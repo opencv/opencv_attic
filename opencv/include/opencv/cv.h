@@ -906,7 +906,8 @@ CVAPI(void)  cvCalcImageHomography( float* line, CvPoint3D32f* center,
 CVAPI(void)  cvDistTransform( const CvArr* src, CvArr* dst,
                               int distance_type CV_DEFAULT(CV_DIST_L2),
                               int mask_size CV_DEFAULT(3),
-                              const float* mask CV_DEFAULT(NULL));
+                              const float* mask CV_DEFAULT(NULL),
+                              CvArr* labels CV_DEFAULT(NULL));
 
 
 /* Types of thresholding */

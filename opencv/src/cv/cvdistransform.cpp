@@ -40,933 +40,434 @@
 //M*/
 #include "_cv.h"
 
-#define _CV_DIST_SHIFT  18
+#define ICV_DIST_SHIFT  16
+#define ICV_INIT_DIST0  (INT_MAX >> 2)
 
-static int
-_MINn( const int *values, int n )
+static CvStatus
+icvInitTopBottom( int* temp, int tempstep, CvSize size, int border )
 {
-    int i;
-    int ret;
-
-    ret = values[0];
-
-    for( i = 1; i < n; i++ )
+    int i, j;
+    for( i = 0; i < border; i++ )
     {
-        int t = values[i];
-
-        CV_CALC_MIN( ret, t );
-    }
-
-    return ret;
-}
-
-
-static void
-init_distances_8uC1( const uchar * pSrc, int srcStep, int *pDst, int dstStep, CvSize roiSize )
-{
-    int ri, ci;
-
-    for( ri = 0; ri < roiSize.height; ri++, pSrc += srcStep, pDst += dstStep )
-    {
-        /* Convert the feature color to zero and non-feature -- to infinity */
-        for( ci = 0; ci <= roiSize.width - 4; ci += 4 )
+        int* ttop = (int*)(temp + i*tempstep);
+        int* tbottom = (int*)(temp + (size.height + border*2 - i - 1)*tempstep);
+        
+        for( j = 0; j < size.width + border*2; j++ )
         {
-            int t0 = pSrc[ci] ? (INT_MAX >> 1) : 0;
-            int t1 = pSrc[ci + 1] ? (INT_MAX >> 1) : 0;
-            int t2 = pSrc[ci + 2] ? (INT_MAX >> 1) : 0;
-            int t3 = pSrc[ci + 3] ? (INT_MAX >> 1) : 0;
-
-            pDst[ci] = t0;
-            pDst[ci + 1] = t1;
-            pDst[ci + 2] = t2;
-            pDst[ci + 3] = t3;
-        }
-
-        for( ; ci < roiSize.width; ci++ )
-        {
-            pDst[ci] = pSrc[ci] > 0 ? (INT_MAX >> 1) : 0;
+            ttop[j] = ICV_INIT_DIST0;
+            tbottom[j] = ICV_INIT_DIST0;
         }
     }
-}
-
-
-static void
-icvCvtIntTofloat( int *idist, int step, CvSize roiSize, float scale )
-{
-    int ri, ci;
-
-    for( ri = 0; ri < roiSize.height; ri++, idist += step )
-    {
-        for( ci = 0; ci <= roiSize.width - 4; ci += 4 )
-        {
-            float ft0 = scale * idist[ci];
-            float ft1 = scale * idist[ci + 1];
-            float ft2 = scale * idist[ci + 2];
-            float ft3 = scale * idist[ci + 3];
-
-            ((float *) idist)[ci] = (float) ft0;
-            ((float *) idist)[ci + 1] = (float) ft1;
-            ((float *) idist)[ci + 2] = (float) ft2;
-            ((float *) idist)[ci + 3] = (float) ft3;
-        }
-
-        for( ; ci < roiSize.width; ci++ )
-        {
-            ((float *) idist)[ci] = (float) (scale * idist[ci]);
-        }
-    }
-}
-
-#define _IS_VALID(roiSize, row, column)\
-    (row < 0 || column < 0 || row > roiSize.height - 1\
-    || column > roiSize.width - 1) ? 0 : 1
-
-#define VALIDATE_INPUT(img, img_step, dist, step, roiSize)\
-    if( !img || !dist ) return CV_NULLPTR_ERR;\
-    if( img_step < roiSize.width || step < roiSize.width*CV_SIZEOF_FLOAT ||\
-        (step & (CV_SIZEOF_FLOAT-1)) != 0 || roiSize.width < 0 || roiSize.height < 0) \
-        return CV_BADSIZE_ERR;
-
-
-IPCVAPI_IMPL( CvStatus, icvDistanceTransform_3x3_8u32f_C1R,
-              (const uchar * pSrc, int srcStep,
-               float *pDst, int dstStep, CvSize roiSize, float *pMetrics),
-              (pSrc, srcStep, pDst, dstStep, roiSize, pMetrics) )
-{
-    int w = roiSize.width;
-    int h = roiSize.height;
-    int *idist = (int *) pDst;
-    int ri;
-    int t1, t2, t3, t4;
-    int mask0, mask1;
-    float scale;
-
-    /* Test input data for validness */
-    if( !pSrc || !pDst || !pMetrics )
-        return CV_NULLPTR_ERR;
-    if( roiSize.width < 0 || roiSize.height < 0 ||
-        srcStep < roiSize.width || dstStep < roiSize.width * CV_SIZEOF_FLOAT ||
-        (dstStep & (CV_SIZEOF_FLOAT - 1)) != 0 )
-        return CV_BADSIZE_ERR;
-
-    dstStep /= CV_SIZEOF_FLOAT;
-
-    mask0 = cvRound( pMetrics[0] * (1 << _CV_DIST_SHIFT) );
-    mask1 = cvRound( pMetrics[1] * (1 << _CV_DIST_SHIFT) );
-    scale = (float) (1. / (1 << _CV_DIST_SHIFT));
-
-    init_distances_8uC1( pSrc, srcStep, idist, dstStep, roiSize );
-
-    if( w == 1 )
-    {
-        int ri;
-
-        /* Forward mask */
-        /* ri = 0: do nothing */
-
-        /* 0 < ri < h */
-        for( ri = 1, idist += dstStep; ri < h; ri++, idist += dstStep )
-        {
-            t1 = idist[0];
-            t2 = idist[-dstStep] + mask0;
-            CV_CALC_MIN( t1, t2 );
-            idist[0] = t1;
-        }
-
-        /* Backward mask */
-        /* ri = h - 1: do nothing */
-
-        /* h - 1 > ri >= 0 */
-        for( ri = h - 2, idist -= 2 * dstStep; ri >= 0; ri--, idist -= dstStep )
-        {
-            t1 = idist[0];
-            t2 = idist[dstStep] + mask0;
-            CV_CALC_MIN( t1, t2 );
-            idist[0] = t1;
-        }
-
-        idist += dstStep;
-    }
-    else
-    {
-        int ci;
-
-/*  ____________ Forward mask _______________  */
-
-        /* ci = 0: do nothing */
-
-        /* 0 < ci < w */
-        for( ci = 1; ci < w; ci++ )
-        {
-            t1 = idist[ci];
-            t2 = idist[ci - 1] + mask0;
-            CV_CALC_MIN( t1, t2 );
-            idist[ci] = t1;
-        }
-
-        if( h > 1 )
-        {
-            for( ri = 1, idist += dstStep; ri < h; ri++, idist += dstStep )
-            {
-                int *idist2 = idist - dstStep;
-
-                /* ci = 0 */
-                t1 = idist[0];
-                t2 = idist2[0] + mask0;
-                CV_CALC_MIN( t1, t2 );
-                t2 = idist2[1] + mask1;
-                CV_CALC_MIN( t1, t2 );
-                idist[0] = t1;
-
-                /* 0 < ci < w - 1 */
-                for( ci = 1; ci < w - 1; ci++ )
-                {
-                    t1 = idist[ci];
-                    t2 = idist[ci - 1] + mask0;
-                    CV_CALC_MIN( t1, t2 );
-                    t3 = idist2[ci] + mask0;
-                    t4 = idist2[ci - 1] + mask1;
-                    CV_CALC_MIN( t3, t4 );
-                    t2 = idist2[ci + 1] + mask1;
-                    CV_CALC_MIN( t1, t3 );
-                    CV_CALC_MIN( t1, t2 );
-                    idist[ci] = t1;
-                }
-
-                /* ci = w - 1 */
-                t1 = idist[ci];
-
-                t2 = idist[ci - 1] + mask0;
-                CV_CALC_MIN( t1, t2 );
-
-                t2 = idist2[ci - 1] + mask1;
-                CV_CALC_MIN( t1, t2 );
-
-                t2 = idist2[ci] + mask0;
-                CV_CALC_MIN( t1, t2 );
-
-                idist[ci] = t1;
-            }
-
-            idist -= dstStep;
-        }
-
-/*  ____________ Backward mask _______________ */
-        /* ci = w - 1: do nothing */
-
-        /* w - 1 > ci >= 0 */
-        for( ci = w - 2; ci >= 0; ci-- )
-        {
-            t1 = idist[ci];
-            t2 = idist[ci + 1] + mask0;
-            CV_CALC_MIN( t1, t2 );
-            idist[ci] = t1;
-        }
-
-        if( h > 1 )
-        {
-            /* 0 <= ri < h - 1 */
-            for( ri = h - 2, idist -= dstStep; ri >= 0; ri--, idist -= dstStep )
-            {
-                int *idist2 = idist + dstStep;
-
-                /* ci = w - 1 */
-                t1 = idist[w - 1];
-                t2 = idist2[w - 1] + mask0;
-                CV_CALC_MIN( t1, t2 );
-                t2 = idist2[w - 2] + mask1;
-                CV_CALC_MIN( t1, t2 );
-                idist[w - 1] = t1;
-
-                /* 0 < ci < w - 1 */
-                for( ci = w - 2; ci > 0; ci-- )
-                {
-                    t1 = idist[ci];
-                    t2 = idist[ci + 1] + mask0;
-                    CV_CALC_MIN( t1, t2 );
-                    t3 = idist2[ci] + mask0;
-                    t4 = idist2[ci - 1] + mask1;
-                    CV_CALC_MIN( t3, t4 );
-                    t2 = idist2[ci + 1] + mask1;
-                    CV_CALC_MIN( t1, t3 );
-                    CV_CALC_MIN( t1, t2 );
-                    idist[ci] = t1;
-                }
-
-                /* ci = 0 */
-                t1 = idist[0];
-
-                t2 = idist[1] + mask0;
-                CV_CALC_MIN( t1, t2 );
-
-                t2 = idist2[0] + mask0;
-                CV_CALC_MIN( t1, t2 );
-
-                t2 = idist2[1] + mask1;
-                CV_CALC_MIN( t1, t2 );
-                idist[0] = t1;
-            }
-            idist += dstStep;
-        }
-    }
-
-    assert( idist == (int *) pDst );
-
-    icvCvtIntTofloat( idist, dstStep, roiSize, scale );
 
     return CV_OK;
 }
 
 
-#define _POINT(row, column)  (((int*)pDst)[(row)*dstStep+(column)])
-#define _ADD_POINT(row, column, m)\
-    buffer[length++] = ((int*)pDst)[dstStep*(row) + (column)] + (m)
-
-
-IPCVAPI_IMPL( CvStatus, icvDistanceTransform_5x5_8u32f_C1R,
-              (const uchar * pSrc, int srcStep,
-              float *pDst, int dstStep, CvSize roiSize, float *pMetrics),
-              (pSrc, srcStep, pDst, dstStep, roiSize, pMetrics) )
+static CvStatus CV_STDCALL
+icvDistanceTransform_3x3_C1R( const uchar* src, int srcstep, int* temp,
+        int step, float* dist, int dststep, CvSize size, const float* metrics )
 {
-    int ri;                     /* Row index */
-    int ci;                     /* Column index */
-    int w = roiSize.width;
-    int h = roiSize.height;
-    int t1, t2;
-    int *d;
-    int buffer[13];
-    int length;
-    int offset;
-    int mask0, mask1, mask2;
-    float scale;
+    const int BORDER = 1;
+    int i, j;
+    const int HV_DIST = CV_FLT_TO_FIX( metrics[0], ICV_DIST_SHIFT );
+    const int DIAG_DIST = CV_FLT_TO_FIX( metrics[1], ICV_DIST_SHIFT );
+    const float scale = 1.f/(1 << ICV_DIST_SHIFT);
 
-    /* Test input data for validness */
-    if( !pSrc || !pDst || !pMetrics )
-        return CV_NULLPTR_ERR;
-    if( roiSize.width < 0 || roiSize.height < 0 ||
-        srcStep < roiSize.width || dstStep < roiSize.width * CV_SIZEOF_FLOAT ||
-        (dstStep & (CV_SIZEOF_FLOAT - 1)) != 0 )
-        return CV_BADSIZE_ERR;
+    srcstep /= sizeof(src[0]);
+    step /= sizeof(temp[0]);
+    dststep /= sizeof(dist[0]);
 
-    dstStep /= CV_SIZEOF_FLOAT;
+    icvInitTopBottom( temp, step, size, BORDER );
 
-    mask0 = cvRound( pMetrics[0] * (1 << _CV_DIST_SHIFT) );
-    mask1 = cvRound( pMetrics[1] * (1 << _CV_DIST_SHIFT) );
-    mask2 = cvRound( pMetrics[2] * (1 << _CV_DIST_SHIFT) );
-    scale = (float) (1. / (1 << _CV_DIST_SHIFT));
-
-    init_distances_8uC1( pSrc, srcStep, (int *) pDst, dstStep, roiSize );
-
-    if( w < 4 || h < 4 )
+    // forward pass
+    for( i = 0; i < size.height; i++ )
     {
-        /*  ____________ Forward mask _______________ */
+        const uchar* s = src + i*srcstep;
+        int* tmp = (int*)(temp + (i+BORDER)*step) + BORDER;
 
-        for( ri = 0; ri < h; ri++ )
+        for( j = 0; j < BORDER; j++ )
+            tmp[-j-1] = tmp[size.width + j] = ICV_INIT_DIST0;
+        
+        for( j = 0; j < size.width; j++ )
         {
-            for( ci = 0; ci < w; ci++ )
+            if( !s[j] )
+                tmp[j] = 0;
+            else
             {
-                length = 1;
-                offset = ri * dstStep + ci;
-                d = (int *) pDst + offset;
-                buffer[0] = d[0];
-
-                if( ri == 0 )
-                {
-                    if( ci == 1 )
-                    {
-                        _ADD_POINT( ri, ci - 1, mask0 );
-                    }
-                    else if( ci > 1 )
-                    {
-                        _ADD_POINT( ri, ci - 1, mask0 );
-                        _ADD_POINT( ri, ci - 2, 2 * mask0 );
-                    }
-                }
-                else if( ri == 1 )
-                {
-                    if( ci == 0 )
-                    {
-                        _ADD_POINT( ri - 1, ci, mask0 );
-                    }
-                    else if( ci == 1 )
-                    {
-                        _ADD_POINT( ri, ci - 1, mask0 );
-                        _ADD_POINT( ri - 1, ci, mask0 );
-                        _ADD_POINT( ri - 1, ci - 1, mask1 );
-                    }
-                    else
-                    {
-                        _ADD_POINT( ri, ci - 1, mask0 );
-                        _ADD_POINT( ri, ci - 2, 2 * mask0 );
-                        _ADD_POINT( ri - 1, ci, mask0 );
-                        _ADD_POINT( ri - 1, ci - 1, mask1 );
-                        _ADD_POINT( ri - 1, ci - 2, mask2 );
-                    }
-
-                    if( ci == w - 2 )
-                    {
-                        _ADD_POINT( ri - 1, ci + 1, mask1 );
-                    }
-                    else if( ci < w - 2 )
-                    {
-                        _ADD_POINT( ri - 1, ci + 1, mask1 );
-                        _ADD_POINT( ri - 1, ci + 2, mask2 );
-                    }
-                }
-                else
-                {
-                    if( ci == 0 )
-                    {
-                        _ADD_POINT( ri - 1, ci, mask0 );
-                        _ADD_POINT( ri - 2, ci, 2 * mask0 );
-                    }
-                    else if( ci == 1 )
-                    {
-                        _ADD_POINT( ri, ci - 1, mask0 );
-                        _ADD_POINT( ri - 1, ci, mask0 );
-                        _ADD_POINT( ri - 1, ci - 1, mask1 );
-                        _ADD_POINT( ri - 2, ci, 2 * mask0 );
-                        _ADD_POINT( ri - 2, ci - 1, mask2 );
-                    }
-                    else
-                    {
-                        _ADD_POINT( ri, ci - 1, mask0 );
-                        _ADD_POINT( ri, ci - 2, 2 * mask0 );
-                        _ADD_POINT( ri - 1, ci, mask0 );
-                        _ADD_POINT( ri - 1, ci - 1, mask1 );
-                        _ADD_POINT( ri - 1, ci - 2, mask2 );
-                        _ADD_POINT( ri - 2, ci, 2 * mask0 );
-                        _ADD_POINT( ri - 2, ci - 1, mask2 );
-                        _ADD_POINT( ri - 2, ci - 2, 2 * mask1 );
-                    }
-
-                    if( ci == w - 2 )
-                    {
-                        _ADD_POINT( ri - 1, ci + 1, mask1 );
-                        _ADD_POINT( ri - 2, ci + 1, mask2 );
-                    }
-                    else if( ci < w - 2 )
-                    {
-                        _ADD_POINT( ri - 1, ci + 1, mask1 );
-                        _ADD_POINT( ri - 1, ci + 2, mask2 );
-                        _ADD_POINT( ri - 2, ci + 1, mask2 );
-                        _ADD_POINT( ri - 2, ci + 2, 2 * mask1 );
-                    }
-                }
-
-                d[0] = _MINn( buffer, length );
+                int t0 = tmp[j-step-1] + DIAG_DIST;
+                int t = tmp[j-step] + HV_DIST;
+                if( t0 > t ) t0 = t;
+                t = tmp[j-step+1] + DIAG_DIST;
+                if( t0 > t ) t0 = t;
+                t = tmp[j-1] + HV_DIST;
+                if( t0 > t ) t0 = t;
+                tmp[j] = t0;
             }
         }
+    }
 
-        /*  ____________ Backward mask _______________ */
-
-        for( ri = h - 1; ri >= 0; ri-- )
+    // backward pass
+    for( i = size.height - 1; i >= 0; i-- )
+    {
+        float* d = (float*)(dist + i*dststep);
+        int* tmp = (int*)(temp + (i+BORDER)*step) + BORDER;
+        
+        for( j = size.width - 1; j >= 0; j-- )
         {
-            for( ci = w - 1; ci >= 0; ci-- )
+            int t0 = tmp[j];
+            if( t0 > HV_DIST )
             {
-                length = 1;
-                offset = ri * dstStep + ci;
-                d = (int *) pDst + offset;
-                buffer[0] = d[0];
-
-                if( ri == h - 1 )
-                {
-                    if( ci == w - 2 )
-                    {
-                        _ADD_POINT( ri, ci + 1, mask0 );
-                    }
-                    else if( ci < w - 2 )
-                    {
-                        _ADD_POINT( ri, ci + 1, mask0 );
-                        _ADD_POINT( ri, ci + 2, 2 * mask0 );
-                    }
-                }
-                else if( ri == h - 2 )
-                {
-                    if( ci == w - 1 )
-                    {
-                        _ADD_POINT( ri + 1, ci, mask0 );
-                    }
-                    else if( ci == w - 2 )
-                    {
-                        _ADD_POINT( ri, ci + 1, mask0 );
-                        _ADD_POINT( ri + 1, ci, mask0 );
-                        _ADD_POINT( ri + 1, ci + 1, mask1 );
-                    }
-                    else
-                    {
-                        _ADD_POINT( ri, ci + 1, mask0 );
-                        _ADD_POINT( ri, ci + 2, 2 * mask0 );
-                        _ADD_POINT( ri + 1, ci, mask0 );
-                        _ADD_POINT( ri + 1, ci + 1, mask1 );
-                        _ADD_POINT( ri + 1, ci + 2, mask2 );
-                    }
-
-                    if( ci == 1 )
-                    {
-                        _ADD_POINT( ri + 1, ci - 1, mask1 );
-                    }
-                    else if( ci > 1 )
-                    {
-                        _ADD_POINT( ri + 1, ci - 1, mask1 );
-                        _ADD_POINT( ri + 1, ci - 2, mask2 );
-                    }
-                }
-                else
-                {
-                    if( ci == w - 1 )
-                    {
-                        _ADD_POINT( ri + 1, ci, mask0 );
-                        _ADD_POINT( ri + 2, ci, 2 * mask0 );
-                    }
-                    else if( ci == w - 2 )
-                    {
-                        _ADD_POINT( ri, ci + 1, mask0 );
-                        _ADD_POINT( ri + 1, ci, mask0 );
-                        _ADD_POINT( ri + 1, ci + 1, mask1 );
-                        _ADD_POINT( ri + 2, ci, 2 * mask0 );
-                        _ADD_POINT( ri + 2, ci + 1, mask2 );
-                    }
-                    else
-                    {
-                        _ADD_POINT( ri, ci + 1, mask0 );
-                        _ADD_POINT( ri, ci + 2, 2 * mask0 );
-                        _ADD_POINT( ri + 1, ci, mask0 );
-                        _ADD_POINT( ri + 1, ci + 1, mask1 );
-                        _ADD_POINT( ri + 1, ci + 2, mask2 );
-                        _ADD_POINT( ri + 2, ci, 2 * mask0 );
-                        _ADD_POINT( ri + 2, ci + 1, mask2 );
-                        _ADD_POINT( ri + 2, ci + 2, 2 * mask1 );
-                    }
-
-                    if( ci == 1 )
-                    {
-                        _ADD_POINT( ri + 1, ci - 1, mask1 );
-                        _ADD_POINT( ri + 2, ci - 1, mask2 );
-                    }
-                    else if( ci > 1 )
-                    {
-                        _ADD_POINT( ri + 1, ci - 1, mask1 );
-                        _ADD_POINT( ri + 1, ci - 2, mask2 );
-                        _ADD_POINT( ri + 2, ci - 1, mask2 );
-                        _ADD_POINT( ri + 2, ci - 2, 2 * mask1 );
-                    }
-                }
-
-                d[0] = _MINn( buffer, length );
+                int t = tmp[j+step+1] + DIAG_DIST;
+                if( t0 > t ) t0 = t;
+                t = tmp[j+step] + HV_DIST;
+                if( t0 > t ) t0 = t;
+                t = tmp[j+step-1] + DIAG_DIST;
+                if( t0 > t ) t0 = t;
+                t = tmp[j+1] + HV_DIST;
+                if( t0 > t ) t0 = t;
+                tmp[j] = t0;
             }
+            d[j] = (float)(t0 * scale);
         }
-
-        goto func_exit;
     }
 
-/*  ____________ Forward mask _______________ */
-
-    /* ri = 0, ci = 0: do nothing */
-
-    /* ri = 0, ci = 1 */
-    t1 = *(int *) &_POINT( 0, 1 );
-    t2 = _POINT( 0, 0 ) + mask0;
-    CV_CALC_MIN( t1, t2 );
-    _POINT( 0, 1 ) = t1;
-
-    /* ri = 0, 1 < ci < w */
-    for( ci = 2; ci < w; ci++ )
-    {
-        t1 = *(int *) &_POINT( 0, ci );
-        t2 = _POINT( 0, ci - 1 ) + mask0;
-        CV_CALC_MIN( t1, t2 );
-        _POINT( 0, ci ) = t1;
-    }
-
-    /* ri = 1, ci = 0 */
-    t1 = *(int *) &_POINT( 1, 0 );
-    t2 = _POINT( 0, 0 ) + mask0;
-    CV_CALC_MIN(t1, t2);
-	t2 = _POINT( 0, 1 ) + mask1;
-    CV_CALC_MIN( t1, t2 );
-    t2 = _POINT( 0, 2 ) + mask2;
-    CV_CALC_MIN( t1, t2 );
-    _POINT( 1, 0 ) = t1;
-
-    /* ri = 1, ci = 1 */
-    t1 = *(int *) &_POINT( 1, 1 );
-    t2 = _POINT( 0, 1 ) + mask0;
-    CV_CALC_MIN( t1, t2 );
-    t2 = _POINT( 0, 2 ) + mask1;
-    CV_CALC_MIN( t1, t2 );
-    t2 = _POINT( 0, 3 ) + mask2;
-    CV_CALC_MIN( t1, t2 );
-    t2 = _POINT( 0, 0 ) + mask1;
-    CV_CALC_MIN( t1, t2 );
-    t2 = _POINT( 1, 0 ) + mask0;
-    CV_CALC_MIN( t1, t2 );
-    _POINT( 1, 1 ) = t1;
-
-
-    /* ri = 1, 1 < ci < w - 2 */
-    for( ci = 2; ci < w - 2; ci++ )
-    {
-        t1 = *(int *) &_POINT( 1, ci );
-        t2 = _POINT( 0, ci ) + mask0;
-        CV_CALC_MIN( t1, t2 );
-        t2 = _POINT( 0, ci + 1 ) + mask1;
-        CV_CALC_MIN( t1, t2 );
-        t2 = _POINT( 0, ci + 2 ) + mask2;
-        CV_CALC_MIN( t1, t2 );
-        t2 = _POINT( 0, ci - 1 ) + mask1;
-        CV_CALC_MIN( t1, t2 );
-        t2 = _POINT( 1, ci - 1 ) + mask0;
-        CV_CALC_MIN( t1, t2 );
-        t2 = _POINT( 0, ci - 2 ) + mask2;
-        CV_CALC_MIN( t1, t2 );
-        _POINT( 1, ci ) = t1;
-    }
-
-    /* ri = 1, ci = w - 2 */
-    t1 = *(int *) &_POINT( 1, w - 2 );
-    t2 = _POINT( 0, w - 2 ) + mask0;
-    CV_CALC_MIN( t1, t2 );
-    t2 = _POINT( 0, w - 1 ) + mask1;
-    CV_CALC_MIN( t1, t2 );
-    t2 = _POINT( 0, w - 3 ) + mask1;
-    CV_CALC_MIN( t1, t2 );
-    t2 = _POINT( 1, w - 3 ) + mask0;
-    CV_CALC_MIN( t1, t2 );
-    t2 = _POINT( 0, w - 4 ) + mask2;
-    CV_CALC_MIN( t1, t2 );
-    _POINT( 1, w - 2 ) = t1;
-
-    /* ri = 1, ci = w - 1 */
-    t1 = *(int *) &_POINT( 1, w - 1 );
-    t2 = _POINT( 0, w - 1 ) + mask0;
-    CV_CALC_MIN( t1, t2 );
-    t2 = _POINT( 0, w - 2 ) + mask1;
-    CV_CALC_MIN( t1, t2 );
-    t2 = _POINT( 1, w - 2 ) + mask0;
-    CV_CALC_MIN( t1, t2 );
-    t2 = _POINT( 0, w - 3 ) + mask2;
-    CV_CALC_MIN( t1, t2 );
-    _POINT( 1, w - 1 ) = t1;
-        /* 1 < ri < h */
-        for( ri = 2; ri < h; ri++ )
-    {
-        /* ci = 0 */
-        t1 = *(int *) &_POINT( ri, 0 );
-        t2 = _POINT( ri - 1, 0 ) + mask0;
-        CV_CALC_MIN( t1, t2 );
-        t2 = _POINT( ri - 1, 1 ) + mask1;
-        CV_CALC_MIN( t1, t2 );
-        t2 = _POINT( ri - 1, 2 ) + mask2;
-        CV_CALC_MIN( t1, t2 );
-        t2 = _POINT( ri - 2, 1 ) + mask2;
-        CV_CALC_MIN( t1, t2 );
-        _POINT( ri, 0 ) = t1;
-
-        /* ci = 1 */
-        t1 = *(int *) &_POINT( ri, 1 );
-        t2 = _POINT( ri - 1, 1 ) + mask0;
-        CV_CALC_MIN( t1, t2 );
-        t2 = _POINT( ri - 1, 2 ) + mask1;
-        CV_CALC_MIN( t1, t2 );
-        t2 = _POINT( ri - 1, 3 ) + mask2;
-        CV_CALC_MIN( t1, t2 );
-        t2 = _POINT( ri - 2, 2 ) + mask2;
-        CV_CALC_MIN( t1, t2 );
-        t2 = _POINT( ri, 0 ) + mask0;
-        CV_CALC_MIN( t1, t2 );
-        t2 = _POINT( ri - 1, 0 ) + mask1;
-        CV_CALC_MIN( t1, t2 );
-        t2 = _POINT( ri - 2, 0 ) + mask2;
-        CV_CALC_MIN( t1, t2 );
-        _POINT( ri, 1 ) = t1;
-
-
-        /* 1 < ci < w - 2 */
-        for( ci = 2; ci < w - 2; ci++ )
-        {
-            t1 = *(int *) &_POINT( ri, ci );
-            t2 = _POINT( ri, ci - 1 ) + mask0;
-            CV_CALC_MIN( t1, t2 );
-            t2 = _POINT( ri - 1, ci ) + mask0;
-            CV_CALC_MIN( t1, t2 );
-            t2 = _POINT( ri - 1, ci + 1 ) + mask1;
-            CV_CALC_MIN( t1, t2 );
-            t2 = _POINT( ri - 1, ci + 2 ) + mask2;
-            CV_CALC_MIN( t1, t2 );
-            t2 = _POINT( ri - 2, ci + 1 ) + mask2;
-            CV_CALC_MIN( t1, t2 );
-            t2 = _POINT( ri - 1, ci - 1 ) + mask1;
-            CV_CALC_MIN( t1, t2 );
-            t2 = _POINT( ri - 1, ci - 2 ) + mask2;
-            CV_CALC_MIN( t1, t2 );
-            t2 = _POINT( ri - 2, ci - 1 ) + mask2;
-            CV_CALC_MIN( t1, t2 );
-            _POINT( ri, ci ) = t1;
-        }
-
-
-        /* ci = w - 2 */
-        t1 = *(int *) &_POINT( ri, w - 2 );
-        t2 = _POINT( ri - 1, w - 2 ) + mask0;
-        CV_CALC_MIN( t1, t2 );
-        t2 = _POINT( ri - 1, w - 1 ) + mask1;
-        CV_CALC_MIN( t1, t2 );
-        t2 = _POINT( ri - 2, w - 1 ) + mask2;
-        CV_CALC_MIN( t1, t2 );
-        t2 = _POINT( ri, w - 2 ) + mask0;
-        CV_CALC_MIN( t1, t2 );
-        t2 = _POINT( ri - 1, w - 3 ) + mask1;
-        CV_CALC_MIN( t1, t2 );
-        t2 = _POINT( ri - 1, w - 4 ) + mask2;
-        CV_CALC_MIN( t1, t2 );
-        t2 = _POINT( ri - 2, w - 3 ) + mask2;
-        CV_CALC_MIN( t1, t2 );
-        _POINT( ri, w - 2 ) = t1;
-
-
-        /* ci = w - 1 */
-        t1 = *(int *) &_POINT( ri, w - 1 );
-        t2 = _POINT( ri - 1, w - 1 ) + mask0;
-        CV_CALC_MIN( t1, t2 );
-        t2 = _POINT( ri, w - 2 ) + mask0;
-        CV_CALC_MIN( t1, t2 );
-        t2 = _POINT( ri - 1, w - 2 ) + mask1;
-        CV_CALC_MIN( t1, t2 );
-        t2 = _POINT( ri - 1, w - 3 ) + mask2;
-        CV_CALC_MIN( t1, t2 );
-        t2 = _POINT( ri - 2, w - 2 ) + mask2;
-        CV_CALC_MIN( t1, t2 );
-        _POINT( ri, w - 1 ) = t1;
-    }
-
-
-/*  ____________ Backward mask _______________ */
-
-    /* ri = h - 1, ci = w - 1: do nothing */
-
-    /* ri = h - 1, ci = w - 2 */
-    t1 = *(int *) &_POINT( h - 1, w - 2 );
-    t2 = _POINT( h - 1, w - 1 ) + mask0;
-    CV_CALC_MIN( t1, t2 );
-    _POINT( h - 1, w - 2 ) = t1;
-
-    /* ri = h - 1, w - 2 > ci >= 0 */
-    for( ci = w - 3; ci >= 0; ci-- )
-    {
-        t1 = *(int *) &_POINT( h - 1, ci );
-        t2 = _POINT( h - 1, ci + 1 ) + mask0;
-        CV_CALC_MIN( t1, t2 );
-        _POINT( h - 1, ci ) = t1;
-    }
-
-
-    /* ri = h - 2, ci = w - 1 */
-    t1 = *(int *) &_POINT( h - 2, w - 1 );
-    t2 = _POINT( h - 1, w - 1 ) + mask0;
-    CV_CALC_MIN( t1, t2 );
-    t2 = _POINT( h - 1, w - 2 ) + mask1;
-    CV_CALC_MIN( t1, t2 );
-    t2 = _POINT( h - 1, w - 3 ) + mask2;
-    CV_CALC_MIN( t1, t2 );
-    _POINT( h - 2, w - 1 ) = t1;
-
-    /* ri = h - 2, ci = w - 2 */
-    t1 = *(int *) &_POINT( h - 2, w - 2 );
-    t2 = _POINT( h - 1, w - 2 ) + mask0;
-    CV_CALC_MIN( t1, t2 );
-    t2 = _POINT( h - 1, w - 3 ) + mask1;
-    CV_CALC_MIN( t1, t2 );
-    t2 = _POINT( h - 1, w - 4 ) + mask2;
-    CV_CALC_MIN( t1, t2 );
-    t2 = _POINT( h - 1, w - 1 ) + mask1;
-    CV_CALC_MIN( t1, t2 );
-    t2 = _POINT( h - 2, w - 1 ) + mask0;
-    CV_CALC_MIN( t1, t2 );
-    _POINT( h - 2, w - 2 ) = t1;
-
-    /* ri = h - 2, w - 2 > ci > 1 */
-    for( ci = w - 3; ci > 1; ci-- )
-    {
-        t1 = *(int *) &_POINT( h - 2, ci );
-        t2 = _POINT( h - 2, ci + 1 ) + mask0;
-        CV_CALC_MIN( t1, t2 );
-        t2 = _POINT( h - 1, ci ) + mask0;
-        CV_CALC_MIN( t1, t2 );
-        t2 = _POINT( h - 1, ci + 1 ) + mask1;
-        CV_CALC_MIN( t1, t2 );
-        t2 = _POINT( h - 1, ci + 2 ) + mask2;
-        CV_CALC_MIN( t1, t2 );
-        t2 = _POINT( h - 1, ci - 1 ) + mask1;
-        CV_CALC_MIN( t1, t2 );
-        t2 = _POINT( h - 1, ci - 2 ) + mask2;
-        CV_CALC_MIN( t1, t2 );
-        _POINT( h - 2, ci ) = t1;
-    }
-
-    /* ri = h - 2, ci = 1 */
-    t1 = *(int *) &_POINT( h - 2, 1 );
-    t2 = _POINT( h - 2, 2 ) + mask0;
-    CV_CALC_MIN( t1, t2 );
-    t2 = _POINT( h - 1, 2 ) + mask1;
-    CV_CALC_MIN( t1, t2 );
-    t2 = _POINT( h - 1, 3 ) + mask2;
-    CV_CALC_MIN( t1, t2 );
-    t2 = _POINT( h - 1, 1 ) + mask0;
-    CV_CALC_MIN( t1, t2 );
-    t2 = _POINT( h - 1, 0 ) + mask1;
-    CV_CALC_MIN( t1, t2 );
-    _POINT( h - 2, 1 ) = t1;
-
-    /* ri = h - 2, ci = 0 */
-    t1 = *(int *) &_POINT( h - 2, 0 );
-    t2 = _POINT( h - 2, 1 ) + mask0;
-    CV_CALC_MIN( t1, t2 );
-    t2 = _POINT( h - 1, 1 ) + mask1;
-    CV_CALC_MIN( t1, t2 );
-    t2 = _POINT( h - 1, 2 ) + mask2;
-    CV_CALC_MIN( t1, t2 );
-    t2 = _POINT( h - 1, 0 ) + mask0;
-    CV_CALC_MIN( t1, t2 );
-    _POINT( h - 2, 0 ) = t1;
-
-
-    /* h - 2 > ri >= 0 */
-    for( ri = h - 3; ri >= 0; ri-- )
-    {
-        /* ci = w - 1 */
-        t1 = *(int *) &_POINT( ri, w - 1 );
-        t2 = _POINT( ri + 1, w - 1 ) + mask0;
-        CV_CALC_MIN( t1, t2 );
-        t2 = _POINT( ri + 1, w - 2 ) + mask1;
-        CV_CALC_MIN( t1, t2 );
-        t2 = _POINT( ri + 2, w - 2 ) + mask2;
-        CV_CALC_MIN( t1, t2 );
-        t2 = _POINT( ri + 1, w - 3 ) + mask2;
-        CV_CALC_MIN( t1, t2 );
-        _POINT( ri, w - 1 ) = t1;
-
-        /* ci = w - 2 */
-        t1 = *(int *) &_POINT( ri, w - 2 );
-        t2 = _POINT( ri, w - 1 ) + mask0;
-        CV_CALC_MIN( t1, t2 );
-        t2 = _POINT( ri + 1, w - 1 ) + mask1;
-        CV_CALC_MIN( t1, t2 );
-        t2 = _POINT( ri + 2, w - 1 ) + mask2;
-        CV_CALC_MIN( t1, t2 );
-        t2 = _POINT( ri + 1, w - 2 ) + mask0;
-        CV_CALC_MIN( t1, t2 );
-        t2 = _POINT( ri + 1, w - 3 ) + mask1;
-        CV_CALC_MIN( t1, t2 );
-        t2 = _POINT( ri + 2, w - 3 ) + mask2;
-        CV_CALC_MIN( t1, t2 );
-        t2 = _POINT( ri + 1, w - 4 ) + mask2;
-        CV_CALC_MIN( t1, t2 );
-        _POINT( ri, w - 2 ) = t1;
-
-        /* w - 2 > ci > 1 */
-        for( ci = w - 3; ci > 1; ci-- )
-        {
-            t1 = *(int *) &_POINT( ri, ci );
-            t2 = _POINT( ri, ci + 1 ) + mask0;
-            CV_CALC_MIN( t1, t2 );
-            t2 = _POINT( ri + 1, ci ) + mask0;
-            CV_CALC_MIN( t1, t2 );
-            t2 = _POINT( ri + 1, ci + 1 ) + mask1;
-            CV_CALC_MIN( t1, t2 );
-            t2 = _POINT( ri + 1, ci + 2 ) + mask2;
-            CV_CALC_MIN( t1, t2 );
-            t2 = _POINT( ri + 2, ci + 1 ) + mask2;
-            CV_CALC_MIN( t1, t2 );
-            t2 = _POINT( ri + 1, ci - 1 ) + mask1;
-            CV_CALC_MIN( t1, t2 );
-            t2 = _POINT( ri + 1, ci - 2 ) + mask2;
-            CV_CALC_MIN( t1, t2 );
-            t2 = _POINT( ri + 2, ci - 1 ) + mask2;
-            CV_CALC_MIN( t1, t2 );
-            _POINT( ri, ci ) = t1;
-        }
-
-        /* ci = 1 */
-        t1 = *(int *) &_POINT( ri, 1 );
-        t2 = _POINT( ri, 2 ) + mask0;
-        CV_CALC_MIN( t1, t2 );
-        t2 = _POINT( ri + 1, 1 ) + mask0;
-        CV_CALC_MIN( t1, t2 );
-        t2 = _POINT( ri + 1, 2 ) + mask1;
-        CV_CALC_MIN( t1, t2 );
-        t2 = _POINT( ri + 1, 3 ) + mask2;
-        CV_CALC_MIN( t1, t2 );
-        t2 = _POINT( ri + 2, 2 ) + mask2;
-        CV_CALC_MIN( t1, t2 );
-        t2 = _POINT( ri + 1, 0 ) + mask1;
-        CV_CALC_MIN( t1, t2 );
-        t2 = _POINT( ri + 2, 0 ) + mask2;
-        CV_CALC_MIN( t1, t2 );
-        _POINT( ri, 1 ) = t1;
-
-        /* ci = 0 */
-        t1 = *(int *) &_POINT( ri, 0 );
-        t2 = _POINT( ri, 1 ) + mask0;
-        CV_CALC_MIN( t1, t2 );
-        t2 = _POINT( ri + 1, 0 ) + mask0;
-        CV_CALC_MIN( t1, t2 );
-        t2 = _POINT( ri + 1, 1 ) + mask1;
-        CV_CALC_MIN( t1, t2 );
-        t2 = _POINT( ri + 1, 2 ) + mask2;
-        CV_CALC_MIN( t1, t2 );
-        t2 = _POINT( ri + 2, 1 ) + mask2;
-        CV_CALC_MIN( t1, t2 );
-        _POINT( ri, 0 ) = t1;
-    }
-
-  func_exit:
-
-    icvCvtIntTofloat( (int *) pDst, dstStep, roiSize, scale );
     return CV_OK;
 }
 
 
-IPCVAPI_IMPL( CvStatus, icvGetDistanceTransformMask, (int maskType, float *pMetrics), (maskType, pMetrics) )
+static CvStatus CV_STDCALL
+icvDistanceTransform_5x5_C1R( const uchar* src, int srcstep, int* temp,
+        int step, float* dist, int dststep, CvSize size, const float* metrics )
 {
-    if( !pMetrics )
+    const int BORDER = 2;
+    int i, j;
+    const int HV_DIST = CV_FLT_TO_FIX( metrics[0], ICV_DIST_SHIFT );
+    const int DIAG_DIST = CV_FLT_TO_FIX( metrics[1], ICV_DIST_SHIFT );
+    const int LONG_DIST = CV_FLT_TO_FIX( metrics[2], ICV_DIST_SHIFT );
+    const float scale = 1.f/(1 << ICV_DIST_SHIFT);
+
+    srcstep /= sizeof(src[0]);
+    step /= sizeof(temp[0]);
+    dststep /= sizeof(dist[0]);
+
+    icvInitTopBottom( temp, step, size, BORDER );
+
+    // forward pass
+    for( i = 0; i < size.height; i++ )
+    {
+        const uchar* s = src + i*srcstep;
+        int* tmp = (int*)(temp + (i+BORDER)*step) + BORDER;
+
+        for( j = 0; j < BORDER; j++ )
+            tmp[-j-1] = tmp[size.width + j] = ICV_INIT_DIST0;
+        
+        for( j = 0; j < size.width; j++ )
+        {
+            if( !s[j] )
+                tmp[j] = 0;
+            else
+            {
+                int t0 = tmp[j-step*2-1] + LONG_DIST;
+                int t = tmp[j-step*2+1] + LONG_DIST;
+                if( t0 > t ) t0 = t;
+                t = tmp[j-step-2] + LONG_DIST;
+                if( t0 > t ) t0 = t;
+                t = tmp[j-step-1] + DIAG_DIST;
+                if( t0 > t ) t0 = t;
+                t = tmp[j-step] + HV_DIST;
+                if( t0 > t ) t0 = t;
+                t = tmp[j-step+1] + DIAG_DIST;
+                if( t0 > t ) t0 = t;
+                t = tmp[j-step+2] + LONG_DIST;
+                if( t0 > t ) t0 = t;
+                t = tmp[j-1] + HV_DIST;
+                if( t0 > t ) t0 = t;
+                tmp[j] = t0;
+            }
+        }
+    }
+
+    // backward pass
+    for( i = size.height - 1; i >= 0; i-- )
+    {
+        float* d = (float*)(dist + i*dststep);
+        int* tmp = (int*)(temp + (i+BORDER)*step) + BORDER;
+        
+        for( j = size.width - 1; j >= 0; j-- )
+        {
+            int t0 = tmp[j];
+            if( t0 > HV_DIST )
+            {
+                int t = tmp[j+step*2+1] + LONG_DIST;
+                if( t0 > t ) t0 = t;
+                t = tmp[j+step*2-1] + LONG_DIST;
+                if( t0 > t ) t0 = t;
+                t = tmp[j+step+2] + LONG_DIST;
+                if( t0 > t ) t0 = t;
+                t = tmp[j+step+1] + DIAG_DIST;
+                if( t0 > t ) t0 = t;
+                t = tmp[j+step] + HV_DIST;
+                if( t0 > t ) t0 = t;
+                t = tmp[j+step-1] + DIAG_DIST;
+                if( t0 > t ) t0 = t;
+                t = tmp[j+step-2] + LONG_DIST;
+                if( t0 > t ) t0 = t;
+                t = tmp[j+1] + HV_DIST;
+                if( t0 > t ) t0 = t;
+                tmp[j] = t0;
+            }
+            d[j] = (float)(t0 * scale);
+        }
+    }
+
+    return CV_OK;
+}
+
+
+static CvStatus CV_STDCALL
+icvDistanceTransformEx_5x5_C1R( const uchar* src, int srcstep, int* temp,
+                int step, float* dist, int dststep, int* labels, int lstep,
+                CvSize size, const float* metrics )
+{
+    const int BORDER = 2;
+    
+    int i, j;
+    const int HV_DIST = CV_FLT_TO_FIX( metrics[0], ICV_DIST_SHIFT );
+    const int DIAG_DIST = CV_FLT_TO_FIX( metrics[1], ICV_DIST_SHIFT );
+    const int LONG_DIST = CV_FLT_TO_FIX( metrics[2], ICV_DIST_SHIFT );
+    const float scale = 1.f/(1 << ICV_DIST_SHIFT);
+
+    srcstep /= sizeof(src[0]);
+    step /= sizeof(temp[0]);
+    dststep /= sizeof(dist[0]);
+    lstep /= sizeof(labels[0]);
+
+    icvInitTopBottom( temp, step, size, BORDER );
+
+    // forward pass
+    for( i = 0; i < size.height; i++ )
+    {
+        const uchar* s = src + i*srcstep;
+        int* tmp = (int*)(temp + (i+BORDER)*step) + BORDER;
+        int* lls = (int*)(labels + i*lstep);
+
+        for( j = 0; j < BORDER; j++ )
+            tmp[-j-1] = tmp[size.width + j] = ICV_INIT_DIST0;
+        
+        for( j = 0; j < size.width; j++ )
+        {
+            if( !s[j] )
+            {
+                tmp[j] = 0;
+                //assert( lls[j] != 0 );
+            }
+            else
+            {
+                int t0 = ICV_INIT_DIST0, t;
+                int l0 = 0;
+
+                t = tmp[j-step*2-1] + LONG_DIST;
+                if( t0 > t )
+                {
+                    t0 = t;
+                    l0 = lls[j-lstep*2-1];
+                }
+                t = tmp[j-step*2+1] + LONG_DIST;
+                if( t0 > t )
+                {
+                    t0 = t;
+                    l0 = lls[j-lstep*2+1];
+                }
+                t = tmp[j-step-2] + LONG_DIST;
+                if( t0 > t )
+                {
+                    t0 = t;
+                    l0 = lls[j-lstep-2];
+                }
+                t = tmp[j-step-1] + DIAG_DIST;
+                if( t0 > t )
+                {
+                    t0 = t;
+                    l0 = lls[j-lstep-1];
+                }
+                t = tmp[j-step] + HV_DIST;
+                if( t0 > t )
+                {
+                    t0 = t;
+                    l0 = lls[j-lstep];
+                }
+                t = tmp[j-step+1] + DIAG_DIST;
+                if( t0 > t )
+                {
+                    t0 = t;
+                    l0 = lls[j-lstep+1];
+                }
+                t = tmp[j-step+2] + LONG_DIST;
+                if( t0 > t )
+                {
+                    t0 = t;
+                    l0 = lls[j-lstep+2];
+                }
+                t = tmp[j-1] + HV_DIST;
+                if( t0 > t )
+                {
+                    t0 = t;
+                    l0 = lls[j-1];
+                }
+
+                tmp[j] = t0;
+                lls[j] = l0;
+            }
+        }
+    }
+
+    // backward pass
+    for( i = size.height - 1; i >= 0; i-- )
+    {
+        float* d = (float*)(dist + i*dststep);
+        int* tmp = (int*)(temp + (i+BORDER)*step) + BORDER;
+        int* lls = (int*)(labels + i*lstep);
+        
+        for( j = size.width - 1; j >= 0; j-- )
+        {
+            int t0 = tmp[j];
+            int l0 = lls[j];
+            if( t0 > HV_DIST )
+            {
+                int t = tmp[j+step*2+1] + LONG_DIST;
+                if( t0 > t )
+                {
+                    t0 = t;
+                    l0 = lls[j+lstep*2+1];
+                }
+                t = tmp[j+step*2-1] + LONG_DIST;
+                if( t0 > t )
+                {
+                    t0 = t;
+                    l0 = lls[j+lstep*2-1];
+                }
+                t = tmp[j+step+2] + LONG_DIST;
+                if( t0 > t )
+                {
+                    t0 = t;
+                    l0 = lls[j+lstep+2];
+                }
+                t = tmp[j+step+1] + DIAG_DIST;
+                if( t0 > t )
+                {
+                    t0 = t;
+                    l0 = lls[j+lstep+1];
+                }
+                t = tmp[j+step] + HV_DIST;
+                if( t0 > t )
+                {
+                    t0 = t;
+                    l0 = lls[j+lstep];
+                }
+                t = tmp[j+step-1] + DIAG_DIST;
+                if( t0 > t )
+                {
+                    t0 = t;
+                    l0 = lls[j+lstep-1];
+                }
+                t = tmp[j+step-2] + LONG_DIST;
+                if( t0 > t )
+                {
+                    t0 = t;
+                    l0 = lls[j+lstep-2];
+                }
+                t = tmp[j+1] + HV_DIST;
+                if( t0 > t )
+                {
+                    t0 = t;
+                    l0 = lls[j+1];
+                }
+                tmp[j] = t0;
+                lls[j] = l0;
+            }
+            d[j] = (float)(t0 * scale);
+        }
+    }
+
+    return CV_OK;
+}
+
+
+static CvStatus
+icvGetDistanceTransformMask( int maskType, float *metrics )
+{
+    if( !metrics )
         return CV_NULLPTR_ERR;
 
     switch (maskType)
     {
     case 30:
-        pMetrics[0] = 1.0f;
-        pMetrics[1] = 1.0f;
+        metrics[0] = 1.0f;
+        metrics[1] = 1.0f;
         break;
 
     case 31:
-        pMetrics[0] = 1.0f;
-        pMetrics[1] = 2.0f;
+        metrics[0] = 1.0f;
+        metrics[1] = 2.0f;
         break;
 
     case 32:
-        pMetrics[0] = 0.955f;
-        pMetrics[1] = 1.3693f;
+        metrics[0] = 0.955f;
+        metrics[1] = 1.3693f;
+        break;
+
+    case 50:
+        metrics[0] = 1.0f;
+        metrics[1] = 1.0f;
+        metrics[2] = 2.0f;
+        break;
+
+    case 51:
+        metrics[0] = 1.0f;
+        metrics[1] = 2.0f;
+        metrics[2] = 3.0f;
         break;
 
     case 52:
-        pMetrics[0] = 1.0f;
-        pMetrics[1] = 1.4f;
-        pMetrics[2] = 2.1969f;
+        metrics[0] = 1.0f;
+        metrics[1] = 1.4f;
+        metrics[2] = 2.1969f;
         break;
     default:
         return CV_BADRANGE_ERR;
     }
+
     return CV_OK;
 }
 
+
+/*********************************** IPP functions *********************************/
+
+icvDistanceTransform_3x3_8u32f_C1R_t icvDistanceTransform_3x3_8u32f_C1R_p = 0;
+icvDistanceTransform_5x5_8u32f_C1R_t icvDistanceTransform_5x5_8u32f_C1R_p = 0;
+
+typedef CvStatus (CV_STDCALL * CvIPPDistTransFunc)( const uchar* src, int srcstep,
+                                                    float* dst, int dststep,
+                                                    CvSize size, const float* metrics );
+
+/***********************************************************************************/
+
+typedef CvStatus (CV_STDCALL * CvDistTransFunc)( const uchar* src, int srcstep,
+                                                 int* temp, int tempstep,
+                                                 float* dst, int dststep,
+                                                 CvSize size, const float* metrics );
 
 /* Wrapper function for distance transform group */
 CV_IMPL void
 cvDistTransform( const void* srcarr, void* dstarr,
                  int distType, int maskSize,
-                 const float *mask )
+                 const float *mask,
+                 void* labelsarr )
 {
+    CvMat* temp = 0;
+    CvMat* src_copy = 0;
+    CvMemStorage* st = 0;
+    
     CV_FUNCNAME( "cvDistTransform" );
 
     __BEGIN__;
@@ -974,27 +475,45 @@ cvDistTransform( const void* srcarr, void* dstarr,
     float _mask[5];
     CvMat srcstub, *src = (CvMat*)srcarr;
     CvMat dststub, *dst = (CvMat*)dstarr;
+    CvMat lstub, *labels = (CvMat*)labelsarr;
+    CvSize size;
+    CvIPPDistTransFunc ipp_func = 0;
 
     CV_CALL( src = cvGetMat( src, &srcstub ));
     CV_CALL( dst = cvGetMat( dst, &dststub ));
 
     if( !CV_IS_MASK_ARR( src ) || CV_MAT_TYPE( dst->type ) != CV_32FC1 )
-        CV_ERROR( CV_StsUnsupportedFormat, "" );
+        CV_ERROR( CV_StsUnsupportedFormat, "source image must be 8uC1 and the distance map must be 32fC1" );
 
     if( !CV_ARE_SIZES_EQ( src, dst ))
-        CV_ERROR( CV_StsUnmatchedSizes, "" );
+        CV_ERROR( CV_StsUnmatchedSizes, "the source and the destination images must be of the same size" );
 
     if( maskSize != CV_DIST_MASK_3 && maskSize != CV_DIST_MASK_5 )
-        CV_ERROR( CV_StsBadSize, "" );
+        CV_ERROR( CV_StsBadSize, "Mask size should be 3 or 5" );
 
     if( distType == CV_DIST_C || distType == CV_DIST_L1 )
-        maskSize = CV_DIST_MASK_3;
+        maskSize = !labels ? CV_DIST_MASK_3 : CV_DIST_MASK_5;
+    else if( distType == CV_DIST_L2 && labels )
+        maskSize = CV_DIST_MASK_5;
+
+    if( labels )
+    {
+        CV_CALL( labels = cvGetMat( labels, &lstub ));
+        if( CV_MAT_TYPE( labels->type ) != CV_32SC1 )
+            CV_ERROR( CV_StsUnsupportedFormat, "the output array of labels must be 32sC1" );
+
+        if( !CV_ARE_SIZES_EQ( labels, dst ))
+            CV_ERROR( CV_StsUnmatchedSizes, "the array of labels has a different size" );
+
+        if( maskSize == CV_DIST_MASK_3 )
+            CV_ERROR( CV_StsNotImplemented,
+            "3x3 mask can not be used for \"labeled\" distance transform. Use 5x5 mask" );
+    }
 
     if( distType == CV_DIST_C || distType == CV_DIST_L1 || distType == CV_DIST_L2 )
     {
-        IPPI_CALL( icvGetDistanceTransformMask( distType == CV_DIST_C ? 30 :
-                                                distType == CV_DIST_L1 ? 31 :
-                                                maskSize*10 + 2, _mask ));
+        icvGetDistanceTransformMask( (distType == CV_DIST_C ? 0 :
+            distType == CV_DIST_L1 ? 1 : 2) + maskSize*10, _mask );
     }
     else if( distType == CV_DIST_USER )
     {
@@ -1004,21 +523,57 @@ cvDistTransform( const void* srcarr, void* dstarr,
         memcpy( _mask, mask, (maskSize/2 + 1)*sizeof(float));
     }
 
-    if( maskSize == CV_DIST_MASK_3 )
+    if( !labels )
+        ipp_func = maskSize == CV_DIST_MASK_3 ? icvDistanceTransform_3x3_8u32f_C1R_p :
+                                                icvDistanceTransform_5x5_8u32f_C1R_p;
+
+    size = cvGetMatSize(src);
+
+    if( ipp_func )
     {
-        IPPI_CALL( icvDistanceTransform_3x3_8u32f_C1R
-                   ( src->data.ptr, src->step,
-                     dst->data.fl, dst->step,
-                     cvGetMatSize(src), _mask ));
+        IPPI_CALL( ipp_func( src->data.ptr, src->step, dst->data.fl, dst->step, size, _mask ));
     }
     else
     {
-        IPPI_CALL( icvDistanceTransform_5x5_8u32f_C1R
-                   ( src->data.ptr, src->step,
-                     dst->data.fl, dst->step,
-                     cvGetMatSize(src), _mask ));
+        int border = maskSize == CV_DIST_MASK_3 ? 1 : 2;
+        CV_CALL( temp = cvCreateMat( size.height + border*2, size.width + border*2, CV_32SC1 ));
+
+        if( !labels )
+        {
+            CvDistTransFunc func = maskSize == CV_DIST_MASK_3 ?
+                icvDistanceTransform_3x3_C1R :
+                icvDistanceTransform_5x5_C1R;
+
+            func( src->data.ptr, src->step, temp->data.i, temp->step,
+                  dst->data.fl, dst->step, size, _mask );
+        }
+        else
+        {
+            CvSeq *contours = 0;
+            int label;
+
+            CV_CALL( st = cvCreateMemStorage() );
+            CV_CALL( src_copy = cvCreateMat( size.height, size.width, src->type ));
+            cvCmpS( src, 0, src_copy, CV_CMP_EQ );
+            cvFindContours( src_copy, st, &contours, sizeof(CvContour),
+                            CV_RETR_CCOMP, CV_CHAIN_APPROX_SIMPLE );
+            cvZero( labels );
+            for( label = 1; contours != 0; contours = contours->h_next, label++ )
+                cvDrawContours( labels, contours, cvScalarAll(label), cvScalarAll(label), -255, -1, 8 );
+
+            cvCopy( src, src_copy );
+            cvRectangle( src_copy, cvPoint(0,0), cvPoint(size.width-1,size.height-1), cvScalarAll(255), 1, 8 );
+
+            icvDistanceTransformEx_5x5_C1R( src_copy->data.ptr, src_copy->step, temp->data.i, temp->step,
+                        dst->data.fl, dst->step, labels->data.i, labels->step, size, _mask );
+        }
     }
 
     __END__;
+
+    cvReleaseMat( &temp );
+    cvReleaseMat( &src_copy );
+    cvReleaseMemStorage( &st );
 }
 
+/* End of file. */
