@@ -1823,6 +1823,11 @@ cvDFT( const CvArr* srcarr, CvArr* dstarr, int flags, int nonzero_rows )
         CV_ERROR( CV_StsUnmatchedFormats,
         "Incorrect or unsupported combination of input & output formats" );
 
+    if( src->cols == 1 && nonzero_rows > 0 )
+        CV_ERROR( CV_StsNotImplemented,
+        "This mode (using nonzero_rows with a single-column matrix) breaks the function logic, so it is prohibited.\n"
+        "For fast convolution/correlation use 2-column matrix or single-row matrix instead" );
+
     // determine, which transform to do first - row-wise
     // (stage 0) or column-wise (stage 1) transform
     if( !(flags & CV_DXT_ROWS) && src->rows > 1 &&

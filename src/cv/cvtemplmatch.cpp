@@ -164,6 +164,8 @@ icvCrossCorr( const CvArr* _img, const CvArr* _templ, CvArr* _corr )
     templsize = cvGetSize(templ);
     corrsize = cvGetSize(corr);
     dftsize.width = cvGetOptimalDFTSize(imgsize.width + templsize.width - 1);
+    if( dftsize.width == 1 )
+        dftsize.width = 2;
     dftsize.height = cvGetOptimalDFTSize(imgsize.height + templsize.height - 1);
     if( dftsize.width <= 0 || dftsize.height <= 0 )
         CV_ERROR( CV_StsOutOfRange, "the input arrays are too big" );
