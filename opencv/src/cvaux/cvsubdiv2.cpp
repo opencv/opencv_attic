@@ -41,10 +41,6 @@
 
 #include "_cvaux.h"
 
-#include <float.h>
-#include "_cvutils.h"
-
-
 CV_IMPL int
 icvSubdiv2DCheck( CvSubdiv2D* subdiv )
 {
@@ -145,14 +141,13 @@ draw_subdiv_facet( CvSubdiv2D * subdiv, IplImage * dst, IplImage * src, CvSubdiv
     {
         CvSubdiv2DPoint *pt = cvSubdiv2DEdgeDst( cvSubdiv2DRotateEdge( edge, 1 ));
         CvPoint ip = cvPoint( cvRound( pt->pt.x ), cvRound( pt->pt.y ));
-        int color = 0;
+        CvScalar color = {0,0,0,0};
 
         //printf("count = %d, (%d,%d)\n", ip.x, ip.y );
 
         if( 0 <= ip.x && ip.x < src->width && 0 <= ip.y && ip.y < src->height )
         {
-            char *ptr = src->imageData + ip.y * src->widthStep + ip.x * 3;
-
+            uchar *ptr = (uchar*)(src->imageData + ip.y * src->widthStep + ip.x * 3);
             color = CV_RGB( ptr[2], ptr[1], ptr[0] );
         }
 

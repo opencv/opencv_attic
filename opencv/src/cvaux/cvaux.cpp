@@ -39,8 +39,9 @@
 //
 //M*/
 
-
 #include "_cvaux.h"
+
+#if 0
 #include <stdlib.h>
 
 #ifdef WIN32
@@ -102,5 +103,5 @@ static func_desc ipp_func_desc[] =
 
 static int loaded = cvFillInternalFuncsTable( (void*)ipp_func_desc );
 
-
 #undef IPCVAPI
+#endif

@@ -473,9 +473,10 @@ cvTrackFace(CvFaceTracker* pFaceTracker, IplImage* imgGray, CvRect* pRects, int 
     *dbAngleRotate = pFaceTracker->dbRotateAngle;
     
     int nElements = 16;
-    double d_eyes = sqrt(pow2(pFaceTracker->face[LEYE].ptCenter.x - pFaceTracker->face[REYE].ptCenter.x) + 
-        pow2(pFaceTracker->face[LEYE].ptCenter.y - pFaceTracker->face[REYE].ptCenter.y));
-    int d = int(0.25 * d_eyes + 0.5);
+    double dx = pFaceTracker->face[LEYE].ptCenter.x - pFaceTracker->face[REYE].ptCenter.x;
+    double dy = pFaceTracker->face[LEYE].ptCenter.y - pFaceTracker->face[REYE].ptCenter.y;
+    double d_eyes = sqrt(dx*dx + dy*dy);
+    int d = cvRound(0.25 * d_eyes);
     int dMinSize = d;
     int nRestarts = 0;
     
@@ -705,7 +706,7 @@ int ChoiceTrackingFace3(CvFaceTracker* pTF, const int nElements, const CvFaceEle
             face[elem] = *(new_face[elem]);
     }
     return found;
-}; // int ChoiceTrackingFace3(const CvTrackingRect* tr_face, CvTrackingRect* new_face, int& new_energy)
+} // int ChoiceTrackingFace3(const CvTrackingRect* tr_face, CvTrackingRect* new_face, int& new_energy)
 
 int ChoiceTrackingFace2(CvFaceTracker* pTF, const int nElements, const CvFaceElement* big_face, CvTrackingRect* face, int& new_energy, int noel)
 {
@@ -756,11 +757,11 @@ int ChoiceTrackingFace2(CvFaceTracker* pTF, const int nElements, const CvFaceEle
         CvPoint prev_v01 = {pTF->face[element[1]].ptCenter.x - pTF->face[element[0]].ptCenter.x, pTF->face[element[1]].ptCenter.y - pTF->face[element[0]].ptCenter.y};
         CvPoint prev_v02 = {pTF->face[element[2]].ptCenter.x - pTF->face[element[0]].ptCenter.x, pTF->face[element[2]].ptCenter.y - pTF->face[element[0]].ptCenter.y};
         CvPoint new_v01 = {new_face[element[1]]->ptCenter.x - new_face[element[0]]->ptCenter.x, new_face[element[1]]->ptCenter.y - new_face[element[0]]->ptCenter.y};
-        double templ_d01 = sqrt(pow2(templ_v01.x) + pow2(templ_v01.y));
-        double templ_d02 = sqrt(pow2(templ_v02.x) + pow2(templ_v02.y));
-        double prev_d01 = sqrt(pow2(prev_v01.x) + pow2(prev_v01.y));
-        double prev_d02 = sqrt(pow2(prev_v02.x) + pow2(prev_v02.y));
-        double new_d01 = sqrt(pow2(new_v01.x) + pow2(new_v01.y));
+        double templ_d01 = sqrt((double)templ_v01.x*templ_v01.x + templ_v01.y*templ_v01.y);
+        double templ_d02 = sqrt((double)templ_v02.x*templ_v02.x + templ_v02.y*templ_v02.y);
+        double prev_d01 = sqrt((double)prev_v01.x*prev_v01.x + prev_v01.y*prev_v01.y);
+        double prev_d02 = sqrt((double)prev_v02.x*prev_v02.x + prev_v02.y*prev_v02.y);
+        double new_d01 = sqrt((double)new_v01.x*new_v01.x + new_v01.y*new_v01.y);
         double scale = templ_d01 / new_d01;
         double new_d02 = templ_d02 / scale; 
         double sin_a = double(prev_v01.x * prev_v02.y - prev_v01.y * prev_v02.x) / (prev_d01 * prev_d02);
@@ -786,7 +787,7 @@ int ChoiceTrackingFace2(CvFaceTracker* pTF, const int nElements, const CvFaceEle
         _ASSERT(face[LEYE].r.x + face[LEYE].r.width <= face[REYE].r.x);
     }
     return found;
-}; // int ChoiceTrackingFace3(const CvTrackingRect* tr_face, CvTrackingRect* new_face, int& new_energy)
+} // int ChoiceTrackingFace3(const CvTrackingRect* tr_face, CvTrackingRect* new_face, int& new_energy)
 
 inline int GetEnergy(CvTrackingRect** ppNew, const CvTrackingRect* pPrev, CvPoint* ptTempl, CvRect* rTempl)
 {
@@ -816,7 +817,7 @@ inline int GetEnergy(CvTrackingRect** ppNew, const CvTrackingRect* pPrev, CvPoin
         1 * (int)pow(h_mouth - double(rTempl[MOUTH].height), 2) + 
         0;
     return energy;
-};
+}
 
 inline int GetEnergy2(CvTrackingRect** ppNew, const CvTrackingRect* pPrev, CvPoint* ptTempl, CvRect* rTempl, int* element)
 {
@@ -824,10 +825,11 @@ inline int GetEnergy2(CvTrackingRect** ppNew, const CvTrackingRect* pPrev, CvPoi
         ppNew[element[0]]->ptCenter.y - ppNew[element[1]]->ptCenter.y};
     CvPoint prev_v = {pPrev[element[0]].ptCenter.x - pPrev[element[1]].ptCenter.x,
         pPrev[element[0]].ptCenter.y - pPrev[element[1]].ptCenter.y};
-    double new_d = sqrt(pow2(new_v.x) + pow2(new_v.y));
-    double prev_d = sqrt(pow2(prev_v.x) + pow2(prev_v.y));
-    double templ_d = sqrt(pow2(ptTempl[element[0]].x - ptTempl[element[1]].x) +
-        pow2(ptTempl[element[0]].y - ptTempl[element[1]].y));
+    double new_d = sqrt((double)new_v.x*new_v.x + new_v.y*new_v.y);
+    double prev_d = sqrt((double)prev_v.x*prev_v.x + prev_v.y*prev_v.y);
+    double dx = ptTempl[element[0]].x - ptTempl[element[1]].x;
+    double dy = ptTempl[element[0]].y - ptTempl[element[1]].y;
+    double templ_d = sqrt(dx*dx + dy*dy);
     double scale_templ = new_d / templ_d;
     double w0 = (double)ppNew[element[0]]->r.width * scale_templ;
     double h0 = (double)ppNew[element[0]]->r.height * scale_templ;
@@ -844,7 +846,7 @@ inline int GetEnergy2(CvTrackingRect** ppNew, const CvTrackingRect* pPrev, CvPoi
         0;
     
     return energy;
-};
+}
 
 inline double CalculateTransformationLMS3( CvPoint* pTemplPoints, 
                                    CvPoint* pSrcPoints,

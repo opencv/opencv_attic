@@ -39,25 +39,27 @@
 //
 //M*/
 
-#include "_cvaux.h"
 
+#include "_cvaux.h"
 #include "cvtypes.h"
 #include <float.h>
 #include <limits.h>
 #include "cv.h"
 
+/* Valery Mosyagin */
+
 #define EPS64D 1e-9
 
-CvStatus cvComputeEssentialMatrix(  CvMatr32f rotMatr,
+int cvComputeEssentialMatrix(  CvMatr32f rotMatr,
                                     CvMatr32f transVect,
                                     CvMatr32f essMatr);
 
-CvStatus cvConvertEssential2Fundamental( CvMatr32f essMatr,
+int cvConvertEssential2Fundamental( CvMatr32f essMatr,
                                          CvMatr32f fundMatr,
                                          CvMatr32f cameraMatr1,
                                          CvMatr32f cameraMatr2);
 
-CvStatus cvComputeEpipolesFromFundMatrix(CvMatr32f fundMatr,
+int cvComputeEpipolesFromFundMatrix(CvMatr32f fundMatr,
                                          CvPoint3D32f* epipole1,
                                          CvPoint3D32f* epipole2);
 
@@ -68,7 +70,7 @@ void icvTestPoint( CvPoint2D64d testPoint,
 
 
 
-CvStatus icvGetSymPoint3D(  CvPoint3D64d pointCorner,
+int icvGetSymPoint3D(  CvPoint3D64d pointCorner,
                             CvPoint3D64d point1,
                             CvPoint3D64d point2,
                             CvPoint3D64d *pointSym2)
@@ -92,7 +94,7 @@ CvStatus icvGetSymPoint3D(  CvPoint3D64d pointCorner,
 /*  author Valery Mosyagin */
 
 /* Compute 3D point for scanline and alpha betta */
-CvStatus icvCompute3DPoint( double alpha,double betta,
+int icvCompute3DPoint( double alpha,double betta,
                             CvStereoLineCoeff* coeffs,
                             CvPoint3D64d* point)
 {
@@ -134,7 +136,7 @@ CvStatus icvCompute3DPoint( double alpha,double betta,
 /*--------------------------------------------------------------------------------------*/
 
 /* Compute rotate matrix and trans vector for change system */
-CvStatus icvCreateConvertMatrVect( CvMatr64d     rotMatr1,
+int icvCreateConvertMatrVect( CvMatr64d     rotMatr1,
                                 CvMatr64d     transVect1,
                                 CvMatr64d     rotMatr2,
                                 CvMatr64d     transVect2,
@@ -169,7 +171,7 @@ CvStatus icvCreateConvertMatrVect( CvMatr64d     rotMatr1,
 /*--------------------------------------------------------------------------------------*/
 
 /* Compute point coordinates in other system */
-CvStatus icvConvertPointSystem(CvPoint3D64d  M2,
+int icvConvertPointSystem(CvPoint3D64d  M2,
                             CvPoint3D64d* M1,
                             CvMatr64d     rotMatr,
                             CvMatr64d     transVect
@@ -188,7 +190,7 @@ CvStatus icvConvertPointSystem(CvPoint3D64d  M2,
     return CV_NO_ERR;
 }
 /*--------------------------------------------------------------------------------------*/
-CvStatus icvComputeCoeffForStereoV3( double quad1[4][2],
+int icvComputeCoeffForStereoV3( double quad1[4][2],
                                 double quad2[4][2],
                                 int    numScanlines,
                                 CvMatr64d    camMatr1,
@@ -244,7 +246,7 @@ CvStatus icvComputeCoeffForStereoV3( double quad1[4][2],
     return CV_NO_ERR;    
 }
 /*--------------------------------------------------------------------------------------*/
-CvStatus icvComputeCoeffForStereoNew(   double quad1[4][2],
+int icvComputeCoeffForStereoNew(   double quad1[4][2],
                                         double quad2[4][2],
                                         int    numScanlines,
                                         CvMatr32f    camMatr1,
@@ -269,7 +271,7 @@ CvStatus icvComputeCoeffForStereoNew(   double quad1[4][2],
     icvCvt_32f_64d(camMatr2,camMatr2_64d,9);
 
     icvCvt_32f_64d(rotMatr1,rotMatr1_64d,9);
-    icvCvt_32f_64d(transVect1,transVect1_64d,9);
+    icvCvt_32f_64d(transVect1,transVect1_64d,3);
 
     rotMatr2_64d[0] = 1;
     rotMatr2_64d[1] = 0;
@@ -285,7 +287,7 @@ CvStatus icvComputeCoeffForStereoNew(   double quad1[4][2],
     transVect2_64d[1] = 0;
     transVect2_64d[2] = 0;
 
-    CvStatus status = icvComputeCoeffForStereoV3( quad1,
+    int status = icvComputeCoeffForStereoV3( quad1,
                                                 quad2,
                                                 numScanlines,
                                                 camMatr1_64d,
@@ -302,7 +304,7 @@ CvStatus icvComputeCoeffForStereoNew(   double quad1[4][2],
 
 }
 /*--------------------------------------------------------------------------------------*/
-CvStatus icvComputeCoeffForStereo(  CvStereoCamera* stereoCamera)
+int icvComputeCoeffForStereo(  CvStereoCamera* stereoCamera)
 {
     double quad1[4][2];
     double quad2[4][2];
@@ -332,7 +334,7 @@ CvStatus icvComputeCoeffForStereo(  CvStereoCamera* stereoCamera)
 
 
 /*--------------------------------------------------------------------------------------*/
-CvStatus icvComCoeffForLine(   CvPoint2D64d point1,
+int icvComCoeffForLine(   CvPoint2D64d point1,
                             CvPoint2D64d point2,
                             CvPoint2D64d point3,
                             CvPoint2D64d point4,
@@ -488,7 +490,7 @@ CvStatus icvComCoeffForLine(   CvPoint2D64d point1,
 
 /*--------------------------------------------------------------------------------------*/
 
-CvStatus icvGetDirectionForPoint(  CvPoint2D64d point,
+int icvGetDirectionForPoint(  CvPoint2D64d point,
                                 CvMatr64d camMatr,
                                 CvPoint3D64d* direct)
 {
@@ -517,7 +519,7 @@ CvStatus icvGetDirectionForPoint(  CvPoint2D64d point,
 
 /*--------------------------------------------------------------------------------------*/
 
-CvStatus icvGetCrossLines(CvPoint3D64d point11,CvPoint3D64d point12,
+int icvGetCrossLines(CvPoint3D64d point11,CvPoint3D64d point12,
                        CvPoint3D64d point21,CvPoint3D64d point22,
                        CvPoint3D64d* midPoint)
 {
@@ -591,7 +593,7 @@ CvStatus icvGetCrossLines(CvPoint3D64d point11,CvPoint3D64d point12,
 
 /*--------------------------------------------------------------------------------------*/
 
-CvStatus icvComputeStereoLineCoeffs(   CvPoint3D64d pointA,
+int icvComputeStereoLineCoeffs(   CvPoint3D64d pointA,
                                     CvPoint3D64d pointB,
                                     CvPoint3D64d pointCam1,
                                     double gamma,
@@ -2140,7 +2142,7 @@ CV_IMPL IplImage* icvCreateIsometricImage( IplImage* src, IplImage* dst,
     return dst;
 };
 
-CvStatus
+int
 icvCvt_32f_64d( float *src, double *dst, int size )
 {
     int t;
@@ -2160,7 +2162,7 @@ icvCvt_32f_64d( float *src, double *dst, int size )
 
 /*======================================================================================*/
 /* Type conversion double -> float */
-CvStatus
+int
 icvCvt_64d_32f( double *src, float *dst, int size )
 {
     int t;
@@ -2702,7 +2704,7 @@ void icvComputeeInfiniteProject2(   CvMatr64d     rotMatr,
 
 /* Select best R and t for given cameras, points, ... */
 /* For both cameras */
-CvStatus icvSelectBestRt(           int           numImages,
+int icvSelectBestRt(           int           numImages,
                                     int*          numPoints,
                                     CvPoint2D32f* imagePoints1,
                                     CvPoint2D32f* imagePoints2,
@@ -3036,7 +3038,7 @@ float icvDefinePointPosition(CvPoint2D32f point1,CvPoint2D32f point2,CvPoint2D32
 }
 
 /* Convert function for stereo warping */
-CvStatus icvConvertWarpCoordinates(double coeffs[3][3],
+int icvConvertWarpCoordinates(double coeffs[3][3],
                                 CvPoint2D32f* cameraPoint,
                                 CvPoint2D32f* warpPoint,
                                 int direction)
@@ -3075,8 +3077,8 @@ CvStatus icvConvertWarpCoordinates(double coeffs[3][3],
 }
 
 /* Compute stereo params using some camera params */
-/* by Valery Mosyagin. CvStatus ComputeRestStereoParams(StereoParams *stereoparams) */
-CvStatus icvComputeRestStereoParams(CvStereoCamera *stereoparams)
+/* by Valery Mosyagin. int ComputeRestStereoParams(StereoParams *stereoparams) */
+int icvComputeRestStereoParams(CvStereoCamera *stereoparams)
 {
 
 
@@ -3162,7 +3164,7 @@ CvStatus icvComputeRestStereoParams(CvStereoCamera *stereoparams)
 
 /*-------------------------------------------------------------------------------------------*/
 
-CvStatus icvStereoCalibration( int numImages,
+int icvStereoCalibration( int numImages,
                             int* nums,
                             CvSize imageSize,
                             CvPoint2D32f* imagePoints1,
@@ -3549,7 +3551,7 @@ int icvGetCrossLineDirect(CvPoint2D32f p1,CvPoint2D32f p2,float a,float b,float 
     return 1;
 }
 
-CvStatus cvComputeEpipoles( CvMatr32f camMatr1,  CvMatr32f camMatr2,
+int cvComputeEpipoles( CvMatr32f camMatr1,  CvMatr32f camMatr2,
                             CvMatr32f rotMatr1,  CvMatr32f rotMatr2,
                             CvVect32f transVect1,CvVect32f transVect2,
                             CvVect32f epipole1,
@@ -3631,7 +3633,7 @@ CvStatus cvComputeEpipoles( CvMatr32f camMatr1,  CvMatr32f camMatr2,
 
 
 /* Compute epipoles for fundamental matrix */
-CvStatus cvComputeEpipolesFromFundMatrix(CvMatr32f fundMatr,
+int cvComputeEpipolesFromFundMatrix(CvMatr32f fundMatr,
                                          CvPoint3D32f* epipole1,
                                          CvPoint3D32f* epipole2)
 {
@@ -3662,7 +3664,7 @@ CvStatus cvComputeEpipolesFromFundMatrix(CvMatr32f fundMatr,
     return CV_OK;
 }
 
-CvStatus cvConvertEssential2Fundamental( CvMatr32f essMatr,
+int cvConvertEssential2Fundamental( CvMatr32f essMatr,
                                          CvMatr32f fundMatr,
                                          CvMatr32f cameraMatr1,
                                          CvMatr32f cameraMatr2)
@@ -3697,7 +3699,7 @@ CvStatus cvConvertEssential2Fundamental( CvMatr32f essMatr,
 
 /* Compute essential matrix */
 
-CvStatus cvComputeEssentialMatrix(  CvMatr32f rotMatr,
+int cvComputeEssentialMatrix(  CvMatr32f rotMatr,
                                     CvMatr32f transVect,
                                     CvMatr32f essMatr)
 {

@@ -40,12 +40,8 @@
 //M*/
 
 /* Reconstruction of contour skeleton */
-
 #include "_cvaux.h"
 #include <time.h>
-
-#define CV_IMPL CV_EXTERN_C
-
 
 #define NEXT_SEQ(seq,seq_first) ((seq) == (seq_first) ? seq->v_next : seq->h_next)
 #define SIGN(x) ( x<0 ? -1:( x>0 ? 1:0 ) )
@@ -189,7 +185,7 @@ typedef CvDirection* pCvDirection;
 //    Returns: 1, if Voronoi Diagram was succesfully computed 
 //             0, if some error occures
 //F*/
-OPENCVAPI int  _cvLee(CvSeq* ContourSeq,
+static int  _cvLee(CvSeq* ContourSeq,
                       CvVoronoiDiagramInt* pVoronoiDiagramInt,
                       CvMemStorage* VoronoiStorage,
                       CvLeeParameters contour_type,
@@ -214,7 +210,7 @@ OPENCVAPI int  _cvLee(CvSeq* ContourSeq,
 //     Return: 1, if sites were succesfully constructed 
 //             0, if some error occures
 //F*/
-OPENCVAPI int _cvConstuctSites(CvSeq* ContourSeq,
+static int _cvConstuctSites(CvSeq* ContourSeq,
                             CvVoronoiDiagramInt* pVoronoiDiagram,
                             CvLeeParameters contour_type,
                             int contour_orientation);
@@ -230,7 +226,7 @@ OPENCVAPI int _cvConstuctSites(CvSeq* ContourSeq,
 //     Return: 1, if chains were succesfully constructed 
 //             0, if some error occures
 //F*/
-OPENCVAPI int _cvConstructChains(CvVoronoiDiagramInt* pVoronoiDiagram);
+static int _cvConstructChains(CvVoronoiDiagramInt* pVoronoiDiagram);
 
 /*F///////////////////////////////////////////////////////////////////////////////////////
 //    Author:  Andrey Sobolev
@@ -243,7 +239,7 @@ OPENCVAPI int _cvConstructChains(CvVoronoiDiagramInt* pVoronoiDiagram);
 //    Returns: 1, if skeleton was succesfully computed 
 //             0, if some error occures
 //F*/
-OPENCVAPI int _cvConstructSkeleton(CvVoronoiDiagramInt* pVoronoiDiagram);
+static int _cvConstructSkeleton(CvVoronoiDiagramInt* pVoronoiDiagram);
 
 /*F///////////////////////////////////////////////////////////////////////////////////////
 //    Author:  Andrey Sobolev
@@ -255,7 +251,7 @@ OPENCVAPI int _cvConstructSkeleton(CvVoronoiDiagramInt* pVoronoiDiagram);
 //                       description of Voronoi Diagram.
 //    Returns: 
 //F*/
-OPENCVAPI void _cvConstructSiteTree(CvVoronoiDiagramInt* pVoronoiDiagram);
+static void _cvConstructSiteTree(CvVoronoiDiagramInt* pVoronoiDiagram);
 
 /*F///////////////////////////////////////////////////////////////////////////////////////
 //    Author:   Andrey Sobolev
@@ -271,7 +267,7 @@ OPENCVAPI void _cvConstructSiteTree(CvVoronoiDiagramInt* pVoronoiDiagram);
 //                           if group2<>0 then storages from second group released
 //    Return    :
 //F*/
-OPENCVAPI void _cvReleaseVoronoiStorage(CvVoronoiStorageInt* pVoronoiStorage, int group1, int group2);
+static void _cvReleaseVoronoiStorage(CvVoronoiStorageInt* pVoronoiStorage, int group1, int group2);
 
 /*F///////////////////////////////////////////////////////////////////////////////////////
 //  Author:  Andrey Sobolev
@@ -291,11 +287,11 @@ OPENCVAPI void _cvReleaseVoronoiStorage(CvVoronoiStorageInt* pVoronoiStorage, in
 //             0, if some error occures
 //F*/
 /*
-OPENCVAPI int _cvConvert(CvVoronoiDiagram2D* VoronoiDiagram, 
+static int _cvConvert(CvVoronoiDiagram2D* VoronoiDiagram, 
                       CvMemStorage* VoronoiStorage,
                       int change_orientation);
 */
-OPENCVAPI int _cvConvert(CvVoronoiDiagram2D* VoronoiDiagram,
+static int _cvConvert(CvVoronoiDiagram2D* VoronoiDiagram,
                        CvVoronoiDiagramInt VoronoiDiagramInt,
                        CvSet* &NewSiteSeqPrev,
                        CvSeqWriter &NodeWriter,
@@ -319,10 +315,10 @@ OPENCVAPI int _cvConvert(CvVoronoiDiagram2D* VoronoiDiagram,
 //             0, if some error occures
 //F*/
 /*
-OPENCVAPI int _cvConvertSameOrientation(CvVoronoiDiagram2D* VoronoiDiagram, 
+static int _cvConvertSameOrientation(CvVoronoiDiagram2D* VoronoiDiagram, 
                                       CvMemStorage* VoronoiStorage);
 */
-OPENCVAPI int _cvConvertSameOrientation(CvVoronoiDiagram2D* VoronoiDiagram,
+static int _cvConvertSameOrientation(CvVoronoiDiagram2D* VoronoiDiagram,
                        CvVoronoiDiagramInt VoronoiDiagramInt,
                        CvSet* &NewSiteSeqPrev,
                        CvSeqWriter &NodeWriter,
@@ -345,10 +341,10 @@ OPENCVAPI int _cvConvertSameOrientation(CvVoronoiDiagram2D* VoronoiDiagram,
 //             0, if some error occures
 //F*/
 /*
-OPENCVAPI int _cvConvertChangeOrientation(CvVoronoiDiagram2D* VoronoiDiagram, 
+static int _cvConvertChangeOrientation(CvVoronoiDiagram2D* VoronoiDiagram, 
                                       CvMemStorage* VoronoiStorage);
                                       */
-OPENCVAPI int _cvConvertChangeOrientation(CvVoronoiDiagram2D* VoronoiDiagram,
+static int _cvConvertChangeOrientation(CvVoronoiDiagram2D* VoronoiDiagram,
                        CvVoronoiDiagramInt VoronoiDiagramInt,
                        CvSet* &NewSiteSeqPrev,
                        CvSeqWriter &NodeWriter,
@@ -409,7 +405,7 @@ int _cvConstructIntSites(CvVoronoiDiagramInt* pVoronoiDiagram,
     Return: 1, if chains were succesfully constructed 
             0, if some error occures
     --------------------------------------------------------------------------*/
-OPENCVAPI int _cvConstructExtChains(CvVoronoiDiagramInt* pVoronoiDiagram);
+static int _cvConstructExtChains(CvVoronoiDiagramInt* pVoronoiDiagram);
 
 /*--------------------------------------------------------------------------
     Author      : Andrey Sobolev
@@ -423,7 +419,7 @@ OPENCVAPI int _cvConstructExtChains(CvVoronoiDiagramInt* pVoronoiDiagram);
 
       Return    : 
     --------------------------------------------------------------------------*/
-OPENCVAPI void _cvConstructIntChains(CvVoronoiDiagramInt* pVoronoiDiagram,
+static void _cvConstructIntChains(CvVoronoiDiagramInt* pVoronoiDiagram,
                                   CvSeq* CurrChainSeq,
                                   CvSeq* CurrSiteSeq,
                                   pCvVoronoiSite pTopSite);
@@ -438,7 +434,7 @@ OPENCVAPI void _cvConstructIntChains(CvVoronoiDiagramInt* pVoronoiDiagram,
 
      Return : 
     --------------------------------------------------------------------------*/
-OPENCVAPI void _cvConstructEdges(pCvVoronoiSite pSite,CvVoronoiDiagramInt* pVoronoiDiagram);
+static void _cvConstructEdges(pCvVoronoiSite pSite,CvVoronoiDiagramInt* pVoronoiDiagram);
 
 /*--------------------------------------------------------------------------
     Author      : Andrey Sobolev
@@ -452,7 +448,7 @@ OPENCVAPI void _cvConstructEdges(pCvVoronoiSite pSite,CvVoronoiDiagramInt* pVoro
      shift: in, the value of maximal shift.
      Return : 
     --------------------------------------------------------------------------*/
-OPENCVAPI void _cvRandomModification(CvVoronoiDiagramInt* pVoronoiDiagram, int begin, int end, float shift);
+static void _cvRandomModification(CvVoronoiDiagramInt* pVoronoiDiagram, int begin, int end, float shift);
 
 /*--------------------------------------------------------------------------
     Author      : Andrey Sobolev
@@ -463,7 +459,7 @@ OPENCVAPI void _cvRandomModification(CvVoronoiDiagramInt* pVoronoiDiagram, int b
      Return     : 1, if VD was constructed succesfully
                   0, if some error occure
     --------------------------------------------------------------------------*/
-OPENCVAPI int _cvConstructExtVD(CvVoronoiDiagramInt* pVoronoiDiagram);
+static int _cvConstructExtVD(CvVoronoiDiagramInt* pVoronoiDiagram);
 
 /*--------------------------------------------------------------------------
     Author      : Andrey Sobolev
@@ -473,7 +469,7 @@ OPENCVAPI int _cvConstructExtVD(CvVoronoiDiagramInt* pVoronoiDiagram);
                         description of Voronoi Diagram
      Return     : 
     --------------------------------------------------------------------------*/
-OPENCVAPI void _cvConstructIntVD(CvVoronoiDiagramInt* pVoronoiDiagram);
+static void _cvConstructIntVD(CvVoronoiDiagramInt* pVoronoiDiagram);
 
 /*--------------------------------------------------------------------------
     Author      : Andrey Sobolev
@@ -486,7 +482,7 @@ OPENCVAPI void _cvConstructIntVD(CvVoronoiDiagramInt* pVoronoiDiagram);
      Return     : 1, if joining was succesful
                   0, if some error occure
     --------------------------------------------------------------------------*/
-OPENCVAPI int _cvJoinChains(pCvVoronoiChain pChain1, 
+static int _cvJoinChains(pCvVoronoiChain pChain1, 
                          pCvVoronoiChain pChain2,
                          CvVoronoiDiagramInt* pVoronoiDiagram);
 
@@ -499,7 +495,7 @@ OPENCVAPI int _cvJoinChains(pCvVoronoiChain pChain1,
                          description of Voronoi Diagram
      Return     : 
     --------------------------------------------------------------------------*/
-OPENCVAPI void _cvFindNearestSite(CvVoronoiDiagramInt* pVoronoiDiagram);
+static void _cvFindNearestSite(CvVoronoiDiagramInt* pVoronoiDiagram);
 
 /*--------------------------------------------------------------------------
     Author      : Andrey Sobolev
@@ -514,7 +510,7 @@ OPENCVAPI void _cvFindNearestSite(CvVoronoiDiagramInt* pVoronoiDiagram);
      Return     : 1, if the search was succesful
                   0, if some error occure
     --------------------------------------------------------------------------*/
-OPENCVAPI int _cvFindOppositSiteCW(pCvVoronoiHole pHole, CvVoronoiDiagramInt* pVoronoiDiagram);
+static int _cvFindOppositSiteCW(pCvVoronoiHole pHole, CvVoronoiDiagramInt* pVoronoiDiagram);
 
 /*--------------------------------------------------------------------------
     Author      : Andrey Sobolev
@@ -529,7 +525,7 @@ OPENCVAPI int _cvFindOppositSiteCW(pCvVoronoiHole pHole, CvVoronoiDiagramInt* pV
      Return     : 1, if the search was succesful
                   0, if some error occure
     --------------------------------------------------------------------------*/
-OPENCVAPI int _cvFindOppositSiteCCW(pCvVoronoiHole pHole,CvVoronoiDiagramInt* pVoronoiDiagram);
+static int _cvFindOppositSiteCCW(pCvVoronoiHole pHole,CvVoronoiDiagramInt* pVoronoiDiagram);
 
 /*--------------------------------------------------------------------------
     Author      : Andrey Sobolev
@@ -542,7 +538,7 @@ pVoronoiDiagram : in, pointer to struct, which contains the
      Return     : 1, if merging was succesful
                   0, if some error occure
     --------------------------------------------------------------------------*/
-OPENCVAPI int _cvMergeVD(pCvVoronoiHole pHole,CvVoronoiDiagramInt* pVoronoiDiagram);
+static int _cvMergeVD(pCvVoronoiHole pHole,CvVoronoiDiagramInt* pVoronoiDiagram);
 
 
 /*////////////////////////////////////////////////////////////////////////////////////////
@@ -607,7 +603,7 @@ void _cvCalcEdge(pCvVoronoiNode pNode,
      pEdge      : out, bisector
      Return     : 
     --------------------------------------------------------------------------*/
-OPENCVAPI CV_INLINE
+CV_INLINE
 void _cvCalcEdgeLL(pCvDirection pDirection1,
                   pCvDirection pDirection2,
                   pCvVoronoiEdge pEdge,
@@ -623,7 +619,7 @@ void _cvCalcEdgeLL(pCvDirection pDirection1,
      pEdge      : out, bisector
      Return     : 
     --------------------------------------------------------------------------*/
-OPENCVAPI CV_INLINE
+CV_INLINE
 void _cvCalcEdgePP(pCvPointFloat pPoint1,
                   pCvPointFloat pPoint2,
                   pCvVoronoiEdge pEdge,
@@ -642,7 +638,7 @@ void _cvCalcEdgePP(pCvPointFloat pPoint1,
      pEdge      : out, bisector
      Return     : 
     --------------------------------------------------------------------------*/
-OPENCVAPI CV_INLINE
+CV_INLINE
 void _cvCalcEdgePL(pCvVoronoiNode pFocus,
                   pCvVoronoiSite pDirectrice,
                   pCvVoronoiEdge pEdge,
@@ -661,7 +657,7 @@ void _cvCalcEdgePL(pCvVoronoiNode pFocus,
      pEdge      : out, bisector
      Return     : 
     --------------------------------------------------------------------------*/
-OPENCVAPI CV_INLINE
+CV_INLINE
 void _cvCalcEdgeLP(pCvVoronoiSite pDirectrice,
                   pCvVoronoiNode pFocus,
                   pCvVoronoiEdge pEdge,
@@ -686,7 +682,7 @@ void _cvCalcEdgeLP(pCvVoronoiSite pDirectrice,
       Return    : distance between pPoint and marked point on pEdge1 or
                 : -1, if edges have no intersections
     --------------------------------------------------------------------------*/
-OPENCVAPI
+static
 float _cvCalcEdgeIntersection(pCvVoronoiEdge pEdge1,
                               pCvVoronoiEdge pEdge2,
                               CvPointFloat* pPoint,
@@ -708,7 +704,7 @@ float _cvCalcEdgeIntersection(pCvVoronoiEdge pEdge1,
      Return : distance between pPoint and marked point on pEdge1 or
                 : -1, if edges have no intersections
     --------------------------------------------------------------------------*/
-OPENCVAPI
+static
 float _cvLine_LineIntersection(pCvVoronoiEdge pEdge1,
                                 pCvVoronoiEdge pEdge2,
                                 pCvPointFloat  pPoint,
@@ -730,7 +726,7 @@ float _cvLine_LineIntersection(pCvVoronoiEdge pEdge1,
       Return    : distance between pPoint and marked point on pEdge1 or
                 : -1, if edges have no intersections
     --------------------------------------------------------------------------*/
-OPENCVAPI
+static
 float _cvLine_ParIntersection(pCvVoronoiEdge pEdge1,
                                 pCvVoronoiEdge pEdge2,
                                 pCvPointFloat  pPoint,
@@ -752,7 +748,7 @@ float _cvLine_ParIntersection(pCvVoronoiEdge pEdge1,
       Return    : distance between pPoint and marked point on pEdge1 or
                 : -1, if edges have no intersections
     --------------------------------------------------------------------------*/
-OPENCVAPI
+static
 float _cvLine_CloseParIntersection(pCvVoronoiEdge pEdge1,
                                 pCvVoronoiEdge pEdge2,
                                 pCvPointFloat  pPoint,
@@ -774,7 +770,7 @@ float _cvLine_CloseParIntersection(pCvVoronoiEdge pEdge1,
       Return    : distance between pPoint and marked point on pEdge1 or
                 : -1, if edges have no intersections
     --------------------------------------------------------------------------*/
-OPENCVAPI
+static
 float _cvLine_OpenParIntersection(pCvVoronoiEdge pEdge1,
                                 pCvVoronoiEdge pEdge2,
                                 pCvPointFloat  pPoint,
@@ -796,7 +792,7 @@ float _cvLine_OpenParIntersection(pCvVoronoiEdge pEdge1,
       Return    : distance between pPoint and marked point on pEdge1 or
                 : -1, if edges have no intersections
     --------------------------------------------------------------------------*/
-OPENCVAPI
+static
 float _cvPar_LineIntersection(pCvVoronoiEdge pEdge1,
                                 pCvVoronoiEdge pEdge2,
                                 pCvPointFloat  pPoint,
@@ -817,7 +813,7 @@ float _cvPar_LineIntersection(pCvVoronoiEdge pEdge1,
       Return    : distance between pPoint and marked point on pEdge1 or
                 : -1, if edges have no intersections
     --------------------------------------------------------------------------*/
-OPENCVAPI
+static
 float _cvPar_OpenLineIntersection(pCvVoronoiEdge pEdge1,
                                 pCvVoronoiEdge pEdge2,
                                 pCvPointFloat  pPoint,
@@ -839,7 +835,7 @@ float _cvPar_OpenLineIntersection(pCvVoronoiEdge pEdge1,
       Return    : distance between pPoint and marked point on pEdge1 or
                 : -1, if edges have no intersections
     --------------------------------------------------------------------------*/
-OPENCVAPI
+static
 float _cvPar_CloseLineIntersection(pCvVoronoiEdge pEdge1,
                                     pCvVoronoiEdge pEdge2,
                                     pCvPointFloat  pPoint,
@@ -861,7 +857,7 @@ float _cvPar_CloseLineIntersection(pCvVoronoiEdge pEdge1,
       Return    : distance between pPoint and marked point on pEdge1 or
                 : -1, if edges have no intersections
     --------------------------------------------------------------------------*/
-OPENCVAPI
+static
 float _cvPar_ParIntersection(pCvVoronoiEdge pEdge1,
                                 pCvVoronoiEdge pEdge2,
                                 pCvPointFloat  pPoint,
@@ -884,7 +880,7 @@ float _cvPar_ParIntersection(pCvVoronoiEdge pEdge1,
       Return    : distance between pPoint and marked point on pEdge1 or
                 : -1, if edges have no intersections
     --------------------------------------------------------------------------*/
-OPENCVAPI
+static
 float _cvPar_OpenParIntersection(pCvVoronoiEdge pEdge1,
                             pCvVoronoiEdge pEdge2,
                             pCvPointFloat  pPoint,
@@ -906,7 +902,7 @@ float _cvPar_OpenParIntersection(pCvVoronoiEdge pEdge1,
       Return    : distance between pPoint and marked point on pEdge1 or
                 : -1, if edges have no intersections
     --------------------------------------------------------------------------*/
-OPENCVAPI
+static
 float _cvPar_CloseParIntersection(pCvVoronoiEdge pEdge1,
                             pCvVoronoiEdge pEdge2,
                             pCvPointFloat  pPoint,
@@ -924,7 +920,7 @@ float _cvPar_CloseParIntersection(pCvVoronoiEdge pEdge1,
         pEdge2  : out
      Return     : 
     --------------------------------------------------------------------------*/
-OPENCVAPI CV_INLINE
+CV_INLINE
 void _cvMakeTwinEdge(pCvVoronoiEdge pEdge2,
                      pCvVoronoiEdge pEdge1);
 
@@ -937,7 +933,7 @@ void _cvMakeTwinEdge(pCvVoronoiEdge pEdge2,
         pSite_left : in&out
      Return     : 
     --------------------------------------------------------------------------*/
-OPENCVAPI CV_INLINE
+CV_INLINE
 void _cvStickEdgeLeftBegin(pCvVoronoiEdge pEdge, 
                           pCvVoronoiEdge pEdge_left_prev,
                           pCvVoronoiSite pSite_left);
@@ -951,7 +947,7 @@ void _cvStickEdgeLeftBegin(pCvVoronoiEdge pEdge,
         pSite_right : in&out
      Return     : 
     --------------------------------------------------------------------------*/
-OPENCVAPI CV_INLINE
+CV_INLINE
 void _cvStickEdgeRightBegin(pCvVoronoiEdge pEdge, 
                           pCvVoronoiEdge pEdge_right_next,
                           pCvVoronoiSite pSite_right);
@@ -965,7 +961,7 @@ void _cvStickEdgeRightBegin(pCvVoronoiEdge pEdge,
         pSite_left : in&out
      Return     : 
     --------------------------------------------------------------------------*/
-OPENCVAPI CV_INLINE
+CV_INLINE
 void _cvStickEdgeLeftEnd(pCvVoronoiEdge pEdge, 
                         pCvVoronoiEdge pEdge_left_next,
                         pCvVoronoiSite pSite_left);
@@ -979,7 +975,7 @@ void _cvStickEdgeLeftEnd(pCvVoronoiEdge pEdge,
         pSite_right : in&out
      Return     : 
     --------------------------------------------------------------------------*/
-OPENCVAPI CV_INLINE
+CV_INLINE
 void _cvStickEdgeRightEnd(pCvVoronoiEdge pEdge, 
                          pCvVoronoiEdge pEdge_right_prev,
                          pCvVoronoiSite pSite_right);
@@ -992,7 +988,7 @@ void _cvStickEdgeRightEnd(pCvVoronoiEdge pEdge,
         pEdge_left : in
      Return     : 
     --------------------------------------------------------------------------*/
-OPENCVAPI CV_INLINE
+CV_INLINE
 void _cvTwinNULLLeft(pCvVoronoiEdge pEdge_left_cur,
                     pCvVoronoiEdge pEdge_left);
 
@@ -1004,7 +1000,7 @@ void _cvTwinNULLLeft(pCvVoronoiEdge pEdge_left_cur,
         pEdge_right : in
      Return     : 
     --------------------------------------------------------------------------*/
-OPENCVAPI CV_INLINE
+CV_INLINE
 void _cvTwinNULLRight(pCvVoronoiEdge pEdge_right_cur,
                      pCvVoronoiEdge pEdge_right);
 
@@ -1030,7 +1026,7 @@ void _cvInitVoronoiNode(pCvVoronoiNode pNode,
          pNode1,pNode2,pPrev_site : in 
      Return     : 
     --------------------------------------------------------------------------*/
-OPENCVAPI CV_INLINE
+CV_INLINE
 void _cvInitVoronoiSite(pCvVoronoiSite pSite,
                        pCvVoronoiNode pNode1,
                        pCvVoronoiNode pNode2,
@@ -1071,7 +1067,7 @@ pHoleHierarchy  : in, pointer to the structur
           pHole : in, element 
      Return     : pointer to the element in the sequence
     --------------------------------------------------------------------------*/
-OPENCVAPI CV_INLINE
+CV_INLINE
 void _cvSeqPushInOrder(CvVoronoiDiagramInt* pVoronoiDiagram, pCvVoronoiHole pHole);
 
 /*--------------------------------------------------------------------------
@@ -1084,7 +1080,7 @@ void _cvSeqPushInOrder(CvVoronoiDiagramInt* pVoronoiDiagram, pCvVoronoiHole pHol
         EdgeSeq : in
      Return     : one of parts
     --------------------------------------------------------------------------*/
-OPENCVAPI CV_INLINE
+CV_INLINE
 pCvVoronoiEdge _cvDivideRightEdge(pCvVoronoiEdge pEdge,
                                  pCvVoronoiNode pNode, 
                                  CvSeq* EdgeSeq);
@@ -1099,7 +1095,7 @@ pCvVoronoiEdge _cvDivideRightEdge(pCvVoronoiEdge pEdge,
         EdgeSeq : in
      Return     : one of parts
     --------------------------------------------------------------------------*/
-OPENCVAPI CV_INLINE
+CV_INLINE
 pCvVoronoiEdge _cvDivideLeftEdge(pCvVoronoiEdge pEdge,
                                 pCvVoronoiNode pNode, 
                                 CvSeq* EdgeSeq);
@@ -1189,7 +1185,7 @@ void _cvCalcVectorImage(pCvDirection pImgVector,pCvDirection pVector,T* A);
         pSite   : in, site
       Return    : distance
     --------------------------------------------------------------------------*/
-OPENCVAPI CV_INLINE
+CV_INLINE
 float _cvCalcDist(pCvPointFloat pPoint, pCvVoronoiSite pSite);
 
 /*--------------------------------------------------------------------------
@@ -1199,7 +1195,7 @@ float _cvCalcDist(pCvPointFloat pPoint, pCvVoronoiSite pSite);
     pPoint1,pPoint2 : in, two points
       Return    : distance
     --------------------------------------------------------------------------*/
-OPENCVAPI CV_INLINE
+CV_INLINE
 float _cvPPDist(pCvPointFloat pPoint1,pCvPointFloat pPoint2);
 
 /*--------------------------------------------------------------------------
@@ -1211,7 +1207,7 @@ float _cvPPDist(pCvPointFloat pPoint1,pCvPointFloat pPoint2);
     pPoint1,pPoint2 : in, segment [pPoint1,pPoint2]
        Return   : distance
     --------------------------------------------------------------------------*/
-OPENCVAPI CV_INLINE
+CV_INLINE
 float _cvPLDist(pCvPointFloat pPoint,pCvPointFloat pPoint1,pCvDirection pDirection);
 
 /*--------------------------------------------------------------------------
@@ -1275,14 +1271,17 @@ CV_IMPL int   cvVoronoiDiagramFromContour(CvSeq* ContourSeq,
                                            int contour_orientation,
                                            int attempt_number)
 {
-    CV_FUNCNAME( "CvVoronoiDiagramFromContour" );
-    __BEGIN__
+    CV_FUNCNAME( "cvVoronoiDiagramFromContour" );
+
+    __BEGIN__;
 
     CvSet* SiteSeq = NULL;
     CvSeq* CurContourSeq = NULL;
     CvVoronoiDiagramInt VoronoiDiagramInt;
     CvSeqWriter NodeWriter, EdgeWriter;
     CvMemStorage* storage;
+
+    memset( &VoronoiDiagramInt, 0, sizeof(VoronoiDiagramInt) );
 
     if( !ContourSeq )
         CV_ERROR( CV_StsBadArg,"Contour sequence is empty" );
@@ -1322,8 +1321,8 @@ CV_IMPL int   cvVoronoiDiagramFromContour(CvSeq* ContourSeq,
         if(SiteSeq != NULL)
             return 1;
 
-    __CLEANUP__
-    __END__
+    
+    __END__;
     return 0;
 }//end of cvVoronoiDiagramFromContour 
 
@@ -1337,13 +1336,13 @@ CV_IMPL int   cvVoronoiDiagramFromImage(IplImage* pImage,
     CV_FUNCNAME( "cvVoronoiDiagramFromContour" );
     int RESULT = 0;
     
-    __BEGIN__
+    __BEGIN__;
 
     IplImage* pWorkImage = NULL;
     CvSize image_size;
     int i, multiplicator = 3;
     
-    CvChainApproxMethod approx_method;
+    int approx_method;
     CvMemStorage* ApproxContourStorage = NULL;
     CvSeq* ApproxContourSeq = NULL;
 
@@ -1437,16 +1436,16 @@ CV_IMPL int   cvVoronoiDiagramFromImage(IplImage* pImage,
 
     cvReleaseMemStorage(&ApproxContourStorage);
     
-    __CLEANUP__
-    __END__
+    
+    __END__;
     return RESULT;                                         
 }//end of cvVoronoiDiagramFromImage
 
 CV_IMPL void cvReleaseVoronoiStorage(CvVoronoiDiagram2D* VoronoiDiagram,
                                      CvMemStorage** pVoronoiStorage)
 {
-    CV_FUNCNAME( "cvReleaseVoronoiStorage" );
-    __BEGIN__
+    /*CV_FUNCNAME( "cvReleaseVoronoiStorage" );*/
+    __BEGIN__;
     
     CvSeq* Seq;
 
@@ -1462,11 +1461,10 @@ CV_IMPL void cvReleaseVoronoiStorage(CvVoronoiDiagram2D* VoronoiDiagram,
     if(*pVoronoiStorage)
         cvReleaseMemStorage(pVoronoiStorage);
 
-    __CLEANUP__
-    __END__
+    __END__;
 }//end of cvReleaseVoronoiStorage
 
-CV_IMPL int  _cvLee(CvSeq* ContourSeq,
+static int  _cvLee(CvSeq* ContourSeq,
                     CvVoronoiDiagramInt* pVoronoiDiagramInt,
                     CvMemStorage* VoronoiStorage,
                     CvLeeParameters contour_type,
@@ -1532,7 +1530,7 @@ FAULT:
     return 0;
 }// end of _cvLee
 
-CV_IMPL int _cvConstuctSites(CvSeq* ContourSeq,
+static int _cvConstuctSites(CvSeq* ContourSeq,
                             CvVoronoiDiagramInt* pVoronoiDiagram,
                             CvLeeParameters contour_type,
                             int contour_orientation)
@@ -1588,7 +1586,7 @@ CV_IMPL int _cvConstuctSites(CvSeq* ContourSeq,
     return 1;
 }//end of _cvConstuctSites
 
-CV_IMPL int _cvConstructChains(CvVoronoiDiagramInt* pVoronoiDiagram)
+static int _cvConstructChains(CvVoronoiDiagramInt* pVoronoiDiagram)
 {
     if(!_cvConstructExtChains(pVoronoiDiagram))
         return 0;
@@ -1606,7 +1604,7 @@ CV_IMPL int _cvConstructChains(CvVoronoiDiagramInt* pVoronoiDiagram)
     return 1;
 }//end of _cvConstructChains
 
-CV_IMPL int _cvConstructSkeleton(CvVoronoiDiagramInt* pVoronoiDiagram)
+static int _cvConstructSkeleton(CvVoronoiDiagramInt* pVoronoiDiagram)
 {
     if(!_cvConstructExtVD(pVoronoiDiagram))
         return 0;
@@ -1645,7 +1643,7 @@ CV_IMPL int _cvConstructSkeleton(CvVoronoiDiagramInt* pVoronoiDiagram)
     return 1;
 }//end of _cvConstructSkeleton
 
-CV_IMPL void _cvConstructSiteTree(CvVoronoiDiagramInt* pVoronoiDiagram)
+static void _cvConstructSiteTree(CvVoronoiDiagramInt* pVoronoiDiagram)
 {
     CvSeq* CurSeq = pVoronoiDiagram->SiteSeq;
     for(pCvVoronoiHole pHole = pVoronoiDiagram->top_hole;\
@@ -1669,7 +1667,7 @@ CV_IMPL void _cvConstructSiteTree(CvVoronoiDiagramInt* pVoronoiDiagram)
     CurSeq->h_next = NULL;
 }//end of _cvConstructSiteTree
 
-CV_IMPL void _cvRandomModification(CvVoronoiDiagramInt* pVoronoiDiagram, int begin, int end, float shift)
+static void _cvRandomModification(CvVoronoiDiagramInt* pVoronoiDiagram, int begin, int end, float shift)
 {
     CvSeqReader Reader;
     pCvVoronoiNode pNode;
@@ -1694,7 +1692,7 @@ CV_IMPL void _cvRandomModification(CvVoronoiDiagramInt* pVoronoiDiagram, int beg
         
 }//end of _cvRandomModification
 
-CV_IMPL void _cvReleaseVoronoiStorage(CvVoronoiStorageInt* pVoronoiStorage, int group1, int group2)
+static void _cvReleaseVoronoiStorage(CvVoronoiStorageInt* pVoronoiStorage, int group1, int group2)
 {
     //if group1 = 1 then SiteSeq, NodeSeq, EdgeSeq released
     //if group2 = 1 then DirectionSeq, ParabolaSeq, ChainSeq, HoleSeq released
@@ -1720,7 +1718,7 @@ CV_IMPL void _cvReleaseVoronoiStorage(CvVoronoiStorageInt* pVoronoiStorage, int 
     }
 }// end of _cvReleaseVoronoiStorage
 
-CV_IMPL int _cvConvert(CvVoronoiDiagram2D* VoronoiDiagram,
+static int _cvConvert(CvVoronoiDiagram2D* VoronoiDiagram,
                        CvVoronoiDiagramInt VoronoiDiagramInt,
                        CvSet* &SiteSeq,
                        CvSeqWriter &NodeWriter,
@@ -1736,7 +1734,7 @@ CV_IMPL int _cvConvert(CvVoronoiDiagram2D* VoronoiDiagram,
                                         EdgeWriter,VoronoiStorage);
 }// end of _cvConvert
 
-CV_IMPL int _cvConvertSameOrientation(CvVoronoiDiagram2D* VoronoiDiagram,
+static int _cvConvertSameOrientation(CvVoronoiDiagram2D* VoronoiDiagram,
                                       CvVoronoiDiagramInt VoronoiDiagramInt,
                                       CvSet* &NewSiteSeqPrev,
                                       CvSeqWriter &NodeWriter,
@@ -1752,11 +1750,11 @@ CV_IMPL int _cvConvertSameOrientation(CvVoronoiDiagram2D* VoronoiDiagram,
     CvSet *NewSiteSeq = NULL,*CurrNewSiteSeq = NULL, *PrevNewSiteSeq = NULL;;
     CvSeqWriter SiteWriter; 
 
-    CvVoronoiSite2D NewSite = {NULL, NULL, NULL,NULL},NewSite_prev;
+    CvVoronoiSite2D NewSite = {{0,0},{0,0},{0,0}},NewSite_prev;
     CvVoronoiSite2D *pNewSite, *pNewSite_prev = &NewSite_prev;
     pCvVoronoiSite pSite,pFirstSite;
 
-    CvVoronoiEdge2D NewEdge = {NULL, NULL, NULL,NULL,NULL,NULL,NULL,NULL};
+    CvVoronoiEdge2D NewEdge = {{0,0},{0,0},{0,0,0,0}};
     CvVoronoiEdge2D *pNewEdge1, *pNewEdge2;
     pCvVoronoiEdge pEdge;
 
@@ -1784,7 +1782,7 @@ CV_IMPL int _cvConvertSameOrientation(CvVoronoiDiagram2D* VoronoiDiagram,
         }
         PrevNewSiteSeq = CurrNewSiteSeq;
         
-        pSite = pFirstSite = (pCvVoronoiSite)cvGetSeqElem(CurrSiteSeq, 0, NULL);
+        pSite = pFirstSite = (pCvVoronoiSite)cvGetSeqElem(CurrSiteSeq, 0);
         while(pSite->prev_site->node1 == pSite->prev_site->node2)\
             pSite = pSite->next_site;
         pFirstSite = pSite;
@@ -1923,7 +1921,7 @@ CV_IMPL int _cvConvertSameOrientation(CvVoronoiDiagram2D* VoronoiDiagram,
     return 1;
 }//end of _cvConvertSameOrientation
 
-CV_IMPL int _cvConvertChangeOrientation(CvVoronoiDiagram2D* VoronoiDiagram,
+static int _cvConvertChangeOrientation(CvVoronoiDiagram2D* VoronoiDiagram,
                                         CvVoronoiDiagramInt VoronoiDiagramInt,
                                         CvSet* &NewSiteSeqPrev,
                                         CvSeqWriter &NodeWriter,
@@ -1942,11 +1940,11 @@ CV_IMPL int _cvConvertChangeOrientation(CvVoronoiDiagram2D* VoronoiDiagram,
     CvSet *NewSiteSeq = NULL,*CurrNewSiteSeq = NULL, *PrevNewSiteSeq = NULL;;
     CvSeqWriter SiteWriter; 
 
-    CvVoronoiSite2D NewSite = {NULL, NULL, NULL,NULL},NewSite_prev;
+    CvVoronoiSite2D NewSite = {{0,0},{0,0},{0,0}},NewSite_prev;
     CvVoronoiSite2D *pNewSite, *pNewSite_prev = &NewSite_prev;
     pCvVoronoiSite pSite,pFirstSite;
 
-    CvVoronoiEdge2D NewEdge = {NULL, NULL, NULL,NULL,NULL,NULL,NULL,NULL};
+    CvVoronoiEdge2D NewEdge = {{0,0},{0,0},{0,0,0,0}};
     CvVoronoiEdge2D *pNewEdge1, *pNewEdge2;
     pCvVoronoiEdge pEdge;
 
@@ -1974,7 +1972,7 @@ CV_IMPL int _cvConvertChangeOrientation(CvVoronoiDiagram2D* VoronoiDiagram,
         }
         PrevNewSiteSeq = CurrNewSiteSeq;
         
-        pSite = (pCvVoronoiSite)cvGetSeqElem(CurrSiteSeq, 0, NULL);
+        pSite = (pCvVoronoiSite)cvGetSeqElem(CurrSiteSeq, 0);
         while(pSite->next_site->node1 == pSite->next_site->node2)\
             pSite = pSite->next_site;
         pFirstSite = pSite;
@@ -2165,7 +2163,7 @@ int _cvConstructExtSites(CvVoronoiDiagramInt* pVoronoiDiagram,
 
     delta_x_cl = Vertex2.x - Vertex1.x;
     delta_y_cl = Vertex2.y - Vertex1.y;
-    norm_cl = (float)sqrt(delta_x_cl*delta_x_cl + delta_y_cl*delta_y_cl);
+    norm_cl = (float)sqrt((double)delta_x_cl*delta_x_cl + delta_y_cl*delta_y_cl);
 
     for( i = 0;i<ContourSeq->total;i++)
     {
@@ -2186,7 +2184,7 @@ int _cvConstructExtSites(CvVoronoiDiagramInt* pVoronoiDiagram,
 
         delta_x_rc = Vertex3.x - Vertex2.x;
         delta_y_rc = Vertex3.y - Vertex2.y;
-        norm_rc = (float)sqrt(delta_x_rc*delta_x_rc + delta_y_rc*delta_y_rc);
+        norm_rc = (float)sqrt((double)delta_x_rc*delta_x_rc + delta_y_rc*delta_y_rc);
         if(norm_rc==0)
             continue;
     
@@ -2220,7 +2218,7 @@ int _cvConstructExtSites(CvVoronoiDiagramInt* pVoronoiDiagram,
             delta_x_rc = delta_x_cl + delta_x_rc;
             pSite->node2 = pNode2;
         
-            norm_rc = (float)sqrt(delta_y_rc*delta_y_rc + delta_x_rc*delta_x_rc);
+            norm_rc = (float)sqrt((double)delta_y_rc*delta_y_rc + delta_x_rc*delta_x_rc);
         }
         Vertex2=Vertex3;
         delta_y_cl= delta_y_rc;
@@ -2325,7 +2323,7 @@ int _cvConstructIntSites(CvVoronoiDiagramInt* pVoronoiDiagram,
 
     delta_x_cl = Vertex2.x - Vertex1.x;
     delta_y_cl = Vertex2.y - Vertex1.y;
-    norm_cl = (float)sqrt(delta_x_cl*delta_x_cl + delta_y_cl*delta_y_cl);
+    norm_cl = (float)sqrt((double)delta_x_cl*delta_x_cl + delta_y_cl*delta_y_cl);
     for( i = 0;i<CurrContourSeq->total;i++)
     {
         if(orientation == 1)
@@ -2344,7 +2342,7 @@ int _cvConstructIntSites(CvVoronoiDiagramInt* pVoronoiDiagram,
 
         delta_x_rc = Vertex3.x - Vertex2.x;
         delta_y_rc = Vertex3.y - Vertex2.y;
-        norm_rc = (float)sqrt(delta_x_rc*delta_x_rc + delta_y_rc*delta_y_rc);
+        norm_rc = (float)sqrt((double)delta_x_rc*delta_x_rc + delta_y_rc*delta_y_rc);
         if(norm_rc==0)
             continue;
 
@@ -2379,7 +2377,7 @@ int _cvConstructIntSites(CvVoronoiDiagramInt* pVoronoiDiagram,
             Vertex2 = Vertex3;
             delta_y_rc = delta_y_cl + delta_y_rc;
             delta_x_rc = delta_x_cl + delta_x_rc;
-            norm_rc = (float)sqrt(delta_y_rc*delta_y_rc + delta_x_rc*delta_x_rc);
+            norm_rc = (float)sqrt((double)delta_y_rc*delta_y_rc + delta_x_rc*delta_x_rc);
             pSite->node2 = pNode2;
         }
 
@@ -2405,7 +2403,7 @@ int _cvConstructIntSites(CvVoronoiDiagramInt* pVoronoiDiagram,
     return 1;
 }//end of _cvConstructIntSites
 
-CV_IMPL int _cvConstructExtChains(CvVoronoiDiagramInt* pVoronoiDiagram)
+static int _cvConstructExtChains(CvVoronoiDiagramInt* pVoronoiDiagram)
 {
     CvSeq* SiteSeq = pVoronoiDiagram->SiteSeq;
     CvSeq* ChainSeq = pVoronoiDiagram->ChainSeq;
@@ -2415,7 +2413,7 @@ CV_IMPL int _cvConstructExtChains(CvVoronoiDiagramInt* pVoronoiDiagram)
     pCvVoronoiSite pSite, pSite_prev, pSiteFirst,pReflexSite = pVoronoiDiagram->reflex_site;
 
     if(pReflexSite==NULL)
-        pSite = pSiteFirst = (pCvVoronoiSite)cvGetSeqElem(SiteSeq, 0,NULL);
+        pSite = pSiteFirst = (pCvVoronoiSite)cvGetSeqElem(SiteSeq, 0);
     else
     {
         while(pReflexSite->next_site->next_site->node1==
@@ -2452,7 +2450,7 @@ CV_IMPL int _cvConstructExtChains(CvVoronoiDiagramInt* pVoronoiDiagram)
 
     Chain.first_site = pSite_prev;
     pChain = _cvSeqPushFront(ChainSeq,&Chain);
-    pChainFirst = (pCvVoronoiChain)cvGetSeqElem(ChainSeq,ChainSeq->total - 1,NULL);
+    pChainFirst = (pCvVoronoiChain)cvGetSeqElem(ChainSeq,ChainSeq->total - 1);
     pChainFirst->next_chain = pChain;
     if(ChainSeq->total < 3)
         return 0;
@@ -2460,7 +2458,7 @@ CV_IMPL int _cvConstructExtChains(CvVoronoiDiagramInt* pVoronoiDiagram)
         return 1;
 }// end of _cvConstructExtChains
 
-CV_IMPL void _cvConstructIntChains(CvVoronoiDiagramInt* pVoronoiDiagram,
+static void _cvConstructIntChains(CvVoronoiDiagramInt* pVoronoiDiagram,
                                    CvSeq* CurrChainSeq,
                                    CvSeq* CurrSiteSeq,
                                    pCvVoronoiSite pTopSite)
@@ -2507,7 +2505,7 @@ CV_IMPL void _cvConstructIntChains(CvVoronoiDiagramInt* pVoronoiDiagram,
     Chain.first_site = pSite_prev;
     if(pSite == pSiteFirst->prev_site)
     {
-        pChainFirst = (pCvVoronoiChain)cvGetSeqElem(ChainSeq,ChainSeq->total - 1,NULL);
+        pChainFirst = (pCvVoronoiChain)cvGetSeqElem(ChainSeq,ChainSeq->total - 1);
         pChainFirst->last_site = Chain.last_site;
         pChainFirst->next_chain = Chain.next_chain;
         return;
@@ -2515,13 +2513,13 @@ CV_IMPL void _cvConstructIntChains(CvVoronoiDiagramInt* pVoronoiDiagram,
     else
     {
         pChain = _cvSeqPushFront(ChainSeq,&Chain);
-        pChainFirst = (pCvVoronoiChain)cvGetSeqElem(ChainSeq,ChainSeq->total - 1,NULL);
+        pChainFirst = (pCvVoronoiChain)cvGetSeqElem(ChainSeq,ChainSeq->total - 1);
         pChainFirst->next_chain = pChain;
         return;
     }
 }// end of _cvConstructIntChains
 
-CV_IMPL CV_INLINE void _cvConstructEdges(pCvVoronoiSite pSite,CvVoronoiDiagramInt* pVoronoiDiagram)
+CV_INLINE void _cvConstructEdges(pCvVoronoiSite pSite,CvVoronoiDiagramInt* pVoronoiDiagram)
 {
     CvSeq* EdgeSeq = pVoronoiDiagram->EdgeSeq;
     CvSeq* DirectionSeq = pVoronoiDiagram->DirectionSeq;
@@ -2535,7 +2533,7 @@ CV_IMPL CV_INLINE void _cvConstructEdges(pCvVoronoiSite pSite,CvVoronoiDiagramIn
     {
         SiteDirection.x = pSite->node2->node.x - pSite->node1->node.x;
         SiteDirection.y = pSite->node2->node.y - pSite->node1->node.y;
-        site_lengh = (float)sqrt(SiteDirection.x*SiteDirection.x + SiteDirection.y * SiteDirection.y);
+        site_lengh = (float)sqrt((double)SiteDirection.x*SiteDirection.x + SiteDirection.y * SiteDirection.y);
         SiteDirection.x /= site_lengh;
         SiteDirection.y /= site_lengh;
         EdgeDirection.x = -SiteDirection.y;
@@ -2571,13 +2569,13 @@ CV_IMPL CV_INLINE void _cvConstructEdges(pCvVoronoiSite pSite,CvVoronoiDiagramIn
         pEdge1->prev_edge = pEdge2;
 }// end of _cvConstructEdges
 
-CV_IMPL int _cvConstructExtVD(CvVoronoiDiagramInt* pVoronoiDiagram)
+static int _cvConstructExtVD(CvVoronoiDiagramInt* pVoronoiDiagram)
 {
     pCvVoronoiSite pSite_right = 0,pSite_left = 0;
     pCvVoronoiEdge pEdge_left,pEdge_right;
     pCvVoronoiChain pChain1, pChain2;
 
-    pChain1 = (pCvVoronoiChain)cvGetSeqElem(pVoronoiDiagram->ChainSeq,0,NULL);
+    pChain1 = (pCvVoronoiChain)cvGetSeqElem(pVoronoiDiagram->ChainSeq,0);
     do
     {
         pChain2 = pChain1->next_chain;
@@ -2615,7 +2613,7 @@ CV_IMPL int _cvConstructExtVD(CvVoronoiDiagramInt* pVoronoiDiagram)
     return 1;
 }//end of _cvConstructExtVD
 
-CV_IMPL int _cvJoinChains(pCvVoronoiChain pChain1, 
+static int _cvJoinChains(pCvVoronoiChain pChain1, 
                           pCvVoronoiChain pChain2,
                           CvVoronoiDiagramInt* pVoronoiDiagram)
 {
@@ -2930,7 +2928,7 @@ CV_IMPL int _cvJoinChains(pCvVoronoiChain pChain1,
 
 }// end of _cvJoinChains
 
-CV_IMPL void _cvFindNearestSite(CvVoronoiDiagramInt* pVoronoiDiagram)
+static void _cvFindNearestSite(CvVoronoiDiagramInt* pVoronoiDiagram)
 {
     pCvVoronoiHole pCurrHole, pHole = pVoronoiDiagram->top_hole;
     pCvPointFloat pTopPoint,pPoint1,pPoint2;
@@ -2952,7 +2950,7 @@ CV_IMPL void _cvFindNearestSite(CvVoronoiDiagramInt* pVoronoiDiagram)
         {
             if(pCurrHole && pCurrHole->error)
                 continue;
-            pSite = (pCvVoronoiSite)cvGetSeqElem(CurrSeq,0,NULL);
+            pSite = (pCvVoronoiSite)cvGetSeqElem(CurrSeq,0);
             if(CurrSeq->total == 1)
             {
                 distance = _cvCalcDist(pTopPoint, pSite);
@@ -3039,7 +3037,7 @@ CV_IMPL void _cvFindNearestSite(CvVoronoiDiagramInt* pVoronoiDiagram)
     }
 }//end of _cvFindNearestSite
 
-CV_IMPL void _cvConstructIntVD(CvVoronoiDiagramInt* pVoronoiDiagram)
+static void _cvConstructIntVD(CvVoronoiDiagramInt* pVoronoiDiagram)
 {
     pCvVoronoiChain pChain1, pChain2;
     pCvVoronoiHole pHole;
@@ -3051,7 +3049,7 @@ CV_IMPL void _cvConstructIntVD(CvVoronoiDiagramInt* pVoronoiDiagram)
     {
         if(pHole->ChainSeq->total == 0)
             continue;
-        pChain1 = (pCvVoronoiChain)cvGetSeqElem(pHole->ChainSeq,0,NULL);
+        pChain1 = (pCvVoronoiChain)cvGetSeqElem(pHole->ChainSeq,0);
         for(i = pHole->ChainSeq->total; i > 0;i--)
         {
             pChain2 = pChain1->next_chain;
@@ -3068,7 +3066,7 @@ CV_IMPL void _cvConstructIntVD(CvVoronoiDiagramInt* pVoronoiDiagram)
     }
 }// end of _cvConstructIntVD
 
-CV_IMPL int _cvFindOppositSiteCW(pCvVoronoiHole pHole, CvVoronoiDiagramInt* pVoronoiDiagram)
+static int _cvFindOppositSiteCW(pCvVoronoiHole pHole, CvVoronoiDiagramInt* pVoronoiDiagram)
 {
     pCvVoronoiSite pSite_left = pHole->site_nearest;
     pCvVoronoiSite pSite_right = pHole->site_top;
@@ -3123,7 +3121,7 @@ CV_IMPL int _cvFindOppositSiteCW(pCvVoronoiHole pHole, CvVoronoiDiagramInt* pVor
     }
 }//end of _cvFindOppositSiteCW
 
-CV_IMPL int _cvFindOppositSiteCCW(pCvVoronoiHole pHole,CvVoronoiDiagramInt* pVoronoiDiagram)
+static int _cvFindOppositSiteCCW(pCvVoronoiHole pHole,CvVoronoiDiagramInt* pVoronoiDiagram)
 {
     pCvVoronoiSite pSite_right = pHole->site_nearest;
     pCvVoronoiSite pSite_left = pHole->site_top;
@@ -3179,7 +3177,7 @@ CV_IMPL int _cvFindOppositSiteCCW(pCvVoronoiHole pHole,CvVoronoiDiagramInt* pVor
     }
 }//end of _cvFindOppositSiteCCW
 
-CV_IMPL int _cvMergeVD(pCvVoronoiHole pHole,CvVoronoiDiagramInt* pVoronoiDiagram)
+static int _cvMergeVD(pCvVoronoiHole pHole,CvVoronoiDiagramInt* pVoronoiDiagram)
 {
     pCvVoronoiSite pSite_left_first = pHole->site_top;
     pCvVoronoiSite pSite_right_first = pHole->site_opposite;
@@ -3405,7 +3403,7 @@ void _cvCalcEdge(pCvVoronoiNode pNode,
         _cvCalcEdgePP(&pNode->node,&pSite->node1->node,pEdge,pVoronoiDiagram);
 }//end of _cvCalcEdge
 
-CV_IMPL CV_INLINE
+CV_INLINE
 void _cvCalcEdgeLL(pCvDirection pDirection1,
                   pCvDirection pDirection2,
                   pCvVoronoiEdge pEdge,
@@ -3417,7 +3415,7 @@ void _cvCalcEdgeLL(pCvDirection pDirection1,
     pEdge->direction = _cvSeqPush(pVoronoiDiagram->DirectionSeq,&Direction);;
 }//end of _cvCalcEdgeLL
 
-CV_IMPL CV_INLINE
+CV_INLINE
 void _cvCalcEdgePP(pCvPointFloat pPoint1,
                   pCvPointFloat pPoint2,
                   pCvVoronoiEdge pEdge,
@@ -3427,7 +3425,7 @@ void _cvCalcEdgePP(pCvPointFloat pPoint1,
     pEdge->direction = _cvSeqPush(pVoronoiDiagram->DirectionSeq,&Direction);
 }//end of _cvCalcEdgePP
 
-CV_IMPL CV_INLINE
+CV_INLINE
 void _cvCalcEdgePL(pCvVoronoiNode pFocus,
                   pCvVoronoiSite pDirectrice,
                   pCvVoronoiEdge pEdge,
@@ -3461,7 +3459,7 @@ void _cvCalcEdgePL(pCvVoronoiNode pFocus,
     pEdge->parabola = pParabola;
 }//end of _cvCalcEdgePL
 
-CV_IMPL CV_INLINE
+CV_INLINE
 void _cvCalcEdgeLP(pCvVoronoiSite pDirectrice,
                   pCvVoronoiNode pFocus,
                   pCvVoronoiEdge pEdge,
@@ -3499,7 +3497,7 @@ void _cvCalcEdgeLP(pCvVoronoiSite pDirectrice,
 //                  Computation of intersections of bisectors                           //
 ////////////////////////////////////////////////////////////////////////////////////////*/
 
-CV_IMPL 
+static 
 float _cvCalcEdgeIntersection(pCvVoronoiEdge pEdge1,
                               pCvVoronoiEdge pEdge2,
                               CvPointFloat* pPoint,
@@ -3516,7 +3514,7 @@ float _cvCalcEdgeIntersection(pCvVoronoiEdge pEdge1,
     return -1;
 }//end of _cvCalcEdgeIntersection
 
-CV_IMPL
+static
 float _cvLine_LineIntersection(pCvVoronoiEdge pEdge1,
                                 pCvVoronoiEdge pEdge2,
                                 pCvPointFloat  pPoint,
@@ -3595,7 +3593,7 @@ float _cvLine_LineIntersection(pCvVoronoiEdge pEdge1,
     return _cvPPDist(pPoint,&Point1);;
 }//end of _cvLine_LineIntersection
 
-CV_IMPL
+static
 float _cvLine_ParIntersection(pCvVoronoiEdge pEdge1,
                                 pCvVoronoiEdge pEdge2,
                                 pCvPointFloat  pPoint,
@@ -3607,7 +3605,7 @@ float _cvLine_ParIntersection(pCvVoronoiEdge pEdge1,
         return _cvLine_CloseParIntersection(pEdge1,pEdge2,pPoint,Radius);
 }//end of _cvLine_ParIntersection
 
-CV_IMPL
+static
 float _cvLine_OpenParIntersection(pCvVoronoiEdge pEdge1,
                                 pCvVoronoiEdge pEdge2,
                                 pCvPointFloat  pPoint,
@@ -3717,7 +3715,7 @@ float _cvLine_OpenParIntersection(pCvVoronoiEdge pEdge1,
         return dist;
 }// end of _cvLine_OpenParIntersection
 
-CV_IMPL
+static
 float _cvLine_CloseParIntersection(pCvVoronoiEdge pEdge1,
                                 pCvVoronoiEdge pEdge2,
                                 pCvPointFloat  pPoint,
@@ -3847,7 +3845,7 @@ float _cvLine_CloseParIntersection(pCvVoronoiEdge pEdge1,
         return dist;
 }// end of _cvLine_CloseParIntersection
 
-CV_IMPL
+static
 float _cvPar_LineIntersection(pCvVoronoiEdge pEdge1,
                                 pCvVoronoiEdge pEdge2,
                                 pCvPointFloat  pPoint,
@@ -3859,7 +3857,7 @@ float _cvPar_LineIntersection(pCvVoronoiEdge pEdge1,
         return _cvPar_CloseLineIntersection(pEdge1,pEdge2,pPoint,Radius);
 }//end _cvPar_LineIntersection
 
-CV_IMPL
+static
 float _cvPar_OpenLineIntersection(pCvVoronoiEdge pEdge1,
                                 pCvVoronoiEdge pEdge2,
                                 pCvPointFloat  pPoint,
@@ -3947,7 +3945,7 @@ float _cvPar_OpenLineIntersection(pCvVoronoiEdge pEdge1,
         return dist;
 }// end of _cvPar_OpenLineIntersection
 
-CV_IMPL
+static
 float _cvPar_CloseLineIntersection(pCvVoronoiEdge pEdge1,
                                     pCvVoronoiEdge pEdge2,
                                     pCvPointFloat  pPoint,
@@ -4045,7 +4043,7 @@ float _cvPar_CloseLineIntersection(pCvVoronoiEdge pEdge1,
         return dist;
 }// end of _cvPar_CloseLineIntersection
 
-CV_IMPL
+static
 float _cvPar_ParIntersection(pCvVoronoiEdge pEdge1,
                             pCvVoronoiEdge pEdge2,
                             pCvPointFloat  pPoint,
@@ -4057,7 +4055,7 @@ float _cvPar_ParIntersection(pCvVoronoiEdge pEdge1,
         return _cvPar_CloseParIntersection(pEdge1,pEdge2,pPoint,Radius);
 }// end of _cvPar_ParIntersection
 
-CV_IMPL
+static
 float _cvPar_OpenParIntersection(pCvVoronoiEdge pEdge1,
                             pCvVoronoiEdge pEdge2,
                             pCvPointFloat  pPoint,
@@ -4198,7 +4196,7 @@ float _cvPar_OpenParIntersection(pCvVoronoiEdge pEdge1,
         return dist;
 }// end of _cvPar_OpenParIntersection
 
-CV_IMPL
+static
 float _cvPar_CloseParIntersection(pCvVoronoiEdge pEdge1,
                                   pCvVoronoiEdge pEdge2,
                                   pCvPointFloat  pPoint,
@@ -4353,7 +4351,7 @@ float _cvPar_CloseParIntersection(pCvVoronoiEdge pEdge1,
 //                           Subsidiary functions                                       //
 ////////////////////////////////////////////////////////////////////////////////////////*/
 
-CV_IMPL CV_INLINE
+CV_INLINE
 void _cvMakeTwinEdge(pCvVoronoiEdge pEdge2,
                     pCvVoronoiEdge pEdge1)
 {
@@ -4364,7 +4362,7 @@ void _cvMakeTwinEdge(pCvVoronoiEdge pEdge2,
     pEdge1->twin_edge = pEdge2;
 }//end of _cvMakeTwinEdge
 
-CV_IMPL CV_INLINE
+CV_INLINE
 void _cvStickEdgeLeftBegin(pCvVoronoiEdge pEdge, 
                           pCvVoronoiEdge pEdge_left_prev,
                           pCvVoronoiSite pSite_left)
@@ -4380,7 +4378,7 @@ void _cvStickEdgeLeftBegin(pCvVoronoiEdge pEdge,
     }
 }//end of _cvStickEdgeLeftBegin
 
-CV_IMPL CV_INLINE
+CV_INLINE
 void _cvStickEdgeRightBegin(pCvVoronoiEdge pEdge, 
                           pCvVoronoiEdge pEdge_right_next,
                           pCvVoronoiSite pSite_right)
@@ -4396,7 +4394,7 @@ void _cvStickEdgeRightBegin(pCvVoronoiEdge pEdge,
     }
 }// end of _cvStickEdgeRightBegin
 
-CV_IMPL CV_INLINE
+CV_INLINE
 void _cvStickEdgeLeftEnd(pCvVoronoiEdge pEdge, 
                         pCvVoronoiEdge pEdge_left_next,
                         pCvVoronoiSite pSite_left)
@@ -4411,7 +4409,7 @@ void _cvStickEdgeLeftEnd(pCvVoronoiEdge pEdge,
     }
 }//end of _cvStickEdgeLeftEnd
 
-CV_IMPL CV_INLINE
+CV_INLINE
 void _cvStickEdgeRightEnd(pCvVoronoiEdge pEdge, 
                          pCvVoronoiEdge pEdge_right_prev,
                          pCvVoronoiSite pSite_right)
@@ -4436,7 +4434,7 @@ void _cvInitVoronoiNode(pCvVoronoiNode pNode,
     pNode->radius = radius;
 }//end of _cvInitVoronoiNode
 
-CV_IMPL CV_INLINE
+CV_INLINE
 void _cvInitVoronoiSite(pCvVoronoiSite pSite,
                        pCvVoronoiNode pNode1,
                        pCvVoronoiNode pNode2,
@@ -4463,7 +4461,7 @@ T _cvSeqPushFront(CvSeq* Seq, T pElem)
 //  return (T)cvGetSeqElem(Seq,0,NULL);
 }//end of _cvSeqPushFront
 
-CV_IMPL CV_INLINE
+CV_INLINE
 void _cvTwinNULLLeft(pCvVoronoiEdge pEdge_left_cur,
                     pCvVoronoiEdge pEdge_left)
 {
@@ -4475,7 +4473,7 @@ void _cvTwinNULLLeft(pCvVoronoiEdge pEdge_left_cur,
     }
 }//end of _cvTwinNULLLeft
 
-CV_IMPL CV_INLINE
+CV_INLINE
 void _cvTwinNULLRight(pCvVoronoiEdge pEdge_right_cur,
                      pCvVoronoiEdge pEdge_right)
 {
@@ -4487,7 +4485,7 @@ void _cvTwinNULLRight(pCvVoronoiEdge pEdge_right_cur,
     }
 }//end of _cvTwinNULLRight
 
-CV_IMPL CV_INLINE
+CV_INLINE
 void _cvSeqPushInOrder(CvVoronoiDiagramInt* pVoronoiDiagram, pCvVoronoiHole pHole)
 {
     pHole = _cvSeqPush(pVoronoiDiagram->HoleSeq, pHole);
@@ -4515,7 +4513,7 @@ void _cvSeqPushInOrder(CvVoronoiDiagramInt* pVoronoiDiagram, pCvVoronoiHole pHol
     pCurrHole->next_hole = pHole;
 }//end of _cvSeqPushInOrder
 
-CV_IMPL CV_INLINE
+CV_INLINE
 pCvVoronoiEdge _cvDivideRightEdge(pCvVoronoiEdge pEdge,pCvVoronoiNode pNode, CvSeq* EdgeSeq)
 {
     CvVoronoiEdgeInt Edge1 = *pEdge;
@@ -4539,7 +4537,7 @@ pCvVoronoiEdge _cvDivideRightEdge(pCvVoronoiEdge pEdge,pCvVoronoiNode pNode, CvS
     return pEdge2;
 }//end of _cvDivideRightEdge
 
-CV_IMPL CV_INLINE
+CV_INLINE
 pCvVoronoiEdge _cvDivideLeftEdge(pCvVoronoiEdge pEdge,pCvVoronoiNode pNode, CvSeq* EdgeSeq)
 {
     CvVoronoiEdgeInt Edge1 = *pEdge;
@@ -4629,7 +4627,7 @@ void _cvCalcComposition(T* Result,T* A,T* B)
     Result[5] = A[3]*B[2] + A[4]*B[5] + A[5];
 }//end of _cvCalcComposition
 
-CV_IMPL CV_INLINE
+CV_INLINE
 float _cvCalcDist(pCvPointFloat pPoint, pCvVoronoiSite pSite)
 {
     if(pSite->node1==pSite->node2)
@@ -4638,16 +4636,16 @@ float _cvCalcDist(pCvPointFloat pPoint, pCvVoronoiSite pSite)
         return _cvPLDist(pPoint,&(pSite->node1->node),pSite->direction);
 }//end of _cvCalcComposition
 
-CV_IMPL CV_INLINE
+CV_INLINE
 float _cvPPDist(pCvPointFloat pPoint1,pCvPointFloat pPoint2)
 {
     float delta_x = pPoint1->x - pPoint2->x;
     float delta_y = pPoint1->y - pPoint2->y;
-    return (float)sqrt(delta_x*delta_x + delta_y*delta_y);
+    return (float)sqrt((double)delta_x*delta_x + delta_y*delta_y);
 }//end of _cvPPDist
 
 
-CV_IMPL CV_INLINE
+CV_INLINE
 float _cvPLDist(pCvPointFloat pPoint,pCvPointFloat pPoint1,pCvDirection pDirection)
 {
     return (float)fabs(pDirection->x*(pPoint->y - pPoint1->y) -
@@ -4664,7 +4662,7 @@ int _cvSolveEqu2thR(T c2, T c1, T c0, T* X)
     T Discr = c1*c1 - c2*c0*4;
     if(Discr<-eps)
         return 0;
-    Discr = (T)sqrt((T)fabs(Discr));
+    Discr = (T)sqrt((double)fabs(Discr));
 
     if(fabs(Discr)<eps)
     {

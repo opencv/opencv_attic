@@ -85,8 +85,8 @@ double _cvStretchingWork(CvPoint2D32f* P1,
 {
     double L1,L2, L_min, dL;
 
-    L1 = sqrt( P1->x*P1->x + P1->y*P1->y);
-    L2 = sqrt( P2->x*P2->x + P2->y*P2->y);
+    L1 = sqrt( (double)P1->x*P1->x + P1->y*P1->y);
+    L2 = sqrt( (double)P2->x*P2->x + P2->y*P2->y);
     
     L_min = MIN(L1, L2);
     dL = fabs( L1 - L2 );
@@ -524,10 +524,10 @@ CvPoint2D32f Q(CvPoint2D32f q0,CvPoint2D32f q1,CvPoint2D32f q2,double t)
 
 double angle(CvPoint2D32f A, CvPoint2D32f B)
 {
-    return acos( (A.x*B.x + A.y*B.y)/sqrt( (A.x*A.x + A.y*A.y)*(B.x*B.x + B.y*B.y) ) );
+    return acos( (A.x*B.x + A.y*B.y)/sqrt( (double)(A.x*A.x + A.y*A.y)*(B.x*B.x + B.y*B.y) ) );
 }
 
-/***************************************************************************************
+/***************************************************************************************\
 *
 *   This function compute intermediate polygon between contour1 and contour2
 *
@@ -535,7 +535,7 @@ double angle(CvPoint2D32f A, CvPoint2D32f B)
 *
 *   param = [0,1];  0 correspondence to contour1, 1 - contour2
 *
-/***************************************************************************************/
+\***************************************************************************************/
 CvSeq* icvBlendContours(CvSeq* contour1, 
                         CvSeq* contour2,
                         CvSeq* corr,

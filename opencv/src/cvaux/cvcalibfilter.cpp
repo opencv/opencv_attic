@@ -525,18 +525,20 @@ void CvCalibFilter::DrawPoints( CvMat** dstarr )
 
                 dst = cvGetMat( dstarr[i], &dst_stub );
 
-                static const int line_colors[] = {
-                    CV_RGB(255,0,0),
-                    CV_RGB(255,128,0),
-                    CV_RGB(200,200,0),
-                    CV_RGB(0,255,0),
-                    CV_RGB(0,200,200),
-                    CV_RGB(0,0,255),
-                    CV_RGB(255,0,255) };
+                static const CvScalar line_colors[] =
+                {
+                    {0,0,255},
+                    {0,128,255},
+                    {0,200,200},
+                    {0,255,0},
+                    {200,200,0},
+                    {255,0,0},
+                    {255,0,255}
+                };
+
                 const int colorCount = sizeof(line_colors)/sizeof(line_colors[0]);
                 const int r = 4;
-                int color = CV_RGB(255,0,0);
-
+                CvScalar color = line_colors[0];
                 CvPoint prev_pt = { 0, 0};
 
                 for( j = 0; j < count; j++ )
@@ -553,18 +555,16 @@ void CvCalibFilter::DrawPoints( CvMat** dstarr )
                             color = CV_RGB(0,255,0);
 
                         if( j != 0 )
-                            cvLineAA( dst, prev_pt, pt, color );
+                            cvLine( dst, prev_pt, pt, color, 1, CV_AA );
                     }
 
-                    cvLineAA( dst,
-                              cvPoint( pt.x - r, pt.y - r ),
-                              cvPoint( pt.x + r, pt.y + r ), color );
+                    cvLine( dst, cvPoint( pt.x - r, pt.y - r ),
+                            cvPoint( pt.x + r, pt.y + r ), color, 1, CV_AA );
 
-                    cvLineAA( dst,
-                              cvPoint( pt.x - r, pt.y + r),
-                              cvPoint( pt.x + r, pt.y - r), color );
+                    cvLine( dst, cvPoint( pt.x - r, pt.y + r),
+                            cvPoint( pt.x + r, pt.y - r), color, 1, CV_AA );
 
-                    cvCircleAA( dst, pt, r+1, color );
+                    cvCircle( dst, pt, r+1, color, 1, CV_AA );
 
                     prev_pt = pt;
                 }

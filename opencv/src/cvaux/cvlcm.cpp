@@ -103,7 +103,7 @@ typedef struct CvLCMData
 //    Returns: 1, if hybrid model was succesfully constructed
 //             0, if some error occures
 //F*/
-OPENCVAPI 
+CV_IMPL 
 int _cvConstructLCM(CvLCM* LCM);
 
 /*F///////////////////////////////////////////////////////////////////////////////////////
@@ -118,7 +118,7 @@ int _cvConstructLCM(CvLCM* LCM);
 //      pLCMInputData: in, input parameters
 //    Returns: pointer to constructed node
 //F*/
-OPENCVAPI
+CV_IMPL
 CvLCMNode* _cvConstructLCMComplexNode(CvLCM* pLCM,
                                       CvLCMEdge* pLCMEdge,
                                       CvLCMData* pLCMInputData);
@@ -135,7 +135,7 @@ CvLCMNode* _cvConstructLCMComplexNode(CvLCM* pLCM,
 //      pLCMInputData: in, input parameters
 //    Returns: pointer to constructed node
 //F*/
-OPENCVAPI
+CV_IMPL
 CvLCMNode* _cvConstructLCMSimpleNode(CvLCM* pLCM,
                                     CvLCMEdge* pLCMEdge,
                                     CvLCMData* pLCMInputData);
@@ -150,7 +150,7 @@ CvLCMNode* _cvConstructLCMSimpleNode(CvLCM* pLCM,
 //      pLCMInputData: in, input parameters
 //    Returns: pointer to constructed edge
 //F*/
-OPENCVAPI
+CV_IMPL
 CvLCMEdge* _cvConstructLCMEdge(CvLCM* pLCM,
                                CvLCMData* pLCMInputData);
 
@@ -164,7 +164,7 @@ CvLCMEdge* _cvConstructLCMEdge(CvLCM* pLCM,
 //      pLCMInputData: in, input parameters
 //    Returns: pointer to graph node
 //F*/
-OPENCVAPI
+CV_IMPL
 CvLCMNode* _cvTreatExeptionalCase(CvLCM* pLCM,
                                   CvLCMData* pLCMInputData);
 
@@ -183,7 +183,7 @@ CvLCMNode* _cvTreatExeptionalCase(CvLCM* pLCM,
 //              for this pSite, this property hold out far all edges)  
 //    Returns: number of incident edges (must be less than 10)
 //F*/
-OPENCVAPI
+CV_IMPL
 int _cvNodeMultyplicity(CvVoronoiSite2D* pSite,
                         CvVoronoiEdge2D* pEdge,
                         CvVoronoiNode2D* pNode,
@@ -199,7 +199,7 @@ int _cvNodeMultyplicity(CvVoronoiSite2D* pSite,
 //      pLCM : in, information about graph
 //    Returns: pointer to graph node
 //F*/
-OPENCVAPI
+CV_IMPL
 CvLCMNode* _cvCreateLCMNode(CvLCM* pLCM);
 
 /*F///////////////////////////////////////////////////////////////////////////////////////
@@ -211,7 +211,7 @@ CvLCMNode* _cvCreateLCMNode(CvLCM* pLCM);
 //      pLCM : in, information about graph
 //    Returns: pointer to graph edge
 //F*/
-OPENCVAPI
+CV_IMPL
 CvLCMEdge* _cvCreateLCMEdge(CvLCM* pLCM);
 
 /*F///////////////////////////////////////////////////////////////////////////////////////
@@ -228,7 +228,7 @@ CvLCMEdge* _cvCreateLCMEdge(CvLCM* pLCM);
 //             =1, if node  is terminal for edge
 //    Returns: 
 //F*/
-OPENCVAPI
+CV_IMPL
 void _cvAttachLCMEdgeToLCMNode(CvLCMNode* LCMNode,
                                CvLCMEdge* LCMEdge,
                                CvLCMEdge* &LCMEdge_prev,
@@ -246,7 +246,7 @@ void _cvAttachLCMEdgeToLCMNode(CvLCMNode* LCMNode,
 //      dist : distance from PointO to PrPoint
 //    Returns: 
 //F*/
-OPENCVAPI
+CV_IMPL
 void _cvProjectionPointToSegment(CvPoint2D32f* PointO,
                                  CvPoint2D32f* PointA,
                                  CvPoint2D32f* PointB,
@@ -263,7 +263,7 @@ void _cvProjectionPointToSegment(CvPoint2D32f* PointO,
 //      pLCMCCNData : out
 //    Returns: 
 //F*/
-OPENCVAPI
+CV_IMPL
 void _cvPrepareData(CvLCMComplexNodeData* pLCMCCNData,
                     CvLCMData* pLCMData);
 
@@ -279,7 +279,7 @@ CV_IMPL CvGraph* cvLinearContorModelFromVoronoiDiagram(CvVoronoiDiagram2D* Voron
     CvLCM LCM = {NULL, VoronoiDiagram,NULL,NULL,maxWidth};
 
     CV_FUNCNAME( "cvLinearContorModelFromVoronoiDiagram" );
-     __BEGIN__
+     __BEGIN__;
     
     if( !VoronoiDiagram )
         CV_ERROR( CV_StsBadArg,"Voronoi Diagram is not defined" );
@@ -308,8 +308,8 @@ CV_IMPL CvGraph* cvLinearContorModelFromVoronoiDiagram(CvVoronoiDiagram2D* Voron
     if(!_cvConstructLCM(&LCM))
         cvReleaseLinearContorModelStorage(&LCM.Graph);
 
-    __CLEANUP__
-    __END__
+    
+    __END__;
     return LCM.Graph;
 }//end of cvLinearContorModelFromVoronoiDiagram
 
@@ -319,8 +319,8 @@ CV_IMPL int cvReleaseLinearContorModelStorage(CvGraph** Graph)
     CvLCMNode* pLCMNode;
     CvLCMEdge* pLCMEdge;
 
-    CV_FUNCNAME( "cvReleaseLinearContorModelStorage" );
-     __BEGIN__
+    /*CV_FUNCNAME( "cvReleaseLinearContorModelStorage" );*/
+     __BEGIN__;
 
     if(!Graph || !(*Graph))
         return 0;
@@ -329,13 +329,13 @@ CV_IMPL int cvReleaseLinearContorModelStorage(CvGraph** Graph)
     LCMEdgeSeq = (CvSeq*)(*Graph)->edges;
     if(LCMNodeSeq->total > 0)
     {
-        pLCMNode = (CvLCMNode*)cvGetSeqElem(LCMNodeSeq,0,NULL);
+        pLCMNode = (CvLCMNode*)cvGetSeqElem(LCMNodeSeq,0);
         if(pLCMNode->contour->storage)
             cvReleaseMemStorage(&pLCMNode->contour->storage);
     }
     if(LCMEdgeSeq->total > 0)
     {
-        pLCMEdge = (CvLCMEdge*)cvGetSeqElem(LCMEdgeSeq,0,NULL);
+        pLCMEdge = (CvLCMEdge*)cvGetSeqElem(LCMEdgeSeq,0);
         if(pLCMEdge->chain->storage)
             cvReleaseMemStorage(&pLCMEdge->chain->storage);
     }
@@ -343,12 +343,12 @@ CV_IMPL int cvReleaseLinearContorModelStorage(CvGraph** Graph)
         cvReleaseMemStorage(&(*Graph)->storage);
     *Graph = NULL;
 
-    __CLEANUP__
-    __END__
+    
+    __END__;
     return 1;
 }//end of cvReleaseLinearContorModelStorage
 
-CV_IMPL int _cvConstructLCM(CvLCM* LCM)
+int _cvConstructLCM(CvLCM* LCM)
 {
     CvVoronoiSite2D* pSite = 0;
     CvVoronoiEdge2D* pEdge = 0, *pEdge1;
@@ -406,7 +406,6 @@ PREPARESIMPLENODE:
     return 1;
 }//end of _cvConstructLCM
 
-CV_IMPL
 CvLCMNode* _cvConstructLCMComplexNode(CvLCM* pLCM,
                                       CvLCMEdge* pLCMEdge,
                                       CvLCMData* pLCMInputData)
@@ -482,7 +481,6 @@ CvLCMNode* _cvConstructLCMComplexNode(CvLCM* pLCM,
     return pLCMNode;
 }//end of _cvConstructLCMComplexNode
 
-CV_IMPL
 CvLCMNode* _cvConstructLCMSimpleNode(CvLCM* pLCM,
                                      CvLCMEdge* pLCMEdge,
                                      CvLCMData* pLCMInputData)
@@ -521,7 +519,6 @@ CvLCMNode* _cvConstructLCMSimpleNode(CvLCM* pLCM,
     return pLCMNode;
 }//end of _cvConstructLCMSimpleNode
 
-CV_IMPL
 CvLCMEdge* _cvConstructLCMEdge(CvLCM* pLCM,
                                CvLCMData* pLCMInputData)
 {
@@ -572,7 +569,6 @@ LCMEDGEEXIT:
     return pLCMEdge;
 }//end of _cvConstructLCMEdge
 
-CV_IMPL
 CvLCMNode* _cvTreatExeptionalCase(CvLCM* pLCM,
                                   CvLCMData* pLCMInputData)
 {
@@ -584,7 +580,7 @@ CvLCMNode* _cvTreatExeptionalCase(CvLCM* pLCM,
     return pLCMNode;
 }//end of _cvConstructLCMEdge
 
-CV_IMPL CV_INLINE
+CV_INLINE
 CvLCMNode* _cvCreateLCMNode(CvLCM* pLCM)
 {
     CvLCMNode* pLCMNode;
@@ -595,7 +591,7 @@ CvLCMNode* _cvCreateLCMNode(CvLCM* pLCM)
     return pLCMNode;
 }//end of _cvCreateLCMNode
 
-CV_IMPL CV_INLINE
+CV_INLINE
 CvLCMEdge* _cvCreateLCMEdge(CvLCM* pLCM)
 {
     CvLCMEdge* pLCMEdge;
@@ -607,7 +603,7 @@ CvLCMEdge* _cvCreateLCMEdge(CvLCM* pLCM)
     return pLCMEdge;
 }//end of _cvCreateLCMEdge
 
-CV_IMPL CV_INLINE
+CV_INLINE
 void _cvAttachLCMEdgeToLCMNode(CvLCMNode* LCMNode,
                                CvLCMEdge* LCMEdge,
                                CvLCMEdge* &LCMEdge_prev,
@@ -632,7 +628,7 @@ void _cvAttachLCMEdgeToLCMNode(CvLCMNode* LCMNode,
     LCMEdge_prev = LCMEdge;
 }//end of _cvAttachLCMEdgeToLCMNode
 
-CV_IMPL
+
 int _cvNodeMultyplicity(CvVoronoiSite2D* pSite,
                         CvVoronoiEdge2D* pEdge,
                         CvVoronoiNode2D* pNode,
@@ -659,7 +655,8 @@ int _cvNodeMultyplicity(CvVoronoiSite2D* pSite,
     return multyplicity;
 }//end of _cvNodeMultyplicity
 
-CV_IMPL CV_INLINE
+
+CV_INLINE
 void _cvPrepareData(CvLCMComplexNodeData* pLCMCCNData,
                     CvLCMData* pLCMData)
 {
@@ -689,7 +686,7 @@ void _cvPrepareData(CvLCMComplexNodeData* pLCMCCNData,
     }
 }//end of _cvPrepareData
 
-CV_IMPL
+
 void _cvProjectionPointToSegment(CvPoint2D32f* PointO,
                                  CvPoint2D32f* PointA,
                                  CvPoint2D32f* PointB,
@@ -703,7 +700,7 @@ void _cvProjectionPointToSegment(CvPoint2D32f* PointO,
     {
         *PrPoint = *PointA;
         if(dist)
-            *dist = (float)sqrt( (PointO->x -PointA->x)*(PointO->x -PointA->x) + (PointO->y - PointA->y)*(PointO->y - PointA->y));
+            *dist = (float)sqrt( (double)(PointO->x -PointA->x)*(PointO->x -PointA->x) + (PointO->y - PointA->y)*(PointO->y - PointA->y));
         return;
     }
 
@@ -713,7 +710,7 @@ void _cvProjectionPointToSegment(CvPoint2D32f* PointO,
     if(dist)
     {
         float vector_AO_AB = (float)fabs(VectorAO.x*VectorAB.y - VectorAO.y*VectorAB.x);
-        *dist = (float)(vector_AO_AB/sqrt(scal_AB_AB));
+        *dist = (float)(vector_AO_AB/sqrt((double)scal_AB_AB));
     }
 
     float alfa = scal_AO_AB/scal_AB_AB;

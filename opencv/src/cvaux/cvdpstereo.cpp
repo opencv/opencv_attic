@@ -538,7 +538,7 @@ cvFindStereoCorrespondence(
 
         CV_CALL( icvFindStereoCorrespondenceByBirchfieldDP( src1->data.ptr, 
             src2->data.ptr, dst->data.ptr, 
-            icvGetMatSize( src1 ), src1->step,
+            cvGetMatSize( src1 ), src1->step,
             maxDisparity, (float)param1, (float)param2, (float)param3, 
             (float)param4, (float)param5 ) );
     }

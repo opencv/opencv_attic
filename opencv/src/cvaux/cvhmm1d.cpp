@@ -42,9 +42,6 @@
 
 #include "_cvaux.h"
 
-#include <float.h>
-#include "_cvutils.h"
-
 #if 0
 
 #define LN2PI 1.837877f
