@@ -69,7 +69,7 @@ float distance(float* vector_1, float *vector_2, int VecSize)
 
 //returns number of made iterations
 int _real_kmeans( int numClusters, float **sample, int numSamples, 
-                   int VecSize, int* a_class, float eps, int iter )
+                   int VecSize, int* a_class, double eps, int iter )
 
 {                            
   int     i, k, n;

@@ -13,6 +13,17 @@
 #ifndef JPEGLIB_H
 #define JPEGLIB_H
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
+/* HJH modification: protect compiler options for structure alignment and enum
+ * size if the compiler is Borland C++ */
+#ifdef __BORLANDC__
+#pragma option push -b
+#pragma option push -a4
+#endif
+
 /*
  * First we include the configuration files that record how this
  * installation of the JPEG library is set up.  jconfig.h can be
@@ -1091,6 +1102,15 @@ struct jpeg_color_quantizer { long dummy; };
 #ifdef JPEG_INTERNALS
 #include "jpegint.h"		/* fetch private declarations */
 #include "jerror.h"		/* fetch error codes too */
+#endif
+
+#ifdef __BORLANDC__
+#pragma option pop /* pop -a switch */
+#pragma option pop /* pop -b */
+#endif
+
+#ifdef __cplusplus
+}
 #endif
 
 #endif /* JPEGLIB_H */

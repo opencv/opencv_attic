@@ -390,8 +390,8 @@ for( usePrevious = 0; usePrevious < 2; usePrevious++ )
         }
     }/* for */
     /* Filling initial velocity with zero */
-    iplSetFP( testVelocityX, 0 );
-    iplSetFP( testVelocityY, 0 );
+    cvZero( testVelocityX );
+    cvZero( testVelocityY );
     for (i = 0; i < lImageWidth * lImageHeight; i++ )
     {
         VelocityX[i] = 0 ;

@@ -263,12 +263,12 @@ static int foaImage( void )
                 dst->width *= 2;
             }
 
-            if( iplNorm( src, dst, IPL_L1 ) )
+            if( cvNorm( src, dst, CV_L1 ) )
             {
                 trsWrite( ATS_CON | ATS_LST, "cvCopyImage: wrong destination image\n" );
                 Errors++;
             }
-            /*if( iplNorm( src, clone, IPL_L1 ) )
+            /*if( cvNorm( src, clone, CV_L1 ) )
             {
                 trsWrite( ATS_CON | ATS_LST, "cvCloneImage: wrong destination image\n" );
                 Errors++;
@@ -287,7 +287,7 @@ static int foaImage( void )
             if( depths[i] == IPL_DEPTH_1U && channels[j] != 1 ) // skip for IPL_DEPTH_1U
                 continue;                                       // all non 1 channels
             IplImage image;
-            cvInitImageHeader( &image, size, depths[i], channels[j], IPL_ORIGIN_TL, align, 1 );
+            cvInitImageHeader( &image, size, depths[i], channels[j], IPL_ORIGIN_TL, align );
             if( image.width != size.width || image.height != size.height )
             {
                 trsWrite( ATS_CON | ATS_LST,

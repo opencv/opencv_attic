@@ -1,1 +1,1 @@
-SUBDIRS = trs ats cv
+SUBDIRS = trs cv

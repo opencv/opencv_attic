@@ -60,7 +60,7 @@ CV_IMPL  int64  cvGetTickCount( void )
 CV_IMPL  double  cvGetTickFrequency()
 {
 #ifndef WIN32
-    return CLOCKS_PER_SEC;
+    return CLOCKS_PER_SEC*1e-6;
 #else
     int64 clocks1, clocks2;
     volatile int t;

@@ -281,7 +281,7 @@ test_exit:
 
     img->roi = 0;
 
-    iplDeallocate( img, IPL_IMAGE_ALL );
+    cvReleaseImage(& img);
 
     //if( code == TRS_OK )
     {

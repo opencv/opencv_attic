@@ -52,6 +52,11 @@ GrFmtPxM::GrFmtPxM()
 }
 
 
+GrFmtPxM::~GrFmtPxM()
+{
+}
+
+
 bool GrFmtPxM::CheckSignature( const char* signature )
 {
     return signature[0] == 'P' &&
@@ -118,6 +123,11 @@ static int ReadNumber( RLByteStream& strm, int maxdigits )
 GrFmtPxMReader::GrFmtPxMReader( const char* filename ) : GrFmtReader( filename )
 {
     m_offset = -1;
+}
+
+
+GrFmtPxMReader::~GrFmtPxMReader()
+{
 }
 
 
@@ -309,6 +319,12 @@ bool  GrFmtPxMReader::ReadData( uchar* data, int step, int color )
 GrFmtPxMWriter::GrFmtPxMWriter( const char* filename ) : GrFmtWriter( filename )
 {
 }
+
+
+GrFmtPxMWriter::~GrFmtPxMWriter()
+{
+}
+
 
 static char PxMLUT[256][5];
 static bool isPxMLUTInitialized = false;

@@ -135,7 +135,7 @@ static int fmaCanny( void* arg )
         test8u->imageData[i] =
         test8u->imageData[(src8u->height-1)*test8u->widthStep + i] = 0;
     }*/
-    lErrors = (long)iplNorm(dst8u,test8u,IPL_C);
+    lErrors = (long)cvNorm(dst8u,test8u,CV_C);
 
     cvReleaseImage( &src8u );
     cvReleaseImage( &dst8u );

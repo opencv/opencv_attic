@@ -66,6 +66,11 @@ GrFmtPng::GrFmtPng()
 }
 
 
+GrFmtPng::~GrFmtPng()
+{
+}
+
+
 GrFmtReader* GrFmtPng::NewReader( const char* filename )
 {
     return new GrFmtPngReader( filename );
@@ -91,6 +96,11 @@ GrFmtPngReader::GrFmtPngReader( const char* filename ) : GrFmtReader( filename )
     m_png_ptr = 0;
     m_info_ptr = m_end_info = 0;
     m_f = 0;
+}
+
+
+GrFmtPngReader::~GrFmtPngReader()
+{
 }
 
 
@@ -232,6 +242,12 @@ bool  GrFmtPngReader::ReadData( uchar* data, int step, int color )
 GrFmtPngWriter::GrFmtPngWriter( const char* filename ) : GrFmtWriter( filename )
 {
 }
+
+
+GrFmtPngWriter::~GrFmtPngWriter()
+{
+}
+
 
 bool  GrFmtPngWriter::WriteImage( const uchar* data, int step,
                                   int width, int height, bool isColor )

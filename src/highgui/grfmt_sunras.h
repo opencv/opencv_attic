@@ -65,6 +65,7 @@ class GrFmtSunRasterReader : public GrFmtReader
 public:
 
     GrFmtSunRasterReader( const char* filename );
+    ~GrFmtSunRasterReader();
 
     bool  ReadData( uchar* data, int step, int color );
     bool  ReadHeader();
@@ -87,7 +88,8 @@ class GrFmtSunRasterWriter : public GrFmtWriter
 public:
     
     GrFmtSunRasterWriter( const char* filename );
-    
+    ~GrFmtSunRasterWriter();
+
     bool  WriteImage( const uchar* data, int step,
                       int width, int height, bool isColor );
 protected:
@@ -102,9 +104,10 @@ class GrFmtSunRaster : public GrFmtFilterFactory
 public:
     
     GrFmtSunRaster();
+    ~GrFmtSunRaster();
+
     GrFmtReader* NewReader( const char* filename );
     GrFmtWriter* NewWriter( const char* filename );
-
 };
 
 #endif/*_GRFMT_SUNRAS_H_*/

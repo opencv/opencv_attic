@@ -70,7 +70,7 @@ int test_ht(void* arg)
     int type = int(arg);
     IplImage* image; /* Source and destination images */
     image = cvCreateImage( cvSize(w, h), 8, 1 );
-    iplSet(image, 0);
+    cvZero(image);
     
     if( image == NULL )
     {
@@ -95,7 +95,7 @@ int test_ht(void* arg)
         break;
 
     default:
-        iplDeallocate( image, IPL_IMAGE_ALL );
+        cvReleaseImage(& image);
         delete lines;
         delete flines;
         trsResult(TRS_FAIL, "No such function");
@@ -103,7 +103,7 @@ int test_ht(void* arg)
     cvReleaseImage( &image );
     delete lines;
     delete flines;
-    if(iplGetErrStatus() < 0)
+    if(cvGetErrStatus() < 0)
     {
         return trsResult(TRS_FAIL, "Function returned 'bad argument'");
     }

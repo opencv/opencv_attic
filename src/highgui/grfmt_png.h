@@ -54,6 +54,7 @@ class GrFmtPngReader : public GrFmtReader
 public:
     
     GrFmtPngReader( const char* filename );
+    ~GrFmtPngReader();
 
     bool  CheckFormat( const char* signature );
     bool  ReadData( uchar* data, int step, int color );
@@ -76,6 +77,7 @@ class GrFmtPngWriter : public GrFmtWriter
 public:
     
     GrFmtPngWriter( const char* filename );
+    ~GrFmtPngWriter();
 
     bool  WriteImage( const uchar* data, int step,
                       int width, int height, bool isColor );
@@ -90,6 +92,8 @@ class GrFmtPng : public GrFmtFilterFactory
 public:
     
     GrFmtPng();
+    ~GrFmtPng();
+
     GrFmtReader* NewReader( const char* filename );
     GrFmtWriter* NewWriter( const char* filename );
     bool CheckSignature( const char* signature );

@@ -40,6 +40,9 @@
 //M*/
 
 #include "cvtest.h"
+
+#if 1
+
 #define PUSHC(Y,X) { CurStack[CStIn].y=Y; \
                      CurStack[CStIn].x=X; \
                      CStIn++;}
@@ -202,7 +205,7 @@ static int fcaMotSeg( void )
 			if(src[i*step+j]>80)src[i*step+j]=80;
 		}
 	}
-	iplSetFP(test32f,0);
+	cvZero(test32f);
 	seq1 = cvSegmentMotion(mhi,mask32f,storage,80,thresh);
 	cvStartWriteSeq( 0, sizeof( CvSeq ), sizeof( CvConnectedComp ), storage, &writer );
 	roi.width = lImageWidth;
@@ -291,7 +294,7 @@ static int fcaMotSeg( void )
          }
     }
     seq2 = cvEndWriteSeq( &writer );
-	Error += iplNorm(test32f,mask32f,IPL_C);
+	Error += cvNorm(test32f,mask32f,CV_C);
 	cvReleaseMemStorage(&storage);
 	cvReleaseImage(&mhi);
 	cvReleaseImage(&test32f);
@@ -306,5 +309,7 @@ void InitAMotSeg(void)
 {
     trsReg( "cvMotSeg", TestName, TestClass, fcaMotSeg);
 } /* InitASobel */
+
+#endif
 
 /* End of file. */

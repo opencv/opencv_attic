@@ -57,6 +57,9 @@ GrFmtTiff::GrFmtTiff()
     m_description = "TIFF Files (*.tiff;*.tif)";
 }
 
+GrFmtTiff::~GrFmtTiff()
+{
+}
 
 bool GrFmtTiff::CheckSignature( const char* signature )
 {
@@ -97,6 +100,11 @@ GrFmtTiffReader::GrFmtTiffReader( const char* filename ) : GrFmtReader( filename
         TIFFSetErrorHandler( GrFmtSilentTIFFErrorHandler );
         TIFFSetWarningHandler( GrFmtSilentTIFFErrorHandler );
     }
+}
+
+
+GrFmtTiffReader::~GrFmtTiffReader()
+{
 }
 
 
@@ -653,6 +661,10 @@ bad_decoding_end:
 //////////////////////////////////////////////////////////////////////////////////////////
 
 GrFmtTiffWriter::GrFmtTiffWriter( const char* filename ) : GrFmtWriter( filename )
+{
+}
+
+GrFmtTiffWriter::~GrFmtTiffWriter()
 {
 }
 

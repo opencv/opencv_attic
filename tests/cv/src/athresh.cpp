@@ -110,7 +110,7 @@ static int myThresh( uchar*        Src8u,
             Src32f[i] =        (Src32f[i] >        Thresh ? 0 : Src32f[i]);
             break;
         default:
-            assert( NULL );
+            assert( 0 );
         }
     }
     return 0;
@@ -157,7 +157,7 @@ static int foaThreshold( void* prm )
     int    height;
     int    width;
 
-    long   Errors = NULL;
+    long   Errors = 0;
 
     float  ThreshMax;
     float  ThreshMin;

@@ -48,19 +48,9 @@
 #endif
 
 #if defined(_CH_)
-#include <dlfcn.h>
-void *_ChCv_handle = _dlopen("libcv.dl", RTLD_LAZY);
-if(_ChCv_handle == NULL) {
-   fprintf(_stderr, "Error: dlopen(): %s\n", dlerror());
-   fprintf(_stderr, "       cannot get _ChCv_handle in cv.h\n");
-   exit(-1);
-} 
-void _dlclose_libcv(void) {
-  dlclose(_ChCv_handle);
-}
-_atexit(_dlclose_libcv);
+#include <cvch.h>
+CV_CH_LOAD_CODE(cv,Cv)
 #endif
-
 
 #ifdef HAVE_IPL
 #ifndef _INC_WINDOWS
@@ -2241,10 +2231,6 @@ CV_INLINE  void  cvCalcHist( IplImage** img, CvHistogram* hist,
     cvCalcArrHist( (CvArr**)img, hist, doNotClear, mask );
 }
 
-/* Calculates contrast histogram */
-OPENCVAPI  void  cvCalcContrastHist( CvArr** img, CvHistogram* hist,
-                                     int doNotClear, IplImage* mask );
-
 /* Calculates back project */
 OPENCVAPI  void  cvCalcArrBackProject( CvArr** img, CvArr* dst,
                                        const CvHistogram* hist );
@@ -2677,63 +2663,25 @@ OPENCVAPI void cvMake2DPoints(CvMat* srcPoint,CvMat* dstPoint);
 OPENCVAPI void cvMake3DPoints(CvMat* srcPoint,CvMat* dstPoint);
 OPENCVAPI int cvSolveCubic(CvMat* coeffs,CvMat* result);
 
-/*F///////////////////////////////////////////////////////////////////////////////////////
-//    Name:    cvFindFundamentalMat
-//    Purpose: find fundamental matrix for given points using different methods
-//    Context:
-//    Parameters:
-//      points1  - points on first image. Size of matrix 2xN or 3xN
-//      points2  - points on second image Size of matrix 2xN or 3xN
-//      fundMatr - found fundamental matrixes. Size 3x3. Or 9x3 for 7-point algorithm only.
-//                 (7-point algorith can returns 3 fundamental matrixes)
-//      method   - method for computing fundamental matrix
-//                 CV_FM_7POINT - for 7-point algorithm. Number of points == 7
-//                 CV_FM_8POINT - for 8-point algorithm. Number of points >= 8
-//                 CV_FM_RANSAC - for RANSAC  algorithm. Number of points >= 8
-//                 CV_FM_LMEDS  - for LMedS   algorithm. Number of points >= 8
-//      param1 and param2 uses for RANSAC and LMedS method.
-//         param1 - threshold distance from point to epipolar line.
-//                  If distance less than threshold point is good.
-//         param2 - probability. Usually = 0.99
-//         status - array, every element of which will be set to 1 if the point was good,
-//                  0 else. (for RANSAC and LMedS only)
-//                  For other methods all points status set to 1)
-//                  (it is optional parameter, can be NULL)
-//
-//    Returns:
-//      number of found fundamental matrixes
-//F*/
+/* Calculates fundamental matrix given a set of corresponding points */
 #define CV_FM_7POINT 1
 #define CV_FM_8POINT 2
 #define CV_FM_RANSAC 3
 #define CV_FM_LMEDS  4 
+OPENCVAPI  int cvFindFundamentalMat( CvMat* points1, CvMat* points2,
+                                     CvMat* fundMatr, int method,
+                                     double param1, double param2,
+                                     CvMat* status );
 
-OPENCVAPI  int cvFindFundamentalMat(    CvMat* points1,
-                                CvMat* points2,
-                                CvMat* fundMatr,
-                                int    method,
-                                double param1,
-                                double param2,
-                                CvMat* status);
-
-/*F///////////////////////////////////////////////////////////////////////////////////////
-//    Name:    cvComputeCorrespondEpilines
-//    Purpose: computes correspondence piline for given point and fundamental matrix
-//    Context:
-//    Parameters:
-//      points  - points on image. Size of matrix 2xN or 3xN
-//      pointImageID - image on which points are located. 1 or 2 
-//      fundMatr - fundamental matrix
-//      corrLines - found correspondence lines for each point. Size of matrix 3xN,
-//                  Each line given by a,b,c. (ax+by+c=0)
-//
-//    Returns:
-//     
-//F*/
+/* For each input point on one of images
+   computes parameters of the corresponding
+   epipolar line on the other image */
 OPENCVAPI  void cvComputeCorrespondEpilines(CvMat* points,
                                             int pointImageID,
                                             CvMat* fundMatr,
                                             CvMat* corrLines);
+
+/*************************** View Morphing Functions ************************/
 
 /* The order of the function corresponds to the order they should appear in
    the view morphing pipeline */ 

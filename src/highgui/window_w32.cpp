@@ -47,11 +47,7 @@
 #pragma warning( disable: 4710 )
 #endif
 
-#define WIN32_LEAN_AND_MEAN  // Exclude rarely-used stuff from Windows headers
-
-#include "windows.h"
 #include "commctrl.h"
-
 #include <stdlib.h>
 #include <string.h>
 #include <stdio.h>
@@ -105,7 +101,32 @@ typedef struct CvWindow
 CvWindow;
 
 
-void  FillBitmapInfo( BITMAPINFO* bmi, int width, int height, int bpp, int origin );
+void  FillBitmapInfo( BITMAPINFO* bmi, int width, int height, int bpp, int origin )
+{
+    assert( bmi && width >= 0 && height >= 0 && (bpp == 8 || bpp == 24 || bpp == 32));
+
+    BITMAPINFOHEADER* bmih = &(bmi->bmiHeader);
+
+    memset( bmih, 0, sizeof(*bmih));
+    bmih->biSize = sizeof(BITMAPINFOHEADER); 
+    bmih->biWidth = width;
+    bmih->biHeight = origin ? abs(height) : -abs(height);
+    bmih->biPlanes = 1; 
+    bmih->biBitCount = (unsigned short)bpp;
+    bmih->biCompression = BI_RGB;
+
+    if( bpp == 8 )
+    {
+        RGBQUAD* palette = bmi->bmiColors;
+        int i;
+        for( i = 0; i < 256; i++ )
+        {
+            palette[i].rgbBlue = palette[i].rgbGreen = palette[i].rgbRed = (BYTE)i;
+            palette[i].rgbReserved = 0;
+        }
+    }
+}
+
 
 #define HG_BUDDY_WIDTH  130
 
@@ -273,6 +294,9 @@ HIGHGUI_IMPL int cvNamedWindow( const char* name, int flags )
 static void icvRemoveWindow( CvWindow* window )
 {
     CvTrackbar* trackbar;
+
+    SetWindowLong( window->hwnd, GWL_USERDATA, (long)0 );
+    SetWindowLong( window->frame, GWL_USERDATA, (long)0 );
     
     if( window->prev )
         window->prev->next = window->next;
@@ -385,7 +409,6 @@ static void icvGetBitmapData( CvWindow* window, SIZE* size, int* channels, void*
 static void icvUpdateWindowPos( CvWindow* window )
 {
     RECT rect;
-    int error;
     assert(window);
 
     if( (window->flags & HG_AUTOSIZE) && window->image )
@@ -404,10 +427,9 @@ static void icvUpdateWindowPos( CvWindow* window )
             GetClientRect(window->hwnd, &rw);
             GetWindowRect(window->frame, &rmw);
             // Resize the mainhWnd window in order to make the bitmap fit into the child window
-            error = MoveWindow(window->frame, rmw.left, rmw.top, 
+            MoveWindow(window->frame, rmw.left, rmw.top, 
                 rmw.right - rmw.left + size.cx - rw.right + rw.left, 
                 rmw.bottom  - rmw.top + size.cy - rw.bottom + rw.top, TRUE );
-            assert(error);
         }
     }
     
@@ -893,7 +915,9 @@ static LRESULT CALLBACK HGToolbarProc( HWND hwnd, UINT uMsg, WPARAM wParam, LPAR
     return CallWindowProc(window->toolbar.toolBarProc, hwnd, uMsg, wParam, lParam);
 }
 
-void destroy_all()
+
+HIGHGUI_IMPL void
+cvDestroyAllWindows(void)
 {
     CvWindow* window = hg_windows;
 

@@ -46,6 +46,7 @@
 
 #include "_highgui.h"
 
+#ifdef __cplusplus
 
 //////////////////////////////////////////////////////////////////////
 // Construction/Destruction
@@ -68,10 +69,10 @@ CvvImage::~CvvImage()
 
 bool  CvvImage::Create( int w, int h, int bpp, int origin )
 {
-    const int max_img_size = 10000;
+    const unsigned max_img_size = 10000;
 
     if( (bpp != 8 && bpp != 24 && bpp != 32) ||
-        (unsigned)w >=  max_img_size || h >= max_img_size ||
+        (unsigned)w >=  max_img_size || (unsigned)h >= max_img_size ||
         (origin != IPL_ORIGIN_TL && origin != IPL_ORIGIN_BL))
     {
         assert(0); // most probably, it is a programming error
@@ -212,32 +213,7 @@ void  CvvImage::Show( const char* window )
 
 #ifdef WIN32
 
-void  FillBitmapInfo( BITMAPINFO* bmi, int width, int height, int bpp, int origin )
-{
-    assert( bmi && width >= 0 && height >= 0 && (bpp == 8 || bpp == 24 || bpp == 32));
-
-    BITMAPINFOHEADER* bmih = &(bmi->bmiHeader);
-
-    memset( bmih, 0, sizeof(*bmih));
-    bmih->biSize = sizeof(BITMAPINFOHEADER); 
-    bmih->biWidth = width;
-    bmih->biHeight = origin ? abs(height) : -abs(height);
-    bmih->biPlanes = 1; 
-    bmih->biBitCount = (unsigned short)bpp;
-    bmih->biCompression = BI_RGB;
-
-    if( bpp == 8 )
-    {
-        RGBQUAD* palette = bmi->bmiColors;
-        int i;
-        for( i = 0; i < 256; i++ )
-        {
-            palette[i].rgbBlue = palette[i].rgbGreen = palette[i].rgbRed = (BYTE)i;
-            palette[i].rgbReserved = 0;
-        }
-    }
-}
-
+void  FillBitmapInfo( BITMAPINFO* bmi, int width, int height, int bpp, int origin );
 
 void  CvvImage::Show( HDC dc, int x, int y, int w, int h, int from_x, int from_y )
 {
@@ -309,5 +285,7 @@ void  CvvImage::Fill( int color )
 {
     cvFillImage( m_img, color );
 }
+
+#endif
 
 /* End of file. */

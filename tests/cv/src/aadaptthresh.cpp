@@ -54,9 +54,8 @@ static int	aAdaptThreshold()
 {
 
     CvPoint *cp;
-//  CvPoint cp[] ={0,0, 5,5, 5,0, 0,5};
-//  CvPoint cp[] ={5,0, 10,5, 5,10, 0,5};
-//	CvPoint cp[] ={0,0, 5,5, 5,0, 10,5, 10,0, 15,5, 15,0};
+    int parameter1 = 3;
+    double parameter2 = 10;
     int width = 128;
     int height = 128;
     int kp = 5;
@@ -73,7 +72,7 @@ static int	aAdaptThreshold()
     char rand;
 	AtsRandState state;
 
-	long diff_binary, diff_binary_inv, diff_to_zero, diff_to_zero_inv;
+	long diff_binary, diff_binary_inv;
     
     int l,i,j;
 
@@ -136,8 +135,6 @@ static int	aAdaptThreshold()
 	
     memset(imInput->imageData,bgrn,l);
 
-//    CVL_CHECK(ippiFillPoly8uC1R((uchar*)Iplimage->imageData, Iplimage->widthStep, size, cp, kp, color1));
-
     cvFillPoly(imInput, &cp, &kp, 1, signal);
 
 //  do noise   
@@ -145,11 +142,7 @@ static int	aAdaptThreshold()
     lower = -upper;
     seed = 345753;
     atsRandInit( &state, lower, upper, seed );
-
 	
-//	named_window("input image", 1);
-//	named_window("binary image", 1);
-
 	uchar *input = (uchar*)imInput->imageData;
 	uchar *binary = (uchar*)imBinary->imageData;
 	uchar *binary_inv = (uchar*)imBinary_inv->imageData;
@@ -164,7 +157,6 @@ static int	aAdaptThreshold()
 		 for(j = 0; j<size.width; j++)
          {
 			    atsbRand8s( &state, &rand, 1);   
-//				rand = 0;   
 				if(input[j] == bgrn) 
 				{
 					binary[j] = to_zero[j] = (uchar)0;
@@ -183,33 +175,14 @@ static int	aAdaptThreshold()
 
 
 
-//				CV_THRESH_BINARY       - val = (val > Thresh ? MAX    : 0)
-//	minDisp = (double)45;
-	parameter[0] = (double)2;  
-	parameter[1] = (double)50; 
-	
-	cvAdaptiveThreshold( imInput, imOutput, (double)255, CV_STDDEV_ADAPTIVE_THRESH, CV_THRESH_BINARY, parameter); 
+	cvAdaptiveThreshold( imInput, imOutput, (double)255, CV_ADAPTIVE_THRESH_MEAN_C, CV_THRESH_BINARY, parameter1, parameter2 ); 
 	diff_binary = atsCompare1Db( (uchar*)imOutput->imageData, (uchar*)imBinary->imageData, l, 5);
 
-//	show_iplimage("input image", imInput);
-//	show_iplimage("binary image", imOutput);
-//	wait_key(0);
-
-
-//                  CV_THRESH_BINARY_INV   - val = (val > Thresh ? 0      : MAX)
-	cvAdaptiveThreshold( imInput, imOutput, (double)255, CV_STDDEV_ADAPTIVE_THRESH, CV_THRESH_BINARY_INV, parameter); 
+	cvAdaptiveThreshold( imInput, imOutput, (double)255, CV_ADAPTIVE_THRESH_MEAN_C, CV_THRESH_BINARY_INV, parameter1, parameter2 ); 
 	diff_binary_inv = atsCompare1Db( (uchar*)imOutput->imageData, (uchar*)imBinary_inv->imageData, l, 5);
 
-//                  CV_THRESH_TOZERO       - val = (val > Thresh ? val    : 0)
-	cvAdaptiveThreshold( imInput, imOutput, (double)255, CV_STDDEV_ADAPTIVE_THRESH, CV_THRESH_TOZERO, parameter); 
-	diff_to_zero = atsCompare1Db( (uchar*)imOutput->imageData, (uchar*)imTo_zero->imageData, l, 5);
-
-//                  CV_THRESH_TOZERO_INV   - val = (val > Thresh ? 0      : val)
-	cvAdaptiveThreshold( imInput, imOutput, (double)255, CV_STDDEV_ADAPTIVE_THRESH, CV_THRESH_TOZERO_INV, parameter); 
-	diff_to_zero_inv = atsCompare1Db( (uchar*)imOutput->imageData, (uchar*)imTo_zero_inv->imageData, l, 5);
-
-    if(diff_binary > 5 || diff_binary_inv > 5 || diff_to_zero > 5 || diff_to_zero_inv > 5) code = TRS_FAIL;  
-
+    if( diff_binary > 5 || diff_binary_inv > 5 )
+        code = TRS_FAIL;  
 	
 	atsReleaseImage(imInput);
 	atsReleaseImage(imOutput);
@@ -218,19 +191,11 @@ static int	aAdaptThreshold()
 	atsReleaseImage(imTo_zero);
 	atsReleaseImage(imTo_zero_inv);
 
-
-//	destroy_window("input image");
-//	destroy_window("binary image");
-
-
     trsWrite( ATS_CON | ATS_LST | ATS_SUM, "diff_binary =%ld \n", diff_binary); 
 	trsWrite( ATS_CON | ATS_LST | ATS_SUM, "diff_binary_inv =%ld \n", diff_binary_inv); 
-	trsWrite( ATS_CON | ATS_LST | ATS_SUM, "diff_to_zero =%ld \n", diff_to_zero); 
-	trsWrite( ATS_CON | ATS_LST | ATS_SUM, "diff_to_zero_inv =%ld \n", diff_to_zero_inv); 
 
     trsFree(parameter);
     trsFree(cp);
-//    _getch();    
     return code;
 }
 

@@ -110,7 +110,7 @@ bool GetContour( int /*type*/, CvSeq** Seq, int* d,
     int total = atsRandPlain32s( rng_state ) % 1000 + 1;
     CvPoint center;
     int radius, angle;
-    double deg_to_rad = IPL_PI/180.;
+    double deg_to_rad = CV_PI/180.;
     CvPoint pt;
 
     center.x = atsRandPlain32s( rng_state ) % 1000;

@@ -87,10 +87,10 @@ void show_points( IplImage* gray, CvPoint2D32f* u, int u_cnt, CvPoint2D32f* v, i
         }
     }
 
-    named_window( "test", 0 );
-    show_iplimage( "test", rgb );
+    cvvNamedWindow( "test", 0 );
+    cvvShowImage( "test", rgb );
 
-    wait_key(0);
+    cvvWaitKey(0);
 }
 
 
@@ -141,7 +141,7 @@ static int chess_corner_test( void )
         /* read the image */
         sprintf( filename, "%schess%d.jpg", filepath, idx );
 	
-        img = load_iplimage( filename );
+        img = cvvLoadImage( filename );
         
         if( !img )
         {

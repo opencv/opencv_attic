@@ -94,6 +94,7 @@ class GrFmtTiffReader : public GrFmtReader
 public:
     
     GrFmtTiffReader( const char* filename );
+    ~GrFmtTiffReader();
 
     bool  CheckFormat( const char* signature );
     bool  ReadData( uchar* data, int step, int color );
@@ -148,7 +149,8 @@ class GrFmtTiffWriter : public GrFmtWriter
 public:
     
     GrFmtTiffWriter( const char* filename );
-    
+    ~GrFmtTiffWriter();
+
     bool  WriteImage( const uchar* data, int step,
                       int width, int height, bool isColor );
 protected:
@@ -166,6 +168,8 @@ class GrFmtTiff : public GrFmtFilterFactory
 public:
     
     GrFmtTiff();
+    ~GrFmtTiff();
+
     GrFmtReader* NewReader( const char* filename );
     GrFmtWriter* NewWriter( const char* filename );
     bool CheckSignature( const char* signature );

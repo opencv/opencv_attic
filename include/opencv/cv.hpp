@@ -79,9 +79,9 @@ public:
     float   get_orientation() const // orientation of the object in degrees 
     { return m_box.angle; }
     float   get_length() const // the larger linear size of the object
-    { return m_box.size.width; }
-    float   get_width() const // the smaller linear size of the object
     { return m_box.size.height; }
+    float   get_width() const // the smaller linear size of the object
+    { return m_box.size.width; }
     CvPoint2D32f get_center() const // center of the object
     { return m_box.center; }
     CvRect get_window() const // bounding rectangle for the object

@@ -176,8 +176,6 @@ static int foaCamShiftC1R( void* prm )
             break;
         } /* switch( Flvr ) */
 
-        putchar('.');
-
         for( i = 0; i < steps; i++ )
         {
             CvConnectedComp comp;

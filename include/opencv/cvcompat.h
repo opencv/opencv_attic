@@ -49,7 +49,7 @@
 
 #include <string.h>
 
-#if _MSC_VER>=1200
+#if _MSC_VER>=1200 && !defined __ICL
     #define CV_UNREFERENCED(arg)  (arg)
 #else
     #define CV_UNREFERENCED(arg)
@@ -126,7 +126,13 @@ CV_INLINE double cvMean( const CvArr* image, const CvArr* mask )
     return mean.val[0];
 }
 
-#define cvSumPixels( img )  ((cvSum( img )).val[0])
+
+CV_INLINE double  cvSumPixels( const CvArr* image );
+CV_INLINE double  cvSumPixels( const CvArr* image )
+{
+    CvScalar scalar = cvSum( image );
+    return scalar.val[0];
+}
 
 CV_INLINE void  cvMean_StdDev( const CvArr* image, double* mean, double* sdv,
                                const CvArr* mask CV_DEFAULT(0));
@@ -488,7 +494,9 @@ CV_INLINE  void  cvFindFundamentalMatrix( int* points1, int* points2,
     CvMat* pointsMat2;
     CvMat fundMatr = cvMat(3,3,CV_32F,matrix);
     int i, curr = 0;
+#ifndef __BORLANDC__
     method = method;
+#endif
 
     pointsMat1 = cvCreateMat(3,numpoints,CV_64F);
     pointsMat2 = cvCreateMat(3,numpoints,CV_64F);

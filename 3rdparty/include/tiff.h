@@ -1,4 +1,4 @@
-/* $Header: /home/vp/work/opencv-cvsbackup/opencv/3rdparty/include/tiff.h,v 1.1 2002-11-27 22:50:19 neurosurg Exp $ */
+/* $Header: /home/vp/work/opencv-cvsbackup/opencv/3rdparty/include/tiff.h,v 1.2 2002-12-01 15:38:38 neurosurg Exp $ */
 
 /*
  * Copyright (c) 1988-1997 Sam Leffler

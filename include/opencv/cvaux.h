@@ -42,7 +42,6 @@
 #ifndef __CVAUX__H__
 #define __CVAUX__H__
 
-/*#include "ipl.h"*/
 #include <cv.h>
 
 #if defined WIN32 && defined CVAUX_DLL
@@ -609,6 +608,20 @@ OPENCVAUXAPI CvStatus icvSelectBestRt(           int           numImages,
                                     CvVect32f     bestTransVect
                                     );
 
+/****************************************************************************************\
+*                                   Contour Morphing                                     *
+\****************************************************************************************/
+
+/* finds correspondence between two contours */
+CvSeq* cvCalcContoursCorrespondence( const CvSeq* contour1,
+                                     const CvSeq* contour2, 
+                                     CvMemStorage* storage);
+
+/* morphs contours using the pre-calculated correspondence:
+   alpha=0 ~ contour1, alpha=1 ~ contour2 */
+CvSeq* cvMorphContours( const CvSeq* contour1, const CvSeq* contour2,
+                        CvSeq* corr, double alpha,
+                        CvMemStorage* storage );
 
 /****************************************************************************************\
 *                                    Texture Descriptors                                 *
@@ -767,7 +780,7 @@ cvReleaseHaarClassifierCascade( CvHaarClassifierCascade** cascade );
 \****************************************************************************************/
 
 
-typedef struct CvFaceTracking CvFaceTracking;
+typedef struct CvFaceTracker CvFaceTracker;
 
 #define CV_NUM_FACE_ELEMENTS    3 
 enum CV_FACE_ELEMENTS
@@ -777,12 +790,12 @@ enum CV_FACE_ELEMENTS
     CV_FACE_RIGHT_EYE = 2
 };
 
-OPENCVAUXAPI CvFaceTracking* cvInitFaceTracking(CvFaceTracking* pFaceTracking, const IplImage* imgGray,
+OPENCVAUXAPI CvFaceTracker* cvInitFaceTracker(CvFaceTracker* pFaceTracking, const IplImage* imgGray,
                                                 CvRect* pRects, int nRects);
-OPENCVAUXAPI int cvFindFaceTracking(CvFaceTracking* pFaceTracking, IplImage* imgGray,
-                                    CvRect* pRects, int nRects,
-                                    CvPoint* ptRotate, double* dbAngleRotate);
-OPENCVAUXAPI void cvReleaseFaceTracking(CvFaceTracking** ppFaceTracking);
+OPENCVAUXAPI int cvTrackFace( CvFaceTracker* pFaceTracker, IplImage* imgGray,
+                              CvRect* pRects, int nRects,
+                              CvPoint* ptRotate, double* dbAngleRotate);
+OPENCVAUXAPI void cvReleaseFaceTracker(CvFaceTracker** ppFaceTracker);
 
 
 typedef struct CvFace
@@ -792,9 +805,192 @@ typedef struct CvFace
     CvRect RightEyeRect;
 } CvFaceData;
 
-CvSeq * cvFindFace(IplImage * Image,CvMemStorage* lpStorage);
-CvSeq * cvPostBoostingFindFace(IplImage * Image,CvMemStorage* lpStorage);
+CvSeq * cvFindFace(IplImage * Image,CvMemStorage* storage);
+CvSeq * cvPostBoostingFindFace(IplImage * Image,CvMemStorage* storage);
 
+
+/****************************************************************************************\
+*                                         3D Tracker                                     *
+\****************************************************************************************/
+
+typedef unsigned char CvBool;
+
+typedef struct
+{
+    int id;
+    CvPoint p;
+} Cv3dTracker2dTrackedObject;
+
+CV_INLINE Cv3dTracker2dTrackedObject cv3dTracker2dTrackedObject(int id, CvPoint p);
+CV_INLINE Cv3dTracker2dTrackedObject cv3dTracker2dTrackedObject(int id, CvPoint p)
+{
+    Cv3dTracker2dTrackedObject r;
+    r.id = id;
+    r.p = p;
+    return r;
+}
+
+typedef struct
+{
+    int id;
+    CvPoint3D32f p;             // location of the tracked object
+} Cv3dTrackerTrackedObject;
+
+CV_INLINE Cv3dTracker2dTrackedObject cv3dTracker2dTrackedObject(int id, CvPoint p);
+CV_INLINE Cv3dTrackerTrackedObject cv3dTrackerTrackedObject(int id, CvPoint3D32f p)
+{
+    Cv3dTrackerTrackedObject r;
+    r.id = id;
+    r.p = p;
+    return r;
+}
+
+typedef struct
+{
+    CvBool valid;
+    float mat[4][4];              /* maps camera coordinates to world coordinates */
+    CvPoint2D32f principal_point; /* copied from intrinsics so this structure */
+                                  /* has all the info we need */
+} Cv3dTrackerCameraInfo;
+
+typedef struct
+{
+    CvPoint2D32f principal_point;
+    float focal_length[2];
+    float distortion[4];
+} Cv3dTrackerCameraIntrinsics;
+
+OPENCVAUXAPI CvBool cv3dTrackerCalibrateCameras(int num_cameras,
+                     const Cv3dTrackerCameraIntrinsics camera_intrinsics[], /* size is num_cameras */
+                     CvSize etalon_size,
+                     float square_size,
+                     IplImage *samples[],                                   /* size is num_cameras */
+                     Cv3dTrackerCameraInfo camera_info[]);                  /* size is num_cameras */
+
+OPENCVAUXAPI int  cv3dTrackerLocateObjects(int num_cameras, int num_objects,
+                   const Cv3dTrackerCameraInfo camera_info[],        /* size is num_cameras */
+                   const Cv3dTracker2dTrackedObject tracking_info[], /* size is num_objects*num_cameras */
+                   Cv3dTrackerTrackedObject tracked_objects[]);      /* size is num_objects */
+/****************************************************************************************
+ tracking_info is a rectangular array; one row per camera, num_objects elements per row.
+ The id field of any unused slots must be -1. Ids need not be ordered or consecutive. On
+ completion, the return value is the number of objects located; i.e., the number of objects
+ visible by more than one camera. The id field of any unused slots in tracked objects is
+ set to -1.
+****************************************************************************************/
+
+
+/****************************************************************************************\
+*                           Skeletons and Linear-Contour Models                          *
+\****************************************************************************************/
+
+typedef enum CvLeeParameters
+{
+    CV_LEE_INT = 0,
+    CV_LEE_FLOAT = 1,
+    CV_LEE_DOUBLE = 2,
+    CV_LEE_AUTO = -1,
+    CV_LEE_ERODE = 0,
+    CV_LEE_ZOOM = 1,
+    CV_LEE_NON = 2
+} CvLeeParameters;
+
+#define CV_NEXT_VORONOISITE2D( SITE ) ((SITE)->edge[0]->site[((SITE)->edge[0]->site[0] == (SITE))])
+#define CV_PREV_VORONOISITE2D( SITE ) ((SITE)->edge[1]->site[((SITE)->edge[1]->site[0] == (SITE))])
+#define CV_FIRST_VORONOIEDGE2D( SITE ) ((SITE)->edge[0])
+#define CV_LAST_VORONOIEDGE2D( SITE ) ((SITE)->edge[1])
+#define CV_NEXT_VORONOIEDGE2D( EDGE, SITE ) ((EDGE)->next[(EDGE)->site[0] != (SITE)])
+#define CV_PREV_VORONOIEDGE2D( EDGE, SITE ) ((EDGE)->next[2 + ((EDGE)->site[0] != (SITE))])
+#define CV_VORONOIEDGE2D_BEGINNODE( EDGE, SITE ) ((EDGE)->node[((EDGE)->site[0] != (SITE))])
+#define CV_VORONOIEDGE2D_ENDNODE( EDGE, SITE ) ((EDGE)->node[((EDGE)->site[0] == (SITE))])
+#define CV_TWIN_VORONOISITE2D( SITE, EDGE ) ( (EDGE)->site[((EDGE)->site[0] == (SITE))]) 
+
+#define CV_VORONOISITE2D_FIELDS()    \
+    struct CvVoronoiNode2D *node[2]; \
+    struct CvVoronoiEdge2D *edge[2];
+
+typedef struct CvVoronoiSite2D
+{
+    CV_VORONOISITE2D_FIELDS()
+    struct CvVoronoiSite2D *next[2];
+} CvVoronoiSite2D;
+
+#define CV_VORONOIEDGE2D_FIELDS()    \
+    struct CvVoronoiNode2D *node[2]; \
+    struct CvVoronoiSite2D *site[2]; \
+    struct CvVoronoiEdge2D *next[4];
+
+typedef struct CvVoronoiEdge2D
+{
+    CV_VORONOIEDGE2D_FIELDS()
+} CvVoronoiEdge2D;
+
+#define CV_VORONOINODE2D_FIELDS()       \
+    CV_SET_ELEM_FIELDS(CvVoronoiNode2D) \
+    CvPoint2D32f pt;                    \
+    float radius;
+
+typedef struct CvVoronoiNode2D
+{
+    CV_VORONOINODE2D_FIELDS()
+} CvVoronoiNode2D;
+
+#define CV_VORONOIDIAGRAM2D_FIELDS() \
+    CV_GRAPH_FIELDS()                \
+    CvSet *sites;
+
+typedef struct CvVoronoiDiagram2D
+{
+    CV_VORONOIDIAGRAM2D_FIELDS()
+} CvVoronoiDiagram2D;
+
+/* Computes Voronoi Diagram for given polygons with holes */
+OPENCVAUXAPI int  cvVoronoiDiagramFromContour(CvSeq* ContourSeq,
+                                           CvVoronoiDiagram2D** VoronoiDiagram,
+                                           CvMemStorage* VoronoiStorage,
+                                           CvLeeParameters contour_type CV_DEFAULT(CV_LEE_INT),
+                                           int contour_orientation CV_DEFAULT(-1),
+                                           int attempt_number CV_DEFAULT(10));
+
+/* Computes Voronoi Diagram for domains in given image */
+OPENCVAUXAPI int  cvVoronoiDiagramFromImage(IplImage* pImage,
+                                         CvSeq** ContourSeq,
+                                         CvVoronoiDiagram2D** VoronoiDiagram,
+                                         CvMemStorage* VoronoiStorage,
+                                         CvLeeParameters regularization_method CV_DEFAULT(CV_LEE_NON),
+                                         float approx_precision CV_DEFAULT(CV_LEE_AUTO));
+
+/* Deallocates the storage */
+OPENCVAUXAPI void cvReleaseVoronoiStorage(CvVoronoiDiagram2D* VoronoiDiagram,
+                                          CvMemStorage** pVoronoiStorage);
+
+/*********************** Linear-Contour Model ****************************/
+
+struct CvLCMEdge;
+struct CvLCMNode;
+
+typedef struct CvLCMEdge
+{
+    CV_GRAPH_EDGE_FIELDS() 
+    CvSeq* chain;
+    float width;
+    int index1;
+    int index2;
+} CvLCMEdge;
+
+typedef struct CvLCMNode
+{
+    CV_GRAPH_VERTEX_FIELDS()
+    CvContour* contour; 
+} CvLCMNode;
+
+
+/* Computes hybrid model from Voronoi Diagram */
+OPENCVAUXAPI CvGraph* cvLinearContorModelFromVoronoiDiagram(CvVoronoiDiagram2D* VoronoiDiagram,
+                                                         float maxWidth);
+
+/* Releases hybrid model storage */
+OPENCVAUXAPI int cvReleaseLinearContorModelStorage(CvGraph** Graph);
 
 /****************************************************************************************\
 *                                   Calibration engine                                   *
@@ -887,9 +1083,6 @@ public:
     
     /* Loads all camera parameters from file */
     virtual bool LoadCameraParams( const char* filename );
-
-//    /* Calculates epipolar geometry parameters using camera parameters */
-//    virtual bool CalcEpipolarGeometry();
 
     /* Undistorts images using camera parameters. Some of src pointers can be NULL. */
     virtual bool Undistort( IplImage** src, IplImage** dst );

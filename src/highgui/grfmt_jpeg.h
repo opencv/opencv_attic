@@ -54,6 +54,7 @@ class GrFmtJpegReader : public GrFmtReader
 public:
     
     GrFmtJpegReader( const char* filename );
+    ~GrFmtJpegReader();
 
     bool  ReadData( uchar* data, int step, int color );
     bool  ReadHeader();
@@ -72,6 +73,8 @@ class GrFmtJpegWriter : public GrFmtWriter
 public:
     
     GrFmtJpegWriter( const char* filename );
+    ~GrFmtJpegWriter();
+
     bool  WriteImage( const uchar* data, int step,
                       int width, int height, bool isColor );
 };
@@ -182,6 +185,7 @@ class GrFmtJpegWriter : public GrFmtWriter
 public:
     
     GrFmtJpegWriter( const char* filename );
+    ~GrFmtJpegWriter();
 
     bool  WriteImage( const uchar* data, int step,
                       int width, int height, bool isColor );
@@ -200,6 +204,8 @@ class GrFmtJpeg : public GrFmtFilterFactory
 public:
     
     GrFmtJpeg();
+    ~GrFmtJpeg();
+
     GrFmtReader* NewReader( const char* filename );
     GrFmtWriter* NewWriter( const char* filename );
 };

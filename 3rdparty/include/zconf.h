@@ -3,7 +3,7 @@
  * For conditions of distribution and use, see copyright notice in zlib.h 
  */
 
-/* @(#) $Id: zconf.h,v 1.1 2002-11-27 22:50:19 neurosurg Exp $ */
+/* @(#) $Id: zconf.h,v 1.2 2002-12-01 15:38:38 neurosurg Exp $ */
 
 #ifndef _ZCONF_H
 #define _ZCONF_H

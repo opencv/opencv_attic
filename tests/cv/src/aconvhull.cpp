@@ -299,8 +299,8 @@ static int fmaConvexHullContour(void* prm)
         int numpts;
         /* Allocating points */
                 
-        cvStartWriteSeq( CV_SEQ_SIMPLE_POLYGON , sizeof(CvSeq),
-                                sizeof(CvPoint), storage, &writer );
+        cvStartWriteSeq( CV_SEQ_SIMPLE_POLYGON , sizeof(CvContour),
+                         sizeof(CvPoint), storage, &writer );
 
         ats1iInitRandom( 5, lNumPoints, &numpts, 1 );
         

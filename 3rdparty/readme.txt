@@ -49,3 +49,15 @@ zlib 1.1.4 - General purpose LZ77 compression library
              it is included automatically if either libpng or libtiff are used.
 
 ------------------------------------------------------------------------------------
+
+The folder lib also contains libvfw_*.a import libraries that enable to
+build vfw camera/avi capture code of highgui with Mingw compiler.
+
+The files have been taken from http://mywebpage.netscape.com/PtrPck/multimedia.htm site.
+Besides the libraries, you will also need the following headers that are missing in Mingw:
+msacm.h, mmreg.h, vfw.h, vfwmsgs.h, verinfo.h, verinfo.ver, digitalv.h.
+Copy them to <GCC_HOME>\include
+You may take them, for example, from Microsoft Platform SDK or
+Borland C++ 5.5 free compiler.
+
+------------------------------------------------------------------------------------

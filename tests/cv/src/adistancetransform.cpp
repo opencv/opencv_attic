@@ -129,7 +129,7 @@ int test_dt(void* arg)
     }
 
     /* Insert random feature points */
-    iplSet(image, 1);
+    cvSet(image, cvScalarAll(1));
     switch(genType = read_gen_type())
     {
     case 0:
@@ -152,7 +152,7 @@ int test_dt(void* arg)
 
     /* Run the distance transformation function */
     cvDistTransform(image, dist, CV_DIST_L2, maskType, 0);
-    if(iplGetErrStatus() < 0)
+    if(cvGetErrStatus() < 0)
     {
         cvReleaseImage( &image );
         cvReleaseImage( &dist );

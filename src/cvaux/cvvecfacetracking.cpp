@@ -60,13 +60,13 @@ enum
 
 const double pi = 3.1415926535;
 
-struct CvFaceTracking;
+struct CvFaceTracker;
 struct CvTrackingRect;
 class CvFaceElement;
 
 void ThresholdingParam(IplImage *imgGray, int iNumLayers, int &iMinLevel, int &iMaxLevel, float &step, float& power, int iHistMin /*= HIST_MIN*/);
-int ChoiceTrackingFace3(CvFaceTracking* pTF, const int nElements, const CvFaceElement* big_face, CvTrackingRect* face, int& new_energy);
-int ChoiceTrackingFace2(CvFaceTracking* pTF, const int nElements, const CvFaceElement* big_face, CvTrackingRect* face, int& new_energy, int noel);
+int ChoiceTrackingFace3(CvFaceTracker* pTF, const int nElements, const CvFaceElement* big_face, CvTrackingRect* face, int& new_energy);
+int ChoiceTrackingFace2(CvFaceTracker* pTF, const int nElements, const CvFaceElement* big_face, CvTrackingRect* face, int& new_energy, int noel);
 inline int GetEnergy(CvTrackingRect** ppNew, const CvTrackingRect* pPrev, CvPoint* ptTempl, CvRect* rTempl);
 inline int GetEnergy2(CvTrackingRect** ppNew, const CvTrackingRect* pPrev, CvPoint* ptTempl, CvRect* rTempl, int* element);
 inline double CalculateTransformationLMS3_0( CvPoint* pTemplPoints, CvPoint* pSrcPoints);
@@ -104,7 +104,7 @@ struct CvTrackingRect
     }
 };
 
-struct CvFaceTracking
+struct CvFaceTracker
 {
     CvTrackingRect face[NUM_FACE_ELEMENTS];
     int iTrackingFaceType;
@@ -118,7 +118,7 @@ struct CvFaceTracking
     IplImage* imgGray;
     IplImage* imgThresh;
     CvMemStorage* mstgContours;
-    CvFaceTracking()
+    CvFaceTracker()
     {
         ptRotate.x = 0;
         ptRotate.y = 0;
@@ -129,7 +129,7 @@ struct CvFaceTracking
         imgGray = NULL;
         mstgContours = NULL;
     };
-    ~CvFaceTracking()
+    ~CvFaceTracker()
     {
         if (NULL != imgGray)
             delete imgGray;
@@ -425,8 +425,8 @@ void CvFaceElement::Energy()
     }
 }//void CvFaceElement::Energy()
 
-CV_IMPL CvFaceTracking*
-cvInitFaceTracking(CvFaceTracking* pFaceTracking, const IplImage* imgGray, CvRect* pRects, int nRects)
+CV_IMPL CvFaceTracker*
+cvInitFaceTracker(CvFaceTracker* pFaceTracker, const IplImage* imgGray, CvRect* pRects, int nRects)
 {
     _ASSERT(NULL != imgGray);
     _ASSERT(NULL != pRects);
@@ -437,44 +437,44 @@ cvInitFaceTracking(CvFaceTracking* pFaceTracking, const IplImage* imgGray, CvRec
         return NULL;
     
     int new_face = FALSE;
-    CvFaceTracking* pFace = pFaceTracking;
+    CvFaceTracker* pFace = pFaceTracker;
     if (NULL == pFace)
     {
-        pFace = new CvFaceTracking;
+        pFace = new CvFaceTracker;
         if (NULL == pFace)
             return NULL;
         new_face = TRUE;
     }
     pFace->Init(pRects, (IplImage*)imgGray);
     return pFace;
-}//CvFaceTracking* InitFaceTracking(IplImage* imgGray, CvRect* pRects, int nRects)
+}//CvFaceTracker* InitFaceTracker(IplImage* imgGray, CvRect* pRects, int nRects)
 
 CV_IMPL void
-cvReleaseFaceTracking(CvFaceTracking** ppFaceTracking)
+cvReleaseFaceTracker(CvFaceTracker** ppFaceTracker)
 {
-    if (NULL == *ppFaceTracking)
+    if (NULL == *ppFaceTracker)
         return;
-    delete *ppFaceTracking;
-    *ppFaceTracking = NULL;
-}//void ReleaseFaceTracking(CvFaceTracking** ppFaceTracking)
+    delete *ppFaceTracker;
+    *ppFaceTracker = NULL;
+}//void ReleaseFaceTracker(CvFaceTracker** ppFaceTracker)
 
 
 CV_IMPL int
-cvFindFaceTracking(CvFaceTracking* pFaceTracking, IplImage* imgGray, CvRect* pRects, int nRects, CvPoint* ptRotate, double* dbAngleRotate)
+cvTrackFace(CvFaceTracker* pFaceTracker, IplImage* imgGray, CvRect* pRects, int nRects, CvPoint* ptRotate, double* dbAngleRotate)
 {
-    _ASSERT(NULL != pFaceTracking);
+    _ASSERT(NULL != pFaceTracker);
     _ASSERT(NULL != imgGray);
     _ASSERT(NULL != pRects && nRects >= NUM_FACE_ELEMENTS);
-    if ((NULL == pFaceTracking) ||
+    if ((NULL == pFaceTracker) ||
         (NULL == imgGray))
         return FALSE;
-    pFaceTracking->InitNextImage(imgGray);
-    *ptRotate = pFaceTracking->ptRotate;
-    *dbAngleRotate = pFaceTracking->dbRotateAngle;
+    pFaceTracker->InitNextImage(imgGray);
+    *ptRotate = pFaceTracker->ptRotate;
+    *dbAngleRotate = pFaceTracker->dbRotateAngle;
     
     int nElements = 16;
-    double d_eyes = sqrt(pow2(pFaceTracking->face[LEYE].ptCenter.x - pFaceTracking->face[REYE].ptCenter.x) + 
-        pow2(pFaceTracking->face[LEYE].ptCenter.y - pFaceTracking->face[REYE].ptCenter.y));
+    double d_eyes = sqrt(pow2(pFaceTracker->face[LEYE].ptCenter.x - pFaceTracker->face[REYE].ptCenter.x) + 
+        pow2(pFaceTracker->face[LEYE].ptCenter.y - pFaceTracker->face[REYE].ptCenter.y));
     int d = int(0.25 * d_eyes + 0.5);
     int dMinSize = d;
     int nRestarts = 0;
@@ -486,7 +486,7 @@ START:
     // init
     for (elem = 0; elem < NUM_FACE_ELEMENTS; elem++)
     {
-        CvRect r = pFaceTracking->face[elem].r;
+        CvRect r = pFaceTracker->face[elem].r;
         Extend(r, d);
         if (r.width < 4*d)
         {
@@ -502,26 +502,26 @@ START:
             r.x = 1;
         if (r.y < 1)
             r.y = 1;
-        if (r.x + r.width > pFaceTracking->imgGray->width - 2)
-            r.width = pFaceTracking->imgGray->width - 2 - r.x;
-        if (r.y + r.height > pFaceTracking->imgGray->height - 2)
-            r.height = pFaceTracking->imgGray->height - 2 - r.y;
-        if (!big_face[elem].Init(r, pFaceTracking->face[elem], pFaceTracking->mstgContours))
+        if (r.x + r.width > pFaceTracker->imgGray->width - 2)
+            r.width = pFaceTracker->imgGray->width - 2 - r.x;
+        if (r.y + r.height > pFaceTracker->imgGray->height - 2)
+            r.height = pFaceTracker->imgGray->height - 2 - r.y;
+        if (!big_face[elem].Init(r, pFaceTracker->face[elem], pFaceTracker->mstgContours))
             return FALSE;
     }
     // find contours
     for (elem = 0; elem < NUM_FACE_ELEMENTS; elem++)
-        big_face[elem].FindRects(pFaceTracking->imgGray, pFaceTracking->imgThresh, 32, dMinSize);
+        big_face[elem].FindRects(pFaceTracker->imgGray, pFaceTracker->imgThresh, 32, dMinSize);
     // candidats
     CvTrackingRect new_face[NUM_FACE_ELEMENTS];
     int new_energy = 0;
-    int found = ChoiceTrackingFace3(pFaceTracking, nElements, big_face, new_face, new_energy);
+    int found = ChoiceTrackingFace3(pFaceTracker, nElements, big_face, new_face, new_energy);
     int restart = FALSE;
     int find2 = FALSE;
     int noel = -1;
     if (found)
     {
-        if (new_energy > 100000 && -1 != pFaceTracking->iTrackingFaceType)
+        if (new_energy > 100000 && -1 != pFaceTracker->iTrackingFaceType)
             find2 = TRUE;
         else if (new_energy > 150000)
         {
@@ -541,7 +541,7 @@ START:
     }
     else
     {
-        if (-1 != pFaceTracking->iTrackingFaceType)
+        if (-1 != pFaceTracker->iTrackingFaceType)
             find2 = TRUE;
         else
             restart = TRUE;
@@ -557,12 +557,12 @@ RESTART:
     }
     else if (find2)
     {
-        if (-1 != pFaceTracking->iTrackingFaceType)
-            noel = pFaceTracking->iTrackingFaceType;
-        int found2 = ChoiceTrackingFace2(pFaceTracking, nElements, big_face, new_face, new_energy, noel);
+        if (-1 != pFaceTracker->iTrackingFaceType)
+            noel = pFaceTracker->iTrackingFaceType;
+        int found2 = ChoiceTrackingFace2(pFaceTracker, nElements, big_face, new_face, new_energy, noel);
         if (found2 && new_energy < 100000)
         {
-            pFaceTracking->iTrackingFaceType = noel;
+            pFaceTracker->iTrackingFaceType = noel;
             found = TRUE;
         }
         else 
@@ -575,41 +575,41 @@ RESTART:
     if (found)
     {
         // angle by mouth & eyes
-        double vx_prev = double(pFaceTracking->face[LEYE].ptCenter.x + pFaceTracking->face[REYE].ptCenter.x) / 2.0 - pFaceTracking->face[MOUTH].ptCenter.x;
-        double vy_prev = double(pFaceTracking->face[LEYE].ptCenter.y + pFaceTracking->face[REYE].ptCenter.y) / 2.0 - pFaceTracking->face[MOUTH].ptCenter.y;
-        double vx_prev1 = vx_prev * cos(pFaceTracking->dbRotateDelta) - vy_prev * sin(pFaceTracking->dbRotateDelta);
-        double vy_prev1 = vx_prev * sin(pFaceTracking->dbRotateDelta) + vy_prev * cos(pFaceTracking->dbRotateDelta);
+        double vx_prev = double(pFaceTracker->face[LEYE].ptCenter.x + pFaceTracker->face[REYE].ptCenter.x) / 2.0 - pFaceTracker->face[MOUTH].ptCenter.x;
+        double vy_prev = double(pFaceTracker->face[LEYE].ptCenter.y + pFaceTracker->face[REYE].ptCenter.y) / 2.0 - pFaceTracker->face[MOUTH].ptCenter.y;
+        double vx_prev1 = vx_prev * cos(pFaceTracker->dbRotateDelta) - vy_prev * sin(pFaceTracker->dbRotateDelta);
+        double vy_prev1 = vx_prev * sin(pFaceTracker->dbRotateDelta) + vy_prev * cos(pFaceTracker->dbRotateDelta);
         vx_prev = vx_prev1;
         vy_prev = vy_prev1;
         for (elem = 0; elem < NUM_FACE_ELEMENTS; elem++)
-            pFaceTracking->face[elem] = new_face[elem];
-        double vx = double(pFaceTracking->face[LEYE].ptCenter.x + pFaceTracking->face[REYE].ptCenter.x) / 2.0 - pFaceTracking->face[MOUTH].ptCenter.x;
-        double vy = double(pFaceTracking->face[LEYE].ptCenter.y + pFaceTracking->face[REYE].ptCenter.y) / 2.0 - pFaceTracking->face[MOUTH].ptCenter.y;
-        pFaceTracking->dbRotateDelta = 0;
+            pFaceTracker->face[elem] = new_face[elem];
+        double vx = double(pFaceTracker->face[LEYE].ptCenter.x + pFaceTracker->face[REYE].ptCenter.x) / 2.0 - pFaceTracker->face[MOUTH].ptCenter.x;
+        double vy = double(pFaceTracker->face[LEYE].ptCenter.y + pFaceTracker->face[REYE].ptCenter.y) / 2.0 - pFaceTracker->face[MOUTH].ptCenter.y;
+        pFaceTracker->dbRotateDelta = 0;
         double n1_n2 = (vx * vx + vy * vy) * (vx_prev * vx_prev + vy_prev * vy_prev);
         if (n1_n2 != 0)
-            pFaceTracking->dbRotateDelta = asin((vx * vy_prev - vx_prev * vy) / sqrt(n1_n2));
-        pFaceTracking->dbRotateAngle -= pFaceTracking->dbRotateDelta;
+            pFaceTracker->dbRotateDelta = asin((vx * vy_prev - vx_prev * vy) / sqrt(n1_n2));
+        pFaceTracker->dbRotateAngle -= pFaceTracker->dbRotateDelta;
     }
     else
     {
-        pFaceTracking->dbRotateDelta = 0;
-        pFaceTracking->dbRotateAngle = 0;
+        pFaceTracker->dbRotateDelta = 0;
+        pFaceTracker->dbRotateAngle = 0;
     }
-    if ((pFaceTracking->dbRotateAngle >= pi/2 && pFaceTracking->dbRotateAngle > 0) ||
-        (pFaceTracking->dbRotateAngle <= -pi/2 && pFaceTracking->dbRotateAngle < 0))
+    if ((pFaceTracker->dbRotateAngle >= pi/2 && pFaceTracker->dbRotateAngle > 0) ||
+        (pFaceTracker->dbRotateAngle <= -pi/2 && pFaceTracker->dbRotateAngle < 0))
     {
-        pFaceTracking->dbRotateDelta = 0;
-        pFaceTracking->dbRotateAngle = 0;
+        pFaceTracker->dbRotateDelta = 0;
+        pFaceTracker->dbRotateAngle = 0;
         found = FALSE;
     }
     if (found)
     {
         for (int i = 0; i < NUM_FACE_ELEMENTS && i < nRects; i++)
-            pRects[i] = pFaceTracking->face[i].r;
+            pRects[i] = pFaceTracker->face[i].r;
     }
     return found;
-}//int FindFaceTracking(CvFaceTracking* pFaceTracking, IplImage* imgGray, CvRect* pRects, int nRects, CvPoint& ptRotate, double& dbAngleRotate)
+}//int FindFaceTracker(CvFaceTracker* pFaceTracker, IplImage* imgGray, CvRect* pRects, int nRects, CvPoint& ptRotate, double& dbAngleRotate)
 
 void ThresholdingParam(IplImage *imgGray, int iNumLayers, int &iMinLevel, int &iMaxLevel, float &step, float& power, int iHistMin /*= HIST_MIN*/)
 {
@@ -659,7 +659,7 @@ void ThresholdingParam(IplImage *imgGray, int iNumLayers, int &iMinLevel, int &i
         step = 1.0;
 }// void ThresholdingParam(IplImage *imgGray, int iNumLayers, int &iMinLevel, int &iMaxLevel, int &iStep)
 
-int ChoiceTrackingFace3(CvFaceTracking* pTF, const int nElements, const CvFaceElement* big_face, CvTrackingRect* face, int& new_energy)
+int ChoiceTrackingFace3(CvFaceTracker* pTF, const int nElements, const CvFaceElement* big_face, CvTrackingRect* face, int& new_energy)
 {
     CvTrackingRect* curr_face[NUM_FACE_ELEMENTS] = {NULL};
     CvTrackingRect* new_face[NUM_FACE_ELEMENTS] = {NULL};
@@ -707,7 +707,7 @@ int ChoiceTrackingFace3(CvFaceTracking* pTF, const int nElements, const CvFaceEl
     return found;
 }; // int ChoiceTrackingFace3(const CvTrackingRect* tr_face, CvTrackingRect* new_face, int& new_energy)
 
-int ChoiceTrackingFace2(CvFaceTracking* pTF, const int nElements, const CvFaceElement* big_face, CvTrackingRect* face, int& new_energy, int noel)
+int ChoiceTrackingFace2(CvFaceTracker* pTF, const int nElements, const CvFaceElement* big_face, CvTrackingRect* face, int& new_energy, int noel)
 {
     int element[NUM_FACE_ELEMENTS];
     for (int i = 0, elem = 0; i < NUM_FACE_ELEMENTS; i++)

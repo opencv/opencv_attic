@@ -1,14 +1,14 @@
 lib_LTLIBRARIES = libcvaux.la
 
 libcvaux_la_SOURCES = \
-cvaux.cpp          cvfacedetection.cpp    cvmat.cpp             \
-cvauxutils.cpp     cvfacetemplate.cpp     cvsegment.cpp         \
-cvcalibfilter.cpp  cvfindface.cpp         cvsubdiv2.cpp         \
-cvtexture.cpp      cvdpstereo.cpp     	  cvhaar.cpp            \
-cvvecfacetracking.cpp  cvepilines.cpp     cvhaarfacecascade.cpp \
-cvvideo.cpp    cvface.cpp    cvhmm1d.cpp     precomp.cpp 
+cv3dtracker.cpp    cvface.cpp             cvhmm1d.cpp          \
+cvaux.cpp          cvfacedetection.cpp    cvlcm.cpp            cvsubdiv2.cpp \
+cvauxutils.cpp     cvfacetemplate.cpp     cvlee.cpp            cvtexture.cpp \
+cvcalibfilter.cpp  cvfindface.cpp         cvmat.cpp            cvvecfacetracking.cpp \
+cvdpstereo.cpp     cvhaar.cpp             cvmorphcontours.cpp  cvvideo.cpp \
+cvepilines.cpp     cvhaarfacecascade.cpp  cvsegment.cpp        precomp.cpp
 
-EXTRA_DIST =
+EXTRA_DIST = cvaux.rc resource.h
 
 SOMAJOR = @MMAJOR@
 SOMINOR = @MMINOR@
@@ -19,8 +19,7 @@ SOSUBMINOR = @MSUBMINOR@
 include_HEADERS =
 
 # here you should add all header files, which shouldn't be installed
-noinst_HEADERS = _cvaux.h _cvvectrack.h  \
-cvfacedetection.h cvfacetemplate.h cvboostingtemplate.h cvface.h
+noinst_HEADERS = _cvaux.h  _cvfacedetection.h  _cvvectrack.h
 
 libcvaux_la_LDFLAGS = -no-undefined -version-info $(LT_CURRENT):$(LT_REVISION):$(LT_AGE) -release $(LT_RELEASE) @LDFLAGS@
 

@@ -90,8 +90,11 @@ typedef unsigned long ulong;
     #if defined _MSC_VER || defined __BORLANDC__
         #include <malloc.h>
     #endif
-#else
-    #include <alloca.h>
+#endif
+
+#ifdef __GNUC__
+    #undef alloca
+    #define alloca __builtin_alloca
 #endif
 
 #include "_cvoptions.h"
@@ -255,11 +258,11 @@ typedef struct CvBigFuncTable CvBigFuncTable;
 #define  CV_ORIGIN_BL  1
 
 #define  CV_POS_INF       0x7f800000
-#define  CV_NEG_INF       CV_TOGGLE_FLT(0xff800000)
-#define  CV_TOGGLE_FLT(x) (((x)&0x7fffffff)^(((int)(x) < 0 ? -1 : 0)))
+#define  CV_NEG_INF       0x807fffff /* CV_TOGGLE_FLT(0xff800000) */
+#define  CV_TOGGLE_FLT(x) ((x)^((int)(x) < 0 ? 0x7fffffff : 0))
 
 #define  CV_TOGGLE_DBL(x) \
-    (((x)&CV_BIG_INT(0x7fffffffffffffff))^(((int64)(x) < 0 ? -1 : 0)))
+    ((x)^((int64)(x) < 0 ? CV_BIG_INT(0x7fffffffffffffff) : 0))
 
 #define  CV_PI   3.1415926535897932384626433832795
 
