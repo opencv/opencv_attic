@@ -75,8 +75,6 @@ icvInitPyramidalAlgorithm( const uchar * imgA, const uchar * imgB,
                            int **step, CvSize** size,
                            double **scale, uchar ** buffer )
 {
-    uchar *pyr_down_temp_buffer = 0;
-    CvStatus result = CV_OK;
     int pyrBytes, bufferBytes = 0;
     int level1 = level + 1;
 
@@ -162,7 +160,6 @@ icvInitPyramidalAlgorithm( const uchar * imgA, const uchar * imgB,
         uchar *bufPtr = (uchar *) (*size + level1);
         uchar *ptrA = pyrA;
         uchar *ptrB = pyrB;
-        int pyr_down_buffer_size = 0;
 
         if( !ptrA )
         {
@@ -173,16 +170,13 @@ icvInitPyramidalAlgorithm( const uchar * imgA, const uchar * imgB,
         if( !ptrB )
             ptrB = bufPtr;
 
-        icvPyrDownGetBufSize_Gauss5x5( imgSize.width, cv8u, 1, &pyr_down_buffer_size );
-        pyr_down_temp_buffer = (uchar *) cvAlloc( pyr_down_buffer_size );
-        
         levelSize = imgSize;
 
         /* build pyramids for both frames */
         for( i = 1; i <= level; i++ )
         {
             int levelBytes;
-            CvSize srcSize = levelSize;
+            CvMat prev_level, next_level;
 
             levelSize.width = (levelSize.width + 1) >> 1;
             levelSize.height = (levelSize.height + 1) >> 1;
@@ -195,18 +189,25 @@ icvInitPyramidalAlgorithm( const uchar * imgA, const uchar * imgB,
             imgI[0][i] = (uchar *) ptrA;
             ptrA += levelBytes;
 
-            srcSize.width &= -2;
-            srcSize.height &= -2;
+            //srcSize.width &= -2;
+            //srcSize.height &= -2;
 
             if( !(flags & CV_LKFLOW_PYR_A_READY) )
             {
-                result = icvPyrDown_Gauss5x5_8u_C1R( imgI[0][i - 1], step[0][i - 1],
+                prev_level = cvMat( size[0][i-1].height, size[0][i-1].width, CV_8UC1 );
+                next_level = cvMat( size[0][i].height, size[0][i].width, CV_8UC1 );
+                cvSetData( &prev_level, imgI[0][i-1], step[0][i-1] );
+                cvSetData( &next_level, imgI[0][i], step[0][i] );
+                cvPyrDown( &prev_level, &next_level );
+
+                /*result = icvPyrDown_Gauss5x5_8u_C1R( imgI[0][i - 1], step[0][i - 1],
                                                      imgI[0][i], step[0][i],
                                                      srcSize, pyr_down_temp_buffer );
                 if( result < 0 )
                     goto func_exit;
                 icvPyrDownBorder_8u_CnR( imgI[0][i - 1], step[0][i - 1], size[0][i-1],
-                                         imgI[0][i], step[0][i], size[0][i], 1 );
+                                         imgI[0][i], step[0][i], size[0][i], 1 );*/
+                
             }
 
             imgJ[0][i] = (uchar *) ptrB;
@@ -214,19 +215,22 @@ icvInitPyramidalAlgorithm( const uchar * imgA, const uchar * imgB,
 
             if( !(flags & CV_LKFLOW_PYR_B_READY) )
             {
-                result = icvPyrDown_Gauss5x5_8u_C1R( imgJ[0][i - 1], step[0][i - 1],
+                prev_level = cvMat( size[0][i-1].height, size[0][i-1].width, CV_8UC1 );
+                next_level = cvMat( size[0][i].height, size[0][i].width, CV_8UC1 );
+                cvSetData( &prev_level, imgJ[0][i-1], step[0][i-1] );
+                cvSetData( &next_level, imgJ[0][i], step[0][i] );
+                cvPyrDown( &prev_level, &next_level );
+            
+                /*result = icvPyrDown_Gauss5x5_8u_C1R( imgJ[0][i - 1], step[0][i - 1],
                                                      imgJ[0][i], step[0][i],
                                                      srcSize, pyr_down_temp_buffer );
                 if( result < 0 )
                     goto func_exit;
                 icvPyrDownBorder_8u_CnR( imgJ[0][i - 1], step[0][i - 1], size[0][i-1],
-                                         imgJ[0][i], step[0][i], size[0][i], 1 );
+                                         imgJ[0][i], step[0][i], size[0][i], 1 );*/
             }
         }
     }
-
-  func_exit:
-    cvFree( (void**)&pyr_down_temp_buffer );
 
     return CV_OK;
 }

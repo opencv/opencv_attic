@@ -41,14 +41,40 @@
 
 #include "_cv.h"
 
+/* 
+   Finds L1 norm between two blocks.
+*/
+static int
+icvCmpBlocksL1_8u_C1( const uchar * vec1, const uchar * vec2, int len )
+{
+    int i, sum = 0;
 
-static CvStatus CV_STDCALL
+    for( i = 0; i <= len - 4; i += 4 )
+    {
+        int t0 = abs(vec1[i] - vec2[i]);
+        int t1 = abs(vec1[i + 1] - vec2[i + 1]);
+        int t2 = abs(vec1[i + 2] - vec2[i + 2]);
+        int t3 = abs(vec1[i + 3] - vec2[i + 3]);
+
+        sum += t0 + t1 + t2 + t3;
+    }
+
+    for( ; i < len; i++ )
+    {
+        int t0 = abs(vec1[i] - vec2[i]);
+        sum += t0;
+    }
+
+    return sum;
+}
+
+
+static void
 icvCopyBM_8u_C1R( const uchar* src, int src_step,
                   uchar* dst, int dst_step, CvSize size )
 {
     for( ; size.height--; src += src_step, dst += dst_step )
         memcpy( dst, src, size.width );
-    return CV_OK;
 }
 
 

@@ -130,7 +130,7 @@ cvArcLength( const void *array, CvSlice slice, int is_closed )
 }
 
 
-CvStatus
+static CvStatus
 icvFindCircle( CvPoint2D32f pt0, CvPoint2D32f pt1,
                CvPoint2D32f pt2, CvPoint2D32f * center, float *radius )
 {
@@ -213,7 +213,8 @@ icvFindEnslosingCicle4pts_32f( CvPoint2D32f * pts, CvPoint2D32f * _center, float
             idxs[k++] = i;
     }
 
-    center = icvMidPoint( pts[idxs[0]], pts[idxs[1]] );
+    center = cvPoint2D32f( (pts[idxs[0]].x + pts[idxs[1]].x)*0.5f,
+                           (pts[idxs[0]].y + pts[idxs[1]].y)*0.5f );
     radius = (float)(icvDistanceL2_32f( pts[idxs[0]], center )*1.03);
     if( radius < 1.f )
         radius = 1.f;
@@ -482,7 +483,7 @@ icvContourArea( const CvSeq* contour, double *area )
 
 \****************************************************************************************/
 
-CvStatus
+static CvStatus
 icvMemCopy( double **buf1, double **buf2, double **buf3, int *b_max )
 {
     int bb;

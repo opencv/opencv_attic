@@ -64,6 +64,11 @@ extern "C" {
 *                                    Image Processing                                    *
 \****************************************************************************************/
 
+/* Copies source 2D array into interior of destination array and makes a border
+   (of type IPL_BORDER_CONSTANT or IPL_BORDER_REPLICATE) around the copied area. */
+CVAPI(void) cvCopyMakeBorder( const CvArr* src, CvArr* dst, CvPoint offset,
+                              int bordertype, CvScalar value CV_DEFAULT(cvScalarAll(0)));
+
 #define CV_BLUR_NO_SCALE 0
 #define CV_BLUR  1
 #define CV_GAUSSIAN  2
@@ -80,7 +85,7 @@ CVAPI(void) cvSmooth( const CvArr* src, CvArr* dst,
 /* Linear filter */
 CVAPI(void) cvFilter2D( const CvArr* src, CvArr* dst, const CvMat* kernel,
                         CvPoint anchor CV_DEFAULT(cvPoint(-1,-1)));
-#define cvConvolve2D cvFilter2D
+
 
 /* Finds integral image: SUM(X,Y) = sum(x<X,y<Y)I(x,y) */
 CVAPI(void) cvIntegral( const CvArr* image, CvArr* sum,
@@ -212,7 +217,22 @@ CVAPI(void) cvLaplace( const CvArr* src, CvArr* dst,
 #define  CV_BayerRG2RGB CV_BayerBG2BGR
 #define  CV_BayerGR2RGB CV_BayerGB2BGR
 
-#define  CV_COLORCVT_MAX  56
+#define  CV_BGR2Luv     50
+#define  CV_RGB2Luv     51
+#define  CV_BGR2HLS     52
+#define  CV_RGB2HLS     53
+
+#define  CV_HSV2BGR     54
+#define  CV_HSV2RGB     55
+
+#define  CV_Lab2BGR     56
+#define  CV_Lab2RGB     57
+#define  CV_Luv2BGR     58
+#define  CV_Luv2RGB     59
+#define  CV_HLS2BGR     60
+#define  CV_HLS2RGB     61
+
+#define  CV_COLORCVT_MAX  100
 
 /* Converts input array from one color space to another */
 CVAPI(void)  cvCvtColor( const CvArr* src, CvArr* dst, int code );
@@ -691,7 +711,7 @@ CVAPI(CvSeq*) cvFindDominantPoints( CvSeq* contour, CvMemStorage* storage,
                                    double parameter3 CV_DEFAULT(0),
                                    double parameter4 CV_DEFAULT(0));
 
-/* Calculates perimeter of a contour or a part of contour */
+/* Calculates perimeter of a contour or length of a part of contour */
 CVAPI(double)  cvArcLength( const void* curve,
                             CvSlice slice CV_DEFAULT(CV_WHOLE_SEQ),
                             int is_closed CV_DEFAULT(-1));
@@ -1171,7 +1191,7 @@ CVAPI(void) cvComputeCorrespondEpilines( const CvMat* points,
 *                                 Backward compatibility                                 *
 \****************************************************************************************/
 
-#ifndef _CV_NO_BACKWARD_COMPATIBILITY
+#ifndef CV_NO_BACKWARD_COMPATIBILITY
 #include "cvcompat.h"
 #endif
 

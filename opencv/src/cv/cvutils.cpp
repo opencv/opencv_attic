@@ -405,183 +405,302 @@ CvStatus CV_STDCALL icvJacobiEigens_64d(double *A, double *V, double *E, int n, 
 }
 
 
-/* 
-   Finds L1 norm between two blocks.
-*/
-int
-icvCmpBlocksL1_8u_C1( const uchar * vec1, const uchar * vec2, int len )
-{
-    int i, sum = 0;
-
-    for( i = 0; i <= len - 4; i += 4 )
-    {
-        int t0 = abs(vec1[i] - vec2[i]);
-        int t1 = abs(vec1[i + 1] - vec2[i + 1]);
-        int t2 = abs(vec1[i + 2] - vec2[i + 2]);
-        int t3 = abs(vec1[i + 3] - vec2[i + 3]);
-
-        sum += t0 + t1 + t2 + t3;
-    }
-
-    for( ; i < len; i++ )
-    {
-        int t0 = abs(vec1[i] - vec2[i]);
-        sum += t0;
-    }
-
-    return sum;
+#define ICV_COPY_REPLICATE_BORDER_FUNC( flavor, arrtype, cn )   \
+IPCVAPI_IMPL( CvStatus,                                         \
+icvCopyReplicateBorder_##flavor, (                              \
+    const arrtype *src, int srcstep, CvSize srcroi,             \
+    arrtype* dst, int dststep, CvSize dstroi, int top, int left ),\
+    (src, srcstep, srcroi, dst, dststep, dstroi, top, left))    \
+{                                                               \
+    int i, j;                                                   \
+    srcstep /= sizeof(src[0]);                                  \
+    dststep /= sizeof(dst[0]);                                  \
+    srcroi.width *= cn;                                         \
+    dstroi.width *= cn;                                         \
+    left *= cn;                                                 \
+                                                                \
+    for( i = 0; i < dstroi.height; i++, dst += dststep )        \
+    {                                                           \
+        memcpy( dst + left, src, srcroi.width*sizeof(src[0]) ); \
+        for( j = left - 1; j >= 0; j-- )                        \
+            dst[j] = dst[j + cn];                               \
+        for( j = left + srcroi.width; j < dstroi.width; j++ )   \
+            dst[j] = dst[j - cn];                               \
+        if( i >= top && i < top + srcroi.height - 1 )           \
+            src += srcstep;                                     \
+    }                                                           \
+                                                                \
+    return CV_OK;                                               \
 }
 
 
-int64
-icvCmpBlocksL2_8u_C1( const uchar * vec1, const uchar * vec2, int len )
-{
-    int i, s = 0;
-    int64 sum = 0;
-
-    for( i = 0; i <= len - 4; i += 4 )
-    {
-        int v = vec1[i] - vec2[i];
-        int e = v * v;
-
-        v = vec1[i + 1] - vec2[i + 1];
-        e += v * v;
-        v = vec1[i + 2] - vec2[i + 2];
-        e += v * v;
-        v = vec1[i + 3] - vec2[i + 3];
-        e += v * v;
-        sum += e;
-    }
-
-    for( ; i < len; i++ )
-    {
-        int v = vec1[i] - vec2[i];
-
-        s += v * v;
-    }
-
-    return sum + s;
+#define ICV_COPY_CONST_BORDER_FUNC_C1( flavor, arrtype )        \
+IPCVAPI_IMPL( CvStatus,                                         \
+icvCopyConstBorder_##flavor, (                                  \
+    const arrtype *src, int srcstep, CvSize srcroi,             \
+    arrtype* dst, int dststep, CvSize dstroi,                   \
+    int top, int left, arrtype value ),                         \
+    (src, srcstep, srcroi, dst, dststep, dstroi, top, left, value ))\
+{                                                               \
+    int i, j;                                                   \
+    srcstep /= sizeof(src[0]);                                  \
+    dststep /= sizeof(dst[0]);                                  \
+                                                                \
+    for( i = 0; i < dstroi.height; i++, dst += dststep )        \
+    {                                                           \
+        if( i == 0 || i == srcroi.height + top )                \
+        {                                                       \
+            int limit = i < top || i == srcroi.height + top ?   \
+                        dstroi.width : left;                    \
+            for( j = 0; j < limit; j++ )                        \
+                dst[j] = value;                                 \
+                                                                \
+            if( limit == dstroi.width )                         \
+                continue;                                       \
+                                                                \
+            for( j=srcroi.width+left; j < dstroi.width; j++ )   \
+                dst[j] = value;                                 \
+        }                                                       \
+                                                                \
+        if( i < top || i > srcroi.height + top )                \
+            memcpy( dst, dst-dststep, dstroi.width*sizeof(dst[0]));\
+        else                                                    \
+        {                                                       \
+            if( i > 0 )                                         \
+            {                                                   \
+                for( j = 0; j < left; j++ )                     \
+                    dst[j] = dst[j - dststep];                  \
+                for( j = srcroi.width + left; j < dstroi.width; j++ ) \
+                    dst[j] = dst[j - dststep];                  \
+            }                                                   \
+            memcpy( dst, src, srcroi.width*sizeof(dst[0]));     \
+            src += srcstep;                                     \
+        }                                                       \
+    }                                                           \
+                                                                \
+    return CV_OK;                                               \
 }
 
 
-double
-icvCmpBlocksL2_32f_C1( const float *vec1, const float *vec2, int len )
-{
-    double sum = 0;
-    int i;
-
-    for( i = 0; i <= len - 4; i += 4 )
-    {
-        double v0 = vec1[i] - vec2[i];
-        double v1 = vec1[i + 1] - vec2[i + 1];
-        double v2 = vec1[i + 2] - vec2[i + 2];
-        double v3 = vec1[i + 3] - vec2[i + 3];
-
-        sum += v0 * v0 + v1 * v1 + v2 * v2 + v3 * v3;
-    }
-    for( ; i < len; i++ )
-    {
-        double v = vec1[i] - vec2[i];
-
-        sum += v * v;
-    }
-    return sum;
+#define ICV_COPY_CONST_BORDER_FUNC_CN( flavor, arrtype, cn )    \
+IPCVAPI_IMPL( CvStatus,                                         \
+icvCopyConstBorder_##flavor, (                                  \
+    const arrtype *src, int srcstep, CvSize srcroi,             \
+    arrtype* dst, int dststep, CvSize dstroi,                   \
+    int top, int left, const arrtype* value ),                  \
+    (src, srcstep, srcroi, dst, dststep, dstroi, top, left, value ))\
+{                                                               \
+    int i, j, k;                                                \
+    srcstep /= sizeof(src[0]);                                  \
+    dststep /= sizeof(dst[0]);                                  \
+    srcroi.width *= cn;                                         \
+    dstroi.width *= cn;                                         \
+    left *= cn;                                                 \
+                                                                \
+    for( i = 0; i < dstroi.height; i++, dst += dststep )        \
+    {                                                           \
+        if( i == 0 || i == srcroi.height + top )                \
+        {                                                       \
+            int limit = i < top || i == srcroi.height + top ?   \
+                        dstroi.width : left;                    \
+            for( j = 0; j < limit; j += cn )                    \
+                for( k = 0; k < cn; k++ )                       \
+                    dst[j+k] = value[k];                        \
+                                                                \
+            if( limit == dstroi.width )                         \
+                continue;                                       \
+                                                                \
+            for( j=srcroi.width+left; j < dstroi.width; j+=cn ) \
+                for( k = 0; k < cn; k++ )                       \
+                    dst[j+k] = value[k];                        \
+        }                                                       \
+                                                                \
+        if( i < top || i > srcroi.height + top )                \
+            memcpy( dst, dst-dststep, dstroi.width*sizeof(dst[0]));\
+        else                                                    \
+        {                                                       \
+            if( i > 0 )                                         \
+            {                                                   \
+                for( j = 0; j < left; j++ )                     \
+                    dst[j] = dst[j - dststep];                  \
+                for( j = srcroi.width + left; j < dstroi.width; j++ ) \
+                    dst[j] = dst[j - dststep];                  \
+            }                                                   \
+            memcpy( dst, src, srcroi.width*sizeof(dst[0]));     \
+            src += srcstep;                                     \
+        }                                                       \
+    }                                                           \
+                                                                \
+    return CV_OK;                                               \
 }
 
 
-/* 
-   Calculates cross correlation for two blocks.
-*/
-int64
-icvCrossCorr_8u_C1( const uchar * vec1, const uchar * vec2, int len )
+ICV_COPY_REPLICATE_BORDER_FUNC( 8u_C1R, uchar, 1 )  // 1
+ICV_COPY_REPLICATE_BORDER_FUNC( 16s_C1R, ushort, 1 )// 2
+ICV_COPY_REPLICATE_BORDER_FUNC( 8u_C3R, uchar, 3 )  // 3
+ICV_COPY_REPLICATE_BORDER_FUNC( 32s_C1R, int, 1 )   // 4
+ICV_COPY_REPLICATE_BORDER_FUNC( 16s_C3R, ushort, 3 )// 6
+ICV_COPY_REPLICATE_BORDER_FUNC( 16s_C4R, int, 2 )   // 8
+ICV_COPY_REPLICATE_BORDER_FUNC( 32s_C3R, int, 3 )   // 12
+ICV_COPY_REPLICATE_BORDER_FUNC( 32s_C4R, int, 4 )   // 16
+ICV_COPY_REPLICATE_BORDER_FUNC( 64f_C3R, int, 6 )   // 24
+ICV_COPY_REPLICATE_BORDER_FUNC( 64f_C4R, int, 8 )   // 32
+
+ICV_COPY_CONST_BORDER_FUNC_C1( 8u_C1R, uchar )      // 1
+ICV_COPY_CONST_BORDER_FUNC_C1( 16s_C1R, ushort )    // 2
+ICV_COPY_CONST_BORDER_FUNC_C1( 32s_C1R, int )       // 4
+
+ICV_COPY_CONST_BORDER_FUNC_CN( 8u_C3R, uchar, 3 )   // 3
+ICV_COPY_CONST_BORDER_FUNC_CN( 16s_C3R, ushort, 3 ) // 6
+ICV_COPY_CONST_BORDER_FUNC_CN( 16s_C4R, int, 2 )    // 8
+ICV_COPY_CONST_BORDER_FUNC_CN( 32s_C3R, int, 3 )    // 12
+ICV_COPY_CONST_BORDER_FUNC_CN( 32s_C4R, int, 4 )    // 16
+ICV_COPY_CONST_BORDER_FUNC_CN( 64f_C3R, int, 6 )    // 24
+ICV_COPY_CONST_BORDER_FUNC_CN( 64f_C4R, int, 8 )    // 32
+
+
+CvCopyNonConstBorderFunc icvGetCopyNonConstBorderFunc( int pix_size, int /*bordertype*/ )
 {
-    int i, s = 0;
-    int64 sum = 0;
+    CvBtFuncTable borderrepl_tab;
+    int initflag = 0;
 
-    for( i = 0; i <= len - 4; i += 4 )
+    assert( (unsigned)pix_size <= 4*sizeof(double) );
+
+    if( !initflag )
     {
-        int e = vec1[i] * vec2[i];
-        int v = vec1[i + 1] * vec2[i + 1];
-
-        e += v;
-        v = vec1[i + 2] * vec2[i + 2];
-        e += v;
-        v = vec1[i + 3] * vec2[i + 3];
-        e += v;
-        sum += e;
+        borderrepl_tab.fn_2d[1] = (void*)icvCopyReplicateBorder_8u_C1R;
+        borderrepl_tab.fn_2d[2] = (void*)icvCopyReplicateBorder_16s_C1R;
+        borderrepl_tab.fn_2d[3] = (void*)icvCopyReplicateBorder_8u_C3R;
+        borderrepl_tab.fn_2d[4] = (void*)icvCopyReplicateBorder_32s_C1R;
+        borderrepl_tab.fn_2d[6] = (void*)icvCopyReplicateBorder_16s_C3R;
+        borderrepl_tab.fn_2d[8] = (void*)icvCopyReplicateBorder_16s_C4R;
+        borderrepl_tab.fn_2d[12] = (void*)icvCopyReplicateBorder_32s_C3R;
+        borderrepl_tab.fn_2d[16] = (void*)icvCopyReplicateBorder_32s_C4R;
+        borderrepl_tab.fn_2d[24] = (void*)icvCopyReplicateBorder_64f_C3R;
+        borderrepl_tab.fn_2d[32] = (void*)icvCopyReplicateBorder_64f_C4R;
+        initflag = 1;
     }
 
-    for( ; i < len; i++ )
-    {
-        s += vec1[i] * vec2[i];
-    }
-
-    return sum + s;
-}
-
-double
-icvCrossCorr_32f_C1( const float *vec1, const float *vec2, int len )
-{
-    double sum = 0;
-    int i;
-
-    for( i = 0; i <= len - 4; i += 4 )
-    {
-        double v0 = vec1[i] * vec2[i];
-        double v1 = vec1[i + 1] * vec2[i + 1];
-        double v2 = vec1[i + 2] * vec2[i + 2];
-        double v3 = vec1[i + 3] * vec2[i + 3];
-
-        sum += v0 + v1 + v2 + v3;
-    }
-    for( ; i < len; i++ )
-    {
-        double v = vec1[i] * vec2[i];
-
-        sum += v;
-    }
-    return sum;
+    return (CvCopyNonConstBorderFunc)borderrepl_tab.fn_2d[pix_size];
 }
 
 
-/* 
-   Calculates cross correlation for two blocks.
-*/
-int64
-icvSumPixels_8u_C1( const uchar * vec, int len )
+CvCopyConstBorderFunc_Cn icvGetCopyConstBorderFunc_Cn( int pix_size )
 {
-    int i, s = 0;
-    int64 sum = 0;
+    CvBtFuncTable borderconst_tab;
+    int initflag = 0;
 
-    for( i = 0; i <= len - 4; i += 4 )
+    assert( (unsigned)pix_size <= 4*sizeof(double) );
+
+    if( !initflag )
     {
-        sum += vec[i] + vec[i + 1] + vec[i + 2] + vec[i + 3];
+        borderconst_tab.fn_2d[1] = 0; // manual handling
+        borderconst_tab.fn_2d[2] = 0; // manual handling
+        borderconst_tab.fn_2d[3] = (void*)icvCopyConstBorder_8u_C3R;
+        borderconst_tab.fn_2d[4] = 0; // manual handling
+        borderconst_tab.fn_2d[6] = (void*)icvCopyConstBorder_16s_C3R;
+        borderconst_tab.fn_2d[8] = (void*)icvCopyConstBorder_16s_C4R;
+        borderconst_tab.fn_2d[12] = (void*)icvCopyConstBorder_32s_C3R;
+        borderconst_tab.fn_2d[16] = (void*)icvCopyConstBorder_32s_C4R;
+        borderconst_tab.fn_2d[24] = (void*)icvCopyConstBorder_64f_C3R;
+        borderconst_tab.fn_2d[32] = (void*)icvCopyConstBorder_64f_C4R;
+        initflag = 1;
     }
 
-    for( ; i < len; i++ )
-    {
-        s += vec[i];
-    }
-
-    return sum + s;
+    return (CvCopyConstBorderFunc_Cn)borderconst_tab.fn_2d[pix_size];
 }
 
-double
-icvSumPixels_32f_C1( const float *vec, int len )
+
+CV_IMPL void
+cvCopyMakeBorder( const CvArr* srcarr, CvArr* dstarr, CvPoint offset,
+                  int bordertype, CvScalar value )
 {
-    double sum = 0;
-    int i;
+    CV_FUNCNAME( "cvCopyMakeBorder" );
 
-    for( i = 0; i <= len - 4; i += 4 )
-    {
-        sum += vec[i] + vec[i + 1] + vec[i + 2] + vec[i + 3];
-    }
+    __BEGIN__;
 
-    for( ; i < len; i++ )
+    CvMat srcstub, *src = (CvMat*)srcarr;
+    CvMat dststub, *dst = (CvMat*)dstarr;
+    CvSize srcsize, dstsize;
+    int srcstep, dststep;
+    int pix_size, type;
+
+    if( !CV_IS_MAT(src) )
+        CV_CALL( src = cvGetMat( src, &srcstub ));
+    
+    if( !CV_IS_MAT(dst) )    
+        CV_CALL( dst = cvGetMat( dst, &dststub ));
+
+    if( offset.x < 0 || offset.y < 0 )
+        CV_ERROR( CV_StsOutOfRange, "Offset (left/top border width) is negative" );
+
+    if( src->rows + offset.y > dst->rows || src->cols + offset.x > dst->cols )
+        CV_ERROR( CV_StsBadSize, "Source array is too big or destination array is too small" );
+
+    if( !CV_ARE_TYPES_EQ( src, dst ))
+        CV_ERROR( CV_StsUnmatchedFormats, "" );
+
+    type = CV_MAT_TYPE(src->type);
+    pix_size = CV_ELEM_SIZE(type);
+    srcsize = cvGetMatSize(src);
+    dstsize = cvGetMatSize(dst);
+    srcstep = src->step;
+    dststep = dst->step;
+    if( srcstep == 0 )
+        srcstep = CV_STUB_STEP;
+    if( dststep == 0 )
+        dststep = CV_STUB_STEP;
+
+    if( bordertype == IPL_BORDER_REPLICATE )
     {
-        sum += vec[i];
+        CvCopyNonConstBorderFunc func =
+            icvGetCopyNonConstBorderFunc( pix_size, IPL_BORDER_REPLICATE );
+        if( !func )
+            CV_ERROR( CV_StsUnsupportedFormat, "" );
+
+        IPPI_CALL( func( src->data.ptr, srcstep, srcsize,
+                         dst->data.ptr, dststep, dstsize,
+                         offset.y, offset.x ));
     }
-    return sum;
+    else if( bordertype == IPL_BORDER_CONSTANT )
+    {
+        double buf[4];
+        cvScalarToRawData( &value, buf, src->type, 0 );
+
+        if( pix_size == 1 )
+        {
+            IPPI_CALL( icvCopyConstBorder_8u_C1R( src->data.ptr, srcstep, srcsize,
+                                                  dst->data.ptr, dststep, dstsize,
+                                                  offset.y, offset.x, ((uchar*)buf)[0] ));
+        }
+        else if( pix_size == 2 )
+        {
+            IPPI_CALL( icvCopyConstBorder_16s_C1R( (ushort*)src->data.ptr, srcstep, srcsize,
+                                                   (ushort*)dst->data.ptr, dststep, dstsize,
+                                                   offset.y, offset.x, ((ushort*)buf)[0] ));
+        }
+        else if( pix_size == 4 )
+        {
+            IPPI_CALL( icvCopyConstBorder_32s_C1R( src->data.i, srcstep, srcsize,
+                                                   dst->data.i, dststep, dstsize,
+                                                   offset.y, offset.x, ((int*)buf)[0] ));
+        }
+        else
+        {
+            CvCopyConstBorderFunc_Cn func =
+                icvGetCopyConstBorderFunc_Cn( pix_size );
+            if( !func )
+                CV_ERROR( CV_StsUnsupportedFormat, "" );
+
+            IPPI_CALL( func( src->data.ptr, srcstep, srcsize,
+                             dst->data.ptr, dststep, dstsize,
+                             offset.y, offset.x, buf ));
+        }
+    }
+    else
+        CV_ERROR( CV_StsBadFlag, "Unknown/unsupported border type" );
+    
+    __END__;
 }
 
 /* End of file. */

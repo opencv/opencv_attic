@@ -58,7 +58,7 @@ CvStatus CV_STDCALL icvFilterInitAlloc(
     int buffer_size;
     int bt_pix, bt_pix_n;
     int aligned_hdr_size = cvAlign((int)sizeof(*state),align);
-    int temp_lines = dataType == cv8u ? 1 : 2;
+    int temp_lines = 2;
     int binaryElement = ICV_KERNEL_TYPE(elementType) == ICV_BINARY_KERNEL;
     int separableElement = ICV_KERNEL_TYPE(elementType) == ICV_SEPARABLE_KERNEL;
     char *ptr;
@@ -166,10 +166,8 @@ CvStatus CV_STDCALL icvFilterFree( CvFilterState ** filterState )
 
 #define SMALL_GAUSSIAN_SIZE  7
 
-static CvStatus
-icvSmoothInitAlloc( int roiWidth, CvDataType /*dataType*/, int channels,
-                    CvSize elSize, int smoothtype, double sigma,
-                    struct CvFilterState** filterState )
+static void
+icvCalcGaussianKernel( int n, double sigma, float* kernel )
 {
     static const float small_gaussian_tab[][SMALL_GAUSSIAN_SIZE] = 
     {
@@ -178,86 +176,66 @@ icvSmoothInitAlloc( int roiWidth, CvDataType /*dataType*/, int channels,
         {0.0625f, 0.25f, 0.375f, 0.25f, 0.0625f},
         {0.03125, 0.109375, 0.21875, 0.28125, 0.21875, 0.109375, 0.03125}
     };
+
+    if( n <= SMALL_GAUSSIAN_SIZE && sigma <= 0 )
+    {
+        assert( n%2 == 1 );
+        memcpy( kernel, small_gaussian_tab[n>>1], n*sizeof(kernel[0]));
+    }
+    else
+    {
+        double sigmaX = sigma > 0 ? sigma : (n/2 - 1)*0.3 + 0.8;
+        double scale2X = -0.5/(sigmaX*sigmaX);
+        double sum = 1.;
+        int i;
+        sum = kernel[n/2] = 1.f;
     
-    CvPoint elAnchor = { elSize.width/2, elSize.height/2 };
-    float* dataX = 0;
+        for( i = 1; i <= n/2; i++ )
+        {
+            kernel[n/2+i] = kernel[n/2-i] = (float)exp(scale2X*i*i);
+            sum += kernel[n/2+i]*2;
+        }
+
+        sum = 1./sum;
+        for( i = 0; i <= n/2; i++ )
+            kernel[n/2+i] = kernel[n/2-i] = (float)(kernel[n/2+i]*sum);
+    }
+}
+
+
+static CvStatus
+icvSmoothInitAlloc( int width, CvDataType /*dataType*/, int channels,
+                    CvSize el_size, int smoothtype, double sigma,
+                    struct CvFilterState** filterState )
+{
+    CvPoint el_anchor = { el_size.width/2, el_size.height/2 };
+    float* kx = 0;
     CvStatus status;
 
     if( smoothtype == CV_GAUSSIAN )
     {
-        int i, n = elSize.width, m = elSize.height;
-        float* dataY;
-                
-        dataX = (float*)cvStackAlloc( (elSize.width + elSize.height)*sizeof(dataX[0]));
-        dataY = dataX + elSize.width;
+        kx = (float*)cvStackAlloc( (el_size.width + el_size.height)*sizeof(kx[0]));
+        float* ky = kx + el_size.width;
 
-        if( n <= SMALL_GAUSSIAN_SIZE && sigma <= 0 )
-        {
-            assert( n%2 == 1 );
-            memcpy( dataX, small_gaussian_tab[n>>1], n*sizeof(dataX[0]));
-        }
+        icvCalcGaussianKernel( el_size.width, sigma, kx );
+        if( el_size.width == el_size.height )
+            memcpy( ky, kx, el_size.width*sizeof(kx[0]) );
         else
-        {
-            double sigmaX = sigma > 0 ? sigma : (n/2 - 1)*0.3 + 0.8;
-            //double scaleX = 0.39894228040143267793994605993438/sigmaX;
-            double scale2X = -0.5/(sigmaX*sigmaX);
-            double sumX = 1.;
-            sumX = dataX[n/2] = 1.f;
-        
-            for( i = 1; i <= n/2; i++ )
-            {
-                dataX[n/2+i] = dataX[n/2-i] = (float)exp(scale2X*i*i);
-                sumX += dataX[n/2+i]*2;
-            }
-
-            sumX = 1./sumX;
-            for( i = 0; i <= n/2; i++ )
-                dataX[n/2+i] = dataX[n/2-i] = (float)(dataX[n/2+i]*sumX);
-        }
-
-        if( m == n )
-        {
-            memcpy( dataY, dataX, n*sizeof(dataX[0]));
-        }
-        else if( m <= SMALL_GAUSSIAN_SIZE )
-        {
-            assert( m%2 == 1 );
-            memcpy( dataY, small_gaussian_tab[m>>1], m*sizeof(dataY[0]));
-        }
-        else
-        {
-            double sigmaY = sigma > 0 ? sigma : (m/2 - 1)*0.3 + 0.8;
-            double scaleY = 0.39894228040143267793994605993438/sigmaY;
-            double scale2Y = -0.5/(sigmaY*sigmaY);
-            double sumY;
-
-            sumY = dataY[m/2] = (float)scaleY;
-
-            for( i = 1; i < (m+1)/2; i++ )
-            {
-                dataY[m/2+i] = dataY[m/2-i] = (float)(exp(scale2Y*i*i)*scaleY);
-                sumY += dataY[m/2+i]*2;
-            }
-
-            if( m > 1 )
-                dataY[0] = dataY[m-1] = (float)(dataY[0] + (1 - sumY)*0.5);
-            else
-                dataY[0] = 1.f;
-        }
+            icvCalcGaussianKernel( el_size.height, sigma, ky );
     }
 
-    status = icvFilterInitAlloc( roiWidth, cv32f, channels, elSize,
-                                 elAnchor, dataX, ICV_SEPARABLE_KERNEL, filterState );
+    status = icvFilterInitAlloc( width, cv32f, channels, el_size, el_anchor,
+                                 kx, ICV_SEPARABLE_KERNEL, filterState );
     if( status < 0 )
         return status;
 
     if( filterState && *filterState )
     {
         if( smoothtype == CV_BLUR )
-            (*filterState)->divisor = elSize.width * elSize.height;
+            (*filterState)->divisor = el_size.width * el_size.height;
         else if( smoothtype == CV_GAUSSIAN )
         {
-            (*filterState)->divisor = (double)(1 << elSize.width) * (1 << elSize.height);
+            (*filterState)->divisor = (double)(1 << el_size.width) * (1 << el_size.height);
             (*filterState)->kerType = ((*filterState)->kerType & ~255) |
                 (sigma > 0 ? ICV_CUSTOM_GAUSSIAN_KERNEL : ICV_DEFAULT_GAUSSIAN_KERNEL);
         }
@@ -494,7 +472,7 @@ icvBlur_8u_CnR( uchar* src, int srcStep,
         trow = rows[0];
         trow2 = rows[ker_height-1];
 
-        for( x = 0; x < width_n; x += CV_MORPH_ALIGN )
+        for( x = 0; x < width_n; x += 4 )
         {
             int val0, val1, t0, t1;
 
@@ -723,7 +701,7 @@ icvBlur_8u16s_C1R( const uchar* pSrc, int srcStep,
         trow = rows[0];
         trow2 = rows[ker_height-1];
 
-        for( x = 0; x < width_n; x += CV_MORPH_ALIGN )
+        for( x = 0; x < width_n; x += 4 )
         {
             int val0, val1;
 
@@ -999,7 +977,7 @@ icvBlur_32f_CnR( const float* pSrc, int srcStep,
 
         if( no_scale )
         {
-            for( x = 0; x < width_n; x += CV_MORPH_ALIGN )
+            for( x = 0; x < width_n; x += 4 )
             {
                 float val0, val1;
 
@@ -1030,7 +1008,7 @@ icvBlur_32f_CnR( const float* pSrc, int srcStep,
         }
         else
         {
-            for( x = 0; x < width_n; x += CV_MORPH_ALIGN )
+            for( x = 0; x < width_n; x += 4 )
             {
                 float val0, val1, t0, t1;
 
@@ -1382,7 +1360,7 @@ icvGaussianBlur_small_8u_CnR( uchar* src, int srcStep,
 
         if( ker_height == 1 )
         {
-            for( x = 0; x < width_n; x += CV_MORPH_ALIGN )
+            for( x = 0; x < width_n; x += 4 )
             {
                 int val0, val1, val2, val3;
 
@@ -1401,7 +1379,7 @@ icvGaussianBlur_small_8u_CnR( uchar* src, int srcStep,
         {
             int *trow1 = rows[0], *trow2 = rows[2];
             
-            for( x = 0; x < width_n; x += CV_MORPH_ALIGN )
+            for( x = 0; x < width_n; x += 4 )
             {
                 int val0, val1;
                 val0 = (trow[x]*2 + trow1[x] + trow2[x] + delta) >> rshift;
@@ -1694,7 +1672,7 @@ icvGaussianBlur_8u_CnR( uchar* src, int srcStep,
 
             trow = rows[ker_y];
 
-            for( x = 0; x < width_n; x += CV_MORPH_ALIGN )
+            for( x = 0; x < width_n; x += 4 )
             {
                 double val0, val1, val2, val3;
 
@@ -1967,7 +1945,7 @@ icvGaussianBlur_32f_CnR( float* src, int srcStep,
 
         trow = rows[ker_y];
 
-        for( x = 0; x < width_n; x += CV_MORPH_ALIGN )
+        for( x = 0; x < width_n; x += 4 )
         {
             double val0, val1, val2, val3;
 
@@ -2054,8 +2032,8 @@ icvMedianBlur_8u_CnR( uchar* src, int srcStep,
     #define UPDATE_ACC01( pix, cn, op ) \
     {                                   \
         int p = (pix);                  \
-        zone0[cn][p >> 4] op;           \
         zone1[cn][p] op;                \
+        zone0[cn][p >> 4] op;           \
     }
 
     if( size.height < nx || size.width < nx )
@@ -2504,6 +2482,7 @@ icvBilateralFiltering_8u_CnR( uchar* src, int srcStep,
 #undef COLOR_DISTANCE_C3
 }
 
+
 static void icvInitSmoothTab( CvFuncTable* blur_no_scale_tab, 
                               CvFuncTable* blur_tab, CvFuncTable* gaussian_tab,
                               CvFuncTable* median_tab, CvFuncTable* bilateral_tab )
@@ -2522,7 +2501,26 @@ static void icvInitSmoothTab( CvFuncTable* blur_no_scale_tab,
     bilateral_tab->fn_2d[CV_8U] = (void*)icvBilateralFiltering_8u_CnR;
 }
 
- 
+
+//////////////////////////////// IPP smoothing functions /////////////////////////////////
+
+icvFilterMedian_8u_C1R_t icvFilterMedian_8u_C1R_p = 0;
+icvFilterMedian_8u_C3R_t icvFilterMedian_8u_C3R_p = 0;
+icvFilterMedian_8u_C4R_t icvFilterMedian_8u_C4R_p = 0;
+
+icvFilterBox_8u_C1R_t icvFilterBox_8u_C1R_p = 0;
+icvFilterBox_8u_C3R_t icvFilterBox_8u_C3R_p = 0;
+icvFilterBox_8u_C4R_t icvFilterBox_8u_C4R_p = 0;
+icvFilterBox_32f_C1R_t icvFilterBox_32f_C1R_p = 0;
+icvFilterBox_32f_C3R_t icvFilterBox_32f_C3R_p = 0;
+icvFilterBox_32f_C4R_t icvFilterBox_32f_C4R_p = 0;
+
+typedef CvStatus (CV_STDCALL * CvSmoothFixedIPPFunc)
+( const void* src, int srcstep, void* dst, int dststep,
+  CvSize size, CvSize ksize, CvPoint anchor );
+
+//////////////////////////////////////////////////////////////////////////////////////////
+
 CV_IMPL void
 cvSmooth( const void* srcarr, void* dstarr, int smoothtype,
           int param1, int param2, double param3 )
@@ -2530,6 +2528,7 @@ cvSmooth( const void* srcarr, void* dstarr, int smoothtype,
     static CvFuncTable smooth_tab[5];
     static int inittab = 0;
     CvFilterState *state = 0;
+    CvMat* temp = 0;
 
     CV_FUNCNAME( "cvSmooth" );
 
@@ -2544,6 +2543,7 @@ cvSmooth( const void* srcarr, void* dstarr, int smoothtype,
     int src_step, dst_step;
     int nonlin_param[] = { 0, param1, param2 };
     void* ptr = nonlin_param;
+    double sigma = 0;
 
     if( !inittab )
     {
@@ -2594,15 +2594,102 @@ cvSmooth( const void* srcarr, void* dstarr, int smoothtype,
     }
     else /* simple blurring, gaussian, median */
     {
+        sigma = param3;
+        
         // automatic detection of kernel size from sigma
-        if( smoothtype == CV_GAUSSIAN && param1 == 0 && param3 > 0 )
-            param1 = cvRound(param3*(depth == CV_8U ? 3 : 4)*2 + 1)|1;
+        if( smoothtype == CV_GAUSSIAN && param1 == 0 && sigma > 0 )
+            param1 = cvRound(sigma*(depth == CV_8U ? 3 : 4)*2 + 1)|1;
         
         if( param2 == 0 )
             param2 = param1;
         if( param1 < 1 || (param1 & 1) == 0 || param2 < 1 || (param2 & 1) == 0 )
             CV_ERROR( CV_StsOutOfRange,
                 "One of aperture dimensions is incorrect (should be >=1 and odd)" );
+
+        if( param1 == 1 && param2 == 1 )
+        {
+            cvCopy( src, dst );
+            EXIT;
+        }
+    }
+
+    src_step = src->step;
+    dst_step = dst->step;
+    if( size.height == 1 )
+        src_step = dst_step = CV_AUTOSTEP;
+
+    if( CV_MAT_CN(type) == 2 )
+        CV_ERROR( CV_BadNumChannels, "Unsupported number of channels" );
+
+    if( (smoothtype == CV_BLUR || smoothtype == CV_MEDIAN) && icvFilterBox_8u_C1R_p )
+    {
+        CvSmoothFixedIPPFunc ipp_median_box_func = 0;
+
+        if( smoothtype == CV_BLUR )
+        {
+            ipp_median_box_func =
+                type == CV_8UC1 ? icvFilterBox_8u_C1R_p :
+                type == CV_8UC3 ? icvFilterBox_8u_C3R_p :
+                type == CV_8UC4 ? icvFilterBox_8u_C4R_p :
+                type == CV_32FC1 ? icvFilterBox_32f_C1R_p :
+                type == CV_32FC3 ? icvFilterBox_32f_C3R_p :
+                type == CV_32FC4 ? icvFilterBox_32f_C4R_p : 0;
+        }
+        else if( smoothtype == CV_MEDIAN )
+        {
+            ipp_median_box_func =
+                type == CV_8UC1 ? icvFilterMedian_8u_C1R_p :
+                type == CV_8UC3 ? icvFilterMedian_8u_C3R_p :
+                type == CV_8UC4 ? icvFilterMedian_8u_C4R_p : 0;
+        }
+        
+        if( ipp_median_box_func )
+        {
+            CvSize el_size = { param1, param2 };
+            CvPoint el_anchor = { param1/2, param2/2 };
+            int stripe_size = 1 << 14; // the optimal value may depend on CPU cache,
+                                       // overhead of current IPP code etc.
+            const uchar* shifted_ptr;
+            int y, dy = 0;
+            int temp_step;
+            int dst_step = dst->step ? dst->step : CV_STUB_STEP;
+
+            CV_CALL( temp = icvIPPFilterInit( src, stripe_size, el_size ));
+            
+            shifted_ptr = temp->data.ptr +
+                el_anchor.y*temp->step + el_anchor.x*CV_ELEM_SIZE(type);
+            temp_step = temp->step ? temp->step : CV_STUB_STEP;
+
+            for( y = 0; y < src->rows; y += dy )
+            {
+                dy = icvIPPFilterNextStripe( src, temp, y, el_size, el_anchor );
+                IPPI_CALL( ipp_median_box_func( shifted_ptr, temp_step,
+                    dst->data.ptr + y*dst_step, dst_step, cvSize(src->cols, dy),
+                    el_size, el_anchor ));
+            }
+            EXIT;
+        }
+    }
+    else if( smoothtype == CV_GAUSSIAN &&
+             icvFilterBox_8u_C1R_p /* this is to check that IPP is loaded */ )
+    {
+        CvSize ksize = { param1, param2 };
+        float* kx = (float*)cvStackAlloc( ksize.width*sizeof(kx[0]) );
+        float* ky = (float*)cvStackAlloc( ksize.height*sizeof(ky[0]) );
+        CvMat KX = cvMat( 1, ksize.width, CV_32F, kx );
+        CvMat KY = cvMat( 1, ksize.height, CV_32F, ky );
+        int done = 0;
+
+        icvCalcGaussianKernel( ksize.width, sigma, kx );
+        if( ksize.width != ksize.height )
+            icvCalcGaussianKernel( ksize.height, sigma, ky );
+        else
+            KY.data.fl = kx;
+
+        CV_CALL( done = icvIPPSepFilter( src, dst, &KX, &KY,
+                        cvPoint(ksize.width/2,ksize.height/2)));
+        if( done )
+            EXIT;
     }
 
     if( smoothtype <= CV_GAUSSIAN )
@@ -2611,29 +2698,21 @@ cvSmooth( const void* srcarr, void* dstarr, int smoothtype,
                                        CV_MAT_CN(type),
                                        cvSize( param1, size.height == 1 ? 1 :
                                                smoothtype <= CV_GAUSSIAN ? param2 : param1),
-                                       smoothtype, param3 /* custom sigma */, &state ));
+                                       smoothtype, sigma, &state ));
         ptr = state;
     }
-
-    if( CV_MAT_CN(type) == 2 )
-        CV_ERROR( CV_BadNumChannels, "Unsupported number of channels" );
 
     func = (CvFilterFunc)(smooth_tab[smoothtype].fn_2d[depth]);
 
     if( !func )
         CV_ERROR( CV_StsUnsupportedFormat, "" );
 
-    src_step = src->step;
-    dst_step = dst->step;
-
-    if( size.height == 1 )
-        src_step = dst_step = CV_AUTOSTEP;
-
     IPPI_CALL( func( src->data.ptr, src_step, dst->data.ptr,
                      dst_step, &size, (CvFilterState*)ptr, 0 ));
 
     __END__;
 
+    cvReleaseMat( &temp );
     icvSmoothFree( &state );
 }
 

@@ -84,7 +84,8 @@ cvMeanShift( const void* imgProb, CvRect windowIn,
     if( windowIn.height <= 0 || windowIn.width <= 0 )
         CV_ERROR( CV_StsBadArg, "Input window has non-positive sizes" );
 
-    if( !icvIsRectInRect( windowIn, cvRect( 0, 0, mat->width, mat->height )))
+    if( windowIn.x < 0 || windowIn.x + windowIn.width > mat->cols ||
+        windowIn.y < 0 || windowIn.y + windowIn.height > mat->rows )
         CV_ERROR( CV_StsBadArg, "Initial window is not inside the image ROI" );
 
     CV_CALL( criteria = cvCheckTermCriteria( criteria, 1., 100 ));

@@ -102,42 +102,9 @@ CvFilterState;
 #define  CV_SET( dst, val, len, idx )  \
     for( (idx) = 0; (idx) < (len); (idx)++) (dst)[idx] = (val)
 
-/* 
-   Finds L1 norm between two blocks.
-   !!!! function doesn't perform EMMS !!!!
-*/
-int  icvCmpBlocksL1_8u_C1( const uchar* vec1, const uchar* vec2, int len );
-
-/* 
-   Finds squared L2 norm between two blocks.
-   !!!! function don't perform EMMS (except 32f flavor function) !!!!
-*/
-int64  icvCmpBlocksL2_8u_C1( const uchar* vec1, const uchar* vec2, int len );
-double icvCmpBlocksL2_32f_C1( const float* vec1, const float* vec2, int len );
-
-
-int64  icvSumPixels_8u_C1( const uchar* vec, int len );
-double icvSumPixels_32f_C1( const float* vec, int len );
-
-/* 
-   Calculates cross correlation for two blocks.
-   !!!! function doesn't perform EMMS !!!!
-*/
-int64  icvCrossCorr_8u_C1( const uchar* vec1, const uchar* vec2, int len );
-double icvCrossCorr_32f_C1( const float* vec1, const float* vec2, int len );
-
 /* performs convolution of 2d floating-point array with 3x1, 1x3 or separable 3x3 mask */
 void icvSepConvSmall3_32f( float* src, int src_step, float* dst, int dst_step,
             CvSize src_size, const float* kx, const float* ky, float* buffer );
-
-CvStatus CV_STDCALL icvPyrDownBorder_8u_CnR( const uchar *src, int src_step, CvSize src_size,
-                                             uchar *dst, int dst_step, CvSize dst_size, int cn );
-
-CvStatus CV_STDCALL icvPyrDownBorder_32f_CnR( const float *src, int src_step, CvSize src_size,
-                                              float *dst, int dst_step, CvSize dst_size, int cn );
-
-CvStatus CV_STDCALL icvPyrDownBorder_64f_CnR( const double *src, int src_step, CvSize src_size,
-                                              double *dst, int dst_step, CvSize dst_size, int cn );
 
 CvStatus CV_STDCALL icvFilterInitAlloc( int roiWidth, CvDataType dataType, int channels,
                     CvSize elSize, CvPoint elAnchor, const void* elData, int elementFlags,
@@ -170,52 +137,11 @@ CvStatus CV_STDCALL icvBlur_32f_CnR( const float* pSrc, int srcStep,
 
 #define icvBlur_32f_C1R icvBlur_32f_CnR
 
-typedef struct
-{
-    uchar  b, g, r;
-}
-CvRGB8u;
-
-
-typedef struct
-{
-    uchar  b, g, r, a;
-}
-CvRGBA8u;
-
-
-typedef struct
-{
-    int  b, g, r;
-}
-CvRGB32s;
-
-
-typedef struct
-{
-    int  b, g, r, a;
-}
-CvRGBA32s;
-
-typedef struct
-{
-    float  b, g, r;
-}
-CvRGB32f;
-
-
-typedef struct
-{
-    float  b, g, r, a;
-}
-CvRGBA32f;
-
+#undef   CV_CALC_MIN
+#define  CV_CALC_MIN(a, b) if((a) > (b)) (a) = (b)
 
 #undef   CV_CALC_MAX
-#undef   CV_CALC_MIN
-
-#define  CV_CALC_MIN(a, b) (a) = CV_IMIN((a),(b))
-#define  CV_CALC_MAX(a, b) (a) = CV_IMAX((a),(b))
+#define  CV_CALC_MAX(a, b) if((a) < (b)) (a) = (b)
 
 #define CV_MORPH_ALIGN  4
 
@@ -230,5 +156,28 @@ typedef CvStatus( CV_STDCALL* CvFilterFunc )( const void* src, int src_step,
 #define CV_START   1
 #define CV_END     2
 #define CV_MIDDLE  4
+
+typedef CvStatus (CV_STDCALL * CvCopyNonConstBorderFunc)(
+    const void* src, int srcstep, CvSize srcsize,
+    void* dst, int dststep, CvSize dstsize, int top, int left );
+
+typedef CvStatus (CV_STDCALL * CvCopyConstBorderFunc_Cn)(
+    const void* src, int srcstep, CvSize srcsize,
+    void* dst, int dststep, CvSize dstsize,
+    int top, int left, const void* value );
+
+CvCopyNonConstBorderFunc icvGetCopyNonConstBorderFunc(
+    int pixsize, int bordertype=IPL_BORDER_REPLICATE );
+
+CvCopyConstBorderFunc_Cn icvGetCopyConstBorderFunc_Cn(
+    int pixsize );
+
+CvMat* icvIPPFilterInit( const CvMat* src, int stripe_size, CvSize ksize );
+
+int icvIPPFilterNextStripe( const CvMat* src, CvMat* temp, int y,
+                            CvSize ksize, CvPoint anchor );
+
+int icvIPPSepFilter( const CvMat* src, CvMat* dst, const CvMat* kernelX,
+                     const CvMat* kernelY, CvPoint anchor );
 
 #endif /*_CV_INTERNAL_H_*/

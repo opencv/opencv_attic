@@ -41,61 +41,48 @@
 
 #include "_cv.h"
 #include <limits.h>
+#include <stdio.h>
 
-IPCVAPI_IMPL( CvStatus,
-    icvMorphologyInitAlloc, ( int roiWidth, CvDataType dataType, int channels,
-                              CvSize elSize, CvPoint elAnchor,
-                              int elShape, int* elData,
-                              struct CvMorphState** morphState ),
-                              (roiWidth, dataType, channels, elSize, elAnchor,
-                              elShape, elData, morphState) )
+#define IPCV_MORPHOLOGY_PTRS( morphtype, flavor )                                   \
+icv##morphtype##Rect_##flavor##_C1R_t icv##morphtype##Rect_##flavor##_C1R_p = 0;    \
+icv##morphtype##Rect_##flavor##_C3R_t icv##morphtype##Rect_##flavor##_C3R_p = 0;    \
+icv##morphtype##Rect_##flavor##_C4R_t icv##morphtype##Rect_##flavor##_C4R_p = 0;    \
+icv##morphtype##Any_##flavor##_C1R_t icv##morphtype##Any_##flavor##_C1R_p = 0;      \
+icv##morphtype##Any_##flavor##_C3R_t icv##morphtype##Any_##flavor##_C3R_p = 0;      \
+icv##morphtype##Any_##flavor##_C4R_t icv##morphtype##Any_##flavor##_C4R_p = 0;
+
+IPCV_MORPHOLOGY_PTRS( Erode, 8u )
+IPCV_MORPHOLOGY_PTRS( Erode, 32f )
+IPCV_MORPHOLOGY_PTRS( Dilate, 8u )
+IPCV_MORPHOLOGY_PTRS( Dilate, 32f )
+
+
+static CvStatus CV_STDCALL
+icvMorphologyInitAlloc( int roiWidth, CvDataType dataType, int channels,
+                        CvSize elSize, CvPoint elAnchor, int elShape,
+                        int* elData, struct CvMorphState** morphState )
 {
     CvStatus status;
     
     switch( elShape )
     {
     case CV_SHAPE_RECT:
+        break;
     case CV_SHAPE_CROSS:
-        break;
     case CV_SHAPE_ELLIPSE:
-        {
-            int i, r = elSize.height / 2, c = elSize.width / 2;
-            double inv_r2 = 1. / (((double) (r)) * (r));
-
-            elData = (int*)cvStackAlloc( elSize.width * elSize.height * sizeof(elData[0]));
-            memset( elData, 0, elSize.width*elSize.height*sizeof(elData[0]));
-
-            for( i = 0; i < r; i++ )
-            {
-                int y = r - i;
-                int dx = cvRound( c * sqrt( ((double)r * r - y * y) * inv_r2 ));
-                int x1 = c - dx;
-                int x2 = c + dx;
-
-                if( x1 < 0 )
-                    x1 = 0;
-                if( x2 >= elSize.width )
-                    x2 = elSize.width;
-                x2 = (x2 - x1 - 1)*sizeof(elData[0]);
-
-                memset( elData + i * elSize.width + x1, -1, x2 );
-                memset( elData + (elSize.height - i - 1) * elSize.width + x1, -1, x2 );
-            }
-
-            elShape = CV_SHAPE_CUSTOM;
-        }
-        break;
     case CV_SHAPE_CUSTOM:
-        if( elShape == CV_SHAPE_CUSTOM && elData == 0 )
+        if( elData == 0 )
             return CV_NULLPTR_ERR;
         break;
     default:
         return CV_BADFLAG_ERR;
     }
 
-    status = icvFilterInitAlloc( roiWidth, dataType, channels, elSize, elAnchor,
-                                 elShape == CV_SHAPE_CUSTOM ? elData : 0,
-                                 ICV_MAKE_BINARY_KERNEL(elShape), morphState );
+    status = icvFilterInitAlloc( roiWidth, dataType, channels,
+        cvSize(elSize.width, elSize.height + (elShape == CV_SHAPE_RECT)),
+        elAnchor, elShape != CV_SHAPE_RECT ? elData : 0,
+        ICV_MAKE_BINARY_KERNEL(elShape), morphState );
+    (*morphState)->ker_height = elSize.height;
 
     if( status < 0 )
         return status;
@@ -107,510 +94,541 @@ IPCVAPI_IMPL( CvStatus,
 }
 
 
-IPCVAPI_IMPL( CvStatus, icvMorphologyFree, (CvMorphState ** morphState), (morphState) )
+static CvStatus CV_STDCALL
+icvMorphologyFree( CvMorphState ** morphState )
 {
     return icvFilterFree( morphState );
 }
 
 
 /****************************************************************************************\
-*         Erode/Dilate with rectangular or cross-shaped element for integer types        *
+*                 Erode/Dilate with rectangular element for integer types                *
 \****************************************************************************************/
 
 #define ICV_DEF_MORPH_RECT_INT_FUNC( name, flavor, arrtype,                 \
                                      update_extr_macro )                    \
 static CvStatus CV_STDCALL                                                  \
-icv##name##RC_##flavor( arrtype* src, int srcstep,                          \
-                        arrtype* dst, int dststep,                          \
-                        CvSize* roi, CvMorphState* state, int stage )       \
+icv##name##Rect_##flavor( arrtype* src, int srcstep, arrtype* dst, int dststep,\
+                          CvSize* roi, CvMorphState* state, int /*stage*/ ) \
 {                                                                           \
-    int width = roi->width;                                                 \
     int src_height = roi->height;                                           \
     int dst_height = src_height;                                            \
-    int x, y = 0, i;                                                        \
+    int x, y = 0, dy = 0, i;                                                \
                                                                             \
-    int ker_x = state->ker_x;                                               \
-    int ker_y = state->ker_y;                                               \
-    int ker_width = state->ker_width;                                       \
-    int ker_height = state->ker_height;                                     \
-    int ker_right = ker_width - ker_x;                                      \
-                                                                            \
-    int crows = state->crows;                                               \
+    int row_count, rows_wanted;                                             \
     arrtype** rows = (arrtype**)(state->rows);                              \
-    arrtype* tbuf = (arrtype*)(state->tbuf);                                \
+    arrtype *tbuf = (arrtype*)(state->tbuf), *tdst, *tsrc;                  \
                                                                             \
     int channels = state->channels;                                         \
-    int ker_x_n = ker_x * channels;                                         \
-    int ker_width_n = ker_width * channels;                                 \
-    int ker_right_n = ker_right * channels;                                 \
-    int width_n = width * channels;                                         \
-                                                                            \
-    int is_small_width = width < MAX( ker_x, ker_right );                   \
-    int starting_flag = 0;                                                  \
-    int width_rest = width_n & (CV_MORPH_ALIGN - 1);                        \
-                                                                            \
-    int is_cross = ICV_BINARY_KERNEL_SHAPE(state->kerType)==CV_SHAPE_CROSS; \
-                                                                            \
-    /* initialize cyclic buffer when starting */                            \
-    if( stage == CV_WHOLE || stage == CV_START )                            \
-    {                                                                       \
-        for( i = 0; i < ker_height; i++ )                                   \
-            rows[i] = (arrtype*)(state->buffer + state->buffer_step * i);   \
-                                                                            \
-        crows = ker_y;                                                      \
-        if( stage != CV_WHOLE )                                             \
-            dst_height -= ker_height - ker_y - 1;                           \
-        starting_flag = 1;                                                  \
-    }                                                                       \
-                                                                            \
-    if( stage == CV_END )                                                   \
-        dst_height += ker_height - ker_y - 1;                               \
-                                                                            \
-    do                                                                      \
-    {                                                                       \
-        int need_copy = is_small_width | (y == 0);                          \
-        arrtype *tsrc, *tdst;                                               \
-        arrtype *saved_row = rows[ker_y];                                   \
-                                                                            \
-        /* fill cyclic buffer - horizontal filtering */                     \
-        for( ; crows < ker_height + is_cross; crows++ )                     \
-        {                                                                   \
-            if( crows < ker_height )                                        \
-            {                                                               \
-                tsrc = src - ker_x_n;                                       \
-                tdst = rows[crows];                                         \
-                                                                            \
-                if( src_height-- <= 0 )                                     \
-                {                                                           \
-                    if( stage != CV_WHOLE && stage != CV_END )              \
-                        break;                                              \
-                    /* duplicate last row */                                \
-                    tsrc = rows[crows - 1];                                 \
-                    CV_COPY( tdst, tsrc, width_n, x );                      \
-                    continue;                                               \
-                }                                                           \
-                                                                            \
-                need_copy |= src_height == 1;                               \
-            }                                                               \
-            else                                                            \
-            {                                                               \
-                /* convolve center line for cross-shaped element */         \
-                tsrc = rows[ker_y] - ker_x_n;                               \
-                tdst = tbuf;                                                \
-                                                                            \
-                need_copy = 0;                                              \
-            }                                                               \
-                                                                            \
-            if( ker_width > 1 && (!is_cross || crows == ker_height) )       \
-            {                                                               \
-                if( need_copy )                                             \
-                {                                                           \
-                    tsrc = tbuf - ker_x_n;                                  \
-                    CV_COPY( tbuf, src, width_n, x );                       \
-                }                                                           \
-                else if( !is_cross )                                        \
-                {                                                           \
-                    CV_COPY( tbuf - ker_x_n, src - ker_x_n, ker_x_n, x );   \
-                    CV_COPY( tbuf, src + width_n, ker_right_n, x );         \
-                }                                                           \
-                                                                            \
-                /* make replication borders */                              \
-                for( i = ker_x_n - 1; i >= 0; i-- )                         \
-                    tsrc[i] = tsrc[i + channels];                           \
-                for( i = width_n + ker_x_n; i < width_n + ker_width_n; i++ )\
-                    tsrc[i] = tsrc[i - channels];                           \
-                                                                            \
-                /* row processing */                                        \
-                if( channels == 1 )                                         \
-                    for( i = 0; i < width_n; i += 2 )                       \
-                    {                                                       \
-                        int j;                                              \
-                        int t, t0 = tsrc[i + 1];                            \
-                                                                            \
-                        for( j = 2; j < ker_width_n; j++ )                  \
-                        {                                                   \
-                            int t1 = tsrc[i + j];                           \
-                            update_extr_macro( t0, t1 );                    \
-                        }                                                   \
-                                                                            \
-                        t = tsrc[i];                                        \
-                        update_extr_macro( t, t0 );                         \
-                        tdst[i] = (arrtype) t;                              \
-                                                                            \
-                        t = tsrc[i + j];                                    \
-                        update_extr_macro( t, t0 );                         \
-                        tdst[i + 1] = (arrtype) t;                          \
-                    }                                                       \
-                else                                                        \
-                    for( i = 0; i < width_n; i++ )                          \
-                    {                                                       \
-                        int j;                                              \
-                        int t0 = tsrc[i];                                   \
-                                                                            \
-                        for( j = channels; j < ker_width_n; j += channels ) \
-                        {                                                   \
-                            int t1 = tsrc[i + j];                           \
-                            update_extr_macro( t0, t1 );                    \
-                        }                                                   \
-                                                                            \
-                        tdst[i] = (arrtype)t0;                              \
-                    }                                                       \
-                                                                            \
-                if( !need_copy && !is_cross )                               \
-                {                                                           \
-                    /* restore borders */                                   \
-                    CV_COPY( src - ker_x_n, tbuf - ker_x_n, ker_x_n, x );   \
-                    CV_COPY( src + width_n, tbuf, ker_right_n, x );         \
-                }                                                           \
-            }                                                               \
-            else                                                            \
-                CV_COPY( tdst, tsrc + ker_x_n, width_n, x );                \
-                                                                            \
-            src += crows < ker_height ? srcstep : 0;                        \
-        }                                                                   \
-                                                                            \
-        if( starting_flag )                                                 \
-        {                                                                   \
-            starting_flag = 0;                                              \
-            tsrc = rows[ker_y];                                             \
-                                                                            \
-            for( i = 0; i < ker_y; i++ )                                    \
-            {                                                               \
-                tdst = rows[i];                                             \
-                CV_COPY( tdst, tsrc, width_n, x );                          \
-            }                                                               \
-        }                                                                   \
-                                                                            \
-        /* vertical convolution */                                          \
-        if( crows != ker_height )                                           \
-        {                                                                   \
-            if( crows < ker_height )                                        \
-                break;                                                      \
-            /* else it is cross-shaped element: change central line */      \
-            rows[ker_y] = tbuf;                                             \
-            crows--;                                                        \
-        }                                                                   \
-                                                                            \
-        tdst = dst;                                                         \
-                                                                            \
-        if( width_rest )                                                    \
-        {                                                                   \
-            need_copy = width_n < CV_MORPH_ALIGN || y == dst_height - 1;    \
-                                                                            \
-            if( need_copy )                                                 \
-                tdst = tbuf;                                                \
-            else                                                            \
-                CV_COPY( tbuf + width_n, dst + width_n, CV_MORPH_ALIGN, x );\
-        }                                                                   \
-                                                                            \
-        for( x = 0; x < width_n; x += 4 )                                   \
-        {                                                                   \
-            int val0, val1, val2, val3;                                     \
-                                                                            \
-            tsrc = rows[0];                                                 \
-                                                                            \
-            val0 = tsrc[x];                                                 \
-            val1 = tsrc[x + 1];                                             \
-            val2 = tsrc[x + 2];                                             \
-            val3 = tsrc[x + 3];                                             \
-                                                                            \
-            for( i = 1; i < ker_height; i++ )                               \
-            {                                                               \
-                tsrc = rows[i];                                             \
-                int s = tsrc[x + 0];                                        \
-                update_extr_macro( val0, s );                               \
-                s = tsrc[x + 1];                                            \
-                update_extr_macro( val1, s );                               \
-                s = tsrc[x + 2];                                            \
-                update_extr_macro( val2, s );                               \
-                s = tsrc[x + 3];                                            \
-                update_extr_macro( val3, s );                               \
-            }                                                               \
-                                                                            \
-            tdst[x + 0] = (arrtype)val0;                                    \
-            tdst[x + 1] = (arrtype)val1;                                    \
-            tdst[x + 2] = (arrtype)val2;                                    \
-            tdst[x + 3] = (arrtype)val3;                                    \
-        }                                                                   \
-                                                                            \
-        if( width_rest )                                                    \
-        {                                                                   \
-            if( need_copy )                                                 \
-                CV_COPY( dst, tbuf, width_n, x );                           \
-            else                                                            \
-                CV_COPY( dst + width_n, tbuf + width_n, CV_MORPH_ALIGN, x );\
-        }                                                                   \
-                                                                            \
-        rows[ker_y] = saved_row;                                            \
-                                                                            \
-        /* rotate buffer */                                                 \
-        {                                                                   \
-            arrtype *t = rows[0];                                           \
-                                                                            \
-            CV_COPY( rows, rows + 1, ker_height - 1, i );                   \
-            rows[i] = t;                                                    \
-            crows--;                                                        \
-            dst += dststep;                                                 \
-        }                                                                   \
-    }                                                                       \
-    while( ++y < dst_height );                                              \
-                                                                            \
-    roi->height = y;                                                        \
-    state->crows = crows;                                                   \
-                                                                            \
-    return CV_OK;                                                           \
-}
-
-
-/****************************************************************************************\
-*         Erode/Dilate with rectangular or cross-shaped element for 32f type             *
-\****************************************************************************************/
-
-#define ICV_DEF_MORPH_RECT_FLT_FUNC( name, flavor, arrtype,                 \
-                                     update_extr_macro )                    \
-static CvStatus                                                             \
-icv##name##RC_##flavor( arrtype* src, int srcstep,                          \
-                        arrtype* dst, int dststep,                          \
-                        CvSize* roi, CvMorphState* state, int stage )       \
-{                                                                           \
-    int width = roi->width;                                                 \
-    int src_height = roi->height;                                           \
-    int dst_height = src_height;                                            \
-    int x, y = 0, i;                                                        \
-                                                                            \
-    int ker_x = state->ker_x;                                               \
+    int ker_x_n = state->ker_x * channels;                                  \
+    int ker_width_n = state->ker_width * channels;                          \
     int ker_y = state->ker_y;                                               \
-    int ker_width = state->ker_width;                                       \
     int ker_height = state->ker_height;                                     \
-                                                                            \
-    int crows = state->crows;                                               \
-    int **rows = (int**)(state->rows);                                      \
-    int *tbuf = (int*)(state->tbuf);                                        \
-    int *tbuf2 = (int*)(state->tbuf + state->buffer_step);                  \
-                                                                            \
-    int channels = state->channels;                                         \
-    int ker_x_n = ker_x * channels;                                         \
-    int ker_width_n = ker_width * channels;                                 \
-    int width_n = width * channels;                                         \
-                                                                            \
-    int starting_flag = 0;                                                  \
-    int width_rest = width_n & (CV_MORPH_ALIGN - 1);                        \
-                                                                            \
-    int is_cross = ICV_BINARY_KERNEL_SHAPE(state->kerType)==CV_SHAPE_CROSS; \
+    int width_n = roi->width * channels;                                    \
                                                                             \
     /* initialize cyclic buffer when starting */                            \
-    if( stage == CV_WHOLE || stage == CV_START )                            \
-    {                                                                       \
-        for( i = 0; i < ker_height; i++ )                                   \
-        {                                                                   \
-            rows[i] = (int *) (state->buffer + state->buffer_step * i);     \
-        }                                                                   \
-        crows = ker_y;                                                      \
-        if( stage != CV_WHOLE )                                             \
-            dst_height -= ker_height - ker_y - 1;                           \
-        starting_flag = 1;                                                  \
-    }                                                                       \
-                                                                            \
-    if( stage == CV_END )                                                   \
-        dst_height += ker_height - ker_y - 1;                               \
+    for( i = 0; i <= ker_height; i++ )                                      \
+        rows[i] = (arrtype*)(state->buffer + state->buffer_step * i);       \
+    row_count = 0;                                                          \
+    rows_wanted = ker_height - ker_y + 1;                                   \
                                                                             \
     srcstep /= sizeof(src[0]);                                              \
     dststep /= sizeof(dst[0]);                                              \
                                                                             \
-    do                                                                      \
+    for( y = 0; y < dst_height; y += dy )                                   \
     {                                                                       \
-        int need_copy = 0;                                                  \
-        int *tsrc, *tdst;                                                   \
-        int *saved_row = rows[ker_y];                                       \
+        int val0, val1, val2, val3, t;                                      \
+        dy = MIN( dst_height - y, 2 );                                      \
                                                                             \
-        /* fill cyclic buffer - horizontal filtering */                     \
-        for( ; crows < ker_height + is_cross; crows++ )                     \
+        /* fill cyclic buffer - apply horizontal filter */                  \
+        for( ; row_count < rows_wanted; row_count++, src += srcstep )       \
         {                                                                   \
-            if( crows < ker_height )                                        \
+            tdst = rows[row_count];                                         \
+            if( ker_height == 1 )                                           \
             {                                                               \
-                tsrc = (int *) src;                                         \
-                tdst = rows[crows];                                         \
-                                                                            \
-                if( src_height-- <= 0 )                                     \
-                {                                                           \
-                    if( stage != CV_WHOLE && stage != CV_END )              \
-                        break;                                              \
-                    /* duplicate last row */                                \
-                    tsrc = rows[crows - 1];                                 \
-                    CV_COPY( tdst, tsrc, width_n, x );                      \
-                    continue;                                               \
-                }                                                           \
-                                                                            \
-                for( x = 0; x < width_n; x++ )                              \
-                {                                                           \
-                    int t = tsrc[x];                                        \
-                                                                            \
-                    tbuf2[x] = CV_TOGGLE_FLT( t );                          \
-                }                                                           \
-                tsrc = tbuf2 - ker_x_n;                                     \
-            }                                                               \
-            else                                                            \
-            {                                                               \
-                /* convolve center line for cross-shaped element */         \
-                tsrc = rows[ker_y] - ker_x_n;                               \
-                tdst = tbuf;                                                \
+                tdst = dst;                                                 \
+                dst += dststep;                                             \
             }                                                               \
                                                                             \
-            if( ker_width > 1 && (!is_cross || crows == ker_height) )       \
-            {                                                               \
-                /* make replication borders */                              \
-                for( i = ker_x_n - 1; i >= 0; i-- )                         \
-                    tsrc[i] = tsrc[i + channels];                           \
-                for( i = width_n + ker_x_n; i < width_n + ker_width_n; i++ )\
-                    tsrc[i] = tsrc[i - channels];                           \
-                                                                            \
-                /* row processing */                                        \
-                if( channels == 1 )                                         \
-                    for( i = 0; i < width_n; i += 2 )                       \
-                    {                                                       \
-                        int j;                                              \
-                        int t, t0 = tsrc[i + 1];                            \
-                                                                            \
-                        for( j = 2; j < ker_width_n; j++ )                  \
-                        {                                                   \
-                            int t1 = tsrc[i + j];                           \
-                            update_extr_macro( t0, t1 );                    \
-                        }                                                   \
-                                                                            \
-                        t = tsrc[i];                                        \
-                        update_extr_macro( t, t0 );                         \
-                        tdst[i] = (int) t;                                  \
-                                                                            \
-                        t = tsrc[i + j];                                    \
-                        update_extr_macro( t, t0 );                         \
-                        tdst[i + 1] = (int) t;                              \
-                    }                                                       \
-                else                                                        \
-                    for( i = 0; i < width_n; i++ )                          \
-                    {                                                       \
-                        int j;                                              \
-                        int t0 = tsrc[i];                                   \
-                                                                            \
-                        for( j = channels; j < ker_width_n; j += channels ) \
-                        {                                                   \
-                            int t1 = tsrc[i + j];                           \
-                            update_extr_macro( t0, t1 );                    \
-                        }                                                   \
-                                                                            \
-                        tdst[i] = (int) t0;                                 \
-                    }                                                       \
-            }                                                               \
-            else                                                            \
-                CV_COPY( tdst, tsrc + ker_x_n, width_n, x );                \
-                                                                            \
-            if( crows < ker_height )                                        \
-                src += srcstep;                                             \
-        }                                                                   \
-                                                                            \
-        if( starting_flag )                                                 \
-        {                                                                   \
-            starting_flag = 0;                                              \
-            tsrc = rows[ker_y];                                             \
-                                                                            \
-            for( i = 0; i < ker_y; i++ )                                    \
-            {                                                               \
-                tdst = rows[i];                                             \
-                CV_COPY( tdst, tsrc, width_n, x );                          \
-            }                                                               \
-        }                                                                   \
-                                                                            \
-        /* vertical convolution */                                          \
-        if( crows != ker_height )                                           \
-        {                                                                   \
-            if( crows < ker_height )                                        \
+            if( src_height-- <= 0 )                                         \
                 break;                                                      \
-            /* else it is cross-shaped element: change central line */      \
-            rows[ker_y] = tbuf;                                             \
-            crows--;                                                        \
-        }                                                                   \
                                                                             \
-        tdst = (int *) dst;                                                 \
-                                                                            \
-        if( width_rest )                                                    \
-        {                                                                   \
-            need_copy = width_n < CV_MORPH_ALIGN || y == dst_height - 1;    \
-                                                                            \
-            if( need_copy )                                                 \
-                tdst = tbuf;                                                \
-            else                                                            \
-                CV_COPY(tbuf + width_n, tdst + width_n, CV_MORPH_ALIGN, x); \
-        }                                                                   \
-                                                                            \
-        for( x = 0; x < width_n; x += 4 )                                   \
-        {                                                                   \
-            int val0, val1, val2, val3;                                     \
-                                                                            \
-            tsrc = rows[0];                                                 \
-                                                                            \
-            val0 = tsrc[x];                                                 \
-            val1 = tsrc[x + 1];                                             \
-            val2 = tsrc[x + 2];                                             \
-            val3 = tsrc[x + 3];                                             \
-                                                                            \
-            for( i = 1; i < ker_height; i++ )                               \
+            if( ker_width_n == channels )                                   \
             {                                                               \
-                tsrc = rows[i];                                             \
-                int s = tsrc[x + 0];                                        \
-                update_extr_macro( val0, s );                               \
-                s = tsrc[x + 1];                                            \
-                update_extr_macro( val1, s );                               \
-                s = tsrc[x + 2];                                            \
-                update_extr_macro( val2, s );                               \
-                s = tsrc[x + 3];                                            \
-                update_extr_macro( val3, s );                               \
+                CV_COPY( tdst, src, width_n, x );                           \
+                continue;                                                   \
             }                                                               \
-            tdst[x + 0] = CV_TOGGLE_FLT( val0 );                            \
-            tdst[x + 1] = CV_TOGGLE_FLT( val1 );                            \
-            tdst[x + 2] = CV_TOGGLE_FLT( val2 );                            \
-            tdst[x + 3] = CV_TOGGLE_FLT( val3 );                            \
-        }                                                                   \
                                                                             \
-        if( width_rest )                                                    \
-        {                                                                   \
-            if( need_copy )                                                 \
-                CV_COPY( (int *) dst, tbuf, width_n, x );                   \
+            CV_COPY( tbuf + ker_x_n, src, width_n, x );                     \
+                                                                            \
+            /* make replication borders */                                  \
+            for( i = ker_x_n - 1; i >= 0; i-- )                             \
+                tbuf[i] = tbuf[i + channels];                               \
+            for( i = width_n + ker_x_n; i < width_n + ker_width_n; i++ )    \
+                tbuf[i] = tbuf[i - channels];                               \
+                                                                            \
+            /* row processing */                                            \
+            if( channels == 1 )                                             \
+            {                                                               \
+                for( x = 0; x <= width_n - 2; x += 2 )                      \
+                {                                                           \
+                    tsrc = tbuf + x;                                        \
+                    val0 = tsrc[1];                                         \
+                                                                            \
+                    for( i = 2; i < ker_width_n; i++ )                      \
+                    {                                                       \
+                        t = tsrc[i]; update_extr_macro( val0, t );          \
+                    }                                                       \
+                    t = tsrc[0]; update_extr_macro( t, val0 ); tdst[x] = (arrtype)t;\
+                    t = tsrc[i]; update_extr_macro( t, val0 ); tdst[x+1] = (arrtype)t;\
+                }                                                           \
+            }                                                               \
+            else if( channels == 3 )                                        \
+            {                                                               \
+                for( x = 0; x <= width_n - 6; x += 6 )                      \
+                {                                                           \
+                    tsrc = tbuf + x;                                        \
+                    val0 = tsrc[3]; val1 = tsrc[4]; val2 = tsrc[5];         \
+                                                                            \
+                    for( i = 6; i < ker_width_n; i += 3 )                   \
+                    {                                                       \
+                        t = tsrc[i]; update_extr_macro( val0, t );          \
+                        t = tsrc[i+1]; update_extr_macro( val1, t );        \
+                        t = tsrc[i+2]; update_extr_macro( val2, t );        \
+                    }                                                       \
+                    t = tsrc[0]; update_extr_macro( t, val0 ); tdst[x] = (arrtype)t;\
+                    t = tsrc[i]; update_extr_macro( t, val0 ); tdst[x+3] = (arrtype)t;\
+                                                                            \
+                    t = tsrc[1]; update_extr_macro( t, val1 ); tdst[x+1] = (arrtype)t;\
+                    t = tsrc[i+1]; update_extr_macro( t, val1 ); tdst[x+4] = (arrtype)t;\
+                                                                            \
+                    t = tsrc[2]; update_extr_macro( t, val2 ); tdst[x+2] = (arrtype)t;\
+                    t = tsrc[i+2]; update_extr_macro( t, val2 ); tdst[x+5] = (arrtype)t;\
+                }                                                           \
+            }                                                               \
             else                                                            \
-                CV_COPY(tdst + width_n, tbuf + width_n, CV_MORPH_ALIGN, x); \
+            {                                                               \
+                assert( channels == 4 );                                    \
+                for( x = 0; x <= width_n - 8; x += 8 )                      \
+                {                                                           \
+                    tsrc = tbuf + x;                                        \
+                    val0 = tsrc[4]; val1 = tsrc[5];                         \
+                    val2 = tsrc[6]; val3 = tsrc[7];                         \
+                                                                            \
+                    for( i = 8; i < ker_width_n; i += 4 )                   \
+                    {                                                       \
+                        t = tsrc[i]; update_extr_macro( val0, t );          \
+                        t = tsrc[i+1]; update_extr_macro( val1, t );        \
+                        t = tsrc[i+2]; update_extr_macro( val2, t );        \
+                        t = tsrc[i+3]; update_extr_macro( val3, t );        \
+                    }                                                       \
+                    t = tsrc[0]; update_extr_macro( t, val0 ); tdst[x] = (arrtype)t;\
+                    t = tsrc[i]; update_extr_macro( t, val0 ); tdst[x+4] = (arrtype)t;\
+                                                                            \
+                    t = tsrc[1]; update_extr_macro( t, val1 ); tdst[x+1] = (arrtype)t;\
+                    t = tsrc[i+1]; update_extr_macro( t, val1 ); tdst[x+5] = (arrtype)t;\
+                                                                            \
+                    t = tsrc[2]; update_extr_macro( t, val2 ); tdst[x+2] = (arrtype)t;\
+                    t = tsrc[i+2]; update_extr_macro( t, val2 ); tdst[x+6] = (arrtype)t;\
+                                                                            \
+                    t = tsrc[3]; update_extr_macro( t, val3 ); tdst[x+3] = (arrtype)t;\
+                    t = tsrc[i+3]; update_extr_macro( t, val3 ); tdst[x+7] = (arrtype)t;\
+                }                                                           \
+            }                                                               \
+                                                                            \
+            for( ; x < width_n; x++ )                                       \
+            {                                                               \
+                val0 = tbuf[x];                                             \
+                for( i = channels; i < ker_width_n; i += channels )         \
+                {                                                           \
+                    t = tbuf[x + i]; update_extr_macro( val0, t );          \
+                }                                                           \
+                tdst[x] = (arrtype)val0;                                    \
+            }                                                               \
         }                                                                   \
                                                                             \
-        rows[ker_y] = saved_row;                                            \
-                                                                            \
-        /* rotate buffer */                                                 \
+        /* apply vertical filter */                                         \
+        if( ker_height == 1 )                                               \
         {                                                                   \
-            int *t = rows[0];                                               \
-                                                                            \
-            CV_COPY( rows, rows + 1, ker_height - 1, i );                   \
-            rows[i] = t;                                                    \
-            crows--;                                                        \
-            dst += dststep;                                                 \
+            row_count -= 2;                                                 \
+            continue;                                                       \
         }                                                                   \
-    }                                                                       \
-    while( ++y < dst_height );                                              \
                                                                             \
-    roi->height = y;                                                        \
-    state->crows = crows;                                                   \
+        if( dy == 2 )                                                       \
+        {                                                                   \
+            int second_row = MIN((int)(y >= ker_y), row_count-1);           \
+            int last_row = row_count - (src_height >= 0);                   \
+                                                                            \
+            for( x = 0; x <= width_n - 4; x += 4, dst += 4 )                \
+            {                                                               \
+                tsrc = rows[second_row] + x;                                \
+                val0 = tsrc[0]; val1 = tsrc[1];                             \
+                val2 = tsrc[2]; val3 = tsrc[3];                             \
+                                                                            \
+                for( i = second_row + 1; i < last_row; i++ )                \
+                {                                                           \
+                    tsrc = rows[i] + x;                                     \
+                    t = tsrc[0]; update_extr_macro(val0, t);                \
+                    t = tsrc[1]; update_extr_macro(val1, t);                \
+                    t = tsrc[2]; update_extr_macro(val2, t);                \
+                    t = tsrc[3]; update_extr_macro(val3, t);                \
+                }                                                           \
+                                                                            \
+                tsrc = rows[0] + x;                                         \
+                t = tsrc[0]; update_extr_macro(t, val0); dst[0] = (arrtype)t;\
+                t = tsrc[1]; update_extr_macro(t, val1); dst[1] = (arrtype)t;\
+                t = tsrc[2]; update_extr_macro(t, val2); dst[2] = (arrtype)t;\
+                t = tsrc[3]; update_extr_macro(t, val3); dst[3] = (arrtype)t;\
+                                                                            \
+                tsrc = rows[row_count - 1] + x;                             \
+                t = tsrc[0]; update_extr_macro(t, val0); dst[dststep] = (arrtype)t;\
+                t = tsrc[1]; update_extr_macro(t, val1); dst[dststep+1] = (arrtype)t;\
+                t = tsrc[2]; update_extr_macro(t, val2); dst[dststep+2] = (arrtype)t;\
+                t = tsrc[3]; update_extr_macro(t, val3); dst[dststep+3] = (arrtype)t;\
+            }                                                               \
+                                                                            \
+            for( ; x < width_n; x++, dst++ )                                \
+            {                                                               \
+                tsrc = rows[second_row] + x;                                \
+                val0 = tsrc[0];                                             \
+                                                                            \
+                for( i = second_row + 1; i < last_row; i++ )                \
+                {                                                           \
+                    tsrc = rows[i] + x;                                     \
+                    t = tsrc[0]; update_extr_macro(val0, t);                \
+                }                                                           \
+                                                                            \
+                tsrc = rows[0] + x;                                         \
+                t = tsrc[0]; update_extr_macro(t, val0); dst[0] = (arrtype)t;\
+                tsrc = rows[row_count - 1] + x;                             \
+                t = tsrc[0]; update_extr_macro(t, val0); dst[dststep] = (arrtype)t;\
+            }                                                               \
+            dst -= width_n;                                                 \
+        }                                                                   \
+        else                                                                \
+        {                                                                   \
+            for( x = 0; x < width_n; x++ )                                  \
+            {                                                               \
+                tsrc = rows[0] + x;                                         \
+                val0 = tsrc[0];                                             \
+                                                                            \
+                for( i = 1; i < row_count; i++ )                            \
+                {                                                           \
+                    tsrc = rows[i] + x;                                     \
+                    t = tsrc[0]; update_extr_macro(val0, t);                \
+                }                                                           \
+                                                                            \
+                dst[x] = (arrtype)val0;                                     \
+            }                                                               \
+        }                                                                   \
+                                                                            \
+        if( y+dy > ker_y && row_count > 1 )                                 \
+        {                                                                   \
+            /* rotate buffer */                                             \
+            int shift = dy - (y < ker_y);                                   \
+            arrtype* row0 = rows[0];                                        \
+            arrtype* row1 = rows[1];                                        \
+            if( row_count <= shift && src_height <= 0 )                     \
+                shift = 1;                                                  \
+                                                                            \
+            CV_COPY( rows, rows + shift, ker_height + 1 - shift, i );       \
+                                                                            \
+            if( shift == 2 )                                                \
+            {                                                               \
+                rows[ker_height - 1] = row0;                                \
+                rows[ker_height] = row1;                                    \
+            }                                                               \
+            else                                                            \
+                rows[ker_height] = row0;                                    \
+            row_count -= shift;                                             \
+        }                                                                   \
+                                                                            \
+        rows_wanted = MIN(rows_wanted + 2, ker_height + 1);                 \
+        dst += dststep*dy;                                                  \
+    }                                                                       \
                                                                             \
     return CV_OK;                                                           \
 }
 
 
 /****************************************************************************************\
-*         Erode/Dilate with arbitrary element and arbitrary type                         *
+*                    Erode/Dilate with rectangular element for 32f type                  *
 \****************************************************************************************/
 
-#define ICV_DEF_MORPH_ARB_FUNC( name, flavor, arrtype, init_val,            \
+#define ICV_DEF_MORPH_RECT_FLT_FUNC( name, update_extr_macro )              \
+static CvStatus CV_STDCALL                                                  \
+icv##name##Rect_32f( int* src, int srcstep, int* dst, int dststep,          \
+                     CvSize* roi, CvMorphState* state, int /*stage*/ )      \
+{                                                                           \
+    int src_height = roi->height;                                           \
+    int dst_height = src_height;                                            \
+    int x, y = 0, dy = 0, i;                                                \
+                                                                            \
+    int row_count, rows_wanted;                                             \
+    int** rows = (int**)(state->rows);                                      \
+    int *tbuf = (int*)(state->tbuf), *tdst, *tsrc;                          \
+                                                                            \
+    int channels = state->channels;                                         \
+    int ker_x_n = state->ker_x * channels;                                  \
+    int ker_width_n = state->ker_width * channels;                          \
+    int ker_y = state->ker_y;                                               \
+    int ker_height = state->ker_height;                                     \
+    int width_n = roi->width * channels;                                    \
+                                                                            \
+    /* initialize cyclic buffer when starting */                            \
+    for( i = 0; i <= ker_height; i++ )                                      \
+        rows[i] = (int*)(state->buffer + state->buffer_step * i);           \
+    row_count = 0;                                                          \
+    rows_wanted = ker_height - ker_y + 1;                                   \
+                                                                            \
+    srcstep /= sizeof(src[0]);                                              \
+    dststep /= sizeof(dst[0]);                                              \
+                                                                            \
+    for( y = 0; y < dst_height; y += dy )                                   \
+    {                                                                       \
+        int val0, val1, val2, val3, t;                                      \
+        dy = MIN( dst_height - y, 2 );                                      \
+                                                                            \
+        /* fill cyclic buffer - apply horizontal filter */                  \
+        for( ; row_count < rows_wanted; row_count++, src += srcstep )       \
+        {                                                                   \
+            tdst = rows[row_count];                                         \
+            if( ker_height == 1 )                                           \
+            {                                                               \
+                tdst = dst;                                                 \
+                dst += dststep;                                             \
+            }                                                               \
+                                                                            \
+            if( src_height-- <= 0 )                                         \
+                break;                                                      \
+                                                                            \
+            if( ker_width_n == channels )                                   \
+            {                                                               \
+                if( ker_height == 1 )                                       \
+                {                                                           \
+                    CV_COPY( tdst, src, width_n, x );                       \
+                }                                                           \
+                else                                                        \
+                {                                                           \
+                    for( x = 0; x < width_n; x++ )                          \
+                        t = src[x], tdst[x] = CV_TOGGLE_FLT(t);             \
+                }                                                           \
+                continue;                                                   \
+            }                                                               \
+                                                                            \
+            for( x = 0; x < width_n; x++ )                                  \
+            {                                                               \
+                t = src[x];                                                 \
+                tbuf[ker_x_n + x] = CV_TOGGLE_FLT(t);                       \
+            }                                                               \
+                                                                            \
+            /* make replication borders */                                  \
+            for( i = ker_x_n - 1; i >= 0; i-- )                             \
+                tbuf[i] = tbuf[i + channels];                               \
+            for( i = width_n + ker_x_n; i < width_n + ker_width_n; i++ )    \
+                tbuf[i] = tbuf[i - channels];                               \
+                                                                            \
+            /* row processing */                                            \
+            if( channels == 1 )                                             \
+            {                                                               \
+                for( x = 0; x <= width_n - 2; x += 2 )                      \
+                {                                                           \
+                    tsrc = tbuf + x;                                        \
+                    val0 = tsrc[1];                                         \
+                                                                            \
+                    for( i = 2; i < ker_width_n; i++ )                      \
+                    {                                                       \
+                        t = tsrc[i]; update_extr_macro( val0, t );          \
+                    }                                                       \
+                    t = tsrc[0]; update_extr_macro( t, val0 ); tdst[x] = t; \
+                    t = tsrc[i]; update_extr_macro( t, val0 ); tdst[x+1]= t;\
+                }                                                           \
+            }                                                               \
+            else if( channels == 3 )                                        \
+            {                                                               \
+                for( x = 0; x <= width_n - 6; x += 6 )                      \
+                {                                                           \
+                    tsrc = tbuf + x;                                        \
+                    val0 = tsrc[3]; val1 = tsrc[4]; val2 = tsrc[5];         \
+                                                                            \
+                    for( i = 6; i < ker_width_n; i += 3 )                   \
+                    {                                                       \
+                        t = tsrc[i]; update_extr_macro( val0, t );          \
+                        t = tsrc[i+1]; update_extr_macro( val1, t );        \
+                        t = tsrc[i+2]; update_extr_macro( val2, t );        \
+                    }                                                       \
+                    t = tsrc[0]; update_extr_macro( t, val0 ); tdst[x] = t; \
+                    t = tsrc[i]; update_extr_macro( t, val0 ); tdst[x+3] = t;\
+                                                                            \
+                    t = tsrc[1]; update_extr_macro( t, val1 ); tdst[x+1] = t;\
+                    t = tsrc[i+1]; update_extr_macro( t, val1 ); tdst[x+4] = t;\
+                                                                            \
+                    t = tsrc[2]; update_extr_macro( t, val2 ); tdst[x+2] = t;\
+                    t = tsrc[i+2]; update_extr_macro( t, val2 ); tdst[x+5] = t;\
+                }                                                           \
+            }                                                               \
+            else                                                            \
+            {                                                               \
+                assert( channels == 4 );                                    \
+                for( x = 0; x <= width_n - 8; x += 8 )                      \
+                {                                                           \
+                    tsrc = tbuf + x;                                        \
+                    val0 = tsrc[4]; val1 = tsrc[5];                         \
+                    val2 = tsrc[6]; val3 = tsrc[7];                         \
+                                                                            \
+                    for( i = 8; i < ker_width_n; i += 4 )                   \
+                    {                                                       \
+                        t = tsrc[i]; update_extr_macro( val0, t );          \
+                        t = tsrc[i+1]; update_extr_macro( val1, t );        \
+                        t = tsrc[i+2]; update_extr_macro( val2, t );        \
+                        t = tsrc[i+3]; update_extr_macro( val3, t );        \
+                    }                                                       \
+                    t = tsrc[0]; update_extr_macro( t, val0 ); tdst[x] = t; \
+                    t = tsrc[i]; update_extr_macro( t, val0 ); tdst[x+4] = t;\
+                                                                            \
+                    t = tsrc[1]; update_extr_macro( t, val1 ); tdst[x+1] = t;\
+                    t = tsrc[i+1]; update_extr_macro( t, val1 ); tdst[x+5] = t;\
+                                                                            \
+                    t = tsrc[2]; update_extr_macro( t, val2 ); tdst[x+2] = t;\
+                    t = tsrc[i+2]; update_extr_macro( t, val2 ); tdst[x+6] = t;\
+                                                                            \
+                    t = tsrc[3]; update_extr_macro( t, val3 ); tdst[x+3] = t;\
+                    t = tsrc[i+3]; update_extr_macro( t, val3 ); tdst[x+7] = t;\
+                }                                                           \
+            }                                                               \
+                                                                            \
+            for( ; x < width_n; x++ )                                       \
+            {                                                               \
+                val0 = tbuf[x];                                             \
+                for( i = channels; i < ker_width_n; i += channels )         \
+                {                                                           \
+                    t = tbuf[x + i]; update_extr_macro( val0, t );          \
+                }                                                           \
+                tdst[x] = val0;                                             \
+            }                                                               \
+                                                                            \
+            if( ker_height == 1 )                                           \
+            {                                                               \
+                for( x = 0; x < width_n; x++ )                              \
+                    t = tdst[x], tdst[x] = CV_TOGGLE_FLT(t);                \
+            }                                                               \
+        }                                                                   \
+                                                                            \
+        /* apply vertical filter */                                         \
+        if( ker_height == 1 )                                               \
+        {                                                                   \
+            row_count -= 2;                                                 \
+            continue;                                                       \
+        }                                                                   \
+                                                                            \
+        if( dy == 2 )                                                       \
+        {                                                                   \
+            int second_row = MIN((int)(y >= ker_y), row_count-1);           \
+            int last_row = row_count - (src_height >= 0);                   \
+                                                                            \
+            for( x = 0; x <= width_n - 4; x += 4, dst += 4 )                \
+            {                                                               \
+                tsrc = rows[second_row] + x;                                \
+                val0 = tsrc[0]; val1 = tsrc[1];                             \
+                val2 = tsrc[2]; val3 = tsrc[3];                             \
+                                                                            \
+                for( i = second_row + 1; i < last_row; i++ )                \
+                {                                                           \
+                    tsrc = rows[i] + x;                                     \
+                    t = tsrc[0]; update_extr_macro(val0, t);                \
+                    t = tsrc[1]; update_extr_macro(val1, t);                \
+                    t = tsrc[2]; update_extr_macro(val2, t);                \
+                    t = tsrc[3]; update_extr_macro(val3, t);                \
+                }                                                           \
+                                                                            \
+                tsrc = rows[0] + x;                                         \
+                t = tsrc[0]; update_extr_macro(t, val0); dst[0] = CV_TOGGLE_FLT(t);\
+                t = tsrc[1]; update_extr_macro(t, val1); dst[1] = CV_TOGGLE_FLT(t);\
+                t = tsrc[2]; update_extr_macro(t, val2); dst[2] = CV_TOGGLE_FLT(t);\
+                t = tsrc[3]; update_extr_macro(t, val3); dst[3] = CV_TOGGLE_FLT(t);\
+                                                                            \
+                tsrc = rows[row_count - 1] + x;                             \
+                t = tsrc[0]; update_extr_macro(t, val0); dst[dststep] = CV_TOGGLE_FLT(t);\
+                t = tsrc[1]; update_extr_macro(t, val1); dst[dststep+1] = CV_TOGGLE_FLT(t);\
+                t = tsrc[2]; update_extr_macro(t, val2); dst[dststep+2] = CV_TOGGLE_FLT(t);\
+                t = tsrc[3]; update_extr_macro(t, val3); dst[dststep+3] = CV_TOGGLE_FLT(t);\
+            }                                                               \
+                                                                            \
+            for( ; x < width_n; x++, dst++ )                                \
+            {                                                               \
+                tsrc = rows[second_row] + x;                                \
+                val0 = tsrc[0];                                             \
+                                                                            \
+                for( i = second_row + 1; i < last_row; i++ )                \
+                {                                                           \
+                    tsrc = rows[i] + x;                                     \
+                    t = tsrc[0]; update_extr_macro(val0, t);                \
+                }                                                           \
+                                                                            \
+                tsrc = rows[0] + x;                                         \
+                t = tsrc[0]; update_extr_macro(t, val0); dst[0] = CV_TOGGLE_FLT(t);\
+                tsrc = rows[row_count - 1] + x;                             \
+                t = tsrc[0]; update_extr_macro(t, val0); dst[dststep] = CV_TOGGLE_FLT(t);\
+            }                                                               \
+            dst -= width_n;                                                 \
+        }                                                                   \
+        else                                                                \
+        {                                                                   \
+            for( x = 0; x < width_n; x++ )                                  \
+            {                                                               \
+                tsrc = rows[0] + x;                                         \
+                val0 = tsrc[0];                                             \
+                                                                            \
+                for( i = 1; i < row_count; i++ )                            \
+                {                                                           \
+                    tsrc = rows[i] + x;                                     \
+                    t = tsrc[0]; update_extr_macro(val0, t);                \
+                }                                                           \
+                                                                            \
+                dst[x] = CV_TOGGLE_FLT(val0);                               \
+            }                                                               \
+        }                                                                   \
+                                                                            \
+        if( y+dy > ker_y && row_count > 1 )                                 \
+        {                                                                   \
+            /* rotate buffer */                                             \
+            int shift = dy - (y < ker_y);                                   \
+            int* row0 = rows[0];                                            \
+            int* row1 = rows[1];                                            \
+            if( row_count <= shift && src_height <= 0 )                     \
+                shift = 1;                                                  \
+                                                                            \
+            CV_COPY( rows, rows + shift, ker_height + 1 - shift, i );       \
+                                                                            \
+            if( shift == 2 )                                                \
+            {                                                               \
+                rows[ker_height - 1] = row0;                                \
+                rows[ker_height] = row1;                                    \
+            }                                                               \
+            else                                                            \
+                rows[ker_height] = row0;                                    \
+            row_count -= shift;                                             \
+        }                                                                   \
+                                                                            \
+        rows_wanted = MIN(rows_wanted + 2, ker_height + 1);                 \
+        dst += dststep*dy;                                                  \
+    }                                                                       \
+                                                                            \
+    return CV_OK;                                                           \
+}
+
+
+/****************************************************************************************\
+*                 Erode/Dilate with arbitrary element and arbitrary type                 *
+\****************************************************************************************/
+
+#define ICV_DEF_MORPH_ARB_FUNC( name, flavor, arrtype,                      \
                                 update_extr_macro, toggle_macro )           \
-static CvStatus                                                             \
-icv##name##Arb_##flavor( arrtype* src, int srcstep,                         \
+static CvStatus CV_STDCALL                                                  \
+icv##name##Any_##flavor( arrtype* src, int srcstep,                         \
                          arrtype* dst, int dststep,                         \
                          CvSize* roi, CvMorphState* state, int stage )      \
 {                                                                           \
-    const int INIT_VAL = init_val;                                          \
     int width = roi->width;                                                 \
     int src_height = roi->height;                                           \
     int dst_height = src_height;                                            \
@@ -721,21 +739,22 @@ icv##name##Arb_##flavor( arrtype* src, int srcstep,                         \
                 if( ker_data[i*ker_width + x] )                             \
                     *ker_ptr++ = rows[i] + x*channels;                      \
             }                                                               \
+        if( ker_ptr == ker )                                                \
+            *ker_ptr++ = rows[ker_y] + ker_x_n;                             \
                                                                             \
         if( channels == 3 )                                                 \
             for( x = 0; x < width_n; x += 3 )                               \
             {                                                               \
-                int val0 = INIT_VAL, val1 = INIT_VAL, val2 = INIT_VAL;      \
                 arrtype** kp = ker;                                         \
+                arrtype* tp = *kp++;                                        \
+                int t, val0 = tp[x], val1 = tp[x+1], val2 = tp[x+2];        \
+                                                                            \
                 while( kp != ker_ptr )                                      \
                 {                                                           \
-                    arrtype* tp = *kp++;                                    \
-                    int t = tp[x];                                          \
-                    update_extr_macro( val0, t );                           \
-                    t = tp[x+1];                                            \
-                    update_extr_macro( val1, t );                           \
-                    t = tp[x+2];                                            \
-                    update_extr_macro( val2, t );                           \
+                    tp = *kp++;                                             \
+                    t = tp[x]; update_extr_macro( val0, t );                \
+                    t = tp[x + 1]; update_extr_macro( val1, t );            \
+                    t = tp[x + 2]; update_extr_macro( val2, t );            \
                 }                                                           \
                 tdst[x] = (arrtype)toggle_macro(val0);                      \
                 tdst[x + 1] = (arrtype)toggle_macro(val1);                  \
@@ -745,20 +764,18 @@ icv##name##Arb_##flavor( arrtype* src, int srcstep,                         \
             /* channels == 1 or channels == 4 */                            \
             for( x = 0; x < width_n; x += 4 )                               \
             {                                                               \
-                int val0 = INIT_VAL, val1 = INIT_VAL,                       \
-                    val2 = INIT_VAL, val3 = INIT_VAL;                       \
                 arrtype** kp = ker;                                         \
+                arrtype* tp = *kp++;                                        \
+                int t, val0 = tp[x], val1 = tp[x+1],                        \
+                       val2 = tp[x+2], val3 = tp[x+3];                      \
+                                                                            \
                 while( kp != ker_ptr )                                      \
                 {                                                           \
                     arrtype* tp = *kp++;                                    \
-                    int t = tp[x];                                          \
-                    update_extr_macro( val0, t );                           \
-                    t = tp[x+1];                                            \
-                    update_extr_macro( val1, t );                           \
-                    t = tp[x+2];                                            \
-                    update_extr_macro( val2, t );                           \
-                    t = tp[x+3];                                            \
-                    update_extr_macro( val3, t );                           \
+                    t = tp[x]; update_extr_macro( val0, t );                \
+                    t = tp[x + 1]; update_extr_macro( val1, t );            \
+                    t = tp[x + 2]; update_extr_macro( val2, t );            \
+                    t = tp[x + 3]; update_extr_macro( val3, t );            \
                 }                                                           \
                                                                             \
                 tdst[x] = (arrtype)toggle_macro(val0);                      \
@@ -794,125 +811,15 @@ icv##name##Arb_##flavor( arrtype* src, int srcstep,                         \
 }
 
 
-ICV_DEF_MORPH_RECT_INT_FUNC( Erode, 8u, uchar, CV_CALC_MIN )
-ICV_DEF_MORPH_RECT_INT_FUNC( Dilate, 8u, uchar, CV_CALC_MAX )
-ICV_DEF_MORPH_RECT_FLT_FUNC( Erode, 32f, int, CV_CALC_MIN )
-ICV_DEF_MORPH_RECT_FLT_FUNC( Dilate, 32f, int, CV_CALC_MAX )
+ICV_DEF_MORPH_RECT_INT_FUNC( Erode, 8u, uchar, CV_CALC_MIN_8U )
+ICV_DEF_MORPH_RECT_INT_FUNC( Dilate, 8u, uchar, CV_CALC_MAX_8U )
+ICV_DEF_MORPH_RECT_FLT_FUNC( Erode, CV_CALC_MIN )
+ICV_DEF_MORPH_RECT_FLT_FUNC( Dilate, CV_CALC_MAX )
 
-ICV_DEF_MORPH_ARB_FUNC( Erode, 8u, uchar, 255, CV_CALC_MIN, CV_NOP )
-ICV_DEF_MORPH_ARB_FUNC( Dilate, 8u, uchar, 0, CV_CALC_MAX, CV_NOP )
-ICV_DEF_MORPH_ARB_FUNC( Erode, 32f, int, INT_MAX, CV_CALC_MIN, CV_TOGGLE_FLT )
-ICV_DEF_MORPH_ARB_FUNC( Dilate, 32f, int, INT_MIN, CV_CALC_MAX, CV_TOGGLE_FLT )
-
-static CvStatus
-icvCheckMorphArgs( const void *pSrc, int srcstep,
-                   void *pDst, int dststep,
-                   CvSize * roi,
-                   CvMorphState * state,
-                   int stage, int shape, CvDataType dataType, int channels )
-{
-    int bt_pix = channels * (dataType != cv32f ? 1 : 4);
-
-    if( !pSrc || !pDst || !state || !roi )
-        return CV_NULLPTR_ERR;
-
-    if( roi->width <= 0 || roi->width > state->max_width || roi->height < 0 )
-        return CV_BADSIZE_ERR;
-
-    if( state->dataType != dataType || state->channels != channels )
-        return CV_UNMATCHED_FORMATS_ERR;
-
-    if( ICV_BINARY_KERNEL_SHAPE(state->kerType) != shape )
-        return CV_UNMATCHED_FORMATS_ERR;
-
-    if( roi->width * bt_pix > srcstep || roi->width * bt_pix > dststep )
-        return CV_BADSIZE_ERR;
-
-    if( stage != CV_WHOLE && stage != CV_MIDDLE && stage != CV_START && stage != CV_END )
-        return CV_BADRANGE_ERR;
-
-    if( state->crows == 0 && stage > CV_START || roi->height == 0 && stage != CV_END )
-    {
-        roi->height = 0;
-        return ( CvStatus ) 1;
-    }
-
-    return CV_OK;
-}
-
-/****************************************************************************************\
-                              Internal IPP-like functions
-\****************************************************************************************/
-
-#define ICV_DEF_MORPH_FUNC( extname, intname, flavor, cn, arrtype, shape )          \
-IPCVAPI_IMPL( CvStatus,                                                             \
-icv##extname##_##flavor##_C##cn##R,( const arrtype* pSrc, int srcstep,              \
-                                     arrtype* pDst, int dststep,                    \
-                                     CvSize* roi,                                   \
-                                     CvMorphState * state, int stage ),             \
-                                     (pSrc, srcstep, pDst, dststep, roi, state, stage) )\
-{                                                                                   \
-    CvStatus status = icvCheckMorphArgs( pSrc, srcstep, pDst, dststep, roi,         \
-                                         state, stage, shape, cv##flavor, cn );     \
-                                                                                    \
-    if( status == CV_OK )                                                           \
-    {                                                                               \
-        status = icv##intname##_##flavor( (arrtype*)pSrc, srcstep, pDst, dststep,   \
-                                          roi, state, stage );                      \
-    }                                                                               \
-                                                                                    \
-    return status >= 0 ? CV_OK : status;                                            \
-}
-
-
-ICV_DEF_MORPH_FUNC( ErodeStrip_Rect, ErodeRC, 8u, 1, uchar, CV_SHAPE_RECT )
-ICV_DEF_MORPH_FUNC( ErodeStrip_Rect, ErodeRC, 8u, 3, uchar, CV_SHAPE_RECT )
-ICV_DEF_MORPH_FUNC( ErodeStrip_Rect, ErodeRC, 8u, 4, uchar, CV_SHAPE_RECT )
-
-ICV_DEF_MORPH_FUNC( ErodeStrip_Cross, ErodeRC, 8u, 1, uchar, CV_SHAPE_CROSS )
-ICV_DEF_MORPH_FUNC( ErodeStrip_Cross, ErodeRC, 8u, 3, uchar, CV_SHAPE_CROSS )
-ICV_DEF_MORPH_FUNC( ErodeStrip_Cross, ErodeRC, 8u, 4, uchar, CV_SHAPE_CROSS )
-
-ICV_DEF_MORPH_FUNC( ErodeStrip, ErodeArb, 8u, 1, uchar, CV_SHAPE_CUSTOM )
-ICV_DEF_MORPH_FUNC( ErodeStrip, ErodeArb, 8u, 3, uchar, CV_SHAPE_CUSTOM )
-ICV_DEF_MORPH_FUNC( ErodeStrip, ErodeArb, 8u, 4, uchar, CV_SHAPE_CUSTOM )
-
-ICV_DEF_MORPH_FUNC( ErodeStrip_Rect, ErodeRC, 32f, 1, int, CV_SHAPE_RECT )
-ICV_DEF_MORPH_FUNC( ErodeStrip_Rect, ErodeRC, 32f, 3, int, CV_SHAPE_RECT )
-ICV_DEF_MORPH_FUNC( ErodeStrip_Rect, ErodeRC, 32f, 4, int, CV_SHAPE_RECT )
-
-ICV_DEF_MORPH_FUNC( ErodeStrip_Cross, ErodeRC, 32f, 1, int, CV_SHAPE_CROSS )
-ICV_DEF_MORPH_FUNC( ErodeStrip_Cross, ErodeRC, 32f, 3, int, CV_SHAPE_CROSS )
-ICV_DEF_MORPH_FUNC( ErodeStrip_Cross, ErodeRC, 32f, 4, int, CV_SHAPE_CROSS )
-
-ICV_DEF_MORPH_FUNC( ErodeStrip, ErodeArb, 32f, 1, int, CV_SHAPE_CUSTOM )
-ICV_DEF_MORPH_FUNC( ErodeStrip, ErodeArb, 32f, 3, int, CV_SHAPE_CUSTOM )
-ICV_DEF_MORPH_FUNC( ErodeStrip, ErodeArb, 32f, 4, int, CV_SHAPE_CUSTOM )
-
-ICV_DEF_MORPH_FUNC( DilateStrip_Rect, DilateRC, 8u, 1, uchar, CV_SHAPE_RECT )
-ICV_DEF_MORPH_FUNC( DilateStrip_Rect, DilateRC, 8u, 3, uchar, CV_SHAPE_RECT )
-ICV_DEF_MORPH_FUNC( DilateStrip_Rect, DilateRC, 8u, 4, uchar, CV_SHAPE_RECT )
-
-ICV_DEF_MORPH_FUNC( DilateStrip_Cross, DilateRC, 8u, 1, uchar, CV_SHAPE_CROSS )
-ICV_DEF_MORPH_FUNC( DilateStrip_Cross, DilateRC, 8u, 3, uchar, CV_SHAPE_CROSS )
-ICV_DEF_MORPH_FUNC( DilateStrip_Cross, DilateRC, 8u, 4, uchar, CV_SHAPE_CROSS )
-
-ICV_DEF_MORPH_FUNC( DilateStrip, DilateArb, 8u, 1, uchar, CV_SHAPE_CUSTOM )
-ICV_DEF_MORPH_FUNC( DilateStrip, DilateArb, 8u, 3, uchar, CV_SHAPE_CUSTOM )
-ICV_DEF_MORPH_FUNC( DilateStrip, DilateArb, 8u, 4, uchar, CV_SHAPE_CUSTOM )
-
-ICV_DEF_MORPH_FUNC( DilateStrip_Rect, DilateRC, 32f, 1, int, CV_SHAPE_RECT )
-ICV_DEF_MORPH_FUNC( DilateStrip_Rect, DilateRC, 32f, 3, int, CV_SHAPE_RECT )
-ICV_DEF_MORPH_FUNC( DilateStrip_Rect, DilateRC, 32f, 4, int, CV_SHAPE_RECT )
-
-ICV_DEF_MORPH_FUNC( DilateStrip_Cross, DilateRC, 32f, 1, int, CV_SHAPE_CROSS )
-ICV_DEF_MORPH_FUNC( DilateStrip_Cross, DilateRC, 32f, 3, int, CV_SHAPE_CROSS )
-ICV_DEF_MORPH_FUNC( DilateStrip_Cross, DilateRC, 32f, 4, int, CV_SHAPE_CROSS )
-
-ICV_DEF_MORPH_FUNC( DilateStrip, DilateArb, 32f, 1, int, CV_SHAPE_CUSTOM )
-ICV_DEF_MORPH_FUNC( DilateStrip, DilateArb, 32f, 3, int, CV_SHAPE_CUSTOM )
-ICV_DEF_MORPH_FUNC( DilateStrip, DilateArb, 32f, 4, int, CV_SHAPE_CUSTOM )
-
+ICV_DEF_MORPH_ARB_FUNC( Erode, 8u, uchar, CV_CALC_MIN, CV_NOP )
+ICV_DEF_MORPH_ARB_FUNC( Dilate, 8u, uchar, CV_CALC_MAX, CV_NOP )
+ICV_DEF_MORPH_ARB_FUNC( Erode, 32f, int, CV_CALC_MIN, CV_TOGGLE_FLT )
+ICV_DEF_MORPH_ARB_FUNC( Dilate, 32f, int, CV_CALC_MAX, CV_TOGGLE_FLT )
 
 
 /////////////////////////////////// External Interface /////////////////////////////////////
@@ -1025,64 +932,34 @@ cvReleaseStructuringElement( IplConvKernel ** element )
 }
 
 
-static void icvInitMorphologyTab( CvBigFuncTable* rect_erode, CvBigFuncTable* rect_dilate,
-                                CvBigFuncTable* cross_erode, CvBigFuncTable* cross_dilate,
-                                CvBigFuncTable* arb_erode, CvBigFuncTable* arb_dilate )
+static void icvInitMorphologyTab( CvFuncTable* rect_erode, CvFuncTable* rect_dilate,
+                                  CvFuncTable* any_erode, CvFuncTable* any_dilate )
 {
-    rect_erode->fn_2d[CV_8UC1] = (void*)icvErodeStrip_Rect_8u_C1R;
-    rect_erode->fn_2d[CV_8UC3] = (void*)icvErodeStrip_Rect_8u_C3R;
-    rect_erode->fn_2d[CV_8UC4] = (void*)icvErodeStrip_Rect_8u_C4R;
+    rect_erode->fn_2d[CV_8U] = (void*)icvErodeRect_8u;
+    rect_erode->fn_2d[CV_32F] = (void*)icvErodeRect_32f;
+    any_erode->fn_2d[CV_8U] = (void*)icvErodeAny_8u;
+    any_erode->fn_2d[CV_32F] = (void*)icvErodeAny_32f;
 
-    rect_erode->fn_2d[CV_32FC1] = (void*)icvErodeStrip_Rect_32f_C1R;
-    rect_erode->fn_2d[CV_32FC3] = (void*)icvErodeStrip_Rect_32f_C3R;
-    rect_erode->fn_2d[CV_32FC4] = (void*)icvErodeStrip_Rect_32f_C4R;
-
-    cross_erode->fn_2d[CV_8UC1] = (void*)icvErodeStrip_Cross_8u_C1R;
-    cross_erode->fn_2d[CV_8UC3] = (void*)icvErodeStrip_Cross_8u_C3R;
-    cross_erode->fn_2d[CV_8UC4] = (void*)icvErodeStrip_Cross_8u_C4R;
-
-    cross_erode->fn_2d[CV_32FC1] = (void*)icvErodeStrip_Cross_32f_C1R;
-    cross_erode->fn_2d[CV_32FC3] = (void*)icvErodeStrip_Cross_32f_C3R;
-    cross_erode->fn_2d[CV_32FC4] = (void*)icvErodeStrip_Cross_32f_C4R;
-
-    arb_erode->fn_2d[CV_8UC1] = (void*)icvErodeStrip_8u_C1R;
-    arb_erode->fn_2d[CV_8UC3] = (void*)icvErodeStrip_8u_C3R;
-    arb_erode->fn_2d[CV_8UC4] = (void*)icvErodeStrip_8u_C4R;
-
-    arb_erode->fn_2d[CV_32FC1] = (void*)icvErodeStrip_32f_C1R;
-    arb_erode->fn_2d[CV_32FC3] = (void*)icvErodeStrip_32f_C3R;
-    arb_erode->fn_2d[CV_32FC4] = (void*)icvErodeStrip_32f_C4R;
-
-    rect_dilate->fn_2d[CV_8UC1] = (void*)icvDilateStrip_Rect_8u_C1R;
-    rect_dilate->fn_2d[CV_8UC3] = (void*)icvDilateStrip_Rect_8u_C3R;
-    rect_dilate->fn_2d[CV_8UC4] = (void*)icvDilateStrip_Rect_8u_C4R;
-
-    rect_dilate->fn_2d[CV_32FC1] = (void*)icvDilateStrip_Rect_32f_C1R;
-    rect_dilate->fn_2d[CV_32FC3] = (void*)icvDilateStrip_Rect_32f_C3R;
-    rect_dilate->fn_2d[CV_32FC4] = (void*)icvDilateStrip_Rect_32f_C4R;
-
-    cross_dilate->fn_2d[CV_8UC1] = (void*)icvDilateStrip_Cross_8u_C1R;
-    cross_dilate->fn_2d[CV_8UC3] = (void*)icvDilateStrip_Cross_8u_C3R;
-    cross_dilate->fn_2d[CV_8UC4] = (void*)icvDilateStrip_Cross_8u_C4R;
-
-    cross_dilate->fn_2d[CV_32FC1] = (void*)icvDilateStrip_Cross_32f_C1R;
-    cross_dilate->fn_2d[CV_32FC3] = (void*)icvDilateStrip_Cross_32f_C3R;
-    cross_dilate->fn_2d[CV_32FC4] = (void*)icvDilateStrip_Cross_32f_C4R;
-
-    arb_dilate->fn_2d[CV_8UC1] = (void*)icvDilateStrip_8u_C1R;
-    arb_dilate->fn_2d[CV_8UC3] = (void*)icvDilateStrip_8u_C3R;
-    arb_dilate->fn_2d[CV_8UC4] = (void*)icvDilateStrip_8u_C4R;
-
-    arb_dilate->fn_2d[CV_32FC1] = (void*)icvDilateStrip_32f_C1R;
-    arb_dilate->fn_2d[CV_32FC3] = (void*)icvDilateStrip_32f_C3R;
-    arb_dilate->fn_2d[CV_32FC4] = (void*)icvDilateStrip_32f_C4R;
+    rect_dilate->fn_2d[CV_8U] = (void*)icvDilateRect_8u;
+    rect_dilate->fn_2d[CV_32F] = (void*)icvDilateRect_32f;
+    any_dilate->fn_2d[CV_8U] = (void*)icvDilateAny_8u;
+    any_dilate->fn_2d[CV_32F] = (void*)icvDilateAny_32f;
 }
+
+
+typedef CvStatus (CV_STDCALL * CvMorphRectFunc_IPP)
+    ( const void* src, int srcstep, void* dst, int dststep,
+      CvSize roi, CvSize elSize, CvPoint elAnchor );
+
+typedef CvStatus (CV_STDCALL * CvMorphAnyFunc_IPP)
+    ( const void* src, int srcstep, void* dst, int dststep,
+      CvSize roi, const uchar* element, CvSize elSize, CvPoint elAnchor );
 
 static void
 icvMorphOp( const void* srcarr, void* dstarr, IplConvKernel* element,
             int iterations, int mop )
 {
-    static CvBigFuncTable morph_tab[6];
+    static CvFuncTable morph_tab[4];
     static int inittab = 0;
     CvMorphState *state = 0;
     CvMat* temp = 0;
@@ -1092,22 +969,19 @@ icvMorphOp( const void* srcarr, void* dstarr, IplConvKernel* element,
     __BEGIN__;
 
     CvMorphFunc func = 0;
-    int shape;
     int i, coi1 = 0, coi2 = 0;
     CvMat srcstub, *src = (CvMat*)srcarr;
     CvMat dststub, *dst = (CvMat*)dstarr;
-    CvSize size;
-    int type;
+    CvSize size, el_size;
+    CvPoint el_anchor;
+    int el_shape;
+    int type, depth;
 
     if( !inittab )
     {
-        icvInitMorphologyTab( morph_tab + 0, morph_tab + 1, morph_tab + 2,
-                              morph_tab + 3, morph_tab + 4, morph_tab + 5 );
+        icvInitMorphologyTab( morph_tab+0, morph_tab+1, morph_tab+2, morph_tab+3 );
         inittab = 1;
     }
-
-    if( iterations <= 0 )
-        CV_CALL( cvCopy( src, dst ));
 
     CV_CALL( src = cvGetMat( src, &srcstub, &coi1 ));
     
@@ -1140,47 +1014,134 @@ icvMorphOp( const void* srcarr, void* dstarr, IplConvKernel* element,
         CV_ERROR( CV_BadCOI, "" );
 
     type = CV_MAT_TYPE( src->type );
+    depth = CV_MAT_DEPTH( type );
+
+    if( iterations == 0 || (element && element->nCols == 1 && element->nRows == 1))
+    {
+        if( src->data.ptr != dst->data.ptr )
+            cvCopy( src, dst );
+        EXIT;
+    }
 
     if( element )
     {
-        CvSize element_size = { element->nCols, element->nRows };
-        CvPoint element_anchor = { element->anchorX, element->anchorY };
-        IPPI_CALL(
-            icvMorphologyInitAlloc( src->width, CV_MAT_DEPTH(type) == CV_8U ? cv8u : cv32f,
-                                 CV_MAT_CN(type), element_size, element_anchor,
-                                 (int) (element->nShiftR), element->values,
-                                 &state ));
-        shape = (int)(element->nShiftR);
-        shape = shape < CV_SHAPE_ELLIPSE ? shape : CV_SHAPE_CUSTOM;
+        el_size = cvSize( element->nCols, element->nRows );
+        el_anchor = cvPoint( element->anchorX, element->anchorY );
+        el_shape = (int)(element->nShiftR);
+        el_shape = el_shape < CV_SHAPE_CUSTOM ? el_shape : CV_SHAPE_CUSTOM;
     }
     else
     {
-        CvSize element_size = { 1+iterations*2, 1+iterations*2 };
-        CvPoint element_anchor = { iterations, iterations };
-        IPPI_CALL(
-            icvMorphologyInitAlloc( src->width, CV_MAT_DEPTH(type) == CV_8U ? cv8u : cv32f,
-                                  CV_MAT_CN(type), element_size, element_anchor,
-                                  CV_SHAPE_RECT, 0, &state ));
+        el_size = cvSize( 1+iterations*2, 1+iterations*2 );
+        el_anchor = cvPoint( iterations, iterations );
+        el_shape = CV_SHAPE_RECT;
         iterations = 1;
-        shape = CV_SHAPE_RECT;
     }
 
-    func = (CvMorphFunc)(morph_tab[(shape == CV_SHAPE_RECT ? 0 :
-                         shape == CV_SHAPE_CROSS ? 1 : 2) * 2 + mop].fn_2d[type]);
+    if( icvErodeRect_8u_C1R_p )
+    {
+        CvMorphRectFunc_IPP rect_func = 0;
+        CvMorphAnyFunc_IPP any_func = 0;
 
+        if( el_shape == CV_SHAPE_RECT && mop == 0 )
+        {
+            rect_func = type == CV_8UC1 ? icvErodeRect_8u_C1R_p :
+                        type == CV_8UC3 ? icvErodeRect_8u_C3R_p :
+                        type == CV_8UC4 ? icvErodeRect_8u_C4R_p :
+                        type == CV_32FC1 ? icvErodeRect_32f_C1R_p :
+                        type == CV_32FC3 ? icvErodeRect_32f_C3R_p :
+                        type == CV_32FC4 ? icvErodeRect_32f_C4R_p : 0;
+        }
+        else if( el_shape == CV_SHAPE_RECT && mop == 1 )
+        {
+            rect_func = type == CV_8UC1 ? icvDilateRect_8u_C1R_p :
+                        type == CV_8UC3 ? icvDilateRect_8u_C3R_p :
+                        type == CV_8UC4 ? icvDilateRect_8u_C4R_p :
+                        type == CV_32FC1 ? icvDilateRect_32f_C1R_p :
+                        type == CV_32FC3 ? icvDilateRect_32f_C3R_p :
+                        type == CV_32FC4 ? icvDilateRect_32f_C4R_p : 0;
+        }
+        else if( mop == 0 )
+        {
+            any_func =  type == CV_8UC1 ? icvErodeAny_8u_C1R_p :
+                        type == CV_8UC3 ? icvErodeAny_8u_C3R_p :
+                        type == CV_8UC4 ? icvErodeAny_8u_C4R_p :
+                        type == CV_32FC1 ? icvErodeAny_32f_C1R_p :
+                        type == CV_32FC3 ? icvErodeAny_32f_C3R_p :
+                        type == CV_32FC4 ? icvErodeAny_32f_C4R_p : 0;
+        }
+        else
+        {
+            any_func =  type == CV_8UC1 ? icvDilateAny_8u_C1R_p :
+                        type == CV_8UC3 ? icvDilateAny_8u_C3R_p :
+                        type == CV_8UC4 ? icvDilateAny_8u_C4R_p :
+                        type == CV_32FC1 ? icvDilateAny_32f_C1R_p :
+                        type == CV_32FC3 ? icvDilateAny_32f_C3R_p :
+                        type == CV_32FC4 ? icvDilateAny_32f_C4R_p : 0;
+        }
+
+        
+        if( rect_func || any_func )
+        {
+            int y, dy = 0;
+            int i, el_len = el_size.width*el_size.height;
+            int temp_step;
+            uchar* el_mask = 0;
+            const uchar* shifted_ptr;
+            int stripe_size = 1 << 15; // the optimal value may depend on CPU cache,
+                                       // overhead of current IPP code etc.
+            if( any_func )
+            {
+                el_mask = (uchar*)cvStackAlloc( el_len );
+                for( i = 0; i < el_len; i++ )
+                    el_mask[i] = (uchar)(element->values[i] != 0);
+            }
+
+            CV_CALL( temp = icvIPPFilterInit( src, stripe_size, el_size ));
+            
+            shifted_ptr = temp->data.ptr +
+                el_anchor.y*temp->step + el_anchor.x*CV_ELEM_SIZE(type);
+            temp_step = temp->step ? temp->step : CV_STUB_STEP;
+
+            for( i = 0; i < iterations; i++ )
+            {
+                int dst_step = dst->step ? dst->step : CV_STUB_STEP;
+
+                for( y = 0; y < src->rows; y += dy )
+                {
+                    dy = icvIPPFilterNextStripe( src, temp, y, el_size, el_anchor );
+                    if( rect_func )
+                    {
+                        IPPI_CALL( rect_func( shifted_ptr, temp_step,
+                            dst->data.ptr + y*dst_step, dst_step, cvSize(src->cols, dy),
+                            el_size, el_anchor ));
+                    }
+                    else
+                    {
+                        IPPI_CALL( any_func( shifted_ptr, temp_step,
+                            dst->data.ptr + y*dst_step, dst_step, cvSize(src->cols, dy),
+                            el_mask, el_size, el_anchor ));
+                    }
+                }
+                src = dst;
+            }
+            EXIT;
+        }
+    }
+
+    IPPI_CALL( icvMorphologyInitAlloc( src->width, depth == CV_8U ? cv8u : cv32f,
+                                    CV_MAT_CN(type), el_size, el_anchor, el_shape,
+                                    element ? element->values : 0, &state ));
+
+    func = (CvMorphFunc)(morph_tab[(el_shape != CV_SHAPE_RECT)*2 + mop].fn_2d[depth]);
     if( !func )
         CV_ERROR( CV_StsUnsupportedFormat, "" );
 
     size = cvGetMatSize( src );
-
     for( i = 0; i < iterations; i++ )
     {
-        int src_step = src->step, dst_step = dst->step;
-        if( src_step == 0 )
-            src_step = dst_step = size.width * CV_ELEM_SIZE(type);
-
-        IPPI_CALL( func( src->data.ptr, src_step, dst->data.ptr,
-                         dst_step, &size, state, 0 ));
+        IPPI_CALL( func( src->data.ptr, src->step, dst->data.ptr,
+                         dst->step, &size, state, 0 ));
         src = dst;
     }
 

@@ -42,7 +42,7 @@
 
 /* The function calculates center of gravity and central second order moments */
 static void
-icvCompleteMomentState( CvMoments * moments )
+icvCompleteMomentState( CvMoments* moments )
 {
     double cx = 0, cy = 0;
     double mu20, mu11, mu02;
@@ -53,7 +53,6 @@ icvCompleteMomentState( CvMoments * moments )
     if( moments->m00 != 0 )
     {
         double inv_m00 = 1. / moments->m00;
-
         cx = moments->m10 * inv_m00;
         cy = moments->m01 * inv_m00;
         moments->inv_sqrt_m00 = sqrt( inv_m00 );
@@ -161,7 +160,7 @@ icvContourMoments( CvSeq* contour, CvMoments* moments )
             if( a00 > 0 )
             {
                 db1_2 = 0.5;
-                db1_6 = 0.16666666666666666666666666666667l;
+                db1_6 = 0.16666666666666666666666666666667;
                 db1_12 = 0.083333333333333333333333333333333;
                 db1_24 = 0.041666666666666666666666666666667;
                 db1_20 = 0.05;
@@ -170,7 +169,7 @@ icvContourMoments( CvSeq* contour, CvMoments* moments )
             else
             {
                 db1_2 = -0.5;
-                db1_6 = -0.16666666666666666666666666666667l;
+                db1_6 = -0.16666666666666666666666666666667;
                 db1_12 = -0.083333333333333333333333333333333;
                 db1_24 = -0.041666666666666666666666666666667;
                 db1_20 = -0.05;
@@ -251,9 +250,8 @@ icvAccumulateMoments( double *tiles, CvSize size, CvSize tile_size, CvMoments * 
 \****************************************************************************************/
 
 #define ICV_DEF_CALC_MOMENTS_IN_TILE( __op__, name, flavor, srctype, temptype, momtype ) \
-IPCVAPI_IMPL( CvStatus, icv##name##_##flavor##_CnCR,                                     \
-( const srctype* img, int step, CvSize size, int cn, int coi, double *moments ),         \
-  (img, step, size, cn, coi, moments) )                                                  \
+static CvStatus CV_STDCALL icv##name##_##flavor##_CnCR                                   \
+( const srctype* img, int step, CvSize size, int cn, int coi, double *moments )          \
 {                                                                                        \
     int x, y, sx_init = (size.width & -4) * (size.width & -4), sy = 0;                   \
     momtype mom[10];                                                                     \
@@ -352,6 +350,17 @@ ICV_DEF_CALC_MOMENTS_IN_TILE( CV_NONZERO_FLT, MomentsInTileBin, 64f, int64, doub
 CV_DEF_INIT_FUNC_TAB_2D( MomentsInTile, CnCR )
 CV_DEF_INIT_FUNC_TAB_2D( MomentsInTileBin, CnCR )
 
+////////////////////////////////// IPP moment functions //////////////////////////////////
+
+icvMoments_8u_C1R_t icvMoments_8u_C1R_p = 0;
+icvMoments_32f_C1R_t icvMoments_32f_C1R_p = 0;
+icvMomentInitAlloc_64f_t icvMomentInitAlloc_64f_p = 0;
+icvMomentFree_64f_t icvMomentFree_64f_p = 0;
+icvGetSpatialMoment_64f_t icvGetSpatialMoment_64f_p = 0;
+
+typedef CvStatus (CV_STDCALL * CvMomentIPPFunc)
+    ( const void* img, int step, CvSize size, void* momentstate );
+
 CV_IMPL void
 cvMoments( const void* array, CvMoments* moments, int binary )
 {
@@ -359,6 +368,7 @@ cvMoments( const void* array, CvMoments* moments, int binary )
     static CvFuncTable mombin_tab;
     static int inittab = 0;
     double* tiles = 0;
+    void* ippmomentstate = 0;
 
     CV_FUNCNAME("cvMoments");
 
@@ -370,6 +380,7 @@ cvMoments( const void* array, CvMoments* moments, int binary )
     CvSize size, tile_size = { 32, 32 };
     CvMat stub, *mat = (CvMat*)array;
     CvFunc2DnC_1A1P func = 0;
+    CvMomentIPPFunc ipp_func = 0;
     CvContour contour_header;
     CvSeq* contour = 0;
     CvSeqBlock block;
@@ -426,6 +437,30 @@ cvMoments( const void* array, CvMoments* moments, int binary )
         EXIT;
     }
 
+    if( type == CV_8UC1 )
+        ipp_func = (CvMomentIPPFunc)icvMoments_8u_C1R_p;
+    else if( type == CV_32FC1 )
+        ipp_func = (CvMomentIPPFunc)icvMoments_32f_C1R_p;
+
+    if( ipp_func && !binary )
+    {
+        int matstep = mat->step ? mat->step : CV_STUB_STEP;
+        IPPI_CALL( icvMomentInitAlloc_64f_p( &ippmomentstate, cvAlgHintAccurate ));
+        IPPI_CALL( ipp_func( mat->data.ptr, matstep, size, ippmomentstate ));
+        icvGetSpatialMoment_64f_p( ippmomentstate, 0, 0, 0, cvPoint(0,0), &moments->m00 );
+        icvGetSpatialMoment_64f_p( ippmomentstate, 1, 0, 0, cvPoint(0,0), &moments->m10 );
+        icvGetSpatialMoment_64f_p( ippmomentstate, 0, 1, 0, cvPoint(0,0), &moments->m01 );
+        icvGetSpatialMoment_64f_p( ippmomentstate, 2, 0, 0, cvPoint(0,0), &moments->m20 );
+        icvGetSpatialMoment_64f_p( ippmomentstate, 1, 1, 0, cvPoint(0,0), &moments->m11 );
+        icvGetSpatialMoment_64f_p( ippmomentstate, 0, 2, 0, cvPoint(0,0), &moments->m02 );
+        icvGetSpatialMoment_64f_p( ippmomentstate, 3, 0, 0, cvPoint(0,0), &moments->m30 );
+        icvGetSpatialMoment_64f_p( ippmomentstate, 2, 1, 0, cvPoint(0,0), &moments->m21 );
+        icvGetSpatialMoment_64f_p( ippmomentstate, 1, 2, 0, cvPoint(0,0), &moments->m12 );
+        icvGetSpatialMoment_64f_p( ippmomentstate, 0, 3, 0, cvPoint(0,0), &moments->m03 );
+        icvCompleteMomentState( moments );
+        EXIT;
+    }
+
     func = (CvFunc2DnC_1A1P)(!binary ? mom_tab.fn_2d[depth] : mombin_tab.fn_2d[depth]);
 
     if( !func )
@@ -460,6 +495,9 @@ cvMoments( const void* array, CvMoments* moments, int binary )
     icvAccumulateMoments( tiles, size, tile_size, moments );
 
     __END__;
+
+    if( ippmomentstate )
+        icvMomentFree_64f_p( ippmomentstate );
 
     cvFree( (void**)&tiles );
 }
