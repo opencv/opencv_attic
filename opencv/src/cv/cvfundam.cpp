@@ -72,11 +72,9 @@ static void icvNormalizeFundPoints(    CvMat* points,
 
 static void icvMake2DPoints(CvMat* srcPoint,CvMat* dstPoint);
 
-static void icvMake3DPoints(CvMat* srcPoint,CvMat* dstPoint);
+static void icvMake3DPoints(const CvMat* srcPoint,CvMat* dstPoint);
 
 static int icvCubicV( double a2, double a1, double a0, double *squares );
-
-static void cvComputeCorrespondEpilines(CvMat* points,int pointImageID,CvMat* fundMatr,CvMat* corrLines);
 
 /*=====================================================================================*/
 
@@ -1825,7 +1823,7 @@ static void icvMake2DPoints(CvMat* srcPoint,CvMat* dstPoint)
 
 void cvMake3DPoints(CvMat* srcPoint,CvMat* dstPoint)
 {
-    icvMake3DPoints(srcPoint,dstPoint);
+    icvMake3DPoints((const CvMat*)srcPoint,dstPoint);
     return;
 }
 
@@ -1843,7 +1841,7 @@ void cvMake3DPoints(CvMat* srcPoint,CvMat* dstPoint)
           
   Source and destiantion may be the same and in this case src must be 2D
 */
-static void icvMake3DPoints(CvMat* srcPoint,CvMat* dstPoint)
+static void icvMake3DPoints(const CvMat* srcPoint,CvMat* dstPoint)
 {
     CvMat* tmpSubmatz = 0;
 
@@ -1917,7 +1915,8 @@ static void icvMake3DPoints(CvMat* srcPoint,CvMat* dstPoint)
 }
 
 /*=====================================================================================*/
-static void cvComputeCorrespondEpilines(CvMat* points,int pointImageID,CvMat* fundMatr,CvMat* corrLines)
+CV_IMPL void
+cvComputeCorrespondEpilines(const CvMat* points,int pointImageID,const CvMat* fundMatr,CvMat* corrLines)
 {
 
     CvMat* wpoints = 0;
