@@ -77,9 +77,6 @@ static int fmaCanny( void* arg )
     if( !read_param )
     {
         read_param = 1;
-        /* Determine which test are needed to run */
-        trsCaseRead( &data_type,"/u/s/a", "u",
-                     "a - all, 8u - unsigned char, 8s - char" );
 
         /* Read test-parameters */
         trsiRead( &lImageWidth, "5", "width of the image" );

@@ -62,7 +62,7 @@ int Counter=0;
 static int X1=0, X2=0, Y1=0, Y2=0;
 
 /*---------------------- Test function (the most slowly algorithm) ----------------------- */
-CvStatus _cvFloodFill8uC1R_slow ( uchar*  pImage,
+int _cvFloodFill8uC1R_slow ( uchar*  pImage,
                                   int     step,
                                   CvSize  imgSize,
                                   CvPoint initPoint,
@@ -136,7 +136,7 @@ CvStatus _cvFloodFill8uC1R_slow ( uchar*  pImage,
     return CV_NO_ERR;
 } /*  _cvFloodFill8uC1R_slow */
 /*--------------------------------------------------------------------------------------*/
-CvStatus _cvFloodFill32fC1R_slow ( float*  pImage,
+int _cvFloodFill32fC1R_slow ( float*  pImage,
                                    int     step,
                                    CvSize  imgSize,
                                    CvPoint initPoint,
@@ -224,7 +224,7 @@ static int fmaFloodFill( void )
     CvSize  size;
     CvPoint seed;
     CvConnectedComp Comp;
-    CvStatus r;
+    int r;
 
     /* Reading test parameters */
     trsiRead( &nx,        "64", "Image width" );
@@ -283,7 +283,7 @@ static int fmaFloodFill( void )
      /* 8U */
             Counter = 0;   X1 = X2 = i;    Y1 = Y2 = j;
             /* Run CVL function */
-            cvFloodFill ( I1, seed, 10.0, 0.0, 0.0, &Comp );
+            cvFloodFill ( I1, seed, cvScalar(10.0), cvScalar(0.0), cvScalar(0.0), &Comp );
             /* Run test function */
             r = _cvFloodFill8uC1R_slow (pI2+mp, step, size, seed, 10, 0, 0 );
             /* Comparison */
@@ -296,7 +296,7 @@ static int fmaFloodFill( void )
      /* 32F */
             Counter = 0;   X1 = X2 = i;    Y1 = Y2 = j;
             /* Run CVL function */
-            cvFloodFill ( I3, seed, 10.0, 0.0, 0.0, &Comp );
+            cvFloodFill ( I3, seed, cvScalar(10.0), cvScalar(0.0), cvScalar(0.0), &Comp );
             /* Run test function */
             r = _cvFloodFill32fC1R_slow (pI4+mp4, step4, size, seed, 10.0, 0.0f, 0.0f );
             /* Comparison */
@@ -336,7 +336,7 @@ static int fmaFloodFill( void )
      /* 8U */
                 Counter = 0; X1 = X2 = i;    Y1 = Y2 = j;
                 /* Run CVL function */
-                cvFloodFill ( I1, seed, 255.0, (double)d1, (double)d2, &Comp );
+                cvFloodFill ( I1, seed, cvScalar(255.0), cvScalar(d1), cvScalar(d2), &Comp );
                 /* Run test function */
                 r = _cvFloodFill8uC1R_slow (pI2+mp, step, size, seed, 255, d1, d2 );
                 /* Comparison */
@@ -349,7 +349,7 @@ static int fmaFloodFill( void )
      /* 32F */
                 Counter = 0; X1 = X2 = i;    Y1 = Y2 = j;
                 /* Run CVL function */
-                cvFloodFill ( I3, seed, 255.0, (double)d1, (double)d2, &Comp );
+                cvFloodFill ( I3, seed, cvScalar(255.0), cvScalar(d1), cvScalar(d2), &Comp );
                 /* Run test function */
                 r = _cvFloodFill32fC1R_slow (pI4+mp4, step4, size, seed, 255.0, (float)d1, (float)d2 );
                 /* Comparison */

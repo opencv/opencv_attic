@@ -68,7 +68,7 @@ static double rel_bufSize;
 
 /*-----------------------------=--=-=== Callback functions ===-=--=---------------------*/
 
-CvStatus read_callback_8u( int ind, void* buf, void* userData)
+int read_callback_8u( int ind, void* buf, void* userData)
 {
     int i, j, k = 0;
     UserData* data = (UserData*)userData;
@@ -76,7 +76,7 @@ CvStatus read_callback_8u( int ind, void* buf, void* userData)
     uchar* buff = (uchar*)buf;
 
     if( ind<0 ) return CV_BADFACTOR_ERR;
-    if( buf==NULL || userData==NULL ) CV_NULLPTR_ERR;
+    if( buf==NULL || userData==NULL ) return CV_NULLPTR_ERR;
 
     for( i=0; i<data->size1.height; i++, start+=data->step1 )
         for( j=0; j<data->size1.width; j++, k++ )
@@ -84,7 +84,7 @@ CvStatus read_callback_8u( int ind, void* buf, void* userData)
     return CV_NO_ERR;
 }
 /*----------------------*/
-CvStatus read_callback_32f( int ind, void* buf, void* userData)
+int read_callback_32f( int ind, void* buf, void* userData)
 {
     int i, j, k = 0;
     UserData* data = (UserData*)userData;
@@ -92,7 +92,7 @@ CvStatus read_callback_32f( int ind, void* buf, void* userData)
     float* buff = (float*)buf;
 
     if( ind<0 ) return CV_BADFACTOR_ERR;
-    if( buf==NULL || userData==NULL ) CV_NULLPTR_ERR;
+    if( buf==NULL || userData==NULL ) return CV_NULLPTR_ERR;
 
     for( i=0; i<data->size2.height; i++, start+=data->step2/4 )
         for( j=0; j<data->size2.width; j++, k++ )
@@ -100,7 +100,7 @@ CvStatus read_callback_32f( int ind, void* buf, void* userData)
     return CV_NO_ERR;
 }
 /*========================*/
-CvStatus write_callback_8u( int ind, void* buf, void* userData)
+int write_callback_8u( int ind, void* buf, void* userData)
 {
     int i, j, k = 0;
     UserData* data = (UserData*)userData;
@@ -108,7 +108,7 @@ CvStatus write_callback_8u( int ind, void* buf, void* userData)
     uchar* buff = (uchar*)buf;
 
     if( ind<0 ) return CV_BADFACTOR_ERR;
-    if( buf==NULL || userData==NULL ) CV_NULLPTR_ERR;
+    if( buf==NULL || userData==NULL ) return CV_NULLPTR_ERR;
 
     for( i=0; i<data->size1.height; i++, start+=data->step1 )
         for( j=0; j<data->size1.width; j++, k++ )
@@ -116,7 +116,7 @@ CvStatus write_callback_8u( int ind, void* buf, void* userData)
     return CV_NO_ERR;
 }
 /*----------------------*/
-CvStatus write_callback_32f( int ind, void* buf, void* userData)
+int write_callback_32f( int ind, void* buf, void* userData)
 {
     int i, j, k = 0;
     UserData* data = (UserData*)userData;
@@ -124,7 +124,7 @@ CvStatus write_callback_32f( int ind, void* buf, void* userData)
     float* buff = (float*)buf;
 
     if( ind<0 ) return CV_BADFACTOR_ERR;
-    if( buf==NULL || userData==NULL ) CV_NULLPTR_ERR;
+    if( buf==NULL || userData==NULL ) return CV_NULLPTR_ERR;
 
     for( i=0; i<data->size2.height; i++, start+=data->step2/4 )
         for( j=0; j<data->size2.width; j++, k++ )
@@ -147,14 +147,14 @@ static int fmaEigenObjects( void )
     double eps0, amax=0, singleCoeff, p;
     AtsRandState state;
     CvSize size;
-    CvStatus  r;
+    int  r;
     CvTermCriteria limit;
     UserData userData;
-    CvStatus (*read_callback)( int ind, void* buf, void* userData)=
+    int (*read_callback)( int ind, void* buf, void* userData)=
                  read_callback_8u;
-    CvStatus (*read2_callback)( int ind, void* buf, void* userData)=
+    int (*read2_callback)( int ind, void* buf, void* userData)=
                  read_callback_32f;
-    CvStatus (*write_callback)( int ind, void* buf, void* userData)=
+    int (*write_callback)( int ind, void* buf, void* userData)=
                  write_callback_32f;
     CvInput* u_r = (CvInput*)&read_callback;
     CvInput* u_r2= (CvInput*)&read2_callback;
@@ -227,7 +227,7 @@ static int fmaEigenObjects( void )
         }
     }
 
-    limit.type = CV_TERMCRIT_ITER;  limit.maxIter = m1;  limit.epsilon = 1;//(float)eps0;
+    limit.type = CV_TERMCRIT_ITER;  limit.max_iter = m1;  limit.epsilon = 1;//(float)eps0;
 
     bufSize = (int)(4*n*obj_number*rel_bufSize);
 trsWrite(TW_RUN|TW_CON, "\n i/o buffer size : %10d bytes\n", bufSize );

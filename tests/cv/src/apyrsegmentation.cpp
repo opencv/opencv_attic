@@ -136,8 +136,8 @@ static int aPyrSegmentation(void* agr)
     {
         case 1:
         {
-            cvFillPoly( image, &cp, &nPoints, 1, color2);
-            cvFillPoly( image, &cp2, &nPoints, 1, color3); 
+            cvFillPoly( image, &cp, &nPoints, 1, cvScalar(color2));
+            cvFillPoly( image, &cp2, &nPoints, 1, cvScalar(color3)); 
 
             row = (uchar*)image->imageData;
             f_row = (uchar*)image_f->imageData;

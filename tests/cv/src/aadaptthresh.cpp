@@ -135,7 +135,7 @@ static int	aAdaptThreshold()
 	
     memset(imInput->imageData,bgrn,l);
 
-    cvFillPoly(imInput, &cp, &kp, 1, signal);
+    cvFillPoly(imInput, &cp, &kp, 1, cvScalarAll(signal));
 
 //  do noise   
     upper = 22;

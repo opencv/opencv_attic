@@ -47,7 +47,8 @@
 #endif
 
 #include <math.h>
-#include "cv.hpp"
+#include "cv.h"
+#include "cxmisc.h"
 #include "cvaux.h"
 #include "highgui.h"
 #include "trsapi.h"
@@ -232,7 +233,7 @@ void atsInitModuleTestData( char* module, char* path_from_module );
 
 char* atsGetTestDataPath( char* buffer, char* folder, char* filename, char* extention );
 
-int atsLoadPrimitives( int argc, char** argv );
+void atsLoadPrimitives( int flag );
 
 /******************************************************************************/
 /*                                 Defines                                    */
@@ -612,17 +613,6 @@ typedef CvSeq* ( *Contour )( CvMemStorage* storage );
             }                                                \
             else trsWrite( ATS_CON | ATS_LST, "ok\n" );      \
         }
-
-/* patch */
-typedef enum {
-   cv1u,
-   cv8u, cv8s,
-   cv16u, cv16s, cv16sc,
-   cv32u, cv32s, cv32sc,
-   cv32f, cv32fc,
-   cv64u, cv64s, cv64sc,
-   cv64f, cv64fc
-} CvDataType;
 
 #define _CV_C            1
 #define _CV_L1           2

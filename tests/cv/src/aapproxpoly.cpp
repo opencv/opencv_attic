@@ -195,7 +195,7 @@ int CheckSlice( CvPoint StartPt, CvPoint EndPt, CvSeqReader* SrcReader, float Ep
         else
         {
             if( flag ) dist = sin_a * Pt.y + cos_a * Pt.x - d;
-            else dist = sqrt( (EndPt.y - Pt.y)*(EndPt.y - Pt.y) + (EndPt.x - Pt.x)*(EndPt.x - Pt.x) );
+            else dist = sqrt( (double)(EndPt.y - Pt.y)*(EndPt.y - Pt.y) + (EndPt.x - Pt.x)*(EndPt.x - Pt.x) );
 
             if( dist > Eps ) TotallErrors++;
 

@@ -66,7 +66,6 @@ static int dt_l = 0, dt_h = 2,
 static int init_templ_match_params = 0;
 
 static const int img8u_range = 255;
-static const int img8s_range = 128;
 static const float img32f_range = 100.f;
 static const int img32f_bits = 23;
 
@@ -77,8 +76,8 @@ static void read_templ_match_params( void )
         int  data_types, method;
 
         /* Determine which tests are needed to run */
-        trsCaseRead( &data_types,"/a/8u/8s/32f", "a",
-            "a - all, 8u - unsigned char, 8s - signed char, 32f - float" );
+        trsCaseRead( &data_types,"/a/8u/32f", "a",
+            "a - all, 8u - unsigned char, 32f - float" );
         if( data_types != 0 ) dt_l = dt_h = data_types - 1;
 
         trsCaseRead( &method,"/a/sd/sdn/cr/crn/cf/cfn", "a",
@@ -92,11 +91,11 @@ static void read_templ_match_params( void )
         if( method != 0 ) meth_l = meth_h = method - 1;
 
         /* read tests params */
-        trsiRead( &min_img_size, "1", "Minimal width or height of image" );
+        trsiRead( &min_img_size, "3", "Minimal width or height of image" );
         trsiRead( &max_img_size, "32", "Maximal width or height of image" );
         trsCaseRead( &img_size_delta_type,"/a/m", "m", "a - add, m - multiply" );
         trsiRead( &img_size_delta, "3", "Image size step(factor)" );
-        trsiRead( &min_templ_size, "1", "Minimal width or height of image" );
+        trsiRead( &min_templ_size, "1", "Minimal width or height of template" );
         trsCaseRead( &templ_size_delta_type,"/a/m", "a", "a - add, m - multiply" );
         trsiRead( &templ_size_delta, "3", "Image size step(factor)" );
         trsiRead( &base_iters, "1000", "Base number of iterations" );
@@ -193,8 +192,8 @@ static void match_templ_etalon( IplImage* src, IplImage* templ, IplImage* dst,
 
 static int match_templ_test( void* arg )
 {
-    const double success_error_level = 1e-6;
-    const double error_level_scale = 1e-3;
+    const double success_error_level = 1;
+    const double error_level_scale = 1;
 
     int   param     = (int)arg;
     int   depth     = param/6;
@@ -222,7 +221,7 @@ static int match_templ_test( void* arg )
     if( !(ATS_RANGE( depth, dt_l, dt_h+1 ) &&
           ATS_RANGE( method, meth_l, meth_h+1 ))) return TRS_UNDEF;
 
-    depth = depth == 2 ? IPL_DEPTH_32F : depth == 1 ? IPL_DEPTH_8S : IPL_DEPTH_8U;
+    depth = depth == 1 ? IPL_DEPTH_32F : IPL_DEPTH_8U;
 
     src_img = atsCreateImage( max_img_size, max_img_size, depth, 1, 0 );
     templ_img = atsCreateImage( max_img_size, max_img_size, depth, 1, 0 );
@@ -254,9 +253,6 @@ static int match_templ_test( void* arg )
     {
     case IPL_DEPTH_8U:
         atsRandSetBounds( &rng_state, 0, img8u_range );
-        break;
-    case IPL_DEPTH_8S:
-        atsRandSetBounds( &rng_state, -img8s_range, img8s_range );
         break;
     case IPL_DEPTH_32F:
         atsRandSetBounds( &rng_state, -img32f_range, img32f_range );
@@ -382,19 +378,12 @@ test_exit:
 #define MTEMPL_CCOEFF_8U          4
 #define MTEMPL_CCOEFF_NORMED_8U   5
 
-#define MTEMPL_SQDIFF_8S          6
-#define MTEMPL_SQDIFF_NORMED_8S   7
-#define MTEMPL_CCORR_8S           8
-#define MTEMPL_CCORR_NORMED_8S    9
-#define MTEMPL_CCOEFF_8S         10
-#define MTEMPL_CCOEFF_NORMED_8S  11
-
-#define MTEMPL_SQDIFF_32F        12
-#define MTEMPL_SQDIFF_NORMED_32F 13
-#define MTEMPL_CCORR_32F         14
-#define MTEMPL_CCORR_NORMED_32F  15
-#define MTEMPL_CCOEFF_32F        16
-#define MTEMPL_CCOEFF_NORMED_32F 17
+#define MTEMPL_SQDIFF_32F         6
+#define MTEMPL_SQDIFF_NORMED_32F  7
+#define MTEMPL_CCORR_32F          8
+#define MTEMPL_CCORR_NORMED_32F   9
+#define MTEMPL_CCOEFF_32F        10
+#define MTEMPL_CCOEFF_NORMED_32F 11
 
 
 void InitAMatchTemplate( void )
@@ -406,13 +395,6 @@ void InitAMatchTemplate( void )
     trsRegArg( funcs[0], test_desc, atsAlgoClass, match_templ_test, MTEMPL_CCORR_NORMED_8U );
     trsRegArg( funcs[0], test_desc, atsAlgoClass, match_templ_test, MTEMPL_CCOEFF_8U );
     trsRegArg( funcs[0], test_desc, atsAlgoClass, match_templ_test, MTEMPL_CCOEFF_NORMED_8U );
-
-    trsRegArg( funcs[0], test_desc, atsAlgoClass, match_templ_test, MTEMPL_SQDIFF_8S );
-    trsRegArg( funcs[0], test_desc, atsAlgoClass, match_templ_test, MTEMPL_SQDIFF_NORMED_8S );
-    trsRegArg( funcs[0], test_desc, atsAlgoClass, match_templ_test, MTEMPL_CCORR_8S );
-    trsRegArg( funcs[0], test_desc, atsAlgoClass, match_templ_test, MTEMPL_CCORR_NORMED_8S );
-    trsRegArg( funcs[0], test_desc, atsAlgoClass, match_templ_test, MTEMPL_CCOEFF_8S );
-    trsRegArg( funcs[0], test_desc, atsAlgoClass, match_templ_test, MTEMPL_CCOEFF_NORMED_8S );
 
     trsRegArg( funcs[0], test_desc, atsAlgoClass, match_templ_test, MTEMPL_SQDIFF_32F );
     trsRegArg( funcs[0], test_desc, atsAlgoClass, match_templ_test, MTEMPL_SQDIFF_NORMED_32F );

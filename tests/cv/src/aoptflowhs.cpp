@@ -96,7 +96,7 @@ static int fmaCalcOpticalFlowHS( void )
 
     /* initialization - for warning disable */
     criteria.epsilon = 0;
-    criteria.maxIter = 0;
+    criteria.max_iter = 0;
     criteria.type  = 1;
 
     /* Allocating memory for all frames */
@@ -201,11 +201,11 @@ for( usePrevious = 0; usePrevious < 2; usePrevious++ )
         case 0:
             {
                 criteria.type = CV_TERMCRIT_ITER;
-                criteria.maxIter = 3;
+                criteria.max_iter = 3;
 
                 trsWrite( ATS_LST|ATS_CON,
-                         "usePrevious = %d, criteria = ITER, maxIter = %d\n",
-                         usePrevious, criteria.maxIter);
+                         "usePrevious = %d, criteria = ITER, max_iter = %d\n",
+                         usePrevious, criteria.max_iter);
 
                 break;
             }
@@ -223,12 +223,12 @@ for( usePrevious = 0; usePrevious < 2; usePrevious++ )
             {
                 criteria.type = CV_TERMCRIT_EPS | CV_TERMCRIT_ITER;
                 criteria.epsilon = 0.0001f;
-                criteria.maxIter = 3;
+                criteria.max_iter = 3;
                 trsWrite( ATS_LST|ATS_CON,
                          "usePrevious = %d,"
                          "criteria = EPS|ITER,"
-                         "epsilon = %f, maxIter = %d\n",
-                         usePrevious, criteria.epsilon, criteria.maxIter);
+                         "epsilon = %f, max_iter = %d\n",
+                         usePrevious, criteria.epsilon, criteria.max_iter);
 
                 break;
             }
@@ -236,12 +236,12 @@ for( usePrevious = 0; usePrevious < 2; usePrevious++ )
             {
                 criteria.type = CV_TERMCRIT_EPS | CV_TERMCRIT_ITER;
                 criteria.epsilon = 0.00001f;
-                criteria.maxIter = 100;
+                criteria.max_iter = 100;
                 trsWrite( ATS_LST|ATS_CON,
                          "usePrevious = %d,"
                          "criteria = EPS|ITER,"
-                         "epsilon = %f, maxIter = %d\n",
-                         usePrevious, criteria.epsilon, criteria.maxIter);
+                         "epsilon = %f, max_iter = %d\n",
+                         usePrevious, criteria.epsilon, criteria.max_iter);
 
                 break;
             }
@@ -342,12 +342,12 @@ for( usePrevious = 0; usePrevious < 2; usePrevious++ )
             switch (criteria.type)
             {
             case CV_TERMCRIT_ITER:
-                Stop = (criteria.maxIter == iteration );break;
+                Stop = (criteria.max_iter == iteration );break;
             case CV_TERMCRIT_EPS:
                 Stop = (criteria.epsilon > epsilon );break;
             case CV_TERMCRIT_ITER|CV_TERMCRIT_EPS:
                 Stop = ( ( criteria.epsilon > epsilon    ) ||
-                         ( criteria.maxIter == iteration ));
+                         ( criteria.max_iter == iteration ));
                 break;
             }
             if (Stop)

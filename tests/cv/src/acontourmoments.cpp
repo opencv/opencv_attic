@@ -152,7 +152,7 @@ static int aContourMoments(void *arg)
     memset(Iplimage->imageData,bkcolor,l);
 //    CVL_CHECK(ippiFillPoly8uC1R((uchar*)Iplimage->imageData, Iplimage->widthStep, size, cp, kp, color1));
 
-    cvFillPoly(Iplimage, &cp, &kp, 1, color1);
+    cvFillPoly(Iplimage, &cp, &kp, 1, cvScalar(color1));
 
     for(i=0;i<kp;i++)
     {
@@ -160,7 +160,7 @@ static int aContourMoments(void *arg)
          else i1 = 0;
 //         CVL_CHECK(ippiLine8uC1R((uchar*)Iplimage->imageData, Iplimage->widthStep, size, cp[i], cp[i1],
 //                                 color2));
-         cvLine(Iplimage, cp[i], cp[i1], color2);
+         cvLine(Iplimage, cp[i], cp[i1], cvScalar(color2));
     }
     cvMoments(Iplimage, &mState);
 

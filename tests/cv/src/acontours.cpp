@@ -175,7 +175,7 @@ static int contour_retrieving_test( void )
         cvZero( dst2_img );
         if( contours )
         {
-            cvDrawContours( dst2_img, contours, mark_val2, mark_val2, INT_MAX );
+            cvDrawContours( dst2_img, contours, cvScalar(mark_val2), cvScalar(mark_val2), INT_MAX );
         }
 
 #if DRAW_CONTOURS
@@ -227,7 +227,7 @@ static int contour_retrieving_test( void )
 
             if( contours2 )
             {
-                cvDrawContours( dst3_img, contours2, mark_val2, mark_val2, INT_MAX );
+                cvDrawContours( dst3_img, contours2, cvScalar(mark_val2), cvScalar(mark_val2), INT_MAX );
             }
 
             err1 = cvNorm( dst2_img, dst3_img, CV_L1 );
@@ -368,13 +368,13 @@ int get_slice_length( CvSeq* seq, CvSlice slice )
     int total = seq->total;
     int length;
 
-    /*if( slice.startIndex == slice.endIndex )
+    /*if( slice.start_index == slice.end_index )
         return 0;*/
-    if( slice.startIndex < 0 )
-        slice.startIndex += total;
-    if( slice.endIndex <= 0 )
-        slice.endIndex += total;
-    length = slice.endIndex - slice.startIndex;
+    if( slice.start_index < 0 )
+        slice.start_index += total;
+    if( slice.end_index <= 0 )
+        slice.end_index += total;
+    length = slice.end_index - slice.start_index;
     if( length < 0 )
         length += total;
     else if( length > total )
@@ -394,7 +394,7 @@ double calc_contour_perimeter( CvPoint* array, int count )
         int dx = array[i].x - array[i+1].x;
         int dy = array[i].y - array[i+1].y;
         
-        s += sqrt(dx*dx + dy*dy);
+        s += sqrt((double)dx*dx + dy*dy);
     }
 
     return s;
@@ -467,8 +467,8 @@ static int contour_perimeter_test( void )
         }
         else
         {
-            slice.startIndex = atsRandPlain32s( &rng_state ) % (count*3) - count;
-            slice.endIndex = atsRandPlain32s( &rng_state ) % (count*3) - count;
+            slice.start_index = atsRandPlain32s( &rng_state ) % (count*3) - count;
+            slice.end_index = atsRandPlain32s( &rng_state ) % (count*3) - count;
         }
 
         perimeter = cvArcLength( contour, slice );
@@ -479,20 +479,23 @@ static int contour_perimeter_test( void )
             goto test_exit;
         }
 
-        len0 = get_slice_length( contour, slice );
-        slice.endIndex++;
+        len0 = cvSliceLength( slice, contour );
+        slice.end_index++;
 
-        len = get_slice_length( contour, slice );
-        if( len == 0 )
+        len = cvSliceLength( slice, contour );
+        if( len <= 0 )
         {
             assert( len0 != 0 );
             len = MIN( len0 + 1, count );
-            if( slice.startIndex < 0 )
-                slice.startIndex += count;
-            else if( slice.startIndex >= count )
-                slice.startIndex -= count;
-            slice.endIndex = slice.startIndex + len;
+            if( slice.start_index < 0 )
+                slice.start_index += count;
+            else if( slice.start_index >= count )
+                slice.start_index -= count;
+            slice.end_index = slice.start_index + len;
         }
+
+        if( len <= 0 )
+            continue;
 
         if( len + 1 > curr_size )
         {
@@ -503,7 +506,7 @@ static int contour_perimeter_test( void )
         cvCvtSeqToArray( contour, array, slice );
 
         cvStartReadSeq( contour, &reader, 0 );
-        cvSetSeqReaderPos( &reader, slice.startIndex, 0 );
+        cvSetSeqReaderPos( &reader, slice.start_index, 0 );
 
         for( j = 0; j < len; j++ )
         {
