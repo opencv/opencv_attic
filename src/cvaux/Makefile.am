@@ -1,39 +1,21 @@
 lib_LTLIBRARIES = libcvaux.la
 
-libcvaux_la_SOURCES = \
-cv3dtracker.cpp    cvface.cpp             cvhmm1d.cpp          \
-cvaux.cpp          cvfacedetection.cpp    cvlcm.cpp            cvsubdiv2.cpp \
-cvauxutils.cpp     cvfacetemplate.cpp     cvlee.cpp            cvtexture.cpp \
-cvcalibfilter.cpp  cvfindface.cpp         cvmat.cpp            cvvecfacetracking.cpp \
-cvdpstereo.cpp     cvhaar.cpp             cvmorphcontours.cpp  cvvideo.cpp \
-cvepilines.cpp     cvhaarfacecascade.cpp  cvsegment.cpp        precomp.cpp
+libcvaux_la_SOURCES = camshift.cpp cv3dtracker.cpp cvaux.cpp \
+    cvauxutils.cpp cvcalibfilter.cpp cvcorrespond.cpp cvcorrimages.cpp \
+    cvcreatehandmask.cpp cvdpstereo.cpp cveigenobjects.cpp cvepilines.cpp \
+    cvface.cpp cvfacedetection.cpp cvfacetemplate.cpp cvfindface.cpp \
+    cvfindhandregion.cpp cvhmm.cpp cvhmm1d.cpp cvhmmobs.cpp cvlcm.cpp \
+    cvlee.cpp cvlevmar.cpp cvlevmarprojbandle.cpp cvlevmartrif.cpp \
+    cvlines.cpp cvlmeds.cpp cvmat.cpp cvmorphcontours.cpp cvmorphing.cpp \
+    cvprewarp.cpp cvscanlines.cpp cvsegment.cpp cvsubdiv2.cpp cvtexture.cpp \
+    cvtrifocal.cpp cvvecfacetracking.cpp cvvideo.cpp precomp.cpp
 
-EXTRA_DIST = cvaux.rc resource.h
+EXTRA_DIST = cvaux.dsp cvaux.vcproj cvaux.rc resource.h
 
-SOMAJOR = @MMAJOR@
-SOMINOR = @MMINOR@
-SOSUBMINOR = @MSUBMINOR@
-
-# here you should add all header files, which contains the functionality
-# of your shared lib (published for the users)
 include_HEADERS =
+noinst_HEADERS = _cvaux.h _cvfacedetection.h _cvvectrack.h _cvvm.h
 
-# here you should add all header files, which shouldn't be installed
-noinst_HEADERS = _cvaux.h  _cvfacedetection.h  _cvvectrack.h
+libcvaux_la_LDFLAGS = -no-undefined -version-info @LT_VERSION@ @LDFLAGS@
+libcvaux_la_LIBADD =
 
-libcvaux_la_LDFLAGS = -no-undefined -version-info $(LT_CURRENT):$(LT_REVISION):$(LT_AGE) -release $(LT_RELEASE) @LDFLAGS@
-
-# add here the libraries which have to be include
-# for building the shared lib
-#
-#  please consider also the usage of the make environment variables
-#  like
-#  $(LIB_KDEUI), $(LIB_QT), $(LIB_HTML), etc.
-#  instead of the hardcoded entries, which have placed
-#  in here.
-#  The following line is only a suggestion!
-#
-libcvaux_la_LIBADD = 
-
-INCLUDES = -I. -I../include -I../../cv/include -I../../cv/src -I../..
-CXXFLAGS = @CXXFLAGS@ -Wall
+INCLUDES = -I. -I../include -I../../cxcore/include -I../../cv/include -I../../cv/src -I../..

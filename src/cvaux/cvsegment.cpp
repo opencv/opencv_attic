@@ -120,7 +120,7 @@ icvSegmFloodFill_Stage1( uchar* pImage, int step,
 
     while( StIn )
     {
-        int k, YC, PL, PR, flag, curstep;
+        int k, YC, PL, PR, flag/*, curstep*/;
 
         POP( YC, L, R, PL, PR, flag );
 
@@ -141,7 +141,7 @@ icvSegmFloodFill_Stage1( uchar* pImage, int step,
         for( k = 0; k < 3; k++ )
         {
             flag = data[k][0];
-            curstep = flag * step;
+            /*curstep = flag * step;*/
             img = pImage + (YC + flag) * step;
             mask = pMask + (YC + flag) * maskStep;
             int left = data[k][1];
@@ -184,7 +184,7 @@ icvSegmFloodFill_Stage1( uchar* pImage, int step,
     region->rect.y = YMin;
     region->rect.width = XMax - XMin + 1;
     region->rect.height = YMax - YMin + 1;
-    region->value = 0;
+    region->value = cvScalarAll(0);
 
     {
         double inv_area = area ? 1./area : 0;
@@ -276,7 +276,7 @@ static void color_derv( const CvArr* srcArr, CvArr* dstArr, int thresh )
             m[1] = dv[0]*dv[0] + dv[1]*dv[1] + dh[2]*dh[2];
 
             val = (m[0] + m[2]) + 
-                sqrt(((double)(m[0] - m[2]))*(m[0] - m[2]) + (4.*m[1])*m[1]);
+                sqrt(((double)((double)m[0] - m[2]))*(m[0] - m[2]) + (4.*m[1])*m[1]);
 
             /*
 
@@ -521,7 +521,7 @@ cvSegmentImage( const CvArr* srcarr, CvArr* dstarr,
     mask = canny; // a new name for new role
 
     // make a non-zero border.
-    cvRectangle( mask, cvPoint(0,0), cvPoint(size.width-1,size.height-1), 1, 1 );
+    cvRectangle( mask, cvPoint(0,0), cvPoint(size.width-1,size.height-1), cvScalarAll(1), 1 );
 
     for( pt.y = 0; pt.y < size.height; pt.y++ )
     {
@@ -554,8 +554,7 @@ cvSegmentImage( const CvArr* srcarr, CvArr* dstarr,
                                                      region.rect, storage );
                     if( tmpseq != 0 )
                     {
-                        ((CvContour*)tmpseq)->color =
-                           CV_RGB(avgVal[2],avgVal[1],avgVal[0]);
+                        ((CvContour*)tmpseq)->color = avgVal[0] + (avgVal[1] << 8) + (avgVal[2] << 16);
                         tmpseq->h_prev = prev_seq;
                         if( prev_seq )
                             prev_seq->h_next = tmpseq;

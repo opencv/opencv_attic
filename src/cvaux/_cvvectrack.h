@@ -57,18 +57,18 @@
 inline int pow2(int v)
 {
         return (v*v);
-};
+}
 
 inline int operator == (const CvRect& r1, const CvRect& r2)
 {
         return (r1.x == r2.x) && (r1.y == r2.y) &&
                         (r1.width == r2.width) && (r1.height == r2.height);
-};
+}
 
 inline int operator != (const CvRect& r1, const CvRect& r2)
 {
         return !(r1 == r2);
-};
+}
 
 inline 
 int CmpPoints(const CvPoint& p1, const CvPoint& p2, int err)
@@ -82,7 +82,7 @@ int PointInRect(const CvPoint& p, const CvRect& r)
 {
         return ((p.x > r.x) && (p.x < (r.x + r.width)) &&
                         (p.y > r.y) && (p.y < (r.y + r.height)));
-};
+}
 
 inline 
 int RectInRect(const CvRect& r1, const CvRect& r2)
@@ -90,7 +90,7 @@ int RectInRect(const CvRect& r1, const CvRect& r2)
         CvPoint plt = {r1.x, r1.y};
         CvPoint prb = {r1.x + r1.width, r1.y + r1.height};
         return (PointInRect(plt, r2) && PointInRect(prb, r2));
-};
+}
 
 inline 
 CvRect Increase(const CvRect& r, int decr)
@@ -101,7 +101,7 @@ CvRect Increase(const CvRect& r, int decr)
         rect.width = r.width * decr;
         rect.height = r.height * decr;
         return rect;
-};
+}
 
 inline 
 CvPoint Increase(const CvPoint& p, int decr)
@@ -110,21 +110,21 @@ CvPoint Increase(const CvPoint& p, int decr)
         point.x = p.x * decr;
         point.y = p.y * decr;
         return point;
-};
+}
 
 inline 
 void Move(CvRect& r, int dx, int dy)
 {
         r.x += dx;
         r.y += dy;
-};
+}
 
 inline 
 void Move(CvPoint& p, int dx, int dy)
 {
         p.x += dx;
         p.y += dy;
-};
+}
 
 inline 
 void Extend(CvRect& r, int d)
@@ -133,7 +133,7 @@ void Extend(CvRect& r, int d)
         r.y -= d;
         r.width += 2*d;
         r.height += 2*d;
-};
+}
 
 inline 
 CvPoint Center(const CvRect& r)
@@ -142,7 +142,7 @@ CvPoint Center(const CvRect& r)
         p.x = r.x + r.width / 2;
         p.y = r.y + r.height / 2;
         return p;
-};
+}
 
 inline void ReallocImage(IplImage** ppImage, CvSize sz, long lChNum)
 {
@@ -158,6 +158,6 @@ inline void ReallocImage(IplImage** ppImage, CvSize sz, long lChNum)
     if( pImage == NULL )
         pImage = cvCreateImage( sz, IPL_DEPTH_8U, lChNum);
     *ppImage = pImage;
-};
+}
 
 #endif //__VECTRACK_H__

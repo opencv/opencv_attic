@@ -40,53 +40,5 @@
 //M*/
 
 #include "_cvaux.h"
-#include <time.h>
-
-typedef int64 (CV_CDECL * rdtsc_func)(void);
-
-/* helper functions for RNG initialization and accurate time measurement: x86 only */
-CV_IMPL  int64  cvGetTickCount( void )
-{
-#ifndef WIN32
-    return clock();
-#else
-    static const char code[] = "\x0f\x31\xc3";
-    rdtsc_func func = (rdtsc_func)(void*)code;
-    return func();
-#endif
-}
-
-
-CV_IMPL  double  cvGetTickFrequency()
-{
-#ifndef WIN32
-    return CLOCKS_PER_SEC*1e-6;
-#else
-    int64 clocks1, clocks2;
-    volatile int t;
-    int dt = 100;
-    int frequency = 0, old_frequency;
-
-    do
-    {
-        old_frequency = frequency;
-        t = clock();
-        while( t==clock() );
-        t = clock();
-
-        clocks1 = cvGetTickCount();
-        while( dt+t>clock() );
-        clocks2 = cvGetTickCount();
-
-        frequency = (int)(((double)(clocks2 - clocks1))/(1e3*dt)+.5) + 10;
-        if( frequency % 50 <= 16 )
-            frequency = (frequency/50)*50;
-        else
-            frequency = (frequency/100)*100 + ((frequency % 100)/33)*33;
-    }
-    while( frequency != old_frequency );
-    return (double)frequency;
-#endif
-}
 
 /* End of file. */

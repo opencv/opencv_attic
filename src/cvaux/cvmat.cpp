@@ -41,7 +41,8 @@
 
 #include "_cvaux.h"
 
-#if (_MSC_VER>=1200) || defined __BORLANDC__
+// temporarily remove it from build
+#if 0 && ((_MSC_VER>=1200) || defined __BORLANDC__)
 
 double CvMAT::get( const uchar* ptr, int type, int coi )
 {
@@ -72,16 +73,6 @@ double CvMAT::get( const uchar* ptr, int type, int coi )
 
     return t;
 }
-
-
-#define CV_CAST_8U(t)    (uchar)( !((t) & ~255) ? (t) : (t) > 0 ? 255 : 0)
-#define CV_CAST_8S(t)    (char)( !(((t)+128) & ~255) ? (t) : (t) > 0 ? 127 : -128 )
-#define CV_CAST_16S(t)   (short)( !(((t)+32768) & ~65535) ? (t) : (t) > 0 ? 32767 : -32768 )
-#define CV_CAST_32S(t)   (int)(t)
-#define CV_CAST_64S(t)   (int64)(t)
-#define CV_CAST_32F(t)   (float)(t)
-#define CV_CAST_64F(t)   (double)(t)
-
 
 void CvMAT::set( uchar* ptr, int type, int coi, double d )
 {
@@ -330,18 +321,8 @@ CvMAT::CvMAT( const _CvMAT_LOGIC_& mat_logic )
 CvMAT::CvMAT( const _CvMAT_COPY_& mat_copy )
 {
     CvMAT* src = (CvMAT*)mat_copy.a;
-    if( src->istemp() )
-    {
-        memcpy( this, src, sizeof(*this));
-        type &= ~CV_MAT_TEMP_FLAG;
-        assert( refcount );
-        refcount[0]++;
-    }
-    else
-    {
-        create( src->height, src->width, src->type );
-        cvCopy( src, this );
-    }
+    create( src->height, src->width, src->type );
+    cvCopy( src, this );
 }
 
 
@@ -390,15 +371,7 @@ CvMAT& CvMAT::operator = ( const _CvMAT_T_& mat_t )
     CvMAT* src = (CvMAT*)&mat_t.a;
     if( !data.ptr )
     {
-        if( src->istemp() && src->width == src->height )
-        {
-            memcpy( this, src, sizeof(*this));
-            type &= ~CV_MAT_TEMP_FLAG;
-            assert( refcount );
-            refcount[0]++;
-        }
-        else
-            create( src->width, src->height, src->type );
+        create( src->width, src->height, src->type );
     }
 
     cvTranspose( src, this );
@@ -413,13 +386,7 @@ CvMAT& CvMAT::operator = ( const _CvMAT_ADD_& mat_add )
 
     if( !data.ptr )
     {
-        if( a->istemp() )
-            memcpy( this, a, sizeof(*this));
-        else if( b->istemp() )
-            memcpy( this, b, sizeof(*this));
-        else
-            create( a->height, a->width, a->type );
-        type &= ~CV_MAT_TEMP_FLAG;
+        create( a->height, a->width, a->type );
     }
 
     if( mat_add.beta == 1 )
@@ -449,13 +416,7 @@ CvMAT& CvMAT::operator = ( const _CvMAT_ADD_EX_& mat_add )
 
     if( !data.ptr )
     {
-        if( a->istemp() )
-            memcpy( this, a, sizeof(*this));
-        else if( b->istemp() )
-            memcpy( this, b, sizeof(*this));
-        else
-            create( a->height, a->width, a->type );
-        type &= ~CV_MAT_TEMP_FLAG;
+        create( a->height, a->width, a->type );
     }
 
     cvAddWeighted( a, mat_add.alpha, b, mat_add.beta, mat_add.gamma, this );
@@ -469,15 +430,7 @@ CvMAT& CvMAT::operator = ( const _CvMAT_SCALE_& scale_mat )
 
     if( !data.ptr )
     {
-        if( src->istemp() )
-        {
-            memcpy( this, src, sizeof(*this));
-            type &= ~CV_MAT_TEMP_FLAG;
-            assert( refcount );
-            refcount[0]++;
-        }
-        else
-            create( src->height, src->width, src->type );
+        create( src->height, src->width, src->type );
     }
 
     cvConvertScale( src, this, scale_mat.alpha, 0 );
@@ -491,15 +444,7 @@ CvMAT& CvMAT::operator = ( const _CvMAT_SCALE_SHIFT_& scale_shift_mat )
     
     if( !data.ptr )
     {
-        if( src->istemp() )
-        {
-            memcpy( this, src, sizeof(*this));
-            type &= ~CV_MAT_TEMP_FLAG;
-            assert( refcount );
-            refcount[0]++;
-        }
-        else
-            create( src->height, src->width, src->type );
+        create( src->height, src->width, src->type );
     }
 
     cvConvertScale( src, this, scale_shift_mat.alpha, scale_shift_mat.beta );
@@ -514,35 +459,12 @@ CvMAT& CvMAT::operator = ( const _CvMAT_MUL_& mmul )
     int t_a = mmul.t_ab & 1;
     int t_b = (mmul.t_ab & 2) != 0;
     int m = (&(a->rows))[t_a];
-    int l = (&(a->rows))[t_a ^ 1];
     int n = (&(b->rows))[t_b ^ 1];
-    CvMAT* src = 0;
     /* this(m x n) = (a^o1(t))(m x l) * (b^o2(t))(l x n) */
 
     if( !data.ptr )
     {
-        if( a->istemp() && l == n )
-            src = a;
-        else if( b->istemp() && l == m )
-            src = b;
-
-        if( src )
-        {
-            if( src->rows == m )
-            {
-                memcpy( this, src, sizeof(*this));
-                type &= ~CV_MAT_TEMP_FLAG;
-            }
-            else
-            {
-                cvInitMatHeader( this, m, n, src->type, src->data.ptr );
-                refcount = src->refcount;
-            }
-            assert( refcount );
-            refcount[0]++;
-        }
-        else
-            create( m, n, a->type );
+        create( m, n, a->type );
     }
 
     if( mmul.alpha == 1 )
@@ -575,37 +497,12 @@ CvMAT& CvMAT::operator = ( const _CvMAT_MUL_ADD_& mmuladd )
     int t_a = mmuladd.t_abc & 1;
     int t_b = (mmuladd.t_abc & 2) != 0;
     int m = (&(a->rows))[t_a];
-    int l = (&(a->rows))[t_a ^ 1];
     int n = (&(b->rows))[t_b ^ 1];
-    CvMAT* src = 0;
     /* this(m x n) = (a^o1(t))(m x l) * (b^o2(t))(l x n) */
 
     if( !data.ptr )
     {
-        if( c->istemp() )
-            src = c;
-        else if( a->istemp() && l == n )
-            src = a;
-        else if( b->istemp() && l == m )
-            src = b;
-
-        if( src )
-        {
-            if( src->rows == m )
-            {
-                memcpy( this, src, sizeof(*this));
-                type &= ~CV_MAT_TEMP_FLAG;
-            }
-            else
-            {
-                cvInitMatHeader( this, m, n, src->type, src->data.ptr );
-                refcount = src->refcount;
-            }
-            assert( refcount );
-            refcount[0]++;
-        }
-        else
-            create( m, n, a->type );
+        create( m, n, a->type );
     }
 
     if( mmuladd.t_abc == 0 && mmuladd.alpha == 1 && mmuladd.beta == 1 )
@@ -622,15 +519,7 @@ CvMAT& CvMAT::operator = ( const _CvMAT_INV_& inv_mat )
     
     if( !data.ptr )
     {
-        if( src->istemp() )
-        {
-            memcpy( this, src, sizeof(*this));
-            type &= ~CV_MAT_TEMP_FLAG;
-            assert( refcount );
-            refcount[0]++;
-        }
-        else
-            create( src->height, src->width, src->type );
+        create( src->height, src->width, src->type );
     }
 
     if( inv_mat.method == 0 )
@@ -647,15 +536,7 @@ CvMAT& CvMAT::operator = ( const _CvMAT_NOT_& not_mat )
     
     if( !data.ptr )
     {
-        if( src->istemp() )
-        {
-            memcpy( this, src, sizeof(*this));
-            type &= ~CV_MAT_TEMP_FLAG;
-            assert( refcount );
-            refcount[0]++;
-        }
-        else
-            create( src->height, src->width, src->type );
+        create( src->height, src->width, src->type );
     }
 
     cvNot( src, this );
@@ -672,19 +553,7 @@ CvMAT& CvMAT::operator = ( const _CvMAT_LOGIC_& mat_logic )
 
     if( !data.ptr )
     {
-        if( a->istemp() )
-        {
-            memcpy( this, a, sizeof(*this));
-            refcount[0]++;
-        }
-        else if( b->istemp() )
-        {
-            memcpy( this, b, sizeof(*this));
-            refcount[0]++;
-        }
-        else
-            create( a->height, a->width, a->type );
-        type &= ~CV_MAT_TEMP_FLAG;
+        create( a->height, a->width, a->type );
     }
 
     switch( op )
@@ -788,14 +657,7 @@ CvMAT& CvMAT::operator = ( const _CvMAT_UN_LOGIC_& mat_logic )
 
     if( !data.ptr )
     {
-        if( a->istemp() )
-        {
-            memcpy( this, a, sizeof(*this));
-            refcount[0]++;
-        }
-        else
-            create( a->height, a->width, a->type );
-        type &= ~CV_MAT_TEMP_FLAG;
+        create( a->height, a->width, a->type );
     }
 
     switch( op )
@@ -841,16 +703,7 @@ CvMAT& CvMAT::operator = ( const _CvMAT_COPY_& mat_copy )
 
     if( !data.ptr )
     {
-        if( src->istemp() )
-        {
-            memcpy( this, src, sizeof(*this));
-            type &= ~CV_MAT_TEMP_FLAG;
-            assert( refcount );
-            refcount[0]++;
-            return *this;
-        }
-        else
-            create( src->height, src->width, src->type );
+        create( src->height, src->width, src->type );
     }
 
     if( src != this )
@@ -867,17 +720,8 @@ CvMAT& CvMAT::operator = ( const _CvMAT_CVT_& mat_cvt )
     if( !data.ptr )
     {
         int depth = mat_cvt.newdepth;
-        
-        if( src->istemp() && depth < 0 )
-        {
-            memcpy( this, src, sizeof(*this));
-            type &= ~CV_MAT_TEMP_FLAG;
-            assert( refcount );
-            refcount[0]++;
-        }
-        else
-            create( src->height, src->width, depth < 0 ? src->type :
-                    CV_MAT_CN(src->type)|CV_MAT_DEPTH(depth));
+        create( src->height, src->width, depth < 0 ? src->type :
+                CV_MAT_CN(src->type)|CV_MAT_DEPTH(depth));
     }
 
     cvCvtScale( src, this, mat_cvt.scale, mat_cvt.shift );
@@ -892,24 +736,9 @@ CvMAT& CvMAT::operator = ( const _CvMAT_DOT_OP_& dot_op )
     
     if( !data.ptr )
     {
-        CvMAT* src = 0;
-
-        if( a->istemp() )
-            src = a;
-        else if( b->istemp() )
-            src = b;
-
-        if( src )
-        {
-            memcpy( this, src, sizeof(*this));
-            assert( refcount );
-            refcount[0]++;
-        }
-        else
-            create( a->height, a->width, a->type );
+        create( a->height, a->width, a->type );
     }
 
-    type &= ~CV_MAT_TEMP_FLAG;
     switch( dot_op.op )
     {
     case '*':
@@ -954,15 +783,7 @@ CvMAT& CvMAT::operator = ( const _CvMAT_SOLVE_& solve_mat )
 
     if( !data.ptr )
     {
-        if( b->istemp() && a->cols == a->rows )
-        {
-            memcpy( this, b, sizeof(*this));
-            assert( refcount );
-            refcount[0]++;
-        }
-        else
-            create( a->height, b->width, a->type );
-        type &= ~CV_MAT_TEMP_FLAG;
+        create( a->height, b->width, a->type );
     }
 
     if( solve_mat.method == 0 )
@@ -970,18 +791,8 @@ CvMAT& CvMAT::operator = ( const _CvMAT_SOLVE_& solve_mat )
     else
     {
         CvMAT temp;
-        
-        if( a->istemp() && a->cols == a->rows )
-        {
-            memcpy( &temp, a, sizeof(temp));
-            assert( temp.refcount );
-            temp.refcount[0]++;
-        }
-        else
-        {
-            cvInitMatHeader( &temp, a->cols, a->rows, a->type );
-            cvCreateData( &temp );
-        }
+        cvInitMatHeader( &temp, a->cols, a->rows, a->type );
+        cvCreateData( &temp );
 
         cvPseudoInv( a, &temp );
         cvMatMul( &temp, b, this );
@@ -998,13 +809,7 @@ CvMAT& CvMAT::operator = ( const _CvMAT_CMP_& mat_cmp )
 
     if( !data.ptr )
     {
-        if( a->istemp() && CV_IS_MASK_ARR(a))
-            memcpy( this, a, sizeof(*this));
-        else if( b && b->istemp() && CV_IS_MASK_ARR(b))
-            memcpy( this, b, sizeof(*this));
-        else
-            create( a->height, a->width, CV_8UC1 );
-        type &= ~CV_MAT_TEMP_FLAG;
+        create( a->height, a->width, CV_8UC1 );
     }
 
     if( b )

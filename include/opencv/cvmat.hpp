@@ -42,7 +42,11 @@
 #ifndef _CVMAT_HPP_
 #define _CVMAT_HPP_
 
-#if defined __cplusplus && (_MSC_VER>=1200 || defined __BORLANDC__)
+#if 0 && (defined __cplusplus && (_MSC_VER>=1200 || defined __BORLANDC__ || defined __GNUC__))
+
+#if _MSC_VER >= 1200
+#pragma warning( disable: 4710 ) /* suppress "function ... is not inlined" */
+#endif
 
 #include <string.h>
 #include <stdio.h>
@@ -337,7 +341,6 @@ struct  _CvMATConstElem_;
 struct  _CvMATElem_;
 struct  _CvMATElemCn_;
 
-struct  _CvMAT_TMP_;
 struct  _CvMAT_T_;
 struct  _CvMAT_MUL_;
 struct  _CvMAT_INV_;
@@ -355,7 +358,7 @@ struct  _CvMAT_DOT_OP_;
 struct  _CvMAT_SOLVE_;
 struct  _CvMAT_CMP_;
 
-class CVAUX_DLL_ENTRY CvMAT : public CvMat
+class CV_EXPORTS CvMAT : public CvMat
 {
 protected:
 
@@ -549,10 +552,6 @@ public:
 
     /* decrease matrix data reference counter and clear data pointer */
     void  release();
-
-    /* internal use only! */
-    bool  istemp() const;
-
 protected:
     
     void  create( int rows, int cols, int type );
@@ -563,7 +562,7 @@ protected:
 /* proxies for matrix elements */
 
 /* const_A(i,j) */
-struct  CVAUX_DLL_ENTRY _CvMATConstElem_
+struct  CV_EXPORTS _CvMATConstElem_
 {
     explicit _CvMATConstElem_( const uchar* ptr, int type );
     operator CvScalar () const;
@@ -575,7 +574,7 @@ struct  CVAUX_DLL_ENTRY _CvMATConstElem_
 
 
 /* A(i,j,cn) or A(i,j)(cn) */
-struct  CVAUX_DLL_ENTRY _CvMATElemCn_
+struct  CV_EXPORTS _CvMATElemCn_
 {
     explicit _CvMATElemCn_( uchar* ptr, int type, int coi );
     operator double() const;
@@ -593,7 +592,7 @@ struct  CVAUX_DLL_ENTRY _CvMATElemCn_
 
 
 /* A(i,j) */
-struct  CVAUX_DLL_ENTRY _CvMATElem_ : _CvMATConstElem_
+struct  CV_EXPORTS _CvMATElem_ : public _CvMATConstElem_
 {
     explicit _CvMATElem_( uchar* ptr, int type );
     _CvMATElemCn_ operator ()( int coi = 0 );
@@ -608,40 +607,10 @@ struct  CVAUX_DLL_ENTRY _CvMATElem_ : _CvMATConstElem_
 };
 
 
-/* !!! Internal Use Only !!! */
-/* temporary classes for matrix operations */
-struct  CVAUX_DLL_ENTRY _CvMAT_TMP_ : public CvMAT
-{
-    _CvMAT_TMP_();
-    _CvMAT_TMP_( const _CvMAT_TMP_& mat );
-    _CvMAT_TMP_& operator = ( const _CvMAT_TMP_& mat );
-
-    explicit _CvMAT_TMP_( const _CvMAT_T_& mat_t );
-    explicit _CvMAT_TMP_( const _CvMAT_INV_& inv_mat );
-    explicit _CvMAT_TMP_( const _CvMAT_ADD_& mat_add );
-    explicit _CvMAT_TMP_( const _CvMAT_ADD_EX_& mat_add );
-    explicit _CvMAT_TMP_( const _CvMAT_SCALE_& scale_mat );
-    explicit _CvMAT_TMP_( const _CvMAT_SCALE_SHIFT_& scale_shift_mat );
-    explicit _CvMAT_TMP_( const _CvMAT_MUL_& mmul );
-    explicit _CvMAT_TMP_( const _CvMAT_MUL_ADD_& mmuladd );
-    explicit _CvMAT_TMP_( const _CvMAT_LOGIC_& mmuladd );
-    explicit _CvMAT_TMP_( const _CvMAT_UN_LOGIC_& mmuladd );
-    explicit _CvMAT_TMP_( const _CvMAT_NOT_& not_mat );
-    explicit _CvMAT_TMP_( const _CvMAT_DOT_OP_& dot_mul );
-    explicit _CvMAT_TMP_( const _CvMAT_SOLVE_& solve_mat );
-    explicit _CvMAT_TMP_( const _CvMAT_CMP_& cmp_mat );
-    explicit _CvMAT_TMP_( const _CvMAT_CVT_& cmp_mat );
-    
-    /* extracting parts from CvMAT */
-    explicit _CvMAT_TMP_( const _CvMAT_TMP_& mat, CvRect rect );
-    explicit _CvMAT_TMP_( const _CvMAT_TMP_& mat, int k, int i );
-};
-
-
-struct  CVAUX_DLL_ENTRY _CvMAT_BASE_OP_
+struct  CV_EXPORTS _CvMAT_BASE_OP_
 {
     _CvMAT_BASE_OP_() {};
-    virtual operator _CvMAT_TMP_() const = 0;
+    virtual operator CvMAT() const = 0;
 
     _CvMAT_DOT_OP_  mul( const CvMAT& a ) const;
     _CvMAT_DOT_OP_  mul( const _CvMAT_SCALE_& a ) const;
@@ -663,12 +632,12 @@ struct  CVAUX_DLL_ENTRY _CvMAT_BASE_OP_
     _CvMAT_INV_     inv( int method = 0 ) const;
     _CvMAT_T_       t() const;
 
-    _CvMAT_TMP_     row( int row ) const;
-    _CvMAT_TMP_     rowrange( int row1, int row2 ) const;
-    _CvMAT_TMP_     col( int col ) const;
-    _CvMAT_TMP_     colrange( int col1, int col2 ) const;
-    _CvMAT_TMP_     rect( CvRect rect ) const;
-    _CvMAT_TMP_     diag( int diag = 0 ) const;
+    CvMAT     row( int row ) const;
+    CvMAT     rowrange( int row1, int row2 ) const;
+    CvMAT     col( int col ) const;
+    CvMAT     colrange( int col1, int col2 ) const;
+    CvMAT     rect( CvRect rect ) const;
+    CvMAT     diag( int diag = 0 ) const;
     _CvMAT_CVT_     cvt( int newdepth = -1, double scale = 1, double shift = 0 ) const;
     
     double          norm( int norm_type = CV_L2 ) const;
@@ -679,14 +648,14 @@ struct  CVAUX_DLL_ENTRY _CvMAT_BASE_OP_
 
 
 /* (A^t)*alpha */
-struct  CVAUX_DLL_ENTRY _CvMAT_T_ : public _CvMAT_BASE_OP_
+struct  CV_EXPORTS _CvMAT_T_ : public _CvMAT_BASE_OP_
 {
     explicit _CvMAT_T_( const CvMAT* a );
     explicit _CvMAT_T_( const CvMAT* a, double alpha );
     
     double det() const;
     double norm( int normType = CV_L2 ) const;
-    operator _CvMAT_TMP_() const;
+    operator CvMAT() const;
 
     CvMAT  a;
     double alpha;
@@ -694,10 +663,10 @@ struct  CVAUX_DLL_ENTRY _CvMAT_T_ : public _CvMAT_BASE_OP_
 
 
 /* inv(A) */
-struct  CVAUX_DLL_ENTRY _CvMAT_INV_ : public _CvMAT_BASE_OP_
+struct  CV_EXPORTS _CvMAT_INV_ : public _CvMAT_BASE_OP_
 {
     explicit _CvMAT_INV_( const CvMAT* mat, int method );
-    operator _CvMAT_TMP_() const;
+    operator CvMAT() const;
 
     CvMAT a;
     int method;
@@ -705,12 +674,12 @@ struct  CVAUX_DLL_ENTRY _CvMAT_INV_ : public _CvMAT_BASE_OP_
 
 
 /* (A^ta)*(B^tb)*alpha */
-struct  CVAUX_DLL_ENTRY _CvMAT_MUL_ : public _CvMAT_BASE_OP_
+struct  CV_EXPORTS _CvMAT_MUL_ : public _CvMAT_BASE_OP_
 {
     explicit _CvMAT_MUL_( const CvMAT* a, const CvMAT* b, int t_ab );
     explicit _CvMAT_MUL_( const CvMAT* a, const CvMAT* b,
                           double alpha, int t_abc );
-    operator _CvMAT_TMP_() const;
+    operator CvMAT() const;
 
     double alpha;
     CvMAT* a;
@@ -720,13 +689,13 @@ struct  CVAUX_DLL_ENTRY _CvMAT_MUL_ : public _CvMAT_BASE_OP_
 
 
 /* (A^ta)*(B^tb)*alpha + (C^tc)*beta */
-struct  CVAUX_DLL_ENTRY _CvMAT_MUL_ADD_ : public _CvMAT_BASE_OP_
+struct  CV_EXPORTS _CvMAT_MUL_ADD_ : public _CvMAT_BASE_OP_
 {
     explicit _CvMAT_MUL_ADD_( const CvMAT* a, const CvMAT* b,
                               const CvMAT* c, int t_abc );
     explicit _CvMAT_MUL_ADD_( const CvMAT* a, const CvMAT* b, double alpha,
                               const CvMAT* c, double beta, int t_abc );
-    operator _CvMAT_TMP_() const;
+    operator CvMAT() const;
 
     double alpha, beta;
     CvMAT* a;
@@ -737,10 +706,10 @@ struct  CVAUX_DLL_ENTRY _CvMAT_MUL_ADD_ : public _CvMAT_BASE_OP_
 
 
 /* A + B*beta */
-struct  CVAUX_DLL_ENTRY _CvMAT_ADD_ : public _CvMAT_BASE_OP_
+struct  CV_EXPORTS _CvMAT_ADD_ : public _CvMAT_BASE_OP_
 {
     explicit _CvMAT_ADD_( const CvMAT* a, const CvMAT* b, double beta = 1 );
-    operator _CvMAT_TMP_() const;
+    operator CvMAT() const;
 
     double   norm( int norm_type = CV_L2 ) const;
     _CvMAT_DOT_OP_ abs() const;
@@ -752,11 +721,11 @@ struct  CVAUX_DLL_ENTRY _CvMAT_ADD_ : public _CvMAT_BASE_OP_
 
 
 /* A*alpha + B*beta + gamma */
-struct  CVAUX_DLL_ENTRY _CvMAT_ADD_EX_ : public _CvMAT_BASE_OP_
+struct  CV_EXPORTS _CvMAT_ADD_EX_ : public _CvMAT_BASE_OP_
 {
     explicit _CvMAT_ADD_EX_( const CvMAT* a, double alpha,
                              const CvMAT* b, double beta, double gamma = 0 );
-    operator _CvMAT_TMP_() const;
+    operator CvMAT() const;
 
     double alpha, beta, gamma;
     CvMAT* a;
@@ -765,10 +734,10 @@ struct  CVAUX_DLL_ENTRY _CvMAT_ADD_EX_ : public _CvMAT_BASE_OP_
 
 
 /* A*alpha */
-struct  CVAUX_DLL_ENTRY _CvMAT_SCALE_ : public _CvMAT_BASE_OP_
+struct  CV_EXPORTS _CvMAT_SCALE_ : public _CvMAT_BASE_OP_
 {
     explicit _CvMAT_SCALE_( const CvMAT* a, double alpha );
-    operator _CvMAT_TMP_() const;
+    operator CvMAT() const;
 
     _CvMAT_DOT_OP_  mul( const CvMAT& a ) const;
     _CvMAT_DOT_OP_  mul( const _CvMAT_SCALE_& a ) const;
@@ -782,10 +751,10 @@ struct  CVAUX_DLL_ENTRY _CvMAT_SCALE_ : public _CvMAT_BASE_OP_
 
 
 /* A*alpha + beta */
-struct  CVAUX_DLL_ENTRY _CvMAT_SCALE_SHIFT_ : public _CvMAT_BASE_OP_
+struct  CV_EXPORTS _CvMAT_SCALE_SHIFT_ : public _CvMAT_BASE_OP_
 {
     explicit _CvMAT_SCALE_SHIFT_( const CvMAT* a, double alpha, double beta );
-    operator _CvMAT_TMP_() const;
+    operator CvMAT() const;
 
     _CvMAT_DOT_OP_  abs() const;
 
@@ -795,11 +764,11 @@ struct  CVAUX_DLL_ENTRY _CvMAT_SCALE_SHIFT_ : public _CvMAT_BASE_OP_
 
 
 /* (A & B), (A | B) or (A ^ B) */
-struct  CVAUX_DLL_ENTRY _CvMAT_LOGIC_ : public _CvMAT_BASE_OP_
+struct  CV_EXPORTS _CvMAT_LOGIC_ : public _CvMAT_BASE_OP_
 {
     enum Op { AND = 0, OR = 1, XOR = 2 };
     explicit _CvMAT_LOGIC_( const CvMAT* a, const CvMAT* b, Op op, int flags = 0 );
-    operator _CvMAT_TMP_() const;
+    operator CvMAT() const;
 
     CvMAT* a;
     CvMAT* b;
@@ -809,11 +778,11 @@ struct  CVAUX_DLL_ENTRY _CvMAT_LOGIC_ : public _CvMAT_BASE_OP_
 
 
 /* (A & scalar), (A | scalar) or (A ^ scalar) */
-struct  CVAUX_DLL_ENTRY _CvMAT_UN_LOGIC_ : public _CvMAT_BASE_OP_
+struct  CV_EXPORTS _CvMAT_UN_LOGIC_ : public _CvMAT_BASE_OP_
 {
     explicit _CvMAT_UN_LOGIC_( const CvMAT* a, double alpha,
                                _CvMAT_LOGIC_::Op op, int flags = 0 );
-    operator _CvMAT_TMP_() const;
+    operator CvMAT() const;
 
     CvMAT* a;
     double alpha;
@@ -823,21 +792,21 @@ struct  CVAUX_DLL_ENTRY _CvMAT_UN_LOGIC_ : public _CvMAT_BASE_OP_
 
 
 /* ~A */
-struct  CVAUX_DLL_ENTRY _CvMAT_NOT_ : public _CvMAT_BASE_OP_
+struct  CV_EXPORTS _CvMAT_NOT_ : public _CvMAT_BASE_OP_
 {
     explicit _CvMAT_NOT_( const CvMAT* a );
-    operator _CvMAT_TMP_() const;
+    operator CvMAT() const;
 
     CvMAT* a;
 };
 
 
 /* conversion of data type */
-struct  CVAUX_DLL_ENTRY _CvMAT_CVT_ : public _CvMAT_BASE_OP_
+struct  CV_EXPORTS _CvMAT_CVT_ : public _CvMAT_BASE_OP_
 {
     explicit _CvMAT_CVT_( const CvMAT* a, int newdepth = -1,
                           double scale = 1, double shift = 0 );
-    operator _CvMAT_TMP_() const;
+    operator CvMAT() const;
 
     CvMAT a;
     int newdepth;
@@ -846,7 +815,7 @@ struct  CVAUX_DLL_ENTRY _CvMAT_CVT_ : public _CvMAT_BASE_OP_
 
 
 /* conversion of data type */
-struct  CVAUX_DLL_ENTRY _CvMAT_COPY_
+struct  CV_EXPORTS _CvMAT_COPY_
 {
     explicit _CvMAT_COPY_( const CvMAT* a );
     operator CvMAT() const;
@@ -855,11 +824,11 @@ struct  CVAUX_DLL_ENTRY _CvMAT_COPY_
 
 
 /* a.op(b), where op = mul, div, min, max ... */
-struct  CVAUX_DLL_ENTRY _CvMAT_DOT_OP_ : public _CvMAT_BASE_OP_
+struct  CV_EXPORTS _CvMAT_DOT_OP_ : public _CvMAT_BASE_OP_
 {
     explicit _CvMAT_DOT_OP_( const CvMAT* a, const CvMAT* b,
                              int op, double alpha = 1 );
-    operator _CvMAT_TMP_() const;
+    operator CvMAT() const;
 
     CvMAT a; /* keep the left operand copy */
     CvMAT* b;
@@ -869,10 +838,10 @@ struct  CVAUX_DLL_ENTRY _CvMAT_DOT_OP_ : public _CvMAT_BASE_OP_
 
 
 /* A.inv()*B or A.pinv()*B */
-struct  CVAUX_DLL_ENTRY _CvMAT_SOLVE_ : public _CvMAT_BASE_OP_
+struct  CV_EXPORTS _CvMAT_SOLVE_ : public _CvMAT_BASE_OP_
 {
     explicit _CvMAT_SOLVE_( const CvMAT* a, const CvMAT* b, int method );
-    operator _CvMAT_TMP_() const;
+    operator CvMAT() const;
 
     CvMAT* a;
     CvMAT* b;
@@ -881,11 +850,11 @@ struct  CVAUX_DLL_ENTRY _CvMAT_SOLVE_ : public _CvMAT_BASE_OP_
 
 
 /* A <=> B */
-struct  CVAUX_DLL_ENTRY _CvMAT_CMP_ : public _CvMAT_BASE_OP_
+struct  CV_EXPORTS _CvMAT_CMP_ : public _CvMAT_BASE_OP_
 {
     explicit _CvMAT_CMP_( const CvMAT* a, const CvMAT* b, int cmp_op );
     explicit _CvMAT_CMP_( const CvMAT* a, double alpha, int cmp_op );
-    operator _CvMAT_TMP_() const;
+    operator CvMAT() const;
 
     CvMAT* a;
     CvMAT* b;
@@ -1071,8 +1040,14 @@ inline CvMAT::CvMAT( int rows, int type, void* data, int step )
 
 inline void CvMAT::create( int rows, int cols, int type )
 {
-    cvInitMatHeader( this, rows, cols, type );
-    cvCreateData( this );
+    int step = cols*CV_ELEM_SIZE(type), total_size = step*rows;
+    this->rows = rows;
+    this->cols = cols;
+    this->step = rows == 1 ? 0 : step;
+    this->type = CV_MAT_MAGIC_VAL | (type & CV_MAT_TYPE_MASK) | CV_MAT_CONT_FLAG;
+    refcount = (int*)cvAlloc((size_t)total_size + 8);
+    data.ptr = (uchar*)(((size_t)(refcount + 1) + 7) & -8);
+    *refcount = 1;
 }
 
 
@@ -1112,12 +1087,9 @@ inline CvMAT::CvMAT( const IplImage& img )
 
 inline void CvMAT::release()
 {
-    if( type != 0 && refcount && --refcount[0] == 0 )
-    {
-        uchar* ptr = (uchar*)refcount + sizeof(refcount)*2;
-        cvFree( (void**)&ptr );
-    }
-    data.ptr = 0;
+    data.ptr = NULL;
+    if( refcount != NULL && --*refcount == 0 )
+        cvFree( (void**)&refcount );
     refcount = 0;
 }
 
@@ -1125,12 +1097,6 @@ inline void CvMAT::release()
 inline CvMAT::~CvMAT()
 {
     release();
-}
-
-
-inline bool CvMAT::istemp() const
-{
-    return (type & CV_MAT_TEMP_FLAG) != 0;
 }
 
 
@@ -2064,163 +2030,92 @@ inline CvMAT& CvMAT::operator *= ( const _CvMAT_SCALE_SHIFT_& scale_mat )
 *                        misc. operations on temporary matrices (+,-,*)                  *
 \****************************************************************************************/
 
-inline _CvMAT_TMP_::_CvMAT_TMP_() : CvMAT() {}
-
-inline _CvMAT_TMP_::_CvMAT_TMP_( const _CvMAT_TMP_& mat ) : CvMAT( (const CvMat&)mat )
-{   type |= CV_MAT_TEMP_FLAG;   }
-
-inline _CvMAT_TMP_& _CvMAT_TMP_::operator = ( const _CvMAT_TMP_& mat )
-{
-    if( this != &mat )
-    {
-        release();
-        memcpy( this, &mat, sizeof(mat));
-        if( refcount )
-            (*refcount)++;
-    }
-    return *this;
-}
-
-inline  _CvMAT_TMP_::_CvMAT_TMP_( const _CvMAT_T_& mat_t ) : CvMAT( mat_t )
-{   type |= CV_MAT_TEMP_FLAG;   }
-
-inline  _CvMAT_TMP_::_CvMAT_TMP_( const _CvMAT_INV_& inv_mat ) : CvMAT( inv_mat )
-{   type |= CV_MAT_TEMP_FLAG;   }
-
-inline  _CvMAT_TMP_::_CvMAT_TMP_( const _CvMAT_ADD_& mat_add ) : CvMAT( mat_add )
-{   type |= CV_MAT_TEMP_FLAG;   }
-
-inline  _CvMAT_TMP_::_CvMAT_TMP_( const _CvMAT_ADD_EX_& mat_add ) : CvMAT( mat_add )
-{   type |= CV_MAT_TEMP_FLAG;   }
-
-inline  _CvMAT_TMP_::_CvMAT_TMP_( const _CvMAT_SCALE_& scale_mat ) : CvMAT( scale_mat )
-{   type |= CV_MAT_TEMP_FLAG;   }
-
-inline  _CvMAT_TMP_::_CvMAT_TMP_( const _CvMAT_SCALE_SHIFT_& scale_shift_mat ) : CvMAT( scale_shift_mat )
-{   type |= CV_MAT_TEMP_FLAG;   }
-
-inline  _CvMAT_TMP_::_CvMAT_TMP_( const _CvMAT_MUL_& mmul ) : CvMAT( mmul )
-{   type |= CV_MAT_TEMP_FLAG;   }
-
-inline  _CvMAT_TMP_::_CvMAT_TMP_( const _CvMAT_MUL_ADD_& mmuladd ) : CvMAT( mmuladd )
-{   type |= CV_MAT_TEMP_FLAG;   }
-
-inline  _CvMAT_TMP_::_CvMAT_TMP_( const _CvMAT_LOGIC_& mat_logic ) : CvMAT( mat_logic )
-{   type |= CV_MAT_TEMP_FLAG;   }
-
-inline  _CvMAT_TMP_::_CvMAT_TMP_( const _CvMAT_UN_LOGIC_& mat_logic ) : CvMAT( mat_logic )
-{   type |= CV_MAT_TEMP_FLAG;   }
-
-inline  _CvMAT_TMP_::_CvMAT_TMP_( const _CvMAT_NOT_& not_mat ) : CvMAT( not_mat )
-{   type |= CV_MAT_TEMP_FLAG;   }
-
-inline  _CvMAT_TMP_::_CvMAT_TMP_( const _CvMAT_DOT_OP_& dot_mul ) : CvMAT( dot_mul )
-{   type |= CV_MAT_TEMP_FLAG;   }
-
-inline  _CvMAT_TMP_::_CvMAT_TMP_( const _CvMAT_SOLVE_& solve_mat ) : CvMAT( solve_mat )
-{   type |= CV_MAT_TEMP_FLAG;   }
-
-inline  _CvMAT_TMP_::_CvMAT_TMP_( const _CvMAT_CMP_& cmp_mat ) : CvMAT( cmp_mat )
-{   type |= CV_MAT_TEMP_FLAG;   }
-
-inline  _CvMAT_TMP_::_CvMAT_TMP_( const _CvMAT_TMP_& mat, CvRect rect ) :
-    CvMAT( (const CvMAT&)mat, rect )
-{   type |= CV_MAT_TEMP_FLAG;   }
-
-inline  _CvMAT_TMP_::_CvMAT_TMP_( const _CvMAT_CVT_& cvt_mat ) : CvMAT( cvt_mat )
-{   type |= CV_MAT_TEMP_FLAG;   }
-
-inline _CvMAT_TMP_::_CvMAT_TMP_( const _CvMAT_TMP_& mat, int k, int i ) :
-    CvMAT( (const CvMAT&)mat, k, i )
-{   type |= CV_MAT_TEMP_FLAG;   }
-
-
 /*
 * the base proxy class implementation
 */
 
 /* a.*b */
 inline _CvMAT_DOT_OP_ _CvMAT_BASE_OP_::mul( const CvMAT& a ) const
-{   return ((_CvMAT_TMP_)*this).mul(a);  }
+{   return ((CvMAT)*this).mul(a);  }
 
 /* a.*b*alpha */
 inline _CvMAT_DOT_OP_ _CvMAT_BASE_OP_::mul( const _CvMAT_SCALE_& a ) const
-{   return ((_CvMAT_TMP_)*this).mul(a);  }
+{   return ((CvMAT)*this).mul(a);  }
 
 /* a./b */
 inline _CvMAT_DOT_OP_ _CvMAT_BASE_OP_::div( const CvMAT& a ) const
-{   return ((_CvMAT_TMP_)*this).div(a);  }
+{   return ((CvMAT)*this).div(a);  }
 
 /* a./(b*alpha) */
 inline _CvMAT_DOT_OP_ _CvMAT_BASE_OP_::div( const _CvMAT_SCALE_& a ) const
-{   return ((_CvMAT_TMP_)*this).div(a);  }
+{   return ((CvMAT)*this).div(a);  }
 
 /* a.max(b) */
 inline _CvMAT_DOT_OP_ _CvMAT_BASE_OP_::min( const CvMAT& a ) const
-{   return ((_CvMAT_TMP_)*this).min(a);  }
+{   return ((CvMAT)*this).min(a);  }
 
 /* a.min(b) */
 inline _CvMAT_DOT_OP_ _CvMAT_BASE_OP_::max( const CvMAT& a ) const
-{   return ((_CvMAT_TMP_)*this).max(a);  }
+{   return ((CvMAT)*this).max(a);  }
 
 /* a.max(alpha) */
 inline _CvMAT_DOT_OP_ _CvMAT_BASE_OP_::min( double alpha ) const
-{   return ((_CvMAT_TMP_)*this).min(alpha);  }
+{   return ((CvMAT)*this).min(alpha);  }
 
 /* a.min(alpha) */
 inline _CvMAT_DOT_OP_ _CvMAT_BASE_OP_::max( double alpha ) const
-{   return ((_CvMAT_TMP_)*this).max(alpha);  }
+{   return ((CvMAT)*this).max(alpha);  }
 
 
 inline _CvMAT_INV_  _CvMAT_BASE_OP_::inv( int method ) const
-{   return ((_CvMAT_TMP_)*this).inv(method);  }
+{   return ((CvMAT)*this).inv(method);  }
 
 inline _CvMAT_T_  _CvMAT_BASE_OP_::t() const
-{   return ((_CvMAT_TMP_)*this).t();  }
+{   return ((CvMAT)*this).t();  }
 
 inline _CvMAT_CVT_ _CvMAT_BASE_OP_::cvt( int newdepth, double scale, double shift ) const
-{   return ((_CvMAT_TMP_)*this).cvt( newdepth, scale, shift ); }
+{   return ((CvMAT)*this).cvt( newdepth, scale, shift ); }
 
-inline _CvMAT_TMP_  _CvMAT_BASE_OP_::row( int r ) const
-{   return _CvMAT_TMP_((_CvMAT_TMP_)*this, 0, r ); }
+inline CvMAT  _CvMAT_BASE_OP_::row( int r ) const
+{   return CvMAT((CvMAT)*this, 0, r ); }
 
-inline _CvMAT_TMP_  _CvMAT_BASE_OP_::rowrange( int row1, int row2 ) const
+inline CvMAT  _CvMAT_BASE_OP_::rowrange( int row1, int row2 ) const
 {   
-    _CvMAT_TMP_ m = (_CvMAT_TMP_)*this;
+    CvMAT m = (CvMAT)*this;
     assert( 0 <= row1 && row1 < row2 && row2 <= m.height );
-    return _CvMAT_TMP_( m, cvRect( 0, row1, m.width, row2 - row1 ));
+    return CvMAT( m, cvRect( 0, row1, m.width, row2 - row1 ));
 }
 
-inline _CvMAT_TMP_  _CvMAT_BASE_OP_::col( int c ) const
-{   return _CvMAT_TMP_( (_CvMAT_TMP_)*this, 1, c ); }
+inline CvMAT  _CvMAT_BASE_OP_::col( int c ) const
+{   return CvMAT( (CvMAT)*this, 1, c ); }
 
-inline _CvMAT_TMP_  _CvMAT_BASE_OP_::colrange( int col1, int col2 ) const
+inline CvMAT  _CvMAT_BASE_OP_::colrange( int col1, int col2 ) const
 {   
-    _CvMAT_TMP_ m = (_CvMAT_TMP_)*this;
+    CvMAT m = (CvMAT)*this;
     assert( 0 <= col1 && col1 < col2 && col2 <= m.width );
-    return _CvMAT_TMP_( m, cvRect( col1, 0, col2 - col1, m.height ));
+    return CvMAT( m, cvRect( col1, 0, col2 - col1, m.height ));
 }
 
-inline _CvMAT_TMP_  _CvMAT_BASE_OP_::rect( CvRect r ) const
-{   return _CvMAT_TMP_( (_CvMAT_TMP_)*this, r ); }
+inline CvMAT  _CvMAT_BASE_OP_::rect( CvRect r ) const
+{   return CvMAT( (CvMAT)*this, r ); }
 
-inline _CvMAT_TMP_  _CvMAT_BASE_OP_::diag( int d ) const
-{   return _CvMAT_TMP_( (_CvMAT_TMP_)*this, -1, d ); }
+inline CvMAT  _CvMAT_BASE_OP_::diag( int d ) const
+{   return CvMAT( (CvMAT)*this, -1, d ); }
 
 inline double _CvMAT_BASE_OP_::det() const
-{   return ((_CvMAT_TMP_)*this).det(); }
+{   return ((CvMAT)*this).det(); }
 
 inline double _CvMAT_BASE_OP_::norm( int norm_type ) const
-{   return ((_CvMAT_TMP_)*this).norm( norm_type ); }
+{   return ((CvMAT)*this).norm( norm_type ); }
 
 inline CvScalar _CvMAT_BASE_OP_::sum() const
-{   return ((_CvMAT_TMP_)*this).sum(); }
+{   return ((CvMAT)*this).sum(); }
 
 inline double _CvMAT_BASE_OP_::min( CvPoint* minloc ) const
-{   return ((_CvMAT_TMP_)*this).min( minloc ); }
+{   return ((CvMAT)*this).min( minloc ); }
 
 inline double _CvMAT_BASE_OP_::max( CvPoint* maxloc ) const
-{   return ((_CvMAT_TMP_)*this).max( maxloc ); }
+{   return ((CvMAT)*this).max( maxloc ); }
 
 
 /****************************************************************************************/
@@ -2314,53 +2209,53 @@ inline _CvMAT_CMP_::_CvMAT_CMP_( const CvMAT* _a, double _alpha, int _cmp_op ) :
 
 /****************************************************************************************/
 /*                              proxy classes implementation.                           */
-/*                              part II. conversion to _CvMAT_TMP_                      */
+/*                              part II. conversion to CvMAT                      */
 /****************************************************************************************/
 
-inline _CvMAT_T_::operator _CvMAT_TMP_() const
-{   return _CvMAT_TMP_( *this );    }
+inline _CvMAT_T_::operator CvMAT() const
+{   return CvMAT( *this );    }
 
-inline _CvMAT_INV_::operator _CvMAT_TMP_() const
-{   return _CvMAT_TMP_( *this );    }
+inline _CvMAT_INV_::operator CvMAT() const
+{   return CvMAT( *this );    }
 
-inline _CvMAT_MUL_::operator _CvMAT_TMP_() const
-{   return _CvMAT_TMP_( *this );    }
+inline _CvMAT_MUL_::operator CvMAT() const
+{   return CvMAT( *this );    }
 
-inline _CvMAT_SCALE_::operator _CvMAT_TMP_() const
-{   return _CvMAT_TMP_( *this );    }
+inline _CvMAT_SCALE_::operator CvMAT() const
+{   return CvMAT( *this );    }
 
-inline _CvMAT_SCALE_SHIFT_::operator _CvMAT_TMP_() const
-{   return _CvMAT_TMP_( *this );    }
+inline _CvMAT_SCALE_SHIFT_::operator CvMAT() const
+{   return CvMAT( *this );    }
 
-inline _CvMAT_ADD_::operator _CvMAT_TMP_() const
-{   return _CvMAT_TMP_( *this );    }
+inline _CvMAT_ADD_::operator CvMAT() const
+{   return CvMAT( *this );    }
 
-inline _CvMAT_ADD_EX_::operator _CvMAT_TMP_() const
-{   return _CvMAT_TMP_( *this );    }
+inline _CvMAT_ADD_EX_::operator CvMAT() const
+{   return CvMAT( *this );    }
 
-inline _CvMAT_MUL_ADD_::operator _CvMAT_TMP_() const
-{   return _CvMAT_TMP_( *this );    }
+inline _CvMAT_MUL_ADD_::operator CvMAT() const
+{   return CvMAT( *this );    }
 
-inline _CvMAT_LOGIC_::operator _CvMAT_TMP_() const
-{   return _CvMAT_TMP_( *this );    }
+inline _CvMAT_LOGIC_::operator CvMAT() const
+{   return CvMAT( *this );    }
 
-inline _CvMAT_UN_LOGIC_::operator _CvMAT_TMP_() const
-{   return _CvMAT_TMP_( *this );    }
+inline _CvMAT_UN_LOGIC_::operator CvMAT() const
+{   return CvMAT( *this );    }
 
-inline _CvMAT_NOT_::operator _CvMAT_TMP_() const
-{   return _CvMAT_TMP_( *this );    }
+inline _CvMAT_NOT_::operator CvMAT() const
+{   return CvMAT( *this );    }
 
-inline _CvMAT_DOT_OP_::operator _CvMAT_TMP_() const
-{   return _CvMAT_TMP_( *this );    }
+inline _CvMAT_DOT_OP_::operator CvMAT() const
+{   return CvMAT( *this );    }
 
-inline _CvMAT_SOLVE_::operator _CvMAT_TMP_() const
-{   return _CvMAT_TMP_( *this );    }
+inline _CvMAT_SOLVE_::operator CvMAT() const
+{   return CvMAT( *this );    }
 
-inline _CvMAT_CMP_::operator _CvMAT_TMP_() const
-{   return _CvMAT_TMP_( *this );    }
+inline _CvMAT_CMP_::operator CvMAT() const
+{   return CvMAT( *this );    }
 
-inline _CvMAT_CVT_::operator _CvMAT_TMP_() const
-{   return _CvMAT_TMP_(*this);   }
+inline _CvMAT_CVT_::operator CvMAT() const
+{   return CvMAT(*this);   }
 
 inline _CvMAT_COPY_::operator CvMAT() const
 {   return *a;   }
@@ -2406,7 +2301,7 @@ inline double _CvMAT_ADD_::norm( int norm_type ) const
     if( beta == -1 )
         return cvNorm( a, b, norm_type );
     else
-        return ((_CvMAT_TMP_)*this).norm( norm_type );
+        return ((CvMAT)*this).norm( norm_type );
 }
 
 inline _CvMAT_DOT_OP_ _CvMAT_ADD_::abs() const
@@ -2414,7 +2309,7 @@ inline _CvMAT_DOT_OP_ _CvMAT_ADD_::abs() const
     if( beta == -1 )
         return _CvMAT_DOT_OP_( a, b, 'a', 0 );
     else
-        return ((_CvMAT_TMP_)*this).abs();
+        return ((CvMAT)*this).abs();
 }
 
 inline _CvMAT_DOT_OP_ _CvMAT_SCALE_SHIFT_::abs() const
@@ -2422,7 +2317,7 @@ inline _CvMAT_DOT_OP_ _CvMAT_SCALE_SHIFT_::abs() const
     if( alpha == 1 )
         return _CvMAT_DOT_OP_( a, 0, 'a', -beta );
     else
-        return ((_CvMAT_TMP_)*this).abs();
+        return ((CvMAT)*this).abs();
 }
 
 #endif /* __cplusplus */

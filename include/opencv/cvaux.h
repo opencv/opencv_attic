@@ -44,60 +44,218 @@
 
 #include <cv.h>
 
-#if defined WIN32 && defined CVAUX_DLL
-    #define CVAUX_DLL_ENTRY __declspec(dllexport)
-#else
-    #define CVAUX_DLL_ENTRY
+#ifdef __cplusplus
+extern "C" {
 #endif
 
-#ifndef OPENCVAUXAPI
-    #define OPENCVAUXAPI CV_EXTERN_C CVAUX_DLL_ENTRY
-#endif
-
-OPENCVAUXAPI CvSeq* cvSegmentImage( const CvArr* srcarr, CvArr* dstarr,
+CVAPI(CvSeq*) cvSegmentImage( const CvArr* srcarr, CvArr* dstarr,
                                     double canny_threshold,
                                     double ffill_threshold,
                                     CvMemStorage* storage );
 
 /****************************************************************************************\
-*                               1D HMM  experimental                                     *
+*                                  Eigen objects                                         *
 \****************************************************************************************/
+
+typedef int (CV_CDECL * CvCallback)(int index, void* buffer, void* user_data);
+typedef union
+{
+    CvCallback callback;
+    void* data;
+}
+CvInput;
+
+#define CV_EIGOBJ_NO_CALLBACK     0
+#define CV_EIGOBJ_INPUT_CALLBACK  1
+#define CV_EIGOBJ_OUTPUT_CALLBACK 2
+#define CV_EIGOBJ_BOTH_CALLBACK   3
+
+/* Calculates covariation matrix of a set of arrays */
+CVAPI(void)  cvCalcCovarMatrixEx( int nObjects, void* input, int ioFlags,
+                                  int ioBufSize, uchar* buffer, void* userData,
+                                  IplImage* avg, float* covarMatrix );
+
+/* Calculates eigen values and vectors of covariation matrix of a set of
+   arrays */
+CVAPI(void)  cvCalcEigenObjects( int nObjects, void* input, void* output,
+                                 int ioFlags, int ioBufSize, void* userData,
+                                 CvTermCriteria* calcLimit, IplImage* avg,
+                                 float* eigVals );
+
+/* Calculates dot product (obj - avg) * eigObj (i.e. projects image to eigen vector) */
+CVAPI(double)  cvCalcDecompCoeff( IplImage* obj, IplImage* eigObj, IplImage* avg );
+
+/* Projects image to eigen space (finds all decomposion coefficients */
+CVAPI(void)  cvEigenDecomposite( IplImage* obj, int nEigObjs, void* eigInput,
+                                 int ioFlags, void* userData, IplImage* avg,
+                                 float* coeffs );
+
+/* Projects original objects used to calculate eigen space basis to that space */
+CVAPI(void)  cvEigenProjection( void* eigInput, int nEigObjs, int ioFlags,
+                                void* userData, float* coeffs, IplImage* avg,
+                                IplImage* proj );
+
+/****************************************************************************************\
+*                                       1D/2D HMM                                        *
+\****************************************************************************************/
+
+typedef struct CvImgObsInfo
+{
+    int obs_x;
+    int obs_y;
+    int obs_size;
+    float* obs;//consequtive observations
+
+    int* state;/* arr of pairs superstate/state to which observation belong */
+    int* mix;  /* number of mixture to which observation belong */
+
+}
+CvImgObsInfo;/*struct for 1 image*/
 
 typedef CvImgObsInfo Cv1DObsInfo;
 
+typedef struct CvEHMMState
+{
+    int num_mix;        /*number of mixtures in this state*/
+    float* mu;          /*mean vectors corresponding to each mixture*/
+    float* inv_var;     /* square root of inversed variances corresp. to each mixture*/
+    float* log_var_val; /* sum of 0.5 (LN2PI + ln(variance[i]) ) for i=1,n */
+    float* weight;      /*array of mixture weights. Summ of all weights in state is 1. */
 
-OPENCVAUXAPI CvStatus  icvCreate1DHMM( CvEHMM** this_hmm,
+}
+CvEHMMState;
+
+typedef struct CvEHMM
+{
+    int level; /* 0 - lowest(i.e its states are real states), ..... */
+    int num_states; /* number of HMM states */
+    float*  transP;/*transition probab. matrices for states */
+    float** obsProb; /* if level == 0 - array of brob matrices corresponding to hmm
+                        if level == 1 - martix of matrices */
+    union
+    {
+        CvEHMMState* state; /* if level == 0 points to real states array,
+                               if not - points to embedded hmms */
+        struct CvEHMM* ehmm; /* pointer to an embedded model or NULL, if it is a leaf */
+    } u;
+
+}
+CvEHMM;
+
+CVAPI(int)  icvCreate1DHMM( CvEHMM** this_hmm,
                                    int state_number, int* num_mix, int obs_size );
 
-OPENCVAUXAPI CvStatus  icvRelease1DHMM( CvEHMM** phmm );
+CVAPI(int)  icvRelease1DHMM( CvEHMM** phmm );
 
-OPENCVAUXAPI CvStatus  icvUniform1DSegm( Cv1DObsInfo* obs_info, CvEHMM* hmm );
+CVAPI(int)  icvUniform1DSegm( Cv1DObsInfo* obs_info, CvEHMM* hmm );
 
-OPENCVAUXAPI CvStatus  icvInit1DMixSegm( Cv1DObsInfo** obs_info_array, int num_img, CvEHMM* hmm);
+CVAPI(int)  icvInit1DMixSegm( Cv1DObsInfo** obs_info_array, int num_img, CvEHMM* hmm);
 
-OPENCVAUXAPI CvStatus  icvEstimate1DHMMStateParams( CvImgObsInfo** obs_info_array, int num_img, CvEHMM* hmm);
+CVAPI(int)  icvEstimate1DHMMStateParams( CvImgObsInfo** obs_info_array, int num_img, CvEHMM* hmm);
 
-OPENCVAUXAPI CvStatus  icvEstimate1DObsProb( CvImgObsInfo* obs_info, CvEHMM* hmm );
+CVAPI(int)  icvEstimate1DObsProb( CvImgObsInfo* obs_info, CvEHMM* hmm );
 
-OPENCVAUXAPI CvStatus  icvEstimate1DTransProb( Cv1DObsInfo** obs_info_array,
+CVAPI(int)  icvEstimate1DTransProb( Cv1DObsInfo** obs_info_array,
                                            int num_seq,
                                            CvEHMM* hmm );
 
-OPENCVAUXAPI float  icvViterbi( Cv1DObsInfo* obs_info, CvEHMM* hmm);
+CVAPI(float)  icvViterbi( Cv1DObsInfo* obs_info, CvEHMM* hmm);
 
-OPENCVAUXAPI CvStatus  icv1DMixSegmL2( CvImgObsInfo** obs_info_array, int num_img, CvEHMM* hmm );
+CVAPI(int)  icv1DMixSegmL2( CvImgObsInfo** obs_info_array, int num_img, CvEHMM* hmm );
 
+/*********************************** Embedded HMMs *************************************/
+
+/* Creates 2D HMM */
+CVAPI(CvEHMM*)  cvCreate2DHMM( int* stateNumber, int* numMix, int obsSize );
+
+/* Releases HMM */
+CVAPI(void)  cvRelease2DHMM( CvEHMM** hmm );
+
+#define CV_COUNT_OBS(roi, win, delta, numObs )                                       \
+{                                                                                    \
+   (numObs)->width  =((roi)->width  -(win)->width  +(delta)->width)/(delta)->width;  \
+   (numObs)->height =((roi)->height -(win)->height +(delta)->height)/(delta)->height;\
+}
+
+/* Creates storage for observation vectors */
+CVAPI(CvImgObsInfo*)  cvCreateObsInfo( CvSize numObs, int obsSize );
+
+/* Releases storage for observation vectors */
+CVAPI(void)  cvReleaseObsInfo( CvImgObsInfo** obs_info );
+
+
+/* The function takes an image on input and and returns the sequnce of observations
+   to be used with an embedded HMM; Each observation is top-left block of DCT
+   coefficient matrix */
+CVAPI(void)  cvImgToObs_DCT( const CvArr* arr, float* obs, CvSize dctSize,
+                             CvSize obsSize, CvSize delta );
+
+
+/* Uniformly segments all observation vectors extracted from image */
+CVAPI(void)  cvUniformImgSegm( CvImgObsInfo* obs_info, CvEHMM* ehmm );
+
+/* Does mixture segmentation of the states of embedded HMM */
+CVAPI(void)  cvInitMixSegm( CvImgObsInfo** obs_info_array,
+                            int num_img, CvEHMM* hmm );
+
+/* Function calculates means, variances, weights of every Gaussian mixture
+   of every low-level state of embedded HMM */
+CVAPI(void)  cvEstimateHMMStateParams( CvImgObsInfo** obs_info_array,
+                                       int num_img, CvEHMM* hmm );
+
+/* Function computes transition probability matrices of embedded HMM
+   given observations segmentation */
+CVAPI(void)  cvEstimateTransProb( CvImgObsInfo** obs_info_array,
+                                  int num_img, CvEHMM* hmm );
+
+/* Function computes probabilities of appearing observations at any state
+   (i.e. computes P(obs|state) for every pair(obs,state)) */
+CVAPI(void)  cvEstimateObsProb( CvImgObsInfo* obs_info,
+                                CvEHMM* hmm );
+
+/* Runs Viterbi algorithm for embedded HMM */
+CVAPI(float)  cvEViterbi( CvImgObsInfo* obs_info, CvEHMM* hmm );
+
+
+/* Function clusters observation vectors from several images
+   given observations segmentation.
+   Euclidean distance used for clustering vectors.
+   Centers of clusters are given means of every mixture */
+CVAPI(void)  cvMixSegmL2( CvImgObsInfo** obs_info_array,
+                          int num_img, CvEHMM* hmm );
+
+/****************************************************************************************\
+*               A few functions from old stereo gesture recognition demosions            *
+\****************************************************************************************/
+
+/* Creates hand mask image given several points on the hand */
+CVAPI(void)  cvCreateHandMask( CvSeq* hand_points,
+                                   IplImage *img_mask, CvRect *roi);
+
+/* Finds hand region in range image data */
+CVAPI(void)  cvFindHandRegion (CvPoint3D32f* points, int count,
+                                CvSeq* indexs,
+                                float* line, CvSize2D32f size, int flag,
+                                CvPoint3D32f* center,
+                                CvMemStorage* storage, CvSeq **numbers);
+
+/* Finds hand region in range image data (advanced version) */
+CVAPI(void)  cvFindHandRegionA( CvPoint3D32f* points, int count,
+                                CvSeq* indexs,
+                                float* line, CvSize2D32f size, int jc,
+                                CvPoint3D32f* center,
+                                CvMemStorage* storage, CvSeq **numbers);
 
 /****************************************************************************************\
 *                           Additional operations on Subdivisions                        *
 \****************************************************************************************/
 
 // paints voronoi diagram: just demo function
-OPENCVAUXAPI void  icvDrawMosaic( CvSubdiv2D* subdiv, IplImage* src, IplImage* dst );
+CVAPI(void)  icvDrawMosaic( CvSubdiv2D* subdiv, IplImage* src, IplImage* dst );
 
 // checks planar subdivision for correctness. It is not an absolute check,
 // but it verifies some relations between quad-edges
-OPENCVAUXAPI int   icvSubdiv2DCheck( CvSubdiv2D* subdiv );
+CVAPI(int)   icvSubdiv2DCheck( CvSubdiv2D* subdiv );
 
 // returns squared distance between two 2D points with floating-point coordinates.
 CV_INLINE double icvSqDist2D32f( CvPoint2D32f pt1, CvPoint2D32f pt2 )
@@ -149,13 +307,13 @@ typedef enum CvGraphWeightType
 
 ///////////////////////////////////////////////////////////
 // Triangulation
-OPENCVAUXAPI void cvDecompPoly( CvContour* cont, CvSubdiv2D** subdiv, CvMemStorage* storage );
+CVAPI(void) cvDecompPoly( CvContour* cont, CvSubdiv2D** subdiv, CvMemStorage* storage );
 ///////////////////////////////////////////////////////////
 
 /*******************************Stereo correspondence*************************************/
-OPENCVAUXAPI void icvDrawFilledSegments( CvSeq* seq, IplImage* img, int part );
+CVAPI(void) icvDrawFilledSegments( CvSeq* seq, IplImage* img, int part );
 
-OPENCVAUXAPI CvSeq* cvExtractSingleEdges( IplImage* image, //bw image
+CVAPI(CvSeq*) cvExtractSingleEdges( IplImage* image, //bw image
                       CvMemStorage* storage );
 
 typedef struct CvCliqueFinder
@@ -190,12 +348,12 @@ typedef struct CvCliqueFinder
 #define CLIQUE_FOUND 1
 #define CLIQUE_END   0
 
-OPENCVAUXAPI void cvStartFindCliques( CvGraph* graph, CvCliqueFinder* finder, int reverse, 
+CVAPI(void) cvStartFindCliques( CvGraph* graph, CvCliqueFinder* finder, int reverse, 
                                    int weighted CV_DEFAULT(0),  int weighted_edges CV_DEFAULT(0));
-OPENCVAUXAPI int cvFindNextMaximalClique( CvCliqueFinder* finder, int* clock_rest CV_DEFAULT(0) ); 
-OPENCVAUXAPI void cvEndFindCliques( CvCliqueFinder* finder );
+CVAPI(int) cvFindNextMaximalClique( CvCliqueFinder* finder, int* clock_rest CV_DEFAULT(0) ); 
+CVAPI(void) cvEndFindCliques( CvCliqueFinder* finder );
 
-OPENCVAUXAPI void cvBronKerbosch( CvGraph* graph );                 
+CVAPI(void) cvBronKerbosch( CvGraph* graph );                 
 
 
 
@@ -230,7 +388,7 @@ OPENCVAUXAPI void cvBronKerbosch( CvGraph* graph );
 //      weight of subgraph.
 //    Notes:
 //F*/
-OPENCVAUXAPI float cvSubgraphWeight( CvGraph *graph, CvSeq *subgraph,
+CVAPI(float) cvSubgraphWeight( CvGraph *graph, CvSeq *subgraph,
                                   CvGraphWeightType weight_type CV_DEFAULT(CV_NOT_WEIGHTED),
                                   CvVect32f weight_vtx CV_DEFAULT(0),
                                   CvMatr32f weight_edge CV_DEFAULT(0) );
@@ -281,7 +439,7 @@ OPENCVAUXAPI float cvSubgraphWeight( CvGraph *graph, CvSeq *subgraph,
 //      in cases of CV_WEIGHTED_EDGE and CV_WEIGHTED_ALL weights should be nonnegative.
 //      start_clique has a priority over subgraph_of_ban.
 //F*/
-OPENCVAUXAPI CvSeq *cvFindCliqueEx( CvGraph *graph, CvMemStorage *storage,
+CVAPI(CvSeq*) cvFindCliqueEx( CvGraph *graph, CvMemStorage *storage,
                                  int is_complementary CV_DEFAULT(0),
                                  CvGraphWeightType weight_type CV_DEFAULT(CV_NOT_WEIGHTED),
                                  CvVect32f weight_vtx CV_DEFAULT(0),
@@ -322,7 +480,7 @@ OPENCVAUXAPI CvSeq *cvFindCliqueEx( CvGraph *graph, CvMemStorage *storage,
 //      Images must be rectified.
 //      All images must have format 8uC1.
 //F*/
-OPENCVAUXAPI void 
+CVAPI(void) 
 cvFindStereoCorrespondence( 
                    const  CvArr* leftImage, const  CvArr* rightImage,
                    int     mode,
@@ -402,41 +560,41 @@ typedef struct CvContourOrientation
 #define CV_CAMERA_TO_WARP 1
 #define CV_WARP_TO_CAMERA 2
 
-OPENCVAUXAPI CvStatus icvConvertWarpCoordinates(double coeffs[3][3],
+CVAPI(int) icvConvertWarpCoordinates(double coeffs[3][3],
                                 CvPoint2D32f* cameraPoint,
                                 CvPoint2D32f* warpPoint,
                                 int direction);
 
-OPENCVAUXAPI CvStatus icvGetSymPoint3D(  CvPoint3D64d pointCorner,
+CVAPI(int) icvGetSymPoint3D(  CvPoint3D64d pointCorner,
                             CvPoint3D64d point1,
                             CvPoint3D64d point2,
                             CvPoint3D64d *pointSym2);
 
-OPENCVAUXAPI void icvGetPieceLength3D(CvPoint3D64d point1,CvPoint3D64d point2,double* dist);
+CVAPI(void) icvGetPieceLength3D(CvPoint3D64d point1,CvPoint3D64d point2,double* dist);
 
-OPENCVAUXAPI CvStatus icvCompute3DPoint(    double alpha,double betta,
+CVAPI(int) icvCompute3DPoint(    double alpha,double betta,
                             CvStereoLineCoeff* coeffs,
                             CvPoint3D64d* point);
 
-OPENCVAUXAPI CvStatus icvCreateConvertMatrVect( CvMatr64d     rotMatr1,
+CVAPI(int) icvCreateConvertMatrVect( CvMatr64d     rotMatr1,
                                 CvMatr64d     transVect1,
                                 CvMatr64d     rotMatr2,
                                 CvMatr64d     transVect2,
                                 CvMatr64d     convRotMatr,
                                 CvMatr64d     convTransVect);
 
-OPENCVAUXAPI CvStatus icvConvertPointSystem(CvPoint3D64d  M2,
+CVAPI(int) icvConvertPointSystem(CvPoint3D64d  M2,
                             CvPoint3D64d* M1,
                             CvMatr64d     rotMatr,
                             CvMatr64d     transVect
                             );
 
-OPENCVAUXAPI CvStatus icvComputeCoeffForStereo(  CvStereoCamera* stereoCamera);
+CVAPI(int) icvComputeCoeffForStereo(  CvStereoCamera* stereoCamera);
 
-OPENCVAUXAPI int icvGetCrossPieceVector(CvPoint2D32f p1_start,CvPoint2D32f p1_end,CvPoint2D32f v2_start,CvPoint2D32f v2_end,CvPoint2D32f *cross);
-OPENCVAUXAPI int icvGetCrossLineDirect(CvPoint2D32f p1,CvPoint2D32f p2,float a,float b,float c,CvPoint2D32f* cross);
-OPENCVAUXAPI float icvDefinePointPosition(CvPoint2D32f point1,CvPoint2D32f point2,CvPoint2D32f point);
-OPENCVAUXAPI CvStatus icvStereoCalibration( int numImages,
+CVAPI(int) icvGetCrossPieceVector(CvPoint2D32f p1_start,CvPoint2D32f p1_end,CvPoint2D32f v2_start,CvPoint2D32f v2_end,CvPoint2D32f *cross);
+CVAPI(int) icvGetCrossLineDirect(CvPoint2D32f p1,CvPoint2D32f p2,float a,float b,float c,CvPoint2D32f* cross);
+CVAPI(float) icvDefinePointPosition(CvPoint2D32f point1,CvPoint2D32f point2,CvPoint2D32f point);
+CVAPI(int) icvStereoCalibration( int numImages,
                             int* nums,
                             CvSize imageSize,
                             CvPoint2D32f* imagePoints1,
@@ -446,11 +604,11 @@ OPENCVAUXAPI CvStatus icvStereoCalibration( int numImages,
                            );
 
 
-OPENCVAUXAPI CvStatus icvComputeRestStereoParams(CvStereoCamera *stereoparams);
+CVAPI(int) icvComputeRestStereoParams(CvStereoCamera *stereoparams);
 
-OPENCVAUXAPI void cvComputePerspectiveMap(const double coeffs[3][3], CvArr* rectMap);
+CVAPI(void) cvComputePerspectiveMap(const double coeffs[3][3], CvArr* rectMap);
 
-OPENCVAUXAPI CvStatus icvComCoeffForLine(   CvPoint2D64d point1,
+CVAPI(int) icvComCoeffForLine(   CvPoint2D64d point1,
                             CvPoint2D64d point2,
                             CvPoint2D64d point3,
                             CvPoint2D64d point4,
@@ -463,21 +621,21 @@ OPENCVAUXAPI CvStatus icvComCoeffForLine(   CvPoint2D64d point1,
                             CvStereoLineCoeff*    coeffs,
                             int* needSwapCameras);
 
-OPENCVAUXAPI CvStatus icvGetDirectionForPoint(  CvPoint2D64d point,
+CVAPI(int) icvGetDirectionForPoint(  CvPoint2D64d point,
                                 CvMatr64d camMatr,
                                 CvPoint3D64d* direct);
 
-OPENCVAUXAPI CvStatus icvGetCrossLines(CvPoint3D64d point11,CvPoint3D64d point12,
+CVAPI(int) icvGetCrossLines(CvPoint3D64d point11,CvPoint3D64d point12,
                        CvPoint3D64d point21,CvPoint3D64d point22,
                        CvPoint3D64d* midPoint);
 
-OPENCVAUXAPI CvStatus icvComputeStereoLineCoeffs(   CvPoint3D64d pointA,
+CVAPI(int) icvComputeStereoLineCoeffs(   CvPoint3D64d pointA,
                                     CvPoint3D64d pointB,
                                     CvPoint3D64d pointCam1,
                                     double gamma,
                                     CvStereoLineCoeff*    coeffs);
 
-OPENCVAUXAPI CvStatus icvComputeFundMatrEpipoles ( CvMatr64d camMatr1, 
+CVAPI(int) icvComputeFundMatrEpipoles ( CvMatr64d camMatr1, 
                                     CvMatr64d     rotMatr1, 
                                     CvVect64d     transVect1,
                                     CvMatr64d     camMatr2,
@@ -487,58 +645,58 @@ OPENCVAUXAPI CvStatus icvComputeFundMatrEpipoles ( CvMatr64d camMatr1,
                                     CvPoint2D64d* epipole2,
                                     CvMatr64d     fundMatr);
 
-OPENCVAUXAPI void
+CVAPI(void)
 icvSolveCubic(CvMat* coeffs,CvMat* result);
 
-OPENCVAUXAPI int icvGetAngleLine( CvPoint2D64d startPoint, CvSize imageSize,CvPoint2D64d *point1,CvPoint2D64d *point2);
+CVAPI(int) icvGetAngleLine( CvPoint2D64d startPoint, CvSize imageSize,CvPoint2D64d *point1,CvPoint2D64d *point2);
 
-OPENCVAUXAPI void icvGetCoefForPiece(   CvPoint2D64d p_start,CvPoint2D64d p_end,
+CVAPI(void) icvGetCoefForPiece(   CvPoint2D64d p_start,CvPoint2D64d p_end,
                         double *a,double *b,double *c,
                         int* result);
 
-OPENCVAUXAPI void icvGetCommonArea( CvSize imageSize,
+CVAPI(void) icvGetCommonArea( CvSize imageSize,
                     CvPoint2D64d epipole1,CvPoint2D64d epipole2,
                     CvMatr64d fundMatr,
                     CvVect64d coeff11,CvVect64d coeff12,
                     CvVect64d coeff21,CvVect64d coeff22,
                     int* result);
 
-OPENCVAUXAPI void icvComputeeInfiniteProject1(CvMatr64d    rotMatr,
+CVAPI(void) icvComputeeInfiniteProject1(CvMatr64d    rotMatr,
                                      CvMatr64d    camMatr1,
                                      CvMatr64d    camMatr2,
                                      CvPoint2D32f point1,
                                      CvPoint2D32f *point2);
 
-OPENCVAUXAPI void icvComputeeInfiniteProject2(CvMatr64d    rotMatr,
+CVAPI(void) icvComputeeInfiniteProject2(CvMatr64d    rotMatr,
                                      CvMatr64d    camMatr1,
                                      CvMatr64d    camMatr2,
                                      CvPoint2D32f* point1,
                                      CvPoint2D32f point2);
 
-OPENCVAUXAPI void icvGetCrossDirectDirect(  CvVect64d direct1,CvVect64d direct2,
+CVAPI(void) icvGetCrossDirectDirect(  CvVect64d direct1,CvVect64d direct2,
                             CvPoint2D64d *cross,int* result);
 
-OPENCVAUXAPI void icvGetCrossPieceDirect(   CvPoint2D64d p_start,CvPoint2D64d p_end,
+CVAPI(void) icvGetCrossPieceDirect(   CvPoint2D64d p_start,CvPoint2D64d p_end,
                             double a,double b,double c,
                             CvPoint2D64d *cross,int* result);
 
-OPENCVAUXAPI void icvGetCrossPiecePiece( CvPoint2D64d p1_start,CvPoint2D64d p1_end,
+CVAPI(void) icvGetCrossPiecePiece( CvPoint2D64d p1_start,CvPoint2D64d p1_end,
                             CvPoint2D64d p2_start,CvPoint2D64d p2_end,
                             CvPoint2D64d* cross,
                             int* result);
                             
-OPENCVAUXAPI void icvGetPieceLength(CvPoint2D64d point1,CvPoint2D64d point2,double* dist);
+CVAPI(void) icvGetPieceLength(CvPoint2D64d point1,CvPoint2D64d point2,double* dist);
 
-OPENCVAUXAPI void icvGetCrossRectDirect(    CvSize imageSize,
+CVAPI(void) icvGetCrossRectDirect(    CvSize imageSize,
                             double a,double b,double c,
                             CvPoint2D64d *start,CvPoint2D64d *end,
                             int* result);
 
-OPENCVAUXAPI void icvProjectPointToImage(   CvPoint3D64d point,
+CVAPI(void) icvProjectPointToImage(   CvPoint3D64d point,
                             CvMatr64d camMatr,CvMatr64d rotMatr,CvVect64d transVect,
                             CvPoint2D64d* projPoint);
 
-OPENCVAUXAPI void icvGetQuadsTransform( CvSize        imageSize,
+CVAPI(void) icvGetQuadsTransform( CvSize        imageSize,
                         CvMatr64d     camMatr1,
                         CvMatr64d     rotMatr1,
                         CvVect64d     transVect1,
@@ -553,41 +711,36 @@ OPENCVAUXAPI void icvGetQuadsTransform( CvSize        imageSize,
                         CvPoint3D64d* epipole2
                         );
 
-OPENCVAUXAPI void icvGetQuadsTransformStruct(  CvStereoCamera* stereoCamera);
+CVAPI(void) icvGetQuadsTransformStruct(  CvStereoCamera* stereoCamera);
 
-OPENCVAUXAPI void icvComputeStereoParamsForCameras(CvStereoCamera* stereoCamera);
+CVAPI(void) icvComputeStereoParamsForCameras(CvStereoCamera* stereoCamera);
 
-OPENCVAUXAPI void icvGetCutPiece(   CvVect64d areaLineCoef1,CvVect64d areaLineCoef2,
+CVAPI(void) icvGetCutPiece(   CvVect64d areaLineCoef1,CvVect64d areaLineCoef2,
                     CvPoint2D64d epipole,
                     CvSize imageSize,
                     CvPoint2D64d* point11,CvPoint2D64d* point12,
                     CvPoint2D64d* point21,CvPoint2D64d* point22,
                     int* result);
 
-OPENCVAUXAPI void icvGetMiddleAnglePoint(   CvPoint2D64d basePoint,
+CVAPI(void) icvGetMiddleAnglePoint(   CvPoint2D64d basePoint,
                             CvPoint2D64d point1,CvPoint2D64d point2,
                             CvPoint2D64d* midPoint);
 
-OPENCVAUXAPI void icvGetNormalDirect(CvVect64d direct,CvPoint2D64d point,CvVect64d normDirect);
+CVAPI(void) icvGetNormalDirect(CvVect64d direct,CvPoint2D64d point,CvVect64d normDirect);
 
-OPENCVAUXAPI double icvGetVect(CvPoint2D64d basePoint,CvPoint2D64d point1,CvPoint2D64d point2);
+CVAPI(double) icvGetVect(CvPoint2D64d basePoint,CvPoint2D64d point1,CvPoint2D64d point2);
 
-OPENCVAUXAPI void icvProjectPointToDirect(  CvPoint2D64d point,CvVect64d lineCoeff,
+CVAPI(void) icvProjectPointToDirect(  CvPoint2D64d point,CvVect64d lineCoeff,
                             CvPoint2D64d* projectPoint);
 
-OPENCVAUXAPI void icvGetDistanceFromPointToDirect( CvPoint2D64d point,CvVect64d lineCoef,double*dist);
+CVAPI(void) icvGetDistanceFromPointToDirect( CvPoint2D64d point,CvVect64d lineCoef,double*dist);
 
-OPENCVAUXAPI IplImage* icvCreateIsometricImage( IplImage* src, IplImage* dst,
+CVAPI(IplImage*) icvCreateIsometricImage( IplImage* src, IplImage* dst,
                               int desired_depth, int desired_num_channels );
 
-OPENCVAUXAPI CvStatus icvCvt_32f_64d( float *src, double *dst, int size );
-OPENCVAUXAPI CvStatus icvCvt_64d_32f( double *src, float *dst, int size );
+CVAPI(void) cvDeInterlace( const CvArr* frame, CvArr* fieldEven, CvArr* fieldOdd );
 
-OPENCVAUXAPI void cvDeInterlace( IplImage* frame, IplImage* fieldEven, IplImage* fieldOdd );
-
-
-
-OPENCVAUXAPI CvStatus icvSelectBestRt(           int           numImages,
+CVAPI(int) icvSelectBestRt(           int           numImages,
                                     int*          numPoints,
                                     CvSize        imageSize,
                                     CvPoint2D32f* imagePoints1,
@@ -652,128 +805,24 @@ CvSeq* cvMorphContours( const CvSeq* contour1, const CvSeq* contour2,
 
 typedef struct CvGLCM CvGLCM;
 
-OPENCVAUXAPI CvGLCM* cvCreateGLCM( const IplImage* srcImage,
+CVAPI(CvGLCM*) cvCreateGLCM( const IplImage* srcImage,
                                 int stepMagnitude,
                                 const int* stepDirections CV_DEFAULT(0),
                                 int numStepDirections CV_DEFAULT(0),
                                 int optimizationType CV_DEFAULT(CV_GLCM_OPTIMIZATION_NONE));
 
-OPENCVAUXAPI void cvReleaseGLCM( CvGLCM** GLCM, int flag CV_DEFAULT(CV_GLCM_ALL));
+CVAPI(void) cvReleaseGLCM( CvGLCM** GLCM, int flag CV_DEFAULT(CV_GLCM_ALL));
 
-OPENCVAUXAPI void cvCreateGLCMDescriptors( CvGLCM* destGLCM,
+CVAPI(void) cvCreateGLCMDescriptors( CvGLCM* destGLCM,
                                         int descriptorOptimizationType
                                         CV_DEFAULT(CV_GLCMDESC_OPTIMIZATION_ALLOWDOUBLENEST));
 
-OPENCVAUXAPI double cvGetGLCMDescriptor( CvGLCM* GLCM, int step, int descriptor );
+CVAPI(double) cvGetGLCMDescriptor( CvGLCM* GLCM, int step, int descriptor );
 
-OPENCVAUXAPI void cvGetGLCMDescriptorStatistics( CvGLCM* GLCM, int descriptor,
+CVAPI(void) cvGetGLCMDescriptorStatistics( CvGLCM* GLCM, int descriptor,
                                               double* average, double* standardDeviation );
 
-OPENCVAUXAPI IplImage* cvCreateGLCMImage( CvGLCM* GLCM, int step );
-
-
-/****************************************************************************************\
-*                             Haar-like object detection                                 *
-\****************************************************************************************/
-
-#define CV_HAAR_FEATURE_MAX  3
-
-typedef struct CvHaarFeature
-{
-    int  tilted;
-    struct
-    {
-        CvRect r;
-        float weight;
-    } rect[CV_HAAR_FEATURE_MAX];
-}
-CvHaarFeature;
-
-
-typedef struct CvHaarClassifier
-{
-    int count;
-    CvHaarFeature* haarFeature;
-    float* threshold;
-    int* left;
-    int* right;
-    float* alpha;
-}
-CvHaarClassifier;
-
-
-typedef struct CvHaarStageClassifier
-{
-    int  count;
-    float threshold;
-    CvHaarClassifier* classifier;
-}
-CvHaarStageClassifier;
-
-
-typedef struct CvHaarClassifierCascade
-{
-    int  count;
-    CvSize origWindowSize;
-    CvHaarStageClassifier* stageClassifier;
-}
-CvHaarClassifierCascade;
-
-
-typedef struct CvHidHaarClassifierCascade CvHidHaarClassifierCascade;
-
-
-/* create faster internal representation of haar classifier cascade */
-OPENCVAUXAPI CvHidHaarClassifierCascade*
-cvCreateHidHaarClassifierCascade( CvHaarClassifierCascade* cascade,
-                                  const CvArr* sumImage CV_DEFAULT(0),
-                                  const CvArr* sqSumImage CV_DEFAULT(0),
-                                  const CvArr* tiltedSumImage CV_DEFAULT(0),
-                                  double scale CV_DEFAULT(1));
-
-OPENCVAUXAPI double
-cvGetHaarClassifierCascadeScale( CvHidHaarClassifierCascade* cascade );
-
-OPENCVAUXAPI CvSize
-cvGetHaarClassifierCascadeWindowSize( CvHidHaarClassifierCascade* cascade );
-
-
-OPENCVAUXAPI void
-cvSetImagesForHaarClassifierCascade( CvHidHaarClassifierCascade* cascade,
-                                     const CvArr* sumImage,
-                                     const CvArr* sqSumImage,
-                                     const CvArr* tiltedImage,
-                                     double scale );
-
-OPENCVAUXAPI int
-cvRunHaarClassifierCascade( CvHidHaarClassifierCascade* cascade,
-                            CvPoint pt, int startStage CV_DEFAULT(0));
-
-OPENCVAUXAPI void
-cvReleaseHidHaarClassifierCascade( CvHidHaarClassifierCascade** cascade );
-
-typedef struct CvAvgComp
-{
-    CvRect rect;
-    int neighbors;
-}
-CvAvgComp;
-
-#define CV_HAAR_DO_CANNY_PRUNING 1
-
-OPENCVAUXAPI CvSeq*
-cvHaarDetectObjects( const IplImage* img,
-                     CvHidHaarClassifierCascade* hid_cascade,
-                     CvMemStorage* storage, double scale_factor CV_DEFAULT(1.1),
-                     int min_neighbors CV_DEFAULT(3), int flags CV_DEFAULT(0));
-
-OPENCVAUXAPI CvHaarClassifierCascade*
-cvLoadHaarClassifierCascade( const char* directory CV_DEFAULT("<default_face_cascade>"),
-                             CvSize origWindowSize CV_DEFAULT(cvSize(24,24)));
-
-OPENCVAUXAPI void
-cvReleaseHaarClassifierCascade( CvHaarClassifierCascade** cascade );
-
+CVAPI(IplImage*) cvCreateGLCMImage( CvGLCM* GLCM, int step );
 
 /****************************************************************************************\
 *                                  Face eyes&mouth tracking                              *
@@ -790,12 +839,12 @@ enum CV_FACE_ELEMENTS
     CV_FACE_RIGHT_EYE = 2
 };
 
-OPENCVAUXAPI CvFaceTracker* cvInitFaceTracker(CvFaceTracker* pFaceTracking, const IplImage* imgGray,
+CVAPI(CvFaceTracker*) cvInitFaceTracker(CvFaceTracker* pFaceTracking, const IplImage* imgGray,
                                                 CvRect* pRects, int nRects);
-OPENCVAUXAPI int cvTrackFace( CvFaceTracker* pFaceTracker, IplImage* imgGray,
+CVAPI(int) cvTrackFace( CvFaceTracker* pFaceTracker, IplImage* imgGray,
                               CvRect* pRects, int nRects,
                               CvPoint* ptRotate, double* dbAngleRotate);
-OPENCVAUXAPI void cvReleaseFaceTracker(CvFaceTracker** ppFaceTracker);
+CVAPI(void) cvReleaseFaceTracker(CvFaceTracker** ppFaceTracker);
 
 
 typedef struct CvFace
@@ -860,14 +909,14 @@ typedef struct
     float distortion[4];
 } Cv3dTrackerCameraIntrinsics;
 
-OPENCVAUXAPI CvBool cv3dTrackerCalibrateCameras(int num_cameras,
+CVAPI(CvBool) cv3dTrackerCalibrateCameras(int num_cameras,
                      const Cv3dTrackerCameraIntrinsics camera_intrinsics[], /* size is num_cameras */
                      CvSize etalon_size,
                      float square_size,
                      IplImage *samples[],                                   /* size is num_cameras */
                      Cv3dTrackerCameraInfo camera_info[]);                  /* size is num_cameras */
 
-OPENCVAUXAPI int  cv3dTrackerLocateObjects(int num_cameras, int num_objects,
+CVAPI(int)  cv3dTrackerLocateObjects(int num_cameras, int num_objects,
                    const Cv3dTrackerCameraInfo camera_info[],        /* size is num_cameras */
                    const Cv3dTracker2dTrackedObject tracking_info[], /* size is num_objects*num_cameras */
                    Cv3dTrackerTrackedObject tracked_objects[]);      /* size is num_objects */
@@ -945,7 +994,7 @@ typedef struct CvVoronoiDiagram2D
 } CvVoronoiDiagram2D;
 
 /* Computes Voronoi Diagram for given polygons with holes */
-OPENCVAUXAPI int  cvVoronoiDiagramFromContour(CvSeq* ContourSeq,
+CVAPI(int)  cvVoronoiDiagramFromContour(CvSeq* ContourSeq,
                                            CvVoronoiDiagram2D** VoronoiDiagram,
                                            CvMemStorage* VoronoiStorage,
                                            CvLeeParameters contour_type CV_DEFAULT(CV_LEE_INT),
@@ -953,7 +1002,7 @@ OPENCVAUXAPI int  cvVoronoiDiagramFromContour(CvSeq* ContourSeq,
                                            int attempt_number CV_DEFAULT(10));
 
 /* Computes Voronoi Diagram for domains in given image */
-OPENCVAUXAPI int  cvVoronoiDiagramFromImage(IplImage* pImage,
+CVAPI(int)  cvVoronoiDiagramFromImage(IplImage* pImage,
                                          CvSeq** ContourSeq,
                                          CvVoronoiDiagram2D** VoronoiDiagram,
                                          CvMemStorage* VoronoiStorage,
@@ -961,7 +1010,7 @@ OPENCVAUXAPI int  cvVoronoiDiagramFromImage(IplImage* pImage,
                                          float approx_precision CV_DEFAULT(CV_LEE_AUTO));
 
 /* Deallocates the storage */
-OPENCVAUXAPI void cvReleaseVoronoiStorage(CvVoronoiDiagram2D* VoronoiDiagram,
+CVAPI(void) cvReleaseVoronoiStorage(CvVoronoiDiagram2D* VoronoiDiagram,
                                           CvMemStorage** pVoronoiStorage);
 
 /*********************** Linear-Contour Model ****************************/
@@ -986,24 +1035,107 @@ typedef struct CvLCMNode
 
 
 /* Computes hybrid model from Voronoi Diagram */
-OPENCVAUXAPI CvGraph* cvLinearContorModelFromVoronoiDiagram(CvVoronoiDiagram2D* VoronoiDiagram,
+CVAPI(CvGraph*) cvLinearContorModelFromVoronoiDiagram(CvVoronoiDiagram2D* VoronoiDiagram,
                                                          float maxWidth);
 
 /* Releases hybrid model storage */
-OPENCVAUXAPI int cvReleaseLinearContorModelStorage(CvGraph** Graph);
+CVAPI(int) cvReleaseLinearContorModelStorage(CvGraph** Graph);
+
+
+/* two stereo-related functions */
+
+CVAPI(void) cvInitPerspectiveTransform( CvSize size, const CvPoint2D32f vertex[4], double matrix[3][3],
+                                              CvArr* rectMap );
+
+CVAPI(void) cvInitStereoRectification( CvStereoCamera* params,
+                                             CvArr* rectMap1, CvArr* rectMap2,
+                                             int do_undistortion );
+
+/*************************** View Morphing Functions ************************/
+
+/* The order of the function corresponds to the order they should appear in
+   the view morphing pipeline */ 
+
+/* Finds ending points of scanlines on left and right images of stereo-pair */
+CVAPI(void)  cvMakeScanlines( const CvMatrix3* matrix, CvSize  img_size,
+                              int*  scanlines1, int*  scanlines2,
+                              int*  lengths1, int*  lengths2,
+                              int*  line_count );
+
+/* Grab pixel values from scanlines and stores them sequentially
+   (some sort of perspective image transform) */
+CVAPI(void)  cvPreWarpImage( int       line_count,
+                             IplImage* img,
+                             uchar*    dst,
+                             int*      dst_nums,
+                             int*      scanlines);
+
+/* Approximate each grabbed scanline by a sequence of runs
+   (lossy run-length compression) */
+CVAPI(void)  cvFindRuns( int    line_count,
+                         uchar* prewarp1,
+                         uchar* prewarp2,
+                         int*   line_lengths1,
+                         int*   line_lengths2,
+                         int*   runs1,
+                         int*   runs2,
+                         int*   num_runs1,
+                         int*   num_runs2);
+
+/* Compares two sets of compressed scanlines */
+CVAPI(void)  cvDynamicCorrespondMulti( int  line_count,
+                                       int* first,
+                                       int* first_runs,
+                                       int* second,
+                                       int* second_runs,
+                                       int* first_corr,
+                                       int* second_corr);
+
+/* Finds scanline ending coordinates for some intermediate "virtual" camera position */
+CVAPI(void)  cvMakeAlphaScanlines( int*  scanlines1,
+                                   int*  scanlines2,
+                                   int*  scanlinesA,
+                                   int*  lengths,
+                                   int   line_count,
+                                   float alpha);
+
+/* Blends data of the left and right image scanlines to get
+   pixel values of "virtual" image scanlines */
+CVAPI(void)  cvMorphEpilinesMulti( int    line_count,
+                                   uchar* first_pix,
+                                   int*   first_num,
+                                   uchar* second_pix,
+                                   int*   second_num,
+                                   uchar* dst_pix,
+                                   int*   dst_num,
+                                   float  alpha,
+                                   int*   first,
+                                   int*   first_runs,
+                                   int*   second,
+                                   int*   second_runs,
+                                   int*   first_corr,
+                                   int*   second_corr);
+
+/* Does reverse warping of the morphing result to make
+   it fill the destination image rectangle */
+CVAPI(void)  cvPostWarpImage( int       line_count,
+                              uchar*    src,
+                              int*      src_nums,
+                              IplImage* img,
+                              int*      scanlines);
+
+/* Deletes Moire (missed pixels that appear due to discretization) */
+CVAPI(void)  cvDeleteMoire( IplImage*  img );
+
+#ifdef __cplusplus
+}
+#endif
+
+#ifdef __cplusplus
 
 /****************************************************************************************\
 *                                   Calibration engine                                   *
 \****************************************************************************************/
-
-OPENCVAUXAPI void cvInitPerspectiveTransform( CvSize size, const CvPoint2D32f vertex[4], double matrix[3][3],
-                                              CvArr* rectMap );
-
-OPENCVAUXAPI void cvInitStereoRectification( CvStereoCamera* params,
-                                             CvArr* rectMap1, CvArr* rectMap2,
-                                             int do_undistortion );
-
-#ifdef __cplusplus
 
 typedef enum CvCalibEtalonType
 {
@@ -1013,7 +1145,7 @@ typedef enum CvCalibEtalonType
 }
 CvCalibEtalonType;
 
-class CVAUX_DLL_ENTRY CvCalibFilter
+class CV_EXPORTS CvCalibFilter
 {
 public:
     /* Constructor & destructor */
@@ -1142,17 +1274,9 @@ protected:
 #endif
 
 
-/****************************************************************************************\
-*                                    Utility Functions                                   *
-\****************************************************************************************/
-
-/* helper functions for RNG initialization and accurate time measurement: x86 only */
-OPENCVAUXAPI int64  cvGetTickCount( void );
-OPENCVAUXAPI double cvGetTickFrequency(); 
-
 #ifdef __cplusplus
 #include "cvaux.hpp"
-#include "cvmat.hpp"
+/*#include "cvmat.hpp"*/
 #endif
 
 #endif

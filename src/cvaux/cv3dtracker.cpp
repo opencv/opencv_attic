@@ -329,24 +329,24 @@ static void DrawEtalon(IplImage *img, CvPoint2D32f *corners,
     int i;
     int x, y;
     CvPoint prev_pt = { 0, 0 };
-    static const int rgb_colors[] = {
-        CV_RGB(255,0,0),
-        CV_RGB(255,128,0),
-        CV_RGB(200,200,0),
-        CV_RGB(0,255,0),
-        CV_RGB(0,200,200),
-        CV_RGB(0,0,255),
-        CV_RGB(255,0,255) };
-    static const int gray_colors[] = {
-        80, 120, 160, 200, 100, 140, 180
+    static const CvScalar rgb_colors[] = {
+        {0,0,255},
+        {0,128,255},
+        {0,200,200},
+        {0,255,0},
+        {200,200,0},
+        {255,0,0},
+        {255,0,255} };
+    static const CvScalar gray_colors[] = {
+        {80}, {120}, {160}, {200}, {100}, {140}, {180}
     };
-    const int (* const colors)[7] = img->nChannels == 3 ? &rgb_colors : &gray_colors;
+    const CvScalar* colors = img->nChannels == 3 ? rgb_colors : gray_colors;
 
-    int color = (*colors)[0];
+    CvScalar color = colors[0];
     for (y = 0, i = 0; y < etalon_size.height; y++)
     {
         if (draw_ordered)
-            color = (*colors)[y % ARRAY_SIZEOF(*colors)];
+            color = colors[y % ARRAY_SIZEOF(rgb_colors)];
 
         for (x = 0; x < etalon_size.width && i < corner_count; x++, i++)
         {
@@ -359,17 +359,15 @@ static void DrawEtalon(IplImage *img, CvPoint2D32f *corners,
             if (draw_ordered)
             {
                 if (i != 0)
-                   cvLineAA(img, prev_pt, pt, color);
+                   cvLine(img, prev_pt, pt, color, 1, CV_AA);
                 prev_pt = pt;
             }
 
-            cvLineAA(img,
-                      cvPoint(pt.x - r, pt.y - r),
-                      cvPoint(pt.x + r, pt.y + r), color);
-            cvLineAA(img,
-                      cvPoint(pt.x - r, pt.y + r),
-                      cvPoint(pt.x + r, pt.y - r), color);
-            cvCircleAA(img, pt, r+1, color);
+            cvLine( img, cvPoint(pt.x - r, pt.y - r),
+                    cvPoint(pt.x + r, pt.y + r), color, 1, CV_AA );
+            cvLine( img, cvPoint(pt.x - r, pt.y + r),
+                    cvPoint(pt.x + r, pt.y - r), color, 1, CV_AA );
+            cvCircle( img, pt, r+1, color, 1, CV_AA );
         }
     }
 }
@@ -412,7 +410,7 @@ CV_IMPL int  cv3dTrackerLocateObjects(int num_cameras, int num_objects,
                  const Cv3dTracker2dTrackedObject tracking_info[], // size is num_objects*num_cameras
                  Cv3dTrackerTrackedObject tracked_objects[])     // size is num_objects
 {
-    CV_FUNCNAME("cv3dTrackerLocateObjects");
+    /*CV_FUNCNAME("cv3dTrackerLocateObjects");*/
     int found_objects = 0;
 
     // count how many cameras could see each object
@@ -491,7 +489,6 @@ CV_IMPL int  cv3dTrackerLocateObjects(int num_cameras, int num_objects,
 }
 
 #define EPS 1e-9
-inline double abs(double d) { return fabs(d); };
 
 // Compute the determinant of the 3x3 matrix represented by 3 row vectors.
 static inline double det(CvPoint3D32f v1, CvPoint3D32f v2, CvPoint3D32f v3)

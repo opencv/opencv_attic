@@ -41,54 +41,41 @@
 
 #include "_cvaux.h"
 
-#include <float.h>
-#include "_cvutils.h"
-
 CV_IMPL void
-cvDeInterlace( IplImage* frame, IplImage* fieldEven, IplImage* fieldOdd )
+cvDeInterlace( const CvArr* framearr, CvArr* fieldEven, CvArr* fieldOdd )
 {
-
-    CV_FUNCNAME("icvDeInterlace");
+    CV_FUNCNAME("cvDeInterlace");
     
     __BEGIN__;
 
-    uchar *framedata, *f0data, *f1data;
-    int framestep = 0, f0step = 0, f1step = 0;
-    CvSize framesize, f0size, f1size;
+    CvMat frame_stub, *frame = (CvMat*)framearr;
+    CvMat even_stub, *even = (CvMat*)fieldEven;
+    CvMat odd_stub, *odd = (CvMat*)fieldOdd;
+    CvSize size;
     int y;
 
-    if( !frame || !fieldEven || !fieldOdd )
-        CV_ERROR_FROM_STATUS( CV_NULLPTR_ERR );
+    CV_CALL( frame = cvGetMat( frame, &frame_stub ));
+    CV_CALL( even = cvGetMat( even, &even_stub ));
+    CV_CALL( odd = cvGetMat( odd, &odd_stub ));
 
-    cvGetImageRawData( frame, &framedata, &framestep, &framesize );
-    cvGetImageRawData( fieldEven, &f0data, &f0step, &f0size );
-    cvGetImageRawData( fieldOdd, &f1data, &f1step, &f1size );
+    if( !CV_ARE_TYPES_EQ( frame, even ) || !CV_ARE_TYPES_EQ( frame, odd ))
+        CV_ERROR( CV_StsUnmatchedFormats, "All the input images must have the same type" );
 
-    if( f0size.width != f1size.width ||
-        f0size.height != f1size.height ||
-        f0size.width != framesize.width ||
-        f0size.height != framesize.height/2 )
-        CV_ERROR( CV_StsBadArg,
-        "source image and destination image have incorrect combination of sizes" );
+    if( frame->cols != even->cols || frame->cols != odd->cols ||
+        frame->rows != even->rows*2 || odd->rows != even->rows )
+        CV_ERROR( CV_StsUnmatchedSizes, "Uncorrelated sizes of the input image and output fields" );
 
-    if( frame->depth != fieldEven->depth ||
-        frame->depth != fieldOdd->depth )
-        CV_ERROR_FROM_STATUS( CV_UNMATCHED_FORMATS_ERR );
+    size = cvGetMatSize( even );
+    size.width *= CV_ELEM_SIZE( even->type );
 
-    if( frame->nChannels != fieldEven->nChannels ||
-        frame->nChannels != fieldOdd->nChannels )
-        CV_ERROR_FROM_STATUS( CV_UNMATCHED_FORMATS_ERR );
-
-    f0size.width *= icvGetBtPix( frame );
-
-    for( y = 0; y < f0size.height; y++, framedata += frame->widthStep*2,
-                                        f0data += f0step, f1data += f1step )
+    for( y = 0; y < size.height; y++ )
     {
-        memcpy( f0data, framedata, f0size.width );
-        memcpy( f1data, framedata + frame->widthStep, f0size.width );
+        memcpy( even->data.ptr + even->step*y,
+                frame->data.ptr + frame->step*y*2, size.width );
+        memcpy( odd->data.ptr + even->step*y,
+                frame->data.ptr + frame->step*(y*2+1), size.width );
     }  
 
-    __CLEANUP__;
     __END__;
 }
 
