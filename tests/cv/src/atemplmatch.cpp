@@ -178,7 +178,14 @@ static void match_templ_etalon( IplImage* src, IplImage* templ, IplImage* dst,
 
             if( is_normed )
             {
-                val /= (sqrt(nrmS + FLT_EPSILON)*sqrt(nrmT + FLT_EPSILON));
+                double denom = sqrt(nrmS)*sqrt(nrmT);
+                if( denom > FLT_EPSILON )
+                {
+                    val /= denom;
+                    val = val < -1 ? -1 : val > 1 ? 1 : val;
+                }
+                else
+                    val = method == CV_TM_SQDIFF_NORMED ? 0 : 1;
             }
             dst_data[i*dst_step + j] = (float)val;
         }
@@ -192,12 +199,16 @@ static void match_templ_etalon( IplImage* src, IplImage* templ, IplImage* dst,
 
 static int match_templ_test( void* arg )
 {
-    const double success_error_level = 1;
-    const double error_level_scale = 1;
+    double success_error_level = 2;
+    double success_error_level_normed = 0.01;
 
     int   param     = (int)arg;
     int   depth     = param/6;
     int   method    = param%6;
+
+    int   is_normed = method == CV_TM_SQDIFF_NORMED ||
+                      method == CV_TM_CCORR_NORMED ||
+                      method == CV_TM_CCOEFF_NORMED;
 
     int   seed = atsGetSeed();
 
@@ -207,7 +218,7 @@ static int match_templ_test( void* arg )
     /* test parameters */
     int     w = 0, h = 0, tw = 0, th = 0, i = 0;
     double  max_err = 0.;
-    //int     code = TRS_OK;
+    int     code = TRS_OK;
 
     IplROI       src_roi, templ_roi, dst_roi;
     IplImage    *src_img, *templ_img, *dst_img, *dst2_img;
@@ -308,11 +319,6 @@ static int match_templ_test( void* arg )
 
                         err = cvNorm( dst_img, dst2_img, CV_C );
 
-                        if( method == 5 && tw == 1 && th == 1 )
-                        {
-                            err *= error_level_scale;
-                        }
-
                         if( err > max_err )
                         {
                             merr_w    = w;
@@ -321,7 +327,11 @@ static int match_templ_test( void* arg )
                             merr_th   = th;
                             merr_iter = i;
                             max_err   = err;
-                            if( max_err > success_error_level ) goto test_exit;
+                            if( max_err > (is_normed ? success_error_level_normed : success_error_level))
+                            {
+                                code = TRS_FAIL;
+                                goto test_exit;
+                            }
                         }
                     }
                     ATS_INCREASE( tw, templ_size_delta_type, templ_size_delta );
@@ -357,9 +367,7 @@ test_exit:
                            max_err, merr_w, merr_h, merr_tw, merr_th,
                            merr_iter, seed );
 
-        return max_err <= success_error_level ?
-            trsResult( TRS_OK, "No errors" ) :
-            trsResult( TRS_FAIL, "Bad accuracy" );
+        return trsResult( code, code == TRS_OK ? "No errors" : "Bad accuracy" );
     }
     /*else
     {

@@ -50,6 +50,7 @@
 #include "cv.h"
 #include "cxmisc.h"
 #include "cvaux.h"
+#include "cxts.h"
 #include "highgui.h"
 #include "trsapi.h"
 

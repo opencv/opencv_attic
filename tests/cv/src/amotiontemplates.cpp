@@ -219,8 +219,8 @@ static void CalcGlobalOrientationEtalon( IplImage* orient, IplImage* mask,
     atsGetImageInfo( mask, (void**)&mask_data, &mask_step, 0, 0, 0, 0 );
     atsGetImageInfo( orient, (void**)&orient_data, &orient_step, 0, 0, 0, 0 );
 
-    orient_step /= 4;
-    mhi_step /= 4;
+    orient_step /= sizeof(float);
+    mhi_step /= sizeof(float);
 
     memset( histogram, 0, sizeof( histogram ));
 
@@ -230,7 +230,7 @@ static void CalcGlobalOrientationEtalon( IplImage* orient, IplImage* mask,
         for( x = 0; x < sz.width; x++ )
             if( mask_data[x] )
             {
-                int bin = cvRound( (orient_data[x]*HIST_SIZE)/360 );
+                int bin = cvFloor( (orient_data[x]*HIST_SIZE)/360 );
                 histogram[bin < 0 ? 0 : bin >= HIST_SIZE ? HIST_SIZE-1 : bin]++;
             }
         orient_data += orient_step;
@@ -254,7 +254,7 @@ static void CalcGlobalOrientationEtalon( IplImage* orient, IplImage* mask,
             {
                 double diff = orient_data[x] - base_orientation;
                 double delta_weight = mhi_data[x] >= low_time ?
-                    ((mhi_data[x] - low_time)*254 + 1)/255 : 0;
+                    (((mhi_data[x] - low_time)/mhi_duration)*254 + 1)/255 : 0;
 
                 if( diff < -180 ) diff += 360;
                 if( diff > 180 ) diff -= 360;
@@ -476,6 +476,7 @@ static int calc_motion_gradient_test( void )
     IplImage    *orient, *silh, *orient2, *mask, *mask2, *mhi;
     IplImage    *dervX_min, *dervY_max;
     AtsRandState rng_state;
+
     atsRandInit( &rng_state, 0, 1, seed );
 
     read_mot_templ2_params();
@@ -639,6 +640,7 @@ static int calc_global_orientation_test( void )
     IplROI       roi;
     IplImage    *orient, *silh, *mask, *mhi;
     AtsRandState rng_state;
+
     atsRandInit( &rng_state, 0, 1, seed );
 
     read_mot_templ2_params();
@@ -734,7 +736,8 @@ static int calc_global_orientation_test( void )
                     merr_h    = h;
                     merr_iter = i;
                     max_err = err;
-                    if( max_err > success_orient_error_level ) goto test_exit;
+                    if( max_err > success_orient_error_level )
+                        goto test_exit;
                 }
             }
             ATS_INCREASE( w, img_size_delta_type, img_size_delta );
