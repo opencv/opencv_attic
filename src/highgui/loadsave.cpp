@@ -418,7 +418,7 @@ cvSaveImage( const char* filename, const CvArr* arr )
         origin = ((IplImage*)arr)->origin;
 
     channels = CV_MAT_CN( image->type );
-    if( channels != 1 && channels != 3 )
+    if( channels != 1 && channels != 3 && channels != 4 )
         CV_ERROR( CV_BadNumChannels, "" );
 
     writer = g_Filters.FindWriter( filename );
@@ -432,7 +432,7 @@ cvSaveImage( const char* filename, const CvArr* arr )
     }
 
     if( !writer->WriteImage( image->data.ptr, image->step, image->width,
-                             image->height, channels > 1 ))
+                             image->height, channels ))
         CV_ERROR( CV_StsError, "could not save the image" );
 
     __END__;

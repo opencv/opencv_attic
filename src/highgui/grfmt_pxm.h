@@ -77,7 +77,7 @@ public:
     ~GrFmtPxMWriter();
 
     bool  WriteImage( const uchar* data, int step,
-                      int width, int height, bool isColor );
+                      int width, int height, int channels );
 protected:
 
     WLByteStream  m_strm;

@@ -679,11 +679,10 @@ void  GrFmtTiffWriter::WriteTag( TiffTag tag, TiffFieldType fieldType,
 
 
 bool  GrFmtTiffWriter::WriteImage( const uchar* data, int step,
-                                   int width, int height, bool isColor )
+                                   int width, int height, int channels )
 {
     bool result = false;
-    int nch  = isColor ? 3 : 1;
-    int fileStep = width*nch;
+    int fileStep = width*channels;
 
     assert( data && width > 0 && height > 0 && step >= fileStep);
 
@@ -727,8 +726,12 @@ bool  GrFmtTiffWriter::WriteImage( const uchar* data, int step,
 
             for( ; y < limit; y++, data += step )
             {
-                if( isColor ) icvCvt_RGB2BGR_8u_C3R( data, 0, buffer, 0, cvSize(width,1) );
-                m_strm.PutBytes( isColor ? buffer : data, fileStep );
+                if( channels == 3 )
+                    icvCvt_BGR2RGB_8u_C3R( data, 0, buffer, 0, cvSize(width,1) );
+                else if( channels == 4 )
+                    icvCvt_BGRA2RGBA_8u_C4R( data, 0, buffer, 0, cvSize(width,1) );
+
+                m_strm.PutBytes( channels > 1 ? buffer : data, fileStep );
             }
 
             stripCounts[i] = (short)(m_strm.GetPos() - stripOffsets[i]);
@@ -753,12 +756,14 @@ bool  GrFmtTiffWriter::WriteImage( const uchar* data, int step,
             stripCountsOffset = stripCounts[0];
         }
 
-        if( isColor )
+        if( channels > 1 )
         {
             bitsPerSample = m_strm.GetPos();
             m_strm.PutWord(8);
             m_strm.PutWord(8);
             m_strm.PutWord(8);
+            if( channels == 4 )
+                m_strm.PutWord(8);
         }
 
         directoryOffset = m_strm.GetPos();
@@ -769,11 +774,11 @@ bool  GrFmtTiffWriter::WriteImage( const uchar* data, int step,
         WriteTag( TIFF_TAG_WIDTH, TIFF_TYPE_LONG, 1, width );
         WriteTag( TIFF_TAG_HEIGHT, TIFF_TYPE_LONG, 1, height );
         WriteTag( TIFF_TAG_BITS_PER_SAMPLE,
-                  TIFF_TYPE_SHORT, nch, bitsPerSample );
+                  TIFF_TYPE_SHORT, channels, bitsPerSample );
         WriteTag( TIFF_TAG_COMPRESSION, TIFF_TYPE_LONG, 1, TIFF_UNCOMP );
-        WriteTag( TIFF_TAG_PHOTOMETRIC, TIFF_TYPE_SHORT, 1, isColor ? 2 : 1 );
+        WriteTag( TIFF_TAG_PHOTOMETRIC, TIFF_TYPE_SHORT, 1, channels > 1 ? 2 : 1 );
 
-        WriteTag( TIFF_TAG_SAMPLES_PER_PIXEL, TIFF_TYPE_SHORT, 1, nch );
+        WriteTag( TIFF_TAG_SAMPLES_PER_PIXEL, TIFF_TYPE_SHORT, 1, channels );
         WriteTag( TIFF_TAG_ROWS_PER_STRIP, TIFF_TYPE_LONG, 1, rowsPerStrip );
         
         WriteTag( TIFF_TAG_STRIP_OFFSETS, TIFF_TYPE_LONG,

@@ -412,11 +412,10 @@ GrFmtSunRasterWriter::~GrFmtSunRasterWriter()
 
 
 bool  GrFmtSunRasterWriter::WriteImage( const uchar* data, int step,
-                                        int width, int height, bool isColor )
+                                        int width, int height, int channels )
 {
     bool result = false;
-    int  nch = isColor ? 3 : 1;
-    int  fileStep = (width*nch + 1) & -2;
+    int  fileStep = (width*channels + 1) & -2;
     int  y;
 
     assert( data && width > 0 && height > 0 && step >= fileStep);
@@ -426,7 +425,7 @@ bool  GrFmtSunRasterWriter::WriteImage( const uchar* data, int step,
         m_strm.PutBytes( fmtSignSunRas, strlen(fmtSignSunRas) );
         m_strm.PutDWord( width );
         m_strm.PutDWord( height );
-        m_strm.PutDWord( nch*8 );
+        m_strm.PutDWord( channels*8 );
         m_strm.PutDWord( fileStep*height );
         m_strm.PutDWord( RAS_STANDARD );
         m_strm.PutDWord( RMT_NONE );

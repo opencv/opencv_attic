@@ -50,9 +50,10 @@
 
 void icvCvt_BGR2Gray_8u_C3C1R( const uchar* rgb, int rgb_step,
                                uchar* gray, int gray_step,
-                               CvSize size, int swap_rb )
+                               CvSize size, int _swap_rb )
 {
     int i;
+    int swap_rb = _swap_rb ? 2 : 0;
     for( ; size.height--; gray += gray_step )
     {
         for( i = 0; i < size.width; i++, rgb += 3 )
@@ -68,9 +69,10 @@ void icvCvt_BGR2Gray_8u_C3C1R( const uchar* rgb, int rgb_step,
 
 void icvCvt_BGRA2Gray_8u_C4C1R( const uchar* rgba, int rgba_step,
                                 uchar* gray, int gray_step,
-                                CvSize size, int swap_rb )
+                                CvSize size, int _swap_rb )
 {
     int i;
+    int swap_rb = _swap_rb ? 2 : 0;
     for( ; size.height--; gray += gray_step )
     {
         for( i = 0; i < size.width; i++, rgba += 4 )
@@ -101,9 +103,10 @@ void icvCvt_Gray2BGR_8u_C1C3R( const uchar* gray, int gray_step,
 
 void icvCvt_BGRA2BGR_8u_C4C3R( const uchar* bgra, int bgra_step,
                                uchar* bgr, int bgr_step,
-                               CvSize size, int swap_rb )
+                               CvSize size, int _swap_rb )
 {
     int i;
+    int swap_rb = _swap_rb ? 2 : 0;
     for( ; size.height--; )
     {
         for( i = 0; i < size.width; i++, bgr += 3, bgra += 4 )
@@ -114,6 +117,25 @@ void icvCvt_BGRA2BGR_8u_C4C3R( const uchar* bgra, int bgra_step,
         }
         bgr += bgr_step - size.width*3;
         bgra += bgra_step - size.width*4;
+    }
+}
+
+
+void icvCvt_BGRA2RGBA_8u_C4R( const uchar* bgra, int bgra_step,
+                              uchar* rgba, int rgba_step, CvSize size )
+{
+    int i;
+    for( ; size.height--; )
+    {
+        for( i = 0; i < size.width; i++, bgra += 4, rgba += 4 )
+        {
+            uchar t0 = bgra[0], t1 = bgra[1];
+            uchar t2 = bgra[2], t3 = bgra[3];
+            rgba[0] = t2; rgba[1] = t1;
+            rgba[2] = t0; rgba[3] = t3;
+        }
+        bgra += bgra_step - size.width*4;
+        rgba += rgba_step - size.width*4;
     }
 }
 
