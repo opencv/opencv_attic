@@ -214,11 +214,11 @@ void icvInitCapture_V4L() {
       deviceHandle = open(deviceName, O_RDONLY);
       if (deviceHandle != -1) {
          /* This device does indeed exist - add it to the total so far */
-	// add indexList
-	indexList|=(1 << CameraNumber);
+    // add indexList
+    indexList|=(1 << CameraNumber);
         numCameras++;
-	}        
-	close(deviceHandle);
+    }        
+    close(deviceHandle);
       /* Set up to test the next /dev/video source in line */
       CameraNumber++;
    } /* End while */
@@ -228,7 +228,7 @@ void icvInitCapture_V4L() {
 int
 try_palette(int fd,
             struct video_picture *cam_pic,
-	    int pal,
+        int pal,
             int depth)
 {
   cam_pic->palette = pal;
@@ -266,10 +266,10 @@ CvCapture* icvOpenCAM_V4L( int index ) {
    /* Select camera, or rather, V4L video source */
    if (index<0) { // Asking for the first device available 
      for (; autoindex<MAX_CAMERAS;autoindex++)
-	if (indexList & (1<<autoindex))
-		break;
+    if (indexList & (1<<autoindex))
+        break;
      if (autoindex==MAX_CAMERAS)
-	return NULL; 
+    return NULL; 
      index=autoindex;
      autoindex++;// i can recall icvOpenCAM_V4l with index=-1 for next camera
    }
@@ -337,8 +337,8 @@ CvCapture* icvOpenCAM_V4L( int index ) {
       (capture->captureWindow.width < DEFAULT_V4L_WIDTH) &&
       (capture->captureWindow.height < DEFAULT_V4L_HEIGHT)) {
      /* If your card can open a bigger window, it will be attempted here.  I have a version
-	of this program that returns the "Property" set ability, but it is buggy.  It also
-	handles multiple camers for stero work.  Contact TW if you would like to use it */
+    of this program that returns the "Property" set ability, but it is buggy.  It also
+    handles multiple camers for stero work.  Contact TW if you would like to use it */
      //printf("trying to get a %dx%d image.\n", DEFAULT_V4L_WIDTH, DEFAULT_V4L_HEIGHT);
      capture->captureWindow.x = 0;
      capture->captureWindow.y = 0;
@@ -349,7 +349,7 @@ CvCapture* icvOpenCAM_V4L( int index ) {
      capture->captureWindow.clips = 0;
      capture->captureWindow.clipcount = 0;
      if (ioctl(capture->deviceHandle, VIDIOCSWIN, &capture->captureWindow) == -1) {
-	 //printf("cannot get a %dx%d image.\n", DEFAULT_V4L_WIDTH, DEFAULT_V4L_HEIGHT);
+     //printf("cannot get a %dx%d image.\n", DEFAULT_V4L_WIDTH, DEFAULT_V4L_HEIGHT);
      }
      /* Get window info again, to get the real value */
      if(ioctl(capture->deviceHandle, VIDIOCGWIN, &capture->captureWindow) == -1) {
@@ -431,12 +431,12 @@ static int icvGrabFrameCAM_V4L( CvCaptureCAM_V4L* capture) {
       /* This is just a technicality, but all buffers must be filled up before any
          staggered SYNC is applied.  SO, filler up. (see V4L HowTo) */
       for (capture->bufferIndex = 0;
-	   capture->bufferIndex < (capture->memoryBuffer.frames-1);
-	   ++capture->bufferIndex) {
-	  capture->mmaps[capture->bufferIndex].frame  = capture->bufferIndex;
-	  capture->mmaps[capture->bufferIndex].width  = capture->captureWindow.width;
-	  capture->mmaps[capture->bufferIndex].height = capture->captureWindow.height;
-	  capture->mmaps[capture->bufferIndex].format = capture->imageProperties.palette;
+       capture->bufferIndex < (capture->memoryBuffer.frames-1);
+       ++capture->bufferIndex) {
+      capture->mmaps[capture->bufferIndex].frame  = capture->bufferIndex;
+      capture->mmaps[capture->bufferIndex].width  = capture->captureWindow.width;
+      capture->mmaps[capture->bufferIndex].height = capture->captureWindow.height;
+      capture->mmaps[capture->bufferIndex].format = capture->imageProperties.palette;
          if (ioctl(capture->deviceHandle, VIDIOCMCAPTURE, &capture->mmaps[capture->bufferIndex]) == -1) {
             fprintf( stderr, "HIGHGUI ERROR: V4L: Initial Capture Error: Unable to load initial memory buffers.\n");
             return 0;
@@ -477,14 +477,14 @@ static int icvGrabFrameCAM_V4L( CvCaptureCAM_V4L* capture) {
  * coefficients are scaled into 16.16 fixed-point integers.
  * They were determined as follows:
  *
- *	double brightness = 1.0;  (0->black; 1->full scale) 
- *	double saturation = 1.0;  (0->greyscale; 1->full color)
- *	double fixScale = brightness * 256 * 256;
- *	int rvScale = (int)(1.402 * saturation * fixScale);
- *	int guScale = (int)(-0.344136 * saturation * fixScale);
- *	int gvScale = (int)(-0.714136 * saturation * fixScale);
- *	int buScale = (int)(1.772 * saturation * fixScale);
- *	int yScale = (int)(fixScale);	
+ *  double brightness = 1.0;  (0->black; 1->full scale) 
+ *  double saturation = 1.0;  (0->greyscale; 1->full color)
+ *  double fixScale = brightness * 256 * 256;
+ *  int rvScale = (int)(1.402 * saturation * fixScale);
+ *  int guScale = (int)(-0.344136 * saturation * fixScale);
+ *  int gvScale = (int)(-0.714136 * saturation * fixScale);
+ *  int buScale = (int)(1.772 * saturation * fixScale);
+ *  int yScale = (int)(fixScale);   
  */
 
 /* LIMIT: convert a 16.16 fixed-point value to a byte, with clipping. */
@@ -492,80 +492,80 @@ static int icvGrabFrameCAM_V4L( CvCaptureCAM_V4L* capture) {
 
 static inline void
 move_420_block(int yTL, int yTR, int yBL, int yBR, int u, int v, 
-	       int rowPixels, unsigned char * rgb)
+           int rowPixels, unsigned char * rgb)
 {
-	const int rvScale = 91881;
-	const int guScale = -22553;
-	const int gvScale = -46801;
-	const int buScale = 116129;
-	const int yScale  = 65536;
-	int r, g, b;
+    const int rvScale = 91881;
+    const int guScale = -22553;
+    const int gvScale = -46801;
+    const int buScale = 116129;
+    const int yScale  = 65536;
+    int r, g, b;
 
-	g = guScale * u + gvScale * v;
-//	if (force_rgb) {
-//		r = buScale * u;
-//		b = rvScale * v;
-//	} else {
-		r = rvScale * v;
-		b = buScale * u;
-//	}
+    g = guScale * u + gvScale * v;
+//  if (force_rgb) {
+//      r = buScale * u;
+//      b = rvScale * v;
+//  } else {
+        r = rvScale * v;
+        b = buScale * u;
+//  }
 
-	yTL *= yScale; yTR *= yScale;
-	yBL *= yScale; yBR *= yScale;
+    yTL *= yScale; yTR *= yScale;
+    yBL *= yScale; yBR *= yScale;
 
-	/* Write out top two pixels */
-	rgb[0] = LIMIT(b+yTL); rgb[1] = LIMIT(g+yTL);
-	rgb[2] = LIMIT(r+yTL);
+    /* Write out top two pixels */
+    rgb[0] = LIMIT(b+yTL); rgb[1] = LIMIT(g+yTL);
+    rgb[2] = LIMIT(r+yTL);
 
-	rgb[3] = LIMIT(b+yTR); rgb[4] = LIMIT(g+yTR);
-	rgb[5] = LIMIT(r+yTR);
+    rgb[3] = LIMIT(b+yTR); rgb[4] = LIMIT(g+yTR);
+    rgb[5] = LIMIT(r+yTR);
 
-	/* Skip down to next line to write out bottom two pixels */
-	rgb += 3 * rowPixels;
-	rgb[0] = LIMIT(b+yBL); rgb[1] = LIMIT(g+yBL);
-	rgb[2] = LIMIT(r+yBL);
+    /* Skip down to next line to write out bottom two pixels */
+    rgb += 3 * rowPixels;
+    rgb[0] = LIMIT(b+yBL); rgb[1] = LIMIT(g+yBL);
+    rgb[2] = LIMIT(r+yBL);
 
-	rgb[3] = LIMIT(b+yBR); rgb[4] = LIMIT(g+yBR);
-	rgb[5] = LIMIT(r+yBR);
+    rgb[3] = LIMIT(b+yBR); rgb[4] = LIMIT(g+yBR);
+    rgb[5] = LIMIT(r+yBR);
 }
 
 static inline void
 move_411_block(int yTL, int yTR, int yBL, int yBR, int u, int v, 
-	       int rowPixels, unsigned char * rgb)
+           int rowPixels, unsigned char * rgb)
 {
-	const int rvScale = 91881;
-	const int guScale = -22553;
-	const int gvScale = -46801;
-	const int buScale = 116129;
-	const int yScale  = 65536;
-	int r, g, b;
+    const int rvScale = 91881;
+    const int guScale = -22553;
+    const int gvScale = -46801;
+    const int buScale = 116129;
+    const int yScale  = 65536;
+    int r, g, b;
 
-	g = guScale * u + gvScale * v;
-//	if (force_rgb) {
-//		r = buScale * u;
-//		b = rvScale * v;
-//	} else {
-		r = rvScale * v;
-		b = buScale * u;
-//	}
+    g = guScale * u + gvScale * v;
+//  if (force_rgb) {
+//      r = buScale * u;
+//      b = rvScale * v;
+//  } else {
+        r = rvScale * v;
+        b = buScale * u;
+//  }
 
-	yTL *= yScale; yTR *= yScale;
-	yBL *= yScale; yBR *= yScale;
+    yTL *= yScale; yTR *= yScale;
+    yBL *= yScale; yBR *= yScale;
 
-	/* Write out top two first pixels */
-	rgb[0] = LIMIT(b+yTL); rgb[1] = LIMIT(g+yTL);
-	rgb[2] = LIMIT(r+yTL);
+    /* Write out top two first pixels */
+    rgb[0] = LIMIT(b+yTL); rgb[1] = LIMIT(g+yTL);
+    rgb[2] = LIMIT(r+yTL);
 
-	rgb[3] = LIMIT(b+yTR); rgb[4] = LIMIT(g+yTR);
-	rgb[5] = LIMIT(r+yTR);
+    rgb[3] = LIMIT(b+yTR); rgb[4] = LIMIT(g+yTR);
+    rgb[5] = LIMIT(r+yTR);
 
-	/* Write out top two last pixels */
-	rgb += 6;
-	rgb[0] = LIMIT(b+yBL); rgb[1] = LIMIT(g+yBL);
-	rgb[2] = LIMIT(r+yBL);
+    /* Write out top two last pixels */
+    rgb += 6;
+    rgb[0] = LIMIT(b+yBL); rgb[1] = LIMIT(g+yBL);
+    rgb[2] = LIMIT(r+yBL);
 
-	rgb[3] = LIMIT(b+yBR); rgb[4] = LIMIT(g+yBR);
-	rgb[5] = LIMIT(r+yBR);
+    rgb[3] = LIMIT(b+yBR); rgb[4] = LIMIT(g+yBR);
+    rgb[5] = LIMIT(r+yBR);
 }
 
 // Consider a YUV420P image of 8x2 pixels.
@@ -582,35 +582,35 @@ move_411_block(int yTL, int yTR, int yBL, int yBR, int u, int v,
 /* Converts from planar YUV420P to RGB24. */
 static void 
 yuv420p_to_rgb24(int width, int height,
-	       unsigned char *pIn0, unsigned char *pOut0)
+           unsigned char *pIn0, unsigned char *pOut0)
 {
-	const int numpix = width * height;
-	const int bytes = 24 >> 3;
-	int i, j, y00, y01, y10, y11, u, v;
-	unsigned char *pY = pIn0;
-	unsigned char *pU = pY + numpix;
-	unsigned char *pV = pU + numpix / 4;
-	unsigned char *pOut = pOut0;
+    const int numpix = width * height;
+    const int bytes = 24 >> 3;
+    int i, j, y00, y01, y10, y11, u, v;
+    unsigned char *pY = pIn0;
+    unsigned char *pU = pY + numpix;
+    unsigned char *pV = pU + numpix / 4;
+    unsigned char *pOut = pOut0;
 
-	for (j = 0; j <= height - 2; j += 2) {
-		for (i = 0; i <= width - 2; i += 2) {
-			y00 = *pY;
-			y01 = *(pY + 1);
-			y10 = *(pY + width);
-			y11 = *(pY + width + 1);
-			u = (*pU++) - 128;
-			v = (*pV++) - 128;
+    for (j = 0; j <= height - 2; j += 2) {
+        for (i = 0; i <= width - 2; i += 2) {
+            y00 = *pY;
+            y01 = *(pY + 1);
+            y10 = *(pY + width);
+            y11 = *(pY + width + 1);
+            u = (*pU++) - 128;
+            v = (*pV++) - 128;
 
-			move_420_block(y00, y01, y10, y11, u, v,
-				       width, pOut);
-	
-			pY += 2;
-			pOut += 2 * bytes;
+            move_420_block(y00, y01, y10, y11, u, v,
+                       width, pOut);
+    
+            pY += 2;
+            pOut += 2 * bytes;
 
-		}
-		pY += width;
-		pOut += width * bytes;
-	}
+        }
+        pY += width;
+        pOut += width * bytes;
+    }
 }
 
 // Consider a YUV420 image of 6x2 pixels.
@@ -625,48 +625,48 @@ yuv420p_to_rgb24(int width, int height,
 /* [FD] untested... */
 static void 
 yuv420_to_rgb24(int width, int height,
-		unsigned char *pIn0, unsigned char *pOut0)
+        unsigned char *pIn0, unsigned char *pOut0)
 {
-	const int numpix = width * height;
-	const int bytes = 24 >> 3;
-	int i, j, y00, y01, y10, y11, u, v;
-	unsigned char *pY = pIn0;
-	unsigned char *pU = pY + 4;
-	unsigned char *pV = pU + width;
-	unsigned char *pOut = pOut0;
+    const int numpix = width * height;
+    const int bytes = 24 >> 3;
+    int i, j, y00, y01, y10, y11, u, v;
+    unsigned char *pY = pIn0;
+    unsigned char *pU = pY + 4;
+    unsigned char *pV = pU + width;
+    unsigned char *pOut = pOut0;
 
-	for (j = 0; j <= height - 2; j += 2) {
-		for (i = 0; i <= width - 4; i += 4) {
-			y00 = *pY;
-			y01 = *(pY + 1);
-			y10 = *(pY + width);
-			y11 = *(pY + width + 1);
-			u = (*pU++) - 128;
-			v = (*pV++) - 128;
+    for (j = 0; j <= height - 2; j += 2) {
+        for (i = 0; i <= width - 4; i += 4) {
+            y00 = *pY;
+            y01 = *(pY + 1);
+            y10 = *(pY + width);
+            y11 = *(pY + width + 1);
+            u = (*pU++) - 128;
+            v = (*pV++) - 128;
 
-			move_420_block(y00, y01, y10, y11, u, v,
-				       width, pOut);
-	
-			pY += 2;
-			pOut += 2 * bytes;
+            move_420_block(y00, y01, y10, y11, u, v,
+                       width, pOut);
+    
+            pY += 2;
+            pOut += 2 * bytes;
 
-			y00 = *pY;
-			y01 = *(pY + 1);
-			y10 = *(pY + width);
-			y11 = *(pY + width + 1);
-			u = (*pU++) - 128;
-			v = (*pV++) - 128;
+            y00 = *pY;
+            y01 = *(pY + 1);
+            y10 = *(pY + width);
+            y11 = *(pY + width + 1);
+            u = (*pU++) - 128;
+            v = (*pV++) - 128;
 
-			move_420_block(y00, y01, y10, y11, u, v,
-				       width, pOut);
-	
-			pY += 4; // skip UV
-			pOut += 2 * bytes;
+            move_420_block(y00, y01, y10, y11, u, v,
+                       width, pOut);
+    
+            pY += 4; // skip UV
+            pOut += 2 * bytes;
 
-		}
-		pY += width;
-		pOut += width * bytes;
-	}
+        }
+        pY += width;
+        pOut += width * bytes;
+    }
 }
 
 // Consider a YUV411P image of 8x2 pixels.
@@ -686,33 +686,33 @@ yuv420_to_rgb24(int width, int height,
 /* [FD] untested... */
 static void 
 yuv411p_to_rgb24(int width, int height,
-	       unsigned char *pIn0, unsigned char *pOut0)
+           unsigned char *pIn0, unsigned char *pOut0)
 {
-	const int numpix = width * height;
-	const int bytes = 24 >> 3;
-	int i, j, y00, y01, y10, y11, u, v;
-	unsigned char *pY = pIn0;
-	unsigned char *pU = pY + numpix;
-	unsigned char *pV = pU + numpix / 4;
-	unsigned char *pOut = pOut0;
+    const int numpix = width * height;
+    const int bytes = 24 >> 3;
+    int i, j, y00, y01, y10, y11, u, v;
+    unsigned char *pY = pIn0;
+    unsigned char *pU = pY + numpix;
+    unsigned char *pV = pU + numpix / 4;
+    unsigned char *pOut = pOut0;
 
-	for (j = 0; j <= height; j++) {
-		for (i = 0; i <= width - 4; i += 4) {
-			y00 = *pY;
-			y01 = *(pY + 1);
-			y10 = *(pY + 2);
-			y11 = *(pY + 3);
-			u = (*pU++) - 128;
-			v = (*pV++) - 128;
+    for (j = 0; j <= height; j++) {
+        for (i = 0; i <= width - 4; i += 4) {
+            y00 = *pY;
+            y01 = *(pY + 1);
+            y10 = *(pY + 2);
+            y11 = *(pY + 3);
+            u = (*pU++) - 128;
+            v = (*pV++) - 128;
 
-			move_411_block(y00, y01, y10, y11, u, v,
-				       width, pOut);
-	
-			pY += 4;
-			pOut += 4 * bytes;
+            move_411_block(y00, y01, y10, y11, u, v,
+                       width, pOut);
+    
+            pY += 4;
+            pOut += 4 * bytes;
 
-		}
-	}
+        }
+    }
 }
 
 
@@ -730,36 +730,36 @@ static IplImage* icvRetrieveFrameCAM_V4L( CvCaptureCAM_V4L* capture ) {
       || (capture->frame.height != capture->mmaps[capture->bufferIndex].height)) {
        cvFree((void**)&capture->frame.imageData);
        cvInitImageHeader( &capture->frame,
-			  cvSize( capture->captureWindow.width,
-				  capture->captureWindow.height ),
-			  IPL_DEPTH_8U, 3, IPL_ORIGIN_TL, 4 );
+              cvSize( capture->captureWindow.width,
+                  capture->captureWindow.height ),
+              IPL_DEPTH_8U, 3, IPL_ORIGIN_TL, 4 );
        capture->frame.imageData = (char *)cvAlloc(capture->frame.imageSize);
    }
   switch(capture->imageProperties.palette) {
   case VIDEO_PALETTE_RGB24:
     memcpy((char *)capture->frame.imageData, 
-	   (char *)(capture->memoryMap + capture->memoryBuffer.offsets[capture->bufferIndex]),
-	   capture->frame.imageSize);
+       (char *)(capture->memoryMap + capture->memoryBuffer.offsets[capture->bufferIndex]),
+       capture->frame.imageSize);
     break;
   case VIDEO_PALETTE_YUV420P:
     yuv420p_to_rgb24(capture->captureWindow.width,
-		     capture->captureWindow.height,
-		     (unsigned char*)(capture->memoryMap + capture->memoryBuffer.offsets[capture->bufferIndex]),
-		     (unsigned char*)capture->frame.imageData);
+             capture->captureWindow.height,
+             (unsigned char*)(capture->memoryMap + capture->memoryBuffer.offsets[capture->bufferIndex]),
+             (unsigned char*)capture->frame.imageData);
     break;
   case VIDEO_PALETTE_YUV420:
     yuv420_to_rgb24(capture->captureWindow.width,
-		  capture->captureWindow.height,
-		  (unsigned char*)(capture->memoryMap + capture->memoryBuffer.offsets[capture->bufferIndex]),
-		  (unsigned char*)capture->frame.imageData);
+          capture->captureWindow.height,
+          (unsigned char*)(capture->memoryMap + capture->memoryBuffer.offsets[capture->bufferIndex]),
+          (unsigned char*)capture->frame.imageData);
     break;
   case VIDEO_PALETTE_YUV411P:
     yuv411p_to_rgb24(capture->captureWindow.width,
-		  capture->captureWindow.height,
-		  (unsigned char*)(capture->memoryMap + capture->memoryBuffer.offsets[capture->bufferIndex]),
-		  (unsigned char*)capture->frame.imageData);
+          capture->captureWindow.height,
+          (unsigned char*)(capture->memoryMap + capture->memoryBuffer.offsets[capture->bufferIndex]),
+          (unsigned char*)capture->frame.imageData);
     break;
-  defaut:
+  default:
      fprintf( stderr, "HIGHGUI ERROR: V4L: Cannot convert from palette %d to RGB\n");
      return 0;
   }
@@ -815,21 +815,21 @@ static int icvSetPropertyCAM_V4L( CvCaptureCAM_V4L* capture, int property_id, do
     /* the first one will return an error, though. */
    switch (property_id) {
        case CV_CAP_PROP_FRAME_WIDTH:
-	   width = cvRound(value);
-	   if(width !=0 && height != 0) {
-	       retval = icvSetVideoSize( capture, width, height);
-	       width = height = 0;
-	       return retval;
-	   }
-	   break;
+       width = cvRound(value);
+       if(width !=0 && height != 0) {
+           retval = icvSetVideoSize( capture, width, height);
+           width = height = 0;
+           return retval;
+       }
+       break;
        case CV_CAP_PROP_FRAME_HEIGHT:
-	   height = cvRound(value);
-	   if(width !=0 && height != 0) {
-	       retval = icvSetVideoSize( capture, width, height);
-	       width = height = 0;
-	       return retval;
-	   }
-	   break;
+       height = cvRound(value);
+       if(width !=0 && height != 0) {
+           retval = icvSetVideoSize( capture, width, height);
+           width = height = 0;
+           return retval;
+       }
+       break;
    }
    return 0;
 };
