@@ -81,6 +81,7 @@ public:
     }
 
     int size() { return _size; }
+    T* data() { return _buf; }
     void clear() { _size = 0; }
 
 protected:
@@ -105,7 +106,7 @@ public:
     virtual int init( CvTS* system );
 
     // writes default parameters to file storage
-    virtual int write_default_params(CvFileStorage* fs);
+    virtual int write_defaults(CvTS* ts);
 
     // the main procedure of the test
     virtual void run( int start_from );
@@ -113,11 +114,13 @@ public:
     // the wrapper for run that cares of exceptions
     virtual void safe_run( int start_from );
 
-    const char* get_name() { return name; }
-    const char* get_func_list() { return tested_functions; }
-    const char* get_description() { return description; }
+    const char* get_name() const { return name; }
+    const char* get_func_list() const { return tested_functions; }
+    const char* get_description() const { return description; }
+    const char* get_group_name( char* buffer ) const;
     CvTest* get_next() { return next; }
     static CvTest* get_first_test() { return first; }
+    static const char* get_parent_name( const char* name, char* buffer );
 
     // returns true iff test cases do not depend on each other
     // (so that test system could get right to the problematic test cases)
@@ -133,6 +136,10 @@ protected:
     static int test_count;
     CvTest* next;
 
+    // called from write_defaults
+    virtual int write_default_params(CvFileStorage* fs);
+
+    // read test params
     virtual int read_params( CvFileStorage* fs );
 
     // returns the number of tests or -1 if it is unknown a-priori
@@ -145,7 +152,7 @@ protected:
     virtual int validate_test_results( int test_case_idx );
 
     // calls the tested function. the method is called from run_test_case()
-    virtual void run_func() = 0; // runs tested func(s)
+    virtual void run_func(); // runs tested func(s)
 
     // retrives timing mode for particular test case
     virtual int get_timing_mode( int test_case_idx );
@@ -155,6 +162,14 @@ protected:
 
     // updates progress bar
     virtual int update_progress( int progress, int test_case_idx, int count, double dt );
+
+    // find test parameter
+    const CvFileNode* find_param( CvFileStorage* fs, const char* param_name );
+
+    // write parameters
+    void write_param( CvFileStorage* fs, const char* paramname, int val );
+    void write_param( CvFileStorage* fs, const char* paramname, double val );
+    void write_param( CvFileStorage* fs, const char* paramname, const char* val );
 
     // name of the test (it is possible to locate a test by its name)
     const char* name;
@@ -172,6 +187,8 @@ protected:
 
     // pointer to the system that includes the test
     CvTS* ts;
+
+    int hdr_state;
 };
 
 
@@ -334,6 +351,9 @@ public:
     // returns the current timing mode
     int get_timing_mode() { return params.timing_mode; }
 
+    int find_written_param( CvTest* test, const char* paramname,
+                            int valtype, const void* val );
+
 protected:
     // deallocates memory buffers and closes all the streams;
     // called by init() and from destructor. It does not remove any tests!!!
@@ -378,6 +398,9 @@ protected:
 
     // a sequence of tests to run
     CvTestPtrVec* selected_tests;
+
+    // a sequence of written test params
+    CvTestPtrVec* written_params;
 
     // a sequence of failed tests
     CvTestInfoVec* failed_tests;
@@ -480,7 +503,7 @@ protected:
     virtual int validate_test_results( int test_case_idx );
 
     virtual int get_test_case_count();
-    virtual void prepare_to_validation( int test_case_idx ) = 0;
+    virtual void prepare_to_validation( int test_case_idx );
     virtual void get_test_array_types_and_sizes( int test_case_idx, CvSize** sizes, int** types );
     virtual void fill_array( int test_case_idx, int i, int j, CvMat* arr );
     virtual void get_minmax_bounds( int i, int j, int type, CvScalar* low, CvScalar* high );

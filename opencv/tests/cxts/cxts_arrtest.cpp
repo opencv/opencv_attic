@@ -73,9 +73,9 @@ CvArrTest::~CvArrTest()
 
 int CvArrTest::write_default_params( CvFileStorage* fs )
 {
-    cvWriteInt( fs, "test_case_count", test_case_count );
-    cvWriteInt( fs, "min_log_array_size", min_log_array_size );
-    cvWriteInt( fs, "max_log_array_size", max_log_array_size );
+    write_param( fs, "test_case_count", test_case_count );
+    write_param( fs, "min_log_array_size", min_log_array_size );
+    write_param( fs, "max_log_array_size", max_log_array_size );
     return 0;
 }
 
@@ -101,12 +101,9 @@ void CvArrTest::clear()
 
 int CvArrTest::read_params( CvFileStorage* fs )
 {
-    CvFileNode* node = cvGetFileNodeByName( fs, 0, get_name() );
-    min_log_array_size = cvReadIntByName( fs, node, "min_log_array_size", min_log_array_size );
-    max_log_array_size = cvReadIntByName( fs, node, "max_log_array_size",
-                                          max_log_array_size );
-    test_case_count = cvReadIntByName( fs, node, "test_case_count",
-                                       test_case_count );
+    min_log_array_size = cvReadInt( find_param( fs, "min_log_array_size" ), min_log_array_size );
+    max_log_array_size = cvReadInt( find_param( fs, "max_log_array_size" ), max_log_array_size );
+    test_case_count = cvReadInt( find_param( fs, "test_case_count" ), test_case_count );
 
     min_log_array_size = cvTsClipInt( min_log_array_size, 0, 20 );
     max_log_array_size = cvTsClipInt( max_log_array_size, min_log_array_size, 20 );
@@ -312,6 +309,12 @@ double CvArrTest::get_success_error_level( int /*test_case_idx*/, int i, int j )
     int elem_depth = CV_MAT_DEPTH(cvGetElemType(test_array[i][j]));
     assert( i == OUTPUT || i == INPUT_OUTPUT );
     return elem_depth < CV_32F ? 0 : elem_depth == CV_32F ? FLT_EPSILON*100: DBL_EPSILON*5000;
+}
+
+
+void CvArrTest::prepare_to_validation( int /*test_case_idx*/ )
+{
+    assert(0);
 }
 
 

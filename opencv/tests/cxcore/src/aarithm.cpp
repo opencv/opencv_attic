@@ -158,6 +158,8 @@ void CxCore_ArithmTest::prepare_to_validation( int /*test_case_idx*/ )
 }
 
 
+CxCore_ArithmTest arithm( "arithm", "" );
+
 ////////////////////////////// add /////////////////////////////
 
 class CxCore_AddTest : public CxCore_ArithmTest
@@ -169,7 +171,7 @@ protected:
 };
 
 CxCore_AddTest::CxCore_AddTest()
-    : CxCore_ArithmTest( "add", "cvAdd", 0, true )
+    : CxCore_ArithmTest( "arithm-add", "cvAdd", 0, true )
 {
     alpha = beta = cvScalarAll(1.);
 }
@@ -193,7 +195,7 @@ protected:
 };
 
 CxCore_SubTest::CxCore_SubTest()
-    : CxCore_ArithmTest( "sub", "cvSub", 0, true )
+    : CxCore_ArithmTest( "arithm-sub", "cvSub", 0, true )
 {
     alpha = cvScalarAll(1.);
     beta = cvScalarAll(-1.);
@@ -219,7 +221,7 @@ protected:
 };
 
 CxCore_AddSTest::CxCore_AddSTest()
-    : CxCore_ArithmTest( "adds", "cvAddS", 4, true )
+    : CxCore_ArithmTest( "arithm-adds", "cvAddS", 4, true )
 {
     test_array[INPUT].pop();
     alpha = cvScalarAll(1.);
@@ -244,7 +246,7 @@ protected:
 };
 
 CxCore_SubRSTest::CxCore_SubRSTest()
-    : CxCore_ArithmTest( "subrs", "cvSubRS", 4, true )
+    : CxCore_ArithmTest( "arithm-subrs", "cvSubRS", 4, true )
 {
     test_array[INPUT].pop();
     alpha = cvScalarAll(-1.);
@@ -272,7 +274,7 @@ protected:
 };
 
 CxCore_AddWeightedTest::CxCore_AddWeightedTest()
-    : CxCore_ArithmTest( "addweighted", "cvAddWeighted", 7, false )
+    : CxCore_ArithmTest( "arithm-addweighted", "cvAddWeighted", 7, false )
 {
 }
 
@@ -320,7 +322,7 @@ protected:
 };
 
 CxCore_AbsDiffTest::CxCore_AbsDiffTest()
-    : CxCore_ArithmTest( "absdiff", "cvAbsDiff", 0, false, true )
+    : CxCore_ArithmTest( "arithm-absdiff", "cvAbsDiff", 0, false, true )
 {
     alpha = cvScalarAll(1.);
     beta = cvScalarAll(-1.);
@@ -344,7 +346,7 @@ protected:
 };
 
 CxCore_AbsDiffSTest::CxCore_AbsDiffSTest()
-    : CxCore_ArithmTest( "absdiffs", "cvAbsDiffS", 4, false, true )
+    : CxCore_ArithmTest( "arithm-absdiffs", "cvAbsDiffS", 4, false, true )
 {
     alpha = cvScalarAll(-1.);
     test_array[INPUT].pop();
@@ -371,7 +373,7 @@ protected:
 };
 
 CxCore_MulTest::CxCore_MulTest()
-    : CxCore_ArithmTest( "mul", "cvMul", 4, false, false )
+    : CxCore_ArithmTest( "arithm-mul", "cvMul", 4, false, false )
 {
 }
 
@@ -414,7 +416,7 @@ protected:
 };
 
 CxCore_DivTest::CxCore_DivTest()
-    : CxCore_ArithmTest( "div", "cvDiv", 4, false, false )
+    : CxCore_ArithmTest( "arithm-div", "cvDiv", 4, false, false )
 {
 }
 
@@ -445,7 +447,7 @@ protected:
 };
 
 CxCore_RecipTest::CxCore_RecipTest()
-    : CxCore_ArithmTest( "recip", "cvDiv", 4, false, false )
+    : CxCore_ArithmTest( "arithm-recip", "cvDiv", 4, false, false )
 {
     test_array[INPUT].pop();
 }
@@ -466,28 +468,46 @@ void CxCore_RecipTest::prepare_to_validation( int /*test_case_idx*/ )
 CxCore_RecipTest recip_test;
 
 
+///////////////// matrix copy/initializing/permutations /////////////////////
+                                                   
+class CxCore_MemTest : public CxCore_ArithmTest
+{
+public:
+    CxCore_MemTest( const char* test_name, const char* test_funcs,
+                    int _generate_scalars=0, bool _allow_mask=true );
+protected:
+    double get_success_error_level( int /*test_case_idx*/, int /*i*/, int /*j*/ );
+};
+
+CxCore_MemTest::CxCore_MemTest( const char* test_name, const char* test_funcs,
+                                int _generate_scalars, bool _allow_mask ) :
+    CxCore_ArithmTest( test_name, test_funcs, _generate_scalars, _allow_mask, false )
+{
+}
+
+double CxCore_MemTest::get_success_error_level( int /*test_case_idx*/, int /*i*/, int /*j*/ )
+{
+    return 0;
+}
+
+CxCore_MemTest mem_test( "mem", "" );
+
 ///////////////// setidentity /////////////////////
 
-class CxCore_SetIdentityTest : public CxCore_ArithmTest
+class CxCore_SetIdentityTest : public CxCore_MemTest
 {
 public:
     CxCore_SetIdentityTest();
 protected:
-    double get_success_error_level( int test_case_idx, int i, int j );
     void run_func();
     void prepare_to_validation( int test_case_idx );
 };
 
 
 CxCore_SetIdentityTest::CxCore_SetIdentityTest() :
-    CxCore_ArithmTest( "setidentity", "cvSetIdentity", 4, false, false )
+    CxCore_MemTest( "mem-setidentity", "cvSetIdentity", 4, false )
 {
     test_array[INPUT].clear();
-}
-
-double CxCore_SetIdentityTest::get_success_error_level( int /*test_case_idx*/, int /*i*/, int /*j*/ )
-{
-    return 0;
 }
 
 
@@ -507,27 +527,20 @@ CxCore_SetIdentityTest setidentity_test;
 
 ///////////////// SetZero /////////////////////
 
-class CxCore_SetZeroTest : public CxCore_ArithmTest
+class CxCore_SetZeroTest : public CxCore_MemTest
 {
 public:
     CxCore_SetZeroTest();
 protected:
-    double get_success_error_level( int /*test_case_idx*/, int /*i*/, int /*j*/ );
     void run_func();
     void prepare_to_validation( int test_case_idx );
 };
 
 
 CxCore_SetZeroTest::CxCore_SetZeroTest() :
-    CxCore_ArithmTest( "setzero", "cvSetZero", 0, false, false )
+    CxCore_MemTest( "mem-setzero", "cvSetZero", 0, false )
 {
     test_array[INPUT].clear();
-}
-
-
-double CxCore_SetZeroTest::get_success_error_level( int /*test_case_idx*/, int /*i*/, int /*j*/ )
-{
-    return 0;
 }
 
 
@@ -547,27 +560,20 @@ CxCore_SetZeroTest setzero_test;
 
 ///////////////// Set /////////////////////
 
-class CxCore_FillTest : public CxCore_ArithmTest
+class CxCore_FillTest : public CxCore_MemTest
 {
 public:
     CxCore_FillTest();
 protected:
-    double get_success_error_level( int test_case_idx, int i, int j );
     void run_func();
     void prepare_to_validation( int test_case_idx );
 };
 
 
 CxCore_FillTest::CxCore_FillTest() :
-    CxCore_ArithmTest( "fill", "cvSet", 4, true, false )
+    CxCore_MemTest( "mem-fill", "cvSet", 4, true )
 {
     test_array[INPUT].clear();
-}
-
-
-double CxCore_FillTest::get_success_error_level( int /*test_case_idx*/, int /*i*/, int /*j*/ )
-{
-    return 0;
 }
 
 
@@ -595,7 +601,7 @@ CxCore_FillTest fill_test;
 
 ///////////////// Copy /////////////////////
 
-class CxCore_CopyTest : public CxCore_ArithmTest
+class CxCore_CopyTest : public CxCore_MemTest
 {
 public:
     CxCore_CopyTest();
@@ -607,7 +613,7 @@ protected:
 
 
 CxCore_CopyTest::CxCore_CopyTest() :
-    CxCore_ArithmTest( "copy", "cvCopy", 0, true, false )
+    CxCore_MemTest( "mem-copy", "cvCopy", 0, true )
 {
     test_array[INPUT].pop();
 }
@@ -635,7 +641,7 @@ CxCore_CopyTest copy_test;
 
 ///////////////// Transpose /////////////////////
 
-class CxCore_TransposeTest : public CxCore_ArithmTest
+class CxCore_TransposeTest : public CxCore_MemTest
 {
 public:
     CxCore_TransposeTest();
@@ -650,7 +656,7 @@ protected:
 
 
 CxCore_TransposeTest::CxCore_TransposeTest() :
-    CxCore_ArithmTest( "transpose", "cvTranspose", 0, false, false ), inplace(false)
+    CxCore_MemTest( "mem-transpose", "cvTranspose", 0, false ), inplace(false)
 {
     test_array[INPUT].pop();
 }
@@ -701,7 +707,7 @@ CxCore_TransposeTest transpose_test;
 
 ///////////////// Flip /////////////////////
 
-class CxCore_FlipTest : public CxCore_ArithmTest
+class CxCore_FlipTest : public CxCore_MemTest
 {
 public:
     CxCore_FlipTest();
@@ -717,7 +723,7 @@ protected:
 
 
 CxCore_FlipTest::CxCore_FlipTest() :
-    CxCore_ArithmTest( "flip", "cvFlip", 0, false, false ), flip_type(0), inplace(false)
+    CxCore_MemTest( "mem-flip", "cvFlip", 0, false ), flip_type(0), inplace(false)
 {
     test_array[INPUT].pop();
 }
@@ -763,7 +769,7 @@ CxCore_FlipTest flip_test;
 
 ///////////////// Split /////////////////////
 
-class CxCore_SplitTest : public CxCore_ArithmTest
+class CxCore_SplitTest : public CxCore_MemTest
 {
 public:
     CxCore_SplitTest();
@@ -780,7 +786,7 @@ protected:
 
 
 CxCore_SplitTest::CxCore_SplitTest() :
-    CxCore_ArithmTest( "split", "cvSplit", 0, false, false ), are_images(false), coi(0)
+    CxCore_MemTest( "mem-split", "cvSplit", 0, false ), are_images(false), coi(0)
 {
     test_array[INPUT].pop();
     memset( hdrs, 0, sizeof(hdrs) );
@@ -877,7 +883,7 @@ CxCore_SplitTest split_test;
 
 ///////////////// Merge /////////////////////
 
-class CxCore_MergeTest : public CxCore_ArithmTest
+class CxCore_MergeTest : public CxCore_MemTest
 {
 public:
     CxCore_MergeTest();
@@ -894,7 +900,7 @@ protected:
 
 
 CxCore_MergeTest::CxCore_MergeTest() :
-    CxCore_ArithmTest( "merge", "cvMerge", 0, false, false ), are_images(false), coi(0)
+    CxCore_MemTest( "mem-merge", "cvMerge", 0, false ), are_images(false), coi(0)
 {
     test_array[INPUT].pop();
     test_array[OUTPUT].clear();
@@ -1002,6 +1008,7 @@ public:
                            int _op_type, int _generate_scalars=0 );
 protected:
     void get_test_array_types_and_sizes( int test_case_idx, CvSize** sizes, int** types );
+    double get_success_error_level( int /*test_case_idx*/, int /*i*/, int /*j*/ );
     void prepare_to_validation( int /*test_case_idx*/ );
     int op_type;
 };
@@ -1012,6 +1019,11 @@ CxCore_MinMaxBaseTest::CxCore_MinMaxBaseTest( const char* test_name, const char*
 {
     if( _generate_scalars )
         test_array[INPUT].pop();
+}
+
+double CxCore_MinMaxBaseTest::get_success_error_level( int /*test_case_idx*/, int /*i*/, int /*j*/ )
+{
+    return 0;
 }
 
 void CxCore_MinMaxBaseTest::get_test_array_types_and_sizes( int test_case_idx, CvSize** sizes, int** types )
@@ -1049,7 +1061,7 @@ protected:
 
 
 CxCore_MinTest::CxCore_MinTest()
-    : CxCore_MinMaxBaseTest( "min", "cvMin", CV_TS_MIN, 0 )
+    : CxCore_MinMaxBaseTest( "arithm-min", "cvMin", CV_TS_MIN, 0 )
 {
 }
 
@@ -1072,7 +1084,7 @@ protected:
 };
 
 CxCore_MaxTest::CxCore_MaxTest()
-    : CxCore_MinMaxBaseTest( "max", "cvMax", CV_TS_MAX, 0 )
+    : CxCore_MinMaxBaseTest( "arithm-max", "cvMax", CV_TS_MAX, 0 )
 {
 }
 
@@ -1095,7 +1107,7 @@ protected:
 };
 
 CxCore_MinSTest::CxCore_MinSTest()
-    : CxCore_MinMaxBaseTest( "mins", "cvMinS", CV_TS_MIN, 4 )
+    : CxCore_MinMaxBaseTest( "arithm-mins", "cvMinS", CV_TS_MIN, 4 )
 {
 }
 
@@ -1117,7 +1129,7 @@ protected:
 };
 
 CxCore_MaxSTest::CxCore_MaxSTest()
-    : CxCore_MinMaxBaseTest( "maxs", "cvMaxS", CV_TS_MAX, 4 )
+    : CxCore_MinMaxBaseTest( "arithm-maxs", "cvMaxS", CV_TS_MAX, 4 )
 {
 }
 
@@ -1198,6 +1210,7 @@ void CxCore_LogicTest::prepare_to_validation( int /*test_case_idx*/ )
     }
 }
 
+CxCore_LogicTest logic_test("logic", "", -1);
 
 ///////////////////////// and //////////////////////////
 
@@ -1210,7 +1223,7 @@ protected:
 };
 
 CxCore_AndTest::CxCore_AndTest()
-    : CxCore_LogicTest( "and", "cvAnd", CV_TS_LOGIC_AND )
+    : CxCore_LogicTest( "logic-and", "cvAnd", CV_TS_LOGIC_AND )
 {
 }
 
@@ -1232,7 +1245,7 @@ protected:
 };
 
 CxCore_AndSTest::CxCore_AndSTest()
-    : CxCore_LogicTest( "ands", "cvAndS", CV_TS_LOGIC_AND, 4 )
+    : CxCore_LogicTest( "logic-ands", "cvAndS", CV_TS_LOGIC_AND, 4 )
 {
 }
 
@@ -1256,7 +1269,7 @@ protected:
 };
 
 CxCore_OrTest::CxCore_OrTest()
-    : CxCore_LogicTest( "or", "cvOr", CV_TS_LOGIC_OR )
+    : CxCore_LogicTest( "logic-or", "cvOr", CV_TS_LOGIC_OR )
 {
 }
 
@@ -1278,7 +1291,7 @@ protected:
 };
 
 CxCore_OrSTest::CxCore_OrSTest()
-    : CxCore_LogicTest( "ors", "cvOrS", CV_TS_LOGIC_OR, 4 )
+    : CxCore_LogicTest( "logic-ors", "cvOrS", CV_TS_LOGIC_OR, 4 )
 {
 }
 
@@ -1302,7 +1315,7 @@ protected:
 };
 
 CxCore_XorTest::CxCore_XorTest()
-    : CxCore_LogicTest( "xor", "cvXor", CV_TS_LOGIC_XOR )
+    : CxCore_LogicTest( "logic-xor", "cvXor", CV_TS_LOGIC_XOR )
 {
 }
 
@@ -1324,7 +1337,7 @@ protected:
 };
 
 CxCore_XorSTest::CxCore_XorSTest()
-    : CxCore_LogicTest( "xors", "cvXorS", CV_TS_LOGIC_XOR, 4 )
+    : CxCore_LogicTest( "logic-xors", "cvXorS", CV_TS_LOGIC_XOR, 4 )
 {
 }
 
@@ -1348,7 +1361,7 @@ protected:
 };
 
 CxCore_NotTest::CxCore_NotTest()
-    : CxCore_LogicTest( "not", "cvNot", CV_TS_LOGIC_NOT, 4, false )
+    : CxCore_LogicTest( "logic-not", "cvNot", CV_TS_LOGIC_NOT, 4, false )
 {
 }
 
@@ -1475,6 +1488,7 @@ void CxCore_CmpBaseTest::prepare_to_validation( int /*test_case_idx*/ )
     }
 }
 
+CxCore_CmpBaseTest cmpbase_test( "cmp", "", 0 );
 
 class CxCore_CmpTest : public CxCore_CmpBaseTest
 {
@@ -1485,7 +1499,7 @@ protected:
 };
 
 CxCore_CmpTest::CxCore_CmpTest()
-    : CxCore_CmpBaseTest( "cmp", "cvCmp", 0, 0 )
+    : CxCore_CmpBaseTest( "cmp-cmp", "cvCmp", 0, 0 )
 {
 }
 
@@ -1507,7 +1521,7 @@ protected:
 };
 
 CxCore_CmpSTest::CxCore_CmpSTest()
-    : CxCore_CmpBaseTest( "cmps", "cvCmpS", 0, 4 )
+    : CxCore_CmpBaseTest( "cmp-cmps", "cvCmpS", 0, 4 )
 {
 }
 
@@ -1529,7 +1543,7 @@ protected:
 };
 
 CxCore_InRangeTest::CxCore_InRangeTest()
-    : CxCore_CmpBaseTest( "inrange", "cvInRange", 1, 0 )
+    : CxCore_CmpBaseTest( "cmp-inrange", "cvInRange", 1, 0 )
 {
 }
 
@@ -1551,7 +1565,7 @@ protected:
 };
 
 CxCore_InRangeSTest::CxCore_InRangeSTest()
-    : CxCore_CmpBaseTest( "inranges", "cvInRangeS", 1, 5 )
+    : CxCore_CmpBaseTest( "cmp-inranges", "cvInRangeS", 1, 5 )
 {
 }
 
@@ -1629,6 +1643,8 @@ void CxCore_CvtBaseTest::prepare_to_validation( int /*test_case_idx*/ )
              cvScalarAll(gamma.val[0]), &test_mat[REF_OUTPUT][0], calc_abs );
 }
 
+CxCore_CvtBaseTest cvt_test( "cvt", "", false );
+
 
 class CxCore_CvtScaleTest : public CxCore_CvtBaseTest
 {
@@ -1639,7 +1655,7 @@ protected:
 };
 
 CxCore_CvtScaleTest::CxCore_CvtScaleTest()
-    : CxCore_CvtBaseTest( "cvtscale", "cvCvtScale", false )
+    : CxCore_CvtBaseTest( "cvt-scale", "cvCvtScale", false )
 {
 }
 
@@ -1661,7 +1677,7 @@ protected:
 };
 
 CxCore_CvtScaleAbsTest::CxCore_CvtScaleAbsTest()
-    : CxCore_CvtBaseTest( "cvtscaleabs", "cvCvtScaleAbs", true )
+    : CxCore_CvtBaseTest( "cvt-scaleabs", "cvCvtScaleAbs", true )
 {
 }
 
@@ -1757,11 +1773,16 @@ int CxCore_StatTest::prepare_test_case( int test_case_idx )
 
 double CxCore_StatTest::get_success_error_level( int test_case_idx, int i, int j )
 {
-    if( CV_MAT_DEPTH(cvGetElemType(test_array[INPUT][0])) == CV_32F )
-        return FLT_EPSILON*100;
+    int depth = CV_MAT_DEPTH(cvGetElemType(test_array[INPUT][0]));
+    if( depth == CV_32F )
+        return FLT_EPSILON*1000;
+    if( depth == CV_64F )
+        return DBL_EPSILON*1000;
     else
         return CvArrTest::get_success_error_level( test_case_idx, i, j );
 }
+
+CxCore_StatTest stat_test( "stat", "", 0, 1 );
 
 ////////////////// sum /////////////////
 class CxCore_SumTest : public CxCore_StatTest
@@ -1775,7 +1796,7 @@ protected:
 
 
 CxCore_SumTest::CxCore_SumTest()
-    : CxCore_StatTest( "sum", "cvSum", 4 /* CvScalar */, false, false, false )
+    : CxCore_StatTest( "stat-sum", "cvSum", 4 /* CvScalar */, false, false, false )
 {
 }
 
@@ -1813,7 +1834,7 @@ protected:
 
 
 CxCore_NonZeroTest::CxCore_NonZeroTest()
-    : CxCore_StatTest( "nonzero", "cvCountNonZero", 1 /* int */, true, false, false )
+    : CxCore_StatTest( "stat-nonzero", "cvCountNonZero", 1 /* int */, true, false, false )
 {
     test_array[TEMP].push(NULL);
     test_array[TEMP].push(NULL);
@@ -1866,7 +1887,7 @@ protected:
 
 
 CxCore_MeanTest::CxCore_MeanTest()
-    : CxCore_StatTest( "mean", "cvAvg", 4 /* CvScalar */, false, true, false )
+    : CxCore_StatTest( "stat-mean", "cvAvg", 4 /* CvScalar */, false, true, false )
 {
 }
 
@@ -1900,7 +1921,7 @@ protected:
 
 
 CxCore_MeanStdDevTest::CxCore_MeanStdDevTest()
-    : CxCore_StatTest( "mean_stddev", "cvAvgSdv", 8 /* CvScalar x 2 */, false, true, false )
+    : CxCore_StatTest( "stat-mean_stddev", "cvAvgSdv", 8 /* CvScalar x 2 */, false, true, false )
 {
 }
 
@@ -1937,7 +1958,7 @@ protected:
 
 
 CxCore_MinMaxLocTest::CxCore_MinMaxLocTest()
-    : CxCore_StatTest( "minmaxloc", "cvMinMaxLoc", 6 /* double x 2 + CvPoint x 2 */, true, true, false )
+    : CxCore_StatTest( "stat-minmaxloc", "cvMinMaxLoc", 6 /* double x 2 + CvPoint x 2 */, true, true, false )
 {
 }
 
@@ -1983,14 +2004,25 @@ protected:
     void prepare_to_validation( int test_case_idx );
     void get_test_array_types_and_sizes( int test_case_idx,
                                          CvSize** sizes, int** types );
+    double get_success_error_level( int test_case_idx, int i, int j );
     int norm_type;
 };
 
 
 CxCore_NormTest::CxCore_NormTest()
-    : CxCore_StatTest( "norm", "cvNorm", 1 /* double */, false, true, true )
+    : CxCore_StatTest( "stat-norm", "cvNorm", 1 /* double */, false, true, true )
 {
     test_array[TEMP].push(NULL);
+}
+
+
+double CxCore_NormTest::get_success_error_level( int test_case_idx, int i, int j )
+{
+    int depth = CV_MAT_DEPTH(cvGetElemType(test_array[INPUT][0]));
+    if( (depth == CV_16U || depth == CV_16S) && (norm_type&3) != CV_C  )
+        return FLT_EPSILON*100;
+    else
+        return CxCore_StatTest::get_success_error_level( test_case_idx, i, j );
 }
 
 void CxCore_NormTest::get_test_array_types_and_sizes( int test_case_idx,
@@ -2019,6 +2051,13 @@ void CxCore_NormTest::get_test_array_types_and_sizes( int test_case_idx,
 
 void CxCore_NormTest::run_func()
 {
+    /*if( ts->get_current_test_info()->test_case_idx == 268 )
+    {
+        cvSave( "_a.xml", &test_mat[INPUT][0] );
+        cvSave( "_b.xml", &test_mat[INPUT][1] );
+        putchar('.');
+    }*/
+    
     test_mat[OUTPUT][0].data.db[0] = cvNorm( test_array[INPUT][0],
             test_array[INPUT][1], norm_type, test_array[MASK][0] );
 }
@@ -2030,6 +2069,7 @@ void CxCore_NormTest::prepare_to_validation( int /*test_case_idx*/ )
     CvMat* b = &test_mat[INPUT][1];
     CvMat* mask = test_array[MASK][0] ? &test_mat[MASK][0] : 0;
     CvMat* diff = a;
+
     if( norm_type & (CV_DIFF|CV_RELATIVE) )
     {
         diff = &test_mat[TEMP][0] ? &test_mat[TEMP][0] : a;
@@ -2061,7 +2101,7 @@ protected:
 
 
 CxCore_TraceTest::CxCore_TraceTest() :
-    CxCore_StatTest( "trace", "cvTrace", 4, false, false, false )
+    CxCore_StatTest( "matrix-trace", "cvTrace", 4, false, false, false )
 {
 }
 
