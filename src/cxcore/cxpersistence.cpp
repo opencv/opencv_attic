@@ -49,30 +49,25 @@
 #define cv_isprint(c)     ((signed char)(c) >= (signed char)' ')
 #define cv_isprint_or_tab(c)  ((signed char)(c) >= (signed char)' ' || (c) == '\t')
 
-static char* icv_itoa( int val, char* buffer, int /*radix*/ )
+static char* icv_itoa( int _val, char* buffer, int /*radix*/ )
 {
     const int radix = 10;
-    char* ptr=buffer, *ptr2 = buffer;
-    if( val < 0 )
-    {
-        *ptr++ = '-';
-        ptr2 = ptr;
-        val = -val;
-    }
+    char* ptr=buffer + 23 /* enough even for 64-bit integers */;
+    unsigned val = abs(_val);
 
+    *ptr = '\0';
     do
     {
-        *ptr++ = (char)(val % radix + '0');
-        val /= radix;
+        unsigned r = val / radix;
+        *--ptr = (char)(val - (r*radix) + '0');
+        val = r;
     }
     while( val != 0 );
-    *ptr-- = '\0';
-    for( ; ptr > ptr2; ptr--, ptr2++ )
-    {
-        char t;
-        CV_SWAP( *ptr, *ptr2, t );
-    }
-    return buffer;
+
+    if( _val < 0 )
+        *--ptr = '-';
+
+    return ptr;
 }
 
 typedef struct CvGenericHash
@@ -2429,11 +2424,9 @@ icvXMLWriteInt( CvFileStorage* fs, const char* key, int value )
 
     __BEGIN__;
     
-    char buf[128];
-    int len;
-
-    len = strlen(icv_itoa( value, buf, 10 ));
-    icvXMLWriteScalar( fs, key, buf, len );
+    char buf[128], *ptr = icv_itoa( value, buf, 10 );
+    int len = strlen(ptr);
+    icvXMLWriteScalar( fs, key, ptr, len );
     
     __END__;    
 }
@@ -3019,7 +3012,7 @@ cvWriteRawData( CvFileStorage* fs, const void* _data, int len, const char* dt )
             int i, count = fmt_pairs[k*2];
             int elem_type = fmt_pairs[k*2+1];
             int elem_size = CV_ELEM_SIZE(elem_type);
-            const char* data;
+            const char* data, *ptr;
             
             offset = cvAlign( offset, elem_size );
             data = data0 + offset;
@@ -3029,35 +3022,35 @@ cvWriteRawData( CvFileStorage* fs, const void* _data, int len, const char* dt )
                 switch( elem_type )
                 {
                 case CV_8U:
-                    icv_itoa( *(uchar*)data, buf, 10 );
+                    ptr = icv_itoa( *(uchar*)data, buf, 10 );
                     data++;
                     break;
                 case CV_8S:
-                    icv_itoa( *(char*)data, buf, 10 );
+                    ptr = icv_itoa( *(char*)data, buf, 10 );
                     data++;
                     break;
                 case CV_16U:
-                    icv_itoa( *(ushort*)data, buf, 10 );
+                    ptr = icv_itoa( *(ushort*)data, buf, 10 );
                     data += sizeof(ushort);
                     break;
                 case CV_16S:
-                    icv_itoa( *(short*)data, buf, 10 );
+                    ptr = icv_itoa( *(short*)data, buf, 10 );
                     data += sizeof(short);
                     break;
                 case CV_32S:
-                    icv_itoa( *(int*)data, buf, 10 );
+                    ptr = icv_itoa( *(int*)data, buf, 10 );
                     data += sizeof(int);
                     break;
                 case CV_32F:
-                    icvFloatToString( buf, *(float*)data );
+                    ptr = icvFloatToString( buf, *(float*)data );
                     data += sizeof(float);
                     break;
                 case CV_64F:
-                    icvDoubleToString( buf, *(double*)data );
+                    ptr = icvDoubleToString( buf, *(double*)data );
                     data += sizeof(double);
                     break;
                 case CV_USRTYPE1: /* reference */
-                    icv_itoa( (int)*(size_t*)data, buf, 10 );
+                    ptr = icv_itoa( (int)*(size_t*)data, buf, 10 );
                     data += sizeof(size_t);
                     break;
                 default:
@@ -3067,11 +3060,11 @@ cvWriteRawData( CvFileStorage* fs, const void* _data, int len, const char* dt )
 
                 if( fs->is_xml )
                 {
-                    int buf_len = strlen(buf);
-                    CV_CALL( icvXMLWriteScalar( fs, 0, buf, buf_len ));
+                    int buf_len = strlen(ptr);
+                    CV_CALL( icvXMLWriteScalar( fs, 0, ptr, buf_len ));
                 }
                 else
-                    CV_CALL( icvYMLWrite( fs, 0, buf, cvFuncName ));
+                    CV_CALL( icvYMLWrite( fs, 0, ptr, cvFuncName ));
             }
 
             offset = data - data0;
@@ -4988,7 +4981,7 @@ cvRead( CvFileStorage* fs, CvFileNode* node, CvAttrList* list )
         EXIT;
 
     if( !CV_NODE_IS_USER(node->tag) || !node->info )
-        CV_ERROR( CV_StsError, "The node does not represent a user object" );
+        CV_ERROR( CV_StsError, "The node does not represent a user object (unknown type?)" );
 
     CV_CALL( obj = node->info->read( fs, node ));
 

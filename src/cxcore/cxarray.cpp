@@ -836,7 +836,7 @@ icvGetNodePtr( CvSparseMat* mat, int* idx, int* _type,
         if( mat->heap->active_count >= mat->hashsize*CV_SPARSE_HASH_RATIO )
         {
             void** newtable;
-            int newsize = CV_MAX( mat->hashsize*2, CV_SPARSE_HASH_SIZE0);
+            int newsize = MAX( mat->hashsize*2, CV_SPARSE_HASH_SIZE0);
             int newrawsize = newsize*sizeof(newtable[0]);
             
             CvSparseMatIterator iterator;

@@ -510,8 +510,9 @@ cvRandArr( CvRNG* rng, CvArr* arr, int disttype, CvScalar param1, CvScalar param
             {
                 int t0 = iparam[0][i] = cvCeil( param1.val[i] );
                 int t1 = iparam[1][i] = cvFloor( param2.val[i] ) - t0;
+                double diff = param1.val[i] - param2.val[i];
 
-                fast_int_mode &= (t1 & (t1 - 1)) == 0;
+                fast_int_mode &= INT_MIN <= diff && diff <= INT_MAX && (t1 & (t1 - 1)) == 0;
             }
         }
 
@@ -593,8 +594,3 @@ cvRandArr( CvRNG* rng, CvArr* arr, int disttype, CvScalar param1, CvScalar param
 }
 
 /* End of file. */
-
-
-
-
-

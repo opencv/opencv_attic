@@ -71,6 +71,9 @@ typedef unsigned long ulong;
 extern const float icv8x32fTab[];
 #define CV_8TO32F(x)  icv8x32fTab[(x)+128]
 
+extern const ushort icv8x16uSqrTab[];
+#define CV_SQR_8U(x)  icv8x16uSqrTab[(x)+255]
+
 extern const char* icvHersheyGlyphs[];
 
 extern const int icvPixSize[];

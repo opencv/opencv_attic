@@ -42,297 +42,850 @@
 #include "_cxcore.h"
 
 /****************************************************************************************\
-*                                  N o r m                                               *
+*                                         N o r m                                        *
 \****************************************************************************************/
 
-#define ICV_DEF_NORM_CASE( _op_, _update_op_, temptype, len ) \
-{                                                       \
-    for( x = 0; x <= (len) - 4; x += 4 )                \
-    {                                                   \
-        temptype t0 = (src)[x];                         \
-        temptype t1 = (src)[x+1];                       \
-                                                        \
-        t0 = (temptype)_op_(t0);                        \
-        t1 = (temptype)_op_(t1);                        \
-                                                        \
-        norm = _update_op_( norm, t0 );                 \
-        norm = _update_op_( norm, t1 );                 \
-                                                        \
-        t0 = (src)[x+2];                                \
-        t1 = (src)[x+3];                                \
-                                                        \
-        t0 = (temptype)_op_(t0);                        \
-        t1 = (temptype)_op_(t1);                        \
-                                                        \
-        norm = _update_op_( norm, t0 );                 \
-        norm = _update_op_( norm, t1 );                 \
-    }                                                   \
-                                                        \
-    for( ; x < (len); x++ )                             \
-    {                                                   \
-        temptype t0 = (src)[x];                         \
-        t0 = (temptype)_op_(t0);                        \
-        norm = _update_op_( norm, t0 );                 \
-    }                                                   \
+#define ICV_NORM_CASE( _op_,                \
+    _update_op_, worktype, len )            \
+                                            \
+    for( ; x <= (len) - 4; x += 4 )         \
+    {                                       \
+        worktype t0 = (src)[x];             \
+        worktype t1 = (src)[x+1];           \
+        t0 = _op_(t0);                      \
+        t1 = _op_(t1);                      \
+        norm = _update_op_( norm, t0 );     \
+        norm = _update_op_( norm, t1 );     \
+                                            \
+        t0 = (src)[x+2];                    \
+        t1 = (src)[x+3];                    \
+        t0 = _op_(t0);                      \
+        t1 = _op_(t1);                      \
+        norm = _update_op_( norm, t0 );     \
+        norm = _update_op_( norm, t1 );     \
+    }                                       \
+                                            \
+    for( ; x < (len); x++ )                 \
+    {                                       \
+        worktype t0 = (src)[x];             \
+        t0 = (worktype)_op_(t0);            \
+        norm = _update_op_( norm, t0 );     \
+    }
+
+
+#define ICV_NORM_COI_CASE( _op_,            \
+    _update_op_, worktype, len, cn )        \
+                                            \
+    for( ; x < (len); x++ )                 \
+    {                                       \
+        worktype t0 = (src)[x*(cn)];        \
+        t0 = (worktype)_op_(t0);            \
+        norm = _update_op_( norm, t0 );     \
+    }
+
+
+#define ICV_NORM_DIFF_CASE( _op_,           \
+    _update_op_, worktype, len )            \
+                                            \
+    for( ; x <= (len) - 4; x += 4 )         \
+    {                                       \
+        worktype t0 = (src1)[x] - (src2)[x];\
+        worktype t1 = (src1)[x+1]-(src2)[x+1];\
+                                            \
+        t0 = _op_(t0);                      \
+        t1 = _op_(t1);                      \
+                                            \
+        norm = _update_op_( norm, t0 );     \
+        norm = _update_op_( norm, t1 );     \
+                                            \
+        t0 = (src1)[x+2] - (src2)[x+2];     \
+        t1 = (src1)[x+3] - (src2)[x+3];     \
+                                            \
+        t0 = _op_(t0);                      \
+        t1 = _op_(t1);                      \
+                                            \
+        norm = _update_op_( norm, t0 );     \
+        norm = _update_op_( norm, t1 );     \
+    }                                       \
+                                            \
+    for( ; x < (len); x++ )                 \
+    {                                       \
+        worktype t0 = (src1)[x] - (src2)[x];\
+        t0 = (worktype)_op_(t0);            \
+        norm = _update_op_( norm, t0 );     \
+    }
+
+
+#define ICV_NORM_DIFF_COI_CASE( _op_, _update_op_, worktype, len, cn ) \
+    for( ; x < (len); x++ )                                     \
+    {                                                           \
+        worktype t0 = (src1)[x*(cn)] - (src2)[x*(cn)];          \
+        t0 = (worktype)_op_(t0);                                \
+        norm = _update_op_( norm, t0 );                         \
+    }
+
+
+/*
+ 	The algorithm and its multiple variations below
+    below accumulates the norm by blocks of size "block_size".
+    Each block may span across multiple lines and it is
+    not necessary aligned by row boundaries. Within a block
+    the norm is accumulated to intermediate light-weight
+    type (worktype). It really makes sense for 8u, 16s, 16u types
+    and L1 & L2 norms, where worktype==int and normtype==int64.
+    In other cases a simpler algorithm is used
+*/
+#define  ICV_DEF_NORM_NOHINT_BLOCK_FUNC_2D( name, _op_, _update_op_, \
+    post_func, arrtype, normtype, worktype, block_size )        \
+IPCVAPI_IMPL( CvStatus, name, ( const arrtype* src, int step,   \
+    CvSize size, double* _norm ), (src, step, size, _norm) )    \
+{                                                               \
+    int remaining = block_size;                                 \
+    normtype total_norm = 0;                                    \
+    worktype norm = 0;                                          \
+    step /= sizeof(src[0]);                                     \
+                                                                \
+    for( ; size.height--; src += step )                         \
+    {                                                           \
+        int x = 0;                                              \
+        while( x < size.width )                                 \
+        {                                                       \
+            int limit = MIN( remaining, size.width - x );       \
+            remaining -= limit;                                 \
+            limit += x;                                         \
+            ICV_NORM_CASE( _op_, _update_op_, worktype, limit );\
+            if( remaining == 0 )                                \
+            {                                                   \
+                remaining = block_size;                         \
+                total_norm += (normtype)norm;                   \
+                norm = 0;                                       \
+            }                                                   \
+        }                                                       \
+    }                                                           \
+                                                                \
+    total_norm += (normtype)norm;                               \
+    *_norm = post_func((double)total_norm);                     \
+    return CV_OK;                                               \
 }
 
 
-#define ICV_DEF_NORM_DIFF_CASE( _diff_op_, _update_op_,\
-                                temptype, len ) \
+#define  ICV_DEF_NORM_NOHINT_FUNC_2D( name, _op_, _update_op_,  \
+    post_func, arrtype, normtype, worktype, block_size )        \
+IPCVAPI_IMPL( CvStatus, name, ( const arrtype* src, int step,   \
+    CvSize size, double* _norm ), (src, step, size, _norm) )    \
+{                                                               \
+    normtype norm = 0;                                          \
+    step /= sizeof(src[0]);                                     \
+                                                                \
+    for( ; size.height--; src += step )                         \
+    {                                                           \
+        int x = 0;                                              \
+        ICV_NORM_CASE(_op_, _update_op_, worktype, size.width); \
+    }                                                           \
+                                                                \
+    *_norm = post_func((double)norm);                           \
+    return CV_OK;                                               \
+}
+
+
+/*
+   In IPP only 32f flavors of norm functions are with hint.
+   For float worktype==normtype==double, thus the block algorithm,
+   described above, is not necessary.
+ */
+#define  ICV_DEF_NORM_HINT_FUNC_2D( name, _op_, _update_op_,    \
+    post_func, arrtype, normtype, worktype, block_size )        \
+IPCVAPI_IMPL( CvStatus, name, ( const arrtype* src, int step,   \
+    CvSize size, double* _norm, CvHintAlgorithm /*hint*/ ),     \
+    (src, step, size, _norm, cvAlgHintAccurate) )               \
+{                                                               \
+    normtype norm = 0;                                          \
+    step /= sizeof(src[0]);                                     \
+                                                                \
+    for( ; size.height--; src += step )                         \
+    {                                                           \
+        int x = 0;                                              \
+        ICV_NORM_CASE(_op_, _update_op_, worktype, size.width); \
+    }                                                           \
+                                                                \
+    *_norm = post_func((double)norm);                           \
+    return CV_OK;                                               \
+}
+
+
+#define  ICV_DEF_NORM_NOHINT_BLOCK_FUNC_2D_COI( name, _op_,     \
+    _update_op_, post_func, arrtype,                            \
+    normtype, worktype, block_size )                            \
+static CvStatus CV_STDCALL name( const arrtype* src, int step,  \
+                CvSize size, int cn, int coi, double* _norm )   \
+{                                                               \
+    int remaining = block_size;                                 \
+    normtype total_norm = 0;                                    \
+    worktype norm = 0;                                          \
+    step /= sizeof(src[0]);                                     \
+    src += coi - 1;                                             \
+                                                                \
+    for( ; size.height--; src += step )                         \
+    {                                                           \
+        int x = 0;                                              \
+        while( x < size.width )                                 \
+        {                                                       \
+            int limit = MIN( remaining, size.width - x );       \
+            remaining -= limit;                                 \
+            limit += x;                                         \
+            ICV_NORM_COI_CASE( _op_, _update_op_,               \
+                               worktype, limit, cn );           \
+            if( remaining == 0 )                                \
+            {                                                   \
+                remaining = block_size;                         \
+                total_norm += (normtype)norm;                   \
+                norm = 0;                                       \
+            }                                                   \
+        }                                                       \
+    }                                                           \
+                                                                \
+    total_norm += (normtype)norm;                               \
+    *_norm = post_func((double)total_norm);                     \
+    return CV_OK;                                               \
+}
+
+
+#define  ICV_DEF_NORM_NOHINT_FUNC_2D_COI( name, _op_,           \
+    _update_op_, post_func,                                     \
+    arrtype, normtype, worktype, block_size )                   \
+static CvStatus CV_STDCALL name( const arrtype* src, int step,  \
+                CvSize size, int cn, int coi, double* _norm )   \
+{                                                               \
+    normtype norm = 0;                                          \
+    step /= sizeof(src[0]);                                     \
+    src += coi - 1;                                             \
+                                                                \
+    for( ; size.height--; src += step )                         \
+    {                                                           \
+        int x = 0;                                              \
+        ICV_NORM_COI_CASE( _op_, _update_op_,                   \
+                           worktype, size.width, cn );          \
+    }                                                           \
+                                                                \
+    *_norm = post_func((double)norm);                           \
+    return CV_OK;                                               \
+}
+
+
+#define  ICV_DEF_NORM_DIFF_NOHINT_BLOCK_FUNC_2D( name, _op_,    \
+    _update_op_, post_func, arrtype,                            \
+    normtype, worktype, block_size )                            \
+IPCVAPI_IMPL( CvStatus, name,( const arrtype* src1, int step1,  \
+    const arrtype* src2, int step2, CvSize size, double* _norm),\
+   (src1, step1, src2, step2, size, _norm))                     \
+{                                                               \
+    int remaining = block_size;                                 \
+    normtype total_norm = 0;                                    \
+    worktype norm = 0;                                          \
+    step1 /= sizeof(src1[0]);                                   \
+    step2 /= sizeof(src2[0]);                                   \
+                                                                \
+    for( ; size.height--; src1 += step1, src2 += step2 )        \
+    {                                                           \
+        int x = 0;                                              \
+        while( x < size.width )                                 \
+        {                                                       \
+            int limit = MIN( remaining, size.width - x );       \
+            remaining -= limit;                                 \
+            limit += x;                                         \
+            ICV_NORM_DIFF_CASE( _op_, _update_op_,              \
+                                worktype, limit );              \
+            if( remaining == 0 )                                \
+            {                                                   \
+                remaining = block_size;                         \
+                total_norm += (normtype)norm;                   \
+                norm = 0;                                       \
+            }                                                   \
+        }                                                       \
+    }                                                           \
+                                                                \
+    total_norm += (normtype)norm;                               \
+    *_norm = post_func((double)total_norm);                     \
+    return CV_OK;                                               \
+}
+
+
+#define  ICV_DEF_NORM_DIFF_NOHINT_FUNC_2D( name, _op_,          \
+    _update_op_, post_func,                                     \
+    arrtype, normtype, worktype, block_size )                   \
+IPCVAPI_IMPL( CvStatus, name,( const arrtype* src1, int step1,  \
+    const arrtype* src2, int step2, CvSize size, double* _norm),\
+    ( src1, step1, src2, step2, size, _norm ))                  \
+{                                                               \
+    normtype norm = 0;                                          \
+    step1 /= sizeof(src1[0]);                                   \
+    step2 /= sizeof(src2[0]);                                   \
+                                                                \
+    for( ; size.height--; src1 += step1, src2 += step2 )        \
+    {                                                           \
+        int x = 0;                                              \
+        ICV_NORM_DIFF_CASE( _op_, _update_op_,                  \
+                            worktype, size.width );             \
+    }                                                           \
+                                                                \
+    *_norm = post_func((double)norm);                           \
+    return CV_OK;                                               \
+}
+
+
+#define  ICV_DEF_NORM_DIFF_HINT_FUNC_2D( name, _op_,            \
+    _update_op_, post_func,                                     \
+    arrtype, normtype, worktype, block_size )                   \
+IPCVAPI_IMPL( CvStatus, name,( const arrtype* src1, int step1,  \
+    const arrtype* src2, int step2, CvSize size, double* _norm, \
+    CvHintAlgorithm /*hint*/ ),                                 \
+    (src1, step1, src2, step2, size, _norm, cvAlgHintAccurate ))\
+{                                                               \
+    normtype norm = 0;                                          \
+    step1 /= sizeof(src1[0]);                                   \
+    step2 /= sizeof(src2[0]);                                   \
+                                                                \
+    for( ; size.height--; src1 += step1, src2 += step2 )        \
+    {                                                           \
+        int x = 0;                                              \
+        ICV_NORM_DIFF_CASE( _op_, _update_op_,                  \
+                            worktype, size.width );             \
+    }                                                           \
+                                                                \
+    *_norm = post_func((double)norm);                           \
+    return CV_OK;                                               \
+}
+
+
+#define  ICV_DEF_NORM_DIFF_NOHINT_BLOCK_FUNC_2D_COI( name, _op_,\
+    _update_op_, post_func, arrtype,                            \
+    normtype, worktype, block_size )                            \
+static CvStatus CV_STDCALL name( const arrtype* src1, int step1,\
+    const arrtype* src2, int step2, CvSize size,                \
+    int cn, int coi, double* _norm )                            \
+{                                                               \
+    int remaining = block_size;                                 \
+    normtype total_norm = 0;                                    \
+    worktype norm = 0;                                          \
+    step1 /= sizeof(src1[0]);                                   \
+    step2 /= sizeof(src2[0]);                                   \
+    src1 += coi - 1;                                            \
+    src2 += coi - 1;                                            \
+                                                                \
+    for( ; size.height--; src1 += step1, src2 += step2 )        \
+    {                                                           \
+        int x = 0;                                              \
+        while( x < size.width )                                 \
+        {                                                       \
+            int limit = MIN( remaining, size.width - x );       \
+            remaining -= limit;                                 \
+            limit += x;                                         \
+            ICV_NORM_DIFF_COI_CASE( _op_, _update_op_,          \
+                                    worktype, limit, cn );      \
+            if( remaining == 0 )                                \
+            {                                                   \
+                remaining = block_size;                         \
+                total_norm += (normtype)norm;                   \
+                norm = 0;                                       \
+            }                                                   \
+        }                                                       \
+    }                                                           \
+                                                                \
+    total_norm += (normtype)norm;                               \
+    *_norm = post_func((double)total_norm);                     \
+    return CV_OK;                                               \
+}
+
+
+#define  ICV_DEF_NORM_DIFF_NOHINT_FUNC_2D_COI( name, _op_,      \
+    _update_op_, post_func,                                     \
+    arrtype, normtype, worktype, block_size )                   \
+static CvStatus CV_STDCALL name( const arrtype* src1, int step1,\
+    const arrtype* src2, int step2, CvSize size,                \
+    int cn, int coi, double* _norm )                            \
+{                                                               \
+    normtype norm = 0;                                          \
+    step1 /= sizeof(src1[0]);                                   \
+    step2 /= sizeof(src2[0]);                                   \
+    src1 += coi - 1;                                            \
+    src2 += coi - 1;                                            \
+                                                                \
+    for( ; size.height--; src1 += step1, src2 += step2 )        \
+    {                                                           \
+        int x = 0;                                              \
+        ICV_NORM_DIFF_COI_CASE( _op_, _update_op_,              \
+                                worktype, size.width, cn );     \
+    }                                                           \
+                                                                \
+    *_norm = post_func((double)norm);                           \
+    return CV_OK;                                               \
+}
+
+
+/****************************************************************************************\
+*                             N o r m   with    M A S K                                  *
+\****************************************************************************************/
+
+#define ICV_NORM_MASK_CASE( _op_,               \
+        _update_op_, worktype, len )            \
 {                                               \
-    for( x = 0; x <= (len) - 4; x += 4 )        \
+    for( ; x <= (len) - 2; x += 2 )             \
     {                                           \
-        temptype t0 = (src1)[x] - (src2)[x];    \
-        temptype t1 = (src1)[x+1] - (src2)[x+1];\
-                                                \
-        t0 = (temptype)_diff_op_(t0);           \
-        t1 = (temptype)_diff_op_(t1);           \
-                                                \
-        norm = _update_op_( norm, t0 );         \
-        norm = _update_op_( norm, t1 );         \
-                                                \
-        t0 = (src1)[x+2] - (src2)[x+2];         \
-        t1 = (src1)[x+3] - (src2)[x+3];         \
-                                                \
-        t0 = (temptype)_diff_op_(t0);           \
-        t1 = (temptype)_diff_op_(t1);           \
-                                                \
-        norm = _update_op_( norm, t0 );         \
-        norm = _update_op_( norm, t1 );         \
+        worktype t0;                            \
+        if( mask[x] )                           \
+        {                                       \
+            t0 = (src)[x];                      \
+            t0 = _op_(t0);                      \
+            norm = _update_op_( norm, t0 );     \
+        }                                       \
+        if( mask[x+1] )                         \
+        {                                       \
+            t0 = (src)[x+1];                    \
+            t0 = _op_(t0);                      \
+            norm = _update_op_( norm, t0 );     \
+        }                                       \
     }                                           \
                                                 \
     for( ; x < (len); x++ )                     \
+        if( mask[x] )                           \
+        {                                       \
+            worktype t0 = (src)[x];             \
+            t0 = _op_(t0);                      \
+            norm = _update_op_( norm, t0 );     \
+        }                                       \
+}
+
+
+#define ICV_NORM_DIFF_MASK_CASE( _op_, _update_op_, worktype, len ) \
+{                                               \
+    for( ; x <= (len) - 2; x += 2 )             \
     {                                           \
-        temptype t0 = (src1)[x] - (src2)[x];    \
-        t0 = (temptype)_diff_op_(t0);           \
-        norm = _update_op_( norm, t0 );         \
+        worktype t0;                            \
+        if( mask[x] )                           \
+        {                                       \
+            t0 = (src1)[x] - (src2)[x];         \
+            t0 = _op_(t0);                      \
+            norm = _update_op_( norm, t0 );     \
+        }                                       \
+        if( mask[x+1] )                         \
+        {                                       \
+            t0 = (src1)[x+1] - (src2)[x+1];     \
+            t0 = _op_(t0);                      \
+            norm = _update_op_( norm, t0 );     \
+        }                                       \
     }                                           \
+                                                \
+    for( ; x < (len); x++ )                     \
+        if( mask[x] )                           \
+        {                                       \
+            worktype t0 = (src1)[x] - (src2)[x];\
+            t0 = _op_(t0);                      \
+            norm = _update_op_( norm, t0 );     \
+        }                                       \
 }
 
 
-#define ICV_DEF_NORM_COI_CASE( _op_, _update_op_, temptype, len, cn ) \
-{                                                          \
-    for( x = 0; x < (len); x++ )                           \
-    {                                                      \
-        temptype t0 = (src)[x*(cn)];                       \
-        t0 = (temptype)_op_(t0);                           \
-        norm = _update_op_( norm, t0 );                    \
-    }                                                      \
+#define ICV_NORM_MASK_COI_CASE( _op_, _update_op_, worktype, len, cn ) \
+{                                               \
+    for( ; x < (len); x++ )                     \
+        if( mask[x] )                           \
+        {                                       \
+            worktype t0 = (src)[x*(cn)];        \
+            t0 = _op_(t0);                      \
+            norm = _update_op_( norm, t0 );     \
+        }                                       \
 }
 
 
-#define ICV_DEF_NORM_DIFF_COI_CASE( _diff_op_, _update_op_,   \
-                                temptype, len, cn )     \
-{                                                       \
-    for( x = 0; x < (len); x++ )                        \
-    {                                                   \
-        temptype t0 = (src1)[x*(cn)] - (src2)[x*(cn)];  \
-        t0 = (temptype)_diff_op_(t0);                   \
-        norm = _update_op_( norm, t0 );                 \
-    }                                                   \
+#define ICV_NORM_DIFF_MASK_COI_CASE( _op_, _update_op_, worktype, len, cn )\
+{                                               \
+    for( ; x < (len); x++ )                     \
+        if( mask[x] )                           \
+        {                                       \
+            worktype t0 = (src1)[x*(cn)] - (src2)[x*(cn)];  \
+            t0 = _op_(t0);                      \
+            norm = _update_op_( norm, t0 );     \
+        }                                       \
 }
 
 
-#define  CV_NORM_ENTRY( normtype )  \
-    int  x;                         \
-    normtype norm = 0
-
-#define  CV_NORM_REL_ENTRY( normtype )  \
-    int  x;                             \
-    normtype norm = 0, norm_diff = 0
-
-#define  CV_NORM_EXIT( cn )  *_norm = (double)norm
-
-#define  CV_NORM_REL_EXIT( cn )  \
-    *_norm = ((double)norm_diff)/((double)norm + DBL_EPSILON)
-
-#define  CV_NORM_L2_EXIT( cn )  *_norm = sqrt((double)norm)
-
-#define  CV_NORM_REL_L2_EXIT( cn )  \
-    *_norm = sqrt((double)norm_diff)/sqrt((double)norm + DBL_EPSILON)
-
-
-#define  ICV_DEF_NORM_NOHINT_FUNC_2D( _op_, _update_op_, _entry_, _case_, _exit_,\
-                               name, srctype, normtype, temptype )  \
-IPCVAPI_IMPL( CvStatus, name, ( const srctype* src, int step,       \
-                                CvSize size, double* _norm ),       \
-                                (src, step, size, _norm) )          \
-{                                                                   \
-    _entry_( normtype );                                            \
-                                                                    \
-    for( ; size.height--; (char*&)src += step )                     \
-    {                                                               \
-        _case_( _op_, _update_op_, temptype, size.width );          \
-    }                                                               \
-                                                                    \
-    _exit_(1);                                                      \
-                                                                    \
-    return CV_OK;                                                   \
-}
-
-#define  ICV_DEF_NORM_HINT_FUNC_2D( _op_, _update_op_, _entry_, _case_, _exit_,\
-                               name, srctype, normtype, temptype )  \
-IPCVAPI_IMPL( CvStatus, name, ( const srctype* src, int step,       \
-                                CvSize size, double* _norm,         \
-                                CvHintAlgorithm /*hint*/ ),         \
-                                (src, step, size, _norm, cvAlgHintAccurate) )\
-{                                                                   \
-    _entry_( normtype );                                            \
-                                                                    \
-    for( ; size.height--; (char*&)src += step )                     \
-    {                                                               \
-        _case_( _op_, _update_op_, temptype, size.width );          \
-    }                                                               \
-                                                                    \
-    _exit_(1);                                                      \
-                                                                    \
-    return CV_OK;                                                   \
-}
-
-
-#define  ICV_DEF_NORM_FUNC_2D_COI( _op_, _update_op_, _entry_, _case_, _exit_,\
-                                   name, srctype, normtype, temptype )\
-static CvStatus CV_STDCALL name( const srctype* src, int step,  \
-                  CvSize size, int cn, int coi, double* _norm ) \
+#define  ICV_DEF_NORM_MASK_NOHINT_BLOCK_FUNC_2D( name, _op_,    \
+    _update_op_, post_func, arrtype,                            \
+    normtype, worktype, block_size )                            \
+IPCVAPI_IMPL( CvStatus, name, ( const arrtype* src, int step,   \
+    const uchar* mask, int maskstep, CvSize size, double* _norm ),\
+    (src, step, mask, maskstep, size, _norm) )                  \
 {                                                               \
-    _entry_( normtype );                                        \
+    int remaining = block_size;                                 \
+    normtype total_norm = 0;                                    \
+    worktype norm = 0;                                          \
+    step /= sizeof(src[0]);                                     \
                                                                 \
-    src += coi - 1;                                             \
-    for( ; size.height--; (char*&)src += step )                 \
+    for( ; size.height--; src += step, mask += maskstep )       \
     {                                                           \
-        _case_( _op_, _update_op_, temptype, size.width, cn );  \
+        int x = 0;                                              \
+        while( x < size.width )                                 \
+        {                                                       \
+            int limit = MIN( remaining, size.width - x );       \
+            remaining -= limit;                                 \
+            limit += x;                                         \
+            ICV_NORM_MASK_CASE( _op_, _update_op_,              \
+                                worktype, limit );              \
+            if( remaining == 0 )                                \
+            {                                                   \
+                remaining = block_size;                         \
+                total_norm += (normtype)norm;                   \
+                norm = 0;                                       \
+            }                                                   \
+        }                                                       \
     }                                                           \
                                                                 \
-    _exit_(1);                                                  \
+    total_norm += (normtype)norm;                               \
+    *_norm = post_func((double)total_norm);                     \
+    return CV_OK;                                               \
+}
+
+
+#define  ICV_DEF_NORM_MASK_NOHINT_FUNC_2D( name, _op_, _update_op_,\
+    post_func, arrtype, normtype, worktype, block_size )        \
+IPCVAPI_IMPL( CvStatus, name, ( const arrtype* src, int step,   \
+    const uchar* mask, int maskstep, CvSize size, double* _norm ),\
+    (src, step, mask, maskstep, size, _norm) )                  \
+{                                                               \
+    normtype norm = 0;                                          \
+    step /= sizeof(src[0]);                                     \
                                                                 \
+    for( ; size.height--; src += step, mask += maskstep )       \
+    {                                                           \
+        int x = 0;                                              \
+        ICV_NORM_MASK_CASE( _op_, _update_op_,                  \
+                            worktype, size.width );             \
+    }                                                           \
+                                                                \
+    *_norm = post_func((double)norm);                           \
+    return CV_OK;                                               \
+}
+
+
+#define  ICV_DEF_NORM_MASK_NOHINT_BLOCK_FUNC_2D_COI( name, _op_,\
+                _update_op_, post_func, arrtype,                \
+                normtype, worktype, block_size )                \
+static CvStatus CV_STDCALL name( const arrtype* src, int step,  \
+    const uchar* mask, int maskstep, CvSize size,               \
+    int cn, int coi, double* _norm )                            \
+{                                                               \
+    int remaining = block_size;                                 \
+    normtype total_norm = 0;                                    \
+    worktype norm = 0;                                          \
+    step /= sizeof(src[0]);                                     \
+    src += coi - 1;                                             \
+                                                                \
+    for( ; size.height--; src += step, mask += maskstep )       \
+    {                                                           \
+        int x = 0;                                              \
+        while( x < size.width )                                 \
+        {                                                       \
+            int limit = MIN( remaining, size.width - x );       \
+            remaining -= limit;                                 \
+            limit += x;                                         \
+            ICV_NORM_MASK_COI_CASE( _op_, _update_op_,          \
+                                    worktype, limit, cn );      \
+            if( remaining == 0 )                                \
+            {                                                   \
+                remaining = block_size;                         \
+                total_norm += (normtype)norm;                   \
+                norm = 0;                                       \
+            }                                                   \
+        }                                                       \
+    }                                                           \
+                                                                \
+    total_norm += (normtype)norm;                               \
+    *_norm = post_func((double)total_norm);                     \
+    return CV_OK;                                               \
+}
+
+
+#define  ICV_DEF_NORM_MASK_NOHINT_FUNC_2D_COI( name, _op_,      \
+    _update_op_, post_func,                                     \
+    arrtype, normtype, worktype, block_size )                   \
+static CvStatus CV_STDCALL name( const arrtype* src, int step,  \
+    const uchar* mask, int maskstep, CvSize size,               \
+    int cn, int coi, double* _norm )                            \
+{                                                               \
+    normtype norm = 0;                                          \
+    step /= sizeof(src[0]);                                     \
+    src += coi - 1;                                             \
+                                                                \
+    for( ; size.height--; src += step, mask += maskstep )       \
+    {                                                           \
+        int x = 0;                                              \
+        ICV_NORM_MASK_COI_CASE( _op_, _update_op_,              \
+                                worktype, size.width, cn );     \
+    }                                                           \
+                                                                \
+    *_norm = post_func((double)norm);                           \
     return CV_OK;                                               \
 }
 
 
 
-#define  ICV_DEF_NORM_DIFF_NOHINT_FUNC_2D( _diff_op_, _update_op_,      \
-                                    _entry_, _case_, _exit_,            \
-                                    name, srctype, normtype, temptype ) \
-IPCVAPI_IMPL( CvStatus, name,( const srctype* src1, int step1,          \
-                               const srctype* src2, int step2,          \
-                               CvSize size, double* _norm ),            \
-                               (src1, step1, src2, step2, size, _norm) )\
-{                                                                       \
-    _entry_( normtype );                                                \
-                                                                        \
-    for( ; size.height--; (char*&)src1 += step1,                        \
-                          (char*&)src2 += step2 )                       \
-    {                                                                   \
-        _case_( _diff_op_, _update_op_, temptype, size.width );         \
-    }                                                                   \
-                                                                        \
-    _exit_(1);                                                          \
-                                                                        \
-    return CV_OK;                                                       \
+#define  ICV_DEF_NORM_DIFF_MASK_NOHINT_BLOCK_FUNC_2D( name,     \
+    _op_, _update_op_, post_func, arrtype,                      \
+    normtype, worktype, block_size )                            \
+IPCVAPI_IMPL( CvStatus, name,( const arrtype* src1, int step1,  \
+    const arrtype* src2, int step2, const uchar* mask,          \
+    int maskstep, CvSize size, double* _norm ),                 \
+    (src1, step1, src2, step2, mask, maskstep, size, _norm ))   \
+{                                                               \
+    int remaining = block_size;                                 \
+    normtype total_norm = 0;                                    \
+    worktype norm = 0;                                          \
+    step1 /= sizeof(src1[0]);                                   \
+    step2 /= sizeof(src2[0]);                                   \
+                                                                \
+    for( ; size.height--; src1 += step1, src2 += step2,         \
+                          mask += maskstep )                    \
+    {                                                           \
+        int x = 0;                                              \
+        while( x < size.width )                                 \
+        {                                                       \
+            int limit = MIN( remaining, size.width - x );       \
+            remaining -= limit;                                 \
+            limit += x;                                         \
+            ICV_NORM_DIFF_MASK_CASE( _op_, _update_op_,         \
+                                     worktype, limit );         \
+            if( remaining == 0 )                                \
+            {                                                   \
+                remaining = block_size;                         \
+                total_norm += (normtype)norm;                   \
+                norm = 0;                                       \
+            }                                                   \
+        }                                                       \
+    }                                                           \
+                                                                \
+    total_norm += (normtype)norm;                               \
+    *_norm = post_func((double)total_norm);                     \
+    return CV_OK;                                               \
 }
 
 
-#define  ICV_DEF_NORM_DIFF_HINT_FUNC_2D( _diff_op_, _update_op_,        \
-                                    _entry_, _case_, _exit_,            \
-                                    name, srctype, normtype, temptype ) \
-IPCVAPI_IMPL( CvStatus, name,( const srctype* src1, int step1,          \
-                               const srctype* src2, int step2,          \
-                               CvSize size, double* _norm,              \
-                               CvHintAlgorithm /*hint*/ ),              \
-                               (src1, step1, src2, step2,               \
-                                size, _norm, cvAlgHintAccurate))        \
-{                                                                       \
-    _entry_( normtype );                                                \
-                                                                        \
-    for( ; size.height--; (char*&)src1 += step1,                        \
-                          (char*&)src2 += step2 )                       \
-    {                                                                   \
-        _case_( _diff_op_, _update_op_, temptype, size.width );         \
-    }                                                                   \
-                                                                        \
-    _exit_(1);                                                          \
-                                                                        \
-    return CV_OK;                                                       \
+#define  ICV_DEF_NORM_DIFF_MASK_NOHINT_FUNC_2D( name, _op_,     \
+    _update_op_, post_func,                                     \
+    arrtype, normtype, worktype, block_size )                   \
+IPCVAPI_IMPL( CvStatus, name,( const arrtype* src1, int step1,  \
+    const arrtype* src2, int step2, const uchar* mask,          \
+    int maskstep, CvSize size, double* _norm ),                 \
+    (src1, step1, src2, step2, mask, maskstep, size, _norm ))   \
+{                                                               \
+    normtype norm = 0;                                          \
+    step1 /= sizeof(src1[0]);                                   \
+    step2 /= sizeof(src2[0]);                                   \
+                                                                \
+    for( ; size.height--; src1 += step1, src2 += step2,         \
+                          mask += maskstep )                    \
+    {                                                           \
+        int x = 0;                                              \
+        ICV_NORM_DIFF_MASK_CASE( _op_, _update_op_,             \
+                                 worktype, size.width );        \
+    }                                                           \
+                                                                \
+    *_norm = post_func((double)norm);                           \
+    return CV_OK;                                               \
 }
 
 
-#define  ICV_DEF_NORM_DIFF_FUNC_2D_COI( _diff_op_, _update_op_,         \
-                                        _entry_, _case_, _exit_, name,  \
-                                        srctype, normtype, temptype )   \
-static CvStatus CV_STDCALL name( const srctype* src1, int step1,        \
-                       const srctype* src2, int step2,                  \
-                       CvSize size, int cn, int coi, double* _norm )    \
-{                                                                       \
-    _entry_( normtype );                                                \
-                                                                        \
-    src1 += coi - 1;                                                    \
-    src2 += coi - 1;                                                    \
-    for( ; size.height--; (char*&)src1 += step1,                        \
-                          (char*&)src2 += step2 )                       \
-    {                                                                   \
-        _case_( _diff_op_, _update_op_, temptype, size.width, cn );     \
-    }                                                                   \
-                                                                        \
-    _exit_(1);                                                          \
-                                                                        \
-    return CV_OK;                                                       \
+#define  ICV_DEF_NORM_DIFF_MASK_NOHINT_BLOCK_FUNC_2D_COI( name, \
+    _op_, _update_op_, post_func, arrtype,                      \
+    normtype, worktype, block_size )                            \
+static CvStatus CV_STDCALL name( const arrtype* src1, int step1,\
+    const arrtype* src2, int step2, const uchar* mask,          \
+    int maskstep, CvSize size, int cn, int coi, double* _norm ) \
+{                                                               \
+    int remaining = block_size;                                 \
+    normtype total_norm = 0;                                    \
+    worktype norm = 0;                                          \
+    step1 /= sizeof(src1[0]);                                   \
+    step2 /= sizeof(src2[0]);                                   \
+    src1 += coi - 1;                                            \
+    src2 += coi - 1;                                            \
+                                                                \
+    for( ; size.height--; src1 += step1, src2 += step2,         \
+                          mask += maskstep )                    \
+    {                                                           \
+        int x = 0;                                              \
+        while( x < size.width )                                 \
+        {                                                       \
+            int limit = MIN( remaining, size.width - x );       \
+            remaining -= limit;                                 \
+            limit += x;                                         \
+            ICV_NORM_DIFF_MASK_COI_CASE( _op_, _update_op_,     \
+                                    worktype, limit, cn );      \
+            if( remaining == 0 )                                \
+            {                                                   \
+                remaining = block_size;                         \
+                total_norm += (normtype)norm;                   \
+                norm = 0;                                       \
+            }                                                   \
+        }                                                       \
+    }                                                           \
+                                                                \
+    total_norm += (normtype)norm;                               \
+    *_norm = post_func((double)total_norm);                     \
+    return CV_OK;                                               \
 }
 
 
-
-#define ICV_DEF_NORM_FUNC_ALL( _abs_macro_, _abs_diff_macro_, flavor, srctype,          \
-                               c_normtype, l_normtype, l_temptype, hint )               \
-                                                                                        \
-ICV_DEF_NORM_NOHINT_FUNC_2D( _abs_macro_, MAX,                                          \
-                      CV_NORM_ENTRY, ICV_DEF_NORM_CASE, CV_NORM_EXIT,                   \
-                      icvNorm_Inf_##flavor##_C1R, srctype, c_normtype, c_normtype )     \
-ICV_DEF_NORM_##hint##_FUNC_2D( _abs_macro_, CV_ADD,                                     \
-                      CV_NORM_ENTRY, ICV_DEF_NORM_CASE, CV_NORM_EXIT,                   \
-                      icvNorm_L1_##flavor##_C1R, srctype, l_normtype, c_normtype )      \
-ICV_DEF_NORM_##hint##_FUNC_2D( CV_SQR, CV_ADD,                                          \
-                      CV_NORM_ENTRY, ICV_DEF_NORM_CASE, CV_NORM_L2_EXIT,                \
-                      icvNorm_L2_##flavor##_C1R, srctype, l_normtype, l_temptype )      \
-                                                                                        \
-ICV_DEF_NORM_DIFF_NOHINT_FUNC_2D( _abs_diff_macro_, MAX,                                \
-                        CV_NORM_ENTRY, ICV_DEF_NORM_DIFF_CASE, CV_NORM_EXIT,            \
-                        icvNormDiff_Inf_##flavor##_C1R, srctype, c_normtype, c_normtype)\
-ICV_DEF_NORM_DIFF_##hint##_FUNC_2D( _abs_diff_macro_, CV_ADD,                           \
-                        CV_NORM_ENTRY, ICV_DEF_NORM_DIFF_CASE, CV_NORM_EXIT,            \
-                        icvNormDiff_L1_##flavor##_C1R, srctype, l_normtype, c_normtype )\
-ICV_DEF_NORM_DIFF_##hint##_FUNC_2D( CV_SQR, CV_ADD,                                     \
-                          CV_NORM_ENTRY, ICV_DEF_NORM_DIFF_CASE, CV_NORM_L2_EXIT,       \
-                          icvNormDiff_L2_##flavor##_C1R, srctype, l_normtype, l_temptype)\
-                                                                                        \
-ICV_DEF_NORM_FUNC_2D_COI( _abs_macro_, MAX,                                             \
-                         CV_NORM_ENTRY, ICV_DEF_NORM_COI_CASE, CV_NORM_EXIT,            \
-                         icvNorm_Inf_##flavor##_CnCR, srctype, c_normtype, c_normtype ) \
-ICV_DEF_NORM_FUNC_2D_COI( _abs_macro_, CV_ADD,                                          \
-                          CV_NORM_ENTRY, ICV_DEF_NORM_COI_CASE, CV_NORM_EXIT,           \
-                          icvNorm_L1_##flavor##_CnCR, srctype, l_normtype, c_normtype ) \
-ICV_DEF_NORM_FUNC_2D_COI( CV_SQR, CV_ADD,                                               \
-                          CV_NORM_ENTRY, ICV_DEF_NORM_COI_CASE, CV_NORM_L2_EXIT,        \
-                          icvNorm_L2_##flavor##_CnCR, srctype, l_normtype, l_temptype ) \
-                                                                                        \
-ICV_DEF_NORM_DIFF_FUNC_2D_COI( _abs_diff_macro_, MAX,                                   \
-                          CV_NORM_ENTRY, ICV_DEF_NORM_DIFF_COI_CASE, CV_NORM_EXIT,      \
-                          icvNormDiff_Inf_##flavor##_CnCR,                              \
-                          srctype, c_normtype, c_normtype)                              \
-ICV_DEF_NORM_DIFF_FUNC_2D_COI( _abs_diff_macro_, CV_ADD,                                \
-                          CV_NORM_ENTRY, ICV_DEF_NORM_DIFF_COI_CASE, CV_NORM_EXIT,      \
-                          icvNormDiff_L1_##flavor##_CnCR,                               \
-                          srctype, l_normtype, c_normtype )                             \
-ICV_DEF_NORM_DIFF_FUNC_2D_COI( CV_SQR, CV_ADD,                                          \
-                          CV_NORM_ENTRY, ICV_DEF_NORM_DIFF_COI_CASE, CV_NORM_L2_EXIT,   \
-                          icvNormDiff_L2_##flavor##_CnCR,                               \
-                          srctype, l_normtype, l_temptype )
+#define  ICV_DEF_NORM_DIFF_MASK_NOHINT_FUNC_2D_COI( name, _op_, \
+    _update_op_, post_func,                                     \
+    arrtype, normtype, worktype, block_size )                   \
+static CvStatus CV_STDCALL name( const arrtype* src1, int step1,\
+    const arrtype* src2, int step2, const uchar* mask,          \
+    int maskstep, CvSize size, int cn, int coi, double* _norm ) \
+{                                                               \
+    normtype norm = 0;                                          \
+    step1 /= sizeof(src1[0]);                                   \
+    step2 /= sizeof(src2[0]);                                   \
+    src1 += coi - 1;                                            \
+    src2 += coi - 1;                                            \
+                                                                \
+    for( ; size.height--; src1 += step1, src2 += step2,         \
+                          mask += maskstep )                    \
+    {                                                           \
+        int x = 0;                                              \
+        ICV_NORM_DIFF_MASK_COI_CASE( _op_, _update_op_,         \
+                                     worktype, size.width, cn );\
+    }                                                           \
+                                                                \
+    *_norm = post_func((double)norm);                           \
+    return CV_OK;                                               \
+}
 
 
-ICV_DEF_NORM_FUNC_ALL( CV_NOP, CV_IABS, 8u, uchar, int, int64, int, NOHINT )
-ICV_DEF_NORM_FUNC_ALL( CV_NOP, CV_IABS, 16u, ushort, int, int64, int64, NOHINT )
-ICV_DEF_NORM_FUNC_ALL( CV_IABS, CV_IABS, 16s, short, int, int64, int64, NOHINT )
-ICV_DEF_NORM_FUNC_ALL( fabs, fabs, 32s, int, double, double, double, NOHINT )
-ICV_DEF_NORM_FUNC_ALL( fabs, fabs, 32f, float, double, double, double, HINT )
-ICV_DEF_NORM_FUNC_ALL( fabs, fabs, 64f, double, double, double, double, NOHINT )
+//////////////////////////////////// The macros expanded /////////////////////////////////
+
+
+#define ICV_DEF_NORM_FUNC_ALL_C(flavor, _abs_, _abs_diff_, arrtype, worktype)\
+                                                                            \
+ICV_DEF_NORM_NOHINT_FUNC_2D( icvNorm_Inf_##flavor##_C1R,                    \
+    _abs_, MAX, CV_NOP, arrtype, worktype, worktype, 0 )                    \
+                                                                            \
+ICV_DEF_NORM_NOHINT_FUNC_2D_COI( icvNorm_Inf_##flavor##_CnCR,               \
+    _abs_, MAX, CV_NOP, arrtype, worktype, worktype, 0 )                    \
+                                                                            \
+ICV_DEF_NORM_DIFF_NOHINT_FUNC_2D( icvNormDiff_Inf_##flavor##_C1R,           \
+    _abs_diff_, MAX, CV_NOP, arrtype, worktype, worktype, 0 )               \
+                                                                            \
+ICV_DEF_NORM_DIFF_NOHINT_FUNC_2D_COI( icvNormDiff_Inf_##flavor##_CnCR,      \
+    _abs_diff_, MAX, CV_NOP, arrtype, worktype, worktype, 0 )               \
+                                                                            \
+ICV_DEF_NORM_MASK_NOHINT_FUNC_2D( icvNorm_Inf_##flavor##_C1MR,              \
+    _abs_, MAX, CV_NOP, arrtype, worktype, worktype, 0 )                    \
+                                                                            \
+ICV_DEF_NORM_MASK_NOHINT_FUNC_2D_COI( icvNorm_Inf_##flavor##_CnCMR,         \
+    _abs_, MAX, CV_NOP, arrtype, worktype, worktype, 0 )                    \
+                                                                            \
+ICV_DEF_NORM_DIFF_MASK_NOHINT_FUNC_2D( icvNormDiff_Inf_##flavor##_C1MR,     \
+    _abs_diff_, MAX, CV_NOP, arrtype, worktype, worktype, 0 )               \
+                                                                            \
+ICV_DEF_NORM_DIFF_MASK_NOHINT_FUNC_2D_COI( icvNormDiff_Inf_##flavor##_CnCMR,\
+    _abs_diff_, MAX, CV_NOP, arrtype, worktype, worktype, 0 )
+
+
+ICV_DEF_NORM_FUNC_ALL_C( 8u, CV_NOP, CV_IABS, uchar, int )
+ICV_DEF_NORM_FUNC_ALL_C( 16u, CV_NOP, CV_IABS, ushort, int )
+ICV_DEF_NORM_FUNC_ALL_C( 16s, CV_IABS, CV_IABS, short, int )
+// there is no protection from overflow
+// (otherwise we had to do everything in int64's or double's)
+ICV_DEF_NORM_FUNC_ALL_C( 32s, CV_IABS, CV_IABS, int, int )
+ICV_DEF_NORM_FUNC_ALL_C( 32f, fabs, fabs, float, double )
+ICV_DEF_NORM_FUNC_ALL_C( 64f, fabs, fabs, double, double )
+
+#define ICV_DEF_NORM_FUNC_ALL_L1( flavor, _abs_, _abs_diff_, hintp_func, nohint_func,\
+                                  arrtype, normtype, worktype, block_size )         \
+                                                                                    \
+ICV_DEF_NORM_##hintp_func##_FUNC_2D( icvNorm_L1_##flavor##_C1R,                     \
+    _abs_, CV_ADD, CV_NOP, arrtype, normtype, worktype, block_size )                \
+                                                                                    \
+ICV_DEF_NORM_##nohint_func##_FUNC_2D_COI( icvNorm_L1_##flavor##_CnCR,               \
+    _abs_, CV_ADD, CV_NOP, arrtype, normtype, worktype, block_size )                \
+                                                                                    \
+ICV_DEF_NORM_DIFF_##hintp_func##_FUNC_2D( icvNormDiff_L1_##flavor##_C1R,            \
+    _abs_diff_, CV_ADD, CV_NOP, arrtype, normtype, worktype, block_size )           \
+                                                                                    \
+ICV_DEF_NORM_DIFF_##nohint_func##_FUNC_2D_COI( icvNormDiff_L1_##flavor##_CnCR,      \
+    _abs_diff_, CV_ADD, CV_NOP, arrtype, normtype, worktype, block_size )           \
+                                                                                    \
+ICV_DEF_NORM_MASK_##nohint_func##_FUNC_2D( icvNorm_L1_##flavor##_C1MR,              \
+    _abs_, CV_ADD, CV_NOP, arrtype, normtype, worktype, block_size )                \
+                                                                                    \
+ICV_DEF_NORM_MASK_##nohint_func##_FUNC_2D_COI( icvNorm_L1_##flavor##_CnCMR,         \
+    _abs_, CV_ADD, CV_NOP, arrtype, normtype, worktype, block_size )                \
+                                                                                    \
+ICV_DEF_NORM_DIFF_MASK_##nohint_func##_FUNC_2D( icvNormDiff_L1_##flavor##_C1MR,     \
+    _abs_diff_, CV_ADD, CV_NOP, arrtype, normtype, worktype, block_size )           \
+                                                                                    \
+ICV_DEF_NORM_DIFF_MASK_##nohint_func##_FUNC_2D_COI( icvNormDiff_L1_##flavor##_CnCMR,\
+    _abs_diff_, CV_ADD, CV_NOP, arrtype, normtype, worktype, block_size )
+
+
+ICV_DEF_NORM_FUNC_ALL_L1( 8u, CV_NOP, CV_IABS, NOHINT_BLOCK, NOHINT_BLOCK,
+                          uchar, int64, int, 1 << 23 )
+ICV_DEF_NORM_FUNC_ALL_L1( 16u, CV_NOP, CV_IABS, NOHINT_BLOCK, NOHINT_BLOCK,
+                          ushort, int64, int, 1 << 15 )
+ICV_DEF_NORM_FUNC_ALL_L1( 16s, CV_IABS, CV_IABS, NOHINT_BLOCK, NOHINT_BLOCK,
+                          short, int64, int, 1 << 15 )
+// there is no protection from overflow on abs() stage.
+// (otherwise we had to do everything in int64's or double's)
+ICV_DEF_NORM_FUNC_ALL_L1( 32s, fabs, fabs, NOHINT, NOHINT,
+                          int, double, double, INT_MAX )
+ICV_DEF_NORM_FUNC_ALL_L1( 32f, fabs, fabs, HINT, NOHINT,
+                          float, double, double, INT_MAX )
+ICV_DEF_NORM_FUNC_ALL_L1( 64f, fabs, fabs, NOHINT, NOHINT,
+                          double, double, double, INT_MAX )
+
+
+#define ICV_DEF_NORM_FUNC_ALL_L2( flavor, hintp_func, nohint_func, arrtype,         \
+                                  normtype, worktype, block_size, sqr_macro )       \
+                                                                                    \
+ICV_DEF_NORM_##hintp_func##_FUNC_2D( icvNorm_L2_##flavor##_C1R,                     \
+    sqr_macro, CV_ADD, sqrt, arrtype, normtype, worktype, block_size )              \
+                                                                                    \
+ICV_DEF_NORM_##nohint_func##_FUNC_2D_COI( icvNorm_L2_##flavor##_CnCR,               \
+    sqr_macro, CV_ADD, sqrt, arrtype, normtype, worktype, block_size )              \
+                                                                                    \
+ICV_DEF_NORM_DIFF_##hintp_func##_FUNC_2D( icvNormDiff_L2_##flavor##_C1R,            \
+    sqr_macro, CV_ADD, sqrt, arrtype, normtype, worktype, block_size )              \
+                                                                                    \
+ICV_DEF_NORM_DIFF_##nohint_func##_FUNC_2D_COI( icvNormDiff_L2_##flavor##_CnCR,      \
+    sqr_macro, CV_ADD, sqrt, arrtype, normtype, worktype, block_size )              \
+                                                                                    \
+ICV_DEF_NORM_MASK_##nohint_func##_FUNC_2D( icvNorm_L2_##flavor##_C1MR,              \
+    sqr_macro, CV_ADD, sqrt, arrtype, normtype, worktype, block_size )              \
+                                                                                    \
+ICV_DEF_NORM_MASK_##nohint_func##_FUNC_2D_COI( icvNorm_L2_##flavor##_CnCMR,         \
+    sqr_macro, CV_ADD, sqrt, arrtype, normtype, worktype, block_size )              \
+                                                                                    \
+ICV_DEF_NORM_DIFF_MASK_##nohint_func##_FUNC_2D( icvNormDiff_L2_##flavor##_C1MR,     \
+    sqr_macro, CV_ADD, sqrt, arrtype, normtype, worktype, block_size )              \
+                                                                                    \
+ICV_DEF_NORM_DIFF_MASK_##nohint_func##_FUNC_2D_COI( icvNormDiff_L2_##flavor##_CnCMR,\
+    sqr_macro, CV_ADD, sqrt, arrtype, normtype, worktype, block_size )
+
+
+ICV_DEF_NORM_FUNC_ALL_L2( 8u, NOHINT_BLOCK, NOHINT_BLOCK, uchar,
+                          int64, int, 1 << 15, CV_SQR_8U )
+ICV_DEF_NORM_FUNC_ALL_L2( 16u, NOHINT, NOHINT, ushort,
+                          double, double, INT_MAX, CV_SQR )
+ICV_DEF_NORM_FUNC_ALL_L2( 16s, NOHINT, NOHINT, short,
+                          double, double, INT_MAX, CV_SQR )
+// there is no protection from overflow on abs() stage.
+// (otherwise we had to do everything in int64's or double's)
+ICV_DEF_NORM_FUNC_ALL_L2( 32s, NOHINT, NOHINT, int,
+                          double, double, INT_MAX, CV_SQR )
+ICV_DEF_NORM_FUNC_ALL_L2( 32f, HINT, NOHINT, float,
+                          double, double, INT_MAX, CV_SQR )
+ICV_DEF_NORM_FUNC_ALL_L2( 64f, NOHINT, NOHINT, double,
+                          double, double, INT_MAX, CV_SQR )
 
 
 #define ICV_DEF_INIT_NORM_TAB_2D( FUNCNAME, FLAG )              \
@@ -360,243 +913,6 @@ ICV_DEF_INIT_NORM_TAB_2D( Norm_L2, CnCR )
 ICV_DEF_INIT_NORM_TAB_2D( NormDiff_Inf, CnCR )
 ICV_DEF_INIT_NORM_TAB_2D( NormDiff_L1, CnCR )
 ICV_DEF_INIT_NORM_TAB_2D( NormDiff_L2, CnCR )
-
-
-/****************************************************************************************\
-*                             N o r m   with    M A S K                                  *
-\****************************************************************************************/
-
-
-#define ICV_DEF_NORM_MASK_CASE( _mask_op_, _op_, _update_op_,\
-                                temptype, len )         \
-{                                                       \
-    for( x = 0; x <= (len) - 2; x += 2 )                \
-    {                                                   \
-        temptype t0 = _mask_op_(mask[x],(src)[x]);      \
-        temptype t1 = _mask_op_(mask[x+1],(src)[x+1]);  \
-                                                        \
-        t0 = (temptype)_op_(t0);                        \
-        t1 = (temptype)_op_(t1);                        \
-                                                        \
-        norm = _update_op_( norm, t0 );                 \
-        norm = _update_op_( norm, t1 );                 \
-    }                                                   \
-                                                        \
-    if( x < (len) )                                     \
-    {                                                   \
-        temptype t0 = _mask_op_(mask[x],(src)[x]);      \
-        t0 = (temptype)_op_(t0);                        \
-        norm = _update_op_( norm, t0 );                 \
-    }                                                   \
-}
-
-
-#define ICV_DEF_NORM_DIFF_MASK_CASE( _mask_op_, _diff_op_,          \
-                                     _update_op_, temptype, len )   \
-{                                                                   \
-    for( x = 0; x <= (len) - 2; x += 2 )                            \
-    {                                                               \
-        temptype t0 = _mask_op_(mask[x],(src1)[x] - (src2)[x]);     \
-        temptype t1 = _mask_op_(mask[x+1],(src1)[x+1] - (src2)[x+1]);\
-                                                                    \
-        t0 = (temptype)_diff_op_(t0);                               \
-        t1 = (temptype)_diff_op_(t1);                               \
-                                                                    \
-        norm = _update_op_( norm, t0 );                             \
-        norm = _update_op_( norm, t1 );                             \
-    }                                                               \
-                                                                    \
-    if( x < (len) )                                                 \
-    {                                                               \
-        temptype t0 = _mask_op_(mask[x],(src1)[x] - (src2)[x]);     \
-        t0 = (temptype)_diff_op_(t0);                               \
-        norm = _update_op_( norm, t0 );                             \
-    }                                                               \
-}
-
-
-#define ICV_DEF_NORM_MASK_COI_CASE( _mask_op_, _op_, _update_op_,\
-                                temptype, len, cn )     \
-{                                                       \
-    for( x = 0; x < (len); x++ )                        \
-    {                                                   \
-        temptype t0 = _mask_op_(mask[x],(src)[x*(cn)]); \
-        t0 = (temptype)_op_(t0);                        \
-        norm = _update_op_( norm, t0 );                 \
-    }                                                   \
-}
-
-
-#define ICV_DEF_NORM_DIFF_MASK_COI_CASE( _mask_op_, _diff_op_,      \
-                                     _update_op_, temptype, len, cn )\
-{                                                                   \
-    for( x = 0; x < (len); x++ )                                    \
-    {                                                               \
-        temptype t0 = _mask_op_(mask[x],(src1)[x*(cn)]-(src2)[x*(cn)]);\
-        t0 = (temptype)_diff_op_(t0);                               \
-        norm = _update_op_( norm, t0 );                             \
-    }                                                               \
-}
-
-
-#define  CV_NORM_MASK_ENTRY_FLT( normtype )  \
-    int  x;                                  \
-    float maskTab[] = { 0.f, 1.f };          \
-    normtype norm = 0
-
-
-
-#define  ICV_DEF_NORM_MASK_FUNC_2D( _mask_op_, _op_, _update_op_,   \
-                                    _entry_, _case_, _exit_,        \
-                                    name, srctype, normtype, temptype )  \
-IPCVAPI_IMPL( CvStatus, name, ( const srctype* src, int step,       \
-                       const uchar* mask, int maskStep,             \
-                       CvSize size, double* _norm ),                \
-                       (src, step, mask, maskStep, size, _norm) )   \
-{                                                                   \
-    _entry_( normtype );                                            \
-                                                                    \
-    for( ; size.height--; (char*&)src += step, mask += maskStep )   \
-    {                                                               \
-        _case_( _mask_op_, _op_, _update_op_,                       \
-                temptype, size.width );                             \
-    }                                                               \
-                                                                    \
-    _exit_(1);                                                      \
-                                                                    \
-    return CV_OK;                                                   \
-}
-
-
-#define  ICV_DEF_NORM_MASK_FUNC_2D_COI( _mask_op_, _op_, _update_op_,\
-                                        _entry_, _case_, _exit_,    \
-                                        name, srctype, normtype,    \
-                                        temptype )                  \
-static CvStatus CV_STDCALL name( const srctype* src, int step,      \
-                       const uchar* mask, int maskStep,             \
-                       CvSize size, int cn, int coi, double* _norm )\
-{                                                                   \
-    _entry_( normtype );                                            \
-                                                                    \
-    src += coi - 1;                                                 \
-    for( ; size.height--; (char*&)src += step, mask += maskStep )   \
-    {                                                               \
-        _case_( _mask_op_, _op_, _update_op_,                       \
-                temptype, size.width, cn );                         \
-    }                                                               \
-                                                                    \
-    _exit_(1);                                                      \
-                                                                    \
-    return CV_OK;                                                   \
-}
-
-
-
-#define  ICV_DEF_NORM_DIFF_MASK_FUNC_2D( _mask_op_, _diff_op_, _update_op_,         \
-                                         _entry_, _case_, _exit_, name,             \
-                                         srctype, normtype, temptype )              \
-IPCVAPI_IMPL( CvStatus, name, ( const srctype* src1, int step1,                     \
-                       const srctype* src2, int step2,                              \
-                       const uchar* mask, int maskStep,                             \
-                       CvSize size, double* _norm ),                                \
-                       (src1, step1, src2, step2, mask, maskStep, size, _norm) )    \
-{                                                                                   \
-    _entry_( normtype );                                                            \
-                                                                                    \
-    for( ; size.height--; (char*&)src1 += step1, (char*&)src2 += step2, mask += maskStep )\
-    {                                                                               \
-        _case_( _mask_op_, _diff_op_, _update_op_, temptype, size.width );          \
-    }                                                                               \
-                                                                                    \
-    _exit_(1);                                                                      \
-                                                                                    \
-    return CV_OK;                                                                   \
-}
-
-
-#define  ICV_DEF_NORM_DIFF_MASK_FUNC_2D_COI(_mask_op_, _diff_op_, _update_op_,      \
-                                            _entry_, _case_, _exit_, name,          \
-                                             srctype, normtype, temptype )          \
-static CvStatus CV_STDCALL name( const srctype* src1, int step1,                    \
-                                 const srctype* src2, int step2,                    \
-                                 const uchar* mask, int maskStep,                   \
-                                 CvSize size, int cn, int coi, double* _norm )      \
-{                                                                                   \
-    _entry_( normtype );                                                            \
-                                                                                    \
-    src1 += coi - 1;                                                                \
-    src2 += coi - 1;                                                                \
-    for( ; size.height--; (char*&)src1 += step1, (char*&)src2 += step2, mask += maskStep )\
-    {                                                                               \
-        _case_( _mask_op_, _diff_op_, _update_op_, temptype, size.width, cn );      \
-    }                                                                               \
-                                                                                    \
-    _exit_(1);                                                                      \
-                                                                                    \
-    return CV_OK;                                                                   \
-}
-
-
-#define ICV_DEF_NORM_MASK_FUNC_ALL( _mask_op_, _abs_macro_, _abs_diff_macro_, _entry_,      \
-                                    flavor, srctype, c_normtype, l_normtype, l_temptype )   \
-                                                                                            \
-ICV_DEF_NORM_MASK_FUNC_2D( _mask_op_, _abs_macro_, MAX,                                     \
-                      _entry_, ICV_DEF_NORM_MASK_CASE, CV_NORM_EXIT,                        \
-                      icvNorm_Inf_##flavor##_C1MR, srctype, c_normtype, c_normtype )        \
-ICV_DEF_NORM_MASK_FUNC_2D( _mask_op_, _abs_macro_, CV_ADD,                                  \
-                      _entry_, ICV_DEF_NORM_MASK_CASE, CV_NORM_EXIT,                        \
-                      icvNorm_L1_##flavor##_C1MR, srctype, l_normtype, c_normtype )         \
-ICV_DEF_NORM_MASK_FUNC_2D( _mask_op_, CV_SQR, CV_ADD,                                       \
-                      _entry_, ICV_DEF_NORM_MASK_CASE, CV_NORM_L2_EXIT,                     \
-                      icvNorm_L2_##flavor##_C1MR, srctype, l_normtype, l_temptype )         \
-                                                                                            \
-ICV_DEF_NORM_DIFF_MASK_FUNC_2D( _mask_op_, _abs_diff_macro_, MAX,                           \
-                        _entry_, ICV_DEF_NORM_DIFF_MASK_CASE, CV_NORM_EXIT,                 \
-                        icvNormDiff_Inf_##flavor##_C1MR, srctype, c_normtype, c_normtype )  \
-ICV_DEF_NORM_DIFF_MASK_FUNC_2D( _mask_op_, _abs_diff_macro_, CV_ADD,                        \
-                        _entry_, ICV_DEF_NORM_DIFF_MASK_CASE, CV_NORM_EXIT,                 \
-                        icvNormDiff_L1_##flavor##_C1MR, srctype, l_normtype, c_normtype )   \
-ICV_DEF_NORM_DIFF_MASK_FUNC_2D( _mask_op_, CV_SQR, CV_ADD,                                  \
-                          _entry_, ICV_DEF_NORM_DIFF_MASK_CASE, CV_NORM_L2_EXIT,            \
-                          icvNormDiff_L2_##flavor##_C1MR, srctype, l_normtype, l_temptype)  \
-                                                                                            \
-ICV_DEF_NORM_MASK_FUNC_2D_COI( _mask_op_, _abs_macro_, MAX,                                 \
-                         _entry_, ICV_DEF_NORM_MASK_COI_CASE, CV_NORM_EXIT,                 \
-                         icvNorm_Inf_##flavor##_CnCMR, srctype, c_normtype, c_normtype )    \
-ICV_DEF_NORM_MASK_FUNC_2D_COI( _mask_op_, _abs_macro_, CV_ADD,                              \
-                          _entry_, ICV_DEF_NORM_MASK_COI_CASE, CV_NORM_EXIT,                \
-                          icvNorm_L1_##flavor##_CnCMR, srctype, l_normtype, c_normtype )    \
-ICV_DEF_NORM_MASK_FUNC_2D_COI( _mask_op_, CV_SQR, CV_ADD,                                   \
-                          _entry_, ICV_DEF_NORM_MASK_COI_CASE, CV_NORM_L2_EXIT,             \
-                          icvNorm_L2_##flavor##_CnCMR, srctype, l_normtype, l_temptype )    \
-                                                                                            \
-ICV_DEF_NORM_DIFF_MASK_FUNC_2D_COI( _mask_op_, _abs_diff_macro_, MAX,                       \
-                          _entry_, ICV_DEF_NORM_DIFF_MASK_COI_CASE, CV_NORM_EXIT,           \
-                          icvNormDiff_Inf_##flavor##_CnCMR,                                 \
-                          srctype, c_normtype, c_normtype )                                 \
-ICV_DEF_NORM_DIFF_MASK_FUNC_2D_COI( _mask_op_, _abs_diff_macro_, CV_ADD,                    \
-                          _entry_, ICV_DEF_NORM_DIFF_MASK_COI_CASE, CV_NORM_EXIT,           \
-                          icvNormDiff_L1_##flavor##_CnCMR,                                  \
-                          srctype, l_normtype, c_normtype )                                 \
-ICV_DEF_NORM_DIFF_MASK_FUNC_2D_COI( _mask_op_, CV_SQR, CV_ADD,                              \
-                          _entry_, ICV_DEF_NORM_DIFF_MASK_COI_CASE, CV_NORM_L2_EXIT,        \
-                          icvNormDiff_L2_##flavor##_CnCMR,                                  \
-                          srctype, l_normtype, l_temptype )
-
-
-ICV_DEF_NORM_MASK_FUNC_ALL( CV_ANDMASK, CV_NOP, CV_IABS, CV_NORM_ENTRY,
-                            8u, uchar, int, int64, int )
-ICV_DEF_NORM_MASK_FUNC_ALL( CV_ANDMASK, CV_NOP, CV_IABS, CV_NORM_ENTRY,
-                            16u, ushort, int, int64, int64 )
-ICV_DEF_NORM_MASK_FUNC_ALL( CV_ANDMASK, CV_IABS, CV_IABS, CV_NORM_ENTRY,
-                            16s, short, int, int64, int64 )
-ICV_DEF_NORM_MASK_FUNC_ALL( CV_MULMASK, fabs, fabs, CV_NORM_MASK_ENTRY_FLT,
-                            32s, int, double, double, double )
-ICV_DEF_NORM_MASK_FUNC_ALL( CV_MULMASK, fabs, fabs, CV_NORM_MASK_ENTRY_FLT,
-                            32f, float, double, double, double )
-ICV_DEF_NORM_MASK_FUNC_ALL( CV_MULMASK, fabs, fabs, CV_NORM_MASK_ENTRY_FLT,
-                            64f, double, double, double, double )
-
 
 ICV_DEF_INIT_NORM_TAB_2D( Norm_Inf, C1MR )
 ICV_DEF_INIT_NORM_TAB_2D( Norm_L1, C1MR )

@@ -817,7 +817,7 @@ CVAPI(double)  cvNorm( const CvArr* arr1, const CvArr* arr2 CV_DEFAULT(NULL),
                        const CvArr* mask CV_DEFAULT(NULL) );
 
 /****************************************************************************************\
-*                                 Discrete Linear Transforms                             *
+*                      Discrete Linear Transforms and Related Functions                  *
 \****************************************************************************************/
 
 #define CV_DXT_FORWARD  0
@@ -832,12 +832,16 @@ CVAPI(double)  cvNorm( const CvArr* arr1, const CvArr* arr2 CV_DEFAULT(NULL),
     complex->complex,
     real->ccs (forward),
     ccs->real (inverse) */
-CVAPI(void)  cvDFT( const CvArr* src, CvArr* dst, int flags );
+CVAPI(void)  cvDFT( const CvArr* src, CvArr* dst, int flags,
+                    int nonzero_rows CV_DEFAULT(0) );
 #define cvFFT cvDFT
 
 /* Multiply results of DFTs: DFT(X)*DFT(Y) or DFT(X)*conj(DFT(Y)) */
 CVAPI(void)  cvMulSpectrums( const CvArr* src1, const CvArr* src2,
                              CvArr* dst, int flags );
+
+/* Finds optimal DFT vector size >= size0 */
+CVAPI(int)  cvGetOptimalDFTSize( int size0 );
 
 /* Discrete Cosine Transform */
 CVAPI(void)  cvDCT( const CvArr* src, CvArr* dst, int flags );
