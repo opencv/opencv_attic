@@ -11,7 +11,7 @@ First it tries to install a firewire camera,
 if that fails it tries a v4l/USB camera
 It has been tested with the motempl sample program
  
-This Patch:   August 24, 2004 Travis Wood   TravisOCV@tkwood.com
+First Patch:  August 24, 2004 Travis Wood   TravisOCV@tkwood.com
 For Release:  OpenCV-Linux Beta4  opencv-0.9.6
 Tested On:    LMLBT44 with 8 video inputs
 Problems?     Post problems/fixes to OpenCV group on groups.yahoo.com
@@ -31,7 +31,7 @@ Re Written driver for standard V4L mode. Tested using LMLBT44 video capture card
 Standard bttv drivers are on the LMLBT44 with up to 8 Inputs.
 
 This utility was written with the help of the document:
-http://pages.cpcs.ucalgary.ca/~sayles/VFL_HowTo
+http://pages.cpsc.ucalgary.ca/~sayles/VFL_HowTo
 as a general guide for interfacing into the V4l standard.
 
 Made the index value passed for icvOpenCAM_V4L(index) be the number of the
@@ -54,6 +54,19 @@ If you are interested, I will make my version available to other OpenCV users.  
 difference in mine is you may pass the camera number as part of the cv argument, but this
 convention is non standard for current OpenCV calls and the camera number is not currently
 passed into the called routine.
+
+Second Patch:   August 28, 2004 Sfuncia Fabio fiblan@yahoo.it
+For Release:  OpenCV-Linux Beta4 Opencv-0.9.6
+
+FS: this patch fix not sequential index of device (unplugged device), and real numCameras.
+    for -1 index (icvOpenCAM_V4L) i dont use /dev/video but real device available, because 
+    if /dev/video is a link to /dev/video0 and i unplugged device on /dev/video0, /dev/video 
+    is a bad link. I search the first available device with indexList. 
+
+This Patch:    August 30, 2004 Sfuncia Fabio fiblan@yahoo.it
+For Release: OpenCV-Linux Beta4 opencv-0.9.6
+
+FS: This patch add support for palette yuv420p (for example Philips ToUcam Pro) 
 
 */
 
@@ -127,7 +140,7 @@ passed into the called routine.
 #define CHANNEL_NUMBER 1
 #define MAX_CAMERAS 8
 
-#define MAX_DEVICE_DRIVER_NAME 14
+#define MAX_DEVICE_DRIVER_NAME 80
 
 /* Device Capture Objects */
 
@@ -153,13 +166,23 @@ static IplImage* icvRetrieveFrameCAM_V4L( CvCaptureCAM_V4L* capture );
 static double icvGetPropertyCAM_V4L( CvCaptureCAM_V4L* capture, int property_id );
 static int    icvSetPropertyCAM_V4L( CvCaptureCAM_V4L* capture, int property_id, double value );
 
+#if defined V4L_SCALE_OPTION
 static void icvSetVideoSize( CvCaptureCAM_V4L* capture, int w, int h);
+#endif
 
-//static void icvSetVideoSize( CvCaptureCAM_V4L* capture, int w, int h);
+//convertion routine
+unsigned char
+citb(int i);
+/* Converts from planar YUV420 to BGR24. */
+static void
+yuv420p_to_bgr(int width, int height,
+               unsigned char *pIn0, unsigned char *pOut0);
+
+
 /***********************   Implementations  ***************************************/
 
-static int numCameras = -1;
- 
+static int numCameras = 0;
+static int indexList = 0; 
 CvCaptureVTable captureCAM_V4L_vtable =
 {
     6,
@@ -190,34 +213,11 @@ void icvInitCapture_V4L() {
       deviceHandle = open(deviceName, O_RDONLY);
       if (deviceHandle != -1) {
          /* This device does indeed exist - add it to the total so far */
-         numCameras = CameraNumber+1;
-         close(deviceHandle);
-      }
-      else {
-         /* Check if we failed on the fist device attempt of /dev/video0. 
-         If we did, then check for a simple /dev/video with no trailing number */
-         if (numCameras<1) {
-            strcpy(deviceName, "/dev/video");
-            deviceHandle = open(deviceName, O_RDWR);
-            if (deviceHandle == -1) {
-               /* Could not find ANY /dev/video type inputs! 
-               return with -1 still in numCameras. */
-               return;
-            }
-            else {
-               /* It would seem that the device is called /dev/video at this point.
-               return with the total number of cameras equal to just one. */
-               numCameras = 1;
-               return;
-            } /* End if-else */
-         } /* End numCameras<1 */
-         /* So we ran into a device name that does not exist.  That would mean we ran
-         into the last device name after sucessfully openening previous devices. We
-         now know the true number of /dev/videoX sources at this point. This is now 
-         reflected in numCameras correctly.  All we need to do now is return. */
-         return;
-      } /* End if-else */
-
+	// add indexList
+	indexList|=(1 << CameraNumber);
+        numCameras++;
+	}        
+	close(deviceHandle);
       /* Set up to test the next /dev/video source in line */
       CameraNumber++;
    } /* End while */
@@ -226,15 +226,19 @@ void icvInitCapture_V4L() {
 
 CvCapture* icvOpenCAM_V4L( int index ) {
    int i;
+   static int autoindex=0;
    struct video_channel selectedChannel;
    char deviceName[MAX_DEVICE_DRIVER_NAME];
-
-   if (numCameras<1)
+   if (!numCameras)
       icvInitCapture_V4L(); /* Havent called icvInitCapture yet - do it now! */
-   if (numCameras<1)
-     return 0; /* Are there any /dev/video input sources? */
-   if (index>=numCameras)
-     return 0; /* Did someone ask for too high a video source number? */
+   if (!numCameras)
+     return NULL; /* Are there any /dev/video input sources? */
+   //search index in indexList
+   if ( (index>-1) && ! ((1 << index) & indexList) ) 
+   {
+     fprintf(stderr,"\n\nV4L: index %d is not correct!\n",index);
+     return NULL; /* Did someone ask for not correct video source number? */
+   }
    /* Allocate memory for this humongus CvCaptureCAM_V4L structure that contains ALL
       the handles for V4L processing */
    CvCaptureCAM_V4L * capture = (CvCaptureCAM_V4L*)cvAlloc(sizeof(CvCaptureCAM_V4L));
@@ -242,22 +246,26 @@ CvCapture* icvOpenCAM_V4L( int index ) {
       printf("\nCould not allocate memory for capture process.\n");
       return NULL;
    }
+   /* Select camera, or rather, V4L video source */
+   if (index<0) { // Asking for the first device available 
+     for (; autoindex<MAX_CAMERAS;autoindex++)
+	if (indexList & (1<<autoindex))
+		break;
+     if (autoindex==MAX_CAMERAS)
+	return NULL; 
+     index=autoindex;
+     autoindex++;// i can recall icvOpenCAM_V4l with index=-1 for next camera
+   }
+   /* Print the CameraNumber at the end of the string with a width of one character */
+   sprintf(deviceName, "/dev/video%1d", index);
+   
    /* w/o memset some parts  arent initialized - AKA: Fill it with zeros so it is clean */
    memset(capture,0,sizeof(CvCaptureCAM_V4L));
    /* Present the routines needed for V4L funtionality.  They are inserted as part of
       the standard set of cv calls promoting transparency.  "Vector Table" insertion. */
    capture->vtable = &captureCAM_V4L_vtable;
 
-   /* Select camera, or rather, V4L video source */
-   if (index<0) { /* Asking for the plane old /dev/video device of lor' */
-     strcpy(deviceName, "/dev/video");
-   }
-   else {
-      /* Print the CameraNumber at the end of the string with a width of one character */
-      sprintf(deviceName, "/dev/video%1d", index);
-      /* Test using an open to see if this new device name really does exists. */
-   }
-
+   /* Test using an open to see if this new device name really does exists. */
    /* No matter what the name - it still must be opened! */
    capture->deviceHandle = open(deviceName, O_RDWR);
    if (capture->deviceHandle == 0) {
@@ -357,9 +365,13 @@ CvCapture* icvOpenCAM_V4L( int index ) {
    capture->imageProperties.colour=     65535/2;
    capture->imageProperties.hue=        65535/2;
    if(ioctl(capture->deviceHandle, VIDIOCSPICT, &capture->imageProperties) < 0) {
-      printf("\n\nUnable to set Brightness, Contrast, Color, Hue, Depth or Palette.\n");
+      printf("\n\nUnable to set Brightness, Contrast, Color, Hue, Depth or Palette. Try YUV420P...\n");
+      capture->imageProperties.palette= VIDEO_PALETTE_YUV420P; 	
+   if(ioctl(capture->deviceHandle, VIDIOCSPICT, &capture->imageProperties) < 0) {
+      printf("\n\nUnable to set Brightness, Contrast, Color, Hue, Depth or Palette! Sorry. \n");
       icvCloseCAM_V4L(capture);
       return NULL;
+   }
    }
 
    /* Setup mapped memory io */
@@ -441,11 +453,19 @@ static int icvGrabFrameCAM_V4L( CvCaptureCAM_V4L* capture) {
 }
 
 static IplImage* icvRetrieveFrameCAM_V4L( CvCaptureCAM_V4L* capture ) {
-   /* Now get what has already been captured as a IplImage return */
-   memcpy((char *)capture->frame.imageData, 
+   if ( capture->imageProperties.palette!= VIDEO_PALETTE_YUV420P)
+    /* Now get what has already been captured as a IplImage return */
+    memcpy((char *)capture->frame.imageData, 
           (char *)(capture->memoryMap + capture->memoryBuffer.offsets[bufferIndex]),
           capture->frame.imageSize);
-
+   else
+    {
+    yuv420p_to_bgr(capture->frame.width,
+                   capture->frame.height,
+                   (unsigned char*)(capture->memoryMap+
+                   capture->memoryBuffer.offsets[bufferIndex]),
+                   (unsigned char*)(capture->frame.imageData));
+   }	
    ++bufferIndex;
    if (bufferIndex == capture->memoryBuffer.frames) {
       /* Do not let buffer index past the last buffer - reset it */
@@ -455,7 +475,7 @@ static IplImage* icvRetrieveFrameCAM_V4L( CvCaptureCAM_V4L* capture ) {
    /* Start capture of next frame even before getting last buffer */
    if (ioctl(capture->deviceHandle, VIDIOCMCAPTURE, &capture->mmaps[bufferIndex]) == -1) {
       printf("\n\nUnable to start next buffer cycle. %s\n\n", strerror(errno));
-      return(0);
+      //return(0);
    }
 
    return(&capture->frame);
@@ -584,4 +604,55 @@ static void icvCloseCAM_V4L( CvCaptureCAM_V4L* capture ){
    }
 };
 
+//these are adaptations of camsource program functions 
+
+static void
+yuv420p_to_bgr(int width,int height,unsigned char *src, unsigned char *dst)
+{
+   const unsigned char *u, *v, *bu, *bv;
+   int dx, dy, uvc, buvc;
+
+   u = src + width * height;
+   v = u + (width / 2) * (height / 2);
+
+   buvc = 0;
+   for (dy = 0; dy < height; dy++)
+   {
+      bu = u;
+      bv = v;
+      uvc = 0;
+
+      for (dx = 0; dx < width; dx++)
+      {
+         int tblue, tgreen, tred;
+         tblue = cvRound((int)*src++ + 2.029 * ((int) *u - 128));
+         tgreen = cvRound((int)*src - 0.396 * ((int) *u - 128) - 0.581 * ((int) *v - 128));
+         tred = cvRound((int)*src + 1.140 * ((int) *v - 128));
+         
+         *dst++ = CV_CAST_8U(tblue);
+         *dst++ = CV_CAST_8U(tgreen);
+         *dst++ = CV_CAST_8U(tred);
+
+         uvc++;
+         if (uvc >= 2)
+         {
+            uvc = 0;
+            u++;
+            v++;
+         }
+      }
+
+      buvc++;
+      if (buvc < 2)
+      {
+         u = bu;
+         v = bv;
+      }
+      else
+         buvc = 0;
+   }
+}
+
+
 #endif
+
