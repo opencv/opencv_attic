@@ -436,31 +436,30 @@ void CxCore_DynStructBaseTest::clear()
 
 int CxCore_DynStructBaseTest::write_default_params( CvFileStorage* fs )
 {
-    cvWriteInt( fs, "struct_count", struct_count );
-    cvWriteInt( fs, "max_struct_size", max_struct_size );
-    cvWriteInt( fs, "generations", generations );
-    cvWriteInt( fs, "iterations", iterations );
-    cvWriteInt( fs, "min_log_storage_block_size", min_log_storage_block_size );
-    cvWriteInt( fs, "max_log_storage_block_size", max_log_storage_block_size );
-    cvWriteInt( fs, "min_log_elem_size", min_log_elem_size );
-    cvWriteInt( fs, "max_log_elem_size", max_log_elem_size );
+    write_param( fs, "struct_count", struct_count );
+    write_param( fs, "max_struct_size", max_struct_size );
+    write_param( fs, "generations", generations );
+    write_param( fs, "iterations", iterations );
+    write_param( fs, "min_log_storage_block_size", min_log_storage_block_size );
+    write_param( fs, "max_log_storage_block_size", max_log_storage_block_size );
+    write_param( fs, "min_log_elem_size", min_log_elem_size );
+    write_param( fs, "max_log_elem_size", max_log_elem_size );
     return 0;
 }
 
 
 int CxCore_DynStructBaseTest::read_params( CvFileStorage* fs )
 {
-    CvFileNode* node = cvGetFileNodeByName( fs, 0, get_name() );
-    struct_count = cvReadIntByName( fs, node, "struct_count", struct_count );
-    max_struct_size = cvReadIntByName( fs, node, "max_struct_size", max_struct_size );
-    generations = cvReadIntByName( fs, node, "generations", generations );
-    iterations = cvReadIntByName( fs, node, "iterations", iterations );
-    min_log_storage_block_size = cvReadIntByName( fs, node,
-        "min_log_storage_block_size", min_log_storage_block_size );
-    max_log_storage_block_size = cvReadIntByName( fs, node,
-        "max_log_storage_block_size", max_log_storage_block_size );
-    min_log_elem_size = cvReadIntByName( fs, node, "min_log_elem_size", min_log_elem_size );
-    max_log_elem_size = cvReadIntByName( fs, node, "max_log_elem_size", max_log_elem_size );
+    struct_count = cvReadInt( find_param( fs, "struct_count" ), struct_count );
+    max_struct_size = cvReadInt( find_param( fs, "max_struct_size" ), max_struct_size );
+    generations = cvReadInt( find_param( fs, "generations" ), generations );
+    iterations = cvReadInt( find_param( fs, "iterations" ), iterations );
+    min_log_storage_block_size = cvReadInt( find_param( fs, "min_log_storage_block_size" ),
+                                            min_log_storage_block_size );
+    max_log_storage_block_size = cvReadInt( find_param( fs, "max_log_storage_block_size" ),
+                                            max_log_storage_block_size );
+    min_log_elem_size = cvReadInt( find_param( fs, "min_log_elem_size" ), min_log_elem_size );
+    max_log_elem_size = cvReadInt( find_param( fs, "max_log_elem_size" ), max_log_elem_size );
     
     struct_count = cvTsClipInt( struct_count, 1, 100 );
     max_struct_size = cvTsClipInt( max_struct_size, 1, 1<<20 );
@@ -556,6 +555,8 @@ int CxCore_DynStructBaseTest::test_seq_block_consistence( int _struct_idx, CvSeq
     return code;
 }
 
+
+CxCore_DynStructBaseTest ds_test( "ds", "" );
 
 /////////////////////////////////// sequence tests ////////////////////////////////////
 
@@ -1151,7 +1152,7 @@ void CxCore_SeqBaseTest::run( int )
     __END__;
 }
 
-CxCore_SeqBaseTest seqbase_test( "seqbase", "cvCreateSeq, cvClearSeq, cvSeqSlice, "
+CxCore_SeqBaseTest seqbase_test( "ds-seq-base", "cvCreateSeq, cvClearSeq, cvSeqSlice, "
                        "cvStartAppendToSeq, cvStartWriteSeq, cvEndWriteSeq, CV_WRITE_SEQ_ELEM_VAR, "
                        "cvGetSeqElem, cvSeqElemIdx, cvStartReadSeq, CV_NEXT_SEQ_ELEM, CV_PREV_SEQ_ELEM, "
                        "cvSetSeqReaderPos, cvGetSeqReaderPos, cvSeqPush, cvSeqPushFront, cvSeqPop, "
@@ -1335,7 +1336,7 @@ void CxCore_SeqSortInvTest::run( int )
 }
 
 
-CxCore_SeqSortInvTest seqsortinv_test( "seqsortinv",
+CxCore_SeqSortInvTest seqsortinv_test( "ds-seq-sortinv",
                     "cvCreateSeq, cvStartAppendToSeq, cvStartWriteSeq, "
                     "cvEndWriteSeq, CV_WRITE_SEQ_ELEM_VAR, "
                     "cvSeqSort, cvSeqSearch, cvSeqInvert, "
@@ -1357,7 +1358,7 @@ protected:
 
 
 CxCore_SetTest::CxCore_SetTest():
-    CxCore_DynStructBaseTest( "set", "cvCreateSet, cvClearSet, "
+    CxCore_DynStructBaseTest( "ds-set", "cvCreateSet, cvClearSet, "
                        "cvSetAdd, cvSetRemove, cvSetNew, cvSetRemoveByPtr, cvGetSetElem" )
 {
 }
@@ -1592,7 +1593,7 @@ protected:
 
 
 CxCore_GraphTest::CxCore_GraphTest():
-    CxCore_DynStructBaseTest( "graph", "cvCreateGraph, cvClearGraph, "
+    CxCore_DynStructBaseTest( "ds-graph", "cvCreateGraph, cvClearGraph, "
                        "cvGraphAddVtx, cvGraphRemoveVtx, cvGraphRemoveVtxByPtr, "
                        "cvGraphAddEdge, cvGraphAddEdgeByPtr, "
                        "cvGraphRemoveEdge, cvGraphRemoveEdgeByPtr, "
@@ -2052,7 +2053,7 @@ protected:
 
 
 CxCore_GraphScanTest::CxCore_GraphScanTest():
-    CxCore_DynStructBaseTest( "graphscan", "cvCreateGraph, "
+    CxCore_DynStructBaseTest( "ds-graphscan", "cvCreateGraph, "
                        "cvGraphAddVtx, cvGraphAddEdge, cvNextGraphItem, "
                        "cvCreateGraphScanner, cvReleaseGraphScanner" )
 {

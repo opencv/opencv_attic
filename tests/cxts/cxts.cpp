@@ -464,6 +464,7 @@ CvTest::CvTest( const char* _test_name, const char* _test_funcs, const char* _te
     last = this;
     test_count++;
     ts = 0;
+    hdr_state = 0;
 }
 
 CvTest::~CvTest()
@@ -485,8 +486,101 @@ int CvTest::init( CvTS* _test_system )
 }
 
 
+const char* CvTest::get_parent_name( const char* name, char* buffer )
+{
+    const char* dash_pos = strrchr( name ? name : "", '-' );
+    if( !dash_pos )
+        return 0;
+    
+    if( name != (const char*)buffer )
+        strncpy( buffer, name, dash_pos - name );
+    buffer[dash_pos - name] = '\0';
+    return buffer;
+}
+
+
+const CvFileNode* CvTest::find_param( CvFileStorage* fs, const char* param_name )
+{
+    char buffer[256];
+    const char* name = get_name();
+    CvFileNode* node = 0;
+
+    for(;;)
+    {
+        if( !name )
+            break;
+        node = cvGetFileNodeByName( fs, 0, name );
+        if( node )
+        {
+            node = cvGetFileNodeByName( fs, node, param_name );
+            if( node )
+                break;
+        }
+        name = get_parent_name( name, buffer );
+    }
+
+    return node;
+}
+
+
+void CvTest::write_param( CvFileStorage* fs, const char* paramname, int val )
+{
+    if( !ts->find_written_param( this, paramname, CV_NODE_INT, &val) )
+    {
+        if( hdr_state == 0 )
+        {
+            cvStartWriteStruct( fs, get_name(), CV_NODE_MAP );
+            hdr_state = 1;
+        }
+
+        cvWriteInt( fs, paramname, val );
+    }
+}
+
+
+void CvTest::write_param( CvFileStorage* fs, const char* paramname, double val )
+{
+    if( !ts->find_written_param( this, paramname, CV_NODE_REAL, &val) )
+    {
+        if( hdr_state == 0 )
+        {
+            cvStartWriteStruct( fs, get_name(), CV_NODE_MAP );
+            hdr_state = 1;
+        }
+
+        cvWriteReal( fs, paramname, val );
+    }
+}
+
+
+void CvTest::write_param( CvFileStorage* fs, const char* paramname, const char* val )
+{
+    if( !ts->find_written_param( this, paramname, CV_NODE_STRING, &val) )
+    {
+        if( hdr_state == 0 )
+        {
+            cvStartWriteStruct( fs, get_name(), CV_NODE_MAP );
+            hdr_state = 1;
+        }
+
+        cvWriteString( fs, paramname, val );
+    }
+}
+
+
 int CvTest::read_params( CvFileStorage* /*fs*/ )
 {
+    return 0;
+}
+
+
+int CvTest::write_defaults(CvTS* _ts)
+{
+    ts = _ts;
+    hdr_state = 0;
+    write_default_params( ts->get_file_storage() );
+    if( hdr_state )
+        cvEndWriteStruct( ts->get_file_storage() );
     return 0;
 }
 
@@ -586,6 +680,12 @@ void CvTest::run( int start_from )
 }
 
 
+void CvTest::run_func()
+{
+    assert(0);
+}
+
+
 int CvTest::get_test_case_count()
 {
     return -1;
@@ -654,6 +754,7 @@ CvTS::CvTS()
     memset( output_streams, 0, sizeof(output_streams) );
     selected_tests = new CvTestPtrVec();
     failed_tests = new CvTestInfoVec();
+    written_params = new CvTestPtrVec();
 
     clear();
 }
@@ -663,6 +764,7 @@ void CvTS::clear()
 {
     int i;
     CvTest* test;
+
     for( test = get_first_test(); test != 0; test = test->get_next() )
         test->clear();
 
@@ -708,6 +810,14 @@ void CvTS::clear()
 CvTS::~CvTS()
 {
     clear();
+
+    if( written_params )
+    {
+        for( int i = 0; i < written_params->size(); i++ )
+            free( written_params->at(i) );
+        delete written_params;
+    }
+
     delete selected_tests;
     delete failed_tests;
     cvSetMemoryManager( 0, 0 );
@@ -792,19 +902,99 @@ void CvTS::set_handlers( bool on )
     }
 }
 
+
+typedef struct CvTsParamVal
+{
+    const char* fullname;
+    const void* val;
+}
+CvTsParamVal;
+
+int CvTS::find_written_param( CvTest* test, const char* paramname, int valtype, const void* val )
+{
+    const char* testname = test->get_name();
+    bool add_to_list = test->get_func_list()[0] == '\0';
+    char buffer[256];
+    int paramname_len = strlen(paramname);
+    int paramval_len = valtype == CV_NODE_INT ? sizeof(int) :
+        valtype == CV_NODE_REAL ? sizeof(double) : -1;
+    const char* name = CvTest::get_parent_name( testname, buffer );
+
+    if( !fs )
+        return -1;
+
+    if( paramval_len < 0 )
+    {
+        assert(0); // unsupported parameter type
+        return -1;
+    }
+
+    while( name )
+    {
+        int i, len = strlen(buffer);
+        buffer[len] = '.';
+        memcpy( buffer + len + 1, paramname, paramname_len + 1 );
+        for( i = 0; i < written_params->size(); i++ )
+        {
+            CvTsParamVal* param = (CvTsParamVal*)written_params->at(i);
+            if( strcmp( param->fullname, buffer ) == 0 )
+            {
+                if( paramval_len > 0 && memcmp( param->val, val, paramval_len ) == 0 ||
+                    paramval_len < 0 && strcmp( (const char*)param->val, (const char*)val ) == 0 )
+                    return 1;
+                break;
+            }
+        }
+        if( i < written_params->size() )
+            break;
+        buffer[len] = '\0';
+        name = CvTest::get_parent_name( buffer, buffer );
+    }
+
+    if( add_to_list )
+    {
+        int bufsize, fullname_len = strlen(testname) + paramname_len + 2;
+        CvTsParamVal* param;
+        if( paramval_len < 0 )
+            paramval_len = strlen((const char*)val) + 1;
+        bufsize = sizeof(*param) + fullname_len + paramval_len;
+        param = (CvTsParamVal*)malloc(bufsize);
+        param->fullname = (const char*)(param + 1);
+        param->val = param->fullname + fullname_len;
+        sprintf( (char*)param->fullname, "%s.%s", testname, paramname );
+        memcpy( (void*)param->val, val, paramval_len );
+        written_params->push( param );
+    }
+
+    return 0;
+}
+
+
 #ifndef MAX_PATH
 #define MAX_PATH 1024
 #endif
+
+static int CV_CDECL cmp_test_names( const void* a, const void* b )
+{
+    return strcmp( (*(const CvTest**)a)->get_name(), (*(const CvTest**)b)->get_name() );
+}
 
 int CvTS::run( int argc, char** argv )
 {
     time( &start_time );
     
     int i, write_params = 0;
+    CvTestPtrVec all_tests;
     CvTest* test;
 
-    // 0. reset all the parameters
+    // 0. reset all the parameters, reorder tests
     clear();
+
+    for( test = get_first_test(), i = 0; test != 0; test = test->get_next(), i++ )
+        all_tests.push(test);
+
+    if( all_tests.size() > 0 && all_tests.data() )
+        qsort( all_tests.data(), all_tests.size(), sizeof(CvTest*), cmp_test_names );
 
     // 1. parse command line options
     for( i = 1; i < argc; i++ )
@@ -839,11 +1029,10 @@ int CvTS::run( int argc, char** argv )
         write_default_params( fs );
         cvEndWriteStruct( fs );
 
-        for( test = get_first_test(); test != 0; test = test->get_next() )
+        for( i = 0; i < all_tests.size(); i++ )
         {
-            cvStartWriteStruct( fs, test->get_name(), CV_NODE_MAP );
-            test->write_default_params( fs );
-            cvEndWriteStruct( fs );
+            test = (CvTest*)all_tests[i];
+            test->write_defaults( this );
             test->clear();
         }
         cvReleaseFileStorage( &fs );
@@ -894,9 +1083,10 @@ int CvTS::run( int argc, char** argv )
 
     // 4. traverse through the list of all registered tests.
     // Initialize the selected tests and put them into the separate sequence
-    for( test = get_first_test(); test != 0; test = test->get_next() )
+    for( i = 0; i < all_tests.size(); i++ )
     {
-        if( filter(test) )
+        test = (CvTest*)all_tests[i];
+        if( strcmp( test->get_func_list(), "" ) != 0 && filter(test) )
         {
             if( test->init(this) >= 0 )
                 selected_tests->push( test );

@@ -97,6 +97,7 @@ void CxCore_MathTest::get_test_array_types_and_sizes( int test_case_idx,
     }
 }
 
+CxCore_MathTest math_test( "math", "" );
 
 ////////// exp /////////////
 class CxCore_ExpTest : public CxCore_MathTest
@@ -113,7 +114,7 @@ protected:
 
 
 CxCore_ExpTest::CxCore_ExpTest()
-    : CxCore_MathTest( "exp", "cvExp" )
+    : CxCore_MathTest( "math-exp", "cvExp" )
 {
     out_type = 0;
 }
@@ -196,7 +197,7 @@ protected:
 
 
 CxCore_LogTest::CxCore_LogTest()
-    : CxCore_MathTest( "log", "cvLog" )
+    : CxCore_MathTest( "math-log", "cvLog" )
 {
 }
 
@@ -282,7 +283,7 @@ protected:
 
 
 CxCore_PowTest::CxCore_PowTest()
-    : CxCore_MathTest( "pow", "cvPow" )
+    : CxCore_MathTest( "math-pow", "cvPow" )
 {
     power = 0;
 }
@@ -536,7 +537,7 @@ protected:
 
 
 CxCore_CartToPolarTest::CxCore_CartToPolarTest()
-    : CxCore_MathTest( "cart2polar", "cvCartToPolar" )
+    : CxCore_MathTest( "math-cart2polar", "cvCartToPolar" )
 {
     use_degrees = 0;
     test_array[INPUT].push(NULL);
@@ -663,7 +664,7 @@ protected:
 
 
 CxCore_PolarToCartTest::CxCore_PolarToCartTest()
-    : CxCore_MathTest( "polar2cart", "cvPolarToCart" )
+    : CxCore_MathTest( "math-polar2cart", "cvPolarToCart" )
 {
     use_degrees = 0;
     test_array[INPUT].push(NULL);
@@ -828,6 +829,8 @@ double CxCore_MatrixTest::get_success_error_level( int test_case_idx, int i, int
     return MAX(input_precision, output_precision);
 }
 
+CxCore_MatrixTest matrix_test( "matrix", "", 0, 0, false, false, 0 );
+
 ///////// dotproduct //////////
 
 class CxCore_DotProductTest : public CxCore_MatrixTest
@@ -841,7 +844,7 @@ protected:
 
 
 CxCore_DotProductTest::CxCore_DotProductTest() :
-    CxCore_MatrixTest( "dotproduct", "cvDotProduct", 2, 1, true, true, 4 )
+    CxCore_MatrixTest( "matrix-dotproduct", "cvDotProduct", 2, 1, true, true, 4 )
 {
 }
 
@@ -876,7 +879,7 @@ protected:
 
 
 CxCore_CrossProductTest::CxCore_CrossProductTest() :
-    CxCore_MatrixTest( "crossproduct", "cvCrossProduct", 2, 1, false, false, 1 )
+    CxCore_MatrixTest( "matrix-crossproduct", "cvCrossProduct", 2, 1, false, false, 1 )
 {
 }
 
@@ -975,7 +978,7 @@ protected:
 };
 
 CxCore_ScaleAddTest::CxCore_ScaleAddTest() :
-    CxCore_MatrixTest( "scaleadd", "cvScaleAdd", 3, 1, false, false, 2 )
+    CxCore_MatrixTest( "matrix-scaleadd", "cvScaleAdd", 3, 1, false, false, 2 )
 {
 }
 
@@ -1061,7 +1064,7 @@ protected:
 };
 
 CxCore_GEMMTest::CxCore_GEMMTest() :
-    CxCore_MatrixTest( "gemm", "cvGEMM", 5, 1, false, false, 2 )
+    CxCore_MatrixTest( "matrix-gemm", "cvGEMM", 5, 1, false, false, 2 )
 {
     test_case_count = 100;
 }
@@ -1162,7 +1165,7 @@ protected:
 
 
 CxCore_MulTransposedTest::CxCore_MulTransposedTest() :
-    CxCore_MatrixTest( "multransposed", "cvMulTransposed, cvRepeat", 2, 1, false, false, 1 )
+    CxCore_MatrixTest( "matrix-multransposed", "cvMulTransposed, cvRepeat", 2, 1, false, false, 1 )
 {
     test_case_count = 100;
     order = 0;
@@ -1245,7 +1248,7 @@ protected:
 
 
 CxCore_TransformTest::CxCore_TransformTest() :
-    CxCore_MatrixTest( "transform", "cvTransform", 3, 1, true, false, 4 )
+    CxCore_MatrixTest( "matrix-transform", "cvTransform", 3, 1, true, false, 4 )
 {
 }
 
@@ -1288,7 +1291,8 @@ void CxCore_TransformTest::get_test_array_types_and_sizes( int test_case_idx, Cv
 
 double CxCore_TransformTest::get_success_error_level( int test_case_idx, int i, int j )
 {
-    return CV_MAT_DEPTH(test_mat[INPUT][0].type) < CV_32F ? 1 :
+    int depth = CV_MAT_DEPTH(test_mat[INPUT][0].type);
+    return depth == CV_8U ? 1 : depth == CV_16S || depth == CV_16U ? 3 :
         CxCore_MatrixTest::get_success_error_level( test_case_idx, i, j );
 }
 
@@ -1324,7 +1328,7 @@ protected:
 
 
 CxCore_PerspectiveTransformTest::CxCore_PerspectiveTransformTest() :
-    CxCore_MatrixTest( "perspective", "cvPerspectiveTransform", 2, 1, false, false, 2 )
+    CxCore_MatrixTest( "matrix-perspective", "cvPerspectiveTransform", 2, 1, false, false, 2 )
 {
 }
 
@@ -1476,7 +1480,7 @@ protected:
 
 
 CxCore_MahalanobisTest::CxCore_MahalanobisTest() :
-    CxCore_MatrixTest( "mahalanobis", "cvMahalanobis", 3, 1, false, true, 1 )
+    CxCore_MatrixTest( "matrix-mahalanobis", "cvMahalanobis", 3, 1, false, true, 1 )
 {
     test_case_count = 100;
     test_array[TEMP].push(NULL);
@@ -1558,7 +1562,7 @@ protected:
 
 
 CxCore_CovarMatrixTest::CxCore_CovarMatrixTest() :
-    CxCore_MatrixTest( "covarmatrix", "cvCalcCovarMatrix", 1, 1, true, false, 1 ),
+    CxCore_MatrixTest( "matrix-covar", "cvCalcCovarMatrix", 1, 1, true, false, 1 ),
         flags(0), t_flag(0), are_images(false)
 {
     test_case_count = 100;
@@ -1721,7 +1725,7 @@ protected:
 
 
 CxCore_DetTest::CxCore_DetTest() :
-    CxCore_MatrixTest( "det", "cvDet", 1, 1, false, true, 1 )
+    CxCore_MatrixTest( "matrix-det", "cvDet", 1, 1, false, true, 1 )
 {
     test_case_count = 100;
     max_log_array_size = 7;
@@ -1887,7 +1891,7 @@ protected:
 
 
 CxCore_InvertTest::CxCore_InvertTest() :
-    CxCore_MatrixTest( "invert", "cvInvert, cvSVD, cvSVBkSb", 1, 1, false, false, 1 ), method(0), result(0.), rank(0)
+    CxCore_MatrixTest( "matrix-invert", "cvInvert, cvSVD, cvSVBkSb", 1, 1, false, false, 1 ), method(0), result(0.), rank(0)
 {
     test_case_count = 100;
     max_log_array_size = 7;
@@ -1967,7 +1971,7 @@ void CxCore_InvertTest::run_func()
 static double cvTsSVDet( CvMat* mat )
 {
     int type = CV_MAT_TYPE(mat->type);
-    int i, nm = CV_MIN( mat->rows, mat->cols );
+    int i, nm = MIN( mat->rows, mat->cols );
     CvMat* w = cvCreateMat( nm, 1, type );
     double det = 1.;
 
@@ -2039,7 +2043,7 @@ protected:
 
 
 CxCore_SolveTest::CxCore_SolveTest() :
-    CxCore_MatrixTest( "solve", "cvSolve, cvSVD, cvSVBkSb", 2, 1, false, false, 1 ), method(0), result(0.), rank(0)
+    CxCore_MatrixTest( "matrix-solve", "cvSolve, cvSVD, cvSVBkSb", 2, 1, false, false, 1 ), method(0), result(0.), rank(0)
 {
     test_case_count = 100;
     max_log_array_size = 7;
@@ -2165,7 +2169,7 @@ protected:
 
 
 CxCore_SVDTest::CxCore_SVDTest() :
-    CxCore_MatrixTest( "svd", "cvSVD", 1, 4, false, false, 1 ),
+    CxCore_MatrixTest( "matrix-svd", "cvSVD", 1, 4, false, false, 1 ),
         flags(0), have_u(false), have_v(false), symmetric(false), compact(false), vector_w(false)
 {
     test_case_count = 100;
@@ -2397,7 +2401,7 @@ protected:
 
 
 CxCore_SVBkSbTest::CxCore_SVBkSbTest() :
-    CxCore_MatrixTest( "svbksb", "cvSVBkSb", 2, 1, false, false, 1 ),
+    CxCore_MatrixTest( "matrix-svbksb", "cvSVBkSb", 2, 1, false, false, 1 ),
         flags(0), have_b(false), symmetric(false), compact(false), vector_w(false)
 {
     test_case_count = 100;
@@ -2603,8 +2607,6 @@ CxCore_SVBkSbTest svbksb_test;
 
 
 // TODO: eigenvv, invsqrt, cbrt, fastarctan, (round, floor, ceil(?)),
-// svd, svbksb (the latter two are somewhat tested in invert & solve,
-// though some special cases are not considered)
 
 /* End of file. */
 

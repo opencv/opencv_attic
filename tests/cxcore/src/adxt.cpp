@@ -655,6 +655,7 @@ int CxCore_DXTBaseTest::prepare_test_case( int test_case_idx )
     return ok;
 }
 
+CxCore_DXTBaseTest dxt_test( "dxt", "" );
 
 ////////////////////// FFT ////////////////////////
 class CxCore_DFTTest : public CxCore_DXTBaseTest
@@ -667,7 +668,7 @@ protected:
 };
 
 
-CxCore_DFTTest::CxCore_DFTTest() : CxCore_DXTBaseTest( "dft", "cvDFT", true, true, false )
+CxCore_DFTTest::CxCore_DFTTest() : CxCore_DXTBaseTest( "dxt-dft", "cvDFT", true, true, false )
 {
 }
 
@@ -733,7 +734,7 @@ protected:
 };
 
 
-CxCore_DCTTest::CxCore_DCTTest() : CxCore_DXTBaseTest( "dct", "cvDCT", false, false, false )
+CxCore_DCTTest::CxCore_DCTTest() : CxCore_DXTBaseTest( "dxt-dct", "cvDCT", false, false, false )
 {
 }
 
@@ -774,7 +775,7 @@ protected:
 
 
 CxCore_MulSpectrumsTest::CxCore_MulSpectrumsTest() :
-    CxCore_DXTBaseTest( "mulspectrums", "cvMulSpectrums", true, true, true )
+    CxCore_DXTBaseTest( "dxt-mulspectrums", "cvMulSpectrums", true, true, true )
 {
 }
 
