@@ -69,7 +69,7 @@ void show_points( IplImage* gray, CvPoint2D32f* u, int u_cnt, CvPoint2D32f* v, i
     cvGetImageRawData( gray, 0, 0, &size );
     
     IplImage* rgb = cvCreateImage( size, 8, 3 );
-    cvCvtPlaneToPix( gray, gray, gray, 0, rgb );
+    cvMerge( gray, gray, gray, 0, rgb );
 
     if( v )
     {

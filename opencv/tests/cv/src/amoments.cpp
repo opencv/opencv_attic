@@ -69,7 +69,6 @@ static int fn_l = 0, fn_h = ATS_DIM(funcs)-1,
 static int init_moments_params = 0;
 
 static const int img8u_range = 255;
-static const int img8s_range = 128;
 static const float img32f_range = 100.f;
 static const int img32f_bits = 3;
 
@@ -132,8 +131,8 @@ static void read_moments_params( void )
                      "mb - moments binary\n");
         if( func != 0 ) fn_l = fn_h = func - 1;
 
-        trsCaseRead( &data_types,"/a/8u/8s/32f", "a",
-            "a - all, 8u - unsigned char, 8s - signed char, 32f - float" );
+        trsCaseRead( &data_types,"/a/8u/32f", "a",
+            "a - all, 8u - unsigned char, 32f - float" );
         if( data_types != 0 ) dt_l = dt_h = data_types - 1;
 
         trsCaseRead( &channels, "/a/1/3", "a", "a - all, 1 - single channel, 3 - three channels" );
@@ -188,7 +187,7 @@ static int moments_test( void* arg )
           ATS_RANGE( depth, dt_l, dt_h+1 ) &&
           ATS_RANGE( channels, ch_l, ch_h+1 ))) return TRS_UNDEF;
 
-    depth = depth == 2 ? IPL_DEPTH_32F : depth == 1 ? IPL_DEPTH_8S : IPL_DEPTH_8U;
+    depth = depth == 1 ? IPL_DEPTH_32F : IPL_DEPTH_8U;
     channels = channels*2 + 1;
 
     img  = atsCreateImage( max_img_size, max_img_size, depth, channels, 0 );
@@ -216,9 +215,6 @@ static int moments_test( void* arg )
                 {
                 case IPL_DEPTH_8U:
                     atsRandSetBounds( &rng_state, 0, img8u_range );
-                    break;
-                case IPL_DEPTH_8S:
-                    atsRandSetBounds( &rng_state, -img8s_range, img8s_range );
                     break;
                 case IPL_DEPTH_32F:
                     atsRandSetBounds( &rng_state, -img32f_range, img32f_range );
@@ -380,15 +376,11 @@ void InitAMoments( void )
 
     trsRegArg( funcs[0], test_desc, atsAlgoClass, moments_test, _8U_C1 );
     trsRegArg( funcs[0], test_desc, atsAlgoClass, moments_test, _8U_C3 );
-    trsRegArg( funcs[0], test_desc, atsAlgoClass, moments_test, _8S_C1 );
-    trsRegArg( funcs[0], test_desc, atsAlgoClass, moments_test, _8S_C3 );
     trsRegArg( funcs[0], test_desc, atsAlgoClass, moments_test, _32F_C1 );
     trsRegArg( funcs[0], test_desc, atsAlgoClass, moments_test, _32F_C3 );
 
     trsRegArg( funcs[0], test_desc, atsAlgoClass, moments_test, BIN_8U_C1 );
     trsRegArg( funcs[0], test_desc, atsAlgoClass, moments_test, BIN_8U_C3 );
-    trsRegArg( funcs[0], test_desc, atsAlgoClass, moments_test, BIN_8S_C1 );
-    trsRegArg( funcs[0], test_desc, atsAlgoClass, moments_test, BIN_8S_C3 );
     trsRegArg( funcs[0], test_desc, atsAlgoClass, moments_test, BIN_32F_C1 );
     trsRegArg( funcs[0], test_desc, atsAlgoClass, moments_test, BIN_32F_C3 );
 

@@ -70,7 +70,6 @@ static int fcaLinAcc( void )
     
     AtsRandState      state;
     IplImage*         pSrc8u;
-    IplImage*         pSrc8s;
     IplImage*         pSrc32f;
     
     IplImage*         pDst;
@@ -92,12 +91,10 @@ static int fcaLinAcc( void )
     }
     atsRandInit(&state,0,255,127);
     pSrc8u         = cvCreateImage(cvSize(lImageWidth, lImageHeight), IPL_DEPTH_8U, 3);
-    pSrc8s         = cvCreateImage(cvSize(lImageWidth, lImageHeight), IPL_DEPTH_8S, 3);
     pSrc32f        = cvCreateImage(cvSize(lImageWidth, lImageHeight), IPL_DEPTH_32F, 3);
     pDst           = cvCreateImage(cvSize(lImageWidth, lImageHeight), IPL_DEPTH_32F, 3);
     pTemp          = cvCreateImage(cvSize(lImageWidth, lImageHeight), IPL_DEPTH_32F, 3);	
     atsFillRandomImageEx(pSrc8u, &state );
-    atsFillRandomImageEx(pSrc8s, &state );
     atsFillRandomImageEx(pSrc32f, &state );
     atsFillRandomImageEx(pDst, &state );
     pTest = cvCloneImage(pDst);
@@ -105,9 +102,6 @@ static int fcaLinAcc( void )
     
     cvAcc(pSrc8u,pTest);
     atsConvert(pSrc8u,pTemp);
-    cvAdd(pDst,pTemp,pDst);
-    cvAcc(pSrc8s,pTest);
-    atsConvert(pSrc8s,pTemp);
     cvAdd(pDst,pTemp,pDst);
     cvAcc(pSrc32f,pTest);
     cvAdd(pDst,pSrc32f,pDst);
@@ -120,7 +114,6 @@ static int fcaLinAcc( void )
     
     
     cvReleaseImage( &pSrc8u );
-    cvReleaseImage( &pSrc8s );
     cvReleaseImage( &pSrc32f );
     cvReleaseImage( &pDst );
     cvReleaseImage( &pTest);
@@ -136,7 +129,6 @@ static int fcaSqrAcc( void )
     
     AtsRandState      state;
     IplImage*         pSrc8u;
-    IplImage*         pSrc8s;
     IplImage*         pSrc32f;
     
     IplImage*         pDst;
@@ -158,12 +150,10 @@ static int fcaSqrAcc( void )
     }
     atsRandInit(&state,0,255,127);
     pSrc8u         = cvCreateImage(cvSize(lImageWidth, lImageHeight), IPL_DEPTH_8U, 1);
-    pSrc8s         = cvCreateImage(cvSize(lImageWidth, lImageHeight), IPL_DEPTH_8S, 1);
     pSrc32f        = cvCreateImage(cvSize(lImageWidth, lImageHeight), IPL_DEPTH_32F, 1);
     pDst           = cvCreateImage(cvSize(lImageWidth, lImageHeight), IPL_DEPTH_32F, 1);
     pTemp          = cvCreateImage(cvSize(lImageWidth, lImageHeight), IPL_DEPTH_32F, 1);	
     atsFillRandomImageEx(pSrc8u, &state );
-    atsFillRandomImageEx(pSrc8s, &state );
     atsFillRandomImageEx(pSrc32f, &state );
     atsFillRandomImageEx(pDst, &state );
     pTest = cvCloneImage(pDst);
@@ -171,10 +161,6 @@ static int fcaSqrAcc( void )
     
     cvSquareAcc(pSrc8u,pTest);
     atsConvert(pSrc8u,pTemp);
-    cvMul(pTemp,pTemp,pTemp);
-    cvAdd(pDst,pTemp,pDst);
-    cvSquareAcc(pSrc8s,pTest);
-    atsConvert(pSrc8s,pTemp);
     cvMul(pTemp,pTemp,pTemp);
     cvAdd(pDst,pTemp,pDst);
     cvSquareAcc(pSrc32f,pTest);
@@ -189,7 +175,6 @@ static int fcaSqrAcc( void )
     
     
     cvReleaseImage( &pSrc8u );
-    cvReleaseImage( &pSrc8s );
     cvReleaseImage( &pSrc32f );
     cvReleaseImage( &pDst );
     cvReleaseImage( &pTest );
@@ -205,10 +190,8 @@ static int fcaMultAcc( void )
     
     AtsRandState      state;
     IplImage*         pSrcA8u;
-    IplImage*         pSrcA8s;
     IplImage*         pSrcA32f;
     IplImage*         pSrcB8u;
-    IplImage*         pSrcB8s;
     IplImage*         pSrcB32f;
     
     IplImage*         pDst;
@@ -231,19 +214,15 @@ static int fcaMultAcc( void )
     }
     atsRandInit(&state,0,255,127);
     pSrcA8u         = cvCreateImage(cvSize(lImageWidth, lImageHeight), IPL_DEPTH_8U, 1);
-    pSrcA8s         = cvCreateImage(cvSize(lImageWidth, lImageHeight), IPL_DEPTH_8S, 1);
     pSrcA32f        = cvCreateImage(cvSize(lImageWidth, lImageHeight), IPL_DEPTH_32F, 1);
     pSrcB8u         = cvCreateImage(cvSize(lImageWidth, lImageHeight), IPL_DEPTH_8U, 1);
-    pSrcB8s         = cvCreateImage(cvSize(lImageWidth, lImageHeight), IPL_DEPTH_8S, 1);
     pSrcB32f        = cvCreateImage(cvSize(lImageWidth, lImageHeight), IPL_DEPTH_32F, 1);
     pDst            = cvCreateImage(cvSize(lImageWidth, lImageHeight), IPL_DEPTH_32F, 1);
     pTempA          = cvCreateImage(cvSize(lImageWidth, lImageHeight), IPL_DEPTH_32F, 1);
     pTempB          = cvCreateImage(cvSize(lImageWidth, lImageHeight), IPL_DEPTH_32F, 1);
     atsFillRandomImageEx(pSrcA8u, &state );
-    atsFillRandomImageEx(pSrcA8s, &state );
     atsFillRandomImageEx(pSrcA32f, &state );
     atsFillRandomImageEx(pSrcB8u, &state );
-    atsFillRandomImageEx(pSrcB8s, &state );
     atsFillRandomImageEx(pSrcB32f, &state );
     atsFillRandomImageEx(pDst, &state );
     pTest = cvCloneImage(pDst);
@@ -254,13 +233,6 @@ static int fcaMultAcc( void )
     atsConvert(pSrcB8u,pTempB);
     cvMul(pTempA,pTempB,pTempA);
     cvAdd(pDst,pTempA,pDst);
-    //Error = (long)cvNorm(pTest,pDst,CV_C);
-    cvMultiplyAcc(pSrcA8s,pSrcB8s,pTest);
-    atsConvert(pSrcA8s,pTempA);
-    atsConvert(pSrcB8s,pTempB);
-    cvMul(pTempA,pTempB,pTempA);
-    cvAdd(pDst,pTempA,pDst);
-    //Error = (long)cvNorm(pTest,pDst,CV_C);
     cvMultiplyAcc(pSrcA32f,pSrcB32f,pTest);
     cvMul(pSrcA32f,pSrcB32f,pSrcA32f);
     cvAdd(pDst,pSrcA32f,pDst);
@@ -273,10 +245,8 @@ static int fcaMultAcc( void )
     
     
     cvReleaseImage( &pSrcA8u );
-    cvReleaseImage( &pSrcA8s );
     cvReleaseImage( &pSrcA32f );
     cvReleaseImage( &pSrcB8u );
-    cvReleaseImage( &pSrcB8s );
     cvReleaseImage( &pSrcB32f );
     cvReleaseImage( &pDst );
     cvReleaseImage( &pTest);
@@ -293,7 +263,6 @@ static int fcaRunAvg( void )
 
     AtsRandState      state;
     IplImage*         pSrc8u;
-    IplImage*         pSrc8s;
     IplImage*         pSrc32f;
     
     IplImage*         pDst;
@@ -315,24 +284,16 @@ static int fcaRunAvg( void )
     }
     atsRandInit(&state,0,255,127);
     pSrc8u         = cvCreateImage(cvSize(lImageWidth, lImageHeight), IPL_DEPTH_8U, 1);
-    pSrc8s         = cvCreateImage(cvSize(lImageWidth, lImageHeight), IPL_DEPTH_8S, 1);
     pSrc32f        = cvCreateImage(cvSize(lImageWidth, lImageHeight), IPL_DEPTH_32F, 1);
     pDst           = cvCreateImage(cvSize(lImageWidth, lImageHeight), IPL_DEPTH_32F, 1);
     pTemp          = cvCreateImage(cvSize(lImageWidth, lImageHeight), IPL_DEPTH_32F, 1);	
     atsFillRandomImageEx(pSrc8u, &state );
-    atsFillRandomImageEx(pSrc8s, &state );
     atsFillRandomImageEx(pSrc32f, &state );
     atsFillRandomImageEx(pDst, &state );
     pTest = cvCloneImage(pDst);
     
     cvRunningAvg(pSrc8u,pTest,alpha);
     atsConvert(pSrc8u,pTemp);
-    cvScale(pDst,pDst,(1.f-alpha));
-    cvScale(pTemp,pTemp,alpha);
-    cvAdd(pDst,pTemp,pDst);
-    Error = (long)cvNorm(pTest,pDst,CV_C);
-    cvRunningAvg(pSrc8s,pTest,alpha);
-    atsConvert(pSrc8s,pTemp);
     cvScale(pDst,pDst,(1.f-alpha));
     cvScale(pTemp,pTemp,alpha);
     cvAdd(pDst,pTemp,pDst);
@@ -350,7 +311,6 @@ static int fcaRunAvg( void )
    
 
     cvReleaseImage( &pSrc8u );
-    cvReleaseImage( &pSrc8s );
     cvReleaseImage( &pSrc32f );
     cvReleaseImage( &pDst );
     cvReleaseImage( &pTest);

@@ -233,7 +233,7 @@ static int fmaKMeans(void)
     /* run etalon kmeans */
     /* actually it is the simpliest realization of kmeans */
 
-    int ni = _real_kmeans( lNumClust, vectors, lNumVect, lVectSize, etalon_output, crit.epsilon, crit.maxIter );
+    int ni = _real_kmeans( lNumClust, vectors, lNumVect, lVectSize, etalon_output, crit.epsilon, crit.max_iter );
 
     trsWrite(  ATS_CON, "%d iterations done\n",  ni );
                   

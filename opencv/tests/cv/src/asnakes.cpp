@@ -71,8 +71,8 @@ static const int numfig_grad  = 1;
 
 static char* file_name[] = 
 {
-    "Ring",
-    "Square"
+    "ring",
+    "square"
 }; 
               
 
@@ -102,7 +102,7 @@ static int fmaSnakes( void* arg )
 
     static int  read_param = 0;
 
-    atsGetTestDataPath( rel_path, "Snakes", 0, 0 );
+    atsGetTestDataPath( rel_path, "snakes", 0, 0 );
 
     /* Initialization global parameters */
     if( !read_param )
@@ -167,7 +167,7 @@ static int fmaSnakes( void* arg )
         fscanf(file, "%d", &num_pos );
 
         /* get number iterations between two positions */
-        fscanf(file, "%d", &criteria.maxIter ); 
+        fscanf(file, "%d", &criteria.max_iter ); 
 
         /* read initial snake position */
         for ( j = 0; j < length; j++ )

@@ -131,7 +131,7 @@ static int aCreateContourTree(void)
 
     error = 0;
     criteria.type = CV_TERMCRIT_ITER;
-    criteria.maxIter = 100;
+    criteria.max_iter = 100;
     contour_h2 = cvContourFromContourTree (tree, storage, criteria);
     rezult = cvMatchContours ((CvSeq*)&contour_h1, contour_h2,CV_CONTOURS_MATCH_I1);
 
@@ -145,14 +145,14 @@ static int aCreateContourTree(void)
 
     criteria.type = CV_TERMCRIT_ITER + CV_TERMCRIT_EPS;
     criteria.epsilon = (float)0.00001;
-    criteria.maxIter = 1;
+    criteria.max_iter = 1;
     contour_h2 = cvContourFromContourTree (tree, storage, criteria);
     rezult = cvMatchContours ((CvSeq*)&contour_h1, contour_h2, CV_CONTOURS_MATCH_I1);
     error+=rezult;
 
     criteria.type = CV_TERMCRIT_ITER + CV_TERMCRIT_EPS;
     criteria.epsilon = 1000.;
-    criteria.maxIter = 100;
+    criteria.max_iter = 100;
     contour_h2 = cvContourFromContourTree (tree, storage, criteria);
     rezult = cvMatchContours ((CvSeq*)&contour_h1, contour_h2, CV_CONTOURS_MATCH_I1);
     error+=rezult;

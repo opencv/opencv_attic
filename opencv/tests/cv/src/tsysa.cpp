@@ -41,10 +41,8 @@
 
 #include "cvtest.h"
 
-void InitAAbsDiff();
 void InitAAcc();
 void InitAApproxPoly();
-void InitAArithmetic();
 void InitAArrayIterator();
 void InitABackProject();
 void InitACalibration();
@@ -53,14 +51,11 @@ void InitACanny();
 void InitAChessCorners();
 void InitAConDens();
 void InitAContours();
-void InitAConvert();
 void InitAConvexHull();
 void InitACorner();
 void InitACvCalculate();
 void InitADerv();
 void InitADistanceTransform();
-void InitADrawing();
-void InitADrawingRegress();
 void InitAEMD();
 void InitAFitEllipse();
 void InitAFitLine();
@@ -74,16 +69,12 @@ void InitAHistogramOperations();
 void InitAHistograms();
 void InitAHoughLines();
 void InitAImage();
-void InitAImageStatistics();
 void InitAImageToHMMObs();
 void InitAKalman();
 void InitAKMeans();
-void InitALogic();
 void InitAMaskAcc();
 void InitAMatchTemplate();
 void InitAMathUtils();
-void InitAMatr();
-void InitAMatr2();
 void InitAMeanShift();
 void InitAMinAreaRect();
 void InitAMinEVal();
@@ -100,7 +91,6 @@ void InitASequence();
 void InitASnakes();
 void InitAStorageArray();
 void InitASubdiv();
-void InitASVD();
 void InitAThreshold();
 void InitAAdaptThreshold();
 void InitATree();
@@ -109,8 +99,6 @@ void InitAFloodFill();
 void InitAFloodFill8();
 void InitAUnDistort();
 void InitAEigenObjects();
-void InitANorm();
-void InitANormMask();
 void InitAContourMoments();
 void InitAMatchContours();
 void InitACreateContourTree();
@@ -135,15 +123,11 @@ int main(int argC,char *argV[])
 #else
     atsInitModuleTestData( argV[0], "../testdata" );
 #endif
-    atsLoadPrimitives( argC, argV );
+    atsLoadPrimitives( 1 );
 
-    InitAAbsDiff();
     InitAAcc();
     // InitAAdaptThreshold(); // test is not up-to-date
     InitAApproxPoly();
-    InitAArithmetic();
-    InitAArrayIterator();
-    InitABackProject();
     InitACalcOpticalFlowLK();
     InitACalcOpticalFlowHS();
     InitACalibration();
@@ -153,42 +137,30 @@ int main(int argC,char *argV[])
     InitAConDens();
     InitAContours();
     InitAContourMoments();
-    InitAConvert();
     InitAConvexHull();
     InitACorner();
     InitACreateContourTree();
-    InitACvCalculate();
     InitADerv();
     InitADistanceTransform();
-    InitADrawing();
-    InitADrawingRegress();
     InitAEigenObjects();
     InitAEMD();
 
     InitAFitEllipse();
     InitAFitLine();
-
     InitAFloodFill();
     InitAFloodFill8();
     InitAHaar();
-    InitAHistogram();
     //InitACalcContrastHist(); // the function is not available
-    InitAHistogramOperations();
     InitAHistograms();
     InitAHoughLines();
     InitAImage();
-    InitAImageStatistics();
     //InitAImageToHMMObs(); // test uses IPL DCT
     InitAKalman();
     //InitAKMeans(); // test is not up-to-date
-    InitALogic();
     InitAMaskAcc();
     InitAMatchContours();
     InitAMatchContourTrees();
     InitAMatchTemplate();
-    InitAMathUtils();
-    InitAMatr();
-    InitAMatr2();
 
     InitAMeanShift();
     InitAMinAreaRect();
@@ -197,25 +169,15 @@ int main(int argC,char *argV[])
     InitAMotionTemplates();
     // InitAMotSeg(); // test is not up-to-date
     InitAMinEVal ();
-
-    InitANodeIterator();
-    InitANorm();
-    InitANormMask();
     InitAOptFlowPyrLK();
-
     InitAPixelAccess();
 
     InitAPOSIT();
     InitAPyramids();
     InitASamplers();
-    InitASequence();
     InitASnakes();
-    InitAStorageArray();
     InitASubdiv();
-    InitASVD();
     InitAThreshold();
-    InitATree();
-    InitATreeIterator();
     InitAUnDistort();
     InitAPreCorner();
     InitAPyrSegmentation();

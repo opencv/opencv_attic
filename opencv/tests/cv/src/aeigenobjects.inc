@@ -46,7 +46,7 @@
 
 #include "cvtest.h"
 
-static CvStatus _cvCalcCovarMatrix_8u32fR_q( int      nObjects,
+static int _cvCalcCovarMatrix_8u32fR_q( int      nObjects,
                                      uchar**  objects,
                                      int      objStep,
                                      float*   avg,
@@ -115,7 +115,7 @@ static CvStatus _cvCalcCovarMatrix_8u32fR_q( int      nObjects,
 
 
 /* copy of _cvJacobiEigen_32f */
-CvStatus _cvJacobiEigens_32f ( float* A,
+int _cvJacobiEigens_32f ( float* A,
                                float* V,
                                float* E,
                                int    n,
@@ -256,7 +256,7 @@ CvStatus _cvJacobiEigens_32f ( float* A,
 
 /*______________________________________________________________________________________*/
 
-CvStatus  _cvCalcEigenObjects_8u32fR_q( int      nObjects,
+int  _cvCalcEigenObjects_8u32fR_q( int      nObjects,
                                       uchar**  objects,
                                       int      objStep,
                                       float**  eigObjs,
@@ -271,7 +271,7 @@ CvStatus  _cvCalcEigenObjects_8u32fR_q( int      nObjects,
     int i, j, k, l;
     uchar *bu;
     float *c=0, *ev=0, *bf, *bf1, *bf2, m;
-    CvStatus  r;
+    int  r;
 
 
     if ( nObjects < 2 )                                         return CV_BADFACTOR_ERR;
@@ -376,7 +376,7 @@ float _cvCalcDecompCoeff_8u32fR_q( uchar*  obj,
 }
 /*______________________________________________________________________________________*/
 
-CvStatus  _cvEigenDecomposite_8u32fR_q( uchar*  obj,
+int  _cvEigenDecomposite_8u32fR_q( uchar*  obj,
                                           int     objStep,
                                           int     nEigObjs,
                                           float** eigObjs,
@@ -405,7 +405,7 @@ CvStatus  _cvEigenDecomposite_8u32fR_q( uchar*  obj,
 }
 /*______________________________________________________________________________________*/
 
-CvStatus  _cvEigenProjection_8u32fR_q( int     nEigObjs,
+int  _cvEigenProjection_8u32fR_q( int     nEigObjs,
                                          float** eigens,
                                          int     eigStep,
                                          float*  coeffs,

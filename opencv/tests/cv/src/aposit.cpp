@@ -112,7 +112,7 @@ static int fmaPOSIT(void)
     /* Initilization */
     criteria.type = CV_TERMCRIT_EPS|CV_TERMCRIT_ITER;
     criteria.epsilon = flEpsilon;
-    criteria.maxIter = 10000;
+    criteria.max_iter = 10000;
 
     /* Allocating source arrays; */
     obj_points = (CvPoint3D32f*)icvAlloc( 8 * sizeof(CvPoint3D32f) );

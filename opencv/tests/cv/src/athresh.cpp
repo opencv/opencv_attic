@@ -49,7 +49,6 @@ static long  Len;
 static float Thresh;
 
 #define ATS_8U  3
-#define ATS_8S  4
 #define ATS_32F 5
 
 #define BINARY_8U      (CV_THRESH_BINARY     << 4) + ATS_8U
@@ -72,7 +71,6 @@ static float Thresh;
 
 
 static int myThresh( uchar*        Src8u,
-                     char*         Src8s,
                      float*        Src32f,
                      float         Thresh,
                      float         Max,
@@ -86,27 +84,22 @@ static int myThresh( uchar*        Src8u,
         {
         case CV_THRESH_BINARY:
             Src8u[i]  = (uchar)(Src8u[i]  > (uchar)Thresh ? Max : 0);
-            Src8s[i]  = (char) (Src8s[i]  > (char) Thresh ? Max : 0);
             Src32f[i] =        (Src32f[i] >        Thresh ? Max : 0);
             break;
         case CV_THRESH_BINARY_INV:
             Src8u[i]  = (uchar)(Src8u[i]  > (uchar)Thresh ? 0 : Max);
-            Src8s[i]  = (char) (Src8s[i]  > (char) Thresh ? 0 : Max);
             Src32f[i] =        (Src32f[i] >        Thresh ? 0 : Max);
             break;
         case CV_THRESH_TRUNC:
             Src8u[i]  = (uchar)(Src8u[i]  > (uchar)Thresh ? Thresh : Src8u[i] );
-            Src8s[i]  = (char) (Src8s[i]  > (char) Thresh ? Thresh : Src8s[i] );
             Src32f[i] =        (Src32f[i] >        Thresh ? Thresh : Src32f[i]);
             break;
         case CV_THRESH_TOZERO:
             Src8u[i]  = (uchar)(Src8u[i]  > (uchar)Thresh ? Src8u[i]  : 0);
-            Src8s[i]  = (char) (Src8s[i]  > (char) Thresh ? Src8s[i]  : 0);
             Src32f[i] =        (Src32f[i] >        Thresh ? Src32f[i] : 0);
             break;
         case CV_THRESH_TOZERO_INV:
             Src8u[i]  = (uchar)(Src8u[i]  > (uchar)Thresh ? 0 : Src8u[i] );
-            Src8s[i]  = (char) (Src8s[i]  > (char) Thresh ? 0 : Src8s[i] );
             Src32f[i] =        (Src32f[i] >        Thresh ? 0 : Src32f[i]);
             break;
         default:
@@ -118,25 +111,22 @@ static int myThresh( uchar*        Src8u,
 
 
 static int myThreshR( IplImage*     Src8u,
-                      IplImage*     Src8s,
                       IplImage*     Src32f,
                       float         Thresh,
                       float         Max,
                       CvThreshType  Type )
 {
     char* s8u;
-    char* s8s;
     char* s32f;
-    int step8u, step8s, step32f;
+    int step8u, step32f;
     CvSize size;
 
     cvGetImageRawData(Src8u, (uchar**)&s8u, &step8u, &size);
-    cvGetImageRawData(Src8s, (uchar**)&s8s, &step8s, 0);
     cvGetImageRawData(Src32f, (uchar**)&s32f, &step32f, 0);
 
     int y;
-    for( y = 0; y < size.height; y++, s8u += step8u, s8s += step8s, s32f += step32f )
-        myThresh( (uchar*)s8u, s8s, (float*)s32f, Thresh, Max, size.width, Type );
+    for( y = 0; y < size.height; y++, s8u += step8u, s32f += step32f )
+        myThresh( (uchar*)s8u, (float*)s32f, Thresh, Max, size.width, Type );
     return 0;
 }
 
@@ -148,10 +138,8 @@ static int foaThreshold( void* prm )
     CvThreshType  Type    = (CvThreshType)((lParam >> 4) & 0xf);
 
     IplImage* Src8uR;
-    IplImage* Src8sR;
     IplImage* Src32fR;
     IplImage* Src8uControlR;
-    IplImage* Src8sControlR;
     IplImage* Src32fControlR;
 
     int    height;
@@ -179,21 +167,16 @@ static int foaThreshold( void* prm )
     height = Len / 2 + 1;
     
     Src8uR         = cvCreateImage(cvSize(width, height), IPL_DEPTH_8U, 1);
-    Src8sR         = cvCreateImage(cvSize(width, height), IPL_DEPTH_8S, 1);
     Src32fR        = cvCreateImage(cvSize(width, height), IPL_DEPTH_32F, 1);
     Src8uControlR  = cvCreateImage(cvSize(width, height), IPL_DEPTH_8U, 1);
-    Src8sControlR  = cvCreateImage(cvSize(width, height), IPL_DEPTH_8S, 1);
     Src32fControlR = cvCreateImage(cvSize(width, height), IPL_DEPTH_32F, 1);
     
     assert( Src8uR );
-    assert( Src8sR );
     assert( Src32fR );
     assert( Src8uControlR );
-    assert( Src8sControlR );
     assert( Src32fControlR );
 
-    ThreshMin = (Flavour == ATS_8U ? MAX( -Thresh, 0 ) :
-                 Flavour == ATS_8S ? MAX( -Thresh, -128 ) : -Thresh);
+    ThreshMin = (Flavour == ATS_8U ? MAX( -Thresh, 0 ) : -Thresh);
     ThreshMax = Thresh;
 
     for( _Thresh = ThreshMin; _Thresh <= ThreshMax; _Thresh++ )
@@ -203,7 +186,6 @@ static int foaThreshold( void* prm )
         for( i = 0; i < height; i++ )
         {
             ats1bInitRandom( 0, 255, (uchar*)Src8uControlR->imageData + i * Src8uControlR->widthStep, Len );
-            ats1cInitRandom( -128, 127, Src8sControlR->imageData + i * Src8sControlR->widthStep, Len );
             ats1flInitRandom( -255, 255, (float*)(Src32fControlR->imageData + i * Src32fControlR->widthStep), Len );
         }
 
@@ -214,27 +196,15 @@ static int foaThreshold( void* prm )
             cvThreshold( Src8uControlR, Src8uR, _Thresh, 250, Type );
             /* Run my function */
             myThreshR( Src8uControlR,
-                       Src8sControlR,
                        Src32fControlR,
                        _Thresh, 250, Type );
             Errors += atsCompare2Db( (uchar*)Src8uR->imageData, (uchar*)Src8uControlR->imageData,
                                      size, Src8uR->widthStep, 0 );
             break;
-        case ATS_8S:
-            cvThreshold( Src8sControlR,Src8sR, _Thresh, 120, Type );
-            /* Run my function */
-            myThreshR( Src8uControlR,
-                       Src8sControlR,
-                       Src32fControlR,
-                       _Thresh, 120, Type );
-            Errors += atsCompare2Dc( Src8sR->imageData, Src8sControlR->imageData,
-                                     size, Src8sR->widthStep, 0 );
-            break;
         case ATS_32F:
             cvThreshold( Src32fControlR, Src32fR, _Thresh, 250, Type );
             /* Run my function */
             myThreshR( Src8uControlR,
-                       Src8sControlR,
                        Src32fControlR,
                        _Thresh, 250, Type );
             Errors += atsCompare2Dfl( (float*)Src32fR->imageData, (float*)Src32fControlR->imageData,
@@ -245,10 +215,8 @@ static int foaThreshold( void* prm )
         }
     }
     cvReleaseImage( &Src8uR );
-    cvReleaseImage( &Src8sR );
     cvReleaseImage( &Src32fR );
     cvReleaseImage( &Src8uControlR );
-    cvReleaseImage( &Src8sControlR );
     cvReleaseImage( &Src32fControlR );
 
     return Errors == 0 ? TRS_OK : trsResult( TRS_FAIL, "Fixed %d errors", Errors );
@@ -262,12 +230,6 @@ void InitAThreshold()
     trsRegArg( FuncName,  TestName, TestClass, foaThreshold, TOZERO_8U    );
     trsRegArg( FuncName,  TestName, TestClass, foaThreshold, TOZERO_INV_8U);
 
-    trsRegArg( FuncName,  TestName, TestClass, foaThreshold, BINARY_8S    );
-    trsRegArg( FuncName,  TestName, TestClass, foaThreshold, BINARY_INV_8S);
-    trsRegArg( FuncName,  TestName, TestClass, foaThreshold, TRUNC_8S     );
-    trsRegArg( FuncName,  TestName, TestClass, foaThreshold, TOZERO_8S    );
-    trsRegArg( FuncName,  TestName, TestClass, foaThreshold, TOZERO_INV_8S);
-    
     trsRegArg( FuncName, TestName, TestClass, foaThreshold, BINARY_32F   );
     trsRegArg( FuncName, TestName, TestClass, foaThreshold, BINARY_INV_32F);
     trsRegArg( FuncName, TestName, TestClass, foaThreshold, TRUNC_32F    );

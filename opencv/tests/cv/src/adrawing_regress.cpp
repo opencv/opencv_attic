@@ -152,7 +152,7 @@ static int drawing_test()
         CvPoint p1 = cvPoint( i - 30, i * 4 + 10 );
         CvPoint p2 = cvPoint( size.width + 30 - i, size.height - 10 - i * 4 );
 
-        cvLine( image, p1, p2, RGB(i, 255 - i, 178 + i), i % 10 );
+        cvLine( image, p1, p2, CV_RGB(178+i, 255-i, i), i % 10 );
     }
     Errors += ProcessImage( image, "cvLine", read );
 
@@ -164,7 +164,7 @@ static int drawing_test()
         CvPoint p1 = cvPoint( i - 30, i * 4 + 10 );
         CvPoint p2 = cvPoint( size.width + 30 - i, size.height - 10 - i * 4 );
 
-        cvLineAA( image, p1, p2, RGB(i, 255 - i, 178 + i), 0 );
+        cvLine( image, p1, p2, CV_RGB(178+i, 255-i, i), 1, CV_AA, 0 );
     }
     //Errors += ProcessImage( image, "cvLineAA", read );
 
@@ -176,7 +176,7 @@ static int drawing_test()
         CvPoint p1 = cvPoint( i - 30, i * 4 + 10 );
         CvPoint p2 = cvPoint( size.width + 30 - i, size.height - 10 - i * 4 );
 
-        cvRectangle( image, p1, p2, RGB(i, 255 - i, 178 + i), i % 10 );
+        cvRectangle( image, p1, p2, CV_RGB(178+i, 255-i, i), i % 10 );
     }
     Errors += ProcessImage( image, "cvRectangle", read );
 
@@ -192,8 +192,8 @@ static int drawing_test()
         CvPoint p1 = cvPoint( i * 3, i * 2 );
         CvPoint p2 = cvPoint( size.width - i * 3, size.height - i * 2 );
 
-        cvCircle( image, p1, i, RGB(i, 255 - i, 178 + i), i % 10 );
-        cvCircle( image, p2, i, RGB(i, 255 - i, 178 + i), i % 10 );
+        cvCircle( image, p1, i, CV_RGB(178+i, 255-i, i), i % 10 );
+        cvCircle( image, p2, i, CV_RGB(178+i, 255-i, i), i % 10 );
 
 #if 0
         show_iplimage( "Diff", image );
@@ -225,7 +225,7 @@ static int drawing_test()
 
         cvEllipse( image, p1, axes,
                    180 * i / 100, 90 * i / 100, 90 * (i - 100) / 100,
-                   RGB(i, 255 - i, 178 + i), i % 10 );
+                   CV_RGB(178+i, 255-i, i), i % 10 );
     }
     Errors += ProcessImage( image, "cvEllipse", read );
 
@@ -251,7 +251,7 @@ static int drawing_test()
         {
             CvPoint p[4] = {{ j * 100 - 10, i }, { j * 100 + 10, i },
                             { j * 100 + 30, i * 2 }, { j * 100 + 170, i * 3 }};
-            cvFillConvexPoly( image, p, 4, RGB(i, 255 - i, 178 + i) );
+            cvFillConvexPoly( image, p, 4, CV_RGB(178+i, 255-i, i) );
 
         }
     Errors += ProcessImage( image, "cvFillConvexPoly", read );
@@ -270,7 +270,7 @@ static int drawing_test()
         CvPoint* p[] = {p0, p1, p2, p3, p4};
 
         int n[] = {4, 4, 4, 4, 4};
-        cvFillPoly( image, p, n, 5, RGB(i, 255 - i, 178 + i) );
+        cvFillPoly( image, p, n, 5, CV_RGB(178+i, 255-i, i) );
     }
     Errors += ProcessImage( image, "cvFillPoly", read );
 
@@ -288,7 +288,7 @@ static int drawing_test()
         CvPoint* p[] = {p0, p1, p2, p3, p4};
 
         int n[] = {4, 4, 4, 4, 4};
-        cvPolyLine( image, p, n, 5, 1, RGB(i, 255 - i, 178 + i), i % 10 );
+        cvPolyLine( image, p, n, 5, 1, CV_RGB(178+i, 255-i, i), i % 10 );
     }
     Errors += ProcessImage( image, "cvPolyLine", read );
 
@@ -318,7 +318,7 @@ static int drawing_test()
         CvFont font;
         cvInitFont( &font, CV_FONT_VECTOR0,
                     (double)i / 5, (double)i / 5, (double)i / 10, i );
-        cvPutText( image, "privet. this is test. :)", cvPoint(0, i * 20), &font, RGB(i, 255 - i, 178 + i) );
+        cvPutText( image, "privet. this is test. :)", cvPoint(0, i * 20), &font, CV_RGB(178+i, 255-i, i) );
     }
     Errors += ProcessImage( image, "cvPutText", read );
 

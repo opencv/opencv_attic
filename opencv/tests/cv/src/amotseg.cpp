@@ -133,7 +133,7 @@ again:
     region->rect.y = YMin;
     region->rect.width = XMax - XMin + 1;
     region->rect.height = YMax - YMin + 1;
-    region->value = (float)nv;
+    region->value = cvScalar(nv);
     icvFree(&CurStack);
     icvFree(&NextStack);
     return;
@@ -230,7 +230,7 @@ static int fcaMotSeg( void )
 							 test32f->widthStep,
 							 thresh,
 							 &ConComp);
-					ConComp.value = color;
+					ConComp.value = cvScalar(color);
 					CV_WRITE_SEQ_ELEM( ConComp, writer );
 					color+=1;
 				}
@@ -249,7 +249,7 @@ static int fcaMotSeg( void )
 							 test32f->widthStep,
 							 thresh,
 							 &ConComp);
-					ConComp.value = color;
+					ConComp.value = cvScalar(color);
 					CV_WRITE_SEQ_ELEM( ConComp, writer );
 					color+=1;
 				}
@@ -267,7 +267,7 @@ static int fcaMotSeg( void )
 							 test32f->widthStep,
 							 thresh,
 							 &ConComp);
-					ConComp.value = color;
+					ConComp.value = cvScalar(color);
 					CV_WRITE_SEQ_ELEM( ConComp, writer );
 					color+=1;
 				}
@@ -285,7 +285,7 @@ static int fcaMotSeg( void )
 							 test32f->widthStep,
 							 thresh,
 							 &ConComp);
-					ConComp.value = color;
+					ConComp.value = cvScalar(color);
 					CV_WRITE_SEQ_ELEM( ConComp, writer );
 					color+=1;
 				}

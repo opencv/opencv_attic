@@ -171,7 +171,7 @@ int test_dt(void* arg)
             euclid = FLT_MAX;
             for(ip = 0; ip < npoints; ip++)
             {
-                distance = (float)sqrt((xi-x[ip])*(xi-x[ip])+(yi-y[ip])*(yi-y[ip]));
+                distance = (float)sqrt((double)(xi-x[ip])*(xi-x[ip])+(yi-y[ip])*(yi-y[ip]));
                 if(distance < euclid)
                 {
                     euclid = distance;
