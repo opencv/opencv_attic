@@ -226,7 +226,7 @@ void CV_TemplMatchTest::run_func()
 }
 
 
-static cvTsMatchTemplate( const CvMat* img, const CvMat* templ, CvMat* result, int method )
+static void cvTsMatchTemplate( const CvMat* img, const CvMat* templ, CvMat* result, int method )
 {
     int i, j, k, l;
     int depth = CV_MAT_DEPTH(img->type), cn = CV_MAT_CN(img->type);
