@@ -666,20 +666,28 @@ CvStatus;
 
 /* IPP types' enumeration */
 typedef enum CvDataType {
-   cv1u,
-   cv8u, cv8s,
-   cv16u, cv16s, cv16sc,
-   cv32u, cv32s, cv32sc,
-   cv32f, cv32fc,
-   cv64u, cv64s, cv64sc,
-   cv64f, cv64fc
+    cv1u,
+    cv8u, cv8s,
+    cv16u, cv16s, cv16sc,
+    cv32u, cv32s, cv32sc,
+    cv32f, cv32fc,
+    cv64u, cv64s, cv64sc,
+    cv64f, cv64fc
 } CvDataType;
 
 typedef enum CvHintAlgorithm {
-   cvAlgHintNone,
-   cvAlgHintFast,
-   cvAlgHintAccurate
+    cvAlgHintNone,
+    cvAlgHintFast,
+    cvAlgHintAccurate
 } CvHintAlgorithm;
+
+typedef enum CvCmpOp {
+    cvCmpLess,
+    cvCmpLessEq,
+    cvCmpEq,
+    cvCmpGreaterEq,
+    cvCmpGreater
+} CvCmpOp;
 
 typedef struct CvFuncTable
 {

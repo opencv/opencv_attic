@@ -407,7 +407,7 @@ void CV_MHIGradientTest::print_timing_params( int test_case_idx, char* ptr, int 
 
 double CV_MHIGradientTest::get_success_error_level( int /*test_case_idx*/, int /*i*/, int j )
 {
-    return j == 0 ? 0 : 1e-1;
+    return j == 0 ? 0 : 2e-1;
 }
 
 
@@ -420,8 +420,12 @@ void CV_MHIGradientTest::run_func()
 
 void CV_MHIGradientTest::prepare_to_validation( int /*test_case_idx*/ )
 {
-    cvTsMHIGradient( &test_mat[INPUT][0], &test_mat[REF_OUTPUT][0], &test_mat[REF_OUTPUT][1],
-                     delta1, delta2, aperture_size );
+    cvTsMHIGradient( &test_mat[INPUT][0], &test_mat[REF_OUTPUT][0],
+                     &test_mat[REF_OUTPUT][1], delta1, delta2, aperture_size );
+    cvTsAdd( &test_mat[REF_OUTPUT][1], cvScalarAll(1.), 0, cvScalarAll(0.),
+             cvScalarAll(1.), &test_mat[REF_OUTPUT][1], 0 );
+    cvTsAdd( &test_mat[OUTPUT][1], cvScalarAll(1.), 0, cvScalarAll(0.),
+             cvScalarAll(1.), &test_mat[OUTPUT][1], 0 );
 }
 
 

@@ -112,9 +112,6 @@ icvFloodFill_8u_CnIR( uchar* pImage, int step, CvSize roi, CvPoint seed,
         val0[0] = img[L];
         newVal[0] = _newVal[0];
 
-        if( val0[0] == newVal[0] )
-            goto exit_func;
-
         img[L] = newVal[0];
 
         while( ++R < roi.width && img[R] == val0[0] )
@@ -129,9 +126,6 @@ icvFloodFill_8u_CnIR( uchar* pImage, int step, CvSize roi, CvPoint seed,
         ICV_SET_C3( val0, img + L*3 );
         ICV_SET_C3( newVal, _newVal );
         
-        if( ICV_EQ_C3( val0, newVal ))
-            goto exit_func;
-
         ICV_SET_C3( img + L*3, newVal );
     
         while( --L >= 0 && ICV_EQ_C3( img + L*3, val0 ))
@@ -167,12 +161,15 @@ icvFloodFill_8u_CnIR( uchar* pImage, int step, CvSize roi, CvPoint seed,
             if( YMin > YC ) YMin = YC;
         }
 
-        for( k = (unsigned)(YC - dir) >= (unsigned)roi.height; k < 3; k++ )
+        for( k = 0/*(unsigned)(YC - dir) >= (unsigned)roi.height*/; k < 3; k++ )
         {
             dir = data[k][0];
             img = pImage + (YC + dir) * step;
             int left = data[k][1];
             int right = data[k][2];
+
+            if( (unsigned)(YC + dir) >= (unsigned)roi.height )
+                continue;
 
             if( cn == 1 )
                 for( i = left; i <= right; i++ )
@@ -209,7 +206,6 @@ icvFloodFill_8u_CnIR( uchar* pImage, int step, CvSize roi, CvPoint seed,
         }
     }
 
-exit_func:
     if( region )
     {
         region->area = area;
@@ -248,9 +244,6 @@ icvFloodFill_32f_CnIR( int* pImage, int step, CvSize roi, CvPoint seed,
         val0[0] = img[L];
         newVal[0] = _newVal[0];
 
-        if( val0[0] == newVal[0] )
-            goto exit_func;
-
         img[L] = newVal[0];
 
         while( ++R < roi.width && img[R] == val0[0] )
@@ -265,9 +258,6 @@ icvFloodFill_32f_CnIR( int* pImage, int step, CvSize roi, CvPoint seed,
         ICV_SET_C3( val0, img + L*3 );
         ICV_SET_C3( newVal, _newVal );
         
-        if( ICV_EQ_C3( val0, newVal ))
-            goto exit_func;
-
         ICV_SET_C3( img + L*3, newVal );
     
         while( --L >= 0 && ICV_EQ_C3( img + L*3, val0 ))
@@ -303,12 +293,15 @@ icvFloodFill_32f_CnIR( int* pImage, int step, CvSize roi, CvPoint seed,
             if( YMin > YC ) YMin = YC;
         }
 
-        for( k = (unsigned)(YC - dir) >= (unsigned)roi.height; k < 3; k++ )
+        for( k = 0/*(unsigned)(YC - dir) >= (unsigned)roi.height*/; k < 3; k++ )
         {
             dir = data[k][0];
             img = pImage + (YC + dir) * step;
             int left = data[k][1];
             int right = data[k][2];
+
+            if( (unsigned)(YC + dir) >= (unsigned)roi.height )
+                continue;
 
             if( cn == 1 )
                 for( i = left; i <= right; i++ )
@@ -345,7 +338,6 @@ icvFloodFill_32f_CnIR( int* pImage, int step, CvSize roi, CvPoint seed,
         }
     }
 
-exit_func:
     if( region )
     {
         region->area = area;
@@ -1027,9 +1019,12 @@ cvFloodFill( CvArr* arr, CvPoint seed_point,
     CvFFillSegment* buffer = 0;
     CV_FUNCNAME( "cvFloodFill" );
 
+    if( comp )
+        memset( comp, 0, sizeof(*comp) );
+
     __BEGIN__;
 
-    int i, type, cn, is_simple, idx;
+    int i, type, depth, cn, is_simple, idx;
     int buffer_size, connectivity = flags & 255;
     double nv_buf[4] = {0,0,0,0}, ld_buf[4] = {0,0,0,0}, ud_buf[4] = {0,0,0,0};
     CvMat stub, *img = (CvMat*)arr;
@@ -1044,6 +1039,7 @@ cvFloodFill( CvArr* arr, CvPoint seed_point,
 
     CV_CALL( img = cvGetMat( img, &stub ));
     type = CV_MAT_TYPE( img->type );
+    depth = CV_MAT_DEPTH(type);
     cn = CV_MAT_CN(type);
 
     idx = type == CV_8UC1 || type == CV_8UC3 ? 0 :
@@ -1123,8 +1119,22 @@ cvFloodFill( CvArr* arr, CvPoint seed_point,
             memset( mask_row, 1, width );
         }
 
-        cvScalarToRawData( &lo_diff, &ld_buf, type, 0 );
-        cvScalarToRawData( &up_diff, &ud_buf, type, 0 );
+        //cvScalarToRawData( &lo_diff, &ld_buf, type, 0 );
+        //cvScalarToRawData( &up_diff, &ud_buf, type, 0 );
+        if( depth == CV_8U )
+            for( i = 0; i < cn; i++ )
+            {
+                int t = cvFloor(lo_diff.val[i]);
+                ((uchar*)ld_buf)[i] = CV_CAST_8U(t);
+                t = cvFloor(up_diff.val[i]);
+                ((uchar*)ud_buf)[i] = CV_CAST_8U(t);
+            }
+        else
+            for( i = 0; i < cn; i++ )
+            {
+                ((float*)ld_buf)[i] = (float)lo_diff.val[i];
+                ((float*)ud_buf)[i] = (float)up_diff.val[i];
+            }
 
         IPPI_CALL( func( img->data.ptr, img->step, mask->data.ptr, mask->step,
                          size, seed_point, &nv_buf, &ld_buf, &ud_buf,

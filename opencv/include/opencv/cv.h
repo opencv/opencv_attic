@@ -274,6 +274,10 @@ CVAPI(void)  cvRemap( const CvArr* src, CvArr* dst,
                       int flags CV_DEFAULT(CV_INTER_LINEAR+CV_WARP_FILL_OUTLIERS),
                       CvScalar fillval CV_DEFAULT(cvScalarAll(0)) );
 
+CVAPI(void)  cvLogPolar( const CvArr* src, CvArr* dst,
+                         CvPoint2D32f center, double M,
+                         int flags CV_DEFAULT(CV_INTER_LINEAR+CV_WARP_FILL_OUTLIERS));
+
 #define  CV_SHAPE_RECT      0
 #define  CV_SHAPE_CROSS     1
 #define  CV_SHAPE_ELLIPSE   2

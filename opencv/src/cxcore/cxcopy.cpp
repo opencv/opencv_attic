@@ -517,6 +517,13 @@ cvSet( void* arr, CvScalar value, const void* maskarr )
     int mat_step;
     CvSize size;
 
+    if( !value.val[0] && !value.val[1] &&
+        !value.val[2] && !value.val[3] && !maskarr )
+    {
+        cvZero( arr );
+        EXIT;
+    }
+
     if( !CV_IS_MAT(mat))
     {
         if( CV_IS_MATND(mat))
@@ -859,7 +866,7 @@ icvFlipVert_8u_C1R( const uchar* src, int srcstep,
                                               dst += dststep, dst1 -= dststep )
     {
         i = 0;
-        if( ((size_t)(src)|(size_t)(dst)) % sizeof(int) == 0 )
+        if( ((size_t)(src)|(size_t)(dst)|(size_t)src1|(size_t)dst1) % sizeof(int) == 0 )
         {
             for( ; i <= size.width - 16; i += 16 )
             {

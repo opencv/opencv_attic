@@ -41,347 +41,529 @@
 
 #include "cvtest.h"
 
-/* Testing parameters */
-static char FuncName[] = "cvFloodFill";
-static char TestName[] = "Flood Fill 4-connected function test";
-static char TestClass[] = "Algorithm";
+static const char* floodfill_param_names[] = { "size", "channels", "depth", "dist_type", "labels", 0 };
+static const CvSize floodfill_sizes[] = {{320, 240}, {720,480}, {-1,-1}};
+static const CvSize floodfill_whole_sizes[] = {{320, 240}, {720,480}, {-1,-1}};
+static const char* floodfill_types[] = { "fixed_level", "fixed_range", "floating_range", 0 };
+static const int floodfill_depths[] = { CV_8U, CV_32F, -1 };
+static const int floodfill_channels[] = { 1, 3, -1 };
 
-typedef struct
+class CV_FloodFillTest : public CvArrTest
 {
-    int    nx0;
-    ushort nx1;
-    ushort ny1;
-    uchar  q1;
-    uchar  q2;
-    uchar  unv;
-    uchar* b;
-    uchar* I;
-} consts;
+public:
+    CV_FloodFillTest();
 
-int Counter=0;
-static int X1=0, X2=0, Y1=0, Y2=0;
+protected:
+    void get_test_array_types_and_sizes( int test_case_idx, CvSize** sizes, int** types );
+    double get_success_error_level( int test_case_idx, int i, int j );
+    void run_func();
+    void prepare_to_validation( int );
 
-/*---------------------- Test function (the most slowly algorithm) ----------------------- */
-int _cvFloodFill8uC1R_slow ( uchar*  pImage,
-                                  int     step,
-                                  CvSize  imgSize,
-                                  CvPoint initPoint,
-                                  int     nv,
-                                  int     d1,
-                                  int     d2 )
+    void fill_array( int test_case_idx, int i, int j, CvMat* arr );
+    
+    /*int write_default_params(CvFileStorage* fs);
+    void get_timing_test_array_types_and_sizes( int test_case_idx, CvSize** sizes, int** types,
+                                                CvSize** whole_sizes, bool *are_images );
+    void print_timing_params( int test_case_idx, char* ptr, int params_left );*/
+    CvPoint seed_pt;
+    CvScalar new_val;
+    CvScalar l_diff, u_diff;
+    int connectivity;
+    bool use_mask, mask_only;
+    int range_type;
+    int new_mask_val;
+};
+
+
+CV_FloodFillTest::CV_FloodFillTest()
+    : CvArrTest( "floodfill", "cvFloodFill", "" )
 {
-    int i, j, k, ij, ijb, ij1, nx, ny, n, nx1, ny1, mNew, ov, nxj, nxjb;
-    uchar *b, b0, q1, q2, q10, q20;
+    test_array[INPUT_OUTPUT].push(NULL);
+    test_array[INPUT_OUTPUT].push(NULL);
+    test_array[REF_INPUT_OUTPUT].push(NULL);
+    test_array[REF_INPUT_OUTPUT].push(NULL);
+    test_array[OUTPUT].push(NULL);
+    test_array[REF_OUTPUT].push(NULL);
+    optional_mask = false;
+    element_wise_relative_error = true;
 
-    nx = imgSize.width;  ny = imgSize.height;
-    ij = initPoint.x + nx*initPoint.y;
-    ov = pImage[ij];
-    n = nx*ny;
-    nx1 = nx-1;  ny1 = ny-1;
-    b0=1;
-    q10=(uchar)d1; q20=(uchar)d2;
-    if( (b=(uchar*)malloc(n*sizeof(uchar))) == NULL) return CV_OUTOFMEM_ERR;
-    for(k=0; k<n; k++) b[k]=0;
-    b[ij]=1;
+    support_testing_modes = CvTS::CORRECTNESS_CHECK_MODE;
 
-    do
+    default_timing_param_names = floodfill_param_names;
+    depth_list = floodfill_depths;
+    size_list = floodfill_sizes;
+    whole_size_list = floodfill_whole_sizes;
+    cn_list = floodfill_channels;
+}
+
+
+void CV_FloodFillTest::get_test_array_types_and_sizes( int test_case_idx,
+                                                CvSize** sizes, int** types )
+{
+    CvRNG* rng = ts->get_rng();
+    int depth, cn;
+    int i;
+    double buf[8];
+    CvArrTest::get_test_array_types_and_sizes( test_case_idx, sizes, types );
+
+    depth = test_case_idx*2/test_case_count;
+    depth = depth == 0 ? CV_8U : CV_32F;
+    cn = cvTsRandInt(rng) & 1 ? 3 : 1;
+
+    use_mask = (cvTsRandInt(rng) & 1) != 0;
+    connectivity = (cvTsRandInt(rng) & 1) ? 4 : 8;
+    mask_only = use_mask && (cvTsRandInt(rng) & 1) != 0;
+    new_mask_val = cvTsRandInt(rng) & 255;
+    range_type = cvTsRandInt(rng) % 3;
+
+    types[INPUT_OUTPUT][0] = types[REF_INPUT_OUTPUT][0] = CV_MAKETYPE(depth, cn);
+    types[INPUT_OUTPUT][1] = types[REF_INPUT_OUTPUT][1] = CV_8UC1;
+    types[OUTPUT][0] = types[REF_OUTPUT][0] = CV_64FC1;
+    sizes[OUTPUT][0] = sizes[REF_OUTPUT][0] = cvSize(9,1);
+
+    if( !use_mask )
+        sizes[INPUT_OUTPUT][1] = sizes[REF_INPUT_OUTPUT][1] = cvSize(0,0);
+    else
     {
-        mNew = 0;
-        for(j=0; j<ny; j++)
-        {
-            nxj = step*j;
-            nxjb= nx *j;
-            for(i=0; i<nx; i++)
-            {
-                ij = i + nxj;
-                ijb= i + nxjb;
-                if(b[ijb]!=b0)continue;
-
-                b[ijb]++;
-                q1 = (uchar)((pImage[ij]>q10) ? pImage[ij]-q10 : (uchar)0);
-                q2 = (uchar)(((int)pImage[ij]+(int)q20<255)?pImage[ij]+q20:(uchar)255);
-                pImage[ij] = (uchar)nv;
-                Counter++;
-                if(X1>i) X1=i;  if(X2<i) X2=i;  if(Y1>j) Y1=j;  if(Y2<j) Y2=j;
-
-                ij1=ij-1;
-                if((i>0) && (!b[ijb-1]) && (pImage[ij1]>=q1) && (pImage[ij1]<=q2))
-                {
-                    mNew++;
-                    b[ijb-1]++;
-                }
-                ij1=ij+1;
-                if((i<nx1) && (!b[ijb+1]) && (pImage[ij1]>=q1) && (pImage[ij1]<=q2))
-                {
-                    mNew++;
-                    b[ijb+1]++;
-                }
-                ij1=ij-step;
-                if((j>0) && (!b[ijb-nx]) && (pImage[ij1]>=q1) && (pImage[ij1]<=q2))
-                {
-                    mNew++;
-                    b[ijb-nx]++;
-                }
-                ij1=ij+step;
-                if((j<ny1) && (!b[ijb+nx]) && (pImage[ij1]>=q1) && (pImage[ij1]<=q2))
-                {
-                    mNew++;
-                    b[ijb+nx]++;
-                }
-            }     /* i */
-        }         /* j */
-    } while(mNew);
-
-    free(b);
-    return CV_NO_ERR;
-} /*  _cvFloodFill8uC1R_slow */
-/*--------------------------------------------------------------------------------------*/
-int _cvFloodFill32fC1R_slow ( float*  pImage,
-                                   int     step,
-                                   CvSize  imgSize,
-                                   CvPoint initPoint,
-                                   float   nv,
-                                   float   d1,
-                                   float   d2 )
-{
-    int i, j, k, ij, ij1, ijb, ijb1, nx, ny, n, nx1, ny1, mNew, nxj, nxjb;
-    float ov, q1, q2;
-    uchar *b, b0;
-
-    step /= 4;
-    nx = imgSize.width;  ny = imgSize.height;  n = nx * ny;
-    ij = initPoint.x + step*initPoint.y;
-    ov = pImage[ij];
-    nx1 = nx-1;  ny1 = ny-1;
-    b0=1;
-    if( (b=(uchar*)malloc(n*sizeof(uchar))) == NULL) return CV_OUTOFMEM_ERR;
-    for(k=0; k<n; k++) b[k]=0;
-    ij = initPoint.x + nx*initPoint.y;
-    b[ij]=b0;
-    Counter = 0;
-
-    do
-    {
-        mNew = 0;
-        for(j=0; j<ny; j++)
-        {
-            nxj = step*j;
-            nxjb= nx *j;
-            for(i=0; i<nx; i++)
-            {
-                ij = i + nxj;
-                ijb= i + nxjb;
-                if(b[ijb]!=b0)continue;
-
-                b[ijb]++;
-                q1 = pImage[ij] - d1;  q2 = pImage[ij] + d2;
-                pImage[ij] = nv;
-                Counter++;
-                if(X1>i) X1=i;  if(X2<i) X2=i;  if(Y1>j) Y1=j;  if(Y2<j) Y2=j;
-
-                ij1=ij-1; ijb1=ijb-1;
-                if((i>0) && (!b[ijb1]) && (pImage[ij1]>=q1) && (pImage[ij1]<=q2))
-                {
-                    mNew++;
-                    b[ijb1]++;
-                }
-                ij1=ij+1; ijb1=ijb+1;
-                if((i<nx1) && (!b[ijb1]) && (pImage[ij1]>=q1) && (pImage[ij1]<=q2))
-                {
-                    mNew++;
-                    b[ijb1]++;
-                }
-                ij1=ij-step; ijb1=ijb-nx;
-                if((j>0) && (!b[ijb1]) && (pImage[ij1]>=q1) && (pImage[ij1]<=q2))
-                {
-                    mNew++;
-                    b[ijb1]++;
-                }
-                ij1=ij+step; ijb1=ijb+nx;
-                if((j<ny1) && (!b[ijb1]) && (pImage[ij1]>=q1) && (pImage[ij1]<=q2))
-                {
-                    mNew++;
-                    b[ijb1]++;
-                }
-            }     /* i */
-        }         /* j */
-    } while(mNew);
-
-    free(b);
-    return CV_NO_ERR;
-} /*  _ipcvFloodFill32fC1R_slow */
-
-/*=================================================== Test body ========================== */
-static int fmaFloodFill( void )
-{
-    /* Some Variables */
-    int nx, ny, stepX, stepY, numTest, ROI_offset, mp=0, mp4=0;
-    int i, j, k, ij, it, n, n4, ov, d1, d2, ntest2, nerr, nerr1=0, nerr2=0, nerr3=0, nerr4=0;
-    int step, step4;
-    uchar *pI0, *pI1, *pI2;
-    float* pI3, *pI4;
-    IplImage *I0, *I1, *I2, *I3, *I4;
-    CvSize  size;
-    CvPoint seed;
-    CvConnectedComp Comp;
-    int r;
-
-    /* Reading test parameters */
-    trsiRead( &nx,        "64", "Image width" );
-    trsiRead( &stepX,     "16", "Seed point horizontal step" );
-    trsiRead( &numTest,   "32", "Number of each seed point tests" );
-    trsiRead( &ROI_offset, "0", "ROI offset" );
-
-    ny = nx;
-    stepY = stepX;
-    n = nx*ny;
-    ntest2 = numTest/2;
-    size.width  = nx;
-    size.height = ny;
-
-    I0  = cvCreateImage( size, IPL_DEPTH_8U, 1 );
-    I1  = cvCreateImage( size, IPL_DEPTH_8U, 1 );
-    I2  = cvCreateImage( size, IPL_DEPTH_8U, 1 );
-    I3  = cvCreateImage( size, IPL_DEPTH_32F,1 );
-    I4  = cvCreateImage( size, IPL_DEPTH_32F,1 );
-
-    pI0 = (uchar*)I0->imageData;
-    pI1 = (uchar*)I1->imageData;
-    pI2 = (uchar*)I2->imageData;
-    pI3 = (float*)I3->imageData;
-    pI4 = (float*)I4->imageData;
-
-    step = I1->widthStep;  step4 = I3->widthStep;
-    n = step*ny;  n4 = (step4/4)*ny;
-
-    if(ROI_offset)
-    {
-        mp = ROI_offset + ROI_offset*step;
-        mp4= ROI_offset + ROI_offset*step4;
-        size.width  = nx - 2*ROI_offset;
-        size.height = ny - 2*ROI_offset;
-        I1->roi->xOffset = I1->roi->yOffset = ROI_offset;
-        I1->roi->height  = size.height;  I1->roi->width = size.width;
-        I3->roi->xOffset = I3->roi->yOffset = ROI_offset;
-        I3->roi->height = size.height;  I3->roi->width = size.width;
+        CvSize sz = sizes[INPUT_OUTPUT][0];
+        sizes[INPUT_OUTPUT][1] = sizes[REF_INPUT_OUTPUT][1] = cvSize(sz.width+2,sz.height+2);
     }
+    
+    seed_pt.x = cvTsRandInt(rng) % sizes[INPUT_OUTPUT][0].width;
+    seed_pt.y = cvTsRandInt(rng) % sizes[INPUT_OUTPUT][0].height;
 
-    /*  T E S T I N G  */
-
-/* Zero interval */
-    d1 = d2 = 0;
-    ats1bInitRandom ( 0, 1.5, pI0, n );
-        /*for(i=0;i<n;i++)printf(" %d",pI0[i]);getchar(); */
-    for(j=0; j<size.height; j=j+stepY)
+    if( range_type == 0 )
+        l_diff = u_diff = cvScalarAll(0.);
+    else
     {
-        seed.y = j;
-        for(i=0; i<size.width; i=i+stepX)
+        CvMat m = cvMat( 1, 8, CV_64F, buf );
+        cvRandArr( rng, &m, CV_RAND_NORMAL, cvScalarAll(0), cvScalarAll(4) );
+        for( i = 0; i < 4; i++ )
         {
-            seed.x = i;
-            for(k=0; k<n;  k++) pI1[k]=pI2[k]=pI0[k];
-            for(k=0; k<n4; k++) pI3[k]=pI4[k]=(float)pI0[k];
-     /* 8U */
-            Counter = 0;   X1 = X2 = i;    Y1 = Y2 = j;
-            /* Run CVL function */
-            cvFloodFill ( I1, seed, cvScalar(10.0), cvScalar(0.0), cvScalar(0.0), &Comp );
-            /* Run test function */
-            r = _cvFloodFill8uC1R_slow (pI2+mp, step, size, seed, 10, 0, 0 );
-            /* Comparison */
-                for(k=0; k<n; k++) if( (pI1[k]-pI2[k]) ) nerr1++;
-                if( Comp.area!=Counter ) nerr1++;
-            if(X1!=Comp.rect.x) nerr1++;
-            if(Y1!=Comp.rect.y) nerr1++;
-            if((X2-X1+1)!=Comp.rect.width) nerr1++;
-            if((Y2-Y1+1)!=Comp.rect.height) nerr1++;
-     /* 32F */
-            Counter = 0;   X1 = X2 = i;    Y1 = Y2 = j;
-            /* Run CVL function */
-            cvFloodFill ( I3, seed, cvScalar(10.0), cvScalar(0.0), cvScalar(0.0), &Comp );
-            /* Run test function */
-            r = _cvFloodFill32fC1R_slow (pI4+mp4, step4, size, seed, 10.0, 0.0f, 0.0f );
-            /* Comparison */
-                for(k=0; k<n4; k++) if( (pI3[k]-pI4[k]) ) nerr2++;
-                if( Comp.area!=Counter ) nerr2++;
-            if(X1!=Comp.rect.x) nerr2++;
-            if(Y1!=Comp.rect.y) nerr2++;
-            if((X2-X1+1)!=Comp.rect.width) nerr2++;
-            if((Y2-Y1+1)!=Comp.rect.height) nerr2++;
-            if( nerr1 != 0 || nerr2 != 0 )
-                goto test_end;
+            l_diff.val[i] = fabs(m.data.db[i]);
+            u_diff.val[i] = fabs(m.data.db[i+4]);
         }
     }
 
-/* Non-zero interval */
-    ats1bInitRandom ( 0, 254.99, pI0, n );
-    for(j=1; j<size.height; j=j+stepY)
-    {
-        seed.y = j;
-        for(i=1; i<size.width; i=i+stepX)
-        {
-            ij=i+step*j;   ov=pI0[ij+mp];
-            seed.x = i;
-            for(it=0; it<numTest; it++)
-            {
-                for(k=0; k<n;  k++) pI1[k]=pI2[k]=pI0[k];
-                for(k=0; k<n4; k++) pI3[k]=pI4[k]=(float)pI0[k];
-                if(it<ntest2)  /* sequential increase interval */
-                { d1=(ov*(it+1))/ntest2;  d2=((255-ov)*(it+1))/ntest2; }
-                else           /* random interval */
-                {
-                    d1 = (int)atsInitRandom(1.0, 127);
-                    d2 = (int)atsInitRandom(1.0, 127);
-                    if(it>(3*numTest)/4){d1/=2; d2/=2;}
-                }
+    new_val = cvScalarAll(0.);
+    for( i = 0; i < cn; i++ )
+        new_val.val[i] = cvTsRandReal(rng)*255;
+}
 
-     /* 8U */
-                Counter = 0; X1 = X2 = i;    Y1 = Y2 = j;
-                /* Run CVL function */
-                cvFloodFill ( I1, seed, cvScalar(255.0), cvScalar(d1), cvScalar(d2), &Comp );
-                /* Run test function */
-                r = _cvFloodFill8uC1R_slow (pI2+mp, step, size, seed, 255, d1, d2 );
-                /* Comparison */
-                    for(k=0; k<n; k++) if( (pI1[k]-pI2[k]) ) nerr3++;
-                    if( Comp.area!=Counter ) nerr3++;
-                if(X1!=Comp.rect.x) nerr3++;
-                if(Y1!=Comp.rect.y) nerr3++;
-                if((X2-X1+1)!=Comp.rect.width) nerr3++;
-                if((Y2-Y1+1)!=Comp.rect.height) nerr3++;
-     /* 32F */
-                Counter = 0; X1 = X2 = i;    Y1 = Y2 = j;
-                /* Run CVL function */
-                cvFloodFill ( I3, seed, cvScalar(255.0), cvScalar(d1), cvScalar(d2), &Comp );
-                /* Run test function */
-                r = _cvFloodFill32fC1R_slow (pI4+mp4, step4, size, seed, 255.0, (float)d1, (float)d2 );
-                /* Comparison */
-                    for(k=0; k<n4; k++) if( (pI3[k]-pI4[k]) ) nerr4++;
-                    if( Comp.area!=Counter ) nerr4++;
-                if(X1!=Comp.rect.x) nerr4++;
-                if(Y1!=Comp.rect.y) nerr4++;
-                if((X2-X1+1)!=Comp.rect.width) nerr4++;
-                if((Y2-Y1+1)!=Comp.rect.height) nerr4++;
-                if( nerr3 != 0 || nerr4 != 0 )
-                    goto test_end;
+
+double CV_FloodFillTest::get_success_error_level( int /*test_case_idx*/, int i, int j )
+{
+    return i == OUTPUT ? FLT_EPSILON : j == 0 ? FLT_EPSILON : 0;
+}
+
+
+void CV_FloodFillTest::fill_array( int test_case_idx, int i, int j, CvMat* arr )
+{
+    CvRNG* rng = ts->get_rng();
+    
+    if( i != INPUT && i != INPUT_OUTPUT )
+    {
+        CvArrTest::fill_array( test_case_idx, i, j, arr );
+        return;
+    }
+    
+    if( j == 0 )
+    {
+        CvMat* tmp = arr;
+        CvScalar m = cvScalarAll(128);
+        CvScalar s = cvScalarAll(10);
+
+        if( CV_MAT_DEPTH(arr->type) == CV_32FC1 )
+            tmp = cvCreateMat( arr->rows, arr->cols, arr->type & CV_MAT_CN_MASK );
+
+        if( range_type == 0 )
+            s = cvScalarAll(2);
+
+        cvRandArr( rng, tmp, CV_RAND_NORMAL, m, s );
+        if( arr != tmp )
+        {
+            cvTsConvert( tmp, arr );
+            cvReleaseMat( &tmp );
+        }
+    }
+    else
+    {
+        CvScalar l = cvScalarAll(-2);
+        CvScalar u = cvScalarAll(2);
+        cvRandArr( rng, arr, CV_RAND_UNI, l, u );
+        cvRectangle( arr, cvPoint(0,0), cvPoint(arr->cols-1,arr->rows-1), cvScalarAll(1), 1, 8, 0 );
+    }
+}
+
+
+void CV_FloodFillTest::run_func()
+{
+    CvConnectedComp comp;
+    double* odata = test_mat[OUTPUT][0].data.db;
+    cvFloodFill( test_array[INPUT_OUTPUT][0], seed_pt, new_val, l_diff, u_diff, &comp,
+                 connectivity + (mask_only ? CV_FLOODFILL_MASK_ONLY : 0) +
+                 (range_type == 1 ? CV_FLOODFILL_FIXED_RANGE : 0) + (new_mask_val << 8),
+                 test_array[INPUT_OUTPUT][1] );
+    odata[0] = comp.area;
+    odata[1] = comp.rect.x;
+    odata[2] = comp.rect.y;
+    odata[3] = comp.rect.width;
+    odata[4] = comp.rect.height;
+    odata[5] = comp.value.val[0];
+    odata[6] = comp.value.val[1];
+    odata[7] = comp.value.val[2];
+    odata[8] = comp.value.val[3];
+}
+
+
+typedef struct ff_offset_pair_t
+{
+    int mofs, iofs;
+}
+ff_offset_pair_t;
+
+static void
+cvTsFloodFill( CvMat* _img, CvPoint seed_pt, CvScalar new_val,
+               CvScalar l_diff, CvScalar u_diff, CvMat* _mask,
+               double* comp, int connectivity, int range_type,
+               int new_mask_val, bool mask_only )
+{
+    CvMemStorage* st = cvCreateMemStorage();
+    ff_offset_pair_t p0, p;
+    CvSeq* seq = cvCreateSeq( 0, sizeof(CvSeq), sizeof(p0), st );
+    CvMat* tmp = _img;
+    CvMat* mask;
+    CvRect r = cvRect( 0, 0, -1, -1 );
+    int area = 0;
+    int i, j;
+    ushort* m;
+    float* img;
+    int mstep, step;
+    int cn = CV_MAT_CN(_img->type);
+    int mdelta[8], idelta[8], ncount;
+    int cols = _img->cols, rows = _img->rows;
+    int u0 = 0, u1 = 0, u2 = 0;
+    double s0 = 0, s1 = 0, s2 = 0;
+    
+    if( CV_MAT_DEPTH(_img->type) == CV_8U )
+    {
+        tmp = cvCreateMat( rows, cols, CV_MAKETYPE(CV_32F,CV_MAT_CN(_img->type)) );
+        cvTsConvert(_img, tmp);
+    }
+
+    mask = cvCreateMat( rows + 2, cols + 2, CV_16UC1 );
+
+    if( _mask )
+        cvTsConvert( _mask, mask );
+    else
+    {
+        cvTsZero( mask );
+        cvRectangle( mask, cvPoint(0,0), cvPoint(mask->cols-1,mask->rows-1), cvScalarAll(1.), 1, 8, 0 );
+    }
+
+    new_mask_val = (new_mask_val != 0 ? new_mask_val : 1) << 8;
+
+    m = (ushort*)(mask->data.ptr + mask->step) + 1;
+    mstep = mask->step / sizeof(m[0]);
+    img = tmp->data.fl;
+    step = tmp->step / sizeof(img[0]);
+
+    p0.mofs = seed_pt.y*mstep + seed_pt.x;
+    p0.iofs = seed_pt.y*step + seed_pt.x*cn;
+
+    if( m[p0.mofs] )
+        goto _exit_;
+
+    cvSeqPush( seq, &p0 );
+    m[p0.mofs] = (ushort)new_mask_val;
+
+    if( connectivity == 4 )
+    {
+        ncount = 4;
+        mdelta[0] = -mstep; idelta[0] = -step;
+        mdelta[1] = -1; idelta[1] = -cn;
+        mdelta[2] = 1; idelta[2] = cn;
+        mdelta[3] = mstep; idelta[3] = step;
+    }
+    else
+    {
+        ncount = 8;
+        mdelta[0] = -mstep-1; mdelta[1] = -mstep; mdelta[2] = -mstep+1;
+        idelta[0] = -step-cn; idelta[1] = -step; idelta[2] = -step+cn;
+
+        mdelta[3] = -1; mdelta[4] = 1;
+        idelta[3] = -cn; idelta[4] = cn;
+
+        mdelta[5] = mstep-1; mdelta[6] = mstep; mdelta[7] = mstep+1;
+        idelta[5] = step-cn; idelta[6] = step; idelta[7] = step+cn;
+    }
+
+    if( cn == 1 )
+    {
+        float a0 = (float)-l_diff.val[0];
+        float b0 = (float)u_diff.val[0];
+
+        s0 = img[p0.iofs];
+
+        if( range_type < 2 )
+        {
+            a0 += (float)s0; b0 += (float)s0;
+        }
+
+        while( seq->total )
+        {
+            cvSeqPop( seq, &p0 );
+            float a = a0, b = b0;
+            float* ptr = img + p0.iofs;
+            ushort* mptr = m + p0.mofs;
+
+            if( range_type == 2 )
+                a += ptr[0], b += ptr[0];
+
+            for( i = 0; i < ncount; i++ )
+            {
+                int md = mdelta[i], id = idelta[i];
+                float v;
+                if( !mptr[md] && a <= (v = ptr[id]) && v <= b )
+                {
+                    mptr[md] = (ushort)new_mask_val;
+                    p.mofs = p0.mofs + md;
+                    p.iofs = p0.iofs + id;
+                    cvSeqPush( seq, &p );
+                }
             }
         }
-        trsWrite(TW_RUN|TW_CON, " %d%% ", ((j+stepY)*100)/size.height);
+    }
+    else
+    {
+        float a0 = (float)-l_diff.val[0];
+        float a1 = (float)-l_diff.val[1];
+        float a2 = (float)-l_diff.val[2];
+        float b0 = (float)u_diff.val[0];
+        float b1 = (float)u_diff.val[1];
+        float b2 = (float)u_diff.val[2];
+
+        s0 = img[p0.iofs];
+        s1 = img[p0.iofs + 1];
+        s2 = img[p0.iofs + 2];
+
+        if( range_type < 2 )
+        {
+            a0 += (float)s0; b0 += (float)s0;
+            a1 += (float)s1; b1 += (float)s1;
+            a2 += (float)s2; b2 += (float)s2;
+        }
+
+        while( seq->total )
+        {
+            cvSeqPop( seq, &p0 );
+            float _a0 = a0, _a1 = a1, _a2 = a2;
+            float _b0 = b0, _b1 = b1, _b2 = b2;
+            float* ptr = img + p0.iofs;
+            ushort* mptr = m + p0.mofs;
+
+            if( range_type == 2 )
+            {
+                _a0 += ptr[0]; _b0 += ptr[0];
+                _a1 += ptr[1]; _b1 += ptr[1];
+                _a2 += ptr[2]; _b2 += ptr[2];
+            }
+
+            for( i = 0; i < ncount; i++ )
+            {
+                int md = mdelta[i], id = idelta[i];
+                float v;
+                if( !mptr[md] &&
+                    _a0 <= (v = ptr[id]) && v <= _b0 &&
+                    _a1 <= (v = ptr[id+1]) && v <= _b1 &&
+                    _a2 <= (v = ptr[id+2]) && v <= _b2 )
+                {
+                    mptr[md] = (ushort)new_mask_val;
+                    p.mofs = p0.mofs + md;
+                    p.iofs = p0.iofs + id;
+                    cvSeqPush( seq, &p );
+                }
+            }
+        }        
     }
 
-test_end:
-    cvReleaseImage( &I0 );
-    cvReleaseImage( &I1 );
-    cvReleaseImage( &I2 );
-    cvReleaseImage( &I3 );
-    cvReleaseImage( &I4 );
-    nerr = nerr1 + nerr2 + nerr3 + nerr4;
-            printf( "\n  zero:  %d  %d     non-zero:  %d  %d\n", nerr1, nerr2, nerr3, nerr4 );
-    trsWrite(TW_RUN|TW_CON|TW_SUM, "    Nerr = %d\n", nerr);
-    if( nerr == 0 ) return trsResult( TRS_OK, "No errors fixed by this test" );
-    else return trsResult( TRS_FAIL, "Total fixed %d errors", nerr );
-} /*fma*/
-/*------------------------------------------------ Initialize function ------------------- */
-void InitAFloodFill( void )
+    r.x = r.width = seed_pt.x;
+    r.y = r.height = seed_pt.y;
+
+    if( !mask_only )
+    {
+        s0 = new_val.val[0];
+        s1 = new_val.val[1];
+        s2 = new_val.val[2];
+
+        if( tmp != _img )
+        {
+            u0 = cvRound(s0);
+            u0 = CV_CAST_8U(u0);
+            u1 = cvRound(s1);
+            u1 = CV_CAST_8U(u1);
+            u2 = cvRound(s2);
+            u2 = CV_CAST_8U(u2);
+
+            s0 = u0;
+            s1 = u1;
+            s2 = u2;
+        }
+    }
+    else
+        s0 = s1 = s2 = 0;
+
+    new_mask_val >>= 8;
+
+    for( i = 0; i < rows; i++ )
+    {
+        float* ptr = img + i*step;
+        ushort* mptr = m + i*mstep;
+        uchar* dmptr = _mask ? _mask->data.ptr + (i+1)*_mask->step + 1 : 0;
+        uchar* dptr = tmp != _img ? _img->data.ptr + i*_img->step : 0;
+        double area0 = area;
+
+        for( j = 0; j < cols; j++ )
+        {
+            if( mptr[j] > 255 )
+            {
+                if( dmptr )
+                    dmptr[j] = (uchar)new_mask_val;
+                if( !mask_only )
+                {
+                    if( cn == 1 )
+                    {
+                        if( dptr )
+                            dptr[j] = (uchar)u0;
+                        else
+                            ptr[j] = (float)s0;
+                    }
+                    else
+                    {
+                        if( dptr )
+                        {
+                            dptr[j*3] = (uchar)u0;
+                            dptr[j*3+1] = (uchar)u1;
+                            dptr[j*3+2] = (uchar)u2;
+                        }
+                        else
+                        {
+                            ptr[j*3] = (float)s0;
+                            ptr[j*3+1] = (float)s1;
+                            ptr[j*3+2] = (float)s2;
+                        }
+                    }
+                }
+                else
+                {
+                    if( cn == 1 )
+                        s0 += ptr[j];
+                    else
+                    {
+                        s0 += ptr[j*3];
+                        s1 += ptr[j*3+1];
+                        s2 += ptr[j*3+2];
+                    }
+                }
+
+                area++;
+                if( r.x > j )
+                    r.x = j;
+                if( r.width < j )
+                    r.width = j;
+            }
+        }
+
+        if( area != area0 )
+        {
+            if( r.y > i )
+                r.y = i;
+            if( r.height < i )
+                r.height = i;
+        }
+    }
+
+_exit_:
+    cvReleaseMat( &mask );
+    if( tmp != _img )
+        cvReleaseMat( &tmp );
+
+    comp[0] = area;
+    comp[1] = r.x;
+    comp[2] = r.y;
+    comp[3] = r.width - r.x + 1;
+    comp[4] = r.height - r.y + 1;
+    if( mask_only )
+    {
+        double t = area ? 1./area : 0;
+        s0 *= t;
+        s1 *= t;
+        s2 *= t;
+    }
+    comp[5] = s0;
+    comp[6] = s1;
+    comp[7] = s2;
+    comp[8] = 0;
+}
+
+
+void CV_FloodFillTest::prepare_to_validation( int /*test_case_idx*/ )
 {
-    trsReg( FuncName, TestName, TestClass, fmaFloodFill );
-} /* InitAFloodFill */
+    cvTsFloodFill( &test_mat[REF_INPUT_OUTPUT][0], seed_pt, new_val, l_diff, u_diff,
+                   test_array[REF_INPUT_OUTPUT][1] ? &test_mat[REF_INPUT_OUTPUT][1] : 0,
+                   test_mat[REF_OUTPUT][0].data.db, connectivity,
+                   range_type, new_mask_val, mask_only );
+}
+
+
+/*int CV_FloodFillTest::write_default_params( CvFileStorage* fs )
+{
+    int code = CvArrTest::write_default_params( fs );
+    if( code < 0 )
+        return code;
+    
+    if( ts->get_testing_mode() == CvTS::TIMING_MODE )
+    {
+        start_write_param( fs );        
+        write_string_list( fs, "dist_type", floodfill_types );
+        write_int_list( fs, "labels", floodfill_labels, -1, -1 );
+    }
+
+    return code;
+}
+
+
+void CV_FloodFillTest::get_timing_test_array_types_and_sizes( int test_case_idx,
+                CvSize** sizes, int** types, CvSize** whole_sizes, bool *are_images )
+{
+    CvArrTest::get_timing_test_array_types_and_sizes( test_case_idx, sizes, types,
+                                                      whole_sizes, are_images );
+    const char* distype_str = cvReadString( find_timing_param( "dist_type" ), "l2_5x5" );
+    mask_size = strstr( distype_str, "3x3" ) ? 3 : 5;
+    dist_type = distype_str[0] == 'c' ? CV_DIST_C : distype_str[1] == '1' ? CV_DIST_L1 : CV_DIST_L2;
+    fill_labels = cvReadInt( find_timing_param( "labels" ), 0 );
+
+    types[INPUT][0] = CV_8UC1;
+    types[OUTPUT][0] = CV_32FC1;
+    types[OUTPUT][1] = CV_32SC1;
+
+    if( !fill_labels )
+        sizes[OUTPUT][0] = whole_sizes[OUTPUT][0] = cvSize(0,0);
+}
+
+
+void CV_FloodFillTest::print_timing_params( int test_case_idx, char* ptr, int params_left )
+{
+    sprintf( ptr, "%s,", cvReadString( find_timing_param( "dist_type" ), "l2_5x5" ) );
+    ptr += strlen(ptr);
+    sprintf( ptr, "%s,", fill_labels ? "labels" : "no_labels" );
+    ptr += strlen(ptr);
+    params_left -= 2;
+
+    CvArrTest::print_timing_params( test_case_idx, ptr, params_left );
+}*/
+
+
+CV_FloodFillTest floodfill_test;
 
 /* End of file. */
