@@ -703,7 +703,7 @@ icvDoubleToString( char* buf, double value )
         {
             static const char* fmt[] = {"%.16e", "%.16f"};
             double avalue = fabs(value);
-            sprintf( buf, fmt[0.01 < avalue && avalue < 1000], value );
+            sprintf( buf, fmt[0.01 <= avalue && avalue < 1000], value );
         }
     }
     else
@@ -732,7 +732,7 @@ icvFloatToString( char* buf, float value )
         {
             static const char* fmt[] = {"%.8e", "%.8f"};
             double avalue = fabs((double)value);
-            sprintf( buf, fmt[0.01 < avalue && avalue < 1000], value );
+            sprintf( buf, fmt[0.01 <= avalue && avalue < 1000], value );
         }
     }
     else

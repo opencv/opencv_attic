@@ -41,20 +41,33 @@
 
 #include "cvtest.h"
 
+static const char* templmatch_param_names[] = { "template_size", "method", "size", "channels", "depth", 0 };
+static const int templmatch_depths[] = { CV_8U, CV_32F, -1 };
+static const int templmatch_channels[] = { 1, 3, -1 };
+
+static const CvSize templmatch_sizes[] = {{320, 240}, {1024,768}, {-1,-1}};
+static const CvSize templmatch_whole_sizes[] = {{320,240}, {1024,768}, {-1,-1}};
+static const CvSize templmatch_template_sizes[] = {{15,15}, {60,60}, {-1,-1}};
+static const char* templmatch_methods[] = { "sqdiff", "sqdiff_norm", "ccorr", "ccorr_normed", "ccoeff", "ccoeff_normed", 0 };
+
 class CV_TemplMatchTest : public CvArrTest
 {
 public:
     CV_TemplMatchTest();
-    int write_default_params(CvFileStorage* fs);
 
 protected:
-    int support_testing_modes();
     int read_params( CvFileStorage* fs );
     void get_test_array_types_and_sizes( int test_case_idx, CvSize** sizes, int** types );
     void get_minmax_bounds( int i, int j, int type, CvScalar* low, CvScalar* high );
     double get_success_error_level( int test_case_idx, int i, int j );
     void run_func();
     void prepare_to_validation( int );
+
+    int write_default_params(CvFileStorage* fs);
+    void get_timing_test_array_types_and_sizes( int test_case_idx, CvSize** sizes, int** types,
+                                                CvSize** whole_sizes, bool *are_images );
+    void print_timing_params( int test_case_idx, char* ptr, int params_left );
+
     int max_template_size;
     int method;
 };
@@ -70,6 +83,13 @@ CV_TemplMatchTest::CV_TemplMatchTest()
     element_wise_relative_error = false;
     max_template_size = 100;
     method = 0;
+
+    size_list = templmatch_sizes;
+    whole_size_list = templmatch_whole_sizes;
+    cn_list = templmatch_channels;
+    depth_list = templmatch_depths;
+
+    default_timing_param_names = templmatch_param_names;
 }
 
 
@@ -98,6 +118,23 @@ int CV_TemplMatchTest::write_default_params( CvFileStorage* fs )
     if( ts->get_testing_mode() == CvTS::CORRECTNESS_CHECK_MODE )
     {
         write_param( fs, "max_template_size", max_template_size );
+    }
+    else
+    {
+        int i;
+        start_write_param( fs );        
+        
+        cvStartWriteStruct( fs, "template_size", CV_NODE_SEQ+CV_NODE_FLOW );
+        for( i = 0; templmatch_template_sizes[i].width >= 0; i++ )
+        {
+            cvStartWriteStruct( fs, 0, CV_NODE_SEQ+CV_NODE_FLOW );
+            cvWriteInt( fs, 0, templmatch_template_sizes[i].width );
+            cvWriteInt( fs, 0, templmatch_template_sizes[i].height );
+            cvEndWriteStruct(fs);
+        }
+        cvEndWriteStruct(fs);
+
+        write_string_list( fs, "method", templmatch_methods );
     }
 
     return code;
@@ -138,9 +175,42 @@ void CV_TemplMatchTest::get_test_array_types_and_sizes( int test_case_idx,
 }
 
 
-int CV_TemplMatchTest::support_testing_modes()
+void CV_TemplMatchTest::get_timing_test_array_types_and_sizes( int test_case_idx,
+                CvSize** sizes, int** types, CvSize** whole_sizes, bool *are_images )
 {
-    return CvTS::CORRECTNESS_CHECK_MODE; // for now disable the timing test
+    CvArrTest::get_timing_test_array_types_and_sizes( test_case_idx, sizes, types,
+                                                      whole_sizes, are_images );
+    const char* method_str = cvReadString( find_timing_param( "method" ), "ccorr" );
+    const CvFileNode* node = find_timing_param( "template_size" );
+    CvSize templ_size, result_size;
+
+    assert( node && CV_NODE_IS_SEQ( node->tag ));
+
+    method = strncmp( method_str, "sqdiff", 6 ) == 0 ? CV_TM_SQDIFF :
+             strncmp( method_str, "ccorr", 5 ) == 0 ? CV_TM_CCORR : CV_TM_CCOEFF;
+    method += strstr( method_str, "_normed" ) != 0;
+
+    cvReadRawData( ts->get_file_storage(), node, &templ_size, "2i" );
+
+    sizes[INPUT][1] = whole_sizes[INPUT][1] = templ_size;
+    result_size.width = sizes[INPUT][0].width - templ_size.width + 1;
+    result_size.height = sizes[INPUT][0].height - templ_size.height + 1;
+    assert( result_size.width > 0 && result_size.height > 0 );
+    sizes[OUTPUT][0] = whole_sizes[OUTPUT][0] = result_size;
+
+    types[OUTPUT][0] = CV_32FC1;
+}
+
+
+void CV_TemplMatchTest::print_timing_params( int test_case_idx, char* ptr, int params_left )
+{
+    sprintf( ptr, "%s,", cvReadString( find_timing_param( "method" ), "ccorr" ) );
+    ptr += strlen(ptr);
+    sprintf( ptr, "templ_size=%dx%d,", test_mat[INPUT][1].width, test_mat[INPUT][1].height );
+    ptr += strlen(ptr);
+    params_left -= 2;
+
+    CvArrTest::print_timing_params( test_case_idx, ptr, params_left );
 }
 
 

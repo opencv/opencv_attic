@@ -41,747 +41,475 @@
 
 #include "cvtest.h"
 
-#include <stdlib.h>
-#include <assert.h>
-#include <limits.h>
-#include <float.h>
 
-static char* func_name[3] =
+///////////////////// base MHI class ///////////////////////
+class CV_MHIBaseTest : public CvArrTest
 {
-    "cvUpdateMHIByTime",
-    "cvCalcMotionGradient",
-    "cvCalcGlobalOrientation"
+public:
+    CV_MHIBaseTest( const char* test_name, const char* test_funcs );
+
+protected:
+    void get_test_array_types_and_sizes( int test_case_idx, CvSize** sizes, int** types );
+    void get_minmax_bounds( int i, int j, int type, CvScalar* low, CvScalar* high );
+    int prepare_test_case( int test_case_idx );
+    double timestamp, duration, max_log_duration;
+    int mhi_i, mhi_ref_i;
 };
 
-static int max_img_size, min_img_size;
-static int img_size_delta_type, img_size_delta;
-static int min_aperture_size = 3, max_aperture_size = 5;
-static int base_iters;
-static int init_mot_templ2_params = 0;
 
-static char* test_desc = "comparing with the simple algorithm";
-
-
-static void UpdateMHIByTimeEtalon( IplImage *silh, IplImage *mhi,
-                                   float time_stamp, float mhi_duration )
+CV_MHIBaseTest::CV_MHIBaseTest( const char* test_name, const char* test_funcs )
+    : CvArrTest( test_name, test_funcs )
 {
-    uchar*   silh_data;
-    float*   mhi_data;
-    float    low_time = time_stamp - mhi_duration;
+    timestamp = duration = 0;
+    max_log_duration = 9;
+    mhi_i = mhi_ref_i = -1;
 
-    int      silh_step, mhi_step;
-    int      i, j;
-    CvSize  sz;
-
-    atsGetImageInfo( silh, (void**)&silh_data, &silh_step, &sz, 0, 0, 0 );
-    atsGetImageInfo( mhi, (void**)&mhi_data, &mhi_step, 0, 0, 0, 0 );
-
-    mhi_step /= 4;
-
-    for( i = 0; i < sz.height; i++, silh_data += silh_step, mhi_data += mhi_step )
-        for( j = 0; j < sz.width; j++ )
-        {
-            if( silh_data[j] != 0 )
-            {
-                mhi_data[j] = time_stamp;
-            }
-            else if( mhi_data[j] < low_time )
-            {
-                mhi_data[j] = 0.f;
-            }
-        }
+    support_testing_modes = CvTS::CORRECTNESS_CHECK_MODE; // for now disable the timing test
 }
 
 
-static void CalcMotionGradientEtalon(
-                                   IplImage*  mhi,
-                                   IplImage*  mask,
-                                   IplImage*  orient,
-                                   IplImage*  dervX_min,
-                                   IplImage*  dervY_max,
-                                   int   apertureSize,
-                                   float max_delta, float min_delta,
-                                   int   origin )
+void CV_MHIBaseTest::get_minmax_bounds( int i, int j, int type, CvScalar* low, CvScalar* high )
 {
-    float    limit;
-    int      element_values[256];
-
-    uchar*   mask_data;
-    float*   x_data;
-    float*   y_data;
-    float*   orient_data;
-    int      x_step, y_step, orient_step, mask_step;
-    int      i, j;
-    int      max_ker_width, max_ker_height;
-    CvSize  sz;
-    IplConvKernelFP* dX, *dY;
-    IplConvKernel element;
-
-    assert( 1 <= apertureSize && apertureSize <= 7 && (apertureSize&1) != 0 );
-
-    /* build derivative kernels */
-    dX = atsCalcDervConvKernel( 1, 0, apertureSize, origin );
-    dY = atsCalcDervConvKernel( 0, 1, apertureSize, origin );
-
-    max_ker_width = MAX( dX->nCols, dY->nCols );
-    max_ker_height = MAX( dX->nRows, dY->nRows );
-
-    /* calc derivatives "underflow" limit - then to clear orient */
-    limit = 1e-4f*max_ker_width*max_ker_height;
-
-#if 1
-    /* prepare images */
-    atsReplicateBorders( mhi, apertureSize, apertureSize );
-    atsConvolve( mhi, dervX_min, dX );
-    atsConvolve( mhi, dervY_max, dY );
-#else
-    /* calc derivatives */
-    atsConvolve( mhi, dervX_min, dX );
-    atsConvolve( mhi, dervY_max, dY );
-#endif
-
-    /* calc orientation */
-    atsGetImageInfo( dervY_max, (void**)&y_data, &y_step, &sz, 0, 0, 0 );
-    atsGetImageInfo( dervX_min, (void**)&x_data, &x_step, 0, 0, 0, 0 );
-    atsGetImageInfo( orient, (void**)&orient_data, &orient_step, 0, 0, 0, 0 );
-
-    x_step /= 4;
-    y_step /= 4;
-    orient_step /= 4;
-
-    for( i = 0; i < sz.height; i++, x_data += x_step, y_data += y_step,
-                                    orient_data += orient_step  )
-        for( j = 0; j < sz.width; j++ )
-        {
-            float angle = (float)(atan2( y_data[j], x_data[j] )*57.29578f);
-            if( angle < 0 ) angle += 360;
-            orient_data[j] = fabs(y_data[j]) > limit || fabs(x_data[j]) > limit ? angle : 0;
-        }
-
-    /* build rectangular structuring element */
-    element.nCols = max_ker_width;
-    element.nRows = max_ker_height;
-    element.anchorX = max_ker_width/2;
-    element.anchorY = max_ker_height/2;
-    element.nShiftR = 0;
-    memset( element_values, -1, sizeof( element_values ));
-    element.values = element_values;
-
-    /* apply min and max filters */
-    atsMinFilterEx( mhi, dervX_min, &element );
-    atsMaxFilterEx( mhi, dervY_max, &element );
-
-    /* calc mask */
-    x_data -= sz.height * x_step;
-    y_data -= sz.height * y_step;
-    orient_data -= sz.height * orient_step;
-
-    atsGetImageInfo( mask, (void**)&mask_data, &mask_step, 0, 0, 0, 0 );
-
-    cvSet( mask, cvScalarAll(255) );
-
-    for( i = 0; i < sz.height; i++, x_data += x_step, y_data += y_step,
-                                    mask_data += mask_step,
-                                    orient_data += orient_step )
-        for( j = 0; j < sz.width; j++ )
-        {
-            float delta = y_data[j] - x_data[j];
-            assert( delta >= 0 );
-            mask_data[j] = (uchar)(min_delta <= delta && delta <= max_delta);
-            /*if( !mask_data[j] ) orient_data[j] = 0;*/
-        }
-
-    atsDeleteConvKernelFP( dX );
-    atsDeleteConvKernelFP( dY );
+    CvArrTest::get_minmax_bounds( i, j, type, low, high );
+    if( i == INPUT && CV_MAT_DEPTH(type) == CV_8U )
+    {
+        *low = cvScalarAll(-4);
+        *high = cvScalarAll(2);
+    }
+    else if( i == mhi_i || i == mhi_ref_i )
+    {
+        *low = cvScalarAll(-exp(max_log_duration));
+        *high = cvScalarAll(0.);
+    }
 }
 
 
-static void CalcGlobalOrientationEtalon( IplImage* orient, IplImage* mask,
-                                         IplImage* mhi, float time_stamp,
-                                         float mhi_duration, float* angle, float* delta )
+void CV_MHIBaseTest::get_test_array_types_and_sizes( int test_case_idx,
+                                                CvSize** sizes, int** types )
 {
-#define HIST_SIZE 12
-    float*   mhi_data;
-    uchar*   mask_data;
-    float*   orient_data;
+    CvRNG* rng = ts->get_rng();
+    CvArrTest::get_test_array_types_and_sizes( test_case_idx, sizes, types );
 
-    int      mhi_step, mask_step, orient_step;
-    CvSize  sz;
+    types[INPUT][0] = CV_8UC1;
+    types[mhi_i][0] = types[mhi_ref_i][0] = CV_32FC1;
+    duration = exp(cvTsRandReal(rng)*max_log_duration);
+    timestamp = duration + cvTsRandReal(rng)*30.-10.;
+}
+
+
+int CV_MHIBaseTest::prepare_test_case( int test_case_idx )
+{
+    int code = CvArrTest::prepare_test_case( test_case_idx );
+    if( code > 0 )
+    {
+        CvMat* mat = &test_mat[mhi_i][0];
+        CvMat* mat0 = &test_mat[mhi_ref_i][0];
+        cvTsAdd( mat, cvScalarAll(1.), 0, cvScalarAll(0.), cvScalarAll(duration), mat, 0 ); 
+        cvTsMinMaxS( mat, 0, mat, CV_TS_MAX );
+        if( mhi_i != mhi_ref_i )
+            cvTsCopy( mat, mat0 );
+    }
+
+    return code;
+}
+
+
+CV_MHIBaseTest mhi_base_test( "", "" );
+
+
+///////////////////// update motion history ////////////////////////////
+
+static void cvTsUpdateMHI( const CvMat* silh, CvMat* mhi, double timestamp, double duration )
+{
+    int i, j;
+    for( i = 0; i < mhi->rows; i++ )
+    {
+        const uchar* silh_row = silh->data.ptr + i*silh->step;
+        float* mhi_row = (float*)(mhi->data.ptr + i*mhi->step);
+
+        for( j = 0; j < mhi->cols; j++ )
+        {
+            if( silh_row[j] )
+                mhi_row[j] = (float)timestamp;
+            else if( mhi_row[j] < timestamp - duration )
+                mhi_row[j] = 0.f;
+        }
+    }
+}
+
+
+class CV_UpdateMHITest : public CV_MHIBaseTest
+{
+public:
+    CV_UpdateMHITest();
+
+protected:
+    double get_success_error_level( int test_case_idx, int i, int j );
+    void run_func();
+    void prepare_to_validation( int );
+};
+
+
+CV_UpdateMHITest::CV_UpdateMHITest()
+    : CV_MHIBaseTest( "mhi-update", "cvUpdateMotionHistory" )
+{
+    test_array[INPUT].push(NULL);
+    test_array[INPUT_OUTPUT].push(NULL);
+    test_array[REF_INPUT_OUTPUT].push(NULL);
+    mhi_i = INPUT_OUTPUT; mhi_ref_i = REF_INPUT_OUTPUT;
+}
+
+
+double CV_UpdateMHITest::get_success_error_level( int /*test_case_idx*/, int /*i*/, int /*j*/ )
+{
+    return 0;
+}
+
+
+void CV_UpdateMHITest::run_func()
+{
+    cvUpdateMotionHistory( test_array[INPUT][0], test_array[INPUT_OUTPUT][0], timestamp, duration );
+}
+
+
+void CV_UpdateMHITest::prepare_to_validation( int /*test_case_idx*/ )
+{
+    cvTsUpdateMHI( &test_mat[INPUT][0], &test_mat[REF_INPUT_OUTPUT][0], timestamp, duration );
+}
+
+
+CV_UpdateMHITest mhi_update_test;
+
+
+///////////////////// calc motion gradient ////////////////////////////
+
+static void cvTsMHIGradient( const CvMat* mhi, CvMat* mask, CvMat* orientation,
+                             double delta1, double delta2, int aperture_size )
+{
+    CvPoint anchor = { aperture_size/2, aperture_size/2 };
+    CvMat* src = cvCreateMat( mhi->rows + aperture_size - 1, mhi->cols + aperture_size - 1, CV_32FC1 );
+    CvMat* kernel = cvCreateMat( aperture_size, aperture_size, CV_32FC1 );
+    CvMat* dx = cvCreateMat( mhi->rows, mhi->cols, CV_32FC1 );
+    CvMat* dy = cvCreateMat( mhi->rows, mhi->cols, CV_32FC1 );
+    CvMat* min_mhi = cvCreateMat( mhi->rows, mhi->cols, CV_32FC1 );
+    CvMat* max_mhi = cvCreateMat( mhi->rows, mhi->cols, CV_32FC1 );
+    IplConvKernel* element = cvCreateStructuringElementEx( aperture_size, aperture_size,
+                                        aperture_size/2, aperture_size/2, CV_SHAPE_RECT );
+    int i, j;
+    double limit = 1e-4*aperture_size*aperture_size;
+    
+    cvTsPrepareToFilter( mhi, src, anchor );
+    cvTsCalcSobelKernel2D( 1, 0, aperture_size, 0, kernel );
+    cvTsConvolve2D( src, dx, kernel, anchor );
+    cvTsCalcSobelKernel2D( 0, 1, aperture_size, 0, kernel );
+    cvTsConvolve2D( src, dy, kernel, anchor );
+    cvReleaseMat( &kernel );
+
+    cvTsMinMaxFilter( src, min_mhi, element, CV_TS_MIN );
+    cvTsMinMaxFilter( src, max_mhi, element, CV_TS_MAX );
+    cvReleaseStructuringElement( &element );
+
+    if( delta1 > delta2 )
+    {
+        double t;
+        CV_SWAP( delta1, delta2, t );
+    }
+
+    for( i = 0; i < mhi->rows; i++ )
+    {
+        uchar* mask_row = mask->data.ptr + i*mask->step;
+        float* orient_row = (float*)(orientation->data.ptr + i*orientation->step);
+        const float* dx_row = (float*)(dx->data.ptr + i*dx->step);
+        const float* dy_row = (float*)(dy->data.ptr + i*dy->step);
+        const float* min_row = (float*)(min_mhi->data.ptr + i*min_mhi->step);
+        const float* max_row = (float*)(max_mhi->data.ptr + i*max_mhi->step);
+
+        for( j = 0; j < mhi->cols; j++ )
+        {
+            double delta = max_row[j] - min_row[j];
+            double _dx = dx_row[j], _dy = dy_row[j];
+
+            if( delta1 <= delta && delta <= delta2 &&
+                (fabs(_dx) > limit || fabs(_dy) > limit) )
+            {
+                mask_row[j] = 1;
+                double angle = atan2( _dy, _dx ) * (180/CV_PI);
+                if( angle < 0 )
+                    angle += 360.;
+                orient_row[j] = (float)angle;
+            }
+            else
+            {
+                mask_row[j] = 0;
+                orient_row[j] = 0.f;
+            }
+        }
+    }
+
+    cvReleaseMat( &dx );
+    cvReleaseMat( &dy );
+    cvReleaseMat( &min_mhi );
+    cvReleaseMat( &max_mhi );
+}
+
+
+class CV_MHIGradientTest : public CV_MHIBaseTest
+{
+public:
+    CV_MHIGradientTest();
+
+protected:
+    void get_test_array_types_and_sizes( int test_case_idx, CvSize** sizes, int** types );
+    double get_success_error_level( int test_case_idx, int i, int j );
+    void run_func();
+    void prepare_to_validation( int );
+    double delta1, delta2, delta_range_log;
+    int aperture_size;
+};
+
+
+CV_MHIGradientTest::CV_MHIGradientTest()
+    : CV_MHIBaseTest( "mhi-gradient", "cvCalcMotionGradient" )
+{
+    mhi_i = mhi_ref_i = INPUT;
+    test_array[INPUT].push(NULL);
+    test_array[OUTPUT].push(NULL);
+    test_array[OUTPUT].push(NULL);
+    test_array[REF_OUTPUT].push(NULL);
+    test_array[REF_OUTPUT].push(NULL);
+    delta1 = delta2 = 0;
+    aperture_size = 0;
+    delta_range_log = 4;
+}
+
+
+void CV_MHIGradientTest::get_test_array_types_and_sizes( int test_case_idx, CvSize** sizes, int** types )
+{
+    CvRNG* rng = ts->get_rng();
+    CV_MHIBaseTest::get_test_array_types_and_sizes( test_case_idx, sizes, types );
+
+    types[OUTPUT][0] = types[REF_OUTPUT][0] = CV_8UC1;
+    types[OUTPUT][1] = types[REF_OUTPUT][1] = CV_32FC1;
+    delta1 = exp(cvTsRandReal(rng)*delta_range_log + 1.);
+    delta2 = exp(cvTsRandReal(rng)*delta_range_log + 1.);
+    aperture_size = (cvTsRandInt(rng)%3)*2+3;
+    //duration = exp(cvTsRandReal(rng)*max_log_duration);
+    //timestamp = duration + cvTsRandReal(rng)*30.-10.;
+}
+
+
+double CV_MHIGradientTest::get_success_error_level( int /*test_case_idx*/, int /*i*/, int j )
+{
+    return j == 0 ? 0 : 1e-1;
+}
+
+
+void CV_MHIGradientTest::run_func()
+{
+    cvCalcMotionGradient( test_array[INPUT][0], test_array[OUTPUT][0],
+                          test_array[OUTPUT][1], delta1, delta2, aperture_size );
+}
+
+
+void CV_MHIGradientTest::prepare_to_validation( int /*test_case_idx*/ )
+{
+    cvTsMHIGradient( &test_mat[INPUT][0], &test_mat[REF_OUTPUT][0], &test_mat[REF_OUTPUT][1],
+                     delta1, delta2, aperture_size );
+}
+
+
+CV_MHIGradientTest mhi_gradient_test;
+
+
+////////////////////// calc global orientation /////////////////////////
+
+static double
+cvTsCalcGlobalOrientation( const CvMat* orient, const CvMat* mask, const CvMat* mhi,
+                           double timestamp, double duration )
+{
+    const int HIST_SIZE = 12;
     int      y, x;
     int      histogram[HIST_SIZE];
     int      max_bin = 0;
 
     double   base_orientation = 0, delta_orientation = 0, weight = 0;
-    double   low_time = time_stamp - mhi_duration;
-    double   global_orientation;
-
-    atsGetImageInfo( mhi, (void**)&mhi_data, &mhi_step, &sz, 0, 0, 0 );
-    atsGetImageInfo( mask, (void**)&mask_data, &mask_step, 0, 0, 0, 0 );
-    atsGetImageInfo( orient, (void**)&orient_data, &orient_step, 0, 0, 0, 0 );
-
-    orient_step /= sizeof(float);
-    mhi_step /= sizeof(float);
+    double   low_time, global_orientation;
 
     memset( histogram, 0, sizeof( histogram ));
+    timestamp = 0;
 
-    /* build historgam */
-    for( y = 0; y < sz.height; y++ )
+    for( y = 0; y < orient->rows; y++ )
     {
-        for( x = 0; x < sz.width; x++ )
+        const float* orient_data = (const float*)(orient->data.ptr + y*orient->step);
+        const uchar* mask_data = mask->data.ptr + y*mask->step;
+        const float* mhi_data = (const float*)(mhi->data.ptr + y*mhi->step);
+        for( x = 0; x < orient->cols; x++ )
             if( mask_data[x] )
             {
                 int bin = cvFloor( (orient_data[x]*HIST_SIZE)/360 );
                 histogram[bin < 0 ? 0 : bin >= HIST_SIZE ? HIST_SIZE-1 : bin]++;
+                if( mhi_data[x] > timestamp )
+                    timestamp = mhi_data[x];
             }
-        orient_data += orient_step;
-        mask_data += mask_step;
     }
+
+    low_time = timestamp - duration;
 
     for( x = 1; x < HIST_SIZE; x++ )
     {
-        if( histogram[x] > histogram[max_bin] ) max_bin = x;
+        if( histogram[x] > histogram[max_bin] )
+            max_bin = x;
     }
 
     base_orientation = ((double)max_bin*360)/HIST_SIZE;
 
-    mask_data -= sz.height*mask_step;
-    orient_data -= sz.height*orient_step;
-
-    for( y = 0; y < sz.height; y++ )
+    for( y = 0; y < orient->rows; y++ )
     {
-        for( x = 0; x < sz.width; x++ )
+        const float* orient_data = (const float*)(orient->data.ptr + y*orient->step);
+        const float* mhi_data = (const float*)(mhi->data.ptr + y*mhi->step);
+        const uchar* mask_data = mask->data.ptr + y*mask->step;
+        
+        for( x = 0; x < orient->cols; x++ )
+        {
             if( mask_data[x] )
             {
                 double diff = orient_data[x] - base_orientation;
                 double delta_weight = mhi_data[x] >= low_time ?
-                    (((mhi_data[x] - low_time)/mhi_duration)*254 + 1)/255 : 0;
+                    (((mhi_data[x] - low_time)/duration)*254 + 1)/255 : 0;
 
                 if( diff < -180 ) diff += 360;
                 if( diff > 180 ) diff -= 360;
 
-                if( delta_weight > 0 )
+                if( delta_weight > 0 && fabs(diff) < 90 )
                 {
                     delta_orientation += diff*delta_weight;
                     weight += delta_weight;
                 }
             }
-        mhi_data += mhi_step;
-        orient_data += orient_step;
-        mask_data += mask_step;
+        }
     }
 
     if( weight == 0 )
         global_orientation = base_orientation;
     else
     {
-        global_orientation = base_orientation + delta_orientation/weight;
+        global_orientation = base_orientation + cvRound(delta_orientation/weight);
         if( global_orientation < 0 ) global_orientation += 360;
         if( global_orientation > 360 ) global_orientation -= 360;
     }
-    *angle = (float)global_orientation;
-    *delta = (float)delta_orientation;
+    
+    return global_orientation;
 }
 
-static double compare_img_angles( IplImage* img0, IplImage* img1, IplImage* mask )
+
+class CV_MHIGlobalOrientTest : public CV_MHIBaseTest
 {
-    float*   data0;
-    float*   data1;
-    uchar*   mask_data;
-    int      step0, step1, mask_step;
-    int      x, y;
-    CvSize  sz;
-    double   merr = 0;
+public:
+    CV_MHIGlobalOrientTest();
 
-    atsGetImageInfo( img0, (void**)&data0, &step0, &sz, 0, 0, 0 );
-    atsGetImageInfo( img1, (void**)&data1, &step1, 0, 0, 0, 0 );
-    atsGetImageInfo( mask, (void**)&mask_data, &mask_step, 0, 0, 0, 0 );
+protected:
+    void get_test_array_types_and_sizes( int test_case_idx, CvSize** sizes, int** types );
+    void get_minmax_bounds( int i, int j, int type, CvScalar* low, CvScalar* high );
+    double get_success_error_level( int test_case_idx, int i, int j );
+    int validate_test_results( int test_case_idx );
+    void run_func();
+    double timestamp, duration;
+    double angle, min_angle, max_angle;
+};
 
-    step0 /= 4;
-    step1 /= 4;
 
-    for( y = 0; y < sz.height; y++, data0 += step0, data1 += step1, mask_data += mask_step )
-        for( x = 0; x < sz.width; x++ )
-        {
-            if( mask_data[x] )
-            {
-                double err = atsCompareAngles( data0[x], data1[x] );
-                merr = MAX( merr, err );
-            }
-        }
-    return merr;
+CV_MHIGlobalOrientTest::CV_MHIGlobalOrientTest()
+    : CV_MHIBaseTest( "mhi-global", "cvCalcGlobalOrientation" )
+{
+    mhi_i = mhi_ref_i = INPUT;
+    test_array[INPUT].push(NULL);
+    test_array[INPUT].push(NULL);
+    test_array[INPUT].push(NULL);
+    test_array[OUTPUT].push(NULL);
+    test_array[REF_OUTPUT].push(NULL);
+    min_angle = max_angle = 0;
 }
 
-static void read_mot_templ2_params( void )
+
+void CV_MHIGlobalOrientTest::get_test_array_types_and_sizes( int test_case_idx, CvSize** sizes, int** types )
 {
-    if( !init_mot_templ2_params )
+    CvRNG* rng = ts->get_rng();
+    CV_MHIBaseTest::get_test_array_types_and_sizes( test_case_idx, sizes, types );
+    CvSize size = sizes[INPUT][0];
+
+    size.width = MAX( size.width, 8 );
+    size.height = MAX( size.height, 8 );
+    sizes[INPUT][0] = sizes[INPUT][1] = sizes[INPUT][2] = size;
+
+    types[INPUT][1] = CV_8UC1; // mask
+    types[INPUT][2] = CV_32FC1; // orientation
+    min_angle = cvTsRandReal(rng)*359.9;
+    max_angle = cvTsRandReal(rng)*359.9;
+    if( min_angle >= max_angle )
     {
-        /* Read test params */
-        trsiRead( &min_img_size, "6", "Minimal linear size of the image" );
-        trsiRead( &max_img_size, "31", "Maximal linear size of the image" );
-        trsCaseRead( &img_size_delta_type,"/a/m", "a", "a - add, m - multiply" );
-        trsiRead( &img_size_delta, "3", "Image size step(factor)" );
-        trsiRead( &base_iters, "1000", "Base number of iterations" );
+        double t;
+        CV_SWAP( min_angle, max_angle, t );
+    }
+    max_angle += 0.1;
+    duration = exp(cvTsRandReal(rng)*max_log_duration);
+    timestamp = duration + cvTsRandReal(rng)*30.-10.;
+}
 
-        init_mot_templ2_params = 1;
+
+void CV_MHIGlobalOrientTest::get_minmax_bounds( int i, int j, int type, CvScalar* low, CvScalar* high )
+{
+    CV_MHIBaseTest::get_minmax_bounds( i, j, type, low, high );
+    if( i == INPUT && j == 2 )
+    {
+        *low = cvScalarAll(min_angle);
+        *high = cvScalarAll(max_angle);
     }
 }
 
 
-static int update_mhi_by_time_test( void )
+double CV_MHIGlobalOrientTest::get_success_error_level( int /*test_case_idx*/, int /*i*/, int /*j*/ )
 {
-    const float max_time = 100.f;
-    const int success_error_level = 0;
-    const int mhi_depth = IPL_DEPTH_32F;
-    const int silh_depth = IPL_DEPTH_8U;
-    const int channels = 1;
-
-    int   seed = atsGetSeed();
-
-    /* position where the maximum error occured */
-    int   merr_w = 0, merr_h = 0, merr_iter = 0;
-
-    /* test parameters */
-    int     w = 0, h = 0, i = 0;
-    float   time_stamp = 0, mhi_duration = 0;
-    double  max_err = 0.;
-    //int     code = TRS_OK;
-
-    IplROI       roi;
-    IplImage    *silh, *mhi, *mhi_copy;
-    AtsRandState rng_state;
-    atsRandInit( &rng_state, 0, 1, seed );
-
-    read_mot_templ2_params();
-
-    silh = atsCreateImage( max_img_size, max_img_size, silh_depth, channels, 0 );
-    mhi = atsCreateImage( max_img_size, max_img_size, mhi_depth, channels, 0 );
-    mhi_copy = atsCreateImage( max_img_size, max_img_size, mhi_depth, channels, 0 );
-
-    roi.coi = 0;
-    roi.xOffset = roi.yOffset = 0;
-
-    silh->roi = mhi->roi = mhi_copy->roi = &roi;
-
-    for( h = min_img_size; h <= max_img_size; )
-    {
-        for( w = min_img_size; w <= max_img_size; )
-        {
-            int  denom = (w - min_img_size + 1)*(h - min_img_size + 1)*channels;
-            int  iters = (base_iters*2 + denom)/(2*denom);
-            CvSize size;
-
-            size.width = roi.width = w;
-            size.height = roi.height = h;
-
-            if( iters < 1 ) iters = 1;
-
-            for( i = 0; i < iters; i++ )
-            {
-                double err;
-
-                atsRandSetBounds( &rng_state, 0, max_time );
-
-                time_stamp = atsRand32f( &rng_state );
-                mhi_duration = atsRand32f( &rng_state );
-
-                /*if( time_stamp < mhi_duration )
-                {
-                    float temp;
-                    ATS_SWAP( time_stamp, mhi_duration, temp );
-                }*/
-
-                atsFillRandomImageEx( mhi, &rng_state );
-
-                atsRandSetBounds( &rng_state, 0, 1 );
-                atsFillRandomImageEx( silh, &rng_state );
-
-                cvCopy( mhi, mhi_copy );
-
-                UpdateMHIByTimeEtalon( silh, mhi_copy, time_stamp, mhi_duration );
-
-                cvUpdateMHIByTime( silh, mhi, time_stamp, mhi_duration );
-
-                err = cvNorm( mhi, mhi_copy, CV_C );
-
-                if( err > max_err )
-                {
-                    merr_w    = w;
-                    merr_h    = h;
-                    merr_iter = i;
-                    max_err   = err;
-                    if( max_err > success_error_level ) goto test_exit;
-                }
-            }
-            ATS_INCREASE( w, img_size_delta_type, img_size_delta );
-        } /* end of the loop by w */
-
-        ATS_INCREASE( h, img_size_delta_type, img_size_delta );
-    }  /* end of the loop by h */
-
-test_exit:
-
-    silh->roi = mhi->roi = mhi_copy->roi = 0;
-
-    atsReleaseImage( silh );
-    atsReleaseImage( mhi );
-    atsReleaseImage( mhi_copy );
-
-    //if( code == TRS_OK )
-    {
-        trsWrite( ATS_LST, "Max err is %g at w = %d, h = %d, "
-                           "iter = %d, seed = %08x",
-                           max_err, merr_w, merr_h, merr_iter, seed );
-
-        return max_err <= success_error_level ?
-            trsResult( TRS_OK, "No errors" ) :
-            trsResult( TRS_FAIL, "Bad accuracy" );
-    }
-    /*else
-    {
-        trsWrite( ATS_LST, "Fatal error at w = %d, h = %d, "
-                           "iter = %d, seed = %08x",
-                           w, h, i, seed );
-        return trsResult( TRS_FAIL, "Function returns error code" );
-    }*/
+    return 30;
 }
 
 
-
-static int calc_motion_gradient_test( void )
+void CV_MHIGlobalOrientTest::run_func()
 {
-    const float max_time = 100.f;
-    const float delta_range = 5.f;
-    const float success_orient_error_level = 1;
-    const float success_mask_error_level = 1;
-    const int mhi_depth = IPL_DEPTH_32F;
-    const int orient_depth = IPL_DEPTH_32F;
-    const int mask_depth = IPL_DEPTH_8U;
-    const int silh_depth = IPL_DEPTH_8U;
-    const int channels = 1;
-    const int origin = 0;
-
-    int   seed = atsGetSeed();
-
-    /* position where the maximum error occured */
-    int   merr_w = 0, merr_h = 0, merr_iter = 0, merr_aperture_size = 0;
-
-    /* test parameters */
-    int     w = 0, h = 0, i = 0;
-    int     aperture_size = 0;
-    float   max_delta = 0.f, min_delta = 0.f;
-    double  max_orient_err = 0., max_mask_err = 0.;
-    //int     code = TRS_OK;
-
-    IplROI       roi;
-    IplImage    *orient, *silh, *orient2, *mask, *mask2, *mhi;
-    IplImage    *dervX_min, *dervY_max;
-    AtsRandState rng_state;
-
-    atsRandInit( &rng_state, 0, 1, seed );
-
-    read_mot_templ2_params();
-
-    orient = atsCreateImage( max_img_size, max_img_size, orient_depth, channels, 0 );
-    orient2 = atsCreateImage( max_img_size, max_img_size, orient_depth, channels, 0 );
-    mhi = atsCreateImage( max_img_size, max_img_size, mhi_depth, channels, 0 );
-    mask = atsCreateImage( max_img_size, max_img_size, mask_depth, channels, 0 );
-    mask2 = atsCreateImage( max_img_size, max_img_size, mask_depth, channels, 0 );
-    silh  = atsCreateImage( max_img_size, max_img_size, silh_depth, channels, 0 );
-    dervX_min = atsCreateImage( max_img_size, max_img_size, mhi_depth, channels, 0 );
-    dervY_max = atsCreateImage( max_img_size, max_img_size, mhi_depth, channels, 0 );
-
-    cvZero( silh );
-
-    roi.coi = 0;
-    roi.xOffset = roi.yOffset = 0;
-
-    orient->roi = orient2->roi = mhi->roi = mask->roi = mask2->roi = silh->roi = &roi;
-    dervX_min->roi = dervY_max->roi = &roi;
-
-    for( h = min_img_size; h <= max_img_size; )
-    {
-        for( w = min_img_size; w <= max_img_size; )
-        {
-            int  denom = (w - min_img_size + 1)*(h - min_img_size + 1)*channels;
-            int  iters = (base_iters*2 + denom)/(2*denom);
-            CvSize size;
-
-            size.width = roi.width  = w;
-            size.height = roi.height = h;
-
-            if( iters < 1 ) iters = 1;
-
-            for( i = 0; i < iters; i++ )
-            {
-                double err;
-
-                atsRandSetBounds( &rng_state, 0, delta_range );
-
-                max_delta = atsRand32f( &rng_state ) + delta_range;
-                min_delta = atsRand32f( &rng_state );
-
-                atsRandSetBounds( &rng_state, 0, max_time );
-                atsFillRandomImageEx( mhi, &rng_state );
-
-                /* cut off some motion */
-                UpdateMHIByTimeEtalon( silh, mhi, max_time, max_time*2/3 );
-
-                for( aperture_size = min_aperture_size; aperture_size <= max_aperture_size;
-                     aperture_size += 2 )
-                {
-                    CalcMotionGradientEtalon( mhi, mask2, orient2, dervX_min, dervY_max,
-                                              aperture_size, max_delta, min_delta, origin );
-
-                    cvCalcMotionGradient( mhi, mask, orient, max_delta, min_delta, aperture_size );
-
-                    /* compare angles */
-                    err = compare_img_angles( orient, orient2, mask2 );
-
-                    if( err > max_orient_err )
-                    {
-                        merr_w    = w;
-                        merr_h    = h;
-                        merr_iter = i;
-                        merr_aperture_size = aperture_size;
-                        max_orient_err   = err;
-                        if( max_orient_err > success_orient_error_level )
-                            goto test_exit;
-                    }
-
-                    err = cvNorm( mask, mask2, CV_L1 );
-                    cvXor( mask, mask2, mask );
-
-                    if( err > max_mask_err )
-                    {
-                        merr_w    = w;
-                        merr_h    = h;
-                        merr_iter = i;
-                        merr_aperture_size = aperture_size;
-                        max_mask_err   = err;
-                        if( max_mask_err > success_mask_error_level )
-                            goto test_exit;
-                    }
-
-                    roi.xOffset = roi.yOffset = 0;
-                    roi.width = w;
-                    roi.height = h;
-                }
-            }
-            ATS_INCREASE( w, img_size_delta_type, img_size_delta );
-        } /* end of the loop by w */
-
-        ATS_INCREASE( h, img_size_delta_type, img_size_delta );
-    }  /* end of the loop by h */
-
-test_exit:
-
-    silh->roi = mhi->roi = mask->roi = mask2->roi = orient->roi = orient2->roi = 0;
-    dervX_min->roi = dervY_max->roi = 0;
-
-    atsReleaseImage( silh );
-    atsReleaseImage( mhi );
-    atsReleaseImage( mask );
-    atsReleaseImage( mask2);
-    atsReleaseImage( orient );
-    atsReleaseImage( orient2 );
-    atsReleaseImage( dervX_min );
-    atsReleaseImage( dervY_max );
-
-    //if( code == TRS_OK )
-    {
-        trsWrite( ATS_LST, "Max orient err is %g, Max mask err is %g at w = %d, h = %d, "
-                           "iter = %d, aperture_size = %d, seed = %08x",
-                           max_orient_err, max_mask_err, merr_w, merr_h, merr_iter,
-                           merr_aperture_size, seed );
-
-        return max_orient_err <= success_orient_error_level &&
-               max_mask_err <= success_mask_error_level ?
-            trsResult( TRS_OK, "No errors" ) :
-               max_mask_err > success_mask_error_level ?
-            trsResult( TRS_FAIL, "Bad mask accuracy" ) :
-            trsResult( TRS_FAIL, "Bad orient accuracy" );
-    }
-    /*else
-    {
-        trsWrite( ATS_LST, "Fatal error at w = %d, h = %d, "
-                           "iter = %d, aperture_size = %d, seed = %08x",
-                           w, h, i, aperture_size, seed );
-        return trsResult( TRS_FAIL, "Function returns error code" );
-    }*/
+    angle = cvCalcGlobalOrientation( test_array[INPUT][2], test_array[INPUT][1],
+                                     test_array[INPUT][0], timestamp, duration );
 }
 
 
-
-static int calc_global_orientation_test( void )
+int CV_MHIGlobalOrientTest::validate_test_results( int test_case_idx )
 {
-    const float max_time = 2000.f;
-    const float mask_range = 3.f;
-    const float success_orient_error_level = 30;
-    const int mhi_depth = IPL_DEPTH_32F;
-    const int orient_depth = IPL_DEPTH_32F;
-    const int mask_depth = IPL_DEPTH_8U;
-    const int silh_depth = IPL_DEPTH_8U;
-    const int channels = 1;
+    double ref_angle = cvTsCalcGlobalOrientation( &test_mat[INPUT][2], &test_mat[INPUT][1],
+                                                  &test_mat[INPUT][0], timestamp, duration );
+    double err_level = get_success_error_level( test_case_idx, 0, 0 );
+    int code = CvTS::OK;
+    int nz = cvCountNonZero( test_array[INPUT][1] );
 
-    int   seed = atsGetSeed();
-
-    /* position where the maximum error occured */
-    int   merr_w = 0, merr_h = 0, merr_iter = 0;
-
-    /* test parameters */
-    int     w = 0, h = 0, i = 0;
-    float   time_stamp = 0.f, mhi_duration = 0.f;
-    float   min_angle = 0.f, max_angle = 0.f;
-
-    float   res_angle = 0.f, std_angle = 0.f;
-    double  max_err = 0.;
-    int     code = TRS_OK;
-
-    IplROI       roi;
-    IplImage    *orient, *silh, *mask, *mhi;
-    AtsRandState rng_state;
-
-    atsRandInit( &rng_state, 0, 1, seed );
-
-    read_mot_templ2_params();
-
-    orient = atsCreateImage( max_img_size, max_img_size, orient_depth, channels, 0 );
-    mhi = atsCreateImage( max_img_size, max_img_size, mhi_depth, channels, 0 );
-    mask = atsCreateImage( max_img_size, max_img_size, mask_depth, channels, 0 );
-    silh  = atsCreateImage( max_img_size, max_img_size, silh_depth, channels, 0 );
-
-    cvZero( silh );
-
-    roi.coi = 0;
-    roi.xOffset = roi.yOffset = 0;
-
-    orient->roi = mhi->roi = mask->roi = silh->roi = &roi;
-
-    for( h = MAX( 4, min_img_size); h <= max_img_size; )
+    if( nz > 16 && !(min_angle - err_level <= angle &&
+          max_angle + err_level >= angle) &&
+        !(min_angle - err_level <= angle+360 &&
+          max_angle + err_level >= angle+360) )
     {
-        for( w = MAX( 4, min_img_size); w <= max_img_size; )
-        {
-            int  denom = (w - min_img_size + 1)*(h - min_img_size + 1)*channels;
-            int  iters = (base_iters*2 + denom)/(2*denom);
-            CvSize size;
-
-            if( iters < 1 ) iters = 1;
-
-            size.width = roi.width  = w;
-            size.height = roi.height = h;
-
-            for( i = 0; i < iters; i++ )
-            {
-                double err;
-                float  temp, delta = 0;
-
-                atsRandSetBounds( &rng_state, 0, max_time );
-
-                time_stamp = atsRand32f( &rng_state ) + 0.01f;
-                mhi_duration = atsRand32f( &rng_state ) + 0.01f;
-
-                if( time_stamp < mhi_duration )
-                    ATS_SWAP( time_stamp, mhi_duration, temp );
-
-                if( time_stamp < mhi_duration + 1 ) time_stamp += 1.f;
-
-                atsRandSetBounds( &rng_state, mhi_duration, time_stamp );
-                atsFillRandomImageEx( mhi, &rng_state );
-
-                /* cut off some motion */
-                UpdateMHIByTimeEtalon( silh, mhi, max_time, max_time*2/3 );
-
-                /* generate random angles range */
-                atsRandSetBounds( &rng_state, 0, 360 );
-                min_angle = atsRand32f( &rng_state );
-                max_angle = atsRand32f( &rng_state );
-
-                if( min_angle > max_angle )
-                    ATS_SWAP( min_angle, max_angle, temp );
-
-                /* make orientation image */
-                min_angle += (max_angle - min_angle)*0.3f;
-                max_angle -= (max_angle - min_angle)*0.3f;
-
-                atsRandSetBounds( &rng_state, min_angle, max_angle );
-                atsFillRandomImageEx( orient, &rng_state );
-
-                /* make mask image */
-                atsRandSetBounds( &rng_state, 1, mask_range+1 );
-                atsFillRandomImageEx( mask, &rng_state );
-                cvSubS( mask, cvScalarAll((int)(mask_range - 1)), mask );
-
-                CalcGlobalOrientationEtalon( orient, mask, mhi, time_stamp,
-                                             mhi_duration, &std_angle, &delta );
-
-                res_angle = (float)cvCalcGlobalOrientation( orient, mask, mhi,
-                                                            time_stamp, mhi_duration );
-
-                if( !(min_angle - success_orient_error_level <= res_angle &&
-                      max_angle + success_orient_error_level >= res_angle) &&
-                    !(min_angle - success_orient_error_level <= res_angle+360 &&
-                      max_angle + success_orient_error_level >= res_angle+360)
-                      && w > 4 && h > 4 )
-                {
-                    code = -2;
-                    goto test_exit;
-                }
-
-                /* compare angles */
-                err = atsCompareAngles( res_angle, std_angle );
-
-                if( err > max_err )
-                {
-                    merr_w    = w;
-                    merr_h    = h;
-                    merr_iter = i;
-                    max_err = err;
-                    if( max_err > success_orient_error_level )
-                        goto test_exit;
-                }
-            }
-            ATS_INCREASE( w, img_size_delta_type, img_size_delta );
-        } /* end of the loop by w */
-
-        ATS_INCREASE( h, img_size_delta_type, img_size_delta );
-    }  /* end of the loop by h */
-
-test_exit:
-
-    silh->roi = mhi->roi = mask->roi = orient->roi = 0;
-
-    atsReleaseImage( silh );
-    atsReleaseImage( mhi );
-    atsReleaseImage( mask );
-    atsReleaseImage( orient );
-
-    if( code == TRS_OK )
-    {
-        trsWrite( ATS_LST, "Max orient err is %g at w = %d, h = %d, "
-                           "iter = %d, seed = %08x",
-                           max_err, merr_w, merr_h, merr_iter, seed );
-
-        return max_err <= success_orient_error_level ?
-            trsResult( TRS_OK, "No errors" ) :
-            trsResult( TRS_FAIL, "Bad orient accuracy" );
+        ts->printf( CvTS::LOG, "The angle=%g is outside (%g,%g) range\n",
+                    angle, min_angle - err_level, max_angle + err_level );
+        code = CvTS::FAIL_BAD_ACCURACY;
     }
-    else
+    else if( fabs(angle - ref_angle) > err_level &&
+             fabs(360 - fabs(angle - ref_angle)) > err_level )
     {
-        trsWrite( ATS_LST, "Fatal error at w = %d, h = %d, iter = %d, seed = %08x",
-                           w, h, i, seed );
-        return trsResult( TRS_FAIL, "Function returns error code" );
+        ts->printf( CvTS::LOG, "The angle=%g differs too much from reference value=%g\n",
+                    angle, ref_angle );
+        code = CvTS::FAIL_BAD_ACCURACY;
     }
+
+    if( code < 0 )
+        ts->set_failed_test_info( code );
+    return code;
 }
 
 
-void InitAMotionTemplates( void )
-{
-    trsReg( func_name[0], test_desc, atsAlgoClass, update_mhi_by_time_test );
-    trsReg( func_name[1], test_desc, atsAlgoClass, calc_motion_gradient_test );
-    trsReg( func_name[2], test_desc, atsAlgoClass, calc_global_orientation_test );
+CV_MHIGlobalOrientTest mhi_global_orient_test;
 
-} /* InitAMotionTemplates */
-
-/* End of file. */
-
-/* End of file. */

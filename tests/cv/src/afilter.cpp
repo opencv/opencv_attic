@@ -41,19 +41,23 @@
 
 #include "cvtest.h"
 
-class CV_FilterBaseTest : public CvArrTest
+static const CvSize filter_sizes[] = {{30,30}, {320, 240}, {720,480}, {-1,-1}};
+static const CvSize filter_whole_sizes[] = {{320,240}, {320, 240}, {720,480}, {-1,-1}};
+static const int filter_depths[] = { CV_8U, CV_16U, CV_32F, -1 };
+static const int filter_channels[] = { 1, 3, 4, -1 };
+
+class CV_FilterBaseTestImpl : public CvArrTest
 {
 public:
-    CV_FilterBaseTest( const char* test_name, const char* test_funcs, bool _fp_kernel );
-    int write_default_params(CvFileStorage* fs);
+    CV_FilterBaseTestImpl( const char* test_name, const char* test_funcs, bool _fp_kernel );
 
 protected:
-    int support_testing_modes();
     int prepare_test_case( int test_case_idx );
     void prepare_to_validation( int /*test_case_idx*/ );
     int read_params( CvFileStorage* fs );
     void get_test_array_types_and_sizes( int test_case_idx, CvSize** sizes, int** types );
     void get_minmax_bounds( int i, int j, int type, CvScalar* low, CvScalar* high );
+    int write_default_params(CvFileStorage* fs);
     CvSize aperture_size;
     CvPoint anchor;
     int max_aperture_size;
@@ -62,7 +66,7 @@ protected:
 };
 
 
-CV_FilterBaseTest::CV_FilterBaseTest( const char* test_name, const char* test_funcs, bool _fp_kernel )
+CV_FilterBaseTestImpl::CV_FilterBaseTestImpl( const char* test_name, const char* test_funcs, bool _fp_kernel )
     : CvArrTest( test_name, test_funcs, "" ), fp_kernel(_fp_kernel)
 {
     test_array[INPUT].push(NULL);
@@ -75,10 +79,15 @@ CV_FilterBaseTest::CV_FilterBaseTest( const char* test_name, const char* test_fu
     aperture_size = cvSize(0,0);
     anchor = cvPoint(0,0);
     element_wise_relative_error = false;
+
+    size_list = filter_sizes;
+    whole_size_list = filter_whole_sizes;
+    depth_list = filter_depths;
+    cn_list = filter_channels;
 }
 
 
-int CV_FilterBaseTest::read_params( CvFileStorage* fs )
+int CV_FilterBaseTestImpl::read_params( CvFileStorage* fs )
 {
     int code = CvArrTest::read_params( fs );
     if( code < 0 )
@@ -94,7 +103,7 @@ int CV_FilterBaseTest::read_params( CvFileStorage* fs )
 }
 
 
-int CV_FilterBaseTest::write_default_params( CvFileStorage* fs )
+int CV_FilterBaseTestImpl::write_default_params( CvFileStorage* fs )
 {
     int code = CvArrTest::write_default_params( fs );
     if( code < 0 )
@@ -109,7 +118,7 @@ int CV_FilterBaseTest::write_default_params( CvFileStorage* fs )
 }
 
 
-void CV_FilterBaseTest::get_minmax_bounds( int i, int j, int type, CvScalar* low, CvScalar* high )
+void CV_FilterBaseTestImpl::get_minmax_bounds( int i, int j, int type, CvScalar* low, CvScalar* high )
 {
     CvArrTest::get_minmax_bounds( i, j, type, low, high );
     if( i == INPUT )
@@ -146,7 +155,7 @@ void CV_FilterBaseTest::get_minmax_bounds( int i, int j, int type, CvScalar* low
 }
 
 
-void CV_FilterBaseTest::get_test_array_types_and_sizes( int test_case_idx,
+void CV_FilterBaseTestImpl::get_test_array_types_and_sizes( int test_case_idx,
                                                 CvSize** sizes, int** types )
 {
     CvRNG* rng = ts->get_rng();
@@ -172,7 +181,7 @@ void CV_FilterBaseTest::get_test_array_types_and_sizes( int test_case_idx,
 }
 
 
-int CV_FilterBaseTest::prepare_test_case( int test_case_idx )
+int CV_FilterBaseTestImpl::prepare_test_case( int test_case_idx )
 {
     int code = CvArrTest::prepare_test_case( test_case_idx );
     if( code > 0 )
@@ -186,7 +195,7 @@ int CV_FilterBaseTest::prepare_test_case( int test_case_idx )
 }
 
 
-void CV_FilterBaseTest::prepare_to_validation( int /*test_case_idx*/ )
+void CV_FilterBaseTestImpl::prepare_to_validation( int /*test_case_idx*/ )
 {
     CvMat* src = &test_mat[INPUT][0];
     
@@ -200,48 +209,78 @@ void CV_FilterBaseTest::prepare_to_validation( int /*test_case_idx*/ )
 }
 
 
-int CV_FilterBaseTest::support_testing_modes()
+CV_FilterBaseTestImpl filter_base( "filter", "", false );
+
+
+class CV_FilterBaseTest : public CV_FilterBaseTestImpl
 {
-    return CvTS::CORRECTNESS_CHECK_MODE; // for now disable the timing test
+public:
+    CV_FilterBaseTest( const char* test_name, const char* test_funcs, bool _fp_kernel );
+};
+
+
+CV_FilterBaseTest::CV_FilterBaseTest( const char* test_name, const char* test_funcs, bool _fp_kernel )
+    : CV_FilterBaseTestImpl( test_name, test_funcs, _fp_kernel )
+{
+    size_list = 0;
+    whole_size_list = 0;
+    depth_list = 0;
+    cn_list = 0;
 }
 
 
-CV_FilterBaseTest filter_base( "filter", "", false );
-
 /////////////////////////
 
-class CV_MorphologyBaseTest : public CV_FilterBaseTest
+static const char* morph_param_names[] = { "mask_size", "shape", "size", "channels", "depth", 0 };
+static const int morph_depths[] = { CV_8U, CV_32F, -1 };
+static const int morph_mask_size[] = { 3, 5, 11 };
+static const char* morph_mask_shape[] = { "rect", "ellipse", 0 };
+
+class CV_MorphologyBaseTestImpl : public CV_FilterBaseTest
 {
 public:
-    CV_MorphologyBaseTest( const char* test_name, const char* test_funcs, int optype );
-    int write_default_params(CvFileStorage* fs);
+    CV_MorphologyBaseTestImpl( const char* test_name, const char* test_funcs, int optype );
 
 protected:
     void prepare_to_validation( int test_case_idx );
     int prepare_test_case( int test_case_idx );
     void get_test_array_types_and_sizes( int test_case_idx, CvSize** sizes, int** types );
+    void get_timing_test_array_types_and_sizes( int test_case_idx, CvSize** sizes, int** types,
+                                                CvSize** whole_sizes, bool *are_images );
+    void print_timing_params( int test_case_idx, char* ptr, int params_left );
     double get_success_error_level( int test_case_idx, int i, int j );
+    int write_default_params(CvFileStorage* fs);
     int optype;
     int shape;
     IplConvKernel* element;
 };
 
 
-CV_MorphologyBaseTest::CV_MorphologyBaseTest( const char* test_name, const char* test_funcs, int _optype )
+CV_MorphologyBaseTestImpl::CV_MorphologyBaseTestImpl( const char* test_name, const char* test_funcs, int _optype )
     : CV_FilterBaseTest( test_name, test_funcs, false ), optype(_optype)
 {
     shape = -1;
     element = 0;
+
+    depth_list = morph_depths;
+    element = 0;
 }
 
 
-int CV_MorphologyBaseTest::write_default_params( CvFileStorage* fs )
+int CV_MorphologyBaseTestImpl::write_default_params( CvFileStorage* fs )
 {
-    return CV_FilterBaseTest::write_default_params( fs );
+    int code = CV_FilterBaseTest::write_default_params( fs );
+    if( code >= 0 && ts->get_testing_mode() == CvTS::TIMING_MODE && strcmp(tested_functions,"") == 0 )
+    {
+        start_write_param( fs );
+        write_int_list( fs, "mask_size", morph_mask_size, CV_DIM(morph_mask_size) );
+        write_string_list( fs, "shape", morph_mask_shape );
+    }
+    return code;
 }
 
 
-void CV_MorphologyBaseTest::get_test_array_types_and_sizes( int test_case_idx,
+void CV_MorphologyBaseTestImpl::get_test_array_types_and_sizes( int test_case_idx,
                                                 CvSize** sizes, int** types )
 {
     CvRNG* rng = ts->get_rng();
@@ -258,13 +297,38 @@ void CV_MorphologyBaseTest::get_test_array_types_and_sizes( int test_case_idx,
 }
 
 
-double CV_MorphologyBaseTest::get_success_error_level( int /*test_case_idx*/, int /*i*/, int /*j*/ )
+void CV_MorphologyBaseTestImpl::get_timing_test_array_types_and_sizes( int test_case_idx,
+                CvSize** sizes, int** types, CvSize** whole_sizes, bool *are_images )
+{
+    CV_FilterBaseTest::get_timing_test_array_types_and_sizes( test_case_idx, sizes, types,
+                                                              whole_sizes, are_images );
+    const char* shape_str = cvReadString( find_timing_param( "shape" ), "rect" );
+    shape = strcmp( shape_str, "rect" ) == 0 ? CV_SHAPE_RECT : CV_SHAPE_ELLIPSE;
+    aperture_size.width = cvReadInt( find_timing_param( "mask_size" ), 3 );
+    aperture_size.height = aperture_size.width;
+    anchor.x = anchor.y = aperture_size.width / 2;
+}
+
+
+void CV_MorphologyBaseTestImpl::print_timing_params( int test_case_idx, char* ptr, int params_left )
+{
+    sprintf( ptr, "%dx%d,", aperture_size.width, aperture_size.height );
+    ptr += strlen(ptr);
+    sprintf( ptr, "%s,", shape == CV_SHAPE_RECT ? "rect" : "ellipse" );
+    ptr += strlen(ptr);
+    params_left -= 2;
+
+    CV_FilterBaseTest::print_timing_params( test_case_idx, ptr, params_left );
+}
+
+
+double CV_MorphologyBaseTestImpl::get_success_error_level( int /*test_case_idx*/, int /*i*/, int /*j*/ )
 {
     return 0;
 }
 
 
-int CV_MorphologyBaseTest::prepare_test_case( int test_case_idx )
+int CV_MorphologyBaseTestImpl::prepare_test_case( int test_case_idx )
 {
     int code = CV_FilterBaseTest::prepare_test_case( test_case_idx );
     int* eldata = 0;
@@ -292,13 +356,14 @@ int CV_MorphologyBaseTest::prepare_test_case( int test_case_idx )
             eldata[anchor.y*aperture_size.width + anchor.x] = 1;
     }
     
+    cvReleaseStructuringElement( &element );
     element = cvCreateStructuringElementEx( aperture_size.width, aperture_size.height,
                                             anchor.x, anchor.y, shape, eldata );
     return code;
 }
 
 
-void CV_MorphologyBaseTest::prepare_to_validation( int test_case_idx )
+void CV_MorphologyBaseTestImpl::prepare_to_validation( int test_case_idx )
 {
     CV_FilterBaseTest::prepare_to_validation( test_case_idx );
     cvTsMinMaxFilter( &test_mat[TEMP][0], &test_mat[REF_OUTPUT][0], element, optype );
@@ -306,7 +371,24 @@ void CV_MorphologyBaseTest::prepare_to_validation( int test_case_idx )
 }
 
 
-CV_MorphologyBaseTest morph( "morph", "", -1 );
+CV_MorphologyBaseTestImpl morph( "morph", "", -1 );
+
+
+class CV_MorphologyBaseTest : public CV_MorphologyBaseTestImpl
+{
+public:
+    CV_MorphologyBaseTest( const char* test_name, const char* test_funcs, int optype );
+};
+
+
+CV_MorphologyBaseTest::CV_MorphologyBaseTest( const char* test_name, const char* test_funcs, int _optype )
+    : CV_MorphologyBaseTestImpl( test_name, test_funcs, _optype )
+{
+    default_timing_param_names = morph_param_names;
+    depth_list = 0;
+    size_list = 0;
+    cn_list = 0;
+}
 
 
 /////////////// erode ///////////////
@@ -363,6 +445,8 @@ CV_DilateTest dilate_test;
 
 /////////////// generic filter ///////////////
 
+static const char* filter_generic_param_names[] = { "mask_size", "size", "channels", "depth", 0 };
+
 class CV_FilterTest : public CV_FilterBaseTest
 {
 public:
@@ -373,12 +457,30 @@ protected:
     void run_func();
     void get_test_array_types_and_sizes( int test_case_idx, CvSize** sizes, int** types );
     double get_success_error_level( int test_case_idx, int i, int j );
+    
+    void get_timing_test_array_types_and_sizes( int test_case_idx, CvSize** sizes, int** types,
+                                                CvSize** whole_sizes, bool *are_images );
+    void print_timing_params( int test_case_idx, char* ptr, int params_left );
+    int write_default_params(CvFileStorage* fs);
 };
 
 
 CV_FilterTest::CV_FilterTest()
     : CV_FilterBaseTest( "filter-generic", "cvFilter2D", true )
 {
+    default_timing_param_names = filter_generic_param_names;
+}
+
+
+int CV_FilterTest::write_default_params( CvFileStorage* fs )
+{
+    int code = CV_FilterBaseTest::write_default_params( fs );
+    if( code >= 0 && ts->get_testing_mode() == CvTS::TIMING_MODE )
+    {
+        start_write_param( fs );
+        write_int_list( fs, "mask_size", morph_mask_size, CV_DIM(morph_mask_size) );
+    }
+    return code;
 }
 
 
@@ -390,6 +492,29 @@ void CV_FilterTest::get_test_array_types_and_sizes( int test_case_idx,
     int cn = CV_MAT_CN(types[INPUT][0]);
     depth = depth == 0 ? CV_8U : depth == 1 ? CV_16U : CV_32F;
     types[INPUT][0] = types[OUTPUT][0] = types[REF_OUTPUT][0] = types[TEMP][0] = CV_MAKETYPE(depth, cn);
+}
+
+
+void CV_FilterTest::get_timing_test_array_types_and_sizes( int test_case_idx,
+                CvSize** sizes, int** types, CvSize** whole_sizes, bool *are_images )
+{
+    CV_FilterBaseTest::get_timing_test_array_types_and_sizes( test_case_idx, sizes, types,
+                                                              whole_sizes, are_images );
+    aperture_size.width = cvReadInt( find_timing_param( "mask_size" ), 3 );
+    aperture_size.height = aperture_size.width;
+    anchor.x = anchor.y = aperture_size.width / 2;
+    sizes[INPUT][1] = aperture_size;
+    types[INPUT][1] = CV_32FC1;
+}
+
+
+void CV_FilterTest::print_timing_params( int test_case_idx, char* ptr, int params_left )
+{
+    sprintf( ptr, "%dx%d,", aperture_size.width, aperture_size.height );
+    ptr += strlen(ptr);
+    params_left--;
+
+    CV_FilterBaseTest::print_timing_params( test_case_idx, ptr, params_left );
 }
 
 
@@ -419,6 +544,12 @@ CV_FilterTest filter;
 
 ////////////////////////
 
+static const int laplace_aperture[] = { 3, 5, 7 };
+static const int sobel_aperture[] = { -1, 3, 5, 7 };
+static const char* laplace_param_names[] = { "aperture", "size", "depth", 0 };
+static const char* sobel_param_names[] = { "deriv_type", "aperture", "size", "depth", 0 };
+static const char* sobel_deriv_type[] = { "dx", "dy", "d2x", "d2y", "dxdy", 0 };
+
 class CV_DerivBaseTest : public CV_FilterBaseTest
 {
 public:
@@ -426,6 +557,8 @@ public:
 protected:
     void get_test_array_types_and_sizes( int test_case_idx, CvSize** sizes, int** types );
     double get_success_error_level( int test_case_idx, int i, int j );
+    void get_timing_test_array_types_and_sizes( int test_case_idx, CvSize** sizes, int** types,
+                                                CvSize** whole_sizes, bool *are_images );
     int _aperture_size;
 };
 
@@ -434,6 +567,8 @@ CV_DerivBaseTest::CV_DerivBaseTest( const char* test_name, const char* test_func
     : CV_FilterBaseTest( test_name, test_funcs, true )
 {
     max_aperture_size = 7;
+    depth_list = morph_depths;
+    cn_list = 0;
 }
 
 
@@ -458,6 +593,20 @@ double CV_DerivBaseTest::get_success_error_level( int /*test_case_idx*/, int /*i
 }
 
 
+void CV_DerivBaseTest::get_timing_test_array_types_and_sizes( int test_case_idx,
+                CvSize** sizes, int** types, CvSize** whole_sizes, bool *are_images )
+{
+    CV_FilterBaseTest::get_timing_test_array_types_and_sizes( test_case_idx, sizes, types,
+                                                              whole_sizes, are_images );
+    _aperture_size = cvReadInt( find_timing_param( "aperture" ), 3 );
+    aperture_size.width = aperture_size.height = _aperture_size < 0 ? 3 : _aperture_size;
+    anchor.x = anchor.y = aperture_size.width / 2;
+    sizes[INPUT][1] = aperture_size;
+    types[INPUT][1] = CV_32FC1;
+    types[OUTPUT][0] = types[INPUT][0] == CV_8UC1 ? CV_16SC1 : types[INPUT][0];
+}
+
+
 /////////////// sobel ///////////////
 
 class CV_SobelTest : public CV_DerivBaseTest
@@ -470,8 +619,11 @@ protected:
     void prepare_to_validation( int test_case_idx );
     void run_func();
     void get_test_array_types_and_sizes( int test_case_idx, CvSize** sizes, int** types );
-    int dx, dy;
-    int origin;
+    void get_timing_test_array_types_and_sizes( int test_case_idx, CvSize** sizes, int** types,
+                                                CvSize** whole_sizes, bool *are_images );
+    int write_default_params( CvFileStorage* fs );
+    void print_timing_params( int test_case_idx, char* ptr, int params_left );
+    int dx, dy, origin;
     IplImage img;
     void* src;
 };
@@ -480,6 +632,20 @@ protected:
 CV_SobelTest::CV_SobelTest() : CV_DerivBaseTest( "filter-sobel", "cvSobel" )
 {
     src = 0;
+    default_timing_param_names = sobel_param_names;
+}
+
+
+int CV_SobelTest::write_default_params( CvFileStorage* fs )
+{
+    int code = CV_DerivBaseTest::write_default_params( fs );
+    if( code >= 0 && ts->get_testing_mode() == CvTS::TIMING_MODE )
+    {
+        start_write_param( fs );
+        write_int_list( fs, "aperture", sobel_aperture, CV_DIM(sobel_aperture) );
+        write_string_list( fs, "deriv_type", sobel_deriv_type );
+    }
+    return code;
 }
 
 
@@ -525,11 +691,42 @@ void CV_SobelTest::get_test_array_types_and_sizes( int test_case_idx,
 }
 
 
+void CV_SobelTest::get_timing_test_array_types_and_sizes( int test_case_idx,
+                CvSize** sizes, int** types, CvSize** whole_sizes, bool *are_images )
+{
+    CV_DerivBaseTest::get_timing_test_array_types_and_sizes( test_case_idx, sizes, types,
+                                                            whole_sizes, are_images );
+    //_aperture_size = cvReadInt( find_timing_param( "mask_size" ), 3 );
+    const char* mask_type = cvReadString( find_timing_param( "deriv_type" ), "dx" );
+    if( strcmp( mask_type, "dx" ) == 0 )
+        dx = 1, dy = 0;
+    else if( strcmp( mask_type, "dy" ) == 0 )
+        dx = 0, dy = 1;
+    else if( strcmp( mask_type, "d2x" ) == 0 )
+        dx = 2, dy = 0;
+    else if( strcmp( mask_type, "d2y" ) == 0 )
+        dx = 0, dy = 2;
+    else
+        dx = 1, dy = 1;
+    origin = 0;
+
+    aperture_size.width = aperture_size.height = _aperture_size < 0 ? 3 : _aperture_size;
+    anchor.x = anchor.y = aperture_size.width / 2;
+    sizes[INPUT][1] = aperture_size;
+    types[INPUT][1] = CV_32FC1;
+    types[OUTPUT][0] = types[INPUT][0] == CV_8UC1 ? CV_16SC1 : types[INPUT][0];
+}
+
+
 int CV_SobelTest::prepare_test_case( int test_case_idx )
 {
-    int code = CV_FilterBaseTest::prepare_test_case( test_case_idx );
+    int code = CV_DerivBaseTest::prepare_test_case( test_case_idx );
+    
     if( code > 0 )
     {
+        if( _aperture_size < 0 && ((dx != 1 || dy != 0) && (dx != 0 || dy != 1)) )
+            return 0;
+
         if( origin )
         {
             src = inplace ? &test_mat[OUTPUT][0] : &test_mat[INPUT][0];
@@ -541,6 +738,18 @@ int CV_SobelTest::prepare_test_case( int test_case_idx )
             src = inplace ? test_array[OUTPUT][0] : test_array[INPUT][0];
     }
     return code;
+}
+
+
+void CV_SobelTest::print_timing_params( int test_case_idx, char* ptr, int params_left )
+{
+    const char* mask_type = cvReadString( find_timing_param( "deriv_type" ), "dx" );
+    sprintf( ptr, "%dx%d,%s_%s,", aperture_size.width, aperture_size.height,
+             _aperture_size > 0 ? "Sobel" : "Scharr", mask_type );
+    ptr += strlen(ptr);
+    params_left -= 2;
+
+    CV_DerivBaseTest::print_timing_params( test_case_idx, ptr, params_left );
 }
 
 
@@ -589,7 +798,7 @@ static void cvTsCalcSobelKernel1D( int order, int _aperture_size, int size, int*
 }
 
 
-static void cvTsCalcSobelKernel2D( int dx, int dy, int _aperture_size, int origin, CvMat* kernel )
+void cvTsCalcSobelKernel2D( int dx, int dy, int _aperture_size, int origin, CvMat* kernel )
 {
     int i, j;
     int* kx = (int*)alloca( (kernel->cols+1)*sizeof(kx[0]) );
@@ -628,14 +837,30 @@ public:
     CV_LaplaceTest();
 
 protected:
+    int prepare_test_case( int test_case_idx );
     void prepare_to_validation( int test_case_idx );
     void run_func();
     void get_test_array_types_and_sizes( int test_case_idx, CvSize** sizes, int** types );
+    int write_default_params( CvFileStorage* fs );
+    void print_timing_params( int test_case_idx, char* ptr, int params_left );
 };
 
 
 CV_LaplaceTest::CV_LaplaceTest() : CV_DerivBaseTest( "filter-laplace", "cvLaplace" )
 {
+    default_timing_param_names = laplace_param_names;
+}
+
+
+int CV_LaplaceTest::write_default_params( CvFileStorage* fs )
+{
+    int code = CV_DerivBaseTest::write_default_params( fs );
+    if( code >= 0 && ts->get_testing_mode() == CvTS::TIMING_MODE )
+    {
+        start_write_param( fs );
+        write_int_list( fs, "aperture", laplace_aperture, CV_DIM(laplace_aperture) );
+    }
+    return code;
 }
 
 
@@ -690,6 +915,23 @@ static void cvTsCalcLaplaceKernel2D( int _aperture_size, CvMat* kernel )
 }
 
 
+int CV_LaplaceTest::prepare_test_case( int test_case_idx )
+{
+    int code = CV_DerivBaseTest::prepare_test_case( test_case_idx );
+    return _aperture_size < 0 ? 0 : code;
+}
+
+
+void CV_LaplaceTest::print_timing_params( int test_case_idx, char* ptr, int params_left )
+{
+    sprintf( ptr, "%dx%d,", aperture_size.width, aperture_size.height );
+    ptr += strlen(ptr);
+    params_left--;
+
+    CV_DerivBaseTest::print_timing_params( test_case_idx, ptr, params_left );
+}
+
+
 void CV_LaplaceTest::prepare_to_validation( int test_case_idx )
 {
     CV_DerivBaseTest::prepare_to_validation( test_case_idx );
@@ -703,6 +945,9 @@ CV_LaplaceTest laplace_test;
 
 ////////////////////////////////////////////////////////////
 
+static const char* smooth_param_names[] = { "mask_size", "size", "channels", "depth", 0 };
+static const int smooth_depths[] = { CV_8U, CV_32F, -1 };
+
 class CV_SmoothBaseTest : public CV_FilterBaseTest
 {
 public:
@@ -711,14 +956,33 @@ public:
 protected:
     void get_test_array_types_and_sizes( int test_case_idx, CvSize** sizes, int** types );
     double get_success_error_level( int test_case_idx, int i, int j );
+    void get_timing_test_array_types_and_sizes( int test_case_idx, CvSize** sizes, int** types,
+                                                CvSize** whole_sizes, bool *are_images );
+    int write_default_params( CvFileStorage* fs );
+    void print_timing_params( int test_case_idx, char* ptr, int params_left );
+    const char* smooth_type;
 };
 
 
 CV_SmoothBaseTest::CV_SmoothBaseTest( const char* test_name, const char* test_funcs )
     : CV_FilterBaseTest( test_name, test_funcs, true )
 {
+    default_timing_param_names = smooth_param_names;
+    depth_list = smooth_depths;
+    smooth_type = "";
 }
 
+
+int CV_SmoothBaseTest::write_default_params( CvFileStorage* fs )
+{
+    int code = CV_FilterBaseTest::write_default_params( fs );
+    if( code >= 0 && ts->get_testing_mode() == CvTS::TIMING_MODE )
+    {
+        start_write_param( fs );
+        write_int_list( fs, "mask_size", morph_mask_size, CV_DIM(morph_mask_size) );
+    }
+    return code;
+}
 
 void CV_SmoothBaseTest::get_test_array_types_and_sizes( int test_case_idx,
                                                 CvSize** sizes, int** types )
@@ -747,7 +1011,33 @@ double CV_SmoothBaseTest::get_success_error_level( int /*test_case_idx*/, int /*
 }
 
 
+void CV_SmoothBaseTest::get_timing_test_array_types_and_sizes( int test_case_idx,
+                CvSize** sizes, int** types, CvSize** whole_sizes, bool *are_images )
+{
+    CV_FilterBaseTest::get_timing_test_array_types_and_sizes( test_case_idx,
+                                    sizes, types, whole_sizes, are_images );
+    
+    aperture_size.width = aperture_size.height = cvReadInt( find_timing_param( "mask_size" ), 3 );
+    anchor.x = anchor.y = aperture_size.width / 2;
+    sizes[INPUT][1] = aperture_size;
+    types[INPUT][1] = CV_32FC1;
+}
+
+
+void CV_SmoothBaseTest::print_timing_params( int test_case_idx, char* ptr, int params_left )
+{
+    sprintf( ptr, "%dx%d,%s,", aperture_size.width, aperture_size.height, smooth_type );
+    ptr += strlen(ptr);
+    params_left--;
+
+    CV_FilterBaseTest::print_timing_params( test_case_idx, ptr, params_left );
+}
+
+
 /////////////// blur ///////////////
+
+static const char* blur_param_names[] = { "normalize", "mask_size", "size", "channels", "depth", 0 };
+static const int blur_normalize[] = { 0, 1 };
 
 class CV_BlurTest : public CV_SmoothBaseTest
 {
@@ -755,15 +1045,20 @@ public:
     CV_BlurTest();
 
 protected:
+    int prepare_test_case( int test_case_idx );
     void prepare_to_validation( int test_case_idx );
     void run_func();
     void get_test_array_types_and_sizes( int test_case_idx, CvSize** sizes, int** types );
+    void get_timing_test_array_types_and_sizes( int test_case_idx, CvSize** sizes, int** types,
+                                                CvSize** whole_sizes, bool *are_images );
+    int write_default_params( CvFileStorage* fs );
     bool normalize;
 };
 
 
 CV_BlurTest::CV_BlurTest() : CV_SmoothBaseTest( "filter-blur", "cvSmooth" )
 {
+    default_timing_param_names = blur_param_names;
 }
 
 
@@ -783,11 +1078,43 @@ void CV_BlurTest::get_test_array_types_and_sizes( int test_case_idx,
 }
 
 
+int CV_BlurTest::write_default_params( CvFileStorage* fs )
+{
+    int code = CV_SmoothBaseTest::write_default_params( fs );
+    if( code >= 0 && ts->get_testing_mode() == CvTS::TIMING_MODE )
+    {
+        write_int_list( fs, "normalize", blur_normalize, CV_DIM(blur_normalize) );
+    }
+    return code;
+}
+
+
+void CV_BlurTest::get_timing_test_array_types_and_sizes( int test_case_idx,
+                CvSize** sizes, int** types, CvSize** whole_sizes, bool *are_images )
+{
+    CV_SmoothBaseTest::get_timing_test_array_types_and_sizes( test_case_idx,
+                                    sizes, types, whole_sizes, are_images );
+    normalize = cvReadInt( find_timing_param( "normalize" ), 1 ) != 0;
+    smooth_type = normalize ? "Blur" : "Blur_NoScale";
+    sizes[INPUT][1] = aperture_size;
+    types[INPUT][1] = CV_32FC1;
+    if( !normalize && types[INPUT][0] == CV_8UC1 )
+        types[OUTPUT][0] = CV_16SC1;
+}
+
+
 void CV_BlurTest::run_func()
 {
     cvSmooth( inplace ? test_array[OUTPUT][0] : test_array[INPUT][0],
               test_array[OUTPUT][0], normalize ? CV_BLUR : CV_BLUR_NO_SCALE,
               aperture_size.width, aperture_size.height );
+}
+
+
+int CV_BlurTest::prepare_test_case( int test_case_idx )
+{
+    int code = CV_SmoothBaseTest::prepare_test_case( test_case_idx );
+    return code > 0 && !normalize && CV_MAT_CN(test_mat[INPUT][0].type) > 1 ? 0 : code;
 }
 
 
@@ -816,6 +1143,8 @@ protected:
     void run_func();
     void get_test_array_types_and_sizes( int test_case_idx, CvSize** sizes, int** types );
     double get_success_error_level( int /*test_case_idx*/, int /*i*/, int /*j*/ );
+    void get_timing_test_array_types_and_sizes( int test_case_idx, CvSize** sizes, int** types,
+                                                CvSize** whole_sizes, bool *are_images );
     double sigma;
     int param1, param2;
 };
@@ -824,6 +1153,7 @@ protected:
 CV_GaussianBlurTest::CV_GaussianBlurTest() : CV_SmoothBaseTest( "filter-gaussian", "cvSmooth" )
 {
     sigma = 0.;
+    smooth_type = "Gaussian";
 }
 
 
@@ -864,9 +1194,18 @@ void CV_GaussianBlurTest::get_test_array_types_and_sizes( int test_case_idx,
         sizes[TEMP][0].height = sizes[INPUT][0].height + aperture_size.height - 1;
         param1 = param2 = 0;
     }
-    inplace = true;
 }
 
+
+void CV_GaussianBlurTest::get_timing_test_array_types_and_sizes( int test_case_idx,
+                CvSize** sizes, int** types, CvSize** whole_sizes, bool *are_images )
+{
+    CV_SmoothBaseTest::get_timing_test_array_types_and_sizes( test_case_idx,
+                                    sizes, types, whole_sizes, are_images );
+    param1 = aperture_size.width;
+    param2 = aperture_size.height;
+    sigma = sqrt(2.);
+}
 
 void CV_GaussianBlurTest::run_func()
 {
@@ -947,6 +1286,8 @@ CV_GaussianBlurTest gaussianblur_test;
 
 /////////////// median ///////////////
 
+static const int smooth_median_depths[] = { CV_8U, -1 };
+
 class CV_MedianBlurTest : public CV_SmoothBaseTest
 {
 public:
@@ -963,6 +1304,8 @@ protected:
 CV_MedianBlurTest::CV_MedianBlurTest() : CV_SmoothBaseTest( "filter-median", "cvSmooth" )
 {
     test_array[TEMP].push(NULL);
+    smooth_type = "Median";
+    depth_list = smooth_median_depths;
 }
 
 
@@ -1134,6 +1477,9 @@ CV_MedianBlurTest medianblur_test;
 
 /////////////// pyramid tests ///////////////
 
+static const char* pyramid_param_names[] = { "size", "channels", "depth", 0 };
+static int pyramid_channels[] = { 1, 3, -1 };
+
 class CV_PyramidBaseTest : public CV_FilterBaseTest
 {
 public:
@@ -1143,6 +1489,8 @@ protected:
     int prepare_test_case( int test_case_idx );
     double get_success_error_level( int test_case_idx, int i, int j );
     void get_test_array_types_and_sizes( int test_case_idx, CvSize** sizes, int** types );
+    void get_timing_test_array_types_and_sizes( int test_case_idx, CvSize** sizes, int** types,
+                                                CvSize** whole_sizes, bool *are_images );
     bool downsample;
 };
 
@@ -1151,6 +1499,15 @@ CV_PyramidBaseTest::CV_PyramidBaseTest( const char* test_name, const char* test_
     : CV_FilterBaseTest( test_name, test_funcs, true ), downsample(_downsample)
 {
     test_array[TEMP].push(NULL);
+    depth_list = smooth_depths;
+    cn_list = pyramid_channels;
+    default_timing_param_names = 0;
+    if( strcmp( test_funcs, "" ) != 0 )
+    {
+        default_timing_param_names = pyramid_param_names;
+        cn_list = 0;
+        depth_list = 0;
+    }
 }
 
 
@@ -1199,6 +1556,25 @@ void CV_PyramidBaseTest::get_test_array_types_and_sizes( int test_case_idx, CvSi
     sizes[TEMP][0].width = sz.width + aperture_size.width - 1;
     sizes[TEMP][0].height = sz.height + aperture_size.height - 1;
     inplace = false;
+}
+
+
+void CV_PyramidBaseTest::get_timing_test_array_types_and_sizes( int test_case_idx,
+                CvSize** sizes, int** types, CvSize** whole_sizes, bool *are_images )
+{
+    CV_FilterBaseTest::get_timing_test_array_types_and_sizes( test_case_idx,
+                                    sizes, types, whole_sizes, are_images );
+    CvSize sz = sizes[INPUT][0];
+    sz.width /= 2;
+    sz.height /= 2;
+    if( downsample )
+        sizes[OUTPUT][0] = sz;
+    else
+        sizes[INPUT][0] = sz;
+    aperture_size.width = aperture_size.height = 5;
+    anchor.x = anchor.y = aperture_size.width / 2;
+    sizes[INPUT][1] = aperture_size;
+    types[INPUT][1] = CV_32FC1;
 }
 
 
@@ -1405,18 +1781,23 @@ CV_PyramidUpTest pyrup;
 
 //////////////////////// feature selection //////////////////////////
 
-class CV_FeatureSelBaseTest : public CvArrTest
+static const char* featuresel_param_names[] = { "block_size", "aperture", "size", "depth", 0 };
+static const int featuresel_block_size[] = { 3, 5, 11 }; 
+
+class CV_FeatureSelBaseTestImpl : public CvArrTest
 {
 public:
-    CV_FeatureSelBaseTest( const char* test_name, const char* test_funcs, int width_factor );
-    int write_default_params(CvFileStorage* fs);
+    CV_FeatureSelBaseTestImpl( const char* test_name, const char* test_funcs, int width_factor );
 
 protected:
-    int support_testing_modes();
     int read_params( CvFileStorage* fs );
     void get_test_array_types_and_sizes( int test_case_idx, CvSize** sizes, int** types );
     void get_minmax_bounds( int i, int j, int type, CvScalar* low, CvScalar* high );
     double get_success_error_level( int test_case_idx, int i, int j );
+    int write_default_params(CvFileStorage* fs);
+    void get_timing_test_array_types_and_sizes( int test_case_idx, CvSize** sizes, int** types,
+                                                CvSize** whole_sizes, bool *are_images );
+    void print_timing_params( int test_case_idx, char* ptr, int params_left );
     int aperture_size, block_size;
     int max_aperture_size;
     int max_block_size;
@@ -1424,7 +1805,7 @@ protected:
 };
 
 
-CV_FeatureSelBaseTest::CV_FeatureSelBaseTest( const char* test_name, const char* test_funcs, int _width_factor )
+CV_FeatureSelBaseTestImpl::CV_FeatureSelBaseTestImpl( const char* test_name, const char* test_funcs, int _width_factor )
     : CvArrTest( test_name, test_funcs, "" )
 {
     max_aperture_size = 7;
@@ -1435,10 +1816,15 @@ CV_FeatureSelBaseTest::CV_FeatureSelBaseTest( const char* test_name, const char*
     test_array[REF_OUTPUT].push(NULL);
     element_wise_relative_error = false;
     width_factor = _width_factor;
+
+    size_list = filter_sizes;
+    whole_size_list = filter_whole_sizes;
+    depth_list = morph_depths;
+    cn_list = 0;
 }
 
 
-int CV_FeatureSelBaseTest::read_params( CvFileStorage* fs )
+int CV_FeatureSelBaseTestImpl::read_params( CvFileStorage* fs )
 {
     int code = CvTest::read_params( fs );
     if( code < 0 )
@@ -1456,7 +1842,7 @@ int CV_FeatureSelBaseTest::read_params( CvFileStorage* fs )
 }
 
 
-int CV_FeatureSelBaseTest::write_default_params( CvFileStorage* fs )
+int CV_FeatureSelBaseTestImpl::write_default_params( CvFileStorage* fs )
 {
     int code = CvArrTest::write_default_params( fs );
     if( code < 0 )
@@ -1467,19 +1853,25 @@ int CV_FeatureSelBaseTest::write_default_params( CvFileStorage* fs )
         write_param( fs, "max_aperture_size", max_aperture_size );
         write_param( fs, "max_block_size", max_block_size );
     }
+    else if( ts->get_testing_mode() == CvTS::TIMING_MODE && strcmp( tested_functions, "" ) == 0 )
+    {
+        start_write_param( fs );
+        write_int_list( fs, "aperture", sobel_aperture, CV_DIM(sobel_aperture) );
+        write_int_list( fs, "block_size", featuresel_block_size, CV_DIM(featuresel_block_size) );
+    }
 
     return code;
 }
 
 
-double CV_FeatureSelBaseTest::get_success_error_level( int /*test_case_idx*/, int /*i*/, int /*j*/ )
+double CV_FeatureSelBaseTestImpl::get_success_error_level( int /*test_case_idx*/, int /*i*/, int /*j*/ )
 {
     int depth = CV_MAT_DEPTH(test_mat[INPUT][0].type);
     return depth <= CV_8S ? 1e-2 : depth == CV_32F ? 1e-3 : 1e-10;
 }
 
 
-void CV_FeatureSelBaseTest::get_minmax_bounds( int i, int j, int type, CvScalar* low, CvScalar* high )
+void CV_FeatureSelBaseTestImpl::get_minmax_bounds( int i, int j, int type, CvScalar* low, CvScalar* high )
 {
     CvArrTest::get_minmax_bounds( i, j, type, low, high );
     if( i == INPUT && CV_MAT_DEPTH(type) == CV_32F )
@@ -1490,7 +1882,7 @@ void CV_FeatureSelBaseTest::get_minmax_bounds( int i, int j, int type, CvScalar*
 }
 
 
-void CV_FeatureSelBaseTest::get_test_array_types_and_sizes( int test_case_idx,
+void CV_FeatureSelBaseTestImpl::get_test_array_types_and_sizes( int test_case_idx,
                                                 CvSize** sizes, int** types )
 {
     CvRNG* rng = ts->get_rng();
@@ -1518,19 +1910,67 @@ void CV_FeatureSelBaseTest::get_test_array_types_and_sizes( int test_case_idx,
 }
 
 
-int CV_FeatureSelBaseTest::support_testing_modes()
+void CV_FeatureSelBaseTestImpl::get_timing_test_array_types_and_sizes( int test_case_idx,
+                    CvSize** sizes, int** types, CvSize** whole_sizes, bool *are_images )
 {
-    return CvTS::CORRECTNESS_CHECK_MODE; // for now disable the timing test
+    CvArrTest::get_timing_test_array_types_and_sizes( test_case_idx, sizes, types,
+                                                      whole_sizes, are_images );
+    aperture_size = cvReadInt( find_timing_param( "aperture" ), 3 );
+    block_size = cvReadInt( find_timing_param( "block_size" ), 0 );
+    int asz = aperture_size < 0 ? 3 : aperture_size;
+
+    sizes[INPUT][0].width = MAX( sizes[INPUT][0].width, asz + block_size );
+    sizes[INPUT][0].height = MAX( sizes[INPUT][0].height, asz + block_size );
+    whole_sizes[INPUT][0].width = MAX( whole_sizes[INPUT][0].width, asz + block_size );
+    whole_sizes[INPUT][0].height = MAX( whole_sizes[INPUT][0].height, asz + block_size );
+    sizes[OUTPUT][0].height = sizes[INPUT][0].height;
+    sizes[OUTPUT][0].width = sizes[INPUT][0].width*width_factor;
+    whole_sizes[OUTPUT][0].height = whole_sizes[INPUT][0].height;
+    whole_sizes[OUTPUT][0].width = MAX(whole_sizes[OUTPUT][0].width,sizes[OUTPUT][0].width);
+    types[OUTPUT][0] = CV_32FC1;
 }
 
 
-CV_FeatureSelBaseTest featuresel_base( "features", "", 0 );
+void CV_FeatureSelBaseTestImpl::print_timing_params( int test_case_idx, char* ptr, int params_left )
+{
+    int asz = aperture_size < 0 ? 3 : aperture_size;
+    sprintf( ptr, "%s(%dx%d),", aperture_size < 0 ? "Scharr" : "Sobel", asz, asz );
+    ptr += strlen(ptr);
+    params_left--;
+    if( block_size > 0 )
+    {
+        sprintf( ptr, "block_size=%dx%d,", block_size, block_size );
+        ptr += strlen(ptr);
+        params_left--;
+    }
+
+    CvArrTest::print_timing_params( test_case_idx, ptr, params_left );
+}
+
+
+CV_FeatureSelBaseTestImpl featuresel_base( "features", "", 0 );
+
+
+
+class CV_FeatureSelBaseTest : public CV_FeatureSelBaseTestImpl
+{
+public:
+    CV_FeatureSelBaseTest( const char* test_name, const char* test_funcs, int width_factor );
+};
+
+
+CV_FeatureSelBaseTest::CV_FeatureSelBaseTest( const char* test_name, const char* test_funcs, int _width_factor )
+    : CV_FeatureSelBaseTestImpl( test_name, test_funcs, _width_factor )
+{
+    depth_list = 0;
+    size_list = whole_size_list = 0;
+    default_timing_param_names = featuresel_param_names;
+}
 
 
 static void
 cvTsCornerEigenValsVecs( const CvMat* _src, CvMat* eigenv, CvMat* ocv_eigenv,
-                         int block_size, int _aperture_size,
-                         int mode )
+                         int block_size, int _aperture_size, int mode )
 {
     CvMat *dx2 = 0, *dxdy = 0, *dy2 = 0;
     CvMat* kernel = 0, *src2 = 0;
@@ -1765,6 +2205,10 @@ void CV_EigenValVecTest::prepare_to_validation( int /*test_case_idx*/ )
 CV_EigenValVecTest features_evalvec;
 
 
+
+static const char* precorner_param_names[] = { "aperture", "size", "depth", 0 };
+static const int precorner_aperture[] = { 3, 5, 7 }; 
+
 // precornerdetect
 class CV_PreCornerDetectTest : public CV_FeatureSelBaseTest
 {
@@ -1775,12 +2219,30 @@ protected:
     void run_func();
     void prepare_to_validation( int );
     int prepare_test_case( int );
+    int write_default_params(CvFileStorage* fs);
 };
 
 
 CV_PreCornerDetectTest::CV_PreCornerDetectTest()
     : CV_FeatureSelBaseTest( "features-precorner", "cvPreCornerDetect", 1 )
 {
+    default_timing_param_names = precorner_param_names;
+}
+
+
+int CV_PreCornerDetectTest::write_default_params( CvFileStorage* fs )
+{
+    int code = CV_FeatureSelBaseTest::write_default_params( fs );
+    if( code < 0 )
+        return code;
+    
+    if( ts->get_testing_mode() == CvTS::TIMING_MODE )
+    {
+        start_write_param( fs );
+        write_int_list( fs, "aperture", precorner_aperture, CV_DIM(precorner_aperture) );
+    }
+
+    return code;
 }
 
 
@@ -1875,18 +2337,29 @@ CV_PreCornerDetectTest precorner;
 
 
 ///////// integral /////////
+
+static const char* integral_param_names[] = { "output", "size", "channels", "sum_depth", "depth", 0 };
+static const int integral_sum_depth[] = { CV_32S, CV_64F, -1 };
+static const int integral_block_size[] = { 3, 5, 11 };
+static const char* integral_output[] = { "sum", "sum+sqsum", "all", 0 };
+
 class CV_IntegralTest : public CvArrTest
 {
 public:
     CV_IntegralTest();
 
 protected:
-    int support_testing_modes();
     void get_test_array_types_and_sizes( int test_case_idx, CvSize** sizes, int** types );
     void get_minmax_bounds( int i, int j, int type, CvScalar* low, CvScalar* high );
     double get_success_error_level( int test_case_idx, int i, int j );
     void run_func();
     void prepare_to_validation( int );
+
+    int prepare_test_case( int test_case_idx );
+    int write_default_params(CvFileStorage* fs);
+    void get_timing_test_array_types_and_sizes( int test_case_idx, CvSize** sizes, int** types,
+                                                CvSize** whole_sizes, bool *are_images );
+    void print_timing_params( int test_case_idx, char* ptr, int params_left );
 };
 
 
@@ -1906,6 +2379,12 @@ CV_IntegralTest::CV_IntegralTest()
     test_array[TEMP].push(NULL);
     test_array[TEMP].push(NULL);
     element_wise_relative_error = false;
+
+    size_list = filter_sizes;
+    whole_size_list = filter_whole_sizes;
+    default_timing_param_names = integral_param_names;
+    depth_list = morph_depths;
+    cn_list = filter_channels;
 }
 
 
@@ -1918,6 +2397,29 @@ void CV_IntegralTest::get_minmax_bounds( int i, int j, int type, CvScalar* low, 
         *low = cvScalarAll(-10.);
         *high = cvScalarAll(10.);
     }
+}
+
+
+int CV_IntegralTest::write_default_params( CvFileStorage* fs )
+{
+    int code = CvArrTest::write_default_params( fs );
+    if( code < 0 )
+        return code;
+    
+    if( ts->get_testing_mode() == CvTS::TIMING_MODE )
+    {
+        int i;
+        start_write_param( fs );        
+        
+        cvStartWriteStruct( fs, "sum_depth", CV_NODE_SEQ+CV_NODE_FLOW );
+        for( i = 0; integral_sum_depth[i] >= 0; i++ )
+            cvWriteString( fs, 0, cvTsGetTypeName(integral_sum_depth[i]) );
+        cvEndWriteStruct(fs);
+
+        write_string_list( fs, "output", integral_output );
+    }
+
+    return code;
 }
 
 
@@ -1968,16 +2470,58 @@ void CV_IntegralTest::get_test_array_types_and_sizes( int test_case_idx,
 }
 
 
-int CV_IntegralTest::support_testing_modes()
-{
-    return CvTS::CORRECTNESS_CHECK_MODE; // for now disable the timing test
-}
-
-
 double CV_IntegralTest::get_success_error_level( int /*test_case_idx*/, int i, int j )
 {
     int depth = CV_MAT_DEPTH(test_mat[i][j].type);
     return depth == CV_32S ? 0 : 1e-10;
+}
+
+
+void CV_IntegralTest::get_timing_test_array_types_and_sizes( int test_case_idx,
+                CvSize** sizes, int** types, CvSize** whole_sizes, bool *are_images )
+{
+    CvArrTest::get_timing_test_array_types_and_sizes( test_case_idx, sizes, types,
+                                                      whole_sizes, are_images );
+    const char* output = cvReadString( find_timing_param( "output" ), "sum" );
+    CvSize sum_size = { sizes[INPUT][0].width + 1, sizes[INPUT][0].height + 1 };
+    const char* _sum_depth = cvReadString( find_timing_param( "sum_depth" ), "64f" );
+    int cn = CV_MAT_CN(types[INPUT][0]);
+    int sum_depth = strcmp( _sum_depth, "32s" ) == 0 ? CV_32S : CV_64F;
+
+    sizes[OUTPUT][0] = sizes[OUTPUT][1] = sizes[OUTPUT][2] = cvSize(0,0);
+    whole_sizes[OUTPUT][0] = whole_sizes[OUTPUT][1] = whole_sizes[OUTPUT][2] = cvSize(0,0);
+
+    if( strcmp( output, "sum" ) == 0 )
+        sizes[OUTPUT][0] = whole_sizes[OUTPUT][0] = sum_size;
+    else if( strcmp( output, "all" ) == 0 )
+        sizes[OUTPUT][0] = sizes[OUTPUT][1] = sizes[OUTPUT][2] =
+            whole_sizes[OUTPUT][0] = whole_sizes[OUTPUT][1] = whole_sizes[OUTPUT][2] = sum_size;
+    else
+        sizes[OUTPUT][0] = sizes[OUTPUT][1] =
+            whole_sizes[OUTPUT][0] = whole_sizes[OUTPUT][1] = sum_size;
+
+    sizes[TEMP][0] = sizes[TEMP][1] = sizes[TEMP][2] = sizes[TEMP][3] = sizes[TEMP][4] = cvSize(0,0);
+
+    types[OUTPUT][0] = types[OUTPUT][2] = CV_MAKETYPE( sum_depth, cn );
+    types[OUTPUT][1] = CV_MAKETYPE( CV_64F, cn );
+}
+
+
+void CV_IntegralTest::print_timing_params( int test_case_idx, char* ptr, int params_left )
+{
+    sprintf( ptr, "%s,", cvReadString( find_timing_param( "output" ), "sum" ) );
+    ptr += strlen(ptr);
+    params_left--;
+
+    CvArrTest::print_timing_params( test_case_idx, ptr, params_left );
+}
+
+
+int CV_IntegralTest::prepare_test_case( int test_case_idx )
+{
+    int code = CvArrTest::prepare_test_case( test_case_idx );
+    return code > 0 && (test_array[OUTPUT][2] && CV_MAT_CN(test_mat[OUTPUT][2].type) > 1 ||
+        CV_MAT_DEPTH(test_mat[OUTPUT][0].type) < CV_MAT_DEPTH(test_mat[INPUT][0].type)) ? 0 : code;
 }
 
 

@@ -745,7 +745,6 @@ CxCore_DXTBaseTest::CxCore_DXTBaseTest( const char* test_name, const char* test_
 {
     size_list = 0;
     depth_list = 0;
-    timing_param_count = CV_DIM(dxt_param_names);
     default_timing_param_names = dxt_param_names;
     transform_type_list = dft_transforms;
 }

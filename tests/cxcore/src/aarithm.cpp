@@ -50,8 +50,9 @@ static const CvSize arithm_sizes[] = {{10,10}, {100,100}, {720,480}, {-1,-1}};
 static const CvSize arithm_whole_sizes[] = {{10,10}, {720,480}, {720,480}, {-1,-1}};
 static const int arithm_depths[] = { CV_8U, CV_16U, CV_16S, CV_32S, CV_32F, CV_64F, -1 };
 static const int arithm_channels[] = { 1, 2, 3, 4, -1 };
-static const char* arithm_param_names[] = { "size", "channels", "depth", "use_mask" };
-static const char* minmax_param_names[] = { "size", "depth" };
+static const char* arithm_mask_param_names[] = { "size", "channels", "depth", "use_mask", 0 };
+static const char* arithm_param_names[] = { "size", "channels", "depth", 0 };
+static const char* minmax_param_names[] = { "size", "depth", 0 };
 
 class CxCore_ArithmTestImpl : public CvArrTest
 {
@@ -227,8 +228,7 @@ CxCore_ArithmTest::CxCore_ArithmTest( const char* test_name, const char* test_fu
                                       int _generate_scalars, bool _allow_mask, bool _calc_abs ) :
     CxCore_ArithmTestImpl( test_name, test_funcs, _generate_scalars, _allow_mask, _calc_abs )
 {
-    timing_param_count = 3 + (optional_mask ? 1 : 0);
-    default_timing_param_names = arithm_param_names;
+    default_timing_param_names = optional_mask ? arithm_mask_param_names : arithm_param_names;
         
     // inherit the default parameters from arithmetical test
     size_list = 0;
@@ -440,7 +440,7 @@ CxCore_AbsDiffSTest absdiffs_test;
 
 ////////////////////////////// mul /////////////////////////////
 
-static const char* mul_param_names[] = { "size", "scale", "channels", "depth" };
+static const char* mul_param_names[] = { "size", "scale", "channels", "depth", 0 };
 static const char* mul_scale_flags[] = { "scale==1", "scale!=1", 0 };
 
 class CxCore_MulTest : public CxCore_ArithmTest
@@ -462,7 +462,6 @@ protected:
 CxCore_MulTest::CxCore_MulTest()
     : CxCore_ArithmTest( "arithm-mul", "cvMul", 4, false, false )
 {
-    timing_param_count = CV_DIM(mul_param_names);
     default_timing_param_names = mul_param_names;
 }
 
@@ -661,8 +660,7 @@ CxCore_MemTest::CxCore_MemTest( const char* test_name, const char* test_funcs,
                                 int _generate_scalars, bool _allow_mask ) :
     CxCore_MemTestImpl( test_name, test_funcs, _generate_scalars, _allow_mask )
 {
-    timing_param_count = 3 + (optional_mask ? 1 : 0);
-    default_timing_param_names = arithm_param_names;
+    default_timing_param_names = optional_mask ? arithm_mask_param_names : arithm_param_names;
         
     // inherit the default parameters from arithmerical test
     size_list = 0;
@@ -899,8 +897,8 @@ CxCore_TransposeTest transpose_test;
 ///////////////// Flip /////////////////////
 
 static const int flip_codes[] = { 0, 1, -1, INT_MIN };
-static const char* flip_strings[] = { "center", "vert", "horiz" };
-static const char* flip_param_names[] = { "size", "flip_op", "channels", "depth" };
+static const char* flip_strings[] = { "center", "vert", "horiz", 0 };
+static const char* flip_param_names[] = { "size", "flip_op", "channels", "depth", 0 };
 
 class CxCore_FlipTest : public CxCore_MemTest
 {
@@ -925,7 +923,6 @@ CxCore_FlipTest::CxCore_FlipTest() :
     CxCore_MemTest( "mem-flip", "cvFlip", 0, false ), flip_type(0), inplace(false)
 {
     test_array[INPUT].pop();
-    timing_param_count = CV_DIM(flip_param_names);
     default_timing_param_names = flip_param_names;
 }
 
@@ -1007,7 +1004,7 @@ CxCore_FlipTest flip_test;
 
 static const char* split_merge_types[] = { "all", "single", 0 };
 static int split_merge_channels[] = { 2, 3, 4, -1 };
-static const char* split_merge_param_names[] = { "size", "planes", "channels", "depth" };
+static const char* split_merge_param_names[] = { "size", "planes", "channels", "depth", 0 };
 
 class CxCore_SplitMergeBaseTest : public CxCore_MemTest
 {
@@ -1044,7 +1041,6 @@ CxCore_SplitMergeBaseTest::CxCore_SplitMergeBaseTest( const char* test_name,
     }
     memset( hdrs, 0, sizeof(hdrs) );
 
-    timing_param_count = CV_DIM(split_merge_param_names);
     default_timing_param_names = split_merge_param_names;
     cn_list = split_merge_channels;
 }
@@ -1280,7 +1276,6 @@ CxCore_MinMaxBaseTest::CxCore_MinMaxBaseTest( const char* test_name, const char*
 {
     if( _generate_scalars )
         test_array[INPUT].pop();
-    timing_param_count = CV_DIM(minmax_param_names);
     default_timing_param_names = minmax_param_names;
 }
 
@@ -1486,8 +1481,7 @@ CxCore_LogicTest::CxCore_LogicTest( const char* test_name, const char* test_func
                             int _logic_op, int _generate_scalars, bool _allow_mask )
     : CxCore_LogicTestImpl( test_name, test_funcs, _logic_op, _generate_scalars, _allow_mask )
 {
-    timing_param_count = 3 + (optional_mask ? 1 : 0);
-    default_timing_param_names = arithm_param_names;
+    default_timing_param_names = optional_mask ? arithm_mask_param_names : arithm_param_names;
 
     // inherit the default parameters from arithmerical test
     size_list = 0;
@@ -1686,8 +1680,8 @@ CxCore_CmpBaseTestImpl::CxCore_CmpBaseTestImpl( const char* test_name, const cha
                                         int _in_range, int _generate_scalars )
     : CxCore_ArithmTestImpl( test_name, test_funcs, _generate_scalars, 0, 0 ), in_range(_in_range)
 {
-    static const char* cmp_param_names[] = { "size", "cmp_op", "depth" };
-    static const char* inrange_param_names[] = { "size", "channels", "depth" };
+    static const char* cmp_param_names[] = { "size", "cmp_op", "depth", 0 };
+    static const char* inrange_param_names[] = { "size", "channels", "depth", 0 };
 
     if( in_range )
     {
@@ -1700,16 +1694,7 @@ CxCore_CmpBaseTestImpl::CxCore_CmpBaseTestImpl( const char* test_name, const cha
     if( gen_scalars )
         test_array[INPUT].pop();
 
-    if( in_range == 1 )
-    {
-        timing_param_count = CV_DIM(inrange_param_names);
-        default_timing_param_names = inrange_param_names;
-    }
-    else if( in_range == 0 )
-    {
-        timing_param_count = CV_DIM(cmp_param_names);
-        default_timing_param_names = cmp_param_names;
-    }
+    default_timing_param_names = in_range == 1 ? inrange_param_names : cmp_param_names;
 
     cmp_op_strings[CV_CMP_EQ] = "eq";
     cmp_op_strings[CV_CMP_LT] = "lt";
@@ -1966,7 +1951,7 @@ CxCore_InRangeSTest inranges_test;
 
 /////////////////////////// convertscale[abs] ////////////////////////////////////////
 
-static const char* cvt_param_names[] = { "size", "scale", "dst_depth", "depth" };
+static const char* cvt_param_names[] = { "size", "scale", "dst_depth", "depth", 0 };
 static const char* cvt_abs_param_names[] = { "size", "depth" };
 static const int cvt_scale_flags[] = { 0, 1 };
 
@@ -2147,7 +2132,6 @@ protected:
 CxCore_CvtScaleTest::CxCore_CvtScaleTest()
     : CxCore_CvtBaseTest( "cvt-scale", "cvCvtScale", false )
 {
-    timing_param_count = CV_DIM(cvt_param_names);
     default_timing_param_names = cvt_param_names;
 }
 
@@ -2171,7 +2155,6 @@ protected:
 CxCore_CvtScaleAbsTest::CxCore_CvtScaleAbsTest()
     : CxCore_CvtBaseTest( "cvt-scaleabs", "cvCvtScaleAbs", true )
 {
-    timing_param_count = CV_DIM(cvt_abs_param_names);
     default_timing_param_names = cvt_abs_param_names;
 }
 
@@ -2186,8 +2169,10 @@ CxCore_CvtScaleAbsTest cvtscaleabs_test;
 
 /////////////////////////////// statistics //////////////////////////////////
 
-static const char* stat_param_names[] = { "size", "coi", "channels", "depth", "use_mask" };
-static const char* stat_single_param_names[] = { "size", "channels", "depth", "use_mask" };
+static const char* stat_param_names[] = { "size", "coi", "channels", "depth", 0 };
+static const char* stat_mask_param_names[] = { "size", "coi", "channels", "depth", "use_mask", 0 };
+static const char* stat_single_param_names[] = { "size", "channels", "depth", 0 };
+static const char* stat_single_mask_param_names[] = { "size", "channels", "depth", "use_mask", 0 };
 static const char* stat_coi_modes[] = { "all", "single", 0 };
 
 class CxCore_StatTestImpl : public CvArrTest
@@ -2359,15 +2344,9 @@ CxCore_StatTest::CxCore_StatTest( const char* test_name, const char* test_funcs,
     : CxCore_StatTestImpl( test_name, test_funcs, _output_count, _single_channel, _allow_mask, _is_binary )
 {
     if( !single_channel )
-    {
-        timing_param_count = CV_DIM(stat_param_names) - (optional_mask ? 0 : 1);
-        default_timing_param_names = stat_param_names;
-    }
+        default_timing_param_names = optional_mask ? stat_single_mask_param_names : stat_single_param_names;
     else
-    {
-        timing_param_count = CV_DIM(stat_single_param_names) - (optional_mask ? 0 : 1);
-        default_timing_param_names = stat_single_param_names;
-    }
+        default_timing_param_names = optional_mask ? stat_mask_param_names : stat_param_names;
     
     // inherit the default parameters from arithmerical test
     size_list = 0;
@@ -2588,7 +2567,7 @@ CxCore_MinMaxLocTest minmaxloc_test;
 
 /////////////////// norm //////////////////////
 
-static const char* stat_norm_param_names[] = { "size", "coi", "norm_type", "channels", "depth", "use_mask" };
+static const char* stat_norm_param_names[] = { "size", "coi", "norm_type", "channels", "depth", "use_mask", 0 };
 static const char* stat_norm_type_names[] = { "Inf", "L1", "L2", "diff_Inf", "diff_L1", "diff_L2", 0 };
 
 class CxCore_NormTest : public CxCore_StatTest
@@ -2614,7 +2593,6 @@ CxCore_NormTest::CxCore_NormTest()
     : CxCore_StatTest( "stat-norm", "cvNorm", 1 /* double */, false, true, true )
 {
     test_array[TEMP].push(NULL);
-    timing_param_count = CV_DIM(stat_norm_param_names);
     default_timing_param_names = stat_norm_param_names;
 }
 

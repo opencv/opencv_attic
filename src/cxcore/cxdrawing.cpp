@@ -1237,9 +1237,6 @@ icvFillEdgeCollection( CvMat* img, CvContour* edges, const void* color )
         CV_NEXT_SEQ_ELEM( sizeof(CvPolyEdge), reader );
     }
 
-    if( y_max >= size.height )
-        y_max = size.height - 1;
-
     /* start drawing */
     tmp.y0 = INT_MAX;
     cvSeqPush( (CvSeq*)edges, &tmp );
@@ -1248,12 +1245,9 @@ icvFillEdgeCollection( CvMat* img, CvContour* edges, const void* color )
     tmp.next = 0;
     cvStartReadSeq( (CvSeq*)edges, &reader );
     e = (CvPolyEdge*)(reader.ptr);
-    y = e->y0;
+    y_max = MIN( y_max, size.height );
 
-    if( y >= size.height )
-        EXIT;
-
-    do
+    for( y = e->y0; y < y_max; y++ )
     {
         CvPolyEdge *last, *prelast, *keep_prelast;
         int sort_flag = 0;
@@ -1358,7 +1352,6 @@ icvFillEdgeCollection( CvMat* img, CvContour* edges, const void* color )
         }
         while( sort_flag && keep_prelast != tmp.next && keep_prelast != &tmp );
     }
-    while( (++y) < y_max );
 
     __END__;
 }

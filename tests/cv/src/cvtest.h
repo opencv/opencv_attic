@@ -117,7 +117,7 @@ typedef unsigned short      ushort;
 
 
 /****************************************************************************************/
-/*                              Warnings Disabling                                      */
+/*                                Warnings Disabling                                    */
 /****************************************************************************************/
 #if _MSC_VER > 1000
 #pragma warning(disable : 4514) /* unreferenced inline function has been */
@@ -125,8 +125,17 @@ typedef unsigned short      ushort;
 #pragma warning(disable : 4127) /* conditional expression is constant    */
                                 /* for no warnings in _ASSERT            */
 #endif
+
+
 /****************************************************************************************/
-/*                              Finctions declaration                                   */
+/*                       Helper Functions for New-Style Tests                           */
+/****************************************************************************************/
+
+void cvTsCalcSobelKernel2D( int dx, int dy, int _aperture_size, int origin, CvMat* kernel );
+
+    
+/****************************************************************************************/
+/*                           Old API for RNG and Comparison                             */
 /****************************************************************************************/
 
 double atsInitRandom( double Min, double Max );

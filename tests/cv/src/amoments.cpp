@@ -40,6 +40,12 @@
 //M*/
 #include "cvtest.h"
 
+static const char* moments_param_names[] = { "size", "depth", 0 };
+static const int moments_depths[] = { CV_8U, CV_32F, -1 };
+
+static const CvSize moments_sizes[] = {{30,30}, {320, 240}, {720,480}, {-1,-1}};
+static const CvSize moments_whole_sizes[] = {{320,240}, {320, 240}, {720,480}, {-1,-1}};
+
 // image moments
 class CV_MomentsTest : public CvArrTest
 {
@@ -49,11 +55,11 @@ public:
 protected:
     
     enum { MOMENT_COUNT = 25 };
-    
-    int support_testing_modes();
     int prepare_test_case( int test_case_idx );
     void prepare_to_validation( int /*test_case_idx*/ );
     void get_test_array_types_and_sizes( int test_case_idx, CvSize** sizes, int** types );
+    void get_timing_test_array_types_and_sizes( int test_case_idx, CvSize** sizes, int** types,
+                                                CvSize** whole_sizes, bool *are_images );
     void get_minmax_bounds( int i, int j, int type, CvScalar* low, CvScalar* high );
     double get_success_error_level( int test_case_idx, int i, int j );
     void run_func();
@@ -71,6 +77,13 @@ CV_MomentsTest::CV_MomentsTest()
     coi = -1;
     is_binary = false;
     //element_wise_relative_error = false;
+
+    default_timing_param_names = moments_param_names;
+    depth_list = moments_depths;
+    size_list = moments_sizes;
+    whole_size_list = moments_whole_sizes;
+
+    cn_list = 0;
 }
 
 
@@ -120,6 +133,16 @@ void CV_MomentsTest::get_test_array_types_and_sizes( int test_case_idx,
         coi = cvTsRandInt(rng) % cn;
         cvmat_allowed = false;
     }
+}
+
+
+void CV_MomentsTest::get_timing_test_array_types_and_sizes( int test_case_idx,
+                    CvSize** sizes, int** types, CvSize** whole_sizes, bool *are_images )
+{
+    CvArrTest::get_timing_test_array_types_and_sizes( test_case_idx, sizes, types,
+                                                      whole_sizes, are_images );
+    types[OUTPUT][0] = CV_64FC1;
+    sizes[OUTPUT][0] = whole_sizes[OUTPUT][0] = cvSize(MOMENT_COUNT,1);
 }
 
 
@@ -288,12 +311,6 @@ void CV_MomentsTest::prepare_to_validation( int /*test_case_idx*/ )
 }
 
 
-int CV_MomentsTest::support_testing_modes()
-{
-    return CvTS::CORRECTNESS_CHECK_MODE; // for now disable the timing test
-}
-
-
 CV_MomentsTest img_moments_test;
 
 
@@ -307,7 +324,6 @@ protected:
     
     enum { MOMENT_COUNT = 18, HU_MOMENT_COUNT = 7 };
     
-    int support_testing_modes();
     int prepare_test_case( int test_case_idx );
     void prepare_to_validation( int /*test_case_idx*/ );
     void get_test_array_types_and_sizes( int test_case_idx, CvSize** sizes, int** types );
@@ -323,6 +339,8 @@ CV_HuMomentsTest::CV_HuMomentsTest()
     test_array[INPUT].push(NULL);
     test_array[OUTPUT].push(NULL);
     test_array[REF_OUTPUT].push(NULL);
+
+    support_testing_modes = CvTS::CORRECTNESS_CHECK_MODE; // for now disable the timing test
 }
 
 
@@ -401,12 +419,6 @@ void CV_HuMomentsTest::prepare_to_validation( int /*test_case_idx*/ )
             4*nu11*(nu30 + nu12)*(nu21 + nu03);
     hu->hu7 = (3*nu21 - nu03)*(nu30 + nu12)*(sqr(nu30 + nu12) - 3*sqr(nu21 + nu03)) +
             (3*nu12 - nu30)*(nu21 + nu03)*(3*sqr(nu30 + nu12) - sqr(nu21 + nu03));
-}
-
-
-int CV_HuMomentsTest::support_testing_modes()
-{
-    return CvTS::CORRECTNESS_CHECK_MODE; // for now disable the timing test
 }
 
 
