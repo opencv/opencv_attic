@@ -540,18 +540,18 @@ icvLine2( CvMat* img, CvPoint pt1, CvPoint pt2, const void* color )
     int i, j;
     int x_step, y_step;
     int cb = ((uchar*)color)[0], cg = ((uchar*)color)[1], cr = ((uchar*)color)[2];
-    int nch = CV_MAT_CN( img->type );
+    int pix_size = CV_ELEM_SIZE( img->type );
     uchar *ptr = (uchar*)(img->data.ptr), *tptr;
     int step = img->step;
     CvSize size = cvGetMatSize( img );
 
-    assert( img && (nch == 1 || nch == 3) && CV_MAT_DEPTH(img->type) == CV_8U );
+    //assert( img && (nch == 1 || nch == 3) && CV_MAT_DEPTH(img->type) == CV_8U );
 
     pt1.x -= XY_ONE*2;
     pt1.y -= XY_ONE*2;
     pt2.x -= XY_ONE*2;
     pt2.y -= XY_ONE*2;
-    ptr += img->step*2 + 2*nch;
+    ptr += img->step*2 + 2*pix_size;
 
     size.width = (size.width - 4) << XY_SHIFT;
     size.height = (size.height - 4) << XY_SHIFT;
@@ -601,7 +601,7 @@ icvLine2( CvMat* img, CvPoint pt1, CvPoint pt2, const void* color )
     pt1.x += (XY_ONE >> 1);
     pt1.y += (XY_ONE >> 1);
 
-    if( nch == 3 )
+    if( pix_size == 3 )
     {
         #define  ICV_PUT_POINT()    \
         {                           \
@@ -643,7 +643,7 @@ icvLine2( CvMat* img, CvPoint pt1, CvPoint pt2, const void* color )
 
         #undef ICV_PUT_POINT
     }
-    else
+    else if( pix_size == 1 )
     {
         #define  ICV_PUT_POINT()            \
         {                                   \
@@ -680,6 +680,45 @@ icvLine2( CvMat* img, CvPoint pt1, CvPoint pt2, const void* color )
                 ecount--;
             }
         }
+        #undef ICV_PUT_POINT
+    }
+    else
+    {
+        #define  ICV_PUT_POINT()                \
+            for( j = 0; j < pix_size; j++ )     \
+                tptr[j] = ((uchar*)color)[j];
+
+        tptr = ptr + ((pt2.x + (XY_ONE >> 1))>> XY_SHIFT)*pix_size +
+            ((pt2.y + (XY_ONE >> 1)) >> XY_SHIFT)*step;
+        ICV_PUT_POINT();
+        
+        if( ax > ay )
+        {
+            ptr += (pt1.x >> XY_SHIFT) * pix_size;
+
+            while( ecount >= 0 )
+            {
+                uchar *tptr = ptr + (pt1.y >> XY_SHIFT) * step;
+                ICV_PUT_POINT();
+                pt1.y += y_step;
+                ptr += pix_size;
+                ecount--;
+            }
+        }
+        else
+        {
+            ptr += (pt1.y >> XY_SHIFT) * step;
+
+            while( ecount >= 0 )
+            {
+                uchar *tptr = ptr + (pt1.x >> XY_SHIFT) * pix_size;
+                ICV_PUT_POINT();
+                pt1.x += x_step;
+                ptr += step;
+                ecount--;
+            }
+        }
+
         #undef ICV_PUT_POINT
     }
 }
@@ -956,21 +995,26 @@ icvFillConvexPoly( CvMat* img, CvPoint *v, int npts, const void* color, int line
             imin = i;
         }
 
-        ymax = CV_MAX( ymax, p.y );
-        xmax = CV_MAX( xmax, p.x );
-        xmin = CV_MIN( xmin, p.x );
+        ymax = MAX( ymax, p.y );
+        xmax = MAX( xmax, p.x );
+        xmin = MIN( xmin, p.x );
 
         p.x <<= XY_SHIFT - shift;
         p.y <<= XY_SHIFT - shift;
 
         if( line_type <= 8 )
         {
-            /*CvPoint pt0, pt1;
-            pt0.x = (p0.x + (XY_ONE >> 1)) >> XY_SHIFT;
-            pt0.y = (p0.y + (XY_ONE >> 1)) >> XY_SHIFT;
-            pt1.x = (p.x + (XY_ONE >> 1)) >> XY_SHIFT;
-            pt1.y = (p.y + (XY_ONE >> 1)) >> XY_SHIFT;*/
-            icvLine2( img, p0, p, color );
+            if( shift == 0 )
+            {
+                CvPoint pt0, pt1;
+                pt0.x = p0.x >> XY_SHIFT;
+                pt0.y = p0.y >> XY_SHIFT;
+                pt1.x = p.x >> XY_SHIFT;
+                pt1.y = p.y >> XY_SHIFT;
+                icvLine( img, pt0, pt1, color, line_type );
+            }
+            else
+                icvLine2( img, p0, p, color );
         }
         else
             icvLineAA( img, p0, p, color );
@@ -985,7 +1029,7 @@ icvFillConvexPoly( CvMat* img, CvPoint *v, int npts, const void* color, int line
     if( npts < 3 || xmax < 0 || ymax < 0 || xmin >= size.width || ymin >= size.height )
         return;
 
-    ymax = CV_MIN( ymax, size.height - 1 );
+    ymax = MIN( ymax, size.height - 1 );
     edge[0].idx = edge[1].idx = imin;
 
     edge[0].ye = edge[1].ye = y = ymin;
@@ -1116,18 +1160,18 @@ icvCollectPolyEdges( CvMat* img, CvSeq* v, CvContour* edges,
         if( pt0.y > pt1.y )
             CV_SWAP( pt0, pt1, t0 );
 
-        bounds.y = CV_MIN( bounds.y, pt0.y );
-        bounds.height = CV_MAX( bounds.height, pt1.y );
+        bounds.y = MIN( bounds.y, pt0.y );
+        bounds.height = MAX( bounds.height, pt1.y );
 
         if( pt0.x < pt1.x )
         {
-            bounds.x = CV_MIN( bounds.x, pt0.x );
-            bounds.width = CV_MAX( bounds.width, pt1.x );
+            bounds.x = MIN( bounds.x, pt0.x );
+            bounds.width = MAX( bounds.width, pt1.x );
         }
         else
         {
-            bounds.x = CV_MIN( bounds.x, pt1.x );
-            bounds.width = CV_MAX( bounds.width, pt0.x );
+            bounds.x = MIN( bounds.x, pt1.x );
+            bounds.width = MAX( bounds.width, pt0.x );
         }
 
         edge.y0 = pt0.y;
@@ -1188,7 +1232,7 @@ icvFillEdgeCollection( CvMat* img, CvContour* edges, const void* color )
         assert( i == 0 || icvCmpEdges( e, e1, 0 ) <= 0 );
         e = e1;
 #endif
-        y_max = CV_MAX( y_max, e1->y1 );
+        y_max = MAX( y_max, e1->y1 );
 
         CV_NEXT_SEQ_ELEM( sizeof(CvPolyEdge), reader );
     }
@@ -1379,8 +1423,8 @@ icvCircle( CvMat* img, CvPoint center, int radius, const void* color, int fill )
         {
             if( fill )
             {
-                x11 = CV_MAX( x11, 0 );
-                x12 = CV_MIN( x12, size.width - 1 );
+                x11 = MAX( x11, 0 );
+                x12 = MIN( x12, size.width - 1 );
             }
             
             if( (unsigned)y11 < (unsigned)size.height )
@@ -1417,8 +1461,8 @@ icvCircle( CvMat* img, CvPoint center, int radius, const void* color, int fill )
             {
                 if( fill )
                 {
-                    x21 = CV_MAX( x21, 0 );
-                    x22 = CV_MIN( x22, size.width - 1 );
+                    x21 = MAX( x21, 0 );
+                    x22 = MIN( x22, size.width - 1 );
                 }
 
                 if( (unsigned)y21 < (unsigned)size.height )
