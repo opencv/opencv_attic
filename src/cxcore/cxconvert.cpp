@@ -860,147 +860,6 @@ cvConvertScaleAbs( const void* srcarr, void* dstarr,
     __END__;
 }
 
-
-/****************************************************************************************\
-*                                    LUT Transform                                       *
-\****************************************************************************************/
-
-#define  ICV_DEF_LUT_FUNC( flavor, dsttype )                        \
-static CvStatus CV_STDCALL                                          \
-icvLUT_Transform_##flavor##_C1R( const void* srcptr, int srcstep,   \
-                           void* dstptr, int dststep, CvSize size,  \
-                           const void* lutptr )                     \
-{                                                                   \
-    const uchar* src = (const uchar*)srcptr;                        \
-    dsttype* dst = (dsttype*)dstptr;                                \
-    const dsttype* lut = (const dsttype*)lutptr;                    \
-                                                                    \
-    for( ; size.height--; src += srcstep,                           \
-                          (char*&)dst += dststep )                  \
-    {                                                               \
-        int i;                                                      \
-                                                                    \
-        for( i = 0; i <= size.width - 4; i += 4 )                   \
-        {                                                           \
-            dsttype t0 = lut[src[i]];                               \
-            dsttype t1 = lut[src[i+1]];                             \
-                                                                    \
-            dst[i] = t0;                                            \
-            dst[i+1] = t1;                                          \
-                                                                    \
-            t0 = lut[src[i+2]];                                     \
-            t1 = lut[src[i+3]];                                     \
-                                                                    \
-            dst[i+2] = t0;                                          \
-            dst[i+3] = t1;                                          \
-        }                                                           \
-                                                                    \
-        for( ; i < size.width; i++ )                                \
-        {                                                           \
-            dsttype t0 = lut[src[i]];                               \
-            dst[i] = t0;                                            \
-        }                                                           \
-    }                                                               \
-                                                                    \
-    return CV_OK;                                                   \
-}
-
-
-ICV_DEF_LUT_FUNC( 8u, uchar )
-ICV_DEF_LUT_FUNC( 16s, ushort )
-ICV_DEF_LUT_FUNC( 32s, int )
-ICV_DEF_LUT_FUNC( 64f, int64 )
-
-#define  icvLUT_Transform_8s_C1R   icvLUT_Transform_8u_C1R
-#define  icvLUT_Transform_16u_C1R   icvLUT_Transform_16s_C1R
-#define  icvLUT_Transform_32f_C1R   icvLUT_Transform_32s_C1R
-
-CV_DEF_INIT_FUNC_TAB_2D( LUT_Transform, C1R )
-
-
-CV_IMPL  void
-cvLUT( const void* srcarr, void* dstarr, const void* lutarr )
-{
-    static  CvFuncTable  lut_tab;
-    static  int inittab = 0;
-
-    CV_FUNCNAME( "cvLUT" );
-
-    __BEGIN__;
-
-    int  coi1 = 0, coi2 = 0;
-    CvMat  srcstub, *src = (CvMat*)srcarr;
-    CvMat  dststub, *dst = (CvMat*)dstarr;
-    CvMat  lutstub, *lut = (CvMat*)lutarr;
-    uchar* lut_data;
-    uchar  shuffled_lut[256*sizeof(double)];
-    CvFunc2D_2A1P func;
-    CvSize size;
-    int src_step, dst_step;
-
-    if( !inittab )
-    {
-        icvInitLUT_TransformC1RTable( &lut_tab );
-        inittab = 1;
-    }
-
-    CV_CALL( src = cvGetMat( src, &srcstub, &coi1 ));
-    CV_CALL( dst = cvGetMat( dst, &dststub, &coi2 ));
-    CV_CALL( lut = cvGetMat( lut, &lutstub ));
-
-    if( coi1 != 0 || coi2 != 0 )
-        CV_ERROR( CV_BadCOI, "" );
-
-    if( !CV_ARE_SIZES_EQ( src, dst ))
-        CV_ERROR( CV_StsUnmatchedSizes, "" );
-
-    if( !CV_ARE_CNS_EQ( src, dst ))
-        CV_ERROR( CV_StsUnmatchedFormats, "" );
-
-    if( CV_MAT_DEPTH( src->type ) > CV_8S )
-        CV_ERROR( CV_StsUnsupportedFormat, "" );
-
-    if( !CV_IS_MAT_CONT(lut->type) || CV_MAT_CN(lut->type) != 1 ||
-        !CV_ARE_DEPTHS_EQ( dst, lut ) || lut->width*lut->height != 256 )
-        CV_ERROR( CV_StsBadArg, "The LUT must be continuous, single-channel array \n"
-                                "with 256 elements of the same type as destination" );
-
-    size = cvGetMatSize( src );
-    size.width *= CV_MAT_CN( src->type );
-    src_step = src->step;
-    dst_step = dst->step;
-
-    if( CV_IS_MAT_CONT( src->type & dst->type ))
-    {
-        size.width *= size.height;
-        src_step = dst_step = CV_STUB_STEP;
-        size.height = 1;
-    }
-
-    lut_data = lut->data.ptr;
-
-    if( CV_MAT_DEPTH( src->type ) == CV_8S )
-    {
-        int half_size = icvPixSize[CV_MAT_TYPE(lut->type)]*128;
-
-        // shuffle lut
-        memcpy( shuffled_lut, lut_data + half_size, half_size );
-        memcpy( shuffled_lut + half_size, lut_data, half_size );
-
-        lut_data = shuffled_lut;
-    }
-
-    func = (CvFunc2D_2A1P)(lut_tab.fn_2d[CV_MAT_DEPTH(src->type)]);
-    if( !func )
-        CV_ERROR( CV_StsUnsupportedFormat, "" );
-
-    IPPI_CALL( func( src->data.ptr, src_step, dst->data.ptr,
-                     dst_step, size, lut_data));
-    __END__;
-}
-
-
-
 /****************************************************************************************\
 *                                      cvConvertScale                                    *
 \****************************************************************************************/
@@ -1039,9 +898,8 @@ cvLUT( const void* srcarr, void* dstarr, const void* lutarr )
 #define  ICV_DEF_CVT_SCALE_FUNC_INT( flavor, dsttype, cast_macro )      \
 static  CvStatus  CV_STDCALL                                            \
 icvCvtScaleTo_##flavor##_C1R( const char* src, int srcstep,             \
-                              dsttype* dst, int dststep,                \
-                              CvSize size, double scale, double shift,  \
-                              int param )                               \
+                              dsttype* dst, int dststep, CvSize size,   \
+                              double scale, double shift, int param )   \
 {                                                                       \
     int i, srctype = param;                                             \
     dsttype lut[256];                                                   \
@@ -1057,8 +915,8 @@ icvCvtScaleTo_##flavor##_C1R( const char* src, int srcstep,             \
                 lut[i] = cast_macro(t);                                 \
             }                                                           \
                                                                         \
-            icvLUT_Transform_##flavor##_C1R( src, srcstep, dst,         \
-                                        dststep, size, lut );           \
+            icvLUT_Transform8u_##flavor##_C1R( src, srcstep, dst,       \
+                                               dststep, size, lut );    \
         }                                                               \
         else if( fabs( scale ) <= 128. &&                               \
                  fabs( shift ) <= (INT_MAX*0.5)/(1 << ICV_FIX_SHIFT))   \
@@ -1084,8 +942,8 @@ icvCvtScaleTo_##flavor##_C1R( const char* src, int srcstep,             \
                 lut[i] = cast_macro(t);                                 \
             }                                                           \
                                                                         \
-            icvLUT_Transform_##flavor##_C1R( src, srcstep, dst,         \
-                                             dststep, size, lut );      \
+            icvLUT_Transform8u_##flavor##_C1R( src, srcstep, dst,       \
+                                               dststep, size, lut );    \
         }                                                               \
         else if( fabs( scale ) <= 128. &&                               \
                  fabs( shift ) <= (INT_MAX*0.5)/(1 << ICV_FIX_SHIFT))   \
@@ -1156,9 +1014,8 @@ icvCvtScaleTo_##flavor##_C1R( const char* src, int srcstep,             \
 #define  ICV_DEF_CVT_SCALE_FUNC_FLT( flavor, dsttype, cast_macro )      \
 static  CvStatus  CV_STDCALL                                            \
 icvCvtScaleTo_##flavor##_C1R( const char* src, int srcstep,             \
-                              dsttype* dst, int dststep,                \
-                              CvSize size, double scale, double shift,  \
-                              int param )                               \
+                              dsttype* dst, int dststep, CvSize size,   \
+                              double scale, double shift, int param )   \
 {                                                                       \
     int i, srctype = param;                                             \
     dsttype lut[256];                                                   \
@@ -1173,8 +1030,8 @@ icvCvtScaleTo_##flavor##_C1R( const char* src, int srcstep,             \
                 lut[i] = (dsttype)(i*scale + shift);                    \
             }                                                           \
                                                                         \
-            icvLUT_Transform_##flavor##_C1R( src, srcstep, dst,         \
-                                        dststep, size, lut );           \
+            icvLUT_Transform8u_##flavor##_C1R( src, srcstep, dst,       \
+                                               dststep, size, lut );    \
         }                                                               \
         else                                                            \
         {                                                               \
@@ -1190,8 +1047,8 @@ icvCvtScaleTo_##flavor##_C1R( const char* src, int srcstep,             \
                 lut[i] = (dsttype)((char)i*scale + shift);              \
             }                                                           \
                                                                         \
-            icvLUT_Transform_##flavor##_C1R( src, srcstep, dst,         \
-                                             dststep, size, lut );      \
+            icvLUT_Transform8u_##flavor##_C1R( src, srcstep, dst,       \
+                                               dststep, size, lut );    \
         }                                                               \
         else                                                            \
         {                                                               \
