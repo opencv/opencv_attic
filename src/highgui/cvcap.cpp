@@ -913,313 +913,103 @@ CV_IMPL void cvReleaseVideoWriter( CvVideoWriter** writer )
 #ifdef HAVE_FFMPEG
 
 extern "C" {
-#include "ffmpeg/avcodec.h"
+#include <ffmpeg/avformat.h>
 }
-
-typedef struct avi_entry
-{
-    int id;
-    int flags;
-    int offset;
-    int size;
-}
-avi_entry;
-
-typedef struct avi_entry_compact
-{
-    int flags;
-    int offset;
-}
-avi_entry_compact;
 
 
 typedef struct CvCaptureAVI_FFMPEG
 {
     CvCaptureVTable* vtable;
-    AVCodec *codec;
-    AVCodecContext *avctx;
-    AVFrame picture, rgb_picture;
 
-    int codec_fourcc;
-    int codec_sub_fourcc;
+    AVFormatContext *ic;
+    int video_stream;
+    AVStream *video_st;
+    AVFrame *picture;
+    int64_t picture_pts;
+    AVFrame rgb_picture;
 
-    CvSlice film_range;
-    int pos;
-
-    CvSize frame_size;
-    double fps;
-    FILE* file;
-    int64 data_offset;
-    int64 file_size;
-    int64 offset;
-    int stream_index;
-    char* buffer;
-    int buffer_size;
-    avi_entry_compact* entries;
     IplImage frame;
 }
 CvCaptureAVI_FFMPEG;
 
-
-#define fourcc(c1,c2,c3,c4) \
-    (((c1)&255) + (((c2)&255)<<8) + (((c3)&255)<<16) + (((c4)&255)<<24))
-
-static int read4( CvCaptureAVI_FFMPEG* capture )
-{
-    unsigned char buffer[4];
-    if( fread( buffer, 1, 4, capture->file ) == 4 )
-    {
-        capture->offset += 4;
-        return fourcc(buffer[0],buffer[1],buffer[2],buffer[3]);
-    }
-    else
-        return -1;
-}
-
-static void skip( CvCaptureAVI_FFMPEG* capture, int bytes )
-{
-    if( bytes != 0 )
-    {
-        fseek( capture->file, bytes, SEEK_CUR );
-        capture->offset += bytes;
-    }
-}
-
-static void icvInitCapture_FFMPEG()
-{
-    static int isInitialized = 0;
-    if( !isInitialized )
-    {
-        avcodec_init();
-        avcodec_register_all();
-        isInitialized = 1;
-    }
-}
-
 static void icvCloseAVI_FFMPEG( CvCaptureAVI_FFMPEG* capture )
 {
-    cvFree( (void**)&(capture->entries) );
-    
-    if( capture->avctx )
+    //cvFree( (void**)&(capture->entries) );
+        
+    if( capture->picture )
+	av_free(capture->picture);
+
+    if( capture->video_st )
     {
-        avcodec_close( capture->avctx );
-        av_free( capture->avctx );
-        capture->avctx = 0;
+        avcodec_close( &capture->video_st->codec );
+	capture->video_st = NULL;
     }
 
-    if( capture->file )
+    if( capture->ic )
     {
-        fclose( capture->file );
-        capture->file = 0;
+        av_close_input_file(capture->ic);
+        capture->ic = NULL;
     }
 
-    /*if( capture->picture.data[0] )
-        cvFree( (void**)&capture->picture.data[0] );*/
-    
     if( capture->rgb_picture.data[0] )
         cvFree( (void**)&capture->rgb_picture.data[0] );
 
-    cvFree( (void**)&capture->buffer );
-
-    capture->codec = 0;
-    capture->pos = 0;
-    capture->film_range.start_index = capture->film_range.end_index = 0;
     memset( &capture->frame, 0, sizeof(capture->frame));
 }
 
 
 static int icvOpenAVI_FFMPEG( CvCaptureAVI_FFMPEG* capture, const char* filename )
 {
-    int err, valid = 0;
-    int val;
-    icvInitCapture_FFMPEG();
-    
-    capture->stream_index = -1;
-    capture->file = fopen( filename, "rb" );
-    if( !capture->file )
-        goto exit_func;
+    int err, valid = 0, video_index = -1, i;
+    AVFormatContext *ic;
 
-    val = read4( capture );
-    if( val != fourcc('R','I','F','F'))
-        goto exit_func;
+    capture->ic = NULL;
+    capture->video_stream = -1;
+    capture->video_st = NULL;
+    /* register all codecs, demux and protocols */
+    av_register_all();
 
-    capture->file_size = read4( capture );
-    val = read4( capture );
-    if( val != fourcc('A','V','I',' '))
-        goto exit_func;
-
-    for(;;)
-    {
-        int64 new_offset;
-        val = read4( capture );
-
-        if( val == -1 )
-            break;
-
-        new_offset = read4( capture );
-        new_offset += capture->offset;
-
-        if( val == fourcc('L','I','S','T'))
-        {
-            val = read4( capture );
-
-            switch( val )
-            {
-            case fourcc('m','o','v','i'):
-                capture->data_offset = capture->offset;
-                break;
-            case fourcc('h','d','r','l'):
-            {
-                int hdr_len, list_len, stream_index = -1;
-                int i, streams;
-                
-                ///////////////  read AVI header  ////////////////
-                val = read4( capture );
-                hdr_len = read4( capture );
-                
-                capture->fps = (float)(1e6/read4(capture));
-                read4( capture ); // bit-rate
-                read4( capture ); // reserved
-                read4( capture ); // flags
-                capture->film_range.end_index = read4( capture );
-                read4( capture ); // initial frames
-                streams = read4( capture ); // nstreams
-                capture->buffer_size = read4( capture );
-                skip( capture, hdr_len - 32 );
-
-                for( i = 0; i < streams; i++ )
-                {
-                    /////////////// Streams' information ////////////////
-                    if( read4(capture) != fourcc('L','I','S','T'))
-                        goto exit_func;
-
-                    list_len = read4(capture) - 4;
-                    if( read4(capture) != fourcc('s','t','r','l'))
-                        goto exit_func;
-
-                    while( list_len > 0 )
-                    {
-                        val = read4(capture);
-                        hdr_len = read4(capture);
-                        list_len -= hdr_len + 8;
-
-                        switch( val )
-                        {
-                        case fourcc('s','t','r','h'):
-                            stream_index++;
-                            val = read4(capture);
-                            hdr_len -= 4;
-                            if( val == fourcc('v','i','d','s') && capture->stream_index < 0 )
-                            {
-                                capture->stream_index = stream_index;
-                                capture->codec_fourcc = read4( capture );
-                                hdr_len -= 4;
-                            }
-                            break;
-                        case fourcc('s','t','r','f'):
-                            if( capture->stream_index == stream_index )
-                            {
-                                read4(capture); // header size
-                                capture->frame_size.width = read4(capture);
-                                capture->frame_size.height = read4(capture);
-                                read4(capture); // planes & bit count
-                                capture->codec_sub_fourcc = read4(capture);
-                                hdr_len -= 20;
-                            }
-                            break;
-                        }
-
-                        skip( capture, hdr_len );
-                    }
-                }
-            }
-            break;
-            }
-        }
-        else if( val == fourcc('i','d','x','1'))
-        {
-            int i, k = 0, size = (int)(new_offset - capture->offset);
-            int fourcc1 = fourcc( '0', (capture->stream_index + '0'), 'd', 'b' );
-            int fourcc2 = fourcc( '0', (capture->stream_index + '0'), 'd', 'c' );
-
-            avi_entry* entries = (avi_entry*)cvAlloc( size );
-            fread( entries, 1, size, capture->file );
-            capture->offset = new_offset;
-            size /= sizeof(entries[0]);
-
-            capture->entries = (avi_entry_compact*)cvAlloc( capture->film_range.end_index*
-                                                            sizeof(capture->entries[0]) );
-            for( i = 0; i < size; i++ )
-            {
-                if( entries[i].id == fourcc1 || entries[i].id == fourcc2 )
-                {
-                    int flags = entries[i].flags & 16;
-                    int offset = entries[i].offset;
-                    capture->entries[k].flags = flags;
-                    capture->entries[k].offset = offset;
-                    k++;
-                }
-            }
-            cvFree( (void**)&entries );
-        }
-  
-        skip( capture, (long)(new_offset - capture->offset) );
+    err = av_open_input_file(&ic, filename, NULL, 0, NULL);
+    if (err < 0) {
+	fprintf(stderr, "HIGHGUI ERROR: AVI: %s: could not open file\n", filename);
+	goto exit_func;
     }
+    capture->ic = ic;
+    err = av_find_stream_info(ic);
+    if (err < 0) {
+	fprintf(stderr, "HIGHGUI ERROR: AVI: %s: could not find codec parameters\n", filename);
+	goto exit_func;
+    }
+    for(i = 0; i < ic->nb_streams; i++) {
+        AVCodecContext *enc = &ic->streams[i]->codec;
+        AVCodec *codec;
+	if( CODEC_TYPE_VIDEO == enc->codec_type && video_index < 0) {
+	    video_index = i;
+	    codec = avcodec_find_decoder(enc->codec_id);
+	    if (!codec ||
+		avcodec_open(enc, codec) < 0)
+		goto exit_func;
+	    capture->video_stream = i;
+	    capture->video_st = ic->streams[i];
+	    capture->picture = avcodec_alloc_frame();
 
-    if( capture->codec_fourcc && capture->data_offset )
-    {
-        int fcc = capture->codec_sub_fourcc;
-        CodecID id = fcc == fourcc('U','2','6','3') ? CODEC_ID_H263 :
-                     fcc == fourcc('I','2','6','3') ? CODEC_ID_H263I :
-                     fcc == fourcc('D', 'I', 'V', '3') ? CODEC_ID_MSMPEG4V3 :
-                     fcc == fourcc('D', 'I', 'V', 'X') ? CODEC_ID_MPEG4 :
-                     fcc == fourcc('D', 'X', '5', '0') ? CODEC_ID_MPEG4 :
-                     fcc == fourcc('M', 'P', '4', '2') ? CODEC_ID_MSMPEG4V2 :
-                     fcc == fourcc('M', 'J', 'P', 'G') ? CODEC_ID_MJPEG :
-                     fcc == fourcc('P', 'I', 'M', '1') ? CODEC_ID_MPEG1VIDEO :
-                     fcc == 0x50 ? CODEC_ID_MP2 :
-                     fcc == 0x55 ? CODEC_ID_MP2 : CODEC_ID_NONE;
-
-        capture->codec = avcodec_find_decoder( id );
-
-        if( capture->codec )
-        {
-            capture->avctx = avcodec_alloc_context();
-            capture->avctx->width = capture->frame_size.width;
-            capture->avctx->height = capture->frame_size.height;
-            capture->avctx->codec_tag = capture->codec_sub_fourcc;
-            capture->avctx->codec_type = CODEC_TYPE_VIDEO;
-            capture->avctx->codec_id = id;
-            
-            err = avcodec_open( capture->avctx, capture->codec );
-            if( err >= 0 )
-            {
-                capture->rgb_picture.data[0] = (uchar*)cvAlloc(
+	    capture->rgb_picture.data[0] = (uchar*)cvAlloc(
                                 avpicture_get_size( PIX_FMT_BGR24,
-                                capture->avctx->width, capture->avctx->height ));
-                avpicture_fill( (AVPicture*)&capture->rgb_picture, capture->rgb_picture.data[0],
-                                PIX_FMT_BGR24, capture->avctx->width, capture->avctx->height );
-                /*capture->picture.data[0] = (uchar*)cvAlloc(
-                                avpicture_get_size( capture->avctx->pix_fmt,
-                                capture->avctx->width, capture->avctx->height ));
-                avpicture_fill( (AVPicture*)&capture->picture, capture->picture.data[0],
-                                capture->avctx->pix_fmt, capture->avctx->width, capture->avctx->height );*/
+                                enc->width, enc->height ));
+	    avpicture_fill( (AVPicture*)&capture->rgb_picture, capture->rgb_picture.data[0],
+			    PIX_FMT_BGR24, enc->width, enc->height );
 
-                cvInitImageHeader( &capture->frame, cvSize( capture->avctx->width,
-                                   capture->avctx->height ), 8, 3, 0, 4 );
-                cvSetData( &capture->frame, capture->rgb_picture.data[0],
+	    cvInitImageHeader( &capture->frame, cvSize( enc->width,
+                                   enc->height ), 8, 3, 0, 4 );
+	    cvSetData( &capture->frame, capture->rgb_picture.data[0],
                            capture->rgb_picture.linesize[0] );
-
-                capture->pos = 0;
-                capture->fps = capture->avctx->frame_rate*1e-4;
-                capture->picture.data[0] = 0;
-                fseek( capture->file, (long)capture->data_offset, SEEK_SET );
-                capture->offset = capture->data_offset;
-                valid = 1;
-                avcodec_flush_buffers( capture->avctx );
-            }
-        }
+	    break;
+	}
     }
+
+
+    if(video_index >= 0)
+	valid = 1;
 
 exit_func:
 
@@ -1232,92 +1022,82 @@ exit_func:
 
 static int icvGrabFrameAVI_FFMPEG( CvCaptureAVI_FFMPEG* capture )
 {
-    if( capture && capture->avctx )
-    {
-        for(;;)
-        {
-            int val = read4( capture );
-            if( val == -1 )
-                return 0;
+    int ret, valid=0;
+    AVPacket pkt1, *pkt = &pkt1;
+    int len1, got_picture;
 
-            if( isdigit((char)val) && isdigit((char)(val>>8)) &&
-                ((char)(val>>16) == 'd' || (char)(val>>16) == 'w') &&
-                ((char)(val>>24) == 'b' || (char)(val>>24) == 'c'))
-            {
-                int stream_index = ((char)(val>>8) - '0') + ((char)val - '0')*10;
-                int size = (read4( capture ) + 1) & -2;
+    if( !capture || !capture->ic || !capture->video_st )
+	return 0;
+    for(;;) {
+	ret = av_read_frame(capture->ic, pkt);
+	if(ret < 0)
+	    goto the_end;
 
-                if( stream_index == capture->stream_index )
-                {
-                    int got_picture = 0, ret;
-
-                    if( !capture->buffer || capture->buffer_size < size )
-                    {
-                        cvFree( (void**)&capture->buffer );
-                        if( capture->buffer_size < size )
-                            capture->buffer_size = size;
-                        capture->buffer = (char*)cvAlloc( capture->buffer_size );
-                    }
-                    fread( capture->buffer, 1, size, capture->file );
-                    capture->offset += size;
-
-                    ret = avcodec_decode_video( capture->avctx, &capture->picture,
-                                                &got_picture, (uchar*)capture->buffer, size );
-                    if( got_picture )
-                    {
-                        capture->pos++;
-                        return 1;
-                    }
-                    //if( ret <= 0 )
-                    //   return 0;
-                    continue;   
-                }
-                else
-                    skip( capture, size );
-            }
-        }
+	len1 = avcodec_decode_video(&capture->video_st->codec, 
+				    capture->picture, &got_picture, 
+				    pkt->data, pkt->size);
+	if (got_picture) {
+	    capture->picture_pts = pkt->pts;
+	    break;
+	}
+        av_free_packet(pkt);
     }
-
-    return 0;
+    valid = 1;
+	
+ the_end:
+    return valid;
 }
 
 
 static const IplImage* icvRetrieveFrameAVI_FFMPEG( CvCaptureAVI_FFMPEG* capture )
 {
-    if( capture && capture->avctx && capture->picture.data[0] )
-    {
-        img_convert( (AVPicture*)&capture->rgb_picture, PIX_FMT_BGR24,
-                     (AVPicture*)&capture->picture, capture->avctx->pix_fmt,
-                     capture->avctx->width, capture->avctx->height );
-        /*icvCvt_RGB2BGR_8u_C3R( (uchar*)capture->frame->imageData, capture->frame->widthStep,
-                               (uchar*)capture->frame->imageData, capture->frame->widthStep,
-                               cvSize(capture->frame->width,capture->frame->height) );*/
-        return &capture->frame;
-    }
-
-    return 0;
+    if( !capture || !capture->video_st || !capture->picture->data[0] )
+	return 0;
+    img_convert( (AVPicture*)&capture->rgb_picture, PIX_FMT_BGR24,
+		 (AVPicture*)capture->picture, capture->video_st->codec.pix_fmt,
+		 capture->video_st->codec.width, capture->video_st->codec.height );
+    return &capture->frame;
 }
 
 
+static int icvSetPropertyAVI_FFMPEG( CvCaptureAVI_FFMPEG* capture,
+                                     int property_id, double value );
+
 static double icvGetPropertyAVI_FFMPEG( CvCaptureAVI_FFMPEG* capture, int property_id )
 {
+    if( !capture || !capture->video_st || !capture->picture->data[0] )
+	return 0;
+
+    int64_t timestamp;
+    timestamp = capture->picture_pts;
+
     switch( property_id )
     {
     case CV_CAP_PROP_POS_MSEC:
-        return cvRound(capture->pos*1000./capture->fps);
+        if(capture->ic->start_time != AV_NOPTS_VALUE)
+	    return (double)(timestamp - capture->ic->start_time)*1000/(double)AV_TIME_BASE;
         break;
     case CV_CAP_PROP_POS_FRAMES:
-        return capture->pos;
+	if(capture->video_st->cur_dts != AV_NOPTS_VALUE)
+	    return (double)capture->video_st->cur_dts-1;
+	break;
     case CV_CAP_PROP_POS_AVI_RATIO:
-        return ((double)capture->offset)/((double)capture->file_size);
+	if(capture->ic->start_time != AV_NOPTS_VALUE && capture->ic->duration != AV_NOPTS_VALUE)
+	    return (double)(timestamp-capture->ic->start_time)/(double)capture->ic->duration;
+	break;
     case CV_CAP_PROP_FRAME_WIDTH:
         return capture->frame.width;
+	break;
     case CV_CAP_PROP_FRAME_HEIGHT:
         return capture->frame.height;
+	break;
     case CV_CAP_PROP_FPS:
-        return capture->fps;
+        return (double)capture->video_st->codec.frame_rate
+	    / (double)capture->video_st->codec.frame_rate_base;
+	break;
     case CV_CAP_PROP_FOURCC:
-        return capture->codec_sub_fourcc;
+        return (double)capture->video_st->codec.codec_tag;
+	break;
     }
     return 0;
 }
@@ -1326,41 +1106,46 @@ static double icvGetPropertyAVI_FFMPEG( CvCaptureAVI_FFMPEG* capture, int proper
 static int icvSetPropertyAVI_FFMPEG( CvCaptureAVI_FFMPEG* capture,
                                      int property_id, double value )
 {
+    if( !capture || !capture->video_st || !capture->picture->data[0] )
+	return 0;
     switch( property_id )
     {
+#if 0    
     case CV_CAP_PROP_POS_MSEC:
     case CV_CAP_PROP_POS_FRAMES:
     case CV_CAP_PROP_POS_AVI_RATIO:
-        if( capture->entries )
         {
-            int pos;
-            switch( property_id )
+	    int64_t timestamp = AV_NOPTS_VALUE;
+	    switch( property_id )
             {
-            case CV_CAP_PROP_POS_MSEC:
-                pos = cvRound(value*capture->fps*0.001);
-                break;
-            case CV_CAP_PROP_POS_AVI_RATIO:
-                pos = cvRound(value*(capture->film_range.end_index - 
-                                     capture->film_range.start_index) +
-                              capture->film_range.start_index);
-                break;
-            default:
-                pos = cvRound(value);
-            }
-            pos -= 10; // to make sure the frame is updated properly
-            if( pos < capture->film_range.start_index )
-                pos = capture->film_range.start_index;
-            if( pos > capture->film_range.end_index )
-                pos = capture->film_range.end_index;
-            for( ; pos > 0; pos-- )
-                if( capture->entries[pos].flags & 16 )
-                    break;
-            capture->pos = pos;
-            capture->offset = capture->entries[pos].offset + capture->data_offset;
-            fseek( capture->file, (long)capture->offset, SEEK_SET );
-            avcodec_flush_buffers( capture->avctx );
-        }
+	    case CV_CAP_PROP_POS_FRAMES:
+		if(capture->ic->start_time != AV_NOPTS_VALUE) {
+		    value *= (double)capture->video_st->codec.frame_rate_base
+			/ (double)capture->video_st->codec.frame_rate;
+		    timestamp = capture->ic->start_time+(int64_t)(value*AV_TIME_BASE);
+		}
+		break;
+	    case CV_CAP_PROP_POS_MSEC:
+		if(capture->ic->start_time != AV_NOPTS_VALUE)
+		    timestamp = capture->ic->start_time+(int64_t)(value*AV_TIME_BASE/1000);
+		break;
+	    case CV_CAP_PROP_POS_AVI_RATIO:
+		if(capture->ic->start_time != AV_NOPTS_VALUE && capture->ic->duration != AV_NOPTS_VALUE)
+		    timestamp = capture->ic->start_time+(int64_t)(value*capture->ic->duration);
+		break;
+	    }
+	    if(timestamp != AV_NOPTS_VALUE) {
+		//printf("timestamp=%g\n",(double)timestamp);
+		int ret = av_seek_frame(capture->ic, -1, timestamp, 0);
+		if (ret < 0) {
+		    fprintf(stderr, "HIGHGUI ERROR: AVI: could not seek to position %0.3f\n", 
+			    (double)timestamp / AV_TIME_BASE);
+		    return 0;
+		}
+	    }
+	}
         break;
+#endif	
     default:
         return 0;
     }
@@ -1398,7 +1183,7 @@ CV_IMPL CvCapture* cvCaptureFromFile( const char* filename )
     return (CvCapture*)capture;
 }
 
-#else
+#else	// !HAVE_FFMPEG
 
 CV_IMPL CvCapture* cvCaptureFromFile( const char* filename )
 {
@@ -1406,7 +1191,7 @@ CV_IMPL CvCapture* cvCaptureFromFile( const char* filename )
     return 0;
 }
 
-#endif
+#endif	// HAVE_FFMPEG
 
 
 CV_IMPL CvCapture* cvCaptureFromCAM( int index )
@@ -1447,7 +1232,7 @@ CV_IMPL void cvReleaseVideoWriter( CvVideoWriter** /*writer*/ )
 }
 
 
-#endif
+#endif /* Linux version */
 
 
 #if 0
