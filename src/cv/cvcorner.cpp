@@ -109,7 +109,7 @@ icvCalcEigenValsVecs( const float* cov, int cov_step, float* dst,
             double y = l1 - a;
             double e = fabs(x);
 
-            if( e + fabs(y) < 1e-3 )
+            if( e + fabs(y) < 1e-4 )
             {
                 y = b;
                 x = l1 - c;
@@ -124,7 +124,7 @@ icvCalcEigenValsVecs( const float* cov, int cov_step, float* dst,
             y = l2 - a;
             e = fabs(x);
 
-            if( e + fabs(y) < 1e-3 )
+            if( e + fabs(y) < 1e-4 )
             {
                 y = b;
                 x = l2 - c;

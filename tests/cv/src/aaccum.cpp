@@ -41,297 +41,217 @@
 
 #include "cvtest.h"
 
-/* Testing parameters */
-static char* FuncName[] = 
+class CV_AccumBaseTest : public CvArrTest
 {
-    "cvAcc",
-    "cvSquareAcc",
-    "cvMultiplyAcc",
-    "cvRunningAvg"
+public:
+    CV_AccumBaseTest( const char* test_name, const char* test_funcs );
+
+protected:
+    int support_testing_modes();
+    void get_test_array_types_and_sizes( int test_case_idx, CvSize** sizes, int** types );
+    double get_success_error_level( int test_case_idx, int i, int j );
+    double alpha;
 };
-static char* TestName[]    = 
+
+
+CV_AccumBaseTest::CV_AccumBaseTest( const char* test_name, const char* test_funcs )
+    : CvArrTest( test_name, test_funcs, "" )
 {
-    "Linear Accumulating",
-    "Accumulating of Squares",
-    "Accumulating of Products",
-    "Running Average"
+    test_array[INPUT].push(NULL);
+    test_array[INPUT_OUTPUT].push(NULL);
+    test_array[REF_INPUT_OUTPUT].push(NULL);
+    test_array[TEMP].push(NULL);
+    test_array[MASK].push(NULL);
+    element_wise_relative_error = false;
+}
+
+
+void CV_AccumBaseTest::get_test_array_types_and_sizes( int test_case_idx,
+                                                CvSize** sizes, int** types )
+{
+    CvRNG* rng = ts->get_rng();
+    int depth = test_case_idx*2/test_case_count, cn = cvTsRandInt(rng) ? 3 : 1;
+    int i, input_count = test_array[INPUT].size();
+    CvArrTest::get_test_array_types_and_sizes( test_case_idx, sizes, types );
+    depth = depth == 0 ? CV_8U : CV_32F;
+
+    for( i = 0; i < input_count; i++ )
+        types[INPUT][i] = CV_MAKETYPE(depth,cn);
+    types[INPUT_OUTPUT][0] = types[REF_INPUT_OUTPUT][0] = types[TEMP][0] = CV_MAKETYPE(CV_32F,cn);
+
+    alpha = cvTsRandReal(rng);
+}
+
+
+int CV_AccumBaseTest::support_testing_modes()
+{
+    return CvTS::CORRECTNESS_CHECK_MODE; // for now disable the timing test
+}
+
+
+double CV_AccumBaseTest::get_success_error_level( int /*test_case_idx*/, int /*i*/, int /*j*/ )
+{
+    return FLT_EPSILON*10;
+}
+
+
+CV_AccumBaseTest accum_base( "accum", "" );
+
+
+/// acc
+class CV_AccTest : public CV_AccumBaseTest
+{
+public:
+    CV_AccTest();
+protected:
+    void run_func();
+    void prepare_to_validation( int );
 };
-static char TestClass[]   = "Algorithm";
 
 
-static long lImageWidth;
-static long lImageHeight;
-
-#define EPSILON 0.01
-
-static int fcaLinAcc( void )
+CV_AccTest::CV_AccTest()
+    : CV_AccumBaseTest( "accum-acc", "cvAcc" )
 {
-    /* Some Variables */
-    
-    AtsRandState      state;
-    IplImage*         pSrc8u;
-    IplImage*         pSrc32f;
-    
-    IplImage*         pDst;
-    IplImage*         pTest;
-    IplImage*         pTemp;
-    
-    
-    double Error;
-    
-    static int  read_param = 0;
-    
-    /* Initialization global parameters */
-    if( !read_param )
-    {
-        read_param = 1;
-        /* Reading test-parameters */
-        trslRead( &lImageHeight, "256", "Image Height" );
-        trslRead( &lImageWidth, "256", "Image width" );
-    }
-    atsRandInit(&state,0,255,127);
-    pSrc8u         = cvCreateImage(cvSize(lImageWidth, lImageHeight), IPL_DEPTH_8U, 3);
-    pSrc32f        = cvCreateImage(cvSize(lImageWidth, lImageHeight), IPL_DEPTH_32F, 3);
-    pDst           = cvCreateImage(cvSize(lImageWidth, lImageHeight), IPL_DEPTH_32F, 3);
-    pTemp          = cvCreateImage(cvSize(lImageWidth, lImageHeight), IPL_DEPTH_32F, 3);	
-    atsFillRandomImageEx(pSrc8u, &state );
-    atsFillRandomImageEx(pSrc32f, &state );
-    atsFillRandomImageEx(pDst, &state );
-    pTest = cvCloneImage(pDst);
-    
-    
-    cvAcc(pSrc8u,pTest);
-    atsConvert(pSrc8u,pTemp);
-    cvAdd(pDst,pTemp,pDst);
-    cvAcc(pSrc32f,pTest);
-    cvAdd(pDst,pSrc32f,pDst);
-    Error = (long)cvNorm(pTest,pDst,CV_C);
-    
-    trsWrite(ATS_SUM, "\nAccuracy   %e\n",EPSILON);
-    /*************************************************************************************/
-    /*    check 8u                                                                       */
-    /*************************************************************************************/
-    
-    
-    cvReleaseImage( &pSrc8u );
-    cvReleaseImage( &pSrc32f );
-    cvReleaseImage( &pDst );
-    cvReleaseImage( &pTest);
-    cvReleaseImage( &pTemp );
-    
-    if( Error < EPSILON  ) return trsResult( TRS_OK, "No errors fixed for this text" );
-    else return trsResult( TRS_FAIL,"Total fixed %d errors", 1);
-} /* fmaAcc */
+}
 
-static int fcaSqrAcc( void )
+
+void CV_AccTest::run_func()
 {
-    /* Some Variables */
-    
-    AtsRandState      state;
-    IplImage*         pSrc8u;
-    IplImage*         pSrc32f;
-    
-    IplImage*         pDst;
-    IplImage*         pTest;
-    IplImage*         pTemp;
-    
-    
-    double Error;
-    
-    static int  read_param = 0;
-    
-    /* Initialization global parameters */
-    if( !read_param )
-    {
-        read_param = 1;
-        /* Reading test-parameters */
-        trslRead( &lImageHeight, "177", "Image Height" );
-        trslRead( &lImageWidth, "177", "Image width" );
-    }
-    atsRandInit(&state,0,255,127);
-    pSrc8u         = cvCreateImage(cvSize(lImageWidth, lImageHeight), IPL_DEPTH_8U, 1);
-    pSrc32f        = cvCreateImage(cvSize(lImageWidth, lImageHeight), IPL_DEPTH_32F, 1);
-    pDst           = cvCreateImage(cvSize(lImageWidth, lImageHeight), IPL_DEPTH_32F, 1);
-    pTemp          = cvCreateImage(cvSize(lImageWidth, lImageHeight), IPL_DEPTH_32F, 1);	
-    atsFillRandomImageEx(pSrc8u, &state );
-    atsFillRandomImageEx(pSrc32f, &state );
-    atsFillRandomImageEx(pDst, &state );
-    pTest = cvCloneImage(pDst);
-    
-    
-    cvSquareAcc(pSrc8u,pTest);
-    atsConvert(pSrc8u,pTemp);
-    cvMul(pTemp,pTemp,pTemp);
-    cvAdd(pDst,pTemp,pDst);
-    cvSquareAcc(pSrc32f,pTest);
-    cvMul(pSrc32f,pSrc32f,pSrc32f);
-    cvAdd(pDst,pSrc32f,pDst);
-    Error = (long)cvNorm(pTest,pDst,CV_C);
-    
-    trsWrite(ATS_SUM, "\nAccuracy   %e\n",EPSILON);
-    /*************************************************************************************/
-    /*    check 8u                                                                       */
-    /*************************************************************************************/
-    
-    
-    cvReleaseImage( &pSrc8u );
-    cvReleaseImage( &pSrc32f );
-    cvReleaseImage( &pDst );
-    cvReleaseImage( &pTest );
-    cvReleaseImage( &pTemp );
-    
-    if( Error < EPSILON  ) return trsResult( TRS_OK, "No errors fixed for this text" );
-    else return trsResult( TRS_FAIL,"Total fixed %d errors", 1);
-} /* fmaAcc */
+    cvAcc( test_array[INPUT][0], test_array[INPUT_OUTPUT][0], test_array[MASK][0] );
+}
 
-static int fcaMultAcc( void )
+
+void CV_AccTest::prepare_to_validation( int )
 {
-    /* Some Variables */
-    
-    AtsRandState      state;
-    IplImage*         pSrcA8u;
-    IplImage*         pSrcA32f;
-    IplImage*         pSrcB8u;
-    IplImage*         pSrcB32f;
-    
-    IplImage*         pDst;
-    IplImage*         pTest;
-    IplImage*         pTempA;
-    IplImage*         pTempB;
-    
-    
-    double Error;
-    
-    static int  read_param = 0;
-    
-    /* Initialization global parameters */
-    if( !read_param )
-    {
-        read_param = 1;
-        /* Reading test-parameters */
-        trslRead( &lImageHeight, "177", "Image Height" );
-        trslRead( &lImageWidth, "177", "Image width" );
-    }
-    atsRandInit(&state,0,255,127);
-    pSrcA8u         = cvCreateImage(cvSize(lImageWidth, lImageHeight), IPL_DEPTH_8U, 1);
-    pSrcA32f        = cvCreateImage(cvSize(lImageWidth, lImageHeight), IPL_DEPTH_32F, 1);
-    pSrcB8u         = cvCreateImage(cvSize(lImageWidth, lImageHeight), IPL_DEPTH_8U, 1);
-    pSrcB32f        = cvCreateImage(cvSize(lImageWidth, lImageHeight), IPL_DEPTH_32F, 1);
-    pDst            = cvCreateImage(cvSize(lImageWidth, lImageHeight), IPL_DEPTH_32F, 1);
-    pTempA          = cvCreateImage(cvSize(lImageWidth, lImageHeight), IPL_DEPTH_32F, 1);
-    pTempB          = cvCreateImage(cvSize(lImageWidth, lImageHeight), IPL_DEPTH_32F, 1);
-    atsFillRandomImageEx(pSrcA8u, &state );
-    atsFillRandomImageEx(pSrcA32f, &state );
-    atsFillRandomImageEx(pSrcB8u, &state );
-    atsFillRandomImageEx(pSrcB32f, &state );
-    atsFillRandomImageEx(pDst, &state );
-    pTest = cvCloneImage(pDst);
-    
-    
-    cvMultiplyAcc(pSrcA8u,pSrcB8u,pTest);
-    atsConvert(pSrcA8u,pTempA);
-    atsConvert(pSrcB8u,pTempB);
-    cvMul(pTempA,pTempB,pTempA);
-    cvAdd(pDst,pTempA,pDst);
-    cvMultiplyAcc(pSrcA32f,pSrcB32f,pTest);
-    cvMul(pSrcA32f,pSrcB32f,pSrcA32f);
-    cvAdd(pDst,pSrcA32f,pDst);
-    Error = cvNorm(pTest,pDst,CV_C);
-    
-    trsWrite(ATS_SUM, "\nAccuracy   %e\n",Error);
-    /*************************************************************************************/
-    /*    check 8u                                                                       */
-    /*************************************************************************************/
-    
-    
-    cvReleaseImage( &pSrcA8u );
-    cvReleaseImage( &pSrcA32f );
-    cvReleaseImage( &pSrcB8u );
-    cvReleaseImage( &pSrcB32f );
-    cvReleaseImage( &pDst );
-    cvReleaseImage( &pTest);
-    cvReleaseImage( &pTempA );
-    cvReleaseImage( &pTempB );
-    
-    if( Error < EPSILON  ) return trsResult( TRS_OK, "No errors fixed for this text" );
-    else return trsResult( TRS_FAIL,"Total fixed %d errors", 1);
-} /* fmaAcc */
+    const CvMat* src = &test_mat[INPUT][0];
+    CvMat* dst = &test_mat[REF_INPUT_OUTPUT][0];
+    CvMat* temp = &test_mat[TEMP][0];
+    const CvMat* mask = test_array[MASK][0] ? &test_mat[MASK][0] : 0;
 
-static int fcaRunAvg( void )
+    cvTsAdd( src, cvScalarAll(1.), dst, cvScalarAll(1.), cvScalarAll(0.), temp, 0 );
+    cvTsCopy( temp, dst, mask );
+}
+
+CV_AccTest acc_test;
+
+
+/// square acc
+class CV_SquareAccTest : public CV_AccumBaseTest
 {
-    /* Some Variables */
-
-    AtsRandState      state;
-    IplImage*         pSrc8u;
-    IplImage*         pSrc32f;
-    
-    IplImage*         pDst;
-    IplImage*         pTest;
-    IplImage*         pTemp;
-    
-    float alpha =0.05f; 
-    double Error;
-    
-    static int  read_param = 0;
-    
-    /* Initialization global parameters */
-    if( !read_param )
-    {
-        read_param = 1;
-        /* Reading test-parameters */
-        trslRead( &lImageHeight, "177", "Image Height" );
-        trslRead( &lImageWidth, "177", "Image width" );
-    }
-    atsRandInit(&state,0,255,127);
-    pSrc8u         = cvCreateImage(cvSize(lImageWidth, lImageHeight), IPL_DEPTH_8U, 1);
-    pSrc32f        = cvCreateImage(cvSize(lImageWidth, lImageHeight), IPL_DEPTH_32F, 1);
-    pDst           = cvCreateImage(cvSize(lImageWidth, lImageHeight), IPL_DEPTH_32F, 1);
-    pTemp          = cvCreateImage(cvSize(lImageWidth, lImageHeight), IPL_DEPTH_32F, 1);	
-    atsFillRandomImageEx(pSrc8u, &state );
-    atsFillRandomImageEx(pSrc32f, &state );
-    atsFillRandomImageEx(pDst, &state );
-    pTest = cvCloneImage(pDst);
-    
-    cvRunningAvg(pSrc8u,pTest,alpha);
-    atsConvert(pSrc8u,pTemp);
-    cvScale(pDst,pDst,(1.f-alpha));
-    cvScale(pTemp,pTemp,alpha);
-    cvAdd(pDst,pTemp,pDst);
-    Error = (long)cvNorm(pTest,pDst,CV_C);
-    cvRunningAvg(pSrc32f,pTest,alpha);
-    cvScale(pDst,pDst,(1.f-alpha));
-    cvScale(pSrc32f,pTemp,alpha);
-    cvAdd(pDst,pTemp,pDst);
-    Error = (long)cvNorm(pTest,pDst,CV_C);
-    
-    trsWrite(ATS_SUM, "\nAccuracy   %e\n",EPSILON);
-    /*************************************************************************************/
-    /*    check 8u                                                                       */
-    /*************************************************************************************/
-   
-
-    cvReleaseImage( &pSrc8u );
-    cvReleaseImage( &pSrc32f );
-    cvReleaseImage( &pDst );
-    cvReleaseImage( &pTest);
-    cvReleaseImage( &pTemp );
-
-    if( Error < EPSILON  ) return trsResult( TRS_OK, "No errors fixed for this text" );
-    else return trsResult( TRS_FAIL,"Total fixed %d errors", 1);
-} /* fmaAcc */
+public:
+    CV_SquareAccTest();
+protected:
+    void run_func();
+    void prepare_to_validation( int );
+};
 
 
-
-
-
-void InitAAcc( void )
+CV_SquareAccTest::CV_SquareAccTest()
+    : CV_AccumBaseTest( "accum-squareacc", "cvSquareAcc" )
 {
-    /* Registering test function */
-    trsReg( FuncName[0], TestName[0], TestClass, fcaLinAcc );
-    trsReg( FuncName[1], TestName[1], TestClass, fcaSqrAcc );
-    trsReg( FuncName[2], TestName[2], TestClass, fcaMultAcc );
-    trsReg( FuncName[3], TestName[3], TestClass, fcaRunAvg );
-} /* InitAAcc */
+}
 
 
-/* End of file. */
+void CV_SquareAccTest::run_func()
+{
+    cvSquareAcc( test_array[INPUT][0], test_array[INPUT_OUTPUT][0], test_array[MASK][0] );
+}
+
+
+void CV_SquareAccTest::prepare_to_validation( int )
+{
+    const CvMat* src = &test_mat[INPUT][0];
+    CvMat* dst = &test_mat[REF_INPUT_OUTPUT][0];
+    CvMat* temp = &test_mat[TEMP][0];
+    const CvMat* mask = test_array[MASK][0] ? &test_mat[MASK][0] : 0;
+
+    cvTsMul( src, src, cvScalarAll(1.), temp );
+    cvTsAdd( temp, cvScalarAll(1.), dst, cvScalarAll(1.), cvScalarAll(0.), temp, 0 );
+    cvTsCopy( temp, dst, mask );
+}
+
+CV_SquareAccTest squareacc_test;
+
+
+/// multiply acc
+class CV_MultiplyAccTest : public CV_AccumBaseTest
+{
+public:
+    CV_MultiplyAccTest();
+protected:
+    void run_func();
+    void prepare_to_validation( int );
+};
+
+
+CV_MultiplyAccTest::CV_MultiplyAccTest()
+    : CV_AccumBaseTest( "accum-mulacc", "cvMultiplyAcc" )
+{
+    test_array[INPUT].push(NULL);
+}
+
+
+void CV_MultiplyAccTest::run_func()
+{
+    cvMultiplyAcc( test_array[INPUT][0], test_array[INPUT][1],
+                   test_array[INPUT_OUTPUT][0], test_array[MASK][0] );
+}
+
+
+void CV_MultiplyAccTest::prepare_to_validation( int )
+{
+    const CvMat* src1 = &test_mat[INPUT][0];
+    const CvMat* src2 = &test_mat[INPUT][1];
+    CvMat* dst = &test_mat[REF_INPUT_OUTPUT][0];
+    CvMat* temp = &test_mat[TEMP][0];
+    const CvMat* mask = test_array[MASK][0] ? &test_mat[MASK][0] : 0;
+
+    cvTsMul( src1, src2, cvScalarAll(1.), temp );
+    cvTsAdd( temp, cvScalarAll(1.), dst, cvScalarAll(1.), cvScalarAll(0.), temp, 0 );
+    cvTsCopy( temp, dst, mask );
+}
+
+CV_MultiplyAccTest mulacc_test;
+
+
+/// running average
+class CV_RunningAvgTest : public CV_AccumBaseTest
+{
+public:
+    CV_RunningAvgTest();
+protected:
+    void run_func();
+    void prepare_to_validation( int );
+};
+
+
+CV_RunningAvgTest::CV_RunningAvgTest()
+    : CV_AccumBaseTest( "accum-runavg", "cvRunningAvg" )
+{
+}
+
+
+void CV_RunningAvgTest::run_func()
+{
+    cvRunningAvg( test_array[INPUT][0], test_array[INPUT_OUTPUT][0],
+                  alpha, test_array[MASK][0] );
+}
+
+
+void CV_RunningAvgTest::prepare_to_validation( int )
+{
+    const CvMat* src = &test_mat[INPUT][0];
+    CvMat* dst = &test_mat[REF_INPUT_OUTPUT][0];
+    CvMat* temp = &test_mat[TEMP][0];
+    const CvMat* mask = test_array[MASK][0] ? &test_mat[MASK][0] : 0;
+    float a[1], b[1];
+    CvMat A = cvMat(1,1,CV_32F,a), B = cvMat(1,1,CV_32F,b);
+    cvSetReal1D( &A, 0, alpha);
+    cvSetReal1D( &B, 0, 1 - A.data.fl[0] );
+
+    cvTsAdd( src, cvScalarAll(A.data.fl[0]), dst, cvScalarAll(B.data.fl[0]), cvScalarAll(0.), temp, 0 );
+    cvTsCopy( temp, dst, mask );
+}
+
+CV_RunningAvgTest runavg_test;
+

@@ -55,7 +55,7 @@ icvCompleteMomentState( CvMoments* moments )
         double inv_m00 = 1. / moments->m00;
         cx = moments->m10 * inv_m00;
         cy = moments->m01 * inv_m00;
-        moments->inv_sqrt_m00 = sqrt( inv_m00 );
+        moments->inv_sqrt_m00 = sqrt( fabs(inv_m00) );
     }
 
     /* mu20 = m20 - m10*cx */

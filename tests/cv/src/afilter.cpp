@@ -516,7 +516,7 @@ void CV_SobelTest::get_test_array_types_and_sizes( int test_case_idx,
     }
     else
         aperture_size = cvSize(_aperture_size, _aperture_size);
-        
+
     sizes[INPUT][1] = aperture_size;
     sizes[TEMP][0].width = sizes[INPUT][0].width + aperture_size.width - 1;
     sizes[TEMP][0].height = sizes[INPUT][0].height + aperture_size.height - 1;
@@ -1528,7 +1528,7 @@ CV_FeatureSelBaseTest featuresel_base( "features", "", 0 );
 
 
 static void
-cvTsCornerEigenValsVecs( const CvMat* _src, CvMat* eigenv,
+cvTsCornerEigenValsVecs( const CvMat* _src, CvMat* eigenv, CvMat* ocv_eigenv,
                          int block_size, int _aperture_size,
                          int mode )
 {
@@ -1618,6 +1618,7 @@ cvTsCornerEigenValsVecs( const CvMat* _src, CvMat* eigenv,
         for( i = 0; i < src->rows; i++ )
         {
             float* eigenvp = (float*)(eigenv->data.ptr + i*eigenv->step);
+            float* ocv_eigenvp = (float*)(ocv_eigenv->data.ptr + i*ocv_eigenv->step);
             const float* dxdyp = (float*)(dxdy->data.ptr + i*dxdy->step);
             const float* dx2p = (float*)(dx2->data.ptr + i*dx2->step);
             const float* dy2p = (float*)(dy2->data.ptr + i*dy2->step);
@@ -1629,7 +1630,10 @@ cvTsCornerEigenValsVecs( const CvMat* _src, CvMat* eigenv,
                 double l1 = 0.5*(a + c + d);
                 double l2 = 0.5*(a + c - d);
                 double x1, y1, x2, y2, s;
-                
+
+                /*if( j == (202/6) && i == 426 )
+                    putchar('.');*/
+
                 if( fabs(a - l1) + fabs(b) >= 1e-3 )
                     x1 = b, y1 = l1 - a;
                 else
@@ -1643,6 +1647,16 @@ cvTsCornerEigenValsVecs( const CvMat* _src, CvMat* eigenv,
                     x2 = l2 - c, y2 = b;
                 s = 1./(sqrt(x2*x2+y2*y2)+DBL_EPSILON);
                 x2 *= s; y2 *= s;
+
+                /* the orientation of eigen vectors might be inversed relative to OpenCV function,
+                   which is normal */
+                if( fabs(x1) >= fabs(y1) && ocv_eigenvp[j*6+2]*x1 < 0 ||
+                    fabs(x1) < fabs(y1) && ocv_eigenvp[j*6+3]*y1 < 0 )
+                    x1 = -x1, y1 = -y1;
+
+                if( fabs(x2) >= fabs(y2) && ocv_eigenvp[j*6+4]*x2 < 0 ||
+                    fabs(x2) < fabs(y2) && ocv_eigenvp[j*6+5]*y2 < 0 )
+                    x2 = -x2, y2 = -y2;
 
                 eigenvp[j*6] = (float)l1;
                 eigenvp[j*6+1] = (float)l2;
@@ -1709,7 +1723,7 @@ void CV_MinEigenValTest::run_func()
 void CV_MinEigenValTest::prepare_to_validation( int /*test_case_idx*/ )
 {
     cvTsCornerEigenValsVecs( &test_mat[INPUT][0], &test_mat[REF_OUTPUT][0],
-                             block_size, aperture_size, 1 );
+                    &test_mat[OUTPUT][0], block_size, aperture_size, 1 );
 }
 
 
@@ -1744,7 +1758,7 @@ void CV_EigenValVecTest::run_func()
 void CV_EigenValVecTest::prepare_to_validation( int /*test_case_idx*/ )
 {
     cvTsCornerEigenValsVecs( &test_mat[INPUT][0], &test_mat[REF_OUTPUT][0],
-                             block_size, aperture_size, 0 );
+                    &test_mat[OUTPUT][0], block_size, aperture_size, 0 );
 }
 
 
