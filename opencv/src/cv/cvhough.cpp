@@ -40,7 +40,7 @@
 //M*/
 
 #include "_cv.h"
-#include "_cvList.h"
+#include "_cvlist.h"
 
 #define halfPi ((float)(CV_PI*0.5))
 #define Pi     ((float)CV_PI)

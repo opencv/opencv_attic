@@ -48,5 +48,6 @@
 #include "grfmt_jpeg.h"
 #include "grfmt_pxm.h"
 #include "grfmt_tiff.h"
+#include "grfmt_png.h"
 
 #endif/*_GRFMTS_H_*/

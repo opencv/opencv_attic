@@ -137,8 +137,7 @@ bool  CvvPath::Add( const char* path )
         m_maxsize = new_size;
     }
 
-    if( m_len != 0 )
-        m_path[m_len++] = ';';
+    m_path[m_len++] = ';';
     memcpy( m_path + m_len, buffer, len );
     m_len += len;
 
@@ -285,37 +284,29 @@ public:
 
 protected:
 
-    GrFmtReadersList*  m_readers;
-    GrFmtWritersList*  m_writers;
-
+    GrFmtFactoriesList*  m_factories;
     CvvPath m_path;
 };
 
 
 CvvImageFilters::CvvImageFilters()
 {
-    m_readers = new GrFmtReadersList;
+    m_factories = new GrFmtFactoriesList;
 
-    m_readers->AddFilter( new GrFmtBmpReader() );
-    m_readers->AddFilter( new GrFmtSunRasterReader() );
-    m_readers->AddFilter( new GrFmtJpegReader() );
-    m_readers->AddFilter( new GrFmtPXMReader() );
-    m_readers->AddFilter( new GrFmtTiffReader() );
-
-    m_writers = new GrFmtWritersList;
-
-    m_writers->AddFilter( new GrFmtBmpWriter() );
-    m_writers->AddFilter( new GrFmtJpegWriter() );
-    m_writers->AddFilter( new GrFmtSunRasterWriter() );
-    m_writers->AddFilter( new GrFmtPXMWriter() );
-    m_writers->AddFilter( new GrFmtTiffWriter() );
+    m_factories->AddFactory( new GrFmtBmp() );
+    m_factories->AddFactory( new GrFmtJpeg() );
+    m_factories->AddFactory( new GrFmtSunRaster() );
+    m_factories->AddFactory( new GrFmtPxM() );
+    m_factories->AddFactory( new GrFmtTiff() );
+#ifdef HAVE_PNG
+    m_factories->AddFactory( new GrFmtPng() );
+#endif
 }
 
 
 CvvImageFilters::~CvvImageFilters()
 {
-    delete m_readers;
-    delete m_writers;
+    delete m_factories;
 }
 
 
@@ -325,10 +316,7 @@ GrFmtReader* CvvImageFilters::FindReader( const char* filename ) const
     GrFmtReader* reader = 0;
 
     filename = m_path.Find( filename, buffer );
-    reader = (GrFmtReader*)(filename ? m_readers->FindFilter( filename ) : 0);
-
-    if( reader )
-        reader->SetFile( filename );
+    reader = filename ? m_factories->FindReader( filename ) : 0;
 
     return reader;
 }
@@ -337,11 +325,8 @@ GrFmtReader* CvvImageFilters::FindReader( const char* filename ) const
 GrFmtWriter* CvvImageFilters::FindWriter( const char* filename ) const
 {
     char buffer[_MAX_PATH + 1];
-    GrFmtWriter* writer = (GrFmtWriter*)(CvvPath::Preprocess( filename, buffer ) ?
-                                         m_writers->FindFilter( buffer ) : 0);
-    if( writer )
-        writer->SetFile( filename );
-
+    GrFmtWriter* writer = CvvPath::Preprocess( filename, buffer ) ?
+                            m_factories->FindWriter( buffer ) : 0;
     return writer;
 }
 
@@ -353,9 +338,9 @@ GrFmtWriter* CvvImageFilters::FindWriter( const char* filename ) const
 CvvImageFilters  g_Filters;
 
 HIGHGUI_IMPL void
-cvvAddSearchPath( const char* path )
+cvAddSearchPath( const char* path )
 {
-    CV_FUNCNAME( "cvvAddSearchPath" );
+    CV_FUNCNAME( "cvAddSearchPath" );
 
     __BEGIN__;
 
@@ -369,12 +354,12 @@ cvvAddSearchPath( const char* path )
 
 
 HIGHGUI_IMPL IplImage*
-cvvLoadImage( const char* filename )
+cvLoadImage( const char* filename, int iscolor )
 {
     GrFmtReader* reader = 0;
     IplImage* image = 0;
 
-    CV_FUNCNAME( "cvvLoadImage" );
+    CV_FUNCNAME( "cvLoadImage" );
 
     __BEGIN__;
 
@@ -383,27 +368,31 @@ cvvLoadImage( const char* filename )
 
     reader = g_Filters.FindReader( filename );
     if( !reader )
-        CV_ERROR( CV_StsError, "could not open the input file or find an appropriate filter for it" );
+        EXIT;
 
     if( !reader->ReadHeader() )
-        CV_ERROR( CV_StsError, "could not read image header" );
+        EXIT;
 
     {
         CvSize size;
         size.width = reader->GetWidth();
         size.height = reader->GetHeight();
 
-        CV_CALL( image = cvCreateImage( size, IPL_DEPTH_8U, 3 ));
+        iscolor = iscolor > 0 || (iscolor < 0 && reader->IsColor());
+
+        CV_CALL( image = cvCreateImage( size, IPL_DEPTH_8U, iscolor ? 3 : 1 ));
         
         if( !reader->ReadData( (unsigned char*)(image->imageData),
-                               image->widthStep, 1 ))
-            CV_ERROR( CV_StsError, "could not read image data" );
+                               image->widthStep, iscolor ))
+        {
+            cvReleaseImage( &image );
+            EXIT;
+        }
     }
     
     __END__;
 
-    if( reader )
-        reader->Close();
+    delete reader;
 
     if( cvGetErrStatus() < 0 )
         cvReleaseImage( &image );
@@ -413,17 +402,18 @@ cvvLoadImage( const char* filename )
 
 
 HIGHGUI_IMPL int
-cvvSaveImage( const char* filename, const CvArr* arr )
+cvSaveImage( const char* filename, const CvArr* arr )
 {
     int origin = 0;
     int did_flip = 0;
+    GrFmtWriter* writer = 0;
     
-    CV_FUNCNAME( "cvvSaveImage" );
+    CV_FUNCNAME( "cvSaveImage" );
 
     __BEGIN__;
     
-    GrFmtWriter* writer;
     CvMat stub, *image;
+    int channels;
     
     if( !filename || strlen(filename) == 0 )
         CV_ERROR( CV_StsNullPtr, "null filename" );
@@ -431,9 +421,11 @@ cvvSaveImage( const char* filename, const CvArr* arr )
     CV_CALL( image = cvGetMat( arr, &stub ));
 
     if( CV_IS_IMAGE( arr ))
-    {
         origin = ((IplImage*)arr)->origin;
-    }
+
+    channels = CV_MAT_CN( image->type );
+    if( channels != 1 && channels != 3 )
+        CV_ERROR( CV_BadNumChannels, "" );
 
     writer = g_Filters.FindWriter( filename );
     if( !writer )
@@ -445,10 +437,13 @@ cvvSaveImage( const char* filename, const CvArr* arr )
         did_flip = 1;
     }
 
-    if( !writer->WriteImage( image->data.ptr, image->step, image->width, image->height, 1 ))
+    if( !writer->WriteImage( image->data.ptr, image->step, image->width,
+                             image->height, channels > 1 ))
         CV_ERROR( CV_StsError, "could not save the image" );
 
     __END__;
+
+    delete writer;
 
     if( origin && did_flip )
         cvFlip( arr, (void*)arr, 0 );
@@ -458,11 +453,11 @@ cvvSaveImage( const char* filename, const CvArr* arr )
 
 
 HIGHGUI_IMPL void
-cvvConvertImage( const CvArr* srcarr, CvArr* dstarr, int flip )
+cvConvertImage( const CvArr* srcarr, CvArr* dstarr, int flip )
 {
     CvMat* temp = 0;
     
-    CV_FUNCNAME( "cvvConvertImage" );
+    CV_FUNCNAME( "cvConvertImage" );
     
     __BEGIN__;
 
@@ -473,19 +468,19 @@ cvvConvertImage( const CvArr* srcarr, CvArr* dstarr, int flip )
     CV_CALL( src = cvGetMat( srcarr, &srcstub ));
     CV_CALL( dst = cvGetMat( dstarr, &dststub ));
 
-    src_cn = CV_ARR_CN( src->type );
+    src_cn = CV_MAT_CN( src->type );
 
     if( src_cn != 1 && src_cn != 3 && src_cn != 4 )
         CV_ERROR( CV_BadNumChannels, "Source image must have 1, 3 or 4 channels" );
 
-    if( CV_ARR_DEPTH( dst->type ) != CV_8U )
+    if( CV_MAT_DEPTH( dst->type ) != CV_8U )
         CV_ERROR( CV_BadDepth, "Destination image must be 8u" );
     
     if( !CV_ARE_DEPTHS_EQ( src, dst ))
     {
         temp = cvCreateMat( src->height, src->width,
-                            (src->type & CV_ARR_CN_MASK)|(dst->type & CV_ARR_DEPTH_MASK));
-        cvScale( src, temp, CV_ARR_DEPTH(src->type) >= CV_32F ? 255 : 1, 0 );
+                            (src->type & CV_MAT_CN_MASK)|(dst->type & CV_MAT_DEPTH_MASK));
+        cvScale( src, temp, CV_MAT_DEPTH(src->type) >= CV_32F ? 255 : 1, 0 );
         src = temp;
     }
 
@@ -500,7 +495,7 @@ cvvConvertImage( const CvArr* srcarr, CvArr* dstarr, int flip )
             CV_BGRA2GRAY, CV_BGRA2BGR565, CV_BGRA2BGR, 0
         };
 
-        CV_CALL( cvCvtColor( src, dst, cvt_table[(src_cn-1)*4 + CV_ARR_CN(dst->type) - 1] ));
+        CV_CALL( cvCvtColor( src, dst, cvt_table[(src_cn-1)*4 + CV_MAT_CN(dst->type) - 1] ));
 
         if( flip )
         {

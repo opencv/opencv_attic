@@ -42,23 +42,35 @@
 #include "_highgui.h"
 #include "grfmt_sunras.h"
 
-static const char fmtDescrSunRas[] = "Sun raster files (*.sr;*.ras)";
-static const char fmtSignSunRas[] = "\x59\xA6\x6A\x95";
+static const char* fmtSignSunRas = "\x59\xA6\x6A\x95";
 
-/************************ Sun Raster reader *****************************/
+// Sun Raster filter factory
 
-GrFmtSunRasterReader::GrFmtSunRasterReader()
+GrFmtSunRaster::GrFmtSunRaster()
 {
     m_sign_len = 4;
     m_signature = fmtSignSunRas;
-    m_description = fmtDescrSunRas;
-    m_offset = -1;
+    m_description = "Sun raster files (*.sr;*.ras)";
 }
 
 
-GrFmtSunRasterReader::~GrFmtSunRasterReader()
+GrFmtReader* GrFmtSunRaster::NewReader( const char* filename )
 {
-    Close();
+    return new GrFmtSunRasterReader( filename );
+}
+
+
+GrFmtWriter* GrFmtSunRaster::NewWriter( const char* filename )
+{
+    return new GrFmtSunRasterWriter( filename );
+}
+
+
+/************************ Sun Raster reader *****************************/
+
+GrFmtSunRasterReader::GrFmtSunRasterReader( const char* filename ) : GrFmtReader( filename )
+{
+    m_offset = -1;
 }
 
 
@@ -75,7 +87,7 @@ bool  GrFmtSunRasterReader::ReadHeader()
     assert( strlen(m_filename) != 0 );
     if( !m_strm.Open( m_filename )) return false;
 
-    try
+    if( setjmp( m_strm.JmpBuf()) == 0 )
     {
         m_strm.Skip( 4 );
         m_width  = m_strm.GetDWord();
@@ -137,9 +149,6 @@ bool  GrFmtSunRasterReader::ReadHeader()
             }
         }
     }
-    catch( int )
-    {
-    }
 
     if( !result )
     {
@@ -177,7 +186,7 @@ bool  GrFmtSunRasterReader::ReadData( uchar* data, int step, int color )
     if( !color && m_maptype == RMT_EQUAL_RGB )
         CvtPaletteToGray( m_palette, gray_palette, 1 << m_bpp );
 
-    try
+    if( setjmp( m_strm.JmpBuf()) == 0 )
     {
         m_strm.SetPos( m_offset );
         
@@ -382,9 +391,6 @@ bad_decoding_end:
             assert(0);
         }
     }
-    catch( int )
-    {
-    }
 
     if( src != buffer ) delete src; 
     if( bgr != bgr_buffer ) delete bgr;
@@ -395,15 +401,10 @@ bad_decoding_end:
 
 //////////////////////////////////////////////////////////////////////////////////////////
 
-GrFmtSunRasterWriter::GrFmtSunRasterWriter()
-{
-    m_description = fmtDescrSunRas;
-}
-
-
-GrFmtSunRasterWriter::~GrFmtSunRasterWriter()
+GrFmtSunRasterWriter::GrFmtSunRasterWriter( const char* filename ) : GrFmtWriter( filename )
 {
 }
+
 
 bool  GrFmtSunRasterWriter::WriteImage( const uchar* data, int step,
                                         int width, int height, bool isColor )

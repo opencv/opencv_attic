@@ -1830,46 +1830,72 @@ OPENCVAPI void  cvConDensUpdateByTime( CvConDensation* ConDens);
 /* Initializes ConDensation filter samples  */
 OPENCVAPI void  cvConDensInitSampleSet( CvConDensation* conDens, CvMat* lowerBound,CvMat* upperBound);
 
+/*
+standard Kalman filter (in G. Welch' and G. Bishop's notation):
 
+  x(k)=A*x(k-1)+B*u(k)+w(k)  p(w)~N(0,Q)
+  z(k)=H*x(k)+v(k),   p(v)~N(0,R)
+*/
 typedef struct CvKalman
 {
-    int MP;
-    int DP;
-    float* PosterState;          /* Vector of State of the System in k-th step  */
-    float* PriorState;           /* Vector of State of the System in (k-1)-th step */
-    float* DynamMatr;            /* Matrix of the linear Dynamics system */
-                                 /* (Must be updated by LinearizedDynamics function on each step*/
-                                 /*  for nonlinear systems)*/
-    float* MeasurementMatr;      /* Matrix of linear measurement (Must be updated by */
-                                 /* LinearizedMeasurement function on each step*/
-                                 /* for nonlinear measurements)*/
-    float* MNCovariance;         /* Matrix of measurement noice covariance*/
-                                 /* Initializes to Zero matrix, or sets by SetMeasureNoiseCov*/
-                                 /* method  */
-    float* PNCovariance;         /* Matrix of process noice covariance*/
-                                 /* Initializes to Identity matrix, or sets by SetProcessNoiseCov*/
-                                 /* method */
-    float* KalmGainMatr;         /* Kalman Gain Matrix*/
-    float* PriorErrorCovariance; /*Prior Error Covariance matrix*/
-    float* PosterErrorCovariance;/*Poster Error Covariance matrix*/
-    float* Temp1;                 /* Temporary Matrix */
-    float* Temp2;
+    int MP;                     /* number of measurement vector dimensions */
+    int DP;                     /* number of state vector dimensions */
+    int CP;                     /* number of control vector dimensions */
 
-} CvKalman;
+    /* backward compatibility fields */
+#if 1
+    float* PosterState;         /* =state_pre->data.fl */
+    float* PriorState;          /* =state_post->data.fl */
+    float* DynamMatr;           /* =transition_matrix->data.fl */
+    float* MeasurementMatr;     /* =measurement_matrix->data.fl */
+    float* MNCovariance;        /* =measurement_noise_cov->data.fl */
+    float* PNCovariance;        /* =process_noise_cov->data.fl */
+    float* KalmGainMatr;        /* =gain->data.fl */
+    float* PriorErrorCovariance;/* =error_cov_pre->data.fl */
+    float* PosterErrorCovariance;/* =error_cov_post->data.fl */
+    float* Temp1;               /* temp1->data.fl */
+    float* Temp2;               /* temp2->data.fl */
+#endif
 
-/* Creates Kalman filter state */
-OPENCVAPI CvKalman* cvCreateKalman( int DynamParams, int MeasureParams);
+    CvMat* state_pre;           /* predicted state (x'(k)):
+                                    x(k)=A*x(k-1)+B*u(k) */
+    CvMat* state_post;          /* corrected state (x(k)):
+                                    x(k)=x'(k)+K(k)*(z(k)-H*x'(k)) */
+    CvMat* transition_matrix;   /* state transition matrix (A) */
+    CvMat* control_matrix;      /* control matrix (B)
+                                   (it is not used if there is no control)*/
+    CvMat* measurement_matrix;  /* measurement matrix (H) */
+    CvMat* process_noise_cov;   /* process noise covariance matrix (Q) */
+    CvMat* measurement_noise_cov; /* measurement noise covariance matrix (R) */
+    CvMat* error_cov_pre;       /* priori error estimate covariance matrix (P'(k)):
+                                    P'(k)=A*P(k-1)*At + Q)*/
+    CvMat* gain;                /* Kalman gain matrix (K(k)):
+                                    K(k)=P'(k)*Ht*inv(H*P'(k)*Ht+R)*/
+    CvMat* error_cov_post;      /* posteriori error estimate covariance matrix (P(k)):
+                                    P(k)=(I-K(k)*H)*P'(k) */
+    CvMat* temp1;               /* temporary matrices */
+    CvMat* temp2;
+    CvMat* temp3;
+    CvMat* temp4;
+    CvMat* temp5;
+
+}
+CvKalman;
+
+/* Creates Kalman filter and sets A, B, Q, R and state to some initial values */
+OPENCVAPI CvKalman* cvCreateKalman( int dynamParams, int measureParams,
+                                    int controlParams CV_DEFAULT(0));
 
 /* Releases Kalman filter state */
 OPENCVAPI void  cvReleaseKalman( CvKalman** Kalman);
 
 /* Updates Kalman filter by time (predicts future state of the system) */
-OPENCVAPI void  cvKalmanUpdateByTime( CvKalman* Kalman);
+OPENCVAPI const CvMat*  cvKalmanPredict( CvKalman* Kalman,
+                                         const CvMat* control CV_DEFAULT(NULL));
 
 /* Updates Kalman filter by measurement
    (corrects state of the system and internal matrices) */
-OPENCVAPI void  cvKalmanUpdateByMeasurement( CvKalman* Kalman, CvMat* Measurement);
-
+OPENCVAPI const CvMat*  cvKalmanCorrect( CvKalman* Kalman, const CvMat* measurement );
 
 /****************************************************************************************\
 *                              Planar subdivisions                                       *
@@ -2024,7 +2050,7 @@ CV_INLINE  CvSubdiv2DPoint*  cvSubdiv2DEdgeOrg( CvSubdiv2DEdge edge );
 CV_INLINE  CvSubdiv2DPoint*  cvSubdiv2DEdgeOrg( CvSubdiv2DEdge edge )
 {
     CvQuadEdge2D* e = (CvQuadEdge2D*)(edge & ~3);
-    return e->pt[edge & 3];
+    return (CvSubdiv2DPoint*)e->pt[edge & 3];
 }
 
 
@@ -2032,7 +2058,7 @@ CV_INLINE  CvSubdiv2DPoint*  cvSubdiv2DEdgeDst( CvSubdiv2DEdge edge );
 CV_INLINE  CvSubdiv2DPoint*  cvSubdiv2DEdgeDst( CvSubdiv2DEdge edge )
 {
     CvQuadEdge2D* e = (CvQuadEdge2D*)(edge & ~3);
-    return e->pt[(edge + 2) & 3];
+    return (CvSubdiv2DPoint*)e->pt[(edge + 2) & 3];
 }
 
 
@@ -2235,7 +2261,7 @@ OPENCVAPI  void  cvCalcArrBackProjectPatch( CvArr** img, CvArr* dst, CvSize rang
 
 
 /* calculates probabilistic density (divides one histogram by another) */
-OPENCVAPI  void  cvCalcProbDensity( CvHistogram* hist, CvHistogram* hist_mask,
+OPENCVAPI  void  cvCalcProbDensity( const CvHistogram* hist, const CvHistogram* hist_mask,
                                     CvHistogram* hist_dens, double scale CV_DEFAULT(255) );
 
 
@@ -2249,28 +2275,9 @@ OPENCVAPI  void  cvSnakeImage( const IplImage* src, CvPoint* points,
                             int coeffUsage, CvSize  win,
                             CvTermCriteria criteria, int calcGradient CV_DEFAULT(1));
 
-/* Finds hand region in range image data */
-OPENCVAPI  void  cvFindHandRegion (CvPoint3D32f* points, int count,
-                                CvSeq* indexs,
-                                float* line, CvSize2D32f size, int flag,
-                                CvPoint3D32f* center,
-                                CvMemStorage* storage, CvSeq **numbers);
-
-/* Finds hand region in range image data (advanced version) */
-OPENCVAPI  void  cvFindHandRegionA( CvPoint3D32f* points, int count,
-                                CvSeq* indexs,
-                                float* line, CvSize2D32f size, int jc,
-                                CvPoint3D32f* center,
-                                CvMemStorage* storage, CvSeq **numbers);
-
 /* Calculates the cooficients of the homography matrix */
 OPENCVAPI  void  cvCalcImageHomography(float *line, CvPoint3D32f* center,
                                      float* intrinsic, float* homography);
-
-/* Creates hand mask image given several points on the hand */
-OPENCVAPI  void  cvCreateHandMask( CvSeq* hand_points,
-                                   IplImage *img_mask, CvRect *roi);
-
 
 #define CV_DIST_MASK_3   3
 #define CV_DIST_MASK_5   5 
@@ -2956,6 +2963,8 @@ CV_INLINE CvAttrList cvAttrList( char** attr, CvAttrList* next )
 
     return list;
 }
+
+OPENCVAPI const char* cvAttrValue( const CvAttrList* attr, const char* attr_name );
 
 struct CvTypeInfo;
 

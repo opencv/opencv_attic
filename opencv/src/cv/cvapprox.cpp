@@ -821,7 +821,7 @@ cvApproxPoly( const void*  array, int  header_size,
     if( header_size == 0 )
         header_size = src_seq->header_size;
 
-    if( header_size < sizeof(CvContour) )
+    if( header_size < (int)sizeof(CvContour) )
         CV_ERROR( CV_StsBadSize, "New header size must be non-less than sizeof(CvContour)" );
 
     if( method != CV_POLY_APPROX_DP )
@@ -847,7 +847,7 @@ cvApproxPoly( const void*  array, int  header_size,
 
         assert( contour );
 
-        if( header_size >= sizeof(CvContour))
+        if( header_size >= (int)sizeof(CvContour))
             cvBoundingRect( contour, 1 );
 
         contour->v_prev = parent;

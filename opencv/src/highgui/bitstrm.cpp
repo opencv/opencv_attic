@@ -100,6 +100,7 @@ RBaseStream::RBaseStream()
     m_block_size = BS_DEF_BLOCK_SIZE;
     m_unGetsize = 4; // 32 bits
     m_is_opened = false;
+    m_jmp_set = false;
 }
 
 
@@ -129,7 +130,11 @@ void  RBaseStream::ReadBlock()
     m_current   -= m_block_size;
     m_block_pos += m_block_size;
 
-    if( readed == 0 || m_current >= m_end ) throw RBS_THROW_EOS;
+    if( readed == 0 || m_current >= m_end )
+    {
+        if( m_jmp_set )
+            longjmp( m_jmp_buf, RBS_THROW_EOS );
+    }
 }
 
 
@@ -211,6 +216,12 @@ void  RBaseStream::Skip( int bytes )
 {
     assert( bytes >= 0 );
     m_current += bytes;
+}
+
+jmp_buf& RBaseStream::JmpBuf()
+{ 
+    m_jmp_set = true;
+    return m_jmp_buf;
 }
 
 /////////////////////////  RLByteStream ////////////////////////////
@@ -447,7 +458,11 @@ int  RLBitStream::GetHuff( const short* table )
     }
 
     Move( code_bits );
-    if( val == RBS_HUFF_FORB ) throw RBS_THROW_FORB;
+    if( val == RBS_HUFF_FORB )
+    {
+        if( m_jmp_set )
+            longjmp( m_jmp_buf, RBS_THROW_FORB );
+    }
 
     return val;
 }
@@ -546,7 +561,10 @@ int  RMBitStream::GetHuff( const short* table )
 
     Move( code_bits );
     if( val == RBS_HUFF_FORB )
-        throw RBS_THROW_FORB;
+    {
+        if( m_jmp_set )
+            longjmp( m_jmp_buf, RBS_THROW_FORB );
+    }
 
     return val;
 }
@@ -733,7 +751,7 @@ void  WBaseStream::WriteBlock()
     written = fwrite( m_start, 1, size, m_file );
     m_current = m_start;
 
-    if( written < size ) throw RBS_THROW_EOS;
+    /*if( written < size ) throw RBS_THROW_EOS;*/
     
     m_block_pos += size;
 }
@@ -893,8 +911,8 @@ void WMByteStream::PutWord( int val )
 
     if( current+1 < m_end )
     {
-        current[1] = (uchar)val;
         current[0] = (uchar)(val >> 8);
+        current[1] = (uchar)val;
         m_current = current + 2;
         if( m_current == m_end )
             WriteBlock();
@@ -913,10 +931,10 @@ void WMByteStream::PutDWord( int val )
 
     if( current+3 < m_end )
     {
-        current[3] = (uchar)(val >> 24);
-        current[2] = (uchar)(val >> 16);
-        current[1] = (uchar)(val >> 8);
-        current[0] = (uchar)val;
+        current[0] = (uchar)(val >> 24);
+        current[1] = (uchar)(val >> 16);
+        current[2] = (uchar)(val >> 8);
+        current[3] = (uchar)val;
         m_current = current + 4;
         if( m_current == m_end )
             WriteBlock();

@@ -43,7 +43,6 @@
 
 #include <float.h>
 #include "_cvutils.h"
-#include "_cvwrap.h"
 
 CV_IMPL void
 cvDeInterlace( IplImage* frame, IplImage* fieldEven, IplImage* fieldOdd )
@@ -69,7 +68,7 @@ cvDeInterlace( IplImage* frame, IplImage* fieldEven, IplImage* fieldOdd )
         f0size.height != f1size.height ||
         f0size.width != framesize.width ||
         f0size.height != framesize.height/2 )
-        CV_ERROR( IPL_StsBadArg,
+        CV_ERROR( CV_StsBadArg,
         "source image and destination image have incorrect combination of sizes" );
 
     if( frame->depth != fieldEven->depth ||

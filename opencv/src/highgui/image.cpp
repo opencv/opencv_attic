@@ -134,7 +134,7 @@ void  CvvImage::CopyOf( IplImage* img, int desired_color )
 
 bool  CvvImage::Load( const char* filename, int desired_color )
 {
-    IplImage* img = cvvLoadImage( filename );
+    IplImage* img = cvLoadImage( filename, desired_color );
     if( !img )
         return false;
 
@@ -150,7 +150,7 @@ bool  CvvImage::LoadRect( const char* filename,
 {
     if( r.width < 0 || r.height < 0 ) return false;
 
-    IplImage* img = cvvLoadImage( filename );
+    IplImage* img = cvLoadImage( filename, desired_color );
     if( !img )
         return false;
 
@@ -198,7 +198,7 @@ bool  CvvImage::Save( const char* filename )
 {
     if( !m_img )
         return false;
-    cvvSaveImage( filename, m_img );
+    cvSaveImage( filename, m_img );
     return true;
 }
 
@@ -206,7 +206,7 @@ bool  CvvImage::Save( const char* filename )
 void  CvvImage::Show( const char* window )
 {
     if( m_img )
-        cvvShowImage( window, m_img );
+        cvShowImage( window, m_img );
 }
 
 

@@ -45,6 +45,41 @@
 #include "grfmt_base.h"
 #include "bitstrm.h"
 
+#ifdef HAVE_JPEG
+
+/* IJG-based version */
+
+class GrFmtJpegReader : public GrFmtReader
+{
+public:
+    
+    GrFmtJpegReader( const char* filename );
+
+    bool  ReadData( uchar* data, int step, int color );
+    bool  ReadHeader();
+    void  Close();
+
+protected:
+
+    void* m_cinfo; // pointer to IJG JPEG codec structure
+    void* m_jerr; // pointer to error processing manager state
+    FILE* m_f;
+};
+
+
+class GrFmtJpegWriter : public GrFmtWriter
+{
+public:
+    
+    GrFmtJpegWriter( const char* filename );
+    bool  WriteImage( const uchar* data, int step,
+                      int width, int height, bool isColor );
+};
+
+#else
+
+/* hand-crafted implementation */
+
 class RJpegBitStream : public RMBitStream
 {
 public:
@@ -71,7 +106,7 @@ class GrFmtJpegReader : public GrFmtReader
 {
 public:
     
-    GrFmtJpegReader();
+    GrFmtJpegReader( const char* filename );
     ~GrFmtJpegReader();
 
     bool  ReadData( uchar* data, int step, int color );
@@ -146,8 +181,7 @@ class GrFmtJpegWriter : public GrFmtWriter
 {
 public:
     
-    GrFmtJpegWriter();
-    ~GrFmtJpegWriter();
+    GrFmtJpegWriter( const char* filename );
 
     bool  WriteImage( const uchar* data, int step,
                       int width, int height, bool isColor );
@@ -155,6 +189,19 @@ public:
 protected:
 
     WJpegBitStream  m_strm;
+};
+
+#endif /* HAVE_JPEG */
+
+
+// JPEG filter factory
+class GrFmtJpeg : public GrFmtFilterFactory
+{
+public:
+    
+    GrFmtJpeg();
+    GrFmtReader* NewReader( const char* filename );
+    GrFmtWriter* NewWriter( const char* filename );
 };
 
 

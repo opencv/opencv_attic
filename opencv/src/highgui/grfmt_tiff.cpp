@@ -39,21 +39,203 @@
 //
 //M*/
 
+/****************************************************************************************\
+    A part of the file implements TIFF reader on base of libtiff library
+    (see otherlibs/_graphics/readme.txt for copyright notice)
+\****************************************************************************************/
+
 #include "_highgui.h"
 #include "grfmt_tiff.h"
 
-static const char fmtDescrTiff[] = "TIFF (*.tiff;*.tif)";
 static const char fmtSignTiffII[] = "II\x2a\x00";
 static const char fmtSignTiffMM[] = "MM\x00\x2a";
+
+GrFmtTiff::GrFmtTiff()
+{
+    m_sign_len = 4;
+    m_signature = "";
+    m_description = "TIFF Files (*.tiff;*.tif)";
+}
+
+
+bool GrFmtTiff::CheckSignature( const char* signature )
+{
+    return memcmp( signature, fmtSignTiffII, 4 ) == 0 ||
+           memcmp( signature, fmtSignTiffMM, 4 ) == 0;
+}
+
+
+GrFmtReader* GrFmtTiff::NewReader( const char* filename )
+{
+    return new GrFmtTiffReader( filename );
+}
+
+
+GrFmtWriter* GrFmtTiff::NewWriter( const char* filename )
+{
+    return new GrFmtTiffWriter( filename );
+}
+
+
+#ifdef HAVE_TIFF
+
+#include "tiff.h"
+#include "tiffio.h"
+
+static int grfmt_tiff_err_handler_init = 0;
+
+void GrFmtSilentTIFFErrorHandler( const char*, const char*, va_list ) {}
+
+GrFmtTiffReader::GrFmtTiffReader( const char* filename ) : GrFmtReader( filename )
+{
+    m_tif = 0;
+
+    if( !grfmt_tiff_err_handler_init )
+    {
+        grfmt_tiff_err_handler_init = 1;
+
+        TIFFSetErrorHandler( GrFmtSilentTIFFErrorHandler );
+        TIFFSetWarningHandler( GrFmtSilentTIFFErrorHandler );
+    }
+}
+
+
+void  GrFmtTiffReader::Close()
+{
+    if( m_tif )
+    {
+        TIFF* tif = (TIFF*)m_tif;
+        TIFFClose( tif );
+        m_tif = 0;
+    }
+}
+
+
+bool  GrFmtTiffReader::CheckFormat( const char* signature )
+{
+    return memcmp( signature, fmtSignTiffII, 4 ) == 0 ||
+           memcmp( signature, fmtSignTiffMM, 4 ) == 0;
+}
+
+
+bool  GrFmtTiffReader::ReadHeader()
+{
+    char errmsg[1024];
+    bool result = false;
+
+    Close();
+    TIFF* tif = TIFFOpen( m_filename, "r" );
+
+    if( tif )
+    {
+        int width = 0, height = 0, photometric = 0, compression = 0;
+        m_tif = tif;
+
+        if( TIFFRGBAImageOK( tif, errmsg ) &&
+            TIFFGetField( tif, TIFFTAG_IMAGEWIDTH, &width ) &&
+            TIFFGetField( tif, TIFFTAG_IMAGELENGTH, &height ) &&
+            TIFFGetField( tif, TIFFTAG_PHOTOMETRIC, &photometric ) && 
+            (!TIFFGetField( tif, TIFFTAG_COMPRESSION, &compression ) ||
+            (compression != COMPRESSION_LZW &&
+             compression != COMPRESSION_OJPEG)))
+        {
+            m_width = width;
+            m_height = height;
+            m_iscolor = photometric > 1;
+            
+            result = true;
+        }
+    }
+
+    if( !result )
+        Close();
+
+    return result;
+}
+
+
+bool  GrFmtTiffReader::ReadData( uchar* data, int step, int color )
+{
+    bool result = false;
+    uchar* buffer = 0;
+
+    color = color > 0 || (color < 0 && m_iscolor);
+
+    if( m_tif && m_width && m_height )
+    {
+        TIFF* tif = (TIFF*)m_tif;
+        int tile_width0 = m_width, tile_height0 = 0;
+        int x, y, i;
+        int is_tiled = TIFFIsTiled(tif);
+        
+        if( !is_tiled &&
+            TIFFGetField( tif, TIFFTAG_ROWSPERSTRIP, &tile_height0 ) ||
+            is_tiled &&
+            TIFFGetField( tif, TIFFTAG_TILEWIDTH, &tile_width0 ) &&
+            TIFFGetField( tif, TIFFTAG_TILELENGTH, &tile_height0 ))
+        {
+            if( tile_width0 <= 0 )
+                tile_width0 = m_width;
+
+            if( tile_height0 <= 0 )
+                tile_height0 = m_height;
+            
+            buffer = new uchar[tile_height0*tile_width0*4];
+
+            for( y = 0; y < m_height; y += tile_height0, data += step*tile_height0 )
+            {
+                int tile_height = tile_height0;
+
+                if( y + tile_height > m_height )
+                    tile_height = m_height - y;
+
+                for( x = 0; x < m_width; x += tile_width0 )
+                {
+                    int tile_width = tile_width0, ok;
+
+                    if( x + tile_width > m_width )
+                        tile_width = m_width - x;
+
+                    if( !is_tiled )
+                        ok = TIFFReadRGBAStrip( tif, y, (uint32*)buffer );
+                    else
+                        ok = TIFFReadRGBATile( tif, x, y, (uint32*)buffer );
+
+                    if( !ok )
+                        goto exit_func;
+
+                    for( i = 0; i < tile_height; i++ )
+                        if( color )
+                            CvtRGBAToBGR( buffer + i*tile_width*4,
+                                          data + x*3 + step*(tile_height - i - 1),
+                                          tile_width );
+                        else
+                            CvtRGBAToGray( buffer + i*tile_width*4,
+                                           data + x + step*(tile_height - i - 1),
+                                           tile_width );
+                }
+            }
+
+            result = true;
+        }
+    }
+
+exit_func:
+
+    Close();
+    delete buffer;
+
+    return result;
+}
+
+#else
+
 static const int  tiffMask[] = { 0xff, 0xff, 0xffffffff, 0xffff, 0xffffffff };
 
 /************************ TIFF reader *****************************/
 
-GrFmtTiffReader::GrFmtTiffReader()
+GrFmtTiffReader::GrFmtTiffReader( const char* filename ) : GrFmtReader( filename )
 {
-    m_sign_len = 4;
-    m_signature = fmtSignTiffII;
-    m_description = fmtDescrTiff;
     m_offsets = 0;
     m_maxoffsets = 0;
     m_strips = -1;
@@ -101,19 +283,19 @@ int   GrFmtTiffReader::GetDWordEx()
 }
 
 
-void  GrFmtTiffReader::ReadTable( int offset, int count,
-                                  TiffFieldType fieldType,
-                                  int*& array, int& arraysize )
+int  GrFmtTiffReader::ReadTable( int offset, int count,
+                                 TiffFieldType fieldType,
+                                 int*& array, int& arraysize )
 {
     int i;
     
     if( count < 0 )
-        BAD_HEADER_ERR();
+        return RBS_BAD_HEADER;
     
     if( fieldType != TIFF_TYPE_SHORT &&
         fieldType != TIFF_TYPE_LONG &&
         fieldType != TIFF_TYPE_BYTE )
-        BAD_HEADER_ERR();
+        return RBS_BAD_HEADER;
 
     if( count > arraysize )
     {
@@ -158,6 +340,8 @@ void  GrFmtTiffReader::ReadTable( int offset, int count,
         assert( (offset & ~tiffMask[fieldType]) == 0 );
         array[0] = offset;
     }
+
+    return 0;
 }
 
 
@@ -180,8 +364,9 @@ bool  GrFmtTiffReader::ReadHeader()
     m_bpp = 1;
     m_compression = TIFF_UNCOMP;
     m_rows_per_strip = -1;
+    m_iscolor = false;
 
-    try
+    if( setjmp( m_strm.JmpBuf()) == 0 )
     {
         m_byteorder = (TiffByteOrder)m_strm.GetWord();
         m_strm.Skip( 2 );
@@ -229,14 +414,13 @@ bool  GrFmtTiffReader::ReadHeader()
                     if( count > MAX_CHANNELS )
                         BAD_HEADER_ERR();
 
-                    ReadTable( value, count, fieldType, bpp_arr_ref, count );
+                    if( ReadTable( value, count, fieldType, bpp_arr_ref, count ) < 0 )
+                        BAD_HEADER_ERR();
                 
                     for( j = 1; j < count; j++ )
                     {
                         if( bpp_arr[j] != bpp_arr[0] )
-                        {
                             BAD_HEADER_ERR();
-                        }
                     }
 
                     m_bpp = bpp_arr[0];
@@ -260,7 +444,8 @@ bool  GrFmtTiffReader::ReadHeader()
 
             case  TIFF_TAG_STRIP_OFFSETS:
                 m_strips = count;
-                ReadTable( value, count, fieldType, m_offsets, m_maxoffsets );
+                if( ReadTable( value, count, fieldType, m_offsets, m_maxoffsets ) < 0 )
+                    BAD_HEADER_ERR();
                 break;
 
             case  TIFF_TAG_SAMPLES_PER_PIXEL:
@@ -284,8 +469,9 @@ bool  GrFmtTiffReader::ReadHeader()
             case  TIFF_TAG_COLOR_MAP:
                 if( fieldType != TIFF_TYPE_SHORT || count < 2 )
                     BAD_HEADER_ERR();
-                ReadTable( value, count, fieldType,
-                           m_temp_palette, m_max_pal_length );
+                if( ReadTable( value, count, fieldType,
+                               m_temp_palette, m_max_pal_length ) < 0 )
+                    BAD_HEADER_ERR();
                 pal_length = count / 3;
                 if( pal_length > 256 )
                     BAD_HEADER_ERR();
@@ -347,9 +533,8 @@ bool  GrFmtTiffReader::ReadHeader()
                 BAD_HEADER_ERR();
             }
         }
-    }
-    catch( int )
-    {
+bad_header_exit:
+        ;
     }
 
     if( !result )
@@ -385,7 +570,7 @@ bool  GrFmtTiffReader::ReadData( uchar* data, int step, int color )
             CvtPaletteToGray( m_palette, gray_palette, 1 << m_bpp );
         }
 
-    try
+    if( setjmp( m_strm.JmpBuf()) == 0 )
     {
         for( int s = 0; s < m_strips; s++ )
         {
@@ -458,27 +643,18 @@ bad_decoding_end:
             ;
         }
     }
-    catch( int )
-    {
-    }
 
     if( src != buffer ) delete src; 
     return result;
 }
 
+#endif
 
 //////////////////////////////////////////////////////////////////////////////////////////
 
-GrFmtTiffWriter::GrFmtTiffWriter()
-{
-    m_description = fmtDescrTiff;
-}
-
-
-GrFmtTiffWriter::~GrFmtTiffWriter()
+GrFmtTiffWriter::GrFmtTiffWriter( const char* filename ) : GrFmtWriter( filename )
 {
 }
-
 
 void  GrFmtTiffWriter::WriteTag( TiffTag tag, TiffFieldType fieldType,
                                  int count, int value )
@@ -616,5 +792,4 @@ bool  GrFmtTiffWriter::WriteImage( const uchar* data, int step,
     }
     return result;
 }
-
 

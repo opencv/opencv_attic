@@ -50,98 +50,22 @@
 #include <assert.h>
 
 #include "highgui.h"
-
-#ifdef WIN32
-
-#define WIN32_LEAN_AND_MEAN  // Exclude rarely-used stuff from Windows headers
-
-#include "windows.h"
-#include "commctrl.h"
-
-typedef HWND CvvWidget;
-typedef WNDPROC CvvWidgetProc;
-typedef void* CvvCanvas;
-
-#else
-
-#include <X11/Xlib.h>
-#include <X11/Intrinsic.h>
-
-typedef Widget CvvWidget;
-typedef int (*CvvWidgetProc)( void* );
-typedef XImage* CvvCanvas;
-
+#ifndef WIN32
+#include "cvconfig.h"
 #endif
 
+/* Errors */
+#define HG_OK          0 /* Don't bet on it! */
+#define HG_BADNAME    -1 /* Bad window or file name */
+#define HG_INITFAILED -2 /* Can't initialize HigHGUI. Possibly, can't find vlgrfmts.dll */
+#define HG_WCFAILED   -3 /* Can't create a window */
+#define HG_NULLPTR    -4 /* The null pointer where it should not appear */
+#define HG_BADPARAM   -5 
+
+#define HG_WINDOW_SIGNATURE  0x00420042
+#define HG_TRACKBAR_SIGNATURE 0x00420043
+
 #define HIGHGUI_IMPL extern "C"
-
-#ifdef WIN32
-
-struct CvvControl
-{
-    CvvWidget m_control;
-    void* m_data;
-    void (*m_notify)(int);
-    int m_id;
-    char* m_name;
-    CvvControl* m_next;
-};
-
-struct CvvToolbar
-{
-    CvvWidget m_toolbar;
-    int m_pos;
-    int m_rows;
-    CvvWidgetProc m_toolBarProc;
-    CvvControl* m_first;
-};
-
-struct CvvWindow
-{
-    CvvWidget m_window;
-    CvvWidget m_main;
-    CvvCanvas m_image;
-    char* m_name;
-    HDC m_dc;
-    int m_last_key;
-    CvvToolbar m_toolbar;
-    unsigned long m_flags;
-    CvvWindow* m_prev;
-    CvvWindow* m_next;
-};
-
-void  FillBitmapInfo( BITMAPINFO* bmi, int width, int height, int bpp, int origin );
-
-#else
-
-typedef struct _CvvTrackbar
-{
-    char    name[100];
-    int    count;
-    int*   value;
-    void   (*on_notify)(int);
-    struct _CvvTrackbar* next;
-} CvvTrackbar;
-
-struct CvvWindow
-{
-    char    name[100];
-    int     created;
-    int     flags;
-
-    CvvWidget  window;
-    CvvWidget  paned;
-    CvvWidget  frame;
-    CvvCanvas  image;
-    CvvCanvas  dst_image;
-    int        converted;
-
-    struct  CvvWindow* next;
-    struct  CvvWindow* prev;
-    CvvTrackbar*  trackbar;
-};
-
-#endif /* WIN32 */
 
 #endif /* __HIGHGUI_H_ */
 

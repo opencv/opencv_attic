@@ -59,6 +59,15 @@ void CvtBGRToGray( const uchar* bgr, uchar* gray, int len )
     }
 }
 
+void CvtGrayToBGR( const uchar* gray, uchar* bgr, int len )
+{
+    int i;
+    for( i = 0; i < len; i++, bgr += 3 )
+    {
+        uchar t = gray[i];
+        bgr[0] = bgr[1] = bgr[2] = t;
+    }
+}
 
 void CvtRGBToGray( const uchar* rgb, uchar* gray, int len )
 {

@@ -42,7 +42,9 @@
 #include "_cvaux.h"
 #include <stdio.h>
 
-#if 1
+#if _MSC_VER >= 1200
+#pragma warning( disable: 4701 )
+#endif
 
 CvCalibFilter::CvCalibFilter()
 {
@@ -281,11 +283,11 @@ void CvCalibFilter::Stop( bool calibrate )
             cameraParams[i].imgSize[0] = (float)imgSize.width;
             cameraParams[i].imgSize[1] = (float)imgSize.height;
             
-            cameraParams[i].focalLength[0] = cameraParams[i].matrix[0];
-            cameraParams[i].focalLength[1] = cameraParams[i].matrix[4];
+//            cameraParams[i].focalLength[0] = cameraParams[i].matrix[0];
+//            cameraParams[i].focalLength[1] = cameraParams[i].matrix[4];
 
-            cameraParams[i].principalPoint[0] = cameraParams[i].matrix[2];
-            cameraParams[i].principalPoint[1] = cameraParams[i].matrix[5];
+//            cameraParams[i].principalPoint[0] = cameraParams[i].matrix[2];
+//            cameraParams[i].principalPoint[1] = cameraParams[i].matrix[5];
 
             memcpy( cameraParams[i].rotMatr, rotMatr, 9 * sizeof(rotMatr[0]));
             memcpy( cameraParams[i].transVect, transVect, 3 * sizeof(transVect[0]));
@@ -298,64 +300,29 @@ void CvCalibFilter::Stop( bool calibrate )
                 break;
         }
 
+
+
         isCalibrated = i == cameraCount;
 
-        if( isCalibrated && cameraCount == 2 )
-        {
-            /* Compute transform vector and rotate matrix for cameras */
-            double quad[2][4][2];
-            CvSize warpSize;
-            CvPoint2D64d epipole[2];
-
-            double matrix[2][9];
-            double rotMatr164d[9], transVect164d[3],
-                   rotMatr264d[9], transVect264d[3];
-
-            for( i = 0; i < 9; i++ )
+        {/* calibrate stereo cameras */
+            if( cameraCount == 2 )
             {
-                rotMatr164d[i] = cameraParams[0].rotMatr[i];
-                rotMatr264d[i] = cameraParams[1].rotMatr[i];
-                matrix[0][i] = cameraParams[0].matrix[i];
-                matrix[1][i] = cameraParams[1].matrix[i];
+                stereo.camera[0] = &cameraParams[0];
+                stereo.camera[1] = &cameraParams[1];
 
-                if( i >= 3 ) continue;
+                icvStereoCalibration( framesAccepted, counts,
+                                   imgSize,
+                                   points[0],points[1],
+                                   buffer,
+                                   &stereo);
 
-                transVect164d[i] = cameraParams[0].transVect[i];
-                transVect264d[i] = cameraParams[1].transVect[i];
+                for( i = 0; i < 9; i++ )
+                {
+                    stereo.fundMatr[i] = stereo.fundMatr[i];
+                }
+                
             }
 
-            /*
-            {
-            double convRotMatr[9];
-            double convTransVect[3];
-            printf( "trans vect: %g, %g, %g\n",
-                    convTransVect[0], convTransVect[1], convTransVect[2] );
-
-            printf( "trans matrix: %10.5f, %10.5f, %10.5f\n%10.5f, %10.5f, %10.5f\n%10.5f, %10.5f, %10.5f\n",
-                    convRotMatr[0], convRotMatr[1], convRotMatr[2],
-                    convRotMatr[3], convRotMatr[4], convRotMatr[5],
-                    convRotMatr[6], convRotMatr[7], convRotMatr[8] );
-            }
-            icvCreateConvertMatrVect( rotMatr164d, transVect164d,
-                                      rotMatr264d, transVect264d,
-                                      convRotMatr, convTransVect);
-            */
-
-            icvGetQuadsTransform( imgSize, matrix[0], rotMatr164d, transVect164d,
-                                  matrix[1], rotMatr264d, transVect264d, &warpSize,
-                                  quad[0], quad[1], stereo.fundMatr,
-                                  &epipole[0], &epipole[1] );
-
-            cameraParams[0].epipole = cvPoint2D32f( epipole[0].x, epipole[0].y );
-            cameraParams[1].epipole = cvPoint2D32f( epipole[1].x, epipole[1].y );
-            for( i = 0; i < 4; i++ )
-            {
-                cameraParams[0].quad[i] = cvPoint2D32f( quad[0][i][0], quad[0][i][1] );
-                cameraParams[1].quad[i] = cvPoint2D32f( quad[1][i][0], quad[1][i][1] );
-            }
-
-            stereo.camera[0] = &cameraParams[0];
-            stereo.camera[1] = &cameraParams[1];
         }
 
         cvFree( (void**)&buffer );
@@ -392,7 +359,7 @@ bool CvCalibFilter::FindEtalon( CvMat** mats )
         {
             if( !latestPoints[i] )
                 latestPoints[i] = (CvPoint2D32f*)
-                    cvAlloc( tempPointCount0*sizeof(latestPoints[0]));
+                    cvAlloc( tempPointCount0*2*sizeof(latestPoints[0]));
         }
 
         for( i = 0; i < cameraCount; i++ )
@@ -401,7 +368,7 @@ bool CvCalibFilter::FindEtalon( CvMat** mats )
             int tempPointCount = tempPointCount0;
             bool found = false;
 
-            if( !CV_IS_ARR(mats[i]) && !CV_IS_IMAGE(mats[i]))
+            if( !CV_IS_MAT(mats[i]) && !CV_IS_IMAGE(mats[i]))
             {
                 assert(0);
                 break;
@@ -635,7 +602,7 @@ const CvCamera* CvCalibFilter::GetCameraParams( int idx ) const
    the function returns 0 */
 const CvStereoCamera* CvCalibFilter::GetStereoParams() const
 {
-    if( isCalibrated && cameraCount == 2 )
+    if( !(isCalibrated && cameraCount == 2) )
     {
         assert(0);
         return 0;
@@ -674,20 +641,114 @@ bool CvCalibFilter::SetCameraParams( CvCamera* params )
 
 bool CvCalibFilter::SaveCameraParams( const char* filename )
 {
+    if( isCalibrated )
+    {
+        int i, j;
+        
+        FILE* f = fopen( filename, "w" );
+
+        if( !f ) return false;
+
+        fprintf( f, "%d\n\n", cameraCount );
+
+        for( i = 0; i < cameraCount; i++ )
+        {
+            for( j = 0; j < (int)(sizeof(cameraParams[i])/sizeof(float)); j++ )
+            {
+                fprintf( f, "%15.10f ", ((float*)(cameraParams + i))[j] );
+            }
+            fprintf( f, "\n\n" );
+        }
+
+        /* Save stereo params */
+
+        /* Save quad */
+        for( i = 0; i < 2; i++ )
+        {
+            for( j = 0; j < 4; j++ )
+            {
+                fprintf(f, "%15.10f ", stereo.quad[i][j].x );
+                fprintf(f, "%15.10f ", stereo.quad[i][j].y );
+            }
+            fprintf(f, "\n");
+        }
+
+        /* Save coeffs */
+        for( i = 0; i < 2; i++ )
+        {
+            for( j = 0; j < 9; j++ )
+            {
+                fprintf(f, "%15.10lf ", stereo.coeffs[i][j/3][j%3] );
+            }
+            fprintf(f, "\n");
+        }
+
+
+        fclose(f);
+        return true;
+    }
+
     return false;
 }
 
 
 bool CvCalibFilter::LoadCameraParams( const char* filename )
 {
+    int i, j;
+    int d = 0;
+    FILE* f = fopen( filename, "r" );
+
+    isCalibrated = false;
+
+    if( !f ) return false;
+
+    if( fscanf( f, "%d", &d ) != 1 || d <= 0 || d > 10 )
+        return false;
+
+    SetCameraCount( d );
+    
+    for( i = 0; i < cameraCount; i++ )
+    {
+        for( j = 0; j < (int)(sizeof(cameraParams[i])/sizeof(float)); j++ )
+        {
+            fscanf( f, "%f", &((float*)(cameraParams + i))[j] );
+        }
+    }
+
+
+    /* Load stereo params */
+
+    /* load quad */
+    for( i = 0; i < 2; i++ )
+    {
+        for( j = 0; j < 4; j++ )
+        {
+            fscanf(f, "%f ", &(stereo.quad[i][j].x) );
+            fscanf(f, "%f ", &(stereo.quad[i][j].y) );
+        }
+    }
+
+    /* Load coeffs */
+    for( i = 0; i < 2; i++ )
+    {
+        for( j = 0; j < 9; j++ )
+        {
+            fscanf(f, "%lf ", &(stereo.coeffs[i][j/3][j%3]) );
+        }
+    }
+    
+    
+    
+    
+    fclose(f);
+
+    stereo.warpSize = cvSize( cvRound(cameraParams[0].imgSize[0]), cvRound(cameraParams[0].imgSize[1]));
+
+    isCalibrated = true;
+    
     return false;
 }
 
-
-bool CvCalibFilter::CalcEpipolarGeometry()
-{
-    return false;    
-}
 
 bool CvCalibFilter::Rectify( IplImage** srcarr, IplImage** dstarr )
 {
@@ -721,7 +782,7 @@ bool CvCalibFilter::Rectify( CvMat** srcarr, CvMat** dstarr )
                     if( !undistImg ||
                         undistImg->width != src->width ||
                         undistImg->height != src->height ||
-                        CV_ARR_CN(undistImg->type) != src->nChannels )
+                        CV_MAT_CN(undistImg->type) != src->nChannels )
                     {
                         cvReleaseMat( &undistImg );
                         undistImg = cvCreateMat( src->height, src->width,
@@ -733,37 +794,27 @@ bool CvCalibFilter::Rectify( CvMat** srcarr, CvMat** dstarr )
 
                 cvZero( dst );
 
-            #if 1
                 if( !rectMap[i] || rectMap[i]->width != src->width ||
                     rectMap[i]->height != src->height )
                 {
+
                     cvReleaseMat( &rectMap[i] );
-                    rectMap[i] = cvCreateMat( src->height, src->width, CV_32SC3 );
-                    cvInitRectify( src, cameraParams + i, rectMap[i] ); 
+
+                    CvMat* tmpMap;
+                    tmpMap = cvCreateMat(stereo.warpSize.height,stereo.warpSize.width,CV_32FC2);
+
+                    rectMap[i] = cvCreateMat(stereo.warpSize.height,stereo.warpSize.width,CV_32SC3);
+
+                    cvComputePerspectiveMap(stereo.coeffs[i], tmpMap);
+
+                    cvConvertMap(src,tmpMap,rectMap[i],1);
+
+                    cvReleaseMat(&tmpMap);
+
+
                 }
 
                 cvRemap( src, dst, rectMap[i], 1 );
-            #else
-                {
-                double quad[4][2];
-                int k;
-                int s, d;
-
-                for( k = 0; k < 4; k++ )
-                {
-                    quad[k][0] = cameraParams[i].quad[k].x;
-                    quad[k][1] = cameraParams[i].quad[k].y;
-                }
-
-                s = src->origin;
-                d = dst->origin;
-                src->origin = dst->origin = 1;
-                iplWarpPerspectiveQ( src, dst, quad,
-                                     IPL_WARP_Q_TO_R, IPL_INTER_LINEAR);
-                src->origin = s;
-                dst->origin = d;
-                }
-            #endif
             }
         }
     }
@@ -850,6 +901,3 @@ bool CvCalibFilter::Undistort( CvMat** srcarr, CvMat** dstarr )
 
     return false;
 }
-
-
-#endif

@@ -39,12 +39,13 @@
 //
 //M*/
 
+
 #include "_cvaux.h"
 
 #include <float.h>
 #include "_cvutils.h"
-#include "_cvwrap.h"
 
+#if 0
 
 #define LN2PI 1.837877f
 #define BIG_FLT 1.e+10f
@@ -1144,4 +1145,10 @@ CvStatus icvEstimate1DHMMStateParams(CvImgObsInfo** obs_info_array, int num_img,
     icvDeleteVector( tmp_vect);
     return CV_NO_ERR; 
 }
+
+
+
+
+
+#endif
 
