@@ -3113,10 +3113,14 @@ cvReshape( const CvArr* array, CvMat* header,
     if( new_cn > total_width )
         new_rows = mat->rows * total_width / new_cn;
 
-    if( new_rows != 0 )
+    if( new_rows == 0 || new_rows == mat->rows )
+    {
+        header->rows = mat->rows;
+        header->step = mat->step;
+    }
+    else
     {
         int total_size = total_width * mat->rows;
-
         if( !CV_IS_MAT_CONT( mat->type ))
             CV_ERROR( CV_BadStep,
             "The matrix is not continuous, thus its number of rows can not be changed" );
