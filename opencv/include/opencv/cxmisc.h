@@ -151,8 +151,6 @@
 #define  CV_TOGGLE_DBL(x) \
     ((x)^((int64)(x) < 0 ? CV_BIG_INT(0x7fffffffffffffff) : 0))
 
-#define  CV_PI   3.1415926535897932384626433832795
-
 #define  CV_NOP(a)      (a)
 #define  CV_ADD(a, b)   ((a) + (b))
 #define  CV_SUB(a, b)   ((a) - (b))
@@ -163,8 +161,6 @@
 #define  CV_ANDN(a, b)  (~(a) & (b))
 #define  CV_ORN(a, b)   (~(a) | (b))
 #define  CV_SQR(a)      ((a) * (a))
-#define  CV_MIN(a, b)   ((a) <= (b) ? (a) : (b))
-#define  CV_MAX(a, b)   ((a) >= (b) ? (a) : (b))
 
 #define  CV_LT(a, b)    ((a) < (b))
 #define  CV_LE(a, b)    ((a) <= (b))
@@ -274,7 +270,6 @@ CV_INLINE CvFastDiv cvFastDiv( int divisor )
 
 #define CV_FAST_UDIV( x, fastdiv )  \
     ((int)(((uint64)((x)*2 + (fastdiv).delta))*(fastdiv).scale>>CV_FAST_DIV_SHIFT))
-
 
 #define CV_MEMCPY_CHAR( dst, src, len )                                             \
 {                                                                                   \

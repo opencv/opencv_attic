@@ -1295,6 +1295,17 @@ if( dst_cn == 3 )                                                   \
         dst[1] = _cast_macro2_(t1);                                 \
         dst[2] = _cast_macro2_(t2);                                 \
     }                                                               \
+else if( dst_cn == 1 )                                              \
+{                                                                   \
+    for( i = 0; i < size.width; i++, src += 3 )                     \
+    {                                                               \
+        temptype t0;                                                \
+        t0 = _cast_macro1_(mat[0]*src[0] + mat[1]*src[1] +          \
+                           mat[2]*src[2] + mat[3]);                 \
+        dst[i] = _cast_macro2_(t0);                                 \
+    }                                                               \
+    dst += size.width;                                              \
+}                                                                   \
 else                                                                \
     for( i = 0; i < size.width; i++, src += 3, dst += dst_cn )      \
     {                                                               \
@@ -1384,6 +1395,28 @@ typedef CvStatus (CV_STDCALL * CvTransformFunc)(
                        const void* src, int srcstep,
                        void* dst, int dststep, CvSize size,
                        const void* mat, int dst_cn );
+
+///////////////////// IPP transform functions //////////////////
+
+icvColorTwist_8u_C3R_t icvColorTwist_8u_C3R_p = 0;
+icvColorTwist_16u_C3R_t icvColorTwist_16u_C3R_p = 0;
+icvColorTwist_16s_C3R_t icvColorTwist_16s_C3R_p = 0;
+icvColorTwist_32f_C3R_t icvColorTwist_32f_C3R_p = 0;
+icvColorTwist_32f_C4R_t icvColorTwist_32f_C4R_p = 0;
+
+icvColorToGray_8u_C3C1R_t icvColorToGray_8u_C3C1R_p = 0;
+icvColorToGray_16u_C3C1R_t icvColorToGray_16u_C3C1R_p = 0;
+icvColorToGray_16s_C3C1R_t icvColorToGray_16s_C3C1R_p = 0;
+icvColorToGray_32f_C3C1R_t icvColorToGray_32f_C3C1R_p = 0;
+icvColorToGray_8u_AC4C1R_t icvColorToGray_8u_AC4C1R_p = 0;
+icvColorToGray_16u_AC4C1R_t icvColorToGray_16u_AC4C1R_p = 0;
+icvColorToGray_16s_AC4C1R_t icvColorToGray_16s_AC4C1R_p = 0;
+icvColorToGray_32f_AC4C1R_t icvColorToGray_32f_AC4C1R_p = 0;
+
+typedef CvStatus (CV_STDCALL * CvColorTwistIPPFunc)( const void* src, int srcstep,
+                        void* dst, int dststep, CvSize size, const float* coeffs );
+
+////////////////////////////////////////////////////////////////
 
 CV_IMPL void
 cvTransform( const CvArr* srcarr, CvArr* dstarr,
@@ -1547,21 +1580,75 @@ cvTransform( const CvArr* srcarr, CvArr* dstarr,
 
     {
         CvTransformFunc func = (CvTransformFunc)(transform_tab.fn_2d[type]);
+        CvColorTwistIPPFunc ipp_func = 0;
         CvSize size;
+        float* ipp_coeffs = (float*)cvStackAlloc( 16*sizeof(ipp_coeffs[0]) );
 
         if( !func )
             CV_ERROR( CV_StsUnsupportedFormat, "" );
 
+        if( cn == dst_cn )
+            ipp_func = type == CV_8UC3 ? icvColorTwist_8u_C3R_p :
+                       type == CV_16UC3 ? icvColorTwist_16u_C3R_p :
+                       type == CV_16SC3 ? icvColorTwist_16s_C3R_p :
+                       type == CV_32FC3 ? icvColorTwist_32f_C3R_p :
+                       type == CV_32FC4 && buffer[4] == 0 && buffer[9] == 0 &&
+                       buffer[14] == 0 && buffer[19] == 0 ? icvColorTwist_32f_C4R_p : 0;
+        else if( dst_cn == 1 && (cn == 3 || cn == 4) &&
+                 buffer[0] >= 0 && buffer[1] >= 0 && buffer[2] >= 0 &&
+                 buffer[0] + buffer[1] + buffer[2] <= 1.01 &&
+                 buffer[3] == 0 && (cn == 3 || buffer[4] == 0) )
+        {
+            if( cn == 3 )
+                ipp_func = type == CV_8UC3 ? icvColorToGray_8u_C3C1R_p :
+                           type == CV_16UC3 ? icvColorToGray_16u_C3C1R_p :
+                           type == CV_16SC3 ? icvColorToGray_16s_C3C1R_p :
+                           type == CV_32FC3 ? icvColorToGray_32f_C3C1R_p : 0;
+            else
+                ipp_func = type == CV_8UC4 ? icvColorToGray_8u_AC4C1R_p :
+                           type == CV_16UC4 ? icvColorToGray_16u_AC4C1R_p :
+                           type == CV_16SC4 ? icvColorToGray_16s_AC4C1R_p :
+                           type == CV_32FC4 ? icvColorToGray_32f_AC4C1R_p : 0;
+        }
+
+        if( ipp_func )
+        {
+            const double* ptr = buffer;
+
+            // fill cn x 4 ipp_coeffs array
+            for( i = 0; i < cn*4; i += 4, ptr += cn+1 )
+            {
+                float t0 = (float)ptr[0];
+                float t1 = (float)ptr[1];
+                ipp_coeffs[i] = t0;
+                ipp_coeffs[i+1] = t1;
+                t0 = (float)ptr[2];
+                t1 = (float)ptr[3];
+                ipp_coeffs[i+2] = t0;
+                ipp_coeffs[i+3] = t1;
+            }
+        }
+
         if( !src_seq )
         {
+            int srcstep = src->step;
+            int dststep = dst->step;
             size = cvGetMatSize( src );
+            
             if( CV_IS_MAT_CONT( src->type & dst->type ))
             {
                 size.width *= size.height;
                 size.height = 1;
+                srcstep = dststep = CV_STUB_STEP;
             }
-            IPPI_CALL( func( src->data.ptr, src->step, dst->data.ptr,
-                             dst->step, size, buffer, dst_cn ));
+            if( ipp_func )
+            {
+                IPPI_CALL( ipp_func( src->data.ptr, srcstep, dst->data.ptr,
+                                     dststep, size, ipp_coeffs ));
+            }
+            else
+                func( src->data.ptr, src->step, dst->data.ptr,
+                      dst->step, size, buffer, dst_cn );
         }
         else
         {
@@ -1575,11 +1662,19 @@ cvTransform( const CvArr* srcarr, CvArr* dstarr,
             {
                 int src_len = src_block->count - src_idx;
                 int dst_len = dst_block->count - dst_idx;
-
+                const void* srcptr = src_block->data + src_idx*src_elem_size;
+                void* dstptr = dst_block->data + dst_idx*dst_elem_size;
                 src_len = MIN(src_len, dst_len);
-                IPPI_CALL( func( src_block->data + src_idx*src_elem_size, CV_STUB_STEP,
-                                 dst_block->data + dst_idx*dst_elem_size, CV_STUB_STEP,
-                                 cvSize( src_len, 1 ), buffer, dst_cn ));
+
+                if( ipp_func )
+                {
+                    IPPI_CALL( ipp_func( srcptr, CV_STUB_STEP, dstptr, CV_STUB_STEP,
+                                         cvSize( src_len, 1 ), ipp_coeffs ));
+                }
+                else
+                    func( srcptr, CV_STUB_STEP, dstptr, CV_STUB_STEP,
+                          cvSize( src_len, 1 ), buffer, dst_cn );
+
                 if( (src_idx += src_len) == src_block->count )
                     src_block = src_block->next, src_idx = 0;
                 if( (dst_idx += src_len) == dst_block->count )

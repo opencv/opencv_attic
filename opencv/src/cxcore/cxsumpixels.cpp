@@ -45,211 +45,334 @@
 *                             Find sum of pixels in the ROI                              *
 \****************************************************************************************/
 
-
-#define ICV_DEF_SUM_1D_CASE_COI( __op__, src, len, sum, cn )                \
-{                                                                           \
-    int i;                                                                  \
-                                                                            \
-    for( i = 0; i <= (len) - 4*(cn); i += 4*(cn) )                          \
-        (sum)[0] += __op__((src)[i]) + __op__((src)[i+(cn)]) +              \
-                    __op__((src)[i+(cn)*2]) + __op__((src)[i+(cn)*3]);      \
-                                                                            \
-    for( ; i < (len); i += (cn) )                                           \
-        (sum)[0] += __op__((src)[i]);                                       \
-}                                                                           \
+#define ICV_SUM_COI_CASE( __op__, len, cn )                 \
+    for( ; x <= (len) - 4*(cn); x += 4*(cn) )               \
+        s0 += __op__(src[x]) + __op__(src[x+(cn)]) +        \
+              __op__(src[x+(cn)*2]) + __op__(src[x+(cn)*3]);\
+                                                            \
+    for( ; x < (len); x += (cn) )                           \
+        s0 += __op__(src[x]);
 
 
-#define ICV_DEF_SUM_1D_CASE_C1( __op__, src, len, sum ) \
-    ICV_DEF_SUM_1D_CASE_COI( __op__, src, len, sum, 1 )
+#define ICV_SUM_CASE_C1( __op__, len )                      \
+    ICV_SUM_COI_CASE( __op__, len, 1 )
 
 
-#define ICV_DEF_SUM_1D_CASE_C2( __op__, src, len, sum )                     \
-{                                                                           \
-    int i;                                                                  \
-                                                                            \
-    for( i = 0; i <= (len) - 8; i += 8 )                                    \
-    {                                                                       \
-        (sum)[0] += __op__((src)[i]) + __op__((src)[i+2]) +                 \
-                    __op__((src)[i+4]) + __op__((src)[i+6]);                \
-        (sum)[1] += __op__((src)[i+1]) + __op__((src)[i+3]) +               \
-                    __op__((src)[i+5]) + __op__((src)[i+7]);                \
-    }                                                                       \
-                                                                            \
-    for( ; i < (len); i += 2 )                                              \
-    {                                                                       \
-        (sum)[0] += __op__((src)[i]);                                       \
-        (sum)[1] += __op__((src)[i+1]);                                     \
-    }                                                                       \
-}                                                                           \
+#define ICV_SUM_CASE_C2( __op__, len )                      \
+    for( ; x <= (len) - 8; x += 8 )                         \
+    {                                                       \
+        s0 += __op__(src[x]) + __op__(src[x+2]) +           \
+              __op__(src[x+4]) + __op__(src[x+6]);          \
+        s1 += __op__(src[x+1]) + __op__(src[x+3]) +         \
+              __op__(src[x+5]) + __op__(src[x+7]);          \
+    }                                                       \
+                                                            \
+    for( ; x < (len); x += 2 )                              \
+    {                                                       \
+        s0 += __op__(src[x]);                               \
+        s1 += __op__(src[x+1]);                             \
+    }
 
 
-#define ICV_DEF_SUM_1D_CASE_C3( __op__, src, len, sum )                     \
-{                                                                           \
-    int i;                                                                  \
-                                                                            \
-    for( i = 0; i <= (len) - 12; i += 12 )                                  \
-    {                                                                       \
-        (sum)[0] += __op__((src)[i]) + __op__((src)[i+3]) +                 \
-                    __op__((src)[i+6]) + __op__((src)[i+9]);                \
-        (sum)[1] += __op__((src)[i+1]) + __op__((src)[i+4]) +               \
-                    __op__((src)[i+7]) + __op__((src)[i+10]);               \
-        (sum)[2] += __op__((src)[i+2]) + __op__((src)[i+5]) +               \
-                    __op__((src)[i+8]) + __op__((src)[i+11]);               \
-    }                                                                       \
-                                                                            \
-    for( ; i < (len); i += 3 )                                              \
-    {                                                                       \
-        (sum)[0] += __op__((src)[i]);                                       \
-        (sum)[1] += __op__((src)[i+1]);                                     \
-        (sum)[2] += __op__((src)[i+2]);                                     \
-    }                                                                       \
+
+#define ICV_SUM_CASE_C3( __op__, len )                      \
+    for( ; x <= (len) - 12; x += 12 )                       \
+    {                                                       \
+        s0 += __op__(src[x]) + __op__(src[x+3]) +           \
+              __op__(src[x+6]) + __op__(src[x+9]);          \
+        s1 += __op__(src[x+1]) + __op__(src[x+4]) +         \
+              __op__(src[x+7]) + __op__(src[x+10]);         \
+        s2 += __op__(src[x+2]) + __op__(src[x+5]) +         \
+              __op__(src[x+8]) + __op__(src[x+11]);         \
+    }                                                       \
+                                                            \
+    for( ; x < (len); x += 3 )                              \
+    {                                                       \
+        s0 += __op__(src[x]);                               \
+        s1 += __op__(src[x+1]);                             \
+        s2 += __op__(src[x+2]);                             \
+    }
+
+
+#define ICV_SUM_CASE_C4( __op__, len )                      \
+    for( ; x <= (len) - 16; x += 16 )                       \
+    {                                                       \
+        s0 += __op__(src[x]) + __op__(src[x+4]) +           \
+              __op__(src[x+8]) + __op__(src[x+12]);         \
+        s1 += __op__(src[x+1]) + __op__(src[x+5]) +         \
+              __op__(src[x+9]) + __op__(src[x+13]);         \
+        s2 += __op__(src[x+2]) + __op__(src[x+6]) +         \
+              __op__(src[x+10]) + __op__(src[x+14]);        \
+        s3 += __op__(src[x+3]) + __op__(src[x+7]) +         \
+              __op__(src[x+11]) + __op__(src[x+15]);        \
+    }                                                       \
+                                                            \
+    for( ; x < (len); x += 4 )                              \
+    {                                                       \
+        s0 += __op__(src[x]);                               \
+        s1 += __op__(src[x+1]);                             \
+        s2 += __op__(src[x+2]);                             \
+        s3 += __op__(src[x+3]);                             \
+    }
+
+
+////////////////////////////////////// entry macros //////////////////////////////////////
+
+#define ICV_SUM_ENTRY_COMMON()          \
+    step /= sizeof(src[0])
+
+#define ICV_SUM_ENTRY_C1( sumtype )     \
+    sumtype s0 = 0;                     \
+    ICV_SUM_ENTRY_COMMON()
+
+#define ICV_SUM_ENTRY_C2( sumtype )     \
+    sumtype s0 = 0, s1 = 0;             \
+    ICV_SUM_ENTRY_COMMON()
+
+#define ICV_SUM_ENTRY_C3( sumtype )     \
+    sumtype s0 = 0, s1 = 0, s2 = 0;     \
+    ICV_SUM_ENTRY_COMMON()
+
+#define ICV_SUM_ENTRY_C4( sumtype )         \
+    sumtype s0 = 0, s1 = 0, s2 = 0, s3 = 0; \
+    ICV_SUM_ENTRY_COMMON()
+
+
+#define ICV_SUM_ENTRY_BLOCK_COMMON( block_size )    \
+    int remaining = block_size;                     \
+    ICV_SUM_ENTRY_COMMON()
+
+#define ICV_SUM_ENTRY_BLOCK_C1( sumtype, worktype, block_size ) \
+    sumtype sum0 = 0;                                           \
+    worktype s0 = 0;                                            \
+    ICV_SUM_ENTRY_BLOCK_COMMON( block_size )
+
+#define ICV_SUM_ENTRY_BLOCK_C2( sumtype, worktype, block_size ) \
+    sumtype sum0 = 0, sum1 = 0;                                 \
+    worktype s0 = 0, s1 = 0;                                    \
+    ICV_SUM_ENTRY_BLOCK_COMMON( block_size )
+
+#define ICV_SUM_ENTRY_BLOCK_C3( sumtype, worktype, block_size ) \
+    sumtype sum0 = 0, sum1 = 0, sum2 = 0;                       \
+    worktype s0 = 0, s1 = 0, s2 = 0;                            \
+    ICV_SUM_ENTRY_BLOCK_COMMON( block_size )
+
+#define ICV_SUM_ENTRY_BLOCK_C4( sumtype, worktype, block_size ) \
+    sumtype sum0 = 0, sum1 = 0, sum2 = 0, sum3 = 0;             \
+    worktype s0 = 0, s1 = 0, s2 = 0, s3 = 0;                    \
+    ICV_SUM_ENTRY_BLOCK_COMMON( block_size )
+
+
+/////////////////////////////////////// exit macros //////////////////////////////////////
+
+#define ICV_SUM_EXIT_C1( tmp, sumtype )     \
+    sum[0] = (sumtype)tmp##0
+
+#define ICV_SUM_EXIT_C2( tmp, sumtype )     \
+    sum[0] = (sumtype)tmp##0;               \
+    sum[1] = (sumtype)tmp##1;
+
+#define ICV_SUM_EXIT_C3( tmp, sumtype )     \
+    sum[0] = (sumtype)tmp##0;               \
+    sum[1] = (sumtype)tmp##1;               \
+    sum[2] = (sumtype)tmp##2;
+
+#define ICV_SUM_EXIT_C4( tmp, sumtype )     \
+    sum[0] = (sumtype)tmp##0;               \
+    sum[1] = (sumtype)tmp##1;               \
+    sum[2] = (sumtype)tmp##2;               \
+    sum[3] = (sumtype)tmp##3;
+
+#define ICV_SUM_EXIT_BLOCK_C1( sumtype )    \
+    sum0 += s0;                             \
+    ICV_SUM_EXIT_C1( sum, sumtype )
+
+#define ICV_SUM_EXIT_BLOCK_C2( sumtype )    \
+    sum0 += s0; sum1 += s1;                 \
+    ICV_SUM_EXIT_C2( sum, sumtype )
+
+#define ICV_SUM_EXIT_BLOCK_C3( sumtype )    \
+    sum0 += s0; sum1 += s1;                 \
+    sum2 += s2;                             \
+    ICV_SUM_EXIT_C3( sum, sumtype )
+
+#define ICV_SUM_EXIT_BLOCK_C4( sumtype )    \
+    sum0 += s0; sum1 += s1;                 \
+    sum2 += s2; sum3 += s3;                 \
+    ICV_SUM_EXIT_C4( sum, sumtype )
+
+////////////////////////////////////// update macros /////////////////////////////////////
+
+#define ICV_SUM_UPDATE_COMMON( block_size ) \
+    remaining = block_size
+
+#define ICV_SUM_UPDATE_C1( block_size )     \
+    ICV_SUM_UPDATE_COMMON( block_size );    \
+    sum0 += s0;                             \
+    s0 = 0
+
+#define ICV_SUM_UPDATE_C2( block_size )     \
+    ICV_SUM_UPDATE_COMMON( block_size );    \
+    sum0 += s0; sum1 += s1;                 \
+    s0 = s1 = 0
+
+#define ICV_SUM_UPDATE_C3( block_size )     \
+    ICV_SUM_UPDATE_COMMON( block_size );    \
+    sum0 += s0; sum1 += s1; sum2 += s2;     \
+    s0 = s1 = s2 = 0
+
+#define ICV_SUM_UPDATE_C4( block_size )     \
+    ICV_SUM_UPDATE_COMMON( block_size );    \
+    sum0 += s0; sum1 += s1;                 \
+    sum2 += s2; sum3 += s3;                 \
+    s0 = s1 = s2 = s3 = 0
+
+
+#define ICV_DEF_SUM_NOHINT_BLOCK_FUNC_2D( name, flavor, cn,     \
+    __op__, arrtype, sumtype_final, sumtype, worktype, block_size )\
+IPCVAPI_IMPL(CvStatus, icv##name##_##flavor##_C##cn##R,(        \
+    const arrtype* src, int step, CvSize size,                  \
+    sumtype_final* sum ), (src, step, size, sum) )              \
+{                                                               \
+    ICV_SUM_ENTRY_BLOCK_C##cn(sumtype,worktype,(block_size)*(cn)); \
+    size.width *= cn;                                           \
+                                                                \
+    for( ; size.height--; src += step )                         \
+    {                                                           \
+        int x = 0;                                              \
+        while( x < size.width )                                 \
+        {                                                       \
+            int limit = MIN( remaining, size.width - x );       \
+            remaining -= limit;                                 \
+            limit += x;                                         \
+            ICV_SUM_CASE_C##cn( __op__, limit );                \
+            if( remaining == 0 )                                \
+            {                                                   \
+                ICV_SUM_UPDATE_C##cn( (block_size)*(cn) );      \
+            }                                                   \
+        }                                                       \
+    }                                                           \
+                                                                \
+    ICV_SUM_EXIT_BLOCK_C##cn( sumtype_final );                  \
+    return CV_OK;                                               \
 }
 
 
-#define ICV_DEF_SUM_1D_CASE_C4( __op__, src, len, sum )                     \
-{                                                                           \
-    int i;                                                                  \
-                                                                            \
-    for( i = 0; i <= (len) - 16; i += 16 )                                  \
-    {                                                                       \
-        (sum)[0] += __op__((src)[i]) + __op__((src)[i+4]) +                 \
-                    __op__((src)[i+8]) + __op__((src)[i+12]);               \
-        (sum)[1] += __op__((src)[i+1]) + __op__((src)[i+5]) +               \
-                    __op__((src)[i+9]) + __op__((src)[i+13]);               \
-        (sum)[2] += __op__((src)[i+2]) + __op__((src)[i+6]) +               \
-                    __op__((src)[i+10]) + __op__((src)[i+14]);              \
-        (sum)[3] += __op__((src)[i+3]) + __op__((src)[i+7]) +               \
-                    __op__((src)[i+11]) + __op__((src)[i+15]);              \
-    }                                                                       \
-                                                                            \
-    for( ; i < (len); i += 4 )                                              \
-    {                                                                       \
-        (sum)[0] += __op__((src)[i]);                                       \
-        (sum)[1] += __op__((src)[i+1]);                                     \
-        (sum)[2] += __op__((src)[i+2]);                                     \
-        (sum)[3] += __op__((src)[i+3]);                                     \
-    }                                                                       \
+#define ICV_DEF_SUM_NOHINT_FUNC_2D( name, flavor, cn,           \
+    __op__, arrtype, sumtype_final, sumtype, worktype, block_size )\
+IPCVAPI_IMPL(CvStatus, icv##name##_##flavor##_C##cn##R,(        \
+    const arrtype* src, int step, CvSize size,                  \
+    sumtype_final* sum ), (src, step, size, sum) )              \
+{                                                               \
+    ICV_SUM_ENTRY_C##cn( sumtype );                             \
+    size.width *= cn;                                           \
+                                                                \
+    for( ; size.height--; src += step )                         \
+    {                                                           \
+        int x = 0;                                              \
+        ICV_SUM_CASE_C##cn( __op__, size.width );               \
+    }                                                           \
+                                                                \
+    ICV_SUM_EXIT_C##cn( s, sumtype_final );                     \
+    return CV_OK;                                               \
 }
 
 
-#define CV_SUM_ENTRY_C1( sumtype ) \
-    sumtype temp[1] = { 0 };
-
-#define CV_SUM_ENTRY_C2( sumtype ) \
-    sumtype temp[2] = { 0, 0 };
-
-#define CV_SUM_ENTRY_C3( sumtype ) \
-    sumtype temp[3] = { 0, 0, 0 };
-
-#define CV_SUM_ENTRY_C4( sumtype ) \
-    sumtype temp[4] = { 0, 0, 0, 0 };
-
-#define CV_SUM_EXIT_C1(sumtype_final) \
-    sum[0] = (sumtype_final)temp[0]
-
-#define CV_SUM_EXIT_C2(sumtype_final) \
-    CV_SUM_EXIT_C1(sumtype_final), sum[1] = (sumtype_final)temp[1]
-
-#define CV_SUM_EXIT_C3(sumtype_final) \
-    CV_SUM_EXIT_C2(sumtype_final), sum[2] = (sumtype_final)temp[2]
-
-#define CV_SUM_EXIT_C4(sumtype_final) \
-    CV_SUM_EXIT_C3(sumtype_final), sum[3] = (sumtype_final)temp[3]
-
-
-#define ICV_DEF_SUM_NOHINT_FUNC_2D( __op__, _entry_, _exit_, name, flavor,  \
-                             cn, srctype, sumtype, sumtype_final )          \
-IPCVAPI_IMPL(CvStatus, icv##name##_##flavor##_C##cn##R,( const srctype* src,\
-                                int step, CvSize size, sumtype_final* sum ),\
-                                (src, step, size, sum) )                    \
-{                                                                           \
-    _entry_( sumtype );                                                     \
-    size.width *= cn;                                                       \
-                                                                            \
-    for( int y = 0; y < size.height; y++, (char*&)src += step )             \
-    {                                                                       \
-        ICV_DEF_SUM_1D_CASE_C##cn( __op__, src, size.width, temp );         \
-    }                                                                       \
-                                                                            \
-    _exit_(sumtype_final);                                                  \
-                                                                            \
-    return CV_OK;                                                           \
+#define ICV_DEF_SUM_HINT_FUNC_2D( name, flavor, cn,             \
+    __op__, arrtype, sumtype_final, sumtype, worktype, block_size )\
+IPCVAPI_IMPL(CvStatus, icv##name##_##flavor##_C##cn##R,(        \
+    const arrtype* src, int step, CvSize size,                  \
+    sumtype_final* sum, CvHintAlgorithm /*hint*/ ),             \
+    (src, step, size, sum, cvAlgHintAccurate) )                 \
+{                                                               \
+    ICV_SUM_ENTRY_C##cn( sumtype );                             \
+    size.width *= cn;                                           \
+                                                                \
+    for( ; size.height--; src += step )                         \
+    {                                                           \
+        int x = 0;                                              \
+        ICV_SUM_CASE_C##cn( __op__, size.width );               \
+    }                                                           \
+                                                                \
+    ICV_SUM_EXIT_C##cn( s, sumtype_final );                     \
+    return CV_OK;                                               \
 }
 
 
-#define ICV_DEF_SUM_HINT_FUNC_2D( __op__, _entry_, _exit_, name, flavor,    \
-                             cn, srctype, sumtype, sumtype_final )          \
-IPCVAPI_IMPL(CvStatus, icv##name##_##flavor##_C##cn##R,( const srctype* src,\
-                                    int step, CvSize size, sumtype_final* sum,\
-                                    CvHintAlgorithm /*hint*/ ),             \
-                                    (src, step, size, sum, cvAlgHintAccurate) )\
-{                                                                           \
-    _entry_( sumtype );                                                     \
-    size.width *= cn;                                                       \
-                                                                            \
-    for( int y = 0; y < size.height; y++, (char*&)src += step )             \
-    {                                                                       \
-        ICV_DEF_SUM_1D_CASE_C##cn( __op__, src, size.width, temp );         \
-    }                                                                       \
-                                                                            \
-    _exit_(sumtype_final);                                                  \
-                                                                            \
-    return CV_OK;                                                           \
+#define ICV_DEF_SUM_NOHINT_BLOCK_FUNC_2D_COI( name, flavor,     \
+    __op__, arrtype, sumtype_final, sumtype, worktype, block_size )\
+static CvStatus CV_STDCALL icv##name##_##flavor##_CnCR(         \
+    const arrtype* src, int step, CvSize size, int cn,          \
+    int coi, sumtype_final* sum )                               \
+{                                                               \
+    ICV_SUM_ENTRY_BLOCK_C1(sumtype,worktype,(block_size)*(cn)); \
+    size.width *= cn;                                           \
+    src += coi - 1;                                             \
+                                                                \
+    for( ; size.height--; src += step )                         \
+    {                                                           \
+        int x = 0;                                              \
+        while( x < size.width )                                 \
+        {                                                       \
+            int limit = MIN( remaining, size.width - x );       \
+            remaining -= limit;                                 \
+            limit += x;                                         \
+            ICV_SUM_COI_CASE( __op__, limit, cn );              \
+            if( remaining == 0 )                                \
+            {                                                   \
+                ICV_SUM_UPDATE_C1( (block_size)*(cn) );         \
+            }                                                   \
+        }                                                       \
+    }                                                           \
+                                                                \
+    ICV_SUM_EXIT_BLOCK_C1( sumtype_final );                     \
+    return CV_OK;                                               \
 }
 
 
-#define ICV_DEF_SUM_0D_CASE_C1( __op__, src, sum )                          \
-{                                                                           \
-    (sum)[0] += __op__((src)[0]);                                           \
-}                                                                           \
-
-
-#define ICV_DEF_SUM_0D_CASE_C2( __op__, src, sum )                          \
-{                                                                           \
-    (sum)[0] += __op__((src)[0]);                                           \
-    (sum)[1] += __op__((src)[1]);                                           \
-}                                                                           \
-
-
-#define ICV_DEF_SUM_FUNC_2D_COI( __op__, name, flavor, srctype,             \
-                                 sumtype, sumtype_final )                   \
-static CvStatus CV_STDCALL icv##name##_##flavor##_CnCR( const srctype* src, \
-                int step, CvSize size, int cn, int coi, sumtype_final* sum )\
-{                                                                           \
-    CV_SUM_ENTRY_C1( sumtype );                                             \
-                                                                            \
-    size.width *= cn;                                                       \
-    src += coi - 1;                                                         \
-                                                                            \
-    for( int y = 0; y < size.height; y++, (char*&)src += step )             \
-    {                                                                       \
-        ICV_DEF_SUM_1D_CASE_COI( __op__, src, size.width, temp, cn );       \
-    }                                                                       \
-                                                                            \
-    CV_SUM_EXIT_C1(sumtype_final);                                          \
-                                                                            \
-    return CV_OK;                                                           \
+#define ICV_DEF_SUM_NOHINT_FUNC_2D_COI( name, flavor,           \
+    __op__, arrtype, sumtype_final, sumtype, worktype, block_size )\
+static CvStatus CV_STDCALL icv##name##_##flavor##_CnCR(         \
+    const arrtype* src, int step, CvSize size, int cn,          \
+    int coi, sumtype_final* sum )                               \
+{                                                               \
+    ICV_SUM_ENTRY_C1( sumtype );                                \
+    size.width *= cn;                                           \
+    src += coi - 1;                                             \
+                                                                \
+    for( ; size.height--; src += step )                         \
+    {                                                           \
+        int x = 0;                                              \
+        ICV_SUM_COI_CASE( __op__, size.width, cn );             \
+    }                                                           \
+                                                                \
+    ICV_SUM_EXIT_C1( s, sumtype_final );                        \
+    return CV_OK;                                               \
 }
 
 
-#define ICV_DEF_SUM_ALL( __op__, name, flavor, srctype, sumtype, sumtype_final, hint )\
-    ICV_DEF_SUM_##hint##_FUNC_2D( __op__, CV_SUM_ENTRY_C1, CV_SUM_EXIT_C1,      \
-                         name, flavor, 1, srctype, sumtype, sumtype_final )     \
-    ICV_DEF_SUM_##hint##_FUNC_2D( __op__, CV_SUM_ENTRY_C2, CV_SUM_EXIT_C2,      \
-                         name, flavor, 2, srctype, sumtype, sumtype_final )     \
-    ICV_DEF_SUM_##hint##_FUNC_2D( __op__, CV_SUM_ENTRY_C3, CV_SUM_EXIT_C3,      \
-                         name, flavor, 3, srctype, sumtype, sumtype_final )     \
-    ICV_DEF_SUM_##hint##_FUNC_2D( __op__, CV_SUM_ENTRY_C4, CV_SUM_EXIT_C4,      \
-                         name, flavor, 4, srctype, sumtype, sumtype_final )     \
-    ICV_DEF_SUM_FUNC_2D_COI( __op__, name, flavor, srctype, sumtype, sumtype_final )
+#define ICV_DEF_SUM_ALL( name, flavor, __op__, arrtype, sumtype_final, sumtype, \
+                         worktype, hintp_type, nohint_type, block_size )        \
+    ICV_DEF_SUM_##hintp_type##_FUNC_2D( name, flavor, 1, __op__, arrtype,       \
+                         sumtype_final, sumtype, worktype, block_size )         \
+    ICV_DEF_SUM_##hintp_type##_FUNC_2D( name, flavor, 2, __op__, arrtype,       \
+                         sumtype_final, sumtype, worktype, block_size )         \
+    ICV_DEF_SUM_##hintp_type##_FUNC_2D( name, flavor, 3, __op__, arrtype,       \
+                         sumtype_final, sumtype, worktype, block_size )         \
+    ICV_DEF_SUM_##hintp_type##_FUNC_2D( name, flavor, 4, __op__, arrtype,       \
+                         sumtype_final, sumtype, worktype, block_size )         \
+    ICV_DEF_SUM_##nohint_type##_FUNC_2D_COI( name, flavor, __op__, arrtype,     \
+                         sumtype_final, sumtype, worktype, block_size )
 
-
-ICV_DEF_SUM_ALL( CV_NOP, Sum, 8u, uchar, int64, double, NOHINT )
-ICV_DEF_SUM_ALL( CV_NOP, Sum, 16u, ushort, int64, double, NOHINT )
-ICV_DEF_SUM_ALL( CV_NOP, Sum, 16s, short, int64, double, NOHINT )
-ICV_DEF_SUM_ALL( CV_CAST_64S, Sum, 32s, int, int64, double, NOHINT )
-ICV_DEF_SUM_ALL( CV_NOP, Sum, 32f, float, double, double, HINT )
-ICV_DEF_SUM_ALL( CV_NOP, Sum, 64f, double, double, double, NOHINT )
+ICV_DEF_SUM_ALL( Sum, 8u, CV_NOP, uchar, double, int64, unsigned,
+                 NOHINT_BLOCK, NOHINT_BLOCK, 1 << 24 )
+ICV_DEF_SUM_ALL( Sum, 16u, CV_NOP, ushort, double, int64, unsigned,
+                 NOHINT_BLOCK, NOHINT_BLOCK, 1 << 16 )
+ICV_DEF_SUM_ALL( Sum, 16s, CV_NOP, short, double, int64, int,
+                 NOHINT_BLOCK, NOHINT_BLOCK, 1 << 16 )
+ICV_DEF_SUM_ALL( Sum, 32s, CV_NOP, int, double, double, double, NOHINT, NOHINT, 0 )
+ICV_DEF_SUM_ALL( Sum, 32f, CV_NOP, float, double, double, double, HINT, NOHINT, 0 )
+ICV_DEF_SUM_ALL( Sum, 64f, CV_NOP, double, double, double, double, NOHINT, NOHINT, 0 )
 
 #define icvSum_8s_C1R   0
 #define icvSum_8s_C2R   0
@@ -421,16 +544,20 @@ cvSum( const CvArr* arr )
 }
 
 
-#define ICV_DEF_SUM_C1( __op__, name, flavor, srctype, sumtype )        \
-    ICV_DEF_SUM_NOHINT_FUNC_2D( __op__, CV_SUM_ENTRY_C1, CV_SUM_EXIT_C1,\
-                         name, flavor, 1, srctype, sumtype, int )       \
-    ICV_DEF_SUM_FUNC_2D_COI( __op__, name, flavor, srctype, sumtype, int )
+#define ICV_DEF_NONZERO_ALL( flavor, __op__, arrtype )              \
+    ICV_DEF_SUM_NOHINT_FUNC_2D( CountNonZero, flavor, 1, __op__,    \
+                                arrtype, int, int, int, 0 )         \
+    ICV_DEF_SUM_NOHINT_FUNC_2D_COI( CountNonZero, flavor, __op__,   \
+                                    arrtype, int, int, int, 0 )
 
-ICV_DEF_SUM_C1( CV_NONZERO, CountNonZero, 8u, uchar, int )
-ICV_DEF_SUM_C1( CV_NONZERO, CountNonZero, 16s, ushort, int )
-ICV_DEF_SUM_C1( CV_NONZERO, CountNonZero, 32s, int, int )
-ICV_DEF_SUM_C1( CV_NONZERO_FLT, CountNonZero, 32f, int, int )
-ICV_DEF_SUM_C1( CV_NONZERO_FLT, CountNonZero, 64f, int64, int )
+#undef  CV_NONZERO_DBL
+#define CV_NONZERO_DBL(x) (((x) & CV_BIG_INT(0x7fffffffffffffff)) != 0)
+
+ICV_DEF_NONZERO_ALL( 8u, CV_NONZERO, uchar )
+ICV_DEF_NONZERO_ALL( 16s, CV_NONZERO, ushort )
+ICV_DEF_NONZERO_ALL( 32s, CV_NONZERO, int )
+ICV_DEF_NONZERO_ALL( 32f, CV_NONZERO_FLT, int )
+ICV_DEF_NONZERO_ALL( 64f, CV_NONZERO_DBL, int64 )
 
 #define icvCountNonZero_8s_C1R icvCountNonZero_8u_C1R
 #define icvCountNonZero_8s_CnCR icvCountNonZero_8u_CnCR
@@ -439,7 +566,6 @@ ICV_DEF_SUM_C1( CV_NONZERO_FLT, CountNonZero, 64f, int64, int )
 
 CV_DEF_INIT_FUNC_TAB_2D( CountNonZero, C1R )
 CV_DEF_INIT_FUNC_TAB_2D( CountNonZero, CnCR )
-
 
 CV_IMPL int
 cvCountNonZero( const CvArr* img )

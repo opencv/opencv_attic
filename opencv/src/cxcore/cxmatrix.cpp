@@ -132,7 +132,7 @@ cvTrace( const CvArr* array )
     {
         mat = (CvMat*)array;
         int type = CV_MAT_TYPE(mat->type);
-        int size = CV_MIN(mat->rows,mat->cols);
+        int size = MIN(mat->rows,mat->cols);
         uchar* data = mat->data.ptr;
 
         if( type == CV_32FC1 )
@@ -155,7 +155,7 @@ cvTrace( const CvArr* array )
     }
 
     CV_CALL( mat = cvGetDiag( array, &stub ));
-    CV_CALL( sum = CvScalar(cvSum( mat )));
+    CV_CALL( sum = cvSum( mat ));
 
     __END__;
 

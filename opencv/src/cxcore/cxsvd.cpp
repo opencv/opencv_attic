@@ -44,8 +44,6 @@
 
 /////////////////////////////////////////////////////////////////////////////////////////
 
-#define CV_SWAP( a, b, t ) ((t) = (a), (a) = (b), (b) = (t))
-
 #define icvGivens_64f( n, x, y, c, s ) \
 {                                      \
     int _i;                            \
@@ -61,6 +59,8 @@
     }                                  \
 }
 
+
+/* y[0:m,0:n] += diag(a[0:1,0:m]) * x[0:m,0:n] */
 static  void
 icvMatrAXPY_64f( int m, int n, const double* x, int dx,
                  const double* a, double* y, int dy )
@@ -88,6 +88,8 @@ icvMatrAXPY_64f( int m, int n, const double* x, int dx,
 }
 
 
+/* y[1:m,-1] = h*y[1:m,0:n]*x[0:1,0:n]'*x[-1]  (this is used for U&V reconstruction)
+   y[1:m,0:n] += h*y[1:m,0:n]*x[0:1,0:n]'*x[0:1,0:n] */
 static void
 icvMatrAXPY3_64f( int m, int n, const double* x, int l, double* y, double h )
 {
@@ -201,6 +203,7 @@ icvMatrAXPY3_32f( int m, int n, const float* x, int l, float* y, double h )
     }
 }
 
+/* accurate hypotenuse calculation */
 static double
 pythag( double a, double b )
 {
@@ -259,6 +262,7 @@ icvSVD_64f( double* a, int lda, int m, int n,
     m1 = m;
     n1 = n;
 
+    /* transform a to bi-diagonal form */
     for( ;; )
     {
         int update_u;
@@ -594,7 +598,7 @@ icvSVD_64f( double* a, int lda, int m, int n,
         }
     }                           /* end of diagonalization loop */
 
-    /* sort singular values */
+    /* sort singular values and corresponding values */
     for( i = 0; i < nm; i++ )
     {
         k = i;
@@ -604,7 +608,6 @@ icvSVD_64f( double* a, int lda, int m, int n,
 
         if( k != i )
         {
-            /* swap i & k values */
             double t;
             CV_SWAP( w[i], w[k], t );
 
@@ -655,6 +658,7 @@ icvSVD_32f( float* a, int lda, int m, int n,
     m1 = m;
     n1 = n;
 
+    /* transform a to bi-diagonal form */
     for( ;; )
     {
         int update_u;
@@ -991,7 +995,7 @@ icvSVD_32f( float* a, int lda, int m, int n,
         }
     }                           /* end of diagonalization loop */
 
-    /* sort singular values */
+    /* sort singular values and corresponding vectors */
     for( i = 0; i < nm; i++ )
     {
         k = i;
@@ -1001,7 +1005,6 @@ icvSVD_32f( float* a, int lda, int m, int n,
 
         if( k != i )
         {
-            /* swap i & k values */
             float t;
             CV_SWAP( w[i], w[k], t );
 
@@ -1224,8 +1227,8 @@ cvSVD( CvArr* aarr, CvArr* warr, CvArr* uarr, CvArr* varr, int flags )
     uchar* tw = 0;
     int type;
     int a_buf_offset = 0, u_buf_offset = 0, buf_size, pix_size;
-    int temp_u = 0, // temporary storage for U is needed
-        t_svd; // special case: a->rows < a->cols
+    int temp_u = 0, /* temporary storage for U is needed */
+        t_svd; /* special case: a->rows < a->cols */
     int m, n;
     int w_rows, w_cols;
     int u_rows = 0, u_cols = 0;

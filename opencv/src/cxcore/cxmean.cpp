@@ -46,240 +46,328 @@
 *                              Mean value over the region                                *
 \****************************************************************************************/
 
-#define ICV_IMPL_MEAN_1D_CASE_C1( _mask_op_, acctype, src, mask, len, sum, pix ) \
-{                                                                   \
-    int i;                                                          \
-    acctype s1 = 0;                                                 \
-                                                                    \
-    for( i = 0; i <= (len) - 4; i += 4 )                            \
-    {                                                               \
-        int m = ((mask)[i] == 0) - 1;                               \
-        acctype s;                                                  \
-                                                                    \
-        s = _mask_op_(m,(src)[i]);                                  \
-        (pix) -= m;                                                 \
-                                                                    \
-        m = ((mask)[i + 1] == 0) - 1;                               \
-        s += _mask_op_(m,(src)[i + 1]);                             \
-        (pix) -= m;                                                 \
-                                                                    \
-        m = ((mask)[i + 2] == 0) - 1;                               \
-        s += _mask_op_(m,(src)[i + 2]);                             \
-        (pix) -= m;                                                 \
-                                                                    \
-        m = ((mask)[i + 3] == 0) - 1;                               \
-        (sum)[0] += s + _mask_op_(m,(src)[i + 3]);                  \
-        (pix) -= m;                                                 \
-    }                                                               \
-                                                                    \
-    for( ; i < (len); i++ )                                         \
-    {                                                               \
-        int m = ((mask)[i] == 0) - 1;                               \
-                                                                    \
-        s1 += _mask_op_(m,(src)[i]);                                \
-        (pix) -= m;                                                 \
-    }                                                               \
-                                                                    \
-    (sum)[0] += s1;                                                 \
+#define ICV_MEAN_CASE_C1( len )         \
+    for( ; x <= (len) - 2; x += 2 )     \
+    {                                   \
+        if( mask[x] )                   \
+             s0 += src[x], pix++;       \
+        if( mask[x+1] )                 \
+            s0 += src[x+1], pix++;      \
+    }                                   \
+                                        \
+    for( ; x < (len); x++ )             \
+        if( mask[x] )                   \
+            s0 += src[x], pix++
+
+
+#define ICV_MEAN_CASE_C2( len )         \
+    for( ; x < (len); x++ )             \
+        if( mask[x] )                   \
+        {                               \
+            s0 += src[x*2];             \
+            s1 += src[x*2+1];           \
+            pix++;                      \
+        }
+
+
+#define ICV_MEAN_CASE_C3( len )         \
+    for( ; x < (len); x++ )             \
+        if( mask[x] )                   \
+        {                               \
+            s0 += src[x*3];             \
+            s1 += src[x*3+1];           \
+            s2 += src[x*3+2];           \
+            pix++;                      \
+        }
+
+
+#define ICV_MEAN_CASE_C4( len )         \
+    for( ; x < (len); x++ )             \
+        if( mask[x] )                   \
+        {                               \
+            s0 += src[x*4];             \
+            s1 += src[x*4+1];           \
+            s2 += src[x*4+2];           \
+            s3 += src[x*4+3];           \
+            pix++;                      \
+        }
+
+
+#define ICV_MEAN_COI_CASE( len, cn )    \
+    for( ; x <= (len) - 2; x += 2 )     \
+    {                                   \
+        if( mask[x] )                   \
+             s0 += src[x*(cn)], pix++;  \
+        if( mask[x+1] )                 \
+            s0+=src[(x+1)*(cn)], pix++; \
+    }                                   \
+                                        \
+    for( ; x < (len); x++ )             \
+        if( mask[x] )                   \
+            s0 += src[x*(cn)], pix++;
+
+
+////////////////////////////////////// entry macros //////////////////////////////////////
+
+#define ICV_MEAN_ENTRY_COMMON()         \
+    int pix = 0;                        \
+    step /= sizeof(src[0])
+
+#define ICV_MEAN_ENTRY_C1( sumtype )    \
+    sumtype s0 = 0;                     \
+    ICV_MEAN_ENTRY_COMMON()
+
+#define ICV_MEAN_ENTRY_C2( sumtype )    \
+    sumtype s0 = 0, s1 = 0;             \
+    ICV_MEAN_ENTRY_COMMON()
+
+#define ICV_MEAN_ENTRY_C3( sumtype )    \
+    sumtype s0 = 0, s1 = 0, s2 = 0;     \
+    ICV_MEAN_ENTRY_COMMON()
+
+#define ICV_MEAN_ENTRY_C4( sumtype )        \
+    sumtype s0 = 0, s1 = 0, s2 = 0, s3 = 0; \
+    ICV_MEAN_ENTRY_COMMON()
+
+
+#define ICV_MEAN_ENTRY_BLOCK_COMMON( block_size ) \
+    int remaining = block_size;                   \
+    ICV_MEAN_ENTRY_COMMON()
+
+#define ICV_MEAN_ENTRY_BLOCK_C1( sumtype, worktype, block_size )\
+    sumtype sum0 = 0;                                           \
+    worktype s0 = 0;                                            \
+    ICV_MEAN_ENTRY_BLOCK_COMMON( block_size )
+
+#define ICV_MEAN_ENTRY_BLOCK_C2( sumtype, worktype, block_size )\
+    sumtype sum0 = 0, sum1 = 0;                                 \
+    worktype s0 = 0, s1 = 0;                                    \
+    ICV_MEAN_ENTRY_BLOCK_COMMON( block_size )
+
+#define ICV_MEAN_ENTRY_BLOCK_C3( sumtype, worktype, block_size )\
+    sumtype sum0 = 0, sum1 = 0, sum2 = 0;                       \
+    worktype s0 = 0, s1 = 0, s2 = 0;                            \
+    ICV_MEAN_ENTRY_BLOCK_COMMON( block_size )
+
+#define ICV_MEAN_ENTRY_BLOCK_C4( sumtype, worktype, block_size )\
+    sumtype sum0 = 0, sum1 = 0, sum2 = 0, sum3 = 0;             \
+    worktype s0 = 0, s1 = 0, s2 = 0, s3 = 0;                    \
+    ICV_MEAN_ENTRY_BLOCK_COMMON( block_size )
+
+
+/////////////////////////////////////// exit macros //////////////////////////////////////
+
+#define ICV_MEAN_EXIT_COMMON()          \
+    double scale = pix ? 1./pix : 0
+
+#define ICV_MEAN_EXIT_C1( tmp )         \
+    ICV_MEAN_EXIT_COMMON();             \
+    mean[0] = scale*(double)tmp##0
+
+#define ICV_MEAN_EXIT_C2( tmp )         \
+    ICV_MEAN_EXIT_COMMON();             \
+    double t0 = scale*(double)tmp##0;   \
+    double t1 = scale*(double)tmp##1;   \
+    mean[0] = t0;                       \
+    mean[1] = t1
+
+#define ICV_MEAN_EXIT_C3( tmp )         \
+    ICV_MEAN_EXIT_COMMON();             \
+    double t0 = scale*(double)tmp##0;   \
+    double t1 = scale*(double)tmp##1;   \
+    double t2 = scale*(double)tmp##2;   \
+    mean[0] = t0;                       \
+    mean[1] = t1;                       \
+    mean[2] = t2
+
+#define ICV_MEAN_EXIT_C4( tmp )         \
+    ICV_MEAN_EXIT_COMMON();             \
+    double t0 = scale*(double)tmp##0;   \
+    double t1 = scale*(double)tmp##1;   \
+    mean[0] = t0;                       \
+    mean[1] = t1;                       \
+    t0 = scale*(double)tmp##2;          \
+    t1 = scale*(double)tmp##3;          \
+    mean[2] = t0;                       \
+    mean[3] = t1
+
+#define ICV_MEAN_EXIT_BLOCK_C1()    \
+    sum0 += s0;                     \
+    ICV_MEAN_EXIT_C1( sum )
+
+#define ICV_MEAN_EXIT_BLOCK_C2()    \
+    sum0 += s0; sum1 += s1;         \
+    ICV_MEAN_EXIT_C2( sum )
+
+#define ICV_MEAN_EXIT_BLOCK_C3()    \
+    sum0 += s0; sum1 += s1;         \
+    sum2 += s2;                     \
+    ICV_MEAN_EXIT_C3( sum )
+
+#define ICV_MEAN_EXIT_BLOCK_C4()    \
+    sum0 += s0; sum1 += s1;         \
+    sum2 += s2; sum3 += s3;         \
+    ICV_MEAN_EXIT_C4( sum )
+
+////////////////////////////////////// update macros /////////////////////////////////////
+
+#define ICV_MEAN_UPDATE_COMMON( block_size )\
+    remaining = block_size
+
+#define ICV_MEAN_UPDATE_C1( block_size )    \
+    ICV_MEAN_UPDATE_COMMON( block_size );   \
+    sum0 += s0;                             \
+    s0 = 0
+
+#define ICV_MEAN_UPDATE_C2( block_size )    \
+    ICV_MEAN_UPDATE_COMMON( block_size );   \
+    sum0 += s0; sum1 += s1;                 \
+    s0 = s1 = 0
+
+#define ICV_MEAN_UPDATE_C3( block_size )    \
+    ICV_MEAN_UPDATE_COMMON( block_size );   \
+    sum0 += s0; sum1 += s1; sum2 += s2;     \
+    s0 = s1 = s2 = 0
+
+#define ICV_MEAN_UPDATE_C4( block_size )    \
+    ICV_MEAN_UPDATE_COMMON( block_size );   \
+    sum0 += s0; sum1 += s1;                 \
+    sum2 += s2; sum3 += s3;                 \
+    s0 = s1 = s2 = s3 = 0
+
+
+#define ICV_IMPL_MEAN_BLOCK_FUNC_2D( flavor, cn,                \
+    arrtype, sumtype, worktype, block_size )                    \
+IPCVAPI_IMPL( CvStatus, icvMean_##flavor##_C##cn##MR,           \
+    ( const arrtype* src, int step,                             \
+      const uchar* mask, int maskstep,                          \
+      CvSize size, double* mean ),                              \
+    (src, step, mask, maskstep, size, mean))                    \
+{                                                               \
+    ICV_MEAN_ENTRY_BLOCK_C##cn( sumtype, worktype, block_size );\
+                                                                \
+    for( ; size.height--; src += step, mask += maskstep )       \
+    {                                                           \
+        int x = 0;                                              \
+        while( x < size.width )                                 \
+        {                                                       \
+            int limit = MIN( remaining, size.width - x );       \
+            remaining -= limit;                                 \
+            limit += x;                                         \
+            ICV_MEAN_CASE_C##cn( limit );                       \
+            if( remaining == 0 )                                \
+            {                                                   \
+                ICV_MEAN_UPDATE_C##cn( block_size );            \
+            }                                                   \
+        }                                                       \
+    }                                                           \
+                                                                \
+    { ICV_MEAN_EXIT_BLOCK_C##cn(); }                            \
+    return CV_OK;                                               \
 }
 
 
-#define ICV_IMPL_MEAN_1D_CASE_COI( _mask_op_, acctype, src, mask, len, sum, pix, cn ) \
-{                                                                   \
-    int i;                                                          \
-    acctype s1 = 0;                                                 \
-                                                                    \
-    for( i = 0; i <= (len) - 4; i += 4 )                            \
-    {                                                               \
-        int m = ((mask)[i] == 0) - 1;                               \
-        acctype s;                                                  \
-                                                                    \
-        s = _mask_op_( m, (src)[i*(cn)]);                           \
-        (pix) -= m;                                                 \
-                                                                    \
-        m = ((mask)[i + 1] == 0) - 1;                               \
-        s += _mask_op_( m, (src)[(i + 1)*(cn)]);                    \
-        (pix) -= m;                                                 \
-                                                                    \
-        m = ((mask)[i + 2] == 0) - 1;                               \
-        s += _mask_op_( m, (src)[(i + 2)*(cn)]);                    \
-        (pix) -= m;                                                 \
-                                                                    \
-        m = ((mask)[i + 3] == 0) - 1;                               \
-        (sum)[0] += s + _mask_op_( m, (src)[(i + 3)*(cn)]);         \
-        (pix) -= m;                                                 \
-    }                                                               \
-                                                                    \
-    for( ; i < (len); i++ )                                         \
-    {                                                               \
-        int m = ((mask)[i] == 0) - 1;                               \
-                                                                    \
-        s1 += _mask_op_( m, (src)[i*(cn)]);                         \
-        (pix) -= m;                                                 \
-    }                                                               \
-                                                                    \
-    (sum)[0] += s1;                                                 \
+#define ICV_IMPL_MEAN_FUNC_2D( flavor, cn,                      \
+                arrtype, sumtype, worktype )                    \
+IPCVAPI_IMPL( CvStatus, icvMean_##flavor##_C##cn##MR,           \
+    ( const arrtype* src, int step,                             \
+      const uchar* mask, int maskstep,                          \
+      CvSize size, double* mean),                               \
+    (src, step, mask, maskstep, size, mean))                    \
+{                                                               \
+    ICV_MEAN_ENTRY_C##cn( sumtype );                            \
+                                                                \
+    for( ; size.height--; src += step, mask += maskstep )       \
+    {                                                           \
+        int x = 0;                                              \
+        ICV_MEAN_CASE_C##cn( size.width );                      \
+    }                                                           \
+                                                                \
+    { ICV_MEAN_EXIT_C##cn( s ); }                               \
+    return CV_OK;                                               \
 }
 
 
-#define ICV_IMPL_MEAN_1D_CASE_C2( _mask_op_, acctype, src, mask, len, sum, pix ) \
-{                                                                   \
-    int i;                                                          \
-                                                                    \
-    for( i = 0; i <= (len) - 2; i += 2 )                            \
-    {                                                               \
-        int m = ((mask)[i] == 0) - 1;                               \
-                                                                    \
-        (sum)[0] += _mask_op_( m, (src)[i*2]);                      \
-        (sum)[1] += _mask_op_( m, (src)[i*2 + 1]);                  \
-        (pix) -= m;                                                 \
-                                                                    \
-        m = ((mask)[i + 1] == 0) - 1;                               \
-        (sum)[0] += _mask_op_( m, (src)[i*2 + 2]);                  \
-        (sum)[1] += _mask_op_( m, (src)[i*2 + 3]);                  \
-        (pix) -= m;                                                 \
-    }                                                               \
-                                                                    \
-    for( ; i < (len); i++ )                                         \
-    {                                                               \
-        int m = ((mask)[i] == 0) - 1;                               \
-                                                                    \
-        (sum)[0] += _mask_op_( m, (src)[i*2]);                      \
-        (sum)[1] += _mask_op_( m, (src)[i*2 + 1]);                  \
-        (pix) -= m;                                                 \
-    }                                                               \
+#define ICV_IMPL_MEAN_BLOCK_FUNC_2D_COI( flavor,                \
+        arrtype, sumtype, worktype, block_size )                \
+static CvStatus CV_STDCALL                                      \
+icvMean_##flavor##_CnCMR( const arrtype* src, int step,         \
+                          const uchar* mask, int maskstep,      \
+                          CvSize size, int cn,                  \
+                          int coi, double* mean )               \
+{                                                               \
+    ICV_MEAN_ENTRY_BLOCK_C1( sumtype, worktype, block_size );   \
+    src += coi - 1;                                             \
+                                                                \
+    for( ; size.height--; src += step, mask += maskstep )       \
+    {                                                           \
+        int x = 0;                                              \
+        while( x < size.width )                                 \
+        {                                                       \
+            int limit = MIN( remaining, size.width - x );       \
+            remaining -= limit;                                 \
+            limit += x;                                         \
+            ICV_MEAN_COI_CASE( limit, cn );                     \
+            if( remaining == 0 )                                \
+            {                                                   \
+                ICV_MEAN_UPDATE_C1( block_size );               \
+            }                                                   \
+        }                                                       \
+    }                                                           \
+                                                                \
+    { ICV_MEAN_EXIT_BLOCK_C1(); }                               \
+    return CV_OK;                                               \
 }
 
 
-#define ICV_IMPL_MEAN_1D_CASE_C3( _mask_op_, acctype, src, mask, len, sum, pix ) \
-{                                                                   \
-    int i;                                                          \
-                                                                    \
-    for( i = 0; i < (len); i++ )                                    \
-    {                                                               \
-        int m = ((mask)[i] == 0) - 1;                               \
-                                                                    \
-        (sum)[0] += _mask_op_( m, (src)[i*3]);                      \
-        (sum)[1] += _mask_op_( m, (src)[i*3 + 1]);                  \
-        (sum)[2] += _mask_op_( m, (src)[i*3 + 2]);                  \
-        (pix) -= m;                                                 \
-    }                                                               \
+#define ICV_IMPL_MEAN_FUNC_2D_COI( flavor,                      \
+                arrtype, sumtype, worktype )                    \
+static CvStatus CV_STDCALL                                      \
+icvMean_##flavor##_CnCMR( const arrtype* src, int step,         \
+                          const uchar* mask, int maskstep,      \
+                          CvSize size, int cn,                  \
+                          int coi, double* mean )               \
+{                                                               \
+    ICV_MEAN_ENTRY_C1( sumtype );                               \
+    src += coi - 1;                                             \
+                                                                \
+    for( ; size.height--; src += step, mask += maskstep )       \
+    {                                                           \
+        int x = 0;                                              \
+        ICV_MEAN_COI_CASE( size.width, cn );                    \
+    }                                                           \
+                                                                \
+    { ICV_MEAN_EXIT_C1( s ); }                                  \
+    return CV_OK;                                               \
 }
 
 
-#define ICV_IMPL_MEAN_1D_CASE_C4( _mask_op_, acctype, src, mask, len, sum, pix ) \
-{                                                                   \
-    int i;                                                          \
-                                                                    \
-    for( i = 0; i < (len); i++ )                                    \
-    {                                                               \
-        int m = ((mask)[i] == 0) - 1;                               \
-                                                                    \
-        (sum)[0] += _mask_op_( m, (src)[i*4]);                      \
-        (sum)[1] += _mask_op_( m, (src)[i*4 + 1]);                  \
-        (sum)[2] += _mask_op_( m, (src)[i*4 + 2]);                  \
-        (sum)[3] += _mask_op_( m, (src)[i*4 + 3]);                  \
-        (pix) -= m;                                                 \
-    }                                                               \
-}
+#define ICV_IMPL_MEAN_BLOCK_ALL( flavor, arrtype, sumtype,      \
+                                 worktype, block_size )         \
+    ICV_IMPL_MEAN_BLOCK_FUNC_2D( flavor, 1, arrtype, sumtype,   \
+                                 worktype, block_size )         \
+    ICV_IMPL_MEAN_BLOCK_FUNC_2D( flavor, 2, arrtype, sumtype,   \
+                                 worktype, block_size )         \
+    ICV_IMPL_MEAN_BLOCK_FUNC_2D( flavor, 3, arrtype, sumtype,   \
+                                 worktype, block_size )         \
+    ICV_IMPL_MEAN_BLOCK_FUNC_2D( flavor, 4, arrtype, sumtype,   \
+                                 worktype, block_size )         \
+    ICV_IMPL_MEAN_BLOCK_FUNC_2D_COI( flavor, arrtype, sumtype,  \
+                                 worktype, block_size )
 
+#define ICV_IMPL_MEAN_ALL( flavor, arrtype, sumtype, worktype )     \
+    ICV_IMPL_MEAN_FUNC_2D( flavor, 1, arrtype, sumtype, worktype )  \
+    ICV_IMPL_MEAN_FUNC_2D( flavor, 2, arrtype, sumtype, worktype )  \
+    ICV_IMPL_MEAN_FUNC_2D( flavor, 3, arrtype, sumtype, worktype )  \
+    ICV_IMPL_MEAN_FUNC_2D( flavor, 4, arrtype, sumtype, worktype )  \
+    ICV_IMPL_MEAN_FUNC_2D_COI( flavor, arrtype, sumtype, worktype )
 
-
-#define ICV_MEAN_ENTRY( sumtype ) \
-    sumtype sum[4] = {0,0,0,0};  \
-    int pix = 0
-
-
-#define ICV_MEAN_ENTRY_FLT( sumtype ) \
-    float  maskTab[] = { 1.f, 0.f }; \
-    sumtype sum[4] = {0,0,0,0};      \
-    int pix = 0
-
-
-#define ICV_MEAN_EXIT(cn)                  \
-{                                         \
-    double scale = pix ? 1./pix : 0;      \
-    for( int k = 0; k < cn; k++ )         \
-        mean[k] = sum[k]*scale;           \
-}                                         \
-return CV_OK;
-
-
-#define ICV_IMPL_MEAN_FUNC_2D( _mask_op_, _entry_, _exit_,          \
-                              flavor, cn, srctype, sumtype, acctype)\
-IPCVAPI_IMPL( CvStatus, icvMean_##flavor##_C##cn##MR,               \
-                          ( const srctype* src, int step,           \
-                            const uchar* mask, int maskStep,        \
-                            CvSize size, double* mean ),            \
-                           (src, step, mask, maskStep, size, mean) )\
-{                                                                   \
-    _entry_( sumtype );                                             \
-                                                                    \
-    for( ; size.height--;                                           \
-         (char*&)src += step, (char*&)mask += maskStep )            \
-    {                                                               \
-        ICV_IMPL_MEAN_1D_CASE_C##cn( _mask_op_, acctype, src, mask, \
-                                    size.width, sum, pix );         \
-    }                                                               \
-                                                                    \
-    _exit_(cn);                                                     \
-}
-
-
-#define ICV_IMPL_MEAN_FUNC_2D_COI( _mask_op_, _entry_, _exit_,      \
-                                  flavor, srctype, sumtype, acctype)\
-static CvStatus CV_STDCALL                                          \
-icvMean_##flavor##_CnCMR( const srctype* src, int step,             \
-                        const uchar* mask, int maskStep,            \
-                        CvSize size, int cn, int coi, double* mean )\
-{                                                                   \
-    _entry_( sumtype );                                             \
-    (src) += coi - 1;                                               \
-                                                                    \
-    for( ; size.height--;                                           \
-         (char*&)src += step, (char*&)mask += maskStep )            \
-    {                                                               \
-        ICV_IMPL_MEAN_1D_CASE_COI( _mask_op_, acctype, src, mask,   \
-                                  size.width, sum, pix, cn );       \
-    }                                                               \
-                                                                    \
-    mean[0] = sum[0]*(pix ? 1./pix : 0);                            \
-                                                                    \
-    return CV_OK;                                                   \
-}
-
-
-#define ICV_IMPL_MEAN_ALL( flavor, srctype, sumtype, acctype )        \
-    ICV_IMPL_MEAN_FUNC_2D( CV_AND, ICV_MEAN_ENTRY, ICV_MEAN_EXIT,     \
-                           flavor, 1, srctype, sumtype, acctype )     \
-    ICV_IMPL_MEAN_FUNC_2D( CV_AND, ICV_MEAN_ENTRY, ICV_MEAN_EXIT,     \
-                           flavor, 2, srctype, sumtype, acctype )     \
-    ICV_IMPL_MEAN_FUNC_2D( CV_AND, ICV_MEAN_ENTRY, ICV_MEAN_EXIT,     \
-                           flavor, 3, srctype, sumtype, acctype )     \
-    ICV_IMPL_MEAN_FUNC_2D( CV_AND, ICV_MEAN_ENTRY, ICV_MEAN_EXIT,     \
-                           flavor, 4, srctype, sumtype, acctype )     \
-    ICV_IMPL_MEAN_FUNC_2D_COI( CV_AND, ICV_MEAN_ENTRY, ICV_MEAN_EXIT, \
-                               flavor, srctype, sumtype, acctype )
-
-
-#define ICV_IMPL_MEAN_ALL_FLT( flavor, srctype, sumtype, acctype )              \
-    ICV_IMPL_MEAN_FUNC_2D( CV_MULMASK1, ICV_MEAN_ENTRY_FLT, ICV_MEAN_EXIT,      \
-                           flavor, 1, srctype, sumtype, acctype )               \
-    ICV_IMPL_MEAN_FUNC_2D( CV_MULMASK1, ICV_MEAN_ENTRY_FLT, ICV_MEAN_EXIT,      \
-                           flavor, 2, srctype, sumtype, acctype )               \
-    ICV_IMPL_MEAN_FUNC_2D( CV_MULMASK1, ICV_MEAN_ENTRY_FLT, ICV_MEAN_EXIT,      \
-                           flavor, 3, srctype, sumtype, acctype )               \
-    ICV_IMPL_MEAN_FUNC_2D( CV_MULMASK1, ICV_MEAN_ENTRY_FLT, ICV_MEAN_EXIT,      \
-                           flavor, 4, srctype, sumtype, acctype )               \
-    ICV_IMPL_MEAN_FUNC_2D_COI( CV_MULMASK1, ICV_MEAN_ENTRY_FLT, ICV_MEAN_EXIT,  \
-                               flavor, srctype, sumtype, acctype )
-
-ICV_IMPL_MEAN_ALL( 8u, uchar, int64, int )
-ICV_IMPL_MEAN_ALL( 16u, ushort, int64, int )
-ICV_IMPL_MEAN_ALL( 16s, short, int64, int )
-ICV_IMPL_MEAN_ALL( 32s, int, int64, int64 )
-ICV_IMPL_MEAN_ALL_FLT( 32f, float, double, double )
-ICV_IMPL_MEAN_ALL_FLT( 64f, double, double, double )
+ICV_IMPL_MEAN_BLOCK_ALL( 8u, uchar, int64, unsigned, 1 << 24 )
+ICV_IMPL_MEAN_BLOCK_ALL( 16u, ushort, int64, unsigned, 1 << 16 )
+ICV_IMPL_MEAN_BLOCK_ALL( 16s, short, int64, int, 1 << 16 )
+ICV_IMPL_MEAN_ALL( 32s, int, double, double )
+ICV_IMPL_MEAN_ALL( 32f, float, double, double )
+ICV_IMPL_MEAN_ALL( 64f, double, double, double )
 
 #define icvMean_8s_C1MR 0
 #define icvMean_8s_C2MR 0
@@ -308,7 +396,7 @@ cvAvg( const void* img, const void* maskarr )
 
     if( !maskarr )
     {
-        CV_CALL( mean = CvScalar(cvSum(img)));
+        CV_CALL( mean = cvSum(img));
         size = cvGetSize( img );
         size.width *= size.height;
         scale = size.width ? 1./size.width : 0;

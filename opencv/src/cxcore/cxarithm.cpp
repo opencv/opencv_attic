@@ -100,7 +100,7 @@ static const uchar icvSaturate8u[] =
     255
 };
 
-#define CV_FAST_CAST_8U(t)   (assert(-256 <= (t) || (t) <= 512), icvSaturate8u[t+256])
+#define CV_FAST_CAST_8U(t)   (assert(-256 <= (t) || (t) <= 512), icvSaturate8u[(t)+256])
 
 /****************************************************************************************\
 *                      Arithmetic operations (+, -) without mask                         *
@@ -1910,7 +1910,7 @@ icvAddWeighted_8u_fast_C1R( const uchar* src1, int step1, double alpha,
     int j, t0, t1, t2, t3;
 
     alpha *= 1 << shift;
-    gamma *= 1 << shift;
+    gamma = gamma*(1 << shift) + (1 << (shift - 1));
     beta *= 1 << shift;
 
     for( j = 0; j < 256; j++ )
@@ -1921,10 +1921,10 @@ icvAddWeighted_8u_fast_C1R( const uchar* src1, int step1, double alpha,
         gamma += beta;
     }
 
-    t0 = CV_DESCALE( tab1[0] + tab2[0], shift );
-    t1 = CV_DESCALE( tab1[0] + tab2[255], shift );
-    t2 = CV_DESCALE( tab1[255] + tab2[0], shift );
-    t3 = CV_DESCALE( tab1[255] + tab2[255], shift );
+    t0 = (tab1[0] + tab2[0]) >> shift;
+    t1 = (tab1[0] + tab2[255]) >> shift;
+    t2 = (tab1[255] + tab2[0]) >> shift;
+    t3 = (tab1[255] + tab2[255]) >> shift;
 
     if( (unsigned)(t0+256) < 768 && (unsigned)(t1+256) < 768 &&
         (unsigned)(t2+256) < 768 && (unsigned)(t3+256) < 768 )
@@ -1936,23 +1936,23 @@ icvAddWeighted_8u_fast_C1R( const uchar* src1, int step1, double alpha,
 
             for( i = 0; i <= size.width - 4; i += 4 )
             {
-                int t0 = CV_DESCALE( tab1[src1[i]] + tab2[src2[i]], shift );
-                int t1 = CV_DESCALE( tab1[src1[i+1]] + tab2[src2[i+1]], shift );
+                int t0 = CV_FAST_CAST_8U((tab1[src1[i]] + tab2[src2[i]]) >> shift);
+                int t1 = CV_FAST_CAST_8U((tab1[src1[i+1]] + tab2[src2[i+1]]) >> shift);
 
-                (dst)[i] = CV_FAST_CAST_8U( t0 );
-                (dst)[i+1] = CV_FAST_CAST_8U( t1 );
+                dst[i] = (uchar)t0;
+                dst[i+1] = (uchar)t1;
 
-                t0 = CV_DESCALE( tab1[src1[i+2]] + tab2[src2[i+2]], shift );
-                t1 = CV_DESCALE( tab1[src1[i+3]] + tab2[src2[i+3]], shift );
+                t0 = CV_FAST_CAST_8U((tab1[src1[i+2]] + tab2[src2[i+2]]) >> shift);
+                t1 = CV_FAST_CAST_8U((tab1[src1[i+3]] + tab2[src2[i+3]]) >> shift);
 
-                (dst)[i+2] = CV_FAST_CAST_8U( t0 );
-                (dst)[i+3] = CV_FAST_CAST_8U( t1 );
+                dst[i+2] = (uchar)t0;
+                dst[i+3] = (uchar)t1;
             }
 
             for( ; i < size.width; i++ )
             {
-                int t0 = CV_DESCALE( tab1[src1[i]] + tab2[src2[i]], shift );
-                (dst)[i] = CV_FAST_CAST_8U( t0 );
+                int t0 = CV_FAST_CAST_8U((tab1[src1[i]] + tab2[src2[i]]) >> shift);
+                dst[i] = (uchar)t0;
             }
         }
     }
@@ -1965,23 +1965,23 @@ icvAddWeighted_8u_fast_C1R( const uchar* src1, int step1, double alpha,
             
             for( i = 0; i <= size.width - 4; i += 4 )
             {
-                int t0 = CV_DESCALE( tab1[src1[i]] + tab2[src2[i]], shift );
-                int t1 = CV_DESCALE( tab1[src1[i+1]] + tab2[src2[i+1]], shift );
+                int t0 = (tab1[src1[i]] + tab2[src2[i]]) >> shift;
+                int t1 = (tab1[src1[i+1]] + tab2[src2[i+1]]) >> shift;
 
-                (dst)[i] = CV_CAST_8U( t0 );
-                (dst)[i+1] = CV_CAST_8U( t1 );
+                dst[i] = CV_CAST_8U( t0 );
+                dst[i+1] = CV_CAST_8U( t1 );
 
-                t0 = CV_DESCALE( tab1[src1[i+2]] + tab2[src2[i+2]], shift );
-                t1 = CV_DESCALE( tab1[src1[i+3]] + tab2[src2[i+3]], shift );
+                t0 = (tab1[src1[i+2]] + tab2[src2[i+2]]) >> shift;
+                t1 = (tab1[src1[i+3]] + tab2[src2[i+3]]) >> shift;
 
-                (dst)[i+2] = CV_CAST_8U( t0 );
-                (dst)[i+3] = CV_CAST_8U( t1 );
+                dst[i+2] = CV_CAST_8U( t0 );
+                dst[i+3] = CV_CAST_8U( t1 );
             }
 
             for( ; i < size.width; i++ )
             {
-                int t0 = CV_DESCALE( tab1[src1[i]] + tab2[src2[i]], shift );
-                (dst)[i] = CV_CAST_8U( t0 );
+                int t0 = (tab1[src1[i]] + tab2[src2[i]]) >> shift;
+                dst[i] = CV_CAST_8U( t0 );
             }
         }
     }
@@ -2063,7 +2063,7 @@ cvAddWeighted( const CvArr* srcAarr, double alpha,
         srcA_step = srcB_step = dst_step = CV_AUTOSTEP;
     }
 
-    if( type == CV_8UC1 && size.width * size.height > 1024 &&
+    if( type == CV_8UC1 && size.width * size.height >= 1024 &&
         fabs(alpha) < 256 && fabs(beta) < 256 && fabs(gamma) < 256*256 )
     {
         func = (CvAddWeightedFunc)icvAddWeighted_8u_fast_C1R;

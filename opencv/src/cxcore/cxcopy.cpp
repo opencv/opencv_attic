@@ -102,98 +102,65 @@ icvSet_8u_C1R( uchar* dst, int dst_step, CvSize size,
 /////////////////////////////////////////////////////////////////////////////////////////
 
 
-#define ICV_DEF_COPY_MASK_C1_CASE( type, worktype, src, dst, mask, len )\
+#define ICV_DEF_COPY_MASK_C1_CASE( type, src, dst, mask, len )          \
 {                                                                       \
     int i;                                                              \
                                                                         \
-    for( i = 0; i <= (len) - 4; i += 4 )                                \
+    for( i = 0; i <= (len) - 2; i += 2 )                                \
     {                                                                   \
-        worktype m0 = (mask)[i] ? -1 : 0;                               \
-        worktype m1 = (mask)[i+1] ? -1 : 0;                             \
-        worktype t0 = (dst)[i];                                         \
-        worktype t1 = (dst)[i+1];                                       \
-                                                                        \
-        t0 ^= (t0 ^ (src)[i]) & m0;                                     \
-        t1 ^= (t1 ^ (src)[i+1]) & m1;                                   \
-                                                                        \
-        (dst)[i] = (type)t0;                                            \
-        (dst)[i+1] = (type)t1;                                          \
-                                                                        \
-        m0 = (mask)[i+2] ? -1 : 0;                                      \
-        m1 = (mask)[i+3] ? -1 : 0;                                      \
-        t0 = (dst)[i+2];                                                \
-        t1 = (dst)[i+3];                                                \
-                                                                        \
-        t0 ^= (t0 ^ (src)[i+2]) & m0;                                   \
-        t1 ^= (t1 ^ (src)[i+3]) & m1;                                   \
-                                                                        \
-        (dst)[i+2] = (type)t0;                                          \
-        (dst)[i+3] = (type)t1;                                          \
+        if( (mask)[i] )                                                 \
+            (dst)[i] = (src)[i];                                        \
+        if( (mask)[i+1] )                                               \
+            (dst)[i+1] = (src)[i+1];                                    \
     }                                                                   \
                                                                         \
     for( ; i < (len); i++ )                                             \
     {                                                                   \
-        worktype m = (mask)[i] ? -1 : 0;                                \
-        worktype t = (dst)[i];                                          \
-                                                                        \
-        t ^= (t ^ (src)[i]) & m;                                        \
-                                                                        \
-        (dst)[i] = (type)t;                                             \
+        if( (mask)[i] )                                                 \
+            (dst)[i] = (src)[i];                                        \
     }                                                                   \
 }
 
 
-#define ICV_DEF_COPY_MASK_C3_CASE( type, worktype, src, dst, mask, len )\
+#define ICV_DEF_COPY_MASK_C3_CASE( type, src, dst, mask, len )          \
 {                                                                       \
     int i;                                                              \
                                                                         \
     for( i = 0; i < (len); i++ )                                        \
-    {                                                                   \
-        worktype m  = (mask)[i] ? -1 : 0;                               \
-        worktype t0 = (dst)[i*3];                                       \
-        worktype t1 = (dst)[i*3+1];                                     \
-        worktype t2 = (dst)[i*3+2];                                     \
+        if( (mask)[i] )                                                 \
+        {                                                               \
+            type t0 = (src)[i*3];                                       \
+            type t1 = (src)[i*3+1];                                     \
+            type t2 = (src)[i*3+2];                                     \
                                                                         \
-        t0 ^= (t0 ^ (src)[i*3]) & m;                                    \
-        t1 ^= (t1 ^ (src)[i*3+1]) & m;                                  \
-        t2 ^= (t2 ^ (src)[i*3+2]) & m;                                  \
-                                                                        \
-        (dst)[i*3] = (type)t0;                                          \
-        (dst)[i*3+1] = (type)t1;                                        \
-        (dst)[i*3+2] = (type)t2;                                        \
-    }                                                                   \
+            (dst)[i*3] = t0;                                            \
+            (dst)[i*3+1] = t1;                                          \
+            (dst)[i*3+2] = t2;                                          \
+        }                                                               \
 }
 
 
-#define ICV_DEF_COPY_MASK_C4_CASE( type, worktype, src, dst, mask, len )\
+#define ICV_DEF_COPY_MASK_C4_CASE( type, src, dst, mask, len )          \
 {                                                                       \
     int i;                                                              \
                                                                         \
     for( i = 0; i < (len); i++ )                                        \
-    {                                                                   \
-        worktype m  = (mask)[i] ? -1 : 0;                               \
-        worktype t0 = (dst)[i*4];                                       \
-        worktype t1 = (dst)[i*4+1];                                     \
+        if( (mask)[i] )                                                 \
+        {                                                               \
+            type t0 = (src)[i*4];                                       \
+            type t1 = (src)[i*4+1];                                     \
+            (dst)[i*4] = t0;                                            \
+            (dst)[i*4+1] = t1;                                          \
                                                                         \
-        t0 ^= (t0 ^ (src)[i*4]) & m;                                    \
-        t1 ^= (t1 ^ (src)[i*4+1]) & m;                                  \
-                                                                        \
-        (dst)[i*4] = (type)t0;                                          \
-        (dst)[i*4+1] = (type)t1;                                        \
-                                                                        \
-        t0 = (dst)[i*4+2];                                              \
-        t1 = (dst)[i*4+3];                                              \
-                                                                        \
-        t0 ^= (t0 ^ (src)[i*4+2]) & m;                                  \
-        t1 ^= (t1 ^ (src)[i*4+3]) & m;                                  \
-                                                                        \
-        (dst)[i*4+2] = (type)t0;                                        \
-        (dst)[i*4+3] = (type)t1;                                        \
-    }                                                                   \
+            t0 = (src)[i*4+2];                                          \
+            t1 = (src)[i*4+3];                                          \
+            (dst)[i*4+2] = t0;                                          \
+            (dst)[i*4+3] = t1;                                          \
+        }                                                               \
 }
 
 
-#define ICV_DEF_COPY_MASK_2D( name, type, worktype, cn )                \
+#define ICV_DEF_COPY_MASK_2D( name, type, cn )                          \
 IPCVAPI_IMPL( CvStatus,                                                 \
 name,( const type* src, int step1, type* dst, int step,                 \
        CvSize size, const uchar* mask, int step2 ),                     \
@@ -203,8 +170,7 @@ name,( const type* src, int step1, type* dst, int step,                 \
                           (char*&)dst += step,                          \
                           mask += step2 )                               \
     {                                                                   \
-        ICV_DEF_COPY_MASK_C##cn##_CASE( type, worktype, src,            \
-                                        dst, mask, size.width )         \
+        ICV_DEF_COPY_MASK_C##cn##_CASE( type, src, dst, mask, size.width )\
     }                                                                   \
                                                                         \
     return  CV_OK;                                                      \
@@ -212,136 +178,93 @@ name,( const type* src, int step1, type* dst, int step,                 \
 
 
 
-#define ICV_DEF_SET_MASK_C1_CASE( type, worktype, src, dst, mask, len ) \
+#define ICV_DEF_SET_MASK_C1_CASE( type, dst, mask, len )                \
 {                                                                       \
     int i;                                                              \
                                                                         \
-    for( i = 0; i <= (len) - 4; i += 4 )                                \
+    for( i = 0; i <= (len) - 2; i += 2 )                                \
     {                                                                   \
-        worktype m0 = (mask)[i] ? -1 : 0;                               \
-        worktype m1 = (mask)[i+1] ? -1 : 0;                             \
-        worktype t0 = (dst)[i];                                         \
-        worktype t1 = (dst)[i+1];                                       \
-                                                                        \
-        t0 ^= (t0 ^ s0) & m0;                                           \
-        t1 ^= (t1 ^ s0) & m1;                                           \
-                                                                        \
-        (dst)[i] = (type)t0;                                            \
-        (dst)[i+1] = (type)t1;                                          \
-                                                                        \
-        m0 = (mask)[i+2] ? -1 : 0;                                      \
-        m1 = (mask)[i+3] ? -1 : 0;                                      \
-        t0 = (dst)[i+2];                                                \
-        t1 = (dst)[i+3];                                                \
-                                                                        \
-        t0 ^= (t0 ^ s0) & m0;                                           \
-        t1 ^= (t1 ^ s0) & m1;                                           \
-                                                                        \
-        (dst)[i+2] = (type)t0;                                          \
-        (dst)[i+3] = (type)t1;                                          \
+        if( (mask)[i] )                                                 \
+            (dst)[i] = s0;                                              \
+        if( (mask)[i+1] )                                               \
+            (dst)[i+1] = s0;                                            \
     }                                                                   \
                                                                         \
     for( ; i < (len); i++ )                                             \
     {                                                                   \
-        worktype m = (mask)[i] ? -1 : 0;                                \
-        worktype t = (dst)[i];                                          \
-                                                                        \
-        t ^= (t ^ s0) & m;                                              \
-                                                                        \
-        (dst)[i] = (type)t;                                             \
+        if( (mask)[i] )                                                 \
+            (dst)[i] = s0;                                              \
     }                                                                   \
 }
 
 
-#define ICV_DEF_SET_MASK_C3_CASE( type, worktype, src, dst, mask, len ) \
+#define ICV_DEF_SET_MASK_C3_CASE( type, dst, mask, len )                \
 {                                                                       \
     int i;                                                              \
                                                                         \
     for( i = 0; i < (len); i++ )                                        \
-    {                                                                   \
-        worktype m  = (mask)[i] ? -1 : 0;                               \
-        worktype t0 = (dst)[i*3];                                       \
-        worktype t1 = (dst)[i*3+1];                                     \
-        worktype t2 = (dst)[i*3+2];                                     \
-                                                                        \
-        t0 ^= (t0 ^ s0) & m;                                            \
-        t1 ^= (t1 ^ s1) & m;                                            \
-        t2 ^= (t2 ^ s2) & m;                                            \
-                                                                        \
-        (dst)[i*3] = (type)t0;                                          \
-        (dst)[i*3+1] = (type)t1;                                        \
-        (dst)[i*3+2] = (type)t2;                                        \
-    }                                                                   \
+        if( (mask)[i] )                                                 \
+        {                                                               \
+            (dst)[i*3] = s0;                                            \
+            (dst)[i*3+1] = s1;                                          \
+            (dst)[i*3+2] = s2;                                          \
+        }                                                               \
 }
 
 
-#define ICV_DEF_SET_MASK_C4_CASE( type, worktype, src, dst, mask, len ) \
+#define ICV_DEF_SET_MASK_C4_CASE( type, dst, mask, len )                \
 {                                                                       \
     int i;                                                              \
                                                                         \
     for( i = 0; i < (len); i++ )                                        \
-    {                                                                   \
-        worktype m  = (mask)[i] ? -1 : 0;                               \
-        worktype t0 = (dst)[i*4];                                       \
-        worktype t1 = (dst)[i*4+1];                                     \
-                                                                        \
-        t0 ^= (t0 ^ s0) & m;                                            \
-        t1 ^= (t1 ^ s1) & m;                                            \
-                                                                        \
-        (dst)[i*4] = (type)t0;                                          \
-        (dst)[i*4+1] = (type)t1;                                        \
-                                                                        \
-        t0 = (dst)[i*4+2];                                              \
-        t1 = (dst)[i*4+3];                                              \
-                                                                        \
-        t0 ^= (t0 ^ s2) & m;                                            \
-        t1 ^= (t1 ^ s3) & m;                                            \
-                                                                        \
-        (dst)[i*4+2] = (type)t0;                                        \
-        (dst)[i*4+3] = (type)t1;                                        \
-    }                                                                   \
+        if( (mask)[i] )                                                 \
+        {                                                               \
+            (dst)[i*4] = s0;                                            \
+            (dst)[i*4+1] = s1;                                          \
+            (dst)[i*4+2] = s2;                                          \
+            (dst)[i*4+3] = s3;                                          \
+        }                                                               \
 }
 
 
-#define ICV_DEF_SET_MASK_2D( name, type, worktype, cn )                 \
+#define ICV_DEF_SET_MASK_2D( name, type, cn )                           \
 IPCVAPI_IMPL( CvStatus,                                                 \
 name,( type* dst, int step, const uchar* mask, int step2,               \
        CvSize size, const type* scalar ),                               \
        (dst, step, mask, step2, size, scalar) )                         \
 {                                                                       \
-    CV_UN_ENTRY_C##cn( worktype );                                      \
+    CV_UN_ENTRY_C##cn( type );                                          \
                                                                         \
     for( ; size.height--; mask += step2, (char*&)dst += step )          \
     {                                                                   \
-        ICV_DEF_SET_MASK_C##cn##_CASE( type, worktype, buf,             \
-                                       dst, mask, size.width )          \
+        ICV_DEF_SET_MASK_C##cn##_CASE( type, dst, mask, size.width )    \
     }                                                                   \
                                                                         \
     return CV_OK;                                                       \
 }
 
 
-ICV_DEF_SET_MASK_2D( icvSet_8u_C1MR, uchar, int, 1 )
-ICV_DEF_SET_MASK_2D( icvSet_16s_C1MR, ushort, int, 1 )
-ICV_DEF_SET_MASK_2D( icvSet_8u_C3MR, uchar, int, 3 )
-ICV_DEF_SET_MASK_2D( icvSet_8u_C4MR, int, int, 1 )
-ICV_DEF_SET_MASK_2D( icvSet_16s_C3MR, ushort, int, 3 )
-ICV_DEF_SET_MASK_2D( icvSet_16s_C4MR, int64, int64, 1 )
-ICV_DEF_SET_MASK_2D( icvSet_32f_C3MR, int, int, 3 )
-ICV_DEF_SET_MASK_2D( icvSet_32f_C4MR, int, int, 4 )
-ICV_DEF_SET_MASK_2D( icvSet_64s_C3MR, int64, int64, 3 )
-ICV_DEF_SET_MASK_2D( icvSet_64s_C4MR, int64, int64, 4 )
+ICV_DEF_SET_MASK_2D( icvSet_8u_C1MR, uchar, 1 )
+ICV_DEF_SET_MASK_2D( icvSet_16s_C1MR, ushort, 1 )
+ICV_DEF_SET_MASK_2D( icvSet_8u_C3MR, uchar, 3 )
+ICV_DEF_SET_MASK_2D( icvSet_8u_C4MR, int, 1 )
+ICV_DEF_SET_MASK_2D( icvSet_16s_C3MR, ushort, 3 )
+ICV_DEF_SET_MASK_2D( icvSet_16s_C4MR, int64, 1 )
+ICV_DEF_SET_MASK_2D( icvSet_32f_C3MR, int, 3 )
+ICV_DEF_SET_MASK_2D( icvSet_32f_C4MR, int, 4 )
+ICV_DEF_SET_MASK_2D( icvSet_64s_C3MR, int64, 3 )
+ICV_DEF_SET_MASK_2D( icvSet_64s_C4MR, int64, 4 )
 
-ICV_DEF_COPY_MASK_2D( icvCopy_8u_C1MR, uchar, int, 1 )
-ICV_DEF_COPY_MASK_2D( icvCopy_16s_C1MR, ushort, int, 1 )
-ICV_DEF_COPY_MASK_2D( icvCopy_8u_C3MR, uchar, int, 3 )
-ICV_DEF_COPY_MASK_2D( icvCopy_8u_C4MR, int, int, 1 )
-ICV_DEF_COPY_MASK_2D( icvCopy_16s_C3MR, ushort, int, 3 )
-ICV_DEF_COPY_MASK_2D( icvCopy_16s_C4MR, int64, int64, 1 )
-ICV_DEF_COPY_MASK_2D( icvCopy_32f_C3MR, int, int, 3 )
-ICV_DEF_COPY_MASK_2D( icvCopy_32f_C4MR, int, int, 4 )
-ICV_DEF_COPY_MASK_2D( icvCopy_64s_C3MR, int64, int64, 3 )
-ICV_DEF_COPY_MASK_2D( icvCopy_64s_C4MR, int64, int64, 4 )
+ICV_DEF_COPY_MASK_2D( icvCopy_8u_C1MR, uchar, 1 )
+ICV_DEF_COPY_MASK_2D( icvCopy_16s_C1MR, ushort, 1 )
+ICV_DEF_COPY_MASK_2D( icvCopy_8u_C3MR, uchar, 3 )
+ICV_DEF_COPY_MASK_2D( icvCopy_8u_C4MR, int, 1 )
+ICV_DEF_COPY_MASK_2D( icvCopy_16s_C3MR, ushort, 3 )
+ICV_DEF_COPY_MASK_2D( icvCopy_16s_C4MR, int64, 1 )
+ICV_DEF_COPY_MASK_2D( icvCopy_32f_C3MR, int, 3 )
+ICV_DEF_COPY_MASK_2D( icvCopy_32f_C4MR, int, 4 )
+ICV_DEF_COPY_MASK_2D( icvCopy_64s_C3MR, int64, 3 )
+ICV_DEF_COPY_MASK_2D( icvCopy_64s_C4MR, int64, 4 )
 
 #define CV_DEF_INIT_COPYSET_TAB_2D( FUNCNAME, FLAG )                \
 static void icvInit##FUNCNAME##FLAG##Table( CvBtFuncTable* table )  \

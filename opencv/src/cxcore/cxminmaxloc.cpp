@@ -394,8 +394,8 @@ CV_DEF_INIT_FUNC_TAB_2D( MinMaxIndx, CnCMR )
 
 
 CV_IMPL  void
-cvMinMaxLoc( const void* img, double* minVal, double* maxVal,
-             CvPoint* minLoc, CvPoint* maxLoc, const void* mask )
+cvMinMaxLoc( const void* img, double* _minVal, double* _maxVal,
+             CvPoint* _minLoc, CvPoint* _maxLoc, const void* mask )
 {
     static CvFuncTable minmax_tab, minmaxcoi_tab;
     static CvFuncTable minmaxmask_tab, minmaxmaskcoi_tab;
@@ -409,6 +409,8 @@ cvMinMaxLoc( const void* img, double* minVal, double* maxVal,
     int mat_step, mask_step = 0;
     CvSize size;
     CvMat stub, maskstub, *mat = (CvMat*)img, *matmask = (CvMat*)mask;
+    CvPoint minLoc, maxLoc;
+    double minVal = 0, maxVal = 0;
 
     if( !inittab )
     {
@@ -444,7 +446,7 @@ cvMinMaxLoc( const void* img, double* minVal, double* maxVal,
                 CV_ERROR( CV_StsBadArg, cvUnsupportedFormat );
 
             IPPI_CALL( func( mat->data.ptr, mat_step, size,
-                             minVal, maxVal, minLoc, maxLoc ));
+                             &minVal, &maxVal, &minLoc, &maxLoc ));
         }
         else
         {
@@ -454,7 +456,7 @@ cvMinMaxLoc( const void* img, double* minVal, double* maxVal,
                 CV_ERROR( CV_StsBadArg, cvUnsupportedFormat );
 
             IPPI_CALL( func( mat->data.ptr, mat_step, size, cn, coi,
-                             minVal, maxVal, minLoc, maxLoc ));
+                             &minVal, &maxVal, &minLoc, &maxLoc ));
         }
     }
     else
@@ -481,7 +483,7 @@ cvMinMaxLoc( const void* img, double* minVal, double* maxVal,
 
             IPPI_CALL( func( mat->data.ptr, mat_step, matmask->data.ptr,
                              mask_step, size,
-                             minVal, maxVal, minLoc, maxLoc ));
+                             &minVal, &maxVal, &minLoc, &maxLoc ));
         }
         else
         {
@@ -492,18 +494,27 @@ cvMinMaxLoc( const void* img, double* minVal, double* maxVal,
 
             IPPI_CALL( func( mat->data.ptr, mat_step,
                              matmask->data.ptr, mask_step, size, cn, coi,
-                             minVal, maxVal, minLoc, maxLoc ));
+                             &minVal, &maxVal, &minLoc, &maxLoc ));
         }
     }
 
     if( depth < CV_32S || depth == CV_32F )
     {
-        if( minVal )
-            *minVal = *(float*)minVal;
-
-        if( maxVal )
-            *maxVal = *(float*)maxVal;
+        minVal = *(float*)&minVal;
+        maxVal = *(float*)&maxVal;
     }
+
+    if( _minVal )
+        *_minVal = minVal;
+
+    if( _maxVal )
+        *_maxVal = maxVal;
+
+    if( _minLoc )
+        *_minLoc = minLoc;
+
+    if( _maxLoc )
+        *_maxLoc = maxLoc;
 
     __END__;
 }

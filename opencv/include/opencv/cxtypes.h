@@ -45,6 +45,7 @@
 #include <assert.h>
 #include <stdlib.h>
 #include <string.h>
+#include <float.h>
 #ifndef __BORLANDC__
 #include <math.h>
 #else
@@ -188,7 +189,7 @@ CV_INLINE  int  cvFloor( double value )
 {
     int temp = cvRound(value);
     float diff = (float)(value - temp);
-
+    
     return temp - (*(int*)&diff < 0);
 }
 
@@ -198,7 +199,7 @@ CV_INLINE  int  cvCeil( double value )
 {
     int temp = cvRound(value);
     float diff = (float)(temp - value);
-
+    
     return temp + (*(int*)&diff < 0);
 }
 
@@ -208,18 +209,30 @@ CV_INLINE  int  cvCeil( double value )
 CV_INLINE int cvIsNaN( double value );
 CV_INLINE int cvIsNaN( double value )
 {
+#if 1/*defined _MSC_VER || defined __BORLANDC__
+    return _isnan(value);
+#elif defined __GNUC__
+    return isnan(value);
+#else*/
     unsigned lo = (unsigned)*(uint64*)&value;
     unsigned hi = (unsigned)(*(uint64*)&value >> 32);
     return (hi & 0x7fffffff) + (lo != 0) > 0x7ff00000;
+#endif
 }
 
 
 CV_INLINE int cvIsInf( double value );
 CV_INLINE int cvIsInf( double value )
 {
+#if 1/*defined _MSC_VER || defined __BORLANDC__
+    return !_finite(value);
+#elif defined __GNUC__
+    return isinf(value);
+#else*/
     unsigned lo = (unsigned)*(uint64*)&value;
     unsigned hi = (unsigned)(*(uint64*)&value >> 32);
     return (hi & 0x7fffffff) == 0x7ff00000 && lo == 0;
+#endif
 }
 
 
@@ -369,10 +382,6 @@ IplConvKernelFP;
 #define IPL_IMAGE_MAGIC_VAL  ((int)sizeof(IplImage))
 #define CV_TYPE_NAME_IMAGE "opencv-image"
 
-
-/* for file storages make the value independent from arch */
-#define IPL_IMAGE_FILE_MAGIC_VAL  112
-
 #define CV_IS_IMAGE_HDR(img) \
     ((img) != NULL && ((const IplImage*)(img))->nSize == sizeof(IplImage))
 
@@ -386,7 +395,6 @@ IplConvKernelFP;
    for multi-channel images (col) should be multiplied by number of channels */
 #define CV_IMAGE_ELEM( image, elemtype, row, col )       \
     (((elemtype*)((image)->imageData + (image)->widthStep*(row)))[(col)])
-
 
 /****************************************************************************************\
 *                                  Matrix type (CvMat)                                   *
@@ -1112,9 +1120,9 @@ CvSeq;
 /*************************************** Set ********************************************/
 /*
   Set.
-  Order isn't keeped. There can be gaps between sequence elements.
-  After the element has been inserted it stays on the same place all the time.
-  The MSB(most-significant or sign bit) of the first field is 0 iff the element exists.
+  Order is not preserved. There can be gaps between sequence elements.
+  After the element has been inserted it stays in the same place all the time.
+  The MSB(most-significant or sign bit) of the first field (flags) is 0 iff the element exists.
 */
 #define CV_SET_ELEM_FIELDS(elem_type)   \
     int  flags;                         \
