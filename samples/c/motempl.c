@@ -9,6 +9,7 @@
 #include <time.h>
 #include <math.h>
 #include <ctype.h>
+#include <stdio.h>
 #endif
 
 // various tracking parameters (in seconds)
@@ -46,7 +47,7 @@ void  update_mhi( IplImage* img, IplImage* dst, int diff_threshold )
     double angle;
     CvPoint center;
     double magnitude;          
-    int color;
+    CvScalar color;
 
     // allocate images at the beginning or
     // reallocate them if the frame size is changed
@@ -112,7 +113,7 @@ void  update_mhi( IplImage* img, IplImage* dst, int diff_threshold )
             magnitude = 100;
         }
         else { // i-th motion component
-            comp_rect = ((CvConnectedComp*)cvGetSeqElem( seq, i, 0 ))->rect;
+            comp_rect = ((CvConnectedComp*)cvGetSeqElem( seq, i ))->rect;
             if( comp_rect.width + comp_rect.height < 100 ) // reject very small components
                 continue;
             color = CV_RGB(255,0,0);
@@ -144,15 +145,16 @@ void  update_mhi( IplImage* img, IplImage* dst, int diff_threshold )
         center = cvPoint( (comp_rect.x + comp_rect.width/2),
                           (comp_rect.y + comp_rect.height/2) );
 
-        cvCircle( dst, center, cvRound(magnitude*1.2), color, 3 );
+        cvCircle( dst, center, cvRound(magnitude*1.2), color, 3, CV_AA, 0 );
         cvLine( dst, center, cvPoint( cvRound( center.x + magnitude*cos(angle*CV_PI/180)),
-                cvRound( center.y - magnitude*sin(angle*CV_PI/180))), color, 3, 8 );
+                cvRound( center.y - magnitude*sin(angle*CV_PI/180))), color, 3, CV_AA, 0 );
     }
 }
 
 
 int main(int argc, char** argv)
 {
+    IplImage* motion = 0;
     CvCapture* capture = 0;
     
     if( argc == 1 || (argc == 2 && strlen(argv[1]) == 1 && isdigit(argv[1][0])))
@@ -160,10 +162,9 @@ int main(int argc, char** argv)
     else if( argc == 2 )
         capture = cvCaptureFromAVI( argv[1] ); 
 
-    cvWaitKey(0);
     if( capture )
     {
-        IplImage* motion = 0;
+        
         cvNamedWindow( "Motion", 1 );
         
         for(;;)

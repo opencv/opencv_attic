@@ -43,15 +43,16 @@ void on_mouse( int event, int x, int y, int flags )
             
             if( is_color )
             {
-                int color = CV_RGB( r, g, b );
+                CvScalar color = CV_RGB( r, g, b );
                 cvFloodFill( color_img, seed, color, CV_RGB( lo, lo, lo ),
                              CV_RGB( up, up, up ), &comp, flags, is_mask ? mask : NULL );
                 cvShowImage( "image", color_img );
             }
             else
             {
-                int brightness = (r*2 + g*7 + b + 5)/10;
-                cvFloodFill( gray_img, seed, brightness, lo, up, &comp, flags, is_mask ? mask : NULL );
+                CvScalar brightness = cvRealScalar((r*2 + g*7 + b + 5)/10);
+                cvFloodFill( gray_img, seed, brightness, cvRealScalar(lo),
+                             cvRealScalar(up), &comp, flags, is_mask ? mask : NULL );
                 cvShowImage( "image", gray_img );
             }
 
@@ -70,6 +71,17 @@ int main( int argc, char** argv )
 
     if( (color_img0 = cvLoadImage(filename,1)) == 0 )
         return 0;
+
+    printf( "Hot keys: \n"
+            "\tESC - quit the program\n"
+            "\tc - switch color/grayscale mode\n"
+            "\tm - switch mask mode\n"
+            "\tr - restore the original image\n"
+            "\ts - use null-range floodfill\n"
+            "\tf - use gradient floodfill with fixed(absolute) range\n"
+            "\tg - use gradient floodfill with floating(relative) range\n"
+            "\t4 - use 4-connectivity mode\n"
+            "\t8 - use 8-connectivity mode\n" );
         
     color_img = cvCloneImage( color_img0 );
     gray_img0 = cvCreateImage( cvSize(color_img->width, color_img->height), 8, 1 );
