@@ -45,11 +45,10 @@
                                     Initialization
 \****************************************************************************************/
 
-CvStatus CV_STDCALL icvFilterInitAlloc(
+CvFilterState* icvFilterInitAlloc(
              int roiWidth, CvDataType dataType, int channels,
              CvSize elSize, CvPoint elAnchor,
-             const void* elData, int elementType,
-             struct CvFilterState ** filterState )
+             const void* elData, int elementType )
 {
     CvFilterState *state = 0;
     const int align = sizeof(size_t);
@@ -63,22 +62,21 @@ CvStatus CV_STDCALL icvFilterInitAlloc(
     int separableElement = ICV_KERNEL_TYPE(elementType) == ICV_SEPARABLE_KERNEL;
     char *ptr;
 
-    if( !filterState )
-        return CV_NULLPTR_ERR;
-    *filterState = 0;
+    CV_FUNCNAME( "icvFilterInitAlloc" );
+
+    __BEGIN__;
 
     if( roiWidth <= 0 )
-        return CV_BADSIZE_ERR;
+        CV_ERROR( CV_StsOutOfRange, "image width <= 0" );
     if( dataType != cv8u && dataType != cv32s && dataType != cv32f )
-        return CV_BADDEPTH_ERR;
-
+        CV_ERROR( CV_StsUnsupportedFormat, "dataType is not CV_8U, CV_32S or CV_32F" );
     if( channels < 1 || channels > 4 )
-        return CV_UNSUPPORTED_CHANNELS_ERR;
+        CV_ERROR( CV_StsUnsupportedFormat, "number of channels is not within 1..4" );
     if( elSize.width <= 0 || elSize.height <= 0 )
-        return CV_BADSIZE_ERR;
+        CV_ERROR( CV_StsBadSize, "aperture width <= 0 or aperture height <= 0" );
     if( (unsigned) elAnchor.x >= (unsigned) elSize.width ||
         (unsigned) elAnchor.y >= (unsigned) elSize.height )
-        return CV_BADRANGE_ERR;
+        CV_ERROR( CV_StsOutOfRange, "anchor point is outside the aperture" );
 
     bt_pix = dataType == cv8u ? 1 : dataType == cv32s ? sizeof(int) : sizeof(float);
     bt_pix_n = bt_pix * channels;
@@ -95,9 +93,7 @@ CvStatus CV_STDCALL icvFilterInitAlloc(
 
     buffer_size = cvAlign(buffer_size + align, align);
 
-    state = (CvFilterState*)cvAlloc( buffer_size );
-    if( !state )
-        return CV_OUTOFMEM_ERR;
+    CV_CALL( state = (CvFilterState*)cvAlloc( buffer_size ));
 
     ptr = (char*)state;
     state->buffer_step = buffer_step;
@@ -149,17 +145,18 @@ CvStatus CV_STDCALL icvFilterInitAlloc(
         }
     }
 
-    *filterState = state;
-    return CV_OK;
+    __END__;
+
+    if( cvGetErrStatus() < 0 )
+        icvFilterFree( &state );
+
+    return state;
 }
 
 
-CvStatus CV_STDCALL icvFilterFree( CvFilterState ** filterState )
+void icvFilterFree( CvFilterState** filterState )
 {
-    if( !filterState )
-        return CV_NULLPTR_ERR;
-    cvFree( (void **) filterState );
-    return CV_OK;
+    cvFree( (void**)filterState );
 }
 
 
@@ -202,14 +199,13 @@ icvCalcGaussianKernel( int n, double sigma, float* kernel )
 }
 
 
-static CvStatus
+static CvFilterState*
 icvSmoothInitAlloc( int width, CvDataType /*dataType*/, int channels,
-                    CvSize el_size, int smoothtype, double sigma,
-                    struct CvFilterState** filterState )
+                    CvSize el_size, int smoothtype, double sigma )
 {
+    CvFilterState* filterState = 0;
     CvPoint el_anchor = { el_size.width/2, el_size.height/2 };
     float* kx = 0;
-    CvStatus status;
 
     if( smoothtype == CV_GAUSSIAN )
     {
@@ -223,31 +219,29 @@ icvSmoothInitAlloc( int width, CvDataType /*dataType*/, int channels,
             icvCalcGaussianKernel( el_size.height, sigma, ky );
     }
 
-    status = icvFilterInitAlloc( width, cv32f, channels, el_size, el_anchor,
-                                 kx, ICV_SEPARABLE_KERNEL, filterState );
-    if( status < 0 )
-        return status;
+    filterState = icvFilterInitAlloc( width, cv32f, channels, el_size, el_anchor,
+                                      kx, ICV_SEPARABLE_KERNEL );
 
-    if( filterState && *filterState )
+    if( filterState )
     {
         if( smoothtype == CV_BLUR )
-            (*filterState)->divisor = el_size.width * el_size.height;
+            filterState->divisor = el_size.width * el_size.height;
         else if( smoothtype == CV_GAUSSIAN )
         {
-            (*filterState)->divisor = (double)(1 << el_size.width) * (1 << el_size.height);
-            (*filterState)->kerType = ((*filterState)->kerType & ~255) |
+            filterState->divisor = (double)(1 << el_size.width) * (1 << el_size.height);
+            filterState->kerType = (filterState->kerType & ~255) |
                 (sigma > 0 ? ICV_CUSTOM_GAUSSIAN_KERNEL : ICV_DEFAULT_GAUSSIAN_KERNEL);
         }
     }
 
-    return filterState != 0 ? CV_OK : CV_NOTDEFINED_ERR;
+    return filterState;
 }
 
 
-static CvStatus
+static void
 icvSmoothFree( CvFilterState ** filterState )
 {
-    return icvFilterFree( filterState );
+    icvFilterFree( filterState );
 }
 
 
@@ -1081,12 +1075,10 @@ icvBlur_32f_CnR( const float* pSrc, int srcStep,
 }
 
 
-CvStatus CV_STDCALL icvBlurInitAlloc(
-    int roiWidth, int depth, int channels, int size,
-    struct CvFilterState** filterState )
+CvFilterState* icvBlurInitAlloc( int roiWidth, int depth, int channels, int size )
 {
-    return icvSmoothInitAlloc( roiWidth, (CvDataType)depth, channels, cvSize(size,size),
-                               CV_BLUR_NO_SCALE, 0, filterState );
+    return icvSmoothInitAlloc( roiWidth, (CvDataType)depth, channels,
+                               cvSize(size,size), CV_BLUR_NO_SCALE, 0 );
 }
 
 
@@ -2716,9 +2708,9 @@ cvSmooth( const void* srcarr, void* dstarr, int smoothtype,
 
     if( smoothtype <= CV_GAUSSIAN )
     {
-        IPPI_CALL( icvSmoothInitAlloc( src->width, depth < CV_32F ? cv32s : cv32f,
+        CV_CALL( state = icvSmoothInitAlloc( src->width, depth < CV_32F ? cv32s : cv32f,
             CV_MAT_CN(type), cvSize(param1, smoothtype <= CV_GAUSSIAN ? param2 : param1),
-            smoothtype, sigma, &state ));
+            smoothtype, sigma ));
         ptr = state;
     }
 

@@ -708,9 +708,9 @@ cvFilter2D( const CvArr* _src, CvArr* _dst, const CvMat* _kernel, CvPoint anchor
         }
     }
 
-    IPPI_CALL( icvFilterInitAlloc( src->cols, cv32f, CV_MAT_CN(type),
+    CV_CALL( state = icvFilterInitAlloc( src->cols, cv32f, CV_MAT_CN(type),
                                    cvSize(kernel->cols, kernel->rows), anchor,
-                                   kernel->data.ptr, ICV_GENERIC_KERNEL, &state ));
+                                   kernel->data.ptr, ICV_GENERIC_KERNEL ));
 
     if( CV_MAT_CN(type) == 2 )
         CV_ERROR( CV_BadNumChannels, "Unsupported number of channels" );

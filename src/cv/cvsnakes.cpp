@@ -306,10 +306,8 @@ icvSnake8uC1R( unsigned char *src,
                             g_roi.width = leftshift + 8 + rightshift;
 
                             
-							icvSobelInitAlloc( g_roi.width, cv8u, 3, CV_ORIGIN_TL, 1, 0,
-                                                &pX );
-							icvSobelInitAlloc( g_roi.width, cv8u, 3, CV_ORIGIN_TL, 0, 1,
-                                                &pY );
+							pX = icvSobelInitAlloc( g_roi.width, cv8u, 3, CV_ORIGIN_TL, 1, 0 );
+							pY = icvSobelInitAlloc( g_roi.width, cv8u, 3, CV_ORIGIN_TL, 0, 1 );
 
                             icvSobel_8u16s_C1R( source, srcStep, dx, 20, &g_roi, pX, 0 );
                             icvSobel_8u16s_C1R( source, srcStep, dy, 20, &g_roi, pY, 0 );

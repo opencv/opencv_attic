@@ -95,7 +95,6 @@ CV_INLINE  CvDataType icvDepthToDataType( int type )
 CV_EXTERN_C_FUNCPTR( void (CV_CDECL * CvWriteNodeFunction)(void* seq,void* node) )
 
 #define _CvConvState CvFilterState
-#define CvMorphState CvFilterState
 
 #include "_cvipp.h"
 #include "_cvmatrix.h"
