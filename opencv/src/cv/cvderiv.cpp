@@ -235,7 +235,10 @@ CvStatus CV_STDCALL icvSobel_8u16s_C1R( const uchar* pSrc, int srcStep,
         y_type = ICV_Y_KERNEL_TYPE(state->kerType);
     int x_asymm = (x_type & 3) - 1, /* <0 - general kind (not used),
                                        0-symmetric, 1-asymmetric*/
-        y_asymm = (y_type & 3) - 1; 
+        y_asymm = (y_type & 3) - 1;
+
+    if( stage == CV_START + CV_END )
+        stage = CV_WHOLE;
 
     /* initialize cyclic buffer when starting */
     if( stage == CV_WHOLE || stage == CV_START )
@@ -594,7 +597,10 @@ CvStatus CV_STDCALL icvSobel_32f_C1R( const float* pSrc, int srcStep,
         y_type = ICV_Y_KERNEL_TYPE(state->kerType);
     int x_asymm = (x_type & 3) - 1, /* <0 - general kind (not used),
                                        0-symmetric, 1-asymmetric*/
-        y_asymm = (y_type & 3) - 1; 
+        y_asymm = (y_type & 3) - 1;
+
+    if( stage == CV_START + CV_END )
+        stage = CV_WHOLE;
 
     /* initialize cyclic buffer when starting */
     if( stage == CV_WHOLE || stage == CV_START )
@@ -704,12 +710,12 @@ CvStatus CV_STDCALL icvSobel_32f_C1R( const float* pSrc, int srcStep,
                         for( i = 0; i < width; i++ )
                         {
                             int j;
-                            float t0 = tsrc[i + ker_x]*fmX0;
+                            double t0 = tsrc[i + ker_x]*fmX0;
 
                             for( j = 1; j <= ker_x; j++ )
                                 t0 += (tsrc[i+ker_x+j] + tsrc[i+ker_x-j])*fmaskX[j];
 
-                            tdst[i] = t0;
+                            tdst[i] = (float)t0;
                         }
                     }
                 }
@@ -769,7 +775,7 @@ CvStatus CV_STDCALL icvSobel_32f_C1R( const float* pSrc, int srcStep,
 
                     for( x = 0; x < width; x += 4 )
                     {
-                        float val0, val1;
+                        double val0, val1;
                         val0 = trow2[x] - trow1[x];
                         val1 = trow2[x + 1] - trow1[x + 1];
                 
@@ -787,7 +793,7 @@ CvStatus CV_STDCALL icvSobel_32f_C1R( const float* pSrc, int srcStep,
                 {
                     for( x = 0; x < width; x += 4 )
                     {
-                        float val0, val1, val2, val3;
+                        double val0, val1, val2, val3;
 
                         val0 = trow[x]*fmY0;
                         val1 = trow[x + 1]*fmY0;
@@ -797,7 +803,7 @@ CvStatus CV_STDCALL icvSobel_32f_C1R( const float* pSrc, int srcStep,
                         for( i = 1; i <= ker_y; i++ )
                         {
                             float *trow1, *trow2;
-                            float m = fmaskY[i];
+                            double m = fmaskY[i];
                             trow1 = rows[ker_y - i];
                             trow2 = rows[ker_y + i];
                             val0 += (trow2[x] - trow1[x])*m;
@@ -806,10 +812,10 @@ CvStatus CV_STDCALL icvSobel_32f_C1R( const float* pSrc, int srcStep,
                             val3 += (trow2[x+3] - trow1[x+3])*m;
                         }
 
-                        tdst2[x + 0] = val0;
-                        tdst2[x + 1] = val1;
-                        tdst2[x + 2] = val2;
-                        tdst2[x + 3] = val3;
+                        tdst2[x + 0] = (float)val0;
+                        tdst2[x + 1] = (float)val1;
+                        tdst2[x + 2] = (float)val2;
+                        tdst2[x + 3] = (float)val3;
                     }
                 }
             }
@@ -821,7 +827,7 @@ CvStatus CV_STDCALL icvSobel_32f_C1R( const float* pSrc, int srcStep,
 
                     for( x = 0; x < width; x += 4 )
                     {
-                        float val0, val1;
+                        double val0, val1;
                         val0 = trow[x]*2 + trow1[x] + trow2[x];
                         val1 = trow[x + 1]*2 + trow1[x+1] + trow2[x+1];
                 
@@ -841,7 +847,7 @@ CvStatus CV_STDCALL icvSobel_32f_C1R( const float* pSrc, int srcStep,
 
                     for( x = 0; x < width; x += 4 )
                     {
-                        float val0, val1;
+                        double val0, val1;
                         val0 = trow[x]*10 + (trow1[x] + trow2[x])*3;
                         val1 = trow[x + 1]*10 + (trow1[x+1] + trow2[x+1])*3;
                 
@@ -859,7 +865,7 @@ CvStatus CV_STDCALL icvSobel_32f_C1R( const float* pSrc, int srcStep,
                 {
                     for( x = 0; x < width; x += 4 )
                     {
-                        float val0, val1, val2, val3;
+                        double val0, val1, val2, val3;
 
                         val0 = trow[x]*fmY0;
                         val1 = trow[x + 1]*fmY0;
@@ -878,10 +884,10 @@ CvStatus CV_STDCALL icvSobel_32f_C1R( const float* pSrc, int srcStep,
                             val3 += (trow2[x+3] + trow1[x+3])*m;
                         }
 
-                        tdst2[x + 0] = val0;
-                        tdst2[x + 1] = val1;
-                        tdst2[x + 2] = val2;
-                        tdst2[x + 3] = val3;
+                        tdst2[x + 0] = (float)val0;
+                        tdst2[x + 1] = (float)val1;
+                        tdst2[x + 2] = (float)val2;
+                        tdst2[x + 3] = (float)val3;
                     }
                 }
             }
@@ -1026,6 +1032,9 @@ icvLaplace_8u16s_C1R( const uchar* pSrc, int srcStep,
     int starting_flag = 0;
     int width_rest = width & (CV_MORPH_ALIGN - 1);
     int y_type = ICV_Y_KERNEL_TYPE(state->kerType);
+
+    if( stage == CV_START + CV_END )
+        stage = CV_WHOLE;
 
     /* initialize cyclic buffer when starting */
     if( stage == CV_WHOLE || stage == CV_START )
@@ -1355,6 +1364,9 @@ icvLaplace_32f_C1R( const float* pSrc, int srcStep,
     int width_rest = width & (CV_MORPH_ALIGN - 1);
     int y_type = ICV_Y_KERNEL_TYPE(state->kerType);
 
+    if( stage == CV_START + CV_END )
+        stage = CV_WHOLE;
+
     /* initialize cyclic buffer when starting */
     if( stage == CV_WHOLE || stage == CV_START )
     {
@@ -1461,8 +1473,8 @@ icvLaplace_32f_C1R( const float* pSrc, int srcStep,
                     for( i = 0; i < width; i++ )
                     {
                         int j;
-                        float t0 = tsrc[i + ker_x]*fmX0;
-                        float t1 = tsrc[i + ker_x]*fmY0;
+                        double t0 = tsrc[i + ker_x]*fmX0;
+                        double t1 = tsrc[i + ker_x]*fmY0;
 
                         for( j = 1; j <= ker_x; j++ )
                         {
@@ -1470,8 +1482,8 @@ icvLaplace_32f_C1R( const float* pSrc, int srcStep,
                             t1 += (tsrc[i+ker_x+j] + tsrc[i+ker_x-j])*fmaskY[j];
                         }
 
-                        tdst[i] = t0;
-                        tdst[i+width] = t1;
+                        tdst[i] = (float)t0;
+                        tdst[i+width] = (float)t1;
                     }
                 }
 
@@ -1594,7 +1606,7 @@ icvLaplace_32f_C1R( const float* pSrc, int srcStep,
         {
             for( x = 0; x < width; x += 4 )
             {
-                float val0, val1, val2, val3;
+                double val0, val1, val2, val3;
 
                 val0 = trow[x]*fmY0 + trow[x + width]*fmX0;
                 val1 = trow[x + 1]*fmY0 + trow[x + 1 + width]*fmX0;
@@ -1604,7 +1616,7 @@ icvLaplace_32f_C1R( const float* pSrc, int srcStep,
                 for( i = 1; i <= ker_y; i++ )
                 {
                     float *trow1, *trow2;
-                    float m0 = fmaskY[i], m1 = fmaskX[i];
+                    double m0 = fmaskY[i], m1 = fmaskX[i];
                     trow1 = rows[ker_y - i];
                     trow2 = rows[ker_y + i];
                     val0 += (trow2[x] + trow1[x])*m0 +
@@ -1617,10 +1629,10 @@ icvLaplace_32f_C1R( const float* pSrc, int srcStep,
                             (trow2[x+3+width] + trow1[x+3+width])*m1;
                 }
 
-                tdst2[x + 0] = val0;
-                tdst2[x + 1] = val1;
-                tdst2[x + 2] = val2;
-                tdst2[x + 3] = val3;
+                tdst2[x + 0] = (float)val0;
+                tdst2[x + 1] = (float)val1;
+                tdst2[x + 2] = (float)val2;
+                tdst2[x + 3] = (float)val3;
             }
         }
 

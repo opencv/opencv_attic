@@ -290,6 +290,9 @@ icvBlur_8u_CnR( uchar* src, int srcStep,
     int divisor = cvRound(state->divisor);
     double inv_divisor = divisor ? 1./divisor : 0.;
 
+    /*if( stage == CV_START + CV_END )
+        stage = CV_WHOLE;*/
+
     /* initialize cyclic buffer when starting */
     if( stage == CV_WHOLE || stage == CV_START )
     {
@@ -569,6 +572,9 @@ icvBlur_8u16s_C1R( const uchar* pSrc, int srcStep,
     int starting_flag = 0;
     int width_rest = width_n & (CV_MORPH_ALIGN - 1);
 
+    /*if( stage == CV_START + CV_END )
+        stage = CV_WHOLE;*/
+
     /* initialize cyclic buffer when starting */
     if( stage == CV_WHOLE || stage == CV_START )
     {
@@ -711,8 +717,8 @@ icvBlur_8u16s_C1R( const uchar* pSrc, int srcStep,
             val0 += trow2[x];
             val1 += trow2[x+1];
 
-            tdst2[x] = (short)val0;
-            tdst2[x+1] = (short)val1;
+            tdst2[x] = CV_CAST_16S(val0);
+            tdst2[x+1] = CV_CAST_16S(val1);
 
             sumbuf[x] = val0 - trow[x];
             sumbuf[x+1] = val1 - trow[x+1];
@@ -723,8 +729,8 @@ icvBlur_8u16s_C1R( const uchar* pSrc, int srcStep,
             val0 += trow2[x+2];
             val1 += trow2[x+3];
 
-            tdst2[x+2] = (short)val0;
-            tdst2[x+3] = (short)val1;
+            tdst2[x+2] = CV_CAST_16S(val0);
+            tdst2[x+3] = CV_CAST_16S(val1);
 
             sumbuf[x+2] = val0 - trow[x+2];
             sumbuf[x+3] = val1 - trow[x+3];
@@ -796,6 +802,9 @@ icvBlur_32f_CnR( const float* pSrc, int srcStep,
 
     srcStep /= sizeof(float);
     dstStep /= sizeof(float);
+
+    /*if( stage == CV_START + CV_END )
+        stage = CV_WHOLE;*/
 
     /* initialize cyclic buffer when starting */
     if( stage == CV_WHOLE || stage == CV_START )
@@ -1121,6 +1130,9 @@ icvGaussianBlur_small_8u_CnR( uchar* src, int srcStep,
 
     assert( ker_width <= SMALL_GAUSSIAN_SIZE &&
             ker_height <= SMALL_GAUSSIAN_SIZE );
+
+    if( stage == CV_START + CV_END )
+        stage = CV_WHOLE;
 
     /* initialize cyclic buffer when starting */
     if( stage == CV_WHOLE || stage == CV_START )
@@ -1490,9 +1502,12 @@ icvGaussianBlur_8u_CnR( uchar* src, int srcStep,
         float* fmaskY = (float*)(state->ker1) + ker_y;
         double fmX0 = fmaskX[0], fmY0 = fmaskY[0];
 
-        int is_small_width = width < MAX( ker_x, ker_right );
+        int is_small_width = width < ker_width;
         int starting_flag = 0;
         int width_rest = width_n & (CV_MORPH_ALIGN - 1);
+
+        if( stage == CV_START + CV_END )
+            stage = CV_WHOLE;
 
         /* initialize cyclic buffer when starting */
         if( stage == CV_WHOLE || stage == CV_START )
@@ -1760,12 +1775,15 @@ icvGaussianBlur_32f_CnR( float* src, int srcStep,
     float* fmaskY = (float*)(state->ker1) + ker_y;
     double fmX0 = fmaskX[0], fmY0 = fmaskY[0];
 
-    int is_small_width = width < MAX( ker_x, ker_right );
+    int is_small_width = width < ker_width;
     int starting_flag = 0;
     int width_rest = width_n & (CV_MORPH_ALIGN - 1);
 
     srcStep /= sizeof(src[0]);
     dstStep /= sizeof(dst[0]);
+
+    if( stage == CV_START + CV_END )
+        stage = CV_WHOLE;
 
     /* initialize cyclic buffer when starting */
     if( stage == CV_WHOLE || stage == CV_START )
@@ -2005,29 +2023,23 @@ icvGaussianBlur_32f_CnR( float* src, int srcStep,
                                       Median Filter
 \****************************************************************************************/
 
+#define CV_MINMAX_8U(a,b) \
+    (t = CV_FAST_CAST_8U((a) - (b)), (b) += t, a -= t)
+
 static CvStatus CV_STDCALL
-icvMedianBlur_8u_CnR( uchar* src, int srcStep,
-                      uchar* dst, int dstStep,
-                      CvSize* roiSize,
-                      int* param, int /*stub */ )
+icvMedianBlur_8u_CnR( uchar* src, int src_step, uchar* dst, int dst_step,
+                      CvSize* roiSize, int* param, int /*stub */ )
 {
-    const int small_thresh = 3;
     #define N  16
     int     zone0[4][N];
     int     zone1[4][N*N];
     int     x, y;
-    int     channels = param[0];
-    int     m = param[1];
+    int     cn = param[0];
+    int     m = param[1], n2 = m*m/2;
     int     nx = (m + 1)/2 - 1;
     CvSize  size = *roiSize;
-    uchar*  src_max = src + size.height*srcStep;
-    uchar*  src_right = src + size.width*channels;
-
-    #define UPDATE_ACC1( pix, cn, op )  \
-    {                                   \
-        int p = (pix);                  \
-        zone1[cn][p] op;                \
-    }
+    uchar*  src_max = src + size.height*src_step;
+    uchar*  src_right = src + size.width*cn;
 
     #define UPDATE_ACC01( pix, cn, op ) \
     {                                   \
@@ -2039,205 +2051,214 @@ icvMedianBlur_8u_CnR( uchar* src, int srcStep,
     if( size.height < nx || size.width < nx )
         return CV_BADSIZE_ERR;
 
-    if( m >= small_thresh )
-        for( y = 0; y < 4; y++ )
-            for( x = 0; x < N; x++ )
-                zone0[y][x] = INT_MAX;
-   
-    for( x = 0; x < size.width; x++, dst += channels )
+    if( m == 3 )
+    {
+        size.width *= cn;
+        
+        for( y = 0; y < size.height; y++, dst += dst_step )
+        {
+            const uchar* src0 = src + src_step*(y-1);
+            const uchar* src1 = src0 + src_step;
+            const uchar* src2 = src1 + src_step;
+            if( y == 0 )
+                src0 = src1;
+            else if( y == size.height - 1 )
+                src2 = src1;
+
+            for( x = 0; x < 2*cn; x++ )
+            {
+                int x0 = x < cn ? x : size.width - 3*cn + x;
+                int x2 = x < cn ? x + cn : size.width - 2*cn + x;
+                int x1 = x < cn ? x0 : x2, t;
+
+                int p0 = src0[x0], p1 = src0[x1], p2 = src0[x2];
+                int p3 = src1[x0], p4 = src1[x1], p5 = src1[x2];
+                int p6 = src2[x0], p7 = src2[x1], p8 = src2[x2];
+            
+                CV_MINMAX_8U(p1, p2);
+                CV_MINMAX_8U(p4, p5);
+                CV_MINMAX_8U(p7, p8);
+                CV_MINMAX_8U(p0, p1);
+                CV_MINMAX_8U(p3, p4);
+                CV_MINMAX_8U(p6, p7);
+                CV_MINMAX_8U(p1, p2);
+                CV_MINMAX_8U(p4, p5);
+                CV_MINMAX_8U(p7, p8);
+                CV_MINMAX_8U(p0, p3);
+                CV_MINMAX_8U(p5, p8);
+                CV_MINMAX_8U(p4, p7);
+                CV_MINMAX_8U(p3, p6);
+                CV_MINMAX_8U(p1, p4);
+                CV_MINMAX_8U(p2, p5);
+                CV_MINMAX_8U(p4, p7);
+                CV_MINMAX_8U(p4, p2);
+                CV_MINMAX_8U(p6, p4);
+                CV_MINMAX_8U(p4, p2);
+                dst[x1] = (uchar)p4;
+            }
+
+            for( x = cn; x < size.width - cn; x++ )
+            {
+                int p0 = src0[x-cn], p1 = src0[x], p2 = src0[x+cn];
+                int p3 = src1[x-cn], p4 = src1[x], p5 = src1[x+cn];
+                int p6 = src2[x-cn], p7 = src2[x], p8 = src2[x+cn];
+                int t;
+            
+                CV_MINMAX_8U(p1, p2);
+                CV_MINMAX_8U(p4, p5);
+                CV_MINMAX_8U(p7, p8);
+                CV_MINMAX_8U(p0, p1);
+                CV_MINMAX_8U(p3, p4);
+                CV_MINMAX_8U(p6, p7);
+                CV_MINMAX_8U(p1, p2);
+                CV_MINMAX_8U(p4, p5);
+                CV_MINMAX_8U(p7, p8);
+                CV_MINMAX_8U(p0, p3);
+                CV_MINMAX_8U(p5, p8);
+                CV_MINMAX_8U(p4, p7);
+                CV_MINMAX_8U(p3, p6);
+                CV_MINMAX_8U(p1, p4);
+                CV_MINMAX_8U(p2, p5);
+                CV_MINMAX_8U(p4, p7);
+                CV_MINMAX_8U(p4, p2);
+                CV_MINMAX_8U(p6, p4);
+                CV_MINMAX_8U(p4, p2);
+
+                dst[x] = (uchar)p4;
+            }
+        }
+        
+        return CV_OK;
+    }
+
+    for( x = 0; x < size.width; x++, dst += cn )
     {
         uchar* dst_cur = dst;
         uchar* src_top = src;
         uchar* src_bottom = src;
-        int    ny = (m + 1)/2 - 1;
-        int    m2;
         int    k, c;
+        int    x0 = -1;
 
-        if( x <= m/2 ) nx++; // check left bound
+        if( x <= m/2 )
+            nx++;
+
+        if( nx < m )
+            x0 = x < m/2 ? 0 : (nx-1)*cn;
 
         // init accumulator
-        if( m < small_thresh )
-        {
-            memset( zone0, 0, sizeof(zone0[0])*channels );
-            memset( zone1, 0, sizeof(zone1[0])*channels );
+        memset( zone0, 0, sizeof(zone0[0])*cn );
+        memset( zone1, 0, sizeof(zone1[0])*cn );
 
-            for( y = 0; y < ny; y++, src_bottom += srcStep )
-            {
-                for( k = 0; k < nx*channels; k += channels )
-                    for( c = 0; c < channels; c++ )
-                        UPDATE_ACC01( src_bottom[k+c], c, ++ );
-            }
-        }
-        else
+        for( y = -m/2; y < m/2; y++ )
         {
-            memset( zone1, 0, sizeof(zone1[0])*channels );
-
-            for( y = 0; y < ny; y++, src_bottom += srcStep )
+            for( c = 0; c < cn; c++ )
             {
-                for( k = 0; k < nx*channels; k += channels )
-                    for( c = 0; c < channels; c++ )
-                        UPDATE_ACC1( src_bottom[k+c], c, ++ );
+                if( x0 >= 0 )
+                    UPDATE_ACC01( src_bottom[x0+c], c, += (m - nx) );
+                for( k = 0; k < nx*cn; k += cn )
+                    UPDATE_ACC01( src_bottom[k+c], c, ++ );
             }
+            
+            if( (unsigned)y < (unsigned)(size.height-1) )
+                src_bottom += src_step;
         }
 
-        ny *= nx;
-        m2 = m*nx;
-
-        for( y = 0; y < size.height; y++, dst_cur += dstStep )
+        for( y = 0; y < size.height; y++, dst_cur += dst_step )
         {
-            int n;
-
-            if( src_bottom < src_max )
+            if( cn == 1 )
             {
-                if( m < small_thresh )
-                {
-                    if( channels == 1 )
-                    {
-                        for( k = 0; k < nx; k++ )
-                            UPDATE_ACC01( src_bottom[k], 0, ++ );
-                    }
-                    else if( channels == 3 )
-                    {
-                        for( k = 0; k < nx*3; k += 3 )
-                        {
-                            UPDATE_ACC01( src_bottom[k], 0, ++ );
-                            UPDATE_ACC01( src_bottom[k+1], 1, ++ );
-                            UPDATE_ACC01( src_bottom[k+2], 2, ++ );
-                        }
-                    }
-                    else
-                    {
-                        assert( channels == 4 );
-                        for( k = 0; k < nx*4; k += 4 )
-                        {
-                            UPDATE_ACC01( src_bottom[k], 0, ++ );
-                            UPDATE_ACC01( src_bottom[k+1], 1, ++ );
-                            UPDATE_ACC01( src_bottom[k+2], 2, ++ );
-                            UPDATE_ACC01( src_bottom[k+3], 3, ++ );
-                        }
-                    }
-                }
-                else
-                {
-                    if( channels == 1 )
-                    {
-                        for( k = 0; k < nx; k++ )
-                            UPDATE_ACC1( src_bottom[k], 0, ++ );
-                    }
-                    else if( channels == 3 )
-                    {
-                        for( k = 0; k < nx*3; k += 3 )
-                        {
-                            UPDATE_ACC1( src_bottom[k], 0, ++ );
-                            UPDATE_ACC1( src_bottom[k+1], 1, ++ );
-                            UPDATE_ACC1( src_bottom[k+2], 2, ++ );
-                        }
-                    }
-                    else
-                    {
-                        assert( channels == 4 );
-                        for( k = 0; k < nx*4; k += 4 )
-                        {
-                            UPDATE_ACC1( src_bottom[k], 0, ++ );
-                            UPDATE_ACC1( src_bottom[k+1], 1, ++ );
-                            UPDATE_ACC1( src_bottom[k+2], 2, ++ );
-                            UPDATE_ACC1( src_bottom[k+3], 3, ++ );
-                        }
-                    }
-                }
-
-                ny += nx;
-                src_bottom += srcStep;
+                for( k = 0; k < nx; k++ )
+                    UPDATE_ACC01( src_bottom[k], 0, ++ );
             }
+            else if( cn == 3 )
+            {
+                for( k = 0; k < nx*3; k += 3 )
+                {
+                    UPDATE_ACC01( src_bottom[k], 0, ++ );
+                    UPDATE_ACC01( src_bottom[k+1], 1, ++ );
+                    UPDATE_ACC01( src_bottom[k+2], 2, ++ );
+                }
+            }
+            else
+            {
+                assert( cn == 4 );
+                for( k = 0; k < nx*4; k += 4 )
+                {
+                    UPDATE_ACC01( src_bottom[k], 0, ++ );
+                    UPDATE_ACC01( src_bottom[k+1], 1, ++ );
+                    UPDATE_ACC01( src_bottom[k+2], 2, ++ );
+                    UPDATE_ACC01( src_bottom[k+3], 3, ++ );
+                }
+            }
+
+            if( x0 >= 0 )
+            {
+                for( c = 0; c < cn; c++ )
+                    UPDATE_ACC01( src_bottom[x0+c], c, += (m - nx) );
+            }
+
+            if( src_bottom + src_step < src_max )
+                src_bottom += src_step;
 
             // find median
-            n = ny >> 1;
-            for( c = 0; c < channels; c++ )
+            for( c = 0; c < cn; c++ )
             {
                 int s = 0;
                 for( k = 0; ; k++ )
                 {
                     int t = s + zone0[c][k];
-                    if( t > n ) break;
+                    if( t > n2 ) break;
                     s = t;
                 }
 
                 for( k *= N; ;k++ )
                 {
                     s += zone1[c][k];
-                    if( s > n ) break;
+                    if( s > n2 ) break;
                 }
 
                 dst_cur[c] = (uchar)k;
             }
 
-            if( ny == m2 )
+            if( cn == 1 )
             {
-                if( m < small_thresh )
-                {
-                    if( channels == 1 )
-                    {
-                        for( k = 0; k < nx; k++ )
-                            UPDATE_ACC01( src_top[k], 0, -- );
-                    }
-                    else if( channels == 3 )
-                    {
-                        for( k = 0; k < nx*3; k += 3 )
-                        {
-                            UPDATE_ACC01( src_top[k], 0, -- );
-                            UPDATE_ACC01( src_top[k+1], 1, -- );
-                            UPDATE_ACC01( src_top[k+2], 2, -- );
-                        }
-                    }
-                    else
-                    {
-                        assert( channels == 4 );
-                        for( k = 0; k < nx*4; k += 4 )
-                        {
-                            UPDATE_ACC01( src_top[k], 0, -- );
-                            UPDATE_ACC01( src_top[k+1], 1, -- );
-                            UPDATE_ACC01( src_top[k+2], 2, -- );
-                            UPDATE_ACC01( src_top[k+3], 3, -- );
-                        }
-                    }
-                }
-                else
-                {
-                    if( channels == 1 )
-                    {
-                        for( k = 0; k < nx; k++ )
-                            UPDATE_ACC1( src_top[k], 0, -- );
-                    }
-                    else if( channels == 3 )
-                    {
-                        for( k = 0; k < nx*3; k += 3 )
-                        {
-                            UPDATE_ACC1( src_top[k], 0, -- );
-                            UPDATE_ACC1( src_top[k+1], 1, -- );
-                            UPDATE_ACC1( src_top[k+2], 2, -- );
-                        }
-                    }
-                    else
-                    {
-                        assert( channels == 4 );
-                        for( k = 0; k < nx*4; k += 4 )
-                        {
-                            UPDATE_ACC1( src_top[k], 0, -- );
-                            UPDATE_ACC1( src_top[k+1], 1, -- );
-                            UPDATE_ACC1( src_top[k+2], 2, -- );
-                            UPDATE_ACC1( src_top[k+3], 3, -- );
-                        }
-                    }
-                }
-
-                ny -= nx;
-                src_top += srcStep;
+                for( k = 0; k < nx; k++ )
+                    UPDATE_ACC01( src_top[k], 0, -- );
             }
+            else if( cn == 3 )
+            {
+                for( k = 0; k < nx*3; k += 3 )
+                {
+                    UPDATE_ACC01( src_top[k], 0, -- );
+                    UPDATE_ACC01( src_top[k+1], 1, -- );
+                    UPDATE_ACC01( src_top[k+2], 2, -- );
+                }
+            }
+            else
+            {
+                assert( cn == 4 );
+                for( k = 0; k < nx*4; k += 4 )
+                {
+                    UPDATE_ACC01( src_top[k], 0, -- );
+                    UPDATE_ACC01( src_top[k+1], 1, -- );
+                    UPDATE_ACC01( src_top[k+2], 2, -- );
+                    UPDATE_ACC01( src_top[k+3], 3, -- );
+                }
+            }
+
+            if( x0 >= 0 )
+            {
+                for( c = 0; c < cn; c++ )
+                    UPDATE_ACC01( src_top[x0+c], c, -= (m - nx) );
+            }
+
+            if( y >= m/2 )
+                src_top += src_step;
         }
 
         if( x >= m/2 )
-            src += channels;
-        if( src + nx*channels >= src_right ) nx--;
+            src += cn;
+        if( src + nx*cn > src_right ) nx--;
     }
 #undef N
 #undef UPDATE_ACC
@@ -2601,12 +2622,12 @@ cvSmooth( const void* srcarr, void* dstarr, int smoothtype,
             param1 = cvRound(sigma*(depth == CV_8U ? 3 : 4)*2 + 1)|1;
         
         if( param2 == 0 )
-            param2 = param1;
+            param2 = size.height == 1 ? 1 : param1;
         if( param1 < 1 || (param1 & 1) == 0 || param2 < 1 || (param2 & 1) == 0 )
             CV_ERROR( CV_StsOutOfRange,
                 "One of aperture dimensions is incorrect (should be >=1 and odd)" );
 
-        if( param1 == 1 && param2 == 1 )
+        if( param1 == 1 && param2 == 1 && CV_ARE_TYPES_EQ(src,dst) )
         {
             cvCopy( src, dst );
             EXIT;
@@ -2621,7 +2642,8 @@ cvSmooth( const void* srcarr, void* dstarr, int smoothtype,
     if( CV_MAT_CN(type) == 2 )
         CV_ERROR( CV_BadNumChannels, "Unsupported number of channels" );
 
-    if( (smoothtype == CV_BLUR || smoothtype == CV_MEDIAN) && icvFilterBox_8u_C1R_p )
+    if( (smoothtype == CV_BLUR || smoothtype == CV_MEDIAN) && icvFilterBox_8u_C1R_p &&
+        size.width >= param1 && size.height >= param2 && param1 > 1 && param2 > 1 )
     {
         CvSmoothFixedIPPFunc ipp_median_box_func = 0;
 
@@ -2671,7 +2693,8 @@ cvSmooth( const void* srcarr, void* dstarr, int smoothtype,
         }
     }
     else if( smoothtype == CV_GAUSSIAN &&
-             icvFilterBox_8u_C1R_p /* this is to check that IPP is loaded */ )
+             icvFilterBox_8u_C1R_p /* this is to check that IPP is loaded */ &&
+             size.width >= param1*3 && size.height >= param2 && param1 > 1 && param2 > 1 )
     {
         CvSize ksize = { param1, param2 };
         float* kx = (float*)cvStackAlloc( ksize.width*sizeof(kx[0]) );
@@ -2695,10 +2718,8 @@ cvSmooth( const void* srcarr, void* dstarr, int smoothtype,
     if( smoothtype <= CV_GAUSSIAN )
     {
         IPPI_CALL( icvSmoothInitAlloc( src->width, depth < CV_32F ? cv32s : cv32f,
-                                       CV_MAT_CN(type),
-                                       cvSize( param1, size.height == 1 ? 1 :
-                                               smoothtype <= CV_GAUSSIAN ? param2 : param1),
-                                       smoothtype, sigma, &state ));
+            CV_MAT_CN(type), cvSize(param1, smoothtype <= CV_GAUSSIAN ? param2 : param1),
+            smoothtype, sigma, &state ));
         ptr = state;
     }
 

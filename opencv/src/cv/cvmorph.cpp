@@ -657,6 +657,9 @@ icv##name##Any_##flavor( arrtype* src, int srcstep,                         \
     srcstep /= sizeof(src[0]);                                              \
     dststep /= sizeof(dst[0]);                                              \
                                                                             \
+    if( stage == CV_START + CV_END )                                        \
+        stage = CV_WHOLE;                                                   \
+                                                                            \
     /* initialize cyclic buffer when starting */                            \
     if( stage == CV_WHOLE || stage == CV_START )                            \
     {                                                                       \

@@ -216,16 +216,18 @@ int icvIPPSepFilter( const CvMat* src, CvMat* dst, const CvMat* kernelX,
     size = cvGetMatSize(src);
     stripe_size = src->data.ptr == dst->data.ptr ? 1 << 15 : 1 << 16;
     max_dy = MAX( ksize.height - 1, stripe_size/(size.width + ksize.width - 1));
+    max_dy = MIN( max_dy, size.height + ksize.height - 1 );
     
     align = 8/CV_ELEM_SIZE(depth);
 
-    CV_CALL( top_bottom = cvCreateMat( ksize.height - 1 +
-        MAX(ksize.height - anchor.y - 1, anchor.y), cvAlign(size.width,align), type ));
+    CV_CALL( top_bottom = cvCreateMat( ksize.height*2, cvAlign(size.width,align), type ));
 
-    CV_CALL( vout_hin = cvCreateMat( max_dy, cvAlign(size.width + ksize.width - 1, align), type ));
+    CV_CALL( vout_hin = cvCreateMat( max_dy + ksize.height,
+        cvAlign(size.width + ksize.width - 1, align), type ));
     
     if( src->data.ptr == dst->data.ptr && size.height )
-        CV_CALL( dst_buf = cvCreateMat( max_dy, cvAlign(size.width, align), type ));
+        CV_CALL( dst_buf = cvCreateMat( max_dy + ksize.height,
+            cvAlign(size.width, align), type ));
 
     kx = (float*)cvStackAlloc( ksize.width*sizeof(kx[0]) );
     ky = (float*)cvStackAlloc( ksize.height*sizeof(ky[0]) );
@@ -252,7 +254,7 @@ int icvIPPSepFilter( const CvMat* src, CvMat* dst, const CvMat* kernelX,
         int src_y = y, dst_y = y;
         dy = MIN( max_dy, size.height - (ksize.height - anchor.y - 1) - y );
 
-        if( y < anchor.y || dy <= 0 )
+        if( y < anchor.y || dy < anchor.y )
         {
             int ay = anchor.y;
             CvSize src_stripe_size = size;
@@ -374,6 +376,8 @@ icvFilter_##flavor##_CnR( arrtype* src, int srcstep,                        \
                 ker_coeffs++;                                               \
             }                                                               \
         }                                                                   \
+    if( stage == CV_START + CV_END )                                        \
+        stage = CV_WHOLE;                                                   \
                                                                             \
     /* initialize cyclic buffer when starting */                            \
     if( stage == CV_WHOLE || stage == CV_START )                            \
@@ -460,14 +464,14 @@ icvFilter_##flavor##_CnR( arrtype* src, int srcstep,                        \
         {                                                                   \
             for( x = 0; x < width_n; x += 3 )                               \
             {                                                               \
-                float sum0 = 0, sum1 = 0, sum2 = 0;                         \
+                double sum0 = 0, sum1 = 0, sum2 = 0;                        \
                 worktype t0, t1, t2;                                        \
                 arrtype** kp = ker;                                         \
                 ker_coeffs = ker_coeffs0;                                   \
                 while( kp != ker_ptr )                                      \
                 {                                                           \
                     arrtype* tp = *kp++;                                    \
-                    float f = *ker_coeffs++;                                \
+                    double f = *ker_coeffs++;                               \
                     sum0 += load_macro(tp[x])*f;                            \
                     sum1 += load_macro(tp[x+1])*f;                          \
                     sum2 += load_macro(tp[x+2])*f;                          \
@@ -484,14 +488,14 @@ icvFilter_##flavor##_CnR( arrtype* src, int srcstep,                        \
         {                                                                   \
             for( x = 0; x < width_n; x += 4 )                               \
             {                                                               \
-                float sum0 = 0, sum1 = 0, sum2 = 0, sum3 = 0;               \
+                double sum0 = 0, sum1 = 0, sum2 = 0, sum3 = 0;              \
                 worktype t0, t1;                                            \
                 arrtype** kp = ker;                                         \
                 ker_coeffs = ker_coeffs0;                                   \
                 while( kp != ker_ptr )                                      \
                 {                                                           \
                     arrtype* tp = *kp++;                                    \
-                    float f = *ker_coeffs++;                                \
+                    double f = *ker_coeffs++;                               \
                     sum0 += load_macro(tp[x])*f;                            \
                     sum1 += load_macro(tp[x+1])*f;                          \
                     sum2 += load_macro(tp[x+2])*f;                          \
@@ -537,7 +541,7 @@ icvFilter_##flavor##_CnR( arrtype* src, int srcstep,                        \
 
 ICV_DEF_FILTER_FUNC( 8u, uchar, int, CV_8TO32F, cvRound, CV_CAST_8U )
 ICV_DEF_FILTER_FUNC( 16u, ushort, int, CV_NOP, cvRound, CV_CAST_16U )
-ICV_DEF_FILTER_FUNC( 32f, float, float, CV_NOP, CV_NOP, CV_NOP )
+ICV_DEF_FILTER_FUNC( 32f, float, double, CV_NOP, CV_NOP, CV_CAST_32F )
 
 
 static void icvInitFilterTab( CvFuncTable* tab )
