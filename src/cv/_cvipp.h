@@ -337,6 +337,41 @@ IPCV_WARPPERSPECTIVE_BACK( 32f, 4 )
 
 #undef IPCV_WARPPERSPECTIVE_BACK
 
+
+#define IPCV_WARPPERSPECTIVE( flavor, cn )                                  \
+IPCVAPI_EX( CvStatus, icvWarpPerspective_##flavor##_C##cn##R,               \
+    "ippiWarpPerspective_" #flavor "_C" #cn "R", CV_PLUGINS1(CV_PLUGIN_IPPI),\
+    (const void* src, CvSize srcsize, int srcstep, CvRect srcroi,           \
+    void* dst, int dststep, CvRect dstroi,                                  \
+    const double* coeffs, int interpolate ))
+
+IPCV_WARPPERSPECTIVE( 8u, 1 )
+IPCV_WARPPERSPECTIVE( 8u, 3 )
+IPCV_WARPPERSPECTIVE( 8u, 4 )
+
+IPCV_WARPPERSPECTIVE( 32f, 1 )
+IPCV_WARPPERSPECTIVE( 32f, 3 )
+IPCV_WARPPERSPECTIVE( 32f, 4 )
+
+#undef IPCV_WARPPERSPECTIVE
+
+#define IPCV_REMAP( flavor, cn )                                        \
+IPCVAPI_EX( CvStatus, icvRemap_##flavor##_C##cn##R,                     \
+    "ippiRemap_" #flavor "_C" #cn "R", CV_PLUGINS1(CV_PLUGIN_IPPI),     \
+    ( const void* src, CvSize srcsize, int srcstep, CvRect srcroi,      \
+      const float* xmap, int xmapstep, const float* ymap, int ymapstep, \
+      void* dst, int dststep, CvSize dstsize, int interpolation )) 
+
+IPCV_REMAP( 8u, 1 )
+IPCV_REMAP( 8u, 3 )
+IPCV_REMAP( 8u, 4 )
+
+IPCV_REMAP( 32f, 1 )
+IPCV_REMAP( 32f, 3 )
+IPCV_REMAP( 32f, 4 )
+
+#undef IPCV_REMAP
+
 /****************************************************************************************\
 *                                      Morphology                                        *
 \****************************************************************************************/

@@ -44,11 +44,12 @@
 
 static CV_IMPLEMENT_QSORT( icvSortFeatures, int *, cmp_features )
 
-void
+CV_IMPL void
 cvGoodFeaturesToTrack( const void* image, void* eigImage, void* tempImage,
                        CvPoint2D32f* corners, int *corner_count,
                        double quality_level, double min_distance,
-                       const void* maskImage )
+                       const void* maskImage, int block_size,
+                       int use_harris, double harris_k )
 {
     CV_FUNCNAME( "cvGoodFeaturesToTrack" );
 
@@ -117,7 +118,14 @@ cvGoodFeaturesToTrack( const void* image, void* eigImage, void* tempImage,
     if( quality_level <= 0 || min_distance < 0 )
         CV_ERROR( CV_StsBadArg, "quality level or min distance are non positive" );
 
-    CV_CALL( cvCornerMinEigenVal( img, eig, 3, 3 ));
+    if( use_harris )
+    {
+        CV_CALL( cvCornerHarris( img, eig, block_size, 3, harris_k ));
+    }
+    else
+    {
+        CV_CALL( cvCornerMinEigenVal( img, eig, block_size, 3 ));
+    }
     CV_CALL( cvMinMaxLoc( eig, 0, &max_val, 0, 0 ));
     CV_CALL( cvThreshold( eig, eig, max_val * quality_level,
                           0, CV_THRESH_TOZERO ));
