@@ -375,7 +375,6 @@ public:
 
 protected:
     int read_params( CvFileStorage* fs );
-    int get_test_case_count();
     void run_func(void);
     void set_error_context( const char* condition,
                            const char* err_msg,
@@ -450,6 +449,10 @@ int CxCore_DynStructBaseTest::write_default_params( CvFileStorage* fs )
 
 int CxCore_DynStructBaseTest::read_params( CvFileStorage* fs )
 {
+    int code = CvTest::read_params( fs );
+    if( code < 0 )
+        return code;
+
     struct_count = cvReadInt( find_param( fs, "struct_count" ), struct_count );
     max_struct_size = cvReadInt( find_param( fs, "max_struct_size" ), max_struct_size );
     generations = cvReadInt( find_param( fs, "generations" ), generations );
@@ -474,12 +477,6 @@ int CxCore_DynStructBaseTest::read_params( CvFileStorage* fs )
     max_log_elem_size = cvTsClipInt( max_log_elem_size, min_log_elem_size, 10 );
 
     return 0;
-}
-
-
-int CxCore_DynStructBaseTest::get_test_case_count()
-{
-    return -1; //iterations * max_struct_size;
 }
 
 

@@ -1753,14 +1753,7 @@ icvFilterScharrHoriz_8u16s_C1R_t icvFilterScharrHoriz_8u16s_C1R_p = 0;
 icvFilterScharrVert_32f_C1R_t icvFilterScharrVert_32f_C1R_p = 0;
 icvFilterScharrHoriz_32f_C1R_t icvFilterScharrHoriz_32f_C1R_p = 0;
 
-typedef CvStatus (CV_STDCALL * CvSobelFixedIPPFunc)
-( const void* src, int srcstep, void* dst, int dststep, CvSize roi, int aperture );
-
-typedef CvStatus (CV_STDCALL * CvFilterFixedIPPFunc)
-( const void* src, int srcstep, void* dst, int dststep, CvSize roi );
-
 //////////////////////////////////////////////////////////////////////////////////////////
-
 
 CV_IMPL void
 cvSobel( const void* srcarr, void* dstarr, int dx, int dy, int aperture_size )

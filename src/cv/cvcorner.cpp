@@ -438,7 +438,6 @@ cvCornerEigenValsAndVecs( const void* srcarr, void* eigenvarr,
 }
 
 
-#if 0
 CV_IMPL void
 cvPreCornerDetect( const void* srcarr, void* dstarr, int aperture_size )
 {
@@ -664,6 +663,5 @@ cvPreCornerDetect( const void* srcarr, void* dstarr, int aperture_size )
     cvReleaseMat( &Dxy );
     cvReleaseMat( &tempsrc );
 }
-#endif
 
 /* End of file */

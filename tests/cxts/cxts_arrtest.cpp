@@ -51,10 +51,15 @@ CvArrTest::CvArrTest( const char* _test_name, const char* _test_funcs, const cha
 
     iplimage_allowed = true;
     cvmat_allowed = true;
-    optional_mask = true;
+    optional_mask = false;
     min_log_array_size = 0;
     max_log_array_size = default_max_log_array_size;
     element_wise_relative_error = true;
+
+    size_list = 0;
+    whole_size_list = 0;
+    depth_list = 0;
+    cn_list = 0;
 
     max_arr = MAX_ARR;
     test_array = new CvTestPtrVec[max_arr];
@@ -71,11 +76,65 @@ CvArrTest::~CvArrTest()
 }
 
 
+int CvArrTest::support_testing_modes()
+{
+    return CvTS::CORRECTNESS_CHECK_MODE + CvTS::TIMING_MODE;
+}
+
+
 int CvArrTest::write_default_params( CvFileStorage* fs )
 {
-    write_param( fs, "test_case_count", test_case_count );
-    write_param( fs, "min_log_array_size", min_log_array_size );
-    write_param( fs, "max_log_array_size", max_log_array_size );
+    int code = CvTest::write_default_params( fs );
+    if( code < 0 )
+        return code;
+    
+    if( ts->get_testing_mode() == CvTS::CORRECTNESS_CHECK_MODE )
+    {
+        write_param( fs, "test_case_count", test_case_count );
+        write_param( fs, "min_log_array_size", min_log_array_size );
+        write_param( fs, "max_log_array_size", max_log_array_size );
+    }
+    else if( ts->get_testing_mode() == CvTS::TIMING_MODE )
+    {
+        int i;
+
+        start_write_param( fs ); // make sure we have written the entry header containing the test name
+        if( size_list )
+        {
+            cvStartWriteStruct( fs, "size", CV_NODE_SEQ+CV_NODE_FLOW );
+            for( i = 0; size_list[i].width >= 0; i++ )
+            {
+                cvStartWriteStruct( fs, 0, CV_NODE_SEQ+CV_NODE_FLOW );
+                cvWriteInt( fs, 0, size_list[i].width );
+                cvWriteInt( fs, 0, size_list[i].height );
+                if( whole_size_list &&
+                    (whole_size_list[i].width > size_list[i].width ||
+                    whole_size_list[i].height > size_list[i].height) )
+                {
+                    cvWriteInt( fs, 0, whole_size_list[i].width );
+                    cvWriteInt( fs, 0, whole_size_list[i].height );
+                }
+                cvEndWriteStruct( fs );
+            }
+            cvEndWriteStruct(fs);
+        }
+
+        if( depth_list )
+        {
+            cvStartWriteStruct( fs, "depth", CV_NODE_SEQ+CV_NODE_FLOW );
+            for( i = 0; depth_list[i] >= 0; i++ )
+                cvWriteString( fs, 0, cvTsGetTypeName(depth_list[i]) );
+            cvEndWriteStruct(fs);
+        }
+
+        write_int_list( fs, "channels", cn_list, -1, -1 );
+        
+        if( optional_mask )
+        {
+            static const int use_mask[] = { 0, 1 };
+            write_int_list( fs, "use_mask", use_mask, 2 );
+        }
+    }
     return 0;
 }
 
@@ -101,22 +160,24 @@ void CvArrTest::clear()
 
 int CvArrTest::read_params( CvFileStorage* fs )
 {
-    min_log_array_size = cvReadInt( find_param( fs, "min_log_array_size" ), min_log_array_size );
-    max_log_array_size = cvReadInt( find_param( fs, "max_log_array_size" ), max_log_array_size );
-    test_case_count = cvReadInt( find_param( fs, "test_case_count" ), test_case_count );
+    int code = CvTest::read_params( fs );
+    if( code < 0 )
+        return code;
 
-    min_log_array_size = cvTsClipInt( min_log_array_size, 0, 20 );
-    max_log_array_size = cvTsClipInt( max_log_array_size, min_log_array_size, 20 );
-    test_case_count = cvTsClipInt( test_case_count, 0, 100000 );
+    if( ts->get_testing_mode() == CvTS::CORRECTNESS_CHECK_MODE )
+    {
+        min_log_array_size = cvReadInt( find_param( fs, "min_log_array_size" ), min_log_array_size );
+        max_log_array_size = cvReadInt( find_param( fs, "max_log_array_size" ), max_log_array_size );
+        test_case_count = cvReadInt( find_param( fs, "test_case_count" ), test_case_count );
 
-    return 0;
+        min_log_array_size = cvTsClipInt( min_log_array_size, 0, 20 );
+        max_log_array_size = cvTsClipInt( max_log_array_size, min_log_array_size, 20 );
+        test_case_count = cvTsClipInt( test_case_count, 0, 100000 );
+    }
+
+    return code;
 }
 
-
-int CvArrTest::get_test_case_count()
-{
-    return test_case_count;
-}
 
 void CvArrTest::get_test_array_types_and_sizes( int /*test_case_idx*/, CvSize** sizes, int** types )
 {
@@ -143,6 +204,198 @@ void CvArrTest::get_test_array_types_and_sizes( int /*test_case_idx*/, CvSize** 
 }
 
 
+void CvArrTest::get_timing_test_array_types_and_sizes( int /*test_case_idx*/, CvSize** sizes, int** types,
+                                                       CvSize** whole_sizes, bool *are_images )
+{
+    const CvFileNode* size_node = find_timing_param( "size" );
+    const CvFileNode* depth_node = find_timing_param( "depth" );
+    const CvFileNode* channels_node = find_timing_param( "channels" );
+    int i, j;
+    int depth = 0, channels = 1;
+    CvSize size = {1,1}, whole_size = size;
+    
+    if( size_node && CV_NODE_IS_SEQ(size_node->tag) )
+    {
+        CvSeq* seq = size_node->data.seq;
+        size.width = cvReadInt((const CvFileNode*)cvGetSeqElem(seq,0), 1);
+        size.height = cvReadInt((const CvFileNode*)cvGetSeqElem(seq,1), 1);
+        whole_size = size;
+        if( seq->total > 2 )
+        {
+            whole_size.width = cvReadInt((const CvFileNode*)cvGetSeqElem(seq,2), 1);
+            whole_size.height = cvReadInt((const CvFileNode*)cvGetSeqElem(seq,3), 1);
+            whole_size.width = MAX( whole_size.width, size.width );
+            whole_size.height = MAX( whole_size.height, size.height );
+        }
+    }
+
+    if( depth_node && CV_NODE_IS_STRING(depth_node->tag) )
+    {
+        depth = cvTsTypeByName( depth_node->data.str.ptr );
+        if( depth < 0 || depth > CV_64F )
+            depth = 0;
+    }
+
+    if( channels_node && CV_NODE_IS_INT(channels_node->tag) )
+    {
+        channels = cvReadInt( channels_node, 1 );
+        if( channels < 0 || channels > CV_CN_MAX )
+            channels = 1;
+    }
+
+    for( i = 0; i < max_arr; i++ )
+    {
+        int count = test_array[i].size();
+        for( j = 0; j < count; j++ )
+        {
+            sizes[i][j] = size;
+            whole_sizes[i][j] = whole_size;
+            if( i != MASK )
+                types[i][j] = CV_MAKETYPE(depth,channels);
+            else
+                types[i][j] = CV_8UC1;
+            if( i == REF_OUTPUT || i == REF_INPUT_OUTPUT )
+                sizes[i][j] = cvSize(0,0);
+        }
+    }
+
+    if( are_images )
+        *are_images = false; // by default CvMat is used in performance tests
+}
+
+
+void CvArrTest::print_timing_params( int /*test_case_idx*/, char* ptr, int params_left )
+{
+    int i, len;
+    for( i = 0; i < params_left; i++ )
+    {
+        len = 0;
+        sprintf( ptr, "-,%n", &len );
+        ptr += len;
+    }
+}
+
+
+void CvArrTest::print_time( int test_case_idx, double time_clocks )
+{
+    int in_type = -1, out_type = -1;
+    CvSize size = { -1, -1 };
+    const CvFileNode* size_node = find_timing_param( "size" );
+    char str[1024], *ptr = str;
+    int len;
+    bool have_mask;
+    double cpe;
+
+    if( size_node )
+    {
+        if( !CV_NODE_IS_SEQ(size_node->tag) )
+        {
+            size.width = cvReadInt(size_node,-1);
+            size.height = 1;
+        }
+        else
+        {
+            size.width = cvReadInt((const CvFileNode*)cvGetSeqElem(size_node->data.seq,0),-1);
+            size.height = cvReadInt((const CvFileNode*)cvGetSeqElem(size_node->data.seq,1),-1);
+        }
+    }
+
+    if( test_array[INPUT].size() )
+    {
+        in_type = CV_MAT_TYPE(test_mat[INPUT][0].type);
+        if( size.width == -1 )
+            size = cvGetMatSize(&test_mat[INPUT][0]);
+    }
+
+    if( test_array[OUTPUT].size() )
+    {
+        out_type = CV_MAT_TYPE(test_mat[OUTPUT][0].type);
+        if( in_type < 0 )
+            in_type = out_type;
+        if( size.width == -1 )
+            size = cvGetMatSize(&test_mat[OUTPUT][0]);
+    }
+
+    if( out_type < 0 && test_array[INPUT_OUTPUT].size() )
+    {
+        out_type = CV_MAT_TYPE(test_mat[INPUT_OUTPUT][0].type);
+        if( in_type < 0 )
+            in_type = out_type;
+        if( size.width == -1 )
+            size = cvGetMatSize(&test_mat[INPUT_OUTPUT][0]);
+    }
+
+    have_mask = test_array[MASK].size() > 0 && test_array[MASK][0] != 0;
+
+    if( in_type < 0 && out_type < 0 )
+        return;
+
+    if( out_type < 0 )
+        out_type = in_type;
+
+    ptr = strchr( tested_functions, ',' );
+    if( ptr )
+    {
+        len = ptr - tested_functions;
+        strncpy( str, tested_functions, len );
+    }
+    else
+    {
+        len = strlen( tested_functions );
+        strcpy( str, tested_functions );
+    }
+    ptr = str + len;
+    *ptr = '\0';
+    if( have_mask )
+    {
+        len = 0;
+        sprintf( ptr, "(Mask)%n", &len );
+        ptr += len;
+    }
+    *ptr++ = ',';
+    len = 0;
+    sprintf( ptr, "%s%n", cvTsGetTypeName(in_type), &len );
+    ptr += len;
+
+    if( CV_MAT_DEPTH(out_type) != CV_MAT_DEPTH(in_type) )
+    {
+        len = 0;
+        sprintf( ptr, "%s%n", cvTsGetTypeName(out_type), &len );
+        ptr += len;
+    }
+    *ptr++ = ',';
+
+    len = 0;
+    sprintf( ptr, "C%d%n", CV_MAT_CN(in_type), &len );
+    ptr += len;
+
+    if( CV_MAT_CN(out_type) != CV_MAT_CN(in_type) )
+    {
+        len = 0;
+        sprintf( ptr, "C%d%n", CV_MAT_CN(out_type), &len );
+        ptr += len;
+    }
+    *ptr++ = ',';
+
+    len = 0;
+    sprintf( ptr, "%dx%d,%n", size.width, size.height, &len );
+    ptr += len;
+
+    print_timing_params( test_case_idx, ptr );
+    ptr += strlen(ptr);
+    cpe = time_clocks / ((double)size.width * size.height);
+    len = 0;
+    if( cpe >= 100 )
+        sprintf( ptr, "%.0f,%n", cpe, &len );
+    else
+        sprintf( ptr, "%.1f,%n", cpe, &len );
+    ptr += len;
+    sprintf( ptr, "%g", time_clocks/cvGetTickFrequency() );
+    
+    ts->printf( CvTS::CSV, "%s\n", str );
+}
+
+
 static const int icvTsTypeToDepth[] =
 {
     IPL_DEPTH_8U, IPL_DEPTH_8S, IPL_DEPTH_16U, IPL_DEPTH_16S,
@@ -152,14 +405,26 @@ static const int icvTsTypeToDepth[] =
 
 int CvArrTest::prepare_test_case( int test_case_idx )
 {
+    int code = 1;
     CvSize** sizes = (CvSize**)malloc( max_arr*sizeof(sizes[0]) );
+    CvSize** whole_sizes = (CvSize**)malloc( max_arr*sizeof(whole_sizes[0]) );
     int** types = (int**)malloc( max_arr*sizeof(types[0]) );
     int i, j, total = 0;
     CvRNG* rng = ts->get_rng();
+    bool is_image = false;
 
     CV_FUNCNAME( "CvArrTest::prepare_test_case" );
 
     __BEGIN__;
+
+    if( ts->get_testing_mode() == CvTS::TIMING_MODE )
+    {
+        if( !get_next_timing_param_tuple() )
+        {
+            code = -1;
+            EXIT;
+        }
+    }
 
     for( i = 0; i < max_arr; i++ )
     {
@@ -167,9 +432,16 @@ int CvArrTest::prepare_test_case( int test_case_idx )
         count = MAX(count, 1);
         sizes[i] = (CvSize*)malloc( count*sizeof(sizes[i][0]) );
         types[i] = (int*)malloc( count*sizeof(types[i][0]) );
+        whole_sizes[i] = (CvSize*)malloc( count*sizeof(whole_sizes[i][0]) );
     }
 
-    get_test_array_types_and_sizes( test_case_idx, sizes, types );
+    if( ts->get_testing_mode() == CvTS::CORRECTNESS_CHECK_MODE )
+        get_test_array_types_and_sizes( test_case_idx, sizes, types );
+    else
+    {
+        get_timing_test_array_types_and_sizes( test_case_idx, sizes, types,
+                                               whole_sizes, &is_image );
+    }
 
     for( i = 0; i < max_arr; i++ )
     {
@@ -178,11 +450,27 @@ int CvArrTest::prepare_test_case( int test_case_idx )
         for( j = 0; j < count; j++ )
         {
             unsigned t = cvRandInt(rng);
-            int is_image = !cvmat_allowed ? 1 : iplimage_allowed ? (t & 1) : 0;
-            int create_mask = (t & 6) == 0; // ~ each of 3 tests will use mask
-            int use_roi = t & 8;
+            bool create_mask = true, use_roi = false;
             CvSize size = sizes[i][j], whole_size = size;
             CvRect roi = {0,0,0,0};
+
+            if( ts->get_testing_mode() == CvTS::CORRECTNESS_CHECK_MODE )
+            {
+                is_image = !cvmat_allowed ? true : iplimage_allowed ? (t & 1) != 0 : false;
+                create_mask = (t & 6) == 0; // ~ each of 3 tests will use mask
+                use_roi = (t & 8) != 0;
+                if( use_roi )
+                {
+                    whole_size.width += cvRandInt(rng) % 10;
+                    whole_size.height += cvRandInt(rng) % 10;
+                }
+            }
+            else
+            {
+                whole_size = whole_sizes[i][j];
+                use_roi = whole_size.width != size.width || whole_size.height != size.height;
+                create_mask = cvReadInt(find_timing_param( "use_mask" ),0) != 0;
+            }
 
             cvRelease( &test_array[i][j] );
             if( size.width > 0 && size.height > 0 &&
@@ -192,8 +480,6 @@ int CvArrTest::prepare_test_case( int test_case_idx )
                 {
                     roi.width = size.width;
                     roi.height = size.height;
-                    whole_size.width += cvRandInt(rng) % 10;
-                    whole_size.height += cvRandInt(rng) % 10;
                     if( whole_size.width > size.width )
                         roi.x = cvRandInt(rng) % (whole_size.width - size.width);
                     if( whole_size.height > size.height )
@@ -255,17 +541,23 @@ int CvArrTest::prepare_test_case( int test_case_idx )
         total += count;
     }
 
-    for( i = 0; i < max_arr; i++ )
-    {
-        free( sizes[i] );
-        free( types[i] );
-    }
-
     __END__;
 
+    for( i = 0; i < max_arr; i++ )
+    {
+        if( sizes )
+            free( sizes[i] );
+        if( whole_sizes )
+            free( whole_sizes[i] );
+        if( types )
+            free( types[i] );
+    }
+
     free( sizes );
+    free( whole_sizes );
     free( types );
-    return 0;
+
+    return code;
 }
 
 
@@ -323,7 +615,6 @@ int CvArrTest::validate_test_results( int test_case_idx )
     static const char* arr_names[] = { "input", "input/output", "output",
                                        "ref input/output", "ref output",
                                        "temporary", "mask" };
-    static const char* type_names[] = { "8u", "8s", "16u", "16s", "32s", "32f", "64f" };
     int i, j;
     prepare_to_validation( test_case_idx );
 
@@ -381,7 +672,7 @@ int CvArrTest::validate_test_results( int test_case_idx )
                         CvSize size = cvGetSize(arr);
                         int type = cvGetElemType(arr);
                         ts->printf( CvTS::LOG, "%s array %d type=%sC%d, size=(%d,%d)\n",
-                                    arr_names[i0], i1, type_names[CV_MAT_DEPTH(type)],
+                                    arr_names[i0], i1, cvTsGetTypeName(type),
                                     CV_MAT_CN(type), size.width, size.height );
                     }
                 }

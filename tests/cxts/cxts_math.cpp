@@ -45,6 +45,23 @@
 *                                   Utility Functions                                    *
 \****************************************************************************************/
 
+const char* cvTsGetTypeName( int type )
+{
+    static const char* type_names[] = { "8u", "8s", "16u", "16s", "32s", "32f", "64f", "ptr" };
+    return type_names[CV_MAT_DEPTH(type)];
+}
+
+
+int cvTsTypeByName( const char* name )
+{
+    int i;
+    for( i = 0; i < CV_DEPTH_MAX; i++ )
+        if( strcmp(name, cvTsGetTypeName(i)) == 0 )
+            return i;
+    return -1;
+}
+
+
 void cvTsRandUni( CvRNG* rng, CvMat* a, CvScalar param0, CvScalar param1 )
 {
     int i, j, k, cn, ncols;

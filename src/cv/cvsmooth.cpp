@@ -1074,10 +1074,10 @@ icvBlur_32f_CnR( const float* pSrc, int srcStep,
 
 
 CvStatus CV_STDCALL icvBlurInitAlloc(
-    int roiWidth, int depth, int size,
+    int roiWidth, int depth, int channels, int size,
     struct CvFilterState** filterState )
 {
-    return icvSmoothInitAlloc( roiWidth, (CvDataType)depth, 1, cvSize(size,size),
+    return icvSmoothInitAlloc( roiWidth, (CvDataType)depth, channels, cvSize(size,size),
                                CV_BLUR_NO_SCALE, 0, filterState );
 }
 
@@ -2562,10 +2562,10 @@ cvSmooth( const void* srcarr, void* dstarr, int smoothtype,
     type = CV_MAT_TYPE( src->type );
     dsttype = CV_MAT_TYPE( dst->type );
 
-    if( !((smoothtype > 0 && CV_ARE_SIZES_EQ( src, dst )) ||
-          (smoothtype == 0 &&
-          (type == CV_8UC1 && dsttype == CV_16SC1 ||
-           type == CV_32FC1 && dsttype == CV_32FC1 ))))
+    if( smoothtype > 0 && !CV_ARE_TYPES_EQ( src, dst ) ||
+        smoothtype == 0 &&
+        !(type == CV_8UC1 && dsttype == CV_16SC1 ||
+          type == CV_32FC1 && dsttype == CV_32FC1 ))
         CV_ERROR( CV_StsUnmatchedFormats, "" );
 
     if( !CV_ARE_SIZES_EQ( src, dst ))

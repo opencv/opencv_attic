@@ -405,7 +405,7 @@ icvIsPtInCircle3( CvPoint2D32f pt, CvPoint2D32f a, CvPoint2D32f b, CvPoint2D32f 
     val -= (pt.x * pt.x + pt.y * pt.y) * cvTriangleArea( a, b, c );
 
     return val > FLT_EPSILON ? 1 : val < -FLT_EPSILON ? -1 : 0;
-};
+}
 
 
 CV_IMPL CvSubdiv2DPoint *
