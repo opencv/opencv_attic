@@ -60,6 +60,7 @@ struct PaletteEntry
 #define  saturate(x)   (uchar)(((x) & ~255) == 0 ? (x) : ~((x)>>31))
 
 void  CvtBGRToGray( const uchar* bgr, uchar* gray, int len );
+void  CvtGrayToBGR( const uchar* gray, uchar* bgr, int len );
 void  CvtRGBToGray( const uchar* rgb, uchar* gray, int len );
 void  CvtRGBToBGR( const uchar* rgb, uchar* bgr, int len );
 void  CvtBGRAToBGR( const uchar* bgra, uchar* bgr, int len );

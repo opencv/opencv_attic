@@ -66,53 +66,142 @@ extern "C" {
 #define HIGHGUI_API
 #endif /* HIGHGUI_DLLEXPORT */
 
-#define CVVAPI HIGHGUI_API
 
-typedef IplImage* IPLIMAGE;
+/****************************************************************************************\
+*                                Basic HighGUI functionality                             *
+\****************************************************************************************/
 
-/* Errors */
-#define CVV_OK          0 /* Don't bet on it! */
-#define CVV_BADNAME    -1 /* Bad window or file name */
-#define CVV_INITFAILED -2 /* Can't initialize HigCVVUI. Possibly, can't find vlgrfmts.dll */
-#define CVV_WCFAILED   -3 /* Can't create a window */
-#define CVV_NULLPTR    -4 /* The null pointer where it should not appear */
-#define CVV_BADPARAM   -5 
+/* this function is used to set some external parameters in case of X Window */
+HIGHGUI_API int cvInitSystem( int argc, char** argv );
 
-#define HG_OK         CVV_OK
-#define HG_BADNAME    CVV_BADNAME
-#define HG_INITFAILED CVV_INITFAILED
-#define HG_WCFAILED   CVV_WCFAILED
-#define HG_NULLPTR    CVV_NULLPTR
-#define HG_BADPARAM   CVV_BADPARAM
+#define CV_WINDOW_AUTOSIZE  1
+/* create window */
+HIGHGUI_API int cvNamedWindow( const char* name, int flags );
 
-/* this function is used to set graphical library some extern parameters */
-HIGHGUI_API int cvvInitSystem( int argc, char** argv );
+/* display image within window (highgui windows remember their content) */
+HIGHGUI_API void cvShowImage( const char* name, const CvArr* image );
 
-HIGHGUI_API int cvvNamedWindow( const char* name, unsigned long flags );
+/* resize/move window */
+HIGHGUI_API void cvResizeWindow( const char* name, int width, int height );
 
-HIGHGUI_API void cvvShowImage( const char* name, const CvArr* image );
+/* destroy window and all the trackers associated with it */
+HIGHGUI_API void cvDestroyWindow( const char* name );
 
-HIGHGUI_API int cvvResizeWindow( const char* name, int width, int height );
+/* get native window handle (HWND in case of Win32 and Widget in case of X Window) */
+HIGHGUI_API void* cvGetWindowHandle( const char* name );
 
-HIGHGUI_API int cvvDestroyWindow( const char* name );
+/* get name of highgui window given its native handle */
+HIGHGUI_API const char* cvGetWindowName( void* window_handle );
 
-CV_EXTERN_C_FUNCPTR( void (*HG_on_notify)(int) );
+CV_EXTERN_C_FUNCPTR( void (*CvTrackbarCallback)(int pos) );
 
-HIGHGUI_API int cvvCreateTrackbar( const char* name, const char* window_name,
-                                   int* value, int count, HG_on_notify on_notify );
+/* create trackbar and display it on top of given window, set callback */
+HIGHGUI_API int cvCreateTrackbar( const char* trackbar_name, const char* window_name,
+                                  int* value, int count, CvTrackbarCallback on_change );
 
-HIGHGUI_API IplImage* cvvLoadImage( const char* filename );
+/* retrieve or set trackbar position */
+HIGHGUI_API int cvGetTrackbarPos( const char* trackbar_name, const char* window_name );
+HIGHGUI_API void cvSetTrackbarPos( const char* trackbar_name, const char* window_name, int pos );
 
-HIGHGUI_API int cvvSaveImage( const char* filename, const CvArr* image );
+#define CV_EVENT_MOUSEMOVE      0
+#define CV_EVENT_LBUTTONDOWN    1
+#define CV_EVENT_RBUTTONDOWN    2
+#define CV_EVENT_MBUTTONDOWN    3
+#define CV_EVENT_LBUTTONUP      4
+#define CV_EVENT_RBUTTONUP      5
+#define CV_EVENT_MBUTTONUP      6
+#define CV_EVENT_LBUTTONDBLCLK  7
+#define CV_EVENT_RBUTTONDBLCLK  8
+#define CV_EVENT_MBUTTONDBLCLK  9
 
-HIGHGUI_API void cvvAddSearchPath( const char* path );
+#define CV_EVENT_FLAG_LBUTTON   1
+#define CV_EVENT_FLAG_RBUTTON   2
+#define CV_EVENT_FLAG_MBUTTON   4
+#define CV_EVENT_FLAG_CTRLKEY   8
+#define CV_EVENT_FLAG_SHIFTKEY  16
+#define CV_EVENT_FLAG_ALTKEY    32
 
-HIGHGUI_API int cvvWaitKey( const char* name );
+CV_EXTERN_C_FUNCPTR( void (*CvMouseCallback )(int event, int x, int y, int flags) );
+/* assign callback for mouse events */
+HIGHGUI_API void cvSetMouseCallback( const char* window_name, CvMouseCallback on_mouse );
 
-HIGHGUI_API int cvvWaitKeyEx( const char* name, int delay );
+/*load image from file 
+  iscolor: >0 - output image is always color,
+            0 - output image is always grayscale,
+           <0 - output image is color or grayscale dependending on the file */
+HIGHGUI_API IplImage* cvLoadImage( const char* filename, int iscolor CV_DEFAULT(1));
 
-HIGHGUI_API void cvvConvertImage( const CvArr* src, CvArr* dst, int flip CV_DEFAULT(0));
+/* save image to file */
+HIGHGUI_API int cvSaveImage( const char* filename, const CvArr* image );
 
+/* add folder to the image search path (used by cvLoadImage) */
+HIGHGUI_API void cvAddSearchPath( const char* path );
+
+/* utility function: convert one image to another with optional vertical flip */
+HIGHGUI_API void cvConvertImage( const CvArr* src, CvArr* dst, int flip CV_DEFAULT(0));
+
+/* wait for key event infinitely (delay<=0) or for "delay" milliseconds */
+HIGHGUI_API int cvWaitKey(int delay CV_DEFAULT(0));
+
+
+/****************************************************************************************\
+*                             Working with AVIs and Cameras                              *
+\****************************************************************************************/
+
+/* "black box" capture structure */
+typedef struct CvCapture CvCapture;
+
+/* start capturing frames from AVI */
+HIGHGUI_API CvCapture* cvCaptureFromAVI( const char* filename );
+
+/* start capturing frames from camera */
+HIGHGUI_API CvCapture* cvCaptureFromCAM( int index );
+
+/*just grab frame, return 1 if success, 0 if fail 
+  this function is thought to be fast               */  
+HIGHGUI_API int cvGrabFrame( CvCapture* capture );
+
+/*get frame grabbed with cvGrabFrame(..) 
+  This function may apply some frame processing like 
+  frame decompression, flipping etc.
+  !!!DO NOT RELEASE or MODIFY the retrieved frame!!! */
+HIGHGUI_API IplImage* cvRetrieveFrame( CvCapture* capture );
+
+/* Just successive call of cvGrabFrame and cvRetrieveFrame
+   !!!DO NOT RELEASE or MODIFY the retrieved frame!!!      */
+HIGHGUI_API IplImage* cvQueryFrame( CvCapture* capture );
+
+/* stop capturing/reading and free resources */
+HIGHGUI_API void cvReleaseCapture( CvCapture** capture );
+
+#define CV_CAP_PROP_POS_MSEC       0
+#define CV_CAP_PROP_POS_FRAMES     1
+#define CV_CAP_PROP_POS_AVI_RATIO  2
+#define CV_CAP_PROP_FRAME_WIDTH    3
+#define CV_CAP_PROP_FRAME_HEIGHT   4
+#define CV_CAP_PROP_FPS            5
+#define CV_CAP_PROP_FOURCC         6
+
+/* retrieve or set capture properties */
+HIGHGUI_API double cvGetCaptureProperty( CvCapture* capture, int property_id );
+HIGHGUI_API int    cvSetCaptureProperty( CvCapture* capture, int property_id, double value );
+
+/* "black box" AVI writer structure */
+typedef struct CvAVIWriter CvAVIWriter;
+
+/* initialize AVI writer */
+HIGHGUI_API CvAVIWriter* cvCreateAVIWriter( const char* filename, int fourcc,
+                                            double fps, CvSize frameSize );
+
+/* write frame to AVI */
+HIGHGUI_API int cvWriteToAVI( CvAVIWriter* writer, const IplImage* image );
+
+/* close AVI writer */
+HIGHGUI_API void cvReleaseAVIWriter( CvAVIWriter** writer );
+
+/****************************************************************************************\
+*                              Obsolete functions/synonyms                               *
+\****************************************************************************************/
 
 #ifndef HIGHGUI_NO_BACKWARD_COMPATIBILITY
     #define HIGHGUI_BACKWARD_COMPATIBILITY
@@ -120,52 +209,56 @@ HIGHGUI_API void cvvConvertImage( const CvArr* src, CvArr* dst, int flip CV_DEFA
 
 #ifdef HIGHGUI_BACKWARD_COMPATIBILITY
 
-#define HGInitialize() cvvInitSystem( 0, 0 )
-#define HGExit()
-#define add_search_path cvvAddSearchPath
-#define named_window cvvNamedWindow
-#define show_iplimage cvvShowImage
-#define resize cvvResizeWindow
-#define destroy_window cvvDestroyWindow
-#define create_trackbar cvvCreateTrackbar
-#define create_slider create_trackbar
-#define load_iplimage cvvLoadImage
-#define save_iplimage cvvSaveImage
-#define wait_key cvvWaitKey
-#define wait_key_ex cvvWaitKeyEx
-#define CImage CvvImage /* see below */
+#define cvvInitSystem cvInitSystem
+#define cvvNamedWindow cvNamedWindow
+#define cvvShowImage cvShowImage
+#define cvvResizeWindow cvResizeWindow
+#define cvvDestroyWindow cvDestroyWindow
+#define cvvCreateTrackbar cvCreateTrackbar
+#define cvvLoadImage cvLoadImage
+#define cvvSaveImage cvSaveImage
+#define cvvAddSearchPath cvAddSearchPath
+#define cvvWaitKey(name) cvWaitKey(0)
+#define cvvWaitKeyEx(name,delay) cvWaitKey(delay)
+#define cvvConvertImage cvConvertImage
+#define HG_AUTOSIZE CV_WINDOW_AUTOSIZE
+
+#ifdef WIN32
+
+CV_EXTERN_C_FUNCPTR( int (CV_CDECL * CvWin32WindowCallback)
+                     (HWND, UINT, WPARAM, LPARAM, int*));
+HIGHGUI_API void set_preprocess_func( CvWin32WindowCallback on_preprocess );
+HIGHGUI_API void set_postprocess_func( CvWin32WindowCallback on_postprocess );
+
+#define get_hwnd_byname  cvGetWindowHandle
+#define get_name_byhwnd  cvGetWindowName
+
+HIGHGUI_API void destroy_all();
+
+CV_INLINE int iplWidth( const IplImage* img );
+CV_INLINE int iplWidth( const IplImage* img )
+{
+    return !img ? 0 : !img->roi ? img->width : img->roi->width;
+}
+
+CV_INLINE int iplHeight( const IplImage* img );
+CV_INLINE int iplHeight( const IplImage* img )
+{
+    return !img ? 0 : !img->roi ? img->height : img->roi->height;
+}
 
 #endif
 
+#endif /* obsolete functions */
+
 /* For use with Win32 */
-
 #ifdef WIN32
-HIGHGUI_API void SetInstance(void* curInstance);
-HIGHGUI_API int  check_key(const char* window_name);
-HIGHGUI_API int  reset_key(const char* window_name);
-HIGHGUI_API int  create_toolbar(const char* window_name/*, int pos*/);
-HIGHGUI_API void destroy_all();
-HIGHGUI_API void detach_all_controls();
 
-HIGHGUI_API HWND get_hwnd_byname(const char* name);
-HIGHGUI_API const char* get_name_byhwnd(HWND hwnd);
-HIGHGUI_API void set_preprocess_func(int (__cdecl * on_preprocess)(HWND, UINT, WPARAM, LPARAM, int*));
-HIGHGUI_API void set_postprocess_func(int (__cdecl *on_postprocess)(HWND, UINT, WPARAM, LPARAM, int*));
-
-__inline int iplWidth( const IplImage* img )
-{
-    return !img ? 0 : !img->roi ? img->width : img->roi->width; 
-}
-
-__inline int iplHeight( const IplImage* img )
-{
-    return !img ? 0 : !img->roi ? img->height : img->roi->height; 
-}
-
-__inline RECT NormalizeRect( RECT r )
+CV_INLINE RECT NormalizeRect( RECT r );
+CV_INLINE RECT NormalizeRect( RECT r )
 {
     int t;
-    
+
     if( r.left > r.right )
     {
         t = r.left;
@@ -183,13 +276,15 @@ __inline RECT NormalizeRect( RECT r )
     return r;
 }
 
-__inline CvRect RectToCvRect( RECT sr )
+CV_INLINE CvRect RectToCvRect( RECT sr );
+CV_INLINE CvRect RectToCvRect( RECT sr )
 {
     sr = NormalizeRect( sr );
     return cvRect( sr.left, sr.top, sr.right - sr.left, sr.bottom - sr.top );
 }
 
-__inline RECT CvRectToRect( CvRect sr )
+CV_INLINE RECT CvRectToRect( CvRect sr );
+CV_INLINE RECT CvRectToRect( CvRect sr )
 {
     RECT dr;
     dr.left = sr.x;
@@ -200,7 +295,8 @@ __inline RECT CvRectToRect( CvRect sr )
     return dr;
 }
 
-__inline IplROI RectToROI( RECT r )
+CV_INLINE IplROI RectToROI( RECT r );
+CV_INLINE IplROI RectToROI( RECT r )
 {
     IplROI roi;
     r = NormalizeRect( r );
@@ -214,9 +310,6 @@ __inline IplROI RectToROI( RECT r )
 }
 
 #endif /* WIN32 */
-
-/* Window flags */
-#define HG_AUTOSIZE 1
 
 #ifdef __cplusplus
 }  /* end of extern "C" */
@@ -233,10 +326,10 @@ class CvvImage
 public:
     HIGHGUI_DLL_ENTRY CvvImage();
     HIGHGUI_DLL_ENTRY virtual ~CvvImage();
-    
+
     /* Create image (BGR or grayscale) */
     HIGHGUI_DLL_ENTRY virtual bool  Create( int w, int h, int bpp, int origin = 0 );
-    
+
     /* Load image from specified file */
     HIGHGUI_DLL_ENTRY virtual bool  Load( const char* filename, int desired_color = 1 );
 
@@ -252,17 +345,17 @@ public:
                          cvRect( r.left, r.top, r.right - r.left, r.bottom - r.top ));
     }
 #endif
-    
+
     /* Save entire image to specified file. */
     HIGHGUI_DLL_ENTRY virtual bool  Save( const char* filename );
-    
+
     /* Get copy of input image ROI */
     HIGHGUI_DLL_ENTRY virtual void  CopyOf( CvvImage& image, int desired_color = -1 );
     HIGHGUI_DLL_ENTRY virtual void  CopyOf( IplImage* img, int desired_color = -1 );
 
     IplImage* GetImage() { return m_img; };
     HIGHGUI_DLL_ENTRY virtual void  Destroy(void);
-    
+
     /* width and height of ROI */
     int Width() { return !m_img ? 0 : !m_img->roi ? m_img->width : m_img->roi->width; };
     int Height() { return !m_img ? 0 : !m_img->roi ? m_img->height : m_img->roi->height;};

@@ -633,6 +633,7 @@ cvSegmentMotion( const CvArr* mhiimg, CvArr* segmask, CvMemStorage* storage,
     CvMat  maskstub, *mask = (CvMat*)segmask;
     float  ts = (float)timestamp;
     float  comp_idx = 1;
+    float  stub_val = FLT_MAX*0.1f;
     int x, y;
 
     if( !storage )
@@ -647,7 +648,7 @@ cvSegmentMotion( const CvArr* mhiimg, CvArr* segmask, CvMemStorage* storage,
     if( !CV_ARE_SIZES_EQ( mhi, mask ))
         CV_ERROR( CV_StsUnmatchedSizes, "" );
 
-    CV_CALL( mask8u = cvCreateMat( mhi->rows, mhi->cols, CV_8UC1 ));
+    CV_CALL( mask8u = cvCreateMat( mhi->rows + 2, mhi->cols + 2, CV_8UC1 ));
     cvZero( mask8u );
     cvZero( mask );
     CV_CALL( components = cvCreateSeq( CV_SEQ_KIND_GENERIC, sizeof(CvSeq),
@@ -656,7 +657,17 @@ cvSegmentMotion( const CvArr* mhiimg, CvArr* segmask, CvMemStorage* storage,
     for( y = 0; y < mhi->rows; y++ )
     {
         int* mhi_row = (int*)(mhi->data.ptr + y*mhi->step);
-        uchar* mask8u_row = mask8u->data.ptr + y*mask->step;
+        for( x = 0; x < mhi->cols; x++ )
+        {
+            if( mhi_row[x] == 0 )
+                mhi_row[x] = (int&)stub_val;
+        }
+    }
+
+    for( y = 0; y < mhi->rows; y++ )
+    {
+        int* mhi_row = (int*)(mhi->data.ptr + y*mhi->step);
+        uchar* mask8u_row = mask8u->data.ptr + (y+1)*mask8u->step + 1;
 
         for( x = 0; x < mhi->cols; x++ )
         {
@@ -665,15 +676,15 @@ cvSegmentMotion( const CvArr* mhiimg, CvArr* segmask, CvMemStorage* storage,
                 CvConnectedComp comp;
                 int x1, y1;
 
-                CV_CALL( cvFloodFill( mhi, cvPoint( x, y ), 0, seg_thresh, 0,
-                                      &comp, CV_FLOODFILL_MASK_ONLY + 2, mask8u ));
+                CV_CALL( cvFloodFill( mhi, cvPoint( x, y ), 0, seg_thresh, seg_thresh,
+                                      &comp, CV_FLOODFILL_MASK_ONLY + 2*256 + 4, mask8u ));
 
                 for( y1 = 0; y1 < comp.rect.height; y1++ )
                 {
                     int* mask_row1 = (int*)(mask->data.ptr +
                                     (comp.rect.y + y1)*mask->step) + comp.rect.x;
                     uchar* mask8u_row1 = mask8u->data.ptr +
-                                    (comp.rect.y + y1)*mask8u->step + comp.rect.x;
+                                    (comp.rect.y + y1+1)*mask8u->step + comp.rect.x+1;
 
                     for( x1 = 0; x1 < comp.rect.width; x1++ )
                     {
@@ -687,6 +698,16 @@ cvSegmentMotion( const CvArr* mhiimg, CvArr* segmask, CvMemStorage* storage,
                 comp_idx++;
                 cvSeqPush( components, &comp );
             }
+        }
+    }
+
+    for( y = 0; y < mhi->rows; y++ )
+    {
+        int* mhi_row = (int*)(mhi->data.ptr + y*mhi->step);
+        for( x = 0; x < mhi->cols; x++ )
+        {
+            if( mhi_row[x] == (int&)stub_val )
+                mhi_row[x] = 0;
         }
     }
 

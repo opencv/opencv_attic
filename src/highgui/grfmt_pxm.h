@@ -39,19 +39,18 @@
 //
 //M*/
 
-#ifndef _GRFMT_PXM_H_
-#define _GRFMT_PXM_H_
+#ifndef _GRFMT_PxM_H_
+#define _GRFMT_PxM_H_
 
 #include "grfmt_base.h"
 #include "bitstrm.h"
 
 
-class GrFmtPXMReader : public GrFmtReader
+class GrFmtPxMReader : public GrFmtReader
 {
 public:
     
-    GrFmtPXMReader();
-    ~GrFmtPXMReader();
+    GrFmtPxMReader( const char* filename );
     
     bool  CheckFormat( const char* signature );
     bool  ReadData( uchar* data, int step, int color );
@@ -69,13 +68,12 @@ protected:
 };
 
 
-class GrFmtPXMWriter : public GrFmtWriter
+class GrFmtPxMWriter : public GrFmtWriter
 {
 public:
     
-    GrFmtPXMWriter();
-    ~GrFmtPXMWriter();
-    
+    GrFmtPxMWriter( const char* filename );
+
     bool  WriteImage( const uchar* data, int step,
                       int width, int height, bool isColor );
 protected:
@@ -84,4 +82,16 @@ protected:
 };
 
 
-#endif/*_GRFMT_PXM_H_*/
+// PxM filter factory
+class GrFmtPxM : public GrFmtFilterFactory
+{
+public:
+    
+    GrFmtPxM();
+    GrFmtReader* NewReader( const char* filename );
+    GrFmtWriter* NewWriter( const char* filename );
+    bool CheckSignature( const char* signature );
+};
+
+
+#endif/*_GRFMT_PxM_H_*/

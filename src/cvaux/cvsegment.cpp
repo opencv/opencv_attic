@@ -43,24 +43,24 @@
 
 typedef struct Seg
 {
-    int y;
-    int l;
-    int r;
-    int Prevl;
-    int Prevr;
-    int fl;
+    ushort y;
+    ushort l;
+    ushort r;
+    ushort Prevl;
+    ushort Prevr;
+    short  fl;
 }
 Seg;
 
 #define UP 1
 #define DOWN -1             
 
-#define PUSH(Y,IL,IR,IPL,IPR,FL) {  stack[StIn].y=Y; \
-                                    stack[StIn].l=IL; \
-                                    stack[StIn].r=IR; \
-                                    stack[StIn].Prevl=IPL; \
-                                    stack[StIn].Prevr=IPR; \
-                                    stack[StIn].fl=FL; \
+#define PUSH(Y,IL,IR,IPL,IPR,FL) {  stack[StIn].y=(ushort)(Y); \
+                                    stack[StIn].l=(ushort)(IL); \
+                                    stack[StIn].r=(ushort)(IR); \
+                                    stack[StIn].Prevl=(ushort)(IPL); \
+                                    stack[StIn].Prevr=(ushort)(IPR); \
+                                    stack[StIn].fl=(short)(FL); \
                                     StIn++; }
 
 #define POP(Y,IL,IR,IPL,IPR,FL)  {  StIn--; \
@@ -76,13 +76,17 @@ Seg;
                      (unsigned)((p1)[1] - (p2)[1] + d_lw)<=Interval && \
                      (unsigned)((p1)[2] - (p2)[2] + d_lw)<=Interval)
 
+/*#define DIFF(p1,p2) (CV_IABS((p1)[0] - (p2)[0]) + \
+                     CV_IABS((p1)[1] - (p2)[1]) + \
+                     CV_IABS((p1)[2] - (p2)[2]) <=Interval )*/
 
-CvStatus  icvSegmFloodFill_Stage1( uchar* pImage, int step,
-                                   uchar* pMask, int maskStep,
-                                   CvSize /*roi*/, CvPoint seed,
-                                   int* newVal, int d_lw, int d_up,
-                                   CvConnectedComp * region,
-                                   void *pStack )
+static CvStatus
+icvSegmFloodFill_Stage1( uchar* pImage, int step,
+                         uchar* pMask, int maskStep,
+                         CvSize /*roi*/, CvPoint seed,
+                         int* newVal, int d_lw, int d_up,
+                         CvConnectedComp * region,
+                         void *pStack )
 {
     uchar* img = pImage + step * seed.y;
     uchar* mask = pMask + maskStep * (seed.y + 1);
@@ -95,8 +99,7 @@ CvStatus  icvSegmFloodFill_Stage1( uchar* pImage, int step,
     int XMin, XMax, YMin = seed.y, YMax = seed.y;
     int val0[3];
 
-    L = seed.x;
-    R = seed.x;
+    L = R = seed.x;
     img = pImage + seed.y*step;
     mask = pMask + seed.y*maskStep;
     mask[L] = 1;
@@ -199,13 +202,14 @@ CvStatus  icvSegmFloodFill_Stage1( uchar* pImage, int step,
 #undef DIFF
 
 
-CvStatus  icvSegmFloodFill_Stage2( uchar* pImage, int step,
-                                   uchar* pMask, int maskStep,
-                                   CvSize /*roi*/, int* newVal,
-                                   CvRect rect )
+static CvStatus
+icvSegmFloodFill_Stage2( uchar* pImage, int step,
+                         uchar* pMask, int maskStep,
+                         CvSize /*roi*/, int* newVal,
+                         CvRect rect )
 {
     uchar* img = pImage + step * rect.y + rect.x * 3;
-    uchar* mask = pMask + maskStep * (rect.y + 1) + rect.x + 1;
+    uchar* mask = pMask + maskStep * rect.y + rect.x;
     uchar uv[] = { (uchar)newVal[0], (uchar)newVal[1], (uchar)newVal[2] };
     int x, y;
 
@@ -215,20 +219,270 @@ CvStatus  icvSegmFloodFill_Stage2( uchar* pImage, int step,
             {
                 mask[x] = 1;
                 img[x*3] = uv[0];
-                img[x*3 + 1] = uv[1];
-                img[x*3 + 2] = uv[2];
+                img[x*3+1] = uv[1];
+                img[x*3+2] = uv[2];
             }
 
     return CV_OK;
 }
 
-
-CV_IMPL void
-cvSegmentImage( CvArr* srcarr, CvArr* dstarr,
-                double canny_threshold, double ffill_threshold )
+#if 0
+static void color_derv( const CvArr* srcArr, CvArr* dstArr, int thresh )
 {
+    static int tab[] = { 0, 2, 2, 1 };
+    
+    uchar *src = 0, *dst = 0;
+    int dst_step, src_step;
+    int x, y;
+    CvSize size;
+
+    cvGetRawData( srcArr, (uchar**)&src, &src_step, &size );
+    cvGetRawData( dstArr, (uchar**)&dst, &dst_step, 0 );
+
+    memset( dst, 0, size.width*sizeof(dst[0]));
+    memset( (uchar*)dst + dst_step*(size.height-1), 0, size.width*sizeof(dst[0]));
+    src += 3;
+
+    #define  CV_IABS(a)     (((a) ^ ((a) < 0 ? -1 : 0)) - ((a) < 0 ? -1 : 0))
+    
+    for( y = 1; y < size.height - 1; y++ )
+    {
+        src += src_step;
+        dst += dst_step;
+        uchar* src0 = src;
+        
+        dst[0] = dst[size.width - 1] = 0;
+
+        for( x = 1; x < size.width - 1; x++, src += 3 )
+        {
+            /*int d[3];
+            int ad[3];
+            int f0, f1;
+            int val;*/
+            int m[3];
+            double val;
+            //double xx, yy;
+            int dh[3];
+            int dv[3];
+            dh[0] = src[0] - src[-3];
+            dv[0] = src[0] - src[-src_step];
+            dh[1] = src[1] - src[-2];
+            dv[1] = src[1] - src[1-src_step];
+            dh[2] = src[2] - src[-1];
+            dv[2] = src[2] - src[2-src_step];
+
+            m[0] = dh[0]*dh[0] + dh[1]*dh[1] + dh[2]*dh[2];
+            m[2] = dh[0]*dv[0] + dh[1]*dv[1] + dh[2]*dv[2];
+            m[1] = dv[0]*dv[0] + dv[1]*dv[1] + dh[2]*dh[2];
+
+            val = (m[0] + m[2]) + 
+                sqrt(((double)(m[0] - m[2]))*(m[0] - m[2]) + (4.*m[1])*m[1]);
+
+            /*
+
+            xx = m[1];
+            yy = v - m[0];
+            v /= sqrt(xx*xx + yy*yy) + 1e-7;
+            xx *= v;
+            yy *= v;
+            
+            dx[x] = (short)cvRound(xx);
+            dy[x] = (short)cvRound(yy);
+
+            //dx[x] = (short)cvRound(v);
+
+            //dx[x] = dy[x] = (short)v;
+            d[0] = src[0] - src[-3];
+            ad[0] = CV_IABS(d[0]);
+
+            d[1] = src[1] - src[-2];
+            ad[1] = CV_IABS(d[1]);
+
+            d[2] = src[2] - src[-1];
+            ad[2] = CV_IABS(d[2]);
+
+            f0 = ad[1] > ad[0];
+            f1 = ad[2] > ad[f0];  
+
+            val = d[tab[f0*2 + f1]];
+
+            d[0] = src[0] - src[-src_step];
+            ad[0] = CV_IABS(d[0]);
+
+            d[1] = src[1] - src[1-src_step];
+            ad[1] = CV_IABS(d[1]);
+
+            d[2] = src[2] - src[2-src_step];
+            ad[2] = CV_IABS(d[2]);
+
+            f0 = ad[1] > ad[0];
+            f1 = ad[2] > ad[f0];  
+
+            dst[x] = (uchar)(val + d[tab[f0*2 + f1]] > thresh ? 255 : 0);*/
+            dst[x] = (uchar)(val > thresh);
+        }
+
+        src = src0;
+    }
+
+}
+#endif
+
+const CvPoint icvCodeDeltas[8] =
+    { {1, 0}, {1, -1}, {0, -1}, {-1, -1}, {-1, 0}, {-1, 1}, {0, 1}, {1, 1} };
+
+static CvSeq*
+icvGetComponent( uchar* img, int step, CvRect rect,
+                 CvMemStorage* storage )
+{
+    const char nbd = 4;
+    int  deltas[16];
+    int  x, y;
+    CvSeq* exterior = 0;
+    char* ptr;
+
+    /* initialize local state */
+    CV_INIT_3X3_DELTAS( deltas, step, 1 );
+    memcpy( deltas + 8, deltas, 8 * sizeof( deltas[0] ));
+
+    ptr = (char*)(img + step*rect.y);
+    rect.width += rect.x;
+    rect.height += rect.y;
+
+    for( y = rect.y; y < rect.height; y++, ptr += step )
+    {
+        int prev = ptr[rect.x - 1] & -2;
+        
+        for( x = rect.x; x < rect.width; x++ )
+        {
+            int p = ptr[x] & -2;
+
+            //assert( exterior || ((p | prev) & -4) == 0 );
+
+            if( p != prev )
+            {
+                CvSeq *seq = 0;
+                int is_hole = 0;
+                CvSeqWriter  writer;
+                char  *i0, *i1, *i3, *i4 = 0;
+                int  prev_s = -1, s, s_end;
+                CvPoint pt = { x, y };
+
+                if( !(prev == 0 && p == 2) )    /* if not external contour */
+                {
+                    /* check hole */
+                    if( p != 0 || prev < 1 )
+                    {
+                        prev = p;
+                        continue;
+                    }
+
+                    is_hole = 1;
+                    if( !exterior )
+                    {
+                        assert(0);
+                        return 0;
+                    }
+                }
+
+                cvStartWriteSeq( CV_SEQ_CONTOUR | (is_hole ? CV_SEQ_FLAG_HOLE : 0),
+                                 sizeof(CvContour), sizeof(CvPoint), storage, &writer );
+                s_end = s = is_hole ? 0 : 4;
+                i0 = ptr + x - is_hole;
+
+                do
+                {
+                    s = (s - 1) & 7;
+                    i1 = i0 + deltas[s];
+                    if( (*i1 & -2) != 0 )
+                        break;
+                }
+                while( s != s_end );
+
+                if( s == s_end )            /* single pixel domain */
+                {
+                    *i0 = (char) (nbd | -128);
+                    CV_WRITE_SEQ_ELEM( pt, writer );
+                }
+                else
+                {
+                    i3 = i0;
+                    prev_s = s ^ 4;
+
+                    /* follow border */
+                    for( ;; )
+                    {
+                        s_end = s;
+
+                        for( ;; )
+                        {
+                            i4 = i3 + deltas[++s];
+                            if( (*i4 & -2) != 0 )
+                                break;
+                        }
+                        s &= 7;
+
+                        /* check "right" bound */
+                        if( (unsigned) (s - 1) < (unsigned) s_end )
+                        {
+                            *i3 = (char) (nbd | -128);
+                        }
+                        else if( *i3 > 0 )
+                        {
+                            *i3 = nbd;
+                        }
+
+                        if( s != prev_s )
+                        {
+                            CV_WRITE_SEQ_ELEM( pt, writer );
+                            prev_s = s;
+                        }
+
+                        pt.x += icvCodeDeltas[s].x;
+                        pt.y += icvCodeDeltas[s].y;
+
+                        if( i4 == i0 && i3 == i1 )
+                            break;
+
+                        i3 = i4;
+                        s = (s + 4) & 7;
+                    }                       /* end of border following loop */
+                }
+
+                seq = cvEndWriteSeq( &writer );
+                cvContourBoundingRect( seq, 1 );
+
+                if( !is_hole )
+                    exterior = seq;
+                else
+                {
+                    seq->v_prev = exterior;
+                    seq->h_next = exterior->v_next;
+                    if( seq->h_next )
+                        seq->h_next->h_prev = seq;
+                    exterior->v_next = seq;
+                }
+
+                prev = ptr[x] & -2;
+            }
+        }
+    }
+
+    return exterior;
+}
+
+
+
+CV_IMPL CvSeq*
+cvSegmentImage( const CvArr* srcarr, CvArr* dstarr,
+                double canny_threshold,
+                double ffill_threshold,
+                CvMemStorage* storage )
+{
+    CvSeq* root = 0;
     CvMat* gray = 0;
     CvMat* canny = 0;
+    //CvMat* temp = 0;
     void* stack = 0;
     
     CV_FUNCNAME( "cvSegmentImage" );
@@ -241,26 +495,29 @@ cvSegmentImage( CvArr* srcarr, CvArr* dstarr,
     CvSize size;
     CvPoint pt;
     int ffill_lw_up = cvRound( fabs(ffill_threshold) );
+    CvSeq* prev_seq = 0;
 
     CV_CALL( src = cvGetMat( srcarr, &srcstub ));
     CV_CALL( dst = cvGetMat( dstarr, &dststub ));
-
-    if( src->data.ptr != dst->data.ptr )
-    {
-        CV_CALL( cvCopy( src, dst ));
-        src = dst;
-    }
 
     size = cvGetSize( src );
 
     CV_CALL( gray = cvCreateMat( size.height, size.width, CV_8UC1 ));
     CV_CALL( canny = cvCreateMat( size.height, size.width, CV_8UC1 ));
+    //CV_CALL( temp = cvCreateMat( size.height/2, size.width/2, CV_8UC3 ));
 
     CV_CALL( stack = cvAlloc( size.width * size.height * sizeof(Seg)));
 
     cvCvtColor( src, gray, CV_BGR2GRAY );
-    cvCanny( gray, canny, 0, canny_threshold, 5 );
+    cvCanny( gray, canny, 0/*canny_threshold*0.4*/, canny_threshold, 3 );
+    cvThreshold( canny, canny, 1, 1, CV_THRESH_BINARY );
+    //cvZero( canny );
+    //color_derv( src, canny, canny_threshold );
 
+    //cvPyrDown( src, temp );
+    //cvPyrUp( temp, dst );
+
+    //src = dst;
     mask = canny; // a new name for new role
 
     // make a non-zero border.
@@ -281,7 +538,34 @@ cvSegmentImage( CvArr* srcarr, CvArr* dstarr,
                                          ffill_lw_up, ffill_lw_up,
                                          &region, stack );
 
-                icvSegmFloodFill_Stage2( src->data.ptr, src->step,
+                /*avgVal[0] = (avgVal[0] + 15) & -32;
+                if( avgVal[0] > 255 )
+                    avgVal[0] = 255;
+                avgVal[1] = (avgVal[1] + 15) & -32;
+                if( avgVal[1] > 255 )
+                    avgVal[1] = 255;
+                avgVal[2] = (avgVal[2] + 15) & -32;
+                if( avgVal[2] > 255 )
+                    avgVal[2] = 255;*/
+
+                if( storage )
+                {
+                    CvSeq* tmpseq = icvGetComponent( mask->data.ptr, mask->step,
+                                                     region.rect, storage );
+                    if( tmpseq != 0 )
+                    {
+                        ((CvContour*)tmpseq)->color =
+                           CV_RGB(avgVal[2],avgVal[1],avgVal[0]);
+                        tmpseq->h_prev = prev_seq;
+                        if( prev_seq )
+                            prev_seq->h_next = tmpseq;
+                        else
+                            root = tmpseq;
+                        prev_seq = tmpseq;
+                    }
+                }
+
+                icvSegmFloodFill_Stage2( dst->data.ptr, dst->step,
                                          mask->data.ptr, mask->step,
                                          size, avgVal,
                                          region.rect );
@@ -291,9 +575,12 @@ cvSegmentImage( CvArr* srcarr, CvArr* dstarr,
 
     __END__;
 
+    //cvReleaseMat( &temp );
     cvReleaseMat( &gray );
     cvReleaseMat( &canny );
     cvFree( &stack );
+
+    return root;
 }
 
 /* End of file. */

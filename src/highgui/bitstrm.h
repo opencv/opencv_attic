@@ -42,6 +42,9 @@
 #ifndef _BITSTRM_H_
 #define _BITSTRM_H_
 
+#include <stdio.h>
+#include <setjmp.h>
+
 #if _MSC_VER >= 1200
     #pragma warning( disable: 4711 )
 #endif
@@ -68,6 +71,7 @@ public:
     void          SetPos( int pos );
     int           GetPos();
     void          Skip( int bytes );
+    jmp_buf&      JmpBuf();
     
 protected:
     
@@ -79,7 +83,9 @@ protected:
     int     m_block_pos;
     FILE*   m_file;
     bool    m_is_opened;
-    
+    jmp_buf m_jmp_buf;
+    bool    m_jmp_set;
+
     virtual void  ReadBlock();
     virtual void  Release();
     virtual void  Allocate();

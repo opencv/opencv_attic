@@ -377,12 +377,12 @@ cvThreshold( const void* srcarr, void* dstarr, double thresh, double maxval, CvT
     if( coi1 + coi2 )
         CV_ERROR( CV_BadCOI, "COI is not supported by the function" );
 
-    if( !CV_ARE_CNS_EQ( src, dst ) || CV_MAT_CN(dst->type) != 1 )
-        CV_ERROR( CV_StsUnmatchedFormats, "Both arrays must be single-channel" );
+    if( !CV_ARE_CNS_EQ( src, dst ) )
+        CV_ERROR( CV_StsUnmatchedFormats, "Both arrays must have equal number of channels" );
 
     if( !CV_ARE_DEPTHS_EQ( src, dst ) )
     {
-        if( CV_MAT_DEPTH(dst->type) != CV_8U )
+        if( CV_MAT_TYPE(dst->type) != CV_8UC1 )
             CV_ERROR( CV_StsUnsupportedFormat, "In case of different types destination should be 8uC1" );
 
         if( type != CV_THRESH_BINARY && type != CV_THRESH_BINARY_INV )

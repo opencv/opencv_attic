@@ -43,7 +43,6 @@
 
 #include <float.h>
 #include "_cvutils.h"
-#include "_cvwrap.h"
 
 
 CV_IMPL int
@@ -63,7 +62,7 @@ icvSubdiv2DCheck( CvSubdiv2D* subdiv )
     {
         CvQuadEdge2D* edge = (CvQuadEdge2D*)cvGetSetElem(subdiv->edges,i);
         
-        if( edge && CV_IS_SET_ELEM_EXISTS( edge ))
+        if( edge && CV_IS_SET_ELEM( edge ))
         {
             for( j = 0; j < 4; j++ )
             {
@@ -101,7 +100,6 @@ icvSubdiv2DCheck( CvSubdiv2D* subdiv )
 
     check_result = 1;
 
-    __CLEANUP__;
     __END__;
 
     return check_result;
@@ -179,7 +177,7 @@ icvDrawMosaic( CvSubdiv2D * subdiv, IplImage * src, IplImage * dst )
     {
         CvQuadEdge2D *edge = (CvQuadEdge2D *) cvGetSetElem( subdiv->edges, i );
 
-        if( edge && CV_IS_SET_ELEM_EXISTS( edge ))
+        if( edge && CV_IS_SET_ELEM( edge ))
         {
             CvSubdiv2DEdge e = (CvSubdiv2DEdge) edge;
 
@@ -189,107 +187,6 @@ icvDrawMosaic( CvSubdiv2D * subdiv, IplImage * src, IplImage * dst )
             draw_subdiv_facet( subdiv, dst, src, cvSubdiv2DRotateEdge( e, 3 ));
         }
     }
-}
-
-
-static int
-icvIsRightOf( const CvPoint2D32f& pt, const CvPoint2D32f& org, const CvPoint2D32f& diff )
-{
-    float cw_area = (org.x - pt.x)*diff.y - (org.y - pt.y)*diff.x;
-    int iarea = (int&)cw_area;
-
-    return (iarea > 0)*2 - (iarea + iarea != 0);
-}
-
-
-CV_IMPL CvSubdiv2DPoint*
-icvFindNearestPoint2D( CvSubdiv2D* subdiv, CvPoint2D32f pt )
-{
-    CvSubdiv2DPoint* point = 0;
-    CvPoint2D32f start;
-    CvPoint2D32f diff;
-    CvSubdiv2DPointLocation loc;
-    CvSubdiv2DEdge edge; 
-    int i;
-    
-    CV_FUNCNAME("icvFindNearestPoint2D");
-
-    __BEGIN__;
-
-    if( !subdiv )
-        CV_ERROR_FROM_STATUS( CV_NULLPTR_ERR );
-
-    if( !CV_IS_SUBDIV2D( subdiv ))
-        CV_ERROR_FROM_STATUS( CV_NULLPTR_ERR );
-
-    if( !subdiv->is_geometry_valid )
-        cvCalcSubdivVoronoi2D( subdiv );
-
-    loc = cvSubdiv2DLocate( subdiv, pt, &edge, &point );
-
-    switch( loc )
-    {
-    case CV_PTLOC_ON_EDGE:
-    case CV_PTLOC_INSIDE:
-        break;
-    default:
-        EXIT;
-    }
-
-    point = 0;
-
-    start = cvSubdiv2DEdgeOrg( edge )->pt;
-    diff.x = pt.x - start.x;
-    diff.y = pt.y - start.y;
-
-    edge = cvSubdiv2DRotateEdge( edge, 1 );
-
-    for( i = 0; i < subdiv->total; i++ )
-    {
-        CvPoint2D32f t;
-        
-        for(;;)
-        {
-            assert( cvSubdiv2DEdgeDst( edge ));
-            
-            t = cvSubdiv2DEdgeDst( edge )->pt;
-            if( icvIsRightOf( t, start, diff ) >= 0 )
-                break;
-
-            edge = cvSubdiv2DGetEdge( edge, CV_NEXT_AROUND_LEFT );
-        }
-
-        for(;;)
-        {
-            assert( cvSubdiv2DEdgeOrg( edge ));
-
-            t = cvSubdiv2DEdgeOrg( edge )->pt;
-            if( icvIsRightOf( t, start, diff ) < 0 )
-                break;
-
-            edge = cvSubdiv2DGetEdge( edge, CV_PREV_AROUND_LEFT );
-        }
-
-        {
-            CvPoint2D32f tempDiff = cvSubdiv2DEdgeDst( edge )->pt;
-            t = cvSubdiv2DEdgeOrg( edge )->pt;
-            tempDiff.x -= t.x;
-            tempDiff.y -= t.y;
-
-            if( icvIsRightOf( pt, t, tempDiff ) >= 0 )
-            {
-                point = cvSubdiv2DEdgeOrg( cvSubdiv2DRotateEdge( edge, 3 ));
-                break;
-            }
-        }
-
-        edge = cvSubdiv2DSymEdge( edge );
-    }
-
-    __CLEANUP__;
-    __END__;
-
-    return point;
 }
 
 /* End of file. */

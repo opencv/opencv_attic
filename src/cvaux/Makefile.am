@@ -1,8 +1,14 @@
 lib_LTLIBRARIES = libcvaux.la
 
-libcvaux_la_SOURCES = correspond.cpp cvaux.cpp cvbilateralfiltering.cpp cvcalibfilter.cpp cvclique.cpp cvcontourex.cpp cvepilines.cpp cvgraphex.cpp cvhmm1d.cpp cvsegment.cpp cvsubdiv2.cpp cvtexture.cpp cvvideo.cpp decomppoly.cpp enmin.cpp extendededges.cpp precomp.cpp
+libcvaux_la_SOURCES = \
+cvaux.cpp          cvfacedetection.cpp    cvmat.cpp             \
+cvauxutils.cpp     cvfacetemplate.cpp     cvsegment.cpp         \
+cvcalibfilter.cpp  cvfindface.cpp         cvsubdiv2.cpp         \
+cvtexture.cpp      cvdpstereo.cpp     	  cvhaar.cpp            \
+cvvecfacetracking.cpp  cvepilines.cpp     cvhaarfacecascade.cpp \
+cvvideo.cpp    cvface.cpp    cvhmm1d.cpp     precomp.cpp 
 
-EXTRA_DIST = 
+EXTRA_DIST =
 
 SOMAJOR = @MMAJOR@
 SOMINOR = @MMINOR@
@@ -13,9 +19,10 @@ SOSUBMINOR = @MSUBMINOR@
 include_HEADERS =
 
 # here you should add all header files, which shouldn't be installed
-noinst_HEADERS = _cvaux.h
+noinst_HEADERS = _cvaux.h _cvvectrack.h  \
+cvfacedetection.h cvfacetemplate.h cvboostingtemplate.h cvface.h
 
-libcvaux_la_LDFLAGS = $(all_libraries) -no-undefined -version-info $(SOMAJOR):$(SOMINOR):$(SOSUBMINOR) $(LDFLAGS)
+libcvaux_la_LDFLAGS = -no-undefined -version-info $(LT_CURRENT):$(LT_REVISION):$(LT_AGE) -release $(LT_RELEASE) @LDFLAGS@
 
 # add here the libraries which have to be include
 # for building the shared lib
@@ -29,6 +36,5 @@ libcvaux_la_LDFLAGS = $(all_libraries) -no-undefined -version-info $(SOMAJOR):$(
 #
 libcvaux_la_LIBADD = 
 
-INCLUDES += -I../include -I. -I../../cv/include -I../../cv/src
-CFLAGS += -Wall @DEBUG@
-CXXFLAGS += -Wall @DEBUG@
+INCLUDES = -I. -I../include -I../../cv/include -I../../cv/src -I../..
+CXXFLAGS = @CXXFLAGS@ -Wall

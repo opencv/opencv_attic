@@ -51,13 +51,13 @@ enum BmpCompression
     BMP_RLE4 = 2
 };
 
+
 // Windows Bitmap reader
 class GrFmtBmpReader : public GrFmtReader
 {
 public:
     
-    GrFmtBmpReader();
-    ~GrFmtBmpReader();
+    GrFmtBmpReader( const char* filename );
     
     bool  ReadData( uchar* data, int step, int color );
     bool  ReadHeader();
@@ -73,12 +73,12 @@ protected:
 };
 
 
-// ... and writer
+// ... writer
 class GrFmtBmpWriter : public GrFmtWriter
 {
 public:
     
-    GrFmtBmpWriter();
+    GrFmtBmpWriter( const char* filename );
     ~GrFmtBmpWriter();
     
     bool  WriteImage( const uchar* data, int step,
@@ -88,5 +88,16 @@ protected:
     WLByteStream  m_strm;
 };
 
+
+// ... and filter factory
+class GrFmtBmp : public GrFmtFilterFactory
+{
+public:
+    
+    GrFmtBmp();
+    GrFmtReader* NewReader( const char* filename );
+    GrFmtWriter* NewWriter( const char* filename );
+
+};
 
 #endif/*_GRFMT_BMP_H_*/

@@ -1,7 +1,41 @@
 lib_LTLIBRARIES = libopencv.la
 
-libopencv_la_SOURCES = camshift.cpp cvabsdiff.cpp cvaccum.cpp cvadapthresh.cpp cvaffine.cpp cvalloc.cpp cvapprox.cpp cvarithm.cpp cvarray.cpp cvblur.cpp cvcalccontrasthistogram.cpp cvcalccovarmatrix.cpp cvcalccovarmatrixex.cpp cvcalceigenobjects.cpp cvcalcimagehomography.cpp cvcalcprobdensity.cpp cvcalibinit.cpp cvcalibration.cpp cvcamshift.cpp cvcanny.cpp cvcmp.cpp cvcolor.cpp cvcondens.cpp cvcontourarea.cpp cvcontours.cpp cvcontoursmoments.cpp cvcontourtree.cpp cvconvert.cpp cvconvgen.cpp cvconvhull.cpp cvcopy.cpp cvcorner.cpp cvcornersubpix.cpp cvcorrespond.cpp cvcreatehandmask.cpp cvdatastructs.cpp cvdetectwr.cpp cvdistransform.cpp cvdominants.cpp cvdrawing.cpp cveigendecomposite.cpp cveigenobjectswrap.cpp cveigenprojection.cpp cvellipsefit.cpp cvemd.cpp cverror.cpp cvfeatureselect.cpp cvfilterwr.cpp cvfindhandregion.cpp cvfloodfill.cpp cvfundam.cpp cvgeometry.cpp cvgeometrywrap.cpp cvgesturerecognition.cpp cvhistogram.cpp cvhmm.cpp cvhmmobs.cpp cvhmmwrap.cpp cvhough.cpp cvhoughdiv.cpp cvhoughp.cpp cvhoughwrap.cpp cvimage.cpp cvinitconvol.cpp cvjacobieigens.cpp cvkalman.cpp cvlaplace.cpp cvlinefit.cpp cvlines.cpp cvlkpyramid.cpp cvlmeds.cpp cvlogic.cpp cvmatchcontours.cpp cvmathfuncs.cpp cvmatmul.cpp cvmatrix64d.cpp cvmatrix.cpp cvmaxrect.cpp cvmean.cpp cvmeansdv.cpp cvmineval.cpp cvminmaxloc.cpp cvmoments.cpp cvmorph.cpp cvmorphing.cpp cvmotempl.cpp cvmotseg.cpp cvnorm.cpp cvoptflowbm.cpp cvoptflowhs.cpp cvoptflowlk.cpp cvouttext.cpp cvpgh.cpp cvposit.cpp cvprecomp.cpp cvprecorner.cpp cvprewarp.cpp cvprint.cpp cvproject.cpp cvpyramids.cpp cvpyrsegmentation.cpp cvrand.cpp cvrotcalipers.cpp cvsamplers.cpp cvscanlines.cpp cvscharr.cpp cvshapedescr.cpp cvsmooth.cpp cvsnakes.cpp cvsubdivision2d.cpp cvsumpixels.cpp cvsvd.cpp cvswitcher.cpp cvtables.cpp cvtemplmatch.cpp cvthresh.cpp cvundistort.cpp cvutils.cpp
-# camshift.cpp cvabsdiff.cpp cvaccum.cpp cvadapthresh.cpp cvaffine.cpp cvalloc.cpp cvapprox.cpp cvarithm.cpp cvarray.cpp cvblur.cpp cvcalccontrasthistogram.cpp cvcalccovarmatrix.cpp cvcalccovarmatrixex.cpp cvcalceigenobjects.cpp cvcalcimagehomography.cpp cvcalcprobdensity.cpp cvcalibinit.cpp cvcalibration.cpp cvcamshift.cpp cvcanny.cpp cvcolor.cpp cvcondens.cpp cvcontourarea.cpp cvcontours.cpp cvcontoursmoments.cpp cvcontourtree.cpp cvconvert.cpp cvconvgen.cpp cvconvhull.cpp cvcopy.cpp cvcorner.cpp cvcornersubpix.cpp cvcorrespond.cpp cvcreatehandmask.cpp cvdatastructs.cpp cvdetectwr.cpp cvdistransform.cpp cvdominants.cpp cvdrawing.cpp cveigendecomposite.cpp cveigenobjectswrap.cpp cveigenprojection.cpp cvellipsefit.cpp cvemd.cpp cverror.cpp cvfeatureselect.cpp cvfilterwr.cpp cvfindhandregion.cpp cvfloodfill.cpp cvfundam.cpp cvgeometry.cpp cvgeometrywrap.cpp cvgesturerecognition.cpp cvhistogram.cpp cvhmm.cpp cvhmmobs.cpp cvhmmwrap.cpp cvhough.cpp cvhoughdiv.cpp cvhoughp.cpp cvhoughwrap.cpp cvimage.cpp cvinitconvol.cpp cvjacobieigens.cpp cvkalman.cpp cvlaplace.cpp cvlinefit.cpp cvlines.cpp cvlkpyramid.cpp cvlmeds.cpp cvlogic.cpp cvmatchcontours.cpp cvmathfuncs.cpp cvmatmul.cpp cvmatrix.cpp cvmatrix64d.cpp cvmaxrect.cpp cvmean.cpp cvmeansdv.cpp cvmineval.cpp cvminmaxloc.cpp cvmoments.cpp cvmorph.cpp cvmorphing.cpp cvmotempl.cpp cvmotseg.cpp cvnorm.cpp cvoptflowbm.cpp cvoptflowhs.cpp cvoptflowlk.cpp cvouttext.cpp cvpgh.cpp cvposit.cpp cvprecomp.cpp cvprecorner.cpp cvprewarp.cpp cvprint.cpp cvproject.cpp cvpyramids.cpp cvpyrsegmentation.cpp cvrand.cpp cvrotcalipers.cpp cvsamplers.cpp cvscanlines.cpp cvscharr.cpp cvshapedescr.cpp cvsnakes.cpp cvsubdivision2d.cpp cvsumpixels.cpp cvsvd.cpp cvswitcher.cpp cvtables.cpp cvtemplmatch.cpp cvthresh.cpp cvundistort.cpp cvutils.cpp
+libopencv_la_SOURCES = \
+camshift.cpp                 cveigendecomposite.cpp  cvmorphing.cpp        \
+cvabsdiff.cpp                cveigenobjectswrap.cpp  cvmotempl.cpp         \
+cvaccum.cpp                  cveigenprojection.cpp   cvnorm.cpp            \
+cvadapthresh.cpp             cvellipsefit.cpp        cvoptflowbm.cpp       \
+cvaffine.cpp                 cvemd.cpp               cvoptflowhs.cpp       \
+cvalloc.cpp                  cverror.cpp             cvoptflowlk.cpp       \
+cvapprox.cpp                 cvfeatureselect.cpp     cvouttext.cpp         \
+cvarithm.cpp                 cvfindhandregion.cpp    cvpersistence.cpp     \
+cvarray.cpp                  cvfloodfill.cpp         cvpgh.cpp             \
+cvcalccontrasthistogram.cpp  cvfundam.cpp            cvposit.cpp           \
+cvcalccovarmatrix.cpp        cvgeometry.cpp          cvprecomp.cpp         \
+cvcalceigenobjects.cpp       cvhistogram.cpp         cvprecorner.cpp       \
+cvcalcimagehomography.cpp    cvhmm.cpp               cvprewarp.cpp         \
+cvcalibinit.cpp              cvhmmobs.cpp            cvprint.cpp           \
+cvcalibration.cpp            cvhmmwrap.cpp           cvproject.cpp         \
+cvcamshift.cpp               cvhough.cpp             cvpyramids.cpp        \
+cvcanny.cpp                  cvimage.cpp             cvpyrsegmentation.cpp \
+cvcmp.cpp                    cvjacobieigens.cpp      cvrand.cpp            \
+cvcolor.cpp                  cvkalman.cpp            cvrotcalipers.cpp     \
+cvcondens.cpp                cvlinefit.cpp           cvsamplers.cpp        \
+cvcontours.cpp               cvlines.cpp             cvscanlines.cpp       \
+cvcontourtree.cpp            cvlkpyramid.cpp         cvshapedescr.cpp      \
+cvconvert.cpp                cvlmeds.cpp             cvsmooth.cpp          \
+cvconvhull.cpp               cvlogic.cpp             cvsnakes.cpp          \
+cvcopy.cpp                   cvmatchcontours.cpp     cvsubdivision2d.cpp   \
+cvcorner.cpp                 cvmathfuncs.cpp         cvsumpixels.cpp       \
+cvcornersubpix.cpp           cvmatmul.cpp            cvsvd.cpp             \
+cvcorrespond.cpp             cvmatrix64d.cpp         cvswitcher.cpp        \
+cvcreatehandmask.cpp         cvmatrix.cpp            cvtables.cpp          \
+cvdatastructs.cpp            cvmean.cpp              cvtemplmatch.cpp      \
+cvderiv.cpp                  cvmeansdv.cpp           cvthresh.cpp          \
+cvdetectwr.cpp               cvmineval.cpp           cvundistort.cpp       \
+cvdistransform.cpp           cvminmaxloc.cpp         cvutils.cpp           \
+cvdominants.cpp              cvmoments.cpp                                 \
+cvdrawing.cpp                cvmorph.cpp
 
 SOMAJOR = @MMAJOR@
 SOMINOR = @MMINOR@
@@ -12,32 +46,16 @@ SOSUBMINOR = @MSUBMINOR@
 include_HEADERS =
 
 # here you should add all header files, which shouldn't be installed
-noinst_HEADERS = _cv.h _cvarr.h _cvdatastructs.h _cverror.h _cvfuncn.h _cvgeom.h _cvlist.h _cvmatrix.h _cvmorphology.h _cvoptions.h _cvtables.h _cvutils.h _cvvm.h _cvwrap.h _ipcv.h _optcv.h
+noinst_HEADERS =  \
+_cvarr.h          _cvfuncn.h  _cvlist.h     _cvtables.h  _ipcv.h                  \
+_cvdatastructs.h  _cvgeom.h   _cvmatrix.h   _cvutils.h   _optcv.h                 \
+_cverror.h        _cv.h       _cvoptions.h  _cvvm.h
 
-libopencv_la_LDFLAGS = $(all_libraries) -no-undefined -version-info $(LT_CURRENT):$(LT_REVISION):$(LT_AGE) -release $(LT_RELEASE) $(LDFLAGS)
+#libopencv_la_LDFLAGS = $(all_libraries) -no-undefined -version-info $(LT_CURRENT):$(LT_REVISION):$(LT_AGE) -release $(LT_RELEASE) @LDFLAGS@
+libopencv_la_LDFLAGS = -no-undefined -version-info $(LT_CURRENT):$(LT_REVISION):$(LT_AGE) -release $(LT_RELEASE)
 
-# add here the libraries which have to be include
-# for building the shared lib
-#
-#  please consider also the usage of the make environment variables
-#  like
-#  $(LIB_KDEUI), $(LIB_QT), $(LIB_HTML), etc.
-#  instead of the hardcoded entries, which have placed
-#  in here.
-#  The following line is only a suggestion!
-#
-libopencv_la_LIBADD = 
+LIBS = -ldl -lpthread -lm
 
-#		../../bin/ippcv/a6/libippcva6.la \
-#		../../bin/ippcv/m6/libippcvm6.la \
-#		../../bin/ippcv/w7/libippcvw7.la \
-#		../../bin/optcv/a6/liboptcva6.la \
-#		../../bin/optcv/m6/liboptcvm6.la \
-#		../../bin/optcv/w7/liboptcvw7.la 
-
-LIBS += -ldl -lpthread -lm
-
-INCLUDES += -I../include -I../_include
-CFLAGS += -Wall @DEBUG@
-CXXFLAGS += -Wall @DEBUG@
+INCLUDES = -I. -I../include -I../..
+CXXFLAGS = @CXXFLAGS@ -Wall
 

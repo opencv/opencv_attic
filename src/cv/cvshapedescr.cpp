@@ -1034,7 +1034,7 @@ cvBoundingRect( const void* array, int update )
         if( !CV_IS_SEQ_POINT_SET( ptseq ))
             CV_ERROR( CV_StsBadArg, "Unsupported sequence type" );
 
-        if( ptseq->header_size < sizeof(CvContour))
+        if( ptseq->header_size < (int)sizeof(CvContour))
         {
             if( update == 1 )
                 CV_ERROR( CV_StsBadArg, "The header is too small to fit the rectangle, "

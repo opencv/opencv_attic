@@ -49,6 +49,12 @@
 
 #include <string.h>
 
+#if _MSC_VER>=1200
+    #define CV_UNREFERENCED(arg)  (arg)
+#else
+    #define CV_UNREFERENCED(arg)
+#endif
+
 #define CvMatType int
 #define CvDisMaskType int
 #define CvMatArray CvMat
@@ -269,7 +275,7 @@ CV_INLINE double cvPseudoInverse( const CvArr* src, CvArr* dst,
                                   int flags CV_DEFAULT(0));
 CV_INLINE double cvPseudoInverse( const CvArr* src, CvArr* dst, int flags )
 {
-    flags; /* unused parameter */
+    CV_UNREFERENCED( flags );
     return cvInvert( src, dst, CV_SVD );
 }
 
@@ -321,8 +327,8 @@ CV_INLINE void cvConvexHull( CvPoint* points, int num_points, CvRect* bound_rect
     CvMat points1 = cvMat( 1, num_points, CV_32SC2, points );
     CvMat hull1 = cvMat( 1, num_points, CV_32SC1, hull );
 
-    bound_rect; /* to avoid "unused parameter" warning */
-
+    CV_UNREFERENCED( bound_rect );
+    
     cvConvexHull2( &points1, &hull1, orientation, 0 );
     *hullsize = hull1.cols;
 }
@@ -363,7 +369,7 @@ CV_INLINE void cvMinAreaRect( CvPoint* points, int n,
     vect2->x = pt[3].x - pt[0].x;
     vect2->y = pt[3].y - pt[0].y;
 
-    left, bottom, right, top; /* to avoid "unused parameter" warning */
+    CV_UNREFERENCED( (left, bottom, right, top) );
 }
 
 
@@ -541,6 +547,26 @@ CV_INLINE  void  cvKMeans( int num_clusters, float** samples,
     cvReleaseMat( &samples_mat );
 }
 
+#define cvKalmanUpdateByTime  cvKalmanPredict
+#define cvKalmanUpdateByMeasurement cvKalmanCorrect
+
+/* Creates hand mask image given several points on the hand */
+OPENCVAPI  void  cvCreateHandMask( CvSeq* hand_points,
+                                   IplImage *img_mask, CvRect *roi);
+
+/* Finds hand region in range image data */
+OPENCVAPI  void  cvFindHandRegion (CvPoint3D32f* points, int count,
+                                CvSeq* indexs,
+                                float* line, CvSize2D32f size, int flag,
+                                CvPoint3D32f* center,
+                                CvMemStorage* storage, CvSeq **numbers);
+
+/* Finds hand region in range image data (advanced version) */
+OPENCVAPI  void  cvFindHandRegionA( CvPoint3D32f* points, int count,
+                                CvSeq* indexs,
+                                float* line, CvSize2D32f size, int jc,
+                                CvPoint3D32f* center,
+                                CvMemStorage* storage, CvSeq **numbers);
 
 /****************************************************************************************\
 *                                   Pixel Access Macros                                  *

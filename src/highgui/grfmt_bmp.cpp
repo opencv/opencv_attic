@@ -42,28 +42,39 @@
 #include "_highgui.h"
 #include "grfmt_bmp.h"
 
-static const char fmtDescrBmp[] = "Windows bitmap (*.bmp;*.dib)";
-static const char fmtSignBmp[] = "BM";
+static const char* fmtSignBmp = "BM";
 
-/************************ BMP reader *****************************/
-
-GrFmtBmpReader::GrFmtBmpReader()
+GrFmtBmp::GrFmtBmp()
 {
     m_sign_len = 2;
-    m_signature =fmtSignBmp;
-    m_description = fmtDescrBmp;
-    m_offset = -1;
+    m_signature = fmtSignBmp;
+    m_description = "Windows bitmap (*.bmp;*.dib)";
 }
 
 
-GrFmtBmpReader::~GrFmtBmpReader()
+GrFmtReader* GrFmtBmp::NewReader( const char* filename )
 {
-    Close();
+    return new GrFmtBmpReader( filename );
+}
+
+
+GrFmtWriter* GrFmtBmp::NewWriter( const char* filename )
+{
+    return new GrFmtBmpWriter( filename );
+}
+
+
+/************************ BMP reader *****************************/
+
+GrFmtBmpReader::GrFmtBmpReader( const char* filename ) : GrFmtReader( filename )
+{
+    m_offset = -1;
 }
 
 void  GrFmtBmpReader::Close()
 {
     m_strm.Close();
+    GrFmtReader::Close();
 }
 
 
@@ -74,7 +85,7 @@ bool  GrFmtBmpReader::ReadHeader()
     assert( strlen(m_filename) != 0 );
     if( !m_strm.Open( m_filename )) return false;
 
-    try
+    if( setjmp( m_strm.JmpBuf()) == 0 )
     {
         m_strm.Skip( 10 );
         m_offset = m_strm.GetDWord();
@@ -135,9 +146,6 @@ bool  GrFmtBmpReader::ReadHeader()
             }
         }
     }
-    catch( int )
-    {
-    }
 
     if( !result )
     {
@@ -181,7 +189,7 @@ bool  GrFmtBmpReader::ReadData( uchar* data, int step, int color )
         if( m_width*3 + 32 > buffer_size ) bgr = new uchar[m_width*3 + 32];
     }
     
-    try
+    if( setjmp( m_strm.JmpBuf()) == 0 )
     {
         m_strm.SetPos( m_offset );
         
@@ -358,7 +366,7 @@ decode_rle4_bad: ;
                                 y_shift = m_strm.GetByte();
                             }
 
-                            len = x_shift3 + ((y_shift * width3) & ((code == 0) - 1));
+                            x_shift3 += (y_shift * width3) & ((code == 0) - 1);
 
                             if( y >= m_height )
                                 break;
@@ -410,9 +418,6 @@ decode_rle8_bad: ;
             assert(0);
         }
     }
-    catch( int )
-    {
-    }
 
     if( src != buffer ) delete src;
     if( bgr != bgr_buffer ) delete bgr;
@@ -422,9 +427,8 @@ decode_rle8_bad: ;
 
 //////////////////////////////////////////////////////////////////////////////////////////
 
-GrFmtBmpWriter::GrFmtBmpWriter()
+GrFmtBmpWriter::GrFmtBmpWriter( const char* filename ) : GrFmtWriter( filename )
 {
-    m_description = fmtDescrBmp;
 }
 
 
@@ -439,6 +443,7 @@ bool  GrFmtBmpWriter::WriteImage( const uchar* data, int step,
     bool result = false;
     int nch  = isColor ? 3 : 1;
     int fileStep = (width*nch + 3) & -4;
+    uchar zeropad[] = "\0\0\0\0";
 
     assert( data && width > 0 && height > 0 && step >= fileStep);
     
@@ -447,7 +452,6 @@ bool  GrFmtBmpWriter::WriteImage( const uchar* data, int step,
         int  bitmapHeaderSize = 40;
         int  paletteSize = isColor ? 0 : 1024;
         int  headerSize = 14 /* fileheader */ + bitmapHeaderSize + paletteSize;
-        int  i;
         PaletteEntry palette[256];
         
         // write signature 'BM'
@@ -477,12 +481,14 @@ bool  GrFmtBmpWriter::WriteImage( const uchar* data, int step,
             m_strm.PutBytes( palette, sizeof(palette));
         }
 
-        // for alignment
-        //m_strm.PutWord(0); 
-        
+        width *= nch;
         data += step*(height - 1);
-        for( i = height; i > 0; i--, data -= step )
-            m_strm.PutBytes( data, step );
+        for( ; height--; data -= step )
+        {
+            m_strm.PutBytes( data, width );
+            if( fileStep > width )
+                m_strm.PutBytes( zeropad, fileStep - width );
+        }
 
         m_strm.Close();
         result = true;

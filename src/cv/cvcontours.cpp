@@ -1170,7 +1170,7 @@ icvFindContoursInInterval( const CvArr* src,
     if( !result )
         CV_ERROR( CV_StsNullPtr, "NULL double CvSeq pointer" );
 
-    if( contourHeaderSize < sizeof(CvContour))
+    if( contourHeaderSize < (int)sizeof(CvContour))
         CV_ERROR( CV_StsBadSize, "Contour header size must be >= sizeof(CvContour)" );
 
     CV_CALL( storage00 = cvCreateChildMemStorage(storage));

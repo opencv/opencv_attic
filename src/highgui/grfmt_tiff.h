@@ -44,6 +44,8 @@
 
 #include "grfmt_base.h"
 
+
+// native simple TIFF codec
 enum TiffCompression
 {
     TIFF_UNCOMP = 1,
@@ -81,12 +83,36 @@ enum TiffFieldType
     TIFF_TYPE_LONG = 4
 };
 
-// Aldus TIFF reader
+
+
+#ifdef HAVE_TIFF
+
+// libtiff based TIFF codec
+
 class GrFmtTiffReader : public GrFmtReader
 {
 public:
     
-    GrFmtTiffReader();
+    GrFmtTiffReader( const char* filename );
+
+    bool  CheckFormat( const char* signature );
+    bool  ReadData( uchar* data, int step, int color );
+    bool  ReadHeader();
+    void  Close();
+
+protected:
+
+    void* m_tif;
+};
+
+
+#else
+
+class GrFmtTiffReader : public GrFmtReader
+{
+public:
+    
+    GrFmtTiffReader( const char* filename );
     ~GrFmtTiffReader();
 
     bool  CheckFormat( const char* signature );
@@ -108,20 +134,20 @@ protected:
     TiffCompression  m_compression;
     TiffByteOrder    m_byteorder;
 
-    int   GetWordEx();
-    int   GetDWordEx();
-    void  ReadTable( int offset, int count, TiffFieldType fieldtype,
-                     int*& array, int& arraysize );
+    int  GetWordEx();
+    int  GetDWordEx();
+    int  ReadTable( int offset, int count, TiffFieldType fieldtype,
+                    int*& array, int& arraysize );
 };
 
+#endif
 
 // ... and writer
 class GrFmtTiffWriter : public GrFmtWriter
 {
 public:
     
-    GrFmtTiffWriter();
-    ~GrFmtTiffWriter();
+    GrFmtTiffWriter( const char* filename );
     
     bool  WriteImage( const uchar* data, int step,
                       int width, int height, bool isColor );
@@ -133,5 +159,16 @@ protected:
                     int count, int value );
 };
 
+
+// TIFF filter factory
+class GrFmtTiff : public GrFmtFilterFactory
+{
+public:
+    
+    GrFmtTiff();
+    GrFmtReader* NewReader( const char* filename );
+    GrFmtWriter* NewWriter( const char* filename );
+    bool CheckSignature( const char* signature );
+};
 
 #endif/*_GRFMT_TIFF_H_*/

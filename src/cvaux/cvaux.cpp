@@ -39,6 +39,7 @@
 //
 //M*/
 
+
 #include "_cvaux.h"
 #include <stdlib.h>
 
@@ -49,7 +50,6 @@
 #endif
 
 #undef __IPCV_H_
-#undef __OPTCV_H_
 
 #define __CV_DEFINE_USER_LIST__
 
@@ -76,9 +76,7 @@
 #endif
 
 #undef __IPCV_H_
-#undef __OPTCV_H_
 #include "_ipcv.h"
-#include "_optcv.h"
 
 #undef IPCVAPI
 #define GETAPI(addr,name) { (ipp_func_addr*)&addr, #name, 0 },
@@ -96,10 +94,7 @@ struct func_desc
 static func_desc ipp_func_desc[] =
 {
 #undef __IPCV_H_
-#undef __OPTCV_H_
 #include "_ipcv.h"
-#include "_optcv.h"
-#undef __OPTCV_H_
 #undef __IPCV_H_
     {
     0, 0}

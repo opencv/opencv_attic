@@ -229,7 +229,7 @@ int cvFindFundamentalMat(   CvMat* points1,
 
 /* Computes 1 or 3 fundamental matrixes using 7-point algorithm */
 int icvComputeFundamental7Point(CvMat* points1, CvMat* points2, CvMat* fundMatr)
-{/* !!! Use just first real square of cubic equation */
+{
 
     CvMat* squares = 0;
     int numberRoots = 0;
@@ -414,7 +414,7 @@ int icvComputeFundamental7Point(CvMat* points1, CvMat* points2, CvMat* fundMatr)
     numCubRoots = icvSolveCubic(&coeffs,squares);
 
     /* take real solution */
-    /* !!! Need test whole 3 roots */
+    /* Need test all roots */
 
     int i;
     for( i = 0; i < numCubRoots; i++ )
@@ -620,7 +620,7 @@ int icvComputeFundamental8Point(CvMat* points1,CvMat* points2, CvMat* fundMatr)
         icvMakeFundamentalSingular(preFundMatr);
     
         /* Denormalize fundamental matrix */
-        /* Copmute transformation for normalization */
+        /* Compute transformation for normalization */
 
         CvMat wfundMatr;
         double wfundMatr_dat[9];
@@ -823,7 +823,7 @@ int icvComputeFundamentalRANSAC(   CvMat* points1,CvMat* points2,
                 cvmSet(&selPoints2,1,t,y);
             }
 
-            /* Copmute fundamental matrix using 7-points algorithm */
+            /* Compute fundamental matrix using 7-points algorithm */
 
             double fundTriple_dat[27];
             CvMat fundTriple;
@@ -937,7 +937,7 @@ int icvComputeFundamentalRANSAC(   CvMat* points1,CvMat* points2,
                 cvGetSubArr( bestPoints2, &wbestPnts2, cvRect(0,0,maxGoodPoints,3) );
 
                 /* best points was collectet. Improve fundamental matrix */
-                /* !!! Just use 8-point algorithm */
+                /* Just use 8-point algorithm */
                 double impFundMatr_dat[9];
                 CvMat impFundMatr;
                 impFundMatr = cvMat(3,3,CV_64F,impFundMatr_dat);
@@ -1327,7 +1327,7 @@ int icvComputeFundamentalLMedS(    CvMat* points1,CvMat* points2,
                     cvGetSubArr( bestPoints2, &wbestPnts2, cvRect(0,0,numGoodPoints,3) );
 
                     /* best points was collectet. Improve fundamental matrix */
-                    /* !!! Just use 8-point algorithm */
+                    /* Just use 8-point algorithm */
                     double impFundMatr_dat[9];
                     CvMat impFundMatr;
                     impFundMatr = cvMat(3,3,CV_64F,impFundMatr_dat);
@@ -1420,6 +1420,7 @@ void icvMakeFundamentalSingular(CvMat* fundMatr)
     __END__;
 }
 
+
 /*=====================================================================================*/
 /* Normalize points for computing fundamental matrix */
 /* and compute transform matrix */
@@ -1428,14 +1429,25 @@ void icvMakeFundamentalSingular(CvMat* fundMatr)
 /* place centroid of points to (0,0) */
 /* set mean distance from (0,0) by sqrt(2) */
 
-void icvNormalizeFundPoints( CvMat* points,
-                        CvMat* transfMatr)
+void icvNormalizeFundPoints( CvMat* points, CvMat* transfMatr )
 {
     CvMat* subwpointsx = 0;
     CvMat* subwpointsy = 0;
     CvMat* sqdists     = 0;
     CvMat* pointsxx    = 0;
     CvMat* pointsyy    = 0;
+
+	int numPoint;
+	int type;
+	double shiftx,shifty; 
+	double meand;
+	double scale;
+
+	CvMat tmpwpointsx;
+    CvMat tmpwpointsy;
+
+	CvScalar sumx;
+    CvScalar sumy;
 
     CV_FUNCNAME( "icvNormalizeFundPoints" );
     __BEGIN__;
@@ -1446,11 +1458,9 @@ void icvNormalizeFundPoints( CvMat* points,
     {
         CV_ERROR(CV_StsBadPoint,"Input data is not matrixes");
     }
-
-    int numPoint;
-    numPoint = points->cols;
     
-    int type;
+    numPoint = points->cols;
+        
     type = points->type;
     
     if( numPoint < 1 )
@@ -1468,17 +1478,15 @@ void icvNormalizeFundPoints( CvMat* points,
         CV_ERROR( CV_StsBadSize, "Size of transform matrix must be 3x3" );
     }
 
-    CV_CALL( subwpointsx = cvCreateMat(1,numPoint,CV_64F));
-    CV_CALL( subwpointsy = cvCreateMat(1,numPoint,CV_64F));
-    CV_CALL( sqdists     = cvCreateMat(1,numPoint,CV_64F));
-    CV_CALL( pointsxx    = cvCreateMat(1,numPoint,CV_64F));
-    CV_CALL( pointsyy    = cvCreateMat(1,numPoint,CV_64F));
+    CV_CALL( subwpointsx  =  cvCreateMat(1,numPoint,CV_64F) );
+    CV_CALL( subwpointsy  =  cvCreateMat(1,numPoint,CV_64F) );
+    CV_CALL( sqdists      =  cvCreateMat(1,numPoint,CV_64F) );
+    CV_CALL( pointsxx     =  cvCreateMat(1,numPoint,CV_64F) );
+    CV_CALL( pointsyy     =  cvCreateMat(1,numPoint,CV_64F) );
 
     /* get x,y coordinates of points */
     
     {
-        CvMat tmpwpointsx;
-        CvMat tmpwpointsy;
         cvGetRow( points, &tmpwpointsx, 0 );
         cvGetRow( points, &tmpwpointsy, 1 );
 
@@ -1487,12 +1495,10 @@ void icvNormalizeFundPoints( CvMat* points,
         cvConvert(&tmpwpointsy,subwpointsy);
     }
 
-    double shiftx,shifty; 
-    
     /* Compute center of points */
 
-    CvScalar sumx = cvSum(subwpointsx);
-    CvScalar sumy = cvSum(subwpointsy);
+    sumx = cvSum(subwpointsx);
+    sumy = cvSum(subwpointsy);
 
     sumx.val[0] /= (double)numPoint;
     sumy.val[0] /= (double)numPoint;
@@ -1519,10 +1525,8 @@ void icvNormalizeFundPoints( CvMat* points,
 
     /* in vector sqdists we have distances */
     /* compute mean value and scale */
-
-    double meand;
-    meand = cvMean(sqdists);
-    double scale;
+    
+    meand = cvMean(sqdists);    
     
     if( fabs(meand) > 1e-8  )
     {
@@ -1533,15 +1537,12 @@ void icvNormalizeFundPoints( CvMat* points,
         scale = 1.0;
     }
 
-
     /* scale working points */    
     cvScale(subwpointsx,subwpointsx,scale);
     cvScale(subwpointsy,subwpointsy,scale);
 
     /* copy output data */
     {
-        CvMat tmpwpointsx;
-        CvMat tmpwpointsy;
         cvGetRow( points, &tmpwpointsx, 0 );
         cvGetRow( points, &tmpwpointsy, 1 );
 
@@ -1649,7 +1650,7 @@ int icvSolveCubic(CvMat* coeffs,CvMat* result)
             numRoots = icvCubicV(a0,a1,a2,squares);
         }
         else
-        {// !!!  It's a square eqaution.
+        {// It's a square eqaution.
             double a,b,c;
             a = cc[1];
             b = cc[2];
@@ -2184,7 +2185,6 @@ icvCubicV( double a2, double a1, double a0, double *squares )
 
 
 
-
 /* Obsolete functions. Just for ViewMorping */
 /*=====================================================================================*/
 
@@ -2446,7 +2446,6 @@ icvLMedS7( int *points1, int *points2, CvMatrix3 * matrix )
 
 
 /*======================================================================================*/
-
 /*F///////////////////////////////////////////////////////////////////////////////////////
 //    Name:    icvPoint7
 //    Purpose:

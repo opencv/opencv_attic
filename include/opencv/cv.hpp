@@ -39,8 +39,6 @@
 //
 //M*/
 
-//#ifdef WIN32
-
 #ifndef _CV_HPP_
 #define _CV_HPP_
 
@@ -70,224 +68,96 @@ struct CV_DLL_ENTRY CvImage : public IplImage
     CvImage& copy( const CvImage& another );
 };
 
-
-class CV_DLL_ENTRY CvImageGroup
-{
-public:
-    enum{ max_count = 7 };
-    
-    CvImageGroup( int _count = 0 )
-    { assert( _count < max_count ); clear(); operator=(_count); }
-
-
-    ~CvImageGroup() { destroy(); }
-    
-    CvImage& operator[]( int count ) { return (CvImage&)*image[count]; }
-
-    CvImageGroup& operator=( const CvImageGroup& another )
-    { return copy( another ); }
-
-    CvImageGroup& operator=( const CvImage& another )
-    { return copy( another ); }
-
-    CvImageGroup& copy( const CvImageGroup& another );
-
-    CvImageGroup& copy( const CvImage& another );
-    CvImageGroup& operator=( int _count );
-
-    int get_count() const { return count; }
-
-    void destroy();
-    void clear() { for( int i = 0; i < max_count; i++ ) image[i] = 0; }
-    IplImage** get_group() { return &image[0]; };
-
-protected:
-    int       count;
-    IplImage* image[max_count];
-};
-
-
 class CV_DLL_ENTRY CvCamShiftTracker
 {
 public:
     
-    // constructor
     CvCamShiftTracker();
-    // destructor
     virtual ~CvCamShiftTracker();
     
-    // get- properties
+    /**** Characteristics of the object that are calculated by track_object method *****/
+    float   get_orientation() const // orientation of the object in degrees 
+    { return m_box.angle; }
+    float   get_length() const // the larger linear size of the object
+    { return m_box.size.width; }
+    float   get_width() const // the smaller linear size of the object
+    { return m_box.size.height; }
+    CvPoint2D32f get_center() const // center of the object
+    { return m_box.center; }
+    CvRect get_window() const // bounding rectangle for the object
+    { return m_comp.rect; }
     
-    // Characteristics of the object, 
-    // which are calculated by track_object method
-    float   get_orientation()  // orientation of the object in degrees 
-    { return orientation; }
-    float   get_length()       // the larger linear size of the object
-    { return length; }
-    float   get_width()        // the smaller linear size of the object
-    { return width; }
-    CvRect get_window()       // bounding rectangle for the object
-    { return window; }
-    
-    // Tracking parameters
-    int     get_threshold()  // thresholding value that applied to back project
-    { return threshold; }
-    int     get_hist_dims( int* dims = 0 ); // returns number of histogram dimensions and sets
-    // dims[0] to number of bins on 1st dimension,
-    // dims[1] -||- on 2nd dimension etc. 
-    // (if dims pointer is not 0).
-    
-    int     get_min_ch_val( int channel )  // Given channel index, returns 
-    { return min_ch_val[channel]; }        // the minimum value of that channel, 
-                                           // starting from which the pixel
-                                           // is counted during histogram calculation.
-    
-    int     get_max_ch_val( int channel )  // Get maximum channel value.
-    { return max_ch_val[channel]; }
-    
-    
-    // Background differencing parameters
-    
-    // set- properties
-    // Object characteristics
-    bool    set_window( CvRect _window) // set initial bounding rectangle for the object
-    { window = _window; return true; }
-    
-    // Tracking parameters
-    bool    set_threshold( int _threshold ) // threshold level that applied 
-    { threshold = _threshold; return true; }
+    /*********************** Tracking parameters ************************/
+    int     get_threshold() const // thresholding value that applied to back project
+    { return m_threshold; }
 
-    // to back project.
-    bool    set_hist_dims( int c_dims, int* dims );// histogram dimensions.
+    int     get_hist_dims( int* dims = 0 ) const // returns number of histogram dimensions and sets
+    { return m_hist ? cvGetDims( m_hist->bins, dims ) : 0; } 
     
-    bool    set_min_ch_val( int channel, int val ) // Given channel index, sets 
-    { min_ch_val[channel] = val; return true; }    // the minimum value of that channel, 
-                                                   // starting from which the pixel
-                                                   // is counted during histogram calculation.
+    int     get_min_ch_val( int channel ) const // get the minimum allowed value of the specified channel
+    { return m_min_ch_val[channel]; }
     
-    bool    set_max_ch_val( int channel, int val ) // Set maximum value for the channel.
-    { max_ch_val[channel] = val; return true; }
-
-    bool    set_thresh( int channel, int min, int max );
+    int     get_max_ch_val( int channel ) const // get the maximum allowed value of the specified channel
+    { return m_max_ch_val[channel]; }
     
-    bool    set_hist_mapping( int* /*channels*/ )
-    { return 0; }
-    // selects the channels from
-    // resulting image 
-    // (before histogram/back prj calculation)
-    // for using them in histogram/back prj
-    // calculation. 
-    // That is, channel #(channels[0]) is 
-    // corresponds to first histogram 
-    // dimension, channel #(channels[1])
-    // to 2nd etc.
+    // set initial object rectangle (must be called before initial calculation of the histogram)
+    bool    set_window( CvRect window)
+    { m_comp.rect = window; return true; }
     
-    // Backgournd differencing ...
+    bool    set_threshold( int threshold ) // threshold applied to the histogram bins
+    { m_threshold = threshold; return true; }
+
+    bool    set_hist_bin_range( int dim, int min_val, int max_val );
+
+    bool    set_hist_dims( int c_dims, int* dims );// set the histogram parameters
     
-    // can be used (and overrided) if histogram is built from several frames
-    virtual void  reset_histogram() { cvClearHist( hist ); }
+    bool    set_min_ch_val( int channel, int val ) // set the minimum allowed value of the specified channel
+    { m_min_ch_val[channel] = val; return true; }
+    bool    set_max_ch_val( int channel, int val ) // set the maximum allowed value of the specified channel
+    { m_max_ch_val[channel] = val; return true; }
+
+    /************************ The processing methods *********************************/
+    // update object position
+    virtual bool  track_object( const IplImage* cur_frame );
     
-    // main pipeline for object tracking 
-    virtual void  track_object( CvImage* src_image )
-    {
-        trackobj_find( calc_back_project( trackobj_post_color(
-            trackobj_color_transform( trackobj_pre_color( src_image )))));
-    }
-    
-    // main pipeline for histogram calculation
-    virtual void update_histogram( CvImage* src_image )
-    {
-        calc_histogram( hist_post_color(
-            hist_color_transform( hist_pre_color( src_image ))));
-    }
+    // update object histogram
+    virtual bool  update_histogram( const IplImage* cur_frame );
 
+    // reset histogram
+    virtual void  reset_histogram();
 
-    virtual CvImage* get_back_project()
-    { return &calc_back_project_image; }
+    /************************ Retrieving internal data *******************************/
+    // get back project image
+    virtual IplImage* get_back_project()
+    { return m_back_project; }
 
-
-    virtual int get_shift_parameter()
-    { return shift; }
-
-
-    virtual bool set_shift_parameter(int _shift)
-    { shift = _shift; return true; }
-
-
-    virtual int query( int bin )
-    { return cvRound(cvQueryHistValue_1D( hist, bin )); }
+    float query( int* bin ) const
+    { return m_hist ? cvQueryHistValue_nD( m_hist, bin ) : 0.f; }
     
 protected:
-    typedef CvHistogram  hist_type;
 
-    hist_type* hist;
+    // internal method for color conversion: fills m_color_planes group
+    virtual void color_transform( const IplImage* img ); 
 
-    float      orientation;
-    float      width;
-    float      length;
-    CvRect     window;
+    CvHistogram* m_hist;
 
-    int        min_ch_val[6];
-    int        max_ch_val[6];
+    CvBox2D    m_box;
+    CvConnectedComp m_comp;
 
-    int        shift;
+    float      m_hist_ranges_data[CV_MAX_DIM][2];
+    float*     m_hist_ranges[CV_MAX_DIM];
 
-    float*     thresh[CvImageGroup::max_count];
-    float      thresh_buf[CvImageGroup::max_count*2];
-    int        threshold;
+    int        m_min_ch_val[CV_MAX_DIM];
+    int        m_max_ch_val[CV_MAX_DIM];
+    int        m_threshold;
 
-    CvImageGroup   color_transform_image_group;
-    CvImage        trackobj_pre_color_image;
-    CvImage        calc_back_project_image;
-    
-    // Internal pipeline functions
-    
-    // Common
-    
-    // common color transform
-    virtual CvImageGroup* color_transform( CvImage* src_image );
-    
-    // Specific for object tracking
-    // preprocessing before color transformation
-    virtual CvImage* trackobj_pre_color( CvImage* src_image );
-    
-    // color transformation. do common transform by default
-    virtual CvImageGroup* trackobj_color_transform( CvImage* src_image )
-    { return color_transform( src_image ); }
-    
-    // postprocessing after color transformation before back project
-    virtual CvImageGroup* trackobj_post_color( CvImageGroup* src_image );
-    
-    // calculation of back project
-    virtual CvImage* calc_back_project( CvImageGroup* src_image );
-    
-    // apply camshift algorithm to calculate object parameters
-    virtual void  trackobj_find( CvImage* src_image );
-    
-    
-    // Specific for histogram calculation   
-    
-    // preprocessing before color transformation
-    virtual CvImage* hist_pre_color( CvImage* src_image )
-    { return trackobj_pre_color( src_image ); }
-
-    // color transformation. do common transform by default
-    virtual CvImageGroup* hist_color_transform( CvImage* src_image )
-    { return color_transform( src_image ); }
-    
-    // postprocessing after color transformation before back project
-    virtual CvImageGroup* hist_post_color( CvImageGroup* src_image )
-    { return trackobj_post_color( src_image ); }
-    
-    // histogram calculation
-    virtual void calc_histogram( CvImageGroup* src_image );
-    
-    
+    IplImage*  m_color_planes[CV_MAX_DIM];
+    IplImage*  m_back_project;
+    IplImage*  m_temp;
+    IplImage*  m_mask;
 };
 
 #endif /* __cplusplus */
-
-#endif /* _CV_HPP */
-
+#endif /* _CV_HPP_ */
 
 /* End of file. */

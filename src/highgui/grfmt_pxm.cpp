@@ -42,7 +42,35 @@
 #include "_highgui.h"
 #include "grfmt_pxm.h"
 
-static const char fmtDescrPxM[] = "Portable image format (*.pbm;*.pgm;*.ppm)";
+// P?M filter factory
+
+GrFmtPxM::GrFmtPxM()
+{
+    m_sign_len = 3;
+    m_signature = "";
+    m_description = "Portable image format (*.pbm;*.pgm;*.ppm)";
+}
+
+
+bool GrFmtPxM::CheckSignature( const char* signature )
+{
+    return signature[0] == 'P' &&
+           '1' <= signature[1] && signature[1] <= '6' &&
+           isspace(signature[2]);
+}
+
+
+GrFmtReader* GrFmtPxM::NewReader( const char* filename )
+{
+    return new GrFmtPxMReader( filename );
+}
+
+
+GrFmtWriter* GrFmtPxM::NewWriter( const char* filename )
+{
+    return new GrFmtPxMWriter( filename );
+}
+
 
 ///////////////////////// P?M reader //////////////////////////////
 
@@ -87,43 +115,26 @@ static int ReadNumber( RLByteStream& strm, int maxdigits )
 }
 
 
-GrFmtPXMReader::GrFmtPXMReader()
+GrFmtPxMReader::GrFmtPxMReader( const char* filename ) : GrFmtReader( filename )
 {
-    m_sign_len = 3;
-    m_signature ="";
-    m_description = fmtDescrPxM;
     m_offset = -1;
 }
 
 
-GrFmtPXMReader::~GrFmtPXMReader()
-{
-    Close();
-}
-
-
-bool  GrFmtPXMReader::CheckFormat( const char* signature )
-{
-    return strlen(signature) >= 3 && signature[0] == 'P' &&
-           '1' <= signature[1] && signature[1] <= '6' &&
-           isspace(signature[2]);
-}
-
-
-void  GrFmtPXMReader::Close()
+void  GrFmtPxMReader::Close()
 {
     m_strm.Close();
 }
 
 
-bool  GrFmtPXMReader::ReadHeader()
+bool  GrFmtPxMReader::ReadHeader()
 {
     bool result = false;
     
     assert( strlen(m_filename) != 0 );
     if( !m_strm.Open( m_filename )) return false;
 
-    try
+    if( setjmp( m_strm.JmpBuf()) == 0 )
     {
         int code = m_strm.GetByte();
         if( code != 'P' )
@@ -153,9 +164,8 @@ bool  GrFmtPXMReader::ReadHeader()
             m_offset = m_strm.GetPos();
             result = true;
         }
-    }
-    catch( int )
-    {
+bad_header_exit:
+        ;
     }
 
     if( !result )
@@ -168,7 +178,7 @@ bool  GrFmtPXMReader::ReadHeader()
 }
 
 
-bool  GrFmtPXMReader::ReadData( uchar* data, int step, int color )
+bool  GrFmtPxMReader::ReadData( uchar* data, int step, int color )
 {
     const  int buffer_size = 1 << 12;
     uchar  buffer[buffer_size];
@@ -202,9 +212,9 @@ bool  GrFmtPXMReader::ReadData( uchar* data, int step, int color )
         gray_palette[i] = (uchar)((i*255/m_maxval)^(m_bpp == 1 ? 255 : 0));
     }
 
-    FillGrayPalette( palette, m_bpp, m_bpp == 1 );
+    FillGrayPalette( palette, 8, m_bpp == 1 );
     
-    try
+    if( setjmp( m_strm.JmpBuf()) == 0 )
     {
         m_strm.SetPos( m_offset );
         
@@ -280,9 +290,6 @@ bool  GrFmtPXMReader::ReadData( uchar* data, int step, int color )
             assert(0);
         }
     }
-    catch( int )
-    {
-    }
 
     if( src != buffer )
         delete src; 
@@ -299,21 +306,17 @@ bool  GrFmtPXMReader::ReadData( uchar* data, int step, int color )
 
 //////////////////////////////////////////////////////////////////////////////////////////
 
-GrFmtPXMWriter::GrFmtPXMWriter()
-{
-    m_description = fmtDescrPxM;
-}
-
-GrFmtPXMWriter::~GrFmtPXMWriter()
+GrFmtPxMWriter::GrFmtPxMWriter( const char* filename ) : GrFmtWriter( filename )
 {
 }
 
 static char PxMLUT[256][5];
 static bool isPxMLUTInitialized = false;
 
-bool  GrFmtPXMWriter::WriteImage( const uchar* data, int step,
+bool  GrFmtPxMWriter::WriteImage( const uchar* data, int step,
                                   int width, int height, bool isColor )
 {
+    bool isBinary = false;
     bool result = false;
 
     int  nch = isColor ? 3 : 1;
@@ -324,7 +327,6 @@ bool  GrFmtPXMWriter::WriteImage( const uchar* data, int step,
     
     if( m_strm.Open( m_filename ) )
     {
-        bool isBinary = m_parameter == 0;
         int  lineLength = ((isBinary ? 1 : 4)*nch +
                            (isColor ? 2 : 0))*width + 32;
         int  bufferSize = 128; // buffer that should fit a header

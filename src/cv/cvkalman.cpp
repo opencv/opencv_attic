@@ -40,234 +40,202 @@
 //M*/
 #include "_cv.h"
 
-static CvStatus  icvMulTransposed_32f( CvMatr32f srcMatr1,
-                                       int matrWidth1,
-                                       int matrHeight1,
-                                       CvMatr32f srcMatr2,
-                                       int matrWidth2,
-                                       int matrHeight2, CvMatr32f destMatr )
-{
-    int i, j;
 
-    for( i = 0; i < matrHeight1; i++ )
-    {
-        for( j = 0; j < matrHeight2; j++ )
-        {
-            destMatr[i * matrHeight2 + j] = (float)
-                icvDotProduct_32f( srcMatr1 + i * matrWidth1,
-                                srcMatr2 + j * matrWidth2,
-                                matrWidth1 );
-        }
-    }
-    return CV_NO_ERR;
-}
-
-/*F///////////////////////////////////////////////////////////////////////////////////////
-//    Name:    cvCreateKalman
-//    Purpose: Creating CvKalman structure and allocating memory for it
-//    Context:
-//    Parameters:
-//      Kalman        - double pointer to CvKalman structure
-//      DynParams     - dimension of the dynamical vector
-//      MeasureParams - dimension of the measurement vector
-//    Returns:
-//    Notes:
-//      
-//F*/
 CV_IMPL CvKalman*
-cvCreateKalman( int DynamParams, int MeasureParams )
+cvCreateKalman( int DP, int MP, int CP )
 {
-    CvKalman *Kalm = 0;
+    CvKalman *kalman = 0;
 
     CV_FUNCNAME( "cvCreateKalman" );
-    __BEGIN__;
     
-    if( DynamParams <= 0 || MeasureParams <= 0 )
-        CV_ERROR( CV_StsOutOfRange, "" );
+    __BEGIN__;
+
+    if( DP <= 0 || MP <= 0 )
+        CV_ERROR( CV_StsOutOfRange,
+        "state and measurement vectors must have positive number of dimensions" );
+
+    if( CP < 0 )
+        CP = DP;
     
     /* allocating memory for the structure */
-    CV_CALL( Kalm = (CvKalman *) cvAlloc( sizeof( CvKalman )));
-    /* Setting struture fields */
-    Kalm->DP = DynamParams;
-    Kalm->MP = MeasureParams;
-    /* allocating memory for the structure fields */
-    CV_CALL( Kalm->DynamMatr = (float *) cvAlloc( sizeof( float ) * DynamParams * DynamParams ));
-    CV_CALL( Kalm->MeasurementMatr =
-        (float *) cvAlloc( sizeof( float ) * MeasureParams * DynamParams ));
-    CV_CALL( Kalm->MNCovariance = (float *) cvAlloc( sizeof( float ) * MeasureParams * DynamParams ));
-    CV_CALL( Kalm->PNCovariance = (float *) cvAlloc( sizeof( float ) * DynamParams * DynamParams ));
-    CV_CALL( Kalm->PriorState = (float *) cvAlloc( sizeof( float ) * DynamParams ));
-    CV_CALL( Kalm->PosterState = (float *) cvAlloc( sizeof( float ) * DynamParams ));
-    CV_CALL( Kalm->PosterErrorCovariance =
-        (float *) cvAlloc( sizeof( float ) * DynamParams * DynamParams ));
-    CV_CALL( Kalm->PriorErrorCovariance =
-        (float *) cvAlloc( sizeof( float ) * DynamParams * DynamParams ));
-    CV_CALL( Kalm->KalmGainMatr = (float *) cvAlloc( sizeof( float ) * DynamParams * MeasureParams ));
-    CV_CALL( Kalm->Temp1 = (float *) cvAlloc( sizeof( float ) * DynamParams * DynamParams ));
-    CV_CALL( Kalm->Temp2 = (float *) cvAlloc( sizeof( float ) * DynamParams * DynamParams ));
+    CV_CALL( kalman = (CvKalman *)cvAlloc( sizeof( CvKalman )));
+    memset( kalman, 0, sizeof(*kalman));
+    
+    kalman->DP = DP;
+    kalman->MP = MP;
+    kalman->CP = CP;
 
-    /* Returning created structure */
+    CV_CALL( kalman->state_pre = cvCreateMat( DP, 1, CV_32FC1 ));
+    cvZero( kalman->state_pre );
+    
+    CV_CALL( kalman->state_post = cvCreateMat( DP, 1, CV_32FC1 ));
+    cvZero( kalman->state_post );
+    
+    CV_CALL( kalman->transition_matrix = cvCreateMat( DP, DP, CV_32FC1 ));
+    cvSetIdentity( kalman->transition_matrix );
+
+    CV_CALL( kalman->process_noise_cov = cvCreateMat( DP, DP, CV_32FC1 ));
+    cvSetIdentity( kalman->process_noise_cov );
+    
+    CV_CALL( kalman->measurement_matrix = cvCreateMat( MP, DP, CV_32FC1 ));
+    cvZero( kalman->measurement_matrix );
+
+    CV_CALL( kalman->measurement_noise_cov = cvCreateMat( MP, MP, CV_32FC1 ));
+    cvSetIdentity( kalman->process_noise_cov );
+
+    CV_CALL( kalman->error_cov_pre = cvCreateMat( DP, DP, CV_32FC1 ));
+    
+    CV_CALL( kalman->error_cov_post = cvCreateMat( DP, DP, CV_32FC1 ));
+    cvZero( kalman->error_cov_post );
+
+    CV_CALL( kalman->gain = cvCreateMat( DP, MP, CV_32FC1 ));
+
+    if( CP > 0 )
+    {
+        CV_CALL( kalman->control_matrix = cvCreateMat( DP, CP, CV_32FC1 ));
+        cvZero( kalman->control_matrix );
+    }
+
+    CV_CALL( kalman->temp1 = cvCreateMat( DP, DP, CV_32FC1 ));
+    CV_CALL( kalman->temp2 = cvCreateMat( MP, DP, CV_32FC1 ));
+    CV_CALL( kalman->temp3 = cvCreateMat( MP, MP, CV_32FC1 ));
+    CV_CALL( kalman->temp4 = cvCreateMat( MP, DP, CV_32FC1 ));
+    CV_CALL( kalman->temp5 = cvCreateMat( MP, 1, CV_32FC1 ));
+
+#if 1
+    kalman->PosterState = kalman->state_pre->data.fl;
+    kalman->PriorState = kalman->state_post->data.fl;
+    kalman->DynamMatr = kalman->transition_matrix->data.fl;
+    kalman->MeasurementMatr = kalman->measurement_matrix->data.fl;
+    kalman->MNCovariance = kalman->measurement_noise_cov->data.fl;
+    kalman->PNCovariance = kalman->process_noise_cov->data.fl;
+    kalman->KalmGainMatr = kalman->gain->data.fl;
+    kalman->PriorErrorCovariance = kalman->error_cov_pre->data.fl;
+    kalman->PosterErrorCovariance = kalman->error_cov_post->data.fl;
+#endif    
+
     __END__;
 
-    return Kalm;
+    if( cvGetErrStatus() < 0 )
+        cvReleaseKalman( &kalman );
+
+    return kalman;
 }
 
-/*F///////////////////////////////////////////////////////////////////////////////////////
-//    Name:    cvReleaseKalman
-//    Purpose: Releases CvKalman structure and frees memory allocated for it
-//    Context:
-//    Parameters:
-//      Kalman        - double pointer to CvKalman structure
-//    Returns:
-//    Notes:
-//      
-//F*/
+
 CV_IMPL void
-cvReleaseKalman( CvKalman ** Kalman )
+cvReleaseKalman( CvKalman** _kalman )
 {
-    CvKalman *Kalm;
+    CvKalman *kalman;
 
     CV_FUNCNAME( "cvReleaseKalman" );
     __BEGIN__;
     
-    if( !Kalman )
+    if( !_kalman )
         CV_ERROR( CV_StsNullPtr, "" );
     
-    Kalm = *Kalman;
+    kalman = *_kalman;
     
     /* freeing the memory */
-    cvFree( (void**)&Kalm->PriorState );
-    cvFree( (void**)&Kalm->PosterState );
-    cvFree( (void**)&Kalm->DynamMatr );
-    cvFree( (void**)&Kalm->MeasurementMatr );
-    cvFree( (void**)&Kalm->PNCovariance );
-    cvFree( (void**)&Kalm->MNCovariance );
-    cvFree( (void**)&Kalm->PosterErrorCovariance );
-    cvFree( (void**)&Kalm->PriorErrorCovariance );
-    cvFree( (void**)&Kalm->KalmGainMatr );
-    cvFree( (void**)&Kalm->Temp1 );
-    cvFree( (void**)&Kalm->Temp2 );
+    cvReleaseMat( &kalman->state_pre );
+    cvReleaseMat( &kalman->state_post );
+    cvReleaseMat( &kalman->transition_matrix );
+    cvReleaseMat( &kalman->control_matrix );
+    cvReleaseMat( &kalman->measurement_matrix );
+    cvReleaseMat( &kalman->process_noise_cov );
+    cvReleaseMat( &kalman->measurement_noise_cov );
+    cvReleaseMat( &kalman->error_cov_pre );
+    cvReleaseMat( &kalman->gain );
+    cvReleaseMat( &kalman->error_cov_post );
+    cvReleaseMat( &kalman->temp1 );
+    cvReleaseMat( &kalman->temp2 );
+    cvReleaseMat( &kalman->temp3 );
+    cvReleaseMat( &kalman->temp4 );
+    cvReleaseMat( &kalman->temp5 );
+
+    memset( kalman, 0, sizeof(*kalman));
 
     /* deallocating the structure */
-    cvFree( (void**)Kalman );
-    Kalman = NULL;
+    cvFree( (void**)_kalman );
+
     __END__;
 }
 
-/*F///////////////////////////////////////////////////////////////////////////////////////
-//    Name:    cvKalmanUpdateByTime
-//    Purpose: Performing Time update routine for Kalman Filter
-//    Context:
-//    Parameters:
-//      Kalman  - pointer to CvKalman structure
-//    Returns:
-//    Notes:
-//      
-//F*/
 
-CV_IMPL void
-cvKalmanUpdateByTime( CvKalman * Kalman )
+CV_IMPL const CvMat*
+cvKalmanPredict( CvKalman* kalman, const CvMat* control )
 {
-    CV_FUNCNAME( "cvCreateKalman" );
+    CvMat* result = 0;
+    
+    CV_FUNCNAME( "cvKalmanPredict" );
+
     __BEGIN__;
     
-    if( !Kalman )
+    if( !kalman )
         CV_ERROR( CV_StsNullPtr, "" );
-    
-    /*Updating the state */
-    icvTransformVector_32f( Kalman->DynamMatr,
-                             Kalman->PosterState, Kalman->PriorState, Kalman->DP, Kalman->DP );
 
-    /*Updating the Error Covariances */
-    icvMulTransposed_32f( Kalman->PosterErrorCovariance,
-                          Kalman->DP,
-                          Kalman->DP,
-                          Kalman->DynamMatr, Kalman->DP, Kalman->DP, Kalman->Temp1 );
-    icvMulMatrix_32f( Kalman->DynamMatr,
-                      Kalman->DP,
-                      Kalman->DP,
-                      Kalman->Temp1, Kalman->DP, Kalman->DP, Kalman->PriorErrorCovariance );
-    icvAddMatrix_32f( Kalman->PriorErrorCovariance,
-                      Kalman->PNCovariance,
-                      Kalman->PriorErrorCovariance, Kalman->DP, Kalman->DP );
+    /* update the state */
+    /* x'(k) = A*x(k) */
+    CV_CALL( cvMatMulAdd( kalman->transition_matrix, kalman->state_post, 0, kalman->state_pre ));
+
+    if( control && kalman->CP > 0 )
+        /* x'(k) = x'(k) + B*u(k) */
+        CV_CALL( cvMatMulAdd( kalman->control_matrix, control, kalman->state_pre, kalman->state_pre ));
+    
+    /* update error covariance matrices */
+    /* temp1 = A*P(k) */
+    CV_CALL( cvMatMulAdd( kalman->transition_matrix, kalman->error_cov_post, 0, kalman->temp1 ));
+    
+    /* P'(k) = temp1*At + Q */
+    CV_CALL( cvGEMM( kalman->temp1, kalman->transition_matrix, 1, kalman->process_noise_cov, 1,
+                     kalman->error_cov_pre, CV_GEMM_B_T ));
+
+    result = kalman->state_pre;
+
     __END__;
+
+    return result;
 }
 
-/*F///////////////////////////////////////////////////////////////////////////////////////
-//    Name:    cvKalmanUpdateByTMeasurement
-//    Purpose: Performing Measurement update routine for Kalman Filter
-//    Context:
-//    Parameters:
-//    Kalman  - pointer to CvKalman structure
-//    Measurement - Current Measurement vector 
-//    Returns:
-//    Notes:
-//      
-//F*/
-CV_IMPL void
-cvKalmanUpdateByMeasurement( CvKalman * Kalman, CvMat * Measurement )
-{
-    float *Measure;
 
-    CV_FUNCNAME( "cvCreateKalman" );
+CV_IMPL const CvMat*
+cvKalmanCorrect( CvKalman* kalman, const CvMat* measurement )
+{
+    CvMat* result = 0;
+
+    CV_FUNCNAME( "cvKalmanCorrect" );
+
     __BEGIN__;
     
-    if( !Kalman || !Measurement )
+    if( !kalman || !measurement )
         CV_ERROR( CV_StsNullPtr, "" );
 
-    if( CV_MAT_TYPE( Measurement->type ) != CV_32FC1 )
-        CV_ERROR( CV_StsBadArg, "source  has not appropriate format" );
+    /* temp2 = H*P'(k) */
+    CV_CALL( cvMatMulAdd( kalman->measurement_matrix,
+                          kalman->error_cov_pre, 0, kalman->temp2 ));
+    /* temp3 = temp2*Ht + R */
+    CV_CALL( cvGEMM( kalman->temp2, kalman->measurement_matrix, 1,
+                     kalman->measurement_noise_cov, 1, kalman->temp3, CV_GEMM_B_T ));
 
-    if( (Measurement->cols != 1) || (Measurement->rows != Kalman->MP) )
-        CV_ERROR( CV_StsBadArg, "source  has not appropriate size" );
+    /* temp4 = inv(temp3)*temp2 = Kt(k) */
+    CV_CALL( cvSolve( kalman->temp3, kalman->temp2, kalman->temp4, CV_SVD ));
 
-    Measure = Measurement->data.fl;
+    /* K(k) */
+    CV_CALL( cvTranspose( kalman->temp4, kalman->gain ));
+    
+    /* temp5 = z(k) - H*x'(k) */
+    CV_CALL( cvGEMM( kalman->measurement_matrix, kalman->state_pre, -1, measurement, 1, kalman->temp5 ));
 
-    /* Calculating Kalman Gain Matrix */
-    icvMulTransposed_32f( Kalman->PriorErrorCovariance,
-                          Kalman->DP,
-                          Kalman->DP,
-                          Kalman->MeasurementMatr,
-                          Kalman->DP,
-                          Kalman->MP,
-                          Kalman->Temp1 );
+    /* x(k) = x'(k) + K(k)*temp5 */
+    CV_CALL( cvMatMulAdd( kalman->gain, kalman->temp5, kalman->state_pre, kalman->state_post ));
 
-    icvMulMatrix_32f( Kalman->MeasurementMatr,
-                      Kalman->DP,
-                      Kalman->MP,
-                      Kalman->Temp1, Kalman->MP, Kalman->DP, Kalman->KalmGainMatr );
+    /* P(k) = P'(k) - K(k)*temp2 */
+    CV_CALL( cvGEMM( kalman->gain, kalman->temp2, -1, kalman->error_cov_pre, 1,
+                     kalman->error_cov_post, 0 ));
 
-    icvAddMatrix_32f( Kalman->KalmGainMatr,
-                      Kalman->MNCovariance, Kalman->KalmGainMatr, Kalman->MP, Kalman->MP );
+    result = kalman->state_post;
 
-    icvInvertMatrix_32f( Kalman->KalmGainMatr, Kalman->MP, Kalman->Temp2 );
-
-    icvMulMatrix_32f( Kalman->Temp1,
-                      Kalman->MP,
-                      Kalman->DP,
-                      Kalman->Temp2, Kalman->MP, Kalman->MP, Kalman->KalmGainMatr );
-
-    /* Update the estimation */
-    icvTransformVector_32f( Kalman->MeasurementMatr,
-                             Kalman->PriorState, Kalman->Temp1, Kalman->DP, Kalman->MP );
-    icvSubVector_32f( Measure, Kalman->Temp1, Kalman->Temp2, Kalman->MP );
-    icvTransformVector_32f( Kalman->KalmGainMatr,
-                             Kalman->Temp2, Kalman->Temp1, Kalman->MP, Kalman->DP );
-    icvAddVector_32f( Kalman->PriorState, Kalman->Temp1, Kalman->PosterState, Kalman->DP );
-
-    /* Update the Error Covariance */
-    icvMulMatrix_32f( Kalman->KalmGainMatr,
-                      Kalman->MP,
-                      Kalman->DP,
-                      Kalman->MeasurementMatr,
-                      Kalman->DP, Kalman->MP, Kalman->PosterErrorCovariance );
-    icvSetIdentity_32f( Kalman->Temp1, Kalman->DP, Kalman->DP );
-    icvSubMatrix_32f( Kalman->Temp1,
-                      Kalman->PosterErrorCovariance, Kalman->Temp1, Kalman->DP, Kalman->DP );
-    icvMulMatrix_32f( Kalman->Temp1,
-                      Kalman->DP,
-                      Kalman->DP,
-                      Kalman->PriorErrorCovariance,
-                      Kalman->DP, Kalman->DP, Kalman->PosterErrorCovariance );
     __END__;
+
+    return result;
 }

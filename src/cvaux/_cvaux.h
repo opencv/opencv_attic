@@ -38,11 +38,21 @@
 // the use of this software, even if advised of the possibility of such damage.
 //
 //M*/
-
 #ifndef __CVAUX_H__
 #define __CVAUX_H__
 
-#include "_cv.h"
+#if _MSC_VER >= 1200
+#pragma warning( disable: 4711 ) /* function AAA selected for automatic inline expansion */
+#endif
+
 #include "cvaux.h"
+#include "_cv.h"
+
+#ifndef FALSE
+#define FALSE 0
+#endif
+#ifndef TRUE
+#define TRUE 1
+#endif
 
 #endif /* __CVAUX_H__ */
