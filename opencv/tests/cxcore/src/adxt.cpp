@@ -493,16 +493,29 @@ static void cvTsFixCCS( CvMat* mat, int cols, int flags )
 }
 
 
-class CxCore_DXTBaseTest : public CvArrTest
+static const CvSize dxt_sizes[] = {{16,1}, {256,1}, {1024,1}, {65536,1},
+    {10,1}, {100,1}, {1000,1}, {100000,1}, {256, 256}, {1024,1024}, {-1,-1}};
+static const int dxt_depths[] = { CV_32F, CV_64F, -1 };
+static const char* dxt_param_names[] = { "size", "depth", "transform_type" };
+static const char* dft_transforms[] = { "Fwd_CToC", "Inv_CToC", "Fwd_RToPack", "Inv_PackToR", 0 };
+static const char* mulsp_transforms[] = { "Fwd_CToC", "Fwd_RToPack", 0 };
+static const char* dct_transforms[] = { "Fwd", "Inv", 0 };
+
+class CxCore_DXTBaseTestImpl : public CvArrTest
 {
 public:
-    CxCore_DXTBaseTest( const char* test_name, const char* test_funcs,
+    CxCore_DXTBaseTestImpl( const char* test_name, const char* test_funcs,
                         bool _allow_complex=false, bool _allow_odd=false,
                         bool _spectrum_mode=false );
 protected:
     void get_test_array_types_and_sizes( int test_case_idx, CvSize** sizes, int** types );
     int prepare_test_case( int test_case_idx );
     double get_success_error_level( int /*test_case_idx*/, int /*i*/, int /*j*/ );
+    void get_timing_test_array_types_and_sizes( int test_case_idx,
+                                                CvSize** sizes, int** types,
+                                                CvSize** whole_sizes, bool* are_images );
+    void print_timing_params( int test_case_idx, char* ptr, int params_left );
+    int write_default_params( CvFileStorage* fs );
     int flags; // transformation flags
     bool allow_complex, // whether input/output may be complex or not:
                         // true for DFT and MulSpectrums, false for DCT
@@ -512,10 +525,11 @@ protected:
                         // true for MulSpectrums, false for DFT and DCT
          inplace,       // inplace operation (set for each individual test case)
          temp_dst;      // use temporary destination (for real->ccs DFT and ccs MulSpectrums)
+    const char** transform_type_list;
 };
 
 
-CxCore_DXTBaseTest::CxCore_DXTBaseTest( const char* test_name, const char* test_funcs,
+CxCore_DXTBaseTestImpl::CxCore_DXTBaseTestImpl( const char* test_name, const char* test_funcs,
                                         bool _allow_complex, bool _allow_odd, bool _spectrum_mode )
     : CvArrTest( test_name, test_funcs, "" ),
     flags(0), allow_complex(_allow_complex), allow_odd(_allow_odd),
@@ -530,10 +544,16 @@ CxCore_DXTBaseTest::CxCore_DXTBaseTest( const char* test_name, const char* test_
     test_array[TEMP].push(NULL);
 
     element_wise_relative_error = spectrum_mode;
+
+    size_list = (CvSize*)dxt_sizes;
+    whole_size_list = 0;
+    depth_list = (int*)dxt_depths;
+    cn_list = 0;
+    transform_type_list = 0;
 }
 
 
-void CxCore_DXTBaseTest::get_test_array_types_and_sizes( int test_case_idx,
+void CxCore_DXTBaseTestImpl::get_test_array_types_and_sizes( int test_case_idx,
                                                 CvSize** sizes, int** types )
 {
     CvRNG* rng = ts->get_rng();
@@ -549,6 +569,7 @@ void CxCore_DXTBaseTest::get_test_array_types_and_sizes( int test_case_idx,
     types[TEMP][0] = types[TEMP][1] = types[INPUT][0] =
         types[OUTPUT][0] = CV_MAKETYPE(depth, cn);
     size = sizes[INPUT][0];
+
     //size.width = size.width % 10 + 1;
     //size.height = size.width % 10 + 1;
     temp_dst = false;
@@ -631,31 +652,102 @@ void CxCore_DXTBaseTest::get_test_array_types_and_sizes( int test_case_idx,
 }
 
 
-double CxCore_DXTBaseTest::get_success_error_level( int test_case_idx, int i, int j )
+void CxCore_DXTBaseTestImpl::get_timing_test_array_types_and_sizes( int test_case_idx,
+                                                    CvSize** sizes, int** types,
+                                                    CvSize** whole_sizes, bool* are_images )
+{
+    CvArrTest::get_timing_test_array_types_and_sizes( test_case_idx,
+                            sizes, types, whole_sizes, are_images );
+    const char* transform_type = cvReadString( find_timing_param( "transform_type" ), "" );
+    int depth = CV_MAT_DEPTH(types[INPUT][0]);
+    int in_type = depth, out_type = depth;
+
+    if( strcmp( transform_type, "Fwd_CToC" ) == 0 || strcmp( transform_type, "Inv_CToC" ) == 0 )
+        in_type = out_type = CV_MAKETYPE(depth,2);
+
+    if( strncmp( transform_type, "Fwd", 3 ) == 0 )
+        flags = CV_DXT_FORWARD;
+    else
+        flags = CV_DXT_INV_SCALE;
+
+    types[INPUT][0] = in_type;
+    if( spectrum_mode )
+        types[INPUT][1] = in_type;
+    types[OUTPUT][0] = types[REF_OUTPUT][0] = out_type;
+    sizes[TEMP][0] = cvSize(0,0);
+
+    inplace = false;
+}
+
+
+int CxCore_DXTBaseTestImpl::write_default_params( CvFileStorage* fs )
+{
+    int code = CvArrTest::write_default_params(fs);
+    if( code < 0 || ts->get_testing_mode() != CvTS::TIMING_MODE )
+        return code;
+    write_string_list( fs, "transform_type", transform_type_list );
+    return code;
+}
+
+
+void CxCore_DXTBaseTestImpl::print_timing_params( int test_case_idx, char* ptr, int params_left )
+{
+    sprintf( ptr, "%s,", cvReadString( find_timing_param("transform_type"), "" ) );
+    ptr += strlen(ptr);
+    params_left--;
+    CvArrTest::print_timing_params( test_case_idx, ptr, params_left );
+}
+
+
+double CxCore_DXTBaseTestImpl::get_success_error_level( int test_case_idx, int i, int j )
 {
     return CvArrTest::get_success_error_level( test_case_idx, i, j );
 }
 
 
-int CxCore_DXTBaseTest::prepare_test_case( int test_case_idx )
+int CxCore_DXTBaseTestImpl::prepare_test_case( int test_case_idx )
 {
-    int ok = CvArrTest::prepare_test_case( test_case_idx );
-    int in_type = CV_MAT_TYPE(test_mat[INPUT][0].type);
-    int out_type = CV_MAT_TYPE(test_mat[OUTPUT][0].type);
+    int code = CvArrTest::prepare_test_case( test_case_idx );
+    if( code > 0 && ts->get_testing_mode() == CvTS::CORRECTNESS_CHECK_MODE )
+    {
+        int in_type = CV_MAT_TYPE(test_mat[INPUT][0].type);
+        int out_type = CV_MAT_TYPE(test_mat[OUTPUT][0].type);
 
-    if( CV_MAT_CN(in_type) == 2 && CV_MAT_CN(out_type) == 1 )
-        cvTsFixCCS( &test_mat[INPUT][0], test_mat[OUTPUT][0].cols, flags );
+        if( CV_MAT_CN(in_type) == 2 && CV_MAT_CN(out_type) == 1 )
+            cvTsFixCCS( &test_mat[INPUT][0], test_mat[OUTPUT][0].cols, flags );
 
-    if( inplace )
-        cvTsCopy( &test_mat[INPUT][test_case_idx & (int)spectrum_mode],
-            temp_dst ? &test_mat[TEMP][1] :
-            in_type == out_type ? &test_mat[OUTPUT][0] :
-            &test_mat[TEMP][0] );
+        if( inplace )
+            cvTsCopy( &test_mat[INPUT][test_case_idx & (int)spectrum_mode],
+                temp_dst ? &test_mat[TEMP][1] :
+                in_type == out_type ? &test_mat[OUTPUT][0] :
+                &test_mat[TEMP][0] );
+    }
 
-    return ok;
+    return code;
 }
 
-CxCore_DXTBaseTest dxt_test( "dxt", "" );
+CxCore_DXTBaseTestImpl dxt_test( "dxt", "" );
+
+
+class CxCore_DXTBaseTest : public CxCore_DXTBaseTestImpl
+{
+public:
+    CxCore_DXTBaseTest( const char* test_name, const char* test_funcs,
+                        bool _allow_complex=false, bool _allow_odd=false,
+                        bool _spectrum_mode=false );
+};
+
+CxCore_DXTBaseTest::CxCore_DXTBaseTest( const char* test_name, const char* test_funcs,
+                                        bool _allow_complex, bool _allow_odd, bool _spectrum_mode )
+    : CxCore_DXTBaseTestImpl( test_name, test_funcs, _allow_complex, _allow_odd, _spectrum_mode )
+{
+    size_list = 0;
+    depth_list = 0;
+    timing_param_count = CV_DIM(dxt_param_names);
+    default_timing_param_names = dxt_param_names;
+    transform_type_list = dft_transforms;
+}
+
 
 ////////////////////// FFT ////////////////////////
 class CxCore_DFTTest : public CxCore_DXTBaseTest
@@ -736,6 +828,7 @@ protected:
 
 CxCore_DCTTest::CxCore_DCTTest() : CxCore_DXTBaseTest( "dxt-dct", "cvDCT", false, false, false )
 {
+    transform_type_list = dct_transforms;
 }
 
 
@@ -777,6 +870,7 @@ protected:
 CxCore_MulSpectrumsTest::CxCore_MulSpectrumsTest() :
     CxCore_DXTBaseTest( "dxt-mulspectrums", "cvMulSpectrums", true, true, true )
 {
+    transform_type_list = mulsp_transforms;
 }
 
 

@@ -172,9 +172,10 @@ icvCrossCorr( const CvArr* _img, const CvArr* _templ, CvArr* _corr )
     O_direct = (double)corrsize.width * corrsize.height *
                (double)templsize.width * templsize.height; // approximate formulae
 
-    O_fast = ((imgsize.height + templsize.height + corrsize.height)*
-             (double)dftsize.width*log((double)dftsize.width) +
-             3*dftsize.width*(double)dftsize.height*log((double)dftsize.height))/CV_LOG2;
+    // calculate it in two steps to avoid icc remark
+    O_fast = (imgsize.height + templsize.height + corrsize.height)*
+             (double)dftsize.width*log((double)dftsize.width);
+    O_fast = (O_fast + 3*dftsize.width*(double)dftsize.height*log((double)dftsize.height))/CV_LOG2;
 
     if( O_direct < O_fast )
     {
@@ -366,7 +367,8 @@ cvMatchTemplate( const CvArr* _img, const CvArr* _templ, CvArr* _result, int met
         }
         
         templ_sum2 /= inv_area;
-        templ_norm = sqrt(templ_norm)/sqrt(inv_area); // care of accuracy here
+        templ_norm = sqrt(templ_norm);
+        templ_norm /= sqrt(inv_area); // care of accuracy here
 
         q0 = (double*)sqsum->data.ptr;
         q1 = q0 + templ->cols*cn;

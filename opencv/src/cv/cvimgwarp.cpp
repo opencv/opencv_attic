@@ -1469,6 +1469,7 @@ cvWarpPerspectiveQMatrix( const CvPoint2D32f* src,
     cvSolve( &A, &B, &X, CV_SVD );
     x[8] = 1;
     
+    X = cvMat( 3, 3, CV_64FC1, x );
     cvConvert( &X, matrix );
 
     __END__;

@@ -218,7 +218,6 @@ public:
     static int free_proxy( void* ptr, void* userdata );
 
 protected:
-
     virtual void* alloc( size_t size );
     virtual int free( void* ptr );
     virtual int free_block( CvTestAllocBlock* block );
@@ -465,6 +464,14 @@ CvTest::CvTest( const char* _test_name, const char* _test_funcs, const char* _te
     test_count++;
     ts = 0;
     hdr_state = 0;
+
+    timing_param_names = 0;
+    timing_param_current = 0;
+    timing_param_seqs = 0;
+    timing_param_idxs = 0;
+    timing_param_count = 0;
+
+    test_case_count = -1;
 }
 
 CvTest::~CvTest()
@@ -475,6 +482,17 @@ CvTest::~CvTest()
 
 void CvTest::clear()
 {
+    if( timing_param_current )
+        free( timing_param_current );
+    if( timing_param_seqs )
+        free( timing_param_seqs );
+    if( timing_param_idxs )
+        free( timing_param_idxs );
+
+    timing_param_current = 0;
+    timing_param_seqs = 0;
+    timing_param_idxs = 0;
+    timing_param_count = 0;
 }
 
 
@@ -523,16 +541,21 @@ const CvFileNode* CvTest::find_param( CvFileStorage* fs, const char* param_name 
 }
 
 
+void CvTest::start_write_param( CvFileStorage* fs )
+{
+    if( hdr_state == 0 )
+    {
+        cvStartWriteStruct( fs, get_name(), CV_NODE_MAP );
+        hdr_state = 1;
+    }
+}
+
+
 void CvTest::write_param( CvFileStorage* fs, const char* paramname, int val )
 {
     if( !ts->find_written_param( this, paramname, CV_NODE_INT, &val) )
     {
-        if( hdr_state == 0 )
-        {
-            cvStartWriteStruct( fs, get_name(), CV_NODE_MAP );
-            hdr_state = 1;
-        }
-
+        start_write_param( fs );
         cvWriteInt( fs, paramname, val );
     }
 }
@@ -542,12 +565,7 @@ void CvTest::write_param( CvFileStorage* fs, const char* paramname, double val )
 {
     if( !ts->find_written_param( this, paramname, CV_NODE_REAL, &val) )
     {
-        if( hdr_state == 0 )
-        {
-            cvStartWriteStruct( fs, get_name(), CV_NODE_MAP );
-            hdr_state = 1;
-        }
-
+        start_write_param( fs );
         cvWriteReal( fs, paramname, val );
     }
 }
@@ -557,19 +575,164 @@ void CvTest::write_param( CvFileStorage* fs, const char* paramname, const char* 
 {
     if( !ts->find_written_param( this, paramname, CV_NODE_STRING, &val) )
     {
-        if( hdr_state == 0 )
-        {
-            cvStartWriteStruct( fs, get_name(), CV_NODE_MAP );
-            hdr_state = 1;
-        }
-
+        start_write_param( fs );
         cvWriteString( fs, paramname, val );
     }
 }
 
 
-int CvTest::read_params( CvFileStorage* /*fs*/ )
+void CvTest::write_string_list( CvFileStorage* fs, const char* paramname, const char** val, int count )
 {
+    if( val )
+    {
+        start_write_param( fs );
+        int i;
+        if( count < 0 )
+            count = INT_MAX;
+
+        cvStartWriteStruct( fs, paramname, CV_NODE_SEQ + CV_NODE_FLOW );
+        for( i = 0; i < count && val[i] != 0; i++ )
+            cvWriteString( fs, 0, val[i] );
+        cvEndWriteStruct( fs );
+    }
+}
+
+
+void CvTest::write_int_list( CvFileStorage* fs, const char* paramname,
+                             const int* val, int count, int stop_value )
+{
+    if( val )
+    {
+        start_write_param( fs );
+        int i;
+        if( count < 0 )
+            count = INT_MAX;
+
+        cvStartWriteStruct( fs, paramname, CV_NODE_SEQ + CV_NODE_FLOW );
+        for( i = 0; i < count && val[i] != stop_value; i++ )
+            cvWriteInt( fs, 0, val[i] );
+        cvEndWriteStruct( fs );
+    }
+}
+
+
+int CvTest::read_params( CvFileStorage* fs )
+{
+    int code = 0;
+    
+    if( ts->get_testing_mode() == CvTS::TIMING_MODE )
+    {
+        timing_param_names = find_param( fs, "timing_params" );
+        if( CV_NODE_IS_SEQ(timing_param_names->tag) )
+        {
+            CvSeq* seq = timing_param_names->data.seq;
+            CvSeqReader reader;
+            cvStartReadSeq( seq, &reader );
+            int i;
+
+            timing_param_count = seq->total;
+            timing_param_seqs = (const CvFileNode**)malloc( timing_param_count*sizeof(timing_param_seqs[0]));
+            timing_param_idxs = (int*)malloc( timing_param_count*sizeof(timing_param_idxs[0]));
+            timing_param_current = (const CvFileNode**)malloc( timing_param_count*sizeof(timing_param_current[0]));
+            test_case_count = 1;
+
+            for( i = 0; i < timing_param_count; i++ )
+            {
+                CvFileNode* param_name = (CvFileNode*)(reader.ptr);
+
+                if( !CV_NODE_IS_STRING(param_name->tag) )
+                {
+                    ts->printf( CvTS::LOG, "ERROR: name of timing parameter #%d is not a string\n", i );
+                    code = -1;
+                    break;
+                }
+
+                timing_param_idxs[i] = 0;
+                timing_param_current[i] = 0;
+                timing_param_seqs[i] = find_param( fs, param_name->data.str.ptr );
+                if( !timing_param_seqs[i] )
+                {
+                    ts->printf( CvTS::LOG, "ERROR: timing parameter %s is not found\n", param_name->data.str.ptr );
+                    code = -1;
+                    break;
+                }
+
+                if( CV_NODE_IS_SEQ(timing_param_seqs[i]->tag) )
+                    test_case_count *= timing_param_seqs[i]->data.seq->total;
+
+                CV_NEXT_SEQ_ELEM( seq->elem_size, reader );
+            }
+
+            if( i < timing_param_count )
+                timing_param_count = 0;
+        }
+        else
+        {
+            ts->printf( CvTS::LOG, "ERROR: \"timing_params\" is not found" );
+            code = -1;
+        }
+    }
+    
+    return code;
+}
+
+
+int CvTest::get_next_timing_param_tuple()
+{
+    bool increment;
+    int i;
+    
+    if( timing_param_count <= 0 || !timing_param_names || !timing_param_seqs )
+        return -1;
+
+    increment = timing_param_current[0] != 0; // if already have some valid test tuple, move to the next
+    for( i = 0; i < timing_param_count; i++ )
+    {
+        const CvFileNode* node = timing_param_seqs[i];
+        int total = CV_NODE_IS_SEQ(node->tag) ? node->data.seq->total : 1;
+        int new_idx = timing_param_idxs[i];
+
+        if( !timing_param_current[i] )
+            timing_param_idxs[i] = new_idx = 0;
+        else if( increment )
+        {
+            new_idx++;
+            if( new_idx >= total )
+                new_idx = 0;
+            else if( total > 1 )
+                increment = false;
+        }
+
+        if( !timing_param_current[i] || new_idx != timing_param_idxs[i] )
+        {
+            if( CV_NODE_IS_SEQ(node->tag) )
+                timing_param_current[i] = (CvFileNode*)cvGetSeqElem( node->data.seq, new_idx );
+            else
+                timing_param_current[i] = node;
+            timing_param_idxs[i] = new_idx;
+        }
+    }
+
+    return !increment; // return 0 in case of overflow (i.e. if there is no more test cases)
+}
+
+
+const CvFileNode* CvTest::find_timing_param( const char* paramname )
+{
+    if( timing_param_names )
+    {
+        int i;
+        CvSeqReader reader;
+        cvStartReadSeq( timing_param_names->data.seq, &reader, 0 );
+
+        for( i = 0; i < timing_param_count; i++ )
+        {
+            const char* ptr = ((const CvFileNode*)(reader.ptr))->data.str.ptr;
+            if( ptr[0] == paramname[0] && strcmp(ptr, paramname) == 0 )
+                return timing_param_current[i];
+            CV_NEXT_SEQ_ELEM( reader.seq->elem_size, reader );
+        }
+    }
     return 0;
 }
 
@@ -585,15 +748,11 @@ int CvTest::write_defaults(CvTS* _ts)
 }
 
 
-int CvTest::write_default_params(CvFileStorage*)
+int CvTest::write_default_params( CvFileStorage* fs )
 {
+    if( ts->get_testing_mode() == CvTS::TIMING_MODE )
+        write_string_list( fs, "timing_params", default_timing_param_names, timing_param_count );
     return 0;
-}
-
-
-int CvTest::get_timing_mode( int )
-{
-    return ts->get_timing_mode();
 }
 
 
@@ -602,6 +761,11 @@ bool CvTest::can_do_fast_forward()
     return true;
 }
 
+
+int CvTest::support_testing_modes()
+{
+    return CvTS::CORRECTNESS_CHECK_MODE;
+}
 
 void CvTest::safe_run( int start_from )
 {
@@ -619,61 +783,79 @@ void CvTest::run( int start_from )
     int64 t_start = cvGetTickCount();
     double freq = cvGetTickFrequency();
     bool ff = can_do_fast_forward();
-    int progress = 0;
+    int progress = 0, code;
     
     for( test_case_idx = ff && start_from >= 0 ? start_from : 0;
          count < 0 || test_case_idx < count; test_case_idx++ )
     {
         ts->update_context( this, test_case_idx, ff );
-        int timing_mode = get_timing_mode( test_case_idx );
         int64 t00 = 0, t0, t1 = 0;
         double t_acc = 0;
 
-        if( prepare_test_case( test_case_idx ) < 0 || ts->get_err_code() < 0 )
-            return;
-
-        for( i = 0; i < (timing_mode ? 10 : 1); i++ )
+        if( ts->get_testing_mode() == CvTS::TIMING_MODE )
         {
-            t0 = cvGetTickCount();
-            run_func();
-            t1 = cvGetTickCount();
-            if( ts->get_err_code() < 0 )
+            const int iterations = 10;
+            code = prepare_test_case( test_case_idx );
+            
+            if( code < 0 || ts->get_err_code() < 0 )
                 return;
 
-            if( !timing_mode || i == 0 )
+            if( code == 0 )
+                continue;
+
+            for( i = 0; i < iterations; i++ )
             {
-                t_acc = (double)(t1 - t0);
-                t00 = t0;
-            }
-            else
-            {
-                t0 = t1 - t0;
-                
-                if( timing_mode == CvTS::MIN_TIME )
+                t0 = cvGetTickCount();
+                run_func();
+                t1 = cvGetTickCount();
+                if( ts->get_err_code() < 0 )
+                    return;
+
+                if( i == 0 )
                 {
-                    if( (double)t0 < t_acc )
-                        t_acc = (double)t0;
+                    t_acc = (double)(t1 - t0);
+                    t00 = t0;
                 }
                 else
                 {
-                    assert( timing_mode == CvTS::AVG_TIME );
-                    t_acc += (double)t0;
-                }
+                    t0 = t1 - t0;
                 
-                if( t1 - t00 > freq*2000000 )
-                    break;
+                    if( ts->get_timing_mode() == CvTS::MIN_TIME )
+                    {
+                        if( (double)t0 < t_acc )
+                            t_acc = (double)t0;
+                    }
+                    else
+                    {
+                        assert( ts->get_timing_mode() == CvTS::AVG_TIME );
+                        t_acc += (double)t0;
+                    }
+                
+                    if( t1 - t00 > freq*2000000 )
+                        break;
+                }
             }
-        }
 
-        if( timing_mode )
-        {
-            if( timing_mode == CvTS::AVG_TIME )
+            if( ts->get_timing_mode() == CvTS::AVG_TIME )
                 t_acc /= i;
             print_time( test_case_idx, t_acc );
         }
+        else
+        {
+            code = prepare_test_case( test_case_idx );
+            if( code < 0 || ts->get_err_code() < 0 )
+                return;
 
-        if( validate_test_results( test_case_idx ) < 0 || ts->get_err_code() < 0 )
-            return;
+            if( code == 0 )
+                continue;
+
+            run_func();
+            if( ts->get_err_code() < 0 )
+                return;
+
+            if( validate_test_results( test_case_idx ) < 0 || ts->get_err_code() < 0 )
+                return;
+        }
 
         progress = update_progress( progress, test_case_idx, count, (double)(t1 - t_start)/(freq*1000) );
     }
@@ -688,7 +870,7 @@ void CvTest::run_func()
 
 int CvTest::get_test_case_count()
 {
-    return -1;
+    return test_case_count;
 }
 
 
@@ -752,6 +934,7 @@ CvTS::CvTS()
     ostrm_suffixes[CONSOLE_IDX] = 0;
     ostrm_base_name = 0;
     memset( output_streams, 0, sizeof(output_streams) );
+    memset( &params, 0, sizeof(params) );
     selected_tests = new CvTestPtrVec();
     failed_tests = new CvTestInfoVec();
     written_params = new CvTestPtrVec();
@@ -800,7 +983,9 @@ void CvTS::clear()
     params.debug_mode = 1;
     params.print_only_failed = 0;
     params.skip_header = 0;
-    params.timing_mode = NO_TIME;
+    params.test_mode = CORRECTNESS_CHECK_MODE;
+    params.timing_mode = MIN_TIME;
+    params.use_optimized = -1;
 
     if( memory_manager )
         memory_manager->clear_and_check();
@@ -1008,6 +1193,8 @@ int CvTS::run( int argc, char** argv )
         {
             if( strcmp( argv[i], "-w" ) == 0 )
                 write_params = 1;
+            else if( strcmp( argv[i], "-t" ) == 0 )
+                params.test_mode = TIMING_MODE;
         }
     }
 
@@ -1032,6 +1219,8 @@ int CvTS::run( int argc, char** argv )
         for( i = 0; i < all_tests.size(); i++ )
         {
             test = (CvTest*)all_tests[i];
+            if( !(test->support_testing_modes() & get_testing_mode()) )
+                continue;
             test->write_defaults( this );
             test->clear();
         }
@@ -1086,6 +1275,9 @@ int CvTS::run( int argc, char** argv )
     for( i = 0; i < all_tests.size(); i++ )
     {
         test = (CvTest*)all_tests[i];
+        if( !(test->support_testing_modes() & get_testing_mode()) )
+            continue;
+
         if( strcmp( test->get_func_list(), "" ) != 0 && filter(test) )
         {
             if( test->init(this) >= 0 )
@@ -1098,8 +1290,18 @@ int CvTS::run( int argc, char** argv )
     // 5. setup all the neccessary handlers and print header
     set_handlers( !params.debug_mode );
 
+    if( params.use_optimized >= 0 )
+    {
+        printf( LOG, params.use_optimized ? "Loading optimized plugins..." : "Unloading optimized plugins..." );
+        if( params.use_optimized == 0 )
+            cvUseOptimized(0);
+        /*else
+            cvUseOptimized(1); // this is done anyway, so we comment it off
+        */
+    }
+
     if( !params.skip_header )
-        print_summary_header( SUMMARY + LOG + CONSOLE );
+        print_summary_header( SUMMARY + LOG + CONSOLE + CSV );
     rng = params.rng_seed;
     update_context( 0, -1, true );
 
@@ -1190,13 +1392,15 @@ int CvTS::read_params( CvFileStorage* fs )
     params.rerun_immediately = cvReadIntByName( fs, node, "rerun_immediately", 0 ) != 0;
     const char* str = cvReadStringByName( fs, node, "filter_mode", "tests" );
     params.test_filter_mode = strcmp( str, "functions" ) == 0 ? CHOOSE_FUNCTIONS : CHOOSE_TESTS;
-    str = cvReadStringByName( fs, node, "timing_mode", "none" );
-    params.timing_mode = strcmp( str, "average" ) == 0 || strcmp( str, "avg" ) == 0 ? AVG_TIME :
-                         strcmp( str, "minimum" ) == 0 || strcmp( str, "min" ) == 0 ||
-                         strcmp( str, "yes" ) == 0 ? MIN_TIME : NO_TIME;
+    str = cvReadStringByName( fs, node, "test_mode", params.test_mode == TIMING_MODE ? "timing" : "correctness" ); 
+    params.test_mode = strcmp( str, "timing" ) == 0 || strcmp( str, "performance" ) == 0 ?
+                        TIMING_MODE : CORRECTNESS_CHECK_MODE;
+    str = cvReadStringByName( fs, node, "timing_mode", params.timing_mode == AVG_TIME ? "avg" : "min" ); 
+    params.timing_mode = strcmp( str, "average" ) == 0 || strcmp( str, "avg" ) == 0 ? AVG_TIME : MIN_TIME;
     params.test_filter_pattern = cvReadStringByName( fs, node, params.test_filter_mode == CHOOSE_FUNCTIONS ?
                                                      "functions" : "tests", "" );
     params.resource_path = cvReadStringByName( fs, node, "." );
+    params.use_optimized = cvReadIntByName( fs, node, "use_optimized", -1 );
     str = cvReadStringByName( fs, node, "seed", 0 );
     params.rng_seed = 0;
     if( str && strlen(str) == 16 )
@@ -1236,8 +1440,9 @@ void CvTS::write_default_params( CvFileStorage* fs )
     cvWriteInt( fs, "rerun_failed", params.rerun_failed );
     cvWriteInt( fs, "rerun_immediately", params.rerun_immediately );
     cvWriteString( fs, "filter_mode", params.test_filter_mode == CHOOSE_FUNCTIONS ? "functions" : "tests" );
-    cvWriteString( fs, "timing_mode", params.timing_mode == NO_TIME ? "none" :
-                   params.timing_mode == MIN_TIME ? "min" : "avg" );
+    cvWriteString( fs, "test_mode", params.test_mode == TIMING_MODE ? "timing" : "correctness" );
+    if( params.test_mode == TIMING_MODE )
+        cvWriteString( fs, "timing_mode", params.timing_mode == AVG_TIME ? "avg" : "min" );
     // test_filter, seed & output_file_base_name are not written
 }
 
@@ -1285,8 +1490,12 @@ const char* CvTS::get_libs_info( const char** addon_modules )
     return all_info;
 }
 
+
 void CvTS::print_summary_header( int streams )
 {
+    char csv_header[256], *ptr = csv_header;
+    int i, len;
+
     printf( streams, "Engine: %s\n", version );
     time_t t1;
     time( &t1 );
@@ -1295,12 +1504,27 @@ void CvTS::print_summary_header( int streams )
     strftime( buf, sizeof(buf)-1, "%c", t2 );
     printf( streams, "Execution Date & Time: %s\n", buf );
     printf( streams, "Config File: %s\n", config_name );
-    const char* addon_modules = 0;
-    const char* lib_verinfo = get_libs_info( &addon_modules );
+    const char* plugins = 0;
+    const char* lib_verinfo = get_libs_info( &plugins );
     printf( streams, "Tested Libraries: %s\n", lib_verinfo );
-    printf( streams, "Optimized Low-level Addons: %s\n", addon_modules );
+    printf( streams, "Optimized Low-level Plugin\'s: %s\n", plugins );
     printf( streams, "=================================================\n");
+
+    len = 0;
+    sprintf( ptr, "funcName,dataType,channels,size,%n", &len );
+    ptr += len;
+
+    for( i = 0; i < CvTest::TIMING_EXTRA_PARAMS; i++ )
+    {
+        len = 0;
+        sprintf( ptr, "param%d,%n", i, &len );
+        ptr += len;
+    }
+
+    sprintf( ptr, "CPE,Time(uSecs)" );
+    printf( CSV, "%s\n", csv_header );
 }
+
     
 void CvTS::print_summary_tailer( int streams )
 {
@@ -1336,7 +1560,7 @@ void CvTS::vprintf( int streams, const char* fmt, va_list l )
                           i == LOG_IDX ? stderr : output_streams[i].f;
                 if( f )
                 {
-                    if( !(ostream_testname_mask & (1 << i)) && current_test_info.test )
+                    if( i != CSV_IDX && !(ostream_testname_mask & (1 << i)) && current_test_info.test )
                     {
                         fprintf( f, "-------------------------------------------------\n" );
                         fprintf( f, "%s: ", current_test_info.test->get_name() );
@@ -1344,8 +1568,8 @@ void CvTS::vprintf( int streams, const char* fmt, va_list l )
                         ostream_testname_mask |= 1 << i;
                     }
                     fputs( str, f );
-		    if( i == CONSOLE_IDX )
-			fflush(f);
+                    if( i == CONSOLE_IDX )
+                        fflush(f);
                 }
             }
         }
@@ -1399,6 +1623,7 @@ static char* cv_strnstr( const char* str, int len,
 int CvTS::filter( CvTest* test )
 {
     const char* pattern = params.test_filter_pattern;
+
     if( !pattern || strcmp( pattern, "" ) == 0 || strcmp( pattern, "*" ) == 0 )
         return 1;
 

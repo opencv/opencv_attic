@@ -55,32 +55,48 @@
 /// by generating min/max boundaries for random data in logarimithic scale, but
 /// within the same test case all the input array elements are of the same order.
 
-class CxCore_MathTest : public CvArrTest
+static const CvSize math_sizes[] = {{10,1}, {100,1}, {10000,1}, {-1,-1}};
+static const int math_depths[] = { CV_32F, CV_64F, -1 };
+static const char* math_param_names[] = { "size", "depth" };
+
+static const CvSize matrix_sizes[] = {{3,3}, {4,4}, {10,10}, {30,30}, {100,100}, {500,500}, {-1,-1}};
+
+class CxCore_MathTestImpl : public CvArrTest
 {
 public:
-    CxCore_MathTest( const char* test_name, const char* test_funcs );
+    CxCore_MathTestImpl( const char* test_name, const char* test_funcs );
 protected:
     void get_test_array_types_and_sizes( int test_case_idx, CvSize** sizes, int** types );
     double get_success_error_level( int /*test_case_idx*/, int i, int j );
 };
 
 
-CxCore_MathTest::CxCore_MathTest( const char* test_name, const char* test_funcs )
+CxCore_MathTestImpl::CxCore_MathTestImpl( const char* test_name, const char* test_funcs )
     : CvArrTest( test_name, test_funcs, "" )
 {
+    optional_mask = false;
+
     test_array[INPUT].push(NULL);
     test_array[OUTPUT].push(NULL);
     test_array[REF_OUTPUT].push(NULL);
+
+    timing_param_count = CV_DIM(math_param_names);
+    default_timing_param_names = math_param_names;
+
+    size_list = math_sizes;
+    whole_size_list = 0;
+    depth_list = math_depths;
+    cn_list = 0;
 }
 
 
-double CxCore_MathTest::get_success_error_level( int /*test_case_idx*/, int i, int j )
+double CxCore_MathTestImpl::get_success_error_level( int /*test_case_idx*/, int i, int j )
 {
     return CV_MAT_DEPTH(test_mat[i][j].type) == CV_32F ? FLT_EPSILON*128 : DBL_EPSILON*1024;
 }
 
 
-void CxCore_MathTest::get_test_array_types_and_sizes( int test_case_idx,
+void CxCore_MathTestImpl::get_test_array_types_and_sizes( int test_case_idx,
                                                       CvSize** sizes, int** types )
 {
     CvRNG* rng = ts->get_rng();
@@ -97,7 +113,23 @@ void CxCore_MathTest::get_test_array_types_and_sizes( int test_case_idx,
     }
 }
 
-CxCore_MathTest math_test( "math", "" );
+CxCore_MathTestImpl math_test( "math", "" );
+
+
+class CxCore_MathTest : public CxCore_MathTestImpl
+{
+public:
+    CxCore_MathTest( const char* test_name, const char* test_funcs );
+};
+
+
+CxCore_MathTest::CxCore_MathTest( const char* test_name, const char* test_funcs )
+    : CxCore_MathTestImpl( test_name, test_funcs )
+{
+    size_list = 0;
+    depth_list = 0;
+}
+
 
 ////////// exp /////////////
 class CxCore_ExpTest : public CxCore_MathTest
@@ -268,6 +300,11 @@ CxCore_LogTest log_test;
 
 
 ////////// pow /////////////
+
+static const double math_pow_values[] = { 2., 5., 0.5, -0.5, 1./3, -1./3, CV_PI };
+static const char* math_pow_param_names[] = { "size", "power", "depth" };
+static const int math_pow_depths[] = { CV_8U, CV_16U, CV_16S, CV_32S, CV_32F, CV_64F, -1 };
+
 class CxCore_PowTest : public CxCore_MathTest
 {
 public:
@@ -275,7 +312,13 @@ public:
 protected:
     void get_test_array_types_and_sizes( int test_case_idx, CvSize** sizes, int** types );
     void get_minmax_bounds( int i, int j, int type, CvScalar* low, CvScalar* high );
+    void get_timing_test_array_types_and_sizes( int test_case_idx,
+                                                CvSize** sizes, int** types,
+                                                CvSize** whole_sizes, bool* are_images );
+    int write_default_params( CvFileStorage* fs );
+    void print_timing_params( int test_case_idx, char* ptr, int params_left );
     void run_func();
+    int prepare_test_case( int test_case_idx );
     void prepare_to_validation( int test_case_idx );
     double get_success_error_level( int test_case_idx, int i, int j );
     double power;
@@ -286,6 +329,9 @@ CxCore_PowTest::CxCore_PowTest()
     : CxCore_MathTest( "math-pow", "cvPow" )
 {
     power = 0;
+    timing_param_count = CV_DIM(math_pow_param_names);
+    default_timing_param_names = math_pow_param_names;
+    depth_list = math_pow_depths;
 }
 
 
@@ -314,6 +360,51 @@ void CxCore_PowTest::get_test_array_types_and_sizes( int test_case_idx, CvSize**
         for( j = 0; j < count; j++ )
             types[i][j] = type;
     }
+}
+
+
+void CxCore_PowTest::get_timing_test_array_types_and_sizes( int test_case_idx,
+                                                    CvSize** sizes, int** types,
+                                                    CvSize** whole_sizes, bool* are_images )
+{
+    CxCore_MathTest::get_timing_test_array_types_and_sizes( test_case_idx,
+                                    sizes, types, whole_sizes, are_images );
+    power = cvReadReal( find_timing_param( "power" ), 0.2 );
+}
+
+
+int CxCore_PowTest::write_default_params( CvFileStorage* fs )
+{
+    int i, code = CxCore_MathTest::write_default_params(fs);
+    if( code < 0 || ts->get_testing_mode() != CvTS::TIMING_MODE )
+        return code;
+    start_write_param( fs );
+    cvStartWriteStruct( fs, "power", CV_NODE_SEQ + CV_NODE_FLOW );
+    for( i = 0; i < CV_DIM(math_pow_values); i++ )
+        cvWriteReal( fs, 0, math_pow_values[i] );
+    cvEndWriteStruct(fs);
+    return code;
+}
+
+
+int CxCore_PowTest::prepare_test_case( int test_case_idx )
+{
+    int code = CxCore_MathTest::prepare_test_case( test_case_idx );
+    if( code > 0 && ts->get_testing_mode() == CvTS::TIMING_MODE )
+    {
+        if( cvRound(power) != power && CV_MAT_DEPTH(test_mat[INPUT][0].type) < CV_32F )
+            return 0;
+    }
+    return code;
+}
+
+
+void CxCore_PowTest::print_timing_params( int test_case_idx, char* ptr, int params_left )
+{
+    sprintf( ptr, "%g,", power );
+    ptr += strlen(ptr);
+    params_left--;
+    CxCore_MathTest::print_timing_params( test_case_idx, ptr, params_left );
 }
 
 
@@ -756,13 +847,18 @@ CxCore_PolarToCartTest polar2cart_test;
 
 ///////////////////////////////////////// matrix tests ////////////////////////////////////////////
 
-class CxCore_MatrixTest : public CvArrTest
+static const int matrix_all_depths[] = { CV_8U, CV_16U, CV_16S, CV_32S, CV_32F, CV_64F, -1 };
+
+class CxCore_MatrixTestImpl : public CvArrTest
 {
 public:
-    CxCore_MatrixTest( const char* test_name, const char* test_funcs, int in_count, int out_count,
+    CxCore_MatrixTestImpl( const char* test_name, const char* test_funcs, int in_count, int out_count,
                        bool allow_int, bool scalar_output, int max_cn );
 protected:
     void get_test_array_types_and_sizes( int test_case_idx, CvSize** sizes, int** types );
+    void get_timing_test_array_types_and_sizes( int test_case_idx,
+                                                CvSize** sizes, int** types,
+                                                CvSize** whole_sizes, bool* are_images );
     double get_success_error_level( int test_case_idx, int i, int j );
     bool allow_int;
     bool scalar_output;
@@ -770,7 +866,7 @@ protected:
 };
 
 
-CxCore_MatrixTest::CxCore_MatrixTest( const char* test_name, const char* test_funcs,
+CxCore_MatrixTestImpl::CxCore_MatrixTestImpl( const char* test_name, const char* test_funcs,
                                       int in_count, int out_count,
                                       bool _allow_int, bool _scalar_output, int _max_cn )
     : CvArrTest( test_name, test_funcs, "" ),
@@ -787,10 +883,18 @@ CxCore_MatrixTest::CxCore_MatrixTest( const char* test_name, const char* test_fu
     }
 
     element_wise_relative_error = false;
+
+    timing_param_count = CV_DIM(math_param_names);
+    default_timing_param_names = math_param_names;
+
+    size_list = (CvSize*)matrix_sizes;
+    whole_size_list = 0;
+    depth_list = (int*)math_depths;
+    cn_list = 0;
 }
 
 
-void CxCore_MatrixTest::get_test_array_types_and_sizes( int test_case_idx, CvSize** sizes, int** types )
+void CxCore_MatrixTestImpl::get_test_array_types_and_sizes( int test_case_idx, CvSize** sizes, int** types )
 {
     CvRNG* rng = ts->get_rng();
     int depth = test_case_idx*(allow_int ? CV_64F : 2)/test_case_count;
@@ -820,7 +924,21 @@ void CxCore_MatrixTest::get_test_array_types_and_sizes( int test_case_idx, CvSiz
 }
 
 
-double CxCore_MatrixTest::get_success_error_level( int test_case_idx, int i, int j )
+void CxCore_MatrixTestImpl::get_timing_test_array_types_and_sizes( int test_case_idx,
+                CvSize** sizes, int** types, CvSize** whole_sizes, bool* are_images )
+{
+    CvArrTest::get_timing_test_array_types_and_sizes( test_case_idx,
+                              sizes, types, whole_sizes, are_images );
+    if( scalar_output )
+    {
+        types[OUTPUT][0] = types[REF_OUTPUT][0] = CV_64FC1;
+        sizes[OUTPUT][0] = sizes[REF_OUTPUT][0] = cvSize( 4, 1 );
+        whole_sizes[OUTPUT][0] = whole_sizes[REF_OUTPUT][0] = cvSize( 4, 1 );
+    }
+}
+
+
+double CxCore_MatrixTestImpl::get_success_error_level( int test_case_idx, int i, int j )
 {
     int input_depth = CV_MAT_DEPTH(cvGetElemType( test_array[INPUT][0] ));
     double input_precision = input_depth < CV_32F ? 0 : input_depth == CV_32F ?
@@ -829,7 +947,70 @@ double CxCore_MatrixTest::get_success_error_level( int test_case_idx, int i, int
     return MAX(input_precision, output_precision);
 }
 
-CxCore_MatrixTest matrix_test( "matrix", "", 0, 0, false, false, 0 );
+CxCore_MatrixTestImpl matrix_test( "matrix", "", 0, 0, false, false, 0 );
+
+
+class CxCore_MatrixTest : public CxCore_MatrixTestImpl
+{
+public:
+    CxCore_MatrixTest( const char* test_name, const char* test_funcs, int in_count, int out_count,
+                       bool allow_int, bool scalar_output, int max_cn );
+};
+
+
+CxCore_MatrixTest::CxCore_MatrixTest( const char* test_name, const char* test_funcs,
+                                      int in_count, int out_count, bool _allow_int,
+                                      bool _scalar_output, int _max_cn )
+    : CxCore_MatrixTestImpl( test_name, test_funcs, in_count, out_count,
+                             _allow_int, _scalar_output, _max_cn )
+{
+    size_list = 0;
+    depth_list = 0;
+}
+
+
+///////////////// Trace /////////////////////
+
+class CxCore_TraceTest : public CxCore_MatrixTest
+{
+public:
+    CxCore_TraceTest();
+protected:
+    void run_func();
+    void prepare_to_validation( int test_case_idx );
+};
+
+
+CxCore_TraceTest::CxCore_TraceTest() :
+    CxCore_MatrixTest( "matrix-trace", "cvTrace", 1, 1, true, true, 4 )
+{
+}
+
+
+void CxCore_TraceTest::run_func()
+{
+    *((CvScalar*)(test_mat[OUTPUT][0].data.db)) = cvTrace(test_array[INPUT][0]);
+}
+
+
+void CxCore_TraceTest::prepare_to_validation( int )
+{
+    CvMat* mat = &test_mat[INPUT][0];
+    int i, j, count = MIN( mat->rows, mat->cols );
+    CvScalar trace = {0,0,0,0};
+
+    for( i = 0; i < count; i++ )
+    {
+        CvScalar el = cvGet2D( mat, i, i );
+        for( j = 0; j < 4; j++ )
+            trace.val[j] += el.val[j];
+    }
+
+    *((CvScalar*)(test_mat[REF_OUTPUT][0].data.db)) = trace;
+}
+
+CxCore_TraceTest trace_test;
+
 
 ///////// dotproduct //////////
 
@@ -846,6 +1027,7 @@ protected:
 CxCore_DotProductTest::CxCore_DotProductTest() :
     CxCore_MatrixTest( "matrix-dotproduct", "cvDotProduct", 2, 1, true, true, 4 )
 {
+    depth_list = matrix_all_depths;
 }
 
 
@@ -867,6 +1049,8 @@ CxCore_DotProductTest dotproduct_test;
 
 ///////// crossproduct //////////
 
+static const CvSize cross_product_sizes[] = {{3,1}, {-1,-1}};
+
 class CxCore_CrossProductTest : public CxCore_MatrixTest
 {
 public:
@@ -881,6 +1065,7 @@ protected:
 CxCore_CrossProductTest::CxCore_CrossProductTest() :
     CxCore_MatrixTest( "matrix-crossproduct", "cvCrossProduct", 2, 1, false, false, 1 )
 {
+    size_list = cross_product_sizes;
 }
 
 
@@ -973,13 +1158,19 @@ public:
     CxCore_ScaleAddTest();
 protected:
     void get_test_array_types_and_sizes( int test_case_idx, CvSize** sizes, int** types );
+    void get_timing_test_array_types_and_sizes( int test_case_idx,
+                                                CvSize** sizes, int** types,
+                                                CvSize** whole_sizes, bool* are_images );
+    int prepare_test_case( int test_case_idx );
     void run_func();
     void prepare_to_validation( int test_case_idx );
+    CvScalar alpha;
 };
 
 CxCore_ScaleAddTest::CxCore_ScaleAddTest() :
     CxCore_MatrixTest( "matrix-scaleadd", "cvScaleAdd", 3, 1, false, false, 2 )
 {
+    alpha = cvScalarAll(0);
 }
 
 
@@ -990,16 +1181,33 @@ void CxCore_ScaleAddTest::get_test_array_types_and_sizes( int test_case_idx, CvS
 }
 
 
+void CxCore_ScaleAddTest::get_timing_test_array_types_and_sizes( int test_case_idx,
+                                                CvSize** sizes, int** types,
+                                                CvSize** whole_sizes, bool* are_images )
+{
+    CxCore_MatrixTest::get_timing_test_array_types_and_sizes( test_case_idx, sizes, types,
+                                                              whole_sizes, are_images );
+    sizes[INPUT][2] = cvSize(1,1);
+}
+
+
+int CxCore_ScaleAddTest::prepare_test_case( int test_case_idx )
+{
+    int code = CxCore_MatrixTest::prepare_test_case( test_case_idx );
+    if( code > 0 )
+        alpha = cvGet1D( &test_mat[INPUT][2], 0 );
+    return code;
+}
+
+
 void CxCore_ScaleAddTest::run_func()
 {
-    CvScalar s = cvGet1D( &test_mat[INPUT][2], 0 );
-    cvScaleAdd( test_array[INPUT][0], s, test_array[INPUT][1], test_array[OUTPUT][0] );
+    cvScaleAdd( test_array[INPUT][0], alpha, test_array[INPUT][1], test_array[OUTPUT][0] );
 }
 
 
 void CxCore_ScaleAddTest::prepare_to_validation( int )
 {
-    CvScalar s = cvGet1D( &test_mat[INPUT][2], 0 );
     int rows = test_mat[INPUT][0].rows;
     int type = CV_MAT_TYPE(test_mat[INPUT][0].type);
     int cn = CV_MAT_CN(type);
@@ -1016,28 +1224,28 @@ void CxCore_ScaleAddTest::prepare_to_validation( int )
         {
         case CV_32FC1:
             for( j = 0; j < ncols; j++ )
-                ((float*)dst)[j] = (float)(((float*)src1)[j]*s.val[0] + ((float*)src2)[j]);
+                ((float*)dst)[j] = (float)(((float*)src1)[j]*alpha.val[0] + ((float*)src2)[j]);
             break;
         case CV_32FC2:
             for( j = 0; j < ncols; j += 2 )
             {
                 double re = ((float*)src1)[j];
                 double im = ((float*)src1)[j+1];
-                ((float*)dst)[j] = (float)(re*s.val[0] - im*s.val[1] + ((float*)src2)[j]);
-                ((float*)dst)[j+1] = (float)(re*s.val[1] + im*s.val[0] + ((float*)src2)[j+1]);
+                ((float*)dst)[j] = (float)(re*alpha.val[0] - im*alpha.val[1] + ((float*)src2)[j]);
+                ((float*)dst)[j+1] = (float)(re*alpha.val[1] + im*alpha.val[0] + ((float*)src2)[j+1]);
             }
             break;
         case CV_64FC1:
             for( j = 0; j < ncols; j++ )
-                ((double*)dst)[j] = ((double*)src1)[j]*s.val[0] + ((double*)src2)[j];
+                ((double*)dst)[j] = ((double*)src1)[j]*alpha.val[0] + ((double*)src2)[j];
             break;
         case CV_64FC2:
             for( j = 0; j < ncols; j += 2 )
             {
                 double re = ((double*)src1)[j];
                 double im = ((double*)src1)[j+1];
-                ((double*)dst)[j] = (double)(re*s.val[0] - im*s.val[1] + ((double*)src2)[j]);
-                ((double*)dst)[j+1] = (double)(re*s.val[1] + im*s.val[0] + ((double*)src2)[j+1]);
+                ((double*)dst)[j] = (double)(re*alpha.val[0] - im*alpha.val[1] + ((double*)src2)[j]);
+                ((double*)dst)[j+1] = (double)(re*alpha.val[1] + im*alpha.val[0] + ((double*)src2)[j+1]);
             }
             break;
         default:
@@ -1051,6 +1259,10 @@ CxCore_ScaleAddTest scaleadd_test;
 
 ///////////////// gemm /////////////////////
 
+static const char* matrix_gemm_param_names[] = { "size", "add_c", "mul_type", "depth" };
+static const char* matrix_gemm_mul_types[] = { "AB", "AtB", "ABt", "AtBt", 0 };
+static const int matrix_gemm_add_c_flags[] = { 0, 1 };
+
 class CxCore_GEMMTest : public CxCore_MatrixTest
 {
 public:
@@ -1058,15 +1270,25 @@ public:
 protected:
     void get_test_array_types_and_sizes( int test_case_idx, CvSize** sizes, int** types );
     void get_minmax_bounds( int /*i*/, int /*j*/, int /*type*/, CvScalar* low, CvScalar* high );
+    void get_timing_test_array_types_and_sizes( int test_case_idx,
+                                                CvSize** sizes, int** types,
+                                                CvSize** whole_sizes, bool* are_images );
+    int write_default_params( CvFileStorage* fs );
+    void print_timing_params( int test_case_idx, char* ptr, int params_left );
+    int prepare_test_case( int test_case_idx );
     void run_func();
     void prepare_to_validation( int test_case_idx );
     int tabc_flag;
+    double alpha, beta;
 };
 
 CxCore_GEMMTest::CxCore_GEMMTest() :
     CxCore_MatrixTest( "matrix-gemm", "cvGEMM", 5, 1, false, false, 2 )
 {
     test_case_count = 100;
+    timing_param_count = CV_DIM(matrix_gemm_param_names);
+    default_timing_param_names = matrix_gemm_param_names;
+    alpha = beta = 0;
 }
 
 
@@ -1121,6 +1343,62 @@ void CxCore_GEMMTest::get_test_array_types_and_sizes( int test_case_idx, CvSize*
 }
 
 
+void CxCore_GEMMTest::get_timing_test_array_types_and_sizes( int test_case_idx,
+                                                    CvSize** sizes, int** types,
+                                                    CvSize** whole_sizes, bool* are_images )
+{
+    CxCore_MatrixTest::get_timing_test_array_types_and_sizes( test_case_idx,
+                                    sizes, types, whole_sizes, are_images );
+    const char* mul_type = cvReadString( find_timing_param("mul_type"), "AB" );
+    if( strcmp( mul_type, "AtB" ) == 0 )
+        tabc_flag = CV_GEMM_A_T;
+    else if( strcmp( mul_type, "ABt" ) == 0 )
+        tabc_flag = CV_GEMM_B_T;
+    else if( strcmp( mul_type, "AtBt" ) == 0 )
+        tabc_flag = CV_GEMM_A_T + CV_GEMM_B_T;
+    else
+        tabc_flag = 0;
+
+    if( cvReadInt( find_timing_param( "add_c" ), 0 ) == 0 )
+        sizes[INPUT][4] = cvSize(0,0);
+}
+
+
+int CxCore_GEMMTest::write_default_params( CvFileStorage* fs )
+{
+    int code = CxCore_MatrixTest::write_default_params(fs);
+    if( code < 0 || ts->get_testing_mode() != CvTS::TIMING_MODE )
+        return code;
+    write_string_list( fs, "mul_type", matrix_gemm_mul_types );
+    write_int_list( fs, "add_c", matrix_gemm_add_c_flags, CV_DIM(matrix_gemm_add_c_flags) );
+    return code;
+}
+
+
+void CxCore_GEMMTest::print_timing_params( int test_case_idx, char* ptr, int params_left )
+{
+    sprintf( ptr, "%s%s,%s,",
+        tabc_flag & CV_GEMM_A_T ? "At" : "A",
+        tabc_flag & CV_GEMM_B_T ? "Bt" : "B",
+        test_array[INPUT][4] ? "plusC" : "" );
+    ptr += strlen(ptr);
+    params_left -= 2;
+    CxCore_MatrixTest::print_timing_params( test_case_idx, ptr, params_left );
+}
+
+
+int CxCore_GEMMTest::prepare_test_case( int test_case_idx )
+{
+    int code = CxCore_MatrixTest::prepare_test_case( test_case_idx );
+    if( code > 0 )
+    {
+        alpha = cvmGet( &test_mat[INPUT][2], 0, 0 );
+        beta = cvmGet( &test_mat[INPUT][3], 0, 0 );
+    }
+    return code;
+}
+
+
 void CxCore_GEMMTest::get_minmax_bounds( int /*i*/, int /*j*/, int /*type*/, CvScalar* low, CvScalar* high )
 {
     *low = cvScalarAll(-10.);
@@ -1130,8 +1408,6 @@ void CxCore_GEMMTest::get_minmax_bounds( int /*i*/, int /*j*/, int /*type*/, CvS
 
 void CxCore_GEMMTest::run_func()
 {
-    double alpha = cvmGet( &test_mat[INPUT][2], 0, 0 );
-    double beta = cvmGet( &test_mat[INPUT][3], 0, 0 );
     cvGEMM( test_array[INPUT][0], test_array[INPUT][1], alpha,
             test_array[INPUT][4], beta, test_array[OUTPUT][0], tabc_flag );
 }
@@ -1139,8 +1415,6 @@ void CxCore_GEMMTest::run_func()
 
 void CxCore_GEMMTest::prepare_to_validation( int )
 {
-    double alpha = cvmGet( &test_mat[INPUT][2], 0, 0 );
-    double beta = cvmGet( &test_mat[INPUT][3], 0, 0 );
     cvTsGEMM( &test_mat[INPUT][0], &test_mat[INPUT][1], alpha,
         test_array[INPUT][4] ? &test_mat[INPUT][4] : 0,
         beta, &test_mat[REF_OUTPUT][0], tabc_flag );
@@ -1151,12 +1425,21 @@ CxCore_GEMMTest gemm_test;
 
 ///////////////// multransposed /////////////////////
 
+static const char* matrix_multrans_param_names[] = { "size", "use_delta", "mul_type", "depth" };
+static const int matrix_multrans_use_delta_flags[] = { 0, 1 };
+static const char* matrix_multrans_mul_types[] = { "AAt", "AtA", 0 };
+
 class CxCore_MulTransposedTest : public CxCore_MatrixTest
 {
 public:
     CxCore_MulTransposedTest();
 protected:
     void get_test_array_types_and_sizes( int test_case_idx, CvSize** sizes, int** types );
+    void get_timing_test_array_types_and_sizes( int test_case_idx,
+                                                CvSize** sizes, int** types,
+                                                CvSize** whole_sizes, bool* are_images );
+    int write_default_params( CvFileStorage* fs );
+    void print_timing_params( int test_case_idx, char* ptr, int params_left );
     void get_minmax_bounds( int /*i*/, int /*j*/, int /*type*/, CvScalar* low, CvScalar* high );
     void run_func();
     void prepare_to_validation( int test_case_idx );
@@ -1170,6 +1453,8 @@ CxCore_MulTransposedTest::CxCore_MulTransposedTest() :
     test_case_count = 100;
     order = 0;
     test_array[TEMP].push(NULL);
+    timing_param_count = CV_DIM(matrix_multrans_param_names);
+    default_timing_param_names = matrix_multrans_param_names;
 }
 
 
@@ -1193,6 +1478,41 @@ void CxCore_MulTransposedTest::get_test_array_types_and_sizes( int test_case_idx
     sizes[OUTPUT][0].width = sizes[OUTPUT][0].height = order == 0 ?
         sizes[INPUT][0].height : sizes[INPUT][0].width;
     sizes[REF_OUTPUT][0] = sizes[OUTPUT][0];
+}
+
+
+void CxCore_MulTransposedTest::get_timing_test_array_types_and_sizes( int test_case_idx,
+                                                    CvSize** sizes, int** types,
+                                                    CvSize** whole_sizes, bool* are_images )
+{
+    CxCore_MatrixTest::get_timing_test_array_types_and_sizes( test_case_idx,
+                                    sizes, types, whole_sizes, are_images );
+    const char* mul_type = cvReadString( find_timing_param("mul_type"), "AAt" );
+    order = strcmp( mul_type, "AtA" ) == 0;
+
+    if( cvReadInt( find_timing_param( "use_delta" ), 0 ) == 0 )
+        sizes[INPUT][1] = cvSize(0,0);
+}
+
+
+int CxCore_MulTransposedTest::write_default_params( CvFileStorage* fs )
+{
+    int code = CxCore_MatrixTest::write_default_params(fs);
+    if( code < 0 || ts->get_testing_mode() != CvTS::TIMING_MODE )
+        return code;
+    write_string_list( fs, "mul_type", matrix_multrans_mul_types );
+    write_int_list( fs, "use_delta", matrix_multrans_use_delta_flags,
+                    CV_DIM(matrix_multrans_use_delta_flags) );
+    return code;
+}
+
+
+void CxCore_MulTransposedTest::print_timing_params( int test_case_idx, char* ptr, int params_left )
+{
+    sprintf( ptr, "%s,%s,", order == 0 ? "AAt" : "AtA", test_array[INPUT][1] ? "delta" : "" );
+    ptr += strlen(ptr);
+    params_left -= 2;
+    CxCore_MatrixTest::print_timing_params( test_case_idx, ptr, params_left );
 }
 
 
@@ -1235,6 +1555,11 @@ CxCore_MulTransposedTest multransposed_test;
 
 ///////////////// Transform /////////////////////
 
+static const CvSize matrix_transform_sizes[] = {{10,10}, {100,100}, {720,480}, {-1,-1}};
+static const CvSize matrix_transform_whole_sizes[] = {{10,10}, {720,480}, {720,480}, {-1,-1}};
+static const int matrix_transform_channels[] = { 2, 3, 4, -1 };
+static const char* matrix_transform_param_names[] = { "size", "channels", "depth" };
+
 class CxCore_TransformTest : public CxCore_MatrixTest
 {
 public:
@@ -1242,6 +1567,10 @@ public:
 protected:
     void get_test_array_types_and_sizes( int test_case_idx, CvSize** sizes, int** types );
     double get_success_error_level( int test_case_idx, int i, int j );
+    void get_timing_test_array_types_and_sizes( int test_case_idx,
+                                                CvSize** sizes, int** types,
+                                                CvSize** whole_sizes, bool* are_images );
+    void print_timing_params( int test_case_idx, char* ptr, int params_left );
     void run_func();
     void prepare_to_validation( int test_case_idx );
 };
@@ -1250,6 +1579,12 @@ protected:
 CxCore_TransformTest::CxCore_TransformTest() :
     CxCore_MatrixTest( "matrix-transform", "cvTransform", 3, 1, true, false, 4 )
 {
+    timing_param_count = CV_DIM(matrix_transform_param_names);
+    default_timing_param_names = matrix_transform_param_names;
+    cn_list = matrix_transform_channels;
+    depth_list = matrix_all_depths;
+    size_list = matrix_transform_sizes;
+    whole_size_list = matrix_transform_whole_sizes;
 }
 
 
@@ -1289,10 +1624,32 @@ void CxCore_TransformTest::get_test_array_types_and_sizes( int test_case_idx, Cv
 }
 
 
+void CxCore_TransformTest::get_timing_test_array_types_and_sizes( int test_case_idx,
+                CvSize** sizes, int** types, CvSize** whole_sizes, bool* are_images )
+{
+    CxCore_MatrixTest::get_timing_test_array_types_and_sizes( test_case_idx,
+                                    sizes, types, whole_sizes, are_images );
+    int cn = CV_MAT_CN(types[INPUT][0]);
+    sizes[INPUT][1] = cvSize(cn + (cn < 4), cn);
+    sizes[INPUT][2] = cvSize(0,0);
+    types[INPUT][1] = types[INPUT][2] = CV_64FC1;
+}
+
+
+void CxCore_TransformTest::print_timing_params( int test_case_idx, char* ptr, int params_left )
+{
+    CvSize size = cvGetMatSize(&test_mat[INPUT][1]);
+    sprintf( ptr, "matrix=%dx%d,", size.height, size.width );
+    ptr += strlen(ptr);
+    params_left--;
+    CxCore_MatrixTest::print_timing_params( test_case_idx, ptr, params_left );
+}
+
+
 double CxCore_TransformTest::get_success_error_level( int test_case_idx, int i, int j )
 {
     int depth = CV_MAT_DEPTH(test_mat[INPUT][0].type);
-    return depth == CV_8U ? 1 : depth == CV_16S || depth == CV_16U ? 3 :
+    return depth == CV_8U ? 1 : depth == CV_16S || depth == CV_16U ? 8 :
         CxCore_MatrixTest::get_success_error_level( test_case_idx, i, j );
 }
 
@@ -1316,12 +1673,17 @@ CxCore_TransformTest transform_test;
 
 ///////////////// PerspectiveTransform /////////////////////
 
+static const int matrix_perspective_transform_channels[] = { 2, 3, -1 };
+
 class CxCore_PerspectiveTransformTest : public CxCore_MatrixTest
 {
 public:
     CxCore_PerspectiveTransformTest();
 protected:
     void get_test_array_types_and_sizes( int test_case_idx, CvSize** sizes, int** types );
+    void get_timing_test_array_types_and_sizes( int test_case_idx,
+                                                CvSize** sizes, int** types,
+                                                CvSize** whole_sizes, bool* are_images );
     void run_func();
     void prepare_to_validation( int test_case_idx );
 };
@@ -1330,6 +1692,11 @@ protected:
 CxCore_PerspectiveTransformTest::CxCore_PerspectiveTransformTest() :
     CxCore_MatrixTest( "matrix-perspective", "cvPerspectiveTransform", 2, 1, false, false, 2 )
 {
+    timing_param_count = CV_DIM(matrix_transform_param_names);
+    default_timing_param_names = matrix_transform_param_names;
+    cn_list = matrix_perspective_transform_channels;
+    size_list = matrix_transform_sizes;
+    whole_size_list = matrix_transform_whole_sizes;
 }
 
 
@@ -1347,6 +1714,17 @@ void CxCore_PerspectiveTransformTest::get_test_array_types_and_sizes( int test_c
     mattype = depth == CV_64F ? CV_64F : bits & 1 ? CV_32F : CV_64F;
     types[INPUT][1] = mattype;
     sizes[INPUT][1] = cvSize(cn + 1, cn + 1);
+}
+
+
+void CxCore_PerspectiveTransformTest::get_timing_test_array_types_and_sizes( int test_case_idx,
+                        CvSize** sizes, int** types, CvSize** whole_sizes, bool* are_images )
+{
+    CxCore_MatrixTest::get_timing_test_array_types_and_sizes( test_case_idx,
+                                    sizes, types, whole_sizes, are_images );
+    int cn = CV_MAT_CN(types[INPUT][0]);
+    sizes[INPUT][1] = cvSize(cn + 1, cn + 1);
+    types[INPUT][1] = CV_64FC1;
 }
 
 
@@ -1473,6 +1851,9 @@ public:
     CxCore_MahalanobisTest();
 protected:
     void get_test_array_types_and_sizes( int test_case_idx, CvSize** sizes, int** types );
+    void get_timing_test_array_types_and_sizes( int test_case_idx,
+                                                CvSize** sizes, int** types,
+                                                CvSize** whole_sizes, bool* are_images );
     int prepare_test_case( int test_case_idx );
     void run_func();
     void prepare_to_validation( int test_case_idx );
@@ -1506,15 +1887,26 @@ void CxCore_MahalanobisTest::get_test_array_types_and_sizes( int test_case_idx, 
 }
 
 
+void CxCore_MahalanobisTest::get_timing_test_array_types_and_sizes( int test_case_idx,
+                        CvSize** sizes, int** types, CvSize** whole_sizes, bool* are_images )
+{
+    CxCore_MatrixTest::get_timing_test_array_types_and_sizes( test_case_idx,
+                                    sizes, types, whole_sizes, are_images );
+    sizes[INPUT][0].height = sizes[INPUT][1].height = 1;
+}
+
+
 int CxCore_MahalanobisTest::prepare_test_case( int test_case_idx )
 {
-    int result = CxCore_MatrixTest::prepare_test_case( test_case_idx );
+    int code = CxCore_MatrixTest::prepare_test_case( test_case_idx );
+    if( code > 0 && ts->get_testing_mode() == CvTS::CORRECTNESS_CHECK_MODE )
+    {
+        // make sure that the inverted "covariation" matrix is symmetrix and positively defined.
+        cvTsGEMM( &test_mat[INPUT][2], &test_mat[INPUT][2], 1., 0, 0., &test_mat[TEMP][2], CV_GEMM_B_T );
+        cvTsCopy( &test_mat[TEMP][2], &test_mat[INPUT][2] );
+    }
 
-    // make sure that the inverted covariation matrix is positively defined.
-    cvTsGEMM( &test_mat[INPUT][2], &test_mat[INPUT][2], 1., 0, 0., &test_mat[TEMP][2], CV_GEMM_B_T );
-    cvTsCopy( &test_mat[TEMP][2], &test_mat[INPUT][2] );
-
-    return result;
+    return code;
 }
 
 
@@ -1554,6 +1946,7 @@ protected:
     int prepare_test_case( int test_case_idx );
     void run_func();
     void prepare_to_validation( int test_case_idx );
+    int support_testing_modes();
     CvTestPtrVec temp_hdrs;
     uchar* hdr_data;
     int flags, t_flag;
@@ -1570,6 +1963,12 @@ CxCore_CovarMatrixTest::CxCore_CovarMatrixTest() :
     test_array[REF_INPUT_OUTPUT].push(NULL);
     test_array[TEMP].push(NULL);
     test_array[TEMP].push(NULL);
+}
+
+
+int CxCore_CovarMatrixTest::support_testing_modes()
+{
+    return CvTS::CORRECTNESS_CHECK_MODE; // for now disable the timing test
 }
 
 
@@ -1608,30 +2007,33 @@ void CxCore_CovarMatrixTest::get_test_array_types_and_sizes( int test_case_idx, 
 
 int CxCore_CovarMatrixTest::prepare_test_case( int test_case_idx )
 {
-    int result = CxCore_MatrixTest::prepare_test_case( test_case_idx );
-    int i, count = temp_hdrs.size();
-    int hdr_size = are_images ? sizeof(IplImage) : sizeof(CvMat);
-
-    hdr_data = (uchar*)cvAlloc( count*hdr_size );
-    for( i = 0; i < count; i++ )
+    int code = CxCore_MatrixTest::prepare_test_case( test_case_idx );
+    if( code > 0 )
     {
-        CvMat part;
-        void* ptr = hdr_data + i*hdr_size;
+        int i, count = temp_hdrs.size();
+        int hdr_size = are_images ? sizeof(IplImage) : sizeof(CvMat);
 
-        if( !t_flag )
-            cvGetRow( &test_mat[INPUT][0], &part, i );
-        else
-            cvGetCol( &test_mat[INPUT][0], &part, i );
+        hdr_data = (uchar*)cvAlloc( count*hdr_size );
+        for( i = 0; i < count; i++ )
+        {
+            CvMat part;
+            void* ptr = hdr_data + i*hdr_size;
 
-        if( !are_images )
-            *((CvMat*)ptr) = part;
-        else
-            cvGetImage( &part, (IplImage*)ptr );
+            if( !t_flag )
+                cvGetRow( &test_mat[INPUT][0], &part, i );
+            else
+                cvGetCol( &test_mat[INPUT][0], &part, i );
 
-        temp_hdrs[i] = ptr;
+            if( !are_images )
+                *((CvMat*)ptr) = part;
+            else
+                cvGetImage( &part, (IplImage*)ptr );
+
+            temp_hdrs[i] = ptr;
+        }
     }
 
-    return result;
+    return code;
 }
 
 
@@ -1758,10 +2160,11 @@ double CxCore_DetTest::get_success_error_level( int /*test_case_idx*/, int /*i*/
 
 int CxCore_DetTest::prepare_test_case( int test_case_idx )
 {
-    int ok = CxCore_MatrixTest::prepare_test_case( test_case_idx );
-    cvTsFloodWithZeros( &test_mat[INPUT][0], ts->get_rng() );
+    int code = CxCore_MatrixTest::prepare_test_case( test_case_idx );
+    if( code > 0 )
+        cvTsFloodWithZeros( &test_mat[INPUT][0], ts->get_rng() );
 
-    return ok;
+    return code;
 }
 
 
@@ -1874,12 +2277,20 @@ CxCore_DetTest det_test;
 
 ///////////////// invert /////////////////////
 
+static const char* matrix_solve_invert_param_names[] = { "size", "method", "depth" };
+static const char* matrix_solve_invert_methods[] = { "LU", "SVD", 0 };
+
 class CxCore_InvertTest : public CxCore_MatrixTest
 {
 public:
     CxCore_InvertTest();
 protected:
     void get_test_array_types_and_sizes( int test_case_idx, CvSize** sizes, int** types );
+    void get_timing_test_array_types_and_sizes( int test_case_idx,
+                                                CvSize** sizes, int** types,
+                                                CvSize** whole_sizes, bool* are_images );
+    int write_default_params( CvFileStorage* fs );
+    void print_timing_params( int test_case_idx, char* ptr, int params_left );
     void get_minmax_bounds( int /*i*/, int /*j*/, int /*type*/, CvScalar* low, CvScalar* high );
     double get_success_error_level( int test_case_idx, int i, int j );
     int prepare_test_case( int test_case_idx );
@@ -1897,6 +2308,9 @@ CxCore_InvertTest::CxCore_InvertTest() :
     max_log_array_size = 7;
     test_array[TEMP].push(NULL);
     test_array[TEMP].push(NULL);
+
+    timing_param_count = CV_DIM(matrix_solve_invert_param_names);
+    default_timing_param_names = matrix_solve_invert_param_names;
 }
 
 
@@ -1932,6 +2346,36 @@ void CxCore_InvertTest::get_test_array_types_and_sizes( int test_case_idx, CvSiz
 }
 
 
+void CxCore_InvertTest::get_timing_test_array_types_and_sizes( int test_case_idx,
+                                                    CvSize** sizes, int** types,
+                                                    CvSize** whole_sizes, bool* are_images )
+{
+    CxCore_MatrixTest::get_timing_test_array_types_and_sizes( test_case_idx,
+                                    sizes, types, whole_sizes, are_images );
+    const char* method_str = cvReadString( find_timing_param("method"), "LU" );
+    method = strcmp( method_str, "LU" ) == 0 ? CV_LU : CV_SVD;
+}
+
+
+int CxCore_InvertTest::write_default_params( CvFileStorage* fs )
+{
+    int code = CxCore_MatrixTest::write_default_params(fs);
+    if( code < 0 || ts->get_testing_mode() != CvTS::TIMING_MODE )
+        return code;
+    write_string_list( fs, "method", matrix_solve_invert_methods );
+    return code;
+}
+
+
+void CxCore_InvertTest::print_timing_params( int test_case_idx, char* ptr, int params_left )
+{
+    sprintf( ptr, "%s,", method == CV_LU ? "LU" : "SVD" );
+    ptr += strlen(ptr);
+    params_left--;
+    CxCore_MatrixTest::print_timing_params( test_case_idx, ptr, params_left );
+}
+
+
 double CxCore_InvertTest::get_success_error_level( int /*test_case_idx*/, int, int )
 {
     return CV_MAT_DEPTH(cvGetElemType(test_array[OUTPUT][0])) == CV_32F ? 1e-2 : 1e-9;
@@ -1939,18 +2383,20 @@ double CxCore_InvertTest::get_success_error_level( int /*test_case_idx*/, int, i
 
 int CxCore_InvertTest::prepare_test_case( int test_case_idx )
 {
-    int ok = CxCore_MatrixTest::prepare_test_case( test_case_idx );
-
-    cvTsFloodWithZeros( &test_mat[INPUT][0], ts->get_rng() );
-
-    if( method == CV_SVD_SYM )
+    int code = CxCore_MatrixTest::prepare_test_case( test_case_idx );
+    if( code > 0 )
     {
-        cvTsGEMM( &test_mat[INPUT][0], &test_mat[INPUT][0], 1.,
-                  0, 0., &test_mat[TEMP][0], CV_GEMM_B_T );
-        cvTsCopy( &test_mat[TEMP][0], &test_mat[INPUT][0] );
+        cvTsFloodWithZeros( &test_mat[INPUT][0], ts->get_rng() );
+
+        if( method == CV_SVD_SYM )
+        {
+            cvTsGEMM( &test_mat[INPUT][0], &test_mat[INPUT][0], 1.,
+                      0, 0., &test_mat[TEMP][0], CV_GEMM_B_T );
+            cvTsCopy( &test_mat[TEMP][0], &test_mat[INPUT][0] );
+        }
     }
 
-    return ok;
+    return code;
 }
 
 
@@ -2032,6 +2478,11 @@ public:
     CxCore_SolveTest();
 protected:
     void get_test_array_types_and_sizes( int test_case_idx, CvSize** sizes, int** types );
+    void get_timing_test_array_types_and_sizes( int test_case_idx,
+                                                CvSize** sizes, int** types,
+                                                CvSize** whole_sizes, bool* are_images );
+    int write_default_params( CvFileStorage* fs );
+    void print_timing_params( int test_case_idx, char* ptr, int params_left );
     void get_minmax_bounds( int /*i*/, int /*j*/, int /*type*/, CvScalar* low, CvScalar* high );
     double get_success_error_level( int test_case_idx, int i, int j );
     int prepare_test_case( int test_case_idx );
@@ -2049,6 +2500,9 @@ CxCore_SolveTest::CxCore_SolveTest() :
     max_log_array_size = 7;
     test_array[TEMP].push(NULL);
     test_array[TEMP].push(NULL);
+
+    timing_param_count = CV_DIM(matrix_solve_invert_param_names);
+    default_timing_param_names = matrix_solve_invert_param_names;
 }
 
 
@@ -2087,10 +2541,40 @@ void CxCore_SolveTest::get_test_array_types_and_sizes( int test_case_idx, CvSize
     sizes[OUTPUT][0] = sizes[REF_OUTPUT][0] = cvSize(sizes[INPUT][1].width, min_size);
 }
 
+void CxCore_SolveTest::get_timing_test_array_types_and_sizes( int test_case_idx,
+                                                    CvSize** sizes, int** types,
+                                                    CvSize** whole_sizes, bool* are_images )
+{
+    CxCore_MatrixTest::get_timing_test_array_types_and_sizes( test_case_idx,
+                                    sizes, types, whole_sizes, are_images );
+    const char* method_str = cvReadString( find_timing_param("method"), "LU" );
+    sizes[INPUT][1].width = sizes[TEMP][0].width = sizes[OUTPUT][0].width = sizes[REF_OUTPUT][0].width = 1;
+    method = strcmp( method_str, "LU" ) == 0 ? CV_LU : CV_SVD;
+}
+
+
+int CxCore_SolveTest::write_default_params( CvFileStorage* fs )
+{
+    int code = CxCore_MatrixTest::write_default_params(fs);
+    if( code < 0 || ts->get_testing_mode() != CvTS::TIMING_MODE )
+        return code;
+    write_string_list( fs, "method", matrix_solve_invert_methods );
+    return code;
+}
+
+
+void CxCore_SolveTest::print_timing_params( int test_case_idx, char* ptr, int params_left )
+{
+    sprintf( ptr, "%s,", method == CV_LU ? "LU" : "SVD" );
+    ptr += strlen(ptr);
+    params_left--;
+    CxCore_MatrixTest::print_timing_params( test_case_idx, ptr, params_left );
+}
+
 
 int CxCore_SolveTest::prepare_test_case( int test_case_idx )
 {
-    int ok = CxCore_MatrixTest::prepare_test_case( test_case_idx );
+    int code = CxCore_MatrixTest::prepare_test_case( test_case_idx );
 
     /*if( method == CV_SVD_SYM )
     {
@@ -2099,7 +2583,7 @@ int CxCore_SolveTest::prepare_test_case( int test_case_idx )
         cvTsCopy( test_array[TEMP][0], test_array[INPUT][0] );
     }*/
 
-    return ok;
+    return code;
 }
 
 
@@ -2153,12 +2637,20 @@ CxCore_SolveTest solve_test;
 
 ///////////////// SVD /////////////////////
 
+static const char* matrix_svd_param_names[] = { "size", "output", "depth" };
+static const char* matrix_svd_output_modes[] = { "w", "all", 0 };
+
 class CxCore_SVDTest : public CxCore_MatrixTest
 {
 public:
     CxCore_SVDTest();
 protected:
     void get_test_array_types_and_sizes( int test_case_idx, CvSize** sizes, int** types );
+    void get_timing_test_array_types_and_sizes( int test_case_idx,
+                                                CvSize** sizes, int** types,
+                                                CvSize** whole_sizes, bool* are_images );
+    int write_default_params( CvFileStorage* fs );
+    void print_timing_params( int test_case_idx, char* ptr, int params_left );
     void get_minmax_bounds( int /*i*/, int /*j*/, int /*type*/, CvScalar* low, CvScalar* high );
     int prepare_test_case( int test_case_idx );
     void run_func();
@@ -2177,6 +2669,9 @@ CxCore_SVDTest::CxCore_SVDTest() :
     test_array[TEMP].push(NULL);
     test_array[TEMP].push(NULL);
     test_array[TEMP].push(NULL);
+
+    timing_param_count = CV_DIM(matrix_svd_param_names);
+    default_timing_param_names = matrix_svd_param_names;
 }
 
 
@@ -2253,24 +2748,76 @@ void CxCore_SVDTest::get_test_array_types_and_sizes( int test_case_idx, CvSize**
 }
 
 
-int CxCore_SVDTest::prepare_test_case( int test_case_idx )
+void CxCore_SVDTest::get_timing_test_array_types_and_sizes( int test_case_idx,
+                                                    CvSize** sizes, int** types,
+                                                    CvSize** whole_sizes, bool* are_images )
 {
-    int ok = CxCore_MatrixTest::prepare_test_case( test_case_idx );
-    CvMat* input = &test_mat[INPUT][0];
-    cvTsFloodWithZeros( input, ts->get_rng() );
-
-    if( symmetric && (have_u || have_v) )
+    CxCore_MatrixTest::get_timing_test_array_types_and_sizes( test_case_idx,
+                                    sizes, types, whole_sizes, are_images );
+    const char* output_str = cvReadString( find_timing_param("output"), "all" );
+    bool need_all = strcmp( output_str, "all" ) == 0;
+    int i, count = test_array[OUTPUT].size();
+    vector_w = true;
+    symmetric = false;
+    compact = true;
+    sizes[TEMP][0] = cvSize(1,sizes[INPUT][0].height);
+    if( need_all )
     {
-        CvMat* temp = &test_mat[TEMP][have_u ? 1 : 2];
-        cvTsGEMM( input, input, 1.,
-                  0, 0., temp, CV_GEMM_B_T );
-        cvTsCopy( temp, input );
+        have_u = have_v = true;
+    }
+    else
+    {
+        have_u = have_v = false;
+        sizes[TEMP][1] = sizes[TEMP][2] = cvSize(0,0);
     }
 
-    if( (flags & CV_SVD_MODIFY_A) && test_array[OUTPUT][0] )
-        cvTsCopy( input, &test_mat[OUTPUT][0] );
+    flags = CV_SVD_U_T + CV_SVD_V_T;
+    for( i = 0; i < count; i++ )
+        sizes[OUTPUT][i] = sizes[REF_OUTPUT][i] = cvSize(0,0);
+    sizes[OUTPUT][0] = cvSize(1,1);
+}
 
-    return ok;
+
+int CxCore_SVDTest::write_default_params( CvFileStorage* fs )
+{
+    int code = CxCore_MatrixTest::write_default_params(fs);
+    if( code < 0 || ts->get_testing_mode() != CvTS::TIMING_MODE )
+        return code;
+    write_string_list( fs, "output", matrix_svd_output_modes );
+    return code;
+}
+
+
+void CxCore_SVDTest::print_timing_params( int test_case_idx, char* ptr, int params_left )
+{
+    sprintf( ptr, "%s,", have_u ? "all" : "w" );
+    ptr += strlen(ptr);
+    params_left--;
+    CxCore_MatrixTest::print_timing_params( test_case_idx, ptr, params_left );
+}
+
+
+int CxCore_SVDTest::prepare_test_case( int test_case_idx )
+{
+    int code = CxCore_MatrixTest::prepare_test_case( test_case_idx );
+    if( code > 0 )
+    {
+        CvMat* input = &test_mat[INPUT][0];
+        cvTsFloodWithZeros( input, ts->get_rng() );
+
+        if( symmetric && (have_u || have_v) )
+        {
+            CvMat* temp = &test_mat[TEMP][have_u ? 1 : 2];
+            cvTsGEMM( input, input, 1.,
+                      0, 0., temp, CV_GEMM_B_T );
+            cvTsCopy( temp, input );
+        }
+
+        if( (flags & CV_SVD_MODIFY_A) && test_array[OUTPUT][0] )
+            cvTsCopy( input, &test_mat[OUTPUT][0] );
+    }
+
+    return code;
 }
 
 
@@ -2390,6 +2937,9 @@ public:
     CxCore_SVBkSbTest();
 protected:
     void get_test_array_types_and_sizes( int test_case_idx, CvSize** sizes, int** types );
+    void get_timing_test_array_types_and_sizes( int test_case_idx,
+                                                CvSize** sizes, int** types,
+                                                CvSize** whole_sizes, bool* are_images );
     double get_success_error_level( int test_case_idx, int i, int j );
     void get_minmax_bounds( int /*i*/, int /*j*/, int /*type*/, CvScalar* low, CvScalar* high );
     int prepare_test_case( int test_case_idx );
@@ -2471,22 +3021,40 @@ void CxCore_SVBkSbTest::get_test_array_types_and_sizes( int test_case_idx, CvSiz
 }
 
 
+void CxCore_SVBkSbTest::get_timing_test_array_types_and_sizes( int test_case_idx,
+                                                    CvSize** sizes, int** types,
+                                                    CvSize** whole_sizes, bool* are_images )
+{
+    CxCore_MatrixTest::get_timing_test_array_types_and_sizes( test_case_idx,
+                                    sizes, types, whole_sizes, are_images );
+    have_b = true;
+    vector_w = true;
+    compact = true;
+    sizes[TEMP][0] = cvSize(1,sizes[INPUT][0].height);
+    sizes[INPUT][1] = sizes[OUTPUT][0] = sizes[REF_OUTPUT][0] = cvSize(1,sizes[INPUT][0].height);
+    flags = CV_SVD_U_T + CV_SVD_V_T;
+}
+
+
 int CxCore_SVBkSbTest::prepare_test_case( int test_case_idx )
 {
-    int ok = CxCore_MatrixTest::prepare_test_case( test_case_idx );
-    CvMat* input = &test_mat[INPUT][0];
-    cvTsFloodWithZeros( input, ts->get_rng() );
-
-    if( symmetric )
+    int code = CxCore_MatrixTest::prepare_test_case( test_case_idx );
+    if( code > 0 )
     {
-        CvMat* temp = &test_mat[TEMP][1];
-        cvTsGEMM( input, input, 1., 0, 0., temp, CV_GEMM_B_T );
-        cvTsCopy( temp, input );
+        CvMat* input = &test_mat[INPUT][0];
+        cvTsFloodWithZeros( input, ts->get_rng() );
+
+        if( symmetric )
+        {
+            CvMat* temp = &test_mat[TEMP][1];
+            cvTsGEMM( input, input, 1., 0, 0., temp, CV_GEMM_B_T );
+            cvTsCopy( temp, input );
+        }
+
+        cvSVD( input, test_array[TEMP][0], test_array[TEMP][1], test_array[TEMP][2], flags );
     }
 
-    cvSVD( input, test_array[TEMP][0], test_array[TEMP][1], test_array[TEMP][2], flags );
-
-    return ok;
+    return code;
 }
 
 
