@@ -68,7 +68,9 @@ typedef unsigned short ushort;
 
 /* helper tables */
 extern const uchar icvSaturate8u[];
-#define CV_FAST_CAST_8U(t)   (assert(-256 <= (t) || (t) <= 512), icvSaturate8u[t+256])
+#define CV_FAST_CAST_8U(t)  (assert(-256 <= (t) || (t) <= 512), icvSaturate8u[(t)+256])
+#define CV_CALC_MIN_8U(a,b) (a) -= CV_FAST_CAST_8U((a) - (b))
+#define CV_CALC_MAX_8U(a,b) (a) += CV_FAST_CAST_8U((b) - (a))
 
 // -128.f ... 255.f
 extern const float icv8x32fTab_cv[];
@@ -89,30 +91,10 @@ CV_INLINE  CvDataType icvDepthToDataType( int type )
 
 #define CV_HIST_DEFAULT_TYPE CV_32F
 
-CV_INLINE int icvGetImageCOI( const IplImage* image );
-CV_INLINE int icvGetImageCOI( const IplImage* image )
-{
-    return image->roi ? image->roi->coi : 0;
-}
-
-CV_INLINE bool operator == (CvSize size1, CvSize size2 );
-CV_INLINE bool operator == (CvSize size1, CvSize size2 )
-{
-    return size1.width == size2.width && size1.height == size2.height;
-}
-
-CV_INLINE bool operator != (CvSize size1, CvSize size2 );
-CV_INLINE bool operator != (CvSize size1, CvSize size2 )
-{
-    return size1.width != size2.width || size1.height != size2.height;
-}
-
 CV_EXTERN_C_FUNCPTR( void (CV_CDECL * CvWriteNodeFunction)(void* seq,void* node) )
-
 
 #define _CvConvState CvFilterState
 #define CvMorphState CvFilterState
-
 
 #include "_cvipp.h"
 #include "_cvmatrix.h"

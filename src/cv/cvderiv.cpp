@@ -407,7 +407,7 @@ CvStatus CV_STDCALL icvSobel_8u16s_C1R( const uchar* pSrc, int srcStep,
                 {
                     int *trow1 = rows[origin*2], *trow2 = rows[(origin^1)*2];
 
-                    for( x = 0; x < width; x += CV_MORPH_ALIGN )
+                    for( x = 0; x < width; x += 4 )
                     {
                         int val0, val1;
                         val0 = trow2[x] - trow1[x];
@@ -425,7 +425,7 @@ CvStatus CV_STDCALL icvSobel_8u16s_C1R( const uchar* pSrc, int srcStep,
                 }
                 else
                 {
-                    for( x = 0; x < width; x += CV_MORPH_ALIGN )
+                    for( x = 0; x < width; x += 4 )
                     {
                         int val0, val1, val2, val3;
 
@@ -459,7 +459,7 @@ CvStatus CV_STDCALL icvSobel_8u16s_C1R( const uchar* pSrc, int srcStep,
                 {
                     int *trow1 = rows[0], *trow2 = rows[2];
 
-                    for( x = 0; x < width; x += CV_MORPH_ALIGN )
+                    for( x = 0; x < width; x += 4 )
                     {
                         int val0, val1;
                         val0 = trow[x]*2 + trow1[x] + trow2[x];
@@ -479,7 +479,7 @@ CvStatus CV_STDCALL icvSobel_8u16s_C1R( const uchar* pSrc, int srcStep,
                 {
                     int *trow1 = rows[0], *trow2 = rows[2];
 
-                    for( x = 0; x < width; x += CV_MORPH_ALIGN )
+                    for( x = 0; x < width; x += 4 )
                     {
                         int val0, val1;
                         val0 = trow[x]*10 + (trow1[x] + trow2[x])*3;
@@ -497,7 +497,7 @@ CvStatus CV_STDCALL icvSobel_8u16s_C1R( const uchar* pSrc, int srcStep,
                 }
                 else
                 {
-                    for( x = 0; x < width; x += CV_MORPH_ALIGN )
+                    for( x = 0; x < width; x += 4 )
                     {
                         int val0, val1, val2, val3;
 
@@ -767,7 +767,7 @@ CvStatus CV_STDCALL icvSobel_32f_C1R( const float* pSrc, int srcStep,
                 {
                     float *trow1 = rows[origin*2], *trow2 = rows[(origin^1)*2];
 
-                    for( x = 0; x < width; x += CV_MORPH_ALIGN )
+                    for( x = 0; x < width; x += 4 )
                     {
                         float val0, val1;
                         val0 = trow2[x] - trow1[x];
@@ -785,7 +785,7 @@ CvStatus CV_STDCALL icvSobel_32f_C1R( const float* pSrc, int srcStep,
                 }
                 else
                 {
-                    for( x = 0; x < width; x += CV_MORPH_ALIGN )
+                    for( x = 0; x < width; x += 4 )
                     {
                         float val0, val1, val2, val3;
 
@@ -819,7 +819,7 @@ CvStatus CV_STDCALL icvSobel_32f_C1R( const float* pSrc, int srcStep,
                 {
                     float *trow1 = rows[0], *trow2 = rows[2];
 
-                    for( x = 0; x < width; x += CV_MORPH_ALIGN )
+                    for( x = 0; x < width; x += 4 )
                     {
                         float val0, val1;
                         val0 = trow[x]*2 + trow1[x] + trow2[x];
@@ -839,7 +839,7 @@ CvStatus CV_STDCALL icvSobel_32f_C1R( const float* pSrc, int srcStep,
                 {
                     float *trow1 = rows[0], *trow2 = rows[2];
 
-                    for( x = 0; x < width; x += CV_MORPH_ALIGN )
+                    for( x = 0; x < width; x += 4 )
                     {
                         float val0, val1;
                         val0 = trow[x]*10 + (trow1[x] + trow2[x])*3;
@@ -857,7 +857,7 @@ CvStatus CV_STDCALL icvSobel_32f_C1R( const float* pSrc, int srcStep,
                 }
                 else
                 {
-                    for( x = 0; x < width; x += CV_MORPH_ALIGN )
+                    for( x = 0; x < width; x += 4 )
                     {
                         float val0, val1, val2, val3;
 
@@ -1194,7 +1194,7 @@ icvLaplace_8u16s_C1R( const uchar* pSrc, int srcStep,
 
             if( y_type == ICV_1_2_1_KERNEL )
             {
-                for( x = 0; x < width; x += CV_MORPH_ALIGN )
+                for( x = 0; x < width; x += 4 )
                 {
                     int val0, val1;
                     val0 = trow[x]*2 + trow1[x] + trow2[x] -
@@ -1216,7 +1216,7 @@ icvLaplace_8u16s_C1R( const uchar* pSrc, int srcStep,
             }
             else
             {
-                for( x = 0; x < width; x += CV_MORPH_ALIGN )
+                for( x = 0; x < width; x += 4 )
                 {
                     int val0, val1;
                     val0 = trow[x] -
@@ -1241,7 +1241,7 @@ icvLaplace_8u16s_C1R( const uchar* pSrc, int srcStep,
         {
             int *trow0 = rows[0], *trow1 = rows[1], *trow3 = rows[3], *trow4 = rows[4];
 
-            for( x = 0; x < width; x += CV_MORPH_ALIGN )
+            for( x = 0; x < width; x += 4 )
             {
                 int val0, val1;
                 val0 = trow0[x] + trow4[x] + (trow1[x] + trow3[x])*4 + trow[x]*6 +
@@ -1263,7 +1263,7 @@ icvLaplace_8u16s_C1R( const uchar* pSrc, int srcStep,
         }
         else
         {
-            for( x = 0; x < width; x += CV_MORPH_ALIGN )
+            for( x = 0; x < width; x += 4 )
             {
                 int val0, val1, val2, val3;
 
@@ -1523,7 +1523,7 @@ icvLaplace_32f_C1R( const float* pSrc, int srcStep,
 
             if( y_type == ICV_1_2_1_KERNEL )
             {
-                for( x = 0; x < width; x += CV_MORPH_ALIGN )
+                for( x = 0; x < width; x += 4 )
                 {
                     float val0, val1;
                     val0 = trow[x]*2 + trow1[x] + trow2[x] -
@@ -1545,7 +1545,7 @@ icvLaplace_32f_C1R( const float* pSrc, int srcStep,
             }
             else
             {
-                for( x = 0; x < width; x += CV_MORPH_ALIGN )
+                for( x = 0; x < width; x += 4 )
                 {
                     float val0, val1;
                     val0 = trow[x] -
@@ -1570,7 +1570,7 @@ icvLaplace_32f_C1R( const float* pSrc, int srcStep,
         {
             float*trow0 = rows[0], *trow1 = rows[1], *trow3 = rows[3], *trow4 = rows[4];
 
-            for( x = 0; x < width; x += CV_MORPH_ALIGN )
+            for( x = 0; x < width; x += 4 )
             {
                 float val0, val1;
                 val0 = trow0[x] + trow4[x] + (trow1[x] + trow3[x])*4 + trow[x]*6 +
@@ -1592,7 +1592,7 @@ icvLaplace_32f_C1R( const float* pSrc, int srcStep,
         }
         else
         {
-            for( x = 0; x < width; x += CV_MORPH_ALIGN )
+            for( x = 0; x < width; x += 4 )
             {
                 float val0, val1, val2, val3;
 
@@ -1733,11 +1733,41 @@ ICV_DEF_INIT_DERIV_TAB( Sobel )
 ICV_DEF_INIT_DERIV_TAB( Scharr )
 ICV_DEF_INIT_DERIV_TAB( Laplace )
 
+
+////////////////////////////////// IPP derivative filters ////////////////////////////////
+
+icvFilterSobelVert_8u16s_C1R_t icvFilterSobelVert_8u16s_C1R_p = 0;
+icvFilterSobelHoriz_8u16s_C1R_t icvFilterSobelHoriz_8u16s_C1R_p = 0;
+icvFilterSobelVertSecond_8u16s_C1R_t icvFilterSobelVertSecond_8u16s_C1R_p = 0;
+icvFilterSobelHorizSecond_8u16s_C1R_t icvFilterSobelHorizSecond_8u16s_C1R_p = 0;
+icvFilterSobelCross_8u16s_C1R_t icvFilterSobelCross_8u16s_C1R_p = 0;
+
+icvFilterSobelVert_32f_C1R_t icvFilterSobelVert_32f_C1R_p = 0;
+icvFilterSobelHoriz_32f_C1R_t icvFilterSobelHoriz_32f_C1R_p = 0;
+icvFilterSobelVertSecond_32f_C1R_t icvFilterSobelVertSecond_32f_C1R_p = 0;
+icvFilterSobelHorizSecond_32f_C1R_t icvFilterSobelHorizSecond_32f_C1R_p = 0;
+icvFilterSobelCross_32f_C1R_t icvFilterSobelCross_32f_C1R_p = 0;
+
+icvFilterScharrVert_8u16s_C1R_t icvFilterScharrVert_8u16s_C1R_p = 0;
+icvFilterScharrHoriz_8u16s_C1R_t icvFilterScharrHoriz_8u16s_C1R_p = 0;
+icvFilterScharrVert_32f_C1R_t icvFilterScharrVert_32f_C1R_p = 0;
+icvFilterScharrHoriz_32f_C1R_t icvFilterScharrHoriz_32f_C1R_p = 0;
+
+typedef CvStatus (CV_STDCALL * CvSobelFixedIPPFunc)
+( const void* src, int srcstep, void* dst, int dststep, CvSize roi, int aperture );
+
+typedef CvStatus (CV_STDCALL * CvFilterFixedIPPFunc)
+( const void* src, int srcstep, void* dst, int dststep, CvSize roi );
+
+//////////////////////////////////////////////////////////////////////////////////////////
+
+
 CV_IMPL void
 cvSobel( const void* srcarr, void* dstarr, int dx, int dy, int aperture_size )
 {
     static CvFuncTable sobel_tab, scharr_tab;
     static int inittab = 0;
+    CvMat* temp = 0;
 
     CvFilterState *state = 0;
     CV_FUNCNAME( "cvSobel" );
@@ -1763,35 +1793,107 @@ cvSobel( const void* srcarr, void* dstarr, int dx, int dy, int aperture_size )
     CV_CALL( dst = cvGetMat( dst, &dststub ));
 
     if( CV_IS_IMAGE_HDR( srcarr ))
-    {
         origin = ((IplImage*)srcarr)->origin;
-    }
 
     if( CV_MAT_CN( src->type ) != 1 || CV_MAT_CN( dst->type ) != 1 )
         CV_ERROR( CV_BadNumChannels, cvUnsupportedFormat );
 
-    if( CV_MAT_DEPTH( src->type ) <= CV_8S )
+    if( CV_MAT_DEPTH( src->type ) == CV_8U )
     {
         if( CV_MAT_DEPTH( dst->type ) != CV_16S )
-            CV_ERROR( CV_StsUnmatchedFormats, "Destination should have 16s format"
-                                              " when source has 8u or 8s format" );
+            CV_ERROR( CV_StsUnmatchedFormats,
+            "Destination array should be 16-bit signed when the source is 8-bit" );
     }
     else if( CV_MAT_DEPTH( src->type ) == CV_32F )
     {
         if( CV_MAT_DEPTH( dst->type ) != CV_32F )
-            CV_ERROR( CV_StsUnmatchedFormats, "Destination should have 16s format"
-                                              " when source has 8u or 8s format" );
+            CV_ERROR( CV_StsUnmatchedFormats,
+            "Destination array should be 32-bit floating point "
+            "when the source is 32-bit floating point" );
     }
     else
-    {
         CV_ERROR( CV_StsUnsupportedFormat, "Unsupported source array format" );
-    }
 
     depth = CV_MAT_DEPTH( src->type );
     datatype = icvDepthToDataType(depth);
 
     if( !CV_ARE_SIZES_EQ( src, dst ))
         CV_ERROR( CV_StsBadArg, "src and dst have different sizes" );
+
+    size = cvGetMatSize(src);
+
+    if( ((aperture_size == CV_SCHARR || aperture_size == 3 || aperture_size == 5) &&
+        dx <= 1 && dy <= 1 && icvFilterSobelVert_8u16s_C1R_p))
+    {
+        CvSobelFixedIPPFunc ipp_sobel_func = 0;
+        CvFilterFixedIPPFunc ipp_scharr_func = 0;
+
+        if( dx == 1 && dy == 0 && aperture_size == CV_SCHARR )
+            ipp_scharr_func = depth == CV_8U ?
+                icvFilterScharrVert_8u16s_C1R_p : icvFilterScharrVert_32f_C1R_p;
+        else if( dx == 0 && dy == 1 && aperture_size == CV_SCHARR )
+            ipp_scharr_func = depth == CV_8U ?
+                icvFilterScharrHoriz_8u16s_C1R_p : icvFilterScharrHoriz_32f_C1R_p;
+        else if( dx == 1 && dy == 0 )
+            ipp_sobel_func = depth == CV_8U ?
+                icvFilterSobelVert_8u16s_C1R_p : icvFilterSobelVert_32f_C1R_p;
+        else if( dx == 0 && dy == 1 )
+            ipp_sobel_func = depth == CV_8U ?
+                icvFilterSobelHoriz_8u16s_C1R_p : icvFilterSobelHoriz_32f_C1R_p;
+        else if( dx == 2 && dy == 0 )
+            ipp_sobel_func = depth == CV_8U ?
+                icvFilterSobelVertSecond_8u16s_C1R_p : icvFilterSobelVertSecond_32f_C1R_p;
+        else if( dx == 1 && dy == 1 )
+            ipp_sobel_func = depth == CV_8U ?
+                icvFilterSobelCross_8u16s_C1R_p : icvFilterSobelCross_32f_C1R_p;
+        else if( dx == 0 && dy == 2 )
+            ipp_sobel_func = depth == CV_8U ?
+                icvFilterSobelHorizSecond_8u16s_C1R_p : icvFilterSobelHorizSecond_32f_C1R_p;
+
+        if( ipp_sobel_func || ipp_scharr_func )
+        {
+            int need_to_negate = (dx == 1 && aperture_size != CV_SCHARR) ^ ((dy == 1) && origin);
+            aperture_size = aperture_size == CV_SCHARR ? 3 : aperture_size;
+            CvSize el_size = { aperture_size, aperture_size };
+            CvPoint el_anchor = { aperture_size/2, aperture_size/2 };
+            int stripe_buf_size = 1 << 15; // the optimal value may depend on CPU cache,
+                                           // overhead of current IPP code etc.
+            const uchar* shifted_ptr;
+            int y, dy = 0;
+            int temp_step;
+            int dst_step = dst->step ? dst->step : CV_STUB_STEP;
+            CvSize stripe_size;
+
+            CV_CALL( temp = icvIPPFilterInit( src, stripe_buf_size, el_size ));
+            
+            shifted_ptr = temp->data.ptr +
+                el_anchor.y*temp->step + el_anchor.x*CV_ELEM_SIZE(depth);
+            temp_step = temp->step ? temp->step : CV_STUB_STEP;
+
+            for( y = 0; y < src->rows; y += dy )
+            {
+                dy = icvIPPFilterNextStripe( src, temp, y, el_size, el_anchor );
+                stripe_size.width = size.width;
+                stripe_size.height = dy;
+
+                if( ipp_sobel_func )
+                {
+                    IPPI_CALL( ipp_sobel_func( shifted_ptr, temp_step,
+                            dst->data.ptr + y*dst_step, dst_step,
+                            stripe_size, aperture_size*10 + aperture_size ));
+                }
+                else
+                {
+                    IPPI_CALL( ipp_scharr_func( shifted_ptr, temp_step,
+                            dst->data.ptr + y*dst_step, dst_step, stripe_size ));
+                }
+            }
+
+            if( need_to_negate )
+                cvSubRS( dst, cvScalarAll(0), dst );
+            EXIT;
+        }
+    }
 
     if( aperture_size == CV_SCHARR )
     {
@@ -1808,12 +1910,12 @@ cvSobel( const void* srcarr, void* dstarr, int dx, int dy, int aperture_size )
     if( !func )
         CV_ERROR( CV_StsUnsupportedFormat, "" );
 
-    size = cvGetMatSize(src);
     IPPI_CALL( func( src->data.ptr, src->step, dst->data.ptr,
                      dst->step, &size, state, 0 ));
 
     __END__;
 
+    cvReleaseMat( &temp );
     icvFilterFree( &state );
 }
 
@@ -1848,7 +1950,7 @@ cvLaplace( const void* srcarr, void* dstarr, int aperture_size )
     if( CV_MAT_CN( src->type ) != 1 || CV_MAT_CN( dst->type ) != 1 )
         CV_ERROR( CV_BadNumChannels, cvUnsupportedFormat );
 
-    if( CV_MAT_DEPTH( src->type ) <= CV_8S )
+    if( CV_MAT_DEPTH( src->type ) == CV_8U )
     {
         if( CV_MAT_DEPTH( dst->type ) != CV_16S )
             CV_ERROR( CV_StsUnmatchedFormats, "Destination should have 16s format"

@@ -450,7 +450,7 @@ static int icvComputeFundamental7Point(CvMat* points1, CvMat* points2, CvMat* fu
         {
             CvMat subFund;
             cvGetSubArr( fundMatr, &subFund, cvRect(0,i*3,3,3) );
-            cvmScale(&subFund,&subFund,1.0/fsc);
+            cvScale(&subFund,&subFund,1.0/fsc);
         }
     }
 
@@ -632,8 +632,8 @@ static int icvComputeFundamental8Point(CvMat* points1,CvMat* points2, CvMat* fun
 
             cvTranspose(&transfMatr[0],&tmptransfMatr);
         
-            cvmMul(&tmptransfMatr,preFundMatr,&tmpMatr);
-            cvmMul(&tmpMatr,&transfMatr[1],&wfundMatr);
+            cvMatMul(&tmptransfMatr,preFundMatr,&tmpMatr);
+            cvMatMul(&tmpMatr,&transfMatr[1],&wfundMatr);
         }
 
         /* scale fundamental matrix */
@@ -641,7 +641,7 @@ static int icvComputeFundamental8Point(CvMat* points1,CvMat* points2, CvMat* fun
         fsc = cvmGet(&wfundMatr,2,2);
         if( fabs(fsc) > 1.0e-8 )
         {
-            cvmScale(&wfundMatr,&wfundMatr,1.0/fsc);
+            cvScale(&wfundMatr,&wfundMatr,1.0/fsc);
         }
     
         /* copy result fundamental matrix */
@@ -1419,8 +1419,8 @@ static void icvMakeFundamentalSingular(CvMat* fundMatr)
         cvmSet(&matrFW,2,2,0);
         /* multiply U*W*V' */
 
-        cvmMul(&matrFU,&matrFW,&tmpMatr);
-        cvmMul(&tmpMatr,&matrFVt,&preFundMatr);
+        cvMatMul(&matrFU,&matrFW,&tmpMatr);
+        cvMatMul(&tmpMatr,&matrFVt,&preFundMatr);
         cvConvert(&preFundMatr,fundMatr);
     }
     
@@ -1991,7 +1991,7 @@ cvComputeCorrespondEpilines(const CvMat* points,int pointImageID,const CvMat* fu
     /* if points has 2 coordinates trandform them to 3D */
     icvMake3DPoints(points,wpoints);
 
-    cvmMul(&wfundMatr,wpoints,wcorrLines);
+    cvMatMul(&wfundMatr,wpoints,wcorrLines);
 
     /* normalise line coordinates */
     int i;

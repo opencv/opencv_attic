@@ -583,6 +583,25 @@ typedef CvStatus (CV_STDCALL * CvResizeAreaFunc)
                       int xofs_count, float* buf, float* sum );
 
 
+////////////////////////////////// IPP resize functions //////////////////////////////////
+
+icvResize_8u_C1R_t icvResize_8u_C1R_p = 0;
+icvResize_8u_C3R_t icvResize_8u_C3R_p = 0;
+icvResize_8u_C4R_t icvResize_8u_C4R_p = 0;
+icvResize_16u_C1R_t icvResize_16u_C1R_p = 0;
+icvResize_16u_C3R_t icvResize_16u_C3R_p = 0;
+icvResize_16u_C4R_t icvResize_16u_C4R_p = 0;
+icvResize_32f_C1R_t icvResize_32f_C1R_p = 0;
+icvResize_32f_C3R_t icvResize_32f_C3R_p = 0;
+icvResize_32f_C4R_t icvResize_32f_C4R_p = 0;
+
+typedef CvStatus (CV_STDCALL * CvResizeIPPFunc)
+( const void* src, CvSize srcsize, int srcstep, CvRect srcroi,
+  void* dst, int dststep, CvSize dstroi,
+  double xfactor, double yfactor, int interpolation );
+
+//////////////////////////////////////////////////////////////////////////////////////////
+
 CV_IMPL void
 cvResize( const CvArr* srcarr, CvArr* dstarr, int method )
 {
@@ -599,7 +618,7 @@ cvResize( const CvArr* srcarr, CvArr* dstarr, int method )
     CvSize ssize, dsize;
     float scale_x, scale_y;
     int k, sx, sy, dx, dy;
-    int depth, cn;
+    int type, depth, cn;
     
     CV_CALL( src = cvGetMat( srcarr, &srcstub ));
     CV_CALL( dst = cvGetMat( dstarr, &dststub ));
@@ -618,10 +637,35 @@ cvResize( const CvArr* srcarr, CvArr* dstarr, int method )
 
     ssize = cvGetMatSize( src );
     dsize = cvGetMatSize( dst );
-    depth = CV_MAT_DEPTH(src->type);
-    cn = CV_MAT_CN(src->type);
+    type = CV_MAT_TYPE(src->type);
+    depth = CV_MAT_DEPTH(type);
+    cn = CV_MAT_CN(type);
     scale_x = (float)ssize.width/dsize.width;
     scale_y = (float)ssize.height/dsize.height;
+
+    if( icvResize_8u_C1R_p )
+    {
+        CvResizeIPPFunc ipp_func =
+            type == CV_8UC1 ? icvResize_8u_C1R_p :
+            type == CV_8UC3 ? icvResize_8u_C3R_p :
+            type == CV_8UC4 ? icvResize_8u_C4R_p :
+            type == CV_16UC1 ? icvResize_16u_C1R_p :
+            type == CV_16UC3 ? icvResize_16u_C3R_p :
+            type == CV_16UC4 ? icvResize_16u_C4R_p :
+            type == CV_32FC1 ? icvResize_32f_C1R_p :
+            type == CV_32FC3 ? icvResize_32f_C3R_p :
+            type == CV_32FC4 ? icvResize_32f_C4R_p : 0;
+        if( ipp_func && CV_INTER_NN < method && method <= CV_INTER_AREA )
+        {
+            int srcstep = src->step ? src->step : CV_STUB_STEP;
+            int dststep = dst->step ? dst->step : CV_STUB_STEP;
+            IPPI_CALL( ipp_func( src->data.ptr, ssize, srcstep,
+                                 cvRect(0,0,ssize.width,ssize.height),
+                                 dst->data.ptr, dststep, dsize,
+                                 1./scale_x, 1./scale_y, 1 << method ));
+            EXIT;
+        }
+    }
 
     if( method == CV_INTER_NN )
     {
@@ -976,6 +1020,22 @@ static void icvInitWarpAffineTab( CvFuncTable* bilin_tab )
 }
 
 
+/////////////////////////////// IPP warpaffine functions /////////////////////////////////
+
+icvWarpAffineBack_8u_C1R_t icvWarpAffineBack_8u_C1R_p = 0;
+icvWarpAffineBack_8u_C3R_t icvWarpAffineBack_8u_C3R_p = 0;
+icvWarpAffineBack_8u_C4R_t icvWarpAffineBack_8u_C4R_p = 0;
+icvWarpAffineBack_32f_C1R_t icvWarpAffineBack_32f_C1R_p = 0;
+icvWarpAffineBack_32f_C3R_t icvWarpAffineBack_32f_C3R_p = 0;
+icvWarpAffineBack_32f_C4R_t icvWarpAffineBack_32f_C4R_p = 0;
+
+typedef CvStatus (CV_STDCALL * CvWarpAffineBackIPPFunc)
+( const void* src, CvSize srcsize, int srcstep, CvRect srcroi,
+  void* dst, int dststep, CvRect dstroi,
+  const double* coeffs, int interpolation );
+
+//////////////////////////////////////////////////////////////////////////////////////////
+
 CV_IMPL void
 cvWarpAffine( const CvArr* srcarr, CvArr* dstarr, const CvMat* matrix,
               int flags, CvScalar fillval )
@@ -989,9 +1049,10 @@ cvWarpAffine( const CvArr* srcarr, CvArr* dstarr, const CvMat* matrix,
     
     CvMat srcstub, *src = (CvMat*)srcarr;
     CvMat dststub, *dst = (CvMat*)dstarr;
-    int k, depth, cn, *ofs = 0;
+    int k, type, depth, cn, *ofs = 0;
     double src_matrix[6], dst_matrix[6];
     double fillbuf[4];
+    int method = flags & 3;
     CvMat srcAb = cvMat( 2, 3, CV_64F, src_matrix ),
           dstAb = cvMat( 2, 3, CV_64F, dst_matrix ),
           A, b, invA, invAb;
@@ -1029,8 +1090,40 @@ cvWarpAffine( const CvArr* srcarr, CvArr* dstarr, const CvMat* matrix,
         cvGEMM( &invA, &b, -1, 0, 0, &invAb );
     }
 
-    depth = CV_MAT_DEPTH(src->type);
-    cn = CV_MAT_CN(src->type);
+    type = CV_MAT_TYPE(src->type);
+    depth = CV_MAT_DEPTH(type);
+    cn = CV_MAT_CN(type);
+
+    ssize = cvGetMatSize(src);
+    dsize = cvGetMatSize(dst);
+
+    if( icvWarpAffineBack_8u_C1R_p )
+    {
+        CvWarpAffineBackIPPFunc ipp_func =
+            type == CV_8UC1 ? icvWarpAffineBack_8u_C1R_p :
+            type == CV_8UC3 ? icvWarpAffineBack_8u_C3R_p :
+            type == CV_8UC4 ? icvWarpAffineBack_8u_C4R_p :
+            type == CV_32FC1 ? icvWarpAffineBack_32f_C1R_p :
+            type == CV_32FC3 ? icvWarpAffineBack_32f_C3R_p :
+            type == CV_32FC4 ? icvWarpAffineBack_32f_C4R_p : 0;
+        
+        if( ipp_func && CV_INTER_NN <= method && method <= CV_INTER_AREA )
+        {
+            int srcstep = src->step ? src->step : CV_STUB_STEP;
+            int dststep = dst->step ? dst->step : CV_STUB_STEP;
+            CvRect srcroi = {0, 0, ssize.width, ssize.height};
+            CvRect dstroi = {0, 0, dsize.width, dsize.height};
+
+            // this is not the most efficient way to fill outliers
+            if( flags & CV_WARP_FILL_OUTLIERS )
+                cvSet( dst, fillval );
+
+            IPPI_CALL( ipp_func( src->data.ptr, ssize, srcstep, srcroi,
+                                 dst->data.ptr, dststep, dstroi,
+                                 dstAb.data.db, 1 << method ));
+            EXIT;
+        }
+    }
 
     cvScalarToRawData( &fillval, fillbuf, CV_MAT_TYPE(src->type), 0 );
     ofs = (int*)cvStackAlloc( dst->cols*2*sizeof(ofs[0]) );
@@ -1039,9 +1132,6 @@ cvWarpAffine( const CvArr* srcarr, CvArr* dstarr, const CvMat* matrix,
         ofs[2*k] = CV_FLT_TO_FIX( dst_matrix[0]*k, ICV_WARP_SHIFT );
         ofs[2*k+1] = CV_FLT_TO_FIX( dst_matrix[3]*k, ICV_WARP_SHIFT );
     }
-
-    ssize = cvGetMatSize(src);
-    dsize = cvGetMatSize(dst);
 
     /*if( method == CV_INTER_LINEAR )*/
     {
@@ -1196,6 +1286,22 @@ static void icvInitWarpPerspectiveTab( CvFuncTable* bilin_tab )
 }
 
 
+/////////////////////////// IPP warpperspective functions ////////////////////////////////
+
+icvWarpPerspectiveBack_8u_C1R_t icvWarpPerspectiveBack_8u_C1R_p = 0;
+icvWarpPerspectiveBack_8u_C3R_t icvWarpPerspectiveBack_8u_C3R_p = 0;
+icvWarpPerspectiveBack_8u_C4R_t icvWarpPerspectiveBack_8u_C4R_p = 0;
+icvWarpPerspectiveBack_32f_C1R_t icvWarpPerspectiveBack_32f_C1R_p = 0;
+icvWarpPerspectiveBack_32f_C3R_t icvWarpPerspectiveBack_32f_C3R_p = 0;
+icvWarpPerspectiveBack_32f_C4R_t icvWarpPerspectiveBack_32f_C4R_p = 0;
+
+typedef CvStatus (CV_STDCALL * CvWarpPerspectiveBackIPPFunc)
+( const void* src, CvSize srcsize, int srcstep, CvRect srcroi,
+  void* dst, int dststep, CvRect dstroi,
+  const double* coeffs, int interpolation );
+
+//////////////////////////////////////////////////////////////////////////////////////////
+
 CV_IMPL void
 cvWarpPerspective( const CvArr* srcarr, CvArr* dstarr,
                    const CvMat* matrix, int flags, CvScalar fillval )
@@ -1209,13 +1315,17 @@ cvWarpPerspective( const CvArr* srcarr, CvArr* dstarr,
     
     CvMat srcstub, *src = (CvMat*)srcarr;
     CvMat dststub, *dst = (CvMat*)dstarr;
-    int depth, cn;
+    int type, depth, cn;
+    int method = flags & 3;
     double src_matrix[9], dst_matrix[9];
     double fillbuf[4];
     CvMat A = cvMat( 3, 3, CV_64F, src_matrix ),
           invA = cvMat( 3, 3, CV_64F, dst_matrix );
     CvWarpPerspectiveFunc func;
     CvSize ssize, dsize;
+
+    if( method == CV_INTER_NN || method == CV_INTER_AREA )
+        method = CV_INTER_LINEAR;
     
     if( !inittab )
     {
@@ -1232,7 +1342,7 @@ cvWarpPerspective( const CvArr* srcarr, CvArr* dstarr,
     if( !CV_IS_MAT(matrix) || CV_MAT_CN(matrix->type) != 1 ||
         CV_MAT_DEPTH(matrix->type) < CV_32F || matrix->rows != 3 || matrix->cols != 3 )
         CV_ERROR( CV_StsBadArg,
-        "Transformation matrix should be 2x3 floating-point single-channel matrix" );
+        "Transformation matrix should be 3x3 floating-point single-channel matrix" );
 
     if( flags & CV_WARP_INVERSE_MAP )
         cvConvertScale( matrix, &invA );
@@ -1242,12 +1352,44 @@ cvWarpPerspective( const CvArr* srcarr, CvArr* dstarr,
         cvInvert( &A, &invA, CV_SVD );
     }
 
-    depth = CV_MAT_DEPTH(src->type);
-    cn = CV_MAT_CN(src->type);
-    cvScalarToRawData( &fillval, fillbuf, CV_MAT_TYPE(src->type), 0 );
-
+    type = CV_MAT_TYPE(src->type);
+    depth = CV_MAT_DEPTH(type);
+    cn = CV_MAT_CN(type);
+    
     ssize = cvGetMatSize(src);
     dsize = cvGetMatSize(dst);
+    
+    if( icvWarpPerspectiveBack_8u_C1R_p )
+    {
+        CvWarpPerspectiveBackIPPFunc ipp_func =
+            type == CV_8UC1 ? icvWarpPerspectiveBack_8u_C1R_p :
+            type == CV_8UC3 ? icvWarpPerspectiveBack_8u_C3R_p :
+            type == CV_8UC4 ? icvWarpPerspectiveBack_8u_C4R_p :
+            type == CV_32FC1 ? icvWarpPerspectiveBack_32f_C1R_p :
+            type == CV_32FC3 ? icvWarpPerspectiveBack_32f_C3R_p :
+            type == CV_32FC4 ? icvWarpPerspectiveBack_32f_C4R_p : 0;
+        
+        if( ipp_func && CV_INTER_NN <= method && method <= CV_INTER_AREA )
+        {
+            int srcstep = src->step ? src->step : CV_STUB_STEP;
+            int dststep = dst->step ? dst->step : CV_STUB_STEP;
+            CvStatus status;
+            CvRect srcroi = {0, 0, ssize.width, ssize.height};
+            CvRect dstroi = {0, 0, dsize.width, dsize.height};
+
+            // this is not the most efficient way to fill outliers
+            if( flags & CV_WARP_FILL_OUTLIERS )
+                cvSet( dst, fillval );
+
+            status = ipp_func( src->data.ptr, ssize, srcstep, srcroi,
+                               dst->data.ptr, dststep, dstroi,
+                               invA.data.db, 1 << method );
+            if( status >= 0 )
+                EXIT;
+        }
+    }
+
+    cvScalarToRawData( &fillval, fillbuf, CV_MAT_TYPE(src->type), 0 );
 
     /*if( method == CV_INTER_LINEAR )*/
     {
@@ -1327,7 +1469,6 @@ cvWarpPerspectiveQMatrix( const CvPoint2D32f* src,
     cvSolve( &A, &B, &X, CV_SVD );
     x[8] = 1;
     
-    X = cvMat( 3, 3, CV_64F, x );
     cvConvert( &X, matrix );
 
     __END__;

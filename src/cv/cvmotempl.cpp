@@ -41,26 +41,6 @@
 
 #include "_cv.h"
 
-/*F///////////////////////////////////////////////////////////////////////////////////////
-//    Name:    icvUpdateMHIByTime32fC1R
-//    Purpose: The function updates motion history image.
-//    Context:
-//    Parameters:
-//        silIm         - silhouette image
-//        silStep       - its step
-//        mhiIm         - motion history image
-//        mhiStep       - its step
-//        size          - size of both images (in pixels)
-//        timestamp     - current system time (in seconds)
-//        mhi_duration  - maximal duration of motion track before it will
-//                        be removed (in seconds too)
-//    Returns:
-//        CV_OK or error code:
-//           CV_NULLPTR_ERR - silIm or mhiIm pointer are null
-//           CV_BADSIZE_ERR   - width or height is negative or steps less than width
-//           CV_BADFACTOR_ERR - mhi_duration is non positive
-//    Notes:
-//F*/
 IPCVAPI_IMPL( CvStatus, icvUpdateMotionHistory_8u32f_C1IR,
     (const uchar * silIm, int silStep, float *mhiIm, int mhiStep,
      CvSize size, float timestamp, float mhi_duration),
@@ -130,332 +110,6 @@ IPCVAPI_IMPL( CvStatus, icvUpdateMotionHistory_8u32f_C1IR,
 }
 
 
-/*F///////////////////////////////////////////////////////////////////////////////////////
-//    Name:    icvCalcMotionGradient32fC1R
-//    Purpose: The functions calculates motion gradient and mask where it is valid
-//    Context:
-//    Parameters:
-//       mhi         - motion history image
-//       mhiStep     - its step
-//       mask        - mask(out): indicates where <orient> data is valid
-//       maskStep    - its step
-//       orient      - image containing gradient orientation(out) (in degrees)
-//       orientStep  - its step
-//       size        - size of the all images in pixels
-//       aperture_size - size of the filters for Dx & Dy
-//       maxTDelta   - gradient bounds.
-//       minTDelta   _/
-//       origin      - 0 - image data start from geometrical top (y coordinate increases)
-//                     1 - image data start from geometrical bottom (y decreases)
-//    Returns:
-//        CV_OK or error code:
-//        CV_NULLPTR_ERR - orient or mask or mhi pointers are null
-//        CV_BADSIZE_ERR   - width or height is negative or steps less than width
-//        CV_BADFACTOR_ERR - if sobel_order parameter is invalid (<2 or >8 or uneven) or
-//                            minDelta >= maxDelta.
-//    Notes:
-//F*/
-static CvStatus
-icvCalcMotionGradient32fC1R( float *mhi, int mhiStep,
-                             uchar * mask, int maskStep,
-                             float *orient, int orientStep,
-                             CvSize roi, int apertureSize,
-                             float maxTDelta, float minTDelta, int origin )
-{
-    float gradientEps = 1e-4f * apertureSize;
-    int iGradientEps = (int &) gradientEps;
-    int iMinDelta = *(int *) &minTDelta;
-    int iMaxDelta = *(int *) &maxTDelta;
-    int x, y;
-    CvMorphState *morph_filter;
-    float *drvX_min;
-    float *drvY_max;
-    int tempStep;
-    int tempSize;
-    _CvConvState *pX;
-    _CvConvState *pY;
-
-    CvStatus result = CV_OK;
-
-    /* check parameters */
-    if( !orient || !mask || !mhi )
-        return CV_NULLPTR_ERR;
-
-    if( orient == mhi )
-        return CV_INPLACE_NOT_SUPPORTED_ERR;
-
-    if( roi.height <= 0 || roi.width <= 0 || orientStep < roi.width * 4 ||
-        maskStep < roi.width || mhiStep < roi.width * 4 )
-        return CV_BADSIZE_ERR;
-    if( ((mhiStep | orientStep) & 3) != 0 )
-        return CV_BADSIZE_ERR;
-
-    tempStep = cvAlign(roi.width,2) * sizeof( float );
-
-    tempSize = tempStep * roi.height;
-
-    drvX_min = (float *) cvAlloc( tempSize );
-    drvY_max = (float *) cvAlloc( tempSize );
-    if( !drvX_min || !drvY_max )
-    {
-        result = CV_OUTOFMEM_ERR;
-        goto func_exit;
-    }
-
-    {
-    CvSize element_size = { apertureSize, apertureSize };
-    CvPoint element_anchor = { apertureSize/2, apertureSize/2 };
-    icvMorphologyInitAlloc( roi.width, cv32f, 1, element_size, element_anchor,
-                            CV_SHAPE_RECT, 0, &morph_filter );
-    }
-
-    /* calc Dx and Dy */
-    icvSobelInitAlloc( roi.width, cv32f, apertureSize, origin, 1, 0, &pX );
-    result = icvSobel_32f_C1R( mhi, mhiStep, drvX_min, tempStep, &roi, pX, 0 );
-    icvFilterFree( &pX );
-
-    if( result < 0 )
-        goto func_exit;
-    icvSobelInitAlloc( roi.width, cv32f, apertureSize, origin, 0, 1, &pY );
-    result = icvSobel_32f_C1R( mhi, mhiStep, drvY_max, tempStep, &roi, pY, 0 );
-    icvFilterFree( &pY );
-
-    if( result < 0 )
-        goto func_exit;
-
-    /* calc gradient */
-    for( y = 0; y < roi.height; y++, drvX_min += tempStep / sizeof( float ),
-         drvY_max += tempStep / sizeof( float ), orient += orientStep / sizeof( float ))
-    {
-        cvbFastArctan( drvY_max, drvX_min, orient, roi.width );
-
-        /* make orientation zero where the gradient is very small */
-        for( x = 0; x < roi.width; x++ )
-        {
-            int dY = ((int *) drvY_max)[x] & 0x7fffffff;
-            int dX = ((int *) drvX_min)[x] & 0x7fffffff;
-
-            ((int *) orient)[x] &= ((dX < iGradientEps) && (dY < iGradientEps)) - 1;
-        }
-    }
-
-    drvX_min -= tempSize / sizeof( float );
-    drvY_max -= tempSize / sizeof( float );
-    orient -= (orientStep / sizeof( float )) * roi.height;
-
-    result = icvErodeStrip_Rect_32f_C1R( (int*)mhi, mhiStep, (int*)drvX_min, tempStep,
-                                         &roi, morph_filter, 0 );
-    if( result < 0 )
-        goto func_exit;
-
-    result = icvDilateStrip_Rect_32f_C1R( (int*)mhi, mhiStep, (int*)drvY_max, tempStep,
-                                           &roi, morph_filter, 0 );
-    if( result < 0 )
-        goto func_exit;
-
-    /* mask off pixels which have little motion difference in their neighborhood */
-    for( y = 0; y < roi.height; y++, drvX_min += tempStep / sizeof( float ),
-         drvY_max += tempStep / sizeof( float ),
-         orient += orientStep / sizeof( float ), mask += maskStep )
-    {
-        for( x = 0; x <= roi.width - 4; x += 4 )
-        {
-            float d0 = drvY_max[x] - drvX_min[x];
-            float d1 = drvY_max[x + 1] - drvX_min[x + 1];
-            float d2 = drvY_max[x + 2] - drvX_min[x + 2];
-            float d3 = drvY_max[x + 3] - drvX_min[x + 3];
-
-            mask[x] = (uchar) ((*(int *) &d0 >= iMinDelta) && (*(int *) &d0 <= iMaxDelta));
-            mask[x + 1] = (uchar) ((*(int *) &d1 >= iMinDelta) && (*(int *) &d1 <= iMaxDelta));
-            mask[x + 2] = (uchar) ((*(int *) &d2 >= iMinDelta) && (*(int *) &d2 <= iMaxDelta));
-            mask[x + 3] = (uchar) ((*(int *) &d3 >= iMinDelta) && (*(int *) &d3 <= iMaxDelta));
-            /*((int*)orient)[x] &= (mask[x] == 0) - 1;
-               ((int*)orient)[x + 1] &= (mask[x + 1] == 0) - 1;
-               ((int*)orient)[x + 2] &= (mask[x + 2] == 0) - 1;
-               ((int*)orient)[x + 3] &= (mask[x + 3] == 0) - 1; */
-        }
-
-        for( ; x < roi.width; x++ )
-        {
-            float delta = drvY_max[x] - drvX_min[x];
-
-            mask[x] = (uchar) ((delta >= minTDelta) && (delta <= maxTDelta));
-            /*((int*)orient)[x] &= (mask[x] == 0) - 1; */
-        }
-    }
-
-
-    drvX_min -= tempSize / sizeof( float );
-    drvY_max -= tempSize / sizeof( float );
-
-  func_exit:
-
-    icvMorphologyFree( &morph_filter );
-    cvFree( (void**)&drvX_min );
-    cvFree( (void**)&drvY_max );
-
-    return result;
-}
-
-
-/*F///////////////////////////////////////////////////////////////////////////////////////
-//    Name:    icvCalcGlobalOrientation32fC1R
-//    Purpose: The function calculates general motion direction in the selected region.
-//    Context:
-//    Parameters:
-//         orient             - orientation image
-//         orientStep         - its step
-//         mask               - region mask
-//         maskStep           - its step
-//         mhi                - motion history image
-//         mhiStep            - its step
-//         size               - size of the all images in pixels
-//         curr_mhi_timestamp - the last timestamp when mhi was updated
-//         mhi_duration       - maximal motion track duration.
-//         angle              - result: motion direction of the region
-//    Returns:
-//        CV_OK or error code:
-//           CV_NULLPTR_ERR - orient or mask or mhi pointers are null
-//           CV_BADSIZE_ERR   - width or height is negative or steps less than width
-//           CV_BADFACTOR_ERR - mhi_duration is non positive
-//    Notes:
-//F*/
-static CvStatus
-icvCalcGlobalOrientation32fC1R( float *orient, int orientStep,
-                                uchar * mask, int maskStep,
-                                float *mhi, int mhiStep,
-                                CvSize size,
-                                float curr_mhi_timestamp, float mhi_duration, float *angle )
-{
-#define _CV_MT2_HIST_SIZE  12
-    const double hist_scale = _CV_MT2_HIST_SIZE / 360.;
-    float delbound = curr_mhi_timestamp - mhi_duration;
-    int orient_hist[_CV_MT2_HIST_SIZE];
-    int y;
-    int base_orient = 0;
-
-    if( !orient || !mask || !mhi || !angle )
-        return CV_NULLPTR_ERR;
-
-    if( orient == mhi )
-        return CV_INPLACE_NOT_SUPPORTED_ERR;
-
-    if( size.height <= 0 || size.width <= 0 ||
-        orientStep < size.width * 4 || maskStep < size.width || mhiStep < size.width * 4 )
-        return CV_BADSIZE_ERR;
-    if( mhi_duration <= 0 )
-        return CV_BADFACTOR_ERR;
-
-    orientStep /= 4;
-    mhiStep /= 4;
-
-    memset( orient_hist, 0, sizeof( orient_hist ));
-
-    /* 1. Calc orientation histogram */
-    for( y = 0; y < size.height; y++ )
-    {
-        int x;
-
-        for( x = 0; x < size.width; x++ )
-            if( mask[x] != 0 )
-            {
-                int bin = cvRound( orient[x] * hist_scale );
-
-                bin = CV_IMAX( bin, 0 );
-                bin = CV_IMIN( bin, _CV_MT2_HIST_SIZE - 1 );
-                orient_hist[bin]++;
-            }
-        orient += orientStep;
-        mask += maskStep;
-    }
-
-    /* 2. find historgam maximum */
-    {
-        int max_bin_val = orient_hist[0];
-
-        for( y = 1; y < _CV_MT2_HIST_SIZE; y++ )
-        {
-            int bin_val = orient_hist[y];
-            int max_mask = (max_bin_val >= bin_val) - 1;
-
-            /*
-               if( !(max_bin_val > bin_val) )
-               max_bin_val = bin_val, base_orient = y;
-             */
-            max_bin_val ^= (max_bin_val ^ bin_val) & max_mask;
-            base_orient ^= (base_orient ^ y) & max_mask;
-        }
-
-        base_orient *= 30;
-    }
-
-
-    /* 3. find the shift as weighted sum of relative angles */
-    {
-        double shift_orient = 0, shift_weight = 0;
-        double a = (254. / 255.) / mhi_duration;
-        double b = 1. - curr_mhi_timestamp * a;
-        double fbase_orient = base_orient;
-
-        /*
-           a = 254/(255*dt)
-           b = 1 - t*a = 1 - 254*t/(255*dur) =
-           (255*dt - 254*t)/(255*dt) =
-           (dt - (t - dt)*254)/(255*dt);
-           --------------------------------------------------------
-           ax + b = 254*x/(255*dt) + (dt - (t - dt)*254)/(255*dt) =
-           (254*x + dt - (t - dt)*254)/(255*dt) =
-           ((x - (t - dt))*254 + dt)/(255*dt) =
-           (((x - (t - dt))/dt)*254 + 1)/255 = (((x - low_time)/dt)*254 + 1)/255
-         */
-
-        orient -= size.height * orientStep;
-        mask -= size.height * maskStep;
-
-        for( y = 0; y < size.height; y++ )
-        {
-            int x;
-
-            for( x = 0; x < size.width; x++ )
-                if( mask[x] != 0 && mhi[x] > delbound )
-                {
-                    /*
-                       orient in 0..360, base_orient in 0..360
-                       -> (rel_angle = orient - base_orient) in -360..360.
-                       rel_angle is translated to -180..180
-                     */
-                    double weight = mhi[x] * a + b;
-                    int rel_angle = cvRound( orient[x] - fbase_orient );
-
-                    rel_angle += (rel_angle < -180 ? 360 : 0);
-                    rel_angle += (rel_angle > 180 ? -360 : 0);
-                    shift_orient += weight * rel_angle;
-                    shift_weight += weight;
-                }
-
-            orient += orientStep;
-            mask += maskStep;
-            mhi += mhiStep;
-        }
-
-        /* 4. add base and shift orientations and normalize result */
-
-        /* set lowest mantissa's bit to avoid division by 0 */
-        *((int *) &shift_weight) |= 1;
-
-        base_orient = base_orient + cvRound( shift_orient / shift_weight );
-    }
-
-    base_orient -= (base_orient < 360 ? 0 : 360);
-    base_orient += (base_orient >= 0 ? 0 : 360);
-
-    *angle = (float) base_orient;
-    return CV_OK;
-
-#undef _CV_MT2_HIST_SIZE
-}
-
-
 /* motion templates */
 CV_IMPL void
 cvUpdateMotionHistory( const void* silhouette, void* mhimg,
@@ -505,19 +159,27 @@ cvUpdateMotionHistory( const void* silhouette, void* mhimg,
 
 
 CV_IMPL void
-cvCalcMotionGradient( const void* mhiimg, void* maskimg,
-                      void* orientation,
-                      double maxTDelta, double minTDelta,
-                      int apertureSize )
+cvCalcMotionGradient( const CvArr* mhiimg, CvArr* maskimg,
+                      CvArr* orientation,
+                      double delta1, double delta2,
+                      int aperture_size )
 {
-    CvSize  size;
-    CvMat  mhistub, *mhi = (CvMat*)mhiimg;
-    CvMat  maskstub, *mask = (CvMat*)maskimg;
-    CvMat  orientstub, *orient = (CvMat*)orientation;
+    CvMat *dX_min = 0, *dY_max = 0;
+    IplConvKernel* el = 0;
 
     CV_FUNCNAME( "cvCalcMotionGradient" );
 
     __BEGIN__;
+
+    CvMat  mhistub, *mhi = (CvMat*)mhiimg;
+    CvMat  maskstub, *mask = (CvMat*)maskimg;
+    CvMat  orientstub, *orient = (CvMat*)orientation;
+    CvMat  dX_min_row, dY_max_row, orient_row, mask_row;
+    CvSize size;
+    int x, y;
+
+    float  gradient_epsilon = 1e-4f * aperture_size;
+    float  min_delta, max_delta;
 
     CV_CALL( mhi = cvGetMat( mhi, &mhistub ));
     CV_CALL( mask = cvGetMat( mask, &maskstub ));
@@ -526,38 +188,82 @@ cvCalcMotionGradient( const void* mhiimg, void* maskimg,
     if( !CV_IS_MASK_ARR( mask ))
         CV_ERROR( CV_StsBadMask, "" );
 
-    if( apertureSize < 3 || apertureSize > 7 || (apertureSize & 1) == 0 )
-        CV_ERROR( CV_StsOutOfRange, "apertureSize must be 3, 5 or 7" );
+    if( aperture_size < 3 || aperture_size > 7 || (aperture_size & 1) == 0 )
+        CV_ERROR( CV_StsOutOfRange, "aperture_size must be 3, 5 or 7" );
 
-    if( minTDelta <= 0 || maxTDelta <= 0 )
+    if( delta1 <= 0 || delta2 <= 0 )
         CV_ERROR( CV_StsOutOfRange, "both delta's must be positive" );
 
-    if( CV_MAT_CN( mhi->type ) != 1 || CV_MAT_CN( orient->type ) != 1 )
-        CV_ERROR( CV_BadNumChannels, "" );
-
-    if( CV_MAT_DEPTH( mhi->type ) != CV_32F ||
-        CV_MAT_DEPTH( orient->type ) != CV_32F )
-        CV_ERROR( CV_BadDepth, "" );
+    if( CV_MAT_TYPE( mhi->type ) != CV_32FC1 || CV_MAT_TYPE( orient->type ) != CV_32FC1 )
+        CV_ERROR( CV_StsUnsupportedFormat,
+        "MHI and orientation must be single-channel floating-point images" );
 
     if( !CV_ARE_SIZES_EQ( mhi, mask ) || !CV_ARE_SIZES_EQ( orient, mhi ))
         CV_ERROR( CV_StsUnmatchedSizes, "" );
 
-    if( minTDelta > maxTDelta )
+    if( orient->data.ptr == mhi->data.ptr )
+        CV_ERROR( CV_StsInplaceNotSupported, "orientation image must be different from MHI" );
+
+    if( delta1 > delta2 )
     {
         double t;
-        CV_SWAP( minTDelta, maxTDelta, t );
+        CV_SWAP( delta1, delta2, t );
     }
 
     size = cvGetMatSize( mhi );
+    min_delta = (float)delta1;
+    max_delta = (float)delta2;
+    CV_CALL( dX_min = cvCreateMat( mhi->rows, mhi->cols, CV_32F ));
+    CV_CALL( dY_max = cvCreateMat( mhi->rows, mhi->cols, CV_32F ));
 
-    IPPI_CALL( icvCalcMotionGradient32fC1R( mhi->data.fl, mhi->step,
-                                            (uchar*)(mask->data.ptr), mask->step,
-                                            orient->data.fl, orient->step,
-                                            size, apertureSize,
-                                            (float) maxTDelta, (float) minTDelta,
-                                            CV_IS_IMAGE_HDR(orientation) ?
-                                            ((IplImage*)orientation)->origin : 0 ));
+    /* calc Dx and Dy */
+    CV_CALL( cvSobel( mhi, dX_min, 1, 0, aperture_size ));
+    CV_CALL( cvSobel( mhi, dY_max, 0, 1, aperture_size ));
+    cvGetRow( dX_min, &dX_min_row, 0 );
+    cvGetRow( dY_max, &dY_max_row, 0 );
+    cvGetRow( orient, &orient_row, 0 );
+    cvGetRow( mask, &mask_row, 0 );
+
+    /* calc gradient */
+    for( y = 0; y < size.height; y++ )
+    {
+        dX_min_row.data.ptr = dX_min->data.ptr + y*dX_min->step;
+        dY_max_row.data.ptr = dY_max->data.ptr + y*dY_max->step;
+        orient_row.data.ptr = orient->data.ptr + y*orient->step;
+        cvCartToPolar( &dX_min_row, &dY_max_row, 0, &orient_row, 1 );
+
+        /* make orientation zero where the gradient is very small */
+        for( x = 0; x < size.width; x++ )
+        {
+            float dY = dY_max_row.data.fl[x];
+            float dX = dX_min_row.data.fl[x];
+            orient_row.data.i[x] &= (fabs(dX) < gradient_epsilon && fabs(dY) < gradient_epsilon) - 1;
+        }
+    }
+
+    CV_CALL( el = cvCreateStructuringElementEx( aperture_size, aperture_size,
+                            aperture_size/2, aperture_size/2, CV_SHAPE_RECT ));
+    cvErode( mhi, dX_min, el );
+    cvDilate( mhi, dY_max, el );
+
+    /* mask off pixels which have little motion difference in their neighborhood */
+    for( y = 0; y < size.height; y++ )
+    {
+        dX_min_row.data.ptr = dX_min->data.ptr + y*dX_min->step;
+        dY_max_row.data.ptr = dY_max->data.ptr + y*dY_max->step;
+        mask_row.data.ptr = mask->data.ptr + y*mask->step;
+        for( x = 0; x < size.width; x++ )
+        {
+            float d0 = dY_max_row.data.fl[x] - dX_min_row.data.fl[x];
+            mask_row.data.ptr[x] = (uchar)(min_delta <= d0 && d0 <= max_delta);
+        }
+    }
+
     __END__;
+
+    cvReleaseMat( &dX_min );
+    cvReleaseMat( &dY_max );
+    cvReleaseStructuringElement( &el );
 }
 
 
@@ -565,16 +271,20 @@ CV_IMPL double
 cvCalcGlobalOrientation( const void* orientation, const void* maskimg, const void* mhiimg,
                          double curr_mhi_timestamp, double mhi_duration )
 {
-    CvSize  size;
-    float  angle = 0;
-    CvMat  mhistub, *mhi = (CvMat*)mhiimg;
-    CvMat  maskstub, *mask = (CvMat*)maskimg;
-    CvMat  orientstub, *orient = (CvMat*)orientation;
-    int  mhi_step, orient_step, mask_step;
+    double  angle = 0;
+    int hist_size = 12;
+    CvHistogram* hist = 0;
 
     CV_FUNCNAME( "cvCalcGlobalOrientation" );
 
     __BEGIN__;
+
+    CvMat  mhistub, *mhi = (CvMat*)mhiimg;
+    CvMat  maskstub, *mask = (CvMat*)maskimg;
+    CvMat  orientstub, *orient = (CvMat*)orientation;
+    float _ranges[] = { 0, 360 };
+    float* ranges = _ranges;
+    int base_orient;
 
     CV_CALL( mhi = cvGetMat( mhi, &mhistub ));
     CV_CALL( mask = cvGetMat( mask, &maskstub ));
@@ -583,34 +293,95 @@ cvCalcGlobalOrientation( const void* orientation, const void* maskimg, const voi
     if( !CV_IS_MASK_ARR( mask ))
         CV_ERROR( CV_StsBadMask, "" );
 
-    if( CV_MAT_CN( mhi->type ) != 1 || CV_MAT_CN( orient->type ) != 1 )
-        CV_ERROR( CV_BadNumChannels, "" );
-
-    if( CV_MAT_DEPTH( mhi->type ) != CV_32F ||
-        CV_MAT_DEPTH( orient->type ) != CV_32F )
-        CV_ERROR( CV_BadDepth, "" );
+    if( CV_MAT_TYPE( mhi->type ) != CV_32FC1 || CV_MAT_TYPE( orient->type ) != CV_32FC1 )
+        CV_ERROR( CV_StsUnsupportedFormat,
+        "MHI and orientation must be single-channel floating-point images" );
 
     if( !CV_ARE_SIZES_EQ( mhi, mask ) || !CV_ARE_SIZES_EQ( orient, mhi ))
         CV_ERROR( CV_StsUnmatchedSizes, "" );
 
-    size = cvGetMatSize( mhi );
+    if( mhi_duration <= 0 )
+        CV_ERROR( CV_StsOutOfRange, "MHI duration must be positive" );
 
-    mhi_step = mhi->step;
-    mask_step = mask->step;
-    orient_step = orient->step;
+    if( orient->data.ptr == mhi->data.ptr )
+        CV_ERROR( CV_StsInplaceNotSupported, "orientation image must be different from MHI" );
 
-    if( CV_IS_MAT_CONT( mhi->type & mask->type & orient->type ))
+    // calculate histogram of different orientation values
+    CV_CALL( hist = cvCreateHist( 1, &hist_size, CV_HIST_ARRAY, &ranges ));
+    cvCalcArrHist( (CvArr**)&orient, hist, 0, mask );
+
+    // find the maximum index (the dominant orientation)
+    cvGetMinMaxHistValue( hist, 0, 0, 0, &base_orient );
+    base_orient *= 360/hist_size;
+
+    // find the shift relative to the dominant orientation as weighted sum of relative angles
     {
-        size.width *= size.height;
-        mhi_step = mask_step = orient_step = CV_STUB_STEP;
-        size.height = 1;
+        double shift_orient = 0, shift_weight = 0;
+        double a = (254. / 255.) / mhi_duration;
+        double b = 1. - curr_mhi_timestamp * a;
+        double fbase_orient = base_orient;
+        float delbound = (float)(curr_mhi_timestamp - mhi_duration);
+        CvMat mhi_row, mask_row, orient_row;
+        int x, y;
+        CvSize size = cvGetMatSize( mhi );
+
+        if( CV_IS_MAT_CONT( mhi->type & mask->type & orient->type ))
+        {
+            size.width *= size.height;
+            size.height = 1;
+        }
+
+        cvGetRow( mhi, &mhi_row, 0 );
+        cvGetRow( mask, &mask_row, 0 );
+        cvGetRow( orient, &orient_row, 0 );
+
+        /*
+           a = 254/(255*dt)
+           b = 1 - t*a = 1 - 254*t/(255*dur) =
+           (255*dt - 254*t)/(255*dt) =
+           (dt - (t - dt)*254)/(255*dt);
+           --------------------------------------------------------
+           ax + b = 254*x/(255*dt) + (dt - (t - dt)*254)/(255*dt) =
+           (254*x + dt - (t - dt)*254)/(255*dt) =
+           ((x - (t - dt))*254 + dt)/(255*dt) =
+           (((x - (t - dt))/dt)*254 + 1)/255 = (((x - low_time)/dt)*254 + 1)/255
+         */
+        for( y = 0; y < size.height; y++ )
+        {
+            mhi_row.data.ptr = mhi->data.ptr + mhi->step*y;
+            mask_row.data.ptr = mask->data.ptr + mask->step*y;
+            orient_row.data.ptr = orient->data.ptr + orient->step*y;
+
+            for( x = 0; x < size.width; x++ )
+                if( mask_row.data.ptr[x] != 0 && mhi_row.data.fl[x] > delbound )
+                {
+                    /*
+                       orient in 0..360, base_orient in 0..360
+                       -> (rel_angle = orient - base_orient) in -360..360.
+                       rel_angle is translated to -180..180
+                     */
+                    double weight = mhi_row.data.fl[x] * a + b;
+                    int rel_angle = cvRound( orient_row.data.fl[x] - fbase_orient );
+
+                    rel_angle += (rel_angle < -180 ? 360 : 0);
+                    rel_angle += (rel_angle > 180 ? -360 : 0);
+                    shift_orient += weight * rel_angle;
+                    shift_weight += weight;
+                }
+        }
+
+        // add the dominant orientation and the relative shift
+        if( shift_weight == 0 )
+            shift_weight = 0.01;
+
+        base_orient = base_orient + cvRound( shift_orient / shift_weight );
     }
 
-    IPPI_CALL( icvCalcGlobalOrientation32fC1R( orient->data.fl, orient_step,
-                                               (uchar*)(mask->data.ptr), mask_step,
-                                               mhi->data.fl, mhi_step, size,
-                                               (float)curr_mhi_timestamp,
-                                               (float)mhi_duration, &angle ));
+    base_orient -= (base_orient < 360 ? 0 : 360);
+    base_orient += (base_orient >= 0 ? 0 : 360);
+
+    angle = base_orient;
+
     __END__;
 
     return angle;

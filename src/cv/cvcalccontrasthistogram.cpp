@@ -58,8 +58,9 @@ IPCVAPI(CvStatus, icvCalcContrastHistMask8uC1R, ( uchar** img, int step,
 //    Notes:      if dont_clear parameter is NULL then histogram clearing before
 //                calculating (all values sets to NULL)
 //F*/
-IPCVAPI_IMPL( CvStatus, icvCalcContrastHist8uC1R, (uchar ** img, int step, CvSize size,
-                                                   CvHistogram * hist, int dont_clear) )
+static CvStatus CV_STDCALL
+icvCalcContrastHist8uC1R( uchar** img, int step, CvSize size,
+                          CvHistogram* hist, int dont_clear )
 {
     int i, j, t, x = 0, y = 0;
     int dims;
@@ -170,10 +171,9 @@ IPCVAPI_IMPL( CvStatus, icvCalcContrastHist8uC1R, (uchar ** img, int step, CvSiz
 //    Notes:      if dont_clear parameter is NULL then histogram clearing before
 //                calculating (all values sets to NULL)
 //F*/
-IPCVAPI_IMPL( CvStatus, icvCalcContrastHistMask8uC1R, (uchar ** img, int step,
-                                                       uchar * mask, int mask_step,
-                                                       CvSize size, CvHistogram * hist,
-                                                       int dont_clear) )
+static CvStatus CV_STDCALL
+icvCalcContrastHistMask8uC1R( uchar** img, int step, uchar* mask, int mask_step,
+                              CvSize size, CvHistogram * hist, int dont_clear )
 {
     int i, j, t, x = 0, y = 0;
     int dims;
@@ -371,7 +371,7 @@ cvCalcContrastHist( IplImage ** img, CvHistogram * hist, int dont_clear, IplImag
         else
         {
             IPPI_CALL( icvCalcContrastHistMask8uC1R( data, step, mask_data,
-                                                      mask_step, roi, hist, dont_clear ));
+                                                     mask_step, roi, hist, dont_clear ));
         }
         break;
     default:

@@ -110,18 +110,6 @@ cvBoxPoints( CvBox2D box, CvPoint2D32f pt[4] )
 
 
 int
-icvIsPtInCircle3( CvPoint2D32f pt, CvPoint2D32f a, CvPoint2D32f b, CvPoint2D32f c )
-{
-    double val = (a.x * a.x + a.y * a.y) * cvTriangleArea( b, c, pt );
-    val -= (b.x * b.x + b.y * b.y) * cvTriangleArea( a, c, pt );
-    val += (c.x * c.x + c.y * c.y) * cvTriangleArea( a, b, pt );
-    val -= (pt.x * pt.x + pt.y * pt.y) * cvTriangleArea( a, b, c );
-
-    return val > FLT_EPSILON ? 1 : val < -FLT_EPSILON ? -1 : 0;
-}
-
-
-int
 icvIntersectLines( double x1, double dx1, double y1, double dy1,
                    double x2, double dx2, double y2, double dy2, double *t2 )
 {

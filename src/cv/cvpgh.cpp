@@ -190,16 +190,14 @@ icvCalcPGH( const CvSeq * contour, float *pgh, int angle_dim, int dist_dim )
     for( i = 0; i < count; i++ )
     {
         CvPoint pt1, pt2;
-        int dx, dy;
+        double dx, dy;
 
         CV_READ_EDGE( pt1, pt2, reader1 );
 
         dx = pt2.x - pt1.x;
         dy = pt2.y - pt1.y;
-        buffer[i] = (float) (dx * dx + dy * dy);
+        buffer[i] = (float)(1./sqrt(dx * dx + dy * dy));
     }
-
-    cvbInvSqrt( buffer, buffer, i );
 
     /* 
        do 2 passes. 

@@ -239,8 +239,6 @@ cvCanny( const void* srcarr, void* dstarr,
 {
     CvMat *dx = 0, *dy = 0;
     void *buffer = 0;
-    _CvConvState *pX = 0;
-    _CvConvState *pY = 0;
 
     CV_FUNCNAME( "cvCanny" );
 
@@ -255,9 +253,7 @@ cvCanny( const void* srcarr, void* dstarr,
     CV_CALL( dst = cvGetMat( dst, &dststub ));
 
     if( CV_IS_IMAGE_HDR( srcarr ))
-    {
         origin = ((IplImage*)srcarr)->origin;
-    }
 
     if( CV_MAT_TYPE( src->type ) != CV_8UC1 ||
         CV_MAT_TYPE( dst->type ) != CV_8UC1 )
@@ -283,17 +279,11 @@ cvCanny( const void* srcarr, void* dstarr,
     IPPI_CALL( icvCannyGetSize( src_size, &buf_size ));
     CV_CALL( buffer = cvAlloc( buf_size ));
 
-    IPPI_CALL( icvSobelInitAlloc( src_size.width, cv8u,
-                                  aperture_size, origin, 1, 0, &pX ));
-    IPPI_CALL( icvSobelInitAlloc( src_size.width, cv8u,
-                                  aperture_size, origin, 0, 1, &pY ));
+    cvSobel( src, dx, 1, 0, aperture_size );
+    cvSobel( src, dy, 0, 1, aperture_size );
 
-    IPPI_CALL( icvSobel_8u16s_C1R( src->data.ptr, src->step,
-                                   (short*)dx->data.ptr, dx->step,
-                                   &src_size, pX, 0 ));
-    IPPI_CALL( icvSobel_8u16s_C1R( src->data.ptr, src->step,
-                                   (short*)dy->data.ptr, dy->step,
-                                   &src_size, pY, 0 ));
+    if( origin )
+        cvSubRS( dy, cvScalarAll(0), dy );
 
     IPPI_CALL( icvCanny_16s8u_C1R( (short*)dx->data.ptr, dx->step,
                                    (short*)dy->data.ptr, dy->step,
@@ -306,9 +296,6 @@ cvCanny( const void* srcarr, void* dstarr,
     cvReleaseMat( &dx );
     cvReleaseMat( &dy );
     cvFree( &buffer );
-    
-    icvFilterFree( &pX );
-    icvFilterFree( &pY );
 }
 
 

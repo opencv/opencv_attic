@@ -40,8 +40,11 @@
 //M*/
 
 /*
-   This is a set of macros and definitions intended to provide backward compatibility
-   with the previous versions of OpenCV
+   A few macros and definitions for backward compatibility
+   with the previous versions of OpenCV. They are obsolete and
+   are likely to be removed in future. To check whether your code
+   uses any of these, define CV_NO_BACKWARD_COMPATIBILITY before
+   including cv.h.
 */
 
 #ifndef _CVCOMPAT_H_

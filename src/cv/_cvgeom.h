@@ -43,15 +43,6 @@
 #define _CV_GEOM_H_
 
 /* Finds distance between two points */
-CV_INLINE  float  icvDistanceL2_32s( CvPoint pt1, CvPoint pt2 )
-{
-    int dx = pt2.x - pt1.x;
-    int dy = pt2.y - pt1.y;
-
-    return cvSqrt( (float)(dx*dx + dy*dy));
-}
-
-/* Finds distance between two points */
 CV_INLINE  float  icvDistanceL2_32f( CvPoint2D32f pt1, CvPoint2D32f pt2 )
 {
     float dx = pt2.x - pt1.x;
@@ -61,38 +52,9 @@ CV_INLINE  float  icvDistanceL2_32f( CvPoint2D32f pt1, CvPoint2D32f pt2 )
 }
 
 
-int icvIsPtInCircle3( CvPoint2D32f pt, CvPoint2D32f a,
-                      CvPoint2D32f b, CvPoint2D32f c );
-
-
-CV_INLINE CvPoint2D32f icvMidPoint( CvPoint2D32f pt1, CvPoint2D32f pt2 )
-{
-    CvPoint2D32f  mid_pt;
-    mid_pt.x = (pt1.x + pt2.x)*0.5f;
-    mid_pt.y = (pt1.y + pt2.y)*0.5f;
-    return  mid_pt;
-}
-
-CV_INLINE bool icvIsRectInRect( CvRect subrect, CvRect mainrect );
-CV_INLINE bool icvIsRectInRect( CvRect subrect, CvRect mainrect )
-{
-    return  subrect.x >= mainrect.x && subrect.y >= mainrect.y &&
-            subrect.x + subrect.width <= mainrect.x + mainrect.width &&
-            subrect.y + subrect.height <= mainrect.y + mainrect.height;
-}
-
 int  icvIntersectLines( double x1, double dx1, double y1, double dy1,
                         double x2, double dx2, double y2, double dy2,
                         double* t2 );
-
-
-CvStatus   icvFindCircle( CvPoint2D32f pt0, CvPoint2D32f pt1,
-                          CvPoint2D32f pt2, CvPoint2D32f* center,
-                          float* radius );
-
-
-CvStatus icvProject3D( CvPoint3D32f* points3D, int count,
-                       CvPoint2D32f* points2D, int index1, int index2);
 
 
 void icvCreateCenterNormalLine( CvSubdiv2DEdge edge, double* a, double* b, double* c );
@@ -119,8 +81,6 @@ typedef struct _CvTrianAttr
 _CvTrianAttr;
 
 
-CvStatus  icvMemCopy (double **buf1, double **buf2, double **buf3, int *b_max);
-
 /* curvature: 0 - 1-curvature, 1 - k-cosine curvature. */
 CvStatus  icvApproximateChainTC89( CvChain*      chain,
                                    int header_size,
@@ -131,9 +91,6 @@ CvStatus  icvApproximateChainTC89( CvChain*      chain,
 CvSeq* icvPointSeqFromMat( int seq_kind, const CvArr* mat,
                            CvContour* contour_header,
                            CvSeqBlock* block );
-
-#define CV_ADJUST_EDGE_COUNT( count, seq )  \
-    ((count) -= ((count) == (seq)->total && !CV_IS_SEQ_CLOSED(seq)))
 
 #endif /*_IPCVGEOM_H_*/
 
