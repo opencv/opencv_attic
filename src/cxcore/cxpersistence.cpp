@@ -1127,8 +1127,13 @@ force_string:
 
             if( is_parent_flow || c != ':' )
             {
+                char* str_end = endptr;
                 node->tag = CV_NODE_STRING;
-                CV_CALL( node->data.str = cvMemStorageAllocString( fs->memstorage, ptr, endptr - ptr ));
+                // strip spaces in the end of string
+                do c = *--str_end;
+                while( str_end > ptr && c == ' ' );
+                str_end++;
+                CV_CALL( node->data.str = cvMemStorageAllocString( fs->memstorage, ptr, str_end - ptr ));
                 ptr = endptr;
                 EXIT;
             }

@@ -41,29 +41,28 @@
 
 #include "_cv.h"
 
-static CvStatus CV_STDCALL icvCannyGetSize( CvSize roi, int *bufferSize )
+IPCVAPI_IMPL( CvStatus, icvCannyGetSize, ( CvSize roi, int *bufsize ), (roi, bufsize))
 {
     if( (roi.width <= 0) && (roi.height <= 0) )
         return CV_BADSIZE_ERR;
-    if( !bufferSize )
+    if( !bufsize )
         return CV_NULLPTR_ERR;
-    (*bufferSize) = (roi.height + 2) * (roi.width + 2) *
-                    (sizeof(int) + sizeof(uchar) + sizeof(void*)*2);
+    *bufsize = (roi.height + 2)*(roi.width + 2)*(sizeof(int) + sizeof(uchar) + sizeof(void*)*2);
     return CV_NO_ERR;
 }
 
 
-static CvStatus CV_STDCALL icvCanny_16s8u_C1R( const short *pDX, int dxStep,
-                                               const short *pDY, int dyStep,
-                                               uchar *dst, int dststep,
-                                               CvSize roi, float lowThreshold,
-                                               float highThreshold, void *buffer )
+IPCVAPI_IMPL( CvStatus,
+icvCanny_16s8u_C1R, ( const short *dx, int dxstep, const short *dy, int dystep,
+                      uchar *dst, int dststep, CvSize roi, float low_threshold,
+                      float high_threshold, void *buffer ),
+    (dx, dxstep, dy, dystep, dst, dststep, roi, low_threshold, high_threshold, buffer ))
+
 {
     static const int sec_tab[] = { 1, 3, 0, 0, 2, 2, 2, 2 };
-
     int stack_count = 0;
-    int low = cvRound( lowThreshold );
-    int high = cvRound( highThreshold );
+    int low = cvRound( low_threshold );
+    int high = cvRound( high_threshold );
     uchar* sector = (uchar*)buffer;
     int sectorstep = roi.width;
     int* mag = (int*)(sector + roi.width * roi.height);
@@ -72,7 +71,7 @@ static CvStatus CV_STDCALL icvCanny_16s8u_C1R( const short *pDX, int dxStep,
     int i, j;
 
     /* Check Bad Arguments */
-    if( !pDX || !pDY || !dst || !stack  )
+    if( !dx || !dy || !dst || !stack  )
         return CV_NULLPTR_ERR;
 
     if( (roi.width <= 0) || (roi.height <= 0) )
@@ -81,6 +80,9 @@ static CvStatus CV_STDCALL icvCanny_16s8u_C1R( const short *pDX, int dxStep,
     memset( mag, 0, magstep * sizeof(mag[0]));
     memset( mag + magstep * (roi.height + 1), 0, magstep * sizeof(mag[0]));
     mag += magstep + 1;
+
+    dxstep /= sizeof(dx[0]);
+    dystep /= sizeof(dy[0]);
 
     /* sector numbers 
        (Top-Left Origin)
@@ -95,15 +97,15 @@ static CvStatus CV_STDCALL icvCanny_16s8u_C1R( const short *pDX, int dxStep,
     */
 
     /* ///////////////////// calculate magnitude and angle of gradient ///////////////// */
-    for( i = 0; i < roi.height; i++, (char*&)pDX += dxStep, (char*&)pDY += dyStep,
+    for( i = 0; i < roi.height; i++, dx += dxstep, dy += dystep,
                                      sector += sectorstep, mag += magstep )
     {
         mag[-1] = mag[roi.width] = 0;
 
         for( j = 0; j < roi.width; j++ )
         {
-            int x = pDX[j];
-            int y = pDY[j];
+            int x = dx[j];
+            int y = dy[j];
             int s = x ^ y;
 
             x = abs(x);
@@ -179,10 +181,11 @@ static CvStatus CV_STDCALL icvCanny_16s8u_C1R( const short *pDX, int dxStep,
                     int sec = sector[j];
                     int delta = mshift[sec];
                     int b = center[delta];
+                    int c = center[-delta] & INT_MAX;
                     
-                    if( val > b && val > (center[-delta] & INT_MAX) ||
+                    if( val > c && (val > b ||
                         sec == 0 && val == b ||
-                        sec == 2 && val == b )
+                        sec == 2 && val == b) )
                     {
                         if( val > high )
                             PUSH2( dst + j, mag + j );
@@ -226,7 +229,6 @@ static CvStatus CV_STDCALL icvCanny_16s8u_C1R( const short *pDX, int dxStep,
             }
         }
     }
-
     #undef PUSH2
     #undef POP2
 

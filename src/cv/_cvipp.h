@@ -627,29 +627,25 @@ IPCVAPI_EX( CvStatus, icvUnDistort_8u_C3R,
 *                               Thresholding functions                                   *
 \****************************************************************************************/
 
-IPCVAPI_EX(CvStatus, icvThresh_8u_C1R, "ippiThresh_8u_C1R", CV_PLUGINS1(CV_PLUGIN_OPTCV),
+IPCVAPI_EX( CvStatus, icvThresh_8u_C1R, "ippiThresh_8u_C1R", CV_PLUGINS1(CV_PLUGIN_OPTCV),
            ( const uchar*  src, int  src_step, uchar*  dst, int  dst_step,
              CvSize  roi, int  thresh, uchar max_val, int type ))
 
-IPCVAPI_EX(CvStatus, icvThresh_32f_C1R, "ippiThresh_32f_C1R", CV_PLUGINS1(CV_PLUGIN_OPTCV),
+IPCVAPI_EX( CvStatus, icvThresh_32f_C1R, "ippiThresh_32f_C1R", CV_PLUGINS1(CV_PLUGIN_OPTCV),
            ( const float*  src, int  src_step, float*  dst, int  dst_step,
              CvSize  roi, float  thresh, float max_val, int type))
-
-#if 0
 
 /****************************************************************************************\
 *                                 Canny Edge Detector                                    *
 \****************************************************************************************/
 
-IPCVAPI( CvStatus, icvCannyGetSize, ( CvSize roiSize, int* bufferSize ))
+IPCVAPI_EX( CvStatus, icvCannyGetSize, "ippiCannyGetSize", 0/*CV_PLUGINS1(CV_PLUGIN_IPPCV)*/,
+           ( CvSize roiSize, int* bufferSize ))
 
-IPCVAPI( CvStatus, icvCanny_16s8u_C1R, ( const short* pSrcDx, int srcDxStep,
-                                         const short* pSrcDy, int srcDyStep,
-                                         uchar*  pDstEdges, int dstEdgeStep, 
-                                         CvSize roiSize, float  lowThresh,
-                                         float  highThresh, void* pBuffer ))
-
-#endif
+IPCVAPI_EX( CvStatus, icvCanny_16s8u_C1R, "ippiCanny_16s8u_C1R", 0/*CV_PLUGINS1(CV_PLUGIN_IPPCV)*/,
+    ( const short* pSrcDx, int srcDxStep, const short* pSrcDy, int srcDyStep,
+      uchar*  pDstEdges, int dstEdgeStep, CvSize roiSize, float lowThresh,
+      float  highThresh, void* pBuffer ))
 
 #endif /*_CV_PLUGIN_H_*/
 

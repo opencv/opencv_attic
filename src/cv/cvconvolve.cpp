@@ -67,6 +67,7 @@ int icvIPPFilterNextStripe( const CvMat* src, CvMat* temp, int y,
     int i, dy, src_y1 = 0, src_y2;
     int temp_rows;
     uchar* temp_ptr = temp->data.ptr;
+    CvSize stripe_size, temp_size;
     CvCopyNonConstBorderFunc copy_border_func =
         icvGetCopyNonConstBorderFunc( pix_size, IPL_BORDER_REPLICATE );
 
@@ -96,9 +97,11 @@ int icvIPPFilterNextStripe( const CvMat* src, CvMat* temp, int y,
     }
 
     src_y2 = MIN( src_y2, src->rows );
+
+    stripe_size = cvSize(src->cols, src_y2 - src_y1);
+    temp_size = cvSize(temp->cols, temp_rows);
     copy_border_func( src->data.ptr + src_y1*src_step, src_step,
-                      cvSize(src->cols, src_y2 - src_y1),
-                      temp_ptr, temp_step, cvSize(temp->cols,temp_rows),
+                      stripe_size, temp_ptr, temp_step, temp_size,
                       (y == 0 ? anchor.y : 0), anchor.x );
     return dy;
 }
@@ -148,12 +151,12 @@ int icvIPPSepFilter( const CvMat* src, CvMat* dst, const CvMat* kernelX,
     CvSize ksize;
     CvPoint el_anchor;
     CvSize size;
-    int type, depth, cn, pix_size;
+    int type, depth, pix_size;
     int i, x, y, dy = 0, prev_dy = 0, max_dy;
     CvMat vout;
     CvCopyNonConstBorderFunc copy_border_func;
     CvIPPSepFilterFunc x_func = 0, y_func = 0;
-    int src_step, dst_step, top_bottom_step;
+    int src_step, top_bottom_step;
     float *kx, *ky;
     int align, stripe_size;
 
@@ -187,7 +190,6 @@ int icvIPPSepFilter( const CvMat* src, CvMat* dst, const CvMat* kernelX,
 
     type = CV_MAT_TYPE(src->type);
     depth = CV_MAT_DEPTH(type);
-    cn = CV_MAT_CN(type);
     pix_size = CV_ELEM_SIZE(type);
 
     if( type == CV_8UC1 )
@@ -241,7 +243,6 @@ int icvIPPSepFilter( const CvMat* src, CvMat* dst, const CvMat* kernelX,
     copy_border_func = icvGetCopyNonConstBorderFunc( pix_size, IPL_BORDER_REPLICATE );
 
     src_step = src->step ? src->step : CV_STUB_STEP;
-    dst_step = dst->step ? dst->step : CV_STUB_STEP;
     top_bottom_step = top_bottom->step ? top_bottom->step : CV_STUB_STEP;
     vout.step = vout.step ? vout.step : CV_STUB_STEP;
 
@@ -253,24 +254,24 @@ int icvIPPSepFilter( const CvMat* src, CvMat* dst, const CvMat* kernelX,
 
         if( y < anchor.y || dy <= 0 )
         {
-            int src_rows, ay = anchor.y; 
+            int ay = anchor.y;
+            CvSize src_stripe_size = size;
             
             if( y < anchor.y )
             {
                 src_y = 0;
                 dy = MIN( anchor.y, size.height );
-                src_rows = MIN( dy + ksize.height - anchor.y - 1, size.height );
+                src_stripe_size.height = MIN( dy + ksize.height - anchor.y - 1, size.height );
             }
             else
             {
                 src_y = MAX( y - anchor.y, 0 );
                 dy = size.height - y;
-                src_rows = MIN( dy + anchor.y, size.height );
+                src_stripe_size.height = MIN( dy + anchor.y, size.height );
                 ay = MAX( anchor.y - y, 0 );
             }
 
-            copy_border_func( src->data.ptr + src_y*src_step, src_step,
-                              cvSize(size.width, src_rows),
+            copy_border_func( src->data.ptr + src_y*src_step, src_step, src_stripe_size,
                               top_bottom->data.ptr, top_bottom_step,
                               cvSize(size.width, dy + ksize.height - 1),
                               ay, 0 );

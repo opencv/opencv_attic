@@ -75,7 +75,7 @@ typedef struct CvProcessorInfo
 {
     int model;
     int count;
-    double frequency; // clocks per microseconds
+    double frequency; // clocks per microsecond
 }
 CvProcessorInfo;
 
@@ -552,7 +552,7 @@ cvGetModuleInfo( const char* name, const char **version, const char **plugin_lis
         char* ptr = plugin_list_buf;
         int i;
 
-        for( i = 0; plugins[i].basename != 0; i++ )
+        for( i = 0; i < CV_PLUGIN_MAX; i++ )
             if( plugins[i].handle != 0 )
             {
                 int n = 0;
