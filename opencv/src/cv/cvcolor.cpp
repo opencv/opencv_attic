@@ -296,11 +296,14 @@ icvHLS2RGB_8u_C3R_t  icvHLS2RGB_8u_C3R_p = 0;
 icvHLS2RGB_32f_C3R_t icvHLS2RGB_32f_C3R_p = 0;
 
 icvRGB2Luv_8u_C3R_t  icvRGB2Luv_8u_C3R_p = 0;
-icvRGB2Luv_32f_C3R_t icvRGB2Luv_32f_C3R_p = 0;
 icvLuv2RGB_8u_C3R_t  icvLuv2RGB_8u_C3R_p = 0;
-icvLuv2RGB_32f_C3R_t icvLuv2RGB_32f_C3R_p = 0;
 
-#if 1
+//icvRGB2Luv_32f_C3R_t icvRGB2Luv_32f_C3R_p = 0;
+//icvLuv2RGB_32f_C3R_t icvLuv2RGB_32f_C3R_p = 0;
+icvRGB2HLS_32f_C3R_t icvRGB2Luv_32f_C3R_p = 0;
+icvRGB2HLS_32f_C3R_t icvLuv2RGB_32f_C3R_p = 0;
+
+
 #define CV_IMPL_BGRx2ABC_IPP( flavor, arrtype )                         \
 static CvStatus CV_STDCALL                                              \
 icvBGRx2ABC_IPP_##flavor##_CnC3R( const arrtype* src, int srcstep,      \
@@ -315,6 +318,9 @@ icvBGRx2ABC_IPP_##flavor##_CnC3R( const arrtype* src, int srcstep,      \
                                                                         \
     if( !do_copy )                                                      \
         return ipp_func( src, srcstep, dst, dststep, size );            \
+                                                                        \
+    srcstep /= sizeof(src[0]);                                          \
+    dststep /= sizeof(dst[0]);                                          \
                                                                         \
     buffer = (arrtype*)cvStackAlloc( block_size*3*sizeof(buffer[0]) );  \
     srcstep -= size.width*src_cn;                                       \
@@ -345,26 +351,58 @@ icvBGRx2ABC_IPP_##flavor##_CnC3R( const arrtype* src, int srcstep,      \
                                                                         \
     return CV_OK;                                                       \
 }
-#else
-#define CV_IMPL_BGRx2ABC_IPP( flavor, arrtype )                         \
-static CvStatus CV_STDCALL                                              \
-icvBGRx2ABC_IPP_##flavor##_CnC3R( const arrtype* src, int srcstep,      \
-    arrtype* dst, int dststep, CvSize size, int src_cn,                 \
-    int blue_idx, CvColorCvtFunc0 ipp_func )                            \
-{                                                                       \
-    if( src_cn > 3 || blue_idx != 2 )                                   \
-    {                                                                   \
-        ((CvColorCvtFunc2)icvBGRx2BGR_##flavor##_CnC3R)                 \
-            ( src, srcstep, dst, dststep, size, src_cn, blue_idx^2 );   \
-        src = dst;                                                      \
-        srcstep = dststep;                                              \
-    }                                                                   \
-                                                                        \
-    return ipp_func( src, srcstep, dst, dststep, size );                \
-}
-#endif
 
-CV_IMPL_BGRx2ABC_IPP( 8u, uchar )
+
+static CvStatus CV_STDCALL
+icvBGRx2ABC_IPP_8u_CnC3R( const uchar* src, int srcstep,
+    uchar* dst, int dststep, CvSize size, int src_cn,
+    int blue_idx, CvColorCvtFunc0 ipp_func )
+{
+    int block_size = MIN(1 << 14, size.width);
+    uchar* buffer;
+    int i, di, k;
+    int do_copy = src_cn > 3 || blue_idx != 2 || src == dst;
+    CvStatus status = CV_OK;
+
+    if( !do_copy )
+        return ipp_func( src, srcstep, dst, dststep, size );
+
+    srcstep /= sizeof(src[0]);
+    dststep /= sizeof(dst[0]);
+
+    buffer = (uchar*)cvStackAlloc( block_size*3*sizeof(buffer[0]) );
+    srcstep -= size.width*src_cn;
+
+    for( ; size.height--; src += srcstep, dst += dststep )
+    {
+        for( i = 0; i < size.width; i += block_size )
+        {
+            uchar* dst1 = dst + i*3;
+            di = MIN(block_size, size.width - i);
+
+            for( k = 0; k < di*3; k += 3, src += src_cn )
+            {
+                uchar b = src[blue_idx];
+                uchar g = src[1];
+                uchar r = src[blue_idx^2];
+                buffer[k] = r;
+                buffer[k+1] = g;
+                buffer[k+2] = b;
+            }
+
+            status = ipp_func( buffer, CV_STUB_STEP,
+                               dst1, CV_STUB_STEP, cvSize(di,1) );
+            if( status < 0 )
+                return status;
+        }
+    }
+
+    return CV_OK;
+}
+
+
+
+//CV_IMPL_BGRx2ABC_IPP( 8u, uchar )
 CV_IMPL_BGRx2ABC_IPP( 16u, ushort )
 CV_IMPL_BGRx2ABC_IPP( 32f, float )
 
@@ -382,6 +420,9 @@ icvABC2BGRx_IPP_##flavor##_C3CnR( const arrtype* src, int srcstep,      \
                                                                         \
     if( !do_copy )                                                      \
         return ipp_func( src, srcstep, dst, dststep, size );            \
+                                                                        \
+    srcstep /= sizeof(src[0]);                                          \
+    dststep /= sizeof(dst[0]);                                          \
                                                                         \
     buffer = (arrtype*)cvStackAlloc( block_size*3*sizeof(buffer[0]) );  \
     dststep -= size.width*dst_cn;                                       \
@@ -773,17 +814,17 @@ CV_IMPL_YCrCb2BGRx( 32f, float, float, CV_NOP, CV_NOP, CV_NOP,
 #define xyzBz_32f  1.057311f
 
 #define xyz_shift  10
-#define xyzXr_32s  fix(0.412453f, xyz_shift )
-#define xyzXg_32s  fix(0.357580f, xyz_shift )
-#define xyzXb_32s  fix(0.180423f, xyz_shift )
+#define xyzXr_32s  fix(xyzXr_32f, xyz_shift )
+#define xyzXg_32s  fix(xyzXg_32f, xyz_shift )
+#define xyzXb_32s  fix(xyzXb_32f, xyz_shift )
 
-#define xyzYr_32s  fix(0.212671f, xyz_shift )
-#define xyzYg_32s  fix(0.715160f, xyz_shift )
-#define xyzYb_32s  fix(0.072169f, xyz_shift )
+#define xyzYr_32s  fix(xyzYr_32f, xyz_shift )
+#define xyzYg_32s  fix(xyzYg_32f, xyz_shift )
+#define xyzYb_32s  fix(xyzYb_32f, xyz_shift )
 
-#define xyzZr_32s  fix(0.019334f, xyz_shift )
-#define xyzZg_32s  fix(0.119193f, xyz_shift )
-#define xyzZb_32s  fix(0.950227f, xyz_shift )
+#define xyzZr_32s  fix(xyzZr_32f, xyz_shift )
+#define xyzZg_32s  fix(xyzZg_32f, xyz_shift )
+#define xyzZb_32s  fix(xyzZb_32f, xyz_shift )
 
 #define xyzRx_32s  fix(3.240479f, xyz_shift )
 #define xyzRy_32s  -fix(1.53715f, xyz_shift )
@@ -967,7 +1008,7 @@ icvABC2BGRx_8u_C3CnR( const uchar* src, int srcstep, uchar* dst, int dststep,
                     dst[0] = CV_CAST_8U(b);
                     dst[1] = CV_CAST_8U(g);
                     dst[2] = CV_CAST_8U(r);
-                    if( dst_cn == 3 )
+                    if( dst_cn == 4 )
                         dst[3] = 0;
                 }
             }
@@ -982,7 +1023,7 @@ icvABC2BGRx_8u_C3CnR( const uchar* src, int srcstep, uchar* dst, int dststep,
                     dst[0] = CV_CAST_8U(b);
                     dst[1] = CV_CAST_8U(g);
                     dst[2] = CV_CAST_8U(r);
-                    if( dst_cn == 3 )
+                    if( dst_cn == 4 )
                         dst[3] = 0;
                 }
             }
@@ -1065,6 +1106,48 @@ icvBGRx2ABC_8u_CnC3R( const uchar* src, int srcstep, uchar* dst, int dststep,
 *                                      RGB <-> HSV                                       *
 \****************************************************************************************/
 
+static const uchar icvHue255To180[] =
+{
+      0,   1,   1,   2,   3,   4,   4,   5,   6,   6,   7,   8,   8,   9,  10,  11,
+     11,  12,  13,  13,  14,  15,  16,  16,  17,  18,  18,  19,  20,  20,  21,  22,
+     23,  23,  24,  25,  25,  26,  27,  28,  28,  29,  30,  30,  31,  32,  32,  33,
+     34,  35,  35,  36,  37,  37,  38,  39,  40,  40,  41,  42,  42,  43,  44,  44,
+     45,  46,  47,  47,  48,  49,  49,  50,  51,  52,  52,  53,  54,  54,  55,  56,
+     56,  57,  58,  59,  59,  60,  61,  61,  62,  63,  64,  64,  65,  66,  66,  67,
+     68,  68,  69,  70,  71,  71,  72,  73,  73,  74,  75,  76,  76,  77,  78,  78,
+     79,  80,  80,  81,  82,  83,  83,  84,  85,  85,  86,  87,  88,  88,  89,  90,
+     90,  91,  92,  92,  93,  94,  95,  95,  96,  97,  97,  98,  99, 100, 100, 101,
+    102, 102, 103, 104, 104, 105, 106, 107, 107, 108, 109, 109, 110, 111, 112, 112,
+    113, 114, 114, 115, 116, 116, 117, 118, 119, 119, 120, 121, 121, 122, 123, 124,
+    124, 125, 126, 126, 127, 128, 128, 129, 130, 131, 131, 132, 133, 133, 134, 135,
+    136, 136, 137, 138, 138, 139, 140, 140, 141, 142, 143, 143, 144, 145, 145, 146,
+    147, 148, 148, 149, 150, 150, 151, 152, 152, 153, 154, 155, 155, 156, 157, 157,
+    158, 159, 160, 160, 161, 162, 162, 163, 164, 164, 165, 166, 167, 167, 168, 169,
+    169, 170, 171, 172, 172, 173, 174, 174, 175, 176, 176, 177, 178, 179, 179, 180
+};
+
+
+static const uchar icvHue180To255[] =
+{
+      0,   1,   3,   4,   6,   7,   9,  10,  11,  13,  14,  16,  17,  18,  20,  21,
+     23,  24,  26,  27,  28,  30,  31,  33,  34,  35,  37,  38,  40,  41,  43,  44,
+     45,  47,  48,  50,  51,  52,  54,  55,  57,  58,  60,  61,  62,  64,  65,  67,
+     68,  69,  71,  72,  74,  75,  77,  78,  79,  81,  82,  84,  85,  86,  88,  89,
+     91,  92,  94,  95,  96,  98,  99, 101, 102, 103, 105, 106, 108, 109, 111, 112,
+    113, 115, 116, 118, 119, 120, 122, 123, 125, 126, 128, 129, 130, 132, 133, 135,
+    136, 137, 139, 140, 142, 143, 145, 146, 147, 149, 150, 152, 153, 154, 156, 157,
+    159, 160, 162, 163, 164, 166, 167, 169, 170, 171, 173, 174, 176, 177, 179, 180,
+    181, 183, 184, 186, 187, 188, 190, 191, 193, 194, 196, 197, 198, 200, 201, 203,
+    204, 205, 207, 208, 210, 211, 213, 214, 215, 217, 218, 220, 221, 222, 224, 225,
+    227, 228, 230, 231, 232, 234, 235, 237, 238, 239, 241, 242, 244, 245, 247, 248,
+    249, 251, 252, 254, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255,
+    255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255,
+    255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255,
+    255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255,
+    255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255,
+};
+
+
 static CvStatus CV_STDCALL
 icvBGRx2HSV_8u_CnC3R( const uchar* src, int srcstep, uchar* dst, int dststep,
                       CvSize size, int src_cn, int blue_idx )
@@ -1106,26 +1189,6 @@ icvBGRx2HSV_8u_CnC3R( const uchar* src, int srcstep, uchar* dst, int dststep,
         4212, 4195, 4178, 4161, 4145, 4128, 4112, 4096
     };
 
-    static const uchar hue255To180[] =
-    {
-      0,   1,   1,   2,   3,   4,   4,   5,   6,   6,   7,   8,   8,   9,  10,  11,
-     11,  12,  13,  13,  14,  15,  16,  16,  17,  18,  18,  19,  20,  20,  21,  22,
-     23,  23,  24,  25,  25,  26,  27,  28,  28,  29,  30,  30,  31,  32,  32,  33,
-     34,  35,  35,  36,  37,  37,  38,  39,  40,  40,  41,  42,  42,  43,  44,  44,
-     45,  46,  47,  47,  48,  49,  49,  50,  51,  52,  52,  53,  54,  54,  55,  56,
-     56,  57,  58,  59,  59,  60,  61,  61,  62,  63,  64,  64,  65,  66,  66,  67,
-     68,  68,  69,  70,  71,  71,  72,  73,  73,  74,  75,  76,  76,  77,  78,  78,
-     79,  80,  80,  81,  82,  83,  83,  84,  85,  85,  86,  87,  88,  88,  89,  90,
-     90,  91,  92,  92,  93,  94,  95,  95,  96,  97,  97,  98,  99, 100, 100, 101,
-    102, 102, 103, 104, 104, 105, 106, 107, 107, 108, 109, 109, 110, 111, 112, 112,
-    113, 114, 114, 115, 116, 116, 117, 118, 119, 119, 120, 121, 121, 122, 123, 124,
-    124, 125, 126, 126, 127, 128, 128, 129, 130, 131, 131, 132, 133, 133, 134, 135,
-    136, 136, 137, 138, 138, 139, 140, 140, 141, 142, 143, 143, 144, 145, 145, 146,
-    147, 148, 148, 149, 150, 150, 151, 152, 152, 153, 154, 155, 155, 156, 157, 157,
-    158, 159, 160, 160, 161, 162, 162, 163, 164, 164, 165, 166, 167, 167, 168, 169,
-    169, 170, 171, 172, 172, 173, 174, 174, 175, 176, 176, 177, 178, 179, 179, 180
-    };
-
     int i;
     if( icvRGB2HSV_8u_C3R_p )
     {
@@ -1138,13 +1201,13 @@ icvBGRx2HSV_8u_CnC3R( const uchar* src, int srcstep, uchar* dst, int dststep,
             {
                 for( i = 0; i <= size.width - 12; i += 12 )
                 {
-                    uchar t0 = hue255To180[dst[i]], t1 = hue255To180[dst[i+3]];
+                    uchar t0 = icvHue255To180[dst[i]], t1 = icvHue255To180[dst[i+3]];
                     dst[i] = t0; dst[i+3] = t1;
-                    t0 = hue255To180[dst[i+6]]; t1 = hue255To180[dst[i+9]];
+                    t0 = icvHue255To180[dst[i+6]]; t1 = icvHue255To180[dst[i+9]];
                     dst[i+6] = t0; dst[i+9] = t1;
                 }
                 for( ; i < size.width; i += 3 )
-                    dst[i] = hue255To180[dst[i]];
+                    dst[i] = icvHue255To180[dst[i]];
             }
         }
         return status;
@@ -1295,25 +1358,6 @@ icvHSV2BGRx_8u_C3CnR( const uchar* src, int srcstep, uchar* dst, int dststep,
                       CvSize size, int dst_cn, int blue_idx )
 {
     static const float pre_coeffs[] = { 2.f, 0.f, 0.0039215686274509803f, 0.f, 1.f, 0.f };
-    static const uchar hue180To255[] =
-    {
-      0,   1,   3,   4,   6,   7,   9,  10,  11,  13,  14,  16,  17,  18,  20,  21,
-     23,  24,  26,  27,  28,  30,  31,  33,  34,  35,  37,  38,  40,  41,  43,  44,
-     45,  47,  48,  50,  51,  52,  54,  55,  57,  58,  60,  61,  62,  64,  65,  67,
-     68,  69,  71,  72,  74,  75,  77,  78,  79,  81,  82,  84,  85,  86,  88,  89,
-     91,  92,  94,  95,  96,  98,  99, 101, 102, 103, 105, 106, 108, 109, 111, 112,
-    113, 115, 116, 118, 119, 120, 122, 123, 125, 126, 128, 129, 130, 132, 133, 135,
-    136, 137, 139, 140, 142, 143, 145, 146, 147, 149, 150, 152, 153, 154, 156, 157,
-    159, 160, 162, 163, 164, 166, 167, 169, 170, 171, 173, 174, 176, 177, 179, 180,
-    181, 183, 184, 186, 187, 188, 190, 191, 193, 194, 196, 197, 198, 200, 201, 203,
-    204, 205, 207, 208, 210, 211, 213, 214, 215, 217, 218, 220, 221, 222, 224, 225,
-    227, 228, 230, 231, 232, 234, 235, 237, 238, 239, 241, 242, 244, 245, 247, 248,
-    249, 251, 252, 254, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255,
-    255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255,
-    255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255,
-    255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255,
-    255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255,
-    };
 
     if( icvHSV2RGB_8u_C3R_p )
     {
@@ -1333,7 +1377,7 @@ icvHSV2BGRx_8u_C3CnR( const uchar* src, int srcstep, uchar* dst, int dststep,
                 di = MIN(block_size, size.width - i);
                 for( k = 0; k < di*3; k += 3 )
                 {
-                    uchar h = hue180To255[src1[k]];
+                    uchar h = icvHue180To255[src1[k]];
                     uchar s = src1[k+1];
                     uchar v = src1[k+2];
                     buffer[k] = h;
@@ -1379,8 +1423,29 @@ icvBGRx2HLS_32f_CnC3R( const float* src, int srcstep, float* dst, int dststep,
     int i;
 
     if( icvRGB2HLS_32f_C3R_p )
-        return icvBGRx2ABC_IPP_32f_CnC3R( src, srcstep, dst, dststep, size,
-                                          src_cn, blue_idx, icvRGB2HLS_32f_C3R_p );
+    {
+        CvStatus status = icvBGRx2ABC_IPP_32f_CnC3R( src, srcstep, dst, dststep, size,
+                                                     src_cn, blue_idx, icvRGB2HLS_32f_C3R_p );
+        if( status >= 0 )
+        {
+            size.width *= 3;
+            dststep /= sizeof(dst[0]);
+
+            for( ; size.height--; dst += dststep )
+            {
+                for( i = 0; i <= size.width - 12; i += 12 )
+                {
+                    float t0 = dst[i]*360.f, t1 = dst[i+3]*360.f;
+                    dst[i] = t0; dst[i+3] = t1;
+                    t0 = dst[i+6]*360.f; t1 = dst[i+9]*360.f;
+                    dst[i+6] = t0; dst[i+9] = t1;
+                }
+                for( ; i < size.width; i += 3 )
+                    dst[i] = dst[i]*360.f;
+            }
+        }
+        return status;
+    }
 
     srcstep /= sizeof(src[0]);
     dststep /= sizeof(dst[0]);
@@ -1434,13 +1499,50 @@ icvHLS2BGRx_32f_C3CnR( const float* src, int srcstep, float* dst, int dststep,
                        CvSize size, int dst_cn, int blue_idx )
 {
     int i;
-
-    if( icvHLS2RGB_32f_C3R_p )
-        return icvABC2BGRx_IPP_32f_C3CnR( src, srcstep, dst, dststep, size,
-                                          dst_cn, blue_idx, icvHLS2RGB_32f_C3R_p );
-
     srcstep /= sizeof(src[0]);
     dststep /= sizeof(dst[0]);
+
+    if( icvHLS2RGB_32f_C3R_p )
+    {
+        int block_size = MIN(1 << 10, size.width);
+        float* buffer;
+        int i, di, k;
+        CvStatus status = CV_OK;
+
+        buffer = (float*)cvStackAlloc( block_size*3*sizeof(buffer[0]) );
+        dststep -= size.width*dst_cn;
+
+        for( ; size.height--; src += srcstep, dst += dststep )
+        {
+            for( i = 0; i < size.width; i += block_size )
+            {
+                const float* src1 = src + i*3;
+                di = MIN(block_size, size.width - i);
+                for( k = 0; k < di*3; k += 3 )
+                {
+                    float h = src1[k]*0.0027777777777777779f; // /360.
+                    float s = src1[k+1], v = src1[k+2];
+                    buffer[k] = h; buffer[k+1] = s; buffer[k+2] = v;
+                }
+
+                status = icvHLS2RGB_32f_C3R_p( buffer, di*3*sizeof(dst[0]),
+                                buffer, di*3*sizeof(dst[0]), cvSize(di,1) );
+                if( status < 0 )
+                    return status;
+
+                for( k = 0; k < di*3; k += 3, dst += dst_cn )
+                {
+                    float r = buffer[k], g = buffer[k+1], b = buffer[k+2];
+                    dst[blue_idx] = b; dst[1] = g; dst[blue_idx^2] = r;
+                    if( dst_cn == 4 )
+                        dst[3] = 0;
+                }
+            }
+        }
+
+        return CV_OK;
+    }
+    
     dststep -= size.width*dst_cn;
     size.width *= 3;
 
@@ -1501,8 +1603,28 @@ icvBGRx2HLS_8u_CnC3R( const uchar* src, int srcstep, uchar* dst, int dststep,
     static const float post_coeffs[] = { 0.5f, 0.f, 255.f, 0.f, 255.f, 0.f };
 
     if( icvRGB2HLS_8u_C3R_p )
-        return icvBGRx2ABC_IPP_8u_CnC3R( src, srcstep, dst, dststep, size,
-                                         src_cn, blue_idx, icvRGB2HLS_8u_C3R_p );
+    {
+        CvStatus status = icvBGRx2ABC_IPP_8u_CnC3R( src, srcstep, dst, dststep, size,
+                                                    src_cn, blue_idx, icvRGB2HLS_8u_C3R_p );
+        if( status >= 0 )
+        {
+            size.width *= 3;
+            for( ; size.height--; dst += dststep )
+            {
+                int i;
+                for( i = 0; i <= size.width - 12; i += 12 )
+                {
+                    uchar t0 = icvHue255To180[dst[i]], t1 = icvHue255To180[dst[i+3]];
+                    dst[i] = t0; dst[i+3] = t1;
+                    t0 = icvHue255To180[dst[i+6]]; t1 = icvHue255To180[dst[i+9]];
+                    dst[i+6] = t0; dst[i+9] = t1;
+                }
+                for( ; i < size.width; i += 3 )
+                    dst[i] = icvHue255To180[dst[i]];
+            }
+        }
+        return status;
+    }
 
     return icvBGRx2ABC_8u_CnC3R( src, srcstep, dst, dststep, size, src_cn, blue_idx,
                                  (CvColorCvtFunc2)icvBGRx2HLS_32f_CnC3R, 1, post_coeffs );
@@ -1517,8 +1639,52 @@ icvHLS2BGRx_8u_C3CnR( const uchar* src, int srcstep, uchar* dst, int dststep,
                                         0.0039215686274509803f, 0.f };
 
     if( icvHLS2RGB_8u_C3R_p )
-        return icvABC2BGRx_IPP_8u_C3CnR( src, srcstep, dst, dststep, size,
-                                         dst_cn, blue_idx, icvHLS2RGB_8u_C3R_p );
+    {
+        int block_size = MIN(1 << 14, size.width);
+        uchar* buffer;
+        int i, di, k;
+        CvStatus status = CV_OK;
+
+        buffer = (uchar*)cvStackAlloc( block_size*3*sizeof(buffer[0]) );
+        dststep -= size.width*dst_cn;
+
+        for( ; size.height--; src += srcstep, dst += dststep )
+        {
+            for( i = 0; i < size.width; i += block_size )
+            {
+                const uchar* src1 = src + i*3;
+                di = MIN(block_size, size.width - i);
+                for( k = 0; k < di*3; k += 3 )
+                {
+                    uchar h = icvHue180To255[src1[k]];
+                    uchar l = src1[k+1];
+                    uchar s = src1[k+2];
+                    buffer[k] = h;
+                    buffer[k+1] = l;
+                    buffer[k+2] = s;
+                }
+
+                status = icvHLS2RGB_8u_C3R_p( buffer, di*3,
+                                buffer, di*3, cvSize(di,1) );
+                if( status < 0 )
+                    return status;
+
+                for( k = 0; k < di*3; k += 3, dst += dst_cn )
+                {
+                    uchar r = buffer[k];
+                    uchar g = buffer[k+1];
+                    uchar b = buffer[k+2];
+                    dst[blue_idx] = b;
+                    dst[1] = g;
+                    dst[blue_idx^2] = r;
+                    if( dst_cn == 4 )
+                        dst[3] = 0;
+                }
+            }
+        }
+
+        return CV_OK;
+    }
 
     return icvABC2BGRx_8u_C3CnR( src, srcstep, dst, dststep, size, dst_cn, blue_idx,
                                  (CvColorCvtFunc2)icvHLS2BGRx_32f_C3CnR, pre_coeffs, 1 );
@@ -1964,31 +2130,38 @@ icvLuv2BGRx_8u_C3CnR( const uchar* src, int srcstep, uchar* dst, int dststep,
 \****************************************************************************************/
 
 static CvStatus CV_STDCALL
-icvBayer2BGR_8u_C1C3R( const uchar* bayer, int bayerStep,
-                       uchar *dst, int dstStep,
+icvBayer2BGR_8u_C1C3R( const uchar* bayer0, int bayer_step,
+                       uchar *dst0, int dst_step,
                        CvSize size, int code )
 {
     int blue = code == CV_BayerBG2BGR || code == CV_BayerGB2BGR ? -1 : 1;
     int start_with_green = code == CV_BayerGB2BGR || code == CV_BayerGR2BGR;
 
-    if( size.width < 2 || size.height < 2 )
-        return CV_BADSIZE_ERR;
-
-    dst += dstStep + 3 + 1;
+    memset( dst0, 0, size.width*3*sizeof(dst0[0]) );
+    memset( dst0 + (size.height - 1)*dst_step, 0, size.width*3*sizeof(dst0[0]) );
+    dst0 += dst_step + 3 + 1;
     size.height -= 2;
     size.width -= 2;
 
-    for( ; size.height--; bayer += bayerStep, dst += dstStep )
+    for( ; size.height-- > 0; bayer0 += bayer_step, dst0 += dst_step )
     {
         int t0, t1;
-        const uchar* bayerEnd = bayer + size.width;
+        const uchar* bayer = bayer0;
+        uchar* dst = dst0;
+        const uchar* bayer_end = bayer + size.width;
+
+        dst[-4] = dst[-3] = dst[-2] = dst[size.width*3-1] =
+            dst[size.width*3] = dst[size.width*3+1] = 0;
+
+        if( size.width <= 0 )
+            continue;
 
         if( start_with_green )
         {
-            t0 = (bayer[0] + bayer[bayerStep*2] + 1) >> 1;
-            t1 = (bayer[bayerStep] + bayer[bayerStep+2] + 1) >> 1;
+            t0 = (bayer[1] + bayer[bayer_step*2+1] + 1) >> 1;
+            t1 = (bayer[bayer_step] + bayer[bayer_step+2] + 1) >> 1;
             dst[-blue] = (uchar)t0;
-            dst[0] = bayer[bayerStep+1];
+            dst[0] = bayer[bayer_step+1];
             dst[blue] = (uchar)t1;
             bayer++;
             dst += 3;
@@ -1996,58 +2169,55 @@ icvBayer2BGR_8u_C1C3R( const uchar* bayer, int bayerStep,
 
         if( blue > 0 )
         {
-            for( ; bayer <= bayerEnd - 2; bayer += 2, dst += 6 )
+            for( ; bayer <= bayer_end - 2; bayer += 2, dst += 6 )
             {
-                t0 = (bayer[0] + bayer[2] + bayer[bayerStep*2] +
-                      bayer[bayerStep*2+2] + 2) >> 2;
-                t1 = (bayer[1] + bayer[bayerStep] +
-                      bayer[bayerStep+2] + bayer[bayerStep*2+1]+2) >> 2;
+                t0 = (bayer[0] + bayer[2] + bayer[bayer_step*2] +
+                      bayer[bayer_step*2+2] + 2) >> 2;
+                t1 = (bayer[1] + bayer[bayer_step] +
+                      bayer[bayer_step+2] + bayer[bayer_step*2+1]+2) >> 2;
                 dst[-1] = (uchar)t0;
                 dst[0] = (uchar)t1;
-                dst[1] = bayer[bayerStep+1];
+                dst[1] = bayer[bayer_step+1];
 
-                t0 = (bayer[2] + bayer[bayerStep*2+2] + 1) >> 1;
-                t1 = (bayer[bayerStep+1] + bayer[bayerStep+3] + 1) >> 1;
+                t0 = (bayer[2] + bayer[bayer_step*2+2] + 1) >> 1;
+                t1 = (bayer[bayer_step+1] + bayer[bayer_step+3] + 1) >> 1;
                 dst[2] = (uchar)t0;
-                dst[3] = bayer[bayerStep+2];
+                dst[3] = bayer[bayer_step+2];
                 dst[4] = (uchar)t1;
             }
         }
         else
         {
-            for( ; bayer <= bayerEnd - 2; bayer += 2, dst += 6 )
+            for( ; bayer <= bayer_end - 2; bayer += 2, dst += 6 )
             {
-                t0 = (bayer[0] + bayer[2] + bayer[bayerStep*2] +
-                      bayer[bayerStep*2+2] + 2) >> 2;
-                t1 = (bayer[1] + bayer[bayerStep] +
-                      bayer[bayerStep+2] + bayer[bayerStep*2+1]+2) >> 2;
+                t0 = (bayer[0] + bayer[2] + bayer[bayer_step*2] +
+                      bayer[bayer_step*2+2] + 2) >> 2;
+                t1 = (bayer[1] + bayer[bayer_step] +
+                      bayer[bayer_step+2] + bayer[bayer_step*2+1]+2) >> 2;
                 dst[1] = (uchar)t0;
                 dst[0] = (uchar)t1;
-                dst[-1] = bayer[bayerStep+1];
+                dst[-1] = bayer[bayer_step+1];
 
-                t0 = (bayer[2] + bayer[bayerStep*2+2] + 1) >> 1;
-                t1 = (bayer[bayerStep+1] + bayer[bayerStep+3] + 1) >> 1;
+                t0 = (bayer[2] + bayer[bayer_step*2+2] + 1) >> 1;
+                t1 = (bayer[bayer_step+1] + bayer[bayer_step+3] + 1) >> 1;
                 dst[4] = (uchar)t0;
-                dst[3] = bayer[bayerStep+2];
+                dst[3] = bayer[bayer_step+2];
                 dst[2] = (uchar)t1;
             }
         }
 
-        if( bayer < bayerEnd )
+        if( bayer < bayer_end )
         {
-            t0 = (bayer[0] + bayer[2] + bayer[bayerStep*2] +
-                  bayer[bayerStep*2+2] + 2) >> 2;
-            t1 = (bayer[1] + bayer[bayerStep] +
-                  bayer[bayerStep+2] + bayer[bayerStep*2+1]+2) >> 2;
+            t0 = (bayer[0] + bayer[2] + bayer[bayer_step*2] +
+                  bayer[bayer_step*2+2] + 2) >> 2;
+            t1 = (bayer[1] + bayer[bayer_step] +
+                  bayer[bayer_step+2] + bayer[bayer_step*2+1]+2) >> 2;
             dst[-blue] = (uchar)t0;
             dst[0] = (uchar)t1;
-            dst[blue] = bayer[bayerStep+1];
+            dst[blue] = bayer[bayer_step+1];
             bayer++;
             dst += 3;
         }
-
-        bayer -= size.width;
-        dst -= size.width*3;
 
         blue = -blue;
         start_with_green = !start_with_green;
@@ -2098,7 +2268,9 @@ cvCvtColor( const CvArr* srcarr, CvArr* dstarr, int code )
     src_step = src->step;
     dst_step = dst->step;
 
-    if( CV_IS_MAT_CONT(src->type & dst->type) )
+    if( CV_IS_MAT_CONT(src->type & dst->type) &&
+        code != CV_BayerBG2BGR && code != CV_BayerGB2BGR &&
+        code != CV_BayerRG2BGR && code != CV_BayerGR2BGR ) 
     {
         size.width *= size.height;
         size.height = 1;
@@ -2114,7 +2286,7 @@ cvCvtColor( const CvArr* srcarr, CvArr* dstarr, int code )
             "Incorrect number of channels for this conversion code" );
 
         func1 = depth == CV_8U ? (CvColorCvtFunc1)icvBGR2BGRx_8u_C3C4R :
-                depth == CV_16S ? (CvColorCvtFunc1)icvBGR2BGRx_16u_C3C4R :
+                depth == CV_16U ? (CvColorCvtFunc1)icvBGR2BGRx_16u_C3C4R :
                 depth == CV_32F ? (CvColorCvtFunc1)icvBGR2BGRx_32f_C3C4R : 0;
         param[0] = code == CV_BGR2BGRA ? 0 : 2; // blue_idx
         break;
@@ -2127,7 +2299,7 @@ cvCvtColor( const CvArr* srcarr, CvArr* dstarr, int code )
             "Incorrect number of channels for this conversion code" );
 
         func2 = depth == CV_8U ? (CvColorCvtFunc2)icvBGRx2BGR_8u_CnC3R :
-                depth == CV_16S ? (CvColorCvtFunc2)icvBGRx2BGR_16u_CnC3R :
+                depth == CV_16U ? (CvColorCvtFunc2)icvBGRx2BGR_16u_CnC3R :
                 depth == CV_32F ? (CvColorCvtFunc2)icvBGRx2BGR_32f_CnC3R : 0;
         param[0] = src_cn;
         param[1] = code == CV_BGRA2BGR ? 0 : 2; // blue_idx
@@ -2139,7 +2311,7 @@ cvCvtColor( const CvArr* srcarr, CvArr* dstarr, int code )
             "Incorrect number of channels for this conversion code" );
 
         func0 = depth == CV_8U ? (CvColorCvtFunc0)icvBGRA2RGBA_8u_C4R :
-                depth == CV_16S ? (CvColorCvtFunc0)icvBGRA2RGBA_16u_C4R :
+                depth == CV_16U ? (CvColorCvtFunc0)icvBGRA2RGBA_16u_C4R :
                 depth == CV_32F ? (CvColorCvtFunc0)icvBGRA2RGBA_32f_C4R : 0;
         break;
 
@@ -2202,7 +2374,7 @@ cvCvtColor( const CvArr* srcarr, CvArr* dstarr, int code )
             "Incorrect number of channels for this conversion code" );
 
         func2 = depth == CV_8U ? (CvColorCvtFunc2)icvBGRx2Gray_8u_CnC1R :
-                depth == CV_16S ? (CvColorCvtFunc2)icvBGRx2Gray_16u_CnC1R :
+                depth == CV_16U ? (CvColorCvtFunc2)icvBGRx2Gray_16u_CnC1R :
                 depth == CV_32F ? (CvColorCvtFunc2)icvBGRx2Gray_32f_CnC1R : 0;
         
         param[0] = src_cn;
@@ -2232,7 +2404,7 @@ cvCvtColor( const CvArr* srcarr, CvArr* dstarr, int code )
             "Incorrect number of channels for this conversion code" );
 
         func1 = depth == CV_8U ? (CvColorCvtFunc1)icvGray2BGRx_8u_C1CnR :
-                depth == CV_16S ? (CvColorCvtFunc1)icvGray2BGRx_16u_C1CnR :
+                depth == CV_16U ? (CvColorCvtFunc1)icvGray2BGRx_16u_C1CnR :
                 depth == CV_32F ? (CvColorCvtFunc1)icvGray2BGRx_32f_C1CnR : 0;
         
         param[0] = dst_cn;
@@ -2288,7 +2460,7 @@ cvCvtColor( const CvArr* srcarr, CvArr* dstarr, int code )
                     code == CV_BGR2HLS || code == CV_RGB2HLS ? (CvColorCvtFunc2)icvBGRx2HLS_32f_CnC3R : 0;
         
         param[0] = src_cn;
-        param[1] = code == CV_BGR2YCrCb || code == CV_BGR2HSV ||
+        param[1] = code == CV_BGR2XYZ || code == CV_BGR2YCrCb || code == CV_BGR2HSV ||
                    code == CV_BGR2Lab || code == CV_BGR2Luv || code == CV_BGR2HLS ? 0 : 2;
         break;
 
@@ -2326,8 +2498,8 @@ cvCvtColor( const CvArr* srcarr, CvArr* dstarr, int code )
                     code == CV_Lab2BGR || code == CV_Lab2RGB ? (CvColorCvtFunc2)icvLab2BGRx_32f_C3CnR :
                     code == CV_Luv2BGR || code == CV_Luv2RGB ? (CvColorCvtFunc2)icvLuv2BGRx_32f_C3CnR : 0;
         
-        param[0] = src_cn;
-        param[1] = code == CV_YCrCb2BGR || code == CV_HSV2BGR ||
+        param[0] = dst_cn;
+        param[1] = code == CV_XYZ2BGR || code == CV_YCrCb2BGR || code == CV_HSV2BGR ||
                    code == CV_Lab2BGR || code == CV_Luv2BGR || code == CV_HLS2BGR ? 0 : 2;
         break;
 

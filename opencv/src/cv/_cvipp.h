@@ -511,9 +511,9 @@ IPCV_COLOR( BGR2Lab, BGRToLab, 8u )
 IPCV_COLOR( Lab2BGR, LabToBGR, 8u )
 
 IPCV_COLOR( RGB2Luv, RGBToLUV, 8u )
-IPCV_COLOR( RGB2Luv, RGBToLUV, 32f )
+/*IPCV_COLOR( RGB2Luv, RGBToLUV, 32f )*/
 IPCV_COLOR( Luv2RGB, LUVToRGB, 8u )
-IPCV_COLOR( Luv2RGB, LUVToRGB, 32f )
+/*IPCV_COLOR( Luv2RGB, LUVToRGB, 32f )*/
 
 /****************************************************************************************\
 *                                  Motion Templates                                      *
