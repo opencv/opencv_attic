@@ -39,15 +39,7 @@
 //
 //M*/
 
-/****************************************************************************************/
-/*                         Dynamic detection and loading of IPP modules                 */
-/****************************************************************************************/
-
 #include "_cv.h"
-
-/****************************************************************************************/
-/*                               Make functions descriptions                            */
-/****************************************************************************************/
 
 #undef IPCVAPI_EX
 #define IPCVAPI_EX(type,func_name,names,modules,arg) \
@@ -61,7 +53,7 @@ static CvPluginFuncInfo cv_ipp_tab[] =
     {0, 0, 0, 0, 0}
 };
 
-static CvModuleInfo cv_module = { 0, "cv", "beta 4.0", cv_ipp_tab };
+static CvModuleInfo cv_module = { 0, "cv", "beta 4.1 (0.9.7)", cv_ipp_tab };
 static int loaded_functions = cvRegisterModule( &cv_module );
 
 /* End of file. */
