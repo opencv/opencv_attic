@@ -454,6 +454,7 @@ class IplImage(_object):
     __setattr__ = lambda self, name, value: _swig_setattr(self, IplImage, name, value)
     __swig_getmethods__ = {}
     __getattr__ = lambda self, name: _swig_getattr(self, IplImage, name)
+    def __init__(self): raise RuntimeError, "No constructor defined"
     def __repr__(self):
         return "<C IplImage instance at %s>" % (self.this,)
     __swig_setmethods__["ID"] = _cv.IplImage_ID_set
@@ -495,9 +496,6 @@ class IplImage(_object):
         except: pass
     def imageData_set(*args): return _cv.IplImage_imageData_set(*args)
     def imageData_get(*args): return _cv.IplImage_imageData_get(*args)
-    def __init__(self, *args):
-        _swig_setattr(self, IplImage, 'this', _cv.new_IplImage(*args))
-        _swig_setattr(self, IplImage, 'thisown', 1)
 
 class IplImagePtr(IplImage):
     def __init__(self, this):
@@ -548,6 +546,7 @@ class IplConvKernel(_object):
     __setattr__ = lambda self, name, value: _swig_setattr(self, IplConvKernel, name, value)
     __swig_getmethods__ = {}
     __getattr__ = lambda self, name: _swig_getattr(self, IplConvKernel, name)
+    def __init__(self): raise RuntimeError, "No constructor defined"
     def __repr__(self):
         return "<C IplConvKernel instance at %s>" % (self.this,)
     __swig_setmethods__["nCols"] = _cv.IplConvKernel_nCols_set
@@ -572,9 +571,6 @@ class IplConvKernel(_object):
         try:
             if self.thisown: destroy(self)
         except: pass
-    def __init__(self, *args):
-        _swig_setattr(self, IplConvKernel, 'this', _cv.new_IplConvKernel(*args))
-        _swig_setattr(self, IplConvKernel, 'thisown', 1)
 
 class IplConvKernelPtr(IplConvKernel):
     def __init__(self, this):
