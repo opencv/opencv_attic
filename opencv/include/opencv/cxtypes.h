@@ -543,7 +543,7 @@ CvMat;
 
 /* inline constructor. No data is allocated internally!!!
    (use together with cvCreateData, or use cvCreateMat instead to
-   get a matrix with allocated data */
+   get a matrix with allocated data) */
 CV_INLINE CvMat cvMat( int rows, int cols, int type, void* data CV_DEFAULT(NULL));
 CV_INLINE CvMat cvMat( int rows, int cols, int type, void* data )
 {
@@ -914,21 +914,46 @@ CV_INLINE  CvPoint3D32f  cvPoint3D32f( double x, double y, double z )
 }
 
 
-typedef struct CvPoint2D64d
+typedef struct CvPoint2D64f
 {
     double x;
     double y;
 }
-CvPoint2D64d;
+CvPoint2D64f;
 
 
-typedef struct CvPoint3D64d
+CV_INLINE  CvPoint2D64f  cvPoint2D64f( double x, double y );
+CV_INLINE  CvPoint2D64f  cvPoint2D64f( double x, double y )
+{
+    CvPoint2D64f p;
+
+    p.x = x;
+    p.y = y;
+
+    return p;
+}
+
+
+typedef struct CvPoint3D64f
 {
     double x;
     double y;
     double z;
 }
-CvPoint3D64d;
+CvPoint3D64f;
+
+
+CV_INLINE  CvPoint3D64f  cvPoint3D64f( double x, double y, double z );
+CV_INLINE  CvPoint3D64f  cvPoint3D64f( double x, double y, double z )
+{
+    CvPoint3D64f p;
+
+    p.x = x;
+    p.y = y;
+    p.z = z;
+
+    return p;
+}
 
 
 /******************************** CvSize's & CvBox **************************************/

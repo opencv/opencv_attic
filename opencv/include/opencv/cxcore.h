@@ -1326,7 +1326,8 @@ CVAPI(CvScalar)  cvColorToScalar( double packed_color, int arrtype );
 CVAPI(void)  cvDrawContours( CvArr *img, CvSeq* contour,
                             CvScalar external_color, CvScalar hole_color,
                             int max_level, int thickness CV_DEFAULT(1),
-                            int line_type CV_DEFAULT(8));
+                            int line_type CV_DEFAULT(8),
+                            CvPoint offset CV_DEFAULT(cvPoint(0,0)));
 
 /* Does look-up transformation. Elements of the source array
    (that should be 8uC1 or 8sC1) are used as indexes in lutarr 256-element table */

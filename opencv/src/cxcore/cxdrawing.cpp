@@ -59,7 +59,8 @@ CvPolyEdge;
 
 static void
 icvCollectPolyEdges( CvMat* img, CvSeq* v, CvContour* edges,
-                     const void* color, int line_type, int shift );
+                     const void* color, int line_type,
+                     int shift, CvPoint offset=cvPoint(0,0) );
 
 static void
 icvFillEdgeCollection( CvMat* img, CvContour* edges, const void* color );
@@ -1115,11 +1116,13 @@ icvFillConvexPoly( CvMat* img, CvPoint *v, int npts, const void* color, int line
 
 static void
 icvCollectPolyEdges( CvMat* img, CvSeq* v, CvContour* edges,
-                     const void* color, int line_type, int shift )
+                     const void* color, int line_type, int shift,
+                     CvPoint offset )
 {
     int  i, count = v->total;
     CvRect bounds = edges->rect;
-    int delta = shift ? 1 << (shift - 1) : 0;
+    int delta = offset.y + (shift ? 1 << (shift - 1) : 0);
+    int elem_type = CV_MAT_TYPE(v->flags);
 
     CvSeqReader reader;
     CvSeqWriter writer;
@@ -1134,10 +1137,21 @@ icvCollectPolyEdges( CvMat* img, CvSeq* v, CvContour* edges,
         
         CV_READ_EDGE( pt0, pt1, reader );
 
-        pt0.x <<= XY_SHIFT - shift;
-        pt0.y = (pt0.y + delta) >> shift;
-        pt1.x <<= XY_SHIFT - shift;
-        pt1.y = (pt1.y + delta) >> shift;
+        if( elem_type == CV_32SC2 )
+        {
+            pt0.x = (pt0.x + offset.x) << (XY_SHIFT - shift);
+            pt0.y = (pt0.y + delta) >> shift;
+            pt1.x = (pt1.x + offset.y) << (XY_SHIFT - shift);
+            pt1.y = (pt1.y + delta) >> shift;
+        }
+        else
+        {
+            assert( shift == 0 );
+            pt0.x = cvRound(((float&)pt0.x + offset.x) * XY_ONE);
+            pt0.y = cvRound((float&)pt0.y + offset.y);
+            pt1.x = cvRound(((float&)pt1.x + offset.x) * XY_ONE);
+            pt1.y = cvRound((float&)pt1.y + offset.y);
+        }
 
         if( line_type < CV_AA )
         {
@@ -2365,7 +2379,8 @@ static const CvPoint icvCodeDeltas[8] =
 CV_IMPL void
 cvDrawContours( void*  img,  CvSeq*  contour,
                 CvScalar externalColor, CvScalar holeColor, 
-                int  maxLevel, int thickness, int line_type )
+                int  maxLevel, int thickness,
+                int line_type, CvPoint offset )
 {
     CvSeq *contour0 = contour, *h_next = 0;
     CvMemStorage* st = 0;
@@ -2424,6 +2439,7 @@ cvDrawContours( void*  img,  CvSeq*  contour,
     {
         CvSeqReader reader;
         int i, count = contour->total;
+        int elem_type = CV_MAT_TYPE(contour->flags);
         void* clr = (contour->flags & CV_SEQ_FLAG_HOLE) == 0 ? ext_buf : hole_buf;
 
         cvStartReadSeq( contour, &reader, 0 );
@@ -2440,6 +2456,9 @@ cvDrawContours( void*  img,  CvSeq*  contour,
                 cvStartAppendToSeq( tseq, &writer );
                 CV_WRITE_SEQ_ELEM( pt, writer );
             }
+
+            prev_pt.x += offset.x;
+            prev_pt.y += offset.y;
 
             for( i = 0; i < count; i++ )
             {
@@ -2483,20 +2502,42 @@ cvDrawContours( void*  img,  CvSeq*  contour,
             if( thickness >= 0 )
             {
                 CvPoint pt1, pt2;
-                CV_ADJUST_EDGE_COUNT( count, contour );
-
-                /* scroll the reader by 1 point */
-                CV_READ_EDGE( pt1, pt2, reader );
+                int shift = 0;
+                
+                count -= !CV_IS_SEQ_CLOSED(contour);
+                CV_READ_SEQ_ELEM( pt1, reader );
+                if( elem_type == CV_32SC2 )
+                {
+                    pt1.x += offset.x;
+                    pt1.y += offset.y;
+                }
+                else
+                {
+                    pt1.x = cvRound( ((float&)pt1.x + offset.x) * XY_ONE );
+                    pt1.y = cvRound( ((float&)pt1.y + offset.y) * XY_ONE );
+                    shift = XY_SHIFT;
+                }
 
                 for( i = 0; i < count; i++ )
                 {
-                    CV_READ_EDGE( pt1, pt2, reader );
-                    icvThickLine( mat, pt1, pt2, clr, thickness, line_type, 2, 0 );
+                    CV_READ_SEQ_ELEM( pt2, reader );
+                    if( elem_type == CV_32SC2 )
+                    {
+                        pt2.x += offset.x;
+                        pt2.y += offset.y;
+                    }
+                    else
+                    {
+                        pt2.x = cvRound( (float&)pt2.x * XY_ONE );
+                        pt2.y = cvRound( (float&)pt2.y * XY_ONE );
+                    }
+                    icvThickLine( mat, pt1, pt2, clr, thickness, line_type, 2, shift );
+                    pt1 = pt2;
                 }
             }
             else
             {
-                CV_CALL( icvCollectPolyEdges( mat, contour, edges, ext_buf, line_type, 0 ));
+                CV_CALL( icvCollectPolyEdges( mat, contour, edges, ext_buf, line_type, 0, offset ));
             }
         }
     }

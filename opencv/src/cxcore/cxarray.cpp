@@ -1499,13 +1499,13 @@ cvGetSubRect( const CvArr* arr, CvMat* submat, CvRect rect )
 
     cvDecRefData( submat );
     */
-    submat->rows = rect.height;
-    submat->cols = rect.width;
-    submat->step = mat->step & (submat->rows > 1 ? -1 : 0);
     submat->data.ptr = mat->data.ptr + (size_t)rect.y*mat->step +
                        rect.x*icvPixSize[CV_MAT_TYPE(mat->type)];
-    submat->type = (mat->type & (submat->cols < mat->cols ? ~CV_MAT_CONT_FLAG : -1)) |
+    submat->step = mat->step & (rect.height > 1 ? -1 : 0);
+    submat->type = (mat->type & (rect.width < mat->cols ? ~CV_MAT_CONT_FLAG : -1)) |
                    (submat->step == 0 ? CV_MAT_CONT_FLAG : 0);
+    submat->rows = rect.height;
+    submat->cols = rect.width;
     submat->refcount = 0;
     res = submat;
     }
