@@ -53,6 +53,13 @@ static char* icv_itoa( int val, char* buffer, int /*radix*/ )
 {
     const int radix = 10;
     char* ptr=buffer, *ptr2 = buffer;
+    if( val < 0 )
+    {
+        *ptr++ = '-';
+        ptr2 = ptr;
+        val = -val;
+    }
+
     do
     {
         *ptr++ = (char)(val % radix + '0');
