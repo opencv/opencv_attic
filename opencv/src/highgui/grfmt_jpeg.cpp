@@ -256,7 +256,7 @@ GrFmtJpegWriter::~GrFmtJpegWriter()
 
 
 bool  GrFmtJpegWriter::WriteImage( const uchar* data, int step,
-                                   int width, int height, bool isColor )
+                                   int width, int height, int _channels )
 {
     const int default_quality = 90;
     struct jpeg_compress_struct cinfo;
@@ -264,7 +264,7 @@ bool  GrFmtJpegWriter::WriteImage( const uchar* data, int step,
 
     bool result = false;
     FILE* f = 0;
-    int channels = isColor ? 3 : 1;
+    int channels = _channels > 1 ? 3 : 1;
     uchar* buffer = 0; // temporary buffer for row flipping
     
     cinfo.err = jpeg_std_error(&jerr.pub);
@@ -296,9 +296,14 @@ bool  GrFmtJpegWriter::WriteImage( const uchar* data, int step,
             {
                 uchar* ptr = (uchar*)data;
             
-                if( channels > 1 )
+                if( _channels == 3 )
                 {
-                    icvCvt_RGB2BGR_8u_C3R( data, 0, buffer, 0, cvSize(width,1) );
+                    icvCvt_BGR2RGB_8u_C3R( data, 0, buffer, 0, cvSize(width,1) );
+                    ptr = buffer;
+                }
+                else if( _channels == 4 )
+                {
+                    icvCvt_BGRA2BGR_8u_C4C3R( data, 0, buffer, 0, cvSize(width,1), 2 );
                     ptr = buffer;
                 }
 
@@ -1402,7 +1407,7 @@ static void aan_fdct8x8( int *src, int *dst,
 
 
 bool  GrFmtJpegWriter::WriteImage( const uchar* data, int step,
-                                   int width, int height, bool isColor )
+                                   int width, int height, int _channels )
 {
     assert( data && width > 0 && height > 0 );
     
@@ -1422,15 +1427,15 @@ bool  GrFmtJpegWriter::WriteImage( const uchar* data, int step,
     int   fdct_qtab[2][64];
     ulong huff_dc_tab[2][16];
     ulong huff_ac_tab[2][256];
-    int  nch  = isColor ? 3 : 1;
-    int  x_scale = isColor ? 2 : 1, y_scale = x_scale;
+    int  channels = _channels > 1 ? 3 : 1;
+    int  x_scale = channels > 1 ? 2 : 1, y_scale = x_scale;
     int  dc_pred[] = { 0, 0, 0 };
     int  x_step = x_scale * 8;
     int  y_step = y_scale * 8;
     int  block[6][64];
     int  buffer[1024];
     int  luma_count = x_scale*y_scale;
-    int  block_count = luma_count + nch - 1;
+    int  block_count = luma_count + channels - 1;
     int  Y_step = x_scale*8;
     const int UV_step = 16;
     double inv_quality;
@@ -1444,7 +1449,7 @@ bool  GrFmtJpegWriter::WriteImage( const uchar* data, int step,
     lowstrm.PutBytes( jpegHeader, sizeof(jpegHeader) - 1 );
     
     // Encode quantization tables
-    for( i = 0; i < (isColor ? 2 : 1); i++ )
+    for( i = 0; i < (channels > 1 ? 2 : 1); i++ )
     {
         const uchar* qtable = i == 0 ? jpegTableK1_T : jpegTableK2_T;
         int chroma_scale = i > 0 ? luma_count : 1;
@@ -1469,7 +1474,7 @@ bool  GrFmtJpegWriter::WriteImage( const uchar* data, int step,
     }
 
     // Encode huffman tables
-    for( i = 0; i < (isColor ? 4 : 2); i++ )
+    for( i = 0; i < (channels > 1 ? 4 : 2); i++ )
     {
         const uchar* htable = i == 0 ? jpegTableK3 : i == 1 ? jpegTableK5 :
                               i == 2 ? jpegTableK4 : jpegTableK6;
@@ -1488,14 +1493,14 @@ bool  GrFmtJpegWriter::WriteImage( const uchar* data, int step,
     }
 
     // put frame header
-    lowstrm.PutWord( 0xFFC0 );    // SOF0 marker
-    lowstrm.PutWord( 8 + 3*nch ); // length of frame header
-    lowstrm.PutByte( 8 );         // sample precision
+    lowstrm.PutWord( 0xFFC0 );          // SOF0 marker
+    lowstrm.PutWord( 8 + 3*channels );  // length of frame header
+    lowstrm.PutByte( 8 );               // sample precision
     lowstrm.PutWord( height );
     lowstrm.PutWord( width );
-    lowstrm.PutByte( nch );       // number of components */
+    lowstrm.PutByte( channels );        // number of components
 
-    for( i = 0; i < nch; i++ )
+    for( i = 0; i < channels; i++ )
     {
         lowstrm.PutByte( i + 1 );  // (i+1)-th component id (Y,U or V)
         if( i == 0 )
@@ -1506,11 +1511,11 @@ bool  GrFmtJpegWriter::WriteImage( const uchar* data, int step,
     }
 
     // put scan header
-    lowstrm.PutWord( 0xFFDA );    // SOS marker
-    lowstrm.PutWord( 6 + 2*nch ); // length of scan header
-    lowstrm.PutByte( nch );       // number of components in the scan
+    lowstrm.PutWord( 0xFFDA );          // SOS marker
+    lowstrm.PutWord( 6 + 2*channels );  // length of scan header
+    lowstrm.PutByte( channels );        // number of components in the scan
 
-    for( i = 0; i < nch; i++ )
+    for( i = 0; i < channels; i++ )
     {
         lowstrm.PutByte( i+1 );             // component id
         lowstrm.PutByte( (i>0)*16 + (i>0) );// selection of DC & AC tables
@@ -1529,7 +1534,7 @@ bool  GrFmtJpegWriter::WriteImage( const uchar* data, int step,
         {
             int x_limit = x_step;
             int y_limit = y_step;
-            const uchar* rgb_data = data + x*nch;
+            const uchar* rgb_data = data + x*_channels;
             int* Y_data = block[0];
 
             if( x + x_limit > width ) x_limit = width - x;
@@ -1537,17 +1542,17 @@ bool  GrFmtJpegWriter::WriteImage( const uchar* data, int step,
 
             memset( block, 0, block_count*64*sizeof(block[0][0]));
             
-            if( isColor )
+            if( channels > 1 )
             {
                 int* UV_data = block[luma_count];
 
                 for( i = 0; i < y_limit; i++, rgb_data += step, Y_data += Y_step )
                 {
-                    for( j = 0; j < x_limit; j++ )
+                    for( j = 0; j < x_limit; j++, rgb_data += _channels )
                     {
-                        int r = rgb_data[j*3 + 2];
-                        int g = rgb_data[j*3 + 1];
-                        int b = rgb_data[j*3];
+                        int r = rgb_data[2];
+                        int g = rgb_data[1];
+                        int b = rgb_data[0];
 
                         int Y = descale( r*y_r + g*y_g + b*y_b, fixc - 2) - 128*4;
                         int U = descale( r*cb_r + g*cb_g + b*cb_b, fixc - 2 );
@@ -1559,6 +1564,7 @@ bool  GrFmtJpegWriter::WriteImage( const uchar* data, int step,
                         UV_data[j2 + 8] += V;
                     }
 
+                    rgb_data -= x_limit*_channels;
                     if( ((i+1) & (y_scale - 1)) == 0 )
                     {
                         UV_data += UV_step;

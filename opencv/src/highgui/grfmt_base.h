@@ -94,7 +94,7 @@ public:
 
     virtual bool  WriteImage( const uchar* data, int step,
                               int width, int height,
-                              bool isColor ) = 0;
+                              int channels ) = 0;
 protected:
     char    m_filename[_MAX_PATH]; // filename
 };

@@ -250,7 +250,7 @@ GrFmtPngWriter::~GrFmtPngWriter()
 
 
 bool  GrFmtPngWriter::WriteImage( const uchar* data, int step,
-                                  int width, int height, bool isColor )
+                                  int width, int height, int channels )
 {
     png_structp png_ptr = png_create_write_struct( PNG_LIBPNG_VER_STRING, 0, 0, 0 );
     png_infop info_ptr = 0;
@@ -276,7 +276,8 @@ bool  GrFmtPngWriter::WriteImage( const uchar* data, int step,
                     png_set_compression_mem_level( png_ptr, MAX_MEM_LEVEL );
 
                     png_set_IHDR( png_ptr, info_ptr, width, height, 8,
-                        isColor ? PNG_COLOR_TYPE_RGB : PNG_COLOR_TYPE_GRAY,
+                        channels == 1 ? PNG_COLOR_TYPE_GRAY :
+                        channels == 3 ? PNG_COLOR_TYPE_RGB : PNG_COLOR_TYPE_RGBA,
                         PNG_INTERLACE_NONE, PNG_COMPRESSION_TYPE_DEFAULT,
                         PNG_FILTER_TYPE_DEFAULT );
 

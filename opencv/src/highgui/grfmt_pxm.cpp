@@ -330,21 +330,21 @@ static char PxMLUT[256][5];
 static bool isPxMLUTInitialized = false;
 
 bool  GrFmtPxMWriter::WriteImage( const uchar* data, int step,
-                                  int width, int height, bool isColor )
+                                  int width, int height, int _channels )
 {
     bool isBinary = false;
     bool result = false;
 
-    int  nch = isColor ? 3 : 1;
-    int  fileStep = width*nch;
+    int  channels = _channels > 1 ? 3 : 1;
+    int  fileStep = width*channels;
     int  x, y;
 
-    assert( data && width > 0 && height > 0 && step >= fileStep);
+    assert( data && width > 0 && height > 0 && step >= fileStep );
     
     if( m_strm.Open( m_filename ) )
     {
-        int  lineLength = ((isBinary ? 1 : 4)*nch +
-                           (isColor ? 2 : 0))*width + 32;
+        int  lineLength = ((isBinary ? 1 : 4)*channels +
+                           (channels > 1 ? 2 : 0))*width + 32;
         int  bufferSize = 128; // buffer that should fit a header
         char* buffer = 0;
                 
@@ -368,7 +368,7 @@ bool  GrFmtPxMWriter::WriteImage( const uchar* data, int step,
 
         // write header;
         sprintf( buffer, "P%c\n%d %d\n255\n",
-                 '2' + (isColor ? 1 : 0) + (isBinary ? 3 : 0),
+                 '2' + (channels > 1 ? 1 : 0) + (isBinary ? 3 : 0),
                  width, height );
 
         m_strm.PutBytes( buffer, strlen(buffer) );
@@ -377,17 +377,20 @@ bool  GrFmtPxMWriter::WriteImage( const uchar* data, int step,
         {
             if( isBinary )
             {
-                if( isColor )
-                    icvCvt_RGB2BGR_8u_C3R( (uchar*)data, 0,
+                if( _channels == 3 )
+                    icvCvt_BGR2RGB_8u_C3R( (uchar*)data, 0,
                         (uchar*)buffer, 0, cvSize(width,1) );
-                m_strm.PutBytes( isColor ? buffer : (char*)data, fileStep );
+                else if( _channels == 4 )
+                    icvCvt_BGRA2BGR_8u_C4C3R( (uchar*)data, 0,
+                        (uchar*)buffer, 0, cvSize(width,1), 1 );
+                m_strm.PutBytes( channels > 1 ? buffer : (char*)data, fileStep );
             }
             else
             {
                 char* ptr = buffer;
                 
-                if( isColor )
-                    for( x = 0; x < width*3; x += 3 )
+                if( channels > 1 )
+                    for( x = 0; x < width*channels; x += channels )
                     {
                         strcpy( ptr, PxMLUT[data[x+2]] );
                         ptr += 4;

@@ -491,11 +491,10 @@ GrFmtBmpWriter::~GrFmtBmpWriter()
 
 
 bool  GrFmtBmpWriter::WriteImage( const uchar* data, int step,
-                                  int width, int height, bool isColor )
+                                  int width, int height, int channels )
 {
     bool result = false;
-    int nch  = isColor ? 3 : 1;
-    int fileStep = (width*nch + 3) & -4;
+    int fileStep = (width*channels + 3) & -4;
     uchar zeropad[] = "\0\0\0\0";
 
     assert( data && width > 0 && height > 0 && step >= fileStep);
@@ -503,7 +502,7 @@ bool  GrFmtBmpWriter::WriteImage( const uchar* data, int step,
     if( m_strm.Open( m_filename ) )
     {
         int  bitmapHeaderSize = 40;
-        int  paletteSize = isColor ? 0 : 1024;
+        int  paletteSize = channels > 1 ? 0 : 1024;
         int  headerSize = 14 /* fileheader */ + bitmapHeaderSize + paletteSize;
         PaletteEntry palette[256];
         
@@ -520,7 +519,7 @@ bool  GrFmtBmpWriter::WriteImage( const uchar* data, int step,
         m_strm.PutDWord( width );
         m_strm.PutDWord( height );
         m_strm.PutWord( 1 );
-        m_strm.PutWord( nch << 3 );
+        m_strm.PutWord( channels << 3 );
         m_strm.PutDWord( BMP_RGB );
         m_strm.PutDWord( 0 );
         m_strm.PutDWord( 0 );
@@ -528,13 +527,13 @@ bool  GrFmtBmpWriter::WriteImage( const uchar* data, int step,
         m_strm.PutDWord( 0 );
         m_strm.PutDWord( 0 );
 
-        if( !isColor )
+        if( channels == 1 )
         {
             FillGrayPalette( palette, 8 );
             m_strm.PutBytes( palette, sizeof(palette));
         }
 
-        width *= nch;
+        width *= channels;
         data += step*(height - 1);
         for( ; height--; data -= step )
         {
