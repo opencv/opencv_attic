@@ -19,7 +19,7 @@ Alekseev, Aleksey       Intel Corp.                IppCV testing
 Boldyrev, Sergey        Intel Corp.                rpm spec & linux makefiles
 Bradley, David          Princeton Univ.            Haar classifier for profile faces
 Breen, Ed               ???                        EiC intepreter, used for Hawk
-Devernay, Frederic      INRIA (?)                  Patch for cvcam (Linux version), cv, highgui.
+Devernay, Frederic      INRIA (?)                  Multiple patches for OpenCV (cvcam, cxcore, cv, highgui).
 Don Murray              PointGrey                  PointGrey SDK and patches for stereo gesture recognition code
 Dubey, Premnath         ???                        Patch for cvcam (Windows version)
 Halsall, Chris          Open Source Solutions Inc  O-Reilly papers on OpenCV,
