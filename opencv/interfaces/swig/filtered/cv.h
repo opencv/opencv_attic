@@ -1,6 +1,6 @@
 # 1 "../../cv/include/cv.h"
-# 1 "<eingebaut>"
-# 1 "<Kommandozeile>"
+# 1 "<built-in>"
+# 1 "<command line>"
 # 1 "../../cv/include/cv.h"
 # 58 "../../cv/include/cv.h"
 # 1 "../../cxcore/include/cxcore.h" 1
