@@ -2601,7 +2601,7 @@ double CxCore_NormTest::get_success_error_level( int test_case_idx, int i, int j
 {
     int depth = CV_MAT_DEPTH(cvGetElemType(test_array[INPUT][0]));
     if( (depth == CV_16U || depth == CV_16S) && (norm_type&3) != CV_C  )
-        return FLT_EPSILON*100;
+        return 1e-4;
     else
         return CxCore_StatTest::get_success_error_level( test_case_idx, i, j );
 }

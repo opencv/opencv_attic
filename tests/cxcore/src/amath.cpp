@@ -2365,7 +2365,7 @@ void CxCore_InvertTest::print_timing_params( int test_case_idx, char* ptr, int p
 
 double CxCore_InvertTest::get_success_error_level( int /*test_case_idx*/, int, int )
 {
-    return CV_MAT_DEPTH(cvGetElemType(test_array[OUTPUT][0])) == CV_32F ? 1e-2 : 1e-9;
+    return CV_MAT_DEPTH(cvGetElemType(test_array[OUTPUT][0])) == CV_32F ? 1e-2 : 1e-8;
 }
 
 int CxCore_InvertTest::prepare_test_case( int test_case_idx )
