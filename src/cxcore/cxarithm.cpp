@@ -658,7 +658,7 @@ cvSubRS( const void* srcarr, CvScalar scalar, void* dstarr, const void* maskarr 
         if( !func )
             CV_ERROR( CV_StsUnsupportedFormat, "" );
        
-        CV_CALL( cvScalarToRawData( &scalar, buf, sctype, 0 ));
+        CV_CALL( cvScalarToRawData( &scalar, buf, sctype, 1 ));
 
         do
         {
@@ -1133,7 +1133,7 @@ cvAddS( const void* srcarr, CvScalar scalar, void* dstarr, const void* maskarr )
         if( !func )
             CV_ERROR( CV_StsUnsupportedFormat, "" );
        
-        CV_CALL( cvScalarToRawData( &scalar, buf, sctype, 0 ));
+        CV_CALL( cvScalarToRawData( &scalar, buf, sctype, 1 ));
 
         do
         {
@@ -1328,15 +1328,18 @@ IPCVAPI_IMPL( CvStatus, icvMul_##flavor##_C1R,( const arrtype* src1, int step1, 
             int i;                                                                      \
             for( i = 0; i <= size.width - 4; i += 4 )                                   \
             {                                                                           \
-                worktype t0, t1;                                                        \
-                t0 = _cast_macro1_(scale*_cvt_macro_(src1[i])*_cvt_macro_(src2[i]));    \
-                t1 = _cast_macro1_(scale*_cvt_macro_(src1[i+1])*_cvt_macro_(src2[i+1]));\
+                double ft0 = scale*_cvt_macro_(src1[i])*_cvt_macro_(src2[i]);           \
+                double ft1 = scale*_cvt_macro_(src1[i+1])*_cvt_macro_(src2[i+1]);       \
+                worktype t0 = _cast_macro1_(ft0);                                       \
+                worktype t1 = _cast_macro1_(ft1);                                       \
                                                                                         \
                 dst[i] = _cast_macro2_(t0);                                             \
                 dst[i+1] = _cast_macro2_(t1);                                           \
                                                                                         \
-                t0 = _cast_macro1_(scale*_cvt_macro_(src1[i+2])*_cvt_macro_(src2[i+2]));\
-                t1 = _cast_macro1_(scale*_cvt_macro_(src1[i+3])*_cvt_macro_(src2[i+3]));\
+                ft0 = scale*_cvt_macro_(src1[i+2])*_cvt_macro_(src2[i+2]);              \
+                ft1 = scale*_cvt_macro_(src1[i+3])*_cvt_macro_(src2[i+3]);              \
+                t0 = _cast_macro1_(ft0);                                                \
+                t1 = _cast_macro1_(ft1);                                                \
                                                                                         \
                 dst[i+2] = _cast_macro2_(t0);                                           \
                 dst[i+3] = _cast_macro2_(t1);                                           \
