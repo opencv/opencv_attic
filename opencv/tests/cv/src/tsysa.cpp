@@ -57,14 +57,19 @@ void InitAConvert();
 void InitAConvexHull();
 void InitACorner();
 void InitACvCalculate();
+void InitADerv();
 void InitADistanceTransform();
 void InitADrawing();
 void InitADrawingRegress();
 void InitAEMD();
+void InitAFitEllipse();
 void InitAFitLine();
 void InitAFloodFill();
+void InitAHaar();
 void InitAHistogram();
 void InitACalcContrastHist();
+void InitACalcOpticalFlowLK();
+void InitACalcOpticalFlowHS(); 
 void InitAHistogramOperations();
 void InitAHistograms();
 void InitAHoughLines();
@@ -72,7 +77,7 @@ void InitAImage();
 void InitAImageStatistics();
 void InitAImageToHMMObs();
 void InitAKalman();
-void InitALaplace();
+void InitAKMeans();
 void InitALogic();
 void InitAMaskAcc();
 void InitAMatchTemplate();
@@ -80,6 +85,7 @@ void InitAMathUtils();
 void InitAMatr();
 void InitAMatr2();
 void InitAMeanShift();
+void InitAMinAreaRect();
 void InitAMinEVal();
 void InitAMoments();
 void InitAMorphology();
@@ -91,8 +97,7 @@ void InitAPixelAccess();
 void InitAPyramids();
 void InitASamplers();
 void InitASequence();
-void InitASobel();
-void InitAScharr();
+void InitASnakes();
 void InitAStorageArray();
 void InitASubdiv();
 void InitASVD();
@@ -114,26 +119,27 @@ void InitAPreCorner();
 void InitAPyrSegmentation();
 void InitAGestureRecognition();
 void InitAPOSIT();
-void InitAMinAreaRect();
-void InitASnakes();
-void InitAFitEllipse();
-void InitACalcOpticalFlowLK();
-void InitACalcOpticalFlowHS(); 
-void InitAKMeans();     
 
 /*============================== Algorithm Tests =============================*/
 int main(int argC,char *argV[])
 {
+    char** argv = (char**)malloc( (argC + 4)*sizeof(argv[0]));
+    argv[argC + 0] = "-l";
+    argv[argC + 1] = "-s";
+    argv[argC + 2] = "-m";
+    argv[argC + 3] = "-B";
+    memcpy( argv, argV, argC*sizeof(argv[0]));
+
 #ifdef WIN32
-    atsInitModuleTestData( argV[0], "../tests/cv/testdata/" );
+    atsInitModuleTestData( argV[0], "../tests/cv/testdata" );
 #else
     atsInitModuleTestData( argV[0], "../testdata" );
 #endif
     atsLoadPrimitives( argC, argV );
-    
+
     InitAAbsDiff();
     InitAAcc();
-    InitAAdaptThreshold();
+    // InitAAdaptThreshold(); // test is not up-to-date
     InitAApproxPoly();
     InitAArithmetic();
     InitAArrayIterator();
@@ -152,6 +158,7 @@ int main(int argC,char *argV[])
     InitACorner();
     InitACreateContourTree();
     InitACvCalculate();
+    InitADerv();
     InitADistanceTransform();
     InitADrawing();
     InitADrawingRegress();
@@ -163,18 +170,17 @@ int main(int argC,char *argV[])
 
     InitAFloodFill();
     InitAFloodFill8();
+    InitAHaar();
     InitAHistogram();
-    InitACalcContrastHist();
-
+    //InitACalcContrastHist(); // the function is not available
     InitAHistogramOperations();
     InitAHistograms();
     InitAHoughLines();
     InitAImage();
     InitAImageStatistics();
-    InitAImageToHMMObs();
+    //InitAImageToHMMObs(); // test uses IPL DCT
     InitAKalman();
-    InitAKMeans();
-    InitALaplace();
+    //InitAKMeans(); // test is not up-to-date
     InitALogic();
     InitAMaskAcc();
     InitAMatchContours();
@@ -189,7 +195,7 @@ int main(int argC,char *argV[])
     InitAMoments();
     InitAMorphology();
     InitAMotionTemplates();
-    InitAMotSeg();
+    // InitAMotSeg(); // test is not up-to-date
     InitAMinEVal ();
 
     InitANodeIterator();
@@ -204,8 +210,6 @@ int main(int argC,char *argV[])
     InitASamplers();
     InitASequence();
     InitASnakes();
-    InitASobel();
-    InitAScharr();
     InitAStorageArray();
     InitASubdiv();
     InitASVD();
@@ -215,11 +219,11 @@ int main(int argC,char *argV[])
     InitAUnDistort();
     InitAPreCorner();
     InitAPyrSegmentation();
+    //InitAGestureRecognition(); // some functionality has been removed
 
-    //InitAGestureRecognition();
-
-    trsRun(argC,argV);
+    trsRun(argC + 4,argv);
     printf("Passed\n");
+    free( argv );
     return 0;
 }
 /* End of file. */

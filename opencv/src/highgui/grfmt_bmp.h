@@ -58,6 +58,7 @@ class GrFmtBmpReader : public GrFmtReader
 public:
     
     GrFmtBmpReader( const char* filename );
+    ~GrFmtBmpReader();
     
     bool  ReadData( uchar* data, int step, int color );
     bool  ReadHeader();
@@ -95,6 +96,8 @@ class GrFmtBmp : public GrFmtFilterFactory
 public:
     
     GrFmtBmp();
+    ~GrFmtBmp();
+
     GrFmtReader* NewReader( const char* filename );
     GrFmtWriter* NewWriter( const char* filename );
 

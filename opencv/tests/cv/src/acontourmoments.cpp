@@ -61,9 +61,9 @@ static int aContourMoments(void *arg)
 {
 
     CvSeqBlock contour_blk;
-    CvSeq contour_h;
+    CvContour contour_h;
     CvMoments r_moments,moments;
-    IplMomentState mState;
+    CvMoments mState;
     CvPoint *cp;
 /*    CvPoint cp[] ={0,0, 5,5, 5,0, 0,5};*/
 /*    CvPoint cp[] ={5,0, 10,5, 5,10, 0,5};*/
@@ -162,39 +162,38 @@ static int aContourMoments(void *arg)
 //                                 color2));
          cvLine(Iplimage, cp[i], cp[i1], color2);
     }
-    iplMoments(Iplimage, mState);
+    cvMoments(Iplimage, &mState);
 
-    r_moments.m00 = iplGetSpatialMoment(mState, 0, 0)*0.5;
-    r_moments.m10 = iplGetSpatialMoment(mState, 1, 0)*0.5;
-    r_moments.m01 = iplGetSpatialMoment(mState, 0, 1)*0.5;
-    r_moments.m20 = iplGetSpatialMoment(mState, 2, 0)*0.5;
-    r_moments.m11 = iplGetSpatialMoment(mState, 1, 1)*0.5;
-    r_moments.m02 = iplGetSpatialMoment(mState, 0, 2)*0.5;
-    r_moments.m30 = iplGetSpatialMoment(mState, 3, 0)*0.5;
-    r_moments.m21 = iplGetSpatialMoment(mState, 2, 1)*0.5;
-    r_moments.m12 = iplGetSpatialMoment(mState, 1, 2)*0.5;
-    r_moments.m03 = iplGetSpatialMoment(mState, 0, 3)*0.5;
+    r_moments.m00 = cvGetSpatialMoment(&mState, 0, 0)*0.5;
+    r_moments.m10 = cvGetSpatialMoment(&mState, 1, 0)*0.5;
+    r_moments.m01 = cvGetSpatialMoment(&mState, 0, 1)*0.5;
+    r_moments.m20 = cvGetSpatialMoment(&mState, 2, 0)*0.5;
+    r_moments.m11 = cvGetSpatialMoment(&mState, 1, 1)*0.5;
+    r_moments.m02 = cvGetSpatialMoment(&mState, 0, 2)*0.5;
+    r_moments.m30 = cvGetSpatialMoment(&mState, 3, 0)*0.5;
+    r_moments.m21 = cvGetSpatialMoment(&mState, 2, 1)*0.5;
+    r_moments.m12 = cvGetSpatialMoment(&mState, 1, 2)*0.5;
+    r_moments.m03 = cvGetSpatialMoment(&mState, 0, 3)*0.5;
 
-    r_moments.mu20 = iplGetCentralMoment(mState, 2, 0)*0.5;
-    r_moments.mu11 = iplGetCentralMoment(mState, 1, 1)*0.5;
-    r_moments.mu02 = iplGetCentralMoment(mState, 0, 2)*0.5;
-    r_moments.mu30 = iplGetCentralMoment(mState, 3, 0)*0.5;
-    r_moments.mu21 = iplGetCentralMoment(mState, 2, 1)*0.5;
-    r_moments.mu12 = iplGetCentralMoment(mState, 1, 2)*0.5;
-    r_moments.mu03 = iplGetCentralMoment(mState, 0, 3)*0.5;
+    r_moments.mu20 = cvGetCentralMoment(&mState, 2, 0)*0.5;
+    r_moments.mu11 = cvGetCentralMoment(&mState, 1, 1)*0.5;
+    r_moments.mu02 = cvGetCentralMoment(&mState, 0, 2)*0.5;
+    r_moments.mu30 = cvGetCentralMoment(&mState, 3, 0)*0.5;
+    r_moments.mu21 = cvGetCentralMoment(&mState, 2, 1)*0.5;
+    r_moments.mu12 = cvGetCentralMoment(&mState, 1, 2)*0.5;
+    r_moments.mu03 = cvGetCentralMoment(&mState, 0, 3)*0.5;
     r_moments.inv_sqrt_m00 = r_moments.m00 ? 1./sqrt(r_moments.m00) : 0;
 
 //	H = sqrt((r_moments.mu20 - r_moments.mu02) * (r_moments.mu20 - r_moments.mu02) + 
 //		          4 * r_moments.mu11 * r_moments.mu11) / 4;
 
     cvReleaseImage(&Iplimage);
-//    iplDeallocate (Iplimage,IPL_IMAGE_ALL);
 
     seq_type = CV_SEQ_POLYGON;
 
 
-    cvMakeSeqHeaderForArray(seq_type, sizeof(CvSeq), sizeof(CvPoint),
-                            (char*)cp, nPoints2, &contour_h, &contour_blk);
+    cvMakeSeqHeaderForArray(seq_type, sizeof(CvContour), sizeof(CvPoint),
+                            (char*)cp, nPoints2, (CvSeq*)&contour_h, &contour_blk);
 //    cvMakeSeqHeaderForArray(seq_type, sizeof(CvSeq), sizeof(CvPoint),
 //                            (char*)cp, nPoints2, &contour_h, &contour_blk));
 
@@ -267,3 +266,4 @@ void InitAContourMoments( void )
 } /* InitAContourMoments */
 
 /* End of file. */
+

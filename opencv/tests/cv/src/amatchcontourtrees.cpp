@@ -49,7 +49,7 @@ static char cFuncName[] = "cvMatchContourTrees";
 static int aMatchContourTrees(void)
 {
     CvSeqBlock contour_blk1, contour_blk2;
-    CvSeq contour_h1, contour_h2;
+    CvContour contour_h1, contour_h2;
     CvContourTree *tree1, *tree2;
     CvMemStorage *storage;   /*   storage for contour and tree writing */
     int block_size = 10000;
@@ -140,17 +140,17 @@ static int aMatchContourTrees(void)
 
 /*   contours initialazing */
         type_seq = CV_SEQ_POLYGON;
-        cvMakeSeqHeaderForArray( type_seq, sizeof(CvSeq), sizeof(CvPoint),
-                       (char*)cp1, nPoints1, &contour_h1, &contour_blk1);
+        cvMakeSeqHeaderForArray( type_seq, sizeof(CvContour), sizeof(CvPoint),
+                       (char*)cp1, nPoints1, (CvSeq*)&contour_h1, &contour_blk1);
 
-        cvMakeSeqHeaderForArray( type_seq, sizeof(CvSeq), sizeof(CvPoint),
-                       (char*)cp2, nPoints2, &contour_h2, &contour_blk2);
+        cvMakeSeqHeaderForArray( type_seq, sizeof(CvContour), sizeof(CvPoint),
+                       (char*)cp2, nPoints2, (CvSeq*)&contour_h2, &contour_blk2);
 
 /*  contour trees created*/
         storage = cvCreateMemStorage( block_size );
 
-        tree1 = cvCreateContourTree (&contour_h1, storage, threshold);
-        tree2 = cvCreateContourTree (&contour_h2, storage, threshold);
+        tree1 = cvCreateContourTree ((CvSeq*)&contour_h1, storage, threshold);
+        tree2 = cvCreateContourTree ((CvSeq*)&contour_h2, storage, threshold);
 
 
 /*  countours matchig */

@@ -54,6 +54,11 @@ GrFmtSunRaster::GrFmtSunRaster()
 }
 
 
+GrFmtSunRaster::~GrFmtSunRaster()
+{
+}
+
+
 GrFmtReader* GrFmtSunRaster::NewReader( const char* filename )
 {
     return new GrFmtSunRasterReader( filename );
@@ -71,6 +76,11 @@ GrFmtWriter* GrFmtSunRaster::NewWriter( const char* filename )
 GrFmtSunRasterReader::GrFmtSunRasterReader( const char* filename ) : GrFmtReader( filename )
 {
     m_offset = -1;
+}
+
+
+GrFmtSunRasterReader::~GrFmtSunRasterReader()
+{
 }
 
 
@@ -402,6 +412,11 @@ bad_decoding_end:
 //////////////////////////////////////////////////////////////////////////////////////////
 
 GrFmtSunRasterWriter::GrFmtSunRasterWriter( const char* filename ) : GrFmtWriter( filename )
+{
+}
+
+
+GrFmtSunRasterWriter::~GrFmtSunRasterWriter()
 {
 }
 

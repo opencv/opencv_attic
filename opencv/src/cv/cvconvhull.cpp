@@ -78,7 +78,7 @@ icvSklansky_32s( CvPoint** array, int start, int end, int* stack, int nsign, int
             int ay = cury - array[pprev]->y;
             int convexity = ay*bx - ax*by;/* if >0 then convex angle */
 
-            if( CV_SIGN(convexity) == sign2 )
+            if( CV_SIGN(convexity) != -sign2 && (ax != 0 || ay != 0))
             {
                 pprev = pcur;
                 pcur = pnext;
@@ -94,7 +94,6 @@ icvSklansky_32s( CvPoint** array, int start, int end, int* stack, int nsign, int
                     stack[1] = pcur;
                     pnext += incr;
                     stack[2] = pnext;
-
                 }
                 else
                 {
@@ -152,7 +151,7 @@ icvSklansky_32f( CvPoint2D32f** array, int start, int end, int* stack, int nsign
             float ay = cury - array[pprev]->y;
             float convexity = ay*bx - ax*by;/* if >0 then convex angle */
 
-            if( CV_SIGN( convexity ) == sign2 )
+            if( CV_SIGN( convexity ) != -sign2 && (ax != 0 || ay != 0))
             {
                 pprev = pcur;
                 pcur = pnext;

@@ -51,6 +51,8 @@ _cvarr.h          _cvfuncn.h  _cvlist.h     _cvtables.h  _ipcv.h                
 _cvdatastructs.h  _cvgeom.h   _cvmatrix.h   _cvutils.h   _optcv.h                 \
 _cverror.h        _cv.h       _cvoptions.h  _cvvm.h
 
+EXTRA_DIST = cv.rc resource.h
+
 #libopencv_la_LDFLAGS = $(all_libraries) -no-undefined -version-info $(LT_CURRENT):$(LT_REVISION):$(LT_AGE) -release $(LT_RELEASE) @LDFLAGS@
 libopencv_la_LDFLAGS = -no-undefined -version-info $(LT_CURRENT):$(LT_REVISION):$(LT_AGE) -release $(LT_RELEASE)
 

@@ -132,8 +132,8 @@ static void CalcMotionGradientEtalon(
 #if 1
     /* prepare images */
     atsReplicateBorders( mhi, apertureSize, apertureSize );
-    iplConvolve2DFP( mhi, dervX_min, &dX, 1, 0 );
-    iplConvolve2DFP( mhi, dervY_max, &dY, 1, 0 );
+    atsConvolve( mhi, dervX_min, dX );
+    atsConvolve( mhi, dervY_max, dY );
 #else
     /* calc derivatives */
     atsConvolve( mhi, dervX_min, dX );
@@ -178,7 +178,7 @@ static void CalcMotionGradientEtalon(
 
     atsGetImageInfo( mask, (void**)&mask_data, &mask_step, 0, 0, 0, 0 );
 
-    iplSet( mask, -1 );
+    cvSet( mask, cvScalarAll(255) );
 
     for( i = 0; i < sz.height; i++, x_data += x_step, y_data += y_step,
                                     mask_data += mask_step,
@@ -191,8 +191,8 @@ static void CalcMotionGradientEtalon(
             /*if( !mask_data[j] ) orient_data[j] = 0;*/
         }
 
-    iplDeleteConvKernelFP( dX );
-    iplDeleteConvKernelFP( dY );
+    atsDeleteConvKernelFP( dX );
+    atsDeleteConvKernelFP( dY );
 }
 
 
@@ -395,13 +395,13 @@ static int update_mhi_by_time_test( void )
                 atsRandSetBounds( &rng_state, 0, 1 );
                 atsFillRandomImageEx( silh, &rng_state );
 
-                iplCopy( mhi, mhi_copy );
+                cvCopy( mhi, mhi_copy );
 
                 UpdateMHIByTimeEtalon( silh, mhi_copy, time_stamp, mhi_duration );
 
                 cvUpdateMHIByTime( silh, mhi, time_stamp, mhi_duration );
 
-                err = iplNorm( mhi, mhi_copy, IPL_C );
+                err = cvNorm( mhi, mhi_copy, CV_C );
 
                 if( err > max_err )
                 {
@@ -489,7 +489,7 @@ static int calc_motion_gradient_test( void )
     dervX_min = atsCreateImage( max_img_size, max_img_size, mhi_depth, channels, 0 );
     dervY_max = atsCreateImage( max_img_size, max_img_size, mhi_depth, channels, 0 );
 
-    iplSet( silh, 0 );
+    cvZero( silh );
 
     roi.coi = 0;
     roi.xOffset = roi.yOffset = 0;
@@ -547,10 +547,8 @@ static int calc_motion_gradient_test( void )
                             goto test_exit;
                     }
 
-                    iplSetErrMode( IPL_ErrModeParent );
-                    err = iplNorm( mask, mask2, IPL_L1 );
-
-                    iplXor( mask, mask2, mask );
+                    err = cvNorm( mask, mask2, CV_L1 );
+                    cvXor( mask, mask2, mask );
 
                     if( err > max_mask_err )
                     {
@@ -650,7 +648,7 @@ static int calc_global_orientation_test( void )
     mask = atsCreateImage( max_img_size, max_img_size, mask_depth, channels, 0 );
     silh  = atsCreateImage( max_img_size, max_img_size, silh_depth, channels, 0 );
 
-    iplSet( silh, 0 );
+    cvZero( silh );
 
     roi.coi = 0;
     roi.xOffset = roi.yOffset = 0;
@@ -677,8 +675,8 @@ static int calc_global_orientation_test( void )
 
                 atsRandSetBounds( &rng_state, 0, max_time );
 
-                time_stamp = atsRand32f( &rng_state );
-                mhi_duration = atsRand32f( &rng_state );
+                time_stamp = atsRand32f( &rng_state ) + 0.01f;
+                mhi_duration = atsRand32f( &rng_state ) + 0.01f;
 
                 if( time_stamp < mhi_duration )
                     ATS_SWAP( time_stamp, mhi_duration, temp );
@@ -709,7 +707,7 @@ static int calc_global_orientation_test( void )
                 /* make mask image */
                 atsRandSetBounds( &rng_state, 1, mask_range+1 );
                 atsFillRandomImageEx( mask, &rng_state );
-                iplSubtractS( mask, mask, (int)(mask_range - 1), 0 );
+                cvSubS( mask, cvScalarAll((int)(mask_range - 1)), mask );
 
                 CalcGlobalOrientationEtalon( orient, mask, mhi, time_stamp,
                                              mhi_duration, &std_angle, &delta );

@@ -1,0 +1,142 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0//EN">
+<html><head>
+<title>OpenCV Documentation (draft)</title>
+</head><body>
+
+<center><table cellspacing=0 cellpadding=5 width="90%" bgcolor="#6a9bed" nosave >
+<tr nosave>
+<td nosave>
+<center><i><font color="#000000"><font size=+4>
+Intel&reg; Open Source Computer Vision Library
+</font></font></i></center>
+</td>
+</tr>
+</table></center>
+
+<!-- <p align="center"><img src="opencv.jpg"></a></p>
+
+<hr>-->
+
+<h1>What is OpenCV</h1>
+
+<p>OpenCV means Intel&reg; Open Source Computer Vision Library.
+It is a collection of C functions and few C++ classes that implement some
+popular algorithms of Image Processing and Computer Vision.</p>
+
+<hr>
+
+<h1>The key features</h1>
+
+<p>OpenCV is cross-platform middle-to-high level API that consists
+   of a few hundreds (>300) C functions. It does not rely on external
+   numerical libraries, though it can make use of some of them (see below)
+   at runtime, if they are available.</p>
+
+<p>OpenCV is free for both non-commercial and commercial use
+(see the <a href="license.txt">license</a> for details).</p>
+
+<p><a name="#ipp">OpenCV provides transparent for user interface to Intel&reg; Integrated Performance
+Primitives (IPP) (only ippcv for now).</a>
+That is, it loads automatically IPP libraries optimized
+for specific processor at runtime, if they are available.
+More information about IPP can be retrieved at
+<a href="http://www.intel.com/software/products/ipp/ippvm20/index.htm">
+http://www.intel.com/software/products/ipp/ippvm20/index.htm</a></p>
+
+<p>There are interfaces to OpenCV for some other languages/environments (more to come):
+<ul>
+<li>EiC - ANSI C interpreter written by Ed Breen.
+    AFAIK, it is now abandoned.
+    Hawk and CvEnv are the interactive environments (written in MFC and TCL,respectively)
+    that embedd EiC interpteter.
+<li>Ch - ANSI C/C++ interpreter with some scripting capabilities,
+    created and supported by SoftIntegration&reg; company
+    (<a href="http://www.softintegration.com">http://www.softintegration.com</a>)
+    Wrappers for Ch are located at opencv/interfaces/ch.
+<li>MATLAB&reg; - great environment for numerical and symbolic computing by
+    Mathworks. MATLAB&reg; interface for some of OpenCV functions
+    can be found at opencv/interfaces/matlab/toolbox
+</ul>
+
+<hr>
+
+<h1>Who created it</h1>
+
+<p>Most of the coding work has been done in Intel Research Lab, Nizhny Novgorod, Russia.
+The complete list of authors can be found in the file <a href="..\AUTHORS">AUTHORS</a>.</p>
+
+<p>Besides, a lot of people helped with suggestions, patches, bug reports etc.
+The incomplete list is in <a href="..\THANKS">THANKS</a> file.<br>
+
+<hr>
+
+<h1>What's New</h1>
+
+<p>The most important things arrived in beta 3 are:
+<ul>
+<li>Complete up-to-date HTML reference [we hope]
+<li>Source code for stereo correspondence.
+<li>Robust and fast face detection.
+</ul>
+
+<p>See <a href="..\ChangeLog">ChangeLog</a> file for full list of changes.
+
+<hr>
+
+<h1>Where to get OpenCV</h1>
+
+<p>Go <a href="http://www.sourceforge.net/projects/opencvlibrary">http://www.sourceforge.net/projects/opencvlibrary</a>.
+If it does not work, type "OpenCV" in <a href="http://www.google.com">Google</a>.</p>
+
+<hr>
+
+<h1><a name="troubleshooting">If you have a problem with installing/running/using OpenCV</a></h1>
+
+<ol>
+<li>Read <a href="faq.htm">FAQs</a>
+<li>Search through OpenCV archives at www.yahoogroups.com
+(<a href="http://groups.yahoo.com/group/OpenCV/">http://groups.yahoo.com/group/OpenCV/</a>)
+<li>Join OpenCV mailing list at yahoo groups (see FAQs on how to do it) and mail your questions
+   (the mailing list will probably migrate to
+   <a href="http://www.sourceforge.net/projects/opencvlibrary">OpenCV's SourceForge site</a>)
+<li>Look at the OpenCV sample code, read the reference manual :)
+</ol>
+
+<hr>
+
+<h1><a name="#ref">OpenCV Reference Manual</a></h1>
+
+<ul>
+<li><a href="ref/OpenCVRef_BasicFuncs.htm">Basic Structures and Operations Reference</a>
+<li><a href="ref/OpenCVRef_ImageProcessing.htm">Image Processing and Analysis Reference</a>
+<li><a href="ref/OpenCVRef_StructAnalysis.htm">Structural Analysis Reference</a>
+<li><a href="ref/OpenCVRef_Motion_Tracking.htm">Motion Analysis and Object Tracking Reference</a>
+<li><a href="ref/OpenCVRef_ObjectRecognition.htm">Object Recognition Reference</a>
+<li><a href="ref/OpenCVRef_3dReconstruction.htm">Camera Calibration and 3D Reconstruction Reference</a>
+<li><a href="ref/OpenCVRef_Experimental.htm">Experimental Functionality</a>
+<li><a href="ref/OpenCVRef_Highgui.htm">GUI and Video Acquisition Reference</a>
+<li><a href="ref/OpenCVRef_Bibliography.htm">Bibliography</a>
+<li><a href="cvcam.rtf">cvcam manual (RTF)</a>
+</ul>
+
+<p>You may also look at the <a href="opencvman_old.pdf">PDF manual</a>, but do not trust it much -
+it is pretty out of date, especially, the reference part.</p>
+
+<hr>
+
+<h1>Other resources</h1>
+
+<p><a href="appPage/appindex.htm">OpenCV Applications (Windows only)</a>
+
+<hr>
+
+<p><a name="mail">If you have questions/corrections/suggestions about these pages
+(not about the library ifself),
+mail to <a href="mailto:vadim.pisarevksy@intel.com">Vadim.Pisarevsky@intel.com</a>.
+
+<p>All the trademarks referenced above belong to their respected owners.</p>
+
+</body></html>
+
+
+

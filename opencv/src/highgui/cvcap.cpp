@@ -43,10 +43,7 @@
 
 #ifdef WIN32
 
-#define WINDOWS_LEAN_AND_MEAN
-#include <windows.h>
 #include <vfw.h>
-
 #if _MSC_VER >= 1200
 #pragma warning( disable: 4711 )
 #endif
@@ -92,7 +89,7 @@ typedef struct CvCapture
 CvCapture;
 
 
-extern "C" void cvReleaseCapture( CvCapture** pcapture )
+HIGHGUI_IMPL void cvReleaseCapture( CvCapture** pcapture )
 {
     if( pcapture && *pcapture )
     {
@@ -106,7 +103,7 @@ extern "C" void cvReleaseCapture( CvCapture** pcapture )
 }
 
 
-extern "C" IplImage* cvQueryFrame( CvCapture* capture )
+HIGHGUI_IMPL IplImage* cvQueryFrame( CvCapture* capture )
 {
     if( capture && capture->vtable &&
         capture->vtable->count >= CV_CAPTURE_BASE_API_COUNT &&
@@ -116,7 +113,7 @@ extern "C" IplImage* cvQueryFrame( CvCapture* capture )
     return 0;
 }
 
-extern "C" int cvGrabFrame( CvCapture* capture )
+HIGHGUI_IMPL int cvGrabFrame( CvCapture* capture )
 {
     if( capture && capture->vtable &&
         capture->vtable->count >= CV_CAPTURE_BASE_API_COUNT &&
@@ -125,7 +122,7 @@ extern "C" int cvGrabFrame( CvCapture* capture )
     return 0;
 } 
 
-extern "C" IplImage* cvRetrieveFrame( CvCapture* capture )
+HIGHGUI_IMPL IplImage* cvRetrieveFrame( CvCapture* capture )
 {
     if( capture && capture->vtable &&
         capture->vtable->count >= CV_CAPTURE_BASE_API_COUNT &&
@@ -134,7 +131,7 @@ extern "C" IplImage* cvRetrieveFrame( CvCapture* capture )
     return 0;
 }                                       
 
-extern "C" double cvGetCaptureProperty( CvCapture* capture, int id )
+HIGHGUI_IMPL double cvGetCaptureProperty( CvCapture* capture, int id )
 {
     if( capture && capture->vtable &&
         capture->vtable->count >= CV_CAPTURE_BASE_API_COUNT &&
@@ -144,7 +141,7 @@ extern "C" double cvGetCaptureProperty( CvCapture* capture, int id )
 }
 
 
-extern "C" int cvSetCaptureProperty( CvCapture* capture, int id, double value )
+HIGHGUI_IMPL int cvSetCaptureProperty( CvCapture* capture, int id, double value )
 {
     if( capture && capture->vtable &&
         capture->vtable->count >= CV_CAPTURE_BASE_API_COUNT &&
@@ -157,17 +154,6 @@ extern "C" int cvSetCaptureProperty( CvCapture* capture, int id, double value )
 /********************* Capturing video from AVI via VFW ************************/
 
 #ifdef WIN32
-
-static void icvInitCapture_VFW()
-{
-    static int isInitialized = 0;
-    if( !isInitialized )
-    {
-        AVIFileInit();
-        isInitialized = 1;
-    }
-}
-
 
 static BITMAPINFOHEADER
 icvBitmapHeader( int width, int height, int bpp, int compression = BI_RGB )
@@ -182,6 +168,16 @@ icvBitmapHeader( int width, int height, int bpp, int compression = BI_RGB )
     bmih.biPlanes = 1;
 
     return bmih;
+}
+
+static void icvInitCapture_VFW()
+{
+    static int isInitialized = 0;
+    if( !isInitialized )
+    {
+        AVIFileInit();
+        isInitialized = 1;
+    }
 }
 
 
@@ -370,7 +366,7 @@ static CvCaptureVTable captureAVI_VFW_vtable =
 };
 
 
-extern "C" CvCapture* cvCaptureFromAVI( const char* filename )
+HIGHGUI_IMPL CvCapture* cvCaptureFromAVI( const char* filename )
 {
     CvCaptureAVI_VFW* capture = (CvCaptureAVI_VFW*)cvAlloc( sizeof(*capture));
     memset( capture, 0, sizeof(*capture));
@@ -591,8 +587,15 @@ static CvCaptureVTable captureCAM_VFW_vtable =
    
 /********************* Capturing video from camera via MIL *********************/
 //#ifdef WIN32
+
+/* Small patch to cope with automatically generated Makefiles */
+#if !defined _MSC_VER || defined __ICL || defined CV_BATCH_MSVC
+#undef USE_MIL 
+#endif
+
 #ifdef USE_MIL 
-#include "mil.h"
+#include "mil.h" /* to build MIL-enabled version of HighGUI you
+                    should have MIL installed */
 
 struct 
 {      
@@ -744,7 +747,7 @@ static CvCaptureVTable captureCAM_MIL_vtable =
 #endif //USE_MIL 
 //#endif //WIN32
 
-extern "C" CvCapture* cvCaptureFromCAM( int index )
+HIGHGUI_IMPL CvCapture* cvCaptureFromCAM( int index )
 {
     if( index < 100 ) //try VFW 
     {
@@ -772,6 +775,7 @@ extern "C" CvCapture* cvCaptureFromCAM( int index )
 #endif
     return 0;
 }
+
 
 /*************************** writing AVIs ******************************/
 
@@ -865,8 +869,8 @@ static int icvInitAVIWriter( CvAVIWriter* writer, int fourcc,
 }
 
 
-CvAVIWriter* cvCreateAVIWriter( const char* filename, int fourcc,
-                                double fps, CvSize frameSize )
+HIGHGUI_IMPL CvAVIWriter* cvCreateAVIWriter( const char* filename, int fourcc,
+                                             double fps, CvSize frameSize )
 {
     CvAVIWriter* writer = (CvAVIWriter*)cvAlloc( sizeof(CvAVIWriter));
     memset( writer, 0, sizeof(*writer));
@@ -897,7 +901,7 @@ CvAVIWriter* cvCreateAVIWriter( const char* filename, int fourcc,
 }
 
 
-int cvWriteToAVI( CvAVIWriter* writer, const IplImage* image )
+HIGHGUI_IMPL int cvWriteToAVI( CvAVIWriter* writer, const IplImage* image )
 {
     if( writer && (writer->compressed ||
         icvInitAVIWriter( writer, writer->fourcc, writer->fps, writer->frameSize )))
@@ -917,7 +921,7 @@ int cvWriteToAVI( CvAVIWriter* writer, const IplImage* image )
 }
 
 
-void cvReleaseAVIWriter( CvAVIWriter** writer )
+HIGHGUI_IMPL void cvReleaseAVIWriter( CvAVIWriter** writer )
 {
     if( writer && *writer )
     {
@@ -926,7 +930,7 @@ void cvReleaseAVIWriter( CvAVIWriter** writer )
     }
 }
 
-#else
+#else /* Linux version */
 
 #ifdef HAVE_FFMPEG
 
@@ -1384,7 +1388,7 @@ static CvCaptureVTable captureAVI_FFMPEG_vtable =
     (CvCaptureGetDescriptionFunc)0
 };
 
-extern "C" CvCapture* cvCaptureFromAVI( const char* filename )
+HIGHGUI_IMPL CvCapture* cvCaptureFromAVI( const char* filename )
 {
     CvCaptureAVI_FFMPEG* capture = (CvCaptureAVI_FFMPEG*)cvAlloc( sizeof(*capture));
     memset( capture, 0, sizeof(*capture));
@@ -1399,33 +1403,33 @@ extern "C" CvCapture* cvCaptureFromAVI( const char* filename )
 
 #else
 
-extern "C" CvCapture* cvCaptureFromAVI( const char* filename )
+HIGHGUI_IMPL CvCapture* cvCaptureFromAVI( const char* filename )
 {
     return 0;
 }
 
 #endif
 
-extern "C" CvCapture* cvCaptureFromCAM( int /*index*/ )
+HIGHGUI_IMPL CvCapture* cvCaptureFromCAM( int /*index*/ )
 {
     return 0;
 }
 
 
-CvAVIWriter* cvCreateAVIWriter( const char* /*filename*/, int /*fourcc*/,
-                                double /*fps*/, CvSize /*frameSize*/ )
+HIGHGUI_IMPL CvAVIWriter* cvCreateAVIWriter( const char* /*filename*/, int /*fourcc*/,
+                                             double /*fps*/, CvSize /*frameSize*/ )
 {
     return 0;
 }
 
 
-int cvWriteToAVI( CvAVIWriter* /*writer*/, const IplImage* /*image*/ )
+HIGHGUI_IMPL int cvWriteToAVI( CvAVIWriter* /*writer*/, const IplImage* /*image*/ )
 {
     return 0;
 }
 
 
-void cvReleaseAVIWriter( CvAVIWriter** /*writer*/ )
+HIGHGUI_IMPL void cvReleaseAVIWriter( CvAVIWriter** /*writer*/ )
 {
 }
 

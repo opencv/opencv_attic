@@ -51,6 +51,7 @@ class GrFmtPxMReader : public GrFmtReader
 public:
     
     GrFmtPxMReader( const char* filename );
+    ~GrFmtPxMReader();
     
     bool  CheckFormat( const char* signature );
     bool  ReadData( uchar* data, int step, int color );
@@ -73,6 +74,7 @@ class GrFmtPxMWriter : public GrFmtWriter
 public:
     
     GrFmtPxMWriter( const char* filename );
+    ~GrFmtPxMWriter();
 
     bool  WriteImage( const uchar* data, int step,
                       int width, int height, bool isColor );
@@ -88,6 +90,8 @@ class GrFmtPxM : public GrFmtFilterFactory
 public:
     
     GrFmtPxM();
+    ~GrFmtPxM();
+
     GrFmtReader* NewReader( const char* filename );
     GrFmtWriter* NewWriter( const char* filename );
     bool CheckSignature( const char* signature );

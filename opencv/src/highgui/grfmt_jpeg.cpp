@@ -52,6 +52,11 @@ GrFmtJpeg::GrFmtJpeg()
 }
 
 
+GrFmtJpeg::~GrFmtJpeg()
+{
+}
+
+
 GrFmtReader* GrFmtJpeg::NewReader( const char* filename )
 {
     return new GrFmtJpegReader( filename );
@@ -80,6 +85,10 @@ GrFmtWriter* GrFmtJpeg::NewWriter( const char* filename )
 #define XMD_H // prevent redefinition of INT32
 #undef FAR  // prevent FAR redefinition
 
+#endif
+
+#if defined WIN32 && defined __GNUC__
+typedef unsigned char boolean;
 #endif
 
 extern "C" {
@@ -113,6 +122,11 @@ GrFmtJpegReader::GrFmtJpegReader( const char* filename ) : GrFmtReader( filename
 {
     m_cinfo = 0;
     m_f = 0;
+}
+
+
+GrFmtJpegReader::~GrFmtJpegReader()
+{
 }
 
 
@@ -235,6 +249,12 @@ GrFmtJpegWriter::GrFmtJpegWriter( const char* filename ) : GrFmtWriter( filename
 {
 }
 
+
+GrFmtJpegWriter::~GrFmtJpegWriter()
+{
+}
+
+
 bool  GrFmtJpegWriter::WriteImage( const uchar* data, int step,
                                    int width, int height, bool isColor )
 {
@@ -307,6 +327,7 @@ RJpegBitStream::RJpegBitStream()
 
 RJpegBitStream::~RJpegBitStream()
 {
+    Close();
 }
 
 
@@ -1155,6 +1176,10 @@ void  WJpegBitStream::WriteBlock()
 /////////////////////// GrFmtJpegWriter ///////////////////
 
 GrFmtJpegWriter::GrFmtJpegWriter( const char* filename ) : GrFmtWriter( filename )
+{
+}
+
+GrFmtJpegWriter::~GrFmtJpegWriter()
 {
 }
 

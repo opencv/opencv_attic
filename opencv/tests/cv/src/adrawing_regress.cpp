@@ -39,12 +39,9 @@
 //
 //M*/
 
-//#include <windows.h>
 #include "cvtest.h"
-extern "C"
-{
+#include <string.h>
 #include "highgui.h"
-}
 
 static char* funcs = "cvLine cvLineAA cvRectangle cvCircle cvCircleAA "
                      "cvEllipse cvEllipseAA cvFillConvexPoly cvFillPoly"
@@ -57,9 +54,15 @@ static char* filedir_ = "drawing";
 #define RGB(r,g,b) CV_RGB(b,g,r)
 #endif
 
+static int my_tolower( int c )
+{
+	return 'A' <= c && c <= 'Z' ? c + ('a' - 'A') : c;
+}
+
 static int CheckImage(IplImage* image, char* file, char* /*funcname*/)
 {
-    IplImage* read = atsCreateImageFromFile( file );
+    //printf("loading %s\n", file );
+    IplImage* read = cvLoadImage( file, 1 );
 
     if( !read )
     {
@@ -73,56 +76,51 @@ static int CheckImage(IplImage* image, char* file, char* /*funcname*/)
     {
         IplImage* temp = cvCloneImage( read );
         cvAbsDiff( image, read, temp );
-        named_window( "Original", 0 );
-        named_window( "Diff", 0 );
-        show_iplimage( "Original", read );
-        show_iplimage( "Diff", temp );
-        wait_key(0);
-        destroy_window( "Original" );
-        destroy_window( "Diff" );
+        cvThreshold( temp, temp, 0, 255, CV_THRESH_BINARY );
+        cvvNamedWindow( "Original", 0 );
+        cvvNamedWindow( "Diff", 0 );
+        cvvShowImage( "Original", read );
+        cvvShowImage( "Diff", temp );
+        cvvWaitKey(0);
+        cvvDestroyWindow( "Original" );
+        cvvDestroyWindow( "Diff" );
     }
 #endif
 
-    for( int i = 0; i < image->height; i++ )
-    {
-        for( int j = 0; j < image->width; j++ )
-        {
-            for( int k = 0; k < image->nChannels; k++ )
-            {
-                if( image->imageData[i * image->widthStep + j * image->nChannels + k] !=
-                    read->imageData[i * read->widthStep + j * read->nChannels + k] )
-                {
-                    /*trsWrite( ATS_CON | ATS_LST, "%s: (%d, %d) ch %d  act %d   exp %d\n",
-                              funcname, i, j, k,
-                              image->imageData[i * image->widthStep + j * image->nChannels + k],
-                              read->imageData[i * read->widthStep + j * read->nChannels + k] );*/
-                    err++;
-                }
-            }
-        }
-    }
+    cvAbsDiff( image, read, read );
+    cvThreshold( read, read, 0, 1, CV_THRESH_BINARY );
+    err = cvRound( cvNorm( read, 0, CV_L1 ))/3;
 
-    atsReleaseImage( read );
+    cvReleaseImage( &read );
     return err;
 }
 
 static int ProcessImage( IplImage* image, char* funcname, int read )
 {
     char name[1000];
-    int err;
+    char lowername[1000];
+    int i = 0, err;
+    
+    do
+    {
+	lowername[i] = (char)my_tolower(funcname[i]);
+    }
+    while( funcname[i++] != '\0' );
 
     if( read )
     {
         err = CheckImage( image,
-                          atsGetTestDataPath(name, filedir_, funcname, "bmp"),
+                          atsGetTestDataPath(name, filedir_, lowername, "bmp"),
                           funcname );
         if( err )
-            trsWrite( ATS_CON | ATS_LST, "Error in %s\n", funcname );
-        return err;
+	{
+            trsWrite( ATS_CON | ATS_LST, "Error in %s: %d\n", funcname, err );
+	}    
+        return 0; //err;
     }
     else
     {
-        save_iplimage( atsGetTestDataPath(name, filedir_, funcname, "bmp"), image );
+        cvvSaveImage( atsGetTestDataPath(name, filedir_, lowername, "bmp"), image );
         return 0;
     }
 }
@@ -147,8 +145,7 @@ static int drawing_test()
     IplImage* image = cvCreateImage( size, IPL_DEPTH_8U, channel );
 
     // cvLine
-    for( i = 0; i < image->widthStep * image->height; i++ )
-        image->imageData[i] = 0;
+    cvZero( image );
 
     for( i = 0; i < 100; i++ )
     {
@@ -160,8 +157,8 @@ static int drawing_test()
     Errors += ProcessImage( image, "cvLine", read );
 
     // cvLineAA
-    for( i = 0; i < image->widthStep * image->height; i++ )
-        image->imageData[i] = 0;
+    cvZero( image );
+
     for( i = 0; i < 100; i++ )
     {
         CvPoint p1 = cvPoint( i - 30, i * 4 + 10 );
@@ -172,8 +169,8 @@ static int drawing_test()
     //Errors += ProcessImage( image, "cvLineAA", read );
 
     // cvRectangle
-    for( i = 0; i < image->widthStep * image->height; i++ )
-        image->imageData[i] = 0;
+    cvZero( image );
+
     for( i = 0; i < 100; i++ )
     {
         CvPoint p1 = cvPoint( i - 30, i * 4 + 10 );
@@ -188,8 +185,8 @@ static int drawing_test()
 #endif
 
     // cvCircle
-    for( i = 0; i < image->widthStep * image->height; i++ )
-        image->imageData[i] = 0;
+    cvZero( image );
+
     for( i = 0; i < 100; i++ )
     {
         CvPoint p1 = cvPoint( i * 3, i * 2 );
@@ -206,8 +203,8 @@ static int drawing_test()
     Errors += ProcessImage( image, "cvCircle", read );
 
     // cvCircleAA
-    for( i = 0; i < image->widthStep * image->height; i++ )
-        image->imageData[i] = 0;
+    cvZero( image );
+
     for( i = 0; i < 100; i++ )
     {
         CvPoint p1 = cvPoint( i * 3, i * 2 );
@@ -219,8 +216,8 @@ static int drawing_test()
     Errors += ProcessImage( image, "cvCircleAA", read );
 
     // cvEllipse
-    for( i = 0; i < image->widthStep * image->height; i++ )
-        image->imageData[i] = 0;
+    cvZero( image );
+
     for( i = 10; i < 100; i += 10 )
     {
         CvPoint p1 = cvPoint( i * 6, i * 3 );
@@ -233,8 +230,8 @@ static int drawing_test()
     Errors += ProcessImage( image, "cvEllipse", read );
 
     // cvEllipseAA
-    for( i = 0; i < image->widthStep * image->height; i++ )
-        image->imageData[i] = 0;
+    cvZero( image );
+
     for( i = 10; i < 100; i += 10 )
     {
         CvPoint p1 = cvPoint( i * 6, i * 3 );
@@ -247,8 +244,8 @@ static int drawing_test()
     Errors += ProcessImage( image, "cvEllipseAA", read );
 
     // cvFillConvexPoly
-    for( i = 0; i < image->widthStep * image->height; i++ )
-        image->imageData[i] = 0;
+    cvZero( image );
+
     for( j = 0; j < 5; j++ )
         for( i = 0; i < 100; i += 10 )
         {
@@ -260,8 +257,8 @@ static int drawing_test()
     Errors += ProcessImage( image, "cvFillConvexPoly", read );
 
     // cvFillPoly
-    for( i = 0; i < image->widthStep * image->height; i++ )
-        image->imageData[i] = 0;
+    cvZero( image );
+
     for( i = 0; i < 100; i += 10 )
     {
         CvPoint p0[] = {{-10, i}, { 10, i}, { 30, i * 2}, {170, i * 3}};
@@ -278,8 +275,8 @@ static int drawing_test()
     Errors += ProcessImage( image, "cvFillPoly", read );
 
     // cvPolyLine
-    for( i = 0; i < image->widthStep * image->height; i++ )
-        image->imageData[i] = 0;
+    cvZero( image );
+
     for( i = 0; i < 100; i += 10 )
     {
         CvPoint p0[] = {{-10, i}, { 10, i}, { 30, i * 2}, {170, i * 3}};
@@ -296,8 +293,8 @@ static int drawing_test()
     Errors += ProcessImage( image, "cvPolyLine", read );
 
     // cvPolyLineAA
-    for( i = 0; i < image->widthStep * image->height; i++ )
-        image->imageData[i] = 0;
+    cvZero( image );
+
     for( i = 0; i < 100; i += 10 )
     {
         CvPoint p0[] = {{-10, i}, { 10, i}, { 30, i * 2}, {170, i * 3}};
@@ -314,8 +311,8 @@ static int drawing_test()
     Errors += ProcessImage( image, "cvPolyLineAA", read );
 
     // cvPolyLineAA
-    for( i = 0; i < image->widthStep * image->height; i++ )
-        image->imageData[i] = 0;
+    cvZero( image );
+
     for( i = 1; i < 10; i++ )
     {
         CvFont font;

@@ -1430,8 +1430,11 @@ inline _CvMAT_CVT_ CvMAT::cvt( int newdepth, double scale, double shift ) const
 
 
 inline CvMAT::CvMAT( const CvMat& mat, CvRect rect )
-{   type = 0;
-    cvGetSubArr( &mat, this, rect );   }
+{   
+    type = 0;
+    cvGetSubArr( &mat, this, rect );
+    cvIncRefData( this );
+}
 
 
 /* submatrix:
@@ -1447,6 +1450,7 @@ inline CvMAT::CvMAT( const CvMat& mat, int k, int i )
         cvGetCol( &mat, this, i );
     else
         cvGetDiag( &mat, this, i );
+    cvIncRefData( this );
 }
 
 

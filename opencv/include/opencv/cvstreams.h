@@ -70,7 +70,7 @@ You need DirectShow SDK that is now a part of DirectX SDK.
     to the includes' search path (at Tools->Options->Directories->Include files
                                   in case of Developer Studio 6.0)
    Add
-      <DirectXSDKInstallFolder>\include
+      <DirectXSDKInstallFolder>\lib
    to the libraries' search path (at Tools->Options->Directories->Library files
                                   in case of Developer Studio 6.0)
 

@@ -118,7 +118,7 @@ static int contour_retrieving_test( void )
     const int  min_brightness = 0, max_brightness = 2;
     const int  mark_val = 255, mark_val2 = mark_val >> DRAW_CONTOURS;
 
-    int     seed  = -1; //atsGetSeed();
+    int  seed  = atsGetSeed();
 
     /* position where the maximum error occured */
     int     merr_iter = 0;
@@ -162,17 +162,17 @@ static int contour_retrieving_test( void )
         CvSeq* contours3 = 0;
         atsGenerateBlobImage( src_img, min_blob_size, max_blob_size, blob_count,
                               min_brightness, max_brightness, &rng_state );
-        iplCopy( src_img, dst2_img );
-        iplCopy( src_img, dst3_img );
+        cvCopy( src_img, dst2_img );
+        cvCopy( src_img, dst3_img );
         atsClearBorder( src_img );
-        iplCopy( src_img, dst1_img );
+        cvCopy( src_img, dst1_img );
 
         mark_contours_etalon( dst1_img, mark_val );
 
         count = cvFindContours( dst2_img, storage, &contours, sizeof(CvContour),
                                 retrMode, approxMethod );
 
-        iplSet( dst2_img, 0 );
+        cvZero( dst2_img );
         if( contours )
         {
             cvDrawContours( dst2_img, contours, mark_val2, mark_val2, INT_MAX );
@@ -181,7 +181,7 @@ static int contour_retrieving_test( void )
 #if DRAW_CONTOURS
         {
             named_window( "Test", 0 );
-            iplMultiplyS( src_img, src_img, 64 );
+            cvMulS( src_img, src_img, 64 );
             show_iplimage( "Test", src_img );
             wait_key(0);
             iplXor( src_img, dst1_img, dst1_img );
@@ -192,21 +192,21 @@ static int contour_retrieving_test( void )
 #endif
 
         if( retrMode != CV_RETR_EXTERNAL && approxMethod < CV_CHAIN_APPROX_TC89_L1 ) 
-            err = iplNorm( dst1_img, dst2_img, IPL_L1 );
+            err = cvNorm( dst1_img, dst2_img, CV_L1 );
         
         count2 = cvFindContours( dst3_img, storage, &contours2, sizeof(CvChain),
                                  retrMode, CV_CHAIN_CODE );
 
         {
-            CvSeqTreeIterator iterator;
-            icvInitSeqTreeIterator( &iterator, contours2, INT_MAX );
+            CvTreeNodeIterator iterator;
+            cvInitTreeNodeIterator( &iterator, contours2, INT_MAX );
             CvSeq* seq = contours2;
             
-            while( icvNextSeq( &iterator ) )
+            while( cvNextTreeNode( &iterator ) )
             {
                 count3++;
-                assert( iterator.seq != seq );
-                seq = iterator.seq;
+                assert( iterator.node != seq );
+                seq = (CvSeq*)iterator.node;
                 assert( count3 <= count );
             }
 
@@ -223,28 +223,28 @@ static int contour_retrieving_test( void )
 
         if( approxMethod < CV_CHAIN_APPROX_TC89_L1 )
         {
-            iplSet( dst3_img, 0 );
+            cvZero( dst3_img );
 
             if( contours2 )
             {
                 cvDrawContours( dst3_img, contours2, mark_val2, mark_val2, INT_MAX );
             }
 
-            err1 = iplNorm( dst2_img, dst3_img, IPL_L1 );
+            err1 = cvNorm( dst2_img, dst3_img, CV_L1 );
             err = MAX( err, err1 );
 
             if( approxMethod == CV_CHAIN_APPROX_NONE )
             {
-                CvSeqTreeIterator iterator1;
-                CvSeqTreeIterator iterator2;
+                CvTreeNodeIterator iterator1;
+                CvTreeNodeIterator iterator2;
 
-                icvInitSeqTreeIterator( &iterator1, contours, INT_MAX );
-                icvInitSeqTreeIterator( &iterator2, contours2, INT_MAX );
+                cvInitTreeNodeIterator( &iterator1, contours, INT_MAX );
+                cvInitTreeNodeIterator( &iterator2, contours2, INT_MAX );
 
                 for(;;)
                 {
-                    CvSeq* seq1 = icvNextSeq( &iterator1 );
-                    CvChain* seq2 = (CvChain*)icvNextSeq( &iterator2 );
+                    CvSeq* seq1 = (CvSeq*)cvNextTreeNode( &iterator1 );
+                    CvChain* seq2 = (CvChain*)cvNextTreeNode( &iterator2 );
                     CvSeqReader reader;
                     CvChainPtReader reader2;
                     CvChainPtReader reader3;
@@ -282,16 +282,16 @@ static int contour_retrieving_test( void )
         contours3 = cvApproxChains( contours2, storage, approxMethod, 0, 0, 1 );
 
         {
-            CvSeqTreeIterator iterator1;
-            CvSeqTreeIterator iterator2;
+            CvTreeNodeIterator iterator1;
+            CvTreeNodeIterator iterator2;
 
-            icvInitSeqTreeIterator( &iterator1, contours, INT_MAX );
-            icvInitSeqTreeIterator( &iterator2, contours3, INT_MAX );
+            cvInitTreeNodeIterator( &iterator1, contours, INT_MAX );
+            cvInitTreeNodeIterator( &iterator2, contours3, INT_MAX );
 
             for( ;; count3++ )
             {
-                CvSeq* seq1 = icvNextSeq( &iterator1 );
-                CvSeq* seq2 = icvNextSeq( &iterator2 );
+                CvSeq* seq1 = (CvSeq*)cvNextTreeNode( &iterator1 );
+                CvSeq* seq2 = (CvSeq*)cvNextTreeNode( &iterator2 );
                 CvSeqReader reader;
                 CvSeqReader reader2;
 
@@ -372,12 +372,13 @@ int get_slice_length( CvSeq* seq, CvSlice slice )
         return 0;*/
     if( slice.startIndex < 0 )
         slice.startIndex += total;
-    if( slice.endIndex < 0 )
+    if( slice.endIndex <= 0 )
         slice.endIndex += total;
     length = slice.endIndex - slice.startIndex;
-    if( length < 0 ) length += total;
-    if( length < 0 ) length += total;
-    if( length > total ) length = total;
+    if( length < 0 )
+        length += total;
+    else if( length > total )
+        length = total;
 
     return length;
 }
@@ -405,7 +406,7 @@ static int contour_perimeter_test( void )
     const double  success_error_level = 1e-4;
     const int max_delta = 100;
 
-    int     seed  = atsGetSeed();
+    int  seed = atsGetSeed();
 
     /* position where the maximum error occured */
     int     merr_iter = 0;
@@ -434,18 +435,13 @@ static int contour_perimeter_test( void )
         double perimeter, etalon_perimeter;
         double err = 0;
         int count = atsRandPlain32s( &rng_state ) % (max_contour_size) + 1;
-        int len, flag = 0;
+        int len, len0;
         CvSlice slice; 
         CvSeqReader reader;
         CvPoint pt0 = { 0, 0 };
 
         CvSeq* contour = cvCreateSeq( CV_SEQ_CONTOUR, sizeof(CvContour),
                                       sizeof(CvPoint), storage );
-
-        if( i == 135 )
-        {
-            putchar('.');
-        }
 
         for( j = 0; j < count; j++ )
         {
@@ -475,7 +471,7 @@ static int contour_perimeter_test( void )
             slice.endIndex = atsRandPlain32s( &rng_state ) % (count*3) - count;
         }
 
-        perimeter = cvContourPerimeter( contour, slice );
+        perimeter = cvArcLength( contour, slice );
  
         if( perimeter < 0 )
         {
@@ -483,15 +479,19 @@ static int contour_perimeter_test( void )
             goto test_exit;
         }
 
+        len0 = get_slice_length( contour, slice );
         slice.endIndex++;
 
         len = get_slice_length( contour, slice );
         if( len == 0 )
         {
-            len = count;
-            slice.startIndex = (slice.startIndex + count*2) % count;
+            assert( len0 != 0 );
+            len = MIN( len0 + 1, count );
+            if( slice.startIndex < 0 )
+                slice.startIndex += count;
+            else if( slice.startIndex >= count )
+                slice.startIndex -= count;
             slice.endIndex = slice.startIndex + len;
-            flag = 1;
         }
 
         if( len + 1 > curr_size )
@@ -516,7 +516,7 @@ static int contour_perimeter_test( void )
             }
         }
 
-        if( len - flag == contour->total )
+        if( len0 == contour->total )
         {
             array[len++] = array[0];
         }
@@ -605,7 +605,7 @@ static int contour_approx_drawing_test( void )
         count = cvFindContours( src_img, storage, &contours, sizeof(CvContour),
                                 retrMode, approxMethod );
 
-        iplSet( dst2_img, 0 );
+        cvZero( dst2_img );
         CvSeq* seq = icvSeqTreeToSeq( contours );
         int j;
 
@@ -640,8 +640,6 @@ static int contour_approx_drawing_test( void )
 
         cvClearMemStorage( storage );
     }
-
-//test_exit:
 
     cvReleaseMemStorage( &storage );
 

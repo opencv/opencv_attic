@@ -52,6 +52,11 @@ GrFmtBmp::GrFmtBmp()
 }
 
 
+GrFmtBmp::~GrFmtBmp()
+{
+}
+
+
 GrFmtReader* GrFmtBmp::NewReader( const char* filename )
 {
     return new GrFmtBmpReader( filename );
@@ -70,6 +75,12 @@ GrFmtBmpReader::GrFmtBmpReader( const char* filename ) : GrFmtReader( filename )
 {
     m_offset = -1;
 }
+
+
+GrFmtBmpReader::~GrFmtBmpReader()
+{
+}
+
 
 void  GrFmtBmpReader::Close()
 {

@@ -105,13 +105,13 @@ static int fcaLinAcc( void )
     
     cvAcc(pSrc8u,pTest);
     atsConvert(pSrc8u,pTemp);
-    iplAdd(pDst,pTemp,pDst);
+    cvAdd(pDst,pTemp,pDst);
     cvAcc(pSrc8s,pTest);
     atsConvert(pSrc8s,pTemp);
-    iplAdd(pDst,pTemp,pDst);
+    cvAdd(pDst,pTemp,pDst);
     cvAcc(pSrc32f,pTest);
-    iplAdd(pDst,pSrc32f,pDst);
-    Error = (long)iplNorm(pTest,pDst,IPL_C);
+    cvAdd(pDst,pSrc32f,pDst);
+    Error = (long)cvNorm(pTest,pDst,CV_C);
     
     trsWrite(ATS_SUM, "\nAccuracy   %e\n",EPSILON);
     /*************************************************************************************/
@@ -171,16 +171,16 @@ static int fcaSqrAcc( void )
     
     cvSquareAcc(pSrc8u,pTest);
     atsConvert(pSrc8u,pTemp);
-    iplMultiply(pTemp,pTemp,pTemp);
-    iplAdd(pDst,pTemp,pDst);
+    cvMul(pTemp,pTemp,pTemp);
+    cvAdd(pDst,pTemp,pDst);
     cvSquareAcc(pSrc8s,pTest);
     atsConvert(pSrc8s,pTemp);
-    iplMultiply(pTemp,pTemp,pTemp);
-    iplAdd(pDst,pTemp,pDst);
+    cvMul(pTemp,pTemp,pTemp);
+    cvAdd(pDst,pTemp,pDst);
     cvSquareAcc(pSrc32f,pTest);
-    iplMultiply(pSrc32f,pSrc32f,pSrc32f);
-    iplAdd(pDst,pSrc32f,pDst);
-    Error = (long)iplNorm(pTest,pDst,IPL_C);
+    cvMul(pSrc32f,pSrc32f,pSrc32f);
+    cvAdd(pDst,pSrc32f,pDst);
+    Error = (long)cvNorm(pTest,pDst,CV_C);
     
     trsWrite(ATS_SUM, "\nAccuracy   %e\n",EPSILON);
     /*************************************************************************************/
@@ -252,19 +252,19 @@ static int fcaMultAcc( void )
     cvMultiplyAcc(pSrcA8u,pSrcB8u,pTest);
     atsConvert(pSrcA8u,pTempA);
     atsConvert(pSrcB8u,pTempB);
-    iplMultiply(pTempA,pTempB,pTempA);
-    iplAdd(pDst,pTempA,pDst);
-    //Error = (long)iplNorm(pTest,pDst,IPL_C);
+    cvMul(pTempA,pTempB,pTempA);
+    cvAdd(pDst,pTempA,pDst);
+    //Error = (long)cvNorm(pTest,pDst,CV_C);
     cvMultiplyAcc(pSrcA8s,pSrcB8s,pTest);
     atsConvert(pSrcA8s,pTempA);
     atsConvert(pSrcB8s,pTempB);
-    iplMultiply(pTempA,pTempB,pTempA);
-    iplAdd(pDst,pTempA,pDst);
-    //Error = (long)iplNorm(pTest,pDst,IPL_C);
+    cvMul(pTempA,pTempB,pTempA);
+    cvAdd(pDst,pTempA,pDst);
+    //Error = (long)cvNorm(pTest,pDst,CV_C);
     cvMultiplyAcc(pSrcA32f,pSrcB32f,pTest);
-    iplMultiply(pSrcA32f,pSrcB32f,pSrcA32f);
-    iplAdd(pDst,pSrcA32f,pDst);
-    Error = iplNorm(pTest,pDst,IPL_C);
+    cvMul(pSrcA32f,pSrcB32f,pSrcA32f);
+    cvAdd(pDst,pSrcA32f,pDst);
+    Error = cvNorm(pTest,pDst,CV_C);
     
     trsWrite(ATS_SUM, "\nAccuracy   %e\n",Error);
     /*************************************************************************************/
@@ -327,21 +327,21 @@ static int fcaRunAvg( void )
     
     cvRunningAvg(pSrc8u,pTest,alpha);
     atsConvert(pSrc8u,pTemp);
-    iplMultiplySFP(pDst,pDst,(1.f-alpha));
-    iplMultiplySFP(pTemp,pTemp,alpha);
-    iplAdd(pDst,pTemp,pDst);
-    Error = (long)iplNorm(pTest,pDst,IPL_C);
+    cvScale(pDst,pDst,(1.f-alpha));
+    cvScale(pTemp,pTemp,alpha);
+    cvAdd(pDst,pTemp,pDst);
+    Error = (long)cvNorm(pTest,pDst,CV_C);
     cvRunningAvg(pSrc8s,pTest,alpha);
     atsConvert(pSrc8s,pTemp);
-    iplMultiplySFP(pDst,pDst,(1.f-alpha));
-    iplMultiplySFP(pTemp,pTemp,alpha);
-    iplAdd(pDst,pTemp,pDst);
-    Error = (long)iplNorm(pTest,pDst,IPL_C);
+    cvScale(pDst,pDst,(1.f-alpha));
+    cvScale(pTemp,pTemp,alpha);
+    cvAdd(pDst,pTemp,pDst);
+    Error = (long)cvNorm(pTest,pDst,CV_C);
     cvRunningAvg(pSrc32f,pTest,alpha);
-    iplMultiplySFP(pDst,pDst,(1.f-alpha));
-    iplMultiplySFP(pSrc32f,pTemp,alpha);
-    iplAdd(pDst,pTemp,pDst);
-    Error = (long)iplNorm(pTest,pDst,IPL_C);
+    cvScale(pDst,pDst,(1.f-alpha));
+    cvScale(pSrc32f,pTemp,alpha);
+    cvAdd(pDst,pTemp,pDst);
+    Error = (long)cvNorm(pTest,pDst,CV_C);
     
     trsWrite(ATS_SUM, "\nAccuracy   %e\n",EPSILON);
     /*************************************************************************************/

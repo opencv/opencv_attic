@@ -49,7 +49,7 @@ static char cFuncName[] = "cvMatchContours";
 static int aMatchContours(void)
 {
     CvSeqBlock contour_blk1, contour_blk2;
-    CvSeq contour_h1, contour_h2;
+    CvContour contour_h1, contour_h2;
     CvContoursMatchMethod method;
     int nPoints1 = 20, nPoints2 = 20; 
     int xc,yc,a1 = 10, b1 = 20, a2 = 15, b2 =30, fi = 0;
@@ -122,11 +122,11 @@ static int aMatchContours(void)
 
 /*   contours initialazing */
     seq_type = CV_SEQ_POLYGON;
-    cvMakeSeqHeaderForArray( seq_type, sizeof(CvSeq), sizeof(CvPoint),
-               (char*)cp1, nPoints1, &contour_h1, &contour_blk1);
+    cvMakeSeqHeaderForArray( seq_type, sizeof(CvContour), sizeof(CvPoint),
+               (char*)cp1, nPoints1, (CvSeq*)&contour_h1, &contour_blk1);
 
-    cvMakeSeqHeaderForArray( seq_type, sizeof(CvSeq), sizeof(CvPoint),
-              (char*)cp2, nPoints2, &contour_h2, &contour_blk2);
+    cvMakeSeqHeaderForArray( seq_type, sizeof(CvContour), sizeof(CvPoint),
+              (char*)cp2, nPoints2, (CvSeq*)&contour_h2, &contour_blk2);
 
 /*  countours matchig */
     error_test = 0.;
@@ -134,7 +134,7 @@ static int aMatchContours(void)
     for (i=1;i<=3;i++)
     {
         method = (CvContoursMatchMethod)i;
-        rezult = cvMatchContours (&contour_h1, &contour_h2, method);
+        rezult = cvMatchContours((CvSeq*)&contour_h1, (CvSeq*)&contour_h2, method);
 
         error_test+=rezult;
     }
@@ -163,3 +163,4 @@ void InitAMatchContours( void )
 } /* InitAMatchContours */
 
 /* End of file. */
+

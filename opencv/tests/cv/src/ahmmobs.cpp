@@ -41,6 +41,8 @@
 
 #include "cvtest.h"
 
+#if 0 /* avoid this while a substitution for IPL DCT is not ready */
+
 #include <stdlib.h>
 #include <assert.h>
 #include <limits.h>
@@ -110,7 +112,7 @@ static  void hmm_obs_dct_etalon( IplImage* img, char* obs, CvSize dctSize,
         for( x = 0; x < result.width; x += delta.width )
         {
             cvSetImageROI( img, cvRect( x, y, dctSize.width, dctSize.height ));
-            iplCopy( img, src );
+            cvCopy( img, src );
             iplDCT2D( src, dst, IPL_DCT_Forward );
             for( j = 0; j < obsSize.height; j++ )
             {
@@ -200,7 +202,7 @@ static int hmm_dct_test( void )
 
         assert( obs->roi == 0 && obs2->roi == 0 );
 
-        err = iplNorm( obs, obs2, IPL_C );
+        err = cvNorm( obs, obs2, CV_C );
 
         obs->width = obs2->width = max_img_size;
         obs->height = obs2->height = max_img_size;
@@ -245,5 +247,7 @@ void InitAImageToHMMObs( void )
     trsReg( funcs[0], test_desc[0], atsAlgoClass, hmm_dct_test );
 
 } /* InitAMoments */
+
+#endif
 
 /* End of file. */

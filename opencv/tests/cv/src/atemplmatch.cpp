@@ -170,7 +170,7 @@ static void match_templ_etalon( IplImage* src, IplImage* templ, IplImage* dst,
             {
             case CV_TM_SQDIFF_NORMED:
             case CV_TM_SQDIFF:
-                val = iplNorm( src, templ, IPL_L2 );
+                val = cvNorm( src, templ, CV_L2 );
                 val *= val;
                 break;
             default:
@@ -310,7 +310,7 @@ static int match_templ_test( void* arg )
                         cvMatchTemplate( src_img, templ_img, dst_img,
                                          (CvTemplMatchMethod)method );
 
-                        err = iplNorm( dst_img, dst2_img, IPL_C );
+                        err = cvNorm( dst_img, dst2_img, CV_C );
 
                         if( method == 5 && tw == 1 && th == 1 )
                         {

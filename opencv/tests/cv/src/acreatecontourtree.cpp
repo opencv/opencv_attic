@@ -40,8 +40,6 @@
 //M*/
 
 #include "cvtest.h"
-#include "_cvgeom.h"
-/*#include "conio.h" */
 
 static char cTestName[] = "Binary tree create";
 static char cTestClass[] = "Algorithm";
@@ -50,7 +48,7 @@ static char cFuncName[] = "cvCreateContourTree";
 static int aCreateContourTree(void)
 {
     CvSeqBlock contour_blk1;
-    CvSeq contour_h1;   /*  input contour */
+    CvContour contour_h1;   /*  input contour */
     CvSeq *contour_h2;  /*  destination contour */
     CvContourTree *tree;     /*   created binary tree */
     CvMemStorage *storage;   /*   storage for contour and tree writing  */
@@ -121,13 +119,13 @@ static int aCreateContourTree(void)
 /*   contours initialazing  */
 
     type_seq = CV_SEQ_POLYGON;
-    cvMakeSeqHeaderForArray(type_seq, sizeof(CvSeq), sizeof(CvPoint),
-              (char*)cp1, nPoints1, &contour_h1, &contour_blk1);
+    cvMakeSeqHeaderForArray(type_seq, sizeof(CvContour), sizeof(CvPoint),
+              (char*)cp1, nPoints1, (CvSeq*)&contour_h1, &contour_blk1);
     
 /*  create countour's tree  */
     error_test = 0.;
 
-    tree = cvCreateContourTree (&contour_h1, storage, threshold);
+    tree = cvCreateContourTree ((CvSeq*)&contour_h1, storage, threshold);
 
     trsWrite( ATS_CON | ATS_LST | ATS_SUM, "Contour's binary tree is created \n");
 
@@ -135,28 +133,28 @@ static int aCreateContourTree(void)
     criteria.type = CV_TERMCRIT_ITER;
     criteria.maxIter = 100;
     contour_h2 = cvContourFromContourTree (tree, storage, criteria);
-    rezult = cvMatchContours (&contour_h1, contour_h2,CV_CONTOURS_MATCH_I1);
+    rezult = cvMatchContours ((CvSeq*)&contour_h1, contour_h2,CV_CONTOURS_MATCH_I1);
 
     error+=rezult;
 
     criteria.type = CV_TERMCRIT_EPS;
     criteria.epsilon = (float)0.00001;
     contour_h2 = cvContourFromContourTree (tree, storage, criteria);
-    rezult = cvMatchContours (&contour_h1, contour_h2, CV_CONTOURS_MATCH_I1);
+    rezult = cvMatchContours ((CvSeq*)&contour_h1, contour_h2, CV_CONTOURS_MATCH_I1);
     error+=rezult;
 
     criteria.type = CV_TERMCRIT_ITER + CV_TERMCRIT_EPS;
     criteria.epsilon = (float)0.00001;
     criteria.maxIter = 1;
     contour_h2 = cvContourFromContourTree (tree, storage, criteria);
-    rezult = cvMatchContours (&contour_h1, contour_h2, CV_CONTOURS_MATCH_I1);
+    rezult = cvMatchContours ((CvSeq*)&contour_h1, contour_h2, CV_CONTOURS_MATCH_I1);
     error+=rezult;
 
     criteria.type = CV_TERMCRIT_ITER + CV_TERMCRIT_EPS;
     criteria.epsilon = 1000.;
     criteria.maxIter = 100;
     contour_h2 = cvContourFromContourTree (tree, storage, criteria);
-    rezult = cvMatchContours (&contour_h1, contour_h2, CV_CONTOURS_MATCH_I1);
+    rezult = cvMatchContours ((CvSeq*)&contour_h1, contour_h2, CV_CONTOURS_MATCH_I1);
     error+=rezult;
 
     if(error > eps_rez )

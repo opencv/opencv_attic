@@ -47,6 +47,11 @@
 #include <windows.h>
 #endif
 
+#if defined(_CH_)
+#include <cvch.h>
+CV_CH_LOAD_CODE(highgui,Highgui)
+#endif
+
 #ifdef __cplusplus
 #define HIGHGUI_EXTERN_C extern "C"
 extern "C" {
@@ -86,6 +91,8 @@ HIGHGUI_API void cvResizeWindow( const char* name, int width, int height );
 
 /* destroy window and all the trackers associated with it */
 HIGHGUI_API void cvDestroyWindow( const char* name );
+
+HIGHGUI_API void cvDestroyAllWindows(void);
 
 /* get native window handle (HWND in case of Win32 and Widget in case of X Window) */
 HIGHGUI_API void* cvGetWindowHandle( const char* name );
@@ -189,6 +196,9 @@ HIGHGUI_API int    cvSetCaptureProperty( CvCapture* capture, int property_id, do
 /* "black box" AVI writer structure */
 typedef struct CvAVIWriter CvAVIWriter;
 
+#define CV_FOURCC(c1,c2,c3,c4)  \
+    (((c1)&255) + (((c2)&255)<<8) + (((c3)&255)<<16) + (((c4)&255)<<24))
+
 /* initialize AVI writer */
 HIGHGUI_API CvAVIWriter* cvCreateAVIWriter( const char* filename, int fourcc,
                                             double fps, CvSize frameSize );
@@ -215,7 +225,7 @@ HIGHGUI_API void cvReleaseAVIWriter( CvAVIWriter** writer );
 #define cvvResizeWindow cvResizeWindow
 #define cvvDestroyWindow cvDestroyWindow
 #define cvvCreateTrackbar cvCreateTrackbar
-#define cvvLoadImage cvLoadImage
+#define cvvLoadImage(name) cvLoadImage((name),1)
 #define cvvSaveImage cvSaveImage
 #define cvvAddSearchPath cvAddSearchPath
 #define cvvWaitKey(name) cvWaitKey(0)
@@ -229,11 +239,6 @@ CV_EXTERN_C_FUNCPTR( int (CV_CDECL * CvWin32WindowCallback)
                      (HWND, UINT, WPARAM, LPARAM, int*));
 HIGHGUI_API void set_preprocess_func( CvWin32WindowCallback on_preprocess );
 HIGHGUI_API void set_postprocess_func( CvWin32WindowCallback on_postprocess );
-
-#define get_hwnd_byname  cvGetWindowHandle
-#define get_name_byhwnd  cvGetWindowName
-
-HIGHGUI_API void destroy_all();
 
 CV_INLINE int iplWidth( const IplImage* img );
 CV_INLINE int iplWidth( const IplImage* img )

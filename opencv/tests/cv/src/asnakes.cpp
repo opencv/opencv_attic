@@ -41,8 +41,6 @@
 
 #include "cvtest.h"
 
-#ifdef WIN32
-
 #define SCAN  0
 #define CHECK 1
 
@@ -130,8 +128,8 @@ static int fmaSnakes( void* arg )
         /* create full name of bitmap file */
         strcpy(tmp, rel_path);
         strcat(tmp, file_name[i]);
-        _fullpath( abs_file_name, tmp, _MAX_PATH ); 
-        strcat( abs_file_name, ".BMP" );
+        strcpy( abs_file_name, tmp ); 
+        strcat( abs_file_name, ".bmp" );
 
         /* read bitmap with 8u image */
         iplSrc = atsCreateImageFromFile( abs_file_name );
@@ -144,8 +142,8 @@ static int fmaSnakes( void* arg )
         /* init snake reading file with snake */
         strcpy(tmp, rel_path);
         strcat(tmp, file_name[i]);
-        _fullpath( abs_file_name, tmp, _MAX_PATH ); 
-        strcat( abs_file_name, ".TXT" );
+        strcpy( abs_file_name, tmp ); 
+        strcat( abs_file_name, ".txt" );
         
         file = fopen( abs_file_name, "r+" );
 
@@ -228,8 +226,3 @@ void InitASnakes(void)
     /*trsRegArg( func_name[0], test_desc, atsAlgoClass, fmaSnakes, SCAN );*/
     trsRegArg( func_name[0], test_desc, atsAlgoClass, fmaSnakes, CHECK );
 } /* InitASnakes */
-#else
-void InitASnakes(void)
-{
-}
-#endif

@@ -1,10 +1,10 @@
 lib_LTLIBRARIES = libhighgui.la
 
-libhighgui_la_SOURCES = bitstrm.cpp grfmt_base.cpp grfmt_bmp.cpp grfmt_jpeg.cpp grfmt_pxm.cpp grfmt_png.cpp grfmt_sunras.cpp grfmt_tiff.cpp image.cpp loadsave.cpp precomp.cpp utils.cpp window_lnx.cpp window_w32.cpp
+libhighgui_la_SOURCES = bitstrm.cpp cvcap.cpp grfmt_base.cpp grfmt_bmp.cpp grfmt_jpeg.cpp grfmt_pxm.cpp grfmt_png.cpp grfmt_sunras.cpp grfmt_tiff.cpp image.cpp loadsave.cpp precomp.cpp utils.cpp window_lnx.cpp window_w32.cpp
 
-EXTRA_DIST = highgui.dsp 
+EXTRA_DIST = highgui.dsp makefile.vc makefile.icl makefile.bcc makefile.gcc highgui.rc resource.h
 
-libhighguiincludedir = $(includedir)/cv
+libhighguiincludedir = $(includedir)/opencv
 
 # here you should add all header files, which contains the functionality
 # of your shared lib (published for the users)
@@ -29,7 +29,7 @@ libhighgui_la_LDFLAGS = -no-undefined -version-info $(LT_CURRENT):$(LT_REVISION)
 #  in here.
 #  The following line is only a suggestion!
 #
-libhighgui_la_LIBADD = @MOTIFLIBS@ @IMAGELIBS@
+libhighgui_la_LIBADD = @MOTIFLIBS@ @IMAGELIBS@ @FFMPEGLIBS@
 
 INCLUDES = -I. -I../../cv/include -I../.. $(X_CFLAGS)
 
