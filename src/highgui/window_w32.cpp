@@ -113,6 +113,7 @@ typedef struct CvWindow
     int flags;
 
     CvMouseCallback on_mouse;
+    void* on_mouse_param;
 
     struct
     {
@@ -378,6 +379,7 @@ CV_IMPL int cvNamedWindow( const char* name, int flags )
     window->last_key = 0;
 
     window->on_mouse = 0;
+    window->on_mouse_param = 0;
 
     memset( &window->toolbar, 0, sizeof(window->toolbar));
 
@@ -836,7 +838,8 @@ static LRESULT CALLBACK HighGUIProc( HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM
             icvGetBitmapData( window, &size, 0, 0 );
 
             window->on_mouse( event, pt.x*size.cx/MAX(rect.right - rect.left,1),
-                                     pt.y*size.cy/MAX(rect.bottom - rect.top,1), flags );
+                                     pt.y*size.cy/MAX(rect.bottom - rect.top,1), flags,
+                                     window->on_mouse_param );
         }
         break;
 
@@ -1302,7 +1305,7 @@ cvCreateTrackbar( const char* trackbar_name, const char* window_name,
 
 
 CV_IMPL void
-cvSetMouseCallback( const char* window_name, CvMouseCallback on_mouse )
+cvSetMouseCallback( const char* window_name, CvMouseCallback on_mouse, void* param )
 {
     CV_FUNCNAME( "cvSetMouseCallback" );
 
@@ -1318,6 +1321,7 @@ cvSetMouseCallback( const char* window_name, CvMouseCallback on_mouse )
         EXIT;
 
     window->on_mouse = on_mouse;
+    window->on_mouse_param = param;
 
     __END__;
 }

@@ -21,7 +21,7 @@ int is_color = 1;
 int is_mask = 0;
 int new_mask_val = 255;
 
-void on_mouse( int event, int x, int y, int flags )
+void on_mouse( int event, int x, int y, int flags, void* param )
 {
     if( !color_img )
         return;
@@ -93,7 +93,7 @@ int main( int argc, char** argv )
     cvCreateTrackbar( "lo_diff", "image", &lo_diff, 255, NULL );
     cvCreateTrackbar( "up_diff", "image", &up_diff, 255, NULL );
 
-    cvSetMouseCallback( "image", on_mouse );
+    cvSetMouseCallback( "image", on_mouse, 0 );
 
     for(;;)
     {
