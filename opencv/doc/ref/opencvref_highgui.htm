@@ -201,17 +201,20 @@ The function <code>cvSetTrackbarPos</code>
 #define CV_EVENT_FLAG_SHIFTKEY  16
 #define CV_EVENT_FLAG_ALTKEY    32
 
-CV_EXTERN_C_FUNCPTR( void (*CvMouseCallback )(int event, int x, int y, int flags) );
+CV_EXTERN_C_FUNCPTR( void (*CvMouseCallback )(int event, int x, int y, int flags, void* param) );
 
-void cvSetMouseCallback( const char* window_name, CvMouseCallback on_mouse );
+void cvSetMouseCallback( const char* window_name, CvMouseCallback on_mouse, void* param=NULL );
 </pre><dl>
 <dt>window_name<dd>Name of the window.
 <dt>on_mouse<dd>Pointer to the function to be called every time mouse event occurs
                 in the specified window. This function should be prototyped as
-  <pre>void Foo(int event, int x, int y, int flags);</pre>
+  <pre>void Foo(int event, int x, int y, int flags, void* param);</pre>
   where <code>event</code> is one of <code>CV_EVENT_*</code>,
   <code>x</code> and <code>y</code> are coordinates of mouse pointer in image coordinates
-  (not window coordinates) and <code>flags</code> is a combination of <code>CV_EVENT_FLAG</code>.
+  (not window coordinates), <code>flags</code> is a combination of <code>CV_EVENT_FLAG</code>,
+  and <code>param</code> is a user-defined parameter passed to the
+  <code>cvSetMouseCallback</code> function call.
+<dt>param<dd>User-defined parameter to be passed to the callback function.
 </dl><p>
 The function <code>cvSetMouseCallback</code>
 sets the callback function for mouse events occuting within the specified

@@ -26,7 +26,7 @@ float hranges_arr[] = {0,180};
 float* hranges = hranges_arr;
 int vmin = 10, vmax = 256, smin = 30;
 
-void on_mouse( int event, int x, int y, int flags )
+void on_mouse( int event, int x, int y, int flags, void* param )
 {
     if( !image )
         return;
@@ -106,7 +106,7 @@ int main( int argc, char** argv )
 
     cvNamedWindow( "Histogram", 1 );
     cvNamedWindow( "CamShiftDemo", 1 );
-    cvSetMouseCallback( "CamShiftDemo", on_mouse );
+    cvSetMouseCallback( "CamShiftDemo", on_mouse, 0 );
     cvCreateTrackbar( "Vmin", "CamShiftDemo", &vmin, 256, 0 );
     cvCreateTrackbar( "Vmax", "CamShiftDemo", &vmax, 256, 0 );
     cvCreateTrackbar( "Smin", "CamShiftDemo", &smin, 256, 0 );

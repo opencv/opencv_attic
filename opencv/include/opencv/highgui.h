@@ -168,10 +168,11 @@ CVAPI(void) cvSetTrackbarPos( const char* trackbar_name, const char* window_name
 #define CV_EVENT_FLAG_SHIFTKEY  16
 #define CV_EVENT_FLAG_ALTKEY    32
 
-typedef void (CV_CDECL *CvMouseCallback )(int event, int x, int y, int flags);
+typedef void (CV_CDECL *CvMouseCallback )(int event, int x, int y, int flags, void* param);
 
 /* assign callback for mouse events */
-CVAPI(void) cvSetMouseCallback( const char* window_name, CvMouseCallback on_mouse );
+CVAPI(void) cvSetMouseCallback( const char* window_name, CvMouseCallback on_mouse,
+                                void* param CV_DEFAULT(NULL));
 
 /*load image from file 
   iscolor: >0 - output image is always color,

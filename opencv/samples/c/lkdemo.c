@@ -26,7 +26,7 @@ int add_remove_pt = 0;
 CvPoint pt;
 
 
-void on_mouse( int event, int x, int y, int flags )
+void on_mouse( int event, int x, int y, int flags, void* param )
 {
     if( !image )
         return;
@@ -65,7 +65,7 @@ int main( int argc, char** argv )
             "To add/remove a feature point click it\n" );
 
     cvNamedWindow( "LkDemo", 0 );
-    cvSetMouseCallback( "LkDemo", on_mouse );
+    cvSetMouseCallback( "LkDemo", on_mouse, 0 );
 
     for(;;)
     {
@@ -107,7 +107,7 @@ int main( int argc, char** argv )
 
             count = MAX_COUNT;
             cvGoodFeaturesToTrack( grey, eig, temp, points[1], &count,
-                                   quality, min_distance, 0 );
+                                   quality, min_distance, 0, 3, 0, 0.04 );
             cvFindCornerSubPix( grey, points[1], count,
                 cvSize(win_size,win_size), cvSize(-1,-1),
                 cvTermCriteria(CV_TERMCRIT_ITER|CV_TERMCRIT_EPS,20,0.03));
