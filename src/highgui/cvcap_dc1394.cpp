@@ -90,11 +90,23 @@ Comments and changes welcome
 
 #if !defined WIN32 && defined HAVE_DC1394
 
+#include <unistd.h>
+#include <stdint.h>
 #include <libraw1394/raw1394.h>
 #include <libdc1394/dc1394_control.h>
 
+#define  DELAY              50000
+
+// bpp for 16-bits cameras... this value works for PtGrey DragonFly...
+#define MONO16_BPP 8
+
 /* should be in pixelformat */
-static void yuv422_to_bgr(unsigned char * src,unsigned char * dest,int w,int h);
+static void uyv2bgr(const unsigned char *src, unsigned char *dest, unsigned long long int NumPixels);
+static void uyvy2bgr(const unsigned char *src, unsigned char *dest, unsigned long long int NumPixels);
+static void uyyvyy2bgr(const unsigned char *src, unsigned char *dest, unsigned long long int NumPixels);
+static void y2bgr(const unsigned char *src, unsigned char *dest, unsigned long long int NumPixels);
+static void y162bgr(const unsigned char *src, unsigned char *dest, unsigned long long int NumPixels, int bits);
+static void rgb482bgr(const unsigned char *src8, unsigned char *dest, unsigned long long int NumPixels, int bits);
 
 static char * videodev[4]={
   "/dev/video1394/0",
@@ -111,6 +123,7 @@ typedef struct CvCaptureCAM_DC1394
     dc1394_cameracapture* camera;
     int format;
     int mode;
+    int color_mode;
     int frame_rate;
     char * device_name;
     IplImage* rgb_frame;
@@ -137,6 +150,24 @@ static int numPorts = -1;
 static int numCameras = 0;
 static nodeid_t *camera_nodes;
 struct camnode {dc1394_cameracapture cam;int portnum;} cameras[MAX_CAMERAS];
+
+static const int preferred_modes[]
+= {
+    // uncomment the following line to test a particular mode:
+    //FORMAT_VGA_NONCOMPRESSED, MODE_640x480_MONO16, 0,
+    FORMAT_SVGA_NONCOMPRESSED_2,
+    MODE_1600x1200_RGB, MODE_1600x1200_YUV422, MODE_1280x960_RGB, MODE_1280x960_YUV422,
+    MODE_1600x1200_MONO, MODE_1280x960_MONO, MODE_1600x1200_MONO16, MODE_1280x960_MONO16,
+    FORMAT_SVGA_NONCOMPRESSED_1,
+    MODE_1024x768_RGB, MODE_1024x768_YUV422, MODE_800x600_RGB, MODE_800x600_YUV422,
+    MODE_1024x768_MONO, MODE_800x600_MONO, MODE_1024x768_MONO16, MODE_800x600_MONO16, 
+    FORMAT_VGA_NONCOMPRESSED,
+   MODE_640x480_RGB, MODE_640x480_YUV422, MODE_640x480_YUV411, MODE_320x240_YUV422,
+    MODE_160x120_YUV444, MODE_640x480_MONO, MODE_640x480_MONO16,
+    FORMAT_SCALABLE_IMAGE_SIZE,
+    MODE_FORMAT7_0, MODE_FORMAT7_1, MODE_FORMAT7_2, MODE_FORMAT7_3,
+    MODE_FORMAT7_4, MODE_FORMAT7_5, MODE_FORMAT7_6, MODE_FORMAT7_7,
+    0};
 
 static CvCaptureVTable captureCAM_DC1394_vtable = 
 {
@@ -175,7 +206,10 @@ void icvInitCapture_DC1394(){
 };
 
 CvCapture* icvOpenCAM_DC1394( int index ){
-   if (numPorts<0) icvInitCapture_DC1394();
+    quadlet_t framerates, modes[8], formats;
+    int i;
+
+  if (numPorts<0) icvInitCapture_DC1394();
    if (numPorts==0)
      return 0;     /* No i1394 ports found */
    if (numCameras<1)
@@ -184,30 +218,182 @@ CvCapture* icvOpenCAM_DC1394( int index ){
      return 0;
    if (index<0)
      return 0;
+
    CvCaptureCAM_DC1394 * pcap = (CvCaptureCAM_DC1394*)cvAlloc(sizeof(CvCaptureCAM_DC1394));
    pcap->vtable = &captureCAM_DC1394_vtable;
-   pcap->format = FORMAT_VGA_NONCOMPRESSED;
-   pcap->mode = MODE_640x480_RGB, //MODE_320x240_YUV422;
-     //pcap->mode = MODE_640x480_YUV422, //MODE_320x240_YUV422;
-     //pcap->mode = MODE_320x240_YUV422, //MODE_320x240_YUV422;
-   pcap->frame_rate = FRAMERATE_15;
+
    /* Select a port and camera */
    pcap->device_name = videodev[cameras[index].portnum];
    pcap->handle = handles[cameras[index].portnum];
    pcap->camera = &cameras[index].cam;
    
-   dc1394_dma_setup_capture(pcap->handle,pcap->camera->node,index+1 /*channel*/,
-                pcap->format, pcap->mode,SPEED_200, pcap->frame_rate, NUM_BUFFERS,
-                            0 /* do extra buffering */, 1 /*DROP_FRAMES*/,
-                            pcap->device_name, pcap->camera);
+   // get supported formats
+   if (dc1394_query_supported_formats(pcap->handle, pcap->camera->node, &formats)<0) {
+       fprintf(stderr,"%s:%d: Could not query supported formats\n",__FILE__,__LINE__);
+       formats=0x0;
+   }
+   for (i=0; i < NUM_FORMATS; i++) {
+       modes[i]=0;
+       if (formats & (0x1<<(31-i))) 
+      if (dc1394_query_supported_modes(pcap->handle, pcap->camera->node, i+FORMAT_MIN, &modes[i])<0) {
+          fprintf(stderr,"%s:%d: Could not query Format%d modes\n",__FILE__,__LINE__,i);
+      }
+   }
 
-   dc1394_start_iso_transmission(pcap->handle, pcap->camera->node);
+   pcap->format = 0;
+   pcap->mode = 0;
+   pcap->color_mode = 0;
+   pcap->frame_rate = 0;
+
+   int format = -1;
+   int format_min = 0;
+
+   // scan the list of preferred modes, and find a supported one
+   for(i=0; (pcap->mode == 0) && (preferred_modes[i] != 0); i++) {
+       if((preferred_modes[i] >= FORMAT_MIN) && (preferred_modes[i] <= FORMAT_MAX)) {
+      pcap->format = preferred_modes[i];
+      format = preferred_modes[i] - FORMAT_MIN;
+      format_min = MODE_FORMAT0_MIN + 32*format;
+      continue;
+       }
+       assert(format != -1);
+       if ( !(formats & (0x1<<(31-format))) )
+      continue;
+       if (modes[format] & (0x1<<(31-(preferred_modes[i]-format_min)))) {
+      pcap->mode = preferred_modes[i];
+       }
+   }
+   if (pcap->mode == 0) {
+       fprintf(stderr,"%s:%d: Could not find a supported mode for this camera\n",__FILE__,__LINE__);
+       goto ERROR;
+   }
+
+   float bpp;
+   bpp = -1;
+   switch(pcap->mode) {
+   case MODE_160x120_YUV444:
+       pcap->color_mode=COLOR_FORMAT7_YUV444;
+       bpp=3;
+       break;
+   case MODE_320x240_YUV422:
+   case MODE_640x480_YUV422:
+   case MODE_800x600_YUV422:
+   case MODE_1024x768_YUV422:
+   case MODE_1280x960_YUV422:
+   case MODE_1600x1200_YUV422:
+       pcap->color_mode=COLOR_FORMAT7_YUV422;
+       bpp=2;
+       break;
+   case MODE_640x480_YUV411:
+       pcap->color_mode=COLOR_FORMAT7_YUV411;
+       bpp=1.5;
+       break;
+   case MODE_640x480_RGB:
+   case MODE_800x600_RGB:
+   case MODE_1024x768_RGB:
+   case MODE_1280x960_RGB:
+   case MODE_1600x1200_RGB:
+       pcap->color_mode=COLOR_FORMAT7_RGB8;
+       bpp=3;
+       break;
+   case MODE_640x480_MONO:
+   case MODE_800x600_MONO:
+   case MODE_1024x768_MONO:
+   case MODE_1280x960_MONO:
+   case MODE_1600x1200_MONO:
+       pcap->color_mode=COLOR_FORMAT7_MONO8;
+       bpp=1;
+       break;
+   case MODE_640x480_MONO16:
+   case MODE_800x600_MONO16:
+   case MODE_1024x768_MONO16:
+   case MODE_1280x960_MONO16:
+   case MODE_1600x1200_MONO16:
+       pcap->color_mode=COLOR_FORMAT7_MONO16;
+       bpp=2;
+       break;
+   case MODE_FORMAT7_0:
+   case MODE_FORMAT7_1:
+   case MODE_FORMAT7_2:
+   case MODE_FORMAT7_3:
+   case MODE_FORMAT7_4:
+   case MODE_FORMAT7_5:
+   case MODE_FORMAT7_6:
+   case MODE_FORMAT7_7:
+       fprintf(stderr,"%s:%d: Format7 not yet supported\n",__FILE__,__LINE__);
+       goto ERROR;
+       break;
+   }
+   if (bpp==-1) {
+       fprintf(stderr,"%s:%d: ERROR: BPP is -1!!\n",__FILE__,__LINE__);
+       goto ERROR;
+   }
+   
+   if (dc1394_query_supported_framerates(pcap->handle, pcap->camera->node, pcap->format, pcap->mode, &framerates)!=DC1394_SUCCESS) {
+       fprintf(stderr,"%s:%d: Could not query supported framerates\n",__FILE__,__LINE__);
+       framerates = 0;
+   }
+   for (int f=FRAMERATE_MAX; f>=FRAMERATE_MIN; f--) {
+       if (framerates & (0x1<< (31-(f-FRAMERATE_MIN)))) {
+           pcap->frame_rate = f;
+           f = FRAMERATE_MIN;
+       }
+   }
+
+   if (pcap->format!=FORMAT_SCALABLE_IMAGE_SIZE) { // everything except Format 7
+       if (dc1394_dma_setup_capture(pcap->handle, pcap->camera->node, index+1 /*channel*/,
+                                    pcap->format, pcap->mode, SPEED_400, 
+                                    pcap->frame_rate, NUM_BUFFERS,
+                                 #ifdef HAVE_DC1394_095
+                                    0 /*do_extra_buffering*/,
+                                 #endif
+                                    1 /*DROP_FRAMES*/,
+                                    pcap->device_name, pcap->camera) != DC1394_SUCCESS) {
+           fprintf(stderr,"%s:%d: Failed to setup DMA capture with VIDEO1394\n",__FILE__,__LINE__);
+           goto ERROR;
+       }
+   }
+   else {
+       if(dc1394_dma_setup_format7_capture(pcap->handle,pcap->camera->node,index+1 /*channel*/,
+                                    pcap->mode, SPEED_400, QUERY_FROM_CAMERA,
+                                    (unsigned int)QUERY_FROM_CAMERA, (unsigned int)QUERY_FROM_CAMERA,
+                                    (unsigned int)QUERY_FROM_CAMERA, (unsigned int)QUERY_FROM_CAMERA,
+                                    NUM_BUFFERS,
+                                #ifdef HAVE_DC1394_095
+                                    0 /*do_extra_buffering*/,
+                                #endif
+                                    1 /*DROP_FRAMES*/,
+                                    pcap->device_name, pcap->camera) != DC1394_SUCCESS) {
+           fprintf(stderr,"%s:%d: Failed to setup DMA capture with VIDEO1394\n",__FILE__,__LINE__);
+           goto ERROR;
+       }
+   }
+     
+   if (dc1394_start_iso_transmission(pcap->handle, pcap->camera->node)!=DC1394_SUCCESS) {
+       fprintf(stderr,"%s:%d: Could not start ISO transmission\n",__FILE__,__LINE__);
+       goto ERROR;
+   }
+
+   usleep(DELAY);
+
+   dc1394bool_t status;
+   if (dc1394_get_iso_status(pcap->handle, pcap->camera->node, &status)!=DC1394_SUCCESS) {
+       fprintf(stderr,"%s:%d: Could get ISO status",__FILE__,__LINE__);
+       goto ERROR;
+   }
+   if (status==DC1394_FALSE) {
+       fprintf(stderr,"%s:%d: ISO transmission refuses to start",__FILE__,__LINE__);
+       goto ERROR;
+   }
 
    cvInitImageHeader( &pcap->frame,cvSize( pcap->camera->frame_width,pcap->camera->frame_height ),
                            IPL_DEPTH_8U, 3, IPL_ORIGIN_TL, 4 );
    /* Allocate space for RGBA data */ 
    pcap->frame.imageData = (char *)cvAlloc(pcap->frame.imageSize);
    return (CvCapture *)pcap;
+
+  ERROR:
+   return 0;  
 };
 
 static void icvCloseCAM_DC1394( CvCaptureCAM_DC1394* capture ){
@@ -227,93 +413,278 @@ static IplImage* icvRetrieveFrameCAM_DC1394( CvCaptureCAM_DC1394* capture ){
         /* Convert to RGBA */
         /*  Convert(capture->mode,(unsigned char *) cameras[i].capture_buffer, 
             capture->frame.imageData ,capture->camera.width, capture->camera.height) */
-        char * src = (char *)capture->camera->capture_buffer;
-        char * dst = (char *)capture->frame.imageData;
-        switch (capture->mode) {
-    case MODE_640x480_RGB: 
-       /* Convert RGB to BGR */
-       for (int i=0;i<capture->frame.imageSize;i+=6) {
-          dst[i]   = src[i+2];
-          dst[i+1] = src[i+1];
-          dst[i+2] = src[i];
-          dst[i+3] = src[i+5];
-          dst[i+4] = src[i+4];
-          dst[i+5] = src[i+3];
-       }
-           break;
-    case MODE_640x480_YUV422:
-        case MODE_320x240_YUV422: 
-       yuv422_to_bgr((unsigned char *)capture->camera->capture_buffer,
-                     (unsigned char*)capture->frame.imageData,
-                     capture->frame.width, capture->frame.height); 
-       break;
-        } /* switch (capture->mode) */
-    dc1394_dma_done_with_buffer(capture->camera);
-    return &capture->frame;
-    }
-    return 0;
+        unsigned char * src = (unsigned char *)capture->camera->capture_buffer;
+        unsigned char * dst = (unsigned char *)capture->frame.imageData;
+        switch (capture->color_mode) {
+   case COLOR_FORMAT7_RGB8:
+     /* Convert RGB to BGR */
+     for (int i=0;i<capture->frame.imageSize;i+=6) {
+      dst[i]   = src[i+2];
+      dst[i+1] = src[i+1];
+      dst[i+2] = src[i];
+      dst[i+3] = src[i+5];
+      dst[i+4] = src[i+4];
+      dst[i+5] = src[i+3];
+     }
+     break;
+      case COLOR_FORMAT7_YUV422:
+     uyvy2bgr(src,
+       dst,
+       capture->frame.width * capture->frame.height);
+     break;
+   case COLOR_FORMAT7_MONO8:
+     y2bgr(src,
+      dst,
+      capture->frame.width * capture->frame.height);
+     break;
+   case COLOR_FORMAT7_YUV411:
+     uyyvyy2bgr(src,
+          dst,
+          capture->frame.width * capture->frame.height);
+     break;
+   case COLOR_FORMAT7_YUV444:
+     uyv2bgr(src,
+       dst,
+       capture->frame.width * capture->frame.height);
+     break;
+   case COLOR_FORMAT7_MONO16:
+     y162bgr(src,
+       dst,
+       capture->frame.width * capture->frame.height, MONO16_BPP);
+     break;
+   case COLOR_FORMAT7_RGB16:
+     rgb482bgr(src,
+          dst,
+          capture->frame.width * capture->frame.height, MONO16_BPP);
+     break;
+   default:
+     fprintf(stderr,"%s:%d: Unsupported color mode %d\n",__FILE__,__LINE__,capture->color_mode);
+     return 0;
+      } /* switch (capture->mode) */
+   dc1394_dma_done_with_buffer(capture->camera);
+   return &capture->frame;
+   }
+   return 0;
 };
 
 static double icvGetPropertyCAM_DC1394( CvCaptureCAM_DC1394* capture, int property_id ){
+   switch ( property_id ) {
+   case CV_CAP_PROP_FPS:
+      dc1394_get_video_framerate(capture->handle, capture->camera->node,
+            (unsigned int *) &capture->camera->frame_rate);
+      switch(capture->camera->frame_rate) {
+      case FRAMERATE_1_875:
+     return 1.875;
+      case FRAMERATE_3_75:
+     return 3.75;
+      case FRAMERATE_7_5:
+     return 7.5;
+      case FRAMERATE_15:
+     return 15.;
+      case FRAMERATE_30:
+     return 30.;
+      case FRAMERATE_60:
+     return 60;
+#if NUM_FRAMERATES > 6
+      case FRAMERATE_120:
+     return 120;
+#endif
+#if NUM_FRAMERATES > 7
+      case FRAMERATE_240:
+     return 240;
+#endif
+      }
+   }
    return 0;
 };
 
 static int    
 icvSetPropertyCAM_DC1394( CvCaptureCAM_DC1394* capture, int property_id, double value ){
    switch ( property_id ) {
-      case CV_CAP_PROP_FPS:
-     unsigned int fps=15;
-         if (value==7.5) fps=FRAMERATE_7_5;
-         if (value==15) fps=FRAMERATE_15;
-         if (value==30) fps=FRAMERATE_30;
-         dc1394_set_video_framerate(capture->handle, capture->camera->node,fps);
-         dc1394_get_video_framerate(capture->handle, capture->camera->node,
-                                    (unsigned int *) &capture->camera->frame_rate);
-         break;
+   case CV_CAP_PROP_FPS:
+   unsigned int fps=15;
+   if(capture->format == FORMAT_SCALABLE_IMAGE_SIZE)
+     break; /* format 7 has no fixed framerates */
+   if (value==1.875)
+     fps=FRAMERATE_1_875;
+   else if (value==3.75)
+     fps=FRAMERATE_3_75;
+   else if (value==7.5)
+     fps=FRAMERATE_7_5;
+   else if (value==15)
+     fps=FRAMERATE_15;
+   else if (value==30)
+     fps=FRAMERATE_30;
+   else if (value==60)
+     fps=FRAMERATE_60;
+#if NUM_FRAMERATES > 6
+   else if (value==120)
+     fps=FRAMERATE_120;
+#endif
+#if NUM_FRAMERATES > 7
+   else if (value==240)
+     fps=FRAMERATE_240;
+#endif
+   dc1394_set_video_framerate(capture->handle, capture->camera->node,fps);
+   dc1394_get_video_framerate(capture->handle, capture->camera->node,
+              (unsigned int *) &capture->camera->frame_rate);
+   break;
    }
    return 0;
 };
 
-/*********************************************************************************************
-PIXELFORMAT CONVERSIONS - Unoptimized
-*********************************************************************************************/
-void yuv422_to_bgr(unsigned char * src,unsigned char * dest,int w,int h) {
-   /* UYVY unsigned char to BGR unsigned char */ 
-   int R,G,B;
-   unsigned char * pSrc, * pDest;
-double YY1,YY2,U,V;
-/*
-if (useMMX) {
-   MMX_ConvUYVYTo32(src,dest,w,h);
-   return;
-   } // else
-*/
-pSrc=src;
-for (int r=0;r<h;r++) {
-   //   pDest=dest+w*(h-r-1)*3;
-   pDest=dest+w*r*3;
-   for (int c=w/2;c>0;c--)
-      {
-         U = (*pSrc++)-128.0;
-         YY1 = 1.164*((*pSrc++)-16.0);
-         V = (*pSrc++)-128.0;
-         YY2 = 1.164*((*pSrc++)-16.0);
-         B = cvRound(YY1          + 2.018*U);
-         G = cvRound(YY1 - 0.813*V- 0.391*U);
-         R = cvRound(YY1 + 1.596*V);
-         pDest[0] = CV_CAST_8U(B);
-         pDest[1] = CV_CAST_8U(G);
-         pDest[2] = CV_CAST_8U(R);
-         pDest += 3;
-         B = cvRound(YY2          + 2.018*U);
-         G = cvRound(YY2 - 0.813*V- 0.391*U);
-         R = cvRound(YY2 + 1.596*V);
-         pDest[0] = CV_CAST_8U(B);
-         pDest[1] = CV_CAST_8U(G);
-         pDest[2] = CV_CAST_8U(R);
-         pDest += 3;
-      }
-   }      
+/**********************************************************************
+*
+*  CONVERSION FUNCTIONS TO RGB 24bpp 
+*
+**********************************************************************/
+
+/* color conversion functions from Bart Nabbe. *//* corrected by Damien: bad coeficients in YUV2RGB */
+#define YUV2RGB(y, u, v, r, g, b)\
+r = y + ((v*1436) >> 10);\
+g = y - ((u*352 + v*731) >> 10);\
+b = y + ((u*1814) >> 10);\
+r = r < 0 ? 0 : r;\
+g = g < 0 ? 0 : g;\
+b = b < 0 ? 0 : b;\
+r = r > 255 ? 255 : r;\
+g = g > 255 ? 255 : g;\
+b = b > 255 ? 255 : b
+
+static void
+uyv2bgr(const unsigned char *src, unsigned char *dest,
+   unsigned long long int NumPixels)
+{
+   register int i = NumPixels + (NumPixels << 1) - 1;
+   register int j = NumPixels + (NumPixels << 1) - 1;
+   register int y, u, v;
+   register int r, g, b;
+
+   while (i > 0) {
+   v = src[i--] - 128;
+   y = src[i--];
+   u = src[i--] - 128;
+   YUV2RGB(y, u, v, r, g, b);
+   dest[j--] = r;
+   dest[j--] = g;
+   dest[j--] = b;
+   }
+}
+
+static void
+uyvy2bgr(const unsigned char *src, unsigned char *dest,
+   unsigned long long int NumPixels)
+{
+   register int i = (NumPixels << 1) - 1;
+   register int j = NumPixels + (NumPixels << 1) - 1;
+   register int y0, y1, u, v;
+   register int r, g, b;
+
+   while (i > 0) {
+   y1 = src[i--];
+   v = src[i--] - 128;
+   y0 = src[i--];
+   u = src[i--] - 128;
+   YUV2RGB(y1, u, v, r, g, b);
+   dest[j--] = r;
+   dest[j--] = g;
+   dest[j--] = b;
+   YUV2RGB(y0, u, v, r, g, b);
+   dest[j--] = r;
+   dest[j--] = g;
+   dest[j--] = b;
+   }
+}
+
+
+static void
+uyyvyy2bgr(const unsigned char *src, unsigned char *dest,
+     unsigned long long int NumPixels)
+{
+   register int i = NumPixels + (NumPixels >> 1) - 1;
+   register int j = NumPixels + (NumPixels << 1) - 1;
+   register int y0, y1, y2, y3, u, v;
+   register int r, g, b;
+
+   while (i > 0) {
+   y3 = src[i--];
+   y2 = src[i--];
+   v = src[i--] - 128;
+   y1 = src[i--];
+   y0 = src[i--];
+   u = src[i--] - 128;
+   YUV2RGB(y3, u, v, r, g, b);
+   dest[j--] = r;
+   dest[j--] = g;
+   dest[j--] = b;
+   YUV2RGB(y2, u, v, r, g, b);
+   dest[j--] = r;
+   dest[j--] = g;
+   dest[j--] = b;
+   YUV2RGB(y1, u, v, r, g, b);
+   dest[j--] = r;
+   dest[j--] = g;
+   dest[j--] = b;
+   YUV2RGB(y0, u, v, r, g, b);
+   dest[j--] = r;
+   dest[j--] = g;
+   dest[j--] = b;
+   }
+}
+
+static void
+y2bgr(const unsigned char *src, unsigned char *dest,
+      unsigned long long int NumPixels)
+{
+   register int i = NumPixels - 1;
+   register int j = NumPixels + (NumPixels << 1) - 1;
+   register int y;
+
+   while (i > 0) {
+   y = src[i--];
+   dest[j--] = y;
+   dest[j--] = y;
+   dest[j--] = y;
+   }
+}
+
+static void
+y162bgr(const unsigned char *src, unsigned char *dest,
+   unsigned long long int NumPixels, int bits)
+{
+   register int i = (NumPixels << 1) - 1;
+   register int j = NumPixels + (NumPixels << 1) - 1;
+   register int y;
+
+   while (i > 0) {
+   y = src[i--];
+   y = (y + (src[i--] << 8)) >> (bits - 8);
+   dest[j--] = y;
+   dest[j--] = y;
+   dest[j--] = y;
+   }
+}
+
+// this one was in coriander but didn't take bits into account
+static void
+rgb482bgr(const unsigned char *src, unsigned char *dest,
+   unsigned long long int NumPixels, int bits)
+{
+   register int i = (NumPixels << 1) - 1;
+   register int j = NumPixels + (NumPixels << 1) - 1;
+   register int y;
+
+   while (i > 0) {
+   y = src[i--];
+   dest[j-2] = (y + (src[i--] << 8)) >> (bits - 8);
+   j--;
+   y = src[i--];
+   dest[j] = (y + (src[i--] << 8)) >> (bits - 8);
+   j--;
+   y = src[i--];
+   dest[j+2] = (y + (src[i--] << 8)) >> (bits - 8);
+   j--;
+   }
 }
 
 #endif
