@@ -78,7 +78,7 @@ int main( int argc, char* argv[] )
     int boosttype = 3;
     const char* stumperrors[] = { "misclass", "gini", "entropy" };
     int stumperror = 0;
-    int maxtreesplits = -1;
+    int maxtreesplits = 0;
     int minpos = 500;
 
     if( argc == 1 )
