@@ -41,200 +41,243 @@
 
 #include "cvtest.h"
 
-static char* FuncName = "cvThreshold";
-static char TestName[]    = "Thresholding";
-static char TestClass[]   = "Algorithm";
+static const char* thresh_param_names[] = { "size", "depth", "thresh_type", 0 };
+static const CvSize thresh_sizes[] = {{30,30}, {320, 240}, {720,480}, {-1,-1}};
+static const CvSize thresh_whole_sizes[] = {{320,240}, {320, 240}, {720,480}, {-1,-1}};
+static const int thresh_depths[] = { CV_8U, CV_32F, -1 };
+static const char* thresh_types[] = { "binary", "binary_inv", "trunc", "tozero", "tozero_inv", 0 };
 
-static long  Len;
-static float Thresh;
-
-#define ATS_8U  3
-#define ATS_32F 5
-
-#define BINARY_8U      (CV_THRESH_BINARY     << 4) + ATS_8U
-#define BINARY_INV_8U  (CV_THRESH_BINARY_INV << 4) + ATS_8U
-#define TRUNC_8U       (CV_THRESH_TRUNC      << 4) + ATS_8U
-#define TOZERO_8U      (CV_THRESH_TOZERO     << 4) + ATS_8U
-#define TOZERO_INV_8U  (CV_THRESH_TOZERO_INV << 4) + ATS_8U
-
-#define BINARY_8S      (CV_THRESH_BINARY     << 4) + ATS_8S
-#define BINARY_INV_8S  (CV_THRESH_BINARY_INV << 4) + ATS_8S
-#define TRUNC_8S       (CV_THRESH_TRUNC      << 4) + ATS_8S
-#define TOZERO_8S      (CV_THRESH_TOZERO     << 4) + ATS_8S
-#define TOZERO_INV_8S  (CV_THRESH_TOZERO_INV << 4) + ATS_8S
-
-#define BINARY_32F     (CV_THRESH_BINARY     << 4) + ATS_32F
-#define BINARY_INV_32F (CV_THRESH_BINARY_INV << 4) + ATS_32F
-#define TRUNC_32F      (CV_THRESH_TRUNC      << 4) + ATS_32F
-#define TOZERO_32F     (CV_THRESH_TOZERO     << 4) + ATS_32F
-#define TOZERO_INV_32F (CV_THRESH_TOZERO_INV << 4) + ATS_32F
-
-
-static int myThresh( uchar*        Src8u,
-                     float*        Src32f,
-                     float         Thresh,
-                     float         Max,
-                     int           Len,
-                     CvThreshType  Type )
+class CV_ThreshTest : public CvArrTest
 {
-    int i;
-    for( i = 0; i < Len; i++ )
-    {
-        switch( Type )
-        {
-        case CV_THRESH_BINARY:
-            Src8u[i]  = (uchar)(Src8u[i]  > (uchar)Thresh ? Max : 0);
-            Src32f[i] =        (Src32f[i] >        Thresh ? Max : 0);
-            break;
-        case CV_THRESH_BINARY_INV:
-            Src8u[i]  = (uchar)(Src8u[i]  > (uchar)Thresh ? 0 : Max);
-            Src32f[i] =        (Src32f[i] >        Thresh ? 0 : Max);
-            break;
-        case CV_THRESH_TRUNC:
-            Src8u[i]  = (uchar)(Src8u[i]  > (uchar)Thresh ? Thresh : Src8u[i] );
-            Src32f[i] =        (Src32f[i] >        Thresh ? Thresh : Src32f[i]);
-            break;
-        case CV_THRESH_TOZERO:
-            Src8u[i]  = (uchar)(Src8u[i]  > (uchar)Thresh ? Src8u[i]  : 0);
-            Src32f[i] =        (Src32f[i] >        Thresh ? Src32f[i] : 0);
-            break;
-        case CV_THRESH_TOZERO_INV:
-            Src8u[i]  = (uchar)(Src8u[i]  > (uchar)Thresh ? 0 : Src8u[i] );
-            Src32f[i] =        (Src32f[i] >        Thresh ? 0 : Src32f[i]);
-            break;
-        default:
-            assert( 0 );
-        }
-    }
-    return 0;
-} /* myThresh */
+public:
+    CV_ThreshTest();
+
+protected:
+    void get_test_array_types_and_sizes( int test_case_idx, CvSize** sizes, int** types );
+    double get_success_error_level( int test_case_idx, int i, int j );
+    void run_func();
+    void prepare_to_validation( int );
+    
+    int write_default_params(CvFileStorage* fs);
+    void get_timing_test_array_types_and_sizes( int test_case_idx, CvSize** sizes, int** types,
+                                                CvSize** whole_sizes, bool *are_images );
+    void print_timing_params( int test_case_idx, char* ptr, int params_left );
+
+    int thresh_type;
+    float thresh_val;
+    float max_val;
+};
 
 
-static int myThreshR( IplImage*     Src8u,
-                      IplImage*     Src32f,
-                      float         Thresh,
-                      float         Max,
-                      CvThreshType  Type )
+CV_ThreshTest::CV_ThreshTest()
+    : CvArrTest( "thresh-simple", "cvThreshold", "" )
 {
-    char* s8u;
-    char* s32f;
-    int step8u, step32f;
-    CvSize size;
+    test_array[INPUT].push(NULL);
+    test_array[OUTPUT].push(NULL);
+    test_array[REF_OUTPUT].push(NULL);
+    optional_mask = false;
+    element_wise_relative_error = true;
 
-    cvGetImageRawData(Src8u, (uchar**)&s8u, &step8u, &size);
-    cvGetImageRawData(Src32f, (uchar**)&s32f, &step32f, 0);
-
-    int y;
-    for( y = 0; y < size.height; y++, s8u += step8u, s32f += step32f )
-        myThresh( (uchar*)s8u, (float*)s32f, Thresh, Max, size.width, Type );
-    return 0;
+    default_timing_param_names = thresh_param_names;
+    depth_list = thresh_depths;
+    size_list = thresh_sizes;
+    whole_size_list = thresh_whole_sizes;
+    cn_list = 0;
 }
 
 
-static int foaThreshold( void* prm )
+void CV_ThreshTest::get_test_array_types_and_sizes( int test_case_idx,
+                                                CvSize** sizes, int** types )
 {
-    long          lParam  = (long)prm;
-    int           Flavour = lParam & 0xf;
-    CvThreshType  Type    = (CvThreshType)((lParam >> 4) & 0xf);
+    CvRNG* rng = ts->get_rng();
+    int depth = test_case_idx*2/test_case_count, cn = cvTsRandInt(rng) % 4 + 1;
+    CvArrTest::get_test_array_types_and_sizes( test_case_idx, sizes, types );
+    depth = depth == 0 ? CV_8U : CV_32F;
 
-    IplImage* Src8uR;
-    IplImage* Src32fR;
-    IplImage* Src8uControlR;
-    IplImage* Src32fControlR;
+    types[INPUT][0] = types[OUTPUT][0] = types[REF_OUTPUT][0] = CV_MAKETYPE(depth,cn);
+    thresh_type = cvTsRandInt(rng) % 5;
 
-    int    height;
-    int    width;
-
-    long   Errors = 0;
-
-    float  ThreshMax;
-    float  ThreshMin;
-    float  _Thresh;
-
-    int    i;
-
-    static int  read_param = 0;
-
-    /* Initialization global parameters */
-    if( !read_param )
+    if( depth == CV_8U )
     {
-        read_param = 1;
-        trslRead( &Len,    "106", "Size of sourse array" );
-        trssRead( &Thresh, "125", "Threshold value" );
+        thresh_val = (float)(cvTsRandReal(rng)*350. - 50.);
+        max_val = (float)(cvTsRandReal(rng)*350. - 50.);
+        if( cvTsRandInt(rng)%4 == 0 )
+            max_val = 255;
     }
-
-    width = Len;
-    height = Len / 2 + 1;
-    
-    Src8uR         = cvCreateImage(cvSize(width, height), IPL_DEPTH_8U, 1);
-    Src32fR        = cvCreateImage(cvSize(width, height), IPL_DEPTH_32F, 1);
-    Src8uControlR  = cvCreateImage(cvSize(width, height), IPL_DEPTH_8U, 1);
-    Src32fControlR = cvCreateImage(cvSize(width, height), IPL_DEPTH_32F, 1);
-    
-    assert( Src8uR );
-    assert( Src32fR );
-    assert( Src8uControlR );
-    assert( Src32fControlR );
-
-    ThreshMin = (Flavour == ATS_8U ? MAX( -Thresh, 0 ) : -Thresh);
-    ThreshMax = Thresh;
-
-    for( _Thresh = ThreshMin; _Thresh <= ThreshMax; _Thresh++ )
+    else
     {
-        CvSize size = cvSize( width, height );
-        
-        for( i = 0; i < height; i++ )
-        {
-            ats1bInitRandom( 0, 255, (uchar*)Src8uControlR->imageData + i * Src8uControlR->widthStep, Len );
-            ats1flInitRandom( -255, 255, (float*)(Src32fControlR->imageData + i * Src32fControlR->widthStep), Len );
-        }
-
-        /* Run CVL function comparing results */
-        switch( Flavour )
-        {
-        case ATS_8U:
-            cvThreshold( Src8uControlR, Src8uR, _Thresh, 250, Type );
-            /* Run my function */
-            myThreshR( Src8uControlR,
-                       Src32fControlR,
-                       _Thresh, 250, Type );
-            Errors += atsCompare2Db( (uchar*)Src8uR->imageData, (uchar*)Src8uControlR->imageData,
-                                     size, Src8uR->widthStep, 0 );
-            break;
-        case ATS_32F:
-            cvThreshold( Src32fControlR, Src32fR, _Thresh, 250, Type );
-            /* Run my function */
-            myThreshR( Src8uControlR,
-                       Src32fControlR,
-                       _Thresh, 250, Type );
-            Errors += atsCompare2Dfl( (float*)Src32fR->imageData, (float*)Src32fControlR->imageData,
-                                      size, Src32fR->widthStep, 0 );
-            break;
-        default:
-            assert( 0 );
-        }
+        thresh_val = (float)(cvTsRandReal(rng)*1000. - 500.);
+        max_val = (float)(cvTsRandReal(rng)*1000. - 500.);
     }
-    cvReleaseImage( &Src8uR );
-    cvReleaseImage( &Src32fR );
-    cvReleaseImage( &Src8uControlR );
-    cvReleaseImage( &Src32fControlR );
-
-    return Errors == 0 ? TRS_OK : trsResult( TRS_FAIL, "Fixed %d errors", Errors );
 }
 
-void InitAThreshold()
+
+double CV_ThreshTest::get_success_error_level( int /*test_case_idx*/, int /*i*/, int /*j*/ )
 {
-    trsRegArg( FuncName,  TestName, TestClass, foaThreshold, BINARY_8U    );
-    trsRegArg( FuncName,  TestName, TestClass, foaThreshold, BINARY_INV_8U);
-    trsRegArg( FuncName,  TestName, TestClass, foaThreshold, TRUNC_8U     );
-    trsRegArg( FuncName,  TestName, TestClass, foaThreshold, TOZERO_8U    );
-    trsRegArg( FuncName,  TestName, TestClass, foaThreshold, TOZERO_INV_8U);
+    return FLT_EPSILON*10;
+}
 
-    trsRegArg( FuncName, TestName, TestClass, foaThreshold, BINARY_32F   );
-    trsRegArg( FuncName, TestName, TestClass, foaThreshold, BINARY_INV_32F);
-    trsRegArg( FuncName, TestName, TestClass, foaThreshold, TRUNC_32F    );
-    trsRegArg( FuncName, TestName, TestClass, foaThreshold, TOZERO_32F   );
-    trsRegArg( FuncName, TestName, TestClass, foaThreshold, TOZERO_INV_32F);
-} /* InitAThresholdC1S */
 
-/* End of file. */
+void CV_ThreshTest::run_func()
+{
+    cvThreshold( test_array[INPUT][0], test_array[OUTPUT][0],
+                 thresh_val, max_val, thresh_type );
+}
+
+
+static void cvTsThreshold( const CvMat* _src, CvMat* _dst,
+                           float thresh, float maxval, int thresh_type )
+{
+    int i, j;
+    int depth = CV_MAT_DEPTH(_src->type), cn = CV_MAT_CN(_src->type);
+    int width_n = _src->cols*cn, height = _src->rows;
+    int ithresh = cvFloor(thresh), ithresh2, imaxval = cvRound(maxval);
+    const uchar* src = _src->data.ptr;
+    uchar* dst = _dst->data.ptr;
+    
+    ithresh2 = CV_CAST_8U(ithresh);
+    imaxval = CV_CAST_8U(imaxval);
+
+    assert( depth == CV_8U || depth == CV_32F );
+    
+    switch( thresh_type )
+    {
+    case CV_THRESH_BINARY:
+        for( i = 0; i < height; i++, src += _src->step, dst += _dst->step )
+        {
+            if( depth == CV_8U )
+                for( j = 0; j < width_n; j++ )
+                    dst[j] = (uchar)(src[j] > ithresh ? imaxval : 0);
+            else
+                for( j = 0; j < width_n; j++ )
+                    ((float*)dst)[j] = ((const float*)src)[j] > thresh ? maxval : 0.f;
+        }
+        break;
+    case CV_THRESH_BINARY_INV:
+        for( i = 0; i < height; i++, src += _src->step, dst += _dst->step )
+        {
+            if( depth == CV_8U )
+                for( j = 0; j < width_n; j++ )
+                    dst[j] = (uchar)(src[j] > ithresh ? 0 : imaxval);
+            else
+                for( j = 0; j < width_n; j++ )
+                    ((float*)dst)[j] = ((const float*)src)[j] > thresh ? 0.f : maxval;
+        }
+        break;
+    case CV_THRESH_TRUNC:
+        for( i = 0; i < height; i++, src += _src->step, dst += _dst->step )
+        {
+            if( depth == CV_8U )
+                for( j = 0; j < width_n; j++ )
+                {
+                    int s = src[j];
+                    dst[j] = (uchar)(s > ithresh ? ithresh2 : s);
+                }
+            else
+                for( j = 0; j < width_n; j++ )
+                {
+                    float s = ((const float*)src)[j];
+                    ((float*)dst)[j] = s > thresh ? thresh : s;
+                }
+        }
+        break;
+    case CV_THRESH_TOZERO:
+        for( i = 0; i < height; i++, src += _src->step, dst += _dst->step )
+        {
+            if( depth == CV_8U )
+                for( j = 0; j < width_n; j++ )
+                {
+                    int s = src[j];
+                    dst[j] = (uchar)(s > ithresh ? s : 0);
+                }
+            else
+                for( j = 0; j < width_n; j++ )
+                {
+                    float s = ((const float*)src)[j];
+                    ((float*)dst)[j] = s > thresh ? s : 0.f;
+                }
+        }
+        break;
+    case CV_THRESH_TOZERO_INV:
+        for( i = 0; i < height; i++, src += _src->step, dst += _dst->step )
+        {
+            if( depth == CV_8U )
+                for( j = 0; j < width_n; j++ )
+                {
+                    int s = src[j];
+                    dst[j] = (uchar)(s > ithresh ? 0 : s);
+                }
+            else
+                for( j = 0; j < width_n; j++ )
+                {
+                    float s = ((const float*)src)[j];
+                    ((float*)dst)[j] = s > thresh ? 0.f : s;
+                }
+        }
+        break;
+    default:
+        assert(0);
+    }
+}
+
+
+void CV_ThreshTest::prepare_to_validation( int /*test_case_idx*/ )
+{
+    cvTsThreshold( &test_mat[INPUT][0], &test_mat[REF_OUTPUT][0],
+                   thresh_val, max_val, thresh_type );
+}
+
+
+int CV_ThreshTest::write_default_params( CvFileStorage* fs )
+{
+    int code = CvArrTest::write_default_params( fs );
+    if( code < 0 )
+        return code;
+    
+    if( ts->get_testing_mode() == CvTS::TIMING_MODE )
+    {
+        start_write_param( fs );        
+        write_string_list( fs, "thresh_type", thresh_types );
+    }
+
+    return code;
+}
+
+
+void CV_ThreshTest::get_timing_test_array_types_and_sizes( int test_case_idx,
+                CvSize** sizes, int** types, CvSize** whole_sizes, bool *are_images )
+{
+    CvArrTest::get_timing_test_array_types_and_sizes( test_case_idx, sizes, types,
+                                                      whole_sizes, are_images );
+    const char* thresh_str = cvReadString( find_timing_param( "thresh_type" ), "binary" );
+    thresh_type = strcmp( thresh_str, "binary" ) == 0 ? CV_THRESH_BINARY :
+        strcmp( thresh_str, "binary_inv" ) == 0 ? CV_THRESH_BINARY_INV :
+        strcmp( thresh_str, "trunc" ) == 0 ? CV_THRESH_TRUNC :
+        strcmp( thresh_str, "tozero" ) == 0 ? CV_THRESH_TOZERO :
+        CV_THRESH_TOZERO_INV;
+
+    if( CV_MAT_DEPTH(types[INPUT][0]) == CV_8U )
+    {
+        thresh_val = 128;
+        max_val = 255;
+    }
+    else
+    {
+        thresh_val = 500.;
+        max_val = 1.;
+    }
+}
+
+
+void CV_ThreshTest::print_timing_params( int test_case_idx, char* ptr, int params_left )
+{
+    sprintf( ptr, "%s,", cvReadString( find_timing_param( "thresh_type" ), "binary" ) );
+    ptr += strlen(ptr);
+    params_left--;
+
+    CvArrTest::print_timing_params( test_case_idx, ptr, params_left );
+}
+
+
+CV_ThreshTest thresh_test;
+

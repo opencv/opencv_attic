@@ -515,10 +515,6 @@ CV_DEF_INIT_FUNC_TAB_2D( CmpGTC, C1R )
 CV_DEF_INIT_FUNC_TAB_2D( CmpGEC, C1R )
 CV_DEF_INIT_FUNC_TAB_2D( CmpEQC, C1R )
 
-#define icvCmpEq            2
-#define icvCmpGreaterEq     3
-#define icvCmpGreater       4
-
 icvCompare_8u_C1R_t icvCompare_8u_C1R_p = 0;
 icvCompare_16s_C1R_t icvCompare_16s_C1R_p = 0;
 icvCompare_32f_C1R_t icvCompare_32f_C1R_p = 0;
@@ -549,7 +545,8 @@ cvCmp( const void* srcarr1, const void* srcarr2,
     __BEGIN__;
 
     int type, coi = 0;
-    int invflag = 0, ipp_cmp_op;
+    int invflag = 0;
+    CvCmpOp ipp_cmp_op;
     int src1_step, src2_step, dst_step;
     CvMat srcstub1, *src1 = (CvMat*)srcarr1;
     CvMat srcstub2, *src2 = (CvMat*)srcarr2;
@@ -643,7 +640,7 @@ cvCmp( const void* srcarr1, const void* srcarr2,
     if( !func )
         CV_ERROR( CV_StsUnsupportedFormat, "" );
 
-    ipp_cmp_op = cmp_op == CV_CMP_EQ ? icvCmpEq : icvCmpGreater;
+    ipp_cmp_op = cmp_op == CV_CMP_EQ ? cvCmpEq : cvCmpGreater;
 
     if( type == CV_8U && icvCompare_8u_C1R_p )
     {
@@ -793,8 +790,8 @@ cvCmpS( const void* srcarr, double value, void* dstarr, int cmp_op )
     if( !func )
         CV_ERROR( CV_StsUnsupportedFormat, "" );
 
-    ipp_cmp_op = cmp_op == CV_CMP_EQ ? icvCmpEq :
-                 cmp_op == CV_CMP_GE ? icvCmpGreaterEq : icvCmpGreater;
+    ipp_cmp_op = cmp_op == CV_CMP_EQ ? cvCmpEq :
+                 cmp_op == CV_CMP_GE ? cvCmpGreaterEq : cvCmpGreater;
     if( type == CV_8U && icvCompare_8u_C1R_p )
     {
         IPPI_CALL( icvCompareC_8u_C1R_p( src1->data.ptr, src1_step, (uchar)(int&)buf,

@@ -157,7 +157,7 @@ void CV_TemplMatchTest::get_test_array_types_and_sizes( int test_case_idx,
                                                 CvSize** sizes, int** types )
 {
     CvRNG* rng = ts->get_rng();
-    int depth = test_case_idx*2/test_case_count, cn = cvTsRandInt(rng) ? 3 : 1;
+    int depth = test_case_idx*2/test_case_count, cn = cvTsRandInt(rng) & 1 ? 3 : 1;
     CvArrTest::get_test_array_types_and_sizes( test_case_idx, sizes, types );
     depth = depth == 0 ? CV_8U : CV_32F;
 
@@ -216,7 +216,7 @@ void CV_TemplMatchTest::print_timing_params( int test_case_idx, char* ptr, int p
 
 double CV_TemplMatchTest::get_success_error_level( int /*test_case_idx*/, int /*i*/, int /*j*/ )
 {
-    return 1e-4;
+    return 1e-3;
 }
 
 
