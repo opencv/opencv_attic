@@ -955,12 +955,6 @@ CV_INLINE  CvPoint3D64f  cvPoint3D64f( double x, double y, double z )
     return p;
 }
 
-// 2005-03-21, mark.asbach@rwth-aachen.de 
-// quick fix - complete API transition before release(!)
-#ifndef API_TRANSITION
-  typedef CvPoint2D64f CvPoint2D64d;
-  typedef CvPoint3D64f CvPoint3D64d;
-#endif
 
 /******************************** CvSize's & CvBox **************************************/
 
