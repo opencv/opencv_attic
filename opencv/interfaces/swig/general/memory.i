@@ -49,7 +49,7 @@
 *          Array allocation, deallocation, initialization and access to elements         *
 \****************************************************************************************/
 
-%nodefault IplImage;
+%nodefault _IplImage;
 %newobject cvCreateImage;
 %newobject cvCreateImageHeader;
 %newobject cvCloneImage;
@@ -102,7 +102,7 @@
 *                                    Image Processing                                    *
 \****************************************************************************************/
 
-%nodefault IplConvKernel;
+%nodefault _IplConvKernel;
 %newobject cvCreateStructuringElement;
 
 
