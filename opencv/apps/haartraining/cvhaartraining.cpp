@@ -1929,7 +1929,7 @@ void cvCreateCascadeClassifier( const char* dirname,
             int len = strlen(dirname);
             CvHaarClassifierCascade* cascade = 0;
             strcpy( xml_path, dirname );
-            if( xml_path[len] == '\\' || xml_path[len] == '/' )
+            if( xml_path[len-1] == '\\' || xml_path[len-1] == '/' )
                 len--;
             strcpy( xml_path + len, ".xml" );
             cascade = cvLoadHaarClassifierCascade( dirname, cvSize(winwidth,winheight) );
