@@ -713,7 +713,7 @@ CvStatus CV_STDCALL icvSobel_32f_C1R( const float* pSrc, int srcStep,
                             double t0 = tsrc[i + ker_x]*fmX0;
 
                             for( j = 1; j <= ker_x; j++ )
-                                t0 += (tsrc[i+ker_x+j] + tsrc[i+ker_x-j])*fmaskX[j];
+                                t0 += (double)(tsrc[i+ker_x+j] + tsrc[i+ker_x-j])*fmaskX[j];
 
                             tdst[i] = (float)t0;
                         }
@@ -875,7 +875,7 @@ CvStatus CV_STDCALL icvSobel_32f_C1R( const float* pSrc, int srcStep,
                         for( i = 1; i <= ker_y; i++ )
                         {
                             float *trow1, *trow2;
-                            float m = fmaskY[i];
+                            double m = fmaskY[i];
                             trow1 = rows[ker_y - i];
                             trow2 = rows[ker_y + i];
                             val0 += (trow2[x] + trow1[x])*m;
