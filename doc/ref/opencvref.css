@@ -1,11 +1,25 @@
+.synopsis, .classsynopsis 
+{
+  background: #eeeeee;
+  border: solid 1px #aaaaaa;
+  padding: 0.5em;
+}
+
+Body { 
+    margin-left: 10%;
+    margin-right: 10%;
+}
+
 A.link {
     color: blue;
     text-decoration: underline;
 }
+
 A.visited {
     color: purple;
     text-decoration: underline;
 }
+
 A.active {
     color: red;
     text-decoration: underline;
@@ -14,12 +28,14 @@ A.active {
 
 H1 {
     color: #000000;
+    background-color: #6699FF;
+    text-align: center;
 }
 
 
 H2 {
     color: #000000;
-    background-color: #6699FF
+    text-decoration: underline;
 }
 
 H3 {
@@ -47,5 +63,5 @@ P.Blurb {
 
 DL DT {
     font-family:Monospace;
-    font-size: 80%;
+    # font-size: 80%;
 }

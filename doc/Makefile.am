@@ -1,2 +1,16 @@
-SUBDIRS = ref
-EXTRA_DIST = opencvman_old.pdf license.txt cvcam.rtf index.htm faq.htm opencv.jpg
+opencvdocdir = $(pkgdatadir)/doc
+nobase_dist_opencvdoc_DATA = cvcam.rtf faq.htm index.htm \
+    license.txt opencv.jpg opencvman_old.pdf \
+    papers/algo_tracking.pdf papers/avbpa99.ps papers/camshift.pdf \
+    ref/opencvref.css ref/opencvref_cv.htm ref/opencvref_cvaux.htm \
+    ref/opencvref_cxcore.htm ref/opencvref_highgui.htm \
+    ref/pics/backprojectpatch.png ref/pics/boundingrect.png \
+    ref/pics/building.jpg ref/pics/contoursecarea.png \
+    ref/pics/cornersubpix.png ref/pics/defects.png \
+    ref/pics/ellipse.png ref/pics/errmsg.png \
+    ref/pics/face.png ref/pics/haarfeatures.png \
+    ref/pics/houghp.png ref/pics/left.jpg \
+    ref/pics/maxrect.png ref/pics/memstorage1.png \
+    ref/pics/memstorage2.png ref/pics/minareabox.png \
+    ref/pics/quadedge.png ref/pics/right.jpg \
+    ref/pics/subdiv.png ref/pics/threshold.png
