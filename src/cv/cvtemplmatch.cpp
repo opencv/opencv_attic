@@ -50,9 +50,9 @@ icvCalculateBufferSizes( CvSize roiSize, CvSize templSize,
                          int *sumBufSize, int *sqsumBufSize,
                          int *resNumBufSize, int *resDenomBufSize )
 {
-    int depth = dataType == cv32f ? sizeof_float : 1;
+    int depth = dataType == cv32f ? CV_SIZEOF_FLOAT : 1;
 
-#define align(size) icvAlign((int)(size) + 16, 32)
+#define align(size) cvAlign((int)(size) + 16, 32)
 
     *imgBufSize = align( (templSize.width * roiSize.height + roiSize.width) * depth );
     *templBufSize = align( templSize.width * templSize.height * depth );
@@ -99,11 +99,11 @@ icvMatchTemplateEntry( const void *pImage, int imageStep,
 
     if( templStep < templSize.width * depth ||
         imageStep < roiSize.width * depth ||
-        resultStep < (roiSize.width - templSize.width + 1) * sizeof_float )
+        resultStep < (roiSize.width - templSize.width + 1) * CV_SIZEOF_FLOAT )
         return CV_BADSIZE_ERR;
 
     if( (templStep & (depth - 1)) != 0 ||
-        (imageStep & (depth - 1)) != 0 || (resultStep & (sizeof_float - 1)) != 0 )
+        (imageStep & (depth - 1)) != 0 || (resultStep & (CV_SIZEOF_FLOAT - 1)) != 0 )
         return CV_BADSIZE_ERR;
 
     icvCalculateBufferSizes( roiSize, templSize, dataType,
@@ -164,7 +164,9 @@ icvMatchTemplateEntry( const void *pImage, int imageStep,
 IPCVAPI_IMPL( CvStatus, icvMatchTemplate_SqDiff_8u32f_C1R,
               (const uchar * pImage, int imageStep, CvSize roiSize,
                const uchar * pTemplate, int templStep, CvSize templSize,
-               float *pResult, int resultStep, void *pBuffer) )
+               float *pResult, int resultStep, void *pBuffer),
+               (pImage, imageStep, roiSize, pTemplate, templStep, templSize,
+                pResult, resultStep, pBuffer) )
 {
     uchar *imgBuf = 0;
     uchar *templBuf = 0;
@@ -184,7 +186,7 @@ IPCVAPI_IMPL( CvStatus, icvMatchTemplate_SqDiff_8u32f_C1R,
     if( result != CV_OK )
         return result;
 
-    resultStep /= sizeof_float;
+    resultStep /= CV_SIZEOF_FLOAT;
 
     /* main loop - through x coordinate of the result */
     for( x = 0; x < resultSize.width; x++ )
@@ -227,7 +229,9 @@ IPCVAPI_IMPL( CvStatus, icvMatchTemplate_SqDiff_8u32f_C1R,
 IPCVAPI_IMPL( CvStatus, icvMatchTemplate_SqDiffNormed_8u32f_C1R,
               (const uchar * pImage, int imageStep, CvSize roiSize,
                const uchar * pTemplate, int templStep, CvSize templSize,
-               float *pResult, int resultStep, void *pBuffer) )
+               float *pResult, int resultStep, void *pBuffer),
+               (pImage, imageStep, roiSize, pTemplate, templStep, templSize,
+                pResult, resultStep, pBuffer) )
 {
     uchar *imgBuf = 0;
     uchar *templBuf = 0;
@@ -252,7 +256,7 @@ IPCVAPI_IMPL( CvStatus, icvMatchTemplate_SqDiffNormed_8u32f_C1R,
     if( result != CV_OK )
         return result;
 
-    resultStep /= sizeof_float;
+    resultStep /= CV_SIZEOF_FLOAT;
 
     /* calc common statistics for template and image */
     {
@@ -260,7 +264,7 @@ IPCVAPI_IMPL( CvStatus, icvMatchTemplate_SqDiffNormed_8u32f_C1R,
         int64 templSqsum = icvCrossCorr_8u_C1( templBuf, templBuf, winLen );
 
         templCoeff = (double) templSqsum;
-        templCoeff = icvInvSqrt64d( fabs( templCoeff ) + FLT_EPSILON );
+        templCoeff = 1./sqrt( fabs( templCoeff ) + FLT_EPSILON );
 
         for( y = 0; y < roiSize.height; y++, rowPtr += templSize.width )
         {
@@ -316,7 +320,7 @@ IPCVAPI_IMPL( CvStatus, icvMatchTemplate_SqDiffNormed_8u32f_C1R,
         for( y = 0; y < resultSize.height; y++ )
         {
             double res = ((double) resNum[y]) * templCoeff *
-                icvInvSqrt64d( fabs( (double) resDenom[y] ) + FLT_EPSILON );
+                1./sqrt( fabs( (double) resDenom[y] ) + FLT_EPSILON );
 
             pResult[x + y * resultStep] = (float) res;
         }
@@ -330,7 +334,9 @@ IPCVAPI_IMPL( CvStatus, icvMatchTemplate_SqDiffNormed_8u32f_C1R,
 IPCVAPI_IMPL( CvStatus, icvMatchTemplate_Corr_8u32f_C1R,
               (const uchar * pImage, int imageStep, CvSize roiSize,
                const uchar * pTemplate, int templStep, CvSize templSize,
-               float *pResult, int resultStep, void *pBuffer) )
+               float *pResult, int resultStep, void *pBuffer),
+               (pImage, imageStep, roiSize, pTemplate, templStep, templSize,
+                pResult, resultStep, pBuffer) )
 {
     uchar *imgBuf = 0;
     uchar *templBuf = 0;
@@ -350,7 +356,7 @@ IPCVAPI_IMPL( CvStatus, icvMatchTemplate_Corr_8u32f_C1R,
     if( result != CV_OK )
         return result;
 
-    resultStep /= sizeof_float;
+    resultStep /= CV_SIZEOF_FLOAT;
 
     /* main loop - through x coordinate of the result */
     for( x = 0; x < resultSize.width; x++ )
@@ -394,7 +400,9 @@ IPCVAPI_IMPL( CvStatus, icvMatchTemplate_Corr_8u32f_C1R,
 IPCVAPI_IMPL( CvStatus, icvMatchTemplate_CorrNormed_8u32f_C1R,
               (const uchar * pImage, int imageStep, CvSize roiSize,
                const uchar * pTemplate, int templStep, CvSize templSize,
-               float *pResult, int resultStep, void *pBuffer) )
+               float *pResult, int resultStep, void *pBuffer),
+               (pImage, imageStep, roiSize, pTemplate, templStep, templSize,
+                pResult, resultStep, pBuffer) )
 {
     uchar *imgBuf = 0;
     uchar *templBuf = 0;
@@ -419,7 +427,7 @@ IPCVAPI_IMPL( CvStatus, icvMatchTemplate_CorrNormed_8u32f_C1R,
     if( result != CV_OK )
         return result;
 
-    resultStep /= sizeof_float;
+    resultStep /= CV_SIZEOF_FLOAT;
 
     /* calc common statistics for template and image */
     {
@@ -428,7 +436,7 @@ IPCVAPI_IMPL( CvStatus, icvMatchTemplate_CorrNormed_8u32f_C1R,
 
 
         templCoeff = (double) templSqsum;
-        templCoeff = icvInvSqrt64d( fabs( templCoeff ) + FLT_EPSILON );
+        templCoeff = 1./sqrt( fabs( templCoeff ) + FLT_EPSILON );
 
         for( y = 0; y < roiSize.height; y++, rowPtr += templSize.width )
         {
@@ -485,7 +493,7 @@ IPCVAPI_IMPL( CvStatus, icvMatchTemplate_CorrNormed_8u32f_C1R,
         for( y = 0; y < resultSize.height; y++ )
         {
             double res = ((double) resNum[y]) * templCoeff *
-                icvInvSqrt64d( fabs( (double) resDenom[y] ) + FLT_EPSILON );
+                1./sqrt( fabs( (double) resDenom[y] ) + FLT_EPSILON );
 
             pResult[x + y * resultStep] = (float) res;
         }
@@ -500,7 +508,9 @@ IPCVAPI_IMPL( CvStatus, icvMatchTemplate_CorrNormed_8u32f_C1R,
 IPCVAPI_IMPL( CvStatus, icvMatchTemplate_Coeff_8u32f_C1R,
               (const uchar * pImage, int imageStep, CvSize roiSize,
                const uchar * pTemplate, int templStep, CvSize templSize,
-               float *pResult, int resultStep, void *pBuffer) )
+               float *pResult, int resultStep, void *pBuffer),
+               (pImage, imageStep, roiSize, pTemplate, templStep, templSize,
+                pResult, resultStep, pBuffer) )
 {
     uchar *imgBuf = 0;
     uchar *templBuf = 0;
@@ -525,7 +535,7 @@ IPCVAPI_IMPL( CvStatus, icvMatchTemplate_Coeff_8u32f_C1R,
     if( result != CV_OK )
         return result;
 
-    resultStep /= sizeof_float;
+    resultStep /= CV_SIZEOF_FLOAT;
 
     /* calc common statistics for template and image */
     {
@@ -602,7 +612,9 @@ IPCVAPI_IMPL( CvStatus, icvMatchTemplate_Coeff_8u32f_C1R,
 IPCVAPI_IMPL( CvStatus, icvMatchTemplate_CoeffNormed_8u32f_C1R,
               (const uchar * pImage, int imageStep, CvSize roiSize,
                const uchar * pTemplate, int templStep, CvSize templSize,
-               float *pResult, int resultStep, void *pBuffer) )
+               float *pResult, int resultStep, void *pBuffer),
+               (pImage, imageStep, roiSize, pTemplate, templStep, templSize,
+                pResult, resultStep, pBuffer) )
 {
     uchar *imgBuf = 0;
     uchar *templBuf = 0;
@@ -631,7 +643,7 @@ IPCVAPI_IMPL( CvStatus, icvMatchTemplate_CoeffNormed_8u32f_C1R,
     if( result != CV_OK )
         return result;
 
-    resultStep /= sizeof_float;
+    resultStep /= CV_SIZEOF_FLOAT;
 
     /* calc common statistics for template and image */
     {
@@ -642,7 +654,7 @@ IPCVAPI_IMPL( CvStatus, icvMatchTemplate_CoeffNormed_8u32f_C1R,
 
 
         templCoeff = (double) templSqsum - ((double) templSum) * templSum * winCoeff;
-        templCoeff = icvInvSqrt64d( fabs( templCoeff ) + FLT_EPSILON );
+        templCoeff = 1./sqrt( fabs( templCoeff ) + FLT_EPSILON );
 
         for( y = 0; y < roiSize.height; y++, rowPtr += templSize.width )
         {
@@ -710,582 +722,13 @@ IPCVAPI_IMPL( CvStatus, icvMatchTemplate_CoeffNormed_8u32f_C1R,
             double res = ((double) resNum[y]) - wsum * templSum;
             double nrm_s = ((double) resDenom[y + resultSize.height]) - wsum * sum;
 
-            res *= templCoeff * icvInvSqrt64d( fabs( nrm_s ) + FLT_EPSILON );
+            res *= templCoeff / sqrt( fabs( nrm_s ) + FLT_EPSILON );
             pResult[x + y * resultStep] = (float) res;
         }
     }
 
     return CV_OK;
 }
-
-
-/****************************************************************************************\
-*                                      8s flavor                                         *
-\****************************************************************************************/
-
-/* --------------------------------------- SqDiff ------------------------------------- */
-
-IPCVAPI_IMPL( CvStatus, icvMatchTemplate_SqDiff_8s32f_C1R,
-              (const char *pImage, int imageStep, CvSize roiSize,
-               const char *pTemplate, int templStep, CvSize templSize,
-               float *pResult, int resultStep, void *pBuffer) )
-{
-    char *imgBuf = 0;
-    char *templBuf = 0;
-    int64 *resNum = 0;
-    int winLen = templSize.width * templSize.height;
-    CvSize resultSize = cvSize( roiSize.width - templSize.width + 1,
-                                roiSize.height - templSize.height + 1 );
-    int x, y;
-
-    CvStatus result = icvMatchTemplateEntry( pImage, imageStep, roiSize,
-                                             pTemplate, templStep, templSize,
-                                             pResult, resultStep, pBuffer,
-                                             cv8s, 0, 0,
-                                             (void **) &imgBuf, (void **) &templBuf,
-                                             0, 0, (void **) &resNum, 0 );
-
-    if( result != CV_OK )
-        return result;
-
-    resultStep /= sizeof_float;
-
-    /* main loop - through x coordinate of the result */
-    for( x = 0; x < resultSize.width; x++ )
-    {
-        char *imgPtr = imgBuf + x;
-
-        /* update sums and image band buffer */
-        if( x > 0 )
-        {
-            const char *src = pImage + x + templSize.width - 1;
-            char *dst = imgPtr - 1;
-
-            dst += templSize.width;
-
-            for( y = 0; y < roiSize.height; y++, src += imageStep, dst += templSize.width )
-            {
-                dst[0] = src[0];
-            }
-        }
-
-        for( y = 0; y < resultSize.height; y++, imgPtr += templSize.width )
-        {
-            int64 res = icvCmpBlocksL2_8s_C1( imgPtr, templBuf, winLen );
-
-            resNum[y] = res;
-        }
-
-
-
-        for( y = 0; y < resultSize.height; y++ )
-        {
-            pResult[x + y * resultStep] = (float) resNum[y];
-        }
-    }
-
-    return CV_OK;
-}
-
-
-/* ----------------------------------- SqDiffNormed ----------------------------------- */
-
-IPCVAPI_IMPL( CvStatus, icvMatchTemplate_SqDiffNormed_8s32f_C1R,
-              (const char *pImage, int imageStep, CvSize roiSize,
-               const char *pTemplate, int templStep, CvSize templSize,
-               float *pResult, int resultStep, void *pBuffer) )
-{
-    char *imgBuf = 0;
-    char *templBuf = 0;
-    int64 *sqsumBuf = 0;
-    int64 *resNum = 0;
-    int64 *resDenom = 0;
-    double templCoeff = 0;
-
-    int winLen = templSize.width * templSize.height;
-    CvSize resultSize = cvSize( roiSize.width - templSize.width + 1,
-                                roiSize.height - templSize.height + 1 );
-    int x, y;
-
-    CvStatus result = icvMatchTemplateEntry( pImage, imageStep, roiSize,
-                                             pTemplate, templStep, templSize,
-                                             pResult, resultStep, pBuffer,
-                                             cv8s, 0, 1,
-                                             (void **) &imgBuf, (void **) &templBuf,
-                                             0, (void **) &sqsumBuf,
-                                             (void **) &resNum, (void **) &resDenom );
-
-    if( result != CV_OK )
-        return result;
-
-    resultStep /= sizeof_float;
-
-    /* calc common statistics for template and image */
-    {
-        const char *rowPtr = (const char *) imgBuf;
-        int64 templSqsum = icvCrossCorr_8s_C1( templBuf, templBuf, winLen );
-
-
-        templCoeff = (double) templSqsum;
-        templCoeff = icvInvSqrt64d( fabs( templCoeff ) + FLT_EPSILON );
-
-        for( y = 0; y < roiSize.height; y++, rowPtr += templSize.width )
-        {
-            sqsumBuf[y] = icvCrossCorr_8s_C1( rowPtr, rowPtr, templSize.width );
-        }
-
-    }
-
-    /* main loop - through x coordinate of the result */
-    for( x = 0; x < resultSize.width; x++ )
-    {
-        int64 sqsum = 0;
-        char *img_ptr = imgBuf + x;
-
-        /* update sums and image band buffer */
-        if( x > 0 )
-        {
-            const char *src = pImage + x + templSize.width - 1;
-            char *dst = img_ptr - 1;
-            int out_val = dst[0];
-
-            dst += templSize.width;
-
-            for( y = 0; y < roiSize.height; y++, src += imageStep, dst += templSize.width )
-            {
-                int in_val = src[0];
-
-                sqsumBuf[y] += (in_val - out_val) * (in_val + out_val);
-                out_val = dst[0];
-                dst[0] = (char) in_val;
-            }
-        }
-
-        for( y = 0; y < templSize.height; y++ )
-        {
-            sqsum += sqsumBuf[y];
-        }
-
-        for( y = 0; y < resultSize.height; y++, img_ptr += templSize.width )
-        {
-            int64 res = icvCmpBlocksL2_8s_C1( img_ptr, templBuf, winLen );
-
-            if( y > 0 )
-            {
-                sqsum -= sqsumBuf[y - 1];
-                sqsum += sqsumBuf[y + templSize.height - 1];
-            }
-            resNum[y] = res;
-            resDenom[y] = sqsum;
-        }
-
-
-
-        for( y = 0; y < resultSize.height; y++ )
-        {
-            double res = ((double) resNum[y]) * templCoeff *
-                icvInvSqrt64d( fabs( (double) resDenom[y] ) + FLT_EPSILON );
-
-            pResult[x + y * resultStep] = (float) res;
-        }
-    }
-
-    return CV_OK;
-}
-
-/* -------------------------------------- Corr ---------------------------------------- */
-
-IPCVAPI_IMPL( CvStatus, icvMatchTemplate_Corr_8s32f_C1R,
-              (const char *pImage, int imageStep, CvSize roiSize,
-               const char *pTemplate, int templStep, CvSize templSize,
-               float *pResult, int resultStep, void *pBuffer) )
-{
-    char *imgBuf = 0;
-    char *templBuf = 0;
-    int64 *resNum = 0;
-    int winLen = templSize.width * templSize.height;
-    CvSize resultSize = cvSize( roiSize.width - templSize.width + 1,
-                                roiSize.height - templSize.height + 1 );
-    int x, y;
-
-    CvStatus result = icvMatchTemplateEntry( pImage, imageStep, roiSize,
-                                             pTemplate, templStep, templSize,
-                                             pResult, resultStep, pBuffer,
-                                             cv8s, 0, 0,
-                                             (void **) &imgBuf, (void **) &templBuf,
-                                             0, 0, (void **) &resNum, 0 );
-
-    if( result != CV_OK )
-        return result;
-
-    resultStep /= sizeof_float;
-
-    /* main loop - through x coordinate of the result */
-    for( x = 0; x < resultSize.width; x++ )
-    {
-        char *imgPtr = imgBuf + x;
-
-        /* update sums and image band buffer */
-        if( x > 0 )
-        {
-            const char *src = pImage + x + templSize.width - 1;
-            char *dst = imgPtr - 1;
-
-            dst += templSize.width;
-
-            for( y = 0; y < roiSize.height; y++, src += imageStep, dst += templSize.width )
-            {
-                dst[0] = src[0];
-            }
-        }
-
-        for( y = 0; y < resultSize.height; y++, imgPtr += templSize.width )
-        {
-            int64 res = icvCrossCorr_8s_C1( imgPtr, templBuf, winLen );
-
-            resNum[y] = res;
-        }
-
-
-
-        for( y = 0; y < resultSize.height; y++ )
-        {
-            pResult[x + y * resultStep] = (float) resNum[y];
-        }
-    }
-
-    return CV_OK;
-}
-
-/* ------------------------------------ CorrNormed ------------------------------------ */
-
-IPCVAPI_IMPL( CvStatus, icvMatchTemplate_CorrNormed_8s32f_C1R,
-              (const char *pImage, int imageStep, CvSize roiSize,
-               const char *pTemplate, int templStep, CvSize templSize,
-               float *pResult, int resultStep, void *pBuffer) )
-{
-    char *imgBuf = 0;
-    char *templBuf = 0;
-    int64 *sqsumBuf = 0;
-    int64 *resNum = 0;
-    int64 *resDenom = 0;
-    double templCoeff = 0;
-
-    int winLen = templSize.width * templSize.height;
-    CvSize resultSize = cvSize( roiSize.width - templSize.width + 1,
-                                roiSize.height - templSize.height + 1 );
-    int x, y;
-
-    CvStatus result = icvMatchTemplateEntry( pImage, imageStep, roiSize,
-                                             pTemplate, templStep, templSize,
-                                             pResult, resultStep, pBuffer,
-                                             cv8s, 0, 1,
-                                             (void **) &imgBuf, (void **) &templBuf,
-                                             0, (void **) &sqsumBuf,
-                                             (void **) &resNum, (void **) &resDenom );
-
-    if( result != CV_OK )
-        return result;
-
-    resultStep /= sizeof_float;
-
-    /* calc common statistics for template and image */
-    {
-        const char *rowPtr = (const char *) imgBuf;
-        int64 templSqsum = icvCrossCorr_8s_C1( templBuf, templBuf, winLen );
-
-
-        templCoeff = (double) templSqsum;
-        templCoeff = icvInvSqrt64d( fabs( templCoeff ) + FLT_EPSILON );
-
-        for( y = 0; y < roiSize.height; y++, rowPtr += templSize.width )
-        {
-            sqsumBuf[y] = icvCrossCorr_8s_C1( rowPtr, rowPtr, templSize.width );
-        }
-
-    }
-
-    /* main loop - through x coordinate of the result */
-    for( x = 0; x < resultSize.width; x++ )
-    {
-        int64 sqsum = 0;
-        char *imgPtr = imgBuf + x;
-
-        /* update sums and image band buffer */
-        if( x > 0 )
-        {
-            const char *src = pImage + x + templSize.width - 1;
-            char *dst = imgPtr - 1;
-            int out_val = dst[0];
-
-            dst += templSize.width;
-
-            for( y = 0; y < roiSize.height; y++, src += imageStep, dst += templSize.width )
-            {
-                int in_val = src[0];
-
-                sqsumBuf[y] += (in_val - out_val) * (in_val + out_val);
-                out_val = dst[0];
-                dst[0] = (char) in_val;
-            }
-        }
-
-        for( y = 0; y < templSize.height; y++ )
-        {
-            sqsum += sqsumBuf[y];
-        }
-
-        for( y = 0; y < resultSize.height; y++, imgPtr += templSize.width )
-        {
-            int64 res = icvCrossCorr_8s_C1( imgPtr, templBuf, winLen );
-
-            if( y > 0 )
-            {
-                sqsum -= sqsumBuf[y - 1];
-                sqsum += sqsumBuf[y + templSize.height - 1];
-            }
-            resNum[y] = res;
-            resDenom[y] = sqsum;
-        }
-
-
-
-        for( y = 0; y < resultSize.height; y++ )
-        {
-            double res = ((double) resNum[y]) * templCoeff *
-                icvInvSqrt64d( fabs( (double) resDenom[y] ) + FLT_EPSILON );
-
-            pResult[x + y * resultStep] = (float) res;
-        }
-    }
-
-    return CV_OK;
-}
-
-
-/* -------------------------------------- Coeff --------------------------------------- */
-
-IPCVAPI_IMPL( CvStatus, icvMatchTemplate_Coeff_8s32f_C1R,
-              (const char *pImage, int imageStep, CvSize roiSize,
-               const char *pTemplate, int templStep, CvSize templSize,
-               float *pResult, int resultStep, void *pBuffer) )
-{
-    char *imgBuf = 0;
-    char *templBuf = 0;
-    int64 *resNum = 0;
-    int64 *resDenom = 0;
-    int64 *sumBuf = 0;
-    int winLen = templSize.width * templSize.height;
-    CvSize resultSize = cvSize( roiSize.width - templSize.width + 1,
-                                roiSize.height - templSize.height + 1 );
-    int64 templSum = 0;
-    double winCoeff = 1. / (winLen + DBL_EPSILON);
-    int x, y;
-
-    CvStatus result = icvMatchTemplateEntry( pImage, imageStep, roiSize,
-                                             pTemplate, templStep, templSize,
-                                             pResult, resultStep, pBuffer,
-                                             cv8s, 1, 0,
-                                             (void **) &imgBuf, (void **) &templBuf,
-                                             (void **) &sumBuf, 0,
-                                             (void **) &resNum, (void **) &resDenom );
-
-    if( result != CV_OK )
-        return result;
-
-    resultStep /= sizeof_float;
-
-    /* calc common statistics for template and image */
-    {
-        const char *rowPtr = (const char *) imgBuf;
-
-        templSum = icvSumPixels_8s_C1( templBuf, winLen );
-
-        for( y = 0; y < roiSize.height; y++, rowPtr += templSize.width )
-        {
-            sumBuf[y] = icvSumPixels_8s_C1( rowPtr, templSize.width );
-        }
-
-    }
-
-    /* main loop - through x coordinate of the result */
-    for( x = 0; x < resultSize.width; x++ )
-    {
-        char *imgPtr = imgBuf + x;
-        int64 sum = 0;
-
-        /* update sums and image band buffer */
-        if( x > 0 )
-        {
-            const char *src = pImage + x + templSize.width - 1;
-            char *dst = imgPtr - 1;
-            int out_val = dst[0];
-
-            dst += templSize.width;
-
-            for( y = 0; y < roiSize.height; y++, src += imageStep, dst += templSize.width )
-            {
-                int in_val = src[0];
-
-                sumBuf[y] += in_val - out_val;
-                out_val = dst[0];
-                dst[0] = (char) in_val;
-            }
-        }
-
-        for( y = 0; y < templSize.height; y++ )
-        {
-            sum += sumBuf[y];
-        }
-
-        for( y = 0; y < resultSize.height; y++, imgPtr += templSize.width )
-        {
-            int64 res = icvCrossCorr_8s_C1( imgPtr, templBuf, winLen );
-
-            if( y > 0 )
-            {
-                sum -= sumBuf[y - 1];
-                sum += sumBuf[y + templSize.height - 1];
-            }
-            resNum[y] = res;
-            resDenom[y] = sum;
-        }
-
-
-
-        for( y = 0; y < resultSize.height; y++ )
-        {
-            double res = ((double) resNum[y]) - winCoeff * templSum * ((double) resDenom[y]);
-
-            pResult[x + y * resultStep] = (float) res;
-        }
-    }
-
-    return CV_OK;
-}
-
-
-/* ------------------------------------ CoeffNormed ----------------------------------- */
-
-IPCVAPI_IMPL( CvStatus, icvMatchTemplate_CoeffNormed_8s32f_C1R,
-              (const char *pImage, int imageStep, CvSize roiSize,
-               const char *pTemplate, int templStep, CvSize templSize,
-               float *pResult, int resultStep, void *pBuffer) )
-{
-    char *imgBuf = 0;
-    char *templBuf = 0;
-    int64 *sumBuf = 0;
-    int64 *sqsumBuf = 0;
-    int64 *resNum = 0;
-    int64 *resDenom = 0;
-    int64 templSum = 0;
-    double templCoeff = 0;
-
-    int winLen = templSize.width * templSize.height;
-    double winCoeff = 1. / (winLen + DBL_EPSILON);
-
-    CvSize resultSize = cvSize( roiSize.width - templSize.width + 1,
-                                roiSize.height - templSize.height + 1 );
-    int x, y;
-
-    CvStatus result = icvMatchTemplateEntry( pImage, imageStep, roiSize,
-                                             pTemplate, templStep, templSize,
-                                             pResult, resultStep, pBuffer,
-                                             cv8s, 1, 1,
-                                             (void **) &imgBuf, (void **) &templBuf,
-                                             (void **) &sumBuf, (void **) &sqsumBuf,
-                                             (void **) &resNum, (void **) &resDenom );
-
-    if( result != CV_OK )
-        return result;
-
-    resultStep /= sizeof_float;
-
-    /* calc common statistics for template and image */
-    {
-        const char *rowPtr = (const char *) imgBuf;
-        int64 templSqsum = icvCrossCorr_8s_C1( templBuf, templBuf, winLen );
-
-        templSum = icvSumPixels_8s_C1( templBuf, winLen );
-
-
-        templCoeff = (double) templSqsum - ((double) templSum) * templSum * winCoeff;
-        templCoeff = icvInvSqrt64d( fabs( templCoeff ) + FLT_EPSILON );
-
-        for( y = 0; y < roiSize.height; y++, rowPtr += templSize.width )
-        {
-            sumBuf[y] = icvSumPixels_8s_C1( rowPtr, templSize.width );
-            sqsumBuf[y] = icvCrossCorr_8s_C1( rowPtr, rowPtr, templSize.width );
-        }
-
-    }
-
-    /* main loop - through x coordinate of the result */
-    for( x = 0; x < resultSize.width; x++ )
-    {
-        int64 sum = 0;
-        int64 sqsum = 0;
-        char *imgPtr = imgBuf + x;
-
-        /* update sums and image band buffer */
-        if( x > 0 )
-        {
-            const char *src = pImage + x + templSize.width - 1;
-            char *dst = imgPtr - 1;
-            int out_val = dst[0];
-
-            dst += templSize.width;
-
-            for( y = 0; y < roiSize.height; y++, src += imageStep, dst += templSize.width )
-            {
-                int in_val = src[0];
-
-                sumBuf[y] += in_val - out_val;
-                sqsumBuf[y] += (in_val - out_val) * (in_val + out_val);
-                out_val = dst[0];
-                dst[0] = (char) in_val;
-            }
-        }
-
-        for( y = 0; y < templSize.height; y++ )
-        {
-            sum += sumBuf[y];
-            sqsum += sqsumBuf[y];
-        }
-
-        for( y = 0; y < resultSize.height; y++, imgPtr += templSize.width )
-        {
-            int64 res = icvCrossCorr_8s_C1( imgPtr, templBuf, winLen );
-
-            if( y > 0 )
-            {
-                sum -= sumBuf[y - 1];
-                sum += sumBuf[y + templSize.height - 1];
-                sqsum -= sqsumBuf[y - 1];
-                sqsum += sqsumBuf[y + templSize.height - 1];
-            }
-            resNum[y] = res;
-            resDenom[y] = sum;
-            resDenom[y + resultSize.height] = sqsum;
-        }
-
-
-
-        for( y = 0; y < resultSize.height; y++ )
-        {
-            double sum = ((double) resDenom[y]);
-            double wsum = winCoeff * sum;
-            double res = ((double) resNum[y]) - wsum * templSum;
-            double nrm_s = ((double) resDenom[y + resultSize.height]) - wsum * sum;
-
-            res *= templCoeff * icvInvSqrt64d( fabs( nrm_s ) + FLT_EPSILON );
-            pResult[x + y * resultStep] = (float) res;
-        }
-    }
-
-    return CV_OK;
-}
-
 
 /****************************************************************************************\
 *                                      32f flavor                                        *
@@ -1296,7 +739,9 @@ IPCVAPI_IMPL( CvStatus, icvMatchTemplate_CoeffNormed_8s32f_C1R,
 IPCVAPI_IMPL( CvStatus, icvMatchTemplate_SqDiff_32f_C1R,
               (const float *pImage, int imageStep, CvSize roiSize,
                const float *pTemplate, int templStep, CvSize templSize,
-               float *pResult, int resultStep, void *pBuffer) )
+               float *pResult, int resultStep, void *pBuffer),
+               (pImage, imageStep, roiSize, pTemplate, templStep, templSize,
+                pResult, resultStep, pBuffer) )
 {
     float *imgBuf = 0;
     float *templBuf = 0;
@@ -1316,9 +761,9 @@ IPCVAPI_IMPL( CvStatus, icvMatchTemplate_SqDiff_32f_C1R,
     if( result != CV_OK )
         return result;
 
-    imageStep /= sizeof_float;
-    templStep /= sizeof_float;
-    resultStep /= sizeof_float;
+    imageStep /= CV_SIZEOF_FLOAT;
+    templStep /= CV_SIZEOF_FLOAT;
+    resultStep /= CV_SIZEOF_FLOAT;
 
     /* main loop - through x coordinate of the result */
     for( x = 0; x < resultSize.width; x++ )
@@ -1361,7 +806,9 @@ IPCVAPI_IMPL( CvStatus, icvMatchTemplate_SqDiff_32f_C1R,
 IPCVAPI_IMPL( CvStatus, icvMatchTemplate_SqDiffNormed_32f_C1R,
               (const float *pImage, int imageStep, CvSize roiSize,
                const float *pTemplate, int templStep, CvSize templSize,
-               float *pResult, int resultStep, void *pBuffer) )
+               float *pResult, int resultStep, void *pBuffer),
+               (pImage, imageStep, roiSize, pTemplate, templStep, templSize,
+                pResult, resultStep, pBuffer) )
 {
     float *imgBuf = 0;
     float *templBuf = 0;
@@ -1386,9 +833,9 @@ IPCVAPI_IMPL( CvStatus, icvMatchTemplate_SqDiffNormed_32f_C1R,
     if( result != CV_OK )
         return result;
 
-    imageStep /= sizeof_float;
-    templStep /= sizeof_float;
-    resultStep /= sizeof_float;
+    imageStep /= CV_SIZEOF_FLOAT;
+    templStep /= CV_SIZEOF_FLOAT;
+    resultStep /= CV_SIZEOF_FLOAT;
 
     /* calc common statistics for template and image */
     {
@@ -1397,7 +844,7 @@ IPCVAPI_IMPL( CvStatus, icvMatchTemplate_SqDiffNormed_32f_C1R,
 
 
         templCoeff = (double) templSqsum;
-        templCoeff = icvInvSqrt64d( fabs( templCoeff ) + FLT_EPSILON );
+        templCoeff = 1./sqrt( fabs( templCoeff ) + FLT_EPSILON );
 
         for( y = 0; y < roiSize.height; y++, rowPtr += templSize.width )
         {
@@ -1452,7 +899,7 @@ IPCVAPI_IMPL( CvStatus, icvMatchTemplate_SqDiffNormed_32f_C1R,
         for( y = 0; y < resultSize.height; y++ )
         {
             double res = ((double) resNum[y]) * templCoeff *
-                icvInvSqrt64d( fabs( (double) resDenom[y] ) + FLT_EPSILON );
+                1./sqrt( fabs( (double) resDenom[y] ) + FLT_EPSILON );
 
             pResult[x + y * resultStep] = (float) res;
         }
@@ -1466,7 +913,9 @@ IPCVAPI_IMPL( CvStatus, icvMatchTemplate_SqDiffNormed_32f_C1R,
 IPCVAPI_IMPL( CvStatus, icvMatchTemplate_Corr_32f_C1R,
               (const float *pImage, int imageStep, CvSize roiSize,
                const float *pTemplate, int templStep, CvSize templSize,
-               float *pResult, int resultStep, void *pBuffer) )
+               float *pResult, int resultStep, void *pBuffer),
+               (pImage, imageStep, roiSize, pTemplate, templStep, templSize,
+                pResult, resultStep, pBuffer) )
 {
     float *imgBuf = 0;
     float *templBuf = 0;
@@ -1486,9 +935,9 @@ IPCVAPI_IMPL( CvStatus, icvMatchTemplate_Corr_32f_C1R,
     if( result != CV_OK )
         return result;
 
-    imageStep /= sizeof_float;
-    templStep /= sizeof_float;
-    resultStep /= sizeof_float;
+    imageStep /= CV_SIZEOF_FLOAT;
+    templStep /= CV_SIZEOF_FLOAT;
+    resultStep /= CV_SIZEOF_FLOAT;
 
     /* main loop - through x coordinate of the result */
     for( x = 0; x < resultSize.width; x++ )
@@ -1530,7 +979,9 @@ IPCVAPI_IMPL( CvStatus, icvMatchTemplate_Corr_32f_C1R,
 IPCVAPI_IMPL( CvStatus, icvMatchTemplate_CorrNormed_32f_C1R,
               (const float *pImage, int imageStep, CvSize roiSize,
                const float *pTemplate, int templStep, CvSize templSize,
-               float *pResult, int resultStep, void *pBuffer) )
+               float *pResult, int resultStep, void *pBuffer),
+               (pImage, imageStep, roiSize, pTemplate, templStep, templSize,
+                pResult, resultStep, pBuffer) )
 {
     float *imgBuf = 0;
     float *templBuf = 0;
@@ -1555,9 +1006,9 @@ IPCVAPI_IMPL( CvStatus, icvMatchTemplate_CorrNormed_32f_C1R,
     if( result != CV_OK )
         return result;
 
-    imageStep /= sizeof_float;
-    templStep /= sizeof_float;
-    resultStep /= sizeof_float;
+    imageStep /= CV_SIZEOF_FLOAT;
+    templStep /= CV_SIZEOF_FLOAT;
+    resultStep /= CV_SIZEOF_FLOAT;
 
     /* calc common statistics for template and image */
     {
@@ -1566,7 +1017,7 @@ IPCVAPI_IMPL( CvStatus, icvMatchTemplate_CorrNormed_32f_C1R,
 
 
         templCoeff = (double) templSqsum;
-        templCoeff = icvInvSqrt64d( fabs( templCoeff ) + FLT_EPSILON );
+        templCoeff = 1./sqrt( fabs( templCoeff ) + FLT_EPSILON );
 
         for( y = 0; y < roiSize.height; y++, rowPtr += templSize.width )
         {
@@ -1621,7 +1072,7 @@ IPCVAPI_IMPL( CvStatus, icvMatchTemplate_CorrNormed_32f_C1R,
         for( y = 0; y < resultSize.height; y++ )
         {
             double res = ((double) resNum[y]) * templCoeff *
-                icvInvSqrt64d( fabs( (double) resDenom[y] ) + FLT_EPSILON );
+                1./sqrt( fabs( (double) resDenom[y] ) + FLT_EPSILON );
 
             pResult[x + y * resultStep] = (float) res;
         }
@@ -1636,7 +1087,9 @@ IPCVAPI_IMPL( CvStatus, icvMatchTemplate_CorrNormed_32f_C1R,
 IPCVAPI_IMPL( CvStatus, icvMatchTemplate_Coeff_32f_C1R,
               (const float *pImage, int imageStep, CvSize roiSize,
                const float *pTemplate, int templStep, CvSize templSize,
-               float *pResult, int resultStep, void *pBuffer) )
+               float *pResult, int resultStep, void *pBuffer),
+               (pImage, imageStep, roiSize, pTemplate, templStep, templSize,
+                pResult, resultStep, pBuffer) )
 {
     float *imgBuf = 0;
     float *templBuf = 0;
@@ -1661,9 +1114,9 @@ IPCVAPI_IMPL( CvStatus, icvMatchTemplate_Coeff_32f_C1R,
     if( result != CV_OK )
         return result;
 
-    imageStep /= sizeof_float;
-    templStep /= sizeof_float;
-    resultStep /= sizeof_float;
+    imageStep /= CV_SIZEOF_FLOAT;
+    templStep /= CV_SIZEOF_FLOAT;
+    resultStep /= CV_SIZEOF_FLOAT;
 
     /* calc common statistics for template and image */
     {
@@ -1737,7 +1190,9 @@ IPCVAPI_IMPL( CvStatus, icvMatchTemplate_Coeff_32f_C1R,
 IPCVAPI_IMPL( CvStatus, icvMatchTemplate_CoeffNormed_32f_C1R,
               (const float *pImage, int imageStep, CvSize roiSize,
                const float *pTemplate, int templStep, CvSize templSize,
-               float *pResult, int resultStep, void *pBuffer) )
+               float *pResult, int resultStep, void *pBuffer),
+               (pImage, imageStep, roiSize, pTemplate, templStep, templSize,
+                pResult, resultStep, pBuffer) )
 {
     float *imgBuf = 0;
     float *templBuf = 0;
@@ -1766,9 +1221,9 @@ IPCVAPI_IMPL( CvStatus, icvMatchTemplate_CoeffNormed_32f_C1R,
     if( result != CV_OK )
         return result;
 
-    imageStep /= sizeof_float;
-    templStep /= sizeof_float;
-    resultStep /= sizeof_float;
+    imageStep /= CV_SIZEOF_FLOAT;
+    templStep /= CV_SIZEOF_FLOAT;
+    resultStep /= CV_SIZEOF_FLOAT;
 
     /* calc common statistics for template and image */
     {
@@ -1778,7 +1233,7 @@ IPCVAPI_IMPL( CvStatus, icvMatchTemplate_CoeffNormed_32f_C1R,
 
         templSum = icvSumPixels_32f_C1( templBuf, winLen );
         templCoeff = (double) templSqsum - ((double) templSum) * templSum * winCoeff;
-        templCoeff = icvInvSqrt64d( fabs( templCoeff ) + FLT_EPSILON );
+        templCoeff = 1./sqrt( fabs( templCoeff ) + FLT_EPSILON );
 
         for( y = 0; y < roiSize.height; y++, rowPtr += templSize.width )
         {
@@ -1844,7 +1299,7 @@ IPCVAPI_IMPL( CvStatus, icvMatchTemplate_CoeffNormed_32f_C1R,
             double res = ((double) resNum[y]) - wsum * templSum;
             double nrm_s = ((double) resDenom[y + resultSize.height]) - wsum * sum;
 
-            res *= templCoeff * icvInvSqrt64d( fabs( nrm_s ) + FLT_EPSILON );
+            res *= templCoeff / sqrt( fabs( nrm_s ) + FLT_EPSILON );
             pResult[x + y * resultStep] = (float) res;
         }
     }
@@ -1873,7 +1328,7 @@ icvMatchTemplateGetBufSize( CvSize roiSize, CvSize templSize,
         roiSize.width < templSize.width || roiSize.height < templSize.height )
         return CV_BADSIZE_ERR;
 
-    if( dataType != cv8u && dataType != cv8s && dataType != cv32f )
+    if( dataType != cv8u && dataType != cv32f )
         return CV_BADDEPTH_ERR;
 
     icvCalculateBufferSizes( roiSize, templSize, dataType,
@@ -1888,46 +1343,49 @@ icvMatchTemplateGetBufSize( CvSize roiSize, CvSize templSize,
 }
 
 
-IPCVAPI_IMPL( CvStatus, icvMatchTemplateGetBufSize_SqDiff, (CvSize roiSize, CvSize templSize,
-                                                            CvDataType dataType,
-                                                            int *bufferSize) )
+IPCVAPI_IMPL( CvStatus, icvMatchTemplateGetBufSize_SqDiff,
+             (CvSize roiSize, CvSize templSize, CvDataType dataType, int *bufferSize),
+             (roiSize, templSize, dataType, bufferSize) )
 {
     return icvMatchTemplateGetBufSize( roiSize, templSize, dataType, bufferSize, 0, 0 );
 }
 
 
 IPCVAPI_IMPL( CvStatus, icvMatchTemplateGetBufSize_SqDiffNormed,
-              (CvSize roiSize, CvSize templSize, CvDataType dataType, int *bufferSize) )
+              (CvSize roiSize, CvSize templSize, CvDataType dataType, int *bufferSize),
+              (roiSize, templSize, dataType, bufferSize) )
 {
     return icvMatchTemplateGetBufSize( roiSize, templSize, dataType, bufferSize, 0, 1 );
 }
 
 
-IPCVAPI_IMPL( CvStatus, icvMatchTemplateGetBufSize_Corr, (CvSize roiSize, CvSize templSize,
-                                                          CvDataType dataType,
-                                                          int *bufferSize) )
+IPCVAPI_IMPL( CvStatus, icvMatchTemplateGetBufSize_Corr,
+             (CvSize roiSize, CvSize templSize, CvDataType dataType, int *bufferSize),
+             (roiSize, templSize, dataType, bufferSize) )
 {
     return icvMatchTemplateGetBufSize( roiSize, templSize, dataType, bufferSize, 0, 0 );
 }
 
 
 IPCVAPI_IMPL( CvStatus, icvMatchTemplateGetBufSize_CorrNormed,
-              (CvSize roiSize, CvSize templSize, CvDataType dataType, int *bufferSize) )
+              (CvSize roiSize, CvSize templSize, CvDataType dataType, int *bufferSize),
+             (roiSize, templSize, dataType, bufferSize) )
 {
     return icvMatchTemplateGetBufSize( roiSize, templSize, dataType, bufferSize, 0, 1 );
 }
 
 
-IPCVAPI_IMPL( CvStatus, icvMatchTemplateGetBufSize_Coeff, (CvSize roiSize, CvSize templSize,
-                                                           CvDataType dataType,
-                                                           int *bufferSize) )
+IPCVAPI_IMPL( CvStatus, icvMatchTemplateGetBufSize_Coeff,
+             (CvSize roiSize, CvSize templSize, CvDataType dataType, int *bufferSize),
+             (roiSize, templSize, dataType, bufferSize) )
 {
     return icvMatchTemplateGetBufSize( roiSize, templSize, dataType, bufferSize, 1, 0 );
 }
 
 
 IPCVAPI_IMPL( CvStatus, icvMatchTemplateGetBufSize_CoeffNormed,
-              (CvSize roiSize, CvSize templSize, CvDataType dataType, int *bufferSize) )
+              (CvSize roiSize, CvSize templSize, CvDataType dataType, int *bufferSize),
+              (roiSize, templSize, dataType, bufferSize) )
 {
     return icvMatchTemplateGetBufSize( roiSize, templSize, dataType, bufferSize, 1, 1 );
 }
@@ -1965,12 +1423,12 @@ static  void  icvInitMatchTemplTable( void** bufSizeTab, void** funcTab )
     funcTab[4]  = (void*)icvMatchTemplate_Coeff_8u32f_C1R;
     funcTab[5]  = (void*)icvMatchTemplate_CoeffNormed_8u32f_C1R;
 
-    funcTab[6]  = (void*)icvMatchTemplate_SqDiff_8s32f_C1R;
-    funcTab[7]  = (void*)icvMatchTemplate_SqDiffNormed_8s32f_C1R;
-    funcTab[8]  = (void*)icvMatchTemplate_Corr_8s32f_C1R;
-    funcTab[9]  = (void*)icvMatchTemplate_CorrNormed_8s32f_C1R;
-    funcTab[10] = (void*)icvMatchTemplate_Coeff_8s32f_C1R;
-    funcTab[11] = (void*)icvMatchTemplate_CoeffNormed_8s32f_C1R;
+    funcTab[6]  = 0;
+    funcTab[7]  = 0;
+    funcTab[8]  = 0;
+    funcTab[9]  = 0;
+    funcTab[10] = 0;
+    funcTab[11] = 0;
 
     funcTab[12] = (void*)icvMatchTemplate_SqDiff_32f_C1R;
     funcTab[13] = (void*)icvMatchTemplate_SqDiffNormed_32f_C1R;
@@ -1982,8 +1440,7 @@ static  void  icvInitMatchTemplTable( void** bufSizeTab, void** funcTab )
 
 
 CV_IMPL void
-cvMatchTemplate( const void* arr, const void* templarr, void* resultarr,
-                 CvTemplMatchMethod method )
+cvMatchTemplate( const void* arr, const void* templarr, void* resultarr, int method )
 {
     static void* bufSizeFuncs[6];
     static void* funcs[18];
@@ -2021,7 +1478,6 @@ cvMatchTemplate( const void* arr, const void* templarr, void* resultarr,
 
     if( CV_MAT_CN( img->type ) != 1 ||
         CV_MAT_DEPTH( img->type ) != CV_8U &&
-        CV_MAT_DEPTH( img->type ) != CV_8S &&
         CV_MAT_DEPTH( img->type ) != CV_32F )
         CV_ERROR( CV_StsUnsupportedFormat, "" );
 
@@ -2044,25 +1500,21 @@ cvMatchTemplate( const void* arr, const void* templarr, void* resultarr,
         dataType = cv8u;
         dataOffset = 0;
         break;
-    case CV_8S:
-        dataType = cv8s;
-        dataOffset = 1;
-        break;
     case CV_32F:
         dataType = cv32f;
         dataOffset = 2;
         break;
     default:
-        CV_ERROR( CV_StsBadArg, icvUnsupportedFormat );
+        CV_ERROR( CV_StsBadArg, cvUnsupportedFormat );
     }
 
-    imgSize = icvGetMatSize( img );
-    templSize = icvGetMatSize( templ );
+    imgSize = cvGetMatSize( img );
+    templSize = cvGetMatSize( templ );
 
     bufSizeFunc = (CvMatchBufSizeFunc)(bufSizeFuncs[imethod]);
     IPPI_CALL( bufSizeFunc( imgSize, templSize, dataType, &bufferSize ));
 
-    CV_CALL( buffer = icvAlloc( bufferSize ));
+    CV_CALL( buffer = cvAlloc( bufferSize ));
 
     func = (CvMatchTemplFunc)(funcs[imethod + dataOffset * 6]);
 
@@ -2074,13 +1526,13 @@ cvMatchTemplate( const void* arr, const void* templarr, void* resultarr,
     result_step = result->step;
 
     if( img_step == 0 )
-        img_step = img->width*icvPixSize[CV_MAT_TYPE(img->type)];
+        img_step = img->width*CV_ELEM_SIZE(img->type);
 
     if( templ_step == 0 )
-        templ_step = templ->width*icvPixSize[CV_MAT_TYPE(templ->type)];
+        templ_step = templ->width*CV_ELEM_SIZE(templ->type);
 
     if( result_step == 0 )
-        result_step = result->width*icvPixSize[CV_MAT_TYPE(result->type)];
+        result_step = result->width*CV_ELEM_SIZE(result->type);
 
     IPPI_CALL(  func( img->data.ptr, img_step, imgSize,
                       templ->data.ptr, templ_step, templSize,

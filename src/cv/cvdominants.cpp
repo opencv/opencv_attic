@@ -50,7 +50,7 @@ typedef struct _PointInfo
 icvPointInfo;
 
 
-CvStatus
+static CvStatus
 icvFindDominantPointsIPAN( CvSeq * contour,
                            CvMemStorage * storage,
                            CvSeq ** corners, int dmin2, int dmax2, int dneigh2, float amax )
@@ -86,10 +86,10 @@ icvFindDominantPointsIPAN( CvSeq * contour,
     if( (amax < 0) || (amax > 180) )
         return CV_BADSIZE_ERR;
 
-    sharpness = (float *) icvAlloc( n * sizeof( float ));
-    distance = (float *) icvAlloc( n * sizeof( float ));
+    sharpness = (float *) cvAlloc( n * sizeof( float ));
+    distance = (float *) cvAlloc( n * sizeof( float ));
 
-    ptInf = (icvPointInfo *) icvAlloc( n * sizeof( icvPointInfo ));
+    ptInf = (icvPointInfo *) cvAlloc( n * sizeof( icvPointInfo ));
 
 /*****************************************************************************************/
 /*                                 First pass                                            */
@@ -322,18 +322,18 @@ icvFindDominantPointsIPAN( CvSeq * contour,
 
     *corners = cvEndWriteSeq( &writer );
 
-    icvFree( &sharpness );
-    icvFree( &distance );
-    icvFree( &ptInf );
+    cvFree( (void**)&sharpness );
+    cvFree( (void**)&distance );
+    cvFree( (void**)&ptInf );
 
     return status;
 
   error:
     /* dmax is so big (more than contour diameter)
        that algorithm could become infinite cycle */
-    icvFree( &sharpness );
-    icvFree( &distance );
-    icvFree( &ptInf );
+    cvFree( (void**)&sharpness );
+    cvFree( (void**)&distance );
+    cvFree( (void**)&ptInf );
 
     return CV_BADRANGE_ERR;
 }
@@ -364,37 +364,53 @@ icvFindDominantPointsIPAN( CvSeq * contour,
 //      User must allocate out_numbers array. If it is small - function fills array 
 //      with part of points and returns  error
 //F*/
-#define CV_DOMINANT_IPAN 1
-
-CV_IMPL void
-cvFindDominantPoints( CvSeq * contour,
-                      CvMemStorage * storage, CvSeq ** corners, int method, float *parameters )
+CV_IMPL CvSeq*
+cvFindDominantPoints( CvSeq * contour, CvMemStorage * storage, int method,
+                      double parameter1, double parameter2, double parameter3, double parameter4 )
 {
+    CvSeq* corners = 0;
+
     CV_FUNCNAME( "cvFindDominantPoints" );
     __BEGIN__;
 
-    if( !contour || !parameters || !storage || !corners )
-        CV_ERROR_FROM_STATUS( CV_NULLPTR_ERR );
+    if( !contour )
+        CV_ERROR( CV_StsNullPtr, "" );
+
+    if( !storage )
+        storage = contour->storage;
+
+    if( !storage )
+        CV_ERROR( CV_StsNullPtr, "" );
 
     switch (method)
     {
     case CV_DOMINANT_IPAN:
         {
-            int dmin2 = cvRound( parameters[0] * parameters[0] );
-            int dmax2 = cvRound( parameters[1] * parameters[1] );
-            int dneigh2 = cvRound( parameters[2] * parameters[2] );
-            float amax = parameters[3];
+            int dmin = cvRound(parameter1);
+            int dmax = cvRound(parameter2);
+            int dneigh = cvRound(parameter3);
+            int amax = cvRound(parameter4);
 
-            IPPI_CALL( icvFindDominantPointsIPAN( contour, storage, corners,
-                                                  dmin2, dmax2, dneigh2, amax ));
+            if( amax == 0 )
+                amax = 150;
+            if( dmin == 0 )
+                dmin = 7;
+            if( dmax == 0 )
+                dmax = dmin + 2;
+            if( dneigh == 0 )
+                dneigh = dmin;
+
+            IPPI_CALL( icvFindDominantPointsIPAN( contour, storage, &corners,
+                                                  dmin*dmin, dmax*dmax, dneigh*dneigh, (float)amax ));
         }
         break;
     default:
         CV_ERROR_FROM_STATUS( CV_BADFLAG_ERR );
     }
 
-    __CLEANUP__;
     __END__;
+
+    return corners;
 }
 
 /* End of file. */

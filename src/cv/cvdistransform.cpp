@@ -40,9 +40,6 @@
 //M*/
 #include "_cv.h"
 
-#define MIN2(a, b) MIN((a),(b))
-#define CALC_MIN(a, b) if((a) > (b)) (a) = (b)
-
 #define _CV_DIST_SHIFT  18
 
 static int
@@ -57,7 +54,7 @@ _MINn( const int *values, int n )
     {
         int t = values[i];
 
-        CALC_MIN( ret, t );
+        CV_CALC_MIN( ret, t );
     }
 
     return ret;
@@ -126,14 +123,15 @@ icvCvtIntTofloat( int *idist, int step, CvSize roiSize, float scale )
 
 #define VALIDATE_INPUT(img, img_step, dist, step, roiSize)\
     if( !img || !dist ) return CV_NULLPTR_ERR;\
-    if( img_step < roiSize.width || step < roiSize.width*sizeof_float ||\
-        (step & (sizeof_float-1)) != 0 || roiSize.width < 0 || roiSize.height < 0) \
+    if( img_step < roiSize.width || step < roiSize.width*CV_SIZEOF_FLOAT ||\
+        (step & (CV_SIZEOF_FLOAT-1)) != 0 || roiSize.width < 0 || roiSize.height < 0) \
         return CV_BADSIZE_ERR;
 
 
 IPCVAPI_IMPL( CvStatus, icvDistanceTransform_3x3_8u32f_C1R,
               (const uchar * pSrc, int srcStep,
-               float *pDst, int dstStep, CvSize roiSize, float *pMetrics) )
+               float *pDst, int dstStep, CvSize roiSize, float *pMetrics),
+              (pSrc, srcStep, pDst, dstStep, roiSize, pMetrics) )
 {
     int w = roiSize.width;
     int h = roiSize.height;
@@ -147,11 +145,11 @@ IPCVAPI_IMPL( CvStatus, icvDistanceTransform_3x3_8u32f_C1R,
     if( !pSrc || !pDst || !pMetrics )
         return CV_NULLPTR_ERR;
     if( roiSize.width < 0 || roiSize.height < 0 ||
-        srcStep < roiSize.width || dstStep < roiSize.width * sizeof_float ||
-        (dstStep & (sizeof_float - 1)) != 0 )
+        srcStep < roiSize.width || dstStep < roiSize.width * CV_SIZEOF_FLOAT ||
+        (dstStep & (CV_SIZEOF_FLOAT - 1)) != 0 )
         return CV_BADSIZE_ERR;
 
-    dstStep /= sizeof_float;
+    dstStep /= CV_SIZEOF_FLOAT;
 
     mask0 = cvRound( pMetrics[0] * (1 << _CV_DIST_SHIFT) );
     mask1 = cvRound( pMetrics[1] * (1 << _CV_DIST_SHIFT) );
@@ -171,7 +169,7 @@ IPCVAPI_IMPL( CvStatus, icvDistanceTransform_3x3_8u32f_C1R,
         {
             t1 = idist[0];
             t2 = idist[-dstStep] + mask0;
-            CALC_MIN( t1, t2 );
+            CV_CALC_MIN( t1, t2 );
             idist[0] = t1;
         }
 
@@ -183,7 +181,7 @@ IPCVAPI_IMPL( CvStatus, icvDistanceTransform_3x3_8u32f_C1R,
         {
             t1 = idist[0];
             t2 = idist[dstStep] + mask0;
-            CALC_MIN( t1, t2 );
+            CV_CALC_MIN( t1, t2 );
             idist[0] = t1;
         }
 
@@ -202,7 +200,7 @@ IPCVAPI_IMPL( CvStatus, icvDistanceTransform_3x3_8u32f_C1R,
         {
             t1 = idist[ci];
             t2 = idist[ci - 1] + mask0;
-            CALC_MIN( t1, t2 );
+            CV_CALC_MIN( t1, t2 );
             idist[ci] = t1;
         }
 
@@ -215,9 +213,9 @@ IPCVAPI_IMPL( CvStatus, icvDistanceTransform_3x3_8u32f_C1R,
                 /* ci = 0 */
                 t1 = idist[0];
                 t2 = idist2[0] + mask0;
-                CALC_MIN( t1, t2 );
+                CV_CALC_MIN( t1, t2 );
                 t2 = idist2[1] + mask1;
-                CALC_MIN( t1, t2 );
+                CV_CALC_MIN( t1, t2 );
                 idist[0] = t1;
 
                 /* 0 < ci < w - 1 */
@@ -225,13 +223,13 @@ IPCVAPI_IMPL( CvStatus, icvDistanceTransform_3x3_8u32f_C1R,
                 {
                     t1 = idist[ci];
                     t2 = idist[ci - 1] + mask0;
-                    CALC_MIN( t1, t2 );
+                    CV_CALC_MIN( t1, t2 );
                     t3 = idist2[ci] + mask0;
                     t4 = idist2[ci - 1] + mask1;
-                    CALC_MIN( t3, t4 );
+                    CV_CALC_MIN( t3, t4 );
                     t2 = idist2[ci + 1] + mask1;
-                    CALC_MIN( t1, t3 );
-                    CALC_MIN( t1, t2 );
+                    CV_CALC_MIN( t1, t3 );
+                    CV_CALC_MIN( t1, t2 );
                     idist[ci] = t1;
                 }
 
@@ -239,13 +237,13 @@ IPCVAPI_IMPL( CvStatus, icvDistanceTransform_3x3_8u32f_C1R,
                 t1 = idist[ci];
 
                 t2 = idist[ci - 1] + mask0;
-                CALC_MIN( t1, t2 );
+                CV_CALC_MIN( t1, t2 );
 
                 t2 = idist2[ci - 1] + mask1;
-                CALC_MIN( t1, t2 );
+                CV_CALC_MIN( t1, t2 );
 
                 t2 = idist2[ci] + mask0;
-                CALC_MIN( t1, t2 );
+                CV_CALC_MIN( t1, t2 );
 
                 idist[ci] = t1;
             }
@@ -261,7 +259,7 @@ IPCVAPI_IMPL( CvStatus, icvDistanceTransform_3x3_8u32f_C1R,
         {
             t1 = idist[ci];
             t2 = idist[ci + 1] + mask0;
-            CALC_MIN( t1, t2 );
+            CV_CALC_MIN( t1, t2 );
             idist[ci] = t1;
         }
 
@@ -275,9 +273,9 @@ IPCVAPI_IMPL( CvStatus, icvDistanceTransform_3x3_8u32f_C1R,
                 /* ci = w - 1 */
                 t1 = idist[w - 1];
                 t2 = idist2[w - 1] + mask0;
-                CALC_MIN( t1, t2 );
+                CV_CALC_MIN( t1, t2 );
                 t2 = idist2[w - 2] + mask1;
-                CALC_MIN( t1, t2 );
+                CV_CALC_MIN( t1, t2 );
                 idist[w - 1] = t1;
 
                 /* 0 < ci < w - 1 */
@@ -285,13 +283,13 @@ IPCVAPI_IMPL( CvStatus, icvDistanceTransform_3x3_8u32f_C1R,
                 {
                     t1 = idist[ci];
                     t2 = idist[ci + 1] + mask0;
-                    CALC_MIN( t1, t2 );
+                    CV_CALC_MIN( t1, t2 );
                     t3 = idist2[ci] + mask0;
                     t4 = idist2[ci - 1] + mask1;
-                    CALC_MIN( t3, t4 );
+                    CV_CALC_MIN( t3, t4 );
                     t2 = idist2[ci + 1] + mask1;
-                    CALC_MIN( t1, t3 );
-                    CALC_MIN( t1, t2 );
+                    CV_CALC_MIN( t1, t3 );
+                    CV_CALC_MIN( t1, t2 );
                     idist[ci] = t1;
                 }
 
@@ -299,13 +297,13 @@ IPCVAPI_IMPL( CvStatus, icvDistanceTransform_3x3_8u32f_C1R,
                 t1 = idist[0];
 
                 t2 = idist[1] + mask0;
-                CALC_MIN( t1, t2 );
+                CV_CALC_MIN( t1, t2 );
 
                 t2 = idist2[0] + mask0;
-                CALC_MIN( t1, t2 );
+                CV_CALC_MIN( t1, t2 );
 
                 t2 = idist2[1] + mask1;
-                CALC_MIN( t1, t2 );
+                CV_CALC_MIN( t1, t2 );
                 idist[0] = t1;
             }
             idist += dstStep;
@@ -320,9 +318,6 @@ IPCVAPI_IMPL( CvStatus, icvDistanceTransform_3x3_8u32f_C1R,
 }
 
 
-#define _F2I(i, f) (i) = (f);
-#define _I2F(f, i) (f) = (i);
-
 #define _POINT(row, column)  (((int*)pDst)[(row)*dstStep+(column)])
 #define _ADD_POINT(row, column, m)\
     buffer[length++] = ((int*)pDst)[dstStep*(row) + (column)] + (m)
@@ -330,7 +325,8 @@ IPCVAPI_IMPL( CvStatus, icvDistanceTransform_3x3_8u32f_C1R,
 
 IPCVAPI_IMPL( CvStatus, icvDistanceTransform_5x5_8u32f_C1R,
               (const uchar * pSrc, int srcStep,
-               float *pDst, int dstStep, CvSize roiSize, float *pMetrics) )
+              float *pDst, int dstStep, CvSize roiSize, float *pMetrics),
+              (pSrc, srcStep, pDst, dstStep, roiSize, pMetrics) )
 {
     int ri;                     /* Row index */
     int ci;                     /* Column index */
@@ -348,11 +344,11 @@ IPCVAPI_IMPL( CvStatus, icvDistanceTransform_5x5_8u32f_C1R,
     if( !pSrc || !pDst || !pMetrics )
         return CV_NULLPTR_ERR;
     if( roiSize.width < 0 || roiSize.height < 0 ||
-        srcStep < roiSize.width || dstStep < roiSize.width * sizeof_float ||
-        (dstStep & (sizeof_float - 1)) != 0 )
+        srcStep < roiSize.width || dstStep < roiSize.width * CV_SIZEOF_FLOAT ||
+        (dstStep & (CV_SIZEOF_FLOAT - 1)) != 0 )
         return CV_BADSIZE_ERR;
 
-    dstStep /= sizeof_float;
+    dstStep /= CV_SIZEOF_FLOAT;
 
     mask0 = cvRound( pMetrics[0] * (1 << _CV_DIST_SHIFT) );
     mask1 = cvRound( pMetrics[1] * (1 << _CV_DIST_SHIFT) );
@@ -570,177 +566,178 @@ IPCVAPI_IMPL( CvStatus, icvDistanceTransform_5x5_8u32f_C1R,
 
     /* ri = 0, ci = 1 */
     t1 = *(int *) &_POINT( 0, 1 );
-    _F2I( t2, _POINT( 0, 0 ) + mask0 );
-    CALC_MIN( t1, t2 );
-    _I2F( _POINT( 0, 1 ), t1 );
+    t2 = _POINT( 0, 0 ) + mask0;
+    CV_CALC_MIN( t1, t2 );
+    _POINT( 0, 1 ) = t1;
 
     /* ri = 0, 1 < ci < w */
     for( ci = 2; ci < w; ci++ )
     {
         t1 = *(int *) &_POINT( 0, ci );
-        _F2I( t2, _POINT( 0, ci - 1 ) + mask0 );
-        CALC_MIN( t1, t2 );
-        _I2F( _POINT( 0, ci ), t1 );
+        t2 = _POINT( 0, ci - 1 ) + mask0;
+        CV_CALC_MIN( t1, t2 );
+        _POINT( 0, ci ) = t1;
     }
 
     /* ri = 1, ci = 0 */
     t1 = *(int *) &_POINT( 1, 0 );
-    _F2I( t2, _POINT( 0, 0 ) + mask0 );
-    CALC_MIN(t1, t2);
-	_F2I( t2, _POINT( 0, 1 ) + mask1 );
-    CALC_MIN( t1, t2 );
-    _F2I( t2, _POINT( 0, 2 ) + mask2 );
-    CALC_MIN( t1, t2 );
-    _I2F( _POINT( 1, 0 ), t1 );
+    t2 = _POINT( 0, 0 ) + mask0;
+    CV_CALC_MIN(t1, t2);
+	t2 = _POINT( 0, 1 ) + mask1;
+    CV_CALC_MIN( t1, t2 );
+    t2 = _POINT( 0, 2 ) + mask2;
+    CV_CALC_MIN( t1, t2 );
+    _POINT( 1, 0 ) = t1;
 
     /* ri = 1, ci = 1 */
     t1 = *(int *) &_POINT( 1, 1 );
-    _F2I( t2, _POINT( 0, 1 ) + mask0 );
-    CALC_MIN( t1, t2 );
-    _F2I( t2, _POINT( 0, 2 ) + mask1 );
-    CALC_MIN( t1, t2 );
-    _F2I( t2, _POINT( 0, 3 ) + mask2 );
-    CALC_MIN( t1, t2 );
-    _F2I( t2, _POINT( 0, 0 ) + mask1 );
-    CALC_MIN( t1, t2 );
-    _F2I( t2, _POINT( 1, 0 ) + mask0 );
-    CALC_MIN( t1, t2 );
-    _I2F( _POINT( 1, 1 ), t1 );
+    t2 = _POINT( 0, 1 ) + mask0;
+    CV_CALC_MIN( t1, t2 );
+    t2 = _POINT( 0, 2 ) + mask1;
+    CV_CALC_MIN( t1, t2 );
+    t2 = _POINT( 0, 3 ) + mask2;
+    CV_CALC_MIN( t1, t2 );
+    t2 = _POINT( 0, 0 ) + mask1;
+    CV_CALC_MIN( t1, t2 );
+    t2 = _POINT( 1, 0 ) + mask0;
+    CV_CALC_MIN( t1, t2 );
+    _POINT( 1, 1 ) = t1;
 
 
     /* ri = 1, 1 < ci < w - 2 */
     for( ci = 2; ci < w - 2; ci++ )
     {
         t1 = *(int *) &_POINT( 1, ci );
-        _F2I( t2, _POINT( 0, ci ) + mask0 );
-        CALC_MIN( t1, t2 );
-        _F2I( t2, _POINT( 0, ci + 1 ) + mask1 );
-        CALC_MIN( t1, t2 );
-        _F2I( t2, _POINT( 0, ci + 2 ) + mask2 );
-        CALC_MIN( t1, t2 );
-        _F2I( t2, _POINT( 0, ci - 1 ) + mask1 );
-        CALC_MIN( t1, t2 );
-        _F2I( t2, _POINT( 1, ci - 1 ) + mask0 );
-        CALC_MIN( t1, t2 );
-        _F2I( t2, _POINT( 0, ci - 2 ) + mask2 );
-        CALC_MIN( t1, t2 );
-        _I2F( _POINT( 1, ci ), t1 );
+        t2 = _POINT( 0, ci ) + mask0;
+        CV_CALC_MIN( t1, t2 );
+        t2 = _POINT( 0, ci + 1 ) + mask1;
+        CV_CALC_MIN( t1, t2 );
+        t2 = _POINT( 0, ci + 2 ) + mask2;
+        CV_CALC_MIN( t1, t2 );
+        t2 = _POINT( 0, ci - 1 ) + mask1;
+        CV_CALC_MIN( t1, t2 );
+        t2 = _POINT( 1, ci - 1 ) + mask0;
+        CV_CALC_MIN( t1, t2 );
+        t2 = _POINT( 0, ci - 2 ) + mask2;
+        CV_CALC_MIN( t1, t2 );
+        _POINT( 1, ci ) = t1;
     }
 
     /* ri = 1, ci = w - 2 */
     t1 = *(int *) &_POINT( 1, w - 2 );
-    _F2I( t2, _POINT( 0, w - 2 ) + mask0 );
-    CALC_MIN( t1, t2 );
-    _F2I( t2, _POINT( 0, w - 1 ) + mask1 );
-    CALC_MIN( t1, t2 );
-    _F2I( t2, _POINT( 0, w - 3 ) + mask1 );
-    CALC_MIN( t1, t2 );
-    _F2I( t2, _POINT( 1, w - 3 ) + mask0 );
-    CALC_MIN( t1, t2 );
-    _F2I( t2, _POINT( 0, w - 4 ) + mask2 );
-    CALC_MIN( t1, t2 );
-    _I2F( _POINT( 1, w - 2 ), t1 );
+    t2 = _POINT( 0, w - 2 ) + mask0;
+    CV_CALC_MIN( t1, t2 );
+    t2 = _POINT( 0, w - 1 ) + mask1;
+    CV_CALC_MIN( t1, t2 );
+    t2 = _POINT( 0, w - 3 ) + mask1;
+    CV_CALC_MIN( t1, t2 );
+    t2 = _POINT( 1, w - 3 ) + mask0;
+    CV_CALC_MIN( t1, t2 );
+    t2 = _POINT( 0, w - 4 ) + mask2;
+    CV_CALC_MIN( t1, t2 );
+    _POINT( 1, w - 2 ) = t1;
 
     /* ri = 1, ci = w - 1 */
     t1 = *(int *) &_POINT( 1, w - 1 );
-    _F2I( t2, _POINT( 0, w - 1 ) + mask0 );
-    CALC_MIN( t1, t2 );
-    _F2I( t2, _POINT( 0, w - 2 ) + mask1 );
-    CALC_MIN( t1, t2 );
-    _F2I( t2, _POINT( 1, w - 2 ) + mask0 );
-    CALC_MIN( t1, t2 );
-    _F2I( t2, _POINT( 0, w - 3 ) + mask2 );
-    CALC_MIN( t1, t2 );
-    _I2F( _POINT( 1, w - 1 ), t1 )
+    t2 = _POINT( 0, w - 1 ) + mask0;
+    CV_CALC_MIN( t1, t2 );
+    t2 = _POINT( 0, w - 2 ) + mask1;
+    CV_CALC_MIN( t1, t2 );
+    t2 = _POINT( 1, w - 2 ) + mask0;
+    CV_CALC_MIN( t1, t2 );
+    t2 = _POINT( 0, w - 3 ) + mask2;
+    CV_CALC_MIN( t1, t2 );
+    _POINT( 1, w - 1 ) = t1;
         /* 1 < ri < h */
         for( ri = 2; ri < h; ri++ )
     {
         /* ci = 0 */
         t1 = *(int *) &_POINT( ri, 0 );
-        _F2I( t2, _POINT( ri - 1, 0 ) + mask0 );
-        CALC_MIN( t1, t2 );
-        _F2I( t2, _POINT( ri - 1, 1 ) + mask1 );
-        CALC_MIN( t1, t2 );
-        _F2I( t2, _POINT( ri - 1, 2 ) + mask2 );
-        CALC_MIN( t1, t2 );
-        _F2I( t2, _POINT( ri - 2, 1 ) + mask2 );
-        CALC_MIN( t1, t2 );
-        _I2F( _POINT( ri, 0 ), t1 );
+        t2 = _POINT( ri - 1, 0 ) + mask0;
+        CV_CALC_MIN( t1, t2 );
+        t2 = _POINT( ri - 1, 1 ) + mask1;
+        CV_CALC_MIN( t1, t2 );
+        t2 = _POINT( ri - 1, 2 ) + mask2;
+        CV_CALC_MIN( t1, t2 );
+        t2 = _POINT( ri - 2, 1 ) + mask2;
+        CV_CALC_MIN( t1, t2 );
+        _POINT( ri, 0 ) = t1;
 
         /* ci = 1 */
         t1 = *(int *) &_POINT( ri, 1 );
-        _F2I( t2, _POINT( ri - 1, 1 ) + mask0 );
-        CALC_MIN( t1, t2 );
-        _F2I( t2, _POINT( ri - 1, 2 ) + mask1 );
-        CALC_MIN( t1, t2 );
-        _F2I( t2, _POINT( ri - 1, 3 ) + mask2 );
-        CALC_MIN( t1, t2 );
-        _F2I( t2, _POINT( ri - 2, 2 ) + mask2 );
-        CALC_MIN( t1, t2 );
-        _F2I( t2, _POINT( ri, 0 ) + mask0 );
-        CALC_MIN( t1, t2 );
-        _F2I( t2, _POINT( ri - 1, 0 ) + mask1 );
-        CALC_MIN( t1, t2 );
-        _F2I( t2, _POINT( ri - 2, 0 ) + mask2 );
-        CALC_MIN( t1, t2 );
-        _I2F( _POINT( ri, 1 ), t1 );
+        t2 = _POINT( ri - 1, 1 ) + mask0;
+        CV_CALC_MIN( t1, t2 );
+        t2 = _POINT( ri - 1, 2 ) + mask1;
+        CV_CALC_MIN( t1, t2 );
+        t2 = _POINT( ri - 1, 3 ) + mask2;
+        CV_CALC_MIN( t1, t2 );
+        t2 = _POINT( ri - 2, 2 ) + mask2;
+        CV_CALC_MIN( t1, t2 );
+        t2 = _POINT( ri, 0 ) + mask0;
+        CV_CALC_MIN( t1, t2 );
+        t2 = _POINT( ri - 1, 0 ) + mask1;
+        CV_CALC_MIN( t1, t2 );
+        t2 = _POINT( ri - 2, 0 ) + mask2;
+        CV_CALC_MIN( t1, t2 );
+        _POINT( ri, 1 ) = t1;
 
 
         /* 1 < ci < w - 2 */
         for( ci = 2; ci < w - 2; ci++ )
         {
             t1 = *(int *) &_POINT( ri, ci );
-            _F2I( t2, _POINT( ri, ci - 1 ) + mask0 );
-            CALC_MIN( t1, t2 );
-            _F2I( t2, _POINT( ri - 1, ci ) + mask0 );
-            CALC_MIN( t1, t2 );
-            _F2I( t2, _POINT( ri - 1, ci + 1 ) + mask1 );
-            CALC_MIN( t1, t2 );
-            _F2I( t2, _POINT( ri - 1, ci + 2 ) + mask2 );
-            CALC_MIN( t1, t2 );
-            _F2I( t2, _POINT( ri - 2, ci + 1 ) + mask2 );
-            CALC_MIN( t1, t2 );
-            _F2I( t2, _POINT( ri - 1, ci - 1 ) + mask1 );
-            CALC_MIN( t1, t2 );
-            _F2I( t2, _POINT( ri - 1, ci - 2 ) + mask2 );
-            CALC_MIN( t1, t2 );
-            _F2I( t2, _POINT( ri - 2, ci - 1 ) + mask2 );
-            CALC_MIN( t1, t2 );
-        _I2F( _POINT( ri, ci ), t1 )}
+            t2 = _POINT( ri, ci - 1 ) + mask0;
+            CV_CALC_MIN( t1, t2 );
+            t2 = _POINT( ri - 1, ci ) + mask0;
+            CV_CALC_MIN( t1, t2 );
+            t2 = _POINT( ri - 1, ci + 1 ) + mask1;
+            CV_CALC_MIN( t1, t2 );
+            t2 = _POINT( ri - 1, ci + 2 ) + mask2;
+            CV_CALC_MIN( t1, t2 );
+            t2 = _POINT( ri - 2, ci + 1 ) + mask2;
+            CV_CALC_MIN( t1, t2 );
+            t2 = _POINT( ri - 1, ci - 1 ) + mask1;
+            CV_CALC_MIN( t1, t2 );
+            t2 = _POINT( ri - 1, ci - 2 ) + mask2;
+            CV_CALC_MIN( t1, t2 );
+            t2 = _POINT( ri - 2, ci - 1 ) + mask2;
+            CV_CALC_MIN( t1, t2 );
+            _POINT( ri, ci ) = t1;
+        }
 
 
         /* ci = w - 2 */
         t1 = *(int *) &_POINT( ri, w - 2 );
-        _F2I( t2, _POINT( ri - 1, w - 2 ) + mask0 );
-        CALC_MIN( t1, t2 );
-        _F2I( t2, _POINT( ri - 1, w - 1 ) + mask1 );
-        CALC_MIN( t1, t2 );
-        _F2I( t2, _POINT( ri - 2, w - 1 ) + mask2 );
-        CALC_MIN( t1, t2 );
-        _F2I( t2, _POINT( ri, w - 2 ) + mask0 );
-        CALC_MIN( t1, t2 );
-        _F2I( t2, _POINT( ri - 1, w - 3 ) + mask1 );
-        CALC_MIN( t1, t2 );
-        _F2I( t2, _POINT( ri - 1, w - 4 ) + mask2 );
-        CALC_MIN( t1, t2 );
-        _F2I( t2, _POINT( ri - 2, w - 3 ) + mask2 );
-        CALC_MIN( t1, t2 );
-        _I2F( _POINT( ri, w - 2 ), t1 );
+        t2 = _POINT( ri - 1, w - 2 ) + mask0;
+        CV_CALC_MIN( t1, t2 );
+        t2 = _POINT( ri - 1, w - 1 ) + mask1;
+        CV_CALC_MIN( t1, t2 );
+        t2 = _POINT( ri - 2, w - 1 ) + mask2;
+        CV_CALC_MIN( t1, t2 );
+        t2 = _POINT( ri, w - 2 ) + mask0;
+        CV_CALC_MIN( t1, t2 );
+        t2 = _POINT( ri - 1, w - 3 ) + mask1;
+        CV_CALC_MIN( t1, t2 );
+        t2 = _POINT( ri - 1, w - 4 ) + mask2;
+        CV_CALC_MIN( t1, t2 );
+        t2 = _POINT( ri - 2, w - 3 ) + mask2;
+        CV_CALC_MIN( t1, t2 );
+        _POINT( ri, w - 2 ) = t1;
 
 
         /* ci = w - 1 */
         t1 = *(int *) &_POINT( ri, w - 1 );
-        _F2I( t2, _POINT( ri - 1, w - 1 ) + mask0 );
-        CALC_MIN( t1, t2 );
-        _F2I( t2, _POINT( ri, w - 2 ) + mask0 );
-        CALC_MIN( t1, t2 );
-        _F2I( t2, _POINT( ri - 1, w - 2 ) + mask1 );
-        CALC_MIN( t1, t2 );
-        _F2I( t2, _POINT( ri - 1, w - 3 ) + mask2 );
-        CALC_MIN( t1, t2 );
-        _F2I( t2, _POINT( ri - 2, w - 2 ) + mask2 );
-        CALC_MIN( t1, t2 );
-        _I2F( _POINT( ri, w - 1 ), t1 );
+        t2 = _POINT( ri - 1, w - 1 ) + mask0;
+        CV_CALC_MIN( t1, t2 );
+        t2 = _POINT( ri, w - 2 ) + mask0;
+        CV_CALC_MIN( t1, t2 );
+        t2 = _POINT( ri - 1, w - 2 ) + mask1;
+        CV_CALC_MIN( t1, t2 );
+        t2 = _POINT( ri - 1, w - 3 ) + mask2;
+        CV_CALC_MIN( t1, t2 );
+        t2 = _POINT( ri - 2, w - 2 ) + mask2;
+        CV_CALC_MIN( t1, t2 );
+        _POINT( ri, w - 1 ) = t1;
     }
 
 
@@ -750,88 +747,88 @@ IPCVAPI_IMPL( CvStatus, icvDistanceTransform_5x5_8u32f_C1R,
 
     /* ri = h - 1, ci = w - 2 */
     t1 = *(int *) &_POINT( h - 1, w - 2 );
-    _F2I( t2, _POINT( h - 1, w - 1 ) + mask0 );
-    CALC_MIN( t1, t2 );
-    _I2F( _POINT( h - 1, w - 2 ), t1 );
+    t2 = _POINT( h - 1, w - 1 ) + mask0;
+    CV_CALC_MIN( t1, t2 );
+    _POINT( h - 1, w - 2 ) = t1;
 
     /* ri = h - 1, w - 2 > ci >= 0 */
     for( ci = w - 3; ci >= 0; ci-- )
     {
         t1 = *(int *) &_POINT( h - 1, ci );
-        _F2I( t2, _POINT( h - 1, ci + 1 ) + mask0 );
-        CALC_MIN( t1, t2 );
-        _I2F( _POINT( h - 1, ci ), t1 );
+        t2 = _POINT( h - 1, ci + 1 ) + mask0;
+        CV_CALC_MIN( t1, t2 );
+        _POINT( h - 1, ci ) = t1;
     }
 
 
     /* ri = h - 2, ci = w - 1 */
     t1 = *(int *) &_POINT( h - 2, w - 1 );
-    _F2I( t2, _POINT( h - 1, w - 1 ) + mask0 );
-    CALC_MIN( t1, t2 );
-    _F2I( t2, _POINT( h - 1, w - 2 ) + mask1 );
-    CALC_MIN( t1, t2 );
-    _F2I( t2, _POINT( h - 1, w - 3 ) + mask2 );
-    CALC_MIN( t1, t2 );
-    _I2F( _POINT( h - 2, w - 1 ), t1 );
+    t2 = _POINT( h - 1, w - 1 ) + mask0;
+    CV_CALC_MIN( t1, t2 );
+    t2 = _POINT( h - 1, w - 2 ) + mask1;
+    CV_CALC_MIN( t1, t2 );
+    t2 = _POINT( h - 1, w - 3 ) + mask2;
+    CV_CALC_MIN( t1, t2 );
+    _POINT( h - 2, w - 1 ) = t1;
 
     /* ri = h - 2, ci = w - 2 */
     t1 = *(int *) &_POINT( h - 2, w - 2 );
-    _F2I( t2, _POINT( h - 1, w - 2 ) + mask0 );
-    CALC_MIN( t1, t2 );
-    _F2I( t2, _POINT( h - 1, w - 3 ) + mask1 );
-    CALC_MIN( t1, t2 );
-    _F2I( t2, _POINT( h - 1, w - 4 ) + mask2 );
-    CALC_MIN( t1, t2 );
-    _F2I( t2, _POINT( h - 1, w - 1 ) + mask1 );
-    CALC_MIN( t1, t2 );
-    _F2I( t2, _POINT( h - 2, w - 1 ) + mask0 );
-    CALC_MIN( t1, t2 );
-    _I2F( _POINT( h - 2, w - 2 ), t1 );
+    t2 = _POINT( h - 1, w - 2 ) + mask0;
+    CV_CALC_MIN( t1, t2 );
+    t2 = _POINT( h - 1, w - 3 ) + mask1;
+    CV_CALC_MIN( t1, t2 );
+    t2 = _POINT( h - 1, w - 4 ) + mask2;
+    CV_CALC_MIN( t1, t2 );
+    t2 = _POINT( h - 1, w - 1 ) + mask1;
+    CV_CALC_MIN( t1, t2 );
+    t2 = _POINT( h - 2, w - 1 ) + mask0;
+    CV_CALC_MIN( t1, t2 );
+    _POINT( h - 2, w - 2 ) = t1;
 
     /* ri = h - 2, w - 2 > ci > 1 */
     for( ci = w - 3; ci > 1; ci-- )
     {
         t1 = *(int *) &_POINT( h - 2, ci );
-        _F2I( t2, _POINT( h - 2, ci + 1 ) + mask0 );
-        CALC_MIN( t1, t2 );
-        _F2I( t2, _POINT( h - 1, ci ) + mask0 );
-        CALC_MIN( t1, t2 );
-        _F2I( t2, _POINT( h - 1, ci + 1 ) + mask1 );
-        CALC_MIN( t1, t2 );
-        _F2I( t2, _POINT( h - 1, ci + 2 ) + mask2 );
-        CALC_MIN( t1, t2 );
-        _F2I( t2, _POINT( h - 1, ci - 1 ) + mask1 );
-        CALC_MIN( t1, t2 );
-        _F2I( t2, _POINT( h - 1, ci - 2 ) + mask2 );
-        CALC_MIN( t1, t2 );
-        _I2F( _POINT( h - 2, ci ), t1 );
+        t2 = _POINT( h - 2, ci + 1 ) + mask0;
+        CV_CALC_MIN( t1, t2 );
+        t2 = _POINT( h - 1, ci ) + mask0;
+        CV_CALC_MIN( t1, t2 );
+        t2 = _POINT( h - 1, ci + 1 ) + mask1;
+        CV_CALC_MIN( t1, t2 );
+        t2 = _POINT( h - 1, ci + 2 ) + mask2;
+        CV_CALC_MIN( t1, t2 );
+        t2 = _POINT( h - 1, ci - 1 ) + mask1;
+        CV_CALC_MIN( t1, t2 );
+        t2 = _POINT( h - 1, ci - 2 ) + mask2;
+        CV_CALC_MIN( t1, t2 );
+        _POINT( h - 2, ci ) = t1;
     }
 
     /* ri = h - 2, ci = 1 */
     t1 = *(int *) &_POINT( h - 2, 1 );
-    _F2I( t2, _POINT( h - 2, 2 ) + mask0 );
-    CALC_MIN( t1, t2 );
-    _F2I( t2, _POINT( h - 1, 2 ) + mask1 );
-    CALC_MIN( t1, t2 );
-    _F2I( t2, _POINT( h - 1, 3 ) + mask2 );
-    CALC_MIN( t1, t2 );
-    _F2I( t2, _POINT( h - 1, 1 ) + mask0 );
-    CALC_MIN( t1, t2 );
-    _F2I( t2, _POINT( h - 1, 0 ) + mask1 );
-    CALC_MIN( t1, t2 );
-    _I2F( _POINT( h - 2, 1 ), t1 );
+    t2 = _POINT( h - 2, 2 ) + mask0;
+    CV_CALC_MIN( t1, t2 );
+    t2 = _POINT( h - 1, 2 ) + mask1;
+    CV_CALC_MIN( t1, t2 );
+    t2 = _POINT( h - 1, 3 ) + mask2;
+    CV_CALC_MIN( t1, t2 );
+    t2 = _POINT( h - 1, 1 ) + mask0;
+    CV_CALC_MIN( t1, t2 );
+    t2 = _POINT( h - 1, 0 ) + mask1;
+    CV_CALC_MIN( t1, t2 );
+    _POINT( h - 2, 1 ) = t1;
 
     /* ri = h - 2, ci = 0 */
     t1 = *(int *) &_POINT( h - 2, 0 );
-    _F2I( t2, _POINT( h - 2, 1 ) + mask0 );
-    CALC_MIN( t1, t2 );
-    _F2I( t2, _POINT( h - 1, 1 ) + mask1 );
-    CALC_MIN( t1, t2 );
-    _F2I( t2, _POINT( h - 1, 2 ) + mask2 );
-    CALC_MIN( t1, t2 );
-    _F2I( t2, _POINT( h - 1, 0 ) + mask0 );
-    CALC_MIN( t1, t2 );
-    _I2F( _POINT( h - 2, 0 ), t1 );
+    t2 = _POINT( h - 2, 1 ) + mask0;
+    CV_CALC_MIN( t1, t2 );
+    t2 = _POINT( h - 1, 1 ) + mask1;
+    CV_CALC_MIN( t1, t2 );
+    t2 = _POINT( h - 1, 2 ) + mask2;
+    CV_CALC_MIN( t1, t2 );
+    t2 = _POINT( h - 1, 0 ) + mask0;
+    CV_CALC_MIN( t1, t2 );
+    _POINT( h - 2, 0 ) = t1;
 
 
     /* h - 2 > ri >= 0 */
@@ -839,88 +836,88 @@ IPCVAPI_IMPL( CvStatus, icvDistanceTransform_5x5_8u32f_C1R,
     {
         /* ci = w - 1 */
         t1 = *(int *) &_POINT( ri, w - 1 );
-        _F2I( t2, _POINT( ri + 1, w - 1 ) + mask0 );
-        CALC_MIN( t1, t2 );
-        _F2I( t2, _POINT( ri + 1, w - 2 ) + mask1 );
-        CALC_MIN( t1, t2 );
-        _F2I( t2, _POINT( ri + 2, w - 2 ) + mask2 );
-        CALC_MIN( t1, t2 );
-        _F2I( t2, _POINT( ri + 1, w - 3 ) + mask2 );
-        CALC_MIN( t1, t2 );
-        _I2F( _POINT( ri, w - 1 ), t1 );
+        t2 = _POINT( ri + 1, w - 1 ) + mask0;
+        CV_CALC_MIN( t1, t2 );
+        t2 = _POINT( ri + 1, w - 2 ) + mask1;
+        CV_CALC_MIN( t1, t2 );
+        t2 = _POINT( ri + 2, w - 2 ) + mask2;
+        CV_CALC_MIN( t1, t2 );
+        t2 = _POINT( ri + 1, w - 3 ) + mask2;
+        CV_CALC_MIN( t1, t2 );
+        _POINT( ri, w - 1 ) = t1;
 
         /* ci = w - 2 */
         t1 = *(int *) &_POINT( ri, w - 2 );
-        _F2I( t2, _POINT( ri, w - 1 ) + mask0 );
-        CALC_MIN( t1, t2 );
-        _F2I( t2, _POINT( ri + 1, w - 1 ) + mask1 );
-        CALC_MIN( t1, t2 );
-        _F2I( t2, _POINT( ri + 2, w - 1 ) + mask2 );
-        CALC_MIN( t1, t2 );
-        _F2I( t2, _POINT( ri + 1, w - 2 ) + mask0 );
-        CALC_MIN( t1, t2 );
-        _F2I( t2, _POINT( ri + 1, w - 3 ) + mask1 );
-        CALC_MIN( t1, t2 );
-        _F2I( t2, _POINT( ri + 2, w - 3 ) + mask2 );
-        CALC_MIN( t1, t2 );
-        _F2I( t2, _POINT( ri + 1, w - 4 ) + mask2 );
-        CALC_MIN( t1, t2 );
-        _I2F( _POINT( ri, w - 2 ), t1 );
+        t2 = _POINT( ri, w - 1 ) + mask0;
+        CV_CALC_MIN( t1, t2 );
+        t2 = _POINT( ri + 1, w - 1 ) + mask1;
+        CV_CALC_MIN( t1, t2 );
+        t2 = _POINT( ri + 2, w - 1 ) + mask2;
+        CV_CALC_MIN( t1, t2 );
+        t2 = _POINT( ri + 1, w - 2 ) + mask0;
+        CV_CALC_MIN( t1, t2 );
+        t2 = _POINT( ri + 1, w - 3 ) + mask1;
+        CV_CALC_MIN( t1, t2 );
+        t2 = _POINT( ri + 2, w - 3 ) + mask2;
+        CV_CALC_MIN( t1, t2 );
+        t2 = _POINT( ri + 1, w - 4 ) + mask2;
+        CV_CALC_MIN( t1, t2 );
+        _POINT( ri, w - 2 ) = t1;
 
         /* w - 2 > ci > 1 */
         for( ci = w - 3; ci > 1; ci-- )
         {
             t1 = *(int *) &_POINT( ri, ci );
-            _F2I( t2, _POINT( ri, ci + 1 ) + mask0 );
-            CALC_MIN( t1, t2 );
-            _F2I( t2, _POINT( ri + 1, ci ) + mask0 );
-            CALC_MIN( t1, t2 );
-            _F2I( t2, _POINT( ri + 1, ci + 1 ) + mask1 );
-            CALC_MIN( t1, t2 );
-            _F2I( t2, _POINT( ri + 1, ci + 2 ) + mask2 );
-            CALC_MIN( t1, t2 );
-            _F2I( t2, _POINT( ri + 2, ci + 1 ) + mask2 );
-            CALC_MIN( t1, t2 );
-            _F2I( t2, _POINT( ri + 1, ci - 1 ) + mask1 );
-            CALC_MIN( t1, t2 );
-            _F2I( t2, _POINT( ri + 1, ci - 2 ) + mask2 );
-            CALC_MIN( t1, t2 );
-            _F2I( t2, _POINT( ri + 2, ci - 1 ) + mask2 );
-            CALC_MIN( t1, t2 );
-            _I2F( _POINT( ri, ci ), t1 );
+            t2 = _POINT( ri, ci + 1 ) + mask0;
+            CV_CALC_MIN( t1, t2 );
+            t2 = _POINT( ri + 1, ci ) + mask0;
+            CV_CALC_MIN( t1, t2 );
+            t2 = _POINT( ri + 1, ci + 1 ) + mask1;
+            CV_CALC_MIN( t1, t2 );
+            t2 = _POINT( ri + 1, ci + 2 ) + mask2;
+            CV_CALC_MIN( t1, t2 );
+            t2 = _POINT( ri + 2, ci + 1 ) + mask2;
+            CV_CALC_MIN( t1, t2 );
+            t2 = _POINT( ri + 1, ci - 1 ) + mask1;
+            CV_CALC_MIN( t1, t2 );
+            t2 = _POINT( ri + 1, ci - 2 ) + mask2;
+            CV_CALC_MIN( t1, t2 );
+            t2 = _POINT( ri + 2, ci - 1 ) + mask2;
+            CV_CALC_MIN( t1, t2 );
+            _POINT( ri, ci ) = t1;
         }
 
         /* ci = 1 */
         t1 = *(int *) &_POINT( ri, 1 );
-        _F2I( t2, _POINT( ri, 2 ) + mask0 );
-        CALC_MIN( t1, t2 );
-        _F2I( t2, _POINT( ri + 1, 1 ) + mask0 );
-        CALC_MIN( t1, t2 );
-        _F2I( t2, _POINT( ri + 1, 2 ) + mask1 );
-        CALC_MIN( t1, t2 );
-        _F2I( t2, _POINT( ri + 1, 3 ) + mask2 );
-        CALC_MIN( t1, t2 );
-        _F2I( t2, _POINT( ri + 2, 2 ) + mask2 );
-        CALC_MIN( t1, t2 );
-        _F2I( t2, _POINT( ri + 1, 0 ) + mask1 );
-        CALC_MIN( t1, t2 );
-        _F2I( t2, _POINT( ri + 2, 0 ) + mask2 );
-        CALC_MIN( t1, t2 );
-        _I2F( _POINT( ri, 1 ), t1 );
+        t2 = _POINT( ri, 2 ) + mask0;
+        CV_CALC_MIN( t1, t2 );
+        t2 = _POINT( ri + 1, 1 ) + mask0;
+        CV_CALC_MIN( t1, t2 );
+        t2 = _POINT( ri + 1, 2 ) + mask1;
+        CV_CALC_MIN( t1, t2 );
+        t2 = _POINT( ri + 1, 3 ) + mask2;
+        CV_CALC_MIN( t1, t2 );
+        t2 = _POINT( ri + 2, 2 ) + mask2;
+        CV_CALC_MIN( t1, t2 );
+        t2 = _POINT( ri + 1, 0 ) + mask1;
+        CV_CALC_MIN( t1, t2 );
+        t2 = _POINT( ri + 2, 0 ) + mask2;
+        CV_CALC_MIN( t1, t2 );
+        _POINT( ri, 1 ) = t1;
 
         /* ci = 0 */
         t1 = *(int *) &_POINT( ri, 0 );
-        _F2I( t2, _POINT( ri, 1 ) + mask0 );
-        CALC_MIN( t1, t2 );
-        _F2I( t2, _POINT( ri + 1, 0 ) + mask0 );
-        CALC_MIN( t1, t2 );
-        _F2I( t2, _POINT( ri + 1, 1 ) + mask1 );
-        CALC_MIN( t1, t2 );
-        _F2I( t2, _POINT( ri + 1, 2 ) + mask2 );
-        CALC_MIN( t1, t2 );
-        _F2I( t2, _POINT( ri + 2, 1 ) + mask2 );
-        CALC_MIN( t1, t2 );
-        _I2F( _POINT( ri, 0 ), t1 );
+        t2 = _POINT( ri, 1 ) + mask0;
+        CV_CALC_MIN( t1, t2 );
+        t2 = _POINT( ri + 1, 0 ) + mask0;
+        CV_CALC_MIN( t1, t2 );
+        t2 = _POINT( ri + 1, 1 ) + mask1;
+        CV_CALC_MIN( t1, t2 );
+        t2 = _POINT( ri + 1, 2 ) + mask2;
+        CV_CALC_MIN( t1, t2 );
+        t2 = _POINT( ri + 2, 1 ) + mask2;
+        CV_CALC_MIN( t1, t2 );
+        _POINT( ri, 0 ) = t1;
     }
 
   func_exit:
@@ -930,7 +927,7 @@ IPCVAPI_IMPL( CvStatus, icvDistanceTransform_5x5_8u32f_C1R,
 }
 
 
-IPCVAPI_IMPL( CvStatus, icvGetDistanceTransformMask, (int maskType, float *pMetrics) )
+IPCVAPI_IMPL( CvStatus, icvGetDistanceTransformMask, (int maskType, float *pMetrics), (maskType, pMetrics) )
 {
     if( !pMetrics )
         return CV_NULLPTR_ERR;
@@ -967,7 +964,7 @@ IPCVAPI_IMPL( CvStatus, icvGetDistanceTransformMask, (int maskType, float *pMetr
 /* Wrapper function for distance transform group */
 CV_IMPL void
 cvDistTransform( const void* srcarr, void* dstarr,
-                 CvDisType distType, int maskSize,
+                 int distType, int maskSize,
                  const float *mask )
 {
     CV_FUNCNAME( "cvDistTransform" );
@@ -1012,14 +1009,14 @@ cvDistTransform( const void* srcarr, void* dstarr,
         IPPI_CALL( icvDistanceTransform_3x3_8u32f_C1R
                    ( src->data.ptr, src->step,
                      dst->data.fl, dst->step,
-                     icvGetMatSize(src), _mask ));
+                     cvGetMatSize(src), _mask ));
     }
     else
     {
         IPPI_CALL( icvDistanceTransform_5x5_8u32f_C1R
                    ( src->data.ptr, src->step,
                      dst->data.fl, dst->step,
-                     icvGetMatSize(src), _mask ));
+                     cvGetMatSize(src), _mask ));
     }
 
     __END__;

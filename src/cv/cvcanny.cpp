@@ -41,28 +41,7 @@
 
 #include "_cv.h"
 
-/*F///////////////////////////////////////////////////////////////////////////////////////
-//    Name:      ippiCanny8uC1R     
-//    Purpose:   finds edges on image using J.Canny algorithm
-//    Context:   
-//    Parameters:
-//               src - source image,
-//               srcStep - its step,
-//               dst - destination binary image with edges,
-//               dstStep - its step,
-//               roi - size of ROI,
-//               opSize - size of Sobel operator aperture, 
-//               lowThreshold, 
-//               highThreshold - tresholds for hysteresis thresholding  
-//                 
-//    Returns:   
-//    Notes: image gradient magnitude has scale factor 2^(2*opSize-1)
-//           so user must choose appropriate lowThreshold and highThreshold 
-//           i.e. if real gradient magnitude is 1, then 3x3 Sobel used in this function 
-//           will compute 8 //opSize is 2//
-//F*/
-
-IPCVAPI_IMPL( CvStatus, icvCannyGetSize, (CvSize roi, int *bufferSize) )
+static CvStatus CV_STDCALL icvCannyGetSize( CvSize roi, int *bufferSize )
 {
     if( (roi.width <= 0) && (roi.height <= 0) )
         return CV_BADSIZE_ERR;
@@ -74,12 +53,11 @@ IPCVAPI_IMPL( CvStatus, icvCannyGetSize, (CvSize roi, int *bufferSize) )
 }
 
 
-IPCVAPI_IMPL( CvStatus,
-icvCanny_16s8u_C1R, ( const short *pDX, int dxStep,
-                      const short *pDY, int dyStep,
-                      uchar *dst, int dststep,
-                      CvSize roi, float lowThreshold,
-                      float highThreshold, void *buffer ))
+static CvStatus CV_STDCALL icvCanny_16s8u_C1R( const short *pDX, int dxStep,
+                                               const short *pDY, int dyStep,
+                                               uchar *dst, int dststep,
+                                               CvSize roi, float lowThreshold,
+                                               float highThreshold, void *buffer )
 {
     static const int sec_tab[] = { 1, 3, 0, 0, 2, 2, 2, 2 };
 
@@ -128,13 +106,10 @@ icvCanny_16s8u_C1R, ( const short *pDX, int dxStep,
             int y = pDY[j];
             int s = x ^ y;
 
-            int m = (x >= 0) - 1;
-            x = (x ^ m) - m;
+            x = abs(x);
+            y = abs(y);
 
-            m = (y >= 0) - 1;
-            y = (y ^ m) - m;
-
-            m = x + y;
+            int m = x + y;
 
             /* estimating sector and magnitude */
             if( m > low )
@@ -201,9 +176,13 @@ icvCanny_16s8u_C1R, ( const short *pDX, int dxStep,
             
                 if( val )
                 {
-                    int delta = mshift[sector[j]];
-
-                    if( val >= center[delta] && val >= (center[-delta] & INT_MAX))
+                    int sec = sector[j];
+                    int delta = mshift[sec];
+                    int b = center[delta];
+                    
+                    if( val > b && val > (center[-delta] & INT_MAX) ||
+                        sec == 0 && val == b ||
+                        sec == 2 && val == b )
                     {
                         if( val > high )
                             PUSH2( dst + j, mag + j );
@@ -229,37 +208,21 @@ icvCanny_16s8u_C1R, ( const short *pDX, int dxStep,
                 *d = 255;
 
                 if( m[-1] > low && d[-1] == 0 )
-                {
                     PUSH2( d - 1, m - 1 );
-                }
-                else if( m[1] > low && d[1] == 0 )
-                {
+                if( m[1] > low && d[1] == 0 )
                     PUSH2( d + 1, m + 1 );
-                }
-                else if( m[-magstep-1] > low && d[-dststep-1] == 0 )
-                {
+                if( m[-magstep-1] > low && d[-dststep-1] == 0 )
                     PUSH2( d - dststep - 1, m - magstep - 1 );
-                }
-                else if( m[-magstep] > low && d[-dststep] == 0 )
-                {
+                if( m[-magstep] > low && d[-dststep] == 0 )
                     PUSH2( d - dststep, m - magstep );
-                }
-                else if( m[-magstep+1] > low && d[-dststep+1] == 0 )
-                {
+                if( m[-magstep+1] > low && d[-dststep+1] == 0 )
                     PUSH2( d - dststep + 1, m - magstep + 1 );
-                }
-                else if( m[magstep-1] > low && d[dststep-1] == 0 )
-                {
+                if( m[magstep-1] > low && d[dststep-1] == 0 )
                     PUSH2( d + dststep - 1, m + magstep - 1 );
-                }
-                else if( m[magstep] > low && d[dststep] == 0 )
-                {
+                if( m[magstep] > low && d[dststep] == 0 )
                     PUSH2( d + dststep, m + magstep );
-                }
-                else if( m[magstep+1] > low && d[dststep+1] == 0 )
-                {
+                if( m[magstep+1] > low && d[dststep+1] == 0 )
                     PUSH2( d + dststep + 1, m + magstep + 1 );
-                }
             }
         }
     }
@@ -286,7 +249,7 @@ cvCanny( const void* srcarr, void* dstarr,
     CvMat srcstub, *src = (CvMat*)srcarr;
     CvMat dststub, *dst = (CvMat*)dstarr;
     CvSize src_size;
-    int buf_size, origin = 0;
+    int buf_size = 0, origin = 0;
 
     CV_CALL( src = cvGetMat( src, &srcstub ));
     CV_CALL( dst = cvGetMat( dst, &dststub ));
@@ -312,7 +275,7 @@ cvCanny( const void* srcarr, void* dstarr,
     if( (aperture_size & 1) == 0 || aperture_size < 3 || aperture_size > 7 )
         CV_ERROR( CV_StsBadFlag, "" );
 
-    src_size = icvGetMatSize( src );
+    src_size = cvGetMatSize( src );
 
     dx = cvCreateMat( src_size.height, src_size.width, CV_16SC1 );
     dy = cvCreateMat( src_size.height, src_size.width, CV_16SC1 );

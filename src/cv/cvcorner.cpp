@@ -41,7 +41,7 @@
 
 #include "_cv.h"
 
-CvStatus  icvCalcValues(float* Dx2Blured,
+static CvStatus  icvCalcValues(float* Dx2Blured,
                         float* Dy2Blured,
                         float* DxyBlured,
                         int width,
@@ -98,7 +98,7 @@ CvStatus  icvCalcValues(float* Dx2Blured,
             {
                 float apc = a + c;
                 float discr = apc * apc - 4 * det;
-                float Sqrt  = (float)sqrt( discr );
+                float Sqrt  = (float)sqrt( (double)discr );
                 float Inorm1,Inorm2,x1,x2,y1,y2;
 
                 l1 = (apc + Sqrt)*0.5f;
@@ -110,8 +110,8 @@ CvStatus  icvCalcValues(float* Dx2Blured,
                 y1 = b;
                 y2 = (-( a - l2 ));
 
-                Inorm1 = 1.f/(float)sqrt(x1*x1 + x2*x2);
-                Inorm2 = 1.f/(float)sqrt(y1*y1 + y2*y2);
+                Inorm1 = 1.f/(float)sqrt((double)x1*x1 + (double)x2*x2);
+                Inorm2 = 1.f/(float)sqrt((double)y1*y1 + (double)y2*y2);
                 eigenvv[ 6 * j ] = l1;
                 eigenvv[ 6 * j + 1] = l2;
                 eigenvv[ 6 * j + 2] = x1 * Inorm1;
@@ -179,8 +179,9 @@ static CvStatus  icvMulDBuffers32f( CvSize roi,
     return CV_NO_ERR;
 }
 
-IPCVAPI_IMPL(CvStatus, icvEigenValsVecsGetSize, ( int roiWidth,int apertureSize,
-                                                  int avgWindow, int* bufferSize ))
+static CvStatus CV_STDCALL
+icvEigenValsVecsGetSize( int roiWidth,int apertureSize,
+                         int avgWindow, int* bufferSize )
 {
     if((roiWidth<=0)&&(apertureSize<=3)&&(avgWindow<=3))return CV_BADSIZE_ERR;
     if(!bufferSize) return CV_NULLPTR_ERR;
@@ -204,12 +205,13 @@ IPCVAPI_IMPL(CvStatus, icvEigenValsVecsGetSize, ( int roiWidth,int apertureSize,
 //              CV_NO_ERR if all ok or error code
 //    Notes:
 //F*/
-IPCVAPI_IMPL(CvStatus, icvEigenValsVecs_8u32f_C1R, ( const unsigned char* pSrc, int srcStep,
-                                                     float* eigenvv, int eigenvvStep,
-                                                     CvSize roi, int kerSize,
-                                                     int blSize, void*  pBuffer ))
+static CvStatus CV_STDCALL
+icvEigenValsVecs_8u32f_C1R( const uchar* pSrc, int srcStep,
+                            float* eigenvv, int eigenvvStep,
+                            CvSize roi, int kerSize,
+                            int blSize, void*  pBuffer )
 {
-int RestToSobel = roi.height;
+    int RestToSobel = roi.height;
     CvSize curROI;
     int i;
     int HBuf = MAX(7,MAX(kerSize, blSize));
@@ -307,110 +309,12 @@ int RestToSobel = roi.height;
     return CV_NO_ERR;
 }
 
-IPCVAPI_IMPL(CvStatus, icvEigenValsVecs_8s32f_C1R, ( const char* pSrc, int srcStep,
-                                                  float* eigenvv, int eigenvvStep,
-                                                  CvSize roi, int kerSize,
-                                                  int blSize, void* pBuffer ))
-{
-    int RestToSobel = roi.height;
-    CvSize curROI;
-    int i;
-    int HBuf = MAX(7,MAX(kerSize, blSize));
-    /* multiplied derivatives buffers - used for bluring */
-    float* flBufXX = (float*)pBuffer;
-    float* flBufYY = flBufXX+(HBuf+1)*roi.width;
-    float* flBufXY = flBufYY+(HBuf+1)*roi.width;
-    float denom = 1;
-    
-    _CvConvState* stX;
-    _CvConvState* stY;
-    _CvConvState* stBX;
-    _CvConvState* stBY;
-    _CvConvState* stBXY;
-    /* Step of all buffers in pixels */
-    int ustep  = roi.width*sizeof(float);
-    int Temp;
-    char* src = (char*)pSrc;
 
-    
-    /* Check Bad Arguments */
-    if((src == NULL) || (eigenvv == NULL))return CV_NULLPTR_ERR;
-    if((srcStep <= 0)||(eigenvvStep <= 0))return CV_BADSIZE_ERR;
-    if((roi.width <= 0)||(roi.height <= 0 )) return CV_BADSIZE_ERR;
-    
-    for(i = 0; i < kerSize-1;i++)denom *= 2;
-    denom = denom*denom * 255*blSize*blSize;
-    denom=1.0f/denom;
-    curROI.width = roi.width;
-    icvSobelInitAlloc(roi.width,cv8u,kerSize,CV_ORIGIN_TL,1,0,&stX);
-    icvSobelInitAlloc(roi.width,cv8u,kerSize,CV_ORIGIN_TL,0,1,&stY);
-    icvBlurInitAlloc(roi.width,cv32f,kerSize,&stBX);
-    icvBlurInitAlloc(roi.width,cv32f,kerSize,&stBY);
-    icvBlurInitAlloc(roi.width,cv32f,kerSize,&stBXY);
-
-            
-    /* Main Cycle */
-    while ( RestToSobel)
-    {
-        int stage;
-        if((RestToSobel == roi.height))
-        {
-            stage = CV_START;
-            Temp = curROI.height = HBuf+kerSize/2; 
-            
-        }
-        else if(RestToSobel+kerSize/2+blSize/2<=HBuf)
-        {
-            stage = CV_END;
-            Temp = curROI.height = RestToSobel;
-        }
-        else
-        {
-            stage = CV_MIDDLE;
-            curROI.height = Temp = (RestToSobel<= HBuf)?RestToSobel-1:HBuf; 
-                             
-        }
-        RestToSobel-=Temp;
-        icvSobel_8s16s_C1R( src, srcStep, (short*)(flBufXX+roi.width),
-                          ustep, &curROI,stX, stage);
-
-        curROI.height =Temp;
-        icvSobel_8s16s_C1R( src, srcStep, (short*)(flBufYY+roi.width),
-                          ustep, &curROI,stY, stage);
-        
-        src += Temp * srcStep;
-          
-/****************************************************************************************\
-*                     Multy Buffers                                                      *
-\****************************************************************************************/
-        icvMulDBuffers(curROI,ustep,flBufXX+roi.width,flBufXY+roi.width,flBufYY+roi.width);
-        Temp = curROI.height;
-        icvBlur_32f_C1R(flBufXX+roi.width,ustep,flBufXX,ustep,&curROI,stBX,stage);
-        curROI.height =Temp;
-        icvBlur_32f_C1R(flBufXY+roi.width,ustep,flBufXY,ustep,&curROI,stBXY,stage);
-        curROI.height =Temp;
-        icvBlur_32f_C1R(flBufYY+roi.width,ustep,flBufYY,ustep,&curROI,stBY,stage);
-        
-        /* calc values */
-
-        icvCalcValues( flBufXX, flBufYY, flBufXY, roi.width,ustep,
-                     eigenvv, eigenvvStep, curROI.height,denom);
-        eigenvv += curROI.height * eigenvvStep/4;
-
-    }
-   
-    icvFilterFree(&stX);
-    icvFilterFree(&stY);
-    icvFilterFree(&stBX);
-    icvFilterFree(&stBY);
-    icvFilterFree(&stBXY);
-    return CV_NO_ERR;
-}
-
-IPCVAPI_IMPL(CvStatus, icvEigenValsVecs_32f_C1R, ( const float* pSrc, int srcStep,
-                                                   float* eigenvv, int eigenvvStep,
-                                                   CvSize roi, int kerSize,
-                                                   int blSize, void* pBuffer ))
+static CvStatus CV_STDCALL
+icvEigenValsVecs_32f_C1R( const float* pSrc, int srcStep,
+                          float* eigenvv, int eigenvvStep,
+                          CvSize roi, int kerSize,
+                          int blSize, void* pBuffer )
 {
     int RestToSobel = roi.height;
     CvSize curROI;
@@ -509,6 +413,82 @@ IPCVAPI_IMPL(CvStatus, icvEigenValsVecs_32f_C1R, ( const float* pSrc, int srcSte
     icvFilterFree(&stBY);
     icvFilterFree(&stBXY);
     return CV_NO_ERR;
+}
+
+
+#define ICV_DEF_INIT_TAB_DETECTION( FUNCNAME )              \
+static void icvInit##FUNCNAME##Table( CvFuncTable* table )  \
+{                                                           \
+    table->fn_2d[CV_8U] = (void*)icv##FUNCNAME##_8u32f_C1R; \
+    table->fn_2d[CV_8S] = 0;                                \
+    table->fn_2d[CV_32F] = (void*)icv##FUNCNAME##_32f_C1R;  \
+}
+
+
+ICV_DEF_INIT_TAB_DETECTION( EigenValsVecs )
+
+typedef CvStatus (CV_STDCALL * CvEigFunc)( const void* src, int srcstep,
+                                           void* dst, int dststep,
+                                           CvSize size, int aperture_size,
+                                           int block_size, void* buffer );
+
+CV_IMPL void
+cvCornerEigenValsAndVecs( const void* srcarr, void* eigenvarr,
+                          int block_size, int aperture_size )
+{
+    static CvFuncTable eig_tab;
+    static int inittab = 0;
+    void *buffer = 0;
+
+    CV_FUNCNAME( "cvCornerEigenValsAndVecs" );
+
+    __BEGIN__;
+
+    CvSize src_size;
+    int buf_size = 0;
+    CvEigFunc func = 0;
+
+    CvMat stub, *src = (CvMat*)srcarr;
+    CvMat eigstub, *eigenv = (CvMat*)eigenvarr;
+
+    if( !inittab )
+    {
+        icvInitEigenValsVecsTable( &eig_tab );
+        inittab = 1;
+    }
+
+    CV_CALL( src = cvGetMat( srcarr, &stub ));
+    CV_CALL( eigenv = cvGetMat( eigenv, &eigstub ));
+
+    if( CV_MAT_CN(src->type) != 1 )
+        CV_ERROR(CV_StsBadArg, "Source image has more than 1 channel");
+
+    if( CV_MAT_CN(eigenv->type)*eigenv->width != src->width*6 )
+        CV_ERROR(CV_StsBadArg, "Eigen-vals&vecs image should be 6 times "
+                               "wider than the source image");
+
+    if( src->height != eigenv->height )
+        CV_ERROR( CV_StsUnmatchedSizes, "" );
+
+    if( CV_MAT_DEPTH(eigenv->type) != CV_32F )
+        CV_ERROR( CV_BadDepth, "Eigen-vals&vecs image does not have IPL_DEPTH_32F depth" );
+
+    func = (CvEigFunc)(eig_tab.fn_2d[CV_MAT_DEPTH(src->type)]);
+    if( !func )
+        CV_ERROR( CV_StsUnsupportedFormat, "" );
+
+    src_size = cvGetMatSize( src );
+
+    IPPI_CALL( icvEigenValsVecsGetSize( src_size.width, aperture_size,
+                                        block_size, &buf_size ));
+    CV_CALL( buffer = cvAlloc( buf_size ));
+
+    IPPI_CALL( func( src->data.ptr, src->step, eigenv->data.ptr, eigenv->step,
+                     src_size, aperture_size, block_size, buffer ));
+
+    __END__;
+
+    cvFree( &buffer );
 }
 
 

@@ -39,8 +39,8 @@
 //
 //M*/
 
-#ifndef _IPCVGEOM_H_
-#define _IPCVGEOM_H_
+#ifndef _CV_GEOM_H_
+#define _CV_GEOM_H_
 
 /* Finds distance between two points */
 CV_INLINE  float  icvDistanceL2_32s( CvPoint pt1, CvPoint pt2 )
@@ -61,16 +61,6 @@ CV_INLINE  float  icvDistanceL2_32f( CvPoint2D32f pt1, CvPoint2D32f pt2 )
 }
 
 
-CV_INLINE int icvIsPtInCircle( CvPoint2D32f  pt,
-                               CvPoint2D32f  center,
-                               float  radius )
-{
-    pt.x -= center.x;
-    pt.y -= center.y;
-    return  pt.x*pt.x + pt.y*pt.y <= radius*radius;
-}
-
-
 int icvIsPtInCircle3( CvPoint2D32f pt, CvPoint2D32f a,
                       CvPoint2D32f b, CvPoint2D32f c );
 
@@ -83,6 +73,13 @@ CV_INLINE CvPoint2D32f icvMidPoint( CvPoint2D32f pt1, CvPoint2D32f pt2 )
     return  mid_pt;
 }
 
+CV_INLINE bool icvIsRectInRect( CvRect subrect, CvRect mainrect );
+CV_INLINE bool icvIsRectInRect( CvRect subrect, CvRect mainrect )
+{
+    return  subrect.x >= mainrect.x && subrect.y >= mainrect.y &&
+            subrect.x + subrect.width <= mainrect.x + mainrect.width &&
+            subrect.y + subrect.height <= mainrect.y + mainrect.height;
+}
 
 int  icvIntersectLines( double x1, double dx1, double y1, double dy1,
                         double x2, double dx2, double y2, double dy2,
@@ -122,11 +119,21 @@ typedef struct _CvTrianAttr
 _CvTrianAttr;
 
 
-CvStatus  icvCalcTriAttr(CvSeq *contour_h,CvPoint t2,CvPoint t1,int n1,
-						   CvPoint t3, int n3, double *s, double *s_c,
-						   double *h, double *a, double *b);
-
 CvStatus  icvMemCopy (double **buf1, double **buf2, double **buf3, int *b_max);
+
+/* curvature: 0 - 1-curvature, 1 - k-cosine curvature. */
+CvStatus  icvApproximateChainTC89( CvChain*      chain,
+                                   int header_size,
+                                   CvMemStorage* storage,
+                                   CvSeq**   contour,
+                                   int method );
+
+CvSeq* icvPointSeqFromMat( int seq_kind, const CvArr* mat,
+                           CvContour* contour_header,
+                           CvSeqBlock* block );
+
+#define CV_ADJUST_EDGE_COUNT( count, seq )  \
+    ((count) -= ((count) == (seq)->total && !CV_IS_SEQ_CLOSED(seq)))
 
 #endif /*_IPCVGEOM_H_*/
 

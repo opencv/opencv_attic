@@ -39,8 +39,6 @@
 //
 //M*/
 #include "_cv.h"
-#include "_cvdatastructs.h"
-#include <float.h>
 
 #define _CV_ACOS_TABLE_SIZE  513
 
@@ -148,11 +146,11 @@ static const float icv_acos_table[_CV_ACOS_TABLE_SIZE] = {
 //      CV_OK or error code
 //    Notes:
 //F*/
-CvStatus
+static CvStatus
 icvCalcPGH( const CvSeq * contour, float *pgh, int angle_dim, int dist_dim )
 {
     char local_buffer[(1 << 14) + 32];
-    float *local_buffer_ptr = (float *)icvAlignPtr(local_buffer,32);
+    float *local_buffer_ptr = (float *)cvAlignPtr(local_buffer,32);
     float *buffer = local_buffer_ptr;
     double angle_scale = (angle_dim - 0.51) / icv_acos_table[0];
     double dist_scale = DBL_EPSILON;
@@ -180,7 +178,7 @@ icvCalcPGH( const CvSeq * contour, float *pgh, int angle_dim, int dist_dim )
 
     if( buffer_size > (int)sizeof(local_buffer) - 32 )
     {
-        buffer = (float *) icvAlloc( buffer_size );
+        buffer = (float *) cvAlloc( buffer_size );
         if( !buffer )
             return CV_OUTOFMEM_ERR;
     }
@@ -201,7 +199,7 @@ icvCalcPGH( const CvSeq * contour, float *pgh, int angle_dim, int dist_dim )
         buffer[i] = (float) (dx * dx + dy * dy);
     }
 
-    icvbInvSqrt_32f( buffer, buffer, i );
+    cvbInvSqrt( buffer, buffer, i );
 
     /* 
        do 2 passes. 
@@ -328,7 +326,7 @@ icvCalcPGH( const CvSeq * contour, float *pgh, int angle_dim, int dist_dim )
     }
 
     if( buffer != local_buffer_ptr )
-        icvFree( &buffer );
+        cvFree( (void**)&buffer );
 
     return CV_OK;
 }

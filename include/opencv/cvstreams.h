@@ -54,19 +54,18 @@ You need DirectShow SDK that is now a part of DirectX SDK.
 
 2. Install it TOGETHER WITH SAMPLES.
 
-3. Open <DirectXSDKInstallFolder>\samples\Multimedia\DirectShow\BaseClasses\baseclasses.dsw.
+3. Open <DirectXSDKInstallFolder>\samples\C++\DirectShow\BaseClasses\baseclasses.{dsw|sln}.
    If there is no such file, it is that you either didn't install samples or the path has changed,
-   in the latter case search for streams.h and open a workspace file
-   (workspace files for Developer Studio .NET have different extension) located in the same folder.
+   in the latter case search for streams.h and open a workspace file located in the same folder.
 
 4. Build the library in both Release in Debug configurations.
 
-5. Copy the built libraries (in DirectX 8.x they are called strmbase.lib and strmbasd.lib)
+5. Copy the built libraries (in DirectX 9.x they are called strmbase.lib and strmbasd.lib)
    to <DirectXSDKInstallFolder>\lib.
 
 6. In Developer Studio add the following paths:
       <DirectXSDKInstallFolder>\include
-      <DirectXSDKInstallFolder>\samples\Multimedia\DirectShow\BaseClasses
+      <DirectXSDKInstallFolder>\samples\C++\DirectShow\BaseClasses
     to the includes' search path (at Tools->Options->Directories->Include files
                                   in case of Developer Studio 6.0)
    Add
@@ -84,5 +83,5 @@ You need DirectShow SDK that is now a part of DirectX SDK.
 
 #endif
 
-#endif /* _CV_ERROR_EXT_H_ */
+#endif /*_CVSTREAMS_H_*/
 

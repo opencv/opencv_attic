@@ -39,10 +39,6 @@
 //
 //M*/
 #include "_cv.h"
-#include "_cvgeom.h"
-#include "string.h"
-
-#include <limits.h>
 
 typedef struct CvContourEx
 {
@@ -117,12 +113,12 @@ cvFindChessBoardCornerGuesses( const void* arr, void* thresharr,
 
     if( CV_MAT_TYPE( img->type ) != CV_8UC1 ||
         CV_MAT_TYPE( thresh->type ) != CV_8UC1 )
-        CV_ERROR( CV_BadDepth, icvUnsupportedFormat );
+        CV_ERROR( CV_BadDepth, cvUnsupportedFormat );
 
     if( !CV_ARE_SIZES_EQ( img, thresh ))
         CV_ERROR( CV_StsUnmatchedSizes, "" );
 
-    size = icvGetMatSize( img );
+    size = cvGetMatSize( img );
 
     // 
     //   Create temporary storages.
@@ -135,7 +131,7 @@ cvFindChessBoardCornerGuesses( const void* arr, void* thresharr,
     min_size = cvRound( size.width*size.height * .03 * 0.03 );
 
     // empiric threshold level 
-    mean = cvMean( img );
+    mean = cvAvg( img ).val[0];
     thresh_level = cvRound( mean - 10 );
     thresh_level = MAX( thresh_level, 10 );
 
@@ -182,15 +178,18 @@ cvFindChessBoardCornerGuesses( const void* arr, void* thresharr,
                 CvPoint pt[4];
                 int i;
                 double d1, d2, p = cvContourPerimeter(dst_contour);
+                double dx, dy;
 
                 for( i = 0; i < 4; i++ )
                     pt[i] = *(CvPoint*)cvGetSeqElem( dst_contour, i );
 
-                d1 = sqrt((pt[0].x - pt[2].x)*(pt[0].x - pt[2].x) +
-                          (pt[0].y - pt[2].y)*(pt[0].y - pt[2].y));
+                dx = pt[0].x - pt[2].x;
+                dy = pt[0].y - pt[2].y;
+                d1 = sqrt( dx*dx + dy*dy );
 
-                d2 = sqrt((pt[1].x - pt[3].x)*(pt[1].x - pt[3].x) +
-                          (pt[1].y - pt[3].y)*(pt[1].y - pt[3].y));
+                dx = pt[1].x - pt[3].x;
+                dy = pt[1].y - pt[3].y;
+                d2 = sqrt( dx*dx + dy*dy );
 
                 if( d1 >= 0.25*p && d2 >= 0.25*p )
                 {
@@ -313,11 +312,11 @@ cvFindChessBoardCornerGuesses( const void* arr, void* thresharr,
         int dx, dy, denom;
         int i, j;
 
-        indices = (int *) icvAlloc( etalon_points * sizeof( int ));
+        indices = (int *)cvAlloc( etalon_points * sizeof( int ));
 
-        iPoints = (CvPoint *) icvAlloc( etalon_points * sizeof( CvPoint ));
-        ordered = (CvPoint *) icvAlloc( etalon_points * sizeof( CvPoint ));
-        hullpoints = (CvPoint *) icvAlloc( etalon_points * sizeof( CvPoint ));
+        iPoints = (CvPoint *)cvAlloc( etalon_points * sizeof( CvPoint ));
+        ordered = (CvPoint *)cvAlloc( etalon_points * sizeof( CvPoint ));
+        hullpoints = (CvPoint *)cvAlloc( etalon_points * sizeof( CvPoint ));
 
         for( i = 0; i < etalon_points; i++ )
         {
@@ -326,7 +325,7 @@ cvFindChessBoardCornerGuesses( const void* arr, void* thresharr,
 
         numRestPoints = etalon_points;
 
-#define IPCV_L2_DIST( pt1, pt2 )  \
+        #define IPCV_L2_DIST( pt1, pt2 )  \
         (dx = (pt1).x - (pt2).x, dy = (pt1).y - (pt2).y, dx*dx + dy*dy)
 
         // Find minimal distance between image etalon points 
@@ -378,7 +377,7 @@ cvFindChessBoardCornerGuesses( const void* arr, void* thresharr,
                                          hullpoints, ind_size, (CvSeq*)&hullcontour,
                                          &hullcontour_blk );
 
-                max_level = cvRound( sqrt( min_dist ));
+                max_level = cvRound( sqrt( (double)min_dist ));
 
                 // approximate convex hull. we should get quadrangle 
                 for( level = min_approx_level; level <= max_level; level++ )
@@ -586,13 +585,12 @@ cvFindChessBoardCornerGuesses( const void* arr, void* thresharr,
     //////////////////////////////////////////////
     //////////////////////////////////////////////
     //////////////////////////////////////////////
-    __CLEANUP__;
     __END__;
 
-    icvFree( &iPoints );
-    icvFree( &indices );
-    icvFree( &ordered );
-    icvFree( &hullpoints );
+    cvFree( (void**)&iPoints );
+    cvFree( (void**)&indices );
+    cvFree( (void**)&ordered );
+    cvFree( (void**)&hullpoints );
 
     // release storages 
     cvReleaseMemStorage( &storage1 );

@@ -44,85 +44,6 @@
 #define _CV_SNAKE_IMAGE 1
 #define _CV_SNAKE_GRAD  2
 
-/* internal function */
-CvStatus icvSnake8uC1R( unsigned char *src,
-                        int srcStep,
-                        CvSize roi,
-                        CvPoint * pt,
-
-                        int length,
-                        float *alpha,
-                        float *beta,
-                        float *gamma,
-                        CvCoeffType coeffUsage,
-                        CvSize win, CvTermCriteria criteria, int scheme );
-
-/*F///////////////////////////////////////////////////////////////////////////////////////
-//    Name:      icvSnakeImage8uC1R     
-//    Purpose:   
-//    Context:   
-//    Parameters:
-//               src - source image,
-//               srcStep - its step in bytes,
-//               roi - size of ROI,
-//               points - pointer to snake points array
-//               length - size of points array, 
-//               alpha - pointer to coefficient of continuity energy, 
-//               beta - pointer to coefficient of curvature energy,  
-//               gamma - pointer to coefficient of image energy,  
-//               coeffUsage - if CV_VALUE - alpha, beta, gamma point to single value
-//                            if CV_MATAY - point to arrays
-//               criteria - termination criteria.
-//    Returns:   
-//F*/
-IPCVAPI_IMPL( CvStatus, icvSnakeImage8uC1R, (unsigned char *src,
-                                             int srcStep,
-                                             CvSize roi,
-                                             CvPoint * points,
-                                             int length,
-                                             float *alpha,
-                                             float *beta,
-                                             float *gamma,
-                                             CvCoeffType coeffUsage,
-                                             CvSize win, CvTermCriteria criteria) )
-{
-    return icvSnake8uC1R( src, srcStep, roi, points, length,
-                          alpha, beta, gamma, coeffUsage, win, criteria, _CV_SNAKE_IMAGE );
-
-}
-
-/*F///////////////////////////////////////////////////////////////////////////////////////
-//    Name:      icvSnakeImageGrad8uC1R     
-//    Purpose:   
-//    Context:   
-//    Parameters:
-//               src - source image,
-//               srcStep - its step in bytes,
-//               roi - size of ROI,
-//               points - pointer to snake points array
-//               length - size of points array, 
-//               alpha - pointer to coefficient of continuity energy, 
-//               beta - pointer to coefficient of curvature energy,  
-//               gamma - pointer to coefficient of image energy,  
-//               coeffUsage - if CV_VALUE - alpha, beta, gamma point to single value
-//                            if CV_MATAY - point to arrays
-//               criteria - termination criteria.
-//    Returns:   
-//F*/
-IPCVAPI_IMPL( CvStatus, icvSnakeImageGrad8uC1R, (unsigned char *src,
-                                                 int srcStep,
-                                                 CvSize roi,
-                                                 CvPoint * points,
-                                                 int length,
-                                                 float *alpha,
-                                                 float *beta,
-                                                 float *gamma,
-                                                 CvCoeffType coeffUsage,
-                                                 CvSize win, CvTermCriteria criteria) )
-{
-    return icvSnake8uC1R( src, srcStep, roi, points, length,
-                          alpha, beta, gamma, coeffUsage, win, criteria, _CV_SNAKE_GRAD );
-}
 
 /*F///////////////////////////////////////////////////////////////////////////////////////
 //    Name:      icvSnake8uC1R     
@@ -146,7 +67,7 @@ IPCVAPI_IMPL( CvStatus, icvSnakeImageGrad8uC1R, (unsigned char *src,
 //    Returns:   
 //F*/
 
-CvStatus
+static CvStatus
 icvSnake8uC1R( unsigned char *src,
                int srcStep,
                CvSize roi,
@@ -155,7 +76,7 @@ icvSnake8uC1R( unsigned char *src,
                float *alpha,
                float *beta,
                float *gamma,
-               CvCoeffType coeffUsage, CvSize win, CvTermCriteria criteria, int scheme )
+               int coeffUsage, CvSize win, CvTermCriteria criteria, int scheme )
 {
     int i, j, k;
     int neighbors = win.height * win.width;
@@ -219,26 +140,26 @@ icvSnake8uC1R( unsigned char *src,
 
     if( scheme == _CV_SNAKE_GRAD )
     {
-        dx = (short *) icvAlloc( 10 * 10 * sizeof( short ));
-        dy = (short *) icvAlloc( 10 * 10 * sizeof( short ));
+        dx = (short *) cvAlloc( 10 * 10 * sizeof( short ));
+        dy = (short *) cvAlloc( 10 * 10 * sizeof( short ));
 
-        gradient = (float *) icvAlloc( roi.height * roi.width * sizeof( float ));
+        gradient = (float *) cvAlloc( roi.height * roi.width * sizeof( float ));
 
         if( !gradient )
             return CV_OUTOFMEM_ERR;
-        map = (uchar *) icvAlloc( map_width * map_height );
+        map = (uchar *) cvAlloc( map_width * map_height );
         if( !map )
         {
-            icvFree( &gradient );
+            cvFree( (void**)&gradient );
             return CV_OUTOFMEM_ERR;
         }
         /* clear map - no gradient computed */
         memset( (void *) map, 0, map_width * map_height );
     }
-    Econt = (float *) icvAlloc( neighbors * sizeof( float ));
-    Ecurv = (float *) icvAlloc( neighbors * sizeof( float ));
-    Eimg = (float *) icvAlloc( neighbors * sizeof( float ));
-    E = (float *) icvAlloc( neighbors * sizeof( float ));
+    Econt = (float *) cvAlloc( neighbors * sizeof( float ));
+    Ecurv = (float *) cvAlloc( neighbors * sizeof( float ));
+    Eimg = (float *) cvAlloc( neighbors * sizeof( float ));
+    E = (float *) cvAlloc( neighbors * sizeof( float ));
 
     while( !converged )
     {
@@ -472,23 +393,23 @@ icvSnake8uC1R( unsigned char *src,
             }
         }
         converged = (moved == 0);
-        if( (criteria.type & CV_TERMCRIT_ITER) && (iteration >= criteria.maxIter) )
+        if( (criteria.type & CV_TERMCRIT_ITER) && (iteration >= criteria.max_iter) )
             converged = 1;
         if( (criteria.type & CV_TERMCRIT_EPS) && (moved <= criteria.epsilon) )
             converged = 1;
     }
 
-    icvFree( &Econt );
-    icvFree( &Ecurv );
-    icvFree( &Eimg );
-    icvFree( &E );
+    cvFree( (void**)&Econt );
+    cvFree( (void**)&Ecurv );
+    cvFree( (void**)&Eimg );
+    cvFree( (void**)&E );
 
     if( scheme == _CV_SNAKE_GRAD )
     {
-        icvFree( &gradient );
-        icvFree( &map );
-        icvFree( &dx );
-        icvFree( &dy );
+        cvFree( (void**)&gradient );
+        cvFree( (void**)&map );
+        cvFree( (void**)&dx );
+        cvFree( (void**)&dy );
     }
     return CV_OK;
 }
@@ -498,7 +419,7 @@ CV_IMPL void
 cvSnakeImage( const IplImage* src, CvPoint* points,
               int length, float *alpha,
               float *beta, float *gamma,
-              CvCoeffType coeffUsage, CvSize win,
+              int coeffUsage, CvSize win,
               CvTermCriteria criteria, int calcGradient )
 {
 
@@ -514,22 +435,13 @@ cvSnakeImage( const IplImage* src, CvPoint* points,
         CV_ERROR( CV_BadNumChannels, "input image has more than one channel" );
 
     if( src->depth != IPL_DEPTH_8U )
-        CV_ERROR( CV_BadDepth, icvUnsupportedFormat );
+        CV_ERROR( CV_BadDepth, cvUnsupportedFormat );
 
+    cvGetRawData( src, &data, &step, &size );
 
-    cvGetImageRawData( src, &data, &step, &size );
-
-    if( calcGradient )
-    {
-        IPPI_CALL( icvSnakeImageGrad8uC1R( data, step, size, points, length,
-                              alpha, beta, gamma, coeffUsage, win, criteria ));
-    }
-    else
-    {
-        IPPI_CALL( icvSnakeImage8uC1R( data, step, size, points, length, alpha, beta,
-                                       gamma, coeffUsage, win, criteria ));
-    }
-    __CLEANUP__;
+    IPPI_CALL( icvSnake8uC1R( data, step, size, points, length,
+                              alpha, beta, gamma, coeffUsage, win, criteria,
+                              calcGradient ? _CV_SNAKE_GRAD : _CV_SNAKE_IMAGE ));
     __END__;
 }
 

@@ -45,19 +45,19 @@
                                     Initialization
 \****************************************************************************************/
 
-IPCVAPI_IMPL( CvStatus, icvFilterInitAlloc, (
+CvStatus CV_STDCALL icvFilterInitAlloc(
              int roiWidth, CvDataType dataType, int channels,
              CvSize elSize, CvPoint elAnchor,
              const void* elData, int elementType,
-             struct CvFilterState ** filterState ))
+             struct CvFilterState ** filterState )
 {
     CvFilterState *state = 0;
-    const int align = sizeof(long);
+    const int align = sizeof(size_t);
     int ker_size = 0;
     int buffer_step = 0;
     int buffer_size;
     int bt_pix, bt_pix_n;
-    int aligned_hdr_size = icvAlign((int)sizeof(*state),align);
+    int aligned_hdr_size = cvAlign((int)sizeof(*state),align);
     int temp_lines = dataType == cv8u ? 1 : 2;
     int binaryElement = ICV_KERNEL_TYPE(elementType) == ICV_BINARY_KERNEL;
     int separableElement = ICV_KERNEL_TYPE(elementType) == ICV_SEPARABLE_KERNEL;
@@ -88,14 +88,14 @@ IPCVAPI_IMPL( CvStatus, icvFilterInitAlloc, (
                    separableElement ? (elSize.width + elSize.height)*bt_pix :
                                       elSize.width * elSize.height * bt_pix;
 
-    buffer_step = icvAlign((roiWidth + elSize.width+1 + CV_MORPH_ALIGN*4)*bt_pix_n, align);
+    buffer_step = cvAlign((roiWidth + elSize.width+1 + CV_MORPH_ALIGN*4)*bt_pix_n, align);
 
     buffer_size = (elSize.height + temp_lines) * (buffer_step + sizeof(void*)) +
                   ker_size + aligned_hdr_size + elSize.width * bt_pix_n;
 
-    buffer_size = icvAlign(buffer_size + align, align);
+    buffer_size = cvAlign(buffer_size + align, align);
 
-    state = (CvFilterState*)icvAlloc( buffer_size );
+    state = (CvFilterState*)cvAlloc( buffer_size );
     if( !state )
         return CV_OUTOFMEM_ERR;
 
@@ -114,7 +114,7 @@ IPCVAPI_IMPL( CvStatus, icvFilterInitAlloc, (
     state->dataType = dataType;
     state->channels = channels;
     state->origin = 0;
-    ptr += icvAlign( aligned_hdr_size + elAnchor.x * bt_pix_n, CV_MORPH_ALIGN * bt_pix );
+    ptr += cvAlign( aligned_hdr_size + elAnchor.x * bt_pix_n, CV_MORPH_ALIGN * bt_pix );
 
     state->buffer = ptr;
     ptr += buffer_step * elSize.height;
@@ -135,14 +135,12 @@ IPCVAPI_IMPL( CvStatus, icvFilterInitAlloc, (
         if( binaryElement )
         {
             int i, mask_size = elSize.width * elSize.height;
-            state->ker1 = (uchar*)(ptr + (ker_size >> 1));
+            state->ker1 = 0;
 
             for( i = 0; i < mask_size; i++ )
             {
                 int t = ((int*)elData)[i] ? -1 : 0;
-
                 state->ker0[i] = (uchar)t;
-                state->ker1[i] = (uchar)~t;
             }
         }
         else
@@ -157,11 +155,11 @@ IPCVAPI_IMPL( CvStatus, icvFilterInitAlloc, (
 }
 
 
-IPCVAPI_IMPL( CvStatus, icvFilterFree, (CvFilterState ** filterState) )
+CvStatus CV_STDCALL icvFilterFree( CvFilterState ** filterState )
 {
     if( !filterState )
         return CV_NULLPTR_ERR;
-    icvFree( (void **) filterState );
+    cvFree( (void **) filterState );
     return CV_OK;
 }
 
@@ -170,7 +168,7 @@ IPCVAPI_IMPL( CvStatus, icvFilterFree, (CvFilterState ** filterState) )
 
 static CvStatus
 icvSmoothInitAlloc( int roiWidth, CvDataType /*dataType*/, int channels,
-                    CvSize elSize, int smoothtype,
+                    CvSize elSize, int smoothtype, double sigma,
                     struct CvFilterState** filterState )
 {
     static const float small_gaussian_tab[][SMALL_GAUSSIAN_SIZE] = 
@@ -190,30 +188,31 @@ icvSmoothInitAlloc( int roiWidth, CvDataType /*dataType*/, int channels,
         int i, n = elSize.width, m = elSize.height;
         float* dataY;
                 
-        dataX = (float*)alloca( (elSize.width + elSize.height)*sizeof(dataX[0]));
+        dataX = (float*)cvStackAlloc( (elSize.width + elSize.height)*sizeof(dataX[0]));
         dataY = dataX + elSize.width;
 
-        if( n <= SMALL_GAUSSIAN_SIZE )
+        if( n <= SMALL_GAUSSIAN_SIZE && sigma <= 0 )
         {
             assert( n%2 == 1 );
             memcpy( dataX, small_gaussian_tab[n>>1], n*sizeof(dataX[0]));
         }
         else
         {
-            double sigmaX = (n/2 - 1)*0.3 + 0.8;
-            double scaleX = 0.39894228040143267793994605993438/sigmaX;
+            double sigmaX = sigma > 0 ? sigma : (n/2 - 1)*0.3 + 0.8;
+            //double scaleX = 0.39894228040143267793994605993438/sigmaX;
             double scale2X = -0.5/(sigmaX*sigmaX);
-            double sumX;
-            sumX = dataX[n/2] = (float)scaleX;
+            double sumX = 1.;
+            sumX = dataX[n/2] = 1.f;
         
-            for( i = 1; i < (n+1)/2; i++ )
+            for( i = 1; i <= n/2; i++ )
             {
-                dataX[n/2+i] = dataX[n/2-i] = (float)(exp(scale2X*i*i)*scaleX);
+                dataX[n/2+i] = dataX[n/2-i] = (float)exp(scale2X*i*i);
                 sumX += dataX[n/2+i]*2;
             }
 
-            // adjust endpoints to make sum = 1
-            dataX[0] = dataX[n-1] = (float)(dataX[0] + (1 - sumX)*0.5);
+            sumX = 1./sumX;
+            for( i = 0; i <= n/2; i++ )
+                dataX[n/2+i] = dataX[n/2-i] = (float)(dataX[n/2+i]*sumX);
         }
 
         if( m == n )
@@ -227,7 +226,7 @@ icvSmoothInitAlloc( int roiWidth, CvDataType /*dataType*/, int channels,
         }
         else
         {
-            double sigmaY = (m/2 - 1)*0.3 + 0.8;
+            double sigmaY = sigma > 0 ? sigma : (m/2 - 1)*0.3 + 0.8;
             double scaleY = 0.39894228040143267793994605993438/sigmaY;
             double scale2Y = -0.5/(sigmaY*sigmaY);
             double sumY;
@@ -249,7 +248,6 @@ icvSmoothInitAlloc( int roiWidth, CvDataType /*dataType*/, int channels,
 
     status = icvFilterInitAlloc( roiWidth, cv32f, channels, elSize,
                                  elAnchor, dataX, ICV_SEPARABLE_KERNEL, filterState );
-
     if( status < 0 )
         return status;
 
@@ -258,7 +256,11 @@ icvSmoothInitAlloc( int roiWidth, CvDataType /*dataType*/, int channels,
         if( smoothtype == CV_BLUR )
             (*filterState)->divisor = elSize.width * elSize.height;
         else if( smoothtype == CV_GAUSSIAN )
+        {
             (*filterState)->divisor = (double)(1 << elSize.width) * (1 << elSize.height);
+            (*filterState)->kerType = ((*filterState)->kerType & ~255) |
+                (sigma > 0 ? ICV_CUSTOM_GAUSSIAN_KERNEL : ICV_DEFAULT_GAUSSIAN_KERNEL);
+        }
     }
 
     return filterState != 0 ? CV_OK : CV_NOTDEFINED_ERR;
@@ -276,15 +278,10 @@ icvSmoothFree( CvFilterState ** filterState )
                                       Simple Blur
 \****************************************************************************************/
 
-IPCVAPI( CvStatus,
-     icvBlur_8u_CnR, ( uchar* src, int srcStep,
-                       uchar* dst, int dstStep, CvSize * roiSize,
-                       CvFilterState* state, int stage ));
-
-IPCVAPI_IMPL( CvStatus,
-     icvBlur_8u_CnR, ( uchar* src, int srcStep,
-                       uchar* dst, int dstStep, CvSize * roiSize,
-                       CvFilterState* state, int stage ))
+static CvStatus CV_STDCALL
+icvBlur_8u_CnR( uchar* src, int srcStep,
+                uchar* dst, int dstStep, CvSize * roiSize,
+                CvFilterState* state, int stage )
 {
     int width = roiSize->width;
     int src_height = roiSize->height;
@@ -313,7 +310,7 @@ IPCVAPI_IMPL( CvStatus,
     int starting_flag = 0;
     int width_rest = width_n & (CV_MORPH_ALIGN - 1);
     int divisor = cvRound(state->divisor);
-    CvFastDiv fastdiv = icvFastDiv( divisor );
+    double inv_divisor = divisor ? 1./divisor : 0.;
 
     /* initialize cyclic buffer when starting */
     if( stage == CV_WHOLE || stage == CV_START )
@@ -369,16 +366,15 @@ IPCVAPI_IMPL( CvStatus,
                     CV_COPY( tbuf, src + width_n, ker_right_n, x );
                 }
 
+                /* make replication borders */
+                for( i = ker_x_n - 1; i >= 0; i-- )
+                    tsrc[i] = tsrc[i + channels];
+                for( i = width_n + ker_x_n; i < width_n + ker_width_n; i++ )
+                    tsrc[i] = tsrc[i - channels];
+
                 if( channels == 1 )
                 {
-                    /* make replication borders */
-                    uchar pix = tsrc[ker_x];
                     int t0 = 0;
-
-                    CV_SET( tsrc, pix, ker_x, x );
-
-                    pix = tsrc[width + ker_x - 1];
-                    CV_SET( tsrc + width + ker_x, pix, ker_right, x );
 
                     for( i = 0; i < ker_width_n - 1; i++ )
                         t0 += tsrc[i];
@@ -393,14 +389,7 @@ IPCVAPI_IMPL( CvStatus,
                 }
                 else if( channels == 3 )
                 {
-                    /* make replication borders */
-                    CvRGB8u pix = ((CvRGB8u *)tsrc)[ker_x];
                     int t0 = 0, t1 = 0, t2 = 0;
-
-                    CV_SET( (CvRGB8u *) tsrc, pix, ker_x, x );
-
-                    pix = ((CvRGB8u *) tsrc)[width + ker_x - 1];
-                    CV_SET( (CvRGB8u *) tsrc + width + ker_x, pix, ker_right, x );
 
                     for( i = 0; i < ker_width_n - 3; i += 3 )
                     {
@@ -425,15 +414,8 @@ IPCVAPI_IMPL( CvStatus,
                 }
                 else            /* channels == 4 */
                 {
-                    /* make replication borders */
-                    CvRGBA8u pix = ((CvRGBA8u *) tsrc)[ker_x];
                     int t0 = 0, t1 = 0, t2 = 0, t3 = 0;
-
-                    CV_SET( (CvRGBA8u *) tsrc, pix, ker_x, x );
-
-                    pix = ((CvRGBA8u *) tsrc)[width + ker_x - 1];
-                    CV_SET( (CvRGBA8u *) tsrc + width + ker_x, pix, ker_right, x );
-
+                    
                     for( i = 0; i < ker_width_n - 4; i += 4 )
                     {
                         t0 += tsrc[i];
@@ -522,8 +504,8 @@ IPCVAPI_IMPL( CvStatus,
             val0 += trow2[x];
             val1 += trow2[x+1];
 
-            t0 = CV_FAST_UDIV(val0, fastdiv);
-            t1 = CV_FAST_UDIV(val1, fastdiv);
+            t0 = cvRound(val0*inv_divisor);
+            t1 = cvRound(val1*inv_divisor);
 
             tdst2[x] = (uchar)t0;
             tdst2[x+1] = (uchar)t1;
@@ -537,8 +519,8 @@ IPCVAPI_IMPL( CvStatus,
             val0 += trow2[x+2];
             val1 += trow2[x+3];
 
-            t0 = CV_FAST_UDIV(val0, fastdiv);
-            t1 = CV_FAST_UDIV(val1, fastdiv);
+            t0 = cvRound(val0*inv_divisor);
+            t1 = cvRound(val1*inv_divisor);
 
             tdst2[x+2] = (uchar)t0;
             tdst2[x+3] = (uchar)t1;
@@ -576,15 +558,10 @@ IPCVAPI_IMPL( CvStatus,
 }
 
 
-IPCVAPI( CvStatus,
-     icvBlur_8u16s_C1R, ( const uchar* src, int srcStep,
-                          short* dst, int dstStep, CvSize * roiSize,
-                          CvFilterState* state, int stage ));
-
-IPCVAPI_IMPL( CvStatus,
-     icvBlur_8u16s_C1R, ( const uchar* pSrc, int srcStep,
-                          short* dst, int dstStep, CvSize * roiSize,
-                          CvFilterState* state, int stage ))
+CvStatus CV_STDCALL
+icvBlur_8u16s_C1R( const uchar* pSrc, int srcStep,
+                   short* dst, int dstStep, CvSize * roiSize,
+                   CvFilterState* state, int stage )
 {
     uchar* src = (uchar*)pSrc;
     int width = roiSize->width;
@@ -804,243 +781,10 @@ IPCVAPI_IMPL( CvStatus,
 }
 
 
-IPCVAPI( CvStatus,
-     icvBlur_8s16s_C1R, ( const char* src, int srcStep,
-                          short* dst, int dstStep, CvSize * roiSize,
-                          CvFilterState* state, int stage ));
-
-IPCVAPI_IMPL( CvStatus,
-     icvBlur_8s16s_C1R, ( const char* pSrc, int srcStep,
-                          short* dst, int dstStep, CvSize * roiSize,
-                          CvFilterState* state, int stage ))
-{
-    char* src = (char*)pSrc;
-    int width = roiSize->width;
-    int src_height = roiSize->height;
-    int dst_height = src_height;
-    int x, y = 0, i;
-
-    int ker_x = state->ker_x;
-    int ker_y = state->ker_y;
-    int ker_width = state->ker_width;
-    int ker_height = state->ker_height;
-    int ker_right = ker_width - ker_x;
-
-    int crows = state->crows;
-    int **rows = (int**)(state->rows);
-    short *tbufw = (short*)(state->tbuf);
-    int   *sumbuf = (int*)((char*)state->tbuf + state->buffer_step);
-    int *trow, *trow2;
-
-    int channels = state->channels;
-    int ker_x_n = ker_x * channels;
-    int ker_width_n = ker_width * channels;
-    int ker_right_n = ker_right * channels;
-    int width_n = width * channels;
-
-    int is_small_width = width < MAX( ker_x, ker_right );
-    int starting_flag = 0;
-    int width_rest = width_n & (CV_MORPH_ALIGN - 1);
-
-    /* initialize cyclic buffer when starting */
-    if( stage == CV_WHOLE || stage == CV_START )
-    {
-        for( i = 0; i < ker_height; i++ )
-            rows[i] = (int*)(state->buffer + state->buffer_step * i);
-
-        crows = ker_y;
-        if( stage != CV_WHOLE )
-            dst_height -= ker_height - ker_y - 1;
-        starting_flag = 1;
-    }
-
-    if( stage == CV_END )
-        dst_height += ker_height - ker_y - 1;
-
-    dstStep /= sizeof(dst[0]);
-
-    do
-    {
-        int need_copy = is_small_width | (y == 0);
-        char *tsrc;
-        int *tdst;
-        short *tdst2;
-        int *saved_row = rows[ker_y];
-
-        /* fill cyclic buffer - horizontal filtering */
-        for( ; crows < ker_height; crows++ )
-        {
-            tsrc = src - ker_x_n;
-            tdst = rows[crows];
-
-            if( src_height-- <= 0 )
-            {
-                if( stage != CV_WHOLE && stage != CV_END )
-                    break;
-                /* duplicate last row */
-                trow = rows[crows - 1];
-                CV_COPY( tdst, trow, width_n, x );
-                continue;
-            }
-
-            need_copy |= src_height == 1;
-
-            if( ker_width > 1 )
-            {
-                char* tbuf = (char*)tbufw;
-
-                if( need_copy )
-                {
-                    tsrc = tbuf - ker_x_n;
-                    CV_COPY( tbuf, src, width_n, x );
-                }
-                else
-                {
-                    CV_COPY( tbuf - ker_x_n, src - ker_x_n, ker_x_n, x );
-                    CV_COPY( tbuf, src + width_n, ker_right_n, x );
-                }
-
-                {
-                    /* make replication borders */
-                    char pix = tsrc[ker_x];
-                    int t0 = 0;
-
-                    CV_SET( tsrc, pix, ker_x, x );
-
-                    pix = tsrc[width + ker_x - 1];
-                    CV_SET( tsrc + width + ker_x, pix, ker_right, x );
-
-                    for( i = 0; i < ker_width_n - 1; i++ )
-                        t0 += tsrc[i];
-
-                    /* horizontal blurring */
-                    for( i = ker_width_n; i < width_n + ker_width_n; i++ )
-                    {
-                        t0 += tsrc[i-1];
-                        tdst[i-ker_width_n] = t0;
-                        t0 -= tsrc[i - ker_width_n];
-                    }
-                }
-
-                if( !need_copy )
-                {
-                    /* restore borders */
-                    CV_COPY( src - ker_x_n, tbuf - ker_x_n, ker_x_n, x );
-                    CV_COPY( src + width_n, tbuf, ker_right_n, x );
-                }
-            }
-            else
-            {
-                CV_COPY( tdst, tsrc + ker_x_n, width_n, x );
-            }
-
-            if( crows < ker_height )
-                src += srcStep;
-        }
-
-        if( starting_flag )
-        {
-            starting_flag = 0;
-
-            for( x = 0; x < width_n; x++ )
-            {
-                int t = rows[ker_y][x];
-                for( i = 0; i < ker_y; i++ ) // copy border
-                    rows[i][x] = t;
-
-                t *= ker_y;
-                for( i = ker_y; i < ker_height - 1; i++ ) // accumulate initial sum
-                    t += rows[i][x];
-                sumbuf[x] = t;
-            }
-        }
-
-        /* vertical convolution */
-        if( crows != ker_height )
-            break;
-
-        tdst2 = dst;
-
-        if( width_rest )
-        {
-            need_copy = width_n < CV_MORPH_ALIGN || y == dst_height - 1;
-
-            if( need_copy )
-                tdst2 = tbufw;
-            else
-                CV_COPY( tbufw + width_n, dst + width_n, CV_MORPH_ALIGN, x );
-        }
-
-        trow = rows[0];
-        trow2 = rows[ker_height-1];
-
-        for( x = 0; x < width_n; x += CV_MORPH_ALIGN )
-        {
-            int val0, val1;
-
-            val0 = sumbuf[x];
-            val1 = sumbuf[x+1];
-            
-            val0 += trow2[x];
-            val1 += trow2[x+1];
-
-            tdst2[x] = (short)val0;
-            tdst2[x+1] = (short)val1;
-
-            sumbuf[x] = val0 - trow[x];
-            sumbuf[x+1] = val1 - trow[x+1];
-
-            val0 = sumbuf[x+2];
-            val1 = sumbuf[x+3];
-            
-            val0 += trow2[x+2];
-            val1 += trow2[x+3];
-
-            tdst2[x+2] = (short)val0;
-            tdst2[x+3] = (short)val1;
-
-            sumbuf[x+2] = val0 - trow[x+2];
-            sumbuf[x+3] = val1 - trow[x+3];
-        }
-
-        if( width_rest )
-        {
-            if( need_copy )
-                CV_COPY( dst, tbufw, width_n, x );
-            else
-                CV_COPY( dst + width_n, tbufw + width_n, CV_MORPH_ALIGN, x );
-        }
-
-        rows[ker_y] = saved_row;
-
-        /* rotate buffer */
-        {
-            int *t = rows[0];
-
-            CV_COPY( rows, rows + 1, ker_height - 1, i );
-            rows[i] = t;
-            crows--;
-            dst += dstStep;
-        }
-    }
-    while( ++y < dst_height );
-
-    roiSize->height = y;
-    state->crows = crows;
-
-    return CV_OK;
-}
-
-
-IPCVAPI( CvStatus,
-     icvBlur_32f_CnR, ( const float* src, int srcStep,
-                        float* dst, int dstStep, CvSize * roiSize,
-                        CvFilterState* state, int stage ));
-
-IPCVAPI_IMPL( CvStatus,
-     icvBlur_32f_CnR, ( const float* pSrc, int srcStep,
-                        float* dst, int dstStep, CvSize * roiSize,
-                        CvFilterState* state, int stage ))
+CvStatus CV_STDCALL
+icvBlur_32f_CnR( const float* pSrc, int srcStep,
+                 float* dst, int dstStep, CvSize * roiSize,
+                 CvFilterState* state, int stage )
 {
     float* src = (float*)pSrc;
     int width = roiSize->width;
@@ -1129,21 +873,19 @@ IPCVAPI_IMPL( CvStatus,
                     CV_COPY( tbuf, src + width_n, ker_right_n, x );
                 }
 
+                /* make replication borders */
+                for( i = ker_x_n - 1; i >= 0; i-- )
+                    tsrc[i] = tsrc[i + channels];
+                for( i = width_n + ker_x_n; i < width_n + ker_width_n; i++ )
+                    tsrc[i] = tsrc[i - channels];
+
+                /* horizontal blurring */
                 if( channels == 1 )
                 {
-                    /* make replication borders */
-                    float pix = tsrc[ker_x];
                     float t0 = 0;
-
-                    CV_SET( tsrc, pix, ker_x, x );
-
-                    pix = tsrc[width + ker_x - 1];
-                    CV_SET( tsrc + width + ker_x, pix, ker_right, x );
-
                     for( i = 0; i < ker_width_n - 1; i++ )
                         t0 += tsrc[i];
 
-                    /* horizontal blurring */
                     for( i = ker_width_n; i < width_n + ker_width_n; i++ )
                     {
                         t0 += tsrc[i-1];
@@ -1153,15 +895,7 @@ IPCVAPI_IMPL( CvStatus,
                 }
                 else if( channels == 3 )
                 {
-                    /* make replication borders */
-                    CvRGB32f pix = ((CvRGB32f *)tsrc)[ker_x];
                     float t0 = 0, t1 = 0, t2 = 0;
-
-                    CV_SET( (CvRGB32f *) tsrc, pix, ker_x, x );
-
-                    pix = ((CvRGB32f *) tsrc)[width + ker_x - 1];
-                    CV_SET( (CvRGB32f *) tsrc + width + ker_x, pix, ker_right, x );
-
                     for( i = 0; i < ker_width_n - 3; i += 3 )
                     {
                         t0 += tsrc[i];
@@ -1169,7 +903,6 @@ IPCVAPI_IMPL( CvStatus,
                         t2 += tsrc[i+2];
                     }
 
-                    /* horizontal blurring */
                     for( i = ker_width_n; i < width_n + ker_width_n; i += 3 )
                     {
                         t0 += tsrc[i-3];
@@ -1185,15 +918,7 @@ IPCVAPI_IMPL( CvStatus,
                 }
                 else            /* channels == 4 */
                 {
-                    /* make replication borders */
-                    CvRGBA32f pix = ((CvRGBA32f *) tsrc)[ker_x];
                     float t0 = 0, t1 = 0, t2 = 0, t3 = 0;
-
-                    CV_SET( (CvRGBA32f *) tsrc, pix, ker_x, x );
-
-                    pix = ((CvRGBA32f *) tsrc)[width + ker_x - 1];
-                    CV_SET( (CvRGBA32f *) tsrc + width + ker_x, pix, ker_right, x );
-
                     for( i = 0; i < ker_width_n - 4; i += 4 )
                     {
                         t0 += tsrc[i];
@@ -1370,12 +1095,12 @@ IPCVAPI_IMPL( CvStatus,
 }
 
 
-IPCVAPI_IMPL( CvStatus, icvBlurInitAlloc,(
+CvStatus CV_STDCALL icvBlurInitAlloc(
     int roiWidth, int depth, int size,
-    struct CvFilterState** filterState ))
+    struct CvFilterState** filterState )
 {
     return icvSmoothInitAlloc( roiWidth, (CvDataType)depth, 1, cvSize(size,size),
-                               CV_BLUR_NO_SCALE, filterState );
+                               CV_BLUR_NO_SCALE, 0, filterState );
 }
 
 
@@ -1383,16 +1108,10 @@ IPCVAPI_IMPL( CvStatus, icvBlurInitAlloc,(
                                     Gaussian Blur
 \****************************************************************************************/
 
-
-IPCVAPI( CvStatus,
-     icvGaussianBlur_small_8u_CnR, ( uchar* src, int srcStep,
-                                     uchar* dst, int dstStep, CvSize * roiSize,
-                                     CvFilterState* state, int stage ));
-
-IPCVAPI_IMPL( CvStatus,
-     icvGaussianBlur_small_8u_CnR, ( uchar* src, int srcStep,
-                                     uchar* dst, int dstStep, CvSize * roiSize,
-                                     CvFilterState* state, int stage ))
+static CvStatus CV_STDCALL
+icvGaussianBlur_small_8u_CnR( uchar* src, int srcStep,
+                              uchar* dst, int dstStep, CvSize * roiSize,
+                              CvFilterState* state, int stage )
 {
     int width = roiSize->width;
     int src_height = roiSize->height;
@@ -1413,6 +1132,7 @@ IPCVAPI_IMPL( CvStatus,
     int channels = state->channels;
     int ker_x_n = ker_x * channels;
     int ker_right_n = ker_right * channels;
+    int ker_width_n = ker_width * channels;
     int width_n = width * channels;
 
     int is_small_width = width < MAX( ker_x, ker_right );
@@ -1478,15 +1198,14 @@ IPCVAPI_IMPL( CvStatus,
                     CV_COPY( tbuf, src + width_n, ker_right_n, x );
                 }
 
+                /* make replication borders */
+                for( i = ker_x_n - 1; i >= 0; i-- )
+                    tsrc[i] = tsrc[i + channels];
+                for( i = width_n + ker_x_n; i < width_n + ker_width_n; i++ )
+                    tsrc[i] = tsrc[i - channels];
+
                 if( channels == 1 )
                 {
-                    /* make replication borders */
-                    uchar pix = tsrc[ker_x];
-                    CV_SET( tsrc, pix, ker_x, x );
-
-                    pix = tsrc[width + ker_x - 1];
-                    CV_SET( tsrc + width + ker_x, pix, ker_right, x );
-
                     /* horizontal blurring */
                     if( ker_width == 3 )
                     {
@@ -1508,13 +1227,6 @@ IPCVAPI_IMPL( CvStatus,
                 }
                 else if( channels == 3 )
                 {
-                    /* make replication borders */
-                    CvRGB8u pix = ((CvRGB8u *)tsrc)[ker_x];
-                    CV_SET( (CvRGB8u *) tsrc, pix, ker_x, x );
-
-                    pix = ((CvRGB8u *) tsrc)[width + ker_x - 1];
-                    CV_SET( (CvRGB8u *) tsrc + width + ker_x, pix, ker_right, x );
-
                     /* horizontal blurring */
                     if( ker_width == 3 )
                     {
@@ -1565,13 +1277,6 @@ IPCVAPI_IMPL( CvStatus,
                 }
                 else   /* channels == 4 */
                 {
-                    /* make replication borders */
-                    CvRGBA8u pix = ((CvRGBA8u *) tsrc)[ker_x];
-                    CV_SET( (CvRGBA8u *) tsrc, pix, ker_x, x );
-
-                    pix = ((CvRGBA8u *) tsrc)[width + ker_x - 1];
-                    CV_SET( (CvRGBA8u *) tsrc + width + ker_x, pix, ker_right, x );
-
                     /* horizontal blurring */
                     if( ker_width == 3 )
                     {
@@ -1767,17 +1472,14 @@ IPCVAPI_IMPL( CvStatus,
 }
 
 
-IPCVAPI( CvStatus,
-     icvGaussianBlur_8u_CnR, ( uchar* src, int srcStep,
-                               uchar* dst, int dstStep, CvSize * roiSize,
-                               CvFilterState* state, int stage ));
-IPCVAPI_IMPL( CvStatus,
-     icvGaussianBlur_8u_CnR, ( uchar* src, int srcStep,
-                               uchar* dst, int dstStep, CvSize * roiSize,
-                               CvFilterState* state, int stage ))
+static CvStatus CV_STDCALL
+icvGaussianBlur_8u_CnR( uchar* src, int srcStep,
+                        uchar* dst, int dstStep, CvSize * roiSize,
+                        CvFilterState* state, int stage )
 {
     if( state->ker_width <= SMALL_GAUSSIAN_SIZE &&
-        state->ker_height <= SMALL_GAUSSIAN_SIZE )
+        state->ker_height <= SMALL_GAUSSIAN_SIZE &&
+        ICV_X_KERNEL_TYPE(state->kerType) == ICV_DEFAULT_GAUSSIAN_KERNEL )
     {
         return icvGaussianBlur_small_8u_CnR( src, srcStep, dst, dstStep,
                                              roiSize, state, stage );
@@ -1804,6 +1506,7 @@ IPCVAPI_IMPL( CvStatus,
         int ker_x_n = ker_x * channels;
         int ker_right_n = ker_right * channels;
         int width_n = width * channels;
+        int ker_width_n = ker_width * channels;
     
         float* fmaskX = (float*)(state->ker0) + ker_x;
         float* fmaskY = (float*)(state->ker1) + ker_y;
@@ -1867,16 +1570,15 @@ IPCVAPI_IMPL( CvStatus,
                         CV_COPY( tbuf, src + width_n, ker_right_n, x );
                     }
 
+                    /* make replication borders */
+                    for( i = ker_x_n - 1; i >= 0; i-- )
+                        tsrc[i] = tsrc[i + channels];
+                    for( i = width_n + ker_x_n; i < width_n + ker_width_n; i++ )
+                        tsrc[i] = tsrc[i - channels];
+
+                    /* horizontal blurring */
                     if( channels == 1 )
                     {
-                        /* make replication borders */
-                        uchar pix = tsrc[ker_x];
-                        CV_SET( tsrc, pix, ker_x, x );
-
-                        pix = tsrc[width + ker_x - 1];
-                        CV_SET( tsrc + width + ker_x, pix, ker_right, x );
-
-                        /* horizontal blurring */
                         for( i = 0; i < width_n; i++ )
                         {
                             int j;
@@ -1891,64 +1593,32 @@ IPCVAPI_IMPL( CvStatus,
                     }
                     else if( channels == 3 )
                     {
-                        /* make replication borders */
-                        CvRGB8u pix = ((CvRGB8u *)tsrc)[ker_x];
-                        CV_SET( (CvRGB8u *) tsrc, pix, ker_x, x );
-
-                        pix = ((CvRGB8u *) tsrc)[width + ker_x - 1];
-                        CV_SET( (CvRGB8u *) tsrc + width + ker_x, pix, ker_right, x );
-
-                        /* horizontal blurring */
-                        if( ker_width == 3 )
+                        for( i = 0; i < width_n; i += 3 )
                         {
-                            for( i = 0; i < width_n; i += 3 )
+                            int j;
+                            double t0 = CV_8TO32F(tsrc[i + ker_x_n])*fmX0;
+                            double t1 = CV_8TO32F(tsrc[i + ker_x_n + 1])*fmX0;
+                            double t2 = CV_8TO32F(tsrc[i + ker_x_n + 2])*fmX0;
+
+                            for( j = 1; j <= ker_x; j++ )
                             {
-                                double t0 = (tsrc[i + 3]*2 + tsrc[i] + tsrc[i+6])*0.25;
-                                double t1 = (tsrc[i + 4]*2 + tsrc[i+1] + tsrc[i+7])*0.25;
-                                double t2 = (tsrc[i + 5]*2 + tsrc[i+2] + tsrc[i+8])*0.25;
-
-                                tdst[i] = (float)t0;
-                                tdst[i+1] = (float)t1;
-                                tdst[i+2] = (float)t2;
+                                int j3 = j*3;
+                                double m = fmaskX[j];
+                                t0 += (CV_8TO32F(tsrc[i+ker_x_n+j3]) +
+                                       CV_8TO32F(tsrc[i+ker_x_n-j3]))*m;
+                                t1 += (CV_8TO32F(tsrc[i+ker_x_n+j3+1]) +
+                                       CV_8TO32F(tsrc[i+ker_x_n-j3+1]))*m;
+                                t2 += (CV_8TO32F(tsrc[i+ker_x_n+j3+2]) +
+                                       CV_8TO32F(tsrc[i+ker_x_n-j3+2]))*m;
                             }
-                        }
-                        else
-                        {
-                            for( i = 0; i < width_n; i += 3 )
-                            {
-                                int j;
-                                double t0 = CV_8TO32F(tsrc[i + ker_x_n])*fmX0;
-                                double t1 = CV_8TO32F(tsrc[i + ker_x_n + 1])*fmX0;
-                                double t2 = CV_8TO32F(tsrc[i + ker_x_n + 2])*fmX0;
 
-                                for( j = 1; j <= ker_x; j++ )
-                                {
-                                    int j3 = j*3;
-                                    double m = fmaskX[j];
-                                    t0 += (CV_8TO32F(tsrc[i+ker_x_n+j3]) +
-                                           CV_8TO32F(tsrc[i+ker_x_n-j3]))*m;
-                                    t1 += (CV_8TO32F(tsrc[i+ker_x_n+j3+1]) +
-                                           CV_8TO32F(tsrc[i+ker_x_n-j3+1]))*m;
-                                    t2 += (CV_8TO32F(tsrc[i+ker_x_n+j3+2]) +
-                                           CV_8TO32F(tsrc[i+ker_x_n-j3+2]))*m;
-                                }
-
-                                tdst[i] = (float)t0;
-                                tdst[i+1] = (float)t1;
-                                tdst[i+2] = (float)t2;
-                            }
+                            tdst[i] = (float)t0;
+                            tdst[i+1] = (float)t1;
+                            tdst[i+2] = (float)t2;
                         }
                     }
                     else    /* channels == 4 */
                     {
-                        /* make replication borders */
-                        CvRGBA8u pix = ((CvRGBA8u *) tsrc)[ker_x];
-                        CV_SET( (CvRGBA8u *) tsrc, pix, ker_x, x );
-
-                        pix = ((CvRGBA8u *) tsrc)[width + ker_x - 1];
-                        CV_SET( (CvRGBA8u *) tsrc + width + ker_x, pix, ker_right, x );
-
-                        /* horizontal blurring */
                         for( i = 0; i < width_n; i += 4 )
                         {
                             int j;
@@ -2081,14 +1751,10 @@ IPCVAPI_IMPL( CvStatus,
 }
 
 
-IPCVAPI( CvStatus,
-     icvGaussianBlur_32f_CnR, ( float* src, int srcStep,
-                                float* dst, int dstStep, CvSize * roiSize,
-                                CvFilterState* state, int stage ));
-IPCVAPI_IMPL( CvStatus,
-     icvGaussianBlur_32f_CnR, ( float* src, int srcStep,
-                                float* dst, int dstStep, CvSize * roiSize,
-                                CvFilterState* state, int stage ))
+static CvStatus CV_STDCALL
+icvGaussianBlur_32f_CnR( float* src, int srcStep,
+                         float* dst, int dstStep, CvSize * roiSize,
+                         CvFilterState* state, int stage )
 {
     int width = roiSize->width;
     int src_height = roiSize->height;
@@ -2110,6 +1776,7 @@ IPCVAPI_IMPL( CvStatus,
     int ker_x_n = ker_x * channels;
     int ker_right_n = ker_right * channels;
     int width_n = width * channels;
+    int ker_width_n = ker_width * channels;
 
     float* fmaskX = (float*)(state->ker0) + ker_x;
     float* fmaskY = (float*)(state->ker1) + ker_y;
@@ -2176,16 +1843,15 @@ IPCVAPI_IMPL( CvStatus,
                     CV_COPY( tbuf, src + width_n, ker_right_n, x );
                 }
 
+                /* make replication borders */
+                for( i = ker_x_n - 1; i >= 0; i-- )
+                    tsrc[i] = tsrc[i + channels];
+                for( i = width_n + ker_x_n; i < width_n + ker_width_n; i++ )
+                    tsrc[i] = tsrc[i - channels];
+
+                /* horizontal blurring */
                 if( channels == 1 )
                 {
-                    /* make replication borders */
-                    float pix = tsrc[ker_x];
-                    CV_SET( tsrc, pix, ker_x, x );
-
-                    pix = tsrc[width + ker_x - 1];
-                    CV_SET( tsrc + width + ker_x, pix, ker_right, x );
-
-                    /* horizontal blurring */
                     for( i = 0; i < width_n; i++ )
                     {
                         int j;
@@ -2200,64 +1866,32 @@ IPCVAPI_IMPL( CvStatus,
                 }
                 else if( channels == 3 )
                 {
-                    /* make replication borders */
-                    CvRGB32f pix = ((CvRGB32f *)tsrc)[ker_x];
-                    CV_SET( (CvRGB32f *) tsrc, pix, ker_x, x );
-
-                    pix = ((CvRGB32f *) tsrc)[width + ker_x - 1];
-                    CV_SET( (CvRGB32f *) tsrc + width + ker_x, pix, ker_right, x );
-
-                    /* horizontal blurring */
-                    if( ker_width == 3 )
+                    for( i = 0; i < width_n; i += 3 )
                     {
-                        for( i = 0; i < width_n; i += 3 )
+                        int j;
+                        double t0 = (tsrc[i + ker_x_n])*fmX0;
+                        double t1 = (tsrc[i + ker_x_n + 1])*fmX0;
+                        double t2 = (tsrc[i + ker_x_n + 2])*fmX0;
+
+                        for( j = 1; j <= ker_x; j++ )
                         {
-                            double t0 = (tsrc[i + 3]*2 + tsrc[i] + tsrc[i+6])*0.25;
-                            double t1 = (tsrc[i + 4]*2 + tsrc[i+1] + tsrc[i+7])*0.25;
-                            double t2 = (tsrc[i + 5]*2 + tsrc[i+2] + tsrc[i+8])*0.25;
-
-                            tdst[i] = (float)t0;
-                            tdst[i+1] = (float)t1;
-                            tdst[i+2] = (float)t2;
+                            int j3 = j*3;
+                            double m = fmaskX[j];
+                            t0 += ((tsrc[i+ker_x_n+j3]) +
+                                   (tsrc[i+ker_x_n-j3]))*m;
+                            t1 += ((tsrc[i+ker_x_n+j3+1]) +
+                                   (tsrc[i+ker_x_n-j3+1]))*m;
+                            t2 += ((tsrc[i+ker_x_n+j3+2]) +
+                                   (tsrc[i+ker_x_n-j3+2]))*m;
                         }
-                    }
-                    else
-                    {
-                        for( i = 0; i < width_n; i += 3 )
-                        {
-                            int j;
-                            double t0 = (tsrc[i + ker_x_n])*fmX0;
-                            double t1 = (tsrc[i + ker_x_n + 1])*fmX0;
-                            double t2 = (tsrc[i + ker_x_n + 2])*fmX0;
 
-                            for( j = 1; j <= ker_x; j++ )
-                            {
-                                int j3 = j*3;
-                                double m = fmaskX[j];
-                                t0 += ((tsrc[i+ker_x_n+j3]) +
-                                       (tsrc[i+ker_x_n-j3]))*m;
-                                t1 += ((tsrc[i+ker_x_n+j3+1]) +
-                                       (tsrc[i+ker_x_n-j3+1]))*m;
-                                t2 += ((tsrc[i+ker_x_n+j3+2]) +
-                                       (tsrc[i+ker_x_n-j3+2]))*m;
-                            }
-
-                            tdst[i] = (float)t0;
-                            tdst[i+1] = (float)t1;
-                            tdst[i+2] = (float)t2;
-                        }
+                        tdst[i] = (float)t0;
+                        tdst[i+1] = (float)t1;
+                        tdst[i+2] = (float)t2;
                     }
                 }
                 else    /* channels == 4 */
                 {
-                    /* make replication borders */
-                    CvRGBA32f pix = ((CvRGBA32f *) tsrc)[ker_x];
-                    CV_SET( (CvRGBA32f *) tsrc, pix, ker_x, x );
-
-                    pix = ((CvRGBA32f *) tsrc)[width + ker_x - 1];
-                    CV_SET( (CvRGBA32f *) tsrc + width + ker_x, pix, ker_right, x );
-
-                    /* horizontal blurring */
                     for( i = 0; i < width_n; i += 4 )
                     {
                         int j;
@@ -2393,17 +2027,11 @@ IPCVAPI_IMPL( CvStatus,
                                       Median Filter
 \****************************************************************************************/
 
-IPCVAPI( CvStatus,
-     icvMedianBlur_8u_CnR, ( uchar* src, int srcStep,
-                             uchar* dst, int dstStep,
-                             CvSize* roiSize,
-                             int* param, int /*stub */ ));
-
-IPCVAPI_IMPL( CvStatus,
-     icvMedianBlur_8u_CnR, ( uchar* src, int srcStep,
-                             uchar* dst, int dstStep,
-                             CvSize* roiSize,
-                             int* param, int /*stub */ ))
+static CvStatus CV_STDCALL
+icvMedianBlur_8u_CnR( uchar* src, int srcStep,
+                      uchar* dst, int dstStep,
+                      CvSize* roiSize,
+                      int* param, int /*stub */ )
 {
     const int small_thresh = 3;
     #define N  16
@@ -2643,15 +2271,10 @@ IPCVAPI_IMPL( CvStatus,
                                    Bilateral Filtering
 \****************************************************************************************/
 
-IPCVAPI( CvStatus,
-     icvBilateralFiltering_8u_CnR, ( uchar* src, int srcStep,
-                                     uchar* dst, int dstStep,
-                                     CvSize* roiSize, int* param, int /*stub */ ));
-
-IPCVAPI_IMPL( CvStatus,
-     icvBilateralFiltering_8u_CnR, ( uchar* src, int srcStep,
-                                     uchar* dst, int dstStep,
-                                     CvSize* roiSize, int* param, int /*stub*/ ))
+static CvStatus CV_STDCALL
+icvBilateralFiltering_8u_CnR( uchar* src, int srcStep,
+                              uchar* dst, int dstStep,
+                              CvSize* roiSize, int* param, int /*stub*/ )
 {
     CvSize size = *roiSize;
     
@@ -2886,7 +2509,6 @@ static void icvInitSmoothTab( CvFuncTable* blur_no_scale_tab,
                               CvFuncTable* median_tab, CvFuncTable* bilateral_tab )
 {
     blur_no_scale_tab->fn_2d[CV_8U] = (void*)icvBlur_8u16s_C1R;
-    blur_no_scale_tab->fn_2d[CV_8S] = (void*)icvBlur_8s16s_C1R;
     blur_no_scale_tab->fn_2d[CV_32F] = (void*)icvBlur_32f_CnR;
     
     blur_tab->fn_2d[CV_8U] = (void*)icvBlur_8u_CnR;
@@ -2902,8 +2524,8 @@ static void icvInitSmoothTab( CvFuncTable* blur_no_scale_tab,
 
  
 CV_IMPL void
-cvSmooth( const void* srcarr, void* dstarr,
-          int smoothtype, int param1, int param2 )
+cvSmooth( const void* srcarr, void* dstarr, int smoothtype,
+          int param1, int param2, double param3 )
 {
     static CvFuncTable smooth_tab[5];
     static int inittab = 0;
@@ -2934,23 +2556,22 @@ cvSmooth( const void* srcarr, void* dstarr,
     CV_CALL( src = cvGetMat( src, &srcstub, &coi1 ));
     CV_CALL( dst = cvGetMat( dst, &dststub, &coi2 ));
 
+    if( coi1 != 0 || coi2 != 0 )
+        CV_ERROR( CV_BadCOI, "" );
+
     type = CV_MAT_TYPE( src->type );
     dsttype = CV_MAT_TYPE( dst->type );
 
     if( !((smoothtype > 0 && CV_ARE_SIZES_EQ( src, dst )) ||
           (smoothtype == 0 &&
           (type == CV_8UC1 && dsttype == CV_16SC1 ||
-           type == CV_8SC1 && dsttype == CV_16SC1 ||
            type == CV_32FC1 && dsttype == CV_32FC1 ))))
         CV_ERROR( CV_StsUnmatchedFormats, "" );
 
     if( !CV_ARE_SIZES_EQ( src, dst ))
         CV_ERROR( CV_StsUnmatchedSizes, "" );
 
-    if( coi1 != 0 || coi2 != 0 )
-        CV_ERROR( CV_BadCOI, "" );
-
-    size = icvGetMatSize( src );
+    size = cvGetMatSize( src );
     
     depth = CV_MAT_DEPTH(type);
     nonlin_param[0] = CV_MAT_CN(type);
@@ -2963,9 +2584,6 @@ cvSmooth( const void* srcarr, void* dstarr,
         CV_ERROR( CV_StsBadArg,
         "Inplace operation is not supported for that type of smoothing" );
 
-    if( smoothtype < CV_BILATERAL && (param1 < 1 || (param1 & 1) == 0) )
-        CV_ERROR( CV_StsOutOfRange, "Bad aperture size (should be >=1 and odd)" );
-
     if( smoothtype == CV_BILATERAL )
     {
         if( param1 < 0 || param2 < 0 )
@@ -2974,6 +2592,18 @@ cvSmooth( const void* srcarr, void* dstarr,
         param1 += param1 == 0;
         param2 += param2 == 0;
     }
+    else /* simple blurring, gaussian, median */
+    {
+        // automatic detection of kernel size from sigma
+        if( smoothtype == CV_GAUSSIAN && param1 == 0 && param3 > 0 )
+            param1 = cvRound(param3*(depth == CV_8U ? 3 : 4)*2 + 1)|1;
+        
+        if( param2 == 0 )
+            param2 = param1;
+        if( param1 < 1 || (param1 & 1) == 0 || param2 < 1 || (param2 & 1) == 0 )
+            CV_ERROR( CV_StsOutOfRange,
+                "One of aperture dimensions is incorrect (should be >=1 and odd)" );
+    }
 
     if( smoothtype <= CV_GAUSSIAN )
     {
@@ -2981,7 +2611,7 @@ cvSmooth( const void* srcarr, void* dstarr,
                                        CV_MAT_CN(type),
                                        cvSize( param1, size.height == 1 ? 1 :
                                                smoothtype <= CV_GAUSSIAN ? param2 : param1),
-                                       smoothtype, &state ));
+                                       smoothtype, param3 /* custom sigma */, &state ));
         ptr = state;
     }
 

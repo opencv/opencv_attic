@@ -45,7 +45,7 @@
 // */
 
 /********************************* COPYRIGHT NOTICE *******************************\
-  The function for RGB2Lab conversion is based on the MATLAB code
+  The function for RGB to Lab conversion is based on the MATLAB script
   RGB2Lab.m translated by Mark Ruzon from C code by Yossi Rubner, 23 September 1997.
   See the page [http://vision.stanford.edu/~ruzon/software/rgblab.html]
 \**********************************************************************************/
@@ -96,20 +96,24 @@
 
 #include "_cv.h"
 
-#define  ICV_CVT_BGR2RGB( src, dst )                        \
+#define  ICV_CVT_BGR2RGB( arrtype, src, dst )               \
 {                                                           \
-    uchar t0 = (src)[0], t1 = (src)[1], t2 = (src)[2];      \
+    arrtype t0 = (src)[0], t1 = (src)[1], t2 = (src)[2];    \
                                                             \
     (dst)[0] = t2;                                          \
     (dst)[1] = t1;                                          \
     (dst)[2] = t0;                                          \
 }
 
-#define  ICV_CVT_RGBA2BGR  ICV_CVT_BGR2RGB
+#define  ICV_CVT_BGR2RGB_8U( src, dst )   ICV_CVT_BGR2RGB( uchar, src, dst )
+#define  ICV_CVT_BGR2RGB_32F( src, dst )  ICV_CVT_BGR2RGB( float, src, dst )
 
-#define  ICV_CVT_BGR2BGRA( src, dst )                       \
+#define  ICV_CVT_RGBA2BGR_8U  ICV_CVT_BGR2RGB_8U
+#define  ICV_CVT_RGBA2BGR_32F  ICV_CVT_BGR2RGB_32F
+
+#define  ICV_CVT_BGR2BGRA( arrtype, src, dst )              \
 {                                                           \
-    uchar t0 = (src)[0], t1 = (src)[1], t2 = (src)[2];      \
+    arrtype t0 = (src)[0], t1 = (src)[1], t2 = (src)[2];    \
                                                             \
     (dst)[0] = t0;                                          \
     (dst)[1] = t1;                                          \
@@ -117,18 +121,24 @@
     (dst)[3] = 0;                                           \
 }
 
-#define  ICV_CVT_BGRA2BGR( src, dst )                       \
+#define  ICV_CVT_BGR2BGRA_8U( src, dst )   ICV_CVT_BGR2BGRA( uchar, src, dst )
+#define  ICV_CVT_BGR2BGRA_32F( src, dst )  ICV_CVT_BGR2BGRA( float, src, dst )
+
+#define  ICV_CVT_BGRA2BGR( arrtype, src, dst )              \
 {                                                           \
-    uchar t0 = (src)[0], t1 = (src)[1], t2 = (src)[2];      \
+    arrtype t0 = (src)[0], t1 = (src)[1], t2 = (src)[2];    \
                                                             \
     (dst)[0] = t0;                                          \
     (dst)[1] = t1;                                          \
     (dst)[2] = t2;                                          \
 }
 
-#define  ICV_CVT_BGR2RGBA( src, dst )                       \
+#define  ICV_CVT_BGRA2BGR_8U( src, dst )  ICV_CVT_BGRA2BGR( uchar, src, dst )
+#define  ICV_CVT_BGRA2BGR_32F( src, dst )  ICV_CVT_BGRA2BGR( float, src, dst )
+
+#define  ICV_CVT_BGR2RGBA( arrtype, src, dst )              \
 {                                                           \
-    uchar t0 = (src)[0], t1 = (src)[1], t2 = (src)[2];      \
+    arrtype t0 = (src)[0], t1 = (src)[1], t2 = (src)[2];    \
                                                             \
     (dst)[0] = t2;                                          \
     (dst)[1] = t1;                                          \
@@ -136,10 +146,12 @@
     (dst)[3] = 0;                                           \
 }
 
+#define  ICV_CVT_BGR2RGBA_8U( src, dst )  ICV_CVT_BGR2RGBA( uchar, src, dst )
+#define  ICV_CVT_BGR2RGBA_32F( src, dst )  ICV_CVT_BGR2RGBA( float, src, dst )
 
-#define  ICV_CVT_BGRA2RGBA( src, dst )                                  \
+#define  ICV_CVT_BGRA2RGBA( arrtype, src, dst )                         \
 {                                                                       \
-    uchar t0 = (src)[0], t1 = (src)[1], t2 = (src)[2], t3 = (src)[3];   \
+    arrtype t0 = (src)[0], t1 = (src)[1], t2 = (src)[2], t3 = (src)[3]; \
                                                                         \
     (dst)[0] = t2;                                                      \
     (dst)[1] = t1;                                                      \
@@ -147,132 +159,177 @@
     (dst)[3] = t3;                                                      \
 }
 
+#define  ICV_CVT_BGRA2RGBA_8U( src, dst )  ICV_CVT_BGRA2RGBA( uchar, src, dst )
+#define  ICV_CVT_BGRA2RGBA_32F( src, dst )  ICV_CVT_BGRA2RGBA( float, src, dst )
 
-#define ICV_CVT_BGR2BGR565( src, dst )                      \
+/******************************** RGB: 565 <==> 888/8888 ************************/
+
+#define ICV_CVT_RGB2BGR565_8U_EX( src, dst, blue_ofs )      \
 {                                                           \
-    int  t = ((src)[0] >> 3)|(((src)[1] & ~3) << 3)|        \
-             (((src)[2] & ~7) << 8);                        \
+    int  t = ((src)[blue_ofs] >> 3)|(((src)[1] & ~3) << 3)| \
+             (((src)[blue_ofs ^ 2] & ~7) << 8);             \
                                                             \
     ((ushort*)(dst))[0] = (ushort)t;                        \
 }
 
+#define ICV_CVT_BGR2BGR565_8U( src, dst )  \
+    ICV_CVT_RGB2BGR565_8U_EX( (src), (dst), 0 )
 
-#define ICV_CVT_RGB2BGR565( src, dst )                      \
-{                                                           \
-    int  t = ((src)[2] >> 3)|(((src)[1] & ~3) << 3)|        \
-             (((src)[0] & ~7) << 8);                        \
-                                                            \
-    ((ushort*)(dst))[0] = (ushort)t;                        \
-}
+#define ICV_CVT_BGRA2BGR565_8U  ICV_CVT_BGR2BGR565_8U
 
+#define ICV_CVT_RGB2BGR565_8U( src, dst )  \
+    ICV_CVT_RGB2BGR565_8U_EX( (src), (dst), 2 )
 
-#define ICV_CVT_BGRA2BGR565( src, dst )                     \
-{                                                           \
-    int  t = ((src)[0] >> 3)|(((src)[1] & ~3) << 3)|        \
-             (((src)[2] & ~7) << 8);                        \
-                                                            \
-    ((ushort*)(dst))[0] = (ushort)t;                        \
-}
+#define ICV_CVT_RGBA2BGR565_8U  ICV_CVT_RGB2BGR565_8U
 
-
-#define ICV_CVT_RGBA2BGR565( src, dst )                     \
-{                                                           \
-    int  t = ((src)[2] >> 3)|(((src)[1] & ~3) << 3)|        \
-             (((src)[0] & ~7) << 8);                        \
-                                                            \
-    ((ushort*)(dst))[0] = (ushort)t;                        \
-}
-
-
-#define ICV_CVT_BGR5652BGR( src, dst )                      \
+#define ICV_CVT_BGR5652RGB_8U_EX( src, dst, blue_ofs )      \
 {                                                           \
     unsigned t = ((ushort*)(src))[0];                       \
                                                             \
-    (dst)[0] = (uchar)(t << 3);                             \
+    (dst)[blue_ofs] = (uchar)(t << 3);                      \
     (dst)[1] = (uchar)((t >> 3) & ~3);                      \
-    (dst)[2] = (uchar)((t >> 8) & ~7);                      \
+    (dst)[blue_ofs ^ 2] = (uchar)((t >> 8) & ~7);           \
 }
 
+#define ICV_CVT_BGR5652BGR_8U( src, dst ) \
+    ICV_CVT_BGR5652RGB_8U_EX( (src), (dst), 0 )
 
-#define ICV_CVT_BGR5652RGB( src, dst )                      \
+#define ICV_CVT_BGR5652RGB_8U( src, dst ) \
+    ICV_CVT_BGR5652RGB_8U_EX( (src), (dst), 2 )
+
+#define ICV_CVT_BGR5652RGBA_8U_EX( src, dst, blue_ofs )     \
 {                                                           \
     unsigned t = ((ushort*)(src))[0];                       \
                                                             \
-    (dst)[2] = (uchar)(t << 3);                             \
+    (dst)[blue_ofs] = (uchar)(t << 3);                      \
     (dst)[1] = (uchar)((t >> 3) & ~3);                      \
-    (dst)[0] = (uchar)((t >> 8) & ~7);                      \
-}
-
-
-#define ICV_CVT_BGR5652BGRA( src, dst )                     \
-{                                                           \
-    unsigned t = ((ushort*)(src))[0];                       \
-                                                            \
-    (dst)[0] = (uchar)(t << 3);                             \
-    (dst)[1] = (uchar)((t >> 3) & ~3);                      \
-    (dst)[2] = (uchar)((t >> 8) & ~7);                      \
+    (dst)[blue_ofs ^ 2] = (uchar)((t >> 8) & ~7);           \
     (dst)[3] = 0;                                           \
 }
 
+#define ICV_CVT_BGR5652BGRA_8U( src, dst ) \
+    ICV_CVT_BGR5652RGBA_8U_EX( (src), (dst), 0 )
 
-#define ICV_CVT_BGR5652RGBA( src, dst )                     \
+#define ICV_CVT_BGR5652RGBA_8U( src, dst ) \
+    ICV_CVT_BGR5652RGBA_8U_EX( (src), (dst), 2 )
+
+/******************************** RGB: 555 <==> 888/8888 ************************/
+
+#define ICV_CVT_RGB2BGR555_8U_EX( src, dst, blue_ofs )      \
+{                                                           \
+    int  t = ((src)[blue_ofs] >> 3)|(((src)[1] & ~7) << 2)| \
+             (((src)[blue_ofs ^ 2] & ~7) << 7);             \
+                                                            \
+    ((ushort*)(dst))[0] = (ushort)t;                        \
+}
+
+#define ICV_CVT_BGR2BGR555_8U( src, dst )  \
+    ICV_CVT_RGB2BGR555_8U_EX( (src), (dst), 0 )
+
+#define ICV_CVT_BGRA2BGR555_8U  ICV_CVT_BGR2BGR555_8U
+
+#define ICV_CVT_RGB2BGR555_8U( src, dst )  \
+    ICV_CVT_RGB2BGR555_8U_EX( (src), (dst), 2 )
+
+#define ICV_CVT_RGBA2BGR555_8U  ICV_CVT_RGB2BGR555_8U
+
+#define ICV_CVT_BGR5552RGB_8U_EX( src, dst, blue_ofs )      \
 {                                                           \
     unsigned t = ((ushort*)(src))[0];                       \
                                                             \
-    (dst)[2] = (uchar)(t << 3);                             \
-    (dst)[1] = (uchar)((t >> 3) & ~3);                      \
-    (dst)[0] = (uchar)((t >> 8) & ~7);                      \
+    (dst)[blue_ofs] = (uchar)(t << 3);                      \
+    (dst)[1] = (uchar)((t >> 2) & ~7);                      \
+    (dst)[blue_ofs ^ 2] = (uchar)((t >> 7) & ~7);           \
+}
+
+#define ICV_CVT_BGR5552BGR_8U( src, dst ) \
+    ICV_CVT_BGR5552RGB_8U_EX( (src), (dst), 0 )
+
+#define ICV_CVT_BGR5552RGB_8U( src, dst ) \
+    ICV_CVT_BGR5552RGB_8U_EX( (src), (dst), 2 )
+
+#define ICV_CVT_BGR5552RGBA_8U_EX( src, dst, blue_ofs )     \
+{                                                           \
+    unsigned t = ((ushort*)(src))[0];                       \
+                                                            \
+    (dst)[blue_ofs] = (uchar)(t << 3);                      \
+    (dst)[1] = (uchar)((t >> 2) & ~7);                      \
+    (dst)[blue_ofs ^ 2] = (uchar)((t >> 7) & ~7);           \
     (dst)[3] = 0;                                           \
 }
 
+#define ICV_CVT_BGR5552BGRA_8U( src, dst ) \
+    ICV_CVT_BGR5552RGBA_8U_EX( (src), (dst), 0 )
+
+#define ICV_CVT_BGR5552RGBA_8U( src, dst ) \
+    ICV_CVT_BGR5552RGBA_8U_EX( (src), (dst), 2 )
+
+/*********************************** RGB <===> Grayscale **************************/
 
 #define fix(x,n)      (int)((x)*(1 << (n)) + 0.5)
 #define descale       CV_DESCALE
 
-/* BGR/RGB -> Gray */
-#define shift  10
-#define cscGr  fix(0.212671,shift)
-#define cscGg  fix(0.715160,shift)
-#define cscGb  fix(0.072169,shift)
+#define cscGr_32f  0.299f
+#define cscGg_32f  0.587f
+#define cscGb_32f  0.114f
 
-#define  ICV_CVT_BGR5652GRAY( src, dst )                        \
+/* BGR/RGB -> Gray */
+#define csc_shift  10
+#define cscGr  fix(cscGr_32f,csc_shift) 
+#define cscGg  fix(cscGg_32f,csc_shift)
+#define cscGb  /*fix(cscGb_32f,csc_shift)*/ ((1 << csc_shift) - cscGr - cscGg)
+
+#define  ICV_CVT_BGR5652GRAY_8U( src, dst )                     \
 {                                                               \
     int t = ((ushort*)(src))[0];                                \
     t = ((t << 3) & 0xf8)*cscGb + ((t >> 3) & 0xfc)*cscGg +     \
         ((t >> 8) & 0xf8)*cscGr;                                \
-    t = descale(t,shift);                                       \
-    (dst)[0] = CV_FAST_CAST_8U(t);                              \
+    t = descale(t,csc_shift);                                   \
+    (dst)[0] = (uchar)t;                                        \
 }
 
-#define  ICV_CVT_BGRA2GRAY( src, dst )                          \
+#define  ICV_CVT_BGR5552GRAY_8U( src, dst )                     \
+{                                                               \
+    int t = ((ushort*)(src))[0];                                \
+    t = ((t << 3) & 0xf8)*cscGb + ((t >> 2) & 0xf8)*cscGg +     \
+        ((t >> 7) & 0xf8)*cscGr;                                \
+    t = descale(t,csc_shift);                                   \
+    (dst)[0] = (uchar)t;                                        \
+}
+
+#define  ICV_CVT_BGR2GRAY_8U( src, dst )                        \
 {                                                               \
     int t = (src)[0]*cscGb + (src)[1]*cscGg + (src)[2]*cscGr;   \
-    t = descale(t,shift);                                       \
-    (dst)[0] = CV_FAST_CAST_8U(t);                              \
+    t = descale(t,csc_shift);                                   \
+    (dst)[0] = (uchar)t;                                        \
 }
 
-#define  ICV_CVT_BGR2GRAY( src, dst )                           \
-{                                                               \
-    int t = (src)[0]*cscGb + (src)[1]*cscGg + (src)[2]*cscGr;   \
-    t = descale(t,shift);                                       \
-    (dst)[0] = CV_FAST_CAST_8U(t);                              \
+#define  ICV_CVT_BGR2GRAY_32F( src, dst )                                   \
+{                                                                           \
+    float t = (src)[0]*cscGb_32f + (src)[1]*cscGg_32f + (src)[2]*cscGr_32f; \
+    (dst)[0] = t;                                                           \
 }
 
-#define  ICV_CVT_RGB2GRAY( src, dst )                           \
-{                                                               \
-    int t = (src)[0]*cscGr + (src)[1]*cscGg + (src)[2]*cscGb;   \
-    t = descale(t,shift);                                       \
-    (dst)[0] = CV_FAST_CAST_8U(t);                              \
-}
+#define  ICV_CVT_BGRA2GRAY_8U    ICV_CVT_BGR2GRAY_8U
+#define  ICV_CVT_BGRA2GRAY_32F    ICV_CVT_BGR2GRAY_32F
 
-#define  ICV_CVT_RGBA2GRAY( src, dst )                          \
+#define  ICV_CVT_RGB2GRAY_8U( src, dst )                        \
 {                                                               \
     int t = (src)[0]*cscGr + (src)[1]*cscGg + (src)[2]*cscGb;   \
-    t = descale(t,shift);                                       \
-    (dst)[0] = CV_FAST_CAST_8U(t);                              \
+    t = descale(t,csc_shift);                                   \
+    (dst)[0] = (uchar)t;                                        \
 }
 
-#define  ICV_CVT_GRAY2BGR565( src, dst )          \
+#define  ICV_CVT_RGB2GRAY_32F( src, dst )                                   \
+{                                                                           \
+    float t = (src)[0]*cscGr_32f + (src)[1]*cscGg_32f + (src)[2]*cscGb_32f; \
+    (dst)[0] = t;                                                           \
+}
+
+#define  ICV_CVT_RGBA2GRAY_8U    ICV_CVT_RGB2GRAY_8U
+#define  ICV_CVT_RGBA2GRAY_32F    ICV_CVT_RGB2GRAY_32F
+
+#define  ICV_CVT_GRAY2BGR565_8U( src, dst )       \
 {                                                 \
     int t = (src)[0];                             \
     t = (t >> 3)|((t & ~3) << 3)|((t & ~7) << 8); \
@@ -280,131 +337,252 @@
     ((ushort*)(dst))[0] = (ushort)t;              \
 }
 
-
-#define  ICV_CVT_GRAY2BGR( src, dst )       \
-{                                           \
-    uchar t = (src)[0];                     \
-    (dst)[0] = (dst)[1] = (dst)[2] = t;     \
+#define  ICV_CVT_GRAY2BGR555_8U( src, dst )       \
+{                                                 \
+    int t = (src)[0] >> 3;                        \
+    t = t|(t << 5)|(t << 10);                     \
+                                                  \
+    ((ushort*)(dst))[0] = (ushort)t;              \
 }
 
-#define  ICV_CVT_GRAY2BGRA( src, dst )      \
-{                                           \
-    uchar t = (src)[0];                     \
-    (dst)[0] = (dst)[1] = (dst)[2] = t;     \
-    (dst)[3] = 0;                           \
+#define  ICV_CVT_GRAY2BGR( arrtype, src, dst )  \
+{                                               \
+    arrtype t = (src)[0];                       \
+    (dst)[0] = (dst)[1] = (dst)[2] = t;         \
 }
+
+#define  ICV_CVT_GRAY2BGR_8U( src, dst ) ICV_CVT_GRAY2BGR( uchar, src, dst )
+#define  ICV_CVT_GRAY2BGR_32F( src, dst ) ICV_CVT_GRAY2BGR( float, src, dst )
+
+#define  ICV_CVT_GRAY2BGRA( arrtype, src, dst ) \
+{                                               \
+    arrtype t = (src)[0];                       \
+    (dst)[0] = (dst)[1] = (dst)[2] = t;         \
+    (dst)[3] = 0;                               \
+}
+
+#define  ICV_CVT_GRAY2BGRA_8U( src, dst ) ICV_CVT_GRAY2BGRA( uchar, src, dst )
+#define  ICV_CVT_GRAY2BGRA_32F( src, dst ) ICV_CVT_GRAY2BGRA( float, src, dst )
 
 
 /* BGR/RGB -> YCrCb */
-#define yuvYr  fix(0.299,shift)
-#define yuvYg  fix(0.587,shift)
-#define yuvYb  fix(0.114,shift)
-#define yuvCr  fix(0.713,shift)
-#define yuvCb  fix(0.564,shift)
+#define yuvYr_32f cscGr_32f
+#define yuvYg_32f cscGg_32f
+#define yuvYb_32f cscGb_32f
+#define yuvCr_32f 0.713f
+#define yuvCb_32f 0.564f
+
+#define yuv_shift 10
+#define yuvYr  fix(yuvYr_32f,yuv_shift)
+#define yuvYg  fix(yuvYg_32f,yuv_shift)
+#define yuvYb  fix(yuvYb_32f,yuv_shift)
+#define yuvCr  fix(yuvCr_32f,yuv_shift)
+#define yuvCb  fix(yuvCb_32f,yuv_shift)
 
 
-#define  ICV_CVT_BGR2YCrCb_EX( src, dst, blue_idx )         \
-{                                                           \
-    int b = (src)[blue_idx], r = (src)[2^blue_idx], y;      \
-                                                            \
-    y = descale(b*yuvYb + (src)[1]*yuvYg + r*yuvYr,shift);  \
-    r = descale((r - y)*yuvCr + (128 << shift),shift);      \
-    b = descale((b - y)*yuvCb + (128 << shift),shift);      \
-                                                            \
-    (dst)[0] = CV_FAST_CAST_8U(y);                          \
-    (dst)[1] = CV_FAST_CAST_8U(r);                          \
-    (dst)[2] = CV_FAST_CAST_8U(b);                          \
+#define  ICV_CVT_BGR2YCrCb_EX_8U( src, dst, blue_idx )          \
+{                                                               \
+    int b = (src)[blue_idx], r = (src)[2^blue_idx], y;          \
+                                                                \
+    y = descale(b*yuvYb + (src)[1]*yuvYg + r*yuvYr,yuv_shift);  \
+    r = descale((r - y)*yuvCr + (128 << yuv_shift),yuv_shift);  \
+    b = descale((b - y)*yuvCb + (128 << yuv_shift),yuv_shift);  \
+                                                                \
+    (dst)[0] = CV_CAST_8U(y);                                   \
+    (dst)[1] = CV_CAST_8U(r);                                   \
+    (dst)[2] = CV_CAST_8U(b);                                   \
 }
 
 
-#define  ICV_CVT_BGR2YCrCb( src, dst )   ICV_CVT_BGR2YCrCb_EX( src, dst, 0 )
-#define  ICV_CVT_RGB2YCrCb( src, dst )   ICV_CVT_BGR2YCrCb_EX( src, dst, 2 )
+#define  ICV_CVT_BGR2YCrCb_8U( src, dst )   ICV_CVT_BGR2YCrCb_EX_8U( src, dst, 0 )
+#define  ICV_CVT_RGB2YCrCb_8U( src, dst )   ICV_CVT_BGR2YCrCb_EX_8U( src, dst, 2 )
 
 
-#define  yuvRCr   fix(1.403,shift)
-#define  yuvGCr   (-fix(0.344,shift))
-#define  yuvGCb   (-fix(0.714,shift))
-#define  yuvBCb   fix(1.773,shift)
+#define  ICV_CVT_BGR2YCrCb_EX_32F( src, dst, blue_idx )     \
+{                                                           \
+    float b = (src)[blue_idx], r = (src)[2^blue_idx], y;    \
+                                                            \
+    y = b*yuvYb_32f + (src)[1]*yuvYg_32f + r*yuvYr_32f;     \
+    r = (r - y)*yuvCr_32f + 0.5f;                           \
+    b = (b - y)*yuvCb_32f + 0.5f;                           \
+                                                            \
+    (dst)[0] = y;                                           \
+    (dst)[1] = r;                                           \
+    (dst)[2] = b;                                           \
+}
 
-#define  ICV_CVT_YCrCb2BGR_EX( src, dst, blue_idx )     \
+
+#define  ICV_CVT_BGR2YCrCb_32F( src, dst )   ICV_CVT_BGR2YCrCb_EX_32F( src, dst, 0 )
+#define  ICV_CVT_RGB2YCrCb_32F( src, dst )   ICV_CVT_BGR2YCrCb_EX_32F( src, dst, 2 )
+
+#define  yuvRCr_32f   1.403f
+#define  yuvGCr_32f   (-0.714f)
+#define  yuvGCb_32f   (-0.344f)
+#define  yuvBCb_32f   1.773f
+
+#define  yuvRCr   fix(yuvRCr_32f,yuv_shift)
+#define  yuvGCr   (-fix(-yuvGCr_32f,yuv_shift))
+#define  yuvGCb   (-fix(-yuvGCb_32f,yuv_shift))
+#define  yuvBCb   fix(yuvBCb_32f,yuv_shift)
+
+#define  ICV_CVT_YCrCb2BGR_EX_8U( src, dst, blue_idx )  \
 {                                                       \
-    int Y = (src)[0] << shift, Cr = (src)[1] - 128,     \
+    int Y = (src)[0] << yuv_shift, Cr = (src)[1] - 128, \
         Cb = (src)[2] - 128;                            \
     int b, g, r;                                        \
                                                         \
-    b = descale( Y + yuvBCb*Cb, shift );                \
-    g = descale( Y + yuvGCr*Cr + yuvGCb*Cb, shift );    \
-    r = descale( Y + yuvRCr*Cr, shift );                \
+    b = descale( Y + yuvBCb*Cb, yuv_shift );            \
+    g = descale( Y + yuvGCr*Cr + yuvGCb*Cb, yuv_shift );\
+    r = descale( Y + yuvRCr*Cr, yuv_shift );            \
                                                         \
     (dst)[blue_idx] = CV_CAST_8U(b);                    \
     (dst)[1] = CV_CAST_8U(g);                           \
     (dst)[blue_idx^2] = CV_CAST_8U(r);                  \
 }
 
-#define  ICV_CVT_YCrCb2BGR( src, dst )  ICV_CVT_YCrCb2BGR_EX( src, dst, 0 )
-#define  ICV_CVT_YCrCb2RGB( src, dst )  ICV_CVT_YCrCb2BGR_EX( src, dst, 2 )
-
-#define xyzXr  fix(0.412411,shift)
-#define xyzXg  fix(0.357585,shift)
-#define xyzXb  fix(0.180454,shift)
-
-#define xyzYr  fix(0.212649,shift)
-#define xyzYg  fix(0.715169,shift)
-#define xyzYb  fix(0.072182,shift)
-
-#define xyzZr  fix(0.019332,shift)
-#define xyzZg  fix(0.119195,shift)
-#define xyzZb  fix(0.950390,shift)
+#define  ICV_CVT_YCrCb2BGR_8U( src, dst )  ICV_CVT_YCrCb2BGR_EX_8U( src, dst, 0 )
+#define  ICV_CVT_YCrCb2RGB_8U( src, dst )  ICV_CVT_YCrCb2BGR_EX_8U( src, dst, 2 )
 
 
-#define  ICV_CVT_BGR2XYZ_EX( src, dst, blue_idx )       \
-{                                                       \
-    int b = (src)[blue_idx], g = (src)[1],              \
-        r = (src)[2^blue_idx];                          \
-    int x, y, z;                                        \
-                                                        \
-    x = descale( b*xyzXb + g*xyzXg + r*xyzXr, shift );  \
-    y = descale( b*xyzYb + g*xyzYg + r*xyzYr, shift );  \
-    z = descale( b*xyzZb + g*xyzZg + r*xyzZr, shift );  \
-                                                        \
-    (dst)[0] = CV_FAST_CAST_8U(x);                      \
-    (dst)[1] = CV_FAST_CAST_8U(y);                      \
-    (dst)[2] = CV_FAST_CAST_8U(z);                      \
+#define  ICV_CVT_YCrCb2BGR_EX_32F( src, dst, blue_idx )             \
+{                                                                   \
+    float Y = (src)[0], Cr = (src)[1] - 0.5f, Cb = (src)[2] - 0.5f; \
+    float b, g, r;                                                  \
+                                                                    \
+    b = Y + yuvBCb_32f*Cb;                                          \
+    g = Y + yuvGCr_32f*Cr + yuvGCb_32f*Cb;                          \
+    r = Y + yuvRCr_32f*Cr;                                          \
+                                                                    \
+    (dst)[blue_idx] = b;                                            \
+    (dst)[1] = g;                                                   \
+    (dst)[blue_idx^2] = r;                                          \
 }
 
-#define  ICV_CVT_BGR2XYZ( src, dst )  ICV_CVT_BGR2XYZ_EX( src, dst, 0 )
-#define  ICV_CVT_RGB2XYZ( src, dst )  ICV_CVT_BGR2XYZ_EX( src, dst, 2 )
-
-#define  xyzRx   fix(3.240479,shift)
-#define  xyzRy   (-fix(1.53715,shift))
-#define  xyzRz   (-fix(0.498535,shift))
-
-#define  xyzGx   (-fix(0.969256,shift))
-#define  xyzGy   fix(1.875991,shift)
-#define  xyzGz   fix(0.041556,shift)
-
-#define  xyzBx   fix(0.055648,shift)
-#define  xyzBy   (-fix(0.204043,shift))
-#define  xyzBz   fix(1.057311,shift)
+#define  ICV_CVT_YCrCb2BGR_32F( src, dst )  ICV_CVT_YCrCb2BGR_EX_32F( src, dst, 0 )
+#define  ICV_CVT_YCrCb2RGB_32F( src, dst )  ICV_CVT_YCrCb2BGR_EX_32F( src, dst, 2 )
 
 
-#define  ICV_CVT_XYZ2BGR_EX( src, dst, blue_idx )       \
-{                                                       \
-    int x = (src)[0], y = (src)[1], z = (src)[2];       \
-    int b, g, r;                                        \
-                                                        \
-    b = descale( x*xyzBx + y*xyzBy + z*xyzBz, shift );  \
-    g = descale( x*xyzGx + y*xyzGy + z*xyzGz, shift );  \
-    r = descale( x*xyzRx + y*xyzRy + z*xyzRz, shift );  \
-                                                        \
-    (dst)[blue_idx] = CV_CAST_8U(b);                    \
-    (dst)[1] = CV_CAST_8U(g);                           \
-    (dst)[blue_idx^2] = CV_CAST_8U(r);                  \
+#define xyzXr_32f  0.412411f
+#define xyzXg_32f  0.357585f
+#define xyzXb_32f  0.180454f
+
+#define xyzYr_32f  0.212649f
+#define xyzYg_32f  0.715169f
+#define xyzYb_32f  0.072182f
+
+#define xyzZr_32f  0.019332f
+#define xyzZg_32f  0.119195f
+#define xyzZb_32f  0.950390f
+
+#define xyz_shift 10
+#define xyzXr  fix(xyzXr_32f,xyz_shift)
+#define xyzXg  fix(xyzXg_32f,xyz_shift)
+#define xyzXb  fix(xyzXb_32f,xyz_shift)
+                            
+#define xyzYr  fix(xyzYr_32f,xyz_shift)
+#define xyzYg  fix(xyzYg_32f,xyz_shift)
+#define xyzYb  fix(xyzYb_32f,xyz_shift)
+                            
+#define xyzZr  fix(xyzZr_32f,xyz_shift)
+#define xyzZg  fix(xyzZg_32f,xyz_shift)
+#define xyzZb  fix(xyzZb_32f,xyz_shift)
+
+#define  ICV_CVT_BGR2XYZ_EX_8U( src, dst, blue_idx )        \
+{                                                           \
+    int b = (src)[blue_idx], g = (src)[1],                  \
+        r = (src)[2^blue_idx];                              \
+    int x, y, z;                                            \
+                                                            \
+    x = descale( b*xyzXb + g*xyzXg + r*xyzXr, xyz_shift );  \
+    y = descale( b*xyzYb + g*xyzYg + r*xyzYr, xyz_shift );  \
+    z = descale( b*xyzZb + g*xyzZg + r*xyzZr, xyz_shift );  \
+                                                            \
+    (dst)[0] = CV_FAST_CAST_8U(x);                          \
+    (dst)[1] = CV_FAST_CAST_8U(y);                          \
+    (dst)[2] = CV_FAST_CAST_8U(z);                          \
 }
 
+#define  ICV_CVT_BGR2XYZ_8U( src, dst )  ICV_CVT_BGR2XYZ_EX_8U( src, dst, 0 )
+#define  ICV_CVT_RGB2XYZ_8U( src, dst )  ICV_CVT_BGR2XYZ_EX_8U( src, dst, 2 )
 
-#define  ICV_CVT_XYZ2BGR( src, dst )  ICV_CVT_XYZ2BGR_EX( src, dst, 0 )
-#define  ICV_CVT_XYZ2RGB( src, dst )  ICV_CVT_XYZ2BGR_EX( src, dst, 2 )
+#define  ICV_CVT_BGR2XYZ_EX_32F( src, dst, blue_idx )   \
+{                                                       \
+    float b = (src)[blue_idx], g = (src)[1],            \
+          r = (src)[2^blue_idx];                        \
+    float x, y, z;                                      \
+                                                        \
+    x = b*xyzXb_32f + g*xyzXg_32f + r*xyzXr_32f;        \
+    y = b*xyzYb_32f + g*xyzYg_32f + r*xyzYr_32f;        \
+    z = b*xyzZb_32f + g*xyzZg_32f + r*xyzZr_32f;        \
+                                                        \
+    (dst)[0] = x;                                       \
+    (dst)[1] = y;                                       \
+    (dst)[2] = z;                                       \
+}
+
+#define  ICV_CVT_BGR2XYZ_32F( src, dst )  ICV_CVT_BGR2XYZ_EX_32F( src, dst, 0 )
+#define  ICV_CVT_RGB2XYZ_32F( src, dst )  ICV_CVT_BGR2XYZ_EX_32F( src, dst, 2 )
+
+
+#define  xyzRx_32f   3.240479f
+#define  xyzRy_32f   (-1.53715f)
+#define  xyzRz_32f   (-0.498535f)
+
+#define  xyzGx_32f   (-0.969256f)
+#define  xyzGy_32f   1.875991f
+#define  xyzGz_32f   0.041556f
+
+#define  xyzBx_32f   0.055648f
+#define  xyzBy_32f   (-0.204043f)
+#define  xyzBz_32f   1.057311f
+
+#define  xyzRx      fix(xyzRx_32f,xyz_shift)
+#define  xyzRy      (-fix(-xyzRy_32f,xyz_shift))
+#define  xyzRz      (-fix(-xyzRz_32f,xyz_shift))
+
+#define  xyzGx      (-fix(-xyzGx_32f,xyz_shift))
+#define  xyzGy      fix(xyzGy_32f,xyz_shift)
+#define  xyzGz      fix(xyzGz_32f,xyz_shift)
+
+#define  xyzBx      fix(xyzBx_32f,xyz_shift)
+#define  xyzBy      (-fix(-xyzBy_32f,xyz_shift))
+#define  xyzBz      fix(xyzBz_32f,xyz_shift)
+
+
+#define  ICV_CVT_XYZ2BGR_EX_8U( src, dst, blue_idx )        \
+{                                                           \
+    int x = (src)[0], y = (src)[1], z = (src)[2];           \
+    int b, g, r;                                            \
+                                                            \
+    b = descale( x*xyzBx + y*xyzBy + z*xyzBz, xyz_shift );  \
+    g = descale( x*xyzGx + y*xyzGy + z*xyzGz, xyz_shift );  \
+    r = descale( x*xyzRx + y*xyzRy + z*xyzRz, xyz_shift );  \
+                                                            \
+    (dst)[blue_idx] = CV_CAST_8U(b);                        \
+    (dst)[1] = CV_CAST_8U(g);                               \
+    (dst)[blue_idx^2] = CV_CAST_8U(r);                      \
+}
+
+#define  ICV_CVT_XYZ2BGR_8U( src, dst )  ICV_CVT_XYZ2BGR_EX_8U( src, dst, 0 )
+#define  ICV_CVT_XYZ2RGB_8U( src, dst )  ICV_CVT_XYZ2BGR_EX_8U( src, dst, 2 )
+
+#define  ICV_CVT_XYZ2BGR_EX_32F( src, dst, blue_idx )   \
+{                                                       \
+    float x = (src)[0], y = (src)[1], z = (src)[2];     \
+    float b, g, r;                                      \
+                                                        \
+    b = x*xyzBx_32f + y*xyzBy_32f + z*xyzBz_32f;        \
+    g = x*xyzGx_32f + y*xyzGy_32f + z*xyzGz_32f;        \
+    r = x*xyzRx_32f + y*xyzRy_32f + z*xyzRz_32f;        \
+                                                        \
+    (dst)[blue_idx] = b;                                \
+    (dst)[1] = g;                                       \
+    (dst)[blue_idx^2] = r;                              \
+}
+
+#define  ICV_CVT_XYZ2BGR_32F( src, dst )  ICV_CVT_XYZ2BGR_EX_32F( src, dst, 0 )
+#define  ICV_CVT_XYZ2RGB_32F( src, dst )  ICV_CVT_XYZ2BGR_EX_32F( src, dst, 2 )
+
 
 #undef hsv_shift
 #define hsv_shift 12
@@ -445,7 +623,7 @@ static const int div_table[] = {
 };
 
 
-#define  ICV_CVT_BGR2HSV_EX( src, dst, blue_idx )                           \
+#define  ICV_CVT_BGR2HSV_EX_8U( src, dst, blue_idx )                        \
 {                                                                           \
     int b = (src)[blue_idx], g = (src)[1], r = (src)[2^blue_idx];           \
     int h, s, v;                                                            \
@@ -473,30 +651,84 @@ static const int div_table[] = {
     (dst)[2] = (uchar)v;                                                    \
 }
 
-#define  ICV_CVT_BGR2HSV( src, dst )  ICV_CVT_BGR2HSV_EX( src, dst, 0 )
-#define  ICV_CVT_RGB2HSV( src, dst )  ICV_CVT_BGR2HSV_EX( src, dst, 2 )
+#define  ICV_CVT_BGR2HSV_8U( src, dst )  ICV_CVT_BGR2HSV_EX_8U( src, dst, 0 )
+#define  ICV_CVT_RGB2HSV_8U( src, dst )  ICV_CVT_BGR2HSV_EX_8U( src, dst, 2 )
+
+
+#define  ICV_CVT_BGR2HSV_EX_32F( src, dst, blue_idx )                       \
+{                                                                           \
+    float b = (src)[blue_idx], g = (src)[1], r = (src)[2^blue_idx];         \
+    float h, s, v;                                                          \
+                                                                            \
+    float vmin, diff;                                                       \
+                                                                            \
+    v = vmin = r;                                                           \
+    if( v < g ) v = g;                                                      \
+    if( v < b ) v = b;                                                      \
+    if( vmin > g ) vmin = g;                                                \
+    if( vmin > b ) vmin = b;                                                \
+                                                                            \
+    diff = v - vmin;                                                        \
+    s = diff/(float)(fabs(v) + FLT_EPSILON);                                \
+    diff = (float)(60./(fabs(diff) + FLT_EPSILON));                         \
+    if( v == r )                                                            \
+        h = (g - b)*diff;                                                   \
+    else if( v == g )                                                       \
+        h = (b - r)*diff + 120.f;                                           \
+    else                                                                    \
+        h = (r - g)*diff + 240.f;                                           \
+                                                                            \
+    if( h < 0 ) h += 360.f;                                                 \
+                                                                            \
+    (dst)[0] = h;                                                           \
+    (dst)[1] = s;                                                           \
+    (dst)[2] = v;                                                           \
+}
+
+#define  ICV_CVT_BGR2HSV_32F( src, dst )  ICV_CVT_BGR2HSV_EX_32F( src, dst, 0 )
+#define  ICV_CVT_RGB2HSV_32F( src, dst )  ICV_CVT_BGR2HSV_EX_32F( src, dst, 2 )
+
+#define  labXr_32f  0.43391f
+#define  labXg_32f  0.37622f
+#define  labXb_32f  0.18986f
+
+#define  labYr_32f  0.212649f
+#define  labYg_32f  0.715169f
+#define  labYb_32f  0.072182f
+
+#define  labZr_32f  0.017756f
+#define  labZg_32f  0.109478f
+#define  labZb_32f  0.872915f
+
+#define  labT_32f   0.008856f
 
 #undef lab_shift
 #define lab_shift 10
+#define labXr  fix(labXr_32f,lab_shift)
+#define labXg  fix(labXg_32f,lab_shift)
+#define labXb  fix(labXb_32f,lab_shift)
+                            
+#define labYr  fix(labYr_32f,lab_shift)
+#define labYg  fix(labYg_32f,lab_shift)
+#define labYb  fix(labYb_32f,lab_shift)
+                            
+#define labZr  fix(labZr_32f,lab_shift)
+#define labZg  fix(labZg_32f,lab_shift)
+#define labZb  fix(labZb_32f,lab_shift)
 
-#define labXr  fix(0.43391,lab_shift)
-#define labXg  fix(0.37622,lab_shift)
-#define labXb  fix(0.18986,lab_shift)
+#define labT   fix(labT_32f*255,lab_shift)
 
-#define labYr  fix(0.212649,lab_shift)
-#define labYg  fix(0.715169,lab_shift)
-#define labYb  fix(0.072182,lab_shift)
+#define labSmallScale_32f  7.787f
+#define labSmallShift_32f  0.13793103448275862f  /* 16/116 */
+#define labLScale_32f      116.f
+#define labLShift_32f      16.f
+#define labLScale2_32f     903.3f
 
-#define labZr  fix(0.017756,lab_shift)
-#define labZg  fix(0.109478,lab_shift)
-#define labZb  fix(0.872915,lab_shift)
-
-#define labT   fix(2.258279,lab_shift)
-
-#define labSmallScale fix(31.27,lab_shift)
-#define labSmallShift fix(141.24138,lab_shift)
-#define labLScale fix(295.8,lab_shift)
-#define labLShift fix(41779.2,lab_shift)
+#define labSmallScale fix(31.27 /* labSmallScale_32f*(1<<lab_shift)/255 */,lab_shift)
+#define labSmallShift fix(141.24138 /* labSmallScale_32f*(1<<lab) */,lab_shift)
+#define labLScale fix(295.8 /* labLScale_32f*255/100 */,lab_shift)
+#define labLShift fix(41779.2 /* labLShift_32f*1024*255/100 */,lab_shift)
+#define labLScale2 fix(labLScale2_32f*0.01,lab_shift)
 
 /* 1024*(([0..511]./255)**(1./3)) */
 static ushort icvLabCubeRootTab[] = {
@@ -534,7 +766,7 @@ static ushort icvLabCubeRootTab[] = {
 1278, 1279, 1279, 1280, 1281, 1282, 1283, 1284, 1285, 1285, 1286, 1287, 1288, 1289, 1290, 1291
 };
 
-#define  ICV_CVT_BGR2Lab_EX( src, dst, blue_idx )                   \
+#define  ICV_CVT_BGR2Lab_EX_8U( src, dst, blue_idx )                \
 {                                                                   \
     int b = (src)[blue_idx], g = (src)[1],                          \
         r = (src)[2^blue_idx];                                      \
@@ -571,7 +803,7 @@ static ushort icvLabCubeRootTab[] = {
     }                                                               \
     else                                                            \
     {                                                               \
-        l = descale(y*9,lab_shift);                                 \
+        l = descale(y*labLScale2,lab_shift);                        \
         y = descale(y*labSmallScale + labSmallShift,lab_shift);     \
     }                                                               \
                                                                     \
@@ -584,11 +816,62 @@ static ushort icvLabCubeRootTab[] = {
 }
 
 
-#define  ICV_CVT_BGR2Lab( src, dst )   ICV_CVT_BGR2Lab_EX( src, dst, 0 )
-#define  ICV_CVT_RGB2Lab( src, dst )   ICV_CVT_BGR2Lab_EX( src, dst, 2 )
+#define  ICV_CVT_BGR2Lab_8U( src, dst )   ICV_CVT_BGR2Lab_EX_8U( src, dst, 0 )
+#define  ICV_CVT_RGB2Lab_8U( src, dst )   ICV_CVT_BGR2Lab_EX_8U( src, dst, 2 )
+
+#define  ICV_CVT_BGR2Lab_EX_32F( src, dst, blue_idx )               \
+{                                                                   \
+    float b = (src)[blue_idx], g = (src)[1],                        \
+        r = (src)[2^blue_idx];                                      \
+    float x, y, z;                                                  \
+    float l, a;                                                     \
+    int f;                                                          \
+                                                                    \
+    x = b*labXb_32f + g*labXg_32f + r*labXr_32f;                    \
+    y = b*labYb_32f + g*labYg_32f + r*labYr_32f;                    \
+    z = b*labZb_32f + g*labZg_32f + r*labZr_32f;                    \
+                                                                    \
+    f = x > labT_32f;                                               \
+                                                                    \
+    if( f )                                                         \
+        x = cvCbrt(x);                                              \
+    else                                                            \
+        x = x*labSmallScale_32f + labSmallShift_32f;                \
+                                                                    \
+    f = z > labT_32f;                                               \
+                                                                    \
+    if( f )                                                         \
+        z = cvCbrt(z);                                              \
+    else                                                            \
+        z = z*labSmallScale_32f + labSmallShift_32f;                \
+                                                                    \
+    f = y > labT_32f;                                               \
+                                                                    \
+    if( f )                                                         \
+    {                                                               \
+        y = cvCbrt(y);                                              \
+        l = y*labLScale_32f - labLShift_32f;                        \
+    }                                                               \
+    else                                                            \
+    {                                                               \
+        l = y*labLScale2_32f;                                       \
+        y = y*labSmallScale_32f + labSmallShift_32f;                \
+    }                                                               \
+                                                                    \
+    a = 500.f*(x - y);                                              \
+    b = 200.f*(y - z);                                              \
+                                                                    \
+    (dst)[0] = l;                                                   \
+    (dst)[1] = a;                                                   \
+    (dst)[2] = b;                                                   \
+}
 
 
-#define  ICV_COLORCVT_FUNC( cvt_case, flavor, arrtype, src_cn, dst_cn )         \
+#define  ICV_CVT_BGR2Lab_32F( src, dst )   ICV_CVT_BGR2Lab_EX_32F( src, dst, 0 )
+#define  ICV_CVT_RGB2Lab_32F( src, dst )   ICV_CVT_BGR2Lab_EX_32F( src, dst, 2 )
+
+
+#define  ICV_COLORCVT_FUNC( cvt_case, macro_suffix, flavor, arrtype, src_cn, dst_cn ) \
 static CvStatus CV_STDCALL                                                      \
 icvCvt##_##cvt_case##_##flavor( const arrtype* src, int srcstep,                \
                                 arrtype* dst, int dststep, CvSize size )        \
@@ -597,51 +880,96 @@ icvCvt##_##cvt_case##_##flavor( const arrtype* src, int srcstep,                
     {                                                                           \
         int i;                                                                  \
         for( i = 0; i < size.width; i++ )                                       \
-            ICV_CVT_##cvt_case( src + i*(src_cn), dst + i*(dst_cn) );           \
+            ICV_CVT_##cvt_case##_##macro_suffix(src+i*(src_cn), dst+i*(dst_cn));\
     }                                                                           \
                                                                                 \
     return CV_OK;                                                               \
 }
 
 
-ICV_COLORCVT_FUNC( BGR2RGB, 8u_C3R, uchar, 3, 3 )
-ICV_COLORCVT_FUNC( BGR2BGRA, 8u_C3C4R, uchar, 3, 4 )
-ICV_COLORCVT_FUNC( BGRA2BGR, 8u_C4C3R, uchar, 4, 3 )
-ICV_COLORCVT_FUNC( BGR2RGBA, 8u_C3C4R, uchar, 3, 4 )
-ICV_COLORCVT_FUNC( BGRA2RGBA, 8u_C4C4R, uchar, 4, 4 )
-ICV_COLORCVT_FUNC( RGBA2BGR, 8u_C4C3R, uchar, 4, 3 )
-ICV_COLORCVT_FUNC( BGR2GRAY, 8u_C3C1R, uchar, 3, 1 )
-ICV_COLORCVT_FUNC( RGB2GRAY, 8u_C3C1R, uchar, 3, 1 )
-ICV_COLORCVT_FUNC( BGRA2GRAY, 8u_C4C1R, uchar, 4, 1 )
-ICV_COLORCVT_FUNC( RGBA2GRAY, 8u_C4C1R, uchar, 4, 1 )
-ICV_COLORCVT_FUNC( GRAY2BGR, 8u_C1C3R, uchar, 1, 3 )
-ICV_COLORCVT_FUNC( GRAY2BGRA, 8u_C1C4R, uchar, 1, 4 )
-ICV_COLORCVT_FUNC( GRAY2BGR565, 8u_C1C2R, uchar, 1, 2 )
-ICV_COLORCVT_FUNC( BGR5652GRAY, 8u_C2C1R, uchar, 2, 1 )
-ICV_COLORCVT_FUNC( BGR2BGR565, 8u_C3C2R, uchar, 3, 2 )
-ICV_COLORCVT_FUNC( RGB2BGR565, 8u_C3C2R, uchar, 3, 2 )
-ICV_COLORCVT_FUNC( BGRA2BGR565, 8u_C4C2R, uchar, 4, 2 )
-ICV_COLORCVT_FUNC( RGBA2BGR565, 8u_C4C2R, uchar, 4, 2 )
-ICV_COLORCVT_FUNC( BGR5652BGR, 8u_C2C3R, uchar, 2, 3 )
-ICV_COLORCVT_FUNC( BGR5652RGB, 8u_C2C3R, uchar, 2, 3 )
-ICV_COLORCVT_FUNC( BGR5652BGRA, 8u_C2C4R, uchar, 2, 4 )
-ICV_COLORCVT_FUNC( BGR5652RGBA, 8u_C2C4R, uchar, 2, 4 )
+/********************************* 8u ***********************************/
 
-ICV_COLORCVT_FUNC( BGR2XYZ, 8u_C3R, uchar, 3, 3 )
-ICV_COLORCVT_FUNC( RGB2XYZ, 8u_C3R, uchar, 3, 3 )
-ICV_COLORCVT_FUNC( XYZ2BGR, 8u_C3R, uchar, 3, 3 )
-ICV_COLORCVT_FUNC( XYZ2RGB, 8u_C3R, uchar, 3, 3 )
+ICV_COLORCVT_FUNC( BGR2RGB, 8U, 8u_C3R, uchar, 3, 3 )
+ICV_COLORCVT_FUNC( BGR2BGRA, 8U, 8u_C3C4R, uchar, 3, 4 )
+ICV_COLORCVT_FUNC( BGRA2BGR, 8U, 8u_C4C3R, uchar, 4, 3 )
+ICV_COLORCVT_FUNC( BGR2RGBA, 8U, 8u_C3C4R, uchar, 3, 4 )
+ICV_COLORCVT_FUNC( BGRA2RGBA, 8U, 8u_C4C4R, uchar, 4, 4 )
+ICV_COLORCVT_FUNC( RGBA2BGR, 8U, 8u_C4C3R, uchar, 4, 3 )
+ICV_COLORCVT_FUNC( BGR2GRAY, 8U, 8u_C3C1R, uchar, 3, 1 )
+ICV_COLORCVT_FUNC( RGB2GRAY, 8U, 8u_C3C1R, uchar, 3, 1 )
+ICV_COLORCVT_FUNC( BGRA2GRAY, 8U, 8u_C4C1R, uchar, 4, 1 )
+ICV_COLORCVT_FUNC( RGBA2GRAY, 8U, 8u_C4C1R, uchar, 4, 1 )
+ICV_COLORCVT_FUNC( GRAY2BGR, 8U, 8u_C1C3R, uchar, 1, 3 )
+ICV_COLORCVT_FUNC( GRAY2BGRA, 8U, 8u_C1C4R, uchar, 1, 4 )
 
-ICV_COLORCVT_FUNC( BGR2YCrCb, 8u_C3R, uchar, 3, 3 )
-ICV_COLORCVT_FUNC( RGB2YCrCb, 8u_C3R, uchar, 3, 3 )
-ICV_COLORCVT_FUNC( YCrCb2BGR, 8u_C3R, uchar, 3, 3 )
-ICV_COLORCVT_FUNC( YCrCb2RGB, 8u_C3R, uchar, 3, 3 )
+ICV_COLORCVT_FUNC( GRAY2BGR565, 8U, 8u_C1C2R, uchar, 1, 2 )
+ICV_COLORCVT_FUNC( BGR5652GRAY, 8U, 8u_C2C1R, uchar, 2, 1 )
+ICV_COLORCVT_FUNC( BGR2BGR565, 8U, 8u_C3C2R, uchar, 3, 2 )
+ICV_COLORCVT_FUNC( RGB2BGR565, 8U, 8u_C3C2R, uchar, 3, 2 )
+ICV_COLORCVT_FUNC( BGRA2BGR565, 8U, 8u_C4C2R, uchar, 4, 2 )
+ICV_COLORCVT_FUNC( RGBA2BGR565, 8U, 8u_C4C2R, uchar, 4, 2 )
+ICV_COLORCVT_FUNC( BGR5652BGR, 8U, 8u_C2C3R, uchar, 2, 3 )
+ICV_COLORCVT_FUNC( BGR5652RGB, 8U, 8u_C2C3R, uchar, 2, 3 )
+ICV_COLORCVT_FUNC( BGR5652BGRA, 8U, 8u_C2C4R, uchar, 2, 4 )
+ICV_COLORCVT_FUNC( BGR5652RGBA, 8U, 8u_C2C4R, uchar, 2, 4 )
 
-ICV_COLORCVT_FUNC( BGR2HSV, 8u_C3R, uchar, 3, 3 )
-ICV_COLORCVT_FUNC( RGB2HSV, 8u_C3R, uchar, 3, 3 )
+ICV_COLORCVT_FUNC( GRAY2BGR555, 8U, 8u_C1C2R, uchar, 1, 2 )
+ICV_COLORCVT_FUNC( BGR5552GRAY, 8U, 8u_C2C1R, uchar, 2, 1 )
+ICV_COLORCVT_FUNC( BGR2BGR555, 8U, 8u_C3C2R, uchar, 3, 2 )
+ICV_COLORCVT_FUNC( RGB2BGR555, 8U, 8u_C3C2R, uchar, 3, 2 )
+ICV_COLORCVT_FUNC( BGRA2BGR555, 8U, 8u_C4C2R, uchar, 4, 2 )
+ICV_COLORCVT_FUNC( RGBA2BGR555, 8U, 8u_C4C2R, uchar, 4, 2 )
+ICV_COLORCVT_FUNC( BGR5552BGR, 8U, 8u_C2C3R, uchar, 2, 3 )
+ICV_COLORCVT_FUNC( BGR5552RGB, 8U, 8u_C2C3R, uchar, 2, 3 )
+ICV_COLORCVT_FUNC( BGR5552BGRA, 8U, 8u_C2C4R, uchar, 2, 4 )
+ICV_COLORCVT_FUNC( BGR5552RGBA, 8U, 8u_C2C4R, uchar, 2, 4 )
 
-ICV_COLORCVT_FUNC( BGR2Lab, 8u_C3R, uchar, 3, 3 )
-ICV_COLORCVT_FUNC( RGB2Lab, 8u_C3R, uchar, 3, 3 )
+ICV_COLORCVT_FUNC( BGR2YCrCb, 8U, 8u_C3R, uchar, 3, 3 )
+ICV_COLORCVT_FUNC( RGB2YCrCb, 8U, 8u_C3R, uchar, 3, 3 )
+ICV_COLORCVT_FUNC( YCrCb2BGR, 8U, 8u_C3R, uchar, 3, 3 )
+ICV_COLORCVT_FUNC( YCrCb2RGB, 8U, 8u_C3R, uchar, 3, 3 )
+
+ICV_COLORCVT_FUNC( BGR2XYZ, 8U, 8u_C3R, uchar, 3, 3 )
+ICV_COLORCVT_FUNC( RGB2XYZ, 8U, 8u_C3R, uchar, 3, 3 )
+ICV_COLORCVT_FUNC( XYZ2BGR, 8U, 8u_C3R, uchar, 3, 3 )
+ICV_COLORCVT_FUNC( XYZ2RGB, 8U, 8u_C3R, uchar, 3, 3 )
+
+ICV_COLORCVT_FUNC( BGR2HSV, 8U, 8u_C3R, uchar, 3, 3 )
+ICV_COLORCVT_FUNC( RGB2HSV, 8U, 8u_C3R, uchar, 3, 3 )
+
+ICV_COLORCVT_FUNC( BGR2Lab, 8U, 8u_C3R, uchar, 3, 3 )
+ICV_COLORCVT_FUNC( RGB2Lab, 8U, 8u_C3R, uchar, 3, 3 )
+
+/********************************* 32f *********************************/
+
+ICV_COLORCVT_FUNC( BGR2RGB, 32F, 32f_C3R, float, 3, 3 )
+ICV_COLORCVT_FUNC( BGR2BGRA, 32F, 32f_C3C4R, float, 3, 4 )
+ICV_COLORCVT_FUNC( BGRA2BGR, 32F, 32f_C4C3R, float, 4, 3 )
+ICV_COLORCVT_FUNC( BGR2RGBA, 32F, 32f_C3C4R, float, 3, 4 )
+ICV_COLORCVT_FUNC( BGRA2RGBA, 32F, 32f_C4C4R, float, 4, 4 )
+ICV_COLORCVT_FUNC( RGBA2BGR, 32F, 32f_C4C3R, float, 4, 3 )
+ICV_COLORCVT_FUNC( BGR2GRAY, 32F, 32f_C3C1R, float, 3, 1 )
+ICV_COLORCVT_FUNC( RGB2GRAY, 32F, 32f_C3C1R, float, 3, 1 )
+ICV_COLORCVT_FUNC( BGRA2GRAY, 32F, 32f_C4C1R, float, 4, 1 )
+ICV_COLORCVT_FUNC( RGBA2GRAY, 32F, 32f_C4C1R, float, 4, 1 )
+ICV_COLORCVT_FUNC( GRAY2BGR, 32F, 32f_C1C3R, float, 1, 3 )
+ICV_COLORCVT_FUNC( GRAY2BGRA, 32F, 32f_C1C4R, float, 1, 4 )
+
+ICV_COLORCVT_FUNC( BGR2XYZ, 32F, 32f_C3R, float, 3, 3 )
+ICV_COLORCVT_FUNC( RGB2XYZ, 32F, 32f_C3R, float, 3, 3 )
+ICV_COLORCVT_FUNC( XYZ2BGR, 32F, 32f_C3R, float, 3, 3 )
+ICV_COLORCVT_FUNC( XYZ2RGB, 32F, 32f_C3R, float, 3, 3 )
+
+ICV_COLORCVT_FUNC( BGR2YCrCb, 32F, 32f_C3R, float, 3, 3 )
+ICV_COLORCVT_FUNC( RGB2YCrCb, 32F, 32f_C3R, float, 3, 3 )
+ICV_COLORCVT_FUNC( YCrCb2BGR, 32F, 32f_C3R, float, 3, 3 )
+ICV_COLORCVT_FUNC( YCrCb2RGB, 32F, 32f_C3R, float, 3, 3 )
+
+ICV_COLORCVT_FUNC( BGR2HSV, 32F, 32f_C3R, float, 3, 3 )
+ICV_COLORCVT_FUNC( RGB2HSV, 32F, 32f_C3R, float, 3, 3 )
+
+ICV_COLORCVT_FUNC( BGR2Lab, 32F, 32f_C3R, float, 3, 3 )
+ICV_COLORCVT_FUNC( RGB2Lab, 32F, 32f_C3R, float, 3, 3 )
 
 
 static CvStatus
@@ -764,68 +1092,115 @@ typedef struct CvColorCvtFuncEntry
 CvColorCvtFuncEntry;
 
 
-static void icvInitColorCvtTable( CvColorCvtFuncEntry* tab )
+static void icvInitColorCvtTable( CvColorCvtFuncEntry* tab_8u, CvColorCvtFuncEntry* tab_32f )
 {
-    #define ICV_ADD_CVT_FUNC( cvt_case, scn, dcn )                                \
-        tab[CV_##cvt_case].func = (void*)icvCvt_##cvt_case##_8u_C##scn##C##dcn##R;\
-        tab[CV_##cvt_case].src_cn = scn; tab[CV_##cvt_case].dst_cn = dcn;         \
-        tab[CV_##cvt_case].pixel_wise = 1;
+    #define ICV_ADD_CVT_FUNC( cvt_case, flavor, scn, dcn )                              \
+        tab_##flavor[CV_##cvt_case].func = (void*)icvCvt_##cvt_case##_##flavor##_C##scn##C##dcn##R;\
+        tab_##flavor[CV_##cvt_case].src_cn = scn; tab_##flavor[CV_##cvt_case].dst_cn = dcn;\
+        tab_##flavor[CV_##cvt_case].pixel_wise = 1;
 
-    #define ICV_ADD_CVT_FUNC_C3( cvt_case )                                     \
-        tab[CV_##cvt_case].func = (void*)icvCvt_##cvt_case##_8u_C3R;            \
-        tab[CV_##cvt_case].src_cn = tab[CV_##cvt_case].dst_cn = 3;              \
-        tab[CV_##cvt_case].pixel_wise = 1;
+    #define ICV_ADD_CVT_FUNC_C3( cvt_case, flavor )                                     \
+        tab_##flavor[CV_##cvt_case].func = (void*)icvCvt_##cvt_case##_##flavor##_C3R;   \
+        tab_##flavor[CV_##cvt_case].src_cn = tab_##flavor[CV_##cvt_case].dst_cn = 3;    \
+        tab_##flavor[CV_##cvt_case].pixel_wise = 1;
 
-    #define ICV_ADD_BAYER_FUNC( cvt_case )                                      \
-        tab[CV_##cvt_case].func = (void*)icvCvt_##cvt_case##_8u_C1C3R;          \
-        tab[CV_##cvt_case].src_cn = 1; tab[CV_##cvt_case].dst_cn = 3;           \
-        tab[CV_##cvt_case].pixel_wise = 0;
+    #define ICV_ADD_BAYER_FUNC( cvt_case, flavor )                                      \
+        tab_##flavor[CV_##cvt_case].func = (void*)icvCvt_##cvt_case##_##flavor##_C1C3R; \
+        tab_##flavor[CV_##cvt_case].src_cn = 1; tab_##flavor[CV_##cvt_case].dst_cn = 3; \
+        tab_##flavor[CV_##cvt_case].pixel_wise = 0;
 
+    /************************************ 8u **********************************/
 
-    ICV_ADD_CVT_FUNC( BGR2BGRA, 3, 4 )
-    ICV_ADD_CVT_FUNC( BGRA2BGR, 4, 3 )
-    ICV_ADD_CVT_FUNC( BGR2RGBA, 3, 4 )
-    ICV_ADD_CVT_FUNC( BGRA2RGBA, 4, 4 )
-    ICV_ADD_CVT_FUNC( RGBA2BGR, 4, 3 )
-    ICV_ADD_CVT_FUNC( BGR5652GRAY, 2, 1 )
-    ICV_ADD_CVT_FUNC( BGR2GRAY, 3, 1 )
-    ICV_ADD_CVT_FUNC( RGB2GRAY, 3, 1 )
-    ICV_ADD_CVT_FUNC( BGRA2GRAY, 4, 1 )
-    ICV_ADD_CVT_FUNC( RGBA2GRAY, 4, 1 )
-    ICV_ADD_CVT_FUNC( GRAY2BGR565, 1, 2 )
-    ICV_ADD_CVT_FUNC( GRAY2BGR, 1, 3 )
-    ICV_ADD_CVT_FUNC( GRAY2BGRA, 1, 4 )
-    ICV_ADD_CVT_FUNC( BGR2BGR565, 3, 2 )
-    ICV_ADD_CVT_FUNC( RGB2BGR565, 3, 2 )
-    ICV_ADD_CVT_FUNC( BGRA2BGR565, 4, 2 )
-    ICV_ADD_CVT_FUNC( RGBA2BGR565, 4, 2 )
-    ICV_ADD_CVT_FUNC( BGR5652BGR, 2, 3 )
-    ICV_ADD_CVT_FUNC( BGR5652RGB, 2, 3 )
-    ICV_ADD_CVT_FUNC( BGR5652BGRA, 2, 4 )
-    ICV_ADD_CVT_FUNC( BGR5652RGBA, 2, 4 )
+    ICV_ADD_CVT_FUNC( BGR2BGRA, 8u, 3, 4 )
+    ICV_ADD_CVT_FUNC( BGRA2BGR, 8u, 4, 3 )
+    ICV_ADD_CVT_FUNC( BGR2RGBA, 8u, 3, 4 )
+    ICV_ADD_CVT_FUNC( BGRA2RGBA, 8u, 4, 4 )
+    ICV_ADD_CVT_FUNC( RGBA2BGR, 8u, 4, 3 )
     
+    ICV_ADD_CVT_FUNC( BGR5652GRAY, 8u, 2, 1 )
+    ICV_ADD_CVT_FUNC( BGR5552GRAY, 8u, 2, 1 )
+    
+    ICV_ADD_CVT_FUNC( BGR2GRAY, 8u, 3, 1 )
+    ICV_ADD_CVT_FUNC( RGB2GRAY, 8u, 3, 1 )
+    ICV_ADD_CVT_FUNC( BGRA2GRAY, 8u, 4, 1 )
+    ICV_ADD_CVT_FUNC( RGBA2GRAY, 8u, 4, 1 )
+    
+    ICV_ADD_CVT_FUNC( GRAY2BGR565, 8u, 1, 2 )
+    ICV_ADD_CVT_FUNC( GRAY2BGR555, 8u, 1, 2 )
 
-    ICV_ADD_CVT_FUNC_C3( BGR2RGB )    
-    ICV_ADD_CVT_FUNC_C3( BGR2XYZ )
-    ICV_ADD_CVT_FUNC_C3( RGB2XYZ )
-    ICV_ADD_CVT_FUNC_C3( XYZ2BGR )
-    ICV_ADD_CVT_FUNC_C3( XYZ2RGB )
+    ICV_ADD_CVT_FUNC( GRAY2BGR, 8u, 1, 3 )
+    ICV_ADD_CVT_FUNC( GRAY2BGRA, 8u, 1, 4 )
+    
+    ICV_ADD_CVT_FUNC( BGR2BGR565, 8u, 3, 2 )
+    ICV_ADD_CVT_FUNC( RGB2BGR565, 8u, 3, 2 )
+    ICV_ADD_CVT_FUNC( BGRA2BGR565, 8u, 4, 2 )
+    ICV_ADD_CVT_FUNC( RGBA2BGR565, 8u, 4, 2 )
+    ICV_ADD_CVT_FUNC( BGR5652BGR, 8u, 2, 3 )
+    ICV_ADD_CVT_FUNC( BGR5652RGB, 8u, 2, 3 )
+    ICV_ADD_CVT_FUNC( BGR5652BGRA, 8u, 2, 4 )
+    ICV_ADD_CVT_FUNC( BGR5652RGBA, 8u, 2, 4 )
 
-    ICV_ADD_CVT_FUNC_C3( BGR2YCrCb )
-    ICV_ADD_CVT_FUNC_C3( RGB2YCrCb )
-    ICV_ADD_CVT_FUNC_C3( YCrCb2BGR )
-    ICV_ADD_CVT_FUNC_C3( YCrCb2RGB )
+    ICV_ADD_CVT_FUNC( BGR2BGR555, 8u, 3, 2 )
+    ICV_ADD_CVT_FUNC( RGB2BGR555, 8u, 3, 2 )
+    ICV_ADD_CVT_FUNC( BGRA2BGR555, 8u, 4, 2 )
+    ICV_ADD_CVT_FUNC( RGBA2BGR555, 8u, 4, 2 )
+    ICV_ADD_CVT_FUNC( BGR5552BGR, 8u, 2, 3 )
+    ICV_ADD_CVT_FUNC( BGR5552RGB, 8u, 2, 3 )
+    ICV_ADD_CVT_FUNC( BGR5552BGRA, 8u, 2, 4 )
+    ICV_ADD_CVT_FUNC( BGR5552RGBA, 8u, 2, 4 )
+    
+    ICV_ADD_BAYER_FUNC( BayerBG2BGR, 8u )
+    ICV_ADD_BAYER_FUNC( BayerGB2BGR, 8u )
+    ICV_ADD_BAYER_FUNC( BayerRG2BGR, 8u )
+    ICV_ADD_BAYER_FUNC( BayerGR2BGR, 8u )
 
-    ICV_ADD_CVT_FUNC_C3( BGR2HSV )
-    ICV_ADD_CVT_FUNC_C3( RGB2HSV )
+    ICV_ADD_CVT_FUNC_C3( BGR2YCrCb, 8u )
+    ICV_ADD_CVT_FUNC_C3( RGB2YCrCb, 8u )
+    ICV_ADD_CVT_FUNC_C3( YCrCb2BGR, 8u )
+    ICV_ADD_CVT_FUNC_C3( YCrCb2RGB, 8u )
 
-    ICV_ADD_CVT_FUNC_C3( BGR2Lab )
-    ICV_ADD_CVT_FUNC_C3( RGB2Lab )
+    ICV_ADD_CVT_FUNC_C3( BGR2RGB, 8u )
+    ICV_ADD_CVT_FUNC_C3( BGR2XYZ, 8u )
+    ICV_ADD_CVT_FUNC_C3( RGB2XYZ, 8u )
+    ICV_ADD_CVT_FUNC_C3( XYZ2BGR, 8u )
+    ICV_ADD_CVT_FUNC_C3( XYZ2RGB, 8u )
 
-    ICV_ADD_BAYER_FUNC( BayerBG2BGR )
-    ICV_ADD_BAYER_FUNC( BayerGB2BGR )
-    ICV_ADD_BAYER_FUNC( BayerRG2BGR )
-    ICV_ADD_BAYER_FUNC( BayerGR2BGR )
+    ICV_ADD_CVT_FUNC_C3( BGR2HSV, 8u )
+    ICV_ADD_CVT_FUNC_C3( RGB2HSV, 8u )
+
+    ICV_ADD_CVT_FUNC_C3( BGR2Lab, 8u )
+    ICV_ADD_CVT_FUNC_C3( RGB2Lab, 8u )
+
+    /************************************ 32f **********************************/
+
+    ICV_ADD_CVT_FUNC( BGR2BGRA, 32f, 3, 4 )
+    ICV_ADD_CVT_FUNC( BGRA2BGR, 32f, 4, 3 )
+    ICV_ADD_CVT_FUNC( BGR2RGBA, 32f, 3, 4 )
+    ICV_ADD_CVT_FUNC( BGRA2RGBA, 32f, 4, 4 )
+    ICV_ADD_CVT_FUNC( RGBA2BGR, 32f, 4, 3 )
+    ICV_ADD_CVT_FUNC( BGR2GRAY, 32f, 3, 1 )
+    ICV_ADD_CVT_FUNC( RGB2GRAY, 32f, 3, 1 )
+    ICV_ADD_CVT_FUNC( BGRA2GRAY, 32f, 4, 1 )
+    ICV_ADD_CVT_FUNC( RGBA2GRAY, 32f, 4, 1 )
+    ICV_ADD_CVT_FUNC( GRAY2BGR, 32f, 1, 3 )
+    ICV_ADD_CVT_FUNC( GRAY2BGRA, 32f, 1, 4 )
+
+    ICV_ADD_CVT_FUNC_C3( BGR2RGB, 32f )
+    ICV_ADD_CVT_FUNC_C3( BGR2XYZ, 32f )
+    ICV_ADD_CVT_FUNC_C3( RGB2XYZ, 32f )
+    ICV_ADD_CVT_FUNC_C3( XYZ2BGR, 32f )
+    ICV_ADD_CVT_FUNC_C3( XYZ2RGB, 32f )
+
+    ICV_ADD_CVT_FUNC_C3( BGR2YCrCb, 32f )
+    ICV_ADD_CVT_FUNC_C3( RGB2YCrCb, 32f )
+    ICV_ADD_CVT_FUNC_C3( YCrCb2BGR, 32f )
+    ICV_ADD_CVT_FUNC_C3( YCrCb2RGB, 32f )
+
+    ICV_ADD_CVT_FUNC_C3( BGR2HSV, 32f )
+    ICV_ADD_CVT_FUNC_C3( RGB2HSV, 32f )
+
+    ICV_ADD_CVT_FUNC_C3( BGR2Lab, 32f )
+    ICV_ADD_CVT_FUNC_C3( RGB2Lab, 32f )
 }
 
 
@@ -833,7 +1208,7 @@ static void icvInitColorCvtTable( CvColorCvtFuncEntry* tab )
 CV_IMPL void
 cvCvtColor( const CvArr* srcarr, CvArr* dstarr, int colorcvt_code )
 {
-    static CvColorCvtFuncEntry cvttab[CV_COLORCVT_MAX];
+    static CvColorCvtFuncEntry cvttab[2][CV_COLORCVT_MAX];
     static int inittab = 0;
 
     CV_FUNCNAME( "cvCvtColor" );
@@ -846,13 +1221,14 @@ cvCvtColor( const CvArr* srcarr, CvArr* dstarr, int colorcvt_code )
     CvFunc2D_2A func;
     int src_step, dst_step;
     int src_cn, dst_cn;
+    int depth, idx;
     
     CV_CALL( src = cvGetMat( srcarr, &srcstub ));
     CV_CALL( dst = cvGetMat( dstarr, &dststub ));
     
     if( !inittab )
     {
-        icvInitColorCvtTable( cvttab );
+        icvInitColorCvtTable( cvttab[0], cvttab[1] );
         inittab = 1;
     }
 
@@ -862,7 +1238,8 @@ cvCvtColor( const CvArr* srcarr, CvArr* dstarr, int colorcvt_code )
     if( !CV_ARE_DEPTHS_EQ( src, dst ))
         CV_ERROR( CV_StsUnmatchedFormats, "" );
 
-    if( CV_MAT_DEPTH( src->type ) != CV_8U )
+    depth = CV_MAT_DEPTH(src->type);
+    if( depth != CV_8U && depth != CV_32F )
         CV_ERROR( CV_StsUnsupportedFormat, "" );
 
     if( (unsigned)colorcvt_code >= CV_COLORCVT_MAX )
@@ -888,20 +1265,21 @@ cvCvtColor( const CvArr* srcarr, CvArr* dstarr, int colorcvt_code )
         break;
     }
 
-    func = (CvFunc2D_2A)cvttab[colorcvt_code].func;
+    idx = depth == CV_8U ? 0 : 1;
+    func = (CvFunc2D_2A)cvttab[idx][colorcvt_code].func;
 
     if( !func )
         CV_ERROR( CV_StsBadFlag, "" );
 
-    if( src_cn != cvttab[colorcvt_code].src_cn ||
-        dst_cn != cvttab[colorcvt_code].dst_cn )
+    if( src_cn != cvttab[idx][colorcvt_code].src_cn ||
+        dst_cn != cvttab[idx][colorcvt_code].dst_cn )
         CV_ERROR( CV_BadNumChannels, "" );
 
-    size = icvGetMatSize( src );
+    size = cvGetMatSize( src );
     src_step = src->step;
     dst_step = dst->step;
 
-    if( cvttab[colorcvt_code].pixel_wise &&
+    if( cvttab[idx][colorcvt_code].pixel_wise &&
         CV_IS_MAT_CONT( src->type & dst->type ))
     {
         size.width *= size.height;

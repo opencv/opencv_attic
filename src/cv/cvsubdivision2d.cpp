@@ -39,9 +39,6 @@
 //
 //M*/
 #include "_cv.h"
-#include <float.h>
-#include <stdlib.h>
-#include "_cvgeom.h"
 
 #if _MSC_VER >= 1200
 #pragma warning (disable:4710)  // function '...' not inlined
@@ -58,7 +55,7 @@ cvCreateSubdiv2D( int subdiv_type, int header_size,
     __BEGIN__;
 
     if( !storage )
-        CV_ERROR_FROM_STATUS( CV_NULLPTR_ERR );
+        CV_ERROR( CV_StsNullPtr, "" );
 
     if( header_size < (int)sizeof( *subdiv ) ||
         quadedge_size < (int)sizeof( CvQuadEdge2D ) ||
@@ -79,7 +76,7 @@ cvCreateSubdiv2D( int subdiv_type, int header_size,
 *                                    Quad Edge  algebra                                  *
 \****************************************************************************************/
 
-CV_IMPL CvSubdiv2DEdge
+static CvSubdiv2DEdge
 cvSubdiv2DMakeEdge( CvSubdiv2D * subdiv )
 {
     CvQuadEdge2D *edge = 0;
@@ -90,7 +87,7 @@ cvSubdiv2DMakeEdge( CvSubdiv2D * subdiv )
     __BEGIN__;
 
     if( !subdiv )
-        CV_ERROR_FROM_STATUS( CV_NULLPTR_ERR );
+        CV_ERROR( CV_StsNullPtr, "" );
 
     edge = (CvQuadEdge2D*)cvSetNew( (CvSet*)subdiv->edges );
     CV_CHECK();
@@ -112,7 +109,7 @@ cvSubdiv2DMakeEdge( CvSubdiv2D * subdiv )
 }
 
 
-CV_IMPL CvSubdiv2DPoint *
+static CvSubdiv2DPoint *
 cvSubdiv2DAddPoint( CvSubdiv2D * subdiv, CvPoint2D32f pt, int is_virtual )
 {
     CvSubdiv2DPoint *subdiv_point = 0;
@@ -130,7 +127,7 @@ cvSubdiv2DAddPoint( CvSubdiv2D * subdiv, CvPoint2D32f pt, int is_virtual )
 }
 
 
-CV_IMPL void
+static void
 cvSubdiv2DSplice( CvSubdiv2DEdge edgeA, CvSubdiv2DEdge edgeB )
 {
     CvSubdiv2DEdge *a_next = &CV_SUBDIV2D_NEXT_EDGE( edgeA );
@@ -146,7 +143,7 @@ cvSubdiv2DSplice( CvSubdiv2DEdge edgeA, CvSubdiv2DEdge edgeB )
 }
 
 
-CV_IMPL void
+static void
 cvSubdiv2DSetEdgePoints( CvSubdiv2DEdge edge,
                          CvSubdiv2DPoint * org_pt, CvSubdiv2DPoint * dst_pt )
 {
@@ -157,7 +154,7 @@ cvSubdiv2DSetEdgePoints( CvSubdiv2DEdge edge,
     __BEGIN__;
 
     if( !quadedge )
-        CV_ERROR_FROM_STATUS( CV_NULLPTR_ERR );
+        CV_ERROR( CV_StsNullPtr, "" );
 
     quadedge->pt[edge & 3] = org_pt;
     quadedge->pt[(edge + 2) & 3] = dst_pt;
@@ -167,7 +164,7 @@ cvSubdiv2DSetEdgePoints( CvSubdiv2DEdge edge,
 }
 
 
-CV_IMPL void
+static void
 cvSubdiv2DDeleteEdge( CvSubdiv2D * subdiv, CvSubdiv2DEdge edge )
 {
     CvQuadEdge2D *quadedge = (CvQuadEdge2D *) (edge & ~3);
@@ -177,7 +174,7 @@ cvSubdiv2DDeleteEdge( CvSubdiv2D * subdiv, CvSubdiv2DEdge edge )
     __BEGIN__;
 
     if( !subdiv || !quadedge )
-        CV_ERROR_FROM_STATUS( CV_NULLPTR_ERR );
+        CV_ERROR( CV_StsNullPtr, "" );
 
     cvSubdiv2DSplice( edge, cvSubdiv2DGetEdge( edge, CV_PREV_AROUND_ORG ));
 
@@ -194,7 +191,7 @@ cvSubdiv2DDeleteEdge( CvSubdiv2D * subdiv, CvSubdiv2DEdge edge )
 }
 
 
-CV_IMPL CvSubdiv2DEdge
+static CvSubdiv2DEdge
 cvSubdiv2DConnectEdges( CvSubdiv2D * subdiv, CvSubdiv2DEdge edgeA, CvSubdiv2DEdge edgeB )
 {
     CvSubdiv2DEdge new_edge = 0;
@@ -203,16 +200,19 @@ cvSubdiv2DConnectEdges( CvSubdiv2D * subdiv, CvSubdiv2DEdge edgeA, CvSubdiv2DEdg
 
     __BEGIN__;
 
+    CvSubdiv2DPoint *orgB, *dstA;
+
     if( !subdiv )
-        CV_ERROR_FROM_STATUS( CV_NULLPTR_ERR );
+        CV_ERROR( CV_StsNullPtr, "" );
 
     new_edge = cvSubdiv2DMakeEdge( subdiv );
 
     cvSubdiv2DSplice( new_edge, cvSubdiv2DGetEdge( edgeA, CV_NEXT_AROUND_LEFT ));
     cvSubdiv2DSplice( cvSubdiv2DSymEdge( new_edge ), edgeB );
 
-    cvSubdiv2DSetEdgePoints( new_edge, cvSubdiv2DEdgeDst( edgeA ), cvSubdiv2DEdgeOrg( edgeB ));
-
+    dstA = cvSubdiv2DEdgeDst( edgeA );
+    orgB = cvSubdiv2DEdgeOrg( edgeB );
+    cvSubdiv2DSetEdgePoints( new_edge, dstA, orgB );
     
     __END__;
 
@@ -220,16 +220,20 @@ cvSubdiv2DConnectEdges( CvSubdiv2D * subdiv, CvSubdiv2DEdge edgeA, CvSubdiv2DEdg
 }
 
 
-CV_IMPL void
+static void
 cvSubdiv2DSwapEdges( CvSubdiv2DEdge edge )
 {
     CvSubdiv2DEdge sym_edge = cvSubdiv2DSymEdge( edge );
     CvSubdiv2DEdge a = cvSubdiv2DGetEdge( edge, CV_PREV_AROUND_ORG );
     CvSubdiv2DEdge b = cvSubdiv2DGetEdge( sym_edge, CV_PREV_AROUND_ORG );
+    CvSubdiv2DPoint *dstB, *dstA;
 
     cvSubdiv2DSplice( edge, a );
     cvSubdiv2DSplice( sym_edge, b );
-    cvSubdiv2DSetEdgePoints( edge, cvSubdiv2DEdgeDst( a ), cvSubdiv2DEdgeDst( b ));
+
+    dstA = cvSubdiv2DEdgeDst( a );
+    dstB = cvSubdiv2DEdgeDst( b );
+    cvSubdiv2DSetEdgePoints( edge, dstA, dstB );
 
     cvSubdiv2DSplice( edge, cvSubdiv2DGetEdge( a, CV_NEXT_AROUND_LEFT ));
     cvSubdiv2DSplice( sym_edge, cvSubdiv2DGetEdge( b, CV_NEXT_AROUND_LEFT ));
@@ -239,8 +243,8 @@ cvSubdiv2DSwapEdges( CvSubdiv2DEdge edge )
 static int
 icvIsRightOf( CvPoint2D32f& pt, CvSubdiv2DEdge edge )
 {
-    float cw_area = (float)cvTriangleArea( pt, cvSubdiv2DEdgeDst( edge )->pt,
-                                           cvSubdiv2DEdgeOrg( edge )->pt );
+    CvSubdiv2DPoint *org = cvSubdiv2DEdgeOrg(edge), *dst = cvSubdiv2DEdgeDst(edge);
+    float cw_area = (float)cvTriangleArea( pt, dst->pt, org->pt );
     int iarea = (int&)cw_area;
 
     return (iarea > 0)*2 - (iarea + iarea != 0);
@@ -263,7 +267,7 @@ cvSubdiv2DLocate( CvSubdiv2D * subdiv, CvPoint2D32f pt,
     __BEGIN__;
 
     if( !subdiv )
-        CV_ERROR_FROM_STATUS( CV_NULLPTR_ERR );
+        CV_ERROR( CV_StsNullPtr, "" );
 
     if( !CV_IS_SUBDIV2D(subdiv) )
         CV_ERROR_FROM_STATUS( CV_BADFLAG_ERR );
@@ -350,9 +354,12 @@ cvSubdiv2DLocate( CvSubdiv2D * subdiv, CvPoint2D32f pt,
         CvPoint2D32f org_pt = cvSubdiv2DEdgeOrg( edge )->pt;
         CvPoint2D32f dst_pt = cvSubdiv2DEdgeDst( edge )->pt;
 
-        t1 = fabs( pt.x - org_pt.x ) + fabs( pt.y - org_pt.y );
-        t2 = fabs( pt.x - dst_pt.x ) + fabs( pt.y - dst_pt.y );
-        t3 = fabs( org_pt.x - dst_pt.x ) + fabs( org_pt.y - dst_pt.y );
+        t1 = fabs( pt.x - org_pt.x );
+        t1 += fabs( pt.y - org_pt.y );
+        t2 = fabs( pt.x - dst_pt.x );
+        t2 += fabs( pt.y - dst_pt.y );
+        t3 = fabs( org_pt.x - dst_pt.x );
+        t3 += fabs( org_pt.y - dst_pt.y );
 
         if( t1 < FLT_EPSILON )
         {
@@ -404,7 +411,7 @@ cvSubdivDelaunay2DInsert( CvSubdiv2D * subdiv, CvPoint2D32f pt )
     __BEGIN__;
 
     if( !subdiv )
-        CV_ERROR_FROM_STATUS( CV_NULLPTR_ERR );
+        CV_ERROR( CV_StsNullPtr, "" );
 
     if( !CV_IS_SUBDIV2D(subdiv) )
         CV_ERROR_FROM_STATUS( CV_BADFLAG_ERR );
@@ -513,7 +520,7 @@ cvInitSubdivDelaunay2D( CvSubdiv2D * subdiv, CvRect rect )
     __BEGIN__;
 
     if( !subdiv )
-        CV_ERROR_FROM_STATUS( CV_NULLPTR_ERR );
+        CV_ERROR( CV_StsNullPtr, "" );
 
     cvClearSet( (CvSet *) (subdiv->edges) );
     cvClearSet( (CvSet *) subdiv );
@@ -564,7 +571,7 @@ cvClearSubdivVoronoi2D( CvSubdiv2D * subdiv )
     __BEGIN__;
 
     if( !subdiv )
-        CV_ERROR_FROM_STATUS( CV_NULLPTR_ERR );
+        CV_ERROR( CV_StsNullPtr, "" );
 
     /* clear pointers to voronoi points */
     total = subdiv->edges->total;
@@ -616,7 +623,7 @@ cvCalcSubdivVoronoi2D( CvSubdiv2D * subdiv )
     __BEGIN__;
 
     if( !subdiv )
-        CV_ERROR_FROM_STATUS( CV_NULLPTR_ERR );
+        CV_ERROR( CV_StsNullPtr, "" );
 
     /* check if it is already calculated */
     if( subdiv->is_geometry_valid )
@@ -725,10 +732,10 @@ cvFindNearestPoint2D( CvSubdiv2D* subdiv, CvPoint2D32f pt )
     __BEGIN__;
 
     if( !subdiv )
-        CV_ERROR_FROM_STATUS( CV_NULLPTR_ERR );
+        CV_ERROR( CV_StsNullPtr, "" );
 
     if( !CV_IS_SUBDIV2D( subdiv ))
-        CV_ERROR_FROM_STATUS( CV_NULLPTR_ERR );
+        CV_ERROR( CV_StsNullPtr, "" );
 
     if( !subdiv->is_geometry_valid )
         cvCalcSubdivVoronoi2D( subdiv );

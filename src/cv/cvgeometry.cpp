@@ -39,17 +39,83 @@
 //
 //M*/
 #include "_cv.h"
-#include <limits.h>
-#include <float.h>
-#include "_cvgeom.h"
+
+
+CV_IMPL CvRect
+cvMaxRect( const CvRect* rect1, const CvRect* rect2 )
+{
+    if( rect1 && rect2 )
+    {
+        CvRect max_rect;
+        int a, b;
+
+        max_rect.x = a = rect1->x;
+        b = rect2->x;
+        if( max_rect.x > b )
+            max_rect.x = b;
+
+        max_rect.width = a += rect1->width;
+        b += rect2->width;
+
+        if( max_rect.width < b )
+            max_rect.width = b;
+        max_rect.width -= max_rect.x;
+
+        max_rect.y = a = rect1->y;
+        b = rect2->y;
+        if( max_rect.y > b )
+            max_rect.y = b;
+
+        max_rect.height = a += rect1->height;
+        b += rect2->height;
+
+        if( max_rect.height < b )
+            max_rect.height = b;
+        max_rect.height -= max_rect.y;
+        return max_rect;
+    }
+    else if( rect1 )
+        return *rect1;
+    else if( rect2 )
+        return *rect2;
+    else
+        return cvRect(0,0,0,0);
+}
+
+
+CV_IMPL void
+cvBoxPoints( CvBox2D box, CvPoint2D32f pt[4] )
+{
+    CV_FUNCNAME( "cvBoxPoints" );
+
+    __BEGIN__;
+    
+    float a = (float)cos(box.angle)*0.5f;
+    float b = (float)sin(box.angle)*0.5f;
+
+    if( !pt )
+        CV_ERROR( CV_StsNullPtr, "NULL vertex array pointer" );
+
+    pt[0].x = box.center.x - a*box.size.height - b*box.size.width;
+    pt[0].y = box.center.y + b*box.size.height - a*box.size.width;
+    pt[1].x = box.center.x + a*box.size.height - b*box.size.width;
+    pt[1].y = box.center.y - b*box.size.height - a*box.size.width;
+    pt[2].x = 2*box.center.x - pt[0].x;
+    pt[2].y = 2*box.center.y - pt[0].y;
+    pt[3].x = 2*box.center.x - pt[1].x;
+    pt[3].y = 2*box.center.y - pt[1].y;
+
+    __END__;
+}
+
 
 int
 icvIsPtInCircle3( CvPoint2D32f pt, CvPoint2D32f a, CvPoint2D32f b, CvPoint2D32f c )
 {
-    double val = (a.x * a.x + a.y * a.y) * cvTriangleArea( b, c, pt ) -
-        (b.x * b.x + b.y * b.y) * cvTriangleArea( a, c, pt ) +
-        (c.x * c.x + c.y * c.y) * cvTriangleArea( a, b, pt ) -
-        (pt.x * pt.x + pt.y * pt.y) * cvTriangleArea( a, b, c );
+    double val = (a.x * a.x + a.y * a.y) * cvTriangleArea( b, c, pt );
+    val -= (b.x * b.x + b.y * b.y) * cvTriangleArea( a, c, pt );
+    val += (c.x * c.x + c.y * c.y) * cvTriangleArea( a, b, pt );
+    val -= (pt.x * pt.x + pt.y * pt.y) * cvTriangleArea( a, b, c );
 
     return val > FLT_EPSILON ? 1 : val < -FLT_EPSILON ? -1 : 0;
 }
@@ -104,3 +170,6 @@ icvIntersectLines3( double *a0, double *b0, double *c0,
         point->x = point->y = FLT_MAX;
     }
 }
+
+/* End of file. */
+

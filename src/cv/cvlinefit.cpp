@@ -39,9 +39,6 @@
 //
 //M*/
 #include "_cv.h"
-#include "_cvutils.h"
-
-#include <math.h>
 
 #define _FP double
 
@@ -49,7 +46,7 @@
 #pragma warning (disable:4701)
 #endif
 
-CvStatus
+static CvStatus
 icvFitLine2D_wods( CvPoint2D32f * points, int _count, float *weights, float *line )
 {
     _FP x = 0, y = 0, x2 = 0, y2 = 0, xy = 0, w = 0;
@@ -105,7 +102,7 @@ icvFitLine2D_wods( CvPoint2D32f * points, int _count, float *weights, float *lin
     return CV_NO_ERR;
 }
 
-CvStatus
+static CvStatus
 icvFitLine3D_wods( CvPoint3D32f * points, int count, float *weights, float *line )
 {
     int i;
@@ -193,6 +190,7 @@ icvFitLine3D_wods( CvPoint3D32f * points, int count, float *weights, float *line
     det[8] = dy2 + dx2;
 
     /* Searching for a eigenvector of det corresponding to the minimal eigenvalue */
+#if 1
     ret = icvJacobiEigens_32f( det, evc, evl, 3, 0 );
     if( ret != CV_NO_ERR )
     {
@@ -200,8 +198,18 @@ icvFitLine3D_wods( CvPoint3D32f * points, int count, float *weights, float *line
     }
 
     i = evl[0] < evl[1] ? (evl[0] < evl[2] ? 0 : 2) : (evl[1] < evl[2] ? 1 : 2);
+#else
+    {
+        CvMat _det = cvMat( 3, 3, CV_32F, det );
+        CvMat _evc = cvMat( 3, 3, CV_32F, evc );
+        CvMat _evl = cvMat( 1, 3, CV_32F, evl );
+
+        cvSVD( &_det, &_evl, &_evc, 0, CV_SVD_MODIFY_A+CV_SVD_U_T );
+    }
+    i = 2;
+#endif
     v = &evc[i * 3];
-    n = (float) sqrt( v[0] * v[0] + v[1] * v[1] + v[2] * v[2] );
+    n = (float) sqrt( (double)v[0] * v[0] + (double)v[1] * v[1] + (double)v[2] * v[2] );
     line[0] = v[0] / n;
     line[1] = v[1] / n;
     line[2] = v[2] / n;
@@ -212,7 +220,7 @@ icvFitLine3D_wods( CvPoint3D32f * points, int count, float *weights, float *line
     return CV_NO_ERR;
 }
 
-void
+static void
 icvCalcDist2D( CvPoint2D32f * points, int count, float *_line, float *dist )
 {
     int j;
@@ -230,7 +238,7 @@ icvCalcDist2D( CvPoint2D32f * points, int count, float *_line, float *dist )
     }
 }
 
-void
+static void
 icvCalcDist3D( CvPoint3D32f * points, int count, float *_line, float *dist )
 {
     int j;
@@ -240,20 +248,21 @@ icvCalcDist3D( CvPoint3D32f * points, int count, float *_line, float *dist )
     for( j = 0; j < count; j++ )
     {
         float x, y, z;
+        double p1, p2, p3;
 
         x = points[j].x - px;
         y = points[j].y - py;
         z = points[j].z - pz;
 
-        dist[j] =
-            (float) sqrt( (vy * z - vz * y) * (vy * z - vz * y) +
-                          (vz * x - vx * z) * (vz * x - vx * z) + (vx * y - vy * x) * (vx * y -
-                                                                                       vy *
-                                                                                       x) );
+        p1 = vy * z - vz * y;
+        p2 = vz * x - vx * z;
+        p3 = vx * y - vy * x;
+
+        dist[j] = (float) sqrt( p1*p1 + p2*p2 + p3*p3 );
     }
 }
 
-void
+static void
 icvWeightL1( float *d, int count, float *w )
 {
     int i;
@@ -264,19 +273,19 @@ icvWeightL1( float *d, int count, float *w )
     }
 }
 
-void
+static void
 icvWeightL12( float *d, int count, float *w )
 {
     int i;
 
     for( i = 0; i < count; i++ )
     {
-        w[i] = 1.0f / (float) sqrt( 1 + (double) (d[i] * d[i] / 2) );
+        w[i] = 1.0f / (float) sqrt( 1 + (double) (d[i] * d[i] * 0.5) );
     }
 }
 
 
-void
+static void
 icvWeightHuber( float *d, int count, float *w, float _c )
 {
     int i;
@@ -292,7 +301,7 @@ icvWeightHuber( float *d, int count, float *w, float _c )
 }
 
 
-void
+static void
 icvWeightFair( float *d, int count, float *w, float _c )
 {
     int i;
@@ -304,7 +313,7 @@ icvWeightFair( float *d, int count, float *w, float _c )
     }
 }
 
-void
+static void
 icvWeightWelsch( float *d, int count, float *w, float _c )
 {
     int i;
@@ -322,7 +331,7 @@ distance specified by callbacks, fills the array of four floats with line
 parameters A, B, C, D, where (A, B) is the normalized direction vector,
 (C, D) is the point that belongs to the line. */
 
-static CvStatus  icvFitLine2D( CvPoint2D32f * points, int count, CvDisType dist,
+static CvStatus  icvFitLine2D( CvPoint2D32f * points, int count, int dist,
                                float _param, float reps, float aeps, float *line )
 {
     void (*calc_weights) (float *, int, float *) = 0;
@@ -369,8 +378,8 @@ static CvStatus  icvFitLine2D( CvPoint2D32f * points, int count, CvDisType dist,
         return CV_BADFACTOR_ERR;
     }
 
-    w = (float *) icvAlloc( count * sizeof( float ));
-    r = (float *) icvAlloc( count * sizeof( float ));
+    w = (float *) cvAlloc( count * sizeof( float ));
+    r = (float *) cvAlloc( count * sizeof( float ));
 
     for( i = 0; i < count; i++ )
         w[i] = 1.0f;
@@ -380,8 +389,8 @@ static CvStatus  icvFitLine2D( CvPoint2D32f * points, int count, CvDisType dist,
     {
         if( ret != CV_NO_ERR )
         {
-            icvFree( &w );
-            icvFree( &r );
+            cvFree( (void**)&w );
+            cvFree( (void**)&r );
             return ret;
         }
 
@@ -405,8 +414,8 @@ static CvStatus  icvFitLine2D( CvPoint2D32f * points, int count, CvDisType dist,
                     // Return...
                     memcpy( line, _line, 4 * sizeof( float ));
 
-                    icvFree( &w );
-                    icvFree( &r );
+                    cvFree( (void**)&w );
+                    cvFree( (void**)&r );
                     return CV_NO_ERR;
                 }
 
@@ -438,8 +447,8 @@ static CvStatus  icvFitLine2D( CvPoint2D32f * points, int count, CvDisType dist,
         ret = icvFitLine2D_wods( points, count, w, _line );
     }
 
-    icvFree( &w );
-    icvFree( &r );
+    cvFree( (void**)&w );
+    cvFree( (void**)&r );
     return CV_BADCONVERGENCE_ERR;
 }
 
@@ -449,7 +458,7 @@ distance specified by callbacks, fills the array of four floats with line
 parameters A, B, C, D, E, F, where (A, B, C) is the normalized direction vector, 
 (D, E, F) is the point that belongs to the line. */
 
-static CvStatus  icvFitLine3D( CvPoint3D32f * points, int count, CvDisType dist,
+static CvStatus  icvFitLine3D( CvPoint3D32f * points, int count, int dist,
                                float _param, float reps, float aeps, float *line )
 {
     void (*calc_weights) (float *, int, float *) = 0;
@@ -497,8 +506,8 @@ static CvStatus  icvFitLine3D( CvPoint3D32f * points, int count, CvDisType dist,
         return CV_BADFACTOR_ERR;
     }
 
-    w = (float *) icvAlloc( count * sizeof( float ));
-    r = (float *) icvAlloc( count * sizeof( float ));
+    w = (float *) cvAlloc( count * sizeof( float ));
+    r = (float *) cvAlloc( count * sizeof( float ));
 
     for( i = 0; i < count; i++ )
         w[i] = 1.0f;
@@ -508,8 +517,8 @@ static CvStatus  icvFitLine3D( CvPoint3D32f * points, int count, CvDisType dist,
     {
         if( ret != CV_NO_ERR )
         {
-            icvFree( &w );
-            icvFree( &r );
+            cvFree( (void**)&w );
+            cvFree( (void**)&r );
             return ret;
         }
 
@@ -543,8 +552,8 @@ static CvStatus  icvFitLine3D( CvPoint3D32f * points, int count, CvDisType dist,
                     // Return...
                     memcpy( line, _line, 6 * sizeof( float ));
 
-                    icvFree( &w );
-                    icvFree( &r );
+                    cvFree( (void**)&w );
+                    cvFree( (void**)&r );
                     return CV_NO_ERR;
                 }
 
@@ -575,14 +584,14 @@ static CvStatus  icvFitLine3D( CvPoint3D32f * points, int count, CvDisType dist,
         ret = icvFitLine3D_wods( points, count, w, _line );
     }
 
-    icvFree( &w );
-    icvFree( &r );
+    cvFree( (void**)&w );
+    cvFree( (void**)&r );
     return CV_BADCONVERGENCE_ERR;
 }
 
 
 CV_IMPL void
-cvFitLine( const CvArr* array, CvDisType dist, double param,
+cvFitLine( const CvArr* array, int dist, double param,
            double reps, double aeps, float *line )
 {
     char* buffer = 0;
@@ -605,7 +614,7 @@ cvFitLine( const CvArr* array, CvDisType dist, double param,
         if( ptseq->total == 0 )
             CV_ERROR( CV_StsBadSize, "The sequence has no points" );
         if( (type!=CV_32FC2 && type!=CV_32FC3 && type!=CV_32SC2 && type!=CV_32SC3) ||
-            icvPixSize[type] != ptseq->elem_size )
+            CV_ELEM_SIZE(type) != ptseq->elem_size )
             CV_ERROR( CV_StsUnsupportedFormat,
                 "Input sequence must consist of 2d points or 3d points" );
     }
@@ -623,7 +632,7 @@ cvFitLine( const CvArr* array, CvDisType dist, double param,
             "Input array must be 1d continuous array of 2d or 3d points" );
 
         CV_CALL( ptseq = cvMakeSeqHeaderForArray(
-            CV_SEQ_KIND_GENERIC|type, sizeof(CvContour), icvPixSize[type], mat->data.ptr,
+            CV_SEQ_KIND_GENERIC|type, sizeof(CvContour), CV_ELEM_SIZE(type), mat->data.ptr,
             mat->width + mat->height - 1, (CvSeq*)&contour_header, &block ));
     }
 
@@ -637,7 +646,7 @@ cvFitLine( const CvArr* array, CvDisType dist, double param,
     }
     else
     {
-        CV_CALL( buffer = points = (char*)cvAlloc( ptseq->total*icvPixSize[type] ));
+        CV_CALL( buffer = points = (char*)cvAlloc( ptseq->total*CV_ELEM_SIZE(type) ));
         
         if( CV_MAT_DEPTH(type) == CV_32F )
         {

@@ -39,8 +39,6 @@
 //
 //M*/
 #include "_cv.h"
-#include "_cvdatastructs.h"
-#include "_cvgeom.h"
 
 #define CV_MATCH_CHECK( status, cvFun )                                    \
   {                                                                        \
@@ -49,10 +47,10 @@
      goto M_END;                                                           \
   }
 
-CvStatus icvCalcTriAttr( CvSeq * contour, CvPoint t2, CvPoint t1, int n1,
-                         CvPoint t3, int n3, double *s, double *s_c,
-
-                         double *h, double *a, double *b );
+static CvStatus
+icvCalcTriAttr( const CvSeq * contour, CvPoint t2, CvPoint t1, int n1,
+                CvPoint t3, int n3, double *s, double *s_c,
+                double *h, double *a, double *b );
 
 /*F///////////////////////////////////////////////////////////////////////////////////////
 //    Name: icvCreateContourTree
@@ -66,8 +64,8 @@ CvStatus icvCalcTriAttr( CvSeq * contour, CvPoint t2, CvPoint t1, int n1,
 //      threshold - threshold for the binary tree building 
 //
 //F*/
-CvStatus
-icvCreateContourTree( CvSeq * contour, CvMemStorage * storage,
+static CvStatus
+icvCreateContourTree( const CvSeq * contour, CvMemStorage * storage,
                       CvContourTree ** tree, double threshold )
 {
     CvPoint *pt_p;              /*  pointer to previos points   */
@@ -78,6 +76,7 @@ icvCreateContourTree( CvSeq * contour, CvMemStorage * storage,
     int lpt, flag, i, j, i_tree, j_1, j_3, i_buf;
     double s, sp1, sp2, sn1, sn2, s_c, sp1_c, sp2_c, sn1_c, sn2_c, h, hp1, hp2, hn1, hn2,
         a, ap1, ap2, an1, an2, b, bp1, bp2, bn1, bn2;
+    double a_s_c, a_sp1_c;
 
     _CvTrianAttr **ptr_p, **ptr_n, **ptr1, **ptr2;      /*  pointers to pointers of triangles  */
     _CvTrianAttr *cur_adr;
@@ -113,18 +112,18 @@ icvCreateContourTree( CvSeq * contour, CvMemStorage * storage,
     ptr_p = ptr_n = ptr1 = ptr2 = NULL;
     tree_end = NULL;
 
-    pt_p = (CvPoint *) icvAlloc( lpt * sizeof( CvPoint ));
-    pt_n = (CvPoint *) icvAlloc( lpt * sizeof( CvPoint ));
+    pt_p = (CvPoint *) cvAlloc( lpt * sizeof( CvPoint ));
+    pt_n = (CvPoint *) cvAlloc( lpt * sizeof( CvPoint ));
 
-    num_p = (int *) icvAlloc( lpt * sizeof( int ));
-    num_n = (int *) icvAlloc( lpt * sizeof( int ));
+    num_p = (int *) cvAlloc( lpt * sizeof( int ));
+    num_n = (int *) cvAlloc( lpt * sizeof( int ));
 
     hearder_size = sizeof( CvContourTree );
     seq_flags = CV_SEQ_POLYGON_TREE;
     cvStartWriteSeq( seq_flags, hearder_size, sizeof( _CvTrianAttr ), storage, &writer );
 
-    ptr_p = (_CvTrianAttr **) icvAlloc( lpt * sizeof( _CvTrianAttr * ));
-    ptr_n = (_CvTrianAttr **) icvAlloc( lpt * sizeof( _CvTrianAttr * ));
+    ptr_p = (_CvTrianAttr **) cvAlloc( lpt * sizeof( _CvTrianAttr * ));
+    ptr_n = (_CvTrianAttr **) cvAlloc( lpt * sizeof( _CvTrianAttr * ));
 
     memset( ptr_p, 0, lpt * sizeof( _CvTrianAttr * ));
     memset( ptr_n, 0, lpt * sizeof( _CvTrianAttr * ));
@@ -401,8 +400,10 @@ icvCreateContourTree( CvSeq * contour, CvMemStorage * storage,
                     icvCalcTriAttr( contour, tp1, tn2, nmn2, t, nm, &sp1, &sp1_c, &hp1, &ap1,
                                     &bp1 ));
 
+    a_s_c = fabs( s_c - sn2_c );
+    a_sp1_c = fabs( sp1_c - sn1_c );
 
-    if( fabs( s_c - sn2_c ) > fabs( sp1_c - sn1_c ))
+    if( a_s_c > a_sp1_c )
 /*   form child vertexs for the root     */
     {
         tree_one.pt = t;
@@ -576,12 +577,12 @@ icvCreateContourTree( CvSeq * contour, CvMemStorage * storage,
 
   M_END:
 
-    icvFree( &ptr_n );
-    icvFree( &ptr_p );
-    icvFree( &num_n );
-    icvFree( &num_p );
-    icvFree( &pt_n );
-    icvFree( &pt_p );
+    cvFree( (void**)&ptr_n );
+    cvFree( (void**)&ptr_p );
+    cvFree( (void**)&num_n );
+    cvFree( (void**)&num_p );
+    cvFree( (void**)&pt_n );
+    cvFree( (void**)&pt_p );
 
     return status;
 }
@@ -591,9 +592,10 @@ icvCreateContourTree( CvSeq * contour, CvMemStorage * storage,
  triangle attributes calculations 
 
 \****************************************************************************************/
-CvStatus
-icvCalcTriAttr( CvSeq * contour, CvPoint t2, CvPoint t1, int n1,
-                CvPoint t3, int n3, double *s, double *s_c, double *h, double *a, double *b )
+static CvStatus
+icvCalcTriAttr( const CvSeq * contour, CvPoint t2, CvPoint t1, int n1,
+                CvPoint t3, int n3, double *s, double *s_c,
+                double *h, double *a, double *b )
 {
     double x13, y13, x12, y12, l_base, nx, ny, qq;
     double eps = 1.e-5;
@@ -644,7 +646,7 @@ icvCalcTriAttr( CvSeq * contour, CvPoint t2, CvPoint t1, int n1,
 //
 //F*/
 CV_IMPL CvContourTree*
-cvCreateContourTree( CvSeq* contour, CvMemStorage* storage, double threshold )
+cvCreateContourTree( const CvSeq* contour, CvMemStorage* storage, double threshold )
 {
     CvContourTree* tree = 0;
     
@@ -673,7 +675,7 @@ cvCreateContourTree( CvSeq* contour, CvMemStorage* storage, double threshold )
 //                 for the contour reconstracting (level or precision)
 //F*/
 CV_IMPL CvSeq*
-cvContourFromContourTree( CvContourTree*  tree,
+cvContourFromContourTree( const CvContourTree*  tree,
                           CvMemStorage*  storage,
                           CvTermCriteria  criteria )
 {
@@ -700,12 +702,12 @@ cvContourFromContourTree( CvContourTree*  tree,
     __BEGIN__;
 
     if( !tree )
-        CV_ERROR_FROM_STATUS( CV_NULLPTR_ERR );
+        CV_ERROR( CV_StsNullPtr, "" );
 
     if( !CV_IS_SEQ_POLYGON_TREE( tree ))
         CV_ERROR_FROM_STATUS( CV_BADFLAG_ERR );
 
-    criteria = icvCheckTermCriteria( criteria, 0., 100 );
+    criteria = cvCheckTermCriteria( criteria, 0., 100 );
 
     lpt = tree->total;
     ptr_buf = NULL;
@@ -724,12 +726,12 @@ cvContourFromContourTree( CvContourTree*  tree,
     seq_flags = CV_SEQ_POLYGON;
     cvStartWriteSeq( seq_flags, out_hearder_size, sizeof( CvPoint ), storage, &writer );
 
-    ptr_buf = (_CvTrianAttr **) icvAlloc( lpt * sizeof( _CvTrianAttr * ));
+    ptr_buf = (_CvTrianAttr **) cvAlloc( lpt * sizeof( _CvTrianAttr * ));
     if( ptr_buf == NULL )
         CV_ERROR_FROM_STATUS( CV_OUTOFMEM_ERR );
     if( log_iter )
     {
-        level_buf = (int *) icvAlloc( lpt * (sizeof( int )));
+        level_buf = (int *) cvAlloc( lpt * (sizeof( int )));
 
         if( level_buf == NULL )
             CV_ERROR_FROM_STATUS( CV_OUTOFMEM_ERR );
@@ -753,7 +755,7 @@ cvContourFromContourTree( CvContourTree*  tree,
         threshold = 10 * area_all;
 
     if( log_iter )
-        level = criteria.maxIter;
+        level = criteria.max_iter;
     else
         level = -1;
 
@@ -790,13 +792,13 @@ cvContourFromContourTree( CvContourTree*  tree,
     }
 
     contour = cvEndWriteSeq( &writer );
-    cvContourBoundingRect( contour, 1 );
+    cvBoundingRect( contour, 1 );
 
     __CLEANUP__;
     __END__;
 
-    icvFree( &level_buf );
-    icvFree( &ptr_buf );
+    cvFree( (void**)&level_buf );
+    cvFree( (void**)&ptr_buf );
 
     return contour;
 }

@@ -39,8 +39,8 @@
 //
 //M*/
 
-#ifndef _CVMATRIX_H_
-#define _CVMATRIX_H_
+#ifndef _CV_MATRIX_H_
+#define _CV_MATRIX_H_
 
 #define icvCopyVector( src, dst, len ) memcpy( (dst), (src), (len)*sizeof((dst)[0]))
 #define icvSetZero( dst, len ) memset( (dst), 0, (len)*sizeof((dst)[0]))
@@ -52,12 +52,12 @@
 #define icvCopyMatrix_32f( src, w, h, dst ) memcpy((dst),(src),(w)*(h)*sizeof(float))
 #define icvCopyMatrix_64d( src, w, h, dst ) memcpy((dst),(src),(w)*(h)*sizeof(double))
 
-#define icvCreateVector_32f( len )  (float*)icvAlloc( (len)*sizeof(float))
-#define icvCreateVector_64d( len )  (double*)icvAlloc( (len)*sizeof(double))
-#define icvCreateMatrix_32f( w, h )  (float*)icvAlloc( (w)*(h)*sizeof(float))
-#define icvCreateMatrix_64d( w, h )  (double*)icvAlloc( (w)*(h)*sizeof(double))
+#define icvCreateVector_32f( len )  (float*)cvAlloc( (len)*sizeof(float))
+#define icvCreateVector_64d( len )  (double*)cvAlloc( (len)*sizeof(double))
+#define icvCreateMatrix_32f( w, h )  (float*)cvAlloc( (w)*(h)*sizeof(float))
+#define icvCreateMatrix_64d( w, h )  (double*)cvAlloc( (w)*(h)*sizeof(double))
 
-#define icvDeleteVector( vec )  icvFree( (void**)&(vec) )
+#define icvDeleteVector( vec )  cvFree( (void**)&(vec) )
 #define icvDeleteMatrix icvDeleteVector
 
 #define icvAddMatrix_32f( src1, src2, dst, w, h ) \
@@ -73,29 +73,10 @@
     sqrt(icvDotProduct_64d( src, src, len ))
 
 
-#define icvMulTransMatrixR_32f( src, w, h, dst )          \
-    icvMulTransposedR_32f( (src), (w)*sizeof((src)[0]),   \
-                           (dst), (w)*sizeof((src)[0]),   \
-                           cvSize((w), (h)))
-
-#define icvMulTransMatrixR_64d( src, w, h, dst )          \
-    icvMulTransposedR_64f( (src), (w)*sizeof((src)[0]),   \
-                           (dst), (w)*sizeof((src)[0]),   \
-                           cvSize((w), (h)))
-
-#define icvMulTransMatrixL_32f( src, w, h, dst )          \
-    icvMulTransposedL_32f( (src), (w)*sizeof((src)[0]),   \
-                           (dst), (h)*sizeof((src)[0]),   \
-                           cvSize((w), (h)))
-
-#define icvMulTransMatrixL_64d( src, w, h, dst )          \
-    icvMulTransposedL_64f( (src), (w)*sizeof((src)[0]),   \
-                           (dst), (h)*sizeof((src)[0]),   \
-                           cvSize((w), (h)))
-
-
 #define icvDeleteMatrix icvDeleteVector
 
+#define icvCheckVector_64f( ptr, len )
+#define icvCheckVector_32f( ptr, len )
 
 CV_INLINE double icvSum_32f( const float* src, int len )
 {
@@ -364,6 +345,67 @@ CV_INLINE void icvMulMatrix_64d( const double* src1, int w1, int h1,
 
 #define icvDotProduct_64d icvDotProduct_64f
 
-#endif/*_CVMATRIX_H_*/
+
+CV_INLINE void icvInvertMatrix_64d( double* A, int n, double* invA )
+{
+    CvMat Am = cvMat( n, n, CV_64F, A );
+    CvMat invAm = cvMat( n, n, CV_64F, invA );
+
+    cvInvert( &Am, &invAm, CV_SVD );
+}
+
+CV_INLINE void icvMulTransMatrixR_64d( double* src, int width, int height, double* dst )
+{
+    CvMat srcMat = cvMat( height, width, CV_64F, src );
+    CvMat dstMat = cvMat( width, width, CV_64F, dst );
+
+    cvMulTransposed( &srcMat, &dstMat, 1 );
+}
+
+CV_INLINE void icvMulTransMatrixL_64d( double* src, int width, int height, double* dst )
+{
+    CvMat srcMat = cvMat( height, width, CV_64F, src );
+    CvMat dstMat = cvMat( height, height, CV_64F, dst );
+
+    cvMulTransposed( &srcMat, &dstMat, 0 );
+}
+
+CV_INLINE void icvMulTransMatrixR_32f( float* src, int width, int height, float* dst )
+{
+    CvMat srcMat = cvMat( height, width, CV_32F, src );
+    CvMat dstMat = cvMat( width, width, CV_32F, dst );
+
+    cvMulTransposed( &srcMat, &dstMat, 1 );
+}
+
+CV_INLINE void icvMulTransMatrixL_32f( float* src, int width, int height, float* dst )
+{
+    CvMat srcMat = cvMat( height, width, CV_32F, src );
+    CvMat dstMat = cvMat( height, height, CV_32F, dst );
+
+    cvMulTransposed( &srcMat, &dstMat, 0 );
+}
+
+CV_INLINE void icvCvt_32f_64d( const float* src, double* dst, int len )
+{
+    int i;
+    for( i = 0; i < len; i++ )
+        dst[i] = src[i];
+}
+
+CV_INLINE void icvCvt_64d_32f( const double* src, float* dst, int len )
+{
+    int i;
+    for( i = 0; i < len; i++ )
+        dst[i] = (float)src[i];
+}
+
+CvStatus CV_STDCALL icvJacobiEigens_32f(float *A, float *V,
+                                        float *E, int n, float eps);
+
+CvStatus CV_STDCALL icvJacobiEigens_64d(double *A, double *V,
+                                        double *E, int n, double eps);
+
+#endif/*_CV_MATRIX_H_*/
 
 /* End of file. */

@@ -39,7 +39,6 @@
 //
 //M*/
 #include "_cv.h"
-#include "_cvdatastructs.h"
 
 typedef struct _CvRGBf
 {   float blue;
@@ -94,18 +93,18 @@ typedef struct _CvListNode
 _CvListNode;
 
 
-CvStatus  icvSegmentClusterC1( CvSeq* cmp_seq, CvSeq* res_seq,
+static CvStatus  icvSegmentClusterC1( CvSeq* cmp_seq, CvSeq* res_seq,
                                  double threshold,
                                  _CvPyramid* first_level_end,
                                  CvSize first_level_size );
 
-CvStatus  icvSegmentClusterC3( CvSeq* cmp_seq, CvSeq* res_seq,
+static CvStatus  icvSegmentClusterC3( CvSeq* cmp_seq, CvSeq* res_seq,
                                  double threshold,
                                  _CvPyramidC3* first_level_end,
                                  CvSize first_level_size );
 
-void icvMaxRoi( _CvRect16u *max_rect, _CvRect16u* cur_rect );
-void icvMaxRoi1( _CvRect16u *max_rect, int x, int y );
+static void icvMaxRoi( _CvRect16u *max_rect, _CvRect16u* cur_rect );
+static void icvMaxRoi1( _CvRect16u *max_rect, int x, int y );
 
 
 #define _CV_CHECK( icvFun )                                             \
@@ -121,7 +120,6 @@ void icvMaxRoi1( _CvRect16u *max_rect, int x, int y );
                                        (float)fabs((a).green - (b).green),  \
                                        (float)fabs((a).blue - (b).blue))*/
 
-CV_INLINE float icvRGBDist_Max( const _CvRGBf& a, const _CvRGBf& b );
 CV_INLINE float icvRGBDist_Max( const _CvRGBf& a, const _CvRGBf& b )
 {
     float tr = (float)fabs(a.red - b.red);
@@ -131,12 +129,13 @@ CV_INLINE float icvRGBDist_Max( const _CvRGBf& a, const _CvRGBf& b )
     return _CV_MAX3( tr, tg, tb );
 }
 
-CV_INLINE float icvRGBDist_Sum( const _CvRGBf& a, const _CvRGBf& b );
 CV_INLINE float icvRGBDist_Sum( const _CvRGBf& a, const _CvRGBf& b )
 {
-    return (float)(fabs(a.red - b.red) +
-                   fabs(a.green - b.green) +
-                   fabs(a.blue - b.blue));
+    float tr = (float)fabs(a.red - b.red);
+    float tg = (float)fabs(a.green - b.green);
+    float tb = (float)fabs(a.blue - b.blue);
+    
+    return (tr + tg + tb);
 }
 
 #if 1
@@ -166,7 +165,7 @@ icvWritePyrNode( void *elem, void *writer )
 }
 
 
-CvStatus
+static CvStatus
 icvPyrSegmentation8uC1R( uchar * src_image, int src_step,
                          uchar * dst_image, int dst_step,
                          CvSize roi, CvFilter filter,
@@ -241,7 +240,7 @@ icvPyrSegmentation8uC1R( uchar * src_image, int src_step,
     }
 
     /* allocate buffer */
-    buffer = (char *) icvAlloc( buffer_size );
+    buffer = (char *) cvAlloc( buffer_size );
     if( !buffer )
     {
         status = CV_OUTOFMEM_ERR;
@@ -253,8 +252,14 @@ icvPyrSegmentation8uC1R( uchar * src_image, int src_step,
     /* initialization pyramid-linking properties down up to level */
     step = roi.width * sizeof( float );
 
-    _CV_CHECK( icvCvtTo_32f_C1R( src_image, src_step, pyramida,
-                                 step, roi, CV_8UC1 ));
+    {
+        CvMat _src;
+        CvMat _pyramida;
+        cvInitMatHeader( &_src, roi.height, roi.width, CV_8UC1, src_image, src_step );
+        cvInitMatHeader( &_pyramida, roi.height, roi.width, CV_32FC1, pyramida, step );
+        cvConvert( &_src, &_pyramida );
+        /*_CV_CHECK( icvCvtTo_32f_C1R( src_image, src_step, pyramida, step, roi, CV_8UC1 ));*/
+    }
     p_base = (_CvPyramidBase *) (buffer + step * roi.height);
     pyram[0] = (_CvPyramid *) p_base;
 
@@ -273,7 +278,7 @@ icvPyrSegmentation8uC1R( uchar * src_image, int src_step,
 
     icvPyrDownGetBufSize_Gauss5x5( size.width, cv32f, 1, &buff_size );
     assert( buff_size > 0 );
-    buff = icvAlloc( buff_size );
+    buff = cvAlloc( buff_size );
     assert( buff );
 
     /* calculate initial pyramid */
@@ -301,7 +306,7 @@ icvPyrSegmentation8uC1R( uchar * src_image, int src_step,
         }
     }
 
-    icvFree( &buff );
+    cvFree( &buff );
 
     cvStartAppendToSeq( cmp_seq, &writer );
 
@@ -565,7 +570,7 @@ icvPyrSegmentation8uC1R( uchar * src_image, int src_step,
     }
   M_END:
 
-    icvFree( &buffer );
+    cvFree( (void**)&buffer );
     cvReleaseMemStorage( &temp_storage );
 
     if( status == CV_OK )
@@ -579,7 +584,7 @@ icvPyrSegmentation8uC1R( uchar * src_image, int src_step,
 /****************************************************************************************\
     color!!!  image segmentation by pyramid-linking   
 \****************************************************************************************/
-CvStatus
+static CvStatus
 icvPyrSegmentation8uC3R( uchar * src_image, int src_step,
                          uchar * dst_image, int dst_step,
                          CvSize roi, CvFilter filter,
@@ -658,7 +663,7 @@ icvPyrSegmentation8uC3R( uchar * src_image, int src_step,
     }
 
     /* allocate buffer */
-    buffer = (char *) icvAlloc( buffer_size );
+    buffer = (char *) cvAlloc( buffer_size );
     if( !buffer )
     {
         status = CV_OUTOFMEM_ERR;
@@ -670,8 +675,16 @@ icvPyrSegmentation8uC3R( uchar * src_image, int src_step,
     /* initialization pyramid-linking properties down up to level */
     step = roi.width * sizeof( _CvRGBf );
 
-    _CV_CHECK( icvCvtTo_32f_C1R( src_image, src_step, pyramida, step,
-                                 cvSize( roi.width * 3, roi.height ), CV_8UC1 ));
+    {
+        CvMat _src;
+        CvMat _pyramida;
+        cvInitMatHeader( &_src, roi.height, roi.width, CV_8UC3, src_image, src_step );
+        cvInitMatHeader( &_pyramida, roi.height, roi.width, CV_32FC3, pyramida, step );
+        cvConvert( &_src, &_pyramida );
+        /*_CV_CHECK( icvCvtTo_32f_C1R( src_image, src_step, pyramida, step,
+                                 cvSize( roi.width * 3, roi.height ), CV_8UC1 ));*/
+    }
+
     p_base = (_CvPyramidBaseC3 *) (buffer + step * roi.height);
     pyram[0] = (_CvPyramidC3 *) p_base;
 
@@ -690,7 +703,7 @@ icvPyrSegmentation8uC3R( uchar * src_image, int src_step,
 
     icvPyrDownGetBufSize_Gauss5x5( size.width, cv32f, 3, &buff_size );
     assert( buff_size > 0 );
-    buff = icvAlloc( buff_size );
+    buff = cvAlloc( buff_size );
     assert( buff );
 
     /* calculate initial pyramid */
@@ -718,7 +731,7 @@ icvPyrSegmentation8uC3R( uchar * src_image, int src_step,
         }
     }
 
-    icvFree( &buff );
+    cvFree( &buff );
 
     cvStartAppendToSeq( cmp_seq, &writer );
 
@@ -995,7 +1008,7 @@ icvPyrSegmentation8uC3R( uchar * src_image, int src_step,
 
   M_END:
 
-    icvFree( &buffer );
+    cvFree( (void**)&buffer );
     cvReleaseMemStorage( &temp_storage );
 
     if( status == CV_OK )
@@ -1005,15 +1018,10 @@ icvPyrSegmentation8uC3R( uchar * src_image, int src_step,
 }
 
 
-IPCVAPI_IMPL( CvStatus, icvUpdatePyrLinks_8u_C1, (int layer,
-                                                  void *layer_data,
-                                                  CvSize size,
-                                                  void *parent_layer,
-                                                  void *_writer,
-                                                  float threshold,
-                                                  int is_last_iter,
-                                                  void *_stub,
-                                                  ICVWriteNodeFunction ))
+IPCVAPI_IMPL( CvStatus, icvUpdatePyrLinks_8u_C1,
+    (int layer, void *layer_data, CvSize size, void *parent_layer,
+     void *_writer, float threshold, int is_last_iter, void *_stub, CvWriteNodeFunction /*func*/),
+     (layer, layer_data, size, parent_layer, _writer, threshold, is_last_iter, _stub, icvWritePyrNode) )
 {
     int i, j;
     _CvListNode cmp_node;
@@ -1194,15 +1202,10 @@ IPCVAPI_IMPL( CvStatus, icvUpdatePyrLinks_8u_C1, (int layer,
 }
 
 
-IPCVAPI_IMPL( CvStatus, icvUpdatePyrLinks_8u_C3, (int layer,
-                                                  void *layer_data,
-                                                  CvSize size,
-                                                  void *parent_layer,
-                                                  void *_writer,
-                                                  float threshold,
-                                                  int is_last_iter,
-                                                  void *_stub,
-                                                  ICVWriteNodeFunction ))
+IPCVAPI_IMPL( CvStatus, icvUpdatePyrLinks_8u_C3,
+    (int layer, void *layer_data, CvSize size, void *parent_layer,
+     void *_writer, float threshold, int is_last_iter, void *_stub, CvWriteNodeFunction /*func*/),
+     (layer, layer_data, size, parent_layer, _writer, threshold, is_last_iter, _stub, icvWritePyrNode) )
 {
     int i, j;
     _CvListNode cmp_node;
@@ -1433,7 +1436,7 @@ icvSegmentClusterC1( CvSeq * cmp_seq, CvSeq * res_seq,
 
             c = cvRound( cmp->c );
             *(int *) &(cmp->c) = c;
-            comp.value = (float) c;
+            comp.value = cvRealScalar(c);
             comp.area = cmp->a;
             comp.rect.x = cmp->rect.x1;
             comp.rect.y = cmp->rect.y1;
@@ -1536,7 +1539,7 @@ icvSegmentClusterC1( CvSeq * cmp_seq, CvSeq * res_seq,
                 node = node->next;
             }
 
-            comp.value = (float) c;
+            comp.value = cvRealScalar(c);
             comp.area = temp_cmp.a;
             comp.rect.x = temp_cmp.rect.x1;
             comp.rect.y = temp_cmp.rect.y1;
@@ -1612,8 +1615,7 @@ icvSegmentClusterC3( CvSeq * cmp_seq, CvSeq * res_seq,
             ((int *) &(cmp->c))[0] = c_blue;
             ((int *) &(cmp->c))[1] = c_green;
             ((int *) &(cmp->c))[2] = c_red;
-            comp.value = (float) ((uchar) c_blue +
-                                  ((uchar) c_green << 8) + ((uchar) c_red << 16));
+            comp.value = cvScalar( c_blue, c_green, c_red );
             comp.area = cmp->a;
             comp.rect.x = cmp->rect.x1;
             comp.rect.y = cmp->rect.y1;
@@ -1726,8 +1728,7 @@ icvSegmentClusterC3( CvSeq * cmp_seq, CvSeq * res_seq,
                 node = node->next;
             }
 
-            comp.value = (float) ((uchar) c_blue +
-                                  ((uchar) c_green << 8) + ((uchar) c_red << 16));
+            comp.value = cvScalar( c_blue, c_green, c_red );
             comp.area = temp_cmp.a;
             comp.rect.x = temp_cmp.rect.x1;
             comp.rect.y = temp_cmp.rect.y1;
@@ -1834,17 +1835,14 @@ cvPyrSegmentation( IplImage * src,
 
     __BEGIN__;
 
-    CV_CALL( CV_CHECK_IMAGE( src ));
-    CV_CALL( CV_CHECK_IMAGE( dst ));
-
     if( src->depth != IPL_DEPTH_8U )
-        CV_ERROR( CV_BadDepth, icvUnsupportedFormat );
+        CV_ERROR( CV_BadDepth, cvUnsupportedFormat );
 
     if( src->depth != dst->depth || src->nChannels != dst->nChannels )
         CV_ERROR( CV_StsBadArg, "src and dst have different formats" );
 
-    cvGetImageRawData( src, &src_data, &src_step, &src_size );
-    cvGetImageRawData( dst, &dst_data, &dst_step, &dst_size );
+    cvGetRawData( src, &src_data, &src_step, &src_size );
+    cvGetRawData( dst, &dst_data, &dst_step, &dst_size );
 
     if( src_size != dst_size )
         CV_ERROR( CV_StsBadArg, "src and dst have different ROIs" );
@@ -1866,9 +1864,8 @@ cvPyrSegmentation( IplImage * src,
                                             comp, storage, level, thresh1, thresh2 ));
         break;
     default:
-        CV_ERROR( CV_BadNumChannels, icvUnsupportedFormat );
+        CV_ERROR( CV_BadNumChannels, cvUnsupportedFormat );
     }
-    __CLEANUP__;
     __END__;
 }
 

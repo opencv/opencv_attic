@@ -44,7 +44,7 @@
 
 #define halfPi ((float)(CV_PI*0.5))
 #define Pi     ((float)CV_PI)
-#define a0  -4.172325e-7f   /*(-(float)0x7)/((float)0x1000000); */
+#define a0  0 /*-4.172325e-7f*/   /*(-(float)0x7)/((float)0x1000000); */
 #define a1 1.000025f        /*((float)0x1922253)/((float)0x1000000)*2/Pi; */
 #define a2 -2.652905e-4f    /*(-(float)0x2ae6)/((float)0x1000000)*4/(Pi*Pi); */
 #define a3 -0.165624f       /*(-(float)0xa45511)/((float)0x1000000)*8/(Pi*Pi*Pi); */
@@ -53,14 +53,7 @@
 #define a6 -9.580378e-4f    /*(-(float)0x3af27)/((float)0x1000000)*64/(Pi*Pi*Pi*Pi*Pi*Pi); */
 
 #define _sin(x) ((((((a6*(x) + a5)*(x) + a4)*(x) + a3)*(x) + a2)*(x) + a1)*(x) + a0)
-
-CV_FORCE_INLINE float
-_cos( float x )
-{
-    float temp = halfPi - x;
-
-    return _sin( temp );
-}
+#define _cos(x) _sin(halfPi - (x))
 
 /****************************************************************************************\
 *                               Classical Hough Transform                                *
@@ -109,9 +102,9 @@ static  CvStatus  icvHoughLines_8uC1R( uchar* image, int step, CvSize size,
     numangle = (int) (Pi / theta);
     numrho = (int) (((width + height) * 2 + 1) / rho);
 
-    accum = (int*)icvAlloc( sizeof(accum[0]) * numangle * numrho );
-    tabSin = (float*)icvAlloc( sizeof(float) * numangle );
-    tabCos = (float*)icvAlloc( sizeof(float) * numangle );
+    accum = (int*)cvAlloc( sizeof(accum[0]) * numangle * numrho );
+    tabSin = (float*)cvAlloc( sizeof(float) * numangle );
+    tabCos = (float*)cvAlloc( sizeof(float) * numangle );
     memset( accum, 0, sizeof(accum[0]) * numangle * numrho );
 
     if( tabSin == 0 || tabCos == 0 || accum == 0 )
@@ -120,21 +113,20 @@ static  CvStatus  icvHoughLines_8uC1R( uchar* image, int step, CvSize size,
     /* May change using mirroring */
     for( ang = 0, n = 0; n < numangle; ang += theta, n++ )
     {
-        tabSin[n] = (float)sin( ang );
-        tabCos[n] = (float)cos( ang );
+        tabSin[n] = (float)(sin( ang ) * irho);
+        tabCos[n] = (float)(cos( ang ) * irho);
     }
 
-    /* May be optimized ! */
-    for( i = 0; i < width; i++ )
+    for( j = 0; j < height; j++ )
     {
-        for( j = 0; j < height; j++ )
+        for( i = 0; i < width; i++ )
         {
             /* Get (i,j) pixel from image */
             if( image[j * step + i] != 0 )
             {
                 for( n = 0; n < numangle; n++ )
                 {
-                    r = cvRound( (i * tabCos[n] + j * tabSin[n]) * irho );
+                    r = cvRound( i * tabCos[n] + j * tabSin[n] );
                     r += (numrho - 1) / 2;
                     accum[n * numrho + r]++;
                 }
@@ -164,9 +156,9 @@ static  CvStatus  icvHoughLines_8uC1R( uchar* image, int step, CvSize size,
     }
 
 func_exit:
-    icvFree( &tabSin );
-    icvFree( &tabCos );
-    icvFree( &accum );
+    cvFree( (void**)&tabSin );
+    cvFree( (void**)&tabCos );
+    cvFree( (void**)&accum );
 
     return CV_OK;
 }
@@ -176,19 +168,12 @@ func_exit:
 *                     Multi-Scale variant of Classical Hough Transform                   *
 \****************************************************************************************/
 
-typedef struct __index
-{
-    int value;
-    float rho, theta;
-}
-_index;
-
-
 #if _MSC_VER >= 1200
 #pragma warning( disable: 4714 )
 #endif
 
-DECLARE_AND_IMPLEMENT_LIST( _index, h_ );
+//DECLARE_AND_IMPLEMENT_LIST( _index, h_ );
+IMPLEMENT_LIST( _index, h_ )
 
 static  CvStatus  icvHoughLinesSDiv_8uC1R( uchar * image_src, int step, CvSize size,
                                            float rho, float theta, int threshold,
@@ -253,7 +238,7 @@ static  CvStatus  icvHoughLinesSDiv_8uC1R( uchar * image_src, int step, CvSize s
     isrho = 1 / srho;
     istheta = 1 / stheta;
 
-    rn = cvFloor( sqrt( w * w + h * h ) * irho );
+    rn = cvFloor( sqrt( (double)w * w + (double)h * h ) * irho );
     tn = cvFloor( 2 * Pi * itheta );
 
     list = h_create_list__index( linesMax < 1000 ? linesMax : 1000 );
@@ -262,18 +247,18 @@ static  CvStatus  icvHoughLinesSDiv_8uC1R( uchar * image_src, int step, CvSize s
     h_add_head__index( list, &vi );
 
     /* Precalculating sin */
-    sinTable = (float*)icvAlloc( 5 * tn * stn * sizeof( float ));
+    sinTable = (float*)cvAlloc( 5 * tn * stn * sizeof( float ));
 
     for( index = 0; index < 5 * tn * stn; index++ )
     {
-        sinTable[index] = (float)_cos( stheta * index * 0.2f );
+        sinTable[index] = (float)cos( stheta * index * 0.2f );
     }
 
     /* Allocating memory for the accumulator ad initializing it */
     if( threshold > 255 )
         goto func_exit;
 
-    caccum = (uchar*)icvAlloc( rn * tn * sizeof( caccum[0] ));
+    caccum = (uchar*)cvAlloc( rn * tn * sizeof( caccum[0] ));
     memset( caccum, 0, rn * tn * sizeof( caccum[0] ));
 
     /* Counting all feature pixels */
@@ -281,8 +266,8 @@ static  CvStatus  icvHoughLinesSDiv_8uC1R( uchar * image_src, int step, CvSize s
         for( col = 0; col < w; col++ )
             fn += _POINT( row, col ) != 0;
 
-    x = (int*)icvAlloc( fn * sizeof(x[0]));
-    y = (int*)icvAlloc( fn * sizeof(y[0]));
+    x = (int*)cvAlloc( fn * sizeof(x[0]));
+    y = (int*)cvAlloc( fn * sizeof(y[0]));
 
     /* Full Hough Transform (it's accumulator update part) */
     fi = 0;
@@ -310,8 +295,8 @@ static  CvStatus  icvHoughLinesSDiv_8uC1R( uchar * image_src, int step, CvSize s
                     xc = (float) col + 0.5f;
 
                     /* Update the accumulator */
-                    t = (float) fabs( icvFastArctan32f( yc, xc ) * d2r );
-                    r = (float) sqrt( xc * xc + yc * yc );
+                    t = (float) fabs( cvFastArctan( yc, xc ) * d2r );
+                    r = (float) sqrt( (double)xc * xc + (double)yc * yc );
                     r0 = r * irho;
                     ti0 = cvFloor( (t + Pi / 2) * itheta );
 
@@ -325,7 +310,8 @@ static  CvStatus  icvHoughLinesSDiv_8uC1R( uchar * image_src, int step, CvSize s
                          ti1 < halftn; ti1++, phi += theta_it, phi1 += scale_factor )
                     {
                         rv = r0 * _cos( phi );
-                        i = cvFloor( rv ) * tn + cvFloor( phi1 );
+                        i = cvFloor( rv ) * tn;
+                        i += cvFloor( phi1 );
                         assert( i >= 0 );
                         assert( i < rn * tn );
                         caccum[i] = (unsigned char) (caccum[i] + ((i ^ iprev) != 0));
@@ -364,7 +350,7 @@ static  CvStatus  icvHoughLinesSDiv_8uC1R( uchar * image_src, int step, CvSize s
         goto func_exit;
     }
 
-    buffer = (uchar *) icvAlloc( (srn * stn + 2) * sizeof( uchar ));
+    buffer = (uchar *) cvAlloc( (srn * stn + 2) * sizeof( uchar ));
     mcaccum = buffer + 1;
 
     count = 0;
@@ -386,8 +372,8 @@ static  CvStatus  icvHoughLinesSDiv_8uC1R( uchar * image_src, int step, CvSize s
                     xc = (float) x[index] + 0.5f;
 
                     /* Update the accumulator */
-                    t = (float) fabs( icvFastArctan32f( yc, xc ) * d2r );
-                    r = (float) sqrt( xc * xc + yc * yc ) * isrho;
+                    t = (float) fabs( cvFastArctan( yc, xc ) * d2r );
+                    r = (float) sqrt( (double)xc * xc + (double)yc * yc ) * isrho;
                     ti0 = cvFloor( (t + Pi * 0.5f) * istheta );
                     ti2 = (ti * stn - ti0) * 5;
                     r0 = (float) ri *srn;
@@ -478,11 +464,11 @@ static  CvStatus  icvHoughLinesSDiv_8uC1R( uchar * image_src, int step, CvSize s
 func_exit:
     h_destroy_list__index( list );
 
-    icvFree( &sinTable );
-    icvFree( &x );
-    icvFree( &y );
-    icvFree( &caccum );
-    icvFree( &buffer );
+    cvFree( (void**)&sinTable );
+    cvFree( (void**)&x );
+    cvFree( (void**)&y );
+    cvFree( (void**)&caccum );
+    cvFree( (void**)&buffer );
 
     return CV_OK;
 }
@@ -542,7 +528,7 @@ static  CvStatus  icvHoughLinesP_8uC1R( uchar * image_src, int step, CvSize size
     int fpn = 0;
 
     float *sinTable = 0;
-    CvRandState state;
+    CvRNG state = CvRNG(0xffffffff);
 
     if( linesMax <= 0 )
         return CV_BADSIZE_ERR;
@@ -553,19 +539,19 @@ static  CvStatus  icvHoughLinesP_8uC1R( uchar * image_src, int step, CvSize size
     irho = 1 / rho;
     itheta = 1 / theta;
 
-    rn = cvFloor( sqrt( w * w + h * h ) * irho );
+    rn = cvFloor( sqrt( (double)w * w + (double)h * h ) * irho );
     tn = cvFloor( 2 * Pi * itheta );
     halftn = cvFloor( Pi * itheta );
 
     /* Allocating memory for the accumulator ad initializing it */
     if( threshold > 255 )
     {
-        iaccum = (int *) icvAlloc( rn * tn * sizeof( int ));
+        iaccum = (int *) cvAlloc( rn * tn * sizeof( int ));
         memset( iaccum, 0, rn * tn * sizeof( int ));
     }
     else
     {
-        caccum = (uchar *) icvAlloc( rn * tn * sizeof( uchar ));
+        caccum = (uchar *) cvAlloc( rn * tn * sizeof( uchar ));
         memset( caccum, 0, rn * tn * sizeof( uchar ));
     }
 
@@ -580,17 +566,17 @@ static  CvStatus  icvHoughLinesP_8uC1R( uchar * image_src, int step, CvSize size
         }
     }
 
-    x = (int *) icvAlloc( fn * sizeof( int ));
-    y = (int *) icvAlloc( fn * sizeof( int ));
-    map = (int *) icvAlloc( w * h * sizeof( int ));
+    x = (int *) cvAlloc( fn * sizeof( int ));
+    y = (int *) cvAlloc( fn * sizeof( int ));
+    map = (int *) cvAlloc( w * h * sizeof( int ));
     memset( map, -1, w * h * sizeof( int ));
 
 #ifdef _PHOUGH_SIN_TABLE
-    sinTable = (float *) icvAlloc( tn * sizeof( float ));
+    sinTable = (float *) cvAlloc( tn * sizeof( float ));
 
     for( ti = 0; ti < tn; ti++ )
     {
-        sinTable[ti] = _sin( ti * theta );
+        sinTable[ti] = (float)sin( (double)(ti * theta) );
     }
 #endif
 
@@ -610,7 +596,6 @@ static  CvStatus  icvHoughLinesP_8uC1R( uchar * image_src, int step, CvSize size
     }
 
     /* Starting Hough Transform */
-    cvRandInit( &state, 0, 1, -1, CV_RAND_UNI );      /* Initializing random counter */
     while( fn != 0 )
     {
         int temp;
@@ -624,11 +609,12 @@ static  CvStatus  icvHoughLinesP_8uC1R( uchar * image_src, int step, CvSize size
         /* The x, y and length of a line (remember the maximum length) */
         float curx = 0, cury = 0;
         int ox, oy;             /* Rounded ax and ay */
+        int ex, ey;
 
 #define _EXCHANGE(x1, x2) temp = x1;x1 = x2;x2 = temp
 
         /* Select a pixel randomly */
-        index0 = cvRandNext(&state) % fn;
+        index0 = cvRandInt(&state) % fn;
         /* Remove the pixel from the feature points set */
         if( index0 != fn - 1 )
         {
@@ -645,8 +631,8 @@ static  CvStatus  icvHoughLinesP_8uC1R( uchar * image_src, int step, CvSize size
         xc = (float) x[fn] + 0.5f;
 
         /* Update the accumulator */
-        t = (float) fabs( icvFastArctan32f( yc, xc ) * d2r );
-        r = (float) sqrt( xc * xc + yc * yc );
+        t = (float) fabs( cvFastArctan( yc, xc ) * d2r );
+        r = (float) sqrt( (double)xc * xc + (double)yc * yc );
         ti0 = ROUNDT( t * itheta );
 
         /* ti1 = 0 */
@@ -698,6 +684,7 @@ static  CvStatus  icvHoughLinesP_8uC1R( uchar * image_src, int step, CvSize size
                 rv = r * SIN( ti1 );
                 ri1 = ROUNDR( rv * irho );
                 i = ri1 * tn + ti1 + ti0;
+                
                 caccum[i]++;
                 if( cmaccum < caccum[i] )
                 {
@@ -876,21 +863,28 @@ static  CvStatus  icvHoughLinesP_8uC1R( uchar * image_src, int step, CvSize size
         ay = msy;
         ox = cvFloor( msx );
         oy = cvFloor( msy );
-        while( (ox != cvFloor( mex ) || oy != cvFloor( mey )) && fn > 0 )
+        ex = cvFloor( mex );
+        ey = cvFloor( mey );
+
+        while( (ox != ex || oy != ey) && fn > 0 )
         {
-            image_src[oy * step + ox] = 0;
-            index0 = map[oy * w + ox];
-            if( index0 != -1 )
+            if( (unsigned)ox >= (unsigned)w || (unsigned)oy >= (unsigned)h )
+                break;
             {
-                if( index0 != fn - 1 )
+                image_src[oy * step + ox] = 0;
+                index0 = map[oy * w + ox];
+                if( index0 != -1 )
                 {
-                    /* Exchange the point with the last one */
-                    _EXCHANGE( x[index0], x[fn - 1] );
-                    _EXCHANGE( y[index0], y[fn - 1] );
-                    _EXCHANGE( map[y[index0] * w + x[index0]],
-                               map[y[fn - 1] * w + x[fn - 1]] );
+                    if( index0 != fn - 1 )
+                    {
+                        /* Exchange the point with the last one */
+                        _EXCHANGE( x[index0], x[fn - 1] );
+                        _EXCHANGE( y[index0], y[fn - 1] );
+                        _EXCHANGE( map[y[index0] * w + x[index0]],
+                                   map[y[fn - 1] * w + x[fn - 1]] );
+                    }
+                    fn--;
                 }
-                fn--;
             }
 
             ax += mdx;
@@ -913,12 +907,12 @@ static  CvStatus  icvHoughLinesP_8uC1R( uchar * image_src, int step, CvSize size
         }
     }
 func_exit:
-    icvFree( &x );
-    icvFree( &y );
-    icvFree( &map );
-    icvFree( &sinTable );
-    icvFree( &iaccum );
-    icvFree( &caccum );
+    cvFree( (void**)&x );
+    cvFree( (void**)&y );
+    cvFree( (void**)&map );
+    cvFree( (void**)&sinTable );
+    cvFree( (void**)&iaccum );
+    cvFree( (void**)&caccum );
 
     return CV_OK;
 }
@@ -943,6 +937,8 @@ cvHoughLines2( CvArr* src_image, void* lineStorage, int method,
     CvSeqBlock lines_block;
     int lineType, elemSize;
     int linesMax = INT_MAX;
+    CvSize size;
+    int iparam1, iparam2;
 
     CV_CALL( img = cvGetMat( img, &stub ));
 
@@ -992,21 +988,25 @@ cvHoughLines2( CvArr* src_image, void* lineStorage, int method,
         CV_ERROR( CV_StsBadArg, "Destination is not CvMemStorage* nor CvMat*" );
     }
 
+    size = cvGetMatSize(img);
+    iparam1 = cvRound(param1);
+    iparam2 = cvRound(param2);
+
     switch( method )
     {
     case CV_HOUGH_STANDARD:
-          IPPI_CALL( icvHoughLines_8uC1R( img->data.ptr, img->step, icvGetMatSize(img),
-                                          (float)rho, (float)theta, threshold, lines, linesMax ));
+          IPPI_CALL( icvHoughLines_8uC1R( img->data.ptr, img->step, size, (float)rho,
+                                          (float)theta, threshold, lines, linesMax ));
           break;
     case CV_HOUGH_MULTI_SCALE:
-          IPPI_CALL( icvHoughLinesSDiv_8uC1R( img->data.ptr, img->step, icvGetMatSize(img),
-                                          (float)rho, (float)theta, threshold,
-                                          cvRound(param1), cvRound(param2), lines, linesMax ));
+          IPPI_CALL( icvHoughLinesSDiv_8uC1R( img->data.ptr, img->step, size, (float)rho,
+                                              (float)theta, threshold, iparam1,
+                                              iparam2, lines, linesMax ));
           break;
     case CV_HOUGH_PROBABILISTIC:
-          IPPI_CALL( icvHoughLinesP_8uC1R( img->data.ptr, img->step, icvGetMatSize(img),
-                                          (float)rho, (float)theta, threshold,
-                                          cvRound(param1), cvRound(param2), lines, linesMax ));
+          IPPI_CALL( icvHoughLinesP_8uC1R( img->data.ptr, img->step, size, (float)rho,
+                                           (float)theta, threshold, iparam1,
+                                           iparam2, lines, linesMax ));
           break;
     default:
         CV_ERROR( CV_StsBadArg, "Unrecognized method id" );

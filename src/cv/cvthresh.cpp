@@ -41,31 +41,10 @@
 
 #include "_cv.h"
 
-/*F///////////////////////////////////////////////////////////////////////////////////////
-//    Name:    icvThreshold8uC1R
-//    Purpose: Thresholding the source array
-//    Context:
-//    Parameters:
-//      Src     - source array
-//      roi     - size of picture in elements
-//      srcStep - length of string
-//      Thresh  - threshold parameter
-//      Type    - thresholding type, must be one of
-//                  CV_THRESH_BINARY       - val = (val > Thresh ? MAX    : 0)
-//                  CV_THRESH_BINARY_INV   - val = (val > Thresh ? 0      : MAX)
-//                  CV_THRESH_TRUNC        - val = (val > Thresh ? Thresh : val)
-//                  CV_THRESH_TOZERO       - val = (val > Thresh ? val    : 0)
-//                  CV_THRESH_TOZERO_INV   - val = (val > Thresh ? 0      : val)
-//    Returns:
-//    Notes:
-//      The MAX constant for uchar is 255, for char is 127
-//F*/
-IPCVAPI_IMPL( CvStatus, icvThresh_8u_C1R, (const uchar * src,
-                                           int src_step,
-                                           uchar * dst,
-                                           int dst_step,
-                                           CvSize roi,
-                                           int thresh, uchar maxval, CvThreshType type) )
+IPCVAPI_IMPL( CvStatus, icvThresh_8u_C1R,
+    (const uchar * src, int src_step, uchar * dst, int dst_step,
+     CvSize roi, int thresh, uchar maxval, int type),
+    (src, src_step, dst, dst_step, roi, thresh, maxval, type) )
 {
     /* Some variables */
     int i, j;
@@ -134,125 +113,10 @@ IPCVAPI_IMPL( CvStatus, icvThresh_8u_C1R, (const uchar * src,
 }
 
 
-/*F///////////////////////////////////////////////////////////////////////////////////////
-//    Name:    icvThreshold8sC1R
-//    Purpose: Thresholding the source array
-//    Context:
-//    Parameters:
-//      Src     - source array
-//      roi     - size of picture in elements
-//      srcStep - length of string
-//      Thresh  - threshold parameter
-//      Type    - thresholding type, must be one of
-//                  CV_THRESH_BINARY       - val = (val > Thresh ? MAX    : 0)
-//                  CV_THRESH_BINARY_INV   - val = (val > Thresh ? 0      : MAX)
-//                  CV_THRESH_TRUNC        - val = (val > Thresh ? Thresh : val)
-//                  CV_THRESH_TOZERO       - val = (val > Thresh ? val    : 0)
-//                  CV_THRESH_TOZERO_INV   - val = (val > Thresh ? 0      : val)
-//    Returns:
-//    Notes:
-//      The MAX constant for uchar is 255, for char is 127
-//F*/
-IPCVAPI_IMPL( CvStatus, icvThresh_8s_C1R, (const char *src,
-                                           int src_step,
-                                           char *dst,
-                                           int dst_step,
-                                           CvSize roi,
-                                           int thresh, char maxval, CvThreshType type) )
-{
-    /* Some variables */
-    int i, j;
-
-    /* Check for bad arguments */
-    if( !src || !dst )
-        return CV_NULLPTR_ERR;
-    if( thresh < -128 || thresh > 127 )
-        return CV_BADFACTOR_ERR;
-    if( roi.width <= 0 || roi.height <= 0 )
-        return CV_BADSIZE_ERR;
-    if( roi.width > src_step )
-        return CV_BADSIZE_ERR;
-    if( roi.width > dst_step )
-        return CV_BADSIZE_ERR;
-
-    if( roi.width == src_step && roi.width == dst_step )
-    {
-        roi.width *= roi.height;
-        roi.height = 1;
-    }
-
-    /* Calculating */
-    switch (type)
-    {
-    case CV_THRESH_BINARY:
-        for( i = 0; i < roi.height; i++, src += src_step, dst += dst_step )
-            for( j = 0; j < roi.width; j++ )
-                dst[j] = (char) (((thresh - src[j]) >> 8) & maxval);
-        break;
-    case CV_THRESH_BINARY_INV:
-        for( i = 0; i < roi.height; i++, src += src_step, dst += dst_step )
-            for( j = 0; j < roi.width; j++ )
-                dst[j] = (char) (((src[j] - thresh - 1) >> 8) & maxval);
-        break;
-    case CV_THRESH_TRUNC:
-        for( i = 0; i < roi.height; i++, src += src_step, dst += dst_step )
-            for( j = 0; j < roi.width; j++ )
-            {
-                int temp = src[j] - thresh;
-
-                dst[j] = (char) ((temp & (temp >> 31)) + thresh);
-            }
-        break;
-    case CV_THRESH_TOZERO:
-        for( i = 0; i < roi.height; i++, src += src_step, dst += dst_step )
-            for( j = 0; j < roi.width; j++ )
-            {
-                int temp = src[j];
-
-                dst[j] = (char) (((thresh - temp) >> 31) & temp);
-            }
-        break;
-    case CV_THRESH_TOZERO_INV:
-        for( i = 0; i < roi.height; i++, src += src_step, dst += dst_step )
-            for( j = 0; j < roi.width; j++ )
-            {
-                int temp = src[j];
-
-                dst[j] = (char) (((temp - thresh - 1) >> 31) & temp);
-            }
-        break;
-    default:
-        return CV_BADFLAG_ERR;
-    }
-    return CV_NO_ERR;
-}
-
-
-/*F///////////////////////////////////////////////////////////////////////////////////////
-//    Name:    icvThreshold32fC1R
-//    Purpose: Thresholding the source array
-//    Context:
-//    Parameters:
-//      Src     - source array
-//      roi     - size of picture in elements
-//      srcStep - length of string
-//      Thresh  - threshold parameter
-//      Type    - thresholding type, must be one of
-//                  CV_THRESH_BINARY       - val = (val > Thresh ? MAX    : 0)
-//                  CV_THRESH_BINARY_INV   - val = (val > Thresh ? 0      : MAX)
-//                  CV_THRESH_TRUNC        - val = (val > Thresh ? Thresh : val)
-//                  CV_THRESH_TOZERO       - val = (val > Thresh ? val    : 0)
-//                  CV_THRESH_TOZERO_INV   - val = (val > Thresh ? 0      : val)
-//    Returns:
-//    Notes:
-//      The MAX constant for uchar is 255, for char is 127
-//F*/
-IPCVAPI_IMPL( CvStatus, icvThresh_32f_C1R, (const float *src,
-                                            int src_step,
-                                            float *dst,
-                                            int dst_step,
-                                            CvSize roi,
-                                            float thresh, float maxval, CvThreshType type) )
+IPCVAPI_IMPL( CvStatus, icvThresh_32f_C1R,
+    (const float *src, int src_step, float *dst, int dst_step,
+    CvSize roi, float thresh, float maxval, int type),
+    (src, src_step, dst, dst_step, roi, thresh, maxval, type))
 {
     /* Some variables */
     int i, j;
@@ -268,15 +132,15 @@ IPCVAPI_IMPL( CvStatus, icvThresh_32f_C1R, (const float *src,
         return CV_NULLPTR_ERR;
     if( roi.width < 0 || roi.height < 0 )
         return CV_BADSIZE_ERR;
-    if( roi.width * sizeof_float > src_step )
+    if( roi.width * CV_SIZEOF_FLOAT > src_step )
         return CV_BADSIZE_ERR;
-    if( roi.width * sizeof_float > dst_step )
+    if( roi.width * CV_SIZEOF_FLOAT > dst_step )
         return CV_BADSIZE_ERR;
-    if( (src_step & (sizeof_float - 1)) != 0 || (dst_step & (sizeof_float - 1)) != 0 )
+    if( (src_step & (CV_SIZEOF_FLOAT - 1)) != 0 || (dst_step & (CV_SIZEOF_FLOAT - 1)) != 0 )
         return CV_BADSIZE_ERR;
 
-    src_step /= sizeof_float;
-    dst_step /= sizeof_float;
+    src_step /= CV_SIZEOF_FLOAT;
+    dst_step /= CV_SIZEOF_FLOAT;
 
     if( roi.width == src_step && roi.width == dst_step )
     {
@@ -358,7 +222,7 @@ IPCVAPI_IMPL( CvStatus, icvThresh_32f_C1R, (const float *src,
 
 
 CV_IMPL void
-cvThreshold( const void* srcarr, void* dstarr, double thresh, double maxval, CvThreshType type )
+cvThreshold( const void* srcarr, void* dstarr, double thresh, double maxval, int type )
 {
     CV_FUNCNAME( "cvThreshold" );
 
@@ -406,7 +270,7 @@ cvThreshold( const void* srcarr, void* dstarr, double thresh, double maxval, CvT
     if( !CV_ARE_SIZES_EQ( src, dst ) )
         CV_ERROR( CV_StsUnmatchedSizes, "" );
 
-    roi = icvGetMatSize( src );
+    roi = cvGetMatSize( src );
     roi.width *= CV_MAT_CN(src->type);
     if( CV_IS_MAT_CONT( src->type & dst->type ))
     {
@@ -428,19 +292,13 @@ cvThreshold( const void* srcarr, void* dstarr, double thresh, double maxval, CvT
                                      (uchar*)dst->data.ptr, dst_step, roi,
                                      cvRound(thresh), CV_CAST_8U(ival), type ));
         break;
-    case CV_8S:
-        ival = cvRound(maxval);
-        IPPI_CALL( icvThresh_8s_C1R( (char*)src->data.ptr, src_step,
-                                     (char*)dst->data.ptr, dst_step, roi,
-                                     cvRound(thresh), CV_CAST_8S(ival), type ));
-        break;
     case CV_32F:
         IPPI_CALL( icvThresh_32f_C1R( src->data.fl, src_step,
                                       dst->data.fl, dst_step, roi,
                                       (float)thresh, (float)maxval, type ));
         break;
     default:
-        CV_ERROR( CV_BadDepth, icvUnsupportedFormat );
+        CV_ERROR( CV_BadDepth, cvUnsupportedFormat );
     }
 
     __END__;

@@ -39,7 +39,6 @@
 //
 //M*/
 #include "_cv.h"
-#include "_cvdatastructs.h"
 
 /* The function calculates center of gravity and central second order moments */
 static void
@@ -253,7 +252,8 @@ icvAccumulateMoments( double *tiles, CvSize size, CvSize tile_size, CvMoments * 
 
 #define ICV_DEF_CALC_MOMENTS_IN_TILE( __op__, name, flavor, srctype, temptype, momtype ) \
 IPCVAPI_IMPL( CvStatus, icv##name##_##flavor##_CnCR,                                     \
-( const srctype* img, int step, CvSize size, int cn, int coi, double *moments ))         \
+( const srctype* img, int step, CvSize size, int cn, int coi, double *moments ),         \
+  (img, step, size, cn, coi, moments) )                                                  \
 {                                                                                        \
     int x, y, sx_init = (size.width & -4) * (size.width & -4), sy = 0;                   \
     momtype mom[10];                                                                     \
@@ -261,7 +261,8 @@ IPCVAPI_IMPL( CvStatus, icv##name##_##flavor##_CnCR,                            
     assert( img && size.width && (size.width | size.height) >= 0 );                      \
     memset( mom, 0, 10 * sizeof( mom[0] ));                                              \
                                                                                          \
-    img += coi - 1;                                                                      \
+    if( coi )                                                                            \
+        img += coi - 1;                                                                  \
                                                                                          \
     for( y = 0; y < size.height; sy += 2 * y + 1, y++, (char*&)img += step )             \
     {                                                                                    \
@@ -332,7 +333,7 @@ IPCVAPI_IMPL( CvStatus, icv##name##_##flavor##_CnCR,                            
 
 
 ICV_DEF_CALC_MOMENTS_IN_TILE( CV_NOP, MomentsInTile, 8u, uchar, int, int )
-ICV_DEF_CALC_MOMENTS_IN_TILE( CV_NOP, MomentsInTile, 8s, char, int, int )
+ICV_DEF_CALC_MOMENTS_IN_TILE( CV_NOP, MomentsInTile, 16u, ushort, int, int64 )
 ICV_DEF_CALC_MOMENTS_IN_TILE( CV_NOP, MomentsInTile, 16s, short, int, int64 )
 ICV_DEF_CALC_MOMENTS_IN_TILE( CV_NOP, MomentsInTile, 32f, float, double, double )
 ICV_DEF_CALC_MOMENTS_IN_TILE( CV_NOP, MomentsInTile, 64f, double, double, double )
@@ -342,8 +343,10 @@ ICV_DEF_CALC_MOMENTS_IN_TILE( CV_NONZERO, MomentsInTileBin, 16s, ushort, int, in
 ICV_DEF_CALC_MOMENTS_IN_TILE( CV_NONZERO_FLT, MomentsInTileBin, 32f, int, int, int )
 ICV_DEF_CALC_MOMENTS_IN_TILE( CV_NONZERO_FLT, MomentsInTileBin, 64f, int64, double, double )
 
+#define icvMomentsInTile_8s_CnCR  0
 #define icvMomentsInTile_32s_CnCR  0
 #define icvMomentsInTileBin_8s_CnCR   icvMomentsInTileBin_8u_CnCR
+#define icvMomentsInTileBin_16u_CnCR   icvMomentsInTileBin_16s_CnCR
 #define icvMomentsInTileBin_32s_CnCR  0
 
 CV_DEF_INIT_FUNC_TAB_2D( MomentsInTile, CnCR )
@@ -412,8 +415,8 @@ cvMoments( const void* array, CvMoments* moments, int binary )
     type = CV_MAT_TYPE( mat->type );
     depth = CV_MAT_DEPTH( type );
     cn = CV_MAT_CN( type );
-    pix_size = icvPixSize[type];
-    size = icvGetMatSize( mat );
+    pix_size = CV_ELEM_SIZE(type);
+    size = cvGetMatSize( mat );
 
     if( cn > 1 && coi == 0 )
         CV_ERROR( CV_StsBadArg, "Invalid image type" );
@@ -426,7 +429,7 @@ cvMoments( const void* array, CvMoments* moments, int binary )
     func = (CvFunc2DnC_1A1P)(!binary ? mom_tab.fn_2d[depth] : mombin_tab.fn_2d[depth]);
 
     if( !func )
-        CV_ERROR( CV_StsBadArg, icvUnsupportedFormat );
+        CV_ERROR( CV_StsBadArg, cvUnsupportedFormat );
 
     if( depth >= CV_32S && !binary )
         tile_size = size;

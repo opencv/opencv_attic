@@ -40,7 +40,6 @@
 //M*/
 
 #include "_cv.h"
-#include "_cvdatastructs.h"
 
 static int
 icvSklansky_32s( CvPoint** array, int start, int end, int* stack, int nsign, int sign2 )
@@ -191,13 +190,10 @@ icvSklansky_32f( CvPoint2D32f** array, int start, int end, int* stack, int nsign
 typedef int (*sklansky_func)( CvPoint** points, int start, int end,
                               int* stack, int sign, int sign2 );
 
-#define cmp_pts( ptr1, ptr2 ) \
-( ptr1->x < ptr2->x  ||       \
-  ptr1->x == ptr2->x &&       \
-  ptr1->y < ptr2->y  )
-
-CV_IMPLEMENT_QSORT( icvSortPointsByPointers_32s, CvPoint *, cmp_pts );
-CV_IMPLEMENT_QSORT( icvSortPointsByPointers_32f, CvPoint2D32f *, cmp_pts );
+#define cmp_pts( pt1, pt2 )  \
+    ((pt1)->x < (pt2)->x || (pt1)->x == (pt2)->x && (pt1)->y < (pt2)->y)
+static CV_IMPLEMENT_QSORT( icvSortPointsByPointers_32s, CvPoint*, cmp_pts )
+static CV_IMPLEMENT_QSORT( icvSortPointsByPointers_32f, CvPoint2D32f*, cmp_pts )
 
 static void
 icvCalcAndWritePtIndices( CvPoint** pointer, int* stack, int start, int end,
@@ -252,6 +248,7 @@ cvConvexHull2( const CvArr* array, void* hull_storage,
     int t_count;
     int i, miny_ind = 0, maxy_ind = 0;
     int hulltype;
+    int stop_idx;
     sklansky_func sklansky;
 
     if( CV_IS_SEQ( array ))
@@ -409,6 +406,7 @@ cvConvexHull2( const CvArr* array, void* hull_storage,
             for( i = tr_count - 1; i > 0; i-- )
                 CV_WRITE_SEQ_ELEM( pointer[tr_stack[i]][0], writer );
         }
+        stop_idx = tr_count > 2 ? tr_stack[1] : tl_count > 2 ? tl_stack[tl_count - 2] : -1;
     }
 
     /* lower half */
@@ -422,6 +420,22 @@ cvConvexHull2( const CvArr* array, void* hull_storage,
         {
             CV_SWAP( bl_stack, br_stack, t_stack );
             CV_SWAP( bl_count, br_count, t_count );
+        }
+
+        if( stop_idx >= 0 )
+        {
+            int check_idx = bl_count > 2 ? bl_stack[1] :
+                            bl_count + br_count > 2 ? br_stack[2-bl_count] : -1;
+            if( check_idx == stop_idx || check_idx >= 0 &&
+                pointer[check_idx]->x == pointer[stop_idx]->x &&
+                pointer[check_idx]->y == pointer[stop_idx]->y )
+            {
+                /* if all the points lie on the same line, then
+                   the bottom part of the convex hull is the mirrored top part
+                   (except the exteme points).*/
+                bl_count = MIN( bl_count, 2 );
+                br_count = MIN( br_count, 2 );
+            }
         }
 
         if( hulltype == CV_SEQ_ELTYPE_PPOINT )
@@ -527,7 +541,7 @@ cvConvexityDefects( const CvArr* array,
     if( CV_IS_SEQ( hull ))
     {
         int hulltype = CV_SEQ_ELTYPE( hull );
-        if( hulltype != CV_SEQ_ELTYPE_PPOINT || hulltype != CV_SEQ_ELTYPE_INDEX )
+        if( hulltype != CV_SEQ_ELTYPE_PPOINT && hulltype != CV_SEQ_ELTYPE_INDEX )
             CV_ERROR( CV_StsUnsupportedFormat,
                 "Convex hull must represented as a sequence "
                 "of indices or sequence of pointers" );
@@ -577,20 +591,20 @@ cvConvexityDefects( const CvArr* array,
 
         if( !is_index )
         {
-            CvPoint* pos = *CV_GET_SEQ_ELEM( CvPoint*, hull, 0 );
+            CvPoint* pos = *CV_SEQ_ELEM( hull, CvPoint*, 0 );
             CV_CALL( index1 = cvSeqElemIdx( ptseq, pos ));
 
-            pos = *CV_GET_SEQ_ELEM( CvPoint*, hull, 1 );
+            pos = *CV_SEQ_ELEM( hull, CvPoint*, 1 );
             CV_CALL( index2 = cvSeqElemIdx( ptseq, pos ));
 
-            pos = *CV_GET_SEQ_ELEM( CvPoint*, hull, 2 );
+            pos = *CV_SEQ_ELEM( hull, CvPoint*, 2 );
             CV_CALL( index3 = cvSeqElemIdx( ptseq, pos ));
         }
         else
         {
-            index1 = *CV_GET_SEQ_ELEM( int, hull, 0 );
-            index2 = *CV_GET_SEQ_ELEM( int, hull, 1 );
-            index3 = *CV_GET_SEQ_ELEM( int, hull, 2 );
+            index1 = *CV_SEQ_ELEM( hull, int, 0 );
+            index2 = *CV_SEQ_ELEM( hull, int, 1 );
+            index3 = *CV_SEQ_ELEM( hull, int, 2 );
         }
 
         sign += (index2 > index1) ? 1 : 0;
@@ -635,7 +649,7 @@ cvConvexityDefects( const CvArr* array,
 
         dx0 = (double)hull_next->x - (double)hull_cur->x;
         dy0 = (double)hull_next->y - (double)hull_cur->y;
-        assert( dx0 != 0 && dy0 != 0 ); 
+        assert( dx0 != 0 || dy0 != 0 ); 
         scale = 1./sqrt(dx0*dx0 + dy0*dy0);
 
         defect.start = hull_cur;
