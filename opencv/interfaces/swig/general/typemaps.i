@@ -45,31 +45,40 @@
 //             Institute of Communications Engineering, RWTH Aachen University
 
 
-%include "../general/cv.i"
+/**
+ * We set our own error handling function using cvRedirectError.
+ * (See also error.h)
+ * This function throws an error (OpenCV itself never throws) which 
+ * we catch here. The error handling function (SendErrorToPython)
+ * sets the Python error.
+ * We need to return 0 here instead of an PyObject to tell Python
+ * that an error has occured.
+ */
+%exception
+    {
+    try { $action } 
+    catch (...) 
+        {
+        return NULL;
+        } 
+    }
 
-%{
-#include "error.h"
-%}
 
-// Accessors for the IplImage data structure are defined here
-%include "./imagedata.i"
-
-// We integrate OpenCV error handling into the Python exception mechanism
-%include "./error.h"
-
-%pythoncode 
-%{
-
-__doc__ = """
-OpenCV is the Intel Open CV library, an open source effort to provide
-computer vision algorithms for standard PC hardware.
-
-This wrapper was semi-automatically created from the C/C++ headers and therefore
-contains no Python documentation. Because all identifiers are identical to their
-C/C++ counterparts, you can consult the standard manuals that come with OpenCV.
-"""
-
-# this tells OpenCV not to call exit() on errors but throw a python exception instead
-cvRedirectError(function_ptr_generator(), void_ptr_generator(), void_ptrptr_generator())
-
-%}
+/**
+ * This is used to allow functions expecting an IplImage to be 
+ * called with CvArr.
+ */
+%typemap(in) CvArr * 
+    { 
+    int err = SWIG_ConvertPtr
+        (
+        $input,
+        (void **) &$1, 
+        $descriptor(IplImage *), 
+        SWIG_POINTER_EXCEPTION
+        );
+    if (err == -1)
+        return 0; 
+    }
+    
+%typemap(in) const CvArr* = CvArr*;

@@ -1553,9 +1553,6 @@ static PyObject *_wrap_cvLoadImage(PyObject *, PyObject *args) {
         } 
     }
     resultobj = SWIG_NewPointerObj((void*)(result), SWIGTYPE_p_IplImage, 1);
-    {
-        cvReleaseImage(& result);
-    }
     return resultobj;
     fail:
     return NULL;
@@ -1696,9 +1693,6 @@ static PyObject *_wrap_cvCaptureFromFile(PyObject *, PyObject *args) {
         } 
     }
     resultobj = SWIG_NewPointerObj((void*)(result), SWIGTYPE_p_CvCapture, 1);
-    {
-        cvReleaseCapture(& result);
-    }
     return resultobj;
     fail:
     return NULL;
@@ -1724,9 +1718,6 @@ static PyObject *_wrap_cvCaptureFromCAM(PyObject *, PyObject *args) {
         } 
     }
     resultobj = SWIG_NewPointerObj((void*)(result), SWIGTYPE_p_CvCapture, 1);
-    {
-        cvReleaseCapture(& result);
-    }
     return resultobj;
     fail:
     return NULL;
@@ -1926,9 +1917,6 @@ static PyObject *_wrap_cvCreateVideoWriter(PyObject *, PyObject *args) {
         } 
     }
     resultobj = SWIG_NewPointerObj((void*)(result), SWIGTYPE_p_CvVideoWriter, 1);
-    {
-        cvReleaseVideoWriter(& result);
-    }
     return resultobj;
     fail:
     return NULL;

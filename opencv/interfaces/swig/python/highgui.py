@@ -30,17 +30,6 @@ except AttributeError:
 del types
 
 
-__doc__ = """HighGUI provides minimalistic user interface parts and video input/output.
-
-Dependent on the platform it was compiled on, this library provides methods
-to draw a window for image display, capture video from a camera or framegrabber
-or read/write video streams from/to the file system.
-
-This wrapper was semi-automatically created from the C/C++ headers and therefore
-contains no Python documentation. Because all identifiers are identical to their
-C/C++ counterparts, you can consult the standard manuals that come with OpenCV.
-"""
-
 
 cvInitSystem = _highgui.cvInitSystem
 CV_WINDOW_AUTOSIZE = _highgui.CV_WINDOW_AUTOSIZE
@@ -167,5 +156,17 @@ class CvvImagePtr(CvvImage):
         if not hasattr(self,"thisown"): _swig_setattr(self, CvvImage, 'thisown', 0)
         _swig_setattr(self, CvvImage,self.__class__,CvvImage)
 _highgui.CvvImage_swigregister(CvvImagePtr)
+
+__doc__ = """HighGUI provides minimalistic user interface parts and video input/output.
+
+Dependent on the platform it was compiled on, this library provides methods
+to draw a window for image display, capture video from a camera or framegrabber
+or read/write video streams from/to the file system.
+
+This wrapper was semi-automatically created from the C/C++ headers and therefore
+contains no Python documentation. Because all identifiers are identical to their
+C/C++ counterparts, you can consult the standard manuals that come with OpenCV.
+"""
+
 
 
