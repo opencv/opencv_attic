@@ -101,16 +101,20 @@ icvGetContext(void)
 {
 #ifdef CV_DLL
 #if defined WIN32 || defined WIN64
-    CvContext* context = (CvContext*)TlsGetValue( g_TlsIndex );
-    if( !context )
-    {
-    context = icvCreateContext();
+    CvContext* context;
 
+    assert(g_TlsIndex != TLS_OUT_OF_INDEXES);
+    if( g_TlsIndex == TLS_OUT_OF_INDEXES )
+        FatalAppExit( 0, "Only set CV_DLL for DLL usage" );
+
+    context = (CvContext*)TlsGetValue( g_TlsIndex );
     if( !context )
     {
-        FatalAppExit( 0, "OpenCV. Problem to allocate memory for TLS OpenCV context." );
-    }
-    TlsSetValue( g_TlsIndex, context );
+        context = icvCreateContext();
+        if( !context )
+            FatalAppExit( 0, "OpenCV. Problem to allocate memory for TLS OpenCV context." );
+
+        TlsSetValue( g_TlsIndex, context );
     }
     return context;
 #else
@@ -440,7 +444,7 @@ cvErrorFromIppStatus( int status )
     case CV_BADFACTOR_ERR: return CV_StsBadArg;
     case CV_BADPOINT_ERR: return CV_StsBadPoint;
 
-    default: assert(0); return CV_StsError;
+    default: return CV_StsError;
     }
 }
 /* End of file */
