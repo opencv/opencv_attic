@@ -1163,7 +1163,8 @@ CvBackgroundData* icvCreateBackgroundData( const char* filename, CvSize winsize 
         while( !feof( input ) )
         {
             *imgfilename = '\0';
-            fscanf( input, "%s", imgfilename );
+            if( !fscanf( input, "%s", imgfilename ))
+                break;
             len = strlen( imgfilename );
             if( len > 0 )
             {
@@ -1174,7 +1175,8 @@ CvBackgroundData* icvCreateBackgroundData( const char* filename, CvSize winsize 
         }
         if( count > 0 )
         {
-            rewind( input );
+            //rewind( input );
+            fseek( input, 0, SEEK_SET );
             datasize += sizeof( *data ) + sizeof( char* ) * count;
             data = (CvBackgroundData*) cvAlloc( datasize );
             memset( (void*) data, 0, datasize );
@@ -1188,7 +1190,8 @@ CvBackgroundData* icvCreateBackgroundData( const char* filename, CvSize winsize 
             while( !feof( input ) )
             {
                 *imgfilename = '\0';
-                fscanf( input, "%s", imgfilename );
+                if( !fscanf( input, "%s", imgfilename ))
+                    break;
                 len = strlen( imgfilename );
                 if( len > 0 )
                 {
@@ -1464,7 +1467,7 @@ void icvGetAuxImages( CvMat* img, CvMat* sum, CvMat* tilted,
              + ((sqsum_type*) (sqsum->data.ptr))[p3];
 
     /* sqrt( valsqsum / area - ( valsum / are )^2 ) * area */
-    (*normfactor) = (float) sqrt( (double) (area * valsqsum - valsum * valsum) );
+    (*normfactor) = (float) sqrt( (double) (area * valsqsum - (double)valsum * valsum) );
 }
 
 CV_IMPL
@@ -2132,7 +2135,7 @@ void cvCreateTreeCascadeClassifier( const char* dirname,
 
                 if( parent ) sprintf( buf, "%d", parent->idx );
                 else sprintf( buf, "NULL" );
-	            printf( "\nParent node: %s\n\n", buf );
+                printf( "\nParent node: %s\n\n", buf );
 
                 printf( "*** 1 cluster ***\n" );
 
@@ -2212,8 +2215,7 @@ void cvCreateTreeCascadeClassifier( const char* dirname,
                     
                     if( maxtreesplits >= 0 )
                     {
-                        max_clusters = CV_MIN( max_clusters,
-                                               maxtreesplits - total_splits + 1 );
+                        max_clusters = MIN( max_clusters, maxtreesplits - total_splits + 1 );
                     }
 
                     /* try clustering */
@@ -2439,7 +2441,7 @@ void cvCreateTreeCascadeClassifier( const char* dirname,
 
                 if( parent ) sprintf( buf, "%d", parent->idx );
                 else sprintf( buf, "NULL" );
-	            printf( "\nParent node: %s\n", buf );
+                printf( "\nParent node: %s\n", buf );
                 printf( "Chosen number of splits: %d\n\n", (last_split->multiple_clusters)
                     ? (last_split->num_clusters - 1) : 0 );
                 
