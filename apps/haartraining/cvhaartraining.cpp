@@ -1922,6 +1922,21 @@ void cvCreateCascadeClassifier( const char* dirname,
         }
         icvReleaseIntHaarFeatures( &haar_features );
         icvReleaseHaarTrainingData( &data );
+
+        if( i == nstages )
+        {
+            char xml_path[1024];
+            int len = strlen(dirname);
+            CvHaarClassifierCascade* cascade = 0;
+            strcpy( xml_path, dirname );
+            if( xml_path[len] == '\\' || xml_path[len] == '/' )
+                len--;
+            strcpy( xml_path + len, ".xml" );
+            cascade = cvLoadHaarClassifierCascade( dirname, cvSize(winwidth,winheight) );
+            if( cascade )
+                cvSave( xml_path, cascade );
+            cvReleaseHaarClassifierCascade( &cascade );
+        }
     }
     else
     {
