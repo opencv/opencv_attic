@@ -388,8 +388,9 @@ IplConvKernelFP;
 #define CV_IS_IMAGE(img) \
     (CV_IS_IMAGE_HDR(img) && ((IplImage*)img)->imageData != NULL)
 
-#define IPL_DEPTH_64F  64 /* for storing double-precision
-                             floating point data in IplImage's */
+/* for storing double-precision
+   floating point data in IplImage's */
+#define IPL_DEPTH_64F  64 
 
 /* get reference to pixel at (col,row),
    for multi-channel images (col) should be multiplied by number of channels */
@@ -723,8 +724,9 @@ typedef int CvHistType;
 #define CV_HIST_SPARSE        1
 #define CV_HIST_TREE          CV_HIST_SPARSE
 
-#define CV_HIST_UNIFORM       1 /* should be used as a parameter only,
-                                   it turns to CV_HIST_UNIFORM_FLAG of hist->type */
+/* should be used as a parameter only,
+   it turns to CV_HIST_UNIFORM_FLAG of hist->type */
+#define CV_HIST_UNIFORM       1
 
 typedef struct CvHistogram
 {
