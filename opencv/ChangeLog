@@ -1,5 +1,5 @@
 =============================================================================
-                                OpenCV beta 4
+                   OpenCV beta 4, Friday, August 13, 2004
 =============================================================================
 
 >>> Global changes: <<<
@@ -31,6 +31,8 @@
   -  On linux there is no cvcam anymore. Highgui should be used instead
      Windows version is also obsolete and will be removed as soon as DirectShow support
      will be added to highgui.
+
+  -  Interfaces for EiC, Ch and MATLAB have been temporarily dropped.
 
 >>> New features/functionality: <<<
 
@@ -175,6 +177,8 @@
   -  [SF bug #898556] cvGetDimSize() always returned error. Thanks to unknown author for the report.
   -  Multiple bugs in reference manuals have been fixed. Thanks to Irina Shevtsova, Pavel Yarykin,
      Stepan Dilman and others for the reports.
+  -  Several patches for better portability to Linux and IA64 have been applied
+     Thanks to Sam Hocevar.
   ...
 
 

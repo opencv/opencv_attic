@@ -1,17 +1,43 @@
-EXTRA_DIST = Makefile.gcc Makefile.bcc Makefile.icl Makefile.vc docs utils
+# The top-level input Makefile for OpenCV
 
-SUBDIRS = cv cvaux otherlibs @ADDONS@ bin @TESTDIR@
+# require automake 1.4
+# AUTOMAKE_OPTIONS = 1.4
 
-DIST_SUBDIRS = cv cvaux otherlibs bin apps tests
+## Any directories that you want built and installed should go here.
+SUBDIRS = cxcore cv cvaux otherlibs apps tests samples data docs
 
-AUTOMAKE_OPTIONS = foreign
+## Any directories you want a part of the distribution should be listed
+## here, as well as have a Makefile generated at the end of configure.in
+##
+## This only works for subdirectories one level deep.
+DIST_SUBDIRS = $(SUBDIRS)
 
-# this targets create distributive with symbolic links
-dist-l: distdir
-	-chmod -R a+r $(distdir)
-	GZIP=$(GZIP_ENV) $(TAR) cozf $(distdir).tar.gz $(distdir)
-	-rm -rf $(distdir)
-dist-all-l: distdir
-	-chmod -R a+r $(distdir)
-	GZIP=$(GZIP_ENV) $(TAR) cozf $(distdir).tar.gz $(distdir)
-	-rm -rf $(distdir)
+# All the rest of the distributed files
+EXTRA_DIST = THANKS COPYING INSTALL README NEWS ChangeLog OpenCV.spec OpenCV.spec.in opencv.pc.in opencv.pc autogen.sh _make utils
+
+pkgconfigdir = $(libdir)/pkgconfig
+pkgconfig_DATA = opencv.pc
+
+# Rule to build tar-gzipped distribution package
+$(PACKAGE)-$(VERSION).tar.gz: dist
+
+dist-hook:
+	rm -rf `find $(distdir) -name CVS`
+	find $(distdir) -name *.dsw -exec $(srcdir)/utils/unix2dos.py {} \;
+	find $(distdir) -name *.dsp -exec $(srcdir)/utils/unix2dos.py {} \;
+
+# Rule to build RPM distribution package
+rpm: $(PACKAGE)-$(VERSION).tar.gz
+	rpm -ta $(PACKAGE)-$(VERSION).tar.gz
+
+# Rule to force automake to rebuild the library
+changed:
+	@echo "This build target is no longer necessary"
+
+# Rule to install the libraries only - prevent rebuilding apps
+install-lib:
+	cd src && $(MAKE) install-libLTLIBRARIES
+
+# Run ldconfig after installing the library:
+install-hook:
+	-ldconfig
