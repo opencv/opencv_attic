@@ -79,7 +79,7 @@
 ////////// generic macro ////////////
 
 #define ICV_DEF_PYR_DOWN_FUNC( flavor, type, worktype, _pd_scale_ )                     \
-static CvStatus                                                                         \
+static CvStatus CV_STDCALL                                                              \
 icvPyrDownG5x5_##flavor##_CnR( const type* src, int srcstep, type* dst,                 \
                                int dststep, CvSize size, void *buf, int Cs )            \
 {                                                                                       \
@@ -274,7 +274,7 @@ ICV_DEF_PYR_DOWN_FUNC( 64f, double, double, PD_SCALE_FLT )
 
 
 #define ICV_DEF_PYR_UP_FUNC( flavor, type, worktype, _pu_scale_ )                       \
-static CvStatus                                                                         \
+static CvStatus CV_STDCALL                                                              \
 icvPyrUpG5x5_##flavor##_CnR( const type* src, int srcstep, type* dst,                   \
                              int dststep, CvSize size, void *buf, int Cs )              \
 {                                                                                       \

@@ -246,7 +246,7 @@ icvAccumulateMoments( double *tiles, CvSize size, CvSize tile_size, CvMoments * 
 
 
 /****************************************************************************************\
-*                             Spatial Moments caluclating                                *
+*                                   Spatial Moments                                      *
 \****************************************************************************************/
 
 #define ICV_DEF_CALC_MOMENTS_IN_TILE( __op__, name, flavor, srctype, temptype, momtype ) \
