@@ -30,7 +30,7 @@ except AttributeError:
 del types
 
 
-"""HighGUI provides minimalistic user interface parts and video input/output.
+__doc__ = """HighGUI provides minimalistic user interface parts and video input/output.
 
 Dependent on the platform it was compiled on, this library provides methods
 to draw a window for image display, capture video from a camera or framegrabber

@@ -30,7 +30,7 @@ except AttributeError:
 del types
 
 
-"""
+__doc__ = """
 OpenCV is the Intel Open CV library, an open source effort to provide
 computer vision algorithms for standard PC hardware.
 
@@ -1128,65 +1128,69 @@ _cv.CvPoint3D32f_swigregister(CvPoint3D32fPtr)
 
 
 cvPoint3D32f = _cv.cvPoint3D32f
-class CvPoint2D64d(_object):
+class CvPoint2D64f(_object):
     __swig_setmethods__ = {}
-    __setattr__ = lambda self, name, value: _swig_setattr(self, CvPoint2D64d, name, value)
+    __setattr__ = lambda self, name, value: _swig_setattr(self, CvPoint2D64f, name, value)
     __swig_getmethods__ = {}
-    __getattr__ = lambda self, name: _swig_getattr(self, CvPoint2D64d, name)
+    __getattr__ = lambda self, name: _swig_getattr(self, CvPoint2D64f, name)
     def __repr__(self):
-        return "<C CvPoint2D64d instance at %s>" % (self.this,)
-    __swig_setmethods__["x"] = _cv.CvPoint2D64d_x_set
-    __swig_getmethods__["x"] = _cv.CvPoint2D64d_x_get
-    if _newclass:x = property(_cv.CvPoint2D64d_x_get, _cv.CvPoint2D64d_x_set)
-    __swig_setmethods__["y"] = _cv.CvPoint2D64d_y_set
-    __swig_getmethods__["y"] = _cv.CvPoint2D64d_y_get
-    if _newclass:y = property(_cv.CvPoint2D64d_y_get, _cv.CvPoint2D64d_y_set)
+        return "<C CvPoint2D64f instance at %s>" % (self.this,)
+    __swig_setmethods__["x"] = _cv.CvPoint2D64f_x_set
+    __swig_getmethods__["x"] = _cv.CvPoint2D64f_x_get
+    if _newclass:x = property(_cv.CvPoint2D64f_x_get, _cv.CvPoint2D64f_x_set)
+    __swig_setmethods__["y"] = _cv.CvPoint2D64f_y_set
+    __swig_getmethods__["y"] = _cv.CvPoint2D64f_y_get
+    if _newclass:y = property(_cv.CvPoint2D64f_y_get, _cv.CvPoint2D64f_y_set)
     def __init__(self, *args):
-        _swig_setattr(self, CvPoint2D64d, 'this', _cv.new_CvPoint2D64d(*args))
-        _swig_setattr(self, CvPoint2D64d, 'thisown', 1)
-    def __del__(self, destroy=_cv.delete_CvPoint2D64d):
+        _swig_setattr(self, CvPoint2D64f, 'this', _cv.new_CvPoint2D64f(*args))
+        _swig_setattr(self, CvPoint2D64f, 'thisown', 1)
+    def __del__(self, destroy=_cv.delete_CvPoint2D64f):
         try:
             if self.thisown: destroy(self)
         except: pass
 
-class CvPoint2D64dPtr(CvPoint2D64d):
+class CvPoint2D64fPtr(CvPoint2D64f):
     def __init__(self, this):
-        _swig_setattr(self, CvPoint2D64d, 'this', this)
-        if not hasattr(self,"thisown"): _swig_setattr(self, CvPoint2D64d, 'thisown', 0)
-        _swig_setattr(self, CvPoint2D64d,self.__class__,CvPoint2D64d)
-_cv.CvPoint2D64d_swigregister(CvPoint2D64dPtr)
+        _swig_setattr(self, CvPoint2D64f, 'this', this)
+        if not hasattr(self,"thisown"): _swig_setattr(self, CvPoint2D64f, 'thisown', 0)
+        _swig_setattr(self, CvPoint2D64f,self.__class__,CvPoint2D64f)
+_cv.CvPoint2D64f_swigregister(CvPoint2D64fPtr)
 
-class CvPoint3D64d(_object):
+
+cvPoint2D64f = _cv.cvPoint2D64f
+class CvPoint3D64f(_object):
     __swig_setmethods__ = {}
-    __setattr__ = lambda self, name, value: _swig_setattr(self, CvPoint3D64d, name, value)
+    __setattr__ = lambda self, name, value: _swig_setattr(self, CvPoint3D64f, name, value)
     __swig_getmethods__ = {}
-    __getattr__ = lambda self, name: _swig_getattr(self, CvPoint3D64d, name)
+    __getattr__ = lambda self, name: _swig_getattr(self, CvPoint3D64f, name)
     def __repr__(self):
-        return "<C CvPoint3D64d instance at %s>" % (self.this,)
-    __swig_setmethods__["x"] = _cv.CvPoint3D64d_x_set
-    __swig_getmethods__["x"] = _cv.CvPoint3D64d_x_get
-    if _newclass:x = property(_cv.CvPoint3D64d_x_get, _cv.CvPoint3D64d_x_set)
-    __swig_setmethods__["y"] = _cv.CvPoint3D64d_y_set
-    __swig_getmethods__["y"] = _cv.CvPoint3D64d_y_get
-    if _newclass:y = property(_cv.CvPoint3D64d_y_get, _cv.CvPoint3D64d_y_set)
-    __swig_setmethods__["z"] = _cv.CvPoint3D64d_z_set
-    __swig_getmethods__["z"] = _cv.CvPoint3D64d_z_get
-    if _newclass:z = property(_cv.CvPoint3D64d_z_get, _cv.CvPoint3D64d_z_set)
+        return "<C CvPoint3D64f instance at %s>" % (self.this,)
+    __swig_setmethods__["x"] = _cv.CvPoint3D64f_x_set
+    __swig_getmethods__["x"] = _cv.CvPoint3D64f_x_get
+    if _newclass:x = property(_cv.CvPoint3D64f_x_get, _cv.CvPoint3D64f_x_set)
+    __swig_setmethods__["y"] = _cv.CvPoint3D64f_y_set
+    __swig_getmethods__["y"] = _cv.CvPoint3D64f_y_get
+    if _newclass:y = property(_cv.CvPoint3D64f_y_get, _cv.CvPoint3D64f_y_set)
+    __swig_setmethods__["z"] = _cv.CvPoint3D64f_z_set
+    __swig_getmethods__["z"] = _cv.CvPoint3D64f_z_get
+    if _newclass:z = property(_cv.CvPoint3D64f_z_get, _cv.CvPoint3D64f_z_set)
     def __init__(self, *args):
-        _swig_setattr(self, CvPoint3D64d, 'this', _cv.new_CvPoint3D64d(*args))
-        _swig_setattr(self, CvPoint3D64d, 'thisown', 1)
-    def __del__(self, destroy=_cv.delete_CvPoint3D64d):
+        _swig_setattr(self, CvPoint3D64f, 'this', _cv.new_CvPoint3D64f(*args))
+        _swig_setattr(self, CvPoint3D64f, 'thisown', 1)
+    def __del__(self, destroy=_cv.delete_CvPoint3D64f):
         try:
             if self.thisown: destroy(self)
         except: pass
 
-class CvPoint3D64dPtr(CvPoint3D64d):
+class CvPoint3D64fPtr(CvPoint3D64f):
     def __init__(self, this):
-        _swig_setattr(self, CvPoint3D64d, 'this', this)
-        if not hasattr(self,"thisown"): _swig_setattr(self, CvPoint3D64d, 'thisown', 0)
-        _swig_setattr(self, CvPoint3D64d,self.__class__,CvPoint3D64d)
-_cv.CvPoint3D64d_swigregister(CvPoint3D64dPtr)
+        _swig_setattr(self, CvPoint3D64f, 'this', this)
+        if not hasattr(self,"thisown"): _swig_setattr(self, CvPoint3D64f, 'thisown', 0)
+        _swig_setattr(self, CvPoint3D64f,self.__class__,CvPoint3D64f)
+_cv.CvPoint3D64f_swigregister(CvPoint3D64fPtr)
 
+
+cvPoint3D64f = _cv.cvPoint3D64f
 class CvSize(_object):
     __swig_setmethods__ = {}
     __setattr__ = lambda self, name, value: _swig_setattr(self, CvSize, name, value)

@@ -66,4 +66,25 @@ C/C++ counterparts, you can consult the standard manuals that come with OpenCV.
 %}
 
 %include "typemaps.i"
+
+%newobject cvLoadImage;
+
+
+%typemap(newfree) CvCapture *
+{
+  cvReleaseCapture(& $1);
+}
+
+%newobject cvCaptureFromFile;
+%newobject cvCaptureFromCAM;
+
+
+%typemap(newfree) CvVideoWriter *
+{
+  cvReleaseVideoWriter(& $1);
+}
+
+%newobject cvCreateVideoWriter;
+
+
 %include "highgui.h"

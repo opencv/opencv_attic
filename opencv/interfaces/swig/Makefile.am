@@ -66,11 +66,11 @@ filtered/constants.h: $(top_srcdir)/cv/include/cv.h $(top_srcdir)/cv/include/cvt
 	$(PYTHON) $(top_srcdir)/utils/extract_constants.py $(top_srcdir)/cv/include/cvtypes.h     >> $@
 
 # this rule creates the Python wrapper sources for cxcore and cv
-python/_cv.cpp: python/cv.i python/error.h python/error.cpp filtered/cv.h filtered/constants.h Makefile
+python/_cv.cpp: python/cv.i python/typemaps.i python/imagedata.i python/error.h python/error.cpp filtered/cv.h filtered/constants.h Makefile
 	$(SWIG) $(SWIG_PYTHON_OPT) $(CV_INCLUDES) -outdir python -o $@ $<
 
 # this rule creates the Python wrapper sources for highgui
-python/_highgui.cpp: python/highgui.i $(top_srcdir)/otherlibs/highgui/highgui.h Makefile
+python/_highgui.cpp: python/highgui.i python/typemaps.i $(top_srcdir)/otherlibs/highgui/highgui.h Makefile
 	$(SWIG) $(SWIG_PYTHON_OPT) $(CV_INCLUDES) -DSKIP_INCLUDES -outdir python -o $@ $<
 
 endif
