@@ -247,10 +247,9 @@ IPCVAPI_IMPL( CvStatus, name,                                               \
 
 
 #define ICV_DEF_UN_ARI_OP_2D( __op__, name, type, worktype, cast_macro )    \
-IPCVAPI_IMPL( CvStatus, name,                                               \
+static CvStatus CV_STDCALL name                                             \
     ( const type* src, int step1, type* dst, int step,                      \
-      CvSize size, const worktype* scalar ),                                \
-     (src, step1, dst, step, size, scalar) )                                \
+      CvSize size, const worktype* scalar )                                 \
 {                                                                           \
     if( size.width == 1 )                                                   \
     {                                                                       \
@@ -1283,12 +1282,11 @@ cvAddS( const void* srcarr, CvScalar scalar, void* dstarr, const void* maskarr )
 
 #define ICV_DEF_MUL_OP_CASE( flavor, arrtype, worktype, _cast_macro1_,                  \
                              _cast_macro2_, _cvt_macro_ )                               \
-                                                                                        \
-IPCVAPI_IMPL( CvStatus, icvMul_##flavor##_C1R,( const arrtype* src1, int step1,         \
-                                          const arrtype* src2, int step2,               \
-                                          arrtype* dst, int step,                       \
-                                          CvSize size, double scale ),                  \
-                                          (src1, step1, src2, step2, dst, step, size, scale) )\
+static CvStatus CV_STDCALL                                                              \
+    icvMul_##flavor##_C1R( const arrtype* src1, int step1,                              \
+                           const arrtype* src2, int step2,                              \
+                           arrtype* dst, int step,                                      \
+                           CvSize size, double scale )                                  \
 {                                                                                       \
     if( scale == 1 )                                                                    \
     {                                                                                   \

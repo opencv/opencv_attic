@@ -533,10 +533,9 @@ typedef  CvStatus (CV_STDCALL * CvLUBackFunc)( double* A, int stepA, CvSize size
 
 
 #define ICV_DEF_LU_DECOMP_FUNC( flavor, arrtype )                               \
-IPCVAPI_IMPL( CvStatus,                                                         \
-icvLUDecomp_##flavor, (double* A, int stepA, CvSize sizeA,                      \
-                       arrtype* B, int stepB, CvSize sizeB,                     \
-                       double* _det), (A, stepA, sizeA, B, stepB, sizeB, _det)) \
+static CvStatus CV_STDCALL                                                      \
+icvLUDecomp_##flavor( double* A, int stepA, CvSize sizeA,                       \
+                      arrtype* B, int stepB, CvSize sizeB, double* _det )       \
 {                                                                               \
     int n = sizeA.width;                                                        \
     int m = 0, i;                                                               \
@@ -636,10 +635,9 @@ ICV_DEF_LU_DECOMP_FUNC( 64f, double )
 
 
 #define ICV_DEF_LU_BACK_FUNC( flavor, arrtype )                                 \
-IPCVAPI_IMPL( CvStatus,                                                         \
-icvLUBack_##flavor, ( double* A, int stepA, CvSize sizeA,                       \
-                      arrtype* B, int stepB, CvSize sizeB ),                    \
-                      (A, stepA, sizeA, B, stepB, sizeB) )                      \
+static CvStatus CV_STDCALL                                                      \
+icvLUBack_##flavor( double* A, int stepA, CvSize sizeA,                         \
+                    arrtype* B, int stepB, CvSize sizeB )                       \
 {                                                                               \
     int n = sizeA.width;                                                        \
     int m = sizeB.width, i;                                                     \
