@@ -158,11 +158,7 @@ typedef void CvArr;
 #define  CV_CMP(a,b)    (((a) > (b)) - ((a) < (b)))
 #define  CV_SIGN(a)     CV_CMP((a),0)
 
-/* ************************************************************* *\
-   substitutions for round(x), floor(x), ceil(x):
-   the algorithm was taken from Agner Fog's optimization guide
-   at http://www.agner.org/assem
-\* ************************************************************* */
+
 CV_INLINE  int  cvRound( double value );
 CV_INLINE  int  cvRound( double value )
 {
@@ -177,6 +173,10 @@ CV_INLINE  int  cvRound( double value )
 #elif __GNUC__ > 3
     return (int)lrint( value );
 #else
+    /*
+     the algorithm was taken from Agner Fog's optimization guide
+     at http://www.agner.org/assem
+     */
     double temp = value + 6755399441055744.0;
     return (int)*((uint64*)&temp);
 #endif
@@ -202,27 +202,7 @@ CV_INLINE  int  cvCeil( double value )
     return temp + (*(int*)&diff < 0);
 }
 
-/* ************************************************************************** *\
-   Fast square root and inverse square root by
-   Bruce W. Holloway, Jeremy M., James Van Buskirk, Vesa Karvonen and others.
-   Taken from Paul Hsieh's site http://www.azillionmonkeys.com/qed/sqroot.html.
-\* ************************************************************************** */
-#define CV_SQRT_MAGIC  0xbe6f0000
-
-CV_INLINE  float  cvInvSqrt( float value );
-CV_INLINE  float  cvInvSqrt( float value )
-{
-    float x, y;
-    *((unsigned*)&x) = (CV_SQRT_MAGIC - *((unsigned*)&value))>>1;
-
-    y = value*0.5f;
-    x*= 1.5f - y*x*x;
-    x*= 1.5f - y*x*x;
-    x*= 1.5f - y*x*x;
-
-    return x;
-}
-
+#define cvInvSqrt(value) ((float)(1./sqrt(value)))
 #define cvSqrt(value)  ((float)sqrt((value)))
 
 CV_INLINE int cvIsNaN( double value );
@@ -306,6 +286,11 @@ CV_INLINE double cvRandReal( CvRNG* rng )
 
 #define IPL_ALIGN_DWORD   IPL_ALIGN_4BYTES
 #define IPL_ALIGN_QWORD   IPL_ALIGN_8BYTES
+
+#define IPL_BORDER_CONSTANT   0
+#define IPL_BORDER_REPLICATE  1
+#define IPL_BORDER_REFLECT    2
+#define IPL_BORDER_WRAP       3
 
 typedef struct _IplImage
 {

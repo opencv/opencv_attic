@@ -120,13 +120,13 @@ icvInitProcessorInfo( CvProcessorInfo* cpu_info )
         version = (int)cpuid_val;
         features = (int)(cpuid_val >> 32);
 
-        #define ICV_CPUID_M6     ((1<<15)|(1<<23)|6)  /* cmov + mmx */
+        #define ICV_CPUID_M6     ((1<<15)|(1<<23))  /* cmov + mmx */
         #define ICV_CPUID_A6     ((1<<25)|ICV_CPUID_M6) /* <all above> + xmm */
-        #define ICV_CPUID_W7     ((1<<26)|ICV_CPUID_A6|(1<<3)|1) /* <all above> + emm */
+        #define ICV_CPUID_W7     ((1<<26)|ICV_CPUID_A6) /* <all above> + emm */
 
         family = (version >> 8) & 15;
-        if( family >= 6 && (features & (ICV_CPUID_M6 & ~6)) != 0 ) /* Pentium II or higher */
-            id = (features & ICV_CPUID_W7 & -256) | family;
+        if( family >= 6 && (features & ICV_CPUID_M6) != 0 ) /* Pentium II or higher */
+            id = features & ICV_CPUID_W7;
 
         cpu_info->model = id == ICV_CPUID_W7 ? CV_PROC_IA32_P4 :
                           id == ICV_CPUID_A6 ? CV_PROC_IA32_PIII : 
@@ -250,7 +250,7 @@ typedef void* HMODULE;
 #define VERBOSE_LOADING 0
 
 #if VERBOSE_LOADING
-#define ICV_PRINTF(args)  printf args
+#define ICV_PRINTF(args)  printf args; fflush(stdout)
 #else
 #define ICV_PRINTF(args)
 #endif
