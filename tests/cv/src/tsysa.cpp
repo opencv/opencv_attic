@@ -108,22 +108,26 @@ void InitAPyrSegmentation();
 void InitAGestureRecognition();
 void InitAPOSIT();
 
+CvTS test_system;
+
 /*============================== Algorithm Tests =============================*/
 int main(int argC,char *argV[])
 {
-    char** argv = (char**)malloc( (argC + 4)*sizeof(argv[0]));
-    argv[argC + 0] = "-l";
-    argv[argC + 1] = "-s";
-    argv[argC + 2] = "-m";
-    argv[argC + 3] = "-B";
-    memcpy( argv, argV, argC*sizeof(argv[0]));
+    char** argv = (char**)malloc( 10*sizeof(argv[0]));
+    int argc = 0;
+    argv[argc++] = argV[0];
+    argv[argc++] = "-A";
+    argv[argc++] = "-l";
+    argv[argc++] = "-s";
+    argv[argc++] = "-m";
+    argv[argc++] = "-B";
 
 #ifdef WIN32
     atsInitModuleTestData( argV[0], "../tests/cv/testdata" );
 #else
     atsInitModuleTestData( argV[0], "../testdata" );
 #endif
-    atsLoadPrimitives( 1 );
+    //atsLoadPrimitives( 1 );
 
     InitAAcc();
     // InitAAdaptThreshold(); // test is not up-to-date
@@ -161,7 +165,6 @@ int main(int argC,char *argV[])
     InitAMatchContours();
     InitAMatchContourTrees();
     InitAMatchTemplate();
-
     InitAMeanShift();
     InitAMinAreaRect();
     InitAMoments();
@@ -183,9 +186,14 @@ int main(int argC,char *argV[])
     InitAPyrSegmentation();
     //InitAGestureRecognition(); // some functionality has been removed
 
-    trsRun(argC + 4,argv);
-    printf("Passed\n");
+    test_system.run( argC, argV );
+    fflush( stdout );
+    printf( "Now running the old-style tests...\n" );
+
+    trsRun( argc, argv );
+    printf("Done\n");
     free( argv );
     return 0;
 }
+
 /* End of file. */
