@@ -290,8 +290,8 @@ icvBlur_8u_CnR( uchar* src, int srcStep,
     int divisor = cvRound(state->divisor);
     double inv_divisor = divisor ? 1./divisor : 0.;
 
-    /*if( stage == CV_START + CV_END )
-        stage = CV_WHOLE;*/
+    if( stage == CV_START + CV_END )
+        stage = CV_WHOLE;
 
     /* initialize cyclic buffer when starting */
     if( stage == CV_WHOLE || stage == CV_START )
@@ -803,8 +803,8 @@ icvBlur_32f_CnR( const float* pSrc, int srcStep,
     srcStep /= sizeof(float);
     dstStep /= sizeof(float);
 
-    /*if( stage == CV_START + CV_END )
-        stage = CV_WHOLE;*/
+    if( stage == CV_START + CV_END )
+        stage = CV_WHOLE;
 
     /* initialize cyclic buffer when starting */
     if( stage == CV_WHOLE || stage == CV_START )

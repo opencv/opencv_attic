@@ -40,6 +40,7 @@
 //M*/
 
 #include "_cv.h"
+#include <stdio.h>
 
 static void
 icvCalcMinEigenVal( const float* cov, int cov_step, float* dst,
@@ -108,7 +109,7 @@ icvCalcEigenValsVecs( const float* cov, int cov_step, float* dst,
             double y = l1 - a;
             double e = fabs(x);
 
-            if( e + fabs(y) < FLT_EPSILON*100 )
+            if( e + fabs(y) < 1e-3 )
             {
                 y = b;
                 x = l1 - c;
@@ -123,7 +124,7 @@ icvCalcEigenValsVecs( const float* cov, int cov_step, float* dst,
             y = l2 - a;
             e = fabs(x);
 
-            if( e + fabs(y) < FLT_EPSILON*100 )
+            if( e + fabs(y) < 1e-3 )
             {
                 y = b;
                 x = l2 - c;
@@ -243,9 +244,9 @@ icvCornerEigenValsVecs( const CvMat* src, CvMat* eigenv, int block_size,
     {
         ipp_sobel_vert = ipp_sobel_horiz = 0;
         ipp_scharr_vert = ipp_scharr_horiz = 0;
-        IPPI_CALL( icvSobelInitAlloc( size.width, datatype, aperture_size,
+        IPPI_CALL( icvSobelInitAlloc( size.width, datatype, aperture_size0,
                                       CV_ORIGIN_TL, 1, 0, &dxstate ));
-        IPPI_CALL( icvSobelInitAlloc( size.width, datatype, aperture_size,
+        IPPI_CALL( icvSobelInitAlloc( size.width, datatype, aperture_size0,
                                       CV_ORIGIN_TL, 0, 1, &dystate ));
         max_dy = buf_size / src->cols;
         max_dy = MAX( max_dy, aperture_size + block_size );
@@ -270,7 +271,7 @@ icvCornerEigenValsVecs( const CvMat* src, CvMat* eigenv, int block_size,
     if( aperture_size0 == CV_SCHARR )
         factorx *= 2;
     if( depth == CV_8U )
-        factorx *= sqrt(255.);
+        factorx *= 255.;
     factory = factorx = 1./factorx;
     if( ipp_sobel_vert )
         factory = -factory;
@@ -307,9 +308,9 @@ icvCornerEigenValsVecs( const CvMat* src, CvMat* eigenv, int block_size,
             else /*if( ipp_scharr_vert )*/
             {
                 IPPI_CALL( ipp_scharr_vert( shifted_ptr, temp_step,
-                        Dx->data.ptr + y*d_step, d_step, stripe_size ));
+                        Dx->data.ptr, d_step, stripe_size ));
                 IPPI_CALL( ipp_scharr_horiz( shifted_ptr, temp_step,
-                        Dy->data.ptr + y*d_step, d_step, stripe_size ));
+                        Dy->data.ptr, d_step, stripe_size ));
             }
         }
 
@@ -445,7 +446,7 @@ cvPreCornerDetect( const void* srcarr, void* dstarr, int aperture_size )
     CvFilterState* dystate = 0;
     CvFilterState* d2xstate = 0;
     CvFilterState* d2ystate = 0;
-    CvFilterState* dxdystate = 0;
+    CvFilterState* dxystate = 0;
     CvMat *Dx = 0, *Dy = 0, *D2x = 0, *D2y = 0, *Dxy = 0;
     CvMat *tempsrc = 0;
     
@@ -540,7 +541,7 @@ cvPreCornerDetect( const void* srcarr, void* dstarr, int aperture_size )
         IPPI_CALL( icvSobelInitAlloc( size.width, datatype, aperture_size,
                                       CV_ORIGIN_TL, 0, 2, &d2ystate ));
         IPPI_CALL( icvSobelInitAlloc( size.width, datatype, aperture_size,
-                                      CV_ORIGIN_TL, 1, 1, &dxdystate ));
+                                      CV_ORIGIN_TL, 1, 1, &dxystate ));
         max_dy = buf_size / src->cols;
         max_dy = MAX( max_dy, aperture_size );
         opencv_derv_func = depth == CV_8U ? (CvFilterFunc)icvSobel_8u16s_C1R :
@@ -559,10 +560,10 @@ cvPreCornerDetect( const void* srcarr, void* dstarr, int aperture_size )
 
     stripe_size = size;
 
-    factor = (1 << 3*(aperture_size - 1));
+    factor = 1 << (aperture_size - 1);
     if( depth == CV_8U )
-        factor *= 255 * 255;
-    factor = 1./factor;
+        factor *= 255;
+    factor = 1./(factor * factor * factor);
 
     aperture_size = aperture_size * 10 + aperture_size;
 
@@ -588,7 +589,7 @@ cvPreCornerDetect( const void* srcarr, void* dstarr, int aperture_size )
                                          d_step, &stripe_size, d2ystate, stage ));
             stripe_size.height = delta;
             IPPI_CALL( opencv_derv_func( src->data.ptr + y*src->step, src->step, Dxy->data.ptr,
-                                         d_step, &stripe_size, dxstate, stage ));
+                                         d_step, &stripe_size, dxystate, stage ));
         }
         else
         {
@@ -655,7 +656,7 @@ cvPreCornerDetect( const void* srcarr, void* dstarr, int aperture_size )
     icvFilterFree( &dystate );
     icvFilterFree( &d2xstate );
     icvFilterFree( &d2ystate );
-    icvFilterFree( &dxdystate );
+    icvFilterFree( &dxystate );
     cvReleaseMat( &Dx );
     cvReleaseMat( &Dy );
     cvReleaseMat( &D2x );

@@ -1018,8 +1018,8 @@ cvPyrUp( const void* srcarr, void* dstarr, int _filter )
     if( !use_ipp )
         func( src->data.ptr, src->step, dst->data.ptr, dst->step, size, buffer, cn );
     else
-        IPPI_CALL( ipp_func( src->data.ptr, src->step,
-            dst->data.ptr, dst->step, size, buffer ));
+        IPPI_CALL( ipp_func( src->data.ptr, src->step ? src->step : CV_STUB_STEP,
+            dst->data.ptr, dst->step ? dst->step : CV_STUB_STEP, size, buffer ));
     __END__;
 
     if( buffer && !local_alloc )
@@ -1080,6 +1080,11 @@ cvPyrDown( const void* srcarr, void* dstarr, int _filter )
         (unsigned)(dst_size.height - src_size.height/2) > 1 )
         CV_ERROR( CV_StsUnmatchedSizes, "" );
 
+    // current restriction of PyrDownBorder* 
+    if( src_size.width <= 2 && dst_size.width != 1 ||
+        src_size.height <= 2 && dst_size.height != 1 )
+        CV_ERROR( CV_StsUnmatchedSizes, "" );
+
     /*if( src->data.ptr == dst->data.ptr )
         CV_ERROR( CV_StsInplaceNotSupported, "" );*/
 
@@ -1122,8 +1127,8 @@ cvPyrDown( const void* srcarr, void* dstarr, int _filter )
         func( src->data.ptr, src->step, dst->data.ptr,
               dst->step, src_size2, buffer, cn );
     else
-        IPPI_CALL( ipp_func( src->data.ptr, src->step,
-            dst->data.ptr, dst->step, src_size2, buffer ));
+        IPPI_CALL( ipp_func( src->data.ptr, src->step ? src->step : CV_STUB_STEP,
+            dst->data.ptr, dst->step ? dst->step : CV_STUB_STEP, src_size2, buffer ));
 
     if( src_size.width != dst_size.width*2 || src_size.height != dst_size.height*2 )
     {
