@@ -3004,7 +3004,7 @@ floating-point number from 0..1 range (1 is not included).</p>
 #define CV_DXT_INV_SCALE (CV_DXT_SCALE|CV_DXT_INVERSE)
 #define CV_DXT_INVERSE_SCALE CV_DXT_INV_SCALE
 
-void cvDFT( const CvArr* src, CvArr* dst, int flags );
+void cvDFT( const CvArr* src, CvArr* dst, int flags, int nonzero_rows=0 );
 </pre><p><dl>
 <dt>src<dd>Source array, real or complex.
 <dt>dst<dd>Destination array of the same size and same type as the source.
@@ -3021,6 +3021,11 @@ void cvDFT( const CvArr* src, CvArr* dst, int flags );
                                          can be used to decrease the overhead (which is sometimes several times
                                          larger than the processing itself), to do 3D and higher-dimensional
                                          transforms etc.
+<dt>nonzero_rows<dd>Number of nonzero rows to in the source array (in case of forward 2d transform),
+                    or a number of rows of interest in the destination array (in case of inverse 2d transform).
+                    If the value is negative, zero, or greater than the total number of rows, it is ignored.
+                    The parameter can be used to speed up 2d convolution/correlation when computing them via DFT.
+                    See the sample below.
 </dl><p>
 The function <a href="#decl_cvDFT">cvDFT</a> performs forward or inverse transform of
 1D or 2D floating-point array:
@@ -3055,6 +3060,70 @@ Re Y<sub>M/2,0</sub>    Re Y<sub>M-1,1</sub>   Im Y<sub>M-1,1</sub>  Re Y<sub>M-
 
 <p>Note: the last column is present if <code>N</code> is even, the last row is present if <code>M</code> is even.</p>
 <p>In case of 1D real transform the result looks like the first row of the above matrix</p>
+
+<font color=blue size=4>Computing 2D Convolution using DFT</font></p>
+<pre>
+   CvMat* A = cvCreateMat( M1, N1, CV_32F );
+   CvMat* B = cvCreateMat( M2, N2, A->type );
+
+   // it is also possible to have only abs(M2-M1)+1&times;abs(N2-N1)+1
+   // part of the full convolution result
+   CvMat* conv = cvCreateMat( A->rows + B->rows - 1, A->cols + B->cols - 1, A->type );
+
+   // initialize A and B
+   ...
+
+   int dft_M = cvGetOptimalDFTSize( A->rows + B->rows - 1 );
+   int dft_N = cvGetOptimalDFTSize( A->cols + B->cols - 1 );
+
+   CvMat* dft_A = cvCreateMat( dft_M, dft_N, A->type );
+   CvMat* dft_B = cvCreateMat( dft_M, dft_N, B->type );
+   CvMat tmp;
+
+   // copy A to dft_A and pad dft_A with zeros
+   cvGetSubRect( dft_A, &tmp, cvRect(0,0,A->cols,A->rows));
+   cvCopy( A, &tmp );
+   cvGetSubRect( dft_A, &tmp, cvRect(A->cols,0,dft_A->cols - A->cols,A->rows));
+   cvZero( &tmp );
+   // no need to pad bottom part of dft_A with zeros because of
+   // use nonzero_rows parameter in cvDFT() call below
+
+   cvDFT( dft_A, dft_A, CV_DXT_FORWARD, A->rows );
+
+   // repeat the same with the second array
+   cvGetSubRect( dft_B, &tmp, cvRect(0,0,B->cols,B->rows));
+   cvCopy( B, &tmp );
+   cvGetSubRect( dft_B, &tmp, cvRect(B->cols,0,dft_B->cols - B->cols,B->rows));
+   cvZero( &tmp );
+   // no need to pad bottom part of dft_B with zeros because of
+   // use nonzero_rows parameter in cvDFT() call below
+
+   cvDFT( dft_B, dft_B, CV_DXT_FORWBRD, B->rows );
+
+   cvMulSpectrums( dft_A, dft_B, dft_A, 0 /* or CV_DXT_MUL_CONJ to get correlation
+                                             rather than convolution */ );
+
+   cvDFT( dft_A, dft_A, CV_DXT_INV_SCALE, conv->rows ); // calculate only the top part
+   cvGetSubRect( dft_A, &tmp, cvRect(0,0,conv->cols,conv->rows) );
+
+   cvCopy( &tmp, conv );
+</pre></p>
+
+
+<hr><h3><a name="decl_cvGetOptimalDFTSize">GetOptimalDFTSize</a></h3>
+<p class="Blurb">Returns optimal DFT size for given vector size</p>
+<pre>
+int cvGetOptimalDFTSize( int size0 );
+</pre><p><dl>
+<dt>size0<dd>Vector size.
+</dl><p>
+The function <a href="#decl_cvGetOptimalDFTSize">cvGetOptimalDFTSize</a> returns the minimum
+number <code>N</code> that is greater to equal to <code>size0</code>, such that DFT of a vector
+of size <code>N</code> can be computed fast. In the current implementation
+<code>N=2<sup>p</sup>&times;3<sup>q</sup>&times;5<sup>r</sup></code> for some <code>p, q, r</code>.
+</p>
+<p>The function returns a negative number if <code>size0</code> is too large (very close to <code>INT_MAX</code>)</p>
+
 
 <hr><h3><a name="decl_cvMulSpectrums">MulSpectrums</a></h3>
 <p class="Blurb">Performs per-element multiplication of two Fourier spectrums</p>
@@ -6646,9 +6715,9 @@ a function/user-code execution time. To convert the number of tics to time units
 double cvGetTickFrequency( void );
 </pre><p>
 The function <a href="#decl_cvGetTickFrequency">cvGetTickFrequency</a> returns number of tics
-per microsecond. Thus, the product of <a href="#decl_cvGetTickCount">cvGetTickCount</a>() and
-<a href="#decl_cvGetTickFrequency">cvGetTickFrequency</a>() will give the number of microseconds starting
-from the platform-dependent event.</p>
+per microsecond. Thus, the quotient of <a href="#decl_cvGetTickCount">cvGetTickCount</a>() and
+<a href="#decl_cvGetTickFrequency">cvGetTickFrequency</a>() will give a number of microseconds
+starting from the platform-dependent event.</p>
 
 
 <hr><h3><a name="decl_cvRegisterModule">RegisterModule</a></h3>
