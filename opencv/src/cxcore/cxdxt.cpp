@@ -298,7 +298,7 @@ icvDFTInit( int n0, int nf, int* factors, int* itab, int elem_size, void* _wave,
             }
 
             digits[1]++;
-            for( i = n, j = radix[2];; )
+            for( i = n, j = radix[2]; i < n0; )
             {
                 for( k = 0; k < n; k++ )
                     itab[i+k] = itab[k] + j;
