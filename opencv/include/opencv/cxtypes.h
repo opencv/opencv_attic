@@ -93,7 +93,7 @@
 #ifndef CV_INLINE
 #if defined __cplusplus
     #define CV_INLINE inline
-#elif defined WIN32 || defined WIN64 || defined __GNUC__
+#elif (defined WIN32 || defined WIN64) && !defined __GNUC__
     #define CV_INLINE __inline
 #else
     #define CV_INLINE static
