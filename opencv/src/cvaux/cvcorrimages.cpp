@@ -191,6 +191,10 @@ int icvFindCorrForGivenPoints( IplImage *image1,/* Image 1 */
     CvMat* tmpPoints1 = 0;
     CvMat* tmpPoints2 = 0;
     CvMat* pStatus = 0;
+    IplImage *grayImage1 = 0;
+    IplImage *grayImage2 = 0;
+    IplImage *pyrImage1 = 0;
+    IplImage *pyrImage2 = 0;
 
     CV_FUNCNAME( "icvFindCorrForGivenPoints" );
     __BEGIN__;
@@ -274,11 +278,6 @@ int icvFindCorrForGivenPoints( IplImage *image1,/* Image 1 */
         CvvImage pyrImage1;
         CvvImage pyrImage2;
 */
-
-        IplImage *grayImage1 = 0;
-        IplImage *grayImage2 = 0;
-        IplImage *pyrImage1 = 0;
-        IplImage *pyrImage2 = 0;
 
         /* Create Ipl images */
         CV_CALL( grayImage1 = cvCreateImage(cvSize(w,h),8,1) );
@@ -427,7 +426,11 @@ int icvFindCorrForGivenPoints( IplImage *image1,/* Image 1 */
     cvFree((void**)&errors);
     cvFree((void**)&tmpPoints1);
     cvFree((void**)&tmpPoints2);
-
+    cvReleaseMat( &pStatus );
+    cvReleaseImage( &grayImage1 );
+    cvReleaseImage( &grayImage2 );
+    cvReleaseImage( &pyrImage1 );
+    cvReleaseImage( &pyrImage2 );
 
     return resNumCorrPoints;
 }

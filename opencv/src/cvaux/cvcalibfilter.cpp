@@ -814,7 +814,7 @@ bool CvCalibFilter::Rectify( CvMat** srcarr, CvMat** dstarr )
 
                 }
 
-                cvRemap( src, dst, rectMap[i], 1 );
+                cvUnDistort( src, dst, rectMap[i], 1 );
             }
         }
     }
@@ -882,7 +882,7 @@ bool CvCalibFilter::Undistort( CvMat** srcarr, CvMat** dstarr )
                                      cameraParams[i].distortion, 1 );
                 }
 
-                cvRemap( src, dst, undistMap[i], 1 );
+                cvUnDistort( src, dst, undistMap[i], 1 );
             #else
                 cvUnDistortOnce( src, dst, cameraParams[i].matrix, cameraParams[i].distortion, 1 );
             #endif
