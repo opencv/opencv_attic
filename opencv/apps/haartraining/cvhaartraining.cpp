@@ -1550,7 +1550,7 @@ int icvGetHaarTrainingData( CvHaarTrainingData* data, int first, int count,
 /* consumed counter */
 typedef uint64 ccounter_t;
 
-#define CCOUNTER_MAX (0xffffffffffffffff)
+#define CCOUNTER_MAX CV_BIG_UINT(0xffffffffffffffff)
 #define CCOUNTER_SET_ZERO(cc) ((cc) = 0)
 #define CCOUNTER_INC(cc) ( (CCOUNTER_MAX > (cc) ) ? (++(cc)) : (CCOUNTER_MAX) )
 #define CCOUNTER_ADD(cc0, cc1) ( ((CCOUNTER_MAX-(cc1)) > (cc0) ) ? ((cc0) += (cc1)) : ((cc0) = CCOUNTER_MAX) )
