@@ -469,9 +469,10 @@ CvTest::CvTest( const char* _test_name, const char* _test_funcs, const char* _te
     timing_param_current = 0;
     timing_param_seqs = 0;
     timing_param_idxs = 0;
-    timing_param_count = 0;
+    timing_param_count = -1;
 
     test_case_count = -1;
+    support_testing_modes = CvTS::CORRECTNESS_CHECK_MODE;
 }
 
 CvTest::~CvTest()
@@ -492,7 +493,7 @@ void CvTest::clear()
     timing_param_current = 0;
     timing_param_seqs = 0;
     timing_param_idxs = 0;
-    timing_param_count = 0;
+    timing_param_count = -1;
 }
 
 
@@ -762,9 +763,9 @@ bool CvTest::can_do_fast_forward()
 }
 
 
-int CvTest::support_testing_modes()
+int CvTest::get_support_testing_modes()
 {
-    return CvTS::CORRECTNESS_CHECK_MODE;
+    return support_testing_modes;
 }
 
 void CvTest::safe_run( int start_from )
@@ -794,7 +795,7 @@ void CvTest::run( int start_from )
 
         if( ts->get_testing_mode() == CvTS::TIMING_MODE )
         {
-            const int iterations = 10;
+            const int iterations = 15;
             code = prepare_test_case( test_case_idx );
             
             if( code < 0 || ts->get_err_code() < 0 )
@@ -1219,7 +1220,7 @@ int CvTS::run( int argc, char** argv )
         for( i = 0; i < all_tests.size(); i++ )
         {
             test = (CvTest*)all_tests[i];
-            if( !(test->support_testing_modes() & get_testing_mode()) )
+            if( !(test->get_support_testing_modes() & get_testing_mode()) )
                 continue;
             test->write_defaults( this );
             test->clear();
@@ -1275,7 +1276,7 @@ int CvTS::run( int argc, char** argv )
     for( i = 0; i < all_tests.size(); i++ )
     {
         test = (CvTest*)all_tests[i];
-        if( !(test->support_testing_modes() & get_testing_mode()) )
+        if( !(test->get_support_testing_modes() & get_testing_mode()) )
             continue;
 
         if( strcmp( test->get_func_list(), "" ) != 0 && filter(test) )

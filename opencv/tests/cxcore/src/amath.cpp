@@ -80,7 +80,6 @@ CxCore_MathTestImpl::CxCore_MathTestImpl( const char* test_name, const char* tes
     test_array[OUTPUT].push(NULL);
     test_array[REF_OUTPUT].push(NULL);
 
-    timing_param_count = CV_DIM(math_param_names);
     default_timing_param_names = math_param_names;
 
     size_list = math_sizes;
@@ -329,7 +328,6 @@ CxCore_PowTest::CxCore_PowTest()
     : CxCore_MathTest( "math-pow", "cvPow" )
 {
     power = 0;
-    timing_param_count = CV_DIM(math_pow_param_names);
     default_timing_param_names = math_pow_param_names;
     depth_list = math_pow_depths;
 }
@@ -884,7 +882,6 @@ CxCore_MatrixTestImpl::CxCore_MatrixTestImpl( const char* test_name, const char*
 
     element_wise_relative_error = false;
 
-    timing_param_count = CV_DIM(math_param_names);
     default_timing_param_names = math_param_names;
 
     size_list = (CvSize*)matrix_sizes;
@@ -1286,7 +1283,6 @@ CxCore_GEMMTest::CxCore_GEMMTest() :
     CxCore_MatrixTest( "matrix-gemm", "cvGEMM", 5, 1, false, false, 2 )
 {
     test_case_count = 100;
-    timing_param_count = CV_DIM(matrix_gemm_param_names);
     default_timing_param_names = matrix_gemm_param_names;
     alpha = beta = 0;
 }
@@ -1453,7 +1449,6 @@ CxCore_MulTransposedTest::CxCore_MulTransposedTest() :
     test_case_count = 100;
     order = 0;
     test_array[TEMP].push(NULL);
-    timing_param_count = CV_DIM(matrix_multrans_param_names);
     default_timing_param_names = matrix_multrans_param_names;
 }
 
@@ -1579,7 +1574,6 @@ protected:
 CxCore_TransformTest::CxCore_TransformTest() :
     CxCore_MatrixTest( "matrix-transform", "cvTransform", 3, 1, true, false, 4 )
 {
-    timing_param_count = CV_DIM(matrix_transform_param_names);
     default_timing_param_names = matrix_transform_param_names;
     cn_list = matrix_transform_channels;
     depth_list = matrix_all_depths;
@@ -1692,7 +1686,6 @@ protected:
 CxCore_PerspectiveTransformTest::CxCore_PerspectiveTransformTest() :
     CxCore_MatrixTest( "matrix-perspective", "cvPerspectiveTransform", 2, 1, false, false, 2 )
 {
-    timing_param_count = CV_DIM(matrix_transform_param_names);
     default_timing_param_names = matrix_transform_param_names;
     cn_list = matrix_perspective_transform_channels;
     size_list = matrix_transform_sizes;
@@ -1946,7 +1939,6 @@ protected:
     int prepare_test_case( int test_case_idx );
     void run_func();
     void prepare_to_validation( int test_case_idx );
-    int support_testing_modes();
     CvTestPtrVec temp_hdrs;
     uchar* hdr_data;
     int flags, t_flag;
@@ -1963,12 +1955,8 @@ CxCore_CovarMatrixTest::CxCore_CovarMatrixTest() :
     test_array[REF_INPUT_OUTPUT].push(NULL);
     test_array[TEMP].push(NULL);
     test_array[TEMP].push(NULL);
-}
 
-
-int CxCore_CovarMatrixTest::support_testing_modes()
-{
-    return CvTS::CORRECTNESS_CHECK_MODE; // for now disable the timing test
+    support_testing_modes = CvTS::CORRECTNESS_CHECK_MODE;
 }
 
 
@@ -2309,7 +2297,6 @@ CxCore_InvertTest::CxCore_InvertTest() :
     test_array[TEMP].push(NULL);
     test_array[TEMP].push(NULL);
 
-    timing_param_count = CV_DIM(matrix_solve_invert_param_names);
     default_timing_param_names = matrix_solve_invert_param_names;
 }
 
@@ -2501,7 +2488,6 @@ CxCore_SolveTest::CxCore_SolveTest() :
     test_array[TEMP].push(NULL);
     test_array[TEMP].push(NULL);
 
-    timing_param_count = CV_DIM(matrix_solve_invert_param_names);
     default_timing_param_names = matrix_solve_invert_param_names;
 }
 
@@ -2670,7 +2656,6 @@ CxCore_SVDTest::CxCore_SVDTest() :
     test_array[TEMP].push(NULL);
     test_array[TEMP].push(NULL);
 
-    timing_param_count = CV_DIM(matrix_svd_param_names);
     default_timing_param_names = matrix_svd_param_names;
 }
 

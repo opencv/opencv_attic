@@ -33,7 +33,7 @@ window size is automatically adjusted to fit the displayed image
 (see <a href="#decl_cvShowImage">cvShowImage</a>), while user can not change
 the window size manually.
 </dl><p>
-The function <a href="#decl_cvNamedWindow">cvNamedWindow</a>
+The function <code>cvNamedWindow</code>
 creates a window which can be used as a placeholder for images and trackbars.
 Created windows are reffered by their names.
 </p><p>
@@ -48,7 +48,7 @@ void cvDestroyWindow( const char* name );
 <dt>name<dd>Name of the window to be destroyed.
 </dl>
 <p>
-The function <a href="#decl_cvDestroyWindow">cvDestroyWindow</a>
+The function <code>cvDestroyWindow</code>
 destroys the window with a given name.
 </p>
 
@@ -59,7 +59,7 @@ destroys the window with a given name.
 void cvDestroyAllWindows(void);
 </pre>
 <p>
-The function <a href="#decl_cvDestroyAllWindows">cvDestroyAllWindows</a>
+The function <code>cvDestroyAllWindows</code>
 destroys all the opened HighGUI windows.
 </p>
 
@@ -73,7 +73,7 @@ void cvResizeWindow( const char* name, int width, int height );
 <dt>width<dd>New width
 <dt>height<dd>New height
 </dl><p>
-The function <a href="#decl_cvResizeWindow">cvResizeWindow</a> changes size of the window.
+The function <code>cvResizeWindow</code> changes size of the window.
 </p>
 
 
@@ -86,7 +86,7 @@ void cvMoveWindow( const char* name, int x, int y );
 <dt>x<dd>New x coordinate of top-left corner
 <dt>y<dd>New y coordinate of top-left corner
 </dl><p>
-The function <a href="#decl_cvMoveWindow">cvMoveWindow</a> changes position of the window.
+The function <code>cvMoveWindow</code> changes position of the window.
 </p>
 
 
@@ -97,7 +97,7 @@ void* cvGetWindowHandle( const char* name );
 </pre><dl>
 <dt>name<dd>Name of the window.
 </dl><p>
-The function <a href="#decl_cvGetWindowHandle">cvGetWindowHandle</a>
+The function <code>cvGetWindowHandle</code>
 returns native window handle (HWND in case of Win32 and GtkWidget in case of GTK+).
 </p>
 
@@ -109,7 +109,7 @@ const char* cvGetWindowName( void* window_handle );
 </pre><dl>
 <dt>window_handle<dd>Handle of the window.
 </dl><p>
-The function <a href="#decl_cvGetWindowName">cvGetWindowName</a>
+The function <code>cvGetWindowName</code>
 returns the name of window given its native handle
 (HWND in case of Win32 and GtkWidget in case of GTK+).
 </p>
@@ -124,7 +124,7 @@ void cvShowImage( const char* name, const CvArr* image );
 <dt>name<dd>Name of the window.
 <dt>image<dd>Image to be shown.
 </dl><p>
-The function <a href="#decl_cvShowImage">cvShowImage</a>
+The function <code>cvShowImage</code>
 shows the image in the specified window. If the window was created with <code>CV_WINDOW_AUTOSIZE</code>
 flag then the image is shown with its original size, otherwise
 the image is scaled to fit the window.
@@ -148,7 +148,7 @@ int cvCreateTrackbar( const char* trackbar_name, const char* window_name,
   function should be prototyped as <code>void Foo(int);</code>Can be NULL if
   callback is not required.
 </dl><p>
-The function <a href="#decl_cvCreateTrackbar">cvCreateTrackbar</a>
+The function <code>cvCreateTrackbar</code>
 creates the trackbar (a.k.a. slider or range control) with the specified name and range,
 assigns the variable to be syncronized with trackbar position and specifies callback function
 to be called on trackbar position change. The created trackbar is displayed on top
@@ -163,7 +163,7 @@ int cvGetTrackbarPos( const char* trackbar_name, const char* window_name );
 <dt>trackbar_name<dd>Name of trackbar.
 <dt>window_name<dd>Name of the window which is the parent of trackbar.
 </dl><p>
-The function <a href="#decl_cvGetTrackbarPos">cvGetTrackbarPos</a>
+The function <code>cvGetTrackbarPos</code>
 returns the ciurrent position of the specified trackbar.</p>
 
 
@@ -176,7 +176,7 @@ void cvSetTrackbarPos( const char* trackbar_name, const char* window_name, int p
 <dt>window_name<dd>Name of the window which is the parent of trackbar.
 <dt>pos<dd>New position.
 </dl><p>
-The function <a href="#decl_cvSetTrackbarPos">cvSetTrackbarPos</a>
+The function <code>cvSetTrackbarPos</code>
   sets the position of the specified trackbar.</p>
 
 
@@ -213,7 +213,7 @@ void cvSetMouseCallback( const char* window_name, CvMouseCallback on_mouse );
   <code>x</code> and <code>y</code> are coordinates of mouse pointer in image coordinates
   (not window coordinates) and <code>flags</code> is a combination of <code>CV_EVENT_FLAG</code>.
 </dl><p>
-The function <a href="#decl_cvSetMouseCallback">cvSetMouseCallback</a>
+The function <code>cvSetMouseCallback</code>
 sets the callback function for mouse events occuting within the specified
 window. To see how it works, look at <a href="../../samples/c/ffilldemo.c">
 opencv/samples/c/ffilldemo.c</a> demo</p>
@@ -226,7 +226,7 @@ int cvWaitKey( int delay=0 );
 </pre><dl>
 <dt>delay<dd>Delay in milliseconds.
 </dl><p>
-The function <a href="#decl_cvWaitKey">cvWaitKey</a> waits for key event infinitely (delay&lt;=0) or for "delay" milliseconds.
+The function <code>cvWaitKey</code> waits for key event infinitely (delay&lt;=0) or for "delay" milliseconds.
 Returns the code of the pressed key or -1 if no key were pressed until the specified timeout has elapsed.
 </p><p>
 <b>Note</b>: This function is the only method in HighGUI to fetch and handle events so
@@ -249,7 +249,7 @@ IplImage* cvLoadImage( const char* filename, int iscolor=1 );
        if &lt;0, the loaded image will be loaded as is
        (with number of channels depends on the file).
 </dl><p>
-The function <a href="#decl_cvLoadImage">cvLoadImage</a> loads an image
+The function <code>cvLoadImage</code> loads an image
 from the specified file and returns the pointer to the loaded image.
 Currently the following file formats are supported:
 <ul>
@@ -275,9 +275,9 @@ int cvSaveImage( const char* filename, const CvArr* image );
 <dt>filename<dd>Name of the file.
 <dt>image<dd>Image to be saved.
 </dl><p>
-The function <a href="#decl_cvSaveImage">cvSaveImage</a>
+The function <code>cvSaveImage</code>
 saves the image to the specified file. Only 8-bit single-channel or 3-channel
-(with &apos;BGR&apos; channel order) images can be saved using this function.
+(with &#39;BGR&#39; channel order) images can be saved using this function.
 If the format, depth or channel order is different, use <code>cvCvtScale</code>
 and <code>cvCvtColor</code> to convert it before saving, or use
 universal <code>cvSave</code> to save the image to XML or YAML format.
@@ -306,7 +306,7 @@ CvCapture* cvCaptureFromFile( const char* filename );
 </pre><dl>
 <dt>filename<dd>Name of the video file.
 </dl><p>
-The function <a href="#decl_cvCaptureFromFile">cvCaptureFromFile</a>
+The function <code>cvCaptureFromFile</code>
 allocates and initialized the CvCapture structure for reading the video stream
 from the specified file.
 </p>
@@ -323,7 +323,7 @@ CvCapture* cvCaptureFromCAM( int index );
 <dt>index<dd>Index of the camera to be used. If there is only one camera or it
 does not matter what camera to use -1 may be passed.
 </dl><p>
-The function <a href="#decl_cvCaptureFromCAM">cvCaptureFromCAM</a>
+The function <code>cvCaptureFromCAM</code>
 allocates and initialized the CvCapture structure for reading a video stream
 from the camera. Currently two camera interfaces can be used on Windows: Video for
 Windows (VFW) and Matrox Imaging Library (MIL); and two on Linux:
@@ -339,7 +339,7 @@ void cvReleaseCapture( CvCapture** capture );
 </pre><dl>
 <dt>capture<dd>pointer to video capturing structure.
 </dl><p>
-The function <a href="#decl_cvReleaseCapture">cvReleaseCapture</a>
+The function <code>cvReleaseCapture</code>
 releases the CvCapture structure allocated by <a href="#decl_cvCaptureFromFile">cvCaptureFromFile</a>
 or <a href="#decl_cvCaptureFromCAM">cvCaptureFromCAM</a>.
 </p>
@@ -352,7 +352,7 @@ int cvGrabFrame( CvCapture* capture );
 </pre><dl>
 <dt>capture<dd>video capturing structure.
 </dl><p>
-The function <a href="#decl_cvGrabFrame">cvGrabFrame</a>
+The function <code>cvGrabFrame</code>
 grabs the frame from camera or file. The grabbed frame is stored internally.
 The purpose of this function is to grab frame <em>fast</em> that is important
 for syncronization in case of reading from several cameras simultaneously. The
@@ -369,7 +369,7 @@ IplImage* cvRetrieveFrame( CvCapture* capture );
 </pre><dl>
 <dt>capture<dd>video capturing structure.
 </dl><p>
-The function <a href="#decl_cvRetrieveFrame">cvRetrieveFrame</a>
+The function <code>cvRetrieveFrame</code>
 returns the pointer to the image grabbed with <a href="#decl_cvGrabFrame">cvGrabFrame</a>
 function. The returned image should not be released or modified by user.
 </p>
@@ -382,7 +382,7 @@ IplImage* cvQueryFrame( CvCapture* capture );
 </pre><dl>
 <dt>capture<dd>video capturing structure.
 </dl><p>
-The function <a href="#decl_cvQueryFrame">cvQueryFrame</a>
+The function <code>cvQueryFrame</code>
 grabs a frame from camera or video file, decompresses and returns it.
 This function is just a combination of  <a href="#decl_cvGrabFrame">cvGrabFrame</a> and
 <a href="#decl_cvRetrieveFrame">cvRetrieveFrame</a> in one call. The
@@ -406,7 +406,7 @@ double cvGetCaptureProperty( CvCapture* capture, int property_id );
   <code>CV_CAP_PROP_FOURCC</code> - 4-character code of codec.
   <code>CV_CAP_PROP_FRAME_COUNT</code> - number of frames in video file.
   </dl><p>
-The function <a href="#decl_cvGetCaptureProperty">cvGetCaptureProperty</a>
+The function <code>cvGetCaptureProperty</code>
 retrieves the specified property of camera or video file.
 </p>
 
@@ -427,7 +427,7 @@ int cvSetCaptureProperty( CvCapture* capture, int property_id, double value );
  <code>CV_CAP_PROP_FOURCC</code> - 4-character code of codec (only for cameras).
 <dt>value<dd>value of the property.
 </dl><p>
-The function <a href="#decl_cvSetCaptureProperty">cvSetCaptureProperty</a>
+The function <code>cvSetCaptureProperty</code>
 sets the specified property of video capturing. Currently the function supports only
 video files: <code>CV_CAP_PROP_POS_MSEC, CV_CAP_PROP_POS_FRAMES, CV_CAP_PROP_POS_AVI_RATIO<code>
 </p>
@@ -449,7 +449,7 @@ CvVideoWriter* cvCreateVideoWriter( const char* filename, int fourcc, double fps
 <dt>fps<dd>Framerate of the created video stream.
 <dt>frame_size<dd>Size of video frames.
 </dl><p>
-The function <a href="#decl_cvCreateVideoWriter">cvCreateVideoWriter</a>
+The function <code>cvCreateVideoWriter</code>
 creates video writer structure.
 </p>
 <p><b>NOTE</b>: Writing to video files is currently implemented only on Win32</p>
@@ -461,7 +461,7 @@ void cvReleaseVideoWriter( CvVideoWriter** writer );
 </pre><dl>
 <dt>writer<dd>pointer to video file writer structure.
 </dl><p>
-The function <a href="#decl_cvReleaseVideoWriter">cvReleaseVideoWriter</a>
+The function <code>cvReleaseVideoWriter</code>
 finishes writing to video file and releases the structure.
 </p>
 
@@ -474,7 +474,7 @@ int cvWriteFrame( CvVideoWriter* writer, const IplImage* image );
 <dt>writer<dd>video writer structure.
 <dt>image</dt><dd>the written frame
 </dl><p>
-The function <a href="#decl_cvWriteFrame">cvWriteFrame</a>
+The function <code>cvWriteFrame</code>
 writes/appends one frame to video file.
 </p>
 
@@ -489,7 +489,7 @@ int cvInitSystem( int argc, char** argv );
 <dt>argc<dd>Number of command line arguments.
 <dt>argv<dd>Array of command line arguments
 </dl><p>
-The function <a href="#decl_cvInitSystem">cvInitSystem</a>
+The function <code>cvInitSystem</code>
 initializes HighGUI. If it wasn't called explicitly by the user before the first window
 is created, it is called implicitly then with <code>argc</code>=0, <code>argv</code>=NULL.
 Under Win32 there is no need to call it explicitly. Under X Window the arguments may
@@ -505,7 +505,7 @@ void cvAddSearchPath( const char* path );</pre>
   <dl>
 <dt>path<dd>Path to add to the search list.
 </dl><p>
-The function <a href="#decl_cvAddSearchPath">cvAddSearchPath</a>
+The function <code>cvAddSearchPath</code>
 adds the specified folder to the search path list. The search path list is used
 by <a href="#decl_cvLoadImage">cvLoadImage</a> function.
 </p> -->
@@ -527,7 +527,7 @@ void cvConvertImage( const CvArr* src, CvArr* dst, int flags=0 );
                                    before displaying the image (<a href="#decl_cvShowImage">cvShowImage</a>
                                    does this automatically).
 </dl><p>
-The function <a href="#decl_cvConvertImage">cvConvertImage</a>
+The function <code>cvConvertImage</code>
 converts one image to another and flips the result vertically if required.
 The function is used by <a href="#decl_cvShowImage">cvShowImage</a>.</p>
 

@@ -44,18 +44,29 @@
 
 /////////////////////////// base test class for color transformations /////////////////////////
 
-class CV_ColorCvtBaseTest : public CvArrTest
+static const char* cvtcolor_param_names[] = { "op", "size", "depth", 0 };
+static const int cvtcolor_depths_8_16_32[] = { CV_8U, CV_16U, CV_32F, -1 };
+static const int cvtcolor_depths_8_32[] = { CV_8U, CV_32F, -1 };
+static const int cvtcolor_depths_8[] = { CV_8U, -1 };
+
+static const CvSize cvtcolor_sizes[] = {{30,30}, {320, 240}, {720,480}, {-1,-1}};
+static const CvSize cvtcolor_whole_sizes[] = {{320,240}, {320, 240}, {720,480}, {-1,-1}};
+
+class CV_ColorCvtBaseTestImpl : public CvArrTest
 {
 public:
-    CV_ColorCvtBaseTest( const char* test_name, const char* test_funcs,
+    CV_ColorCvtBaseTestImpl( const char* test_name, const char* test_funcs,
                          bool custom_inv_transform, bool allow_32f, bool allow_16u );
 
 protected:
-    int support_testing_modes();
     int prepare_test_case( int test_case_idx );
     void prepare_to_validation( int /*test_case_idx*/ );
     void get_test_array_types_and_sizes( int test_case_idx, CvSize** sizes, int** types );
+    void get_timing_test_array_types_and_sizes( int test_case_idx, CvSize** sizes, int** types,
+                                                CvSize** whole_sizes, bool *are_images );
     void get_minmax_bounds( int i, int j, int type, CvScalar* low, CvScalar* high );
+    int write_default_params(CvFileStorage* fs);
+    void print_timing_params( int test_case_idx, char* ptr, int params_left );
 
     // input --- fwd_transform -> ref_output[0]
     virtual void convert_forward( const CvMat* src, CvMat* dst );
@@ -68,16 +79,20 @@ protected:
     // called from default implementation of convert_backward
     virtual void convert_row_abc2bgr_32f_c3( const float* src_row, float* dst_row, int n );
 
+    const char* fwd_code_str;
+    const char* inv_code_str;
+
     void run_func();
     bool allow_16u, allow_32f;
     int blue_idx;
     bool inplace;
     bool custom_inv_transform;
     int fwd_code, inv_code;
+    int timing_code;
 };
 
 
-CV_ColorCvtBaseTest::CV_ColorCvtBaseTest( const char* test_name, const char* test_funcs,
+CV_ColorCvtBaseTestImpl::CV_ColorCvtBaseTestImpl( const char* test_name, const char* test_funcs,
                                           bool _custom_inv_transform, bool _allow_32f, bool _allow_16u )
     : CvArrTest( test_name, test_funcs, "" )
 {
@@ -89,12 +104,37 @@ CV_ColorCvtBaseTest::CV_ColorCvtBaseTest( const char* test_name, const char* tes
     allow_16u = _allow_16u;
     allow_32f = _allow_32f;
     custom_inv_transform = _custom_inv_transform;
-    fwd_code = inv_code = -1;
+    fwd_code = inv_code = timing_code = -1;
     element_wise_relative_error = false;
+
+    size_list = cvtcolor_sizes;
+    whole_size_list = cvtcolor_whole_sizes;
+    depth_list = cvtcolor_depths_8_16_32;
+
+    fwd_code_str = inv_code_str = 0;
+    
+    default_timing_param_names = 0;
 }
 
 
-void CV_ColorCvtBaseTest::get_minmax_bounds( int i, int j, int type, CvScalar* low, CvScalar* high )
+int CV_ColorCvtBaseTestImpl::write_default_params( CvFileStorage* fs )
+{
+    int code = CvArrTest::write_default_params( fs );
+    if( code >= 0 && ts->get_testing_mode() == CvTS::TIMING_MODE && fwd_code_str != 0 )
+    {
+        start_write_param( fs );
+        cvStartWriteStruct( fs, "op", CV_NODE_SEQ+CV_NODE_FLOW );
+        if( strcmp( fwd_code_str, "" ) != 0 )
+            cvWriteString( fs, 0, fwd_code_str );
+        if( strcmp( inv_code_str, "" ) != 0 )
+            cvWriteString( fs, 0, inv_code_str );
+        cvEndWriteStruct(fs);
+    }
+    return code;
+}
+
+
+void CV_ColorCvtBaseTestImpl::get_minmax_bounds( int i, int j, int type, CvScalar* low, CvScalar* high )
 {
     CvArrTest::get_minmax_bounds( i, j, type, low, high );
     if( i == INPUT )
@@ -106,7 +146,7 @@ void CV_ColorCvtBaseTest::get_minmax_bounds( int i, int j, int type, CvScalar* l
 }
 
 
-void CV_ColorCvtBaseTest::get_test_array_types_and_sizes( int test_case_idx,
+void CV_ColorCvtBaseTestImpl::get_test_array_types_and_sizes( int test_case_idx,
                                                 CvSize** sizes, int** types )
 {
     CvRNG* rng = ts->get_rng();
@@ -138,25 +178,50 @@ void CV_ColorCvtBaseTest::get_test_array_types_and_sizes( int test_case_idx,
 }
 
 
-int CV_ColorCvtBaseTest::prepare_test_case( int test_case_idx )
+void CV_ColorCvtBaseTestImpl::get_timing_test_array_types_and_sizes( int test_case_idx,
+                    CvSize** sizes, int** types, CvSize** whole_sizes, bool *are_images )
+{
+    CvArrTest::get_timing_test_array_types_and_sizes( test_case_idx, sizes, types,
+                                                      whole_sizes, are_images );
+    int depth = CV_MAT_DEPTH(types[INPUT][0]);
+    const char* op_str = cvReadString( find_timing_param( "op" ), "none" );
+    timing_code = strcmp( op_str, inv_code_str ) == 0 ? inv_code : fwd_code;
+    types[INPUT][0] = types[OUTPUT][0] = CV_MAKETYPE(depth, 3);
+    if( test_array[OUTPUT].size() > 1 )
+        types[OUTPUT][1] = types[OUTPUT][0];
+}
+
+
+int CV_ColorCvtBaseTestImpl::prepare_test_case( int test_case_idx )
 {
     int code = CvArrTest::prepare_test_case( test_case_idx );
     if( code > 0 )
     {
         if( inplace )
             cvTsCopy( &test_mat[INPUT][0], &test_mat[OUTPUT][0] );
+        if( ts->get_testing_mode() == CvTS::TIMING_MODE && timing_code != fwd_code )
+        {
+            int save_timing_code = timing_code;
+            timing_code = fwd_code;
+            run_func(); // initialize the intermediate image for backward color space transformation
+            timing_code = save_timing_code;
+        }
     }
     return code;
 }
 
 
-int CV_ColorCvtBaseTest::support_testing_modes()
+void CV_ColorCvtBaseTestImpl::print_timing_params( int test_case_idx, char* ptr, int params_left )
 {
-    return CvTS::CORRECTNESS_CHECK_MODE; // for now disable the timing test
+    sprintf( ptr, "%s,", cvReadString( find_timing_param( "op" ), fwd_code_str ));
+    ptr += strlen(ptr);
+    params_left--;
+
+    CvArrTest::print_timing_params( test_case_idx, ptr, params_left );
 }
 
 
-void CV_ColorCvtBaseTest::run_func()
+void CV_ColorCvtBaseTestImpl::run_func()
 {
     if( ts->get_testing_mode() == CvTS::CORRECTNESS_CHECK_MODE )
     {
@@ -169,10 +234,14 @@ void CV_ColorCvtBaseTest::run_func()
         }
         cvCvtColor( out0, test_array[OUTPUT][1], inv_code );
     }
+    else if( timing_code == fwd_code )
+        cvCvtColor( test_array[INPUT][0], test_array[OUTPUT][0], timing_code );
+    else
+        cvCvtColor( test_array[OUTPUT][0], test_array[OUTPUT][1], timing_code );
 }
 
 
-void CV_ColorCvtBaseTest::prepare_to_validation( int /*test_case_idx*/ )
+void CV_ColorCvtBaseTestImpl::prepare_to_validation( int /*test_case_idx*/ )
 {
     convert_forward( &test_mat[INPUT][0], &test_mat[REF_OUTPUT][0] );
     convert_backward( &test_mat[INPUT][0], &test_mat[REF_OUTPUT][0],
@@ -180,7 +249,7 @@ void CV_ColorCvtBaseTest::prepare_to_validation( int /*test_case_idx*/ )
 }
 
 
-void CV_ColorCvtBaseTest::convert_forward( const CvMat* src, CvMat* dst )
+void CV_ColorCvtBaseTestImpl::convert_forward( const CvMat* src, CvMat* dst )
 {
     const float c8u = 0.0039215686274509803f; // 1./255
     const float c16u = 1.5259021896696422e-005f; // 1./65535
@@ -261,19 +330,19 @@ void CV_ColorCvtBaseTest::convert_forward( const CvMat* src, CvMat* dst )
 }
 
 
-void CV_ColorCvtBaseTest::convert_row_bgr2abc_32f_c3( const float* /*src_row*/,
+void CV_ColorCvtBaseTestImpl::convert_row_bgr2abc_32f_c3( const float* /*src_row*/,
                                                       float* /*dst_row*/, int /*n*/ )
 {
 }
 
 
-void CV_ColorCvtBaseTest::convert_row_abc2bgr_32f_c3( const float* /*src_row*/,
+void CV_ColorCvtBaseTestImpl::convert_row_abc2bgr_32f_c3( const float* /*src_row*/,
                                                       float* /*dst_row*/, int /*n*/ )
 {
 }
 
 
-void CV_ColorCvtBaseTest::convert_backward( const CvMat* src, const CvMat* dst, CvMat* dst2 )
+void CV_ColorCvtBaseTestImpl::convert_backward( const CvMat* src, const CvMat* dst, CvMat* dst2 )
 {
     if( custom_inv_transform )
     {
@@ -385,8 +454,31 @@ void CV_ColorCvtBaseTest::convert_backward( const CvMat* src, const CvMat* dst, 
 }
 
 
-CV_ColorCvtBaseTest cvtcolor( "color", "", false, false, false );
+CV_ColorCvtBaseTestImpl cvtcolor( "color", "", false, false, false );
 
+
+class CV_ColorCvtBaseTest : public CV_ColorCvtBaseTestImpl
+{
+public:
+    CV_ColorCvtBaseTest( const char* test_name, const char* test_funcs,
+                         bool custom_inv_transform, bool allow_32f, bool allow_16u );
+};
+
+
+CV_ColorCvtBaseTest::CV_ColorCvtBaseTest( const char* test_name, const char* test_funcs,
+                                          bool _custom_inv_transform, bool _allow_32f, bool _allow_16u )
+    : CV_ColorCvtBaseTestImpl( test_name, test_funcs, _custom_inv_transform, _allow_32f, _allow_16u )
+{
+    default_timing_param_names = cvtcolor_param_names;
+    depth_list = 0;
+    cn_list = 0;
+    size_list = whole_size_list = 0;
+}
+
+#undef INIT_FWD_INV_CODES
+#define INIT_FWD_INV_CODES( fwd, inv )          \
+    fwd_code = CV_##fwd; inv_code = CV_##inv;   \
+    fwd_code_str = #fwd; inv_code_str = #inv
 
 //// rgb <=> gray
 class CV_ColorGrayTest : public CV_ColorCvtBaseTest
@@ -395,6 +487,8 @@ public:
     CV_ColorGrayTest();
 protected:
     void get_test_array_types_and_sizes( int test_case_idx, CvSize** sizes, int** types );
+    void get_timing_test_array_types_and_sizes( int test_case_idx, CvSize** sizes, int** types,
+                                                CvSize** whole_sizes, bool *are_images );
     void convert_row_bgr2abc_32f_c3( const float* src_row, float* dst_row, int n );
     void convert_row_abc2bgr_32f_c3( const float* src_row, float* dst_row, int n );
     double get_success_error_level( int test_case_idx, int i, int j );
@@ -404,6 +498,7 @@ protected:
 CV_ColorGrayTest::CV_ColorGrayTest()
     : CV_ColorCvtBaseTest( "color-gray", "cvCvtColor", true, true, true )
 {
+    INIT_FWD_INV_CODES( BGR2GRAY, GRAY2BGR );
 }
 
 
@@ -428,6 +523,15 @@ void CV_ColorGrayTest::get_test_array_types_and_sizes( int test_case_idx, CvSize
         else
             fwd_code = CV_RGBA2GRAY, inv_code = CV_GRAY2RGBA;
     }
+}
+
+
+void CV_ColorGrayTest::get_timing_test_array_types_and_sizes( int test_case_idx,
+                    CvSize** sizes, int** types, CvSize** whole_sizes, bool *are_images )
+{
+    CV_ColorCvtBaseTest::get_timing_test_array_types_and_sizes( test_case_idx, sizes, types,
+                                                                whole_sizes, are_images );
+    types[OUTPUT][0] &= CV_MAT_DEPTH_MASK;
 }
 
 
@@ -480,6 +584,7 @@ protected:
 CV_ColorYCrCbTest::CV_ColorYCrCbTest()
     : CV_ColorCvtBaseTest( "color-ycc", "cvCvtColor", true, true, true )
 {
+    INIT_FWD_INV_CODES( BGR2YCrCb, YCrCb2BGR );
 }
 
 
@@ -576,6 +681,8 @@ protected:
 CV_ColorHSVTest::CV_ColorHSVTest()
     : CV_ColorCvtBaseTest( "color-hsv", "cvCvtColor", true, true, false )
 {
+    INIT_FWD_INV_CODES( BGR2HSV, HSV2BGR );
+    depth_list = cvtcolor_depths_8_32;
 }
 
 
@@ -704,6 +811,8 @@ protected:
 CV_ColorHLSTest::CV_ColorHLSTest()
     : CV_ColorCvtBaseTest( "color-hls", "cvCvtColor", true, true, false )
 {
+    INIT_FWD_INV_CODES( BGR2HLS, HLS2BGR );
+    depth_list = cvtcolor_depths_8_32;
 }
 
 
@@ -872,6 +981,7 @@ protected:
 CV_ColorXYZTest::CV_ColorXYZTest()
     : CV_ColorCvtBaseTest( "color-xyz", "cvCvtColor", true, true, true )
 {
+    INIT_FWD_INV_CODES( BGR2XYZ, XYZ2BGR );
 }
 
 
@@ -962,6 +1072,8 @@ protected:
 CV_ColorLabTest::CV_ColorLabTest()
     : CV_ColorCvtBaseTest( "color-lab", "cvCvtColor", true, true, false )
 {
+    INIT_FWD_INV_CODES( BGR2Lab, Lab2BGR );
+    depth_list = cvtcolor_depths_8_32;
 }
 
 
@@ -1092,6 +1204,8 @@ protected:
 CV_ColorLuvTest::CV_ColorLuvTest()
     : CV_ColorCvtBaseTest( "color-luv", "cvCvtColor", true, true, false )
 {
+    INIT_FWD_INV_CODES( BGR2Luv, Luv2BGR );
+    depth_list = cvtcolor_depths_8_32;
 }
 
 
@@ -1247,6 +1361,7 @@ CV_ColorRGBTest::CV_ColorRGBTest()
     : CV_ColorCvtBaseTest( "color-rgb", "cvCvtColor", true, true, true )
 {
     dst_bits = 0;
+    support_testing_modes = CvTS::CORRECTNESS_CHECK_MODE;
 }
 
 
@@ -1496,12 +1611,17 @@ CV_ColorRGBTest color_rgb_test;
 
 
 //// rgb <=> bayer
+
+static const char* cvtcolor_bayer_param_names[] = { "size", "depth", 0 };
+
 class CV_ColorBayerTest : public CV_ColorCvtBaseTest
 {
 public:
     CV_ColorBayerTest();
 protected:
     void get_test_array_types_and_sizes( int test_case_idx, CvSize** sizes, int** types );
+    void get_timing_test_array_types_and_sizes( int test_case_idx, CvSize** sizes, int** types,
+                                                CvSize** whole_sizes, bool *are_images );
     double get_success_error_level( int test_case_idx, int i, int j );
     void run_func();
     void prepare_to_validation( int test_case_idx );
@@ -1513,6 +1633,14 @@ CV_ColorBayerTest::CV_ColorBayerTest()
 {
     test_array[OUTPUT].pop();
     test_array[REF_OUTPUT].pop();
+
+    fwd_code_str = "BayerBG2BGR";
+    inv_code_str = "";
+    fwd_code = CV_BayerBG2BGR;
+    inv_code = -1;
+
+    default_timing_param_names = cvtcolor_bayer_param_names;
+    depth_list = cvtcolor_depths_8;
 }
 
 
@@ -1526,6 +1654,15 @@ void CV_ColorBayerTest::get_test_array_types_and_sizes( int test_case_idx, CvSiz
     inplace = false;
 
     fwd_code = cvTsRandInt(rng)%4 + CV_BayerBG2BGR;
+}
+
+
+void CV_ColorBayerTest::get_timing_test_array_types_and_sizes( int test_case_idx,
+                    CvSize** sizes, int** types, CvSize** whole_sizes, bool *are_images )
+{
+    CV_ColorCvtBaseTest::get_timing_test_array_types_and_sizes( test_case_idx, sizes, types,
+                                                                whole_sizes, are_images );
+    types[INPUT][0] &= CV_MAT_DEPTH_MASK;
 }
 
 

@@ -230,6 +230,7 @@ cvCalcMotionGradient( const CvArr* mhiimg, CvArr* maskimg,
         dX_min_row.data.ptr = dX_min->data.ptr + y*dX_min->step;
         dY_max_row.data.ptr = dY_max->data.ptr + y*dY_max->step;
         orient_row.data.ptr = orient->data.ptr + y*orient->step;
+        mask_row.data.ptr = mask->data.ptr + y*mask->step;
         cvCartToPolar( &dX_min_row, &dY_max_row, 0, &orient_row, 1 );
 
         /* make orientation zero where the gradient is very small */
@@ -237,7 +238,13 @@ cvCalcMotionGradient( const CvArr* mhiimg, CvArr* maskimg,
         {
             float dY = dY_max_row.data.fl[x];
             float dX = dX_min_row.data.fl[x];
-            orient_row.data.i[x] &= (fabs(dX) < gradient_epsilon && fabs(dY) < gradient_epsilon) - 1;
+            if( fabs(dX) < gradient_epsilon && fabs(dY) < gradient_epsilon )
+            {
+                mask_row.data.ptr[x] = 0;
+                orient_row.data.i[x] = 0;
+            }
+            else
+                mask_row.data.ptr[x] = 1;
         }
     }
 
@@ -252,10 +259,16 @@ cvCalcMotionGradient( const CvArr* mhiimg, CvArr* maskimg,
         dX_min_row.data.ptr = dX_min->data.ptr + y*dX_min->step;
         dY_max_row.data.ptr = dY_max->data.ptr + y*dY_max->step;
         mask_row.data.ptr = mask->data.ptr + y*mask->step;
+        orient_row.data.ptr = orient->data.ptr + y*orient->step;
+        
         for( x = 0; x < size.width; x++ )
         {
             float d0 = dY_max_row.data.fl[x] - dX_min_row.data.fl[x];
-            mask_row.data.ptr[x] = (uchar)(min_delta <= d0 && d0 <= max_delta);
+            if( mask_row.data.ptr[x] == 0 || d0 < min_delta || max_delta < d0 )
+            {
+                mask_row.data.ptr[x] = 0;
+                orient_row.data.i[x] = 0;
+            }
         }
     }
 
@@ -314,6 +327,9 @@ cvCalcGlobalOrientation( const void* orientation, const void* maskimg, const voi
     cvGetMinMaxHistValue( hist, 0, 0, 0, &base_orient );
     base_orient *= 360/hist_size;
 
+    // override timestamp with the maximum value in MHI
+    cvMinMaxLoc( mhi, 0, &curr_mhi_timestamp, 0, 0, mask );
+
     // find the shift relative to the dominant orientation as weighted sum of relative angles
     {
         double shift_orient = 0, shift_weight = 0;
@@ -365,8 +381,12 @@ cvCalcGlobalOrientation( const void* orientation, const void* maskimg, const voi
 
                     rel_angle += (rel_angle < -180 ? 360 : 0);
                     rel_angle += (rel_angle > 180 ? -360 : 0);
-                    shift_orient += weight * rel_angle;
-                    shift_weight += weight;
+
+                    if( fabs(rel_angle) < 90 )
+                    {
+                        shift_orient += weight * rel_angle;
+                        shift_weight += weight;
+                    }
                 }
         }
 

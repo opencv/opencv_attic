@@ -41,20 +41,27 @@
 
 #include "cvtest.h"
 
-class CV_AccumBaseTest : public CvArrTest
+static const char* accum_param_names[] = { "size", "channels", "depth", "use_mask", 0 };
+static const CvSize accum_sizes[] = {{30,30}, {320, 240}, {720,480}, {-1,-1}};
+static const CvSize accum_whole_sizes[] = {{320,240}, {320, 240}, {720,480}, {-1,-1}};
+static const int accum_depths[] = { CV_8U, CV_32F, -1 };
+static const int accum_channels[] = { 1, 3, -1 };
+
+class CV_AccumBaseTestImpl : public CvArrTest
 {
 public:
-    CV_AccumBaseTest( const char* test_name, const char* test_funcs );
+    CV_AccumBaseTestImpl( const char* test_name, const char* test_funcs );
 
 protected:
-    int support_testing_modes();
     void get_test_array_types_and_sizes( int test_case_idx, CvSize** sizes, int** types );
     double get_success_error_level( int test_case_idx, int i, int j );
+    void get_timing_test_array_types_and_sizes( int test_case_idx, CvSize** sizes, int** types,
+                                                CvSize** whole_sizes, bool *are_images );
     double alpha;
 };
 
 
-CV_AccumBaseTest::CV_AccumBaseTest( const char* test_name, const char* test_funcs )
+CV_AccumBaseTestImpl::CV_AccumBaseTestImpl( const char* test_name, const char* test_funcs )
     : CvArrTest( test_name, test_funcs, "" )
 {
     test_array[INPUT].push(NULL);
@@ -62,11 +69,18 @@ CV_AccumBaseTest::CV_AccumBaseTest( const char* test_name, const char* test_func
     test_array[REF_INPUT_OUTPUT].push(NULL);
     test_array[TEMP].push(NULL);
     test_array[MASK].push(NULL);
+    optional_mask = true;
     element_wise_relative_error = false;
+
+    default_timing_param_names = 0;
+    depth_list = accum_depths;
+    size_list = accum_sizes;
+    whole_size_list = accum_whole_sizes;
+    cn_list = accum_channels;
 }
 
 
-void CV_AccumBaseTest::get_test_array_types_and_sizes( int test_case_idx,
+void CV_AccumBaseTestImpl::get_test_array_types_and_sizes( int test_case_idx,
                                                 CvSize** sizes, int** types )
 {
     CvRNG* rng = ts->get_rng();
@@ -83,19 +97,42 @@ void CV_AccumBaseTest::get_test_array_types_and_sizes( int test_case_idx,
 }
 
 
-int CV_AccumBaseTest::support_testing_modes()
-{
-    return CvTS::CORRECTNESS_CHECK_MODE; // for now disable the timing test
-}
-
-
-double CV_AccumBaseTest::get_success_error_level( int /*test_case_idx*/, int /*i*/, int /*j*/ )
+double CV_AccumBaseTestImpl::get_success_error_level( int /*test_case_idx*/, int /*i*/, int /*j*/ )
 {
     return FLT_EPSILON*10;
 }
 
 
-CV_AccumBaseTest accum_base( "accum", "" );
+void CV_AccumBaseTestImpl::get_timing_test_array_types_and_sizes( int test_case_idx,
+                CvSize** sizes, int** types, CvSize** whole_sizes, bool *are_images )
+{
+    CvArrTest::get_timing_test_array_types_and_sizes( test_case_idx, sizes, types,
+                                                      whole_sizes, are_images );
+    types[INPUT_OUTPUT][0] = CV_MAKETYPE(CV_32F, CV_MAT_CN(types[INPUT][0]));
+    alpha = 0.333333333333333;
+}
+
+
+CV_AccumBaseTestImpl accum_base( "accum", "" );
+
+
+class CV_AccumBaseTest : public CV_AccumBaseTestImpl
+{
+public:
+    CV_AccumBaseTest( const char* test_name, const char* test_funcs );
+};
+
+
+CV_AccumBaseTest::CV_AccumBaseTest( const char* test_name, const char* test_funcs )
+    : CV_AccumBaseTestImpl( test_name, test_funcs )
+{
+    depth_list = 0;
+    size_list = 0;
+    whole_size_list = 0;
+    cn_list = 0;
+
+    default_timing_param_names = accum_param_names;
+}
 
 
 /// acc

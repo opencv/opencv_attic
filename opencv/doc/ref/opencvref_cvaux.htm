@@ -93,7 +93,7 @@ In Birchfield's algorithm param1 = 25,  param2 = 5, param3 = 12, param4 = 15, pa
 "Depth Discontinuities by Pixel-to-Pixel Stereo" Stanford University Technical Report STAN-CS-TR-96-1573, July 1996.)
 </dl></p><p>
 
-The function <a href="#decl_cvFindStereoCorrespondence">cvFindStereoCorrespondence</a> calculates disparity map
+The function <code>cvFindStereoCorrespondence</code> calculates disparity map
 for two rectified grayscale images.
 
 <p>Example. Calculating disparity for pair of 8-bit color images</h4>
@@ -136,7 +136,7 @@ scanlines.
 scanlines.
 <dt>line_count<dd>Pointer to the variable that stores the number of scanlines.
 </dl></p><p>
-The function <a href="#decl_cvMakeScanlines">cvMakeScanlines</a> finds coordinates of scanlines for two images.
+The function <code>cvMakeScanlines</code> finds coordinates of scanlines for two images.
 <p>
 This function returns the number of scanlines. The function does nothing except
 calculating the number of scanlines if the pointers <code>scanlines1</code> or <code>scanlines2</code> are
@@ -155,7 +155,7 @@ void cvPreWarpImage( int line_count, IplImage* img, uchar* dst,
 <dt>dst_nums<dd>Pointer to the array of lengths of scanlines.
 <dt>scanlines<dd>Pointer to the array of coordinates of scanlines.
 </dl></p><p>
-The function <a href="#decl_cvPreWarpImage">cvPreWarpImage</a> rectifies the image so that the scanlines in the
+The function <code>cvPreWarpImage</code> rectifies the image so that the scanlines in the
 rectified image are horizontal. The output buffer of size
 <code>max(width,height)*line_count*3</code> must be allocated before calling the function.
 
@@ -177,7 +177,7 @@ void cvFindRuns( int line_count, uchar* prewarp1, uchar* prewarp2,
 <dt>num_runs1<dd>Array of numbers of runs in each scanline in the first image.
 <dt>num_runs2<dd>Array of numbers of runs in each scanline in the second image.
 </dl></p><p>
-The function <a href="#decl_cvFindRuns">cvFindRuns</a> retrieves scanlines from the rectified image and breaks
+The function <code>cvFindRuns</code> retrieves scanlines from the rectified image and breaks
 each scanline down into several runs, that is, series of pixels of almost the
 same brightness.
 
@@ -198,7 +198,7 @@ runs.
 <dt>second_corr<dd>Pointer to the array of correspondence information found for the
 second runs.
 </dl></p><p>
-The function <a href="#decl_cvDynamicCorrespondMulti">cvDynamicCorrespondMulti</a> finds correspondence between two sets of
+The function <code>cvDynamicCorrespondMulti</code> finds correspondence between two sets of
 runs of two images. Memory must be allocated before calling this function.
 Memory size for one array of correspondence information is
 <div><code>max( width,height )* numscanlines*3*sizeof ( int )</code> .
@@ -218,7 +218,7 @@ image.
 <dt>line_count<dd>Number of scanlines.
 <dt>alpha<dd>Position of virtual camera <code>(0.0 - 1.0)</code> .
 </dl></p><p>
-The function <a href="#decl_cvMakeAlphaScanlines">cvMakeAlphaScanlines</a> finds coordinates of scanlines for the virtual
+The function <code>cvMakeAlphaScanlines</code> finds coordinates of scanlines for the virtual
 camera with the given camera position.
 <p>
 Memory must be allocated before calling this function. Memory size for the array
@@ -255,7 +255,7 @@ runs.
 <dt>second_corr<dd>Pointer to the array of correspondence information found for the
 second runs.
 </dl></p><p>
-The function <a href="#decl_cvMorphEpilinesMulti">cvMorphEpilinesMulti</a> morphs two pre-warped images using information
+The function <code>cvMorphEpilinesMulti</code> morphs two pre-warped images using information
 about correspondence between the scanlines of two images.
 
 </p><hr><h3><a name="decl_cvPostWarpImage">PostWarpImage</a></h3>
@@ -270,7 +270,7 @@ void cvPostWarpImage( int line_count, uchar* src, int* src_nums,
 <dt>img<dd>Resulting unwarp image.
 <dt>scanlines<dd>Pointer to the array of scanlines data.
 </dl></p><p>
-The function <a href="#decl_cvPostWarpImage">cvPostWarpImage</a> warps the resultant image from the virtual camera by
+The function <code>cvPostWarpImage</code> warps the resultant image from the virtual camera by
 storing its rows across the scanlines whose coordinates are calculated by
 <a href="#decl_cvMakeAlphaScanlines">cvMakeAlphaScanlines</a>.
 
@@ -281,7 +281,7 @@ void cvDeleteMoire( IplImage* img );
 </pre><p><dl>
 <dt>img<dd>Image.
 </dl></p><p>
-The function <a href="#decl_cvDeleteMoire">cvDeleteMoire</a> deletes moire from the given image. The post-warped
+The function <code>cvDeleteMoire</code> deletes moire from the given image. The post-warped
 image may have black (un-covered) points because of possible holes between
 neighboring scanlines. The function deletes moire (black pixels) from the image
 by substituting neighboring pixels for black pixels. If all the scanlines are
@@ -312,7 +312,7 @@ three array parameters.
 <a href="#decl_cv3dTrackerLocateObjects">3dTrackerLocateObjects</a> to do tracking.
 </dl></p>
 <p>
-The function <a href="#decl_cv3dTrackerCalibrateCameras">cv3dTrackerCalibrateCameras</a>
+The function <code>cv3dTrackerCalibrateCameras</code>
 searches for a checkerboard of the specified size in each
 of the images. For each image in which it finds the checkerboard, it fills
 in the corresponding slot in <code>camera_info</code> with the position
@@ -364,7 +364,7 @@ be ordered or consecutive.
 <dt>tracked_objects<dd>filled in with the results.
 </dl></p>
 <p>
-The function <a href="#decl_cv3dTrackerLocateObjects">cv3dTrackerLocateObjects</a>
+The function <code>cv3dTrackerLocateObjects</code>
 determines the 3d position of tracked objects
 based on the 2d tracking information from multiple cameras and
 the camera position and orientation information computed by
@@ -408,7 +408,7 @@ callback function according to the value of the parameter <code>ioFlags</code>.
 <dt>covar_matrix<dd>Covariance matrix. An output parameter; must be allocated before the
 call.
 </dl><p>
-The function <a href="#decl_cvCalcCovarMatrixEx">cvCalcCovarMatrixEx</a> calculates a covariance matrix of the input
+The function <code>cvCalcCovarMatrixEx</code> calculates a covariance matrix of the input
 objects group using previously calculated averaged object. Depending on <code>ioFlags</code>
 parameter it may be used either in direct access or callback mode. If <code>ioFlags</code> is
 not <code>CV_EIGOBJ_NO_CALLBACK</code>, buffer must be allocated before calling the
@@ -435,7 +435,7 @@ callback functions.
 <dt>avg<dd>Averaged object.
 <dt>eigVals<dd>Pointer to the eigenvalues array in the descending order; may be <code>NULL</code> .
 </dl><p>
-The function <a href="#decl_cvCalcEigenObjects">cvCalcEigenObjects</a> calculates orthonormal eigen basis and the
+The function <code>cvCalcEigenObjects</code> calculates orthonormal eigen basis and the
 averaged object for a group of the input objects. Depending on <code>ioFlags</code> parameter
 it may be used either in direct access or callback mode. Depending on the
 parameter <code>calcLimit</code>, calculations are finished either after first
@@ -451,7 +451,7 @@ eigenvalues in the descending order.
 </p>
 The parameter <code>eigVals</code> may be equal to <code>NULL</code>, if eigenvalues are not needed.
 <p>
-The function <a href="#decl_cvCalcEigenObjects">cvCalcEigenObjects</a> uses the function
+The function <code>cvCalcEigenObjects</code> uses the function
 <a href="#decl_cvCalcCovarMatrixEx">cvCalcCovarMatrixEx</a>.
 </p>
 
@@ -464,7 +464,7 @@ double cvCalcDecompCoeff( IplImage* obj, IplImage* eigObj, IplImage* avg );
 <dt>eigObj<dd>Eigen object.
 <dt>avg<dd>Averaged object.
 </dl><p>
-The function <a href="#decl_cvCalcDecompCoeff">cvCalcDecompCoeff</a> calculates one decomposition coefficient of the
+The function <code>cvCalcDecompCoeff</code> calculates one decomposition coefficient of the
 input object using the previously calculated eigen object and the averaged
 object.
 </p>
@@ -486,7 +486,7 @@ callback functions.
 <dt>avg<dd>Averaged object.
 <dt>coeffs<dd>Calculated coefficients; an output parameter.
 </dl><p>
-The function <a href="#decl_cvEigenDecomposite">cvEigenDecomposite</a> calculates all decomposition coefficients for the
+The function <code>cvEigenDecomposite</code> calculates all decomposition coefficients for the
 input object using the previously calculated eigen objects basis and the
 averaged object. Depending on <code>ioFlags</code> parameter it may be used either in direct
 access or callback mode.
@@ -509,7 +509,7 @@ callback functions.
 <dt>avg<dd>Average vector, calculated by <a href="#decl_cvCalcEigenObjects">cvCalcEigenObjects</a>.
 <dt>proj<dd>Projection to the eigen sub-space.
 </dl><p>
-The function <a href="#decl_cvEigenProjection">cvEigenProjection</a> calculates an object projection to the eigen
+The function <code>cvEigenProjection</code> calculates an object projection to the eigen
 sub-space or, in other words, restores an object using previously calculated
 eigen objects basis, averaged object, and decomposition coefficients of the
 restored object. Depending on <code>io_flags</code> parameter it may be used either in direct
@@ -588,7 +588,7 @@ state. The number of elements in the array is equal to number of internal states
 in the HMM, that is, superstates are not counted here.
 <dt>obsSize<dd>Size of observation vectors to be used with created HMM.
 </dl><p>
-The function <a href="#decl_cvCreate2DHMM">cvCreate2DHMM</a> returns the created structure of the type <a href="#decl_CvEHMM">CvEHMM</a> with
+The function <code>cvCreate2DHMM</code> returns the created structure of the type <a href="#decl_CvEHMM">CvEHMM</a> with
 specified parameters.
 
 </p><hr><h3><a name="decl_cvRelease2DHMM">Release2DHMM</a></h3>
@@ -598,7 +598,7 @@ void cvRelease2DHMM(CvEHMM** hmm );
 </pre><p><dl>
 <dt>hmm<dd>Address of pointer to HMM to be released.
 </dl><p>
-The function <a href="#decl_cvRelease2DHMM">cvRelease2DHMM</a> frees all the memory used by HMM and clears the
+The function <code>cvRelease2DHMM</code> frees all the memory used by HMM and clears the
 pointer to HMM.
 
 </p><hr><h3><a name="decl_cvCreateObsInfo">CreateObsInfo</a></h3>
@@ -614,9 +614,9 @@ pointer <code>roi</code> means size of <code>roi</code> of image observed, <code
 of the macro.
 <dt>obsSize<dd>Size of observation vectors to be stored in the structure.
 </dl><p>
-The function <a href="#decl_cvCreateObsInfo">cvCreateObsInfo</a> creates new structures to store image observation
+The function <code>cvCreateObsInfo</code> creates new structures to store image observation
 vectors. For definitions of the parameters <code>roi, dctSize</code>, and <code>delta</code> see the
-specification of the function <a href="#decl_cvImgToObs_DCT">cvImgToObs_DCT</a>.
+specification of The function <code>cvImgToObs_DCT</code>.
 
 </p><hr><h3><a name="decl_cvReleaseObsInfo">ReleaseObsInfo</a></h3>
 <p class="Blurb">Releases observation vectors structure</p>
@@ -625,7 +625,7 @@ void cvReleaseObsInfo( CvImgObsInfo** obsInfo );
 </pre><p><dl>
 <dt>obsInfo<dd>Address of the pointer to the structure <a href="#decl_CvImgObsInfo">CvImgObsInfo</a> .
 </dl><p>
-The function <a href="#decl_cvReleaseObsInfo">cvReleaseObsInfo</a> frees all memory used by observations and clears
+The function <code>cvReleaseObsInfo</code> frees all memory used by observations and clears
 pointer to the structure <a href="#decl_CvImgObsInfo">CvImgObsInfo</a> .
 
 </p><hr><h3><a name="decl_cvImgToObs_DCT">ImgToObs_DCT</a></h3>
@@ -643,7 +643,7 @@ directions to be put into the observation vector.
 <dt>delta<dd>Shift in pixels between two consecutive image blocks in the horizontal and
 vertical directions.
 </dl><p>
-The function <a href="#decl_cvImgToObs_DCT">cvImgToObs_DCT</a> extracts observation vectors, that is, DCT
+The function <code>cvImgToObs_DCT</code> extracts observation vectors, that is, DCT
 coefficients, from the image. The user must pass <code>obsInfo.obs</code> as the parameter
 <code>obs</code> to use this function with other HMM functions and use the structure <code>obsInfo</code>
 of the <a href="#decl_CvImgObsInfo">CvImgObsInfo</a> type.
@@ -667,7 +667,7 @@ void cvUniformImgSegm( CvImgObsInfo* obsInfo, CvEHMM* hmm );
 <dt>obsInfo<dd>Observations structure.
 <dt>hmm<dd>HMM structure.
 </dl><p>
-The function <a href="#decl_cvUniformImgSegm">cvUniformImgSegm</a> segments image observations by HMM states uniformly
+The function <code>cvUniformImgSegm</code> segments image observations by HMM states uniformly
 (see <u><font color=blue>Initial Segmentation</font></u> for 2D Embedded HMM for 2D embedded HMM with 5
 superstates and 3, 6, 6, 6, 3 internal states of every corresponding
 superstate).
@@ -688,7 +688,7 @@ void cvInitMixSegm( CvImgObsInfo** obsInfoArray, int numImg, CvEHMM* hmm );
 <dt>numImg<dd>Length of above array.
 <dt>hmm<dd>HMM.
 </dl><p>
-The function <a href="#decl_cvInitMixSegm">cvInitMixSegm</a> takes a group of observations from several training
+The function <code>cvInitMixSegm</code> takes a group of observations from several training
 images already segmented by states and splits a set of observation vectors
 within every internal HMM state into as many clusters as the number of mixture
 components in the state.
@@ -702,7 +702,7 @@ void cvEstimateHMMStateParams( CvImgObsInfo** obsInfoArray, int numImg, CvEHMM* 
 <dt>numImg<dd>Length of the array.
 <dt>hmm<dd>HMM.
 </dl><p>
-The function <a href="#decl_cvEstimateHMMStateParams">cvEstimateHMMStateParams</a> computes all inner parameters of every HMM
+The function <code>cvEstimateHMMStateParams</code> computes all inner parameters of every HMM
 state, including Gaussian means, variances, etc.
 
 </p><hr><h3><a name="decl_cvEstimateTransProb">EstimateTransProb</a></h3>
@@ -714,7 +714,7 @@ void cvEstimateTransProb( CvImgObsInfo** obsInfoArray, int numImg, CvEHMM* hmm )
 <dt>numImg<dd>Length of the above array.
 <dt>hmm<dd>HMM.
 </dl><p>
-The function <a href="#decl_cvEstimateTransProb">cvEstimateTransProb</a> uses current segmentation of image observations
+The function <code>cvEstimateTransProb</code> uses current segmentation of image observations
 to compute transition probability matrices for all embedded and external HMMs.
 
 </p><hr><h3><a name="decl_cvEstimateObsProb">EstimateObsProb</a></h3>
@@ -725,7 +725,7 @@ void cvEstimateObsProb( CvImgObsInfo* obsInfo, CvEHMM* hmm );
 <dt>obsInfo<dd>Observation structure.
 <dt>hmm<dd>HMM structure.
 </dl><p>
-The function <a href="#decl_cvEstimateObsProb">cvEstimateObsProb</a> computes Gaussian probabilities of each observation
+The function <code>cvEstimateObsProb</code> computes Gaussian probabilities of each observation
 to occur in each of the internal HMM states.
 
 </p><hr><h3><a name="decl_cvEViterbi">EViterbi</a></h3>
@@ -736,7 +736,7 @@ float cvEViterbi( CvImgObsInfo* obsInfo, CvEHMM* hmm );
 <dt>obsInfo<dd>Observation structure.
 <dt>hmm<dd>HMM structure.
 </dl><p>
-The function <a href="#decl_cvEViterbi">cvEViterbi</a> executes Viterbi algorithm for embedded HMM. Viterbi
+The function <code>cvEViterbi</code> executes Viterbi algorithm for embedded HMM. Viterbi
 algorithm evaluates the likelihood of the best match between the given image
 observations and the given HMM and performs segmentation of image observations
 by HMM states. The segmentation is done on the basis of the match found.
@@ -751,7 +751,7 @@ void cvMixSegmL2( CvImgObsInfo** obsInfoArray, int numImg, CvEHMM* hmm );
 <dt>numImg<dd>Length of the array.
 <dt>hmm<dd>HMM.
 </dl><p>
-The function <a href="#decl_cvMixSegmL2">cvMixSegmL2</a> segments observations from all training images by mixture
+The function <code>cvMixSegmL2</code> segments observations from all training images by mixture
 components of newly Viterbi algorithm-assigned states. The function uses
 Euclidean distance to group vectors around the existing mixtures centers.
 </p>

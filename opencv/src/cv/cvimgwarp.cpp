@@ -644,11 +644,13 @@ cvResize( const CvArr* srcarr, CvArr* dstarr, int method )
     scale_y = (float)ssize.height/dsize.height;
 
     if( method == CV_INTER_CUBIC &&
-        (MIN(ssize.width, dsize.height) <= 4 ||
+        (MIN(ssize.width, dsize.width) <= 4 ||
         MIN(ssize.height, dsize.height) <= 4) )
         method = CV_INTER_LINEAR;
 
-    if( icvResize_8u_C1R_p )
+    if( icvResize_8u_C1R_p &&
+        MIN(ssize.width, dsize.width) > 4 &&
+        MIN(ssize.height, dsize.height) > 4 )
     {
         CvResizeIPPFunc ipp_func =
             type == CV_8UC1 ? icvResize_8u_C1R_p :
@@ -660,8 +662,7 @@ cvResize( const CvArr* srcarr, CvArr* dstarr, int method )
             type == CV_32FC1 ? icvResize_32f_C1R_p :
             type == CV_32FC3 ? icvResize_32f_C3R_p :
             type == CV_32FC4 ? icvResize_32f_C4R_p : 0;
-        if( ipp_func && (CV_INTER_NN < method && method < CV_INTER_AREA ||
-            method == CV_INTER_AREA && ssize.width > dsize.width && ssize.height > dsize.height))
+        if( ipp_func && (CV_INTER_NN < method && method < CV_INTER_AREA))
         {
             int srcstep = src->step ? src->step : CV_STUB_STEP;
             int dststep = dst->step ? dst->step : CV_STUB_STEP;
@@ -686,7 +687,6 @@ cvResize( const CvArr* srcarr, CvArr* dstarr, int method )
             ssize.width >= dsize.width && ssize.height >= dsize.height )
         {
             // "area" method for (scale_x > 1 & scale_y > 1)
-
             int iscale_x = cvRound(scale_x);
             int iscale_y = cvRound(scale_y);
 

@@ -284,7 +284,7 @@ IPCV_REMAP( 32f, 4, float )
 
 #define IPCV_RESIZE( flavor, cn )                                           \
 IPCVAPI_EX( CvStatus, icvResize_##flavor##_C##cn##R,                        \
-            "ippiResize_" #flavor "_C" #cn "R", 0/*CV_PLUGINS1(CV_PLUGIN_IPPI)*/,\
+            "ippiResize_" #flavor "_C" #cn "R", CV_PLUGINS1(CV_PLUGIN_IPPI),\
            (const void* src, CvSize srcsize, int srcstep, CvRect srcroi,    \
             void* dst, int dststep, CvSize dstroi,                          \
             double xfactor, double yfactor, int interpolation ))

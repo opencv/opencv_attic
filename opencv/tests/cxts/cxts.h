@@ -133,7 +133,7 @@ public:
     virtual void clear();
 
     // returns the testing modes supported by the particular test
-    virtual int support_testing_modes();
+    int get_support_testing_modes();
 
     enum { TIMING_EXTRA_PARAMS=5 };
 
@@ -149,6 +149,7 @@ protected:
     const CvFileNode** timing_param_seqs; // the array of parameter sequences
     int* timing_param_idxs; // the array of indices
     int timing_param_count; // the number of parameters in the tuple
+    int support_testing_modes;
 
     int test_case_count; // the total number of test cases
 
@@ -534,7 +535,6 @@ public:
 
     virtual int write_default_params( CvFileStorage* fs );
     virtual void clear();
-    virtual int support_testing_modes();
 
 protected:
 

@@ -65,6 +65,8 @@ CvArrTest::CvArrTest( const char* _test_name, const char* _test_funcs, const cha
     test_array = new CvTestPtrVec[max_arr];
     max_hdr = 0;
     hdr = 0;
+
+    support_testing_modes = CvTS::CORRECTNESS_CHECK_MODE + CvTS::TIMING_MODE;
 }
 
 
@@ -73,12 +75,6 @@ CvArrTest::~CvArrTest()
     clear();
     delete[] test_array;
     test_array = 0;
-}
-
-
-int CvArrTest::support_testing_modes()
-{
-    return CvTS::CORRECTNESS_CHECK_MODE + CvTS::TIMING_MODE;
 }
 
 
@@ -412,12 +408,15 @@ int CvArrTest::prepare_test_case( int test_case_idx )
     int i, j, total = 0;
     CvRNG* rng = ts->get_rng();
     bool is_image = false;
+    bool is_timing_test = false;
 
     CV_FUNCNAME( "CvArrTest::prepare_test_case" );
 
     __BEGIN__;
 
-    if( ts->get_testing_mode() == CvTS::TIMING_MODE )
+    is_timing_test = ts->get_testing_mode() == CvTS::TIMING_MODE;
+
+    if( is_timing_test )
     {
         if( !get_next_timing_param_tuple() )
         {
@@ -435,7 +434,7 @@ int CvArrTest::prepare_test_case( int test_case_idx )
         whole_sizes[i] = (CvSize*)malloc( count*sizeof(whole_sizes[i][0]) );
     }
 
-    if( ts->get_testing_mode() == CvTS::CORRECTNESS_CHECK_MODE )
+    if( !is_timing_test )
         get_test_array_types_and_sizes( test_case_idx, sizes, types );
     else
     {
@@ -454,7 +453,7 @@ int CvArrTest::prepare_test_case( int test_case_idx )
             CvSize size = sizes[i][j], whole_size = size;
             CvRect roi = {0,0,0,0};
 
-            if( ts->get_testing_mode() == CvTS::CORRECTNESS_CHECK_MODE )
+            if( !is_timing_test )
             {
                 is_image = !cvmat_allowed ? true : iplimage_allowed ? (t & 1) != 0 : false;
                 create_mask = (t & 6) == 0; // ~ each of 3 tests will use mask
@@ -481,9 +480,20 @@ int CvArrTest::prepare_test_case( int test_case_idx )
                     roi.width = size.width;
                     roi.height = size.height;
                     if( whole_size.width > size.width )
-                        roi.x = cvRandInt(rng) % (whole_size.width - size.width);
+                    {
+                        if( !is_timing_test )
+                            roi.x = cvRandInt(rng) % (whole_size.width - size.width);
+                        else
+                            roi.x = 1;
+                    }
+                    
                     if( whole_size.height > size.height )
-                        roi.y = cvRandInt(rng) % (whole_size.height - size.height);
+                    {
+                        if( !is_timing_test )
+                            roi.y = cvRandInt(rng) % (whole_size.height - size.height);
+                        else
+                            roi.y = 1;
+                    }
                 }
 
                 if( is_image )

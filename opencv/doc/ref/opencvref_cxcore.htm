@@ -372,7 +372,7 @@ vary independently.
     typedef void CvArr;
 </pre>
 <p>
-<a href="#decl_CvArr*">CvArr*</a> is used <em>only</em> as a function parameter to
+The metatype <code>CvArr*</code> is used <em>only</em> as a function parameter to
 specify that the function accepts arrays of more than a
 single type, for example IplImage*, CvMat* or even CvSeq*. The particular array
 type is determined at runtime by analyzing the first 4 bytes of the header.
@@ -408,7 +408,7 @@ IplImage* cvCreateImage( CvSize size, int depth, int channels );
              can process it, this function can create interleaved images
              only.
 </dl><p>
-The function <a href="#decl_cvCreateImage">cvCreateImage</a> creates the header and allocates data. This call is a
+The function <code>cvCreateImage</code> creates the header and allocates data. This call is a
 shortened form of
 <pre>
     header = cvCreateImageHeader(size,depth,channels);
@@ -426,7 +426,7 @@ IplImage* cvCreateImageHeader( CvSize size, int depth, int channels );
 <dt>depth<dd>Image depth (see CreateImage).
 <dt>channels<dd>Number of channels (see CreateImage).
 </dl><p>
-The function <a href="#decl_cvCreateImageHeader">cvCreateImageHeader</a> allocates, initializes, and returns the structure
+The function <code>cvCreateImageHeader</code> allocates, initializes, and returns the structure
 <code>IplImage</code>. This call is an analogue of
 <pre>
   iplCreateImageHeader( channels, 0, depth,
@@ -449,7 +449,7 @@ void cvReleaseImageHeader( IplImage** image );
 </pre><p><dl>
 <dt>image<dd>Double pointer to the deallocated header.
 </dl><p>
-The function <a href="#decl_cvReleaseImageHeader">cvReleaseImageHeader</a> releases the header.
+The function <code>cvReleaseImageHeader</code> releases the header.
 This call is an analogue of
 <pre>
     if( image )
@@ -470,7 +470,7 @@ void cvReleaseImage( IplImage** image );
 </pre><p><dl>
 <dt>image<dd>Double pointer to the header of the deallocated image.
 </dl></p><p>
-The function <a href="#decl_cvReleaseImage">cvReleaseImage</a> releases the header and the image data. This call is a
+The function <code>cvReleaseImage</code> releases the header and the image data. This call is a
 shortened form of
 <pre>
     if( *image )
@@ -495,7 +495,7 @@ IplImage* cvInitImageHeader( IplImage* image, CvSize size, int depth,
 <dt>origin<dd><code>IPL_ORIGIN_TL</code> or <code>IPL_ORIGIN_BL</code>.
 <dt>align<dd>Alignment for image rows, typically 4 or 8 bytes.
 </dl></p><p>
-The function <a href="#decl_cvInitImageHeader">cvInitImageHeader</a> initializes the image header structure,
+The function <code>cvInitImageHeader</code> initializes the image header structure,
 pointer to which is passed by the user, and returns the pointer.
 </p>
 
@@ -507,7 +507,7 @@ IplImage* cvCloneImage( const IplImage* image );
 </pre><p><dl>
 <dt>image<dd>Original image.
 </dl></p><p>
-The function <a href="#decl_cvCloneImage">cvCloneImage</a> makes a full copy of the image including
+The function <code>cvCloneImage</code> makes a full copy of the image including
 header, ROI and data
 </p>
 
@@ -520,7 +520,7 @@ void cvSetImageCOI( IplImage* image, int coi );
 <dt>image<dd>Image header.
 <dt>coi<dd>Channel of interest.
 </dl><p>
-The function <a href="#decl_cvSetImageCOI">cvSetImageCOI</a> sets the channel of interest
+The function <code>cvSetImageCOI</code> sets the channel of interest
 to a given value. Value 0 means that all channels are selected,
 1 means that the first channel is selected etc.
 If ROI is <code>NULL</code> and <code>coi != 0</code>, ROI is allocated.
@@ -538,7 +538,7 @@ int cvGetImageCOI( const IplImage* image );
 </pre><p><dl>
 <dt>image<dd>Image header.
 </dl><p>
-The function <a href="#decl_cvGetImageCOI">cvGetImageCOI</a> returns channel of interest of
+The function <code>cvGetImageCOI</code> returns channel of interest of
 the image (it returns 0 if all the channels are selected).</p>
 
 
@@ -550,7 +550,7 @@ void cvSetImageROI( IplImage* image, CvRect rect );
 <dt>image<dd>Image header.
 <dt>rect<dd>ROI rectangle.
 </dl><p>
-The function <a href="#decl_cvSetImageROI">cvSetImageROI</a> sets the image ROI to a given rectangle. If ROI is <code>NULL</code>
+The function <code>cvSetImageROI</code> sets the image ROI to a given rectangle. If ROI is <code>NULL</code>
 and the value of the parameter <code>rect</code> is not equal to the whole image, ROI is
 allocated. Unlike COI, most of OpenCV functions do support ROI and treat
 it in a way as it would be a separate image (for example, all the pixel
@@ -565,7 +565,7 @@ void cvResetImageROI( IplImage* image );
 </pre><p><dl>
 <dt>image<dd>Image header.
 </dl><p>
-The function <a href="#decl_cvResetImageROI">cvResetImageROI</a> releases image ROI. After that the whole image
+The function <code>cvResetImageROI</code> releases image ROI. After that the whole image
 is considered selected. The similar result can be achieved by</p>
 <pre>
 cvSetImageROI( image, cvRect( 0, 0, image->width, image->height ));
@@ -583,7 +583,7 @@ CvRect cvGetImageROI( const IplImage* image );
 </pre><p><dl>
 <dt>image<dd>Image header.
 </dl><p>
-The function <a href="#decl_cvGetImageROI">cvGetImageROI</a> returns image ROI coordinates.
+The function <code>cvGetImageROI</code> returns image ROI coordinates.
 The rectangle <a href="#decl_cvRect">cvRect</a>(0,0,image->width,image->height) is returned if
 there is no ROI</p>
 
@@ -601,7 +601,7 @@ CvMat* cvCreateMat( int rows, int cols, int type );
             <code>CV_8UC1</code> means an 8-bit unsigned single-channel matrix,
             <code>CV_32SC2</code> means a 32-bit signed matrix with two channels.
 </dl><p>
-The function <a href="#decl_cvCreateMat">cvCreateMat</a> allocates header for the new matrix and underlying data,
+The function <code>cvCreateMat</code> allocates header for the new matrix and underlying data,
 and returns a pointer to the created matrix. It is a short form for:</p>
 <pre>
     CvMat* mat = cvCreateMatHeader( rows, cols, type );
@@ -620,7 +620,7 @@ CvMat* cvCreateMatHeader( int rows, int cols, int type );
 <dt>cols<dd>Number of columns in the matrix.
 <dt>type<dd>Type of the matrix elements (see <a href="#decl_cvCreateMat">cvCreateMat</a>).
 </dl><p>
-The function <a href="#decl_cvCreateMatHeader">cvCreateMatHeader</a> allocates new matrix header and returns pointer to
+The function <code>cvCreateMatHeader</code> allocates new matrix header and returns pointer to
 it. The matrix data can further be allocated using <a href="#decl_cvCreateData">cvCreateData</a> or set
 explicitly to user-allocated data via <a href="#decl_cvSetData">cvSetData</a>.
 </p>
@@ -633,7 +633,7 @@ void cvReleaseMat( CvMat** mat );
 </pre><p><dl>
 <dt>mat<dd>Double pointer to the matrix.
 </dl><p>
-The function <a href="#decl_cvReleaseMat">cvReleaseMat</a> decrements the matrix data reference counter and
+The function <code>cvReleaseMat</code> decrements the matrix data reference counter and
 releases matrix header:</p>
 <pre>
     if( *mat )
@@ -658,7 +658,7 @@ CvMat* cvInitMatHeader( CvMat* mat, int rows, int cols, int type,
 possible step is used, i.e., no gaps is assumed between subsequent rows of the
 matrix.
 </dl><p>
-The function <a href="#decl_cvInitMatHeader">cvInitMatHeader</a> initializes already allocated <a href="#decl_CvMat">CvMat</a> structure. It can
+The function <code>cvInitMatHeader</code> initializes already allocated <a href="#decl_CvMat">CvMat</a> structure. It can
 be used to process raw data with OpenCV matrix functions.
 <p>
 For example, the following code computes matrix product of two matrices, stored
@@ -698,7 +698,7 @@ CvMat cvMat( int rows, int cols, int type, void* data=NULL );
 <dt>type<dd>Type of the matrix elements (see CreateMat).
 <dt>data<dd>Optional data pointer assigned to the matrix header.
 </dl><p>
-The function <a href="#decl_cvMat">cvMat</a> is a fast inline substitution for <a href="#decl_cvInitMatHeader">cvInitMatHeader</a>.
+The function <code>cvMat</code> is a fast inline substitution for <a href="#decl_cvInitMatHeader">cvInitMatHeader</a>.
 Namely, it is equivalent to:
 <pre>
      CvMat mat;
@@ -714,7 +714,7 @@ CvMat* cvCloneMat( const CvMat* mat );
 </pre><p><dl>
 <dt>mat<dd>Input matrix.
 </dl><p>
-The function <a href="#decl_cvCloneMat">cvCloneMat</a> creates a copy of input matrix and returns the pointer to
+The function <code>cvCloneMat</code> creates a copy of input matrix and returns the pointer to
 it.
 </p>
 
@@ -729,7 +729,7 @@ CvMatND* cvCreateMatND( int dims, const int* sizes, int type );
 <dt>sizes<dd>Array of dimension sizes.
 <dt>type<dd>Type of array elements. The same as for <a href="#decl_CvMat">CvMat</a>
 </dl><p>
-The function <a href="#decl_cvCreateMatND">cvCreateMatND</a> allocates header for multi-dimensional dense array
+The function <code>cvCreateMatND</code> allocates header for multi-dimensional dense array
 and the underlying data, and returns pointer to the created array. It is a short form for:</p>
 <pre>
     CvMatND* mat = cvCreateMatNDHeader( dims, sizes, type );
@@ -748,7 +748,7 @@ CvMatND* cvCreateMatNDHeader( int dims, const int* sizes, int type );
 <dt>sizes<dd>Array of dimension sizes.
 <dt>type<dd>Type of array elements. The same as for CvMat
 </dl><p>
-The function <a href="#decl_cvCreateMatND">cvCreateMatND</a> allocates header for multi-dimensional dense array.
+The function <code>cvCreateMatND</code> allocates header for multi-dimensional dense array.
 The array data can further be allocated using <a href="#decl_cvCreateData">cvCreateData</a> or set
 explicitly to user-allocated data via <a href="#decl_cvSetData">cvSetData</a>.
 </p>
@@ -761,7 +761,7 @@ void cvReleaseMatND( CvMatND** mat );
 </pre><p><dl>
 <dt>mat<dd>Double pointer to the array.
 </dl><p>
-The function <a href="#decl_cvReleaseMatND">cvReleaseMatND</a> decrements the array data reference counter and
+The function <code>cvReleaseMatND</code> decrements the array data reference counter and
 releases the array header:</p>
 <pre>
     if( *mat )
@@ -782,7 +782,7 @@ CvMatND* cvInitMatNDHeader( CvMatND* mat, int dims, const int* sizes, int type, 
 <dt>type<dd>Type of array elements. The same as for CvMat
 <dt>data<dd>Optional data pointer assigned to the matrix header.
 </dl><p>
-The function <a href="#decl_cvInitMatNDHeader">cvInitMatNDHeader</a> initializes <a href="#decl_CvMatND">CvMatND</a> structure allocated by
+The function <code>cvInitMatNDHeader</code> initializes <a href="#decl_CvMatND">CvMatND</a> structure allocated by
 the user.
 </p>
 
@@ -794,7 +794,7 @@ CvMatND* cvCloneMatND( const CvMatND* mat );
 </pre><p><dl>
 <dt>mat<dd>Input array.
 </dl><p>
-The function <a href="#decl_cvCloneMatND">cvCloneMatND</a> creates a copy of input array and returns pointer to
+The function <code>cvCloneMatND</code> creates a copy of input array and returns pointer to
 it.
 </p>
 
@@ -806,7 +806,7 @@ void cvDecRefData( CvArr* arr );
 </pre><p><dl>
 <dt>arr<dd>array header.
 </dl><p>
-The function <a href="#decl_cvDecRefData">cvDecRefData</a> decrements <a href="#decl_CvMat">CvMat</a> or <a href="#decl_CvMatND">CvMatND</a> data reference counter if the
+The function <code>cvDecRefData</code> decrements <a href="#decl_CvMat">CvMat</a> or <a href="#decl_CvMatND">CvMatND</a> data reference counter if the
 reference counter pointer is not NULL and deallocates the data if the counter reaches zero.
 In the current implementation the reference counter is not NULL only if the data was allocated using
 <a href="#decl_cvCreateData">cvCreateData</a> function, in other cases such as:<br>
@@ -827,7 +827,7 @@ int cvIncRefData( CvArr* arr );
 </pre><p><dl>
 <dt>arr<dd>array header.
 </dl><p>
-The function <a href="#decl_cvIncRefData">cvIncRefData</a> increments <a href="#decl_CvMat">CvMat</a> or <a href="#decl_CvMatND">CvMatND</a> data reference counter and
+The function <code>cvIncRefData</code> increments <a href="#decl_CvMat">CvMat</a> or <a href="#decl_CvMatND">CvMatND</a> data reference counter and
 returns the new counter value if the reference counter pointer is not NULL, otherwise it returns zero.
 </p>
 
@@ -839,7 +839,7 @@ void cvCreateData( CvArr* arr );
 </pre><p><dl>
 <dt>arr<dd>Array header.
 </dl></p><p>
-The function <a href="#decl_cvCreateData">cvCreateData</a> allocates image, matrix or multi-dimensional array data.
+The function <code>cvCreateData</code> allocates image, matrix or multi-dimensional array data.
 Note that in case of matrix types OpenCV allocation functions are used and
 in case of IplImage they are used too unless <code>CV_TURN_ON_IPL_COMPATIBILITY</code> was called.
 In the latter case IPL functions are used to allocate the data
@@ -853,7 +853,7 @@ void cvReleaseData( CvArr* arr );
 </pre><p><dl>
 <dt>arr<dd>Array header
 </dl><p>
-The function <a href="#decl_cvReleaseData">cvReleaseData</a> releases the array data.
+The function <code>cvReleaseData</code> releases the array data.
 In case of <a href="#decl_CvMat">CvMat</a> or <a href="#decl_CvMatND">CvMatND</a> it simply calls cvDecRefData(), that is
 the function can not deallocate external data. See also the note to <a href="#decl_cvCreateData">cvCreateData</a>.
 </p>
@@ -868,7 +868,7 @@ void cvSetData( CvArr* arr, void* data, int step );
 <dt>data<dd>User data.
 <dt>step<dd>Full row length in bytes.
 </dl><p>
-The function <a href="#decl_cvSetData">cvSetData</a> assigns user data to the array header.
+The function <code>cvSetData</code> assigns user data to the array header.
 Header should be initialized before using cvCreate*Header,
 cvInit*Header or <a href="#decl_cvMat">cvMat</a> (in case of matrix) function.
 </p>
@@ -886,7 +886,7 @@ ROI is set.
 <dt>step<dd>Output full row length in bytes.
 <dt>roi_size<dd>Output ROI size.
 </dl><p>
-The function <a href="#decl_cvGetRawData">cvGetRawData</a> fills output variables with low-level
+The function <code>cvGetRawData</code> fills output variables with low-level
 information about the array data.
 All output parameters are optional, so some of the pointers
 may be set to <code>NULL</code>.
@@ -927,7 +927,7 @@ CvMat* cvGetMat( const CvArr* arr, CvMat* header, int* coi=NULL, int allowND=0 )
               or 1D matrix (when CvMatND has 1 dimension or more than 2 dimensions).
               The array must be continuous.
 </dl><p>
-The function <a href="#decl_cvGetMat">cvGetMat</a> returns matrix header for the input array that can be
+The function <code>cvGetMat</code> returns matrix header for the input array that can be
 matrix - <a href="#decl_CvMat">CvMat</a>, image - <code>IplImage</code> or multi-dimensional dense array - <a href="#decl_CvMatND*">CvMatND*</a>
 (latter case is allowed only if <code>allowND != 0</code>) .
 In the case of matrix the function simply returns the input pointer.
@@ -956,7 +956,7 @@ IplImage* cvGetImage( const CvArr* arr, IplImage* image_header );
 <dt>arr<dd>Input array.
 <dt>image_header<dd>Pointer to <code>IplImage</code> structure used as a temporary buffer.
 </dl><p>
-The function <a href="#decl_cvGetImage">cvGetImage</a> returns image header for the input array that can be
+The function <code>cvGetImage</code> returns image header for the input array that can be
 matrix - <a href="#decl_CvMat*">CvMat*</a>, or image - <code>IplImage*</code>. In the case of image the function simply
 returns the input pointer. In the case of <a href="#decl_CvMat*">CvMat*</a> it initializes <code>image_header</code> structure
 with parameters of the input matrix. Note that if we transform <code>IplImage</code> to <a href="#decl_CvMat">CvMat</a> and then transform
@@ -974,7 +974,7 @@ CvSparseMat* cvCreateSparseMat( int dims, const int* sizes, int type );
 <dt>sizes<dd>Array of dimension sizes.
 <dt>type<dd>Type of array elements. The same as for CvMat
 </dl><p>
-The function <a href="#decl_cvCreateSparseMat">cvCreateSparseMat</a> allocates multi-dimensional sparse array.
+The function <code>cvCreateSparseMat</code> allocates multi-dimensional sparse array.
 Initially the array contain no elements, that is <a href="#decl_cvGet*D">cvGet*D</a> or
 <a href="#decl_cvGetReal*D">cvGetReal*D</a> return zero for every index</p>
 
@@ -986,7 +986,7 @@ void cvReleaseSparseMat( CvSparseMat** mat );
 </pre><p><dl>
 <dt>mat<dd>Double pointer to the array.
 </dl><p>
-The function <a href="#decl_cvReleaseSparseMat">cvReleaseSparseMat</a> releases the sparse array and clears the array pointer upon exit</p>
+The function <code>cvReleaseSparseMat</code> releases the sparse array and clears the array pointer upon exit</p>
 
 
 <hr><h3><a name="decl_cvCloneSparseMat">CloneSparseMat</a></h3>
@@ -996,7 +996,7 @@ CvSparseMat* cvCloneSparseMat( const CvSparseMat* mat );
 </pre><p><dl>
 <dt>mat<dd>Input array.
 </dl><p>
-The function <a href="#decl_cvCloneSparseMat">cvCloneSparseMat</a> creates a copy of the input array and returns pointer to the copy.</p>
+The function <code>cvCloneSparseMat</code> creates a copy of the input array and returns pointer to the copy.</p>
 
 
 <hr><h2><a name="cxcore_arrays_get_set">Accessing Elements and sub-Arrays</a></h2>
@@ -1010,7 +1010,7 @@ CvMat* cvGetSubRect( const CvArr* arr, CvMat* submat, CvRect rect );
 <dt>submat<dd>Pointer to the resultant sub-array header.
 <dt>rect<dd>Zero-based coordinates of the rectangle of interest.
 </dl><p>
-The function <a href="#decl_cvGetSubRect">cvGetSubRect</a> returns header, corresponding
+The function <code>cvGetSubRect</code> returns header, corresponding
 to a specified rectangle of the input array.
 In other words, it allows the user to treat a rectangular part
 of input array as a stand-alone array. ROI is taken into account by the function
@@ -1067,7 +1067,7 @@ CvMat* cvGetDiag( const CvArr* arr, CvMat* submat, int diag=0 );
 <dt>diag<dd>Array diagonal. Zero corresponds to the main diagonal, -1 corresponds to the diagonal above
 the main etc., 1 corresponds to the diagonal below the main etc.
 </dl><p>
-The function <a href="#decl_cvGetDiag">cvGetDiag</a> returns the header, corresponding to a specified
+The function <code>cvGetDiag</code> returns the header, corresponding to a specified
 diagonal of the input array.</p>
 
 
@@ -1078,7 +1078,7 @@ CvSize cvGetSize( const CvArr* arr );
 </pre><p><dl>
 <dt>arr<dd>array header.
 </dl><p>
-The function <a href="#decl_cvGetSize">cvGetSize</a> returns number of rows (CvSize::height) and number of columns
+The function <code>cvGetSize</code> returns number of rows (CvSize::height) and number of columns
 (CvSize::width) of the input matrix or image. In case of image the size of ROI is returned.</p>
 
 
@@ -1091,7 +1091,7 @@ CvSparseNode* cvInitSparseMatIterator( const CvSparseMat* mat,
 <dt>mat<dd>Input array.
 <dt>mat_iterator<dd>Initialized iterator.
 </dl><p>
-The function <a href="#decl_cvInitSparseMatIterator">cvInitSparseMatIterator</a> initializes iterator of sparse array elements and
+The function <code>cvInitSparseMatIterator</code> initializes iterator of sparse array elements and
 returns pointer to the first element, or NULL if the array is empty.</p>
 
 
@@ -1102,7 +1102,7 @@ CvSparseNode* cvGetNextSparseNode( CvSparseMatIterator* mat_iterator );
 </pre><p><dl>
 <dt>mat_iterator<dd>Sparse array iterator.
 </dl><p>
-The function <a href="#decl_cvGetNextSparseNode">cvGetNextSparseNode</a> moves iterator to the next sparse matrix element and returns
+The function <code>cvGetNextSparseNode</code> moves iterator to the next sparse matrix element and returns
 pointer to it. In the current version there is no any particular order of the elements, because they
 are stored in hash table. The sample below demonstrates how to iterate through the sparse matrix:</p>
 <p>
@@ -1153,9 +1153,9 @@ goes first, number of columns (width) next.
 <dt>index<dd>Zero-based dimension index (for matrices 0 means number of rows, 1 means number of columns;
 for images 0 means height, 1 means width).
 </dl><p>
-The function <a href="#decl_cvGetDims">cvGetDims</a> returns number of array dimensions and their sizes.
+The function <code>cvGetDims</code> returns number of array dimensions and their sizes.
 In case of <code>IplImage</code> or <a href="#decl_CvMat">CvMat</a> it always returns 2 regardless of number of image/matrix rows.
-The function <a href="#decl_cvGetDimSize">cvGetDimSize</a> returns the particular dimension size (number of elements per that dimension).
+The function <code>cvGetDimSize</code> returns the particular dimension size (number of elements per that dimension).
 For example, the following code calculates total number of array elements in two ways:<pre>
 
 // via cvGetDims()
@@ -1194,13 +1194,15 @@ the requested element is created if it does not exist already.
 does not recalculate the node hash value, but takes it from the specified location. It is useful for speeding
 up pair-wise operations (TODO: provide an example)
 </dl><p>
-The functions <a href="#decl_cvPtr*D">cvPtr*D</a> return pointer to the particular array element.
+The functions <code>>cvPtr*D</code> return pointer to the particular array element.
 Number of array dimension should match to the number of indices passed to the function except
-for <a href="#decl_cvPtr1D">cvPtr1D</a> function that can be used for sequential access to 1D, 2D or nD dense arrays.
+for <code>cvPtr1D</code> function that can be used for sequential access to 1D, 2D or nD dense arrays.
 </p><p>
 The functions can be used for sparse arrays as well - if the requested node does not exist they
 create it and set it to zero.</p><p>
-All these as well as other functions accessing array elements (<a href="#decl_cvGet[Real]*D">cvGet[Real]*D</a>, <a href="#decl_cvSet[Real]*D">cvSet[Real]*D</a>)
+All these as well as other functions accessing array elements
+(<a href="#decl_cvGet*D">cvGet*D</a>, <a href="#decl_cvGetReal*D">cvGetReal*D</a>,
+<a href="#decl_cvSet*D">cvSet*D</a>, <a href="#decl_cvSetReal*D">cvSetReal*D</a>)
 raise an error in case if the element index is out of range.
 </p>
 
@@ -1219,7 +1221,7 @@ CvScalar cvGetND( const CvArr* arr, int* idx );
 <dt>idx2<dd>The third zero-based component of the element index
 <dt>idx<dd>Array of the element indices
 </dl><p>
-The functions <a href="#decl_cvGet*D">cvGet*D</a> return the particular array element. In case of sparse array
+The functions <code>cvGet*D</code> return the particular array element. In case of sparse array
 the functions return 0 if the requested node does not exist (no new node is created
 by the functions)</p>
 
@@ -1238,7 +1240,7 @@ double cvGetRealND( const CvArr* arr, int* idx );
 <dt>idx2<dd>The third zero-based component of the element index
 <dt>idx<dd>Array of the element indices
 </dl><p>
-The functions <a href="#decl_cvGetReal*D">cvGetReal*D</a> return the particular element of single-channel array.
+The functions <code>cvGetReal*D</code> return the particular element of single-channel array.
 If the array has multiple channels, runtime error is raised. Note that <a href="#decl_cvGet*D">cvGet*D</a> function
 can be used safely for both single-channel and multiple-channel arrays though they are
 a bit slower.</p><p>In case of sparse array
@@ -1255,7 +1257,7 @@ double cvmGet( const CvMat* mat, int row, int col );
 <dt>row<dd>The zero-based index of row.
 <dt>col<dd>The zero-based index of column.
 </dl><p>
-The function <a href="#decl_cvmGet">cvmGet</a> is a fast replacement for <a href="#decl_cvGetReal2D">cvGetReal2D</a> in case of
+The function <code>cvmGet</code> is a fast replacement for <a href="#decl_cvGetReal2D">cvGetReal2D</a> in case of
 single-channel floating-point matrices. It is faster because it is inline,
 it does less checks for array type and array element type and it
 checks for the row and column ranges only in debug mode.</p>
@@ -1276,7 +1278,7 @@ void cvSetND( CvArr* arr, int* idx, CvScalar value );
 <dt>idx<dd>Array of the element indices
 <dt>value<dd>The assigned value
 </dl><p>
-The functions <a href="#decl_cvSet*D">cvSet*D</a> assign the new value to the particular element of array.
+The functions <code>cvSet*D</code> assign the new value to the particular element of array.
 In case of sparse array the functions create the node if it does not exist yet</p>
 
 
@@ -1295,7 +1297,7 @@ void cvSetRealND( CvArr* arr, int* idx, double value );
 <dt>idx<dd>Array of the element indices
 <dt>value<dd>The assigned value
 </dl><p>
-The functions <a href="#decl_cvSetReal*D">cvSetReal*D</a> assign the new value to the particular element of single-channel array.
+The functions <code>cvSetReal*D</code> assign the new value to the particular element of single-channel array.
 If the array has multiple channels, runtime error is raised. Note that <a href="#decl_cvSet*D">cvSet*D</a> function
 can be used safely for both single-channel and multiple-channel arrays though they are
 a bit slower.</p>
@@ -1312,7 +1314,7 @@ void cvmSet( CvMat* mat, int row, int col, double value );
 <dt>col<dd>The zero-based index of column.
 <dt>value<dd>The new value of the matrix element
 </dl><p>
-The function <a href="#decl_cvmSet">cvmSet</a> is a fast replacement for <a href="#decl_cvSetReal2D">cvSetReal2D</a> in case of
+The function <code>cvmSet</code> is a fast replacement for <a href="#decl_cvSetReal2D">cvSetReal2D</a> in case of
 single-channel floating-point matrices. It is faster because it is inline,
 it does less checks for array type and array element type and it
 checks for the row and column ranges only in debug mode.</p>
@@ -1344,7 +1346,7 @@ void cvCopy( const CvArr* src, CvArr* dst, const CvArr* mask=NULL );
 <dt>mask<dd>Operation mask, 8-bit single channel array; specifies elements of
 destination array to be changed.
 </dl><p>
-The function <a href="#decl_cvCopy">cvCopy</a> copies selected elements from input array to output array:</p>
+The function <code>cvCopy</code> copies selected elements from input array to output array:</p>
 <p>
 dst(I)=src(I) if mask(I)!=0.
 </p><p>If any of the passed arrays is of <code>IplImage</code> type, then its ROI and COI fields are
@@ -1362,7 +1364,7 @@ void cvSet( CvArr* arr, CvScalar value, const CvArr* mask=NULL );
 <dt>mask<dd>Operation mask, 8-bit single channel array; specifies elements of
 destination array to be changed.
 </dl><p>
-The function <a href="#decl_cvSet">cvSet</a> copies scalar <code>value</code> to every selected element of the destination
+The function <code>cvSet</code> copies scalar <code>value</code> to every selected element of the destination
 array:</p>
 <pre>arr(I)=value if mask(I)!=0</pre>
 <p>If array <code>arr</code> is of <code>IplImage</code> type, then is ROI used, but COI must not be
@@ -1377,7 +1379,7 @@ void cvSetZero( CvArr* arr );
 </pre><p><dl>
 <dt>arr<dd>array to be cleared.
 </dl><p>
-The function <a href="#decl_cvSetZero">cvSetZero</a> clears the array. In case of dense arrays
+The function <code>cvSetZero</code> clears the array. In case of dense arrays
 (CvMat, CvMatND or IplImage) cvZero(array) is equivalent to cvSet(array,cvScalarAll(0),0),
 in case of sparse arrays all the elements are removed.</p>
 
@@ -1400,7 +1402,7 @@ CvMat* cvReshape( const CvArr* arr, CvMat* header, int new_cn, int new_rows=0 );
 it needs to be changed according to <code>new_cn</code> value.
 destination array to be changed.
 </dl><p>
-The function <a href="#decl_cvReshape">cvReshape</a> initializes CvMat header so that it points to the same data as
+The function <code>cvReshape</code> initializes CvMat header so that it points to the same data as
 the original array but has different shape - different number of channels,
 different number of rows or both.</p><p>For example, the following code creates one image buffer and
 two image headers, first is for 320x240x3 image and the second is for 960x240x1 image:</p>
@@ -1439,7 +1441,7 @@ CvArr* cvReshapeMatND( const CvArr* arr,
 <dt>new_sizes<dd>Array of new dimension sizes. Only <code>new_dims-1</code> values are used, because the total number of
 elements must remain the same. Thus, if <code>new_dims = 1</code>, <code>new_sizes</code> array is not used
 </dl><p>
-The function <a href="#decl_cvReshapeMatND">cvReshapeMatND</a> is an advanced version of <a href="#decl_cvReshape">cvReshape</a> that can work
+The function <code>cvReshapeMatND</code> is an advanced version of <a href="#decl_cvReshape">cvReshape</a> that can work
 with multi-dimensional arrays as well (though, it can work with ordinary images and matrices)
 and change the number of dimensions. Below are the two samples
 from the <a href="#decl_cvReshape">cvReshape</a> description rewritten using <a href="#decl_cvReshapeMatND">cvReshapeMatND</a>:</p>
@@ -1466,7 +1468,7 @@ void cvRepeat( const CvArr* src, CvArr* dst );
 <dt>src<dd>Source array, image or matrix.
 <dt>dst<dd>Destination array, image or matrix.
 </dl><p>
-The function <a href="#decl_cvRepeat">cvRepeat</a> fills the destination array with source array tiled:</p>
+The function <code>cvRepeat</code> fills the destination array with source array tiled:</p>
 <pre>dst(i,j)=src(i mod rows(src), j mod cols(src))</pre>
 <p>
 So the destination array may be as larger as well as smaller than
@@ -1489,7 +1491,7 @@ void  cvFlip( const CvArr* src, CvArr* dst=NULL, int flip_mode=0);
                  and flip_mode &lt; 0 (e.g. -1) means flipping around both axises.
                  See also the discussion below for the formulas
 </dl><p>
-The function <a href="#decl_cvFlip">cvFlip</a> flips the array in one of different 3 ways
+The function <code>cvFlip</code> flips the array in one of different 3 ways
 (row and column indices are 0-based):</p>
 <pre>dst(i,j)=src(rows(src)-i-1,j) if flip_mode = 0</pre>
 <pre>dst(i,j)=src(i,cols(src1)-j-1) if flip_mode > 0</pre>
@@ -1520,7 +1522,7 @@ void cvSplit( const CvArr* src, CvArr* dst0, CvArr* dst1,
 <dt>src<dd>Source array.
 <dt>dst0...dst3<dd>Destination channels.
 </dl><p>
-The function <a href="#decl_cvSplit">cvSplit</a> divides a multi-channel array into separate single-channel arrays.
+The function <code>cvSplit</code> divides a multi-channel array into separate single-channel arrays.
 Two modes are available for the operation. If the source array has N channels then if
 the first N destination channels are not NULL, all they are extracted from the source array,
 otherwise if only a single destination channel of the first N is not NULL, this particular channel
@@ -1540,7 +1542,7 @@ void cvMerge( const CvArr* src0, const CvArr* src1,
 <dt>src0... src3<dd>Input channels.
 <dt>dst<dd>Destination array.
 </dl><p>
-The function <a href="#decl_cvMerge">cvMerge</a> is the opposite to the previous.
+The function <code>cvMerge</code> is the opposite to the previous.
 If the destination array has N channels then if
 the first N input channels are not NULL, all they are copied to the destination array,
 otherwise if only a single source channel of the first N is not NULL, this particular channel is copied
@@ -1564,7 +1566,7 @@ source array.
 <dt>lut<dd>Look-up table of 256 elements; should have the same depth as the
 destination array.
 </dl><p>
-The function <a href="#decl_cvLUT">cvLUT</a> fills the destination array with values
+The function <code>cvLUT</code> fills the destination array with values
 from the look-up table. Indices of the entries are taken from the source array. That is, the
 function processes each element of <code>src</code> as following:</p>
 <pre>
@@ -1589,7 +1591,7 @@ void cvConvertScale( const CvArr* src, CvArr* dst, double scale=1, double shift=
 <dt>scale<dd>Scale factor.
 <dt>shift<dd>Value added to the scaled source array elements.
 </dl><p>
-The function <a href="#decl_cvConvertScale">cvConvertScale</a> has several different purposes and thus has several synonyms.
+The function <code>cvConvertScale</code> has several different purposes and thus has several synonyms.
 It copies one array to another with optional scaling, which is performed first, and/or optional type conversion, performed after:</p>
 <pre>dst(I)=src(I)*scale + (shift,shift,...)</pre>
 <p>All the channels of multi-channel arrays are processed independently.</p><p>
@@ -1614,7 +1616,7 @@ void cvConvertScaleAbs( const CvArr* src, CvArr* dst, double scale=1, double shi
 <dt>scale<dd>ScaleAbs factor.
 <dt>shift<dd>Value added to the scaled source array elements.
 </dl><p>
-The function <a href="#decl_cvConvertScaleAbs">cvConvertScaleAbs</a> is similar to the previous one, but it stores absolute values
+The function <code>cvConvertScaleAbs</code> is similar to the previous one, but it stores absolute values
 of the conversion results:</p>
 <pre>dst(I)=abs(src(I)*scale + (shift,shift,...))</pre>
 <p>
@@ -1635,7 +1637,7 @@ void cvAdd( const CvArr* src1, const CvArr* src2, CvArr* dst, const CvArr* mask=
 <dt>mask<dd>Operation mask, 8-bit single channel array; specifies elements of
 destination array to be changed.
 </dl><p>
-The function <a href="#decl_cvAdd">cvAdd</a> adds one array to another one:</p>
+The function <code>cvAdd</code> adds one array to another one:</p>
 <pre>dst(I)=src1(I)+src2(I) if mask(I)!=0</pre>
 <p>All the arrays must have the same type, except the mask, and the same size (or ROI size)</p>
 
@@ -1651,7 +1653,7 @@ void cvAddS( const CvArr* src, CvScalar value, CvArr* dst, const CvArr* mask=NUL
 <dt>mask<dd>Operation mask, 8-bit single channel array; specifies elements of
 destination array to be changed.
 </dl><p>
-The function <a href="#decl_cvAddS">cvAddS</a> adds scalar <code>value</code> to every element in the source array <code>src1</code> and
+The function <code>cvAddS</code> adds scalar <code>value</code> to every element in the source array <code>src1</code> and
 stores the result in <code>dst</code><p>
 <pre>dst(I)=src(I)+value if mask(I)!=0</pre>
 <p>All the arrays must have the same type, except the mask, and the same size (or ROI size)</p>
@@ -1671,7 +1673,7 @@ void  cvAddWeighted( const CvArr* src1, double alpha,
 <dt>dst<dd>The destination array.
 <dt>gamma<dd>Scalar, added to each sum.
 </dl><p>
-The function <a href="#decl_cvAddWeighted">cvAddWeighted</a> calculated weighted sum
+The function <code>cvAddWeighted</code> calculated weighted sum
 of two arrays as following:</p>
 <pre>dst(I)=src1(I)*alpha+src2(I)*beta+gamma</pre>
 <p>All the arrays must have the same type and the same size (or ROI size)</p>
@@ -1688,7 +1690,7 @@ void cvSub( const CvArr* src1, const CvArr* src2, CvArr* dst, const CvArr* mask=
 <dt>mask<dd>Operation mask, 8-bit single channel array; specifies elements of
 destination array to be changed.
 </dl><p>
-The function <a href="#decl_cvSub">cvSub</a> subtracts one array from another one:</p>
+The function <code>cvSub</code> subtracts one array from another one:</p>
 <pre>dst(I)=src1(I)-src2(I) if mask(I)!=0</pre>
 <p>All the arrays must have the same type, except the mask, and the same size (or ROI size)</p>
 
@@ -1704,7 +1706,7 @@ void cvSubS( const CvArr* src, CvScalar value, CvArr* dst, const CvArr* mask=NUL
 <dt>mask<dd>Operation mask, 8-bit single channel array; specifies elements of
 destination array to be changed.
 </dl><p>
-The function <a href="#decl_cvSubS">cvSubS</a> subtracts a scalar from every element of the source array:<p>
+The function <code>cvSubS</code> subtracts a scalar from every element of the source array:<p>
 <pre>dst(I)=src(I)-value if mask(I)!=0</pre>
 <p>All the arrays must have the same type, except the mask, and the same size (or ROI size)</p>
 
@@ -1720,7 +1722,7 @@ void cvSubRS( const CvArr* src, CvScalar value, CvArr* dst, const CvArr* mask=NU
 <dt>mask<dd>Operation mask, 8-bit single channel array; specifies elements of
 destination array to be changed.
 </dl><p>
-The function <a href="#decl_cvSubRS">cvSubRS</a> subtracts every element of source array from a scalar:</p>
+The function <code>cvSubRS</code> subtracts every element of source array from a scalar:</p>
 <pre>dst(I)=value-src(I) if mask(I)!=0</pre>
 <p>All the arrays must have the same type, except the mask, and the same size (or ROI size)</p>
 
@@ -1735,7 +1737,7 @@ void cvMul( const CvArr* src1, const CvArr* src2, CvArr* dst, double scale=1 );
 <dt>dst<dd>The destination array.
 <dt>scale<dd>Optional scale factor
 </dl><p>
-The function <a href="#decl_cvMul">cvMul</a> calculates per-element product of two arrays:</p>
+The function <code>cvMul</code> calculates per-element product of two arrays:</p>
 <pre>dst(I)=scale&bull;src1(I)&bull;src2(I)</pre>
 <p>All the arrays must have the same type, and the same size (or ROI size)</p>
 
@@ -1745,12 +1747,12 @@ The function <a href="#decl_cvMul">cvMul</a> calculates per-element product of t
 <pre>
 void cvDiv( const CvArr* src1, const CvArr* src2, CvArr* dst, double scale=1 );
 </pre><p><dl>
-<dt>src1<dd>The first source array. If the pointer is NULL, the array is assumed to be all 1's.
+<dt>src1<dd>The first source array. If the pointer is NULL, the array is assumed to be all 1&#146;s.
 <dt>src2<dd>The second source array.
 <dt>dst<dd>The destination array.
 <dt>scale<dd>Optional scale factor
 </dl><p>
-The function <a href="#decl_cvDiv">cvDiv</a> divides one array by another:</p>
+The function <code>cvDiv</code> divides one array by another:</p>
 <pre>
 dst(I)=scale&bull;src1(I)/src2(I), if src1!=NULL
 dst(I)=scale/src2(I),      if src1=NULL
@@ -1769,7 +1771,7 @@ void cvAnd( const CvArr* src1, const CvArr* src2, CvArr* dst, const CvArr* mask=
 <dt>mask<dd>Operation mask, 8-bit single channel array; specifies elements of
 destination array to be changed.
 </dl><p>
-The function <a href="#decl_cvAnd">cvAnd</a> calculates per-element bit-wise logical conjunction of two arrays:</p>
+The function <code>cvAnd</code> calculates per-element bit-wise logical conjunction of two arrays:</p>
 <pre>dst(I)=src1(I)&amp;src2(I) if mask(I)!=0</pre>
 <p>In the case of floating-point arrays their bit representations are used for the
 operation. All the arrays must have the same type, except the mask, and the same size</p>
@@ -1817,7 +1819,7 @@ void cvOr( const CvArr* src1, const CvArr* src2, CvArr* dst, const CvArr* mask=N
 <dt>mask<dd>Operation mask, 8-bit single channel array; specifies elements of
 destination array to be changed.
 </dl><p>
-The function <a href="#decl_cvOr">cvOr</a> calculates per-element bit-wise disjunction of two arrays:</p>
+The function <code>cvOr</code> calculates per-element bit-wise disjunction of two arrays:</p>
 <pre>dst(I)=src1(I)|src2(I)</pre>
 <p>In the case of floating-point arrays their bit representations are used for the
 operation. All the arrays must have the same type, except the mask, and the same size</p>
@@ -1852,7 +1854,7 @@ void cvXor( const CvArr* src1, const CvArr* src2, CvArr* dst, const CvArr* mask=
 <dt>mask<dd>Operation mask, 8-bit single channel array; specifies elements of
 destination array to be changed.
 </dl><p>
-The function <a href="#decl_cvXor">cvXor</a> calculates per-element bit-wise logical conjunction of two arrays:</p>
+The function <code>cvXor</code> calculates per-element bit-wise logical conjunction of two arrays:</p>
 <pre>dst(I)=src1(I)^src2(I) if mask(I)!=0</pre>
 <p>In the case of floating-point arrays their bit representations are used for the
 operation. All the arrays must have the same type, except the mask, and the same size</p>
@@ -1917,7 +1919,7 @@ void cvCmp( const CvArr* src1, const CvArr* src2, CvArr* dst, int cmp_op );
               CV_CMP_LE - src1(I) "less or equal" src2(I)<br>
               CV_CMP_NE - src1(I) "not equal to" src2(I)<br>
 </dl><p>
-The function <a href="#decl_cvCmp">cvCmp</a> compares the corresponding elements of two arrays and
+The function <code>cvCmp</code> compares the corresponding elements of two arrays and
 fills the destination mask array:</p>
 <pre>
 dst(I)=src1(I) op src2(I),
@@ -1944,7 +1946,7 @@ void cvCmpS( const CvArr* src, double value, CvArr* dst, int cmp_op );
               CV_CMP_LE - src1(I) "less or equal" value<br>
               CV_CMP_NE - src1(I) "not equal" value<br>
 </dl><p>
-The function <a href="#decl_cvCmpS">cvCmpS</a> compares the corresponding elements of array and scalar
+The function <code>cvCmpS</code> compares the corresponding elements of array and scalar
 and fills the destination mask array:</p>
 <pre>
 dst(I)=src(I) op scalar,
@@ -1966,7 +1968,7 @@ void cvInRange( const CvArr* src, const CvArr* lower, const CvArr* upper, CvArr*
 <dt>upper<dd>The exclusive upper boundary array.
 <dt>dst<dd>The destination array, must have 8u or 8s type.
 </dl><p>
-The function <a href="#decl_cvInRange">cvInRange</a> does the range check for every element of the input array:</p>
+The function <code>cvInRange</code> does the range check for every element of the input array:</p>
 <pre>
 dst(I)=lower(I)<sub>0</sub> &lt;= src(I)<sub>0</sub> &lt; upper(I)<sub>0</sub>
 </pre>
@@ -1989,7 +1991,7 @@ void cvInRangeS( const CvArr* src, CvScalar lower, CvScalar upper, CvArr* dst );
 <dt>upper<dd>The exclusive upper boundary.
 <dt>dst<dd>The destination array, must have 8u or 8s type.
 </dl><p>
-The function <a href="#decl_cvInRangeS">cvInRangeS</a> does the range check for every element of the input array:</p>
+The function <code>cvInRangeS</code> does the range check for every element of the input array:</p>
 <pre>
 dst(I)=lower<sub>0</sub> &lt;= src(I)<sub>0</sub> &lt; upper<sub>0</sub>
 </pre>
@@ -2012,7 +2014,7 @@ void cvMax( const CvArr* src1, const CvArr* src2, CvArr* dst );
 <dt>src2<dd>The second source array.
 <dt>dst<dd>The destination array.
 </dl><p>
-The function <a href="#decl_cvMax">cvMax</a> calculates per-element maximum of two arrays:</p>
+The function <code>cvMax</code> calculates per-element maximum of two arrays:</p>
 <pre>dst(I)=max(src1(I), src2(I))</pre>
 <p>All the arrays must have a single channel, the same data type
 and the same size (or ROI size).</p>
@@ -2027,7 +2029,7 @@ void cvMaxS( const CvArr* src, double value, CvArr* dst );
 <dt>value<dd>The scalar value.
 <dt>dst<dd>The destination array.
 </dl><p>
-The function <a href="#decl_cvMaxS">cvMaxS</a> calculates per-element maximum of array and scalar:</p>
+The function <code>cvMaxS</code> calculates per-element maximum of array and scalar:</p>
 <pre>dst(I)=max(src(I), value)</pre>
 <p>All the arrays must have a single channel, the same data type
 and the same size (or ROI size).</p>
@@ -2042,7 +2044,7 @@ void cvMin( const CvArr* src1, const CvArr* src2, CvArr* dst );
 <dt>src2<dd>The second source array.
 <dt>dst<dd>The destination array.
 </dl><p>
-The function <a href="#decl_cvMin">cvMin</a> calculates per-element minimum of two arrays:</p>
+The function <code>cvMin</code> calculates per-element minimum of two arrays:</p>
 <pre>
 dst(I)=min(src1(I),src2(I))
 </pre>
@@ -2060,7 +2062,7 @@ void cvMinS( const CvArr* src, double value, CvArr* dst );
 <dt>value<dd>The scalar value.
 <dt>dst<dd>The destination array.
 </dl><p>
-The function <a href="#decl_cvMinS">cvMinS</a> calculates minimum of array and scalar:</p>
+The function <code>cvMinS</code> calculates minimum of array and scalar:</p>
 <pre>dst(I)=min(src(I), value)</pre>
 <p>All the arrays must have a single channel, the same data type
 and the same size (or ROI size).</p>
@@ -2075,7 +2077,7 @@ void cvAbsDiff( const CvArr* src1, const CvArr* src2, CvArr* dst );
 <dt>src2<dd>The second source array.
 <dt>dst<dd>The destination array.
 </dl><p>
-The function <a href="#decl_cvAbsDiff">cvAbsDiff</a> calculates absolute difference between two arrays.</p>
+The function <code>cvAbsDiff</code> calculates absolute difference between two arrays.</p>
 <pre>dst(I)<sub>c</sub> = abs(src1(I)<sub>c</sub> - src2(I)<sub>c</sub>).</pre>
 <p>All the arrays must have the same data type and the same size (or ROI size).</p>
 
@@ -2090,7 +2092,7 @@ void cvAbsDiffS( const CvArr* src, CvArr* dst, CvScalar value );
 <dt>dst<dd>The destination array.
 <dt>value<dd>The scalar.
 </dl><p>
-The function <a href="#decl_cvAbsDiffS">cvAbsDiffS</a> calculates absolute difference between array and scalar.</p>
+The function <code>cvAbsDiffS</code> calculates absolute difference between array and scalar.</p>
 <pre>dst(I)<sub>c</sub> = abs(src(I)<sub>c</sub> - value<sub>c</sub>).</pre>
 <p>All the arrays must have the same data type and the same size (or ROI size).</p>
 
@@ -2104,7 +2106,7 @@ int cvCountNonZero( const CvArr* arr );
 </pre><p><dl>
 <dt>arr<dd>The array, must be single-channel array or multi-channel image with COI set.
 </dl><p>
-The function <a href="#decl_cvCountNonZero">cvCountNonZero</a> returns the number of non-zero elements in src1:</p>
+The function <code>cvCountNonZero</code> returns the number of non-zero elements in src1:</p>
 <pre>
 result = sum<sub>I</sub> arr(I)!=0
 </pre>
@@ -2118,7 +2120,7 @@ CvScalar cvSum( const CvArr* arr );
 </pre><p><dl>
 <dt>arr<dd>The array.
 </dl><p>
-The function <a href="#decl_cvSum">cvSum</a> calculates sum <code>S</code> of array elements, independently for each channel:</p>
+The function <code>cvSum</code> calculates sum <code>S</code> of array elements, independently for each channel:</p>
 <pre>
 S<sub>c</sub> = sum<sub>I</sub> arr(I)<sub>c</sub>
 </pre>
@@ -2134,7 +2136,7 @@ CvScalar cvAvg( const CvArr* arr, const CvArr* mask=NULL );
 <dt>arr<dd>The array.
 <dt>mask<dd>The optional operation mask.
 </dl><p>
-The function <a href="#decl_cvAvg">cvAvg</a> calculates the average value <code>M</code> of array elements, independently for each channel:</p>
+The function <code>cvAvg</code> calculates the average value <code>M</code> of array elements, independently for each channel:</p>
 <pre>
 N = sum<sub>I</sub> mask(I)!=0
 
@@ -2154,7 +2156,7 @@ void cvAvgSdv( const CvArr* arr, CvScalar* mean, CvScalar* std_dev, const CvArr*
 <dt>std_dev<dd>Pointer to the standard deviation.
 <dt>mask<dd>The optional operation mask.
 </dl><p>
-The function <a href="#decl_cvAvgSdv">cvAvgSdv</a> calculates the average value and
+The function <code>cvAvgSdv</code> calculates the average value and
 standard deviation of array elements, independently for each channel:</p>
 <pre>
 N = sum<sub>I</sub> mask(I)!=0
@@ -2201,7 +2203,7 @@ double cvNorm( const CvArr* arr1, const CvArr* arr2=NULL, int norm_type=CV_L2, c
 <dt>normType<dd>Type of norm, see the discussion.
 <dt>mask<dd>The optional operation mask.
 </dl><p>
-The function <a href="#decl_cvNorm">cvNorm</a> calculates the absolute norm of <code>arr1</code> if <code>arr2</code> is NULL:</p>
+The function <code>cvNorm</code> calculates the absolute norm of <code>arr1</code> if <code>arr2</code> is NULL:</p>
 <pre>
 norm = ||arr1||<sub>C</sub> = max<sub>I</sub> abs(arr1(I)),  if <code>normType</code> = CV_C
 
@@ -2248,7 +2250,7 @@ void cvSetIdentity( CvArr* mat, CvScalar value=cvRealScalar(1) );
 <dt>arr<dd>The matrix to initialize (not necesserily square).
 <dt>value<dd>The value to assign to the diagonal elements.
 </dl><p>
-The function <a href="#decl_cvSetIdentity">cvSetIdentity</a> initializes scaled identity matrix:</p>
+The function <code>cvSetIdentity</code> initializes scaled identity matrix:</p>
 <pre>
 arr(i,j)=value if i=j,
        0 otherwise
@@ -2263,7 +2265,7 @@ double cvDotProduct( const CvArr* src1, const CvArr* src2 );
 <dt>src1<dd>The first source array.
 <dt>src2<dd>The second source array.
 </dl><p>
-The function <a href="#decl_cvDotProduct">cvDotProduct</a> calculates and returns the Euclidean dot product of two
+The function <code>cvDotProduct</code> calculates and returns the Euclidean dot product of two
 arrays.</p>
 <pre>src1&bull;src2 = sum<sub>I</sub>(src1(I)*src2(I))
 </pre>
@@ -2282,7 +2284,7 @@ void cvCrossProduct( const CvArr* src1, const CvArr* src2, CvArr* dst );
 <dt>src2<dd>The second source vector.
 <dt>dst<dd>The destination vector.
 </dl><p>
-The function <a href="#decl_cvCrossProduct">cvCrossProduct</a> calculates the cross product of two 3D vectors:</p>
+The function <code>cvCrossProduct</code> calculates the cross product of two 3D vectors:</p>
 <pre>dst = src1 &times; src2, (dst<sub>1</sub> = src1<sub>2</sub>src2<sub>3</sub> - src1<sub>3</sub>src2<sub>2</sub> , dst<sub>2</sub> = src1<sub>3</sub>src2<sub>1</sub> - src1<sub>1</sub>src2<sub>3</sub> , dst<sub>3</sub> = src1<sub>1</sub>src2<sub>2</sub> - src1<sub>2</sub>src2<sub>1</sub>).</pre>
 
 
@@ -2297,7 +2299,7 @@ void cvScaleAdd( const CvArr* src1, CvScalar scale, const CvArr* src2, CvArr* ds
 <dt>src2<dd>The second source array.
 <dt>dst<dd>The destination array
 </dl><p>
-The function <a href="#decl_cvScaleAdd">cvScaleAdd</a> calculates sum of scaled array and another array:</p>
+The function <code>cvScaleAdd</code> calculates sum of scaled array and another array:</p>
 <pre>dst(I)=src1(I)*scale + src2(I)</pre>
 <p>All array parameters should have the same type and the same size.</p>
 
@@ -2321,7 +2323,7 @@ void  cvGEMM( const CvArr* src1, const CvArr* src2, double alpha,
             for example, CV_GEMM_A_T+CV_GEMM_C_T corresponds to
             <pre>alpha*src1<sup>T</sup>*src2 + beta*src<sup>T</sup></pre>
 </dl><p>
-The function <a href="#decl_cvGEMM">cvGEMM</a> performs generalized matrix multiplication:</p>
+The function <code>cvGEMM</code> performs generalized matrix multiplication:</p>
 <pre>dst = alpha*op(src1)*op(src2) + beta*op(src3), where op(X) is X or X<sup>T</sup></pre>
 <p>
 All the matrices should have the same data type and the coordinated sizes.
@@ -2338,7 +2340,7 @@ void cvTransform( const CvArr* src, CvArr* dst, const CvMat* transmat, const CvM
 <dt>transmat<dd>Transformation matrix.
 <dt>shiftvec<dd>Optional shift vector.
 </dl><p>
-The function <a href="#decl_cvTransform">cvTransform</a> performs matrix transformation of every element of array <code>src</code>
+The function <code>cvTransform</code> performs matrix transformation of every element of array <code>src</code>
 and stores the results in <code>dst</code>:</p>
 <pre>dst(I)=transmat*src(I) + shiftvec   or   dst(I)<sub>k</sub>=sum<sub>j</sub>(transmat(k,j)*src(I)<sub>j</sub>) + shiftvec(k)</pre>
 <p>That is every element of <code>N</code>-channel array <code>src</code> is considered as <code>N</code>-element vector, which is
@@ -2360,19 +2362,19 @@ void cvPerspectiveTransform( const CvArr* src, CvArr* dst, const CvMat* mat );
 </pre><p><dl>
 <dt>src<dd>The source three-channel floating-point array.
 <dt>dst<dd>The destination three-channel floating-point array.
-<dt>mat<dd>4 &times; 4 transformation matrix.
+<dt>mat<dd>3&times;3 or 4&times;4 transformation matrix.
 </dl><p>
-The function <a href="#decl_cvPerspectiveTransform">cvPerspectiveTransform</a> transforms every element of <code>src</code>
+The function <code>cvPerspectiveTransform</code> transforms every element of <code>src</code>
 (by treating it as 2D or 3D vector) in the following way:</p>
 <pre>
-(x, y, z) -> (x'/w, y'/w, z'/w) or
-(x, y) -> (x'/w, y'/w),
+(x, y, z) -> (x&#146;/w, y&#146;/w, z&#146;/w) or
+(x, y) -> (x&#146;/w, y&#146;/w),
 
 where
-(x', y', z', w') = mat*(x, y, z, 1) or
-(x', y', w') = mat*(x, y, 1)
+(x&#146;, y&#146;, z&#146;, w&#146;) = mat4x4*(x, y, z, 1) or
+(x&#146;, y&#146;, w&#146;) = mat3x3*(x, y, 1)
 
-and w = w'   if w'!=0,
+and w = w&#146;   if w&#146;!=0,
         inf  otherwise
 </pre>
 
@@ -2387,7 +2389,7 @@ void cvMulTransposed( const CvArr* src, CvArr* dst, int order, const CvArr* delt
 <dt>order<dd>Order of multipliers.
 <dt>delta<dd>An optional array, subtracted from <code>src</code> before multiplication.
 </dl><p>
-The function <a href="#decl_cvMulTransposed">cvMulTransposed</a> calculates the product of src and its transposition.</p>
+The function <code>cvMulTransposed</code> calculates the product of src and its transposition.</p>
 <p>The function evaluates</p>
 <pre>dst=(src-delta)*(src-delta)<sup>T</sup></pre>
 <p>if order=0, and
@@ -2402,7 +2404,7 @@ CvScalar cvTrace( const CvArr* mat );
 </pre><p><dl>
 <dt>mat<dd>The source matrix.
 </dl><p>
-The function <a href="#decl_cvTrace">cvTrace</a> returns sum of diagonal elements of the matrix <code>src1</code>.
+The function <code>cvTrace</code> returns sum of diagonal elements of the matrix <code>src1</code>.
 <pre>
 tr(src1)=sum<sub>i</sub>mat(i,i)
 </pre>
@@ -2417,7 +2419,7 @@ void cvTranspose( const CvArr* src, CvArr* dst );
 <dt>src<dd>The source matrix.
 <dt>dst<dd>The destination matrix.
 </dl><p>
-The function <a href="#decl_cvTranspose">cvTranspose</a> transposes matrix <code>src1</code>:</p>
+The function <code>cvTranspose</code> transposes matrix <code>src1</code>:</p>
 <pre>
 dst(i,j)=src(j,i)
 </pre>
@@ -2432,7 +2434,7 @@ double cvDet( const CvArr* mat );
 </pre><p><dl>
 <dt>mat<dd>The source matrix.
 </dl><p>
-The function <a href="#decl_cvDet">cvDet</a> returns determinant of the square matrix <code>mat</code>.
+The function <code>cvDet</code> returns determinant of the square matrix <code>mat</code>.
 The direct method is used for small matrices and Gaussian elimination is used for larger matrices.
 For symmetric positive-determined matrices it is also possible to run <a href="#decl_cvSVD">SVD</a>
 with <code>U=V=NULL</code> and then calculate determinant as a product of the diagonal elements of <code>W</code></p>
@@ -2451,7 +2453,7 @@ double cvInvert( const CvArr* src, CvArr* dst, int method=CV_LU );
               CV_SVD - Singular value decomposition (SVD) method<br>
               CV_SVD_SYM - SVD method for a symmetric positively-defined matrix<br>
 </dl><p>
-The function <a href="#decl_cvInvert">cvInvert</a> inverts matrix <code>src1</code> and stores the result in <code>src2</code></p>
+The function <code>cvInvert</code> inverts matrix <code>src1</code> and stores the result in <code>src2</code></p>
 <p>In case of <code>LU</code> method the function returns <code>src1</code> determinant (src1 must be square).
 If it is 0, the matrix is not inverted and <code>src2</code> is filled with zeros.</p>
 <p>In case of <code>SVD</code> methods the function returns the inversed condition number of <code>src1</code>
@@ -2472,7 +2474,7 @@ int cvSolve( const CvArr* src1, const CvArr* src2, CvArr* dst, int method=CV_LU 
               CV_SVD - Singular value decomposition (SVD) method<br>
               CV_SVD_SYM - SVD method for a symmetric positively-defined matrix.
 </dl><p>
-The function <a href="#decl_cvSolve">cvSolve</a> solves linear system or least-squares problem (the latter
+The function <code>cvSolve</code> solves linear system or least-squares problem (the latter
 is possible with SVD methods):</p>
 <pre>
 dst = arg min<sub>X</sub>||src1*X-src2||
@@ -2503,7 +2505,7 @@ void cvSVD( CvArr* A, CvArr* W, CvArr* U=NULL, CvArr* V=NULL, int flags=0 );
       Specifying the flag speeds up the processing.
 </ul>
 </dl><p>
-The function <a href="#decl_cvSVD">cvSVD</a> decomposes matrix <code>A</code> into a product of a diagonal matrix and two
+The function <code>cvSVD</code> decomposes matrix <code>A</code> into a product of a diagonal matrix and two
 orthogonal matrices:</p>
 <pre>
 A=U*W*V<sup>T</sup>
@@ -2548,7 +2550,7 @@ void  cvSVBkSb( const CvArr* W, const CvArr* U, const CvArr* V,
 <dt>X<dd>The destination matrix: result of back substitution.
 <dt>flags<dd>Operation flags, should match exactly to the <code>flags</code> passed to <a href="#decl_cvSVD">cvSVD</a>.
 </dl><p>
-The function <a href="#decl_cvSVBkSb">cvSVBkSb</a> calculates back substitution for decomposed matrix <code>A</code> (see
+The function <code>cvSVBkSb</code> calculates back substitution for decomposed matrix <code>A</code> (see
 <a href="#decl_cvSVD">cvSVD</a> description) and matrix <code>B</code>:</p>
 <pre>
 X=V*W<sup>-1</sup>*U<sup>T</sup>*B
@@ -2576,7 +2578,7 @@ void cvEigenVV( CvArr* mat, CvArr* evects, CvArr* evals, double eps=0 );
 eigenvalues and eigenvectors is syncronized, of course).
 <dt>eps<dd>Accuracy of diagonalization (typically, DBL_EPSILON=&asymp;10<sup>-15</sup> is enough).
 </dl><p>
-The function <a href="#decl_cvEigenVV">cvEigenVV</a> computes the eigenvalues and eigenvectors of the matrix <code>A</code>:</p>
+The function <code>cvEigenVV</code> computes the eigenvalues and eigenvectors of the matrix <code>A</code>:</p>
 <pre>mat*evects(i,:)' = evals(i)*evects(i,:)' (in MATLAB notation)</pre>
 <p>The contents of matrix <code>A</code> is destroyed by the function.</p>
 <p>Currently the function is slower than <a href="#decl_cvSVD">cvSVD</a> yet less accurate,
@@ -2618,7 +2620,7 @@ void cvCalcCovarMatrix( const CvArr** vects, int count, CvArr* cov_mat, CvArr* a
                        reciprocal of the total number of elements in every input vector. By default (if the flag is not specified)
                        the covariation matrix is not scaled (<code>scale=1</code>).
 </dl><p>
-The function <a href="#decl_cvCalcCovarMatrix">cvCalcCovarMatrix</a> calculates the covariation matrix and, optionally,
+The function <code>cvCalcCovarMatrix</code> calculates the covariation matrix and, optionally,
 mean vector of the set of input vectors. The function can be used for PCA, for comparing vectors using Mahalanobis distance etc.
 </p>
 
@@ -2631,7 +2633,7 @@ double cvMahalanobis( const CvArr* vec1, const CvArr* vec2, CvArr* mat );
 <dt>vec2<dd>The second 1D source vector.
 <dt>mat<dd>The inverse covariation matrix.
 </dl><p>
-The function <a href="#decl_cvMahalonobis">cvMahalonobis</a> calculates the weighted distance between two vectors
+The function <code>cvMahalonobis</code> calculates the weighted distance between two vectors
 and returns it:</p>
 <pre>
 d(vec1,vec2)=sqrt( sum<sub>i,j</sub> {mat(i,j)*(vec1(i)-vec2(i))*(vec1(j)-vec2(j))} )
@@ -2652,11 +2654,11 @@ int cvCeil( double value );
 </pre><p><dl>
 <dt>value<dd>The input floating-point value
 </dl><p>
-The functions <a href="#decl_cvRound">cvRound, cvFloor, cvCeil</a> convert input floating-point number to
-integer using one of rounding mode. <a href="#decl_cvRound">cvRound</a> returns the nearest integer value to
+The functions <code>cvRound, cvFloor</code> and <code>cvCeil</code> convert input floating-point number to
+integer using one of the rounding modes. <code>cvRound</code> returns the nearest integer value to
 the argument.
-<a href="#decl_cvRound">cvFloor</a> returns the maximum integer value that is not larger than the argument.
-<a href="#decl_cvRound">cvCeil</a> returns the minimum integer value that is not smaller than the argument.
+<code>cvFloor</code> returns the maximum integer value that is not larger than the argument.
+<code>cvCeil</code> returns the minimum integer value that is not smaller than the argument.
 On some architectures the functions work <em>much</em> faster than the standard cast operations in C.
 If absolute value of the argument is greater than 2<sup>31</sup>, the result is not determined.
 Special values (&plusmn;Inf, NaN) are not handled.
@@ -2670,7 +2672,7 @@ float cvSqrt( float value );
 </pre><p><dl>
 <dt>value<dd>The input floating-point value
 </dl><p>
-The function <a href="#decl_cvSqrt">cvSqrt</a> calculates square root of the argument.
+The function <code>cvSqrt</code> calculates square root of the argument.
 If the argument is negative, the result is not determined.
 </p>
 
@@ -2682,7 +2684,7 @@ float cvInvSqrt( float value );
 </pre><p><dl>
 <dt>value<dd>The input floating-point value
 </dl><p>
-The function <a href="#decl_cvInvSqrt">cvInvSqrt</a> calculates inverse square root of the argument, and
+The function <code>cvInvSqrt</code> calculates inverse square root of the argument, and
 normally it is faster than <code>1./sqrt(value)</code>. If the argument is zero or negative, the result is
 not determined. Special values (&plusmn;Inf, NaN) are not handled.
 </p>
@@ -2695,7 +2697,7 @@ float cvCbrt( float value );
 </pre><p><dl>
 <dt>value<dd>The input floating-point value
 </dl><p>
-The function <a href="#decl_cvCbrt">cvCbrt</a> calculates cubic root of the argument, and
+The function <code>cvCbrt</code> calculates cubic root of the argument, and
 normally it is faster than <code>pow(value,1./3)</code>. Besides, negative arguments are handled properly.
 Special values (&plusmn;Inf, NaN) are not handled.
 </p>
@@ -2709,7 +2711,7 @@ float cvFastArctan( float y, float x );
 <dt>x<dd>x-coordinate of 2D vector
 <dt>y<dd>y-coordinate of 2D vector
 </dl><p>
-The function <a href="#decl_cvFastArctan">cvFastArctan</a> calculates full-range angle of input 2D vector.
+The function <code>cvFastArctan</code> calculates full-range angle of input 2D vector.
 The angle is measured in degrees and varies from 0&deg; to 360&deg;. The accuracy is ~0.1&deg;
 </p>
 
@@ -2721,7 +2723,7 @@ int cvIsNaN( double value );
 </pre><p><dl>
 <dt>value<dd>The input floating-point value
 </dl><p>
-The function <a href="#decl_cvIsNaN">cvIsNaN</a> returns 1 if the argument is Not A Number (as defined
+The function <code>cvIsNaN</code> returns 1 if the argument is Not A Number (as defined
 by IEEE754 standard), 0 otherwise.
 </p>
 
@@ -2732,7 +2734,7 @@ int cvIsInf( double value );
 </pre><p><dl>
 <dt>value<dd>The input floating-point value
 </dl><p>
-The function <a href="#decl_cvIsInf">cvIsInf</a> returns 1 if the argument is &plusmn;Infinity (as defined
+The function <code>cvIsInf</code> returns 1 if the argument is &plusmn;Infinity (as defined
 by IEEE754 standard), 0 otherwise.
 </p>
 
@@ -2751,7 +2753,7 @@ void cvCartToPolar( const CvArr* x, const CvArr* y, CvArr* magnitude,
 <dt>angle_in_degrees<dd>The flag indicating whether the angles are measured in radians,
                         which is default mode, or in degrees.
 </dl><p>
-The function <a href="#decl_cvCartToPolar">cvCartToPolar</a> calculates either magnitude, angle,
+The function <code>cvCartToPolar</code> calculates either magnitude, angle,
 or both of every 2d vector <code>(x(I),y(I))</code>:</p>
 <pre>
 magnitude(I)=sqrt( x(I)<sup>2</sup>+y(I)<sup>2</sup> ),
@@ -2767,14 +2769,14 @@ is set to 0.</p>
 void cvPolarToCart( const CvArr* magnitude, const CvArr* angle,
                     CvArr* x, CvArr* y, int angle_in_degrees=0 );
 </pre><p><dl>
-<dt>magnitude<dd>The array of magnitudes. If it is NULL, the magnitudes are assumed all 1's.
+<dt>magnitude<dd>The array of magnitudes. If it is NULL, the magnitudes are assumed all 1&#146;s.
 <dt>angle<dd>The array of angles, whether in radians or degrees.
 <dt>x<dd>The destination array of x-coordinates, may be set to NULL if it is not needed.
 <dt>y<dd>The destination array of y-coordinates, mau be set to NULL if it is not needed.
 <dt>angle_in_degrees<dd>The flag indicating whether the angles are measured in radians,
                         which is default mode, or in degrees.
 </dl><p>
-The function <a href="#decl_cvPolarToCart">cvPolarToCart</a> calculates either x-coodinate, y-coordinate
+The function <code>cvPolarToCart</code> calculates either x-coodinate, y-coordinate
 or both of every vector <code>magnitude(I)*exp(angle(I)*j), j=sqrt(-1)</code>:</p>
 <pre>
 x(I)=magnitude(I)*cos(angle(I)),
@@ -2791,7 +2793,7 @@ void cvPow( const CvArr* src, CvArr* dst, double power );
 <dt>dst<dd>The destination array, should be the same type as the source.
 <dt>power<dd>The exponent of power.
 </dl><p>
-The function <a href="#decl_cvPow">cvPow</a> raises every element of input array to <code>p</code>:</p>
+The function <code>cvPow</code> raises every element of input array to <code>p</code>:</p>
 <pre>
 dst(I)=src(I)<sup>p</sup>, if <code>p</code> is integer
 dst(I)=abs(src(I))<sup>p</sup>, otherwise
@@ -2809,7 +2811,7 @@ cvSubRS( dst, cvScalarAll(0), dst, mask ); /* negate the results of negative inp
 cvReleaseMat( &mask );
 </pre>
 <p>For some values of <code>power</code>, such as integer values, 0.5 and -0.5,
-an optimized algorithm is used.</p>
+specialized faster algorithms are used.</p>
 
 
 <hr><h3><a name="decl_cvExp">Exp</a></h3>
@@ -2821,7 +2823,7 @@ void cvExp( const CvArr* src, CvArr* dst );
 <dt>dst<dd>The destination array, it should have <code>double</code> type or
 the same type as the source.
 </dl><p>
-The function <a href="#decl_cvExp">cvExp</a> calculates exponent of every element of input array:</p>
+The function <code>cvExp</code> calculates exponent of every element of input array:</p>
 <pre>
 dst(I)=exp(src(I))
 </pre>
@@ -2838,7 +2840,7 @@ void cvLog( const CvArr* src, CvArr* dst );
 <dt>dst<dd>The destination array, it should have <code>double</code> type or
 the same type as the source.
 </dl><p>
-The function <a href="#decl_cvLog">cvLog</a> calculates natural logarithm
+The function <code>cvLog</code> calculates natural logarithm
 of absolute value of every element of input array:</p>
 <pre>
 dst(I)=log(abs(src(I))), src(I)!=0
@@ -2856,7 +2858,7 @@ CvRNG cvRNG( int64 seed=-1 );
 </pre><p><dl>
 <dt>seed<dd>64-bit value used to initiate a random sequence.
 </dl><p>
-The function <a href="#decl_cvRNG">cvRNG</a> initializes random number generator
+The function <code>cvRNG</code> initializes random number generator
 and returns the state. Pointer to the state can be then passed to <a href="#decl_cvRandInt">cvRandInt</a>,
 <a href="#decl_cvRandReal">cvRandReal</a> and <a href="#decl_cvRandArr">cvRandArr</a> functions.
 In the current implementation a multiply-with-carry generator is used.</p>
@@ -2879,12 +2881,12 @@ void cvRandArr( CvRNG* rng, CvArr* arr, int dist_type, CvScalar param1, CvScalar
               the exclusive upper boundary of random numbers range. In case of
               normal distribution it is the standard deviation of random numbers.
 </dl><p>
-The function <a href="#decl_cvRandArr">cvRandArr</a> fills the destination array with
+The function <code>cvRandArr</code> fills the destination array with
 uniformly or normally distributed random numbers. In the sample below
 the function is used to add a few normally distributed
 floating-point numbers to random locations within a 2d array</p>
 <pre>
-/* let's noisy_screen be the floating-point 2d array that is to be "crapped" */
+/* let noisy_screen be the floating-point 2d array that is to be "crapped" */
 CvRNG rng_state = cvRNG(0xffffffff);
 int i, pointCount = 1000;
 /* allocate the array of coordinates of points */
@@ -2938,7 +2940,7 @@ unsigned cvRandInt( CvRNG* rng );
 customized by <code>RandSetRange</code> (though, the latter function does not
 affect on the discussed function outcome).
 </dl><p>
-The function <a href="#decl_cvRandInt">cvRandInt</a> returns uniformly-distributed random
+The function <code>cvRandInt</code> returns uniformly-distributed random
 32-bit unsigned integer and updates RNG state. It is similar to rand() function from C runtime library,
 but it always generates 32-bit number whereas rand() returns a number in between 0
 and <code>RAND_MAX</code> which is 2**16 or 2**32, depending on the platform.</p><p>
@@ -2988,7 +2990,7 @@ double cvRandReal( CvRNG* rng );
 </pre><p><dl>
 <dt>rng<dd>RNG state initialized by <a href="#decl_cvRNG">cvRNG</a>.
 </dl><p>
-The function <a href="#decl_cvRandReal">cvRandReal</a> returns uniformly-distributed random
+The function <code>cvRandReal</code> returns uniformly-distributed random
 floating-point number from 0..1 range (1 is not included).</p>
 
 
@@ -3027,7 +3029,7 @@ void cvDFT( const CvArr* src, CvArr* dst, int flags, int nonzero_rows=0 );
                     The parameter can be used to speed up 2d convolution/correlation when computing them via DFT.
                     See the sample below.
 </dl><p>
-The function <a href="#decl_cvDFT">cvDFT</a> performs forward or inverse transform of
+The function <code>cvDFT</code> performs forward or inverse transform of
 1D or 2D floating-point array:
 <pre>
 Forward Fourier transform of 1D vector of N elements:
@@ -3117,7 +3119,7 @@ int cvGetOptimalDFTSize( int size0 );
 </pre><p><dl>
 <dt>size0<dd>Vector size.
 </dl><p>
-The function <a href="#decl_cvGetOptimalDFTSize">cvGetOptimalDFTSize</a> returns the minimum
+The function <code>cvGetOptimalDFTSize</code> returns the minimum
 number <code>N</code> that is greater to equal to <code>size0</code>, such that DFT of a vector
 of size <code>N</code> can be computed fast. In the current implementation
 <code>N=2<sup>p</sup>&times;3<sup>q</sup>&times;5<sup>r</sup></code> for some <code>p, q, r</code>.
@@ -3138,7 +3140,7 @@ void cvMulSpectrums( const CvArr* src1, const CvArr* src2, CvArr* dst, int flags
                                          (see <a href="#decl_cvDFT">cvDFT</a> parameters description).<br>
               <code>CV_DXT_MUL_CONJ</code> - conjugate the second source array before the multiplication.<br>
 </dl><p>
-The function <a href="#decl_cvMulSpectrums">cvMulSpectrums</a> performs per-element multiplication
+The function <code>cvMulSpectrums</code> performs per-element multiplication
 of the two CCS-packed or complex matrices that are results of real or complex Fourier transform.
 </p><p>
 The function, together with <a href="#decl_cvDFT">cvDFT</a>, may be used to calculate convolution
@@ -3165,7 +3167,7 @@ void cvDCT( const CvArr* src, CvArr* dst, int flags );
                                          larger than the processing itself), to do 3D and higher-dimensional
                                          transforms etc.
 </dl><p>
-The function <a href="#decl_cvDCT">cvDCT</a> performs forward or inverse transform of
+The function <code>cvDCT</code> performs forward or inverse transform of
 1D or 2D floating-point array:
 <pre>
 Forward Cosine transform of 1D vector of N elements:
@@ -3262,7 +3264,7 @@ CvMemStorage* cvCreateMemStorage( int block_size=0 );
 <dt>block_size<dd>Size of the storage blocks in bytes. If it is 0, the block size is set to default value
 - currently it is &asymp;64K.
 </dl><p>
-The function <a href="#decl_cvCreateMemStorage">cvCreateMemStorage</a> creates a memory storage and returns pointer
+The function <code>cvCreateMemStorage</code> creates a memory storage and returns pointer
 to it. Initially the storage is empty. All fields of the header, except the <code>block_size</code>,
 are set to 0.</p>
 
@@ -3274,7 +3276,7 @@ CvMemStorage* cvCreateChildMemStorage( CvMemStorage* parent );
 </pre><p><dl>
 <dt>parent<dd>Parent memory storage.
 </dl><p>
-The function <a href="#decl_cvCreateChildMemStorage">cvCreateChildMemStorage</a> creates a child memory storage that is similar
+The function <code>cvCreateChildMemStorage</code> creates a child memory storage that is similar
 to simple memory storage except for the differences in the memory
 allocation/deallocation mechanism. When a child storage needs a new block to
 add to the block list, it tries to get this block from the parent. The first
@@ -3314,7 +3316,7 @@ void cvReleaseMemStorage( CvMemStorage** storage );
 </pre><p><dl>
 <dt>storage<dd>Pointer to the released storage.
 </dl><p>
-The function <a href="#decl_cvReleaseMemStorage">cvReleaseMemStorage</a> deallocates all storage memory blocks or returns
+The function <code>cvReleaseMemStorage</code> deallocates all storage memory blocks or returns
 them to the parent, if any. Then it deallocates the storage header and clears
 the pointer to the storage. All children of the storage must be released before
 the parent is released.</p>
@@ -3327,7 +3329,7 @@ void cvClearMemStorage( CvMemStorage* storage );
 </pre><p><dl>
 <dt>storage<dd>Memory storage.
 </dl><p>
-The function <a href="#decl_cvClearMemStorage">cvClearMemStorage</a> resets the top (free space boundary) of the storage
+The function <code>cvClearMemStorage</code> resets the top (free space boundary) of the storage
 to the very beginning. This function does not deallocate any memory. If the
 storage has a parent, the function returns all blocks to the parent.</p>
 
@@ -3340,7 +3342,7 @@ void* cvMemStorageAlloc( CvMemStorage* storage, size_t size );
 <dt>storage<dd>Memory storage.
 <dt>size<dd>Buffer size.
 </dl><p>
-The function <a href="#decl_cvMemStorageAlloc">cvMemStorageAlloc</a> allocates memory buffer in the storage. The buffer size
+The function <code>cvMemStorageAlloc</code> allocates memory buffer in the storage. The buffer size
 must not exceed the storage block size, otherwise runtime error is raised. The buffer address is
 aligned by <code>CV_STRUCT_ALIGN</code> (=<code>sizeof(double)</code> for the moment) bytes.
 </p>
@@ -3363,7 +3365,7 @@ CvString cvMemStorageAllocString( CvMemStorage* storage, const char* ptr, int le
 <dt>len<dd>Length of the string (not counting the ending '\0'). If the parameter is negative,
            the function computes the length.
 </dl><p>
-The function <a href="#decl_cvMemStorageAllocString">cvMemStorageAllocString</a> creates copy of the
+The function <code>cvMemStorageAllocString</code> creates copy of the
 string in the memory storage. It returns the structure that contains user-passed or computed length
 of the string and pointer to the copied string.
 </p>
@@ -3377,8 +3379,8 @@ void cvSaveMemStoragePos( const CvMemStorage* storage, CvMemStoragePos* pos );
 <dt>storage<dd>Memory storage.
 <dt>pos<dd>The output position of the storage top.
 </dl><p>
-The function <a href="#decl_cvSaveMemStoragePos">cvSaveMemStoragePos</a> saves the current position of the storage top to
-the parameter <code>pos</code>. The function <a href="#decl_cvRestoreMemStoragePos">cvRestoreMemStoragePos</a> can further retrieve
+The function <code>cvSaveMemStoragePos</code> saves the current position of the storage top to
+the parameter <code>pos</code>. The function <code>cvRestoreMemStoragePos</code> can further retrieve
 this position.</p>
 
 
@@ -3390,8 +3392,8 @@ void cvRestoreMemStoragePos( CvMemStorage* storage, CvMemStoragePos* pos );
 <dt>storage<dd>Memory storage.
 <dt>pos<dd>New storage top position.
 </dl><p>
-The function <a href="#decl_cvRestoreMemStoragePos">cvRestoreMemStoragePos</a> restores the position of the storage top from
-the parameter <code>pos</code>. This function and the function <a href="#decl_cvClearMemStorage">cvClearMemStorage</a> are the
+The function <code>cvRestoreMemStoragePos</code> restores the position of the storage top from
+the parameter <code>pos</code>. This function and The function <code>cvClearMemStorage</code> are the
 only methods to release memory occupied in memory blocks.
 Note again that there is no way to free memory in the middle of the occupied part of the storage.
 </p>
@@ -3593,7 +3595,7 @@ element type <code>CV_SEQ_ELTYPE_POINT</code> should be specified and the parame
 must be equal to <code>sizeof(CvPoint)</code>.
 <dt>storage<dd>Sequence location.
 </dl><p>
-The function <a href="#decl_cvCreateSeq">cvCreateSeq</a> creates a sequence and returns the pointer to it. The
+The function <code>cvCreateSeq</code> creates a sequence and returns the pointer to it. The
 function allocates the sequence header in the storage block as one continuous
 chunk and sets the structure fields <code>flags</code>, <code>elem_size</code>, <code>header_size</code> and <code>storage</code> to
 passed values, sets <code>delta_elems</code> to the default value (that may be reassigned using
@@ -3609,7 +3611,7 @@ void cvSetSeqBlockSize( CvSeq* seq, int delta_elems );
 <dt>seq<dd>Sequence.
 <dt>delta_elems<dd>Desirable sequence block size in elements.
 </dl><p>
-The function <a href="#decl_cvSetSeqBlockSize">cvSetSeqBlockSize</a> affects memory allocation granularity.
+The function <code>cvSetSeqBlockSize</code> affects memory allocation granularity.
 When the free space in the sequence buffers has run out, the function allocates the space
 for <code>delta_elems</code> sequence elements. If this block immediately follows the one
 previously allocated, the two blocks are concatenated, otherwise, a new sequence
@@ -3630,7 +3632,7 @@ char* cvSeqPush( CvSeq* seq, void* element=NULL );
 <dt>seq<dd>Sequence.
 <dt>element<dd>Added element.
 </dl><p>
-The function <a href="#decl_cvSeqPush">cvSeqPush</a> adds an element to the end of sequence and retuns pointer
+The function <code>cvSeqPush</code> adds an element to the end of sequence and retuns pointer
 to the allocated element. If the input <code>element</code> is NULL,
 the function simply allocates a space for one more element.</p>
 <p>The following code demonstrates how to create a new sequence using this function:</p>
@@ -3652,7 +3654,7 @@ for( i = 0; i &lt; 100; i++ )
 cvReleaseMemStorage( &storage );
 </pre>
 <p>
-The function <a href="#decl_cvSeqPush">cvSeqPush</a> has O(1) complexity, but there is a faster method for
+The function <code>cvSeqPush</code> has O(1) complexity, but there is a faster method for
 writing large sequences (see <a href="#decl_cvStartWriteSeq">cvStartWriteSeq</a> and related functions).
 </p>
 
@@ -3665,7 +3667,7 @@ void cvSeqPop( CvSeq* seq, void* element=NULL );
 <dt>element<dd>Optional parameter. If the pointer is not zero, the function copies the
 removed element to this location.
 </dl><p>
-The function <a href="#decl_cvSeqPop">cvSeqPop</a> removes an element from the sequence. The function reports
+The function <code>cvSeqPop</code> removes an element from the sequence. The function reports
 an error if the sequence is already empty. The function has O(1) complexity. </p>
 
 
@@ -3677,7 +3679,7 @@ char* cvSeqPushFront( CvSeq* seq, void* element=NULL );
 <dt>seq<dd>Sequence.
 <dt>element<dd>Added element.
 </dl><p>
-The function <a href="#decl_cvSeqPushFront">cvSeqPushFront</a> is similar to <a href="#decl_cvSeqPush">cvSeqPush</a> but it adds the new element
+The function <code>cvSeqPushFront</code> is similar to <a href="#decl_cvSeqPush">cvSeqPush</a> but it adds the new element
 to the beginning of the sequence. The function has O(1) complexity.
 </p>
 
@@ -3691,7 +3693,7 @@ void cvSeqPopFront( CvSeq* seq, void* element=NULL );
 <dt>element<dd>Optional parameter. If the pointer is not zero, the function copies the
 removed element to this location.
 </dl><p>
-The function <a href="#decl_cvSeqPopFront">cvSeqPopFront</a> removes an element from the beginning of the sequence.
+The function <code>cvSeqPopFront</code> removes an element from the beginning of the sequence.
 The function reports an error if the sequence is already empty. The function has O(1) complexity. </p>
 
 
@@ -3707,7 +3709,7 @@ void cvSeqPushMulti( CvSeq* seq, void* elements, int count, int in_front=0 );
                 CV_BACK (=0) - the elements are added to the end of sequence<br>
                 CV_FRONT(!=0) - the elements are added to the beginning of sequence<br>
 </dl><p>
-The function <a href="#decl_cvSeqPushMulti">cvSeqPushMulti</a> adds several elements to either end of the sequence.
+The function <code>cvSeqPushMulti</code> adds several elements to either end of the sequence.
 The elements are added to the sequence in the same order as they are arranged in the
 input array but they can fall into different sequence blocks.</p>
 
@@ -3724,7 +3726,7 @@ void cvSeqPopMulti( CvSeq* seq, void* elements, int count, int in_front=0 );
                 CV_BACK (=0) - the elements are removed from the end of sequence<br>
                 CV_FRONT(!=0) - the elements are removed from the beginning of sequence<br>
 </dl><p>
-The function <a href="#decl_cvSeqPopMulti">cvSeqPopMulti</a> removes several elements from either end of the sequence.
+The function <code>cvSeqPopMulti</code> removes several elements from either end of the sequence.
 If the number of the elements to be removed exceeds the total number of elements
 in the sequence, the function removes as many elements as possible.</p>
 
@@ -3740,7 +3742,7 @@ of the parameter) is equal to <a href="#decl_cvSeqPushFront">cvSeqPushFront</a> 
 allowed value of the parameter) is equal to <a href="#decl_cvSeqPush">cvSeqPush</a>.
 <dt>element<dd>Inserted element.
 </dl><p>
-The function <a href="#decl_cvSeqInsert">cvSeqInsert</a> shifts the sequence elements from the inserted position
+The function <code>cvSeqInsert</code> shifts the sequence elements from the inserted position
 to the nearest end of the sequence and copies the <code>element</code> content there if
 the pointer is not NULL. The function returns pointer to the inserted element.</p>
 
@@ -3753,7 +3755,7 @@ void cvSeqRemove( CvSeq* seq, int index );
 <dt>seq<dd>Sequence.
 <dt>index<dd>Index of removed element.
 </dl><p>
-The function <a href="#decl_cvSeqRemove">cvSeqRemove</a> removes elements with the given index. If the index is
+The function <code>cvSeqRemove</code> removes elements with the given index. If the index is
 out of range the function reports an error.
 An attempt to remove an element from an empty sequence is a
 partitial case of this situation. The function removes an element by shifting the
@@ -3768,7 +3770,7 @@ void cvClearSeq( CvSeq* seq );
 </pre><p><dl>
 <dt>seq<dd>Sequence.
 </dl><p>
-The function <a href="#decl_cvClearSeq">cvClearSeq</a> removes all elements from the sequence. The function does not return the
+The function <code>cvClearSeq</code> removes all elements from the sequence. The function does not return the
 memory to the storage, but this memory is reused later when new elements are added
 to the sequence. This function time complexity is <code>O(1)</code>.
 
@@ -3782,7 +3784,7 @@ char* cvGetSeqElem( const CvSeq* seq, int index );
 <dt>seq<dd>Sequence.
 <dt>index<dd>Index of element.
 </dl><p>
-The function <a href="#decl_cvGetSeqElem">cvGetSeqElem</a> finds the element with the given index in the sequence
+The function <code>cvGetSeqElem</code> finds the element with the given index in the sequence
 and returns the pointer to it. If the element is not found,
 the function returns 0. The function supports negative indices, where -1 stands
 for the last sequence element, -2 stands for the one before last, etc. If the
@@ -3808,7 +3810,7 @@ int cvSeqElemIdx( const CvSeq* seq, const void* element, CvSeqBlock** block=NULL
 <dt>block<dd>Optional argument. If the pointer is not <code>NULL</code>, the address of the
 sequence block that contains the element is stored in this location.
 </dl><p>
-The function <a href="#decl_cvSeqElemIdx">cvSeqElemIdx</a> returns the index of a sequence element or a negative
+The function <code>cvSeqElemIdx</code> returns the index of a sequence element or a negative
 number if the element is not found.</p>
 
 
@@ -3822,7 +3824,7 @@ void* cvCvtSeqToArray( const CvSeq* seq, void* elements, CvSlice slice=CV_WHOLE_
     It should be a pointer to data, not a matrix header.
 <dt>slice<dd>The sequence part to copy to the array.
 </dl><p>
-The function <a href="#decl_cvCvtSeqToArray">cvCvtSeqToArray</a> copies the entire sequence or subsequence to the
+The function <code>cvCvtSeqToArray</code> copies the entire sequence or subsequence to the
 specified buffer and returns the pointer to the buffer.</p>
 
 
@@ -3844,7 +3846,7 @@ must be equal to the value of this parameter.
 <dt>block<dd>Pointer to the local variable that is the header of the single sequence
 block.
 </dl><p>
-The function <a href="#decl_cvMakeSeqHeaderForArray">cvMakeSeqHeaderForArray</a> initializes sequence header for array.
+The function <code>cvMakeSeqHeaderForArray</code> initializes sequence header for array.
 The sequence header as well as the sequence block are allocated by the user (for example, on stack).
 No data is copied by the function. The resultant sequence will consists of a single block and have
 NULL storage pointer, thus, it is possible to read its elements, but the attempts to
@@ -3864,7 +3866,7 @@ CvSeq* cvSeqSlice( const CvSeq* seq, CvSlice slice,
 <dt>copy_data<dd>The flag that indicates whether to copy the elements of the extracted slice
                  (<code>copy_data</code>!=0) or not (<code>copy_data</code>=0)
 </dl><p>
-The function <a href="#decl_cvSeqSlice">cvSeqSlice</a> creates a sequence
+The function <code>cvSeqSlice</code> creates a sequence
 that represents the specified slice of the input sequence. The new sequence either shares the elements
 with the original sequence or has own copy of the elements.
 So if one needs to process a part of sequence but the processing function does not have a slice parameter,
@@ -3881,7 +3883,7 @@ CvSeq* cvCloneSeq( const CvSeq* seq, CvMemStorage* storage=NULL );
 <dt>storage<dd>The destination storage to keep the new sequence header and the copied data if any.
                If it is NULL, the function uses the storage containing the input sequence.
 </dl><p>
-The function <a href="#decl_cvCloneSeq">cvCloneSeq</a> makes a complete copy of the input sequence and returns it.
+The function <code>cvCloneSeq</code> makes a complete copy of the input sequence and returns it.
 The call <code><a href="#decl_cvCloneSeq">cvCloneSeq</a>( seq, storage )</code> is equivalent to
 <code><a href="#decl_cvSeqSlice">cvSeqSlice</a>( seq, CV_WHOLE_SEQ, storage, 1 )</code>
 </p>
@@ -3895,7 +3897,7 @@ void cvSeqRemoveSlice( CvSeq* seq, CvSlice slice );
 <dt>seq<dd>Sequence.
 <dt>slice<dd>The part of the sequence to remove.
 </dl><p>
-The function <a href="#decl_cvSeqRemoveSlice">cvSeqRemoveSlice</a> removes slice from the sequence.</p>
+The function <code>cvSeqRemoveSlice</code> removes slice from the sequence.</p>
 
 
 <hr><h3><a name="decl_cvSeqInsertSlice">SeqInsertSlice</a></h3>
@@ -3907,7 +3909,7 @@ void cvSeqInsertSlice( CvSeq* seq, int before_index, const CvArr* from_arr );
 <dt>slice<dd>The part of the sequence to remove.
 <dt>from_arr<dd>The array to take elements from.
 </dl><p>
-The function <a href="#decl_cvSeqInsertSlice">cvSeqInsertSlice</a> inserts all <code>from_arr</code>
+The function <code>cvSeqInsertSlice</code> inserts all <code>from_arr</code>
 array elements at the specified position of the sequence. The array <code>from_arr</code>
 can be a matrix or another sequence.</p>
 
@@ -3919,7 +3921,7 @@ void cvSeqInvert( CvSeq* seq );
 </pre><p><dl>
 <dt>seq<dd>Sequence.
 </dl><p>
-The function <a href="#decl_cvSeqInvert">cvSeqInvert</a> reverses the sequence in-place - makes the first element go last,
+The function <code>cvSeqInvert</code> reverses the sequence in-place - makes the first element go last,
 the last element go first etc.</p>
 
 
@@ -3939,7 +3941,7 @@ void cvSeqSort( CvSeq* seq, CvCmpFunc func, void* userdata=NULL );
 <dt>userdata<dd>The user parameter passed to the compasion function;
                 helps to avoid global variables in some cases.
 </dl><p>
-The function <a href="#decl_cvSeqSort">cvSeqSort</a> sorts the sequence in-place using the specified criteria.
+The function <code>cvSeqSort</code> sorts the sequence in-place using the specified criteria.
 Below is the example of the function use:</p>
 <pre>
 /* Sort 2d points in top-to-bottom left-to-right order */
@@ -3998,7 +4000,7 @@ char* cvSeqSearch( CvSeq* seq, const void* elem, CvCmpFunc func,
 <dt>userdata<dd>The user parameter passed to the compasion function;
                 helps to avoid global variables in some cases.
 </dl><p>
-The function <a href="#decl_cvSeqSearch">cvSeqSearch</a> searches the element in the sequence.
+The function <code>cvSeqSearch</code> searches the element in the sequence.
 If the sequence is sorted, binary O(log(N)) search is used, otherwise, a simple linear search is used.
 If the element is not found, the function returns NULL pointer and the index is set to the number of
 sequence elements if the linear search is used, and to the smallest index <code>i, seq(i)&gt;elem</code>.
@@ -4013,7 +4015,7 @@ void cvStartAppendToSeq( CvSeq* seq, CvSeqWriter* writer );
 <dt>seq<dd>Pointer to the sequence.
 <dt>writer<dd>Writer state; initialized by the function.
 </dl><p>
-The function <a href="#decl_cvStartAppendToSeq">cvStartAppendToSeq</a> initializes the process of writing data to the sequence.
+The function <code>cvStartAppendToSeq</code> initializes the process of writing data to the sequence.
 Written elements are added to the end of the sequence by <code>CV_WRITE_SEQ_ELEM( written_elem, writer )</code> macro.
 Note that during the writing process other operations on the sequence may yield incorrect result or
 even corrupt the sequence (see description of <a href="#decl_cvFlushSeqWriter">cvFlushSeqWriter</a> that helps to avoid
@@ -4040,7 +4042,7 @@ sequence type. For example, if the sequence of points is created (element type
 <dt>storage<dd>Sequence location.
 <dt>writer<dd>Writer state; initialized by the function.
 </dl><p>
-The function <a href="#decl_cvStartWriteSeq">cvStartWriteSeq</a> is a composition of <a href="#decl_cvCreateSeq">cvCreateSeq</a> and <a href="#decl_cvStartAppendToSeq">cvStartAppendToSeq</a>.
+The function <code>cvStartWriteSeq</code> is a composition of <a href="#decl_cvCreateSeq">cvCreateSeq</a> and <a href="#decl_cvStartAppendToSeq">cvStartAppendToSeq</a>.
 The pointer to the created sequence is stored at <code>writer->seq</code> and is also returned
 by <a href="#decl_cvEndWriteSeq">cvEndWriteSeq</a> function that should be called in the end.</p>
 
@@ -4052,7 +4054,7 @@ CvSeq* cvEndWriteSeq( CvSeqWriter* writer );
 </pre><p><dl>
 <dt>writer<dd>Writer state
 </dl><p>
-The function <a href="#decl_cvEndWriteSeq">cvEndWriteSeq</a> finishes the writing process and returns the pointer to
+The function <code>cvEndWriteSeq</code> finishes the writing process and returns the pointer to
 the written sequence. The function also truncates the last incomplete sequence block to
 return the remaining part of the block to the memory storage. After that the sequence
 can be read and modified safely.</p>
@@ -4065,7 +4067,7 @@ void cvFlushSeqWriter( CvSeqWriter* writer );
 </pre><p><dl>
 <dt>writer<dd>Writer state
 </dl><p>
-The function <a href="#decl_cvFlushSeqWriter">cvFlushSeqWriter</a> is intended to enable the user to read sequence
+The function <code>cvFlushSeqWriter</code> is intended to enable the user to read sequence
 elements, whenever required, during the writing process, e.g., in order to check
 specific conditions. The function updates the sequence headers to make reading
 from the sequence possible. The writer is not closed, however, so that the
@@ -4084,7 +4086,7 @@ void cvStartReadSeq( const CvSeq* seq, CvSeqReader* reader, int reverse=0 );
 the reader is positioned at the first sequence element, otherwise it is positioned at the last
 element.
 </dl><p>
-The function <a href="#decl_cvStartReadSeq">cvStartReadSeq</a> initializes the reader state. After that all the
+The function <code>cvStartReadSeq</code> initializes the reader state. After that all the
 sequence elements from the first down to the last one can be read by subsequent
 calls of the macro <code>CV_READ_SEQ_ELEM( read_elem, reader )</code> in case of forward reading
 and by using <code>CV_REV_READ_SEQ_ELEM( read_elem, reader )</code> in case of reversed reading.
@@ -4139,7 +4141,7 @@ int cvGetSeqReaderPos( CvSeqReader* reader );
 </pre><p><dl>
 <dt>reader<dd>Reader state.
 </dl><p>
-The function <a href="#decl_cvGetSeqReaderPos">cvGetSeqReaderPos</a> returns the current reader position
+The function <code>cvGetSeqReaderPos</code> returns the current reader position
 (within 0 ... <code>reader->seq->total</code> - 1).</p>
 
 
@@ -4154,7 +4156,7 @@ void cvSetSeqReaderPos( CvSeqReader* reader, int index, int is_relative=0 );
              the actual position will be <code>index</code> mod <code>reader->seq->total</code>.
 <dt>is_relative<dd>If it is not zero, then <code>index</code> is a relative to the current position.
 </dl><p>
-The function <a href="#decl_cvSetSeqReaderPos">cvSetSeqReaderPos</a> moves the read position to the absolute position or
+The function <code>cvSetSeqReaderPos</code> moves the read position to the absolute position or
 relative to the current position.
 </p>
 
@@ -4220,7 +4222,7 @@ CvSet* cvCreateSet( int set_flags, int header_size,
 <dt>elem_size<dd>Set element size; may not be less than <a href="#decl_CvSetElem">CvSetElem</a>.
 <dt>storage<dd>Container for the set.
 </dl><p>
-The function <a href="#decl_cvCreateSet">cvCreateSet</a> creates an empty set with a specified header size and element size, and
+The function <code>cvCreateSet</code> creates an empty set with a specified header size and element size, and
 returns the pointer to the set. The function is just a thin layer on top of <a href="#decl_cvCreateSeq">cvCreateSeq</a>.</p>
 
 
@@ -4234,7 +4236,7 @@ int cvSetAdd( CvSet* set_header, CvSetElem* elem=NULL, CvSetElem** inserted_elem
 copies the data to the allocated node (The MSB of the first integer field is cleared after copying).
 <dt>inserted_elem<dd>Optional output argument; the pointer to the allocated cell.
 </dl><p>
-The function <a href="#decl_cvSetAdd">cvSetAdd</a> allocates a new node, optionally copies input element data
+The function <code>cvSetAdd</code> allocates a new node, optionally copies input element data
 to it, and returns the pointer and the index to the node. The index value is
 taken from the lower bits of <code>flags</code> field of the node. The function has O(1) complexity,
 however there exists a faster function for allocating set nodes (see <a href="#decl_cvSetNew">cvSetNew</a>).
@@ -4249,7 +4251,7 @@ void cvSetRemove( CvSet* set_header, int index );
 <dt>set_header<dd>Set.
 <dt>index<dd>Index of the removed element.
 </dl><p>
-The function <a href="#decl_cvSetRemove">cvSetRemove</a> removes an element with a specified index from the set.
+The function <code>cvSetRemove</code> removes an element with a specified index from the set.
 If the node at the specified location is not occupied the function does nothing.
 The function has O(1) complexity, however, <a href="#decl_cvSetRemoveByPtr">cvSetRemoveByPtr</a> provides yet
 faster way to remove a set element if it is located already.</p>
@@ -4262,7 +4264,7 @@ CvSetElem* cvSetNew( CvSet* set_header );
 </pre><p><dl>
 <dt>set_header<dd>Set.
 </dl><p>
-The function <a href="#decl_cvSetNew">cvSetNew</a> is inline light-weight variant of <a href="#decl_cvSetAdd">cvSetAdd</a>.
+The function <code>cvSetNew</code> is inline light-weight variant of <a href="#decl_cvSetAdd">cvSetAdd</a>.
 It occupies a new node and returns pointer to it rather than index.</p>
 
 
@@ -4274,7 +4276,7 @@ void cvSetRemoveByPtr( CvSet* set_header, void* elem );
 <dt>set_header<dd>Set.
 <dt>elem<dd>Removed element.
 </dl><p>
-The function <a href="#decl_cvSetRemoveByPtr">cvSetRemoveByPtr</a> is inline light-weight variant of <a href="#decl_cvSetRemove">cvSetRemove</a>
+The function <code>cvSetRemoveByPtr</code> is inline light-weight variant of <a href="#decl_cvSetRemove">cvSetRemove</a>
 that takes element pointer.
 The function does not check whether the node is occupied or not - the user should take care of it.</p>
 
@@ -4287,7 +4289,7 @@ CvSetElem* cvGetSetElem( const CvSet* set_header, int index );
 <dt>set_header<dd>Set.
 <dt>index<dd>Index of the set element within a sequence.
 </dl><p>
-The function <a href="#decl_cvGetSetElem">cvGetSetElem</a> finds a set element by index. The function returns the
+The function <code>cvGetSetElem</code> finds a set element by index. The function returns the
 pointer to it or 0 if the index is invalid or the corresponding node is free.
 The function supports negative indices as it uses <a href="#decl_cvGetSeqElem">cvGetSeqElem</a> to locate the node.</p>
 </p>
@@ -4300,7 +4302,7 @@ void cvClearSet( CvSet* set_header );
 </pre><p><dl>
 <dt>set_header<dd>Cleared set.
 </dl><p>
-The function <a href="#decl_cvClearSet">cvClearSet</a> removes all elements from set. It has O(1) time complexity.</p>
+The function <code>cvClearSet</code> removes all elements from set. It has O(1) time complexity.</p>
 
 
 <hr><h2><a name="cxcore_ds_graphs">Graphs</a></h2>
@@ -4376,7 +4378,7 @@ for generic unoriented graphs and <code>CV_SEQ_KIND_GRAPH | CV_GRAPH_FLAG_ORIENT
                 (use <code>CV_GRAPH_EDGE_FIELDS()</code>)
 <dt>storage<dd>The graph container.
 </dl><p>
-The function <a href="#decl_cvCreateGraph">cvCreateGraph</a> creates an empty graph and returns pointer to it.</p>
+The function <code>cvCreateGraph</code> creates an empty graph and returns pointer to it.</p>
 
 
 <hr><h3><a name="decl_cvGraphAddVtx">GraphAddVtx</a></h3>
@@ -4391,7 +4393,7 @@ beyond <code>sizeof(CvGraphVtx)</code> are copied).
 <dt>inserted_vertex<dd>Optional output argument. If not <code>NULL</code>, the address of the new
 vertex is written there.
 </dl><p>
-The function <a href="#decl_cvGraphAddVtx">cvGraphAddVtx</a> adds a vertex to the graph and returns the vertex
+The function <code>cvGraphAddVtx</code> adds a vertex to the graph and returns the vertex
 index.</p>
 
 
@@ -4403,7 +4405,7 @@ int cvGraphRemoveVtx( CvGraph* graph, int index );
 <dt>graph<dd>Graph.
 <dt>vtx_idx<dd>Index of the removed vertex.
 </dl><p>
-The function <a href="#decl_cvGraphRemoveAddVtx">cvGraphRemoveAddVtx</a> removes a vertex from the graph together with all
+The function <code>cvGraphRemoveAddVtx</code> removes a vertex from the graph together with all
 the edges incident to it. The function reports an error, if the input vertex does
 not belong to the graph. The return value is number of edges deleted,
 or -1 if the vertex does not belong to the graph.</p>
@@ -4417,7 +4419,7 @@ int cvGraphRemoveVtxByPtr( CvGraph* graph, CvGraphVtx* vtx );
 <dt>graph<dd>Graph.
 <dt>vtx<dd>Pointer to the removed vertex.
 </dl><p>
-The function <a href="#decl_cvGraphRemoveVtxByPtr">cvGraphRemoveVtxByPtr</a> removes a vertex from the graph together with
+The function <code>cvGraphRemoveVtxByPtr</code> removes a vertex from the graph together with
 all the edges incident to it. The function reports an error, if the vertex does not belong to the graph.
 The return value is number of edges deleted, or -1 if the vertex does not belong to the graph.</p>
 
@@ -4430,7 +4432,7 @@ CvGraphVtx* cvGetGraphVtx( CvGraph* graph, int vtx_idx );
 <dt>graph<dd>Graph.
 <dt>vtx_idx<dd>Index of the vertex.
 </dl><p>
-The function <a href="#decl_cvGetGraphVtx">cvGetGraphVtx</a> finds the graph vertex by index and returns the pointer
+The function <code>cvGetGraphVtx</code> finds the graph vertex by index and returns the pointer
 to it or NULL if the vertex does not belong to the graph.</p>
 
 
@@ -4442,7 +4444,7 @@ int cvGraphVtxIdx( CvGraph* graph, CvGraphVtx* vtx );
 <dt>graph<dd>Graph.
 <dt>vtx<dd>Pointer to the graph vertex.
 </dl><p>
-The function <a href="#decl_cvGraphVtxIdx">cvGraphVtxIdx</a> returns index of the graph vertex.</p>
+The function <code>cvGraphVtxIdx</code> returns index of the graph vertex.</p>
 
 
 <hr><h3><a name="decl_cvGraphAddEdge">GraphAddEdge</a></h3>
@@ -4459,7 +4461,7 @@ parameters does not matter.
 <dt>inserted_edge<dd>Optional output parameter to contain the address of the inserted
 edge.
 </dl><p>
-The function <a href="#decl_cvGraphAddEdge">cvGraphAddEdge</a> connects two specified vertices.
+The function <code>cvGraphAddEdge</code> connects two specified vertices.
 The function returns 1 if the edge has been added successfully, 0 if the edge connecting
 the two vertices exists already and -1 if either of the vertices was not found, the starting and
 the ending vertex are the same or there is some other critical situation. In the latter case
@@ -4480,7 +4482,7 @@ parameters does not matter.
 <dt>inserted_edge<dd>Optional output parameter to contain the address of the inserted
 edge within the edge set.
 </dl><p>
-The function <a href="#decl_cvGraphAddEdge">cvGraphAddEdge</a> connects two specified vertices.
+The function <code>cvGraphAddEdge</code> connects two specified vertices.
 The function returns 1 if the edge has been added successfully, 0 if the edge connecting
 the two vertices exists already and -1 if either of the vertices was not found, the starting and
 the ending vertex are the same or there is some other critical situation. In the latter case
@@ -4497,7 +4499,7 @@ void cvGraphRemoveEdge( CvGraph* graph, int start_idx, int end_idx );
 <dt>end_idx<dd>Index of the ending vertex of the edge. For unoriented graph the order of the vertex
 parameters does not matter.
 </dl><p>
-The function <a href="#decl_cvGraphRemoveEdge">cvGraphRemoveEdge</a> removes the edge connecting two specified vertices.
+The function <code>cvGraphRemoveEdge</code> removes the edge connecting two specified vertices.
 If the vertices are not connected [in that order], the function does nothing.
 </p>
 
@@ -4512,7 +4514,7 @@ void cvGraphRemoveEdgeByPtr( CvGraph* graph, CvGraphVtx* start_vtx, CvGraphVtx* 
 <dt>end_vtx<dd>Pointer to the ending vertex of the edge. For unoriented graph the order of the vertex
 parameters does not matter.
 </dl><p>
-The function <a href="#decl_cvGraphRemoveEdgeByPtr">cvGraphRemoveEdgeByPtr</a> removes the edge connecting two specified vertices.
+The function <code>cvGraphRemoveEdgeByPtr</code> removes the edge connecting two specified vertices.
 If the vertices are not connected [in that order], the function does nothing.</p>
 
 
@@ -4527,7 +4529,7 @@ CvGraphEdge* cvFindGraphEdge( const CvGraph* graph, int start_idx, int end_idx )
 <dt>end_idx<dd>Index of the ending vertex of the edge. For unoriented graph the order of the vertex
 parameters does not matter.
 </dl><p>
-The function <a href="#decl_cvFindGraphEdge">cvFindGraphEdge</a> finds the graph edge connecting two specified vertices
+The function <code>cvFindGraphEdge</code> finds the graph edge connecting two specified vertices
 and returns pointer to it or NULL if the edge does not exists.</p>
 
 
@@ -4543,7 +4545,7 @@ CvGraphEdge* cvFindGraphEdgeByPtr( const CvGraph* graph, const CvGraphVtx* start
 <dt>end_vtx<dd>Pointer to the ending vertex of the edge. For unoriented graph the order of the vertex
 parameters does not matter.
 </dl><p>
-The function <a href="#decl_cvFindGraphEdge">cvFindGraphEdge</a> finds the graph edge connecting two specified vertices
+The function <code>cvFindGraphEdge</code> finds the graph edge connecting two specified vertices
 and returns pointer to it or NULL if the edge does not exists.</p>
 
 
@@ -4555,7 +4557,7 @@ int cvGraphEdgeIdx( CvGraph* graph, CvGraphEdge* edge );
 <dt>graph<dd>Graph.
 <dt>edge<dd>Pointer to the graph edge.
 </dl><p>
-The function <a href="#decl_cvGraphEdgeIdx">cvGraphEdgeIdx</a> returns index of the graph edge.</p>
+The function <code>cvGraphEdgeIdx</code> returns index of the graph edge.</p>
 
 
 <hr><h3><a name="decl_cvGraphVtxDegree">GraphVtxDegree</a></h3>
@@ -4566,7 +4568,7 @@ int cvGraphVtxDegree( const CvGraph* graph, int vtx_idx );
 <dt>graph<dd>Graph.
 <dt>vtx<dd>Index of the graph vertex.
 </dl><p>
-The function <a href="#decl_cvGraphVtxDegree">cvGraphVtxDegree</a> returns the number of edges
+The function <code>cvGraphVtxDegree</code> returns the number of edges
 incident to the specified vertex, both incoming and outcoming.
 To count the edges, the following code is used:</p>
 <pre>
@@ -4589,7 +4591,7 @@ int cvGraphVtxDegreeByPtr( const CvGraph* graph, const CvGraphVtx* vtx );
 <dt>graph<dd>Graph.
 <dt>vtx<dd>Pointer to the graph vertex.
 </dl><p>
-The function <a href="#decl_cvGraphVtxDegree">cvGraphVtxDegree</a> returns the number of edges
+The function <code>cvGraphVtxDegree</code> returns the number of edges
 incident to the specified vertex, both incoming and outcoming.</p>
 
 
@@ -4600,7 +4602,7 @@ void cvClearGraph( CvGraph* graph );
 </pre><p><dl>
 <dt>graph<dd>Graph.
 </dl><p>
-The function <a href="#decl_cvClearGraph">cvClearGraph</a> removes all vertices and edges from the graph.
+The function <code>cvClearGraph</code> removes all vertices and edges from the graph.
 The function has O(1) time complexity.</p>
 
 
@@ -4612,7 +4614,7 @@ CvGraph* cvCloneGraph( const CvGraph* graph, CvMemStorage* storage );
 <dt>graph<dd>The graph to copy.
 <dt>storage<dd>Container for the copy.
 </dl><p>
-The function <a href="#decl_cvCloneGraph">cvCloneGraph</a> creates full copy of the graph. If the graph vertices
+The function <code>cvCloneGraph</code> creates full copy of the graph. If the graph vertices
 or edges have pointers to some external data, it still be shared between the copies.
 The vertex and edge indices in the new graph may be different from the original, because
 the function defragments the vertex and edge sets.</p>
@@ -4674,7 +4676,7 @@ CvGraphScanner*  cvCreateGraphScanner( CvGraph* graph, CvGraphVtx* vtx=NULL,
             <li>CV_GRAPH_BACKTRACKING - stop at every already visited vertex during backtracking - returning to
                                 already visited vertexes of the traversal tree.<br></ul>
 </dl><p>
-The function <a href="#decl_cvCreateGraphScanner">cvCreateGraphScanner</a> creates structure for
+The function <code>cvCreateGraphScanner</code> creates structure for
 depth-first graph traversal/search.
 The initialized structure is used in <a href="#decl_cvNextGraphItem">cvNextGraphItem</a> function
 - the incremental traversal procedure.</p>
@@ -4687,7 +4689,7 @@ int cvNextGraphItem( CvGraphScanner* scanner );
 </pre><p><dl>
 <dt>scanner<dd>Graph traversal state. It is updated by the function.
 </dl><p>
-The function <a href="#decl_cvNextGraphItem">cvNextGraphItem</a> traverses through the graph until an event interesting to the user
+The function <code>cvNextGraphItem</code> traverses through the graph until an event interesting to the user
 (that is, an event, specified in the <code>mask</code> in <a href="#decl_cvCreateGraphScanner">cvCreateGraphScanner</a> call)
 is met or the traversal is over. In the first case it returns one of the events,
 listed in the description of <code>mask</code> parameter above and with the next call
@@ -4706,7 +4708,7 @@ void cvReleaseGraphScanner( CvGraphScanner** scanner );
 </pre><p><dl>
 <dt>scanner<dd>Double pointer to graph traverser.
 </dl><p>
-The function <a href="#decl_cvReleaseGraphScanner">cvGraphScanner</a> finishes graph traversal procedure
+The function <code>cvGraphScanner</code> finishes graph traversal procedure
 and releases the traverser state.</p>
 
 
@@ -4759,7 +4761,7 @@ void cvInitTreeNodeIterator( CvTreeNodeIterator* tree_iterator,
                 should be visited, 2 means that the nodes on the same level as <code>first</code> and
                 their direct children should be visited etc.
 </dl><p>
-The function <a href="#decl_cvInitTreeNodeIterator">cvInitTreeNodeIterator</a> initializes tree iterator.
+The function <code>cvInitTreeNodeIterator</code> initializes tree iterator.
 The tree is traversed in depth-first order.</p>
 
 
@@ -4770,7 +4772,7 @@ void* cvNextTreeNode( CvTreeNodeIterator* tree_iterator );
 </pre><p><dl>
 <dt>tree_iterator<dd>Tree iterator initialized by the function.
 </dl><p>
-The function <a href="#decl_cvNextTreeNode">cvNextTreeNode</a> returns the currently observed node and then
+The function <code>cvNextTreeNode</code> returns the currently observed node and then
 updates the iterator - moves it toward the next node. In other words, the function behavior
 is similar to *p++ expression on usual C pointer or C++ collection iterator.
 The function returns NULL if there is no more nodes.</p>
@@ -4783,7 +4785,7 @@ void* cvPrevTreeNode( CvTreeNodeIterator* tree_iterator );
 </pre><p><dl>
 <dt>tree_iterator<dd>Tree iterator initialized by the function.
 </dl><p>
-The function <a href="#decl_cvPrevTreeNode">cvPrevTreeNode</a> returns the currently observed node and then
+The function <code>cvPrevTreeNode</code> returns the currently observed node and then
 updates the iterator - moves it toward the previous node. In other words, the function behavior
 is similar to *p-- expression on usual C pointer or C++ collection iterator.
 The function returns NULL if there is no more nodes.</p>
@@ -4798,7 +4800,7 @@ CvSeq* cvTreeToNodeSeq( const void* first, int header_size, CvMemStorage* storag
 <dt>header_size<dd>Header size of the created sequence (sizeof(CvSeq) is the most used value).
 <dt>storage<dd>Container for the sequence.
 </dl><p>
-The function <a href="#decl_cvTreeToNodeSeq">cvTreeToNodeSeq</a> puts pointers of all nodes reacheable from <code>first</code>
+The function <code>cvTreeToNodeSeq</code> puts pointers of all nodes reacheable from <code>first</code>
 to the single sequence. The pointers are written subsequently in the depth-first order.</p>
 
 
@@ -4812,7 +4814,7 @@ void cvInsertNodeIntoTree( void* node, void* parent, void* frame );
 <dt>frame<dd>The top level node. If <code>parent</code> and <code>frame</code> are the same, <code>v_prev</code>
             field of <code>node</code> is set to NULL rather than <code>parent</code>.
 </dl><p>
-The function <a href="#decl_cvInsertNodeIntoTree">cvInsertNodeIntoTree</a> adds another node into tree. The function does not
+The function <code>cvInsertNodeIntoTree</code> adds another node into tree. The function does not
 allocate any memory, it can only modify links of the tree nodes.</p>
 
 
@@ -4826,7 +4828,7 @@ void cvRemoveNodeFromTree( void* node, void* frame );
             <code>node->h_prev</code> is NULL (i.e. if <code>node</code> is the first child of <code>frame</code>),
             <code>frame->v_next</code> is set to <code>node->h_next</code> (i.e. the first child or frame is changed).
 </dl><p>
-The function <a href="#decl_cvRemoveNodeFromTree">cvRemoveNodeFromTree</a> removes node from tree. The function does not
+The function <code>cvRemoveNodeFromTree</code> removes node from tree. The function does not
 deallocate any memory, it can only modify links of the tree nodes.</p>
 
 
@@ -4875,7 +4877,7 @@ void cvLine( CvArr* img, CvPoint pt1, CvPoint pt2, CvScalar color,
                  <code>CV_AA</code> - antialiased line.
 <dt>shift<dd>Number of fractional bits in the point coordinates.
 </dl><p>
-The function <a href="#decl_cvLine">cvLine</a> draws the line segment between <code>pt1</code> and <code>pt2</code> points
+The function <code>cvLine</code> draws the line segment between <code>pt1</code> and <code>pt2</code> points
 in the image. The line is clipped by the image or ROI rectangle. For non-antialiased lines
 with integer coordinates the 8-connected or 4-connected Bresenham algorithm is used.
 Thick lines are drawn with rounding endings. Antialiased lines are drawn using Gaussian filtering.
@@ -4897,7 +4899,7 @@ make the function to draw a filled rectangle.
 <dt>line_type<dd>Type of the line, see <a href="#decl_cvLine">cvLine</a> description.
 <dt>shift<dd>Number of fractional bits in the point coordinates.
 </dl><p>
-The function <a href="#decl_cvRectangle">cvRectangle</a> draws a rectangle with
+The function <code>cvRectangle</code> draws a rectangle with
 two opposite corners <code>pt1</code> and <code>pt2</code>.</p>
 
 
@@ -4916,7 +4918,7 @@ a filled circle has to be drawn.
 <dt>line_type<dd>Type of the circle boundary, see <a href="#decl_cvLine">cvLine</a> description.
 <dt>shift<dd>Number of fractional bits in the center coordinates and radius value.
 </dl><p>
-The function <a href="#decl_cvCircle">cvCircle</a> draws a simple or filled circle with given center and
+The function <code>cvCircle</code> draws a simple or filled circle with given center and
 radius. The circle is clipped by ROI rectangle. To specify the circle color, the user may
 use the macro <code>CV_RGB ( r, g, b )</code>.</p>
 
@@ -4939,7 +4941,7 @@ void cvEllipse( CvArr* img, CvPoint center, CvSize axes, double angle,
 <dt>line_type<dd>Type of the ellipse boundary, see <a href="#decl_cvLine">cvLine</a> description.
 <dt>shift<dd>Number of fractional bits in the center coordinates and axes' values.
 </dl><p>
-The function <a href="#decl_cvEllipse">cvEllipse</a> draws a simple or thick elliptic arc or fills an ellipse
+The function <code>cvEllipse</code> draws a simple or thick elliptic arc or fills an ellipse
 sector. The arc is clipped by ROI rectangle. A piecewise-linear
 approximation is used for antialiased arcs and thick arcs. All the angles are
 given in degrees. The picture below explains the meaning of the parameters.</p>
@@ -4965,7 +4967,7 @@ void cvFillPoly( CvArr* img, CvPoint** pts, int* npts, int contours,
 <dt>line_type<dd>Type of the polygon boundaries, see <a href="#decl_cvLine">cvLine</a> description.
 <dt>shift<dd>Number of fractional bits in the vertex coordinates.
 </dl><p>
-The function <a href="#decl_cvFillPoly">cvFillPoly</a> fills an area bounded by several polygonal contours.
+The function <code>cvFillPoly</code> fills an area bounded by several polygonal contours.
 The function fills complex areas, for example, areas with holes, contour self-intersection, etc.</p>
 
 
@@ -4982,8 +4984,8 @@ void cvFillConvexPoly( CvArr* img, CvPoint* pts, int npts,
 <dt>line_type<dd>Type of the polygon boundaries, see <a href="#decl_cvLine">cvLine</a> description.
 <dt>shift<dd>Number of fractional bits in the vertex coordinates.
 </dl><p>
-The function <a href="#decl_cvFillConvexPoly">cvFillConvexPoly</a> fills convex polygon interior.
-This function is much faster than the function <a href="#decl_cvFillPoly">cvFillPoly</a> and can fill
+The function <code>cvFillConvexPoly</code> fills convex polygon interior.
+This function is much faster than The function <code>cvFillPoly</code> and can fill
 not only the convex polygons but any monotonic polygon, i.e. a polygon whose contour intersects every
 horizontal line (scan line) twice at the most.</p>
 
@@ -5006,7 +5008,7 @@ vertex.
 <dt>line_type<dd>Type of the line segments, see <a href="#decl_cvLine">cvLine</a> description.
 <dt>shift<dd>Number of fractional bits in the vertex coordinates.
 </dl><p>
-The function <a href="#decl_cvPolyLine">cvPolyLine</a> draws a single or multiple polygonal curves.</p>
+The function <code>cvPolyLine</code> draws a single or multiple polygonal curves.</p>
 
 
 <hr><h2><a name="cxcore_drawing_text">Text</a></h2>
@@ -5019,7 +5021,7 @@ void cvInitFont( CvFont* font, int font_face, double hscale,
                  int thickness=1, int line_type=8 );
 </pre><p><dl>
 <dt>font<dd>Pointer to the font structure initialized by the function.
-<dt>font_face<dd>Font name identifier. Only a subset of Hershey font's
+<dt>font_face<dd>Font name identifier. Only a subset of Hershey fonts
 (<a href="http://sources.isc.org/utils/misc/hershey-font.txt">http://sources.isc.org/utils/misc/hershey-font.txt</a>)
 are supported now:<br>
     <code>CV_FONT_HERSHEY_SIMPLEX</code> - normal size sans-serif font<br>
@@ -5040,12 +5042,12 @@ height depending on the font type. If equal to <code>0.5f</code>, the characters
 the original height.
 <dt>shear<dd>Approximate tangent of the character slope relative to the vertical
 line. Zero value means a non-italic font, <code>1.0f</code> means <code>&asymp;45&deg;</code> slope, etc.
-thickness Thickness of lines composing letters outlines. The function <a href="#decl_cvLine">cvLine</a> is
+thickness Thickness of lines composing letters outlines. The function <code>cvLine</code> is
 used for drawing letters.
 <dt>thickness<dd>Thickness of the text strokes.
 <dt>line_type<dd>Type of the strokes, see <a href="#decl_cvLine">cvLine</a> description.
 </dl><p>
-The function <a href="#decl_cvInitFont">cvInitFont</a> initializes the font structure that can be passed to
+The function <code>cvInitFont</code> initializes the font structure that can be passed to
 text rendering functions.</p>
 
 
@@ -5060,7 +5062,7 @@ void cvPutText( CvArr* img, const char* text, CvPoint org, const CvFont* font, C
 <dt>font<dd>Pointer to the font structure.
 <dt>color<dd>Text color.
 </dl><p>
-The function <a href="#decl_cvPutText">cvPutText</a> renders the text in the image with the specified font and
+The function <code>cvPutText</code> renders the text in the image with the specified font and
 color. The printed text is clipped by ROI rectangle. Symbols that do not belong
 to the specified font are replaced with the rectangle symbol.</p>
 
@@ -5076,7 +5078,7 @@ void cvGetTextSize( const char* text_string, const CvFont* font, CvSize* text_si
 the height of character parts that are below the baseline.
 <dt>baseline<dd>y-coordinate of the baseline relatively to the bottom-most text point.
 </dl><p>
-The function <a href="#decl_cvGetTextSize">cvGetTextSize</a> calculates the binding rectangle for the given text
+The function <code>cvGetTextSize</code> calculates the binding rectangle for the given text
 string when a specified font is used.</p>
 
 
@@ -5104,7 +5106,7 @@ but draws child contours of <code>contour</code> up to abs(<code>max_level</code
 the contour interiors are drawn.
 <dt>line_type<dd>Type of the contour segments, see <a href="#decl_cvLine">cvLine</a> description.
 </dl><p>
-The function <a href="#decl_cvDrawContours">cvDrawContours</a> draws contour outlines in the image if <code>thickness</code>&gt;=0
+The function <code>cvDrawContours</code> draws contour outlines in the image if <code>thickness</code>&gt;=0
 or fills area bounded by the contours if <code>thickness</code>&lt;0.
 </p>
 <h4>Example. Connected component detection via contour functions</h4>
@@ -5346,7 +5348,7 @@ If it is NULL, a temporary memory storage is created and used.
             <code>CV_STORAGE_READ</code> - the storage is open for reading<br>
             <code>CV_STORAGE_WRITE</code> - the storage is open for writing<br>
 </dl><p>
-The function <a href="#decl_cvOpenFileStorage">cvOpenFileStorage</a> opens file storage for
+The function <code>cvOpenFileStorage</code> opens file storage for
 reading or writing data. In the latter case a new file is created or existing file is
 rewritten. Type of the read of written file is determined by the filename extension: <code>.xml</code>
 for <em>XML</em>, and <code>.yml</code> or <code>.yaml</code> for <em>YAML</em>.
@@ -5360,7 +5362,7 @@ void  cvReleaseFileStorage( CvFileStorage** fs );
 </pre><p><dl>
 <dt>fs<dd>Double pointer to the released file storage.
 </dl><p>
-The function <a href="#decl_cvReleaseFileStorage">cvReleaseFileStorage</a> closes the file
+The function <code>cvReleaseFileStorage</code> closes the file
 associated with the storage and releases all the temporary structures.
 It must be called after all I/O operations with the storage are finished.</p>
 
@@ -5399,7 +5401,7 @@ void  cvStartWriteStruct( CvFileStorage* fs, const char* name,
                 <a href="#decl_cvFindTypeInfo">cvFindTypeInfo</a>).
 <dt>attributes<dd>This parameter is not used in the current implementation.
 </dl><p>
-The function <a href="#decl_cvStartWriteStruct">cvStartWriteStruct</a> starts writing
+The function <code>cvStartWriteStruct</code> starts writing
 a compound structure (collection) that can be a sequence or a map. After all the structure
 fields, which can be scalars or structures, are written,
 <a href="#decl_cvEndWriteStruct">cvEndWriteStruct</a> should be called.
@@ -5415,7 +5417,7 @@ void  cvEndWriteStruct( CvFileStorage* fs );
 </pre><p><dl>
 <dt>fs<dd>File storage.
 </dl><p>
-The function <a href="#decl_cvEndWriteStruct">cvEndWriteStruct</a> finishes the
+The function <code>cvEndWriteStruct</code> finishes the
 currently written structure.</p>
 
 
@@ -5429,7 +5431,7 @@ void  cvWriteInt( CvFileStorage* fs, const char* name, int value );
             parent structure is a sequence.
 <dt>value<dd>The written value.
 </dl><p>
-The function <a href="#decl_cvWriteInt">cvWriteInt</a> writes a single integer value
+The function <code>cvWriteInt</code> writes a single integer value
 (with or without a name) to the file storage.</p>
 
 
@@ -5443,7 +5445,7 @@ void  cvWriteReal( CvFileStorage* fs, const char* name, double value );
             parent structure is a sequence.
 <dt>value<dd>The written value.
 </dl><p>
-The function <a href="#decl_cvWriteReal">cvWriteReal</a> writes a single
+The function <code>cvWriteReal</code> writes a single
 floating-point value (with or without a name) to the file storage. The special
 values are encoded: NaN (Not A Number) as .NaN, &plusmn;Infinity as +.Inf (-.Inf).</p>
 <p>The following example shows how to use the low-level writing functions to
@@ -5479,7 +5481,7 @@ void  cvWriteString( CvFileStorage* fs, const char* name,
              only when they are required (e.g. when the string starts with a digit or contains
              spaces).
 </dl><p>
-The function <a href="#decl_cvWriteString">cvWriteString</a> writes a text string
+The function <code>cvWriteString</code> writes a text string
 to the file storage.</p>
 
 
@@ -5495,7 +5497,7 @@ void  cvWriteComment( CvFileStorage* fs, const char* comment, int eol_comment );
              if it does not fit in the end of the current line, the comment starts
              from a new line.
 </dl><p>
-The function <a href="#decl_cvWriteComment">cvWriteComment</a> writes a comment into the
+The function <code>cvWriteComment</code> writes a comment into the
 file storage. The comments are skipped when the storage is read, so they may be
 used only for debugging or descriptive purposes.</p>
 
@@ -5507,7 +5509,7 @@ void  cvStartNextStream( CvFileStorage* fs );
 </pre><p><dl>
 <dt>fs<dd>File storage.
 </dl><p>
-The function <a href="#decl_cvStartNextStream">cvStartNextStream</a> starts the next
+The function <code>cvStartNextStream</code> starts the next
 stream in the file storage. Both YAML and XML supports multiple "streams". This
 is useful for concatenating files or for resuming the writing process.</p>
 
@@ -5525,7 +5527,7 @@ void  cvWrite( CvFileStorage* fs, const char* name,
 <dt>attributes<dd>The attributes of the object. They are specific for each particular
            type (see the dicsussion).
 </dl><p>
-The function <a href="#decl_cvWrite">cvWrite</a> writes the object to file storage.
+The function <code>cvWrite</code> writes the object to file storage.
 First, the appropriate type info is found using <a href="#decl_cvTypeOf">cvTypeOf</a>.
 Then, <code>write</code> method of the type info is called.
 </p><p>
@@ -5604,9 +5606,9 @@ void  cvWriteRawData( CvFileStorage* fs, const void* src,
           of 2 integers, followed by a single-precision floating-point number. The equivalent
           notations of the above specification are <code>'iif'</code>, <code>'2i1f'</code> etc.
           Other examples: <code>dt='u'</code> means that the array consists of bytes,
-          <code>dt='2d'</code> - the array consists of pairs of double's.
+          <code>dt='2d'</code> - the array consists of pairs of double&#146;s.
 </dl><p>
-The function <a href="#decl_cvWriteRawData">cvWriteRawData</a> writes array,
+The function <code>cvWriteRawData</code> writes array,
 which elements consist of a single of multiple numbers. The function call can
 be replaced with a loop containing a few <a href="#decl_cvWriteInt">cvWriteInt</a>
 and <a href="#decl_cvWriteReal">cvWriteReal</a> calls,
@@ -5630,7 +5632,7 @@ void cvWriteFileNode( CvFileStorage* fs, const char* new_node_name,
              written into the currently written structure. Of course, map elements may be
              written only to map, and sequence elements may be written only to sequence.
 </dl><p>
-The function <a href="#decl_cvWriteFileNode">cvWriteFileNode</a>
+The function <code>cvWriteFileNode</code>
 writes a copy of file node to file storage. The possible application of the function are:
 merging several file storages into one. Conversion between XML and YAML formats etc.
 </p>
@@ -5652,7 +5654,7 @@ CvFileNode* cvGetRootFileNode( const CvFileStorage* fs, int stream_index=0 );
 <dt>stream_index<dd>Zero-based index of the stream. See <a href="#decl_cvStartNextStream">cvStartNextStream</a>.
            In most cases, there is only one stream in the file, however there can be several.
 </dl><p>
-The function <a href="#decl_cvGetRootFileNode">cvGetRootFileNode</a> returns
+The function <code>cvGetRootFileNode</code> returns
 one of  top-level file nodes. The top-level nodes do not have a name, they correspond to
 the streams, that are stored one after another in the file storage.
 If the index is out of range, the function returns NULL pointer, so all the top-level
@@ -5673,7 +5675,7 @@ CvFileNode* cvGetFileNodeByName( const CvFileStorage* fs,
            in all the top-level nodes (streams), starting from the first one.
 <dt>name<dd>The file node name.
 </dl><p>
-The function <a href="#decl_cvGetFileNodeByName">cvGetFileNodeByName</a> finds
+The function <code>cvGetFileNodeByName</code> finds
 a file node by <code>name</code>. The node is searched either in <code>map</code>
 or, if the pointer is NULL, among the top-level file nodes of the storage.
 Using this function for maps and <a href="#decl_cvGetSeqElem">cvGetSeqElem</a>
@@ -5696,7 +5698,7 @@ CvStringHashNode* cvGetHashedKey( CvFileStorage* fs, const char* name,
 <dt>create_missing<dd>Flag that specifies, whether an absent key should be
            added into the hash table, or not.
 </dl><p>
-The function <a href="#decl_cvGetHashedKey">cvGetHashedKey</a> returns
+The function <code>cvGetHashedKey</code> returns
 the unique pointer for each particular file node name. This pointer can be
 then passed to <a href="#decl_cvGetFileNode">cvGetFileNode</a> function that
 is faster than <a href="#decl_cvGetFileNodeByName">cvGetFileNodeByName</a>
@@ -5781,7 +5783,7 @@ CvFileNode* cvGetFileNode( CvFileStorage* fs, CvFileNode* map,
 <dt>create_missing<dd>Flag that specifies, whether an absent node should be
            added to the map, or not.
 </dl><p>
-The function <a href="#decl_cvGetFileNode">cvGetFileNode</a> finds a file node. It is
+The function <code>cvGetFileNode</code> finds a file node. It is
 a faster version <a href="#decl_cvGetFileNodeByName">cvGetFileNodeByName</a>
 (see <a href="#decl_cvGetHashedKey">cvGetHashedKey</a> discussion). Also,
 the function can insert a new node, if it is not in the map yet (which is used
@@ -5795,7 +5797,7 @@ const char* cvGetFileNodeName( const CvFileNode* node );
 </pre><p><dl>
 <dt>node<dd>File node
 </dl><p>
-The function <a href="#decl_cvGetFileNodeName">cvGetFileNodeName</a> returns name of the file node
+The function <code>cvGetFileNodeName</code> returns name of the file node
 or NULL, if the file node does not have a name, or if <code>node</code> is <code>NULL</code>.</p>
 
 
@@ -5807,7 +5809,7 @@ int cvReadInt( const CvFileNode* node, int default_value=0 );
 <dt>node<dd>File node.
 <dt>default_value<dd>The value that is returned if <code>node</code> is NULL.
 </dl><p>
-The function <a href="#decl_cvReadInt">cvReadInt</a> returns integer that is
+The function <code>cvReadInt</code> returns integer that is
 represented by the file node. If the file node is NULL, <code>default_value</code>
 is returned (thus, it is convenient to call the function right after
 <a href="#decl_cvGetFileNode">cvGetFileNode</a> without checking for NULL pointer),
@@ -5828,7 +5830,7 @@ int cvReadIntByName( const CvFileStorage* fs, const CvFileNode* map,
 <dt>name<dd>The node name.
 <dt>default_value<dd>The value that is returned if the file node is not found.
 </dl><p>
-The function <a href="#decl_cvReadIntByName">cvReadIntByName</a> is a simple
+The function <code>cvReadIntByName</code> is a simple
 superposition of <a href="#decl_cvGetFileNodeByName">cvGetFileNodeByName</a> and
 <a href="#decl_cvReadInt">cvReadInt</a>.
 
@@ -5841,7 +5843,7 @@ double cvReadReal( const CvFileNode* node, double default_value=0. );
 <dt>node<dd>File node.
 <dt>default_value<dd>The value that is returned if <code>node</code> is NULL.
 </dl><p>
-The function <a href="#decl_cvReadReal">cvReadReal</a> returns floating-point value that is
+The function <code>cvReadReal</code> returns floating-point value that is
 represented by the file node. If the file node is NULL, <code>default_value</code>
 is returned (thus, it is convenient to call the function right after
 <a href="#decl_cvGetFileNode">cvGetFileNode</a> without checking for NULL pointer),
@@ -5862,7 +5864,7 @@ double  cvReadRealByName( const CvFileStorage* fs, const CvFileNode* map,
 <dt>name<dd>The node name.
 <dt>default_value<dd>The value that is returned if the file node is not found.
 </dl><p>
-The function <a href="#decl_cvReadRealByName">cvReadRealByName</a> is a simple
+The function <code>cvReadRealByName</code> is a simple
 superposition of <a href="#decl_cvGetFileNodeByName">cvGetFileNodeByName</a> and
 <a href="#decl_cvReadReal">cvReadReal</a>.
 
@@ -5875,7 +5877,7 @@ const char* cvReadString( const CvFileNode* node, const char* default_value=NULL
 <dt>node<dd>File node.
 <dt>default_value<dd>The value that is returned if <code>node</code> is NULL.
 </dl><p>
-The function <a href="#decl_cvReadString">cvReadString</a> returns text string that is
+The function <code>cvReadString</code> returns text string that is
 represented by the file node. If the file node is NULL, <code>default_value</code>
 is returned (thus, it is convenient to call the function right after
 <a href="#decl_cvGetFileNode">cvGetFileNode</a> without checking for NULL pointer),
@@ -5894,7 +5896,7 @@ const char* cvReadStringByName( const CvFileStorage* fs, const CvFileNode* map,
 <dt>name<dd>The node name.
 <dt>default_value<dd>The value that is returned if the file node is not found.
 </dl><p>
-The function <a href="#decl_cvReadStringByName">cvReadStringByName</a> is a simple
+The function <code>cvReadStringByName</code> is a simple
 superposition of <a href="#decl_cvGetFileNodeByName">cvGetFileNodeByName</a> and
 <a href="#decl_cvReadString">cvReadString</a>.
 
@@ -5909,7 +5911,7 @@ void* cvRead( CvFileStorage* fs, CvFileNode* node,
 <dt>node<dd>The root object node.
 <dt>attributes<dd>Unused parameter.
 </dl><p>
-The function <a href="#decl_cvRead">cvRead</a> decodes user object (creates object
+The function <code>cvRead</code> decodes user object (creates object
 in a native representation from the file storage subtree) and returns it.
 The object to be decoded must be an instance of registered type that supports <code>read</code>
 method (see <a href="#decl_CvTypeInfo">CvTypeInfo</a>). Type of the object is determined by
@@ -5932,7 +5934,7 @@ void* cvReadByName( CvFileStorage* fs, const CvFileNode* map,
 <dt>name<dd>The node name.
 <dt>attributes<dd>Unused parameter.
 </dl><p>
-The function <a href="#decl_cvReadByName">cvReadByName</a> is a simple
+The function <code>cvReadByName</code> is a simple
 superposition of <a href="#decl_cvGetFileNodeByName">cvGetFileNodeByName</a> and
 <a href="#decl_cvRead">cvRead</a>.
 
@@ -5949,7 +5951,7 @@ void cvReadRawData( const CvFileStorage* fs, const CvFileNode* src,
 <dt>dt<dd>Specification of each array element. It has the same format as in
           <a href="#decl_cvWriteRawData">cvWriteRawData</a>.
 </dl><p>
-The function <a href="#decl_cvReadRawData">cvReadRawData</a> reads elements
+The function <code>cvReadRawData</code> reads elements
 from a file node that represents a sequence of scalars</p>
 
 
@@ -5963,7 +5965,7 @@ void cvStartReadRawData( const CvFileStorage* fs, const CvFileNode* src,
 <dt>src<dd>The file node (a sequence) to read numbers from.
 <dt>reader<dd>Pointer to the sequence reader.
 </dl><p>
-The function <a href="#decl_cvStartReadRawData">cvStartReadRawData</a> initializes
+The function <code>cvStartReadRawData</code> initializes
 sequence reader to read data from file node. The initialized reader can be then
 passed to <a href="#decl_cvReadRawDataSlice">cvReadRawDataSlice</a>.</p>
 
@@ -5981,7 +5983,7 @@ void cvReadRawDataSlice( const CvFileStorage* fs, CvSeqReader* reader,
 <dt>dt<dd>Specification of each array element. It has the same format as in
           <a href="#decl_cvWriteRawData">cvWriteRawData</a>.
 </dl><p>
-The function <a href="#decl_cvReadRawDataSlice">cvReadRawDataSlice</a> reads one
+The function <code>cvReadRawDataSlice</code> reads one
 or more elements from the file node, representing a sequence, to user-specified
 array. The total number of read sequence elements is a product of <code>total</code>
 and the number of components in each array element.
@@ -6042,7 +6044,7 @@ void cvRegisterType( const CvTypeInfo* info );
 </pre><p><dl>
 <dt>info<dd>Type info structure.
 </dl><p>
-The function <a href="#decl_cvRegisterType">cvRegisterType</a> registers a new type,
+The function <code>cvRegisterType</code> registers a new type,
 which is described by <code>info</code>. The function creates a copy of the structure,
 so user should delete it after calling the function.</p>
 
@@ -6054,7 +6056,7 @@ void cvUnregisterType( const char* type_name );
 </pre><p><dl>
 <dt>type_name<dd>Name of the unregistered type.
 </dl><p>
-The function <a href="#decl_cvUnregisterType">cvUnregisterType</a> unregisters the type
+The function <code>cvUnregisterType</code> unregisters the type
 with the specified name. If the name is unknown, it is possible to locate the type info
 by an instance of the type using <a href="#decl_cvTypeOf">cvTypeOf</a> or by iterating
 the type list, starting from <a href="#decl_cvFirstType">cvFirstType</a>, and then
@@ -6066,7 +6068,7 @@ call <code><a href="#decl_cvUnregisterType">cvUnregisterType</a>(info->type_name
 <pre>
 CvTypeInfo* cvFirstType( void );
 </pre><p>
-The function <a href="#decl_cvFirstType">cvFirstType</a> returns the first type of the list
+The function <code>cvFirstType</code> returns the first type of the list
 of registered types. Navigation through the list can be done via <code>prev</code> and <code>next</code>
 fields of <a href="#decl_CvTypeInfo">CvTypeInfo</a> structure.</p>
 
@@ -6078,7 +6080,7 @@ CvTypeInfo* cvFindType( const char* type_name );
 </pre><p><dl>
 <dt>type_name<dd>Type name.
 </dl><p>
-The function <a href="#decl_cvFindType">cvFindType</a> finds a registered type by its name.
+The function <code>cvFindType</code> finds a registered type by its name.
 It returns NULL, if there is no type with the specified name.</p>
 
 
@@ -6089,7 +6091,7 @@ CvTypeInfo* cvTypeOf( const void* struct_ptr );
 </pre><p><dl>
 <dt>struct_ptr<dd>The object pointer.
 </dl><p>
-The function <a href="#decl_cvTypeOf">cvTypeOf</a> finds the type of given object. It iterates through the list
+The function <code>cvTypeOf</code> finds the type of given object. It iterates through the list
 of registered types and calls <code>is_instance</code> function/method of every type info structure with
 the object until one of them return non-zero or until the whole list has been traversed. In the latter
 case the function returns NULL.</p>
@@ -6102,7 +6104,7 @@ void cvRelease( void** struct_ptr );
 </pre><p><dl>
 <dt>struct_ptr<dd>Double pointer to the object.
 </dl><p>
-The function <a href="#decl_cvRelease">cvRelease</a> finds the type of given object and calls
+The function <code>cvRelease</code> finds the type of given object and calls
 <code>release</code> with the double pointer.</p>
 
 
@@ -6113,7 +6115,7 @@ void* cvClone( const void* struct_ptr );
 </pre><p><dl>
 <dt>struct_ptr<dd>The object to clone.
 </dl><p>
-The function <a href="#decl_cvClone">cvClone</a> finds the type of given object and calls
+The function <code>cvClone</code> finds the type of given object and calls
 <code>clone</code> with the passed object.</p>
 
 
@@ -6131,7 +6133,7 @@ void cvSave( const char* filename, const void* struct_ptr,
 <dt>comment<dd>Optional comment to put in the beginning of the file.
 <dt>attributes<dd>Optional attributes passed to <a href="#decl_cvWrite">cvWrite</a>.
 </dl><p>
-The function <a href="#decl_cvSave">cvSave</a> saves object to file. It provides a simple interface
+The function <code>cvSave</code> saves object to file. It provides a simple interface
 to <a href="#decl_cvWrite">cvWrite</a>.</p>
 
 
@@ -6148,7 +6150,7 @@ void* cvLoad( const char* filename, CvMemStorage* memstorage=NULL,
 <dt>real_name<dd>Optional output parameter that will contain name of the loaded object
                  (useful if <code>name=NULL</code>).
 </dl><p>
-The function <a href="#decl_cvLoad">cvLoad</a> loads object from file.
+The function <code>cvLoad</code> loads object from file.
 It provides a simple interface to <a href="#decl_cvRead">cvRead</a>.
 After object is loaded,
 the file storage is closed and all the temporary buffers are deleted. Thus, to load a dynamic structure,
@@ -6178,7 +6180,7 @@ int  cvCheckArr( const CvArr* arr, int flags=0,
 <dt>max_val<dd>The exclusive upper boundary of valid values range.
               It is used only if <code>CV_CHECK_RANGE</code> is set.
 </dl><p>
-The function <a href="#decl_cvCheckArr">cvCheckArr</a> checks that every array element
+The function <code>cvCheckArr</code> checks that every array element
 is neither NaN nor &plusmn;Infinity.
 If <code>CV_CHECK_RANGE</code> is set, it also checks that every element is
 greater than or equal to <code>minVal</code> and less than <code>maxVal</code>.
@@ -6201,7 +6203,7 @@ void cvKMeans2( const CvArr* samples, int cluster_count,
 <dt>termcrit<dd>Specifies maximum number of iterations and/or accuracy (distance the centers move by
 between the subsequent iterations).
 </dl><p>
-The function <a href="#decl_cvKMeans2">cvKMeans2</a> implements k-means algorithm that finds centers of <code>cluster_count</code> clusters
+The function <code>cvKMeans2</code> implements k-means algorithm that finds centers of <code>cluster_count</code> clusters
 and groups the input samples around the clusters. On output <code>labels(i)</code> contains a cluster index
 for sample stored in the i-th row of <code>samples</code> matrix.
 <h4>Example. Clustering random samples of multi-gaussian distribution with k-means</h4>
@@ -6296,7 +6298,7 @@ int cvSeqPartition( const CvSeq* seq, CvMemStorage* storage, CvSeq** labels,
                 The partitioning algorithm uses transitive closure of the relation function as equivalency critria.
 <dt>userdata<dd>Pointer that is transparently passed to the <code>is_equal</code> function.
 </dl><p>
-The function <a href="#decl_cvSeqPartition">cvSeqPartition</a> implements quadratic algorithm for splitting
+The function <code>cvSeqPartition</code> implements quadratic algorithm for splitting
 a set into one or more classes of equivalency. The function returns the number of equivalency classes.
 </p>
 <h4>Example. Partitioning 2d point set.</h4>
@@ -6523,7 +6525,7 @@ int main( int argc, char** argv )
 <pre>
 int cvGetErrStatus( void );
 </pre><p>
-The function <a href="#decl_cvGetErrStatus">cvGetErrStatus</a> returns the current error status -
+The function <code>cvGetErrStatus</code> returns the current error status -
 the value set with the last <a href="#decl_cvSetErrStatus">cvSetErrStatus</a> call. Note, that
 in <em>Leaf</em> mode the program terminates immediately after error occured, so to
 always get control after the function call, one should call <a href="#decl_cvSetErrMode">cvSetErrMode</a>
@@ -6538,7 +6540,7 @@ void cvSetErrStatus( int status );
 </pre><p><dl>
 <dt>status<dd>The error status.
 </dl><p>
-The function <a href="#decl_cvSetErrStatus">cvSetErrStatus</a> sets the error status to
+The function <code>cvSetErrStatus</code> sets the error status to
 the specified value. Mostly, the function is used to reset the error status (set to it <code>CV_StsOk</code>)
 to recover after error. In other cases it is more natural to call <a href="#decl_cvError">cvError</a> or
 <a href="#decl_error_macros">CV_ERROR</a>.
@@ -6550,7 +6552,7 @@ to recover after error. In other cases it is more natural to call <a href="#decl
 <pre>
 int cvGetErrMode( void );
 </pre><p>
-The function <a href="#decl_cvGetErrMode">cvGetErrMode</a> returns the current error mode -
+The function <code>cvGetErrMode</code> returns the current error mode -
 the value set with the last <a href="#decl_cvSetErrMode">cvSetErrMode</a> call.
 </p>
 
@@ -6565,7 +6567,7 @@ int cvSetErrMode( int mode );
 </pre><p><dl>
 <dt>mode<dd>The error mode.
 </dl><p>
-The function <a href="#decl_cvSetErrMode">cvSetErrMode</a> sets the specified error mode.
+The function <code>cvSetErrMode</code> sets the specified error mode.
 For description of different error modes see the beginning of the <a href="#cxcore_system_error">section</a>.
 </p>
 
@@ -6582,7 +6584,7 @@ int cvError( int status, const char* func_name,
 <dt>file_name<dd>Name of the file where the error occured.
 <dt>line<dd>Line number, where the error occured.
 </dl><p>
-The function <a href="#decl_cvError">cvError</a> sets the error status
+The function <code>cvError</code> sets the error status
 to the specified value (via <a href="#decl_cvSetErrStatus">cvSetErrStatus</a>)
 and, if the error mode is not <em>Silent</em>, calls the error handler.</p>
 
@@ -6594,7 +6596,7 @@ const char* cvErrorStr( int status );
 </pre><p><dl>
 <dt>status<dd>The error status.
 </dl><p>
-The function <a href="#decl_cvErrorStr">cvErrorStr</a> returns the textual description
+The function <code>cvErrorStr</code> returns the textual description
 for the specified error status code. In case of unknown status the function returns NULL pointer.
 </p>
 
@@ -6612,7 +6614,7 @@ CvErrorCallback cvRedirectError( CvErrorCallback error_handler,
 <dt>userdata<dd>Arbitrary pointer that is transparetly passed to the error handler.
 <dt>prev_userdata<dd>Pointer to the previously assigned user data pointer.
 </dl><p>
-The function <a href="#decl_cvRedirectError">cvRedirectError</a> sets a new error handler that
+The function <code>cvRedirectError</code> sets a new error handler that
 can be one of <a href="#decl_cvNulDevReport">standard handlers</a> or a custom handler that has
 the certain interface. The handler takes the same parameters as <a href="#decl_cvError">cvError</a>
 function. If the handler returns non-zero value, the program is terminated, otherwise, it continues.
@@ -6645,10 +6647,10 @@ int cvGuiBoxReport( int status, const char* func_name,
 <dt>line<dd>Line number, where the error occured.
 <dt>userdata<dd>Pointer to the user data. Ignored by the standard handlers.
 </dl><p>
-The functions <a href="#decl_cv*Report">cvNullDevReport, cvStdErrReport, cvGuiBoxReport</a>
-provide standard error handling. <a href="#decl_cv*Report">cvGuiBoxReport</a> is the default
-error handler on Win32 systems, <a href="#decl_cv*Report">cvStdErrReport</a> - on other systems.
-<a href="#decl_cv*Report">cvGuiBoxReport</a> pops up message box with the error description and
+The functions <code>cvNullDevReport, cvStdErrReport</code> and <code>cvGuiBoxReport</code>
+provide standard error handling. <code>cvGuiBoxReport</code> is the default
+error handler on Win32 systems, <code>cvStdErrReport</code> - on other systems.
+<code>cvGuiBoxReport</code> pops up message box with the error description and
 suggest a few options. Below is the sample message box that may be recieved with the
 <a name="decl_error_handling_sample">sample code</a> above, if one introduce an error as described
 in the sample</p>
@@ -6656,7 +6658,7 @@ in the sample</p>
 <p>
 <img align="center" src="pics/errmsg.png" >
 </p>
-If the error handler is set <a href="#decl_cv*Report">cvStdErrReport</a>, the above message will
+If the error handler is set <code>cvStdErrReport</code>, the above message will
 be printed to standard error output and program will be terminated or continued, depending on the
 current error mode.</p>
 <h4>Error Message printed to Standard Error Output (in <em>Leaf</em> mode)</h4>
@@ -6676,7 +6678,7 @@ void* cvAlloc( size_t size );
 </pre><p><dl>
 <dt>size<dd>Buffer size in bytes.
 </dl><p>
-The function <a href="#decl_cvAlloc">cvAlloc</a> allocates <code>size</code> bytes and
+The function <code>cvAlloc</code> allocates <code>size</code> bytes and
 returns pointer to the allocated buffer. In case of error
 the function reports an error and returns NULL pointer.
 By default cvAlloc calls icvAlloc which itself calls malloc,
@@ -6692,7 +6694,7 @@ void cvFree( void** ptr );
 </pre><p><dl>
 <dt>buffer<dd>Double pointer to released buffer.
 </dl><p>
-The function <a href="#decl_cvFree">cvFree</a> deallocates memory buffer allocated by <a href="#decl_cvAlloc">cvAlloc</a>.
+The function <code>cvFree</code> deallocates memory buffer allocated by <a href="#decl_cvAlloc">cvAlloc</a>.
 It clears the pointer to buffer upon exit, that is why the double pointer is
 used. If *buffer is already NULL, the function does nothing
 </p>
@@ -6703,7 +6705,7 @@ used. If *buffer is already NULL, the function does nothing
 <pre>
 int64 cvGetTickCount( void );
 </pre><p>
-The function <a href="#decl_cvGetTickCount">cvGetTickCount</a> returns number of tics
+The function <code>cvGetTickCount</code> returns number of tics
 starting from some platform-dependent event (number of CPU ticks from the startup, number of milliseconds
 from 1970th year etc.). The function is useful for accurate measurement of
 a function/user-code execution time. To convert the number of tics to time units, use
@@ -6714,7 +6716,7 @@ a function/user-code execution time. To convert the number of tics to time units
 <pre>
 double cvGetTickFrequency( void );
 </pre><p>
-The function <a href="#decl_cvGetTickFrequency">cvGetTickFrequency</a> returns number of tics
+The function <code>cvGetTickFrequency</code> returns number of tics
 per microsecond. Thus, the quotient of <a href="#decl_cvGetTickCount">cvGetTickCount</a>() and
 <a href="#decl_cvGetTickFrequency">cvGetTickFrequency</a>() will give a number of microseconds
 starting from the platform-dependent event.</p>
@@ -6746,7 +6748,7 @@ int cvRegisterModule( const CvModuleInfo* module_info );
 </pre><p><dl>
 <dt>module_info<dd>Information about the module.
 </dl><p>
-The function <a href="#decl_cvRegisterModule">cvRegisterModule</a> adds module to the list of registered
+The function <code>cvRegisterModule</code> adds module to the list of registered
 modules. After the module is registered, information about it can be retrieved
 using <a href="#decl_cvGetModuleInfo">cvGetModuleInfo</a> function. Also, the registered module
 makes full use of optimized plugins (IPP, MKL, ...), supported by CXCORE.
@@ -6769,7 +6771,7 @@ void  cvGetModuleInfo( const char* module_name,
 <dt>loaded_addon_plugins<dd>The list of names and versions of the optimized plugins that CXCORE was
         able to find and load.
 </dl><p>
-The function <a href="#decl_cvGetModuleInfo">cvGetModuleInfo</a> returns information about one of
+The function <code>cvGetModuleInfo</code> returns information about one of
 or all of the registered modules. The returned information is stored inside the libraries, so
 user should not deallocate or modify the returned text strings.</p>
 
@@ -6781,7 +6783,7 @@ int cvUseOptimized( int on_off );
 </pre><p><dl>
 <dt>on_off<dd>Use optimized (&lt;&gt;0) or not (0).
 </dl><p>
-The function <a href="#decl_cvUseOptimized">cvUseOptimized</a> switches between the mode, where
+The function <code>cvUseOptimized</code> switches between the mode, where
 only pure C implementations from cxcore, OpenCV etc. are used, and the mode, where
 IPP and MKL functions are used if available. When <code>cvUseOptimized(0)</code> is called,
 all the optimized libraries are unloaded. The function may be useful for debugging, IPP&MKL upgrade
@@ -6806,7 +6808,7 @@ void cvSetMemoryManager( CvAllocFunc alloc_func=NULL,
 <dt>free_func<dd>Deallocation function; the interface is similar to <code>free</code>.
 <dt>userdata<dd>User data that is transparetly passed to the custom functions.
 </dl><p>
-The function <a href="#decl_cvSetMemoryManager">cvSetMemoryManager</a>
+The function <code>cvSetMemoryManager</code>
 sets user-defined memory managment functions (substitutors for malloc and free) that
 will be called by cvAlloc, cvFree and higher-level functions (e.g. cvCreateImage).
 Note, that the function should be called when there is data allocated using <a href="#decl_cvAlloc">cvAlloc<a>.
@@ -6844,7 +6846,7 @@ void cvSetIPLAllocators( Cv_iplCreateImageHeader create_header,
 <dt>create_roi<dd>Pointer to iplCreateROI.
 <dt>clone_image<dd>Pointer to iplCloneImage.
 </dl><p>
-The function <a href="#decl_cvSetIPLAllocators">cvSetIPLAllocators</a>
+The function <code>cvSetIPLAllocators</code>
 makes CXCORE to use IPL functions for image allocation/deallocation operations.
 For convenience, there is the wrapping macro <code>CV_TURN_ON_IPL_COMPATIBILITY</code>.
 The function is useful for applications where IPL and CXCORE/OpenCV are used together and still
