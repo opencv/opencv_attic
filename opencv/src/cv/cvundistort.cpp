@@ -1261,8 +1261,8 @@ cvUnDistortOnce( const void* srcImage, void* dstImage,
     if( coi1 != 0 || coi2 != 0 )
         CV_ERROR( CV_BadCOI, "" );
 
-    if( CV_ARR_TYPE(src->type) != CV_8UC1 &&
-        CV_ARR_TYPE(src->type) != CV_8UC3 )
+    if( CV_MAT_TYPE(src->type) != CV_8UC1 &&
+        CV_MAT_TYPE(src->type) != CV_8UC3 )
         CV_ERROR( CV_StsUnsupportedFormat, "" );
 
     if( !CV_ARE_TYPES_EQ( src, dst ))
@@ -1277,7 +1277,7 @@ cvUnDistortOnce( const void* srcImage, void* dstImage,
     size = icvGetMatSize( src );
 
     func = (CvUnDistortOnceFunc)
-        (undist_tab[(CV_ARR_CN(src->type)-1)+(distCoeffs[2] != 0 || distCoeffs[3] != 0)]);
+        (undist_tab[(CV_MAT_CN(src->type)-1)+(distCoeffs[2] != 0 || distCoeffs[3] != 0)]);
 
     if( !func )
         CV_ERROR( CV_StsUnsupportedFormat, "" );
@@ -1326,14 +1326,14 @@ cvUnDistortInit( const void* srcImage, void* undistMap,
     if( coi1 != 0 || coi2 != 0 )
         CV_ERROR( CV_BadCOI, "" );
 
-    if( CV_ARR_TYPE( map->type ) != CV_32SC1 && CV_ARR_TYPE( map->type ) != CV_32SC3 )
+    if( CV_MAT_TYPE( map->type ) != CV_32SC1 && CV_MAT_TYPE( map->type ) != CV_32SC3 )
         CV_ERROR( CV_StsUnsupportedFormat, "" );
 
     if( !intrMatrix || !distCoeffs )
         CV_ERROR( CV_StsNullPtr, "" );
 
     if( src->height > map->height ||
-        interpolate && src->width*3 > map->width*CV_ARR_CN( map->type ) ||
+        interpolate && src->width*3 > map->width*CV_MAT_CN( map->type ) ||
         !interpolate && src->width > map->width )
         CV_ERROR( CV_StsUnmatchedSizes, "" );
 
@@ -1341,7 +1341,7 @@ cvUnDistortInit( const void* srcImage, void* undistMap,
 
     IPPI_CALL( icvUnDistortInit( src->step, (int*)map->data.ptr, map->step,
                                  size, intrMatrix, distCoeffs,
-                                 interpolate, icvPixSize[CV_ARR_TYPE(src->type)]));
+                                 interpolate, icvPixSize[CV_MAT_TYPE(src->type)]));
 
     __END__;
 }
@@ -1385,17 +1385,17 @@ cvUnDistort( const void* srcImage, void* dstImage,
     if( coi1 != 0 || coi2 != 0 || coi3 != 0 )
         CV_ERROR( CV_BadCOI, "" );
 
-    if( CV_ARR_TYPE(src->type) != CV_8UC1 && CV_ARR_TYPE(src->type) != CV_8UC3 )
+    if( CV_MAT_TYPE(src->type) != CV_8UC1 && CV_MAT_TYPE(src->type) != CV_8UC3 )
         CV_ERROR( CV_StsUnsupportedFormat, "" );
 
     if( !CV_ARE_TYPES_EQ( src, dst ))
         CV_ERROR( CV_StsUnmatchedFormats, "" );
 
-    if( CV_ARR_TYPE( map->type ) != CV_32SC1 && CV_ARR_TYPE( map->type ) != CV_32SC3 )
+    if( CV_MAT_TYPE( map->type ) != CV_32SC1 && CV_MAT_TYPE( map->type ) != CV_32SC3 )
         CV_ERROR( CV_StsUnsupportedFormat, "" );
 
     if( src->height > map->height ||
-        interpolate && src->width*3 > map->width*CV_ARR_CN( map->type ) ||
+        interpolate && src->width*3 > map->width*CV_MAT_CN( map->type ) ||
         !interpolate && src->width > map->width )
         CV_ERROR( CV_StsUnmatchedSizes, "" );
 
@@ -1404,14 +1404,14 @@ cvUnDistort( const void* srcImage, void* dstImage,
 
     size = icvGetMatSize( src );
 
-    if( CV_ARR_TYPE( src->type ) == CV_8UC1 )
+    if( CV_MAT_TYPE( src->type ) == CV_8UC1 )
     {
         IPPI_CALL( icvUnDistort_8u_C1R( src->data.ptr, src->step,
                                         (int*)map->data.ptr, map->step,
                                         dst->data.ptr, dst->step,
                                         size, interpolate ));
     }
-    else if( CV_ARR_TYPE( src->type ) == CV_8UC3 )
+    else if( CV_MAT_TYPE( src->type ) == CV_8UC3 )
     {
         IPPI_CALL( icvUnDistort_8u_C3R( src->data.ptr, src->step,
                                         (int*)map->data.ptr, map->step, 
@@ -1469,25 +1469,25 @@ cvConvertMap( const CvArr* srcImage, const CvArr* flUndistMap,
 
     size = cvGetSize( src );
 
-    if( CV_ARR_DEPTH( flmap->type ) != CV_32F )
+    if( CV_MAT_DEPTH( flmap->type ) != CV_32F )
         CV_ERROR( CV_StsUnsupportedFormat, "Source map should have 32f depth" );
 
-    if( CV_ARR_CN( flmap->type ) > 2 ||
-        size.width*2 != flmap->width * CV_ARR_CN( flmap->type ) ||
+    if( CV_MAT_CN( flmap->type ) > 2 ||
+        size.width*2 != flmap->width * CV_MAT_CN( flmap->type ) ||
         size.height != flmap->height )
         CV_ERROR( CV_StsUnmatchedSizes, "Source map and source image have unmatched sizes");
 
-    if( CV_ARR_TYPE( map->type ) != CV_32SC1 &&
-        (CV_ARR_TYPE( map->type ) != CV_32SC3 || !interpolate))
+    if( CV_MAT_TYPE( map->type ) != CV_32SC1 &&
+        (CV_MAT_TYPE( map->type ) != CV_32SC3 || !interpolate))
         CV_ERROR( CV_StsUnsupportedFormat, "" );
 
     if( map->height != size.height ||
-        interpolate && size.width*3 != map->width*CV_ARR_CN( map->type ) ||
+        interpolate && size.width*3 != map->width*CV_MAT_CN( map->type ) ||
         !interpolate && size.width != map->width )
         CV_ERROR( CV_StsUnmatchedSizes, "" );
 
     flmapdata = (CvPoint2D32f*)flmap->data.ptr;
-    pixSize = icvPixSize[CV_ARR_TYPE(src->type)];
+    pixSize = icvPixSize[CV_MAT_TYPE(src->type)];
     srcStep = src->step;
 
     if( !interpolate )
