@@ -827,7 +827,7 @@ cvHaarDetectObjects( const CvArr* _img,
         int *p0 = 0, *p1 = 0, *p2 = 0, *p3 = 0;
         int *pq0 = 0, *pq1 = 0, *pq2 = 0, *pq3 = 0;
         int pass, stage_offset = 0;
-        int stop_height = cvRound((img->rows - win_size.height - ystep) / ystep);
+        int stop_height = cvRound((img->rows - win_size.height) / ystep);
 
         if( win_size.width < min_size.width || win_size.height < min_size.height )
             continue;
@@ -869,7 +869,7 @@ cvHaarDetectObjects( const CvArr* _img,
             {
                 int iy = cvRound(_iy*ystep);
                 int _ix, _xstep = 1;
-                int stop_width = cvRound((img->cols - win_size.width - 2*ystep) / ystep);
+                int stop_width = cvRound((img->cols - win_size.width) / ystep);
                 uchar* mask_row = temp->data.ptr + temp->step * iy;
 
                 for( _ix = 0; _ix < stop_width; _ix += _xstep )
