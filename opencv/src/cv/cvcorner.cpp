@@ -270,10 +270,10 @@ icvCornerEigenValsVecs( const CvMat* src, CvMat* eigenv, int block_size,
     {
         ipp_sobel_vert = ipp_sobel_horiz = 0;
         ipp_scharr_vert = ipp_scharr_horiz = 0;
-        IPPI_CALL( icvSobelInitAlloc( size.width, datatype, aperture_size0,
-                                      CV_ORIGIN_TL, 1, 0, &dxstate ));
-        IPPI_CALL( icvSobelInitAlloc( size.width, datatype, aperture_size0,
-                                      CV_ORIGIN_TL, 0, 1, &dystate ));
+        CV_CALL( dxstate = icvSobelInitAlloc( size.width, datatype, aperture_size0,
+                                              CV_ORIGIN_TL, 1, 0 ));
+        CV_CALL( dystate = icvSobelInitAlloc( size.width, datatype, aperture_size0,
+                                              CV_ORIGIN_TL, 0, 1 ));
         max_dy = buf_size / src->cols;
         max_dy = MAX( max_dy, aperture_size + block_size );
         opencv_derv_func = depth == CV_8U ? (CvFilterFunc)icvSobel_8u16s_C1R :
@@ -289,7 +289,7 @@ icvCornerEigenValsVecs( const CvMat* src, CvMat* eigenv, int block_size,
         max_dy -= aperture_size - 1;
     d_step = Dx->step ? Dx->step : CV_STUB_STEP;
 
-    IPPI_CALL( icvBlurInitAlloc( size.width, cv32f, 3, block_size, &blurstate ));
+    CV_CALL( blurstate = icvBlurInitAlloc( size.width, cv32f, 3, block_size ));
     blurstate->divisor = 1; // avoid scaling
     stripe_size = size;
 
@@ -589,16 +589,16 @@ cvPreCornerDetect( const void* srcarr, void* dstarr, int aperture_size )
     {
         ipp_sobel_vert = ipp_sobel_horiz = 0;
         ipp_sobel_vert_second = ipp_sobel_horiz_second = ipp_sobel_cross = 0;
-        IPPI_CALL( icvSobelInitAlloc( size.width, datatype, aperture_size,
-                                      CV_ORIGIN_TL, 1, 0, &dxstate ));
-        IPPI_CALL( icvSobelInitAlloc( size.width, datatype, aperture_size,
-                                      CV_ORIGIN_TL, 0, 1, &dystate ));
-        IPPI_CALL( icvSobelInitAlloc( size.width, datatype, aperture_size,
-                                      CV_ORIGIN_TL, 2, 0, &d2xstate ));
-        IPPI_CALL( icvSobelInitAlloc( size.width, datatype, aperture_size,
-                                      CV_ORIGIN_TL, 0, 2, &d2ystate ));
-        IPPI_CALL( icvSobelInitAlloc( size.width, datatype, aperture_size,
-                                      CV_ORIGIN_TL, 1, 1, &dxystate ));
+        CV_CALL( dxstate = icvSobelInitAlloc( size.width, datatype, aperture_size,
+                                              CV_ORIGIN_TL, 1, 0 ));
+        CV_CALL( dystate = icvSobelInitAlloc( size.width, datatype, aperture_size,
+                                              CV_ORIGIN_TL, 0, 1 ));
+        CV_CALL( d2xstate = icvSobelInitAlloc( size.width, datatype, aperture_size,
+                                               CV_ORIGIN_TL, 2, 0 ));
+        CV_CALL( d2ystate = icvSobelInitAlloc( size.width, datatype, aperture_size,
+                                               CV_ORIGIN_TL, 0, 2 ));
+        CV_CALL( dxystate = icvSobelInitAlloc( size.width, datatype, aperture_size,
+                                               CV_ORIGIN_TL, 1, 1 ));
         max_dy = buf_size / src->cols;
         max_dy = MAX( max_dy, aperture_size );
         opencv_derv_func = depth == CV_8U ? (CvFilterFunc)icvSobel_8u16s_C1R :

@@ -57,12 +57,15 @@ IPCV_MORPHOLOGY_PTRS( Dilate, 8u )
 IPCV_MORPHOLOGY_PTRS( Dilate, 32f )
 
 
-static CvStatus CV_STDCALL
+static CvFilterState* CV_STDCALL
 icvMorphologyInitAlloc( int roiWidth, CvDataType dataType, int channels,
-                        CvSize elSize, CvPoint elAnchor, int elShape,
-                        int* elData, struct CvMorphState** morphState )
+                        CvSize elSize, CvPoint elAnchor, int elShape, int* elData )
 {
-    CvStatus status;
+    CvFilterState* morphState = 0;
+
+    CV_FUNCNAME( "icvMorphologyInitAlloc" );
+
+    __BEGIN__;
     
     switch( elShape )
     {
@@ -72,32 +75,31 @@ icvMorphologyInitAlloc( int roiWidth, CvDataType dataType, int channels,
     case CV_SHAPE_ELLIPSE:
     case CV_SHAPE_CUSTOM:
         if( elData == 0 )
-            return CV_NULLPTR_ERR;
+            CV_ERROR( CV_StsNullPtr,
+            "For non-rectangular strucuring element coefficient should be specified" );
         break;
     default:
-        return CV_BADFLAG_ERR;
+        CV_ERROR( CV_StsBadFlag, "Unknown/unsupported type of structuring element" );
     }
 
-    status = icvFilterInitAlloc( roiWidth, dataType, channels,
+    morphState = icvFilterInitAlloc( roiWidth, dataType, channels,
         cvSize(elSize.width, elSize.height + (elShape == CV_SHAPE_RECT)),
         elAnchor, elShape != CV_SHAPE_RECT ? elData : 0,
-        ICV_MAKE_BINARY_KERNEL(elShape), morphState );
-    (*morphState)->ker_height = elSize.height;
+        ICV_MAKE_BINARY_KERNEL(elShape) );
 
-    if( status < 0 )
-        return status;
+    if( morphState )
+        morphState->ker_height = elSize.height;
 
-    if( !morphState )
-        return CV_NOTDEFINED_ERR;
+    __END__;
 
-    return CV_OK;
+    return morphState;
 }
 
 
-static CvStatus CV_STDCALL
-icvMorphologyFree( CvMorphState ** morphState )
+static void CV_STDCALL
+icvMorphologyFree( CvFilterState** morphState )
 {
-    return icvFilterFree( morphState );
+    icvFilterFree( morphState );
 }
 
 
@@ -109,7 +111,7 @@ icvMorphologyFree( CvMorphState ** morphState )
                                      update_extr_macro )                    \
 static CvStatus CV_STDCALL                                                  \
 icv##name##Rect_##flavor( arrtype* src, int srcstep, arrtype* dst, int dststep,\
-                          CvSize* roi, CvMorphState* state, int /*stage*/ ) \
+                          CvSize* roi, CvFilterState* state, int /*stage*/ ) \
 {                                                                           \
     int src_height = roi->height;                                           \
     int dst_height = src_height;                                            \
@@ -358,7 +360,7 @@ icv##name##Rect_##flavor( arrtype* src, int srcstep, arrtype* dst, int dststep,\
 #define ICV_DEF_MORPH_RECT_FLT_FUNC( name, update_extr_macro )              \
 static CvStatus CV_STDCALL                                                  \
 icv##name##Rect_32f( int* src, int srcstep, int* dst, int dststep,          \
-                     CvSize* roi, CvMorphState* state, int /*stage*/ )      \
+                     CvSize* roi, CvFilterState* state, int /*stage*/ )      \
 {                                                                           \
     int src_height = roi->height;                                           \
     int dst_height = src_height;                                            \
@@ -627,7 +629,7 @@ icv##name##Rect_32f( int* src, int srcstep, int* dst, int dststep,          \
 static CvStatus CV_STDCALL                                                  \
 icv##name##Any_##flavor( arrtype* src, int srcstep,                         \
                          arrtype* dst, int dststep,                         \
-                         CvSize* roi, CvMorphState* state, int stage )      \
+                         CvSize* roi, CvFilterState* state, int stage )      \
 {                                                                           \
     int width = roi->width;                                                 \
     int src_height = roi->height;                                           \
@@ -964,7 +966,7 @@ icvMorphOp( const void* srcarr, void* dstarr, IplConvKernel* element,
 {
     static CvFuncTable morph_tab[4];
     static int inittab = 0;
-    CvMorphState *state = 0;
+    CvFilterState *state = 0;
     CvMat* temp = 0;
 
     CV_FUNCNAME( "icvMorphOp" );
@@ -1132,9 +1134,9 @@ icvMorphOp( const void* srcarr, void* dstarr, IplConvKernel* element,
         }
     }
 
-    IPPI_CALL( icvMorphologyInitAlloc( src->width, depth == CV_8U ? cv8u : cv32f,
-                                    CV_MAT_CN(type), el_size, el_anchor, el_shape,
-                                    element ? element->values : 0, &state ));
+    CV_CALL( state = icvMorphologyInitAlloc( src->width,
+        depth == CV_8U ? cv8u : cv32f, CV_MAT_CN(type),
+        el_size, el_anchor, el_shape, element ? element->values : 0 ));
 
     func = (CvMorphFunc)(morph_tab[(el_shape != CV_SHAPE_RECT)*2 + mop].fn_2d[depth]);
     if( !func )

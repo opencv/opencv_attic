@@ -106,15 +106,14 @@ CvFilterState;
 void icvSepConvSmall3_32f( float* src, int src_step, float* dst, int dst_step,
             CvSize src_size, const float* kx, const float* ky, float* buffer );
 
-CvStatus CV_STDCALL icvFilterInitAlloc( int roiWidth, CvDataType dataType, int channels,
-                                        CvSize elSize, CvPoint elAnchor, const void* elData,
-                                        int elementFlags, CvFilterState ** filterState );
+CvFilterState* icvFilterInitAlloc(
+    int roiWidth, CvDataType dataType, int channels, CvSize elSize,
+    CvPoint elAnchor, const void* elData, int elementFlags );
 
-CvStatus CV_STDCALL icvFilterFree( CvFilterState ** morphState );
+void icvFilterFree( CvFilterState ** morphState );
 
-CvStatus CV_STDCALL icvSobelInitAlloc( int roiwidth, int depth, int kerSize,
-                                       int origin, int dx, int dy,
-                                       CvFilterState** state );
+CvFilterState* icvSobelInitAlloc( int roiwidth, int depth, int kerSize,
+                                  int origin, int dx, int dy );
 
 CvStatus CV_STDCALL icvSobel_8u16s_C1R( const uchar* pSrc, int srcStep,
                                         short* pDst, int dstStep, CvSize* roiSize,
@@ -124,8 +123,7 @@ CvStatus CV_STDCALL icvSobel_32f_C1R( const float* pSrc, int srcStep,
                                       float* pDst, int dstStep, CvSize* roiSize,
                                       struct CvFilterState* state, int stage );
 
-CvStatus CV_STDCALL icvBlurInitAlloc( int roiWidth, int depth, int channels, int kerSize,
-                                      struct CvFilterState** state );
+CvFilterState* icvBlurInitAlloc( int roiWidth, int depth, int channels, int kerSize );
 
 CvStatus CV_STDCALL icvBlur_8u16s_C1R( const uchar* pSrc, int srcStep,
                                        short* pDst, int dstStep, CvSize* roiSize,

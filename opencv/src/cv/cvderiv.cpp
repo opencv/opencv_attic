@@ -144,32 +144,34 @@ static int icvCalcKer( char *kernel, int order, int size,
 }
 
 
-CvStatus CV_STDCALL icvSobelInitAlloc( int roiwidth, int datatype, int size,
-                                       int origin, int dx, int dy, CvFilterState** state )
+CvFilterState* icvSobelInitAlloc( int roiwidth, int datatype, int size,
+                                  int origin, int dx, int dy )
 {
+    CvFilterState* state = 0;
+
     #define MAX_KERNEL_SIZE  7
     int ker[MAX_KERNEL_SIZE*2+1];
     CvDataType worktype = datatype != cv32f ? cv32s : cv32f;
-    CvStatus status;
     int x_filter_type, y_filter_type;
     int x_size = size, y_size = size;
-    
-    if( !state )
-        return CV_NULLPTR_ERR;
 
+    CV_FUNCNAME( "icvSobelInitAlloc" );
+
+    __BEGIN__;
+    
     if( size == CV_SCHARR )
     {
         if( dx + dy != 1 )
-            return CV_BADRANGE_ERR;
+            CV_ERROR( CV_StsOutOfRange, "Sharr filter can be used only for the first derivatives" );
         x_size = y_size = 3;
     }
     else
     {
         if( (size&1) == 0 || size < 1 || size > MAX_KERNEL_SIZE )
-            return CV_BADRANGE_ERR;
+            CV_ERROR( CV_StsBadSize, "Sobel filter size can be 1, 3, 5 or 7" );
 
         if( (unsigned)dx > 2 || (unsigned)dy > 2 )
-            return CV_BADRANGE_ERR;
+            CV_ERROR( CV_StsOutOfRange, "Derivatives of order>2 can not be computed now" );
 
         if( size == 1 )
         {
@@ -178,7 +180,7 @@ CvStatus CV_STDCALL icvSobelInitAlloc( int roiwidth, int datatype, int size,
             else if( dx == 0 )
                 x_size = 1, y_size = 3;
             else
-                return CV_BADARG_ERR;
+                CV_ERROR( CV_StsOutOfRange, "1x3 or 3x1 filter can not be used for mixed derivatives" );
         }
     }
 
@@ -190,15 +192,16 @@ CvStatus CV_STDCALL icvSobelInitAlloc( int roiwidth, int datatype, int size,
     CvSize element_size = { x_size, y_size };
     CvPoint element_anchor = { x_size/2, y_size/2 };
     
-    status = icvFilterInitAlloc( roiwidth, worktype, 1, element_size, element_anchor, ker,
-                                 ICV_MAKE_SEPARABLE_KERNEL(x_filter_type, y_filter_type), state );
+    state = icvFilterInitAlloc( roiwidth, worktype, 1, element_size, element_anchor, ker,
+                                ICV_MAKE_SEPARABLE_KERNEL(x_filter_type, y_filter_type) );
     }
-    if( status < 0 )
-        return status;
 
-    (*state)->origin = origin != 0;
+    if( state )
+        state->origin = origin != 0;
 
-    return CV_OK;
+    __END__;
+
+    return state;
 }
 
 
@@ -931,11 +934,10 @@ CvStatus CV_STDCALL icvSobel_32f_C1R( const float* pSrc, int srcStep,
 *                                      S C H A R R                                       *
 \****************************************************************************************/
 
-static CvStatus CV_STDCALL
-icvScharrInitAlloc( int roiwidth, int datatype, int origin,
-                    int dx, int dy, CvFilterState** state )
+CvFilterState* CV_STDCALL
+icvScharrInitAlloc( int roiwidth, int datatype, int origin, int dx, int dy )
 {
-    return icvSobelInitAlloc( roiwidth, datatype, CV_SCHARR, origin, dx, dy, state );
+    return icvSobelInitAlloc( roiwidth, datatype, CV_SCHARR, origin, dx, dy );
 }
 
 static CvStatus CV_STDCALL
@@ -963,22 +965,23 @@ icvScharr_32f_C1R( const float* pSrc, int srcStep,
 *                                      L A P L A C E                                     *
 \****************************************************************************************/
 
-static CvStatus CV_STDCALL
-icvLaplaceInitAlloc( int roiwidth, int datatype,
-                     int size, CvFilterState** state )
+static CvFilterState* CV_STDCALL
+icvLaplaceInitAlloc( int roiwidth, int datatype, int size )
 {
+    CvFilterState* state = 0;
+
     #define MAX_KERNEL_SIZE  7
     int ker[MAX_KERNEL_SIZE*2+1];
     CvDataType worktype = datatype != cv32f ? cv32s : cv32f;
-    CvStatus status;
     int x_filter_type, y_filter_type;
     int x_size = size;
-    
-    if( !state )
-        return CV_NULLPTR_ERR;
 
+    CV_FUNCNAME( "icvLaplaceInitAlloc" );
+
+    __BEGIN__;
+    
     if( (size&1) == 0 || size < 1 || size > MAX_KERNEL_SIZE )
-        return CV_BADRANGE_ERR;
+        CV_ERROR( CV_StsBadSize, "Aperture size can be 1, 3, 5 or 7" );
 
     if( size == 1 )
         x_size = 3;
@@ -990,15 +993,16 @@ icvLaplaceInitAlloc( int roiwidth, int datatype,
     CvSize element_size = { x_size, x_size };
     CvPoint element_anchor = { x_size/2, x_size/2 };
 
-    status = icvFilterInitAlloc( roiwidth, worktype, 2, element_size, element_anchor, ker,
-                                 ICV_MAKE_SEPARABLE_KERNEL(x_filter_type, y_filter_type), state );
+    state = icvFilterInitAlloc( roiwidth, worktype, 2, element_size, element_anchor, ker,
+                                ICV_MAKE_SEPARABLE_KERNEL(x_filter_type, y_filter_type));
     }
-    if( status < 0 )
-        return status;
 
-    (*state)->origin = 0;
+    if( state )
+        state->origin = 0;
 
-    return CV_OK;
+    __END__;
+
+    return state;
 }
 
 
@@ -1902,13 +1906,12 @@ cvSobel( const void* srcarr, void* dstarr, int dx, int dy, int aperture_size )
 
     if( aperture_size == CV_SCHARR )
     {
-        IPPI_CALL( icvScharrInitAlloc( src->width, datatype, origin, dx, dy, &state ));
+        CV_CALL( state = icvScharrInitAlloc( src->width, datatype, origin, dx, dy ));
         func = (CvFilterFunc)(scharr_tab.fn_2d[depth]);
     }
     else
     {
-        IPPI_CALL( icvSobelInitAlloc( src->width, datatype, aperture_size,
-                                      origin, dx, dy, &state ));
+        CV_CALL( state = icvSobelInitAlloc( src->width, datatype, aperture_size, origin, dx, dy ));
         func = (CvFilterFunc)(sobel_tab.fn_2d[depth]);
     }
 
@@ -1977,7 +1980,7 @@ cvLaplace( const void* srcarr, void* dstarr, int aperture_size )
     if( !CV_ARE_SIZES_EQ( src, dst ))
         CV_ERROR( CV_StsBadArg, "src and dst have different sizes" );
 
-    IPPI_CALL( icvLaplaceInitAlloc( src->width, icvDepthToDataType(depth), aperture_size, &state ));
+    CV_CALL( state = icvLaplaceInitAlloc( src->width, icvDepthToDataType(depth), aperture_size ));
     func = (CvFilterFunc)(laplace_tab.fn_2d[depth]);
 
     if( !func )
