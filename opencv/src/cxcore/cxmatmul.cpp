@@ -1269,6 +1269,18 @@ cvGEMM( const CvArr* Aarr, const CvArr* Barr, double alpha,
 }
 
 
+#define  ICV_DEF_DIAG_TRANSFORM_CASE_C1( arrtype, temptype, _ld_,   \
+                                  _cast_macro1_, _cast_macro2_ )    \
+    for( i = 0; i < size.width; i++ )                               \
+    {                                                               \
+        double ft0;                                                 \
+        temptype t0;                                                \
+        ft0 = mat[0]*_ld_(src[i]) + mat[1];                         \
+        t0 = _cast_macro1_(ft0);                                    \
+        dst[i] = _cast_macro2_(t0);                                 \
+    }
+
+
 #define  ICV_DEF_TRANSFORM_CASE_C2( arrtype, temptype, _ld_,        \
                                   _cast_macro1_, _cast_macro2_ )    \
 if( dst_cn == 2 )                                                   \
@@ -1488,22 +1500,27 @@ ICV_DEF_TRANSFORM_FUNC( 64f_C2R, double, double, CV_NOP, CV_NOP, CV_CAST_64F, 2 
 ICV_DEF_TRANSFORM_FUNC( 64f_C3R, double, double, CV_NOP, CV_NOP, CV_CAST_64F, 3 )
 ICV_DEF_TRANSFORM_FUNC( 64f_C4R, double, double, CV_NOP, CV_NOP, CV_CAST_64F, 4 )
 
+ICV_DEF_DIAG_TRANSFORM_FUNC( 16u_C1R, ushort, int, CV_NOP, cvRound, CV_CAST_16U, 1 )
 ICV_DEF_DIAG_TRANSFORM_FUNC( 16u_C2R, ushort, int, CV_NOP, cvRound, CV_CAST_16U, 2 )
 ICV_DEF_DIAG_TRANSFORM_FUNC( 16u_C3R, ushort, int, CV_NOP, cvRound, CV_CAST_16U, 3 )
 ICV_DEF_DIAG_TRANSFORM_FUNC( 16u_C4R, ushort, int, CV_NOP, cvRound, CV_CAST_16U, 4 )
 
+ICV_DEF_DIAG_TRANSFORM_FUNC( 16s_C1R, short, int, CV_NOP, cvRound, CV_CAST_16S, 1 )
 ICV_DEF_DIAG_TRANSFORM_FUNC( 16s_C2R, short, int, CV_NOP, cvRound, CV_CAST_16S, 2 )
 ICV_DEF_DIAG_TRANSFORM_FUNC( 16s_C3R, short, int, CV_NOP, cvRound, CV_CAST_16S, 3 )
 ICV_DEF_DIAG_TRANSFORM_FUNC( 16s_C4R, short, int, CV_NOP, cvRound, CV_CAST_16S, 4 )
 
+ICV_DEF_DIAG_TRANSFORM_FUNC( 32s_C1R, int, int, CV_NOP, cvRound, CV_NOP, 1 )
 ICV_DEF_DIAG_TRANSFORM_FUNC( 32s_C2R, int, int, CV_NOP, cvRound, CV_NOP, 2 )
 ICV_DEF_DIAG_TRANSFORM_FUNC( 32s_C3R, int, int, CV_NOP, cvRound, CV_NOP, 3 )
 ICV_DEF_DIAG_TRANSFORM_FUNC( 32s_C4R, int, int, CV_NOP, cvRound, CV_NOP, 4 )
 
+ICV_DEF_DIAG_TRANSFORM_FUNC( 32f_C1R, float, double, CV_NOP, CV_NOP, CV_CAST_32F, 1 )
 ICV_DEF_DIAG_TRANSFORM_FUNC( 32f_C2R, float, double, CV_NOP, CV_NOP, CV_CAST_32F, 2 )
 ICV_DEF_DIAG_TRANSFORM_FUNC( 32f_C3R, float, double, CV_NOP, CV_NOP, CV_CAST_32F, 3 )
 ICV_DEF_DIAG_TRANSFORM_FUNC( 32f_C4R, float, double, CV_NOP, CV_NOP, CV_CAST_32F, 4 )
 
+ICV_DEF_DIAG_TRANSFORM_FUNC( 64f_C1R, double, double, CV_NOP, CV_NOP, CV_CAST_64F, 1 )
 ICV_DEF_DIAG_TRANSFORM_FUNC( 64f_C2R, double, double, CV_NOP, CV_NOP, CV_CAST_64F, 2 )
 ICV_DEF_DIAG_TRANSFORM_FUNC( 64f_C3R, double, double, CV_NOP, CV_NOP, CV_CAST_64F, 3 )
 ICV_DEF_DIAG_TRANSFORM_FUNC( 64f_C4R, double, double, CV_NOP, CV_NOP, CV_CAST_64F, 4 )
@@ -1522,12 +1539,6 @@ ICV_DEF_DIAG_TRANSFORM_FUNC( 64f_C4R, double, double, CV_NOP, CV_NOP, CV_CAST_64
 #define icvDiagTransform_8u_C2R 0
 #define icvDiagTransform_8u_C3R 0
 #define icvDiagTransform_8u_C4R 0
-
-#define icvDiagTransform_16u_C1R 0
-#define icvDiagTransform_16s_C1R 0
-#define icvDiagTransform_32s_C1R 0
-#define icvDiagTransform_32f_C1R 0
-#define icvDiagTransform_64f_C1R 0
 
 CV_DEF_INIT_BIG_FUNC_TAB_2D( Transform, R )
 CV_DEF_INIT_BIG_FUNC_TAB_2D( DiagTransform, R )
@@ -1629,8 +1640,8 @@ cvTransform( const CvArr* srcarr, CvArr* dstarr,
         if( !src_seq )
         {
             if( CV_IS_MAT_CONT(src->type) || src->rows != 1 && src->cols != 1 )
-                CV_ERROR( CV_StsBadSize, "if destination is a sequence, "
-                "source must be a sequence or 1d continous vector" );
+                CV_ERROR( CV_StsBadSize, "if eigher the source or destination is a sequence, "
+                "the other array must be also a sequence of continous 1d vector" );
             src_seq = cvMakeSeqHeaderForArray( CV_MAT_TYPE(src->type), sizeof(hdr),
                                        CV_ELEM_SIZE(src->type), src->data.ptr,
                                        src->rows + src->cols + 1, &hdr, &block_hdr );
@@ -1639,8 +1650,8 @@ cvTransform( const CvArr* srcarr, CvArr* dstarr,
         if( !dst_seq )
         {
             if( CV_IS_MAT_CONT(dst->type) || dst->rows != 1 && dst->cols != 1 )
-                CV_ERROR( CV_StsBadSize, "if destination is a sequence, "
-                "source must be a sequence or 1d continous vector" );
+                CV_ERROR( CV_StsBadSize, "if eigher the source or destination is a sequence, "
+                "the other array must be also a sequence of continous 1d vector" );
             if( dst->rows + dst->cols - 1 != src_seq->total )
                 CV_ERROR( CV_StsUnmatchedFormats,
                 "source sequence and destination vector have different sizes" );
@@ -1729,7 +1740,6 @@ cvTransform( const CvArr* srcarr, CvArr* dstarr,
         }
     }
 
-    
     if( coi != 0 || coi2 != 0 )
         CV_ERROR( CV_BadCOI, "" );
 
@@ -1769,7 +1779,7 @@ cvTransform( const CvArr* srcarr, CvArr* dstarr,
                            type == CV_32FC4 ? icvColorToGray_32f_AC4C1R_p : 0;
         }
 
-        if( dst_cn == cn && (cn > 1 || CV_MAT_DEPTH(type) == CV_8U) )
+        if( dst_cn == cn )
         {
             diag_transform = 1;
             for( i = 0; i < dst_cn; i++ )
@@ -1797,7 +1807,8 @@ cvTransform( const CvArr* srcarr, CvArr* dstarr,
                             ltab[j*cn + i] = CV_CAST_8U(t);
                         }
                     }
-                    lut_func = cn == 2 ? icvLUT_Transform8u_8u_C2R :
+                    lut_func = cn == 1 ? icvLUT_Transform8u_8u_C1R :
+                               cn == 2 ? icvLUT_Transform8u_8u_C2R :
                                cn == 3 ? icvLUT_Transform8u_8u_C3R :
                                icvLUT_Transform8u_8u_C4R;
                 }
