@@ -1424,7 +1424,7 @@ cvConvertScale( const void* srcarr, void* dstarr,
                        dst->data.ptr, dst_step, size, type ));
         }
         else
-            CV_CALL( cvCopy( src, dst ));
+            cvCopy( src, dst );
     }
     else
     {

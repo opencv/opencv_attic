@@ -464,46 +464,49 @@ cvUseOptimized( int load_flag )
     plugins[CV_PLUGIN_IPPVM].basename = "ippvm";
     plugins[CV_PLUGIN_MKL].basename = "mkl_";
 
-    if( ipp_suffix )
+    // try to load optimized dlls
+    for( i = 1; i < CV_PLUGIN_MAX; i++ )
     {
-        // try to load optimized dlls
-        for( i = 1; i < CV_PLUGIN_MAX; i++ )
+        // unload previously loaded optimized modules
+        if( plugins[i].handle )
         {
-            // unload previously loaded optimized modules
-            if( plugins[i].handle )
-            {
-                FreeLibrary( plugins[i].handle );
-                plugins[i].handle = 0;
-            }
+            FreeLibrary( plugins[i].handle );
+            plugins[i].handle = 0;
+        }
 
-            // do not load regular IPP modules if the custom merged IPP module is already found.
-            if( i < CV_PLUGIN_MKL && load_flag && plugins[CV_PLUGIN_OPTCV].handle != 0 )
-                continue;
+        // do not load regular IPP modules if the custom merged IPP module is already found.
+        if( i < CV_PLUGIN_MKL && load_flag && plugins[CV_PLUGIN_OPTCV].handle != 0 )
+            continue;
 
-            if( load_flag && plugins[i].basename &&
-                (arch == CV_PROC_IA32_GENERIC || arch == CV_PROC_IA64_GENERIC) )
+        if( load_flag && plugins[i].basename &&
+            (arch == CV_PROC_IA32_GENERIC || arch == CV_PROC_IA64_GENERIC) )
+        {
+            const char* suffix = i == CV_PLUGIN_OPTCV ? opencv_suffix :
+                            i < CV_PLUGIN_MKL ? ipp_suffix : mkl_suffix;
+            for(;;)
             {
-                for(;;)
+                sprintf( plugins[i].name, DLL_PREFIX "%s%s" DLL_DEBUG_FLAG DLL_SUFFIX,
+                    plugins[i].basename, suffix );
+            
+                plugins[i].handle = LoadLibrary( plugins[i].name );
+                if( plugins[i].handle != 0 )
                 {
-                    sprintf( plugins[i].name, DLL_PREFIX "%s%s" DLL_DEBUG_FLAG DLL_SUFFIX,
-                        plugins[i].basename, i == CV_PLUGIN_OPTCV ? opencv_suffix :
-                        i < CV_PLUGIN_MKL ? ipp_suffix : mkl_suffix );
-                
-                    plugins[i].handle = LoadLibrary( plugins[i].name );
-                    if( plugins[i].handle != 0 )
-                    {
-                        ICV_PRINTF(("%s loaded\n", plugins[i].name )); 
-                        loaded_modules++;
-                    }
-                    if( plugins[i].handle != 0 || i < CV_PLUGIN_MKL )
-                        break;
-                    if( strcmp( mkl_suffix, "p4" ) == 0 )
-                        mkl_suffix = "p3";
-                    else if( strcmp( mkl_suffix, "p3" ) == 0 )
-                        mkl_suffix = "def";
-                    else
-                        break;
+                    ICV_PRINTF(("%s loaded\n", plugins[i].name )); 
+                    loaded_modules++;
                 }
+                if( plugins[i].handle != 0 )
+                    break;
+                
+                if( strcmp( suffix, "p4" ) == 0 )
+                    suffix = "p3";
+                else if( strcmp( suffix, "p3" ) == 0 )
+                    suffix = "def";
+                else if( strcmp( suffix, "20" ) == 0 )
+                    suffix = "";
+                else if( strcmp( suffix, "6420" ) == 0 )
+                    suffix = "64";
+                else
+                    break;
             }
         }
     }
