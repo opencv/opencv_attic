@@ -1,3 +1,4 @@
+#!/usr/bin/env python
 """
 Usage: make_index.py <html_ref_file> [ > <output_func_index_file> ]
 This script parses html reference file, creates alphabetical list of

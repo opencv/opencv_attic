@@ -1,3 +1,4 @@
+#!/usr/bin/env python
 """
 Usage: check_doc.py > log.txt
 The script parses different opencv modules

@@ -47,10 +47,12 @@
 #define HAVE_IPL
 #endif
 
-#if defined(_CH_)
-#pragma package <opencv>
-#include <chdl.h>
-LOAD_CHDL_CODE(cv,Cv)
+#ifndef SKIP_INCLUDES
+  #if defined(_CH_)
+    #pragma package <opencv>
+  #include <chdl.h>
+  LOAD_CHDL_CODE(cv,Cv)
+  #endif
 #endif
 
 #include "cxcore.h"

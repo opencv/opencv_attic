@@ -47,28 +47,30 @@
 #define HAVE_IPL
 #endif
 
-#if defined(_CH_)
-#pragma package <opencv>
-#include <chdl.h>
-LOAD_CHDL_CODE(cv,Cv)
-#endif
+#ifndef SKIP_INCLUDES
+  #if defined(_CH_)
+    #pragma package <opencv>
+    #include <chdl.h>
+    LOAD_CHDL_CODE(cv,Cv)
+  #endif
 
-#if defined HAVE_IPL && !defined __IPL_H__
-#ifndef _INC_WINDOWS
-    #define CV_PRETEND_WINDOWS
-    #define _INC_WINDOWS
-    typedef struct tagBITMAPINFOHEADER BITMAPINFOHEADER;
-    typedef int BOOL;
-#endif
-#if defined WIN32 || defined WIN64
-#include "ipl.h"
-#else
-#include "ipl/ipl.h"
-#endif
-#ifdef CV_PRETEND_WINDOWS
-    #undef _INC_WINDOWS
-#endif
-#endif
+  #if defined HAVE_IPL && !defined __IPL_H__
+    #ifndef _INC_WINDOWS
+        #define CV_PRETEND_WINDOWS
+        #define _INC_WINDOWS
+        typedef struct tagBITMAPINFOHEADER BITMAPINFOHEADER;
+        typedef int BOOL;
+    #endif
+    #if defined WIN32 || defined WIN64
+      #include "ipl.h"
+    #else
+      #include "ipl/ipl.h"
+    #endif
+    #ifdef CV_PRETEND_WINDOWS
+        #undef _INC_WINDOWS
+    #endif
+  #endif
+#endif // SKIP_INCLUDES
 
 #include "cxtypes.h"
 #include "cxerror.h"
