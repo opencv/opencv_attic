@@ -610,7 +610,7 @@ bool  GrFmtTiffReader::ReadData( uchar* data, int step, int color )
                             icvCvt_RGB2BGR_8u_C3R( src, 0, data, 0, cvSize(m_width,1) );
                             break;
                         case 32:
-                            icvCvt_RGBA2BGR_8u_C4C3R( src, 0, data, 0, cvSize(m_width,1) );
+                            icvCvt_BGRA2BGR_8u_C4C3R( src, 0, data, 0, cvSize(m_width,1), 2 );
                             break;
                         default:
                             assert(0);
@@ -629,10 +629,10 @@ bool  GrFmtTiffReader::ReadData( uchar* data, int step, int color )
                             FillGrayRow8( data, src, m_width, gray_palette );
                             break;
                         case 24:
-                            icvCvt_RGB2Gray_8u_C3C1R( src, 0, data, 0, cvSize(m_width,1) );
+                            icvCvt_BGR2Gray_8u_C3C1R( src, 0, data, 0, cvSize(m_width,1), 2 );
                             break;
                         case 32:
-                            icvCvt_RGBA2Gray_8u_C4C1R( src, 0, data, 0, cvSize(m_width,1) );
+                            icvCvt_BGRA2Gray_8u_C4C1R( src, 0, data, 0, cvSize(m_width,1), 2 );
                             break;
                         default:
                             assert(0);
