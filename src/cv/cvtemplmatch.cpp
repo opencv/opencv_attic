@@ -465,15 +465,15 @@ cvMatchTemplate( const CvArr* _img, const CvArr* _templ, CvArr* _result, int met
 
             if( is_normed )
             {
-                t = sqrt((wnd_sum2 - wnd_mean2))*templ_norm;
-                if( t > 1e-3 )
+                t = sqrt(wnd_sum2 - wnd_mean2)*templ_norm;
+                if( t == 0 )
+                    num = num_type == 2 ? 1 : -1;
+                else
                 {
                     num /= t;
                     if( fabs(num) > 1. )
                         num = num > 0 ? 1 : -1;
                 }
-                else
-                    num = num_type != 2;
             }
 
             rrow[j] = (float)num;
