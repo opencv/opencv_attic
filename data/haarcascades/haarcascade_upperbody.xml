@@ -1,5 +1,5 @@
 <?xml version="1.0"?>
-<!----------------------------------------------------------------------------
+<!--
    22x18 upperbody detector (see the detailed description below). 
 
 //////////////////////////////////////////////////////////////////////////
@@ -135,7 +135,7 @@ KNOWN LIMITATIONS
 Acknowledgements
 ================
 Thanks to Martin Spengler, ETH Zurich, for providing the demo movie.
------------------------------------------------------------------------->
+-->
 <opencv_storage>
 <haarcascade_upperbody type_id="opencv-haar-classifier">
   <size>22 18</size>

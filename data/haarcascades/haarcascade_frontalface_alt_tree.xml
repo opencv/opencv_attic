@@ -1,5 +1,5 @@
 <?xml version="1.0"?>
-<!--------------------------------------------------------------------------------------
+<!--
     Stump-based 20x20 gentle adaboost frontal face detector.
     This detector uses tree of stage classifiers instead of a cascade
     Created by Rainer Lienhart.
@@ -42,7 +42,7 @@
  and on any theory of liability, whether in contract, strict liability,
  or tort (including negligence or otherwise) arising in any way out of
  the use of this software, even if advised of the possibility of such damage.
---------------------------------------------------------------------------------------->
+-->
 <opencv_storage>
 <haarcascade_frontalface_tree_alt type_id="opencv-haar-classifier">
   <size>20 20</size>
