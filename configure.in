@@ -1,71 +1,108 @@
-dnl Process this file with autoconf to produce a configure script.
-AC_INIT(opencv.pc.in)
-AM_CONFIG_HEADER(cvconfig.h)
+# Process this file with autoconf to produce a configure script.
 
-dnl Set various version strings
-MMAJOR=0
-MMINOR=9
-MSUBMINOR=7
-VERSION=$MMAJOR.$MMINOR.$MSUBMINOR
-LT_VERSION=`expr $MMAJOR + $MMINOR`:$MSUBMINOR:$MMINOR
+# Set various version strings
+m4_define([opencv_major_version],    [0])
+m4_define([opencv_minor_version],    [9])
+m4_define([opencv_subminor_version], [7])
+m4_define([opencv_version],          [opencv_major_version.opencv_minor_version.opencv_subminor_version])
 
-AC_SUBST(MMAJOR)
-AC_SUBST(MMINOR)
-AC_SUBST(MSUBMINOR)
-AC_SUBST(VERSION)
-AC_SUBST(LT_VERSION)
+# Before making a release, the LT_VERSION string should be modified.
+# The string is of the form C:R:A.
+# - If interfaces have been changed or added, but binary compatibility has
+#   been preserved, change to C+1:0:A+1
+# - If binary compatibility has been broken (eg removed or changed interfaces)
+#   change to C+1:0:0
+# - If the interface is the same as the previous version, change to C:R+1:A
+m4_define([opencv_lt_version],       [9:7:9])
 
-dnl Detect the canonical host and target build environment
+
+# init autotools
+AC_PREREQ([2.58])
+AC_INIT([OpenCV],[opencv_version],[opencvlibrary-devel@lists.sourceforge.net])
+AC_CONFIG_SRCDIR([opencv.pc.in])
+AC_CONFIG_AUX_DIR([autotools])
+AC_CONFIG_MACRO_DIR([autotools/aclocal])
+
+# put CVS revision of this configure.in into the resulting configure script
+AC_REVISION($Revision: 1.8 $)
+
+# Detect the canonical host and target build environment
 AC_CANONICAL_HOST
 AC_CANONICAL_TARGET
 
-AM_INIT_AUTOMAKE(opencv, $VERSION)
+# setup automake - we need >= 1.6 because of python and aclocal support
+AM_CONFIG_HEADER([cvconfig.h])
+AM_INIT_AUTOMAKE([1.6 foreign])
 
-dnl Checks for programs.
+# substitute versionnumbers
+AC_SUBST(MMAJOR,     [opencv_major_version])
+AC_SUBST(MMINOR,     [opencv_minor_version])
+AC_SUBST(MSUBMINOR,  [opencv_subminor_version])
+AC_SUBST(VERSION,    [opencv_version])
+AC_SUBST(LT_VERSION, [opencv_lt_version])
+
+# disable building static libraries
+AC_DISABLE_STATIC
+
+# checks for programs.
 AC_PROG_CXX
 AC_PROG_CC
 AC_PROG_CPP
-AC_PROG_RANLIB
-
-AM_DISABLE_STATIC
-AM_PROG_LIBTOOL
+AC_PROG_LIBTOOL
 
 
-os_name = `uname`
+dnl
+dnl **************** Ask for building all parts ***************
+dnl
+AC_ARG_WITH([apps],
+        [AS_HELP_STRING([--with-apps],[build demo applications])],
+        [with_apps=$withval],
+        [with_apps="no"])
+AM_CONDITIONAL([BUILD_APPS], [test x"$with_apps" = x"yes"])
+
 
 dnl Add compiler-specific optimization flags
 dnl Check whether to include debugging code
+
+# cure annoying default arguments for CFLAGS and CXXFLAGS
+if test x"$CFLAGS" = x"-g -O2" ; then
+    CFLAGS=""
+fi
+if test x"$CXXFLAGS" = x"-g -O2" ; then
+    CXXFLAGS=""
+fi
+
 
 AC_MSG_CHECKING([whether to build debug version (no optimization)])
 dnl See if the user wants aggressive optimizations of the code
 AC_ARG_ENABLE(debug,
   [  --enable-debug          build debug version (no optimization) [default=no]],
   [debug=yes], [debug=no])
-if test x$debug = xyes; then
+if test x"$debug" = x"yes"; then
     AC_MSG_RESULT([yes])
-    if test x$ac_cv_prog_gcc = xyes; then
-        CXXFLAGS="-ggdb -O0 -DDEBUG -D_DEBUG"
+    if test x"$ac_cv_c_compiler_gnu" = x"yes"; then
+        CXXFLAGS="-ggdb -O0 -DDEBUG -D_DEBUG $CXXFLAGS"
     fi
 else
     AC_MSG_RESULT([no])
     AC_MSG_NOTICE( TARGET=$target )
     case $target in
     i686-*-*)
-        if test x$ac_cv_prog_gcc = xyes; then
-            CXXFLAGS="-g -mcpu=i686 -march=i686 -ffast-math -fomit-frame-pointer"
+        if test x"$ac_cv_c_compiler_gnu" = x"yes"; then
+            CXXFLAGS="-g -march=i686 -ffast-math -fomit-frame-pointer $CXXFLAGS"
         fi
         ;;
     *-*-*)
-    if test x$ac_cv_prog_gcc = xyes; then
-        CXXFLAGS="-g -fomit-frame-pointer"
+    if test x"$ac_cv_c_compiler_gnu" = x"yes"; then
+        CXXFLAGS="-fomit-frame-pointer $CXXFLAGS"
     fi
     ;;    
     esac
-    CXXFLAGS="$CXXFLAGS -O3 -DNDEBUG"
+    CXXFLAGS="-O3 -DNDEBUG $CXXFLAGS"
 fi
 
-if test x$ac_cv_prog_gcc = xyes; then
-    CXXFLAGS="$CXXFLAGS -Wall -fno-rtti -pipe"
+if test x"$ac_cv_c_compiler_gnu" = x"yes"; then
+    CXXFLAGS="-Wall -fno-rtti -pipe $CXXFLAGS"
 fi
 
 dnl ******* add libm 'cause it is used by several libraries below ****
@@ -77,7 +114,7 @@ dnl ****************** pkg-config *********************
 dnl 
 
 AC_PATH_PROG(PKG_CONFIG, pkg-config, no)
-if test "x$PKG_CONFIG" == "xno"; then
+if test x"$PKG_CONFIG" == x"no"; then
     AC_MSG_ERROR(You have to install pkg-config to compile OpenCV.)
 fi
 
@@ -104,11 +141,11 @@ AC_CHECK_HEADER(zlib.h,
     AC_DEFINE(HAVE_ZLIB,,[LZ77 compression/decompression library (used for PNG)])
     IMAGELIBS="$IMAGELIBS -lz -lm"
     LIBS="$LIBS -lz -lm"]))
-    
+
 AC_CHECK_HEADER(png.h, AC_DEFINE(HAVE_PNG_H,,[png.h needs to be included]))
 AC_CHECK_HEADER([libpng/png.h], AC_DEFINE(HAVE_LIBPNG_PNG_H,,[libpng/png.h needs to be included]))
 
-if test x$ac_cv_header_png_h = xyes -o x$ac_cv_header_libpng_png_h = xyes; then
+if test x"$ac_cv_header_png_h" = x"yes" -o x"$ac_cv_header_libpng_png_h" = x"yes"; then
     AC_CHECK_LIB(png12, png_read_image,
     [have_png=yes
     AC_DEFINE(HAVE_PNG,,[PNG codec])
@@ -146,7 +183,6 @@ dnl
 FFMPEGLIBS=""
 have_ffmpeg=no
 
-
 AC_CHECK_HEADER(ffmpeg/avcodec.h,
     AC_CHECK_LIB(avcodec, avcodec_decode_video,
     [AC_CHECK_LIB(avformat, av_open_input_file,
@@ -168,7 +204,7 @@ AC_CHECK_HEADER(libraw1394/raw1394.h,
     AC_CHECK_LIB(raw1394, raw1394_new_handle, [have_raw1394=yes
         LIBS="-lm -lraw1394 $LIBS"]))
 
-if test x$have_raw1394=xyes; then
+if test x"$have_raw1394" = x"yes"; then
     AC_CHECK_HEADER(libdc1394/dc1394_control.h,
         AC_CHECK_LIB(dc1394_control, dc1394_camera_on, [have_dc1394=yes
         AC_DEFINE(HAVE_DC1394,,[IEEE1394 capturing support])
@@ -183,12 +219,52 @@ AC_SUBST(IEEE1394LIBS)
 dnl
 dnl ****************** V4L Support **************************
 dnl
-have_v4l=no
-if test x$os_name=xLinux; then
-    AC_DEFINE(HAVE_CAMV4L,,[V4L capturing support])
-    have_v4l=yes
-fi
+AC_CHECK_HEADER([linux/videodev.h],
+                [
+                  AC_DEFINE(HAVE_CAMV4L,,[V4L capturing support])
+                  have_v4l=yes
+                ],
+                [ have_v4l=no ])
 
+dnl
+dnl ****************** SWIG wrappers ************************
+dnl
+setup_swig=no
+AC_ARG_ENABLE([python], 
+              [AS_HELP_STRING([--enable-python],[build python wrappers])],
+              [enable_python=$enableval],
+              [enable_python=no])
+if test x"$enable_python" = x"yes"; then
+    AC_MSG_NOTICE([Checking for necessary tools to build python wrappers])
+
+    # we definately need python
+    PYTHON_DEVEL()
+    if test -z "$PYTHON_CPPFLAGS" ; then
+      AC_MSG_ERROR([please install python development files or configure this package with --disable-python])
+    fi
+
+    # it would be nice to have SWIG on board
+    SWIG_PYTHON()
+    setup_swig=yes
+fi
+AM_CONDITIONAL([BUILD_PYTHON_WRAPPERS], [test x$enable_python = x"yes"])
+
+dnl
+dnl *********** set up SWIG if wrappers are wanted ***********
+dnl
+if test x"$setup_swig" = x"yes" ; then
+    AC_MSG_NOTICE([Checking for SWIG])
+    AC_PATH_SWIG()
+    if test -n "$SWIG" ; then
+        SWIG_ENABLE_CXX()
+        SWIG_MULTI_MODULE_SUPPORT()
+    fi
+fi
+AM_CONDITIONAL([UPDATE_SWIG_WRAPPERS],  [test -n "$SWIG"])
+
+dnl
+dnl ****************** Parallelization ***********************
+dnl
 #CXXOPENMP="no"
 #
 #AC_ARG_WITH(openmp, dnl
@@ -202,8 +278,7 @@ fi
 
 AC_SUBST(DEBUG)
 
-AC_OUTPUT(
-Makefile
+AC_CONFIG_FILES([Makefile
 opencv.pc
 opencv.spec
 docs/Makefile
@@ -219,6 +294,8 @@ cvaux/include/Makefile
 cvaux/src/Makefile
 otherlibs/Makefile
 otherlibs/highgui/Makefile
+interfaces/Makefile
+interfaces/swig/Makefile
 tests/Makefile
 tests/trs/Makefile
 tests/cv/Makefile
@@ -232,9 +309,10 @@ apps/Makefile
 apps/haartraining/Makefile
 apps/haartraining/include/Makefile
 apps/haartraining/src/Makefile
-)
+])
+AC_OUTPUT
 
-echo "
+AC_MSG_RESULT([
 Configuration:
     Compiler:                 ${CXX} 
     CXXFLAGS:                 ${CXXFLAGS}
@@ -249,5 +327,12 @@ Configuration:
     Use ffmpeg:               ${have_ffmpeg}
     Use dc1394 & raw1394:     ${have_dc1394}
     Use v4l:                  ${have_v4l}
-Now run make...
-"
+
+    Build wrappers for
+    - Python                  ${enable_python}
+    SWIG is at                ${SWIG}
+
+    Build demo apps           ${with_apps}
+
+Now run make ...
+])

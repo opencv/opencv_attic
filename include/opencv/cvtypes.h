@@ -42,8 +42,10 @@
 #ifndef _CVTYPES_H_
 #define _CVTYPES_H_
 
-#include <assert.h>
-#include <stdlib.h>
+#ifndef SKIP_INCLUDES
+  #include <assert.h>
+  #include <stdlib.h>
+#endif
 
 /* spatial and central moments */
 typedef struct CvMoments

@@ -21,6 +21,8 @@ noinst_HEADERS = _cv.h _cvgeom.h _cvimgproc.h _cvipp.h _cvlist.h _cvmatrix.h
 EXTRA_DIST = cv.dsp cv.vcproj cv.rc resource.h
 
 libcv_la_LDFLAGS = -no-undefined -version-info @LT_VERSION@ @LDFLAGS@
+libcv_la_LIBADD  = ../../cxcore/src/libcxcore.la
+
 LIBS = -ldl -lpthread -lm
 
 INCLUDES = -I. -I../include -I../../cxcore/include -I../..

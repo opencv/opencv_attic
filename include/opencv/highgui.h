@@ -42,19 +42,71 @@
 #ifndef _HIGH_GUI_
 #define _HIGH_GUI_
 
-#include "cxcore.h"
-#ifdef WIN32
-#include <windows.h>
-#endif
+#ifndef SKIP_INCLUDES
+
+  #include "cxcore.h"
+  #ifdef WIN32
+    #include <windows.h>
+  #endif
+
+#else // SKIP_INCLUDES
+
+  #if defined WIN32 || defined WIN64
+    #define CV_CDECL __cdecl
+    #define CV_STDCALL __stdcall
+  #else
+    #define CV_CDECL
+    #define CV_STDCALL
+  #endif
+
+  #ifndef CV_EXTERN_C
+    #ifdef __cplusplus
+      #define CV_EXTERN_C extern "C"
+      #define CV_DEFAULT(val) = val
+    #else
+      #define CV_EXTERN_C
+      #define CV_DEFAULT(val)
+    #endif
+  #endif
+
+  #ifndef CV_EXTERN_C_FUNCPTR
+    #ifdef __cplusplus
+      #define CV_EXTERN_C_FUNCPTR(x) extern "C" { typedef x; }
+    #else
+      #define CV_EXTERN_C_FUNCPTR(x) typedef x
+    #endif
+  #endif
+
+  #ifndef CV_INLINE
+    #if defined __cplusplus
+      #define CV_INLINE inline
+    #elif (defined WIN32 || defined WIN64) && !defined __GNUC__
+      #define CV_INLINE __inline
+    #else
+      #define CV_INLINE static
+    #endif
+  #endif /* CV_INLINE */
+
+  #if (defined WIN32 || defined WIN64) && defined CVAPI_EXPORTS
+    #define CV_EXPORTS __declspec(dllexport)
+  #else
+    #define CV_EXPORTS
+  #endif
+
+  #ifndef CVAPI
+    #define CVAPI(rettype) CV_EXTERN_C CV_EXPORTS rettype CV_CDECL
+  #endif
+
+#endif // SKIP_INCLUDES
 
 #if defined(_CH_)
-#pragma package <opencv>
-#include <chdl.h>
-LOAD_CHDL_CODE(highgui,Highgui)
+  #pragma package <opencv>
+  #include <chdl.h>
+  LOAD_CHDL_CODE(highgui,Highgui)
 #endif
 
 #ifdef __cplusplus
-extern "C" {
+  extern "C" {
 #endif /* __cplusplus */
 
 /****************************************************************************************\

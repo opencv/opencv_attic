@@ -42,27 +42,29 @@
 #ifndef _CXCORE_TYPES_H_
 #define _CXCORE_TYPES_H_
 
-#include <assert.h>
-#include <stdlib.h>
-#include <string.h>
-#include <float.h>
-#ifndef __BORLANDC__
-#include <math.h>
-#else
-#include <fastmath.h>
-#endif
+#ifndef SKIP_INCLUDES
+  #include <assert.h>
+  #include <stdlib.h>
+  #include <string.h>
+  #include <float.h>
+  #ifndef __BORLANDC__
+  #include <math.h>
+  #else
+  #include <fastmath.h>
+  #endif
 
-#ifdef HAVE_IPL
-    #ifndef __IPL_H__
-        #ifdef WIN32
-            #include <ipl.h>
-        #else
-            #include <ipl/ipl.h>
-        #endif
-    #endif
-#elif defined __IPL_H__
-    #define HAVE_IPL
-#endif
+  #ifdef HAVE_IPL
+      #ifndef __IPL_H__
+          #ifdef WIN32
+              #include <ipl.h>
+          #else
+              #include <ipl/ipl.h>
+          #endif
+      #endif
+  #elif defined __IPL_H__
+      #define HAVE_IPL
+  #endif
+#endif // SKIP_INCLUDES
 
 #if defined WIN32 || defined WIN64
     #define CV_CDECL __cdecl
