@@ -404,6 +404,7 @@ cvCalcGlobalOrientation( const void* orientation, const void* maskimg, const voi
 
     __END__;
 
+    cvReleaseHist( &hist );
     return angle;
 }
 
