@@ -63,7 +63,7 @@ protected:
 
 
 CV_MomentsTest::CV_MomentsTest()
-    : CvArrTest( "moments-raster", "cvMoments", "" )
+    : CvArrTest( "moments-raster", "cvMoments, cvGetNormalizedCentralMoment", "" )
 {
     test_array[INPUT].push(NULL);
     test_array[OUTPUT].push(NULL);

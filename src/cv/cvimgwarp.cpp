@@ -643,6 +643,11 @@ cvResize( const CvArr* srcarr, CvArr* dstarr, int method )
     scale_x = (float)ssize.width/dsize.width;
     scale_y = (float)ssize.height/dsize.height;
 
+    if( method == CV_INTER_CUBIC &&
+        (MIN(ssize.width, dsize.height) <= 4 ||
+        MIN(ssize.height, dsize.height) <= 4) )
+        method = CV_INTER_LINEAR;
+
     if( icvResize_8u_C1R_p )
     {
         CvResizeIPPFunc ipp_func =
@@ -655,14 +660,16 @@ cvResize( const CvArr* srcarr, CvArr* dstarr, int method )
             type == CV_32FC1 ? icvResize_32f_C1R_p :
             type == CV_32FC3 ? icvResize_32f_C3R_p :
             type == CV_32FC4 ? icvResize_32f_C4R_p : 0;
-        if( ipp_func && CV_INTER_NN < method && method <= CV_INTER_AREA )
+        if( ipp_func && (CV_INTER_NN < method && method < CV_INTER_AREA ||
+            method == CV_INTER_AREA && ssize.width > dsize.width && ssize.height > dsize.height))
         {
             int srcstep = src->step ? src->step : CV_STUB_STEP;
             int dststep = dst->step ? dst->step : CV_STUB_STEP;
             IPPI_CALL( ipp_func( src->data.ptr, ssize, srcstep,
                                  cvRect(0,0,ssize.width,ssize.height),
                                  dst->data.ptr, dststep, dsize,
-                                 1./scale_x, 1./scale_y, 1 << method ));
+                                 (double)dsize.width/ssize.width,
+                                 (double)dsize.height/ssize.height, 1 << method ));
             EXIT;
         }
     }
@@ -732,6 +739,8 @@ cvResize( const CvArr* srcarr, CvArr* dstarr, int method )
                     float fsx1 = dx*scale_x, fsx2 = fsx1 + scale_x;
                     int sx1 = cvCeil(fsx1), sx2 = cvFloor(fsx2);
 
+                    assert( (unsigned)sx1 < (unsigned)ssize.width );
+
                     if( sx1 > fsx1 )
                     {
                         assert( k < ssize.width*2 );            
@@ -748,9 +757,10 @@ cvResize( const CvArr* srcarr, CvArr* dstarr, int method )
                         xofs[k++].alpha = scale;
                     }
 
-                    if( sx2 < fsx2 )
+                    if( fsx2 - sx2 > 1e-3 )
                     {
                         assert( k < ssize.width*2 );
+                        assert((unsigned)sx2 < (unsigned)ssize.width );
                         xofs[k].di = dx*cn;
                         xofs[k].si = sx2*cn;
                         xofs[k++].alpha = (fsx2 - sx2)*scale;
@@ -854,7 +864,7 @@ cvResize( const CvArr* srcarr, CvArr* dstarr, int method )
     else if( method == CV_INTER_CUBIC )
     {
         int width = dsize.width*cn, buf_size;
-        int xmin = ssize.width, xmax = -1;
+        int xmin = dsize.width, xmax = -1;
         CvResizeAlpha* xofs;
         float* buf[4];
         CvResizeBicubicFunc func = (CvResizeBicubicFunc)bicube_tab.fn_2d[depth];
@@ -880,7 +890,7 @@ cvResize( const CvArr* srcarr, CvArr* dstarr, int method )
             sx = cvFloor(fx);
             fx -= sx;
             int ifx = cvRound(fx*ICV_CUBIC_TAB_SIZE);
-            if( sx >= 0 && xmin > dx )
+            if( sx-1 >= 0 && xmin > dx )
                 xmin = dx;
             if( sx+2 < ssize.width )
                 xmax = dx + 1;
@@ -1097,7 +1107,8 @@ cvWarpAffine( const CvArr* srcarr, CvArr* dstarr, const CvMat* matrix,
     ssize = cvGetMatSize(src);
     dsize = cvGetMatSize(dst);
 
-    if( icvWarpAffineBack_8u_C1R_p )
+    if( icvWarpAffineBack_8u_C1R_p && MIN( ssize.width, dsize.width ) >= 4 &&
+        MIN( ssize.height, dsize.height ) >= 4 )
     {
         CvWarpAffineBackIPPFunc ipp_func =
             type == CV_8UC1 ? icvWarpAffineBack_8u_C1R_p :
