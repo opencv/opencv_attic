@@ -51,6 +51,18 @@
 #include <fastmath.h>
 #endif
 
+#ifdef HAVE_IPL
+    #ifndef __IPL_H__
+        #ifdef WIN32
+            #include <ipl.h>
+        #else
+            #include <ipl/ipl.h>
+        #endif
+    #endif
+#elif defined __IPL_H__
+    #define HAVE_IPL
+#endif
+
 #if defined WIN32 || defined WIN64
     #define CV_CDECL __cdecl
     #define CV_STDCALL __stdcall
@@ -105,7 +117,7 @@ typedef long long int64;
 typedef unsigned long long uint64;
 #endif
 
-#ifndef __IPL_H__
+#ifndef HAVE_IPL
 typedef unsigned char uchar;
 typedef unsigned short ushort;
 #endif
