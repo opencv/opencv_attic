@@ -4353,7 +4353,7 @@ extendible OpenCV structures - via macros, that simplifies extension and customi
 While the vertex and edge structures do not inherit from <a href="#decl_CvSetElem">CvSetElem</a> explicitly, they satisfy
 both conditions on the set elements - have an integer field in the beginning and fit CvSetElem structure.
 The <code>flags</code> fields are used as for indicating occupied vertices and edges as well as
-for other purposes, for example, for graph traversal (see <a href="#decl_cvStartScanGraph">cvStartScanGraph</a> et al.), so
+for other purposes, for example, for graph traversal (see <a href="#decl_cvCreateGraphScanner">cvCreateGraphScanner</a> et al.), so
 it is better not to use them directly.</p>
 <p>The graph is represented as a set of edges each of whose has the list of incident edges. The incidence
 lists for different vertices are interleaved to avoid information duplication as much as posssible.</p>
@@ -4640,7 +4640,7 @@ the function defragments the vertex and edge sets.</p>
 See discussion of the functions below.</p>
 
 
-<hr><h3><a name="decl_cvStartScanGraph">StartScanGraph</a></h3>
+<hr><h3><a name="decl_cvCreateGraphScanner">CreateGraphScanner</a></h3>
 <p class="Blurb">Creates structure for depth-first graph traversal</p>
 <pre>
 CvGraphScanner*  cvCreateGraphScanner( CvGraph* graph, CvGraphVtx* vtx=NULL,
@@ -7310,7 +7310,7 @@ process the data.</p>
 <tr>
 <td width="25%"><a href="#decl_cvSeqInvert">SeqInvert</a></td>
 <td width="25%"><a href="#decl_cvSetIPLAllocators">SetIPLAllocators</a></td>
-<td width="25%"><a href="#decl_cvStartScanGraph">StartScanGraph</a></td>
+<td width="25%"><a href="#decl_cvCreateGraphScanner">CreateGraphScanner</a></td>
 </tr>
 <tr>
 <td width="25%"><a href="#decl_cvSeqPartition">SeqPartition</a></td>
