@@ -51,6 +51,9 @@ cvGoodFeaturesToTrack( const void* image, void* eigImage, void* tempImage,
                        const void* maskImage, int block_size,
                        int use_harris, double harris_k )
 {
+    CvMat* _eigImg = 0;
+    CvMat* _tmpImg = 0;
+    
     CV_FUNCNAME( "cvGoodFeaturesToTrack" );
 
     __BEGIN__;
@@ -85,8 +88,25 @@ cvGoodFeaturesToTrack( const void* image, void* eigImage, void* tempImage,
     }
 
     CV_CALL( img = cvGetMat( img, &stub, &coi1 ));
-    CV_CALL( eig = cvGetMat( eig, &eig_stub, &coi2 ));
-    CV_CALL( tmp = cvGetMat( tmp, &tmp_stub, &coi3 ));
+    if( eig )
+    {
+        CV_CALL( eig = cvGetMat( eig, &eig_stub, &coi2 ));
+    }
+    else
+    {
+        CV_CALL( _eigImg = cvCreateMat( img->rows, img->cols, CV_32FC1 ));
+        eig = _eigImg;
+    }
+
+    if( tmp )
+    {
+        CV_CALL( tmp = cvGetMat( tmp, &tmp_stub, &coi3 ));
+    }
+    else
+    {
+        CV_CALL( _tmpImg = cvCreateMat( img->rows, img->cols, CV_32FC1 ));
+        tmp = _tmpImg;
+    }
 
     if( mask )
     {
@@ -202,6 +222,9 @@ cvGoodFeaturesToTrack( const void* image, void* eigImage, void* tempImage,
     *corner_count = count;
 
     __END__;
+
+    cvReleaseMat( &_eigImg );
+    cvReleaseMat( &_tmpImg );
 }
 
 /* End of file. */
