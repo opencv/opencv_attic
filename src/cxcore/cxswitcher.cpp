@@ -264,7 +264,7 @@ typedef struct CvPluginInfo
 CvPluginInfo;
 
 static CvPluginInfo plugins[CV_PLUGIN_MAX];
-static CvModuleInfo cxcore_module = { 0, "cxcore", "beta 4.0", cxcore_ipp_tab };
+static CvModuleInfo cxcore_module = { 0, "cxcore", "beta 4.1 (0.9.7)", cxcore_ipp_tab };
 
 static CvModuleInfo *icvFirstModule = 0, *icvLastModule = 0;
 
@@ -620,8 +620,8 @@ CV_IMPL  int64  cvGetTickCount( void )
         QueryPerformanceCounter( &counter );
         return (int64)counter.QuadPart;
 #else
-        timeval tv;
-        timezone tz;
+        struct timeval tv;
+        struct timezone tz;
         gettimeofday( &tv, &tz );
         return (int64)tv.tv_sec*1000000 + tv.tv_usec;
 #endif

@@ -694,14 +694,14 @@ CV_EXPORTS void cvTsGEMM( const CvMat* a, const CvMat* b, double alpha,
 
 CV_EXPORTS void cvTsConvolve2D( const CvMat* a, CvMat* b, const CvMat* kernel, CvPoint anchor );
 // op_type == CV_TS_MIN/CV_TS_MAX
-CV_EXPORTS void cvTsMinMaxFilter( const CvMat* a, CvMat* b, const CvMat* kernel,
-                             CvPoint anchor, int op_type );
+CV_EXPORTS void cvTsMinMaxFilter( const CvMat* a, CvMat* b,
+                                  const IplConvKernel* element, int op_type );
 
-enum { CV_TS_BORDER_REPLICATE = 0, CV_TS_BORDER_FILLZERO = 2, CV_TS_BORDER_FILLMIN = 3,
-       CV_TS_BORDER_FILLMAX = 4, CV_TS_BORDER_REFLECT = 5 };
+enum { CV_TS_BORDER_REPLICATE=0, CV_TS_BORDER_REFLECT=1, CV_TS_BORDER_FILL=2 };
 
 CV_EXPORTS void cvTsPrepareToFilter( const CvMat* a, CvMat* b, CvPoint ofs,
-                                int border_mode = CV_TS_BORDER_REPLICATE );
+                                     int border_mode = CV_TS_BORDER_REPLICATE,
+                                     CvScalar fill_val=cvScalarAll(0));
 
 CV_EXPORTS double cvTsCrossCorr( const CvMat* a, const CvMat* b );
 

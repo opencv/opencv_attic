@@ -2573,47 +2573,49 @@ double cvTsMaxVal( int type )
 }
 
 
-void cvTsPrepareToFilter( const CvMat* a, CvMat* b, CvPoint ofs, int border_mode )
+void cvTsPrepareToFilter( const CvMat* a, CvMat* b, CvPoint ofs,
+                          int border_mode, CvScalar fill_val )
 {
-    int i;
+    int i, j, dir;
     CvMat temp, temp2;
-    CvScalar fill_val = cvScalarAll(0);
-    int fill_mode = border_mode == CV_TS_BORDER_FILLMIN ||
-                    border_mode == CV_TS_BORDER_FILLMAX ||
-                    border_mode == CV_TS_BORDER_FILLZERO;
 
     assert( 0 <= ofs.x && ofs.x <= b->cols - a->cols &&
             0 <= ofs.y && ofs.y <= b->rows - a->rows );
 
-    switch( border_mode )
-    {
-    case CV_TS_BORDER_FILLMIN:
-        fill_val = cvScalarAll(cvTsMinVal(a->type));
-        break;
-    case CV_TS_BORDER_FILLMAX:
-        fill_val = cvScalarAll(cvTsMaxVal(a->type));
-        break;
-    default:
-        ;
-    }
-
     cvTsSelect( b, &temp, cvRect( ofs.x, ofs.y, a->cols, a->rows ));
     cvTsCopy( a, &temp, 0 );
 
+    assert( border_mode == CV_TS_BORDER_FILL ||
+            border_mode == CV_TS_BORDER_REPLICATE ||
+            border_mode == CV_TS_BORDER_REFLECT );
+
     if( ofs.y > 0 )
     {
-        if( fill_mode )
+        if( border_mode == CV_TS_BORDER_FILL )
         {
             cvTsSelect( b, &temp, cvRect( ofs.x, 0, a->cols, ofs.y ));
             cvTsAdd( 0, cvScalar(0), 0, cvScalar(0), fill_val, &temp, 0 );
         }
-        else
+        else if( border_mode == CV_TS_BORDER_REPLICATE || a->rows == 1 )
         {
             cvTsSelect( b, &temp, cvRect( ofs.x, ofs.y, a->cols, 1 ));
-            for( i = 0; i < ofs.y; i++ )
+            for( i = ofs.y-1; i >= 0; i-- )
             {
                 cvTsSelect( b, &temp2, cvRect( ofs.x, i, a->cols, 1 ));
                 cvTsCopy( &temp, &temp2, 0 );
+            }
+        }
+        else if( border_mode == CV_TS_BORDER_REFLECT )
+        {
+            j = 1; dir = 1;
+            for( i = ofs.y-1; i >= 0; i-- )
+            {
+                cvTsSelect( b, &temp, cvRect( ofs.x, ofs.y+j, a->cols, 1 ));
+                cvTsSelect( b, &temp2, cvRect( ofs.x, i, a->cols, 1 ));
+                cvTsCopy( &temp, &temp2, 0 );
+                if( (unsigned)(j + dir) >= (unsigned)a->rows )
+                    dir = -dir;
+                j += dir;
             }
         }
     }
@@ -2621,12 +2623,12 @@ void cvTsPrepareToFilter( const CvMat* a, CvMat* b, CvPoint ofs, int border_mode
     ofs.y += a->rows;
     if( ofs.y < b->rows )
     {
-        if( fill_mode )
+        if( border_mode == CV_TS_BORDER_FILL )
         {
             cvTsSelect( b, &temp, cvRect( ofs.x, ofs.y, a->cols, b->rows - ofs.y ));
             cvTsAdd( 0, cvScalar(0), 0, cvScalar(0), fill_val, &temp, 0 );
         }
-        else
+        else if( border_mode == CV_TS_BORDER_REPLICATE || a->rows == 1 )
         {
             cvTsSelect( b, &temp, cvRect( ofs.x, ofs.y - 1, a->cols, 1 ));
             for( i = ofs.y; i < b->rows; i++ )
@@ -2635,22 +2637,48 @@ void cvTsPrepareToFilter( const CvMat* a, CvMat* b, CvPoint ofs, int border_mode
                 cvTsCopy( &temp, &temp2, 0 );
             }
         }
+        else
+        {
+            j = a->rows - 2; dir = -1;
+            for( i = ofs.y; i < b->rows; i++ )
+            {
+                cvTsSelect( b, &temp, cvRect( ofs.x, ofs.y-a->rows+j, a->cols, 1 ));
+                cvTsSelect( b, &temp2, cvRect( ofs.x, i, a->cols, 1 ));
+                cvTsCopy( &temp, &temp2, 0 );
+                if( (unsigned)(j + dir) >= (unsigned)a->rows )
+                    dir = -dir;
+                j += dir;
+            }
+        }
     }
 
     if( ofs.x > 0 )
     {
-        if( fill_mode )
+        if( border_mode == CV_TS_BORDER_FILL )
         {
             cvTsSelect( b, &temp, cvRect( 0, 0, ofs.x, b->rows ));
             cvTsAdd( 0, cvScalar(0), 0, cvScalar(0), fill_val, &temp, 0 );
         }
-        else
+        else if( border_mode == CV_TS_BORDER_REPLICATE || a->cols == 1 )
         {
             cvTsSelect( b, &temp, cvRect( ofs.x, 0, 1, b->rows ));
-            for( i = 0; i < ofs.x; i++ )
+            for( i = ofs.x-1; i >= 0; i-- )
             {
                 cvTsSelect( b, &temp2, cvRect( i, 0, 1, b->rows ));
                 cvTsCopy( &temp, &temp2, 0 );
+            }
+        }
+        else if( border_mode == CV_TS_BORDER_REFLECT )
+        {
+            j = 1; dir = 1;
+            for( i = ofs.x-1; i >= 0; i-- )
+            {
+                cvTsSelect( b, &temp, cvRect( ofs.x+j, 0, 1, b->rows ));
+                cvTsSelect( b, &temp2, cvRect( i, 0, 1, b->rows ));
+                cvTsCopy( &temp, &temp2, 0 );
+                if( (unsigned)(j + dir) >= (unsigned)a->cols )
+                    dir = -dir;
+                j += dir;
             }
         }
     }
@@ -2658,12 +2686,12 @@ void cvTsPrepareToFilter( const CvMat* a, CvMat* b, CvPoint ofs, int border_mode
     ofs.x += a->cols;
     if( ofs.x < b->cols )
     {
-        if( fill_mode )
+        if( border_mode == CV_TS_BORDER_FILL )
         {
             cvTsSelect( b, &temp, cvRect( ofs.x, 0, b->cols - ofs.x, b->rows ));
             cvTsAdd( 0, cvScalar(0), 0, cvScalar(0), fill_val, &temp, 0 );
         }
-        else
+        else if( border_mode == CV_TS_BORDER_REPLICATE || a->cols == 1 )
         {
             cvTsSelect( b, &temp, cvRect( ofs.x-1, 0, 1, b->rows ));
             for( i = ofs.x; i < b->cols; i++ )
@@ -2672,46 +2700,63 @@ void cvTsPrepareToFilter( const CvMat* a, CvMat* b, CvPoint ofs, int border_mode
                 cvTsCopy( &temp, &temp2, 0 );
             }
         }
+        else if( border_mode == CV_TS_BORDER_REFLECT )
+        {
+            j = a->cols - 2; dir = -1;
+            for( i = ofs.x; i < b->cols; i++ )
+            {
+                cvTsSelect( b, &temp, cvRect( ofs.x-a->cols+j, 0, 1, b->rows ));
+                cvTsSelect( b, &temp2, cvRect( i, 0, 1, b->rows ));
+                cvTsCopy( &temp, &temp2, 0 );
+                if( (unsigned)(j + dir) >= (unsigned)a->cols )
+                    dir = -dir;
+                j += dir;
+            }
+        }
     }
 }
+
 
 void cvTsConvolve2D( const CvMat* a, CvMat* b, const CvMat* kernel, CvPoint anchor )
 {
     int i, j, k;
-    int cn, ncols, el_size;
+    int cn, ncols, a_step;
     int ker_size = kernel->rows*kernel->cols;
-    int a_step;
-    int* offset = (int*)alloca( ker_size*sizeof(offset[0]));
-    double* k_data = (double*)alloca( ker_size*sizeof(k_data[0]));
+    int* offset = (int*)malloc( ker_size*sizeof(offset[0]));
+    float* k_data = (float*)malloc( ker_size*sizeof(k_data[0]));
+    int all_same = 1;
+    float first = kernel->data.fl[0];
+    uchar *a_data, *b_data;
 
     cn = CV_MAT_CN(a->type);
-    ncols = a->cols*cn;
-    el_size = CV_ELEM_SIZE(a->type & ~CV_MAT_CN_MASK);
-    a_step = a->step / el_size;
+    ncols = b->cols*cn;
+    a_step = a->step / CV_ELEM_SIZE(a->type & ~CV_MAT_CN_MASK);
 
-    assert( CV_ARE_SIZES_EQ( a, b ) && CV_ARE_TYPES_EQ( a, b ) );
-    assert( CV_MAT_TYPE(kernel->type) == CV_64FC1 );
+    assert( a->cols == b->cols + kernel->cols - 1 &&
+            a->rows == b->rows + kernel->rows - 1 && CV_ARE_TYPES_EQ( a, b ) );
+    assert( CV_MAT_TYPE(kernel->type) == CV_32FC1 );
     assert( 0 <= anchor.x && anchor.x < kernel->cols &&
             0 <= anchor.y && anchor.y < kernel->rows );
 
     for( i = 0, k = 0; i < kernel->rows; i++ )
         for( j = 0; j < kernel->cols; j++ )
         {
-            double f = ((double*)(kernel->data.ptr + kernel->step*i))[j];
+            float f = ((float*)(kernel->data.ptr + kernel->step*i))[j];
             if( f )
             {
                 k_data[k] = f;
                 offset[k++] = (i - anchor.y)*a_step + (j - anchor.x)*cn;
             }
+            if( f != first )
+                all_same = 0;
         }
 
     ker_size = k;
+    a_data = a->data.ptr + a->step*anchor.y + CV_ELEM_SIZE(a->type)*anchor.x;
+    b_data = b->data.ptr;
 
-    for( i = 0; i < a->rows; i++ )
+    for( i = 0; i < b->rows; i++, a_data += a->step, b_data += b->step )
     {
-        uchar* a_data = a->data.ptr + a->step*i;
-        uchar* b_data = b->data.ptr + b->step*i;
-
         switch( CV_MAT_DEPTH(a->type) )
         {
         case CV_8U:
@@ -2768,12 +2813,26 @@ void cvTsConvolve2D( const CvMat* a, CvMat* b, const CvMat* kernel, CvPoint anch
             }
             break;
         case CV_32F:
-            for( j = 0; j < ncols; j++ )
+            if( !all_same )
             {
-                double s = 0;
-                for( k = 0; k < ker_size; k++ )
-                    s += ((float*)a_data)[j+offset[k]]*k_data[k];
-                ((float*)b_data)[j] = (float)s;
+                for( j = 0; j < ncols; j++ )
+                {
+                    double s = 0;
+                    for( k = 0; k < ker_size; k++ )
+                        s += (double)((float*)a_data)[j+offset[k]]*k_data[k];
+                    ((float*)b_data)[j] = (float)s;
+                }
+            }
+            else
+            {
+                // special branch to speedup feature selection and blur tests
+                for( j = 0; j < ncols; j++ )
+                {
+                    double s = 0;
+                    for( k = 0; k < ker_size; k++ )
+                        s += (double)((float*)a_data)[j+offset[k]];
+                    ((float*)b_data)[j] = (float)(s*first);
+                }
             }
             break;
         case CV_64F:
@@ -2795,39 +2854,38 @@ void cvTsConvolve2D( const CvMat* a, CvMat* b, const CvMat* kernel, CvPoint anch
 }
 
 
-void cvTsMinMaxFilter( const CvMat* a, CvMat* b, const CvMat* kernel,
-                       CvPoint anchor, int op_type )
+void cvTsMinMaxFilter( const CvMat* a, CvMat* b, const IplConvKernel* kernel, int op_type )
 {
     int i, j, k;
-    int cn, ncols, el_size, a_step;
-    int ker_size = kernel->rows*kernel->cols;
-    int* offset = (int*)alloca( ker_size*sizeof(offset[0]));
+    int cn, ncols, a_step;
+    int ker_size = kernel->nRows*kernel->nCols;
+    int* offset = (int*)malloc( ker_size*sizeof(offset[0]));
     int calc_max = op_type == CV_TS_MAX;
+    uchar *a_data, *b_data;
 
     cn = CV_MAT_CN(a->type);
-    ncols = a->cols*cn;
-    el_size = CV_ELEM_SIZE(a->type & ~CV_MAT_CN_MASK);
-    a_step = a->step / el_size;
+    ncols = b->cols*cn;
+    a_step = a->step / CV_ELEM_SIZE(a->type & ~CV_MAT_CN_MASK);
 
-    assert( CV_ARE_SIZES_EQ( a, b ) && CV_ARE_TYPES_EQ( a, b ) );
-    assert( CV_MAT_TYPE(kernel->type) == CV_8UC1 || CV_MAT_TYPE(kernel->type) == CV_8SC1 );
-    assert( 0 <= anchor.x && anchor.x < kernel->cols &&
-            0 <= anchor.y && anchor.y < kernel->rows );
+    assert( a->cols == b->cols + kernel->nCols - 1 &&
+            a->rows == b->rows + kernel->nRows - 1 && CV_ARE_TYPES_EQ( a, b ) );
+    assert( 0 <= kernel->anchorX && kernel->anchorX < kernel->nCols &&
+            0 <= kernel->anchorY && kernel->anchorY < kernel->nRows );
 
-    for( i = 0, k = 0; i < kernel->rows; i++ )
-        for( j = 0; j < kernel->cols; j++ )
+    for( i = 0, k = 0; i < kernel->nRows; i++ )
+        for( j = 0; j < kernel->nCols; j++ )
         {
-            if( kernel->data.ptr[kernel->step*i + j] )
-                offset[k++] = (i - anchor.y)*a_step + (j - anchor.x)*cn;
+            if( !kernel->values || kernel->values[i*kernel->nCols + j] )
+                offset[k++] = (i - kernel->anchorY)*a_step + (j - kernel->anchorX)*cn;
         }
 
     ker_size = k;
 
-    for( i = 0; i < a->rows; i++ )
-    {
-        uchar* a_data = a->data.ptr + a->step*i;
-        uchar* b_data = b->data.ptr + b->step*i;
+    a_data = a->data.ptr + kernel->anchorY*a->step + kernel->anchorX*CV_ELEM_SIZE(a->type);
+    b_data = b->data.ptr;
 
+    for( i = 0; i < b->rows; i++, a_data += a->step, b_data += b->step )
+    {
         switch( CV_MAT_DEPTH(a->type) )
         {
         case CV_8U:
@@ -2846,24 +2904,6 @@ void cvTsMinMaxFilter( const CvMat* a, CvMat* b, const CvMat* kernel,
                         m = v;
                 }
                 ((uchar*)b_data)[j] = (uchar)m;
-            }
-            break;
-        case CV_8S:
-            for( j = 0; j < ncols; j++ )
-            {
-                int m = ((char*)a_data)[j+offset[0]];
-                for( k = 1; k < ker_size; k++ )
-                {
-                    int v = ((char*)a_data)[j+offset[k]];
-                    if( calc_max )
-                    {
-                        if( m < v )
-                            m = v;
-                    }
-                    else if( m > v )
-                        m = v;
-                }
-                ((char*)b_data)[j] = (char)m;
             }
             break;
         case CV_16U:
