@@ -87,7 +87,7 @@ GrFmtWriter* GrFmtTiff::NewWriter( const char* filename )
 
 static int grfmt_tiff_err_handler_init = 0;
 
-void GrFmtSilentTIFFErrorHandler( const char*, const char*, va_list ) {}
+static void GrFmtSilentTIFFErrorHandler( const char*, const char*, va_list ) {}
 
 GrFmtTiffReader::GrFmtTiffReader( const char* filename ) : GrFmtReader( filename )
 {
@@ -214,13 +214,13 @@ bool  GrFmtTiffReader::ReadData( uchar* data, int step, int color )
 
                     for( i = 0; i < tile_height; i++ )
                         if( color )
-                            CvtRGBAToBGR( buffer + i*tile_width*4,
-                                          data + x*3 + step*(tile_height - i - 1),
-                                          tile_width );
+                            icvCvt_BGRA2BGR_8u_C4C3R( buffer + i*tile_width*4, 0,
+                                          data + x*3 + step*(tile_height - i - 1), 0,
+                                          cvSize(tile_width,1), 2 );
                         else
-                            CvtRGBAToGray( buffer + i*tile_width*4,
-                                           data + x + step*(tile_height - i - 1),
-                                           tile_width );
+                            icvCvt_BGRA2Gray_8u_C4C1R( buffer + i*tile_width*4, 0,
+                                           data + x + step*(tile_height - i - 1), 0,
+                                           cvSize(tile_width,1), 2 );
                 }
             }
 
@@ -231,7 +231,7 @@ bool  GrFmtTiffReader::ReadData( uchar* data, int step, int color )
 exit_func:
 
     Close();
-    delete buffer;
+    delete[] buffer;
 
     return result;
 }
@@ -256,8 +256,8 @@ GrFmtTiffReader::~GrFmtTiffReader()
 {
     Close();
 
-    delete m_offsets;
-    delete m_temp_palette;
+    delete[] m_offsets;
+    delete[] m_temp_palette;
 }
 
 void  GrFmtTiffReader::Close()
@@ -307,7 +307,7 @@ int  GrFmtTiffReader::ReadTable( int offset, int count,
 
     if( count > arraysize )
     {
-        delete array;
+        delete[] array;
         arraysize = arraysize*3/2;
         if( arraysize < count )
             arraysize = count;
@@ -607,10 +607,10 @@ bool  GrFmtTiffReader::ReadData( uchar* data, int step, int color )
                             FillColorRow8( data, src, m_width, m_palette );
                             break;
                         case 24:
-                            CvtRGBToBGR( src, data, m_width );
+                            icvCvt_RGB2BGR_8u_C3R( src, 0, data, 0, cvSize(m_width,1) );
                             break;
                         case 32:
-                            CvtRGBAToBGR( src, data, m_width );
+                            icvCvt_RGBA2BGR_8u_C4C3R( src, 0, data, 0, cvSize(m_width,1) );
                             break;
                         default:
                             assert(0);
@@ -629,10 +629,10 @@ bool  GrFmtTiffReader::ReadData( uchar* data, int step, int color )
                             FillGrayRow8( data, src, m_width, gray_palette );
                             break;
                         case 24:
-                            CvtRGBToGray( src, data, m_width );
+                            icvCvt_RGB2Gray_8u_C3C1R( src, 0, data, 0, cvSize(m_width,1) );
                             break;
                         case 32:
-                            CvtRGBAToGray( src, data, m_width );
+                            icvCvt_RGBA2Gray_8u_C4C1R( src, 0, data, 0, cvSize(m_width,1) );
                             break;
                         default:
                             assert(0);
@@ -652,7 +652,7 @@ bad_decoding_end:
         }
     }
 
-    if( src != buffer ) delete src; 
+    if( src != buffer ) delete[] src; 
     return result;
 }
 
@@ -698,9 +698,9 @@ bool  GrFmtTiffWriter::WriteImage( const uchar* data, int step,
             rowsPerStrip = height;
 
         int i, stripCount = (height + rowsPerStrip - 1) / rowsPerStrip;
-#if defined _DEBUG || !defined WIN32
+/*#if defined _DEBUG || !defined WIN32
         int uncompressedRowSize = rowsPerStrip * fileStep;
-#endif
+#endif*/
         int directoryOffset = 0;
 
         int* stripOffsets = new int[stripCount];
@@ -727,14 +727,14 @@ bool  GrFmtTiffWriter::WriteImage( const uchar* data, int step,
 
             for( ; y < limit; y++, data += step )
             {
-                if( isColor ) CvtRGBToBGR( data, buffer, width );
+                if( isColor ) icvCvt_RGB2BGR_8u_C3R( data, 0, buffer, 0, cvSize(width,1) );
                 m_strm.PutBytes( isColor ? buffer : data, fileStep );
             }
 
             stripCounts[i] = (short)(m_strm.GetPos() - stripOffsets[i]);
-            assert( stripCounts[i] == uncompressedRowSize ||
+            /*assert( stripCounts[i] == uncompressedRowSize ||
                     stripCounts[i] < uncompressedRowSize &&
-                    i == stripCount - 1);
+                    i == stripCount - 1);*/
         }
 
         if( stripCount > 1 )
@@ -797,8 +797,8 @@ bool  GrFmtTiffWriter::WriteImage( const uchar* data, int step,
         fwrite( buffer, 1, 4, f );
         fclose(f);
 
-        delete  stripOffsets;
-        delete  stripCounts;
+        delete[]  stripOffsets;
+        delete[]  stripCounts;
 
         result = true;
     }

@@ -89,7 +89,7 @@ bool GrFmtFilterFactory::CheckSignature( const char* signature )
 }
 
 
-int GetExtensionLength( const char* buffer )
+static int GetExtensionLength( const char* buffer )
 {
     int len = 0;
 
@@ -139,8 +139,13 @@ bool GrFmtFilterFactory::CheckExtension( const char* format )
         if( len2 == len )
         {
             for( i = 0; i < len; i++ )
-                if( tolower(format[i+1]) != tolower(descr[i+1]))
+            {
+                int c1 = tolower(format[i+1]);
+                int c2 = tolower(descr[i+1]);
+
+                if( c1 != c2 )
                     break;
+            }
             if( i == len )
                 return true;
         }
@@ -171,7 +176,7 @@ void  GrFmtFactoriesList::RemoveAll()
     if( m_factories )
     {
         for( int i = 0; i < m_curFactories; i++ ) delete m_factories[i];
-        delete m_factories;
+        delete[] m_factories;
     }
     m_factories = 0;
     m_maxFactories = m_curFactories = 0;
@@ -191,7 +196,7 @@ bool  GrFmtFactoriesList::AddFactory( GrFmtFilterFactory* factory )
 
         for( int i = 0; i < m_curFactories; i++ ) newFactories[i] = m_factories[i];
 
-        delete m_factories;
+        delete[] m_factories;
         m_factories = newFactories;
         m_maxFactories = newMaxFactories;
     }

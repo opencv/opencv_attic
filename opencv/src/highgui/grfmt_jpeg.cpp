@@ -220,14 +220,14 @@ bool  GrFmtJpegReader::ReadData( uchar* data, int step, int color )
                 if( color )
                 {
                     if( m_iscolor )
-                        CvtRGBToBGR( buffer[0], data, m_width );
+                        icvCvt_RGB2BGR_8u_C3R( buffer[0], 0, data, 0, cvSize(m_width,1) );
                     else
-                        CvtGrayToBGR( buffer[0], data, m_width );
+                        icvCvt_Gray2BGR_8u_C1C3R( buffer[0], 0, data, 0, cvSize(m_width,1) );
                 }
                 else
                 {
                     if( m_iscolor )
-                        CvtRGBToGray( buffer[0], data, m_width );
+                        icvCvt_BGR2Gray_8u_C3C1R( buffer[0], 0, data, 0, cvSize(m_width,1), 2 );
                     else
                         memcpy( data, buffer[0], m_width );
                 }
@@ -258,7 +258,7 @@ GrFmtJpegWriter::~GrFmtJpegWriter()
 bool  GrFmtJpegWriter::WriteImage( const uchar* data, int step,
                                    int width, int height, bool isColor )
 {
-    const int default_quality = 85;
+    const int default_quality = 90;
     struct jpeg_compress_struct cinfo;
     GrFmtJpegErrorMgr jerr;
 
@@ -298,7 +298,7 @@ bool  GrFmtJpegWriter::WriteImage( const uchar* data, int step,
             
                 if( channels > 1 )
                 {
-                    CvtRGBToBGR( data, buffer, width );
+                    icvCvt_RGB2BGR_8u_C3R( data, 0, buffer, 0, cvSize(width,1) );
                     ptr = buffer;
                 }
 
@@ -313,7 +313,7 @@ bool  GrFmtJpegWriter::WriteImage( const uchar* data, int step,
     if(f) fclose(f);
     jpeg_destroy_compress( &cinfo );
 
-    delete buffer;
+    delete[] buffer;
     return result;
 }
 
@@ -444,7 +444,6 @@ static const int idct_prescale[] =
 #define fix(x, n)    (int)((x)*(1 << (n)) + .5)
 #define fix1(x, n)   (x)
 #define fixmul(x)    (x)
-#define postscale(x) round(x)
 
 #define C0_707     fix( 0.707106781f, fixb )
 #define C0_924     fix( 0.923879533f, fixb )
@@ -614,9 +613,9 @@ GrFmtJpegReader::~GrFmtJpegReader()
 {
     for( int i = 0; i < 4; i++ )
     {
-        delete m_td[i];
+        delete[] m_td[i];
         m_td[i] = 0;
-        delete m_ta[i];
+        delete[] m_ta[i];
         m_ta[i] = 0;
     }
 }
@@ -633,7 +632,7 @@ bool GrFmtJpegReader::ReadHeader()
 {
     char buffer[16];
     int  i;
-    bool result = false, is_jfif = false, is_sof = false, 
+    bool result = false, is_sof = false, 
          is_qt = false, is_ht = false, is_sos = false;
     
     assert( strlen(m_filename) != 0 );
@@ -668,7 +667,7 @@ bool GrFmtJpegReader::ReadHeader()
                     if( strcmp(buffer, "JFIF") == 0 ) // JFIF identification
                     {
                         m_version = lstrm.GetWord();
-                        is_jfif = true;
+                        //is_jfif = true;
                     }
                     break;
 
@@ -1458,12 +1457,12 @@ bool  GrFmtJpegWriter::WriteImage( const uchar* data, int step,
         for( j = 0; j < 64; j++ )
         {
             int idx = zigzag[j];
-            int qval = round(qtable[idx]*inv_quality);
+            int qval = cvRound(qtable[idx]*inv_quality);
             if( qval < 1 )
                 qval = 1;
             if( qval > 255 )
                 qval = 255;
-            fdct_qtab[i][idx] = round((1 << (postshift + 9))/
+            fdct_qtab[i][idx] = cvRound((1 << (postshift + 9))/
                                       (qval*chroma_scale*idct_prescale[idx]));
             lowstrm.PutByte( qval );
         }

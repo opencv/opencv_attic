@@ -289,9 +289,9 @@ bool  GrFmtPxMReader::ReadData( uchar* data, int step, int color )
                 else
                 {
                     if( color )
-                        CvtRGBToBGR( src, data, m_width );
+                        icvCvt_RGB2BGR_8u_C3R( src, 0, data, 0, cvSize(m_width,1) );
                     else
-                        CvtRGBToGray( src, data, m_width );
+                        icvCvt_BGR2Gray_8u_C3C1R( src, 0, data, 0, cvSize(m_width,1), 2 );
                 }
             }
             result = true;
@@ -302,13 +302,13 @@ bool  GrFmtPxMReader::ReadData( uchar* data, int step, int color )
     }
 
     if( src != buffer )
-        delete src; 
+        delete[] src; 
 
     if( bgr != bgr_buffer )
-        delete bgr;
+        delete[] bgr;
 
     if( gray_palette != pal_buffer )
-        delete gray_palette;
+        delete[] gray_palette;
 
     return result;
 }
@@ -378,10 +378,9 @@ bool  GrFmtPxMWriter::WriteImage( const uchar* data, int step,
             if( isBinary )
             {
                 if( isColor )
-                    CvtRGBToBGR( (uchar*)data, (uchar*)buffer, width );
-
-                m_strm.PutBytes( isColor ? buffer : (char*)data,
-                                 fileStep );
+                    icvCvt_RGB2BGR_8u_C3R( (uchar*)data, 0,
+                        (uchar*)buffer, 0, cvSize(width,1) );
+                m_strm.PutBytes( isColor ? buffer : (char*)data, fileStep );
             }
             else
             {
@@ -411,7 +410,7 @@ bool  GrFmtPxMWriter::WriteImage( const uchar* data, int step,
                 m_strm.PutBytes( buffer, ptr - buffer );
             }
         }
-        delete buffer;
+        delete[] buffer;
         m_strm.Close();
         result = true;
     }

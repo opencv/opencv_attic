@@ -50,8 +50,12 @@
 #include <assert.h>
 
 #include "highgui.h"
+#include "cxmisc.h"
+
 #ifndef WIN32
 #include "cvconfig.h"
+#else
+void  FillBitmapInfo( BITMAPINFO* bmi, int width, int height, int bpp, int origin );
 #endif
 
 /* Errors */
@@ -62,10 +66,52 @@
 #define HG_NULLPTR    -4 /* The null pointer where it should not appear */
 #define HG_BADPARAM   -5 
 
-#define HG_WINDOW_SIGNATURE  0x00420042
-#define HG_TRACKBAR_SIGNATURE 0x00420043
+#define CV_WINDOW_MAGIC_VAL     0x00420042
+#define CV_TRACKBAR_MAGIC_VAL   0x00420043
 
-#define HIGHGUI_IMPL extern "C"
+#ifdef WIN32
+#undef HAVE_MIL
+#define HAVE_MIL 0 /* change 0 to 1 to turn on MIL support */
+#endif
+
+/***************************** CvCapture structure ******************************/
+
+#define CV_CAPTURE_BASE_API_COUNT 6
+
+typedef void (CV_CDECL* CvCaptureCloseFunc)( CvCapture* capture );
+typedef int (CV_CDECL* CvCaptureGrabFrameFunc)( CvCapture* capture );
+typedef IplImage* (CV_CDECL* CvCaptureRetrieveFrameFunc)( CvCapture* capture );
+typedef double (CV_CDECL* CvCaptureGetPropertyFunc)( CvCapture* capture, int id );
+typedef int (CV_CDECL* CvCaptureSetPropertyFunc)( CvCapture* capture,
+                                                  int id, double value );
+typedef const char* (CV_CDECL* CvCaptureGetDescriptionFunc)( CvCapture* capture );
+
+typedef struct CvCaptureVTable
+{
+    int     count;
+    CvCaptureCloseFunc close;
+    CvCaptureGrabFrameFunc grab_frame;
+    CvCaptureRetrieveFrameFunc retrieve_frame;
+    CvCaptureGetPropertyFunc get_property;
+    CvCaptureSetPropertyFunc set_property;
+    CvCaptureGetDescriptionFunc get_description;
+}
+CvCaptureVTable;
+
+typedef struct CvCapture
+{
+    CvCaptureVTable* vtable;
+}
+CvCapture;
+
+#ifndef WIN32
+#ifdef HAVE_CAMV4L
+CvCapture* icvOpenCAM_V4L( int wIndex );
+#endif
+#ifdef HAVE_DC1394
+CvCapture* icvOpenCAM_DC1394( int wIndex );
+#endif
+#endif
 
 #endif /* __HIGHGUI_H_ */
 
