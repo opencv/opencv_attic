@@ -1280,7 +1280,7 @@ icvGaussianBlur_small_8u_CnR( uchar* src, int srcStep,
                     /* horizontal blurring */
                     if( ker_width == 3 )
                     {
-                        for( i = 0; i < width_n; i += 3 )
+                        for( i = 0; i < width_n; i += 4 )
                         {
                             int t0 = tsrc[i + 4]*2 + tsrc[i] + tsrc[i+8];
                             int t1 = tsrc[i + 5]*2 + tsrc[i+1] + tsrc[i+9];
@@ -1295,7 +1295,7 @@ icvGaussianBlur_small_8u_CnR( uchar* src, int srcStep,
                     }
                     else if( ker_width == 5 )
                     {
-                        for( i = 0; i < width_n; i += 3 )
+                        for( i = 0; i < width_n; i += 4 )
                         {
                             int t0 = tsrc[i+8]*6 + (tsrc[i+4] + tsrc[i+12])*4 +
                                      tsrc[i]+tsrc[i+16];
