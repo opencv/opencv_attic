@@ -1,1 +1,1 @@
-*.aps *.o Makefile Makefile.in .libs
+*.aps *.o Makefile .libs

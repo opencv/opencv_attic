@@ -1,1 +1,1 @@
-_temp bin lib config.* cvconfig.h stamp* *.spec *.pc
+_temp bin lib config.* cvconfig.h stamp* *.spec Makefile *.pc
