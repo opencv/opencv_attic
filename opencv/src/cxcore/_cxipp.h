@@ -386,11 +386,11 @@ IPCVAPI_EX( CvStatus, icvNorm_L1_##flavor##_C1R,                                
                                              ( const srctype* img, int imgstep,         \
                                                CvSize size, double* norm ))             \
 IPCVAPI_EX( CvStatus, icvNorm_L2_##flavor##_C1R,                                        \
-           "ippiNorm_L2_" #flavor "_C1R", CV_PLUGINS1(CV_PLUGIN_IPPI),                  \
+           "ippiNorm_L2_" #flavor "_C1R", 0/*CV_PLUGINS1(CV_PLUGIN_IPPI)*/,             \
                                              ( const srctype* img, int imgstep,         \
                                                CvSize size, double* norm ))             \
 IPCVAPI_EX( CvStatus, icvNormDiff_Inf_##flavor##_C1R,                                   \
-           "ippiNormDiff_Inf_" #flavor "_C1R", CV_PLUGINS1(CV_PLUGIN_IPPI),             \
+           "ippiNormDiff_Inf_" #flavor "_C1R", 0/*CV_PLUGINS1(CV_PLUGIN_IPPI)*/,        \
                                              ( const srctype* img1, int imgstep1,       \
                                                const srctype* img2, int imgstep2,       \
                                                CvSize size, double* norm ))             \
@@ -400,7 +400,7 @@ IPCVAPI_EX( CvStatus, icvNormDiff_L1_##flavor##_C1R,                            
                                                const srctype* img2, int imgstep2,       \
                                                CvSize size, double* norm ))             \
 IPCVAPI_EX( CvStatus, icvNormDiff_L2_##flavor##_C1R,                                    \
-           "ippiNormDiff_L2_" #flavor "_C1R", CV_PLUGINS1(CV_PLUGIN_IPPI),              \
+           "ippiNormDiff_L2_" #flavor "_C1R", 0/*CV_PLUGINS1(CV_PLUGIN_IPPI)*/,         \
                                              ( const srctype* img1, int imgstep1,       \
                                                const srctype* img2, int imgstep2,       \
                                                CvSize size, double* norm ))
