@@ -1055,7 +1055,8 @@ int cvCreateTrainingSamplesFromInfo( const char* infoname, const char* vecfilena
             error = ( fscanf( info, "%d %d %d %d", &x, &y, &width, &height ) != 4 );
             if( error ) break;
             cvSetImageROI( src, cvRect( x, y, width, height ) );
-            cvResize( src, sample );
+            cvResize( src, sample, width >= sample->width &&
+                      height >= sample->height ? CV_INTER_AREA : CV_INTER_LINEAR );
             
             if( showsamples )
             {

@@ -487,7 +487,7 @@ int icvGetHaarTrainingData( CvHaarTrainingData* data, int first, int count,
  * Background reading process must be initialized before call.
  */
 int icvGetHaarTrainingDataFromBG( CvHaarTrainingData* data, int first, int count,
-                                  CvIntHaarClassifier* cascade, int* consumed );
+                                  CvIntHaarClassifier* cascade, double* acceptance_ratio );
 
 typedef struct CvVecFile
 {
