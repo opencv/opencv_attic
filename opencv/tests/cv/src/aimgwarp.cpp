@@ -45,7 +45,7 @@ static const int imgwarp_depths[] = { CV_8U, CV_16U, CV_32F, -1 };
 static const int imgwarp_channels[] = { 1, 3, 4, -1 };
 static const CvSize imgwarp_sizes[] = {{320, 240}, {1024,768}, {-1,-1}};
 
-static const double imgwarp_resize_coeffs[] = { 0.5, 0.333, 2, 2.9, -1 };
+static const double imgwarp_resize_coeffs[] = { 0.5, 0.333, 2, 2.9 };
 static const char* imgwarp_resize_methods[] = { "nearest", "linear", "cubic", "area", 0 };
 static const char* imgwarp_resize_param_names[] = { "method", "coeff", "size", "channels", "depth", 0 };
 
@@ -263,14 +263,8 @@ int CV_ResizeTest::write_default_params( CvFileStorage* fs )
     
     if( ts->get_testing_mode() == CvTS::TIMING_MODE )
     {
-        int i;
         start_write_param( fs );
-
-        cvStartWriteStruct( fs, "coeff", CV_NODE_SEQ+CV_NODE_FLOW );
-        for( i = 0; imgwarp_resize_coeffs[i] > 0; i++ )
-            cvWriteReal( fs, 0, imgwarp_resize_coeffs[i] );
-        cvEndWriteStruct(fs);
-
+        write_real_list( fs, "coeff", imgwarp_resize_coeffs, CV_DIM(imgwarp_resize_coeffs) );
         write_string_list( fs, "method", imgwarp_resize_methods );
     }
 
@@ -463,15 +457,14 @@ int CV_WarpAffineTest::write_default_params( CvFileStorage* fs )
     
     if( ts->get_testing_mode() == CvTS::TIMING_MODE )
     {
-        int i, j;
+        int i;
         start_write_param( fs );
 
         cvStartWriteStruct( fs, "rotate_scale", CV_NODE_SEQ+CV_NODE_FLOW );
         for( i = 0; imgwarp_affine_rotate_scale[i][0] >= 0; i++ )
         {
             cvStartWriteStruct( fs, 0, CV_NODE_SEQ+CV_NODE_FLOW );
-            for( j = 0; j < 4; j++ )
-                cvWriteReal( fs, 0, imgwarp_affine_rotate_scale[i][j] );
+            cvWriteRawData( fs, imgwarp_affine_rotate_scale[i], 4, "d" );
             cvEndWriteStruct(fs);
         }
         cvEndWriteStruct(fs);
@@ -512,7 +505,7 @@ void CV_WarpAffineTest::print_timing_params( int test_case_idx, char* ptr, int p
     assert( node && CV_NODE_IS_SEQ(node->tag) );
     cvReadRawData( ts->get_file_storage(), node, coeffs, "4d" );
     
-    sprintf( ptr, "fx=%.2f,fy=%.2f,angle=%.1fdeg,scale=%.1f", coeffs[0], coeffs[1], coeffs[2], coeffs[3] );
+    sprintf( ptr, "fx=%.2f,fy=%.2f,angle=%.1fdeg,scale=%.1f,", coeffs[0], coeffs[1], coeffs[2], coeffs[3] );
     ptr += strlen(ptr);
     params_left -= 4;
 
@@ -730,15 +723,14 @@ int CV_WarpPerspectiveTest::write_default_params( CvFileStorage* fs )
     
     if( ts->get_testing_mode() == CvTS::TIMING_MODE )
     {
-        int i, j;
+        int i;
         start_write_param( fs );
 
         cvStartWriteStruct( fs, "shift_vtx", CV_NODE_SEQ+CV_NODE_FLOW );
         for( i = 0; imgwarp_perspective_shift_vtx[i][0] >= 0; i++ )
         {
             cvStartWriteStruct( fs, 0, CV_NODE_SEQ+CV_NODE_FLOW );
-            for( j = 0; j < 8; j++ )
-                cvWriteReal( fs, 0, imgwarp_perspective_shift_vtx[i][j] );
+            cvWriteRawData( fs, imgwarp_perspective_shift_vtx[i], 8, "d" );
             cvEndWriteStruct(fs);
         }
         cvEndWriteStruct(fs);

@@ -187,6 +187,8 @@ protected:
     void write_string_list( CvFileStorage* fs, const char* paramname, const char** val, int count=-1 );
     void write_int_list( CvFileStorage* fs, const char* paramname, const int* val,
                          int count, int stop_value=INT_MIN );
+    void write_real_list( CvFileStorage* fs, const char* paramname, const double* val,
+                          int count, double stop_value=DBL_MIN );
     void start_write_param( CvFileStorage* fs );
 
     // returns the specified parameter from the current parameter tuple

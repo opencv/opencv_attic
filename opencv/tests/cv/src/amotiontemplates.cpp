@@ -41,6 +41,13 @@
 
 #include "cvtest.h"
 
+static const int motempl_silh_ratio[] = { 10, 50 };
+static const int motempl_duration[] = { 200, 2000 };
+static const int motempl_gradient_aperture[] = { 3, 5 };
+static const char* motempl_update_param_names[] = { "silh_ratio", "duration", "size", 0 };
+static const char* motempl_gradient_param_names[] = { "silh_ratio", "duration", "aperture", "size", 0 };
+static const char* motempl_global_param_names[] = { "silh_ratio", "duration", "size", 0 };
+static const CvSize motempl_sizes[] = {{320, 240}, {720,480}, {-1,-1}};
 
 ///////////////////// base MHI class ///////////////////////
 class CV_MHIBaseTest : public CvArrTest
@@ -49,11 +56,16 @@ public:
     CV_MHIBaseTest( const char* test_name, const char* test_funcs );
 
 protected:
+    int write_default_params(CvFileStorage* fs);
     void get_test_array_types_and_sizes( int test_case_idx, CvSize** sizes, int** types );
+    void get_timing_test_array_types_and_sizes( int test_case_idx, CvSize** sizes, int** types,
+                                                CvSize** whole_sizes, bool *are_images );
+    void print_timing_params( int test_case_idx, char* ptr, int params_left );
     void get_minmax_bounds( int i, int j, int type, CvScalar* low, CvScalar* high );
     int prepare_test_case( int test_case_idx );
     double timestamp, duration, max_log_duration;
     int mhi_i, mhi_ref_i;
+    double silh_ratio;
 };
 
 
@@ -63,8 +75,30 @@ CV_MHIBaseTest::CV_MHIBaseTest( const char* test_name, const char* test_funcs )
     timestamp = duration = 0;
     max_log_duration = 9;
     mhi_i = mhi_ref_i = -1;
+    
+    size_list = whole_size_list = strcmp( test_funcs, "" ) == 0 ? motempl_sizes : 0;
+    depth_list = 0;
+    cn_list = 0;
+    default_timing_param_names = 0;
 
-    support_testing_modes = CvTS::CORRECTNESS_CHECK_MODE; // for now disable the timing test
+    silh_ratio = 0.25;
+}
+
+
+int CV_MHIBaseTest::write_default_params( CvFileStorage* fs )
+{
+    int code = CvArrTest::write_default_params( fs );
+    if( code < 0 )
+        return code;
+    
+    if( ts->get_testing_mode() == CvTS::TIMING_MODE && strcmp(tested_functions, "") == 0 )
+    {
+        start_write_param( fs );        
+        write_int_list( fs, "silh_ratio", motempl_silh_ratio, CV_DIM(motempl_silh_ratio) );
+        write_int_list( fs, "duration", motempl_duration, CV_DIM(motempl_duration) );
+    }
+
+    return code;
 }
 
 
@@ -73,7 +107,7 @@ void CV_MHIBaseTest::get_minmax_bounds( int i, int j, int type, CvScalar* low, C
     CvArrTest::get_minmax_bounds( i, j, type, low, high );
     if( i == INPUT && CV_MAT_DEPTH(type) == CV_8U )
     {
-        *low = cvScalarAll(-4);
+        *low = cvScalarAll(cvRound(-1./silh_ratio)+2.);
         *high = cvScalarAll(2);
     }
     else if( i == mhi_i || i == mhi_ref_i )
@@ -97,24 +131,49 @@ void CV_MHIBaseTest::get_test_array_types_and_sizes( int test_case_idx,
 }
 
 
+void CV_MHIBaseTest::get_timing_test_array_types_and_sizes( int test_case_idx,
+            CvSize** sizes, int** types, CvSize** whole_sizes, bool *are_images )
+{
+    CvArrTest::get_timing_test_array_types_and_sizes( test_case_idx, sizes, types,
+                                                      whole_sizes, are_images );
+    types[INPUT][0] = CV_8UC1;
+    types[mhi_i][0] = CV_32FC1;
+    duration = cvReadInt( find_timing_param( "duration" ), 500 );
+    silh_ratio = cvReadInt( find_timing_param( "silh_ratio" ), 25 )*0.01;
+    timestamp = duration;
+}
+
+
+void CV_MHIBaseTest::print_timing_params( int test_case_idx, char* ptr, int params_left )
+{
+    sprintf( ptr, "ratio=%d%%,duration=%dms,", cvRound(silh_ratio*100), cvRound(duration) );
+    ptr += strlen(ptr);
+    params_left -= 2;
+
+    CvArrTest::print_timing_params( test_case_idx, ptr, params_left );
+}
+
+
 int CV_MHIBaseTest::prepare_test_case( int test_case_idx )
 {
     int code = CvArrTest::prepare_test_case( test_case_idx );
     if( code > 0 )
     {
         CvMat* mat = &test_mat[mhi_i][0];
-        CvMat* mat0 = &test_mat[mhi_ref_i][0];
         cvTsAdd( mat, cvScalarAll(1.), 0, cvScalarAll(0.), cvScalarAll(duration), mat, 0 ); 
         cvTsMinMaxS( mat, 0, mat, CV_TS_MAX );
-        if( mhi_i != mhi_ref_i )
+        if( ts->get_testing_mode() == CvTS::CORRECTNESS_CHECK_MODE && mhi_i != mhi_ref_i )
+        {
+            CvMat* mat0 = &test_mat[mhi_ref_i][0];
             cvTsCopy( mat, mat0 );
+        }
     }
 
     return code;
 }
 
 
-CV_MHIBaseTest mhi_base_test( "", "" );
+CV_MHIBaseTest mhi_base_test( "mhi", "" );
 
 
 ///////////////////// update motion history ////////////////////////////
@@ -157,6 +216,8 @@ CV_UpdateMHITest::CV_UpdateMHITest()
     test_array[INPUT_OUTPUT].push(NULL);
     test_array[REF_INPUT_OUTPUT].push(NULL);
     mhi_i = INPUT_OUTPUT; mhi_ref_i = REF_INPUT_OUTPUT;
+
+    default_timing_param_names = motempl_update_param_names;
 }
 
 
@@ -260,9 +321,14 @@ public:
 
 protected:
     void get_test_array_types_and_sizes( int test_case_idx, CvSize** sizes, int** types );
+    void get_timing_test_array_types_and_sizes( int test_case_idx, CvSize** sizes, int** types,
+                                                CvSize** whole_sizes, bool *are_images );
+    void print_timing_params( int test_case_idx, char* ptr, int params_left );
     double get_success_error_level( int test_case_idx, int i, int j );
     void run_func();
     void prepare_to_validation( int );
+    int write_default_params(CvFileStorage* fs);
+
     double delta1, delta2, delta_range_log;
     int aperture_size;
 };
@@ -280,6 +346,24 @@ CV_MHIGradientTest::CV_MHIGradientTest()
     delta1 = delta2 = 0;
     aperture_size = 0;
     delta_range_log = 4;
+
+    default_timing_param_names = motempl_gradient_param_names;
+}
+
+
+int CV_MHIGradientTest::write_default_params( CvFileStorage* fs )
+{
+    int code = CvArrTest::write_default_params( fs );
+    if( code < 0 )
+        return code;
+    
+    if( ts->get_testing_mode() == CvTS::TIMING_MODE )
+    {
+        start_write_param( fs );        
+        write_int_list( fs, "aperture", motempl_gradient_aperture, CV_DIM(motempl_gradient_aperture) );
+    }
+
+    return code;
 }
 
 
@@ -295,6 +379,29 @@ void CV_MHIGradientTest::get_test_array_types_and_sizes( int test_case_idx, CvSi
     aperture_size = (cvTsRandInt(rng)%3)*2+3;
     //duration = exp(cvTsRandReal(rng)*max_log_duration);
     //timestamp = duration + cvTsRandReal(rng)*30.-10.;
+}
+
+
+void CV_MHIGradientTest::get_timing_test_array_types_and_sizes( int test_case_idx,
+            CvSize** sizes, int** types, CvSize** whole_sizes, bool *are_images )
+{
+    CV_MHIBaseTest::get_timing_test_array_types_and_sizes( test_case_idx, sizes, types,
+                                                           whole_sizes, are_images );
+    types[OUTPUT][0] = CV_8UC1;
+    types[OUTPUT][1] = CV_32FC1;
+    aperture_size = cvReadInt( find_timing_param( "aperture" ), 3 );
+    delta1 = duration*0.02;
+    delta2 = duration*0.2;
+}
+
+
+void CV_MHIGradientTest::print_timing_params( int test_case_idx, char* ptr, int params_left )
+{
+    sprintf( ptr, "aperture=%d,", aperture_size );
+    ptr += strlen(ptr);
+    params_left--;
+
+    CV_MHIBaseTest::print_timing_params( test_case_idx, ptr, params_left );
 }
 
 
@@ -409,11 +516,12 @@ public:
 
 protected:
     void get_test_array_types_and_sizes( int test_case_idx, CvSize** sizes, int** types );
+    void get_timing_test_array_types_and_sizes( int test_case_idx, CvSize** sizes, int** types,
+                                                CvSize** whole_sizes, bool *are_images );
     void get_minmax_bounds( int i, int j, int type, CvScalar* low, CvScalar* high );
     double get_success_error_level( int test_case_idx, int i, int j );
     int validate_test_results( int test_case_idx );
     void run_func();
-    double timestamp, duration;
     double angle, min_angle, max_angle;
 };
 
@@ -428,6 +536,8 @@ CV_MHIGlobalOrientTest::CV_MHIGlobalOrientTest()
     test_array[OUTPUT].push(NULL);
     test_array[REF_OUTPUT].push(NULL);
     min_angle = max_angle = 0;
+
+    default_timing_param_names = motempl_global_param_names;
 }
 
 
@@ -453,6 +563,16 @@ void CV_MHIGlobalOrientTest::get_test_array_types_and_sizes( int test_case_idx, 
     max_angle += 0.1;
     duration = exp(cvTsRandReal(rng)*max_log_duration);
     timestamp = duration + cvTsRandReal(rng)*30.-10.;
+}
+
+
+void CV_MHIGlobalOrientTest::get_timing_test_array_types_and_sizes( int test_case_idx,
+                CvSize** sizes, int** types, CvSize** whole_sizes, bool *are_images )
+{
+    CV_MHIBaseTest::get_timing_test_array_types_and_sizes( test_case_idx, sizes, types,
+                                                           whole_sizes, are_images );
+    types[INPUT][1] = CV_8UC1;
+    types[INPUT][2] = CV_32FC1;
 }
 
 
