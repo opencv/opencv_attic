@@ -207,7 +207,7 @@ Linux
      compile and run simple c examples at
      /usr/local/share/opencv/samples, e.g.:
 
-     g++ `opencv-config --cxxflags` -o morphology morphology.c `opencv-config --libs`.
+     g++ `pkg-config --cflags opencv` -o morphology morphology.c `pkg-config --libs opencv`
      Plain gcc won't work because of unresolved c++-specific symbols (located in highgui?)
    
 

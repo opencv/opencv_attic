@@ -30,6 +30,9 @@ AC_PROG_RANLIB
 AM_DISABLE_STATIC
 AM_PROG_LIBTOOL
 
+
+os_name = `uname`
+
 dnl Add compiler-specific optimization flags
 dnl Check whether to include debugging code
 
@@ -90,7 +93,7 @@ have_jpeg=no
 AC_CHECK_HEADER(jpeglib.h,
     AC_CHECK_LIB(jpeg, jpeg_destroy_decompress,
     [have_jpeg=yes
-    AC_DEFINE(HAVE_JPEG,,[IJG JPEG codec library is present])
+    AC_DEFINE(HAVE_JPEG,,[IJG JPEG codec])
     IMAGELIBS="$IMAGELIBS -ljpeg"]))
 
 have_zlib=no
@@ -98,7 +101,7 @@ have_png=no
 AC_CHECK_HEADER(zlib.h,
     AC_CHECK_LIB(z, gzopen,
     [have_zlib=yes
-    AC_DEFINE(HAVE_ZLIB,,[LZ77 compression/decompression library is present (used for PNG)])
+    AC_DEFINE(HAVE_ZLIB,,[LZ77 compression/decompression library (used for PNG)])
     IMAGELIBS="$IMAGELIBS -lz -lm"
     LIBS="$LIBS -lz -lm"]))
     
@@ -108,7 +111,7 @@ AC_CHECK_HEADER([libpng/png.h], AC_DEFINE(HAVE_LIBPNG_PNG_H,,[libpng/png.h needs
 if test x$ac_cv_header_png_h = xyes -o x$ac_cv_header_libpng_png_h = xyes; then
     AC_CHECK_LIB(png12, png_read_image,
     [have_png=yes
-    AC_DEFINE(HAVE_PNG,,[PNG codec library is present])
+    AC_DEFINE(HAVE_PNG,,[PNG codec])
     IMAGELIBS="-lpng12 $IMAGELIBS"
     LIBS="-lpng12 $LIBS"
     AC_CHECK_FUNCS(png_get_valid png_set_tRNS_to_alpha)])
@@ -118,7 +121,7 @@ have_tiff=no
 AC_CHECK_HEADER(tiff.h,
     AC_CHECK_LIB(tiff, TIFFReadRGBAStrip,
     [have_tiff=yes
-    AC_DEFINE(HAVE_TIFF,,[TIFF codec library is present])
+    AC_DEFINE(HAVE_TIFF,,[TIFF codec])
     IMAGELIBS="$IMAGELIBS -ltiff"
     LIBS="$LIBS -ltiff"]))
 
@@ -132,7 +135,7 @@ dnl ****************** GTK+ 2.x (or later) *********************
 dnl 
 
 PKG_CHECK_MODULES(GTK, "gtk+-2.0 gdk-pixbuf-2.0", [have_gtk=yes
-                  AC_DEFINE(HAVE_GTK,,[GTK+ 2.x toolkit is present])], have_gtk=no )
+                  AC_DEFINE(HAVE_GTK,,[GTK+ 2.x toolkit])], have_gtk=no )
 AC_SUBST(GTK_CFLAGS)
 AC_SUBST(GTK_LIBS)
 
@@ -147,7 +150,7 @@ have_ffmpeg=no
 AC_CHECK_HEADER(ffmpeg/avcodec.h,
     AC_CHECK_LIB(avcodec, avcodec_decode_video,
     [have_ffmpeg=yes
-    AC_DEFINE(HAVE_FFMPEG,,[FFMpeg codec libs are present])
+    AC_DEFINE(HAVE_FFMPEG,,[FFMpeg video codecs library])
     FFMPEGLIBS="-lavcodec"]))
 
 AC_SUBST(FFMPEGLIBS)
@@ -161,17 +164,27 @@ IEEE1394LIBS=""
 have_raw1394=no
 have_dc1394=no
 AC_CHECK_HEADER(libraw1394/raw1394.h,
-    AC_CHECK_LIB(raw1394, raw1394_new_handle, have_raw1394=yes))
+    AC_CHECK_LIB(raw1394, raw1394_new_handle, [have_raw1394=yes
+        LIBS="-lm -lraw1394 $LIBS"]))
 
 if test x$have_raw1394=xyes; then
     AC_CHECK_HEADER(libdc1394/dc1394_control.h,
-        AC_CHECK_LIB(dc1394_control, dc1394_get_camera_nodes, [have_dc1394=yes
-        AC_DEFINE(HAVE_DC1394,,[IEEE1394 capturing libraries are present])
-        IEEE1394LIBS="-lraw1394 -ldc1394_control"])
+        AC_CHECK_LIB(dc1394_control, dc1394_camera_on, [have_dc1394=yes
+        AC_DEFINE(HAVE_DC1394,,[IEEE1394 capturing support])
+        IEEE1394LIBS="-lm -lraw1394 -ldc1394_control"]))
 fi
 
 LIBS="$SAVELIBS"
 AC_SUBST(IEEE1394LIBS)
+
+dnl
+dnl ****************** V4L Support **************************
+dnl
+have_v4l=no
+if test x$os_name=xLinux; then
+    AC_DEFINE(HAVE_CAMV4L,,[V4L capturing support])
+    have_v4l=yes
+fi
 
 #CXXOPENMP="no"
 #
@@ -189,7 +202,7 @@ AC_SUBST(DEBUG)
 AC_OUTPUT(
 Makefile
 opencv.pc
-OpenCV.spec
+opencv.spec
 docs/Makefile
 data/Makefile
 cxcore/Makefile
@@ -221,16 +234,17 @@ apps/haartraining/src/Makefile
 echo "
 Configuration:
     Compiler:                 ${CXX} 
-        CXXFLAGS:                 ${CXXFLAGS}
+    CXXFLAGS:                 ${CXXFLAGS}
 
-        Install path:             ${prefix}
+    Install path:             ${prefix}
     
-        Use gtk+ 2.x:             ${have_gtk}
-        Use libjpeg:              ${have_jpeg}
-        Use zlib:                 ${have_zlib}
-        Use libpng:               ${have_png}
-        Use libtiff:              ${have_tiff}
-        Use ffmpeg:               ${have_ffmpeg}
-        Use dc1394 & raw1394:     ${have_dc1394}
+    Use gtk+ 2.x:             ${have_gtk}
+    Use libjpeg:              ${have_jpeg}
+    Use zlib:                 ${have_zlib}
+    Use libpng:               ${have_png}
+    Use libtiff:              ${have_tiff}
+    Use ffmpeg:               ${have_ffmpeg}
+    Use dc1394 & raw1394:     ${have_dc1394}
+    Use v4l:                  ${have_v4l}
 Now run make...
 "

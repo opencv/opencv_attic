@@ -287,8 +287,8 @@ static int icvGrabFrameCAM_V4L( CvCaptureCAM_V4L* capture ){
 };
 
 static IplImage* icvRetrieveFrameCAM_V4L( CvCaptureCAM_V4L* capture ){
-   char * src;
-   char * dst;
+   char* src;
+   char* dst;
    if (capture->mmap_buffer>(char *)1L) {
       capture->vmmap.frame=syncFrame;
       ioctl(capture->camera_fd, VIDIOCSYNC, &capture->vmmap.frame);
@@ -296,14 +296,15 @@ static IplImage* icvRetrieveFrameCAM_V4L( CvCaptureCAM_V4L* capture ){
       src += capture->vmbuf.offsets[capture->vmmap.frame];
       //capture->vmmap.frame = (capture->vmmap.frame+1)%capture->vmbuf.frames;
    }
-   else {
-      if(capture->capture_buffer )
-       src = (char *)capture->capture_buffer;
-   }
+   else if(capture->capture_buffer )
+      src = (char *)capture->capture_buffer;
+   else
+      return 0;   
+
    if (capture->vpic.palette == VIDEO_PALETTE_RGB24) { 
-    dst = capture->frame.imageData;
-        memcpy(dst,src,capture->frame.imageSize);
-        return &capture->frame;
+      dst = capture->frame.imageData;
+      memcpy(dst,src,capture->frame.imageSize);
+      return &capture->frame;
    }
    return 0;
 };
@@ -365,10 +366,10 @@ static void icvSetVideoSize( CvCaptureCAM_V4L* capture, int w, int h) {
 static int    icvSetPropertyCAM_V4L( CvCaptureCAM_V4L* capture, int property_id, double value ){
    switch (property_id) {
        case CV_CAP_PROP_FRAME_WIDTH:
-     icvSetVideoSize( capture, value, 0);
+         icvSetVideoSize( capture, cvRound(value), 0);
          break;
        case CV_CAP_PROP_FRAME_HEIGHT:
-     icvSetVideoSize( capture, 0, value);
+         icvSetVideoSize( capture, 0, cvRound(value));
          break;
    }
    return 0;

@@ -200,8 +200,7 @@ CV_IMPL  float  cvCbrt( float value )
     return(fr);
 }
 
-
-static const double _0_5 = 0.5, _1_5 = 1.5;
+//static const double _0_5 = 0.5, _1_5 = 1.5;
 
 IPCVAPI_IMPL( CvStatus, icvInvSqrt_32f, (const float *src, float *dst, int len), (src, dst, len) )
 {
@@ -210,54 +209,8 @@ IPCVAPI_IMPL( CvStatus, icvInvSqrt_32f, (const float *src, float *dst, int len),
     if( !(src && dst && len >= 0) )
         return CV_BADFACTOR_ERR;
 
-    for( ; i <= len - 4; i += 4 )
-    {
-        float x0_, x1_;
-        double x0, x1, x2, x3, y0, y1, y2, y3;
-
-        *((unsigned*)&x0_) = (_CV_SQRT_MAGIC - ((unsigned*)src)[i]) >> 1;
-        *((unsigned*)&x1_) = (_CV_SQRT_MAGIC - ((unsigned*)src)[i+1]) >> 1;
-        y0 = src[i] * _0_5;
-        y1 = src[i+1] * _0_5;
-        x0 = x0_ * (_1_5 - y0 * x0_ * x0_);
-        x1 = x1_ * (_1_5 - y1 * x1_ * x1_);
-
-        *((unsigned*)&x0_) = (_CV_SQRT_MAGIC - ((unsigned*)src)[i+2]) >> 1;
-        *((unsigned*)&x1_) = (_CV_SQRT_MAGIC - ((unsigned*)src)[i+3]) >> 1;
-        y2 = src[i+2] * _0_5;
-        y3 = src[i+3] * _0_5;
-        x2 = x0_ * (_1_5 - y2 * x0_ * x0_);
-        x3 = x1_ * (_1_5 - y3 * x1_ * x1_);
-
-        x0 *= _1_5 - y0 * x0 * x0;
-        x1 *= _1_5 - y1 * x1 * x1;
-        x2 *= _1_5 - y2 * x2 * x2;
-        x3 *= _1_5 - y3 * x3 * x3;
-
-        x0 *= (_1_5 - y0 * x0 * x0);
-        x1 *= (_1_5 - y1 * x1 * x1);
-        
-        dst[i] = (float)x0;
-        dst[i+1] = (float)x1;
-        
-        x2 *= (_1_5 - y2 * x2 * x2);
-        x3 *= (_1_5 - y3 * x3 * x3);
-        
-        dst[i+2] = (float)x2;
-        dst[i+3] = (float)x3;
-    }
-
     for( ; i < len; i++ )
-    {
-        float x0_;
-        double x0, y0;
-
-        *((unsigned *)&x0_) = (_CV_SQRT_MAGIC - ((unsigned*)src)[i]) >> 1;
-        y0 = src[i] * _0_5;
-        x0 = x0_ * (_1_5 - y0 * x0_ * x0_);
-        x0 *= _1_5 - y0 * x0 * x0;
-        dst[i] = (float)(x0 * (_1_5 - y0 * x0 * x0));
-    }
+        dst[i] = (float)(1.f/sqrt(src[i]));
 
     return CV_OK;
 }
@@ -270,59 +223,8 @@ IPCVAPI_IMPL( CvStatus, icvSqrt_32f, (const float *src, float *dst, int len), (s
     if( !(src && dst && len >= 0) )
         return CV_BADFACTOR_ERR;
 
-#if 1 /* In recent days standard sqrt works pretty fast */
     for( ; i < len; i++ )
         dst[i] = (float)sqrt(src[i]);
-#else
-    for( ; i <= len - 4; i += 4 )
-    {
-        float x0_, x1_;
-        double x0, x1, x2, x3, y0, y1, y2, y3;
-
-        *((unsigned*)&x0_) = (_CV_SQRT_MAGIC - ((unsigned*)src)[i]) >> 1;
-        *((unsigned*)&x1_) = (_CV_SQRT_MAGIC - ((unsigned*)src)[i+1]) >> 1;
-        y0 = src[i] * 0.5;
-        y1 = src[i+1] * 0.5;
-        x0 = x0_ * (1.5 - y0 * x0_ * x0_);
-        x1 = x1_ * (1.5 - y1 * x1_ * x1_);
-
-        *((unsigned*)&x0_) = (_CV_SQRT_MAGIC - ((unsigned*)src)[i+2]) >> 1;
-        *((unsigned*)&x1_) = (_CV_SQRT_MAGIC - ((unsigned*)src)[i+3]) >> 1;
-        y2 = src[i+2] * 0.5;
-        y3 = src[i+3] * 0.5;
-        x2 = x0_ * (1.5 - y2 * x0_ * x0_);
-        x3 = x1_ * (1.5 - y3 * x1_ * x1_);
-
-        x0 *= 1.5 - y0 * x0 * x0;
-        x1 *= 1.5 - y1 * x1 * x1;
-        x2 *= 1.5 - y2 * x2 * x2;
-        x3 *= 1.5 - y3 * x3 * x3;
-
-        x0 = (x0 * src[i]) * (1.5 - y0 * x0 * x0);
-        x1 = (x1 * src[i+1]) * (1.5 - y1 * x1 * x1);
-        
-        dst[i] = (float)x0;
-        dst[i+1] = (float)x1;
-        
-        x2 = (x2 * src[i+2]) * (1.5 - y2 * x2 * x2);
-        x3 = (x3 * src[i+3]) * (1.5 - y3 * x3 * x3);
-        
-        dst[i+2] = (float)x2;
-        dst[i+3] = (float)x3;
-    }
-
-    for( ; i < len; i++ )
-    {
-        float x0_;
-        double x0, y0;
-
-        *((unsigned *)&x0_) = (_CV_SQRT_MAGIC - ((unsigned*)src)[i]) >> 1;
-        y0 = src[i] * 0.5;
-        x0 = x0_ * (1.5 - y0 * x0_ * x0_);
-        x0 *= 1.5 - y0 * x0 * x0;
-        dst[i] = (float)((x0 * src[i]) * (1.5 - y0 * x0 * x0));
-    }
-#endif
 
     return CV_OK;
 }

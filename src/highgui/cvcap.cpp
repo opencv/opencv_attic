@@ -1003,8 +1003,8 @@ static void icvCloseAVI_FFMPEG( CvCaptureAVI_FFMPEG* capture )
     if( capture->avctx )
     {
         avcodec_close( capture->avctx );
-        cvFree( (void**)&capture->avctx );
-        //capture->avctx = 0;
+        av_free( capture->avctx );
+        capture->avctx = 0;
     }
 
     if( capture->file )
@@ -1013,11 +1013,8 @@ static void icvCloseAVI_FFMPEG( CvCaptureAVI_FFMPEG* capture )
         capture->file = 0;
     }
 
-    /*if( capture->picture )
-    {
-        free( capture->picture );
-        capture->picture = 0;
-    }*/
+    /*if( capture->picture.data[0] )
+        cvFree( (void**)&capture->picture.data[0] );*/
     
     if( capture->rgb_picture.data[0] )
         cvFree( (void**)&capture->rgb_picture.data[0] );
@@ -1037,10 +1034,6 @@ static int icvOpenAVI_FFMPEG( CvCaptureAVI_FFMPEG* capture, const char* filename
     int val;
     icvInitCapture_FFMPEG();
     
-    capture->file = fopen( filename, "rb" );
-    if(!capture->file)
-        return 0;
-
     capture->stream_index = -1;
     capture->file = fopen( filename, "rb" );
     if( !capture->file )
@@ -1191,8 +1184,7 @@ static int icvOpenAVI_FFMPEG( CvCaptureAVI_FFMPEG* capture, const char* filename
 
         if( capture->codec )
         {
-            capture->avctx = (AVCodecContext*)cvAlloc(sizeof(*capture->avctx));
-            memset( capture->avctx, 0, sizeof(*capture->avctx) );
+            capture->avctx = avcodec_alloc_context();
             capture->avctx->width = capture->frame_size.width;
             capture->avctx->height = capture->frame_size.height;
             capture->avctx->codec_tag = capture->codec_sub_fourcc;
@@ -1207,6 +1199,11 @@ static int icvOpenAVI_FFMPEG( CvCaptureAVI_FFMPEG* capture, const char* filename
                                 capture->avctx->width, capture->avctx->height ));
                 avpicture_fill( (AVPicture*)&capture->rgb_picture, capture->rgb_picture.data[0],
                                 PIX_FMT_BGR24, capture->avctx->width, capture->avctx->height );
+                /*capture->picture.data[0] = (uchar*)cvAlloc(
+                                avpicture_get_size( capture->avctx->pix_fmt,
+                                capture->avctx->width, capture->avctx->height ));
+                avpicture_fill( (AVPicture*)&capture->picture, capture->picture.data[0],
+                                capture->avctx->pix_fmt, capture->avctx->width, capture->avctx->height );*/
 
                 cvInitImageHeader( &capture->frame, cvSize( capture->avctx->width,
                                    capture->avctx->height ), 8, 3, 0, 4 );
@@ -1266,13 +1263,14 @@ static int icvGrabFrameAVI_FFMPEG( CvCaptureAVI_FFMPEG* capture )
 
                     ret = avcodec_decode_video( capture->avctx, &capture->picture,
                                                 &got_picture, (uchar*)capture->buffer, size );
-                    
-                    if( ret >= 0 && got_picture )
+                    if( got_picture )
                     {
                         capture->pos++;
                         return 1;
                     }
-                    return 0;
+                    //if( ret <= 0 )
+                    //   return 0;
+                    continue;   
                 }
                 else
                     skip( capture, size );
