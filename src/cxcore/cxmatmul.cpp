@@ -1252,56 +1252,83 @@ cvGEMM( const CvArr* Aarr, const CvArr* Barr, double alpha,
 *                                        cvTransform                                     *
 \****************************************************************************************/
 
-#define  ICV_DEF_TRANSFORM_CASE_C1( arrtype, temptype,              \
-                                  _cast_macro1_, _cast_macro2_ )    \
-for( i = 0; i < size.width; i++, src++, dst += dst_cn )             \
+#define  ICV_DEF_TRANSFORM_CASE_C1( arrtype, temptype, _ld_,        \
+                                   _cast_macro1_, _cast_macro2_ )   \
 {                                                                   \
-    const double* _mat = mat;                                       \
-    for( k = 0; k < dst_cn; k++, _mat += 2 )                        \
+    for( i = 0; i < size.width; i++, dst += dst_cn )                \
     {                                                               \
-        temptype t0 = _cast_macro1_(_mat[0]*src[0] + _mat[1]);      \
-        dst[k] = _cast_macro2_(t0);                                 \
+        const double* _mat = mat;                                   \
+        double v0 = _ld_(src[i]);                                   \
+        for( k = 0; k < dst_cn; k++, _mat += 2 )                    \
+        {                                                           \
+            temptype t0 = _cast_macro1_(_mat[0]*v0 + _mat[1]);      \
+            dst[k] = _cast_macro2_(t0);                             \
+        }                                                           \
     }                                                               \
+    src += size.width;                                              \
 }
 
 
-#define  ICV_DEF_TRANSFORM_CASE_C2( arrtype, temptype,              \
+#define  ICV_DEF_TRANSFORM_CASE_C2( arrtype, temptype, _ld_,        \
                                   _cast_macro1_, _cast_macro2_ )    \
-for( i = 0; i < size.width; i++, src += 2, dst += dst_cn )          \
+if( dst_cn == 2 )                                                   \
 {                                                                   \
-    const double* _mat = mat;                                       \
-    for( k = 0; k < dst_cn; k++, _mat += 3 )                        \
+    for( i = 0; i < size.width*2; i += 2 )                          \
     {                                                               \
-        temptype t0 = _cast_macro1_(_mat[0]*src[0] +                \
-                                    _mat[1]*src[1] + _mat[2]);      \
-        dst[k] = _cast_macro2_(t0);                                 \
+        double ft0, ft1;                                            \
+        temptype t0, t1;                                            \
+        ft0 = mat[0]*_ld_(src[i]) + mat[1]*_ld_(src[i+1]) + mat[2]; \
+        ft1 = mat[3]*_ld_(src[i]) + mat[4]*_ld_(src[i+1]) + mat[5]; \
+        t0 = _cast_macro1_(ft0);                                    \
+        t1 = _cast_macro1_(ft1);                                    \
+        dst[i] = _cast_macro2_(t0);                                 \
+        dst[i+1] = _cast_macro2_(t1);                               \
     }                                                               \
-}
+    src += size.width*2; dst += size.width*2;                       \
+}                                                                   \
+else                                                                \
+    for( i = 0; i < size.width; i++, src += 2, dst += dst_cn )      \
+    {                                                               \
+        const double* _mat = mat;                                   \
+        double v0 = _ld_(src[0]), v1 = src[1];                      \
+        for( k = 0; k < dst_cn; k++, _mat += 3 )                    \
+        {                                                           \
+            temptype t0 =                                           \
+                _cast_macro1_(_mat[0]*v0 + _mat[1]*v1 + _mat[2]);   \
+            dst[k] = _cast_macro2_(t0);                             \
+        }                                                           \
+    }
 
 
-#define  ICV_DEF_TRANSFORM_CASE_C3( arrtype, temptype,              \
+#define  ICV_DEF_TRANSFORM_CASE_C3( arrtype, temptype, _ld_,        \
                                   _cast_macro1_, _cast_macro2_ )    \
 if( dst_cn == 3 )                                                   \
-    for( i = 0; i < size.width; i++, src += 3, dst += 3 )           \
+{                                                                   \
+    for( i = 0; i < size.width*3; i += 3 )                          \
     {                                                               \
+        double ft0, ft1, ft2;                                       \
         temptype t0, t1, t2;                                        \
-        t0 = _cast_macro1_(mat[0]*src[0] + mat[1]*src[1] +          \
-                           mat[2]*src[2] + mat[3]);                 \
-        t1 = _cast_macro1_(mat[4]*src[0] + mat[5]*src[1] +          \
-                           mat[6]*src[2] + mat[7]);                 \
-        t2 = _cast_macro1_(mat[8]*src[0] + mat[9]*src[1] +          \
-                           mat[10]*src[2] + mat[11]);               \
-        dst[0] = _cast_macro2_(t0);                                 \
-        dst[1] = _cast_macro2_(t1);                                 \
-        dst[2] = _cast_macro2_(t2);                                 \
+        ft0 = mat[0]*_ld_(src[i]) + mat[1]*_ld_(src[i+1]) +         \
+              mat[2]*_ld_(src[i+2]) + mat[3];                       \
+        ft1 = mat[4]*_ld_(src[i]) + mat[5]*_ld_(src[i+1]) +         \
+              mat[6]*_ld_(src[i+2]) + mat[7];                       \
+        ft2 = mat[8]*_ld_(src[i]) + mat[9]*_ld_(src[i+1]) +         \
+              mat[10]*_ld_(src[i+2]) + mat[11];                     \
+        t0 = _cast_macro1_(ft0);                                    \
+        t1 = _cast_macro1_(ft1);                                    \
+        t2 = _cast_macro1_(ft2);                                    \
+        dst[i] = _cast_macro2_(t0);                                 \
+        dst[i+1] = _cast_macro2_(t1);                               \
+        dst[i+2] = _cast_macro2_(t2);                               \
     }                                                               \
+    src += size.width*3; dst += size.width*3;                       \
+}                                                                   \
 else if( dst_cn == 1 )                                              \
 {                                                                   \
     for( i = 0; i < size.width; i++, src += 3 )                     \
     {                                                               \
-        temptype t0;                                                \
-        t0 = _cast_macro1_(mat[0]*src[0] + mat[1]*src[1] +          \
-                           mat[2]*src[2] + mat[3]);                 \
+        temptype t0 = _cast_macro1_(mat[0]*_ld_(src[0]) +           \
+            mat[1]*_ld_(src[1]) + mat[2]*_ld_(src[2]) + mat[3]);    \
         dst[i] = _cast_macro2_(t0);                                 \
     }                                                               \
     dst += size.width;                                              \
@@ -1310,31 +1337,34 @@ else                                                                \
     for( i = 0; i < size.width; i++, src += 3, dst += dst_cn )      \
     {                                                               \
         const double* _mat = mat;                                   \
+        double v0=_ld_(src[0]), v1=_ld_(src[1]), v2=_ld_(src[2]);   \
         for( k = 0; k < dst_cn; k++, _mat += 4 )                    \
         {                                                           \
-            temptype t0 = _cast_macro1_(_mat[0]*src[0] +            \
-                _mat[1]*src[1] + _mat[2]*src[2] + _mat[3]);         \
+            temptype t0 = _cast_macro1_(_mat[0]*v0 +                \
+                    _mat[1]*v1 + _mat[2]*v2 + _mat[3]);             \
             dst[k] = _cast_macro2_(t0);                             \
         }                                                           \
     }
 
 
 
-#define  ICV_DEF_TRANSFORM_CASE_C4( arrtype, temptype,              \
+#define  ICV_DEF_TRANSFORM_CASE_C4( arrtype, temptype, _ld_,        \
                                   _cast_macro1_, _cast_macro2_ )    \
 for( i = 0; i < size.width; i++, src += 4, dst += dst_cn )          \
 {                                                                   \
     const double* _mat = mat;                                       \
+    double v0 = _ld_(src[0]), v1 = _ld_(src[1]),                    \
+           v2 = _ld_(src[2]), v3 = _ld_(src[3]);                    \
     for( k = 0; k < dst_cn; k++, _mat += 5 )                        \
     {                                                               \
-        temptype t0 =_cast_macro1_(_mat[0]*src[0] + _mat[1]*src[1] +\
-                        _mat[2]*src[2] + _mat[3]*src[3] + _mat[4] );\
+        temptype t0 =_cast_macro1_(_mat[0]*v0+_mat[1]*v1+           \
+                                   _mat[2]*v2+_mat[3]*v3+_mat[4]);  \
         dst[k] = _cast_macro2_(t0);                                 \
     }                                                               \
 }
 
 
-#define  ICV_DEF_TRANSFORM_FUNC( flavor, arrtype, temptype,         \
+#define  ICV_DEF_TRANSFORM_FUNC( flavor, arrtype, temptype, _ld_,   \
                                  _cast_macro1_, _cast_macro2_, cn  )\
 static CvStatus CV_STDCALL                                          \
 icvTransform_##flavor( const arrtype* src, int srcstep,             \
@@ -1346,7 +1376,7 @@ icvTransform_##flavor( const arrtype* src, int srcstep,             \
     for( ; size.height--; src += srcstep, dst += dststep )          \
     {                                                               \
         int i, k;                                                   \
-        ICV_DEF_TRANSFORM_CASE_C##cn( arrtype, temptype,            \
+        ICV_DEF_TRANSFORM_CASE_C##cn( arrtype, temptype, _ld_,      \
                                      _cast_macro1_, _cast_macro2_ ) \
     }                                                               \
                                                                     \
@@ -1354,35 +1384,35 @@ icvTransform_##flavor( const arrtype* src, int srcstep,             \
 }
 
 
-ICV_DEF_TRANSFORM_FUNC( 8u_C1R, uchar, int, cvRound, CV_CAST_8U, 1 )
-ICV_DEF_TRANSFORM_FUNC( 8u_C2R, uchar, int, cvRound, CV_CAST_8U, 2 )
-ICV_DEF_TRANSFORM_FUNC( 8u_C3R, uchar, int, cvRound, CV_CAST_8U, 3 )
-ICV_DEF_TRANSFORM_FUNC( 8u_C4R, uchar, int, cvRound, CV_CAST_8U, 4 )
+ICV_DEF_TRANSFORM_FUNC( 8u_C1R, uchar, int, CV_8TO32F, cvRound, CV_CAST_8U, 1 )
+ICV_DEF_TRANSFORM_FUNC( 8u_C2R, uchar, int, CV_8TO32F, cvRound, CV_CAST_8U, 2 )
+ICV_DEF_TRANSFORM_FUNC( 8u_C3R, uchar, int, CV_8TO32F, cvRound, CV_CAST_8U, 3 )
+ICV_DEF_TRANSFORM_FUNC( 8u_C4R, uchar, int, CV_8TO32F, cvRound, CV_CAST_8U, 4 )
 
-ICV_DEF_TRANSFORM_FUNC( 16u_C1R, ushort, int, cvRound, CV_CAST_16U, 1 )
-ICV_DEF_TRANSFORM_FUNC( 16u_C2R, ushort, int, cvRound, CV_CAST_16U, 2 )
-ICV_DEF_TRANSFORM_FUNC( 16u_C3R, ushort, int, cvRound, CV_CAST_16U, 3 )
-ICV_DEF_TRANSFORM_FUNC( 16u_C4R, ushort, int, cvRound, CV_CAST_16U, 4 )
+ICV_DEF_TRANSFORM_FUNC( 16u_C1R, ushort, int, CV_NOP, cvRound, CV_CAST_16U, 1 )
+ICV_DEF_TRANSFORM_FUNC( 16u_C2R, ushort, int, CV_NOP, cvRound, CV_CAST_16U, 2 )
+ICV_DEF_TRANSFORM_FUNC( 16u_C3R, ushort, int, CV_NOP, cvRound, CV_CAST_16U, 3 )
+ICV_DEF_TRANSFORM_FUNC( 16u_C4R, ushort, int, CV_NOP, cvRound, CV_CAST_16U, 4 )
 
-ICV_DEF_TRANSFORM_FUNC( 16s_C1R, short, int, cvRound, CV_CAST_16S, 1 )
-ICV_DEF_TRANSFORM_FUNC( 16s_C2R, short, int, cvRound, CV_CAST_16S, 2 )
-ICV_DEF_TRANSFORM_FUNC( 16s_C3R, short, int, cvRound, CV_CAST_16S, 3 )
-ICV_DEF_TRANSFORM_FUNC( 16s_C4R, short, int, cvRound, CV_CAST_16S, 4 )
+ICV_DEF_TRANSFORM_FUNC( 16s_C1R, short, int, CV_NOP, cvRound, CV_CAST_16S, 1 )
+ICV_DEF_TRANSFORM_FUNC( 16s_C2R, short, int, CV_NOP, cvRound, CV_CAST_16S, 2 )
+ICV_DEF_TRANSFORM_FUNC( 16s_C3R, short, int, CV_NOP, cvRound, CV_CAST_16S, 3 )
+ICV_DEF_TRANSFORM_FUNC( 16s_C4R, short, int, CV_NOP, cvRound, CV_CAST_16S, 4 )
 
-ICV_DEF_TRANSFORM_FUNC( 32s_C1R, int, int, cvRound, CV_NOP, 1 )
-ICV_DEF_TRANSFORM_FUNC( 32s_C2R, int, int, cvRound, CV_NOP, 2 )
-ICV_DEF_TRANSFORM_FUNC( 32s_C3R, int, int, cvRound, CV_NOP, 3 )
-ICV_DEF_TRANSFORM_FUNC( 32s_C4R, int, int, cvRound, CV_NOP, 4 )
+ICV_DEF_TRANSFORM_FUNC( 32s_C1R, int, int, CV_NOP, cvRound, CV_NOP, 1 )
+ICV_DEF_TRANSFORM_FUNC( 32s_C2R, int, int, CV_NOP, cvRound, CV_NOP, 2 )
+ICV_DEF_TRANSFORM_FUNC( 32s_C3R, int, int, CV_NOP, cvRound, CV_NOP, 3 )
+ICV_DEF_TRANSFORM_FUNC( 32s_C4R, int, int, CV_NOP, cvRound, CV_NOP, 4 )
 
-ICV_DEF_TRANSFORM_FUNC( 32f_C1R, float, double, CV_NOP, CV_CAST_32F, 1 )
-ICV_DEF_TRANSFORM_FUNC( 32f_C2R, float, double, CV_NOP, CV_CAST_32F, 2 )
-ICV_DEF_TRANSFORM_FUNC( 32f_C3R, float, double, CV_NOP, CV_CAST_32F, 3 )
-ICV_DEF_TRANSFORM_FUNC( 32f_C4R, float, double, CV_NOP, CV_CAST_32F, 4 )
+ICV_DEF_TRANSFORM_FUNC( 32f_C1R, float, double, CV_NOP, CV_NOP, CV_CAST_32F, 1 )
+ICV_DEF_TRANSFORM_FUNC( 32f_C2R, float, double, CV_NOP, CV_NOP, CV_CAST_32F, 2 )
+ICV_DEF_TRANSFORM_FUNC( 32f_C3R, float, double, CV_NOP, CV_NOP, CV_CAST_32F, 3 )
+ICV_DEF_TRANSFORM_FUNC( 32f_C4R, float, double, CV_NOP, CV_NOP, CV_CAST_32F, 4 )
 
-ICV_DEF_TRANSFORM_FUNC( 64f_C1R, double, double, CV_NOP, CV_CAST_64F, 1 )
-ICV_DEF_TRANSFORM_FUNC( 64f_C2R, double, double, CV_NOP, CV_CAST_64F, 2 )
-ICV_DEF_TRANSFORM_FUNC( 64f_C3R, double, double, CV_NOP, CV_CAST_64F, 3 )
-ICV_DEF_TRANSFORM_FUNC( 64f_C4R, double, double, CV_NOP, CV_CAST_64F, 4 )
+ICV_DEF_TRANSFORM_FUNC( 64f_C1R, double, double, CV_NOP, CV_NOP, CV_CAST_64F, 1 )
+ICV_DEF_TRANSFORM_FUNC( 64f_C2R, double, double, CV_NOP, CV_NOP, CV_CAST_64F, 2 )
+ICV_DEF_TRANSFORM_FUNC( 64f_C3R, double, double, CV_NOP, CV_NOP, CV_CAST_64F, 3 )
+ICV_DEF_TRANSFORM_FUNC( 64f_C4R, double, double, CV_NOP, CV_NOP, CV_CAST_64F, 4 )
 
 #define icvTransform_8s_C1R 0
 #define icvTransform_8s_C2R 0
@@ -2274,7 +2304,7 @@ cvCalcCovarMatrix( const CvArr** vecarr, int count,
     }
     else if( count != cov->rows )
         CV_ERROR( CV_StsUnmatchedSizes,
-        "The number of vectors does not Passed vector count and covariance matrix size do not match" );
+        "The vector count and covariance matrix size do not match" );
 
     CV_CALL( vecdata = (vec_data*)cvAlloc( count*sizeof(vecdata[0])));
 
