@@ -1145,77 +1145,64 @@ cvLoadHaarClassifierCascade( const char* directory, CvSize orig_window_size )
 
     __BEGIN__;
 
-    int n;
+    int i, n;
+    char* slash;
     char name[_MAX_PATH];
-
-    CvFileStorage* fs = NULL;
+    int size = 0;
+    char* ptr = 0;
 
     if( !directory )
         CV_ERROR( CV_StsNullPtr, "Null path is passed" );
 
-    CV_CALL( fs = cvOpenFileStorage( directory, 0, CV_STORAGE_READ ) );
-    if( fs )
+    n = strlen(directory)-1;
+    slash = directory[n] == '\\' || directory[n] == '/' ? "" : "/";
+
+    /* try to read the classifier from directory */
+    for( n = 0; ; n++ )
     {
-        /* read the classifier from .[xy]ml file */
-        CV_CALL( cascade = (CvHaarClassifierCascade*)cvReadByName( fs, NULL, "cascade"));
-        CV_CALL( cvReleaseFileStorage( &fs ) );
+        sprintf( name, "%s%s%d/AdaBoostCARTHaarClassifier.txt", directory, slash, n );
+        FILE* f = fopen( name, "rb" );
+        if( !f )
+            break;
+        fseek( f, 0, SEEK_END );
+        size += ftell( f ) + 1;
+        fclose(f);
+    }
+
+    if( n == 0 && slash[0] )
+    {
+        CV_CALL( cascade = (CvHaarClassifierCascade*)cvLoad( directory ));
         EXIT;
     }
-
-    /* read the classifier from directory */
-
-    /*if( !directory || strcmp( directory, "<default_face_cascade>" ) == 0 )
-    {
-        input_cascade = icvDefaultFaceCascade;
-        for( n = 0; input_cascade[n] != 0; n++ )
-            ;
-    }
-    else*/
-    {
-        int i, size = 0;
-        char* ptr;
-
-        for( n = 0; ; n++ )
-        {
-            sprintf( name, "%s/%d/AdaBoostCARTHaarClassifier.txt", directory, n );
-            FILE* f = fopen( name, "rb" );
-            if( !f )
-                break;
-            fseek( f, 0, SEEK_END );
-            size += ftell( f ) + 1;
-            fclose(f);
-        }
-
-        size += (n+1)*sizeof(char*);
-        CV_CALL( input_cascade = (const char**)cvAlloc( size ));
-        ptr = (char*)(input_cascade + n + 1);
-
-        for( i = 0; i < n; i++ )
-        {
-            sprintf( name, "%s/%d/AdaBoostCARTHaarClassifier.txt", directory, i );
-            FILE* f = fopen( name, "rb" );
-            if( !f )
-                CV_ERROR( CV_StsError, "" );
-            fseek( f, 0, SEEK_END );
-            size = ftell( f );
-            fseek( f, 0, SEEK_SET );
-            fread( ptr, 1, size, f );
-            fclose(f);
-            input_cascade[i] = ptr;
-            ptr += size;
-            *ptr++ = '\0';
-        }
-        input_cascade[n] = 0;
-    }
-
-    if( n == 0 )
+    else if( n == 0 )
         CV_ERROR( CV_StsBadArg, "Invalid path" );
+    
+    size += (n+1)*sizeof(char*);
+    CV_CALL( input_cascade = (const char**)cvAlloc( size ));
+    ptr = (char*)(input_cascade + n + 1);
 
+    for( i = 0; i < n; i++ )
+    {
+        sprintf( name, "%s/%d/AdaBoostCARTHaarClassifier.txt", directory, i );
+        FILE* f = fopen( name, "rb" );
+        if( !f )
+            CV_ERROR( CV_StsError, "" );
+        fseek( f, 0, SEEK_END );
+        size = ftell( f );
+        fseek( f, 0, SEEK_SET );
+        fread( ptr, 1, size, f );
+        fclose(f);
+        input_cascade[i] = ptr;
+        ptr += size;
+        *ptr++ = '\0';
+    }
+
+    input_cascade[n] = 0;
     cascade = icvLoadCascadeCART( input_cascade, n, orig_window_size );
 
     __END__;
 
-    if( input_cascade /*&& input_cascade != icvDefaultFaceCascade*/ )
+    if( input_cascade )
         cvFree( (void**)&input_cascade );
 
     if( cvGetErrStatus() < 0 )
