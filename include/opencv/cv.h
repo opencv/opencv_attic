@@ -10,7 +10,7 @@
 //                        Intel License Agreement
 //                For Open Source Computer Vision Library
 //
-// Copyright( C) 2000, Intel Corporation, all rights reserved.
+// Copyright (C) 2000, Intel Corporation, all rights reserved.
 // Third party copyrights are property of their respective owners.
 //
 // Redistribution and use in source and binary forms, with or without modification,
@@ -31,17 +31,38 @@
 // warranties of merchantability and fitness for a particular purpose are disclaimed.
 // In no event shall the Intel Corporation or contributors be liable for any direct,
 // indirect, incidental, special, exemplary, or consequential damages
-//(including, but not limited to, procurement of substitute goods or services;
+// (including, but not limited to, procurement of substitute goods or services;
 // loss of use, data, or profits; or business interruption) however caused
 // and on any theory of liability, whether in contract, strict liability,
-// or tort(including negligence or otherwise) arising in any way out of
+// or tort (including negligence or otherwise) arising in any way out of
 // the use of this software, even if advised of the possibility of such damage.
 //
 //M*/
 
+
 #ifndef _CV_H_
 #define _CV_H_
 
+#ifdef __IPL_H__
+#define HAVE_IPL /* On Windows IPL is needed by default */
+#endif
+
+#if defined(_CH_)
+#include <dlfcn.h>
+void *_ChCv_handle = _dlopen("libcv.dl", RTLD_LAZY);
+if(_ChCv_handle == NULL) {
+   fprintf(_stderr, "Error: dlopen(): %s\n", dlerror());
+   fprintf(_stderr, "       cannot get _ChCv_handle in cv.h\n");
+   exit(-1);
+} 
+void _dlclose_libcv(void) {
+  dlclose(_ChCv_handle);
+}
+_atexit(_dlclose_libcv);
+#endif
+
+
+#ifdef HAVE_IPL
 #ifndef _INC_WINDOWS
     #define CV_PRETEND_WINDOWS
     #define _INC_WINDOWS
@@ -52,931 +73,740 @@
 #ifdef CV_PRETEND_WINDOWS
     #undef _INC_WINDOWS
 #endif
-#include "cvpixelaccess.h"
+#endif
+
 #include "cvtypes.h"
 #include "cverror.h"
-
-/****************************************************************************************\
-*                                    Function definition                                 *
-\****************************************************************************************/
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
-/*F///////////////////////////////////////////////////////////////////////////////////////
-//    Name:    cvCreateImageHeader
-//    Purpose: allocates IplImage structure, initializes and returns it
-//    Context:
-//    Parameters:
-//      size - image size(width and height)
-//      depth- image depth
-//      channels - number of channels.
-//    Returns:
-//      created image header
-//    Notes:
-//      this call is short form of
-//         iplCreateImageHeader( channels, 0, depth, channels == 1 ? "GRAY" :
-//                               channels == 3 || channels == 4 ? "RGB" : "",
-//                               channels == 1 ? "GRAY" : channels == 3 ? "BGR" :
-//                               channels == 4 ? "BGRA" : "",
-//                               IPL_DATA_ORDER_PIXEL, IPL_ORIGIN_TL, 4,
-//                               size.width, size.height,
-//                               0,0,0,0);
-//F*/
+/****************************************************************************************\
+*                                     Allocation/deallocation                            *
+\****************************************************************************************/
+
+/* <malloc> wrapper.
+   If there is no enough memory the function
+   (as well as other OpenCV functions that call cvAlloc)
+   raises an error. */
+OPENCVAPI  void*  cvAlloc( int size );
+
+/* <free> wrapper.
+   Here and further all the memory releasing functions
+   (that all call cvFree) take double pointer which is used
+   to clear user pointer to the data after releasing it.
+   Passing pointer to NULL pointer is Ok: nothing happens in this case
+*/
+OPENCVAPI  void   cvFree( void** ptr );
+
+/* Allocates and initializes IplImage header */
 OPENCVAPI  IplImage*  cvCreateImageHeader( CvSize size, int depth, int channels );
 
-
-/*F///////////////////////////////////////////////////////////////////////////////////////
-//    Name:    cvInitImageHeader
-//    Purpose: initializes image header structure without memory allocation
-//    Context:
-//    Parameters:
-//      image - image header. User allocates it manually(e.g. on the stack)
-//      size  - width and height of the image
-//      depth - image depth
-//      channels - number of channels
-//      origin - IPL_ORIGIN_TL or IPL_ORIGIN_BL.
-//      align - alignment for raster lines
-//      clear - if 1, header is cleared before it is initialized.
-//    Returns:
-//      initialized header
-//F*/
+/* Inializes IplImage header */
 OPENCVAPI IplImage* cvInitImageHeader( IplImage* image, CvSize size, int depth,
                                        int channels, int origin CV_DEFAULT(0),
-                                       int align CV_DEFAULT(4), int clear CV_DEFAULT(1));
+                                       int align CV_DEFAULT(4));
 
-
-/*F///////////////////////////////////////////////////////////////////////////////////////
-//    Name:    cvCreateImage
-//    Purpose: creates image header and allocates data
-//    Context:
-//    Parameters:
-//      size - image size(width and height)
-//      depth- image depth
-//      channels - number of channels.
-//    Returns:
-//      created image
-//    Notes:
-//      this call is short form of
-//         header = cvCreateImageHeader(size,depth,channels);
-//         cvCreateData(header);
-//F*/
+/* Creates IPL image (header and data) */
 OPENCVAPI  IplImage*  cvCreateImage( CvSize size, int depth, int channels );
 
-
-/*F///////////////////////////////////////////////////////////////////////////////////////
-//    Name:    cvReleaseImageHeader
-//    Purpose: releases header
-//    Context:
-//    Parameters:
-//        image - released image header
-//    Returns:
-//      this call is short form of
-//         if( image )
-//         {
-//              iplDeallocate( *image, IPL_IMAGE_HEADER | IPL_IMAGE_ROI );
-//              *image = 0;
-//         }
-//F*/
+/* Releases (i.e. deallocates) IPL image header */
 OPENCVAPI  void  cvReleaseImageHeader( IplImage** image );
 
-
-/*F///////////////////////////////////////////////////////////////////////////////////////
-//    Name:    cvReleaseImage
-//    Purpose: releases header and image data
-//    Context:
-//    Parameters:
-//      image - released image
-//    Returns:
-//      this call is short form of
-//         if( image && *image )
-//         {
-//              iplDeallocate( *image, IPL_IMAGE_ALL );
-//              *image = 0;
-//         }
-//F*/
+/* Releases IPL image header and data */
 OPENCVAPI  void  cvReleaseImage( IplImage** image );
 
-
-/*F///////////////////////////////////////////////////////////////////////////////////////
-//    Name:    cvCloneImage
-//    Purpose: creates a whole copy of the image
-//    Context:
-//    Parameters:
-//      image - source image
-//    Returns:
-//    Notes:
-//F*/
+/* Creates a copy of IPL image (widthStep may differ) */
 OPENCVAPI IplImage* cvCloneImage( const IplImage* image );
 
-
-/*F///////////////////////////////////////////////////////////////////////////////////////
-//    Name:    cvSetImageCOI
-//    Purpose: set channel of interest to given value.
-//    Context:
-//    Parameters:
-//      image - image header
-//      coi   - channel of interest
-//    Returns:
-//    Notes:
-//      If roi is NULL and coi != 0, roi is allocated.
-//F*/
+/* Sets a Channel Of Interest (only a few functions support COI) - 
+   use cvCopy to extract the selected channel and/or put it back */
 OPENCVAPI  void  cvSetImageCOI( IplImage* image, int coi );
 
-
-/*F///////////////////////////////////////////////////////////////////////////////////////
-//    Name:    cvGetImageCOI
-//    Purpose: retrieves channel of interest
-//    Context:
-//    Parameters:
-//      image - image header
-//    Returns:
-//      COI
-//F*/
+/* Retrieves image Channel Of Interest */
 OPENCVAPI  int  cvGetImageCOI( IplImage* image );
 
-
-/*F///////////////////////////////////////////////////////////////////////////////////////
-//    Name:    cvSetImageROI
-//    Purpose: set image ROI to given rectangle
-//    Context:
-//    Parameters:
-//      image - image header
-//      rect  - ROI rectangle
-//    Returns:
-//    Notes:
-//       If roi is NULL and rect is not equal to a whole image, roi is allocated.
-//F*/
+/* Sets image ROI (region of interest) (COI is not changed) */
 OPENCVAPI  void  cvSetImageROI( IplImage* image, CvRect rect );
 
-
-/*F///////////////////////////////////////////////////////////////////////////////////////
-//    Name:    cvResetImageROI
-//    Purpose: deletes image ROI
-//    Context:
-//    Parameters:
-//      image - image header
-//    Returns:
-//    Notes:
-//F*/
+/* Resets image ROI and COI */
 OPENCVAPI  void  cvResetImageROI( IplImage* image );
 
-
-/*F///////////////////////////////////////////////////////////////////////////////////////
-//    Name:    cvGetImageROI
-//    Purpose: return region of interest (ROI) for given image or
-//             (0,0,image->width,image->height) if ROI is not set
-//    Context:
-//    Parameters:
-//      image - image header
-//    Returns:
-//    Notes:
-//F*/
+/* Retrieves image ROI */
 OPENCVAPI  CvRect cvGetImageROI( const IplImage* image );
 
+/* Allocates and initalizes CvMat header */
+OPENCVAPI  CvMat*  cvCreateMatHeader( int rows, int cols, int type );
 
 #define CV_AUTOSTEP  0x7fffffff
 
-/*F///////////////////////////////////////////////////////////////////////////////////////
-//    Name:    cvCreateMatHeader
-//    Purpose: allocates CvMat structure, initializes and returns it
-//    Context:
-//    Parameters:
-//      rows - number of matrix rows
-//      cols - number of matrix columns
-//      type - matrix type
-//      step - matrix step (or stride) - an optional parameter.
-//    Returns:
-//      created matrix header
-//F*/
-OPENCVAPI  CvMat*  cvCreateMatHeader( int rows, int cols, int type );
-
-
-/*F///////////////////////////////////////////////////////////////////////////////////////
-//    Name:    cvInitMatHeader
-//    Purpose: initializes matrix header structure without memory allocation
-//    Context:
-//    Parameters:
-//      mat   - matrix header. User allocates it manually(e.g. on the stack)
-//      rows  - number of matrix rows
-//      cols  - number of matrix columns
-//      type  - matrix type
-//      step  - matrix step (optional)
-//    Returns:
-//      initalized matrix header
-//F*/
+/* Initializes CvMat header */
 OPENCVAPI CvMat* cvInitMatHeader( CvMat* mat, int rows, int cols,
-                                  int type, void* data CV_DEFAULT(0),
+                                  int type, void* data CV_DEFAULT(NULL),
                                   int step CV_DEFAULT(CV_AUTOSTEP) );
 
-
-/*F///////////////////////////////////////////////////////////////////////////////////////
-//    Name:    cvCreateMat
-//    Purpose: creates matrix header and allocates data
-//    Context:
-//    Parameters:
-//      rows  - number of matrix rows
-//      cols  - number of matrix columns
-//      type  - matrix type
-//      step  - matrix step (optional)
-//    Returns:
-//      created matrix
-//F*/
+/* Allocates and initializes CvMat header and allocates data */
 OPENCVAPI  CvMat*  cvCreateMat( int rows, int cols, int type );
 
-
-/*F///////////////////////////////////////////////////////////////////////////////////////
-//    Name:    cvReleaseMatHeader
-//    Purpose: releases matrix header
-//    Context:
-//    Parameters:
-//        mat - released matrix header
-//    Returns:
-//      nothing
-//F*/
-OPENCVAPI  void  cvReleaseMatHeader( CvMat** mat );
-
-
-/*F///////////////////////////////////////////////////////////////////////////////////////
-//    Name:    cvReleaseMat
-//    Purpose: releases matrix header and underlying data
-//    Context:
-//    Parameters:
-//      matrix - released matrix
-//    Returns:
-//      nothing
-//    Notes:
-//F*/
+/* Releases CvMat header and deallocates matrix data
+   (reference counting is used for data) */
 OPENCVAPI  void  cvReleaseMat( CvMat** mat );
 
+/* Decrements CvMat data reference counter and deallocates the data if
+   it reaches 0 */
+CV_INLINE  void  cvDecRefData( CvArr* arr );
+CV_INLINE  void  cvDecRefData( CvArr* arr )
+{
+    if( CV_IS_MAT( arr ) || CV_IS_MATND( arr ))
+    {
+        CvMat* mat = (CvMat*)arr; /* the first few fields of CvMat and CvMatND are the same */
+        mat->data.ptr = NULL;
+        if( mat->refcount != NULL && --*mat->refcount == 0 )
+        {
+            uchar* data = (uchar*)mat->refcount + 2*sizeof(mat->refcount);
+            cvFree( (void**)&data );
+        }
+        mat->refcount = NULL;
+    }
+}
 
-/*F///////////////////////////////////////////////////////////////////////////////////////
-//    Name:    cvCloneMat
-//    Purpose: creates a whole copy of the matrix
-//    Context:
-//    Parameters:
-//      mat - the cloned matrix
-//    Returns:
-//F*/
+/* Increments CvMat data reference counter */
+CV_INLINE  int  cvIncRefData( CvArr* arr );
+CV_INLINE  int  cvIncRefData( CvArr* arr )
+{
+    int refcount = 0;
+    if( CV_IS_MAT( arr ) || CV_IS_MATND( arr ))
+    {
+        CvMat* mat = (CvMat*)arr;
+        if( mat->refcount != NULL )
+            refcount = ++*mat->refcount;
+    }
+    return refcount;
+}
+
+
+/* Creates an exact copy of the input matrix (except, may be, step value) */
 OPENCVAPI CvMat* cvCloneMat( const CvMat* mat );
 
 
-/*F///////////////////////////////////////////////////////////////////////////////////////
-//    Name:    cvGetSubArr
-//    Purpose: returns sub-matrix w.o copying data
-//    Context:
-//    Parameters:
-//      arr - the original matrix (or IplImage)
-//      submat - pointer to sub-matrix stucture
-//      rect - extracted rectange
-//    Returns:
-//      filled header of submatrix (i.e., &submat)
-//F*/
-OPENCVAPI CvMat* cvGetSubArr( const CvArr* arr, CvMat* submat, CvRect rect );
+/* Makes a new matrix from <rect> subrectangle of input array.
+   No data is copied */
+OPENCVAPI CvMat* cvGetSubRect( const CvArr* arr, CvMat* submat, CvRect rect );
+#define cvGetSubArr cvGetSubRect
+
+/* Partial case of the cvGetSubArr:
+    row span of the input array is selected
+    (end_row is not included into the span). */
+OPENCVAPI CvMat* cvGetRows( const CvArr* arr, CvMat* submat,
+                            int start_row, int end_row );
+
+CV_INLINE  void  cvGetRow( const CvArr* arr, CvMat* submat, int row );
+CV_INLINE  void  cvGetRow( const CvArr* arr, CvMat* submat, int row )
+{
+    cvGetRows( arr, submat, row, row + 1 );
+}
 
 
-/*F///////////////////////////////////////////////////////////////////////////////////////
-//    Name:    cvGetRow
-//    Purpose: The function is analogous to the previous, but returns a single row
-//    Context:
-//    Parameters:
-//      arr - an original matrix (or IplImage)
-//      submat - pointer to sub-matrix stucture
-//      row - index of the row
-//    Returns:
-//      filled header of sub-matrix (i.e., &submat)
-//F*/
-OPENCVAPI CvMat* cvGetRow( const CvArr* arr, CvMat* submat, int row );
+/* Partial case of the cvGetSubArr:
+    column span of the input array is selected
+    (end_col is not included into the span) */
+OPENCVAPI CvMat* cvGetCols( const CvArr* arr, CvMat* submat,
+                               int start_col, int end_col );
 
+CV_INLINE  void  cvGetCol( const CvArr* arr, CvMat* submat, int col );
+CV_INLINE  void  cvGetCol( const CvArr* arr, CvMat* submat, int col )
+{
+    cvGetCols( arr, submat, col, col + 1 );
+}
 
-/*F///////////////////////////////////////////////////////////////////////////////////////
-//    Name:    cvGetCol
-//    Purpose: The function is analogous to the previous, but returns a single column
-//    Context:
-//    Parameters:
-//      arr - an original matrix (or IplImage)
-//      submat - pointer to sub-matrix stucture
-//      column - index of the column
-//    Returns:
-//      filled header of sub-matrix (i.e., &submat)
-//F*/
-OPENCVAPI CvMat* cvGetCol( const CvArr* arr, CvMat* submat, int column );
-
-
-/*F///////////////////////////////////////////////////////////////////////////////////////
-//    Name:    cvGetCol
-//    Purpose: The function is analogous to the previous, but returns a single diagonal
-//    Context:
-//    Parameters:
-//      arr - an original matrix (or IplImage)
-//      submat - pointer to sub-matrix stucture
-//      diag - index of the diagonal ( 0 corresponds to the main diagonal,
-//                positive number - to some upper diagonal, negative number - to
-//                some lower diagonal ), as shown below:
-//             0  1  2  3  4
-//            -1  0  1  2  3
-//            -2 -1  0  1  2
-//            -3 -2 -1  0  1
-//            -4 -3 -2 -1  0
-//            -5 -4 -3 -2 -1
-//
-//    Returns:
-//      filled header of sub-matrix (i.e., &submat)
-//F*/
+/* Partial case of the cvGetSubArr:
+    a single diagonal of the input array is selected
+   (diag = 0 means main diagonal, >0 means some diagonal above the main one,
+   <0 - below the main one).
+   The diagonal will be represented as a column (nx1 matrix). */
 OPENCVAPI CvMat* cvGetDiag( const CvArr* arr, CvMat* submat,
                             int diag CV_DEFAULT(0));
 
+/* low-level scalar <-> raw data conversion functions */
+OPENCVAPI void cvScalarToRawData( const CvScalar* scalar, void* data, int type,
+                                  int extend_to_12 CV_DEFAULT(0) );
 
-/* ptr = &arr(idx) */
-OPENCVAPI uchar* cvGetPtrAt( const CvArr* arr, int y, int x CV_DEFAULT(0));
+OPENCVAPI void cvRawDataToScalar( const void* data, int type, CvScalar* scalar );
 
-/* value = arr(idx) */
-OPENCVAPI CvScalar cvGetAt( const CvArr* arr, int y, int x CV_DEFAULT(0)); 
+/* Allocates and initializes CvMatND header */
+OPENCVAPI  CvMatND*  cvCreateMatNDHeader( int dims, const int* sizes, int type );
 
-/* arr(idx) = value */
-OPENCVAPI void cvSetAt( CvArr* arr, CvScalar value,
-                        int y, int x CV_DEFAULT(0)); 
+/* Allocates and initializes CvMatND header and allocates data */
+OPENCVAPI  CvMatND*  cvCreateMatND( int dims, const int* sizes, int type );
+
+/* Initializes preallocated CvMatND header */
+OPENCVAPI  CvMatND*  cvInitMatNDHeader( CvMatND* mat, int dims, const int* sizes,
+                                        int type, void* data CV_DEFAULT(NULL) );
+
+/* Releases CvMatND */
+CV_INLINE  void  cvReleaseMatND( CvMatND** mat );
+CV_INLINE  void  cvReleaseMatND( CvMatND** mat )
+{
+    cvReleaseMat( (CvMat**)mat );
+}
+
+/* Creates a copy of CvMatND (except, may be, steps) */
+OPENCVAPI  CvMatND* cvCloneMatND( const CvMatND* mat );
+
+/* Allocates and initializes CvSparseMat header and allocates data */
+OPENCVAPI  CvSparseMat*  cvCreateSparseMat( int dims, const int* sizes, int type );
+
+/* Releases CvSparseMat */
+OPENCVAPI  void  cvReleaseSparseMat( CvSparseMat** mat );
+
+/* Creates a copy of CvSparseMat (except, may be, zero items) */
+OPENCVAPI  CvSparseMat* cvCloneSparseMat( const CvSparseMat* mat );
+
+/* Initializes sparse array iterator
+   (returns the first node or NULL if the array is empty) */
+OPENCVAPI  CvSparseNode* cvInitSparseMatIterator( const CvSparseMat* mat,
+                                                  CvSparseMatIterator* matIterator );
+
+// returns next sparse array node (or NULL if there is no more nodes)
+CV_INLINE CvSparseNode* cvGetNextSparseNode( CvSparseMatIterator* matIterator );
+CV_INLINE CvSparseNode* cvGetNextSparseNode( CvSparseMatIterator* matIterator )
+{
+    if( matIterator->node->next )
+        return matIterator->node = matIterator->node->next;
+    else
+    {
+        int idx;
+        for( idx = ++matIterator->curidx; idx < matIterator->mat->hashsize; idx++ )
+        {
+            CvSparseNode* node = (CvSparseNode*)matIterator->mat->hashtable[idx];
+            if( node )
+            {
+                matIterator->curidx = idx;
+                return matIterator->node = node;
+            }
+        }
+        return NULL;
+    }
+}
+
+/* Returns type of array elements:
+   CV_8UC1 ... CV_64FC4 ... */
+OPENCVAPI  int cvGetElemType( const CvArr* arr );
+
+/* Retrieves number of an array dimensions and
+   optionally sizes of the dimensions */
+OPENCVAPI  int cvGetDims( const CvArr* arr, int* sizes CV_DEFAULT(NULL) );
 
 
-/* Converts CvArr (IplImage or CvMat) to CvMat */
-OPENCVAPI CvMat* cvGetMat( const CvArr* src, CvMat* header, int* coi CV_DEFAULT(0));
+/* Retrieves size of a particular array dimension.
+   For 2d arrays cvGetDimSize(arr,0) returns number of rows (image height)
+   and cvGetDimSize(arr,1) returns number of columns (image width) */
+OPENCVAPI  int cvGetDimSize( const CvArr* arr, int index );
+
+
+/* ptr = &arr(idx1,idx2,...). All indexes are zero-based,
+   the major dimensions go first (e.g. (y,x) for 2D, (z,y,x) for 3D */
+OPENCVAPI uchar* cvPtr1D( const CvArr* arr, int idx1, int* type CV_DEFAULT(NULL));
+OPENCVAPI uchar* cvPtr2D( const CvArr* arr, int idx1, int idx2, int* type CV_DEFAULT(NULL) );
+OPENCVAPI uchar* cvPtr3D( const CvArr* arr, int idx1, int idx2, int idx3,
+                          int* type CV_DEFAULT(NULL));
+
+/* For CvMat or IplImage number of indices should be 2
+   (row index (y) goes first, column index (x) goes next).
+   For CvMatND or CvSparseMat number of infices should match number of <dims> and
+   indices order should match the array dimension order. */
+OPENCVAPI uchar* cvPtrND( const CvArr* arr, int* idx, int* type CV_DEFAULT(NULL) );
+
+/* value = arr(idx1,idx2,...) */
+OPENCVAPI CvScalar cvGet1D( const CvArr* arr, int idx1 );
+OPENCVAPI CvScalar cvGet2D( const CvArr* arr, int idx1, int idx2 );
+OPENCVAPI CvScalar cvGet3D( const CvArr* arr, int idx1, int idx2, int idx3 );
+OPENCVAPI CvScalar cvGetND( const CvArr* arr, int* idx );
+
+/* for 1-channel arrays */
+OPENCVAPI double cvGetReal1D( const CvArr* arr, int idx1 );
+OPENCVAPI double cvGetReal2D( const CvArr* arr, int idx1, int idx2 );
+OPENCVAPI double cvGetReal3D( const CvArr* arr, int idx1, int idx2, int idx3 );
+OPENCVAPI double cvGetRealND( const CvArr* arr, int* idx );
+
+/* arr(idx1,idx2,...) = value */
+OPENCVAPI void cvSet1D( CvArr* arr, int idx1, CvScalar value );
+OPENCVAPI void cvSet2D( CvArr* arr, int idx1, int idx2, CvScalar value );
+OPENCVAPI void cvSet3D( CvArr* arr, int idx1, int idx2, int idx3, CvScalar value );
+OPENCVAPI void cvSetND( CvArr* arr, int* idx, CvScalar value );
+
+/* for 1-channel arrays */
+OPENCVAPI void cvSetReal1D( CvArr* arr, int idx1, double value );
+OPENCVAPI void cvSetReal2D( CvArr* arr, int idx1, int idx2, double value );
+OPENCVAPI void cvSetReal3D( CvArr* arr, int idx1,
+                            int idx2, int idx3, double value );
+OPENCVAPI void cvSetRealND( CvArr* arr, int* idx, double value );
+
+/* Converts CvArr (IplImage or CvMat,...) to CvMat.
+   If the last parameter is non-zero, function can
+   convert multi(>2)-dimensional array to CvMat as long as
+   the last array's dimension is continous. The resultant
+   matrix will be have appropriate (a huge) number of rows */
+OPENCVAPI CvMat* cvGetMat( const CvArr* src, CvMat* header,
+                           int* coi CV_DEFAULT(NULL),
+                           int allowND CV_DEFAULT(0));
 
 /* Converts CvArr (IplImage or CvMat) to IplImage */
 OPENCVAPI IplImage* cvGetImage( const CvArr* array, IplImage* img );
 
 
-/*F///////////////////////////////////////////////////////////////////////////////////////
-//    Name:    cvReshape
-//    Purpose: reshapes the matrix
-//    Context:
-//    Parameters:
-//      array  - image or matrix
-//      header - the output matrix header (may be the same as input)
-//      new_cn - the new channel number. The original array width multiplied by the
-//               original number of channels should be divisible
-//               by the new number of channels.
-//      new_rows - the new number of rows in the matrix. 0 means do not change it if
-//               it is not neccessary. Number of rows can be changed only if the matrix
-//               continuous.
-//    Returns:
-//    Notes:
-//      All the output parameters are optional
-//F*/
-OPENCVAPI CvMat* cvReshape( const CvArr* array, CvMat* header,
-                            int new_cn, int new_rows CV_DEFAULT(0));
+/* Changes a shape of multi-dimensional array.
+   new_cn == 0 means that number of channels remains unchanged.
+   new_dims == 0 means that number and sizes of dimensions remain the same
+   (unless they need to be changed to set the new number of channels)
+   if new_dims == 1, there is no need to specify new dimension sizes
+   The resultant configuration should be achievable w/o data copying.
+   If the resultant array is sparse, CvSparseMat header should be passed
+   to the function else if the result is 1 or 2 dimensional,
+   CvMat header should be passed to the function
+   else CvMatND header should be passed */
+OPENCVAPI CvArr* cvReshapeMatND( const CvArr* array,
+                                 int sizeof_header, CvArr* header,
+                                 int new_cn, int new_dims, int* new_sizes );
 
-/*F///////////////////////////////////////////////////////////////////////////////////////
-//    Name:    cvCreateData
-//    Purpose: allocates image or matrix data
-//    Context:
-//    Parameters:
-//        array - image or matrix header
-//F*/
+#define cvReshapeND( arr, header, new_cn, new_dims, new_sizes )   \
+      cvReshapeMatND( (arr), sizeof(*(header)), (header),         \
+                      (new_cn), (new_dims), (new_sizes))
+
+OPENCVAPI CvMat* cvReshape( const CvArr* array, CvMat* header,
+                            int new_cn, int new_rows CV_DEFAULT(0) );
+
+/* Repeats source 2d array several times in both horizontal and
+   vertical direction to fit destination array */
+OPENCVAPI void cvRepeat( const CvArr* src, CvArr* dst );
+
+/* Allocates array data */
 OPENCVAPI  void  cvCreateData( CvArr* array );
 
-
-/*F///////////////////////////////////////////////////////////////////////////////////////
-//    Name:    cvReleaseData
-//    Purpose: releases image data
-//    Context:
-//    Parameters:
-//      array - image or matrix header
-//F*/
+/* Releases array data */
 OPENCVAPI  void  cvReleaseData( CvArr* array );
 
-
-/*F///////////////////////////////////////////////////////////////////////////////////////
-//    Name:    cvSetData
-//    Purpose: sets pointer to data and step parameter to given values
-//    Context:
-//    Parameters:
-//      array - image or matrix header
-//      data  - user data
-//      step  - full width or data (distance between successive rows)
-//    Returns:
-//F*/
+/* Attaches user data to the array header. The step is reffered to
+   the pre-last dimension. That is, all the planes of the array
+   must be joint (w/o gaps) */
 OPENCVAPI  void  cvSetData( CvArr* array, void* data, int step );
 
-/*F///////////////////////////////////////////////////////////////////////////////////////
-//    Name:    cvGetRawData
-//    Purpose: fills output variables with image parameters
-//    Context:
-//    Parameters:
-//      array - image or matrix
-//      data  - pointer to top-left corner of ROI
-//      step  - is set to <widthStep> field in case of IplImage or
-//              to <step> field in case of CvMat
-//      roi_size - width and height of ROI
-//    Returns:
-//    Notes:
-//      All the output parameters are optional
-//F*/
+/* Retrieves raw data of CvMat, IplImage or CvMatND.
+   In the latter case the function raises an error if
+   the array can not be represented as a matrix */
 OPENCVAPI void cvGetRawData( const CvArr* array, uchar** data,
-                             int* step, CvSize* roi_size );
+                             int* step CV_DEFAULT(NULL),
+                             CvSize* roi_size CV_DEFAULT(NULL));
 
-/*F///////////////////////////////////////////////////////////////////////////////////////
-//    Name:    cvGetSize
-//    Purpose: returns size of matrix or image ROI.
-//             in case of matrix size.width == number_of_columns,
-//                               size.height == number_of_rows.
-//    Context:
-//    Parameters:
-//      arr - image or matrix
-//    Returns:
-//    Notes:
-//F*/
+/* Returns width and height of array in elements */
 OPENCVAPI  CvSize cvGetSize( const CvArr* arr );
 
-/*F///////////////////////////////////////////////////////////////////////////////////////
-//    Name:    cvCopy
-//    Purpose: copies image ROI or matrix
-//    Context:
-//    Parameters:
-//      src - source array
-//      dst - destination array
-//      mask - optional mask
-//F*/
+/* Copies source array to destination array */
 OPENCVAPI  void  cvCopy( const CvArr* src, CvArr* dst,
-                         const CvArr* mask CV_DEFAULT(0) );
+                         const CvArr* mask CV_DEFAULT(NULL) );
 
-
-/*F///////////////////////////////////////////////////////////////////////////////////////
-//    Name:    cvSet
-//    Purpose: sets image ROI or matrix to given value
-//    Context:
-//    Parameters:
-//      arr - array
-//      scalar - value to set to
-//      mask - optional mask
-//F*/
+/* Sets all or "masked" elements of input array
+   to the same <scalar> value*/
 OPENCVAPI  void  cvSet( CvArr* arr, CvScalar scalar,
-                        const CvArr* mask CV_DEFAULT(0) );
+                        const CvArr* mask CV_DEFAULT(NULL) );
+
+/* Clears all the array elements (sets them to 0) */
+OPENCVAPI  void  cvSetZero( CvArr* mat );
+#define cvZero  cvSetZero
 
 
-/*F///////////////////////////////////////////////////////////////////////////////////////
-//    Name:    cvLUT
-//    Purpose: Performs lookup-table transform: dst(x,y) = lut[src(x,y)]
-//    Parameters:
-//      srcarr - the source array: 8u or 8s type
-//      dstarr - the destination array of arbitrary type,
-//      lutarr - the LUT array. The same type as the destination array,
-//               contains 256 entries.
-//    Note:
-//      if the source array has 8s type, the modified formula is used:
-//      dst(x,y) = lut[src(x,y) + 128]
-//F*/
-OPENCVAPI  void cvLUT( const CvArr* srcarr, CvArr* dstarr, const CvArr* lutarr );
+/* Splits a multi-channel array into the set of single-channel arrays or
+   extracts particular [color] plane */
+OPENCVAPI  void  cvCvtPixToPlane( const void *src, void *dst0, void *dst1,
+                                  void *dst2, void *dst3 );
+
+/* Merges a set of single-channel arrays into the single multi-channel array
+   or inserts one particular [color] plane to the array */
+OPENCVAPI  void  cvCvtPlaneToPix( const void *src0, const void *src1,
+                                  const void *src2, const void *src3,
+                                  void *dst );
+
+/* Performs linear transformation on every source array element:
+   dst(x,y,c) = scale*src(x,y,c)+shift.
+   Arbitrary combination of input and output array depths are allowed
+   (number of channels must be the same), thus the function can be used
+   for depth conversion */
+OPENCVAPI  void  cvConvertScale( const CvArr *src, CvArr *dst,
+                                 double scale CV_DEFAULT(1),
+                                 double shift CV_DEFAULT(0) );
+#define cvCvtScale cvConvertScale
+#define cvScale  cvConvertScale
+#define cvConvert( src, dst )  cvConvertScale( (src), (dst), 1, 0 )
 
 
-/****************************************************************************************\
-*                                     Pyramids                                           *
-\****************************************************************************************/
-
-/*F///////////////////////////////////////////////////////////////////////////////////////
-//    Name:    cvPyrUp
-//    Purpose: performs factor-2 upsampling of the image with subsequent
-//             Gaussian smoothing.
-//    Context:
-//    Parameters:
-//      src - source image
-//      dst - destination image(must have twice larger width and height than source image)
-//      filter - filter applied. Only IPL_GAUSSIAN_5x5 is allowed.
-//    Returns:
-//F*/
-OPENCVAPI  void  cvPyrUp( const CvArr* src, CvArr* dst,
-                          int filter CV_DEFAULT(IPL_GAUSSIAN_5x5) );
-
-/*F///////////////////////////////////////////////////////////////////////////////////////
-//    Name:    cvPyrDown
-//    Purpose: performs factor-2 downsampling of the image
-//             with prior Gaussian smoothing
-//    Context:
-//    Parameters:
-//        src - source image
-//        dst - destination image(must have twice smaller width and height than
-//                                 source image)
-//        filter - filter applied. Only IPL_GAUSSIAN_5x5 is allowed.
-//    Returns:
-//F*/
-OPENCVAPI  void  cvPyrDown( const CvArr* src, CvArr* dst,
-                            int filter CV_DEFAULT(IPL_GAUSSIAN_5x5) );
+/* Performs linear transformation on every source array element,
+   stores absolute value of the result:
+   dst(x,y,c) = abs(scale*src(x,y,c)+shift).
+   destination array must have 8u type.
+   In other cases one may use cvConvertScale + cvAbsDiffS */
+OPENCVAPI  void  cvConvertScaleAbs( const void *src, void *dst,
+                                    double scale CV_DEFAULT(1),
+                                    double shift CV_DEFAULT(0) );
+#define cvCvtScaleAbs  cvConvertScaleAbs
 
 
-/*F///////////////////////////////////////////////////////////////////////////////////////
-//    Name:    cvPyrSegmentation
-//    Purpose: segments image using iterative multi-scale algorithm 
-//    Context:
-//    Parameters:
-//      src - source image
-//      dst - destination image
-//      storage - pointer to the memory storage
-//      comp - pointer to the output sequence of the connected components
-//      level - number of level to the pyramid costruction
-//      threshold1 - the first segmentation threshold
-//      threshold2 - the second segmentation threshold
-//    Notes:
-//      Source and destination image must be equal types and planes
-//F*/
-OPENCVAPI void cvPyrSegmentation( IplImage* src,
-                               IplImage* dst,
-                               CvMemStorage *storage,
-                               CvSeq **comp,
-                               int level, double threshold1,
-                               double threshold2 );
+/* Finds minimum rectangle containing two given rectangles */
+OPENCVAPI  CvRect  cvMaxRect( const CvRect* rect1, const CvRect* rect2 );
+
+/* Finds coordinates of the box vertices */
+OPENCVAPI  void cvBoxPoints( CvBox2D box, CvPoint2D32f pt[4] );
 
 
 /****************************************************************************************\
-*                              Derivative calculation                                    *
+*                   Arithmetic, logic and comparison operations                          *
 \****************************************************************************************/
 
-/*F///////////////////////////////////////////////////////////////////////////////////////
-//    Name:    cvSobel
-//    Purpose: calculates an image derivative d^(xorder+yorder)I/((dx)^xorder)*(dy^yoder))
-//             by convolving the image with extended Sobel operators.
-//             No scaling is performed.
-//
-//             |-1 -2 -1|     |-1 0 1|
-//             | 0  0  0| and |-2 0 2| are partial cases of it.
-//             | 1  2  1|     |-1 0 1|
-//
-//             First one corresponds to xorder = 0, yorder = 1, apertureSize = 3,
-//             And the second corresponds to xorder = 1, yorder = 0, apertureSize = 3.
-//    Context:
-//    Parameters:
-//      src    - source image
-//      dst    - destination derivative image
-//      xorder - order of x derivative
-//      yorder - order of y derivative
-//      apertureSize - size of colvolution operator. Must be odd: 3, 5, ... or
-//                                        | -3  0  3 |    | -3 -10 -3 |
-//                     CV_SCHARR (-1) for | -10 0 10 | or |  0   0  0 | kernels.
-//                                        | -3  0  3 |    |  3  10  3 |
-//    Returns:
-//    Notes:
-//      The function uses replicatation border mode.
-//      In case of yorder is odd, the image origin is taken into account.
-//      (for matrices the top-left origin is assumed)
-//F*/
-#define CV_SCHARR -1
+/* dst(mask) = srcA(mask) + srcB(mask) */
+OPENCVAPI  void  cvAdd( const CvArr* srcA, const CvArr* srcB, CvArr* dst,
+                        const CvArr* mask CV_DEFAULT(NULL));
 
-OPENCVAPI void cvSobel( const CvArr* src, CvArr* dst,
-                        int xorder, int yorder,
-                        int apertureSize CV_DEFAULT(3));
+/* dst(mask) = src(mask) + value */
+OPENCVAPI  void  cvAddS( const CvArr* src, CvScalar value, CvArr* dst,
+                         const CvArr* mask CV_DEFAULT(NULL));
 
-/*F///////////////////////////////////////////////////////////////////////////////////////
-//    Name:     cvLaplace
-//    Purpose:  Calculates Laplacian of the image: deltaI = d^2(I)/dx^2 + d^2(I)/dy^2.
-//              Sobel operator is used for calculating derivatives.
-//    Context:
-//    Parameters:
-//      src - source image
-//      dst - destination image
-//      apertureSize - size of applied aperture
-//    Returns:
-//    Notes:
-//F*/
-OPENCVAPI void cvLaplace( const CvArr* src, CvArr* dst,
-                          int apertureSize CV_DEFAULT(3) );
+/* dst(mask) = srcA(mask) - srcB(mask) */
+OPENCVAPI  void  cvSub( const CvArr* srcA, const CvArr* srcB, CvArr* dst,
+                        const CvArr* mask CV_DEFAULT(NULL));
 
-/****************************************************************************************\
-*                                    Morphology                                          *
-\****************************************************************************************/
-
-/*F///////////////////////////////////////////////////////////////////////////////////////
-//
-//    Name:    cvCreateStructuringElementEx
-//    Purpose:
-//      Allocates and fills IplConvKernel structure
-//      which can be used as a structuring element in following morphological operations
-//    Context:
-//    Parameters:
-//        cols   - number of columns in the kernel
-//        rows   - number of rows in the kernel
-//        anchorX - x-coordinate of anchor point(0..cols-1)
-//        anchorY - y-coordinate of anchor point(0..rows-1)
-//        shape   - shape of the structuring element
-//              CV_SHAPE_RECT - rectangular element
-//              CV_SHAPE_CROSS - cross-shaped element
-//              CV_SHAPE_ELLIPSE - elliptic element
-//              CV_SHAPE_CUSTOM - arbitrary element.
-//              <values> array determines mask
-//        values  - mask array. non-zero pixels determine shape of the element
-//    Returns:
-//        structuring element
-//F*/
-typedef enum CvElementShape
+/* dst(mask) = src(mask) - value = src(mask) + (-value) */
+CV_INLINE  void  cvSubS( const CvArr* src, CvScalar value, CvArr* dst,
+                         const CvArr* mask CV_DEFAULT(NULL));
+CV_INLINE  void  cvSubS( const CvArr* src, CvScalar value, CvArr* dst,
+                         const CvArr* mask )
 {
-    CV_SHAPE_RECT    = 0,
-    CV_SHAPE_CROSS   = 1,
-    CV_SHAPE_ELLIPSE = 2,
-    CV_SHAPE_CUSTOM  = 100
+    cvAddS( src, cvScalar( -value.val[0], -value.val[1], -value.val[2], -value.val[3]),
+            dst, mask );
 }
-CvElementShape;
 
-OPENCVAPI  IplConvKernel*  cvCreateStructuringElementEx( int  cols,    int rows,
-                                                         int  anchorX, int anchorY,
-                                                         CvElementShape shape,
-                                                         int* values CV_DEFAULT(0) );
+/* dst(mask) = value - src(mask) */
+OPENCVAPI  void  cvSubRS( const CvArr* src, CvScalar value, CvArr* dst,
+                          const CvArr* mask CV_DEFAULT(NULL));
+
+/* dst(idx) = srcA(idx) * srcB(idx) * scale (element-wise multiplication with scale) */
+OPENCVAPI  void  cvMul( const CvArr* srcA, const CvArr* srcB,
+                        CvArr* dst, double scale CV_DEFAULT(1) );
+
+/* element-wise division/inversion with scaling: 
+    dst(idx) = srcA(idx) * scale / srcB(idx)
+    or dst(idx) = scale / srcB(idx) if srcA == 0 */
+OPENCVAPI  void  cvDiv( const CvArr* srcA, const CvArr* srcB,
+                        CvArr* dst, double scale CV_DEFAULT(1));
+
+/* dst = srcA * scale + srcB */
+OPENCVAPI  void  cvScaleAdd( const CvArr* srcA, CvScalar scale,
+                             const CvArr* srcB, CvArr* dst );
+
+/* dst = srcA * alpha + srcB * beta + gamma */
+OPENCVAPI  void  cvAddWeighted( const CvArr* srcA, double alpha,
+                                const CvArr* srcB, double beta,
+                                double gamma, CvArr* dst );
+
+/* result = sum(srcA(i) * srcB*(i))  (srcB is conjugated)
+             i                                           */
+OPENCVAPI  double  cvDotProduct( const CvArr* srcA, const CvArr* srcB );
 
 
-/*F///////////////////////////////////////////////////////////////////////////////////////
-//
-//    Name:    cvReleaseStructuringElement
-//    Purpose:
-//      Releases structuring element and clears pointer
-//    Context:
-//    Parameters:
-//        element - double pointer to structuring element
-//    Returns:
-//F*/
-OPENCVAPI  void  cvReleaseStructuringElement( IplConvKernel** element );
+/* dst(idx) = src1(idx) & src2(idx) */
+OPENCVAPI void cvAnd( const CvArr* src1, const CvArr* src2,
+                      CvArr* dst, const CvArr* mask CV_DEFAULT(NULL));
+
+/* dst(idx) = src(idx) & value */
+OPENCVAPI void cvAndS( const CvArr* src, CvScalar value,
+                       CvArr* dst, const CvArr* mask CV_DEFAULT(NULL));
+
+/* dst(idx) = src1(idx) | src2(idx) */
+OPENCVAPI void cvOr( const CvArr* src1, const CvArr* src2,
+                     CvArr* dst, const CvArr* mask CV_DEFAULT(NULL));
+
+/* dst(idx) = src(idx) | value */
+OPENCVAPI void cvOrS( const CvArr* src, CvScalar value,
+                      CvArr* dst, const CvArr* mask CV_DEFAULT(NULL));
+
+/* dst(idx) = src1(idx) ^ src2(idx) */
+OPENCVAPI void cvXor( const CvArr* src1, const CvArr* src2,
+                      CvArr* dst, const CvArr* mask CV_DEFAULT(NULL));
+
+/* dst(idx) = src(idx) ^ value */
+OPENCVAPI void cvXorS( const CvArr* src, CvScalar value,
+                       CvArr* dst, const CvArr* mask CV_DEFAULT(NULL));
+
+/* dst(idx) = ~src(idx) */
+OPENCVAPI void cvNot( const CvArr* src, CvArr* dst );
+
+/* dst(idx) = lower(idx) <= src(idx) < upper(idx) */
+OPENCVAPI void cvInRange( const CvArr* src, const CvArr* lower,
+                          const CvArr* upper, CvArr* dst );
+
+/* dst(idx) = lower <= src(idx) < upper */
+OPENCVAPI void cvInRangeS( const CvArr* src, CvScalar lower,
+                           CvScalar upper, CvArr* dst );
+
+#define CV_CMP_EQ   0
+#define CV_CMP_GT   1
+#define CV_CMP_GE   2
+#define CV_CMP_LT   3
+#define CV_CMP_LE   4
+#define CV_CMP_NE   5
+
+/* The comparison operation support single-channel arrays only.
+   Destination image should be 8uC1 or 8sC1 */
+
+/* dst(idx) = src1(idx) _cmp_op_ src2(idx) */
+OPENCVAPI void cvCmp( const CvArr* src1, const CvArr* src2, CvArr* dst, int cmpOp );
+
+/* dst(idx) = src1(idx) _cmp_op_ scalar */
+OPENCVAPI void cvCmpS( const CvArr* src1, double scalar, CvArr* dst, int cmpOp );
+
+/* dst(idx) = min(src1(idx),src2(idx)) */
+OPENCVAPI void cvMin( const CvArr* src1, const CvArr* src2, CvArr* dst );
+
+/* dst(idx) = max(src1(idx),src2(idx)) */
+OPENCVAPI void cvMax( const CvArr* src1, const CvArr* src2, CvArr* dst );
+
+/* dst(idx) = min(src(idx),scalar) */
+OPENCVAPI void cvMinS( const CvArr* src, double scalar, CvArr* dst );
+
+/* dst(idx) = max(src(idx),scalar) */
+OPENCVAPI void cvMaxS( const CvArr* src, double scalar, CvArr* dst );
 
 
-/*F///////////////////////////////////////////////////////////////////////////////////////
-//
-//    Name:    cvErode
-//    Purpose:
-//      Applies minimum filter to the source image. Structuring element specifies
-//      a shape of a pixel neigborhood, over which the minimum is calculated
-//    Context:
-//    Parameters:
-//        src    - source image
-//        dst    - destination image, may be the same as source one.
-//        element - structuring element.
-//                  If the pointer is 0, 3x3 rectangular element is used.
-//        iterations - how many times the erosion needs to be applied
-//    Returns:
-//F*/
-OPENCVAPI  void  cvErode( const CvArr* src, CvArr* dst,
-                          IplConvKernel* element CV_DEFAULT(0),
-                          int iterations CV_DEFAULT(1) );
+/****************************************************************************************\
+*                                Math operations                                         *
+\****************************************************************************************/
 
-/*F///////////////////////////////////////////////////////////////////////////////////////
-//
-//    Name:    cvDilate
-//    Purpose:
-//      Applies maximum filter to the source image. Structuring element specifies
-//      a shape of a pixel neigborhood, over which the maximum is calculated
-//    Context:
-//    Parameters:
-//        src    - source image
-//        dst    - destination image, may be the same as source one.
-//        element - structuring element.
-//                  If the pointer is 0, 3x3 rectangular element is used.
-//        iterations - how many times the dilation needs to be applied
-//    Returns:
-//F*/
-OPENCVAPI  void  cvDilate( const CvArr* src, CvArr* dst,
-                           IplConvKernel* element CV_DEFAULT(0),
-                           int iterations CV_DEFAULT(1) );
+/* Does cartesian->polar coordinates conversion.
+   Either of output components (magnitude or angle) is optional */
+OPENCVAPI  void  cvCartToPolar( const CvArr* x, const CvArr* y,
+                                CvArr* magnitude, CvArr* angle CV_DEFAULT(NULL),
+                                int angle_in_degrees CV_DEFAULT(0));
 
-/*F///////////////////////////////////////////////////////////////////////////////////////
-//
-//    Name:    cvMorphologyEx
-//    Purpose:
-//      Applies one of the extended morphological operations that are based on
-//      erosion and dilation.
-//    Context:
-//    Parameters:
-//        src    - source image
-//        dst    - destination image, may be the same as source one.
-//        temp   - temporary image. The parameter must be non-zero
-//                 if operation is CV_MOP_TOPHAT or CV_MOP_BLACKHAT and src == dst, or
-//                 if operation is CV_MOP_GRADIENT
-//        element - structuring element.
-//                  If the pointer is 0, 3x3 rectangular element is used.
-//        operation - one of the following:
-//               (let's nB = "<element>, applied <iterations> times")
-//                CV_MOP_OPEN:   dst = dilate(erode(src,nB),nB);
-//                CV_MOP_CLOSE:  dst = erode(dilate(src,nB),nB);
-//                CV_MOP_GRADIENT: dst = dilate(src,nB)-erode(src,nB)
-//                CV_MOP_TOPHAT:   dst = src - erode(src,nB)
-//                CV_MOP_BLACKHAT: dst = dilate(src,nB) - src
-//        iterations - how many times the erosion/dilation needs to be applied
-//    Returns:
-//F*/
-typedef enum CvMorphOp
+/* Does polar->cartesian coordinates conversion.
+   Either of output components (magnitude or angle) is optional.
+   If magnitude is missing it is assumed to be all 1's */
+OPENCVAPI  void  cvPolarToCart( const CvArr* magnitude, const CvArr* angle,
+                                CvArr* x, CvArr* y,
+                                int angle_in_degrees CV_DEFAULT(0));
+
+/* Does powering: dst(idx) = src(idx)^power */
+OPENCVAPI  void  cvPow( const CvArr* src, CvArr* dst, double power );
+
+/* Does exponention: dst(idx) = exp(src(idx)).
+   Overflow is not handled yet. Underflow is handled.
+   Maximal relative error is ~7e-6 */
+OPENCVAPI  void  cvExp( const CvArr* src, CvArr* dst );
+
+/* Calculates natural logarithms: dst(idx) = log(abs(src(idx))).
+   Logarithm of 0 gives large negative number(~-700)
+   Maximal relative error is ~3e-7
+*/
+OPENCVAPI  void  cvLog( const CvArr* src, CvArr* dst );
+
+/* Checks array values for NaNs, Infs or simply for too large numbers
+   (if CV_CHECK is set). If CV_CHECK_QUIET is set,
+   no runtime errors is raised (function returns zero value in case of "bad" values).
+   Otherwise cvError is called */ 
+#define  CV_CHECK_RANGE    1
+#define  CV_CHECK_QUIET    2
+OPENCVAPI  int  cvCheckArr( const CvArr* arr, int flags CV_DEFAULT(0),
+                            double minVal CV_DEFAULT(0), double maxVal CV_DEFAULT(0));
+#define cvCheckArray cvCheckArr
+
+/* RNG state */
+typedef struct CvRandState
 {
-    CV_MOP_OPEN = 2,
-    CV_MOP_CLOSE = 3,
-    CV_MOP_GRADIENT = 4,
-    CV_MOP_TOPHAT = 5,
-    CV_MOP_BLACKHAT = 6
-} CvMorphOp;
+    uint64    state;    /* RNG state (the current seed and carry)*/
+    int       disttype; /* distribution type */
+    CvScalar  param[2]; /* parameters of RNG */
+}
+CvRandState;
 
-OPENCVAPI  void  cvMorphologyEx( const CvArr* src, CvArr* dst,
-                                 CvArr* temp, IplConvKernel* element,
-                                 CvMorphOp operation, int iterations CV_DEFAULT(1) );
+/* Initalized RNG state */
+#define CV_RAND_UNI      0
+#define CV_RAND_NORMAL   1
+OPENCVAPI  void  cvRandInit( CvRandState* state, double param1,
+                             double param2, int seed,
+                             int disttype CV_DEFAULT(CV_RAND_UNI));
+
+/* Changes RNG range while preserving RNG state */
+OPENCVAPI  void  cvRandSetRange( CvRandState* state, double param1, double param2,
+                                 int index CV_DEFAULT(-1));
+
+/* Fills array with random numbers */
+OPENCVAPI  void  cvRand( CvRandState* state, CvArr* arr );
+
+/* Returns 32-bit random number (ranges are not used)
+   and updates RNG state */
+CV_INLINE  unsigned  cvRandNext( CvRandState* state );
+CV_INLINE  unsigned  cvRandNext( CvRandState* state )
+{
+    uint64 temp = 0;
+
+    if( state )
+    {
+        temp = state->state;
+        temp = (uint64)(unsigned)temp*1554115554 + (temp >> 32);
+        state->state = temp;
+    }
+
+    return (unsigned)temp;
+}
+
 
 /****************************************************************************************\
-*                                  Image Statistics                                      *
+*                                Matrix operations                                       *
 \****************************************************************************************/
+
+/* Calculates cross product of two 3d vectors */
+OPENCVAPI  void  cvCrossProduct( const CvArr* srcA, const CvArr* srcB, CvArr* dst );
+
+/* Matrix transform: dst = A*B + C, C is optional */
+OPENCVAPI  void  cvMatMulAdd( const CvArr* srcA, const CvArr* srcB,
+                              const CvArr* srcC, CvArr* dst );
+#define cvMatMul( srcA, srcB, dst )  cvMatMulAdd( (srcA), (srcB), NULL, (dst))
+
+#define CV_GEMM_A_T 1
+#define CV_GEMM_B_T 2
+#define CV_GEMM_C_T 4
+/* Extended matrix transform:
+   dst = alpha*op(A)*op(B) + beta*op(C), where op(X) is X or X^T */
+OPENCVAPI  void  cvGEMM( const CvArr* srcA, const CvArr* srcB, double alpha,
+                         const CvArr* srcC, double beta, CvArr* dst,
+                         int tABC CV_DEFAULT(0));
+#define cvMatMulAddEx cvGEMM
+
+/* Transforms each element of source array and stores
+   resultant vectors in destination array */
+OPENCVAPI  void  cvMatMulAddS( const CvArr* src, CvArr* dst,
+                               const CvMat* transform,
+                               const CvMat* shiftvec CV_DEFAULT(NULL));
+#define cvTransform cvMatMulAddS
+
+/* Calculates A*A^T (order=0) or A^T*A (order=1) */
+OPENCVAPI void cvMulTransposed( const CvArr* srcarr,
+                                CvArr* dstarr, int order );
+
+/* Tranposes matrix. Square matrices can be transposed in-place */
+OPENCVAPI  void  cvTranspose( const CvArr* src, CvArr* dst );
+#define cvT cvTranspose
+
+
+/* Mirror array data around horizontal (flip=0),
+   vertical (flip=1) or both(flip=-1) axises:
+   cvFlip(src) flips images vertically and sequences horizontally (inplace) */
+OPENCVAPI  void  cvFlip( const CvArr* src, CvArr* dst CV_DEFAULT(NULL),
+                         int flip_mode CV_DEFAULT(0));
+#define cvMirror cvFlip
+
+
+#define CV_SVD_MODIFY_A   1
+#define CV_SVD_U_T        2
+#define CV_SVD_V_T        4
+
+/* Performs Singular Value Decomposition of a matrix */
+OPENCVAPI  void   cvSVD( CvArr* A, CvArr* W CV_DEFAULT(NULL),
+                         CvArr* U CV_DEFAULT(NULL),
+                         CvArr* V CV_DEFAULT(NULL),
+                         int flags CV_DEFAULT(0));
+
+/* Performs Singular Value Back Substitution:
+   flags must be the same as in cvSVD */
+OPENCVAPI  void   cvSVBkSb( const CvArr* warr, const CvArr* uarr,
+                            const CvArr* varr, const CvArr* barr,
+                            CvArr* xarr, int flags );
+
+#define CV_LU  0
+#define CV_SVD 1
+/* Inverts matrix */
+OPENCVAPI  double  cvInvert( const CvArr* src, CvArr* dst,
+                             int method CV_DEFAULT(CV_LU));
+#define cvInv cvInvert
+
+/* Solves linear system Ax = b
+   (returns 0 if A is singular) */
+OPENCVAPI  int  cvSolve( const CvArr* A, const CvArr* b, CvArr* x,
+                         int method CV_DEFAULT(CV_LU));
+
+/* Calculates determinant of input matrix */
+OPENCVAPI  double cvDet( const CvArr* mat );
+
+/* Calculates trace of the matrix (sum of elements on the main diagonal) */
+OPENCVAPI  CvScalar cvTrace( const CvArr* mat );
+
+/* Finds eigen values and vectors of a _symmetric_ matrix */
+OPENCVAPI  void  cvEigenVV( CvArr* src, CvArr* evects, CvArr* evals, double eps );
+
+/* Makes an identity matrix (mat_ij = i == j) */
+OPENCVAPI  void  cvSetIdentity( CvArr* mat, CvScalar value CV_DEFAULT(cvScalar(1)) );
+
+/* Does perspective transform on every element of input array */
+OPENCVAPI  void  cvPerspectiveTransform( const CvArr* src, CvArr* dst, const CvArr* mat );
+
+/* Calculates covariation matrix for a set of vectors */
+OPENCVAPI  void  cvCalcCovarMatrix( const CvArr** vects, CvArr* covarMatrix, CvArr* avg );
+
+/* Calculates Mahalanobis(weighted) distance */
+OPENCVAPI  double  cvMahalanobis( const CvArr* srcA, const CvArr* srcB, CvArr* mat );
+#define cvMahalonobis  cvMahalanobis
 
 /****************************************************************************************\
-*      Image statistics functions support the next image formats:                        *
-*         single-channel: IPL_DEPTH_8U, IPL_DEPTH_8S, IPL_DEPTH_32F                      *
-*         three-channel: IPL_DEPTH_8U, IPL_DEPTH_8S, IPL_DEPTH_32F (COI must be != 0)    *
+*                                    Array Statistics                                    *
 \****************************************************************************************/
 
-/*F///////////////////////////////////////////////////////////////////////////////////////
-//
-//    Name:    cvSum
-//    Purpose:
-//      Sums all the elements in the image ROI or in the matrix
-//    Context:
-//    Parameters:
-//        array - image or matrix.
-//    Returns:
-//        sum of every channel.
-//    Note:
-//        In case of COI is set the sum over the selected channel is saved
-//        if the 0-th element of the returned CvScalar structure.
-//F*/
+/* Finds sum of array elements */
 OPENCVAPI  CvScalar  cvSum( const CvArr* array );
 
 
-/*F///////////////////////////////////////////////////////////////////////////////////////
-//
-//    Name:    cvCountNonZero
-//    Purpose:
-//        Counts all the non-zero elements in the image ROI or in the matrix
-//    Context:
-//    Parameters:
-//        array - image or matrix.
-//    Returns:
-//        count of non-zero pixels
-//    Note:
-//        For multi-channel images COI must be set.
-//F*/
+/* Calculates number of non-zero pixels */
 OPENCVAPI  int  cvCountNonZero( const CvArr* array );
 
 
-/*F///////////////////////////////////////////////////////////////////////////////////////
-//
-//    Name:    cvAvg
-//    Purpose:
-//      Calculates average value of the image region or the matrix.
-//    Context:
-//    Parameters:
-//        array - input image or matrix.
-//        mask - optional parameter: 8uC1 or 8sC1 array that specifies
-//               the processed region of the input array
-//    Returns:
-//        average value for every channel. In case of COI is set, average value
-//        of the selected COI is stored into 0-th element
-//        of the returned CvScalar structure
-//F*/
-OPENCVAPI  CvScalar  cvAvg( const CvArr* array, const CvArr* mask CV_DEFAULT(0) );
+/* Calculates mean value of array elements */
+OPENCVAPI  CvScalar  cvAvg( const CvArr* array, const CvArr* mask CV_DEFAULT(NULL) );
 
-/*F///////////////////////////////////////////////////////////////////////////////////////
-//
-//    Name:    cvAvgSdv
-//    Purpose:
-//      Calculates mean and standard deviation of pixels in the image region
-//    Context:
-//    Parameters:
-//        img - input image.
-//        mean - mean value
-//        std_dev - standard deviation
-//        mask - mask(byte-depth, single channel)
-//    Returns:
-//
-//F*/
+/* Calculates mean and standard deviation of pixel values */
 OPENCVAPI  void  cvAvgSdv( const CvArr* array, CvScalar* mean, CvScalar* std_dev,
-                           const CvArr* mask CV_DEFAULT(0) );
+                           const CvArr* mask CV_DEFAULT(NULL) );
 
-/*F///////////////////////////////////////////////////////////////////////////////////////
-//
-//    Name:    cvMinMaxLoc
-//    Purpose:
-//      Finds minimum and maximum pixel values in the image region
-//      and determines their locations.
-//    Context:
-//    Parameters:
-//        img - input image.
-//        minVal - minimum value
-//        maxVal - maximum value
-//        minLoc - location of the minimum
-//        maxLoc - location of the maximum
-//        mask - mask(byte-depth, single channel)
-//    Returns:
-//    Note:
-//      If there are several global minimums and/or maximums,
-//      function returns the most top-left extremums.
-//F*/
+/* Finds global minimum, maximum among the input array elements and positions
+   of the extremums */
 OPENCVAPI  void  cvMinMaxLoc( const CvArr* array, double* min_val, double* max_val,
-                              CvPoint* min_loc CV_DEFAULT(0),
-                              CvPoint* max_loc CV_DEFAULT(0),
-                              const CvArr* mask CV_DEFAULT(0) );
+                              CvPoint* min_loc CV_DEFAULT(NULL),
+                              CvPoint* max_loc CV_DEFAULT(NULL),
+                              const CvArr* mask CV_DEFAULT(NULL) );
 
-
-/****************************************************************************************\
-*                                         Moments                                        *
-\****************************************************************************************/
-
-/*F///////////////////////////////////////////////////////////////////////////////////////
-//
-//    Name:    cvMoments
-//    Purpose:
-//      Calculates moments(up to third order) of the image ROI.
-//      It fills moments state and after that, it is possible to
-//      return concrete moments using
-//        cvGetSpatialMoment, cvGetCentralMoment or
-//        cvGetNormalizedCentralMoment
-//    Context:
-//    Parameters:
-//        img - input image
-//        moments - output moments state.
-//        binary - if non zero, function treats non-zero pixels as 1s.
-//    Returns:
-//F*/
+/* spatial and central moments */
 typedef struct CvMoments
 {
-    /* spatial moments */
-    double  m00, m10, m01, m20, m11, m02, m30, m21, m12, m03;
-    /* central moments */
-    double  mu20, mu11, mu02, mu30, mu21, mu12, mu03;
-    /* m00 != 0 ? 1/sqrt(m00) : 0 */
-    double  inv_sqrt_m00;
+    double  m00, m10, m01, m20, m11, m02, m30, m21, m12, m03; /* spatial moments */
+    double  mu20, mu11, mu02, mu30, mu21, mu12, mu03; /* central moments */
+    double  inv_sqrt_m00; /* m00 != 0 ? 1/sqrt(m00) : 0 */
 } CvMoments;
 
-OPENCVAPI void cvMoments( const CvArr* array, CvMoments* moments, int binary CV_DEFAULT( 0 ));
+/* Calculates all spatial and central moments up to the 3rd order */
+OPENCVAPI void cvMoments( const CvArr* array, CvMoments* moments, int binary CV_DEFAULT(0));
 
-
-/*F///////////////////////////////////////////////////////////////////////////////////////
-//
-//    Name:    cvGetSpatialMoment, cvGetCentralMoment, cvGetCentralNormalizedMoment
-//    Purpose:
-//      Returns different moments(up to third order) from moments state.
-//        for raster image, these moments are defined as:
-//        mij = spatial_moment(i,j) = sum(y=0,H-1) sum(x=0,W-1) [I(x,y) *(x^i) *(y^j)]
-//       (where I(x,y) means pixel value at point(x,y). x^y means x power y).
-//
-//        muij = central_moment(i,j) = sum(y=0,H-1) sum(x=0,W-1)
-//                                     [I(x,y) *(x-mean_x)^i) *((y-mean_y)^j)]
-//       (where mean_x = m10/m00, mean_y = m01/m00.
-//         it's easy to see that mu00 = m00, mu10 = mu01 = 0)
-//
-//        nu_ij = central_normalized_moment(i,j) = muij/(m00^((i+j)/2+1))
-//    Context:
-//    Parameters:
-//        moments - moment state( filled by cvMoments or cvContourMoments )
-//        x_order - x order of the moment
-//        y_order - y order of the moment.
-//        The following condition has to be satifsied:
-//          0 <= x_order + y_order <= 3
-//    Returns:
-//        Required moment
-//F*/
+/* Retrieve particular spatial, central or normalized central moments */
 OPENCVAPI  double  cvGetSpatialMoment( CvMoments* moments, int x_order, int y_order );
 OPENCVAPI  double  cvGetCentralMoment( CvMoments* moments, int x_order, int y_order );
 OPENCVAPI  double  cvGetNormalizedCentralMoment( CvMoments* moments,
-                                              int x_order, int y_order );
+                                                 int x_order, int y_order );
 
-
-/*F///////////////////////////////////////////////////////////////////////////////////////
-//
-//    Name:    cvGetHuMoments
-//    Purpose:
-//      Calculates seven Hu invariants from normalized moments
-//    Context:
-//    Parameters:
-//        moments - moments state.
-//        hu_moments - Hu moments
-//    Returns:
-//F*/
+/* Hu invariants */
 typedef struct CvHuMoments
 {
     double hu1, hu2, hu3, hu4, hu5, hu6, hu7; /* Hu invariants */
 } CvHuMoments;
 
+/* Calculates 7 Hu's invariants from precalculated spatial and central moments */
 OPENCVAPI void cvGetHuMoments( CvMoments*  moments, CvHuMoments*  hu_moments );
 
-
-/*F///////////////////////////////////////////////////////////////////////////////////////
-//
-//    Name:    cvNorm, cvNormMask
-//    Purpose:
-//      Calculates different types of norm for single or a pair of images
-//    Context:
-//    Parameters:
-//        imgA - first input image
-//        imgB - second input image
-//        mask - determine pixels that are considered in norm calculation
-//        norm_type - type of the norm.
-//                                imgB == 0           imgB != 0
-//         ---------------------------------------------------------------------------
-//          CV_C:               ||imgA||_inf      ||imgA - imgB||_inf
-//          CV_L1:              ||imgA||_L1       ||imgA - imgB||_L1
-//          CV_L2:              ||imgA||_L2       ||imgA - imgB||_L2
-//         ---------------------------------------------------------------------------
-//          CV_RELATIVE_C:       forbidden       ||imgA - imgB||_inf/||imgB||_inf
-//          CV_RELATIVE_L1:      forbidden       ||imgA - imgB||_L1/||imgB||_L1
-//          CV_RELATIVE_L2:      forbidden       ||imgA - imgB||_L2/||imgB||_L2
-//    Returns:
-//      required norm
-//F*/
+/* types of array norm */
 #define CV_C            1
 #define CV_L1           2
 #define CV_L2           4
@@ -991,323 +821,422 @@ OPENCVAPI void cvGetHuMoments( CvMoments*  moments, CvHuMoments*  hu_moments );
 #define CV_RELATIVE_L1  (CV_RELATIVE | CV_L1)
 #define CV_RELATIVE_L2  (CV_RELATIVE | CV_L2)
 
-OPENCVAPI  double  cvNorm( const CvArr* imgA, const CvArr* imgB, int normType,
-                           const CvArr* mask CV_DEFAULT(0) );
+/* Finds norm, difference norm or relative difference norm for an array (two arrays) */
+OPENCVAPI  double  cvNorm( const CvArr* imgA, const CvArr* imgB CV_DEFAULT(NULL),
+                           int normType CV_DEFAULT(CV_L2),
+                           const CvArr* mask CV_DEFAULT(NULL) );
 
 /****************************************************************************************\
-*                                     Drawing                                            *
+*                              Dynamic data structures                                   *
 \****************************************************************************************/
 
-/****************************************************************************************\
-*       Drawing functions work with the following formats:                               *
-*           single channel: IPL_DEPTH_8U, IPL_DEPTH_8S                                   *
-*           three channels: IPL_DEPTH_8U, IPL_DEPTH_8S, coi must be == 0                 *
-*       All the functions include parameter color that means rgb value for three-channel *
-*       images(and may be constructed with CV_RGB macro) and brightness                 *
-*      (least-significant byte of color) for grayscale images.                          *
-*       If drawn figure is partially or completely outside the image, it is clipped.     *
-\****************************************************************************************/
-
-/*F///////////////////////////////////////////////////////////////////////////////////////
-//
-//    Name:    cvLine
-//    Purpose:
-//      Draws line on the image ROI between two points
-//    Context:
-//    Parameters:
-//        img  - image where the line is drawn.
-//        pt1  - starting point
-//        pt2  - ending point
-//        color - line color(or brightness)
-//        thickness - line thickness. 1 means simple line.
-//                    if line is thick, function draws the line with round endings.
-//        connectivity - line connectivity (4 or 8)
-//    Returns:
-//F*/
-OPENCVAPI  void  cvLine( CvArr* array, CvPoint pt1, CvPoint pt2,
-                         double color, int thickness CV_DEFAULT(1),
-                         int connectivity CV_DEFAULT(8) );
+/* Creates new memory storage.
+   block_size == 0 means that default,
+   somewhat optimal size, is used (currently, it is 64K) */
+OPENCVAPI  CvMemStorage*  cvCreateMemStorage( int block_size CV_DEFAULT(0));
 
 
-/*F///////////////////////////////////////////////////////////////////////////////////////
-//
-//    Name:    cvLineAA
-//    Purpose:
-//      Draws thin antialiazed line on the image ROI between two points
-//    Context:
-//    Parameters:
-//        img  - image where the line is drawn.
-//        pt1  - starting point
-//        pt2  - ending point
-//        scale - number of fractional bits in point coordinates.
-//                That is, line can be drawn with sub-pixel accuracy
-//        color - line color(or brightness)
-//    Returns:
-//F*/
-OPENCVAPI  void  cvLineAA( CvArr* array, CvPoint pt1, CvPoint pt2,
-                           double color, int scale CV_DEFAULT(0));
-
-/*F///////////////////////////////////////////////////////////////////////////////////////
-//
-//    Name:    cvRectangle
-//    Purpose:
-//      Draws rectangle on the image ROI
-//    Context:
-//    Parameters:
-//        img  - image where the rectangle is drawn.
-//        pt1  - one of the rectangle corners
-//        pt2  - opposite corner of the rectangle
-//        thickness - thickness of the lines that made up rectangle.
-//        color - line color(or brightness)
-//    Returns:
-//F*/
-OPENCVAPI  void  cvRectangle( CvArr* array, CvPoint pt1, CvPoint pt2,
-                              double color, int thickness CV_DEFAULT(1));
-
-/*F///////////////////////////////////////////////////////////////////////////////////////
-//
-//    Name:    cvCircle
-//    Purpose:
-//      Draws circle on the image ROI
-//    Context:
-//    Parameters:
-//        img  - image.
-//        center - circle center
-//        radius - circle radius(must be >= 0)
-//        color - circle color(or brightness)
-//        thickenss - thickness of drawn circle. <0 means filled circle.
-//    Returns:
-//F*/
-OPENCVAPI  void  cvCircle( CvArr* array, CvPoint center, int radius,
-                           double color, int thickness CV_DEFAULT(1));
+/* Creates a memory storage that will borrow memory blocks from parent storage */
+OPENCVAPI  CvMemStorage*  cvCreateChildMemStorage( CvMemStorage* parent );
 
 
-/*F///////////////////////////////////////////////////////////////////////////////////////
-//
-//    Name:    cvCircleAA
-//    Purpose:
-//      Draws circle on the image ROI
-//    Context:
-//    Parameters:
-//        img  - image.
-//        center - circle center
-//        radius - circle radius(must be >= 0)
-//        color - circle color(or brightness)
-//        scale - number of fractional bits in point coordinates.
-//                That is, circle can be drawn with sub-pixel accuracy
-//    Returns:
-//F*/
-OPENCVAPI  void  cvCircleAA( CvArr* array, CvPoint center, int radius,
-                             double color, int scale CV_DEFAULT(0) );
+/* Releases memory storage. All the children of a parent must be released before
+   the parent. A child storage returns all the blocks to parent when it is released */
+OPENCVAPI  void  cvReleaseMemStorage( CvMemStorage** storage );
 
 
-/*F///////////////////////////////////////////////////////////////////////////////////////
-//
-//    Name:    cvEllipse
-//    Purpose:
-//      Draws elliptic arc
-//    Context:
-//    Parameters:
-//        img  - image.
-//        center - ellipse center
-//        axes - half axes of the ellipse
-//        angle - ellipse angle
-//        startAngle - starting angle of elliptic arc
-//        endAngle - ending angle of elliptic arc
-//        thickness - arc thickness
-//        color - ellipse color(or brightness)
-//    Returns:
-//F*/
-OPENCVAPI  void  cvEllipse( CvArr* array, CvPoint center, CvSize axes,
-                            double angle, double startAngle, double endAngle,
-                            double color, int thickness CV_DEFAULT(1));
+/* Clears memory storage. This is the only way(!!!) (besides cvRestoreMemStoragePos)
+   to reuse memory allocated for the storage - cvClearSeq,cvClearSet ...
+   do not free any memory.
+   A child storage returns all the blocks to the parent when it is cleared */
+OPENCVAPI  void  cvClearMemStorage( CvMemStorage* storage );
 
-/*F///////////////////////////////////////////////////////////////////////////////////////
-//
-//    Name:    cvEllipseAA
-//    Purpose:
-//      Draws antialiazed elliptic arc
-//    Context:
-//    Parameters:
-//        img  - image.
-//        center - ellipse center
-//        axes - half axes of the ellipse
-//        angle - ellipse angle
-//        startAngle - starting angle of elliptic arc
-//        endAngle - ending angle of elliptic arc
-//        scale - number of fractioanl bits in center coordinates and axes sizes.
-//        color - ellipse color(or brightness)
-//    Returns:
-//F*/
-OPENCVAPI  void  cvEllipseAA( CvArr* array, CvPoint center, CvSize axes,
-                              double angle, double startAngle,
-                              double endAngle, double color,
-                              int scale CV_DEFAULT(0) );
+/* Remember a storage "free memory" position */
+OPENCVAPI  void  cvSaveMemStoragePos( const CvMemStorage* storage, CvMemStoragePos* pos );
 
-/*F///////////////////////////////////////////////////////////////////////////////////////
-//
-//    Name:    cvFillConvexPoly
-//    Purpose:
-//      Fills convex polygon
-//    Context:
-//    Parameters:
-//        img  - image.
-//        pts  - array of polygon vertices
-//        ntps - number of vertices in the polygon
-//        color - polygon color(or brightness)
-//    Returns:
-//    Notes:
-//        fucntion automatically closes the contour -
-//        adds edge between first and last vertices.
-//        function doesn't check that input polygon is convex.
-//F*/
-OPENCVAPI  void  cvFillConvexPoly( CvArr* array, CvPoint* pts, int npts, double color );
+/* Restore a storage "free memory" position */
+OPENCVAPI  void  cvRestoreMemStoragePos( CvMemStorage* storage, CvMemStoragePos* pos );
+
+/* Allocates continuous buffer of the specified size in the storage */
+OPENCVAPI  void* cvMemStorageAlloc( CvMemStorage* storage, int size );
+
+/* Creates new empty sequence that will reside in the specified storage */
+OPENCVAPI  CvSeq*  cvCreateSeq( int seq_flags, int header_size,
+                             int elem_size, CvMemStorage* storage );
+
+/* Changes default size (granularity) of sequence blocks.
+   The default size is ~1Kbyte */
+OPENCVAPI  void  cvSetSeqBlockSize( CvSeq* seq, int delta_elements );
 
 
-/*F///////////////////////////////////////////////////////////////////////////////////////
-//
-//    Name:    cvFillPoly
-//    Purpose:
-//      Fills arbitrary regions, bounded by several polygonal contours.
-//    Context:
-//    Parameters:
-//        img  - image.
-//        contours - number of contours
-//        pts  - array of pointers to polygonal contours
-//        ntps - array of vertices counters for the contours
-//        color - polygons color(or brightness)
-//    Returns:
-//    Notes:
-//        function automatically closes each polygonal contour.
-//        If some contours are overlapped, they are added modulo 2.
-//        That is, pixel is filled, if it belongs to odd number of polygonal contours.
-//F*/
-OPENCVAPI  void  cvFillPoly( CvArr* array, CvPoint** pts,
-                             int* npts, int contours, double color );
-
-/*F///////////////////////////////////////////////////////////////////////////////////////
-//
-//    Name:    cvPolyLine
-//    Purpose:
-//      Draws polygons outline with simple or thick lines.
-//    Context:
-//    Parameters:
-//        img  - image.
-//        contours - number of contours
-//        pts  - array of pointers to polygonal contours
-//        ntps - array of vertices counters for the contours
-//        closed - if non-zero, function closes each contour.
-//        thickness - line thickness
-//        color - polygons color(or brightness)
-//    Returns:
-//F*/
-OPENCVAPI  void  cvPolyLine( CvArr* array, CvPoint** pts, int* npts, int contours,
-                             int closed, double color,
-                             int thickness CV_DEFAULT(1),
-                             int connectivity CV_DEFAULT(8));
-
-/*F///////////////////////////////////////////////////////////////////////////////////////
-//
-//    Name:    cvPolyLineAA
-//    Purpose:
-//      Draws polygons outline with antialiazes lines.
-//    Context:
-//    Parameters:
-//        img  - image.
-//        contours - number of contours
-//        pts  - array of pointers to polygonal contours
-//        ntps - array of vertices counters for the contours
-//        closed - if non-zero, function closes each contour.
-//        scale - number of fractioanl bits in vertex coordinates
-//        color - polygons color(or brightness)
-//    Returns:
-//F*/
-OPENCVAPI  void  cvPolyLineAA( CvArr* array, CvPoint** pts, int* npts, int contours,
-                               int closed, double color, int scale CV_DEFAULT(0) );
+/* Adds new element to the end of sequence. Returns pointer to the element */
+OPENCVAPI  char*  cvSeqPush( CvSeq* seq, void* element CV_DEFAULT(NULL));
 
 
-/*F///////////////////////////////////////////////////////////////////////////////////////
-//
-//    Name:    cvInitFont
-//    Purpose:
-//      Initializes font to use it in following text rendering operations
-//    Context:
-//    Parameters:
-//        font - pointer to initialized font structure.
-//        font_face - font family. There is a single font,
-//                    supported now - CV_FONT_VECTOR0.
-//        hscale - multiplier for horizontal letter sizes.
-//                 If 1 then the original size is used,
-//                 if 2 - twice wider, if 0.5 - twice thinner etc.
-//        vscale - multiplier for vertical letter sizes.
-//                 If 1 then the original size is used,
-//                 if 2 - twice longer, if 0.5 - twice shorter etc.
-//        italic_scale - tangent of letter slope, 0 means no slope,
-//                       1 - 45 degree slope
-//        thickness - letter thickness
-//    Returns:
-//F*/
-typedef enum CvFontFace
+/* Adds new element to the beginning of sequence. Returns pointer to it */
+OPENCVAPI  char*  cvSeqPushFront( CvSeq* seq, void* element CV_DEFAULT(NULL));
+
+
+/* Removes the last element from sequence and optionally saves it */
+OPENCVAPI  void  cvSeqPop( CvSeq* seq, void* element CV_DEFAULT(NULL));
+
+
+/* Removes the first element from sequence and optioanally saves it */
+OPENCVAPI  void  cvSeqPopFront( CvSeq* seq, void* element CV_DEFAULT(NULL));
+
+
+#define CV_FRONT 1
+#define CV_BACK 0
+/* Adds several new elements to the end of sequence */
+OPENCVAPI  void  cvSeqPushMulti( CvSeq* seq, void* elements,
+                                 int count, int in_front CV_DEFAULT(0) );
+
+/* Removes several elements from the end of sequence and optionally saves them */
+OPENCVAPI  void  cvSeqPopMulti( CvSeq* seq, void* elements,
+                                int count, int in_front CV_DEFAULT(0) );
+
+/* Inserts a new element in the middle of sequence.
+   cvSeqInsert(seq,0,elem) == cvSeqPushFront(seq,elem) */
+OPENCVAPI  char*  cvSeqInsert( CvSeq* seq, int before_index,
+                               void* element CV_DEFAULT(NULL));
+
+/* Removes specified sequence element */
+OPENCVAPI  void  cvSeqRemove( CvSeq* seq, int index );
+
+
+/* Removes all the elements from the sequence. The freed memory
+   can be reused later only by the same sequence unless cvClearMemStorage
+   or cvRestoreMemStoragePos is called */
+OPENCVAPI  void  cvClearSeq( CvSeq* seq );
+
+
+/* Retrives pointer to specified sequence element.
+   Negative indices are supported and mean counting from the end
+   (e.g -1 means the last sequence element) */
+OPENCVAPI  char*  cvGetSeqElem( CvSeq* seq, int index, CvSeqBlock** block CV_DEFAULT(NULL) );
+
+
+/* Calculates index of the specified sequence element.
+   Returns -1 if element does not belong to the sequence */
+OPENCVAPI int  cvSeqElemIdx( const CvSeq* seq, const void* element,
+                             CvSeqBlock** block CV_DEFAULT(NULL) );
+
+/* Initializes sequence writer. The new elements will be added to the end of sequence */
+OPENCVAPI  void  cvStartAppendToSeq( CvSeq* seq, CvSeqWriter* writer );
+
+
+/* Combination of cvCreateSeq and cvStartAppendToSeq */
+OPENCVAPI  void  cvStartWriteSeq( int seq_flags, int header_size,
+                                  int elem_size, CvMemStorage* storage,
+                                  CvSeqWriter* writer );
+
+/* Closes sequence writer, updates sequence header and returns pointer
+   to the resultant sequence
+   (which may be useful if the sequence was created using cvStartWriteSeq))
+*/
+OPENCVAPI  CvSeq*  cvEndWriteSeq( CvSeqWriter* writer );
+
+
+/* Updates sequence header. May be useful to get access to some of previously
+   written elements via cvGetSeqElem or sequence reader */
+OPENCVAPI  void   cvFlushSeqWriter( CvSeqWriter* writer );
+
+
+/* Initializes sequence reader.
+   The sequence can be read in forward or backward direction */
+OPENCVAPI void cvStartReadSeq( const CvSeq* seq, CvSeqReader* reader,
+                               int reverse CV_DEFAULT(0) );
+
+
+/* Returns current sequence reader position (currently observed sequence element) */
+OPENCVAPI  int  cvGetSeqReaderPos( CvSeqReader* reader );
+
+
+/* Changes sequence reader position. It may seek to an absolute or
+   to relative to the current position */
+OPENCVAPI  void   cvSetSeqReaderPos( CvSeqReader* reader, int index,
+                                     int is_relative CV_DEFAULT(0));
+
+/* Copies sequence content to an array */
+OPENCVAPI  void*  cvCvtSeqToArray( CvSeq* seq, CvArr* array,
+                                   CvSlice slice CV_DEFAULT(CV_WHOLE_SEQ) );
+
+/* Creates sequence header for array.
+   After that all the operations on sequences that do not alter the content
+   can be applied to the resultant sequence */
+OPENCVAPI  CvSeq* cvMakeSeqHeaderForArray( int seq_type, int header_size,
+                                           int elem_size, void* elements, int total,
+                                           CvSeq* seq, CvSeqBlock* block );
+
+/* Extracts sequence slice (with or without copying sequence elements */
+OPENCVAPI CvSeq* cvSeqSlice( CvSeq* seq, CvSlice slice,
+                             CvMemStorage* storage CV_DEFAULT(NULL),
+                             int copy_data CV_DEFAULT(0));
+
+CV_INLINE CvSeq* cvCloneSeq( CvSeq* seq, CvMemStorage* storage CV_DEFAULT(NULL));
+CV_INLINE CvSeq* cvCloneSeq( CvSeq* seq, CvMemStorage* storage )
 {
-    CV_FONT_VECTOR0 = 0
-} CvFontFace;
+    return cvSeqSlice( seq, CV_WHOLE_SEQ, storage, 1 );
+}
 
-typedef struct CvFont
+/* Removes sequence slice */
+OPENCVAPI  void  cvSeqRemoveSlice( CvSeq* seq, CvSlice slice );
+
+/* Inserts a sequence or array into another sequence */
+OPENCVAPI  void  cvSeqInsertSlice( CvSeq* seq, int index, const CvArr* from_arr );
+
+/* a < b ? -1 : a > b ? 1 : 0 */
+CV_EXTERN_C_FUNCPTR( int (CV_CDECL* CvCmpFunc)
+                     (const void* a, const void* b, void* userdata ));
+
+/* Sorts sequence in-place given element comparison function */
+OPENCVAPI  void cvSeqSort( CvSeq* seq, CvCmpFunc func, void* userdata );
+
+/* Reverses order of sequence elements in-place */
+OPENCVAPI  void cvSeqInvert( CvSeq* seq );
+
+/* Splits sequence into set of equivalency classes
+   using specified equivalency criteria */
+OPENCVAPI  int  cvPartitionSeq( CvSeq* seq, CvMemStorage* storage, CvSeq** comps,
+                                CvCmpFunc is_equal, void* userdata, int is_set );
+
+/************ Internal sequence functions ************/
+OPENCVAPI  void  cvChangeSeqBlock( CvSeqReader* reader, int direction );
+OPENCVAPI  void  cvCreateSeqBlock( CvSeqWriter* writer );
+
+
+/* Creates a new set */
+OPENCVAPI  CvSet*  cvCreateSet( int set_flags, int header_size,
+                                int elem_size, CvMemStorage* storage );
+
+/* Adds new element to the set and returns pointer to it */
+OPENCVAPI  int  cvSetAdd( CvSet* set_header, CvSetElem* element CV_DEFAULT(NULL),
+                          CvSetElem** inserted_element CV_DEFAULT(NULL) );
+
+/* Fast variant of cvSetAdd */
+CV_INLINE  CvSetElem* cvSetNew( CvSet* set_header );
+CV_INLINE  CvSetElem* cvSetNew( CvSet* set_header )
 {
-    const int*  data; /* font data and metrics */
-    CvSize      size; /* horizontal and vertical scale factors,
-                         (8:8) fix-point numbers */
-    int         italic_scale; /* slope coefficient: 0 - normal, >0 - italic */
-    int         thickness; /* letters thickness */
-    int         dx; /* horizontal interval between letters */
-} CvFont;
+    CvSetElem* elem = set_header->free_elems;
+    if( elem )
+    {
+        set_header->free_elems = elem->next_free;
+        elem->flags = elem->flags & CV_SET_ELEM_IDX_MASK;
+    }
+    else
+        cvSetAdd( set_header, NULL, (CvSetElem**)&elem );
+    return elem;
+}
 
-OPENCVAPI  void  cvInitFont( CvFont* font, CvFontFace font_face,
-                             double hscale, double vscale,
-                             double italic_scale CV_DEFAULT(0),
-                             int thickness CV_DEFAULT(1) );
-
-/*F///////////////////////////////////////////////////////////////////////////////////////
-//
-//    Name:    cvPutText
-//    Purpose:
-//      Draws text string on the image with given font
-//    Context:
-//    Parameters:
-//        img  - image.
-//        text - text string
-//        org  - left-bottom corner of output text string
-//        font - text font
-//        color - polygons color(or brightness)
-//    Returns:
-//F*/
-OPENCVAPI  void  cvPutText( CvArr* array, const char* text, CvPoint org,
-                            CvFont* font, double color );
+/* Removes set element given its pointer */
+CV_INLINE  void cvSetRemoveByPtr( CvSet* set_header, void* _elem );
+CV_INLINE  void cvSetRemoveByPtr( CvSet* set_header, void* _elem )
+{
+    CvSetElem* elem = (CvSetElem*)_elem;
+    assert( elem->flags >= 0 && (elem->flags & CV_SET_ELEM_IDX_MASK) < set_header->total );
+    elem->next_free = set_header->free_elems;
+    elem->flags = (elem->flags & CV_SET_ELEM_IDX_MASK) | CV_SET_ELEM_FREE_FLAG;
+    set_header->free_elems = elem;
+}
 
 
-/*F///////////////////////////////////////////////////////////////////////////////////////
-//
-//    Name:    cvGetTextSize
-//    Purpose:
-//      Calculates bounding rectangle for given text string and font.
-//    Context:
-//    Parameters:
-//        text - text string
-//        font - font to draw the string with
-//        text_size - output parameter. width and height of bounding box
-//                   (not including part of the text below base line)
-//        ymin - output parameter. negative value or zero - minus height of
-//               text part below base line
-//    Returns:
-//F*/
-OPENCVAPI  void  cvGetTextSize( const char* text_string, CvFont* font,
-                                CvSize* text_size, int* ymin );
+/* Removes element from the set by its index  */
+OPENCVAPI  void   cvSetRemove( CvSet* set_header, int index );
 
+
+/* Returns a set element by index. If the element doesn't belong to the set,
+   NULL is returned */
+OPENCVAPI  CvSetElem*  cvGetSetElem( CvSet* set_header, int index );
+
+
+/* Removes all the elements from the set */
+OPENCVAPI  void  cvClearSet( CvSet* set_header );
+
+
+/* Creates new graph */
+OPENCVAPI  CvGraph*   cvCreateGraph( int graph_flags, int header_size,
+                                  int vtx_size, int edge_size,
+                                  CvMemStorage* storage );
+
+/* Adds new vertex to the graph */
+OPENCVAPI  int  cvGraphAddVtx( CvGraph* graph, CvGraphVtx* vertex CV_DEFAULT(NULL),
+                               CvGraphVtx** inserted_vertex CV_DEFAULT(NULL) );
+
+
+/* Removes vertex from the graph together with all incident edges */
+OPENCVAPI  void   cvGraphRemoveVtx( CvGraph* graph, int index );
+OPENCVAPI  void   cvGraphRemoveVtxByPtr( CvGraph* graph, CvGraphVtx* vtx );
+
+
+/* Link two vertices specifed by indices or pointers if they
+   are not connected or return pointer to already existing edge
+   connecting the vertices.
+   Functions return 1 if a new edge was created, 0 otherwise */
+OPENCVAPI  int  cvGraphAddEdge( CvGraph* graph,
+                                int start_idx, int end_idx,
+                                CvGraphEdge* edge CV_DEFAULT(NULL),
+                                CvGraphEdge** inserted_edge CV_DEFAULT(NULL) );
+
+OPENCVAPI  int  cvGraphAddEdgeByPtr( CvGraph* graph,
+                               CvGraphVtx* start_vtx, CvGraphVtx* end_vtx,
+                               CvGraphEdge* edge CV_DEFAULT(NULL),
+                               CvGraphEdge** inserted_edge CV_DEFAULT(NULL) );
+
+/* Remove edge connecting two vertices */
+OPENCVAPI  void  cvGraphRemoveEdge( CvGraph* graph, int start_idx, int end_idx );
+OPENCVAPI  void  cvGraphRemoveEdgeByPtr( CvGraph* graph, CvGraphVtx* start_vtx,
+                                         CvGraphVtx* end_vtx );
+
+/* Find edge connecting two vertices */
+OPENCVAPI  CvGraphEdge*  cvFindGraphEdge( CvGraph* graph, int start_idx, int end_idx );
+OPENCVAPI  CvGraphEdge*  cvFindGraphEdgeByPtr( CvGraph* graph, CvGraphVtx* start_vtx,
+                                               CvGraphVtx* end_vtx );
+#define cvGraphFindEdge cvFindGraphEdge
+#define cvGraphFindEdgeByPtr cvFindGraphEdgeByPtr
+
+/* Remove all vertices and edges from the graph */
+OPENCVAPI  void  cvClearGraph( CvGraph* graph );
+
+
+/* Count number of edges incident to the vertex */
+OPENCVAPI  int  cvGraphVtxDegree( CvGraph* graph, int vtx_idx );
+OPENCVAPI  int  cvGraphVtxDegreeByPtr( CvGraph* graph, CvGraphVtx* vtx );
+
+
+/* Retrieves graph vertex by given index */
+#define cvGetGraphVtx( graph, idx ) (CvGraphVtx*)cvGetSetElem((CvSet*)(graph), (idx))
+
+/* Retrieves index of a graph vertex given its pointer */
+#define cvGraphVtxIdx( graph, vtx ) ((vtx)->flags & CV_SET_ELEM_IDX_MASK)
+
+/* Retrieves index of a graph edge given its pointer */
+#define cvGraphEdgeIdx( graph, edge ) ((edge)->flags & CV_SET_ELEM_IDX_MASK)
+
+
+#define  CV_GRAPH_VERTEX        1
+#define  CV_GRAPH_TREE_EDGE     2
+#define  CV_GRAPH_BACK_EDGE     4
+#define  CV_GRAPH_FORWARD_EDGE  8
+#define  CV_GRAPH_CROSS_EDGE    16
+#define  CV_GRAPH_ANY_EDGE      30
+#define  CV_GRAPH_NEW_TREE      32
+#define  CV_GRAPH_BACKTRACKING  64
+#define  CV_GRAPH_OVER          -1
+
+#define  CV_GRAPH_ALL_ITEMS    -1
+
+/* flags for graph vertices and edges */
+#define  CV_GRAPH_ITEM_VISITED_FLAG  (1 << 30)
+#define  CV_IS_GRAPH_VERTEX_VISITED(vtx) \
+    (((CvGraphVtx*)(vtx))->flags & CV_GRAPH_ITEM_VISITED_FLAG)
+#define  CV_IS_GRAPH_EDGE_VISITED(edge) \
+    (((CvGraphEdge*)(edge))->flags & CV_GRAPH_ITEM_VISITED_FLAG)
+#define  CV_GRAPH_SEARCH_TREE_NODE_FLAG   (1 << 29)
+#define  CV_GRAPH_FORWARD_EDGE_FLAG       (1 << 28)
+
+typedef struct CvGraphScanner
+{
+    CvGraphVtx* vtx;       /* current graph vertex (or current edge origin) */
+    CvGraphVtx* dst;       /* current graph edge destination vertex */
+    CvGraphEdge* edge;     /* current edge */
+
+    CvGraph* graph;        /* the graph */
+    CvSeq*   stack;        /* the graph vertex stack */
+    int      index;        /* the lower bound of certainly visited vertices */
+    int      mask;         /* event mask */
+}
+CvGraphScanner;
+
+/* Initializes graph traversal process.
+   <mask> indicates what events one wants to handle. */
+OPENCVAPI void  cvStartScanGraph( CvGraph* graph, CvGraphScanner* scanner,
+                                  CvGraphVtx* vtx CV_DEFAULT(NULL),
+                                  int mask CV_DEFAULT(CV_GRAPH_ALL_ITEMS));
+
+/* Initializes graph traversal process.
+   <mask> indicates what events one wants to handle. */
+OPENCVAPI void  cvEndScanGraph( CvGraphScanner* scanner );
+
+/* Get next graph element */
+OPENCVAPI int  cvNextGraphItem( CvGraphScanner* scanner );
+
+/* Creates a copy of graph */
+OPENCVAPI CvGraph* cvCloneGraph( const CvGraph* graph, CvMemStorage* storage );
 
 /****************************************************************************************\
-*                                 Color Transforms                                       *
+*                                    Image Processing                                    *
 \****************************************************************************************/
 
+/* Does look-up transformation. Elements of the source array
+   (that should be 8uC1 or 8sC1) are used as indexes in lutarr 256-element table */
+OPENCVAPI  void cvLUT( const CvArr* srcarr, CvArr* dstarr, const CvArr* lutarr );
+
+
+/* Smoothes array (remove noise) */
+#define CV_BLUR_NO_SCALE 0
+#define CV_BLUR  1
+#define CV_GAUSSIAN  2
+#define CV_MEDIAN 3
+#define CV_BILATERAL 4
+
+OPENCVAPI  void cvSmooth( const CvArr* srcarr, CvArr* dstarr,
+                          int smoothtype CV_DEFAULT(CV_GAUSSIAN),
+                          int param1 CV_DEFAULT(3),
+                          int param2 CV_DEFAULT(0));
+
+/* Finds integral image: SUM(X,Y) = sum(x<X,y<Y)I(x,y) */
+OPENCVAPI void cvIntegral( const CvArr* image, CvArr* sumImage,
+                           CvArr* sumSqImage CV_DEFAULT(NULL),
+                           CvArr* tiltedSumImage CV_DEFAULT(NULL));
+
+/*
+   Down-samples image with prior gaussian smoothing.
+   dst_width = floor(src_width/2)[+1],
+   dst_height = floor(src_height/2)[+1]
+*/
+OPENCVAPI  void  cvPyrDown( const CvArr* src, CvArr* dst,
+                            int filter CV_DEFAULT(CV_GAUSSIAN_5x5) );
+
+/* 
+   Up-samples image with posterior gaussian smoothing.
+   dst_width = src_width*2,
+   dst_height = src_height*2
+*/
+OPENCVAPI  void  cvPyrUp( const CvArr* src, CvArr* dst,
+                          int filter CV_DEFAULT(CV_GAUSSIAN_5x5) );
+
+
+/* Builds the whole pyramid at once. Output array of CvMat headers (levels[*])
+   is initialized with the headers of subsequent pyramid levels */
+/*OPENCVAPI  void  cvCalcPyramid( const CvArr* src, CvArr* container,
+                                CvMat* levels, int levelCount,
+                                int filter CV_DEFAULT(CV_GAUSSIAN_5x5) );*/
+
+
+/* Segments image using son-father links (modification of Burt's algorithm).
+   CvSeq<CvConnectedComp*> is returned to *comp */
+OPENCVAPI void cvPyrSegmentation( IplImage* src,
+                               IplImage* dst,
+                               CvMemStorage *storage,
+                               CvSeq **comp,
+                               int level, double threshold1,
+                               double threshold2 );
+
+
+#define CV_SCHARR -1
+
+/* calculates some image derivative using Sobel (apertureSize = 1,3,5,7)
+   or Scharr (apertureSize = -1) operator.
+   Scharr can be used only for the first dx or dy derivative */
+OPENCVAPI void cvSobel( const CvArr* src, CvArr* dst,
+                        int xorder, int yorder,
+                        int apertureSize CV_DEFAULT(3));
+
+/* Calculates Laplace operator: (d2/dx + d2/dy)I */
+OPENCVAPI void cvLaplace( const CvArr* src, CvArr* dst,
+                          int apertureSize CV_DEFAULT(3) );
+
+/* Constants for color conversion */
 #define  CV_BGR2BGRA    0
 #define  CV_RGB2RGBA    CV_BGR2BGRA
 
@@ -1320,83 +1249,232 @@ OPENCVAPI  void  cvGetTextSize( const char* text_string, CvFont* font,
 #define  CV_RGBA2BGR    3
 #define  CV_BGRA2RGB    CV_RGBA2BGR
 
-#define  CV_BGR2GRAY    4
-#define  CV_RGB2GRAY    5
-
-#define  CV_GRAY2BGR    6
-#define  CV_GRAY2RGB    CV_GRAY2BGR
-
-#define  CV_BGR2BGR565  7
-#define  CV_RGB2BGR565  8
-#define  CV_BGR5652BGR  9
-#define  CV_BGR5652RGB  10
-
-#define  CV_BGR2RGB     11
+#define  CV_BGR2RGB     4
 #define  CV_RGB2BGR     CV_BGR2RGB
 
-#define  CV_BGR2XYZ     12
-#define  CV_RGB2XYZ     13
-#define  CV_XYZ2BGR     14
-#define  CV_XYZ2RGB     15
+#define  CV_BGRA2RGBA   5
+#define  CV_RGBA2BGRA   CV_BGRA2RGBA
 
-#define  CV_BGR2YCrCb   16
-#define  CV_RGB2YCrCb   17
-#define  CV_YCrCb2BGR   18
-#define  CV_YCrCb2RGB   19
-
-#define  CV_BGR2HSV     20
-#define  CV_RGB2HSV     21
-
-#define  CV_BGR2Lab     22
-#define  CV_RGB2Lab     23
-
-#define  CV_GRAY2BGR565 24
-#define  CV_GRAY2BGRA   25
+#define  CV_BGR2GRAY    6
+#define  CV_RGB2GRAY    7
+#define  CV_GRAY2BGR    8
+#define  CV_GRAY2RGB    CV_GRAY2BGR
+#define  CV_GRAY2BGRA   9
 #define  CV_GRAY2RGBA   CV_GRAY2BGRA
+#define  CV_BGRA2GRAY   10
+#define  CV_RGBA2GRAY   11
 
-#define  CV_BGR5652GRAY 26
-#define  CV_BGRA2GRAY   27
-#define  CV_RGBA2GRAY   28
+#define  CV_BGR2BGR565  12
+#define  CV_RGB2BGR565  13
+#define  CV_BGR5652BGR  14
+#define  CV_BGR5652RGB  15
+#define  CV_BGRA2BGR565 16
+#define  CV_RGBA2BGR565 17
+#define  CV_BGR5652BGRA 18
+#define  CV_BGR5652RGBA 19
 
-#define  CV_BGRA2BGR565 29
-#define  CV_RGBA2BGR565 30
+#define  CV_GRAY2BGR565 20
+#define  CV_BGR5652GRAY 21
 
-#define  CV_COLORCVT_MAX  32
+#define  CV_BGR2XYZ     22
+#define  CV_RGB2XYZ     23
+#define  CV_XYZ2BGR     24
+#define  CV_XYZ2RGB     25
 
+#define  CV_BGR2YCrCb   26
+#define  CV_RGB2YCrCb   27
+#define  CV_YCrCb2BGR   28
+#define  CV_YCrCb2RGB   29
+
+#define  CV_BGR2HSV     30
+#define  CV_RGB2HSV     31
+
+#define  CV_BGR2Lab     34
+#define  CV_RGB2Lab     35
+
+#define  CV_BayerBG2BGR 40
+#define  CV_BayerGB2BGR 41
+#define  CV_BayerRG2BGR 42
+#define  CV_BayerGR2BGR 43
+
+#define  CV_BayerBG2RGB CV_BayerRG2BGR
+#define  CV_BayerGB2RGB CV_BayerGR2BGR
+#define  CV_BayerRG2RGB CV_BayerBG2BGR
+#define  CV_BayerGR2RGB CV_BayerGB2BGR
+
+#define  CV_COLORCVT_MAX  48
+
+/* Converts input array from one color space to another.
+   Only 8-bit images are supported now */
 OPENCVAPI  void  cvCvtColor( const CvArr* src, CvArr* dst, int colorCvtCode );
 
 
-/****************************************************************************************\
-*                                 Geometrical Transforms                                 *
-\****************************************************************************************/
-
 #define  CV_INTER_NN        0
 #define  CV_INTER_LINEAR    1
-/*#define  CV_INTER_CUBIC     2*/
+/*#define  CV_INTER_CUBIC     2 - not implemented yet */
 
+/* Resizes 1D-2D array. Destination size is determined by the size of destination array */
 OPENCVAPI  void  cvResize( const CvArr* src, CvArr* dst,
                            int method CV_DEFAULT( CV_INTER_LINEAR ));
 
+
+#define  CV_SHAPE_RECT      0
+#define  CV_SHAPE_CROSS     1
+#define  CV_SHAPE_ELLIPSE   2
+#define  CV_SHAPE_CUSTOM    100
+
+/* creates structuring element used for morphological operations */
+OPENCVAPI  IplConvKernel*  cvCreateStructuringElementEx(
+            int  cols, int  rows, int  anchorX, int  anchorY,
+            int shape, int* values CV_DEFAULT(NULL) );
+
+/* releases structuring element */
+OPENCVAPI  void  cvReleaseStructuringElement( IplConvKernel** element );
+
+
+/* erodes input image (applies minimum filter) one or more times.
+   If element pointer is NULL, 3x3 rectangular element is used */
+OPENCVAPI  void  cvErode( const CvArr* src, CvArr* dst,
+                          IplConvKernel* element CV_DEFAULT(NULL),
+                          int iterations CV_DEFAULT(1) );
+
+/* dilates input image (applies maximum filter) one or more times.
+   If element pointer is NULL, 3x3 rectangular element is used */
+OPENCVAPI  void  cvDilate( const CvArr* src, CvArr* dst,
+                           IplConvKernel* element CV_DEFAULT(NULL),
+                           int iterations CV_DEFAULT(1) );
+
+#define CV_MOP_OPEN         2
+#define CV_MOP_CLOSE        3
+#define CV_MOP_GRADIENT     4
+#define CV_MOP_TOPHAT       5
+#define CV_MOP_BLACKHAT     6
+
+/* performs complex morphological transformation */
+OPENCVAPI  void  cvMorphologyEx( const CvArr* src, CvArr* dst,
+                                 CvArr* temp, IplConvKernel* element,
+                                 int operation, int iterations CV_DEFAULT(1) );
+
+
 /****************************************************************************************\
-*                                       Utilities                                        *
+*                                     Drawing                                            *
 \****************************************************************************************/
 
-/*F///////////////////////////////////////////////////////////////////////////////////////
-//
-//    Name:    cvInitLineIterator
-//    Purpose:
-//      Initializes iterator that gets all the pixels, lying on the raster line between
-//      two given points
-//    Context:
-//    Parameters:
-//        img  - image.
-//        pt1  - starting point
-//        pt2  - ending point. Both points must be inside the image
-//        lineIterator - pointer to initialized iterator state
-//    Returns:
-//        number of pixels between pt1 and pt2.
-//        It is equal to max( abs(pt1.x - pt2.x), abs(pt1.y - pt2.y))
-//F*/
+/****************************************************************************************\
+*       Drawing functions work with arbitrary 8-bit images or single-channel images      *
+*       with larger depth: 16s, 32s, 32f, 64f                                            *
+*       All the functions include parameter color that means rgb value (that may be      *
+*       constructed with CV_RGB macro) for color images and brightness                   *
+*       for grayscale images.                                                            *
+*       If a drawn figure is partially or completely outside the image, it is clipped.   *
+\****************************************************************************************/
+
+#define CV_RGB( r, g, b )  (int)((uchar)(b) + ((uchar)(g) << 8) + ((uchar)(r) << 16))
+#define CV_FILLED -1
+
+/* Draws 4-connected or 8-connected line segment connecting two points */
+OPENCVAPI  void  cvLine( CvArr* array, CvPoint pt1, CvPoint pt2,
+                         double color, int thickness CV_DEFAULT(1),
+                         int connectivity CV_DEFAULT(8) );
+
+/* Draws 8-connected line segment connecting two points with antialiazing.
+   Ending coordinates may be specified with sub-pixel accuracy
+   (scale is number of fractional bits in the coordinates) */
+OPENCVAPI  void  cvLineAA( CvArr* array, CvPoint pt1, CvPoint pt2,
+                           double color, int scale CV_DEFAULT(0));
+
+/* Draws a rectangle given two opposite corners of the rectangle (pt1 & pt2),
+   if thickness<0 (e.g. thickness == CV_FILLED), the filled box is drawn */
+OPENCVAPI  void  cvRectangle( CvArr* array, CvPoint pt1, CvPoint pt2,
+                              double color, int thickness CV_DEFAULT(1));
+
+/* Draws a circle with specified center and radius.
+   Thickness works in the same way as with cvRectangle */
+OPENCVAPI  void  cvCircle( CvArr* array, CvPoint center, int radius,
+                           double color, int thickness CV_DEFAULT(1));
+
+/* Draws antialiazed circle with specified center and radius.
+   Both the center and radius can be specified with sub-pixel accuracy */
+OPENCVAPI  void  cvCircleAA( CvArr* array, CvPoint center, int radius,
+                             double color, int scale CV_DEFAULT(0) );
+
+/* Draws ellipse outline, filled ellipse, elliptic arc or filled elliptic sector,
+   depending on <thickness>, <startAngle> and <endAngle> parameters. The resultant figure
+   is rotated by <angle>. All the angles are in degrees */
+OPENCVAPI  void  cvEllipse( CvArr* array, CvPoint center, CvSize axes,
+                            double angle, double startAngle, double endAngle,
+                            double color, int thickness CV_DEFAULT(1));
+
+CV_INLINE  void  cvEllipseBox( CvArr* array, CvBox2D box,
+                               double color, int thickness CV_DEFAULT(1));
+CV_INLINE  void  cvEllipseBox( CvArr* array, CvBox2D box,
+                               double color, int thickness )
+{
+    cvEllipse( array, cvPointFrom32f( box.center ),
+               cvSize( cvRound(box.size.height*0.5),
+                       cvRound(box.size.width*0.5)),
+               box.angle*180/CV_PI, 0, 360, color, thickness );
+}
+
+
+/* Draws the whole ellipse or elliptic arc with antialiazing */
+OPENCVAPI  void  cvEllipseAA( CvArr* array, CvPoint center, CvSize axes,
+                              double angle, double startAngle,
+                              double endAngle, double color,
+                              int scale CV_DEFAULT(0) );
+
+/* Fills convex or monotonous (every horizontal line intersects the polygon twice at the most,
+   except, may be, horizontal sides) polygon. Connectivity or monotony is not checked */
+OPENCVAPI  void  cvFillConvexPoly( CvArr* array, CvPoint* pts, int npts, double color );
+
+
+/* Fills an area bounded by one or more arbitrary polygons (with possible intersections or
+   self-intersections */
+OPENCVAPI  void  cvFillPoly( CvArr* array, CvPoint** pts,
+                             int* npts, int contours, double color );
+
+/* Draws one or more polygonal curves */
+OPENCVAPI  void  cvPolyLine( CvArr* array, CvPoint** pts, int* npts, int contours,
+                             int closed, double color,
+                             int thickness CV_DEFAULT(1),
+                             int connectivity CV_DEFAULT(8));
+
+/* Draws one or more antialiazed polygonal curves */
+OPENCVAPI  void  cvPolyLineAA( CvArr* array, CvPoint** pts, int* npts, int contours,
+                               int closed, double color, int scale CV_DEFAULT(0) );
+
+/* Font metrics and structure */
+#define CV_FONT_VECTOR0  0
+
+typedef struct CvFont
+{
+    const int*  data; /* font data and metrics */
+    CvSize      size; /* horizontal and vertical scale factors,
+                         (8:8) fix-point numbers */
+    int         italic_scale; /* slope coefficient: 0 - normal, >0 - italic */
+    int         thickness; /* letters thickness */
+    int         dx; /* horizontal interval between letters */
+} CvFont;
+
+/* Initializes font structure used further in cvPutText */
+OPENCVAPI  void  cvInitFont( CvFont* font, int font_face,
+                             double hscale, double vscale,
+                             double italic_scale CV_DEFAULT(0),
+                             int thickness CV_DEFAULT(1) );
+
+/* Renders text stroke with specified font and color at specified location.
+   CvFont should be initialized with cvInitFont */
+OPENCVAPI  void  cvPutText( CvArr* array, const char* text, CvPoint org,
+                            CvFont* font, double color );
+
+/* Calculates bounding box of text stroke (useful for alignment) */
+OPENCVAPI  void  cvGetTextSize( const char* text_string, CvFont* font,
+                                CvSize* text_size, int* ymin );
+
+
+/*********************************** data sampling **************************************/
+
+/* Line iterator state */
 typedef struct CvLineIterator
 {
     uchar* ptr;
@@ -1407,11 +1485,13 @@ typedef struct CvLineIterator
     int  minus_step;
 } CvLineIterator;
 
+/* Initializes line iterator. Initially ptr will point to pt1 location in the array.
+   Returns the number of points on the line between the endings. */
 OPENCVAPI  int  cvInitLineIterator( const CvArr* array, CvPoint pt1, CvPoint pt2,
                                     CvLineIterator* lineIterator,
                                     int connectivity CV_DEFAULT(8));
 
-/* Move to the next line point */
+/* Moves iterator to the next line point */
 #define CV_NEXT_LINE_POINT( iterator )                                          \
 {                                                                               \
     int mask =  (iterator).err < 0 ? -1 : 0;                                    \
@@ -1419,482 +1499,241 @@ OPENCVAPI  int  cvInitLineIterator( const CvArr* array, CvPoint pt1, CvPoint pt2
     (iterator).ptr += (iterator).minus_step + ((iterator).plus_step & mask);    \
 }
 
-/*F///////////////////////////////////////////////////////////////////////////////////////
-//
-//    Name:    cvSampleLine
-//    Purpose:
-//      Fetch all the pixel, lying on the raster line between two given points and
-//      writes them to the buffer
-//    Context:
-//    Parameters:
-//        img  - image.
-//        pt1  - starting point
-//        pt2  - ending point. Both points must be inside the image
-//        buffer - pointer to destination buffer.
-//    Returns:
-//        number of pixels stored.
-//        It is equal to max( abs(pt1.x - pt2.x), abs(pt1.y - pt2.y))
-//F*/
+/* Grabs the raster line data into the destination buffer.
+   Returns the number of retrieved points. */
 OPENCVAPI  int  cvSampleLine( const CvArr* array, CvPoint pt1, CvPoint pt2, void* buffer,
                               int connectivity CV_DEFAULT(8));
 
-
-/*F///////////////////////////////////////////////////////////////////////////////////////
-//
-//    Name:    cvGetRectSubPix
-//    Purpose:
-//      Retrieves rectangle from the image with sub-pixel accuracy
-//    Context:
-//    Parameters:
-//        src  - source image.
-//        dst  - destination image.
-//        center - center point of the extracted rectangle.
-//                 Size of extracted rectangle is equal to
-//                 desination image ROI size.
-//    Returns:
-//F*/
+/* Retrieves the rectangular image region with specified center from the input array.
+ dst(x,y) <- src(x + center.x - dst_width/2, y + center.y - dst_height/2).
+ Values of pixels with fractional coordinates are retrieved using bilinear interpolation*/
 OPENCVAPI  void  cvGetRectSubPix( const CvArr* src, CvArr* dst, CvPoint2D32f center );
 
 
-/*F///////////////////////////////////////////////////////////////////////////////////////
-//
-//    Name:    cvGetQuandrangleSubPix
-//    Purpose:
-//      Retrieves rectangle from the image with sub-pixel accuracy
-//    Context:
-//    Parameters:
-//        src  - source image.
-//        dst  - destination image.
-//        matrix - transformation matrix (2 rows x 3 columns).
-//                 ( a11  a12 | b1 )      dst([x,y]') = src(A[x y]' + b)
-//                 ( a21  a22 | b2 )      (bilinear interpolation is used)
-//        fillOutliers - fill outlier pixels with some constant value or take them from
-//                       the nearest boundary
-//        fillValue - constant value to fill with
-//    Returns:
-//F*/
+/* Retrieves quadrangle from the input array.
+    matrixarr = ( a11  a12 | b1 )   dst(x,y) <- src(A[x y]' + b)
+                ( a21  a22 | b2 )   (bilinear interpolation is used to retrieve pixels
+                                     with fractional coordinates)
+*/
 OPENCVAPI  void  cvGetQuadrangleSubPix( const CvArr* src, CvArr* dstarr,
                                         const CvArr* matrixarr,
                                         int fillOutliers CV_DEFAULT(0),
                                         CvScalar fillvalue CV_DEFAULT(cvScalarAll(0)));
 
+/* Methods for comparing two array */
+#define  CV_TM_SQDIFF        0
+#define  CV_TM_SQDIFF_NORMED 1
+#define  CV_TM_CCORR         2
+#define  CV_TM_CCORR_NORMED  3
+#define  CV_TM_CCOEFF        4
+#define  CV_TM_CCOEFF_NORMED 5
 
-/*F///////////////////////////////////////////////////////////////////////////////////////
-//
-//    Name:    cvCvtPixToPlane
-//    Purpose:
-//      Splits source image into several separate planes
-//    Context:
-//    Parameters:
-//        src  - source image. Must have 3 or 4 channels.
-//        dst0, dst1, dst2, dst3  - destination images. Must have single channel.
-//               if src has 3 channels, dst3 must be NULL.
-//               if one of the destination images is not NULL,
-//               the corresponding channel is extracted from source image.
-//               Else, all 3 or 4 images must be non NULL and all the source image
-//               channels are written to destination images.
-//    Returns:
-//F*/
-OPENCVAPI  void  cvCvtPixToPlane( const void *src, void *dst0, void *dst1,
-                                  void *dst2, void *dst3 );
-
-
-/*F///////////////////////////////////////////////////////////////////////////////////////
-//
-//    Name:    cvCvtPlaneToPix
-//    Purpose:
-//      Composes destination image from separate single-channel images
-//    Context:
-//    Parameters:
-//        src0, src1, src2, src3  - source images. Must have single channel.
-//              if destination image has 3 channels, src3 must be NULL, else must be
-//              non NULL. Other images must always be non NULL.
-//        dst - destination image. Must have 3 or 4 channels.
-//    Returns:
-//F*/
-OPENCVAPI  void  cvCvtPlaneToPix( const void *src0, const void *src1,
-                                  const void *src2, const void *src3,
-                                  void *dst );
-
-
-/*F///////////////////////////////////////////////////////////////////////////////////////
-//
-//    Name:    cvConvertScale
-//    Purpose:
-//      Converts image from one depth to another with linear transform
-//    Context:
-//    Parameters:
-//        src - source image.
-//        dst - destination image.
-//        scale - multiplier
-//        shift - delta. That is, dst(x,y) = src(x,y)*scale + shift.
-//    Returns:
-//    Notes:
-//        only float->uchar and uchar->float are supported by now.
-//F*/
-OPENCVAPI  void  cvConvertScale( const CvArr *src, CvArr *dst,
-                                 double scale CV_DEFAULT(1),
-                                 double shift CV_DEFAULT(0) );
-#define cvCvtScale cvConvertScale
-#define cvScale  cvConvertScale
-#define cvConvert( src, dst )  cvConvertScale( (src), (dst), 1, 0 )
-
-
-/*F///////////////////////////////////////////////////////////////////////////////////////
-//
-//    Name:    cvConvertScaleAbs
-//    Purpose:
-//      Converts image from one depth to another
-//    Context:
-//    Parameters:
-//        src - source image.
-//        dst - destination image.
-//        scale - multiplier
-//        shift - delta. That is, dst(x,y) = abs(src(x,y)*scale + shift).
-//    Returns:
-//    Notes:
-//F*/
-OPENCVAPI  void  cvConvertScaleAbs( const void *src, void *dst,
-                                    double scale CV_DEFAULT(1),
-                                    double shift CV_DEFAULT(0) );
-#define cvCvtScaleAbs  cvConvertScaleAbs
-
-/*F///////////////////////////////////////////////////////////////////////////////////////
-//
-//    Name:    cvAbsDiff
-//    Purpose:
-//      Finds per-pixel absolute difference between two images
-//    Context:
-//    Parameters:
-//        srcA - first source image.
-//        srcB - second source image
-//        dst  - destination image, May be equal to srcA or srcB
-//    Returns:
-//F*/
-OPENCVAPI  void  cvAbsDiff( const CvArr* srcA, const CvArr* srcB, CvArr* dst );
-
-
-/*F///////////////////////////////////////////////////////////////////////////////////////
-//
-//    Name:    cvAbsDiffS
-//    Purpose:
-//      Finds per-pixel absolute difference between image and scalar value
-//    Context:
-//    Parameters:
-//        src - source image.
-//        dst - destination image, May be equal to srcA or srcB
-//        value - scalar value to compare with
-//    Returns:
-//F*/
-OPENCVAPI  void  cvAbsDiffS( const CvArr* src, CvArr* dst, CvScalar value );
-
-
-/*F///////////////////////////////////////////////////////////////////////////////////////
-//
-//    Name: cvMatchTemplate
-//    Purpose:
-//      measures similarity between template and overlapped windows in the source image
-//      and fills the resultant image with the measurements.
-//    Context:
-//    Parameters:
-//      img     - source image
-//      templ   - template to find
-//      result  - resultant image. its ROI must have size:
-//                     (img_width - templ_width + 1, img_height - templ_height + 1)
-//      method  - comparison method:
-//---------------------------------------------------------------------------------------
-//             CV_TM_SQDIFF:  res0(i,j)=sum(y=0,TH-1) sum(x=0,TW-1)[I(i+x,j+y)-T(x,y)]^2
-//                    (where  TW - template width, TH - template height
-//                          res0(i,j) - pixel value of result at location(i,j)
-//                                     (zero-th method)
-//                          Iij(x,y) - pixel value of source image at location(i+x,j+y)
-//                                     Iij alone means window of source image
-//                                     with top-left corner(i,j) and template size.
-//                          T(x,y) - pixel value of template at location(x,y)
-//                                   T alone means template.
-//---------------------------------------------------------------------------------------
-//             CV_TM_SQDIFF_NORMED:  res1(i,j) = res0(i,j)/
-//                                             (l2_norm(Iij)*l2_norm(templ);
-//                      where  l2_norm(A) = sqrt(
-//                                     sum(y=0,A_height-1) sum(x=0,A_width-1) A(x,y)^2);
-//---------------------------------------------------------------------------------------
-//             CV_TM_CCORR:  res2(i,j)=sum(y=0,TH-1) sum(x=0,TW-1)[Iij(x,y)*T(x,y)]
-//---------------------------------------------------------------------------------------
-//             CV_TM_CCORR_NORMED:  res3(i,j) = res2(i,j)/[l2_norm(Iij)*l2_norm(templ)];
-//---------------------------------------------------------------------------------------
-//             CV_TM_CCOEFF:  res4(i,j)=sum(y=0,TH-1) sum(x=0,TW-1) [I'ij(x,y)*T'(x,y)]
-//                   where A'(x,y) = A(x,y)-1/(A_width*A_height)*
-//                                   sum(l=0,A_height-1) sum(k=0,A_width-1)A(k,l)
-//---------------------------------------------------------------------------------------
-//             CV_TM_CCOEFF_NORMED:
-//                   res5(i,j)=res4(i,j)/[l2_norm(I'ij)*l2_norm(T')]
-//---------------------------------------------------------------------------------------
-//    Returns:
-//F*/
-/* method for comparing two images */
-typedef enum CvTemplMatchMethod
-{
-    CV_TM_SQDIFF        = 0,
-    CV_TM_SQDIFF_NORMED = 1,
-    CV_TM_CCORR         = 2,
-    CV_TM_CCORR_NORMED  = 3,
-    CV_TM_CCOEFF        = 4,
-    CV_TM_CCOEFF_NORMED = 5
-}
-CvTemplMatchMethod;
-
+/* Measures similarity between template and overlapped windows in the source image
+   and fills the resultant image with the measurements */
 OPENCVAPI  void  cvMatchTemplate( const CvArr* array, const CvArr* templ,
-                                  CvArr* result, CvTemplMatchMethod method );
+                                  CvArr* result, int method );
 
-/*F///////////////////////////////////////////////////////////////////////////////////////
-//
-//    Name:    cvbFastArctan
-//    Purpose:
-//      Calculates arctangent for arrays of abscissas and ordinates
-//    Context:
-//    Parameters:
-//        y - array of abscissas
-//        x - array of ordinates
-//        angle - array of results: array[i] = arctan(y[i]/x[i])
-//        len - number of elements in arrays
-//    Returns:
-//    Notes:
-//      The function takes into account signs of both argument, so it is similar
-//      to atan2, but it returns angle in degrees(from 0 to 359.999 degrees)
-//      Maximal error is ~0.1 degreee.
-//F*/
-OPENCVAPI  void  cvbFastArctan( const float* y, const float* x, float* angle, int len );
+CV_EXTERN_C_FUNCPTR( float (CV_CDECL * CvDistanceFunction)
+                     ( const float* a, const float* b, void* user_param ));
 
+/* Computes earth mover distance between two weigted point sets
+   (called signatures in image retrieval terminology) */
+OPENCVAPI  float  cvCalcEMD2( const CvArr* signature1,
+                              const CvArr* signature2,
+                              CvDisType dist_type,
+                              CvDistanceFunction dist_func CV_DEFAULT(0),
+                              const CvArr* cost_matrix CV_DEFAULT(0),
+                              CvArr* flow CV_DEFAULT(0),
+                              float* lower_bound CV_DEFAULT(0),
+                              void* user_param CV_DEFAULT(0));
 
-/*F///////////////////////////////////////////////////////////////////////////////////////
-//
-//    Name:    cvbCartToPolar
-//    Purpose:
-//      Converts input arrays of abscissas and ordinates to polar form
-//    Context:
-//    Parameters:
-//        y - array of abscissas
-//        x - array of ordinates
-//        magnitude - array of magnitudes: mag[i] = sqrt(y[i]*y[i] + x[i]*x[i])
-//        angle - array of angles: array[i] = arctan(y[i]/x[i])
-//        len - number of elements in arrays
-//    Returns:
-//    Notes:
-//      The function calculates angle(similar to cvbFastArctan) and magnitude for
-//      every 2D vector(x[i],y[i]). Both output arguments are optional. If some
-//      output parameter is absent, corresponding part is not calculated
-//F*/
-OPENCVAPI  void  cvbCartToPolar( const float* y, const float* x,
-                                float* magnitude, float* angle, int len );
+/****************************************************************************************\
+*                              Contours retrieving                                       *
+\****************************************************************************************/
 
+/*
+Internal structure that is used for sequental retrieving contours from the image.
+It supports both hierarchical and plane variants of Suzuki algorithm.
+*/
+typedef struct _CvContourScanner* CvContourScanner;
 
-/*F///////////////////////////////////////////////////////////////////////////////////////
-//
-//    Name:    cvbSqrt
-//    Purpose:
-//      Calculates square root for array of floats
-//    Context:
-//    Parameters:
-//        x - array of arguments
-//        sqrt_x - array of results
-//        len - number of elements in arrays
-//    Returns:
-//    Notes:
-//      Elements of input array must be non-negative, else the result is not defined.
-//      Maximal relative error is ~3e-7
-//F*/
-OPENCVAPI  void  cvbSqrt( const float* x, float* sqrt_x, int len );
-
-
-/*F///////////////////////////////////////////////////////////////////////////////////////
-//
-//    Name:    cvCheckArr
-//    Purpose:
-//      Checks array for bad elements (NaNs, Infinities or just too big
-//                                     positive or negative values)
-//    Context:
-//    Parameters:
-//      arr - input array
-//      flags - operation flags, that may be zero or combination of the following values:
-//               CV_CHECK_RANGE - the function checks that the array elements are
-//                                within [minVal,maxVal) range. By default, only NaNs
-//                                and Infinities are checked.
-//               CV_CHECK_QUIET - do not raise error if some elements is out of
-//                                range. It is not a default mode.
-//    Returns:
-//      1 if array is ok, 0 otherwise. If CV_CHECK_QUIET is not set, function
-//      raises the CV_StsOutOfRange error in the latter case.
-//F*/
-#define  CV_CHECK_RANGE    1
-#define  CV_CHECK_QUIET    2
-OPENCVAPI  int  cvCheckArr( const CvArr* arr, int flags CV_DEFAULT(0),
-                            double minVal CV_DEFAULT(0), double maxVal CV_DEFAULT(0));
-#define cvCheckArray cvCheckArr
-
-/*F///////////////////////////////////////////////////////////////////////////////////////
-//
-//    Name:    cvbInvSqrt
-//    Purpose:
-//      Calculates inverse square root for array of floats
-//    Context:
-//    Parameters:
-//        x - array of arguments
-//        sqrt_x - array of results
-//        len - number of elements in arrays
-//    Returns:
-//    Notes:
-//      Elements of input array must be positive, else the result is not defined.
-//      Maximal relative error is ~2e-7
-//F*/
-OPENCVAPI  void  cvbInvSqrt( const float* x, float* inv_sqrt_x, int len );
-
-
-/*F///////////////////////////////////////////////////////////////////////////////////////
-//
-//    Name:    cvbReciprocal
-//    Purpose:
-//      Calculates inverse value(1/x) for array of floats
-//    Context:
-//    Parameters:
-//        x - array of arguments
-//        inv_x - array of results
-//        len - number of elements in arrays
-//    Returns:
-//    Notes:
-//      For zero elements result is 0.
-//      Maximal relative error is <2e-7
-//F*/
-OPENCVAPI  void  cvbReciprocal( const float* x, float* inv_x, int len );
-
-
-/*F///////////////////////////////////////////////////////////////////////////////////////
-//
-//    Name:    cvbFastExp
-//    Purpose:
-//      Calculates fast exponent approximation for array of floats
-//    Context:
-//    Parameters:
-//        x - array of arguments
-//        exp_x - array of results
-//        len - number of elements in arrays
-//    Returns:
-//    Notes:
-//      Overflow is not handled yet. Underflow is handled.
-//      Maximal relative error is ~7e-6
-//F*/
-OPENCVAPI  void  cvbFastExp( const float* x, double* exp_x, int len );
-
-
-/*F///////////////////////////////////////////////////////////////////////////////////////
-//
-//    Name:    cvbFastLog
-//    Purpose:
-//      Calculates fast logarithm approximation for array of doubles
-//    Context:
-//    Parameters:
-//        x - array of arguments
-//        log_x - array of logarithms of absolute values of arguments
-//        len - number of elements in arrays
-//    Returns:
-//    Notes:
-//      Negative values are negated before logarithm is taken.
-//      Logarithm of 0 gives large negative number(~700)
-//      Maximal relative error is ~3e-7
-//F*/
-OPENCVAPI  void  cvbFastLog( const double* x, float* log_x, int len );
-
-
-/* RNG state */
-typedef struct CvRandState
+typedef enum CvContourRetrievalMode
 {
-    uint64    state;    /* RNG state (the current seed and carry)*/
-    CvScalar  param[2]; /* parameters of RNG */
+    CV_RETR_EXTERNAL = 0,
+    CV_RETR_LIST     = 1,
+    CV_RETR_CCOMP    = 2,
+    CV_RETR_TREE     = 3
 }
-CvRandState;
+CvContourRetrievalMode;
 
-/*F///////////////////////////////////////////////////////////////////////////////////////
-//
-//    Name:    cvRandInit
-//    Purpose:
-//      Initializes random number generator(RNG)
-//    Context:
-//    Parameters:
-//      state - pointer to initialized RNG state
-//      lower - lower bound of random values
-//      upper - upper bound of random values.
-//              Generated random numbers belong to range [lower,upper)
-//      seed  - initializing 32-bit integer for RNG
-//    Returns:
-//F*/
-OPENCVAPI  void  cvRandInit( CvRandState* state, double lower, double upper, int seed );
-
-/*F///////////////////////////////////////////////////////////////////////////////////////
-//    Name:    cvRandSetRange
-//    Purpose: sets range of generated random numbers without reinitializing RNG
-//    Context:
-//    Parameters:
-//      state - pointer to state structure
-//      lower - lower bound
-//      upper - upper bound
-//      dim  - optional parameter.
-//             Index of the dimension to set the range for (0th, 1st etc.)
-//             -1 means to set the same range for all dimensions.
-//    Returns:
-//      CV_OK or error code if:
-//         state pointer is zero or
-//         lower bound greater than upper bound.
-//    Notes:
-//F*/
-OPENCVAPI  void  cvRandSetRange( CvRandState* state, double lower, double upper,
-                                 int index CV_DEFAULT(-1));
+typedef enum CvChainApproxMethod
+{
+    CV_CHAIN_CODE             = 0,
+    CV_CHAIN_APPROX_NONE      = 1,
+    CV_CHAIN_APPROX_SIMPLE    = 2,
+    CV_CHAIN_APPROX_TC89_L1   = 3,
+    CV_CHAIN_APPROX_TC89_KCOS = 4,
+    CV_LINK_RUNS              = 5
+} CvChainApproxMethod;
 
 
-/*F///////////////////////////////////////////////////////////////////////////////////////
-//
-//    Name:    cvbRand
-//    Purpose:
-//      Fills array of floats with random numbers and updates RNG state
-//    Context:
-//    Parameters:
-//      state - RNG state
-//      dst   - destination floating-point array
-//      len   - number of elements in the array.
-//    Returns:
-//F*/
-OPENCVAPI  void  cvbRand( CvRandState* state, float* dst, int len );
+/* Retrieves outer and possibly inner boundaries of white (non-zero) connected
+   components on the black (zero) background */
+OPENCVAPI  int  cvFindContours( CvArr* array, CvMemStorage* storage,
+                           CvSeq**  firstContour,
+                           int  headerSize CV_DEFAULT(sizeof(CvContour)),
+                           CvContourRetrievalMode mode CV_DEFAULT( CV_RETR_LIST ),
+                           CvChainApproxMethod method CV_DEFAULT(CV_CHAIN_APPROX_SIMPLE));
 
 
-/*F///////////////////////////////////////////////////////////////////////////////////////
-//
-//    Name:    cvRand
-//    Purpose:
-//      Fills an array with random numbers and updates RNG state
-//    Context:
-//    Parameters:
-//      state - RNG state
-//      arr   - the destination array
-//    Returns:
-//F*/
-OPENCVAPI  void  cvRand( CvRandState* state, CvArr* arr );
+/* Initalizes contour retrieving process.
+   Call cvStartFindContours.
+   Call cvFindNextContour until null pointer is returned
+   or some other condition becomes true.
+   Call cvEndFindContours at the end. */
+OPENCVAPI  CvContourScanner   cvStartFindContours( CvArr* array, CvMemStorage* storage,
+                                        int header_size, CvContourRetrievalMode mode,
+                                        CvChainApproxMethod method );
+
+/* Retrieves next contour */
+OPENCVAPI  CvSeq*  cvFindNextContour( CvContourScanner scanner );
 
 
-/*F///////////////////////////////////////////////////////////////////////////////////////
-//
-//    Name:    cvRandNext
-//    Purpose:
-//      Updates RNG state and returns 32-bit random number
-//    Context:
-//    Parameters:
-//      state - RNG state
-//    Returns:
-//      random number
-//F*/
-OPENCVAPI  unsigned  cvRandNext( CvRandState* state );
+/* Substitutes the last retrieved contour with the new one
+   (if the substitutor is null, the last retrieved contour is removed from the tree) */
+OPENCVAPI  void   cvSubstituteContour( CvContourScanner scanner, CvSeq* newContour );
+
+
+/* Releases contour scanner and returns pointer to the first outer contour */
+OPENCVAPI  CvSeq*  cvEndFindContours( CvContourScanner* scanner );
+
+/* Draws contour outlines or filled interiors on the image */
+OPENCVAPI void  cvDrawContours( CvArr *img, CvSeq* contour,
+                                double external_color, double hole_color,
+                                int max_level, int thickness CV_DEFAULT(1),
+                                int connectivity CV_DEFAULT(8));
+
+/******************* Iteration through the sequence tree *****************/
+typedef struct CvTreeNodeIterator
+{
+    const void* node;
+    int level;
+    int maxLevel;
+}
+CvTreeNodeIterator;
+
+OPENCVAPI void cvInitTreeNodeIterator( CvTreeNodeIterator* treeIterator,
+                                   const void* first, int maxLevel );
+OPENCVAPI void* cvNextTreeNode( CvTreeNodeIterator* treeIterator );
+OPENCVAPI void* cvPrevTreeNode( CvTreeNodeIterator* treeIterator );
+
+/* Inserts sequence into tree with specified "parent" sequence.
+   If parent is equal to frame (e.g. the most external contour),
+   then added contour will have null pointer to parent. */
+OPENCVAPI void cvInsertNodeIntoTree( void* node, void* parent, void* frame );
+
+/* Removes contour from tree (together with the contour children). */
+OPENCVAPI void cvRemoveNodeFromTree( void* node, void* frame );
+
+/* Gathers pointers to all the sequences,
+   accessible from the <first>, to the single sequence */
+OPENCVAPI CvSeq* cvTreeToNodeSeq( const void* first, int header_size,
+                                  CvMemStorage* storage );
+
+/* Approximates a single Freeman chain or a tree of chains to polygonal curves */
+OPENCVAPI  CvSeq* cvApproxChains( CvSeq* src_seq, CvMemStorage* storage,
+                            CvChainApproxMethod method CV_DEFAULT(CV_CHAIN_APPROX_SIMPLE),
+                            double parameter CV_DEFAULT(0),
+                            int  minimal_perimeter CV_DEFAULT(0),
+                            int  recursive CV_DEFAULT(0));
+
+
+/* Freeman chain reader state */
+typedef struct CvChainPtReader
+{
+    CV_SEQ_READER_FIELDS()
+    char      code;
+    CvPoint  pt;
+    char      deltas[8][2];
+    int       reserved[2];
+} CvChainPtReader;
+
+/* Initalizes Freeman chain reader.
+   The reader is used to iteratively get coordinates of all the chain points.
+   If the original codes should be read, a simple sequence reader can be used */
+OPENCVAPI  void  cvStartReadChainPoints( CvChain* chain, CvChainPtReader* reader );
+
+/* Retrieve the next chain point */
+OPENCVAPI  CvPoint   cvReadChainPoint( CvChainPtReader* reader );
 
 
 /****************************************************************************************\
-*                               Motion templates                                         *
+*                                  Motion Analysis                                       *
 \****************************************************************************************/
+
+/********************************** change detection ************************************/
+
+/* Finds absolute difference between to arrays
+   dst(x,y,c) = abs(srcA(x,y,c) - srcB(x,y,c)) */
+OPENCVAPI  void  cvAbsDiff( const CvArr* srcA, const CvArr* srcB, CvArr* dst );
+
+
+/* Finds absolute difference between an array and scalar
+   dst(x,y,c) = abs(srcA(x,y,c) - value(c)) */
+OPENCVAPI  void  cvAbsDiffS( const CvArr* src, CvArr* dst, CvScalar value );
+#define cvAbs( src, dst ) cvAbsDiffS( (src), (dst), cvScalarAll(0))
+
+/************************************ optical flow ***************************************/
+
+/* Calculates optical flow for 2 images using classical Lucas & Kanade algorithm */
+OPENCVAPI  void  cvCalcOpticalFlowLK( const CvArr* srcA, const CvArr* srcB,
+                                      CvSize winSize, CvArr* velx, CvArr* vely );
+
+/* Calculates optical flow for 2 images using block matching algorithm */
+OPENCVAPI  void  cvCalcOpticalFlowBM( const CvArr* srcA, const CvArr* srcB,
+                                      CvSize blockSize, CvSize shiftSize,
+                                      CvSize maxRange, int usePrevious,
+                                      CvArr* velx, CvArr* vely );
+
+/* Calculates Optical flow for 2 images using Horn & Schunck algorithm */
+OPENCVAPI  void  cvCalcOpticalFlowHS( const CvArr* srcA, const CvArr* srcB,
+                                      int usePrevious, CvArr* velx, CvArr* vely,
+                                      double lambda, CvTermCriteria criteria );
+
+#define  CV_LKFLOW_PYR_A_READY       1
+#define  CV_LKFLOW_PYR_B_READY       2
+#define  CV_LKFLOW_INITIAL_GUESSES   4
+
+/* It is Lucas & Kanade method, modified to use pyramids.
+   Also it does several iterations to get optical flow for
+   every point at every pyramid level.
+   Calculates optical flow between two images for certain set of points (i.e.
+   it is a "sparse" optical flow, which is opposite to the previous 3 methods) */
+OPENCVAPI  void  cvCalcOpticalFlowPyrLK( const CvArr*  imgA, const CvArr*  imgB,
+                                         CvArr*  pyrA, CvArr*  pyrB,
+                                         CvPoint2D32f* featuresA,
+                                         CvPoint2D32f* featuresB,
+                                         int       count,
+                                         CvSize    winSize,
+                                         int       level,
+                                         char*     status,
+                                         float*    error,
+                                         CvTermCriteria criteria,
+                                         int       flags );
+
+
+/* Modification of a previous sparse optical flow algorithm to calculate
+   affine flow */
+OPENCVAPI  void  cvCalcAffineFlowPyrLK( const CvArr*  imgA, const CvArr*  imgB,
+                                        CvArr*  pyrA, CvArr*  pyrB,
+                                        CvPoint2D32f* featuresA,
+                                        CvPoint2D32f* featuresB,
+                                        float*  matrices, int  count,
+                                        CvSize  winSize, int  level,
+                                        char*  status, float* error,
+                                        CvTermCriteria criteria, int flags );
+
+/********************************* motion templates *************************************/
 
 /****************************************************************************************\
 *        All the motion template functions work only with single channel images.         *
@@ -1906,738 +1745,130 @@ OPENCVAPI  unsigned  cvRandNext( CvRandState* state );
 *        All the angles are in degrees, all the times are in milliseconds                *
 \****************************************************************************************/
 
-/*F///////////////////////////////////////////////////////////////////////////////////////
-//    Name:    cvUpdateMotionHistory
-//    Purpose: updates motion history image.
-//    Context:
-//    Parameters:
-//        silhouette  - silhouette image
-//        mhi         - motion history image
-//        timestamp   - current system time
-//        mhiDuration - maximal duration of motion track before it will be removed
-//    Returns:
-//    Notes:
-//      Motion history image is changed by the following algorithm:
-//         for every point(x,y) in the mhi do
-//             if( silhouette(x,y) != 0 )
-//             {
-//                 mhi(x,y) = timestamp;
-//             }
-//             else if( mhi(x,y) < timestamp - mhi_duration )
-//             {
-//                 mhi(x,y) = 0;
-//             }
-//             // else mhi(x,y) remains unchanged
-//F*/
+/* Updates motion history image given motion silhouette */
 OPENCVAPI  void    cvUpdateMotionHistory( const CvArr* silhouette, CvArr* mhi,
                                           double timestamp, double mhiDuration );
 
-/*F///////////////////////////////////////////////////////////////////////////////////////
-//    Name:    cvCalcMotionGradient
-//    Purpose: calculates motion gradient and mask where it is valid
-//    Context:
-//    Parameters:
-//       mhi         - motion history image
-//       mask        -(output image) indicates where <orientation> data is valid
-//       orientation -(output image) contains gradient orientation in degrees
-//       aperture_size - size of the filters for x & y derivatives
-//
-//       maxTDelta   - gradient bounds.
-//       minTDelta   _/
-//    Returns:
-//    Notes:
-//      Function handles both top-left and bottom-left origins of orientation image
-//F*/
+/* Calculates gradient of the motion history image and fills
+   a mask indicating where the gradient is valid */
 OPENCVAPI  void    cvCalcMotionGradient( const CvArr* mhi, CvArr* mask, CvArr* orientation,
-                                         double maxTDelta, double minTDelta,
+                                         double delta1, double delta2,
                                          int aperture_size CV_DEFAULT(3));
 
-/*F///////////////////////////////////////////////////////////////////////////////////////
-//    Name:    cvCalcGlobalOrientation
-//    Purpose: calculates general motion direction in the selected region.
-//    Context:
-//    Parameters:
-//         orient       - orientation image
-//         mask         - region mask
-//         mhi          - motion history image
-//         timestamp    - the last timestamp when mhi was updated
-//         mhi_duration - maximal motion track duration.
-//    Returns:
-//      direction of selected region in degrees
-//F*/
+/* Calculates average motion direction within a selected motion region 
+   (region can be selected by setting ROIs and/or by composing a valid gradient mask
+   with the region mask) */
 OPENCVAPI  double  cvCalcGlobalOrientation( const CvArr* orientation, const CvArr* mask,
                                             const CvArr* mhi, double curr_mhi_timestamp,
                                             double mhi_duration );
 
-/*F///////////////////////////////////////////////////////////////////////////////////////
-//    Name:    cvSegmentMotion
-//    Purpose: splits motion history image into several regions that
-//             move in different directions.
-//    Context:
-//    Parameters:
-//        mhi        - motion history image
-//        seg_mask   - segmentation mask image. It is marked with different values
-//                    (1,2,3...) for every motion component
-//        storage    - where to store motion components
-//        timestamp  - the last timestamp when mhi was updated
-//        seg_thresh - threshold, which is used to split motion components(regions)
-//                     the bigger threshold, the coarse segmentation is.
-//    Returns:
-//      sequence of connected components
-//    Notes:
-//F*/
-OPENCVAPI  CvSeq*  cvSegmentMotion( CvArr* mhi, CvArr* seg_mask,
+/* Splits a motion history image into a few parts corresponding to separate independent motions
+   (e.g. left hand, right hand) */
+OPENCVAPI  CvSeq*  cvSegmentMotion( const CvArr* mhi, CvArr* seg_mask,
                                     CvMemStorage* storage,
                                     double timestamp, double seg_thresh );
 
-/****************************************************************************************\
-*                               Background Differencing                                  *
-\****************************************************************************************/
+/*********************** Background statistics accumulation *****************************/
 
+/* Adds image to accumulator */
 OPENCVAPI  void  cvAcc( const CvArr* image, CvArr* sum,
-                        const CvArr* mask CV_DEFAULT(0) );
+                        const CvArr* mask CV_DEFAULT(NULL) );
 
+/* Adds squared image to accumulator */
 OPENCVAPI  void  cvSquareAcc( const CvArr* image, CvArr* sqSum,
-                              const CvArr* mask CV_DEFAULT(0) );
+                              const CvArr* mask CV_DEFAULT(NULL) );
 
+/* Adds a product of two images to accumulator */
 OPENCVAPI  void  cvMultiplyAcc( const CvArr* imgA, const CvArr* imgB, CvArr* acc,
-                                const CvArr* mask CV_DEFAULT(0) );
+                                const CvArr* mask CV_DEFAULT(NULL) );
 
+/* Adds image to accumulator with weights: imgU = imgU*(1-alpha) + imgY*alpha */
 OPENCVAPI  void  cvRunningAvg( const CvArr* imgY, CvArr* imgU, double alpha,
-                               const CvArr* mask CV_DEFAULT(0) );
+                               const CvArr* mask CV_DEFAULT(NULL) );
+
 
 /****************************************************************************************\
-*                              Dynamic data structures                                   *
+*                                       Tracking                                         *
 \****************************************************************************************/
 
-/*F///////////////////////////////////////////////////////////////////////////////////////
-//    Name:    cvCreateMemStorage
-//    Purpose: creates memory storage
-//    Context:
-//    Parameters:
-//         block_size - size of memory storage blocks.
-//                      If 0, default size( Currently 64K) is set
-//    Returns:
-//      memory storage
-//F*/
-OPENCVAPI  CvMemStorage*  cvCreateMemStorage( int block_size CV_DEFAULT(0));
-
-
-/*F///////////////////////////////////////////////////////////////////////////////////////
-//    Name:    cvCreateChildMemStorage
-//    Purpose: creates child memory storage
-//            (storage that borrows memory blocks from parent)
-//    Context:
-//    Parameters:
-//         parent - parent memory storage
-//    Returns:
-//      memory storage
-//F*/
-OPENCVAPI  CvMemStorage*  cvCreateChildMemStorage( CvMemStorage* parent );
-
-
-/*F///////////////////////////////////////////////////////////////////////////////////////
-//    Name:    cvReleaseMemStorage
-//    Purpose: releases memory storage.
-//    Context:
-//    Parameters:
-//         storage - double pointer to memory storage
-//    Returns:
-//    Notes:
-//      if memory storage is simple, all its blocks are released,
-//      else(memory storage is child) all its blocks are returned to parent
-//F*/
-OPENCVAPI  void  cvReleaseMemStorage( CvMemStorage** storage );
-
-
-/*F///////////////////////////////////////////////////////////////////////////////////////
-//    Name:    cvClearMemStorage
-//    Purpose: clears memory storage.
-//    Context:
-//    Parameters:
-//         storage - memory storage
-//    Returns:
-//    Notes:
-//      if memory storage is is child, all its blocks are returned to parent,
-//      else the top of the storage is reset
-//F*/
-OPENCVAPI  void  cvClearMemStorage( CvMemStorage* storage );
-
-/*F///////////////////////////////////////////////////////////////////////////////////////
-//    Name:    cvSaveMemStoragePos
-//    Purpose: saves current top of the storage.
-//    Context:
-//    Parameters:
-//         storage - memory storage
-//         pos - position structure
-//    Returns:
-//    Notes:
-//F*/
-OPENCVAPI  void  cvSaveMemStoragePos( CvMemStorage* storage, CvMemStoragePos* pos );
-
-/*F///////////////////////////////////////////////////////////////////////////////////////
-//    Name:    cvRestoreMemStoragePos
-//    Purpose: restores top of the storage.
-//    Context:
-//    Parameters:
-//         storage - memory storage
-//         pos - position structure that was filled with cvSaveMemStoragePos
-//    Returns:
-//    Notes:
-//F*/
-OPENCVAPI  void  cvRestoreMemStoragePos( CvMemStorage* storage, CvMemStoragePos* pos );
-
-
-/*F///////////////////////////////////////////////////////////////////////////////////////
-//    Name:    cvCreateSeq
-//    Purpose: creates sequence, located on the storage
-//    Context:
-//    Parameters:
-//         seq_flags - flags of created sequence
-//         header_size - size of sequence header. Must be non-less than sizeof(CvSeq)
-//         elem_size - size of sequence elements
-//         storage - memory storage
-//    Returns:
-//      created sequence
-//    Notes:
-//F*/
-OPENCVAPI  CvSeq*  cvCreateSeq( int seq_flags, int header_size,
-                             int elem_size, CvMemStorage* storage );
-
-
-/*F///////////////////////////////////////////////////////////////////////////////////////
-//    Name:    cvSetSeqBlockSize
-//    Purpose: adjusts granularity of memory allocation for sequence
-//    Context:
-//    Parameters:
-//         seq - sequence pointer
-//         delta_elements - how many elements to allocate when there is no free space
-//                          in the sequence.
-//    Returns:
-//    Notes:
-//      If this function is not called after sequence is created,
-//      delta_elements is set to ~1K/elem_size
-//F*/
-OPENCVAPI  void  cvSetSeqBlockSize( CvSeq* seq, int delta_elements );
-
-
-/*F///////////////////////////////////////////////////////////////////////////////////////
-//    Name:    cvSeqPush
-//    Purpose: adds element in the end of sequence
-//    Context:
-//    Parameters:
-//         seq - sequence pointer
-//         element - added element
-//    Returns:
-//F*/
-OPENCVAPI  char*  cvSeqPush( CvSeq* seq, void* element CV_DEFAULT(0));
-
-
-/*F///////////////////////////////////////////////////////////////////////////////////////
-//    Name:    cvSeqPushFront
-//    Purpose: adds element in the beginning of sequence
-//    Context:
-//    Parameters:
-//         seq     - sequence pointer
-//         element - added element
-//    Returns:
-//F*/
-OPENCVAPI  char*  cvSeqPushFront( CvSeq* seq, void* element CV_DEFAULT(0));
-
-
-/*F///////////////////////////////////////////////////////////////////////////////////////
-//    Name:    cvSeqPop
-//    Purpose: removes element from the end of sequence
-//    Context:
-//    Parameters:
-//         seq     - sequence pointer
-//         element - optional parameter. If pointer is not NULL,
-//                   removed element is copied there.
-//    Returns:
-//F*/
-OPENCVAPI  void  cvSeqPop( CvSeq* seq, void* element );
-
-
-/*F///////////////////////////////////////////////////////////////////////////////////////
-//    Name:    cvSeqPopFront
-//    Purpose: removes element from the beginning of sequence
-//    Context:
-//    Parameters:
-//         seq     - sequence pointer
-//         element - optional parameter. If pointer is not NULL,
-//                   removed element is copied there.
-//    Returns:
-//F*/
-OPENCVAPI  void  cvSeqPopFront( CvSeq* seq, void* element );
-
-
-/*F///////////////////////////////////////////////////////////////////////////////////////
-//    Name:    cvSeqPushMulti
-//    Purpose: adds several elements in the end of sequence
-//    Context:
-//    Parameters:
-//         seq      - sequence pointer
-//         count    - number of added elements
-//         elements - array of added elements.
-//    Returns:
-//F*/
-OPENCVAPI  void  cvSeqPushMulti( CvSeq* seq, void* elements, int count );
-
-
-/*F///////////////////////////////////////////////////////////////////////////////////////
-//    Name:    cvSeqPopMulti
-//    Purpose: removes several elements from the end of sequence
-//    Context:
-//    Parameters:
-//         seq      - sequence pointer
-//         count    - number of removed elements
-//         elements - optional parameter. If not NULL, removed elements are copied there
-//    Returns:
-//F*/
-OPENCVAPI  void  cvSeqPopMulti( CvSeq* seq, void* elements, int count );
-
-
-/*F///////////////////////////////////////////////////////////////////////////////////////
-//    Name:    cvSeqInsert
-//    Purpose: inserts element in the middle of the sequence
-//    Context:
-//    Parameters:
-//         sequence     - sequence pointer
-//         before_index - index of element, before which the element is inserted
-//         element      - inserted element
-//    Returns:
-//F*/
-OPENCVAPI  char*  cvSeqInsert( CvSeq* seq, int before_index,
-                               void* element CV_DEFAULT(0));
-
-/*F///////////////////////////////////////////////////////////////////////////////////////
-//    Name:    cvSeqRemove
-//    Purpose: removes element from the middle of the sequence
-//    Context:
-//    Parameters:
-//         seq      - sequence pointer
-//         index    - index of removed element
-//    Returns:
-//F*/
-OPENCVAPI  void  cvSeqRemove( CvSeq* seq, int index );
-
-
-/*F///////////////////////////////////////////////////////////////////////////////////////
-//    Name:    cvClearSeq
-//    Purpose: clears sequence(removes all sequence elements)
-//    Context:
-//    Parameters:
-//         seq - sequence pointer
-//    Returns:
-//F*/
-OPENCVAPI  void  cvClearSeq( CvSeq* seq );
-
-
-/*F///////////////////////////////////////////////////////////////////////////////////////
-//    Name:    cvGetSeqElem
-//    Purpose: finds sequence element by its index
-//    Context:
-//    Parameters:
-//         seq - sequence pointer
-//         index - element index
-//         block - optional output parameter. Sequence block, containing found element
-//    Returns:
-//         pointer to found element or NULL.
-//    Notes:
-//         index == -1 means last sequence element, -2 - prelast element etc.
-//F*/
-OPENCVAPI  char*  cvGetSeqElem( CvSeq* seq, int index, CvSeqBlock** block CV_DEFAULT(0) );
-
-
-/*F///////////////////////////////////////////////////////////////////////////////////////
-//    Name:    cvSeqElemIdx
-//    Purpose: calculates element index from its address
-//    Context:
-//    Parameters:
-//         seq - sequence pointer
-//         element - sequence element
-//         block - optional output parameter. Sequence block, containing found element.
-//    Returns:
-//         index of sequence element
-//F*/
-OPENCVAPI int  cvSeqElemIdx( CvSeq* seq, void* element, CvSeqBlock** block CV_DEFAULT(0) );
-
-
-/*F///////////////////////////////////////////////////////////////////////////////////////
-//    Name:    cvStartAppendToSeq
-//    Purpose: initializes writer state for further writing to sequence
-//    Context:
-//    Parameters:
-//         seq - sequence pointer
-//         writer - pointer to initialized writer state
-//    Returns:
-//F*/
-OPENCVAPI  void  cvStartAppendToSeq( CvSeq* seq, CvSeqWriter* writer );
-
-
-/*F///////////////////////////////////////////////////////////////////////////////////////
-//    Name:    cvStartWriteSeq
-//    Purpose: creates new sequence and initializes writer for it
-//    Context:
-//    Parameters:
-//         seq_flags - flags of created sequence
-//         header_size - size of sequence header. Must be non-less than sizeof(CvSeq)
-//         elem_size - size of sequence elements
-//         storage - memory storage, where the sequence will be located
-//         writer - pointer to initialized writer state
-//    Returns:
-//F*/
-OPENCVAPI  void  cvStartWriteSeq( int seq_flags, int header_size,
-                               int elem_size, CvMemStorage* storage,
-                               CvSeqWriter* writer );
-
-/*F///////////////////////////////////////////////////////////////////////////////////////
-//    Name:    cvEndWriteSeq
-//    Purpose: ends writing process and closes writer
-//    Context:
-//    Parameters:
-//         writer - writer state
-//    Returns:
-//         written sequence
-//F*/
-OPENCVAPI  CvSeq*  cvEndWriteSeq( CvSeqWriter* writer );
-
-
-/*F///////////////////////////////////////////////////////////////////////////////////////
-//    Name:    cvFlushSeqWriter
-//    Purpose: updates sequence headers, but don't close writer
-//    Context:
-//    Parameters:
-//         writer - writer state
-//    Returns:
-//F*/
-OPENCVAPI  void   cvFlushSeqWriter( CvSeqWriter* writer );
-
-
-/*F///////////////////////////////////////////////////////////////////////////////////////
-//    Name:    cvStartReadSeq
-//    Purpose: initializes sequence reader
-//    Context:
-//    Parameters:
-//         seq - sequence pointer
-//         reader - pointer to initialized reader state
-//         reverse - if not 0, function moves read position to the end of sequence
-//    Returns:
-//F*/
-OPENCVAPI void cvStartReadSeq( CvSeq* seq, CvSeqReader* reader, int reverse CV_DEFAULT(0) );
-
-
-/*F///////////////////////////////////////////////////////////////////////////////////////
-//    Name:    cvGetSeqReaderPos
-//    Purpose: returns read position
-//    Context:
-//    Parameters:
-//         reader - reader state
-//    Returns:
-//         read position
-//F*/
-OPENCVAPI  int    cvGetSeqReaderPos( CvSeqReader* reader );
-
-
-/*F///////////////////////////////////////////////////////////////////////////////////////
-//    Name:    cvSetSeqReaderPos
-//    Purpose: moves read position
-//    Context:
-//    Parameters:
-//         index  - new read position
-//         is_relative - if not 0, index is offset from current position
-//                      (else it is absolute position). Position is changed cyclically
-//         reader - reader state
-//    Returns:
-//F*/
-OPENCVAPI  void   cvSetSeqReaderPos( CvSeqReader* reader, int index,
-                                  int is_relative CV_DEFAULT(0));
-
-
-/*F///////////////////////////////////////////////////////////////////////////////////////
-//    Name:    cvCvtSeqToArray
-//    Purpose: copies sequence to array
-//    Context:
-//    Parameters:
-//         seq - source sequence
-//         array - destination array. Must have capacity at least
-//                 seq->total*seq->elem_siz bytes
-//    Returns:
-//         pointer to array.
-//F*/
-OPENCVAPI  void*  cvCvtSeqToArray( CvSeq* seq, CvArr* array,
-                                   CvSlice slice CV_DEFAULT(CV_WHOLE_SEQ) );
-
-
-/*F///////////////////////////////////////////////////////////////////////////////////////
-//    Name:    cvMakeSeqHeaderForArray
-//    Purpose: wraps array with sequence(without copying data)
-//    Context:
-//    Parameters:
-//         seq_flags - flags of sequence
-//         header_size - size of sequence header. Must be non-less than sizeof(CvSeq)
-//         elem_size - size of sequence elements
-//         array - source array.
-//         total - total number of elements in array
-//         seq   - pointer to local structure CvSeq
-//         block - pointer to local structure CvSeqBlock
-//    Returns:
-//F*/
-OPENCVAPI  void  cvMakeSeqHeaderForArray( int seq_type, int header_size,
-                                          int elem_size, CvArr* array, int total,
-                                          CvSeq* seq, CvSeqBlock* block );
-
-/************ Internal sequence functions ************/
-OPENCVAPI  void  cvChangeSeqBlock( CvSeqReader* reader, int direction );
-OPENCVAPI  void  cvCreateSeqBlock( CvSeqWriter* writer );
-
-
-/*F///////////////////////////////////////////////////////////////////////////////////////
-//    Name:    cvCreateSet
-//    Purpose: creates new set
-//    Context:
-//    Parameters:
-//         set_flags - flags of set
-//         header_size - size of set header. Must be non-less than sizeof(CvSet)
-//         elem_size - size of set elements.
-//                     Must be non-less than 8 bytes, divisible by 4.
-//                     Least significant bit of first 4-byte field of set elements must
-//                     be zero.
-//         storage   - memory storage, where the set will be located
-//    Returns:
-//         created set
-//F*/
-OPENCVAPI  CvSet*   cvCreateSet( int set_flags, int header_size,
-                              int elem_size, CvMemStorage* storage );
-
-
-/*F///////////////////////////////////////////////////////////////////////////////////////
-//    Name:    cvSetAdd
-//    Purpose: adds new element to the set
-//    Context:
-//    Parameters:
-//         set - set
-//         element - optional input parameter. If non NULL, it is copied to inserted
-//                   element(starting from second 4-byte field)
-//         inserted_element - optional output parameter. If non NULL, address of inserted
-//                   element is stored there
-//    Returns:
-//         index of added element
-//F*/
-OPENCVAPI  int   cvSetAdd( CvSet* set_struct, CvSetElem* element CV_DEFAULT(0),
-                           CvSetElem** inserted_element CV_DEFAULT(0) );
-
-
-/*F///////////////////////////////////////////////////////////////////////////////////////
-//    Name:    cvSetRemove
-//    Purpose: removes element from the set
-//    Context:
-//    Parameters:
-//         set - set
-//         index - index of removed element
-//    Returns:
-//F*/
-OPENCVAPI  void   cvSetRemove( CvSet* set_struct, int index );
-
-
-/*F///////////////////////////////////////////////////////////////////////////////////////
-//    Name:    cvGetSetElem
-//    Purpose: finds set element by its index
-//    Context:
-//    Parameters:
-//         set - set
-//         index - element index
-//    Returns:
-//         pointer to element or 0 if index is out of range or element at this index
-//         isn't in the set
-//F*/
-OPENCVAPI  CvSetElem*  cvGetSetElem( CvSet* set_struct, int index );
-
-
-/*F///////////////////////////////////////////////////////////////////////////////////////
-//    Name:    cvClearSet
-//    Purpose: clear set(removes all elements from the set)
-//    Context:
-//    Parameters:
-//         set - set
-//    Returns:
-//F*/
-OPENCVAPI  void   cvClearSet( CvSet* set_struct );
-
-
-/*F///////////////////////////////////////////////////////////////////////////////////////
-//    Name:    cvCreateGraph
-//    Purpose: creates graph
-//    Context:
-//    Parameters:
-//         graph_flags - flags of created graph. CV_SEQ_KIND_GRAPH must be set,
-//                       CV_GRAPH_FLAG_ORIENTED(if set) means oriented graph.
-//         header_size - size of graph header. Must be non-less than sizeof(CvGraph)
-//         vtx_size - size of graph vertices. Must be GREATER than sizeof(CvGraphVtx).
-//                   (for example, sizeof(CvGraphVtx2D) can be used
-//                     for simple graphs on the plane)
-//         edge_size - size of graph edges. Must be non-less than sizeof(CvGraphEdge)
-//         storage   - memory storage, where the graph will be located
-//    Returns:
-//         created graph
-//F*/
-OPENCVAPI  CvGraph*   cvCreateGraph( int graph_flags, int header_size,
-                                  int vtx_size, int edge_size,
-                                  CvMemStorage* storage );
-
-/*F///////////////////////////////////////////////////////////////////////////////////////
-//    Name:    cvGraphAddVtx
-//    Purpose: adds vertex to graph
-//    Context:
-//    Parameters:
-//         graph - graph
-//         vertex - optional input parameter. If pointer to vertex is not NULL,
-//                  it is copied to inserted vertex
-//                 (first sizeof(CvGraphVtx) bytes aren't copied)
-//         inserted_vertex - optional output parameter. If not NULL, pointer to inserted
-//                  vertex is stored there
-//    Returns:
-//         index of inserted vertex
-//F*/
-OPENCVAPI  int   cvGraphAddVtx( CvGraph* graph, CvGraphVtx* vertex CV_DEFAULT(0),
-                                CvGraphVtx** inserted_vertex CV_DEFAULT(0) );
-
-
-/*F///////////////////////////////////////////////////////////////////////////////////////
-//    Name:    cvGraphRemoveVtx, cvGraphRemoveVtxByPtr
-//    Purpose: removes vertex from the graph
-//    Context:
-//    Parameters:
-//         graph - graph
-//         index - index of removed vertex
-//         vtx - pointer to removed vertex
-//    Returns:
-//    Notes:
-//      Vertex is removed with all the incident edges
-//F*/
-OPENCVAPI  void   cvGraphRemoveVtx( CvGraph* graph, int index );
-OPENCVAPI  void   cvGraphRemoveVtxByPtr( CvGraph* graph, CvGraphVtx* vtx );
-
-
-/*F///////////////////////////////////////////////////////////////////////////////////////
-//    Name:    cvGraphAddEdge, cvGraphAddEdgeByPtr
-//    Purpose: add edge to graph
-//    Context:
-//    Parameters:
-//         graph - graph
-//         start_idx, end_idx - indices of starting and ending vertices
-//         start_vtx, end_vtx - pointers to starting and ending vertices
-//         edge - optional input parameter. If not NULL, the edge is copied to
-//                inserted edge(first sizeof(CvGraphEdge) bytes aren't copied
-//         inserted_edge - optional output parameter. Points to inserted edge.
-//    Returns:
-//    ... 1 if the edge is inserted, 0 if the vertices were connected already,
-//    -1 if a critical error occured (normally, an error message box appears in this case)
-//    Notes:
-//       starting vertex must differ from ending one.
-//F*/
-OPENCVAPI  int  cvGraphAddEdge( CvGraph* graph,
-                                int start_idx, int end_idx,
-                                CvGraphEdge* edge CV_DEFAULT(0),
-                                CvGraphEdge** inserted_edge CV_DEFAULT(0) );
-
-OPENCVAPI  int  cvGraphAddEdgeByPtr( CvGraph* graph,
-                               CvGraphVtx* start_vtx, CvGraphVtx* end_vtx,
-                               CvGraphEdge* edge CV_DEFAULT(0),
-                               CvGraphEdge** inserted_edge CV_DEFAULT(0) );
-
-/*F///////////////////////////////////////////////////////////////////////////////////////
-//    Name:    cvGraphRemoveEdge, cvGraphRemoveEdgeByPtr
-//    Purpose: removes edge to graph
-//    Context:
-//    Parameters:
-//         graph - graph
-//         start_idx, end_idx - indices of starting and ending vertices
-//         start_vtx, end_vtx - pointers to starting and ending vertices
-//    Returns:
-//F*/
-OPENCVAPI  void   cvGraphRemoveEdge( CvGraph* graph, int start_idx, int end_idx );
-OPENCVAPI  void   cvGraphRemoveEdgeByPtr( CvGraph* graph, CvGraphVtx* start_vtx,
-                                          CvGraphVtx* end_vtx );
-
-/*F///////////////////////////////////////////////////////////////////////////////////////
-//    Name:    cvFindGraphEdge, cvFindGraphEdgeByPtr
-//    Purpose: finds edge, connecting two vertices. If graph is orientation, order
-//             of input vertices is taken into account
-//    Context:
-//    Parameters:
-//         graph - graph
-//         start_idx, end_idx - indices of starting and ending vertices
-//         start_vtx, end_vtx - pointers to starting and ending vertices
-//    Returns:
-//F*/
-OPENCVAPI  CvGraphEdge*  cvFindGraphEdge( CvGraph* graph, int start_idx, int end_idx );
-OPENCVAPI  CvGraphEdge*  cvFindGraphEdgeByPtr( CvGraph* graph, CvGraphVtx* start_vtx,
-                                               CvGraphVtx* end_vtx );
-
-
-/*F///////////////////////////////////////////////////////////////////////////////////////
-//    Name:    cvClearGraph
-//    Purpose: clear graph(removes all the edges and vertices from the graph)
-//    Context:
-//    Parameters:
-//         graph - graph
-//    Returns:
-//F*/
-OPENCVAPI  void  cvClearGraph( CvGraph* graph );
-
-
-/*F///////////////////////////////////////////////////////////////////////////////////////
-//    Name:    cvGraphVtxDegree, cvGraphVtxDegreeByPtr
-//    Purpose: counts edges, incident to given vertex
-//    Context:
-//    Parameters:
-//         graph - graph
-//         vtx_idx - vertex index
-//         vtx - pointer to vertex
-//    Returns:
-//      number of incident edges
-//F*/
-OPENCVAPI  int  cvGraphVtxDegree( CvGraph* graph, int vtx_idx );
-OPENCVAPI  int  cvGraphVtxDegreeByPtr( CvGraph* graph, CvGraphVtx* vtx );
-
-
-/*F///////////////////////////////////////////////////////////////////////////////////////
-//    Name:    cvGetGraphVtx
-//    Purpose: finds graph vertex by its index
-//    Context:
-//    Parameters:
-//         graph - graph
-//         idx - vertex index
-//    Returns:
-//      pointer to vertex
-//F*/
-#define cvGetGraphVtx( graph, idx ) (CvGraphVtx*)cvGetSetElem((CvSet*)(graph), (idx))
-
-
-/*F///////////////////////////////////////////////////////////////////////////////////////
-//    Name:    cvGraphVtxIdx
-//    Purpose: calculates index of the graph vertex
-//    Context:
-//    Parameters:
-//         graph - graph
-//         vtx - pointer to vertex
-//    Returns:
-//      vertex index
-//F*/
-#define cvGraphVtxIdx( graph, vtx ) cvSeqElemIdx((CvSeq*)(graph),(vtx),0)
-
-/*F///////////////////////////////////////////////////////////////////////////////////////
-//    Name:    cvGraphEdgeIdx
-//    Purpose: calculates index of the graph edge
-//    Context:
-//    Parameters:
-//         graph - graph
-//         edge - pointer to graph edge
-//    Returns:
-//      edge index
-//F*/
-#define cvGraphEdgeIdx( graph, edge ) cvSeqElemIdx((CvSeq*)((graph)->edges),(edge),0)
+/* Implements CAMSHIFT algorithm - determines object position, size and orientation
+   from the object histogram back project (extension of meanshift) */
+OPENCVAPI int  cvCamShift( const CvArr* imgProb, CvRect  windowIn,
+                           CvTermCriteria criteria, CvConnectedComp* out,
+                           CvBox2D* box );
+
+/* Implements MeanShift algorithm - determines object position
+   from the object histogram back project */
+OPENCVAPI int  cvMeanShift( const CvArr* imgProb, CvRect  windowIn,
+                            CvTermCriteria criteria, CvConnectedComp* out );
+
+typedef struct CvConDensation
+{
+    int MP;
+    int DP;
+    float* DynamMatr;       /* Matrix of the linear Dynamics system  */
+    float* State;           /* Vector of State                       */
+    int SamplesNum;         /* Number of the Samples                 */
+    float** flSamples;      /* array of the Sample Vectors           */
+    float** flNewSamples;   /* temporary array of the Sample Vectors */
+    float* flConfidence;    /* Confidence for each Sample            */
+    float* flCumulative;    /* Cumulative confidence                 */
+    float* Temp;            /* Temporary vector                      */
+    float* RandomSample;    /* RandomVector to update sample set     */
+    CvRandState* RandS;     /* Array of structures to generate random vectors */
+} CvConDensation;
+
+/* Creates ConDensation filter state */
+OPENCVAPI CvConDensation*  cvCreateConDensation( int DP, int MP, int SamplesNum);
+
+/* Releases ConDensation filter state */
+OPENCVAPI void  cvReleaseConDensation( CvConDensation** ConDensation);
+
+/* Updates ConDensation filter by time (predict future state of the system) */
+OPENCVAPI void  cvConDensUpdateByTime( CvConDensation* ConDens);
+
+/* Initializes ConDensation filter samples  */
+OPENCVAPI void  cvConDensInitSampleSet( CvConDensation* conDens, CvMat* lowerBound,CvMat* upperBound);
+
+
+typedef struct CvKalman
+{
+    int MP;
+    int DP;
+    float* PosterState;          /* Vector of State of the System in k-th step  */
+    float* PriorState;           /* Vector of State of the System in (k-1)-th step */
+    float* DynamMatr;            /* Matrix of the linear Dynamics system */
+                                 /* (Must be updated by LinearizedDynamics function on each step*/
+                                 /*  for nonlinear systems)*/
+    float* MeasurementMatr;      /* Matrix of linear measurement (Must be updated by */
+                                 /* LinearizedMeasurement function on each step*/
+                                 /* for nonlinear measurements)*/
+    float* MNCovariance;         /* Matrix of measurement noice covariance*/
+                                 /* Initializes to Zero matrix, or sets by SetMeasureNoiseCov*/
+                                 /* method  */
+    float* PNCovariance;         /* Matrix of process noice covariance*/
+                                 /* Initializes to Identity matrix, or sets by SetProcessNoiseCov*/
+                                 /* method */
+    float* KalmGainMatr;         /* Kalman Gain Matrix*/
+    float* PriorErrorCovariance; /*Prior Error Covariance matrix*/
+    float* PosterErrorCovariance;/*Poster Error Covariance matrix*/
+    float* Temp1;                 /* Temporary Matrix */
+    float* Temp2;
+
+} CvKalman;
+
+/* Creates Kalman filter state */
+OPENCVAPI CvKalman* cvCreateKalman( int DynamParams, int MeasureParams);
+
+/* Releases Kalman filter state */
+OPENCVAPI void  cvReleaseKalman( CvKalman** Kalman);
+
+/* Updates Kalman filter by time (predicts future state of the system) */
+OPENCVAPI void  cvKalmanUpdateByTime( CvKalman* Kalman);
+
+/* Updates Kalman filter by measurement
+   (corrects state of the system and internal matrices) */
+OPENCVAPI void  cvKalmanUpdateByMeasurement( CvKalman* Kalman, CvMat* Measurement);
 
 
 /****************************************************************************************\
@@ -2649,15 +1880,16 @@ OPENCVAPI  int  cvGraphVtxDegreeByPtr( CvGraph* graph, CvGraphVtx* vtx );
 typedef long CvSubdiv2DEdge;
 
 #define CV_QUADEDGE2D_FIELDS()     \
+    int flags;                     \
     struct CvSubdiv2DPoint* pt[4]; \
     CvSubdiv2DEdge  next[4];
 
-#define CV_SUBDIV2D_VIRTUAL_POINT  2
-
 #define CV_SUBDIV2D_POINT_FIELDS()\
-    int            is_virtual; \
+    int            flags;      \
     CvSubdiv2DEdge first;      \
     CvPoint2D32f   pt;
+
+#define CV_SUBDIV2D_VIRTUAL_POINT_FLAG (1 << 30)
 
 typedef struct CvQuadEdge2D
 {
@@ -2709,7 +1941,54 @@ typedef enum CvNextEdgeType
 }
 CvNextEdgeType;
 
+/* get the next edge with the same origin point (counterwise) */
 #define  CV_SUBDIV2D_NEXT_EDGE( edge )  (((CvQuadEdge2D*)((edge) & ~3))->next[(edge)&3])
+
+
+/* Initializes Delaunay triangulation */
+OPENCVAPI  void  cvInitSubdivDelaunay2D( CvSubdiv2D* subdiv, CvRect rect );
+
+/* Creates new subdivision */
+OPENCVAPI  CvSubdiv2D*  cvCreateSubdiv2D( int subdiv_type, int header_size,
+                                       int vtx_size, int quadedge_size,
+                                       CvMemStorage* storage );
+
+/************************* high-level subdivision functions ***************************/
+
+/* Simplified Delaunay diagram creation */
+CV_INLINE  CvSubdiv2D* cvCreateSubdivDelaunay2D( CvRect rect, CvMemStorage* storage );
+CV_INLINE  CvSubdiv2D* cvCreateSubdivDelaunay2D( CvRect rect, CvMemStorage* storage )
+{
+    CvSubdiv2D* subdiv = cvCreateSubdiv2D( CV_SEQ_KIND_SUBDIV2D, sizeof(*subdiv),
+                         sizeof(CvSubdiv2DPoint), sizeof(CvQuadEdge2D), storage );
+
+    cvInitSubdivDelaunay2D( subdiv, rect );
+    return subdiv;
+}
+
+
+/* Inserts new point to the Delaunay triangulation */
+OPENCVAPI  CvSubdiv2DPoint*  cvSubdivDelaunay2DInsert( CvSubdiv2D* subdiv, CvPoint2D32f pt);
+
+/* Locates a point within the Delaunay triangulation (finds the edge
+   the point is left to or belongs to, or the triangulation point the given
+   point coinsides with */
+OPENCVAPI  CvSubdiv2DPointLocation  cvSubdiv2DLocate(
+                               CvSubdiv2D* subdiv, CvPoint2D32f pt,
+                               CvSubdiv2DEdge *_edge,
+                               CvSubdiv2DPoint** _point CV_DEFAULT(NULL) );
+
+/* Calculates Voronoi tesselation (i.e. coordinates of Voronoi points) */
+OPENCVAPI  void  cvCalcSubdivVoronoi2D( CvSubdiv2D* subdiv );
+
+
+/* Removes all Voronoi points from the tesselation */
+OPENCVAPI  void  cvClearSubdivVoronoi2D( CvSubdiv2D* subdiv );
+
+
+/* Finds the nearest to the given point vertex in subdivision. */
+OPENCVAPI CvSubdiv2DPoint* cvFindNearestPoint2D( CvSubdiv2D* subdiv, CvPoint2D32f pt );
+
 
 /************ Basic quad-edge navigation and operations ************/
 
@@ -2763,483 +2042,51 @@ CV_INLINE  double  cvTriangleArea( CvPoint2D32f a, CvPoint2D32f b, CvPoint2D32f 
     return (b.x - a.x) * (c.y - a.y) - (b.y - a.y) * (c.x - a.x);
 }
 
-/*F///////////////////////////////////////////////////////////////////////////////////////
-//    Name:    cvCreateSubdiv2D
-//    Purpose: creates initially empty planar subdivision structure
-//    Context:
-//    Parameters:
-//      subdiv_type - type of subdivision
-//      header_size - size of header(>= sizeof(CvSubdiv2D))
-//      quadedge_size - size of quad-edges(>= sizeof(CvQuadEdge2D))
-//      vtx_size - size of vertices(>= sizeof(CvSubdiv2DPoint))
-//      storage  - size of memory storage
-//    Returns:
-//      created subdivision
-//F*/
-OPENCVAPI  CvSubdiv2D*  cvCreateSubdiv2D( int subdiv_type, int header_size,
-                                       int vtx_size, int quadedge_size,
-                                       CvMemStorage* storage );
-
-
-/*F///////////////////////////////////////////////////////////////////////////////////////
-//    Name:    cvSubdiv2DMakeEdge
-//    Purpose: creates new isolated quad-edge
-//    Context:
-//    Parameters:
-//      subdiv - subdivision - owner of the quadedge
-//    Returns:
-//      first edge of quad-edge.
-//F*/
-OPENCVAPI  CvSubdiv2DEdge  cvSubdiv2DMakeEdge( CvSubdiv2D* subdiv );
-
-
-/*F///////////////////////////////////////////////////////////////////////////////////////
-//    Name:    cvSubdiv2DAddPoint
-//    Purpose:  basic topological operation: breaks or combines edge rings
-//    Context:
-//    Parameters:
-//      edgeA - first edge
-//      edgeB - second edge
-//F*/
-OPENCVAPI  CvSubdiv2DPoint*   cvSubdiv2DAddPoint( CvSubdiv2D* subdiv,
-                                                  CvPoint2D32f pt, int is_virtual );
-
-
-/*F///////////////////////////////////////////////////////////////////////////////////////
-//    Name:    cvSubdiv2DSplice
-//    Purpose:  basic topological operation: breaks or combines edge rings
-//    Context:
-//    Parameters:
-//      edgeA - first edge
-//      edgeB - second edge
-//F*/
-OPENCVAPI  void  cvSubdiv2DSplice( CvSubdiv2DEdge  edgeA,  CvSubdiv2DEdge  edgeB );
-
-
-/*F///////////////////////////////////////////////////////////////////////////////////////
-//    Name:    cvSubdiv2DSetEdgePoints
-//    Purpose:  assigns edge origin and desination points
-//    Context:
-//    Parameters:
-//      edge - edge
-//      org_pt - point to origin vertex
-//      dst_pt - point to destination vertex
-//F*/
-OPENCVAPI  void  cvSubdiv2DSetEdgePoints( CvSubdiv2DEdge edge,
-                                          CvSubdiv2DPoint* org_pt,
-                                          CvSubdiv2DPoint* dst_pt );
-
-/*F///////////////////////////////////////////////////////////////////////////////////////
-//    Name:    cvSubdiv2DDeleteEdge
-//    Purpose:  deletes edge from subdivision.
-//    Context:
-//    Parameters:
-//      subdiv - subdivison
-//      edge - deleted edge
-//F*/
-OPENCVAPI  void  cvSubdiv2DDeleteEdge( CvSubdiv2D* subdiv, CvSubdiv2DEdge edge );
-
-
-/*F///////////////////////////////////////////////////////////////////////////////////////
-//    Name:    cvSubdiv2DConnectEdges
-//    Purpose:  connect destination point of the first edge with
-//              origin point of the second edge
-//    Context:
-//    Parameters:
-//      subdiv - subdivison
-//      edgeA - first edge
-//      edgeB - second edge
-//F*/
-OPENCVAPI  CvSubdiv2DEdge  cvSubdiv2DConnectEdges( CvSubdiv2D* subdiv,
-                                                   CvSubdiv2DEdge edgeA,
-                                                   CvSubdiv2DEdge edgeB );
-
-
-/*F///////////////////////////////////////////////////////////////////////////////////////
-//    Name:    cvSubdiv2DSwapEdges
-//    Purpose:  swap diagonal in two connected Delaunay facets
-//    Context:
-//    Parameters:
-//      subdiv - subdivison
-//      edge - sudivision edge
-//F*/
-OPENCVAPI  void  cvSubdiv2DSwapEdges( CvSubdiv2DEdge edge );
-
-
-/*F///////////////////////////////////////////////////////////////////////////////////////
-//    Name:    cvSubdiv2DLocate
-//    Purpose:  finds location of the point within the Delaunay triangulation
-//              origin point of the second edge
-//    Context:
-//    Parameters:
-//      subdiv - subdivison
-//      pt     - searched point
-//      _edge  - bounding edge for facet, containing the point
-//      _point - vertex(if searched point coincides with the vertex)
-//F*/
-OPENCVAPI  CvSubdiv2DPointLocation  cvSubdiv2DLocate(
-                               CvSubdiv2D* subdiv, CvPoint2D32f pt,
-                               CvSubdiv2DEdge *_edge,
-                               CvSubdiv2DPoint** _point CV_DEFAULT(0) );
-
-
-/*F///////////////////////////////////////////////////////////////////////////////////////
-//    Name:    cvInitSubdivDelaunay2D
-//    Purpose:  connect destination point of the first edge with
-//              origin point of the second edge
-//    Context:
-//    Parameters:
-//      subdiv - subdivison
-//      pt     - searched point
-//      _edge  - bounding edge for facet, containing the point
-//      _point - vertex(if searched point coincides with the vertex)
-//F*/
-OPENCVAPI  void  cvInitSubdivDelaunay2D( CvSubdiv2D* subdiv, CvRect rect );
-
-
-/*F///////////////////////////////////////////////////////////////////////////////////////
-//    Name:    cvSubdivDelaunay2DInsert
-//    Purpose:  insert the point into the triangulation
-//    Context:
-//    Parameters:
-//      subdiv - subdivison
-//      pt     - inserted point
-//F*/
-OPENCVAPI  CvSubdiv2DPoint*  cvSubdivDelaunay2DInsert( CvSubdiv2D* subdiv, CvPoint2D32f pt);
-
-
-/*F///////////////////////////////////////////////////////////////////////////////////////
-//    Name:    cvCalcSubdivVoronoi2D
-//    Purpose:  calculates Voronoi tesselation( Coordinates of Voronoi points)
-//    Context:
-//    Parameters:
-//      subdiv - subdivison
-//    Note:
-//      Before calculations the function checks the flag, indicating that
-//      the Voronoi tesselation is already calculated.
-//      If subdivision is modified(some points have been inserted), the flag is cleared.
-//F*/
-OPENCVAPI  void  cvCalcSubdivVoronoi2D( CvSubdiv2D* subdiv );
-
-
-/*F///////////////////////////////////////////////////////////////////////////////////////
-//    Name:    cvClearSubdivVoronoi2D
-//    Purpose:  removes all Voronoi points from the tesselation.
-//    Context:
-//    Parameters:
-//      subdiv - subdivison
-//    Note:
-//      The function is called implicitly from the cvCalcSubdivVoronoi2D
-//      before Voronoi tesselation is calculated.
-//F*/
-OPENCVAPI  void  cvClearSubdivVoronoi2D( CvSubdiv2D* subdiv );
-
 
 /****************************************************************************************\
-*                              Contours procceding                                       *
+*                            Contour Processing and Shape Analysis                       *
 \****************************************************************************************/
 
-/*F///////////////////////////////////////////////////////////////////////////////////////
-//    Name:    cvFindContours
-//    Purpose: finds contours on the binary image
-//    Context:
-//    Parameters:
-//         img - binary image(depth is IPL_DEPTH_8U or IPL_DEPTH_8S, single channel).
-//         storage - memory storage where the contours will be stored
-//         firstContour - output parameter. First contour on the highest level.
-//         headerSize - size of contours headers.
-//         mode - contour retrieving mode.
-//                  CV_RETR_EXTERNAL - get only the most external contours(list).
-//                  CV_RETR_LIST     - get all the contours without any hierarchical links
-//                                    (list).
-//                  CV_RETR_CCOMP    - get all the contours and make holes as child
-//                                     contours of corresponding external contour
-//                                    (two-level hierarchical structure)
-//                  CV_RETR_TREE     - get all the contours and build all
-//                                     hierarchical links(tree).
-//         method - approximation method
-//                CV_CHAIN_CODE    - output contours in chain-coded form(Freeman code).
-//                              The rest of methods approximate chain code with polyline
-//                CV_CHAIN_APPROX_NONE - no compression. Every point of digital curve
-//                                       is coded
-//                CV_CHAIN_APPROX_SIMPLE - horizontal, vertical and diagonal segments are
-//                                         are coded with ending vertices (by default).
-//                CV_CHAIN_APPROX_TC89_L1 - Teh-Chin algorithm, L1 curvature
-//                CV_CHAIN_APPROX_TC89_KCOS - Teh-Chin algorithm, k-cosine curvature
-//    Returns:
-//      Number of contours found.
-//F*/
-/*
-Internal structure that is used for sequental retrieving contours from the image.
-It supports both hierarchical and plane variants of Suzuki algorithm.
-*/
-typedef struct _CvContourScanner* CvContourScanner;
+#define CV_POLY_APPROX_DP 0
 
-typedef enum CvContourRetrievalMode
-{
-    CV_RETR_EXTERNAL = 0,
-    CV_RETR_LIST     = 1,
-    CV_RETR_CCOMP    = 2,
-    CV_RETR_TREE     = 3
-}
-CvContourRetrievalMode;
+/* Approximates a single polygonal curve (contour) or
+   a tree of polygonal curves (contours) */
+OPENCVAPI  CvSeq*  cvApproxPoly( const void* src_seq,
+                                 int header_size, CvMemStorage* storage,
+                                 int method, double parameter,
+                                 int parameter2 CV_DEFAULT(0));
 
-typedef enum CvChainApproxMethod
-{
-    CV_CHAIN_CODE             = 0,
-    CV_CHAIN_APPROX_NONE      = 1,
-    CV_CHAIN_APPROX_SIMPLE    = 2,
-    CV_CHAIN_APPROX_TC89_L1   = 3,
-    CV_CHAIN_APPROX_TC89_KCOS = 4
-} CvChainApproxMethod;
+/* Calculates perimeter of a contour or a part of contour */
+OPENCVAPI  double  cvArcLength( const void* curve,
+                                CvSlice slice CV_DEFAULT(CV_WHOLE_SEQ),
+                                int is_closed CV_DEFAULT(-1));
+#define cvContourPerimeter( contour ) cvArcLength( contour, CV_WHOLE_SEQ, 1 )
 
-OPENCVAPI  int  cvFindContours( CvArr* array, CvMemStorage* storage,
-                           CvSeq**  firstContour,
-                           int  headerSize CV_DEFAULT(sizeof(CvContour)),
-                           CvContourRetrievalMode mode CV_DEFAULT( CV_RETR_LIST ),
-                           CvChainApproxMethod method CV_DEFAULT(CV_CHAIN_APPROX_SIMPLE));
+/* Calculates contour boundning rectangle (update=1) or
+   just retrieves pre-calculated rectangle (update=0) */
+OPENCVAPI  CvRect  cvBoundingRect( const void* points, int update CV_DEFAULT(0) );
 
+/* Calculates area of a contour or contour segment */
+OPENCVAPI  double  cvContourArea( const void* contour,
+                                  CvSlice slice CV_DEFAULT(CV_WHOLE_SEQ));
 
-/*F///////////////////////////////////////////////////////////////////////////////////////
-//    Name:    cvStartFindContours
-//    Purpose: starts iterrative process of contours retrieving
-//    Context:
-//    Parameters:
-//         img - binary image(depth is IPL_DEPTH_8U or IPL_DEPTH_8S, single channel).
-//         storage - memory storage where the contours will be stored
-//         header_size - size of contours headers.
-//         mode - contour retrieving mode(see cvFindContours description)
-//         method - approximation method(see cvFindContours description)
-//    Returns:
-//      contour scanner state.
-//F*/
-OPENCVAPI  CvContourScanner   cvStartFindContours( CvArr* array, CvMemStorage* storage,
-                                        int header_size, CvContourRetrievalMode mode,
-                                        CvChainApproxMethod method );
+/* Finds minimum area rotated rectangle bounding a set of points */
+OPENCVAPI  CvBox2D  cvMinAreaRect2( const void* points,
+                                    CvMemStorage* storage CV_DEFAULT(NULL));
 
-/*F///////////////////////////////////////////////////////////////////////////////////////
-//    Name:    cvFindNextContour
-//    Purpose: finds next contour on the image
-//    Context:
-//    Parameters:
-//         scanner - contour scanner state
-//    Returns:
-//      next contour or NULL, if no more contours on the image
-//F*/
-OPENCVAPI  CvSeq*  cvFindNextContour( CvContourScanner scanner );
+/* Finds minimum enclosing circle for a set of points */
+OPENCVAPI  void  cvMinEnclosingCircle( const void* points,
+                                       CvPoint2D32f* center, float* radius );
 
+#define CV_CONTOURS_MATCH_I1  1
+#define CV_CONTOURS_MATCH_I2  2
+#define CV_CONTOURS_MATCH_I3  3
 
-/*F///////////////////////////////////////////////////////////////////////////////////////
-//    Name:    cvSubstituteContour
-//    Purpose: substitutes retrived contour with another one.
-//    Context:
-//    Parameters:
-//         scanner - contour scanner state
-//         newContour - substituting contour
-//                      (or NULL, if retrived contour should be rejected)
-//    Returns:
-//    Notes:
-//      The function may be called immediately after contour is retrived
-//     (may be, after some processing) before cvFindNextContour is called next time.
-//      It replaces found contour with processed contour, or even rejects it.
-//F*/
-OPENCVAPI  void   cvSubstituteContour( CvContourScanner scanner, CvSeq* newContour );
+/* Compares two contours by matching their moments */
+OPENCVAPI  double  cvMatchShapes( const void* contour1, const void* contour2,
+                                  int method, double parameter CV_DEFAULT(0));
 
-
-/*F///////////////////////////////////////////////////////////////////////////////////////
-//    Name:    cvEndFindContours
-//    Purpose: finishes process of contours retrieving
-//    Context:
-//    Parameters:
-//         scanner - contour scanner state
-//    Returns:
-//      pointer to first contour on the highest hierarchical level
-//F*/
-OPENCVAPI  CvSeq*  cvEndFindContours( CvContourScanner* scanner );
-
-
-/*F///////////////////////////////////////////////////////////////////////////////////////
-//    Name:    cvApproxChains
-//    Purpose: approximates single(all) chains with polylines.
-//    Context:
-//    Parameters:
-//         src_seq - pointer to chain(which can reffer to other chains).
-//         storage - where to place resultant polylines.
-//         dst_seq - double pointer to first resultant polyline.
-//         method  - approximation method(see cvFindContours description)
-//         parameter - method parameter(is not used now).
-//         minimal_perimeter - approximates only those contours which perimeter is
-//                             not less than <minimal_perimeter>. Other chains
-//                             are removed from resultant structure
-//         recursive - if not 0, approximate all the chains, which can be accessed
-//                     from src_seq. if 0, approximate a single chain
-//    Returns:
-//F*/
-OPENCVAPI  CvSeq* cvApproxChains( CvSeq* src_seq, CvMemStorage* storage,
-                            CvChainApproxMethod method CV_DEFAULT(CV_CHAIN_APPROX_SIMPLE),
-                            double parameter CV_DEFAULT(0),
-                            int  minimal_perimeter CV_DEFAULT(0),
-                            int  recursive CV_DEFAULT(0));
-
-
-/*F///////////////////////////////////////////////////////////////////////////////////////
-//    Name:    cvStartReadChainPoints
-//    Purpose: starts read successive points of the chain-coded curve
-//    Context:
-//    Parameters:
-//         chain   - chain
-//         reader  - chain reader state
-//    Returns:
-//F*/
-typedef struct CvChainPtReader
-{
-    CV_SEQ_READER_FIELDS()
-    char      code;
-    CvPoint  pt;
-    char      deltas[8][2];
-    int       reserved[2];
-} CvChainPtReader;
-
-OPENCVAPI  void  cvStartReadChainPoints( CvChain* chain, CvChainPtReader* reader );
-
-/*F///////////////////////////////////////////////////////////////////////////////////////
-//    Name:    cvReadChainPoint
-//    Purpose: read current point of the chain and moves read position to the next code
-//    Context:
-//    Parameters:
-//         reader - chain reader state
-//    Returns:
-//         current point of the chain
-//F*/
-OPENCVAPI  CvPoint   cvReadChainPoint( CvChainPtReader* reader );
-
-
-/*F///////////////////////////////////////////////////////////////////////////////////////
-//    Name:    cvApproxPoly
-//    Purpose: approximates polygonal curve (either closed or not)
-//             with another polygonal curve with desired accuracy
-//    Context:
-//    Parameters:
-//         src_seq - source contour
-//         header_size - size of destination contour header
-//         storage - memory storage for result
-//         dst_seq - destination contour
-//         method  - approximation method. Only a single method is implemented now.
-//                   CV_POLY_APPROX_DP - Douglas-Peucker method.
-//         parameter - depends on method. For CV_POLY_APPROX_DP it is a desired accuracy.
-//         recursive - if not 0, the function approximates all the contours that
-//                     are next to or below the initial contour, otherwise the single
-//                     contour is approximated
-//    Returns:
-//F*/
-typedef enum CvPolyApproxMethod
-{
-    CV_POLY_APPROX_DP = 0
-}
-CvPolyApproxMethod;
-
-OPENCVAPI  CvSeq*  cvApproxPoly( CvSeq* src_seq, int  header_size, CvMemStorage* storage,
-                                 CvPolyApproxMethod  method, double parameter,
-                                 int recursive CV_DEFAULT(0));
-
-/*F///////////////////////////////////////////////////////////////////////////////////////
-//    Name:    cvContourPerimeter
-//    Purpose:
-//      Calculates contour perimeter, finds minimal edge and maximal egde lengths
-//    Context:
-//    Parameters:
-//      contour  - source contour
-//      slice    - optional parameter. ending and starting indices of contour section  
-//    Returns:
-//      contour section perimeter
-//      when a part of contour is selected, the function doesn't add
-//      length of chord, connecting starting and ending points
-//F*/
-OPENCVAPI  double  cvContourPerimeter( CvSeq* contour,
-                                       CvSlice slice CV_DEFAULT(CV_WHOLE_SEQ) );
-
-
-/*F///////////////////////////////////////////////////////////////////////////////////////
-//    Name:    cvContourBoundingRect
-//    Purpose:
-//      calculates contour bounding rebox
-//    Context:
-//    Parameters:
-//      contour  - pointer to the source contour
-//      update   - attribute of contour bounding box updating
-//                 (if update = 0 the bounding box isn't updated)
-//    Returns:
-//      bounding rectangle
-//F*/
-OPENCVAPI  CvRect  cvContourBoundingRect( CvSeq* contour, int update CV_DEFAULT(0) );
-
-
-/*F///////////////////////////////////////////////////////////////////////////////////////
-//    Name: cvContourMoments
-//    Purpose:
-//      Calculates spatial and central moments of the contour up to order 3
-//    Context:
-//    Parameters:
-//      contour - the source contour
-//      moments - output parameter. Pointer to the calculated moments
-//
-//F*/
-OPENCVAPI  void  cvContourMoments( CvSeq* contour, CvMoments* moments);
-
-/*F///////////////////////////////////////////////////////////////////////////////////////
-//    Name: cvContourArea
-//    Purpose:
-//      Calculates area within the contour
-//    Context:
-//    Parameters:
-//      contour - pointer to input contour object.
-//      slice  - optional parameter. ending and starting indices of contour section  
-//    Returns:
-//      Contour section area
-//F*/
-OPENCVAPI  double  cvContourArea( CvSeq* contour,
-                               CvSlice slice CV_DEFAULT(CV_WHOLE_SEQ));
-
-/*F///////////////////////////////////////////////////////////////////////////////////////
-//    Name: cvMatchContours
-//    Purpose:
-//      Compares two contours
-//    Context:
-//    Parameters:
-//      contour1 - pointer to the first input contour object.
-//      contour2 - pointer to the second input contour object.
-//      method - method for the matching calculation
-//     (now CV_CONTOURS_MATCH_I1, CV_CONTOURS_MATCH_I2 or
-//      CV_CONTOURS_MATCH_I3 only  )
-//      parameter - method-specific parameter (is used now)
-//    Returns:
-//      Comparison result
-//F*/
-typedef enum CvContoursMatchMethod
-{
-    CV_CONTOURS_MATCH_I1 = 1,
-    CV_CONTOURS_MATCH_I2 = 2,
-    CV_CONTOURS_MATCH_I3 = 3
-}
-CvContoursMatchMethod;
-
-OPENCVAPI  double  cvMatchContours( CvSeq* contour1, CvSeq* contour2,
-                                 CvContoursMatchMethod method,
-                                 long parameter CV_DEFAULT(0));
-
-/*F///////////////////////////////////////////////////////////////////////////////////////
-//    Name: cvCreateContourTree
-//    Purpose:
-//      Creates binary tree representation for the contour
-//    Context:
-//    Parameters:
-//      contour - input contour
-//      storage - storage
-//      tree    - output pointer to the binary tree representation
-//      threshold - threshold for the binary tree building
-//    Returns:
-//      Binary tree
-//F*/
+/* Contour tree header */
 typedef struct CvContourTree
 {
     CV_SEQUENCE_FIELDS()
@@ -3247,1353 +2094,302 @@ typedef struct CvContourTree
     CvPoint p2;            /* the last point of the binary tree root segment */
 } CvContourTree;
 
+/* Builds hierarhical representation of a contour */
 OPENCVAPI  CvContourTree*   cvCreateContourTree( CvSeq* contour, CvMemStorage* storage,
                                                  double threshold );
 
-/*F///////////////////////////////////////////////////////////////////////////////////////
-//    Name: cvContourFromContourTree
-//    Purpose:
-//      Reconstructs contour from binary tree representation
-//    Context:
-//    Parameters:
-//      tree   -  input binary tree representation
-//      storage - memory storage
-//      criteria - criteria for the definition threshold value
-//                 for the contour reconstruction(level or precision)
-//    Returns:
-//      Created contour
-//F*/
+/* Reconstruct (completelly or partially) contour a from contour tree */
 OPENCVAPI  CvSeq*  cvContourFromContourTree( CvContourTree *tree,
                                           CvMemStorage* storage,
                                           CvTermCriteria criteria );
 
-/*F///////////////////////////////////////////////////////////////////////////////////////
-//    Name: cvMatchContourTrees
-//    Purpose:
-//      Compares two contour trees
-//    Context:
-//    Parameters:
-//      tree1 - pointer to the first input contour tree object.
-//      tree2 - pointer to the second input contour tree object.
-//      method - method for the matching calculation
-//     (now CV_CONTOUR_TREES_MATCH_I1 only  )
-//      threshold - threshold for the contour trees matching
-//    Returns:
-//      comparison result
-//F*/
-typedef enum CvContourTreesMatchMethod
-{
-    CV_CONTOUR_TREES_MATCH_I1 = 1
-}
-CvContourTreesMatchMethod;
+/* Compares two contour trees */
+#define  CV_CONTOUR_TREES_MATCH_I1  1
 
 OPENCVAPI  double  cvMatchContourTrees( CvContourTree *tree1,
-                                     CvContourTree *tree2,
-                                     CvContourTreesMatchMethod method,
-                                     double threshold );
+                                        CvContourTree *tree2,
+                                        int method, double threshold );
 
-/*F///////////////////////////////////////////////////////////////////////////////////////
-//    Name: cvDrawContours
-//    Purpose:
-//      Draws one or more contours outlines or their interiors on the image
-//    Context:
-//    Parameters:
-//      img      - destination three-channel image
-//      contour  - pointer to drawn contour(s).
-//      external_color - color to draw external contours with
-//      hole_color - color to draw hole contours with
-//      max_level  - max level of the tree(starting from contour pointer) to draw.
-//                   if it is 0, draw single contour, if 1 - draw the contour and
-//                   other contours at the same level, 2 - draw two levels etc.
-//      thickness - thickness of lines the contours are drawn with. If it is
-//                  equal to CV_FILLED (-1), the contour(s) interior is filled.
-//    Returns:
-//F*/
-OPENCVAPI void  cvDrawContours( void *img, CvSeq* contour,
-                                double external_color, double hole_color,
-                                int max_level, int thickness CV_DEFAULT(1),
-                                int connectivity CV_DEFAULT(8));
-
-/*F///////////////////////////////////////////////////////////////////////////////////////
-//    Name: cvCalcPGH
-//    Purpose:
-//      Calculates PGH(pairwise geometric histogram) for given contour.
-//    Context:
-//    Parameters:
-//      contour  - input contour.
-//      pgh      - output histogram(must be two-dimensional)
-//    Returns:
-//F*/
-OPENCVAPI  void  cvCalcPGH( CvSeq* contour, CvHistogram* hist );
-
-/****************************************************************************************\
-*                          Computational Geometry functions                              *
-\****************************************************************************************/
+/* Calculates histogram of a contour */
+OPENCVAPI  void  cvCalcPGH( const CvSeq* contour, CvHistogram* hist );
 
 #define CV_CLOCKWISE         1
 #define CV_COUNTER_CLOCKWISE 2
 
-/*F///////////////////////////////////////////////////////////////////////////////////////
-//    Name: cvConvexHull
-//    Purpose:
-//      Finds convex hull of points set
-//    Context:
-//    Parameters:
-//      points       - array of points
-//      num_points   - number of input points
-//      bound_rect   - pointer to bounding rectangle(if computed), can be NULL
-//      orientation  - orientation of convex hull you want to get
-//                     can be CV_CLOCKWISE or CV_COUNTER_CLOCKWISE
-//      hull         - pointer to output array
-//      hullsize     - pointer to output value, which is number of convex hull vertices
-//
-//    Returns:
-//    Notes: Function computes convex hull and stores result in "hull" array,
-//           where every vertex of convex hull is represented by index in input array.
-//
-//F*/
-OPENCVAPI void cvConvexHull( CvPoint* points, int num_points, CvRect* bound_rect,
-                          int orientation, int* hull, int* hullsize );
+/* Calculates exact convex hull of 2d point set */
+OPENCVAPI CvSeq* cvConvexHull2( const CvArr* input,
+                                void* hull_storage CV_DEFAULT(NULL),
+                                int orientation CV_DEFAULT(CV_CLOCKWISE),
+                                int return_points CV_DEFAULT(0));
 
-/*F///////////////////////////////////////////////////////////////////////////////////////
-//    Name: cvContourConvexHull
-//    Purpose:
-//      Finds convex hull of contour
-//    Context:
-//    Parameters:
-//      contour      - pointer to CvSeq structure, which elements are CvPoints
-//      orientation  - orientation of convex hull you want to get
-//                     can be CV_CLOCKWISE or CV_COUNTER_CLOCKWISE
-//      storage      - pointer to memory storage, where output sequence will be stored
-//    Returns:
-//      Convex hull
-//    Notes: Function computes convex hull and returns it.
-//           Every vertex of convex hull is represented by pointer to original point,
-//           stored in input sequence, i.e. result is CvSeq which elements
-//           have type CvPoint*
-//F*/
-OPENCVAPI CvSeq*  cvContourConvexHull( CvSeq* contour, int orientation,
-                                    CvMemStorage* storage );
+/* Checks whether the contour is convex or not (returns 1 if convex, 0 if not) */
+OPENCVAPI  int  cvCheckContourConvexity( const CvArr* contour );
 
-
-/*F///////////////////////////////////////////////////////////////////////////////////////
-//    Name: cvConvexHullApprox
-//    Purpose:
-//      Finds approximate convex hull of points set
-//    Context:
-//    Parameters:
-//      points       - array of points
-//      num_points   - number of input points
-//      bound_rect   - pointer to bounding rectangle(if computed), can be NULL
-//      bandwidth    - width of band, used in algorithm
-//      orientation  - orientation of convex hull you want to get
-//                     can be CV_CLOCKWISE or CV_COUNTER_CLOCKWISE
-//      hullpoints   - pointer to output array
-//      hullsize     - pointer to output value, which is number of convex hull vertices
-//
-//    Returns:
-//    Notes: Function computes approximate convex hull and stores result in "hull" array,
-//           where every vertex of convex hull is represented by index in input array.
-//           If bandwidth == 1, then exact convex hull is computed.
-//
-//F*/
-OPENCVAPI void  cvConvexHullApprox( CvPoint* points, int num_points,
-                                  CvRect* bound_rect, int bandwidth,
-                                  int orientation, int* hullpoints, int* hullsize );
-
-/*F///////////////////////////////////////////////////////////////////////////////////////
-//    Name: cvContourConvexHullApprox
-//    Purpose:
-//      Finds approximate convex hull of contour
-//    Context:
-//    Parameters:
-//      contour      - pointer to CvSeq structure, which elements are CvPoints
-//      bandwidth    - width of band, used in algorithm
-//      orientation  - orientation of convex hull you want to get
-//                     can be CV_CLOCKWISE or CV_COUNTER_CLOCKWISE
-//      storage      - pointer to memory storage, where output sequence will be stored
-//    Returns:
-//    Notes: Function computes approximate convex hull and returns it.
-//           Every vertex of convex hull is represented by pointer to original point,
-//           stored in input sequence, i.e. result is CvSeq which elements
-//           have type CvPoint*
-//F*/
-OPENCVAPI CvSeq*  cvContourConvexHullApprox( CvSeq* contour, int bandwidth,
-                                          int orientation, CvMemStorage* storage );
-
-/*F///////////////////////////////////////////////////////////////////////////////////////
-//    Name: cvCheckContourConvexity
-//    Purpose:
-//      Checks if contour is convex or not
-//    Context:
-//    Parameters:
-//      contour - input contour
-//
-//    Returns: 0 - contour is not convex
-//             1 - contour is convex
-//    Notes:
-//F*/
-OPENCVAPI int  cvCheckContourConvexity( CvSeq* contour );
-
-/*F///////////////////////////////////////////////////////////////////////////////////////
-//    Name: cvConvexityDefects
-//    Purpose:
-//      Computes convexity defects of contour
-//    Context:
-//    Parameters:
-//      contour      - pointer to CvSeq structure, which elements are CvPoints
-//      convexhull   - pointer to convex hull of input contour
-//      storage      - pointer to memory storage, where output sequence will be stored
-//    Returns:
-//      sequence of convexity defects
-//      (i.e. the resultant sequence elements have type CvConvexityDefect).
-//    Notes:
-//F*/
+/* Finds a sequence of convexity defects of given contour */
 typedef struct CvConvexityDefect
 {
-    CvPoint* start;
-    CvPoint* end;
-    CvPoint* depth_point;
-    float depth;
+    CvPoint* start; /* point of the contour where the defect begins */
+    CvPoint* end; /* point of the contour where the defect ends */
+    CvPoint* depth_point; /* the farthest from the convex hull point within the defect */
+    float depth; /* distance between the farthest point and the convex hull */
 } CvConvexityDefect;
 
-OPENCVAPI CvSeq*  cvConvexityDefects( CvSeq* contour, CvSeq* convexhull,
-                                      CvMemStorage* storage );
 
+/* Finds convexity defects for the contour */
+OPENCVAPI CvSeq*  cvConvexityDefects( const CvArr* contour, const CvArr* convexhull,
+                                      CvMemStorage* storage CV_DEFAULT(NULL));
 
-/*F///////////////////////////////////////////////////////////////////////////////////////
-//    Name: cvFitEllipse
-//    Purpose:
-//      Fits "least-square optimal" ellipse into the set of points
-//    Context:
-//    Parameters:
-//      points       - array of 2D points with float coordinates
-//      n            - number of input points
-//      box          - output structure which contents center of ellipse
-//                     full sizes of ellipse axis and angle to horisont
-//    Returns:
-//    Notes:
-//F*/
-OPENCVAPI void  cvFitEllipse( CvPoint2D32f* points, int n, CvBox2D* box );
-
-/*F///////////////////////////////////////////////////////////////////////////////////////
-//    Name: cvMinAreaRect
-//    Purpose:
-//      For set of points finds enclosing rectangle which has minimal area among all such
-//      rectangles. Function uses Toussaint algorithm(rotating calipers)
-//    Context:
-//    Parameters:
-//       points - input points
-//       n      - number of points
-//       left,
-//       bottom,
-//       right,
-//       top    - indices in input array of most left, bottom, right and top points
-//       anchor - coordinates of one of corners of output rectangle
-//       vect1,
-//       vect2  - two vectors, which represents sides of rectangle which are incident
-//                to anchor
-//    Returns:
-//    Notes:
-//F*/
-OPENCVAPI void  cvMinAreaRect( CvPoint* points, int n,
-                             int left, int bottom, int right, int top,
-                             CvPoint2D32f* anchor,
-                             CvPoint2D32f* vect1,
-                             CvPoint2D32f* vect2 );
-
-/*F///////////////////////////////////////////////////////////////////////////////////////
-//    Name: cvMinEnclosingCircle
-//    Purpose:
-//      Finds minimal enclosing circle for point set
-//    Context:
-//    Parameters:
-//      seq      - sequence of points
-//      center   - center of min enclosing circle
-//      radius   - radius of enclosing circle
-//    Returns:
-//    Notes:
-//F*/
-OPENCVAPI  void  cvMinEnclosingCircle( CvSeq* seq, CvPoint2D32f* center, float* radius );
+/* Fits ellipse into a set of 2d points */
+OPENCVAPI CvBox2D cvFitEllipse2( const CvArr* points );
 
 /****************************************************************************************\
 *                                  Histogram functions                                   *
 \****************************************************************************************/
 
-/*F///////////////////////////////////////////////////////////////////////////////////////
-//    Name:       cvCalcEMD
-//    Purpose:    Computes Earth mover distance(and/or lower bound of it) for given pair
-//                of signatures. Ground distance can calculated as
-//                L1, L2 or C distance between features' coordinate vectors or
-//                using user-defined distance function.
-//    Context:
-//    Parameters:
-//      signature1  - first signature - array of size1 *(dims + 1) elements
-//      signature2  - second signature - array of size2 *(dims + 1) elements
-//      dims        - number of dimensions in feature space. If 0, then
-//                    signature1 and signature2 are considered as simple 1D histograms,
-//                    else both signatures must look as follows:
-//                   (weight_i0, x0_i0, x1_i0, ..., x(dims-1)_i0,
-//                     weight_i1, x0_i1, x1_i1, ..., x(dims-1)_i1,
-//                     ...
-//                     weight_(size1-1),x0_(size1-1),x1_(size1-1,...,x(dims-1)_(size1-1))
-//
-//                     where weight_ik - weight of ik cluster.
-//                     x0_ik,...,x(dims-1)_ik - coordinates of ik cluster.
-//
-//      dist_type   - CV_DIST_L1, CV_DIST_L2, CV_DIST_C mean one of standard metrics.
-//                   ((CvDisType)-1) means user-defined distance function, which is
-//                    passes two coordinate vectors and user parameter, and which returns
-//                    distance between those feature points.
-//      emd         - pointer to calculated emd distance
-//      lower_bound - pointer to calculated lower bound.
-//                    if 0, this quantity is not calculated(only emd is calculated).
-//                    else if calculated lower bound is greater or equal to the value,
-//                    stored at this pointer, then the true emd is not calculated, but
-//                    is set to that lower_bound.
-//    Returns:
-//    Notes:
-//F*/
-CV_EXTERN_C_FUNCPTR( float (CV_CDECL * CvDistanceFunction)
-                     ( const float* a, const float* b, void* user_param ));
+/* Creates new histogram */
+OPENCVAPI  CvHistogram*  cvCreateHist( int dims, int* sizes, int type,
+                                       float** ranges CV_DEFAULT(NULL),
+                                       int uniform CV_DEFAULT(1));
 
-OPENCVAPI  float  cvCalcEMD( const float* signature1, int size1,
-                             const float* signature2, int size2,
-                             int dims, CvDisType dist_type,
-                             CvDistanceFunction dist_func,
-                             float* lower_bound,
-                             void* user_param );
-
-/*F///////////////////////////////////////////////////////////////////////////////////////
-//    Name:       cvCreateHist
-//    Purpose:    Creates histogram
-//    Context:
-//    Parameters:
-//      c_dims - number of dimension in the histogram
-//      dims   - array, containing number of bins per each dimension
-//      type   - type of histogram. Now, CV_HIST_ARRAY is only supported type.
-//      ranges - array of bin ranges.
-//      uniform - flag; non 0 if histogram bins are evenly spaced.
-//    Returns:
-//      Created histogram.
-//F*/
-OPENCVAPI  CvHistogram*  cvCreateHist( int c_dims, int* dims,
-                                    CvHistType type,
-                                    float** ranges CV_DEFAULT(0),
+/* Assignes histogram bin ranges */
+OPENCVAPI void  cvSetHistBinRanges( CvHistogram* hist, float** ranges,
                                     int uniform CV_DEFAULT(1));
 
+/* Creates histogram header for array */
+OPENCVAPI  CvHistogram*  cvMakeHistHeaderForArray(
+                            int  dims, int* sizes, CvHistogram* hist,
+                            float* data, float** ranges CV_DEFAULT(NULL),
+                            int uniform CV_DEFAULT(1));
 
-/*F///////////////////////////////////////////////////////////////////////////////////////
-//    Name:       cvSetHistBinRanges
-//    Purpose:    Sets histogram bins' ranges
-//    Context:
-//    Parameters:
-//      ranges - array of bin ranges.
-//      uniform - flag; non 0 if histogram bins are evenly spaced.
-//    Returns:
-//      nothing
-//    Notes:      if uniform parameter is not NULL then thresh[i][0] - minimum value,
-//                thresh[i][1] - maximum value of thresholds for dimension i
-//F*/
-OPENCVAPI void  cvSetHistBinRanges( CvHistogram* hist, float** ranges,
-                                 int uniform CV_DEFAULT(1));
-
-/*F///////////////////////////////////////////////////////////////////////////////////////
-//    Name:       cvMakeHistHeaderForArray
-//    Purpose:    Initializes histogram header and sets
-//                its data pointer to given value
-//    Context:
-//    Parameters:
-//      c_dims - number of dimension in the histogram
-//      dims   - array, containing number of bins per each dimension
-//      hist   - pointer to histogram structure. It will have CV_HIST_ARRAY type.
-//      data   - histogram data
-//    Returns:
-//F*/
-OPENCVAPI  void  cvMakeHistHeaderForArray( int  c_dims, int* dims, CvHistogram* hist,
-                                           float* data, float** ranges CV_DEFAULT(0),
-                                           int uniform CV_DEFAULT(1));
-
-
-/*F///////////////////////////////////////////////////////////////////////////////////////
-//    Name:       cvReleaseHist
-//    Purpose:    Releases histogram header and underlying data
-//    Context:
-//    Parameters:
-//      hist - pointer to released histogram.
-//    Returns:
-//F*/
+/* Releases histogram */
 OPENCVAPI  void  cvReleaseHist( CvHistogram** hist );
 
+/* Clears all the histogram bins */
+OPENCVAPI  void  cvClearHist( CvHistogram* hist );
 
-/*F///////////////////////////////////////////////////////////////////////////////////////
-//    Name:       cvClearHist
-//    Purpose:    Clears histogram(sets all bins to zero)
-//    Context:
-//    Parameters:
-//      hist - pointer to cleared histogram.
-//    Returns:
-//F*/
-OPENCVAPI  void  cvClearHist( CvHistogram* hist);
-
-
-/*F///////////////////////////////////////////////////////////////////////////////////////
-//    Name:       cvQueryHistValue....
-//    Purpose:    Returns value or histogram bin, given its cooridinates
-//    Context:
-//    Parameters:
-//      hist - pointer to histogram.
-//      idx0 - index for the 1st dimension
-//      idx1 - index for the 2nd dimension
-//             ...
-//      idx  - array of coordinates(for multi-dimensonal histogram)
-//    Returns:
-//      Value of histogram bin
-//    Notes:
-//      For non-array histogram function returns 0 if the specified element isn't present
-//F*/
-OPENCVAPI  float  cvQueryHistValue_1D( CvHistogram* hist, int idx0 );
-OPENCVAPI  float  cvQueryHistValue_2D( CvHistogram* hist, int idx0, int idx1 );
-OPENCVAPI  float  cvQueryHistValue_3D( CvHistogram* hist, int idx0, int idx1, int idx2 );
-OPENCVAPI  float  cvQueryHistValue_nD( CvHistogram* hist, int* idx );
-
-
-/*F///////////////////////////////////////////////////////////////////////////////////////
-//    Name:       cvGetHistValue....
-//    Purpose:    Returns pointer to histogram bin, given its cooridinates
-//    Context:
-//    Parameters:
-//      hist - pointer to histogram.
-//      idx0 - index for the 1st dimension
-//      idx1 - index for the 2nd dimension
-//             ...
-//      idx  - array of coordinates(for multi-dimensonal histogram).
-//             must have hist->c_dims elements.
-//    Returns:
-//      Pointer to histogram bin
-//    Notes:
-//      For non-array histogram function creates a new element if it is not exists.
-//F*/
-OPENCVAPI  float*  cvGetHistValue_1D( CvHistogram* hist, int idx0 );
-OPENCVAPI  float*  cvGetHistValue_2D( CvHistogram* hist, int idx0, int idx1 );
-OPENCVAPI  float*  cvGetHistValue_3D( CvHistogram* hist, int idx0, int idx1, int idx2 );
-OPENCVAPI  float*  cvGetHistValue_nD( CvHistogram* hist, int* idx );
-
-
-/*F///////////////////////////////////////////////////////////////////////////////////////
-//    Name:       cvGetMinMaxHistValue
-//    Purpose:    Finds coordinates and numerical values of minimum and maximum
-//                histogram bins
-//    Context:
-//    Parameters:
-//      hist - pointer to histogram.
-//      idx_min - pointer to array of coordinates for minimum.
-//                if not NULL, must have hist->c_dims elements.
-//      value_min - pointer to minimum value of histogram( Can be NULL).
-//      idx_max - pointer to array of coordinates for maximum.
-//                if not NULL, must have hist->c_dims elements.
-//      value_max - pointer to maximum value of histogram( Can be NULL).
-//    Returns:
-//F*/
-OPENCVAPI  void  cvGetMinMaxHistValue( CvHistogram* hist,
+/* Finds indices and values of minimum and maximum histogram bins */
+OPENCVAPI  void  cvGetMinMaxHistValue( const CvHistogram* hist,
                                     float* value_min, float* value_max,
-                                    int* idx_min CV_DEFAULT(0), 
-                                    int* idx_max CV_DEFAULT(0));
+                                    int* idx_min CV_DEFAULT(NULL),
+                                    int* idx_max CV_DEFAULT(NULL));
 
-/*F///////////////////////////////////////////////////////////////////////////////////////
-//    Name:     cvNormalizeHist
-//    Purpose:  Normalizes histogram(such that sum of histogram bins becomes factor)
-//    Context:
-//    Parameters:
-//      hist - pointer to normalized histogram.
-//    Returns:
-//F*/
+
+/* Normalizes histogram by dividing all bins by sum of the bins, multiplied by <factor>.
+   After that sum of histogram bins is equal to <factor> */
 OPENCVAPI  void  cvNormalizeHist( CvHistogram* hist, double factor );
 
 
-/*F///////////////////////////////////////////////////////////////////////////////////////
-//    Name:     cvThreshHist
-//    Purpose:  Clears histogram bins that are below specified level
-//    Context:
-//    Parameters:
-//      hist - pointer to histogram.
-//      thresh - threshold level
-//    Returns:
-//F*/
+/* Clear all histogram bins that are below the threshold */
 OPENCVAPI  void  cvThreshHist( CvHistogram* hist, double thresh );
 
+#define CV_COMP_CORREL      0
+#define CV_COMP_CHISQR      1
+#define CV_COMP_INTERSECT   2
 
-/*F///////////////////////////////////////////////////////////////////////////////////////
-//    Name:     cvCompareHist
-//    Purpose:  compares two histograms using specified method
-//    Context:
-//    Parameters:
-//      hist1 - first compared histogram.
-//      hist2 - second compared histogram.
-//      method - comparison method
-//    Returns:
-//      value, that characterizes similarity(or difference) of two histograms
-//    Notes:
-//F*/
-OPENCVAPI  double  cvCompareHist( CvHistogram*  hist1,
-                               CvHistogram*  hist2,
-                               CvCompareMethod method);
+/* Compares two histogram */
+OPENCVAPI  double  cvCompareHist( const CvHistogram* hist1,
+                                  const CvHistogram* hist2,
+                                  int method);
+
+/* Copies one histogram to another. Destination histogram is created if
+   the destination pointer is NULL */
+OPENCVAPI void  cvCopyHist( const CvHistogram* src, CvHistogram** dst );
 
 
-/*F///////////////////////////////////////////////////////////////////////////////////////
-//    Name:       cvCopyHist
-//    Purpose:    Copying one histogram to another
-//    Context:
-//    Parameters:
-//      src - source histogram
-//      dst - destination histogram
-//    Returns:
-//    Notes:      if second parameter is pointer to NULL(*dst == 0) then second
-//                histogram will be created.
-//                both histograms(if second histogram present) must be equal
-//                types & sizes
-//F*/
-OPENCVAPI void  cvCopyHist( CvHistogram* src, CvHistogram** dst );
-
-
-/*F///////////////////////////////////////////////////////////////////////////////////////
-//    Name:       cvCalcBayesianProb
-//    Purpose:    Calculates bayesian probabilistic histograms
-//    Context:
-//    Parameters:
-//      src - array of source histograms
-//      number - number of source/destination histograms 
-//      dst - array of destination histograms
-//    Returns:
-//    Notes:
-//F*/
+/* Calculates bayesian probabilistic histograms
+   (each or src and dst is an array of <number> histograms */
 OPENCVAPI void  cvCalcBayesianProb( CvHistogram** src, int number,
-                                  CvHistogram** dst);
+                                    CvHistogram** dst);
+
+/* Calculates array histogram */
+OPENCVAPI  void  cvCalcArrHist( CvArr** arr, CvHistogram* hist,
+                                int doNotClear CV_DEFAULT(0),
+                                const CvArr* mask CV_DEFAULT(NULL) );
+
+CV_INLINE  void  cvCalcHist( IplImage** img, CvHistogram* hist,
+                             int doNotClear CV_DEFAULT(0),
+                             const CvArr* mask CV_DEFAULT(NULL) );
+CV_INLINE  void  cvCalcHist( IplImage** img, CvHistogram* hist,
+                             int doNotClear, const CvArr* mask )
+{
+    cvCalcArrHist( (CvArr**)img, hist, doNotClear, mask );
+}
+
+/* Calculates contrast histogram */
+OPENCVAPI  void  cvCalcContrastHist( CvArr** img, CvHistogram* hist,
+                                     int doNotClear, IplImage* mask );
+
+/* Calculates back project */
+OPENCVAPI  void  cvCalcArrBackProject( CvArr** img, CvArr* dst,
+                                       const CvHistogram* hist );
+#define  cvCalcBackProject(img, dst, hist) cvCalcArrBackProject((CvArr**)img, dst, hist)
 
 
-/*F///////////////////////////////////////////////////////////////////////////////////////
-//    Name:       cvCalcHist
-//    Purpose:    Calculating histogram from array of one-channel images
-//    Context:
-//    Parameters:
-//      img - array of single-channel images
-//      hist - histogram to be calculated. It must have as many dimensions as number of
-//             images in <img> array.
-//      doNotClear - if not 0, the histogram is not cleared before calculations.
-//      mask - optional mask that determines pixels that participate in histogram
-//             accumulation.
-//    Returns:
-//    Notes:      if doNotClear parameter is NULL then histogram clearing before
-//                calculating(all values sets to NULL)
-//F*/
-OPENCVAPI  void  cvCalcHist( IplImage** img, CvHistogram* hist,
-                          int doNotClear CV_DEFAULT(0),
-                          IplImage* mask CV_DEFAULT(0) );
-
-/*F///////////////////////////////////////////////////////////////////////////////////////
-//    Name:       cvCalcContrastHist
-//    Purpose:    Calculates contrast histogram from array of one-channel images
-//    Context:
-//    Parameters:
-//    Returns:
-//    Notes:      if dont_clear parameter is NULL then histogram clearing before
-//                calculating(all values sets to NULL)
-//F*/
-OPENCVAPI  void   cvCalcContrastHist( IplImage** img, CvHistogram* hist,
-                                   int doNotClear, IplImage* mask );
-
-/*F///////////////////////////////////////////////////////////////////////////////////////
-//    Name:       cvCalcBackProject
-//    Purpose:    Calculates back project of histogram
-//      img - array of input single-channel images
-//      dst - destination single-channel image
-//      hist - histogram, used for calculating back project. It must have as many
-//             dimensions as the number of images in the <img> array.
-//    Context:
-//    Parameters:
-//    Returns:
-//    Notes:
-//F*/
-OPENCVAPI  void  cvCalcBackProject( IplImage** img, IplImage* dst,
-                                 CvHistogram* hist );
+/* Does some sort of template matching but compares histograms of
+   template and each window location */
+OPENCVAPI  void  cvCalcArrBackProjectPatch( CvArr** img, CvArr* dst, CvSize range,
+                                            CvHistogram* hist, int method,
+                                            double normFactor );
+#define  cvCalcBackProjectPatch( img, dst, range, hist, method, normFactor ) \
+     cvCalcArrBackProjectPatch( (CvArr**)img, dst, range, hist, method, normFactor )
 
 
-/*F///////////////////////////////////////////////////////////////////////////////////////
-//    Name:       cvCalcBackProjectPatch
-//    Purpose:    Calculating back project patch of histogram
-//    Context:
-//    Parameters:
-//    Returns:
-//    Notes:
-//F*/
-OPENCVAPI  void  cvCalcBackProjectPatch( IplImage** img, IplImage* dst, CvSize range,
-                                      CvHistogram* hist, CvCompareMethod method,
-                                      double normFactor );
+/* calculates probabilistic density (divides one histogram by another) */
+OPENCVAPI  void  cvCalcProbDensity( CvHistogram* hist, CvHistogram* hist_mask,
+                                    CvHistogram* hist_dens, double scale CV_DEFAULT(255) );
 
 
-/****************************************************************************************\
-*                                  Active contours                                       *
-\****************************************************************************************/
-
-
-/*F///////////////////////////////////////////////////////////////////////////////////////
-//    Name:       cvSnakeImage
-//    Purpose:    Updates active contour in order to minimize its cummulative (internal
-//                and external) energy.
-//    Context:
-//    Parameters:
-//      src - source image that represent external energy.
-//      points - array of points in the snake.
-//      length - number of points
-//      alpha, beta, gamma - weights of different energy components
-//      coeffUsage - if it is CV_ARRAY then previous three parameters are array of 
-//                   <length> elements, otherwise each of them is a pointer to
-//                   scalar values.
-//      win - half-size of search window. 
-//      criteria - termination criteria.
-//      calcGradient - if not 0, the function uses magnitude of the source image gradient
-//                     as external energy, otherwise the source image pixel values
-//                     are just used for this purpose.  
-//    Returns:
-//    Notes:
-//F*/
-OPENCVAPI  void  cvSnakeImage( IplImage* src, CvPoint* points,
+#define  CV_VALUE  1
+#define  CV_ARRAY  2
+/* Updates active contour in order to minimize its cummulative
+   (internal and external) energy. */
+OPENCVAPI  void  cvSnakeImage( const IplImage* src, CvPoint* points,
                             int  length, float* alpha,
                             float* beta, float* gamma,
-                            CvCoeffType coeffUsage, CvSize  win,
+                            int coeffUsage, CvSize  win,
                             CvTermCriteria criteria, int calcGradient CV_DEFAULT(1));
 
-/****************************************************************************************\
-*                              Gesture recognition                                      *
-\****************************************************************************************/
-
-/*F///////////////////////////////////////////////////////////////////////////////////////
-//    Name:     cvFindHandRegion
-//    Purpose:  finds hand region in range image data
-//    Context:   
-//    Parameters: 
-//      points - pointer to the input point's set.
-//      count  - the number of the input points.
-//      indexs - pointer to the input sequence of the point's indexes
-//      line   - pointer to the 3D-line
-//      size   - size of the hand in meters 
-//      flag   - hand direction's flag (0 - left, -1 - right, 
-                 otherwise j-index of the initial image center)
-//      center - pointer to the output hand center
-//      storage - pointer to the memory storage  
-//      numbers - pointer to the output sequence of the point's indexes inside
-//                hand region                
-//      
-//    Notes:
-//F*/
+/* Finds hand region in range image data */
 OPENCVAPI  void  cvFindHandRegion (CvPoint3D32f* points, int count,
                                 CvSeq* indexs,
                                 float* line, CvSize2D32f size, int flag,
                                 CvPoint3D32f* center,
                                 CvMemStorage* storage, CvSeq **numbers);
 
-
-
-/*F///////////////////////////////////////////////////////////////////////////////////////
-//    Name:     cvFindHandRegionA
-//    Purpose:  finds hand region in range image data
-//    Context:
-//    Parameters:
-//      points - pointer to the input point's set.
-//      count  - the number of the input points.
-//      indexs - pointer to the input sequence of the point's indexes
-//      line   - pointer to the 3D-line
-//      size   - size of the hand in meters
-//      jc - j-index of the initial image center
-//      center - pointer to the output hand center
-//      storage - pointer to the memory storage
-//      numbers - pointer to the output sequence of the point's indexes inside
-//                hand region
-//
-//    Notes:
-//F*/
+/* Finds hand region in range image data (advanced version) */
 OPENCVAPI  void  cvFindHandRegionA( CvPoint3D32f* points, int count,
                                 CvSeq* indexs,
                                 float* line, CvSize2D32f size, int jc,
                                 CvPoint3D32f* center,
                                 CvMemStorage* storage, CvSeq **numbers);
 
-/*F///////////////////////////////////////////////////////////////////////////////////////
-//    Name:     cvCalcImageHomography
-//    Purpose:  calculates the cooficients of the homography matrix
-//    Context:
-//    Parameters:
-//      line   - pointer to the input 3D-line
-//      center - pointer to the input hand center
-//      intrinsic - intrinsic camera parameters matrix
-//      homography - result homography matrix
-//
-//    Notes:
-//F*/
+/* Calculates the cooficients of the homography matrix */
 OPENCVAPI  void  cvCalcImageHomography(float *line, CvPoint3D32f* center,
-                                     float intrinsic[3][3], float homography[3][3]);
+                                     float* intrinsic, float* homography);
 
-/*F///////////////////////////////////////////////////////////////////////////////////////
-//    Name:     cvCreateHandMask
-//    Purpose:  creates hand mask image
-//    Context:
-//    Parameters:
-//      numbers - pointer to the input sequence of the point's indexes inside
-//                hand region
-//      img_mask - pointer to the result mask image
-//      roi      - result hand mask ROI
-//
-//    Notes:
-//F*/
-OPENCVAPI  void  cvCreateHandMask( CvSeq* numbers,
-                                IplImage *img_mask, CvRect *roi);
+/* Creates hand mask image given several points on the hand */
+OPENCVAPI  void  cvCreateHandMask( CvSeq* hand_points,
+                                   IplImage *img_mask, CvRect *roi);
 
-/*F///////////////////////////////////////////////////////////////////////////////////////
-//    Name:     cvCalcProbDensity
-//    Purpose:  calculates hand mask probability density
-//    Context:
-//    Parameters:
-//      hist      - pointer to the input image histogram
-//      hist_mask - pointer to the input image mask histogram
-//      hist_dens - pointer to the result probability density histogram
-//
-//    Notes:
-//F*/
-OPENCVAPI  void  cvCalcProbDensity( CvHistogram* hist, CvHistogram* hist_mask,
-                                 CvHistogram* hist_dens);
 
-/*F///////////////////////////////////////////////////////////////////////////////////////
-//    Name:     cvMaxRect
-//    Purpose:  calculates maximum rectangle
-//    Context:
-//    Parameters:
-//      rect1      - pointer to the first input rectangle
-//      rect2      - pointer to the second input rectangle
-//      max_rect   - pointer to the result maximum rectangle
-//
-//    Notes:
-//F*/
-OPENCVAPI  void  cvMaxRect( CvRect *rect1, CvRect *rect2, CvRect *max_rect );
-
-/****************************************************************************************\
-*                                  Distance Transform                                    *
-\****************************************************************************************/
-
-/*F///////////////////////////////////////////////////////////////////////////////////////
-//    Name:     cvDistTransform
-//    Purpose:  calculates distance transform of binary image 
-//    Context:
-//    Parameters:
-//      src - source binary image
-//      dst - output floating-point image, whose pixel values are distances from
-//            the correspondend pixel in the source image to the nearest 0-pixel.
-//      disType - type of metric used
-//      maskSize - size of discrete aperture that approximates the metric; can be 3 or 5.
-//      mask - array of 2 (for 3x3 mask) or 3 numbers (for 5x5 mask) that characterizes
-//             metric if disType is CV_DIST_USER (user-defined metric)
-//    Notes:
-//F*/
 #define CV_DIST_MASK_3   3
 #define CV_DIST_MASK_5   5 
 
+/* Applies distance transform to binary image */
 OPENCVAPI  void  cvDistTransform( const CvArr* src, CvArr* dst,
                                   CvDisType disType CV_DEFAULT(CV_DIST_L2),
                                   int maskSize CV_DEFAULT(3),
-                                  const float* mask CV_DEFAULT(0));
+                                  const float* mask CV_DEFAULT(NULL));
 
-
-/****************************************************************************************\
-*                                      Thresholds                                        *
-\****************************************************************************************/
 
 /* Defines for Threshold functions */
-typedef enum CvThreshType
-{
-    CV_THRESH_BINARY     = 0,  /* val = (val>thresh? MAX:0)      */
-    CV_THRESH_BINARY_INV = 1,  /* val = (val>thresh? 0:MAX)      */
-    CV_THRESH_TRUNC      = 2,  /* val = (val>thresh? thresh:val) */
-    CV_THRESH_TOZERO     = 3,  /* val = (val>thresh? val:0)      */
-    CV_THRESH_TOZERO_INV = 4   /* val = (val>thresh? 0:val)      */
-} CvThreshType;
+#define CV_THRESH_BINARY      0  /* val = (val>thresh? MAX:0)      */
+#define CV_THRESH_BINARY_INV  1  /* val = (val>thresh? 0:MAX)      */
+#define CV_THRESH_TRUNC       2  /* val = (val>thresh? thresh:val) */
+#define CV_THRESH_TOZERO      3  /* val = (val>thresh? val:0)      */
+#define CV_THRESH_TOZERO_INV  4  /* val = (val>thresh? 0:val)      */
 
-typedef enum CvAdaptiveThreshMethod
-{
-    CV_STDDEV_ADAPTIVE_THRESH  = 0   /*  method for the defining local adaptive threshold  */
-}
-CvAdaptiveThreshMethod;
-
-/*F///////////////////////////////////////////////////////////////////////////////////////
-//    Name:    cvThreshold
-//    Purpose: Applies fixed threshold to the grayscale image
-//    Context:
-//    Parameters:
-//      src     - source image
-//      dst     - destination image (can be the same as the source image)
-//      threshold - threshold value
-//      maxValue  - the maximum value of the image pixel
-//      type      - thresholding type, must be one of
-//                  CV_THRESH_BINARY       - val =(val > Thresh ? maxValue : 0)
-//                  CV_THRESH_BINARY_INV   - val =(val > Thresh ? 0   : maxValue)
-//                  CV_THRESH_TOZERO       - val =(val > Thresh ? val : 0)
-//                  CV_THRESH_TOZERO_INV   - val =(val > Thresh ? 0   : val)
-//    Returns:
-//    Notes:
-//F*/
+/* Applies fixed-level threshold to grayscale image. This is the basic operation
+   to be performed before retrieving contours */
 OPENCVAPI  void  cvThreshold( const CvArr*  src, CvArr*  dst,
-                              double  thresh,  double  maxValue,
-                              CvThreshType type );
+                              double  thresh, double  maxValue, int type );
 
-/*F///////////////////////////////////////////////////////////////////////////////////////
-//    Name:    cvAdaptiveThreshold
-//    Purpose: Applies adaptive threshold to the grayscale image
-//    Context:
-//    Parameters:
-//      src     - source image
-//      dst     - destination image
-//      maxValue  - the maximum value of the image pixel
-//      method    - method for the adaptive threshold calculation
-                   (now CV_STDDEF_ADAPTIVE_THRESH only)
-//      type      - thresholding type, must be one of
-//                  CV_THRESH_BINARY       - val =(val > Thresh ? MAX    : 0)
-//                  CV_THRESH_BINARY_INV   - val =(val > Thresh ? 0      : MAX)
-//                  CV_THRESH_TOZERO       - val =(val > Thresh ? val    : 0)
-//                  CV_THRESH_TOZERO_INV   - val =(val > Thresh ? 0      : val)
-//      parameters - pointer to the input parameters(for the
-//                   CV_STDDEF_ADAPTIVE_THRESH method parameters[0] is size of
-//                   the neighborhood thresholding,(one of the 1-(3x3),2-(5x5),or
-//                   3-(7x7)), parameters[1] is the value of the minimum variance
-//    Returns:
-//    Notes:
-//F*/
+#define CV_ADAPTIVE_THRESH_MEAN_C  0
+#define CV_ADAPTIVE_THRESH_GAUSSIAN_C  1
+
+/* Applies adaptive threshold to grayscale image.
+   The two parameters for methods CV_ADAPTIVE_THRESH_MEAN_C and
+   CV_ADAPTIVE_THRESH_GAUSSIAN_C are:
+   neighborhood size (3, 5, 7 etc.),
+   and a constant subtracted from mean (...,-3,-2,-1,0,1,2,3,...) */
 OPENCVAPI  void  cvAdaptiveThreshold( const CvArr* src, CvArr* dst, double maxValue,
-                                      CvAdaptiveThreshMethod method, CvThreshType type,
-                                      double* parameters );
+                                      int method CV_DEFAULT(CV_ADAPTIVE_THRESH_MEAN_C),
+                                      int type CV_DEFAULT(CV_THRESH_BINARY),
+                                      int blockSize CV_DEFAULT(3),
+                                      double param1 CV_DEFAULT(5));
 
-/****************************************************************************************\
-*                                     Flood fill                                         *
-\****************************************************************************************/
+#define CV_FLOODFILL_FIXED_RANGE (1 << 16)
+#define CV_FLOODFILL_MASK_ONLY   (1 << 17)
 
-/*F///////////////////////////////////////////////////////////////////////////////////////
-//    Name: cvFloodFill, cvFloodFill
-//    Purpose: The function fills the connected domain, starting from seed pixel
-//             while the pixel values in this domain are not far from each other.
-//    Context:
-//    Parameters:
-//      img        - initial image(in the beginning)
-//                   which is "repainted" during the function action,
-//      seedPoint  - coordinates of the seed point inside image ROI,
-//      newVal     - new value of repainted area pixels,
-//      loDiff, upDiff - maximal lower and upper differences of the values of
-//                   appurtenant to repainted area pixel and one of its
-//                   neighbour,
-//      comp       - pointer to connected component structure of the
-//                   repainted area
-//      connectivity - if it is 4, the function looks for 4-connected neighbors,
-//                     otherwise it looks for 8-connected neighbors.
-//    Notes:
-//F*/
+/* Fills the connected component until the color difference gets large enough */
 OPENCVAPI  void  cvFloodFill( CvArr* array, CvPoint seedPoint,
-                              double newVal, double loDiff, double upDiff,
-                              CvConnectedComp* comp, int connectivity CV_DEFAULT(4) );
-
-/****************************************************************************************\
-*                                     CAMSHIFT                                           *
-\****************************************************************************************/
-
-/*F///////////////////////////////////////////////////////////////////////////////////////
-//    Name:    cvCamShift
-//    Purpose:
-//      Implements CAMSHIFT algorithm - determines object position, size and orientation
-//      from the object histogram back project.
-//    Context:
-//    Parameters:
-//      imgProb - back project of the object histogram
-//      windowIn - initial search window
-//      criteria - iterative search termination criteria 
-//      out    - output parameter. Final position of search window and object area
-//      box    - width and height (i.e. length) of the object, its center and orientation
-//    Returns:
-//      Number of iterations made
-//F*/
-OPENCVAPI int  cvCamShift( const CvArr* imgProb, CvRect  windowIn,
-                           CvTermCriteria criteria, CvConnectedComp* out,
-                           CvBox2D* box );
-
-/*F///////////////////////////////////////////////////////////////////////////////////////
-//    Name:    cvMeanShift
-//    Purpose:
-//      Implements MeanShift algorithm - determines object position
-//      from the object histogram back project.
-//    Context:
-//    Parameters:
-//      imgProb - back project of the object histogram
-//      windowIn - initial search window
-//      criteria - iterative search termination criteria 
-//      out - output parameter. Final position of search window and object area
-//    Returns:
-//      Number of iterations made
-//    Notes:
-//F*/
-OPENCVAPI int  cvMeanShift( const CvArr* imgProb, CvRect  windowIn,
-                            CvTermCriteria criteria, CvConnectedComp* out );
+                              double newVal, double loDiff CV_DEFAULT(0),
+                              double upDiff CV_DEFAULT(0),
+                              CvConnectedComp* comp CV_DEFAULT(NULL),
+                              int flags CV_DEFAULT(4),
+                              CvArr* mask CV_DEFAULT(NULL));
 
 /****************************************************************************************\
 *                                  Feature detection                                     *
 \****************************************************************************************/
 
-/*F///////////////////////////////////////////////////////////////////////////////////////
-//    Name:    cvCanny
-//    Purpose: Canny edge detection
-//    Context:
-//    Parameters:
-//      src - source byte-depth, single channel image,
-//      dst - destination byte-depth, single channel image with edges,
-//      apertureSize - size of Sobel operator aperture,
-//      lowThreshold,
-//      highThreshold - tresholds, applied in hysteresis thresholding
-//    Returns:
-//    Notes: image gradient magnitude has scale factor 2^(2*apertureSize-3)
-//           so user must choose appropriate lowThreshold and highThreshold
-//           i.e. if real gradient magnitude is 1, then 3x3 Sobel used in this function
-//           will output 8 for apertureSize == 3.
-//F*/
-OPENCVAPI  void  cvCanny( const CvArr* src, CvArr* dst, double lowThreshold,
-                          double highThreshold, int  apertureSize CV_DEFAULT(3) );
+/* Runs canny edge detector */
+OPENCVAPI  void  cvCanny( const CvArr* src, CvArr* dst, double low_threshold,
+                          double high_threshold, int  aperture_size CV_DEFAULT(3) );
 
-/*F///////////////////////////////////////////////////////////////////////////////////////
-//    Name:     cvPreCornerDetect
-//    Purpose:  Calculating constraint image for corner detection
-//              Dx^2 * Dyy + Dxx * Dy^2 - 2 * Dx * Dy * Dxy
-//    Context:
-//    Parameters:
-//      src - source image
-//      dst - destination feature image
-//      apertureSize - Sobel operator aperture size
-//    Returns:
-//F*/
+/* Calculates constraint image for corner detection
+   Dx^2 * Dyy + Dxx * Dy^2 - 2 * Dx * Dy * Dxy.
+   Applying threshold to the result gives coordinates of corners */
 OPENCVAPI void cvPreCornerDetect( const CvArr* src, CvArr* dst,
-                                  int apertureSize CV_DEFAULT(3) );
+                                  int aperture_size CV_DEFAULT(3) );
 
-/*F///////////////////////////////////////////////////////////////////////////////////////
-//    Name:    cvCalcCornerEigenValsAndVecs
-//    Purpose:  Calculates eigen values and vectors of 2x2
-//              gradient matrix at every image pixel
-//    Context:
-//    Parameters:
-//      src      - pointer to the source image
-//      eigenvv  - destination image, containing two eigen values and
-//                 components of two eigen vectors for each raster point
-//               ( i.e., this image is 6 times wider than source image )
-//      apertureSize - Sobel operator aperture size
-//      blockSize  - size of block for summation(averaging block)
-//    Returns:
-//F*/
+/* Calculates eigen values and vectors of 2x2
+   gradient matrix at every image pixel */
 OPENCVAPI void  cvCornerEigenValsAndVecs( const CvArr* src, CvArr* eigenvv,
                                           int blockSize,
-                                          int apertureSize CV_DEFAULT(3) );
+                                          int aperture_size CV_DEFAULT(3) );
 
-/*F///////////////////////////////////////////////////////////////////////////////////////
-//    Name:    cvCornerMinEigenVal
-//    Purpose:  Calculates minimal eigenvalue for 2x2 gradient matrix at
-//              every image pixel
-//    Context:
-//    Parameters:
-//      src        - source image
-//      eigenval   - minimal eigen value for each point of the source image
-//      apertureSize - Sobel operator aperture size
-//      blockSize  - size of block for summation(averaging block)
-//    Returns:
-//F*/
+/* Calculates minimal eigenvalue for 2x2 gradient matrix at
+   every image pixel */
 OPENCVAPI void  cvCornerMinEigenVal( const CvArr* src, CvArr* eigenval,
-                                     int blockSize, int apertureSize CV_DEFAULT(3) );
+                                     int blockSize, int aperture_size CV_DEFAULT(3) );
 
-/*F///////////////////////////////////////////////////////////////////////////////////////
-//    Name:    cvFindCornerSubPix
-//    Purpose:
-//      Finds corners on the image with sub-pixel accuracy given
-//      initial guesses for those corners.
-//    Context:
-//    Parameters:
-//      src        - source image
-//      corners    - initial coordinates of corners on input, adjusted coordinates
-//                   on output
-//      count      - number of corner points
-//      win        - search window size for each corner.
-//                   actually, for each corner(x,y), the window
-//                  (x - win.width .. x + win.width,y - win.height .. y + win_height)
-//                   is used.(window  moves with the point after every iteration)
-//      zeroZone   - size of zero zone in the middle of the mask.
-//      criteria   - This parameter specifies, how many times iterate and what precision
-//                   is required.
-//    Returns:
-//      Nothing
-//    Notes:
-//      Size of destination ROI is not passed into the function, because
-//      it assumes dst ROI size:
-//      =(src_size.width - 2, src_size.height - 2) if both kernels are used
-//      =(src_size.width - 2, src_size.height)     if horizontal kernel != 0 only.
-//      =(src_size.width, src_size.height - 2)     if vertical kernel != 0 only.
-F*/
+/* Adjust corner position using some sort of gradient search */
 OPENCVAPI  void  cvFindCornerSubPix( const CvArr* src,CvPoint2D32f*  corners,
-                                     int count, CvSize win,CvSize zeroZone,
+                                     int count, CvSize win,CvSize zero_zone,
                                      CvTermCriteria  criteria );
 
-/*F///////////////////////////////////////////////////////////////////////////////////////
-//    Name:    cvGoodFeaturesToTrack
-//    Purpose:
-//      Finds strong corners on the image
-//    Context:
-//    Parameters:
-//      image    - input image(IPL_DEPTH_8U,IPL_DEPTH_8S or IPL_DEPTH_32F,single channel)
-//      eigImage - temporary image(IPL_DEPTH_32F,single channel),
-//                 which will contain minimal eigen value for each point
-//      tempImage- temporary image(IPL_DEPTH_32F,single channel),
-//                 which is used in non-maxima suppression.
-//      corners  - output corners
-//      corner_count - number of output corners
-//      quality_level - only those corners are selected, which minimal eigen value is
-//                      non-less than maximum of minimal eigen values on the image,
-//                      multiplied by quality_level. For example, quality_level = 0.1
-//                      means that selected corners must be at least 1/10 as good as
-//                      the best corner.
-//      min_distance - The selected corners(after thresholding using quality_level)
-//                     are rerified such that pair-wise distance between them is
-//                     non-less than min_distance
-//    Returns:
-F*/
-OPENCVAPI void  cvGoodFeaturesToTrack( const CvArr* image, CvArr* eigImage,
-                                       CvArr* tempImage, CvPoint2D32f* corners,
+/* Finds a sparse set of points within the selected region
+   that seem to be easy to track */
+OPENCVAPI void  cvGoodFeaturesToTrack( const CvArr* image, CvArr* eig_image,
+                                       CvArr* temp_image, CvPoint2D32f* corners,
                                        int* corner_count, double  quality_level,
                                        double  min_distance,
-                                       const CvArr* mask CV_DEFAULT(0));
+                                       const CvArr* mask CV_DEFAULT(NULL));
 
-/****************************************************************************************\
-*                                     Hough Transform                                    *
-\****************************************************************************************/
+#define CV_HOUGH_STANDARD 0
+#define CV_HOUGH_PROBABILISTIC 1
+#define CV_HOUGH_MULTI_SCALE 2
 
-/*F///////////////////////////////////////////////////////////////////////////////////////
-//    Name:    cvHoughLines
-//    Purpose:
-//      Function detects lines on a binary raster image
-//    Context:
-//    Parameters:
-//      image       - input image
-//      rho         - resolution in rho(the minimum difference between two values)
-//      theta       - resolution in theta(the minimum difference between two values)
-//      threshold   - the pixels number which is enough to plot a line through
-//      lines       - output parameters of a line
-//                    i line is rho = lines[2*i], theta = lines[2*i + 1]
-//      linesNumber - 2*linesNumber is the size of the lines buffer
-//    Returns:
-//    Notes:
-//      the Standard Hough Transform is used in the function
-//F*/
-OPENCVAPI  int  cvHoughLines( IplImage* image, double rho, double theta, int threshold,
-                              float* lines, int linesNumber );
+/* Finds lines on binary image using one of several methods.
+   lineStorage is either memory storage or 1 x maxNumberOfLines CvMat, its
+   number of columns is changed by the function.
+   method is one of CV_HOUGH_*;
+   rho, theta and threshold are used for each of those methods;
+   param1 ~ lineLength, param2 ~ lineGap - for probabilistic,
+   param1 ~ srn, param2 ~ stn - for multi-scale */
+OPENCVAPI  CvSeq*  cvHoughLines2( CvArr* image, void* line_storage, int method, 
+                                  double rho, double theta, int threshold,
+                                  double param1 CV_DEFAULT(0), double param2 CV_DEFAULT(0));
 
-/*F///////////////////////////////////////////////////////////////////////////////////////
-//    Name:    cvHoughLinesP
-//    Purpose:
-//      Function detects lines on a binary raster image
-//    Context:
-//    Parameters:
-//      image       - input image
-//      rho         - resolution in rho(the minimum difference between two values)
-//      theta       - resolution in theta(the minimum difference between two values)
-//      threshold   - the pixels number which is enough to plot a line through
-//      lineLength  - the minimum accepted length of lines
-//      lineGap     - the maximum accepted gap in a line(in pixels)
-//      lines       - output parameters of a line
-//                      the i line starts in x1 = lines[4*i], y1 = lines[4*i + 1] and
-//                      finishes in x2 = lines[4*i + 2], y2 = lines[4*i + 3]
-//      linesNumber - 4*linesNumber is the size of lines buffer
-//      linesToFind - the maximum number of lines to detect
-//    Returns:
-//      The number of found lines
-//    Notes:
-//    The Progressive Probabilistic Hough Transform is implemented in the function. It
-//      searches for linesToFind number of lines, taking only those that contain more than
-//      lineLength pixels and return. Effectively detects long lines on an image with
-//      strong noise.
-//F*/
-OPENCVAPI  int  cvHoughLinesP( IplImage* image, double rho, double theta, int threshold,
-                            int lineLength, int lineGap, int* lines, int linesNumber );
-
-/*F///////////////////////////////////////////////////////////////////////////////////////
-//    Name:    cvHoughLinesSDiv
-//    Purpose:
-//      Function detects lines on a binary raster image
-//    Context:
-//    Parameters:
-//      image       - input image
-//      rho         - rough resolution in rho(the minimum difference between two values)
-//      srn         - the scale factor of a rough rho resolution to a high one
-//      theta       - rough resolution in theta(the minimum difference between two values)
-//      stn         - the scale factor of a rough theta resolution to a high one
-//      threshold   - the pixels number which is enough to plot a line through
-//      lines       - output parameters of a line
-//                      i line is rho = lines[2*i], theta = lines[2*i + 1]
-//      linesNumber - 2*linesNumber is the size of the lines buffer
-//    Returns:
-//      the number of lines found
-//    Notes:
-//    the Standard Hough Transform is used in the function
-//F*/
-OPENCVAPI  int  cvHoughLinesSDiv( IplImage* image, double rho, int srn,
-                                  double theta, int stn, int threshold,
-                                  float* lines, int lines_number );
-
-/****************************************************************************************\
-*                              Geometry functions                                        *
-\****************************************************************************************/
-
+/* Projects 2d points to one of standard coordinate planes
+   (i.e. removes one of coordinates) */
 OPENCVAPI  void  cvProject3D( CvPoint3D32f* points3D, int count,
                               CvPoint2D32f* points2D, int xIndx, int yIndx );
 
-OPENCVAPI  void  cvFitLine3D( CvPoint3D32f* points, int count, CvDisType dist,
-                              void *param, float reps, float aeps, float* line );
+/* Fits a line into set of 2d or 3d points in a robust way (M-estimator technique) */
+OPENCVAPI  void  cvFitLine( const CvArr* points, CvDisType dist, double param,
+                            double reps, double aeps, float* line );
 
-OPENCVAPI  void  cvFitLine2D( CvPoint2D32f* points, int count, CvDisType dist,
-                              void *param, float reps, float aeps, float* line );
-
-
-/****************************************************************************************\
-*                              Optical Flow functions                                    *
-\****************************************************************************************/
-/*F///////////////////////////////////////////////////////////////////////////////////////
-//    Name: cvCalcOpticalFlowLK( Lucas & Kanade method )
-//    Purpose: calculate Optical flow for 2 images using Lucas & Kanade algorithm
-//    Context:
-//    Parameters:
-//            srcA,         // first image
-//            srcB,         // second image
-//            winSize,      // size of the averaging window used for grouping
-//            velx,         //  horizontal
-//            vely          //  vertical components of optical flow
-//
-//    Returns:
-//
-//    Notes:  1.Optical flow to be computed for every pixel in ROI
-//            2.For calculating spatial derivatives we use 3x3 Sobel operator.
-//            3.We use the following border mode.
-//              The last row or column is replicated for the border
-//            ( IPL_BORDER_REPLICATE in IPL ).
-//
-//F*/
-OPENCVAPI  void  cvCalcOpticalFlowLK( const CvArr* srcA, const CvArr* srcB,
-                                      CvSize winSize, CvArr* velx, CvArr* vely );
-
-/*F///////////////////////////////////////////////////////////////////////////////////////
-//    Name: cvCalcOpticalFlowBM
-//    Purpose: calculate Optical flow for 2 images using block matching algorithm
-//    Context:
-//    Parameters:
-//            srcA,         // first image
-//            srcB,         // second image
-//            blockSize,    // size of basic blocks which are compared
-//            shiftSize,    // coordinates increments.
-//            maxRange,     // size of the scanned neighborhood.
-//            usePrevious,  // use previous(input) velocity field.
-//            velx,         //  horizontal
-//            vely          //  vertical components of optical flow
-//
-//    Returns:
-//    Notes:
-//F*/
-OPENCVAPI  void  cvCalcOpticalFlowBM( const CvArr* srcA, const CvArr* srcB,
-                                      CvSize blockSize, CvSize shiftSize,
-                                      CvSize maxRange, int usePrevious,
-                                      CvArr* velx, CvArr* vely );
-
-/*F///////////////////////////////////////////////////////////////////////////////////////
-//    Name: cvCalcOpticalFlowHS(Horn & Schunck method )
-//    Purpose: calculate Optical flow for 2 images using Horn & Schunck algorithm
-//    Context:
-//    Parameters:
-//            srcA,         // first image
-//            srcB,         // second image
-//            int usePrevious, // use previous(input) velocity field.
-//            velx,         //  horizontal
-//            vely          //  vertical components of optical flow
-//            double lambda, // Lagrangian multiplier
-//            criteria       // criteria of process termination
-//
-//    Returns:
-//
-//    Notes:  1.Optical flow to be computed for every pixel in ROI
-//            2.For calculating spatial derivatives we use 3x3 Sobel operator.
-//            3.We use the following border mode.
-//              The first and last rows and columns are replicated for the border
-//            ( IPL_BORDER_REPLICATE in IPL ).
-//F*/
-OPENCVAPI  void  cvCalcOpticalFlowHS( const CvArr* srcA, const CvArr* srcB,
-                                      int usePrevious, CvArr* velx, CvArr* vely,
-                                      double lambda, CvTermCriteria criteria );
-
-
-/*F///////////////////////////////////////////////////////////////////////////////////////
-//    Name: cvCalcOpticalFlowPyrLK
-//    Purpose:
-//      It is Lucas & Kanade method, modified to use pyramids.
-//      Also it does several iterations to get optical flow for
-//      every point at every pyramid level.
-//      Calculates optical flow between two images for certain set of points.
-//    Context:
-//    Parameters:
-//            imgA     - first frame(time t)
-//            imgB     - second frame(time t+1)
-//            pyrA     - buffer for pyramid for the first frame.
-//                       if the pointer is not NULL, the buffer must have size enough to
-//                       store pyramid(from level 1 to level #<level>(see below))
-//                      (total size of(imgSize.width+8)*imgSize.height/3
-//                        bytes will be enough)).
-//            pyrB     - similar to pyrA, but for the second frame.
-//
-//                       for both parameters above the following rules work:
-//                           If image pointer is 0, the function allocates the buffer
-//                           internally, calculates pyramid and releases the buffer after
-//                           processing.
-//                           Else(image should be large enough then) the function calculates
-//                           pyramid and stores it in the buffer unless the
-//                           CV_LKFLOW_PYR_A[B]_READY flag is set. After function call
-//                           both pyramids are calculated and ready-flag for corresponding
-//                           image can be set.
-//
-//            count    - number of feature points
-//            winSize  - size of search window on each pyramid level
-//            level    - maximal pyramid level number
-//                        (if 0, pyramids are not used(single level),
-//                          if 1, two levels are used etc.)
-//
-//            next parameters are arrays of <count> elements.
-//            ------------------------------------------------------
-//            featuresA - array of points, for which the flow needs to be found
-//            featuresB - array of 2D points, containing calculated
-//                       new positions of input features(in the second image).
-//            status   - array, every element of which will be set to 1 if the flow for the
-//                       corresponding feature has been found, 0 else.
-//            error    - array of double numbers, containing difference between
-//                       patches around the original and moved points
-//                      (it is optional parameter, can be NULL).
-//            ------------------------------------------------------
-//            criteria   - specifies when to stop the iteration process of finding flow
-//                         for each point on each pyramid level
-//
-//            flags      - miscellaneous flags:
-//                            CV_LKFLOW_PYR_A_READY - pyramid for the first frame
-//                                                    is precalculated before call
-//                            CV_LKFLOW_PYR_B_READY - pyramid for the second frame
-//                                                    is precalculated before call
-//                            CV_LKFLOW_INITIAL_GUESSES - featuresB array holds initial
-//                                                        guesses about new features'
-//                                                        locations before function call.
-//    Returns:
-//    Notes:  For calculating spatial derivatives 3x3 Sharr operator is used.
-//            The values of pixels beyond the image are determined using border
-//            replication.
-//F*/
-#define  CV_LKFLOW_PYR_A_READY       1
-#define  CV_LKFLOW_PYR_B_READY       2
-#define  CV_LKFLOW_INITIAL_GUESSES   4
-
-OPENCVAPI  void  cvCalcOpticalFlowPyrLK( const CvArr*  imgA, const CvArr*  imgB,
-                                         CvArr*  pyrA, CvArr*  pyrB,
-                                         CvPoint2D32f* featuresA,
-                                         CvPoint2D32f* featuresB,
-                                         int       count,
-                                         CvSize    winSize,
-                                         int       level,
-                                         char*     status,
-                                         float*    error,
-                                         CvTermCriteria criteria,
-                                         int       flags );
-
-
-/*F///////////////////////////////////////////////////////////////////////////////////////
-//    Name: cvCalcAffineFlowPyrLK
-//    Purpose:
-//      It is Lucas & Kanade affine tracking method, modified to use pyramids.
-//      Also it does several iterations to find flow for
-//      every point at every pyramid level.
-//      Calculates affine flow between two images for certain set of points.
-//    Context:
-//    Parameters:
-//            imgA     - first frame(time t)
-//            imgB     - second frame(time t+1)
-//            pyrA     - buffer for pyramid for the first frame.
-//                       if the pointer is not NULL, the buffer must have size enough to
-//                       store pyramid(from level 1 to level #<level>(see below))
-//                      (total size of(imgSize.width+8)*imgSize.height/3
-//                        bytes will be enough)).
-//            pyrB     - similar to pyrA, but for the second frame.
-//
-//                       for both parameters above the following rules work:
-//                           If image pointer is 0, the function allocates the buffer
-//                           internally, calculates pyramid and releases the buffer after
-//                           processing.
-//                           Else(image should be large enough then) the function calculates
-//                           pyramid and stores it in the buffer unless the
-//                           CV_LKFLOW_PYR_A[B]_READY flag is set. After function call
-//                           both pyramids are calculated and ready-flag for corresponding
-//                           image can be set.
-//
-//            count    - number of feature points
-//            winSize  - size of search window on each pyramid level
-//            level    - maximal pyramid level number
-//                        (if 0, pyramids are not used(single level),
-//                          if 1, two levels are used etc.)
-//
-//            next parameters are arrays of <count> elements.
-//            ------------------------------------------------------
-//            featuresA - array of points, for which the flow needs to be found
-//            featuresB - array of 2D points, containing calculated
-//                       new positions of input features(in the second image).
-//            matrices - affine transformation matrices,
-//            status   - array, every element of which will be set to 1 if the flow for the
-//                       corresponding feature has been found, 0 else.
-//            error    - array of double numbers, containing difference between
-//                       patches around the original and moved points
-//                      (it is optional parameter, can be NULL).
-//            ------------------------------------------------------
-//            criteria   - specifies when to stop the iteration process of finding flow
-//                         for each point on each pyramid level
-//
-//            flags      - miscellaneous flags:
-//                            CV_LKFLOW_PYR_A_READY - pyramid for the first frame
-//                                                    is precalculated before call
-//                            CV_LKFLOW_PYR_B_READY - pyramid for the second frame
-//                                                    is precalculated before call
-//                            CV_LKFLOW_INITIAL_GUESSES - featuresB array holds initial
-//                                                        guesses about new features'
-//                                                        locations before function call,
-//                                                        matrices array contains guesses
-//                                                        about local transformations in
-//                                                        the features' neighborhoods.
-//    Returns:
-//    Notes:  For calculating spatial derivatives 3x3 Sharr operator is used.
-//            The values of pixels beyond the image are determined using border
-//            replication.
-//F*/
-OPENCVAPI  void  cvCalcAffineFlowPyrLK( const CvArr*  imgA, const CvArr*  imgB,
-                                        CvArr*  pyrA, CvArr*  pyrB,
-                                        CvPoint2D32f* featuresA,
-                                        CvPoint2D32f* featuresB,
-                                        float*  matrices, int  count,
-                                        CvSize  winSize, int  level,
-                                        char*  status, float* error,
-                                        CvTermCriteria criteria, int flags );
-
-
-/****************************************************************************************\
-*                              Eigen objects functions                                   *
-\****************************************************************************************/
 
 #define CV_EIGOBJ_NO_CALLBACK     0
 #define CV_EIGOBJ_INPUT_CALLBACK  1
 #define CV_EIGOBJ_OUTPUT_CALLBACK 2
 #define CV_EIGOBJ_BOTH_CALLBACK   3
 
-typedef CvStatus (CV_CDECL * CvCallback)( int index, void* buffer, void* userData );
+
+CV_EXTERN_C_FUNCPTR(CvStatus (CV_CDECL * CvCallback)
+                    (int index, void* buffer, void* userData));
 
 typedef union
 {
@@ -4602,141 +2398,30 @@ typedef union
 }
 CvInput;
 
-/*F///////////////////////////////////////////////////////////////////////////////////////
-//    Name: cvCalcCovarMatrixEx
-//    Purpose: The function calculates a covariance matrix for a group of input objects
-//            (images, vectors, etc.).
-//    Context:
-//    Parameters:  nObjects    - number of source objects
-//                 input       - pointer either to array of input objects
-//                               or to read callback function(depending on ioFlags)
-//                 ioFlags     - input/output flags(see Notes to
-//                               cvCalcEigenObjects function)
-//                 ioBufSize   - input/output buffer size
-//                 userData    - pointer to the structure which contains all necessary
-//                               data for the callback functions
-//                 avg         - averaged object
-//                 covarMatrix - covariance matrix(output parameter; must be allocated
-//                               before call)
-//
-//    Notes:  See Notes to cvCalcEigenObjects function
-//F*/
+/* Calculates covariation matrix of a set of arrays */
 OPENCVAPI  void  cvCalcCovarMatrixEx( int nObjects, void* input, int ioFlags,
                                       int ioBufSize, uchar* buffer, void* userData,
                                       IplImage* avg, float* covarMatrix );
 
-/*F///////////////////////////////////////////////////////////////////////////////////////
-//    Name: cvCalcEigenObjects
-//    Purpose: The function calculates an orthonormal eigen basis and a mean(averaged)
-//             object for a group of input objects(images, vectors, etc.).
-//    Context:
-//    Parameters: nObjects  - number of source objects
-//                input     - pointer either to array of input objects
-//                            or to read callback function(depending on ioFlags)
-//                output    - pointer either to output eigen objects
-//                            or to write callback function(depending on ioFlags)
-//                ioFlags   - input/output flags(see Notes)
-//                ioBufSize - input/output buffer size
-//                userData  - pointer to the structure which contains all necessary
-//                            data for the callback functions
-//                calcLimit - determines the calculation finish conditions
-//                avg       - averaged object(has the same size as ROI)
-//                eigVals   - pointer to corresponding eigen values(array of <nObjects>
-//                            elements in descending order)
-//
-//    Notes: 1. input/output data(that is, input objects and eigen ones) may either
-//              be allocated in the RAM or be read from/written to the HDD(or any
-//              other device) by read/write callback functions. It depends on the
-//              value of ioFlags paramater, which may be the following:
-//                  CV_EIGOBJ_NO_CALLBACK, or 0;
-//                  CV_EIGOBJ_INPUT_CALLBACK;
-//                  CV_EIGOBJ_OUTPUT_CALLBACK;
-//                  CV_EIGOBJ_BOTH_CALLBACK, or
-//                            CV_EIGOBJ_INPUT_CALLBACK | CV_EIGOBJ_OUTPUT_CALLBACK.
-//              The callback functions as well as the user data structure must be
-//              developed by the user.
-//
-//           2. If ioBufSize = 0, or it's too large, the function dermines buffer size
-//              itself.
-//
-//           3. Depending on calcLimit parameter, calculations are finished either if
-//              eigenfaces number comes up to certain value or the relation of the
-//              current eigenvalue and the largest one comes down to certain value
-//             (or any of the above conditions takes place). The calcLimit->type value
-//              must be CV_TERMCRIT_NUMB, CV_TERMCRIT_EPS or
-//              CV_TERMCRIT_NUMB | CV_TERMCRIT_EPS. The function returns the real
-//              values calcLimit->maxIter and calcLimit->epsilon.
-//
-//           4. eigVals may be equal to NULL(if you don't need eigen values in further).
-//
-//F*/
+/* Calculates eigen values and vectors of covariation matrix of a set of
+   arrays */
 OPENCVAPI  void  cvCalcEigenObjects( int nObjects, void* input, void* output,
                                     int ioFlags, int ioBufSize, void* userData,
                                     CvTermCriteria* calcLimit, IplImage* avg,
                                     float* eigVals );
 
-/*F///////////////////////////////////////////////////////////////////////////////////////
-//    Name: cvCalcDecompCoeff
-//    Purpose: The function calculates one decomposition coefficient of input object
-//             using previously calculated eigen object and the mean(averaged) object
-//    Context:
-//    Parameters:  obj     - input object
-//                 eigObj  - eigen object
-//                 avg     - averaged object
-//
-//    Returns: decomposition coefficient value or large negative value(if error)
-//
-//    Notes:
-//F*/
+/* Calculates dot product (obj - avg) * eigObj (i.e. projects image to eigen vector) */
 OPENCVAPI  double  cvCalcDecompCoeff( IplImage* obj, IplImage* eigObj, IplImage* avg );
 
-/*F///////////////////////////////////////////////////////////////////////////////////////
-//    Names: cvEigenDecomposite
-//    Purpose: The function calculates all decomposition coefficients for input object
-//             using previously calculated eigen objects basis and the mean(averaged)
-//             object
-//
-//    Parameters:  obj         - input object
-//                 nEigObjs    - number of eigen objects
-//                 eigInput    - pointer either to array of pointers to eigen objects
-//                               or to read callback function(depending on ioFlags)
-//                 ioFlags     - input/output flags
-//                 userData    - pointer to the structure which contains all necessary
-//                               data for the callback function
-//                 avg         - averaged object
-//                 coeffs      - calculated coefficients(output data)
-//
-//    Notes:   see notes to cvCalcEigenObjects function
-//F*/
+/* Projects image to eigen space (finds all decomposion coefficients */
 OPENCVAPI  void  cvEigenDecomposite( IplImage* obj, int nEigObjs, void* eigInput,
                                     int ioFlags, void* userData, IplImage* avg,
                                     float* coeffs );
 
-/*F///////////////////////////////////////////////////////////////////////////////////////
-//    Name: cvEigenProjection
-//    Purpose: The function calculates object projection to the eigen sub-space(restores
-//             an object) using previously calculated eigen objects basis, mean(averaged)
-//             object and decomposition coefficients of the restored object
-//    Context:
-//    Parameters:  nEigObjs    - number of eigen objects
-//                 eigInput    - pointer either to array of pointers to eigen objects
-//                               or to read callback function(depending on ioFlags)
-//                 ioFlags     - input/output flags
-//                 userData    - pointer to the structure which contains all necessary
-//                               data for the callback function
-//                 coeffs      - array of decomposition coefficients
-//                 avg         - averaged object
-//                 proj        - object projection(output data)
-//
-//    Notes:   see notes for cvCalcEigenObjects function
-//F*/
+/* Projects original objects used to calculate eigen space basis to that space */
 OPENCVAPI  void  cvEigenProjection( void* eigInput, int nEigObjs, int ioFlags,
                                    void* userData, float* coeffs, IplImage* avg,
                                    IplImage* proj );
-
-/****************************************************************************************\
-*                              HMM(Hidden Markov Models)                                *
-\****************************************************************************************/
 
 /*********************************** HMM structures *************************************/
 typedef struct CvEHMMState
@@ -4765,68 +2450,15 @@ typedef struct CvEHMM
 
 } CvEHMM;
 
-//*F//////////////////////////////////////////////////////////////////////////////////////
-//    Name: cvCreate2DHMM
-//    Purpose: The function allocates memory for 2-dimensional embedded HMM model
-//             after you finish work with created HMM you must free memory
-//             by calling cvRelease2DHMM function
-//    Context:
-//    Parameters: stateNumber - array of hmm sizes(size of array == state_number[0]+1 )
-//                numMix - number of gaussian mixtures in low-level HMM states
-//                          size of array is defined by previous array values
-//                obsSize - length of observation vectors
-//
-//    Returns:
-//      Created 2D HMM.
-//    Notes: stateNumber[0] - number of states in external HMM.
-//           stateNumber[i] - number of states in embedded HMM
-//
-//           example for face recognition: state_number = { 5 3 6 6 6 3 },
-//                                         length of num_mix array = 3+6+6+6+3 = 24
-//
-//F*/
+/* Creates 2D HMM */
 OPENCVAPI  CvEHMM*  cvCreate2DHMM( int* stateNumber, int* numMix, int obsSize );
 
 
-//*F///////////////////////////////////////////////////////////////////////////////////////
-//    Name: cvRelease2DHMM
-//    Purpose: The function free memory used by CvEHMM structure
-//    Context:
-//    Parameters: hmm - address of pointer to CvEHMM structure
-//    Returns:
-//    Notes:  function set *hmm = 0
-//F*/
+/* Releases HMM */
 OPENCVAPI  void  cvRelease2DHMM( CvEHMM** hmm );
 
 
-//*F///////////////////////////////////////////////////////////////////////////////////////
-//    Name: cvCreateObsInfo
-//    Purpose: The function allocates memory for CvImgObsInfo structure
-//             after you finish working with allocated structure - destroy it
-//             by  cvReleaseObsInfo
-//
-//    Context:
-//    Parameters: numObs  - number of horizontal and vertical observations.
-//                          Total number of allocated observation vectors
-//                          will be   num_obs.width*num_obs.height
-//                obsSize - length of observation vector
-//
-//    Returns:  Parameter obs_info is filled.
-//
-//    Notes: If you extract observations from an image, use CV_COUNT_OBS macro
-//           to compute "numObs" parameter:
-//
-//           CV_COUNT_OBS( &roi, &obs, &delta, &numObs),
-//
-//                          where CvSize roi   - image ROI
-//                                CvSize obs   - size of image block (a single observation)
-//                                CvSize delta - horizontal and vertical shift
-//                                           (i.e. because observation blocks overlap if
-//                                            delta.width < obs.width or
-//                                            delta.height < obs.height )
-//                                CvSize numObs - output parameter to be computed
-//
-//F*/
+
 #define CV_COUNT_OBS(roi, win, delta, numObs )                                       \
 {                                                                                    \
    (numObs)->width  =((roi)->width  -(win)->width  +(delta)->width)/(delta)->width;  \
@@ -4845,291 +2477,90 @@ typedef struct CvImgObsInfo
 
 } CvImgObsInfo;/*struct for 1 image*/
 
+/* Creates storage for observation vectors */
 OPENCVAPI  CvImgObsInfo*  cvCreateObsInfo( CvSize numObs, int obsSize );
 
-//*F///////////////////////////////////////////////////////////////////////////////////////
-//    Name: cvReleaseObsInfo
-//    Purpose: The function free memory used by CvImgObsInfo structure
-//
-//    Context:
-//    Parameters: obs_info - address of pointer to CvImgObsInfo structure
-//    Returns:
-//    Notes:  function sets *obs_info = 0
-//F*/
+/* Releases storage for observation vectors */
 OPENCVAPI  void  cvReleaseObsInfo( CvImgObsInfo** obs_info );
 
 
-//*F//////////////////////////////////////////////////////////////////////////////////////
-//    Name: cvImgToObs_DCT
-//    Purpose: The function takes as input an image and returns the sequnce of observations
-//             to be used with an embedded HMM; Each observation is top-left block of DCT
-//             coefficient matrix.
-//    Context:
-//    Parameters: img     - pointer to the original image
-//                obs     - pointer to resultant observation vectors
-//                dctSize - size of the block for which DCT is calculated
-//                obsSize - size of top-left block of DCT coeffs matrix, which is treated
-//                          as observation. Each observation vector consists of
-//                          obsSize.width * obsSize.height floats.
-//                          The following conditions should be satisfied:
-//                          0 < objSize.width <= dctSize.width,
-//                          0 < objSize.height <= dctSize.height.
-//                delta   - dctBlocks are overlapped and this parameter specifies horizontal
-//                          and vertical shift.
-//    Returns:
-//
-//    Notes:
-//      The algorithm is following:
-//          1. First, number of observation vectors per row and per column are calculated:
-//
-//             Nx = floor((roi.width - dctSize.width + delta.width)/delta.width);
-//             Ny = floor((roi.height - dctSize.height + delta.height)/delta.height);
-//
-//             So, total number of observation vectors is Nx*Ny, and total size of
-//             array obs must be >= Nx*Ny*obsSize.width*obsSize.height*sizeof(float).
-//          2. Observation vectors are calculated in the following loop
-//             ( actual implementation may be different ), where
-//               I[x1:x2,y1:y2] means block of pixels from source image with
-//               x1 <= x < x2, y1 <= y < y2,
-//               D[x1:x2,y1:y2] means sub matrix of DCT matrix D.
-//               O[x,y] means observation vector that corresponds to position
-//              (x*delta.width,y*delta.height) in the source image
-//             ( all indices are counted from 0 ).
-//
-//               for( y = 0; y < Ny; y++ )
-//               {
-//                   for( x = 0; x < Nx; x++ )
-//                   {
-//                       D = DCT(I[x*delta.width : x*delta.width + dctSize.width,
-//                                  y*delta.height : y*delta.height + dctSize.height]);
-//                       O[x,y] = D[0:obsSize.width, 0:obsSize.height];
-//                   }
-//               }
-//F*/
+/* The function takes an image on input and and returns the sequnce of observations
+   to be used with an embedded HMM; Each observation is top-left block of DCT
+   coefficient matrix */
 OPENCVAPI  void  cvImgToObs_DCT( const CvArr* array, float* obs, CvSize dctSize,
                                  CvSize obsSize, CvSize delta );
 
 
-//*F//////////////////////////////////////////////////////////////////////////////////////
-//    Name: cvUniformImgSegm
-//    Purpose: The uniformly segments all observation vectors extracted from image
-//    Context:
-//    Parameters: obs_info - observations structure
-//                hmm      - 2D embedded HMM structure
-//
-//    Returns:
-//    Notes:
-//F*/
+/* Uniformly segments all observation vectors extracted from image */
 OPENCVAPI  void  cvUniformImgSegm( CvImgObsInfo* obs_info, CvEHMM* ehmm );
 
-/*F///////////////////////////////////////////////////////////////////////////////////////
-//    Name: cvInitMixSegm
-//    Purpose: The function implements the mixture segmentation of the states
-//             of the embedded HMM
-//
-//    Context: used with the Viterbi training of the embedded HMM
-//             Function uses K-Means algorithm for clustering.
-//
-//    Parameters:  obs_info_array - array of pointers to image observations
-//                 num_img - length of above array
-//                 hmm - pointer to HMM structure
-//
-//    Returns:
-//    Notes:
-//F*/
+/* Does mixture segmentation of the states of embedded HMM */
 OPENCVAPI  void  cvInitMixSegm( CvImgObsInfo** obs_info_array,
                                int num_img, CvEHMM* hmm );
 
-/*F///////////////////////////////////////////////////////////////////////////////////////
-//    Name: cvEstimHMMStateParams
-//    Purpose: function calculates means, variances, weights of every Gaussian mixture
-//             of every low-level state of embedded HMM
-//    Context:
-//    Parameters:  obs_info_array - array of pointers to observation structures
-//                 num_img  - length of above array
-//                 hmm      - hmm structure
-//
-//    Returns:
-//
-//    Notes:
-//F*/
+/* Function calculates means, variances, weights of every Gaussian mixture
+   of every low-level state of embedded HMM */
 OPENCVAPI  void  cvEstimateHMMStateParams( CvImgObsInfo** obs_info_array,
                                         int num_img, CvEHMM* hmm );
 
-/*F///////////////////////////////////////////////////////////////////////////////////////
-//    Name: cvEstimateTransProb
-//    Purpose: function computes transition probability matrices of embedded HMM
-//             given observations segmentation
-//
-//    Context:
-//    Parameters:  obs_info_array - array of pointers to observation structures
-//                 num_img  - length of above array
-//                 hmm      - hmm structure
-//
-//    Returns:
-//
-//    Notes:
-//F*/
+/* Function computes transition probability matrices of embedded HMM
+   given observations segmentation */
 OPENCVAPI  void  cvEstimateTransProb( CvImgObsInfo** obs_info_array,
                                    int num_img, CvEHMM* hmm );
 
-/*F///////////////////////////////////////////////////////////////////////////////////////
-//    Name: cvEstimateTransProb
-//    Purpose: function computes probabilities of appearing observations at any state
-//           ( i.e. compute P(obs|state) for every pair(obs,state) )
-//    Context:
-//    Parameters:  obs_info - observations structure
-//                 hmm      - hmm structure
-//
-//    Returns:
-//    Notes:
-//F*/
+/* Function computes probabilities of appearing observations at any state
+   (i.e. computes P(obs|state) for every pair(obs,state)) */
 OPENCVAPI  void  cvEstimateObsProb( CvImgObsInfo* obs_info,
                                    CvEHMM* hmm );
 
-/*F///////////////////////////////////////////////////////////////////////////////////////
-//    Name: cvEViterbi  (Embedded Viterbi)
-//    Purpose: The function calculates the embedded Viterbi algorithm
-//    Context:
-//    Parameters:
-//                obs_info - observations structure
-//                hmm      - hmm structure
-//
-//    Returns: the Embedded Viterbi logarithmic probability.
-//             Observations, stored in of obs_info structure are segmented
-//           ( but new segmentation does not affect mixture segmentation or
-//               states parameters )
-//    Notes:
-//F*/
+/* Runs Viterbi algorithm for embedded HMM */
 OPENCVAPI  float  cvEViterbi( CvImgObsInfo* obs_info, CvEHMM* hmm );
 
 
-/*F///////////////////////////////////////////////////////////////////////////////////////
-//    Name: cvMixSegmL2
-//    Purpose: function clusters observation vectors from several images
-//             given observations segmentation.
-//             Euclidean distance used for clustering vectors.
-//             Centers of clusters are given means of every mixture
-//
-//    Context: in HMM face recognition used after Viterbi segmentation
-//    Parameters:  obs_info_array - array of pointers to observation structures
-//                 num_img  - length of above array
-//                 hmm      - hmm structure
-//
-//    Returns:
-//    Notes:
-//F*/
+/* Function clusters observation vectors from several images
+   given observations segmentation.
+   Euclidean distance used for clustering vectors.
+   Centers of clusters are given means of every mixture */
 OPENCVAPI  void  cvMixSegmL2( CvImgObsInfo** obs_info_array,
                              int num_img, CvEHMM* hmm );
 
-/* end of HMM functions*/
-
-/*F///////////////////////////////////////////////////////////////////////////////////////
-//    Name: KMeans
-//    Purpose: The function implements the K means algorithm, to cluster an array of sample
-//             vectors in a number of classes specified by numClusters
-//    Context:
-//    Parameters:  numClunster - the number of clusters
-//                 samples - the array of sample vectors
-//                 numSamples - the number of samples
-//                 VecSize - the size of each sample vector
-//                 termcrit.eps - the convergence error; the iterations to find the best cluster
-//                         centers will stop, when the value of the cost function at consecutive
-//                         iterations falls below this threshold
-//                 cluster - characteristic array. for every input vector indicates cluster
-//
-//    Returns: error code
-//
-//    Notes:
-//F*/
-OPENCVAPI  void  cvKMeans( int num_clusters, CvVect32f* samples, int num_samples,
-                          int vec_size, CvTermCriteria termcrit, int* cluster  );
-
+/* The function implements the K-means algorithm for clustering an array of sample
+   vectors in a specified number of classes */
+OPENCVAPI  void  cvKMeans2( const CvArr* samples, int cluster_count,
+                            CvArr* cluster_idx, CvTermCriteria termcrit );
 
 /****************************************************************************************\
-*                               Undistortion functions                                  *
+*                     Camera Calibration and Rectification functions                     *
 \****************************************************************************************/
 
-/*F//////////////////////////////////////////////////////////////////////////////////////
-//    Name: cvUnDistortOnce
-//    Purpose: The function corrects radial and tangential image distortion using known
-//             matrix of the camera intrinsic parameters and distortion coefficients
-//    Context:
-//    Parameters:  srcImage    - source(distorted) image
-//                 dstImage    - output(undistorted) image
-//                 intrMatrix  - matrix of the camera intrinsic parameters
-//                 distCoeffs  - vector of the distortion coefficients(k1, k2, p1 and p2)
-//                 interpolate - interpolation flag (turned on by default)
-//F*/
+/* The function corrects radial and tangential image distortion using known
+   matrix of the camera intrinsic parameters and distortion coefficients */
 OPENCVAPI  void  cvUnDistortOnce( const CvArr* srcImage, CvArr* dstImage,
                                   const float* intrMatrix,
                                   const float* distCoeffs,
                                   int interpolate CV_DEFAULT(1) );
 
-/*F//////////////////////////////////////////////////////////////////////////////////////
-//    Name: cvUnDistortInit
-//    Purpose: The function calculates arrays of distorted points indices and
-//             interpolation coefficients for cvUnDistort function using known
-//             matrix of the camera intrinsic parameters and distortion coefficients
-//    Context:
-//    Parameters:  srcImage    - source(distorted) image
-//                 intrMatrix  - matrix of the camera intrinsic parameters
-//                 distCoeffs  - vector of the distortion coefficients(k1, k2, p1 and p2)
-//                 undistMap   - distortion data array (CV_32SC1)
-//                 interpolate - interpolation flag (turned on by default)
-//F*/
+/* The function calculates map of distorted points indices and
+   interpolation coefficients for cvUnDistort function using known
+   matrix of the camera intrinsic parameters and distortion coefficients */
 OPENCVAPI  void  cvUnDistortInit( const CvArr* srcImage, CvArr* undistMap,
                                   const float* intrMatrix,
                                   const float* distCoeffs,
                                   int interpolate CV_DEFAULT(1) );
 
-/*F//////////////////////////////////////////////////////////////////////////////////////
-//    Name: cvUnDistort
-//    Purpose: The function corrects radial and tangential distortion in the frame
-//             using previousely calculated arrays of distorted points indices and
-//             undistortion coefficients. The function can be also used
-//             for arbitrary pre-calculated geometrical transformation.
-//             The function processes as following:
-//                 for (x,y) in dstImage:
-//                    dstImage(x,y) = srcImage[ undistMap(x,y) ].
-//    Context:
-//    Parameters:  srcImage  - source(distorted) image (width x height x 8uC1/8uC3)
-//                 dstImage  - output(undistorted) image (width x height x 8uC1/8uC3)
-//                 undistMap - distortion data array:
-//                                 (width x height x 32sC3) or
-//                                 (width*3 x height x 32sC1) if interpolation is enabled;
-//                                 (width x height x 32sC1) if interpolation is disabled;
-//                             This array can be calculated from camera
-//                             lens distortion parameters using cvUnDistortInit or
-//                             from arbitrary floating-point map using cvConvertMap
-//                 interpolate - interpolation flag (turned on by default)
-//F*/
+/* The function corrects radial and tangential image distortion
+   using previousely calculated (via cvUnDistortInit) map */
 OPENCVAPI  void  cvUnDistort( const CvArr* srcImage, CvArr* dstImage,
                               const CvArr* undistMap, int interpolate CV_DEFAULT(1));
 #define cvRemap cvUnDistort
 
 
-/*F//////////////////////////////////////////////////////////////////////////////////////
-//    Name: cvConvertMap
-//    Purpose: The function converts floating-point pixel coordinate map to
-//             faster fixed-point map, used within cvUnDistort (cvRemap)
-//    Context:
-//    Parameters:  srcImage  - sample image which header parameters (step and datatype)
-//                             are used to prepare map.
-//                 flUndistMap - source map: (width x height x 32fC2) or
-//                                           (width*2 x height x 32fC1).
-//                               each pair are pixel coordinates (x,y) in a source image.
-//                 undistMap - resultant map: (width x height x 32sC3) or
-//                                 (width*3 x height x 32sC1) if interpolation is enabled;
-//                                 (width x height x 32sC1) if interpolation is disabled;
-//                 interpolate - interpolation flag (turned on by default)
-//F*/
+/* The function converts floating-point pixel coordinate map to
+   faster fixed-point map, used by cvUnDistort (cvRemap) */
 OPENCVAPI  void  cvConvertMap( const CvArr* srcImage, const CvArr* flUndistMap,
                                CvArr* undistMap, int iterpolate CV_DEFAULT(1) );
 
-/****************************************************************************************\
-*                               Calibration functions                                   *
-\****************************************************************************************/
+/* Calibrates camera using multiple views of calibration pattern */
 OPENCVAPI  void  cvCalibrateCamera( int           numImages,
                                     int*          numPoints,
                                     CvSize        imageSize,
@@ -5141,6 +2572,7 @@ OPENCVAPI  void  cvCalibrateCamera( int           numImages,
                                     CvMatr32f     rotMatrs32f,
                                     int           useIntrinsicGuess);
 
+/* Variant of the previous function that takes double-precision parameters */
 OPENCVAPI  void  cvCalibrateCamera_64d( int           numImages,
                                        int*          numPoints,
                                        CvSize        imageSize,
@@ -5152,7 +2584,8 @@ OPENCVAPI  void  cvCalibrateCamera_64d( int           numImages,
                                        CvMatr64d     rotMatrs,
                                        int           useIntrinsicGuess );
 
-
+/* Find 3d position of object given intrinsic camera parameters,
+   3d model of the object and projection of the object into view plane */
 OPENCVAPI  void  cvFindExtrinsicCameraParams( int           numPoints,
                                              CvSize        imageSize,
                                              CvPoint2D32f* imagePoints32f,
@@ -5163,7 +2596,7 @@ OPENCVAPI  void  cvFindExtrinsicCameraParams( int           numPoints,
                                              CvVect32f     rotVect32f,
                                              CvVect32f     transVect32f);
 
-
+/* Variant of the previous function that takes double-precision parameters */
 OPENCVAPI  void  cvFindExtrinsicCameraParams_64d( int           numPoints,
                                                  CvSize        imageSize,
                                                  CvPoint2D64d* imagePoints,
@@ -5176,16 +2609,14 @@ OPENCVAPI  void  cvFindExtrinsicCameraParams_64d( int           numPoints,
 
 
 /* Rodrigues transform */
-typedef enum CvRodriguesType
-{
-    CV_RODRIGUES_M2V = 0,
-    CV_RODRIGUES_V2M = 1
-}
-CvRodriguesType;
+#define CV_RODRIGUES_M2V  0
+#define CV_RODRIGUES_V2M  1
 
+/* Converts rotation matrix to rotation vector or vice versa */
 OPENCVAPI  void  cvRodrigues( CvMat* rotMatrix, CvMat* rotVector,
-                              CvMat* jacobian, CvRodriguesType convType);
+                              CvMat* jacobian, int convType);
 
+/* Does reprojection of 3d object points to the view plane */
 OPENCVAPI  void  cvProjectPoints( int             numPoints,
                                  CvPoint3D64d*   objectPoints,
                                  CvVect64d       rotVect,
@@ -5200,6 +2631,7 @@ OPENCVAPI  void  cvProjectPoints( int             numPoints,
                                  CvVect64d       derivPointsPrincipal,
                                  CvVect64d       derivPointsDistort);
 
+/* Simpler version of the previous function */
 OPENCVAPI void cvProjectPointsSimple(  int numPoints,
                                     CvPoint3D64d * objectPoints,
                                     CvVect64d rotMatr,
@@ -5208,92 +2640,98 @@ OPENCVAPI void cvProjectPointsSimple(  int numPoints,
                                     CvVect64d distortion,
                                     CvPoint2D64d* imagePoints);
                                     
-/*F///////////////////////////////////////////////////////////////////////////////////////
-//    Name:    cvFindChessBoardCornerGuesses
-//    Purpose:
-//      Function finds first approximation of internal corners on the chess board.
-//    Context:
-//    Parameters:
-//      img      - source halftone image
-//      thresh   - temporary image where the thresholded source image will be stored.
-//      etalon_size - number of corners per each column and each row
-//      corners  - pointer to found points array
-//                 (must have at least etalon_size.width*etalon.height element).
-//      corner_count - number of found corners
-//    Returns:
-//
-//F*/
+/* Detects corners on a chess-board - "brand" OpenCV calibration pattern */
 OPENCVAPI  int  cvFindChessBoardCornerGuesses( const CvArr* array, CvArr* thresh,
                                                CvMemStorage* storage, CvSize etalon_size,
                                                CvPoint2D32f* corners,
-                                               int *corner_count CV_DEFAULT(0));
+                                               int *corner_count CV_DEFAULT(NULL));
 
 
-/****************************************************************************************\
-*                                      POSIT(POse from ITeration)                       *
-\****************************************************************************************/
-
-/*F///////////////////////////////////////////////////////////////////////////////////////
-//    Name:       cvCreatePOSITObject
-//    Purpose:    Allocate and Initialize CvPOSITObject structure
-//                before process cvPOSIT
-//    Context:
-//    Parameters:
-//                  points - pointer to source object points given in
-//                           object related coordinate system
-//                  numPoints - number of object points
-//                  ppObject - address of pointer to CvPOSITObject(returned)
-//    Returns:
-//    Notes:
-//F*/
 typedef struct CvPOSITObject CvPOSITObject;
 
+/* Allocates and initializes CvPOSITObject structure before doing cvPOSIT */
 OPENCVAPI  CvPOSITObject*  cvCreatePOSITObject( CvPoint3D32f* points, int numPoints );
 
 
-/*F///////////////////////////////////////////////////////////////////////////////////////
-//    Name:       cvPOSIT
-//    Purpose:    performs POSIT algorithm
-//
-//    Context:
-//    Parameters:
-//                  pObject - pointer to CvPOSITObject filled with prev. function
-//                  imagePoints - pointer to source object image points given in
-//                                camera related coordinate system
-//                  focalLength - focal length of camera
-//                  criteria - stop criteria.
-//                  rotation - rotation matrix
-//                  translation - translation vector(from camera to
-//                                first point of object )
-//    Returns:
-//    Notes:
-//F*/
+/* Runs POSIT (POSe from ITeration) algorithm for determining 3d position of
+   an object given its model and projection in a weak-perspective case */
 OPENCVAPI  void  cvPOSIT(  CvPOSITObject* pObject, CvPoint2D32f* imagePoints,
                            double focalLength, CvTermCriteria criteria,
                            CvMatr32f rotation, CvVect32f translation);
 
-/*F///////////////////////////////////////////////////////////////////////////////////////
-//    Name:       cvReleasePOSITObject
-//    Purpose:    free CvPOSITObject structure
-//    Context:
-//    Parameters:
-//      ppObject - address of pointer to CvPOSITObject
-//    Returns:
-//    Notes:
-//F*/
+/* Releases CvPOSITObject structure */
 OPENCVAPI  void  cvReleasePOSITObject( CvPOSITObject**  ppObject );
 
 
 /****************************************************************************************\
 *                                      ViewMorphing                                      *
 \****************************************************************************************/
+OPENCVAPI void cvMake2DPoints(CvMat* srcPoint,CvMat* dstPoint);
+OPENCVAPI void cvMake3DPoints(CvMat* srcPoint,CvMat* dstPoint);
+OPENCVAPI int cvSolveCubic(CvMat* coeffs,CvMat* result);
 
-OPENCVAPI  void  cvFindFundamentalMatrix( int*       points1,
-                                        int*       points2,
-                                        int        numpoints,
-                                        int        method,
-                                        float* matrix );
+/*F///////////////////////////////////////////////////////////////////////////////////////
+//    Name:    cvFindFundamentalMat
+//    Purpose: find fundamental matrix for given points using different methods
+//    Context:
+//    Parameters:
+//      points1  - points on first image. Size of matrix 2xN or 3xN
+//      points2  - points on second image Size of matrix 2xN or 3xN
+//      fundMatr - found fundamental matrixes. Size 3x3. Or 9x3 for 7-point algorithm only.
+//                 (7-point algorith can returns 3 fundamental matrixes)
+//      method   - method for computing fundamental matrix
+//                 CV_FM_7POINT - for 7-point algorithm. Number of points == 7
+//                 CV_FM_8POINT - for 8-point algorithm. Number of points >= 8
+//                 CV_FM_RANSAC - for RANSAC  algorithm. Number of points >= 8
+//                 CV_FM_LMEDS  - for LMedS   algorithm. Number of points >= 8
+//      param1 and param2 uses for RANSAC and LMedS method.
+//         param1 - threshold distance from point to epipolar line.
+//                  If distance less than threshold point is good.
+//         param2 - probability. Usually = 0.99
+//         status - array, every element of which will be set to 1 if the point was good,
+//                  0 else. (for RANSAC and LMedS only)
+//                  For other methods all points status set to 1)
+//                  (it is optional parameter, can be NULL)
+//
+//    Returns:
+//      number of found fundamental matrixes
+//F*/
+#define CV_FM_7POINT 1
+#define CV_FM_8POINT 2
+#define CV_FM_RANSAC 3
+#define CV_FM_LMEDS  4 
 
+OPENCVAPI  int cvFindFundamentalMat(    CvMat* points1,
+                                CvMat* points2,
+                                CvMat* fundMatr,
+                                int    method,
+                                double param1,
+                                double param2,
+                                CvMat* status);
+
+/*F///////////////////////////////////////////////////////////////////////////////////////
+//    Name:    cvComputeCorrespondEpilines
+//    Purpose: computes correspondence piline for given point and fundamental matrix
+//    Context:
+//    Parameters:
+//      points  - points on image. Size of matrix 2xN or 3xN
+//      pointImageID - image on which points are located. 1 or 2 
+//      fundMatr - fundamental matrix
+//      corrLines - found correspondence lines for each point. Size of matrix 3xN,
+//                  Each line given by a,b,c. (ax+by+c=0)
+//
+//    Returns:
+//     
+//F*/
+OPENCVAPI  void cvComputeCorrespondEpilines(CvMat* points,
+                                            int pointImageID,
+                                            CvMat* fundMatr,
+                                            CvMat* corrLines);
+
+/* The order of the function corresponds to the order they should appear in
+   the view morphing pipeline */ 
+
+/* Finds ending points of scanlines on left and right images of stereo-pair */
 OPENCVAPI  void  cvMakeScanlines( const CvMatrix3* matrix,
                                 CvSize     imgSize,
                                 int*       scanlines_1,
@@ -5302,12 +2740,16 @@ OPENCVAPI  void  cvMakeScanlines( const CvMatrix3* matrix,
                                 int*       lens_2,
                                 int*       numlines);
 
+/* Grab pixel values from scanlines and stores them sequentially
+   (some sort of perspective image transform) */
 OPENCVAPI  void  cvPreWarpImage( int       numLines,
                                IplImage* img,
                                uchar*    dst,
                                int*      dst_nums,
                                int*      scanlines);
 
+/* Approximate each grabbed scanline by a sequence of runs
+   (lossy run-length compression) */
 OPENCVAPI  void  cvFindRuns( int    numLines,
                            uchar* prewarp_1,
                            uchar* prewarp_2,
@@ -5318,6 +2760,7 @@ OPENCVAPI  void  cvFindRuns( int    numLines,
                            int*   num_runs_1,
                            int*   num_runs_2);
 
+/* Compares two sets of compressed scanlines */
 OPENCVAPI  void  cvDynamicCorrespondMulti( int  lines,
                                          int* first,
                                          int* first_runs,
@@ -5326,7 +2769,7 @@ OPENCVAPI  void  cvDynamicCorrespondMulti( int  lines,
                                          int* first_corr,
                                          int* second_corr);
 
-
+/* Finds scanline ending coordinates for some intermediate "virtual" camera position */
 OPENCVAPI  void  cvMakeAlphaScanlines( int*  scanlines_1,
                                      int*  scanlines_2,
                                      int*  scanlines_a,
@@ -5334,6 +2777,8 @@ OPENCVAPI  void  cvMakeAlphaScanlines( int*  scanlines_1,
                                      int   numlines,
                                      float alpha);
 
+/* Blends data of the left and right image scanlines to get
+   pixel values of "virtual" image scanlines */
 OPENCVAPI  void  cvMorphEpilinesMulti( int    lines,
                                      uchar* first_pix,
                                      int*   first_num,
@@ -5349,610 +2794,57 @@ OPENCVAPI  void  cvMorphEpilinesMulti( int    lines,
                                      int*   first_corr,
                                      int*   second_corr);
 
-OPENCVAPI  void  cvDeleteMoire( IplImage*  img);
-
+/* Does reverse warping of the morphing result to make
+   it fill the destination image rectangle */
 OPENCVAPI  void  cvPostWarpImage( int       numLines,
                                 uchar*    src,
                                 int*      src_nums,
                                 IplImage* img,
                                 int*      scanlines);
 
+/* Deletes Moire (missed pixels that appear due to discretization) */
+OPENCVAPI  void  cvDeleteMoire( IplImage*  img);
 
 /****************************************************************************************\
-*                                      Matrix Functions                                  *
+*                                    System functions                                    *
 \****************************************************************************************/
 
+/* Loads optimized libraries (with manual and automatical processor type specification) */
+OPENCVAPI  int  cvLoadPrimitives( const char* proc_type CV_DEFAULT(NULL) );
 
-/*F///////////////////////////////////////////////////////////////////////////////////////
-//    Name:       cvAdd
-//    Purpose:    Adds one array to another
-//    Context:
-//    Parameters:
-//      srcA - first source array
-//      srcB - second source array
-//      dst  - destination array: dst = srcA + srcB
-//      mask - optional mask
-//    Returns:
-//F*/
-OPENCVAPI  void  cvAdd( const CvArr* srcA, const CvArr* srcB, CvArr* dst,
-                        const CvArr* mask CV_DEFAULT(0));
-
-
-/*F///////////////////////////////////////////////////////////////////////////////////////
-//    Name:       cvAddS
-//    Purpose:    Adds array to scalar
-//    Context:
-//    Parameters:
-//      src  - source array
-//      value - added scalar
-//      dst  - destination array: dst = src + value
-//      mask - optional mask
-//    Returns:
-//F*/
-OPENCVAPI  void  cvAddS( const CvArr* src, CvScalar value, CvArr* dst,
-                         const CvArr* mask CV_DEFAULT(0));
-
-
-/*F///////////////////////////////////////////////////////////////////////////////////////
-//    Name:       cvSub
-//    Purpose:    Subtracts one array from another
-//    Context:
-//    Parameters:
-//      srcA - first source array
-//      srcB - second source array 
-//      dst  - destination array: dst = srcA - srcB
-//    Returns:
-//F*/
-OPENCVAPI  void  cvSub( const CvArr* srcA, const CvArr* srcB, CvArr* dst,
-                        const CvArr* mask CV_DEFAULT(0));
-
-
-/*F///////////////////////////////////////////////////////////////////////////////////////
-//    Name:       cvSubS
-//    Purpose:    Subtracts a scalar value from array
-//    Context:
-//    Parameters:
-//      src - source array
-//      value - subtracted scalar
-//      dst  - destination array: dst = src - value
-//      mask - optional mask
-//    Returns:
-//F*/
-CV_INLINE  void  cvSubS( const CvArr* src, CvScalar value, CvArr* dst,
-                         const CvArr* mask CV_DEFAULT(0));
-CV_INLINE  void  cvSubS( const CvArr* src, CvScalar value, CvArr* dst,
-                         const CvArr* mask )
-{
-    cvAddS( src, cvScalar( -value.val[0], -value.val[1], -value.val[2], -value.val[3]),
-            dst, mask );
-}
-
-
-/*F///////////////////////////////////////////////////////////////////////////////////////
-//    Name:       cvSubRS
-//    Purpose:    Subtracts a scalar value from array
-//    Context:
-//    Parameters:
-//      src - source array
-//      value - scalar to subtract from
-//      dst  - destination array: dst = value - src
-//      mask - optional mask
-//    Returns:
-//F*/
-OPENCVAPI  void  cvSubRS( const CvArr* src, CvScalar value, CvArr* dst,
-                          const CvArr* mask CV_DEFAULT(0));
-
-
-/*F///////////////////////////////////////////////////////////////////////////////////////
-//    Name:       cvMul
-//    Purpose:    Multiplies two arrays
-//    Context:
-//    Parameters:
-//      srcA - first source array
-//      srcB - second source array
-//      dst  - destination array: dst(x,y) = srcA(x,y) * srcB(x,y)
-//    Returns:
-//F*/
-OPENCVAPI  void  cvMul( const CvArr* srcA, const CvArr* srcB, CvArr* dst);
-
-/* dst(idx) = lower(idx) <= src(idx) < upper(idx) */
-OPENCVAPI void cvInRange( const CvArr* src, const CvArr* lower,
-                          const CvArr* upper, CvArr* dst );
-
-/* dst(idx) = lower <= src(idx) < upper */
-OPENCVAPI void cvInRangeS( const CvArr* src, CvScalar lower,
-                           CvScalar upper, CvArr* dst );
-
-/****************************************************************************************\
-*                                      Logic Operations                                  *
-\****************************************************************************************/
-
-/* dst(idx) = src1(idx) & src2(idx) */
-OPENCVAPI void cvAnd( const CvArr* src1, const CvArr* src2,
-                      CvArr* dst, const CvArr* mask CV_DEFAULT(0));
-
-/* dst(idx) = src(idx) & value */
-OPENCVAPI void cvAndS( const CvArr* src, CvScalar value,
-                       CvArr* dst, const CvArr* mask CV_DEFAULT(0));
-
-/* dst(idx) = src1(idx) | src2(idx) */
-OPENCVAPI void cvOr( const CvArr* src1, const CvArr* src2,
-                     CvArr* dst, const CvArr* mask CV_DEFAULT(0));
-
-/* dst(idx) = src(idx) | value */
-OPENCVAPI void cvOrS( const CvArr* src, CvScalar value,
-                      CvArr* dst, const CvArr* mask CV_DEFAULT(0));
-
-/* dst(idx) = src1(idx) ^ src2(idx) */
-OPENCVAPI void cvXor( const CvArr* src1, const CvArr* src2,
-                      CvArr* dst, const CvArr* mask CV_DEFAULT(0));
-
-/* dst(idx) = src(idx) ^ value */
-OPENCVAPI void cvXorS( const CvArr* src, CvScalar value,
-                       CvArr* dst, const CvArr* mask CV_DEFAULT(0));
-
-
-/*F///////////////////////////////////////////////////////////////////////////////////////
-//    Name:       cvScaleAdd
-//    Purpose:    Multiplies all array elements by a scalar value and
-//                adds another scalar to the scaled array
-//    Context:
-//    Parameters:
-//      src - source array
-//      scale - scale factor
-//      delta - shift value
-//      dst - destination array
-//    Returns:
-//    Notes:
-//F*/
-OPENCVAPI  void  cvScaleAdd( const CvArr* src1, CvScalar scale,
-                             const CvArr* src2, CvArr* dst );
-#define cvMulAddS cvScaleAdd
-
-/*F///////////////////////////////////////////////////////////////////////////////////////
-//    Name:       cvDotProduct
-//    Purpose:    Evaluates dot product of two vectors
-//    Context:
-//    Parameters:
-//      srcA - first source array
-//      srcB - second source array
-//
-//    Returns:
-//      Dot product of srcA and srcB:  sum(srcA(i,j)*srcB(i,j))
-//                                     i,j
-//F*/
-OPENCVAPI  double  cvDotProduct( const CvArr* srcA, const CvArr* srcB );
-
-
-/*F///////////////////////////////////////////////////////////////////////////////////////
-//    Name:       cvCrossProduct
-//    Purpose:    Evaluates cross product of two 3d vectors
-//    Context:
-//    Parameters: srcA - first source vector
-//                srcB - second source vector
-//                dst  - destination vector
-//    Returns:
-//
-//F*/
-OPENCVAPI  void  cvCrossProduct( const CvArr* srcA, const CvArr* srcB, CvArr* dst );
-
-
-/*F///////////////////////////////////////////////////////////////////////////////////////
-//    Name:       cvMatMulAdd
-//    Purpose:    Evaluates product of two matrices and
-//                adds the third matrix to the product
-//    Context:
-//    Parameters:
-//      srcA - first source matrix
-//      srcB - second source matrix
-//      srcC - added matrix
-//      dst  - destination matrix
-//    Returns:
-//
-//F*/
-OPENCVAPI  void  cvMatMulAdd( const CvArr* srcA, const CvArr* srcB,
-                              const CvArr* srcC, CvArr* dst );
-#define cvMatMul( srcA, srcB, dst )  cvMatMulAdd( (srcA), (srcB), 0, (dst))
-
-
-/*F///////////////////////////////////////////////////////////////////////////////////////
-//    Name:       cvMatMulAddS
-//    Purpose:    Performs matrix transformation for every vector of the source array
-//    Context:
-//    Parameters:
-//      srcr - source array
-//      dst  - destination array
-//      transform - transformation matrix
-//      shiftvec - optional shift (may be encoded in the matrix as well)
-//    Returns:
-//
-//F*/
-OPENCVAPI  void  cvMatMulAddS( const CvArr* src, CvArr* dst,
-                               const CvArr* transform,
-                               const CvArr* shiftvec CV_DEFAULT(0));
-
-
-/*F///////////////////////////////////////////////////////////////////////////////////////
-//    Name:       cvMulTransposed
-//    Purpose:    Evaluates product of matix by itself transposed
-//    Context:
-//    Parameters:
-//      srcarr - the source matrix
-//      dstarr - the destination matrix
-//      order - determines the order of multiplication
-//              if order = 0, function evaluates A*At
-//              if order = 1, function evaluates At*A
-//    Returns:
-//    Notes:
-//F*/
-OPENCVAPI void cvMulTransposed( const CvArr* srcarr,
-                                CvArr* dstarr, int order );
-
-/*F///////////////////////////////////////////////////////////////////////////////////////
-//    Name:       cvTranspose
-//    Purpose:    Transposes matrix
-//    Context:
-//    Parameters:
-//      src - source matrix
-//      dst - destination matrix
-//    Returns:
-//    Notes:
-//      square matrices can be transposed in-place.
-//F*/
-OPENCVAPI  void  cvTranspose( const CvArr* src, CvArr* dst );
-#define cvT cvTranspose
-
-
-/*F///////////////////////////////////////////////////////////////////////////////////////
-//    Name:       cvFlip
-//    Purpose:    Mirrors the matrix around vertical or horizontal axis
-//    Context:
-//    Parameters:
-//      src - source matrix
-//      dst - destination matrix
-//      flipAxis - 0: horizontal axis
-//                 1: vertical axis
-//                -1: both axis
-//    Returns:
-//    Notes:
-//F*/
-OPENCVAPI  void  cvFlip( const CvArr* src, CvArr* dst, int flip_mode );
-#define cvMirror cvFlip
-
-/*F///////////////////////////////////////////////////////////////////////////////////////
-//    Name:       cvInvert
-//    Purpose:    Inverts Matrix using LU decomposition
-//    Context:
-//    Parameters:
-//      src - source matrix
-//      dst - destination matrix
-//    Returns:
-//      1 if the matrix inverted and 0 if it is a singular (or very close to it)
-//    Notes:
-//F*/
-OPENCVAPI  int  cvInvert( const CvArr* src, CvArr* dst );
-#define cvInv cvInvert
-
-/*F///////////////////////////////////////////////////////////////////////////////////////
-//    Name:       cvSolve
-//    Purpose:    Solves linear system Ax = b using LU decomposition
-//    Context:
-//    Parameters:
-//      A - the matrix
-//      b - the "right side" of the system
-//      x - destination array (solution of the system)
-//    Returns:
-//      1 if the system is solved and 0 if the matrix is a singular (or very close to it)
-//    Notes:
-//F*/
-OPENCVAPI  int  cvSolve( const CvArr* A, const CvArr* b, CvArr* x );
-
-/*F///////////////////////////////////////////////////////////////////////////////////////
-//    Name:       cvDet
-//    Purpose:    Calculates determinant of the matrix
-//    Context:
-//    Parameters:
-//      mat - source matrix
-//    Returns:
-//      Matrix determinant
-//    Notes:
-//F*/
-OPENCVAPI  double cvDet( const CvArr* mat );
-
-/*F///////////////////////////////////////////////////////////////////////////////////////
-//    Name:       cvTrace
-//    Purpose:    Calculates trace of the matrix (sum of elements on the main diagonal) 
-//    Context:
-//    Parameters:
-//      mat - source matrix
-//    Returns:
-//      Matrix determinant
-//    Notes:
-//F*/
-OPENCVAPI  CvScalar cvTrace( const CvArr* mat );
-
-/*F///////////////////////////////////////////////////////////////////////////////////////
-//    Name:       cvSVD
-//    Purpose:    Calculates Singular Value Decomposition for the input matrix: 
-//       A = U W V',   U & V are orthogonal, W is diagonal matrix that can be
-//                     either real matrix (the same size as A) or a vector of
-//                     size min(A->rows,A->cols).
-//       U & V are optional,
-//       flags:  0th bit, reset to 0, means that A is copyied before processing,
-//                        otherwise it is modified during the processing, which is
-//                        faster.
-//               1st bit, reset to 0, means that U is returned normal, otherwise it
-//                        is returned transposed, which is faster.
-//               2nd bit, reset to 0, means that V is returned normal, otherwise it
-//                        is returned transposed, which is faster.
-//F*/
-#define CV_SVD_MODIFY_A   1
-#define CV_SVD_U_T        2
-#define CV_SVD_V_T        4
-
-OPENCVAPI  void   cvSVD( CvArr* A, CvArr* W CV_DEFAULT(0),
-                         CvArr* U CV_DEFAULT(0),
-                         CvArr* V CV_DEFAULT(0),
-                         int flag CV_DEFAULT(0));
-
-
-/*F///////////////////////////////////////////////////////////////////////////////////////
-//    Name:       cvPseudoInv
-//    Purpose:    Calculates inverse or pseudo-inverse matrix for the input matrix.
-//       if A is (m x n) matrix, B will be (n x m) matrix, such that
-//       AB = I(m x m), BA = I(n x n).
-//
-//       flags:  0th bit, reset to 0, means that A is copyied before processing,
-//                        otherwise it is modified during the processing, which is
-//                        faster.
-//    Return value:
-//       The function returns condition number or DBL_MAX if the matrix is signular.
-//F*/
-OPENCVAPI  double  cvPseudoInverse( CvArr* A, CvArr* B,
-                                    int flags CV_DEFAULT(0));
-#define cvPseudoInv cvPseudoInverse
-
-/*F///////////////////////////////////////////////////////////////////////////////////////
-//    Name:       cvEigenVV
-//    Purpose:    Finds eigenvalues & eigenvectors of a symmetric matrix:
-//    Context:
-//    Parameters:
-//      src - source symmetric matrix,
-//      evects - matrix of its eigenvectors
-//               (i-th row is an i-th eigenvector),
-//      evals - vector of its eigenvalues
-//              (i-th element is an i-th eigenvalue),
-//      eps - accuracy of diagonalization.
-//    Returns:
-//    Notes:
-//F*/
-OPENCVAPI  void  cvEigenVV( CvArr* src, CvArr* evects, CvArr* evals, double eps );
-
-
-/*F///////////////////////////////////////////////////////////////////////////////////////
-//    Name:       cvSetZero
-//    Purpose:    Clears all the matrix elements (sets them to 0)
-//    Context:
-//    Parameters: mat  - matrix
-//    Returns:
-//    Notes:
-//F*/
-OPENCVAPI  void  cvSetZero( CvArr* mat );
-#define cvZero  cvSetZero
-
-/*F///////////////////////////////////////////////////////////////////////////////////////
-//    Name:       cvSetIdentity
-//    Purpose:    Fills identity matrix
-//    Context:
-//    Parameters:
-//      mat - matrix
-//    Returns:
-//    Notes:
-//F*/
-OPENCVAPI  void  cvSetIdentity( CvArr* mat );
-
-
-/*F///////////////////////////////////////////////////////////////////////////////////////
-//    Name:       cvMahalanobis
-//    Purpose:    Calculates Mahalanobis(weighted) distance.
-//    Context:
-//    Parameters:
-//      srcA - first source vector
-//      srcB - second source vector
-//      matr - covariance matrix
-//    Returns:
-//      Mahalanobis distance
-//    Notes:
-//F*/
-OPENCVAPI  double  cvMahalanobis( const CvArr* srcA, const CvArr* srcB, CvArr* mat );
-#define cvMahalonobis  cvMahalanobis
-
-/*F///////////////////////////////////////////////////////////////////////////////////////
-//    Name:       cvPerspectiveTransform
-//    Purpose:    Applies perspective transform to the array of vectors
-//    Context:
-//    Parameters: mat - matrix
-//                src - source array
-//                dst - destination array
-//    Returns:
-//    Notes:
-//F*/
-
-OPENCVAPI  void  cvPerspectiveTransform( const CvArr* src, CvArr* dst, const CvArr* mat );
-
-/****************************************************************************************\
-*                    CONditional DENsity PropogaTION tracking                            *
-\****************************************************************************************/
-
-typedef struct 
-{
-    int MP;
-    int DP;
-    float* DynamMatr;       /* Matrix of the linear Dynamics system  */
-    float* State;           /* Vector of State                       */
-    int SamplesNum;         /* Number of the Samples                 */
-    float** flSamples;      /* array of the Sample Vectors           */
-    float** flNewSamples;   /* temporary array of the Sample Vectors */
-    float* flConfidence;    /* Confidence for each Sample            */
-    float* flCumulative;    /* Cumulative confidence                 */
-    float* Temp;            /* Temporary vector                      */
-    float* RandomSample;    /* RandomVector to update sample set     */
-    CvRandState* RandS;     /* Array of structures to generate random vectors */
-
-} CvConDensation;
-
-OPENCVAPI CvConDensation*  cvCreateConDensation( int DP, int MP, int SamplesNum);
-OPENCVAPI void  cvReleaseConDensation( CvConDensation** ConDensation);
-OPENCVAPI void  cvConDensUpdateByTime( CvConDensation* ConDens);
-OPENCVAPI void  cvConDensInitSampleSet( CvConDensation* conDens, CvMat* lowerBound,CvMat* upperBound);
-
-/****************************************************************************************\
-*                                      Kalman Filtering                                  *
-\****************************************************************************************/
-
-typedef struct 
-{
-    int MP;
-    int DP;
-    float* PosterState;          /* Vector of State of the System in k-th step  */
-    float* PriorState;           /* Vector of State of the System in (k-1)-th step */
-    float* DynamMatr;            /* Matrix of the linear Dynamics system */
-                                 /* (Must be updated by LinearizedDynamics function on each step*/
-                                 /*  for nonlinear systems)*/
-    float* MeasurementMatr;      /* Matrix of linear measurement (Must be updated by */
-                                 /* LinearizedMeasurement function on each step*/
-                                 /* for nonlinear measurements)*/
-    float* MNCovariance;         /* Matrix of measurement noice covariance*/
-                                 /* Initializes to Zero matrix, or sets by SetMeasureNoiseCov*/
-                                 /* method  */
-    float* PNCovariance;         /* Matrix of process noice covariance*/
-                                 /* Initializes to Identity matrix, or sets by SetProcessNoiseCov*/
-                                 /* method */
-    float* KalmGainMatr;         /* Kalman Gain Matrix*/
-    float* PriorErrorCovariance; /*Prior Error Covariance matrix*/
-    float* PosterErrorCovariance;/*Poster Error Covariance matrix*/
-    float* Temp1;                 /* Temporary Matrix */
-    float* Temp2;
-
-} CvKalman;
-
-OPENCVAPI CvKalman* cvCreateKalman( int DynamParams, int MeasureParams);
-OPENCVAPI void  cvReleaseKalman( CvKalman** Kalman);
-OPENCVAPI void  cvKalmanUpdateByTime( CvKalman* Kalman);
-OPENCVAPI void  cvKalmanUpdateByMeasurement( CvKalman* Kalman, CvMat* Measurement);
-
-/*F//////////////////////////////////////////////////////////////////////////////////////
-//    Name: cvLoadPrimitives
-//    Purpose: The function loads primitives
-//    Context:
-//    Parameters:  dllName        - name of dll to be loaded(without prefix) or NULL
-//                                  for default dll
-//                 processor_type - needep processor type or NULL for automatic processor
-//                                  detection
-//    Return value: number of loaded functions
-//    Notes:   full dll name is consists from dllName + processor_type.dll(or
-//             dllName + processor_type + "d".dll for debug configuration)
-//F*/
-OPENCVAPI  int  cvLoadPrimitives( const char* proc_type CV_DEFAULT(0) );
+/* Exports low-level functions from OpenCV */
 OPENCVAPI  int  cvFillInternalFuncsTable(void* table);
 
-
-/*F//////////////////////////////////////////////////////////////////////////////////////
-//    Name: cvAlloc and cvFree
-//    Purpose: The functions allocate/deallocate plain memory buffers
-//F*/
-OPENCVAPI  void*  cvAlloc( int size );
-OPENCVAPI  void   cvFree( void** ptr );
-
-
-/*F//////////////////////////////////////////////////////////////////////////////////////
-//    Name: cvGetLibraryInfo
-//    Purpose: The function returns information about current version of library and
-//             loaded/non loaded primitives dll
-//    Context:
-//    Parameters:  version  - pointer to pointer to version of OpenCV - build date
-//                           (or NULL if not needed)
-//                 loaded   - pointer to flag of loaded primitives, nonzero value
-//                            after returning from function indicates that primitives
-//                            are loaded(NULL if not needed)
-//                 loaded_modules - comma-separated list of loaded optimized dlls
-//                           (NULL if not needed)
-//
-//    Notes:   
-//F*/
+/* Retrieves information about OpenCV and loaded optimized primitives */
 OPENCVAPI  void  cvGetLibraryInfo( const char** version, int* loaded,
                                    const char** loaded_modules );
 
-/* **************************** Error handling ************************* */
-
-/* /////////////////////////////////////////////////////////////////////////
-// Name:       cvGetErrStatus
-// Purpose:    Gets last error status
-// Returns:
-// Parameters:
-//
-// Notes:
-*/
+/* Get current OpenCV error status */
 OPENCVAPI CVStatus cvGetErrStatus( void );
 
-/* /////////////////////////////////////////////////////////////////////////
-// Name:       cvSetErrStatus
-// Purpose:    Sets error status
-// Returns:
-// Parameters:
-//
-// Notes:
-*/
+/* Sets error status silently */
 OPENCVAPI void cvSetErrStatus( CVStatus status );
 
 
-/* /////////////////////////////////////////////////////////////////////////
-// Name:       cvGetErrMode, cvSetErrMode
-// Purpose:    gets/sets error mode
-// Returns:
-// Parameters:
-//
-// Notes:
-*/
+/* Retrives current error processing mode */
 OPENCVAPI int  cvGetErrMode( void );
+
+/* Sets error processing mode */
 OPENCVAPI void cvSetErrMode( int mode );
 
-/* /////////////////////////////////////////////////////////////////////////
-// Name:       cvError
-// Purpose:    performs basic error handling
-// Returns:    last status
-// Parameters:
-//
-// Notes:
-*/
-
+/* Sets error status and performs some additonal actions (error message box,
+   writing message to stderr, terminate application etc.)
+   depending on the current error mode */
 OPENCVAPI CVStatus cvError( CVStatus code, const char *func,
                          const char *context, const char *file, int line);
 
-/* /////////////////////////////////////////////////////////////////////////
-// Name:       cvErrorStr
-// Purpose:    translates an error status code into a textual description
-// Returns:
-// Parameters:
-//
-// Notes:
-*/
+/* Retrieves textual description of the error given its code */
 OPENCVAPI const char* cvErrorStr( CVStatus status );
 
 
-/* /////////////////////////////////////////////////////////////////////////
-// Name:       cvRedirectError
-// Purpose:    assigns a new error-handling function
-// Returns:    old error-handling function
-// Parameters: new error-handling function
-//
-// Notes:
-*/
-
+/* Assigns a new error-handling function */
 OPENCVAPI CVErrorCallBack cvRedirectError(CVErrorCallBack cvErrorFunc);
 
-
-/*-----------------  Predefined error-handling functions  -----------------*/
 
 /*
     Output to:
@@ -5969,22 +2861,32 @@ OPENCVAPI CVStatus cvStdErrReport( CVStatus status, const char *funcName,
 OPENCVAPI CVStatus cvGuiBoxReport( CVStatus status, const char *funcName,
                                 const char *context, const char *file, int line);
 
+/* Get call stack */
 OPENCVAPI void cvGetCallStack(CvStackRecord** stack, int* size);
 
+/* Push the record to the call stack */
 OPENCVAPI void cvStartProfile( const char* call, const char* file, int line );
+
+/* Pop the record from the stack */
 OPENCVAPI void cvEndProfile( const char* file, int line );
 
+CV_EXTERN_C_FUNCPTR(void (CV_CDECL* CvStartProfileFunc)(const char*,const char*,int));
+CV_EXTERN_C_FUNCPTR(void (CV_CDECL* CvEndProfileFunc)(const char*,int));
+
 /* management functions */
-OPENCVAPI void cvSetProfile( void (CV_CDECL *startprofile_f)(const char*, const char*, int),
-                          void (CV_CDECL *endprofile_f)(const char*, int) ); 
+OPENCVAPI void cvSetProfile( CvStartProfileFunc startProfile,
+                             CvEndProfileFunc endProfile );
  
 OPENCVAPI void cvRemoveProfile();                  
 
-OPENCVAPI void cvSetMemoryManager( void* (CV_STDCALL *allocFunc)(int, const char*, int) CV_DEFAULT(0),
-                           int (CV_STDCALL *freeFunc)(void**, const char*, int) CV_DEFAULT(0));
 
-OPENCVAPI void cvGetCallStack(CvStackRecord** stack, int* size);
+CV_EXTERN_C_FUNCPTR(void* (CV_STDCALL *CvAllocFunc)(int, const char*, int));
+CV_EXTERN_C_FUNCPTR(int (CV_STDCALL *CvFreeFunc)(void**, const char*, int));
 
+/* Set user-defined memory managment functions (substitutors for malloc and free) that
+   will be called by cvAlloc, cvFree and higher-level functions (e.g. cvCreateImage) */
+OPENCVAPI void cvSetMemoryManager( CvAllocFunc allocFunc CV_DEFAULT(0),
+                                   CvFreeFunc freeFunc CV_DEFAULT(0));
 
 
 CV_EXTERN_C_FUNCPTR(IplImage* (CV_STDCALL* Cv_iplCreateImageHeader)
@@ -5999,14 +2901,7 @@ CV_EXTERN_C_FUNCPTR(IplROI* (CV_STDCALL* Cv_iplCreateROI)(int,int,int,int,int));
 CV_EXTERN_C_FUNCPTR(IplImage* (CV_STDCALL* Cv_iplCloneImage)(const IplImage*));
 
 
-/* //////////////////////////////////////////////////////////////////////////////////
-// Name:    cvSetIPLAllocators
-// Purpose:  Makes OpenCV to use IPL functions for image allocation/deallocation
-// Returns:
-// Parameters:
-//
-// Notes:
-*/
+/* Makes OpenCV use IPL functions for IplImage allocation/deallocation */
 OPENCVAPI void
 cvSetIPLAllocators( Cv_iplCreateImageHeader createHeader,
                     Cv_iplAllocateImageData allocateData,
@@ -6015,19 +2910,158 @@ cvSetIPLAllocators( Cv_iplCreateImageHeader createHeader,
                     Cv_iplCloneImage cloneImage );
 
 #define CV_TURN_ON_IPL_COMPATIBILITY()                                  \
-    cvSetIPLAllocators( iplCreateImageHeader, iplAllocateImageData,     \
+    cvSetIPLAllocators( iplCreateImageHeader, iplAllocateImage,         \
                         iplDeallocate, iplCreateROI, iplCloneImage )
+
+/****************************************************************************************\
+*                                    Data Persistence                                    *
+\****************************************************************************************/
+
+/********************************** High-level functions ********************************/
+
+/* "black box" file storage */
+typedef struct CvFileStorage CvFileStorage;
+
+/* storage flags */
+#define CV_STORAGE_READ          0
+#define CV_STORAGE_WRITE_TEXT    1
+#define CV_STORAGE_WRITE_BINARY  2
+
+/* write flags */
+#define CV_WRITE_TREE      2 /* flag for storing sequence trees */
+
+/* opens existing or creates new file storage */
+OPENCVAPI  CvFileStorage*  cvOpenFileStorage( const char* filename,
+                                              CvMemStorage* storage,
+                                              int flags );
+
+/* closes file storage and deallocates buffers */
+OPENCVAPI  void cvReleaseFileStorage( CvFileStorage** storage );
+
+/* list of attributes */
+typedef struct CvAttrList
+{
+    char** attr; /* NULL-terminated array of (attribute_name,attribute_value) pairs */
+    struct CvAttrList* next; /* pointer to next chunk of the attributes list */
+}
+CvAttrList;
+
+CV_INLINE CvAttrList cvAttrList( char** attr CV_DEFAULT(NULL),
+                                 CvAttrList* next CV_DEFAULT(NULL) );
+CV_INLINE CvAttrList cvAttrList( char** attr, CvAttrList* next )
+{
+    CvAttrList list;
+    list.attr = attr;
+    list.next = next;
+
+    return list;
+}
+
+struct CvTypeInfo;
+
+typedef struct CvFileNode
+{
+    CV_TREE_NODE_FIELDS(CvFileNode)
+    const char* tagname;
+    const char* name;
+    CvAttrList* attr;
+    struct CvFileNode* hash_next;
+    unsigned hash_val;
+    int elem_size;
+    struct CvTypeInfo* typeinfo;
+    const char* body;
+    const void* content;
+}
+CvFileNode;
+
+
+/* writes matrix, image, sequence, graph etc. */
+OPENCVAPI  void cvWrite( CvFileStorage* storage, const char* name,
+                         const void* struct_ptr,
+                         CvAttrList attributes CV_DEFAULT(cvAttrList()),
+                         int flags CV_DEFAULT(0));
+
+/* writes opening tag of a compound object (used internally by cvWrite) */
+OPENCVAPI  void cvStartWriteStruct( CvFileStorage* storage, const char* name,
+                                    const char* type_name CV_DEFAULT(NULL),
+                                    const void* struct_ptr CV_DEFAULT(NULL),
+                                    CvAttrList attributes CV_DEFAULT(cvAttrList()));
+
+/* writes closing tag of a compound object (used internally by cvWrite) */
+OPENCVAPI  void cvEndWriteStruct( CvFileStorage* storage );
+
+/* writes a basic type value or a C structure of such values */
+OPENCVAPI  void cvWriteElem( CvFileStorage* storage,
+                             const char* name,
+                             const char* elem_spec,
+                             const void* data_ptr );
+
+/* finds the specified noe of file storage */
+OPENCVAPI  CvFileNode* cvGetFileNode( CvFileStorage* storage, const char* name );
+
+/* reads matrix, image, sequence, graph etc. */
+OPENCVAPI  const void* cvReadFileNode( CvFileStorage* storage, CvFileNode* node,
+                                       CvAttrList** list CV_DEFAULT(NULL));
+
+CV_INLINE  const void* cvRead( CvFileStorage* storage, const char* name,
+                               CvAttrList** list CV_DEFAULT(NULL) );
+CV_INLINE  const void* cvRead( CvFileStorage* storage, const char* name, CvAttrList** list )
+{
+    return cvReadFileNode( storage, cvGetFileNode( storage, name ), list );
+}
+
+/* read a basic type value or a C structure of such values */
+OPENCVAPI  int cvReadElem( CvFileStorage* storage, const char* name, void* data_ptr );
+
+/*********************************** Adding own types ***********************************/
+
+CV_EXTERN_C_FUNCPTR(int (CV_CDECL *CvIsInstanceFunc)(const void* struct_ptr));
+CV_EXTERN_C_FUNCPTR(void (CV_CDECL *CvReleaseFunc)(void** struct_dblptr));
+CV_EXTERN_C_FUNCPTR(void* (CV_CDECL *CvReadFunc)( CvFileStorage* storage,
+                                                  CvFileNode* node ));
+CV_EXTERN_C_FUNCPTR(void (CV_CDECL *CvWriteFunc)( CvFileStorage* storage,
+                                                  const char* name,
+                                                  const void* struct_ptr,
+                                                  CvAttrList attributes,
+                                                  int flags ));
+CV_EXTERN_C_FUNCPTR(void* (CV_CDECL *CvCloneFunc)( const void* struct_ptr));
+
+typedef struct CvTypeInfo
+{
+    int flags;
+    int header_size;
+    struct CvTypeInfo* prev;
+    struct CvTypeInfo* next;
+    const char* type_name;
+    CvIsInstanceFunc is_instance;
+    CvReleaseFunc release;
+    CvReadFunc read;
+    CvWriteFunc write;
+    CvCloneFunc clone;
+}
+CvTypeInfo;
+
+OPENCVAPI  CvTypeInfo* cvRegisterType( CvTypeInfo* info_data );
+OPENCVAPI  void        cvUnregisterType( const char* type_name );
+OPENCVAPI  CvTypeInfo* cvFirstType(void);
+OPENCVAPI  CvTypeInfo* cvFindType( const char* type_name );
+OPENCVAPI  CvTypeInfo* cvTypeOf( const void* struct_ptr );
+
+/* universal functions */
+OPENCVAPI void cvRelease( void** struct_ptr );
+OPENCVAPI void* cvClone( const void* struct_ptr );
 
 /****************************************************************************************\
 *                                 Backward compatibility                                 *
 \****************************************************************************************/
 
-#ifndef _CV_NO_BACKWARD_COMPATIBILITY
-#include "cvcompat.h"
-#endif
-
 #ifdef __cplusplus
 }
+#endif
+
+
+#ifndef _CV_NO_BACKWARD_COMPATIBILITY
+#include "cvcompat.h"
 #endif
 
 #endif /*_CV_H_*/

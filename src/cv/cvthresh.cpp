@@ -40,7 +40,6 @@
 //M*/
 
 #include "_cv.h"
-#include "_cvwrap.h"
 
 /*F///////////////////////////////////////////////////////////////////////////////////////
 //    Name:    icvThreshold8uC1R
@@ -359,55 +358,89 @@ IPCVAPI_IMPL( CvStatus, icvThresh_32f_C1R, (const float *src,
 
 
 CV_IMPL void
-cvThreshold( const void* srcIm, void* dstIm, double thresh, double maxval, CvThreshType type )
+cvThreshold( const void* srcarr, void* dstarr, double thresh, double maxval, CvThreshType type )
 {
-    CvSize roi;
-    CvSize roi_dst;
-    int step;
-    int step_dst;
-    uchar *src_data = 0;
-    uchar *dst_data = 0;
-    CvMat src_stub, dst_stub;
-    CvMat *src = 0, *dst = 0;
-
     CV_FUNCNAME( "cvThreshold" );
 
     __BEGIN__;
 
-    CV_CALL( src = cvGetMat( srcIm, &src_stub ));
-    CV_CALL( dst = cvGetMat( dstIm, &dst_stub ));
+    CvSize roi;
+    int src_step, dst_step;
+    CvMat src_stub, *src = (CvMat*)srcarr;
+    CvMat dst_stub, *dst = (CvMat*)dstarr;
+    int coi1 = 0, coi2 = 0;
+    int ival = 0;
 
-    if( !CV_ARE_DEPTHS_EQ( src, dst ))
-        CV_ERROR( IPL_BadDepth, "inconsistent depths" );
+    CV_CALL( src = cvGetMat( src, &src_stub, &coi1 ));
+    CV_CALL( dst = cvGetMat( dst, &dst_stub, &coi2 ));
 
-    if( !CV_ARE_CNS_EQ( src, dst ) || CV_ARR_CN(src->type) != 1 )
-        CV_ERROR( IPL_BadNumChannels, "bad channels numbers" );
+    if( coi1 + coi2 )
+        CV_ERROR( CV_BadCOI, "COI is not supported by the function" );
 
-    if( !CV_ARE_SIZES_EQ( src, dst ) )
+    if( !CV_ARE_CNS_EQ( src, dst ) || CV_MAT_CN(dst->type) != 1 )
+        CV_ERROR( CV_StsUnmatchedFormats, "Both arrays must be single-channel" );
+
+    if( !CV_ARE_DEPTHS_EQ( src, dst ) )
     {
-        CV_ERROR( IPL_BadImageSize, "unequal ROI's" );
+        if( CV_MAT_DEPTH(dst->type) != CV_8U )
+            CV_ERROR( CV_StsUnsupportedFormat, "In case of different types destination should be 8uC1" );
+
+        if( type != CV_THRESH_BINARY && type != CV_THRESH_BINARY_INV )
+            CV_ERROR( CV_StsBadArg,
+            "In case of different types only CV_THRESH_BINARY "
+            "and CV_THRESH_BINARY_INV thresholding types are supported" );
+
+        if( maxval < 0 )
+        {
+            CV_CALL( cvSetZero( dst ));
+        }
+        else
+        {
+            CV_CALL( cvCmpS( src, thresh, dst, type == CV_THRESH_BINARY ? CV_CMP_GT : CV_CMP_LE ));
+            if( maxval < 255 )
+                CV_CALL( cvAndS( dst, cvScalarAll( maxval ), dst ));
+        }
+        EXIT;
     }
 
-    cvGetRawData( src, &src_data, &step, &roi );
-    cvGetRawData( dst, &dst_data, &step_dst, &roi_dst );
+    if( !CV_ARE_SIZES_EQ( src, dst ) )
+        CV_ERROR( CV_StsUnmatchedSizes, "" );
 
-    switch( CV_ARR_DEPTH(src->type) )
+    roi = icvGetMatSize( src );
+    roi.width *= CV_MAT_CN(src->type);
+    if( CV_IS_MAT_CONT( src->type & dst->type ))
+    {
+        roi.width *= roi.height;
+        roi.height = 1;
+        src_step = dst_step = CV_STUB_STEP;
+    }
+    else
+    {
+        src_step = src->step;
+        dst_step = dst->step;
+    }
+
+    switch( CV_MAT_DEPTH(src->type) )
     {
     case CV_8U:
-        IPPI_CALL( icvThresh_8u_C1R( src_data, step, dst_data, step_dst, roi,
-                                     cvRound(thresh), (uchar)cvRound( maxval ), type ));
+        ival = cvRound(maxval);
+        IPPI_CALL( icvThresh_8u_C1R( (uchar*)src->data.ptr, src_step,
+                                     (uchar*)dst->data.ptr, dst_step, roi,
+                                     cvRound(thresh), CV_CAST_8U(ival), type ));
         break;
     case CV_8S:
-        IPPI_CALL( icvThresh_8s_C1R( (char*)src_data, step, (char*)dst_data, step_dst, roi,
-                                     cvRound( thresh ), (char)cvRound( maxval ), type ));
+        ival = cvRound(maxval);
+        IPPI_CALL( icvThresh_8s_C1R( (char*)src->data.ptr, src_step,
+                                     (char*)dst->data.ptr, dst_step, roi,
+                                     cvRound(thresh), CV_CAST_8S(ival), type ));
         break;
     case CV_32F:
-        IPPI_CALL( icvThresh_32f_C1R( (float*) src_data, step,
-                                      (float*) dst_data, step_dst, roi,
+        IPPI_CALL( icvThresh_32f_C1R( src->data.fl, src_step,
+                                      dst->data.fl, dst_step, roi,
                                       (float)thresh, (float)maxval, type ));
         break;
     default:
-        CV_ERROR( IPL_BadDepth, icvUnsupportedFormat );
+        CV_ERROR( CV_BadDepth, icvUnsupportedFormat );
     }
 
     __END__;

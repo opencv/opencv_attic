@@ -40,152 +40,74 @@
 //M*/
 
 #include "_cv.h"
-#include <ctype.h>
 
-#ifdef WIN32
-#include <windows.h>
-#else
-#include <dlfcn.h>
-#include <string.h>
-#endif
 
-/*
-   determine processor type
-*/
-CvProcessorType
-icvGetProcessorType( void )
+CV_IMPL CvRect
+cvMaxRect( const CvRect* rect1, const CvRect* rect2 )
 {
-    CvProcessorType proc_type = CV_PROC_GENERIC;
-
-#ifdef  WIN32
-
-    SYSTEM_INFO sys;
-    GetSystemInfo( &sys );
-
-    if( sys.wProcessorArchitecture == PROCESSOR_ARCHITECTURE_INTEL &&
-        sys.dwProcessorType == PROCESSOR_INTEL_PENTIUM )
+    if( rect1 && rect2 )
     {
-        int version = 0, features = 0, family = 0;
-        int id = 0;
+        CvRect max_rect;
+        int a, b;
 
-    #if _MSC_VER >= 1200 || defined __ICL || defined __BORLANDC__
+        max_rect.x = a = rect1->x;
+        b = rect2->x;
+        if( max_rect.x > b )
+            max_rect.x = b;
 
-        __asm
-        {
-            push ebx
-            push esi
-            push edi
-            mov  eax, 1
+        max_rect.width = a += rect1->width;
+        b += rect2->width;
 
-    #ifndef __BORLANDC__
-            _emit 0x0f
-            _emit 0xa2
-    #else
-            db 0fh
-            db 0a2h
-    #endif
-            pop edi
-            pop esi
-            pop ebx
-            mov version, eax
-            mov features, edx
-        }
+        if( max_rect.width < b )
+            max_rect.width = b;
+        max_rect.width -= max_rect.x;
 
-    #elif defined __GNUC__
+        max_rect.y = a = rect1->y;
+        b = rect2->y;
+        if( max_rect.y > b )
+            max_rect.y = b;
 
-        __asm__ __volatile__
-        (
-            "push %%ebx\n\t"    
-            "push %%esi\n\t"
-            "push %%edi\n\t"
-            "movl $1, %%eax\n\t"
-            "cpuid\n\t"
-            "movl %%eax, %0\n\t"
-            "movl %%edx, %1\n\t"
-            "pop %%edi\n\t"
-            "pop %%esi\n\t"
-            "pop %%ebx\n\t"
-            : "=a" (version),
-              "=d" (features)
-            :
-        );
+        max_rect.height = a += rect1->height;
+        b += rect2->height;
 
-    #endif
-
-        #define ICV_CPUID_M6     ((1<<15)|(1<<23)|6)  /* cmov + mmx */
-        #define ICV_CPUID_A6     ((1<<25)|ICV_CPUID_M6) /* <all above> + xmm */
-        #define ICV_CPUID_W7     ((1<<26)|ICV_CPUID_A6|(1<<3)|1) /* <all above> + emm */
-
-        family = (version >> 8) & 15;
-        if( family >= 6 && (features & (ICV_CPUID_M6 & ~6)) != 0 ) /* Pentium II or higher */
-        {
-            id = (features & ICV_CPUID_W7 & -256) | family;
-        }
-
-        switch( id )
-        {
-        case ICV_CPUID_W7:
-            proc_type = CV_PROC_IA32_P4;
-            break;
-        case ICV_CPUID_A6:
-            proc_type = CV_PROC_IA32_PIII;
-            break;
-        case ICV_CPUID_M6:
-            proc_type = CV_PROC_IA32_PII;
-            break;
-        }
+        if( max_rect.height < b )
+            max_rect.height = b;
+        max_rect.height -= max_rect.y;
+        return max_rect;
     }
-
-#else
-    char buffer[1000] = "";
-
-    //reading /proc/cpuinfo file (proc file system must be supported)
-    FILE *file = fopen( "/proc/cpuinfo", "r" );
-
-    memset( buffer, 0, sizeof(buffer));
-
-    if( file && fread( buffer, 1, 1000, file ))
-    {
-        if( strstr( buffer, "mmx" ) && strstr( buffer, "cmov" ))
-        {
-            proc_type = CV_PROC_IA32_PII;
-
-            if( strstr( buffer, "xmm" ) || strstr( buffer, "sse" ))
-            {
-                proc_type = CV_PROC_IA32_PIII;
-
-                if( strstr( buffer, "emm" ))
-                    proc_type = CV_PROC_IA32_P4;
-            }
-        }
-    }
-#endif
-
-    return proc_type;
-}
-
-
-CvProcessorType icvPreviousProcessor( const char* proc_type )
-{
-    char signature[100];
-    int i;
-
-    if( strlen( proc_type ) >= sizeof(signature))
-        return CV_PROC_GENERIC;
-
-    for( i = 0; proc_type[i]; i++ )
-        signature[i] = (char)tolower( proc_type[i] );
-
-    signature[i++] = '\0';
-
-    if( !strcmp( signature, CV_PROC_IA32_P4 ))
-        proc_type = CV_PROC_IA32_PIII;
-    else if( !strcmp( signature, CV_PROC_IA32_PIII ))
-        proc_type = CV_PROC_IA32_PII;
+    else if( rect1 )
+        return *rect1;
+    else if( rect2 )
+        return *rect2;
     else
-        proc_type = CV_PROC_GENERIC;
-
-    return proc_type;
+        return cvRect(0,0,0,0);
 }
+
+
+CV_IMPL void
+cvBoxPoints( CvBox2D box, CvPoint2D32f pt[4] )
+{
+    CV_FUNCNAME( "cvBoxPoints" );
+
+    __BEGIN__;
+    
+    float a = (float)cos(box.angle)*0.5f;
+    float b = (float)sin(box.angle)*0.5f;
+
+    if( !pt )
+        CV_ERROR( CV_StsNullPtr, "NULL vertex array pointer" );
+
+    pt[0].x = box.center.x - a*box.size.height - b*box.size.width;
+    pt[0].y = box.center.y + b*box.size.height - a*box.size.width;
+    pt[1].x = box.center.x + a*box.size.height - b*box.size.width;
+    pt[1].y = box.center.y - b*box.size.height - a*box.size.width;
+    pt[2].x = 2*box.center.x - pt[0].x;
+    pt[2].y = 2*box.center.y - pt[0].y;
+    pt[3].x = 2*box.center.x - pt[1].x;
+    pt[3].y = 2*box.center.y - pt[1].y;
+
+    __END__;
+}
+
 
 /* End of file. */
