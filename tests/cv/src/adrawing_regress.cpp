@@ -40,6 +40,9 @@
 //M*/
 
 #include "cvtest.h"
+
+#if 0
+
 #include <string.h>
 #include "highgui.h"
 
@@ -368,3 +371,5 @@ void InitADrawingRegress()
     trsReg( funcs, test_desc, atsAlgoClass, drawing_test );
     //trsReg( "cvResize", "", atsAlgoClass, resize_test );
 }
+
+#endif

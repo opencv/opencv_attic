@@ -1,1 +1,1 @@
-SUBDIRS = cvenv cvlkdemo cvcsdemo vmdemotk
+SUBDIRS = haartraining
