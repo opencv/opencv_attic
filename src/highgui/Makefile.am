@@ -16,6 +16,6 @@ noinst_HEADERS = _highgui.h bitstrm.h grfmt_base.h grfmt_bmp.h grfmt_jpeg.h grfm
 
 libhighgui_la_LDFLAGS = -no-undefined -version-info @LT_VERSION@ @LDFLAGS@
 
-libhighgui_la_LIBADD = @GTK_LIBS@ @IMAGELIBS@ @FFMPEGLIBS@ @IEEE1394LIBS@
+libhighgui_la_LIBADD  = ../../cv/src/libcv.la @GTK_LIBS@ @IMAGELIBS@ @FFMPEGLIBS@ @IEEE1394LIBS@
 
 INCLUDES = -I. -I../../cxcore/include -I../../cv/include @GTK_CFLAGS@

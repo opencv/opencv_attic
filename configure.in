@@ -24,7 +24,7 @@ AC_CONFIG_AUX_DIR([autotools])
 AC_CONFIG_MACRO_DIR([autotools/aclocal])
 
 # put CVS revision of this configure.in into the resulting configure script
-AC_REVISION($Revision: 1.8 $)
+AC_REVISION($Revision: 1.9 $)
 
 # Detect the canonical host and target build environment
 AC_CANONICAL_HOST
@@ -237,11 +237,12 @@ AC_ARG_ENABLE([python],
 if test x"$enable_python" = x"yes"; then
     AC_MSG_NOTICE([Checking for necessary tools to build python wrappers])
 
-    # we definately need python
-    PYTHON_DEVEL()
-    if test -z "$PYTHON_CPPFLAGS" ; then
-      AC_MSG_ERROR([please install python development files or configure this package with --disable-python])
-    fi
+    # we need Python now
+    AM_PATH_PYTHON()
+
+    # get some info on how to compile and link python modules
+    AZ_PYTHON_CSPEC()
+    AZ_PYTHON_LSPEC()
 
     # it would be nice to have SWIG on board
     SWIG_PYTHON()

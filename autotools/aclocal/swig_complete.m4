@@ -101,11 +101,10 @@ AC_DEFUN([SWIG_MULTI_MODULE_SUPPORT],[
 # check system for example.
 AC_DEFUN([SWIG_PYTHON],[
 	AC_REQUIRE([AC_PATH_SWIG])
-	AC_REQUIRE([PYTHON_DEVEL])
+	AC_REQUIRE([AM_PATH_PYTHON])
 	test "x$1" != "xno" || swig_shadow=" -noproxy"
-	AC_SUBST([SWIG_PYTHON_OPT],[-python$swig_shadow])
-	AC_SUBST([SWIG_PYTHON_CPPFLAGS],[$PYTHON_CPPFLAGS])
-	AC_SUBST([SWIG_PYTHON_LIBS],["$SWIG_RUNTIME_LIBS_DIR -lswigpy"])
+	AC_SUBST([SWIG_PYTHON_OPT],  "-python$swig_shadow")
+	AC_SUBST([SWIG_PYTHON_LIBS], "$SWIG_RUNTIME_LIBS_DIR -lswigpy")
 ])
 
 # PYTHON_DEVEL()

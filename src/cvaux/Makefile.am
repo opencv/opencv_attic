@@ -16,6 +16,6 @@ include_HEADERS =
 noinst_HEADERS = _cvaux.h _cvfacedetection.h _cvvectrack.h _cvvm.h
 
 libcvaux_la_LDFLAGS = -no-undefined -version-info @LT_VERSION@ @LDFLAGS@
-libcvaux_la_LIBADD =
+libcvaux_la_LIBADD  = ../../cv/src/libcv.la
 
 INCLUDES = -I. -I../include -I../../cxcore/include -I../../cv/include -I../../cv/src -I../..
