@@ -151,7 +151,12 @@ static CvCaptureVTable captureCAM_DC1394_vtable =
 
 void icvInitCapture_DC1394(){
    int p;
+   
    raw1394handle_t raw_handle = raw1394_new_handle();
+   if( raw_handle == 0 ) {
+      numPorts = 0;
+      return;
+   }
    numPorts = raw1394_get_port_info(raw_handle, ports, MAX_PORTS);
    raw1394_destroy_handle(raw_handle);
    for (p = 0; p < numPorts; p++) {
@@ -161,10 +166,10 @@ void icvInitCapture_DC1394(){
       /* get the camera nodes and describe them as we find them */
       camera_nodes = dc1394_get_camera_nodes(handles[p], &camCount[p], 0);
       for (int i=0;i<camCount[p];i++) {
-        cameras[numCameras].cam.node = camera_nodes[i];
-        cameras[numCameras].portnum = p;
-        dc1394_stop_iso_transmission(handles[p], camera_nodes[i]);
-    numCameras++;
+         cameras[numCameras].cam.node = camera_nodes[i];
+         cameras[numCameras].portnum = p;
+         dc1394_stop_iso_transmission(handles[p], camera_nodes[i]);
+         numCameras++;
       }
    }
 };
@@ -190,10 +195,11 @@ CvCapture* icvOpenCAM_DC1394( int index ){
    pcap->device_name = videodev[cameras[index].portnum];
    pcap->handle = handles[cameras[index].portnum];
    pcap->camera = &cameras[index].cam;
-
+   
    dc1394_dma_setup_capture(pcap->handle,pcap->camera->node,index+1 /*channel*/,
                 pcap->format, pcap->mode,SPEED_200, pcap->frame_rate, NUM_BUFFERS,
-                            1 /*DROP_FRAMES*/,pcap->device_name, pcap->camera);
+                            0 /* do extra buffering */, 1 /*DROP_FRAMES*/,
+                            pcap->device_name, pcap->camera);
 
    dc1394_start_iso_transmission(pcap->handle, pcap->camera->node);
 
@@ -207,7 +213,7 @@ CvCapture* icvOpenCAM_DC1394( int index ){
 static void icvCloseCAM_DC1394( CvCaptureCAM_DC1394* capture ){
    dc1394_stop_iso_transmission(capture->handle, capture->camera->node);
    /* Deallocate space for RGBA data */ 
-   cvFree(&(void *)capture->frame.imageData);
+   cvFree((void**)&capture->frame.imageData);
 };
 
 static int icvGrabFrameCAM_DC1394( CvCaptureCAM_DC1394* capture ){
@@ -237,7 +243,9 @@ static IplImage* icvRetrieveFrameCAM_DC1394( CvCaptureCAM_DC1394* capture ){
            break;
     case MODE_640x480_YUV422:
         case MODE_320x240_YUV422: 
-       yuv422_to_bgr((unsigned char *)capture->camera->capture_buffer,(unsigned char *)capture->frame.imageData,capture->frame.width,capture->frame.height); 
+       yuv422_to_bgr((unsigned char *)capture->camera->capture_buffer,
+                     (unsigned char*)capture->frame.imageData,
+                     capture->frame.width, capture->frame.height); 
        break;
         } /* switch (capture->mode) */
     dc1394_dma_done_with_buffer(capture->camera);
@@ -259,7 +267,8 @@ icvSetPropertyCAM_DC1394( CvCaptureCAM_DC1394* capture, int property_id, double 
          if (value==15) fps=FRAMERATE_15;
          if (value==30) fps=FRAMERATE_30;
          dc1394_set_video_framerate(capture->handle, capture->camera->node,fps);
-         dc1394_get_video_framerate(capture->handle, capture->camera->node,(unsigned int *) &capture->camera->frame_rate);
+         dc1394_get_video_framerate(capture->handle, capture->camera->node,
+                                    (unsigned int *) &capture->camera->frame_rate);
          break;
    }
    return 0;
@@ -269,9 +278,9 @@ icvSetPropertyCAM_DC1394( CvCaptureCAM_DC1394* capture, int property_id, double 
 PIXELFORMAT CONVERSIONS - Unoptimized
 *********************************************************************************************/
 void yuv422_to_bgr(unsigned char * src,unsigned char * dest,int w,int h) {
-/* UYVY unsigned char to BGR unsigned char */ 
-int R,G,B;
-unsigned char * pSrc, * pDest;
+   /* UYVY unsigned char to BGR unsigned char */ 
+   int R,G,B;
+   unsigned char * pSrc, * pDest;
 double YY1,YY2,U,V;
 /*
 if (useMMX) {
@@ -285,30 +294,26 @@ for (int r=0;r<h;r++) {
    pDest=dest+w*r*3;
    for (int c=w/2;c>0;c--)
       {
-         U=(*pSrc++)-128.0;
-         YY1=1.164*((*pSrc++)-16.0);
-         V=(*pSrc++)-128.0;
-         YY2=1.164*((*pSrc++)-16.0);
-         B=YY1          + 2.018*U;
-         G=YY1 - 0.813*V- 0.391*U;
-         R=YY1 + 1.596*V;
-         if (R<0) R=0;if (G<0) G=0;if (B<0) B=0;
-         if (R>255) R=255;if (G>255) G=255;if (B>255) B=255;
-         pDest[0] =(unsigned char)B ;
-         pDest[1] =(unsigned char)G ;
-         pDest[2] =(unsigned char)R ;
-         pDest+=3;
-         B=YY2          + 2.018*U;
-         G=YY2 - 0.813*V- 0.391*U;
-         R=YY2 + 1.596*V;
-         if (R<0) R=0;if (G<0) G=0;if (B<0) B=0;
-         if (R>255) R=255;if (G>255) G=255;if (B>255) B=255;
-         pDest[0] =(unsigned char)B ;
-         pDest[1] =(unsigned char)G ;
-         pDest[2] =(unsigned char)R ;
-         pDest+=3;
-         }
-   }
+         U = (*pSrc++)-128.0;
+         YY1 = 1.164*((*pSrc++)-16.0);
+         V = (*pSrc++)-128.0;
+         YY2 = 1.164*((*pSrc++)-16.0);
+         B = cvRound(YY1          + 2.018*U);
+         G = cvRound(YY1 - 0.813*V- 0.391*U);
+         R = cvRound(YY1 + 1.596*V);
+         pDest[0] = CV_CAST_8U(B);
+         pDest[1] = CV_CAST_8U(G);
+         pDest[2] = CV_CAST_8U(R);
+         pDest += 3;
+         B = cvRound(YY2          + 2.018*U);
+         G = cvRound(YY2 - 0.813*V- 0.391*U);
+         R = cvRound(YY2 + 1.596*V);
+         pDest[0] = CV_CAST_8U(B);
+         pDest[1] = CV_CAST_8U(G);
+         pDest[2] = CV_CAST_8U(R);
+         pDest += 3;
+      }
+   }      
 }
 
 #endif

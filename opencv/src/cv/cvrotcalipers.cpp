@@ -117,6 +117,8 @@ icvRotatingCalipers( CvPoint2D32f* points, int n, int mode, float* out )
     
     for( i = 0; i < n; i++ )
     {
+        double dx, dy;
+        
         if( pt0.x < left_x )
             left_x = pt0.x, left = i;
 
@@ -130,15 +132,18 @@ icvRotatingCalipers( CvPoint2D32f* points, int n, int mode, float* out )
             bottom_y = pt0.y, bottom = i;
 
         CvPoint2D32f pt = points[(i+1) & (i+1 < n ? -1 : 0)];
+        
+        dx = pt.x - pt0.x;
+        dy = pt.y - pt0.y;
 
-        vect[i].x = (float)(pt.x - pt0.x);
-        vect[i].y = (float)(pt.y - pt0.y);
-        inv_vect_length[i] = vect[i].x*vect[i].x + vect[i].y*vect[i].y;
+        vect[i].x = (float)dx;
+        vect[i].y = (float)dy;
+        inv_vect_length[i] = (float)(1./sqrt(dx*dx + dy*dy));
 
         pt0 = pt;
     }
 
-    cvbInvSqrt( inv_vect_length, inv_vect_length, n );
+    //cvbInvSqrt( inv_vect_length, inv_vect_length, n );
 
     /* find convex hull orientation */
     {
@@ -437,17 +442,17 @@ cvMinAreaRect2( const CvArr* array, CvMemStorage* storage )
         icvRotatingCalipers( points, n, CV_CALIPERS_MINAREARECT, (float*)out );
         box.center.x = out[0].x + (out[1].x + out[2].x)*0.5f;
         box.center.y = out[0].y + (out[1].y + out[2].y)*0.5f;
-        box.size.height = cvSqrt(out[1].x*out[1].x + out[1].y*out[1].y);
-        box.size.width = cvSqrt(out[2].x*out[2].x + out[2].y*out[2].y);
-        box.angle = (float)atan2( -out[1].y, out[1].x );
+        box.size.height = (float)sqrt((double)out[1].x*out[1].x + (double)out[1].y*out[1].y);
+        box.size.width = (float)sqrt((double)out[2].x*out[2].x + (double)out[2].y*out[2].y);
+        box.angle = (float)atan2( -(double)out[1].y, (double)out[1].x );
     }
     else if( n == 2 )
     {
         box.center.x = (points[0].x + points[1].x)*0.5f;
         box.center.y = (points[0].y + points[1].y)*0.5f;
-        float dx = points[1].x - points[0].x;
-        float dy = points[1].y - points[0].y;
-        box.size.height = cvSqrt(dx*dx + dy*dy);
+        double dx = points[1].x - points[0].x;
+        double dy = points[1].y - points[0].y;
+        box.size.height = (float)sqrt(dx*dx + dy*dy);
         box.size.width = 0;
         box.angle = (float)atan2( -dy, dx );
     }

@@ -13,7 +13,7 @@ SUBDIRS = cxcore cv cvaux otherlibs apps tests samples data docs
 DIST_SUBDIRS = $(SUBDIRS)
 
 # All the rest of the distributed files
-EXTRA_DIST = THANKS COPYING INSTALL README NEWS ChangeLog OpenCV.spec OpenCV.spec.in opencv.pc.in opencv.pc autogen.sh _make utils
+EXTRA_DIST = THANKS COPYING INSTALL README NEWS ChangeLog opencv.spec opencv.spec.in opencv.pc.in opencv.pc autogen.sh _make utils
 
 pkgconfigdir = $(libdir)/pkgconfig
 pkgconfig_DATA = opencv.pc
