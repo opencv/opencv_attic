@@ -39,12 +39,11 @@
 //
 //M*/
 #include "_cv.h"
-#include "_cvwrap.h"
-#include <float.h>
+#include "_cvdatastructs.h"
 
 /* The function calculates center of gravity and central second order moments */
-IPCVAPI_IMPL( CvStatus,
-icvCompleteMomentState, ( CvMoments * moments ))
+static void
+icvCompleteMomentState( CvMoments * moments )
 {
     double cx = 0, cy = 0;
     double mu20, mu11, mu02;
@@ -81,8 +80,119 @@ icvCompleteMomentState, ( CvMoments * moments ))
     moments->mu12 = moments->m12 - cy * (mu11 + cy * moments->m10) - cx * mu02;
     /* mu03 = m03 - cy*(3*mu02 + cy*m01) */
     moments->mu03 = moments->m03 - cy * (3 * mu02 + cy * moments->m01);
+}
 
-    return CV_OK;
+
+static void
+icvContourMoments( CvSeq* contour, CvMoments* moments )
+{
+    int is_float = CV_SEQ_ELTYPE(contour) == CV_32FC2;
+
+    if( contour->total )
+    {
+        CvSeqReader reader;
+        double a00, a10, a01, a20, a11, a02, a30, a21, a12, a03;
+        double xi, yi, xi2, yi2, xi_1, yi_1, xi_12, yi_12, dxy, xii_1, yii_1;
+        int lpt = contour->total;
+
+        a00 = a10 = a01 = a20 = a11 = a02 = a30 = a21 = a12 = a03 = 0;
+
+        cvStartReadSeq( contour, &reader, 0 );
+
+        if( !is_float )
+        {
+            xi_1 = ((CvPoint*)(reader.ptr))->x;
+            yi_1 = ((CvPoint*)(reader.ptr))->y;
+        }
+        else
+        {
+            xi_1 = ((CvPoint2D32f*)(reader.ptr))->x;
+            yi_1 = ((CvPoint2D32f*)(reader.ptr))->y;
+        }
+        CV_NEXT_SEQ_ELEM( contour->elem_size, reader );
+        
+        xi_12 = xi_1 * xi_1;
+        yi_12 = yi_1 * yi_1;
+
+        while( lpt-- > 0 )
+        {
+            if( !is_float )
+            {
+                xi = ((CvPoint*)(reader.ptr))->x;
+                yi = ((CvPoint*)(reader.ptr))->y;
+            }
+            else
+            {
+                xi = ((CvPoint2D32f*)(reader.ptr))->x;
+                yi = ((CvPoint2D32f*)(reader.ptr))->y;
+            }
+            CV_NEXT_SEQ_ELEM( contour->elem_size, reader );
+
+            xi2 = xi * xi;
+            yi2 = yi * yi;
+            dxy = xi_1 * yi - xi * yi_1;
+            xii_1 = xi_1 + xi;
+            yii_1 = yi_1 + yi;
+
+            a00 += dxy;
+            a10 += dxy * xii_1;
+            a01 += dxy * yii_1;
+            a20 += dxy * (xi_1 * xii_1 + xi2);
+            a11 += dxy * (xi_1 * (yii_1 + yi_1) + xi * (yii_1 + yi));
+            a02 += dxy * (yi_1 * yii_1 + yi2);
+            a30 += dxy * xii_1 * (xi_12 + xi2);
+            a03 += dxy * yii_1 * (yi_12 + yi2);
+            a21 +=
+                dxy * (xi_12 * (3 * yi_1 + yi) + 2 * xi * xi_1 * yii_1 +
+                       xi2 * (yi_1 + 3 * yi));
+            a12 +=
+                dxy * (yi_12 * (3 * xi_1 + xi) + 2 * yi * yi_1 * xii_1 +
+                       yi2 * (xi_1 + 3 * xi));
+
+            xi_1 = xi;
+            yi_1 = yi;
+            xi_12 = xi2;
+            yi_12 = yi2;
+        }
+
+        double db1_2, db1_6, db1_12, db1_24, db1_20, db1_60;
+
+        if( fabs(a00) > FLT_EPSILON )
+        {
+            if( a00 > 0 )
+            {
+                db1_2 = 0.5;
+                db1_6 = 0.16666666666666666666666666666667l;
+                db1_12 = 0.083333333333333333333333333333333;
+                db1_24 = 0.041666666666666666666666666666667;
+                db1_20 = 0.05;
+                db1_60 = 0.016666666666666666666666666666667;
+            }
+            else
+            {
+                db1_2 = -0.5;
+                db1_6 = -0.16666666666666666666666666666667l;
+                db1_12 = -0.083333333333333333333333333333333;
+                db1_24 = -0.041666666666666666666666666666667;
+                db1_20 = -0.05;
+                db1_60 = -0.016666666666666666666666666666667;
+            }
+
+            /*  spatial moments    */
+            moments->m00 = a00 * db1_2;
+            moments->m10 = a10 * db1_6;
+            moments->m01 = a01 * db1_6;
+            moments->m20 = a20 * db1_12;
+            moments->m11 = a11 * db1_24;
+            moments->m02 = a02 * db1_12;
+            moments->m30 = a30 * db1_20;
+            moments->m21 = a21 * db1_60;
+            moments->m12 = a12 * db1_60;
+            moments->m03 = a03 * db1_20;
+
+            icvCompleteMomentState( moments );
+        }
+    }
 }
 
 
@@ -240,7 +350,7 @@ CV_DEF_INIT_FUNC_TAB_2D( MomentsInTile, CnCR )
 CV_DEF_INIT_FUNC_TAB_2D( MomentsInTileBin, CnCR )
 
 CV_IMPL void
-cvMoments( const void* img, CvMoments* moments, int binary )
+cvMoments( const void* array, CvMoments* moments, int binary )
 {
     static CvFuncTable mom_tab;
     static CvFuncTable mombin_tab;
@@ -251,12 +361,22 @@ cvMoments( const void* img, CvMoments* moments, int binary )
 
     __BEGIN__;
 
-    int type, depth, cn, pix_size;
+    int type = 0, depth, cn, pix_size;
     int coi = 0;
     int x, y, k, tile_num = 1;
     CvSize size, tile_size = { 32, 32 };
-    CvMat stub, *mat = (CvMat*)img;
+    CvMat stub, *mat = (CvMat*)array;
     CvFunc2DnC_1A1P func = 0;
+    CvContour contour_header;
+    CvSeq* contour = 0;
+    CvSeqBlock block;
+
+    if( CV_IS_SEQ( array ))
+    {
+        contour = (CvSeq*)array;
+        if( !CV_IS_SEQ_POLYGON( contour ))
+            CV_ERROR( CV_StsBadArg, "The passed sequence is not a valid contour" );
+    }
 
     if( !inittab )
     {
@@ -270,16 +390,33 @@ cvMoments( const void* img, CvMoments* moments, int binary )
 
     memset( moments, 0, sizeof(*moments));
 
-    CV_CALL( mat = cvGetMat( mat, &stub, &coi ));
+    if( !contour )
+    {
+        CV_CALL( mat = cvGetMat( mat, &stub, &coi ));
+        type = CV_MAT_TYPE( mat->type );
 
-    type = CV_ARR_TYPE( mat->type );
-    depth = CV_ARR_DEPTH( type );
-    cn = CV_ARR_CN( type );
+        if( type == CV_32SC2 || type == CV_32FC2 )
+        {
+            CV_CALL( contour = icvPointSeqFromMat(
+                CV_SEQ_KIND_CURVE | CV_SEQ_FLAG_CLOSED,
+                mat, &contour_header, &block ));
+        }
+    }
+
+    if( contour )
+    {
+        icvContourMoments( contour, moments );
+        EXIT;
+    }
+
+    type = CV_MAT_TYPE( mat->type );
+    depth = CV_MAT_DEPTH( type );
+    cn = CV_MAT_CN( type );
     pix_size = icvPixSize[type];
     size = icvGetMatSize( mat );
 
-    if( CV_ARR_CN(type) > 1 && coi == 0 )
-        CV_ERROR( CV_StsBadArg, "" );
+    if( cn > 1 && coi == 0 )
+        CV_ERROR( CV_StsBadArg, "Invalid image type" );
 
     if( size.width <= 0 || size.height <= 0 )
     {

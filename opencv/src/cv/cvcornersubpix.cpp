@@ -39,7 +39,6 @@
 //
 //M*/
 #include "_cv.h"
-#include "_cvwrap.h"
 
 CV_IMPL void
 cvFindCornerSubPix( const void* srcarr, CvPoint2D32f* corners,
@@ -55,7 +54,6 @@ cvFindCornerSubPix( const void* srcarr, CvPoint2D32f* corners,
     const int MAX_ITERS = 100;
     const float drv_x[] = { -1.f, 0.f, 1.f };
     const float drv_y[] = { 0.f, 0.5f, 0.f };
-    float *buffer;
     float *maskX;
     float *maskY;
     float *mask;
@@ -73,7 +71,7 @@ cvFindCornerSubPix( const void* srcarr, CvPoint2D32f* corners,
     CvMat stub, *src = (CvMat*)srcarr;
     CV_CALL( src = cvGetMat( srcarr, &stub ));
 
-    if( CV_ARR_TYPE( src->type ) != CV_8UC1 )
+    if( CV_MAT_TYPE( src->type ) != CV_8UC1 )
         CV_ERROR( CV_StsBadMask, "" );
 
     if( !corners )
@@ -185,7 +183,7 @@ cvFindCornerSubPix( const void* srcarr, CvPoint2D32f* corners,
         do
         {
             CvPoint2D32f cI2;
-            double a, b, c, bb1, bb2, inv_dt;
+            double a, b, c, bb1, bb2;
 
             IPPI_CALL( icvGetRectSubPix_8u32f_C1R( (uchar*)src->data.ptr, src->step, size,
                                         src_buffer, (win_w + 2) * sizeof( src_buffer[0] ),
@@ -205,7 +203,7 @@ cvFindCornerSubPix( const void* srcarr, CvPoint2D32f* corners,
             /* process gradient */
             for( i = 0, k = 0; i < win_h; i++ )
             {
-                double py = cI.y + (i - win.height);
+                double py = i - win.height;
 
                 for( j = 0; j < win_w; j++, k++ )
                 {
@@ -215,7 +213,7 @@ cvFindCornerSubPix( const void* srcarr, CvPoint2D32f* corners,
                     double gxx = tgx * tgx * m;
                     double gxy = tgx * tgy * m;
                     double gyy = tgy * tgy * m;
-                    double px = cI.x + (j - win.width);
+                    double px = j - win.width;
 
                     a += gxx;
                     b += gxy;
@@ -226,42 +224,22 @@ cvFindCornerSubPix( const void* srcarr, CvPoint2D32f* corners,
                 }
             }
 
-            inv_dt = 1. / (a * c - b * b);
-
-            assert( a >= 0 && inv_dt >= 0 );
-
-            /* find new approximation */
-            cI2.x = (float) ((c * bb1 - b * bb2) * inv_dt);
-            cI2.y = (float) ((a * bb2 - b * bb1) * inv_dt);
-
-#if 1
-            /*if( line_feat ) */
             {
                 double A[4];
-                double V[4];
-                double E[2];
-                CvMat matA, matV, matE;
+                double InvA[4];
+                CvMat matA, matInvA;
 
                 A[0] = a;
                 A[1] = A[2] = b;
                 A[3] = c;
 
-                cvInitMatHeader( &matA, 2, 2, CV_64FC1, A );
-                cvInitMatHeader( &matV, 2, 2, CV_64FC1, V );
-                cvInitMatHeader( &matE, 2, 1, CV_64FC1, E );
+                cvInitMatHeader( &matA, 2, 2, CV_64F, A );
+                cvInitMatHeader( &matInvA, 2, 2, CV_64FC1, InvA );
 
-                cvSVD( &matA, &matE, &matV );
-                assert( E[0] >= E[1] );
-
-                if( E[0] > E[1] * 30 )
-                {
-                    double t = (cI.x - cI2.x) * V[2] + (cI.y - cI2.y) * V[3];
-
-                    cI2.x = (float) (cI2.x + t * V[2]);
-                    cI2.y = (float) (cI2.y + t * V[3]);
-                }
+                cvInvert( &matA, &matInvA, CV_SVD );
+                cI2.x = (float)(cI.x + InvA[0]*bb1 + InvA[1]*bb2);
+                cI2.y = (float)(cI.y + InvA[2]*bb1 + InvA[3]*bb2);
             }
-#endif
 
             err = (cI2.x - cI.x) * (cI2.x - cI.x) + (cI2.y - cI.y) * (cI2.y - cI.y);
             cI = cI2;

@@ -40,7 +40,6 @@
 //M*/
 
 #include "_cv.h"
-#include "_cvwrap.h"
 
 #define  ICV_DEF_ACC_FUNC( name, srctype, dsttype, cvtmacro )                      \
 IPCVAPI_IMPL( CvStatus,                                                            \
@@ -487,7 +486,6 @@ name,( const srctype *pSrc, int srcStep,                                       \
 
 #define  ICV_DEF_ACC_ALL( flavor, srctype, dsttype )                                   \
                                                                                        \
-ICV_DEF_ACC_FUNC( icvAdd_##flavor##_C1IR, srctype, dsttype, CV_8TO32F )                \
 ICV_DEF_ACC_FUNC( icvAddSquare_##flavor##_C1IR, srctype, dsttype, CV_8TO32F_SQR )      \
 ICV_DEF_ACCPROD_FUNC( icvAddProduct_##flavor##_C1IR, srctype, dsttype, CV_8TO32F )     \
 ICV_DEF_ACCWEIGHT_FUNC( icvAddWeighted_##flavor##_C1IR, srctype, dsttype, CV_8TO32F )  \
@@ -517,7 +515,6 @@ ICV_DEF_ACCWEIGHTMASK_FUNC( icvAddWeighted_##flavor##_C3IMR, 3, srctype, dsttype
 
 #define  ICV_DEF_ACC_ALL_FLT( flavor, srctype, dsttype )                               \
                                                                                        \
-ICV_DEF_ACC_FUNC( icvAdd_##flavor##_C1IR, srctype, dsttype, CV_NOP )                   \
 ICV_DEF_ACC_FUNC( icvAddSquare_##flavor##_C1IR, srctype, dsttype, CV_SQR )             \
 ICV_DEF_ACCPROD_FUNC( icvAddProduct_##flavor##_C1IR, srctype, dsttype, CV_NOP )        \
 ICV_DEF_ACCWEIGHT_FUNC( icvAddWeighted_##flavor##_C1IR, srctype, dsttype, CV_NOP )     \
@@ -544,10 +541,58 @@ ICV_DEF_ACCWEIGHTMASK_FUNC( icvAddWeighted_##flavor##_C3IMR, 3, srctype, dsttype
                              CV_NOP, CV_MUL, CV_DEFINE_ALPHA_MASK,                     \
                              CV_PREPARE_FLT_MASK )
 
+#define ICV_DECLARE_ACC_FUNC( flavor, srctype, dsttype )                    \
+    IPCVAPI( CvStatus, icvAdd_##flavor##_C1IR, ( const srctype*, int,       \
+                                                 dsttype*, int, CvSize ))
+
+ICV_DECLARE_ACC_FUNC( 8u64f, uchar, double )
+ICV_DECLARE_ACC_FUNC( 8s64f, char, double )
+ICV_DECLARE_ACC_FUNC( 16s32f, short, float )
+ICV_DECLARE_ACC_FUNC( 16s64f, short, double )
+ICV_DECLARE_ACC_FUNC( 32f64f, float, double )
+ICV_DECLARE_ACC_FUNC( 64f, double, double )
+
+
+ICV_DEF_ACC_FUNC( icvAdd_8u32f_C1IR, uchar, float, CV_8TO32F )
+ICV_DEF_ACC_FUNC( icvAdd_8u64f_C1IR, uchar, double, CV_8TO32F )
+ICV_DEF_ACC_FUNC( icvAdd_8s32f_C1IR, char, float, CV_8TO32F )
+ICV_DEF_ACC_FUNC( icvAdd_8s64f_C1IR, char, double, CV_8TO32F )
+ICV_DEF_ACC_FUNC( icvAdd_16s32f_C1IR, short, float, CV_8TO32F )
+ICV_DEF_ACC_FUNC( icvAdd_16s64f_C1IR, short, double, CV_8TO32F )
+ICV_DEF_ACC_FUNC( icvAdd_32f_C1IR, float, float, CV_NOP )
+ICV_DEF_ACC_FUNC( icvAdd_32f64f_C1IR, float, double, CV_NOP )
+ICV_DEF_ACC_FUNC( icvAdd_64f_C1IR, double, double, CV_NOP )
 
 ICV_DEF_ACC_ALL( 8u32f, uchar, float )
 ICV_DEF_ACC_ALL( 8s32f, char, float )
 ICV_DEF_ACC_ALL_FLT( 32f, float, float )
+
+
+void  icvInitAccTable( CvFuncTable* tabfl, CvFuncTable* tabdb,
+                       CvBigFuncTable* masktab )
+{
+    tabfl->fn_2d[CV_8U] = (void*)icvAdd_8u32f_C1IR;
+    tabfl->fn_2d[CV_8S] = (void*)icvAdd_8s32f_C1IR;
+    tabfl->fn_2d[CV_16S] = (void*)icvAdd_16s32f_C1IR;
+    tabfl->fn_2d[CV_32F] = (void*)icvAdd_32f_C1IR;
+
+    tabdb->fn_2d[CV_8U] = (void*)icvAdd_8u64f_C1IR;
+    tabdb->fn_2d[CV_8S] = (void*)icvAdd_8s64f_C1IR;
+    tabdb->fn_2d[CV_16S] = (void*)icvAdd_16s64f_C1IR;
+    tabdb->fn_2d[CV_32F] = (void*)icvAdd_32f64f_C1IR;
+    tabdb->fn_2d[CV_64F] = (void*)icvAdd_64f_C1IR;
+
+    if( masktab )
+    {
+        masktab->fn_2d[CV_8UC1] = (void*)icvAdd_8u32f_C1IMR;
+        masktab->fn_2d[CV_8SC1] = (void*)icvAdd_8s32f_C1IMR;
+        masktab->fn_2d[CV_32FC1] = (void*)icvAdd_32f_C1IMR;
+
+        masktab->fn_2d[CV_8UC3] = (void*)icvAdd_8u32f_C3IMR;
+        masktab->fn_2d[CV_8SC3] = (void*)icvAdd_8s32f_C3IMR;
+        masktab->fn_2d[CV_32FC3] = (void*)icvAdd_32f_C3IMR;
+    }
+}
 
 
 #define  ICV_DEF_INIT_ACC_TAB( FUNCNAME )                                           \
@@ -567,7 +612,6 @@ static  void  icvInit##FUNCNAME##Table( CvFuncTable* tab, CvBigFuncTable* maskta
 }
 
 
-ICV_DEF_INIT_ACC_TAB( Add )
 ICV_DEF_INIT_ACC_TAB( AddSquare )
 ICV_DEF_INIT_ACC_TAB( AddProduct )
 ICV_DEF_INIT_ACC_TAB( AddWeighted )
@@ -576,7 +620,7 @@ ICV_DEF_INIT_ACC_TAB( AddWeighted )
 CV_IMPL void
 cvAcc( const void* arr, void* sumarr, const void* maskarr )
 {
-    static CvFuncTable acc_tab;
+    static CvFuncTable acc_tab[2];
     static CvBigFuncTable accmask_tab;
     static int inittab = 0;
     
@@ -584,8 +628,7 @@ cvAcc( const void* arr, void* sumarr, const void* maskarr )
 
     __BEGIN__;
 
-    int coi1, coi2;
-    int type;
+    int type, sumdepth;
     int mat_step, sum_step, mask_step = 0;
     CvSize size;
     CvMat stub, *mat = (CvMat*)arr;
@@ -594,40 +637,44 @@ cvAcc( const void* arr, void* sumarr, const void* maskarr )
 
     if( !inittab )
     {
-        icvInitAddTable( &acc_tab, &accmask_tab );
+        icvInitAccTable( &acc_tab[0], &acc_tab[1], &accmask_tab );
         inittab = 1;
     }
 
-    CV_CALL( mat = cvGetMat( mat, &stub, &coi1 ));
-    CV_CALL( sum = cvGetMat( sum, &sumstub, &coi2 ));
-
-    if( coi1 != 0 || coi2 != 0 )
-        CV_ERROR( CV_BadCOI, "" );
+    if( !CV_IS_MAT( mat ) || !CV_IS_MAT( sum ))
+    {
+        int coi1 = 0, coi2 = 0;
+        CV_CALL( mat = cvGetMat( mat, &stub, &coi1 ));
+        CV_CALL( sum = cvGetMat( sum, &sumstub, &coi2 ));
+        if( coi1 + coi2 != 0 )
+            CV_ERROR( CV_BadCOI, "" );
+    }
 
     if( !CV_ARE_CNS_EQ( mat, sum ))
         CV_ERROR( CV_StsUnmatchedFormats, "" );
 
-    if( CV_ARR_DEPTH( sum->type ) != CV_32F )
-        CV_ERROR( CV_BadDepth, "" );
+    sumdepth = CV_MAT_DEPTH( sum->type );
+    if( sumdepth != CV_32F && (maskarr != 0 || sumdepth != CV_64F))
+        CV_ERROR( CV_BadDepth, "Bad accumulator type" );
 
     if( !CV_ARE_SIZES_EQ( mat, sum ))
         CV_ERROR( CV_StsUnmatchedSizes, "" );
 
     size = icvGetMatSize( mat );
-    type = CV_ARR_TYPE( mat->type );
+    type = CV_MAT_TYPE( mat->type );
 
     mat_step = mat->step;
     sum_step = sum->step;
 
     if( !mask )
     {
-        CvFunc2D_2A func = (CvFunc2D_2A)acc_tab.fn_2d[CV_ARR_DEPTH(type)];
+        CvFunc2D_2A func=(CvFunc2D_2A)acc_tab[sumdepth==CV_64F].fn_2d[CV_MAT_DEPTH(type)];
 
         if( !func )
-            CV_ERROR( CV_StsUnsupportedFormat, "" );
+            CV_ERROR( CV_StsUnsupportedFormat, "Unsupported type combination" );
 
-        size.width *= CV_ARR_CN(type);
-        if( CV_IS_ARR_CONT( mat->type & sum->type ))
+        size.width *= CV_MAT_CN(type);
+        if( CV_IS_MAT_CONT( mat->type & sum->type ))
         {
             size.width *= size.height;
             mat_step = sum_step = CV_STUB_STEP;
@@ -653,7 +700,7 @@ cvAcc( const void* arr, void* sumarr, const void* maskarr )
 
         mask_step = mask->step;
 
-        if( CV_IS_ARR_CONT( mat->type & sum->type & mask->type ))
+        if( CV_IS_MAT_CONT( mat->type & sum->type & mask->type ))
         {
             size.width *= size.height;
             mat_step = sum_step = mask_step = CV_STUB_STEP;
@@ -702,28 +749,28 @@ cvSquareAcc( const void* arr, void* sq_sum, const void* maskarr )
     if( !CV_ARE_CNS_EQ( mat, sum ))
         CV_ERROR( CV_StsUnmatchedFormats, "" );
 
-    if( CV_ARR_DEPTH( sum->type ) != CV_32F )
+    if( CV_MAT_DEPTH( sum->type ) != CV_32F )
         CV_ERROR( CV_BadDepth, "" );
 
     if( !CV_ARE_SIZES_EQ( mat, sum ))
         CV_ERROR( CV_StsUnmatchedSizes, "" );
 
     size = icvGetMatSize( mat );
-    type = CV_ARR_TYPE( mat->type );
+    type = CV_MAT_TYPE( mat->type );
 
     mat_step = mat->step;
     sum_step = sum->step;
 
     if( !mask )
     {
-        CvFunc2D_2A func = (CvFunc2D_2A)acc_tab.fn_2d[CV_ARR_DEPTH(type)];
+        CvFunc2D_2A func = (CvFunc2D_2A)acc_tab.fn_2d[CV_MAT_DEPTH(type)];
 
         if( !func )
             CV_ERROR( CV_StsUnsupportedFormat, "" );
 
-        size.width *= CV_ARR_CN(type);
+        size.width *= CV_MAT_CN(type);
 
-        if( CV_IS_ARR_CONT( mat->type & sum->type ))
+        if( CV_IS_MAT_CONT( mat->type & sum->type ))
         {
             size.width *= size.height;
             mat_step = sum_step = CV_STUB_STEP;;
@@ -749,7 +796,7 @@ cvSquareAcc( const void* arr, void* sq_sum, const void* maskarr )
 
         mask_step = mask->step;
 
-        if( CV_IS_ARR_CONT( mat->type & sum->type & mask->type ))
+        if( CV_IS_MAT_CONT( mat->type & sum->type & mask->type ))
         {
             size.width *= size.height;
             mat_step = sum_step = mask_step = CV_STUB_STEP;
@@ -801,14 +848,14 @@ cvMultiplyAcc( const void* arrA, const void* arrB,
     if( !CV_ARE_CNS_EQ( mat1, mat2 ) || !CV_ARE_CNS_EQ( mat1, sum ))
         CV_ERROR( CV_StsUnmatchedFormats, "" );
 
-    if( CV_ARR_DEPTH( sum->type ) != CV_32F )
+    if( CV_MAT_DEPTH( sum->type ) != CV_32F )
         CV_ERROR( CV_BadDepth, "" );
 
     if( !CV_ARE_SIZES_EQ( mat1, sum ) || !CV_ARE_SIZES_EQ( mat2, sum ))
         CV_ERROR( CV_StsUnmatchedSizes, "" );
 
     size = icvGetMatSize( mat1 );
-    type = CV_ARR_TYPE( mat1->type );
+    type = CV_MAT_TYPE( mat1->type );
 
     mat1_step = mat1->step;
     mat2_step = mat2->step;
@@ -816,14 +863,14 @@ cvMultiplyAcc( const void* arrA, const void* arrB,
 
     if( !mask )
     {
-        CvFunc2D_3A func = (CvFunc2D_3A)acc_tab.fn_2d[CV_ARR_DEPTH(type)];
+        CvFunc2D_3A func = (CvFunc2D_3A)acc_tab.fn_2d[CV_MAT_DEPTH(type)];
 
         if( !func )
             CV_ERROR( CV_StsUnsupportedFormat, "" );
 
-        size.width *= CV_ARR_CN(type);
+        size.width *= CV_MAT_CN(type);
 
-        if( CV_IS_ARR_CONT( mat1->type & mat2->type & sum->type ))
+        if( CV_IS_MAT_CONT( mat1->type & mat2->type & sum->type ))
         {
             size.width *= size.height;
             mat1_step = mat2_step = sum_step = CV_STUB_STEP;
@@ -850,7 +897,7 @@ cvMultiplyAcc( const void* arrA, const void* arrB,
 
         mask_step = mask->step;
 
-        if( CV_IS_ARR_CONT( mat1->type & mat2->type & sum->type & mask->type ))
+        if( CV_IS_MAT_CONT( mat1->type & mat2->type & sum->type & mask->type ))
         {
             size.width *= size.height;
             mat1_step = mat2_step = sum_step = mask_step = CV_STUB_STEP;
@@ -910,27 +957,27 @@ cvRunningAvg( const void* arrY, void* arrU,
     if( !CV_ARE_CNS_EQ( mat, sum ))
         CV_ERROR( CV_StsUnmatchedFormats, "" );
 
-    if( CV_ARR_DEPTH( sum->type ) != CV_32F )
+    if( CV_MAT_DEPTH( sum->type ) != CV_32F )
         CV_ERROR( CV_BadDepth, "" );
 
     if( !CV_ARE_SIZES_EQ( mat, sum ))
         CV_ERROR( CV_StsUnmatchedSizes, "" );
 
     size = icvGetMatSize( mat );
-    type = CV_ARR_TYPE( mat->type );
+    type = CV_MAT_TYPE( mat->type );
 
     mat_step = mat->step;
     sum_step = sum->step;
 
     if( !mask )
     {
-        CvAddWeightedFunc func = (CvAddWeightedFunc)acc_tab.fn_2d[CV_ARR_DEPTH(type)];
+        CvAddWeightedFunc func = (CvAddWeightedFunc)acc_tab.fn_2d[CV_MAT_DEPTH(type)];
 
         if( !func )
             CV_ERROR( CV_StsUnsupportedFormat, "" );
 
-        size.width *= CV_ARR_CN(type);
-        if( CV_IS_ARR_CONT( mat->type & sum->type ))
+        size.width *= CV_MAT_CN(type);
+        if( CV_IS_MAT_CONT( mat->type & sum->type ))
         {
             size.width *= size.height;
             mat_step = sum_step = CV_STUB_STEP;
@@ -957,7 +1004,7 @@ cvRunningAvg( const void* arrY, void* arrU,
 
         mask_step = mask->step;
 
-        if( CV_IS_ARR_CONT( mat->type & sum->type & mask->type ))
+        if( CV_IS_MAT_CONT( mat->type & sum->type & mask->type ))
         {
             size.width *= size.height;
             mat_step = sum_step = mask_step = CV_STUB_STEP;

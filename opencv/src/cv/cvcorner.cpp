@@ -299,11 +299,11 @@ int RestToSobel = roi.height;
 
     }
    
-    icvConvolFree(&stX);
-    icvConvolFree(&stY);
-    icvConvolFree(&stBX);
-    icvConvolFree(&stBY);
-    icvConvolFree(&stBXY);
+    icvFilterFree(&stX);
+    icvFilterFree(&stY);
+    icvFilterFree(&stBX);
+    icvFilterFree(&stBY);
+    icvFilterFree(&stBXY);
     return CV_NO_ERR;
 }
 
@@ -399,11 +399,11 @@ IPCVAPI_IMPL(CvStatus, icvEigenValsVecs_8s32f_C1R, ( const char* pSrc, int srcSt
 
     }
    
-    icvConvolFree(&stX);
-    icvConvolFree(&stY);
-    icvConvolFree(&stBX);
-    icvConvolFree(&stBY);
-    icvConvolFree(&stBXY);
+    icvFilterFree(&stX);
+    icvFilterFree(&stY);
+    icvFilterFree(&stBX);
+    icvFilterFree(&stBY);
+    icvFilterFree(&stBXY);
     return CV_NO_ERR;
 }
 
@@ -503,11 +503,11 @@ IPCVAPI_IMPL(CvStatus, icvEigenValsVecs_32f_C1R, ( const float* pSrc, int srcSte
 
     }
    
-    icvConvolFree(&stX);
-    icvConvolFree(&stY);
-    icvConvolFree(&stBX);
-    icvConvolFree(&stBY);
-    icvConvolFree(&stBXY);
+    icvFilterFree(&stX);
+    icvFilterFree(&stY);
+    icvFilterFree(&stBX);
+    icvFilterFree(&stBY);
+    icvFilterFree(&stBXY);
     return CV_NO_ERR;
 }
 

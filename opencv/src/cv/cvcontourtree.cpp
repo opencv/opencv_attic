@@ -39,7 +39,6 @@
 //
 //M*/
 #include "_cv.h"
-#include "_cvwrap.h"
 #include "_cvdatastructs.h"
 #include "_cvgeom.h"
 
@@ -249,7 +248,7 @@ icvCreateContourTree( CvSeq * contour, CvMemStorage * storage,
                     {
 /*   form next vertex  */
                         tree_one.pt = t;
-                        tree_one.sign = (char) (CV_SGN( s ));
+                        tree_one.sign = (char) (CV_SIGN( s ));
                         tree_one.r1 = h / a;
                         tree_one.r2 = b / a;
                         tree_one.area = fabs( s );
@@ -278,7 +277,7 @@ icvCreateContourTree( CvSeq * contour, CvMemStorage * storage,
 /*   form next vertex    */
                 {
                     tree_one.pt = t;
-                    tree_one.sign = (char) (CV_SGN( s ));
+                    tree_one.sign = (char) (CV_SIGN( s ));
                     tree_one.area = fabs( s );
                     tree_one.r1 = h / a;
                     tree_one.r2 = b / a;
@@ -407,7 +406,7 @@ icvCreateContourTree( CvSeq * contour, CvMemStorage * storage,
 /*   form child vertexs for the root     */
     {
         tree_one.pt = t;
-        tree_one.sign = (char) (CV_SGN( s ));
+        tree_one.sign = (char) (CV_SIGN( s ));
         tree_one.area = fabs( s );
         tree_one.r1 = h / a;
         tree_one.r2 = b / a;
@@ -415,7 +414,7 @@ icvCreateContourTree( CvSeq * contour, CvMemStorage * storage,
         tree_one.next_v2 = ptr2[0];
 
         tree_two.pt = tn2;
-        tree_two.sign = (char) (CV_SGN( sn2 ));
+        tree_two.sign = (char) (CV_SIGN( sn2 ));
         tree_two.area = fabs( sn2 );
         tree_two.r1 = hn2 / an2;
         tree_two.r2 = bn2 / an2;
@@ -480,7 +479,7 @@ icvCreateContourTree( CvSeq * contour, CvMemStorage * storage,
     else
     {
         tree_one.pt = tp1;
-        tree_one.sign = (char) (CV_SGN( sp1 ));
+        tree_one.sign = (char) (CV_SIGN( sp1 ));
         tree_one.area = fabs( sp1 );
         tree_one.r1 = hp1 / ap1;
         tree_one.r2 = bp1 / ap1;
@@ -488,7 +487,7 @@ icvCreateContourTree( CvSeq * contour, CvMemStorage * storage,
         tree_one.next_v2 = ptr2[3];
 
         tree_two.pt = tn1;
-        tree_two.sign = (char) (CV_SGN( sn1 ));
+        tree_two.sign = (char) (CV_SIGN( sn1 ));
         tree_two.area = fabs( sn1 );
         tree_two.r1 = hn1 / an1;
         tree_two.r2 = bn1 / an1;

@@ -39,7 +39,6 @@
 //
 //M*/
 #include "_cv.h"
-#include "_cvwrap.h"
 #include "_cvgeom.h"
 
 /*F///////////////////////////////////////////////////////////////////////////////////////
@@ -57,8 +56,8 @@
 //
 //F*/
 CV_IMPL  double
-cvMatchContours( CvSeq * contour1, CvSeq * contour2,
-                 CvContoursMatchMethod method, long /*parameter*/ )
+cvMatchContours( const void* contour1, const void* contour2,
+                 CvContoursMatchMethod method, double /*parameter*/ )
 {
     CvMoments moments;
     CvHuMoments huMoments;
@@ -68,7 +67,7 @@ cvMatchContours( CvSeq * contour1, CvSeq * contour2,
     double mmm;
     double result = 0;
 
-    CV_FUNCNAME( "cvMatchContours" );
+    CV_FUNCNAME( "cvMatchShapes" );
 
     __BEGIN__;
 
@@ -76,10 +75,10 @@ cvMatchContours( CvSeq * contour1, CvSeq * contour2,
         CV_ERROR_FROM_STATUS( CV_NULLPTR_ERR );
 
 /*   first moments calculation */
-    cvContourMoments( contour1, &moments );
+    CV_CALL( cvMoments( contour1, &moments ));
 
 /*  Hu moments calculation   */
-    cvGetHuMoments( &moments, &huMoments );
+    CV_CALL( cvGetHuMoments( &moments, &huMoments ));
 
     ma[0] = huMoments.hu1;
     ma[1] = huMoments.hu2;
@@ -91,7 +90,7 @@ cvMatchContours( CvSeq * contour1, CvSeq * contour2,
 
 
 /*   second moments calculation  */
-    CV_CALL( cvContourMoments( contour2, &moments ));
+    CV_CALL( cvMoments( contour2, &moments ));
 
 /*  Hu moments calculation   */
     CV_CALL( cvGetHuMoments( &moments, &huMoments ));
@@ -201,7 +200,6 @@ cvMatchContours( CvSeq * contour1, CvSeq * contour2,
         CV_ERROR_FROM_STATUS( CV_BADCOEF_ERR );
     }
 
-    __CLEANUP__;
     __END__;
 
     return result;
@@ -388,7 +386,6 @@ cvMatchContourTrees( CvContourTree* tree1, CvContourTree* tree2,
 
     result = match_v;
 
-    __CLEANUP__
     __END__;
 
     icvFree( &ptr_n2 );

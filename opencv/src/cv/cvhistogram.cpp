@@ -39,6216 +39,2747 @@
 //
 //M*/
 #include "_cv.h"
-#include "_cvwrap.h"
 
-#if _MSC_VER >= 1200
-#pragma warning( disable : 4201 )	/* nonstandard extension used : nameless struct/union */
-#endif
-
-#define LEFT_LEFT   ((CV_LEFT	<< 2) + CV_LEFT)
-#define RIGHT_LEFT  ((CV_RIGHT	<< 2) + CV_LEFT)
-#define LEFT_RIGHT  ((CV_LEFT	<< 2) + CV_RIGHT)
-#define RIGHT_RIGHT ((CV_RIGHT	<< 2) + CV_RIGHT)
-#define CENTER_LEFT  ((CV_CENTER  << 2) + CV_LEFT)
-#define CENTER_RIGHT ((CV_CENTER  << 2) + CV_RIGHT)
-
-typedef enum
-{
-    CV_LEFT = 0,
-    CV_RIGHT = 1,
-    CV_CENTER = 2
-}
-CvNodeDirection;
-
-/* Flags for histogram */
-typedef struct CvNode
-{
-    union
-    {
-	struct CvNode *link[2];
-	struct
-	{
-	    struct CvNode *left;
-	    struct CvNode *right;
-	}
-	u;
-    };
-    struct CvNode *up;
-    float value;
-    int64 index;
-}
-CvNode;
-
-#define _LINK(node) ((CvNode*)((long)(node) & ~3))
-#define _BALANCE(node) ((long)(node) & 3)
-#define _UP(link,balance) (CvNode*)(((long)(link) & ~3) + (balance))
-
-static CvNode *
-icvBeginIter( CvNode * root )
-{
-    if( !root )
-	return 0;
-    while( root->u.left )
-	root = root->u.left;
-    assert( !((int) root->u.left & 3) );
-    return root;
-}
-
-static CvNode *
-icvNextIter( CvNode * node )
-{
-    if( node->link[CV_RIGHT] )
-	return icvBeginIter( node->link[CV_RIGHT] );
-
-    while( _LINK( node->up ) && _LINK( node->up )->index < node->index )
-	node = _LINK( node->up );
-    return _LINK( node->up );
-}
-
-
-/*F///////////////////////////////////////////////////////////////////////////////////////
-//    Name:	  icvFillHistHeader
-//    Purpose:	  Filling histogram header (no allocate data)
-//    Context:
-//    Parameters:
-//	c_dims - number of dimensions
-//	dims   - dimensions
-//	hist   - pointer to header
-//    Returns:
-//    Notes:
-//F*/
-static CvStatus
-icvFillHistHeader( int c_dims, int *dims, CvHistType type, CvHistogram * hist )
-{
-    int i;
-    int num = 1;
-
-    if( !hist )
-	return CV_NULLPTR_ERR;
-    hist->header_size = sizeof( CvHistogram );
-    hist->type = type;
-
-    for( i = 0; i < CV_HIST_MAX_DIM; i++ )
-	hist->dims[i] = hist->mdims[i] = 0;
-    for( i = 0; i < c_dims; i++ )
-    {
-	hist->dims[i] = dims[i];
-	hist->mdims[c_dims - i - 1] = num;
-	num *= dims[c_dims - i - 1];
-    }
-
-    hist->c_dims = c_dims;
-
-    return CV_NO_ERR;
-}
-
-/*F///////////////////////////////////////////////////////////////////////////////////////
-//    Name:	  cvCreateHist
-//    Purpose:	  Creating
-//    Context:
-//    Parameters:
-//
-//    Returns:
-//    Notes:
-//F*/
+/* Creates new histogram */
 CvHistogram *
-cvCreateHist( int c_dims, int *dims, CvHistType type, float** ranges, int uniform )
+cvCreateHist( int dims, int *sizes, CvHistType type, float** ranges, int uniform )
 {
     CvHistogram *hist = 0;
 
     CV_FUNCNAME( "cvCreateHist" );
     __BEGIN__;
 
-    if( !c_dims || c_dims > CV_HIST_MAX_DIM )
-	CV_ERROR( IPL_BadOrder, "Too many dimensions" );
-    if( !dims )
-	CV_ERROR( IPL_HeaderIsNull, 0 );
+    if( (unsigned)dims > CV_MAX_DIM )
+        CV_ERROR( CV_BadOrder, "Number of dimensions is out of range" );
 
-    hist = (CvHistogram *) icvAlloc( sizeof( CvHistogram ));
-    if( !hist )
-	CV_ERROR( IPL_StsNoMem, "Out Of Memory" );
+    if( !sizes )
+        CV_ERROR( CV_HeaderIsNull, "Null <sizes> pointer" );
 
-    memset( hist, 0, sizeof( *hist ));
+    CV_CALL( hist = (CvHistogram *)cvAlloc( sizeof( CvHistogram )));
 
-    hist->flags = CV_HIST_MEMALLOCATED | CV_HIST_HEADERALLOCATED;
-
-    IPPI_CALL( icvFillHistHeader( c_dims, dims, type, hist ) );
-
+    hist->type = CV_HIST_MAGIC_VAL;
+    hist->thresh2 = 0;
+    hist->bins = 0;
     if( type == CV_HIST_ARRAY )
     {
-	hist->array = (float *) icvAlloc( (hist->mdims[0] * hist->dims[0] + 1) *
-					  sizeof( hist->array ));
-	if( !hist->array )
-	    CV_ERROR( IPL_StsNoMem, "Out Of Memory" );
+        CV_CALL( hist->bins = cvInitMatNDHeader( &hist->mat, dims, sizes,
+                                                  CV_HIST_DEFAULT_TYPE ));
+        CV_CALL( cvCreateData( hist->bins ));
+    }
+    else if( type == CV_HIST_SPARSE )
+    {
+        CV_CALL( hist->bins = cvCreateSparseMat( dims, sizes, CV_HIST_DEFAULT_TYPE ));
     }
     else
     {
-	assert( type == CV_HIST_TREE );
-	CvMemStorage *storage = cvCreateMemStorage( 0 );
-
-	hist->set = (CvSet *) cvCreateSet( 0, sizeof( CvSet ), sizeof( CvNode ), storage );
+        CV_ERROR( CV_StsBadArg, "Invalid histogram type" );
     }
 
     if( ranges )
-	cvSetHistBinRanges( hist, ranges, uniform );
+        CV_CALL( cvSetHistBinRanges( hist, ranges, uniform ));
 
-    
     __END__;
+
+    if( cvGetErrStatus() < 0 )
+        cvReleaseHist( &hist );
 
     return hist;
 }
 
 
-/*F///////////////////////////////////////////////////////////////////////////////////////
-//    Name:	  cvMakeHistHeaderForArray
-//    Purpose:	  Initializes histogram header and sets
-//		  its data pointer to given value
-//    Context:
-//    Parameters:
-//	c_dims - number of dimension in the histogram
-//	dims   - array, containing number of bins per each dimension
-//	hist   - pointer to histogram structure. It will have CV_HIST_ARRAY type.
-//	data   - histogram data
-//    Returns:
-//	CV_NO_ERR if ok, error code else
-//    Notes:
-//F*/
-CV_IMPL void
-cvMakeHistHeaderForArray( int c_dims, int *dims, CvHistogram *hist,
-			  float *data, float **ranges, int uniform )
+/* Creates histogram wrapping header for given array */
+CV_IMPL CvHistogram*
+cvMakeHistHeaderForArray( int dims, int *sizes, CvHistogram *hist,
+                          float *data, float **ranges, int uniform )
 {
+    CvHistogram* result = 0;
+    
     CV_FUNCNAME( "cvMakeHistHeaderForArray" );
+
     __BEGIN__;
 
     if( !hist )
-	CV_ERROR( IPL_HeaderIsNull, 0 );
-    if( hist->type != CV_HIST_ARRAY )
-	CV_ERROR( IPL_BadOrder, "Unsupported format" );
-    hist->array = data;
-    hist->flags = 0;
-    CV_CALL( icvFillHistHeader( c_dims, dims, CV_HIST_ARRAY, hist ));
+        CV_ERROR( CV_StsNullPtr, "Null histogram header pointer" );
+
+    if( !data )
+        CV_ERROR( CV_StsNullPtr, "Null data pointer" );
+
+    hist->thresh2 = 0;
+    hist->type = CV_HIST_MAGIC_VAL;
+    CV_CALL( hist->bins = cvInitMatNDHeader( &hist->mat, dims, sizes,
+                                             CV_HIST_DEFAULT_TYPE, data ));
 
     if( ranges )
-	cvSetHistBinRanges( hist, ranges, uniform );
+    {
+        if( !uniform )
+            CV_ERROR( CV_StsBadArg, "Only uniform bin ranges can be used here "
+                                    "(to avoid memory allocation)" );
+        CV_CALL( cvSetHistBinRanges( hist, ranges, uniform ));
+    }
 
-    
+    result = hist;
+
     __END__;
+
+    if( cvGetErrStatus() < 0 && hist )
+    {
+        hist->type = 0;
+        hist->bins = 0;
+    }
+
+    return result;
 }
 
 
-/*F///////////////////////////////////////////////////////////////////////////////////////
-//    Name:	  cvReleaseHist
-//    Purpose:	  Releases histogram header and underlying data
-//    Context:
-//    Parameters:
-//	hist - pointer to released histogram.
-//    Returns:
-//	CV_NO_ERR if ok, error code else
-//    Notes:
-//F*/
 CV_IMPL void
 cvReleaseHist( CvHistogram **hist )
 {
-    int i;
-
     CV_FUNCNAME( "cvReleaseHist" );
+    
     __BEGIN__;
 
     if( !hist )
-	CV_ERROR( IPL_HeaderIsNull, 0 );
+        CV_ERROR( CV_StsNullPtr, "" );
+
     if( *hist )
     {
-	if( (*hist)->type == CV_HIST_ARRAY )
-	{
-	    if( ((*hist)->flags & CV_HIST_MEMALLOCATED) && (*hist)->array )
-		icvFree( &(*hist)->array );
-	}
-	else if( ((*hist)->flags & CV_HIST_MEMALLOCATED) && (*hist)->set )
-	{
-	    CvMemStorage *storage = (*hist)->set->storage;
+        CvHistogram* temp = *hist;
 
-	    cvReleaseMemStorage( &storage );
-	}
+        if( !CV_IS_HIST(temp))
+            CV_ERROR( CV_StsBadArg, "Invalid histogram header" );
 
-	if( (*hist)->flags & CV_HIST_THRESHALLOCATED )
-	    for( i = 0; i < (*hist)->c_dims; i++ )
-		if( (*hist)->thresh[i] )
-		    icvFree( &(*hist)->thresh[i] );
-	if( ((*hist)->flags & CV_HIST_THRESHALLOCATED) && (*hist)->chdims[0] )
-	    icvFree( &(*hist)->chdims[0] );
-	if( (*hist)->flags & CV_HIST_HEADERALLOCATED )
-	    icvFree( hist );
+        *hist = 0;
+
+        if( CV_IS_SPARSE_HIST( temp ))
+            cvReleaseSparseMat( (CvSparseMat**)&temp->bins );
+        else
+        {
+            cvReleaseData( temp->bins );
+            temp->bins = 0;
+        }
+        
+        if( temp->thresh2 )
+            cvFree( (void**)&temp->thresh2 );
     }
 
-    
     __END__;
 }
 
 
-/*F///////////////////////////////////////////////////////////////////////////////////////
-//    Name:	icvThreshHist
-//    Purpose:	Clears histogram bins that are below specified level
-//    Context:
-//    Parameters:
-//	hist - pointer to histogram.
-//	thresh - threshold level
-//    Returns:
-//	CV_NO_ERR or error code
-//    Notes:
-//F*/
 CV_IMPL void
-cvThreshHist( CvHistogram * hist, double thresh )
+cvClearHist( CvHistogram *hist )
 {
-    int size;
-
-    CV_FUNCNAME( "cvThreshHist" );
+    CV_FUNCNAME( "cvClearHist" );
+    
     __BEGIN__;
 
-    if( !hist )
-	CV_ERROR( IPL_HeaderIsNull, 0 );
+    if( !CV_IS_HIST(hist) )
+        CV_ERROR( CV_StsBadArg, "Invalid histogram header" );
 
-    if( hist->type == CV_HIST_ARRAY )
+    cvZero( hist->bins );
+
+    __END__;
+}
+
+
+// Clears histogram bins that are below than threshold
+CV_IMPL void
+cvThreshHist( CvHistogram* hist, double thresh )
+{
+    CV_FUNCNAME( "cvThreshHist" );
+
+    __BEGIN__;
+
+    if( !CV_IS_HIST(hist) )
+        CV_ERROR( CV_StsBadArg, "Invalid histogram header" );
+
+    if( !CV_IS_SPARSE_MAT(hist->bins) )
     {
-	size = hist->dims[0] * hist->mdims[0];
-	CV_CALL( icvThresh_32f_C1R( hist->array, size * 4, hist->array, size * 4,
-				     cvSize( size, 1 ), (float)thresh, 0, CV_THRESH_TOZERO ));
+        CvMat mat;
+        CV_CALL( cvGetMat( hist->bins, &mat, 0, 1 ));
+        CV_CALL( cvThreshold( &mat, &mat, thresh, 0, CV_THRESH_TOZERO ));
     }
     else
     {
-	CvNode *node = 0;
-
-	if( !hist->set || !hist->root )
-	    return;
-	node = icvBeginIter( hist->root );
-	do
-	{
-	    if( node->value <= thresh )
-		node->value = 0;
-	}
-	while( (node = icvNextIter( node )) != 0 );
+        CvSparseMat* mat = (CvSparseMat*)hist->bins;
+        CvSparseMatIterator iterator;
+        CvSparseNode *node;
+        
+        for( node = cvInitSparseMatIterator( mat, &iterator );
+             node != 0; node = cvGetNextSparseNode( &iterator ))
+        {
+            float* val = (float*)CV_NODE_VAL( mat, node );
+            if( *val <= thresh )
+                *val = 0;
+        }
     }
     
     __END__;
 }
 
 
-/*F///////////////////////////////////////////////////////////////////////////////////////
-//    Name:	cvNormalizeHist
-//    Purpose:	Normalizes histogram (such that sum of histogram bins becomes factor)
-//    Context:
-//    Parameters:
-//	hist - pointer to normalized histogram.
-//    Returns:
-//	CV_NO_ERR or error code
-//    Notes:
-//F*/
+// Normalizes histogram (make sum of the histogram bins == factor)
 CV_IMPL void
-cvNormalizeHist( CvHistogram * hist, double factor )
+cvNormalizeHist( CvHistogram* hist, double factor )
 {
     double sum = 0;
 
     CV_FUNCNAME( "cvNormalizeHist" );
     __BEGIN__;
 
-    if( !hist )
-	CV_ERROR( IPL_HeaderIsNull, 0 );
+    if( !CV_IS_HIST(hist) )
+        CV_ERROR( CV_StsBadArg, "Invalid histogram header" );
 
-    if( hist->type == CV_HIST_ARRAY )
+    if( !CV_IS_SPARSE_HIST(hist) )
     {
-	int size = hist->dims[0] * hist->mdims[0];
-
-	sum = icvSum_32f( hist->array, size );
-
-	if( !sum )
-	    return;
-
-	CV_CALL( icvScaleVector_32f
-		 ( hist->array, hist->array, size, (float) (factor / sum) ));
+        CvMat mat;
+        CV_CALL( cvGetMat( hist->bins, &mat, 0, 1 ));
+        CV_CALL( sum = cvSum( &mat ).val[0] );
+        if( sum == 0 )
+            sum = 1;
+        CV_CALL( cvScale( &mat, &mat, factor/sum, 0 ));
     }
     else
     {
-	CvNode *node = 0;
-	CvNode *root = 0;
+        CvSparseMat* mat = (CvSparseMat*)hist->bins;
+        CvSparseMatIterator iterator;
+        CvSparseNode *node;
+        float scale;
+        
+        for( node = cvInitSparseMatIterator( mat, &iterator );
+             node != 0; node = cvGetNextSparseNode( &iterator ))
+        {
+            sum += *(float*)CV_NODE_VAL(mat,node);
+        }
 
-	sum = 0;
-	if( !hist->set || !hist->root )
-	    return;
-	node = root = icvBeginIter( hist->root );
-	do
-	{
-	    sum += node->value;
-	}
-	while( (node = icvNextIter( node )) != 0 );
+        if( sum == 0 )
+            sum = 1;
+        scale = (float)(factor/sum);
 
-	if( !sum )
-	    EXIT;
-
-	node = root;
-	factor /= sum;
-
-	do
-	{
-	    node->value = (float)(node->value*factor);
-	}
-	while( (node = icvNextIter( node )) != 0 );
+        for( node = cvInitSparseMatIterator( mat, &iterator );
+             node != 0; node = cvGetNextSparseNode( &iterator ))
+        {
+            *(float*)CV_NODE_VAL(mat,node) *= scale;
+        }
     }
 
-    
     __END__;
 }
 
-#define SET_NODE(node,left,right,_up,_value,index)  \
-    (node)->link[CV_LEFT]  = left;		    \
-    (node)->link[CV_RIGHT] = right;		    \
-    (node)->up		     = _up;		    \
-    (node)->value	     = _value;		    \
-    (node)->index	     = index;
 
-
-static CvNode *
-icvInsertNode( CvHistogram * hist, int64 index )
-{
-    CvNode *root = hist->root;
-    CvNode *node = root;
-    CvNode *last = 0;
-
-    assert( (int64) hist->dims[0] * hist->mdims[0] > index );
-
-    if( !hist->root )
-    {
-	cvSetAdd( hist->set, 0, (CvSetElem **) & hist->root );
-	SET_NODE( hist->root, 0, 0, _UP( 0, CV_CENTER ), 0, index );
-
-	return hist->root;
-    }
-
-    /* Find place where insert new element */
-    while( node && node->index != index )
-    {
-	last = node;
-	node = node->link[index > node->index];
-    }
-
-    /* if element present then return it */
-    if( node )
-	return node;
-
-    cvSetAdd( hist->set, 0, (CvSetElem **) & node );
-    SET_NODE( node, 0, 0, _UP( last, CV_CENTER ), 0, index );
-    last->link[index > last->index] = node;
-    last = node;
-    node = _LINK( node->up );
-
-    /* Rool back while not find wrong place or root node */
-    while( node )
-    {
-	int balance = _BALANCE( node->up );
-
-	assert( node );
-	switch ((balance << 2) + (index > node->index))
-	{
-	case LEFT_LEFT:
-	    assert( _BALANCE( node->u.left->up ) != CV_CENTER );
-	    if( _BALANCE( node->u.left->up ))	/* u.right balance */
-	    {
-		CvNode *a = node;
-		CvNode *b = node->u.left;
-		CvNode *c = b->u.right;
-
-		assert( a );
-		assert( b );
-		assert( c );
-		b->u.right = c->u.left;
-		a->u.left = c->u.right;
-		c->u.left = b;
-		c->u.right = a;
-		node = a->up;
-		b->up = _UP( c, (_BALANCE( c->up ) != CV_RIGHT) << 1 );
-		a->up = _UP( c, 2 - !_BALANCE( c->up ));
-		c->up = _UP( node, CV_CENTER );
-		if( a->u.left )
-		    a->u.left->up = _UP( a, _BALANCE( a->u.left->up ));
-		if( b->u.right )
-		    b->u.right->up = _UP( b, _BALANCE( b->u.right->up ));
-		if( !_LINK( c->up ))
-		    hist->root = c;
-		else
-		{
-		    node = _LINK( c->up );
-		    node->link[c->index > node->index] = c;
-		}
-	    }
-	    else		/* u.left balance */
-	    {
-		CvNode *a = node;
-		CvNode *b = node->u.left;
-
-		assert( a );
-		assert( b );
-		a->u.left = b->u.right;
-		b->u.right = a;
-		b->up = _UP( a->up, CV_CENTER );
-		a->up = _UP( b, CV_CENTER );
-		if( a->u.left )
-		    a->u.left->up = _UP( a, _BALANCE( a->u.left->up ));
-		if( !_LINK( b->up ))
-		    hist->root = b;
-		else
-		{
-		    node = _LINK( b->up );
-		    node->link[b->index > node->index] = b;
-		}
-	    }
-	    return last;
-
-	case LEFT_RIGHT:
-	case RIGHT_LEFT:
-	    node->up = _UP( node->up, CV_CENTER );
-	    return last;
-
-	case CENTER_LEFT:
-	    node->up = _UP( node->up, CV_LEFT );
-	    break;
-
-	case CENTER_RIGHT:
-	    node->up = _UP( node->up, CV_RIGHT );
-	    break;
-
-	case RIGHT_RIGHT:
-	    assert( _BALANCE( node->u.right->up ) != CV_CENTER );
-	    if( !_BALANCE( node->u.right->up )) /* u.left balance */
-	    {
-		CvNode *a = node;
-		CvNode *b = node->u.right;
-		CvNode *c = b->u.left;
-
-		assert( a );
-		assert( b );
-		assert( c );
-		a->u.right = c->u.left;
-		b->u.left = c->u.right;
-		c->u.left = a;
-		c->u.right = b;
-		node = a->up;
-		a->up = _UP( c, (_BALANCE( c->up ) != CV_RIGHT) << 1 );
-		b->up = _UP( c, 2 - !_BALANCE( c->up ));
-		c->up = _UP( node, CV_CENTER );
-		if( a->u.right )
-		    a->u.right->up = _UP( a, _BALANCE( a->u.right->up ));
-		if( b->u.left )
-		    b->u.left->up = _UP( b, _BALANCE( b->u.left->up ));
-		if( !_LINK( c->up ))
-		    hist->root = c;
-		else
-		{
-		    node = _LINK( c->up );
-		    node->link[c->index > node->index] = c;
-		}
-	    }
-	    else		/* u.right balance */
-	    {
-		CvNode *a = node;
-		CvNode *b = node->u.right;
-
-		assert( a );
-		assert( b );
-		a->u.right = b->u.left;
-		b->u.left = a;
-		b->up = _UP( a->up, CV_CENTER );
-		a->up = _UP( b, CV_CENTER );
-		if( a->u.right )
-		    a->u.right->up = _UP( a, _BALANCE( a->u.right->up ));
-		if( !_LINK( b->up ))
-		    hist->root = b;
-		else
-		{
-		    node = _LINK( b->up );
-		    node->link[b->index > node->index] = b;
-		}
-	    }
-	    return last;
-
-	default:
-	    assert( 0 );
-	    return last;
-	}
-	assert( _BALANCE( node->up ) != CV_CENTER );
-	node = _LINK( node->up );
-    }
-    return last;
-}
-
-
-/*F///////////////////////////////////////////////////////////////////////////////////////
-//    Name:	  cvGetHistValue....
-//    Purpose:	  Returns pointer to histogram bin, given its cooridinates
-//    Context:
-//    Parameters:
-//	hist - pointer to histogram.
-//	idx0 - index for the 1st dimension
-//	idx1 - index for the 2nd dimension
-//	       ...
-//	idx  - array of coordinates (for multi-dimensonal histogram).
-//	       must have hist->c_dims elements.
-//    Returns:
-//	Pointer to histogram bin
-//    Notes:
-//	For non-array histogram function creates a new element if it is not exists.
-//F*/
-CV_IMPL float*
-cvGetHistValue_1D( CvHistogram * hist, int idx0 )
-{
-    float* node = 0;
-
-    CV_FUNCNAME( "cvGetHistValue_1D" );
-    
-    __BEGIN__;
-    
-    if( !hist )
-	CV_ERROR( IPL_HeaderIsNull, 0 );
-	
-    if( hist->type == CV_HIST_ARRAY )
-	node = &hist->array[idx0];
-    else
-	node = &icvInsertNode( hist, idx0 )->value;
-    
-    __END__;
-
-    return node;
-}
-
-CV_IMPL float *
-cvGetHistValue_2D( CvHistogram * hist, int idx0, int idx1 )
-{
-    float* node = 0;
-
-    CV_FUNCNAME( "cvGetHistValue_2D" );
-    
-    __BEGIN__;
-    
-    if( !hist )
-	CV_ERROR( IPL_HeaderIsNull, 0 );
-    if( hist->type == CV_HIST_ARRAY )
-	node = &hist->array[idx0 * hist->mdims[0] + idx1];
-    else
-	node = &icvInsertNode( hist, (int64) idx0 * hist->mdims[1] + idx1 )->value;
-    
-    __END__;
-    
-    return node;
-}
-
-CV_IMPL float *
-cvGetHistValue_3D( CvHistogram * hist, int idx0, int idx1, int idx2 )
-{
-    float* node = 0;
-
-    CV_FUNCNAME( "cvGetHistValue_3D" );
-    
-    __BEGIN__;
-    
-    if( !hist )
-	CV_ERROR( IPL_HeaderIsNull, 0 );
-	
-    if( hist->type == CV_HIST_ARRAY )
-	node = &hist->array[idx0 * hist->mdims[0] + idx1 * hist->mdims[1] + idx2];
-    else
-	node = &icvInsertNode( hist, (int64) idx0 * hist->mdims[0] +
-			       idx1 * hist->mdims[1] + idx2 )->value;
-    
-    __END__;
-    
-    return node;
-}
-
-CV_IMPL float *
-cvGetHistValue_nD( CvHistogram * hist, int *idx )
-{
-    float* node = 0;
-
-    CV_FUNCNAME( "cvGetHistValue_nD" );
-    __BEGIN__;
-    int i;
-    int64 address = 0;
-
-    if( !hist )
-	CV_ERROR( IPL_HeaderIsNull, 0 );
-    if( !idx )
-	CV_ERROR( IPL_HeaderIsNull, 0 );
-    for( i = 0; i < hist->c_dims; i++ )
-	address += (int64) hist->mdims[i] * (int64) idx[i];
-    assert( address < (int64) hist->mdims[0] * (int64) hist->dims[0] );
-    if( hist->type == CV_HIST_ARRAY )
-	node = hist->array + address;
-    else
-	node = &icvInsertNode( hist, address )->value;
-    
-    __END__;
-    
-    return node;
-}
-
-
-static CvNode *
-icvFindNode( CvNode * root, int64 index )
-{
-    while( root && root->index != index )
-	root = root->link[index > root->index];
-    return root;
-}
-
-
-/*F///////////////////////////////////////////////////////////////////////////////////////
-//    Name:	  cvQueryHistValue....
-//    Purpose:	  Returns value or histogram bin, given its cooridinates
-//    Context:
-//    Parameters:
-//	hist - pointer to histogram.
-//	idx0 - index for the 1st dimension
-//	idx1 - index for the 2nd dimension
-//	       ...
-//	idx  - array of coordinates (for multi-dimensonal histogram)
-//    Returns:
-//	Value of histogram bin
-//    Notes:
-//	For non-array histogram function returns 0 if the specified element isn't present
-//F*/
-CV_IMPL float
-cvQueryHistValue_1D( CvHistogram * hist, int idx0 )
-{
-    float val = 0;
-
-    CV_FUNCNAME( "cvQueryHistValue_1D" );
-    
-    __BEGIN__;
-    
-    if( !hist )
-	CV_ERROR( IPL_HeaderIsNull, 0 );
-	
-    if( hist->type == CV_HIST_ARRAY )
-    {
-	float *res = cvGetHistValue_1D( hist, idx0 );
-
-	if( res )
-	    val = *res;
-    }
-    else
-    {
-	CvNode *node = icvFindNode( hist->root, idx0 );
-
-	if( node )
-	    val = node->value;
-    }
-    
-    __END__;
-    
-    return val;    
-}
-
-float
-cvQueryHistValue_2D( CvHistogram * hist, int idx0, int idx1 )
-{
-    float val = 0;
-
-    CV_FUNCNAME( "cvQueryHistValue_2D" );
-    __BEGIN__;
-
-    if( !hist )
-	CV_ERROR( IPL_HeaderIsNull, 0 );
-    if( hist->type == CV_HIST_ARRAY )
-    {
-	float *res = cvGetHistValue_2D( hist, idx0, idx1 );
-
-	if( res )
-	    val = *res;
-    }
-    else
-    {
-	CvNode *node = icvFindNode( hist->root, (int64) idx0 * hist->mdims[0] + idx1 );
-
-	if( node )
-	    val = node->value;
-    }
-    __END__;
-    
-    return val;
-}
-
-CV_IMPL float
-cvQueryHistValue_3D( CvHistogram * hist, int idx0, int idx1, int idx2 )
-{
-    float val = 0;
-
-    CV_FUNCNAME( "cvQueryHistValue_3D" );
-    
-    __BEGIN__;
-    
-    if( !hist )
-	CV_ERROR( IPL_HeaderIsNull, 0 );
-	
-    if( hist->type == CV_HIST_ARRAY )
-    {
-	float *res = cvGetHistValue_3D( hist, idx0, idx1, idx2 );
-
-	if( res )
-	    val = *res;
-    }
-    else
-    {
-	CvNode *node = icvFindNode( hist->root, (int64) idx0 * hist->mdims[0] +
-				    idx1 * hist->mdims[1] + idx2 );
-
-	if( node )
-	    val = node->value;
-    }
-    
-    __END__;	
-    return val;
-}
-
-CV_IMPL float
-cvQueryHistValue_nD( CvHistogram * hist, int *idx )
-{
-    float val = 0;
-
-    CV_FUNCNAME( "cvQueryHistValue_nD" );
-    __BEGIN__;
-    
-    if( !hist )
-	CV_ERROR( IPL_HeaderIsNull, 0 );
-    if( hist->type == CV_HIST_ARRAY )
-    {
-	float *res = cvGetHistValue_nD( hist, idx );
-
-	if( res )
-	    val = *res;
-    }
-    else
-    {
-	int64 address = 0;
-	int i;
-	CvNode *node = 0;
-
-	for( i = 0; i < hist->c_dims; i++ )
-	    address += hist->mdims[i] * idx[i];
-	node = icvFindNode( hist->root, address );
-	if( node )
-	    val = node->value;
-    }
-    
-    __END__;
-    return val;    
-}
-
-
-/*F///////////////////////////////////////////////////////////////////////////////////////
-//    Name:	  icvGetMinMaxHistValue
-//    Purpose:	  Finds coordinates and numerical values of minimum and maximum
-//		  histogram bins
-//    Context:
-//    Parameters:
-//	hist - pointer to histogram.
-//	idx_min - pointer to array of coordinates for minimum.
-//		  if not NULL, must have hist->c_dims elements.
-//	value_min - pointer to minimum value of histogram (can be NULL).
-//	idx_max - pointer to array of coordinates for maximum.
-//		  if not NULL, must have hist->c_dims elements.
-//	value_max - pointer to maximum value of histogram (can be NULL).
-//    Returns:
-//	CV_NO_ERR or error code
-//    Notes:
-//F*/
+// Retrieves histogram global min, max and their positions
 CV_IMPL void
-cvGetMinMaxHistValue( CvHistogram * hist, float *value_min, float* value_max,
-		      int *idx_min, int *idx_max )
+cvGetMinMaxHistValue( const CvHistogram* hist,
+                      float *value_min, float* value_max,
+                      int* idx_min, int* idx_max )
 {
-    int i;
-    int size;
+    double minVal, maxVal;
+    int dims, size[CV_MAX_DIM];
 
-    float minValue = 0, maxValue = 0;
-    CvPoint minp, maxp;
-    int64 i_min = 0, i_max = 0;
-
-    CV_FUNCNAME("cvGetMinMaxHistValue");
+    CV_FUNCNAME( "cvGetMinMaxHistValue" );
 
     __BEGIN__;
 
-    if( !hist )
-	CV_ERROR_FROM_STATUS( CV_NULLPTR_ERR );
+    if( !CV_IS_HIST(hist) )
+        CV_ERROR( CV_StsBadArg, "Invalid histogram header" );
 
-    if( hist->type == CV_HIST_ARRAY )
+    dims = cvGetDims( hist->bins, size );
+
+    if( !CV_IS_SPARSE_HIST(hist) )
     {
-	size = hist->dims[0] * hist->mdims[0];
+        CvMat mat;
+        CvPoint minPt, maxPt;
 
-	IPPI_CALL( icvMinMaxIndx_32f_C1R( hist->array, size * sizeof_float,
-					  cvSize( size, 1 ), &minValue, &maxValue,
-					  &minp, &maxp ));
-	i_min = minp.x;
-	i_max = maxp.x;
+        CV_CALL( cvGetMat( hist->bins, &mat, 0, 1 ));
+        CV_CALL( cvMinMaxLoc( &mat, &minVal, &maxVal, &minPt, &maxPt ));
+
+        if( dims == 1 )
+        {
+            if( idx_min )
+                *idx_min = minPt.y + minPt.x;
+            if( idx_max )
+                *idx_max = maxPt.y + maxPt.x;
+        }
+        else if( dims == 2 )
+        {
+            if( idx_min )
+                idx_min[0] = minPt.y, idx_min[1] = minPt.x;
+            if( idx_max )
+                idx_max[0] = maxPt.y, idx_max[1] = maxPt.x;
+        }
+        else if( idx_min || idx_max )
+        {
+            int imin = minPt.y*mat.cols + minPt.x;
+            int imax = maxPt.y*mat.cols + maxPt.x;
+            int i;
+           
+            for( i = dims - 1; i >= 0; i-- )
+            {
+                if( idx_min )
+                {
+                    int t = imin / size[i];
+                    idx_min[i] = imin - t*size[i];
+                    imin = t;
+                }
+
+                if( idx_max )
+                {
+                    int t = imax / size[i];
+                    idx_max[i] = imax - t*size[i];
+                    imax = t;
+                }
+            }
+        }
     }
     else
     {
-	CvNode *node = icvBeginIter( hist->root );
+        CvSparseMat* mat = (CvSparseMat*)hist->bins;
+        CvSparseMatIterator iterator;
+        CvSparseNode *node;
+        int minv = CV_POS_INF;
+        int maxv = CV_NEG_INF;
+        CvSparseNode* minNode = 0;
+        CvSparseNode* maxNode = 0;
 
-	if( node )
-	{
-	    minValue = maxValue = node->value;
-	    i_min = i_max = node->index;
-	    while( (node = icvNextIter( node )) != 0 )
-	    {
-		if( node->value < minValue )
-		{
-		    minValue = node->value;
-		    i_min = node->index;
-		}
-		if( node->value > maxValue )
-		{
-		    maxValue = node->value;
-		    i_max = node->index;
-		}
-	    }
-	}
+        for( node = cvInitSparseMatIterator( mat, &iterator );
+             node != 0; node = cvGetNextSparseNode( &iterator ))
+        {
+            int value = *(int*)CV_NODE_VAL(mat,node);
+            value = CV_TOGGLE_FLT(value);
+            if( value < minv )
+            {
+                minv = value;
+                minNode = node;
+            }
+
+            if( value > maxv )
+            {
+                maxv = value;
+                maxNode = node;
+            }
+        }
+
+        if( !minNode )
+        {
+            assert( !maxNode );
+            minVal = maxVal = 0;
+            if( idx_min )
+                memset( idx_min, -1, dims*sizeof(idx_min[0]));
+            if( idx_max )
+                memset( idx_max, -1, dims*sizeof(idx_max[0]));
+        }
+        else
+        {
+            assert( maxNode );
+            minv = CV_TOGGLE_FLT(minv);
+            maxv = CV_TOGGLE_FLT(maxv);
+            minVal = (float&)minv;
+            maxVal = (float&)maxv;
+            if( idx_min )
+                memcpy( idx_min, (uchar*)minNode+mat->idxoffset, dims*sizeof(idx_min[0]));
+            if( idx_max )
+                memcpy( idx_max, (uchar*)maxNode+mat->idxoffset, dims*sizeof(idx_max[0]));
+        }
     }
 
     if( value_min )
-	*value_min = minValue;
+        *value_min = (float)minVal;
+
     if( value_max )
-	*value_max = maxValue;
+        *value_max = (float)maxVal;
 
-    for( i = 0; i < hist->c_dims; i++ )
-    {
-	int _idx_min;
-	int _idx_max;
-
-	assert( hist->mdims[i] );
-
-	_idx_min = (int) (i_min / hist->mdims[i]);
-	_idx_max = (int) (i_max / hist->mdims[i]);
-
-	if( idx_min )
-	    idx_min[i] = _idx_min;
-	if( idx_max )
-	    idx_max[i] = _idx_max;
-
-	i_min -= hist->mdims[i] * _idx_min;
-	i_max -= hist->mdims[i] * _idx_max;
-    }
-
-    
     __END__;
 }
 
 
-CV_IMPL float
-cvGetMeanHistValue( CvHistogram * hist )
+// Compares two histograms using one of a few methods
+CV_IMPL double
+cvCompareHist( const CvHistogram* hist1,
+               const CvHistogram* hist2,
+               CvCompareMethod method )
 {
-    float sum = 0;
+    double _result = -1;
     
-    CV_FUNCNAME( "cvGetMeanHistValue" );
-    
+    CV_FUNCNAME( "cvCompareHist" );
+
     __BEGIN__;
+
+    int i, dims1, dims2;
+    int size1[CV_MAX_DIM], size2[CV_MAX_DIM], total = 1;
+    double result = 0;
+        
+    if( !CV_IS_HIST(hist1) || !CV_IS_HIST(hist2) )
+        CV_ERROR( CV_StsBadArg, "Invalid histogram header[s]" );
+
+    if( CV_IS_SPARSE_MAT(hist1->bins) != CV_IS_SPARSE_MAT(hist2->bins))
+        CV_ERROR(CV_StsUnmatchedFormats, "One of histograms is sparse and other is not");
+
+    CV_CALL( dims1 = cvGetDims( hist1->bins, size1 ));
+    CV_CALL( dims2 = cvGetDims( hist2->bins, size2 ));
     
-    int size;
+    if( dims1 != dims2 )
+        CV_ERROR( CV_StsUnmatchedSizes,
+                  "The histograms have different numbers of dimensions" );
 
-    if( !hist )
-	CV_ERROR( IPL_HeaderIsNull, 0 );
-
-    size = hist->mdims[0] * hist->dims[0];
-
-    if( hist->type == CV_HIST_ARRAY )
+    for( i = 0; i < dims1; i++ )
     {
-	int i;
+        if( size1[i] != size2[i] )
+            CV_ERROR( CV_StsUnmatchedSizes, "The histograms have different sizes" );
+        total *= size1[i];
+    }
 
-	for( i = 0; i < size; i++ )
-	    sum += hist->array[i];
+
+    if( !CV_IS_SPARSE_MAT(hist1->bins))
+    {
+        float *ptr1 = 0, *ptr2 = 0;
+        CV_CALL( cvGetRawData( hist1->bins, (uchar**)&ptr1 ));
+        CV_CALL( cvGetRawData( hist2->bins, (uchar**)&ptr2 ));
+
+        switch( method )
+        {
+        case CV_COMP_CHISQR:
+            for( i = 0; i < total; i++ )
+            {
+                double a = ptr1[i] - ptr2[i];
+                double b = ptr1[i] + ptr2[i];
+                if( b != 0 )
+                    result += a*a/b;
+            }
+            break;
+        case CV_COMP_CORREL:
+            {
+                double s1 = 0, s11 = 0;
+                double s2 = 0, s22 = 0;
+                double s12 = 0;
+                double num, denom2, scale = 1./total;
+                
+                for( i = 0; i < total; i++ )
+                {
+                    double a = ptr1[i];
+                    double b = ptr2[i];
+
+                    s12 += a*b;
+                    s1 += a;
+                    s11 += a*a;
+                    s2 += b;
+                    s22 += b*b;
+                }
+
+                num = s12 - s1*s2*scale;
+                denom2 = (s11 - s1*s1*scale)*(s22 - s2*s2*scale);
+                result = denom2 != 0 ? num/sqrt(denom2) : 1;
+            }
+            break;
+        case CV_COMP_INTERSECT:
+            for( i = 0; i < total; i++ )
+            {
+                float a = ptr1[i];
+                float b = ptr2[i];
+                if( a <= b )
+                    result += a;
+                else
+                    result += b;
+            }
+            break;
+        default:
+            CV_ERROR( CV_StsBadArg, "Unknown comparison method" );
+        }
     }
     else
     {
-	CvNode *node = icvBeginIter( hist->root );
+        CvSparseMat* mat1 = (CvSparseMat*)(hist1->bins);
+        CvSparseMat* mat2 = (CvSparseMat*)(hist2->bins);
+        CvSparseMatIterator iterator;
+        CvSparseNode *node1, *node2;
 
-	while( node )
-	{
-	    sum += node->value;
-	    node = icvNextIter( node );
-	}
+        if( mat1->total > mat2->total )
+        {
+            CvSparseMat* t;
+            CV_SWAP( mat1, mat2, t );
+        }
+
+        switch( method )
+        {
+        case CV_COMP_CHISQR:
+            for( node1 = cvInitSparseMatIterator( mat1, &iterator );
+                 node1 != 0; node1 = cvGetNextSparseNode( &iterator ))
+            {
+                double v1 = *(float*)CV_NODE_VAL(mat1,node1);
+                uchar* node2 = icvGetNodePtr( mat2, CV_NODE_IDX(mat1,node1),
+                                              0, 0, &node1->hashval );
+                if( !node2 )
+                    result += v1;
+                else
+                {
+                    double v2 = *(float*)node2;
+                    double a = v1 - v2;
+                    double b = v1 + v2;
+                    if( b != 0 )
+                        result += a*a/b;
+                }
+            }
+
+            for( node2 = cvInitSparseMatIterator( mat2, &iterator );
+                 node2 != 0; node2 = cvGetNextSparseNode( &iterator ))
+            {
+                double v2 = *(float*)CV_NODE_VAL(mat2,node2);
+                if( !icvGetNodePtr( mat1, CV_NODE_IDX(mat2,node2),
+                                    0, 0, &node2->hashval ))
+                {
+                    result += v2;
+                }
+            }
+            break;
+        case CV_COMP_CORREL:
+            {
+                double s1 = 0, s11 = 0;
+                double s2 = 0, s22 = 0;
+                double s12 = 0;
+                double num, denom2, scale = 1./total;
+                
+                for( node1 = cvInitSparseMatIterator( mat1, &iterator );
+                     node1 != 0; node1 = cvGetNextSparseNode( &iterator ))
+                {
+                    double v1 = *(float*)CV_NODE_VAL(mat1,node1);
+                    uchar* node2 = icvGetNodePtr( mat2, CV_NODE_IDX(mat1,node1),
+                                                  0, 0, &node1->hashval );
+                    if( node2 )
+                    {
+                        double v2 = *(float*)node2;
+                        s12 += v1*v2;
+                    }
+                    s1 += v1;
+                    s11 += v1*v1;
+                }
+
+                for( node2 = cvInitSparseMatIterator( mat2, &iterator );
+                     node2 != 0; node2 = cvGetNextSparseNode( &iterator ))
+                {
+                    double v2 = *(float*)CV_NODE_VAL(mat2,node2);
+                    s2 += v2;
+                    s22 += v2*v2;
+                }
+
+                num = s12 - s1*s2*scale;
+                denom2 = (s11 - s1*s1*scale)*(s22 - s2*s2*scale);
+                result = denom2 != 0 ? num/sqrt(denom2) : 1;
+            }
+            break;
+        case CV_COMP_INTERSECT:
+            {
+                for( node1 = cvInitSparseMatIterator( mat1, &iterator );
+                     node1 != 0; node1 = cvGetNextSparseNode( &iterator ))
+                {
+                    float v1 = *(float*)CV_NODE_VAL(mat1,node1);
+                    uchar* node2 = icvGetNodePtr( mat2, CV_NODE_IDX(mat1,node1),
+                                                  0, 0, &node1->hashval );
+                    if( node2 )
+                    {
+                        float v2 = *(float*)node2;
+                        if( v1 <= v2 )
+                            result += v1;
+                        else
+                            result += v2;
+                    }
+                }
+            }
+            break;
+        default:
+            CV_ERROR( CV_StsBadArg, "Unknown comparison method" );
+        }
     }
 
-    if( size )
-	sum /= size;
-
+    _result = result;
+    
     __END__;
-
-    return sum;
+    
+    return _result;
 }
 
-
-/*F///////////////////////////////////////////////////////////////////////////////////////
-//    Name:	cvCompareHist
-//    Purpose:	compares two histograms using specified method
-//    Context:
-//    Parameters:
-//	hist1 - first compared histogram.
-//	hist2 - second compared histogram.
-//	method - comparison method
-//    Returns:
-//	value, that characterizes similarity (or difference) of two histograms
-//    Notes:
-//F*/
-CV_IMPL double
-cvCompareHist( CvHistogram * hist1, CvHistogram * hist2, CvCompareMethod method )
-{
-    int i;
-    int size;
-    double sum = 0;
-
-    CV_FUNCNAME( "cvCompareHist" );
-    __BEGIN__;
-
-    if( !hist1 || !hist2 )
-	CV_ERROR( IPL_HeaderIsNull, 0 );
-    if( hist1->type != hist2->type )
-	CV_ERROR( IPL_BadOrder, "Types are not equals" );
-    if( hist1->c_dims != hist2->c_dims )
-	CV_ERROR( IPL_BadOrder, "Dimensions are not equals" );
-    for( i = 0; i < hist1->c_dims; i++ )
-	if( hist1->dims[i] != hist2->dims[i] )
-	    CV_ERROR( IPL_BadOrder, "Dimensions are not equals" );
-
-    size = hist1->dims[0] * hist1->mdims[0];
-
-    switch (method)
-    {
-    case CV_COMP_CHISQR:
-	if( hist1->type == CV_HIST_ARRAY )
-	{
-	    for( i = 0; i < size; i++ )
-		if( hist1->array[i] != -hist2->array[i] )
-		    sum += (hist1->array[i] - hist2->array[i]) *
-			(hist1->array[i] - hist2->array[i]) /
-			(hist1->array[i] + hist2->array[i]);
-	}
-	else
-	{
-	    CvNode *node1 = icvBeginIter( hist1->root );
-	    CvNode *node2 = icvBeginIter( hist2->root );
-
-	    while( node1 || node2 )
-	    {
-		if( node1 && node2 )
-		{
-		    if( node1->index > node2->index )
-		    {
-			sum += node2->value;
-			node2 = icvNextIter( node2 );
-		    }
-		    else if( node1->index < node2->index )
-		    {
-			sum += node1->value;
-			node1 = icvNextIter( node1 );
-		    }
-		    else
-		    {
-			if( node1->value != -node2->value )
-			    sum += (node1->value - node2->value) *
-				(node1->value - node2->value) / (node1->value + node2->value);
-			node1 = icvNextIter( node1 );
-			node2 = icvNextIter( node2 );
-		    }
-		}
-		else if( node1 )
-		{
-		    sum += node1->value;
-		    node1 = icvNextIter( node1 );
-		}
-		else
-		{
-		    sum += node2->value;
-		    node2 = icvNextIter( node2 );
-		}
-	    }
-	}
-	break;
-
-    case CV_COMP_CORREL:
-	if( hist1->type == CV_HIST_ARRAY )
-	{
-	    double sum1 = 0, sum2 = 0, sum3 = 0;
-	    double v1, v2;
-	    float mean1 = cvGetMeanHistValue( hist1 );
-	    float mean2 = cvGetMeanHistValue( hist2 );
-
-	    for( i = 0; i < size; i++ )
-	    {
-		v1 = hist1->array[i] - mean1;
-		v2 = hist2->array[i] - mean2;
-
-		sum1 += v1 * v2;
-		sum2 += v1 * v1;
-		sum3 += v2 * v2;
-	    }
-
-	    assert( sum2 >= 0 && sum3 >= 0 );
-	    sum2 *= sum3;
-
-	    sum = sum2 == 0 ? 1 : sum1 / sqrt( sum2 );
-	}
-	else
-	{
-	    float mean1 = cvGetMeanHistValue( hist1 );
-	    float mean2 = cvGetMeanHistValue( hist2 );
-	    CvNode *node1 = icvBeginIter( hist1->root );
-	    CvNode *node2 = icvBeginIter( hist2->root );
-	    double sum1 = 0, sum2 = 0, sum3 = 0;
-	    double v1, v2;
-
-	    while( node1 || node2 )
-	    {
-		if( node1 && node2 )
-		{
-		    if( node1->index > node2->index )
-			node2 = icvNextIter( node2 );
-		    else if( node1->index < node2->index )
-			node1 = icvNextIter( node1 );
-		    else
-		    {
-			v1 = node1->value - mean1;
-			v2 = node2->value - mean2;
-
-			sum1 += v1 * v2;
-			sum2 += v1 * v1;
-			sum3 += v2 * v2;
-
-			node1 = icvNextIter( node1 );
-			node2 = icvNextIter( node2 );
-		    }
-		}
-		else if( node1 )
-		    node1 = icvNextIter( node1 );
-		else
-		    node2 = icvNextIter( node2 );
-	    }
-
-	    assert( sum2 >= 0 && sum3 >= 0 );
-	    sum2 *= sum3;
-
-	    sum = sum2 == 0 ? 1 : sum1 / sqrt( sum2 );
-	}
-	break;
-
-    case CV_COMP_INTERSECT:
-	if( hist1->type == CV_HIST_ARRAY )
-	{
-	    for( i = 0; i < size; i++ )
-		sum += MIN( hist1->array[i], hist2->array[i] );
-	}
-	else
-	{
-	    CvNode *node1 = icvBeginIter( hist1->root );
-	    CvNode *node2 = icvBeginIter( hist2->root );
-
-	    while( node1 || node2 )
-	    {
-		if( node1 && node2 )
-		{
-		    if( node1->index > node2->index )
-		    {
-			sum += MIN( node2->value, 0 );
-			node2 = icvNextIter( node2 );
-		    }
-		    else if( node1->index < node2->index )
-		    {
-			sum += MIN( node1->value, 0 );
-			node1 = icvNextIter( node1 );
-		    }
-		    else
-		    {
-			sum += MIN( node1->value, node2->value );
-			node1 = icvNextIter( node1 );
-			node2 = icvNextIter( node2 );
-		    }
-		}
-		else if( node1 )
-		{
-		    sum += MIN( node1->value, 0 );
-		    node1 = icvNextIter( node1 );
-		}
-		else
-		{
-		    sum += MIN( node2->value, 0 );
-		    node2 = icvNextIter( node2 );
-		}
-	    }
-	}
-	break;
-
-    default:
-	sum = DBL_MAX;
-	CV_ERROR( IPL_BadOrder, "Wrong method" );
-    }
-
-    __END__;
-
-    return sum;
-}
-
-
-/*F///////////////////////////////////////////////////////////////////////////////////////
-//    Name:	  cvCopyHist
-//    Purpose:	  Copying one histogram to another
-//    Context:
-//    Parameters:
-//    Returns:
-//    Notes:	  if second parameter is pointer to NULL (*dst == 0) then second
-//		  histogram will be created.
-//		  both histograms (if second histogram present) must be equal
-//		  types & sizes
-//F*/
+// copies one histogram to another
 CV_IMPL void
-cvCopyHist( CvHistogram * src, CvHistogram ** dst )
+cvCopyHist( const CvHistogram* src, CvHistogram** _dst )
 {
     CV_FUNCNAME( "cvCopyHist" );
+
     __BEGIN__;
 
-    CvHistogram *_dst;
-    int i;
-    int size;
+    int eq = 0;
+    int is_sparse;
+    int i, dims1, dims2;
+    int size1[CV_MAX_DIM], size2[CV_MAX_DIM], total = 1;
+    float* ranges[CV_MAX_DIM];
+    float** thresh = 0;
+    CvHistogram* dst;
+    
+    if( !_dst )
+        CV_ERROR( CV_StsNullPtr, "Destination double pointer is NULL" );
 
-    if( !src || !dst )
-	CV_ERROR( IPL_HeaderIsNull, 0 );
+    dst = *_dst;
 
-    if( !*dst )
-	*dst = _dst = cvCreateHist( src->c_dims, src->dims, src->type );
-    else
+    if( !CV_IS_HIST(src) || (dst && !CV_IS_HIST(dst)) )
+        CV_ERROR( CV_StsBadArg, "Invalid histogram header[s]" );
+
+    is_sparse = CV_IS_SPARSE_MAT(src->bins);
+    CV_CALL( dims1 = cvGetDims( src->bins, size1 ));
+    for( i = 0; i < dims1; i++ )
+        total *= size1[i];
+
+    if( dst && is_sparse == CV_IS_SPARSE_MAT(dst->bins))
     {
-	_dst = *dst;
-	if( src->type != _dst->type )
-	    CV_ERROR( IPL_BadOrder, "Types are not equal" );
-	if( src->c_dims != _dst->c_dims )
-	    CV_ERROR( IPL_BadOrder, "Dimensions are not equal" );
-	for( i = 0; i < src->c_dims; i++ )
-	    if( src->dims[i] != _dst->dims[i] )
-		CV_ERROR( IPL_BadOrder, "Dimensions are not equal" );
+        CV_CALL( dims2 = cvGetDims( dst->bins, size2 ));
+    
+        if( dims1 == dims2 )
+        {
+            for( i = 0; i < dims1; i++ )
+                if( size1[i] != size2[i] )
+                    break;
+        }
+
+        eq = i == dims1;
     }
 
-    if( src->flags & CV_HIST_THRESHALLOCATED )
+    if( !eq )
     {
-	if( !_dst->thresh[0] )
-	{
-	    for( i = 0; i < _dst->c_dims; i++ )
-		_dst->thresh[i] = (float *) icvAlloc( (_dst->dims[i] + 1) * sizeof( float ));
-
-	    _dst->flags |= CV_HIST_THRESHALLOCATED;
-	}
-	for( i = 0; i < _dst->c_dims; i++ )
-	    icvCopyVector( src->thresh[i], _dst->thresh[i], src->dims[i] + 1 );
-	_dst->flags |= src->flags & CV_HIST_UNIFORM;
+        cvReleaseHist( _dst );
+        CV_CALL( dst = cvCreateHist( dims1, size1,
+                 !is_sparse ? CV_HIST_ARRAY : CV_HIST_SPARSE, 0, 0 ));
+        *_dst = dst;
     }
 
-    size = src->mdims[0] * src->dims[0];
-    if( src->type == CV_HIST_ARRAY )
-	icvCopyVector( src->array, _dst->array, size );
-    else
+    if( CV_HIST_HAS_RANGES( src ))
     {
-	CvNode *node = icvBeginIter( src->root );
-
-	if( _dst->set )
-	    cvClearSet( _dst->set );
-
-	while( node )
-	{
-	    icvInsertNode( _dst, node->index )->value = node->value;
-	    node = icvNextIter( node );
-	}
+        if( CV_IS_UNIFORM_HIST( src ))
+        {
+            for( i = 0; i < dims1; i++ )
+                ranges[i] = (float*)src->thresh[i];
+            thresh = ranges;
+        }
+        else
+            thresh = src->thresh2;
+        CV_CALL( cvSetHistBinRanges( dst, thresh, CV_IS_UNIFORM_HIST(src)));
     }
 
-    if( src->chdims[0] )
-    {
-	if( _dst->chdims[0] )
-	    icvFree( &_dst->chdims[0] );
-	_dst->chdims[0] = (int *) icvAlloc( (128 + 256) * sizeof( int ) * _dst->c_dims );
-
-	for( i = 1; i < _dst->c_dims; i++ )
-	    _dst->chdims[i] = _dst->chdims[i - 1] + (128 + 256);
-	icvCopyVector_32f( (float *) src->chdims[0], (128 + 256) * _dst->c_dims,
-			    (float *) _dst->chdims[0] );
-    }
+    CV_CALL( cvCopy( src->bins, dst->bins ));
     
     __END__;
 }
 
 
-/*F///////////////////////////////////////////////////////////////////////////////////////
-//    Name:	  cvSetHistBinRanges
-//    Purpose:	  Setting threshold values to histogram
-//    Context:
-//    Parameters:
-//    Returns:
-//    Notes:	  if even parameter is not NULL then thresh[i][0] - minimum value,
-//		  thresh[i][1] - maximum value of thresholds for dimension i
-//F*/
+// Sets a value range for every histogram bin
 CV_IMPL void
 cvSetHistBinRanges( CvHistogram* hist, float** ranges, int uniform )
 {
-    int i, j, k;
-
     CV_FUNCNAME( "cvSetHistBinRanges" );
+    
     __BEGIN__;
 
-    if( !hist || !ranges )
-	CV_ERROR( IPL_HeaderIsNull, 0 );
-
-    for( i = 0; i < hist->c_dims; i++ )
-	if( !ranges[i] )
-	    CV_ERROR( IPL_HeaderIsNull, 0 );
-
-    hist->flags |= CV_HIST_THRESHALLOCATED;
-
-    if( !uniform )
-    {
-	for( i = 0; i < hist->c_dims; i++ )
-	{
-	    if( !hist->thresh[i] )
-		hist->thresh[i] =
-		    (float *) icvAlloc( (hist->dims[i] + 1) * sizeof( **hist->thresh ));
-	    for( j = 0; j <= hist->dims[i]; j++ )
-		hist->thresh[i][j] = ranges[i][j];
-	}
-	hist->flags &= ~CV_HIST_UNIFORM;
-    }
-    else
-    {
-	for( i = 0; i < hist->c_dims; i++ )
-	{
-	    float step = (ranges[i][1] - ranges[i][0]) / (hist->dims[i]);
-
-	    if( !hist->thresh[i] )
-		hist->thresh[i] =
-		    (float *) icvAlloc( (hist->dims[i] + 1) * sizeof( **hist->thresh ));
-	    hist->thresh[i][0] = ranges[i][0];
-	    hist->thresh[i][hist->dims[i]] = ranges[i][1];
-	    for( j = 1; j < hist->dims[i]; j++ )
-		hist->thresh[i][j] = step * j + ranges[i][0];
-	}
-	hist->flags |= CV_HIST_UNIFORM;
-    }
-
-    if( hist->chdims[0] )
-	icvFree( &hist->chdims[0] );
-    hist->chdims[0] = (int *) icvAlloc( (128 + 256) * sizeof( int ) * hist->c_dims );
-
-    for( i = 1; i < hist->c_dims; i++ )
-	hist->chdims[i] = hist->chdims[i - 1] + (128 + 256);
-
-    for( k = -128; k < 256; k++ )
-	for( i = 0; i < hist->c_dims; i++ )
-	{
-	    if( k < hist->thresh[i][0] || k >= hist->thresh[i][hist->dims[i]] )
-		hist->chdims[i][k + 128] =
-		    hist->c_dims == 1 ? hist->dims[0] :
-		    hist->c_dims == 2 && i == 0 ? (hist->dims[1] + 1) * hist->dims[0] :
-		    hist->c_dims == 2 && i == 1 ? hist->dims[1] : -1;
-	    else
-	    {
-		for( j = 1; j < hist->dims[i]; j++ )
-		    if( k < hist->thresh[i][j] )
-			break;
-		hist->chdims[i][k + 128] =
-		    (hist->c_dims == 2 && i == 0) ? (hist->mdims[0] + 1) * (j - 1) :
-		    (hist->c_dims == 2 && i == 1) ? (j - 1) : (j - 1) * hist->mdims[i];
-	    }
-	}
-
-    
-    __END__;
-}
-
-
-/*F///////////////////////////////////////////////////////////////////////////////////////
-//    Name:	  icvCalcHist...C1R
-//    Purpose:	  Calculating histogram from array of one-channel images
-//    Context:
-//    Parameters:
-//    Returns:
-//    Notes:	  if dont_clear parameter is NULL then histogram clearing before
-//		  calculating (all values sets to NULL)
-//F*/
-IPCVAPI_IMPL( CvStatus, icvCalcHist8uC1R, (uchar ** img, int step, CvSize size,
-					   CvHistogram * hist, int dont_clear) )
-{
-    int i, j, x = 0, y = 0;
-    int dims;
-
-    if( !hist || !img )
-	return CV_NULLPTR_ERR;
-
-    dims = hist->c_dims;
-
-    for( i = 0; i < dims; i++ )
-	if( !img[i] )
-	    return CV_NULLPTR_ERR;
-
-    for( i = 0; i < hist->c_dims; i++ )
-    {
-	if( !hist->thresh[i] )
-	    return CV_NULLPTR_ERR;
-	assert( hist->chdims[i] );
-    }
-
-    j = hist->dims[0] * hist->mdims[0];
-
-    if( hist->type == CV_HIST_ARRAY )
-    {
-	if( !dont_clear )
-	    for( i = 0; i < j; i++ )
-		hist->array[i] = 0;
-
-	switch (hist->c_dims)
-	{
-	case 1:
-	    {
-		uchar *data0 = img[0];
-		int *array = (int *) hist->array;
-		int *chdims = hist->chdims[0];
-
-		for( i = 0; i < j; i++ )
-		    array[i] = cvRound( hist->array[i] );
-
-		for( y = 0; y < size.height; y++, data0 += step )
-		{
-		    for( x = 0; x <= size.width - 4; x += 4 )
-		    {
-			int val0 = chdims[data0[x] + 128];
-			int val1 = chdims[data0[x + 1] + 128];
-
-			array[val0]++;
-			array[val1]++;
-			val0 = chdims[data0[x + 2] + 128];
-			val1 = chdims[data0[x + 3] + 128];
-			array[val0]++;
-			array[val1]++;
-		    }
-		    for( ; x < size.width; x++ )
-			array[chdims[data0[x] + 128]]++;
-		}
-		for( i = 0; i < j; i++ )
-		    hist->array[i] = (float) array[i];
-	    }
-	    break;
-	case 2:
-	    if( (hist->dims[1] + 1) * (hist->dims[0] + 1) < 4096 )
-	    {
-		uchar *data0 = img[0];
-		uchar *data1 = img[1];
-		int hstep = hist->dims[1] + 1;
-		int array[4096];
-		int chdims0[256];
-		int chdims1[256];
-
-		memcpy( chdims0, hist->chdims[0] + 128, 256 * sizeof( int ));
-		memcpy( chdims1, hist->chdims[1] + 128, 256 * sizeof( int ));
-
-		memset( array, 0, hstep * (hist->mdims[0] + 1) * sizeof( *array ));
-
-		for( y = 0; y < size.height; y++, data0 += step, data1 += step )
-		{
-		    for( x = 0; x < size.width - 2; x += 2 )
-		    {
-			int val0 = chdims0[data0[x]];
-			int val1 = chdims1[data1[x]];
-
-			array[val0 + val1]++;
-			val0 = chdims0[data0[x + 1]];
-			val1 = chdims1[data1[x + 1]];
-			array[val0 + val1]++;
-		    }
-		    for( ; x < size.width; x++ )
-		    {
-			int val0 = chdims0[data0[x]];
-			int val1 = chdims1[data1[x]];
-
-			array[val0 + val1]++;
-		    }
-		}
-		for( y = 0, i = 0; y < hist->dims[0]; y++ )
-		    for( x = 0; x < hist->dims[1]; x++, i++ )
-			hist->array[i] += (float) array[y * hstep + x];
-	    }
-	    else
-	    {
-		uchar *data0 = img[0];
-		uchar *data1 = img[1];
-		int hstep = hist->dims[1] + 1;
-		int *array =
-		    (int *) icvAlloc( (hist->dims[1] + 1) * (hist->dims[0] + 1) *
-
-				      sizeof( *array ));
-		int chdims0[256];
-		int chdims1[256];
-
-		memcpy( chdims0, hist->chdims[0] + 128, 256 * sizeof( int ));
-		memcpy( chdims1, hist->chdims[1] + 128, 256 * sizeof( int ));
-
-		memset( array, 0, hstep * (hist->mdims[0] + 1) * sizeof( *array ));
-
-		for( y = 0; y < size.height; y++, data0 += step, data1 += step )
-		{
-		    for( x = 0; x < size.width - 2; x += 2 )
-		    {
-			int val0 = chdims0[data0[x]];
-			int val1 = chdims1[data1[x]];
-
-			array[val0 + val1]++;
-			val0 = chdims0[data0[x + 1]];
-			val1 = chdims1[data1[x + 1]];
-			array[val0 + val1]++;
-		    }
-		    for( ; x < size.width; x++ )
-		    {
-			int val0 = chdims0[data0[x]];
-			int val1 = chdims1[data1[x]];
-
-			array[val0 + val1]++;
-		    }
-		}
-		for( y = 0, i = 0; y < hist->dims[0]; y++ )
-		    for( x = 0; x < hist->dims[1]; x++, i++ )
-			hist->array[i] += (float) array[y * hstep + x];
-		icvFree( &array );
-	    }
-	    break;
-	case 3:
-	    {
-		uchar *data0 = img[0];
-		uchar *data1 = img[1];
-		uchar *data2 = img[2];
-
-		for( y = 0; y < size.height; y++, data0 += step, data1 += step, data2 += step )
-		    for( x = 0; x < size.width; x++ )
-		    {
-			int val0 = hist->chdims[0][(int) data0[x] + 128];
-			int val1 = hist->chdims[1][(int) data1[x] + 128];
-			int val2 = hist->chdims[2][(int) data2[x] + 128];
-
-			if( (val0 | val1 | val2) >= 0 )
-			    hist->array[val0 + val1 + val2]++;
-		    }
-	    }
-	    break;
-	default:
-	    {
-		uchar *data[CV_HIST_MAX_DIM];
-
-		for( i = 0; i < hist->c_dims; i++ )
-		    data[i] = img[i];
-
-		for( y = 0; y < size.height; y++ )
-		{
-		    for( x = 0; x < size.width; x++ )
-		    {
-			int addr = 0;
-
-			for( i = 0; i < hist->c_dims; i++ )
-			{
-			    int val = hist->chdims[i][(int) data[i][x] + 128];
-
-			    if( val >= 0 )
-				addr += val;
-			    else
-				goto next;
-			}
-			hist->array[addr]++;
-		      next:;
-		    }
-		    for( i = 0; i < hist->c_dims; i++ )
-			data[i] += step;
-		}
-	    }
-	    break;
-	}
-    }
-    else
-    {
-	if( !dont_clear && hist->set )
-	{
-	    cvClearSet( hist->set );
-	    hist->root = 0;
-	}
-
-	switch (hist->c_dims)
-	{
-	case 1:
-	    {
-		uchar *data0 = img[0];
-		int *array = (int *) icvAlloc( j * sizeof( *array ));
-		int *chdims = hist->chdims[0];
-
-		memset( array, 0, j * sizeof( *array ));
-
-		for( y = 0; y < size.height; y++, data0 += step )
-		{
-		    for( x = 0; x <= size.width - 4; x += 4 )
-		    {
-			int val0 = chdims[data0[x] + 128];
-			int val1 = chdims[data0[x + 1] + 128];
-
-			array[val0]++;
-			array[val1]++;
-			val0 = chdims[data0[x + 2] + 128];
-			val1 = chdims[data0[x + 3] + 128];
-			array[val0]++;
-			array[val1]++;
-		    }
-		    for( ; x < size.width; x++ )
-			array[chdims[data0[x] + 128]]++;
-		}
-		for( i = 0; i < j; i++ )
-		    if( array[i] )
-			icvInsertNode( hist, i )->value += (float) array[i];
-		icvFree( &array );
-	    }
-	    break;
-	case 2:
-	    if( (hist->dims[1] + 1) * (hist->dims[0] + 1) < 4096 )
-	    {
-		uchar *data0 = img[0];
-		uchar *data1 = img[1];
-		int hstep = hist->dims[1] + 1;
-		int array[4096];
-		int chdims0[256];
-		int chdims1[256];
-
-		memcpy( chdims0, hist->chdims[0] + 128, 256 * sizeof( int ));
-		memcpy( chdims1, hist->chdims[1] + 128, 256 * sizeof( int ));
-
-		memset( array, 0, hstep * (hist->mdims[0] + 1) * sizeof( *array ));
-
-		for( y = 0; y < size.height; y++, data0 += step, data1 += step )
-		{
-		    for( x = 0; x < size.width - 2; x += 2 )
-		    {
-			int val0 = chdims0[data0[x]];
-			int val1 = chdims1[data1[x]];
-
-			array[val0 + val1]++;
-			val0 = chdims0[data0[x + 1]];
-			val1 = chdims1[data1[x + 1]];
-			array[val0 + val1]++;
-		    }
-		    for( ; x < size.width; x++ )
-		    {
-			int val0 = chdims0[data0[x]];
-			int val1 = chdims1[data1[x]];
-
-			array[val0 + val1]++;
-		    }
-		}
-		for( y = 0, i = 0; y < hist->dims[0]; y++ )
-		    for( x = 0; x < hist->dims[1]; x++, i++ )
-		    {
-			float val = (float) array[y * hstep + x];
-
-			if( val )
-			    icvInsertNode( hist, i )->value += val;
-		    }
-	    }
-	    else
-	    {
-		uchar *data0 = img[0];
-		uchar *data1 = img[1];
-		int hstep = hist->dims[1] + 1;
-		int *array =
-		    (int *) icvAlloc( (hist->dims[1] + 1) * (hist->dims[0] + 1) *
-
-				      sizeof( *array ));
-		int chdims0[256];
-		int chdims1[256];
-
-		memcpy( chdims0, hist->chdims[0] + 128, 256 * sizeof( int ));
-		memcpy( chdims1, hist->chdims[1] + 128, 256 * sizeof( int ));
-
-		memset( array, 0, hstep * (hist->mdims[0] + 1) * sizeof( *array ));
-
-		for( y = 0; y < size.height; y++, data0 += step, data1 += step )
-		{
-		    for( x = 0; x < size.width - 2; x += 2 )
-		    {
-			int val0 = chdims0[data0[x]];
-			int val1 = chdims1[data1[x]];
-
-			array[val0 + val1]++;
-			val0 = chdims0[data0[x + 1]];
-			val1 = chdims1[data1[x + 1]];
-			array[val0 + val1]++;
-		    }
-		    for( ; x < size.width; x++ )
-		    {
-			int val0 = chdims0[data0[x]];
-			int val1 = chdims1[data1[x]];
-
-			array[val0 + val1]++;
-		    }
-		}
-		for( y = 0, i = 0; y < hist->dims[0]; y++ )
-		    for( x = 0; x < hist->dims[1]; x++, i++ )
-		    {
-			float val = (float) array[y * hstep + x];
-
-			if( val )
-			    icvInsertNode( hist, i )->value += val;
-		    }
-		icvFree( &array );
-	    }
-	    break;
-	case 3:
-	    {
-		uchar *data0 = img[0];
-		uchar *data1 = img[1];
-		uchar *data2 = img[2];
-
-		for( y = 0; y < size.height; y++, data0 += step, data1 += step, data2 += step )
-		    for( x = 0; x < size.width; x++ )
-		    {
-			int val0 = hist->chdims[0][(int) data0[x] + 128];
-			int val1 = hist->chdims[1][(int) data1[x] + 128];
-			int val2 = hist->chdims[2][(int) data2[x] + 128];
-
-			if( (val0 | val1 | val2) >= 0 )
-			    icvInsertNode( hist, (int64) val0 + val1 + val2 )->value++;
-		    }
-	    }
-	    break;
-	default:
-	    {
-		uchar *data[CV_HIST_MAX_DIM];
-
-		for( i = 0; i < hist->c_dims; i++ )
-		    data[i] = img[i];
-
-		for( y = 0; y < size.height; y++ )
-		{
-		    for( x = 0; x < size.width; x++ )
-		    {
-			int64 addr = 0;
-
-			for( i = 0; i < hist->c_dims; i++ )
-			{
-			    int val = hist->chdims[i][(int) data[i][x] + 128];
-
-			    if( val >= 0 )
-				addr += val;
-			    else
-				goto next_tree;
-			}
-			icvInsertNode( hist, addr )->value++;
-		      next_tree:;
-		    }
-		    for( i = 0; i < hist->c_dims; i++ )
-			data[i] += step;
-		}
-	    }
-	    break;
-	}
-    }
-
-    return CV_NO_ERR;
-}
-
-/*F///////////////////////////////////////////////////////////////////////////////////////
-//    Name:	  icvCalcHist...C1R
-//    Purpose:	  Calculating histogram from array of one-channel images
-//    Context:
-//    Parameters:
-//    Returns:
-//    Notes:	  if dont_clear parameter is NULL then histogram clearing before
-//		  calculating (all values sets to NULL)
-//F*/
-IPCVAPI_IMPL( CvStatus, icvCalcHist8sC1R, (char **img, int step, CvSize size,
-					   CvHistogram * hist, int dont_clear) )
-{
-    int i, j, x = 0, y = 0;
-    int dims;
-
-    if( !hist || !img )
-	return CV_NULLPTR_ERR;
-
-    dims = hist->c_dims;
-
-    for( i = 0; i < dims; i++ )
-	if( !img[i] )
-	    return CV_NULLPTR_ERR;
-
-    for( i = 0; i < hist->c_dims; i++ )
-    {
-	if( !hist->thresh[i] )
-	    return CV_NULLPTR_ERR;
-	assert( hist->chdims[i] );
-    }
-
-    j = hist->dims[0] * hist->mdims[0];
-    if( hist->type == CV_HIST_ARRAY )
-    {
-	if( !dont_clear )
-	    for( i = 0; i < j; i++ )
-		hist->array[i] = 0;
-
-	switch (hist->c_dims)
-	{
-	case 1:
-	    {
-		char *data0 = img[0];
-		int *array = (int *) hist->array;
-		int *chdims = hist->chdims[0];
-
-		for( i = 0; i < j; i++ )
-		    array[i] = cvRound( hist->array[i] );
-
-		for( y = 0; y < size.height; y++, data0 += step )
-		{
-		    for( x = 0; x <= size.width - 4; x += 4 )
-		    {
-			int val0 = chdims[data0[x] + 128];
-			int val1 = chdims[data0[x + 1] + 128];
-
-			array[val0]++;
-			array[val1]++;
-			val0 = chdims[data0[x + 2] + 128];
-			val1 = chdims[data0[x + 3] + 128];
-			array[val0]++;
-			array[val1]++;
-		    }
-		    for( ; x < size.width; x++ )
-			array[chdims[data0[x] + 128]]++;
-		}
-		for( i = 0; i < j; i++ )
-		    hist->array[i] = (float) array[i];
-	    }
-	    break;
-	case 2:
-	    if( (hist->dims[1] + 1) * (hist->dims[0] + 1) < 4096 )
-	    {
-		char *data0 = img[0];
-		char *data1 = img[1];
-		int hstep = hist->dims[1] + 1;
-		int array[4096];
-		int chdims0[256];
-		int chdims1[256];
-
-		memcpy( chdims0, hist->chdims[0], 256 * sizeof( int ));
-		memcpy( chdims1, hist->chdims[1], 256 * sizeof( int ));
-
-		memset( array, 0, hstep * (hist->mdims[0] + 1) * sizeof( *array ));
-
-		for( y = 0; y < size.height; y++, data0 += step, data1 += step )
-		{
-		    for( x = 0; x < size.width - 2; x += 2 )
-		    {
-			int val0 = chdims0[data0[x] + 128];
-			int val1 = chdims1[data1[x] + 128];
-
-			array[val0 + val1]++;
-			val0 = chdims0[data0[x + 1] + 128];
-			val1 = chdims1[data1[x + 1] + 128];
-			array[val0 + val1]++;
-		    }
-		    for( ; x < size.width; x++ )
-		    {
-			int val0 = chdims0[data0[x] + 128];
-			int val1 = chdims1[data1[x] + 128];
-
-			array[val0 + val1]++;
-		    }
-		}
-		for( y = 0, i = 0; y < hist->dims[0]; y++ )
-		    for( x = 0; x < hist->dims[1]; x++, i++ )
-			hist->array[i] += (float) array[y * hstep + x];
-	    }
-	    else
-	    {
-		char *data0 = img[0];
-		char *data1 = img[1];
-		int hstep = hist->dims[1] + 1;
-		int *array =
-		    (int *) icvAlloc( (hist->dims[1] + 1) * (hist->dims[0] + 1) *
-
-				      sizeof( *array ));
-		int chdims0[256];
-		int chdims1[256];
-
-		memcpy( chdims0, hist->chdims[0] + 128, 256 * sizeof( int ));
-		memcpy( chdims1, hist->chdims[1] + 128, 256 * sizeof( int ));
-
-		memset( array, 0, hstep * (hist->mdims[0] + 1) * sizeof( *array ));
-
-		for( y = 0; y < size.height; y++, data0 += step, data1 += step )
-		{
-		    for( x = 0; x < size.width - 2; x += 2 )
-		    {
-			int val0 = chdims0[data0[x]];
-			int val1 = chdims1[data1[x]];
-
-			array[val0 + val1]++;
-			val0 = chdims0[data0[x + 1]];
-			val1 = chdims1[data1[x + 1]];
-			array[val0 + val1]++;
-		    }
-		    for( ; x < size.width; x++ )
-		    {
-			int val0 = chdims0[data0[x]];
-			int val1 = chdims1[data1[x]];
-
-			array[val0 + val1]++;
-		    }
-		}
-		for( y = 0, i = 0; y < hist->dims[0]; y++ )
-		    for( x = 0; x < hist->dims[1]; x++, i++ )
-			hist->array[i] += (float) array[y * hstep + x];
-		icvFree( &array );
-	    }
-	    break;
-	case 3:
-	    {
-		char *data0 = img[0];
-		char *data1 = img[1];
-		char *data2 = img[2];
-
-		for( y = 0; y < size.height; y++, data0 += step, data1 += step, data2 += step )
-		    for( x = 0; x < size.width; x++ )
-		    {
-			int val0 = hist->chdims[0][data0[x] + 128];
-			int val1 = hist->chdims[1][data1[x] + 128];
-			int val2 = hist->chdims[2][data2[x] + 128];
-
-			if( (val0 | val1 | val2) >= 0 )
-			    hist->array[val0 + val1 + val2]++;
-		    }
-	    }
-	    break;
-	default:
-	    {
-		char *data[CV_HIST_MAX_DIM];
-
-		for( i = 0; i < hist->c_dims; i++ )
-		    data[i] = img[i];
-
-		for( y = 0; y < size.height; y++ )
-		{
-		    for( x = 0; x < size.width; x++ )
-		    {
-			int addr = 0;
-
-			for( i = 0; i < hist->c_dims; i++ )
-			{
-			    int val = hist->chdims[i][data[i][x] + 128];
-
-			    if( val >= 0 )
-				addr += val;
-			    else
-				goto next;
-			}
-			hist->array[addr]++;
-		      next:;
-		    }
-		    for( i = 0; i < hist->c_dims; i++ )
-			data[i] += step;
-		}
-	    }
-	    break;
-	}
-    }
-    else
-    {
-	if( !dont_clear && hist->set )
-	{
-	    cvClearSet( hist->set );
-	    hist->root = 0;
-	}
-
-	switch (hist->c_dims)
-	{
-	case 1:
-	    {
-		char *data0 = img[0];
-		int *array = (int *) icvAlloc( j * sizeof( *array ));
-		int *chdims = hist->chdims[0];
-
-		memset( array, 0, j * sizeof( *array ));
-
-		for( y = 0; y < size.height; y++, data0 += step )
-		{
-		    for( x = 0; x <= size.width - 4; x += 4 )
-		    {
-			int val0 = chdims[data0[x] + 128];
-			int val1 = chdims[data0[x + 1] + 128];
-
-			array[val0]++;
-			array[val1]++;
-			val0 = chdims[data0[x + 2] + 128];
-			val1 = chdims[data0[x + 3] + 128];
-			array[val0]++;
-			array[val1]++;
-		    }
-		    for( ; x < size.width; x++ )
-			array[chdims[data0[x] + 128]]++;
-		}
-		for( i = 0; i < j; i++ )
-		    if( array[i] )
-			icvInsertNode( hist, i )->value += (float) array[i];
-		icvFree( &array );
-	    }
-	    break;
-	case 2:
-	    if( (hist->dims[1] + 1) * (hist->dims[0] + 1) < 4096 )
-	    {
-		char *data0 = img[0];
-		char *data1 = img[1];
-		int hstep = hist->dims[1] + 1;
-		int array[4096];
-		int chdims0[256];
-		int chdims1[256];
-
-		memcpy( chdims0, hist->chdims[0], 256 * sizeof( int ));
-		memcpy( chdims1, hist->chdims[1], 256 * sizeof( int ));
-
-		memset( array, 0, hstep * (hist->mdims[0] + 1) * sizeof( *array ));
-
-		for( y = 0; y < size.height; y++, data0 += step, data1 += step )
-		{
-		    for( x = 0; x < size.width - 2; x += 2 )
-		    {
-			int val0 = chdims0[data0[x] + 128];
-			int val1 = chdims1[data1[x] + 128];
-
-			array[val0 + val1]++;
-			val0 = chdims0[data0[x + 1] + 128];
-			val1 = chdims1[data1[x + 1] + 128];
-			array[val0 + val1]++;
-		    }
-		    for( ; x < size.width; x++ )
-		    {
-			int val0 = chdims0[data0[x] + 128];
-			int val1 = chdims1[data1[x] + 128];
-
-			array[val0 + val1]++;
-		    }
-		}
-		for( y = 0, i = 0; y < hist->dims[0]; y++ )
-		    for( x = 0; x < hist->dims[1]; x++, i++ )
-		    {
-			float val = (float) array[y * hstep + x];
-
-			if( val )
-			    icvInsertNode( hist, i )->value += val;
-		    }
-	    }
-	    else
-	    {
-		char *data0 = img[0];
-		char *data1 = img[1];
-		int hstep = hist->dims[1] + 1;
-		int *array =
-		    (int *) icvAlloc( (hist->dims[1] + 1) * (hist->dims[0] + 1) *
-
-				      sizeof( *array ));
-		int chdims0[256];
-		int chdims1[256];
-
-		memcpy( chdims0, hist->chdims[0] + 128, 256 * sizeof( int ));
-		memcpy( chdims1, hist->chdims[1] + 128, 256 * sizeof( int ));
-
-		memset( array, 0, hstep * (hist->mdims[0] + 1) * sizeof( *array ));
-
-		for( y = 0; y < size.height; y++, data0 += step, data1 += step )
-		{
-		    for( x = 0; x < size.width - 2; x += 2 )
-		    {
-			int val0 = chdims0[data0[x]];
-			int val1 = chdims1[data1[x]];
-
-			array[val0 + val1]++;
-			val0 = chdims0[data0[x + 1]];
-			val1 = chdims1[data1[x + 1]];
-			array[val0 + val1]++;
-		    }
-		    for( ; x < size.width; x++ )
-		    {
-			int val0 = chdims0[data0[x]];
-			int val1 = chdims1[data1[x]];
-
-			array[val0 + val1]++;
-		    }
-		}
-		for( y = 0, i = 0; y < hist->dims[0]; y++ )
-		    for( x = 0; x < hist->dims[1]; x++, i++ )
-		    {
-			float val = (float) array[y * hstep + x];
-
-			if( val )
-			    icvInsertNode( hist, i )->value += val;
-		    }
-		icvFree( &array );
-	    }
-	    break;
-	case 3:
-	    {
-		char *data0 = img[0];
-		char *data1 = img[1];
-		char *data2 = img[2];
-
-		for( y = 0; y < size.height; y++, data0 += step, data1 += step, data2 += step )
-		    for( x = 0; x < size.width; x++ )
-		    {
-			int val0 = hist->chdims[0][data0[x] + 128];
-			int val1 = hist->chdims[1][data1[x] + 128];
-			int val2 = hist->chdims[2][data2[x] + 128];
-
-			if( (val0 | val1 | val2) >= 0 )
-			    icvInsertNode( hist, (int64) val0 + val1 + val2 )->value++;
-		    }
-	    }
-	    break;
-	default:
-	    {
-		char *data[CV_HIST_MAX_DIM];
-
-		for( i = 0; i < hist->c_dims; i++ )
-		    data[i] = img[i];
-
-		for( y = 0; y < size.height; y++ )
-		{
-		    for( x = 0; x < size.width; x++ )
-		    {
-			int64 addr = 0;
-
-			for( i = 0; i < hist->c_dims; i++ )
-			{
-			    int val = hist->chdims[i][data[i][x] + 128];
-
-			    if( val >= 0 )
-				addr += val;
-			    else
-				goto next_tree;
-			}
-			icvInsertNode( hist, addr )->value++;
-		      next_tree:;
-		    }
-		    for( i = 0; i < hist->c_dims; i++ )
-			data[i] += step;
-		}
-	    }
-	    break;
-	}
-    }
-
-    return CV_NO_ERR;
-}
-
-/*F///////////////////////////////////////////////////////////////////////////////////////
-//    Name:	  icvCalcHist...C1R
-//    Purpose:	  Calculating histogram from array of one-channel images
-//    Context:
-//    Parameters:
-//    Returns:
-//    Notes:	  if dont_clear parameter is NULL then histogram clearing before
-//		  calculating (all values sets to NULL)
-//F*/
-IPCVAPI_IMPL( CvStatus, icvCalcHist32fC1R, (float **img, int step, CvSize size,
-					    CvHistogram * hist, int dont_clear) )
-{
-    int i, j, x = 0, y = 0;
-    int dims;
-
-    if( !hist || !img )
-	return CV_NULLPTR_ERR;
-
-    dims = hist->c_dims;
-
-    for( i = 0; i < dims; i++ )
-	if( !img[i] )
-	    return CV_NULLPTR_ERR;
-
-    for( i = 0; i < hist->c_dims; i++ )
-    {
-	if( !hist->thresh[i] )
-	    return CV_NULLPTR_ERR;
-	assert( hist->chdims[i] );
-    }
-
-    j = hist->dims[0] * hist->mdims[0];
-
-    if( hist->type == CV_HIST_ARRAY )
-    {
-	if( !dont_clear )
-	    for( i = 0; i < j; i++ )
-		hist->array[i] = 0;
-
-	if( !(hist->flags & CV_HIST_UNIFORM) )
-	    switch (hist->c_dims)
-	    {
-	    case 1:
-		{
-		    float val;
-		    float *data[CV_HIST_MAX_DIM];
-		    int addr[CV_HIST_MAX_DIM];
-
-		    data[0] = img[0];
-
-		    for( y = 0; y < size.height; y++ )
-		    {
-			for( x = 0; x < size.width; x++ )
-			{
-			    val = data[0][x];
-			    if( val >= hist->thresh[0][0] &&
-				val < hist->thresh[0][hist->dims[0]] )
-			    {
-				for( j = 1; j < hist->dims[0]; j++ )
-				{
-				    assert( hist->thresh[0][j - 1] < hist->thresh[0][j] );
-				    if( val <= hist->thresh[0][j] )
-					break;
-				}
-				addr[0] = j - 1;
-				hist->array[addr[0]]++;
-			    }
-			}
-			data[0] = (float *) ((uchar *) data[0] + step);
-		    }
-		}
-		break;
-	    case 2:
-		{
-		    float val;
-		    float *data[CV_HIST_MAX_DIM];
-		    int addr[CV_HIST_MAX_DIM];
-
-		    data[0] = img[0];
-		    data[1] = img[1];
-
-		    for( y = 0; y < size.height; y++ )
-		    {
-			for( x = 0; x < size.width; x++ )
-			{
-			    val = data[0][x];
-			    if( val >= hist->thresh[0][0] &&
-				val < hist->thresh[0][hist->dims[0]] )
-			    {
-				for( j = 1; j < hist->dims[0]; j++ )
-				{
-				    assert( hist->thresh[0][j - 1] < hist->thresh[0][j] );
-				    if( val <= hist->thresh[0][j] )
-					break;
-				}
-				addr[0] = j - 1;
-
-				val = data[1][x];
-				if( val >= hist->thresh[1][0] &&
-				    val < hist->thresh[1][hist->dims[1]] )
-				{
-				    for( j = 1; j < hist->dims[1]; j++ )
-				    {
-					assert( hist->thresh[1][j - 1] < hist->thresh[1][j] );
-					if( val <= hist->thresh[1][j] )
-					    break;
-				    }
-				    addr[1] = j - 1;
-
-				    hist->array[addr[0] * hist->mdims[0] + addr[1]]++;
-				}
-			    }
-			}
-			data[0] = (float *) ((uchar *) data[0] + step);
-			data[1] = (float *) ((uchar *) data[1] + step);
-		    }
-		}
-		break;
-	    case 3:
-		{
-		    float val;
-		    float *data[CV_HIST_MAX_DIM];
-		    int addr[CV_HIST_MAX_DIM];
-
-		    data[0] = img[0];
-		    data[1] = img[1];
-		    data[2] = img[2];
-
-		    for( y = 0; y < size.height; y++ )
-		    {
-			for( x = 0; x < size.width; x++ )
-			{
-			    val = data[0][x];
-			    if( val >= hist->thresh[0][0] &&
-				val < hist->thresh[0][hist->dims[0]] )
-			    {
-				for( j = 1; j < hist->dims[0]; j++ )
-				{
-				    assert( hist->thresh[0][j - 1] < hist->thresh[0][j] );
-				    if( val <= hist->thresh[0][j] )
-					break;
-				}
-				addr[0] = j - 1;
-
-				val = data[1][x];
-				if( val >= hist->thresh[1][0] &&
-				    val < hist->thresh[1][hist->dims[1]] )
-				{
-				    for( j = 1; j < hist->dims[1]; j++ )
-				    {
-					assert( hist->thresh[1][j - 1] < hist->thresh[1][j] );
-					if( val <= hist->thresh[1][j] )
-					    break;
-				    }
-				    addr[1] = j - 1;
-
-				    val = data[2][x];
-				    if( val >= hist->thresh[2][0] &&
-					val < hist->thresh[2][hist->dims[2]] )
-				    {
-					for( j = 1; j < hist->dims[2]; j++ )
-					{
-					    assert( hist->thresh[2][j - 1] <
-						    hist->thresh[2][j] );
-					    if( val <= hist->thresh[2][j] )
-						break;
-					}
-					addr[2] = j - 1;
-
-					hist->array[addr[0] * hist->mdims[0] +
-						    addr[1] * hist->mdims[1] + addr[2]]++;
-				    }
-				}
-			    }
-			}
-			data[0] = (float *) ((uchar *) data[0] + step);
-			data[1] = (float *) ((uchar *) data[1] + step);
-			data[2] = (float *) ((uchar *) data[2] + step);
-		    }
-		}
-		break;
-	    default:
-		{
-		    float val;
-		    float *data[CV_HIST_MAX_DIM];
-		    int addr[CV_HIST_MAX_DIM];
-
-		    for( i = 0; i < dims; i++ )
-			data[i] = img[i];
-
-		    for( y = 0; y < size.height; y++ )
-		    {
-			for( x = 0; x < size.width; x++ )
-			{
-			    for( i = 0; i < dims; i++ )
-			    {
-				val = data[i][x];
-				if( val < hist->thresh[i][0] ||
-				    val >= hist->thresh[i][hist->dims[i]] )
-				    goto next_pointfloat;
-				else
-				{
-				    for( j = 1; j < hist->dims[i]; j++ )
-				    {
-					assert( hist->thresh[i][j - 1] < hist->thresh[i][j] );
-					if( val <= hist->thresh[i][j] )
-					    break;
-				    }
-				}
-				addr[i] = j - 1;
-			    }
-			    (*cvGetHistValue_nD( hist, addr ))++;
-			  next_pointfloat:;
-			}
-			for( i = 0; i < dims; i++ )
-			    data[i] = (float *) ((uchar *) data[i] + step);
-		    }
-		}
-		break;
-	    }
-	else
-	    switch (hist->c_dims)
-	    {
-	    case 1:
-		{
-		    float val;
-		    float *data[CV_HIST_MAX_DIM];
-		    int addr[CV_HIST_MAX_DIM];
-		    float stp[CV_HIST_MAX_DIM];
-		    float mn[CV_HIST_MAX_DIM];
-
-		    data[0] = img[0];
-		    mn[0] = hist->thresh[0][0];
-		    stp[0] =
-			hist->dims[0] / (hist->thresh[0][hist->dims[0]] - hist->thresh[0][0]);
-
-		    for( y = 0; y < size.height; y++ )
-		    {
-			for( x = 0; x < size.width; x++ )
-			{
-			    val = data[0][x];
-			    if( val >= hist->thresh[0][0] &&
-				val < hist->thresh[0][hist->dims[0]] )
-			    {
-				addr[0] = cvFloor( ((float) val - mn[0]) * stp[0] );
-				hist->array[addr[0]]++;
-			    }
-			}
-			data[0] = (float *) ((uchar *) data[0] + step);
-		    }
-		}
-		break;
-	    case 2:
-		{
-		    float val;
-		    float *data[CV_HIST_MAX_DIM];
-		    int addr[CV_HIST_MAX_DIM];
-		    float stp[CV_HIST_MAX_DIM];
-		    float mn[CV_HIST_MAX_DIM];
-
-		    data[0] = img[0];
-		    mn[0] = hist->thresh[0][0];
-		    stp[0] =
-			hist->dims[0] / (hist->thresh[0][hist->dims[0]] - hist->thresh[0][0]);
-
-		    data[1] = img[1];
-		    mn[1] = hist->thresh[1][0];
-		    stp[1] =
-			hist->dims[1] / (hist->thresh[1][hist->dims[1]] - hist->thresh[1][0]);
-
-		    for( y = 0; y < size.height; y++ )
-		    {
-			for( x = 0; x < size.width; x++ )
-			{
-			    val = data[0][x];
-			    if( val >= hist->thresh[0][0] &&
-				val < hist->thresh[0][hist->dims[0]] )
-			    {
-				addr[0] = cvFloor( ((float) val - mn[0]) * stp[0] );
-
-				val = data[1][x];
-				if( val >= hist->thresh[1][0] &&
-				    val < hist->thresh[1][hist->dims[1]] )
-				{
-				    addr[1] = cvFloor( ((float) val - mn[1]) * stp[1] );
-
-				    hist->array[addr[0] * hist->mdims[0] + addr[1]]++;
-				}
-			    }
-			}
-			data[0] = (float *) ((uchar *) data[0] + step);
-			data[1] = (float *) ((uchar *) data[1] + step);
-		    }
-		}
-		break;
-	    case 3:
-		{
-		    float val;
-		    float *data[CV_HIST_MAX_DIM];
-		    int addr[CV_HIST_MAX_DIM];
-		    float stp[CV_HIST_MAX_DIM];
-		    float mn[CV_HIST_MAX_DIM];
-
-		    data[0] = img[0];
-		    mn[0] = hist->thresh[0][0];
-		    stp[0] =
-			hist->dims[0] / (hist->thresh[0][hist->dims[0]] - hist->thresh[0][0]);
-
-		    data[1] = img[1];
-		    mn[1] = hist->thresh[1][0];
-		    stp[1] =
-			hist->dims[1] / (hist->thresh[1][hist->dims[1]] - hist->thresh[1][0]);
-
-		    data[2] = img[2];
-		    mn[2] = hist->thresh[2][0];
-		    stp[2] =
-			hist->dims[2] / (hist->thresh[2][hist->dims[2]] - hist->thresh[2][0]);
-
-		    for( y = 0; y < size.height; y++ )
-		    {
-			for( x = 0; x < size.width; x++ )
-			{
-			    val = data[0][x];
-			    if( val >= hist->thresh[0][0] &&
-				val < hist->thresh[0][hist->dims[0]] )
-			    {
-				addr[0] = cvFloor( ((float) val - mn[0]) * stp[0] );
-
-				val = data[1][x];
-				if( val >= hist->thresh[1][0] &&
-				    val < hist->thresh[1][hist->dims[1]] )
-				{
-				    addr[1] = cvFloor( ((float) val - mn[1]) * stp[1] );
-
-				    val = data[2][x];
-				    if( val >= hist->thresh[2][0] &&
-					val < hist->thresh[2][hist->dims[2]] )
-				    {
-					addr[2] = cvFloor( ((float) val - mn[2]) * stp[2] );
-
-					hist->array[addr[0] * hist->mdims[0] +
-						    addr[1] * hist->mdims[1] + addr[2]]++;
-				    }
-				}
-			    }
-			}
-			data[0] = (float *) ((uchar *) data[0] + step);
-			data[1] = (float *) ((uchar *) data[1] + step);
-			data[2] = (float *) ((uchar *) data[2] + step);
-		    }
-		}
-		break;
-	    default:
-		{
-		    float val;
-		    float *data[CV_HIST_MAX_DIM];
-		    int addr[CV_HIST_MAX_DIM];
-		    float stp[CV_HIST_MAX_DIM];
-		    float mn[CV_HIST_MAX_DIM];
-
-		    for( i = 0; i < dims; i++ )
-		    {
-			data[i] = img[i];
-			mn[i] = hist->thresh[i][0];
-			stp[i] =
-			    hist->dims[i] / (hist->thresh[i][hist->dims[i]] -
-					     hist->thresh[i][0]);
-		    }
-
-		    for( y = 0; y < size.height; y++ )
-		    {
-			for( x = 0; x < size.width; x++ )
-			{
-			    for( i = 0; i < dims; i++ )
-			    {
-				val = data[i][x];
-				if( val < hist->thresh[i][0] ||
-				    val >= hist->thresh[i][hist->dims[i]] )
-				    goto next_pointefloat;
-				else
-				    addr[i] = cvFloor( ((float) val - mn[i]) * stp[i] );
-			    }
-			    (*cvGetHistValue_nD( hist, addr ))++;
-			  next_pointefloat:;
-			}
-			for( i = 0; i < dims; i++ )
-			    data[i] = (float *) ((uchar *) data[i] + step);
-		    }
-		}
-		break;
-	    }
-    }
-    else
-    {
-	if( !dont_clear && hist->set )
-	{
-	    cvClearSet( hist->set );
-	    hist->root = 0;
-	}
-
-	if( !(hist->flags & CV_HIST_UNIFORM) )
-	    switch (hist->c_dims)
-	    {
-	    case 1:
-		{
-		    float val;
-		    float *data[CV_HIST_MAX_DIM];
-		    int64 addr[CV_HIST_MAX_DIM];
-
-		    data[0] = img[0];
-
-		    for( y = 0; y < size.height; y++ )
-		    {
-			for( x = 0; x < size.width; x++ )
-			{
-			    val = data[0][x];
-			    if( val >= hist->thresh[0][0] &&
-				val < hist->thresh[0][hist->dims[0]] )
-			    {
-				for( j = 1; j < hist->dims[0]; j++ )
-				{
-				    assert( hist->thresh[0][j - 1] < hist->thresh[0][j] );
-				    if( val <= hist->thresh[0][j] )
-					break;
-				}
-				addr[0] = j - 1;
-				icvInsertNode( hist, addr[0] )->value++;
-			    }
-			}
-			data[0] = (float *) ((uchar *) data[0] + step);
-		    }
-		}
-		break;
-	    case 2:
-		{
-		    float val;
-		    float *data[CV_HIST_MAX_DIM];
-		    int addr[CV_HIST_MAX_DIM];
-
-		    data[0] = img[0];
-		    data[1] = img[1];
-
-		    for( y = 0; y < size.height; y++ )
-		    {
-			for( x = 0; x < size.width; x++ )
-			{
-			    val = data[0][x];
-			    if( val >= hist->thresh[0][0] &&
-				val < hist->thresh[0][hist->dims[0]] )
-			    {
-				for( j = 1; j < hist->dims[0]; j++ )
-				{
-				    assert( hist->thresh[0][j - 1] < hist->thresh[0][j] );
-				    if( val <= hist->thresh[0][j] )
-					break;
-				}
-				addr[0] = j - 1;
-
-				val = data[1][x];
-				if( val >= hist->thresh[1][0] &&
-				    val < hist->thresh[1][hist->dims[1]] )
-				{
-				    for( j = 1; j < hist->dims[1]; j++ )
-				    {
-					assert( hist->thresh[1][j - 1] < hist->thresh[1][j] );
-					if( val <= hist->thresh[1][j] )
-					    break;
-				    }
-				    addr[1] = j - 1;
-
-				    icvInsertNode( hist, (int64) addr[0] * hist->mdims[0] +
-						   addr[1] )->value++;
-				}
-			    }
-			}
-			data[0] = (float *) ((uchar *) data[0] + step);
-			data[1] = (float *) ((uchar *) data[1] + step);
-		    }
-		}
-		break;
-	    case 3:
-		{
-		    float val;
-		    float *data[CV_HIST_MAX_DIM];
-		    int addr[CV_HIST_MAX_DIM];
-
-		    data[0] = img[0];
-		    data[1] = img[1];
-		    data[2] = img[2];
-
-		    for( y = 0; y < size.height; y++ )
-		    {
-			for( x = 0; x < size.width; x++ )
-			{
-			    val = data[0][x];
-			    if( val >= hist->thresh[0][0] &&
-				val < hist->thresh[0][hist->dims[0]] )
-			    {
-				for( j = 1; j < hist->dims[0]; j++ )
-				{
-				    assert( hist->thresh[0][j - 1] < hist->thresh[0][j] );
-				    if( val <= hist->thresh[0][j] )
-					break;
-				}
-				addr[0] = j - 1;
-
-				val = data[1][x];
-				if( val >= hist->thresh[1][0] &&
-				    val < hist->thresh[1][hist->dims[1]] )
-				{
-				    for( j = 1; j < hist->dims[1]; j++ )
-				    {
-					assert( hist->thresh[1][j - 1] < hist->thresh[1][j] );
-					if( val <= hist->thresh[1][j] )
-					    break;
-				    }
-				    addr[1] = j - 1;
-
-				    val = data[2][x];
-				    if( val >= hist->thresh[2][0] &&
-					val < hist->thresh[2][hist->dims[2]] )
-				    {
-					for( j = 1; j < hist->dims[2]; j++ )
-					{
-					    assert( hist->thresh[2][j - 1] <
-						    hist->thresh[2][j] );
-					    if( val <= hist->thresh[2][j] )
-						break;
-					}
-					addr[2] = j - 1;
-
-					icvInsertNode( hist, (int64) addr[0] * hist->mdims[0] +
-						       addr[1] * hist->mdims[1] +
-						       addr[2] )->value++;
-				    }
-				}
-			    }
-			}
-			data[0] = (float *) ((uchar *) data[0] + step);
-			data[1] = (float *) ((uchar *) data[1] + step);
-			data[2] = (float *) ((uchar *) data[2] + step);
-		    }
-		}
-		break;
-	    default:
-		{
-		    float val;
-		    float *data[CV_HIST_MAX_DIM];
-		    int addr[CV_HIST_MAX_DIM];
-
-		    for( i = 0; i < dims; i++ )
-			data[i] = img[i];
-
-		    for( y = 0; y < size.height; y++ )
-		    {
-			for( x = 0; x < size.width; x++ )
-			{
-			    for( i = 0; i < dims; i++ )
-			    {
-				val = data[i][x];
-				if( val < hist->thresh[i][0] ||
-				    val >= hist->thresh[i][hist->dims[i]] )
-				    goto next_pointfloat_tree;
-				else
-				{
-				    for( j = 1; j < hist->dims[i]; j++ )
-				    {
-					assert( hist->thresh[i][j - 1] < hist->thresh[i][j] );
-					if( val <= hist->thresh[i][j] )
-					    break;
-				    }
-				}
-				addr[i] = j - 1;
-			    }
-			    (*cvGetHistValue_nD( hist, addr ))++;
-			  next_pointfloat_tree:;
-			}
-			for( i = 0; i < dims; i++ )
-			    data[i] = (float *) ((uchar *) data[i] + step);
-		    }
-		}
-		break;
-	    }
-	else
-	    switch (hist->c_dims)
-	    {
-	    case 1:
-		{
-		    float val;
-		    float *data[CV_HIST_MAX_DIM];
-		    int64 addr[CV_HIST_MAX_DIM];
-		    float stp[CV_HIST_MAX_DIM];
-		    float mn[CV_HIST_MAX_DIM];
-
-		    data[0] = img[0];
-		    mn[0] = hist->thresh[0][0];
-		    stp[0] =
-			hist->dims[0] / (hist->thresh[0][hist->dims[0]] - hist->thresh[0][0]);
-
-		    for( y = 0; y < size.height; y++ )
-		    {
-			for( x = 0; x < size.width; x++ )
-			{
-			    val = data[0][x];
-			    if( val >= hist->thresh[0][0] &&
-				val < hist->thresh[0][hist->dims[0]] )
-			    {
-				addr[0] = cvFloor( ((float) val - mn[0]) * stp[0] );
-				icvInsertNode( hist, addr[0] )->value++;
-			    }
-			}
-			data[0] = (float *) ((uchar *) data[0] + step);
-		    }
-		}
-		break;
-	    case 2:
-		{
-		    float val;
-		    float *data[CV_HIST_MAX_DIM];
-		    int addr[CV_HIST_MAX_DIM];
-		    float stp[CV_HIST_MAX_DIM];
-		    float mn[CV_HIST_MAX_DIM];
-
-		    data[0] = img[0];
-		    mn[0] = hist->thresh[0][0];
-		    stp[0] =
-			hist->dims[0] / (hist->thresh[0][hist->dims[0]] - hist->thresh[0][0]);
-
-		    data[1] = img[1];
-		    mn[1] = hist->thresh[1][0];
-		    stp[1] =
-			hist->dims[1] / (hist->thresh[1][hist->dims[1]] - hist->thresh[1][0]);
-
-		    for( y = 0; y < size.height; y++ )
-		    {
-			for( x = 0; x < size.width; x++ )
-			{
-			    val = data[0][x];
-			    if( val >= hist->thresh[0][0] &&
-				val < hist->thresh[0][hist->dims[0]] )
-			    {
-				addr[0] = cvFloor( ((float) val - mn[0]) * stp[0] );
-
-				val = data[1][x];
-				if( val >= hist->thresh[1][0] &&
-				    val < hist->thresh[1][hist->dims[1]] )
-				{
-				    addr[1] = cvFloor( ((float) val - mn[1]) * stp[1] );
-
-				    icvInsertNode( hist, (int64) addr[0] * hist->mdims[0] +
-						   addr[1] )->value++;
-				}
-			    }
-			}
-			data[0] = (float *) ((uchar *) data[0] + step);
-			data[1] = (float *) ((uchar *) data[1] + step);
-		    }
-		}
-		break;
-	    case 3:
-		{
-		    float val;
-		    float *data[CV_HIST_MAX_DIM];
-		    int addr[CV_HIST_MAX_DIM];
-		    float stp[CV_HIST_MAX_DIM];
-		    float mn[CV_HIST_MAX_DIM];
-
-		    data[0] = img[0];
-		    mn[0] = hist->thresh[0][0];
-		    stp[0] =
-			hist->dims[0] / (hist->thresh[0][hist->dims[0]] - hist->thresh[0][0]);
-
-		    data[1] = img[1];
-		    mn[1] = hist->thresh[1][0];
-		    stp[1] =
-			hist->dims[1] / (hist->thresh[1][hist->dims[1]] - hist->thresh[1][0]);
-
-		    data[2] = img[2];
-		    mn[2] = hist->thresh[2][0];
-		    stp[2] =
-			hist->dims[2] / (hist->thresh[2][hist->dims[2]] - hist->thresh[2][0]);
-
-		    for( y = 0; y < size.height; y++ )
-		    {
-			for( x = 0; x < size.width; x++ )
-			{
-			    val = data[0][x];
-			    if( val >= hist->thresh[0][0] &&
-				val < hist->thresh[0][hist->dims[0]] )
-			    {
-				addr[0] = cvFloor( ((float) val - mn[0]) * stp[0] );
-
-				val = data[1][x];
-				if( val >= hist->thresh[1][0] &&
-				    val < hist->thresh[1][hist->dims[1]] )
-				{
-				    addr[1] = cvFloor( ((float) val - mn[1]) * stp[1] );
-
-				    val = data[2][x];
-				    if( val >= hist->thresh[2][0] &&
-					val < hist->thresh[2][hist->dims[2]] )
-				    {
-					addr[2] = cvFloor( ((float) val - mn[2]) * stp[2] );
-
-					icvInsertNode( hist, (int64) addr[0] * hist->mdims[0] +
-						       addr[1] * hist->mdims[1] +
-						       addr[2] )->value++;
-				    }
-				}
-			    }
-			}
-			data[0] = (float *) ((uchar *) data[0] + step);
-			data[1] = (float *) ((uchar *) data[1] + step);
-			data[2] = (float *) ((uchar *) data[2] + step);
-		    }
-		}
-		break;
-	    default:
-		{
-		    float val;
-		    float *data[CV_HIST_MAX_DIM];
-		    int addr[CV_HIST_MAX_DIM];
-		    float stp[CV_HIST_MAX_DIM];
-		    float mn[CV_HIST_MAX_DIM];
-
-		    for( i = 0; i < dims; i++ )
-		    {
-			data[i] = img[i];
-			mn[i] = hist->thresh[i][0];
-			stp[i] =
-			    hist->dims[i] / (hist->thresh[i][hist->dims[i]] -
-					     hist->thresh[i][0]);
-		    }
-
-		    for( y = 0; y < size.height; y++ )
-		    {
-			for( x = 0; x < size.width; x++ )
-			{
-			    for( i = 0; i < dims; i++ )
-			    {
-				val = data[i][x];
-				if( val < hist->thresh[i][0] ||
-				    val >= hist->thresh[i][hist->dims[i]] )
-				    goto next_pointefloat_tree;
-				else
-				    addr[i] = cvFloor( ((float) val - mn[i]) * stp[i] );
-			    }
-			    (*cvGetHistValue_nD( hist, addr ))++;
-			  next_pointefloat_tree:;
-			}
-			for( i = 0; i < dims; i++ )
-			    data[i] = (float *) ((uchar *) data[i] + step);
-		    }
-		}
-		break;
-	    }
-    }
-    return CV_NO_ERR;
-}
-
-
-/*F///////////////////////////////////////////////////////////////////////////////////////
-//    Name:	  icvCalcHistMask...C1R
-//    Purpose:	  Calculating histogram from array of one-channel images
-//    Context:
-//    Parameters:
-//    Returns:
-//    Notes:	  if dont_clear parameter is NULL then histogram clearing before
-//		  calculating (all values sets to NULL)
-//F*/
-IPCVAPI_IMPL( CvStatus, icvCalcHistMask8uC1R, (uchar ** img, int step,
-					       uchar * mask, int mask_step,
-					       CvSize size,
-					       CvHistogram * hist, int dont_clear) )
-{
-    int i, j, x = 0, y = 0;
-    int dims;
-
-    if( !hist || !img || !mask )
-	return CV_NULLPTR_ERR;
-
-    dims = hist->c_dims;
-
-    for( i = 0; i < dims; i++ )
-	if( !img[i] )
-	    return CV_NULLPTR_ERR;
-
-    for( i = 0; i < hist->c_dims; i++ )
-    {
-	if( !hist->thresh[i] )
-	    return CV_NULLPTR_ERR;
-	assert( hist->chdims[i] );
-    }
-
-    j = hist->dims[0] * hist->mdims[0];
-
-    if( hist->type == CV_HIST_ARRAY )
-    {
-	if( !dont_clear )
-	    for( i = 0; i < j; i++ )
-		hist->array[i] = 0;
-
-	switch (hist->c_dims)
-	{
-	case 1:
-	    {
-		uchar *data0 = img[0];
-		int *array = (int *) hist->array;
-		int *chdims = hist->chdims[0];
-
-		for( i = 0; i < j; i++ )
-		    array[i] = cvRound( hist->array[i] );
-
-		for( y = 0; y < size.height; y++, data0 += step, mask += mask_step )
-		{
-		    for( x = 0; x <= size.width - 2; x += 2 )
-		    {
-			if( mask[x] )
-			{
-			    int val0 = chdims[data0[x] + 128];
-
-			    array[val0]++;
-			}
-			if( mask[x + 1] )
-			{
-			    int val0 = chdims[data0[x + 1] + 128];
-
-			    array[val0]++;
-			}
-		    }
-		    for( ; x < size.width; x++ )
-			if( mask[x] )
-			    array[chdims[data0[x]] + 128]++;
-		}
-		for( i = 0; i < j; i++ )
-		    hist->array[i] = (float) array[i];
-	    }
-	    break;
-	case 2:
-	    if( (hist->dims[1] + 1) * (hist->dims[0] + 1) < 4096 )
-	    {
-		uchar *data0 = img[0];
-		uchar *data1 = img[1];
-		int hstep = hist->dims[1] + 1;
-		int array[4096];
-		int chdims0[256];
-		int chdims1[256];
-
-		memcpy( chdims0, hist->chdims[0] + 128, 256 * sizeof( int ));
-		memcpy( chdims1, hist->chdims[1] + 128, 256 * sizeof( int ));
-
-		memset( array, 0, hstep * (hist->mdims[0] + 1) * sizeof( *array ));
-
-		for( y = 0; y < size.height;
-		     y++, data0 += step, data1 += step, mask += mask_step )
-		{
-		    for( x = 0; x < size.width - 2; x += 2 )
-		    {
-			if( mask[x] )
-			{
-			    int val0 = chdims0[data0[x]];
-			    int val1 = chdims1[data1[x]];
-
-			    array[val0 + val1]++;
-			}
-			if( mask[x + 1] )
-			{
-			    int val0 = chdims0[data0[x + 1]];
-			    int val1 = chdims1[data1[x + 1]];
-
-			    array[val0 + val1]++;
-			}
-		    }
-		    for( ; x < size.width; x++ )
-			if( mask[x] )
-			{
-			    int val0 = chdims0[data0[x]];
-			    int val1 = chdims1[data1[x]];
-
-			    array[val0 + val1]++;
-			}
-		}
-		for( y = 0, i = 0; y < hist->dims[0]; y++ )
-		    for( x = 0; x < hist->dims[1]; x++, i++ )
-			hist->array[i] += (float) array[y * hstep + x];
-	    }
-	    else
-	    {
-		uchar *data0 = img[0];
-		uchar *data1 = img[1];
-		int hstep = hist->dims[1] + 1;
-		int *array =
-		    (int *) icvAlloc( (hist->dims[1] + 1) * (hist->dims[0] + 1) *
-
-				      sizeof( *array ));
-		int chdims0[256];
-		int chdims1[256];
-
-		memcpy( chdims0, hist->chdims[0] + 128, 256 * sizeof( int ));
-		memcpy( chdims1, hist->chdims[1] + 128, 256 * sizeof( int ));
-
-		memset( array, 0, hstep * (hist->mdims[0] + 1) * sizeof( *array ));
-
-		for( y = 0; y < size.height;
-		     y++, data0 += step, data1 += step, mask += mask_step )
-		{
-		    for( x = 0; x < size.width - 2; x += 2 )
-		    {
-			if( mask[x] )
-			{
-			    int val0 = chdims0[data0[x]];
-			    int val1 = chdims1[data1[x]];
-
-			    array[val0 + val1]++;
-			}
-			if( mask[x + 1] )
-			{
-			    int val0 = chdims0[data0[x + 1]];
-			    int val1 = chdims1[data1[x + 1]];
-
-			    array[val0 + val1]++;
-			}
-		    }
-		    for( ; x < size.width; x++ )
-			if( mask[x] )
-			{
-			    int val0 = chdims0[data0[x]];
-			    int val1 = chdims1[data1[x]];
-
-			    array[val0 + val1]++;
-			}
-		}
-		for( y = 0, i = 0; y < hist->dims[0]; y++ )
-		    for( x = 0; x < hist->dims[1]; x++, i++ )
-			hist->array[i] += (float) array[y * hstep + x];
-		icvFree( &array );
-	    }
-	    break;
-	case 3:
-	    {
-		uchar *data0 = img[0];
-		uchar *data1 = img[1];
-		uchar *data2 = img[2];
-
-		for( y = 0; y < size.height; y++, data0 += step, data1 += step,
-		     data2 += step, mask += mask_step )
-		    for( x = 0; x < size.width; x++ )
-			if( mask[x] )
-			{
-			    int val0 = hist->chdims[0][data0[x] + 128];
-			    int val1 = hist->chdims[1][data1[x] + 128];
-			    int val2 = hist->chdims[2][data2[x] + 128];
-
-			    if( (val0 | val1 | val2) >= 0 )
-				hist->array[val0 + val1 + val2]++;
-			}
-	    }
-	    break;
-	default:
-	    {
-		uchar *data[CV_HIST_MAX_DIM];
-
-		for( i = 0; i < hist->c_dims; i++ )
-		    data[i] = img[i];
-
-		for( y = 0; y < size.height; y++, mask += mask_step )
-		{
-		    for( x = 0; x < size.width; x++ )
-			if( mask[x] )
-			{
-			    int addr = 0;
-
-			    for( i = 0; i < hist->c_dims; i++ )
-			    {
-				int val = hist->chdims[i][(int) data[i][x] + 128];
-
-				if( val >= 0 )
-				    addr += val;
-				else
-				    goto next;
-			    }
-			    hist->array[addr]++;
-			  next:;
-			}
-		    for( i = 0; i < hist->c_dims; i++ )
-			data[i] += step;
-		}
-	    }
-	    break;
-	}
-    }
-    else
-    {
-	if( !dont_clear && hist->set )
-	{
-	    cvClearSet( hist->set );
-	    hist->root = 0;
-	}
-
-	switch (hist->c_dims)
-	{
-	case 1:
-	    {
-		uchar *data0 = img[0];
-		int *array = (int *) icvAlloc( j * sizeof( *array ));
-		int *chdims = hist->chdims[0];
-
-		memset( array, 0, j * sizeof( *array ));
-
-		for( y = 0; y < size.height; y++, data0 += step, mask += mask_step )
-		{
-		    for( x = 0; x <= size.width - 2; x += 2 )
-		    {
-			if( mask[x] )
-			{
-			    int val0 = chdims[data0[x] + 128];
-
-			    array[val0]++;
-			}
-			if( mask[x + 1] )
-			{
-			    int val0 = chdims[data0[x + 1] + 128];
-
-			    array[val0]++;
-			}
-		    }
-		    for( ; x < size.width; x++ )
-			if( mask[x] )
-			    array[chdims[data0[x]] + 128]++;
-		}
-		for( i = 0; i < j; i++ )
-		    if( array[i] )
-			icvInsertNode( hist, i )->value += (float) array[i];
-
-		icvFree( &array );
-	    }
-	    break;
-	case 2:
-	    if( (hist->dims[1] + 1) * (hist->dims[0] + 1) < 4096 )
-	    {
-		uchar *data0 = img[0];
-		uchar *data1 = img[1];
-		int hstep = hist->dims[1] + 1;
-		int array[4096];
-		int chdims0[256];
-		int chdims1[256];
-
-		memcpy( chdims0, hist->chdims[0] + 128, 256 * sizeof( int ));
-		memcpy( chdims1, hist->chdims[1] + 128, 256 * sizeof( int ));
-
-		memset( array, 0, hstep * (hist->mdims[0] + 1) * sizeof( *array ));
-
-		for( y = 0; y < size.height;
-		     y++, data0 += step, data1 += step, mask += mask_step )
-		{
-		    for( x = 0; x < size.width - 2; x += 2 )
-		    {
-			if( mask[x] )
-			{
-			    int val0 = chdims0[data0[x]];
-			    int val1 = chdims1[data1[x]];
-
-			    array[val0 + val1]++;
-			}
-			if( mask[x + 1] )
-			{
-			    int val0 = chdims0[data0[x + 1]];
-			    int val1 = chdims1[data1[x + 1]];
-
-			    array[val0 + val1]++;
-			}
-		    }
-		    for( ; x < size.width; x++ )
-			if( mask[x] )
-			{
-			    int val0 = chdims0[data0[x]];
-			    int val1 = chdims1[data1[x]];
-
-			    array[val0 + val1]++;
-			}
-		}
-		for( y = 0, i = 0; y < hist->dims[0]; y++ )
-		    for( x = 0; x < hist->dims[1]; x++, i++ )
-		    {
-			float val = (float) array[y * hstep + x];
-
-			if( val )
-			    icvInsertNode( hist, i )->value += val;
-		    }
-	    }
-	    else
-	    {
-		uchar *data0 = img[0];
-		uchar *data1 = img[1];
-		int hstep = hist->dims[1] + 1;
-		int *array =
-		    (int *) icvAlloc( (hist->dims[1] + 1) * (hist->dims[0] + 1) *
-
-				      sizeof( *array ));
-		int chdims0[256];
-		int chdims1[256];
-
-		memcpy( chdims0, hist->chdims[0] + 128, 256 * sizeof( int ));
-		memcpy( chdims1, hist->chdims[1] + 128, 256 * sizeof( int ));
-
-		memset( array, 0, hstep * (hist->mdims[0] + 1) * sizeof( *array ));
-
-		for( y = 0; y < size.height;
-		     y++, data0 += step, data1 += step, mask += mask_step )
-		{
-		    for( x = 0; x < size.width - 2; x += 2 )
-		    {
-			if( mask[x] )
-			{
-			    int val0 = chdims0[data0[x]];
-			    int val1 = chdims1[data1[x]];
-
-			    array[val0 + val1]++;
-			}
-			if( mask[x + 1] )
-			{
-			    int val0 = chdims0[data0[x + 1]];
-			    int val1 = chdims1[data1[x + 1]];
-
-			    array[val0 + val1]++;
-			}
-		    }
-		    for( ; x < size.width; x++ )
-			if( mask[x] )
-			{
-			    int val0 = chdims0[data0[x]];
-			    int val1 = chdims1[data1[x]];
-
-			    array[val0 + val1]++;
-			}
-		}
-		for( y = 0, i = 0; y < hist->dims[0]; y++ )
-		    for( x = 0; x < hist->dims[1]; x++, i++ )
-		    {
-			float val = (float) array[y * hstep + x];
-
-			if( val )
-			    icvInsertNode( hist, i )->value += val;
-		    }
-		icvFree( &array );
-	    }
-	    break;
-	case 3:
-	    {
-		uchar *data0 = img[0];
-		uchar *data1 = img[1];
-		uchar *data2 = img[2];
-
-		for( y = 0; y < size.height; y++, data0 += step, data1 += step,
-		     data2 += step, mask += mask_step )
-		    for( x = 0; x < size.width; x++ )
-			if( mask[x] )
-			{
-			    int val0 = hist->chdims[0][data0[x] + 128];
-			    int val1 = hist->chdims[1][data1[x] + 128];
-			    int val2 = hist->chdims[2][data2[x] + 128];
-
-			    if( (val0 | val1 | val2) >= 0 )
-				icvInsertNode( hist, (int64) val0 + val1 + val2 )->value++;
-			}
-	    }
-	    break;
-	default:
-	    {
-		uchar *data[CV_HIST_MAX_DIM];
-
-		for( i = 0; i < hist->c_dims; i++ )
-		    data[i] = img[i];
-
-		for( y = 0; y < size.height; y++, mask += mask_step )
-		{
-		    for( x = 0; x < size.width; x++ )
-			if( mask[x] )
-			{
-			    int64 addr = 0;
-
-			    for( i = 0; i < hist->c_dims; i++ )
-			    {
-				int val = hist->chdims[i][(int) data[i][x] + 128];
-
-				if( val >= 0 )
-				    addr += val;
-				else
-				    goto next_tree;
-			    }
-			    icvInsertNode( hist, addr )->value++;
-			  next_tree:;
-			}
-		    for( i = 0; i < hist->c_dims; i++ )
-			data[i] += step;
-		}
-	    }
-	    break;
-	}
-    }
-    return CV_NO_ERR;
-}
-
-
-/*F///////////////////////////////////////////////////////////////////////////////////////
-//    Name:	  icvCalcHistMask...C1R
-//    Purpose:	  Calculating histogram from array of one-channel images
-//    Context:
-//    Parameters:
-//    Returns:
-//    Notes:	  if dont_clear parameter is NULL then histogram clearing before
-//		  calculating (all values sets to NULL)
-//F*/
-IPCVAPI_IMPL( CvStatus, icvCalcHistMask8sC1R, (char **img, int step,
-					       uchar * mask, int mask_step,
-					       CvSize size,
-					       CvHistogram * hist, int dont_clear) )
-{
-    int i, j, x = 0, y = 0;
-    int dims;
-
-    if( !hist || !img || !mask )
-	return CV_NULLPTR_ERR;
-
-    dims = hist->c_dims;
-
-    for( i = 0; i < dims; i++ )
-	if( !img[i] )
-	    return CV_NULLPTR_ERR;
-
-    for( i = 0; i < hist->c_dims; i++ )
-    {
-	if( !hist->thresh[i] )
-	    return CV_NULLPTR_ERR;
-	assert( hist->chdims[i] );
-    }
-
-    j = hist->dims[0] * hist->mdims[0];
-
-    if( hist->type == CV_HIST_ARRAY )
-    {
-	if( !dont_clear )
-	    for( i = 0; i < j; i++ )
-		hist->array[i] = 0;
-
-	switch (hist->c_dims)
-	{
-	case 1:
-	    {
-		char *data0 = img[0];
-		int *array = (int *) hist->array;
-		int *chdims = hist->chdims[0];
-
-		for( i = 0; i < j; i++ )
-		    array[i] = cvRound( hist->array[i] );
-
-		for( y = 0; y < size.height; y++, data0 += step, mask += mask_step )
-		{
-		    for( x = 0; x <= size.width - 2; x += 2 )
-		    {
-			if( mask[x] )
-			{
-			    int val0 = chdims[data0[x] + 128];
-
-			    array[val0]++;
-			}
-			if( mask[x + 1] )
-			{
-			    int val0 = chdims[data0[x + 1] + 128];
-
-			    array[val0]++;
-			}
-		    }
-		    for( ; x < size.width; x++ )
-			if( mask[x] )
-			    array[chdims[data0[x] + 128]]++;
-		}
-		for( i = 0; i < j; i++ )
-		    hist->array[i] = (float) array[i];
-	    }
-	    break;
-	case 2:
-	    if( (hist->dims[1] + 1) * (hist->dims[0] + 1) < 4096 )
-	    {
-		char *data0 = img[0];
-		char *data1 = img[1];
-		int hstep = hist->dims[1] + 1;
-		int array[4096];
-		int chdims0[256];
-		int chdims1[256];
-
-		memcpy( chdims0, hist->chdims[0], 256 * sizeof( int ));
-		memcpy( chdims1, hist->chdims[1], 256 * sizeof( int ));
-
-		memset( array, 0, hstep * (hist->mdims[0] + 1) * sizeof( *array ));
-
-		for( y = 0; y < size.height; y++, data0 += step, data1 += step,
-		     mask += mask_step )
-		{
-		    for( x = 0; x < size.width - 2; x += 2 )
-		    {
-			if( mask[x] )
-			{
-			    int val0 = chdims0[data0[x] + 128];
-			    int val1 = chdims1[data1[x] + 128];
-
-			    array[val0 + val1]++;
-			}
-			if( mask[x + 1] )
-			{
-			    int val0 = chdims0[data0[x + 1] + 128];
-			    int val1 = chdims1[data1[x + 1] + 128];
-
-			    array[val0 + val1]++;
-			}
-		    }
-		    for( ; x < size.width; x++ )
-			if( mask[x] )
-			{
-			    int val0 = chdims0[data0[x] + 128];
-			    int val1 = chdims1[data1[x] + 128];
-
-			    array[val0 + val1]++;
-			}
-		}
-		for( y = 0, i = 0; y < hist->dims[0]; y++ )
-		    for( x = 0; x < hist->dims[1]; x++, i++ )
-			hist->array[i] += (float) array[y * hstep + x];
-	    }
-	    else
-	    {
-		char *data0 = img[0];
-		char *data1 = img[1];
-		int hstep = hist->dims[1] + 1;
-		int *array =
-		    (int *) icvAlloc( (hist->dims[1] + 1) * (hist->dims[0] + 1) *
-
-				      sizeof( *array ));
-		int chdims0[256];
-		int chdims1[256];
-
-		memcpy( chdims0, hist->chdims[0] + 128, 256 * sizeof( int ));
-		memcpy( chdims1, hist->chdims[1] + 128, 256 * sizeof( int ));
-
-		memset( array, 0, hstep * (hist->mdims[0] + 1) * sizeof( *array ));
-
-		for( y = 0; y < size.height; y++, data0 += step, data1 += step,
-		     mask += mask_step )
-		{
-		    for( x = 0; x < size.width - 2; x += 2 )
-		    {
-			if( mask[x] )
-			{
-			    int val0 = chdims0[data0[x] + 128];
-			    int val1 = chdims1[data1[x] + 128];
-
-			    array[val0 + val1]++;
-			}
-			if( mask[x + 1] )
-			{
-			    int val0 = chdims0[data0[x + 1] + 128];
-			    int val1 = chdims1[data1[x + 1] + 128];
-
-			    array[val0 + val1]++;
-			}
-		    }
-		    for( ; x < size.width; x++ )
-			if( mask[x] )
-			{
-			    int val0 = chdims0[data0[x] + 128];
-			    int val1 = chdims1[data1[x] + 128];
-
-			    array[val0 + val1]++;
-			}
-		}
-		for( y = 0, i = 0; y < hist->dims[0]; y++ )
-		    for( x = 0; x < hist->dims[1]; x++, i++ )
-			hist->array[i] += (float) array[y * hstep + x];
-		icvFree( &array );
-	    }
-	    break;
-	case 3:
-	    {
-		char *data0 = img[0];
-		char *data1 = img[1];
-		char *data2 = img[2];
-
-		for( y = 0; y < size.height; y++, data0 += step, data1 += step,
-		     data2 += step, mask += mask_step )
-		    for( x = 0; x < size.width; x++ )
-			if( mask[x] )
-			{
-			    int val0 = hist->chdims[0][(int) data0[x] + 128];
-			    int val1 = hist->chdims[1][(int) data1[x] + 128];
-			    int val2 = hist->chdims[2][(int) data1[x] + 128];
-
-			    if( (val0 | val1 | val2) >= 0 )
-				hist->array[val0 + val1 + val2]++;
-			}
-	    }
-	    break;
-	default:
-	    {
-		char *data[CV_HIST_MAX_DIM];
-
-		for( i = 0; i < hist->c_dims; i++ )
-		    data[i] = img[i];
-
-		for( y = 0; y < size.height; y++, mask += mask_step )
-		{
-		    for( x = 0; x < size.width; x++ )
-			if( mask[x] )
-			{
-			    int addr = 0;
-
-			    for( i = 0; i < hist->c_dims; i++ )
-			    {
-				int val = hist->chdims[i][(int) data[i][x] + 128];
-
-				if( val >= 0 )
-				    addr += val;
-				else
-				    goto next;
-			    }
-			    hist->array[addr]++;
-			  next:;
-			}
-		    for( i = 0; i < hist->c_dims; i++ )
-			data[i] += step;
-		}
-	    }
-	    break;
-	}
-    }
-    else
-    {
-	if( !dont_clear && hist->set )
-	{
-	    cvClearSet( hist->set );
-	    hist->root = 0;
-	}
-
-	switch (hist->c_dims)
-	{
-	case 1:
-	    {
-		char *data0 = img[0];
-		int *array = (int *) icvAlloc( j * sizeof( *array ));
-		int *chdims = hist->chdims[0];
-
-		memset( array, 0, j * sizeof( *array ));
-
-		for( y = 0; y < size.height; y++, data0 += step, mask += mask_step )
-		{
-		    for( x = 0; x <= size.width - 2; x += 2 )
-		    {
-			if( mask[x] )
-			{
-			    int val0 = chdims[data0[x] + 128];
-
-			    array[val0]++;
-			}
-			if( mask[x + 1] )
-			{
-			    int val0 = chdims[data0[x + 1] + 128];
-
-			    array[val0]++;
-			}
-		    }
-		    for( ; x < size.width; x++ )
-			if( mask[x] )
-			    array[chdims[data0[x] + 128]]++;
-		}
-		for( i = 0; i < j; i++ )
-		    if( array[i] )
-			icvInsertNode( hist, i )->value += (float) array[i];
-		icvFree( &array );
-	    }
-	    break;
-	case 2:
-	    if( (hist->dims[1] + 1) * (hist->dims[0] + 1) < 4096 )
-	    {
-		char *data0 = img[0];
-		char *data1 = img[1];
-		int hstep = hist->dims[1] + 1;
-		int array[4096];
-		int chdims0[256];
-		int chdims1[256];
-
-		memcpy( chdims0, hist->chdims[0], 256 * sizeof( int ));
-		memcpy( chdims1, hist->chdims[1], 256 * sizeof( int ));
-
-		memset( array, 0, hstep * (hist->mdims[0] + 1) * sizeof( *array ));
-
-		for( y = 0; y < size.height; y++, data0 += step, data1 += step,
-		     mask += mask_step )
-		{
-		    for( x = 0; x < size.width - 2; x += 2 )
-		    {
-			if( mask[x] )
-			{
-			    int val0 = chdims0[data0[x] + 128];
-			    int val1 = chdims1[data1[x] + 128];
-
-			    array[val0 + val1]++;
-			}
-			if( mask[x + 1] )
-			{
-			    int val0 = chdims0[data0[x + 1] + 128];
-			    int val1 = chdims1[data1[x + 1] + 128];
-
-			    array[val0 + val1]++;
-			}
-		    }
-		    for( ; x < size.width; x++ )
-			if( mask[x] )
-			{
-			    int val0 = chdims0[data0[x] + 128];
-			    int val1 = chdims1[data1[x] + 128];
-
-			    array[val0 + val1]++;
-			}
-		}
-		for( y = 0, i = 0; y < hist->dims[0]; y++ )
-		    for( x = 0; x < hist->dims[1]; x++, i++ )
-		    {
-			float val = (float) array[y * hstep + x];
-
-			if( val )
-			    icvInsertNode( hist, i )->value += val;
-		    }
-	    }
-	    else
-	    {
-		char *data0 = img[0];
-		char *data1 = img[1];
-		int hstep = hist->dims[1] + 1;
-		int *array =
-		    (int *) icvAlloc( (hist->dims[1] + 1) * (hist->dims[0] + 1) *
-
-				      sizeof( *array ));
-		int chdims0[256];
-		int chdims1[256];
-
-		memcpy( chdims0, hist->chdims[0] + 128, 256 * sizeof( int ));
-		memcpy( chdims1, hist->chdims[1] + 128, 256 * sizeof( int ));
-
-		memset( array, 0, hstep * (hist->mdims[0] + 1) * sizeof( *array ));
-
-		for( y = 0; y < size.height; y++, data0 += step, data1 += step,
-		     mask += mask_step )
-		{
-		    for( x = 0; x < size.width - 2; x += 2 )
-		    {
-			if( mask[x] )
-			{
-			    int val0 = chdims0[data0[x] + 128];
-			    int val1 = chdims1[data1[x] + 128];
-
-			    array[val0 + val1]++;
-			}
-			if( mask[x + 1] )
-			{
-			    int val0 = chdims0[data0[x + 1] + 128];
-			    int val1 = chdims1[data1[x + 1] + 128];
-
-			    array[val0 + val1]++;
-			}
-		    }
-		    for( ; x < size.width; x++ )
-			if( mask[x] )
-			{
-			    int val0 = chdims0[data0[x] + 128];
-			    int val1 = chdims1[data1[x] + 128];
-
-			    array[val0 + val1]++;
-			}
-		}
-		for( y = 0, i = 0; y < hist->dims[0]; y++ )
-		    for( x = 0; x < hist->dims[1]; x++, i++ )
-		    {
-			float val = (float) array[y * hstep + x];
-
-			if( val )
-			    icvInsertNode( hist, i )->value += val;
-		    }
-		icvFree( &array );
-	    }
-	    break;
-	case 3:
-	    {
-		char *data0 = img[0];
-		char *data1 = img[1];
-		char *data2 = img[2];
-
-		for( y = 0; y < size.height; y++, data0 += step, data1 += step,
-		     data2 += step, mask += mask_step )
-		    for( x = 0; x < size.width; x++ )
-			if( mask[x] )
-			{
-			    int val0 = hist->chdims[0][(int) data0[x] + 128];
-			    int val1 = hist->chdims[1][(int) data1[x] + 128];
-			    int val2 = hist->chdims[2][(int) data1[x] + 128];
-
-			    if( (val0 | val1 | val2) >= 0 )
-				icvInsertNode( hist, (int64) val0 + val1 + val2 )->value++;
-			}
-	    }
-	    break;
-	default:
-	    {
-		char *data[CV_HIST_MAX_DIM];
-
-		for( i = 0; i < hist->c_dims; i++ )
-		    data[i] = img[i];
-
-		for( y = 0; y < size.height; y++, mask += mask_step )
-		{
-		    for( x = 0; x < size.width; x++ )
-			if( mask[x] )
-			{
-			    int64 addr = 0;
-
-			    for( i = 0; i < hist->c_dims; i++ )
-			    {
-				int val = hist->chdims[i][(int) data[i][x] + 128];
-
-				if( val >= 0 )
-				    addr += val;
-				else
-				    goto next_tree;
-			    }
-			    icvInsertNode( hist, addr )->value++;
-			  next_tree:;
-			}
-		    for( i = 0; i < hist->c_dims; i++ )
-			data[i] += step;
-		}
-	    }
-	    break;
-	}
-    }
-    return CV_NO_ERR;
-}
-
-/*F///////////////////////////////////////////////////////////////////////////////////////
-//    Name:	  icvCalcHist...C1R
-//    Purpose:	  Calculating histogram from array of one-channel images
-//    Context:
-//    Parameters:
-//    Returns:
-//    Notes:	  if dont_clear parameter is NULL then histogram clearing before
-//		  calculating (all values sets to NULL)
-//F*/
-IPCVAPI_IMPL( CvStatus, icvCalcHistMask32fC1R, (float **img, int step,
-						uchar * mask, int mask_step,
-						CvSize size,
-						CvHistogram * hist, int dont_clear) )
-{
-    int i, j, x = 0, y = 0;
-    int dims;
-
-    if( !hist || !img )
-	return CV_NULLPTR_ERR;
-
-    dims = hist->c_dims;
-
-    for( i = 0; i < dims; i++ )
-	if( !img[i] )
-	    return CV_NULLPTR_ERR;
-
-    for( i = 0; i < hist->c_dims; i++ )
-    {
-	if( !hist->thresh[i] )
-	    return CV_NULLPTR_ERR;
-	assert( hist->chdims[i] );
-    }
-
-    j = hist->dims[0] * hist->mdims[0];
-
-    if( hist->type == CV_HIST_ARRAY )
-    {
-	if( !dont_clear )
-	    for( i = 0; i < j; i++ )
-		hist->array[i] = 0;
-
-	if( !(hist->flags & CV_HIST_UNIFORM) )
-	    switch (hist->c_dims)
-	    {
-	    case 1:
-		{
-		    float val;
-		    float *data[CV_HIST_MAX_DIM];
-		    int addr[CV_HIST_MAX_DIM];
-
-		    data[0] = img[0];
-
-		    for( y = 0; y < size.height; y++, mask += mask_step )
-		    {
-			for( x = 0; x < size.width; x++ )
-			{
-			    if( mask[x] )
-			    {
-				val = data[0][x];
-				if( val >= hist->thresh[0][0] &&
-				    val < hist->thresh[0][hist->dims[0]] )
-				{
-				    for( j = 1; j < hist->dims[0]; j++ )
-				    {
-					assert( hist->thresh[0][j - 1] < hist->thresh[0][j] );
-					if( val <= hist->thresh[0][j] )
-					    break;
-				    }
-				    addr[0] = j - 1;
-				    hist->array[addr[0]]++;
-				}
-			    }
-			}
-			data[0] = (float *) ((uchar *) data[0] + step);
-		    }
-		}
-		break;
-	    case 2:
-		{
-		    float val;
-		    float *data[CV_HIST_MAX_DIM];
-		    int addr[CV_HIST_MAX_DIM];
-
-		    data[0] = img[0];
-		    data[1] = img[1];
-
-		    for( y = 0; y < size.height; y++, mask += mask_step )
-		    {
-			for( x = 0; x < size.width; x++ )
-			{
-			    if( mask[x] )
-			    {
-				val = data[0][x];
-				if( val >= hist->thresh[0][0] &&
-				    val < hist->thresh[0][hist->dims[0]] )
-				{
-				    for( j = 1; j < hist->dims[0]; j++ )
-				    {
-					assert( hist->thresh[0][j - 1] < hist->thresh[0][j] );
-					if( val <= hist->thresh[0][j] )
-					    break;
-				    }
-				    addr[0] = j - 1;
-
-				    val = data[1][x];
-				    if( val >= hist->thresh[1][0] &&
-					val < hist->thresh[1][hist->dims[1]] )
-				    {
-					for( j = 1; j < hist->dims[1]; j++ )
-					{
-					    assert( hist->thresh[1][j - 1] <
-						    hist->thresh[1][j] );
-					    if( val <= hist->thresh[1][j] )
-						break;
-					}
-					addr[1] = j - 1;
-
-					hist->array[addr[0] * hist->mdims[0] + addr[1]]++;
-				    }
-				}
-			    }
-			}
-			data[0] = (float *) ((uchar *) data[0] + step);
-			data[1] = (float *) ((uchar *) data[1] + step);
-		    }
-		}
-		break;
-	    case 3:
-		{
-		    float val;
-		    float *data[CV_HIST_MAX_DIM];
-		    int addr[CV_HIST_MAX_DIM];
-
-		    data[0] = img[0];
-		    data[1] = img[1];
-		    data[2] = img[2];
-
-		    for( y = 0; y < size.height; y++, mask += mask_step )
-		    {
-			for( x = 0; x < size.width; x++ )
-			{
-			    if( mask[x] )
-			    {
-				val = data[0][x];
-				if( val >= hist->thresh[0][0] &&
-				    val < hist->thresh[0][hist->dims[0]] )
-				{
-				    for( j = 1; j < hist->dims[0]; j++ )
-				    {
-					assert( hist->thresh[0][j - 1] < hist->thresh[0][j] );
-					if( val <= hist->thresh[0][j] )
-					    break;
-				    }
-				    addr[0] = j - 1;
-
-				    val = data[1][x];
-				    if( val >= hist->thresh[1][0] &&
-					val < hist->thresh[1][hist->dims[1]] )
-				    {
-					for( j = 1; j < hist->dims[1]; j++ )
-					{
-					    assert( hist->thresh[1][j - 1] <
-						    hist->thresh[1][j] );
-					    if( val <= hist->thresh[1][j] )
-						break;
-					}
-					addr[1] = j - 1;
-
-					val = data[2][x];
-					if( val >= hist->thresh[2][0] &&
-					    val < hist->thresh[2][hist->dims[2]] )
-					{
-					    for( j = 1; j < hist->dims[2]; j++ )
-					    {
-						assert( hist->thresh[2][j - 1] <
-							hist->thresh[2][j] );
-						if( val <= hist->thresh[2][j] )
-						    break;
-					    }
-					    addr[2] = j - 1;
-
-					    hist->array[addr[0] * hist->mdims[0] +
-							addr[1] * hist->mdims[1] + addr[2]]++;
-					}
-				    }
-				}
-			    }
-			}
-			data[0] = (float *) ((uchar *) data[0] + step);
-			data[1] = (float *) ((uchar *) data[1] + step);
-			data[2] = (float *) ((uchar *) data[2] + step);
-		    }
-		}
-		break;
-	    default:
-		{
-		    float val;
-		    float *data[CV_HIST_MAX_DIM];
-		    int addr[CV_HIST_MAX_DIM];
-
-		    for( i = 0; i < dims; i++ )
-			data[i] = img[i];
-
-		    for( y = 0; y < size.height; y++, mask += mask_step )
-		    {
-			for( x = 0; x < size.width; x++ )
-			{
-			    if( mask[x] )
-			    {
-				for( i = 0; i < dims; i++ )
-				{
-				    val = data[i][x];
-				    if( val < hist->thresh[i][0] ||
-					val >= hist->thresh[i][hist->dims[i]] )
-					goto next_point_float;
-				    else
-				    {
-					for( j = 1; j < hist->dims[i]; j++ )
-					{
-					    assert( hist->thresh[i][j - 1] <
-						    hist->thresh[i][j] );
-					    if( val <= hist->thresh[i][j] )
-						break;
-					}
-				    }
-				    addr[i] = j - 1;
-				}
-				(*cvGetHistValue_nD( hist, addr ))++;
-			    }
-			  next_point_float:;
-			}
-			for( i = 0; i < dims; i++ )
-			    data[i] = (float *) ((uchar *) data[i] + step);
-		    }
-		}
-		break;
-	    }
-	else
-	    switch (hist->c_dims)
-	    {
-	    case 1:
-		{
-		    float val;
-		    float *data[CV_HIST_MAX_DIM];
-		    int addr[CV_HIST_MAX_DIM];
-		    float stp[CV_HIST_MAX_DIM];
-		    float mn[CV_HIST_MAX_DIM];
-
-		    data[0] = img[0];
-		    mn[0] = hist->thresh[0][0];
-		    stp[0] =
-			hist->dims[0] / (hist->thresh[0][hist->dims[0]] - hist->thresh[0][0]);
-
-		    for( y = 0; y < size.height; y++, mask += mask_step )
-		    {
-			for( x = 0; x < size.width; x++ )
-			{
-			    if( mask[x] )
-			    {
-				val = data[0][x];
-				if( val >= hist->thresh[0][0] &&
-				    val < hist->thresh[0][hist->dims[0]] )
-				{
-				    addr[0] = cvFloor( ((float) val - mn[0]) * stp[0] );
-				    hist->array[addr[0]]++;
-				}
-			    }
-			}
-			data[0] = (float *) ((uchar *) data[0] + step);
-		    }
-		}
-		break;
-	    case 2:
-		{
-		    float val;
-		    float *data[CV_HIST_MAX_DIM];
-		    int addr[CV_HIST_MAX_DIM];
-		    float stp[CV_HIST_MAX_DIM];
-		    float mn[CV_HIST_MAX_DIM];
-
-		    data[0] = img[0];
-		    mn[0] = hist->thresh[0][0];
-		    stp[0] =
-			hist->dims[0] / (hist->thresh[0][hist->dims[0]] - hist->thresh[0][0]);
-
-		    data[1] = img[1];
-		    mn[1] = hist->thresh[1][0];
-		    stp[1] =
-			hist->dims[1] / (hist->thresh[1][hist->dims[1]] - hist->thresh[1][0]);
-
-		    for( y = 0; y < size.height; y++, mask += mask_step )
-		    {
-			for( x = 0; x < size.width; x++ )
-			{
-			    if( mask[x] )
-			    {
-				val = data[0][x];
-				if( val >= hist->thresh[0][0] &&
-				    val < hist->thresh[0][hist->dims[0]] )
-				{
-				    addr[0] = cvFloor( ((float) val - mn[0]) * stp[0] );
-
-				    val = data[1][x];
-				    if( val >= hist->thresh[1][0] &&
-					val < hist->thresh[1][hist->dims[1]] )
-				    {
-					addr[1] = cvFloor( ((float) val - mn[1]) * stp[1] );
-
-					hist->array[addr[0] * hist->mdims[0] + addr[1]]++;
-				    }
-				}
-			    }
-			}
-			data[0] = (float *) ((uchar *) data[0] + step);
-			data[1] = (float *) ((uchar *) data[1] + step);
-		    }
-		}
-		break;
-	    case 3:
-		{
-		    float val;
-		    float *data[CV_HIST_MAX_DIM];
-		    int addr[CV_HIST_MAX_DIM];
-		    float stp[CV_HIST_MAX_DIM];
-		    float mn[CV_HIST_MAX_DIM];
-
-		    data[0] = img[0];
-		    mn[0] = hist->thresh[0][0];
-		    stp[0] =
-			hist->dims[0] / (hist->thresh[0][hist->dims[0]] - hist->thresh[0][0]);
-
-		    data[1] = img[1];
-		    mn[1] = hist->thresh[1][0];
-		    stp[1] =
-			hist->dims[1] / (hist->thresh[1][hist->dims[1]] - hist->thresh[1][0]);
-
-		    data[2] = img[2];
-		    mn[2] = hist->thresh[2][0];
-		    stp[2] =
-			hist->dims[2] / (hist->thresh[2][hist->dims[2]] - hist->thresh[2][0]);
-
-		    for( y = 0; y < size.height; y++ )
-		    {
-			for( x = 0; x < size.width; x++ )
-			{
-			    if( mask[x] )
-			    {
-				val = data[0][x];
-				if( val >= hist->thresh[0][0] &&
-				    val < hist->thresh[0][hist->dims[0]] )
-				{
-				    addr[0] = cvFloor( ((float) val - mn[0]) * stp[0] );
-
-				    val = data[1][x];
-				    if( val >= hist->thresh[1][0] &&
-					val < hist->thresh[1][hist->dims[1]] )
-				    {
-					addr[1] = cvFloor( ((float) val - mn[1]) * stp[1] );
-
-					val = data[2][x];
-					if( val >= hist->thresh[2][0] &&
-					    val < hist->thresh[2][hist->dims[2]] )
-					{
-					    addr[2] =
-						cvFloor( ((float) val - mn[2]) * stp[2] );
-
-					    hist->array[addr[0] * hist->mdims[0] +
-							addr[1] * hist->mdims[1] + addr[2]]++;
-					}
-				    }
-				}
-			    }
-			}
-			data[0] = (float *) ((uchar *) data[0] + step);
-			data[1] = (float *) ((uchar *) data[1] + step);
-			data[2] = (float *) ((uchar *) data[2] + step);
-		    }
-		}
-		break;
-	    default:
-		{
-		    float val;
-		    float *data[CV_HIST_MAX_DIM];
-		    int addr[CV_HIST_MAX_DIM];
-		    float stp[CV_HIST_MAX_DIM];
-		    float mn[CV_HIST_MAX_DIM];
-
-		    for( i = 0; i < dims; i++ )
-		    {
-			data[i] = img[i];
-			mn[i] = hist->thresh[i][0];
-			stp[i] =
-			    hist->dims[i] / (hist->thresh[i][hist->dims[i]] -
-					     hist->thresh[i][0]);
-		    }
-
-		    for( y = 0; y < size.height; y++, mask += mask_step )
-		    {
-			for( x = 0; x < size.width; x++ )
-			{
-			    if( mask[x] )
-			    {
-				for( i = 0; i < dims; i++ )
-				{
-				    val = data[i][x];
-				    if( val < hist->thresh[i][0] ||
-					val >= hist->thresh[i][hist->dims[i]] )
-					goto next_pointe_float;
-				    else
-					addr[i] = cvFloor( ((float) val - mn[i]) * stp[i] );
-				}
-				(*cvGetHistValue_nD( hist, addr ))++;
-			    }
-			  next_pointe_float:;
-			}
-			for( i = 0; i < dims; i++ )
-			    data[i] = (float *) ((uchar *) data[i] + step);
-		    }
-		}
-		break;
-	    }
-    }
-    else
-    {
-	if( !dont_clear && hist->set )
-	{
-	    cvClearSet( hist->set );
-	    hist->root = 0;
-	}
-
-	if( !(hist->flags & CV_HIST_UNIFORM) )
-	    switch (hist->c_dims)
-	    {
-	    case 1:
-		{
-		    float val;
-		    float *data[CV_HIST_MAX_DIM];
-		    int addr[CV_HIST_MAX_DIM];
-
-		    data[0] = img[0];
-
-		    for( y = 0; y < size.height; y++, mask += mask_step )
-		    {
-			for( x = 0; x < size.width; x++ )
-			{
-			    if( mask[x] )
-			    {
-				val = data[0][x];
-				if( val >= hist->thresh[0][0] &&
-				    val < hist->thresh[0][hist->dims[0]] )
-				{
-				    for( j = 1; j < hist->dims[0]; j++ )
-				    {
-					assert( hist->thresh[0][j - 1] < hist->thresh[0][j] );
-					if( val <= hist->thresh[0][j] )
-					    break;
-				    }
-				    addr[0] = j - 1;
-				    icvInsertNode( hist, addr[0] )->value++;
-				}
-			    }
-			}
-			data[0] = (float *) ((uchar *) data[0] + step);
-		    }
-		}
-		break;
-	    case 2:
-		{
-		    float val;
-		    float *data[CV_HIST_MAX_DIM];
-		    int addr[CV_HIST_MAX_DIM];
-
-		    data[0] = img[0];
-		    data[1] = img[1];
-
-		    for( y = 0; y < size.height; y++, mask += mask_step )
-		    {
-			for( x = 0; x < size.width; x++ )
-			{
-			    if( mask[x] )
-			    {
-				val = data[0][x];
-				if( val >= hist->thresh[0][0] &&
-				    val < hist->thresh[0][hist->dims[0]] )
-				{
-				    for( j = 1; j < hist->dims[0]; j++ )
-				    {
-					assert( hist->thresh[0][j - 1] < hist->thresh[0][j] );
-					if( val <= hist->thresh[0][j] )
-					    break;
-				    }
-				    addr[0] = j - 1;
-
-				    val = data[1][x];
-				    if( val >= hist->thresh[1][0] &&
-					val < hist->thresh[1][hist->dims[1]] )
-				    {
-					for( j = 1; j < hist->dims[1]; j++ )
-					{
-					    assert( hist->thresh[1][j - 1] <
-						    hist->thresh[1][j] );
-					    if( val <= hist->thresh[1][j] )
-						break;
-					}
-					addr[1] = j - 1;
-
-					icvInsertNode( hist, addr[0] * hist->mdims[0] +
-						       addr[1] )->value++;
-				    }
-				}
-			    }
-			}
-			data[0] = (float *) ((uchar *) data[0] + step);
-			data[1] = (float *) ((uchar *) data[1] + step);
-		    }
-		}
-		break;
-	    case 3:
-		{
-		    float val;
-		    float *data[CV_HIST_MAX_DIM];
-		    int addr[CV_HIST_MAX_DIM];
-
-		    data[0] = img[0];
-		    data[1] = img[1];
-		    data[2] = img[2];
-
-		    for( y = 0; y < size.height; y++, mask += mask_step )
-		    {
-			for( x = 0; x < size.width; x++ )
-			{
-			    if( mask[x] )
-			    {
-				val = data[0][x];
-				if( val >= hist->thresh[0][0] &&
-				    val < hist->thresh[0][hist->dims[0]] )
-				{
-				    for( j = 1; j < hist->dims[0]; j++ )
-				    {
-					assert( hist->thresh[0][j - 1] < hist->thresh[0][j] );
-					if( val <= hist->thresh[0][j] )
-					    break;
-				    }
-				    addr[0] = j - 1;
-
-				    val = data[1][x];
-				    if( val >= hist->thresh[1][0] &&
-					val < hist->thresh[1][hist->dims[1]] )
-				    {
-					for( j = 1; j < hist->dims[1]; j++ )
-					{
-					    assert( hist->thresh[1][j - 1] <
-						    hist->thresh[1][j] );
-					    if( val <= hist->thresh[1][j] )
-						break;
-					}
-					addr[1] = j - 1;
-
-					val = data[2][x];
-					if( val >= hist->thresh[2][0] &&
-					    val < hist->thresh[2][hist->dims[2]] )
-					{
-					    for( j = 1; j < hist->dims[2]; j++ )
-					    {
-						assert( hist->thresh[2][j - 1] <
-							hist->thresh[2][j] );
-						if( val <= hist->thresh[2][j] )
-						    break;
-					    }
-					    addr[2] = j - 1;
-
-					    icvInsertNode( hist,
-							   (int64) addr[0] * hist->mdims[0] +
-							   addr[1] * hist->mdims[1] +
-							   addr[2] )->value++;
-					}
-				    }
-				}
-			    }
-			}
-			data[0] = (float *) ((uchar *) data[0] + step);
-			data[1] = (float *) ((uchar *) data[1] + step);
-			data[2] = (float *) ((uchar *) data[2] + step);
-		    }
-		}
-		break;
-	    default:
-		{
-		    float val;
-		    float *data[CV_HIST_MAX_DIM];
-		    int addr[CV_HIST_MAX_DIM];
-
-		    for( i = 0; i < dims; i++ )
-			data[i] = img[i];
-
-		    for( y = 0; y < size.height; y++, mask += mask_step )
-		    {
-			for( x = 0; x < size.width; x++ )
-			{
-			    if( mask[x] )
-			    {
-				for( i = 0; i < dims; i++ )
-				{
-				    val = data[i][x];
-				    if( val < hist->thresh[i][0] ||
-					val >= hist->thresh[i][hist->dims[i]] )
-					goto next_point_float_tree;
-				    else
-				    {
-					for( j = 1; j < hist->dims[i]; j++ )
-					{
-					    assert( hist->thresh[i][j - 1] <
-						    hist->thresh[i][j] );
-					    if( val <= hist->thresh[i][j] )
-						break;
-					}
-				    }
-				    addr[i] = j - 1;
-				}
-				(*cvGetHistValue_nD( hist, addr ))++;
-			    }
-			  next_point_float_tree:;
-			}
-			for( i = 0; i < dims; i++ )
-			    data[i] = (float *) ((uchar *) data[i] + step);
-		    }
-		}
-		break;
-	    }
-	else
-	    switch (hist->c_dims)
-	    {
-	    case 1:
-		{
-		    float val;
-		    float *data[CV_HIST_MAX_DIM];
-		    int addr[CV_HIST_MAX_DIM];
-		    float stp[CV_HIST_MAX_DIM];
-		    float mn[CV_HIST_MAX_DIM];
-
-		    data[0] = img[0];
-		    mn[0] = hist->thresh[0][0];
-		    stp[0] =
-			hist->dims[0] / (hist->thresh[0][hist->dims[0]] - hist->thresh[0][0]);
-
-		    for( y = 0; y < size.height; y++, mask += mask_step )
-		    {
-			for( x = 0; x < size.width; x++ )
-			{
-			    if( mask[x] )
-			    {
-				val = data[0][x];
-				if( val >= hist->thresh[0][0] &&
-				    val < hist->thresh[0][hist->dims[0]] )
-				{
-				    addr[0] = cvFloor( ((float) val - mn[0]) * stp[0] );
-				    icvInsertNode( hist, addr[0] )->value++;
-				}
-			    }
-			}
-			data[0] = (float *) ((uchar *) data[0] + step);
-		    }
-		}
-		break;
-	    case 2:
-		{
-		    float val;
-		    float *data[CV_HIST_MAX_DIM];
-		    int addr[CV_HIST_MAX_DIM];
-		    float stp[CV_HIST_MAX_DIM];
-		    float mn[CV_HIST_MAX_DIM];
-
-		    data[0] = img[0];
-		    mn[0] = hist->thresh[0][0];
-		    stp[0] =
-			hist->dims[0] / (hist->thresh[0][hist->dims[0]] - hist->thresh[0][0]);
-
-		    data[1] = img[1];
-		    mn[1] = hist->thresh[1][0];
-		    stp[1] =
-			hist->dims[1] / (hist->thresh[1][hist->dims[1]] - hist->thresh[1][0]);
-
-		    for( y = 0; y < size.height; y++, mask += mask_step )
-		    {
-			for( x = 0; x < size.width; x++ )
-			{
-			    if( mask[x] )
-			    {
-				val = data[0][x];
-				if( val >= hist->thresh[0][0] &&
-				    val < hist->thresh[0][hist->dims[0]] )
-				{
-				    addr[0] = cvFloor( ((float) val - mn[0]) * stp[0] );
-
-				    val = data[1][x];
-				    if( val >= hist->thresh[1][0] &&
-					val < hist->thresh[1][hist->dims[1]] )
-				    {
-					addr[1] = cvFloor( ((float) val - mn[1]) * stp[1] );
-
-					icvInsertNode( hist, addr[0] * hist->mdims[0] +
-						       addr[1] )->value++;
-				    }
-				}
-			    }
-			}
-			data[0] = (float *) ((uchar *) data[0] + step);
-			data[1] = (float *) ((uchar *) data[1] + step);
-		    }
-		}
-		break;
-	    case 3:
-		{
-		    float val;
-		    float *data[CV_HIST_MAX_DIM];
-		    int addr[CV_HIST_MAX_DIM];
-		    float stp[CV_HIST_MAX_DIM];
-		    float mn[CV_HIST_MAX_DIM];
-
-		    data[0] = img[0];
-		    mn[0] = hist->thresh[0][0];
-		    stp[0] =
-			hist->dims[0] / (hist->thresh[0][hist->dims[0]] - hist->thresh[0][0]);
-
-		    data[1] = img[1];
-		    mn[1] = hist->thresh[1][0];
-		    stp[1] =
-			hist->dims[1] / (hist->thresh[1][hist->dims[1]] - hist->thresh[1][0]);
-
-		    data[2] = img[2];
-		    mn[2] = hist->thresh[2][0];
-		    stp[2] =
-			hist->dims[2] / (hist->thresh[2][hist->dims[2]] - hist->thresh[2][0]);
-
-		    for( y = 0; y < size.height; y++ )
-		    {
-			for( x = 0; x < size.width; x++ )
-			{
-			    if( mask[x] )
-			    {
-				val = data[0][x];
-				if( val >= hist->thresh[0][0] &&
-				    val < hist->thresh[0][hist->dims[0]] )
-				{
-				    addr[0] = cvFloor( ((float) val - mn[0]) * stp[0] );
-
-				    val = data[1][x];
-				    if( val >= hist->thresh[1][0] &&
-					val < hist->thresh[1][hist->dims[1]] )
-				    {
-					addr[1] = cvFloor( ((float) val - mn[1]) * stp[1] );
-
-					val = data[2][x];
-					if( val >= hist->thresh[2][0] &&
-					    val < hist->thresh[2][hist->dims[2]] )
-					{
-					    addr[2] =
-						cvFloor( ((float) val - mn[2]) * stp[2] );
-
-					    icvInsertNode( hist, addr[0] * hist->mdims[0] +
-							   addr[1] * hist->mdims[1] +
-							   addr[2] )->value++;
-					}
-				    }
-				}
-			    }
-			}
-			data[0] = (float *) ((uchar *) data[0] + step);
-			data[1] = (float *) ((uchar *) data[1] + step);
-			data[2] = (float *) ((uchar *) data[2] + step);
-		    }
-		}
-		break;
-	    default:
-		{
-		    float val;
-		    float *data[CV_HIST_MAX_DIM];
-		    int addr[CV_HIST_MAX_DIM];
-		    float stp[CV_HIST_MAX_DIM];
-		    float mn[CV_HIST_MAX_DIM];
-
-		    for( i = 0; i < dims; i++ )
-		    {
-			data[i] = img[i];
-			mn[i] = hist->thresh[i][0];
-			stp[i] =
-			    hist->dims[i] / (hist->thresh[i][hist->dims[i]] -
-					     hist->thresh[i][0]);
-		    }
-
-		    for( y = 0; y < size.height; y++, mask += mask_step )
-		    {
-			for( x = 0; x < size.width; x++ )
-			{
-			    if( mask[x] )
-			    {
-				for( i = 0; i < dims; i++ )
-				{
-				    val = data[i][x];
-				    if( val < hist->thresh[i][0] ||
-					val >= hist->thresh[i][hist->dims[i]] )
-					goto next_pointe_float_tree;
-				    else
-					addr[i] = cvFloor( ((float) val - mn[i]) * stp[i] );
-				}
-				(*cvGetHistValue_nD( hist, addr ))++;
-			    }
-			  next_pointe_float_tree:;
-			}
-			for( i = 0; i < dims; i++ )
-			    data[i] = (float *) ((uchar *) data[i] + step);
-		    }
-		}
-		break;
-	    }
-    }
-
-    return CV_NO_ERR;
-}
-
-
-/*F///////////////////////////////////////////////////////////////////////////////////////
-//    Name:	  icvCalcBackProject...C1R
-//    Purpose:	  Calculating back project of histogram
-//    Context:
-//    Parameters:
-//    Returns:
-//    Notes:
-//F*/
-IPCVAPI_IMPL( CvStatus, icvCalcBackProject8uC1R, (uchar ** img, int step,
-						  uchar * dst, int dst_step,
-						  CvSize size, CvHistogram * hist) )
-{
-    int i, dims, x, y;
-
-    if( !img || !dst || !hist )
-	return CV_NULLPTR_ERR;
-    if( size.width <= 0 || size.height <= 0 )
-	return CV_BADSIZE_ERR;
-    if( size.width * (int) sizeof( **img ) > step )
-	return CV_BADSIZE_ERR;
-    if( size.width * (int) sizeof( **img ) > dst_step )
-	return CV_BADSIZE_ERR;
-
-    dims = hist->c_dims;
-    for( i = 0; i < dims; i++ )
-	if( !img[i] )
-	    return CV_NULLPTR_ERR;
-
-    for( i = 0; i < size.height; i++ )
-	memset( dst + dst_step * i, 0, size.width );
-
-    if( hist->type == CV_HIST_ARRAY )
-    {
-	switch (hist->c_dims)
-	{
-	case 1:
-	    {
-		uchar *data0 = img[0];
-		uchar cache[256];
-		int *chdims0 = hist->chdims[0];
-
-		hist->array[hist->dims[0]] = 0;
-
-		for( i = 0; i < 256; i++ )
-		{
-		    int v = chdims0[i + 128];
-
-		    cache[i] = (uchar) hist->array[v];
-		}
-
-		for( y = 0; y < size.height; y++, data0 += step, dst += dst_step )
-		{
-		    for( x = 0; x <= size.width - 4; x += 4 )
-		    {
-			dst[x] = cache[data0[x]];
-			dst[x + 1] = cache[data0[x + 1]];
-			dst[x + 2] = cache[data0[x + 2]];
-			dst[x + 3] = cache[data0[x + 3]];
-		    }
-
-		    for( ; x < size.width; x++ )
-			dst[x] = cache[data0[x]];
-		}
-	    }
-	    break;
-	case 2:
-	    if( (hist->mdims[0] + 1) * (hist->mdims[1] + 1) )
-	    {
-		uchar *data0 = img[0];
-		uchar *data1 = img[1];
-		int chdims0[256];
-		int chdims1[256];
-		int array[4096];
-		int hstep = hist->mdims[0] + 1;
-
-		for( y = 0, i = 0; y < hist->dims[0]; y++ )
-		    for( x = 0; x < hist->dims[1]; x++, i++ )
-			array[y * hstep + x] = cvRound( hist->array[i] );
-		for( i = 0; i < hist->dims[1] + 1; i++ )
-		    array[hist->dims[0] * hstep + i] = 0;
-		for( i = 0; i < hist->dims[0]; i++ )
-		    array[(i + 1) * hstep - 1] = 0;
-
-		memcpy( chdims0, hist->chdims[0] + 128, 256 * sizeof( int ));
-		memcpy( chdims1, hist->chdims[1] + 128, 256 * sizeof( int ));
-
-		for( y = 0; y < size.height; y++, data0 += step, data1 += step,
-		     dst += dst_step )
-		{
-		    for( x = 0; x < size.width - 2; x += 2 )
-		    {
-			int val0 = chdims0[data0[x]];
-			int val1 = chdims1[data1[x]];
-
-			dst[x] = (uchar) array[val0 + val1];
-			val0 = chdims0[data0[x + 1]];
-			val1 = chdims1[data1[x + 1]];
-			dst[x + 1] = (uchar) array[val0 + val1];
-		    }
-		    for( ; x < size.width; x++ )
-		    {
-			int val0 = chdims0[data0[x]];
-			int val1 = chdims1[data1[x]];
-
-			dst[x] = (uchar) array[val0 + val1];
-		    }
-		}
-	    }
-	    else
-	    {
-		uchar *data0 = img[0];
-		uchar *data1 = img[1];
-		int chdims0[256];
-		int chdims1[256];
-		int hstep = hist->mdims[0] + 1;
-		int *array = (int *) icvAlloc( hstep * (hist->dims[0] + 1) );
-
-		for( y = 0, i = 0; y < hist->dims[0]; y++ )
-		    for( x = 0; x < hist->dims[1]; x++, i++ )
-			array[y * hstep + x] = cvRound( hist->array[i] );
-		for( i = 0; i < hist->dims[1] + 1; i++ )
-		    array[hist->dims[0] * hstep + i] = 0;
-		for( i = 0; i < hist->dims[0]; i++ )
-		    array[(i + 1) * hstep - 1] = 0;
-
-		memcpy( chdims0, hist->chdims[0] + 128, 256 * sizeof( int ));
-		memcpy( chdims1, hist->chdims[1] + 128, 256 * sizeof( int ));
-
-		for( y = 0; y < size.height; y++, data0 += step, data1 += step,
-		     dst += dst_step )
-		{
-		    for( x = 0; x < size.width - 2; x += 2 )
-		    {
-			int val0 = chdims0[data0[x]];
-			int val1 = chdims1[data1[x]];
-
-			dst[x] = (uchar) array[val0 + val1];
-			val0 = chdims0[data0[x + 1]];
-			val1 = chdims1[data1[x + 1]];
-			dst[x + 1] = (uchar) array[val0 + val1];
-		    }
-		    for( ; x < size.width; x++ )
-		    {
-			int val0 = chdims0[data0[x]];
-			int val1 = chdims1[data1[x]];
-
-			dst[x] = (uchar) array[val0 + val1];
-		    }
-		}
-		icvFree( &array );
-	    }
-	    break;
-	case 3:
-	    {
-		uchar *data0 = img[0];
-		uchar *data1 = img[1];
-		uchar *data2 = img[2];
-
-		for( y = 0; y < size.height; y++, data0 += step, data1 += step,
-		     data2 += step, dst += dst_step )
-		    for( x = 0; x < size.width; x++ )
-		    {
-			int val0 = hist->chdims[0][(int) data0[x] + 128];
-			int val1 = hist->chdims[1][(int) data1[x] + 128];
-			int val2 = hist->chdims[2][(int) data2[x] + 128];
-
-			if( (val0 | val1 | val2) >= 0 )
-			    dst[x] = (uchar) hist->array[val0 + val1 + val2];
-		    }
-	    }
-	    break;
-	default:
-	    {
-		uchar *data[CV_HIST_MAX_DIM];
-
-		for( i = 0; i < hist->c_dims; i++ )
-		    data[i] = img[i];
-
-		for( y = 0; y < size.height; y++, dst += dst_step )
-		{
-		    for( x = 0; x < size.width; x++ )
-		    {
-			int addr = 0;
-
-			for( i = 0; i < hist->c_dims; i++ )
-			{
-			    int val = hist->chdims[i][(int) data[i][x] + 128];
-
-			    if( val >= 0 )
-				addr += val;
-			    else
-				goto next;
-			}
-			dst[x] = (uchar) hist->array[addr];
-		      next:;
-		    }
-		    for( i = 0; i < hist->c_dims; i++ )
-			data[i] += step;
-		}
-	    }
-	    break;
-	}
-    }
-    else
-    {
-	switch (hist->c_dims)
-	{
-	case 1:
-	    {
-		uchar *data0 = img[0];
-		uchar cache[256];
-		int *chdims0 = hist->chdims[0];
-
-		for( i = 0; i < 256; i++ )
-		{
-		    int v = chdims0[i + 128];
-		    CvNode *node = icvFindNode( hist->root, v );
-
-		    cache[i] = (uchar) (node ? node->value : 0);
-		}
-
-		for( y = 0; y < size.height; y++, data0 += step, dst += dst_step )
-		{
-		    for( x = 0; x <= size.width - 4; x += 4 )
-		    {
-			dst[x] = cache[data0[x]];
-			dst[x + 1] = cache[data0[x + 1]];
-			dst[x + 2] = cache[data0[x + 2]];
-			dst[x + 3] = cache[data0[x + 3]];
-		    }
-
-		    for( ; x < size.width; x++ )
-			dst[x] = cache[data0[x]];
-		}
-	    }
-	    break;
-	case 2:
-	    if( (hist->mdims[0] + 1) * (hist->mdims[1] + 1) )
-	    {
-		uchar *data0 = img[0];
-		uchar *data1 = img[1];
-		int chdims0[256];
-		int chdims1[256];
-		int array[4096];
-		int hstep = hist->mdims[0] + 1;
-
-		for( y = 0, i = 0; y < hist->dims[0]; y++ )
-		    for( x = 0; x < hist->dims[1]; x++, i++ )
-		    {
-			CvNode *node = icvFindNode( hist->root, i );
-
-			array[y * hstep + x] = node ? cvRound( node->value ) : 0;
-		    }
-		for( i = 0; i < hist->dims[1] + 1; i++ )
-		    array[hist->dims[0] * hstep + i] = 0;
-		for( i = 0; i < hist->dims[0]; i++ )
-		    array[(i + 1) * hstep - 1] = 0;
-
-		memcpy( chdims0, hist->chdims[0] + 128, 256 * sizeof( int ));
-		memcpy( chdims1, hist->chdims[1] + 128, 256 * sizeof( int ));
-
-		for( y = 0; y < size.height; y++, data0 += step, data1 += step,
-		     dst += dst_step )
-		{
-		    for( x = 0; x < size.width - 2; x += 2 )
-		    {
-			int val0 = chdims0[data0[x]];
-			int val1 = chdims1[data1[x]];
-
-			dst[x] = (uchar) array[val0 + val1];
-			val0 = chdims0[data0[x + 1]];
-			val1 = chdims1[data1[x + 1]];
-			dst[x + 1] = (uchar) array[val0 + val1];
-		    }
-		    for( ; x < size.width; x++ )
-		    {
-			int val0 = chdims0[data0[x]];
-			int val1 = chdims1[data1[x]];
-
-			dst[x] = (uchar) array[val0 + val1];
-		    }
-		}
-	    }
-	    else
-	    {
-		uchar *data0 = img[0];
-		uchar *data1 = img[1];
-		int chdims0[256];
-		int chdims1[256];
-		int hstep = hist->mdims[0] + 1;
-		int *array = (int *) icvAlloc( hstep * (hist->dims[0] + 1) );
-
-		for( y = 0, i = 0; y < hist->dims[0]; y++ )
-		    for( x = 0; x < hist->dims[1]; x++, i++ )
-		    {
-			CvNode *node = icvFindNode( hist->root, i );
-
-			array[y * hstep + x] = node ? cvRound( node->value ) : 0;
-		    }
-		for( i = 0; i < hist->dims[1] + 1; i++ )
-		    array[hist->dims[0] * hstep + i] = 0;
-		for( i = 0; i < hist->dims[0]; i++ )
-		    array[(i + 1) * hstep - 1] = 0;
-
-		memcpy( chdims0, hist->chdims[0] + 128, 256 * sizeof( int ));
-		memcpy( chdims1, hist->chdims[1] + 128, 256 * sizeof( int ));
-
-		for( y = 0; y < size.height; y++, data0 += step, data1 += step,
-		     dst += dst_step )
-		{
-		    for( x = 0; x < size.width - 2; x += 2 )
-		    {
-			int val0 = chdims0[data0[x]];
-			int val1 = chdims1[data1[x]];
-
-			dst[x] = (uchar) array[val0 + val1];
-			val0 = chdims0[data0[x + 1]];
-			val1 = chdims1[data1[x + 1]];
-			dst[x + 1] = (uchar) array[val0 + val1];
-		    }
-		    for( ; x < size.width; x++ )
-		    {
-			int val0 = chdims0[data0[x]];
-			int val1 = chdims1[data1[x]];
-
-			dst[x] = (uchar) array[val0 + val1];
-		    }
-		}
-		icvFree( &array );
-	    }
-	    break;
-	case 3:
-	    {
-		uchar *data0 = img[0];
-		uchar *data1 = img[1];
-		uchar *data2 = img[2];
-
-		for( y = 0; y < size.height; y++, data0 += step, data1 += step,
-		     data2 += step, dst += dst_step )
-		    for( x = 0; x < size.width; x++ )
-		    {
-			int val0 = hist->chdims[0][(int) data0[x] + 128];
-			int val1 = hist->chdims[1][(int) data1[x] + 128];
-			int val2 = hist->chdims[2][(int) data2[x] + 128];
-
-			if( (val0 | val1 | val2) >= 0 )
-			{
-			    CvNode *node = icvFindNode( hist->root,
-							(int64) val0 + val1 + val2 );
-
-			    dst[x] = (uchar) (node ? node->value : 0);
-			}
-		    }
-	    }
-	    break;
-	default:
-	    {
-		uchar *data[CV_HIST_MAX_DIM];
-
-		for( i = 0; i < hist->c_dims; i++ )
-		    data[i] = img[i];
-
-		for( y = 0; y < size.height; y++, dst += dst_step )
-		{
-		    for( x = 0; x < size.width; x++ )
-		    {
-			int64 addr = 0;
-			CvNode *node;
-
-			for( i = 0; i < hist->c_dims; i++ )
-			{
-			    int val = hist->chdims[i][(int) data[i][x] + 128];
-
-			    if( val >= 0 )
-				addr += val;
-			    else
-				goto next_tree;
-			}
-			node = icvFindNode( hist->root, addr );
-			dst[x] = (uchar) (node ? node->value : 0);
-		      next_tree:;
-		    }
-		    for( i = 0; i < hist->c_dims; i++ )
-			data[i] += step;
-		}
-	    }
-	    break;
-	}
-    }
-    return CV_NO_ERR;
-}
-
-/*F///////////////////////////////////////////////////////////////////////////////////////
-//    Name:	  icvCalcBackProject...C1R
-//    Purpose:	  Calculating back project of histogram
-//    Context:
-//    Parameters:
-//    Returns:
-//    Notes:
-//F*/
-IPCVAPI_IMPL( CvStatus, icvCalcBackProject8sC1R, (char **img, int step,
-						  char *dst, int dst_step,
-						  CvSize size, CvHistogram * hist) )
-{
-    int i, dims, x, y;
-
-    if( !img || !dst || !hist )
-	return CV_NULLPTR_ERR;
-    if( size.width <= 0 || size.height <= 0 )
-	return CV_BADSIZE_ERR;
-    if( size.width * (int) sizeof( **img ) > step )
-	return CV_BADSIZE_ERR;
-    if( size.width * (int) sizeof( **img ) > dst_step )
-	return CV_BADSIZE_ERR;
-
-    dims = hist->c_dims;
-    for( i = 0; i < dims; i++ )
-	if( !img[i] )
-	    return CV_NULLPTR_ERR;
-
-    for( i = 0; i < size.height; i++ )
-	memset( dst + dst_step * i, 0, size.width );
-
-    if( hist->type == CV_HIST_ARRAY )
-    {
-	switch (hist->c_dims)
-	{
-	case 1:
-	    {
-		char *data0 = img[0];
-		char cache[256];
-
-		hist->array[hist->dims[0]] = 0;
-
-		for( i = 0; i < 256; i++ )
-		{
-		    int v = hist->chdims[0][i + 128];
-
-		    if( v >= 0 )
-			cache[i] = (char) hist->array[v];
-		    else
-			cache[i] = 0;
-		}
-
-		for( y = 0; y < size.height; y++, data0 += step, dst += dst_step )
-		{
-		    for( x = 0; x <= size.width - 4; x += 4 )
-		    {
-			dst[x] = cache[data0[x]];
-			dst[x + 1] = cache[data0[x + 1]];
-			dst[x + 2] = cache[data0[x + 2]];
-			dst[x + 3] = cache[data0[x + 3]];
-		    }
-
-		    for( ; x < size.width; x++ )
-		    {
-			dst[x] = cache[data0[x]];
-		    }
-		}
-	    }
-	    break;
-	case 2:
-	    if( (hist->mdims[0] + 1) * (hist->mdims[1] + 1) )
-	    {
-		char *data0 = img[0];
-		char *data1 = img[1];
-		int chdims0[256];
-		int chdims1[256];
-		int array[4096];
-		int hstep = hist->mdims[0] + 1;
-
-		for( y = 0, i = 0; y < hist->dims[0]; y++ )
-		    for( x = 0; x < hist->dims[1]; x++, i++ )
-			array[y * hstep + x] = cvRound( hist->array[i] );
-		for( i = 0; i < hist->dims[1] + 1; i++ )
-		    array[hist->dims[0] * hstep + i] = 0;
-		for( i = 0; i < hist->dims[0]; i++ )
-		    array[(i + 1) * hstep - 1] = 0;
-
-		memcpy( chdims0, hist->chdims[0], 256 * sizeof( int ));
-		memcpy( chdims1, hist->chdims[1], 256 * sizeof( int ));
-
-		for( y = 0; y < size.height; y++, data0 += step, data1 += step,
-		     dst += dst_step )
-		{
-		    for( x = 0; x < size.width; x += 2 )
-		    {
-			int val0 = chdims0[data0[x] + 128];
-			int val1 = chdims1[data1[x] + 128];
-
-			dst[x] = (uchar) array[val0 + val1];
-			val0 = chdims0[data0[x + 1] + 128];
-			val1 = chdims1[data1[x + 1] + 128];
-			dst[x + 1] = (uchar) array[val0 + val1];
-		    }
-		    for( ; x < size.width; x++ )
-		    {
-			int val0 = chdims0[data0[x] + 128];
-			int val1 = chdims1[data1[x] + 128];
-
-			dst[x] = (uchar) array[val0 + val1];
-		    }
-		}
-	    }
-	    else
-	    {
-		char *data0 = img[0];
-		char *data1 = img[1];
-		int chdims0[256];
-		int chdims1[256];
-		int hstep = hist->mdims[0] + 1;
-		int *array = (int *) icvAlloc( hstep * (hist->dims[0] + 1) );
-
-		for( y = 0, i = 0; y < hist->dims[0]; y++ )
-		    for( x = 0; x < hist->dims[1]; x++, i++ )
-			array[y * hstep + x] = cvRound( hist->array[i] );
-		for( i = 0; i < hist->dims[1] + 1; i++ )
-		    array[hist->dims[0] * hstep + i] = 0;
-		for( i = 0; i < hist->dims[0]; i++ )
-		    array[(i + 1) * hstep - 1] = 0;
-
-		memcpy( chdims0, hist->chdims[0], 256 * sizeof( int ));
-		memcpy( chdims1, hist->chdims[1], 256 * sizeof( int ));
-
-		for( y = 0; y < size.height; y++, data0 += step, data1 += step,
-		     dst += dst_step )
-		{
-		    for( x = 0; x < size.width; x += 2 )
-		    {
-			int val0 = chdims0[data0[x] + 128];
-			int val1 = chdims1[data1[x] + 128];
-
-			dst[x] = (uchar) array[val0 + val1];
-			val0 = chdims0[data0[x + 1] + 128];
-			val1 = chdims1[data1[x + 1] + 128];
-			dst[x + 1] = (uchar) array[val0 + val1];
-		    }
-		    for( ; x < size.width; x++ )
-		    {
-			int val0 = chdims0[data0[x] + 128];
-			int val1 = chdims1[data1[x] + 128];
-
-			dst[x] = (uchar) array[val0 + val1];
-		    }
-		}
-		icvFree( &array );
-	    }
-	    break;
-	case 3:
-	    {
-		char *data0 = img[0];
-		char *data1 = img[1];
-		char *data2 = img[2];
-
-		for( y = 0; y < size.height; y++, data0 += step, data1 += step,
-		     data2 += step, dst += dst_step )
-		    for( x = 0; x < size.width; x++ )
-		    {
-			int val0 = hist->chdims[0][(int) data0[x] + 128];
-			int val1 = hist->chdims[1][(int) data1[x] + 128];
-			int val2 = hist->chdims[2][(int) data2[x] + 128];
-
-			if( (val0 | val1 | val2) >= 0 )
-			    dst[x] = (char) hist->array[val0 + val1 + val2];
-		    }
-	    }
-	    break;
-	default:
-	    {
-		char *data[CV_HIST_MAX_DIM];
-
-		for( i = 0; i < hist->c_dims; i++ )
-		    data[i] = img[i];
-
-		for( y = 0; y < size.height; y++, dst += dst_step )
-		{
-		    for( x = 0; x < size.width; x++ )
-		    {
-			int addr = 0;
-
-			for( i = 0; i < hist->c_dims; i++ )
-			{
-			    int val = hist->chdims[i][(int) data[i][x] + 128];
-
-			    if( val >= 0 )
-				addr += val;
-			    else
-				goto next;
-			}
-			dst[x] = (char) hist->array[addr];
-		      next:;
-		    }
-		    for( i = 0; i < hist->c_dims; i++ )
-			data[i] += step;
-		}
-	    }
-	    break;
-	}
-    }
-    else
-    {
-	switch (hist->c_dims)
-	{
-	case 1:
-	    {
-		char *data0 = img[0];
-		char cache[256];
-
-		for( i = 0; i < 256; i++ )
-		{
-		    int v = hist->chdims[0][i + 128];
-
-		    if( v >= 0 )
-		    {
-			CvNode *node = icvFindNode( hist->root, v );
-
-			cache[i] = (uchar) (node ? node->value : 0);
-		    }
-		    else
-			cache[i] = 0;
-		}
-
-		for( y = 0; y < size.height; y++, data0 += step, dst += dst_step )
-		{
-		    for( x = 0; x <= size.width - 4; x += 4 )
-		    {
-			dst[x] = cache[data0[x]];
-			dst[x + 1] = cache[data0[x + 1]];
-			dst[x + 2] = cache[data0[x + 2]];
-			dst[x + 3] = cache[data0[x + 3]];
-		    }
-
-		    for( ; x < size.width; x++ )
-		    {
-			dst[x] = cache[data0[x]];
-		    }
-		}
-	    }
-	    break;
-	case 2:
-	    if( (hist->mdims[0] + 1) * (hist->mdims[1] + 1) )
-	    {
-		char *data0 = img[0];
-		char *data1 = img[1];
-		int chdims0[256];
-		int chdims1[256];
-		int array[4096];
-		int hstep = hist->mdims[0] + 1;
-
-		for( y = 0, i = 0; y < hist->dims[0]; y++ )
-		    for( x = 0; x < hist->dims[1]; x++, i++ )
-		    {
-			CvNode *node = icvFindNode( hist->root, i );
-
-			array[y * hstep + x] = node ? cvRound( node->value ) : 0;
-		    }
-		for( i = 0; i < hist->dims[1] + 1; i++ )
-		    array[hist->dims[0] * hstep + i] = 0;
-		for( i = 0; i < hist->dims[0]; i++ )
-		    array[(i + 1) * hstep - 1] = 0;
-
-		memcpy( chdims0, hist->chdims[0], 256 * sizeof( int ));
-		memcpy( chdims1, hist->chdims[1], 256 * sizeof( int ));
-
-		for( y = 0; y < size.height; y++, data0 += step, data1 += step,
-		     dst += dst_step )
-		{
-		    for( x = 0; x < size.width; x += 2 )
-		    {
-			int val0 = chdims0[data0[x] + 128];
-			int val1 = chdims1[data1[x] + 128];
-
-			dst[x] = (uchar) array[val0 + val1];
-			val0 = chdims0[data0[x + 1] + 128];
-			val1 = chdims1[data1[x + 1] + 128];
-			dst[x + 1] = (uchar) array[val0 + val1];
-		    }
-		    for( ; x < size.width; x++ )
-		    {
-			int val0 = chdims0[data0[x] + 128];
-			int val1 = chdims1[data1[x] + 128];
-
-			dst[x] = (uchar) array[val0 + val1];
-		    }
-		}
-	    }
-	    else
-	    {
-		char *data0 = img[0];
-		char *data1 = img[1];
-		int chdims0[256];
-		int chdims1[256];
-		int hstep = hist->mdims[0] + 1;
-		int *array = (int *) icvAlloc( hstep * (hist->dims[0] + 1) );
-
-		for( y = 0, i = 0; y < hist->dims[0]; y++ )
-		    for( x = 0; x < hist->dims[1]; x++, i++ )
-		    {
-			CvNode *node = icvFindNode( hist->root, i );
-
-			array[y * hstep + x] = node ? cvRound( node->value ) : 0;
-		    }
-		for( i = 0; i < hist->dims[1] + 1; i++ )
-		    array[hist->dims[0] * hstep + i] = 0;
-		for( i = 0; i < hist->dims[0]; i++ )
-		    array[(i + 1) * hstep - 1] = 0;
-
-		memcpy( chdims0, hist->chdims[0], 256 * sizeof( int ));
-		memcpy( chdims1, hist->chdims[1], 256 * sizeof( int ));
-
-		for( y = 0; y < size.height; y++, data0 += step, data1 += step,
-		     dst += dst_step )
-		{
-		    for( x = 0; x < size.width; x += 2 )
-		    {
-			int val0 = chdims0[data0[x] + 128];
-			int val1 = chdims1[data1[x] + 128];
-
-			dst[x] = (uchar) array[val0 + val1];
-			val0 = chdims0[data0[x + 1] + 128];
-			val1 = chdims1[data1[x + 1] + 128];
-			dst[x + 1] = (uchar) array[val0 + val1];
-		    }
-		    for( ; x < size.width; x++ )
-		    {
-			int val0 = chdims0[data0[x] + 128];
-			int val1 = chdims1[data1[x] + 128];
-
-			dst[x] = (uchar) array[val0 + val1];
-		    }
-		}
-		icvFree( &array );
-	    }
-	    break;
-	case 3:
-	    {
-		char *data0 = img[0];
-		char *data1 = img[1];
-		char *data2 = img[2];
-
-		for( y = 0; y < size.height; y++, data0 += step, data1 += step,
-		     data2 += step, dst += dst_step )
-		    for( x = 0; x < size.width; x++ )
-		    {
-			int val0 = hist->chdims[0][(int) data0[x] + 128];
-			int val1 = hist->chdims[1][(int) data1[x] + 128];
-			int val2 = hist->chdims[2][(int) data2[x] + 128];
-
-			if( (val0 | val1 | val2) >= 0 )
-			{
-			    CvNode *node = icvFindNode( hist->root,
-							(int64) val0 + val1 + val2 );
-
-			    dst[x] = (char) (node ? node->value : 0);
-			}
-		    }
-	    }
-	    break;
-	default:
-	    {
-		char *data[CV_HIST_MAX_DIM];
-
-		for( i = 0; i < hist->c_dims; i++ )
-		    data[i] = img[i];
-
-		for( y = 0; y < size.height; y++, dst += dst_step )
-		{
-		    for( x = 0; x < size.width; x++ )
-		    {
-			int addr = 0;
-			CvNode *node;
-
-			for( i = 0; i < hist->c_dims; i++ )
-			{
-			    int val = hist->chdims[i][(int) data[i][x] + 128];
-
-			    if( val >= 0 )
-				addr += val;
-			    else
-				goto next_tree;
-			}
-			node = icvFindNode( hist->root, addr );
-			dst[x] = (char) (node ? node->value : 0);
-		      next_tree:;
-		    }
-		    for( i = 0; i < hist->c_dims; i++ )
-			data[i] += step;
-		}
-	    }
-	    break;
-	}
-    }
-
-    return CV_NO_ERR;
-}
-
-
-/*F///////////////////////////////////////////////////////////////////////////////////////
-//    Name:	  icvCalcBackProject...C1R
-//    Purpose:	  Calculating back project of histogram
-//    Context:
-//    Parameters:
-//    Returns:
-//    Notes:
-//F*/
-IPCVAPI_IMPL( CvStatus, icvCalcBackProject32fC1R, (float **img, int step,
-						   float *dst, int dst_step,
-						   CvSize size, CvHistogram * hist) )
-{
-    int i, j, dims;
-
-    if( !img || !dst || !hist )
-	return CV_NULLPTR_ERR;
-    if( size.width <= 0 || size.height <= 0 )
-	return CV_BADSIZE_ERR;
-    if( size.width * (int) sizeof( **img ) > step )
-	return CV_BADSIZE_ERR;
-    if( size.width * (int) sizeof( *dst ) > dst_step )
-	return CV_BADSIZE_ERR;
-
-    dims = hist->c_dims;
-    for( i = 0; i < dims; i++ )
-	if( !img[i] )
-	    return CV_NULLPTR_ERR;
-
-    for( i = 0; i < size.height; i++ )
-	memset( (char *) dst + dst_step * i, 0, size.width * sizeof( *dst ));
-
-    if( hist->flags & CV_HIST_UNIFORM )
-    {
-	float val;
-	float *data[CV_HIST_MAX_DIM];
-	int x, y;
-	int addr[CV_HIST_MAX_DIM];
-	float stp[CV_HIST_MAX_DIM];
-	float mn[CV_HIST_MAX_DIM];
-
-	for( i = 0; i < dims; i++ )
-	{
-	    data[i] = img[i];
-	    mn[i] = hist->thresh[i][0];
-	    stp[i] = hist->dims[i] / (hist->thresh[i][hist->dims[i]] - hist->thresh[i][0]);
-	}
-
-	for( y = 0; y < size.height; y++ )
-	{
-	    for( x = 0; x < size.width; x++ )
-	    {
-		for( i = 0; i < dims; i++ )
-		{
-		    val = data[i][x];
-		    if( val < hist->thresh[i][0] || val > hist->thresh[i][hist->dims[i]] )
-		    {
-			dst[x] = 0;
-			goto next_pointe_float;
-		    }
-		    else
-			addr[i] = cvFloor( ((float) val - mn[i]) * stp[i] );
-		}
-		dst[x] = (float) cvQueryHistValue_nD( hist, addr );
-	      next_pointe_float:;
-	    }
-	    for( i = 0; i < dims; i++ )
-		data[i] = (float *) ((uchar *) data[i] + step);
-	    dst = (float *) ((uchar *) dst + dst_step);
-	}
-    }
-    else
-    {
-	float val;
-	float *data[CV_HIST_MAX_DIM];
-	int x, y;
-	int addr[CV_HIST_MAX_DIM];
-
-	for( i = 0; i < dims; i++ )
-	    data[i] = img[i];
-
-	for( y = 0; y < size.height; y++ )
-	{
-	    for( x = 0; x < size.width; x++ )
-	    {
-		for( i = 0; i < dims; i++ )
-		{
-		    val = data[i][x];
-		    if( val < hist->thresh[i][0] || val > hist->thresh[i][hist->dims[i]] )
-		    {
-			dst[x] = 0;
-			goto next_point_float;
-		    }
-		    else
-		    {
-			for( j = 1; j < hist->dims[i]; j++ )
-			{
-			    assert( hist->thresh[i][j - 1] < hist->thresh[i][j] );
-			    if( val <= hist->thresh[i][j] )
-				break;
-			}
-		    }
-		    addr[i] = j - 1;
-		}
-		dst[x] = (float) cvQueryHistValue_nD( hist, addr );
-	      next_point_float:;
-	    }
-	    for( i = 0; i < dims; i++ )
-		data[i] = (float *) ((uchar *) data[i] + step);
-	    dst = (float *) ((uchar *) dst + dst_step);
-	}
-    }
-
-    return CV_NO_ERR;
-}
-
-#define _CHECK(func)		      \
-{				      \
-    CvStatus res = func;	      \
-    if(res != CV_NO_ERR) return res;  \
-}
-
-
-/*F///////////////////////////////////////////////////////////////////////////////////////
-//    Name:	  icvCalcBackProjectPatch...C1R
-//    Purpose:	  Calculating back project patch of histogram
-//    Context:
-//    Parameters:
-//    Returns:
-//    Notes:
-//F*/
-IPCVAPI_IMPL( CvStatus, icvCalcBackProjectPatch8uC1R, (uchar ** src, int src_step,
-						       float *dst, int dst_step,
-						       CvSize roi,
-						       CvSize range,
-						       CvHistogram * hist,
-						       CvCompareMethod method,
-						       float norm_factor) )
-{
-    CvHistogram *model = 0;
-    int i, x, y;
-    uchar *img[CV_HIST_MAX_DIM];
-    CvSize rng = cvSize( range.width * 2 + 1, range.height * 2 + 1 );
-
-    if( !hist || !src || !dst )
-	return CV_NULLPTR_ERR;
-    if( roi.width < (range.width * 2 + 1) || roi.height < (range.height * 2 + 1) )
-	return CV_BADSIZE_ERR;
-    for( i = 0; i < hist->c_dims; i++ )
-	if( (img[i] = src[i]) == 0 )
-	    return CV_NULLPTR_ERR;
-
-    cvCopyHist( hist, &model );
-
-    /* top */
-    for( y = 0; y < range.height; y++, dst = (float *) ((char *) dst + dst_step) )
-    {
-	/* u.left */
-	for( x = 0; x < range.width; x++ )
-	{
-	    _CHECK( icvCalcHist8uC1R( img, src_step,
-				      cvSize( range.width + x + 1, range.height + y + 1 ),
-				      model, 0 ));
-	    cvNormalizeHist( model, norm_factor );
-	    dst[x] = (float) cvCompareHist( hist, model, method );
-	}
-	/* center */
-	for( ; x < roi.width - range.width; x++ )
-	{
-	    _CHECK( icvCalcHist8uC1R( img, src_step,
-				      cvSize( rng.width, range.height + y + 1 ), model, 0 ));
-	    cvNormalizeHist( model, norm_factor );
-	    dst[x] = (float) cvCompareHist( hist, model, method );
-	    for( i = 0; i < hist->c_dims; i++ )
-		img[i]++;
-	}
-	/* u.right */
-	for( ; x < roi.width; x++ )
-	{
-	    _CHECK( icvCalcHist8uC1R( img, src_step,
-				      cvSize( roi.width - x + range.width,
-					      range.height + y + 1 ), model, 0 ));
-	    cvNormalizeHist( model, norm_factor );
-	    dst[x] = (float) cvCompareHist( hist, model, method );
-	    for( i = 0; i < hist->c_dims; i++ )
-		img[i]++;
-	}
-	for( i = 0; i < hist->c_dims; i++ )
-	    img[i] = src[0];
-    }
-
-    /* center */
-    for( ; y < roi.height - range.height; y++, dst = (float *) ((char *) dst + dst_step) )
-    {
-	/* u.left */
-	for( x = 0; x < range.width; x++ )
-	{
-	    _CHECK( icvCalcHist8uC1R( img, src_step, cvSize( range.width + x + 1, rng.height ),
-				      model, 0 ));
-	    cvNormalizeHist( model, norm_factor );
-	    dst[x] = (float) cvCompareHist( hist, model, method );
-	}
-	/* center */
-	for( ; x < roi.width - range.width; x++ )
-	{
-	    _CHECK( icvCalcHist8uC1R( img, src_step, rng, model, 0 ));
-	    cvNormalizeHist( model, norm_factor );
-	    dst[x] = (float) cvCompareHist( hist, model, method );
-	    for( i = 0; i < hist->c_dims; i++ )
-		img[i]++;
-	}
-	/* u.right */
-	for( ; x < roi.width; x++ )
-	{
-	    _CHECK( icvCalcHist8uC1R( img, src_step,
-				      cvSize( roi.width - x + range.width, rng.height ),
-				      model, 0 ));
-	    cvNormalizeHist( model, norm_factor );
-	    dst[x] = (float) cvCompareHist( hist, model, method );
-	    for( i = 0; i < hist->c_dims; i++ )
-		img[i]++;
-	}
-	for( i = 0; i < hist->c_dims; i++ )
-	    img[i] += src_step - roi.width + range.width;
-    }
-    /* bottom */
-    for( ; y < roi.height; y++, dst = (float *) ((char *) dst + dst_step) )
-    {
-	/* u.left */
-	for( x = 0; x < range.width; x++ )
-	{
-	    _CHECK( icvCalcHist8uC1R( img, src_step,
-				      cvSize( range.width + x + 1,
-					      roi.height - y + range.height ), model, 0 ));
-	    cvNormalizeHist( model, norm_factor );
-	    dst[x] = (float) cvCompareHist( hist, model, method );
-	}
-	/* center */
-	for( ; x < roi.width - range.width; x++ )
-	{
-	    _CHECK( icvCalcHist8uC1R( img, src_step,
-				      cvSize( rng.width, roi.height - y + range.height ),
-				      model, 0 ));
-	    cvNormalizeHist( model, norm_factor );
-	    dst[x] = (float) cvCompareHist( hist, model, method );
-	    for( i = 0; i < hist->c_dims; i++ )
-		img[i]++;
-	}
-	/* u.right */
-	for( ; x < roi.width; x++ )
-	{
-	    _CHECK( icvCalcHist8uC1R( img, src_step,
-				      cvSize( roi.width - x + range.width,
-					      roi.height - y + range.height ), model, 0 ));
-	    cvNormalizeHist( model, norm_factor );
-	    dst[x] = (float) cvCompareHist( hist, model, method );
-	    for( i = 0; i < hist->c_dims; i++ )
-		img[i]++;
-	}
-	for( i = 0; i < hist->c_dims; i++ )
-	    img[i] += src_step - roi.width + range.width;
-    }
-
-    cvReleaseHist( &model );
-    return CV_NO_ERR;
-}				/* icvCalcBackProjectPatch8uC1R */
-
-/*F///////////////////////////////////////////////////////////////////////////////////////
-//    Name:	  icvCalcBackProjectPatch...C1R
-//    Purpose:	  Calculating back project patch of histogram
-//    Context:
-//    Parameters:
-//    Returns:
-//    Notes:
-//F*/
-IPCVAPI_IMPL( CvStatus, icvCalcBackProjectPatch8sC1R, (char **src, int src_step,
-						       float *dst, int dst_step,
-						       CvSize roi,
-						       CvSize range,
-						       CvHistogram * hist,
-						       CvCompareMethod method,
-						       float norm_factor) )
-{
-    CvHistogram *model = 0;
-    int i, x, y;
-    char *img[CV_HIST_MAX_DIM];
-    CvSize rng = cvSize( range.width * 2 + 1, range.height * 2 + 1 );
-
-    if( !hist || !src || !dst )
-	return CV_NULLPTR_ERR;
-    if( roi.width < (range.width * 2 + 1) || roi.height < (range.height * 2 + 1) )
-	return CV_BADSIZE_ERR;
-    for( i = 0; i < hist->c_dims; i++ )
-	if( (img[i] = src[i]) == 0 )
-	    return CV_NULLPTR_ERR;
-
-    cvCopyHist( hist, &model );
-
-    /* top */
-    for( y = 0; y < range.height; y++, dst = (float *) ((char *) dst + dst_step) )
-    {
-	/* u.left */
-	for( x = 0; x < range.width; x++ )
-	{
-	    _CHECK( icvCalcHist8sC1R( img, src_step,
-				      cvSize( range.width + x + 1, range.height + y + 1 ),
-				      model, 0 ));
-	    cvNormalizeHist( model, norm_factor );
-	    dst[x] = (float) cvCompareHist( hist, model, method );
-	}
-	/* center */
-	for( ; x < roi.width - range.width; x++ )
-	{
-	    _CHECK( icvCalcHist8sC1R( img, src_step,
-				      cvSize( rng.width, range.height + y + 1 ), model, 0 ));
-	    cvNormalizeHist( model, norm_factor );
-	    dst[x] = (float) cvCompareHist( hist, model, method );
-	    for( i = 0; i < hist->c_dims; i++ )
-		img[i]++;
-	}
-	/* u.right */
-	for( ; x < roi.width; x++ )
-	{
-	    _CHECK( icvCalcHist8sC1R( img, src_step,
-				      cvSize( roi.width - x + range.width,
-					      range.height + y + 1 ), model, 0 ));
-	    cvNormalizeHist( model, norm_factor );
-	    dst[x] = (float) cvCompareHist( hist, model, method );
-	    for( i = 0; i < hist->c_dims; i++ )
-		img[i]++;
-	}
-	for( i = 0; i < hist->c_dims; i++ )
-	    img[i] = src[0];
-    }
-
-    /* center */
-    for( ; y < roi.height - range.height; y++, dst = (float *) ((char *) dst + dst_step) )
-    {
-	/* u.left */
-	for( x = 0; x < range.width; x++ )
-	{
-	    _CHECK( icvCalcHist8sC1R( img, src_step, cvSize( range.width + x + 1, rng.height ),
-				      model, 0 ));
-	    cvNormalizeHist( model, norm_factor );
-	    dst[x] = (float) cvCompareHist( hist, model, method );
-	}
-	/* center */
-	for( ; x < roi.width - range.width; x++ )
-	{
-	    _CHECK( icvCalcHist8sC1R( img, src_step, rng, model, 0 ));
-	    cvNormalizeHist( model, norm_factor );
-	    dst[x] = (float) cvCompareHist( hist, model, method );
-	    for( i = 0; i < hist->c_dims; i++ )
-		img[i]++;
-	}
-	/* u.right */
-	for( ; x < roi.width; x++ )
-	{
-	    _CHECK( icvCalcHist8sC1R( img, src_step,
-				      cvSize( roi.width - x + range.width, rng.height ),
-				      model, 0 ));
-	    cvNormalizeHist( model, norm_factor );
-	    dst[x] = (float) cvCompareHist( hist, model, method );
-	    for( i = 0; i < hist->c_dims; i++ )
-		img[i]++;
-	}
-	for( i = 0; i < hist->c_dims; i++ )
-	    img[i] += src_step - roi.width + range.width;
-    }
-    /* bottom */
-    for( ; y < roi.height; y++, dst = (float *) ((char *) dst + dst_step) )
-    {
-	/* u.left */
-	for( x = 0; x < range.width; x++ )
-	{
-	    _CHECK( icvCalcHist8sC1R( img, src_step,
-				      cvSize( range.width + x + 1,
-					      roi.height - y + range.height ), model, 0 ));
-	    cvNormalizeHist( model, norm_factor );
-	    dst[x] = (float) cvCompareHist( hist, model, method );
-	}
-	/* center */
-	for( ; x < roi.width - range.width; x++ )
-	{
-	    _CHECK( icvCalcHist8sC1R( img, src_step,
-				      cvSize( rng.width, roi.height - y + range.height ),
-				      model, 0 ));
-	    cvNormalizeHist( model, norm_factor );
-	    dst[x] = (float) cvCompareHist( hist, model, method );
-	    for( i = 0; i < hist->c_dims; i++ )
-		img[i]++;
-	}
-	/* u.right */
-	for( ; x < roi.width; x++ )
-	{
-	    _CHECK( icvCalcHist8sC1R( img, src_step,
-				      cvSize( roi.width - x + range.width,
-					      roi.height - y + range.height ), model, 0 ));
-	    cvNormalizeHist( model, norm_factor );
-	    dst[x] = (float) cvCompareHist( hist, model, method );
-	    for( i = 0; i < hist->c_dims; i++ )
-		img[i]++;
-	}
-	for( i = 0; i < hist->c_dims; i++ )
-	    img[i] += src_step - roi.width + range.width;
-    }
-
-    cvReleaseHist( &model );
-    return CV_NO_ERR;
-}				/* icvCalcBackProjectPatch8sC1R */
-
-/*F///////////////////////////////////////////////////////////////////////////////////////
-//    Name:	  icvCalcBackProjectPatch...C1R
-//    Purpose:	  Calculating back project patch of histogram
-//    Context:
-//    Parameters:
-//    Returns:
-//    Notes:
-//F*/
-IPCVAPI_IMPL( CvStatus, icvCalcBackProjectPatch32fC1R, (float **src, int src_step,
-							float *dst, int dst_step,
-							CvSize roi,
-							CvSize range,
-							CvHistogram * hist,
-							CvCompareMethod method,
-							float norm_factor) )
-{
-    CvHistogram *model = 0;
-    int i, x, y;
-    float *img[CV_HIST_MAX_DIM];
-    CvSize rng = cvSize( range.width * 2 + 1, range.height * 2 + 1 );
-
-    if( !hist || !src || !dst )
-	return CV_NULLPTR_ERR;
-    if( roi.width < (range.width * 2 + 1) || roi.height < (range.height * 2 + 1) )
-	return CV_BADSIZE_ERR;
-    for( i = 0; i < hist->c_dims; i++ )
-	if( (img[i] = src[i]) == 0 )
-	    return CV_NULLPTR_ERR;
-
-    cvCopyHist( hist, &model );
-
-    /* top */
-    for( y = 0; y < range.height; y++, dst = (float *) ((char *) dst + dst_step) )
-    {
-	/* u.left */
-	for( x = 0; x < range.width; x++ )
-	{
-	    _CHECK( icvCalcHist32fC1R( img, src_step,
-				       cvSize( range.width + x + 1, range.height + y + 1 ),
-				       model, 0 ));
-	    cvNormalizeHist( model, norm_factor );
-	    dst[x] = (float) cvCompareHist( hist, model, method );
-	}
-	/* center */
-	for( ; x < roi.width - range.width; x++ )
-	{
-	    _CHECK( icvCalcHist32fC1R( img, src_step,
-				       cvSize( rng.width, range.height + y + 1 ), model, 0 ));
-	    cvNormalizeHist( model, norm_factor );
-	    dst[x] = (float) cvCompareHist( hist, model, method );
-	    for( i = 0; i < hist->c_dims; i++ )
-		img[i]++;
-	}
-	/* u.right */
-	for( ; x < roi.width; x++ )
-	{
-	    _CHECK( icvCalcHist32fC1R( img, src_step,
-				       cvSize( roi.width - x + range.width,
-					       range.height + y + 1 ), model, 0 ));
-	    cvNormalizeHist( model, norm_factor );
-	    dst[x] = (float) cvCompareHist( hist, model, method );
-	    for( i = 0; i < hist->c_dims; i++ )
-		img[i]++;
-	}
-	for( i = 0; i < hist->c_dims; i++ )
-	    img[i] = src[0];
-    }
-
-    /* center */
-    for( ; y < roi.height - range.height; y++, dst = (float *) ((char *) dst + dst_step) )
-    {
-	/* u.left */
-	for( x = 0; x < range.width; x++ )
-	{
-	    _CHECK( icvCalcHist32fC1R
-		    ( img, src_step, cvSize( range.width + x + 1, rng.height ), model, 0 ));
-	    cvNormalizeHist( model, norm_factor );
-	    dst[x] = (float) cvCompareHist( hist, model, method );
-	}
-	/* center */
-	for( ; x < roi.width - range.width; x++ )
-	{
-	    _CHECK( icvCalcHist32fC1R( img, src_step, rng, model, 0 ));
-	    cvNormalizeHist( model, norm_factor );
-	    dst[x] = (float) cvCompareHist( hist, model, method );
-	    for( i = 0; i < hist->c_dims; i++ )
-		img[i]++;
-	}
-	/* u.right */
-	for( ; x < roi.width; x++ )
-	{
-	    _CHECK( icvCalcHist32fC1R( img, src_step,
-				       cvSize( roi.width - x + range.width, rng.height ),
-				       model, 0 ));
-	    cvNormalizeHist( model, norm_factor );
-	    dst[x] = (float) cvCompareHist( hist, model, method );
-	    for( i = 0; i < hist->c_dims; i++ )
-		img[i]++;
-	}
-	for( i = 0; i < hist->c_dims; i++ )
-	    img[i] += src_step / sizeof( float ) - roi.width + range.width;
-    }
-    /* bottom */
-    for( ; y < roi.height; y++, dst = (float *) ((char *) dst + dst_step) )
-    {
-	/* u.left */
-	for( x = 0; x < range.width; x++ )
-	{
-	    _CHECK( icvCalcHist32fC1R( img, src_step,
-				       cvSize( range.width + x + 1,
-					       roi.height - y + range.height ), model, 0 ));
-	    cvNormalizeHist( model, norm_factor );
-	    dst[x] = (float) cvCompareHist( hist, model, method );
-	}
-	/* center */
-	for( ; x < roi.width - range.width; x++ )
-	{
-	    _CHECK( icvCalcHist32fC1R( img, src_step,
-				       cvSize( rng.width, roi.height - y + range.height ),
-				       model, 0 ));
-	    cvNormalizeHist( model, norm_factor );
-	    dst[x] = (float) cvCompareHist( hist, model, method );
-	    for( i = 0; i < hist->c_dims; i++ )
-		img[i]++;
-	}
-	/* u.right */
-	for( ; x < roi.width; x++ )
-	{
-	    _CHECK( icvCalcHist32fC1R( img, src_step,
-				       cvSize( roi.width - x + range.width,
-					       roi.height - y + range.height ), model, 0 ));
-	    cvNormalizeHist( model, norm_factor );
-	    dst[x] = (float) cvCompareHist( hist, model, method );
-	    for( i = 0; i < hist->c_dims; i++ )
-		img[i]++;
-	}
-	for( i = 0; i < hist->c_dims; i++ )
-	    img[i] += src_step / sizeof( float ) - roi.width + range.width;
-    }
-
-    cvReleaseHist( &model );
-    return CV_NO_ERR;
-}				/* icvCalcBackProjectPatch32fC1R */
-
-
-CvStatus
-icvClearHist( CvHistogram * hist )
-{
-    assert( hist );
-    if( hist->type == CV_HIST_ARRAY )
-    {
-	assert( hist->array );
-	memset( hist->array, 0, hist->dims[0] * hist->mdims[0] * sizeof( *hist->array ));
-    }
-    else			/* tree histogram */
-    {
-	if( hist->set )
-	    cvClearSet( hist->set );
-	hist->root = 0;
-    }
-    return CV_NO_ERR;
-}
-
-
-/*F///////////////////////////////////////////////////////////////////////////////////////
-//    Name:	  icvCalcBayesianProb
-//    Purpose:	  Calculating bayes probabilistic histograms
-//    Context:
-//    Parameters:
-//    Returns:
-//    Notes:
-//F*/
-void
-cvCalcBayesianProb( CvHistogram ** src, int number, CvHistogram ** dst )
-{
+    int dims, size[CV_MAX_DIM], total = 0;
     int i, j;
-    int size;
-
-    CV_FUNCNAME( "cvCalcBayesianProb" );
-    __BEGIN__;
-
-    /* Check for bad args */
-    if( !src || !dst )
-	CV_ERROR( IPL_HeaderIsNull, "Pointer to histogram array is null" );
-    if( number < 2 )
-	CV_ERROR( IPL_BadOrder, "Too small number" );
-
-    for( i = 0; i < number; i++ )
-    {
-	if( !src[i] || !dst[i] )
-	    CV_ERROR( IPL_HeaderIsNull, "Pointer to histogram is null" );
-	if( src[i]->type != src[0]->type || dst[i]->type != src[0]->type )
-	    CV_ERROR( IPL_BadOrder, "Types are not equals" );
-	if( src[i]->c_dims != src[0]->c_dims || dst[i]->c_dims != src[0]->c_dims )
-	    CV_ERROR( IPL_BadOrder, "Dims are not equals" );
-	for( j = 0; j < src[0]->c_dims; j++ )
-	    if( src[i]->dims[j] != src[0]->dims[j] || dst[i]->dims[j] != src[0]->dims[j] )
-		CV_ERROR( IPL_BadOrder, "Dims are not equals" );
-    }
-
-    cvClearHist( dst[0] );
-    size = src[0]->dims[0] * src[0]->mdims[0];
-
-    if( src[0]->type == CV_HIST_ARRAY )
-    {
-	/* using dst[0] histogram for temporary summ array */
-	for( i = 0; i < number; i++ )
-	    icvAddVector_32f( src[i]->array, dst[0]->array, dst[0]->array, size );
-	for( i = 0; i < size; i++ )
-	{
-	    float val = dst[0]->array[i];
-
-	    dst[0]->array[i] = val ? 1.0f / val : 0;
-	}
-	for( i = number - 1; i >= 0; i-- )
-	    icvMulVectors_32f( src[i]->array, dst[0]->array, dst[i]->array, size );
-    }
-    else			/* tree histogram */
-    {
-	float _array[4096];
-	float *array = _array;
-
-	if( number > 4096 )
-	    array = (float *) icvAlloc( number * sizeof( *array ));
-
-	for( i = 1; i < number; i++ )
-	    cvClearHist( dst[i] );
-	for( i = 0; i < size; i++ )
-	{
-	    float sum = 0;
-
-	    for( j = 0; j < number; j++ )
-		sum += (array[j] = cvQueryHistValue_1D( src[j], i ));
-
-	    if( sum )
-	    {
-		sum = 1.0f / sum;
-		for( j = 0; j < number; j++ )
-		    if( array[j] )
-			icvInsertNode( dst[j], i )->value = array[j] * sum;
-	    }
-	}
-	if( number > 4096 )
-	    icvFree( &array );
-    }
     
+    if( !ranges )
+        CV_ERROR( CV_StsNullPtr, "NULL ranges pointer" );
+
+    if( !CV_IS_HIST(hist) )
+        CV_ERROR( CV_StsBadArg, "Invalid histogram header" );
+
+    CV_CALL( dims = cvGetDims( hist->bins, size ));
+    for( i = 0; i < dims; i++ )
+        total += size[i]+1;
+    
+    if( uniform )
+    {
+        for( i = 0; i < dims; i++ )
+        {
+            if( !ranges[i] )
+                CV_ERROR( CV_StsNullPtr, "One of <ranges> elements is NULL" );
+            hist->thresh[i][0] = ranges[i][0];
+            hist->thresh[i][1] = ranges[i][1];
+        }
+
+        hist->type |= CV_HIST_UNIFORM_FLAG + CV_HIST_RANGES_FLAG;
+    }
+    else
+    {
+        float* dim_ranges;
+
+        if( !hist->thresh2 )
+        {
+            CV_CALL( hist->thresh2 = (float**)cvAlloc(
+                        dims*sizeof(hist->thresh2[0])+
+                        total*sizeof(hist->thresh2[0][0])));
+        }
+        dim_ranges = (float*)(hist->thresh2 + dims);
+
+        for( i = 0; i < dims; i++ )
+        {
+            float val0 = -FLT_MAX;
+
+            if( !ranges[i] )
+                CV_ERROR( CV_StsNullPtr, "One of <ranges> elements is NULL" );
+            
+            for( j = 0; j <= size[i]; j++ )
+            {
+                float val = ranges[i][j];
+                if( val <= val0 )
+                    CV_ERROR(CV_StsOutOfRange, "Bin ranges should go in ascenting order");
+                val0 = dim_ranges[j] = val;
+            }
+
+            hist->thresh2[i] = dim_ranges;
+            dim_ranges += size[i] + 1;
+        }
+
+        hist->type |= CV_HIST_RANGES_FLAG;
+        hist->type &= ~CV_HIST_UNIFORM_FLAG;
+    }
+
     __END__;
 }
 
 
-static void
-icvCalcHistMask( IplImage ** img, IplImage * mask, CvHistogram * hist, int dont_clear )
+#define  ICV_HIST_DUMMY_IDX  (INT_MIN/3)
+
+static CvStatus
+icvCalcHistLookupTables8x( const CvHistogram* hist, int lo, int hi,
+                           int dims, int* size, int* tab )
 {
-    CV_FUNCNAME( "_cvCalcHistMask" );
-    uchar *data[CV_HIST_MAX_DIM];
-    uchar *mask_data;
-    int step = 0;
-    int mask_step = 0;
-    CvSize roi = { 0, 0 };
-
-
-    __BEGIN__;
-    for( int i = 0; i < hist->c_dims; i++ )
-	CV_CALL( CV_CHECK_IMAGE( img[i] ));
-    CV_CALL( CV_CHECK_IMAGE( mask ));
-
-    {
-	for( int i = 0; i < hist->c_dims; i++ )
-	    cvGetImageRawData( img[i], &data[i], &step, &roi );
-    }
-    cvGetImageRawData( mask, &mask_data, &mask_step, 0 );
-
-    switch (img[0]->depth)
-    {
-    case IPL_DEPTH_8U:
-	IPPI_CALL( icvCalcHistMask8uC1R( data, step, mask_data, mask_step,
-					 roi, hist, dont_clear ));
-	break;
-    case IPL_DEPTH_8S:
-	IPPI_CALL( icvCalcHistMask8sC1R( (char **) data, step, mask_data, mask_step,
-					 roi, hist, dont_clear ));
-	break;
-    case IPL_DEPTH_32F:
-	IPPI_CALL( icvCalcHistMask32fC1R( (float **) data, step, mask_data, mask_step,
-					  roi, hist, dont_clear ));
-	break;
-    }
-
+    int is_sparse = CV_IS_SPARSE_HIST( hist );
+    int have_range = CV_HIST_HAS_RANGES(hist);
+    int i, j;
     
-    __END__;
+    if( !have_range || CV_IS_UNIFORM_HIST(hist))
+    {
+        for( i = 0; i < dims; i++ )
+        {
+            double a = have_range ? hist->thresh[i][0] : 0;
+            double b = have_range ? hist->thresh[i][1] : 256;
+            int sz = size[i];
+            double scale = sz/(b - a), cur = (lo - a)*scale;
+            int step = 1;
+
+            if( !is_sparse )
+                step = ((CvMatND*)(hist->bins))->dim[i].step/sizeof(float);
+
+            for( j = lo; j < hi; j++ )
+            {
+                int idx = cvFloor(cur);
+                if( (unsigned)idx < (unsigned)sz )
+                    idx *= step;
+                else
+                    idx = ICV_HIST_DUMMY_IDX;
+
+                tab[i*(hi - lo) + j - lo] = idx;
+                cur += scale;
+            }
+        }
+    }
+    else
+    {
+        for( i = 0; i < dims; i++ )
+        {
+            double limit = hist->thresh2[i][0];
+            int idx = -1, write_idx = ICV_HIST_DUMMY_IDX, sz = size[i];
+            int step = 1;
+
+            if( !is_sparse )
+                step = ((CvMatND*)(hist->bins))->dim[i].step/sizeof(float);
+
+            if( limit > hi )
+                limit = hi;
+            
+            j = lo;
+            for(;;)
+            {
+                for( ; j < limit; j++ )
+                    tab[i*(hi - lo) + j - lo] = write_idx;
+
+                if( (unsigned)(++idx) < (unsigned)sz )
+                {
+                    limit = hist->thresh2[i][idx+1];
+                    if( limit > hi )
+                        limit = hi;
+                    write_idx = idx*step;
+                }
+                else
+                {
+                    for( ; j < hi; j++ )
+                        tab[i*(hi - lo) + j - lo] = ICV_HIST_DUMMY_IDX;
+                    break;
+                }
+            }
+        }
+    }
+
+    return CV_OK;
+}
+
+
+/***************************** C A L C   H I S T O G R A M *************************/
+
+// Calculates histogram for one or more 8u arrays
+static CvStatus CV_STDCALL
+    icvCalcHist_8u_C1R( uchar** img, int step, uchar* mask, int maskStep,
+                        CvSize size, CvHistogram* hist )
+{
+    int* tab;
+    int is_sparse = CV_IS_SPARSE_HIST(hist);
+    int dims, histsize[CV_MAX_DIM];
+    int i, x;
+    CvStatus status;
+
+    dims = cvGetDims( hist->bins, histsize );
+
+    tab = (int*)alloca( dims*256*sizeof(int));
+    status = icvCalcHistLookupTables8x( hist, 0, 256, dims,
+                                        histsize, tab );
+
+    if( status < 0 )
+        return status;
+
+    if( !is_sparse )
+    {
+        int total = 1;
+        int* bins = ((CvMatND*)(hist->bins))->data.i;
+
+        for( i = 0; i < dims; i++ )
+            total *= histsize[i];
+
+        if( dims <= 3 && total >= -ICV_HIST_DUMMY_IDX )
+            return CV_BADSIZE_ERR; // too big histogram
+
+        switch( dims )
+        {
+        case 1:
+            {
+            int tab1d[256];
+            memset( tab1d, 0, sizeof(tab1d));
+
+            for( ; size.height--; img[0] += step )
+            {
+                uchar* ptr = img[0];
+                if( !mask )
+                {
+                    for( x = 0; x <= size.width - 4; x += 4 )
+                    {
+                        int v0 = ptr[x];
+                        int v1 = ptr[x+1];
+
+                        tab1d[v0]++;
+                        tab1d[v1]++;
+
+                        v0 = ptr[x+2];
+                        v1 = ptr[x+3];
+
+                        tab1d[v0]++;
+                        tab1d[v1]++;
+                    }
+
+                    for( ; x < size.width; x++ )
+                        tab1d[ptr[x]]++;
+                }
+                else
+                {
+                    for( x = 0; x < size.width; x++ )
+                        if( mask[x] )
+                            tab1d[ptr[x]]++;
+                    mask += maskStep;
+                }
+            }
+
+            for( i = 0; i < 256; i++ )
+            {
+                int idx = tab[i];
+                if( idx >= 0 )
+                    bins[idx] += tab1d[i];
+            }
+            }
+            break;
+        case 2:
+            for( ; size.height--; img[0] += step, img[1] += step )
+            {
+                uchar* ptr0 = img[0];
+                uchar* ptr1 = img[1];
+                if( !mask )
+                {
+                    for( x = 0; x < size.width; x++ )
+                    {
+                        int v0 = ptr0[x];
+                        int v1 = ptr1[x];
+                        int idx = tab[v0] + tab[256+v1];
+
+                        if( idx >= 0 )
+                            bins[idx]++;
+                    }
+                }
+                else
+                {
+                    for( x = 0; x < size.width; x++ )
+                    {
+                        if( mask[x] )
+                        {
+                            int v0 = ptr0[x];
+                            int v1 = ptr1[x];
+
+                            int idx = tab[v0] + tab[256+v1];
+
+                            if( idx >= 0 )
+                                bins[idx]++;
+                        }
+                    }
+                    mask += maskStep;
+                }
+            }
+            break;
+        case 3:
+            for( ; size.height--; img[0] += step, img[1] += step, img[2] += step )
+            {
+                uchar* ptr0 = img[0];
+                uchar* ptr1 = img[1];
+                uchar* ptr2 = img[2];
+                if( !mask )
+                {
+                    for( x = 0; x < size.width; x++ )
+                    {
+                        int v0 = ptr0[x];
+                        int v1 = ptr1[x];
+                        int v2 = ptr2[x];
+                        int idx = tab[v0] + tab[256+v1] + tab[512+v2];
+
+                        if( idx >= 0 )
+                            bins[idx]++;
+                    }
+                }
+                else
+                {
+                    for( x = 0; x < size.width; x++ )
+                    {
+                        if( mask[x] )
+                        {
+                            int v0 = ptr0[x];
+                            int v1 = ptr1[x];
+                            int v2 = ptr2[x];
+                            int idx = tab[v0] + tab[256+v1] + tab[512+v2];
+
+                            if( idx >= 0 )
+                                bins[idx]++;
+                        }
+                    }
+                    mask += maskStep;
+                }
+            }
+            break;
+        default:
+            for( ; size.height--; )
+            {
+                if( !mask )
+                {
+                    for( x = 0; x < size.width; x++ )
+                    {
+                        int* binptr = bins;
+                        for( i = 0; i < dims; i++ )
+                        {
+                            int idx = tab[i*256 + img[i][x]];
+                            if( idx < 0 )
+                                break;
+                            binptr += idx;
+                        }
+                        if( i == dims )
+                            binptr[0]++;
+                    }
+                }
+                else
+                {
+                    for( x = 0; x < size.width; x++ )
+                    {
+                        if( mask[x] )
+                        {
+                            int* binptr = bins;
+                            for( i = 0; i < dims; i++ )
+                            {
+                                int idx = tab[i*256 + img[i][x]];
+                                if( idx < 0 )
+                                    break;
+                                binptr += idx;
+                            }
+                            if( i == dims )
+                                binptr[0]++;
+                        }
+                    }
+                    mask += maskStep;
+                }
+
+                for( i = 0; i < dims; i++ )
+                    img[i] += step;
+            }
+        }
+    }
+    else
+    {
+        CvSparseMat* mat = (CvSparseMat*)(hist->bins);
+        int node_idx[CV_MAX_DIM];
+
+        for( ; size.height--; )
+        {
+            if( !mask )
+            {
+                for( x = 0; x < size.width; x++ )
+                {
+                    for( i = 0; i < dims; i++ )
+                    {
+                        int idx = tab[i*256 + img[i][x]];
+                        if( idx < 0 )
+                            break;
+                        node_idx[i] = idx;
+                    }
+                    if( i == dims )
+                    {
+                        int* bin = (int*)icvGetNodePtr( mat, node_idx, 0, 1 );
+                        bin[0]++;
+                    }
+                }
+            }
+            else
+            {
+                for( x = 0; x < size.width; x++ )
+                {
+                    if( mask[x] )
+                    {
+                        for( i = 0; i < dims; i++ )
+                        {
+                            int idx = tab[i*256 + img[i][x]];
+                            if( idx < 0 )
+                                break;
+                            node_idx[i] = idx;
+                        }
+                        if( i == dims )
+                        {
+                            int* bin = (int*)icvGetNodePtr( mat, node_idx, 0, 1 );
+                            bin[0]++;
+                        }
+                    }
+                }
+                mask += maskStep;
+            }
+
+            for( i = 0; i < dims; i++ )
+                img[i] += step;
+        }
+    }
+
+    return CV_OK;
+}
+
+
+// Calculates histogram for one or more 8s arrays
+static CvStatus CV_STDCALL
+    icvCalcHist_8s_C1R( char** img, int step, uchar* mask, int maskStep,
+                        CvSize size, CvHistogram* hist )
+{
+    int* tab;
+    int is_sparse = CV_IS_SPARSE_HIST(hist);
+    int dims, histsize[CV_MAX_DIM];
+    int i, x;
+    CvStatus status;
+
+    dims = cvGetDims( hist->bins, histsize );
+
+    tab = (int*)alloca( dims*256*sizeof(int));
+    status = icvCalcHistLookupTables8x( hist, -128, 128, dims,
+                                        histsize, tab );
+
+    if( status < 0 )
+        return status;
+
+    if( !is_sparse )
+    {
+        int total = 1;
+        int* bins = ((CvMatND*)(hist->bins))->data.i;
+
+        for( i = 0; i < dims; i++ )
+            total *= histsize[i];
+
+        if( dims <= 3 && total >= -ICV_HIST_DUMMY_IDX )
+            return CV_BADSIZE_ERR; // too big histogram
+
+        switch( dims )
+        {
+        case 1:
+            {
+            int tab1d[256];
+            memset( tab1d, 0, sizeof(tab1d));
+
+            for( ; size.height--; img[0] += step )
+            {
+                char* ptr = img[0];
+                if( !mask )
+                {
+                    for( x = 0; x <= size.width - 4; x += 4 )
+                    {
+                        int v0 = ptr[x];
+                        int v1 = ptr[x+1];
+
+                        tab1d[v0+128]++;
+                        tab1d[v1+128]++;
+
+                        v0 = ptr[x+2];
+                        v1 = ptr[x+3];
+
+                        tab1d[v0+128]++;
+                        tab1d[v1+128]++;
+                    }
+
+                    for( ; x < size.width; x++ )
+                        tab1d[ptr[x]+128]++;
+                }
+                else
+                {
+                    for( x = 0; x < size.width; x++ )
+                        if( mask[x] )
+                            tab1d[ptr[x]+128]++;
+                    mask += maskStep;
+                }
+            }
+
+            for( i = 0; i < 256; i++ )
+            {
+                int idx = tab[i];
+                if( idx >= 0 )
+                    bins[idx] += tab1d[i];
+            }
+            }
+            break;
+        case 2:
+            for( ; size.height--; img[0] += step, img[1] += step )
+            {
+                char* ptr0 = img[0];
+                char* ptr1 = img[1];
+                if( !mask )
+                {
+                    for( x = 0; x < size.width; x++ )
+                    {
+                        int v0 = ptr0[x];
+                        int v1 = ptr1[x];
+                        int idx = tab[128+v0] + tab[384+v1];
+
+                        if( idx >= 0 )
+                            bins[idx]++;
+                    }
+                }
+                else
+                {
+                    for( x = 0; x < size.width; x++ )
+                    {
+                        if( mask[x] )
+                        {
+                            int v0 = ptr0[x];
+                            int v1 = ptr1[x];
+
+                            int idx = tab[128+v0] + tab[384+v1];
+
+                            if( idx >= 0 )
+                                bins[idx]++;
+                        }
+                    }
+                    mask += maskStep;
+                }
+            }
+            break;
+        case 3:
+            for( ; size.height--; img[0] += step, img[1] += step, img[2] += step )
+            {
+                char* ptr0 = img[0];
+                char* ptr1 = img[1];
+                char* ptr2 = img[2];
+                if( !mask )
+                {
+                    for( x = 0; x < size.width; x++ )
+                    {
+                        int v0 = ptr0[x];
+                        int v1 = ptr1[x];
+                        int v2 = ptr2[x];
+                        int idx = tab[128+v0] + tab[384+v1] + tab[640+v2];
+
+                        if( idx >= 0 )
+                            bins[idx]++;
+                    }
+                }
+                else
+                {
+                    for( x = 0; x < size.width; x++ )
+                    {
+                        if( mask[x] )
+                        {
+                            int v0 = ptr0[x];
+                            int v1 = ptr1[x];
+                            int v2 = ptr2[x];
+                            int idx = tab[128+v0] + tab[384+v1] + tab[640+v2];
+
+                            if( idx >= 0 )
+                                bins[idx]++;
+                        }
+                    }
+                    mask += maskStep;
+                }
+            }
+            break;
+        default:
+            for( ; size.height--; )
+            {
+                if( !mask )
+                {
+                    for( x = 0; x < size.width; x++ )
+                    {
+                        int* binptr = bins;
+                        for( i = 0; i < dims; i++ )
+                        {
+                            int idx = tab[i*256 + img[i][x] + 128];
+                            if( idx < 0 )
+                                break;
+                            binptr += idx;
+                        }
+                        if( i == dims )
+                            binptr[0]++;
+                    }
+                }
+                else
+                {
+                    for( x = 0; x < size.width; x++ )
+                    {
+                        if( mask[x] )
+                        {
+                            int* binptr = bins;
+                            for( i = 0; i < dims; i++ )
+                            {
+                                int idx = tab[i*256 + img[i][x] + 128];
+                                if( idx < 0 )
+                                    break;
+                                binptr += idx;
+                            }
+                            if( i == dims )
+                                binptr[0]++;
+                        }
+                    }
+                    mask += maskStep;
+                }
+
+                for( i = 0; i < dims; i++ )
+                    img[i] += step;
+            }
+        }
+    }
+    else
+    {
+        CvSparseMat* mat = (CvSparseMat*)(hist->bins);
+        int node_idx[CV_MAX_DIM];
+
+        for( ; size.height--; )
+        {
+            if( !mask )
+            {
+                for( x = 0; x < size.width; x++ )
+                {
+                    for( i = 0; i < dims; i++ )
+                    {
+                        int idx = tab[i*256 + img[i][x] + 128];
+                        if( idx < 0 )
+                            break;
+                        node_idx[i] = idx;
+                    }
+                    if( i == dims )
+                    {
+                        int* bin = (int*)icvGetNodePtr( mat, node_idx, 0, 1 );
+                        bin[0]++;
+                    }
+                }
+            }
+            else
+            {
+                for( x = 0; x < size.width; x++ )
+                {
+                    if( mask[x] )
+                    {
+                        for( i = 0; i < dims; i++ )
+                        {
+                            int idx = tab[i*256 + img[i][x] + 128];
+                            if( idx < 0 )
+                                break;
+                            node_idx[i] = idx;
+                        }
+                        if( i == dims )
+                        {
+                            int* bin = (int*)icvGetNodePtr( mat, node_idx, 0, 1 );
+                            bin[0]++;
+                        }
+                    }
+                }
+                mask += maskStep;
+            }
+
+            for( i = 0; i < dims; i++ )
+                img[i] += step;
+        }
+    }
+
+    return CV_OK;
+}
+
+
+// Calculates histogram for one or more 32f arrays
+static CvStatus CV_STDCALL
+    icvCalcHist_32f_C1R( float** img, int step, uchar* mask, int maskStep,
+                         CvSize size, CvHistogram* hist )
+{
+    int is_sparse = CV_IS_SPARSE_HIST(hist);
+    int uniform = CV_IS_UNIFORM_HIST(hist);
+    int dims, histsize[CV_MAX_DIM];
+    float uni_range[CV_MAX_DIM][2];
+    int i, x;
+
+    dims = cvGetDims( hist->bins, histsize );
+    step /= sizeof(img[0][0]);
+
+    if( uniform )
+    {
+        for( i = 0; i < dims; i++ )
+        {
+            float t = ((float)histsize[i])/(hist->thresh[i][1] - hist->thresh[i][0]);
+            uni_range[i][0] = t;
+            uni_range[i][1] = (float)(-t*hist->thresh[i][0]);
+        }
+    }
+
+    if( !is_sparse )
+    {
+        CvMatND* mat = (CvMatND*)(hist->bins);
+        int* bins = mat->data.i;
+
+        if( uniform )
+        {
+            switch( dims )
+            {
+            case 1:
+                {
+                float a = uni_range[0][0], b = uni_range[0][1];
+                int sz = histsize[0];
+
+                for( ; size.height--; img[0] += step )
+                {
+                    float* ptr = img[0];
+
+                    if( !mask )
+                    {
+                        for( x = 0; x <= size.width - 4; x += 4 )
+                        {
+                            int v0 = cvFloor(ptr[x]*a + b);
+                            int v1 = cvFloor(ptr[x+1]*a + b);
+
+                            if( (unsigned)v0 < (unsigned)sz )
+                                bins[v0]++;
+                            if( (unsigned)v1 < (unsigned)sz )
+                                bins[v1]++;
+
+                            v0 = cvFloor(ptr[x+2]*a + b);
+                            v1 = cvFloor(ptr[x+3]*a + b);
+
+                            if( (unsigned)v0 < (unsigned)sz )
+                                bins[v0]++;
+                            if( (unsigned)v1 < (unsigned)sz )
+                                bins[v1]++;
+                        }
+
+                        for( ; x < size.width; x++ )
+                        {
+                            int v0 = cvFloor(ptr[x]*a + b);
+                            if( (unsigned)v0 < (unsigned)sz )
+                                bins[v0]++;
+                        }
+                    }
+                    else
+                    {
+                        for( x = 0; x < size.width; x++ )
+                            if( mask[x] )
+                            {
+                                int v0 = cvFloor(ptr[x]*a + b);
+                                if( (unsigned)v0 < (unsigned)sz )
+                                    bins[v0]++;
+                            }
+                        mask += maskStep;
+                    }
+                }
+                }
+                break;
+            case 2:
+                {
+                float  a0 = uni_range[0][0], b0 = uni_range[0][1];
+                float  a1 = uni_range[1][0], b1 = uni_range[1][1];
+                int sz0 = histsize[0], sz1 = histsize[1];
+                int step0 = ((CvMatND*)(hist->bins))->dim[0].step/sizeof(float);
+
+                for( ; size.height--; img[0] += step, img[1] += step )
+                {
+                    float* ptr0 = img[0];
+                    float* ptr1 = img[1];
+
+                    if( !mask )
+                    {
+                        for( x = 0; x < size.width; x++ )
+                        {
+                            int v0 = cvFloor( ptr0[x]*a0 + b0 );
+                            int v1 = cvFloor( ptr1[x]*a1 + b1 );
+
+                            if( (unsigned)v0 < (unsigned)sz0 &&
+                                (unsigned)v1 < (unsigned)sz1 )
+                                bins[v0*step0 + v1]++;
+                        }
+                    }
+                    else
+                    {
+                        for( x = 0; x < size.width; x++ )
+                        {
+                            if( mask[x] )
+                            {
+                                int v0 = cvFloor( ptr0[x]*a0 + b0 );
+                                int v1 = cvFloor( ptr1[x]*a1 + b1 );
+
+                                if( (unsigned)v0 < (unsigned)sz0 &&
+                                    (unsigned)v1 < (unsigned)sz1 )
+                                    bins[v0*step0 + v1]++;
+                            }
+                        }
+                        mask += maskStep;
+                    }
+                }
+                }
+                break;
+            default:
+                for( ; size.height--; )
+                {
+                    if( !mask )
+                    {
+                        for( x = 0; x < size.width; x++ )
+                        {
+                            int* binptr = bins;
+                            for( i = 0; i < dims; i++ )
+                            {
+                                int idx = cvFloor(img[i][x]*uni_range[i][0]
+                                                 + uni_range[i][1]);
+                                if( (unsigned)idx >= (unsigned)histsize[i] )
+                                    break;
+                                binptr += idx*(mat->dim[i].step/sizeof(float));
+                            }
+                            if( i == dims )
+                                binptr[0]++;
+                        }
+                    }
+                    else
+                    {
+                        for( x = 0; x < size.width; x++ )
+                        {
+                            if( mask[x] )
+                            {
+                                int* binptr = bins;
+                                for( i = 0; i < dims; i++ )
+                                {
+                                    int idx = cvFloor(img[i][x]*uni_range[i][0]
+                                                     + uni_range[i][1]);
+                                    if( (unsigned)idx >= (unsigned)histsize[i] )
+                                        break;
+                                    binptr += idx*(mat->dim[i].step/sizeof(float));
+                                }
+                                if( i == dims )
+                                    binptr[0]++;
+                            }
+                        }
+                        mask += maskStep;
+                    }
+
+                    for( i = 0; i < dims; i++ )
+                        img[i] += step;
+                }
+            }
+        }
+        else
+        {
+            for( ; size.height--; )
+            {
+                for( x = 0; x < size.width; x++ )
+                {
+                    if( !mask || mask[x] )
+                    {
+                        int* binptr = bins;
+                        for( i = 0; i < dims; i++ )
+                        {
+                            float v = img[i][x];
+                            float* thresh = hist->thresh2[i];
+                            int idx = -1, sz = histsize[i];
+
+                            while( v >= thresh[idx+1] && ++idx < sz )
+                                /* nop */;
+
+                            if( (unsigned)idx >= (unsigned)sz )
+                                break;
+
+                            binptr += idx*(mat->dim[i].step/sizeof(float));
+                        }
+                        if( i == dims )
+                            binptr[0]++;
+                    }
+                }
+
+                for( i = 0; i < dims; i++ )
+                    img[i] += step;
+                if( mask )
+                    mask += maskStep;
+            }
+        }
+    }
+    else
+    {
+        CvSparseMat* mat = (CvSparseMat*)(hist->bins);
+        int node_idx[CV_MAX_DIM];
+
+        for( ; size.height--; )
+        {
+            if( uniform )
+            {
+                for( x = 0; x < size.width; x++ )
+                {
+                    if( !mask || mask[x] )
+                    {
+                        for( i = 0; i < dims; i++ )
+                        {
+                            int idx = cvFloor(img[i][x]*uni_range[i][0]
+                                             + uni_range[i][1]);
+                            if( (unsigned)idx >= (unsigned)histsize[i] )
+                                break;
+                            node_idx[i] = idx;
+                        }
+                        if( i == dims )
+                        {
+                            int* bin = (int*)icvGetNodePtr( mat, node_idx, 0, 1 );
+                            bin[0]++;
+                        }
+                    }
+                }
+            }
+            else
+            {
+                for( x = 0; x < size.width; x++ )
+                {
+                    if( !mask || mask[x] )
+                    {
+                        for( i = 0; i < dims; i++ )
+                        {
+                            float v = img[i][x];
+                            float* thresh = hist->thresh2[i];
+                            int idx = -1, sz = histsize[i];
+
+                            while( v >= thresh[idx+1] && ++idx < sz )
+                                /* nop */;
+
+                            if( (unsigned)idx >= (unsigned)sz )
+                                break;
+
+                            node_idx[i] = idx;
+                        }
+                        if( i == dims )
+                        {
+                            int* bin = (int*)icvGetNodePtr( mat, node_idx, 0, 1 );
+                            bin[0]++;
+                        }
+                    }
+                }
+            }
+
+            for( i = 0; i < dims; i++ )
+                img[i] += step;
+
+            if( mask )
+                mask += maskStep;
+        }
+    }
+
+    return CV_OK;
 }
 
 
 CV_IMPL void
-cvCalcHist( IplImage ** img, CvHistogram * hist, int dont_clear, IplImage * mask )
+cvCalcArrHist( CvArr** img, CvHistogram* hist,
+               int do_not_clear, const CvArr* mask )
 {
+    CV_FUNCNAME( "cvCalcHist" );
+
+    __BEGIN__;
+
+    uchar* ptr[CV_MAX_DIM];
+    uchar* maskptr = 0;
+    int maskstep = 0, step = 0;
+    int i, dims;
+    int cont_flag = -1;
+    CvMat stub0, *mat0 = 0;
+    CvMatND dense;
+    CvSize size;
+
+    if( !CV_IS_HIST(hist))
+        CV_ERROR( CV_StsBadArg, "Bad histogram pointer" );
+
+    if( !img )
+        CV_ERROR( CV_StsNullPtr, "Null double array pointer" );
+
+    CV_CALL( dims = cvGetDims( hist->bins ));
+    
+    for( i = 0; i < dims; i++ )
+    {
+        CvMat stub, *mat = (CvMat*)img[i];
+        CV_CALL( mat = cvGetMat( mat, i == 0 ? &stub0 : &stub, 0, 1 ));
+
+        if( CV_MAT_CN( mat->type ) != 1 )
+            CV_ERROR( CV_BadNumChannels, "Only 1-channel arrays are allowed here" );
+
+        if( i == 0 )
+        {
+            mat0 = mat;
+            step = mat0->step;
+        }
+        else
+        {
+            if( !CV_ARE_SIZES_EQ( mat0, mat ))
+                CV_ERROR( CV_StsUnmatchedSizes, "Not all the planes have equal sizes" );
+
+            if( mat0->step != mat->step )
+                CV_ERROR( CV_StsUnmatchedSizes, "Not all the planes have equal steps" );
+
+            if( !CV_ARE_TYPES_EQ( mat0, mat ))
+                CV_ERROR( CV_StsUnmatchedFormats, "Not all the planes have equal types" );
+        }
+
+        cont_flag &= mat->type;
+        ptr[i] = mat->data.ptr;
+    }
+
     if( mask )
     {
-	icvCalcHistMask( img, mask, hist, dont_clear );
-	return;
+        CvMat stub, *mat = (CvMat*)mask;
+        CV_CALL( mat = cvGetMat( mat, &stub, 0, 1 ));
+
+        if( !CV_IS_MASK_ARR(mat))
+            CV_ERROR( CV_StsBadMask, "Bad mask array" );
+
+        if( !CV_ARE_SIZES_EQ( mat0, mat ))
+            CV_ERROR( CV_StsUnmatchedSizes,
+                "Mask size does not match to other arrays\' size" );
+        maskptr = mat->data.ptr;
+        maskstep = mat->step;
+        cont_flag &= mat->type;
     }
 
-    CV_FUNCNAME( "cvCalcHist" );
-    uchar *data[CV_HIST_MAX_DIM];
-    int step = 0;
-    CvSize roi = { 0, 0 };
+    size = icvGetMatSize(mat0);
+    if( CV_IS_MAT_CONT( cont_flag ))
+    {
+        size.width *= size.height;
+        size.height = 1;
+        maskstep = step = CV_AUTOSTEP;
+    }
+
+    if( !CV_IS_SPARSE_HIST(hist))
+    {
+        dense = *(CvMatND*)hist->bins;
+        dense.type = (dense.type & ~CV_MAT_TYPE_MASK) | CV_32SC1;
+    }
+
+    if( !do_not_clear )
+    {
+        CV_CALL( cvZero( hist->bins ));
+    }
+    else if( !CV_IS_SPARSE_HIST(hist))
+    {
+        CV_CALL( cvConvert( (CvMatND*)hist->bins, &dense ));
+    }
+    else
+    {
+        CvSparseMat* mat = (CvSparseMat*)(hist->bins);
+        CvSparseMatIterator iterator;
+        CvSparseNode* node;
+
+        for( node = cvInitSparseMatIterator( mat, &iterator );
+             node != 0; node = cvGetNextSparseNode( &iterator ))
+        {
+            int& val = *(int*)CV_NODE_VAL( mat, node );
+            val = cvRound( (float&)val );
+        }
+    }
+
+    if( CV_MAT_DEPTH(mat0->type) > CV_8S && !CV_HIST_HAS_RANGES(hist))
+        CV_ERROR( CV_StsBadArg, "histogram ranges must be set (via cvSetHistBinRanges) "
+                                "before calling the function" );
+
+    switch( CV_MAT_DEPTH(mat0->type) )
+    {
+    case CV_8U:
+        IPPI_CALL( icvCalcHist_8u_C1R( ptr, step, maskptr, maskstep, size, hist ));
+	    break;
+    case CV_8S:
+	    IPPI_CALL( icvCalcHist_8s_C1R( (char**)ptr, step, maskptr, maskstep, size, hist ));
+	    break;
+    case CV_32F:
+	    IPPI_CALL( icvCalcHist_32f_C1R( (float**)ptr, step, maskptr, maskstep, size, hist ));
+	    break;
+    default:
+        CV_ERROR( CV_StsUnsupportedFormat, "Unsupported array type" );
+    }
+
+    if( !CV_IS_SPARSE_HIST(hist))
+    {
+        CV_CALL( cvConvert( &dense, (CvMatND*)hist->bins ));
+    }
+    else
+    {
+        CvSparseMat* mat = (CvSparseMat*)(hist->bins);
+        CvSparseMatIterator iterator;
+        CvSparseNode* node;
+
+        for( node = cvInitSparseMatIterator( mat, &iterator );
+             node != 0; node = cvGetNextSparseNode( &iterator ))
+        {
+            int& val = *(int*)CV_NODE_VAL( mat, node );
+            (float&)val = (float)val;
+        }
+    }
+    
+    __END__;
+}
+
+
+/***************************** B A C K   P R O J E C T *****************************/
+
+// Calculates back project for one or more 8u arrays
+static CvStatus CV_STDCALL
+    icvCalcBackProject_8u_C1R( uchar** img, int step, uchar* dst, int dstStep,
+                               CvSize size, const CvHistogram* hist )
+{
+    const int small_hist_size = 1<<12;
+    int* tab;
+    int is_sparse = CV_IS_SPARSE_HIST(hist);
+    int dims, histsize[CV_MAX_DIM];
+    int i, x;
+    CvStatus status;
+
+    dims = cvGetDims( hist->bins, histsize );
+
+    tab = (int*)alloca( dims*256*sizeof(int));
+    status = icvCalcHistLookupTables8x( hist, 0, 256, dims,
+                                        histsize, tab );
+
+    if( status < 0 )
+        return status;
+
+    if( !is_sparse )
+    {
+        int total = 1;
+        CvMatND* mat = (CvMatND*)(hist->bins);
+        float* bins = mat->data.fl;
+        uchar* buffer = 0;
+
+        for( i = 0; i < dims; i++ )
+            total *= histsize[i];
+
+        if( dims <= 3 && total >= -ICV_HIST_DUMMY_IDX )
+            return CV_BADSIZE_ERR; // too big histogram
+
+        if( dims > 1 && total <= small_hist_size && CV_IS_MAT_CONT(mat->type))
+        {
+            buffer = (uchar*)icvAlloc(total);
+            if( !buffer )
+                return CV_OUTOFMEM_ERR;
+            for( i = 0; i < total; i++ )
+            {
+                int v = cvRound(bins[i]);
+                buffer[i] = CV_CAST_8U(v);
+            }
+        }
+
+        switch( dims )
+        {
+        case 1:
+            {
+            uchar tab1d[256];
+            for( i = 0; i < 256; i++ )
+            {
+                int idx = tab[i];
+                if( idx >= 0 )
+                {
+                    int v = cvRound(bins[idx]);
+                    tab1d[i] = CV_CAST_8U(v);
+                }
+                else
+                    tab1d[i] = 0;
+            }
+
+            for( ; size.height--; img[0] += step, dst += dstStep )
+            {
+                uchar* ptr = img[0];
+                for( x = 0; x <= size.width - 4; x += 4 )
+                {
+                    uchar v0 = tab1d[ptr[x]];
+                    uchar v1 = tab1d[ptr[x+1]];
+
+                    dst[x] = v0;
+                    dst[x+1] = v1;
+
+                    v0 = tab1d[ptr[x+2]];
+                    v1 = tab1d[ptr[x+3]];
+
+                    dst[x+2] = v0;
+                    dst[x+3] = v1;
+                }
+
+                for( ; x < size.width; x++ )
+                    dst[x] = tab1d[ptr[x]];
+            }
+            }
+            break;
+        case 2:
+            for( ; size.height--; img[0] += step, img[1] += step, dst += dstStep )
+            {
+                uchar* ptr0 = img[0];
+                uchar* ptr1 = img[1];
+
+                if( buffer )
+                {
+                    for( x = 0; x < size.width; x++ )
+                    {
+                        int v0 = ptr0[x];
+                        int v1 = ptr1[x];
+                        int idx = tab[v0] + tab[256+v1];
+                        int v = 0;
+
+                        if( idx >= 0 )
+                            v = buffer[idx];
+
+                        dst[x] = (uchar)v;
+                    }
+                }
+                else
+                {
+                    for( x = 0; x < size.width; x++ )
+                    {
+                        int v0 = ptr0[x];
+                        int v1 = ptr1[x];
+                        int idx = tab[v0] + tab[256+v1];
+                        int v = 0;
+
+                        if( idx >= 0 )
+                        {
+                            v = cvRound(bins[idx]);
+                            v = CV_CAST_8U(v);
+                        }
+
+                        dst[x] = (uchar)v;
+                    }
+                }
+            }
+            break;
+        case 3:
+            for( ; size.height--; img[0] += step, img[1] += step,
+                                  img[2] += step, dst += dstStep )
+            {
+                uchar* ptr0 = img[0];
+                uchar* ptr1 = img[1];
+                uchar* ptr2 = img[2];
+
+                if( buffer )
+                {
+                    for( x = 0; x < size.width; x++ )
+                    {
+                        int v0 = ptr0[x];
+                        int v1 = ptr1[x];
+                        int v2 = ptr2[x];
+                        int idx = tab[v0] + tab[256+v1] + tab[512+v2];
+                        int v = 0;
+
+                        if( idx >= 0 )
+                            v = buffer[idx];
+
+                        dst[x] = (uchar)v;
+                    }
+                }
+                else
+                {
+                    for( x = 0; x < size.width; x++ )
+                    {
+                        int v0 = ptr0[x];
+                        int v1 = ptr1[x];
+                        int v2 = ptr2[x];
+                        int idx = tab[v0] + tab[256+v1] + tab[512+v2];
+                        int v = 0;
+
+                        if( idx >= 0 )
+                        {
+                            v = cvRound(bins[idx]);
+                            v = CV_CAST_8U(v);
+                        }
+                        dst[x] = (uchar)v;
+                    }
+                }
+            }
+            break;
+        default:
+            for( ; size.height--; dst += dstStep )
+            {
+                if( buffer )
+                {
+                    for( x = 0; x < size.width; x++ )
+                    {
+                        uchar* binptr = buffer;
+                        int v = 0;
+
+                        for( i = 0; i < dims; i++ )
+                        {
+                            int idx = tab[i*256 + img[i][x]];
+                            if( idx < 0 )
+                                break;
+                            binptr += idx;
+                        }
+                        
+                        if( i == dims )
+                            v = binptr[0];
+
+                        dst[x] = (uchar)v;
+                    }
+                }
+                else
+                {
+                    for( x = 0; x < size.width; x++ )
+                    {
+                        float* binptr = bins;
+                        int v = 0;
+
+                        for( i = 0; i < dims; i++ )
+                        {
+                            int idx = tab[i*256 + img[i][x]];
+                            if( idx < 0 )
+                                break;
+                            binptr += idx;
+                        }
+
+                        if( i == dims )
+                        {
+                            v = cvRound( binptr[0] );
+                            v = CV_CAST_8U(v);
+                        }
+
+                        dst[x] = (uchar)v;
+                    }
+                }
+
+                for( i = 0; i < dims; i++ )
+                    img[i] += step;
+            }
+        }
+
+        icvFree( (void**)&buffer );
+    }
+    else
+    {
+        CvSparseMat* mat = (CvSparseMat*)(hist->bins);
+        int node_idx[CV_MAX_DIM];
+
+        for( ; size.height--; dst += dstStep )
+        {
+            for( x = 0; x < size.width; x++ )
+            {
+                int v = 0;
+
+                for( i = 0; i < dims; i++ )
+                {
+                    int idx = tab[i*256 + img[i][x]];
+                    if( idx < 0 )
+                        break;
+                    node_idx[i] = idx;
+                }
+                if( i == dims )
+                {
+                    float* bin = (float*)icvGetNodePtr( mat, node_idx, 0, 1 );
+                    v = cvRound(bin[0]);
+                    v = CV_CAST_8U(v);
+                }
+
+                dst[x] = (uchar)v;
+            }
+
+            for( i = 0; i < dims; i++ )
+                img[i] += step;
+        }
+    }
+
+    return CV_OK;
+}
+
+
+// Calculates histogram for one or more 8u arrays
+static CvStatus CV_STDCALL
+    icvCalcBackProject_8s_C1R( char** img, int step, char* dst, int dstStep,
+                               CvSize size, const CvHistogram* hist )
+{
+    const int small_hist_size = 1<<12;
+    int* tab;
+    int is_sparse = CV_IS_SPARSE_HIST(hist);
+    int dims, histsize[CV_MAX_DIM];
+    int i, x;
+    CvStatus status;
+
+    dims = cvGetDims( hist->bins, histsize );
+
+    tab = (int*)alloca( dims*256*sizeof(int));
+    status = icvCalcHistLookupTables8x( hist, -128, 128, dims,
+                                        histsize, tab );
+
+    if( status < 0 )
+        return status;
+
+    if( !is_sparse )
+    {
+        int total = 1;
+        CvMatND* mat = (CvMatND*)(hist->bins);
+        float* bins = mat->data.fl;
+        char* buffer = 0;
+
+        for( i = 0; i < dims; i++ )
+            total *= histsize[i];
+
+        if( dims <= 3 && total >= -ICV_HIST_DUMMY_IDX )
+            return CV_BADSIZE_ERR; // too big histogram
+
+        if( dims > 1 && total <= small_hist_size && CV_IS_MAT_CONT(mat->type))
+        {
+            buffer = (char*)icvAlloc(total);
+            if( !buffer )
+                return CV_OUTOFMEM_ERR;
+            for( i = 0; i < total; i++ )
+            {
+                int v = cvRound(bins[i]);
+                buffer[i] = CV_CAST_8S(v);
+            }
+        }
+
+        switch( dims )
+        {
+        case 1:
+            {
+            char tab1d[256];
+            for( i = 0; i < 256; i++ )
+            {
+                int idx = tab[i];
+                if( idx >= 0 )
+                {
+                    int v = cvRound(bins[idx]);
+                    tab1d[i] = CV_CAST_8S(v);
+                }
+                else
+                    tab1d[i] = 0;
+            }
+
+            for( ; size.height--; img[0] += step, dst += dstStep )
+            {
+                char* ptr = img[0];
+                for( x = 0; x <= size.width - 4; x += 4 )
+                {
+                    char v0 = tab1d[ptr[x]+128];
+                    char v1 = tab1d[ptr[x+1]+128];
+
+                    dst[x] = v0;
+                    dst[x+1] = v1;
+
+                    v0 = tab1d[ptr[x+2]+128];
+                    v1 = tab1d[ptr[x+3]+128];
+
+                    dst[x+2] = v0;
+                    dst[x+3] = v1;
+                }
+
+                for( ; x < size.width; x++ )
+                    dst[x] = tab1d[ptr[x]+128];
+            }
+            }
+            break;
+        case 2:
+            for( ; size.height--; img[0] += step, img[1] += step, dst += dstStep )
+            {
+                char* ptr0 = img[0];
+                char* ptr1 = img[1];
+
+                if( buffer )
+                {
+                    for( x = 0; x < size.width; x++ )
+                    {
+                        int v0 = ptr0[x];
+                        int v1 = ptr1[x];
+                        int idx = tab[128+v0] + tab[384+v1];
+                        int v = 0;
+
+                        if( idx >= 0 )
+                            v = buffer[idx];
+
+                        dst[x] = (char)v;
+                    }
+                }
+                else
+                {
+                    for( x = 0; x < size.width; x++ )
+                    {
+                        int v0 = ptr0[x];
+                        int v1 = ptr1[x];
+                        int idx = tab[128+v0] + tab[384+v1];
+                        int v = 0;
+
+                        if( idx >= 0 )
+                        {
+                            v = cvRound(bins[idx]);
+                            v = CV_CAST_8S(v);
+                        }
+
+                        dst[x] = (char)v;
+                    }
+                }
+            }
+            break;
+        case 3:
+            for( ; size.height--; img[0] += step, img[1] += step,
+                                  img[2] += step, dst += dstStep )
+            {
+                char* ptr0 = img[0];
+                char* ptr1 = img[1];
+                char* ptr2 = img[2];
+
+                if( buffer )
+                {
+                    for( x = 0; x < size.width; x++ )
+                    {
+                        int v0 = ptr0[x];
+                        int v1 = ptr1[x];
+                        int v2 = ptr2[x];
+                        int idx = tab[128+v0] + tab[384+v1] + tab[640+v2];
+                        int v = 0;
+
+                        if( idx >= 0 )
+                            v = buffer[idx];
+
+                        dst[x] = (char)v;
+                    }
+                }
+                else
+                {
+                    for( x = 0; x < size.width; x++ )
+                    {
+                        int v0 = ptr0[x];
+                        int v1 = ptr1[x];
+                        int v2 = ptr2[x];
+                        int idx = tab[128+v0] + tab[384+v1] + tab[640+v2];
+                        int v = 0;
+
+                        if( idx >= 0 )
+                        {
+                            v = cvRound(bins[idx]);
+                            v = CV_CAST_8S(v);
+                        }
+                        dst[x] = (char)v;
+                    }
+                }
+            }
+            break;
+        default:
+            for( ; size.height--; dst += dstStep )
+            {
+                if( buffer )
+                {
+                    for( x = 0; x < size.width; x++ )
+                    {
+                        char* binptr = buffer;
+                        int v = 0;
+
+                        for( i = 0; i < dims; i++ )
+                        {
+                            int idx = tab[i*256 + img[i][x] + 128];
+                            if( idx < 0 )
+                                break;
+                            binptr += idx;
+                        }
+                        
+                        if( i == dims )
+                            v = binptr[0];
+
+                        dst[x] = (char)v;
+                    }
+                }
+                else
+                {
+                    for( x = 0; x < size.width; x++ )
+                    {
+                        float* binptr = bins;
+                        int v = 0;
+
+                        for( i = 0; i < dims; i++ )
+                        {
+                            int idx = tab[i*256 + img[i][x] + 128];
+                            if( idx < 0 )
+                                break;
+                            binptr += idx;
+                        }
+
+                        if( i == dims )
+                        {
+                            v = cvRound( binptr[0] );
+                            v = CV_CAST_8S(v);
+                        }
+
+                        dst[x] = (char)v;
+                    }
+                }
+
+                for( i = 0; i < dims; i++ )
+                    img[i] += step;
+            }
+        }
+
+        icvFree( (void**)&buffer );
+    }
+    else
+    {
+        CvSparseMat* mat = (CvSparseMat*)(hist->bins);
+        int node_idx[CV_MAX_DIM];
+
+        for( ; size.height--; dst += dstStep )
+        {
+            for( x = 0; x < size.width; x++ )
+            {
+                int v = 0;
+
+                for( i = 0; i < dims; i++ )
+                {
+                    int idx = tab[i*256 + img[i][x] + 128];
+                    if( idx < 0 )
+                        break;
+                    node_idx[i] = idx;
+                }
+                if( i == dims )
+                {
+                    float* bin = (float*)icvGetNodePtr( mat, node_idx, 0, 1 );
+                    v = cvRound(bin[0]);
+                    v = CV_CAST_8S(v);
+                }
+
+                dst[x] = (char)v;
+            }
+
+            for( i = 0; i < dims; i++ )
+                img[i] += step;
+        }
+    }
+
+    return CV_OK;
+}
+
+
+// Calculates back project for one or more 32f arrays
+static CvStatus CV_STDCALL
+    icvCalcBackProject_32f_C1R( float** img, int step, float* dst, int dstStep,
+                                CvSize size, const CvHistogram* hist )
+{
+    int is_sparse = CV_IS_SPARSE_HIST(hist);
+    int uniform = CV_IS_UNIFORM_HIST(hist);
+    int dims, histsize[CV_MAX_DIM];
+    float uni_range[CV_MAX_DIM][2];
+    int i, x;
+
+    dims = cvGetDims( hist->bins, histsize );
+    step /= sizeof(img[0][0]);
+    dstStep /= sizeof(dst[0]);
+
+    if( uniform )
+    {
+        for( i = 0; i < dims; i++ )
+        {
+            float t = ((float)histsize[i])/(hist->thresh[i][1] - hist->thresh[i][0]);
+            uni_range[i][0] = t;
+            uni_range[i][1] = (float)(-t*hist->thresh[i][0]);
+        }
+    }
+
+    if( !is_sparse )
+    {
+        CvMatND* mat = (CvMatND*)(hist->bins);
+        float* bins = mat->data.fl;
+
+        if( uniform )
+        {
+            switch( dims )
+            {
+            case 1:
+                {
+                float a = uni_range[0][0], b = uni_range[0][1];
+                int sz = histsize[0];
+
+                for( ; size.height--; img[0] += step, dst += dstStep )
+                {
+                    float* ptr = img[0];
+
+                    for( x = 0; x <= size.width - 4; x += 4 )
+                    {
+                        int v0 = cvFloor(ptr[x]*a + b);
+                        int v1 = cvFloor(ptr[x+1]*a + b);
+
+                        if( (unsigned)v0 < (unsigned)sz )
+                            dst[x] = bins[v0];
+                        else
+                            dst[x] = 0;
+
+                        if( (unsigned)v1 < (unsigned)sz )
+                            dst[x+1] = bins[v1];
+                        else
+                            dst[x+1] = 0;
+
+                        v0 = cvFloor(ptr[x+2]*a + b);
+                        v1 = cvFloor(ptr[x+3]*a + b);
+
+                        if( (unsigned)v0 < (unsigned)sz )
+                            dst[x+2] = bins[v0];
+                        else
+                            dst[x+2] = 0;
+
+                        if( (unsigned)v1 < (unsigned)sz )
+                            dst[x+3] = bins[v1];
+                        else
+                            dst[x+3] = 0;
+                    }
+
+                    for( ; x < size.width; x++ )
+                    {
+                        int v0 = cvFloor(ptr[x]*a + b);
+                        if( (unsigned)v0 < (unsigned)sz )
+                            dst[x] = bins[v0];
+                        else
+                            dst[x] = 0;
+                    }
+                }
+                }
+                break;
+            case 2:
+                {
+                float  a0 = uni_range[0][0], b0 = uni_range[0][1];
+                float  a1 = uni_range[1][0], b1 = uni_range[1][1];
+                int sz0 = histsize[0], sz1 = histsize[1];
+                int step0 = ((CvMatND*)(hist->bins))->dim[0].step/sizeof(float);
+
+                for( ; size.height--; img[0] += step, img[1] += step, dst += dstStep )
+                {
+                    float* ptr0 = img[0];
+                    float* ptr1 = img[1];
+
+                    for( x = 0; x < size.width; x++ )
+                    {
+                        int v0 = cvFloor( ptr0[x]*a0 + b0 );
+                        int v1 = cvFloor( ptr1[x]*a1 + b1 );
+
+                        if( (unsigned)v0 < (unsigned)sz0 &&
+                            (unsigned)v1 < (unsigned)sz1 )
+                            dst[x] = bins[v0*step0 + v1];
+                        else
+                            dst[x] = 0;
+                    }
+                }
+                }
+                break;
+            default:
+                for( ; size.height--; dst += dstStep )
+                {
+                    for( x = 0; x < size.width; x++ )
+                    {
+                        float* binptr = bins;
+
+                        for( i = 0; i < dims; i++ )
+                        {
+                            int idx = cvFloor(img[i][x]*uni_range[i][0]
+                                             + uni_range[i][1]);
+                            if( (unsigned)idx >= (unsigned)histsize[i] )
+                                break;
+                            binptr += idx*(mat->dim[i].step/sizeof(float));
+                        }
+                        if( i == dims )
+                            dst[x] = binptr[0];
+                        else
+                            dst[x] = 0;
+                    }
+                }
+
+                for( i = 0; i < dims; i++ )
+                    img[i] += step;
+            }
+        }
+        else
+        {
+            for( ; size.height--; dst += dstStep )
+            {
+                for( x = 0; x < size.width; x++ )
+                {
+                    float* binptr = bins;
+                    for( i = 0; i < dims; i++ )
+                    {
+                        float v = img[i][x];
+                        float* thresh = hist->thresh2[i];
+                        int idx = -1, sz = histsize[i];
+
+                        while( v >= thresh[idx+1] && ++idx < sz )
+                            /* nop */;
+
+                        if( (unsigned)idx >= (unsigned)sz )
+                            break;
+
+                        binptr += idx*(mat->dim[i].step/sizeof(float));
+                    }
+                    if( i == dims )
+                        dst[x] = binptr[0];
+                    else
+                        dst[x] = 0;
+                }
+
+                for( i = 0; i < dims; i++ )
+                    img[i] += step;
+            }
+        }
+    }
+    else
+    {
+        CvSparseMat* mat = (CvSparseMat*)(hist->bins);
+        int node_idx[CV_MAX_DIM];
+
+        for( ; size.height--; dst += dstStep )
+        {
+            if( uniform )
+            {
+                for( x = 0; x < size.width; x++ )
+                {
+                    for( i = 0; i < dims; i++ )
+                    {
+                        int idx = cvFloor(img[i][x]*uni_range[i][0]
+                                         + uni_range[i][1]);
+                        if( (unsigned)idx >= (unsigned)histsize[i] )
+                            break;
+                        node_idx[i] = idx;
+                    }
+                    if( i == dims )
+                    {
+                        float* bin = (float*)icvGetNodePtr( mat, node_idx, 0, 1 );
+                        dst[x] = bin[0];
+                    }
+                    else
+                        dst[x] = 0;
+                }
+            }
+            else
+            {
+                for( x = 0; x < size.width; x++ )
+                {
+                    for( i = 0; i < dims; i++ )
+                    {
+                        float v = img[i][x];
+                        float* thresh = hist->thresh2[i];
+                        int idx = -1, sz = histsize[i];
+
+                        while( v >= thresh[idx+1] && ++idx < sz )
+                            /* nop */;
+
+                        if( (unsigned)idx >= (unsigned)sz )
+                            break;
+
+                        node_idx[i] = idx;
+                    }
+                    if( i == dims )
+                    {
+                        float* bin = (float*)icvGetNodePtr( mat, node_idx, 0, 1 );
+                        dst[x] = bin[0];
+                    }
+                    else
+                        dst[x] = 0;
+                }
+            }
+
+            for( i = 0; i < dims; i++ )
+                img[i] += step;
+        }
+    }
+
+    return CV_OK;
+}
+
+
+CV_IMPL void
+cvCalcArrBackProject( CvArr** img, CvArr* dst, const CvHistogram* hist )
+{
+    CV_FUNCNAME( "cvCalcArrBackProject" );
 
     __BEGIN__;
 
+    uchar* ptr[CV_MAX_DIM];
+    uchar* dstptr = 0;
+    int dststep = 0, step = 0;
+    int i, dims;
+    int cont_flag = -1;
+    CvMat stub0, *mat0 = 0;
+    CvSize size;
+
+    if( !CV_IS_HIST(hist))
+        CV_ERROR( CV_StsBadArg, "Bad histogram pointer" );
+
+    if( !img )
+        CV_ERROR( CV_StsNullPtr, "Null double array pointer" );
+
+    CV_CALL( dims = cvGetDims( hist->bins ));
+    
+    for( i = 0; i <= dims; i++ )
     {
-	for( int i = 0; i < hist->c_dims; i++ )
-	    CV_CALL( CV_CHECK_IMAGE( img[i] ));
+        CvMat stub, *mat = (CvMat*)(i < dims ? img[i] : dst);
+        CV_CALL( mat = cvGetMat( mat, i == 0 ? &stub0 : &stub, 0, 1 ));
+
+        if( CV_MAT_CN( mat->type ) != 1 )
+            CV_ERROR( CV_BadNumChannels, "Only 1-channel arrays are allowed here" );
+
+        if( i == 0 )
+        {
+            mat0 = mat;
+            step = mat0->step;
+        }
+        else
+        {
+            if( !CV_ARE_SIZES_EQ( mat0, mat ))
+                CV_ERROR( CV_StsUnmatchedSizes, "Not all the planes have equal sizes" );
+
+            if( mat0->step != mat->step )
+                CV_ERROR( CV_StsUnmatchedSizes, "Not all the planes have equal steps" );
+
+            if( !CV_ARE_TYPES_EQ( mat0, mat ))
+                CV_ERROR( CV_StsUnmatchedFormats, "Not all the planes have equal types" );
+        }
+
+        cont_flag &= mat->type;
+        if( i < dims )
+            ptr[i] = mat->data.ptr;
+        else
+        {
+            dstptr = mat->data.ptr;
+            dststep = mat->step;
+        }
     }
 
+    size = icvGetMatSize(mat0);
+    if( CV_IS_MAT_CONT( cont_flag ))
     {
-	for( int i = 0; i < hist->c_dims; i++ )
-	    cvGetImageRawData( img[i], &data[i], &step, &roi );
+        size.width *= size.height;
+        size.height = 1;
+        dststep = step = CV_AUTOSTEP;
     }
 
-    switch (img[0]->depth)
+    if( CV_MAT_DEPTH(mat0->type) > CV_8S && !CV_HIST_HAS_RANGES(hist))
+        CV_ERROR( CV_StsBadArg, "histogram ranges must be set (via cvSetHistBinRanges) "
+                                "before calling the function" );
+
+    switch( CV_MAT_DEPTH(mat0->type) )
     {
-    case IPL_DEPTH_8U:
-	IPPI_CALL( icvCalcHist8uC1R( data, step, roi, hist, dont_clear ));
-	break;
-    case IPL_DEPTH_8S:
-	IPPI_CALL( icvCalcHist8sC1R( (char **) data, step, roi, hist, dont_clear ));
-	break;
-    case IPL_DEPTH_32F:
-	IPPI_CALL( icvCalcHist32fC1R( (float **) data, step, roi, hist, dont_clear ));
-	break;
+    case CV_8U:
+        IPPI_CALL( icvCalcBackProject_8u_C1R( ptr, step, dstptr, dststep, size, hist ));
+	    break;
+    case CV_8S:
+	    IPPI_CALL( icvCalcBackProject_8s_C1R( (char**)ptr, step,
+                                (char*)dstptr, dststep, size, hist ));
+	    break;
+    case CV_32F:
+	    IPPI_CALL( icvCalcBackProject_32f_C1R( (float**)ptr, step,
+                                (float*)dstptr, dststep, size, hist ));
+	    break;
+    default:
+        CV_ERROR( CV_StsUnsupportedFormat, "Unsupported array type" );
     }
 
+    __END__;
+}
+
+
+////////////////////// B A C K   P R O J E C T   P A T C H /////////////////////////
+
+CV_IMPL void
+cvCalcArrBackProjectPatch( CvArr** arr, CvArr* dst, CvSize range, CvHistogram* hist,
+                           CvCompareMethod method, double norm_factor )
+{
+    CvHistogram* model = 0;
+    
+    CV_FUNCNAME( "cvCalcArrBackProjectPatch" );
+
+    __BEGIN__;
+
+    IplImage imgstub[CV_MAX_DIM], *img[CV_MAX_DIM];
+    IplROI roi;
+    CvMat dststub, *dstmat;
+    int i, dims;
+    int x, y;
+    CvSize size;
+
+    if( !CV_IS_HIST(hist))
+        CV_ERROR( CV_StsBadArg, "Bad histogram pointer" );
+
+    if( !img )
+        CV_ERROR( CV_StsNullPtr, "Null double array pointer" );
+
+    if( norm_factor <= 0 )
+        CV_ERROR( CV_StsOutOfRange,
+                  "Bad normalization factor (set it to 1.0 if unsure)" );
+
+    CV_CALL( dims = cvGetDims( hist->bins ));
+    CV_CALL( cvCopyHist( hist, &model ));
+    CV_CALL( cvNormalizeHist( hist, norm_factor ));
+
+    for( i = 0; i < dims; i++ )
+    {
+        CvMat stub, *mat;
+        CV_CALL( mat = cvGetMat( arr[i], &stub, 0, 0 ));
+        CV_CALL( img[i] = cvGetImage( mat, &imgstub[i] ));
+        img[i]->roi = &roi;
+    }
+
+    CV_CALL( dstmat = cvGetMat( dst, &dststub, 0, 0 ));
+    if( CV_MAT_TYPE( dstmat->type ) != CV_32FC1 )
+        CV_ERROR( CV_StsUnsupportedFormat, "Resultant image must have 32fC1 type" );
+
+    size = icvGetMatSize(dstmat);
+    roi.coi = 0;
+
+    for( y = 0; y < size.height; y++ )
+    {
+        roi.yOffset = y - range.height;
+        roi.height = range.height*2 + 1;
+        if( roi.yOffset < 0 )
+        {
+            roi.height += roi.yOffset;
+            roi.yOffset = 0;
+        }
+        if( roi.yOffset + roi.height > size.height )
+            roi.height = size.height - roi.yOffset;
+        
+        for( x = 0; x < size.width; x++ )
+        {
+            double result;
+            
+            roi.xOffset = x - range.width;
+            roi.width = range.width*2 + 1;
+            if( roi.xOffset < 0 )
+            {
+                roi.width += roi.xOffset;
+                roi.xOffset = 0;
+            }
+            if( roi.xOffset + roi.width > size.width )
+                roi.width = size.width - roi.xOffset;
+
+            CV_CALL( cvCalcHist( img, model ));
+            CV_CALL( cvNormalizeHist( model, norm_factor ));
+            CV_CALL( result = cvCompareHist( model, hist, method ));
+            CV_MAT_ELEM( *dstmat, float, y, x ) = (float)result;
+        }
+    }
+
+    __END__;
+
+    cvReleaseHist( &model );
+}
+
+
+// Calculates Bayes probabilistic histograms
+CV_IMPL void
+cvCalcBayesianProb( CvHistogram** src, int count, CvHistogram** dst )
+{
+    CV_FUNCNAME( "cvCalcBayesianProb" );
+    
+    __BEGIN__;
+
+    int i;
+    
+    if( !src || !dst )
+        CV_ERROR( CV_StsNullPtr, "NULL histogram array pointer" );
+
+    if( count < 2 )
+        CV_ERROR( CV_StsOutOfRange, "Too small number of histograms" );
+    
+    for( i = 0; i < count; i++ )
+    {
+        if( !CV_IS_HIST(src[i]) || !CV_IS_HIST(dst[i]) )
+            CV_ERROR( CV_StsBadArg, "Invalid histogram header" );
+
+        if( !CV_IS_MATND(src[i]->bins) || !CV_IS_MATND(dst[i]->bins) )
+            CV_ERROR( CV_StsBadArg, "The function supports dense histograms only" );
+    }
+    
+    cvZero( dst[0]->bins );
+    // dst[0] = src[0] + ... + src[count-1]
+    for( i = 0; i < count; i++ )
+        CV_CALL( cvAdd( src[i]->bins, dst[0]->bins, dst[0]->bins ));
+
+    CV_CALL( cvDiv( 0, dst[0]->bins, dst[0]->bins ));
+
+    // dst[i] = src[i]*(1/dst[0])
+    for( i = count - 1; i >= 0; i-- )
+        CV_CALL( cvMul( src[i]->bins, dst[0]->bins, dst[i]->bins ));
     
     __END__;
 }
 
 
 CV_IMPL void
-cvCalcBackProject( IplImage ** img, IplImage * dst, CvHistogram * hist )
+cvCalcProbDensity( CvHistogram* hist, CvHistogram* hist_mask,
+                   CvHistogram* hist_dens, double scale )
 {
-    CV_FUNCNAME( "cvCalcBackProject" );
-    uchar *data[CV_HIST_MAX_DIM];
-    uchar *dst_data;
-    int step = 0;
-    int dst_step = 0;
-    CvSize roi = { 0, 0 };
-
-
-    __BEGIN__;
-    for( int i = 0; i < hist->c_dims; i++ )
-	CV_CALL( CV_CHECK_IMAGE( img[i] ));
-    CV_CALL( CV_CHECK_IMAGE( dst ));
-
-    {
-	for( int i = 0; i < hist->c_dims; i++ )
-	    cvGetImageRawData( img[i], &data[i], &step, &roi );
-    }
-    cvGetImageRawData( dst, &dst_data, &dst_step, 0 );
-
-    switch (img[0]->depth)
-    {
-    case IPL_DEPTH_8U:
-	IPPI_CALL( icvCalcBackProject8uC1R( data, step, dst_data, dst_step, roi, hist ));
-	break;
-    case IPL_DEPTH_8S:
-	IPPI_CALL( icvCalcBackProject8sC1R( (char **) data, step, (char *) dst_data, dst_step,
-					    roi, hist ));
-	break;
-    case IPL_DEPTH_32F:
-	IPPI_CALL( icvCalcBackProject32fC1R
-		   ( (float **) data, step, (float *) dst_data, dst_step, roi, hist ));
-	break;
-    }
-
-    
-    __END__;
-}
-
-
-CV_IMPL void
-cvCalcBackProjectPatch( IplImage ** img, IplImage * dst, CvSize range,
-			CvHistogram * hist, CvCompareMethod method,
-			double norm_factor )
-{
-    CV_FUNCNAME( "cvCalcBackProjectPatch" );
-    uchar *data[CV_HIST_MAX_DIM];
-    float *dst_data;
-    int step = 0;
-    int dst_step = 0;
-    CvSize roi = { 0, 0 };
-
-
-    __BEGIN__;
-    for( int i = 0; i < hist->c_dims; i++ )
-	CV_CALL( CV_CHECK_IMAGE( img[i] ));
-    CV_CALL( CV_CHECK_IMAGE( dst ));
-
-    {
-	for( int i = 0; i < hist->c_dims; i++ )
-	    cvGetImageRawData( img[i], &data[i], &step, &roi );
-    }
-    cvGetImageRawData( dst, (uchar **) & dst_data, &dst_step, 0 );
-
-    switch (img[0]->depth)
-    {
-    case IPL_DEPTH_8U:
-	IPPI_CALL( icvCalcBackProjectPatch8uC1R( data, step, dst_data, dst_step,
-						 roi, range, hist, method, (float)norm_factor ));
-	break;
-    case IPL_DEPTH_8S:
-	IPPI_CALL( icvCalcBackProjectPatch8sC1R( (char **) data, step, dst_data, dst_step,
-						 roi, range, hist, method, (float)norm_factor ));
-	break;
-    case IPL_DEPTH_32F:
-	IPPI_CALL( icvCalcBackProjectPatch32fC1R( (float **) data, step, dst_data, dst_step,
-						  roi, range, hist, method, (float)norm_factor ));
-	break;
-    }
-
-    
-    __END__;
-}
-
-
-void
-cvClearHist( CvHistogram * hist )
-{
-
-    CV_FUNCNAME( "cvClearHist" );
+    CV_FUNCNAME( "cvCalcProbDensity" );
 
     __BEGIN__;
 
-    IPPI_CALL( icvClearHist( hist ));
+    if( scale <= 0 )
+        CV_ERROR( CV_StsOutOfRange, "scale must be positive" );
 
-    
+    if( !CV_IS_HIST(hist) || !CV_IS_HIST(hist_mask) || !CV_IS_HIST(hist_dens) )
+        CV_ERROR( CV_StsBadArg, "Invalid histogram pointer[s]" );
+
+    {
+        CvArr* arrs[] = { hist->bins, hist_mask->bins, hist_dens->bins };
+        CvMatND stubs[3];
+        CvMatNDIterator iterator;
+
+        CV_CALL( icvPrepareArrayOp( 3, arrs, 0, stubs, &iterator ));
+
+        if( CV_MAT_TYPE(iterator.hdr[0]->type) != CV_32FC1 )
+            CV_ERROR( CV_StsUnsupportedFormat, "All histograms must have 32fC1 type" );
+
+        do
+        {
+            const float* srcdata = (const float*)(iterator.ptr[0]);
+            const float* maskdata = (const float*)(iterator.ptr[1]);
+            float* dstdata = (float*)(iterator.ptr[2]);
+            int i;
+
+            for( i = 0; i < iterator.size.width; i++ )
+            {
+                float s = srcdata[i];
+                float m = maskdata[i];
+                if( s > FLT_EPSILON )
+                    if( m <= s )
+                        dstdata[i] = (float)(m*scale/s);
+                    else
+                        dstdata[i] = (float)scale;
+                else
+                    dstdata[i] = (float)0;
+            }
+        }
+        while( icvNextMatNDSlice( &iterator ));
+    }
+
     __END__;
 }
+
+/* End of file. */
+

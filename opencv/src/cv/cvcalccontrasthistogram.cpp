@@ -39,7 +39,8 @@
 //
 //M*/
 #include "_cv.h"
-#include "_cvwrap.h"
+
+#if 0
 
 IPCVAPI(CvStatus, icvCalcContrastHist8uC1R, ( uchar** img, int step, CvSize size,
                                               CvHistogram* hist, int dont_clear ))
@@ -343,7 +344,7 @@ cvCalcContrastHist( IplImage ** img, CvHistogram * hist, int dont_clear, IplImag
     {
         CV_CALL( CV_CHECK_IMAGE( mask ));
         if( mask->depth != IPL_DEPTH_8U )
-            CV_ERROR( IPL_BadDepth, "bad mask depth" );
+            CV_ERROR( CV_BadDepth, "bad mask depth" );
         cvGetImageRawData( mask, &mask_data, &mask_step, 0 );
     }
 
@@ -354,10 +355,10 @@ cvCalcContrastHist( IplImage ** img, CvHistogram * hist, int dont_clear, IplImag
     }
 
     if( img[0]->nChannels != 1 )
-        CV_ERROR( IPL_BadNumChannels, "bad channels numbers" );
+        CV_ERROR( CV_BadNumChannels, "bad channels numbers" );
 
     if( img[0]->depth != IPL_DEPTH_8U )
-        CV_ERROR( IPL_BadDepth, "bad image depth" );
+        CV_ERROR( CV_BadDepth, "bad image depth" );
 
 
     switch (img[0]->depth)
@@ -374,9 +375,11 @@ cvCalcContrastHist( IplImage ** img, CvHistogram * hist, int dont_clear, IplImag
         }
         break;
     default:
-        CV_ERROR( IPL_BadDepth, "bad image depth" );
+        CV_ERROR( CV_BadDepth, "bad image depth" );
     }
 
     __CLEANUP__;
     __END__;
 }
+
+#endif

@@ -39,7 +39,6 @@
 //
 //M*/
 #include "_cv.h"
-#include "_cvwrap.h"
 #include "_cvdatastructs.h"
 #include <float.h>
 
@@ -150,7 +149,7 @@ static const float icv_acos_table[_CV_ACOS_TABLE_SIZE] = {
 //    Notes:
 //F*/
 CvStatus
-icvCalcPGH( CvSeq * contour, float *pgh, int angle_dim, int dist_dim )
+icvCalcPGH( const CvSeq * contour, float *pgh, int angle_dim, int dist_dim )
 {
     char local_buffer[(1 << 14) + 32];
     float *local_buffer_ptr = (float *)icvAlignPtr(local_buffer,32);
@@ -336,18 +335,33 @@ icvCalcPGH( CvSeq * contour, float *pgh, int angle_dim, int dist_dim )
 
 
 CV_IMPL void
-cvCalcPGH( CvSeq * contour, CvHistogram * hist )
+cvCalcPGH( const CvSeq * contour, CvHistogram * hist )
 {
     CV_FUNCNAME( "cvCalcPGH" );
 
     __BEGIN__;
 
-    if( hist->type != CV_HIST_ARRAY || hist->c_dims != 2 )
-        CV_ERROR( IPL_StsBadArg, icvUnsupportedFormat );
+    int size[CV_MAX_DIM];
+    int dims;
+    
+    if( !CV_IS_HIST(hist))
+        CV_ERROR( CV_StsBadArg, "The histogram header is invalid " );
 
-    IPPI_CALL( icvCalcPGH( contour, hist->array, hist->dims[0], hist->dims[1] ));
+    if( CV_IS_SPARSE_HIST( hist ))
+        CV_ERROR( CV_StsUnsupportedFormat, "Sparse histogram are not supported" );
+
+    dims = cvGetDims( hist->bins, size ); 
+
+    if( dims != 2 )
+        CV_ERROR( CV_StsBadSize, "The histogram must be two-dimensional" );
+
+    if( !CV_IS_SEQ_POLYGON( contour ) || CV_SEQ_ELTYPE( contour ) != CV_32SC2 )
+        CV_ERROR( CV_StsUnsupportedFormat, "The contour is not valid or the point type is not supported" );
+
+    IPPI_CALL( icvCalcPGH( contour, ((CvMatND*)(hist->bins))->data.fl, size[0], size[1] ));
 
     __END__;
 }
+
 
 /* End of file. */

@@ -39,7 +39,6 @@
 //
 //M*/
 #include "_cv.h"
-#include "_cvwrap.h"
 
 /****************************************************************************************/
 /****************************************************************************************/
@@ -48,28 +47,8 @@
 
 #include <stdio.h>
 
-
-static CvStatus  icvCvt_32f_64d( const float*  src, double* dst, int size)
-{
-    for( int i = 0; i < size; i++ )
-    {
-        dst[i] = src[i];
-    }
-
-    return CV_OK;
-}
-
-
-static CvStatus  icvCvt_64d_32f( const double* src, float*  dst, int size )
-{
-    for( int i = 0; i < size; i++ )
-    {
-        dst[i] = (float)src[i];
-    }
-
-    return CV_OK;
-}
-
+#define icvCvt_32f_64d  icvCvt_32f64f
+#define icvCvt_64d_32f  icvCvt_64f32f
 
 CvStatus icvFindHomography( int numPoints,
                             CvSize imageSize,
@@ -922,9 +901,9 @@ IPCVAPI_IMPL( CvStatus, icvRodrigues_64d, (CvMatr64d rotMatr,
                         
                         icvSetZero_64d(dvar2dvar,5,4);
 
-                        dvar2dvar[0 * 5 + 0] = 1;
-                        dvar2dvar[1 * 5 + 1] = 1;
-                        dvar2dvar[2 * 5 + 2] = 1;
+                        dvar2dvar[0 * 5 + 0] = vth;
+                        dvar2dvar[1 * 5 + 1] = vth;
+                        dvar2dvar[2 * 5 + 2] = vth;
 
                         dvar2dvar[0 * 5 + 3] = om1[0];
                         dvar2dvar[1 * 5 + 3] = om1[1];

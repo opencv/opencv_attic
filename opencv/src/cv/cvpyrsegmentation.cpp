@@ -39,7 +39,6 @@
 //
 //M*/
 #include "_cv.h"
-#include "_cvwrap.h"
 #include "_cvdatastructs.h"
 
 typedef struct _CvRGBf
@@ -280,12 +279,14 @@ icvPyrSegmentation8uC1R( uchar * src_image, int src_step,
     /* calculate initial pyramid */
     for( l = 1; l <= level; l++ )
     {
+        CvSize dst_size = { size.width/2+1, size.height/2+1 };
+        
         _CV_CHECK( icvPyrDown_Gauss5x5_32f_C1R( pyramida, step, pyramida, step, size, buff ));
-        _CV_CHECK( icvPyrDownBorder_32f_C1R( pyramida, step, pyramida, step, size ));
+        _CV_CHECK( icvPyrDownBorder_32f_CnR( pyramida, step, size, pyramida, step, dst_size, 1 ));
         pyram[l] = p_cur;
 
-        size.width >>= 1;
-        size.height >>= 1;
+        size.width = dst_size.width - 1;
+        size.height = dst_size.height - 1;
 
         /* fill layer #l */
         for( i = 0; i <= size.height; i++ )
@@ -695,12 +696,14 @@ icvPyrSegmentation8uC3R( uchar * src_image, int src_step,
     /* calculate initial pyramid */
     for( l = 1; l <= level; l++ )
     {
+        CvSize dst_size = { size.width/2 + 1, size.height/2 + 1 };
+
         _CV_CHECK( icvPyrDown_Gauss5x5_32f_C3R( pyramida, step, pyramida, step, size, buff ));
-        _CV_CHECK( icvPyrDownBorder_32f_C3R( pyramida, step, pyramida, step, size ));
+        _CV_CHECK( icvPyrDownBorder_32f_CnR( pyramida, step, size, pyramida, step, dst_size, 3 ));
         pyram[l] = p_cur;
 
-        size.width >>= 1;
-        size.height >>= 1;
+        size.width = dst_size.width - 1;
+        size.height = dst_size.height - 1;
 
         /* fill layer #l */
         for( i = 0; i <= size.height; i++ )
@@ -1835,16 +1838,16 @@ cvPyrSegmentation( IplImage * src,
     CV_CALL( CV_CHECK_IMAGE( dst ));
 
     if( src->depth != IPL_DEPTH_8U )
-        CV_ERROR( IPL_BadDepth, icvUnsupportedFormat );
+        CV_ERROR( CV_BadDepth, icvUnsupportedFormat );
 
     if( src->depth != dst->depth || src->nChannels != dst->nChannels )
-        CV_ERROR( IPL_StsBadArg, "src and dst have different formats" );
+        CV_ERROR( CV_StsBadArg, "src and dst have different formats" );
 
     cvGetImageRawData( src, &src_data, &src_step, &src_size );
     cvGetImageRawData( dst, &dst_data, &dst_step, &dst_size );
 
     if( src_size != dst_size )
-        CV_ERROR( IPL_StsBadArg, "src and dst have different ROIs" );
+        CV_ERROR( CV_StsBadArg, "src and dst have different ROIs" );
 
     switch (src->nChannels)
     {
@@ -1863,7 +1866,7 @@ cvPyrSegmentation( IplImage * src,
                                             comp, storage, level, thresh1, thresh2 ));
         break;
     default:
-        CV_ERROR( IPL_BadNumChannels, icvUnsupportedFormat );
+        CV_ERROR( CV_BadNumChannels, icvUnsupportedFormat );
     }
     __CLEANUP__;
     __END__;

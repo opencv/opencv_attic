@@ -39,7 +39,6 @@
 //
 //M*/
 #include "_cv.h"
-#include "_cvwrap.h"
 
 #define _CV_SNAKE_BIG 2.e+38f
 #define _CV_SNAKE_IMAGE 1
@@ -72,7 +71,7 @@ CvStatus icvSnake8uC1R( unsigned char *src,
 //               beta - pointer to coefficient of curvature energy,  
 //               gamma - pointer to coefficient of image energy,  
 //               coeffUsage - if CV_VALUE - alpha, beta, gamma point to single value
-//                            if CV_ARRAY - point to arrays
+//                            if CV_MATAY - point to arrays
 //               criteria - termination criteria.
 //    Returns:   
 //F*/
@@ -106,7 +105,7 @@ IPCVAPI_IMPL( CvStatus, icvSnakeImage8uC1R, (unsigned char *src,
 //               beta - pointer to coefficient of curvature energy,  
 //               gamma - pointer to coefficient of image energy,  
 //               coeffUsage - if CV_VALUE - alpha, beta, gamma point to single value
-//                            if CV_ARRAY - point to arrays
+//                            if CV_MATAY - point to arrays
 //               criteria - termination criteria.
 //    Returns:   
 //F*/
@@ -139,7 +138,7 @@ IPCVAPI_IMPL( CvStatus, icvSnakeImageGrad8uC1R, (unsigned char *src,
 //               beta - pointer to coefficient of curvature energy,  
 //               gamma - pointer to coefficient of image energy,  
 //               coeffUsage - if CV_VALUE - alpha, beta, gamma point to single value
-//                            if CV_ARRAY - point to arrays
+//                            if CV_MATAY - point to arrays
 //               criteria - termination criteria.
 //               scheme - image energy scheme
 //                         if _CV_SNAKE_IMAGE - image intensity is energy
@@ -394,8 +393,8 @@ icvSnake8uC1R( unsigned char *src,
                             icvSobel_8u16s_C1R( source, srcStep, dx, 20, &g_roi, pX, 0 );
                             icvSobel_8u16s_C1R( source, srcStep, dy, 20, &g_roi, pY, 0 );
 
-                            icvConvolFree( &pX );
-                            icvConvolFree( &pY );
+                            icvFilterFree( &pX );
+                            icvFilterFree( &pY );
                             for( l = 0; l < 8 + bottomshift; l++ )
                             {
                                 for( m = 0; m < 8 + rightshift; m++ )
@@ -496,7 +495,7 @@ icvSnake8uC1R( unsigned char *src,
 
 
 CV_IMPL void
-cvSnakeImage( IplImage * src, CvPoint * points,
+cvSnakeImage( const IplImage* src, CvPoint* points,
               int length, float *alpha,
               float *beta, float *gamma,
               CvCoeffType coeffUsage, CvSize win,
@@ -512,10 +511,10 @@ cvSnakeImage( IplImage * src, CvPoint * points,
     int step;
 
     if( src->nChannels != 1 )
-        CV_ERROR( IPL_BadNumChannels, "input image has more than one channel" );
+        CV_ERROR( CV_BadNumChannels, "input image has more than one channel" );
 
     if( src->depth != IPL_DEPTH_8U )
-        CV_ERROR( IPL_BadDepth, icvUnsupportedFormat );
+        CV_ERROR( CV_BadDepth, icvUnsupportedFormat );
 
 
     cvGetImageRawData( src, &data, &step, &size );

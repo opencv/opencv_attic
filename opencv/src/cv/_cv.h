@@ -108,11 +108,127 @@ typedef enum {
    cv64f, cv64fc
 } CvDataType;
 
-#define _CvConvState CvConvState
-struct CvConvState;
-struct CvMorphState;
-
 CV_EXTERN_C_FUNCPTR( void (CV_CDECL * ICVWriteNodeFunction)(void*,void*) )
+
+#define ICV_KERNEL_TYPE_MASK        (15<<16)
+#define ICV_BINARY_KERNEL           (0<<16)
+#define ICV_SEPARABLE_KERNEL        (1<<16)
+
+#define ICV_KERNEL_TYPE(flags)      ((flags) & ICV_KERNEL_TYPE_MASK)
+
+#define ICV_MAKE_SEPARABLE_KERNEL( x_type, y_type ) \
+    (ICV_SEPARABLE_KERNEL | ((x_type)&255) | (((y_type)&255) << 8))
+
+#define ICV_X_KERNEL_TYPE(flags)    ((flags) & 255)
+#define ICV_Y_KERNEL_TYPE(flags)    (((flags) >> 8) & 255)
+#define ICV_SYMMETRIC_KERNEL        1
+#define ICV_ASYMMETRIC_KERNEL       2
+
+#define ICV_1_2_1_KERNEL            (4*1+ICV_SYMMETRIC_KERNEL)
+#define ICV_m1_0_1_KERNEL           (4*2+ICV_ASYMMETRIC_KERNEL)
+#define ICV_1_m2_1_KERNEL           (4*3+ICV_SYMMETRIC_KERNEL)
+#define ICV_3_10_3_KERNEL           (4*4+ICV_SYMMETRIC_KERNEL)
+
+#define ICV_MAKE_BINARY_KERNEL( shape ) \
+    (ICV_BINARY_KERNEL | (int)(shape))
+
+#define ICV_BINARY_KERNEL_SHAPE(flags) ((CvElementShape)((flags) & 255))
+
+typedef struct CvFilterState
+{
+    /* kernel data */
+    int ker_width;
+    int ker_height;
+    int ker_x;
+    int ker_y;
+    int kerType;
+    uchar *ker0;
+    uchar *ker1;
+    double divisor;
+
+    /* image data */
+    int max_width;
+    CvDataType dataType;
+    int channels;
+    int origin;
+
+    /* cyclic buffer */
+    char *buffer;
+    int buffer_step;
+    int crows;
+    char **rows;
+    char *tbuf;
+}
+CvFilterState;
+
+#define _CvConvState CvFilterState
+#define CvMorphState CvFilterState
+
+#define  CV_COPY( dst, src, len, idx ) \
+    for( (idx) = 0; (idx) < (len); (idx)++) (dst)[idx] = (src)[idx]
+
+#define  CV_SET( dst, val, len, idx )  \
+    for( (idx) = 0; (idx) < (len); (idx)++) (dst)[idx] = (val)
+
+
+typedef struct
+{
+    uchar  b, g, r;
+}
+CvRGB8u;
+
+
+typedef struct
+{
+    uchar  b, g, r, a;
+}
+CvRGBA8u;
+
+
+typedef struct
+{
+    int  b, g, r;
+}
+CvRGB32s;
+
+
+typedef struct
+{
+    int  b, g, r, a;
+}
+CvRGBA32s;
+
+typedef struct
+{
+    float  b, g, r;
+}
+CvRGB32f;
+
+
+typedef struct
+{
+    float  b, g, r, a;
+}
+CvRGBA32f;
+
+
+#undef   CV_CALC_MAX
+#undef   CV_CALC_MIN
+
+#define  CV_CALC_MIN(a, b) (a) = CV_IMIN((a),(b))
+#define  CV_CALC_MAX(a, b) (a) = CV_IMAX((a),(b))
+
+#define CV_MORPH_ALIGN  4
+
+typedef CvStatus( CV_STDCALL* CvFilterFunc )( const void* src, int src_step,
+                                              void* dst, int dst_step,
+                                              CvSize* size, struct CvFilterState * state,
+                                              int stage );
+
+#define CvMorphFunc CvFilterFunc
+
+typedef struct CvFuncTable CvFuncTable;
+typedef struct CvBigFuncTable CvBigFuncTable;
 
 #include "_ipcv.h"
 #include "_optcv.h"
@@ -149,17 +265,6 @@ CV_EXTERN_C_FUNCPTR( void (CV_CDECL * ICVWriteNodeFunction)(void*,void*) )
 
 /* IEEE 754 representation of 1.f */
 #define  CV_1F          0x3f800000
-
-/* min & max without jumps */
-// (a) >= (b) ? (a) : (b)
-#define  CV_IMIN(a, b)  ((a) ^ (((a)^(b)) & (((a) < (b)) - 1)))
-
-// (a) <= (b) ? (a) : (b)
-#define  CV_IMAX(a, b)  ((a) ^ (((a)^(b)) & (((a) > (b)) - 1)))
-
-/* absolute value without jumps */
-#define  CV_IABS(a)     (((a) ^ ((a) < 0 ? -1 : 0)) - ((a) < 0 ? -1 : 0))
-#define  CV_SGN(a)      (((a) < 0 ? -1 : 0) | ((a) > 0))
 
 #define  CV_NOP(a)      (a)
 #define  CV_ADD(a, b)   ((a) + (b))
@@ -214,18 +319,6 @@ CV_EXTERN_C_FUNCPTR( void (CV_CDECL * ICVWriteNodeFunction)(void*,void*) )
 
 #define  ICV_UN_ENTRY_C4(worktype)           \
     worktype s0 = scalar[0], s1 = scalar[1], s2 = scalar[2], s3 = scalar[3]
-
-typedef struct CvConvState
-{
-    char*    buffer;      /* pointer to ring buffer */
-    int      BufferStep;  /* BufferStep */
-    int      kerType;   /* symmetry of the X kernel */
-    int      initialized; /* scale value for result of convolution */
-    char*    lines[16];   /* pointers to ring buffer lines */
-    char     KerX[256];   /* horizontal kernel */
-    char     KerY[256];   /* vertical kernel */
-}
-CvConvState;
 
 CV_INLINE void* icvAlignPtr( void* ptr, int align = 32 );
 CV_INLINE void* icvAlignPtr( void* ptr, int align )

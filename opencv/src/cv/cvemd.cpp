@@ -57,7 +57,6 @@
     ==========================================================================
 */
 #include "_cv.h"
-#include "_cvwrap.h"
 
 #define MAX_ITERATIONS 500
 #define CV_EMD_INF   ((float)1e20)
@@ -97,6 +96,9 @@ typedef struct CvEMDState
     CvNode1D *u;
     CvNode1D *v;
 
+    int* idx1;
+    int* idx2;
+
     /* find_loop buffers */
     CvNode2D **loop;
     char *is_used;
@@ -114,9 +116,8 @@ CvEMDState;
 /* static function declaration */
 static CvStatus icvInitEMD( const float *signature1, int size1,
                             const float *signature2, int size2,
-                            int dims,
-                            CvDistanceFunction dist_func,
-                            void *user_param,
+                            int dims, CvDistanceFunction dist_func, void *user_param,
+                            const float* cost, int cost_step,
                             CvEMDState * state, float *lower_bound,
                             char *local_buffer, int local_buffer_size );
 
@@ -143,74 +144,91 @@ static float icvDistL2( const float *x, const float *y, void *user_param );
 static float icvDistL1( const float *x, const float *y, void *user_param );
 static float icvDistC( const float *x, const float *y, void *user_param );
 
-/*F///////////////////////////////////////////////////////////////////////////////////////
-//    Name:       cvCalcEMD
-//    Purpose:    Computes Earth mover distance (and/or lower bound of it) for given pair
-//                of signatures. By default, ground distance is calculated as
-//                L1, L2 or C distance using features' coordinates.
-//    Context:
-//    Parameters:
-//      signature1  - first signature - array of size1 * (dims + 1) elements
-//      signature2  - second signature - array of size2 * (dims + 1) elements
-//      dims        - number of dimensions in feature space. If 0, then
-//                    signature1 and signature2 are considered as simple 1D histograms,
-//                    else both signatures must look as follows:
-//                    (weight_i0, x0_i0, x1_i0, ..., x(dims-1)_i0,
-//                     weight_i1, x0_i1, x1_i1, ..., x(dims-1)_i1,
-//                     ...
-//                     weight_(size1-1),x0_(size1-1),x1_(size1-1,...,x(dims-1)_(size1-1))
-//
-//                     where weight_ik - weight of ik cluster.
-//                     x0_ik,...,x(dims-1)_ik - coordinates of ik cluster.
-//
-//      weights     - array of weights for each coordinate,
-//                    which is used when wieghted euclidian distance is calculated.
-//                    if 0, then all weights are set to 1s.
-//      emd         - pointer to calculated emd distance
-//      lower_bound - pointer to calculated lower bound.
-//                    if 0, this quantity is not calculated (only emd is calculated).
-//                    else if calculated lower bound is greater or equal to the value,
-//                    stored at this pointer, then the true emd is not calculated, but
-//                    is set to that lower_bound.
-//    Returns:
-//      CV_NO_ERR if ok, error code else
-//    Notes:
-//F*/
+/* The main function */
 CV_IMPL float
-cvCalcEMD( const float *signature1, int size1,
-           const float *signature2, int size2,
-           int dims, CvDisType dist_type,
-           CvDistanceFunction dist_func,
-           float *lower_bound,
-           void *user_param )
+cvCalcEMD2( const CvArr* signature_arr1,
+            const CvArr* signature_arr2,
+            CvDisType dist_type,
+            CvDistanceFunction dist_func,
+            const CvArr* cost_matrix,
+            CvArr* flow_matrix,
+            float *lower_bound,
+            void *user_param )
 {
     char local_buffer[16384];
     char *local_buffer_ptr = (char *)icvAlignPtr(local_buffer,16);
     CvEMDState state;
     float emd = 0;
 
-    CV_FUNCNAME( "cvCalcEMD" );
+    CV_FUNCNAME( "cvCalcEMD2" );
 
     memset( &state, 0, sizeof(state));
 
     __BEGIN__;
-    int i, j, itr;
-    float total_cost = 0;
-    
+
+    double total_cost = 0;
     CvStatus result = CV_NO_ERR;
     float eps, min_delta;
     CvNode2D *xp = 0;
+    CvMat sign_stub1, *signature1 = (CvMat*)signature_arr1;
+    CvMat sign_stub2, *signature2 = (CvMat*)signature_arr2;
+    CvMat cost_stub, *cost = &cost_stub;
+    CvMat flow_stub, *flow = (CvMat*)flow_matrix;
+    int dims, size1, size2;
 
-    if( !signature1 || !signature2 )
-        CV_ERROR( CV_StsNullPtr, "Null pointers to signatures" );
-    if( size1 <= 0 || size2 <= 0 || dims < 0 )
-        CV_ERROR( CV_StsBadSize,
-        "size1 <= 0 or size2 <= 0 or number_of_dimensions < 0" );
+    CV_CALL( signature1 = cvGetMat( signature1, &sign_stub1 ));
+    CV_CALL( signature2 = cvGetMat( signature2, &sign_stub2 ));
+
+    if( signature1->cols != signature2->cols )
+        CV_ERROR( CV_StsUnmatchedSizes, "The arrays must have equal number of columns (which is number of dimensions but 1)" );
+
+    dims = signature1->cols - 1;
+    size1 = signature1->rows;
+    size2 = signature2->rows;
+
+    if( !CV_ARE_TYPES_EQ( signature1, signature2 ))
+        CV_ERROR( CV_StsUnmatchedFormats, "The array must have equal types" );
+
+    if( CV_MAT_TYPE( signature1->type ) != CV_32FC1 )
+        CV_ERROR( CV_StsUnsupportedFormat, "The signatures must be 32fC1" );
+
+    if( flow )
+    {
+        CV_CALL( flow = cvGetMat( flow, &flow_stub ));
+
+        if( cost->rows != size1 || cost->cols != size2 )
+            CV_ERROR( CV_StsUnmatchedSizes,
+            "The flow matrix size does not match to the signatures' sizes" );
+
+        if( CV_MAT_TYPE( flow->type ) != CV_32FC1 )
+            CV_ERROR( CV_StsUnsupportedFormat, "The flow matrix must be 32fC1" );
+    }
+
+    cost->data.fl = 0;
+    cost->step = 0;
 
     if( dist_type < 0 )
     {
-        if( !dist_func )
-            CV_ERROR( CV_StsNullPtr, "Distance function is undefined" );
+        if( cost_matrix )
+        {
+            if( dist_func )
+                CV_ERROR( CV_StsBadArg,
+                "Only one of cost matrix or distance function should be non-NULL in case of user-defined distance" );
+
+            if( lower_bound )
+                CV_ERROR( CV_StsBadArg,
+                "The lower boundary can not be calculated if the cost matrix is used" );
+
+            CV_CALL( cost = cvGetMat( cost_matrix, &cost_stub ));
+            if( cost->rows != size1 || cost->cols != size2 )
+                CV_ERROR( CV_StsUnmatchedSizes,
+                "The cost matrix size does not match to the signatures' sizes" );
+
+            if( CV_MAT_TYPE( cost->type ) != CV_32FC1 )
+                CV_ERROR( CV_StsUnsupportedFormat, "The cost matrix must be 32fC1" );
+        }
+        else if( !dist_func )
+            CV_ERROR( CV_StsNullPtr, "In case of user-defined distance Distance function is undefined" );
     }
     else
     {
@@ -234,8 +252,10 @@ cvCalcEMD( const float *signature1, int size1,
         }
     }
 
-    IPPI_CALL( result = icvInitEMD( signature1, size1, signature2, size2,
+    IPPI_CALL( result = icvInitEMD( signature1->data.fl, size1,
+                                    signature2->data.fl, size2,
                                     dims, dist_func, user_param,
+                                    cost->data.fl, cost->step,
                                     &state, lower_bound, local_buffer_ptr,
                                     sizeof( local_buffer ) - 16 ));
 
@@ -250,6 +270,8 @@ cvCalcEMD( const float *signature1, int size1,
     /* if ssize = 1 or dsize = 1 then we are done, else ... */
     if( state.ssize > 1 && state.dsize > 1 )
     {
+        int itr;
+
         for( itr = 1; itr < MAX_ITERATIONS; itr++ )
         {
             /* find basic variables */
@@ -281,13 +303,16 @@ cvCalcEMD( const float *signature1, int size1,
     for( xp = state._x; xp < state.end_x; xp++ )
     {
         float val = xp->val;
+        int i = xp->i;
+        int j = xp->j;
+        int ci = state.idx1[i];
+        int cj = state.idx2[j];
 
-        i = xp->i;
-        j = xp->j;
-
-        if( xp != state.enter_x && i < size1 && j < size2 && val != 0 )
+        if( xp != state.enter_x && ci >= 0 && cj >= 0 )
         {
-            total_cost += val * state.cost[i][j];
+            total_cost += (double)val * state.cost[i][j];
+            if( flow )
+                ((float*)(flow->data.ptr + flow->step*ci))[cj] = val;
         }
     }
 
@@ -308,78 +333,33 @@ cvCalcEMD( const float *signature1, int size1,
 static CvStatus
 icvInitEMD( const float* signature1, int size1,
             const float* signature2, int size2,
-            int dims,
-            CvDistanceFunction dist_func, void* user_param,
+            int dims, CvDistanceFunction dist_func, void* user_param,
+            const float* cost, int cost_step,
             CvEMDState* state, float* lower_bound,
             char* local_buffer, int local_buffer_size )
 {
     float s_sum = 0, d_sum = 0, diff;
-    float *ptr;
-    int i, j, ci = 0, cj = 0, ssize, dsize;
+    int i, j;
+    int ssize = 0, dsize = 0;
     int equal_sums = 1;
     int buffer_size;
-    float *cost_matrix;
     float max_cost = 0;
     char *buffer, *buffer_end;
-    float *xs, *xd;
-
-    ssize = 0;
-    dsize = 0;
 
     memset( state, 0, sizeof( *state ));
-
-    /* sum up the supply and demand */
-    for( i = 0; i < size1; i++ )
-    {
-        float temp = signature1[i * (dims + 1)];
-
-        if( temp > 0 )
-        {
-            s_sum += temp;
-            ssize++;
-        }
-        else if( temp < 0 )
-            return CV_BADRANGE_ERR;
-    }
-
-    for( i = 0; i < size2; i++ )
-    {
-        float temp = signature2[i * (dims + 1)];
-
-        if( temp > 0 )
-        {
-            d_sum += temp;
-            dsize++;
-        }
-        else if( temp < 0 )
-            return CV_BADRANGE_ERR;
-    }
-
-    if( ssize == 0 || dsize == 0 )
-        return CV_BADRANGE_ERR;
-
-    /* if supply different than the demand, add a zero-cost dummy cluster */
-    diff = s_sum - d_sum;
-    if( fabs( diff ) >= CV_EMD_EPS * s_sum )
-    {
-        equal_sums = 0;
-        if( diff < 0 )
-            ssize++;
-        else
-            dsize++;
-    }
-
-    state->weight = s_sum > d_sum ? s_sum : d_sum;
+    assert( cost_step % sizeof(float) == 0 );
+    cost_step /= sizeof(float);
 
     /* calculate buffer size */
-    buffer_size = ssize * dsize * (sizeof( float ) +    /* cost */
+    buffer_size = (size1+1) * (size2+1) * (sizeof( float ) +    /* cost */
                                    sizeof( char ) +     /* is_x */
                                    sizeof( float )) +   /* delta matrix */
-        (ssize + dsize) * (sizeof( CvNode2D ) + /* _x */
-                           sizeof( CvNode2D * ) +       /* cols_x & rows_x */
+        (size1 + size2 + 2) * (sizeof( CvNode2D ) + /* _x */
+                           sizeof( CvNode2D * ) +  /* cols_x & rows_x */
                            sizeof( CvNode1D ) + /* u & v */
-                           sizeof( float )) +   /* s & d */
-        ssize * (sizeof( float * ) + sizeof( char * ) + /* rows pointers for */
+                           sizeof( float ) + /* s & d */
+                           sizeof( int ) + sizeof(CvNode2D*)) +  /* idx1 & idx2 */ 
+        (size1+1) * (sizeof( float * ) + sizeof( char * ) + /* rows pointers for */
                  sizeof( float * )) + 256;      /*  cost, is_x and delta */
 
     if( buffer_size < (int) (dims * 2 * sizeof( float )))
@@ -401,30 +381,96 @@ icvInitEMD( const float* signature1, int size1,
 
     state->buffer = buffer;
     buffer_end = buffer + buffer_size;
-    xs = (float *) buffer;
-    xd = xs + dims;
+
+    state->idx1 = (int*) buffer;
+    buffer += (size1 + 1) * sizeof( int );
+
+    state->idx2 = (int*) buffer;
+    buffer += (size2 + 1) * sizeof( int );
+
+    state->s = (float *) buffer;
+    buffer += (size1 + 1) * sizeof( float );
+
+    state->d = (float *) buffer;
+    buffer += (size2 + 1) * sizeof( float );
+
+    /* sum up the supply and demand */
+    for( i = 0; i < size1; i++ )
+    {
+        float weight = signature1[i * (dims + 1)];
+
+        if( weight > 0 )
+        {
+            s_sum += weight;
+            state->s[ssize] = weight;
+            state->idx1[ssize++] = i;
+            
+        }
+        else if( weight < 0 )
+            return CV_BADRANGE_ERR;
+    }
+
+    for( i = 0; i < size2; i++ )
+    {
+        float weight = signature2[i * (dims + 1)];
+
+        if( weight > 0 )
+        {
+            d_sum += weight;
+            state->d[dsize] = weight;
+            state->idx2[dsize++] = i;
+        }
+        else if( weight < 0 )
+            return CV_BADRANGE_ERR;
+    }
+
+    if( ssize == 0 || dsize == 0 )
+        return CV_BADRANGE_ERR;
+
+    /* if supply different than the demand, add a zero-cost dummy cluster */
+    diff = s_sum - d_sum;
+    if( fabs( diff ) >= CV_EMD_EPS * s_sum )
+    {
+        equal_sums = 0;
+        if( diff < 0 )
+        {
+            state->s[ssize] = -diff;
+            state->idx1[ssize++] = -1;
+        }    
+        else
+        {
+            state->d[dsize] = diff;
+            state->idx2[dsize++] = -1;
+        }
+    }
+
+    state->ssize = ssize;
+    state->dsize = dsize;
+    state->weight = s_sum > d_sum ? s_sum : d_sum;
 
     if( lower_bound && equal_sums )     /* check lower bound */
     {
         int sz1 = size1 * (dims + 1), sz2 = size2 * (dims + 1);
         float lb = 0;
 
-        for( i = 0; i < dims; i++ )
+        float* xs = (float *) buffer;
+        float* xd = xs + dims;
+
+        memset( xs, 0, dims*sizeof(xs[0]));
+        memset( xd, 0, dims*sizeof(xd[0]));
+
+        for( j = 0; j < sz1; j += dims + 1 )
         {
-            float s = 0, d = 0;
+            float weight = signature1[j];
+            for( i = 0; i < dims; i++ )
+                xs[i] += signature1[j + i + 1] * weight;
+        }
 
-            for( j = 0; j < sz1; j += dims + 1 )
-            {
-                s += signature1[j + i + 1] * signature1[j];
-            }
-
-            for( j = 0; j < sz2; j += dims + 1 )
-            {
-                d += signature2[j + i + 1] * signature2[j];
-            }
-
-            xs[i] = s;
-            xd[i] = d;
+        for( j = 0; j < sz2; j += dims + 1 )
+        {
+            float weight = signature2[j];
+            for( i = 0; i < dims; i++ )
+                xd[i] += signature2[j + i + 1] * weight;
         }
 
         lb = dist_func( xs, xd, user_param ) / state->weight;
@@ -447,15 +493,59 @@ icvInitEMD( const float* signature1, int size1,
     }
 
     state->loop = (CvNode2D **) buffer;
-    state->s = (float *) buffer;
-    buffer += (ssize + 1) * sizeof( float );
+    buffer += (ssize + dsize + 1) * sizeof(CvNode2D*);
 
-    state->d = (float *) buffer;
-    buffer += (dsize + 1) * sizeof( float );
-
-    state->_x = (CvNode2D *) buffer;
+    state->_x = state->end_x = (CvNode2D *) buffer;
     buffer += (ssize + dsize) * sizeof( CvNode2D );
 
+    /* init cost matrix */
+    state->cost = (float **) buffer;
+    buffer += ssize * sizeof( float * );
+
+    /* compute the distance matrix */
+    for( i = 0; i < ssize; i++ )
+    {
+        int ci = state->idx1[i];
+
+        state->cost[i] = (float *) buffer;
+        buffer += dsize * sizeof( float );
+
+        if( ci >= 0 )
+        {
+            for( j = 0; j < dsize; j++ )
+            {
+                int cj = state->idx2[j];
+                if( cj < 0 )
+                    state->cost[i][j] = 0;
+                else
+                {
+                    float val;
+                    if( dist_func )
+                    {
+                        val = dist_func( signature1 + ci * (dims + 1) + 1,
+                                         signature2 + cj * (dims + 1) + 1,
+                                         user_param );
+                    }
+                    else
+                    {
+                        assert( cost );
+                        val = cost[cost_step*ci + cj];
+                    }
+                    state->cost[i][j] = val;
+                    if( max_cost < val )
+                        max_cost = val;
+                }
+            }
+        }
+        else
+        {
+            for( j = 0; j < dsize; j++ )
+                state->cost[i][j] = 0;
+        }
+    }
+
+    state->max_cost = max_cost;
+    
     memset( buffer, 0, buffer_end - buffer );
 
     state->rows_x = (CvNode2D **) buffer;
@@ -470,31 +560,6 @@ icvInitEMD( const float* signature1, int size1,
     state->v = (CvNode1D *) buffer;
     buffer += dsize * sizeof( CvNode1D );
 
-    /* init cost matrix */
-    state->cost = (float **) buffer;
-    buffer += ssize * sizeof( float * );
-
-    /* compute the distance matrix */
-    for( i = 0; i < size1; i++ )
-    {
-        state->cost[i] = (float *) buffer;
-        buffer += dsize * sizeof( float );
-
-        if( signature1[i * (dims + 1)] != 0 )
-        {
-            for( j = 0, cj = 0; j < size2; j++ )
-            {
-                if( signature2[j] != 0 )
-                {
-                    state->cost[ci][cj++] = dist_func( signature1 + i * (dims + 1) + 1,
-                                                       signature2 + j * (dims + 1) + 1,
-                                                       user_param );
-                }
-            }
-            ci++;
-        }
-    }
-
     /* init is_x matrix */
     state->is_x = (char **) buffer;
     buffer += ssize * sizeof( char * );
@@ -505,48 +570,7 @@ icvInitEMD( const float* signature1, int size1,
         buffer += dsize;
     }
 
-    /* find maximum of the cost matrix */
-    max_cost = 0;
-    cost_matrix = state->cost[0];
-    for( i = 0; i < ssize * dsize; i++ )
-    {
-        float temp = cost_matrix[i];
-
-        if( temp < 0 )
-            return CV_BADRANGE_ERR;
-        if( max_cost < temp )
-            max_cost = temp;
-    }
-
-    state->ssize = ssize;
-    state->dsize = dsize;
-    state->max_cost = max_cost;
-
-    state->end_x = state->_x;
-
-    for( i = 0, ptr = state->s; i < size1; i++ )
-    {
-        float temp = signature1[i * (dims + 1)];
-
-        if( temp != 0 )
-            *ptr++ = temp;
-    }
-
-    for( i = 0, ptr = state->d; i < size2; i++ )
-    {
-        float temp = signature2[i * (dims + 1)];
-
-        if( temp != 0 )
-            *ptr++ = temp;
-    }
-
-    if( !equal_sums )
-    {
-        if( diff < 0 )
-            state->s[ssize - 1] = -diff;
-        else
-            state->d[dsize - 1] = diff;
-    }
+    assert( buffer <= buffer_end );
 
     icvRussel( state );
 

@@ -39,7 +39,6 @@
 //
 //M*/
 #include "_cv.h"
-#include "_cvwrap.h"
 
 /* POSIT structure */
 struct CvPOSITObject
@@ -117,7 +116,7 @@ static  CvStatus  icvPOSIT( CvPOSITObject *pObject, CvPoint2D32f *imagePoints,
     int i, j, k;
     int count = 0, converged = 0;
     float inorm, jnorm, invInorm, invJnorm, invScale, scale = 0, inv_Z = 0;
-    float diff = criteria.epsilon;
+    float diff = (float)criteria.epsilon;
     float inv_focalLength = 1 / focalLength;
 
     /* init variables */

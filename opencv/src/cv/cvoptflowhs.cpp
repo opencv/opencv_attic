@@ -528,8 +528,8 @@ cvCalcOpticalFlowHS( const void* srcarrA, const void* srcarrB, int usePrevious,
         !CV_ARE_SIZES_EQ( srcA, velx ))
         CV_ERROR( CV_StsUnmatchedSizes, "" );
 
-    if( CV_ARR_TYPE( srcA->type ) != CV_8UC1 ||
-        CV_ARR_TYPE( velx->type ) != CV_32FC1 )
+    if( CV_MAT_TYPE( srcA->type ) != CV_8UC1 ||
+        CV_MAT_TYPE( velx->type ) != CV_32FC1 )
         CV_ERROR( CV_StsUnsupportedFormat, "Source images must have 8uC1 type and "
                                            "destination images must have 32fC1 type" );
 

@@ -5,18 +5,29 @@
 // */
 
 #include "_cv.h"
-#include "_cvarr.h"
+
+const char icvDepthToType[] =
+{
+    -1, -1, CV_8U, CV_8S, -1, CV_16S, -1, -1,
+    CV_32F, CV_32S, -1, -1, -1, -1, -1, -1, CV_64F, -1
+};
+
+const int icvTypeToDepth[] =
+{
+    IPL_DEPTH_8U, IPL_DEPTH_8S, IPL_DEPTH_16S,
+    IPL_DEPTH_32S, IPL_DEPTH_32F, IPL_DEPTH_64F
+};
 
 const int icvPixSize[] =
 {
     sizeof(uchar)*1, sizeof(char)*1, sizeof(short)*1, sizeof(int)*1,
-    sizeof(float)*1, sizeof(double)*1, 0x7fffffff, 0x7fffffff,
+    sizeof(float)*1, sizeof(double)*1, 0, 0,
     sizeof(uchar)*2, sizeof(char)*2, sizeof(short)*2, sizeof(int)*2,
-    sizeof(float)*2, sizeof(double)*2, 0x7fffffff, 0x7fffffff,
+    sizeof(float)*2, sizeof(double)*2, 0, 0,
     sizeof(uchar)*3, sizeof(char)*3, sizeof(short)*3, sizeof(int)*3,
-    sizeof(float)*3, sizeof(double)*3, 0x7fffffff, 0x7fffffff,
+    sizeof(float)*3, sizeof(double)*3, 0, 0,
     sizeof(uchar)*4, sizeof(char)*4, sizeof(short)*4, sizeof(int)*4,
-    sizeof(float)*4, sizeof(double)*4, 0x7fffffff, 0x7fffffff
+    sizeof(float)*4, sizeof(double)*4, 0, 0
 };
 
 const float icv8x32fTab[] =
