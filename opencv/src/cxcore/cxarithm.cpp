@@ -100,7 +100,7 @@ static const uchar icvSaturate8u[] =
     255
 };
 
-#define CV_FAST_CAST_8U(t)   (assert(-256 <= (t) || (t) <= 512), icvSaturate8u[(t)+256])
+#define CV_FAST_CAST_8U(t)   (assert(-256 <= (t) && (t) <= 512), icvSaturate8u[(t)+256])
 
 /****************************************************************************************\
 *                      Arithmetic operations (+, -) without mask                         *
