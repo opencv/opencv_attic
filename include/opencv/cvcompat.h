@@ -75,6 +75,9 @@
 #define CvMorphOp int
 #define CvTemplMatchMethod int
 
+#define CvPoint2D64d CvPoint2D64f
+#define CvPoint3D64d CvPoint3D64f
+
 #define  CV_MAT32F      CV_32FC1
 #define  CV_MAT3x1_32F  CV_32FC1
 #define  CV_MAT4x1_32F  CV_32FC1
