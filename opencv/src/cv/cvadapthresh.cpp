@@ -79,7 +79,6 @@ CV_IMPL void
 cvAdaptiveThreshold( const void *srcIm, void *dstIm, double maxValue,
                      int method, int type, int blockSize, double param1 )
 {
-    ///////////////// Some  variables /////////////////
     CvMat src_stub, dst_stub;
     CvMat *src = 0, *dst = 0;
 
@@ -90,8 +89,6 @@ cvAdaptiveThreshold( const void *srcIm, void *dstIm, double maxValue,
     if( type != CV_THRESH_BINARY && type != CV_THRESH_BINARY_INV )
         CV_ERROR( CV_StsBadArg, "Only CV_TRESH_BINARY and CV_THRESH_BINARY_INV "
                                 "threshold types are acceptable" );
-
-    ///////////////// Checking /////////////////
 
     CV_CALL( src = cvGetMat( srcIm, &src_stub ));
     CV_CALL( dst = cvGetMat( dstIm, &dst_stub ));

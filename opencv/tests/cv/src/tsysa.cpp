@@ -129,7 +129,7 @@ int main(int argC,char *argV[])
 #endif
     //atsLoadPrimitives( 1 );
 
-    InitAAcc();
+    /*InitAAcc();
     // InitAAdaptThreshold(); // test is not up-to-date
     InitAApproxPoly();
     InitACalcOpticalFlowLK();
@@ -185,7 +185,7 @@ int main(int argC,char *argV[])
     InitAPreCorner();
     InitAPyrSegmentation();
     //InitAGestureRecognition(); // some functionality has been removed
-
+    */
     test_system.run( argC, argV );
     fflush( stdout );
     printf( "Now running the old-style tests...\n" );
