@@ -150,6 +150,11 @@ static CvWindow* hg_windows = 0;
 static CvWin32WindowCallback hg_on_preprocess = 0, hg_on_postprocess = 0;
 static HINSTANCE hg_hinstance = 0;
 
+static void icvCleanupHighgui()
+{
+    cvDestroyAllWindows();
+}
+
 CV_IMPL int cvInitSystem( int, char** )
 {
     static int wasInitialized = 0;
@@ -181,12 +186,14 @@ CV_IMPL int cvInitSystem( int, char** )
         wndc.lpfnWndProc = MainWindowProc;
 
         RegisterClass(&wndc);
+        atexit( icvCleanupHighgui );
 
         wasInitialized = 1;
     }
 
     return 0;
 }
+
 
 static CvWindow* icvFindWindowByName( const char* name )
 {
@@ -197,6 +204,7 @@ static CvWindow* icvFindWindowByName( const char* name )
 
     return window;
 }
+
 
 static CvWindow* icvWindowByHWND( HWND hwnd )
 {
@@ -214,6 +222,103 @@ static CvTrackbar* icvTrackbarByHWND( HWND hwnd )
 }
 
 
+static const char* icvWindowPosRootKey = "Software\\OpenCV\\HighGUI\\Windows\\";
+
+// Window positions saving/loading added by Philip Gruebele.
+//<a href="mailto:pgruebele@cox.net">pgruebele@cox.net</a>
+// Restores the window position from the registry saved position.
+static CvPoint
+icvLoadWindowPos( const char* name )
+{
+    CvPoint pos = { CW_USEDEFAULT, CW_USEDEFAULT };
+    HKEY hkey;
+    char szKey[1024];
+    strcpy( szKey, icvWindowPosRootKey );
+    strcat( szKey, name );
+    if( RegOpenKeyEx(HKEY_CURRENT_USER,szKey,0,KEY_QUERY_VALUE,&hkey) == ERROR_SUCCESS )
+    {
+        // Yes we are installed.
+        DWORD dwType = 0;
+        DWORD dwSize = sizeof(int);
+
+        RegQueryValueEx(hkey, "Left", NULL, &dwType, (BYTE*)&pos.x, &dwSize);
+        RegQueryValueEx(hkey, "Top", NULL, &dwType, (BYTE*)&pos.y, &dwSize);
+
+        if( pos.x != CW_USEDEFAULT && (pos.x < -200 || pos.x > 3000) )
+            pos.x = 100;
+        if( pos.y != CW_USEDEFAULT && (pos.y < -200 || pos.y > 3000) )
+            pos.y = 100;
+
+        RegCloseKey(hkey);
+    }
+
+    return pos;
+}
+
+
+// Window positions saving/loading added by Philip Gruebele.
+//<a href="mailto:pgruebele@cox.net">pgruebele@cox.net</a>
+// philipg.  Saves the window position in the registry
+static void
+icvSaveWindowPos( const char* name, CvPoint pos )
+{
+    static const DWORD MAX_RECORD_COUNT = 100;
+    HKEY hkey;
+    char szKey[1024];
+    char rootKey[1024];
+    strcpy( szKey, icvWindowPosRootKey );
+    strcat( szKey, name );
+    
+    if( RegOpenKeyEx( HKEY_CURRENT_USER,szKey,0,KEY_READ,&hkey) != ERROR_SUCCESS )
+    {
+        HKEY hroot;
+        DWORD count = 0;
+        FILETIME oldestTime = { UINT_MAX, UINT_MAX };
+        char oldestKey[1024];
+        char currentKey[1024];
+
+        strcpy( rootKey, icvWindowPosRootKey );
+        rootKey[strlen(rootKey)-1] = '\0';
+        if( RegCreateKeyEx(HKEY_CURRENT_USER, rootKey, 0, NULL, REG_OPTION_NON_VOLATILE, KEY_READ+KEY_WRITE, 0, &hroot, NULL) != ERROR_SUCCESS )
+            //RegOpenKeyEx( HKEY_CURRENT_USER,rootKey,0,KEY_READ,&hroot) != ERROR_SUCCESS )
+            return;
+
+        for(;;)
+        {
+            DWORD csize = sizeof(currentKey);
+            FILETIME accesstime = { 0, 0 };
+            LONG code = RegEnumKeyEx( hroot, count, currentKey, &csize, NULL, NULL, NULL, &accesstime );
+            if( code != ERROR_SUCCESS && code != ERROR_MORE_DATA )
+                break;
+            count++;
+            if( oldestTime.dwHighDateTime > accesstime.dwHighDateTime ||
+                oldestTime.dwHighDateTime == accesstime.dwHighDateTime &&
+                oldestTime.dwLowDateTime > accesstime.dwLowDateTime )
+            {
+                oldestTime = accesstime;
+                strcpy( oldestKey, currentKey );
+            }
+        }
+
+        if( count >= MAX_RECORD_COUNT )
+            RegDeleteKey( hroot, oldestKey );
+        RegCloseKey( hroot );
+
+        if( RegCreateKeyEx(HKEY_CURRENT_USER,szKey,0,NULL,REG_OPTION_NON_VOLATILE, KEY_WRITE, 0, &hkey, NULL) != ERROR_SUCCESS )
+            return;
+    }
+    else
+    {
+        RegCloseKey( hkey );
+        if( RegOpenKeyEx( HKEY_CURRENT_USER,szKey,0,KEY_WRITE,&hkey) != ERROR_SUCCESS )
+            return;
+    }
+    
+    RegSetValueEx(hkey, "Left", 0, REG_DWORD, (BYTE*)&pos.x, sizeof(pos.x));
+    RegSetValueEx(hkey, "Top", 0, REG_DWORD, (BYTE*)&pos.y, sizeof(pos.y));
+    RegCloseKey(hkey);
+}
+
 
 CV_IMPL int cvNamedWindow( const char* name, int flags )
 {
@@ -226,6 +331,7 @@ CV_IMPL int cvNamedWindow( const char* name, int flags )
     CvWindow* window;
     DWORD defStyle = WS_VISIBLE | WS_MINIMIZEBOX | WS_MAXIMIZEBOX | WS_SYSMENU;
     int len;
+    CvPoint pos;
 
     cvInitSystem(0,0);
 
@@ -242,8 +348,10 @@ CV_IMPL int cvNamedWindow( const char* name, int flags )
     if( (flags & CV_WINDOW_AUTOSIZE) == 0 )
         defStyle |= WS_SIZEBOX;
 
+    pos = icvLoadWindowPos( name );
+
     mainhWnd = CreateWindow( "Main HighGUI class", name, defStyle | WS_OVERLAPPED,
-                             CW_USEDEFAULT, 0, 320, 320, 0, 0, hg_hinstance, 0 );
+                             pos.x, pos.y, 320, 320, 0, 0, hg_hinstance, 0 );
     if( !mainhWnd )
         CV_ERROR( CV_StsError, "Frame window can not be created" );
 
@@ -294,6 +402,10 @@ CV_IMPL int cvNamedWindow( const char* name, int flags )
 static void icvRemoveWindow( CvWindow* window )
 {
     CvTrackbar* trackbar;
+    RECT wrect;
+
+    GetWindowRect( window->frame, &wrect );
+    icvSaveWindowPos( window->name, cvPoint(wrect.left, wrect.top) );
 
     SetWindowLong( window->hwnd, GWL_USERDATA, (long)0 );
     SetWindowLong( window->frame, GWL_USERDATA, (long)0 );
@@ -343,6 +455,7 @@ CV_IMPL void cvDestroyWindow( const char* name )
         EXIT;
 
     mainhWnd = window->frame;
+
     SendMessage(window->hwnd, WM_CLOSE, 0, 0);
     SendMessage( mainhWnd, WM_CLOSE, 0, 0);
     // Do NOT call _remove_window -- CvWindow list will be updated automatically ...
@@ -574,6 +687,7 @@ MainWindowProc( HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam )
     switch(uMsg)
     {
     case WM_DESTROY:
+
         icvRemoveWindow(window);
         // Do nothing!!!
         //PostQuitMessage(0);
@@ -780,6 +894,7 @@ static LRESULT CALLBACK HighGUIProc( HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM
         break;
 
     case WM_DESTROY:
+
         icvRemoveWindow(window);
         // Do nothing!!!
         //PostQuitMessage(0);
