@@ -1582,7 +1582,7 @@ icvReadHaarClassifier( CvFileStorage* fs, CvFileNode* node )
 
         CV_CALL( fn = cvGetFileNodeByName( fs, stage_fn, ICV_HAAR_PARENT_NAME ) );
         if( !fn || !CV_NODE_IS_INT( fn->tag )
-            || fn->data.i < -1 || fn->data.i >= cascade->stage_classifier[i].count )
+            || fn->data.i < -1 || fn->data.i >= cascade->count )
         {
             sprintf( buf, "parent must be integer number. (stage %d)", i );
             CV_ERROR( CV_StsError, buf );
@@ -1590,7 +1590,7 @@ icvReadHaarClassifier( CvFileStorage* fs, CvFileNode* node )
         parent = fn->data.i;
         CV_CALL( fn = cvGetFileNodeByName( fs, stage_fn, ICV_HAAR_NEXT_NAME ) );
         if( !fn || !CV_NODE_IS_INT( fn->tag )
-            || fn->data.i < -1 || fn->data.i >= cascade->stage_classifier[i].count )
+            || fn->data.i < -1 || fn->data.i >= cascade->count )
         {
             sprintf( buf, "next must be integer number. (stage %d)", i );
             CV_ERROR( CV_StsError, buf );
