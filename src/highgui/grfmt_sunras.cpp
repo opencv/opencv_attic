@@ -360,14 +360,12 @@ bad_decoding_end:
                 if( color )
                 {
                     if( m_type == RAS_FORMAT_RGB )
-                        CvtRGBToBGR( data, data, m_width );
+                        icvCvt_RGB2BGR_8u_C3R( data, 0, data, 0, cvSize(m_width,1) );
                 }
                 else
                 {
-                    if( m_type == RAS_FORMAT_RGB )
-                        CvtRGBToGray( bgr, data, m_width );
-                    else
-                        CvtBGRToGray( bgr, data, m_width );
+                    icvCvt_BGR2Gray_8u_C3C1R( bgr, 0, data, 0, cvSize(m_width,1),
+                                              m_type == RAS_FORMAT_RGB ? 2 : 0 );
                 }
             }
             result = true;
@@ -381,19 +379,11 @@ bad_decoding_end:
                 m_strm.GetBytes( src + 3, src_pitch );
                 
                 if( color )
-                {
-                    if( m_type == RAS_FORMAT_RGB )
-                        CvtRGBAToBGR( src + 4, data, m_width );
-                    else
-                        CvtBGRAToBGR( src + 4, data, m_width );
-                }
+                    icvCvt_BGRA2BGR_8u_C4C3R( src + 4, 0, data, 0, cvSize(m_width,1),
+                                              m_type == RAS_FORMAT_RGB ? 2 : 0 );
                 else
-                {
-                    if( m_type == RAS_FORMAT_RGB )
-                        CvtRGBAToGray( src + 4, data, m_width );
-                    else
-                        CvtBGRAToGray( src + 4, data, m_width );
-                }
+                    icvCvt_BGRA2Gray_8u_C4C1R( src + 4, 0, data, 0, cvSize(m_width,1),
+                                               m_type == RAS_FORMAT_RGB ? 2 : 0 );
             }
             result = true;
             break;
@@ -402,8 +392,8 @@ bad_decoding_end:
         }
     }
 
-    if( src != buffer ) delete src; 
-    if( bgr != bgr_buffer ) delete bgr;
+    if( src != buffer ) delete[] src; 
+    if( bgr != bgr_buffer ) delete[] bgr;
 
     return result;
 }

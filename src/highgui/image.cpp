@@ -46,7 +46,7 @@
 
 #include "_highgui.h"
 
-#ifdef __cplusplus
+#if defined __cplusplus && (!defined WIN32 || !defined __GNUC__)
 
 //////////////////////////////////////////////////////////////////////
 // Construction/Destruction
@@ -79,8 +79,7 @@ bool  CvvImage::Create( int w, int h, int bpp, int origin )
         return false;
     }
     
-    if( !m_img || Bpp() != bpp || 
-        m_img->width != w && m_img->height != h )
+    if( !m_img || Bpp() != bpp || m_img->width != w || m_img->height != h )
     {
         if( m_img && m_img->nSize == sizeof(IplImage))
             Destroy();
@@ -124,10 +123,7 @@ void  CvvImage::CopyOf( IplImage* img, int desired_color )
                     (!color ? 1 : img->nChannels > 1 ? img->nChannels : 3)*8,
                     img->origin ))
         {
-            if( m_img->nChannels == img->nChannels )
-                cvCopy( img, m_img );
-            else
-                cvCvtColor( img, m_img, color ? CV_GRAY2BGR : CV_BGR2GRAY );
+            cvConvertImage( img, m_img, 0 );
         }
     }
 }
@@ -213,8 +209,6 @@ void  CvvImage::Show( const char* window )
 
 #ifdef WIN32
 
-void  FillBitmapInfo( BITMAPINFO* bmi, int width, int height, int bpp, int origin );
-
 void  CvvImage::Show( HDC dc, int x, int y, int w, int h, int from_x, int from_y )
 {
     if( m_img && m_img->depth == IPL_DEPTH_8U )
@@ -283,7 +277,7 @@ void  CImage::DrawToHDC( HDC hDCDst, RECT* pDstRect )
 
 void  CvvImage::Fill( int color )
 {
-    cvFillImage( m_img, color );
+    cvSet( m_img, cvScalar(color&255,(color>>8)&255,(color>>16)&255,(color>>24)&255) );
 }
 
 #endif

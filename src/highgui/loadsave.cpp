@@ -46,22 +46,23 @@
 #include "_highgui.h"
 #include "grfmts.h"
 
+#if 0
 /****************************************************************************************\
 *                              Path class (list of search folders)                       *
 \****************************************************************************************/
 
-class  CvvPath
+class  CvFilePath
 {
 public:
-    CvvPath();
-    ~CvvPath();
+    CvFilePath();
+    ~CvFilePath();
 
     // preprocess folder or file name - calculate its length,
     // check for invalid symbols in the name and substitute
     // all backslashes with simple slashes.
     // the result is put into the specified buffer
     static int Preprocess( const char* filename, char* buffer );
-    
+
     // add folder to the path
     bool Add( const char* path );
 
@@ -91,27 +92,27 @@ protected:
 };
 
 
-void CvvPath::Clear()
+void CvFilePath::Clear()
 {
-    delete m_path;
+    delete[] m_path;
     m_maxsize = m_len = 0;
 }
 
 
-CvvPath::CvvPath()
+CvFilePath::CvFilePath()
 {
     m_path = 0;
     m_maxsize = m_len = 0;
 }
 
 
-CvvPath::~CvvPath()
+CvFilePath::~CvFilePath()
 {
     Clear();
 }
 
 
-bool  CvvPath::Add( const char* path )
+bool  CvFilePath::Add( const char* path )
 {
     char buffer[_MAX_PATH + 1];
     int len = Preprocess( path, buffer );
@@ -126,11 +127,11 @@ bool  CvvPath::Add( const char* path )
     {
         int new_size = (m_len + len + 3 + 1023) & -1024;
         char* new_path = new char[new_size];
-        
+
         if( m_path )
         {
             memcpy( new_path, m_path, m_len );
-            delete m_path;
+            delete[] m_path;
         }
 
         m_path = new_path;
@@ -150,7 +151,7 @@ bool  CvvPath::Add( const char* path )
 }
 
 
-const char* CvvPath::First( int& len ) const
+const char* CvFilePath::First( int& len ) const
 {
     const char* path = (const char*)(m_path ? m_path : "");
     const char* path_end = path;
@@ -163,11 +164,11 @@ const char* CvvPath::First( int& len ) const
 }
 
 
-const char* CvvPath::Next( const char* folder, int& len ) const
+const char* CvFilePath::Next( const char* folder, int& len ) const
 {
     if( !folder || folder < m_path || folder >= m_path + m_len )
         return 0;
-    
+
     folder = strchr( folder, ';' );
     if( folder )
     {
@@ -182,7 +183,7 @@ const char* CvvPath::Next( const char* folder, int& len ) const
 }
 
 
-const char* CvvPath::Find( const char* filename, char* buffer ) const
+const char* CvFilePath::Find( const char* filename, char* buffer ) const
 {
     char path0[_MAX_PATH + 1];
     int len = Preprocess( filename, path0 );
@@ -201,7 +202,7 @@ const char* CvvPath::Find( const char* filename, char* buffer ) const
         {
             memcpy( buffer, folder, folder_len );
             strcpy( buffer + folder_len, name );
-        
+
             f = fopen( buffer, "rb" );
             if( f )
                 break;
@@ -232,7 +233,7 @@ const char* CvvPath::Find( const char* filename, char* buffer ) const
 }
 
 
-int CvvPath::Preprocess( const char* str, char* buffer )
+int CvFilePath::Preprocess( const char* str, char* buffer )
 {
     int i;
 
@@ -242,10 +243,10 @@ int CvvPath::Preprocess( const char* str, char* buffer )
     for( i = 0; i <= _MAX_PATH; i++ )
     {
         buffer[i] = str[i];
-        
+
         if( isalnum(str[i])) // fast check to skip most of characters
             continue;
-        
+
         if( str[i] == '\0' )
             break;
 
@@ -253,43 +254,44 @@ int CvvPath::Preprocess( const char* str, char* buffer )
                              // (for Win32-*NIX compatibility)
             buffer[i] = '/';
 
-        if( str[i] == '*' || str[i] == ';' || str[i] == ',' || str[i] == '%' ||
-            str[i] == '?' || str[i] == '\"' || str[i] == '>' || str[i] == '<' ||
-            str[i] == '|' )
+        if (str[i] == '*' || str[i] == '?' || str[i] == '\"' ||
+            str[i] == '>' || str[i] == '<' ||
+            str[i] == ';' || /* used as a separator in the path */
+        #ifndef WIN32
+            str[i] == ',' || str[i] == '%' ||
+        #endif
+            str[i] == '|')
             return -1;
     }
 
     return i <= _MAX_PATH ? i : -1;
 }
-
-
+#endif
 
 /****************************************************************************************\
 *                              Image Readers & Writers Class                             *
 \****************************************************************************************/
 
-class  CvvImageFilters
+class  CvImageFilters
 {
 public:
 
-    CvvImageFilters();
-    ~CvvImageFilters();
+    CvImageFilters();
+    ~CvImageFilters();
 
     GrFmtReader* FindReader( const char* filename ) const;
     GrFmtWriter* FindWriter( const char* filename ) const;
-    
-    bool AddPath( const char* path ) { return m_path.Add( path ); };
-    const CvvPath& Path() const { return (const CvvPath&)m_path; };
-    CvvPath& Path() { return m_path; };
+
+    //const CvFilePath& Path() const { return (const CvFilePath&)m_path; };
+    //CvFilePath& Path() { return m_path; };
 
 protected:
 
     GrFmtFactoriesList*  m_factories;
-    CvvPath m_path;
 };
 
 
-CvvImageFilters::CvvImageFilters()
+CvImageFilters::CvImageFilters()
 {
     m_factories = new GrFmtFactoriesList;
 
@@ -304,30 +306,21 @@ CvvImageFilters::CvvImageFilters()
 }
 
 
-CvvImageFilters::~CvvImageFilters()
+CvImageFilters::~CvImageFilters()
 {
     delete m_factories;
 }
 
 
-GrFmtReader* CvvImageFilters::FindReader( const char* filename ) const
+GrFmtReader* CvImageFilters::FindReader( const char* filename ) const
 {
-    char buffer[_MAX_PATH + 1];
-    GrFmtReader* reader = 0;
-
-    filename = m_path.Find( filename, buffer );
-    reader = filename ? m_factories->FindReader( filename ) : 0;
-
-    return reader;
+    return m_factories->FindReader( filename );
 }
 
 
-GrFmtWriter* CvvImageFilters::FindWriter( const char* filename ) const
+GrFmtWriter* CvImageFilters::FindWriter( const char* filename ) const
 {
-    char buffer[_MAX_PATH + 1];
-    GrFmtWriter* writer = CvvPath::Preprocess( filename, buffer ) ?
-                            m_factories->FindWriter( buffer ) : 0;
-    return writer;
+    return m_factories->FindWriter( filename );
 }
 
 /****************************************************************************************\
@@ -335,9 +328,10 @@ GrFmtWriter* CvvImageFilters::FindWriter( const char* filename ) const
 \****************************************************************************************/
 
 // global image I/O filters
-CvvImageFilters  g_Filters;
+static CvImageFilters  g_Filters;
 
-HIGHGUI_IMPL void
+#if 0
+CV_IMPL void
 cvAddSearchPath( const char* path )
 {
     CV_FUNCNAME( "cvAddSearchPath" );
@@ -346,14 +340,14 @@ cvAddSearchPath( const char* path )
 
     if( !path || strlen(path) == 0 )
         CV_ERROR( CV_StsNullPtr, "Null path" );
-    
+
     g_Filters.AddPath( path );
 
     __END__;
 }
+#endif
 
-
-HIGHGUI_IMPL IplImage*
+CV_IMPL IplImage*
 cvLoadImage( const char* filename, int iscolor )
 {
     GrFmtReader* reader = 0;
@@ -381,7 +375,7 @@ cvLoadImage( const char* filename, int iscolor )
         iscolor = iscolor > 0 || (iscolor < 0 && reader->IsColor());
 
         CV_CALL( image = cvCreateImage( size, IPL_DEPTH_8U, iscolor ? 3 : 1 ));
-        
+
         if( !reader->ReadData( (unsigned char*)(image->imageData),
                                image->widthStep, iscolor ))
         {
@@ -389,7 +383,7 @@ cvLoadImage( const char* filename, int iscolor )
             EXIT;
         }
     }
-    
+
     __END__;
 
     delete reader;
@@ -401,20 +395,20 @@ cvLoadImage( const char* filename, int iscolor )
 }
 
 
-HIGHGUI_IMPL int
+CV_IMPL int
 cvSaveImage( const char* filename, const CvArr* arr )
 {
     int origin = 0;
     int did_flip = 0;
     GrFmtWriter* writer = 0;
-    
+
     CV_FUNCNAME( "cvSaveImage" );
 
     __BEGIN__;
-    
+
     CvMat stub, *image;
     int channels;
-    
+
     if( !filename || strlen(filename) == 0 )
         CV_ERROR( CV_StsNullPtr, "null filename" );
 
@@ -449,71 +443,6 @@ cvSaveImage( const char* filename, const CvArr* arr )
         cvFlip( arr, (void*)arr, 0 );
 
     return cvGetErrStatus() >= 0;
-}
-
-
-HIGHGUI_IMPL void
-cvConvertImage( const CvArr* srcarr, CvArr* dstarr, int flip )
-{
-    CvMat* temp = 0;
-    
-    CV_FUNCNAME( "cvConvertImage" );
-    
-    __BEGIN__;
-
-    CvMat srcstub, *src;
-    CvMat dststub, *dst;
-    int src_cn;
-
-    CV_CALL( src = cvGetMat( srcarr, &srcstub ));
-    CV_CALL( dst = cvGetMat( dstarr, &dststub ));
-
-    src_cn = CV_MAT_CN( src->type );
-
-    if( src_cn != 1 && src_cn != 3 && src_cn != 4 )
-        CV_ERROR( CV_BadNumChannels, "Source image must have 1, 3 or 4 channels" );
-
-    if( CV_MAT_DEPTH( dst->type ) != CV_8U )
-        CV_ERROR( CV_BadDepth, "Destination image must be 8u" );
-    
-    if( !CV_ARE_DEPTHS_EQ( src, dst ))
-    {
-        temp = cvCreateMat( src->height, src->width,
-                            (src->type & CV_MAT_CN_MASK)|(dst->type & CV_MAT_DEPTH_MASK));
-        cvScale( src, temp, CV_MAT_DEPTH(src->type) >= CV_32F ? 255 : 1, 0 );
-        src = temp;
-    }
-
-    if( !CV_ARE_CNS_EQ( src, dst ))
-    {
-        static const int cvt_table[] = {
-            /*    \ dst 
-              src  \    */
-            0, CV_GRAY2BGR565, CV_GRAY2BGR, CV_GRAY2BGRA,
-            0, 0, 0, 0,
-            CV_BGR2GRAY, CV_BGR2BGR565, 0, CV_BGR2BGRA,
-            CV_BGRA2GRAY, CV_BGRA2BGR565, CV_BGRA2BGR, 0
-        };
-
-        CV_CALL( cvCvtColor( src, dst, cvt_table[(src_cn-1)*4 + CV_MAT_CN(dst->type) - 1] ));
-
-        if( flip )
-        {
-            CV_CALL( cvFlip( dst, dst, 0 ));
-        }
-    }
-    else if( flip )
-    {
-        CV_CALL( cvFlip( src, dst, 0 ));
-    }
-    else
-    {
-        CV_CALL( cvCopy( src, dst ));
-    }
-
-    __END__;
-
-    cvReleaseMat( &temp );
 }
 
 /* End of file. */

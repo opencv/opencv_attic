@@ -230,7 +230,7 @@ bool  GrFmtPngReader::ReadData( uchar* data, int step, int color )
     }
 
     Close();
-    delete buffer;
+    delete[] buffer;
 
     return result;
 }
@@ -300,7 +300,7 @@ bool  GrFmtPngWriter::WriteImage( const uchar* data, int step,
     png_destroy_write_struct( &png_ptr, &info_ptr );
 
     if(f) fclose( f );
-    delete buffer;
+    delete[] buffer;
 
     return result;
 }

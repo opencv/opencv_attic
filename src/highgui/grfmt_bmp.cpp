@@ -114,20 +114,36 @@ bool  GrFmtBmpReader::ReadHeader()
             m_strm.Skip( size - 36 );
 
             if( m_width > 0 && m_height > 0 &&
-             (((m_bpp == 1 || m_bpp == 4 || m_bpp == 8 || 
-                m_bpp == 24 || m_bpp == 32 ) && m_rle_code == BMP_RGB) || 
+             (((m_bpp == 1 || m_bpp == 4 || m_bpp == 8 ||
+                m_bpp == 24 || m_bpp == 32 ) && m_rle_code == BMP_RGB) ||
+               (m_bpp == 16 && (m_rle_code == BMP_RGB || m_rle_code == BMP_BITFIELDS)) ||
                (m_bpp == 4 && m_rle_code == BMP_RLE4) ||
                (m_bpp == 8 && m_rle_code == BMP_RLE8))) 
             {
                 m_iscolor = true;
-                
+                result = true;
+
                 if( m_bpp <= 8 )
                 {
                     memset( m_palette, 0, sizeof(m_palette));
                     m_strm.GetBytes( m_palette, (clrused == 0? 1<<m_bpp : clrused)*4 );
                     m_iscolor = IsColorPalette( m_palette, m_bpp );
                 }
-                result = true;
+                else if( m_bpp == 16 && m_rle_code == BMP_BITFIELDS )
+                {
+                    int redmask = m_strm.GetDWord();
+                    int greenmask = m_strm.GetDWord();
+                    int bluemask = m_strm.GetDWord();
+
+                    if( bluemask == 0x1f && greenmask == 0x3e0 && redmask == 0x7c00 )
+                        m_bpp = 15;
+                    else if( bluemask == 0x1f && greenmask == 0x7e0 && redmask == 0xf800 )
+                        ;
+                    else
+                        result = false;
+                }
+                else if( m_bpp == 16 && m_rle_code == BMP_RGB )
+                    m_bpp = 15;
             }
         }
         else if( size == 12 )
@@ -177,7 +193,7 @@ bool  GrFmtBmpReader::ReadData( uchar* data, int step, int color )
     bool   result = false;
     uchar* src = buffer;
     uchar* bgr = bgr_buffer;
-    int  src_pitch = ((m_width*m_bpp + 7)/8 + 3) & -4;
+    int  src_pitch = ((m_width*(m_bpp != 15 ? m_bpp : 16) + 7)/8 + 3) & -4;
     int  nch = color ? 3 : 1;
     int  width3 = m_width*nch;
     int  y;
@@ -212,7 +228,8 @@ bool  GrFmtBmpReader::ReadData( uchar* data, int step, int color )
             {
                 m_strm.GetBytes( src, src_pitch );
                 FillColorRow1( color ? data : bgr, src, m_width, m_palette );
-                if( !color ) CvtBGRToGray( bgr, data, m_width );
+                if( !color )
+                    icvCvt_BGR2Gray_8u_C3C1R( bgr, 0, data, 0, cvSize(m_width,1) );
             }
             result = true;
             break;
@@ -403,12 +420,37 @@ decode_rle4_bad: ;
 decode_rle8_bad: ;
             }
             break;
+        /************************* 15 BPP ************************/
+        case 15:
+            for( y = 0; y < m_height; y++, data += step )
+            {
+                m_strm.GetBytes( src, src_pitch );
+                if( !color )
+                    icvCvt_BGR5552Gray_8u_C2C1R( src, 0, data, 0, cvSize(m_width,1) );
+                else
+                    icvCvt_BGR5552BGR_8u_C2C3R( src, 0, data, 0, cvSize(m_width,1) );
+            }
+            result = true;
+            break;
+        /************************* 16 BPP ************************/
+        case 16:
+            for( y = 0; y < m_height; y++, data += step )
+            {
+                m_strm.GetBytes( src, src_pitch );
+                if( !color )
+                    icvCvt_BGR5652Gray_8u_C2C1R( src, 0, data, 0, cvSize(m_width,1) );
+                else
+                    icvCvt_BGR5652BGR_8u_C2C3R( src, 0, data, 0, cvSize(m_width,1) );
+            }
+            result = true;
+            break;
         /************************* 24 BPP ************************/
         case 24:
             for( y = 0; y < m_height; y++, data += step )
             {
                 m_strm.GetBytes( color ? data : src, src_pitch );
-                if( !color ) CvtBGRToGray( src, data, m_width );
+                if( !color )
+                    icvCvt_BGR2Gray_8u_C3C1R( src, 0, data, 0, cvSize(m_width,1) );
             }
             result = true;
             break;
@@ -418,10 +460,10 @@ decode_rle8_bad: ;
             {
                 m_strm.GetBytes( src, src_pitch );
 
-                if( color )
-                    CvtBGRAToBGR( src, data, m_width );
+                if( !color )
+                    icvCvt_BGRA2Gray_8u_C4C1R( src, 0, data, 0, cvSize(m_width,1) );
                 else
-                    CvtBGRAToGray( src, data, m_width );
+                    icvCvt_BGRA2BGR_8u_C4C3R( src, 0, data, 0, cvSize(m_width,1) );
             }
             result = true;
             break;
@@ -430,8 +472,8 @@ decode_rle8_bad: ;
         }
     }
 
-    if( src != buffer ) delete src;
-    if( bgr != bgr_buffer ) delete bgr;
+    if( src != buffer ) delete[] src;
+    if( bgr != bgr_buffer ) delete[] bgr;
     return result;
 }
 

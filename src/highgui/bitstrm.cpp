@@ -168,7 +168,7 @@ void  RBaseStream::Release()
 {
     if( m_start )
     {
-        delete (m_start - m_unGetsize);
+        delete[] (m_start - m_unGetsize);
     }
     m_start = m_end = m_current = 0;
 }
@@ -744,11 +744,11 @@ void  WBaseStream::Allocate()
 
 void  WBaseStream::WriteBlock()
 {
-    int written, size = m_current - m_start;
+    int size = m_current - m_start;
     assert( m_file != 0 );
 
     //fseek( m_file, m_block_pos, SEEK_SET );
-    written = fwrite( m_start, 1, size, m_file );
+    fwrite( m_start, 1, size, m_file );
     m_current = m_start;
 
     /*if( written < size ) throw RBS_THROW_EOS;*/
@@ -790,7 +790,7 @@ void  WBaseStream::Release()
 {
     if( m_start )
     {
-        delete m_start;
+        delete[] m_start;
     }
     m_start = m_end = m_current = 0;
 }
