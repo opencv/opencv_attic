@@ -1146,7 +1146,7 @@ cvLoadHaarClassifierCascade( const char* directory, CvSize orig_window_size )
     __BEGIN__;
 
     int i, n;
-    char* slash;
+    const char* slash;
     char name[_MAX_PATH];
     int size = 0;
     char* ptr = 0;
