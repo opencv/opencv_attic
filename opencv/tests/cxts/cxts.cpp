@@ -1188,6 +1188,7 @@ int CvTS::run( int argc, char** argv )
     time( &start_time );
     
     int i, write_params = 0;
+    int list_tests = 0;
     CvTestPtrVec all_tests;
     CvTest* test;
 
@@ -1214,6 +1215,8 @@ int CvTS::run( int argc, char** argv )
                 write_params = 1;
             else if( strcmp( argv[i], "-t" ) == 0 )
                 params.test_mode = TIMING_MODE;
+            else if( strcmp( argv[i], "-l" ) == 0 )
+                list_tests = 1;
         }
     }
 
@@ -1300,11 +1303,18 @@ int CvTS::run( int argc, char** argv )
         if( strcmp( test->get_func_list(), "" ) != 0 && filter(test) )
         {
             if( test->init(this) >= 0 )
+            {
                 selected_tests->push( test );
+                if( list_tests )
+                    ::printf( "%s\n", test->get_name() );
+            }
             else
                 printf( LOG, "WARNING: an error occured during test %s initialization\n", test->get_name() );
         }
     }
+
+    if( list_tests )
+        goto _exit_;
 
     // 5. setup all the neccessary handlers and print header
     set_handlers( !params.debug_mode );
@@ -1396,7 +1406,7 @@ int CvTS::run( int argc, char** argv )
             test->safe_run( info.test_case_idx );
         }
     }
-
+_exit_:
     clear();
 
     return 0;
