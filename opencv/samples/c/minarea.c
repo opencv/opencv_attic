@@ -17,31 +17,34 @@ int main( int argc, char** argv )
     CvMemStorage* storage = cvCreateMemStorage(0);
 #endif
 
-    cvNamedWindow( "hull", 1 );
+    cvNamedWindow( "rect & circle", 1 );
         
     for(;;)
     {
         int key;
-        int i, count = rand()%100 + 1, hullcount;
-        CvPoint pt0;
+        int i, count = rand()%100 + 1;
+        CvPoint pt0, pt;
+        CvBox2D box;
+        CvPoint2D32f box_vtx[4];
+        CvPoint2D32f center;
+        CvPoint icenter;
+        float radius;
 #if !ARRAY            
         CvSeq* ptseq = cvCreateSeq( CV_SEQ_KIND_GENERIC|CV_32SC2, sizeof(CvContour),
                                      sizeof(CvPoint), storage );
-        CvSeq* hull;
-    
         for( i = 0; i < count; i++ )
         {
             pt0.x = rand() % (img->width/2) + img->width/4;
             pt0.y = rand() % (img->height/2) + img->height/4;
             cvSeqPush( ptseq, &pt0 );
         }
-        hull = cvConvexHull2( ptseq, 0, CV_CLOCKWISE, 0 );
-        hullcount = hull->total;
+#ifndef _EiC /* unfortunately, here EiC crashes */
+        box = cvMinAreaRect2( ptseq, 0 );
+#endif
+        cvMinEnclosingCircle( ptseq, &center, &radius );
 #else
         CvPoint* points = (CvPoint*)malloc( count * sizeof(points[0]));
-        int* hull = (int*)malloc( count * sizeof(hull[0]));
         CvMat pointMat = cvMat( 1, count, CV_32SC2, points );
-        CvMat hullMat = cvMat( 1, count, CV_32SC1, hull );
 
         for( i = 0; i < count; i++ )
         {
@@ -49,9 +52,12 @@ int main( int argc, char** argv )
             pt0.y = rand() % (img->height/2) + img->height/4;
             points[i] = pt0;
         }
-        cvConvexHull2( &pointMat, &hullMat, CV_CLOCKWISE, 0 );
-        hullcount = hullMat.cols;
+#ifndef _EiC
+        box = cvMinAreaRect2( &pointMat, 0 );
 #endif
+        cvMinEnclosingCircle( &pointMat, &center, &radius );
+#endif
+        cvBoxPoints( box, box_vtx );
         cvZero( img );
         for( i = 0; i < count; i++ )
         {
@@ -63,24 +69,22 @@ int main( int argc, char** argv )
             cvCircle( img, pt0, 2, CV_RGB( 255, 0, 0 ), CV_FILLED, CV_AA, 0 );
         }
 
-#if !ARRAY            
-        pt0 = **CV_GET_SEQ_ELEM( CvPoint*, hull, hullcount - 1 );
-#else
-        pt0 = points[hull[hullcount-1]];
-#endif
-
-        for( i = 0; i < hullcount; i++ )
+#ifndef _EiC
+        pt0.x = cvRound(box_vtx[3].x);
+        pt0.y = cvRound(box_vtx[3].y);
+        for( i = 0; i < 4; i++ )
         {
-#if !ARRAY                
-            CvPoint pt = **CV_GET_SEQ_ELEM( CvPoint*, hull, i );
-#else
-            CvPoint pt = points[hull[i]];
-#endif
-            cvLine( img, pt0, pt, CV_RGB( 0, 255, 0 ), 1, CV_AA, 0 );
+            pt.x = cvRound(box_vtx[i].x);
+            pt.y = cvRound(box_vtx[i].y);
+            cvLine(img, pt0, pt, CV_RGB(0, 255, 0), 1, CV_AA, 0);
             pt0 = pt;
         }
+#endif
+        icenter.x = cvRound(center.x);
+        icenter.y = cvRound(center.y);
+        cvCircle( img, icenter, cvRound(radius), CV_RGB(255, 255, 0), 1, CV_AA, 0 );
 
-        cvShowImage( "hull", img );
+        cvShowImage( "rect & circle", img );
 
         key = cvWaitKey(0);
         if( key == 27 || key == 'q' || key == 'Q' ) // 'ESC'
@@ -90,11 +94,10 @@ int main( int argc, char** argv )
         cvClearMemStorage( storage );
 #else
         free( points );
-        free( hull );
 #endif
     }
     
-    cvDestroyWindow( "hull" );
+    cvDestroyWindow( "rect & circle" );
     return 0;
 }
 

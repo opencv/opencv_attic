@@ -20,6 +20,7 @@ IplImage* img = 0;
 IplImage* img0 = 0;
 CvMemStorage* storage = 0;
 CvPoint pt[4];
+const char* wndname = "Square Detection Demo";
 
 // helper function:
 // finds a cosine of angle between vectors
@@ -89,7 +90,7 @@ CvSeq* findSquares4( IplImage* img, CvMemStorage* storage )
             
             // find contours and store them all as a list
             cvFindContours( gray, storage, &contours, sizeof(CvContour),
-                CV_RETR_LIST, CV_CHAIN_APPROX_SIMPLE );
+                CV_RETR_LIST, CV_CHAIN_APPROX_SIMPLE, cvPoint(0,0) );
             
             // test each contour
             while( contours )
@@ -117,9 +118,9 @@ CvSeq* findSquares4( IplImage* img, CvMemStorage* storage )
                         if( i >= 2 )
                         {
                             t = fabs(angle(
-                            (CvPoint*)cvGetSeqElem( result, i, 0 ),
-                            (CvPoint*)cvGetSeqElem( result, i-2, 0 ),
-                            (CvPoint*)cvGetSeqElem( result, i-1, 0 )));
+                            (CvPoint*)cvGetSeqElem( result, i ),
+                            (CvPoint*)cvGetSeqElem( result, i-2 ),
+                            (CvPoint*)cvGetSeqElem( result, i-1 )));
                             s = s > t ? s : t;
                         }
                     }
@@ -130,7 +131,7 @@ CvSeq* findSquares4( IplImage* img, CvMemStorage* storage )
                     if( s < 0.3 )
                         for( i = 0; i < 4; i++ )
                             cvSeqPush( squares,
-                                (CvPoint*)cvGetSeqElem( result, i, 0 ));
+                                (CvPoint*)cvGetSeqElem( result, i ));
                 }
                 
                 // take the next contour
@@ -176,11 +177,11 @@ void drawSquares( IplImage* img, CvSeq* squares )
         CV_NEXT_SEQ_ELEM( squares->elem_size, reader );
         
         // draw the square as a closed polyline 
-        cvPolyLine( cpy, &rect, &count, 1, 1, CV_RGB(0,255,0), 3, 8 );
+        cvPolyLine( cpy, &rect, &count, 1, 1, CV_RGB(0,255,0), 3, CV_AA, 0 );
     }
     
     // show the resultant image
-    cvShowImage("image",cpy);
+    cvShowImage( wndname, cpy );
     cvReleaseImage( &cpy );
 }
 
@@ -192,42 +193,45 @@ void on_trackbar( int a )
 }
 
 char* names[] = { "pic1.png", "pic2.png", "pic3.png",
-                  "pic4.png", "pic5.png", "pic6.png" };
+                  "pic4.png", "pic5.png", "pic6.png", 0 };
 
 int main(int argc, char** argv)
 {
-    int i;
+    int i, c;
     // create memory storage that will contain all the dynamic data
     storage = cvCreateMemStorage(0);
-    // create window with name "image"
-    cvNamedWindow( "image", 1 );
-    // create trackbar (slider) with parent "image" and set callback
-    // (the slider regulates upper threshold, passed to Canny edge detector) 
-    cvCreateTrackbar( "thresh1", "image", &thresh, 1000, on_trackbar );
-    
-    for( i = 0; i < 6; i++ )
+
+    for( i = 0; names[i] != 0; i++ )
     {
         // load i-th image
         img0 = cvLoadImage( names[i], 1 );
         if( !img0 )
         {
             printf("Couldn't load %s\n", names[i] );
-            break;
+            continue;
         }
         img = cvCloneImage( img0 );
+        
+        // create window and a trackbar (slider) with parent "image" and set callback
+        // (the slider regulates upper threshold, passed to Canny edge detector) 
+        cvNamedWindow( wndname, 1 );
+        cvCreateTrackbar( "canny thresh", wndname, &thresh, 1000, on_trackbar );
+        
         // force the image processing
         on_trackbar(0);
         // wait for key.
         // Also the function cvWaitKey takes care of event processing
-        cvWaitKey(0);
+        c = cvWaitKey(0);
         // release both images
         cvReleaseImage( &img );
         cvReleaseImage( &img0 );
         // clear memory storage - reset free space position
         cvClearMemStorage( storage );
+        if( c == 27 )
+            break;
     }
     
-    cvDestroyWindow("image");
+    cvDestroyWindow( wndname );
     
     return 0;
 }

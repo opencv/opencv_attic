@@ -32,7 +32,7 @@ void process_image(int h);
 
 int main( int argc, char** argv )
 {
-    char* filename = argc == 2 ? argv[1] : (char*)"stuff.jpg";
+    const char* filename = argc == 2 ? argv[1] : (char*)"stuff.jpg";
     
     // load image and force it to be grayscale
     if( (image03 = cvLoadImage(filename, 0)) == 0 )
@@ -84,7 +84,7 @@ void process_image(int h)
     
     // Find all contours.
     cvFindContours( image02, stor, &cont, sizeof(CvContour), 
-                    CV_RETR_LIST, CV_CHAIN_APPROX_NONE);
+                    CV_RETR_LIST, CV_CHAIN_APPROX_NONE, cvPoint(0,0));
     
     // Clear images. IPL use.
     cvZero(image02);
@@ -135,7 +135,7 @@ void process_image(int h)
         // Draw ellipse.
         cvEllipse(image04, center, size,
                   box->angle, 0, 360,
-                  CV_RGB(0,0,255), 1);
+                  CV_RGB(0,0,255), 1, CV_AA, 0);
         
         // Free memory.          
         free(PointArray);

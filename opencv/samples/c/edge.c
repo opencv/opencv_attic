@@ -16,8 +16,11 @@ IplImage *image = 0, *cedge = 0, *gray = 0, *edge = 0;
 // define a trackbar callback
 void on_trackbar(int h)
 {
+    cvSmooth( gray, edge, CV_BLUR, 3, 3, 0 );
+    cvNot( gray, edge );
+
     // Run the edge detector on grayscale
-    cvCanny(gray, edge, 0.0f, (float)edge_thresh*5, 3);
+    cvCanny(gray, edge, (float)edge_thresh, (float)edge_thresh*3, 3);
   
     cvZero( cedge );
     // copy edge points
@@ -29,7 +32,6 @@ void on_trackbar(int h)
 int main( int argc, char** argv )
 {
     char* filename = argc == 2 ? argv[1] : (char*)"fruits.jpg";
-    CvSize size;
     
     if( (image = cvLoadImage( filename, 1)) == 0 )
         return -1;

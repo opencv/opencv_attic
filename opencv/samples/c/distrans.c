@@ -10,7 +10,7 @@
 
 char wndname[] = "Distance transform";
 char tbarname[] = "Threshold";
-int edge_thresh = 1;
+int edge_thresh = 100;
 
 // The output images
 IplImage* dist = 0;
@@ -40,7 +40,7 @@ void on_trackbar( int dummy )
     cvConvertScale( dist32s, dist32s, -1, 0 );
     cvAddS( dist32s, cvScalarAll(255), dist32s, 0 );
     cvConvertScale( dist32s, dist8u2, 1, 0 );
-    cvCvtPlaneToPix( dist8u1, dist8u2, dist8u2, 0, dist8u );
+    cvMerge( dist8u1, dist8u2, dist8u2, 0, dist8u );
     cvShowImage( wndname, dist8u );
 }
 
