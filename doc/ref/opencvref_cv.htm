@@ -310,7 +310,7 @@ using <a href="#decl_cvCornerMinEigenVal">cvCornerMinEigenVal</a> function and s
 Then it performs non-maxima suppression (only local maxima in 3x3 neighborhood remain).
 The next step is rejecting the corners with the
 minimal eigenvalue less than <code>quality_level</code>&bull;max(<code>eig_image</code>(x,y)). Finally,
-the function ensures that all the corners found are distanced enough from one
+the function ensures that all the corners found are distanced enough one from
 another by considering the corners (the most strongest corners are considered first)
 and checking that the distance between the newly considered feature and the features considered earlier
 is larger than <code>min_distance</code>. So, the function removes the features than are too close
@@ -796,7 +796,6 @@ in-place.</p>
 void cvFilter2D( const CvArr* src, CvArr* dst,
                  const CvMat* kernel,
                  CvPoint anchor=cvPoint(-1,-1));
-#define cvConvolve2D cvFilter2D
 </pre><p><dl>
 <dt>src<dd>The source image.
 <dt>dst<dd>The destination image.
@@ -820,10 +819,10 @@ interpolates outlier pixel values from the nearest pixels that is inside the ima
 <pre>
 void cvIntegral( const CvArr* image, CvArr* sum, CvArr* sqsum=NULL, CvArr* tilted_sum=NULL );
 </pre><p><dl>
-<dt>image<dd>The source image, <code>W</code>&times;<code>H</code>, single-channel, 8-bit, or floating-point (32f or 64f).
-<dt>sum<dd>The integral image, <code>W+1</code>&times;<code>H+1</code>, single-channel, 32-bit integer or double precision floating-point (64f).
-<dt>sqsum<dd>The integral image for squared pixel values, <code>W+1</code>&times;<code>H+1</code>, single-channel, double precision floating-point (64f).
-<dt>tilted_sum<dd>The integral for the image rotated by 45 degrees, <code>W+1</code>&times;<code>H+1</code>, single-channel, the same data type as <code>sum</code>.
+<dt>image<dd>The source image, <code>W</code>&times;<code>H</code>, 8-bit or floating-point (32f or 64f) image.
+<dt>sum<dd>The integral image, <code>W+1</code>&times;<code>H+1</code>, 32-bit integer or double precision floating-point (64f).
+<dt>sqsum<dd>The integral image for squared pixel values, <code>W+1</code>&times;<code>H+1</code>, double precision floating-point (64f).
+<dt>tilted_sum<dd>The integral for the image rotated by 45 degrees, <code>W+1</code>&times;<code>H+1</code>, the same data type as <code>sum</code>.
 </dl><p>
 The function <a href="#decl_cvIntegral">cvIntegral</a> calculates one or more integral images for the source image as following:</p>
 <pre>
@@ -834,11 +833,12 @@ sqsum(X,Y)=sum<sub>x&lt;X,y&lt;Y</sub>image(x,y)<sup>2</sup>
 tilted_sum(X,Y)=sum<sub>y&lt;Y,abs(x-X)&lt;y</sub>image(x,y)
 </pre>
 <p>Using these integral images, one may calculate sum, mean, standard deviation over
-arbitrary pixel up-right or rotated rectangle in O(1), for example:</p>
+arbitrary up-right or rotated rectangular region of the image in a constant time, for example:</p>
 <pre>
 sum<sub>x1&lt;=x&lt;x2,y1&lt;=y&lt;y2</sub>image(x,y)=sum(x2,y2)-sum(x1,y2)-sum(x2,y1)+sum(x1,x1)
 </pre>
 <p>It makes possible to do a fast blurring or fast block correlation with variable window size etc.
+In case of multi-channel images sums for each channel are accumulated independently.
 </p>
 
 <hr><h3><a name="decl_cvCvtColor">CvtColor</a></h3>
@@ -846,8 +846,9 @@ sum<sub>x1&lt;=x&lt;x2,y1&lt;=y&lt;y2</sub>image(x,y)=sum(x2,y2)-sum(x1,y2)-sum(
 <pre>
 void cvCvtColor( const CvArr* src, CvArr* dst, int code );
 </pre><p><dl>
-<dt>src<dd>The source 8-bit or floating-point image.
-<dt>dst<dd>The destination 8-bit or floating-point image.
+<dt>src<dd>The source 8-bit (8u), 16-bit (16u) or single-precision floating-point (32f) image.
+<dt>dst<dd>The destination image of the same data type as the source one.
+           The number of channels may be different.
 <dt>code<dd>Color conversion operation that can be specifed using
 CV_&lt;src_color_space&gt;2&lt;dst_color_space&gt; constants (see below).
 </dl><p>
@@ -856,73 +857,174 @@ The function ignores <code>colorModel</code> and <code>channelSeq</code> fields 
 so the source image color space should be specified correctly (including order of the channels in case
 of RGB space, e.g. BGR means 24-bit format with B<sub>0</sub> G<sub>0</sub> R<sub>0</sub> B<sub>1</sub> G<sub>1</sub> R<sub>1</sub> ... layout,
 whereas RGB means 24-format with R<sub>0</sub> G<sub>0</sub> B<sub>0</sub> R<sub>1</sub> G<sub>1</sub> B<sub>1</sub> ... layout).
+</p><p>
+The conventional range for R,G,B channel values is:
+<ul>
+<li>0..255 for 8-bit images
+<li>0..65535 for 16-bit images and
+<li>0..1 for floating-point images.
+</ul>
+Of course, in case of linear transformations the range can be arbitrary,
+but in order to get correct results in case of non-linear transformations,
+the input image should be scaled if necessary.
+</p><p>
 The function can do the following transformations:<ul>
 <li>Transformations within RGB space like adding/removing alpha channel, reversing the channel order,
-conversion to/from 16-bit RGB color (Rx5:Gx6:Rx5) color, 15-bit RGB color as well as conversion to/from grayscale using:
+conversion to/from 16-bit RGB color (R5:G6:B5 or R5:G5:B5) color, as well as conversion to/from grayscale using:
 <pre>
-RGB[A]->Gray: Y=0.212671*R + 0.715160*G + 0.072169*B + 0*A
-Gray->RGB[A]: R=Y G=Y B=Y A=0
+RGB[A]->Gray: Y&lt;-0.299*R + 0.587*G + 0.114*B
+Gray->RGB[A]: R&lt;-Y G&lt;-Y B&lt;-Y A&lt;-0
 </pre>
-All the possible combinations of input and output format are allowed here.
-<p></p>
-<li>RGB&lt;=&gt;XYZ (CV_BGR2XYZ, CV_RGB2XYZ, CV_XYZ2BGR, CV_XYZ2RGB):
+<li>RGB&lt;=&gt;CIE XYZ.Rec 709 with D65 white point (<code>CV_BGR2XYZ, CV_RGB2XYZ, CV_XYZ2BGR, CV_XYZ2RGB</code>):
 <pre>
-|X|   |0.412411  0.357585  0.180454| |R|
-|Y| = |0.212649  0.715169  0.072182|*|G|
-|Z|   |0.019332  0.119195  0.950390| |B|
+|X|    |0.412453  0.357580  0.180423| |R|
+|Y| &lt;- |0.212671  0.715160  0.072169|*|G|
+|Z|    |0.019334  0.119193  0.950227| |B|
 
-|R|   | 3.240479  -1.53715  -0.498535| |X|
-|G| = |-0.969256   1.875991  0.041556|*|Y|
-|B|   | 0.055648  -0.204043  1.057311| |Z|
-</pre>
-<p></p>
-<li>RGB&lt;=&gt;YCrCb (CV_BGR2YCrCb, CV_RGB2YCrCb, CV_YCrCb2BGR, CV_YCrCb2RGB)
-<pre>
-Y=0.299*R + 0.587*G + 0.114*B
-Cr=(R-Y)*0.713 + 128
-Cb=(B-Y)*0.564 + 128
+|R|    | 3.240479  -1.53715  -0.498535| |X|
+|G| &lt;- |-0.969256   1.875991  0.041556|*|Y|
+|B|    | 0.055648  -0.204043  1.057311| |Z|
 
-R=Y + 1.403*(Cr - 128)
-G=Y - 0.344*(Cr - 128) - 0.714*(Cb - 128)
-B=Y + 1.773*(Cb - 128)
+X, Y and Z cover the whole value range (in case of floating-point images Z may exceed 1).
 </pre>
 <p></p>
-<li>RGB=>HSV (CV_BGR2HSV,CV_RGB2HSV)
+<li>RGB&lt;=&gt;YCrCb JPEG (a.k.a. YCC) (<code>CV_BGR2YCrCb, CV_RGB2YCrCb, CV_YCrCb2BGR, CV_YCrCb2RGB</code>)
 <pre>
-V=max(R,G,B)
-S=(V-min(R,G,B))*255/V   if V!=0, 0 otherwise
+Y &lt;- 0.299*R + 0.587*G + 0.114*B
+Cr &lt;- (R-Y)*0.713 + delta
+Cb &lt;- (B-Y)*0.564 + delta
 
-       (G - B)*60/S,  if V=R
-H= 180+(B - R)*60/S,  if V=G
-   240+(R - G)*60/S,  if V=B
+R &lt;- Y + 1.403*(Cr - delta)
+G &lt;- Y - 0.344*(Cr - delta) - 0.714*(Cb - delta)
+B &lt;- Y + 1.773*(Cb - delta),
 
-if H&lt;0 then H=H+360
+              { 128 for 8-bit images,
+where delta = { 32768 for 16-bit images
+              { 0.5 for floating-point images
+
+Y, Cr and Cb cover the whole value range.
 </pre>
-<p>
-The hue values calcualted using the above formulae vary from 0&deg; to 360&deg; so they are divided by 2 to
-fit into 8 bits.
-</p><p></p>
-<li>RGB=>Lab (CV_BGR2Lab, CV_RGB2Lab)
+<p></p>
+<li>RGB&lt;=&gt;HSV (<code>CV_BGR2HSV, CV_RGB2HSV, CV_HSV2BGR, CV_HSV2RGB</code>)
 <pre>
-|X|   |0.433910  0.376220  0.189860| |R/255|
-|Y| = |0.212649  0.715169  0.072182|*|G/255|
-|Z|   |0.017756  0.109478  0.872915| |B/255|
+// In case of 8-bit and 16-bit images
+// R, G and B are converted to floating-point format and scaled to fit 0..1 range
 
-L = 116*Y<sup>1/3</sup>      for Y>0.008856
-L = 903.3*Y      for Y&lt;=0.008856
+V &lt;- max(R,G,B)
+S &lt;- (V-min(R,G,B))/V   if V&ne;0, 0 otherwise
 
-a = 500*(f(X)-f(Y))
-b = 200*(f(Y)-f(Z))
+         (G - B)*60/S,  if V=R
+H &lt;- 180+(B - R)*60/S,  if V=G
+     240+(R - G)*60/S,  if V=B
+
+if H&lt;0 then H&lt;-H+360
+
+On output 0&le;V&le;1, 0&le;S&le;1, 0&le;H&le;360.
+The values are then converted to the destination data type:
+    8-bit images:
+        V &lt;- V*255, S &lt;- S*255, H &lt;- H/2 (to fit to 0..255)
+    16-bit images (currently not supported):
+        V &lt;- V*65535, S &lt;- S*65535, H &lt;- H
+    32-bit images:
+        H, S, V are left as is
+</pre>
+<li>RGB&lt;=&gt;HLS (<code>CV_BGR2HLS, CV_RGB2HLS, CV_HLS2BGR, CV_HLS2RGB</code>)
+<pre>
+// In case of 8-bit and 16-bit images
+// R, G and B are converted to floating-point format and scaled to fit 0..1 range
+
+V<sub>max</sub> &lt;- max(R,G,B)
+V<sub>min</sub> &lt;- min(R,G,B)
+
+L &lt;- (V<sub>max</sub> + V<sub>min</sub>)/2
+
+S &lt;- (V<sub>max</sub> - V<sub>min</sub>)/(V<sub>max</sub> + V<sub>min</sub>)  if L &lt; 0.5
+     (V<sub>max</sub> - V<sub>min</sub>)/(2 - (V<sub>max</sub> + V<sub>min</sub>))  if L &ge; 0.5
+
+         (G - B)*60/S,  if V<sub>max</sub>=R
+H &lt;- 180+(B - R)*60/S,  if V<sub>max</sub>=G
+     240+(R - G)*60/S,  if V<sub>max</sub>=B
+
+if H&lt;0 then H&lt;-H+360
+
+On output 0&le;L&le;1, 0&le;S&le;1, 0&le;H&le;360.
+The values are then converted to the destination data type:
+    8-bit images:
+        L &lt;- L*255, S &lt;- S*255, H &lt;- H/2
+    16-bit images (currently not supported):
+        L &lt;- L*65535, S &lt;- S*65535, H &lt;- H
+    32-bit images:
+        H, L, S are left as is
+</pre>
+<li>RGB&lt;=&gt;CIE L*a*b* (<code>CV_BGR2Lab, CV_RGB2Lab, CV_Lab2BGR, CV_Lab2RGB</code>)
+<pre>
+// In case of 8-bit and 16-bit images
+// R, G and B are converted to floating-point format and scaled to fit 0..1 range
+
+// convert R,G,B to CIE XYZ
+|X|    |0.412453  0.357580  0.180423| |R|
+|Y| &lt;- |0.212671  0.715160  0.072169|*|G|
+|Z|    |0.019334  0.119193  0.950227| |B|
+
+X &lt;- X/Xn, where Xn = 0.950456
+Z &lt;- Z/Zn, where Zn = 1.088754
+
+L &lt;- 116*Y<sup>1/3</sup>      for Y>0.008856
+L &lt;- 903.3*Y      for Y&lt;=0.008856
+
+a &lt;- 500*(f(X)-f(Y)) + delta
+b &lt;- 200*(f(Y)-f(Z)) + delta
 where f(t)=t<sup>1/3</sup>              for t>0.008856
       f(t)=7.787*t+16/116   for t&lt;=0.008856
+
+
+where delta = 128 for 8-bit images,
+              0 for floating-point images
+
+On output 0&le;L&le;100, -127&le;a&le;127, -127&le;b&le;127
+The values are then converted to the destination data type:
+    8-bit images:
+        L &lt;- L*255/100, a &lt; a + 128, b &lt; b + 128
+    16-bit images are currently not supported
+    32-bit images:
+        L, a, b are left as is
 </pre>
-The above formulae have been taken from
-<a href="http://www.cica.indiana.edu/cica/faq/color_spaces/color.spaces.html">
-http://www.cica.indiana.edu/cica/faq/color_spaces/color.spaces.html</a>
+
+<li>RGB&lt;=&gt;CIE L*u*v* (<code>CV_BGR2Luv, CV_RGB2Luv, CV_Luv2BGR, CV_Luv2RGB</code>)
+<pre>
+// In case of 8-bit and 16-bit images
+// R, G and B are converted to floating-point format and scaled to fit 0..1 range
+
+// convert R,G,B to CIE XYZ
+|X|    |0.412453  0.357580  0.180423| |R|
+|Y| &lt;- |0.212671  0.715160  0.072169|*|G|
+|Z|    |0.019334  0.119193  0.950227| |B|
+
+L &lt;- 116*Y<sup>1/3</sup>      for Y>0.008856
+L &lt;- 903.3*Y      for Y&lt;=0.008856
+
+u' &lt;- 4*X/(X + 15*Y + 3*Z)
+v' &lt;- 9*Y/(X + 15*Y + 3*Z)
+
+u &lt;- 13*L*(u' - u<sub>n</sub>), where u<sub>n</sub>=0.19793943
+v &lt;- 13*L*(v' - v<sub>n</sub>), where v<sub>n</sub>=0.46831096
+
+On output 0&le;L&le;100, -134&le;u&le;220, -140&le;v&le;122
+The values are then converted to the destination data type:
+    8-bit images:
+        L &lt;- L*255/100, u &lt; (u + 134)*255/354, v &lt; (v + 140)*255/256
+    16-bit images are currently not supported
+    32-bit images:
+        L, u, v are left as is
+</pre>
+
+The above formulae for converting RGB to/from various color spaces have been taken
+from multiple sources on Web, primarily from <a href="#paper_ford98">Color Space Conversions (<b>[Ford98]</b>)</a>
+document at Charles Poynton site.
+
 <p></p>
-<li>Bayer=>RGB (CV_BayerBG2BGR, CV_BayerGB2BGR, CV_BayerRG2BGR, CV_BayerGR2BGR,<br>
-                CV_BayerBG2RGB, CV_BayerRG2BGR, CV_BayerGB2RGB, CV_BayerGR2BGR,<br>
-                CV_BayerRG2RGB, CV_BayerBG2BGR, CV_BayerGR2RGB, CV_BayerGB2BGR)
+<li>Bayer=>RGB (<code>CV_BayerBG2BGR, CV_BayerGB2BGR, CV_BayerRG2BGR, CV_BayerGR2BGR,<br>
+                CV_BayerBG2RGB, CV_BayerGB2RGB, CV_BayerRG2RGB, CV_BayerGR2RGB</code>)
 <p>Bayer pattern is widely used in CCD and CMOS cameras. It allows to get color picture
 out of a single plane where R,G and B pixels (sensors of a particular component) are interleaved like
 this:</p>
@@ -1744,7 +1846,7 @@ Only dense histograms can be initialized this way. The function returns <code>hi
 </p>
 
 
-<hr><h3><a name="decl_cvQueryHistValue_1D">QueryHistValue_1D</a></h3>
+<hr><h3><a name="decl_cvQueryHistValue_*D">QueryHistValue_*D</a></h3>
 <p class="Blurb">Queries value of histogram bin</p>
 <pre>
 #define cvQueryHistValue_1D( hist, idx0 ) \
@@ -1766,7 +1868,7 @@ histogram, and no new bin is created.
 </p>
 
 
-<hr><h3><a name="decl_cvGetHistValue_1D">GetHistValue_1D</a></h3>
+<hr><h3><a name="decl_cvGetHistValue_*D">GetHistValue_*D</a></h3>
 <p class="Blurb">Returns pointer to histogram bin</p>
 <pre>
 #define cvGetHistValue_1D( hist, idx0 ) \
@@ -2060,7 +2162,7 @@ void cvMatchTemplate( const CvArr* image, const CvArr* templ,
                       CvArr* result, int method );
 </pre><p><dl>
 <dt>image<dd>Image where the search is running.
-           It should be single-chanel, 8-bit or 32-bit floating-point.
+           It should be 8-bit or 32-bit floating-point.
 <dt>templ<dd>Searched template; must be not greater than the source image and the same data type as the image.
 <dt>result<dd>A map of comparison results; single-channel 32-bit floating-point. If <code>image</code> is
 <code>W</code>&times;<code>H</code> and <code>templ</code> is <code>w</code>&times;<code>h</code> then <code>result</code> must
@@ -2089,8 +2191,8 @@ R(x,y)=sum<sub>x',y'</sub>[T(x',y')&bull;I(x+x',y+y')]/sqrt[sum<sub>x',y'</sub>T
 method=CV_TM_CCOEFF:
 R(x,y)=sum<sub>x',y'</sub>[T'(x',y')&bull;I'(x+x',y+y')],
 
-where T'(x',y')=T(x',y') - 1/(w&bull;h)&bull;sum<sub>x",y"</sub>T(x",y") (mean template brightness=>0)
-      I'(x+x',y+y')=I(x+x',y+y') - 1/(w&bull;h)&bull;sum<sub>x",y"</sub>I(x+x",y+y") (mean patch brightness=>0)
+where T'(x',y')=T(x',y') - 1/(w&bull;h)&bull;sum<sub>x",y"</sub>T(x",y")
+      I'(x+x',y+y')=I(x+x',y+y') - 1/(w&bull;h)&bull;sum<sub>x",y"</sub>I(x+x",y+y")
 
 method=CV_TM_CCOEFF_NORMED:
 R(x,y)=sum<sub>x',y'</sub>[T'(x',y')&bull;I'(x+x',y+y')]/sqrt[sum<sub>x',y'</sub>T'(x',y')<sup>2</sup>&bull;sum<sub>x',y'</sub>I'(x+x',y+y')<sup>2</sup>]
@@ -2098,6 +2200,8 @@ R(x,y)=sum<sub>x',y'</sub>[T'(x',y')&bull;I'(x+x',y+y')]/sqrt[sum<sub>x',y'</sub
 </pre>
 After the function finishes comparison, the best matches can be found as global minimums (CV_TM_SQDIFF*)
 or maximums (CV_TM_CCORR* and CV_TM_CCOEFF*) using <a href="opencvref_cxcore.htm#decl_cvMinMaxLoc">cvMinMaxLoc</a> function.
+In case of color image and template summation in both numerator and each sum in denominator is done
+over all the channels (and separate mean values are used for each channel).
 </p>
 
 
@@ -4673,7 +4777,7 @@ of every corresponding epipolar line are stored into <code>correspondent_lines</
 <td width="25%"><a href="#decl_cvGetRectSubPix">GetRectSubPix</a></td>
 </tr>
 <tr>
-<td width="25%"><a href="#decl_cvGetHistValue_1D">GetHistValue_1D</a></td>
+<td width="25%"><a href="#decl_cvGetHistValue_*D">GetHistValue_*D</a></td>
 <td width="25%"><a href="#decl_cvGetNormalizedCentralMoment">GetNormalizedCentralMoment</a></td>
 <td width="25%"><a href="#decl_cvGetSpatialMoment">GetSpatialMoment</a></td>
 </tr>
@@ -4762,7 +4866,7 @@ of every corresponding epipolar line are stored into <code>correspondent_lines</
 <hr><h3>Q</h3>
 <table width="100%">
 <tr>
-<td width="25%"><a href="#decl_cvQueryHistValue_1D">QueryHistValue_1D</a></td>
+<td width="25%"><a href="#decl_cvQueryHistValue_*D">QueryHistValue_*D</a></td>
 <td width="25%%"></td>
 <td width="25%%"></td>
 </tr>
@@ -4855,8 +4959,8 @@ of every corresponding epipolar line are stored into <code>correspondent_lines</
 
 <hr><h1><a name="cv_bib">Bibliography</a></h1>
 <p>
-This bibliography provides a list of publications that might be useful to the
-Intel î Computer Vision Library users. This list is not complete; it serves only
+This bibliography provides a list of publications that were might be useful to
+the OpenCV users. This list is not complete; it serves only
 as a starting point.
 </p>
 <ol>
@@ -4896,6 +5000,9 @@ Using Temporal Templates. MIT Media Lab Technical Report 402, 1997.
 <li><b>[Fitzgibbon95]</b> Andrew W. Fitzgibbon, R.B.Fisher. A Buyer's Guide to Conic
 Fitting. Proc.5th British Machine Vision Conference, Birmingham, pp. 513-522,
 1995.
+
+<li><a name="paper_ford98"><b>[Ford98]</b> Adrian Ford, Alan Roberts. Colour Space Conversions.</a>
+<a href="http://www.poynton.com/PDFs/coloureq.pdf">http://www.poynton.com/PDFs/coloureq.pdf</a>
 
 <li><a name="paper_horn81"><b>[Horn81]</b>
 Berthold K.P. Horn and Brian G. Schunck. Determining Optical Flow.
