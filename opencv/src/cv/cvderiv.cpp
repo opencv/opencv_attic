@@ -227,7 +227,7 @@ CvStatus CV_STDCALL icvSobel_8u16s_C1R( const uchar* pSrc, int srcStep,
     int* fmaskY = (int*)(state->ker1) + ker_y;
     int fmX0 = fmaskX[0], fmY0 = fmaskY[0];
 
-    int is_small_width = width < MAX( ker_x, ker_right );
+    int is_small_width = width <= ker_width;
     int starting_flag = 0;
     int width_rest = width & (CV_MORPH_ALIGN - 1);
     int origin = state->origin;
@@ -589,7 +589,7 @@ CvStatus CV_STDCALL icvSobel_32f_C1R( const float* pSrc, int srcStep,
     float* fmaskY = (float*)(state->ker1) + ker_y;
     float fmX0 = fmaskX[0], fmY0 = fmaskY[0];
 
-    int is_small_width = width < MAX( ker_x, ker_right );
+    int is_small_width = width <= ker_width;
     int starting_flag = 0;
     int width_rest = width & (CV_MORPH_ALIGN - 1);
     int origin = state->origin;
@@ -1028,7 +1028,7 @@ icvLaplace_8u16s_C1R( const uchar* pSrc, int srcStep,
     int* fmaskY = (int*)(state->ker1) + ker_y;
     int fmX0 = fmaskX[0], fmY0 = fmaskY[0];
 
-    int is_small_width = width < MAX( ker_x, ker_right );
+    int is_small_width = width <= ker_width;
     int starting_flag = 0;
     int width_rest = width & (CV_MORPH_ALIGN - 1);
     int y_type = ICV_Y_KERNEL_TYPE(state->kerType);
@@ -1359,7 +1359,7 @@ icvLaplace_32f_C1R( const float* pSrc, int srcStep,
     float* fmaskY = (float*)(state->ker1) + ker_y;
     float fmX0 = fmaskX[0], fmY0 = fmaskY[0];
 
-    int is_small_width = width < MAX( ker_x, ker_right );
+    int is_small_width = width <= ker_width;
     int starting_flag = 0;
     int width_rest = width & (CV_MORPH_ALIGN - 1);
     int y_type = ICV_Y_KERNEL_TYPE(state->kerType);

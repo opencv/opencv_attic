@@ -1316,6 +1316,8 @@ int CvTS::run( int argc, char** argv )
             memory_manager->start_tracking();
         update_context( test, -1, true );
         ostream_testname_mask = 0; // reset "test name was printed" flags
+        if( output_streams[LOG_IDX].f )
+            fflush( output_streams[LOG_IDX].f );
 
         temp = current_test_info;
         test->safe_run(0);

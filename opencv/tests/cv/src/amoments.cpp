@@ -40,354 +40,374 @@
 //M*/
 #include "cvtest.h"
 
-#include <stdlib.h>
-#include <assert.h>
-#include <limits.h>
-#include <float.h>
-
-static char* funcs[] =
+// image moments
+class CV_MomentsTest : public CvArrTest
 {
-    "cvMoments",
-    "cvGetHuMoments"
+public:
+    CV_MomentsTest();
+
+protected:
+    
+    enum { MOMENT_COUNT = 25 };
+    
+    int support_testing_modes();
+    int prepare_test_case( int test_case_idx );
+    void prepare_to_validation( int /*test_case_idx*/ );
+    void get_test_array_types_and_sizes( int test_case_idx, CvSize** sizes, int** types );
+    void get_minmax_bounds( int i, int j, int type, CvScalar* low, CvScalar* high );
+    double get_success_error_level( int test_case_idx, int i, int j );
+    void run_func();
+    int coi;
+    bool is_binary;
 };
 
-static char *test_desc = "Comparing with the simple algorithm";
 
-#define IMGSTAT_MOMENTS          0
-#define IMGSTAT_MOMENTS_BINARY   1
-
-/* actual parameters */
-static int min_img_size, max_img_size;
-static int img_size_delta_type, img_size_delta;
-static int base_iters;
-
-/* which tests have to run */
-static int fn_l = 0, fn_h = ATS_DIM(funcs)-1,
-           dt_l = 0, dt_h = 2,
-           ch_l = 0, ch_h = 1;
-
-static int init_moments_params = 0;
-
-static const int img8u_range = 255;
-static const float img32f_range = 100.f;
-static const int img32f_bits = 3;
-
-static double rel_err( double a, double b )
+CV_MomentsTest::CV_MomentsTest()
+    : CvArrTest( "moments-raster", "cvMoments", "" )
 {
-    return fabs(a - b)/(fabs(a) + 1);
+    test_array[INPUT].push(NULL);
+    test_array[OUTPUT].push(NULL);
+    test_array[REF_OUTPUT].push(NULL);
+    coi = -1;
+    is_binary = false;
+    //element_wise_relative_error = false;
 }
 
-#if 0
-static void convert_ipl_to_ats( IplMomentState lstate, AtsMomentState* astate )
-{
-    astate->m00 = iplGetSpatialMoment( lstate, 0, 0 );
-    astate->m10 = iplGetSpatialMoment( lstate, 1, 0 );
-    astate->m01 = iplGetSpatialMoment( lstate, 0, 1 );
-    astate->m20 = iplGetSpatialMoment( lstate, 2, 0 );
-    astate->m11 = iplGetSpatialMoment( lstate, 1, 1 );
-    astate->m02 = iplGetSpatialMoment( lstate, 0, 2 );
-    astate->m30 = iplGetSpatialMoment( lstate, 3, 0 );
-    astate->m21 = iplGetSpatialMoment( lstate, 2, 1 );
-    astate->m12 = iplGetSpatialMoment( lstate, 1, 2 );
-    astate->m03 = iplGetSpatialMoment( lstate, 0, 3 );
 
-    astate->mu20 = iplGetCentralMoment( lstate, 2, 0 );
-    astate->mu11 = iplGetCentralMoment( lstate, 1, 1 );
-    astate->mu02 = iplGetCentralMoment( lstate, 0, 2 );
-    astate->mu30 = iplGetCentralMoment( lstate, 3, 0 );
-    astate->mu21 = iplGetCentralMoment( lstate, 2, 1 );
-    astate->mu12 = iplGetCentralMoment( lstate, 1, 2 );
-    astate->mu03 = iplGetCentralMoment( lstate, 0, 3 );
+void CV_MomentsTest::get_minmax_bounds( int i, int j, int type, CvScalar* low, CvScalar* high )
+{
+    CvArrTest::get_minmax_bounds( i, j, type, low, high );
+    int depth = CV_MAT_DEPTH(type);
+    
+    if( depth == CV_16U )
+    {
+        *low = cvScalarAll(0);
+        *high = cvScalarAll(1000);
+    }
+    else if( depth == CV_16S )
+    {
+        *low = cvScalarAll(-1000);
+        *high = cvScalarAll(1000);
+    }
+    else if( depth == CV_32F )
+    {
+        *low = cvScalarAll(-1);
+        *high = cvScalarAll(1);
+    }
+}
+
+
+void CV_MomentsTest::get_test_array_types_and_sizes( int test_case_idx,
+                                                CvSize** sizes, int** types )
+{
+    CvRNG* rng = ts->get_rng();
+    CvArrTest::get_test_array_types_and_sizes( test_case_idx, sizes, types );
+    int cn = CV_MAT_CN(types[INPUT][0]);
+    int depth = test_case_idx*4/test_case_count;
+    depth = depth == 0 ? CV_8U : depth == 1 ? CV_16U : depth == 2 ? CV_16S : CV_32F;
+    if( cn == 2 )
+        cn = 1;
+
+    types[INPUT][0] = CV_MAKETYPE(depth, cn);
+    types[OUTPUT][0] = types[REF_OUTPUT][0] = CV_64FC1;
+    sizes[OUTPUT][0] = sizes[REF_OUTPUT][0] = cvSize(MOMENT_COUNT,1);
+
+    is_binary = cvTsRandInt(rng) % 2 != 0;
+    coi = 0;
+    cvmat_allowed = true;
+    if( cn > 1 )
+    {
+        coi = cvTsRandInt(rng) % cn;
+        cvmat_allowed = false;
+    }
+}
+
+
+double CV_MomentsTest::get_success_error_level( int /*test_case_idx*/, int /*i*/, int /*j*/ )
+{
+    int depth = CV_MAT_DEPTH(test_mat[INPUT][0].type);
+    return depth != CV_32F ? FLT_EPSILON : FLT_EPSILON*100;
+}
+
+
+
+int CV_MomentsTest::prepare_test_case( int test_case_idx )
+{
+    int code = CvArrTest::prepare_test_case( test_case_idx );
+    if( code > 0 )
+    {
+        int cn = CV_MAT_CN(test_mat[INPUT][0].type);
+        if( cn > 1 )
+            cvSetImageCOI( (IplImage*)test_array[INPUT][0], coi + 1 );
+    }
+
+    return code;
+}
+
+
+void CV_MomentsTest::run_func()
+{
+    CvMoments* m = (CvMoments*)test_mat[OUTPUT][0].data.db;
+    double* others = (double*)(m + 1);
+    cvMoments( test_array[INPUT][0], m, is_binary );
+    others[0] = cvGetNormalizedCentralMoment( m, 2, 0 );
+    others[1] = cvGetNormalizedCentralMoment( m, 1, 1 );
+    others[2] = cvGetNormalizedCentralMoment( m, 0, 2 );
+    others[3] = cvGetNormalizedCentralMoment( m, 3, 0 );
+    others[4] = cvGetNormalizedCentralMoment( m, 2, 1 );
+    others[5] = cvGetNormalizedCentralMoment( m, 1, 2 );
+    others[6] = cvGetNormalizedCentralMoment( m, 0, 3 );
+}
+
+
+void CV_MomentsTest::prepare_to_validation( int /*test_case_idx*/ )
+{
+    CvMat* src = &test_mat[INPUT][0];
+    CvMoments m;
+    double* mdata = test_mat[REF_OUTPUT][0].data.db;
+    int depth = CV_MAT_DEPTH(src->type);
+    int cn = CV_MAT_CN(src->type);
+    int i, y, x, cols = src->cols;
+    double xc = 0., yc = 0.;
+    
+    memset( &m, 0, sizeof(m));
+
+    for( y = 0; y < src->rows; y++ )
+    {
+        double s0 = 0, s1 = 0, s2 = 0, s3 = 0;
+        uchar* ptr = src->data.ptr + y*src->step;
+        for( x = 0; x < cols; x++ )
+        {
+            double val;
+            if( depth == CV_8U )
+                val = ptr[x*cn + coi];
+            else if( depth == CV_16U )
+                val = ((ushort*)ptr)[x*cn + coi];
+            else if( depth == CV_16S )
+                val = ((short*)ptr)[x*cn + coi];
+            else
+                val = ((float*)ptr)[x*cn + coi];
+
+            if( is_binary )
+                val = val != 0;
+
+            s0 += val;
+            s1 += val*x;
+            s2 += val*x*x;
+            s3 += ((val*x)*x)*x;
+        }
+
+        m.m00 += s0;
+        m.m01 += s0*y;
+        m.m02 += (s0*y)*y;
+        m.m03 += ((s0*y)*y)*y;
+        
+        m.m10 += s1;
+        m.m11 += s1*y;
+        m.m12 += (s1*y)*y;
+
+        m.m20 += s2;
+        m.m21 += s2*y;
+
+        m.m30 += s3;
+    }
+
+    if( m.m00 != 0 )
+    {
+        xc = m.m10/m.m00, yc = m.m01/m.m00;
+        m.inv_sqrt_m00 = 1./sqrt(fabs(m.m00));
+    }
+
+    for( y = 0; y < src->rows; y++ )
+    {
+        double s0 = 0, s1 = 0, s2 = 0, s3 = 0, y1 = y - yc;
+        uchar* ptr = src->data.ptr + y*src->step;
+        for( x = 0; x < cols; x++ )
+        {
+            double val, x1 = x - xc;
+            if( depth == CV_8U )
+                val = ptr[x*cn + coi];
+            else if( depth == CV_16U )
+                val = ((ushort*)ptr)[x*cn + coi];
+            else if( depth == CV_16S )
+                val = ((short*)ptr)[x*cn + coi];
+            else
+                val = ((float*)ptr)[x*cn + coi];
+
+            if( is_binary )
+                val = val != 0;
+
+            s0 += val;
+            s1 += val*x1;
+            s2 += val*x1*x1;
+            s3 += ((val*x1)*x1)*x1;
+        }
+
+        m.mu02 += s0*y1*y1;
+        m.mu03 += ((s0*y1)*y1)*y1;
+        
+        m.mu11 += s1*y1;
+        m.mu12 += (s1*y1)*y1;
+
+        m.mu20 += s2;
+        m.mu21 += s2*y1;
+
+        m.mu30 += s3;
+    }
+
+    memcpy( mdata, &m, sizeof(m));
+    mdata += sizeof(m)/sizeof(m.m00);
 
     /* calc normalized moments */
     {
-        double inv_m00 = astate->m00 == 0 ? 0 : 1./astate->m00;
+        double inv_m00 = m.inv_sqrt_m00*m.inv_sqrt_m00;
         double s2 = inv_m00*inv_m00; /* 1./(m00 ^ (2/2 + 1)) */
-        double s3 = s2*sqrt(inv_m00); /* 1./(m00 ^ (3/2 + 1)) */
+        double s3 = s2*m.inv_sqrt_m00; /* 1./(m00 ^ (3/2 + 1)) */
 
-        astate->nu20 = astate->mu20 * s2;
-        astate->nu11 = astate->mu11 * s2;
-        astate->nu02 = astate->mu02 * s2;
+        mdata[0] = m.mu20 * s2;
+        mdata[1] = m.mu11 * s2;
+        mdata[2] = m.mu02 * s2;
 
-        astate->nu30 = astate->mu30 * s3;
-        astate->nu21 = astate->mu21 * s3;
-        astate->nu12 = astate->mu12 * s3;
-        astate->nu03 = astate->mu03 * s3;
+        mdata[3] = m.mu30 * s3;
+        mdata[4] = m.mu21 * s3;
+        mdata[5] = m.mu12 * s3;
+        mdata[6] = m.mu03 * s3;
     }
-}
-#endif
 
-static void read_moments_params( void )
-{
-    if( !init_moments_params )
     {
-        int func, data_types, channels;
-
-        /* Determine which tests are needed to run */
-        trsCaseRead( &func, "/a/m/mb", "a",
-                     "Function type: \n"
-                     "a - all\n"
-                     "m - moments\n"
-                     "mb - moments binary\n");
-        if( func != 0 ) fn_l = fn_h = func - 1;
-
-        trsCaseRead( &data_types,"/a/8u/32f", "a",
-            "a - all, 8u - unsigned char, 32f - float" );
-        if( data_types != 0 ) dt_l = dt_h = data_types - 1;
-
-        trsCaseRead( &channels, "/a/1/3", "a", "a - all, 1 - single channel, 3 - three channels" );
-        if( channels != 0 ) ch_l = ch_h = channels - 1;
-
-        /* read tests params */
-        trsiRead( &min_img_size, "1", "Minimal width or height of image" );
-        trsiRead( &max_img_size, "1000", "Maximal width or height of image" );
-        trsCaseRead( &img_size_delta_type,"/a/m", "m", "a - add, m - multiply" );
-        trsiRead( &img_size_delta, "3", "Image size step(factor)" );
-        trsiRead( &base_iters, "100", "Base number of iterations" );
-
-        init_moments_params = 1;
+    double* a = test_mat[REF_OUTPUT][0].data.db;
+    double* b = test_mat[OUTPUT][0].data.db;
+    for( i = 0; i < MOMENT_COUNT; i++ )
+    {
+        if( fabs(a[i]) < 1e-3 )
+            a[i] = 0;
+        if( fabs(b[i]) < 1e-3 )
+            b[i] = 0;
+    }
     }
 }
 
-/* ///////////////////// moments_test ///////////////////////// */
-static int moments_test( void* arg )
+
+int CV_MomentsTest::support_testing_modes()
 {
-    static double weight[] = { 
-        1e6, 1e6, 1e6,  /* m00, m10, m01 */
-        1e6, 1e6, 1e6, 1, 1, 1, 1, /* m20 - m03 */
-        1, 1e-4, 1, 1e-5, 1e-5, 1e-5, 1e-5, /* mu20 - mu03 */
-        1, 1, 1, 1, 1, 1, 1 }; /* nu20 - nu03 */
-
-    const double success_error_level = 1e-4;
-    int   param     = (int)arg;
-    int   binary    = param >= 6;
-
-    int   depth     = (param % 6)/2;
-    int   channels  = (param & 1);
-
-    int   seed      = atsGetSeed();
-
-    /* position where the maximum error occured */
-    int   merr_w = 0, merr_h = 0, merr_iter = 0, merr_c = 0;
-
-    /* test parameters */
-    int     w = 0, h = 0, i = 0, c = 0;
-    double  max_err = 0.;
-    //int     code = TRS_OK;
-
-    IplROI       roi;
-    IplImage    *img;
-    AtsRandState rng_state;
-
-    atsRandInit( &rng_state, 0, 1, seed );
-
-    read_moments_params();
-
-    if( !(ATS_RANGE( binary, fn_l, fn_h+1 ) &&
-          ATS_RANGE( depth, dt_l, dt_h+1 ) &&
-          ATS_RANGE( channels, ch_l, ch_h+1 ))) return TRS_UNDEF;
-
-    depth = depth == 1 ? IPL_DEPTH_32F : IPL_DEPTH_8U;
-    channels = channels*2 + 1;
-
-    img  = atsCreateImage( max_img_size, max_img_size, depth, channels, 0 );
-
-    roi.coi = 0;
-    roi.xOffset = roi.yOffset = 0;
-
-    img->roi = &roi;
-
-    for( h = min_img_size; h <= max_img_size; )
-    {
-        for( w = min_img_size; w <= max_img_size; )
-        {
-            int  denom = (w - min_img_size + 1)*(h - min_img_size + 1)*channels;
-            int  iters = (base_iters*2 + denom)/(2*denom);
-
-            roi.width = w;
-            roi.height = h;
-
-            if( iters < 1 ) iters = 1;
-
-            for( i = 0; i < iters; i++ )
-            {
-                switch( depth )
-                {
-                case IPL_DEPTH_8U:
-                    atsRandSetBounds( &rng_state, 0, img8u_range );
-                    break;
-                case IPL_DEPTH_32F:
-                    atsRandSetBounds( &rng_state, -img32f_range, img32f_range );
-                    if( binary ) atsRandSetFloatBits( &rng_state, img32f_bits );
-                    break;
-                }
-
-                roi.coi = 0;
-                atsFillRandomImageEx( img, &rng_state );
-                /*iplSet( img, depth == IPL_DEPTH_8S ? 125 : 251 );*/
-
-                for( c = 1; c <= channels; c++ )
-                {
-                    double err0 = 0;
-                    AtsMomentState astate0, astate1;
-                    CvMoments istate;
-                    double* a0 = (double*)&astate0;
-                    double* a1 = (double*)&astate1;
-                    int j;
-
-                    roi.coi = c;
-
-
-                    /* etalon function */
-                    atsCalcMoments( img, &astate0, binary );
-
-                    /* cv function */
-                    cvMoments( img, &istate, binary );
-
-                    atsGetMoments( &istate, &astate1 );
-
-                    /*iplMoments( img, lstate ); */
-                    /*convert_ipl_to_ats( lstate, &astate1 ); */
-
-                    for( j = 0; j < sizeof(astate0)/sizeof(double); j++ )
-                    {
-                        double err = rel_err( a0[j], a1[j] )*weight[j];
-                        err0 = MAX( err0, err );
-                    }
-
-                    if( err0 > max_err )
-                    {
-                        merr_w    = w;
-                        merr_h    = h;
-                        merr_iter = i;
-                        merr_c    = c;
-                        max_err   = err0;
-                        if( max_err > success_error_level )
-                            goto test_exit;
-                    }
-                }
-            }
-            ATS_INCREASE( w, img_size_delta_type, img_size_delta );
-        } /* end of the loop by w */
-
-        ATS_INCREASE( h, img_size_delta_type, img_size_delta );
-    }  /* end of the loop by h */
-
-test_exit:
-
-    img->roi = 0;
-
-    cvReleaseImage(& img);
-
-    //if( code == TRS_OK )
-    {
-        trsWrite( ATS_LST, "Max err is %g at w = %d, h = %d, "
-                           "iter = %d, c = %d, seed = %08x",
-                           max_err, merr_w, merr_h, merr_iter, merr_c, seed );
-
-        return max_err <= success_error_level ?
-            trsResult( TRS_OK, "No errors" ) :
-            trsResult( TRS_FAIL, "Bad accuracy" );
-    }
-    /*else
-    {
-        trsWrite( ATS_LST, "Fatal error at w = %d, h = %d, "
-                           "iter = %d, c = %d, seed = %08x",
-                           w, h, i, c, seed );
-        return trsResult( TRS_FAIL, "Function returns error code" );
-    }*/
+    return CvTS::CORRECTNESS_CHECK_MODE; // for now disable the timing test
 }
 
 
-static double sqr( double x ) { return x*x; }
+CV_MomentsTest img_moments_test;
 
-static int hu_moments_test( void )
+
+// Hu invariants
+class CV_HuMomentsTest : public CvArrTest
 {
-    const double success_error_level = 1e-7;
-    CvSize size = { 512, 512 };
-    int i;
-    IplImage* img = atsCreateImage( size.width, size.height, 8, 1, 0 );
-    CvMoments moments;
-    CvHuMoments a, b;
-    AtsRandState rng_state;
+public:
+    CV_HuMomentsTest();
 
-    int  seed = atsGetSeed();
+protected:
+    
+    enum { MOMENT_COUNT = 18, HU_MOMENT_COUNT = 7 };
+    
+    int support_testing_modes();
+    int prepare_test_case( int test_case_idx );
+    void prepare_to_validation( int /*test_case_idx*/ );
+    void get_test_array_types_and_sizes( int test_case_idx, CvSize** sizes, int** types );
+    void get_minmax_bounds( int i, int j, int type, CvScalar* low, CvScalar* high );
+    double get_success_error_level( int test_case_idx, int i, int j );
+    void run_func();
+};
 
-    double nu20, nu02, nu11, nu30, nu21, nu12, nu03;
-    double err = 0;
-    char   buffer[100];
 
-    atsRandInit( &rng_state, 0, 255, seed );
-    atsbRand8u( &rng_state, (uchar*)(img->imageData), size.width * size.height );
+CV_HuMomentsTest::CV_HuMomentsTest()
+    : CvArrTest( "moments-hu", "cvHuMoments", "" )
+{
+    test_array[INPUT].push(NULL);
+    test_array[OUTPUT].push(NULL);
+    test_array[REF_OUTPUT].push(NULL);
+}
 
-    cvMoments( img, &moments, 0 );
-    atsReleaseImage( img );
 
-    nu20 = cvGetNormalizedCentralMoment( &moments, 2, 0 );
-    nu11 = cvGetNormalizedCentralMoment( &moments, 1, 1 );
-    nu02 = cvGetNormalizedCentralMoment( &moments, 0, 2 );
+void CV_HuMomentsTest::get_minmax_bounds( int i, int j, int type, CvScalar* low, CvScalar* high )
+{
+    CvArrTest::get_minmax_bounds( i, j, type, low, high );
+    *low = cvScalarAll(-10000);
+    *high = cvScalarAll(10000);
+}
 
-    nu30 = cvGetNormalizedCentralMoment( &moments, 3, 0 );
-    nu21 = cvGetNormalizedCentralMoment( &moments, 2, 1 );
-    nu12 = cvGetNormalizedCentralMoment( &moments, 1, 2 );
-    nu03 = cvGetNormalizedCentralMoment( &moments, 0, 3 );
 
-    cvGetHuMoments( &moments, &a );
+void CV_HuMomentsTest::get_test_array_types_and_sizes( int test_case_idx,
+                                                CvSize** sizes, int** types )
+{
+    CvArrTest::get_test_array_types_and_sizes( test_case_idx, sizes, types );
+    types[INPUT][0] = types[OUTPUT][0] = types[REF_OUTPUT][0] = CV_64FC1;
+    sizes[INPUT][0] = cvSize(MOMENT_COUNT,1);
+    sizes[OUTPUT][0] = sizes[REF_OUTPUT][0] = cvSize(HU_MOMENT_COUNT,1);
+}
 
-    b.hu1 = nu20 + nu02;
-    b.hu2 = sqr(nu20 - nu02) + 4*sqr(nu11);
-    b.hu3 = sqr(nu30 - 3*nu12) + sqr(3*nu21 - nu03);
-    b.hu4 = sqr(nu30 + nu12) + sqr(nu21 + nu03);
-    b.hu5 = (nu30 - 3*nu12)*(nu30 + nu12)*(sqr(nu30 + nu12) - 3*sqr(nu21 + nu03)) +
+
+double CV_HuMomentsTest::get_success_error_level( int /*test_case_idx*/, int /*i*/, int /*j*/ )
+{
+    return FLT_EPSILON;
+}
+
+
+
+int CV_HuMomentsTest::prepare_test_case( int test_case_idx )
+{
+    int code = CvArrTest::prepare_test_case( test_case_idx );
+    if( code > 0 )
+    {
+        // ...
+    }
+
+    return code;
+}
+
+
+void CV_HuMomentsTest::run_func()
+{
+    cvGetHuMoments( (CvMoments*)test_mat[INPUT][0].data.db,
+                    (CvHuMoments*)test_mat[OUTPUT][0].data.db );
+}
+
+
+void CV_HuMomentsTest::prepare_to_validation( int /*test_case_idx*/ )
+{
+    CvMoments* m = (CvMoments*)test_mat[INPUT][0].data.db;
+    CvHuMoments* hu = (CvHuMoments*)test_mat[REF_OUTPUT][0].data.db;
+
+    double inv_m00 = m->inv_sqrt_m00*m->inv_sqrt_m00;
+    double s2 = inv_m00*inv_m00; /* 1./(m00 ^ (2/2 + 1)) */
+    double s3 = s2*m->inv_sqrt_m00; /* 1./(m00 ^ (3/2 + 1)) */
+
+    double nu20 = m->mu20 * s2;
+    double nu11 = m->mu11 * s2;
+    double nu02 = m->mu02 * s2;
+                  
+    double nu30 = m->mu30 * s3;
+    double nu21 = m->mu21 * s3;
+    double nu12 = m->mu12 * s3;
+    double nu03 = m->mu03 * s3;
+
+    #undef sqr
+    #define sqr(a) ((a)*(a))
+
+    hu->hu1 = nu20 + nu02;
+    hu->hu2 = sqr(nu20 - nu02) + 4*sqr(nu11);
+    hu->hu3 = sqr(nu30 - 3*nu12) + sqr(3*nu21 - nu03);
+    hu->hu4 = sqr(nu30 + nu12) + sqr(nu21 + nu03);
+    hu->hu5 = (nu30 - 3*nu12)*(nu30 + nu12)*(sqr(nu30 + nu12) - 3*sqr(nu21 + nu03)) +
             (3*nu21 - nu03)*(nu21 + nu03)*(3*sqr(nu30 + nu12) - sqr(nu21 + nu03));
-    b.hu6 = (nu20 - nu02)*(sqr(nu30 + nu12) - sqr(nu21 + nu03)) +
+    hu->hu6 = (nu20 - nu02)*(sqr(nu30 + nu12) - sqr(nu21 + nu03)) +
             4*nu11*(nu30 + nu12)*(nu21 + nu03);
-    b.hu7 = (3*nu21 - nu03)*(nu30 + nu12)*(sqr(nu30 + nu12) - 3*sqr(nu21 + nu03)) +
+    hu->hu7 = (3*nu21 - nu03)*(nu30 + nu12)*(sqr(nu30 + nu12) - 3*sqr(nu21 + nu03)) +
             (3*nu12 - nu30)*(nu21 + nu03)*(3*sqr(nu30 + nu12) - sqr(nu21 + nu03));
-
-    for( i = 0; i < 7; i++ )
-    {
-        double t = rel_err( ((double*)&b)[i], ((double*)&a)[i] );
-        if( t > err ) err = t;
-    }
-
-    sprintf( buffer, "Accuracy: %.4e", err );
-    return trsResult( err > success_error_level ? TRS_FAIL : TRS_OK, buffer );
 }
 
 
-#define _8U_C1     0
-#define _8U_C3     1
-#define _8S_C1     2
-#define _8S_C3     3
-#define _32F_C1    4
-#define _32F_C3    5
-
-#define BIN_8U_C1     6
-#define BIN_8U_C3     7
-#define BIN_8S_C1     8
-#define BIN_8S_C3     9
-#define BIN_32F_C1   10
-#define BIN_32F_C3   11
-
-void InitAMoments( void )
+int CV_HuMomentsTest::support_testing_modes()
 {
-    /* Register test functions */
+    return CvTS::CORRECTNESS_CHECK_MODE; // for now disable the timing test
+}
 
-    trsRegArg( funcs[0], test_desc, atsAlgoClass, moments_test, _8U_C1 );
-    trsRegArg( funcs[0], test_desc, atsAlgoClass, moments_test, _8U_C3 );
-    trsRegArg( funcs[0], test_desc, atsAlgoClass, moments_test, _32F_C1 );
-    trsRegArg( funcs[0], test_desc, atsAlgoClass, moments_test, _32F_C3 );
 
-    trsRegArg( funcs[0], test_desc, atsAlgoClass, moments_test, BIN_8U_C1 );
-    trsRegArg( funcs[0], test_desc, atsAlgoClass, moments_test, BIN_8U_C3 );
-    trsRegArg( funcs[0], test_desc, atsAlgoClass, moments_test, BIN_32F_C1 );
-    trsRegArg( funcs[0], test_desc, atsAlgoClass, moments_test, BIN_32F_C3 );
-
-    trsReg( funcs[1], test_desc, atsAlgoClass, hu_moments_test );
-
-} /* InitAMoments */
-
-/* End of file. */
-
-/* End of file. */
+CV_HuMomentsTest hu_moments_test;

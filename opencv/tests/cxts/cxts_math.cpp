@@ -1277,7 +1277,7 @@ int cvTsCmpEps( const CvMat* check_arr, const CvMat* etalon, double* _max_diff,
                     goto _exit_;
                 }
                 a_val = fabs(a_val - b_val);
-                threshold = element_wise_relative_error ? fabs(b_val)+FLT_EPSILON : maxval;
+                threshold = element_wise_relative_error ? fabs(b_val) + 1e-5 : maxval;
                 if( a_val > threshold*success_err_level )
                 {
                     maxdiff = a_val/threshold;
@@ -1305,7 +1305,7 @@ int cvTsCmpEps( const CvMat* check_arr, const CvMat* etalon, double* _max_diff,
                     goto _exit_;
                 }
                 a_val = fabs(a_val - b_val);
-                threshold = element_wise_relative_error ? fabs(b_val)+DBL_EPSILON : maxval;
+                threshold = element_wise_relative_error ? fabs(b_val)+FLT_EPSILON : maxval;
                 if( a_val > threshold*success_err_level )
                 {
                     maxdiff = a_val/threshold;

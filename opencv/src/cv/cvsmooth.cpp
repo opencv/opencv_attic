@@ -91,7 +91,7 @@ CvStatus CV_STDCALL icvFilterInitAlloc(
     buffer_step = cvAlign((roiWidth + elSize.width+1 + CV_MORPH_ALIGN*4)*bt_pix_n, align);
 
     buffer_size = (elSize.height + temp_lines) * (buffer_step + sizeof(void*)) +
-                  ker_size + aligned_hdr_size + elSize.width * bt_pix_n;
+                  ker_size + aligned_hdr_size + elSize.width * bt_pix_n + align*4;
 
     buffer_size = cvAlign(buffer_size + align, align);
 
@@ -114,7 +114,7 @@ CvStatus CV_STDCALL icvFilterInitAlloc(
     state->dataType = dataType;
     state->channels = channels;
     state->origin = 0;
-    ptr += cvAlign( aligned_hdr_size + elAnchor.x * bt_pix_n, CV_MORPH_ALIGN * bt_pix );
+    ptr += aligned_hdr_size + align;
 
     state->buffer = ptr;
     ptr += buffer_step * elSize.height;
@@ -123,7 +123,6 @@ CvStatus CV_STDCALL icvFilterInitAlloc(
     ptr += buffer_step * temp_lines;
 
     state->rows = (char**)ptr;
-
     ptr += sizeof(state->rows[0])*elSize.height;
 
     state->ker0 = state->ker1 = 0;
@@ -284,7 +283,7 @@ icvBlur_8u_CnR( uchar* src, int srcStep,
     int ker_right_n = ker_right * channels;
     int width_n = width * channels;
 
-    int is_small_width = width < MAX( ker_x, ker_right );
+    int is_small_width = width <= ker_width;
     int starting_flag = 0;
     int width_rest = width_n & (CV_MORPH_ALIGN - 1);
     int divisor = cvRound(state->divisor);
@@ -568,7 +567,7 @@ icvBlur_8u16s_C1R( const uchar* pSrc, int srcStep,
     int ker_right_n = ker_right * channels;
     int width_n = width * channels;
 
-    int is_small_width = width < MAX( ker_x, ker_right );
+    int is_small_width = width <= ker_width;
     int starting_flag = 0;
     int width_rest = width_n & (CV_MORPH_ALIGN - 1);
 
@@ -794,7 +793,7 @@ icvBlur_32f_CnR( const float* pSrc, int srcStep,
     int ker_right_n = ker_right * channels;
     int width_n = width * channels;
 
-    int is_small_width = width < MAX( ker_x, ker_right );
+    int is_small_width = width <= ker_width;
     int starting_flag = 0;
     int width_rest = width_n & (CV_MORPH_ALIGN - 1);
     float scale = (float)(1./state->divisor);
@@ -1122,7 +1121,7 @@ icvGaussianBlur_small_8u_CnR( uchar* src, int srcStep,
     int ker_width_n = ker_width * channels;
     int width_n = width * channels;
 
-    int is_small_width = width < MAX( ker_x, ker_right );
+    int is_small_width = width <= ker_width;
     int starting_flag = 0;
     int width_rest = width_n & (CV_MORPH_ALIGN - 1);
     int rshift = ker_width + ker_height - 2;
@@ -1502,7 +1501,7 @@ icvGaussianBlur_8u_CnR( uchar* src, int srcStep,
         float* fmaskY = (float*)(state->ker1) + ker_y;
         double fmX0 = fmaskX[0], fmY0 = fmaskY[0];
 
-        int is_small_width = width < ker_width;
+        int is_small_width = width <= ker_width;
         int starting_flag = 0;
         int width_rest = width_n & (CV_MORPH_ALIGN - 1);
 
@@ -1775,7 +1774,7 @@ icvGaussianBlur_32f_CnR( float* src, int srcStep,
     float* fmaskY = (float*)(state->ker1) + ker_y;
     double fmX0 = fmaskX[0], fmY0 = fmaskY[0];
 
-    int is_small_width = width < ker_width;
+    int is_small_width = width <= ker_width;
     int starting_flag = 0;
     int width_rest = width_n & (CV_MORPH_ALIGN - 1);
 

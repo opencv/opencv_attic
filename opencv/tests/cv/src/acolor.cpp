@@ -86,7 +86,6 @@ CV_ColorCvtBaseTest::CV_ColorCvtBaseTest( const char* test_name, const char* tes
     test_array[OUTPUT].push(NULL);
     test_array[REF_OUTPUT].push(NULL);
     test_array[REF_OUTPUT].push(NULL);
-    element_wise_relative_error = false;
     allow_16u = _allow_16u;
     allow_32f = _allow_32f;
     custom_inv_transform = _custom_inv_transform;

@@ -130,6 +130,9 @@ IPCVAPI_EX( CvStatus, icvGetSpatialMoment_64f,
 /////////////////////////////////// Accumulation /////////////////////////////////////////
 
 #define IPCV_ACCUM( flavor, arrtype, acctype )                                      \
+IPCVAPI_EX( CvStatus, icvAdd_##flavor##_C1IR,                                       \
+    "ippiAdd_" #flavor "_C1IR", CV_PLUGINS1(CV_PLUGIN_IPPCV),                       \
+    ( const arrtype* src, int srcstep, acctype* dst, int dststep, CvSize size ))    \
 IPCVAPI_EX( CvStatus, icvAddSquare_##flavor##_C1IR,                                 \
     "ippiAddSquare_" #flavor "_C1IR", CV_PLUGINS1(CV_PLUGIN_IPPCV),                 \
     ( const arrtype* src, int srcstep, acctype* dst, int dststep, CvSize size ))    \
@@ -175,10 +178,6 @@ IPCVAPI_EX( CvStatus, icvAddWeighted_##flavor##_C3IMR,                          
     "ippiAddWeighted_" #flavor "_C3IMR", CV_PLUGINS1(CV_PLUGIN_IPPCV),              \
     ( const arrtype* src, int srcstep, const uchar* mask, int maskstep,             \
       acctype* dst, int dststep, CvSize size, acctype alpha ))
-
-IPCVAPI_EX( CvStatus, icvAdd_8u32f_C1IR,
-    "ippiAdd_8u32f_C1IR", CV_PLUGINS1(CV_PLUGIN_IPPCV),
-    ( const uchar* src, int srcstep, float* dst, int dststep, CvSize size ))
 
 IPCV_ACCUM( 8u32f, uchar, float )
 IPCV_ACCUM( 32f, float, float )
