@@ -238,10 +238,8 @@ icvPyrSegmentation8uC1R( uchar * src_image, int src_step,
     /* calculate buffer size */
     buffer_size = roi.width * roi.height * (sizeof( float ) + sizeof( _CvPyramidBase ));
 
-    for( l = 0; l <= level; l++ )
-    {
-        buffer_size += ((roi.width >> l) + 1) * ((roi.width >> l) + 1) * sizeof( _CvPyramid );
-    }
+    for( l = 1; l <= level; l++ )
+        buffer_size += ((roi.width >> l) + 1) * ((roi.height >> l) + 1) * sizeof(_CvPyramid);
 
     /* allocate buffer */
     buffer = (char *) cvAlloc( buffer_size );
@@ -656,11 +654,8 @@ icvPyrSegmentation8uC3R( uchar * src_image, int src_step,
     /* calculate buffer size */
     buffer_size = roi.width * roi.height * (sizeof( _CvRGBf ) + sizeof( _CvPyramidBaseC3 ));
 
-    for( l = 0; l <= level; l++ )
-    {
-        buffer_size +=
-            ((roi.width >> l) + 1) * ((roi.width >> l) + 1) * sizeof( _CvPyramidC3 );
-    }
+    for( l = 1; l <= level; l++ )
+        buffer_size += ((roi.width >> l) + 1) * ((roi.height >> l) + 1) * sizeof(_CvPyramidC3);
 
     /* allocate buffer */
     buffer = (char *) cvAlloc( buffer_size );
@@ -722,6 +717,7 @@ icvPyrSegmentation8uC3R( uchar * src_image, int src_step,
         /* fill layer #l */
         for( i = 0; i <= size.height; i++ )
         {
+            assert( (char*)p_cur - buffer < buffer_size );
             for( j = 0; j <= size.width; j++, p_cur++ )
             {
                 p_cur->c = ((_CvRGBf *) pyramida)[i * roi.width + j];
