@@ -52,6 +52,7 @@
 #include <stdlib.h>
 #include <math.h>
 #include <highgui.h>
+#include <limits.h>
 
 #ifdef CV_VERBOSE
 #include <time.h>
@@ -1260,6 +1261,7 @@ void icvGetNextFromBackgroundData( CvBackgroundData* data,
     size_t datasize = 0;
     int round = 0;
     int i = 0;
+    CvPoint offset = cvPoint(0,0);
 
     assert( data != NULL && reader != NULL );
 
@@ -1287,12 +1289,20 @@ void icvGetNextFromBackgroundData( CvBackgroundData* data,
 //#endif /* CV_VERBOSE */
           
             img = cvLoadImage( data->filename[data->last++], 0 );
+            if( !img )
+                continue;
             data->round += data->last / data->count;
             data->round = data->round % (data->winsize.width * data->winsize.height);
             data->last %= data->count;
 
+            offset.x = round % data->winsize.width;
+            offset.y = round / data->winsize.width;
+
+            offset.x = MIN( offset.x, img->width - data->winsize.width );
+            offset.y = MIN( offset.y, img->height - data->winsize.height );
+            
             if( img != NULL && img->depth == IPL_DEPTH_8U && img->nChannels == 1 &&
-                img->width >= data->winsize.width && img->height >= data->winsize.height )
+                offset.x >= 0 && offset.y >= 0 )
             {
                 break;
             }
@@ -1318,8 +1328,9 @@ void icvGetNextFromBackgroundData( CvBackgroundData* data,
     cvReleaseImage( &img );
     img = NULL;
 
-    reader->offset.x = round % data->winsize.width;
-    reader->offset.y = round / data->winsize.width;
+    //reader->offset.x = round % data->winsize.width;
+    //reader->offset.y = round / data->winsize.width;
+    reader->offset = offset;
     reader->point = reader->offset;
     reader->scale = MAX(
         ((float) data->winsize.width + reader->point.x) / ((float) reader->src.cols),
@@ -1536,12 +1547,21 @@ int icvGetHaarTrainingData( CvHaarTrainingData* data, int first, int count,
     return getcount;
 }
 
+/* consumed counter */
+typedef uint64 ccounter_t;
+
+#define CCOUNTER_MAX (0xffffffffffffffff)
+#define CCOUNTER_SET_ZERO(cc) ((cc) = 0)
+#define CCOUNTER_INC(cc) ( (CCOUNTER_MAX > (cc) ) ? (++(cc)) : (CCOUNTER_MAX) )
+#define CCOUNTER_ADD(cc0, cc1) ( ((CCOUNTER_MAX-(cc1)) > (cc0) ) ? ((cc0) += (cc1)) : ((cc0) = CCOUNTER_MAX) )
+#define CCOUNTER_DIV(cc0, cc1) ( ((cc1) == 0) ? 0 : ( ((double)(cc0))/(double)(int64)(cc1) ) )
+
 CV_IMPL
 int icvGetHaarTrainingDataFromBG( CvHaarTrainingData* data, int first, int count,
-                                  CvIntHaarClassifier* cascade, int* consumed )
+                                  CvIntHaarClassifier* cascade, double* acceptance_ratio )
 {
     int i = 0;
-    int consumedcount = 0;
+    ccounter_t consumed_count;
 
     /* private variables */
     CvMat img;
@@ -1552,6 +1572,8 @@ int icvGetHaarTrainingDataFromBG( CvHaarTrainingData* data, int first, int count
     sum_type* sumdata;
     sum_type* tilteddata;
     float*    normfactor;
+
+    ccounter_t thread_consumed_count;
     /* end private variables */
 
     assert( data != NULL );
@@ -1560,16 +1582,19 @@ int icvGetHaarTrainingDataFromBG( CvHaarTrainingData* data, int first, int count
 
     if( !cvbgdata ) return 0;
 
-    consumedcount = 0;
-    
+    CCOUNTER_SET_ZERO(consumed_count);
+    CCOUNTER_SET_ZERO(thread_consumed_count);
+
     #ifdef _OPENMP
-    #pragma omp parallel reduction(+: consumedcount) private(img, sum, tilted, sqsum, \
-                                                         sumdata, tilteddata, normfactor)
+    #pragma omp parallel private(img, sum, tilted, sqsum, sumdata, tilteddata, \
+                                 normfactor, thread_consumed_count)
     #endif /* _OPENMP */
     {
         sumdata    = NULL;
         tilteddata = NULL;
         normfactor = NULL;
+
+        CCOUNTER_SET_ZERO(thread_consumed_count);
 
         img = cvMat( data->winsize.height, data->winsize.width, CV_8UC1,
             cvAlloc( sizeof( uchar ) * data->winsize.height * data->winsize.width ) );
@@ -1590,7 +1615,9 @@ int icvGetHaarTrainingDataFromBG( CvHaarTrainingData* data, int first, int count
             for( ; ; )
             {
                 icvGetBackgroundImage( cvbgdata, cvbgreader, &img );
-                consumedcount++;
+                
+                CCOUNTER_INC(thread_consumed_count);
+
                 sumdata = (sum_type*) (data->sum.data.ptr + i * data->sum.step);
                 tilteddata = (sum_type*) (data->tilted.data.ptr + i * data->tilted.step);
                 normfactor = data->normfactor.data.fl + i;
@@ -1615,10 +1642,22 @@ int icvGetHaarTrainingDataFromBG( CvHaarTrainingData* data, int first, int count
 
         cvFree( (void**) &(img.data.ptr) );
         cvFree( (void**) &(sqsum.data.ptr) );
+
+        #ifdef _OPENMP
+        #pragma omp critical (c_consumed_count)
+        #endif /* _OPENMP */
+        {
+            /* consumed_count += thread_consumed_count; */
+            CCOUNTER_ADD(consumed_count, thread_consumed_count);
+        }
     } /* omp parallel */
 
-    if( consumed != NULL ) (*consumed) = consumedcount;
-
+    if( acceptance_ratio != NULL )
+    {
+        /* *acceptance_ratio = ((double) count) / consumed_count; */
+        *acceptance_ratio = CCOUNTER_DIV(count, consumed_count);
+    }
+    
     return count;
 }
 
@@ -1727,6 +1766,7 @@ void cvCreateCascadeClassifier( const char* dirname,
     int poscount = 0;
     int negcount = 0;
     int consumed = 0;
+    double false_alarm = 0;
     char stagename[PATH_MAX];
     float posweight = 1.0F;
     float negweight = 1.0F;
@@ -1806,10 +1846,9 @@ void cvCreateCascadeClassifier( const char* dirname,
 #endif /* CV_VERBOSE */
 
             negcount = icvGetHaarTrainingDataFromBG( data, poscount, nneg,
-                (CvIntHaarClassifier*) cascade, &consumed );
+                (CvIntHaarClassifier*) cascade, &false_alarm );
 #ifdef CV_VERBOSE
-            printf( "NEG: %d %d %f\n", negcount, consumed,
-                    ((float) negcount) / consumed );
+            printf( "NEG: %d %g\n", negcount, false_alarm );
             printf( "BACKGROUND PROCESSING TIME: %.2f\n",
                 (proctime + TIME( 0 )) );
 #endif /* CV_VERBOSE */
@@ -2070,10 +2109,11 @@ void cvCreateTreeCascadeClassifier( const char* dirname,
     int poscount;
     int negcount;
     int consumed;
+    double false_alarm;
     double proctime;
 
     int nleaves;
-    float required_leaf_fa_rate;
+    double required_leaf_fa_rate;
     float neg_ratio;
 
     int max_clusters;
@@ -2082,9 +2122,9 @@ void cvCreateTreeCascadeClassifier( const char* dirname,
     neg_ratio = (float) nneg / npos;
 
     nleaves = 1 + MAX( 0, maxtreesplits );
-    required_leaf_fa_rate = powf( maxfalsealarm, (float) nstages ) / nleaves;
+    required_leaf_fa_rate = pow( (double) maxfalsealarm, (double) nstages ) / nleaves;
 
-    printf( "Required leaf false alarm rate: %f\n", required_leaf_fa_rate );
+    printf( "Required leaf false alarm rate: %g\n", required_leaf_fa_rate );
 
     total_splits = 0;
 
@@ -2131,7 +2171,7 @@ void cvCreateTreeCascadeClassifier( const char* dirname,
             {                
                 int best_clusters; /* best selected number of clusters */
                 float posweight, negweight;
-                float leaf_fa_rate;
+                double leaf_fa_rate;
 
                 if( parent ) sprintf( buf, "%d", parent->idx );
                 else sprintf( buf, "NULL" );
@@ -2159,18 +2199,23 @@ void cvCreateTreeCascadeClassifier( const char* dirname,
 
                 nneg = (int) (neg_ratio * poscount);
                 negcount = icvGetHaarTrainingDataFromBG( training_data, poscount, nneg,
-                    (CvIntHaarClassifier*) tcc, &consumed );
+                    (CvIntHaarClassifier*) tcc, &false_alarm );
+                printf( "NEG: %d %g\n", negcount, false_alarm );
 
-                printf( "NEG: %d %d %f\n", negcount, consumed, ((float) negcount)/consumed );
                 printf( "BACKGROUND PROCESSING TIME: %.2f\n", (proctime + TIME( 0 )) );
 
                 if( negcount <= 0 )
                     CV_ERROR( CV_StsError, "Unable to obtain negative samples" );
 
-                leaf_fa_rate = (float) negcount / consumed;
+                leaf_fa_rate = false_alarm;
                 if( leaf_fa_rate <= required_leaf_fa_rate )
                 {
                     printf( "Required leaf false alarm rate achieved. "
+                            "Branch training terminated.\n" );
+                }
+                else if( nleaves == 1 && tcc->next_idx == nstages )
+                {
+                    printf( "Required number of stages achieved. "
                             "Branch training terminated.\n" );
                 }
                 else
@@ -2478,10 +2523,10 @@ void cvCreateTreeCascadeClassifier( const char* dirname,
     proctime = -TIME( 0 );
 
     negcount = icvGetHaarTrainingDataFromBG( training_data, poscount, nneg,
-        (CvIntHaarClassifier*) tcc, &consumed );
+        (CvIntHaarClassifier*) tcc, &false_alarm );
 
-    printf( "NEG: %d %d %f\n", negcount, consumed, 
-        (consumed > 0) ? (((float) negcount)/consumed) : 0 );
+    printf( "NEG: %d %g\n", negcount, false_alarm );
+
     printf( "BACKGROUND PROCESSING TIME: %.2f\n", (proctime + TIME( 0 )) );
 
     if( negcount <= 0 )
