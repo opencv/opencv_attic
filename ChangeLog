@@ -3,17 +3,25 @@
 =============================================================================
 
 >>> New functionality: <<<
-  -  Support for more fireware cameras has been added in highgui.
+  -  (Linux) Support for more cameras has been added in highgui.
      Different versions of libdc1394 can now be used.
-     (thanks to Frederic Devernay for the new version of cvcap_dc1394.cpp and
-     patches for configure script)
+     (thanks to Frederic Devernay for the new versions of cvcap_dc1394.cpp,
+     cvcap_v4l.cpp and patches for configure script,
+     thanks to Sfuncia Fabio for the patch for cvcap_v4l.cpp)
 
-  -  Capturing via Video4Linux can be done in YUV format
-     (thanks to Sfuncia Fabio for the patch)
+  -  (Linux) More types of video files can now be read by using libavformat
+     and libavcodec from ffmpeg-0.4.9pre1
+     (thanks to Frederic Devernay for new version of cvcap.cpp and patches for
+     configure script)
 
   -  cvCvtColor supports new color models (HLS, CIE L*u*v*),
      for every RGB->something transformation the inverse is provided,
      32f format is completely supported, 16u is partially supported.
+
+  -  Performance tests for cxcore and part of cv have been created.
+
+  -  Script for creating custom dynamic library for a subset of IPP, used by OpenCV,
+     has been created. Look at opencv/ipp/custom
 
 >>> Optimizations: <<<
   -  IPP morphology is finally back (in beta 4 it has been turned off).
@@ -51,7 +59,7 @@
         cv (image processing and computer vision part)
         and cxcore (basic functionality that is shared with OpenPNL)
 
-        so any application that linked cv should now link both cv and cxcore.
+        so any application that was linked with cv should now be linked with both cv and cxcore.
 
   -  DLLs now have a version number (096 for beta 4) in their names, so they do not
      conflict with applications using libraries from previous (and future) OpenCV releases.
@@ -130,19 +138,19 @@
   -  DFT functions now use mixed-radix algorithm and, optionally,
      DFT/FFT functions from IPP.
 
-  -  Matrix multiplication now is done by blocks resulting
+  -  Now matrix multiplication is done by blocks resulting
      in better cache utilization => better performance.
      Optionally, gemm from Intel MKL can be used.
 
   -  Lucas-Kanade Optical flow includes a few heuristics that significantly
      improve performance (thanks to Alexander Kibkalo for the patch).
 
-  -  cvRound nows uses inline assembly when built with Visual C++, Intel Compiler
+  -  cvRound now uses inline assembly when built with Visual C++, Intel Compiler
      or GCC 3.x (the latter is done via C99 lrint() function). That also
      resolves the problem with Direct3D and few others (thanks to HCK (hengck23) for the hint).
 
   -  Morphology with arbitrary-shaped element now processes only
-     the aperture elements corresponding non-zero coefficients (so cvFilter2D does)
+     the neighbors corresponding to non-zero coefficients (so cvFilter2D does)
      in a single loop that gives +1.5x performance increase.
 
   -  alloca() has been replaced by cvStackAlloc that returns an aligned pointer.
@@ -155,17 +163,17 @@
      that almost eliminates the worst (quadratic complexity) case and
      improves performance on nearly-sorted sequences.
 
-  -  Some typical operations on data structure, such as retrieving sequence element,
+  -  Some typical operations on data structures, such as retrieving sequence element,
      retrieving graph edge, positioning sequence reader have been optimized for
      faster average performance and smaller overhead.
 
   -  Special vectorized versions of double-precision math functions (cvExp, cvLog etc.)
-     have been created. Optionally, ippvm is used if available, which gives incredible
-     performance improvement.
+     have been created. Optionally, ippvm from IPP is used when available,
+     which gives incredible performance improvement.
 
 >>> Bug fixes: <<<
 
-  (this is an incomplete list, unfortunately)
+  (this is an incomplete list ...)
   -  Several bugs in cvSVD and cvSVBkSb have been fixed.
      Thanks to Siddhartha Chaudhuri, John Coady and others for the reports and patches.
   -  Probabilistic hough transform crashed
@@ -219,7 +227,7 @@
   -  cvCalcEMD2 checked the size of output flow matrix incorrectly.
      Thanks to Duckhoon Kim for the patch.
   -  [SF bug #898556] cvGetDimSize() always returned error. Thanks to unknown author for the report.
-  -  Multiple bugs in reference manuals have been fixed. Thanks to Irina Shevtsova, Pavel Yarykin,
+  -  Multiple bugs in the reference manuals have been fixed. Thanks to Irina Shevtsova, Pavel Yarykin,
      Stepan Dilman and others for the reports.
   -  Several patches for better portability to Linux and IA64 have been applied
      Thanks to Sam Hocevar.

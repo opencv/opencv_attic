@@ -1,5 +1,4 @@
 OpenCV authors and major code algorithm/code contributors.
-(if you noticed that some names are missing, please mail to vadim.pisarevsky@intel.com)
 ---------------------------------------------------------------------------------------
 
 Name                    Company (by the moment     Remarks
@@ -10,15 +9,15 @@ Bradski, Gary           Intel Corp.                Idea and Vision, Leading, CAM
 Bouguet, Jean-Yves      Intel Corp.                Algorithms for Camera calibration, calibration toolbox for MATLAB,
                                                    and LK in pyramids
 Bovyrin, Alexander      Intel Corp.                Contours, Stereo 
-Burenkov, Denis         Moscow State Uni           Contour morphing, hawk scripts
+Burenkov, Denis         Moscow State Uni           Contour morphing, several demo scripts
 Cherepanova, Tatiana    Novosibirsk University     Face tracking
 Cherepennikov, Valery   Intel Corp.                Optimization, matrices, estimators (Kalman, ConDensation) and more ...
 Chudinovich, Boris      Intel Corp.                Ideas and algorithms on contours and comp. geometry functions
 Cowperthwaite, David    Intel Corp.                3d Tracker
 Cox, Cory               Intel Corp.                3d Tracker
-Davies, Bob             Intel Corp.                First OpenCV install, communications with user group, tech. advisor
+Davies, Bob             Intel Corp.                First OpenCV installation program, communications with user group, tech. advisor
 Eaton, Daniel           ???                        Texture descriptors code
-Eruhimov, Victor        Intel Corp.                Hough & distance transforms, stereo, Hawk and more ...
+Eruhimov, Victor        Intel Corp.                Hough & distance transforms, stereo, Hawk, HighGUI and more ...
 Grachev, Ilya           Intel Corp.                TCL/TK demos (cvlkdemo, cvcsdemo, cvenv)
 Khudyakov, Vasily       Novosibirsk University     Face feature detection
 Kuranov, Alexander      Intel Corp.                Matlab wrappers, Face detection code, haartraining and related applications 
