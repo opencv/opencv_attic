@@ -559,21 +559,31 @@ IPCVAPI_EX( CvStatus, icvUpdateMotionHistory_8u32f_C1IR,
       CvSize size,float  timestamp, float  mhi_duration ))
 
 /****************************************************************************************\
-*                                 Cross Correlation                                      *
+*                                 Template Matching                                      *
 \****************************************************************************************/
 
-/*#define ICV_CROSSCORR_DIRECT( flavor, arrtype, corrtype )       \
-IPCVAPI_EX( CvStatus, icvCrossCorrDirect_##flavor##_CnR,        \
-  "ippiCrossCorrDirect_" #flavor "_CnR", CV_PLUGINS1(CV_PLUGIN_IPPCV),\
-( const arrtype* img0, int imgstep, CvSize imgsize,             \
-  const arrtype* templ0, int templstep, CvSize templsize,       \
-  corrtype* corr, int corrstep, CvSize corrsize, int cn ))
+#define ICV_MATCHTEMPLATE( flavor, arrtype )                        \
+IPCVAPI_EX( CvStatus, icvCrossCorrValid_Norm_##flavor##_C1R,        \
+        "ippiCrossCorrValid_Norm_" #flavor "_C1R",                  \
+        CV_PLUGINS1(CV_PLUGIN_IPPI),                                \
+        ( const arrtype* pSrc, int srcStep, CvSize srcRoiSize,      \
+        const arrtype* pTpl, int tplStep, CvSize tplRoiSize,        \
+        float* pDst, int dstStep ))                                 \
+IPCVAPI_EX( CvStatus, icvCrossCorrValid_NormLevel_##flavor##_C1R,   \
+        "ippiCrossCorrValid_NormLevel_" #flavor "_C1R",             \
+        CV_PLUGINS1(CV_PLUGIN_IPPI),                                \
+        ( const arrtype* pSrc, int srcStep, CvSize srcRoiSize,      \
+        const arrtype* pTpl, int tplStep, CvSize tplRoiSize,        \
+        float* pDst, int dstStep ))                                 \
+IPCVAPI_EX( CvStatus, icvSqrDistanceValid_Norm_##flavor##_C1R,      \
+        "ippiSqrDistanceValid_Norm_" #flavor "_C1R",                \
+        CV_PLUGINS1(CV_PLUGIN_IPPI),                                \
+        ( const arrtype* pSrc, int srcStep, CvSize srcRoiSize,      \
+        const arrtype* pTpl, int tplStep, CvSize tplRoiSize,        \
+        float* pDst, int dstStep ))
 
-ICV_CROSSCORR_DIRECT( 8u32f, uchar, float )
-ICV_CROSSCORR_DIRECT( 32f, float, float )
-ICV_CROSSCORR_DIRECT( 64f, double, double )
-
-#undef ICV_CROSSCORR_DIRECT*/
+ICV_MATCHTEMPLATE( 8u32f, uchar )
+ICV_MATCHTEMPLATE( 32f, float )
 
 /****************************************************************************************/
 /*                                Distance Transform                                    */
@@ -641,13 +651,30 @@ IPCVAPI_EX( CvStatus, icvUnDistort_8u_C3R,
 *                               Thresholding functions                                   *
 \****************************************************************************************/
 
-IPCVAPI_EX( CvStatus, icvThresh_8u_C1R, "ippiThresh_8u_C1R", CV_PLUGINS1(CV_PLUGIN_IPPCV),
-           ( const uchar*  src, int  src_step, uchar*  dst, int  dst_step,
-             CvSize  roi, int  thresh, uchar max_val, int type ))
-
-IPCVAPI_EX( CvStatus, icvThresh_32f_C1R, "ippiThresh_32f_C1R", CV_PLUGINS1(CV_PLUGIN_IPPCV),
-           ( const float*  src, int  src_step, float*  dst, int  dst_step,
-             CvSize  roi, float  thresh, float max_val, int type))
+IPCVAPI_EX( CvStatus, icvCompareC_8u_C1R,
+            "ippiCompareC_8u_C1R", CV_PLUGINS1(CV_PLUGIN_IPPI),
+            ( const uchar* src1, int srcstep1, uchar scalar,
+              uchar* dst, int dststep, CvSize size, int cmp_op ))
+IPCVAPI_EX( CvStatus, icvAndC_8u_C1R,
+            "ippiAndC_8u_C1R", CV_PLUGINS1(CV_PLUGIN_IPPI),
+            ( const uchar* src1, int srcstep1, uchar scalar,
+              uchar* dst, int dststep, CvSize size ))
+IPCVAPI_EX( CvStatus, icvThreshold_GTVal_8u_C1R,
+            "ippiThreshold_GTVal_8u_C1R", CV_PLUGINS1(CV_PLUGIN_IPPI),
+            ( const uchar* pSrc, int srcstep, uchar* pDst, int dststep,
+              CvSize size, uchar threshold, uchar value ))
+IPCVAPI_EX( CvStatus, icvThreshold_GTVal_32f_C1R,
+            "ippiThreshold_GTVal_32f_C1R", CV_PLUGINS1(CV_PLUGIN_IPPI),
+            ( const float* pSrc, int srcstep, float* pDst, int dststep,
+              CvSize size, float threshold, float value ))
+IPCVAPI_EX( CvStatus, icvThreshold_LTVal_8u_C1R,
+            "ippiThreshold_LTVal_8u_C1R", CV_PLUGINS1(CV_PLUGIN_IPPI),
+            ( const uchar* pSrc, int srcstep, uchar* pDst, int dststep,
+              CvSize size, uchar threshold, uchar value ))
+IPCVAPI_EX( CvStatus, icvThreshold_LTVal_32f_C1R,
+            "ippiThreshold_LTVal_32f_C1R", CV_PLUGINS1(CV_PLUGIN_IPPI),
+            ( const float* pSrc, int srcstep, float* pDst, int dststep,
+              CvSize size, float threshold, float value ))
 
 /****************************************************************************************\
 *                                 Canny Edge Detector                                    *

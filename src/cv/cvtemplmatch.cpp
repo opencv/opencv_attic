@@ -280,6 +280,22 @@ icvCrossCorr( const CvArr* _img, const CvArr* _templ, CvArr* _corr )
 }
 
 
+/***************************** IPP Match Template Functions ******************************/
+
+icvCrossCorrValid_Norm_8u32f_C1R_t  icvCrossCorrValid_Norm_8u32f_C1R_p = 0;
+icvCrossCorrValid_NormLevel_8u32f_C1R_t  icvCrossCorrValid_NormLevel_8u32f_C1R_p = 0;
+icvSqrDistanceValid_Norm_8u32f_C1R_t  icvSqrDistanceValid_Norm_8u32f_C1R_p = 0;
+icvCrossCorrValid_Norm_32f_C1R_t  icvCrossCorrValid_Norm_32f_C1R_p = 0;
+icvCrossCorrValid_NormLevel_32f_C1R_t  icvCrossCorrValid_NormLevel_32f_C1R_p = 0;
+icvSqrDistanceValid_Norm_32f_C1R_t  icvSqrDistanceValid_Norm_32f_C1R_p = 0;
+
+typedef CvStatus (CV_STDCALL * CvTemplMatchIPPFunc)
+    ( const void* img, int imgstep, CvSize imgsize,
+      const void* templ, int templstep, CvSize templsize,
+      void* result, int rstep );
+
+/*****************************************************************************************/
+
 CV_IMPL void
 cvMatchTemplate( const CvArr* _img, const CvArr* _templ, CvArr* _result, int method )
 {
@@ -291,7 +307,8 @@ cvMatchTemplate( const CvArr* _img, const CvArr* _templ, CvArr* _result, int met
     __BEGIN__;
 
     int coi1 = 0, coi2 = 0;
-    int cn, i, j, k;
+    int depth, cn;
+    int i, j, k;
     CvMat stub, *img = (CvMat*)_img;
     CvMat tstub, *templ = (CvMat*)_templ;
     CvMat rstub, *result = (CvMat*)_result;
@@ -331,7 +348,32 @@ cvMatchTemplate( const CvArr* _img, const CvArr* _templ, CvArr* _result, int met
     if( method < CV_TM_SQDIFF || method > CV_TM_CCOEFF_NORMED )
         CV_ERROR( CV_StsBadArg, "unknown comparison method" );
 
+    depth = CV_MAT_DEPTH(img->type);
     cn = CV_MAT_CN(img->type);
+
+    if( is_normed && cn == 1 && templ->rows > 8 && templ->cols > 8 &&
+        img->rows > templ->cols && img->cols > templ->cols )
+    {
+        CvTemplMatchIPPFunc ipp_func =
+            depth == CV_8U ?
+            (method == CV_TM_SQDIFF_NORMED ? (CvTemplMatchIPPFunc)icvSqrDistanceValid_Norm_8u32f_C1R_p :
+            method == CV_TM_CCORR_NORMED ? (CvTemplMatchIPPFunc)icvCrossCorrValid_Norm_8u32f_C1R_p :
+            (CvTemplMatchIPPFunc)icvCrossCorrValid_NormLevel_8u32f_C1R_p) :
+            (method == CV_TM_SQDIFF_NORMED ? (CvTemplMatchIPPFunc)icvSqrDistanceValid_Norm_32f_C1R_p :
+            method == CV_TM_CCORR_NORMED ? (CvTemplMatchIPPFunc)icvCrossCorrValid_Norm_32f_C1R_p :
+            (CvTemplMatchIPPFunc)icvCrossCorrValid_NormLevel_32f_C1R_p);
+
+        if( ipp_func )
+        {
+            IPPI_CALL( ipp_func( img->data.ptr, img->step ? img->step : CV_STUB_STEP,
+                                 cvGetMatSize(img), templ->data.ptr,
+                                 templ->step ? templ->step : CV_STUB_STEP,
+                                 cvGetMatSize(templ), result->data.ptr,
+                                 result->step ? result->step : CV_STUB_STEP ));
+            EXIT;
+        }
+    }
+
     CV_CALL( icvCrossCorr( img, templ, result ));
 
     if( method == CV_TM_CCORR )
