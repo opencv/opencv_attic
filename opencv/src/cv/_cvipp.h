@@ -160,19 +160,19 @@ IPCVAPI_EX( CvStatus, icvAddWeighted_##flavor##_C1IMR,                          
       acctype* dst, int dststep, CvSize size, acctype alpha ))                      \
                                                                                     \
 IPCVAPI_EX( CvStatus, icvAdd_##flavor##_C3IMR,                                      \
-    "ippiAdd_" #flavor "_C3IMR", CV_PLUGINS2(CV_PLUGIN_IPPCV,CV_PLUGIN_OPTCV),      \
+    "ippiAdd_" #flavor "_C3IMR", CV_PLUGINS1(CV_PLUGIN_IPPCV),                      \
     ( const arrtype* src, int srcstep, const uchar* mask, int maskstep,             \
       acctype* dst, int dststep, CvSize size ))                                     \
 IPCVAPI_EX( CvStatus, icvAddSquare_##flavor##_C3IMR,                                \
-    "ippiAddSquare_" #flavor "_C3IMR", CV_PLUGINS2(CV_PLUGIN_IPPCV,CV_PLUGIN_OPTCV),\
+    "ippiAddSquare_" #flavor "_C3IMR", CV_PLUGINS1(CV_PLUGIN_IPPCV),                \
     ( const arrtype* src, int srcstep, const uchar* mask, int maskstep,             \
       acctype* dst, int dststep, CvSize size ))                                     \
 IPCVAPI_EX( CvStatus, icvAddProduct_##flavor##_C3IMR,                               \
-    "ippiAddProduct_" #flavor "_C3IMR", CV_PLUGINS2(CV_PLUGIN_IPPCV,CV_PLUGIN_OPTCV),\
+    "ippiAddProduct_" #flavor "_C3IMR", CV_PLUGINS1(CV_PLUGIN_IPPCV),               \
     ( const arrtype* src1, int srcstep1, const arrtype* src2, int srcstep2,         \
       const uchar* mask, int maskstep, acctype* dst, int dststep, CvSize size ))    \
 IPCVAPI_EX( CvStatus, icvAddWeighted_##flavor##_C3IMR,                              \
-    "ippiAddWeighted_" #flavor "_C3IMR", CV_PLUGINS2(CV_PLUGIN_IPPCV,CV_PLUGIN_OPTCV),\
+    "ippiAddWeighted_" #flavor "_C3IMR", CV_PLUGINS1(CV_PLUGIN_IPPCV),              \
     ( const arrtype* src, int srcstep, const uchar* mask, int maskstep,             \
       acctype* dst, int dststep, CvSize size, acctype alpha ))
 
@@ -194,7 +194,7 @@ IPCV_ACCUM( 32f, float, float )
 #define IPCV_GET_RECT_SUB_PIX( flavor, cn, srctype, dsttype )       \
 IPCVAPI_EX( CvStatus, icvGetRectSubPix_##flavor##_C##cn##R,         \
 "ippiGetRectSubPix_" #flavor "_C" #cn "R",                          \
-CV_PLUGINS2(CV_PLUGIN_OPTCV,CV_PLUGIN_IPPCV),                       \
+CV_PLUGINS1(CV_PLUGIN_IPPCV),                                       \
 ( const srctype* src, int src_step, CvSize src_size,                \
   dsttype* dst, int dst_step, CvSize win_size, CvPoint2D32f center ))
 
@@ -209,7 +209,7 @@ IPCV_GET_RECT_SUB_PIX( 32f, 3, float, float )
 #define IPCV_GET_QUADRANGLE_SUB_PIX( flavor, cn, srctype, dsttype ) \
 IPCVAPI_EX( CvStatus, icvGetQuadrangleSubPix_##flavor##_C##cn##R,   \
 "ippiGetQuadrangeRectSubPix_" #flavor "_C" #cn "R",                 \
-CV_PLUGINS2(CV_PLUGIN_OPTCV,CV_PLUGIN_IPPCV),                       \
+CV_PLUGINS1(CV_PLUGIN_IPPCV),                                       \
 ( const srctype* src, int src_step, CvSize src_size,                \
   dsttype* dst, int dst_step, CvSize win_size,                      \
   const float *matrix, int fillOutliers, dsttype* fillValue ))
@@ -560,66 +560,50 @@ IPCVAPI_EX( CvStatus, icvGetDistanceTransformMask,
     ( int maskType, float* pMetrics ))
 
 /****************************************************************************************\
-*                                  Pyramid segmentation                                  *
-\****************************************************************************************/
-
-IPCVAPI_EX( CvStatus,  icvUpdatePyrLinks_8u_C1,
-           "ippiUpdatePyrLinks_8u_C1", CV_PLUGINS1(CV_PLUGIN_OPTCV),
-           ( int layer, void* layer_data, CvSize size, void* parent_layer,
-             void* writer, float threshold, int is_last_iter, void* stub,
-             CvWriteNodeFunction ))
-
-IPCVAPI_EX( CvStatus,  icvUpdatePyrLinks_8u_C3,
-           "ippiUpdatePyrLinks_8u_C3", CV_PLUGINS1(CV_PLUGIN_OPTCV),
-           ( int layer, void* layer_data, CvSize size, void* parent_layer,
-             void* writer, float threshold, int is_last_iter, void* stub,
-             CvWriteNodeFunction ))
-
-/****************************************************************************************\
 *                                      Lens undistortion                                 *
 \****************************************************************************************/
 
 IPCVAPI_EX( CvStatus, icvUnDistort1_8u_C1R,
-    "ippiUnDistort1_8u_C1R", CV_PLUGINS1(CV_PLUGIN_OPTCV),
+    "ippiUnDistort1_8u_C1R", CV_PLUGINS1(CV_PLUGIN_IPPCV),
     ( const uchar* srcImage, int srcStep,
     uchar* dstImage, int dstStep,
     CvSize size, const float* intrMatrix,
     const float* distCoeffs, int interToggle ))
 
 IPCVAPI_EX( CvStatus, icvUnDistort1_8u_C3R,
-    "ippiUnDistort1_8u_C3R", CV_PLUGINS1(CV_PLUGIN_OPTCV),
+    "ippiUnDistort1_8u_C3R", CV_PLUGINS1(CV_PLUGIN_IPPCV),
     ( const uchar* srcImage, int srcStep,
     uchar* dstImage, int dstStep,
     CvSize size, const float* intrMatrix,
     const float* distCoeffs, int interToggle ))
 
 IPCVAPI_EX( CvStatus, icvUnDistortEx_8u_C1R,
-    "ippiUnDistortEx_8u_C1R", CV_PLUGINS1(CV_PLUGIN_OPTCV),
+    "ippiUnDistortEx_8u_C1R", CV_PLUGINS1(CV_PLUGIN_IPPCV),
     ( const uchar* srcImage, int srcStep,
     uchar* dstImage, int dstStep,
     CvSize size, const float* intrMatrix,
     const float* distCoeffs, int interToggle ))
 
 IPCVAPI_EX( CvStatus, icvUnDistortEx_8u_C3R,
-    "ippiUnDistortEx_8u_C3R", CV_PLUGINS1(CV_PLUGIN_OPTCV),    
+    "ippiUnDistortEx_8u_C3R", CV_PLUGINS1(CV_PLUGIN_IPPCV),    
     ( const uchar* srcImage, int srcStep,
     uchar* dstImage, int dstStep,
     CvSize size, const float* intrMatrix,
     const float* distCoeffs, int interToggle ))
 
 IPCVAPI_EX( CvStatus, icvUnDistortInit,
-    "ippiUnDistortInit", CV_PLUGINS1(CV_PLUGIN_OPTCV),    
+    "ippiUnDistortInit", CV_PLUGINS1(CV_PLUGIN_IPPCV),    
     ( int srcStep, int* map, int mapStep, CvSize size,
       const float* intrMatrix, const float* distCoeffs,
       int interToggle, int pixSize ))
 
 IPCVAPI_EX( CvStatus, icvUnDistort_8u_C1R,
-    "ippiUnDistort_8u_C1R", CV_PLUGINS1(CV_PLUGIN_OPTCV),        
+    "ippiUnDistort_8u_C1R", CV_PLUGINS1(CV_PLUGIN_IPPCV),        
     ( const uchar* srcImage, int srcStep, const int* map, int mapstep,
       uchar* dstImage, int dstStep, CvSize size, int interToggle ))
 
 IPCVAPI_EX( CvStatus, icvUnDistort_8u_C3R,
-    "ippiUnDistort_8u_C3R", CV_PLUGINS1(CV_PLUGIN_OPTCV),        
+    "ippiUnDistort_8u_C3R", CV_PLUGINS1(CV_PLUGIN_IPPCV),        
     ( const uchar* srcImage, int srcStep, const int* map, int mapstep,
       uchar* dstImage, int dstStep, CvSize size, int interToggle ))
 
@@ -627,11 +611,11 @@ IPCVAPI_EX( CvStatus, icvUnDistort_8u_C3R,
 *                               Thresholding functions                                   *
 \****************************************************************************************/
 
-IPCVAPI_EX( CvStatus, icvThresh_8u_C1R, "ippiThresh_8u_C1R", CV_PLUGINS1(CV_PLUGIN_OPTCV),
+IPCVAPI_EX( CvStatus, icvThresh_8u_C1R, "ippiThresh_8u_C1R", CV_PLUGINS1(CV_PLUGIN_IPPCV),
            ( const uchar*  src, int  src_step, uchar*  dst, int  dst_step,
              CvSize  roi, int  thresh, uchar max_val, int type ))
 
-IPCVAPI_EX( CvStatus, icvThresh_32f_C1R, "ippiThresh_32f_C1R", CV_PLUGINS1(CV_PLUGIN_OPTCV),
+IPCVAPI_EX( CvStatus, icvThresh_32f_C1R, "ippiThresh_32f_C1R", CV_PLUGINS1(CV_PLUGIN_IPPCV),
            ( const float*  src, int  src_step, float*  dst, int  dst_step,
              CvSize  roi, float  thresh, float max_val, int type))
 
@@ -647,5 +631,5 @@ IPCVAPI_EX( CvStatus, icvCanny_16s8u_C1R, "ippiCanny_16s8u_C1R", 0/*CV_PLUGINS1(
       uchar*  pDstEdges, int dstEdgeStep, CvSize roiSize, float lowThresh,
       float  highThresh, void* pBuffer ))
 
-#endif /*_CV_PLUGIN_H_*/
+#endif /*_CV_IPP_H_*/
 

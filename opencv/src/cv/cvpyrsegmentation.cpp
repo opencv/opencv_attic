@@ -103,6 +103,14 @@ static CvStatus  icvSegmentClusterC3( CvSeq* cmp_seq, CvSeq* res_seq,
                                  _CvPyramidC3* first_level_end,
                                  CvSize first_level_size );
 
+static CvStatus icvUpdatePyrLinks_8u_C1
+    (int layer, void *layer_data, CvSize size, void *parent_layer,
+     void *_writer, float threshold, int is_last_iter, void *_stub, CvWriteNodeFunction /*func*/);
+
+static CvStatus icvUpdatePyrLinks_8u_C3
+    (int layer, void *layer_data, CvSize size, void *parent_layer,
+     void *_writer, float threshold, int is_last_iter, void *_stub, CvWriteNodeFunction /*func*/);
+
 static void icvMaxRoi( _CvRect16u *max_rect, _CvRect16u* cur_rect );
 static void icvMaxRoi1( _CvRect16u *max_rect, int x, int y );
 
@@ -1009,10 +1017,9 @@ icvPyrSegmentation8uC3R( uchar * src_image, int src_step,
 }
 
 
-IPCVAPI_IMPL( CvStatus, icvUpdatePyrLinks_8u_C1,
+static CvStatus icvUpdatePyrLinks_8u_C1
     (int layer, void *layer_data, CvSize size, void *parent_layer,
-     void *_writer, float threshold, int is_last_iter, void *_stub, CvWriteNodeFunction /*func*/),
-     (layer, layer_data, size, parent_layer, _writer, threshold, is_last_iter, _stub, icvWritePyrNode) )
+     void *_writer, float threshold, int is_last_iter, void *_stub, CvWriteNodeFunction /*func*/)
 {
     int i, j;
     _CvListNode cmp_node;
@@ -1193,10 +1200,9 @@ IPCVAPI_IMPL( CvStatus, icvUpdatePyrLinks_8u_C1,
 }
 
 
-IPCVAPI_IMPL( CvStatus, icvUpdatePyrLinks_8u_C3,
+static CvStatus icvUpdatePyrLinks_8u_C3
     (int layer, void *layer_data, CvSize size, void *parent_layer,
-     void *_writer, float threshold, int is_last_iter, void *_stub, CvWriteNodeFunction /*func*/),
-     (layer, layer_data, size, parent_layer, _writer, threshold, is_last_iter, _stub, icvWritePyrNode) )
+     void *_writer, float threshold, int is_last_iter, void *_stub, CvWriteNodeFunction /*func*/)
 {
     int i, j;
     _CvListNode cmp_node;
