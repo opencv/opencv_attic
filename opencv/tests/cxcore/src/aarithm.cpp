@@ -103,8 +103,10 @@ CxCore_ArithmTestImpl::CxCore_ArithmTestImpl( const char* test_name, const char*
 void CxCore_ArithmTestImpl::generate_scalars( int depth )
 {
     bool is_timing = ts->get_testing_mode() == CvTS::TIMING_MODE;
-    double min_val = depth == CV_8U ? -100 : depth < CV_32F ? -10000 : -1e6;
-    double max_val = depth == CV_8U ? 100 : depth < CV_32F ? 10000 : 1e6;
+    double ab_min_val = -1.;
+    double ab_max_val = 1.;
+    double gamma_min_val = depth == CV_8U ? -100 : depth < CV_32F ? -10000 : -1e6;
+    double gamma_max_val = depth == CV_8U ? 100 : depth < CV_32F ? 10000 : 1e6;
     
     if( gen_scalars )
     {
@@ -119,8 +121,8 @@ void CxCore_ArithmTestImpl::generate_scalars( int depth )
                 alpha.val[i] *= (cvTsRandInt(rng) & 1) ? 1 : -1;
                 if( is_timing )
                 {
-                    alpha.val[i] = MAX( alpha.val[i], min_val );
-                    alpha.val[i] = MIN( alpha.val[i], max_val );
+                    alpha.val[i] = MAX( alpha.val[i], ab_min_val );
+                    alpha.val[i] = MIN( alpha.val[i], ab_max_val );
                 }
             }
             if( gen_scalars & 2 )
@@ -129,8 +131,8 @@ void CxCore_ArithmTestImpl::generate_scalars( int depth )
                 beta.val[i] *= (cvTsRandInt(rng) & 1) ? 1 : -1;
                 if( is_timing )
                 {
-                    beta.val[i] = MAX( beta.val[i], min_val );
-                    beta.val[i] = MIN( beta.val[i], max_val );
+                    beta.val[i] = MAX( beta.val[i], ab_min_val );
+                    beta.val[i] = MIN( beta.val[i], ab_max_val );
                 }
             }
             if( gen_scalars & 4 )
@@ -139,8 +141,8 @@ void CxCore_ArithmTestImpl::generate_scalars( int depth )
                 gamma.val[i] *= (cvTsRandInt(rng) & 1) ? 1 : -1;
                 if( is_timing )
                 {
-                    gamma.val[i] = MAX( gamma.val[i], min_val );
-                    gamma.val[i] = MIN( gamma.val[i], max_val );
+                    gamma.val[i] = MAX( gamma.val[i], gamma_min_val );
+                    gamma.val[i] = MIN( gamma.val[i], gamma_max_val );
                 }
             }
         }
@@ -438,19 +440,80 @@ CxCore_AbsDiffSTest absdiffs_test;
 
 ////////////////////////////// mul /////////////////////////////
 
+static const char* mul_param_names[] = { "size", "scale", "channels", "depth" };
+static const char* mul_scale_flags[] = { "scale==1", "scale!=1", 0 };
+
 class CxCore_MulTest : public CxCore_ArithmTest
 {
 public:
     CxCore_MulTest();
 protected:
     void run_func();
-    void prepare_to_validation( int /*test_case_idx*/ );
+    void get_timing_test_array_types_and_sizes( int test_case_idx,
+                                                CvSize** sizes, int** types,
+                                                CvSize** whole_sizes, bool* are_images );
     double get_success_error_level( int test_case_idx, int i, int j );
+    void print_timing_params( int test_case_idx, char* ptr, int params_left );
+    void prepare_to_validation( int test_case_idx );
+    int write_default_params( CvFileStorage* fs );
 };
+
 
 CxCore_MulTest::CxCore_MulTest()
     : CxCore_ArithmTest( "arithm-mul", "cvMul", 4, false, false )
 {
+    timing_param_count = CV_DIM(mul_param_names);
+    default_timing_param_names = mul_param_names;
+}
+
+
+int CxCore_MulTest::write_default_params( CvFileStorage* fs )
+{
+    int code = CxCore_ArithmTest::write_default_params(fs);
+    if( code < 0 || ts->get_testing_mode() != CvTS::TIMING_MODE )
+        return code;
+    write_string_list( fs, "scale", mul_scale_flags );
+    return code;
+}
+
+
+void CxCore_MulTest::get_timing_test_array_types_and_sizes( int test_case_idx,
+                                                    CvSize** sizes, int** types,
+                                                    CvSize** whole_sizes, bool* are_images )
+{
+    CxCore_ArithmTest::get_timing_test_array_types_and_sizes( test_case_idx,
+                                    sizes, types, whole_sizes, are_images );
+    const char* scale_flag_str = cvReadString( find_timing_param( "scale" ), "scale==1" );
+    if( strstr( scale_flag_str, "==1" ) )
+        alpha.val[0] = 1.;
+    else
+    {
+        double val = alpha.val[0];
+        int depth = CV_MAT_DEPTH(types[INPUT][0]);
+        if( val == 1. )
+            val = 1./CV_PI;
+        if( depth == CV_16U || depth == CV_16S || depth == CV_32S )
+        {
+            double minmax = 1./cvTsMaxVal(depth);
+            if( val < -minmax )
+                val = -minmax;
+            else if( val > minmax )
+                val = minmax;
+            if( depth == CV_16U && val < 0 )
+                val = -val;
+        }
+        alpha.val[0] = val;
+        ts->printf( CvTS::LOG, "alpha = %g\n", alpha.val[0] );
+    }
+}
+
+
+void CxCore_MulTest::print_timing_params( int test_case_idx, char* ptr, int params_left )
+{
+    sprintf( ptr, "%s,", alpha.val[0] == 1. ? "scale==1" : "scale!=1" );
+    ptr += strlen(ptr);
+    params_left--;
+    CxCore_ArithmTest::print_timing_params( test_case_idx, ptr, params_left );
 }
 
 
@@ -468,13 +531,13 @@ double CxCore_MulTest::get_success_error_level( int test_case_idx, int i, int j 
 void CxCore_MulTest::run_func()
 {
     cvMul( test_array[INPUT][0], test_array[INPUT][1],
-           test_array[OUTPUT][0], gamma.val[0] );
+           test_array[OUTPUT][0], alpha.val[0] );
 }
 
 void CxCore_MulTest::prepare_to_validation( int /*test_case_idx*/ )
 {
     cvTsMul( &test_mat[INPUT][0], &test_mat[INPUT][1],
-             cvScalarAll(gamma.val[0]),
+             cvScalarAll(alpha.val[0]),
              &test_mat[REF_OUTPUT][0] );
 }
 
@@ -488,6 +551,7 @@ public:
     CxCore_DivTest();
 protected:
     void run_func();
+    void print_timing_params( int test_case_idx, char* ptr, int params_left );
     void prepare_to_validation( int /*test_case_idx*/ );
 };
 
@@ -496,16 +560,24 @@ CxCore_DivTest::CxCore_DivTest()
 {
 }
 
+void CxCore_DivTest::print_timing_params( int test_case_idx, char* ptr, int params_left )
+{
+    sprintf( ptr, "s*A(i)/B(i)," );
+    ptr += strlen(ptr);
+    params_left--;
+    CxCore_ArithmTest::print_timing_params( test_case_idx, ptr, params_left );
+}
+
 void CxCore_DivTest::run_func()
 {
     cvDiv( test_array[INPUT][0], test_array[INPUT][1],
-           test_array[OUTPUT][0], gamma.val[0] );
+           test_array[OUTPUT][0], alpha.val[0] );
 }
 
 void CxCore_DivTest::prepare_to_validation( int /*test_case_idx*/ )
 {
     cvTsDiv( &test_mat[INPUT][0], &test_mat[INPUT][1],
-             cvScalarAll(gamma.val[0]),
+             cvScalarAll(alpha.val[0]),
              &test_mat[REF_OUTPUT][0] );
 }
 
@@ -519,6 +591,7 @@ public:
     CxCore_RecipTest();
 protected:
     void run_func();
+    void print_timing_params( int test_case_idx, char* ptr, int params_left );
     void prepare_to_validation( int /*test_case_idx*/ );
 };
 
@@ -526,6 +599,14 @@ CxCore_RecipTest::CxCore_RecipTest()
     : CxCore_ArithmTest( "arithm-recip", "cvDiv", 4, false, false )
 {
     test_array[INPUT].pop();
+}
+
+void CxCore_RecipTest::print_timing_params( int test_case_idx, char* ptr, int params_left )
+{
+    sprintf( ptr, "s/B(i)," );
+    ptr += strlen(ptr);
+    params_left--;
+    CxCore_ArithmTest::print_timing_params( test_case_idx, ptr, params_left );
 }
 
 void CxCore_RecipTest::run_func()
@@ -881,21 +962,18 @@ void CxCore_FlipTest::get_timing_test_array_types_and_sizes( int test_case_idx,
     CxCore_MemTest::get_timing_test_array_types_and_sizes( test_case_idx,
                                     sizes, types, whole_sizes, are_images );
     const char* flip_op_str = cvReadString( find_timing_param( "flip_op" ), "center" );
-    int i;
-    flip_type = 0;
-    for( i = 0; i < 3; i++ )
-        if( strcmp( flip_op_str, flip_strings[i] ) == 0 )
-        {
-            flip_type = i;
-            break;
-        }
-    flip_type--;
+    if( strcmp( flip_op_str, "vert" ) == 0 )
+        flip_type = 0;
+    else if( strcmp( flip_op_str, "horiz" ) == 0 )
+        flip_type = 1;
+    else
+        flip_type = -1;
 }
 
 
 void CxCore_FlipTest::print_timing_params( int test_case_idx, char* ptr, int params_left )
 {
-    sprintf( ptr, "%s,", flip_strings[flip_type+1] );
+    sprintf( ptr, "%s,", flip_type > 0 ? "horiz" : flip_type < 0 ? "center" : "vert" );
     ptr += strlen(ptr);
     params_left--;
     CxCore_MemTest::print_timing_params( test_case_idx, ptr, params_left );
@@ -1751,7 +1829,7 @@ void CxCore_CmpBaseTestImpl::prepare_to_validation( int /*test_case_idx*/ )
             int coi = i / 2, is_lower = (i % 2) == 0;
             int cmp_op = is_lower ? CV_CMP_GE : CV_CMP_LT;
             const CvMat* src = &test_mat[INPUT][0];
-            const CvMat* lu = generate_scalars ? 0 : &test_mat[INPUT][is_lower?1:2];
+            const CvMat* lu = gen_scalars ? 0 : &test_mat[INPUT][is_lower?1:2];
             double luS = is_lower ? alpha.val[coi] : gamma.val[coi];
             
             if( cn > 1 )
