@@ -1,1 +1,1 @@
-SUBDIRS = trs cv
+SUBDIRS = cxts cxcore trs cv
