@@ -69,11 +69,6 @@ void  FillBitmapInfo( BITMAPINFO* bmi, int width, int height, int bpp, int origi
 #define CV_WINDOW_MAGIC_VAL     0x00420042
 #define CV_TRACKBAR_MAGIC_VAL   0x00420043
 
-#ifdef WIN32
-#undef HAVE_MIL
-#define HAVE_MIL 0 /* change 0 to 1 to turn on MIL support */
-#endif
-
 /***************************** CvCapture structure ******************************/
 
 #define CV_CAPTURE_BASE_API_COUNT 6
