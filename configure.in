@@ -171,6 +171,8 @@ if test x$have_raw1394=xyes; then
     AC_CHECK_HEADER(libdc1394/dc1394_control.h,
         AC_CHECK_LIB(dc1394_control, dc1394_camera_on, [have_dc1394=yes
         AC_DEFINE(HAVE_DC1394,,[IEEE1394 capturing support])
+	AC_EGREP_HEADER(do_extra_buffering, libdc1394/dc1394_control.h,
+	[AC_DEFINE(HAVE_DC1394_095,,[libdc1394 0.9.4 or 0.9.5])])
         IEEE1394LIBS="-lm -lraw1394 -ldc1394_control"]))
 fi
 
