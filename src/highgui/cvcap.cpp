@@ -554,6 +554,197 @@ static CvCaptureVTable captureCAM_VFW_vtable =
     (CvCaptureSetPropertyFunc)0,
     (CvCaptureGetDescriptionFunc)0
 };
+
+
+/****************** Capturing video from camera via CMU lib *******************/
+
+#ifdef HAVE_CMU1394
+
+// CMU 1394 camera stuff.
+// This firewire capability added by Philip Gruebele (pgruebele@cox.net).
+// For this to work you need to install the CMU firewire DCAM drivers,
+// located at http://www-2.cs.cmu.edu/~iwan/1394/.
+#include "1394camera.h"
+#define CMU_MAX_CAMERAS     20
+int             CMU_numCameras = 0;
+int             CMU_numActiveCameras = 0;
+bool            CMU_useCameraFlags[CMU_MAX_CAMERAS];
+C1394Camera     *CMU_theCamera = 0;
+const static int CMU_m_Width    = 744 & ~0x7;
+const static int CMU_m_Height   = 480 & ~0x7;
+
+#if _MSC_VER >= 1200
+#pragma comment(lib,"1394camera.lib")
+#endif
+
+typedef struct CvCaptureCAM_CMU
+{
+    CvCaptureVTable* vtable;
+    int     index;
+    IplImage* rgb_frame;
+}
+CvCaptureCAM_CMU;
+
+static int icvOpenCAM_CMU( CvCaptureCAM_CMU* capture, int /*wIndex*/ )
+{
+    // Attempt to open CMU 1394 camera.
+    bool cmu_success = false;
+    int i;
+
+    // if first time, then allocate alll available cameras
+    if( CMU_numCameras == 0 )
+    {
+        CMU_numActiveCameras = 0;
+        CMU_theCamera = new C1394Camera[CMU_MAX_CAMERAS];
+
+        ////////////////////////////////////////////////////////////////////////////////////////////////////////
+        // create all cameras
+        try
+        {
+            // create camera0
+            if( CMU_theCamera[0].CheckLink() != CAM_SUCCESS )
+                throw 1;
+
+            // we have one pin per camera
+            CMU_numCameras = CMU_theCamera[0].GetNumberCameras();
+
+            // allocate remaining cameras
+            for( i = 1; i < CMU_numCameras; i++ )
+            {
+                CMU_useCameraFlags[i] = false;
+                if (CMU_theCamera[i].CheckLink() != CAM_SUCCESS)
+                    throw 1;
+            }
+        }
+        catch (...)
+        {
+            // free any allocated cameras
+            // ...
+            CMU_numCameras = 0;
+        }
+    }
+
+    try
+    {
+        for( i = 0; i < CMU_numCameras; i++ )
+        {
+            if( !CMU_useCameraFlags[i] )
+                break;
+        }
+
+        // can't activate more cameras than we opened!
+        if (i >= CMU_numCameras)
+            throw 1;
+
+        if (CMU_theCamera[i].SelectCamera(i) != CAM_SUCCESS)
+            throw 1;
+
+        if (CMU_theCamera[i].InitCamera() != CAM_SUCCESS)
+            throw 1;
+        
+        if (CMU_theCamera[i].m_controlSize.Inquire() != CAM_SUCCESS)               throw 1;
+        CMU_theCamera[i].SetVideoFormat(7);
+        CMU_theCamera[i].SetVideoMode(0);
+        if (CMU_theCamera[i].m_controlSize.Status() != CAM_SUCCESS)                throw 1;
+        int px = CMU_theCamera[i].m_controlSize.m_maxH / 2 - CMU_m_Width / 2;
+        int py = CMU_theCamera[i].m_controlSize.m_maxV / 2 - CMU_m_Height / 2;
+        if (CMU_theCamera[i].m_controlSize.SetBytesPerPacket(CMU_theCamera[i].m_controlSize.m_bytesPacketMax) != CAM_SUCCESS)             throw 1;
+        if (CMU_theCamera[i].m_controlSize.SetPosition(0, 0) != CAM_SUCCESS)               throw 1;
+        if (CMU_theCamera[i].m_controlSize.SetSize(CMU_m_Width, CMU_m_Height) != CAM_SUCCESS)              throw 1;
+        if (CMU_theCamera[i].m_controlSize.SetPosition(px, py) != CAM_SUCCESS)             throw 1;
+        if (CMU_theCamera[i].m_controlSize.SetColorCode(0) != CAM_SUCCESS)             throw 1;
+
+        capture->rgb_frame = cvCreateImage(cvSize(CMU_m_Width, CMU_m_Height) , IPL_DEPTH_8U, 3);
+        if (capture->rgb_frame)
+        {
+            if(CMU_theCamera[i].StartImageAcquisition() != CAM_SUCCESS)
+                throw 1;
+
+            // successfully activated another camera
+            capture->index = CMU_numActiveCameras;
+            CMU_numActiveCameras++;
+            cmu_success = true;
+            CMU_useCameraFlags[i] = true;
+        }
+    }
+    catch (...)
+    {
+        // failed to activate new camera, but everything else is OK...
+        if (capture->rgb_frame)
+            cvReleaseImage(&capture->rgb_frame);
+    }
+
+    if (CMU_numActiveCameras > 1)
+        CameraControlDialog(NULL, CMU_theCamera, true);
+
+    return cmu_success;
+}
+
+
+static  void icvCloseCAM_CMU( CvCaptureCAM_CMU* capture )
+{
+    if( capture && capture->rgb_frame )
+    {
+        cvReleaseImage( &capture->rgb_frame );
+        capture->rgb_frame = 0;
+        CMU_theCamera[capture->index].StopImageAcquisition();
+        CMU_useCameraFlags[capture->index] = false;
+        CMU_numActiveCameras--;
+
+        if (!CMU_numActiveCameras)
+        {
+            delete[] CMU_theCamera;
+            CMU_theCamera = 0;
+            CMU_numCameras = 0;
+        }
+    }
+}
+
+
+static int icvGrabFrameCAM_CMU( CvCaptureCAM_CMU* capture )
+{
+    return capture->rgb_frame && CMU_theCamera &&
+        CMU_theCamera[capture->index].AcquireImage() == CAM_SUCCESS;
+}
+
+
+static IplImage* icvRetrieveFrameCAM_CMU( CvCaptureCAM_CMU* capture )
+{
+    if( capture->rgb_frame && CMU_theCamera )
+    {
+        CMU_theCamera[capture->index].getRGB((unsigned char*)capture->rgb_frame->imageData);
+        return capture->rgb_frame;
+    }
+
+    return 0;
+}
+
+
+static double icvGetPropertyCAM_CMU( CvCaptureCAM_CMU* capture, int property_id )
+{
+    switch( property_id )
+    {
+    case CV_CAP_PROP_FRAME_WIDTH:
+        return capture->rgb_frame->width;
+    case CV_CAP_PROP_FRAME_HEIGHT:
+        return capture->rgb_frame->height;
+    }
+    return 0;
+}
+
+
+static CvCaptureVTable captureCAM_CMU_vtable = 
+{
+    6,
+    (CvCaptureCloseFunc)icvCloseCAM_CMU,
+    (CvCaptureGrabFrameFunc)icvGrabFrameCAM_CMU,
+    (CvCaptureRetrieveFrameFunc)icvRetrieveFrameCAM_CMU,
+    (CvCaptureGetPropertyFunc)icvGetPropertyCAM_CMU,
+    (CvCaptureSetPropertyFunc)0,
+    (CvCaptureGetDescriptionFunc)0
+};
+
+#endif
    
 /********************* Capturing video from camera via MIL *********************/
 //#ifdef WIN32
@@ -561,10 +752,9 @@ static CvCaptureVTable captureCAM_VFW_vtable =
 /* Small patch to cope with automatically generated Makefiles */
 #if !defined _MSC_VER
 #undef HAVE_MIL
-#define HAVE_MIL 0
 #endif
 
-#if HAVE_MIL 
+#ifdef HAVE_MIL 
 #include "mil.h" /* to build MIL-enabled version of HighGUI you
                     should have MIL installed */
 
@@ -616,12 +806,6 @@ static int icvOpenCAM_MIL( CvCaptureCAM_MIL* capture, int wIndex )
     int h = 240/*120*/;
     
     
-    if( (unsigned)wIndex < 116)
-    {   
-        wIndex -= 100;
-    }
-    if( wIndex < 0 ) wIndex = 0;
-
     for( ; wIndex < 16; wIndex++ ) 
     {
         MsysAlloc( M_SYSTEM_SETUP, //we use default system,
@@ -677,6 +861,7 @@ static  void icvCloseCAM_MIL( CvCaptureCAM_MIL* capture )
     }
 }         
 
+
 static int icvGrabFrameCAM_MIL( CvCaptureCAM_MIL* capture )
 {
     if( capture->MilSystem )
@@ -723,32 +908,75 @@ static CvCaptureVTable captureCAM_MIL_vtable =
 #endif //HAVE_MIL 
 //#endif //WIN32
 
+
 CV_IMPL CvCapture* cvCaptureFromCAM( int index )
 {
-    if( index < 100 ) //try VFW 
+    int i, domains[] = { CV_CAP_IEEE1394, CV_CAP_VFW, CV_CAP_MIL, -1 };
+
+    if( index >= CV_CAP_MIL )
     {
-        CvCaptureCAM_VFW* capture = (CvCaptureCAM_VFW*)cvAlloc( sizeof(*capture));
-        memset( capture, 0, sizeof(*capture));
-
-        capture->vtable = &captureCAM_VFW_vtable;
-
-        if( !icvOpenCAM_VFW( capture, index ))
-            cvReleaseCapture( (CvCapture**)&capture );
-        else return (CvCapture*)capture;
-    }
-#if HAVE_MIL
-    if( index >= 100 || index < 0 ) //try MIL 
-    {
-        CvCaptureCAM_MIL* capture = (CvCaptureCAM_MIL*)cvAlloc( sizeof(*capture));
-        memset( capture, 0, sizeof(*capture));
-
-        capture->vtable = &captureCAM_MIL_vtable;
-
-        if( !icvOpenCAM_MIL( capture, index ))
-            cvReleaseCapture( (CvCapture**)&capture );
-        else return (CvCapture*)capture;
-    }
+#ifdef HAVE_MIL
+        if( index < CV_CAP_VFW )
+            domains[0] = CV_CAP_MIL;
+        else
 #endif
+#ifdef HAVE_CMU1394
+        if( index < CV_CAP_IEEE1394 )
+            domains[0] = CV_CAP_IEEE1394;
+        else
+#endif
+            domains[0] = CV_CAP_VFW;
+        index %= 100;
+        domains[1] = -1;
+    }
+
+    for( i = 0; domains[i] >= 0; i++ )
+    {
+        switch( domains[i] )
+        {
+        case CV_CAP_VFW:
+            {
+            CvCaptureCAM_VFW* capture = (CvCaptureCAM_VFW*)cvAlloc( sizeof(*capture));
+            memset( capture, 0, sizeof(*capture));
+            capture->vtable = &captureCAM_VFW_vtable;
+
+            if( icvOpenCAM_VFW( capture, index ))
+                return (CvCapture*)capture;
+
+            cvReleaseCapture( (CvCapture**)&capture );
+            }
+            break;
+#ifdef HAVE_CMU1394        
+        case CV_CAP_IEEE1394:
+            {
+            CvCaptureCAM_CMU* capture = (CvCaptureCAM_CMU*)cvAlloc( sizeof(*capture));
+            memset( capture, 0, sizeof(*capture));
+            capture->vtable = &captureCAM_CMU_vtable;
+
+            if( icvOpenCAM_CMU( capture, index ))
+                return (CvCapture*)capture;
+
+            cvReleaseCapture( (CvCapture**)&capture );
+            }
+            break;
+#endif
+#ifdef HAVE_MIL
+        case CV_CAP_MIL:
+            {
+            CvCaptureCAM_MIL* capture = (CvCaptureCAM_MIL*)cvAlloc( sizeof(*capture));
+            memset( capture, 0, sizeof(*capture));
+            capture->vtable = &captureCAM_MIL_vtable;
+
+            if( icvOpenCAM_MIL( capture, index ))
+                return (CvCapture*)capture;
+
+            cvReleaseCapture( (CvCapture**)&capture );
+            }
+            break;
+#endif
+        }
+    }
+
     return 0;
 }
 

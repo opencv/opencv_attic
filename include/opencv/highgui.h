@@ -57,11 +57,8 @@ LOAD_CHDL_CODE(highgui,Highgui)
 extern "C" {
 #endif /* __cplusplus */
 
-typedef void (CV_CDECL *CvTrackbarCallback)(int pos);
-typedef void (CV_CDECL *CvMouseCallback )(int event, int x, int y, int flags);
-
 /****************************************************************************************\
-*                                Basic HighGUI functionality                             *
+*                                  Basic GUI functions                                   *
 \****************************************************************************************/
 
 /* this function is used to set some external parameters in case of X Window */
@@ -90,6 +87,9 @@ CVAPI(void*) cvGetWindowHandle( const char* name );
 /* get name of highgui window given its native handle */
 CVAPI(const char*) cvGetWindowName( void* window_handle );
 
+
+typedef void (CV_CDECL *CvTrackbarCallback)(int pos);
+
 /* create trackbar and display it on top of given window, set callback */
 CVAPI(int) cvCreateTrackbar( const char* trackbar_name, const char* window_name,
                                   int* value, int count, CvTrackbarCallback on_change );
@@ -115,6 +115,8 @@ CVAPI(void) cvSetTrackbarPos( const char* trackbar_name, const char* window_name
 #define CV_EVENT_FLAG_CTRLKEY   8
 #define CV_EVENT_FLAG_SHIFTKEY  16
 #define CV_EVENT_FLAG_ALTKEY    32
+
+typedef void (CV_CDECL *CvMouseCallback )(int event, int x, int y, int flags);
 
 /* assign callback for mouse events */
 CVAPI(void) cvSetMouseCallback( const char* window_name, CvMouseCallback on_mouse );
@@ -147,7 +149,17 @@ typedef struct CvCapture CvCapture;
 /* start capturing frames from video file */
 CVAPI(CvCapture*) cvCaptureFromFile( const char* filename );
 
-/* start capturing frames from camera */
+#define CV_CAP_ANY      0
+#define CV_CAP_MIL      100
+#define CV_CAP_VFW      200
+#define CV_CAP_V4L      200
+#define CV_CAP_V4L2     200
+#define CV_CAP_FIREWARE 300
+#define CV_CAP_IEEE1394 300
+#define CV_CAP_DC1394   300
+#define CV_CAP_CMU1394  300
+
+/* start capturing frames from camera: index = camera_index + domain_offset (CV_CAP_*) */
 CVAPI(CvCapture*) cvCaptureFromCAM( int index );
 
 /*just grab frame, return 1 if success, 0 if fail 
