@@ -39,7 +39,6 @@
 //
 //M*/
 #include "_cv.h"
-#include "_cvwrap.h"
 
 
 /*F///////////////////////////////////////////////////////////////////////////////////////
@@ -79,14 +78,14 @@ cvMeanShift( const void* imgProb, CvRect windowIn,
 
     CV_CALL( mat = cvGetMat( mat, &stub ));
 
-    if( CV_ARR_CN( mat->type ) > 1 )
+    if( CV_MAT_CN( mat->type ) > 1 )
         CV_ERROR( CV_BadNumChannels, icvUnsupportedFormat );
 
     if( windowIn.height <= 0 || windowIn.width <= 0 )
-        CV_ERROR( IPL_StsBadArg, "Input window has non-positive sizes" );
+        CV_ERROR( CV_StsBadArg, "Input window has non-positive sizes" );
 
     if( !icvIsRectInRect( windowIn, cvRect( 0, 0, mat->width, mat->height )))
-        CV_ERROR( IPL_StsBadArg, "Initial window is not inside the image ROI" );
+        CV_ERROR( CV_StsBadArg, "Initial window is not inside the image ROI" );
 
     CV_CALL( criteria = icvCheckTermCriteria( criteria, 1., 100 ));
 
@@ -97,7 +96,7 @@ cvMeanShift( const void* imgProb, CvRect windowIn,
         int dx, dy;
         double inv_m00;
 
-        CV_CALL( cvGetSubArr( mat, &cur_win, cur_rect )); 
+        CV_CALL( cvGetSubRect( mat, &cur_win, cur_rect )); 
         CV_CALL( cvMoments( &cur_win, &moments ));
 
         /* Calculating center of mass */
@@ -201,7 +200,7 @@ cvCamShift( const void* imgProb, CvRect windowIn,
     if( windowIn.y + windowIn.height > mat->height )
         windowIn.height = mat->height - windowIn.y;
 
-    CV_CALL( cvGetSubArr( mat, &cur_win, windowIn ));
+    CV_CALL( cvGetSubRect( mat, &cur_win, windowIn ));
 
     /* Calculating moments in new center mass */
     CV_CALL( cvMoments( &cur_win, &moments ));
@@ -245,7 +244,7 @@ cvCamShift( const void* imgProb, CvRect windowIn,
         
         CV_SWAP( length, width, t );
         CV_SWAP( cs, sn, t );
-        theta = IPL_PI_2 - theta;
+        theta = CV_PI*0.5 - theta;
     }
 
     /* Saving results */

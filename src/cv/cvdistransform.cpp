@@ -39,9 +39,6 @@
 //
 //M*/
 #include "_cv.h"
-#include "_cvwrap.h"
-#include <float.h>
-#include <limits.h>
 
 #define MIN2(a, b) MIN((a),(b))
 #define CALC_MIN(a, b) if((a) > (b)) (a) = (b)
@@ -984,7 +981,7 @@ cvDistTransform( const void* srcarr, void* dstarr,
     CV_CALL( src = cvGetMat( src, &srcstub ));
     CV_CALL( dst = cvGetMat( dst, &dststub ));
 
-    if( !CV_IS_MASK_ARR( src ) || CV_ARR_TYPE( dst->type ) != CV_32FC1 )
+    if( !CV_IS_MASK_ARR( src ) || CV_MAT_TYPE( dst->type ) != CV_32FC1 )
         CV_ERROR( CV_StsUnsupportedFormat, "" );
 
     if( !CV_ARE_SIZES_EQ( src, dst ))
@@ -992,6 +989,9 @@ cvDistTransform( const void* srcarr, void* dstarr,
 
     if( maskSize != CV_DIST_MASK_3 && maskSize != CV_DIST_MASK_5 )
         CV_ERROR( CV_StsBadSize, "" );
+
+    if( distType == CV_DIST_C || distType == CV_DIST_L1 )
+        maskSize = CV_DIST_MASK_3;
 
     if( distType == CV_DIST_C || distType == CV_DIST_L1 || distType == CV_DIST_L2 )
     {

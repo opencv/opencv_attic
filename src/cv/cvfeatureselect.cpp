@@ -39,9 +39,7 @@
 //
 //M*/
 #include "_cv.h"
-#include "_cvwrap.h"
 #include "_cvutils.h"
-
 
 #define  cmp_features( f1, f2 )  (*(f1) > *(f2))
 
@@ -102,13 +100,13 @@ cvGoodFeaturesToTrack( const void* image, void* eigImage, void* tempImage,
     if( coi1 != 0 || coi2 != 0 || coi3 != 0 )
         CV_ERROR( CV_BadCOI, "" );
 
-    if( CV_ARR_CN(img->type) != 1 ||
-        CV_ARR_CN(eig->type) != 1 ||
-        CV_ARR_CN(tmp->type) != 1 )
+    if( CV_MAT_CN(img->type) != 1 ||
+        CV_MAT_CN(eig->type) != 1 ||
+        CV_MAT_CN(tmp->type) != 1 )
         CV_ERROR( CV_BadNumChannels, icvUnsupportedFormat );
 
-    if( CV_ARR_DEPTH(tmp->type) != CV_32F ||
-        CV_ARR_DEPTH(eig->type) != CV_32F )
+    if( CV_MAT_DEPTH(tmp->type) != CV_32F ||
+        CV_MAT_DEPTH(eig->type) != CV_32F )
         CV_ERROR( CV_BadDepth, icvUnsupportedFormat );
 
     if( !corners || !corner_count )

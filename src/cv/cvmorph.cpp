@@ -42,220 +42,72 @@
 #include "_cv.h"
 #include <limits.h>
 
-#define  CV_COPY( dst, src, len, idx )                            \
-    for( (idx) = 0; (idx) < (len); (idx)++) (dst)[idx] = (src)[idx]
-
-#define  CV_SET( dst, val, len, idx )                         \
-    for( (idx) = 0; (idx) < (len); (idx)++) (dst)[idx] = (val)  \
-
-
-typedef struct
+IPCVAPI_IMPL( CvStatus,
+    icvMorphologyInitAlloc, ( int roiWidth, CvDataType dataType, int channels,
+                              CvSize elSize, CvPoint elAnchor,
+                              CvElementShape elShape, int* elData,
+                              struct CvMorphState** morphState ))
 {
-    uchar  b, g, r;
-}
-CvRGB8u;
-
-
-typedef struct
-{
-    uchar  b, g, r, a;
-}
-CvRGBA8u;
-
-
-typedef struct
-{
-    int  b, g, r;
-}
-CvRGB32s;
-
-
-typedef struct
-{
-    int  b, g, r, a;
-}
-CvRGBA32s;
-
-#undef   CV_CALC_MAX
-#undef   CV_CALC_MIN
-
-#define  CV_CALC_MIN(a, b) (a) = CV_IMIN((a),(b))
-#define  CV_CALC_MAX(a, b) (a) = CV_IMAX((a),(b))
-
-typedef struct CvMorphState
-{
-    /* kernel data */
-    int ker_width;
-    int ker_height;
-    int ker_x;
-    int ker_y;
-    CvElementShape shape;
-    uchar *ker_erode_mask;
-    uchar *ker_dilate_mask;
-
-    /* image data */
-    int max_width;
-    CvDataType dataType;
-    int channels;
-
-    /* cyclic buffer */
-    char *buffer;
-    int buffer_step;
-    int crows;
-    char **rows;
-    char *tbuf;
-}
-CvMorphState;
-
-
-#define CV_MORPH_ALIGN  ((int)sizeof(long))
-
-IPCVAPI_IMPL( CvStatus, icvMorphologyInitAlloc, (int roiWidth,
-                                                 CvDataType dataType, int channels,
-                                                 CvSize elSize, CvPoint elAnchor,
-                                                 CvElementShape elShape, const int *elData,
-                                                 struct CvMorphState ** morphState) )
-{
-    CvMorphState *state = 0;
-    int ker_size = 0;
-    int buffer_step = 0;
-    int buffer_size;
-    int bt_pix, bt_pix_n;
-    int aligned_hdr_size = icvAlign((int)sizeof(*state),CV_MORPH_ALIGN);
-    int temp_lines = dataType == cv32f ? 2 : 1;
-    char *ptr;
-
-    int i, mask_size;
-
-    if( !morphState )
-        return CV_NULLPTR_ERR;
-    *morphState = 0;
-
-    if( roiWidth <= 0 )
-        return CV_BADSIZE_ERR;
-    if( dataType != cv8u && dataType != cv32f )
-        return CV_BADDEPTH_ERR;
-
-    if( channels != 1 && channels != 3 && channels != 4 )
-        return CV_UNSUPPORTED_CHANNELS_ERR;
-    if( elSize.width <= 0 || elSize.height <= 0 )
-        return CV_BADSIZE_ERR;
-    if( (unsigned) elAnchor.x >= (unsigned) elSize.width ||
-        (unsigned) elAnchor.y >= (unsigned) elSize.height )
-        return CV_BADRANGE_ERR;
-
-    switch (elShape)
+    CvStatus status;
+    
+    switch( elShape )
     {
     case CV_SHAPE_RECT:
     case CV_SHAPE_CROSS:
         break;
     case CV_SHAPE_ELLIPSE:
+        {
+            int i, r = elSize.height / 2, c = elSize.width / 2;
+            double inv_r2 = 1. / (((double) (r)) * (r));
+
+            elData = (int*)alloca( elSize.width * elSize.height * sizeof(elData[0]));
+            memset( elData, 0, elSize.width*elSize.height*sizeof(elData[0]));
+
+            for( i = 0; i < r; i++ )
+            {
+                int y = r - i;
+                int dx = cvRound( c * sqrt( (r * r - y * y) * inv_r2 ));
+                int x1 = c - dx;
+                int x2 = c + dx;
+
+                if( x1 < 0 )
+                    x1 = 0;
+                if( x2 >= elSize.width )
+                    x2 = elSize.width;
+                x2 = (x2 - x1 - 1)*sizeof(elData[0]);
+
+                memset( elData + i * elSize.width + x1, -1, x2 );
+                memset( elData + (elSize.height - i - 1) * elSize.width + x1, -1, x2 );
+            }
+
+            elShape = CV_SHAPE_CUSTOM;
+        }
+        break;
     case CV_SHAPE_CUSTOM:
         if( elShape == CV_SHAPE_CUSTOM && elData == 0 )
             return CV_NULLPTR_ERR;
-        ker_size = (elSize.width + 1) * elSize.height * 2;
         break;
+    default:
+        return CV_BADFLAG_ERR;
     }
 
-    bt_pix = dataType != cv32f ? 1 : 4;
-    bt_pix_n = bt_pix * channels;
+    status = icvFilterInitAlloc( roiWidth, dataType, channels, elSize, elAnchor,
+                                 elShape == CV_SHAPE_CUSTOM ? elData : 0,
+                                 ICV_MAKE_BINARY_KERNEL(elShape), morphState );
 
-    buffer_step = (((roiWidth + elSize.width + 1 + CV_MORPH_ALIGN * 2) * bt_pix_n - 1)
-                   & -CV_MORPH_ALIGN * bt_pix);
+    if( status < 0 )
+        return status;
 
-    buffer_size = (elSize.height + temp_lines) * (buffer_step + sizeof( void * )) +
-        ker_size + aligned_hdr_size + elSize.width * bt_pix_n;
+    if( !morphState )
+        return CV_NOTDEFINED_ERR;
 
-    buffer_size = icvAlign(buffer_size + CV_MORPH_ALIGN, CV_MORPH_ALIGN);
-
-    state = (CvMorphState *) icvAlloc( buffer_size );
-    if( !state )
-        return CV_OUTOFMEM_ERR;
-
-    ptr = (char *) state;
-    state->buffer_step = buffer_step;
-    state->crows = 0;
-
-    state->ker_x = elAnchor.x;
-    state->ker_y = elAnchor.y;
-    state->ker_height = elSize.height;
-    state->ker_width = elSize.width;
-    state->shape = elShape;
-
-    state->max_width = roiWidth;
-    state->dataType = dataType;
-    state->channels = channels;
-    ptr += ((aligned_hdr_size + elAnchor.x * bt_pix_n + CV_MORPH_ALIGN * bt_pix - 1)
-            & -CV_MORPH_ALIGN * bt_pix);
-
-    state->buffer = ptr;
-    ptr += buffer_step * elSize.height;
-
-    state->tbuf = ptr;
-    ptr += buffer_step * temp_lines;
-
-    state->ker_dilate_mask = (uchar *) ptr;
-    state->ker_erode_mask = (uchar *) (ptr + (ker_size >> 1));
-
-    mask_size = elSize.width * elSize.height;
-
-    if( elShape == CV_SHAPE_CUSTOM )
-    {
-        for( i = 0; i < mask_size; i++ )
-        {
-            int t = elData[i] ? -1 : 0;
-
-            ptr[i] = (char) t;
-            ptr[i + (ker_size >> 1)] = (char) (~t);
-        }
-    }
-    else if( elShape == CV_SHAPE_ELLIPSE )
-    {
-        int r = elSize.height / 2;
-        int c = elSize.width / 2;
-        double inv_r2 = 1. / (((double) (r)) * (r));
-
-        memset( ptr, 0, ker_size );
-
-        for( i = 0; i < r; i++ )
-        {
-            int y = r - i;
-            int dx = cvRound( c * sqrt( (r * r - y * y) * inv_r2 ));
-            int x1 = c - dx;
-            int x2 = c + dx;
-
-            if( x1 < 0 )
-                x1 = 0;
-            if( x2 >= elSize.width )
-                x2 = elSize.width;
-            x2 -= x1 - 1;
-            memset( ptr + i * elSize.width + x1, -1, x2 );
-            memset( ptr + (elSize.height - i - 1) * elSize.width + x1, -1, x2 );
-        }
-
-        for( i = 0; i < mask_size; i++ )
-        {
-            ptr[i + (ker_size >> 1)] = (char) (~ptr[i]);
-        }
-    }
-
-    ptr += ker_size;
-
-    state->rows = (char **) ptr;
-    if( state->shape != CV_SHAPE_RECT && state->shape != CV_SHAPE_CROSS )
-        state->shape = CV_SHAPE_CUSTOM;
-
-    *morphState = state;
     return CV_OK;
 }
 
 
 IPCVAPI_IMPL( CvStatus, icvMorphologyFree, (CvMorphState ** morphState) )
 {
-    if( !morphState )
-        return CV_NULLPTR_ERR;
-    icvFree( (void **) morphState );
-    return CV_OK;
+    return icvFilterFree( morphState );
 }
 
 
@@ -288,7 +140,7 @@ icvErodeRC_8u( uchar * src, int srcStep,
     int starting_flag = 0;
     int width_rest = width_n & (CV_MORPH_ALIGN - 1);
 
-    int is_cross = state->shape == CV_SHAPE_CROSS;
+    int is_cross = ICV_BINARY_KERNEL_SHAPE(state->kerType) == CV_SHAPE_CROSS;
 
     /* initialize cyclic buffer when starting */
     if( stage == CV_WHOLE || stage == CV_START )
@@ -565,7 +417,7 @@ icvErodeArb_8u( uchar * src, int srcStep,
     int ker_width = state->ker_width;
     int ker_height = state->ker_height;
     int ker_right = ker_width - ker_x - ((width & 1) == 0);
-    uchar *ker_data = state->ker_erode_mask + ker_width;
+    uchar *ker_data = state->ker1 + ker_width;
 
     int crows = state->crows;
     uchar **rows = (uchar **) (state->rows);
@@ -835,7 +687,7 @@ icvErodeRC_32f( float *src, int srcStep,
     int starting_flag = 0;
     int width_rest = width_n & (CV_MORPH_ALIGN - 1);
 
-    int is_cross = state->shape == CV_SHAPE_CROSS;
+    int is_cross = ICV_BINARY_KERNEL_SHAPE(state->kerType) == CV_SHAPE_CROSS;
 
     /* initialize cyclic buffer when starting */
     if( stage == CV_WHOLE || stage == CV_START )
@@ -1101,7 +953,7 @@ icvErodeArb_32f( float *src, int srcStep,
     int ker_width = state->ker_width;
     int ker_height = state->ker_height;
     int ker_right = ker_width - ker_x - ((width & 1) == 0);
-    char *ker_data = (char *) (state->ker_erode_mask + ker_width);
+    char *ker_data = (char *) (state->ker1 + ker_width);
 
     int crows = state->crows;
     int **rows = (int **) (state->rows);
@@ -1378,7 +1230,7 @@ icvDilateArb_32f( float *src, int srcStep,
     int ker_width = state->ker_width;
     int ker_height = state->ker_height;
     int ker_right = ker_width - ker_x - ((width & 1) == 0);
-    char *ker_data = (char *) (state->ker_dilate_mask + ker_width);
+    char *ker_data = (char *) (state->ker0 + ker_width);
 
     int crows = state->crows;
     int **rows = (int **) (state->rows);
@@ -1670,7 +1522,7 @@ icvDilateRC_8u( uchar * src, int srcStep,
     int starting_flag = 0;
     int width_rest = width_n & (CV_MORPH_ALIGN - 1);
 
-    int is_cross = state->shape == CV_SHAPE_CROSS;
+    int is_cross = ICV_BINARY_KERNEL_SHAPE(state->kerType) == CV_SHAPE_CROSS;
 
     /* initialize cyclic buffer when starting */
     if( stage == CV_WHOLE || stage == CV_START )
@@ -1948,7 +1800,7 @@ icvDilateArb_8u( uchar * src, int srcStep,
     int ker_width = state->ker_width;
     int ker_height = state->ker_height;
     int ker_right = ker_width - ker_x - ((width & 1) == 0);
-    uchar *ker_data = state->ker_dilate_mask + ker_width;
+    uchar *ker_data = state->ker0 + ker_width;
 
     int crows = state->crows;
     uchar **rows = (uchar **) (state->rows);
@@ -2219,7 +2071,7 @@ icvDilateRC_32f( float *src, int srcStep,
     int starting_flag = 0;
     int width_rest = width_n & (CV_MORPH_ALIGN - 1);
 
-    int is_cross = state->shape == CV_SHAPE_CROSS;
+    int is_cross = ICV_BINARY_KERNEL_SHAPE(state->kerType) == CV_SHAPE_CROSS;
 
     /* initialize cyclic buffer when starting */
     if( stage == CV_WHOLE || stage == CV_START )
@@ -2490,7 +2342,7 @@ icvCheckMorphArgs( const void *pSrc, int srcStep,
     if( state->dataType != dataType || state->channels != channels )
         return CV_UNMATCHED_FORMATS_ERR;
 
-    if( state->shape != shape )
+    if( ICV_BINARY_KERNEL_SHAPE(state->kerType) != shape )
         return CV_UNMATCHED_FORMATS_ERR;
 
     if( roiSize->width * bt_pix > srcStep || roiSize->width * bt_pix > dstStep )
@@ -2510,719 +2362,409 @@ icvCheckMorphArgs( const void *pSrc, int srcStep,
 
 
 /****************************************************************************************\
-                                Erosion, byte-depth format
+                              Internal IPP-like functions
 \****************************************************************************************/
 
-/********************************** Rectangular, 8u, C1 *********************************/
-
-IPCVAPI_IMPL( CvStatus, icvErodeStrip_Rect_8u_C1R, (const uchar * pSrc, int srcStep,
-                                                    uchar * pDst, int dstStep,
-                                                    CvSize * roiSize,
-                                                    CvMorphState * state, int stage) )
-{
-    CvStatus status = icvCheckMorphArgs( pSrc, srcStep, pDst, dstStep, roiSize,
-                                         state, stage, CV_SHAPE_RECT, cv8u, 1 );
-
-    if( status == CV_OK )
-    {
-        status = icvErodeRC_8u( (uchar *) pSrc, srcStep, pDst, dstStep,
-                                roiSize, state, stage );
-    }
-
-    return status >= 0 ? CV_OK : status;
+#define ICV_DEF_MORPH_FUNC( extname, intname, flavor, cn, arrtype, shape )          \
+IPCVAPI_IMPL( CvStatus,                                                             \
+icv##extname##_##flavor##_C##cn##R,( const arrtype* pSrc, int srcStep,              \
+                                     arrtype* pDst, int dstStep,                    \
+                                     CvSize* roiSize,                               \
+                                     CvMorphState * state, int stage ))             \
+{                                                                                   \
+    CvStatus status = icvCheckMorphArgs( pSrc, srcStep, pDst, dstStep, roiSize,     \
+                                         state, stage, shape, cv##flavor, cn );     \
+                                                                                    \
+    if( status == CV_OK )                                                           \
+    {                                                                               \
+        status = icv##intname##_##flavor( (arrtype*)pSrc, srcStep, pDst, dstStep,   \
+                                          roiSize, state, stage );                  \
+    }                                                                               \
+                                                                                    \
+    return status >= 0 ? CV_OK : status;                                            \
 }
 
 
-/********************************** Rectangular, 8u, C3 *********************************/
+ICV_DEF_MORPH_FUNC( ErodeStrip_Rect, ErodeRC, 8u, 1, uchar, CV_SHAPE_RECT )
+ICV_DEF_MORPH_FUNC( ErodeStrip_Rect, ErodeRC, 8u, 3, uchar, CV_SHAPE_RECT )
+ICV_DEF_MORPH_FUNC( ErodeStrip_Rect, ErodeRC, 8u, 4, uchar, CV_SHAPE_RECT )
 
-IPCVAPI_IMPL( CvStatus, icvErodeStrip_Rect_8u_C3R, (const uchar * pSrc, int srcStep,
-                                                    uchar * pDst, int dstStep,
-                                                    CvSize * roiSize,
-                                                    CvMorphState * state, int stage) )
+ICV_DEF_MORPH_FUNC( ErodeStrip_Cross, ErodeRC, 8u, 1, uchar, CV_SHAPE_CROSS )
+ICV_DEF_MORPH_FUNC( ErodeStrip_Cross, ErodeRC, 8u, 3, uchar, CV_SHAPE_CROSS )
+ICV_DEF_MORPH_FUNC( ErodeStrip_Cross, ErodeRC, 8u, 4, uchar, CV_SHAPE_CROSS )
+
+ICV_DEF_MORPH_FUNC( ErodeStrip, ErodeArb, 8u, 1, uchar, CV_SHAPE_CUSTOM )
+ICV_DEF_MORPH_FUNC( ErodeStrip, ErodeArb, 8u, 3, uchar, CV_SHAPE_CUSTOM )
+ICV_DEF_MORPH_FUNC( ErodeStrip, ErodeArb, 8u, 4, uchar, CV_SHAPE_CUSTOM )
+
+ICV_DEF_MORPH_FUNC( ErodeStrip_Rect, ErodeRC, 32f, 1, float, CV_SHAPE_RECT )
+ICV_DEF_MORPH_FUNC( ErodeStrip_Rect, ErodeRC, 32f, 3, float, CV_SHAPE_RECT )
+ICV_DEF_MORPH_FUNC( ErodeStrip_Rect, ErodeRC, 32f, 4, float, CV_SHAPE_RECT )
+
+ICV_DEF_MORPH_FUNC( ErodeStrip_Cross, ErodeRC, 32f, 1, float, CV_SHAPE_CROSS )
+ICV_DEF_MORPH_FUNC( ErodeStrip_Cross, ErodeRC, 32f, 3, float, CV_SHAPE_CROSS )
+ICV_DEF_MORPH_FUNC( ErodeStrip_Cross, ErodeRC, 32f, 4, float, CV_SHAPE_CROSS )
+
+ICV_DEF_MORPH_FUNC( ErodeStrip, ErodeArb, 32f, 1, float, CV_SHAPE_CUSTOM )
+ICV_DEF_MORPH_FUNC( ErodeStrip, ErodeArb, 32f, 3, float, CV_SHAPE_CUSTOM )
+ICV_DEF_MORPH_FUNC( ErodeStrip, ErodeArb, 32f, 4, float, CV_SHAPE_CUSTOM )
+
+ICV_DEF_MORPH_FUNC( DilateStrip_Rect, DilateRC, 8u, 1, uchar, CV_SHAPE_RECT )
+ICV_DEF_MORPH_FUNC( DilateStrip_Rect, DilateRC, 8u, 3, uchar, CV_SHAPE_RECT )
+ICV_DEF_MORPH_FUNC( DilateStrip_Rect, DilateRC, 8u, 4, uchar, CV_SHAPE_RECT )
+
+ICV_DEF_MORPH_FUNC( DilateStrip_Cross, DilateRC, 8u, 1, uchar, CV_SHAPE_CROSS )
+ICV_DEF_MORPH_FUNC( DilateStrip_Cross, DilateRC, 8u, 3, uchar, CV_SHAPE_CROSS )
+ICV_DEF_MORPH_FUNC( DilateStrip_Cross, DilateRC, 8u, 4, uchar, CV_SHAPE_CROSS )
+
+ICV_DEF_MORPH_FUNC( DilateStrip, DilateArb, 8u, 1, uchar, CV_SHAPE_CUSTOM )
+ICV_DEF_MORPH_FUNC( DilateStrip, DilateArb, 8u, 3, uchar, CV_SHAPE_CUSTOM )
+ICV_DEF_MORPH_FUNC( DilateStrip, DilateArb, 8u, 4, uchar, CV_SHAPE_CUSTOM )
+
+ICV_DEF_MORPH_FUNC( DilateStrip_Rect, DilateRC, 32f, 1, float, CV_SHAPE_RECT )
+ICV_DEF_MORPH_FUNC( DilateStrip_Rect, DilateRC, 32f, 3, float, CV_SHAPE_RECT )
+ICV_DEF_MORPH_FUNC( DilateStrip_Rect, DilateRC, 32f, 4, float, CV_SHAPE_RECT )
+
+ICV_DEF_MORPH_FUNC( DilateStrip_Cross, DilateRC, 32f, 1, float, CV_SHAPE_CROSS )
+ICV_DEF_MORPH_FUNC( DilateStrip_Cross, DilateRC, 32f, 3, float, CV_SHAPE_CROSS )
+ICV_DEF_MORPH_FUNC( DilateStrip_Cross, DilateRC, 32f, 4, float, CV_SHAPE_CROSS )
+
+ICV_DEF_MORPH_FUNC( DilateStrip, DilateArb, 32f, 1, float, CV_SHAPE_CUSTOM )
+ICV_DEF_MORPH_FUNC( DilateStrip, DilateArb, 32f, 3, float, CV_SHAPE_CUSTOM )
+ICV_DEF_MORPH_FUNC( DilateStrip, DilateArb, 32f, 4, float, CV_SHAPE_CUSTOM )
+
+
+
+/////////////////////////////////// External Interface /////////////////////////////////////
+
+
+CV_IMPL IplConvKernel *
+cvCreateStructuringElementEx( int cols, int rows,
+                              int anchorX, int anchorY,
+                              CvElementShape shape, int *values )
 {
-    CvStatus status = icvCheckMorphArgs( pSrc, srcStep, pDst, dstStep, roiSize,
-                                         state, stage, CV_SHAPE_RECT, cv8u, 3 );
+    IplConvKernel *element = 0;
+    int i, size = rows * cols;
+    int *vals;
+    int element_size = sizeof( *element ) + size * sizeof( element->values[0] );
 
-    if( status == CV_OK )
+    CV_FUNCNAME( "cvCreateStructuringElementEx" );
+
+    __BEGIN__;
+
+    if( !values && shape == CV_SHAPE_CUSTOM )
+        CV_ERROR_FROM_STATUS( CV_NULLPTR_ERR );
+
+    if( cols <= 0 || rows <= 0 ||
+        (unsigned) anchorX >= (unsigned) cols || (unsigned) anchorY >= (unsigned) rows )
+        CV_ERROR_FROM_STATUS( CV_BADSIZE_ERR );
+
+    element_size = icvAlign(element_size,32);
+    element = (IplConvKernel *) icvAlloc( element_size );
+    if( !element )
+        CV_ERROR_FROM_STATUS( CV_OUTOFMEM_ERR );
+
+    element->nCols = cols;
+    element->nRows = rows;
+    element->anchorX = anchorX;
+    element->anchorY = anchorY;
+    element->nShiftR = shape < CV_SHAPE_ELLIPSE ? shape : CV_SHAPE_CUSTOM;
+    element->values = vals = (int *) (element + 1);
+
+    switch (shape)
     {
-        status = icvErodeRC_8u( (uchar *) pSrc, srcStep, pDst, dstStep,
-                                roiSize, state, stage );
+    case CV_SHAPE_RECT:
+        memset( vals, -1, sizeof( vals[0] ) * cols * rows );
+        break;
+    case CV_SHAPE_CROSS:
+        memset( vals, 0, sizeof( vals[0] ) * cols * rows );
+        for( i = 0; i < cols; i++ )
+        {
+            vals[i + anchorY * cols] = -1;
+        }
+
+        for( i = 0; i < rows; i++ )
+        {
+            vals[anchorX + i * cols] = -1;
+        }
+        break;
+    case CV_SHAPE_ELLIPSE:
+        {
+            int r = (rows + 1) / 2;
+            int c = cols / 2;
+            double inv_r2 = 1. / (((double) (r)) * (r));
+
+            memset( vals, 0, sizeof( vals[0] ) * cols * rows );
+
+            for( i = 0; i < r; i++ )
+            {
+                int y = r - i;
+                int dx = cvRound( c * sqrt( (r * r - y * y) * inv_r2 ));
+                int x1 = c - dx;
+                int x2 = c + dx;
+
+                if( x1 < 0 )
+                    x1 = 0;
+                if( x2 >= cols )
+                    x2 = cols;
+                x2 -= x1 - 1;
+                memset( vals + i * cols + x1, -1, x2 * sizeof( int ));
+                memset( vals + (rows - i - 1) * cols + x1, -1, x2 * sizeof( int ));
+            }
+        }
+        break;
+    case CV_SHAPE_CUSTOM:
+        for( i = 0; i < size; i++ )
+        {
+            vals[i] = !values || values[i] ? -1 : 0;
+        }
+        break;
+    default:
+        icvFree( &element );
+        CV_ERROR_FROM_STATUS( CV_BADFLAG_ERR );
     }
 
-    return status >= 0 ? CV_OK : status;
+    __END__;
+
+    return element;
 }
 
 
-/********************************** Rectangular, 8u, C4 *********************************/
-
-IPCVAPI_IMPL( CvStatus, icvErodeStrip_Rect_8u_C4R, (const uchar * pSrc, int srcStep,
-                                                    uchar * pDst, int dstStep,
-                                                    CvSize * roiSize,
-                                                    CvMorphState * state, int stage) )
+CV_IMPL void
+cvReleaseStructuringElement( IplConvKernel ** element )
 {
-    CvStatus status = icvCheckMorphArgs( pSrc, srcStep, pDst, dstStep, roiSize,
-                                         state, stage, CV_SHAPE_RECT, cv8u, 4 );
+    CV_FUNCNAME( "cvReleaseStructuringElement" );
 
-    if( status == CV_OK )
-    {
-        status = icvErodeRC_8u( (uchar *) pSrc, srcStep, pDst, dstStep,
-                                roiSize, state, stage );
-    }
+    __BEGIN__;
 
-    return status >= 0 ? CV_OK : status;
+    if( !element )
+        CV_ERROR_FROM_STATUS( CV_NULLPTR_ERR );
+    icvFree( element );
+
+    __END__;
 }
 
 
-/********************************* Cross-shaped, 8u, C1 *********************************/
-
-IPCVAPI_IMPL( CvStatus, icvErodeStrip_Cross_8u_C1R, (const uchar * pSrc, int srcStep,
-                                                     uchar * pDst, int dstStep,
-                                                     CvSize * roiSize,
-                                                     CvMorphState * state, int stage) )
+static void icvInitMorphologyTab( CvBigFuncTable* rect_erode, CvBigFuncTable* rect_dilate,
+                                CvBigFuncTable* cross_erode, CvBigFuncTable* cross_dilate,
+                                CvBigFuncTable* arb_erode, CvBigFuncTable* arb_dilate )
 {
-    CvStatus status = icvCheckMorphArgs( pSrc, srcStep, pDst, dstStep, roiSize,
-                                         state, stage, CV_SHAPE_CROSS, cv8u, 1 );
+    rect_erode->fn_2d[CV_8UC1] = (void*)icvErodeStrip_Rect_8u_C1R;
+    rect_erode->fn_2d[CV_8UC3] = (void*)icvErodeStrip_Rect_8u_C3R;
+    rect_erode->fn_2d[CV_8UC4] = (void*)icvErodeStrip_Rect_8u_C4R;
 
-    if( status == CV_OK )
-    {
-        status = icvErodeRC_8u( (uchar *) pSrc, srcStep, pDst, dstStep,
-                                roiSize, state, stage );
-    }
+    rect_erode->fn_2d[CV_32FC1] = (void*)icvErodeStrip_Rect_32f_C1R;
+    rect_erode->fn_2d[CV_32FC3] = (void*)icvErodeStrip_Rect_32f_C3R;
+    rect_erode->fn_2d[CV_32FC4] = (void*)icvErodeStrip_Rect_32f_C4R;
 
-    return status >= 0 ? CV_OK : status;
+    cross_erode->fn_2d[CV_8UC1] = (void*)icvErodeStrip_Cross_8u_C1R;
+    cross_erode->fn_2d[CV_8UC3] = (void*)icvErodeStrip_Cross_8u_C3R;
+    cross_erode->fn_2d[CV_8UC4] = (void*)icvErodeStrip_Cross_8u_C4R;
+
+    cross_erode->fn_2d[CV_32FC1] = (void*)icvErodeStrip_Cross_32f_C1R;
+    cross_erode->fn_2d[CV_32FC3] = (void*)icvErodeStrip_Cross_32f_C3R;
+    cross_erode->fn_2d[CV_32FC4] = (void*)icvErodeStrip_Cross_32f_C4R;
+
+    arb_erode->fn_2d[CV_8UC1] = (void*)icvErodeStrip_8u_C1R;
+    arb_erode->fn_2d[CV_8UC3] = (void*)icvErodeStrip_8u_C3R;
+    arb_erode->fn_2d[CV_8UC4] = (void*)icvErodeStrip_8u_C4R;
+
+    arb_erode->fn_2d[CV_32FC1] = (void*)icvErodeStrip_32f_C1R;
+    arb_erode->fn_2d[CV_32FC3] = (void*)icvErodeStrip_32f_C3R;
+    arb_erode->fn_2d[CV_32FC4] = (void*)icvErodeStrip_32f_C4R;
+
+    rect_dilate->fn_2d[CV_8UC1] = (void*)icvDilateStrip_Rect_8u_C1R;
+    rect_dilate->fn_2d[CV_8UC3] = (void*)icvDilateStrip_Rect_8u_C3R;
+    rect_dilate->fn_2d[CV_8UC4] = (void*)icvDilateStrip_Rect_8u_C4R;
+
+    rect_dilate->fn_2d[CV_32FC1] = (void*)icvDilateStrip_Rect_32f_C1R;
+    rect_dilate->fn_2d[CV_32FC3] = (void*)icvDilateStrip_Rect_32f_C3R;
+    rect_dilate->fn_2d[CV_32FC4] = (void*)icvDilateStrip_Rect_32f_C4R;
+
+    cross_dilate->fn_2d[CV_8UC1] = (void*)icvDilateStrip_Cross_8u_C1R;
+    cross_dilate->fn_2d[CV_8UC3] = (void*)icvDilateStrip_Cross_8u_C3R;
+    cross_dilate->fn_2d[CV_8UC4] = (void*)icvDilateStrip_Cross_8u_C4R;
+
+    cross_dilate->fn_2d[CV_32FC1] = (void*)icvDilateStrip_Cross_32f_C1R;
+    cross_dilate->fn_2d[CV_32FC3] = (void*)icvDilateStrip_Cross_32f_C3R;
+    cross_dilate->fn_2d[CV_32FC4] = (void*)icvDilateStrip_Cross_32f_C4R;
+
+    arb_dilate->fn_2d[CV_8UC1] = (void*)icvDilateStrip_8u_C1R;
+    arb_dilate->fn_2d[CV_8UC3] = (void*)icvDilateStrip_8u_C3R;
+    arb_dilate->fn_2d[CV_8UC4] = (void*)icvDilateStrip_8u_C4R;
+
+    arb_dilate->fn_2d[CV_32FC1] = (void*)icvDilateStrip_32f_C1R;
+    arb_dilate->fn_2d[CV_32FC3] = (void*)icvDilateStrip_32f_C3R;
+    arb_dilate->fn_2d[CV_32FC4] = (void*)icvDilateStrip_32f_C4R;
 }
 
-
-/********************************** Cross-shaped, 8u, C3 ********************************/
-
-IPCVAPI_IMPL( CvStatus, icvErodeStrip_Cross_8u_C3R, (const uchar * pSrc, int srcStep,
-                                                     uchar * pDst, int dstStep,
-                                                     CvSize * roiSize,
-                                                     CvMorphState * state, int stage) )
+static void
+icvMorphOp( const void* srcarr, void* dstarr, IplConvKernel* element,
+            int iterations, int mop )
 {
-    CvStatus status = icvCheckMorphArgs( pSrc, srcStep, pDst, dstStep, roiSize,
-                                         state, stage, CV_SHAPE_CROSS, cv8u, 3 );
+    static CvBigFuncTable morph_tab[6];
+    static int inittab = 0;
+    CvMorphState *state = 0;
 
-    if( status == CV_OK )
+    CV_FUNCNAME( "icvMorphOp" );
+
+    __BEGIN__;
+
+    CvMorphFunc func = 0;
+    CvElementShape shape;
+    int i, coi1 = 0, coi2 = 0;
+    CvMat srcstub, *src = (CvMat*)srcarr;
+    CvMat dststub, *dst = (CvMat*)dstarr;
+    CvSize size;
+    int type;
+    int src_step, dst_step;
+
+    if( !inittab )
     {
-        status = icvErodeRC_8u( (uchar *) pSrc, srcStep, pDst, dstStep,
-                                roiSize, state, stage );
+        icvInitMorphologyTab( morph_tab + 0, morph_tab + 1, morph_tab + 2,
+                              morph_tab + 3, morph_tab + 4, morph_tab + 5 );
+        inittab = 1;
     }
 
-    return status >= 0 ? CV_OK : status;
-}
-
-
-/********************************** Cross-shaped, 8u, C4 ********************************/
-
-IPCVAPI_IMPL( CvStatus, icvErodeStrip_Cross_8u_C4R, (const uchar * pSrc, int srcStep,
-                                                     uchar * pDst, int dstStep,
-                                                     CvSize * roiSize,
-                                                     CvMorphState * state, int stage) )
-{
-    CvStatus status = icvCheckMorphArgs( pSrc, srcStep, pDst, dstStep, roiSize,
-                                         state, stage, CV_SHAPE_CROSS, cv8u, 4 );
-
-    if( status == CV_OK )
+    CV_CALL( src = cvGetMat( src, &srcstub, &coi1 ));
+    
+    if( src != &srcstub )
     {
-        status = icvErodeRC_8u( (uchar *) pSrc, srcStep, pDst, dstStep,
-                                roiSize, state, stage );
+        srcstub = *src;
+        src = &srcstub;
     }
 
-    return status >= 0 ? CV_OK : status;
-}
-
-
-/****************************************************************************************\
-                                Dilatation, byte-depth format
-\****************************************************************************************/
-
-/********************************** Rectangular, 8u, C1 *********************************/
-
-IPCVAPI_IMPL( CvStatus, icvDilateStrip_Rect_8u_C1R, (const uchar * pSrc, int srcStep,
-                                                     uchar * pDst, int dstStep,
-                                                     CvSize * roiSize,
-                                                     CvMorphState * state, int stage) )
-{
-    CvStatus status = icvCheckMorphArgs( pSrc, srcStep, pDst, dstStep, roiSize,
-                                         state, stage, CV_SHAPE_RECT, cv8u, 1 );
-
-    if( status == CV_OK )
+    if( dstarr == srcarr )
     {
-        status = icvDilateRC_8u( (uchar *) pSrc, srcStep, pDst, dstStep,
-                                 roiSize, state, stage );
+        dst = src;
+    }
+    else
+    {
+        CV_CALL( dst = cvGetMat( dst, &dststub, &coi2 ));
+
+        if( !CV_ARE_TYPES_EQ( src, dst ))
+            CV_ERROR( CV_StsUnmatchedFormats, "" );
+
+        if( !CV_ARE_SIZES_EQ( src, dst ))
+            CV_ERROR( CV_StsUnmatchedSizes, "" );
     }
 
-    return status >= 0 ? CV_OK : status;
-}
-
-
-/********************************** Rectangular, 8u, C3 *********************************/
-
-IPCVAPI_IMPL( CvStatus, icvDilateStrip_Rect_8u_C3R, (const uchar * pSrc, int srcStep,
-                                                     uchar * pDst, int dstStep,
-                                                     CvSize * roiSize,
-                                                     CvMorphState * state, int stage) )
-{
-    CvStatus status = icvCheckMorphArgs( pSrc, srcStep, pDst, dstStep, roiSize,
-                                         state, stage, CV_SHAPE_RECT, cv8u, 3 );
-
-    if( status == CV_OK )
+    if( dst != &dststub )
     {
-        status = icvDilateRC_8u( (uchar *) pSrc, srcStep, pDst, dstStep,
-                                 roiSize, state, stage );
+        dststub = *dst;
+        dst = &dststub;
     }
 
-    return status >= 0 ? CV_OK : status;
-}
+    if( coi1 != 0 || coi2 != 0 )
+        CV_ERROR( CV_BadCOI, "" );
 
+    type = CV_MAT_TYPE( src->type );
 
-/********************************** Rectangular, 8u, C4 *********************************/
-
-IPCVAPI_IMPL( CvStatus, icvDilateStrip_Rect_8u_C4R, (const uchar * pSrc, int srcStep,
-                                                     uchar * pDst, int dstStep,
-                                                     CvSize * roiSize,
-                                                     CvMorphState * state, int stage) )
-{
-    CvStatus status = icvCheckMorphArgs( pSrc, srcStep, pDst, dstStep, roiSize,
-                                         state, stage, CV_SHAPE_RECT, cv8u, 4 );
-
-    if( status == CV_OK )
+    if( element )
     {
-        status = icvDilateRC_8u( (uchar *) pSrc, srcStep, pDst, dstStep,
-                                 roiSize, state, stage );
+        IPPI_CALL(
+            icvMorphologyInitAlloc( src->width, CV_MAT_DEPTH(type) == CV_8U ? cv8u : cv32f,
+                                 CV_MAT_CN(type), cvSize( element->nCols, element->nRows),
+                                 cvPoint( element->anchorX, element->anchorY ),
+                                 (CvElementShape) (element->nShiftR), element->values,
+                                 &state ));
+        shape = (CvElementShape) (element->nShiftR);
+        shape = shape < CV_SHAPE_ELLIPSE ? shape : CV_SHAPE_CUSTOM;
+    }
+    else
+    {
+        IPPI_CALL(
+            icvMorphologyInitAlloc( src->width, CV_MAT_DEPTH(type) == CV_8U ? cv8u : cv32f,
+                                  CV_MAT_CN(type), cvSize( 3, 3 ), cvPoint( 1, 1 ),
+                                  CV_SHAPE_RECT, 0, &state ));
+        shape = CV_SHAPE_RECT;
     }
 
-    return status >= 0 ? CV_OK : status;
-}
+    func = (CvMorphFunc)(morph_tab[(shape == CV_SHAPE_RECT ? 0 :
+                         shape == CV_SHAPE_CROSS ? 1 : 2) * 2 + mop].fn_2d[type]);
 
+    if( !func )
+        CV_ERROR( CV_StsUnsupportedFormat, "" );
 
-/********************************* Cross-shaped, 8u, C1 *********************************/
+    size = icvGetMatSize( src );
 
-IPCVAPI_IMPL( CvStatus, icvDilateStrip_Cross_8u_C1R, (const uchar * pSrc, int srcStep,
-                                                      uchar * pDst, int dstStep,
-                                                      CvSize * roiSize,
-                                                      CvMorphState * state, int stage) )
-{
-    CvStatus status = icvCheckMorphArgs( pSrc, srcStep, pDst, dstStep, roiSize,
-                                         state, stage, CV_SHAPE_CROSS, cv8u, 1 );
+    src_step = src->step;
+    dst_step = dst->step;
 
-    if( status == CV_OK )
+    if( src_step == 0 )
+        src_step = dst_step = size.width * icvPixSize[type];
+
+    for( i = 0; i < iterations; i++ )
     {
-        status = icvDilateRC_8u( (uchar *) pSrc, srcStep, pDst, dstStep,
-                                 roiSize, state, stage );
+        IPPI_CALL( func( src->data.ptr, src_step, dst->data.ptr,
+                         dst_step, &size, state, 0 ));
+        src = dst;
     }
 
-    return status >= 0 ? CV_OK : status;
-}
+    __END__;
 
-
-/********************************** Cross-shaped, 8u, C3 ********************************/
-
-IPCVAPI_IMPL( CvStatus, icvDilateStrip_Cross_8u_C3R, (const uchar * pSrc, int srcStep,
-                                                      uchar * pDst, int dstStep,
-                                                      CvSize * roiSize,
-                                                      CvMorphState * state, int stage) )
-{
-    CvStatus status = icvCheckMorphArgs( pSrc, srcStep, pDst, dstStep, roiSize,
-                                         state, stage, CV_SHAPE_CROSS, cv8u, 3 );
-
-    if( status == CV_OK )
-    {
-        status = icvDilateRC_8u( (uchar *) pSrc, srcStep, pDst, dstStep,
-                                 roiSize, state, stage );
-    }
-
-    return status >= 0 ? CV_OK : status;
-}
-
-
-/********************************** Cross-shaped, 8u, C4 ********************************/
-
-IPCVAPI_IMPL( CvStatus, icvDilateStrip_Cross_8u_C4R, (const uchar * pSrc, int srcStep,
-                                                      uchar * pDst, int dstStep,
-                                                      CvSize * roiSize,
-                                                      CvMorphState * state, int stage) )
-{
-    CvStatus status = icvCheckMorphArgs( pSrc, srcStep, pDst, dstStep, roiSize,
-                                         state, stage, CV_SHAPE_CROSS, cv8u, 4 );
-
-    if( status == CV_OK )
-    {
-        status = icvDilateRC_8u( (uchar *) pSrc, srcStep, pDst, dstStep,
-                                 roiSize, state, stage );
-    }
-
-    return status >= 0 ? CV_OK : status;
+    icvMorphologyFree( &state );
 }
 
 
 
-/****************************************************************************************\
-                                Erosion, floating-point format
-\****************************************************************************************/
-
-/********************************** Rectangular, 32f, C1 ********************************/
-
-IPCVAPI_IMPL( CvStatus, icvErodeStrip_Rect_32f_C1R, (const float *pSrc, int srcStep,
-                                                     float *pDst, int dstStep,
-                                                     CvSize * roiSize,
-                                                     CvMorphState * state, int stage) )
+CV_IMPL void
+cvErode( const void* src, void* dst, IplConvKernel* element, int iterations )
 {
-    CvStatus status = icvCheckMorphArgs( pSrc, srcStep, pDst, dstStep, roiSize,
-                                         state, stage, CV_SHAPE_RECT, cv32f, 1 );
-
-    if( status == CV_OK )
-    {
-        status = icvErodeRC_32f( (float *) pSrc, srcStep, pDst, dstStep,
-                                 roiSize, state, stage );
-    }
-
-    return status >= 0 ? CV_OK : status;
+    icvMorphOp( src, dst, element, iterations, 0 );
 }
 
 
-/********************************** Rectangular, 32f, C3 ********************************/
-
-IPCVAPI_IMPL( CvStatus, icvErodeStrip_Rect_32f_C3R, (const float *pSrc, int srcStep,
-                                                     float *pDst, int dstStep,
-                                                     CvSize * roiSize,
-                                                     CvMorphState * state, int stage) )
+CV_IMPL void
+cvDilate( const void* src, void* dst, IplConvKernel* element, int iterations )
 {
-    CvStatus status = icvCheckMorphArgs( pSrc, srcStep, pDst, dstStep, roiSize,
-                                         state, stage, CV_SHAPE_RECT, cv32f, 3 );
-
-    if( status == CV_OK )
-    {
-        status = icvErodeRC_32f( (float *) pSrc, srcStep, pDst, dstStep,
-                                 roiSize, state, stage );
-    }
-
-    return status >= 0 ? CV_OK : status;
+    icvMorphOp( src, dst, element, iterations, 1 );
 }
 
 
-/********************************** Rectangular, 32f, C4 ********************************/
-
-IPCVAPI_IMPL( CvStatus, icvErodeStrip_Rect_32f_C4R, (const float *pSrc, int srcStep,
-                                                     float *pDst, int dstStep,
-                                                     CvSize * roiSize,
-                                                     CvMorphState * state, int stage) )
+CV_IMPL void
+cvMorphologyEx( const void* src, void* dst,
+                void* temp, IplConvKernel* element, CvMorphOp op, int iterations )
 {
-    CvStatus status = icvCheckMorphArgs( pSrc, srcStep, pDst, dstStep, roiSize,
-                                         state, stage, CV_SHAPE_RECT, cv32f, 4 );
+    CV_FUNCNAME( "cvMorhologyEx" );
 
-    if( status == CV_OK )
+    __BEGIN__;
+
+    if( (op == CV_MOP_GRADIENT ||
+        (op == CV_MOP_TOPHAT || op == CV_MOP_BLACKHAT) && src == dst) && temp == 0 )
+        CV_ERROR( CV_HeaderIsNull, "temp image required" );
+
+    if( temp == src || temp == dst )
+        CV_ERROR( CV_HeaderIsNull, "temp image is equal to src or dst" );
+
+    switch (op)
     {
-        status = icvErodeRC_32f( (float *) pSrc, srcStep, pDst, dstStep,
-                                 roiSize, state, stage );
+    case CV_MOP_OPEN:
+        CV_CALL( cvErode( src, dst, element, iterations ));
+        CV_CALL( cvDilate( dst, dst, element, iterations ));
+        break;
+    case CV_MOP_CLOSE:
+        CV_CALL( cvDilate( src, dst, element, iterations ));
+        CV_CALL( cvErode( dst, dst, element, iterations ));
+        break;
+    case CV_MOP_GRADIENT:
+        CV_CALL( cvErode( src, temp, element, iterations ));
+        CV_CALL( cvDilate( src, dst, element, iterations ));
+        CV_CALL( cvSub( dst, temp, dst ));
+        break;
+    case CV_MOP_TOPHAT:
+        CV_CALL( cvErode( src, src != dst ? dst : temp, element, iterations ));
+        CV_CALL( cvSub( src, src != dst ? dst : temp, dst ));
+        break;
+    case CV_MOP_BLACKHAT:
+        CV_CALL( cvDilate( src, src != dst ? dst : temp, element, iterations ));
+        CV_CALL( cvSub( src != dst ? dst : temp, src, dst ));
+        break;
+    default:
+        CV_ERROR( CV_StsBadArg, "unknown morphological operation" );
     }
 
-    return status >= 0 ? CV_OK : status;
+    __END__;
 }
-
-
-/********************************* Cross-shaped, 32f, C1 ********************************/
-
-IPCVAPI_IMPL( CvStatus, icvErodeStrip_Cross_32f_C1R, (const float *pSrc, int srcStep,
-                                                      float *pDst, int dstStep,
-                                                      CvSize * roiSize,
-                                                      CvMorphState * state, int stage) )
-{
-    CvStatus status = icvCheckMorphArgs( pSrc, srcStep, pDst, dstStep, roiSize,
-                                         state, stage, CV_SHAPE_CROSS, cv32f, 1 );
-
-    if( status == CV_OK )
-    {
-        status = icvErodeRC_32f( (float *) pSrc, srcStep, pDst, dstStep,
-                                 roiSize, state, stage );
-    }
-
-    return status >= 0 ? CV_OK : status;
-}
-
-
-/********************************** Cross-shaped, 32f, C3 *******************************/
-
-IPCVAPI_IMPL( CvStatus, icvErodeStrip_Cross_32f_C3R, (const float *pSrc, int srcStep,
-                                                      float *pDst, int dstStep,
-                                                      CvSize * roiSize,
-                                                      CvMorphState * state, int stage) )
-{
-    CvStatus status = icvCheckMorphArgs( pSrc, srcStep, pDst, dstStep, roiSize,
-                                         state, stage, CV_SHAPE_CROSS, cv32f, 3 );
-
-    if( status == CV_OK )
-    {
-        status = icvErodeRC_32f( (float *) pSrc, srcStep, pDst, dstStep,
-                                 roiSize, state, stage );
-    }
-
-    return status >= 0 ? CV_OK : status;
-}
-
-
-/********************************** Cross-shaped, 32f, C4 *******************************/
-
-IPCVAPI_IMPL( CvStatus, icvErodeStrip_Cross_32f_C4R, (const float *pSrc, int srcStep,
-                                                      float *pDst, int dstStep,
-                                                      CvSize * roiSize,
-                                                      CvMorphState * state, int stage) )
-{
-    CvStatus status = icvCheckMorphArgs( pSrc, srcStep, pDst, dstStep, roiSize,
-                                         state, stage, CV_SHAPE_CROSS, cv32f, 4 );
-
-    if( status == CV_OK )
-    {
-        status = icvErodeRC_32f( (float *) pSrc, srcStep, pDst, dstStep,
-                                 roiSize, state, stage );
-    }
-
-    return status >= 0 ? CV_OK : status;
-}
-
-
-/****************************************************************************************\
-                                Dilatation, floating-point format
-\****************************************************************************************/
-
-/********************************** Rectangular, 32f, C1 ********************************/
-
-IPCVAPI_IMPL( CvStatus, icvDilateStrip_Rect_32f_C1R, (const float *pSrc, int srcStep,
-                                                      float *pDst, int dstStep,
-                                                      CvSize * roiSize,
-                                                      CvMorphState * state, int stage) )
-{
-    CvStatus status = icvCheckMorphArgs( pSrc, srcStep, pDst, dstStep, roiSize,
-                                         state, stage, CV_SHAPE_RECT, cv32f, 1 );
-
-    if( status == CV_OK )
-    {
-        status = icvDilateRC_32f( (float *) pSrc, srcStep, pDst, dstStep,
-                                  roiSize, state, stage );
-    }
-
-    return status >= 0 ? CV_OK : status;
-}
-
-
-/********************************** Rectangular, 32f, C3 ********************************/
-
-IPCVAPI_IMPL( CvStatus, icvDilateStrip_Rect_32f_C3R, (const float *pSrc, int srcStep,
-                                                      float *pDst, int dstStep,
-                                                      CvSize * roiSize,
-                                                      CvMorphState * state, int stage) )
-{
-    CvStatus status = icvCheckMorphArgs( pSrc, srcStep, pDst, dstStep, roiSize,
-                                         state, stage, CV_SHAPE_RECT, cv32f, 3 );
-
-    if( status == CV_OK )
-    {
-        status = icvDilateRC_32f( (float *) pSrc, srcStep, pDst, dstStep,
-                                  roiSize, state, stage );
-    }
-
-    return status >= 0 ? CV_OK : status;
-}
-
-
-/********************************** Rectangular, 32f, C4 ********************************/
-
-IPCVAPI_IMPL( CvStatus, icvDilateStrip_Rect_32f_C4R, (const float *pSrc, int srcStep,
-                                                      float *pDst, int dstStep,
-                                                      CvSize * roiSize,
-                                                      CvMorphState * state, int stage) )
-{
-    CvStatus status = icvCheckMorphArgs( pSrc, srcStep, pDst, dstStep, roiSize,
-                                         state, stage, CV_SHAPE_RECT, cv32f, 4 );
-
-    if( status == CV_OK )
-    {
-        status = icvDilateRC_32f( (float *) pSrc, srcStep, pDst, dstStep,
-                                  roiSize, state, stage );
-    }
-
-    return status >= 0 ? CV_OK : status;
-}
-
-
-/********************************* Cross-shaped, 32f, C1 ********************************/
-
-IPCVAPI_IMPL( CvStatus, icvDilateStrip_Cross_32f_C1R, (const float *pSrc, int srcStep,
-                                                       float *pDst, int dstStep,
-                                                       CvSize * roiSize,
-                                                       CvMorphState * state, int stage) )
-{
-    CvStatus status = icvCheckMorphArgs( pSrc, srcStep, pDst, dstStep, roiSize,
-                                         state, stage, CV_SHAPE_CROSS, cv32f, 1 );
-
-    if( status == CV_OK )
-    {
-        status = icvDilateRC_32f( (float *) pSrc, srcStep, pDst, dstStep,
-                                  roiSize, state, stage );
-    }
-
-    return status >= 0 ? CV_OK : status;
-}
-
-
-/********************************** Cross-shaped, 32f, C3 *******************************/
-
-IPCVAPI_IMPL( CvStatus, icvDilateStrip_Cross_32f_C3R, (const float *pSrc, int srcStep,
-                                                       float *pDst, int dstStep,
-                                                       CvSize * roiSize,
-                                                       CvMorphState * state, int stage) )
-{
-    CvStatus status = icvCheckMorphArgs( pSrc, srcStep, pDst, dstStep, roiSize,
-                                         state, stage, CV_SHAPE_CROSS, cv32f, 3 );
-
-    if( status == CV_OK )
-    {
-        status = icvDilateRC_32f( (float *) pSrc, srcStep, pDst, dstStep,
-                                  roiSize, state, stage );
-    }
-
-    return status >= 0 ? CV_OK : status;
-}
-
-
-/********************************** Cross-shaped, 32f, C4 *******************************/
-
-IPCVAPI_IMPL( CvStatus, icvDilateStrip_Cross_32f_C4R, (const float *pSrc, int srcStep,
-                                                       float *pDst, int dstStep,
-                                                       CvSize * roiSize,
-                                                       CvMorphState * state, int stage) )
-{
-    CvStatus status = icvCheckMorphArgs( pSrc, srcStep, pDst, dstStep, roiSize,
-                                         state, stage, CV_SHAPE_CROSS, cv32f, 4 );
-
-    if( status == CV_OK )
-    {
-        status = icvDilateRC_32f( (float *) pSrc, srcStep, pDst, dstStep,
-                                  roiSize, state, stage );
-    }
-
-    return status >= 0 ? CV_OK : status;
-}
-
-
-/********************************** Arbitrary, 8u, C1 ***********************************/
-
-IPCVAPI_IMPL( CvStatus, icvErodeStrip_8u_C1R, (const uchar * pSrc, int srcStep,
-                                               uchar * pDst, int dstStep,
-                                               CvSize * roiSize,
-                                               struct CvMorphState * state, int stage) )
-{
-    CvStatus status = icvCheckMorphArgs( pSrc, srcStep, pDst, dstStep, roiSize,
-                                         state, stage, CV_SHAPE_CUSTOM, cv8u, 1 );
-
-    if( status == CV_OK )
-    {
-        status = icvErodeArb_8u( (uchar *) pSrc, srcStep, pDst, dstStep,
-                                 roiSize, state, stage );
-    }
-
-    return status >= 0 ? CV_OK : status;
-}
-
-
-IPCVAPI_IMPL( CvStatus, icvErodeStrip_8u_C3R, (const uchar * pSrc, int srcStep,
-                                               uchar * pDst, int dstStep,
-                                               CvSize * roiSize,
-                                               struct CvMorphState * state, int stage) )
-{
-    CvStatus status = icvCheckMorphArgs( pSrc, srcStep, pDst, dstStep, roiSize,
-                                         state, stage, CV_SHAPE_CUSTOM, cv8u, 3 );
-
-    if( status == CV_OK )
-    {
-        status = icvErodeArb_8u( (uchar *) pSrc, srcStep, pDst, dstStep,
-                                 roiSize, state, stage );
-    }
-
-    return status >= 0 ? CV_OK : status;
-}
-
-
-IPCVAPI_IMPL( CvStatus, icvErodeStrip_8u_C4R, (const uchar * pSrc, int srcStep,
-                                               uchar * pDst, int dstStep,
-                                               CvSize * roiSize,
-                                               struct CvMorphState * state, int stage) )
-{
-    CvStatus status = icvCheckMorphArgs( pSrc, srcStep, pDst, dstStep, roiSize,
-                                         state, stage, CV_SHAPE_CUSTOM, cv8u, 4 );
-
-    if( status == CV_OK )
-    {
-        status = icvErodeArb_8u( (uchar *) pSrc, srcStep, pDst, dstStep,
-                                 roiSize, state, stage );
-    }
-
-    return status >= 0 ? CV_OK : status;
-}
-
-
-IPCVAPI_IMPL( CvStatus, icvErodeStrip_32f_C1R, (const float *pSrc, int srcStep,
-                                                float *pDst, int dstStep,
-                                                CvSize * roiSize,
-                                                struct CvMorphState * state, int stage) )
-{
-    CvStatus status = icvCheckMorphArgs( pSrc, srcStep, pDst, dstStep, roiSize,
-                                         state, stage, CV_SHAPE_CUSTOM, cv32f, 1 );
-
-    if( status == CV_OK )
-    {
-        status = icvErodeArb_32f( (float *) pSrc, srcStep, pDst, dstStep,
-                                  roiSize, state, stage );
-    }
-
-    return status >= 0 ? CV_OK : status;
-}
-
-
-IPCVAPI_IMPL( CvStatus, icvErodeStrip_32f_C3R, (const float *pSrc, int srcStep,
-                                                float *pDst, int dstStep,
-                                                CvSize * roiSize,
-                                                struct CvMorphState * state, int stage) )
-{
-    CvStatus status = icvCheckMorphArgs( pSrc, srcStep, pDst, dstStep, roiSize,
-                                         state, stage, CV_SHAPE_CUSTOM, cv32f, 3 );
-
-    if( status == CV_OK )
-    {
-        status = icvErodeArb_32f( (float *) pSrc, srcStep, pDst, dstStep,
-                                  roiSize, state, stage );
-    }
-
-    return status >= 0 ? CV_OK : status;
-}
-
-
-IPCVAPI_IMPL( CvStatus, icvErodeStrip_32f_C4R, (const float *pSrc, int srcStep,
-                                                float *pDst, int dstStep,
-                                                CvSize * roiSize,
-                                                struct CvMorphState * state, int stage) )
-{
-    CvStatus status = icvCheckMorphArgs( pSrc, srcStep, pDst, dstStep, roiSize,
-                                         state, stage, CV_SHAPE_CUSTOM, cv32f, 4 );
-
-    if( status == CV_OK )
-    {
-        status = icvErodeArb_32f( (float *) pSrc, srcStep, pDst, dstStep,
-                                  roiSize, state, stage );
-    }
-
-    return status >= 0 ? CV_OK : status;
-}
-
-
-/* Dilate */
-IPCVAPI_IMPL( CvStatus, icvDilateStrip_8u_C1R, (const uchar * pSrc, int srcStep,
-                                                uchar * pDst, int dstStep,
-                                                CvSize * roiSize,
-                                                struct CvMorphState * state, int stage) )
-{
-    CvStatus status = icvCheckMorphArgs( pSrc, srcStep, pDst, dstStep, roiSize,
-                                         state, stage, CV_SHAPE_CUSTOM, cv8u, 1 );
-
-    if( status == CV_OK )
-    {
-        status = icvDilateArb_8u( (uchar *) pSrc, srcStep, pDst, dstStep,
-                                  roiSize, state, stage );
-    }
-
-    return status >= 0 ? CV_OK : status;
-}
-
-
-IPCVAPI_IMPL( CvStatus, icvDilateStrip_8u_C3R, (const uchar * pSrc, int srcStep,
-                                                uchar * pDst, int dstStep,
-                                                CvSize * roiSize,
-                                                struct CvMorphState * state, int stage) )
-{
-    CvStatus status = icvCheckMorphArgs( pSrc, srcStep, pDst, dstStep, roiSize,
-                                         state, stage, CV_SHAPE_CUSTOM, cv8u, 3 );
-
-    if( status == CV_OK )
-    {
-        status = icvDilateArb_8u( (uchar *) pSrc, srcStep, pDst, dstStep,
-                                  roiSize, state, stage );
-    }
-
-    return status >= 0 ? CV_OK : status;
-}
-
-
-IPCVAPI_IMPL( CvStatus, icvDilateStrip_8u_C4R, (const uchar * pSrc, int srcStep,
-                                                uchar * pDst, int dstStep,
-                                                CvSize * roiSize,
-                                                struct CvMorphState * state, int stage) )
-{
-    CvStatus status = icvCheckMorphArgs( pSrc, srcStep, pDst, dstStep, roiSize,
-                                         state, stage, CV_SHAPE_CUSTOM, cv8u, 4 );
-
-    if( status == CV_OK )
-    {
-        status = icvDilateArb_8u( (uchar *) pSrc, srcStep, pDst, dstStep,
-                                  roiSize, state, stage );
-    }
-
-    return status >= 0 ? CV_OK : status;
-}
-
-
-IPCVAPI_IMPL( CvStatus, icvDilateStrip_32f_C1R, (const float *pSrc, int srcStep,
-                                                 float *pDst, int dstStep,
-                                                 CvSize * roiSize,
-                                                 struct CvMorphState * state, int stage) )
-{
-    CvStatus status = icvCheckMorphArgs( pSrc, srcStep, pDst, dstStep, roiSize,
-                                         state, stage, CV_SHAPE_CUSTOM, cv32f, 1 );
-
-    if( status == CV_OK )
-    {
-        status = icvDilateArb_32f( (float *) pSrc, srcStep, pDst, dstStep,
-                                   roiSize, state, stage );
-    }
-
-    return status >= 0 ? CV_OK : status;
-}
-
-
-IPCVAPI_IMPL( CvStatus, icvDilateStrip_32f_C3R, (const float *pSrc, int srcStep,
-                                                 float *pDst, int dstStep,
-                                                 CvSize * roiSize,
-                                                 struct CvMorphState * state, int stage) )
-{
-    CvStatus status = icvCheckMorphArgs( pSrc, srcStep, pDst, dstStep, roiSize,
-                                         state, stage, CV_SHAPE_CUSTOM, cv32f, 3 );
-
-    if( status == CV_OK )
-    {
-        status = icvDilateArb_32f( (float *) pSrc, srcStep, pDst, dstStep,
-                                   roiSize, state, stage );
-    }
-
-    return status >= 0 ? CV_OK : status;
-}
-
-
-IPCVAPI_IMPL( CvStatus, icvDilateStrip_32f_C4R, (const float *pSrc, int srcStep,
-                                                 float *pDst, int dstStep,
-                                                 CvSize * roiSize,
-                                                 struct CvMorphState * state, int stage) )
-{
-    CvStatus status = icvCheckMorphArgs( pSrc, srcStep, pDst, dstStep, roiSize,
-                                         state, stage, CV_SHAPE_CUSTOM, cv32f, 4 );
-
-    if( status == CV_OK )
-    {
-        status = icvDilateArb_32f( (float *) pSrc, srcStep, pDst, dstStep,
-                                   roiSize, state, stage );
-    }
-
-    return status >= 0 ? CV_OK : status;
-}
-
 
 /* End of file. */

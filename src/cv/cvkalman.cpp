@@ -39,7 +39,6 @@
 //
 //M*/
 #include "_cv.h"
-#include "_cvwrap.h"
 
 static CvStatus  icvMulTransposed_32f( CvMatr32f srcMatr1,
                                        int matrWidth1,
@@ -216,7 +215,7 @@ cvKalmanUpdateByMeasurement( CvKalman * Kalman, CvMat * Measurement )
     if( !Kalman || !Measurement )
         CV_ERROR( CV_StsNullPtr, "" );
 
-    if( CV_ARR_TYPE( Measurement->type ) != CV_32FC1 )
+    if( CV_MAT_TYPE( Measurement->type ) != CV_32FC1 )
         CV_ERROR( CV_StsBadArg, "source  has not appropriate format" );
 
     if( (Measurement->cols != 1) || (Measurement->rows != Kalman->MP) )

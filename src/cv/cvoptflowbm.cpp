@@ -40,7 +40,6 @@
 //M*/
 
 #include "_cv.h"
-#include "_cvutils.h"
 
 IPCVAPI( CvStatus , icvCalcOpticalFlowBM_8u32fR,( uchar* imgA, uchar* imgB,
                                                   int  imgStep, CvSize imgSize,
@@ -123,7 +122,7 @@ IPCVAPI_IMPL( CvStatus, icvCalcOpticalFlowBM_8u32fR, (uchar * imgA,
     uchar *blockZ = 0;
     int blSize = blockSize.width * blockSize.height;
     int bufferSize = icvAlign(blSize + 9,16);
-    int cmpSize = icvAlign(blSize,-4);
+    int cmpSize = icvAlign(blSize,4);
     int patch_ofs = blSize & -8;
     int64 patch_mask = (((int64) 1) << (blSize - patch_ofs * 8)) - 1;
 
@@ -583,11 +582,11 @@ cvCalcOpticalFlowBM( const void* srcarrA, const void* srcarrB,
     if( !CV_ARE_SIZES_EQ( srcA, srcB ) ||
         !CV_ARE_SIZES_EQ( velx, vely ) ||
         (unsigned)(velx->width*blockSize.width - srcA->width) >= (unsigned)blockSize.width ||
-        (unsigned)(velx->height*blockSize.width - srcA->height) >= (unsigned)blockSize.height )
+        (unsigned)(velx->height*blockSize.height - srcA->height) >= (unsigned)blockSize.height )
         CV_ERROR( CV_StsUnmatchedSizes, "" );
 
-    if( CV_ARR_TYPE( srcA->type ) != CV_8UC1 ||
-        CV_ARR_TYPE( velx->type ) != CV_32FC1 )
+    if( CV_MAT_TYPE( srcA->type ) != CV_8UC1 ||
+        CV_MAT_TYPE( velx->type ) != CV_32FC1 )
         CV_ERROR( CV_StsUnsupportedFormat, "Source images must have 8uC1 type and "
                                            "destination images must have 32fC1 type" );
 

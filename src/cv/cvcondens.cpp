@@ -39,7 +39,6 @@
 //
 //M*/
 #include "_cv.h"
-#include "_cvwrap.h"
 #include "_cvutils.h"
 
 /*F///////////////////////////////////////////////////////////////////////////////////////
@@ -241,7 +240,7 @@ cvConDensInitSampleSet( CvConDensation * conDens, CvMat * lowerBound, CvMat * up
     if( !conDens || !lowerBound || !upperBound )
         CV_ERROR( CV_StsNullPtr, "" );
 
-    if( CV_ARR_TYPE(lowerBound->type) != CV_32FC1 ||
+    if( CV_MAT_TYPE(lowerBound->type) != CV_32FC1 ||
         !CV_ARE_TYPES_EQ(lowerBound,upperBound) )
         CV_ERROR( CV_StsBadArg, "source  has not appropriate format" );
 

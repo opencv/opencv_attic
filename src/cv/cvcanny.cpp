@@ -69,7 +69,7 @@ IPCVAPI_IMPL( CvStatus, icvCannyGetSize, (CvSize roi, int *bufferSize) )
     if( !bufferSize )
         return CV_NULLPTR_ERR;
     (*bufferSize) = (roi.height + 2) * (roi.width + 2) *
-                    (sizeof(int) + sizeof(uchar) + sizeof(void*));
+                    (sizeof(int) + sizeof(uchar) + sizeof(void*)*2);
     return CV_NO_ERR;
 }
 
@@ -87,6 +87,7 @@ icvCanny_16s8u_C1R, ( const short *pDX, int dxStep,
     int low = cvRound( lowThreshold );
     int high = cvRound( highThreshold );
     uchar* sector = (uchar*)buffer;
+    int sectorstep = roi.width;
     int* mag = (int*)(sector + roi.width * roi.height);
     int magstep = roi.width + 2;
     void** stack = (void**)(mag + magstep*(roi.height + 2));
@@ -101,7 +102,7 @@ icvCanny_16s8u_C1R, ( const short *pDX, int dxStep,
 
     memset( mag, 0, magstep * sizeof(mag[0]));
     memset( mag + magstep * (roi.height + 1), 0, magstep * sizeof(mag[0]));
-    mag++;
+    mag += magstep + 1;
 
     /* sector numbers 
        (Top-Left Origin)
@@ -116,11 +117,9 @@ icvCanny_16s8u_C1R, ( const short *pDX, int dxStep,
     */
 
     /* ///////////////////// calculate magnitude and angle of gradient ///////////////// */
-    for( i = 0; i < roi.height; i++, (char*&)pDX += dxStep,
-                                     (char*&)pDY += dyStep,
-                                     sector += roi.width )
+    for( i = 0; i < roi.height; i++, (char*&)pDX += dxStep, (char*&)pDY += dyStep,
+                                     sector += sectorstep, mag += magstep )
     {
-        mag += magstep;
         mag[-1] = mag[roi.width] = 0;
 
         for( j = 0; j < roi.width; j++ )
@@ -157,14 +156,14 @@ icvCanny_16s8u_C1R, ( const short *pDX, int dxStep,
             }
             else
             {
-                mag[j+1] = 0;
+                mag[j] = 0;
                 sector[j] = 0;
             }
         }
     }
 
     mag -= magstep * roi.height;
-    sector -= roi.width * roi.height;
+    sector -= sectorstep * roi.height;
 
     #define PUSH2(d,m)                      \
     {                                       \
@@ -182,17 +181,17 @@ icvCanny_16s8u_C1R, ( const short *pDX, int dxStep,
 
     /* /////////////////////////// non-maxima suppresion ///////////////////////// */
     {
-        int shift[4];
+        /* arrays for neighborhood indexing */
+        int mshift[4];
         
-        /* shift array init */
-        shift[0] = 1;
-        shift[1] = magstep + 1;
-        shift[2] = magstep;
-        shift[3] = magstep - 1;
+        mshift[0] = 1;
+        mshift[1] = magstep + 1;
+        mshift[2] = magstep;
+        mshift[3] = magstep - 1;
 
-        for( i = 0; i < roi.height; i++, sector += roi.width, dst += dststep )
+        for( i = 0; i < roi.height; i++, sector += sectorstep,
+                               mag += magstep, dst += dststep )
         {
-            mag += magstep;
             memset( dst, 0, roi.width );
        
             for( j = 0; j < roi.width; j++ )
@@ -202,9 +201,9 @@ icvCanny_16s8u_C1R, ( const short *pDX, int dxStep,
             
                 if( val )
                 {
-                    int delta = shift[sector[j]];
+                    int delta = mshift[sector[j]];
 
-                    if( val > center[delta] && val > (center[-delta] & INT_MAX))
+                    if( val >= center[delta] && val >= (center[-delta] & INT_MAX))
                     {
                         if( val > high )
                             PUSH2( dst + j, mag + j );
@@ -216,42 +215,52 @@ icvCanny_16s8u_C1R, ( const short *pDX, int dxStep,
                 }
             }
         }
-    }
 
-    dst -= dststep * roi.height;
-    mag -= magstep * roi.height;
-    sector -= roi.width * roi.height;
-
-    ///////////////////////  Hysteresis thresholding /////////////////////
-    while( stack_count )
-    {
-        uchar* d;
-        int* m;
-
-        POP2( d, m );
-        
-        if( *d == 0 )
+        ///////////////////////  Hysteresis thresholding /////////////////////
+        while( stack_count )
         {
-            *d = 255;
+            uchar* d;
+            int* m;
 
-            if( m[-1] > low && d[-1] == 0 )
-                PUSH2( d - 1, m - 1 );
-            if( m[1] > low && d[1] == 0 )
-                PUSH2( d + 1, m + 1 );
+            POP2( d, m );
+        
+            if( *d == 0 )
+            {
+                *d = 255;
 
-            if( m[-magstep-1] > low && d[-dststep-1] == 0 )
-                PUSH2( d - dststep - 1, m - magstep - 1 );
-            if( m[-magstep] > low && d[-dststep] == 0 )
-                PUSH2( d - dststep, m - magstep );
-            if( m[-magstep+1] > low && d[-dststep+1] == 0 )
-                PUSH2( d - dststep + 1, m - magstep + 1 );
-
-            if( m[magstep-1] > low && d[dststep-1] == 0 )
-                PUSH2( d + dststep - 1, m + magstep - 1 );
-            if( m[magstep] > low && d[dststep] == 0 )
-                PUSH2( d + dststep, m + magstep );
-            if( m[magstep+1] > low && d[dststep+1] == 0 )
-                PUSH2( d + dststep + 1, m + magstep + 1 );
+                if( m[-1] > low && d[-1] == 0 )
+                {
+                    PUSH2( d - 1, m - 1 );
+                }
+                else if( m[1] > low && d[1] == 0 )
+                {
+                    PUSH2( d + 1, m + 1 );
+                }
+                else if( m[-magstep-1] > low && d[-dststep-1] == 0 )
+                {
+                    PUSH2( d - dststep - 1, m - magstep - 1 );
+                }
+                else if( m[-magstep] > low && d[-dststep] == 0 )
+                {
+                    PUSH2( d - dststep, m - magstep );
+                }
+                else if( m[-magstep+1] > low && d[-dststep+1] == 0 )
+                {
+                    PUSH2( d - dststep + 1, m - magstep + 1 );
+                }
+                else if( m[magstep-1] > low && d[dststep-1] == 0 )
+                {
+                    PUSH2( d + dststep - 1, m + magstep - 1 );
+                }
+                else if( m[magstep] > low && d[dststep] == 0 )
+                {
+                    PUSH2( d + dststep, m + magstep );
+                }
+                else if( m[magstep+1] > low && d[dststep+1] == 0 )
+                {
+                    PUSH2( d + dststep + 1, m + magstep + 1 );
+                }
+            }
         }
     }
 
@@ -282,20 +291,23 @@ cvCanny( const void* srcarr, void* dstarr,
     CV_CALL( src = cvGetMat( src, &srcstub ));
     CV_CALL( dst = cvGetMat( dst, &dststub ));
 
-    if( _CV_IS_IMAGE( srcarr ))
+    if( CV_IS_IMAGE_HDR( srcarr ))
     {
         origin = ((IplImage*)srcarr)->origin;
     }
 
-    if( CV_ARR_TYPE( src->type ) != CV_8UC1 ||
-        CV_ARR_TYPE( dst->type ) != CV_8UC1 )
+    if( CV_MAT_TYPE( src->type ) != CV_8UC1 ||
+        CV_MAT_TYPE( dst->type ) != CV_8UC1 )
         CV_ERROR( CV_StsUnsupportedFormat, "" );
 
     if( !CV_ARE_SIZES_EQ( src, dst ))
         CV_ERROR( CV_StsUnmatchedSizes, "" );
 
     if( low_thresh > high_thresh )
-        CV_ERROR( CV_StsBadFlag, "" );
+    {
+        double t;
+        CV_SWAP( low_thresh, high_thresh, t );
+    }
 
     if( (aperture_size & 1) == 0 || aperture_size < 3 || aperture_size > 7 )
         CV_ERROR( CV_StsBadFlag, "" );
@@ -332,8 +344,8 @@ cvCanny( const void* srcarr, void* dstarr,
     cvReleaseMat( &dy );
     cvFree( &buffer );
     
-    icvConvolFree( &pX );
-    icvConvolFree( &pY );
+    icvFilterFree( &pX );
+    icvFilterFree( &pY );
 }
 
 

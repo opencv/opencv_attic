@@ -40,7 +40,6 @@
 //M*/
 
 #include "_cv.h"
-#include "_cvwrap.h"
 
 /*F///////////////////////////////////////////////////////////////////////////////////////
 //    Name:    icvUpdateMHIByTime32fC1R
@@ -159,7 +158,7 @@ IPCVAPI_IMPL( CvStatus, icvUpdateMotionHistory_8u32f_C1IR, (const uchar * silIm,
 //                            minDelta >= maxDelta.
 //    Notes:
 //F*/
-CvStatus
+static CvStatus
 icvCalcMotionGradient32fC1R( float *mhi, int mhiStep,
                              uchar * mask, int maskStep,
                              float *orient, int orientStep,
@@ -193,9 +192,6 @@ icvCalcMotionGradient32fC1R( float *mhi, int mhiStep,
         return CV_BADSIZE_ERR;
     if( ((mhiStep | orientStep) & 3) != 0 )
         return CV_BADSIZE_ERR;
-    if( apertureSize < 3 || apertureSize > 9 || (apertureSize & 1) == 0 ||
-        minTDelta < 0 || maxTDelta <= minTDelta || (origin & -2) != 0 )
-        return CV_BADFACTOR_ERR;
 
     tempStep = icvAlign(roi.width,2) * sizeof( float );
 
@@ -217,13 +213,13 @@ icvCalcMotionGradient32fC1R( float *mhi, int mhiStep,
     /* calc Dx and Dy */
     icvSobelInitAlloc( roi.width, cv32f, apertureSize, origin, 1, 0, &pX );
     result = icvSobel_32f_C1R( mhi, mhiStep, drvX_min, tempStep, &roi, pX, 0 );
-    icvConvolFree( &pX );
+    icvFilterFree( &pX );
 
     if( result < 0 )
         goto func_exit;
     icvSobelInitAlloc( roi.width, cv32f, apertureSize, origin, 0, 1, &pY );
     result = icvSobel_32f_C1R( mhi, mhiStep, drvY_max, tempStep, &roi, pY, 0 );
-    icvConvolFree( &pY );
+    icvFilterFree( &pY );
 
     if( result < 0 )
         goto func_exit;
@@ -325,7 +321,7 @@ icvCalcMotionGradient32fC1R( float *mhi, int mhiStep,
 //           CV_BADFACTOR_ERR - mhi_duration is non positive
 //    Notes:
 //F*/
-CvStatus
+static CvStatus
 icvCalcGlobalOrientation32fC1R( float *orient, int orientStep,
                                 uchar * mask, int maskStep,
                                 float *mhi, int mhiStep,
@@ -463,8 +459,8 @@ icvCalcGlobalOrientation32fC1R( float *orient, int orientStep,
 
 /* motion templates */
 CV_IMPL void
-cvUpdateMHIByTime( const void* silhouette, void* mhimg,
-                   double timestamp, double mhi_duration )
+cvUpdateMotionHistory( const void* silhouette, void* mhimg,
+                       double timestamp, double mhi_duration )
 {
     CvSize size;
     CvMat  silhstub, *silh = (CvMat*)silhouette;
@@ -481,10 +477,10 @@ cvUpdateMHIByTime( const void* silhouette, void* mhimg,
     if( !CV_IS_MASK_ARR( silh ))
         CV_ERROR( CV_StsBadMask, "" );
 
-    if( CV_ARR_CN( mhi->type ) > 1 )
+    if( CV_MAT_CN( mhi->type ) > 1 )
         CV_ERROR( CV_BadNumChannels, "" );
 
-    if( CV_ARR_DEPTH( mhi->type ) != CV_32F )
+    if( CV_MAT_DEPTH( mhi->type ) != CV_32F )
         CV_ERROR( CV_BadDepth, "" );
 
     if( !CV_ARE_SIZES_EQ( mhi, silh ))
@@ -495,7 +491,7 @@ cvUpdateMHIByTime( const void* silhouette, void* mhimg,
     mhi_step = mhi->step;
     silh_step = silh->step;
 
-    if( CV_IS_ARR_CONT( mhi->type & silh->type ))
+    if( CV_IS_MAT_CONT( mhi->type & silh->type ))
     {
         size.width *= size.height;
         mhi_step = silh_step = CV_STUB_STEP;
@@ -513,7 +509,7 @@ CV_IMPL void
 cvCalcMotionGradient( const void* mhiimg, void* maskimg,
                       void* orientation,
                       double maxTDelta, double minTDelta,
-                      int aperture_size )
+                      int apertureSize )
 {
     CvSize  size;
     CvMat  mhistub, *mhi = (CvMat*)mhiimg;
@@ -531,24 +527,36 @@ cvCalcMotionGradient( const void* mhiimg, void* maskimg,
     if( !CV_IS_MASK_ARR( mask ))
         CV_ERROR( CV_StsBadMask, "" );
 
-    if( CV_ARR_CN( mhi->type ) != 1 || CV_ARR_CN( orient->type ) != 1 )
+    if( apertureSize < 3 || apertureSize > 7 || (apertureSize & 1) == 0 )
+        CV_ERROR( CV_StsOutOfRange, "apertureSize must be 3, 5 or 7" );
+
+    if( minTDelta <= 0 || maxTDelta <= 0 )
+        CV_ERROR( CV_StsOutOfRange, "both delta's must be positive" );
+
+    if( CV_MAT_CN( mhi->type ) != 1 || CV_MAT_CN( orient->type ) != 1 )
         CV_ERROR( CV_BadNumChannels, "" );
 
-    if( CV_ARR_DEPTH( mhi->type ) != CV_32F ||
-        CV_ARR_DEPTH( orient->type ) != CV_32F )
+    if( CV_MAT_DEPTH( mhi->type ) != CV_32F ||
+        CV_MAT_DEPTH( orient->type ) != CV_32F )
         CV_ERROR( CV_BadDepth, "" );
 
     if( !CV_ARE_SIZES_EQ( mhi, mask ) || !CV_ARE_SIZES_EQ( orient, mhi ))
         CV_ERROR( CV_StsUnmatchedSizes, "" );
+
+    if( minTDelta > maxTDelta )
+    {
+        double t;
+        CV_SWAP( minTDelta, maxTDelta, t );
+    }
 
     size = icvGetMatSize( mhi );
 
     IPPI_CALL( icvCalcMotionGradient32fC1R( mhi->data.fl, mhi->step,
                                             (uchar*)(mask->data.ptr), mask->step,
                                             orient->data.fl, orient->step,
-                                            size, aperture_size,
+                                            size, apertureSize,
                                             (float) maxTDelta, (float) minTDelta,
-                                            _CV_IS_IMAGE(orientation) ?
+                                            CV_IS_IMAGE_HDR(orientation) ?
                                             ((IplImage*)orientation)->origin : 0 ));
     __END__;
 }
@@ -576,11 +584,11 @@ cvCalcGlobalOrientation( const void* orientation, const void* maskimg, const voi
     if( !CV_IS_MASK_ARR( mask ))
         CV_ERROR( CV_StsBadMask, "" );
 
-    if( CV_ARR_CN( mhi->type ) != 1 || CV_ARR_CN( orient->type ) != 1 )
+    if( CV_MAT_CN( mhi->type ) != 1 || CV_MAT_CN( orient->type ) != 1 )
         CV_ERROR( CV_BadNumChannels, "" );
 
-    if( CV_ARR_DEPTH( mhi->type ) != CV_32F ||
-        CV_ARR_DEPTH( orient->type ) != CV_32F )
+    if( CV_MAT_DEPTH( mhi->type ) != CV_32F ||
+        CV_MAT_DEPTH( orient->type ) != CV_32F )
         CV_ERROR( CV_BadDepth, "" );
 
     if( !CV_ARE_SIZES_EQ( mhi, mask ) || !CV_ARE_SIZES_EQ( orient, mhi ))
@@ -592,7 +600,7 @@ cvCalcGlobalOrientation( const void* orientation, const void* maskimg, const voi
     mask_step = mask->step;
     orient_step = orient->step;
 
-    if( CV_IS_ARR_CONT( mhi->type & mask->type & orient->type ))
+    if( CV_IS_MAT_CONT( mhi->type & mask->type & orient->type ))
     {
         size.width *= size.height;
         mhi_step = mask_step = orient_step = CV_STUB_STEP;
@@ -607,6 +615,86 @@ cvCalcGlobalOrientation( const void* orientation, const void* maskimg, const voi
     __END__;
 
     return angle;
+}
+
+
+CV_IMPL CvSeq*
+cvSegmentMotion( const CvArr* mhiimg, CvArr* segmask, CvMemStorage* storage,
+                 double timestamp, double seg_thresh )
+{
+    CvSeq* components = 0;
+    CvMat* mask8u = 0;
+
+    CV_FUNCNAME( "cvSegmentMotion" );
+
+    __BEGIN__;
+
+    CvMat  mhistub, *mhi = (CvMat*)mhiimg;
+    CvMat  maskstub, *mask = (CvMat*)segmask;
+    float  ts = (float)timestamp;
+    float  comp_idx = 1;
+    int x, y;
+
+    if( !storage )
+        CV_ERROR( CV_StsNullPtr, "NULL memory storage" );
+
+    CV_CALL( mhi = cvGetMat( mhi, &mhistub ));
+    CV_CALL( mask = cvGetMat( mask, &maskstub ));
+
+    if( CV_MAT_TYPE( mhi->type ) != CV_32FC1 || CV_MAT_TYPE( mask->type ) != CV_32FC1 )
+        CV_ERROR( CV_BadDepth, "Both MHI and the destination mask" );
+
+    if( !CV_ARE_SIZES_EQ( mhi, mask ))
+        CV_ERROR( CV_StsUnmatchedSizes, "" );
+
+    CV_CALL( mask8u = cvCreateMat( mhi->rows, mhi->cols, CV_8UC1 ));
+    cvZero( mask8u );
+    cvZero( mask );
+    CV_CALL( components = cvCreateSeq( CV_SEQ_KIND_GENERIC, sizeof(CvSeq),
+                                       sizeof(CvConnectedComp), storage ));
+
+    for( y = 0; y < mhi->rows; y++ )
+    {
+        int* mhi_row = (int*)(mhi->data.ptr + y*mhi->step);
+        uchar* mask8u_row = mask8u->data.ptr + y*mask->step;
+
+        for( x = 0; x < mhi->cols; x++ )
+        {
+            if( mhi_row[x] == (int&)ts && mask8u_row[x] == 0 )
+            {
+                CvConnectedComp comp;
+                int x1, y1;
+
+                CV_CALL( cvFloodFill( mhi, cvPoint( x, y ), 0, seg_thresh, 0,
+                                      &comp, CV_FLOODFILL_MASK_ONLY + 2, mask8u ));
+
+                for( y1 = 0; y1 < comp.rect.height; y1++ )
+                {
+                    int* mask_row1 = (int*)(mask->data.ptr +
+                                    (comp.rect.y + y1)*mask->step) + comp.rect.x;
+                    uchar* mask8u_row1 = mask8u->data.ptr +
+                                    (comp.rect.y + y1)*mask8u->step + comp.rect.x;
+
+                    for( x1 = 0; x1 < comp.rect.width; x1++ )
+                    {
+                        if( mask8u_row1[x1] > 1 )
+                        {
+                            mask8u_row1[x1] = 1;
+                            mask_row1[x1] = (int&)comp_idx;
+                        }
+                    }
+                }
+                comp_idx++;
+                cvSeqPush( components, &comp );
+            }
+        }
+    }
+
+    __END__;
+
+    cvReleaseMat( &mask8u );
+
+    return components;
 }
 
 /* End of file. */

@@ -38,1121 +38,561 @@
 // the use of this software, even if advised of the possibility of such damage.
 //
 //M*/
+
 #include "_cv.h"
-#include <limits.h>
-#include "_cvutils.h"
+#include "_cvdatastructs.h"
 
-/* operator >  for upper half,  <  for lower half */
-#define IPCV_IMPLEMENT_SKLANSKY( func_name, _op_, _op2_ )                   \
-int func_name(CvPoint* points, int* index, int start, int end, int* stack )\
-{                                                                         \
-    int pprev, pcur, pnext;                                               \
-                                                                          \
-    int stacksize = 3;                                                    \
-                                                                          \
-    int incr;                                                             \
-                                                                          \
-    if ( end > start )                                                    \
-    {                                                                     \
-        incr = 1;                                                         \
-    }                                                                     \
-    else incr = -1;                                                       \
-                                                                          \
-    if( start==end ||                                                     \
-        ( points[index[start]].x == points[index[end]].x &&               \
-          points[index[start]].y == points[index[end]].y ) )              \
-        { stack[0] = start; return 1; }                                   \
-                                                                          \
-    /* prepare first triangle */                                          \
-    pprev = start;                                                        \
-    pcur = start+incr;                                                    \
-    pnext = pcur+incr;                                                    \
-                                                                          \
-    stack[0] = pprev;                                                     \
-    stack[1] = pcur;                                                      \
-    stack[2] = pnext;                                                     \
-                                                                          \
-    while( pnext != end+incr )                                            \
-    {                                                                     \
-        /* check the angle p1,p2,p3 */                                    \
-        int cury = points[index[pcur]].y;                                 \
-        int nexty = points[index[pnext]].y;                               \
-                                                                           \
-        if (nexty _op2_ cury )                                              \
-        {                                                                    \
-            int ax = points[index[pcur]].x - points[index[pprev]].x;          \
-            int bx = points[index[pnext]].x - points[index[pcur]].x;          \
-                                                                              \
-            int ay = cury - points[index[pprev]].y;                           \
-            int by = nexty - points[index[pcur]].y;                           \
-                                                                              \
-            int convexity =  ay*bx - ax*by;   /* if >0 then convex angle */   \
-                                                                              \
-            if (convexity _op_ 0)                                             \
-            {                                                                 \
-                pprev = pcur;                                                 \
-                pcur = pnext;                                                 \
-                pnext+=incr;                                                  \
-                stack[stacksize] = pnext;                                     \
-                stacksize++;                                                  \
-            }                                                                 \
-            else                                                              \
-            {                                                                 \
-                if (pprev == start)                                           \
-                {                                                             \
-                    pcur = pnext;                                             \
-                    stack[1] = pcur;                                          \
-                    pnext+=incr;                                              \
-                    stack[2] = pnext;                                         \
-                }                                                             \
-                else                                                          \
-                {                                                             \
-                    stack[stacksize-2] = pnext;                               \
-                    pcur = pprev;                                             \
-                    stacksize--;                                              \
-                    pprev = stack[stacksize-3];                               \
-                }                                                             \
-            }                                                                 \
-        }                                                                     \
-        else                                                                 \
-        {                                                                   \
-            pnext+=incr;                                                   \
-            stack[stacksize-1] = pnext;                                    \
-        }                                                                  \
-    }                                                                      \
-    stacksize--;                                                           \
-    return stacksize;                                                      \
-}
-
-IPCV_IMPLEMENT_SKLANSKY( icvSklanskyTL, >, >= );
-IPCV_IMPLEMENT_SKLANSKY( icvSklanskyTR, <, >= );
-IPCV_IMPLEMENT_SKLANSKY( icvSklanskyBL, <, <= );
-IPCV_IMPLEMENT_SKLANSKY( icvSklanskyBR, >, <= );
-
-/* algorithm for convex hull approximation. */
-/* can give true hull                       */
- CvStatus
- icvConvexHull_Approx( CvPoint * points,
-                       int num_points,
-                       CvRect * bound_rect,
-                       int bandwidth, int orientation, int *hullpoints, int *hullsize )
+static int
+icvSklansky_32s( CvPoint** array, int start, int end, int* stack, int nsign, int sign2 )
 {
-    /* bounds */
-    int minx;
-    int screenwidth;
+    int incr = end > start ? 1 : -1;
+    /* prepare first triangle */
+    int pprev = start, pcur = pprev + incr, pnext = pcur + incr;
+    int stacksize = 3;
 
-    int maxy_ind = 0;
-    int miny_ind = 0;
-
-    int *buffer;
-    int *uh;                    /* upper half pretenders  */
-    int *lh;                    /* lower half pretenderts */
-
-    int *flag;
-
-    /* stack of previous points for Sklansky */
-    int *stack;
-
-    int i, hc;
-
-    int numbands;
-    int width = 0;
-
-    /* this value store last point of upper half */
-    int rest = -1;
-
-    float ibw = 1.f / bandwidth;
-
-    if( bound_rect == NULL )
+    if( start == end ||
+        (array[start]->x == array[end]->x &&
+         array[start]->y == array[end]->y) )
     {
-        int k;
-        int maxx;
-
-        maxx = minx = points[0].x;
-        /* find minx and maxx */
-        for( k = 1; k < num_points; k++ )
-        {
-            maxx = MAX( points[k].x, maxx );
-            minx = MIN( points[k].x, minx );
-        }
-        screenwidth = maxx - minx + 1;
-    }
-    else
-    {
-        minx = bound_rect->x;
-        screenwidth = bound_rect->width;
+        stack[0] = start;
+        return 1;
     }
 
-    /* allocate memory for bands */
-    numbands = screenwidth / bandwidth;
-    numbands += (bandwidth * numbands < screenwidth);
+    stack[0] = pprev;
+    stack[1] = pcur;
+    stack[2] = pnext;
 
-    buffer = (int *) icvAlloc( 2 * numbands * sizeof( int ));
+    end += incr; /* make end = afterend */
 
-    if( buffer == NULL )
-        return CV_OUTOFMEM_ERR;
-    flag = (int *) icvAlloc( numbands * sizeof( int ) + 2 );
-
-    if( flag == NULL )
+    while( pnext != end )
     {
-        icvFree( &buffer );
-        return CV_OUTOFMEM_ERR;
-    }
+        /* check the angle p1,p2,p3 */
+        int cury = array[pcur]->y;
+        int nexty = array[pnext]->y;
+        int by = nexty - cury;
 
-    uh = buffer;
-    lh = uh + numbands;
-
-    stack = flag;
-
-    /* fill arrays */
-    for( i = 0; i < numbands; i++ )
-    {
-        lh[i] = -1;
-        uh[i] = -1;
-        flag[i] = 0;
-    }
-
-    /* step two - finding maximal and minimal coordinate within every band */
-    for( i = 0; i < num_points; i++ )
-    {
-        /* find band */
-        int x = cvFloor( (points[i].x - minx) * ibw );
-        int y = points[i].y;
-
-        if( flag[x] == 0 )
+        if( CV_SIGN(by) != nsign )
         {
-            width++;
-            flag[x] = 1;
-            lh[x] = uh[x] = i;
-        }
-        else
-        {
-            if( points[lh[x]].y >= y )
-                lh[x] = i;
-            if( points[uh[x]].y <= y )
-                uh[x] = i;
-        }
-    }
-    /* copy info from characteristic vector to solid array */
-    /* with finding splitter */
-    {
-        int j = 0;
+            int ax = array[pcur]->x - array[pprev]->x;
+            int bx = array[pnext]->x - array[pcur]->x;
+            int ay = cury - array[pprev]->y;
+            int convexity = ay*bx - ax*by;/* if >0 then convex angle */
 
-        for( i = 0; i < numbands; i++ )
-        {
-            if( flag[i] )
+            if( CV_SIGN(convexity) == sign2 )
             {
-                uh[j] = uh[i];
-                if( points[uh[i]].y >= points[uh[maxy_ind]].y )
-                    maxy_ind = j;
-
-                lh[j] = lh[i];
-                if( points[lh[i]].y <= points[lh[miny_ind]].y )
-                    miny_ind = j;
-                j++;
+                pprev = pcur;
+                pcur = pnext;
+                pnext += incr;
+                stack[stacksize] = pnext;
+                stacksize++;
             }
-        }
-    }
-
-    /*upper half */
-    {
-        int tl_count = icvSklanskyTL( points, uh, 0, maxy_ind, stack );
-        int *tr_stack = stack + tl_count;
-        int tr_count = icvSklanskyTR( points, uh, width - 1, maxy_ind, tr_stack );
-
-        /* gather upper part of convex hull to output */
-        hc = 0;
-        if( orientation == CV_COUNTER_CLOCKWISE )
-        {
-            int i;
-
-            for( i = 0; i < tr_count - 1; i++, hc++ )
+            else
             {
-                hullpoints[hc] = uh[tr_stack[i]];
-            }
+                if( pprev == start )
+                {
+                    pcur = pnext;
+                    stack[1] = pcur;
+                    pnext += incr;
+                    stack[2] = pnext;
 
-            for( i = tl_count - 1; i > 0; i--, hc++ )
-            {
-                hullpoints[hc] = uh[stack[i]];
-            }
-            rest = uh[stack[0]];
-        }
-        else
-        {
-            int i;
-
-            for( i = 0; i < tl_count - 1; i++, hc++ )
-            {
-                hullpoints[hc] = uh[stack[i]];
-            }
-
-            for( i = tr_count - 1; i > 0; i--, hc++ )
-            {
-                hullpoints[hc] = uh[tr_stack[i]];
-            }
-            rest = uh[tr_stack[0]];
-        }
-    }
-
-    /* lower half */
-    {
-        int bl_count = icvSklanskyBL( points, lh, 0, miny_ind, stack );
-        int *br_stack = stack + bl_count;
-        int br_count = icvSklanskyBR( points, lh, width - 1, miny_ind, br_stack );
-
-        if( orientation == CV_COUNTER_CLOCKWISE )
-        {
-            int i;
-
-            if( lh[0] != uh[0] )
-            {
-                hullpoints[hc] = rest;
-                hc++;
-            }
-
-            for( i = 0; i < bl_count - 1; i++, hc++ )
-            {
-                hullpoints[hc] = lh[stack[i]];
-            }
-
-            for( i = br_count - 1; i > 0; i--, hc++ )
-            {
-                hullpoints[hc] = lh[br_stack[i]];
-            }
-
-            if( lh[width - 1] != uh[width - 1] )
-            {
-                hullpoints[hc] = lh[br_stack[0]];
-                hc++;
+                }
+                else
+                {
+                    stack[stacksize-2] = pnext;
+                    pcur = pprev;
+                    pprev = stack[stacksize-4];
+                    stacksize--;
+                }
             }
         }
         else
         {
-            int i;
-
-            if( lh[width - 1] != uh[width - 1] )
-            {
-                hullpoints[hc] = rest;
-                hc++;
-            }
-
-            for( i = 0; i < br_count - 1; i++, hc++ )
-            {
-                hullpoints[hc] = lh[br_stack[i]];
-            }
-
-            for( i = bl_count - 1; i > 0; i--, hc++ )
-            {
-                hullpoints[hc] = lh[stack[i]];
-            }
-
-            if( lh[0] != uh[0] )
-            {
-                hullpoints[hc] = lh[stack[0]];
-                hc++;
-            }
+            pnext += incr;
+            stack[stacksize-1] = pnext;
         }
     }
 
-    *hullsize = hc;
-
-    icvFree( &buffer );
-    icvFree( &flag );
-
-    return CV_OK;
-}
-
-/* _op_ >  for upper half,  <  for lower half */
-/* _op2_ >  in ascendance of y ,  <  in descendance of y */
-
-#define IPCV_IMPLEMENT_SKLANSKY2( func_name, _op_, _op2_ )                \
-int func_name(CvPoint** points, int start, int end, int* stack )         \
-{                                                                         \
-    int pprev, pcur, pnext;                                               \
-                                                                          \
-    int stacksize = 3;                                                    \
-                                                                          \
-    int incr;                                                             \
-                                                                          \
-    if ( end > start )                                                    \
-    {                                                                     \
-        incr = 1;                                                         \
-    }                                                                     \
-    else incr = -1;                                                       \
-                                                                          \
-    if( start==end ||                                                     \
-        ( points[start]->x == points[end]->x &&                           \
-          points[start]->y == points[end]->y ) )                          \
-        { stack[0] = start; return 1; }                                   \
-                                                                          \
-    /* prepare first triangle */                                          \
-    pprev = start;                                                        \
-    pcur = start+incr;                                                    \
-    pnext = pcur+incr;                                                    \
-                                                                          \
-    stack[0] = pprev;                                                     \
-    stack[1] = pcur;                                                      \
-    stack[2] = pnext;                                                     \
-                                                                          \
-    end+=incr;/* make end = afterend */                                   \
-                                                                          \
-    while( pnext != end )                                                 \
-    {                                                                     \
-        CvPoint* ptcur = points[pcur];                                   \
-        CvPoint* ptnext = points[pnext];                                 \
-                                                                          \
-        /* check the angle p1,p2,p3 */                                    \
-        int cury = ptcur->y;                                              \
-        int nexty = ptnext->y;                                            \
-                                                                          \
-        if (nexty _op2_ cury )                                            \
-        {                                                                 \
-            CvPoint* ptprev = points[pprev];                             \
-                                                                          \
-            int ax = ptcur->x - ptprev->x;                                \
-            int bx = ptnext->x - ptcur->x;                                \
-                                                                          \
-            int ay = cury - (ptprev->y);                                  \
-            int by = nexty - (ptcur->y);                                  \
-                                                                          \
-            int convexity =  ay*bx - ax*by;/* if >0 then convex angle */  \
-                                                                          \
-            if (convexity _op_ 0)                                         \
-            {                                                             \
-                pprev = pcur;                                             \
-                pcur = pnext;                                             \
-                pnext+=incr;                                              \
-                stack[stacksize] = pnext;                                 \
-                stacksize++;                                              \
-            }                                                             \
-            else                                                          \
-            {                                                             \
-                if (pprev == start)                                       \
-                {                                                         \
-                    pcur = pnext;                                         \
-                    stack[1] = pcur;                                      \
-                    pnext+=incr;                                          \
-                    stack[2] = pnext;                                     \
-                                                                          \
-                }                                                         \
-                else                                                      \
-                {                                                         \
-                    stack[stacksize-2] = pnext;                           \
-                    pcur = pprev;                                         \
-                    stacksize--;                                          \
-                    pprev = stack[stacksize-3];                           \
-                }                                                         \
-            }                                                             \
-        }                                                                 \
-        else                                                              \
-        {                                                                 \
-            pnext+=incr;                                                  \
-            stack[stacksize-1] = pnext;                                   \
-        }                                                                 \
-    }                                                                     \
-    stacksize--;                                                          \
-    return stacksize;                                                     \
+    return --stacksize;
 }
 
 
-#define IPCV_IMPLEMENT_SKLANSKY3( func_name, array_type , _op_ , _op2_ , _access_ ) \
-int func_name(array_type* array, int start, int end, int* stack )         \
-{                                                                         \
-    int pprev, pcur, pnext;                                               \
-                                                                          \
-    int stacksize = 3;                                                    \
-                                                                          \
-    int incr;                                                             \
-                                                                          \
-    if ( end > start )                                                    \
-    {                                                                     \
-        incr = 1;                                                         \
-    }                                                                     \
-    else incr = -1;                                                       \
-                                                                          \
-                                                                          \
-    if( start==end ||                                                     \
-        ( array[start]_access_ x == array[end]_access_ x &&               \
-          array[start]_access_ y == array[end]_access_ y ) )              \
-        { stack[0] = start; return 1; }                                   \
-                                                                          \
-    /* prepare first triangle */                                          \
-    pprev = start;                                                        \
-    pcur = start+incr;                                                    \
-    pnext = pcur+incr;                                                    \
-                                                                          \
-    stack[0] = pprev;                                                     \
-    stack[1] = pcur;                                                      \
-    stack[2] = pnext;                                                     \
-                                                                          \
-    end+=incr;/* make end = afterend */                                   \
-                                                                          \
-    while( pnext != end )                                                 \
-    {                                                                     \
-        /* check the angle p1,p2,p3 */                                    \
-        int cury = array[pcur]_access_ y;                                 \
-        int nexty = array[pnext]_access_ y;                               \
-                                                                          \
-        if (nexty _op2_ cury )                                            \
-        {                                                                 \
-            int ax = (array[pcur]_access_ x) - (array[pprev]_access_ x);  \
-            int bx = (array[pnext]_access_ x) - (array[pcur]_access_ x);  \
-                                                                          \
-            int ay = cury - (array[pprev]_access_ y);                     \
-            int by = nexty - cury;                                        \
-                                                                          \
-            int convexity =  ay*bx - ax*by;/* if >0 then convex angle */  \
-                                                                          \
-            if (convexity _op_ 0)                                         \
-            {                                                             \
-                pprev = pcur;                                             \
-                pcur = pnext;                                             \
-                pnext+=incr;                                              \
-                stack[stacksize] = pnext;                                 \
-                stacksize++;                                              \
-            }                                                             \
-            else                                                          \
-            {                                                             \
-                if (pprev == start)                                       \
-                {                                                         \
-                    pcur = pnext;                                         \
-                    stack[1] = pcur;                                      \
-                    pnext+=incr;                                          \
-                    stack[2] = pnext;                                     \
-                                                                          \
-                }                                                         \
-                else                                                      \
-                {                                                         \
-                    stack[stacksize-2] = pnext;                           \
-                    pcur = pprev;                                         \
-                    stacksize--;                                          \
-                    pprev = stack[stacksize-3];                           \
-                }                                                         \
-            }                                                             \
-        }                                                                 \
-        else                                                              \
-        {                                                                 \
-            pnext+=incr;                                                  \
-            stack[stacksize-1] = pnext;                                   \
-        }                                                                 \
-    }                                                                     \
-    stacksize--;                                                          \
-    return stacksize;                                                     \
-}
-
-
-/*
-IPCV_IMPLEMENT_SKLANSKY2(icvSklanskyTL2, >, >= )
-IPCV_IMPLEMENT_SKLANSKY2(icvSklanskyTR2, <, >= )
-IPCV_IMPLEMENT_SKLANSKY2(icvSklanskyBL2, <, <= )
-IPCV_IMPLEMENT_SKLANSKY2(icvSklanskyBR2, >, <= )
-*/
-
-IPCV_IMPLEMENT_SKLANSKY3( icvSklanskyTL2, CvPoint *, >, >=,-> )
-IPCV_IMPLEMENT_SKLANSKY3( icvSklanskyTR2, CvPoint *, <, >=,-> )
-IPCV_IMPLEMENT_SKLANSKY3( icvSklanskyBL2, CvPoint *, <, <=,-> )
-IPCV_IMPLEMENT_SKLANSKY3( icvSklanskyBR2, CvPoint *, >, <=,-> )
-
-CvStatus
-icvConvexHull_Approx_Contour( CvSeq * contour,
-                              int bandwidth,
-                              int orientation, CvMemStorage * storage, CvSeq ** hull )
+static int
+icvSklansky_32f( CvPoint2D32f** array, int start, int end, int* stack, int nsign, int sign2 )
 {
-    CvStatus status = CV_OK;
-    
-    /* bounds */
-    int minx;
-    int screenwidth;
+    int incr = end > start ? 1 : -1;
+    /* prepare first triangle */
+    int pprev = start, pcur = pprev + incr, pnext = pcur + incr;
+    int stacksize = 3;
 
-    int maxy_ind = 0;
-    int miny_ind = 0;
-
-/*int* uh; *//* upper half pretenders  */
-/*int* lh; *//* lower half pretenderts */
-    CvPoint **puh;              /* upper half pretenders  */
-    CvPoint **plh;              /* upper half pretenders  */
-    int *flag;
-
-    /* stack of previous points for Sklansky */
-    int *stack;
-
-    int i, hc;
-
-    int numbands;
-    int width = 0;
-
-    CvPoint *rest;
-
-    CvSeqReader contour_reader;
-    CvSeqWriter hull_writer;
-
-    float ibw = 1.f / bandwidth;
-
-    cvStartReadSeq( contour, &contour_reader, 0 );
-
-    /*if (contour->bounds.height < 0 ) */
+    if( start == end ||
+        (array[start]->x == array[end]->x &&
+         array[start]->y == array[end]->y) )
     {
-        int k;
-        CvPoint *pt;
-        int maxx = INT_MIN;
-
-        minx = INT_MAX;
-
-        /* find minx and maxx */
-        for( k = 0; k < contour->total; k++ )
-        {
-            pt = (CvPoint *) (contour_reader.ptr);
-            CV_NEXT_SEQ_ELEM( sizeof( CvPoint ), contour_reader );
-            /* find minx and maxx */
-            maxx = MAX( pt->x, maxx );
-            minx = MIN( pt->x, minx );
-        }
-        screenwidth = maxx - minx + 1;
-    }
-/*
-    else
-    {
-        minx = contour->bounds.x;
-        screenwidth = contour->bounds.width;
-    }
-*/
-
-    /* allocate memory for bands */
-    numbands = screenwidth / bandwidth;
-    numbands += (bandwidth * numbands < screenwidth);
-
-/*
-    uh = (int*)icvAlloc( 2 * numbands* sizeof(int) );
-    lh = uh + numbands;
-*/
-    puh = (CvPoint **) icvAlloc( 2 * numbands * sizeof( CvPoint * ));
-    plh = puh + numbands;
-    flag = (int *) icvAlloc( numbands * sizeof( int ) + 2 );
-
-    if( !( /*uh && */ puh && flag) )
-    {
-        status = CV_OUTOFMEM_ERR;
-        goto freemem;
+        stack[0] = start;
+        return 1;
     }
 
-    stack = flag;
-    /* fill arrays */
-    for( i = 0; i < numbands; i++ )
+    stack[0] = pprev;
+    stack[1] = pcur;
+    stack[2] = pnext;
+
+    end += incr; /* make end = afterend */
+
+    while( pnext != end )
     {
-        flag[i] = 0;
-    }
+        /* check the angle p1,p2,p3 */
+        float cury = array[pcur]->y;
+        float nexty = array[pnext]->y;
+        float by = nexty - cury;
 
-    /* step two - finding maximal and minimal coordinate within every band */
-    for( i = 0; i < contour->total; i++ )
-    {
-        /* find band */
-        int x, y;
-        CvPoint *pt = (CvPoint *) (contour_reader.ptr);
-
-        CV_NEXT_SEQ_ELEM( sizeof( CvPoint ), contour_reader );
-        x = cvFloor( (pt->x - minx) * ibw );
-        y = pt->y;
-
-        if( flag[x] == 0 )
+        if( CV_SIGN( by ) != nsign )
         {
-            width++;
-            flag[x] = 1;
-            /*lh[x] = uh[x] = i; */
-            plh[x] = puh[x] = pt;
-        }
-        else
-        {
-            if( plh[x]->y >= y )
-            {                   /*lh[x] = i; */
-                plh[x] = pt;
-            }
-            if( puh[x]->y <= y )
-            {                   /*uh[x] = i; */
-                puh[x] = pt;
-            }
-        }
-    }
-    /* copy info from characteristic vector to solid array */
-    /* with finding splitter */
-    {
-        int j = 0;
+            float ax = array[pcur]->x - array[pprev]->x;
+            float bx = array[pnext]->x - array[pcur]->x;
+            float ay = cury - array[pprev]->y;
+            float convexity = ay*bx - ax*by;/* if >0 then convex angle */
 
-        for( i = 0; i < numbands; i++ )
-        {
-            if( flag[i] )
+            if( CV_SIGN( convexity ) == sign2 )
             {
-                /*uh[j] = uh[i]; */ puh[j] = puh[i];
-                if( puh[i]->y >= puh[maxy_ind]->y )
-                    maxy_ind = j;
-
-                /*lh[j] = lh[i]; */ plh[j] = plh[i];
-                if( plh[i]->y <= plh[miny_ind]->y )
-                    miny_ind = j;
-                j++;
+                pprev = pcur;
+                pcur = pnext;
+                pnext += incr;
+                stack[stacksize] = pnext;
+                stacksize++;
             }
-        }
-    }
-
-    cvStartWriteSeq( CV_SEQ_KIND_CURVE | CV_SEQ_ELTYPE_PPOINT | CV_SEQ_FLAG_CLOSED,
-                     sizeof( CvSeq ), sizeof( CvPoint * ), storage, &hull_writer );
-
-    /*upper half */
-    {
-        int tl_count = icvSklanskyTL2( puh, 0, maxy_ind, stack );
-        int *tr_stack = stack + tl_count;
-        int tr_count = icvSklanskyTR2( puh, width - 1, maxy_ind, tr_stack );
-
-        /* gather upper part of convex hull to output */
-        hc = 0;
-        if( orientation == CV_COUNTER_CLOCKWISE )
-        {
-            int i;
-
-            for( i = 0; i < tr_count - 1; i++, hc++ )
+            else
             {
-                CV_WRITE_SEQ_ELEM( puh[tr_stack[i]], hull_writer );
-            }
+                if( pprev == start )
+                {
+                    pcur = pnext;
+                    stack[1] = pcur;
+                    pnext += incr;
+                    stack[2] = pnext;
 
-            for( i = tl_count - 1; i > 0; i--, hc++ )
-            {
-                CV_WRITE_SEQ_ELEM( puh[stack[i]], hull_writer );
-            }
-            /* memorize rest */
-            rest = puh[stack[0]];
-        }
-        else
-        {
-            int i;
-
-            for( i = 0; i < tl_count - 1; i++, hc++ )
-            {
-                CV_WRITE_SEQ_ELEM( puh[stack[i]], hull_writer );
-            }
-
-            for( i = tr_count - 1; i > 0; i--, hc++ )
-            {
-                CV_WRITE_SEQ_ELEM( puh[tr_stack[i]], hull_writer );
-            }
-            /* memorize rest */
-            rest = puh[tr_stack[0]];
-        }
-    }
-    /* lower half */
-    {
-        int bl_count = icvSklanskyBL2( plh, 0, miny_ind, stack );
-        int *br_stack = stack + bl_count;
-        int br_count = icvSklanskyBR2( plh, width - 1, miny_ind, br_stack );
-
-        if( orientation == CV_COUNTER_CLOCKWISE )
-        {
-            int i;
-
-            if( plh[0] != puh[0] )
-            {
-                CV_WRITE_SEQ_ELEM( rest, hull_writer );
-            }
-
-            for( i = 0; i < bl_count - 1; i++, hc++ )
-            {
-                CV_WRITE_SEQ_ELEM( plh[stack[i]], hull_writer );
-            }
-
-            for( i = br_count - 1; i > 0; i--, hc++ )
-            {
-                CV_WRITE_SEQ_ELEM( plh[br_stack[i]], hull_writer );
-            }
-
-            if( plh[width - 1] != puh[width - 1] )
-            {
-                CV_WRITE_SEQ_ELEM( plh[br_stack[0]], hull_writer );
+                }
+                else
+                {
+                    stack[stacksize-2] = pnext;
+                    pcur = pprev;
+                    pprev = stack[stacksize-4];
+                    stacksize--;
+                }
             }
         }
         else
         {
-            int i;
-
-            if( plh[width - 1] != puh[width - 1] )
-            {
-                CV_WRITE_SEQ_ELEM( rest, hull_writer );
-            }
-
-            for( i = 0; i < br_count - 1; i++, hc++ )
-            {
-                CV_WRITE_SEQ_ELEM( plh[br_stack[i]], hull_writer );
-            }
-
-            for( i = bl_count - 1; i > 0; i--, hc++ )
-            {
-                CV_WRITE_SEQ_ELEM( plh[stack[i]], hull_writer );
-            }
-            if( plh[0] != puh[0] )
-            {
-                CV_WRITE_SEQ_ELEM( plh[stack[0]], hull_writer );
-            }
+            pnext += incr;
+            stack[stacksize-1] = pnext;
         }
     }
-    *hull = cvEndWriteSeq( &hull_writer );
 
-  freemem:
-
-    /*if (uh)   icvFree(&uh); */
-    if( puh )
-        icvFree( &puh );
-    if( flag )
-        icvFree( &flag );
-
-    return status;
+    return --stacksize;
 }
 
+typedef int (*sklansky_func)( CvPoint** points, int start, int end,
+                              int* stack, int sign, int sign2 );
 
-/* exact convex hull with points sorting */
-#define cmp_pts( ind1, ind2 )\
-( aux[ind1].x  < aux[ind2].x  ||\
-  aux[ind1].x == aux[ind2].x && \
-  aux[ind1].y  < aux[ind2].y   )
-
-CV_IMPLEMENT2_QSORT( icvSortPoints, int, cmp_pts, CvPoint * );
-
-CvStatus icvConvexHull_Exact( CvPoint * points,
-                              int num_points,
-                              int orientation, int *hullpoints, int *hullsize )
-{
-    int i;
-    int maxy_ind = 0, miny_ind = 0;
-    int hc = 0;
-
-    int *index;
-    int *stack;
-
-    index = (int *) icvAlloc( num_points * sizeof( int * ));
-
-    if( index == NULL )
-        return CV_OUTOFMEM_ERR;
-
-    stack = (int *) icvAlloc( (num_points + 2) * sizeof( int ));
-
-    if( stack == NULL )
-    {
-        icvFree( &index );
-        return CV_OUTOFMEM_ERR;
-    }
-
-    for( i = 0; i < num_points; i++ )
-    {
-        index[i] = i;
-    }
-
-    icvSortPoints( index, num_points, points );
-
-    /* find top and bottom */
-    for( i = 0; i < num_points; i++ )
-    {
-        maxy_ind = (points[index[maxy_ind]].y < points[index[i]].y) ? i : maxy_ind;
-        miny_ind = (points[index[miny_ind]].y > points[index[i]].y) ? i : miny_ind;
-    }
-
-    /*upper half */
-    {
-        int *tl_stack = stack;
-        int tl_count = icvSklanskyTL( points, index, 0, maxy_ind, tl_stack );
-        int *tr_stack = tl_stack + tl_count;
-        int tr_count = icvSklanskyTR( points, index, num_points - 1, maxy_ind, tr_stack );
-
-        /* gather upper part of convex hull to output */
-        if( orientation == CV_COUNTER_CLOCKWISE )
-        {
-            int i;
-
-            for( i = 0; i < tr_count - 1; i++, hc++ )
-            {
-                hullpoints[hc] = index[tr_stack[i]];
-            }
-
-            for( i = tl_count - 1; i > 0; i--, hc++ )
-            {
-                hullpoints[hc] = index[tl_stack[i]];
-            }
-        }
-        else
-        {
-            int i;
-
-            for( i = 0; i < tl_count - 1; i++, hc++ )
-            {
-                hullpoints[hc] = index[tl_stack[i]];
-            }
-
-            for( i = tr_count - 1; i > 0; i--, hc++ )
-            {
-                hullpoints[hc] = index[tr_stack[i]];
-            }
-        }
-    }
-    /* lower half */
-    {
-        int *bl_stack = stack;
-        int bl_count = icvSklanskyBL( points, index, 0, miny_ind, bl_stack );
-        int *br_stack = stack + bl_count;
-        int br_count = icvSklanskyBR( points, index, num_points - 1, miny_ind, br_stack );
-
-        /*if (lh[0] == uh[0]) */
-        /*{ bl_stack+=1; bl_count--; }
-           if (lh[width - 1] == uh[width - 1]) */
-        /*{ br_stack+=1; br_count--; } */
-
-        if( orientation == CV_COUNTER_CLOCKWISE )
-        {
-            int i;
-
-            for( i = 0; i < bl_count - 1; i++, hc++ )
-            {
-                hullpoints[hc] = index[bl_stack[i]];
-            }
-
-            for( i = br_count - 1; i > 0; i--, hc++ )
-            {
-                hullpoints[hc] = index[br_stack[i]];
-            }
-        }
-        else
-        {
-            int i;
-
-            for( i = 0; i < br_count - 1; i++, hc++ )
-            {
-                hullpoints[hc] = index[br_stack[i]];
-            }
-
-            for( i = bl_count - 1; i > 0; i--, hc++ )
-            {
-                hullpoints[hc] = index[bl_stack[i]];
-            }
-        }
-    }
-
-    *hullsize = hc;
-    icvFree( &index );
-    icvFree( &stack );
-
-    return CV_OK;
-}
-
-/* _op_ >  for upper half,  <  for lower half */
-/* _op2_ >  in ascendance of y ,  <  in descendance of y */
-
-
-
-/* exact contour convex hull with points sorting */
-/*typedef struct
-{
-    CvPoint* pointer;
-    int       index;
-} cvPointPosition;
-*/
-/*#define pt_access  .pointer->*/
-/*
-IPCV_IMPLEMENT_SKLANSKY3(icvSklanskyTL3, cvPointPosition, >, >= , .pointer-> )
-IPCV_IMPLEMENT_SKLANSKY3(icvSklanskyTR3, cvPointPosition, <, >= , .pointer-> )
-IPCV_IMPLEMENT_SKLANSKY3(icvSklanskyBL3, cvPointPosition, <, <= , .pointer-> )
-IPCV_IMPLEMENT_SKLANSKY3(icvSklanskyBR3, cvPointPosition, >, <= , .pointer-> )
-*/
-
-
-/*
-#define cmp_pts1( pos1, pos2 ) \
-( pos1.pointer->x  < pos2.pointer->x  ||       \
-  pos1.pointer->x == pos2.pointer->x &&       \
-  pos1.pointer->y  < pos2.pointer->y  )
-
-*/
-/*IPCV_IMPLEMENT_QSORT( icvSortPointsByPosition, cvPointPosition, cmp_pts1 )*/
-
-#define cmp_pts1( ptr1, ptr2 ) \
-( ptr1->x  < ptr2->x  ||       \
+#define cmp_pts( ptr1, ptr2 ) \
+( ptr1->x < ptr2->x  ||       \
   ptr1->x == ptr2->x &&       \
-  ptr1->y  < ptr2->y  )
+  ptr1->y < ptr2->y  )
 
-CV_IMPLEMENT_QSORT( icvSortPointsByPointers, CvPoint *, cmp_pts1 );
+CV_IMPLEMENT_QSORT( icvSortPointsByPointers_32s, CvPoint *, cmp_pts );
+CV_IMPLEMENT_QSORT( icvSortPointsByPointers_32f, CvPoint2D32f *, cmp_pts );
 
-IPCV_IMPLEMENT_SKLANSKY3( icvSklanskyTL3, CvPoint *, >, >=,-> )
-IPCV_IMPLEMENT_SKLANSKY3( icvSklanskyTR3, CvPoint *, <, >=,-> )
-IPCV_IMPLEMENT_SKLANSKY3( icvSklanskyBL3, CvPoint *, <, <=,-> )
-IPCV_IMPLEMENT_SKLANSKY3( icvSklanskyBR3, CvPoint *, >, <=,-> )
-
-CvStatus
-icvContourConvexHull_Exact( CvSeq * contour,
-                            int orientation, CvMemStorage * storage, CvSeq ** hull )
+static void
+icvCalcAndWritePtIndices( CvPoint** pointer, int* stack, int start, int end,
+                          CvSeq* ptseq, CvSeqWriter* writer )
 {
-    int i;
-    int maxy_ind = 0, miny_ind = 0;
-    int hc = 0;
+    CV_FUNCNAME( "icvCalcAndWritePtIndices" );
 
-    CvPoint **pointer;
-    int *stack;
+    __BEGIN__;
+    
+    int i, incr = start < end ? 1 : -1;
+    int idx, first_idx = ptseq->first->start_index;
 
+    for( i = start; i != end; i += incr )
+    {
+        CvPoint* ptr = (CvPoint*)pointer[stack[i]];
+        CvSeqBlock* block = ptseq->first;
+        while( (unsigned)(idx = ptr - (CvPoint*)block->data) >= (unsigned)block->count )
+        {
+            block = block->next;
+            if( block == ptseq->first )
+                CV_ERROR( CV_StsError, "Internal error" );
+        }
+        idx += block->start_index - first_idx;
+        CV_WRITE_SEQ_ELEM( idx, *writer );
+    }
+
+    __END__;
+}
+
+
+CV_IMPL CvSeq*
+cvConvexHull2( const CvArr* array, void* hull_storage,
+               int orientation, int return_points )
+{
+    CvSeq* hull = 0;
+    CvPoint** pointer = 0;
+    int* stack = 0;
+    
+    CV_FUNCNAME( "cvConvexHull2" );
+    
+    __BEGIN__;
+
+    CvMat* mat = 0;
     CvSeqReader reader;
     CvSeqWriter writer;
+    CvContour contour_header, hull_header;
+    CvSeqBlock block, hullblock;
+    CvSeq* ptseq = 0;
+    CvSeq* hullseq = 0;
+    int is_float;
+    int* t_stack;
+    int t_count;
+    int i, miny_ind = 0, maxy_ind = 0;
+    int hulltype;
+    sklansky_func sklansky;
 
-    if( contour->total == 0 ) return CV_BADRANGE_ERR;
-
-    pointer = (CvPoint **) icvAlloc( contour->total * sizeof( CvPoint * ));
-    if( pointer == NULL )
-        return CV_OUTOFMEM_ERR;
-
-    stack = (int *) icvAlloc( (contour->total + 2) * sizeof( int ));
-
-    if( stack == NULL )
+    if( CV_IS_SEQ( array ))
     {
-        icvFree( &pointer );
-        return CV_OUTOFMEM_ERR;
+        ptseq = (CvSeq*)array;
+        if( !CV_IS_SEQ_POINT_SET( ptseq ))
+            CV_ERROR( CV_StsBadArg, "Unsupported sequence type" );
+        if( hull_storage == 0 )
+            hull_storage = ptseq->storage;
+    }
+    else
+    {
+        CV_CALL( ptseq = icvPointSeqFromMat(
+            CV_SEQ_KIND_GENERIC, array, &contour_header, &block ));
     }
 
-    cvStartReadSeq( contour, &reader, 0 );
-
-    for( i = 0; i < contour->total; i++ )
+    if( CV_IS_STORAGE( hull_storage ))
     {
-        pointer[i] = (CvPoint *) reader.ptr;
-        CV_NEXT_SEQ_ELEM( sizeof( CvPoint ), reader );
+        if( return_points )
+        {
+            CV_CALL( hullseq = cvCreateSeq(
+                CV_SEQ_KIND_CURVE|CV_SEQ_ELTYPE(ptseq)|
+                CV_SEQ_FLAG_CLOSED|CV_SEQ_FLAG_CONVEX,
+                sizeof(CvContour), sizeof(CvPoint),(CvMemStorage*)hull_storage ));
+        }
+        else
+        {
+            CV_CALL( hullseq = cvCreateSeq(
+                CV_SEQ_KIND_CURVE|CV_SEQ_ELTYPE_PPOINT|
+                CV_SEQ_FLAG_CLOSED|CV_SEQ_FLAG_CONVEX,
+                sizeof(CvContour), sizeof(CvPoint*), (CvMemStorage*)hull_storage ));
+        }
+    }
+    else
+    {
+        if( !CV_IS_MAT( hull_storage ))
+            CV_ERROR(CV_StsBadArg, "Destination must be valid memory storage or matrix");
+
+        mat = (CvMat*)hull_storage;
+
+        if( mat->cols != 1 && mat->rows != 1 || !CV_IS_MAT_CONT(mat->type))
+            CV_ERROR( CV_StsBadArg,
+            "The hull matrix should be continuous and have a single row or a single column" );
+
+        if( mat->cols + mat->rows - 1 < ptseq->total )
+            CV_ERROR( CV_StsBadSize, "The hull matrix size might be not enough to fit the hull" );
+
+        if( CV_MAT_TYPE(mat->type) != CV_SEQ_ELTYPE(ptseq) &&
+            CV_MAT_TYPE(mat->type) != CV_32SC1 )
+            CV_ERROR( CV_StsUnsupportedFormat,
+            "The hull matrix must have the same type as input or 32sC1 (integers)" );
+
+        CV_CALL( hullseq = cvMakeSeqHeaderForArray(
+            CV_SEQ_KIND_CURVE|CV_MAT_TYPE(mat->type)|CV_SEQ_FLAG_CLOSED,
+            sizeof(contour_header), CV_ELEM_SIZE(mat->type), mat->data.ptr,
+            mat->cols + mat->rows - 1, (CvSeq*)&hull_header, &hullblock ));
+
+        cvClearSeq( hullseq );
     }
 
-    icvSortPointsByPointers( pointer, contour->total, 0 );
+    if( ptseq->total == 0 )
+    {
+        if( mat )
+            CV_ERROR( CV_StsBadSize,
+            "Point sequence can not be empty if the output is matrix" );
+        EXIT;
+    }
+
+    cvStartAppendToSeq( hullseq, &writer );
+
+    is_float = CV_SEQ_ELTYPE(ptseq) == CV_32FC2;
+    hulltype = CV_SEQ_ELTYPE(hullseq);
+    sklansky = !is_float ? (sklansky_func)icvSklansky_32s :
+                           (sklansky_func)icvSklansky_32f;
+
+    CV_CALL( pointer = (CvPoint**)cvAlloc( ptseq->total*sizeof(pointer[0]) ));
+    CV_CALL( stack = (int*)cvAlloc( (ptseq->total + 2)*sizeof(stack[0]) ));
+
+    cvStartReadSeq( ptseq, &reader );
+
+    for( i = 0; i < ptseq->total; i++ )
+    {
+        pointer[i] = (CvPoint*)reader.ptr;
+        CV_NEXT_SEQ_ELEM( ptseq->elem_size, reader );
+    }
+
+    if( ptseq->total == 1 )
+    {
+        if( hulltype == CV_SEQ_ELTYPE_PPOINT )
+        {
+            CV_WRITE_SEQ_ELEM( pointer[0], writer );
+        }
+        else if( hulltype == CV_SEQ_ELTYPE_INDEX )
+        {
+            int index = 0;
+            CV_WRITE_SEQ_ELEM( index, writer );
+        }
+        else
+        {
+            CvPoint pt = pointer[0][0];
+            CV_WRITE_SEQ_ELEM( pt, writer );
+        }
+        goto finish_hull;
+    }
+
+    if( !is_float )
+        icvSortPointsByPointers_32s( pointer, ptseq->total, 0 );
+    else
+        icvSortPointsByPointers_32f( (CvPoint2D32f**)pointer, ptseq->total, 0 );
 
     /* find top and bottom */
-    for( i = 0; i < contour->total; i++ )
+    for( i = 1; i < ptseq->total; i++ )
     {
-        maxy_ind = (pointer[maxy_ind]->y < pointer[i]->y) ? i : maxy_ind;
-        miny_ind = (pointer[miny_ind]->y > pointer[i]->y) ? i : miny_ind;
+        int y = pointer[i]->y;
+        if( pointer[miny_ind]->y > y )
+            miny_ind = i;
+        if( pointer[maxy_ind]->y < y )
+            maxy_ind = i;
     }
-    cvStartWriteSeq( CV_SEQ_KIND_CURVE | CV_SEQ_ELTYPE_PPOINT | CV_SEQ_FLAG_CLOSED,
-                     sizeof( CvSeq ), sizeof( CvPoint * ), storage, &writer );
-
 
     /*upper half */
     {
         int *tl_stack = stack;
-        int tl_count = icvSklanskyTL3( pointer, 0, maxy_ind, tl_stack );
+        int tl_count = sklansky( pointer, 0, maxy_ind, tl_stack, -1, 1 );
         int *tr_stack = tl_stack + tl_count;
-        int tr_count = icvSklanskyTR3( pointer, contour->total - 1, maxy_ind, tr_stack );
+        int tr_count = sklansky( pointer, ptseq->total - 1, maxy_ind, tr_stack, -1, -1 );
 
         /* gather upper part of convex hull to output */
-        hc = 0;
         if( orientation == CV_COUNTER_CLOCKWISE )
         {
-            int i;
+            CV_SWAP( tl_stack, tr_stack, t_stack );
+            CV_SWAP( tl_count, tr_count, t_count );
+        }
 
-            for( i = 0; i < tr_count - 1; i++, hc++ )
-            {
-                CV_WRITE_SEQ_ELEM( pointer[tr_stack[i]], writer );
-            }
-
-            for( i = tl_count - 1; i > 0; i--, hc++ )
-            {
+        if( hulltype == CV_SEQ_ELTYPE_PPOINT )
+        {
+            for( i = 0; i < tl_count - 1; i++ )
                 CV_WRITE_SEQ_ELEM( pointer[tl_stack[i]], writer );
-            }
+
+            for( i = tr_count - 1; i > 0; i-- )
+                CV_WRITE_SEQ_ELEM( pointer[tr_stack[i]], writer );
+        }
+        else if( hulltype == CV_SEQ_ELTYPE_INDEX )
+        {
+            CV_CALL( icvCalcAndWritePtIndices( pointer, tl_stack,
+                                               0, tl_count-1, ptseq, &writer ));
+            CV_CALL( icvCalcAndWritePtIndices( pointer, tr_stack,
+                                               tr_count-1, 0, ptseq, &writer ));
         }
         else
         {
-            int i;
+            for( i = 0; i < tl_count - 1; i++ )
+                CV_WRITE_SEQ_ELEM( pointer[tl_stack[i]][0], writer );
 
-            for( i = 0; i < tl_count - 1; i++, hc++ )
-            {
-                CV_WRITE_SEQ_ELEM( pointer[tl_stack[i]], writer );
-            }
-
-            for( i = tr_count - 1; i > 0; i--, hc++ )
-            {
-                CV_WRITE_SEQ_ELEM( pointer[tr_stack[i]], writer );
-            }
+            for( i = tr_count - 1; i > 0; i-- )
+                CV_WRITE_SEQ_ELEM( pointer[tr_stack[i]][0], writer );
         }
     }
+
     /* lower half */
     {
         int *bl_stack = stack;
-        int bl_count = icvSklanskyBL3( pointer, 0, miny_ind, bl_stack );
+        int bl_count = sklansky( pointer, 0, miny_ind, bl_stack, 1, -1 );
         int *br_stack = stack + bl_count;
-        int br_count = icvSklanskyBR3( pointer, contour->total - 1, miny_ind, br_stack );
+        int br_count = sklansky( pointer, ptseq->total - 1, miny_ind, br_stack, 1, 1 );
 
-        /*{ bl_stack+=1; bl_count--; } */
-        /*{ br_stack+=1; br_count--; } */
-        if( orientation == CV_COUNTER_CLOCKWISE )
+        if( orientation != CV_COUNTER_CLOCKWISE )
         {
-            int i;
+            CV_SWAP( bl_stack, br_stack, t_stack );
+            CV_SWAP( bl_count, br_count, t_count );
+        }
 
-            for( i = 0; i < bl_count - 1; i++, hc++ )
-            {
+        if( hulltype == CV_SEQ_ELTYPE_PPOINT )
+        {
+            for( i = 0; i < bl_count - 1; i++ )
                 CV_WRITE_SEQ_ELEM( pointer[bl_stack[i]], writer );
-            }
 
-            for( i = br_count - 1; i > 0; i--, hc++ )
-            {
+            for( i = br_count - 1; i > 0; i-- )
                 CV_WRITE_SEQ_ELEM( pointer[br_stack[i]], writer );
-            }
+        }
+        else if( hulltype == CV_SEQ_ELTYPE_INDEX )
+        {
+            CV_CALL( icvCalcAndWritePtIndices( pointer, bl_stack,
+                                               0, bl_count-1, ptseq, &writer ));
+            CV_CALL( icvCalcAndWritePtIndices( pointer, br_stack,
+                                               br_count-1, 0, ptseq, &writer ));
         }
         else
         {
-            int i;
+            for( i = 0; i < bl_count - 1; i++ )
+                CV_WRITE_SEQ_ELEM( pointer[bl_stack[i]][0], writer );
 
-            for( i = 0; i < br_count - 1; i++, hc++ )
-            {
-                CV_WRITE_SEQ_ELEM( pointer[br_stack[i]], writer );
-            }
-
-            for( i = bl_count - 1; i > 0; i--, hc++ )
-            {
-                CV_WRITE_SEQ_ELEM( pointer[bl_stack[i]], writer );
-            }
+            for( i = br_count - 1; i > 0; i-- )
+                CV_WRITE_SEQ_ELEM( pointer[br_stack[i]][0], writer );
         }
     }
-    *hull = cvEndWriteSeq( &writer );
 
-    icvFree( &pointer );
-    icvFree( &stack );
+finish_hull:
+    CV_CALL( cvEndWriteSeq( &writer ));
 
-    return CV_OK;
+    if( mat )
+    {
+        if( mat->rows > mat->cols )
+            mat->rows = hullseq->total;
+        else
+            mat->cols = hullseq->total;
+    }
+    else
+    {
+        hull = hullseq;
+        ((CvContour*)hull)->rect = cvBoundingRect( ptseq, ptseq == (CvSeq*)&contour_header );
+        
+        /*if( ptseq != (CvSeq*)&contour_header )
+            hullseq->v_prev = ptseq;*/
+    }
+
+    __END__;
+
+    cvFree( (void**)&pointer );
+    cvFree( (void**)&stack );
+
+    return hull;
 }
 
-
-
-/*typedef struct
-{
-    CvPoint* start;
-    CvPoint* end;
-    CvPoint* depth_point;
-    float depth;
-}CvConvexityDefect;
-*/
 
 /* contour must be a simple polygon */
 /* it must have more than 3 points  */
-CvStatus
-icvConvexityDefects( CvSeq * contour, CvSeq * convexhull,
-                     CvMemStorage * storage, CvSeq ** defects )
+CV_IMPL CvSeq*
+cvConvexityDefects( const CvArr* array,
+                    const CvArr* hullarray,
+                    CvMemStorage* storage )
 {
-    CvPoint *pos;
-    int index, i;
+    CvSeq* defects = 0;
+    
+    CV_FUNCNAME( "cvConvexityDefects" );
+
+    __BEGIN__;
+
+    int i, index;
+    CvPoint* hull_cur;
 
     /* is orientation of hull different from contour one */
     int rev_orientation;
 
-    CvSeqReader hull_reader;
-    CvSeqReader contour_reader;
-    CvSeqWriter writer;
+    CvContour contour_header;
+    CvContour hull_header;
+    CvSeqBlock block, hullblock;
+    CvSeq *ptseq = (CvSeq*)array, *hull = (CvSeq*)hullarray;
 
-    if( contour->total < 4 || convexhull->total < 3)
-        return CV_BADSIZE_ERR;
-    /* recognize co-orientation of contour and its hull */
+    CvSeqReader hull_reader;
+    CvSeqReader ptseq_reader;
+    CvSeqWriter writer;
+    int is_index;
+
+    if( CV_IS_SEQ( ptseq ))
+    {
+        if( !CV_IS_SEQ_POINT_SET( ptseq ))
+            CV_ERROR( CV_StsUnsupportedFormat,
+                "Input sequence is not a sequence of points" );
+        if( !storage )
+            storage = ptseq->storage;
+    }
+    else
+    {
+        CV_CALL( ptseq = icvPointSeqFromMat(
+            CV_SEQ_KIND_GENERIC, array, &contour_header, &block ));
+    }
+
+    if( CV_SEQ_ELTYPE( ptseq ) != CV_32SC2 )
+        CV_ERROR( CV_StsUnsupportedFormat,
+            "Floating-point coordinates are not supported here" );
+
+    if( CV_IS_SEQ( hull ))
+    {
+        int hulltype = CV_SEQ_ELTYPE( hull );
+        if( hulltype != CV_SEQ_ELTYPE_PPOINT || hulltype != CV_SEQ_ELTYPE_INDEX )
+            CV_ERROR( CV_StsUnsupportedFormat,
+                "Convex hull must represented as a sequence "
+                "of indices or sequence of pointers" );
+        if( !storage )
+            storage = hull->storage;
+    }
+    else
+    {
+        CvMat* mat = (CvMat*)hull;
+        
+        if( !CV_IS_MAT( hull ))
+            CV_ERROR(CV_StsBadArg, "Convex hull is neither sequence nor matrix");
+
+        if( mat->cols != 1 && mat->rows != 1 ||
+            !CV_IS_MAT_CONT(mat->type) || CV_MAT_TYPE(mat->type) != CV_32SC1 )
+            CV_ERROR( CV_StsBadArg,
+            "The matrix should be 1-dimensional and continuous array of int's" );
+
+        if( mat->cols + mat->rows - 1 > ptseq->total )
+            CV_ERROR( CV_StsBadSize, "Convex hull is larger than the point sequence" );
+        
+        CV_CALL( hull = cvMakeSeqHeaderForArray(
+            CV_SEQ_KIND_CURVE|CV_MAT_TYPE(mat->type)|CV_SEQ_FLAG_CLOSED,
+            sizeof(hull_header), CV_ELEM_SIZE(mat->type), mat->data.ptr,
+            mat->cols + mat->rows - 1, (CvSeq*)&hull_header, &hullblock ));
+    }
+
+    is_index = CV_SEQ_ELTYPE(hull) == CV_SEQ_ELTYPE_INDEX;
+
+    if( !storage )
+        CV_ERROR( CV_StsNullPtr, "NULL storage pointer" );
+
+    CV_CALL( defects = cvCreateSeq( CV_SEQ_KIND_GENERIC, sizeof(CvSeq),
+                                    sizeof(CvConvexityDefect), storage ));
+
+    if( ptseq->total < 4 || hull->total < 3)
+    {
+        //CV_ERROR( CV_StsBadSize,
+        //    "point seq size must be >= 4, convex hull size must be >= 3" );
+        EXIT;
+    }
+
+    /* recognize co-orientation of ptseq and its hull */
     {
         int sign = 0;
         int index1, index2, index3;
 
-        pos = *((CvPoint **) (CV_GET_SEQ_ELEM( CvPoint *, convexhull, 0 )));
-        index1 = cvSeqElemIdx( contour, (char *) pos, NULL );
+        if( !is_index )
+        {
+            CvPoint* pos = *CV_GET_SEQ_ELEM( CvPoint*, hull, 0 );
+            CV_CALL( index1 = cvSeqElemIdx( ptseq, pos ));
 
-        pos = *((CvPoint **) (CV_GET_SEQ_ELEM( CvPoint *, convexhull, 1 )));
-        index2 = cvSeqElemIdx( contour, (char *) pos, NULL );
+            pos = *CV_GET_SEQ_ELEM( CvPoint*, hull, 1 );
+            CV_CALL( index2 = cvSeqElemIdx( ptseq, pos ));
 
-        pos = *((CvPoint **) (CV_GET_SEQ_ELEM( CvPoint *, convexhull, 2 )));
-        index3 = cvSeqElemIdx( contour, (char *) pos, NULL );
+            pos = *CV_GET_SEQ_ELEM( CvPoint*, hull, 2 );
+            CV_CALL( index3 = cvSeqElemIdx( ptseq, pos ));
+        }
+        else
+        {
+            index1 = *CV_GET_SEQ_ELEM( int, hull, 0 );
+            index2 = *CV_GET_SEQ_ELEM( int, hull, 1 );
+            index3 = *CV_GET_SEQ_ELEM( int, hull, 2 );
+        }
 
         sign += (index2 > index1) ? 1 : 0;
         sign += (index3 > index2) ? 1 : 0;
@@ -1161,165 +601,218 @@ icvConvexityDefects( CvSeq * contour, CvSeq * convexhull,
         rev_orientation = (sign == 2) ? 0 : 1;
     }
 
-    cvStartReadSeq( contour, &contour_reader, 0 );
-    cvStartReadSeq( convexhull, &hull_reader, rev_orientation );
+    cvStartReadSeq( ptseq, &ptseq_reader, 0 );
+    cvStartReadSeq( hull, &hull_reader, rev_orientation );
 
-    pos = *((CvPoint **) (hull_reader.prev_elem));
-    index = cvSeqElemIdx( contour, (char *) pos, NULL );
-    cvSetSeqReaderPos( &contour_reader, index );
+    if( !is_index )
+    {
+        hull_cur = *(CvPoint**)hull_reader.prev_elem;
+        index = cvSeqElemIdx( ptseq, (char*)hull_cur, 0 );
+    }
+    else
+    {
+        index = *(int*)hull_reader.prev_elem;
+        hull_cur = CV_GET_SEQ_ELEM( CvPoint, ptseq, index );
+    }
+    cvSetSeqReaderPos( &ptseq_reader, index );
+    cvStartAppendToSeq( defects, &writer );
 
-    cvStartWriteSeq( CV_SEQ_KIND_CURVE | CV_SEQ_FLAG_CLOSED, sizeof( CvSeq ),
-                     sizeof( CvConvexityDefect ), storage, &writer );
-
-    /* cycle through contour and hull with computing defects */
-    for( i = 0; i < convexhull->total; i++ )
+    /* cycle through ptseq and hull with computing defects */
+    for( i = 0; i < hull->total; i++ )
     {
         CvConvexityDefect defect;
         int is_defect = 0;
-        int dx0, dy0;
-        float depth = 0;
+        double dx0, dy0;
+        double depth = 0, scale;
+        CvPoint* hull_next;
 
-        /*if (rev_orientation) 
-           {        
-           CV_REV_READ_SEQ_ELEM( pos, hull_reader );
-           }
-           else
-           {
-           CV_READ_SEQ_ELEM( pos, hull_reader );
-           } */
-        dx0 = (*(CvPoint **) (hull_reader.ptr))->x - pos->x;
-        dy0 = (*(CvPoint **) (hull_reader.ptr))->y - pos->y;
-        /* go through contour to achieve next hull point */
-        CV_NEXT_SEQ_ELEM( sizeof( CvPoint ), contour_reader );
-
-        defect.start = pos;
-        defect.end = *((CvPoint **) (hull_reader.ptr));
-
-        while( contour_reader.ptr != (char *) (*((CvPoint **) hull_reader.ptr)))
+        if( !is_index )
+            hull_next = *(CvPoint**)hull_reader.ptr;
+        else
         {
-            CvPoint *cur = (CvPoint *) (contour_reader.ptr);
+            int t = *(int*)hull_reader.ptr;
+            hull_next = CV_GET_SEQ_ELEM( CvPoint, ptseq, t );
+        }
 
-            /* compute distance from current point to hull edge */
-            int dx = cur->x - pos->x;
-            int dy = cur->y - pos->y;
+        dx0 = (double)hull_next->x - (double)hull_cur->x;
+        dy0 = (double)hull_next->y - (double)hull_cur->y;
+        assert( dx0 != 0 && dy0 != 0 ); 
+        scale = 1./sqrt(dx0*dx0 + dy0*dy0);
 
-            /* compute depth */
-            int prod = abs( -dy0 * dx + dx0 * dy );
-            int norm = dx0 * dx0 + dy0 * dy0;
-            float inorm = cvInvSqrt( (float) norm );
-            float dist = prod * inorm;
+        defect.start = hull_cur;
+        defect.end = hull_next;
 
-            if( dist > depth )
+        for(;;)
+        {
+            /* go through ptseq to achieve next hull point */
+            CV_NEXT_SEQ_ELEM( sizeof(CvPoint), ptseq_reader );
+
+            if( ptseq_reader.ptr == (char*)hull_next )
+                break;
+            else
             {
-                depth = dist;
-                defect.depth_point = cur;
-                defect.depth = depth;
-                is_defect = 1;
+                CvPoint* cur = (CvPoint*)ptseq_reader.ptr;
+            
+                /* compute distance from current point to hull edge */
+                double dx = (double)cur->x - (double)hull_cur->x;
+                double dy = (double)cur->y - (double)hull_cur->y;
+
+                /* compute depth */
+                double dist = fabs(-dy0*dx + dx0*dy) * scale;
+
+                if( dist > depth )
+                {
+                    depth = dist;
+                    defect.depth_point = cur;
+                    defect.depth = (float)depth;
+                    is_defect = 1;
+                }
             }
-            CV_NEXT_SEQ_ELEM( sizeof( CvPoint ), contour_reader );
         }
         if( is_defect )
         {
             CV_WRITE_SEQ_ELEM( defect, writer );
         }
 
+        hull_cur = hull_next;
         if( rev_orientation )
         {
-            CV_REV_READ_SEQ_ELEM( pos, hull_reader );
+            CV_PREV_SEQ_ELEM( hull->elem_size, hull_reader );
         }
         else
         {
-            CV_READ_SEQ_ELEM( pos, hull_reader );
+            CV_NEXT_SEQ_ELEM( hull->elem_size, hull_reader );
         }
     }
 
-    *defects = cvEndWriteSeq( &writer );
+    defects = cvEndWriteSeq( &writer );
 
-    return CV_OK;
+    __END__;
+
+    return defects;
 }
 
 
-CvStatus
-icvConvexHull( CvPoint * points,
-               int num_points, CvRect * /*bound_rect*/, int orientation, int *hull, int *hullsize )
+CV_IMPL int
+cvCheckContourConvexity( const CvArr* array )
 {
-    if( points == NULL )
-        return CV_NULLPTR_ERR;
-    if( num_points <= 0 )
-        return CV_BADSIZE_ERR;
-    if( hull == NULL )
-        return CV_NULLPTR_ERR;
-    if( hullsize == NULL )
-        return CV_NULLPTR_ERR;
+    int flag = -1;
 
-    return icvConvexHull_Exact( points, num_points, orientation, hull, hullsize );
-}
+    CV_FUNCNAME( "cvCheckContourConvexity" );
 
-CvStatus
-icvContourConvexHull( CvSeq * contour, int orientation, CvMemStorage * storage, CvSeq ** hull )
-{
-    if( contour == NULL )
-        return CV_NULLPTR_ERR;
-    if( storage == NULL )
-        return CV_NULLPTR_ERR;
-    if( hull == NULL )
-        return CV_NULLPTR_ERR;
+    __BEGIN__;
 
-    return icvContourConvexHull_Exact( contour, orientation, storage, hull );
-}
-
-
-int
-icvCheckContourConvexity( CvSeq * contour )
-{
     int i;
-    int dx0, dy0;
-    CvPoint *cur_pt;
-    CvPoint *prev_pt;
     int orientation = 0;
     CvSeqReader reader;
+    CvContour contour_header;
+    CvSeqBlock block;
+    CvSeq* contour = (CvSeq*)array;
 
-    /* check arguments */
-    if( contour == NULL )
-        return ( int ) CV_NULLPTR_ERR;
-    if( !CV_IS_SEQ_POLYGON( contour ))
-        return ( int ) CV_BADFLAG_ERR;
-
-    cvStartReadSeq( contour, &reader, 0 );
-    prev_pt = (CvPoint *) reader.prev_elem;
-    cur_pt = (CvPoint *) reader.ptr;
-    dx0 = cur_pt->x - prev_pt->x;
-    dy0 = cur_pt->y - prev_pt->y;
-
-    for( i = 0; i < contour->total; i++ )
+    if( CV_IS_SEQ(contour) )
     {
-        int dxdy0, dydx0;
-        int dx, dy;
-
-        /*int orient; */
-        CV_NEXT_SEQ_ELEM( sizeof( CvPoint ), reader );
-        prev_pt = cur_pt;
-        cur_pt = (CvPoint *) reader.ptr;
-
-        dx = cur_pt->x - prev_pt->x;
-        dy = cur_pt->y - prev_pt->y;
-        dxdy0 = dx * dy0;
-        dydx0 = dy * dx0;
-
-        /* find orientation */
-        /*orient = -dy0 * dx + dx0 * dy;
-           orientation |= (orient > 0) ? 1 : 2;
-         */
-        orientation |= (dydx0 > dxdy0) ? 1 : ((dydx0 < dxdy0) ? 2 : 3);
-
-        if( orientation == 3 )
-            return 0;
-
-        dx0 = dx;
-        dy0 = dy;
+        if( !CV_IS_SEQ_POLYGON(contour))
+            CV_ERROR( CV_StsUnsupportedFormat,
+                "Input sequence must be polygon (closed 2d curve)" );
+    }
+    else
+    {
+        CV_CALL( contour = icvPointSeqFromMat(
+            CV_SEQ_KIND_CURVE|CV_SEQ_FLAG_CLOSED, array, &contour_header, &block ));
     }
 
-    return 1;
+    if( contour->total == 0 )
+        EXIT;
+
+    cvStartReadSeq( contour, &reader, 0 );
+    
+    flag = 1;
+
+    if( CV_SEQ_ELTYPE( contour ) == CV_32SC2 )
+    {
+        CvPoint *prev_pt = (CvPoint*)reader.prev_elem;
+        CvPoint *cur_pt = (CvPoint*)reader.ptr;
+    
+        int dx0 = cur_pt->x - prev_pt->x;
+        int dy0 = cur_pt->y - prev_pt->y;
+
+        for( i = 0; i < contour->total; i++ )
+        {
+            int dxdy0, dydx0;
+            int dx, dy;
+
+            /*int orient; */
+            CV_NEXT_SEQ_ELEM( sizeof(CvPoint), reader );
+            prev_pt = cur_pt;
+            cur_pt = (CvPoint *) reader.ptr;
+
+            dx = cur_pt->x - prev_pt->x;
+            dy = cur_pt->y - prev_pt->y;
+            dxdy0 = dx * dy0;
+            dydx0 = dy * dx0;
+
+            /* find orientation */
+            /*orient = -dy0 * dx + dx0 * dy;
+               orientation |= (orient > 0) ? 1 : 2;
+             */
+            orientation |= (dydx0 > dxdy0) ? 1 : ((dydx0 < dxdy0) ? 2 : 3);
+
+            if( orientation == 3 )
+            {
+                flag = 0;
+                break;
+            }
+
+            dx0 = dx;
+            dy0 = dy;
+        }
+    }
+    else
+    {
+        assert( CV_SEQ_ELTYPE(contour) == CV_32FC2 );
+
+        CvPoint2D32f *prev_pt = (CvPoint2D32f*)reader.prev_elem;
+        CvPoint2D32f *cur_pt = (CvPoint2D32f*)reader.ptr;
+    
+        float dx0 = cur_pt->x - prev_pt->x;
+        float dy0 = cur_pt->y - prev_pt->y;
+
+        for( i = 0; i < contour->total; i++ )
+        {
+            float dxdy0, dydx0;
+            float dx, dy;
+
+            /*int orient; */
+            CV_NEXT_SEQ_ELEM( sizeof(CvPoint2D32f), reader );
+            prev_pt = cur_pt;
+            cur_pt = (CvPoint2D32f*) reader.ptr;
+
+            dx = cur_pt->x - prev_pt->x;
+            dy = cur_pt->y - prev_pt->y;
+            dxdy0 = dx * dy0;
+            dydx0 = dy * dx0;
+
+            /* find orientation */
+            /*orient = -dy0 * dx + dx0 * dy;
+               orientation |= (orient > 0) ? 1 : 2;
+             */
+            orientation |= (dydx0 > dxdy0) ? 1 : ((dydx0 < dxdy0) ? 2 : 3);
+
+            if( orientation == 3 )
+            {
+                flag = 0;
+                break;
+            }
+
+            dx0 = dx;
+            dy0 = dy;
+        }
+    }
+
+    __END__;
+
+    return flag;
 }
 
-/* end of file */
+
+/* End of file. */

@@ -40,12 +40,10 @@
 //M*/
 #include "_cv.h"
 #include <limits.h>
-#include "_cvwrap.h"
 #include "_cvdatastructs.h"
 
 const CvPoint icvCodeDeltas[8] =
     { {1, 0}, {1, -1}, {0, -1}, {-1, -1}, {-1, 0}, {-1, 1}, {0, 1}, {1, 1} };
-
 
 CV_IMPL void
 cvStartReadChainPoints( CvChain * chain, CvChainPtReader * reader )
@@ -77,16 +75,7 @@ cvStartReadChainPoints( CvChain * chain, CvChainPtReader * reader )
 }
 
 
-/*F///////////////////////////////////////////////////////////////////////////////////////
-//    Name: cvReadChainPoint
-//    Purpose:
-//      Read sequence points from sequence and move read pointer.
-//    Context:
-//    Parameters:
-//      reader    - reader state.
-//    Returns:
-//      Current point of the chain-coded curve.
-//F*/
+/* retrieves next point of the chain curve and updates reader */
 CV_IMPL CvPoint
 cvReadChainPoint( CvChainPtReader * reader )
 {
@@ -133,6 +122,7 @@ cvReadChainPoint( CvChainPtReader * reader )
 
 typedef struct _CvContourInfo
 {
+    int flags;
     struct _CvContourInfo *next;        /* next contour with the same mark value */
     struct _CvContourInfo *parent;      /* information about parent contour */
     CvSeq *contour;             /* corresponding contour (may be 0, if rejected) */
@@ -190,7 +180,7 @@ _CvContourScanner;
 #define _CV_FIND_CONTOURS_FLAGS_HIERARCHIC       2
 
 /* 
-   Initialize scanner structure.
+   Initializes scanner structure.
    Prepare image for scanning ( clear borders and convert all pixels to 0-1.
 */
 CV_IMPL CvContourScanner
@@ -332,35 +322,6 @@ cvStartFindContours( void* _img, CvMemStorage* storage,
 
     return scanner;
 }
-
-
-/* 
-   Insert contour into tree given certain parent sequence.
-   If parent is equal to frame (the most external contour),
-   then added contour will have null pointer to parent.
-*/
-CV_IMPL void
-cvInsertContourIntoTree( CvSeq * contour, CvSeq * parent, CvSeq * frame )
-{
-    CV_FUNCNAME( "cvInsertContourIntoTree" );
-
-    __BEGIN__;
-
-    if( !contour || !parent )
-        CV_ERROR_FROM_STATUS( CV_NULLPTR_ERR );
-
-    contour->v_prev = parent != frame ? parent : 0;
-    contour->h_next = parent->v_next;
-
-    assert( parent->v_next != contour );
-
-    if( parent->v_next )
-        parent->v_next->h_prev = contour;
-    parent->v_next = contour;
-
-    __END__;
-}
-
 
 /* 
    Final stage of contour processing.
@@ -522,14 +483,14 @@ icvEndProcessContour( CvContourScanner scanner )
 
         if( l_cinfo->contour )
         {
-            cvInsertContourIntoTree( l_cinfo->contour, l_cinfo->parent->contour,
-                                     &(scanner->frame) );
+            cvInsertNodeIntoTree( l_cinfo->contour, l_cinfo->parent->contour,
+                                  &(scanner->frame) );
         }
         scanner->l_cinfo = 0;
     }
 }
 
-
+/* replaces one contour with another */
 CV_IMPL void
 cvSubstituteContour( CvContourScanner scanner, CvSeq * new_contour )
 {
@@ -540,7 +501,7 @@ cvSubstituteContour( CvContourScanner scanner, CvSeq * new_contour )
     __BEGIN__;
 
     if( !scanner )
-        CV_ERROR_FROM_STATUS( CV_NULLPTR_ERR );
+        CV_ERROR( CV_StsNullPtr, "" );
 
     l_cinfo = scanner->l_cinfo;
     if( l_cinfo && l_cinfo->contour && l_cinfo->contour != new_contour )
@@ -577,7 +538,7 @@ icvFetchContour( char                   *ptr,
     assert( (unsigned) _method <= CV_CHAIN_APPROX_SIMPLE );
 
     /* initialize local state */
-    _CV_SET_DELTAS( deltas, step, 1 );
+    CV_INIT_3X3_DELTAS( deltas, step, 1 );
     memcpy( deltas + 8, deltas, 8 * sizeof( deltas[0] ));
 
     /* initialize writer */
@@ -687,7 +648,7 @@ icvTraceContour( char *ptr, int step, char *stop_ptr, int is_hole )
     int s, s_end;
 
     /* initialize local state */
-    _CV_SET_DELTAS( deltas, step, 1 );
+    CV_INIT_3X3_DELTAS( deltas, step, 1 );
     memcpy( deltas + 8, deltas, 8 * sizeof( deltas[0] ));
 
     assert( (*i0 & -2) != 0 );
@@ -751,7 +712,7 @@ icvFetchContourEx( char*                ptr,
     assert( 1 < nbd && nbd < 128 );
 
     /* initialize local state */
-    _CV_SET_DELTAS( deltas, step, 1 );
+    CV_INIT_3X3_DELTAS( deltas, step, 1 );
     memcpy( deltas + 8, deltas, 8 * sizeof( deltas[0] ));
 
     /* initialize writer */
@@ -1140,6 +1101,378 @@ cvEndFindContours( CvContourScanner * _scanner )
 }
 
 
+#define ICV_SINGLE                  0
+#define ICV_CONNECTING_ABOVE        1
+#define ICV_CONNECTING_BELOW        -1
+#define ICV_IS_COMPONENT_POINT(val) ((val) != 0)
+
+#define CV_GET_WRITTEN_ELEM( writer ) ((writer).ptr - (writer).seq->elem_size)
+
+typedef  struct CvLinkedRunPoint
+{
+    struct CvLinkedRunPoint* link;
+    struct CvLinkedRunPoint* next;
+    CvPoint pt;
+}
+CvLinkedRunPoint;
+
+
+static int
+icvFindContoursInInterval( const CvArr* src,
+                           /*int minValue, int maxValue,*/
+                           CvMemStorage* storage,
+                           CvSeq** result,
+                           int contourHeaderSize )
+{
+    int count = 0;
+    CvMemStorage* storage00 = 0;
+    CvMemStorage* storage01 = 0;
+    CvSeq* first = 0;
+
+    CV_FUNCNAME( "icvFindContoursInInterval" );
+
+    __BEGIN__;
+
+    int i, j, k, n;
+
+    uchar*  src_data = 0;
+    int  img_step = 0;
+    CvSize  img_size;
+
+    int  connect_flag;
+    int  lower_total;
+    int  upper_total;
+    int  all_total;
+
+    CvSeq*  runs;
+    CvLinkedRunPoint  tmp;
+    CvLinkedRunPoint*  tmp_prev;
+    CvLinkedRunPoint*  upper_line = 0;
+    CvLinkedRunPoint*  lower_line = 0;
+    CvLinkedRunPoint*  last_elem;
+
+    CvLinkedRunPoint*  upper_run = 0;
+    CvLinkedRunPoint*  lower_run = 0;
+    CvLinkedRunPoint*  prev_point = 0;
+
+    CvSeqWriter  writer_ext;
+    CvSeqWriter  writer_int;
+    CvSeqWriter  writer;
+    CvSeqReader  reader;
+
+    CvSeq* external_contours;
+    CvSeq* internal_contours;
+    CvSeq* prev = 0;
+
+    if( !storage )
+        CV_ERROR( CV_StsNullPtr, "NULL storage pointer" );
+
+    if( !result )
+        CV_ERROR( CV_StsNullPtr, "NULL double CvSeq pointer" );
+
+    if( contourHeaderSize < sizeof(CvContour))
+        CV_ERROR( CV_StsBadSize, "Contour header size must be >= sizeof(CvContour)" );
+
+    CV_CALL( storage00 = cvCreateChildMemStorage(storage));
+    CV_CALL( storage01 = cvCreateChildMemStorage(storage));
+
+    {
+        CvMat stub, *mat;
+
+        CV_CALL( mat = cvGetMat( src, &stub ));
+        if( !CV_IS_MASK_ARR(mat))
+            CV_ERROR( CV_StsBadArg, "Input array must be 8uC1 or 8sC1" );
+        src_data = mat->data.ptr;
+        img_step = mat->step;
+        img_size = icvGetMatSize( mat );
+    }
+
+    // Create temporary sequences
+    runs = cvCreateSeq(0, sizeof(CvSeq), sizeof(CvLinkedRunPoint), storage00 );
+    cvStartAppendToSeq( runs, &writer );
+
+    cvStartWriteSeq( 0, sizeof(CvSeq), sizeof(CvLinkedRunPoint*), storage01, &writer_ext );
+    cvStartWriteSeq( 0, sizeof(CvSeq), sizeof(CvLinkedRunPoint*), storage01, &writer_int );
+
+    tmp_prev = &(tmp);
+    tmp_prev->next = 0;
+    tmp_prev->link = 0;
+    
+    // First line. None of runs is binded
+    tmp.pt.y = 0;
+    i = 0;
+    CV_WRITE_SEQ_ELEM( tmp, writer );
+    upper_line = (CvLinkedRunPoint*)CV_GET_WRITTEN_ELEM( writer );
+    
+    tmp_prev = upper_line;
+    for( j = 0; j < img_size.width; )
+    {
+        for( ; j < img_size.width && !ICV_IS_COMPONENT_POINT(src_data[j]); j++ )
+            ;
+        if( j == img_size.width )
+            break;
+
+        tmp.pt.x = j;
+        CV_WRITE_SEQ_ELEM( tmp, writer );
+        tmp_prev->next = (CvLinkedRunPoint*)CV_GET_WRITTEN_ELEM( writer );
+        tmp_prev = tmp_prev->next;
+
+        for( ; j < img_size.width && ICV_IS_COMPONENT_POINT(src_data[j]); j++ )
+            ;
+
+        tmp.pt.x = j-1;
+        CV_WRITE_SEQ_ELEM( tmp, writer );
+        tmp_prev->next = (CvLinkedRunPoint*)CV_GET_WRITTEN_ELEM( writer );
+        tmp_prev->link = tmp_prev->next;
+        // First point of contour
+        CV_WRITE_SEQ_ELEM( tmp_prev, writer_ext );
+        tmp_prev = tmp_prev->next;
+    }
+    cvFlushSeqWriter( &writer );
+    upper_line = upper_line->next;
+    upper_total = runs->total - 1;
+    last_elem = tmp_prev;
+    tmp_prev->next = 0;
+    
+    for( i = 1; i < img_size.height; i++ )
+    {
+//------// Find runs in next line
+        src_data += img_step;
+        tmp.pt.y = i;
+        all_total = runs->total;
+        for( j = 0; j < img_size.width; )
+        {
+            for( ; j < img_size.width && !ICV_IS_COMPONENT_POINT(src_data[j]); j++ )
+                ;
+            if( j == img_size.width ) break;
+
+            tmp.pt.x = j;
+            CV_WRITE_SEQ_ELEM( tmp, writer );
+            tmp_prev->next = (CvLinkedRunPoint*)CV_GET_WRITTEN_ELEM( writer );
+            tmp_prev = tmp_prev->next;
+
+            for( ; j < img_size.width && ICV_IS_COMPONENT_POINT(src_data[j]); j++ )
+                ;
+
+            tmp.pt.x = j-1;
+            CV_WRITE_SEQ_ELEM( tmp, writer );
+            tmp_prev = tmp_prev->next = (CvLinkedRunPoint*)CV_GET_WRITTEN_ELEM( writer );
+        }//j
+        cvFlushSeqWriter( &writer );
+        lower_line = last_elem->next;
+        lower_total = runs->total - all_total;
+        last_elem = tmp_prev;
+        tmp_prev->next = 0;
+//------//
+//------// Find links between runs of lower_line and upper_line
+        upper_run = upper_line;
+        lower_run = lower_line;
+        connect_flag = ICV_SINGLE;
+
+        for( k = 0, n = 0; k < upper_total/2 && n < lower_total/2; )
+        {
+            switch( connect_flag )
+            {
+            case ICV_SINGLE:
+                if( upper_run->next->pt.x < lower_run->next->pt.x )
+                {
+                    if( upper_run->next->pt.x >= lower_run->pt.x  -1 )
+                    {
+                        lower_run->link = upper_run;
+                        connect_flag = ICV_CONNECTING_ABOVE;
+                        prev_point = upper_run->next;
+                    }
+                    else
+                        upper_run->next->link = upper_run;
+                    k++;
+                    upper_run = upper_run->next->next;
+                }
+                else
+                {
+                    if( upper_run->pt.x <= lower_run->next->pt.x  +1 )
+                    {
+                        lower_run->link = upper_run;
+                        connect_flag = ICV_CONNECTING_BELOW;
+                        prev_point = lower_run->next;
+                    }
+                    else
+                    {
+                        lower_run->link = lower_run->next;
+                        // First point of contour
+                        CV_WRITE_SEQ_ELEM( lower_run, writer_ext );
+                    }
+                    n++;
+                    lower_run = lower_run->next->next;
+                }
+                break;
+            case ICV_CONNECTING_ABOVE:
+                if( upper_run->pt.x > lower_run->next->pt.x +1 )
+                {
+                    prev_point->link = lower_run->next;
+                    connect_flag = ICV_SINGLE;
+                    n++;
+                    lower_run = lower_run->next->next;
+                }
+                else
+                {
+                    prev_point->link = upper_run;
+                    if( upper_run->next->pt.x < lower_run->next->pt.x )
+                    {
+                        k++;
+                        prev_point = upper_run->next;
+                        upper_run = upper_run->next->next;
+                    }
+                    else
+                    {
+                        connect_flag = ICV_CONNECTING_BELOW;
+                        prev_point = lower_run->next;
+                        n++;
+                        lower_run = lower_run->next->next;
+                    }
+                }
+                break;
+            case ICV_CONNECTING_BELOW:
+                if( lower_run->pt.x > upper_run->next->pt.x +1 )
+                {
+                    upper_run->next->link = prev_point;
+                    connect_flag = ICV_SINGLE;
+                    k++;
+                    upper_run = upper_run->next->next;
+                }
+                else
+                {
+                    // First point of contour
+                    CV_WRITE_SEQ_ELEM( lower_run, writer_int );
+
+                    lower_run->link = prev_point;
+                    if( lower_run->next->pt.x < upper_run->next->pt.x )
+                    {
+                        n++;
+                        prev_point = lower_run->next;
+                        lower_run = lower_run->next->next;
+                    }
+                    else
+                    {
+                        connect_flag = ICV_CONNECTING_ABOVE;
+                        k++;
+                        prev_point = upper_run->next;
+                        upper_run = upper_run->next->next;
+                    }
+                }
+                break;          
+            }
+        }// k, n
+
+        for( ; n < lower_total/2; n++ )
+        {
+            if( connect_flag != ICV_SINGLE )
+            {
+                prev_point->link = lower_run->next;
+                connect_flag = ICV_SINGLE;
+                lower_run = lower_run->next->next;
+                continue;
+            }
+            lower_run->link = lower_run->next;
+
+            //First point of contour
+            CV_WRITE_SEQ_ELEM( lower_run, writer_ext );
+
+            lower_run = lower_run->next->next;
+        }
+
+        for( ; k < upper_total/2; k++ )
+        {
+            if( connect_flag != ICV_SINGLE )
+            {
+                upper_run->next->link = prev_point;
+                connect_flag = ICV_SINGLE;
+                upper_run = upper_run->next->next;
+                continue;
+            }
+            upper_run->next->link = upper_run;
+            upper_run = upper_run->next->next;
+        }
+        upper_line = lower_line;
+        upper_total = lower_total;
+    }//i
+
+    upper_run = upper_line;
+
+    //the last line of image
+    for( k = 0; k < upper_total/2; k++ )
+    {
+        upper_run->next->link = upper_run;
+        upper_run = upper_run->next->next;
+    }
+
+//------//
+//------//Find end read contours
+    external_contours = cvEndWriteSeq( &writer_ext );
+    internal_contours = cvEndWriteSeq( &writer_int );
+
+    for( k = 0; k < 2; k++ )
+    {
+        CvSeq* contours = k == 0 ? external_contours : internal_contours;
+
+        cvStartReadSeq( contours, &reader );
+
+        for( j = 0; j < contours->total; j++, count++ )
+        {
+            CvLinkedRunPoint* p_temp;
+            CvLinkedRunPoint* p00;
+            CvLinkedRunPoint* p01;
+            CvSeq* contour;
+            CvSeqWriter writer;
+
+            CV_READ_SEQ_ELEM( p00, reader );
+            p01 = p00;
+
+            if( !p00->link )
+                continue;
+
+            cvStartWriteSeq( CV_SEQ_ELTYPE_POINT | CV_SEQ_POLYLINE | CV_SEQ_FLAG_CLOSED,
+                             contourHeaderSize, sizeof(CvPoint), storage, &writer );
+            do
+            {
+                CV_WRITE_SEQ_ELEM( p00->pt, writer );
+                p_temp = p00;
+                p00 = p00->link;
+                p_temp->link = 0;
+            }
+            while( p00 != p01 );
+
+            contour = cvEndWriteSeq( &writer );
+            cvBoundingRect( contour, 1 );
+
+            if( k != 0 )
+                contour->flags |= CV_SEQ_FLAG_HOLE;
+
+            if( !first )
+                prev = first = contour;
+            else
+            {
+                contour->h_prev = prev;
+                prev = prev->h_next = contour;
+            }
+        }
+    }
+
+    __END__;
+
+    if( !first )
+        count = -1;
+
+    if( result )
+        *result = first;
+
+    cvReleaseMemStorage(&storage00);
+    cvReleaseMemStorage(&storage01);
+
+    return count;
+}
+
+
+
 /*F///////////////////////////////////////////////////////////////////////////////////////
 //    Name: cvFindContours
 //    Purpose:
@@ -1175,21 +1508,28 @@ cvFindContours( void*  img,  CvMemStorage*  storage,
     __BEGIN__;
 
     if( !firstContour )
-        CV_ERROR_FROM_STATUS( CV_NULLPTR_ERR );
+        CV_ERROR( CV_StsNullPtr, "NULL double CvSeq pointer" );
 
-    scanner = cvStartFindContours( img, storage, cntHeaderSize, mode, method );
-    CV_CHECK();
-
-    assert( scanner );
-
-    do
+    if( method == CV_LINK_RUNS )
     {
-        count++;
-        contour = cvFindNextContour( scanner );
+        CV_CALL( count = icvFindContoursInInterval( img, storage,
+                                 firstContour, cntHeaderSize ));
     }
-    while( contour != 0 );
+    else
+    {
+        CV_CALL( scanner = cvStartFindContours( img, storage,
+                                 cntHeaderSize, mode, method ));
+        assert( scanner );
 
-    *firstContour = cvEndFindContours( &scanner );    
+        do
+        {
+            count++;
+            contour = cvFindNextContour( scanner );
+        }
+        while( contour != 0 );
+
+        *firstContour = cvEndFindContours( &scanner );    
+    }
 
     __END__;
 

@@ -40,1453 +40,1006 @@
 //M*/
 
 #include "_cv.h"
-#include "_cvwrap.h"
 
-typedef struct
+typedef struct CvFFillSegment
 {
-    int y;
-    int l;
-    int r;
-    int Prevl;
-    int Prevr;
-    int fl;
-} Seg;
+    ushort y;
+    ushort l;
+    ushort r;
+    ushort prevl;
+    ushort prevr;
+    short dir;
+}
+CvFFillSegment;
 
 #define UP 1
 #define DOWN -1             
 
-#define PUSH(Y,IL,IR,IPL,IPR,FL) {  stack[StIn].y=Y; \
-                                    stack[StIn].l=IL; \
-                                    stack[StIn].r=IR; \
-                                    stack[StIn].Prevl=IPL; \
-                                    stack[StIn].Prevr=IPR; \
-                                    stack[StIn].fl=FL; \
-                                    StIn++; }
-
-#define POP(Y,IL,IR,IPL,IPR,FL)  {  StIn--; \
-                                    Y=stack[StIn].y; \
-                                    IL=stack[StIn].l; \
-                                    IR=stack[StIn].r;\
-                                    IPL=stack[StIn].Prevl; \
-                                    IPR=stack[StIn].Prevr; \
-                                    FL=stack[StIn].fl; }
+#define ICV_PUSH( Y, L, R, PREV_L, PREV_R, DIR )\
+{                                               \
+    tail->y = (ushort)(Y);                      \
+    tail->l = (ushort)(L);                      \
+    tail->r = (ushort)(R);                      \
+    tail->prevl = (ushort)(PREV_L);             \
+    tail->prevr = (ushort)(PREV_R);             \
+    tail->dir = (short)(DIR);                   \
+    if( ++tail >= buffer_end )                  \
+        tail = buffer;                          \
+}
 
 
-/*F///////////////////////////////////////////////////////////////////////////////////////
-//    Name: CvFloodFillGetSize, CvFloodFillGetSize_Grad
-//    Purpose: The functions calculate size of buffer necessary for calling CvFloodFill
-//    Context:
-//    Parameters:  
-//                 roi        - size of image ROI,
-//                 bufferSize - size of buffer in bytes output parameter.
-//
-//    Returns: CV_NO_ERR or error code
-//    Notes:   
-//F*/
+#define ICV_POP( Y, L, R, PREV_L, PREV_R, DIR ) \
+{                                               \
+    Y = head->y;                                \
+    L = head->l;                                \
+    R = head->r;                                \
+    PREV_L = head->prevl;                       \
+    PREV_R = head->prevr;                       \
+    DIR = head->dir;                            \
+    if( ++head >= buffer_end )                  \
+        head = buffer;                          \
+}
 
-IPCVAPI_IMPL( CvStatus, icvFloodFillGetSize, (CvSize roi, int *bufferSize) )
+
+/****************************************************************************************\
+*                             Simple (monochrome) Floodfill                              *
+\****************************************************************************************/
+
+static CvStatus
+icvFloodFill_8u_C1IR( uchar* pImage, int step, CvSize roi, CvPoint seed,
+                      uchar* _newVal, CvConnectedComp* region, int flags,
+                      CvFFillSegment* buffer, int buffersize )
 {
-    if( roi.width <= 0 || roi.height <= 0 )
-        return CV_BADSIZE_ERR;
-    if( !bufferSize )
-        return CV_NULLPTR_ERR;
-    (*bufferSize) = roi.height * roi.width * (sizeof( Seg )) >> 2;
+    uchar* img = pImage + step * seed.y;
+    int i, L, R; 
+    int area = 0;
+    int val0 = 0;
+    uchar newVal = _newVal[0];
+    int XMin, XMax, YMin = seed.y, YMax = seed.y;
+    int _8_connectivity = (flags & 255) == 8;
+    CvFFillSegment* buffer_end = buffer + buffersize, *head = buffer, *tail = buffer;
+
+    L = R = seed.x;
+    val0 = img[L];
+
+    if( val0 == newVal )
+    {
+        XMin = XMax = seed.x;
+        goto exit_func;
+    }
+
+    img[L] = newVal;
+
+    while( ++R < roi.width && img[R] == val0 )
+        img[R] = newVal;
+
+    while( --L >= 0 && img[L] == val0 )
+        img[L] = newVal;
+
+    XMax = --R;
+    XMin = ++L;
+    ICV_PUSH( seed.y, L, R, R + 1, R, UP );
+
+    while( head != tail )
+    {
+        int k, YC, PL, PR, dir, curstep;
+        ICV_POP( YC, L, R, PL, PR, dir );
+
+        int data[][3] =
+        {
+            {-dir, L - _8_connectivity, R + _8_connectivity},
+            {dir, L - _8_connectivity, PL - 1},
+            {dir, PR + 1, R + _8_connectivity}
+        };
+
+        if( region )
+        {
+            area += R - L + 1;
+
+            if( XMax < R ) XMax = R;
+            if( XMin > L ) XMin = L;
+            if( YMax < YC ) YMax = YC;
+            if( YMin > YC ) YMin = YC;
+        }
+
+        for( k = (unsigned)(YC - dir) >= (unsigned)roi.height; k < 3; k++ )
+        {
+            dir = data[k][0];
+            curstep = dir * step;
+            img = pImage + (YC + dir) * step;
+            int left = data[k][1];
+            int right = data[k][2];
+
+            for( i = left; i <= right; i++ )
+            {
+                if( (unsigned)i < (unsigned)roi.width && img[i] == val0 )
+                {
+                    int j = i;
+                    img[i] = newVal;
+                    while( --j >= 0 && img[j] == val0 )
+                        img[j] = newVal;
+
+                    while( ++i < roi.width && img[i] == val0 )
+                        img[i] = newVal;
+
+                    ICV_PUSH( YC + dir, j+1, i-1, L, R, -dir );
+                }
+            }
+        }
+    }
+
+exit_func:
+    if( region )
+    {
+        region->area = area;
+        region->rect.x = XMin;
+        region->rect.y = YMin;
+        region->rect.width = XMax - XMin + 1;
+        region->rect.height = YMax - YMin + 1;
+        region->value = newVal;
+    }
+
     return CV_NO_ERR;
 }
 
-IPCVAPI_IMPL( CvStatus, icvFloodFillGetSize_Grad, (CvSize roi, int *bufferSize) )
+
+#define ICV_EQ_C3( p1, p2 ) \
+    ((p1)[0] == (p2)[0] && (p1)[1] == (p2)[1] && (p1)[2] == (p2)[2])
+
+#define ICV_SET_C3( p, q ) \
+    ((p)[0] = (q)[0], (p)[1] = (q)[1], (p)[2] = (q)[2])
+
+static CvStatus
+icvFloodFill_8u_C3IR( uchar* pImage, int step, CvSize roi, CvPoint seed,
+                      uchar* _newVal, CvConnectedComp* region, int flags,
+                      CvFFillSegment* buffer, int buffersize )
 {
-    if( roi.width <= 0 || roi.height <= 0 )
-        return CV_BADSIZE_ERR;
-    if( !bufferSize )
-        return CV_NULLPTR_ERR;
+    uchar* img = pImage + step * seed.y;
+    int i, L, R; 
+    int area = 0;
+    int val0[3] = { 0, 0, 0 };
+    uchar newVal[3] = { _newVal[0], _newVal[1], _newVal[2] };
+    int XMin, XMax, YMin = seed.y, YMax = seed.y;
+    int _8_connectivity = (flags & 255) == 8;
+    CvFFillSegment* buffer_end = buffer + buffersize, *head = buffer, *tail = buffer;
+
+    L = R = seed.x;
+    ICV_SET_C3( val0, img + L*3 );
+
+    if( ICV_EQ_C3( val0, newVal ))
+    {
+        XMin = XMax = seed.x;
+        goto exit_func;
+    }
+
+    ICV_SET_C3( img + L*3, newVal );
     
-        (*bufferSize) =
-        (roi.width + 2) * (roi.height + 2) + (roi.height * roi.width * sizeof( Seg )) / 4;
+    while( --L >= 0 && ICV_EQ_C3( img + L*3, val0 ))
+        ICV_SET_C3( img + L*3, newVal );
+    
+    while( ++R < roi.width && ICV_EQ_C3( img + R*3, val0 ))
+        ICV_SET_C3( img + R*3, newVal );
+
+    XMin = ++L;
+    XMax = --R;
+    ICV_PUSH( seed.y, L, R, R + 1, R, UP );
+
+    while( head != tail )
+    {
+        int k, YC, PL, PR, dir, curstep;
+        ICV_POP( YC, L, R, PL, PR, dir );
+
+        int data[][3] =
+        {
+            {-dir, L - _8_connectivity, R + _8_connectivity},
+            {dir, L - _8_connectivity, PL - 1},
+            {dir, PR + 1, R + _8_connectivity}
+        };
+
+        if( region )
+        {
+            area += R - L + 1;
+
+            if( XMax < R ) XMax = R;
+            if( XMin > L ) XMin = L;
+            if( YMax < YC ) YMax = YC;
+            if( YMin > YC ) YMin = YC;
+        }
+
+        for( k = (unsigned)(YC - dir) >= (unsigned)roi.height; k < 3; k++ )
+        {
+            dir = data[k][0];
+            curstep = dir * step;
+            img = pImage + (YC + dir) * step;
+            int left = data[k][1];
+            int right = data[k][2];
+
+            for( i = left; i <= right; i++ )
+            {
+                if( (unsigned)i < (unsigned)roi.width && ICV_EQ_C3( img + i*3, val0 ))
+                {
+                    int j = i;
+                    ICV_SET_C3( img + i*3, newVal );
+                    while( --j >= 0 && ICV_EQ_C3( img + j*3, val0 ))
+                        ICV_SET_C3( img + j*3, newVal );
+
+                    while( ++i < roi.width && ICV_EQ_C3( img + i*3, val0 ))
+                        ICV_SET_C3( img + i*3, newVal );
+
+                    ICV_PUSH( YC + dir, j+1, i-1, L, R, -dir );
+                }
+            }
+        }
+    }
+
+exit_func:
+    if( region )
+    {
+        region->area = area;
+        region->rect.x = XMin;
+        region->rect.y = YMin;
+        region->rect.width = XMax - XMin + 1;
+        region->rect.height = YMax - YMin + 1;
+        region->value = CV_RGB( newVal[2], newVal[1], newVal[0] );
+    }
+
     return CV_NO_ERR;
 }
 
-/*F///////////////////////////////////////////////////////////////////////////////////////
-//    Names: icvFloodFill_8uC1R,  icvFloodFill_32fC1R,
-//           icvFloodFill8_8u_C1R, icvFloodFill8_32f_C1R
-//    Purpose: The functions fill the seed pixel environs inside which all pixel
-//             values are not far from each other. 
-//    Context:
-//    Parameters:  img        - pointer to ROI of initial image (in the beginning)
-//                              which is "repainted" during the function action,
-//                 step       - full string length of initial image (in bytes),
-//                 roi        - size of image ROI,
-//                 initPoint  - coordinates of the seed point inside image ROI,
-//                 nv         - new value of repainted area pixels,
-//                 d_lw, d_up - maximal lower and upper differences of the values of
-//                              appurtenant to repainted area pixel and one of its
-//                              neighbour,
-//                 comp       - pointer to connected component structure of the
-//                              repainted area
-//
-//    Notes:   The 1 and 2 functions look for 4-connected environs,
-//             the 3 and 4 ones - 8-connected.
-//F*/
-/*--------------------------------------------------------------------------------------*/
 
-IPCVAPI_IMPL( CvStatus, icvFloodFill_4Con_8u_C1IR, (uchar * pImage, int step,
-                                                    CvSize roi, CvPoint seed,
-                                                    int* _newVal, CvConnectedComp * region,
-                                                    void *pBuffer) )
+/* because all the operations on floats that are done during non-gradient floodfill
+   are just copying and comparison on equality,
+   we can do the whole op on 32-bit integers instead */
+static CvStatus
+icvFloodFill_32f_C1IR( int* pImage, int step, CvSize roi, CvPoint seed,
+                       int* _newVal, CvConnectedComp* region, int flags,
+                       CvFFillSegment* buffer, int buffersize )
 {
-    uchar *Temp = pImage + step * seed.y;
-    uchar defcol = Temp[seed.x];
-    uchar uv = (uchar)*_newVal;
-    Seg *stack;
-    int StIn = 0;
-    unsigned int hght = (unsigned int) (roi.height);
-    int i, j, YC, L, R, PL, PR, flag;
-    int Sum = 0;
+    int* img = pImage + (step /= sizeof(pImage[0])) * seed.y;
+    int i, L, R; 
+    int area = 0;
+    int val0 = 0;
+    int newVal = _newVal[0];
     int XMin, XMax, YMin = seed.y, YMax = seed.y;
+    int _8_connectivity = (flags & 255) == 8;
+    CvFFillSegment* buffer_end = buffer + buffersize, *head = buffer, *tail = buffer;
 
-    if( pImage == NULL )
-        return CV_NULLPTR_ERR;
-    if( roi.width <= 0 || roi.height <= 0 )
-        return CV_BADSIZE_ERR;
-    if( roi.width > step )
-        return CV_BADSIZE_ERR;
-    if( seed.x < 0 || seed.x >= roi.width )
-        return CV_BADPOINT_ERR;
-    if( seed.y < 0 || seed.y >= roi.height )
-        return CV_BADPOINT_ERR;
+    L = R = seed.x;
+    val0 = img[L];
 
-    if( defcol == uv )
-        return CV_NO_ERR;
-    stack = (Seg *) pBuffer;
-    L = seed.x;
-    R = seed.x;
-    YC = seed.y;
-    Temp[R] = uv;
-    while( (R < roi.width - 1) && (Temp[R + 1] == defcol) )
+    if( val0 == newVal )
     {
-        Temp[++R] = uv;
+        XMin = XMax = seed.x;
+        goto exit_func;
     }
-    XMax = R;
-    while( L && (Temp[L - 1] == defcol) )
-    {
-        Temp[--L] = uv;
-    }
-    XMin = L;
-    Sum += R - L + 1;
-    flag = (YC != roi.height - 1) ? UP : DOWN;
-    PUSH( YC, L, R, R + 1, R, flag );
 
-    while( StIn )
+    img[L] = newVal;
+
+    while( ++R < roi.width && img[R] == val0 )
+        img[R] = newVal;
+
+    while( --L >= 0 && img[L] == val0 )
+        img[L] = newVal;
+
+    XMax = --R;
+    XMin = ++L;
+    ICV_PUSH( seed.y, L, R, R + 1, R, UP );
+
+    while( head != tail )
     {
-        POP( YC, L, R, PL, PR, flag );
-        XMax = MAX( XMax, R );
-        XMin = MIN( XMin, L );
-        YMax = MAX( YMax, YC );
-        YMin = MIN( YMin, YC );
-        if( ((unsigned) (YC - flag)) < hght )
+        int k, YC, PL, PR, dir, curstep;
+        ICV_POP( YC, L, R, PL, PR, dir );
+
+        int data[][3] =
         {
-            Temp = pImage + (YC - flag) * step;
-            for( i = L; i < R + 1; i++ )
+            {-dir, L - _8_connectivity, R + _8_connectivity},
+            {dir, L - _8_connectivity, PL - 1},
+            {dir, PR + 1, R + _8_connectivity}
+        };
+
+        if( region )
+        {
+            area += R - L + 1;
+
+            if( XMax < R ) XMax = R;
+            if( XMin > L ) XMin = L;
+            if( YMax < YC ) YMax = YC;
+            if( YMin > YC ) YMin = YC;
+        }
+
+        for( k = (unsigned)(YC - dir) >= (unsigned)roi.height; k < 3; k++ )
+        {
+            dir = data[k][0];
+            curstep = dir * step;
+            img = pImage + (YC + dir) * step;
+            int left = data[k][1];
+            int right = data[k][2];
+
+            for( i = left; i <= right; i++ )
             {
-                if( Temp[i] == defcol )
+                if( (unsigned)i < (unsigned)roi.width && img[i] == val0 )
                 {
-                    j = i;
-                    Temp[i] = uv;
-                    while( j && (Temp[j - 1] == defcol) )
-                    {
-                        Temp[--j] = uv;
-                    }
-                    while( (i < roi.width - 1) && (Temp[i + 1] == defcol) )
-                    {
-                        Temp[++i] = uv;
-                    }
-                    PUSH( YC - flag, j, i++, L, R, flag );
-                    Sum += i - j;
+                    int j = i;
+                    img[i] = newVal;
+                    while( --j >= 0 && img[j] == val0 )
+                        img[j] = newVal;
+
+                    while( ++i < roi.width && img[i] == val0 )
+                        img[i] = newVal;
+
+                    ICV_PUSH( YC + dir, j+1, i-1, L, R, -dir );
                 }
             }
         }
-        Temp = pImage + (YC + flag) * step;
-        for( i = L; i < PL; i++ )
-        {
-            if( Temp[i] == defcol )
-            {
-                j = i;
-                Temp[i] = uv;
-                while( j && (Temp[j - 1] == defcol) )
-                {
-                    Temp[--j] = uv;
-                }
-                while( (i < roi.width - 1) && (Temp[i + 1] == defcol) )
-                {
-                    Temp[++i] = uv;
-                }
-                PUSH( YC + flag, j, i++, L, R, -flag );
-                Sum += i - j;
-            }
-        }
-        for( i = PR + 1; i < R + 1; i++ )
-        {
-            if( Temp[i] == defcol )
-            {
-                j = i;
-                Temp[i] = uv;
-                while( j && (Temp[j - 1] == defcol) )
-                {
-                    Temp[--j] = uv;
-                }
-                while( (i < roi.width - 1) && (Temp[i + 1] == defcol) )
-                {
-                    Temp[++i] = uv;
-                }
-                PUSH( YC + flag, j, i++, L, R, -flag );
-                Sum += i - j;
-            }
-        }
     }
-    region->area = Sum;
-    region->rect.x = XMin;
-    region->rect.y = YMin;
-    region->rect.width = XMax - XMin + 1;
-    region->rect.height = YMax - YMin + 1;
-    region->value = (float)*_newVal;
+
+exit_func:
+    if( region )
+    {
+        region->area = area;
+        region->rect.x = XMin;
+        region->rect.y = YMin;
+        region->rect.width = XMax - XMin + 1;
+        region->rect.height = YMax - YMin + 1;
+        region->value = newVal;
+    }
+
     return CV_NO_ERR;
 }
 
-IPCVAPI_IMPL( CvStatus, icvFloodFill_4Con_32f_C1IR, (float *pImage, int step,
-                                                     CvSize roi, CvPoint seed,
-                                                     float* newVal,
-                                                     CvConnectedComp * region, void *pBuffer) )
+/****************************************************************************************\
+*                                   Gradient Floodfill                                   *
+\****************************************************************************************/
+
+#define DIFF_INT_C1(p1,p2) ((unsigned)((p1)[0] - (p2)[0] + d_lw)<= interval)
+
+#define DIFF_INT_C3(p1,p2) ((unsigned)((p1)[0] - (p2)[0] + d_lw[0])<= interval[0] && \
+                            (unsigned)((p1)[1] - (p2)[1] + d_lw[1])<= interval[1] && \
+                            (unsigned)((p1)[2] - (p2)[2] + d_lw[2])<= interval[2])
+
+#define DIFF_FLT_C1(p1,p2) (fabs((p1)[0] - (p2)[0] + d_lw)<= interval)
+
+static CvStatus
+icvFloodFill_Grad_8u_C1IR( uchar* pImage, int step, uchar* pMask, int maskStep,
+                           CvSize /*roi*/, CvPoint seed, uchar* _newVal, uchar* _d_lw,
+                           uchar* _d_up, CvConnectedComp* region, int flags,
+                           CvFFillSegment* buffer, int buffersize )
 {
-    int ownstep = step / 4;
-    float *Temp = pImage + ownstep * seed.y;
-    Seg *stack;
-    int StIn = 0;
-    int i, j, YC, L, R, PL, PR, flag;
-    float defcol = Temp[seed.x];
-    float uv = *newVal;
-    unsigned int hght = (unsigned int) (roi.height);
-    int Sum = 0;
+    const int cn = 1;
+    uchar* img = pImage + step*seed.y;
+    uchar* mask = (pMask += maskStep + 1) + maskStep*seed.y;
+    int i, L, R;
+    int area = 0;
+    int sum = 0, val0[1] = {0};
+    uchar newVal = _newVal[0];
+    int d_lw = _d_lw[0];
+    int d_up = _d_up[0];
+    unsigned interval = (unsigned) (d_up + d_lw);
     int XMin, XMax, YMin = seed.y, YMax = seed.y;
+    int _8_connectivity = (flags & 255) == 8;
+    int fixedRange = flags & CV_FLOODFILL_FIXED_RANGE;
+    int fillImage = (flags & CV_FLOODFILL_MASK_ONLY) == 0;
+    uchar newMaskVal = (uchar)(flags & 0xff00 ? flags >> 8 : 1);
+    CvFFillSegment* buffer_end = buffer + buffersize, *head = buffer, *tail = buffer;
 
-    if( pImage == NULL )
-        return CV_NULLPTR_ERR;
-    if( roi.width < 1 || roi.height < 1 )
-        return CV_BADSIZE_ERR;
-    if( roi.width > step )
-        return CV_BADSIZE_ERR;
-    if( seed.x < 0 || seed.x >= roi.width )
-        return CV_BADPOINT_ERR;
-    if( seed.y < 0 || seed.y >= roi.height )
-        return CV_BADPOINT_ERR;
-    if( defcol == uv )
-        return CV_NO_ERR;
-    stack = (Seg *) pBuffer;
-    L = seed.x;
-    R = seed.x;
-    YC = seed.y;
-    Temp[R] = uv;
-    while( (R < roi.width - 1) && (Temp[R + 1] == defcol) )
+    L = R = seed.x;
+    if( mask[L] )
+        return CV_OK;
+
+    mask[L] = newMaskVal;
+
+    if( fixedRange )
     {
-        Temp[++R] = uv;
+        val0[0] = img[seed.x];
+
+        while( !mask[R + 1] && DIFF_INT_C1( img + (R+1)*cn, val0 ))
+            mask[++R] = newMaskVal;
+
+        while( !mask[L - 1] && DIFF_INT_C1( img + (L-1)*cn, val0 ))
+            mask[--L] = newMaskVal;
     }
+    else
+    {
+        while( !mask[R + 1] && DIFF_INT_C1( img + (R+1)*cn, img + R*cn ))
+            mask[++R] = newMaskVal;
+
+        while( !mask[L - 1] && DIFF_INT_C1( img + (L-1)*cn, img + L*cn ))
+            mask[--L] = newMaskVal;
+    }
+
     XMax = R;
-    while( L && (Temp[L - 1] == defcol) )
-    {
-        Temp[--L] = uv;
-    }
     XMin = L;
-    Sum += R - L + 1;
-    flag = (YC != roi.height - 1) ? UP : DOWN;
-    PUSH( YC, L, R, R + 1, R, flag );
+    ICV_PUSH( seed.y, L, R, R + 1, R, UP );
 
-    while( StIn )
+    while( head != tail )
     {
-        POP( YC, L, R, PL, PR, flag );
-        XMax = MAX( XMax, R );
-        XMin = MIN( XMin, L );
-        YMax = MAX( YMax, YC );
-        YMin = MIN( YMin, YC );
-        if( ((unsigned) (YC - flag)) < hght )
+        int k, YC, PL, PR, dir, curstep;
+        ICV_POP( YC, L, R, PL, PR, dir );
+
+        int data[][3] =
         {
-            Temp = pImage + (YC - flag) * ownstep;
-            for( i = L; i < R + 1; i++ )
+            {-dir, L - _8_connectivity, R + _8_connectivity},
+            {dir, L - _8_connectivity, PL - 1},
+            {dir, PR + 1, R + _8_connectivity}
+        };
+
+        unsigned length = (unsigned)(R-L);
+
+        if( region )
+        {
+            area += (int)length + 1;
+
+            if( XMax < R ) XMax = R;
+            if( XMin > L ) XMin = L;
+            if( YMax < YC ) YMax = YC;
+            if( YMin > YC ) YMin = YC;
+        }
+
+        for( k = 0; k < 3; k++ )
+        {
+            dir = data[k][0];
+            curstep = dir * step;
+            img = pImage + (YC + dir) * step;
+            mask = pMask + (YC + dir) * maskStep;
+            int left = data[k][1];
+            int right = data[k][2];
+
+            if( fixedRange )
             {
-                if( Temp[i] == defcol )
+                for( i = left; i <= right; i++ )
                 {
-                    j = i;
-                    Temp[i] = uv;
-                    while( j && (Temp[j - 1] == defcol) )
+                    if( !mask[i] && DIFF_INT_C1( img + i*cn, val0 ))
                     {
-                        Temp[--j] = uv;
+                        int j = i;
+                        mask[i] = newMaskVal;
+                        while( !mask[--j] && DIFF_INT_C1( img + j*cn, val0 ))
+                            mask[j] = newMaskVal;
+
+                        while( !mask[++i] && DIFF_INT_C1( img + i*cn, val0 ))
+                            mask[i] = newMaskVal;
+
+                        ICV_PUSH( YC + dir, j+1, i-1, L, R, -dir );
                     }
-                    while( (i < roi.width - 1) && (Temp[i + 1] == defcol) )
+                }
+            }
+            else if( !_8_connectivity )
+            {
+                for( i = left; i <= right; i++ )
+                {
+                    if( !mask[i] && DIFF_INT_C1( img + i*cn, img - curstep + i*cn ))
                     {
-                        Temp[++i] = uv;
+                        int j = i;
+                        mask[i] = newMaskVal;
+                        while( !mask[--j] && DIFF_INT_C1( img + j*cn, img + (j+1)*cn ))
+                            mask[j] = newMaskVal;
+
+                        while( !mask[++i] &&
+                               (DIFF_INT_C1( img + i*cn, img + (i-1)*cn ) ||
+                               (DIFF_INT_C1( img + i*cn, img + i*cn - curstep) && i <= R)))
+                            mask[i] = newMaskVal;
+
+                        ICV_PUSH( YC + dir, j+1, i-1, L, R, -dir );
                     }
-                    PUSH( YC - flag, j, i++, L, R, flag );
-                    Sum += i - j;
                 }
             }
-        }
-        Temp = pImage + (YC + flag) * ownstep;
-        for( i = L; i < PL; i++ )
-        {
-            if( Temp[i] == defcol )
+            else
             {
-                j = i;
-                Temp[i] = uv;
-                while( j && (Temp[j - 1] == defcol) )
+                for( i = left; i <= right; i++ )
                 {
-                    Temp[--j] = uv;
+                    int idx, val[1];
+                    
+                    if( !mask[i] &&
+                        ((val[0] = img[i*cn],
+                        (unsigned)(idx = i-L-1) <= length) &&
+                        DIFF_INT_C1( val, img - curstep + (i-1)*cn ) ||
+                        (unsigned)(++idx) <= length &&
+                        DIFF_INT_C1( val, img - curstep + i*cn ) ||
+                        (unsigned)(++idx) <= length &&
+                        DIFF_INT_C1( val, img - curstep + (i+1)*cn )))
+                    {
+                        int j = i;
+                        mask[i] = newMaskVal;
+                        while( !mask[--j] && DIFF_INT_C1( img + j*cn, img + (j+1)*cn ))
+                            mask[j] = newMaskVal;
+
+                        while( !mask[++i] &&
+                               ((val[0] = img[i*cn],
+                               DIFF_INT_C1( val, img + (i-1)*cn )) ||
+                               ((unsigned)(idx = i-L-1) <= length &&
+                               DIFF_INT_C1( val, img - curstep + (i-1)*cn )) ||
+                               (unsigned)(++idx) <= length &&
+                               DIFF_INT_C1( val, img - curstep + i*cn ) ||
+                               (unsigned)(++idx) <= length &&
+                               DIFF_INT_C1( val, img - curstep + (i+1)*cn )))
+                            mask[i] = newMaskVal;
+
+                        ICV_PUSH( YC + dir, j+1, i-1, L, R, -dir );
+                    }
                 }
-                while( (i < roi.width - 1) && (Temp[i + 1] == defcol) )
-                {
-                    Temp[++i] = uv;
-                }
-                PUSH( YC + flag, j, i++, L, R, -flag );
-                Sum += i - j;
             }
         }
-        for( i = PR + 1; i < R + 1; i++ )
-        {
-            if( Temp[i] == defcol )
-            {
-                j = i;
-                Temp[i] = uv;
-                while( j && (Temp[j - 1] == defcol) )
-                {
-                    Temp[--j] = uv;
-                }
-                while( (i < roi.width - 1) && (Temp[i + 1] == defcol) )
-                {
-                    Temp[++i] = uv;
-                }
-                PUSH( YC + flag, j, i++, L, R, -flag );
-                Sum += i - j;
-            }
-        }
+
+        img = pImage + YC * step;
+        if( fillImage )
+            for( i = L; i <= R; i++ )
+                img[i] = newVal;
+        else if( region )
+            for( i = L; i <= R; i++ )
+                sum += img[i];
     }
-    region->area = Sum;
-    region->rect.x = XMin;
-    region->rect.y = YMin;
-    region->rect.width = XMax - XMin + 1;
-    region->rect.height = YMax - YMin + 1;
-    region->value = uv;
+    
+    if( region )
+    {
+        region->area = area;
+        region->rect.x = XMin;
+        region->rect.y = YMin;
+        region->rect.width = XMax - XMin + 1;
+        region->rect.height = YMax - YMin + 1;
+    
+        if( fillImage )
+            region->value = newVal;
+        else
+            region->value = area ? ((double)sum)/area : 0;
+    }
+
     return CV_NO_ERR;
 }
 
-IPCVAPI_IMPL( CvStatus, icvFloodFill_8Con_8u_C1IR, (uchar * pImage, int step,
-                                                    CvSize roi, CvPoint seed,
-                                                    int* _newVal, CvConnectedComp* region,
-                                                    void *pBuffer) )
+
+static CvStatus
+icvFloodFill_Grad_8u_C3IR( uchar* pImage, int step, uchar* pMask, int maskStep,
+                           CvSize /*roi*/, CvPoint seed, uchar* _newVal, uchar* _d_lw,
+                           uchar* _d_up, CvConnectedComp* region, int flags,
+                           CvFFillSegment* buffer, int buffersize )
 {
-    uchar *Temp = pImage + step * seed.y;
-    uchar *NL;
-    uchar defcol = Temp[seed.x];
-    uchar uv = (uchar)*_newVal;
-    int LB, RB;
-    unsigned int hght = (unsigned int) (roi.height);
-    Seg *stack;
-    int StIn = 0;
-    int i, j, YC, L, R, PL, PR, flag;
-    int Sum = 0;
+    const int cn = 3;
+    uchar* img = pImage + step*seed.y;
+    uchar* mask = (pMask += maskStep + 1) + maskStep*seed.y;
+    int i, L, R;
+    int area = 0;
+    int sum[3] = { 0, 0, 0 }, val0[3] = { 0, 0, 0 };
+    uchar newVal[3] = {_newVal[0], _newVal[1], _newVal[2]};
+    int d_lw[3] = {_d_lw[0], _d_lw[1], _d_lw[2]};
+    int d_up[3] = {_d_up[0], _d_up[1], _d_up[2]};
+    unsigned interval[3] =
+    { (unsigned) (d_up[0] + d_lw[0]),
+      (unsigned) (d_up[1] + d_lw[1]),
+      (unsigned) (d_up[2] + d_lw[2])};
     int XMin, XMax, YMin = seed.y, YMax = seed.y;
+    int _8_connectivity = (flags & 255) == 8;
+    int fixedRange = flags & CV_FLOODFILL_FIXED_RANGE;
+    int fillImage = (flags & CV_FLOODFILL_MASK_ONLY) == 0;
+    uchar newMaskVal = (uchar)(flags & 0xff00 ? flags >> 8 : 1);
+    CvFFillSegment* buffer_end = buffer + buffersize, *head = buffer, *tail = buffer;
 
-    if( pImage == NULL )
-        return CV_NULLPTR_ERR;
-    if( roi.width <= 0 || roi.height <= 0 )
-        return CV_BADSIZE_ERR;
-    if( roi.width > step )
-        return CV_BADSIZE_ERR;
-    if( seed.x < 0 || seed.x >= roi.width )
-        return CV_BADPOINT_ERR;
-    if( seed.y < 0 || seed.y >= roi.height )
-        return CV_BADPOINT_ERR;
+    L = R = seed.x;
+    if( mask[L] )
+        return CV_OK;
 
+    mask[L] = newMaskVal;
 
-    if( defcol == uv )
-        return CV_NO_ERR;
-    stack = (Seg *) pBuffer;
-    L = seed.x;
-    R = seed.x;
-    YC = seed.y;
-    Temp[R] = uv;
-    while( (R < roi.width - 1) && (Temp[R + 1] == defcol) )
+    if( fixedRange )
     {
-        Temp[++R] = uv;
+        val0[0] = img[seed.x*cn];
+        val0[1] = img[seed.x*cn+1];
+        val0[2] = img[seed.x*cn+2];
+
+        while( DIFF_INT_C3( img + (R+1)*cn, val0 ) && !mask[R + 1] )
+            mask[++R] = newMaskVal;
+
+        while( DIFF_INT_C3( img + (L-1)*cn, val0 ) && !mask[L - 1] )
+            mask[--L] = newMaskVal;
     }
+    else
+    {
+        while( DIFF_INT_C3( img + (R+1)*cn, img + R*cn ) && !mask[R + 1] )
+            mask[++R] = newMaskVal;
+
+        while( DIFF_INT_C3( img + (L-1)*cn, img + L*cn ) && !mask[L - 1] )
+            mask[--L] = newMaskVal;
+    }
+
     XMax = R;
-    while( L && (Temp[L - 1] == defcol) )
-    {
-        Temp[--L] = uv;
-    }
     XMin = L;
-    Sum += R - L + 1;
-    PL = MIN( R + 2, roi.width );
-    flag = (YC != roi.height - 1) ? UP : DOWN;
-    PUSH( YC, L, R, R + 1, R, flag );
+    ICV_PUSH( seed.y, L, R, R + 1, R, UP );
 
-    while( StIn )
+    while( head != tail )
     {
-        POP( YC, L, R, PL, PR, flag );
-        XMax = MAX( XMax, R );
-        XMin = MIN( XMin, L );
-        YMax = MAX( YMax, YC );
-        YMin = MIN( YMin, YC );
-        if( ((unsigned) (YC - flag)) < hght )
+        int k, YC, PL, PR, dir, curstep;
+        ICV_POP( YC, L, R, PL, PR, dir );
+
+        int data[][3] =
         {
+            {-dir, L - _8_connectivity, R + _8_connectivity},
+            {dir, L - _8_connectivity, PL - 1},
+            {dir, PR + 1, R + _8_connectivity}
+        };
 
+        unsigned length = (unsigned)(R-L);
 
-            NL = pImage + (YC - flag) * step;
-            LB = MAX( 0, L - 1 );
-            RB = MIN( roi.width, R + 2 );
-            for( i = LB; i < RB; i++ )
+        if( region )
+        {
+            area += (int)length + 1;
+
+            if( XMax < R ) XMax = R;
+            if( XMin > L ) XMin = L;
+            if( YMax < YC ) YMax = YC;
+            if( YMin > YC ) YMin = YC;
+        }
+
+        for( k = 0; k < 3; k++ )
+        {
+            dir = data[k][0];
+            curstep = dir * step;
+            img = pImage + (YC + dir) * step;
+            mask = pMask + (YC + dir) * maskStep;
+            int left = data[k][1];
+            int right = data[k][2];
+
+            if( fixedRange )
             {
-                if( NL[i] == defcol )
+                for( i = left; i <= right; i++ )
                 {
-                    j = i;
-                    NL[i] = uv;
-                    while( j && (NL[j - 1] == defcol) )
+                    if( !mask[i] && DIFF_INT_C3( img + i*cn, val0 ))
                     {
-                        NL[--j] = uv;
+                        int j = i;
+                        mask[i] = newMaskVal;
+                        while( !mask[--j] && DIFF_INT_C3( img + j*cn, val0 ))
+                            mask[j] = newMaskVal;
+
+                        while( !mask[++i] && DIFF_INT_C3( img + i*cn, val0 ))
+                            mask[i] = newMaskVal;
+
+                        ICV_PUSH( YC + dir, j+1, i-1, L, R, -dir );
                     }
-                    while( (i < roi.width - 1) && (NL[i + 1] == defcol) )
+                }
+            }
+            else if( !_8_connectivity )
+            {
+                for( i = left; i <= right; i++ )
+                {
+                    if( !mask[i] && DIFF_INT_C3( img + i*cn, img - curstep + i*cn ))
                     {
-                        NL[++i] = uv;
+                        int j = i;
+                        mask[i] = newMaskVal;
+                        while( !mask[--j] && DIFF_INT_C3( img + j*cn, img + (j+1)*cn ))
+                            mask[j] = newMaskVal;
+
+                        while( !mask[++i] &&
+                               (DIFF_INT_C3( img + i*cn, img + (i-1)*cn ) ||
+                               (DIFF_INT_C3( img + i*cn, img + i*cn - curstep) && i <= R)))
+                            mask[i] = newMaskVal;
+
+                        ICV_PUSH( YC + dir, j+1, i-1, L, R, -dir );
                     }
-                    PUSH( YC - flag, j, i++, L, R, flag );
-                    Sum += i - j;
+                }
+            }
+            else
+            {
+                for( i = left; i <= right; i++ )
+                {
+                    int idx, val[3];
+                    
+                    if( !mask[i] &&
+                        ((val[0] = img[i*cn],
+                          val[1] = img[i*cn+1],
+                          val[2] = img[i*cn+2],
+                        (unsigned)(idx = i-L-1) <= length) &&
+                        DIFF_INT_C3( val, img - curstep + (i-1)*cn ) ||
+                        (unsigned)(++idx) <= length &&
+                        DIFF_INT_C3( val, img - curstep + i*cn ) ||
+                        (unsigned)(++idx) <= length &&
+                        DIFF_INT_C3( val, img - curstep + (i+1)*cn )))
+                    {
+                        int j = i;
+                        mask[i] = newMaskVal;
+                        while( !mask[--j] && DIFF_INT_C3( img + j*cn, img + (j+1)*cn ))
+                            mask[j] = newMaskVal;
+
+                        while( !mask[++i] &&
+                               ((val[0] = img[i*cn],
+                                 val[1] = img[i*cn+1],
+                                 val[2] = img[i*cn+2],
+                               DIFF_INT_C3( &val, img + (i-1)*cn )) ||
+                               ((unsigned)(idx = i-L-1) <= length &&
+                               DIFF_INT_C3( &val, img - curstep + (i-1)*cn )) ||
+                               (unsigned)(++idx) <= length &&
+                               DIFF_INT_C3( &val, img - curstep + i*cn ) ||
+                               (unsigned)(++idx) <= length &&
+                               DIFF_INT_C3( &val, img - curstep + (i+1)*cn )))
+                            mask[i] = newMaskVal;
+
+                        ICV_PUSH( YC + dir, j+1, i-1, L, R, -dir );
+                    }
                 }
             }
         }
-        NL = pImage + (YC + flag) * step;
-        LB = MAX( L - 1, 0 );
-        for( i = LB; i < PL; i++ )
-        {
-            if( NL[i] == defcol )
+
+        img = pImage + YC * step;
+        if( fillImage )
+            for( i = L; i <= R; i++ )
             {
-                j = i;
-                NL[i] = uv;
-                while( j && (NL[j - 1] == defcol) )
-                {
-                    NL[--j] = uv;
-                }
-                while( (i < roi.width - 1) && (NL[i + 1] == defcol) )
-                {
-                    NL[++i] = uv;
-                }
-                PUSH( YC + flag, j, i++, L, R, -flag );
-                Sum += i - j;
+                img[i*3] = newVal[0];
+                img[i*3+1] = newVal[1];
+                img[i*3+2] = newVal[2];
             }
-        }
-        RB = MIN( roi.width, R + 2 );
-        for( i = PR + 1; i < RB; i++ )
-        {
-            if( NL[i] == defcol )
+        else if( region )
+            for( i = L; i <= R; i++ )
             {
-                j = i;
-                NL[i] = uv;
-                while( j && (NL[j - 1] == defcol) )
-                {
-                    NL[--j] = uv;
-                }
-                while( (i < roi.width - 1) && (NL[i + 1] == defcol) )
-                {
-                    NL[++i] = uv;
-                }
-                PUSH( YC + flag, j, i++, L, R, -flag );
-                Sum += i - j;
+                sum[0] += img[i*3];
+                sum[1] += img[i*3+1];
+                sum[2] += img[i*3+2];
+            }
+    }
+    
+    if( region )
+    {
+        region->area = area;
+        region->rect.x = XMin;
+        region->rect.y = YMin;
+        region->rect.width = XMax - XMin + 1;
+        region->rect.height = YMax - YMin + 1;
+    
+        if( fillImage )
+            region->value = CV_RGB(newVal[2],newVal[1],newVal[0]);
+        else
+        {
+            region->value = 0;
+            if( area )
+            {
+                double inv_area = 1./area;
+                int b = cvRound(sum[0]*inv_area);
+                int g = cvRound(sum[1]*inv_area);
+                int r = cvRound(sum[2]*inv_area);
+                b = CV_CAST_8U(b);
+                g = CV_CAST_8U(g);
+                r = CV_CAST_8U(r);
+                region->value = CV_RGB( r, g, b );
             }
         }
     }
 
-    region->area = Sum;
-    region->rect.x = XMin;
-    region->rect.y = YMin;
-    region->rect.width = XMax - XMin + 1;
-    region->rect.height = YMax - YMin + 1;
-    region->value = (float)*_newVal;
     return CV_NO_ERR;
 }
 
-IPCVAPI_IMPL( CvStatus, icvFloodFill_8Con_32f_C1IR, (float *pImage,
-                                                     int step,
-                                                     CvSize roi,
-                                                     CvPoint seed,
-                                                     float* _newVal,
-                                                     CvConnectedComp * region, void *pBuffer) )
+
+static CvStatus
+icvFloodFill_Grad_32f_C1IR( float* pImage, int step, uchar* pMask, int maskStep,
+                            CvSize /*roiSize*/, CvPoint seed, float* _newVal, float* _d_lw,
+                            float* _d_up, CvConnectedComp* region, int flags,
+                            CvFFillSegment* buffer, int buffersize )
 {
-    int ownstep = step / 4;
-    float *Temp = pImage + ownstep * seed.y;
-    float *NL;
-    unsigned int hght = (unsigned int) (roi.height);
-    float defcol = Temp[seed.x];
-    float newVal = *_newVal;
-    Seg *stack;
-    int StIn = 0;
-    int i, j, YC, L, R, PL, PR, flag;
-    int Sum = 0;
-    int LB, RB;
+    const int cn = 1;
+    float* img = pImage + (step /= sizeof(pImage[0]))*seed.y;
+    uchar* mask = (pMask += maskStep + 1) + maskStep*seed.y;
+    int i, L, R;
+    int area = 0;
+    double sum = 0;
+    float val0[1] = {0};
+    float newVal = _newVal[0];
+    float interval = 0.5f*(_d_lw[0] + _d_up[0]);
+    float d_lw = 0.5f*(_d_lw[0] - _d_up[0]);
     int XMin, XMax, YMin = seed.y, YMax = seed.y;
+    int _8_connectivity = (flags & 255) == 8;
+    int fixedRange = flags & CV_FLOODFILL_FIXED_RANGE;
+    int fillImage = (flags & CV_FLOODFILL_MASK_ONLY) == 0;
+    uchar newMaskVal = (uchar)(flags & 0xff00 ? flags >> 8 : 1);
+    CvFFillSegment* buffer_end = buffer + buffersize, *head = buffer, *tail = buffer;
 
-    if( pImage == NULL )
-        return CV_NULLPTR_ERR;
-    if( roi.width < 1 || roi.height < 1 )
-        return CV_BADSIZE_ERR;
-    if( roi.width > step )
-        return CV_BADPOINT_ERR;
-    if( seed.x < 0 || seed.x >= roi.width )
-        return CV_BADPOINT_ERR;
-    if( seed.y < 0 || seed.y >= roi.height )
-        return CV_BADPOINT_ERR;
-    if( defcol == *_newVal )
-        return CV_NO_ERR;
-    stack = (Seg *) pBuffer;
-    L = seed.x;
-    R = seed.x;
-    YC = seed.y;
-    Temp[R] = newVal;
-    while( (R < roi.width - 1) && (Temp[R + 1] == defcol) )
+    L = R = seed.x;
+    if( mask[L] )
+        return CV_OK;
+
+    mask[L] = newMaskVal;
+
+    if( fixedRange )
     {
-        Temp[++R] = newVal;
+        val0[0] = img[seed.x];
+
+        while( DIFF_FLT_C1( img + (R+1)*cn, val0 ) && !mask[R + 1] )
+            mask[++R] = newMaskVal;
+
+        while( DIFF_FLT_C1( img + (L-1)*cn, val0 ) && !mask[L - 1] )
+            mask[--L] = newMaskVal;
     }
+    else
+    {
+        while( DIFF_FLT_C1( img + (R+1)*cn, img + R*cn ) && !mask[R + 1] )
+            mask[++R] = newMaskVal;
+
+        while( DIFF_FLT_C1( img + (L-1)*cn, img + L*cn ) && !mask[L - 1] )
+            mask[--L] = newMaskVal;
+    }
+
     XMax = R;
-    while( L && (Temp[L - 1] == defcol) )
-    {
-        Temp[--L] = newVal;
-    }
     XMin = L;
-    Sum += R - L + 1;
-    PL = MIN( roi.width, R + 2 );
-    flag = (YC != roi.height - 1) ? UP : DOWN;
-    PUSH( YC, L, R, R + 1, R, flag );
+    ICV_PUSH( seed.y, L, R, R + 1, R, UP );
 
-    while( StIn )
+    while( head != tail )
     {
-        POP( YC, L, R, PL, PR, flag );
-        XMax = MAX( XMax, R );
-        XMin = MIN( XMin, L );
-        YMax = MAX( YMax, YC );
-        YMin = MIN( YMin, YC );
-        if( ((unsigned) (YC - flag)) < hght )
+        int k, YC, PL, PR, dir, curstep;
+        ICV_POP( YC, L, R, PL, PR, dir );
+
+        int data[][3] =
         {
-            NL = pImage + (YC - flag) * ownstep;
-            LB = MAX( 0, L - 1 );
-            RB = MIN( R + 2, roi.width );
-            for( i = LB; i < RB; i++ )
+            {-dir, L - _8_connectivity, R + _8_connectivity},
+            {dir, L - _8_connectivity, PL - 1},
+            {dir, PR + 1, R + _8_connectivity}
+        };
+
+        unsigned length = (unsigned)(R-L);
+
+        if( region )
+        {
+            area += (int)length + 1;
+
+            if( XMax < R ) XMax = R;
+            if( XMin > L ) XMin = L;
+            if( YMax < YC ) YMax = YC;
+            if( YMin > YC ) YMin = YC;
+        }
+
+        for( k = 0; k < 3; k++ )
+        {
+            dir = data[k][0];
+            curstep = dir * step;
+            img = pImage + (YC + dir) * step;
+            mask = pMask + (YC + dir) * maskStep;
+            int left = data[k][1];
+            int right = data[k][2];
+
+            if( fixedRange )
             {
-                if( NL[i] == defcol )
+                for( i = left; i <= right; i++ )
                 {
-                    j = i;
-                    NL[i] = newVal;
-                    while( j && (NL[j - 1] == defcol) )
+                    if( !mask[i] && DIFF_FLT_C1( img + i*cn, val0 ))
                     {
-                        NL[--j] = newVal;
+                        int j = i;
+                        mask[i] = newMaskVal;
+                        while( !mask[--j] && DIFF_FLT_C1( img + j*cn, val0 ))
+                            mask[j] = newMaskVal;
+
+                        while( !mask[++i] && DIFF_FLT_C1( img + i*cn, val0 ))
+                            mask[i] = newMaskVal;
+
+                        ICV_PUSH( YC + dir, j+1, i-1, L, R, -dir );
                     }
-                    while( (i < roi.width - 1) && (NL[i + 1] == defcol) )
+                }
+            }
+            else if( !_8_connectivity )
+            {
+                for( i = left; i <= right; i++ )
+                {
+                    if( !mask[i] && DIFF_FLT_C1( img + i*cn, img - curstep + i*cn ))
                     {
-                        NL[++i] = newVal;
+                        int j = i;
+                        mask[i] = newMaskVal;
+                        while( !mask[--j] && DIFF_FLT_C1( img + j*cn, img + (j+1)*cn ))
+                            mask[j] = newMaskVal;
+
+                        while( !mask[++i] &&
+                               (DIFF_FLT_C1( img + i*cn, img + (i-1)*cn ) ||
+                               (DIFF_FLT_C1( img + i*cn, img + i*cn - curstep) && i <= R)))
+                            mask[i] = newMaskVal;
+
+                        ICV_PUSH( YC + dir, j+1, i-1, L, R, -dir );
                     }
-                    PUSH( YC - flag, j, i++, L, R, flag );
-                    Sum += i - j;
                 }
             }
-        }
-        NL = pImage + (YC + flag) * ownstep;
-        LB = MAX( L - 1, 0 );
-        for( i = LB; i < PL; i++ )
-        {
-            if( NL[i] == defcol )
+            else
             {
-                j = i;
-                NL[i] = newVal;
-                while( j && (NL[j - 1] == defcol) )
+                for( i = left; i <= right; i++ )
                 {
-                    NL[--j] = newVal;
-                }
-                while( (i < roi.width - 1) && (NL[i + 1] == defcol) )
-                {
-                    NL[++i] = newVal;
-                }
-                PUSH( YC + flag, j, i++, L, R, -flag );
-                Sum += i - j;
-            }
-        }
-        RB = MIN( roi.width, R + 2 );
-        for( i = PR + 1; i < RB; i++ )
-        {
-            if( NL[i] == defcol )
-            {
-                j = i;
-                NL[i] = newVal;
-                while( j && (NL[j - 1] == defcol) )
-                {
-                    NL[--j] = newVal;
-                }
-                while( (i < roi.width - 1) && (NL[i + 1] == defcol) )
-                {
-                    NL[++i] = newVal;
-                }
-                PUSH( YC + flag, j, i++, L, R, -flag );
-                Sum += i - j;
-            }
-        }
-    }
-
-    region->area = Sum;
-    region->rect.x = XMin;
-    region->rect.y = YMin;
-    region->rect.width = XMax - XMin + 1;
-    region->rect.height = YMax - YMin + 1;
-    region->value = *_newVal;
-    return CV_NO_ERR;
-}
-
-/*F///////////////////////////////////////////////////////////////////////////////////////
-//    Name: ippiFloodFill_8uC1R, ippiFloodFill_32fC1R
-//    Purpose: The function fills the seed pixel enewValirons inside which all pixel
-//             values are not far from each other. 
-//    Context:
-//    Parameters:  pImage     - pointer to ROI of initial image (in the beginning)
-//                              which is "repainted" during the function action,
-//                 step       - full string length of initial image (in bytes),
-//                 roi        - size of image ROI,
-//                 seed  - coordinates of the seed point inside image ROI,
-//                 newVal         - new value of repainted area pixels,
-//                 d_lw, d_up - maximal lower and upper differences of the values of
-//                              appurtenant to repainted area pixel and one of its
-//                              neighbour,
-//                 pPainted   - pointer to counter of repainted pixels number,
-//                 rect       - pointer to rectangle circumscribed about the
-//                              repainted area
-//
-//    Returns: CV_NO_ERR or error code
-//    Notes:   This function uses a rapid non-recursive algorithm.
-//F*/
-
-IPCVAPI_IMPL( CvStatus, icvFloodFill_Grad4Con_8u_C1IR, (uchar * pImage,
-                                                        int step,
-                                                        CvSize roi,
-                                                        CvPoint seed,
-                                                        int* _newVal,
-                                                        int* _d_lw,
-                                                        int* _d_up,
-                                                        CvConnectedComp * region,
-                                                        void *pBuffer) )
-{
-    uchar *Temp = pImage + step * seed.y;
-    uchar *TempRP;
-    uchar *RP;
-    uchar uv = (uchar)*_newVal;
-    int d_lw = *_d_lw;
-    int d_up = *_d_up;
-    Seg *stack;
-    int StIn = 0;
-    int i, j, YC, L, R, PL, PR, flag;
-    int Sum = 0;
-    int curstep;
-    unsigned int Interval = (unsigned int) (d_up + d_lw);
-    int stepr = roi.width + 2;
-    int XMin, XMax, YMin = seed.y, YMax = seed.y;
-
-    if( pImage == NULL )
-        return CV_NULLPTR_ERR;
-    if( roi.width <= 0 || roi.height <= 0 )
-        return CV_BADSIZE_ERR;
-    if( roi.width > step )
-        return CV_BADSIZE_ERR;
-    if( seed.x < 0 || seed.x >= roi.width )
-        return CV_BADPOINT_ERR;
-    if( seed.y < 0 || seed.y >= roi.height )
-        return CV_BADPOINT_ERR;
-    if( d_lw < 0 || d_up < 0 )
-        return CV_BADPOINT_ERR;
-
-    RP = (uchar *) pBuffer;
-    stack = (Seg *) ((long) pBuffer + (roi.width + 2) * (roi.height + 2));
-    memset( RP, 1, stepr );
-    memset( RP + (roi.height + 1) * stepr, 1, stepr );
-    for( i = 0; i < roi.height; i++ )
-    {
-        TempRP = RP + (i + 1) * stepr;
-        TempRP[0] = 1;
-        TempRP[stepr - 1] = 1;
-        TempRP++;
-        memset( TempRP, 0, stepr - 2 );
-    }
-    L = seed.x;
-    R = seed.x;
-    YC = seed.y;
-    TempRP = RP + (YC + 1) * stepr + 1;
-    TempRP[L] = 1;
-    while( ((((unsigned) (Temp[R + 1] - Temp[R] + d_lw)) <= Interval)) && (!TempRP[R + 1]) )
-    {
-        TempRP[++R] = 1;
-    }
-    XMax = R;
-    while( ((((unsigned) (Temp[L - 1] - Temp[L] + d_lw)) <= Interval)) && (!TempRP[L - 1]) )
-    {
-
-        TempRP[--L] = 1;
-    }
-    XMin = L;
-    PUSH( YC, L, R, R + 1, R, UP );
-
-    while( StIn )
-    {
-        POP( YC, L, R, PL, PR, flag );
-        XMax = MAX( XMax, R );
-        XMin = MIN( XMin, L );
-        YMax = MAX( YMax, YC );
-        YMin = MIN( YMin, YC );
-        curstep = flag * step;
-        Temp = pImage + YC * step - curstep;
-        TempRP = RP + (YC + 1 - flag) * stepr + 1;
-        for( i = L; i < R + 1; i++ )
-        {
-            if( (!TempRP[i]) &&
-                (((unsigned) (Temp[i] - Temp[i + curstep] + d_lw)) <= Interval) )
-            {
-                TempRP[i] = 1;
-                j = i;
-                while( (!TempRP[j - 1]) &&
-                       (((unsigned) (Temp[j - 1] - Temp[j] + d_lw)) <= Interval) )
-                {
-                    TempRP[--j] = 1;
-                }
-                while( (!TempRP[i + 1]) &&
-                       ((((unsigned) (Temp[i + 1] - Temp[i] + d_lw)) <= Interval) ||
-                        (((unsigned) (Temp[i + 1] - Temp[i + 1 + curstep] + d_lw) <= Interval)
-                         && (i < R))))
-                {
-                    TempRP[++i] = 1;
-                }
-
-                PUSH( YC - flag, j, i++, L, R, flag );
-
-            }
-        }
-        Temp = pImage + YC * step + curstep;
-        TempRP = RP + (YC + 1 + flag) * stepr + 1;
-        for( i = L; i < PL; i++ )
-        {
-            if( (!TempRP[i]) &&
-                (((unsigned) (Temp[i] - Temp[i - curstep] + d_lw)) <= Interval) )
-            {
-                TempRP[i] = 1;
-                j = i;
-                //moving left
-                while( (!TempRP[j - 1]) &&
-                       (((unsigned) (Temp[j - 1] - Temp[j] + d_lw)) <= Interval) )
-                {
-                    TempRP[--j] = 1;
-                }
-                while( (!TempRP[i + 1]) &&
-                       ((((unsigned) (Temp[i + 1] - Temp[i] + d_lw)) <= Interval) ||
-                        (((unsigned) (Temp[i + 1] - Temp[i + 1 - curstep] + d_lw) <= Interval)
-                         & (i < R))))
-                {
-                    TempRP[++i] = 1;
-                }
-                PUSH( YC + flag, j, i++, L, R, -flag );
-            }
-        }
-        for( i = PR + 1; i < R + 1; i++ )
-        {
-            if( (!TempRP[i]) &&
-                (((unsigned) (Temp[i] - Temp[i - curstep] + d_lw)) <= Interval) )
-            {
-                TempRP[i] = 1;
-                j = i;
-                //moving left
-                while( (!TempRP[j - 1]) &&
-                       (((unsigned) (Temp[j - 1] - Temp[j] + d_lw)) <= Interval) )
-                {
-                    TempRP[--j] = 1;
-                }
-                while( (!TempRP[i + 1]) &&
-                       ((((unsigned) (Temp[i + 1] - Temp[i] + d_lw)) <= Interval) ||
-                        (((unsigned) (Temp[i + 1] - Temp[i + 1 - curstep] + d_lw) <= Interval)
-                         && (i < R))))
-                {
-                    TempRP[++i] = 1;
-                }
-                PUSH( YC + flag, j, i++, L, R, -flag );
-            }
-        }
-        for( i = L; i < R + 1; i++ )
-            pImage[YC * step + i] = uv;
-        Sum += (R - L + 1);
-    }
-    region->area = Sum;
-    region->rect.x = XMin;
-    region->rect.y = YMin;
-    region->rect.width = XMax - XMin + 1;
-    region->rect.height = YMax - YMin + 1;
-    region->value = (float)*_newVal;
-    return CV_NO_ERR;
-}
-
-/****************************************************************************************/
-/******************************** 32fC1 flavor ******************************************/
-/****************************************************************************************/
-IPCVAPI_IMPL( CvStatus, icvFloodFill_Grad4Con_32f_C1IR, (float *pImage,
-                                                         int step,
-                                                         CvSize roi,
-                                                         CvPoint seed,
-                                                         float* _newVal,
-                                                         float* _d_lw,
-                                                         float* _d_up,
-                                                         CvConnectedComp * region,
-                                                         void *pBuffer) )
-{
-    int ownstep = step / 4;
-    float *Temp = pImage + ownstep * seed.y;
-    uchar *RP;
-    uchar *TempRP;
-    float newVal = *_newVal;
-    float d_lw = *_d_lw;
-    float d_up = *_d_up;
-    Seg *stack;
-    int StIn = 0;
-    int i, j, YC, L, R, PL, PR, flag;
-    int Sum = 0;
-    int stepr = roi.width + 2;
-    int curstep;
-    float Addit = (d_lw - d_up) / 2;
-    float Interval = (d_up + d_lw) / 2;
-    int XMin, XMax, YMin = seed.y, YMax = seed.y;
-
-    L = seed.x;
-    R = seed.x;
-    YC = seed.y;
-    RP = (uchar *) pBuffer;
-    memset( RP, 1, stepr );
-    memset( RP + (roi.height + 1) * stepr, 1, stepr );
-    for( i = 0; i < roi.height; i++ )
-    {
-        TempRP = RP + (i + 1) * stepr;
-        TempRP[0] = 1;
-        TempRP[stepr - 1] = 1;
-        TempRP++;
-        memset( TempRP, 0, stepr - 2 );
-
-    }
-    stack = (Seg *) ((long) pBuffer + (roi.width + 2) * (roi.height + 2));
-    TempRP = RP + (YC + 1) * stepr + 1;
-    TempRP[L] = 1;
-    while( (!TempRP[R + 1]) && (((fabs( Temp[R + 1] - Temp[R] + Addit )) <= Interval)))
-    {
-        TempRP[++R] = 1;
-    }
-    XMax = R;
-    while( (!TempRP[L - 1]) && (((fabs( Temp[L - 1] - Temp[L] + Addit )) <= Interval)))
-    {
-
-        TempRP[--L] = 1;
-    }
-    XMin = L;
-    PUSH( YC, L, R, R + 1, R, UP );
-
-    while( StIn )
-    {
-        POP( YC, L, R, PL, PR, flag );
-        XMax = MAX( XMax, R );
-        XMin = MIN( XMin, L );
-        YMin = MIN( YC, YMin );
-        YMax = MAX( YC, YMax );
-        curstep = flag * ownstep;
-        Temp = pImage + YC * ownstep - curstep;
-        TempRP = RP + (YC + 1 - flag) * stepr + 1;
-        for( i = L; i < R + 1; i++ )
-        {
-            if( (!TempRP[i]) && ((fabs( Temp[i] - Temp[i + curstep] + Addit )) <= Interval) )
-            {
-
-                TempRP[i] = 1;
-                j = i;
-                while( (!TempRP[j - 1]) &&
-                       ((fabs( Temp[j - 1] - Temp[j] + Addit )) <= Interval) )
-                {
-                    TempRP[--j] = 1;
-                }
-
-                while( (!TempRP[i + 1]) &&
-                       (((fabs( Temp[i + 1] - Temp[i] + Addit )) <= Interval) ||
-                        ((fabs( Temp[i + 1] - Temp[i + 1 + curstep] + Addit ) <= Interval) &&
-                         (i < R))))
-                {
-                    TempRP[++i] = 1;
-                }
-
-                PUSH( YC - flag, j, i++, L, R, flag );
-
-            }
-        }
-
-        Temp = pImage + YC * ownstep + curstep;
-        TempRP = RP + (YC + 1 + flag) * stepr + 1;
-        for( i = L; i < PL; i++ )
-        {
-            if( (!TempRP[i]) && ((fabs( Temp[i] - Temp[i - curstep] + Addit )) <= Interval) )
-            {
-
-                TempRP[i] = 1;
-                j = i;
-                //moving left
-                while( (!TempRP[j - 1]) &&
-                       ((fabs( Temp[j - 1] - Temp[j] + Addit )) <= Interval) )
-                {
-                    TempRP[--j] = 1;
-                }
-                while( (!TempRP[i + 1]) &&
-                       (((fabs( Temp[i + 1] - Temp[i] + Addit )) <= Interval) ||
-                        ((fabs( Temp[i + 1] - Temp[i + 1 - curstep] + Addit ) <= Interval) &&
-                         (i < R))))
-                {
-                    TempRP[++i] = 1;
-                }
-                PUSH( YC + flag, j, i++, L, R, -flag );
-            }
-        }
-        for( i = PR + 1; i < R + 1; i++ )
-        {
-            if( (!TempRP[i]) && ((fabs( Temp[i] - Temp[i - curstep] + Addit )) <= Interval) )
-            {
-                TempRP[i] = 1;
-                j = i;
-                //moving left
-                while( (!TempRP[j - 1]) &&
-                       ((fabs( Temp[j - 1] - Temp[j] + Addit )) <= Interval) )
-                {
-                    TempRP[--j] = 1;
-                }
-                while( (!TempRP[i + 1]) &&
-                       (((fabs( Temp[i + 1] - Temp[i] + Addit )) <= Interval) ||
-                        ((fabs( Temp[i + 1] - Temp[i + 1 - curstep] + Addit ) <= Interval) &
-                         (i < R))))
-                {
-                    TempRP[++i] = 1;
-                }
-                PUSH( YC + flag, j, i++, L, R, -flag );
-            }
-        }
-
-
-        for( i = L; i < R + 1; i++ )
-            pImage[YC * ownstep + i] = newVal;
-        Sum += (R - L + 1);
-    }
-    region->area = Sum;
-    region->rect.x = XMin;
-    region->rect.y = YMin;
-    region->rect.width = XMax - XMin + 1;
-    region->rect.height = YMax - YMin + 1;
-    region->value = (float) newVal;
-    return CV_NO_ERR;
-}
-
-/*F///////////////////////////////////////////////////////////////////////////////////////
-//    Name: ippiFloodFill8_8u_C1R, ippiFloodFill8_32f_C1R
-//    Purpose: The function fills the seed pixel enewValirons inside which all pixel
-//             values are not far from each other (8-connected variant). 
-//    Context:
-//    Parameters:  pImage     - pointer to ROI of initial image (in the beginning)
-//                              which is "repainted" during the function action,
-//                 step       - full string length of initial image (in bytes),
-//                 roi        - size of image ROI,
-//                 seed  - coordinates of the seed point inside image ROI,
-//                 newVal         - new value of repainted area pixels,
-//                 d_lw, d_up - maximal lower and upper differences of the values of
-//                              appurtenant to repainted area pixel and one of its
-//                              neighbour,
-//                 pPainted   - pointer to counter of repainted pixels number.
-//
-//    Returns: CV_NO_ERR or error code
-//    Notes:   This function uses a rapid non-recursive algorithm.
-//F*/
-IPCVAPI_IMPL( CvStatus, icvFloodFill_Grad8Con_8u_C1IR, (uchar * pImage,
-                                                        int step,
-                                                        CvSize roi,
-                                                        CvPoint seed,
-                                                        int* _newVal,
-                                                        int* _d_lw,
-                                                        int* _d_up,
-                                                        CvConnectedComp * region,
-                                                        void *pBuffer) )
-{
-    uchar *Temp = pImage + step * seed.y;
-    uchar *NL;
-    uchar *TempRP;
-    uchar *NLR;
-    uchar *RP;
-    uchar uv = (uchar)*_newVal;
-    int d_lw = *_d_lw;
-    int d_up = *_d_up;
-    uchar TV;
-    unsigned int Diap;
-    Seg *stack;
-    int StIn = 0;
-    int i, j, YC, L, R, PL, PR, flag, k;
-    int Sum = 0;
-    unsigned int Interval = (unsigned int) (d_up + d_lw);
-    int stepr = roi.width + 2;
-    int XMin, XMax, YMin = seed.y, YMax = seed.y;
-
-    if( pImage == NULL )
-        return CV_NULLPTR_ERR;
-    if( roi.width < 1 || roi.height < 1 )
-        return CV_BADSIZE_ERR;
-    if( roi.width > step )
-        return CV_BADPOINT_ERR;
-    if( seed.x < 0 || seed.x >= roi.width )
-        return CV_BADPOINT_ERR;
-    if( seed.y < 0 || seed.y >= roi.height )
-        return CV_BADPOINT_ERR;
-    if( d_lw < 0 || d_up < 0 )
-        return CV_BADPOINT_ERR;
-    if( *_newVal < 0 || *_newVal > 255 )
-        return CV_BADPOINT_ERR;
-
-    RP = (uchar *) pBuffer;
-    stack = (Seg *) ((long) pBuffer + (roi.width + 2) * (roi.height + 2));
-    memset( RP, 1, stepr );
-    memset( RP + (roi.height + 1) * stepr, 1, stepr );
-    for( i = 0; i < roi.height; i++ )
-    {
-        TempRP = RP + (i + 1) * stepr;
-        TempRP[0] = 1;
-        TempRP[stepr - 1] = 1;
-        TempRP++;
-        memset( TempRP, 0, stepr - 2 );
-
-    }
-    L = seed.x;
-    R = seed.x;
-    YC = seed.y;
-    TempRP = RP + (YC + 1) * stepr + 1;
-    TempRP[L] = 1;
-    while( ((((unsigned) (Temp[R + 1] - Temp[R] + d_lw)) <= Interval)) && (!TempRP[R + 1]) )
-    {
-        TempRP[++R] = 1;
-    }
-    XMax = R;
-    while( ((((unsigned) (Temp[L - 1] - Temp[L] + d_lw)) <= Interval)) && (!TempRP[L - 1]) )
-    {
-
-        TempRP[--L] = 1;
-    }
-    XMin = L;
-    PL = MIN( R + 2, roi.width );
-    PUSH( YC, L, R, PL, R + 2, UP );
-
-    while( StIn )
-    {
-        POP( YC, L, R, PL, PR, flag );
-        XMax = MAX( XMax, R );
-        XMin = MIN( XMin, L );
-        YMax = MAX( YMax, YC );
-        YMin = MIN( YMin, YC );
-        Diap = (unsigned) (R - L);
-        Temp = pImage + YC * step;
-        TempRP = RP + (YC + 1) * stepr + 1;
-        NLR = TempRP - flag * stepr;
-        NL = Temp - flag * step;
-        for( i = L - 1; i < R + 2; i++ )
-        {
-            if( !(NLR[i]) )
-            {
-                TV = NL[i];
-                if( 
-                    (((unsigned) ((k = i - L) - 1) <= Diap) &&
-                     (((unsigned) (TV - Temp[i - 1] + d_lw)) <= Interval)) ||
-                    (((unsigned) (k) <= Diap) &&
-                     (((unsigned) (TV - Temp[i] + d_lw)) <= Interval)) ||
-                    (((unsigned) (++k) <= Diap) &&
-                     (((unsigned) (TV - Temp[i + 1] + d_lw)) <= Interval)))
-                {
-                    NLR[i] = 1;
-                    j = i;
-                    while( (!NLR[j - 1]) &&
-                           (((unsigned) (NL[j - 1] - NL[j] + d_lw)) <= Interval) )
+                    int idx;
+                    float val[1];
+                    
+                    if( !mask[i] &&
+                        ((val[0] = img[i*cn],
+                        (unsigned)(idx = i-L-1) <= length) &&
+                        DIFF_FLT_C1( val, img - curstep + (i-1)*cn ) ||
+                        (unsigned)(++idx) <= length &&
+                        DIFF_FLT_C1( val, img - curstep + i*cn ) ||
+                        (unsigned)(++idx) <= length &&
+                        DIFF_FLT_C1( val, img - curstep + (i+1)*cn )))
                     {
-                        NLR[--j] = 1;
-                    }
-                    while( (!NLR[++i]) &&
-                           ((((unsigned) ((TV = NL[i]) - NL[i - 1] + d_lw)) <= Interval) ||
-                            (((unsigned) ((k = i - L) - 1) <= Diap) &&
-                             (((unsigned) (TV - Temp[i - 1] + d_lw)) <= Interval)) ||
-                            (((unsigned) (k) <= Diap) &&
-                             (((unsigned) (TV - Temp[i] + d_lw)) <= Interval)) ||
-                            (((unsigned) (++k) <= Diap) &&
-                             (((unsigned) (TV - Temp[i + 1] + d_lw)) <= Interval))))
-                    {
-                        NLR[i] = 1;
-                    }
-                    PUSH( YC - flag, j, i - 1, L, R, flag );
-                }
-            }
-        }
-        NLR = TempRP + flag * stepr;
-        NL = Temp + flag * step;
-        for( i = L - 1; i < PL; i++ )
-        {
-            if( !(NLR[i]) )
-            {
-                TV = NL[i];
-                if( 
-                    (((unsigned) ((k = i - L) - 1) <= Diap) &&
-                     (((unsigned) (TV - Temp[i - 1] + d_lw)) <= Interval)) ||
-                    (((unsigned) (k) <= Diap) &&
-                     (((unsigned) (TV - Temp[i] + d_lw)) <= Interval)) ||
-                    (((unsigned) (++k) <= Diap) &&
-                     (((unsigned) (TV - Temp[i + 1] + d_lw)) <= Interval)))
-                {
-                    NLR[i] = 1;
-                    j = i;
-                    while( (!NLR[j - 1]) &&
-                           (((unsigned) (NL[j - 1] - NL[j] + d_lw)) <= Interval) )
-                    {
-                        NLR[--j] = 1;
-                    }
+                        int j = i;
+                        mask[i] = newMaskVal;
+                        while( !mask[--j] && DIFF_FLT_C1( img + j*cn, img + (j+1)*cn ))
+                            mask[j] = newMaskVal;
 
-                    while( (!NLR[++i]) &&
-                           ((((unsigned) ((TV = NL[i]) - NL[i - 1] + d_lw)) <= Interval) ||
-                            (((unsigned) ((k = i - L) - 1) <= Diap) &&
-                             (((unsigned) (TV - Temp[i - 1] + d_lw)) <= Interval)) ||
-                            (((unsigned) (k) <= Diap) &&
-                             (((unsigned) (TV - Temp[i] + d_lw)) <= Interval)) ||
-                            (((unsigned) (++k) <= Diap) &&
-                             (((unsigned) (TV - Temp[i + 1] + d_lw)) <= Interval))))
-                    {
-                        NLR[i] = 1;
-                    }
-                    PUSH( YC + flag, j, i - 1, L, R, -flag );
-                }
-            }
-        }
-        for( i = PR + 1; i < R + 2; i++ )
-        {
-            if( !(NLR[i]) )
-            {
-                TV = NL[i];
-                if( 
-                    (((unsigned) ((k = i - L) - 1) <= Diap) &&
-                     (((unsigned) (TV - Temp[i - 1] + d_lw)) <= Interval)) ||
-                    (((unsigned) (k) <= Diap) &&
-                     (((unsigned) (TV - Temp[i] + d_lw)) <= Interval)) ||
-                    (((unsigned) (++k) <= Diap) &&
-                     (((unsigned) (TV - Temp[i + 1] + d_lw)) <= Interval)))
-                {
-                    NLR[i] = 1;
-                    j = i;
-                    while( (!NLR[j - 1]) &&
-                           (((unsigned) (NL[j - 1] - NL[j] + d_lw)) <= Interval) )
-                    {
-                        NLR[--j] = 1;
-                    }
+                        while( !mask[++i] &&
+                               ((val[0] = img[i*cn],
+                               DIFF_FLT_C1( val, img + (i-1)*cn )) ||
+                               ((unsigned)(idx = i-L-1) <= length &&
+                               DIFF_FLT_C1( val, img - curstep + (i-1)*cn )) ||
+                               (unsigned)(++idx) <= length &&
+                               DIFF_FLT_C1( val, img - curstep + i*cn ) ||
+                               (unsigned)(++idx) <= length &&
+                               DIFF_FLT_C1( val, img - curstep + (i+1)*cn )))
+                            mask[i] = newMaskVal;
 
-                    while( (!NLR[++i]) &&
-                           ((((unsigned) ((TV = NL[i]) - NL[i - 1] + d_lw)) <= Interval) ||
-                            (((unsigned) ((k = i - L) - 1) <= Diap) &&
-                             (((unsigned) (TV - Temp[i - 1] + d_lw)) <= Interval)) ||
-                            (((unsigned) (k) <= Diap) &&
-                             (((unsigned) (TV - Temp[i] + d_lw)) <= Interval)) ||
-                            (((unsigned) (++k) <= Diap) &&
-                             (((unsigned) (TV - Temp[i + 1] + d_lw)) <= Interval))))
-                    {
-                        NLR[i] = 1;
+                        ICV_PUSH( YC + dir, j+1, i-1, L, R, -dir );
                     }
-                    PUSH( YC + flag, j, i - 1, L, R, -flag );
                 }
             }
         }
-        for( i = L; i < R + 1; i++ )
-            pImage[YC * step + i] = uv;
-        Sum += (R - L + 1);
+
+        img = pImage + YC * step;
+        if( fillImage )
+            for( i = L; i <= R; i++ )
+                img[i] = newVal;
+        else if( region )
+            for( i = L; i <= R; i++ )
+                sum += img[i];
     }
-    region->area = Sum;
-    region->rect.x = XMin;
-    region->rect.y = YMin;
-    region->rect.width = XMax - XMin + 1;
-    region->rect.height = YMax - YMin + 1;
-    region->value = (float)*_newVal;
-    return CV_NO_ERR;
-}
-
-/****************************************************************************************/
-/*******************************************32fC1 flavor*********************************/
-/****************************************************************************************/
-IPCVAPI_IMPL( CvStatus, icvFloodFill_Grad8Con_32f_C1IR, (float *pImage,
-                                                         int step,
-                                                         CvSize roi,
-                                                         CvPoint seed,
-                                                         float* _newVal,
-                                                         float* _d_lw,
-                                                         float* _d_up,
-                                                         CvConnectedComp * region,
-                                                         void *pBuffer) )
-{
-    int ownstep = step / 4;
-    float *Temp = pImage + ownstep * seed.y;
-    float *NL;
-    uchar *TempRP;
-    uchar *NLR;
-    uchar *RP;
-    float newVal = *_newVal;
-    float d_lw = *_d_lw;
-    float d_up = *_d_up;
-    float TV;
-    float Addit = (d_lw - d_up) / 2;
-    float Interval = (d_up + d_lw) / 2;
-    Seg *stack;
-    int StIn = 0;
-    int i, j, YC, L, R, PL, PR, flag, k;
-    int Sum = 0;
-    int stepr = roi.width + 2;
-    unsigned int Diap;
-    int XMin, XMax, YMin = seed.y, YMax = seed.y;
-
-    if( pImage == NULL )
-        return CV_NULLPTR_ERR;
-    if( roi.width < 1 || roi.height < 1 )
-        return CV_BADSIZE_ERR;
-    if( roi.width > step )
-        return CV_BADPOINT_ERR;
-    if( seed.x < 0 || seed.x >= roi.width )
-        return CV_BADPOINT_ERR;
-    if( seed.y < 0 || seed.y >= roi.height )
-        return CV_BADPOINT_ERR;
-    if( d_lw < 0 || d_up < 0 )
-        return CV_BADPOINT_ERR;
-    RP = (uchar *) pBuffer;
-    stack = (Seg *) ((long) pBuffer + (roi.width + 2) * (roi.height + 2));
-    memset( RP, 1, stepr );
-    memset( RP + (roi.height + 1) * stepr, 1, stepr );
-    for( i = 0; i < roi.height; i++ )
+    
+    if( region )
     {
-        TempRP = RP + (i + 1) * stepr;
-        TempRP[0] = 1;
-        TempRP[stepr - 1] = 1;
-        TempRP++;
-        memset( TempRP, 0, stepr - 2 );
-
+        region->area = area;
+        region->rect.x = XMin;
+        region->rect.y = YMin;
+        region->rect.width = XMax - XMin + 1;
+        region->rect.height = YMax - YMin + 1;
+    
+        if( fillImage )
+            region->value = newVal;
+        else
+            region->value = area ? ((double)sum)/area : 0;
     }
-    L = seed.x;
-    R = seed.x;
-    YC = seed.y;
-    TempRP = RP + (YC + 1) * stepr + 1;
-    TempRP[L] = 1;
-    while( (fabs( Temp[R + 1] - Temp[R] + Addit ) <= Interval) && (!TempRP[R + 1]) )
-    {
-        TempRP[++R] = 1;
-    }
-    XMax = R;
-    while( (fabs( Temp[L - 1] - Temp[L] + Addit ) <= Interval) && (!TempRP[L - 1]) )
-    {
 
-        TempRP[--L] = 1;
-    }
-    XMin = L;
-    PL = MIN( R + 2, roi.width );
-    PUSH( YC, L, R, PL, R + 2, UP );
-
-    while( StIn )
-    {
-        POP( YC, L, R, PL, PR, flag );
-        XMax = MAX( XMax, R );
-        XMin = MIN( XMin, L );
-        YMax = MAX( YMax, YC );
-        YMin = MIN( YMin, YC );
-        Diap = (unsigned) (R - L);
-        Temp = pImage + YC * ownstep;
-        TempRP = RP + (YC + 1) * stepr + 1;
-        NLR = TempRP - flag * stepr;
-        NL = Temp - flag * ownstep;
-        for( i = L - 1; i < R + 2; i++ )
-        {
-            if( !(NLR[i]) )
-            {
-                TV = NL[i];
-                if( 
-                    (((unsigned) ((k = i - L) - 1) <= Diap) &&
-                     (fabs( TV - Temp[i - 1] + Addit ) <= Interval)) ||
-                    (((unsigned) (k) <= Diap) && (fabs( TV - Temp[i] + Addit ) <= Interval)) ||
-                    (((unsigned) (++k) <= Diap) &&
-                     (fabs( TV - Temp[i + 1] + Addit ) <= Interval)))
-                {
-                    NLR[i] = 1;
-                    j = i;
-                    while( (!NLR[j - 1]) && (fabs( NL[j - 1] - NL[j] + Addit ) <= Interval) )
-                    {
-                        NLR[--j] = 1;
-                    }
-                    while( (!NLR[++i]) &&
-                           ((fabs( (TV = NL[i]) - NL[i - 1] + Addit ) <= Interval) ||
-                            (((unsigned) ((k = i - L) - 1) <= Diap) &&
-                             (fabs( TV - Temp[i - 1] + Addit ) <= Interval)) ||
-                            (((unsigned) (k) <= Diap) &&
-                             (fabs( TV - Temp[i] + Addit ) <= Interval)) ||
-                            (((unsigned) (++k) <= Diap) &&
-                             (fabs( TV - Temp[i + 1] + Addit ) <= Interval))))
-                    {
-                        NLR[i] = 1;
-                    }
-                    PUSH( YC - flag, j, i - 1, L, R, flag );
-                }
-            }
-        }
-        NLR = TempRP + flag * stepr;
-        NL = Temp + flag * ownstep;
-        for( i = L - 1; i < PL; i++ )
-        {
-            if( !(NLR[i]) )
-            {
-                TV = NL[i];
-                if( 
-                    (((unsigned) ((k = i - L) - 1) <= Diap) &&
-                     (fabs( TV - Temp[i - 1] + Addit ) <= Interval)) ||
-                    (((unsigned) (k) <= Diap) && (fabs( TV - Temp[i] + Addit ) <= Interval)) ||
-                    (((unsigned) (++k) <= Diap) &&
-                     (fabs( TV - Temp[i + 1] + Addit ) <= Interval)))
-                {
-                    NLR[i] = 1;
-                    j = i;
-                    while( (!NLR[j - 1]) && (fabs( NL[j - 1] - NL[j] + Addit ) <= Interval) )
-                    {
-                        NLR[--j] = 1;
-                    }
-
-                    while( (!NLR[++i]) &&
-                           ((fabs( (TV = NL[i]) - NL[i - 1] + Addit ) <= Interval) ||
-                            (((unsigned) ((k = i - L) - 1) <= Diap) &&
-                             (fabs( TV - Temp[i - 1] + Addit ) <= Interval)) ||
-                            (((unsigned) (k) <= Diap) &&
-                             (fabs( TV - Temp[i] + Addit ) <= Interval)) ||
-                            (((unsigned) (++k) <= Diap) &&
-                             (fabs( TV - Temp[i + 1] + Addit ) <= Interval))))
-                    {
-                        NLR[i] = 1;
-                    }
-                    PUSH( YC + flag, j, i - 1, L, R, -flag );
-                }
-            }
-        }
-        for( i = PR + 1; i < R + 2; i++ )
-        {
-            if( !(NLR[i]) )
-            {
-                TV = NL[i];
-                if( 
-                    (((unsigned) ((k = i - L) - 1) <= Diap) &&
-                     (fabs( TV - Temp[i - 1] + Addit ) <= Interval)) ||
-                    (((unsigned) (k) <= Diap) && (fabs( TV - Temp[i] + Addit ) <= Interval)) ||
-                    (((unsigned) (++k) <= Diap) &&
-                     (fabs( TV - Temp[i + 1] + Addit ) <= Interval)))
-                {
-                    NLR[i] = 1;
-                    j = i;
-                    while( (!NLR[j - 1]) && (fabs( NL[j - 1] - NL[j] + Addit ) <= Interval) )
-                    {
-                        NLR[--j] = 1;
-                    }
-
-                    while( (!NLR[++i]) &&
-                           ((fabs( (TV = NL[i]) - NL[i - 1] + Addit ) <= Interval) ||
-                            (((unsigned) ((k = i - L) - 1) <= Diap) &&
-                             (fabs( TV - Temp[i - 1] + Addit ) <= Interval)) ||
-                            (((unsigned) (k) <= Diap) &&
-                             (fabs( TV - Temp[i] + Addit ) <= Interval)) ||
-                            (((unsigned) (++k) <= Diap) &&
-                             (fabs( TV - Temp[i + 1] + Addit ) <= Interval))))
-                    {
-                        NLR[i] = 1;
-                    }
-                    PUSH( YC + flag, j, i - 1, L, R, -flag );
-                }
-            }
-        }
-        Sum += (R - L + 1);
-        for( i = L; i < R + 1; i++ )
-            pImage[YC * ownstep + i] = newVal;
-
-    }
-    region->area = Sum;
-    region->rect.x = XMin;
-    region->rect.y = YMin;
-    region->rect.width = XMax - XMin + 1;
-    region->rect.height = YMax - YMin + 1;
-    region->value = newVal;
     return CV_NO_ERR;
 }
 
 
-/*F///////////////////////////////////////////////////////////////////////////////////////
-//    Name: cvFloodFill, cvFloodFill_8
-//    Purpose: The functions fill the seed pixel environs inside which all pixel
-//             values are not far from each other. 
-//    Context:
-//    Parameters:  img        - initial image (in the beginning)
-//                              which is "repainted" during the function action,
-//                 initPoint  - coordinates of the seed point inside image ROI,
-//                 nv         - new value of repainted area pixels,
-//                 lo_diff, up_diff - maximal lower and upper differences of the values of
-//                              appurtenant to repainted area pixel and one of its
-//                              neighbour,
-//                 comp       - pointer to connected component structure of the
-//                              repainted area
-//
-//    Notes:   The 1st function looks for 4-connected environs, the 2nd one - 8-connected.
-//F*/
+/****************************************************************************************\
+*                                    External Functions                                  *
+\****************************************************************************************/
 
+typedef  CvStatus (CV_CDECL* CvFloodFillFunc)(
+                           void* img, int step, CvSize size, CvPoint seed,
+                           void* newval, CvConnectedComp* comp, int flags,
+                           void* buffer, int buffersize );
 
-typedef  CvStatus (CV_STDCALL* CvFloodFillFunc)( void* img, int step, CvSize size,
-                                                 CvPoint seed, void* newval,
-                                                 CvConnectedComp* comp,
-                                                 void* buffer );
-
-typedef  CvStatus (CV_STDCALL* CvFloodFillGradFunc)( void* img, int step, CvSize size,
-                                                     CvPoint seed, void* newval,
-                                                     void* lo_diff, void* hi_diff,
-                                                     CvConnectedComp* comp,
-                                                     void* buffer );
-
+typedef  CvStatus (CV_CDECL* CvFloodFillGradFunc)(
+                           void* img, int step, uchar* mask, int maskStep, CvSize size,
+                           CvPoint seed, void* newval, void* d_lw, void* d_up,
+                           void* ccomp, int flags, void* buffer, int buffersize );
 
 static  void  icvInitFloodFill( void** ffill_tab,
                                 void** ffillgrad_tab )
 {
-    ffill_tab[0] = (void*)icvFloodFill_4Con_8u_C1IR;
-    ffill_tab[1] = (void*)icvFloodFill_8Con_8u_C1IR;
-    ffill_tab[2] = (void*)icvFloodFill_4Con_32f_C1IR;
-    ffill_tab[3] = (void*)icvFloodFill_8Con_32f_C1IR;
+    ffill_tab[0] = (void*)icvFloodFill_8u_C1IR;
+    ffill_tab[1] = (void*)icvFloodFill_8u_C3IR;
+    ffill_tab[2] = (void*)icvFloodFill_32f_C1IR;
 
-    ffillgrad_tab[0] = (void*)icvFloodFill_Grad4Con_8u_C1IR;
-    ffillgrad_tab[1] = (void*)icvFloodFill_Grad8Con_8u_C1IR;
-    ffillgrad_tab[2] = (void*)icvFloodFill_Grad4Con_32f_C1IR;
-    ffillgrad_tab[3] = (void*)icvFloodFill_Grad8Con_32f_C1IR;
+    ffillgrad_tab[0] = (void*)icvFloodFill_Grad_8u_C1IR;
+    ffillgrad_tab[1] = (void*)icvFloodFill_Grad_8u_C3IR;
+    ffillgrad_tab[2] = (void*)icvFloodFill_Grad_32f_C1IR;
 }
 
 
 CV_IMPL void
-cvFloodFill( void* arr, CvPoint seed_point,
-             double newval, double lo_diff, double up_diff,
-             CvConnectedComp *comp, int connectivity )
+cvFloodFill( CvArr* arr, CvPoint seed_point,
+             double newVal, double lo_diff, double up_diff,
+             CvConnectedComp* comp, int flags, CvArr* maskarr )
 {
-    static void* ffill_tab[4];
-    static void* ffillgrad_tab[4];
+    static void* ffill_tab[3];
+    static void* ffillgrad_tab[3];
     static int inittab = 0;
 
-    void *buffer = 0;
-
+    CvMat* tempMask = 0;
+    CvFFillSegment* buffer = 0;
     CV_FUNCNAME( "cvFloodFill" );
 
     __BEGIN__;
 
-    int buf_size, is_simple, idx;
-    double buf[12];
-    void *nv_ptr = 0, *lo_diff_ptr = 0, *up_diff_ptr = 0;
-    CvSize img_size;
+    int type, is_simple, idx;
+    int connectivity = flags & 255;
+    int buffersize;
+    double nv_buf, ld_buf, ud_buf;
+    CvSize size;
     CvMat stub, *img = (CvMat*)arr;
+    CvMat maskstub, *mask = (CvMat*)maskarr;
 
     if( !inittab )
     {
@@ -1495,85 +1048,93 @@ cvFloodFill( void* arr, CvPoint seed_point,
     }
 
     CV_CALL( img = cvGetMat( img, &stub ));
+    type = CV_MAT_TYPE( img->type );
 
-    if( CV_ARR_TYPE( img->type ) != CV_8UC1 &&
-        CV_ARR_TYPE( img->type ) != CV_32FC1 )
+    idx = type == CV_8UC1 ? 0 : type == CV_8UC3 ? 1 : type == CV_32FC1 ? 2 : -1;
+
+    if( idx < 0 )
         CV_ERROR( CV_StsUnsupportedFormat, "" );
 
-    if( connectivity != 4 && connectivity != 8 )
-        CV_ERROR( CV_StsBadFlag, "Connectivity must be 4 or 8" );
+    if( connectivity == 0 )
+        connectivity = 4;
+    else if( connectivity != 4 && connectivity != 8 )
+        CV_ERROR( CV_StsBadFlag, "Connectivity must be 4, 0(=4) or 8" );
 
-    if( lo_diff < 0 || up_diff < 0 )
+    if( type != CV_8UC3 && (lo_diff < 0 || up_diff < 0) )
         CV_ERROR( CV_StsBadArg, "lo_diff and up_diff must be non-negative" );
 
-    img_size = icvGetMatSize( img );
+    size = icvGetMatSize( img );
 
-    if( lo_diff == 0 && up_diff == 0 )
-    {
-        is_simple = 1;
-        IPPI_CALL( icvFloodFillGetSize( img_size, &buf_size ));
-    }
-    else
-    {
-        is_simple = 0;
-        IPPI_CALL( icvFloodFillGetSize_Grad( img_size, &buf_size ));
-    }
-    
-    CV_CALL( buffer = cvAlloc( buf_size ));
+    if( (unsigned)seed_point.x >= (unsigned)size.width ||
+        (unsigned)seed_point.y >= (unsigned)size.height )
+        CV_ERROR( CV_StsOutOfRange, "Seed point is outside of image" );
 
-    idx = (CV_ARR_DEPTH( img->type ) == CV_32F)*2 + (connectivity == 8);
+    is_simple = lo_diff == 0 && up_diff == 0 && mask == 0 &&
+                (flags & CV_FLOODFILL_MASK_ONLY) == 0;
 
-    if( CV_ARR_DEPTH( img->type ) < CV_32F )
-    {
-        int* ibuf = (int*)buf;
-        int  val = cvRound( newval );
-        nv_ptr = ibuf;
-        ibuf[0] = val;
-
-        val = cvRound( lo_diff );
-        lo_diff_ptr = ibuf + 1;
-        ibuf[1] = val;
-
-        val = cvRound( up_diff );
-        up_diff_ptr = ibuf + 2;
-        ibuf[2] = val;
-    }
-    else
-    {
-        float* ibuf = (float*)buf;
-        float  val = (float)newval;
-        nv_ptr = ibuf;
-        ibuf[0] = val;
-
-        val = (float)lo_diff;
-        lo_diff_ptr = ibuf + 1;
-        ibuf[1] = val;
-
-        val = (float)up_diff;
-        up_diff_ptr = ibuf + 2;
-        ibuf[2] = val;
-    }
+    icvExtractColor( newVal, type, &nv_buf );
+    buffersize = MAX( size.width, size.height )*2;
+    CV_CALL( buffer = (CvFFillSegment*)cvAlloc( buffersize*sizeof(buffer[0])));
 
     if( is_simple )
     {
-        CvFloodFillFunc func = (CvFloodFillFunc)(ffill_tab[idx]);
-        assert( func != 0 );
-
-        IPPI_CALL( func( img->data.ptr, img->step, img_size,
-                         seed_point, nv_ptr, comp, buffer ));
+        CvFloodFillFunc func = (CvFloodFillFunc)ffill_tab[idx];
+        if( !func )
+            CV_ERROR( CV_StsUnsupportedFormat, "" );
+        
+        IPPI_CALL( func( img->data.ptr, img->step, size,
+                         seed_point, &nv_buf, comp, flags,
+                         buffer, buffersize ));
     }
     else
     {
-        CvFloodFillGradFunc func = (CvFloodFillGradFunc)(ffillgrad_tab[idx]);
-        assert( func != 0 );
+        CvFloodFillGradFunc func = (CvFloodFillGradFunc)ffillgrad_tab[idx];
+        if( !func )
+            CV_ERROR( CV_StsUnsupportedFormat, "" );
+        
+        if( !mask )
+        {
+            /* created mask will be 8-byte aligned */
+            tempMask = cvCreateMat( size.height + 2, (size.width + 9) & -8, CV_8UC1 );
+            mask = tempMask;
+        }
+        else
+        {
+            CV_CALL( mask = cvGetMat( mask, &maskstub ));
+            if( !CV_IS_MASK_ARR( mask ))
+                CV_ERROR( CV_StsBadMask, "" );
 
-        IPPI_CALL( func( img->data.ptr, img->step, img_size,
-                         seed_point, nv_ptr, lo_diff_ptr, up_diff_ptr, comp, buffer ));
+            if( mask->width != size.width + 2 || mask->height != size.height + 2 )
+                CV_ERROR( CV_StsUnmatchedSizes, "mask must be 2 pixel wider "
+                                       "and 2 pixel taller than filled image" );
+        }
+
+        {
+            int i, width = tempMask ? mask->step : size.width + 2;
+            uchar* mask_row = mask->data.ptr + mask->step;
+            memset( mask_row - mask->step, 1, width );
+
+            for( i = 1; i <= size.height; i++, mask_row += mask->step )
+            {
+                if( tempMask )
+                    memset( mask_row, 0, width );
+                mask_row[0] = mask_row[size.width+1] = (uchar)1;
+            }
+            memset( mask_row, 1, width );
+        }
+
+        icvExtractColor( lo_diff, type, &ld_buf );
+        icvExtractColor( up_diff, type, &ud_buf );
+
+        IPPI_CALL( func( img->data.ptr, img->step, mask->data.ptr, mask->step,
+                         size, seed_point, &nv_buf, &ld_buf, &ud_buf,
+                         comp, flags, buffer, buffersize ));
     }
 
     __END__;
 
-    cvFree( &buffer );
+    cvFree( (void**)&buffer );
+    cvReleaseMat( &tempMask );
 }
 
 /* End of file. */

@@ -2019,16 +2019,16 @@ cvMatchTemplate( const void* arr, const void* templarr, void* resultarr,
     CV_CALL( templ = cvGetMat( templ, &tstub, &coi2 ));
     CV_CALL( result = cvGetMat( result, &resstub ));
 
-    if( CV_ARR_CN( img->type ) != 1 ||
-        CV_ARR_DEPTH( img->type ) != CV_8U &&
-        CV_ARR_DEPTH( img->type ) != CV_8S &&
-        CV_ARR_DEPTH( img->type ) != CV_32F )
+    if( CV_MAT_CN( img->type ) != 1 ||
+        CV_MAT_DEPTH( img->type ) != CV_8U &&
+        CV_MAT_DEPTH( img->type ) != CV_8S &&
+        CV_MAT_DEPTH( img->type ) != CV_32F )
         CV_ERROR( CV_StsUnsupportedFormat, "" );
 
     if( !CV_ARE_TYPES_EQ( img, templ ))
         CV_ERROR( CV_StsUnmatchedSizes, "" );
 
-    if( CV_ARR_TYPE( result->type ) != CV_32FC1 )
+    if( CV_MAT_TYPE( result->type ) != CV_32FC1 )
         CV_ERROR( CV_StsUnsupportedFormat, "" );
 
     if( result->width != img->width - templ->width + 1 ||
@@ -2038,7 +2038,7 @@ cvMatchTemplate( const void* arr, const void* templarr, void* resultarr,
     if( method < CV_TM_SQDIFF || method > CV_TM_CCOEFF_NORMED )
         CV_ERROR( CV_StsBadArg, "unknown comparison method" );
 
-    switch( CV_ARR_DEPTH( img->type ))
+    switch( CV_MAT_DEPTH( img->type ))
     {
     case CV_8U:
         dataType = cv8u;
@@ -2074,13 +2074,13 @@ cvMatchTemplate( const void* arr, const void* templarr, void* resultarr,
     result_step = result->step;
 
     if( img_step == 0 )
-        img_step = img->width*icvPixSize[CV_ARR_TYPE(img->type)];
+        img_step = img->width*icvPixSize[CV_MAT_TYPE(img->type)];
 
     if( templ_step == 0 )
-        templ_step = templ->width*icvPixSize[CV_ARR_TYPE(templ->type)];
+        templ_step = templ->width*icvPixSize[CV_MAT_TYPE(templ->type)];
 
     if( result_step == 0 )
-        result_step = result->width*icvPixSize[CV_ARR_TYPE(result->type)];
+        result_step = result->width*icvPixSize[CV_MAT_TYPE(result->type)];
 
     IPPI_CALL(  func( img->data.ptr, img_step, imgSize,
                       templ->data.ptr, templ_step, templSize,

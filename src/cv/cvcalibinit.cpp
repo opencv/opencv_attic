@@ -39,7 +39,6 @@
 //
 //M*/
 #include "_cv.h"
-#include "_cvwrap.h"
 #include "_cvgeom.h"
 #include "string.h"
 
@@ -68,7 +67,6 @@ CvContourEx;
 //      corners  - pointer to array, containing found points
 //      corner_count - number of corners found
 //    Returns:
-//      CV_NO_ERR if all Ok or error code
 //    Notes:
 //F*/
 CV_IMPL int
@@ -117,8 +115,8 @@ cvFindChessBoardCornerGuesses( const void* arr, void* thresharr,
     CV_CALL( img = cvGetMat( img, &stub ));
     CV_CALL( thresh = cvGetMat( thresh, &thstub ));
 
-    if( CV_ARR_TYPE( img->type ) != CV_8UC1 ||
-        CV_ARR_TYPE( thresh->type ) != CV_8UC1 )
+    if( CV_MAT_TYPE( img->type ) != CV_8UC1 ||
+        CV_MAT_TYPE( thresh->type ) != CV_8UC1 )
         CV_ERROR( CV_BadDepth, icvUnsupportedFormat );
 
     if( !CV_ARE_SIZES_EQ( img, thresh ))
@@ -291,7 +289,7 @@ cvFindChessBoardCornerGuesses( const void* arr, void* thresharr,
         CvPoint cornerPoints[4];
         CvPoint firstPoint = { 0, 0 };
 
-        CvSeq hullcontour;
+        CvContour hullcontour;
         CvSeqBlock hullcontour_blk;
         CvSeq *hullcontour2 = 0;
 
@@ -323,7 +321,7 @@ cvFindChessBoardCornerGuesses( const void* arr, void* thresharr,
 
         for( i = 0; i < etalon_points; i++ )
         {
-            iPoints[i] = icvCvtPoint32f_32s( corners[i] );
+            iPoints[i] = cvPointFrom32f( corners[i] );
         }
 
         numRestPoints = etalon_points;
@@ -375,9 +373,9 @@ cvFindChessBoardCornerGuesses( const void* arr, void* thresharr,
                     hullpoints[i] = iPoints[indices[i]];
                 }
 
-                cvMakeSeqHeaderForArray( CV_SEQ_POLYGON, sizeof( CvSeq ),
+                cvMakeSeqHeaderForArray( CV_SEQ_POLYGON, sizeof( CvContour ),
                                          sizeof( CvPoint ),
-                                         hullpoints, ind_size, &hullcontour,
+                                         hullpoints, ind_size, (CvSeq*)&hullcontour,
                                          &hullcontour_blk );
 
                 max_level = cvRound( sqrt( min_dist ));
@@ -536,7 +534,7 @@ cvFindChessBoardCornerGuesses( const void* arr, void* thresharr,
             {
                 for( i = 0; i < etalon_points; i++ )
                 {
-                    corners[i] = icvCvtPoint32s_32f( ordered[i] );
+                    corners[i] = cvPointTo32f( ordered[i] );
                 }
             }
             else
@@ -553,7 +551,7 @@ cvFindChessBoardCornerGuesses( const void* arr, void* thresharr,
                     for( j = 0; j < etalon_size.width; j++ )
                     {
                         corners[i * etalon_size.width + j] =
-                            icvCvtPoint32s_32f( ordered[j * etalon_size.height + i] );
+                            cvPointTo32f( ordered[j * etalon_size.height + i] );
                     }
             }
             else

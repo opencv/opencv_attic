@@ -42,108 +42,6 @@
 #ifndef _IPCVGEOM_H_
 #define _IPCVGEOM_H_
 
-#define CV_CALIPERS_MAXHEIGHT      0
-#define CV_CALIPERS_MINAREARECT    1
-#define CV_CALIPERS_MAXDIST        2
-
-CvStatus  icvConvexHull( CvPoint* points,
-                         int num_points,
-                         CvRect* bound_rect,
-                         int orientation,
-                         int* hull,
-                         int* hullsize );
-
-CvStatus icvContourConvexHull( CvSeq* contour,
-                               int orientation,
-                               CvMemStorage* storage,
-                               CvSeq** hull );
-
-
-int icvCheckContourConvexity( CvSeq* contour );
-
-
-CvStatus  icvConvexHull_Approx( CvPoint* points,
-                                  int num_points,
-                                  CvRect* bound_rect,
-                                  int bandwidth,
-                                  int orientation, 
-                                  int* hullpoints,
-                                  int* hullsize );
-
-CvStatus  icvConvexHull_Approx_Contour( CvSeq* contour,
-                                          int bandwidth,
-                                          int orientation,
-                                          CvMemStorage* storage,
-                                          CvSeq** hull);
-
-CvStatus  icvConvexHull_Exact( CvPoint* points,
-                               int num_points,
-                               int orientation,
-                               int* hullpoints,
-                               int* hullsize );
-
-CvStatus  icvConvexityDefects( CvSeq* contour, CvSeq* convexhull,
-                               CvMemStorage* storage, CvSeq** defects );
-
-
-/*F///////////////////////////////////////////////////////////////////////////////////////
-//    Name:    icvRotatingCalipers
-//    Purpose:
-//      Rotating calipers algorithm with some applications
-//
-//    Context:
-//    Parameters:
-//      points      - convex hull vertices ( any orientation )
-//      n           - number of vertices
-//      mode        - concrete application of algorithm 
-//                    can be  CV_CALIPERS_MAXDIST   or   
-//                            CV_CALIPERS_MINAREARECT  
-//      left, bottom, right, top - indexes of extremal points
-//      out         - output info.
-//                    In case CV_CALIPERS_MAXDIST it points to float value - 
-                      maximal height of polygon.
-                      In case CV_CALIPERS_MINAREARECT
-                      ((CvPoint2D32f*)out)[0] - corner 
-                      ((CvPoint2D32f*)out)[1] - vector1
-                      ((CvPoint2D32f*)out)[0] - corner2
-                        
-                        ^
-                        |
-                vector2 |
-                        |
-                        |____________\
-                      corner         /
-                                 vector1
-  
-//    Returns:
-//    Notes:
-//F*/
-CvStatus  icvRotatingCalipers( CvPoint* points, int n, int mode,
-                                 int left, int bottom, int right, int top, char* out );
-
-
-/*F///////////////////////////////////////////////////////////////////////////////////////
-//    Name:    icvCalcContourPerimeter
-//    Purpose:
-//      Calculates contour perimeter, finds minimal edge and maximal egde lengths
-//    Context:
-//    Parameters:
-//      contour          - source contour
-//      _perimeter       - pointer to resultant perimeter
-//      _min_edge_length - pointer to minimum edge length
-//      _max_edge_length - pointer to maximum edge length
-//
-//    Returns:
-//      IPP_NO_ERR if ok, error code else
-//    Notes:
-//F*/  
-/*
-CvStatus   icvCalcContourPerimeter( CvSeq* contour,
-                                      double* _perimeter,
-                                      double* _min_edge_length,
-                                      double* _max_edge_length );
-*/
-
 /* Finds distance between two points */
 CV_INLINE  float  icvDistanceL2_32s( CvPoint pt1, CvPoint pt2 )
 {
@@ -160,26 +58,6 @@ CV_INLINE  float  icvDistanceL2_32f( CvPoint2D32f pt1, CvPoint2D32f pt2 )
     float dy = pt2.y - pt1.y;
 
     return cvSqrt( (float)(dx*dx + dy*dy));
-}
-
-
-CV_INLINE CvPoint2D32f icvCvtPoint32s_32f( CvPoint  pt )
-{
-    CvPoint2D32f res_pt;
-    res_pt.x = (float)pt.x;
-    res_pt.y = (float)pt.y;
-
-    return res_pt;
-}
-
-
-CV_INLINE CvPoint icvCvtPoint32f_32s( CvPoint2D32f  pt )
-{
-    CvPoint res_pt;
-    res_pt.x = cvRound( pt.x );
-    res_pt.y = cvRound( pt.y );
-
-    return res_pt;
 }
 
 

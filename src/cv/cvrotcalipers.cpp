@@ -39,13 +39,7 @@
 //
 //M*/
 #include "_cv.h"
-#include "_cvgeom.h"
-
-typedef struct
-{
-    float x, y;
-}
-icvVector;
+#include "_cvdatastructs.h"
 
 typedef struct
 {
@@ -55,9 +49,12 @@ typedef struct
     float width;
     float base_a;
     float base_b;
-
 }
 icvMinAreaState;
+
+#define CV_CALIPERS_MAXHEIGHT      0
+#define CV_CALIPERS_MINAREARECT    1
+#define CV_CALIPERS_MAXDIST        2
 
 /*F///////////////////////////////////////////////////////////////////////////////////////
 //    Name:    icvRotatingCalipers
@@ -69,27 +66,40 @@ icvMinAreaState;
 //      points      - convex hull vertices ( any orientation )
 //      n           - number of vertices
 //      mode        - concrete application of algorithm 
-//                    can be  _CV_CALIPERS_MAXHEIGHT   or   
-//                            _CV_CALIPERS_MINAREARECT  
+//                    can be  CV_CALIPERS_MAXDIST   or   
+//                            CV_CALIPERS_MINAREARECT  
 //      left, bottom, right, top - indexes of extremal points
-//      out         - output info
+//      out         - output info.
+//                    In case CV_CALIPERS_MAXDIST it points to float value - 
+//                    maximal height of polygon.
+//                    In case CV_CALIPERS_MINAREARECT
+//                    ((CvPoint2D32f*)out)[0] - corner 
+//                    ((CvPoint2D32f*)out)[1] - vector1
+//                    ((CvPoint2D32f*)out)[0] - corner2
+//                      
+//                      ^
+//                      |
+//              vector2 |
+//                      |
+//                      |____________\
+//                    corner         /
+//                               vector1
+//
 //    Returns:
 //    Notes:
 //F*/
 
 /* we will use usual cartesian coordinates */
-CvStatus
-icvRotatingCalipers( CvPoint * points, int n, int mode,
-                     int left, int bottom, int right, int top, char *out )
+static void
+icvRotatingCalipers( CvPoint2D32f* points, int n, int mode, float* out )
 {
     float minarea = FLT_MAX;
-    /*float minarea = (float)  ((points[top].y - points[bottom].y) *
-                             (points[right].x - points[left].x));
-    */
     float max_dist = 0;
     char buffer[32];
     int i, k;
-
+    CvPoint2D32f* vect = (CvPoint2D32f*)icvAlloc( n * sizeof(vect[0]) );
+    float* inv_vect_length = (float*)icvAlloc( n * sizeof(inv_vect_length[0]) );
+    int left = 0, bottom = 0, right = 0, top = 0;
     int seq[4] = { -1, -1, -1, -1 };
 
     /* rotating calipers sides will always have coordinates    
@@ -100,32 +110,36 @@ icvRotatingCalipers( CvPoint * points, int n, int mode,
     float base_a;
     float base_b = 0;
 
-    CvPoint2D32f *vect;
-    float *inv_vect_length;
-
-    vect = (CvPoint2D32f *) icvAlloc( n * sizeof( CvPoint2D32f ));
-    if( vect == NULL )
-        return CV_OUTOFMEM_ERR;
-
-    inv_vect_length = (float *) icvAlloc( n * sizeof( float ));
-
-    if( inv_vect_length == NULL )
+    float left_x, right_x, top_y, bottom_y;
+    CvPoint2D32f pt0 = points[0];
+    
+    left_x = right_x = pt0.x;
+    top_y = bottom_y = pt0.y;
+    
+    for( i = 0; i < n; i++ )
     {
-        icvFree( &vect );
-        return CV_OUTOFMEM_ERR;
+        if( pt0.x < left_x )
+            left_x = pt0.x, left = i;
+
+        if( pt0.x > right_x )
+            right_x = pt0.x, right = i;
+
+        if( pt0.y > top_y )
+            top_y = pt0.y, top = i;
+
+        if( pt0.y < bottom_y )
+            bottom_y = pt0.y, bottom = i;
+
+        CvPoint2D32f pt = points[(i+1) & (i+1 < n ? -1 : 0)];
+
+        vect[i].x = (float)(pt.x - pt0.x);
+        vect[i].y = (float)(pt.y - pt0.y);
+        inv_vect_length[i] = vect[i].x*vect[i].x + vect[i].y*vect[i].y;
+
+        pt0 = pt;
     }
 
-    /* translate point sequense to vector sequense */
-    for( i = 0; i < n - 1; i++ )
-    {
-        vect[i].x = (float) (points[i + 1].x - points[i].x);
-        vect[i].y = (float) (points[i + 1].y - points[i].y);
-        inv_vect_length[i] = cvInvSqrt( vect[i].x * vect[i].x + vect[i].y * vect[i].y );
-    }
-    vect[n - 1].x = (float) (points[0].x - points[n - 1].x);
-    vect[n - 1].y = (float) (points[0].y - points[n - 1].y);
-    inv_vect_length[n - 1] = cvInvSqrt( vect[n - 1].x * vect[n - 1].x +
-                                        vect[n - 1].y * vect[n - 1].y );
+    icvbInvSqrt_32f( inv_vect_length, inv_vect_length, n );
 
     /* find convex hull orientation */
     {
@@ -156,7 +170,7 @@ icvRotatingCalipers( CvPoint * points, int n, int mode,
         /* sinus of minimal angle */
         float sinus;
 
-        /* compute cosinus of angle between calipers side and poligon edge */
+        /* compute cosine of angle between calipers side and polygon edge */
         /* dp - dot product */
         float dp0 = base_a * vect[seq[0]].x + base_b * vect[seq[0]].y;
         float dp1 = -base_b * vect[seq[1]].x + base_a * vect[seq[1]].y;
@@ -202,34 +216,17 @@ icvRotatingCalipers( CvPoint * points, int n, int mode,
                 /* 0->2, 1->3, 2->0, 3->1                */
                 int opposite_el = main_element ^ 2;
 
-                int dx = points[seq[opposite_el]].x - points[seq[main_element]].x;
-                int dy = points[seq[opposite_el]].y - points[seq[main_element]].y;
-
+                float dx = points[seq[opposite_el]].x - points[seq[main_element]].x;
+                float dy = points[seq[opposite_el]].y - points[seq[main_element]].y;
                 float dist;
 
                 if( main_element & 1 )
-                {
-                    dist = dx * base_a + dy * base_b;
-                }
+                    dist = (float)fabs(dx * base_a + dy * base_b);
                 else
-                {
-                    dist = dx * (-base_b) + dy * base_a;
-                }
-
-                dist = (float) fabs( dist );
+                    dist = (float)fabs(dx * (-base_b) + dy * base_a);
 
                 if( dist > max_dist )
-                {
-
                     max_dist = dist;
-
-                    /*temporary */
-/*
-                    ((CvPoint*)out)[0] = points[(seq[main_element] + n - 1)%n];
-                    ((CvPoint*)out)[1] = points[seq[main_element]];
-                    ((CvPoint*)out)[2] = points[seq[opposite_el]];
-*/
-                }
 
                 break;
             }
@@ -240,8 +237,8 @@ icvRotatingCalipers( CvPoint * points, int n, int mode,
                 float area;
 
                 /* find vector left-right */
-                int dx = points[seq[1]].x - points[seq[3]].x;
-                int dy = points[seq[1]].y - points[seq[3]].y;
+                float dx = points[seq[1]].x - points[seq[3]].x;
+                float dy = points[seq[1]].y - points[seq[3]].y;
 
                 /* dotproduct */
                 float width = dx * base_a + dy * base_b;
@@ -272,8 +269,8 @@ icvRotatingCalipers( CvPoint * points, int n, int mode,
                 break;
             }
         }                       /*switch */
-
     }                           /* for */
+
     switch (mode)
     {
     case CV_CALIPERS_MINAREARECT:
@@ -294,64 +291,151 @@ icvRotatingCalipers( CvPoint * points, int n, int mode,
             float px = (C1 * B2 - C2 * B1) * idet;
             float py = (A1 * C2 - A2 * C1) * idet;
 
-            ((float *) out)[0] = px;
-            ((float *) out)[1] = py;
+            out[0] = px;
+            out[1] = py;
 
-            ((float *) out)[2] = A1 * buf[2];
-            ((float *) out)[3] = B1 * buf[2];
+            out[2] = A1 * buf[2];
+            out[3] = B1 * buf[2];
 
-            ((float *) out)[4] = A2 * buf[4];
-            ((float *) out)[5] = B2 * buf[4];
-
-//            ((float *) out)[6] = buf[6];
-
+            out[4] = A2 * buf[4];
+            out[5] = B2 * buf[4];
         }
         break;
     case CV_CALIPERS_MAXHEIGHT:
         {
-            *((float *) out) = max_dist;
+            out[0] = max_dist;
         }
         break;
     }
 
-    icvFree( &vect );
-    icvFree( &inv_vect_length );
-
-    return CV_OK;
+    icvFree( (void**)&vect );
+    icvFree( (void**)&inv_vect_length );
 }
 
-IPCVAPI_IMPL( CvStatus, icvMinAreaRect, (CvPoint * points, int n,
-                                         int left, int bottom, int right, int top,
-                                         CvPoint2D32f * anchor,
-                                         CvPoint2D32f * vect1, CvPoint2D32f * vect2) )
 
-/*CvStatus icvMinAreaRect(CvPoint * points, int n,
-                           int left, int bottom, int right, int top,
-                           CvPoint2D32f * anchor,
-                           CvPoint2D32f * vect1, 
-                           CvPoint2D32f * vect2)*/
+CV_IMPL  CvBox2D
+cvMinAreaRect2( const CvArr* array, CvMemStorage* storage )
 {
-    /* check left, bottom, right, top
-       if they all == -1 - compute */
-    if( left == -1 && bottom == -1 && right == -1 && top == -1 )
-    {   
-        left = bottom = right = top = 0;
-        for( int i = 1; i < n; i++ )
-        {
-            left  = (points[i].x < points[left].x) ? i : left;
-            right = (points[i].x > points[right].x) ? i : right;
-            top = (points[i].y > points[top].y) ? i : top;
-            bottom = (points[i].y < points[bottom].y) ? i : bottom;
-        }
+    CvMemStorage* temp_storage = 0;
+    CvBox2D box;
+    CvPoint2D32f* points = 0;
+    
+    CV_FUNCNAME( "cvMinAreaRect2" );
+
+    memset(&box, 0, sizeof(box));
+
+    __BEGIN__;
+
+    int i, n;
+    CvSeqReader reader;
+    CvContour contour_header;
+    CvSeqBlock block;
+    CvSeq* ptseq = (CvSeq*)array;
+    CvPoint2D32f out[3];
+
+    if( CV_IS_SEQ(ptseq) )
+    {
+        if( !CV_IS_SEQ_POINT_SET(ptseq) &&
+            (CV_SEQ_KIND(ptseq) != CV_SEQ_KIND_CURVE || !CV_IS_SEQ_CONVEX(ptseq) ||
+            CV_SEQ_ELTYPE(ptseq) != CV_SEQ_ELTYPE_PPOINT ))
+            CV_ERROR( CV_StsUnsupportedFormat,
+                "Input sequence must consist of 2d points or pointers to 2d points" );
+        if( !storage )
+            storage = ptseq->storage;
+    }
+    else
+    {
+        CV_CALL( ptseq = icvPointSeqFromMat(
+            CV_SEQ_KIND_GENERIC, array, &contour_header, &block ));
     }
 
-    CvPoint2D32f out[3];
-    CvStatus st = icvRotatingCalipers( points, n, CV_CALIPERS_MINAREARECT, left, bottom, right,
-                                       top, (char *) out );
+    if( storage )
+    {
+        CV_CALL( temp_storage = cvCreateChildMemStorage( storage ));
+    }
+    else
+    {
+        CV_CALL( temp_storage = cvCreateMemStorage(1 << 10));
+    }
 
-    *anchor = out[0];
-    *vect1 = out[1];
-    *vect2 = out[2];
-    return st;
+    if( !CV_IS_SEQ_CONVEX( ptseq ))
+    {
+        CV_CALL( ptseq = cvConvexHull2( ptseq, temp_storage, CV_CLOCKWISE, 1 ));
+    }
+    else if( !CV_IS_SEQ_POINT_SET( ptseq ))
+    {
+        CvSeqWriter writer;
+        
+        if( !CV_IS_SEQ(ptseq->v_prev) || !CV_IS_SEQ_POINT_SET(ptseq->v_prev))
+            CV_ERROR( CV_StsBadArg,
+            "Convex hull must have valid pointer to point sequence stored in v_prev" );
+        cvStartReadSeq( ptseq, &reader );
+        cvStartWriteSeq( CV_SEQ_KIND_CURVE|CV_SEQ_FLAG_CONVEX|CV_SEQ_ELTYPE(ptseq->v_prev),
+                         sizeof(CvContour), CV_ELEM_SIZE(ptseq->v_prev->flags),
+                         temp_storage, &writer );
+            
+        for( i = 0; i < ptseq->total; i++ )
+        {
+            CvPoint pt = **(CvPoint**)(reader.ptr);
+            CV_WRITE_SEQ_ELEM( pt, writer );
+        }
+
+        ptseq = cvEndWriteSeq( &writer );
+    }
+
+    n = ptseq->total;
+
+    CV_CALL( points = (CvPoint2D32f*)cvAlloc( n*sizeof(points[0]) ));
+    cvStartReadSeq( ptseq, &reader );
+
+    if( CV_SEQ_ELTYPE( ptseq ) == CV_32SC2 )
+    {
+        for( i = 0; i < n; i++ )
+        {
+            CvPoint pt;
+            CV_READ_SEQ_ELEM( pt, reader );
+            points[i].x = (float)pt.x;
+            points[i].y = (float)pt.y;
+        }
+    }
+    else
+    {
+        for( i = 0; i < n; i++ )
+        {
+            CV_READ_SEQ_ELEM( points[i], reader );
+        }
+    }
+    
+    if( n > 2 )
+    {
+        icvRotatingCalipers( points, n, CV_CALIPERS_MINAREARECT, (float*)out );
+        box.center.x = out[0].x + (out[1].x + out[2].x)*0.5f;
+        box.center.y = out[0].y + (out[1].y + out[2].y)*0.5f;
+        box.size.height = cvSqrt(out[1].x*out[1].x + out[1].y*out[1].y);
+        box.size.width = cvSqrt(out[2].x*out[2].x + out[2].y*out[2].y);
+        box.angle = (float)atan2( -out[1].y, out[1].x );
+    }
+    else if( n == 2 )
+    {
+        box.center.x = (points[0].x + points[1].x)*0.5f;
+        box.center.y = (points[0].y + points[1].y)*0.5f;
+        float dx = points[1].x - points[0].x;
+        float dy = points[1].y - points[0].y;
+        box.size.height = cvSqrt(dx*dx + dy*dy);
+        box.size.width = 0;
+        box.angle = (float)atan2( -dy, dx );
+    }
+    else
+    {
+        if( n == 1 )
+            box.center = points[0];
+    }
+
+    __END__; 
+
+    cvReleaseMemStorage( &temp_storage );
+    cvFree( (void**)&points );
+
+    return box;
 }
 

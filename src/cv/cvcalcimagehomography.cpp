@@ -48,9 +48,9 @@
    
 \****************************************************************************************/
 
-IPCVAPI_IMPL( CvStatus, icvCalcImageHomography, (float *line, CvPoint3D32f * center,
-                                                 float intrinsic[3][3],
-                                                 float homography[3][3]) )
+static CvStatus icvCalcImageHomography( float* line, CvPoint3D32f * center,
+                                        float* intrinsic,
+                                        float* homography )
 {
     float norm_xy, norm_xz, xy_sina, xy_cosa, xz_sina, xz_cosa;
     double plane_dist;
@@ -157,4 +157,28 @@ IPCVAPI_IMPL( CvStatus, icvCalcImageHomography, (float *line, CvPoint3D32f * cen
 
     return CV_OK;
 
+}
+
+/*F///////////////////////////////////////////////////////////////////////////////////////
+//    Name:     cvCalcImageHomography
+//    Purpose:  calculates the cooficients of the homography matrix
+//    Context:   
+//    Parameters: 
+//      line   - pointer to the input 3D-line
+//      center - pointer to the input hand center
+//      intrinsic - intrinsic camera parameters matrix
+//      homography - result homography matrix
+//      
+//    Notes:
+//F*/
+CV_IMPL void
+cvCalcImageHomography( float *line, CvPoint3D32f * center,
+                       float* intrinsic, float* homography )
+{
+    CV_FUNCNAME( "cvCalcImageHomography" );
+    __BEGIN__;
+
+    IPPI_CALL( icvCalcImageHomography( line, center, intrinsic, homography ));
+
+    __END__;
 }

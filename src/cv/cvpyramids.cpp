@@ -40,7 +40,6 @@
 //M*/
 
 #include "_cv.h"
-#include "_cvwrap.h"
 
 /****************************************************************************************\
                          Down-sampling pyramids core functions
@@ -538,286 +537,281 @@ IPCVAPI_IMPL( CvStatus, icvPyrDownGetBufSize_Gauss5x5, ( int roiWidth, CvDataTyp
 
 
 /****************************************************************************************\
-                        Special function for pyramid-based segmentation
+                        Downsampled image border completion
 \****************************************************************************************/
 
-IPCVAPI_IMPL( CvStatus,
-icvPyrDownBorder_32f_C1R, ( const float *src, int src_step,
-                            float *dst, int dst_step, CvSize src_size ))
-{
-    float local_buffer[1 << 10];
-    float *buf = local_buffer;
-    int buf_size;
-    int i;
-    int W, H, Wd, Hd;
-
-    if( !src || !dst )
-        return CV_NULLPTR_ERR;
-    if( src_size.width <= 0 || src_size.height <= 0 ||
-        ((src_size.width | src_size.height) & 1) != 0 ||
-        src_step < src_size.width * 4 || dst_step <= src_size.width * 2 ||
-        ((src_step | dst_step) & 3) != 0 )
-        return CV_BADSIZE_ERR;
-
-    buf_size = MAX( src_size.width, src_size.height ) * 4;
-    if( buf_size > (int)sizeof(local_buffer))
-    {
-        buf = (float *) icvAlloc( buf_size );
-        if( !buf )
-            return CV_OUTOFMEM_ERR;
-    }
-
-    src_step /= 4;
-    dst_step /= 4;
-
-    W = src_size.width;
-    H = src_size.height;
-    Wd = src_size.width / 2;
-    Hd = src_size.height / 2;
-
-    /* calculate right border */
-    src += W - 1;
-    dst += Wd;
-
-    if( W <= 2 )
-    {
-        for( i = 0; i < H; i++, src += src_step )
-        {
-            buf[i] = PD_SINGULAR( src[-1], src[0] );
-        }
-    }
-    else
-    {
-        for( i = 0; i < H; i++, src += src_step )
-        {
-            buf[i] = src[0] * 6 + src[-1] * 8 + src[-2] * 2;
-        }
-    }
-
-    if( H <= 2 )
-    {
-        dst[0] = (float)PD_SCALE_FLT( PD_SINGULAR( buf[0], buf[1] ));
-    }
-    else
-    {
-        /* process left & right bounds */
-        dst[0] = (float)PD_SCALE_FLT( PD_LT( buf[0], buf[1], buf[2] ));
-        dst += dst_step;
-        /* other points (even) */
-        for( i = 1; i < Hd - 1; i++, dst += dst_step )
-        {
-            dst[0] = (float)PD_SCALE_FLT( PD_FILTER( buf[2 * i - 2], buf[2 * i - 1], buf[2 * i],
-                                                  buf[2 * i + 1], buf[2 * i + 2] ));
-        }
-        dst[0] = (float)PD_SCALE_FLT( PD_RB( buf[H - 4], buf[H - 3], buf[H - 2], buf[H - 1] ));
-    }
-
-    /* calculate bottom border */
-    src -= src_step + W - 1;
-    dst += dst_step - Wd;
-
-    if( H <= 2 )
-    {
-        for( i = 0; i < W; i++ )
-        {
-            buf[i] = PD_SINGULAR( src[i - src_step], src[i] );
-        }
-    }
-    else
-    {
-        for( i = 0; i < W; i++ )
-        {
-            buf[i] = src[i] * 6 + src[i - src_step] * 8 + src[i - 2 * src_step] * 2;
-        }
-    }
-
-    if( W <= 2 )
-    {
-        dst[0] = (float)PD_SCALE_FLT( PD_SINGULAR( buf[0], buf[1] ));
-    }
-    else
-    {
-        /* process left & right bounds */
-        dst[0] = (float)PD_SCALE_FLT( PD_LT( buf[0], buf[1], buf[2] ));
-        dst[Wd - 1] = (float)PD_SCALE_FLT( PD_RB( buf[W - 4], buf[W - 3],
-                                               buf[W - 2], buf[W - 1] ));
-        /* other points (even) */
-        for( i = 1; i < Wd - 1; i++ )
-        {
-            dst[i] = (float)PD_SCALE_FLT( PD_FILTER( buf[2 * i - 2], buf[2 * i - 1], buf[2 * i],
-                                                  buf[2 * i + 1], buf[2 * i + 2] ));
-        }
-    }
-
-    dst[Wd] = dst[Wd - 1];
-    if( buf != local_buffer )
-        icvFree( &buf );
-
-    return CV_OK;
+#define ICV_DEF_PYR_BORDER_FUNC( flavor, arrtype, worktype, _pd_scale_ )                \
+IPCVAPI_IMPL( CvStatus,                                                                 \
+icvPyrDownBorder_##flavor##_CnR, ( const arrtype *src, int src_step, CvSize src_size,   \
+                            arrtype *dst, int dst_step, CvSize dst_size, int channels ))\
+{                                                                                       \
+    worktype local_buffer[1 << 10];                                                     \
+    worktype *buf = local_buffer, *buf0;                                                \
+    const arrtype* src2;                                                                \
+    arrtype* dst2;                                                                      \
+    int buf_size;                                                                       \
+    int i, j;                                                                           \
+    int W = src_size.width, H = src_size.height;                                        \
+    int Wd = dst_size.width, Hd = dst_size.height;                                      \
+    int Wd_, Hd_;                                                                       \
+    int bufW;                                                                           \
+    int cols, rows; /* columns and rows to modify */                                    \
+                                                                                        \
+    buf_size = MAX(src_size.width,src_size.height) * sizeof(buf[0]) * 2 * channels;     \
+    if( buf_size > (int)sizeof(local_buffer))                                           \
+    {                                                                                   \
+        buf = (worktype*) icvAlloc( buf_size );                                         \
+        if( !buf )                                                                      \
+            return CV_OUTOFMEM_ERR;                                                     \
+    }                                                                                   \
+                                                                                        \
+    buf0 = buf;                                                                         \
+                                                                                        \
+    src_step /= sizeof(src[0]);                                                         \
+    dst_step /= sizeof(dst[0]);                                                         \
+                                                                                        \
+    cols = (W & 1) + (Wd*2 > W);                                                        \
+    rows = (H & 1) + (Hd*2 > H);                                                        \
+                                                                                        \
+    src2 = src + (H-1)*src_step;                                                        \
+    dst2 = dst + (Hd - rows)*dst_step;                                                  \
+    src += (W - 1)*channels;                                                            \
+    dst += (Wd - cols)*channels;                                                        \
+                                                                                        \
+    /* part of row(column) from 1 to Wd_(Hd_) is processed using PD_FILTER macro */     \
+    Wd_ = Wd - 1 + (cols == 1 && (W & 1) != 0);                                         \
+    Hd_ = Hd - 1 + (rows == 1 && (H & 1) != 0);                                         \
+                                                                                        \
+    bufW = channels * cols;                                                             \
+                                                                                        \
+    /******************* STAGE 1. ******************/                                   \
+                                                                                        \
+    /* do horizontal convolution of the 1-2 right columns and write results to buffer */\
+    if( cols > 0 )                                                                      \
+    {                                                                                   \
+        switch( W )                                                                     \
+        {                                                                               \
+        case 1:                                                                         \
+        case 2:                                                                         \
+            assert( Wd == 1 );                                                          \
+            for( i = 0; i < H; i++, src += src_step, buf += channels )                  \
+                for( j = 0; j < channels; j++ )                                         \
+                    buf[j] = PD_SINGULAR( src[j-channels*(W-1)], src[j] );              \
+            break;                                                                      \
+        case 3:                                                                         \
+            if( Wd == 1 )                                                               \
+                for( i = 0; i < H; i++, src += src_step, buf += channels )              \
+                    for( j = 0; j < channels; j++ )                                     \
+                        buf[j] = PD_LT( src[j-channels*2], src[j-channels], src[j] );   \
+            else                                                                        \
+                for( i = 0; i < H; i++, src += src_step, buf += channels*2 )            \
+                    for( j = 0; j < channels; j++ )                                     \
+                    {                                                                   \
+                        buf[j] = PD_LT( src[j-channels*2], src[j-channels], src[j] );   \
+                        buf[j+channels]=PD_LT(src[j],src[j-channels],src[j-channels*2]);\
+                    }                                                                   \
+            break;                                                                      \
+        default:                                                                        \
+            if( !(W & 1) )                                                              \
+                for( i = 0; i < H; i++, src += src_step, buf += channels )              \
+                    for( j = 0; j < channels; j++ )                                     \
+                        buf[j] = PD_LT( src[j], src[j-channels], src[j-channels*2] );   \
+            else if( cols == 1 )                                                        \
+                for( i = 0; i < H; i++, src += src_step, buf += channels )              \
+                    for( j = 0; j < channels; j++ )                                     \
+                        buf[j] = PD_FILTER( src[j-channels*4], src[j-channels*3],       \
+                                            src[j-channels*2], src[j-channels], src[j]);\
+            else                                                                        \
+                for( i = 0; i < H; i++, src += src_step, buf += channels*2 )            \
+                    for( j = 0; j < channels; j++ )                                     \
+                    {                                                                   \
+                        buf[j] = PD_FILTER( src[j-channels*4], src[j-channels*3],       \
+                                            src[j-channels*2], src[j-channels], src[j]);\
+                        buf[j+channels] = PD_LT( src[j], src[j-channels], src[j-channels*2] );  \
+                    }                                                                   \
+        }                                                                               \
+                                                                                        \
+        buf = buf0;                                                                     \
+    }                                                                                   \
+                                                                                        \
+    src = src2;                                                                         \
+                                                                                        \
+    /******************* STAGE 2. ******************/                                   \
+                                                                                        \
+    /* do vertical convolution of the pre-processed right columns, */                   \
+    /* stored in buffer, and write results to the destination */                        \
+    /* do vertical convolution of the 1-2 bottom rows */                                \
+    /* and write results to the buffer */                                               \
+    switch( H )                                                                         \
+    {                                                                                   \
+    case 1:                                                                             \
+    case 2:                                                                             \
+        if( cols > 0 )                                                                  \
+        {                                                                               \
+            assert( Hd == 1 );                                                          \
+            for( j = 0; j < bufW; j++ )                                                 \
+                dst[j] = (arrtype)_pd_scale_( PD_SINGULAR( buf[j], buf[j+(H-1)*bufW] ));\
+        }                                                                               \
+                                                                                        \
+        if( rows > 0 )                                                                  \
+        {                                                                               \
+            for( j = 0; j < W*channels; j++ )                                           \
+                buf[j] = PD_SINGULAR( src[j-src_step], src[j] );                        \
+        }                                                                               \
+        break;                                                                          \
+                                                                                        \
+    case 3:                                                                             \
+                                                                                        \
+        if( cols > 0 )                                                                  \
+        {                                                                               \
+            for( j = 0; j < bufW; j++ )                                                 \
+                dst[j]= (arrtype)_pd_scale_(PD_LT( buf[j], buf[j+bufW], buf[j+bufW*2]));\
+            if( Hd == 2 )                                                               \
+            {                                                                           \
+                dst += dst_step;                                                        \
+                for( j = 0; j < bufW; j++ )                                             \
+                    dst[j] = (arrtype)_pd_scale_(PD_LT( buf[j+bufW*2], buf[j+bufW], buf[j]));\
+            }                                                                           \
+        }                                                                               \
+                                                                                        \
+        if( Hd == 1 )                                                                   \
+            for( j = 0; j < W*channels; j++ )                                           \
+                buf[j] = PD_LT( src[j-src_step*2], src[j - src_step], src[j] );         \
+        else                                                                            \
+            for( j = 0; j < W*channels; j++ )                                           \
+            {                                                                           \
+                buf[j] = PD_LT( src[j-src_step*2], src[j - src_step], src[j] );         \
+                buf[j+W*channels] = PD_LT( src[j],src[j-src_step],src[j-src_step*2] );  \
+            }                                                                           \
+        break;                                                                          \
+                                                                                        \
+    default:                                                                            \
+                                                                                        \
+        if( cols > 0 )                                                                  \
+        {                                                                               \
+            /* top of the right border */                                               \
+            for( j = 0; j < bufW; j++ )                                                 \
+                dst[j]=(arrtype)_pd_scale_( PD_LT( buf[j], buf[j+bufW], buf[j+bufW*2]));\
+                                                                                        \
+            /* middle part of the right border */                                       \
+            buf += bufW*2;                                                              \
+            dst += dst_step;                                                            \
+            for( i = 1; i < Hd_; i++, dst += dst_step, buf += bufW*2 )                  \
+            {                                                                           \
+                for( j = 0; j < bufW; j++ )                                             \
+                    dst[j] = (arrtype)_pd_scale_( PD_FILTER( buf[j - bufW*2], buf[j - bufW],\
+                                                  buf[j], buf[j + bufW], buf[j + bufW*2] ));\
+            }                                                                           \
+                                                                                        \
+            /* bottom of the right border */                                            \
+            if( !(H & 1) )                                                              \
+                for( j = 0; j < bufW; j++ )                                             \
+                    dst[j] = (arrtype)_pd_scale_( PD_RB( buf[j-bufW*2], buf[j-bufW],    \
+                                                         buf[j], buf[j+bufW] ));        \
+            else if( rows > 1 )                                                         \
+                for( j = 0; j < bufW; j++ )                                             \
+                    dst[j]=(arrtype)_pd_scale_(PD_LT( buf[j-bufW*2], buf[j-bufW], buf[j]));\
+                                                                                        \
+            buf = buf0;                                                                 \
+        }                                                                               \
+                                                                                        \
+        if( rows > 0 )                                                                  \
+        {                                                                               \
+            if( !(H & 1) )                                                              \
+                for( j = 0; j < W*channels; j++ )                                       \
+                    buf[j] = PD_LT( src[j], src[j-src_step], src[j-src_step*2] );       \
+            else if( cols == 1 )                                                        \
+                for( j = 0; j < W*channels; j++ )                                       \
+                    buf[j] = PD_FILTER( src[j-src_step*4], src[j-src_step*3],           \
+                                        src[j-src_step*2], src[j-src_step], src[j] );   \
+            else                                                                        \
+                for( j = 0; j < W*channels; j++ )                                       \
+                {                                                                       \
+                    buf[j] = PD_FILTER( src[j-src_step*4], src[j-src_step*3],           \
+                                        src[j-src_step*2], src[j-src_step], src[j] );   \
+                    buf[j+W*channels] = PD_LT( src[j], src[j-src_step], src[j-src_step*2] );\
+                }                                                                       \
+        }                                                                               \
+    }                                                                                   \
+                                                                                        \
+                                                                                        \
+    /******************* STAGE 3. ******************/                                   \
+                                                                                        \
+    /* do horizontal convolution of the pre-processed bottom rows,*/                    \
+    /* stored in buffer, and write results to the destination */                        \
+    if( rows > 0 )                                                                      \
+    {                                                                                   \
+        dst = dst2;                                                                     \
+                                                                                        \
+        switch( W )                                                                     \
+        {                                                                               \
+        case 1:                                                                         \
+        case 2:                                                                         \
+            assert( Wd == 1 );                                                          \
+            for( ; rows--; dst += dst_step, buf += W*channels )                         \
+                for( j = 0; j < channels; j++ )                                         \
+                    dst[j] = (arrtype)_pd_scale_( PD_SINGULAR( buf[j],                  \
+                                                  buf[j+(W-1)*channels] ));             \
+            break;                                                                      \
+                                                                                        \
+        case 3:                                                                         \
+            if( Wd == 1 )                                                               \
+                for( ; rows--; dst += dst_step, buf += W*channels )                     \
+                    for( j = 0; j < channels; j++ )                                     \
+                        dst[j] = (arrtype)_pd_scale_( PD_LT(                            \
+                            buf[j], buf[j+channels], buf[j+channels*2] ));              \
+            else                                                                        \
+                for( ; rows--; dst += dst_step, buf += W*channels )                     \
+                    for( j = 0; j < channels; j++ )                                     \
+                    {                                                                   \
+                        dst[j] = (arrtype)_pd_scale_( PD_LT(                            \
+                            buf[j], buf[j+channels], buf[j+channels*2] ));              \
+                        dst[j + channels] = (arrtype)_pd_scale_( PD_LT(                 \
+                            buf[j+channels*2], buf[j+channels], buf[j] ));              \
+                    }                                                                   \
+            break;                                                                      \
+                                                                                        \
+        default:                                                                        \
+                                                                                        \
+            for( ; rows--; dst += dst_step, buf += W*channels )                         \
+            {                                                                           \
+                /* left part of the bottom row */                                       \
+                for( j = 0; j < channels; j++ )                                         \
+                    dst[j] = (arrtype)_pd_scale_( PD_LT( buf[j], buf[j+channels],       \
+                                                         buf[j+channels*2] ));          \
+                                                                                        \
+                /* middle part of the bottom row */                                     \
+                for( i = channels; i < Wd_*channels; i += channels )                    \
+                {                                                                       \
+                    for( j = 0; j < channels; j++ )                                     \
+                        dst[i+j] = (arrtype)_pd_scale_( PD_FILTER(                      \
+                                 buf[i*2+j-channels*2], buf[i*2+j-channels], buf[i*2+j],\
+                                 buf[i*2+j+channels], buf[i*2+j+channels*2] ));         \
+                }                                                                       \
+                                                                                        \
+                /* bottom of the right border */                                        \
+                if( !(W & 1) )                                                          \
+                    for( j = 0; j < channels; j++ )                                     \
+                        dst[i+j] = (arrtype)_pd_scale_( PD_RB( buf[i*2+j-channels*2],   \
+                                buf[i*2+j-channels], buf[i*2+j], buf[i*2+j+channels] ));\
+                else if( cols > 1 )                                                     \
+                    for( j = 0; j < channels; j++ )                                     \
+                        dst[i+j] = (arrtype)_pd_scale_( PD_LT( buf[i*2+j-channels*2],   \
+                                                    buf[i*2+j-channels], buf[i*2+j] )); \
+            }                                                                           \
+        }                                                                               \
+    }                                                                                   \
+                                                                                        \
+    if( buf0 != local_buffer )                                                          \
+        icvFree( &buf0 );                                                               \
+                                                                                        \
+    return CV_OK;                                                                       \
 }
 
-
-IPCVAPI_IMPL( CvStatus,
-icvPyrDownBorder_32f_C3R, ( const float *src, int src_step,
-                            float *dst, int dst_step, CvSize src_size ))
-{
-    float local_buffer[1 << 10];
-    float *buf = local_buffer;
-    int buf_size;
-    int i;
-    int W, H, Wd, Hd;
-
-    if( !src || !dst )
-        return CV_NULLPTR_ERR;
-    if( src_size.width <= 0 || src_size.height <= 0 ||
-        ((src_size.width | src_size.height) & 1) != 0 ||
-        src_step < src_size.width * 12 || dst_step <= src_size.width * 6 ||
-        ((src_step | dst_step) & 3) != 0 )
-        return CV_BADSIZE_ERR;
-
-    buf_size = MAX( src_size.width, src_size.height ) * 12;
-    if( buf_size > (int)sizeof( local_buffer ))
-    {
-        buf = (float *) icvAlloc( buf_size );
-        if( !buf )
-            return CV_OUTOFMEM_ERR;
-    }
-
-    src_step /= 4;
-    dst_step /= 4;
-
-    W = src_size.width;
-    H = src_size.height;
-    Wd = src_size.width / 2;
-    Hd = src_size.height / 2;
-
-    /* calculate right border */
-    src += (W - 1) * 3;
-    dst += Wd * 3;
-
-    if( W <= 2 )
-    {
-        for( i = 0; i < H; i++, src += src_step )
-        {
-            buf[i * 3] = PD_SINGULAR( src[-3], src[0] );
-            buf[i * 3 + 1] = PD_SINGULAR( src[-2], src[1] );
-            buf[i * 3 + 2] = PD_SINGULAR( src[-1], src[2] );
-        }
-    }
-    else
-    {
-        for( i = 0; i < H; i++, src += src_step )
-        {
-            buf[i * 3] = src[0] * 6 + src[-3] * 8 + src[-6] * 2;
-            buf[i * 3 + 1] = src[1] * 6 + src[-2] * 8 + src[-5] * 2;
-            buf[i * 3 + 2] = src[2] * 6 + src[-1] * 8 + src[-4] * 2;
-        }
-    }
-
-    if( H <= 2 )
-    {
-        dst[0] = (float)PD_SCALE_FLT( PD_SINGULAR( buf[0], buf[3] ));
-        dst[1] = (float)PD_SCALE_FLT( PD_SINGULAR( buf[1], buf[4] ));
-        dst[2] = (float)PD_SCALE_FLT( PD_SINGULAR( buf[2], buf[5] ));
-    }
-    else
-    {
-        /* process left & right bounds */
-        dst[0] = (float)PD_SCALE_FLT( PD_LT( buf[0], buf[3], buf[6] ));
-        dst[1] = (float)PD_SCALE_FLT( PD_LT( buf[1], buf[4], buf[7] ));
-        dst[2] = (float)PD_SCALE_FLT( PD_LT( buf[2], buf[5], buf[8] ));
-        dst += dst_step;
-        /* other points (even) */
-        for( i = 1; i < Hd - 1; i++, dst += dst_step )
-        {
-            dst[0] = (float)PD_SCALE_FLT( PD_FILTER( buf[6 * i - 6], buf[6 * i - 3], buf[6 * i],
-                                                  buf[6 * i + 3], buf[6 * i + 6] ));
-            dst[1] = (float)PD_SCALE_FLT( PD_FILTER
-                          ( buf[6 * i - 5], buf[6 * i - 2], buf[6 * i + 1], buf[6 * i + 4],
-                            buf[6 * i + 7] ));
-            dst[2] = (float)PD_SCALE_FLT( PD_FILTER
-                          ( buf[6 * i - 4], buf[6 * i - 1], buf[6 * i + 2], buf[6 * i + 5],
-                            buf[6 * i + 8] ));
-        }
-        dst[0] = (float)PD_SCALE_FLT( PD_RB
-                      ( buf[H * 3 - 12], buf[H * 3 - 9], buf[H * 3 - 6], buf[H * 3 - 3] ));
-        dst[1] = (float)PD_SCALE_FLT( PD_RB
-                      ( buf[H * 3 - 11], buf[H * 3 - 8], buf[H * 3 - 5], buf[H * 3 - 2] ));
-        dst[2] = (float)PD_SCALE_FLT( PD_RB
-                      ( buf[H * 3 - 10], buf[H * 3 - 7], buf[H * 3 - 4], buf[H * 3 - 1] ));
-    }
-
-    /* calculate bottom border */
-    src -= src_step + (W - 1) * 3;
-    dst += dst_step - Wd * 3;
-
-    if( H <= 2 )
-    {
-        for( i = 0; i < W; i++ )
-        {
-            buf[i * 3] = PD_SINGULAR( src[i * 3 - src_step], src[i * 3] );
-            buf[i * 3 + 1] = PD_SINGULAR( src[i * 3 + 1 - src_step], src[i * 3 + 1] );
-            buf[i * 3 + 2] = PD_SINGULAR( src[i * 3 + 2 - src_step], src[i * 3 + 2] );
-        }
-    }
-    else
-    {
-        for( i = 0; i < W; i++ )
-        {
-            buf[i * 3] =
-                src[i * 3] * 6 + src[i * 3 - src_step] * 8 + src[i * 3 - 2 * src_step] * 2;
-            buf[i * 3 + 1] =
-                src[i * 3 + 1] * 6 + src[i * 3 + 1 - src_step] * 8 + src[i * 3 + 1 -
-                                                                         2 * src_step] * 2;
-            buf[i * 3 + 2] =
-                src[i * 3 + 2] * 6 + src[i * 3 + 2 - src_step] * 8 + src[i * 3 + 2 -
-                                                                         2 * src_step] * 2;
-        }
-    }
-
-    if( W <= 2 )
-    {
-        dst[0] = (float)PD_SCALE_FLT( PD_SINGULAR( buf[0], buf[3] ));
-        dst[1] = (float)PD_SCALE_FLT( PD_SINGULAR( buf[1], buf[4] ));
-        dst[2] = (float)PD_SCALE_FLT( PD_SINGULAR( buf[2], buf[5] ));
-    }
-    else
-    {
-        /* process left & right bounds */
-        dst[0] = (float)PD_SCALE_FLT( PD_LT( buf[0], buf[3], buf[6] ));
-        dst[1] = (float)PD_SCALE_FLT( PD_LT( buf[1], buf[4], buf[7] ));
-        dst[2] = (float)PD_SCALE_FLT( PD_LT( buf[2], buf[5], buf[8] ));
-
-        dst[Wd * 3 - 3] = (float)PD_SCALE_FLT( PD_RB( buf[W * 3 - 12], buf[W * 3 - 9],
-                                                   buf[W * 3 - 6], buf[W * 3 - 3] ));
-        dst[Wd * 3 - 2] = (float)PD_SCALE_FLT( PD_RB( buf[W * 3 - 11], buf[W * 3 - 8],
-                                                   buf[W * 3 - 5], buf[W * 3 - 2] ));
-        dst[Wd * 3 - 1] = (float)PD_SCALE_FLT( PD_RB( buf[W * 3 - 10], buf[W * 3 - 7],
-                                                   buf[W * 3 - 4], buf[W * 3 - 1] ));
-
-        /* other points (even) */
-        for( i = 1; i < Wd - 1; i++ )
-        {
-            dst[i * 3] = (float)PD_SCALE_FLT( PD_FILTER
-                          ( buf[6 * i - 6], buf[6 * i - 3], buf[6 * i], buf[6 * i + 3],
-                            buf[6 * i + 6] ));
-            dst[i * 3 + 1] = (float)PD_SCALE_FLT( PD_FILTER
-                          ( buf[6 * i - 5], buf[6 * i - 2], buf[6 * i + 1], buf[6 * i + 4],
-                            buf[6 * i + 7] ));
-            dst[i * 3 + 2] = (float)PD_SCALE_FLT( PD_FILTER
-                          ( buf[6 * i - 4], buf[6 * i - 1], buf[6 * i + 2], buf[6 * i + 5],
-                            buf[6 * i + 8] ));
-        }
-    }
-
-    dst[Wd * 3] = dst[Wd * 3 - 3];
-    dst[Wd * 3 + 1] = dst[Wd * 3 - 2];
-    dst[Wd * 3 + 2] = dst[Wd * 3 - 1];
-    if( buf != local_buffer )
-        icvFree( &buf );
-
-    return CV_OK;
-}
+ICV_DEF_PYR_BORDER_FUNC( 8u, uchar, int, PD_SCALE_INT )
+ICV_DEF_PYR_BORDER_FUNC( 8s, char, int, PD_SCALE_INT )
+ICV_DEF_PYR_BORDER_FUNC( 32f, float, float, PD_SCALE_FLT )
+ICV_DEF_PYR_BORDER_FUNC( 64f, double, double, PD_SCALE_FLT )
 
 
 #define ICV_DEF_INIT_PYR_TABLE( FUNCNAME, FLAG )                    \
@@ -833,9 +827,26 @@ static void icvInit##FUNCNAME##FLAG##Table( CvBigFuncTable* tab )   \
     tab->fn_2d[CV_64FC3] = (void*)icv##FUNCNAME##_64f_C3##FLAG;     \
 }
 
+#define ICV_DEF_INIT_PYR_BORDER_TABLE( FUNCNAME, FLAG )             \
+static void icvInit##FUNCNAME##FLAG##Table( CvFuncTable* tab )      \
+{                                                                   \
+    tab->fn_2d[CV_8U] = (void*)icv##FUNCNAME##_8u_Cn##FLAG;         \
+    tab->fn_2d[CV_8S] = (void*)icv##FUNCNAME##_8s_Cn##FLAG;         \
+    tab->fn_2d[CV_32F] = (void*)icv##FUNCNAME##_32f_Cn##FLAG;       \
+    tab->fn_2d[CV_64F] = (void*)icv##FUNCNAME##_64f_Cn##FLAG;       \
+}
+
 
 ICV_DEF_INIT_PYR_TABLE( PyrUp_Gauss5x5, R )
 ICV_DEF_INIT_PYR_TABLE( PyrDown_Gauss5x5, R )
+
+ICV_DEF_INIT_PYR_BORDER_TABLE( PyrDownBorder, R )
+
+typedef CvStatus (CV_STDCALL * CvPyrDownBorderFunc)( const void* src, int srcstep,
+                                                     CvSize srcsize,
+                                                     void* dst, int dststep,
+                                                     CvSize dstsize,
+                                                     int channels );
 
 /****************************************************************************************\
 *                                 External functions                                     *
@@ -883,7 +894,7 @@ cvPyrUp( const void* srcarr, void* dstarr, int _filter )
     if( src->width*2 != dst->width || src->height*2 != dst->height )
         CV_ERROR( CV_StsUnmatchedSizes, "" );
 
-    type = CV_ARR_TYPE(src->type);
+    type = CV_MAT_TYPE(src->type);
 
     func = (CvFunc2D_2A1P)(pyrup_tab.fn_2d[type]);
 
@@ -891,7 +902,7 @@ cvPyrUp( const void* srcarr, void* dstarr, int _filter )
         CV_ERROR( CV_StsUnsupportedFormat, "" );
 
     IPPI_CALL( icvPyrUpGetBufSize_Gauss5x5( src->width, icvDepthToDataType(type),
-                                            CV_ARR_CN( type ), &buffer_size ));
+                                            CV_MAT_CN( type ), &buffer_size ));
 
     if( buffer_size <= CV_MAX_LOCAL_SIZE )
     {
@@ -915,7 +926,8 @@ cvPyrUp( const void* srcarr, void* dstarr, int _filter )
 CV_IMPL void
 cvPyrDown( const void* srcarr, void* dstarr, int _filter )
 {
-    static CvBigFuncTable pyrup_tab;
+    static CvBigFuncTable pyrdown_tab;
+    static CvFuncTable pyrdownborder_tab;
     static int inittab = 0;
     
     void *buffer = 0;
@@ -932,10 +944,12 @@ cvPyrDown( const void* srcarr, void* dstarr, int _filter )
     CvMat dststub, *dst = (CvMat*)dstarr;
     CvFilter filter = (CvFilter) _filter;
     CvFunc2D_2A1P func;
+    CvSize src_size, src_size2, dst_size;
 
     if( !inittab )
     {
-        icvInitPyrDown_Gauss5x5RTable( &pyrup_tab );
+        icvInitPyrDown_Gauss5x5RTable( &pyrdown_tab );
+        icvInitPyrDownBorderRTable( &pyrdownborder_tab );
         inittab = 1;
     }
 
@@ -951,18 +965,27 @@ cvPyrDown( const void* srcarr, void* dstarr, int _filter )
     if( !CV_ARE_TYPES_EQ( src, dst ))
         CV_ERROR( CV_StsUnmatchedFormats, "" );
 
-    if( src->width != dst->width*2 || src->height != dst->height*2 )
+    src_size = icvGetMatSize(src);
+    dst_size = icvGetMatSize(dst);
+    src_size2.width = src_size.width & -2;
+    src_size2.height = src_size.height & -2;
+
+    if( (unsigned)(dst_size.width - src_size.width/2) > 1 ||
+        (unsigned)(dst_size.height - src_size.height/2) > 1 )
         CV_ERROR( CV_StsUnmatchedSizes, "" );
 
-    type = CV_ARR_TYPE(src->type);
+    if( src->data.ptr == dst->data.ptr )
+        CV_ERROR( CV_StsInplaceNotSupported, "" );
 
-    func = (CvFunc2D_2A1P)(pyrup_tab.fn_2d[type]);
+    type = CV_MAT_TYPE(src->type);
+
+    func = (CvFunc2D_2A1P)(pyrdown_tab.fn_2d[type]);
 
     if( !func )
         CV_ERROR( CV_StsUnsupportedFormat, "" );
 
-    IPPI_CALL( icvPyrDownGetBufSize_Gauss5x5( src->width, icvDepthToDataType(type),
-                                            CV_ARR_CN( type ), &buffer_size ));
+    IPPI_CALL( icvPyrDownGetBufSize_Gauss5x5( src_size2.width, icvDepthToDataType(type),
+                                              CV_MAT_CN( type ), &buffer_size ));
     
     if( buffer_size <= CV_MAX_LOCAL_SIZE )
     {
@@ -974,8 +997,20 @@ cvPyrDown( const void* srcarr, void* dstarr, int _filter )
         CV_CALL( buffer = cvAlloc( buffer_size ));
     }
 
-    IPPI_CALL( func( src->data.ptr, src->step, dst->data.ptr, dst->step,
-                     icvGetMatSize(src), buffer ));
+    IPPI_CALL(func(src->data.ptr, src->step, dst->data.ptr, dst->step, src_size2, buffer));
+
+    if( src_size.width != dst_size.width*2 || src_size.height != dst_size.height*2 )
+    {
+        CvPyrDownBorderFunc border_func = (CvPyrDownBorderFunc)
+                            pyrdownborder_tab.fn_2d[CV_MAT_DEPTH(type)];
+
+        if( !border_func )
+            CV_ERROR( CV_StsUnsupportedFormat, "" );
+
+        IPPI_CALL( border_func( src->data.ptr, src->step, src_size,
+                                dst->data.ptr, dst->step, dst_size, CV_MAT_CN(type)));
+    }
+
     __END__;
 
     if( buffer && !local_alloc )
