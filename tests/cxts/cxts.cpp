@@ -617,6 +617,24 @@ void CvTest::write_int_list( CvFileStorage* fs, const char* paramname,
 }
 
 
+void CvTest::write_real_list( CvFileStorage* fs, const char* paramname,
+                              const double* val, int count, double stop_value )
+{
+    if( val )
+    {
+        start_write_param( fs );
+        int i;
+        if( count < 0 )
+            count = INT_MAX;
+
+        cvStartWriteStruct( fs, paramname, CV_NODE_SEQ + CV_NODE_FLOW );
+        for( i = 0; i < count && val[i] != stop_value; i++ )
+            cvWriteReal( fs, 0, val[i] );
+        cvEndWriteStruct( fs );
+    }
+}
+
+
 int CvTest::read_params( CvFileStorage* fs )
 {
     int code = 0;
