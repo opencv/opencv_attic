@@ -5,7 +5,7 @@ AM_CONFIG_HEADER(cvconfig.h)
 dnl Set various version strings
 MMAJOR=0
 MMINOR=9
-MSUBMINOR=6
+MSUBMINOR=7
 VERSION=$MMAJOR.$MMINOR.$MSUBMINOR
 LT_VERSION=`expr $MMAJOR + $MMINOR`:$MSUBMINOR:$MMINOR
 
@@ -149,9 +149,10 @@ have_ffmpeg=no
 
 AC_CHECK_HEADER(ffmpeg/avcodec.h,
     AC_CHECK_LIB(avcodec, avcodec_decode_video,
+    [AC_CHECK_LIB(avformat, av_open_input_file,
     [have_ffmpeg=yes
     AC_DEFINE(HAVE_FFMPEG,,[FFMpeg video codecs library])
-    FFMPEGLIBS="-lavcodec"]))
+    FFMPEGLIBS="-lavcodec -lavformat"])]))
 
 AC_SUBST(FFMPEGLIBS)
 
