@@ -1,4 +1,48 @@
 =============================================================================
+                               OpenCV snapshot
+=============================================================================
+
+>>> New functionality: <<<
+  -  Support for more fireware cameras has been added in highgui.
+     Different versions of libdc1394 can now be used.
+     (thanks to Frederic Devernay for the new version of cvcap_dc1394.cpp and
+     patches for configure script)
+
+  -  Capturing via Video4Linux can be done in YUV format
+     (thanks to Sfuncia Fabio for the patch)
+
+  -  cvCvtColor supports new color models (HLS, CIE L*u*v*),
+     for every RGB->something transformation the inverse is provided,
+     32f format is completely supported, 16u is partially supported.
+
+>>> Optimizations: <<<
+  -  IPP morphology is finally back (in beta 4 it has been turned off).
+     Inplace operations now give correct results.
+     C version of morphology with a rectangular element is now 1.5 to 2+ times faster.
+
+  -  MatchTemplate has been completely rewritten to use DFT that resulted in
+     1 or 2 order(s) of magnitude faster operation.
+     Color images are now accepted (output is 1-channel anyway).
+
+  -  Morphology with rectangular element is 1.5-2x faster. IPP morphology support is back.
+
+  -  Most of statistical functions have been rewritten with a noticeable speed gain.
+
+  -  Support for many functions has been added. The new areas covered include:
+     geometrical transformations (image resize, affine and perspective warping),
+     color conversions, linear and non-linear filters (cvSobel,
+     cvSmooth (CV_BLUR, CV_GAUSSIAN and CV_MEDIAN modes), cvFilter2D, cvErode & cvDilate),
+     moments.
+
+>>> Bug fixes: <<<
+
+  -  cvSmooth with Gaussian blur handled 4-channel images incorrectly (thanks to
+     Sam Hocevar for the patch)
+
+  -  Drawing functions worked incorrectly with 16-bit images (thanks to deforest
+     for the report)
+
+=============================================================================
                    OpenCV beta 4, Friday, August 13, 2004
 =============================================================================
 
@@ -14,10 +58,10 @@
      Import libraries on Windows do not have version numbers in their names.
 
   -  Many of applications have been dropped/replaced with simple demo samples (see opencv/samples/c):
-     - Hawk, HMMDemo, LKDemo, VMDemo, vmdemotk have been dropped completely.
+     - Hawk, HMMDemo, VMDemo and vmdemotk have been dropped completely.
      - LKDemo and cvlkdemo have been replaced with sample lkdemo.c
      - HaarFaceDetect has been replaced with facedetect.c
-     - cvcsdemo has been replaced with camshiftdemo.c
+     - CamShiftDemo and cvcsdemo have been replaced with camshiftdemo.c
 
   -  Some of obsolete functions, including e-HMMs, eigen objects, view morphing ...
      have been moved from cv to cvaux.
@@ -29,8 +73,8 @@
      resulting in noticeable performance increase for many functions.
      
   -  On linux there is no cvcam anymore. Highgui should be used instead
-     Windows version is also obsolete and will be removed as soon as DirectShow support
-     will be added to highgui.
+     Windows version of cvcam is also obsolete and will be removed as soon
+     as DirectShow support will be added to highgui.
 
   -  Interfaces for EiC, Ch and MATLAB have been temporarily dropped.
 

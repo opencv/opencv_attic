@@ -21,7 +21,7 @@ Eaton, Daniel           ???                        Texture descriptors code
 Eruhimov, Victor        Intel Corp.                Hough & distance transforms, stereo, Hawk and more ...
 Grachev, Ilya           Intel Corp.                TCL/TK demos (cvlkdemo, cvcsdemo, cvenv)
 Khudyakov, Vasily       Novosibirsk University     Face feature detection
-Kuranov, Alexander      Intel Corp.                Matlab wrappers, Face detection code 
+Kuranov, Alexander      Intel Corp.                Matlab wrappers, Face detection code, haartraining and related applications 
 Kuriakin, Valery        Intel Corp.                Started OpenCV project in Nizhny Novrogod Lab
 Lantz, Philip           Intel Corp.                3d Tracker
 Lienhart, Rainer        Intel Corp.                Haar feature-based face detection algorithm and the original code
