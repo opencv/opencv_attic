@@ -12,7 +12,7 @@ noinst_HEADERS = cvclassifier.h _cvhaartraining.h _cvcommon.h
 EXTRA_DIST =
 
 INCLUDES = -I../../../cxcore/include -I../../../cv/include -I../../../otherlibs/highgui -I. -I../include
-LIBS = -L../../../cxcore/src -lcxcore -L../../../cv/src -lcv -L../../../otherlibs/highgui -lhighgui
+LIBS = -L../../../otherlibs/highgui -lhighgui -L../../../cv/src -lcv -L../../../cxcore/src -lcxcore 
 
 opencv_haartraining_LDFLAGS = -L. -lcvhaartraining
 opencv_createsamples_LDFLAGS = -L. -lcvhaartraining
