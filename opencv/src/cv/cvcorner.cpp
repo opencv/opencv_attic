@@ -42,6 +42,7 @@
 #include "_cv.h"
 #include <stdio.h>
 
+
 static void
 icvCalcMinEigenVal( const float* cov, int cov_step, float* dst,
                     int dst_step, CvSize size, CvMat* buffer )
@@ -68,6 +69,27 @@ icvCalcMinEigenVal( const float* cov, int cov_step, float* dst,
 
         for( j = 0; j < size.width ; j++ )
             dst[j] = (float)(buf[j + size.width] - buf[j]);
+    }
+}
+
+
+static void
+icvCalcHarris( const float* cov, int cov_step, float* dst,
+               int dst_step, CvSize size, CvMat* /*buffer*/, double k )
+{
+    int j;
+    cov_step /= sizeof(cov[0]);
+    dst_step /= sizeof(dst[0]);
+
+    for( ; size.height--; cov += cov_step, dst += dst_step )
+    {
+        for( j = 0; j < size.width; j++ )
+        {
+            double a = cov[j*3];
+            double b = cov[j*3+1];
+            double c = cov[j*3+2];
+            dst[j] = (float)(a*c - b*b - k*(a + c)*(a + c));
+        }
     }
 }
 
@@ -157,9 +179,13 @@ icvCalcEigenValsVecs( const float* cov, int cov_step, float* dst,
 }
 
 
+#define ICV_MINEIGENVAL     0
+#define ICV_HARRIS          1
+#define ICV_EIGENVALSVECS   2
+
 static void
 icvCornerEigenValsVecs( const CvMat* src, CvMat* eigenv, int block_size,
-                        int aperture_size, int op_type )
+                        int aperture_size, int op_type, double k=0. )
 {
     CvFilterState* dxstate = 0;
     CvFilterState* dystate = 0;
@@ -188,8 +214,8 @@ icvCornerEigenValsVecs( const CvMat* src, CvMat* eigenv, int block_size,
     CvPoint el_anchor;
     double factorx, factory;
 
-    if( block_size <= 0 || !(block_size & 1) )
-        CV_ERROR( CV_StsOutOfRange, "averaging window size must be a positive odd number" );
+    if( block_size < 3 || !(block_size & 1) )
+        CV_ERROR( CV_StsOutOfRange, "averaging window size must be an odd number >= 3" );
         
     if( aperture_size < 3 && aperture_size != CV_SCHARR || !(aperture_size & 1) )
         CV_ERROR( CV_StsOutOfRange,
@@ -356,11 +382,15 @@ icvCornerEigenValsVecs( const CvMat* src, CvMat* eigenv, int block_size,
                                     cov->data.fl, cov->step,
                                     &stripe_size, blurstate, stage ));
 
-        if( op_type == 0 )
+        if( op_type == ICV_MINEIGENVAL )
             icvCalcMinEigenVal( cov->data.fl, cov->step,
                 (float*)(eigenv->data.ptr + dst_y*eigenv->step), eigenv->step,
                 stripe_size, sqrt_buf );
-        else if( op_type == 1 )
+        else if( op_type == ICV_HARRIS )
+            icvCalcHarris( cov->data.fl, cov->step,
+                (float*)(eigenv->data.ptr + dst_y*eigenv->step), eigenv->step,
+                stripe_size, sqrt_buf, k );
+        else if( op_type == ICV_EIGENVALSVECS )
             icvCalcEigenValsVecs( cov->data.fl, cov->step,
                 (float*)(eigenv->data.ptr + dst_y*eigenv->step), eigenv->step,
                 stripe_size, sqrt_buf );
@@ -404,7 +434,34 @@ cvCornerMinEigenVal( const void* srcarr, void* eigenvarr,
     if( !CV_ARE_SIZES_EQ( src, eigenv ))
         CV_ERROR( CV_StsUnmatchedSizes, "" );
 
-    CV_CALL( icvCornerEigenValsVecs( src, eigenv, block_size, aperture_size, 0 ));
+    CV_CALL( icvCornerEigenValsVecs( src, eigenv, block_size, aperture_size, ICV_MINEIGENVAL ));
+
+    __END__;
+}
+
+
+CV_IMPL void
+cvCornerHarris( const CvArr* srcarr, CvArr* harris_responce,
+                int block_size, int aperture_size, double k )
+{
+    CV_FUNCNAME( "cvCornerHarris" );
+
+    __BEGIN__;
+
+    CvMat stub, *src = (CvMat*)srcarr;
+    CvMat eigstub, *eigenv = (CvMat*)harris_responce;
+
+    CV_CALL( src = cvGetMat( srcarr, &stub ));
+    CV_CALL( eigenv = cvGetMat( eigenv, &eigstub ));
+
+    if( CV_MAT_TYPE(src->type) != CV_8UC1 && CV_MAT_TYPE(src->type) != CV_32FC1 ||
+        CV_MAT_TYPE(eigenv->type) != CV_32FC1 )
+        CV_ERROR( CV_StsUnsupportedFormat, "Input must be 8uC1 or 32fC1, output must be 32fC1" );
+
+    if( !CV_ARE_SIZES_EQ( src, eigenv ))
+        CV_ERROR( CV_StsUnmatchedSizes, "" );
+
+    CV_CALL( icvCornerEigenValsVecs( src, eigenv, block_size, aperture_size, ICV_HARRIS, k ));
 
     __END__;
 }
@@ -433,7 +490,7 @@ cvCornerEigenValsAndVecs( const void* srcarr, void* eigenvarr,
         CV_MAT_TYPE(eigenv->type) != CV_32FC1 )
         CV_ERROR( CV_StsUnsupportedFormat, "Input must be 8uC1 or 32fC1, output must be 32fC1" );
 
-    CV_CALL( icvCornerEigenValsVecs( src, eigenv, block_size, aperture_size, 1 ));
+    CV_CALL( icvCornerEigenValsVecs( src, eigenv, block_size, aperture_size, ICV_EIGENVALSVECS ));
 
     __END__;
 }

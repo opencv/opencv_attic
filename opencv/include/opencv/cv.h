@@ -268,6 +268,12 @@ CVAPI(CvMat*) cvWarpPerspectiveQMatrix( const CvPoint2D32f* src,
                                        const CvPoint2D32f* dst,
                                        CvMat* map_matrix );
 
+/* Performs generic geometric transformation using the specified coordinate maps */
+CVAPI(void)  cvRemap( const CvArr* src, CvArr* dst,
+                      const CvArr* mapx, const CvArr* mapy,
+                      int flags CV_DEFAULT(CV_INTER_LINEAR+CV_WARP_FILL_OUTLIERS),
+                      CvScalar fillval CV_DEFAULT(cvScalarAll(0)) );
+
 #define  CV_SHAPE_RECT      0
 #define  CV_SHAPE_CROSS     1
 #define  CV_SHAPE_ELLIPSE   2
@@ -956,14 +962,20 @@ CVAPI(void) cvPreCornerDetect( const CvArr* image, CvArr* corners,
                               int aperture_size CV_DEFAULT(3) );
 
 /* Calculates eigen values and vectors of 2x2
-   gradient matrix at every image pixel */
+   gradient covariation matrix at every image pixel */
 CVAPI(void)  cvCornerEigenValsAndVecs( const CvArr* image, CvArr* eigenvv,
                                       int block_size, int aperture_size CV_DEFAULT(3) );
 
-/* Calculates minimal eigenvalue for 2x2 gradient matrix at
+/* Calculates minimal eigenvalue for 2x2 gradient covariation matrix at
    every image pixel */
 CVAPI(void)  cvCornerMinEigenVal( const CvArr* image, CvArr* eigenval,
                                  int block_size, int aperture_size CV_DEFAULT(3) );
+
+/* Harris corner detector:
+   Calculates det(M) - k*(trace(M)^2), where M is 2x2 gradient covariation matrix for each pixel */
+CVAPI(void)  cvCornerHarris( const CvArr* image, CvArr* harris_responce,
+                             int block_size, int aperture_size CV_DEFAULT(3),
+                             double k CV_DEFAULT(0.04) );
 
 /* Adjust corner position using some sort of gradient search */
 CVAPI(void)  cvFindCornerSubPix( const CvArr* image, CvPoint2D32f* corners,
@@ -976,7 +988,10 @@ CVAPI(void)  cvGoodFeaturesToTrack( const CvArr* image, CvArr* eig_image,
                                    CvArr* temp_image, CvPoint2D32f* corners,
                                    int* corner_count, double  quality_level,
                                    double  min_distance,
-                                   const CvArr* mask CV_DEFAULT(NULL));
+                                   const CvArr* mask CV_DEFAULT(NULL),
+                                   int block_size CV_DEFAULT(3),
+                                   int use_harris CV_DEFAULT(0),
+                                   double k CV_DEFAULT(0.04) );
 
 #define CV_HOUGH_STANDARD 0
 #define CV_HOUGH_PROBABILISTIC 1
@@ -1048,8 +1063,6 @@ CVAPI(void)  cvUnDistortInit( const CvArr* src, CvArr* undistortion_map,
    using previousely calculated (via cvUnDistortInit) map */
 CVAPI(void)  cvUnDistort( const CvArr* src, CvArr* dst, const CvArr* undistortion_map,
                           int interpolate CV_DEFAULT(1));
-#define cvRemap cvUnDistort
-
 
 /* The function converts floating-point pixel coordinate map to
    faster fixed-point map, used by cvUnDistort (cvRemap) */
