@@ -41,115 +41,88 @@
 
 #include "_cv.h"
 
-IPCVAPI_IMPL( CvStatus, icvThresh_8u_C1R,
-    (const uchar * src, int src_step, uchar * dst, int dst_step,
-     CvSize roi, int thresh, uchar maxval, int type),
-    (src, src_step, dst, dst_step, roi, thresh, maxval, type) )
+static CvStatus CV_STDCALL
+icvThresh_8u_C1R( const uchar* src, int src_step, uchar* dst, int dst_step,
+                  CvSize roi, uchar thresh, uchar maxval, int type )
 {
-    /* Some variables */
     int i, j;
+    uchar tab[256];
 
-    /* Check for bad arguments */
-    assert( src && dst );
-    if( thresh & ~255 )
-        return CV_BADFACTOR_ERR;
-    if( roi.width <= 0 || roi.height <= 0 )
-        return CV_BADSIZE_ERR;
-    if( roi.width > src_step )
-        return CV_BADSIZE_ERR;
-    if( roi.width > dst_step )
-        return CV_BADSIZE_ERR;
-
-    if( roi.width == src_step && roi.width == dst_step )
-    {
-        roi.width *= roi.height;
-        roi.height = 1;
-    }
-
-    /* Calculating */
-    switch (type)
+    switch( type )
     {
     case CV_THRESH_BINARY:
-        for( i = 0; i < roi.height; i++, src += src_step, dst += dst_step )
-            for( j = 0; j < roi.width; j++ )
-                dst[j] = (uchar) (((thresh - src[j]) >> 8) & maxval);
+        for( i = 0; i <= thresh; i++ )
+            tab[i] = 0;
+        for( ; i < 256; i++ )
+            tab[i] = maxval;
         break;
     case CV_THRESH_BINARY_INV:
-        for( i = 0; i < roi.height; i++, src += src_step, dst += dst_step )
-            for( j = 0; j < roi.width; j++ )
-                dst[j] = (uchar) (((src[j] - thresh - 1) >> 8) & maxval);
+        for( i = 0; i <= thresh; i++ )
+            tab[i] = maxval;
+        for( ; i < 256; i++ )
+            tab[i] = 0;
         break;
     case CV_THRESH_TRUNC:
-        for( i = 0; i < roi.height; i++, src += src_step, dst += dst_step )
-            for( j = 0; j < roi.width; j++ )
-            {
-                int temp = src[j] - thresh;
-
-                dst[j] = (uchar) ((temp & (temp >> 31)) + thresh);
-            }
+        for( i = 0; i <= thresh; i++ )
+            tab[i] = (uchar)i;
+        for( ; i < 256; i++ )
+            tab[i] = thresh;
         break;
     case CV_THRESH_TOZERO:
-        for( i = 0; i < roi.height; i++, src += src_step, dst += dst_step )
-            for( j = 0; j < roi.width; j++ )
-            {
-                int temp = src[j];
-
-                dst[j] = (uchar) (((thresh - temp) >> 31) & temp);
-            }
+        for( i = 0; i <= thresh; i++ )
+            tab[i] = 0;
+        for( ; i < 256; i++ )
+            tab[i] = (uchar)i;
         break;
     case CV_THRESH_TOZERO_INV:
-        for( i = 0; i < roi.height; i++, src += src_step, dst += dst_step )
-            for( j = 0; j < roi.width; j++ )
-            {
-                int temp = src[j];
-
-                dst[j] = (uchar) (((temp - thresh - 1) >> 31) & temp);
-            }
+        for( i = 0; i <= thresh; i++ )
+            tab[i] = (uchar)i;
+        for( ; i < 256; i++ )
+            tab[i] = 0;
         break;
     default:
         return CV_BADFLAG_ERR;
     }
+
+    for( i = 0; i < roi.height; i++, src += src_step, dst += dst_step )
+    {
+        for( j = 0; j <= roi.width - 4; j += 4 )
+        {
+            uchar t0 = tab[src[j]];
+            uchar t1 = tab[src[j+1]];
+
+            dst[j] = t0;
+            dst[j+1] = t1;
+
+            t0 = tab[src[j+2]];
+            t1 = tab[src[j+3]];
+
+            dst[j+2] = t0;
+            dst[j+3] = t1;
+        }
+
+        for( ; j < roi.width; j++ )
+            dst[j] = tab[src[j]];
+    }
+
     return CV_NO_ERR;
 }
 
 
-IPCVAPI_IMPL( CvStatus, icvThresh_32f_C1R,
-    (const float *src, int src_step, float *dst, int dst_step,
-    CvSize roi, float thresh, float maxval, int type),
-    (src, src_step, dst, dst_step, roi, thresh, maxval, type))
+static CvStatus CV_STDCALL
+icvThresh_32f_C1R( const float *src, int src_step, float *dst, int dst_step,
+                   CvSize roi, float thresh, float maxval, int type )
 {
-    /* Some variables */
     int i, j;
+    const int* isrc = (const int*)src;
+    int* idst = (int*)dst;
     int iThresh = CV_TOGGLE_FLT( (int &) thresh );
     int iMax = (int &) maxval;
-    int *isrc = (int *) src;
-    int *idst = (int *) dst;
 
-    assert( sizeof( int ) == sizeof( float ));
+    src_step /= sizeof(src[0]);
+    dst_step /= sizeof(dst[0]);
 
-    /* Check for bad arguments */
-    if( !src || !dst )
-        return CV_NULLPTR_ERR;
-    if( roi.width < 0 || roi.height < 0 )
-        return CV_BADSIZE_ERR;
-    if( roi.width * CV_SIZEOF_FLOAT > src_step )
-        return CV_BADSIZE_ERR;
-    if( roi.width * CV_SIZEOF_FLOAT > dst_step )
-        return CV_BADSIZE_ERR;
-    if( (src_step & (CV_SIZEOF_FLOAT - 1)) != 0 || (dst_step & (CV_SIZEOF_FLOAT - 1)) != 0 )
-        return CV_BADSIZE_ERR;
-
-    src_step /= CV_SIZEOF_FLOAT;
-    dst_step /= CV_SIZEOF_FLOAT;
-
-    if( roi.width == src_step && roi.width == dst_step )
-    {
-        roi.width *= roi.height;
-        roi.height = 1;
-    }
-
-    /* Calculating */
-    switch (type)
+    switch( type )
     {
     case CV_THRESH_BINARY:
         for( i = 0; i < roi.height; i++, isrc += src_step, idst += dst_step )
@@ -157,8 +130,7 @@ IPCVAPI_IMPL( CvStatus, icvThresh_32f_C1R,
             for( j = 0; j < roi.width; j++ )
             {
                 int temp = isrc[j];
-
-                idst[j] = ((CV_TOGGLE_FLT( temp ) <= iThresh) - 1) & iMax;
+                idst[j] = ((CV_TOGGLE_FLT(temp) <= iThresh) - 1) & iMax;
             }
         }
         break;
@@ -169,8 +141,7 @@ IPCVAPI_IMPL( CvStatus, icvThresh_32f_C1R,
             for( j = 0; j < roi.width; j++ )
             {
                 int temp = isrc[j];
-
-                idst[j] = CV_TOGGLE_FLT( temp ) > iThresh ? 0 : iMax;
+                idst[j] = ((CV_TOGGLE_FLT(temp) > iThresh) - 1) & iMax;
             }
         }
         break;
@@ -195,7 +166,6 @@ IPCVAPI_IMPL( CvStatus, icvThresh_32f_C1R,
             for( j = 0; j < roi.width; j++ )
             {
                 int temp = isrc[j];
-
                 idst[j] = ((CV_TOGGLE_FLT( temp ) <= iThresh) - 1) & temp;
             }
         }
@@ -207,8 +177,7 @@ IPCVAPI_IMPL( CvStatus, icvThresh_32f_C1R,
             for( j = 0; j < roi.width; j++ )
             {
                 int temp = isrc[j];
-
-                idst[j] = CV_TOGGLE_FLT( temp ) > iThresh ? 0 : temp;
+                idst[j] = ((CV_TOGGLE_FLT( temp ) > iThresh) - 1) & temp;
             }
         }
         break;
@@ -221,6 +190,13 @@ IPCVAPI_IMPL( CvStatus, icvThresh_32f_C1R,
 }
 
 
+icvAndC_8u_C1R_t icvAndC_8u_C1R_p = 0;
+icvCompareC_8u_C1R_t icvCompareC_8u_C1R_p = 0;
+icvThreshold_GTVal_8u_C1R_t icvThreshold_GTVal_8u_C1R_p = 0;
+icvThreshold_GTVal_32f_C1R_t icvThreshold_GTVal_32f_C1R_p = 0;
+icvThreshold_LTVal_8u_C1R_t icvThreshold_LTVal_8u_C1R_p = 0;
+icvThreshold_LTVal_32f_C1R_t icvThreshold_LTVal_32f_C1R_p = 0;
+
 CV_IMPL void
 cvThreshold( const void* srcarr, void* dstarr, double thresh, double maxval, int type )
 {
@@ -232,8 +208,9 @@ cvThreshold( const void* srcarr, void* dstarr, double thresh, double maxval, int
     int src_step, dst_step;
     CvMat src_stub, *src = (CvMat*)srcarr;
     CvMat dst_stub, *dst = (CvMat*)dstarr;
+    CvMat src0, dst0;
     int coi1 = 0, coi2 = 0;
-    int ival = 0;
+    int ithresh, imaxval, cn;
 
     CV_CALL( src = cvGetMat( src, &src_stub, &coi1 ));
     CV_CALL( dst = cvGetMat( dst, &dst_stub, &coi2 ));
@@ -243,6 +220,13 @@ cvThreshold( const void* srcarr, void* dstarr, double thresh, double maxval, int
 
     if( !CV_ARE_CNS_EQ( src, dst ) )
         CV_ERROR( CV_StsUnmatchedFormats, "Both arrays must have equal number of channels" );
+
+    cn = CV_MAT_CN(src->type);
+    if( cn > 1 )
+    {
+        src = cvReshape( src, &src0, 1 );
+        dst = cvReshape( dst, &dst0, 1 );
+    }
 
     if( !CV_ARE_DEPTHS_EQ( src, dst ) )
     {
@@ -271,7 +255,6 @@ cvThreshold( const void* srcarr, void* dstarr, double thresh, double maxval, int
         CV_ERROR( CV_StsUnmatchedSizes, "" );
 
     roi = cvGetMatSize( src );
-    roi.width *= CV_MAT_CN(src->type);
     if( CV_IS_MAT_CONT( src->type & dst->type ))
     {
         roi.width *= roi.height;
@@ -287,15 +270,98 @@ cvThreshold( const void* srcarr, void* dstarr, double thresh, double maxval, int
     switch( CV_MAT_DEPTH(src->type) )
     {
     case CV_8U:
-        ival = cvRound(maxval);
-        IPPI_CALL( icvThresh_8u_C1R( (uchar*)src->data.ptr, src_step,
-                                     (uchar*)dst->data.ptr, dst_step, roi,
-                                     cvRound(thresh), CV_CAST_8U(ival), type ));
+        
+        ithresh = cvFloor(thresh);
+        imaxval = cvRound(maxval);
+        if( type == CV_THRESH_TRUNC )
+            imaxval = ithresh;
+        imaxval = CV_CAST_8U(imaxval);
+
+        if( ithresh < 0 || ithresh >= 255 )
+        {
+            if( type == CV_THRESH_BINARY || type == CV_THRESH_BINARY_INV ||
+                (type == CV_THRESH_TRUNC || type == CV_THRESH_TOZERO_INV) && ithresh < 0 ||
+                type == CV_THRESH_TOZERO && ithresh >= 255 )
+            {
+                int v = type == CV_THRESH_BINARY ? (ithresh >= 255 ? 0 : imaxval) :
+                        type == CV_THRESH_BINARY_INV ? (ithresh >= 255 ? imaxval : 0) :
+                        type == CV_THRESH_TRUNC ? imaxval : 0;
+
+                cvSet( dst, cvScalarAll(v) );
+                EXIT;
+            }
+            else
+            {
+                cvCopy( src, dst );
+                EXIT;
+            }
+        }
+
+        if( type == CV_THRESH_BINARY || type == CV_THRESH_BINARY_INV )
+        {
+            if( icvCompareC_8u_C1R_p && icvAndC_8u_C1R_p )
+            {
+                IPPI_CALL( icvCompareC_8u_C1R_p( src->data.ptr, src_step,
+                    (uchar)ithresh, dst->data.ptr, dst_step, roi,
+                    type == CV_THRESH_BINARY ? cvCmpGreater : cvCmpLessEq ));
+
+                if( imaxval < 255 )
+                    IPPI_CALL( icvAndC_8u_C1R_p( dst->data.ptr, dst_step,
+                    (uchar)imaxval, dst->data.ptr, dst_step, roi ));
+                EXIT;
+            }
+        }
+        else if( type == CV_THRESH_TRUNC || type == CV_THRESH_TOZERO_INV )
+        {
+            if( icvThreshold_GTVal_8u_C1R_p )
+            {
+                IPPI_CALL( icvThreshold_GTVal_8u_C1R_p( src->data.ptr, src_step,
+                    dst->data.ptr, dst_step, roi, (uchar)ithresh,
+                    (uchar)(type == CV_THRESH_TRUNC ? ithresh : 0) ));
+                EXIT;
+            }
+        }
+        else
+        {
+            assert( type == CV_THRESH_TOZERO );
+            if( icvThreshold_LTVal_8u_C1R_p )
+            {
+                ithresh = cvFloor(thresh+1.);
+                ithresh = CV_CAST_8U(ithresh);
+                IPPI_CALL( icvThreshold_LTVal_8u_C1R_p( src->data.ptr, src_step,
+                    dst->data.ptr, dst_step, roi, (uchar)ithresh, 0 ));
+                EXIT;
+            }
+        }
+
+        icvThresh_8u_C1R( src->data.ptr, src_step,
+                          dst->data.ptr, dst_step, roi,
+                          (uchar)ithresh, (uchar)imaxval, type );
         break;
     case CV_32F:
-        IPPI_CALL( icvThresh_32f_C1R( src->data.fl, src_step,
-                                      dst->data.fl, dst_step, roi,
-                                      (float)thresh, (float)maxval, type ));
+
+        if( type == CV_THRESH_TRUNC || type == CV_THRESH_TOZERO_INV )
+        {
+            if( icvThreshold_GTVal_32f_C1R_p )
+            {
+                IPPI_CALL( icvThreshold_GTVal_32f_C1R_p( src->data.fl, src_step,
+                    dst->data.fl, dst_step, roi, (float)thresh,
+                    type == CV_THRESH_TRUNC ? (float)thresh : 0 ));
+                EXIT;
+            }
+        }
+        else if( type == CV_THRESH_TOZERO )
+        {
+            if( icvThreshold_LTVal_32f_C1R_p )
+            {
+                IPPI_CALL( icvThreshold_LTVal_32f_C1R_p( src->data.fl, src_step,
+                    dst->data.fl, dst_step, roi, (float)(thresh*(1 + FLT_EPSILON)), 0 ));
+                EXIT;
+            }
+        }
+
+        icvThresh_32f_C1R( src->data.fl, src_step, dst->data.fl, dst_step, roi,
+                           (float)thresh, (float)maxval, type );
         break;
     default:
         CV_ERROR( CV_BadDepth, cvUnsupportedFormat );
@@ -303,6 +369,5 @@ cvThreshold( const void* srcarr, void* dstarr, double thresh, double maxval, int
 
     __END__;
 }
-
 
 /* End of file. */

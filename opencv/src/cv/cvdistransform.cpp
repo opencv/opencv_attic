@@ -529,9 +529,10 @@ cvDistTransform( const void* srcarr, void* dstarr,
 
     size = cvGetMatSize(src);
 
-    if( ipp_func )
+    if( ipp_func && src->cols >= 4 && src->rows >= 2 )
     {
-        IPPI_CALL( ipp_func( src->data.ptr, src->step, dst->data.fl, dst->step, size, _mask ));
+        IPPI_CALL( ipp_func( src->data.ptr, src->step,
+                dst->data.fl, dst->step, size, _mask ));
     }
     else
     {

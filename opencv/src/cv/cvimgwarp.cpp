@@ -1825,4 +1825,139 @@ cvRemap( const CvArr* srcarr, CvArr* dstarr,
     __END__;
 }
 
+
+/****************************************************************************************\
+*                                   Log-Polar Transform                                  *
+\****************************************************************************************/
+
+/* now it is done via Remap; more correct implementation should use
+   some super-sampling technique outside of the "fovea" circle */
+CV_IMPL void
+cvLogPolar( const CvArr* srcarr, CvArr* dstarr,
+            CvPoint2D32f center, double M, int flags )
+{
+    CvMat* mapx = 0;
+    CvMat* mapy = 0;
+    double* exp_tab = 0;
+    float* buf = 0;
+    
+    CV_FUNCNAME( "cvLogPolar" );
+
+    __BEGIN__;
+
+    CvMat srcstub, *src = (CvMat*)srcarr;
+    CvMat dststub, *dst = (CvMat*)dstarr;
+    CvSize ssize, dsize;
+
+    CV_CALL( src = cvGetMat( srcarr, &srcstub ));
+    CV_CALL( dst = cvGetMat( dstarr, &dststub ));
+    
+    if( !CV_ARE_TYPES_EQ( src, dst ))
+        CV_ERROR( CV_StsUnmatchedFormats, "" );
+
+    if( M <= 0 )
+        CV_ERROR( CV_StsOutOfRange, "M should be >0" );
+
+    ssize = cvGetMatSize(src);
+    dsize = cvGetMatSize(dst);
+
+    CV_CALL( mapx = cvCreateMat( dsize.height, dsize.width, CV_32F ));
+    CV_CALL( mapy = cvCreateMat( dsize.height, dsize.width, CV_32F ));
+
+    if( !(flags & CV_WARP_INVERSE_MAP) )
+    {
+        int phi, rho;
+        
+        CV_CALL( exp_tab = (double*)cvAlloc( dsize.width*sizeof(exp_tab[0])) );
+
+        for( rho = 0; rho < dst->width; rho++ )
+            exp_tab[rho] = exp(rho/M);
+    
+        for( phi = 0; phi < dsize.height; phi++ )
+        {
+            double cp = cos(phi*2*CV_PI/dsize.height);
+            double sp = sin(phi*2*CV_PI/dsize.height);
+            float* mx = (float*)(mapx->data.ptr + phi*mapx->step);
+            float* my = (float*)(mapy->data.ptr + phi*mapy->step);
+
+            for( rho = 0; rho < dsize.width; rho++ )
+            {
+                double r = exp_tab[rho];
+                double x = r*cp + center.x;
+                double y = r*sp + center.y;
+
+                mx[rho] = (float)x;
+                my[rho] = (float)y;
+            }
+        }
+    }
+    else
+    {
+        int x, y;
+        CvMat bufx, bufy, bufp, bufa;
+        double ascale = (ssize.width-1)/(2*CV_PI);
+
+        CV_CALL( buf = (float*)cvAlloc( 4*dsize.width*sizeof(buf[0]) ));
+
+        bufx = cvMat( 1, dsize.width, CV_32F, buf );
+        bufy = cvMat( 1, dsize.width, CV_32F, buf + dsize.width );
+        bufp = cvMat( 1, dsize.width, CV_32F, buf + dsize.width*2 );
+        bufa = cvMat( 1, dsize.width, CV_32F, buf + dsize.width*3 );
+
+        for( x = 0; x < dsize.width; x++ )
+            bufx.data.fl[x] = (float)x - center.x;
+
+        for( y = 0; y < dsize.height; y++ )
+        {
+            float* mx = (float*)(mapx->data.ptr + y*mapx->step);
+            float* my = (float*)(mapy->data.ptr + y*mapy->step);
+            
+            for( x = 0; x < dsize.width; x++ )
+                bufy.data.fl[x] = (float)y - center.y;
+
+#if 1
+            cvCartToPolar( &bufx, &bufy, &bufp, &bufa );
+
+            for( x = 0; x < dsize.width; x++ )
+                bufp.data.fl[x] += 1.f;
+
+            cvLog( &bufp, &bufp );
+            
+            for( x = 0; x < dsize.width; x++ )
+            {
+                double rho = bufp.data.fl[x]*M;
+                double phi = bufa.data.fl[x]*ascale;
+
+                mx[x] = (float)rho;
+                my[x] = (float)phi;
+            }
+#else
+            for( x = 0; x < dsize.width; x++ )
+            {
+                double xx = bufx.data.fl[x];
+                double yy = bufy.data.fl[x];
+
+                double p = log(sqrt(xx*xx + yy*yy) + 1.)*M;
+                double a = atan2(yy,xx);
+                if( a < 0 )
+                    a = 2*CV_PI + a;
+                a *= ascale;
+
+                mx[x] = (float)p;
+                my[x] = (float)a;
+            }
+#endif
+        }
+    }
+
+    cvRemap( src, dst, mapx, mapy, flags, cvScalarAll(0) );
+
+    __END__;
+
+    cvFree( (void**)&exp_tab );
+    cvFree( (void**)&buf );
+    cvReleaseMat( &mapx );
+    cvReleaseMat( &mapy );
+}
+
 /* End of file. */
