@@ -293,4 +293,7 @@ CvCopyMaskFunc icvGetCopyMaskFunc( int elem_size );
 
 CvStatus CV_STDCALL icvSetZero_8u_C1R( uchar* dst, int dststep, CvSize size );
 
+CvStatus CV_STDCALL icvScale_32f( const float* src, float* dst, int len, float a, float b );
+CvStatus CV_STDCALL icvScale_64f( const double* src, double* dst, int len, double a, double b );
+
 #endif /*_CXCORE_INTERNAL_H_*/

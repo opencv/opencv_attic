@@ -1251,10 +1251,9 @@ name,( const arrtype* src1, int step1, const arrtype* src2, int step2,          
 
 
 #define  ICV_DEF_UN_ABS_DIFF_2D( name, arrtype, temptype, abs_macro, cast_macro)\
-IPCVAPI_IMPL( CvStatus,                                                         \
-name,( const arrtype* src0, int step1, arrtype* dst0, int step,                 \
-      CvSize size, const temptype* scalar ),                                    \
-      (src0, step1, dst0, step, size, scalar))                                  \
+static CvStatus CV_STDCALL                                                      \
+name( const arrtype* src0, int step1, arrtype* dst0, int step,                  \
+      CvSize size, const temptype* scalar )                                     \
 {                                                                               \
     for( ; size.height--; (char*&)src0 += step1, (char*&)dst0 += step )         \
     {                                                                           \

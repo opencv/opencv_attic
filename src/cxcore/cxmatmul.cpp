@@ -2876,11 +2876,10 @@ cvMulTransposed( const CvArr* srcarr, CvArr* dstarr,
 \****************************************************************************************/
 
 #define ICV_DEF_DOT_PROD_FUNC_2D( flavor, arrtype, temptype, sumtype )  \
-IPCVAPI_IMPL( CvStatus,                                                 \
-icvDotProduct_##flavor##_C1R, ( const arrtype* src1, int step1,         \
-                                const arrtype* src2, int step2,         \
-                                CvSize size, sumtype* _sum ),           \
-                                (src1, step1, src2, step2, size, _sum) )\
+static CvStatus CV_STDCALL                                              \
+icvDotProduct_##flavor##_C1R( const arrtype* src1, int step1,           \
+                              const arrtype* src2, int step2,           \
+                              CvSize size, sumtype* _sum )              \
 {                                                                       \
     sumtype sum = 0;                                                    \
                                                                         \

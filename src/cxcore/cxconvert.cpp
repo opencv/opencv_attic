@@ -1282,11 +1282,10 @@ CV_DEF_INIT_FUNC_TAB_2D( CvtScaleTo, C1R )
                              src_depth4, src_type4, cast_macro14,       \
                              src_depth5, src_type5, cast_macro15,       \
                              src_depth6, src_type6, cast_macro16 )      \
-IPCVAPI_IMPL( CvStatus,                                                 \
-icvCvtTo_##flavor##_C1R,( const void* pSrc, int step1,                  \
-                          void* pDst, int step,                         \
-                          CvSize size, int param ),                     \
-                          (pSrc, step1, pDst, step, size, param))       \
+static CvStatus CV_STDCALL                                              \
+icvCvtTo_##flavor##_C1R( const void* pSrc, int step1,                   \
+                         void* pDst, int step,                          \
+                         CvSize size, int param )                       \
 {                                                                       \
     int srctype = param;                                                \
     const char* src = (const char*)pSrc;                                \
@@ -1640,8 +1639,7 @@ IPCVAPI_IMPL( CvStatus, icvCvt_64f32f,
 }
 
 
-IPCVAPI_IMPL( CvStatus, icvScale_32f,
-    ( const float* src, float* dst, int len, float a, float b ), (src, dst, len, a, b) )
+CvStatus CV_STDCALL icvScale_32f( const float* src, float* dst, int len, float a, float b )
 {
     int i;
     for( i = 0; i <= len - 4; i += 4 )
@@ -1666,8 +1664,7 @@ IPCVAPI_IMPL( CvStatus, icvScale_32f,
 }
 
 
-IPCVAPI_IMPL( CvStatus, icvScale_64f,
-    ( const double* src, double* dst, int len, double a, double b ), (src, dst, len, a, b) )
+CvStatus CV_STDCALL icvScale_64f( const double* src, double* dst, int len, double a, double b )
 {
     int i;
     for( i = 0; i <= len - 4; i += 4 )

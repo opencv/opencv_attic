@@ -283,6 +283,19 @@ icvUpdatePluginFuncTab( CvPluginFuncInfo* func_tab )
         func_tab[i].loaded_from = 0;
     }
 
+    // ippopencv substitutes all the other IPP modules
+    if( plugins[CV_PLUGIN_OPTCV].handle != 0 )
+    {
+        assert( plugins[CV_PLUGIN_IPPCV].handle == 0 &&
+                plugins[CV_PLUGIN_IPPI].handle == 0 &&
+                plugins[CV_PLUGIN_IPPS].handle == 0 && 
+                plugins[CV_PLUGIN_IPPVM].handle == 0 );
+        plugins[CV_PLUGIN_IPPCV].handle = 
+        plugins[CV_PLUGIN_IPPI].handle = 
+        plugins[CV_PLUGIN_IPPS].handle = 
+        plugins[CV_PLUGIN_IPPVM].handle = plugins[CV_PLUGIN_OPTCV].handle;
+    }
+
     // 2. try to find corresponding functions in ipp* and reassign pointers to them
     for( i = 0; func_tab[i].func_addr != 0; i++ )
     {
@@ -362,6 +375,14 @@ icvUpdatePluginFuncTab( CvPluginFuncInfo* func_tab )
     }
 #endif
 
+    if( plugins[CV_PLUGIN_OPTCV].handle != 0 )
+    {
+        plugins[CV_PLUGIN_IPPCV].handle = 
+        plugins[CV_PLUGIN_IPPI].handle = 
+        plugins[CV_PLUGIN_IPPS].handle = 
+        plugins[CV_PLUGIN_IPPVM].handle = 0;
+    }
+
     return loaded_functions;
 }
 
@@ -424,6 +445,7 @@ cvUseOptimized( int load_flag )
     CvModuleInfo* module;
     const CvProcessorInfo* cpu_info = icvGetProcessorInfo();
     int arch = CV_GET_PROC_ARCH(cpu_info->model);
+    const char* opencv_suffix = "096";
     const char* ipp_suffix = arch == CV_PROC_IA32_GENERIC ? "20" :
                              arch == CV_PROC_IA64_GENERIC ? "6420" : 0;
     const char* mkl_suffix = arch == CV_PROC_IA32_GENERIC ?
@@ -435,7 +457,7 @@ cvUseOptimized( int load_flag )
         plugins[i].basename = 0;
     plugins[CV_PLUGIN_NONE].basename = 0;
     plugins[CV_PLUGIN_NONE].name[0] = '\0';
-    plugins[CV_PLUGIN_OPTCV].basename = "optcv";
+    plugins[CV_PLUGIN_OPTCV].basename = "ippopencv";
     plugins[CV_PLUGIN_IPPCV].basename = "ippcv";
     plugins[CV_PLUGIN_IPPI].basename = "ippi";
     plugins[CV_PLUGIN_IPPS].basename = "ipps";
@@ -454,13 +476,18 @@ cvUseOptimized( int load_flag )
                 plugins[i].handle = 0;
             }
 
+            // do not load regular IPP modules if the custom merged IPP module is already found.
+            if( i < CV_PLUGIN_MKL && load_flag && plugins[CV_PLUGIN_OPTCV].handle != 0 )
+                continue;
+
             if( load_flag && plugins[i].basename &&
                 (arch == CV_PROC_IA32_GENERIC || arch == CV_PROC_IA64_GENERIC) )
             {
                 for(;;)
                 {
                     sprintf( plugins[i].name, DLL_PREFIX "%s%s" DLL_DEBUG_FLAG DLL_SUFFIX,
-                             plugins[i].basename, i < CV_PLUGIN_MKL ? ipp_suffix : mkl_suffix );
+                        plugins[i].basename, i == CV_PLUGIN_OPTCV ? opencv_suffix :
+                        i < CV_PLUGIN_MKL ? ipp_suffix : mkl_suffix );
                 
                     plugins[i].handle = LoadLibrary( plugins[i].name );
                     if( plugins[i].handle != 0 )
