@@ -30,15 +30,6 @@ except AttributeError:
 del types
 
 
-__doc__ = """
-OpenCV is the Intel Open CV library, an open source effort to provide
-computer vision algorithms for standard PC hardware.
-
-This wrapper was semi-automatically created from the C/C++ headers and therefore
-contains no Python documentation. Because all identifiers are identical to their
-C/C++ counterparts, you can consult the standard manuals that come with OpenCV.
-"""
-
 CV_AUTOSTEP = _cv.CV_AUTOSTEP
 CV_MAX_ARR = _cv.CV_MAX_ARR
 CV_NO_DEPTH_CHECK = _cv.CV_NO_DEPTH_CHECK
@@ -498,15 +489,15 @@ class IplImage(_object):
     __swig_setmethods__["widthStep"] = _cv.IplImage_widthStep_set
     __swig_getmethods__["widthStep"] = _cv.IplImage_widthStep_get
     if _newclass:widthStep = property(_cv.IplImage_widthStep_get, _cv.IplImage_widthStep_set)
+    def __del__(self, destroy=_cv.delete_IplImage):
+        try:
+            if self.thisown: destroy(self)
+        except: pass
     def imageData_set(*args): return _cv.IplImage_imageData_set(*args)
     def imageData_get(*args): return _cv.IplImage_imageData_get(*args)
     def __init__(self, *args):
         _swig_setattr(self, IplImage, 'this', _cv.new_IplImage(*args))
         _swig_setattr(self, IplImage, 'thisown', 1)
-    def __del__(self, destroy=_cv.delete_IplImage):
-        try:
-            if self.thisown: destroy(self)
-        except: pass
 
 class IplImagePtr(IplImage):
     def __init__(self, this):
@@ -577,13 +568,13 @@ class IplConvKernel(_object):
     __swig_setmethods__["nShiftR"] = _cv.IplConvKernel_nShiftR_set
     __swig_getmethods__["nShiftR"] = _cv.IplConvKernel_nShiftR_get
     if _newclass:nShiftR = property(_cv.IplConvKernel_nShiftR_get, _cv.IplConvKernel_nShiftR_set)
-    def __init__(self, *args):
-        _swig_setattr(self, IplConvKernel, 'this', _cv.new_IplConvKernel(*args))
-        _swig_setattr(self, IplConvKernel, 'thisown', 1)
     def __del__(self, destroy=_cv.delete_IplConvKernel):
         try:
             if self.thisown: destroy(self)
         except: pass
+    def __init__(self, *args):
+        _swig_setattr(self, IplConvKernel, 'this', _cv.new_IplConvKernel(*args))
+        _swig_setattr(self, IplConvKernel, 'thisown', 1)
 
 class IplConvKernelPtr(IplConvKernel):
     def __init__(self, this):
@@ -634,6 +625,7 @@ class CvMat(_object):
     __setattr__ = lambda self, name, value: _swig_setattr(self, CvMat, name, value)
     __swig_getmethods__ = {}
     __getattr__ = lambda self, name: _swig_getattr(self, CvMat, name)
+    def __init__(self): raise RuntimeError, "No constructor defined"
     def __repr__(self):
         return "<C CvMat instance at %s>" % (self.this,)
     __swig_setmethods__["type"] = _cv.CvMat_type_set
@@ -653,9 +645,6 @@ class CvMat(_object):
     if _newclass:cols = property(_cv.CvMat_cols_get, _cv.CvMat_cols_set)
     __swig_getmethods__["data"] = _cv.CvMat_data_get
     if _newclass:data = property(_cv.CvMat_data_get)
-    def __init__(self, *args):
-        _swig_setattr(self, CvMat, 'this', _cv.new_CvMat(*args))
-        _swig_setattr(self, CvMat, 'thisown', 1)
     def __del__(self, destroy=_cv.delete_CvMat):
         try:
             if self.thisown: destroy(self)
@@ -718,6 +707,7 @@ class CvMatND(_object):
     __setattr__ = lambda self, name, value: _swig_setattr(self, CvMatND, name, value)
     __swig_getmethods__ = {}
     __getattr__ = lambda self, name: _swig_getattr(self, CvMatND, name)
+    def __init__(self): raise RuntimeError, "No constructor defined"
     def __repr__(self):
         return "<C CvMatND instance at %s>" % (self.this,)
     __swig_setmethods__["type"] = _cv.CvMatND_type_set
@@ -733,9 +723,6 @@ class CvMatND(_object):
     if _newclass:dim = property(_cv.CvMatND_dim_get)
     __swig_getmethods__["data"] = _cv.CvMatND_data_get
     if _newclass:data = property(_cv.CvMatND_data_get)
-    def __init__(self, *args):
-        _swig_setattr(self, CvMatND, 'this', _cv.new_CvMatND(*args))
-        _swig_setattr(self, CvMatND, 'thisown', 1)
     def __del__(self, destroy=_cv.delete_CvMatND):
         try:
             if self.thisown: destroy(self)
@@ -818,6 +805,7 @@ class CvSparseMat(_object):
     __setattr__ = lambda self, name, value: _swig_setattr(self, CvSparseMat, name, value)
     __swig_getmethods__ = {}
     __getattr__ = lambda self, name: _swig_getattr(self, CvSparseMat, name)
+    def __init__(self): raise RuntimeError, "No constructor defined"
     def __repr__(self):
         return "<C CvSparseMat instance at %s>" % (self.this,)
     __swig_setmethods__["type"] = _cv.CvSparseMat_type_set
@@ -847,9 +835,6 @@ class CvSparseMat(_object):
     __swig_setmethods__["size"] = _cv.CvSparseMat_size_set
     __swig_getmethods__["size"] = _cv.CvSparseMat_size_get
     if _newclass:size = property(_cv.CvSparseMat_size_get, _cv.CvSparseMat_size_set)
-    def __init__(self, *args):
-        _swig_setattr(self, CvSparseMat, 'this', _cv.new_CvSparseMat(*args))
-        _swig_setattr(self, CvSparseMat, 'thisown', 1)
     def __del__(self, destroy=_cv.delete_CvSparseMat):
         try:
             if self.thisown: destroy(self)
@@ -926,6 +911,7 @@ class CvHistogram(_object):
     __setattr__ = lambda self, name, value: _swig_setattr(self, CvHistogram, name, value)
     __swig_getmethods__ = {}
     __getattr__ = lambda self, name: _swig_getattr(self, CvHistogram, name)
+    def __init__(self): raise RuntimeError, "No constructor defined"
     def __repr__(self):
         return "<C CvHistogram instance at %s>" % (self.this,)
     __swig_setmethods__["type"] = _cv.CvHistogram_type_set
@@ -943,9 +929,6 @@ class CvHistogram(_object):
     __swig_setmethods__["mat"] = _cv.CvHistogram_mat_set
     __swig_getmethods__["mat"] = _cv.CvHistogram_mat_get
     if _newclass:mat = property(_cv.CvHistogram_mat_get, _cv.CvHistogram_mat_set)
-    def __init__(self, *args):
-        _swig_setattr(self, CvHistogram, 'this', _cv.new_CvHistogram(*args))
-        _swig_setattr(self, CvHistogram, 'thisown', 1)
     def __del__(self, destroy=_cv.delete_CvHistogram):
         try:
             if self.thisown: destroy(self)
@@ -1376,6 +1359,7 @@ class CvMemStorage(_object):
     __setattr__ = lambda self, name, value: _swig_setattr(self, CvMemStorage, name, value)
     __swig_getmethods__ = {}
     __getattr__ = lambda self, name: _swig_getattr(self, CvMemStorage, name)
+    def __init__(self): raise RuntimeError, "No constructor defined"
     def __repr__(self):
         return "<C CvMemStorage instance at %s>" % (self.this,)
     __swig_setmethods__["signature"] = _cv.CvMemStorage_signature_set
@@ -1396,9 +1380,6 @@ class CvMemStorage(_object):
     __swig_setmethods__["free_space"] = _cv.CvMemStorage_free_space_set
     __swig_getmethods__["free_space"] = _cv.CvMemStorage_free_space_get
     if _newclass:free_space = property(_cv.CvMemStorage_free_space_get, _cv.CvMemStorage_free_space_set)
-    def __init__(self, *args):
-        _swig_setattr(self, CvMemStorage, 'this', _cv.new_CvMemStorage(*args))
-        _swig_setattr(self, CvMemStorage, 'thisown', 1)
     def __del__(self, destroy=_cv.delete_CvMemStorage):
         try:
             if self.thisown: destroy(self)
@@ -2772,6 +2753,7 @@ class CvGraphScanner(_object):
     __setattr__ = lambda self, name, value: _swig_setattr(self, CvGraphScanner, name, value)
     __swig_getmethods__ = {}
     __getattr__ = lambda self, name: _swig_getattr(self, CvGraphScanner, name)
+    def __init__(self): raise RuntimeError, "No constructor defined"
     def __repr__(self):
         return "<C CvGraphScanner instance at %s>" % (self.this,)
     __swig_setmethods__["vtx"] = _cv.CvGraphScanner_vtx_set
@@ -2795,9 +2777,6 @@ class CvGraphScanner(_object):
     __swig_setmethods__["mask"] = _cv.CvGraphScanner_mask_set
     __swig_getmethods__["mask"] = _cv.CvGraphScanner_mask_get
     if _newclass:mask = property(_cv.CvGraphScanner_mask_get, _cv.CvGraphScanner_mask_set)
-    def __init__(self, *args):
-        _swig_setattr(self, CvGraphScanner, 'this', _cv.new_CvGraphScanner(*args))
-        _swig_setattr(self, CvGraphScanner, 'thisown', 1)
     def __del__(self, destroy=_cv.delete_CvGraphScanner):
         try:
             if self.thisown: destroy(self)
@@ -3606,6 +3585,7 @@ class CvConDensation(_object):
     __setattr__ = lambda self, name, value: _swig_setattr(self, CvConDensation, name, value)
     __swig_getmethods__ = {}
     __getattr__ = lambda self, name: _swig_getattr(self, CvConDensation, name)
+    def __init__(self): raise RuntimeError, "No constructor defined"
     def __repr__(self):
         return "<C CvConDensation instance at %s>" % (self.this,)
     __swig_setmethods__["MP"] = _cv.CvConDensation_MP_set
@@ -3644,9 +3624,6 @@ class CvConDensation(_object):
     __swig_setmethods__["RandS"] = _cv.CvConDensation_RandS_set
     __swig_getmethods__["RandS"] = _cv.CvConDensation_RandS_get
     if _newclass:RandS = property(_cv.CvConDensation_RandS_get, _cv.CvConDensation_RandS_set)
-    def __init__(self, *args):
-        _swig_setattr(self, CvConDensation, 'this', _cv.new_CvConDensation(*args))
-        _swig_setattr(self, CvConDensation, 'thisown', 1)
     def __del__(self, destroy=_cv.delete_CvConDensation):
         try:
             if self.thisown: destroy(self)
@@ -3664,6 +3641,7 @@ class CvKalman(_object):
     __setattr__ = lambda self, name, value: _swig_setattr(self, CvKalman, name, value)
     __swig_getmethods__ = {}
     __getattr__ = lambda self, name: _swig_getattr(self, CvKalman, name)
+    def __init__(self): raise RuntimeError, "No constructor defined"
     def __repr__(self):
         return "<C CvKalman instance at %s>" % (self.this,)
     __swig_setmethods__["MP"] = _cv.CvKalman_MP_set
@@ -3753,9 +3731,6 @@ class CvKalman(_object):
     __swig_setmethods__["temp5"] = _cv.CvKalman_temp5_set
     __swig_getmethods__["temp5"] = _cv.CvKalman_temp5_get
     if _newclass:temp5 = property(_cv.CvKalman_temp5_get, _cv.CvKalman_temp5_set)
-    def __init__(self, *args):
-        _swig_setattr(self, CvKalman, 'this', _cv.new_CvKalman(*args))
-        _swig_setattr(self, CvKalman, 'thisown', 1)
     def __del__(self, destroy=_cv.delete_CvKalman):
         try:
             if self.thisown: destroy(self)
@@ -3908,6 +3883,7 @@ class CvHaarClassifierCascade(_object):
     __setattr__ = lambda self, name, value: _swig_setattr(self, CvHaarClassifierCascade, name, value)
     __swig_getmethods__ = {}
     __getattr__ = lambda self, name: _swig_getattr(self, CvHaarClassifierCascade, name)
+    def __init__(self): raise RuntimeError, "No constructor defined"
     def __repr__(self):
         return "<C CvHaarClassifierCascade instance at %s>" % (self.this,)
     __swig_setmethods__["flags"] = _cv.CvHaarClassifierCascade_flags_set
@@ -3931,9 +3907,6 @@ class CvHaarClassifierCascade(_object):
     __swig_setmethods__["hid_cascade"] = _cv.CvHaarClassifierCascade_hid_cascade_set
     __swig_getmethods__["hid_cascade"] = _cv.CvHaarClassifierCascade_hid_cascade_get
     if _newclass:hid_cascade = property(_cv.CvHaarClassifierCascade_hid_cascade_get, _cv.CvHaarClassifierCascade_hid_cascade_set)
-    def __init__(self, *args):
-        _swig_setattr(self, CvHaarClassifierCascade, 'this', _cv.new_CvHaarClassifierCascade(*args))
-        _swig_setattr(self, CvHaarClassifierCascade, 'thisown', 1)
     def __del__(self, destroy=_cv.delete_CvHaarClassifierCascade):
         try:
             if self.thisown: destroy(self)
@@ -4286,6 +4259,15 @@ function_ptr_generator = _cv.function_ptr_generator
 void_ptr_generator = _cv.void_ptr_generator
 
 void_ptrptr_generator = _cv.void_ptrptr_generator
+__doc__ = """
+OpenCV is the Intel Open CV library, an open source effort to provide
+computer vision algorithms for standard PC hardware.
+
+This wrapper was semi-automatically created from the C/C++ headers and therefore
+contains no Python documentation. Because all identifiers are identical to their
+C/C++ counterparts, you can consult the standard manuals that come with OpenCV.
+"""
+
 # this tells OpenCV not to call exit() on errors but throw a python exception instead
 cvRedirectError(function_ptr_generator(), void_ptr_generator(), void_ptrptr_generator())
 

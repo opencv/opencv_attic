@@ -45,9 +45,11 @@
 //             Institute of Communications Engineering, RWTH Aachen University
 
 
-%module highgui
+%include "../general/highgui.i"
 
-%pythoncode %{
+%pythoncode 
+%{
+
 __doc__ = """HighGUI provides minimalistic user interface parts and video input/output.
 
 Dependent on the platform it was compiled on, this library provides methods
@@ -58,33 +60,5 @@ This wrapper was semi-automatically created from the C/C++ headers and therefore
 contains no Python documentation. Because all identifiers are identical to their
 C/C++ counterparts, you can consult the standard manuals that come with OpenCV.
 """
+
 %}
-
-
-%{
-#include "highgui.h"
-%}
-
-%include "typemaps.i"
-
-%newobject cvLoadImage;
-
-
-%typemap(newfree) CvCapture *
-{
-  cvReleaseCapture(& $1);
-}
-
-%newobject cvCaptureFromFile;
-%newobject cvCaptureFromCAM;
-
-
-%typemap(newfree) CvVideoWriter *
-{
-  cvReleaseVideoWriter(& $1);
-}
-
-%newobject cvCreateVideoWriter;
-
-
-%include "highgui.h"

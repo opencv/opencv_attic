@@ -1017,7 +1017,6 @@ static swig_type_info *swig_types[138];
 
 
 #include "cv.h"
-#include "error.h"
 
 
 SWIGSTATICINLINE(PyObject *)
@@ -1270,6 +1269,7 @@ SWIG_Check_int(PyObject* obj)
   return SWIG_AsVal_int(obj, (int*)0);
 }
 
+void delete_IplImage(IplImage *self){ IplImage       * dummy = self; cvReleaseImage              (& dummy); }
 void IplImage_imageData_set(IplImage *self,PyObject *object){
         char* py_string = PyString_AsString(object);
         
@@ -1330,6 +1330,7 @@ PyObject *IplImage_imageData_get(IplImage *self){
             return 0;
         return PyString_FromStringAndSize(self->imageData, self->imageSize);
     }
+void delete_IplConvKernel(IplConvKernel *self){ IplConvKernel  * dummy = self; cvReleaseStructuringElement (& dummy); }
 
 typedef union {
         uchar* ptr;
@@ -1340,6 +1341,7 @@ typedef union {
     } CvMat_data;
 
 
+void delete_CvMat(CvMat *self){ CvMat          * dummy = self; cvReleaseMat                (& dummy); }
 
 typedef struct {
         int size;
@@ -1357,6 +1359,8 @@ typedef union {
     } CvMatND_data;
 
 
+void delete_CvMatND(CvMatND *self){ CvMatND        * dummy = self; cvReleaseMatND              (& dummy); }
+void delete_CvSparseMat(CvSparseMat *self){ CvSparseMat    * dummy = self; cvReleaseSparseMat          (& dummy); }
 
 SWIGSTATICINLINE(int)
   SWIG_CheckUnsignedLongInRange(unsigned long value,
@@ -1452,6 +1456,7 @@ SWIG_Check_unsigned_SS_int(PyObject* obj)
   return SWIG_AsVal_unsigned_SS_int(obj, (unsigned int*)0);
 }
 
+void delete_CvHistogram(CvHistogram *self){ CvHistogram    * dummy = self; cvReleaseHist               (& dummy); }
 
 #include <float.h>
 SWIGSTATICINLINE(int)
@@ -1544,6 +1549,7 @@ SWIG_Check_unsigned_SS_long(PyObject* obj)
   return SWIG_AsVal_unsigned_SS_long(obj, (unsigned long*)0);
 }
 
+void delete_CvMemStorage(CvMemStorage *self){ CvMemStorage   * dummy = self; cvReleaseMemStorage         (& dummy); }
 
 /* returns SWIG_OLDOBJ if the input is a raw char*, SWIG_PYSTR if is a PyString */
 SWIGSTATIC(int)
@@ -1598,6 +1604,7 @@ typedef union {
     } CvFileNode_data;
 
 
+void delete_CvGraphScanner(CvGraphScanner *self){ CvGraphScanner * dummy = self; cvReleaseGraphScanner       (& dummy); }
 
 SWIGSTATICINLINE(PyObject* )
   SWIG_From_long_SS_long(long long value)
@@ -1685,12 +1692,18 @@ SWIGSTATICINLINE(PyObject*)
   return PyString_FromStringAndSize(&c,1);
 }
 
+void delete_CvConDensation(CvConDensation *self){ CvConDensation * dummy = self; cvReleaseConDensation       (& dummy); }
+void delete_CvKalman(CvKalman *self){ CvKalman       * dummy = self; cvReleaseKalman             (& dummy); }
 
 typedef struct {
         CvRect r;
         float weight;
     } CvHaarFeature_rect;
 
+
+void delete_CvHaarClassifierCascade(CvHaarClassifierCascade *self){ CvHaarClassifierCascade * dummy = self; cvReleaseHaarClassifierCascade  (& dummy); }
+
+#include "error.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -2324,6 +2337,30 @@ static PyObject *_wrap_IplImage_widthStep_get(PyObject *, PyObject *args) {
 }
 
 
+static PyObject *_wrap_delete_IplImage(PyObject *, PyObject *args) {
+    PyObject *resultobj;
+    IplImage *arg1 = (IplImage *) 0 ;
+    PyObject * obj0 = 0 ;
+    
+    if(!PyArg_ParseTuple(args,(char *)"O:delete_IplImage",&obj0)) goto fail;
+    if ((SWIG_ConvertPtr(obj0,(void **)(&arg1),SWIGTYPE_p_IplImage,
+    SWIG_POINTER_EXCEPTION | 0)) == -1) SWIG_fail;
+    {
+        try {
+            delete_IplImage(arg1);
+        } 
+        catch (...) 
+        {
+            return NULL;
+        } 
+    }
+    Py_INCREF(Py_None); resultobj = Py_None;
+    return resultobj;
+    fail:
+    return NULL;
+}
+
+
 static PyObject *_wrap_IplImage_imageData_set(PyObject *, PyObject *args) {
     PyObject *resultobj;
     IplImage *arg1 = (IplImage *) 0 ;
@@ -2391,33 +2428,6 @@ static PyObject *_wrap_new_IplImage(PyObject *, PyObject *args) {
         } 
     }
     resultobj = SWIG_NewPointerObj((void*)(result), SWIGTYPE_p_IplImage, 1);
-    {
-        cvReleaseImage(& result);
-    }
-    return resultobj;
-    fail:
-    return NULL;
-}
-
-
-static PyObject *_wrap_delete_IplImage(PyObject *, PyObject *args) {
-    PyObject *resultobj;
-    IplImage *arg1 = (IplImage *) 0 ;
-    PyObject * obj0 = 0 ;
-    
-    if(!PyArg_ParseTuple(args,(char *)"O:delete_IplImage",&obj0)) goto fail;
-    if ((SWIG_ConvertPtr(obj0,(void **)(&arg1),SWIGTYPE_p_IplImage,
-    SWIG_POINTER_EXCEPTION | 0)) == -1) SWIG_fail;
-    {
-        try {
-            delete arg1;
-        } 
-        catch (...) 
-        {
-            return NULL;
-        } 
-    }
-    Py_INCREF(Py_None); resultobj = Py_None;
     return resultobj;
     fail:
     return NULL;
@@ -2912,6 +2922,30 @@ static PyObject *_wrap_IplConvKernel_nShiftR_get(PyObject *, PyObject *args) {
 }
 
 
+static PyObject *_wrap_delete_IplConvKernel(PyObject *, PyObject *args) {
+    PyObject *resultobj;
+    IplConvKernel *arg1 = (IplConvKernel *) 0 ;
+    PyObject * obj0 = 0 ;
+    
+    if(!PyArg_ParseTuple(args,(char *)"O:delete_IplConvKernel",&obj0)) goto fail;
+    if ((SWIG_ConvertPtr(obj0,(void **)(&arg1),SWIGTYPE_p_IplConvKernel,
+    SWIG_POINTER_EXCEPTION | 0)) == -1) SWIG_fail;
+    {
+        try {
+            delete_IplConvKernel(arg1);
+        } 
+        catch (...) 
+        {
+            return NULL;
+        } 
+    }
+    Py_INCREF(Py_None); resultobj = Py_None;
+    return resultobj;
+    fail:
+    return NULL;
+}
+
+
 static PyObject *_wrap_new_IplConvKernel(PyObject *, PyObject *args) {
     PyObject *resultobj;
     IplConvKernel *result;
@@ -2927,33 +2961,6 @@ static PyObject *_wrap_new_IplConvKernel(PyObject *, PyObject *args) {
         } 
     }
     resultobj = SWIG_NewPointerObj((void*)(result), SWIGTYPE_p_IplConvKernel, 1);
-    {
-        cvReleaseStructuringElement(& result);
-    }
-    return resultobj;
-    fail:
-    return NULL;
-}
-
-
-static PyObject *_wrap_delete_IplConvKernel(PyObject *, PyObject *args) {
-    PyObject *resultobj;
-    IplConvKernel *arg1 = (IplConvKernel *) 0 ;
-    PyObject * obj0 = 0 ;
-    
-    if(!PyArg_ParseTuple(args,(char *)"O:delete_IplConvKernel",&obj0)) goto fail;
-    if ((SWIG_ConvertPtr(obj0,(void **)(&arg1),SWIGTYPE_p_IplConvKernel,
-    SWIG_POINTER_EXCEPTION | 0)) == -1) SWIG_fail;
-    {
-        try {
-            delete arg1;
-        } 
-        catch (...) 
-        {
-            return NULL;
-        } 
-    }
-    Py_INCREF(Py_None); resultobj = Py_None;
     return resultobj;
     fail:
     return NULL;
@@ -3427,30 +3434,6 @@ static PyObject *_wrap_CvMat_data_get(PyObject *, PyObject *args) {
 }
 
 
-static PyObject *_wrap_new_CvMat(PyObject *, PyObject *args) {
-    PyObject *resultobj;
-    CvMat *result;
-    
-    if(!PyArg_ParseTuple(args,(char *)":new_CvMat")) goto fail;
-    {
-        try {
-            result = (CvMat *)new CvMat();
-        } 
-        catch (...) 
-        {
-            return NULL;
-        } 
-    }
-    resultobj = SWIG_NewPointerObj((void*)(result), SWIGTYPE_p_CvMat, 1);
-    {
-        cvReleaseMat(& result);
-    }
-    return resultobj;
-    fail:
-    return NULL;
-}
-
-
 static PyObject *_wrap_delete_CvMat(PyObject *, PyObject *args) {
     PyObject *resultobj;
     CvMat *arg1 = (CvMat *) 0 ;
@@ -3461,7 +3444,7 @@ static PyObject *_wrap_delete_CvMat(PyObject *, PyObject *args) {
     SWIG_POINTER_EXCEPTION | 0)) == -1) SWIG_fail;
     {
         try {
-            delete arg1;
+            delete_CvMat(arg1);
         } 
         catch (...) 
         {
@@ -4016,30 +3999,6 @@ static PyObject *_wrap_CvMatND_data_get(PyObject *, PyObject *args) {
 }
 
 
-static PyObject *_wrap_new_CvMatND(PyObject *, PyObject *args) {
-    PyObject *resultobj;
-    CvMatND *result;
-    
-    if(!PyArg_ParseTuple(args,(char *)":new_CvMatND")) goto fail;
-    {
-        try {
-            result = (CvMatND *)new CvMatND();
-        } 
-        catch (...) 
-        {
-            return NULL;
-        } 
-    }
-    resultobj = SWIG_NewPointerObj((void*)(result), SWIGTYPE_p_CvMatND, 1);
-    {
-        cvReleaseMatND(& result);
-    }
-    return resultobj;
-    fail:
-    return NULL;
-}
-
-
 static PyObject *_wrap_delete_CvMatND(PyObject *, PyObject *args) {
     PyObject *resultobj;
     CvMatND *arg1 = (CvMatND *) 0 ;
@@ -4050,7 +4009,7 @@ static PyObject *_wrap_delete_CvMatND(PyObject *, PyObject *args) {
     SWIG_POINTER_EXCEPTION | 0)) == -1) SWIG_fail;
     {
         try {
-            delete arg1;
+            delete_CvMatND(arg1);
         } 
         catch (...) 
         {
@@ -4802,30 +4761,6 @@ static PyObject *_wrap_CvSparseMat_size_get(PyObject *, PyObject *args) {
 }
 
 
-static PyObject *_wrap_new_CvSparseMat(PyObject *, PyObject *args) {
-    PyObject *resultobj;
-    CvSparseMat *result;
-    
-    if(!PyArg_ParseTuple(args,(char *)":new_CvSparseMat")) goto fail;
-    {
-        try {
-            result = (CvSparseMat *)new CvSparseMat();
-        } 
-        catch (...) 
-        {
-            return NULL;
-        } 
-    }
-    resultobj = SWIG_NewPointerObj((void*)(result), SWIGTYPE_p_CvSparseMat, 1);
-    {
-        cvReleaseSparseMat(& result);
-    }
-    return resultobj;
-    fail:
-    return NULL;
-}
-
-
 static PyObject *_wrap_delete_CvSparseMat(PyObject *, PyObject *args) {
     PyObject *resultobj;
     CvSparseMat *arg1 = (CvSparseMat *) 0 ;
@@ -4836,7 +4771,7 @@ static PyObject *_wrap_delete_CvSparseMat(PyObject *, PyObject *args) {
     SWIG_POINTER_EXCEPTION | 0)) == -1) SWIG_fail;
     {
         try {
-            delete arg1;
+            delete_CvSparseMat(arg1);
         } 
         catch (...) 
         {
@@ -5363,30 +5298,6 @@ static PyObject *_wrap_CvHistogram_mat_get(PyObject *, PyObject *args) {
 }
 
 
-static PyObject *_wrap_new_CvHistogram(PyObject *, PyObject *args) {
-    PyObject *resultobj;
-    CvHistogram *result;
-    
-    if(!PyArg_ParseTuple(args,(char *)":new_CvHistogram")) goto fail;
-    {
-        try {
-            result = (CvHistogram *)new CvHistogram();
-        } 
-        catch (...) 
-        {
-            return NULL;
-        } 
-    }
-    resultobj = SWIG_NewPointerObj((void*)(result), SWIGTYPE_p_CvHistogram, 1);
-    {
-        cvReleaseHist(& result);
-    }
-    return resultobj;
-    fail:
-    return NULL;
-}
-
-
 static PyObject *_wrap_delete_CvHistogram(PyObject *, PyObject *args) {
     PyObject *resultobj;
     CvHistogram *arg1 = (CvHistogram *) 0 ;
@@ -5397,7 +5308,7 @@ static PyObject *_wrap_delete_CvHistogram(PyObject *, PyObject *args) {
     SWIG_POINTER_EXCEPTION | 0)) == -1) SWIG_fail;
     {
         try {
-            delete arg1;
+            delete_CvHistogram(arg1);
         } 
         catch (...) 
         {
@@ -8117,30 +8028,6 @@ static PyObject *_wrap_CvMemStorage_free_space_get(PyObject *, PyObject *args) {
 }
 
 
-static PyObject *_wrap_new_CvMemStorage(PyObject *, PyObject *args) {
-    PyObject *resultobj;
-    CvMemStorage *result;
-    
-    if(!PyArg_ParseTuple(args,(char *)":new_CvMemStorage")) goto fail;
-    {
-        try {
-            result = (CvMemStorage *)new CvMemStorage();
-        } 
-        catch (...) 
-        {
-            return NULL;
-        } 
-    }
-    resultobj = SWIG_NewPointerObj((void*)(result), SWIGTYPE_p_CvMemStorage, 1);
-    {
-        cvReleaseMemStorage(& result);
-    }
-    return resultobj;
-    fail:
-    return NULL;
-}
-
-
 static PyObject *_wrap_delete_CvMemStorage(PyObject *, PyObject *args) {
     PyObject *resultobj;
     CvMemStorage *arg1 = (CvMemStorage *) 0 ;
@@ -8151,7 +8038,7 @@ static PyObject *_wrap_delete_CvMemStorage(PyObject *, PyObject *args) {
     SWIG_POINTER_EXCEPTION | 0)) == -1) SWIG_fail;
     {
         try {
-            delete arg1;
+            delete_CvMemStorage(arg1);
         } 
         catch (...) 
         {
@@ -15235,9 +15122,6 @@ static PyObject *_wrap_cvCreateImageHeader(PyObject *, PyObject *args) {
         } 
     }
     resultobj = SWIG_NewPointerObj((void*)(result), SWIGTYPE_p_IplImage, 1);
-    {
-        cvReleaseImage(& result);
-    }
     return resultobj;
     fail:
     return NULL;
@@ -15320,9 +15204,6 @@ static PyObject *_wrap_cvCreateImage(PyObject *, PyObject *args) {
         } 
     }
     resultobj = SWIG_NewPointerObj((void*)(result), SWIGTYPE_p_IplImage, 1);
-    {
-        cvReleaseImage(& result);
-    }
     return resultobj;
     fail:
     return NULL;
@@ -15396,9 +15277,6 @@ static PyObject *_wrap_cvCloneImage(PyObject *, PyObject *args) {
         } 
     }
     resultobj = SWIG_NewPointerObj((void*)(result), SWIGTYPE_p_IplImage, 1);
-    {
-        cvReleaseImage(& result);
-    }
     return resultobj;
     fail:
     return NULL;
@@ -15568,9 +15446,6 @@ static PyObject *_wrap_cvCreateMatHeader(PyObject *, PyObject *args) {
         } 
     }
     resultobj = SWIG_NewPointerObj((void*)(result), SWIGTYPE_p_CvMat, 1);
-    {
-        cvReleaseMat(& result);
-    }
     return resultobj;
     fail:
     return NULL;
@@ -15648,9 +15523,6 @@ static PyObject *_wrap_cvCreateMat(PyObject *, PyObject *args) {
         } 
     }
     resultobj = SWIG_NewPointerObj((void*)(result), SWIGTYPE_p_CvMat, 1);
-    {
-        cvReleaseMat(& result);
-    }
     return resultobj;
     fail:
     return NULL;
@@ -15767,9 +15639,6 @@ static PyObject *_wrap_cvCloneMat(PyObject *, PyObject *args) {
         } 
     }
     resultobj = SWIG_NewPointerObj((void*)(result), SWIGTYPE_p_CvMat, 1);
-    {
-        cvReleaseMat(& result);
-    }
     return resultobj;
     fail:
     return NULL;
@@ -15814,9 +15683,6 @@ static PyObject *_wrap_cvGetSubRect(PyObject *, PyObject *args) {
         } 
     }
     resultobj = SWIG_NewPointerObj((void*)(result), SWIGTYPE_p_CvMat, 1);
-    {
-        cvReleaseMat(& result);
-    }
     return resultobj;
     fail:
     return NULL;
@@ -15867,9 +15733,6 @@ static PyObject *_wrap_cvGetRows(PyObject *, PyObject *args) {
         } 
     }
     resultobj = SWIG_NewPointerObj((void*)(result), SWIGTYPE_p_CvMat, 1);
-    {
-        cvReleaseMat(& result);
-    }
     return resultobj;
     fail:
     return NULL;
@@ -15912,9 +15775,6 @@ static PyObject *_wrap_cvGetRow(PyObject *, PyObject *args) {
         } 
     }
     resultobj = SWIG_NewPointerObj((void*)(result), SWIGTYPE_p_CvMat, 1);
-    {
-        cvReleaseMat(& result);
-    }
     return resultobj;
     fail:
     return NULL;
@@ -15961,9 +15821,6 @@ static PyObject *_wrap_cvGetCols(PyObject *, PyObject *args) {
         } 
     }
     resultobj = SWIG_NewPointerObj((void*)(result), SWIGTYPE_p_CvMat, 1);
-    {
-        cvReleaseMat(& result);
-    }
     return resultobj;
     fail:
     return NULL;
@@ -16006,9 +15863,6 @@ static PyObject *_wrap_cvGetCol(PyObject *, PyObject *args) {
         } 
     }
     resultobj = SWIG_NewPointerObj((void*)(result), SWIGTYPE_p_CvMat, 1);
-    {
-        cvReleaseMat(& result);
-    }
     return resultobj;
     fail:
     return NULL;
@@ -16051,9 +15905,6 @@ static PyObject *_wrap_cvGetDiag(PyObject *, PyObject *args) {
         } 
     }
     resultobj = SWIG_NewPointerObj((void*)(result), SWIGTYPE_p_CvMat, 1);
-    {
-        cvReleaseMat(& result);
-    }
     return resultobj;
     fail:
     return NULL;
@@ -16186,9 +16037,6 @@ static PyObject *_wrap_cvCreateMatND(PyObject *, PyObject *args) {
         } 
     }
     resultobj = SWIG_NewPointerObj((void*)(result), SWIGTYPE_p_CvMatND, 1);
-    {
-        cvReleaseMatND(& result);
-    }
     return resultobj;
     fail:
     return NULL;
@@ -16278,9 +16126,6 @@ static PyObject *_wrap_cvCloneMatND(PyObject *, PyObject *args) {
         } 
     }
     resultobj = SWIG_NewPointerObj((void*)(result), SWIGTYPE_p_CvMatND, 1);
-    {
-        cvReleaseMatND(& result);
-    }
     return resultobj;
     fail:
     return NULL;
@@ -16314,9 +16159,6 @@ static PyObject *_wrap_cvCreateSparseMat(PyObject *, PyObject *args) {
         } 
     }
     resultobj = SWIG_NewPointerObj((void*)(result), SWIGTYPE_p_CvSparseMat, 1);
-    {
-        cvReleaseSparseMat(& result);
-    }
     return resultobj;
     fail:
     return NULL;
@@ -16366,9 +16208,6 @@ static PyObject *_wrap_cvCloneSparseMat(PyObject *, PyObject *args) {
         } 
     }
     resultobj = SWIG_NewPointerObj((void*)(result), SWIGTYPE_p_CvSparseMat, 1);
-    {
-        cvReleaseSparseMat(& result);
-    }
     return resultobj;
     fail:
     return NULL;
@@ -22382,9 +22221,6 @@ static PyObject *_wrap_cvCreateMemStorage(PyObject *, PyObject *args) {
         } 
     }
     resultobj = SWIG_NewPointerObj((void*)(result), SWIGTYPE_p_CvMemStorage, 1);
-    {
-        cvReleaseMemStorage(& result);
-    }
     return resultobj;
     fail:
     return NULL;
@@ -22410,9 +22246,6 @@ static PyObject *_wrap_cvCreateChildMemStorage(PyObject *, PyObject *args) {
         } 
     }
     resultobj = SWIG_NewPointerObj((void*)(result), SWIGTYPE_p_CvMemStorage, 1);
-    {
-        cvReleaseMemStorage(& result);
-    }
     return resultobj;
     fail:
     return NULL;
@@ -24497,30 +24330,6 @@ static PyObject *_wrap_CvGraphScanner_mask_get(PyObject *, PyObject *args) {
 }
 
 
-static PyObject *_wrap_new_CvGraphScanner(PyObject *, PyObject *args) {
-    PyObject *resultobj;
-    CvGraphScanner *result;
-    
-    if(!PyArg_ParseTuple(args,(char *)":new_CvGraphScanner")) goto fail;
-    {
-        try {
-            result = (CvGraphScanner *)new CvGraphScanner();
-        } 
-        catch (...) 
-        {
-            return NULL;
-        } 
-    }
-    resultobj = SWIG_NewPointerObj((void*)(result), SWIGTYPE_p_CvGraphScanner, 1);
-    {
-        cvReleaseGraphScanner(& result);
-    }
-    return resultobj;
-    fail:
-    return NULL;
-}
-
-
 static PyObject *_wrap_delete_CvGraphScanner(PyObject *, PyObject *args) {
     PyObject *resultobj;
     CvGraphScanner *arg1 = (CvGraphScanner *) 0 ;
@@ -24531,7 +24340,7 @@ static PyObject *_wrap_delete_CvGraphScanner(PyObject *, PyObject *args) {
     SWIG_POINTER_EXCEPTION | 0)) == -1) SWIG_fail;
     {
         try {
-            delete arg1;
+            delete_CvGraphScanner(arg1);
         } 
         catch (...) 
         {
@@ -24579,9 +24388,6 @@ static PyObject *_wrap_cvCreateGraphScanner(PyObject *, PyObject *args) {
         } 
     }
     resultobj = SWIG_NewPointerObj((void*)(result), SWIGTYPE_p_CvGraphScanner, 1);
-    {
-        cvReleaseGraphScanner(& result);
-    }
     return resultobj;
     fail:
     return NULL;
@@ -26842,9 +26648,6 @@ static PyObject *_wrap_cvOpenFileStorage(PyObject *, PyObject *args) {
         } 
     }
     resultobj = SWIG_NewPointerObj((void*)(result), SWIGTYPE_p_CvFileStorage, 1);
-    {
-        cvReleaseFileStorage(& result);
-    }
     return resultobj;
     fail:
     return NULL;
@@ -32874,30 +32677,6 @@ static PyObject *_wrap_CvConDensation_RandS_get(PyObject *, PyObject *args) {
 }
 
 
-static PyObject *_wrap_new_CvConDensation(PyObject *, PyObject *args) {
-    PyObject *resultobj;
-    CvConDensation *result;
-    
-    if(!PyArg_ParseTuple(args,(char *)":new_CvConDensation")) goto fail;
-    {
-        try {
-            result = (CvConDensation *)new CvConDensation();
-        } 
-        catch (...) 
-        {
-            return NULL;
-        } 
-    }
-    resultobj = SWIG_NewPointerObj((void*)(result), SWIGTYPE_p_CvConDensation, 1);
-    {
-        cvReleaseConDensation(& result);
-    }
-    return resultobj;
-    fail:
-    return NULL;
-}
-
-
 static PyObject *_wrap_delete_CvConDensation(PyObject *, PyObject *args) {
     PyObject *resultobj;
     CvConDensation *arg1 = (CvConDensation *) 0 ;
@@ -32908,7 +32687,7 @@ static PyObject *_wrap_delete_CvConDensation(PyObject *, PyObject *args) {
     SWIG_POINTER_EXCEPTION | 0)) == -1) SWIG_fail;
     {
         try {
-            delete arg1;
+            delete_CvConDensation(arg1);
         } 
         catch (...) 
         {
@@ -34060,30 +33839,6 @@ static PyObject *_wrap_CvKalman_temp5_get(PyObject *, PyObject *args) {
 }
 
 
-static PyObject *_wrap_new_CvKalman(PyObject *, PyObject *args) {
-    PyObject *resultobj;
-    CvKalman *result;
-    
-    if(!PyArg_ParseTuple(args,(char *)":new_CvKalman")) goto fail;
-    {
-        try {
-            result = (CvKalman *)new CvKalman();
-        } 
-        catch (...) 
-        {
-            return NULL;
-        } 
-    }
-    resultobj = SWIG_NewPointerObj((void*)(result), SWIGTYPE_p_CvKalman, 1);
-    {
-        cvReleaseKalman(& result);
-    }
-    return resultobj;
-    fail:
-    return NULL;
-}
-
-
 static PyObject *_wrap_delete_CvKalman(PyObject *, PyObject *args) {
     PyObject *resultobj;
     CvKalman *arg1 = (CvKalman *) 0 ;
@@ -34094,7 +33849,7 @@ static PyObject *_wrap_delete_CvKalman(PyObject *, PyObject *args) {
     SWIG_POINTER_EXCEPTION | 0)) == -1) SWIG_fail;
     {
         try {
-            delete arg1;
+            delete_CvKalman(arg1);
         } 
         catch (...) 
         {
@@ -35199,30 +34954,6 @@ static PyObject *_wrap_CvHaarClassifierCascade_hid_cascade_get(PyObject *, PyObj
 }
 
 
-static PyObject *_wrap_new_CvHaarClassifierCascade(PyObject *, PyObject *args) {
-    PyObject *resultobj;
-    CvHaarClassifierCascade *result;
-    
-    if(!PyArg_ParseTuple(args,(char *)":new_CvHaarClassifierCascade")) goto fail;
-    {
-        try {
-            result = (CvHaarClassifierCascade *)new CvHaarClassifierCascade();
-        } 
-        catch (...) 
-        {
-            return NULL;
-        } 
-    }
-    resultobj = SWIG_NewPointerObj((void*)(result), SWIGTYPE_p_CvHaarClassifierCascade, 1);
-    {
-        cvReleaseHaarClassifierCascade(& result);
-    }
-    return resultobj;
-    fail:
-    return NULL;
-}
-
-
 static PyObject *_wrap_delete_CvHaarClassifierCascade(PyObject *, PyObject *args) {
     PyObject *resultobj;
     CvHaarClassifierCascade *arg1 = (CvHaarClassifierCascade *) 0 ;
@@ -35233,7 +34964,7 @@ static PyObject *_wrap_delete_CvHaarClassifierCascade(PyObject *, PyObject *args
     SWIG_POINTER_EXCEPTION | 0)) == -1) SWIG_fail;
     {
         try {
-            delete arg1;
+            delete_CvHaarClassifierCascade(arg1);
         } 
         catch (...) 
         {
@@ -38413,9 +38144,6 @@ static PyObject *_wrap_cvCreateConDensation(PyObject *, PyObject *args) {
         } 
     }
     resultobj = SWIG_NewPointerObj((void*)(result), SWIGTYPE_p_CvConDensation, 1);
-    {
-        cvReleaseConDensation(& result);
-    }
     return resultobj;
     fail:
     return NULL;
@@ -38529,9 +38257,6 @@ static PyObject *_wrap_cvCreateKalman(PyObject *, PyObject *args) {
         } 
     }
     resultobj = SWIG_NewPointerObj((void*)(result), SWIGTYPE_p_CvKalman, 1);
-    {
-        cvReleaseKalman(& result);
-    }
     return resultobj;
     fail:
     return NULL;
@@ -39795,9 +39520,6 @@ static PyObject *_wrap_cvCreateHist(PyObject *, PyObject *args) {
         } 
     }
     resultobj = SWIG_NewPointerObj((void*)(result), SWIGTYPE_p_CvHistogram, 1);
-    {
-        cvReleaseHist(& result);
-    }
     return resultobj;
     fail:
     return NULL;
@@ -41284,9 +41006,6 @@ static PyObject *_wrap_cvLoadHaarClassifierCascade(PyObject *, PyObject *args) {
         } 
     }
     resultobj = SWIG_NewPointerObj((void*)(result), SWIGTYPE_p_CvHaarClassifierCascade, 1);
-    {
-        cvReleaseHaarClassifierCascade(& result);
-    }
     return resultobj;
     fail:
     return NULL;
@@ -42211,9 +41930,6 @@ static PyObject *_wrap_cvCreatePOSITObject(PyObject *, PyObject *args) {
         } 
     }
     resultobj = SWIG_NewPointerObj((void*)(result), SWIGTYPE_p_CvPOSITObject, 1);
-    {
-        cvReleasePOSITObject(& result);
-    }
     return resultobj;
     fail:
     return NULL;
@@ -42603,10 +42319,10 @@ static PyMethodDef SwigMethods[] = {
 	 { (char *)"IplImage_imageSize_get", _wrap_IplImage_imageSize_get, METH_VARARGS, NULL },
 	 { (char *)"IplImage_widthStep_set", _wrap_IplImage_widthStep_set, METH_VARARGS, NULL },
 	 { (char *)"IplImage_widthStep_get", _wrap_IplImage_widthStep_get, METH_VARARGS, NULL },
+	 { (char *)"delete_IplImage", _wrap_delete_IplImage, METH_VARARGS, NULL },
 	 { (char *)"IplImage_imageData_set", _wrap_IplImage_imageData_set, METH_VARARGS, NULL },
 	 { (char *)"IplImage_imageData_get", _wrap_IplImage_imageData_get, METH_VARARGS, NULL },
 	 { (char *)"new_IplImage", _wrap_new_IplImage, METH_VARARGS, NULL },
-	 { (char *)"delete_IplImage", _wrap_delete_IplImage, METH_VARARGS, NULL },
 	 { (char *)"IplImage_swigregister", IplImage_swigregister, METH_VARARGS, NULL },
 	 { (char *)"IplROI_coi_set", _wrap_IplROI_coi_set, METH_VARARGS, NULL },
 	 { (char *)"IplROI_coi_get", _wrap_IplROI_coi_get, METH_VARARGS, NULL },
@@ -42633,8 +42349,8 @@ static PyMethodDef SwigMethods[] = {
 	 { (char *)"IplConvKernel_values_get", _wrap_IplConvKernel_values_get, METH_VARARGS, NULL },
 	 { (char *)"IplConvKernel_nShiftR_set", _wrap_IplConvKernel_nShiftR_set, METH_VARARGS, NULL },
 	 { (char *)"IplConvKernel_nShiftR_get", _wrap_IplConvKernel_nShiftR_get, METH_VARARGS, NULL },
-	 { (char *)"new_IplConvKernel", _wrap_new_IplConvKernel, METH_VARARGS, NULL },
 	 { (char *)"delete_IplConvKernel", _wrap_delete_IplConvKernel, METH_VARARGS, NULL },
+	 { (char *)"new_IplConvKernel", _wrap_new_IplConvKernel, METH_VARARGS, NULL },
 	 { (char *)"IplConvKernel_swigregister", IplConvKernel_swigregister, METH_VARARGS, NULL },
 	 { (char *)"IplConvKernelFP_nCols_set", _wrap_IplConvKernelFP_nCols_set, METH_VARARGS, NULL },
 	 { (char *)"IplConvKernelFP_nCols_get", _wrap_IplConvKernelFP_nCols_get, METH_VARARGS, NULL },
@@ -42660,7 +42376,6 @@ static PyMethodDef SwigMethods[] = {
 	 { (char *)"CvMat_cols_set", _wrap_CvMat_cols_set, METH_VARARGS, NULL },
 	 { (char *)"CvMat_cols_get", _wrap_CvMat_cols_get, METH_VARARGS, NULL },
 	 { (char *)"CvMat_data_get", _wrap_CvMat_data_get, METH_VARARGS, NULL },
-	 { (char *)"new_CvMat", _wrap_new_CvMat, METH_VARARGS, NULL },
 	 { (char *)"delete_CvMat", _wrap_delete_CvMat, METH_VARARGS, NULL },
 	 { (char *)"CvMat_swigregister", CvMat_swigregister, METH_VARARGS, NULL },
 	 { (char *)"CvMat_data_ptr_set", _wrap_CvMat_data_ptr_set, METH_VARARGS, NULL },
@@ -42688,7 +42403,6 @@ static PyMethodDef SwigMethods[] = {
 	 { (char *)"CvMatND_refcount_get", _wrap_CvMatND_refcount_get, METH_VARARGS, NULL },
 	 { (char *)"CvMatND_dim_get", _wrap_CvMatND_dim_get, METH_VARARGS, NULL },
 	 { (char *)"CvMatND_data_get", _wrap_CvMatND_data_get, METH_VARARGS, NULL },
-	 { (char *)"new_CvMatND", _wrap_new_CvMatND, METH_VARARGS, NULL },
 	 { (char *)"delete_CvMatND", _wrap_delete_CvMatND, METH_VARARGS, NULL },
 	 { (char *)"CvMatND_swigregister", CvMatND_swigregister, METH_VARARGS, NULL },
 	 { (char *)"CvMatND_dim_size_set", _wrap_CvMatND_dim_size_set, METH_VARARGS, NULL },
@@ -42729,7 +42443,6 @@ static PyMethodDef SwigMethods[] = {
 	 { (char *)"CvSparseMat_idxoffset_get", _wrap_CvSparseMat_idxoffset_get, METH_VARARGS, NULL },
 	 { (char *)"CvSparseMat_size_set", _wrap_CvSparseMat_size_set, METH_VARARGS, NULL },
 	 { (char *)"CvSparseMat_size_get", _wrap_CvSparseMat_size_get, METH_VARARGS, NULL },
-	 { (char *)"new_CvSparseMat", _wrap_new_CvSparseMat, METH_VARARGS, NULL },
 	 { (char *)"delete_CvSparseMat", _wrap_delete_CvSparseMat, METH_VARARGS, NULL },
 	 { (char *)"CvSparseMat_swigregister", CvSparseMat_swigregister, METH_VARARGS, NULL },
 	 { (char *)"CvSparseNode_hashval_set", _wrap_CvSparseNode_hashval_set, METH_VARARGS, NULL },
@@ -42758,7 +42471,6 @@ static PyMethodDef SwigMethods[] = {
 	 { (char *)"CvHistogram_thresh2_get", _wrap_CvHistogram_thresh2_get, METH_VARARGS, NULL },
 	 { (char *)"CvHistogram_mat_set", _wrap_CvHistogram_mat_set, METH_VARARGS, NULL },
 	 { (char *)"CvHistogram_mat_get", _wrap_CvHistogram_mat_get, METH_VARARGS, NULL },
-	 { (char *)"new_CvHistogram", _wrap_new_CvHistogram, METH_VARARGS, NULL },
 	 { (char *)"delete_CvHistogram", _wrap_delete_CvHistogram, METH_VARARGS, NULL },
 	 { (char *)"CvHistogram_swigregister", CvHistogram_swigregister, METH_VARARGS, NULL },
 	 { (char *)"CvRect_x_set", _wrap_CvRect_x_set, METH_VARARGS, NULL },
@@ -42891,7 +42603,6 @@ static PyMethodDef SwigMethods[] = {
 	 { (char *)"CvMemStorage_block_size_get", _wrap_CvMemStorage_block_size_get, METH_VARARGS, NULL },
 	 { (char *)"CvMemStorage_free_space_set", _wrap_CvMemStorage_free_space_set, METH_VARARGS, NULL },
 	 { (char *)"CvMemStorage_free_space_get", _wrap_CvMemStorage_free_space_get, METH_VARARGS, NULL },
-	 { (char *)"new_CvMemStorage", _wrap_new_CvMemStorage, METH_VARARGS, NULL },
 	 { (char *)"delete_CvMemStorage", _wrap_delete_CvMemStorage, METH_VARARGS, NULL },
 	 { (char *)"CvMemStorage_swigregister", CvMemStorage_swigregister, METH_VARARGS, NULL },
 	 { (char *)"CvMemStoragePos_top_set", _wrap_CvMemStoragePos_top_set, METH_VARARGS, NULL },
@@ -43486,7 +43197,6 @@ static PyMethodDef SwigMethods[] = {
 	 { (char *)"CvGraphScanner_index_get", _wrap_CvGraphScanner_index_get, METH_VARARGS, NULL },
 	 { (char *)"CvGraphScanner_mask_set", _wrap_CvGraphScanner_mask_set, METH_VARARGS, NULL },
 	 { (char *)"CvGraphScanner_mask_get", _wrap_CvGraphScanner_mask_get, METH_VARARGS, NULL },
-	 { (char *)"new_CvGraphScanner", _wrap_new_CvGraphScanner, METH_VARARGS, NULL },
 	 { (char *)"delete_CvGraphScanner", _wrap_delete_CvGraphScanner, METH_VARARGS, NULL },
 	 { (char *)"CvGraphScanner_swigregister", CvGraphScanner_swigregister, METH_VARARGS, NULL },
 	 { (char *)"cvCreateGraphScanner", _wrap_cvCreateGraphScanner, METH_VARARGS, NULL },
@@ -43852,7 +43562,6 @@ static PyMethodDef SwigMethods[] = {
 	 { (char *)"CvConDensation_RandomSample_get", _wrap_CvConDensation_RandomSample_get, METH_VARARGS, NULL },
 	 { (char *)"CvConDensation_RandS_set", _wrap_CvConDensation_RandS_set, METH_VARARGS, NULL },
 	 { (char *)"CvConDensation_RandS_get", _wrap_CvConDensation_RandS_get, METH_VARARGS, NULL },
-	 { (char *)"new_CvConDensation", _wrap_new_CvConDensation, METH_VARARGS, NULL },
 	 { (char *)"delete_CvConDensation", _wrap_delete_CvConDensation, METH_VARARGS, NULL },
 	 { (char *)"CvConDensation_swigregister", CvConDensation_swigregister, METH_VARARGS, NULL },
 	 { (char *)"CvKalman_MP_set", _wrap_CvKalman_MP_set, METH_VARARGS, NULL },
@@ -43913,7 +43622,6 @@ static PyMethodDef SwigMethods[] = {
 	 { (char *)"CvKalman_temp4_get", _wrap_CvKalman_temp4_get, METH_VARARGS, NULL },
 	 { (char *)"CvKalman_temp5_set", _wrap_CvKalman_temp5_set, METH_VARARGS, NULL },
 	 { (char *)"CvKalman_temp5_get", _wrap_CvKalman_temp5_get, METH_VARARGS, NULL },
-	 { (char *)"new_CvKalman", _wrap_new_CvKalman, METH_VARARGS, NULL },
 	 { (char *)"delete_CvKalman", _wrap_delete_CvKalman, METH_VARARGS, NULL },
 	 { (char *)"CvKalman_swigregister", CvKalman_swigregister, METH_VARARGS, NULL },
 	 { (char *)"CvHaarFeature_tilted_set", _wrap_CvHaarFeature_tilted_set, METH_VARARGS, NULL },
@@ -43973,7 +43681,6 @@ static PyMethodDef SwigMethods[] = {
 	 { (char *)"CvHaarClassifierCascade_stage_classifier_get", _wrap_CvHaarClassifierCascade_stage_classifier_get, METH_VARARGS, NULL },
 	 { (char *)"CvHaarClassifierCascade_hid_cascade_set", _wrap_CvHaarClassifierCascade_hid_cascade_set, METH_VARARGS, NULL },
 	 { (char *)"CvHaarClassifierCascade_hid_cascade_get", _wrap_CvHaarClassifierCascade_hid_cascade_get, METH_VARARGS, NULL },
-	 { (char *)"new_CvHaarClassifierCascade", _wrap_new_CvHaarClassifierCascade, METH_VARARGS, NULL },
 	 { (char *)"delete_CvHaarClassifierCascade", _wrap_delete_CvHaarClassifierCascade, METH_VARARGS, NULL },
 	 { (char *)"CvHaarClassifierCascade_swigregister", CvHaarClassifierCascade_swigregister, METH_VARARGS, NULL },
 	 { (char *)"CvAvgComp_rect_set", _wrap_CvAvgComp_rect_set, METH_VARARGS, NULL },

@@ -40,36 +40,20 @@
 //M*/
 
 
-// 2004-03-16, Gabriel Schreiber <schreiber@ient.rwth-aachen.de>
-//             Mark Asbach       <asbach@ient.rwth-aachen.de>
+// 2004-03-23, Mark Asbach       <asbach@ient.rwth-aachen.de>
 //             Institute of Communications Engineering, RWTH Aachen University
 
 
-%include "../general/cv.i"
-
-%{
-#include "error.h"
-%}
-
-// Accessors for the IplImage data structure are defined here
-%include "./imagedata.i"
-
-// We integrate OpenCV error handling into the Python exception mechanism
-%include "./error.h"
-
-%pythoncode 
-%{
-
-__doc__ = """
-OpenCV is the Intel Open CV library, an open source effort to provide
-computer vision algorithms for standard PC hardware.
-
-This wrapper was semi-automatically created from the C/C++ headers and therefore
-contains no Python documentation. Because all identifiers are identical to their
-C/C++ counterparts, you can consult the standard manuals that come with OpenCV.
-"""
-
-# this tells OpenCV not to call exit() on errors but throw a python exception instead
-cvRedirectError(function_ptr_generator(), void_ptr_generator(), void_ptrptr_generator())
-
-%}
+%extend IplImage       { ~IplImage       () { IplImage       * dummy = self; cvReleaseImage              (& dummy); } }
+%extend CvMat          { ~CvMat          () { CvMat          * dummy = self; cvReleaseMat                (& dummy); } }
+%extend CvMatND        { ~CvMatND        () { CvMatND        * dummy = self; cvReleaseMatND              (& dummy); } }
+%extend CvSparseMat    { ~CvSparseMat    () { CvSparseMat    * dummy = self; cvReleaseSparseMat          (& dummy); } }
+%extend CvMemStorage   { ~CvMemStorage   () { CvMemStorage   * dummy = self; cvReleaseMemStorage         (& dummy); } }
+%extend CvGraphScanner { ~CvGraphScanner () { CvGraphScanner * dummy = self; cvReleaseGraphScanner       (& dummy); } }
+%extend CvFileStorage  { ~CvFileStorage  () { CvFileStorage  * dummy = self; cvReleaseFileStorage        (& dummy); } }
+%extend IplConvKernel  { ~IplConvKernel  () { IplConvKernel  * dummy = self; cvReleaseStructuringElement (& dummy); } }
+%extend CvKalman       { ~CvKalman       () { CvKalman       * dummy = self; cvReleaseKalman             (& dummy); } }
+%extend CvConDensation { ~CvConDensation () { CvConDensation * dummy = self; cvReleaseConDensation       (& dummy); } }
+%extend CvHistogram    { ~CvHistogram    () { CvHistogram    * dummy = self; cvReleaseHist               (& dummy); } }
+%extend CvHaarClassifierCascade { ~CvHaarClassifierCascade () { CvHaarClassifierCascade * dummy = self; cvReleaseHaarClassifierCascade  (& dummy); } }
+%extend CvPOSITObject  { ~CvPOSITObject  () { CvPOSITObject  * dummy = self; cvReleasePOSITObject        (& dummy); } }

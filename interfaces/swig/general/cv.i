@@ -45,31 +45,25 @@
 //             Institute of Communications Engineering, RWTH Aachen University
 
 
-%include "../general/cv.i"
+%module cv
+
 
 %{
-#include "error.h"
+#include "cv.h"
 %}
 
-// Accessors for the IplImage data structure are defined here
-%include "./imagedata.i"
+// The preprocessor "gcc -E" may generate compiler specific storage specifiers that confuse SWIG
+// We just define them away
+#define __attribute__(arg)
+#define __inline  inline
+#define __const   const
 
-// We integrate OpenCV error handling into the Python exception mechanism
-%include "./error.h"
+// A couple of typemaps helps wrapping OpenCV functions in a sensible way
+%include "./memory.i"
+%include "./typemaps.i"
 
-%pythoncode 
-%{
+// Now include the filtered OpenCV constants and prototypes (includes cxcore as well)
+%include "../filtered/constants.h"
+%include "../filtered/cv.h"
 
-__doc__ = """
-OpenCV is the Intel Open CV library, an open source effort to provide
-computer vision algorithms for standard PC hardware.
-
-This wrapper was semi-automatically created from the C/C++ headers and therefore
-contains no Python documentation. Because all identifiers are identical to their
-C/C++ counterparts, you can consult the standard manuals that come with OpenCV.
-"""
-
-# this tells OpenCV not to call exit() on errors but throw a python exception instead
-cvRedirectError(function_ptr_generator(), void_ptr_generator(), void_ptrptr_generator())
-
-%}
+%include "./extensions.i"

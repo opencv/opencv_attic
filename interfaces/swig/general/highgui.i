@@ -45,31 +45,26 @@
 //             Institute of Communications Engineering, RWTH Aachen University
 
 
-%include "../general/cv.i"
+%module highgui
 
 %{
-#include "error.h"
+#include "highgui.h"
 %}
 
-// Accessors for the IplImage data structure are defined here
-%include "./imagedata.i"
+%include "./memory.i"
+%include "./typemaps.i"
 
-// We integrate OpenCV error handling into the Python exception mechanism
-%include "./error.h"
 
-%pythoncode 
-%{
+%newobject cvLoadImage;
 
-__doc__ = """
-OpenCV is the Intel Open CV library, an open source effort to provide
-computer vision algorithms for standard PC hardware.
+%nodefault CvCapture;
+%newobject cvCaptureFromFile;
+%newobject cvCaptureFromCAM;
 
-This wrapper was semi-automatically created from the C/C++ headers and therefore
-contains no Python documentation. Because all identifiers are identical to their
-C/C++ counterparts, you can consult the standard manuals that come with OpenCV.
-"""
+%nodefault CvVideoWriter;
+%newobject cvCreateVideoWriter;
+%include "highgui.h"
 
-# this tells OpenCV not to call exit() on errors but throw a python exception instead
-cvRedirectError(function_ptr_generator(), void_ptr_generator(), void_ptrptr_generator())
+%extend CvCapture     { ~CvCapture ()     { CvCapture *     dummy = self; cvReleaseCapture     (& dummy); } }
+%extend CvVideoWriter { ~CvVideoWriter () { CvVideoWriter * dummy = self; cvReleaseVideoWriter (& dummy); } }
 
-%}
