@@ -39,7 +39,6 @@
 //
 //M*/
 #include "_cv.h"
-#include "_cvgeom.h"
 
 /*F///////////////////////////////////////////////////////////////////////////////////////
 //    Name: cvMatchContours
@@ -56,8 +55,8 @@
 //
 //F*/
 CV_IMPL  double
-cvMatchContours( const void* contour1, const void* contour2,
-                 CvContoursMatchMethod method, double /*parameter*/ )
+cvMatchShapes( const void* contour1, const void* contour2,
+               int method, double /*parameter*/ )
 {
     CvMoments moments;
     CvHuMoments huMoments;
@@ -72,7 +71,7 @@ cvMatchContours( const void* contour1, const void* contour2,
     __BEGIN__;
 
     if( !contour1 || !contour2 )
-        CV_ERROR_FROM_STATUS( CV_NULLPTR_ERR );
+        CV_ERROR( CV_StsNullPtr, "" );
 
 /*   first moments calculation */
     CV_CALL( cvMoments( contour1, &moments ));
@@ -221,15 +220,14 @@ cvMatchContours( const void* contour1, const void* contour2,
 //      result - output calculated measure 
 //F*/
 CV_IMPL  double
-cvMatchContourTrees( CvContourTree* tree1, CvContourTree* tree2,
-                     CvContourTreesMatchMethod method, 
-					 double threshold )
+cvMatchContourTrees( const CvContourTree* tree1, const CvContourTree* tree2,
+                     int method, double threshold )
 {
     _CvTrianAttr **ptr_p1, **ptr_p2;    /*pointers to the pointer's buffer */
     _CvTrianAttr **ptr_n1, **ptr_n2;    /*pointers to the pointer's buffer */
     _CvTrianAttr **ptr11, **ptr12, **ptr21, **ptr22;
 
-    static int lpt1, lpt2, lpt, flag, flag_n, i, j, ibuf, ibuf1;
+    int lpt1, lpt2, lpt, flag, flag_n, i, j, ibuf, ibuf1;
     double match_v, d12, area1, area2, r11, r12, r21, r22, w1, w2;
     double eps = 1.e-5;
     char s1, s2;
@@ -241,35 +239,27 @@ cvMatchContourTrees( CvContourTree* tree1, CvContourTree* tree2,
     __BEGIN__;
 
     if( !tree1 || !tree2 )
-        CV_ERROR_FROM_STATUS( CV_NULLPTR_ERR );
+        CV_ERROR( CV_StsNullPtr, "" );
 
     if( method != CV_CONTOUR_TREES_MATCH_I1 )
-        CV_ERROR_FROM_STATUS( CV_BADCOEF_ERR );
+        CV_ERROR( CV_StsBadArg, "Unknown/unsupported comparison method" );
 
     if( !CV_IS_SEQ_POLYGON_TREE( tree1 ))
-        CV_ERROR_FROM_STATUS( CV_BADFLAG_ERR );
+        CV_ERROR( CV_StsBadArg, "The first argument is not a valid contour tree" );
 
     if( !CV_IS_SEQ_POLYGON_TREE( tree2 ))
-        CV_ERROR_FROM_STATUS( CV_BADFLAG_ERR );
+        CV_ERROR( CV_StsBadArg, "The second argument is not a valid contour tree" );
 
     lpt1 = tree1->total;
     lpt2 = tree2->total;
     lpt = lpt1 > lpt2 ? lpt1 : lpt2;
 
     ptr_p1 = ptr_n1 = ptr_p2 = ptr_n2 = NULL;
-    ptr_p1 = (_CvTrianAttr **) icvAlloc( lpt * sizeof( _CvTrianAttr * ));
-    if( ptr_p1 == NULL )
-        return CV_OUTOFMEM_ERR;
-    ptr_p2 = (_CvTrianAttr **) icvAlloc( lpt * sizeof( _CvTrianAttr * ));
-    if( ptr_p2 == NULL )
-        return CV_OUTOFMEM_ERR;
+    CV_CALL( ptr_p1 = (_CvTrianAttr **) cvAlloc( lpt * sizeof( _CvTrianAttr * )));
+    CV_CALL( ptr_p2 = (_CvTrianAttr **) cvAlloc( lpt * sizeof( _CvTrianAttr * )));
 
-    ptr_n1 = (_CvTrianAttr **) icvAlloc( lpt * sizeof( _CvTrianAttr * ));
-    if( ptr_n1 == NULL )
-        return CV_OUTOFMEM_ERR;
-    ptr_n2 = (_CvTrianAttr **) icvAlloc( lpt * sizeof( _CvTrianAttr * ));
-    if( ptr_n2 == NULL )
-        return CV_OUTOFMEM_ERR;
+    CV_CALL( ptr_n1 = (_CvTrianAttr **) cvAlloc( lpt * sizeof( _CvTrianAttr * )));
+    CV_CALL( ptr_n2 = (_CvTrianAttr **) cvAlloc( lpt * sizeof( _CvTrianAttr * )));
 
     cvStartReadSeq( (CvSeq *) tree1, &reader1, 0 );
     cvStartReadSeq( (CvSeq *) tree2, &reader2, 0 );
@@ -289,7 +279,7 @@ cvMatchContourTrees( CvContourTree* tree1, CvContourTree* tree2,
     area2 = tree_2.area;
 
     if( area1 < eps || area2 < eps || lpt < 4 )
-        CV_ERROR_FROM_STATUS( CV_BADSIZE_ERR );
+        CV_ERROR( CV_StsBadSize, "" );
 
     r11 = r12 = r21 = r22 = w1 = w2 = d12 = 0;
     flag = 0;
@@ -347,10 +337,18 @@ cvMatchContourTrees( CvContourTree* tree1, CvContourTree* tree2,
                 {
                 case 1:
                     {
+                        double t0, t1;
                         if( s1 != s2 )
-                            d12 = fabs( r11 * w1 + r21 * w2 ) + fabs( r12 * w1 + r22 * w2 );
+                        {
+                            t0 = fabs( r11 * w1 + r21 * w2 );
+                            t1 = fabs( r12 * w1 + r22 * w2 );
+                        }
                         else
-                            d12 = fabs( r11 * w1 - r21 * w2 ) + fabs( r12 * w1 - r22 * w2 );
+                        {
+                            t0 = fabs( r11 * w1 - r21 * w2 );
+                            t1 = fabs( r12 * w1 - r22 * w2 );
+                        }
+                        d12 = t0 + t1;
                         break;
                     }
                 }
@@ -388,10 +386,10 @@ cvMatchContourTrees( CvContourTree* tree1, CvContourTree* tree2,
 
     __END__;
 
-    icvFree( &ptr_n2 );
-    icvFree( &ptr_n1 );
-    icvFree( &ptr_p2 );
-    icvFree( &ptr_p1 );
+    cvFree( (void**)&ptr_n2 );
+    cvFree( (void**)&ptr_n1 );
+    cvFree( (void**)&ptr_p2 );
+    cvFree( (void**)&ptr_p1 );
 
     return result;
 }

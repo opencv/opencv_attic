@@ -148,7 +148,7 @@ static float icvDistC( const float *x, const float *y, void *user_param );
 CV_IMPL float
 cvCalcEMD2( const CvArr* signature_arr1,
             const CvArr* signature_arr2,
-            CvDisType dist_type,
+            int dist_type,
             CvDistanceFunction dist_func,
             const CvArr* cost_matrix,
             CvArr* flow_matrix,
@@ -156,7 +156,7 @@ cvCalcEMD2( const CvArr* signature_arr1,
             void *user_param )
 {
     char local_buffer[16384];
-    char *local_buffer_ptr = (char *)icvAlignPtr(local_buffer,16);
+    char *local_buffer_ptr = (char *)cvAlignPtr(local_buffer,16);
     CvEMDState state;
     float emd = 0;
 
@@ -196,7 +196,7 @@ cvCalcEMD2( const CvArr* signature_arr1,
     {
         CV_CALL( flow = cvGetMat( flow, &flow_stub ));
 
-        if( cost->rows != size1 || cost->cols != size2 )
+        if( flow->rows != size1 || flow->cols != size2 )
             CV_ERROR( CV_StsUnmatchedSizes,
             "The flow matrix size does not match to the signatures' sizes" );
 
@@ -235,7 +235,7 @@ cvCalcEMD2( const CvArr* signature_arr1,
         if( dims == 0 )
             CV_ERROR( CV_StsBadSize,
             "Number of dimensions can be 0 only if a user-defined metric is used" );
-        user_param = (void *) dims;
+        user_param = (void *) (size_t)dims;
         switch (dist_type)
         {
         case CV_DIST_L1:
@@ -321,7 +321,7 @@ cvCalcEMD2( const CvArr* signature_arr1,
     __END__;
 
     if( state.buffer && state.buffer != local_buffer_ptr )
-        icvFree( &(state.buffer) );
+        cvFree( (void**)&(state.buffer) );
 
     return emd;
 }
@@ -374,7 +374,7 @@ icvInitEMD( const float* signature1, int size1,
     }
     else
     {
-        buffer = (char *) icvAlloc( buffer_size );
+        buffer = (char*)cvAlloc( buffer_size );
         if( !buffer )
             return CV_OUTOFMEM_ERR;
     }
@@ -1124,7 +1124,7 @@ icvAddBasicVariable( CvEMDState * state,
 static float
 icvDistL1( const float *x, const float *y, void *user_param )
 {
-    int i, dims = (int)(long)user_param;
+    int i, dims = (int)(size_t)user_param;
     double s = 0;
 
     for( i = 0; i < dims; i++ )
@@ -1139,7 +1139,7 @@ icvDistL1( const float *x, const float *y, void *user_param )
 static float
 icvDistL2( const float *x, const float *y, void *user_param )
 {
-    int i, dims = (int)(long)user_param;
+    int i, dims = (int)(size_t)user_param;
     double s = 0;
 
     for( i = 0; i < dims; i++ )
@@ -1154,7 +1154,7 @@ icvDistL2( const float *x, const float *y, void *user_param )
 static float
 icvDistC( const float *x, const float *y, void *user_param )
 {
-    int i, dims = (int)(long)user_param;
+    int i, dims = (int)(size_t)user_param;
     double s = 0;
 
     for( i = 0; i < dims; i++ )

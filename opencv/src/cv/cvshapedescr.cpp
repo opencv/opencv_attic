@@ -39,8 +39,6 @@
 //
 //M*/
 #include "_cv.h"
-#include "_cvdatastructs.h"
-#include "_cvgeom.h"
 
 /* calculates length of a curve (e.g. contour perimeter) */
 CV_IMPL  double
@@ -54,7 +52,8 @@ cvArcLength( const void *array, CvSlice slice, int is_closed )
 
     int i, j = 0, count;
     const int N = 16;
-    float buffer[N];
+    float buf[N];
+    CvMat buffer = cvMat( 1, N, CV_32F, buf ); 
     CvSeqReader reader;
     CvContour contour_header;
     CvSeq* contour = 0;
@@ -78,17 +77,17 @@ cvArcLength( const void *array, CvSlice slice, int is_closed )
 
     if( contour->total > 1 )
     {
-        CvPoint pt1, pt2;
         int is_float = CV_SEQ_ELTYPE( contour ) == CV_32FC2;
         
         cvStartReadSeq( contour, &reader, 0 );
-        cvSetSeqReaderPos( &reader, slice.startIndex );
-        count = icvSliceLength( slice, contour );
+        cvSetSeqReaderPos( &reader, slice.start_index );
+        count = cvSliceLength( slice, contour );
 
         count -= !is_closed && count == contour->total;
 
         /* scroll the reader by 1 point */
-        CV_READ_EDGE( pt1, pt2, reader );
+        reader.prev_elem = reader.ptr;
+        CV_NEXT_SEQ_ELEM( sizeof(CvPoint), reader );
 
         for( i = 0; i < count; i++ )
         {
@@ -114,12 +113,13 @@ cvArcLength( const void *array, CvSlice slice, int is_closed )
             reader.prev_elem = reader.ptr;
             CV_NEXT_SEQ_ELEM( contour->elem_size, reader );
 
-            buffer[j] = dx * dx + dy * dy;
+            buffer.data.fl[j] = dx * dx + dy * dy;
             if( ++j == N || i == count - 1 )
             {
-                icvbSqrt_32f( buffer, buffer, j );
+                buffer.cols = j;
+                cvPow( &buffer, &buffer, 0.5 );
                 for( ; j > 0; j-- )
-                    perimeter += buffer[j-1];
+                    perimeter += buffer.data.fl[j-1];
             }
         }
     }
@@ -163,8 +163,15 @@ icvFindCircle( CvPoint2D32f pt0, CvPoint2D32f pt1,
 }
 
 
+CV_INLINE double icvIsPtInCircle( CvPoint2D32f pt, CvPoint2D32f center, float radius )
+{
+    double dx = pt.x - center.x;
+    double dy = pt.y - center.y;
+    return (double)radius*radius - dx*dx - dy*dy;
+}
 
-int
+
+static int
 icvFindEnslosingCicle4pts_32f( CvPoint2D32f * pts, CvPoint2D32f * _center, float *_radius )
 {
     int shuffles[4][4] = { {0, 1, 2, 3}, {0, 1, 3, 2}, {2, 3, 0, 1}, {2, 3, 1, 0} };
@@ -207,14 +214,14 @@ icvFindEnslosingCicle4pts_32f( CvPoint2D32f * pts, CvPoint2D32f * _center, float
     }
 
     center = icvMidPoint( pts[idxs[0]], pts[idxs[1]] );
-    radius = (float) (icvDistanceL2_32f( pts[idxs[0]], center ) * (1 + 0.03));
+    radius = (float)(icvDistanceL2_32f( pts[idxs[0]], center )*1.03);
     if( radius < 1.f )
         radius = 1.f;
 
-    if( icvIsPtInCircle( pts[idxs[2]], center, radius ) &&
-        icvIsPtInCircle( pts[idxs[3]], center, radius ))
+    if( icvIsPtInCircle( pts[idxs[2]], center, radius ) >= 0 &&
+        icvIsPtInCircle( pts[idxs[3]], center, radius ) >= 0 )
     {
-        k = 2;
+        k = 2; //rand()%2+2;
     }
     else
     {
@@ -228,7 +235,7 @@ icvFindEnslosingCicle4pts_32f( CvPoint2D32f * pts, CvPoint2D32f * _center, float
                 if( radius < 2.f )
                     radius = 2.f;
 
-                if( icvIsPtInCircle( pts[shuffles[i][3]], center, radius ) &&
+                if( icvIsPtInCircle( pts[shuffles[i][3]], center, radius ) >= 0 &&
                     min_radius > radius )
                 {
                     min_radius = radius;
@@ -254,25 +261,25 @@ icvFindEnslosingCicle4pts_32f( CvPoint2D32f * pts, CvPoint2D32f * _center, float
 
     /* reorder output points */
     for( i = 0; i < 4; i++ )
-    {
         res_pts[i] = pts[idxs[i]];
-    }
 
     for( i = 0; i < 4; i++ )
     {
         pts[i] = res_pts[i];
+        assert( icvIsPtInCircle( pts[i], center, radius ) >= 0 );
     }
 
     return k;
 }
 
 
-CV_IMPL void
+CV_IMPL int
 cvMinEnclosingCircle( const void* array, CvPoint2D32f * _center, float *_radius )
 {
-    const int max_iters = 20;
+    const int max_iters = 100;
     CvPoint2D32f center = { 0, 0 };
     float radius = 0;
+    int result = 0;
 
     if( _center )
         _center->x = _center->y = 0.f;
@@ -371,6 +378,8 @@ cvMinEnclosingCircle( const void* array, CvPoint2D32f * _center, float *_radius 
 
     for( k = 0; k < max_iters; k++ )
     {
+        double min_delta = 0, delta;
+        
         icvFindEnslosingCicle4pts_32f( pts, &center, &radius );
         cvStartReadSeq( sequence, &reader, 0 );
 
@@ -389,13 +398,16 @@ cvMinEnclosingCircle( const void* array, CvPoint2D32f * _center, float *_radius 
             }
             CV_NEXT_SEQ_ELEM( sequence->elem_size, reader );
 
-            if( !icvIsPtInCircle( ptfl, center, radius ))
+            delta = icvIsPtInCircle( ptfl, center, radius );
+            if( delta < min_delta )
             {
                 pts[3] = ptfl;
-                break;
+                min_delta = delta;
+                //break;
             }
         }
-        if( i == count )
+        result = min_delta >= 0;
+        if( result )
             break;
     }
 
@@ -403,6 +415,8 @@ cvMinEnclosingCircle( const void* array, CvPoint2D32f * _center, float *_radius 
 
     *_center = center;
     *_radius = radius;
+
+    return result;
 }
 
 
@@ -480,7 +494,7 @@ icvMemCopy( double **buf1, double **buf2, double **buf3, int *b_max )
     if( *buf2 == NULL )
     {
         *b_max = 2 * (*b_max);
-        *buf2 = (double *) icvAlloc( (*b_max) * sizeof( double ));
+        *buf2 = (double *)cvAlloc( (*b_max) * sizeof( double ));
 
         if( *buf2 == NULL )
             return CV_OUTOFMEM_ERR;
@@ -488,13 +502,13 @@ icvMemCopy( double **buf1, double **buf2, double **buf3, int *b_max )
         memcpy( *buf2, *buf3, bb * sizeof( double ));
 
         *buf3 = *buf2;
-        icvFree( &(*buf1) );
+        cvFree( (void**)buf1 );
         *buf1 = NULL;
     }
     else
     {
         *b_max = 2 * (*b_max);
-        *buf1 = (double *) icvAlloc( (*b_max) * sizeof( double ));
+        *buf1 = (double *) cvAlloc( (*b_max) * sizeof( double ));
 
         if( *buf1 == NULL )
             return CV_OUTOFMEM_ERR;
@@ -502,7 +516,7 @@ icvMemCopy( double **buf1, double **buf2, double **buf3, int *b_max )
         memcpy( *buf1, *buf3, bb * sizeof( double ));
 
         *buf3 = *buf1;
-        icvFree( &(*buf2) );
+        cvFree( (void**)buf2 );
         *buf2 = NULL;
     }
     return CV_OK;
@@ -532,7 +546,7 @@ static CvStatus icvContourSecArea( CvSeq * contour, CvSlice slice, double *area 
     if( !CV_IS_SEQ_POLYGON( contour ))
         return CV_BADFLAG_ERR;
 
-    lpt = icvSliceLength( slice, contour );
+    lpt = cvSliceLength( slice, contour );
     /*if( n2 >= n1 )
         lpt = n2 - n1 + 1;
     else
@@ -544,7 +558,7 @@ static CvStatus icvContourSecArea( CvSeq * contour, CvSlice slice, double *area 
         sk1 = 0;
         flag = 0;
         dxy = 0;
-        p_are1 = (double *) icvAlloc( p_max * sizeof( double ));
+        p_are1 = (double *) cvAlloc( p_max * sizeof( double ));
 
         if( p_are1 == NULL )
             return CV_OUTOFMEM_ERR;
@@ -553,16 +567,16 @@ static CvStatus icvContourSecArea( CvSeq * contour, CvSlice slice, double *area 
         p_are2 = NULL;
 
         cvStartReadSeq( contour, &reader, 0 );
-        cvSetSeqReaderPos( &reader, slice.startIndex );
+        cvSetSeqReaderPos( &reader, slice.start_index );
         CV_READ_SEQ_ELEM( pt_s, reader );
         p_ind = 0;
-        cvSetSeqReaderPos( &reader, slice.endIndex );
+        cvSetSeqReaderPos( &reader, slice.end_index );
         CV_READ_SEQ_ELEM( pt_e, reader );
 
 /*    normal coefficients    */
         nx = pt_s.y - pt_e.y;
         ny = pt_e.x - pt_s.x;
-        cvSetSeqReaderPos( &reader, slice.startIndex );
+        cvSetSeqReaderPos( &reader, slice.start_index );
 
         while( lpt-- > 0 )
         {
@@ -667,9 +681,9 @@ static CvStatus icvContourSecArea( CvSeq * contour, CvSlice slice, double *area 
             (*area) += fabs( p_are[i] );
 
         if( p_are1 != NULL )
-            icvFree( &p_are1 );
+            cvFree( (void**)&p_are1 );
         else if( p_are2 != NULL )
-            icvFree( &p_are2 );
+            cvFree( (void**)&p_are2 );
 
         return CV_OK;
     }
@@ -704,7 +718,7 @@ cvContourArea( const void *array, CvSlice slice )
             CV_SEQ_KIND_CURVE, array, &contour_header, &block ));
     }
 
-    if( icvSliceLength( slice, contour ) == contour->total )
+    if( cvSliceLength( slice, contour ) == contour->total )
     {
         IPPI_CALL( icvContourArea( contour, &area ));
     }
@@ -812,8 +826,7 @@ static CvStatus icvFitEllipse_32f( CvSeq* points, CvBox2D* box )
     }
 
     /* compute S */
-    status1 = icvMulTransMatrixR_32f( D, 6, n, S );
-    assert( status1 == CV_OK );
+    icvMulTransMatrixR_32f( D, 6, n, S );
 
     /* fill matrix C */
     icvSetZero_32f( C, 6, 6 );
@@ -827,24 +840,16 @@ static CvStatus icvFitEllipse_32f( CvSeq* points, CvBox2D* box )
 
     //avoid troubles with small negative values
     for( i = 0; i < 6; i++ )
-       eigenvalues[i] = (float)fabs( eigenvalues[i] ); 
+        eigenvalues[i] = (float)fabs(eigenvalues[i]);
 
-    /* compute sqrt of every eigenvalue; they all must be positive */
-    status1 = icvbSqrt_32f( eigenvalues, eigenvalues, 6 );
-    assert( status1 == CV_OK );
-
-    /* compute inverse of Q */
-    status1 = icvbInvSqrt_32f( eigenvalues, eigenvalues, 6 );
-    assert( status1 == CV_OK );
+    cvbSqrt( eigenvalues, eigenvalues, 6 );
+    cvbInvSqrt( eigenvalues, eigenvalues, 6 );
 
     for( i = 0; i < 6; i++ )
-    {
         icvScaleVector_32f( &INVEIGV[i * 6], &INVEIGV[i * 6], 6, eigenvalues[i] );
-    }
 
     // INVQ = transp(INVEIGV) * INVEIGV
-    status1 = icvMulTransMatrixR_32f( INVEIGV, 6, 6, INVQ );
-    assert( status1 == CV_OK );
+    icvMulTransMatrixR_32f( INVEIGV, 6, 6, INVQ );
     
     /* create matrix INVQ*C*INVQ */
     icvMulMatrix_32f( INVQ, 6, 6, C, 6, 6, TMP1 );
@@ -963,7 +968,7 @@ static CvStatus icvFitEllipse_32f( CvSeq* points, CvBox2D* box )
     }
 
     /* calc angle */
-    box->angle = icvFastArctan32f( INVEIGV[3], INVEIGV[2] );
+    box->angle = cvFastArctan( INVEIGV[3], INVEIGV[2] );
 
 error:
 
@@ -1014,7 +1019,7 @@ cvFitEllipse2( const CvArr* array )
 
 /* Calculates bounding rectagnle of a point set or retrieves already calculated */
 CV_IMPL  CvRect
-cvBoundingRect( const void* array, int update )
+cvBoundingRect( CvArr* array, int update )
 {
     CvSeqReader reader;
     CvRect  rect = { 0, 0, 0, 0 };

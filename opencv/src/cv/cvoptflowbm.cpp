@@ -41,14 +41,15 @@
 
 #include "_cv.h"
 
-IPCVAPI( CvStatus , icvCalcOpticalFlowBM_8u32fR,( uchar* imgA, uchar* imgB,
-                                                  int  imgStep, CvSize imgSize,
-                                                  CvSize blockSize, CvSize shiftSize,
-                                                  CvSize maxRange,
-                                                  int usePrevious,
-                                                  float*   velocityX,
-                                                  float*   velocityY,
-                                                  int      velStep ))
+
+static CvStatus CV_STDCALL
+icvCopyBM_8u_C1R( const uchar* src, int src_step,
+                  uchar* dst, int dst_step, CvSize size )
+{
+    for( ; size.height--; src += src_step, dst += dst_step )
+        memcpy( dst, src, size.width );
+    return CV_OK;
+}
 
 
 /*F///////////////////////////////////////////////////////////////////////////////////////
@@ -73,16 +74,13 @@ IPCVAPI( CvStatus , icvCalcOpticalFlowBM_8u32fR,( uchar* imgA, uchar* imgB,
 #define SMALL_DIFF 2
 #define BIG_DIFF 128
 
-IPCVAPI_IMPL( CvStatus, icvCalcOpticalFlowBM_8u32fR, (uchar * imgA,
-                                                      uchar * imgB,
-                                                      int imgStep,
-                                                      CvSize imgSize,
-                                                      CvSize blockSize,
-                                                      CvSize shiftSize,
-                                                      CvSize maxRange,
-                                                      int usePrev,
-                                                      float *velocityX,
-                                                      float *velocityY, int velStep) )
+static CvStatus CV_STDCALL
+icvCalcOpticalFlowBM_8u32fR( uchar * imgA, uchar * imgB,
+                             int imgStep, CvSize imgSize,
+                             CvSize blockSize, CvSize shiftSize,
+                             CvSize maxRange, int usePrev,
+                             float *velocityX, float *velocityY,
+                             int velStep )
 {
     const float back = 1.f / (float) (1 << 16);
 
@@ -121,8 +119,8 @@ IPCVAPI_IMPL( CvStatus, icvCalcOpticalFlowBM_8u32fR, (uchar * imgA,
     uchar *blockB = 0;
     uchar *blockZ = 0;
     int blSize = blockSize.width * blockSize.height;
-    int bufferSize = icvAlign(blSize + 9,16);
-    int cmpSize = icvAlign(blSize,4);
+    int bufferSize = cvAlign(blSize + 9,16);
+    int cmpSize = cvAlign(blSize,4);
     int patch_ofs = blSize & -8;
     int64 patch_mask = (((int64) 1) << (blSize - patch_ofs * 8)) - 1;
 
@@ -140,7 +138,7 @@ IPCVAPI_IMPL( CvStatus, icvCalcOpticalFlowBM_8u32fR, (uchar * imgA,
 /****************************************************************************************\
 *   Allocate buffers                                                                     *
 \****************************************************************************************/
-    blockA = (uchar *) icvAlloc( bufferSize * 3 );
+    blockA = (uchar *) cvAlloc( bufferSize * 3 );
     if( !blockA )
         return CV_OUTOFMEM_ERR;
 
@@ -149,11 +147,11 @@ IPCVAPI_IMPL( CvStatus, icvCalcOpticalFlowBM_8u32fR, (uchar * imgA,
 
     memset( blockZ, 0, bufferSize );
 
-    ss = (CvPoint *) icvAlloc( (2 * maxRange.width + 1) * (2 * maxRange.height + 1) *
+    ss = (CvPoint *) cvAlloc( (2 * maxRange.width + 1) * (2 * maxRange.height + 1) *
                                sizeof( CvPoint ));
     if( !ss )
     {
-        icvFree( &blockA );
+        cvFree( (void**)&blockA );
         return CV_OUTOFMEM_ERR;
     }
 
@@ -366,10 +364,10 @@ IPCVAPI_IMPL( CvStatus, icvCalcOpticalFlowBM_8u32fR, (uchar * imgA,
 
             if( main_flag )
             {
-                icvCopy_8u_C1R( imgA + X1, imgStep, blockA,
-                                CurSize.width, CurSize );
-                icvCopy_8u_C1R( imgB + (Y1 + offY)*imgStep + (X1 + offX),
-                                imgStep, blockB, CurSize.width, CurSize );
+                icvCopyBM_8u_C1R( imgA + X1, imgStep, blockA,
+                                  CurSize.width, CurSize );
+                icvCopyBM_8u_C1R( imgB + (Y1 + offY)*imgStep + (X1 + offX),
+                                  imgStep, blockB, CurSize.width, CurSize );
 
                 *((int64 *) (blockA + patch_ofs)) &= patch_mask;
                 *((int64 *) (blockB + patch_ofs)) &= patch_mask;
@@ -379,9 +377,9 @@ IPCVAPI_IMPL( CvStatus, icvCalcOpticalFlowBM_8u32fR, (uchar * imgA,
                 memset( blockA, 0, bufferSize );
                 memset( blockB, 0, bufferSize );
 
-                icvCopy_8u_C1R( imgA + X1, imgStep, blockA, blockSize.width, CurSize );
-                icvCopy_8u_C1R( imgB + (Y1 + offY) * imgStep + (X1 + offX), imgStep,
-                                blockB, blockSize.width, CurSize );
+                icvCopyBM_8u_C1R( imgA + X1, imgStep, blockA, blockSize.width, CurSize );
+                icvCopyBM_8u_C1R( imgB + (Y1 + offY) * imgStep + (X1 + offX), imgStep,
+                                  blockB, blockSize.width, CurSize );
             }
 
             if( !main_flag )
@@ -438,16 +436,16 @@ IPCVAPI_IMPL( CvStatus, icvCalcOpticalFlowBM_8u32fR, (uchar * imgA,
 
                     if( main_flag )
                     {
-                        icvCopy_8u_C1R( imgB + Y2 * imgStep + X2,
-                                        imgStep, blockB, CurSize.width, CurSize );
+                        icvCopyBM_8u_C1R( imgB + Y2 * imgStep + X2,
+                                          imgStep, blockB, CurSize.width, CurSize );
 
                         *((int64 *) (blockB + patch_ofs)) &= patch_mask;
                     }
                     else
                     {
                         memset( blockB, 0, bufferSize );
-                        icvCopy_8u_C1R( imgB + Y1 * imgStep + X1, imgStep,
-                                        blockB, blockSize.width, CurSize );
+                        icvCopyBM_8u_C1R( imgB + Y1 * imgStep + X1, imgStep,
+                                          blockB, blockSize.width, CurSize );
                     }
 
                     tmpDist = icvCmpBlocksL1_8u_C1( blockA, blockB, cmpSize );
@@ -534,8 +532,8 @@ IPCVAPI_IMPL( CvStatus, icvCalcOpticalFlowBM_8u32fR, (uchar * imgA,
         }
     }
 
-    icvFree( &ss );
-    icvFree( &blockA );
+    cvFree( (void**)&ss );
+    cvFree( (void**)&blockA );
     
     return CV_OK;
 }                               /*cvCalcOpticalFlowBM_8u */
@@ -594,7 +592,7 @@ cvCalcOpticalFlowBM( const void* srcarrA, const void* srcarrB,
         CV_ERROR( CV_BadStep, "two source or two destination images have different steps" );
 
     IPPI_CALL( icvCalcOpticalFlowBM_8u32fR( (uchar*)srcA->data.ptr, (uchar*)srcB->data.ptr,
-                                            srcA->step, icvGetMatSize( srcA ), blockSize,
+                                            srcA->step, cvGetMatSize( srcA ), blockSize,
                                             shiftSize, maxRange, usePrevious,
                                             velx->data.fl, vely->data.fl, velx->step ));
     __END__;

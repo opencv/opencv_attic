@@ -51,17 +51,6 @@ typedef struct
 icvDerProduct;
 
 
-IPCVAPI( CvStatus , icvCalcOpticalFlowLK_8u32fR,( uchar*   imgA,
-                                                    uchar*   imgB,
-                                                    int      imgStep,
-                                                    CvSize imgSize,
-                                                    CvSize winSize,
-                                                    float*   velocityX,
-                                                    float*   velocityY,
-                                                    int      velStep  ))
-
-
-
 #define CONV( A, B, C)  ((float)( A +  (B<<1)  + C ))
 /*F///////////////////////////////////////////////////////////////////////////////////////
 //    Name: icvCalcOpticalFlowLK_8u32fR ( Lucas & Kanade method )
@@ -90,13 +79,14 @@ IPCVAPI( CvStatus , icvCalcOpticalFlowLK_8u32fR,( uchar*   imgA,
 //
 //
 //F*/
-IPCVAPI_IMPL( CvStatus, icvCalcOpticalFlowLK_8u32fR, (uchar * imgA,
-                                                      uchar * imgB,
-                                                      int imgStep,
-                                                      CvSize imgSize,
-                                                      CvSize winSize,
-                                                      float *velocityX,
-                                                      float *velocityY, int velStep) )
+static CvStatus CV_STDCALL
+icvCalcOpticalFlowLK_8u32fR( uchar * imgA,
+                             uchar * imgB,
+                             int imgStep,
+                             CvSize imgSize,
+                             CvSize winSize,
+                             float *velocityX,
+                             float *velocityY, int velStep )
 {
     /* Loops indexes */
     int i, j, k;
@@ -212,11 +202,11 @@ IPCVAPI_IMPL( CvStatus, icvCalcOpticalFlowLK_8u32fR, (uchar * imgA,
     /****************************************************************************************/
     for( k = 0; k < 2; k++ )
     {
-        MemX[k] = (float *) icvAlloc( (imgSize.height) * sizeof( float ));
+        MemX[k] = (float *) cvAlloc( (imgSize.height) * sizeof( float ));
 
         if( MemX[k] == NULL )
             NoMem = 1;
-        MemY[k] = (float *) icvAlloc( (imgSize.width) * sizeof( float ));
+        MemY[k] = (float *) cvAlloc( (imgSize.width) * sizeof( float ));
 
         if( MemY[k] == NULL )
             NoMem = 1;
@@ -224,8 +214,8 @@ IPCVAPI_IMPL( CvStatus, icvCalcOpticalFlowLK_8u32fR, (uchar * imgA,
 
     BufferSize = BufferHeight * BufferWidth;
 
-    II = (icvDerProduct *) icvAlloc( BufferSize * sizeof( icvDerProduct ));
-    WII = (icvDerProduct *) icvAlloc( BufferSize * sizeof( icvDerProduct ));
+    II = (icvDerProduct *) cvAlloc( BufferSize * sizeof( icvDerProduct ));
+    WII = (icvDerProduct *) cvAlloc( BufferSize * sizeof( icvDerProduct ));
 
 
     if( (II == NULL) || (WII == NULL) )
@@ -236,15 +226,15 @@ IPCVAPI_IMPL( CvStatus, icvCalcOpticalFlowLK_8u32fR, (uchar * imgA,
         for( k = 0; k < 2; k++ )
         {
             if( MemX[k] )
-                icvFree( (void **) &MemX[k] );
+                cvFree( (void **) &MemX[k] );
 
             if( MemY[k] )
-                icvFree( (void **) &MemY[k] );
+                cvFree( (void **) &MemY[k] );
         }
         if( II )
-            icvFree( (void **) &II );
+            cvFree( (void **) &II );
         if( WII )
-            icvFree( (void **) &WII );
+            cvFree( (void **) &WII );
 
         return CV_OUTOFMEM_ERR;
     }
@@ -554,11 +544,11 @@ IPCVAPI_IMPL( CvStatus, icvCalcOpticalFlowLK_8u32fR, (uchar * imgA,
     /* Free memory */
     for( k = 0; k < 2; k++ )
     {
-        icvFree( (void **) &MemX[k] );
-        icvFree( (void **) &MemY[k] );
+        cvFree( (void **) &MemX[k] );
+        cvFree( (void **) &MemY[k] );
     }
-    icvFree( (void **) &II );
-    icvFree( (void **) &WII );
+    cvFree( (void **) &II );
+    cvFree( (void **) &WII );
 
     return CV_OK;
 } /*icvCalcOpticalFlowLK_8u32fR*/
@@ -614,7 +604,7 @@ cvCalcOpticalFlowLK( const void* srcarrA, const void* srcarrB, CvSize winSize,
         CV_ERROR( CV_BadStep, "source and destination images have different step" );
 
     IPPI_CALL( icvCalcOpticalFlowLK_8u32fR( (uchar*)srcA->data.ptr, (uchar*)srcB->data.ptr,
-                                            srcA->step, icvGetMatSize( srcA ), winSize,
+                                            srcA->step, cvGetMatSize( srcA ), winSize,
                                             velx->data.fl, vely->data.fl, velx->step ));
 
     __END__;

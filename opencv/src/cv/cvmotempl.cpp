@@ -61,13 +61,10 @@
 //           CV_BADFACTOR_ERR - mhi_duration is non positive
 //    Notes:
 //F*/
-IPCVAPI_IMPL( CvStatus, icvUpdateMotionHistory_8u32f_C1IR, (const uchar * silIm,
-                                                            int silStep,
-                                                            float *mhiIm,
-                                                            int mhiStep,
-                                                            CvSize size,
-                                                            float timestamp,
-                                                            float mhi_duration) )
+IPCVAPI_IMPL( CvStatus, icvUpdateMotionHistory_8u32f_C1IR,
+    (const uchar * silIm, int silStep, float *mhiIm, int mhiStep,
+     CvSize size, float timestamp, float mhi_duration),
+     (silIm, silStep, mhiIm, mhiStep, size, timestamp, mhi_duration) )
 {
     int y;
     int delbound;
@@ -80,8 +77,8 @@ IPCVAPI_IMPL( CvStatus, icvUpdateMotionHistory_8u32f_C1IR, (const uchar * silIm,
         return CV_NULLPTR_ERR;
 
     if( size.height <= 0 || size.width <= 0 ||
-        silStep < size.width || mhiStep < size.width * sizeof_float ||
-        (mhiStep & (sizeof_float - 1)) != 0 )
+        silStep < size.width || mhiStep < size.width * CV_SIZEOF_FLOAT ||
+        (mhiStep & (CV_SIZEOF_FLOAT - 1)) != 0 )
         return CV_BADSIZE_ERR;
 
     if( mhi_duration < 0 )
@@ -90,7 +87,7 @@ IPCVAPI_IMPL( CvStatus, icvUpdateMotionHistory_8u32f_C1IR, (const uchar * silIm,
     mhi_duration = timestamp - mhi_duration;
     delbound = CV_TOGGLE_FLT( (*(int *) &mhi_duration) );
 
-    mhiStep /= sizeof_float;
+    mhiStep /= CV_SIZEOF_FLOAT;
 
     if( mhiStep == size.width && silStep == size.width )
     {
@@ -193,22 +190,24 @@ icvCalcMotionGradient32fC1R( float *mhi, int mhiStep,
     if( ((mhiStep | orientStep) & 3) != 0 )
         return CV_BADSIZE_ERR;
 
-    tempStep = icvAlign(roi.width,2) * sizeof( float );
+    tempStep = cvAlign(roi.width,2) * sizeof( float );
 
     tempSize = tempStep * roi.height;
 
-    drvX_min = (float *) icvAlloc( tempSize );
-    drvY_max = (float *) icvAlloc( tempSize );
+    drvX_min = (float *) cvAlloc( tempSize );
+    drvY_max = (float *) cvAlloc( tempSize );
     if( !drvX_min || !drvY_max )
     {
         result = CV_OUTOFMEM_ERR;
         goto func_exit;
     }
 
-    icvMorphologyInitAlloc( roi.width, cv32f, 1,
-                             cvSize( apertureSize, apertureSize ),
-                             cvPoint( apertureSize / 2, apertureSize / 2 ),
-                             CV_SHAPE_RECT, 0, &morph_filter );
+    {
+    CvSize element_size = { apertureSize, apertureSize };
+    CvPoint element_anchor = { apertureSize/2, apertureSize/2 };
+    icvMorphologyInitAlloc( roi.width, cv32f, 1, element_size, element_anchor,
+                            CV_SHAPE_RECT, 0, &morph_filter );
+    }
 
     /* calc Dx and Dy */
     icvSobelInitAlloc( roi.width, cv32f, apertureSize, origin, 1, 0, &pX );
@@ -228,7 +227,7 @@ icvCalcMotionGradient32fC1R( float *mhi, int mhiStep,
     for( y = 0; y < roi.height; y++, drvX_min += tempStep / sizeof( float ),
          drvY_max += tempStep / sizeof( float ), orient += orientStep / sizeof( float ))
     {
-        icvbFastArctan_32f( drvY_max, drvX_min, orient, roi.width );
+        cvbFastArctan( drvY_max, drvX_min, orient, roi.width );
 
         /* make orientation zero where the gradient is very small */
         for( x = 0; x < roi.width; x++ )
@@ -244,12 +243,12 @@ icvCalcMotionGradient32fC1R( float *mhi, int mhiStep,
     drvY_max -= tempSize / sizeof( float );
     orient -= (orientStep / sizeof( float )) * roi.height;
 
-    result = icvErodeStrip_Rect_32f_C1R( mhi, mhiStep, drvX_min, tempStep,
-                                          &roi, morph_filter, 0 );
+    result = icvErodeStrip_Rect_32f_C1R( (int*)mhi, mhiStep, (int*)drvX_min, tempStep,
+                                         &roi, morph_filter, 0 );
     if( result < 0 )
         goto func_exit;
 
-    result = icvDilateStrip_Rect_32f_C1R( mhi, mhiStep, drvY_max, tempStep,
+    result = icvDilateStrip_Rect_32f_C1R( (int*)mhi, mhiStep, (int*)drvY_max, tempStep,
                                            &roi, morph_filter, 0 );
     if( result < 0 )
         goto func_exit;
@@ -292,8 +291,8 @@ icvCalcMotionGradient32fC1R( float *mhi, int mhiStep,
   func_exit:
 
     icvMorphologyFree( &morph_filter );
-    icvFree( &drvX_min );
-    icvFree( &drvY_max );
+    cvFree( (void**)&drvX_min );
+    cvFree( (void**)&drvY_max );
 
     return result;
 }
@@ -486,7 +485,7 @@ cvUpdateMotionHistory( const void* silhouette, void* mhimg,
     if( !CV_ARE_SIZES_EQ( mhi, silh ))
         CV_ERROR( CV_StsUnmatchedSizes, "" );
 
-    size = icvGetMatSize( mhi );
+    size = cvGetMatSize( mhi );
 
     mhi_step = mhi->step;
     silh_step = silh->step;
@@ -549,7 +548,7 @@ cvCalcMotionGradient( const void* mhiimg, void* maskimg,
         CV_SWAP( minTDelta, maxTDelta, t );
     }
 
-    size = icvGetMatSize( mhi );
+    size = cvGetMatSize( mhi );
 
     IPPI_CALL( icvCalcMotionGradient32fC1R( mhi->data.fl, mhi->step,
                                             (uchar*)(mask->data.ptr), mask->step,
@@ -594,7 +593,7 @@ cvCalcGlobalOrientation( const void* orientation, const void* maskimg, const voi
     if( !CV_ARE_SIZES_EQ( mhi, mask ) || !CV_ARE_SIZES_EQ( orient, mhi ))
         CV_ERROR( CV_StsUnmatchedSizes, "" );
 
-    size = icvGetMatSize( mhi );
+    size = cvGetMatSize( mhi );
 
     mhi_step = mhi->step;
     mask_step = mask->step;
@@ -675,8 +674,10 @@ cvSegmentMotion( const CvArr* mhiimg, CvArr* segmask, CvMemStorage* storage,
             {
                 CvConnectedComp comp;
                 int x1, y1;
+                CvScalar _seg_thresh = cvRealScalar(seg_thresh);
+                CvPoint seed = cvPoint(x,y);
 
-                CV_CALL( cvFloodFill( mhi, cvPoint( x, y ), 0, seg_thresh, seg_thresh,
+                CV_CALL( cvFloodFill( mhi, seed, cvRealScalar(0), _seg_thresh, _seg_thresh,
                                       &comp, CV_FLOODFILL_MASK_ONLY + 2*256 + 4, mask8u ));
 
                 for( y1 = 0; y1 < comp.rect.height; y1++ )

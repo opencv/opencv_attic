@@ -52,7 +52,7 @@ typedef struct CvUnDistortData
 CvUnDistortData;
 
 /*F//////////////////////////////////////////////////////////////////////////////////////
-//    Names: icvUnDistortInit_8uC1R, icvUnDistortInit_8uC3R, 
+//    Names: icvUnDistortInit_8uC1R, icvUnDistortInit_8uC3R,
 //    Purpose: The functions calculate arrays of distorted points indices and
 //             interpolation coefficients for cvUnDistort function
 //    Context:
@@ -72,11 +72,10 @@ CvUnDistortData;
 //F*/
 /*______________________________________________________________________________________*/
 
-IPCVAPI_IMPL( CvStatus, icvUnDistortInit, ( int srcStep, int* data,
-                                            int mapStep, CvSize size,
-                                            const float *intrMatrix,
-                                            const float *distCoeffs,
-                                            int interToggle, int pixSize ))
+IPCVAPI_IMPL( CvStatus, icvUnDistortInit,
+    ( int srcStep, int* data, int mapStep, CvSize size, const float *intrMatrix,
+      const float *distCoeffs, int interToggle, int pixSize ),
+      (srcStep, data, mapStep, size, intrMatrix, distCoeffs, interToggle, pixSize) )
 {
     const float a1 = 1.f / intrMatrix[0], b1 = 1.f / intrMatrix[4],
         u0 = intrMatrix[2], v0 = intrMatrix[5],
@@ -96,7 +95,7 @@ IPCVAPI_IMPL( CvStatus, icvUnDistortInit, ( int srcStep, int* data,
         {
             float dv = v - v0;
             float y = b1 * dv;
-            float y1 = p1 / y;
+            float y1 = p1 / (y?y:0.1f);
             float y2 = y * y;
             float y3 = 2.f * p1 * y;
 
@@ -104,7 +103,7 @@ IPCVAPI_IMPL( CvStatus, icvUnDistortInit, ( int srcStep, int* data,
             {
                 float du = u - u0;
                 float x = a1 * du;
-                float x1 = p2 / x;
+                float x1 = p2 / (x?x:0.1f);
                 float x2 = x * x;
                 float x3 = p22 * x;
                 float r2 = x2 + y2;
@@ -132,7 +131,7 @@ IPCVAPI_IMPL( CvStatus, icvUnDistortInit, ( int srcStep, int* data,
         {
             float dv = v - v0;
             float y = b1 * dv;
-            float y1 = p1 / y;
+            float y1 = p1 / (y?y:0.1f);
             float y2 = y * y;
             float y3 = 2.f * p1 * y;
 
@@ -140,7 +139,7 @@ IPCVAPI_IMPL( CvStatus, icvUnDistortInit, ( int srcStep, int* data,
             {
                 float du = u - u0;
                 float x = a1 * du;
-                float x1 = p2 / x;
+                float x1 = p2 / (x?x:0.1f);
                 float x2 = x * x;
                 float x3 = p22 * x;
                 float r2 = x2 + y2;
@@ -226,10 +225,10 @@ IPCVAPI_IMPL( CvStatus, icvUnDistortInit, ( int srcStep, int* data,
 //F*/
 /*______________________________________________________________________________________*/
 
-IPCVAPI_IMPL( CvStatus, icvUnDistort_8u_C1R, ( const uchar* src, int srcStep,
-                                               const int* data, int mapStep,
-                                               uchar* dst, int dstStep,
-                                               CvSize size, int interToggle ))
+IPCVAPI_IMPL( CvStatus, icvUnDistort_8u_C1R,
+    ( const uchar* src, int srcStep, const int* data, int mapStep,
+      uchar* dst, int dstStep, CvSize size, int interToggle ),
+      (src, srcStep, data, mapStep, dst, dstStep, size, interToggle) )
 {
     int u, v;
     uchar buf;
@@ -296,14 +295,14 @@ IPCVAPI_IMPL( CvStatus, icvUnDistort_8u_C1R, ( const uchar* src, int srcStep,
     t1 = (src_ptr)[2];                  \
     (dst_ptr)[1] = t0;                  \
     (dst_ptr)[2] = t1
-   
+
 
 /*_____________________________ 3-CHANNEL IMAGES _______________________________*/
 
-IPCVAPI_IMPL( CvStatus, icvUnDistort_8u_C3R, ( const uchar* src, int srcStep,
-                                               const int* data, int mapStep,
-                                               uchar* dst, int dstStep,
-                                               CvSize size, int interToggle ))
+IPCVAPI_IMPL( CvStatus, icvUnDistort_8u_C3R,
+    ( const uchar* src, int srcStep, const int* data, int mapStep,
+      uchar* dst, int dstStep, CvSize size, int interToggle ),
+      (src, srcStep, data, mapStep, dst, dstStep, size, interToggle) )
 {
     int u, v;
     uchar buf[3];
@@ -404,11 +403,10 @@ IPCVAPI_IMPL( CvStatus, icvUnDistort_8u_C3R, ( const uchar* src, int srcStep,
 #define S2 11
 #define FM (float)0x400000
 
-IPCVAPI_IMPL( CvStatus, icvUnDistort1_8u_C1R, ( const uchar* src, int srcStep,
-                                                uchar* dst, int dstStep, CvSize size,
-                                                const float *intrMatrix,
-                                                const float *distCoeffs,
-                                                int interToggle ))
+IPCVAPI_IMPL( CvStatus, icvUnDistort1_8u_C1R,
+    ( const uchar* src, int srcStep, uchar* dst, int dstStep, CvSize size,
+      const float *intrMatrix, const float *distCoeffs, int interToggle ),
+      (src, srcStep, dst, dstStep, size, intrMatrix, distCoeffs, interToggle) )
 {
     const float fm = FM;
     const float a1 = 1.f / intrMatrix[0], b1 = 1.f / intrMatrix[4],
@@ -423,15 +421,15 @@ IPCVAPI_IMPL( CvStatus, icvUnDistort1_8u_C1R, ( const uchar* src, int srcStep,
     if( !src || !dst || !intrMatrix || !distCoeffs )
         return CV_NULLPTR_ERR;
 
-    x2 = (float *) icvAlloc( sizeof( float ) * size.width );
+    x2 = (float *) cvAlloc( sizeof( float ) * size.width );
 
     if( x2 == NULL )
         return CV_OUTOFMEM_ERR;
-    du = (float *) icvAlloc( sizeof( float ) * size.width );
+    du = (float *) cvAlloc( sizeof( float ) * size.width );
 
     if( du == NULL )
     {
-        icvFree( (void **) &x2 );
+        cvFree( (void **) &x2 );
         return CV_OUTOFMEM_ERR;
     }
 
@@ -519,17 +517,16 @@ IPCVAPI_IMPL( CvStatus, icvUnDistort1_8u_C1R, ( const uchar* src, int srcStep,
 
     memcpy( (void*)src, buf, 1 );
 
-    icvFree( (void **) &x2 );
-    icvFree( (void **) &du );
+    cvFree( (void **) &x2 );
+    cvFree( (void **) &du );
     return CV_NO_ERR;
 }
 /*______________________________________________________ 3-CHANNEL IMAGES ______________*/
 
-IPCVAPI_IMPL( CvStatus, icvUnDistort1_8u_C3R, ( const uchar* src, int srcStep,
-                                                uchar* dst, int dstStep, CvSize size,
-                                                const float *intrMatrix,
-                                                const float *distCoeffs,
-                                                int interToggle ))
+IPCVAPI_IMPL( CvStatus, icvUnDistort1_8u_C3R,
+    ( const uchar* src, int srcStep, uchar* dst, int dstStep, CvSize size,
+      const float *intrMatrix, const float *distCoeffs, int interToggle ),
+      (src, srcStep, dst, dstStep, size, intrMatrix, distCoeffs, interToggle) )
 {
     const float fm = FM;
     const float a1 = 1.f / intrMatrix[0], b1 = 1.f / intrMatrix[4],
@@ -545,15 +542,15 @@ IPCVAPI_IMPL( CvStatus, icvUnDistort1_8u_C3R, ( const uchar* src, int srcStep,
     if( !src || !dst || !intrMatrix || !distCoeffs )
         return CV_NULLPTR_ERR;
 
-    x2 = (float *) icvAlloc( sizeof( float ) * size.width );
+    x2 = (float *) cvAlloc( sizeof( float ) * size.width );
 
     if( x2 == NULL )
         return CV_OUTOFMEM_ERR;
-    du = (float *) icvAlloc( sizeof( float ) * size.width );
+    du = (float *) cvAlloc( sizeof( float ) * size.width );
 
     if( du == NULL )
     {
-        icvFree( (void **) &x2 );
+        cvFree( (void **) &x2 );
         return CV_OUTOFMEM_ERR;
     }
 
@@ -753,8 +750,8 @@ IPCVAPI_IMPL( CvStatus, icvUnDistort1_8u_C3R, ( const uchar* src, int srcStep,
 
     memcpy( (void*)src, buf, 1 );
 
-    icvFree( (void **) &x2 );
-    icvFree( (void **) &du );
+    cvFree( (void **) &x2 );
+    cvFree( (void **) &du );
     return CV_NO_ERR;
 }
 
@@ -781,11 +778,10 @@ IPCVAPI_IMPL( CvStatus, icvUnDistort1_8u_C3R, ( const uchar* src, int srcStep,
 //F*/
 /*______________________________________________________________________________________*/
 
-IPCVAPI_IMPL( CvStatus, icvUnDistortEx_8u_C1R, ( const uchar* src, int srcStep,
-                                                 uchar* dst, int dstStep, CvSize size,
-                                                 const float *intrMatrix,
-                                                 const float *distCoeffs,
-                                                 int interToggle ))
+IPCVAPI_IMPL( CvStatus, icvUnDistortEx_8u_C1R,
+    ( const uchar* src, int srcStep, uchar* dst, int dstStep, CvSize size,
+      const float *intrMatrix, const float *distCoeffs, int interToggle ),
+      (src, srcStep, dst, dstStep, size, intrMatrix, distCoeffs, interToggle) )
 {
     const float fm = FM;
     const float a1 = 1.f / intrMatrix[0], b1 = 1.f / intrMatrix[4],
@@ -806,21 +802,21 @@ IPCVAPI_IMPL( CvStatus, icvUnDistortEx_8u_C1R, ( const uchar* src, int srcStep,
     /*if ( !p1 && !p2 ) return icvUnDistort1_8uC1R ( src, dst, step, size,
        intrMatrix, distCoeffs, interToggle ); */
 
-    x1 = (float *) icvAlloc( sizeof( float ) * size.width );
-    x2 = (float *) icvAlloc( sizeof( float ) * size.width );
-    x3 = (float *) icvAlloc( sizeof( float ) * size.width );
-    du = (float *) icvAlloc( sizeof( float ) * size.width );
+    x1 = (float *) cvAlloc( sizeof( float ) * size.width );
+    x2 = (float *) cvAlloc( sizeof( float ) * size.width );
+    x3 = (float *) cvAlloc( sizeof( float ) * size.width );
+    du = (float *) cvAlloc( sizeof( float ) * size.width );
 
     if( x1 == NULL || x2 == NULL || x3 == NULL || du == NULL )
     {
         if( x1 )
-            icvFree( (void **) &x1 );
+            cvFree( (void **) &x1 );
         if( x2 )
-            icvFree( (void **) &x2 );
+            cvFree( (void **) &x2 );
         if( x3 )
-            icvFree( (void **) &x3 );
+            cvFree( (void **) &x3 );
         if( du )
-            icvFree( (void **) &du );
+            cvFree( (void **) &du );
         return CV_OUTOFMEM_ERR;
     }
 
@@ -834,7 +830,7 @@ IPCVAPI_IMPL( CvStatus, icvUnDistortEx_8u_C1R, ( const uchar* src, int srcStep,
             float w = u - u0;
             float x = a1 * w;
 
-            x1[u] = p2 / x;
+            x1[u] = p2 / (x?x:0.1f);
             x2[u] = x * x;
             x3[u] = 2.f * p2 * x;
             du[u] = w;
@@ -844,7 +840,7 @@ IPCVAPI_IMPL( CvStatus, icvUnDistortEx_8u_C1R, ( const uchar* src, int srcStep,
         {
             float dv = v - v0;
             float y = b1 * dv;
-            float y1 = p1 / y;
+            float y1 = p1 / (y?y:0.1f);
             float y2 = y * y;
             float y3 = 2.f * p1 * y;
 
@@ -872,7 +868,7 @@ IPCVAPI_IMPL( CvStatus, icvUnDistortEx_8u_C1R, ( const uchar* src, int srcStep,
             float w = u - u0;
             float x = a1 * w;
 
-            x1[u] = p2 / x;
+            x1[u] = p2 / (x?x:0.1f);
             x2[u] = x * x;
             x3[u] = 2.f * p2 * x;
             du[u] = fm * w;
@@ -882,7 +878,7 @@ IPCVAPI_IMPL( CvStatus, icvUnDistortEx_8u_C1R, ( const uchar* src, int srcStep,
         {
             float dv = v - v0;
             float y = b1 * dv;
-            float y1 = p1 / y;
+            float y1 = p1 / (y?y:0.1f);
             float y2 = y * y;
             float y3 = 2.f * p1 * y;
 
@@ -926,19 +922,18 @@ IPCVAPI_IMPL( CvStatus, icvUnDistortEx_8u_C1R, ( const uchar* src, int srcStep,
 
     memcpy( (void*)src, buf, 1 );
 
-    icvFree( (void **) &x1 );
-    icvFree( (void **) &x2 );
-    icvFree( (void **) &x3 );
-    icvFree( (void **) &du );
+    cvFree( (void **) &x1 );
+    cvFree( (void **) &x2 );
+    cvFree( (void **) &x3 );
+    cvFree( (void **) &du );
     return CV_NO_ERR;
 }
 /*______________________________________________________ 3-CHANNEL IMAGES ______________*/
 
-IPCVAPI_IMPL( CvStatus, icvUnDistortEx_8u_C3R, ( const uchar* src, int srcStep,
-                                                 uchar* dst, int dstStep, CvSize size,
-                                                 const float *intrMatrix,
-                                                 const float *distCoeffs,
-                                                 int interToggle ))
+IPCVAPI_IMPL( CvStatus, icvUnDistortEx_8u_C3R,
+    ( const uchar* src, int srcStep, uchar* dst, int dstStep, CvSize size,
+      const float *intrMatrix, const float *distCoeffs, int interToggle ),
+     (src, srcStep, dst, dstStep, size, intrMatrix, distCoeffs, interToggle) )
 {
     const float fm = FM;
     const float a1 = 1.f / intrMatrix[0], b1 = 1.f / intrMatrix[4],
@@ -960,27 +955,27 @@ IPCVAPI_IMPL( CvStatus, icvUnDistortEx_8u_C3R, ( const uchar* src, int srcStep,
     /*if ( !p1 && !p2 ) return icvUnDistort1_8uC3R ( src, dst, srcStep, size,
        intrMatrix, distCoeffs, interToggle ); */
 
-    x1 = (float *) icvAlloc( sizeof( float ) * size.width );
-    x2 = (float *) icvAlloc( sizeof( float ) * size.width );
-    x3 = (float *) icvAlloc( sizeof( float ) * size.width );
-    du = (float *) icvAlloc( sizeof( float ) * size.width );
+    x1 = (float *) cvAlloc( sizeof( float ) * size.width );
+    x2 = (float *) cvAlloc( sizeof( float ) * size.width );
+    x3 = (float *) cvAlloc( sizeof( float ) * size.width );
+    du = (float *) cvAlloc( sizeof( float ) * size.width );
 
     if( x1 == NULL || x2 == NULL || x3 == NULL || du == NULL )
     {
         if( x1 )
-            icvFree( (void **) &x1 );
+            cvFree( (void **) &x1 );
         if( x2 )
-            icvFree( (void **) &x2 );
+            cvFree( (void **) &x2 );
         if( x3 )
-            icvFree( (void **) &x3 );
+            cvFree( (void **) &x3 );
         if( du )
-            icvFree( (void **) &du );
+            cvFree( (void **) &du );
         return CV_OUTOFMEM_ERR;
     }
 
     memcpy( buf, src, 3 );
     memset( (void*)src, 0, 3 );
-    
+
     if( !interToggle )
     {
         for( u = 0; u < size.width; u++ )
@@ -988,7 +983,7 @@ IPCVAPI_IMPL( CvStatus, icvUnDistortEx_8u_C3R, ( const uchar* src, int srcStep,
             float w = u - u0;
             float x = a1 * w;
 
-            x1[u] = p2 / x;
+            x1[u] = p2 / (x?x:0.1f);
             x2[u] = x * x;
             x3[u] = 2.f * p2 * x;
             du[u] = w;
@@ -998,7 +993,7 @@ IPCVAPI_IMPL( CvStatus, icvUnDistortEx_8u_C3R, ( const uchar* src, int srcStep,
         {
             float dv = v - v0;
             float y = b1 * dv;
-            float y1 = p1 / y;
+            float y1 = p1 / (y?y:0.1f);
             float y2 = y * y;
             float y3 = 2.f * p1 * y;
 
@@ -1058,7 +1053,7 @@ IPCVAPI_IMPL( CvStatus, icvUnDistortEx_8u_C3R, ( const uchar* src, int srcStep,
             float w = u - u0;
             float x = a1 * w;
 
-            x1[u] = p2 / x;
+            x1[u] = p2 / (x?x:0.1f);
             x2[u] = x * x;
             x3[u] = 2.f * p2 * x;
             du[u] = fm * w;
@@ -1068,7 +1063,7 @@ IPCVAPI_IMPL( CvStatus, icvUnDistortEx_8u_C3R, ( const uchar* src, int srcStep,
         {
             float dv = v - v0;
             float y = b1 * dv;
-            float y1 = p1 / y;
+            float y1 = p1 / (y?y:0.1f);
             float y2 = y * y;
             float y3 = 2.f * p1 * y;
 
@@ -1196,10 +1191,10 @@ IPCVAPI_IMPL( CvStatus, icvUnDistortEx_8u_C3R, ( const uchar* src, int srcStep,
 
     memcpy( (void*)src, buf, 3 );
 
-    icvFree( (void **) &x1 );
-    icvFree( (void **) &x2 );
-    icvFree( (void **) &x3 );
-    icvFree( (void **) &du );
+    cvFree( (void **) &x1 );
+    cvFree( (void **) &x2 );
+    cvFree( (void **) &x3 );
+    cvFree( (void **) &du );
     return CV_NO_ERR;
 }
 /*______________________________________________________________________________________*/
@@ -1235,7 +1230,7 @@ cvUnDistortOnce( const void* srcImage, void* dstImage,
 {
     static void* undist_tab[4];
     static int inittab = 0;
-    
+
     CV_FUNCNAME( "cvUnDistortOnce" );
 
     __BEGIN__;
@@ -1274,7 +1269,7 @@ cvUnDistortOnce( const void* srcImage, void* dstImage,
     if( !intrMatrix || !distCoeffs )
         CV_ERROR( CV_StsNullPtr, "" );
 
-    size = icvGetMatSize( src );
+    size = cvGetMatSize( src );
 
     func = (CvUnDistortOnceFunc)
         (undist_tab[(CV_MAT_CN(src->type)-1)+(distCoeffs[2] != 0 || distCoeffs[3] != 0)]);
@@ -1284,7 +1279,7 @@ cvUnDistortOnce( const void* srcImage, void* dstImage,
 
     IPPI_CALL( func( src->data.ptr, src->step, dst->data.ptr, dst->step, size,
                      intrMatrix, distCoeffs, interpolate ));
-  
+
     __END__;
 }
 
@@ -1337,11 +1332,11 @@ cvUnDistortInit( const void* srcImage, void* undistMap,
         !interpolate && src->width > map->width )
         CV_ERROR( CV_StsUnmatchedSizes, "" );
 
-    size = icvGetMatSize( src );
+    size = cvGetMatSize( src );
 
     IPPI_CALL( icvUnDistortInit( src->step, (int*)map->data.ptr, map->step,
                                  size, intrMatrix, distCoeffs,
-                                 interpolate, icvPixSize[CV_MAT_TYPE(src->type)]));
+                                 interpolate, CV_ELEM_SIZE(src->type)));
 
     __END__;
 }
@@ -1402,7 +1397,7 @@ cvUnDistort( const void* srcImage, void* dstImage,
     if( !CV_ARE_SIZES_EQ( src, dst ))
         CV_ERROR( CV_StsUnmatchedSizes, "" );
 
-    size = icvGetMatSize( src );
+    size = cvGetMatSize( src );
 
     if( CV_MAT_TYPE( src->type ) == CV_8UC1 )
     {
@@ -1414,7 +1409,7 @@ cvUnDistort( const void* srcImage, void* dstImage,
     else if( CV_MAT_TYPE( src->type ) == CV_8UC3 )
     {
         IPPI_CALL( icvUnDistort_8u_C3R( src->data.ptr, src->step,
-                                        (int*)map->data.ptr, map->step, 
+                                        (int*)map->data.ptr, map->step,
                                         dst->data.ptr, dst->step,
                                         size, interpolate ));
     }
@@ -1487,7 +1482,7 @@ cvConvertMap( const CvArr* srcImage, const CvArr* flUndistMap,
         CV_ERROR( CV_StsUnmatchedSizes, "" );
 
     flmapdata = (CvPoint2D32f*)flmap->data.ptr;
-    pixSize = icvPixSize[CV_MAT_TYPE(src->type)];
+    pixSize = CV_ELEM_SIZE(src->type);
     srcStep = src->step;
 
     if( !interpolate )

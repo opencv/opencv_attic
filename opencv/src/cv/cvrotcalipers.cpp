@@ -39,7 +39,6 @@
 //
 //M*/
 #include "_cv.h"
-#include "_cvdatastructs.h"
 
 typedef struct
 {
@@ -97,8 +96,8 @@ icvRotatingCalipers( CvPoint2D32f* points, int n, int mode, float* out )
     float max_dist = 0;
     char buffer[32];
     int i, k;
-    CvPoint2D32f* vect = (CvPoint2D32f*)icvAlloc( n * sizeof(vect[0]) );
-    float* inv_vect_length = (float*)icvAlloc( n * sizeof(inv_vect_length[0]) );
+    CvPoint2D32f* vect = (CvPoint2D32f*)cvAlloc( n * sizeof(vect[0]) );
+    float* inv_vect_length = (float*)cvAlloc( n * sizeof(inv_vect_length[0]) );
     int left = 0, bottom = 0, right = 0, top = 0;
     int seq[4] = { -1, -1, -1, -1 };
 
@@ -106,7 +105,7 @@ icvRotatingCalipers( CvPoint2D32f* points, int n, int mode, float* out )
        (a,b) (-b,a) (-a,-b) (b, -a)     
      */
     /* this is a first base bector (a,b) initialized by (1,0) */
-    float orientation;
+    float orientation = 0;
     float base_a;
     float base_b = 0;
 
@@ -139,19 +138,29 @@ icvRotatingCalipers( CvPoint2D32f* points, int n, int mode, float* out )
         pt0 = pt;
     }
 
-    icvbInvSqrt_32f( inv_vect_length, inv_vect_length, n );
+    cvbInvSqrt( inv_vect_length, inv_vect_length, n );
 
     /* find convex hull orientation */
     {
-        float ax = vect[0].x;
-        float ay = vect[0].y;
-        float bx = vect[1].x;
-        float by = vect[1].y;
+        double ax = vect[n-1].x;
+        double ay = vect[n-1].y;
+        
+        for( i = 0; i < n; i++ )
+        {
+            double bx = vect[i].x;
+            double by = vect[i].y;
 
-        float convexity = ax * by - ay * bx;
+            double convexity = ax * by - ay * bx;
 
-        assert( convexity != 0 );
-        orientation = (convexity > 0) ? 1.f : (-1.f);
+            if( convexity != 0 )
+            {
+                orientation = (convexity > 0) ? 1.f : (-1.f);
+                break;
+            }
+            ax = bx;
+            ay = by;
+        }
+        assert( orientation != 0 );
     }
     base_a = orientation;
 
@@ -168,7 +177,7 @@ icvRotatingCalipers( CvPoint2D32f* points, int n, int mode, float* out )
     for( k = 0; k < n; k++ )
     {
         /* sinus of minimal angle */
-        float sinus;
+        /*float sinus;*/
 
         /* compute cosine of angle between calipers side and polygon edge */
         /* dp - dot product */
@@ -191,21 +200,38 @@ icvRotatingCalipers( CvPoint2D32f* points, int n, int mode, float* out )
         cosalpha = dp3 * inv_vect_length[seq[3]];
         maxcos = (cosalpha > maxcos) ? (main_element = 3, cosalpha) : maxcos;
 
-        sinus = orientation * cvSqrt( 1 - maxcos * maxcos );
-
-        /* rotate calipers */
+        /*rotate calipers*/
         {
-            float x = base_a;
-            float y = base_b;
-
-            base_a = maxcos * x - sinus * y;
-            base_b = sinus * x + maxcos * y;
-        }
-
+            //get next base
+            int pindex = seq[main_element];
+            float lead_x = vect[pindex].x*inv_vect_length[pindex];
+            float lead_y = vect[pindex].y*inv_vect_length[pindex];
+            switch( main_element )
+            {
+            case 0:
+                base_a = lead_x;
+                base_b = lead_y;
+                break;
+            case 1:
+                base_a = lead_y; 
+                base_b = -lead_x;
+                break;
+            case 2:
+                base_a = -lead_x;
+                base_b = -lead_y;
+                break;
+            case 3:
+                base_a = -lead_y;
+                base_b = lead_x;
+                break;
+            default: assert(0);
+            }
+        }                        
         /* change base point of main edge */
         seq[main_element] += 1;
         seq[main_element] = (seq[main_element] == n) ? 0 : seq[main_element];
 
+        
         switch (mode)
         {
         case CV_CALIPERS_MAXHEIGHT:
@@ -308,8 +334,8 @@ icvRotatingCalipers( CvPoint2D32f* points, int n, int mode, float* out )
         break;
     }
 
-    icvFree( (void**)&vect );
-    icvFree( (void**)&inv_vect_length );
+    cvFree( (void**)&vect );
+    cvFree( (void**)&inv_vect_length );
 }
 
 

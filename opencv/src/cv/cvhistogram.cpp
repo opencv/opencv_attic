@@ -63,7 +63,7 @@ cvCreateHist( int dims, int *sizes, CvHistType type, float** ranges, int uniform
     if( type == CV_HIST_ARRAY )
     {
         CV_CALL( hist->bins = cvInitMatNDHeader( &hist->mat, dims, sizes,
-                                                  CV_HIST_DEFAULT_TYPE ));
+                                                 CV_HIST_DEFAULT_TYPE ));
         CV_CALL( cvCreateData( hist->bins ));
     }
     else if( type == CV_HIST_SPARSE )
@@ -160,6 +160,8 @@ cvReleaseHist( CvHistogram **hist )
         
         if( temp->thresh2 )
             cvFree( (void**)&temp->thresh2 );
+
+        cvFree( (void**)&temp );
     }
 
     __END__;
@@ -396,7 +398,7 @@ cvGetMinMaxHistValue( const CvHistogram* hist,
 CV_IMPL double
 cvCompareHist( const CvHistogram* hist1,
                const CvHistogram* hist2,
-               CvCompareMethod method )
+               int method )
 {
     double _result = -1;
     
@@ -492,7 +494,7 @@ cvCompareHist( const CvHistogram* hist1,
         CvSparseMatIterator iterator;
         CvSparseNode *node1, *node2;
 
-        if( mat1->total > mat2->total )
+        if( mat1->heap->active_count > mat2->heap->active_count )
         {
             CvSparseMat* t;
             CV_SWAP( mat1, mat2, t );
@@ -505,8 +507,7 @@ cvCompareHist( const CvHistogram* hist1,
                  node1 != 0; node1 = cvGetNextSparseNode( &iterator ))
             {
                 double v1 = *(float*)CV_NODE_VAL(mat1,node1);
-                uchar* node2 = icvGetNodePtr( mat2, CV_NODE_IDX(mat1,node1),
-                                              0, 0, &node1->hashval );
+                uchar* node2 = cvPtrND( mat2, CV_NODE_IDX(mat1,node1), 0, 0, &node1->hashval );
                 if( !node2 )
                     result += v1;
                 else
@@ -523,11 +524,8 @@ cvCompareHist( const CvHistogram* hist1,
                  node2 != 0; node2 = cvGetNextSparseNode( &iterator ))
             {
                 double v2 = *(float*)CV_NODE_VAL(mat2,node2);
-                if( !icvGetNodePtr( mat1, CV_NODE_IDX(mat2,node2),
-                                    0, 0, &node2->hashval ))
-                {
+                if( !cvPtrND( mat1, CV_NODE_IDX(mat2,node2), 0, 0, &node2->hashval ))
                     result += v2;
-                }
             }
             break;
         case CV_COMP_CORREL:
@@ -541,8 +539,7 @@ cvCompareHist( const CvHistogram* hist1,
                      node1 != 0; node1 = cvGetNextSparseNode( &iterator ))
                 {
                     double v1 = *(float*)CV_NODE_VAL(mat1,node1);
-                    uchar* node2 = icvGetNodePtr( mat2, CV_NODE_IDX(mat1,node1),
-                                                  0, 0, &node1->hashval );
+                    uchar* node2 = cvPtrND( mat2, CV_NODE_IDX(mat1,node1), 0, 0, &node1->hashval );
                     if( node2 )
                     {
                         double v2 = *(float*)node2;
@@ -571,8 +568,7 @@ cvCompareHist( const CvHistogram* hist1,
                      node1 != 0; node1 = cvGetNextSparseNode( &iterator ))
                 {
                     float v1 = *(float*)CV_NODE_VAL(mat1,node1);
-                    uchar* node2 = icvGetNodePtr( mat2, CV_NODE_IDX(mat1,node1),
-                                                  0, 0, &node1->hashval );
+                    uchar* node2 = cvPtrND( mat2, CV_NODE_IDX(mat1,node1), 0, 0, &node1->hashval );
                     if( node2 )
                     {
                         float v2 = *(float*)node2;
@@ -830,7 +826,7 @@ static CvStatus CV_STDCALL
 
     dims = cvGetDims( hist->bins, histsize );
 
-    tab = (int*)alloca( dims*256*sizeof(int));
+    tab = (int*)cvStackAlloc( dims*256*sizeof(int));
     status = icvCalcHistLookupTables8x( hist, 0, 256, dims,
                                         histsize, tab );
 
@@ -1034,7 +1030,7 @@ static CvStatus CV_STDCALL
                     }
                     if( i == dims )
                     {
-                        int* bin = (int*)icvGetNodePtr( mat, node_idx, 0, 1 );
+                        int* bin = (int*)cvPtrND( mat, node_idx, 0, 1 );
                         bin[0]++;
                     }
                 }
@@ -1054,7 +1050,7 @@ static CvStatus CV_STDCALL
                         }
                         if( i == dims )
                         {
-                            int* bin = (int*)icvGetNodePtr( mat, node_idx, 0, 1 );
+                            int* bin = (int*)cvPtrND( mat, node_idx, 0, 1, 0 );
                             bin[0]++;
                         }
                     }
@@ -1303,7 +1299,7 @@ static CvStatus CV_STDCALL
                         }
                         if( i == dims )
                         {
-                            int* bin = (int*)icvGetNodePtr( mat, node_idx, 0, 1 );
+                            int* bin = (int*)cvPtrND( mat, node_idx, 0, 1, 0 );
                             bin[0]++;
                         }
                     }
@@ -1331,7 +1327,7 @@ static CvStatus CV_STDCALL
                         }
                         if( i == dims )
                         {
-                            int* bin = (int*)icvGetNodePtr( mat, node_idx, 0, 1 );
+                            int* bin = (int*)cvPtrND( mat, node_idx, 0, 1, 0 );
                             bin[0]++;
                         }
                     }
@@ -1420,7 +1416,7 @@ cvCalcArrHist( CvArr** img, CvHistogram* hist,
         cont_flag &= mat->type;
     }
 
-    size = icvGetMatSize(mat0);
+    size = cvGetMatSize(mat0);
     if( CV_IS_MAT_CONT( cont_flag ))
     {
         size.width *= size.height;
@@ -1510,7 +1506,7 @@ static CvStatus CV_STDCALL
 
     dims = cvGetDims( hist->bins, histsize );
 
-    tab = (int*)alloca( dims*256*sizeof(int));
+    tab = (int*)cvStackAlloc( dims*256*sizeof(int));
     status = icvCalcHistLookupTables8x( hist, 0, 256, dims, histsize, tab );
     if( status < 0 )
         return status;
@@ -1530,7 +1526,7 @@ static CvStatus CV_STDCALL
 
         if( dims > 1 && total <= small_hist_size && CV_IS_MAT_CONT(mat->type))
         {
-            buffer = (uchar*)icvAlloc(total);
+            buffer = (uchar*)cvAlloc(total);
             if( !buffer )
                 return CV_OUTOFMEM_ERR;
             for( i = 0; i < total; i++ )
@@ -1719,7 +1715,7 @@ static CvStatus CV_STDCALL
             }
         }
 
-        icvFree( (void**)&buffer );
+        cvFree( (void**)&buffer );
     }
     else
     {
@@ -1741,7 +1737,7 @@ static CvStatus CV_STDCALL
                 }
                 if( i == dims )
                 {
-                    float* bin = (float*)icvGetNodePtr( mat, node_idx, 0, 1 );
+                    float* bin = (float*)cvPtrND( mat, node_idx, 0, 1, 0 );
                     v = cvRound(bin[0]);
                     v = CV_CAST_8U(v);
                 }
@@ -1946,7 +1942,7 @@ static CvStatus CV_STDCALL
                     }
                     if( i == dims )
                     {
-                        float* bin = (float*)icvGetNodePtr( mat, node_idx, 0, 1 );
+                        float* bin = (float*)cvPtrND( mat, node_idx, 0, 1, 0 );
                         dst[x] = bin[0];
                     }
                     else
@@ -1973,7 +1969,7 @@ static CvStatus CV_STDCALL
                     }
                     if( i == dims )
                     {
-                        float* bin = (float*)icvGetNodePtr( mat, node_idx, 0, 1 );
+                        float* bin = (float*)cvPtrND( mat, node_idx, 0, 1, 0 );
                         dst[x] = bin[0];
                     }
                     else
@@ -2048,7 +2044,7 @@ cvCalcArrBackProject( CvArr** img, CvArr* dst, const CvHistogram* hist )
         }
     }
 
-    size = icvGetMatSize(mat0);
+    size = cvGetMatSize(mat0);
     if( CV_IS_MAT_CONT( cont_flag ))
     {
         size.width *= size.height;
@@ -2081,7 +2077,7 @@ cvCalcArrBackProject( CvArr** img, CvArr* dst, const CvHistogram* hist )
 
 CV_IMPL void
 cvCalcArrBackProjectPatch( CvArr** arr, CvArr* dst, CvSize range, CvHistogram* hist,
-                           CvCompareMethod method, double norm_factor )
+                           int method, double norm_factor )
 {
     CvHistogram* model = 0;
     
@@ -2122,7 +2118,7 @@ cvCalcArrBackProjectPatch( CvArr** arr, CvArr* dst, CvSize range, CvHistogram* h
     if( CV_MAT_TYPE( dstmat->type ) != CV_32FC1 )
         CV_ERROR( CV_StsUnsupportedFormat, "Resultant image must have 32fC1 type" );
 
-    size = icvGetMatSize(dstmat);
+    size = cvGetMatSize(dstmat);
     roi.coi = 0;
 
     for( y = 0; y < size.height; y++ )
@@ -2221,9 +2217,9 @@ cvCalcProbDensity( const CvHistogram* hist, const CvHistogram* hist_mask,
     {
         CvArr* arrs[] = { hist->bins, hist_mask->bins, hist_dens->bins };
         CvMatND stubs[3];
-        CvMatNDIterator iterator;
+        CvNArrayIterator iterator;
 
-        CV_CALL( icvPrepareArrayOp( 3, arrs, 0, stubs, &iterator ));
+        CV_CALL( cvInitNArrayIterator( 3, arrs, 0, stubs, &iterator ));
 
         if( CV_MAT_TYPE(iterator.hdr[0]->type) != CV_32FC1 )
             CV_ERROR( CV_StsUnsupportedFormat, "All histograms must have 32fC1 type" );
@@ -2248,7 +2244,7 @@ cvCalcProbDensity( const CvHistogram* hist, const CvHistogram* hist_mask,
                     dstdata[i] = (float)0;
             }
         }
-        while( icvNextMatNDSlice( &iterator ));
+        while( cvNextNArraySlice( &iterator ));
     }
 
     __END__;

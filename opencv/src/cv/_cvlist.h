@@ -39,21 +39,13 @@
 //
 //M*/
 
-/*
-To use the list of <type>, call DECLARE_LIST and IMPLEMENT_LIST with 
-the argument <type> like this:
-struct _X{...}
-typedef struct _X X;
-DECLARE_LIST(X);
-IMPLEMENT_LIST(X);
-These macros declare and implement data structures and functions which 
-work with the list
-*/
-
+#ifndef _CV_LIST_H_
+#define _CV_LIST_H_
 
 #include <stdlib.h>
-#include <memory.h>
 #include <assert.h>
+
+#define CV_FORCE_INLINE CV_INLINE
 
 #if !defined(_LIST_INLINE)
 #define _LIST_INLINE CV_FORCE_INLINE
@@ -140,7 +132,7 @@ typedef struct _list _CVLIST;
     {\
         if(l->m_buf_size < l->m_size && l->m_head_free.m_pos == NULL)\
         {\
-            *(void**)l->m_buffer = icvAlloc(l->m_buf_size*sizeof(element_type) + sizeof(void*));\
+            *(void**)l->m_buffer = cvAlloc(l->m_buf_size*sizeof(element_type) + sizeof(void*));\
             l->m_buffer = *(void**)l->m_buffer;\
             *(void**)l->m_buffer = NULL;\
             element = (element_type*)((char*)l->m_buffer + sizeof(void*));\
@@ -149,7 +141,7 @@ typedef struct _list _CVLIST;
         {\
             element = (element_type*)((char*)l->m_buffer + sizeof(void*)) + l->m_size - 1;\
         }\
-    };
+    }
 
 /* This macro adds 'element' to the list of free elements*/
 #define INSERT_FREE(element_type, l, element)\
@@ -166,9 +158,9 @@ typedef struct _list _CVLIST;
 #define IMPLEMENT_LIST(type, prefix)\
 _CVLIST* prefix##create_list_##type(long size)\
 {\
-    _CVLIST* pl = (_CVLIST*)icvAlloc(sizeof(_CVLIST));\
+    _CVLIST* pl = (_CVLIST*)cvAlloc(sizeof(_CVLIST));\
     pl->m_buf_size = size > 0 ? size : default_size;\
-    pl->m_first_buffer = icvAlloc(pl->m_buf_size*sizeof(ELEMENT_##type) + sizeof(void*));\
+    pl->m_first_buffer = cvAlloc(pl->m_buf_size*sizeof(ELEMENT_##type) + sizeof(void*));\
     pl->m_buffer = pl->m_first_buffer;\
     *(void**)pl->m_buffer = NULL;\
     pl->m_size = 0;\
@@ -176,7 +168,7 @@ _CVLIST* prefix##create_list_##type(long size)\
     pl->m_tail.m_pos = NULL;\
     pl->m_head_free.m_pos = NULL;\
     return pl;\
-};\
+}\
 void prefix##destroy_list_##type(_CVLIST* l)\
 {\
     void* cur = l->m_first_buffer;\
@@ -184,19 +176,19 @@ void prefix##destroy_list_##type(_CVLIST* l)\
     while(cur)\
     {\
         next = *(void**)cur;\
-        icvFree(&cur);\
+        cvFree((void**)&cur);\
         cur = next;\
     }\
-    icvFree(&l);\
-};\
+    cvFree((void**)&l);\
+}\
 CVPOS prefix##get_head_pos_##type(_CVLIST* l)\
 {\
     return l->m_head;\
-};\
+}\
 CVPOS prefix##get_tail_pos_##type(_CVLIST* l)\
 {\
     return l->m_tail;\
-};\
+}\
 type* prefix##get_next_##type(CVPOS* pos)\
 {\
     if(pos->m_pos)\
@@ -209,7 +201,7 @@ type* prefix##get_next_##type(CVPOS* pos)\
     {\
         return NULL;\
     }\
-};\
+}\
 type* prefix##get_prev_##type(CVPOS* pos)\
 {\
     if(pos->m_pos)\
@@ -222,7 +214,7 @@ type* prefix##get_prev_##type(CVPOS* pos)\
     {\
         return NULL;\
     }\
-};\
+}\
 int prefix##is_pos_##type(CVPOS pos)\
 {\
     return !!pos.m_pos;\
@@ -233,7 +225,7 @@ void prefix##clear_list_##type(_CVLIST* l)\
     l->m_tail.m_pos = NULL;\
     l->m_size = 0;\
     l->m_head_free.m_pos = NULL;\
-};\
+}\
 CVPOS prefix##add_head_##type(_CVLIST* l, type* data)\
 {\
     ELEMENT_##type* element;\
@@ -251,7 +243,7 @@ CVPOS prefix##add_head_##type(_CVLIST* l, type* data)\
     }\
     l->m_head.m_pos = element;\
     return l->m_head;\
-};\
+}\
 CVPOS prefix##add_tail_##type(_CVLIST* l, type* data)\
 {\
     ELEMENT_##type* element;\
@@ -269,7 +261,7 @@ CVPOS prefix##add_tail_##type(_CVLIST* l, type* data)\
     }\
     l->m_tail.m_pos = element;\
     return l->m_tail;\
-};\
+}\
 void prefix##remove_head_##type(_CVLIST* l)\
 {\
     ELEMENT_##type* element = ((ELEMENT_##type*)(l->m_head.m_pos));\
@@ -280,7 +272,7 @@ void prefix##remove_head_##type(_CVLIST* l)\
     l->m_head.m_pos = element->m_next;\
     INSERT_FREE(ELEMENT_##type, l, element);\
     l->m_size--;\
-};\
+}\
 void prefix##remove_tail_##type(_CVLIST* l)\
 {\
     ELEMENT_##type* element = ((ELEMENT_##type*)(l->m_tail.m_pos));\
@@ -291,7 +283,7 @@ void prefix##remove_tail_##type(_CVLIST* l)\
     l->m_tail.m_pos = element->m_prev;\
     INSERT_FREE(ELEMENT_##type, l, element);\
     l->m_size--;\
-};\
+}\
 CVPOS prefix##insert_after_##type(_CVLIST* l, CVPOS pos, type* data)\
 {\
     ELEMENT_##type* element;\
@@ -309,7 +301,7 @@ CVPOS prefix##insert_after_##type(_CVLIST* l, CVPOS pos, type* data)\
         l->m_tail.m_pos = element;\
     newpos.m_pos = element;\
     return newpos;\
-};\
+}\
 CVPOS prefix##insert_before_##type(_CVLIST* l, CVPOS pos, type* data)\
 {\
     ELEMENT_##type* element;\
@@ -327,7 +319,7 @@ CVPOS prefix##insert_before_##type(_CVLIST* l, CVPOS pos, type* data)\
         l->m_head.m_pos = element;\
     newpos.m_pos = element;\
     return newpos;\
-};\
+}\
 void prefix##remove_at_##type(_CVLIST* l, CVPOS pos)\
 {\
     ELEMENT_##type* element = ((ELEMENT_##type*)pos.m_pos);\
@@ -349,22 +341,33 @@ void prefix##remove_at_##type(_CVLIST* l, CVPOS pos)\
     }\
     INSERT_FREE(ELEMENT_##type, l, element);\
     l->m_size--;\
-};\
+}\
 void prefix##set_##type(CVPOS pos, type* data)\
 {\
     ELEMENT_##type* element = ((ELEMENT_##type*)(pos.m_pos));\
     memcpy(&(element->m_data), data, sizeof(data));\
-};\
+}\
 type* prefix##get_##type(CVPOS pos)\
 {\
     ELEMENT_##type* element = ((ELEMENT_##type*)(pos.m_pos));\
     return &(element->m_data);\
-};\
+}\
 int prefix##get_count_##type(_CVLIST* list)\
 {\
     return list->m_size;\
-};
+}
 
 #define DECLARE_AND_IMPLEMENT_LIST(type, prefix)\
-    DECLARE_LIST(type, prefix);\
-    IMPLEMENT_LIST(type, prefix);
+    DECLARE_LIST(type, prefix)\
+    IMPLEMENT_LIST(type, prefix)
+
+typedef struct __index
+{
+    int value;
+    float rho, theta;
+}
+_index;
+
+DECLARE_LIST( _index, h_ )
+
+#endif/*_CV_LIST_H_*/

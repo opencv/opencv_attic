@@ -79,7 +79,7 @@ cvMeanShift( const void* imgProb, CvRect windowIn,
     CV_CALL( mat = cvGetMat( mat, &stub ));
 
     if( CV_MAT_CN( mat->type ) > 1 )
-        CV_ERROR( CV_BadNumChannels, icvUnsupportedFormat );
+        CV_ERROR( CV_BadNumChannels, cvUnsupportedFormat );
 
     if( windowIn.height <= 0 || windowIn.width <= 0 )
         CV_ERROR( CV_StsBadArg, "Input window has non-positive sizes" );
@@ -87,11 +87,11 @@ cvMeanShift( const void* imgProb, CvRect windowIn,
     if( !icvIsRectInRect( windowIn, cvRect( 0, 0, mat->width, mat->height )))
         CV_ERROR( CV_StsBadArg, "Initial window is not inside the image ROI" );
 
-    CV_CALL( criteria = icvCheckTermCriteria( criteria, 1., 100 ));
+    CV_CALL( criteria = cvCheckTermCriteria( criteria, 1., 100 ));
 
     eps = cvRound( criteria.epsilon * criteria.epsilon );
 
-    for( i = 0; i < criteria.maxIter; i++ )
+    for( i = 0; i < criteria.max_iter; i++ )
     {
         int dx, dy;
         double inv_m00;

@@ -41,116 +41,124 @@
 
 #include "_cv.h"
 
-#define  ICV_DEF_ACC_FUNC( name, srctype, dsttype, cvtmacro )                      \
-IPCVAPI_IMPL( CvStatus,                                                            \
-name,( const srctype *pSrc, int srcStep,                                           \
-      dsttype *pSrcDst, int srcDstStep,                                            \
-      CvSize roiSize ))                                                            \
-{                                                                                  \
-    for( ; roiSize.height--; (char*&)pSrc += srcStep,                              \
-                             (char*&)pSrcDst += srcDstStep )                       \
-    {                                                                              \
-        int x;                                                                     \
-                                                                                   \
-        for( x = 0; x <= roiSize.width - 4; x += 4 )                               \
-        {                                                                          \
-            dsttype t0 = pSrcDst[x] + cvtmacro(pSrc[x]);                           \
-            dsttype t1 = pSrcDst[x + 1] + cvtmacro(pSrc[x + 1]);                   \
-                                                                                   \
-            pSrcDst[x] = (dsttype)t0;                                              \
-            pSrcDst[x + 1] = (dsttype)t1;                                          \
-                                                                                   \
-            t0 = pSrcDst[x + 2] + cvtmacro(pSrc[x + 2]);                           \
-            t1 = pSrcDst[x + 3] + cvtmacro(pSrc[x + 3]);                           \
-                                                                                   \
-            pSrcDst[x + 2] = (dsttype)t0;                                          \
-            pSrcDst[x + 3] = (dsttype)t1;                                          \
-        }                                                                          \
-                                                                                   \
-        for( ; x < roiSize.width; x++ )                                            \
-        {                                                                          \
-            dsttype t0 = pSrcDst[x] + cvtmacro(pSrc[x]);                           \
-            pSrcDst[x] = (dsttype)t0;                                              \
-        }                                                                          \
-    }                                                                              \
-                                                                                   \
-    return CV_OK;                                                                  \
+#define  ICV_DEF_ACC_FUNC_BODY( srctype, dsttype, cvtmacro )                        \
+{                                                                                   \
+    for( ; roiSize.height--; (char*&)pSrc += srcStep,                               \
+                             (char*&)pSrcDst += srcDstStep )                        \
+    {                                                                               \
+        int x;                                                                      \
+                                                                                    \
+        for( x = 0; x <= roiSize.width - 4; x += 4 )                                \
+        {                                                                           \
+            dsttype t0 = pSrcDst[x] + cvtmacro(pSrc[x]);                            \
+            dsttype t1 = pSrcDst[x + 1] + cvtmacro(pSrc[x + 1]);                    \
+                                                                                    \
+            pSrcDst[x] = (dsttype)t0;                                               \
+            pSrcDst[x + 1] = (dsttype)t1;                                           \
+                                                                                    \
+            t0 = pSrcDst[x + 2] + cvtmacro(pSrc[x + 2]);                            \
+            t1 = pSrcDst[x + 3] + cvtmacro(pSrc[x + 3]);                            \
+                                                                                    \
+            pSrcDst[x + 2] = (dsttype)t0;                                           \
+            pSrcDst[x + 3] = (dsttype)t1;                                           \
+        }                                                                           \
+                                                                                    \
+        for( ; x < roiSize.width; x++ )                                             \
+        {                                                                           \
+            dsttype t0 = pSrcDst[x] + cvtmacro(pSrc[x]);                            \
+            pSrcDst[x] = (dsttype)t0;                                               \
+        }                                                                           \
+    }                                                                               \
+                                                                                    \
+    return CV_OK;                                                                   \
+}
+
+#define  ICV_DEF_ACC_FUNC( name, srctype, dsttype, cvtmacro )                       \
+IPCVAPI_IMPL( CvStatus,                                                             \
+name,( const srctype *pSrc, int srcStep,                                            \
+      dsttype *pSrcDst, int srcDstStep,                                             \
+      CvSize roiSize ), (pSrc, srcStep, pSrcDst, srcDstStep, roiSize) )             \
+ICV_DEF_ACC_FUNC_BODY( srctype, dsttype, cvtmacro )
+
+#define  ICV_DEF_ACC_FUNC_STATIC( name, srctype, dsttype, cvtmacro )                \
+static CvStatus CV_STDCALL                                                          \
+name( const srctype *pSrc, int srcStep,                                             \
+      dsttype *pSrcDst, int srcDstStep,                                             \
+      CvSize roiSize )                                                              \
+ICV_DEF_ACC_FUNC_BODY( srctype, dsttype, cvtmacro )
+
+#define  ICV_DEF_ACCPROD_FUNC( name, srctype, dsttype, cvtmacro )                   \
+IPCVAPI_IMPL( CvStatus,                                                             \
+name,( const srctype *pSrc1, int src1Step, const srctype *pSrc2, int src2Step,      \
+      dsttype *pSrcDst, int srcDstStep, CvSize roiSize ),                           \
+      (pSrc1, src1Step, pSrc2, src2Step, pSrcDst, srcDstStep, roiSize) )            \
+{                                                                                   \
+    for( ; roiSize.height--; (char*&)pSrc1 += src1Step,                             \
+                             (char*&)pSrc2 += src2Step,                             \
+                             (char*&)pSrcDst += srcDstStep )                        \
+    {                                                                               \
+        int x;                                                                      \
+                                                                                    \
+        for( x = 0; x <= roiSize.width - 4; x += 4 )                                \
+        {                                                                           \
+            dsttype t0 = pSrcDst[x] + cvtmacro(pSrc1[x])*cvtmacro(pSrc2[x]);        \
+            dsttype t1 = pSrcDst[x+1] + cvtmacro(pSrc1[x+1])*cvtmacro(pSrc2[x+1]);  \
+                                                                                    \
+            pSrcDst[x] = (dsttype)t0;                                               \
+            pSrcDst[x + 1] = (dsttype)t1;                                           \
+                                                                                    \
+            t0 = pSrcDst[x + 2] + cvtmacro(pSrc1[x + 2])*cvtmacro(pSrc2[x + 2]);    \
+            t1 = pSrcDst[x + 3] + cvtmacro(pSrc1[x + 3])*cvtmacro(pSrc2[x + 3]);    \
+                                                                                    \
+            pSrcDst[x + 2] = (dsttype)t0;                                           \
+            pSrcDst[x + 3] = (dsttype)t1;                                           \
+        }                                                                           \
+                                                                                    \
+        for( ; x < roiSize.width; x++ )                                             \
+        {                                                                           \
+            dsttype t0 = pSrcDst[x] + cvtmacro(pSrc1[x])*cvtmacro(pSrc2[x]);        \
+            pSrcDst[x] = (dsttype)t0;                                               \
+        }                                                                           \
+    }                                                                               \
+                                                                                    \
+    return CV_OK;                                                                   \
 }
 
 
-#define  ICV_DEF_ACCPROD_FUNC( name, srctype, dsttype, cvtmacro )                  \
-IPCVAPI_IMPL( CvStatus,                                                            \
-name,( const srctype *pSrc1, int src1Step,                                         \
-      const srctype *pSrc2, int src2Step,                                          \
-      dsttype *pSrcDst, int srcDstStep,                                            \
-      CvSize roiSize ))                                                            \
-{                                                                                  \
-    for( ; roiSize.height--; (char*&)pSrc1 += src1Step,                            \
-                             (char*&)pSrc2 += src2Step,                            \
-                             (char*&)pSrcDst += srcDstStep )                       \
-    {                                                                              \
-        int x;                                                                     \
-                                                                                   \
-        for( x = 0; x <= roiSize.width - 4; x += 4 )                               \
-        {                                                                          \
-            dsttype t0 = pSrcDst[x] + cvtmacro(pSrc1[x])*cvtmacro(pSrc2[x]);       \
-            dsttype t1 = pSrcDst[x+1] + cvtmacro(pSrc1[x+1])*cvtmacro(pSrc2[x+1]); \
-                                                                                   \
-            pSrcDst[x] = (dsttype)t0;                                              \
-            pSrcDst[x + 1] = (dsttype)t1;                                          \
-                                                                                   \
-            t0 = pSrcDst[x + 2] + cvtmacro(pSrc1[x + 2])*cvtmacro(pSrc2[x + 2]);   \
-            t1 = pSrcDst[x + 3] + cvtmacro(pSrc1[x + 3])*cvtmacro(pSrc2[x + 3]);   \
-                                                                                   \
-            pSrcDst[x + 2] = (dsttype)t0;                                          \
-            pSrcDst[x + 3] = (dsttype)t1;                                          \
-        }                                                                          \
-                                                                                   \
-        for( ; x < roiSize.width; x++ )                                            \
-        {                                                                          \
-            dsttype t0 = pSrcDst[x] + cvtmacro(pSrc1[x])*cvtmacro(pSrc2[x]);       \
-            pSrcDst[x] = (dsttype)t0;                                              \
-        }                                                                          \
-    }                                                                              \
-                                                                                   \
-    return CV_OK;                                                                  \
-}
-
-
-#define  ICV_DEF_ACCWEIGHT_FUNC( name, srctype, dsttype, cvtmacro )                \
-IPCVAPI_IMPL( CvStatus,                                                            \
-name,( const srctype *pSrc, int srcStep,                                           \
-      dsttype *pSrcDst, int srcDstStep,                                            \
-      CvSize roiSize, dsttype alpha ))                                             \
-{                                                                                  \
-    for( ; roiSize.height--; (char*&)pSrc += srcStep,                              \
-                             (char*&)pSrcDst += srcDstStep )                       \
-    {                                                                              \
-        int x;                                                                     \
-                                                                                   \
-        for( x = 0; x <= roiSize.width - 4; x += 4 )                               \
-        {                                                                          \
-            dsttype t0 = pSrcDst[x] + alpha*(cvtmacro(pSrc[x]) - pSrcDst[x]);      \
-            dsttype t1 = pSrcDst[x+1] + alpha*(cvtmacro(pSrc[x+1]) - pSrcDst[x+1]);\
-                                                                                   \
-            pSrcDst[x] = (dsttype)t0;                                              \
-            pSrcDst[x + 1] = (dsttype)t1;                                          \
-                                                                                   \
-            t0 = pSrcDst[x + 2] + alpha*(cvtmacro(pSrc[x + 2]) - pSrcDst[x + 2]);  \
-            t1 = pSrcDst[x + 3] + alpha*(cvtmacro(pSrc[x + 3]) - pSrcDst[x + 3]);  \
-                                                                                   \
-            pSrcDst[x + 2] = (dsttype)t0;                                          \
-            pSrcDst[x + 3] = (dsttype)t1;                                          \
-        }                                                                          \
-                                                                                   \
-        for( ; x < roiSize.width; x++ )                                            \
-        {                                                                          \
-            dsttype t0 = pSrcDst[x] + alpha*(cvtmacro(pSrc[x]) - pSrcDst[x]);      \
-            pSrcDst[x] = (dsttype)t0;                                              \
-        }                                                                          \
-    }                                                                              \
-                                                                                   \
-    return CV_OK;                                                                  \
+#define  ICV_DEF_ACCWEIGHT_FUNC( name, srctype, dsttype, cvtmacro )                 \
+IPCVAPI_IMPL( CvStatus,                                                             \
+name,( const srctype *pSrc, int srcStep, dsttype *pSrcDst, int srcDstStep,          \
+      CvSize roiSize, dsttype alpha ),                                              \
+      (pSrc, srcStep, pSrcDst, srcDstStep, roiSize, alpha) )                        \
+{                                                                                   \
+    for( ; roiSize.height--; (char*&)pSrc += srcStep,                               \
+                             (char*&)pSrcDst += srcDstStep )                        \
+    {                                                                               \
+        int x;                                                                      \
+                                                                                    \
+        for( x = 0; x <= roiSize.width - 4; x += 4 )                                \
+        {                                                                           \
+            dsttype t0 = pSrcDst[x] + alpha*(cvtmacro(pSrc[x]) - pSrcDst[x]);       \
+            dsttype t1 = pSrcDst[x+1] + alpha*(cvtmacro(pSrc[x+1]) - pSrcDst[x+1]); \
+                                                                                    \
+            pSrcDst[x] = (dsttype)t0;                                               \
+            pSrcDst[x + 1] = (dsttype)t1;                                           \
+                                                                                    \
+            t0 = pSrcDst[x + 2] + alpha*(cvtmacro(pSrc[x + 2]) - pSrcDst[x + 2]);   \
+            t1 = pSrcDst[x + 3] + alpha*(cvtmacro(pSrc[x + 3]) - pSrcDst[x + 3]);   \
+                                                                                    \
+            pSrcDst[x + 2] = (dsttype)t0;                                           \
+            pSrcDst[x + 3] = (dsttype)t1;                                           \
+        }                                                                           \
+                                                                                    \
+        for( ; x < roiSize.width; x++ )                                             \
+        {                                                                           \
+            dsttype t0 = pSrcDst[x] + alpha*(cvtmacro(pSrc[x]) - pSrcDst[x]);       \
+            pSrcDst[x] = (dsttype)t0;                                               \
+        }                                                                           \
+    }                                                                               \
+                                                                                    \
+    return CV_OK;                                                                   \
 }
 
 
@@ -233,7 +241,8 @@ IPCVAPI_IMPL( CvStatus,                                                         
 name,( const srctype *pSrc, int srcStep,                                        \
       const uchar *pMask, int maskStep,                                         \
       dsttype *pSrcDst, int srcDstStep,                                         \
-      CvSize roiSize ))                                                         \
+      CvSize roiSize ),                                                         \
+      (pSrc, srcStep, pMask, maskStep, pSrcDst, srcDstStep, roiSize) )          \
 {                                                                               \
     int x;                                                                      \
     define_mask;                                                                \
@@ -344,7 +353,9 @@ name,( const srctype *pSrc1, int src1Step,                                      
       const srctype *pSrc2, int src2Step,                                       \
       const uchar *pMask, int maskStep,                                         \
       dsttype *pSrcDst, int srcDstStep,                                         \
-      CvSize roiSize ))                                                         \
+      CvSize roiSize ),                                                         \
+      (pSrc1, src1Step, pSrc2, src2Step, pMask, maskStep,                       \
+       pSrcDst, srcDstStep, roiSize) )                                          \
 {                                                                               \
     int x;                                                                      \
     define_mask;                                                                \
@@ -462,7 +473,8 @@ IPCVAPI_IMPL( CvStatus,                                                        \
 name,( const srctype *pSrc, int srcStep,                                       \
       const uchar *pMask, int maskStep,                                        \
       dsttype *pSrcDst, int srcDstStep,                                        \
-      CvSize roiSize, dsttype alpha ))                                         \
+      CvSize roiSize, dsttype alpha ),                                         \
+      (pSrc, srcStep, pMask, maskStep, pSrcDst, srcDstStep, roiSize, alpha) )  \
 {                                                                              \
     int x;                                                                     \
     define_mask;                                                               \
@@ -541,55 +553,36 @@ ICV_DEF_ACCWEIGHTMASK_FUNC( icvAddWeighted_##flavor##_C3IMR, 3, srctype, dsttype
                              CV_NOP, CV_MUL, CV_DEFINE_ALPHA_MASK,                     \
                              CV_PREPARE_FLT_MASK )
 
-#define ICV_DECLARE_ACC_FUNC( flavor, srctype, dsttype )                    \
-    IPCVAPI( CvStatus, icvAdd_##flavor##_C1IR, ( const srctype*, int,       \
-                                                 dsttype*, int, CvSize ))
-
-ICV_DECLARE_ACC_FUNC( 8u64f, uchar, double )
-ICV_DECLARE_ACC_FUNC( 8s64f, char, double )
-ICV_DECLARE_ACC_FUNC( 16s32f, short, float )
-ICV_DECLARE_ACC_FUNC( 16s64f, short, double )
-ICV_DECLARE_ACC_FUNC( 32f64f, float, double )
-ICV_DECLARE_ACC_FUNC( 64f, double, double )
-
-
 ICV_DEF_ACC_FUNC( icvAdd_8u32f_C1IR, uchar, float, CV_8TO32F )
-ICV_DEF_ACC_FUNC( icvAdd_8u64f_C1IR, uchar, double, CV_8TO32F )
-ICV_DEF_ACC_FUNC( icvAdd_8s32f_C1IR, char, float, CV_8TO32F )
-ICV_DEF_ACC_FUNC( icvAdd_8s64f_C1IR, char, double, CV_8TO32F )
-ICV_DEF_ACC_FUNC( icvAdd_16s32f_C1IR, short, float, CV_8TO32F )
-ICV_DEF_ACC_FUNC( icvAdd_16s64f_C1IR, short, double, CV_8TO32F )
-ICV_DEF_ACC_FUNC( icvAdd_32f_C1IR, float, float, CV_NOP )
-ICV_DEF_ACC_FUNC( icvAdd_32f64f_C1IR, float, double, CV_NOP )
-ICV_DEF_ACC_FUNC( icvAdd_64f_C1IR, double, double, CV_NOP )
+ICV_DEF_ACC_FUNC_STATIC( icvAdd_8u64f_C1IR, uchar, double, CV_8TO32F )
+ICV_DEF_ACC_FUNC_STATIC( icvAdd_16s32f_C1IR, short, float, CV_8TO32F )
+ICV_DEF_ACC_FUNC_STATIC( icvAdd_16s64f_C1IR, short, double, CV_8TO32F )
+ICV_DEF_ACC_FUNC_STATIC( icvAdd_32f64f_C1IR, float, double, CV_NOP )
 
 ICV_DEF_ACC_ALL( 8u32f, uchar, float )
-ICV_DEF_ACC_ALL( 8s32f, char, float )
 ICV_DEF_ACC_ALL_FLT( 32f, float, float )
 
-
-void  icvInitAccTable( CvFuncTable* tabfl, CvFuncTable* tabdb,
-                       CvBigFuncTable* masktab )
+static void
+icvInitAccTable( CvFuncTable* tabfl, CvFuncTable* tabdb,
+                 CvBigFuncTable* masktab )
 {
     tabfl->fn_2d[CV_8U] = (void*)icvAdd_8u32f_C1IR;
-    tabfl->fn_2d[CV_8S] = (void*)icvAdd_8s32f_C1IR;
     tabfl->fn_2d[CV_16S] = (void*)icvAdd_16s32f_C1IR;
-    tabfl->fn_2d[CV_32F] = (void*)icvAdd_32f_C1IR;
+    tabfl->fn_2d[CV_32F] = 0;
 
     tabdb->fn_2d[CV_8U] = (void*)icvAdd_8u64f_C1IR;
-    tabdb->fn_2d[CV_8S] = (void*)icvAdd_8s64f_C1IR;
     tabdb->fn_2d[CV_16S] = (void*)icvAdd_16s64f_C1IR;
     tabdb->fn_2d[CV_32F] = (void*)icvAdd_32f64f_C1IR;
-    tabdb->fn_2d[CV_64F] = (void*)icvAdd_64f_C1IR;
+    tabdb->fn_2d[CV_64F] = 0;
 
     if( masktab )
     {
         masktab->fn_2d[CV_8UC1] = (void*)icvAdd_8u32f_C1IMR;
-        masktab->fn_2d[CV_8SC1] = (void*)icvAdd_8s32f_C1IMR;
+        masktab->fn_2d[CV_8SC1] = 0;
         masktab->fn_2d[CV_32FC1] = (void*)icvAdd_32f_C1IMR;
 
         masktab->fn_2d[CV_8UC3] = (void*)icvAdd_8u32f_C3IMR;
-        masktab->fn_2d[CV_8SC3] = (void*)icvAdd_8s32f_C3IMR;
+        masktab->fn_2d[CV_8SC3] = 0;
         masktab->fn_2d[CV_32FC3] = (void*)icvAdd_32f_C3IMR;
     }
 }
@@ -599,15 +592,15 @@ void  icvInitAccTable( CvFuncTable* tabfl, CvFuncTable* tabdb,
 static  void  icvInit##FUNCNAME##Table( CvFuncTable* tab, CvBigFuncTable* masktab ) \
 {                                                                                   \
     tab->fn_2d[CV_8U] = (void*)icv##FUNCNAME##_8u32f_C1IR;                          \
-    tab->fn_2d[CV_8S] = (void*)icv##FUNCNAME##_8s32f_C1IR;                          \
+    tab->fn_2d[CV_8S] = 0;                                                          \
     tab->fn_2d[CV_32F] = (void*)icv##FUNCNAME##_32f_C1IR;                           \
                                                                                     \
     masktab->fn_2d[CV_8UC1] = (void*)icv##FUNCNAME##_8u32f_C1IMR;                   \
-    masktab->fn_2d[CV_8SC1] = (void*)icv##FUNCNAME##_8s32f_C1IMR;                   \
+    masktab->fn_2d[CV_8SC1] = 0;                                                    \
     masktab->fn_2d[CV_32FC1] = (void*)icv##FUNCNAME##_32f_C1IMR;                    \
                                                                                     \
     masktab->fn_2d[CV_8UC3] = (void*)icv##FUNCNAME##_8u32f_C3IMR;                   \
-    masktab->fn_2d[CV_8SC3] = (void*)icv##FUNCNAME##_8s32f_C3IMR;                   \
+    masktab->fn_2d[CV_8SC3] = 0;                                                    \
     masktab->fn_2d[CV_32FC3] = (void*)icv##FUNCNAME##_32f_C3IMR;                    \
 }
 
@@ -650,6 +643,12 @@ cvAcc( const void* arr, void* sumarr, const void* maskarr )
             CV_ERROR( CV_BadCOI, "" );
     }
 
+    if( CV_ARE_TYPES_EQ( mat, sum ) && !mask )
+    {
+        CV_CALL( cvAdd( mat, sum, sum, 0 ));
+        EXIT;
+    }
+
     if( !CV_ARE_CNS_EQ( mat, sum ))
         CV_ERROR( CV_StsUnmatchedFormats, "" );
 
@@ -660,7 +659,7 @@ cvAcc( const void* arr, void* sumarr, const void* maskarr )
     if( !CV_ARE_SIZES_EQ( mat, sum ))
         CV_ERROR( CV_StsUnmatchedSizes, "" );
 
-    size = icvGetMatSize( mat );
+    size = cvGetMatSize( mat );
     type = CV_MAT_TYPE( mat->type );
 
     mat_step = mat->step;
@@ -755,7 +754,7 @@ cvSquareAcc( const void* arr, void* sq_sum, const void* maskarr )
     if( !CV_ARE_SIZES_EQ( mat, sum ))
         CV_ERROR( CV_StsUnmatchedSizes, "" );
 
-    size = icvGetMatSize( mat );
+    size = cvGetMatSize( mat );
     type = CV_MAT_TYPE( mat->type );
 
     mat_step = mat->step;
@@ -854,7 +853,7 @@ cvMultiplyAcc( const void* arrA, const void* arrB,
     if( !CV_ARE_SIZES_EQ( mat1, sum ) || !CV_ARE_SIZES_EQ( mat2, sum ))
         CV_ERROR( CV_StsUnmatchedSizes, "" );
 
-    size = icvGetMatSize( mat1 );
+    size = cvGetMatSize( mat1 );
     type = CV_MAT_TYPE( mat1->type );
 
     mat1_step = mat1->step;
@@ -963,7 +962,7 @@ cvRunningAvg( const void* arrY, void* arrU,
     if( !CV_ARE_SIZES_EQ( mat, sum ))
         CV_ERROR( CV_StsUnmatchedSizes, "" );
 
-    size = icvGetMatSize( mat );
+    size = cvGetMatSize( mat );
     type = CV_MAT_TYPE( mat->type );
 
     mat_step = mat->step;

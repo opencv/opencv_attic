@@ -38,42 +38,52 @@
 // the use of this software, even if advised of the possibility of such damage.
 //
 //M*/
+
 #include "_cv.h"
-#include "_cvutils.h"
 
 /* 
    Initializes line iterator.
    Returns number of points on the line or negative number if error.
 */
-int
-icvInitLineIterator( const CvMat* mat, CvPoint pt1, CvPoint pt2,
-                     CvLineIterator* iterator, int connectivity,
-                     int left_to_right )
+CV_IMPL int
+cvInitLineIterator( const void* img, CvPoint pt1, CvPoint pt2,
+                    CvLineIterator* iterator, int connectivity )
 {
+    int count = -1;
+    
+    CV_FUNCNAME( "cvInitLineIterator" );
+
+    __BEGIN__;
+
+    CvMat stub, *mat = (CvMat*)img;
     int dx, dy, s;
     int bt_pix, bt_pix0, step;
 
+    CV_CALL( mat = cvGetMat( mat, &stub ));
+
+    if( !iterator )
+        CV_ERROR( CV_StsNullPtr, "" );
+
+    if( connectivity != 8 && connectivity != 4 )
+        CV_ERROR( CV_StsBadArg, "" );
+
+    if( (unsigned)pt1.x >= (unsigned)(mat->width) ||
+        (unsigned)pt2.x >= (unsigned)(mat->width) ||
+        (unsigned)pt1.y >= (unsigned)(mat->height) ||
+        (unsigned)pt2.y >= (unsigned)(mat->height) )
+        CV_ERROR( CV_StsBadPoint, "" );
+
     assert( connectivity == 4 || connectivity == 8 );
 
-    bt_pix0 = bt_pix = icvPixSize[CV_MAT_TYPE(mat->type)];
+    bt_pix0 = bt_pix = CV_ELEM_SIZE(mat->type);
     step = mat->step;
 
     dx = pt2.x - pt1.x;
     dy = pt2.y - pt1.y;
     s = dx < 0 ? -1 : 0;
 
-    if( left_to_right )
-    {
-        dx = (dx ^ s) - s;
-        dy = (dy ^ s) - s;
-        pt1.x ^= (pt1.x ^ pt2.x) & s;
-        pt1.y ^= (pt1.y ^ pt2.y) & s;
-    }
-    else
-    {
-        dx = (dx ^ s) - s;
-        bt_pix = (bt_pix ^ s) - s;
-    }
+    dx = (dx ^ s) - s;
+    bt_pix = (bt_pix ^ s) - s;
 
     iterator->ptr = (uchar*)(mat->data.ptr + pt1.y * step + pt1.x * bt_pix0);
 
@@ -101,7 +111,7 @@ icvInitLineIterator( const CvMat* mat, CvPoint pt1, CvPoint pt2,
         iterator->minus_delta = -(dy + dy);
         iterator->plus_step = step;
         iterator->minus_step = bt_pix;
-        s = dx + 1;
+        count = dx + 1;
     }
     else /* connectivity == 4 */
     {
@@ -112,44 +122,8 @@ icvInitLineIterator( const CvMat* mat, CvPoint pt1, CvPoint pt2,
         iterator->minus_delta = -(dy + dy);
         iterator->plus_step = step - bt_pix;
         iterator->minus_step = bt_pix;
-        s = dx + dy + 1;
+        count = dx + dy + 1;
     }
-
-    return s;
-}
-
-
-/* 
-   Initializes line iterator.
-   Returns number of points on the line or negative number if error.
-*/
-CV_IMPL int
-cvInitLineIterator( const void* img, CvPoint pt1, CvPoint pt2,
-                    CvLineIterator* iterator, int connectivity )
-{
-    int count = -1;
-    
-    CV_FUNCNAME( "cvInitLineIterator" );
-
-    __BEGIN__;
-
-    CvMat stub, *mat = (CvMat*)img;
-
-    CV_CALL( mat = cvGetMat( mat, &stub ));
-
-    if( !iterator )
-        CV_ERROR( CV_StsNullPtr, "" );
-
-    if( connectivity != 8 && connectivity != 4 )
-        CV_ERROR( CV_StsBadArg, "" );
-
-    if( (unsigned)pt1.x >= (unsigned)(mat->width) ||
-        (unsigned)pt2.x >= (unsigned)(mat->width) ||
-        (unsigned)pt1.y >= (unsigned)(mat->height) ||
-        (unsigned)pt2.y >= (unsigned)(mat->height) )
-        CV_ERROR( CV_StsBadPoint, "" );
-
-    count = icvInitLineIterator( mat, pt1, pt2, iterator, connectivity );
 
     __END__;
 
@@ -161,79 +135,19 @@ cvInitLineIterator( const void* img, CvPoint pt1, CvPoint pt2,
 *                                   line samplers                                      *
 \**************************************************************************************/
 
-////////////////////////////////////////////////////////////////////////////////////////
-
-#define  ICV_DEF_SAMPLE_LINE( flavor, arrtype, pix_size )                  \
-IPCVAPI_IMPL( CvStatus, icvSampleLine_##flavor,                            \
-( CvLineIterator* iterator, arrtype* buffer, int count ))                  \
-{                                                                          \
-    for( int i = 0; i < count; i++ )                                       \
-    {                                                                      \
-        memcpy( buffer, iterator->ptr, pix_size );                         \
-        buffer += pix_size;                                                \
-        CV_NEXT_LINE_POINT( *iterator );                                   \
-    }                                                                      \
-                                                                           \
-    return CV_OK;                                                          \
-}
-
-
-ICV_DEF_SAMPLE_LINE( 8u_C1R, uchar, 1 )
-ICV_DEF_SAMPLE_LINE( 8u_C2R, uchar, 2 )
-ICV_DEF_SAMPLE_LINE( 8u_C3R, uchar, 3 )
-ICV_DEF_SAMPLE_LINE( 32f_C1R, float, 4 )
-ICV_DEF_SAMPLE_LINE( 32f_C2R, float, 8 )
-ICV_DEF_SAMPLE_LINE( 32f_C3R, float, 12 )
-
-#define icvSampleLine_16u_C2R   icvSampleLine_32f_C1R
-#define icvSampleLine_16u_C3R   0
-#define icvSampleLine_32s_C2R   icvSampleLine_32f_C2R
-#define icvSampleLine_32s_C3R   icvSampleLine_32f_C3R
-#define icvSampleLine_64s_C2R   0
-#define icvSampleLine_64s_C3R   0
-#define icvSampleLine_64s_C4R   0
-
-
-static CvStatus  icvSampleLine( CvLineIterator* iterator, void* buffer,
-                                int count, int pix_size )
-{
-    for( int i = 0; i < count; i++ )
-    {
-        memcpy( buffer, iterator->ptr, pix_size );
-        (char*&)buffer += pix_size;
-        CV_NEXT_LINE_POINT( *iterator );
-    }
-
-    return CV_OK;
-}
-
-
-CV_DEF_INIT_PIXSIZE_TAB_2D( SampleLine, R )
-
-typedef  CvStatus (*CvLineFunc)( CvLineIterator* iterator, void* buffer, int count );
-
 CV_IMPL int
 cvSampleLine( const void* img, CvPoint pt1, CvPoint pt2,
               void* buffer, int connectivity )
 {
-    static  CvBtFuncTable  sl_tab;
-    static  int inittab = 1;
     int count = -1;
     
     CV_FUNCNAME( "cvSampleLine" );
 
     __BEGIN__;
     
-    int coi = 0, pix_size;
+    int i, coi = 0, pix_size;
     CvMat stub, *mat = (CvMat*)img;
     CvLineIterator iterator;
-    CvLineFunc func = 0;
-
-    if( !inittab )
-    {
-        icvInitSampleLineRTable( &sl_tab );
-        inittab = 1;
-    }
 
     CV_CALL( mat = cvGetMat( mat, &stub, &coi ));
 
@@ -245,16 +159,12 @@ cvSampleLine( const void* img, CvPoint pt1, CvPoint pt2,
 
     CV_CALL( count = cvInitLineIterator( mat, pt1, pt2, &iterator, connectivity ));
 
-    pix_size = icvPixSize[CV_MAT_TYPE(mat->type)];
-    func = (CvLineFunc)sl_tab.fn_2d[pix_size];
-
-    if( func )
+    pix_size = CV_ELEM_SIZE(mat->type);
+    for( i = 0; i < count; i++ )
     {
-        IPPI_CALL( func( &iterator, buffer, count ));
-    }
-    else
-    {
-        icvSampleLine( &iterator, buffer, count, pix_size );
+        CV_MEMCPY_AUTO( buffer, iterator.ptr, pix_size );
+        (char*&)buffer += pix_size;
+        CV_NEXT_LINE_POINT( iterator );
     }
 
     __END__;
@@ -322,23 +232,31 @@ icvAdjustRect( const void* srcptr, int src_step, int pix_size,
 
 
 #define  ICV_DEF_GET_RECT_SUB_PIX_FUNC( flavor, srctype, dsttype, worktype, \
-                                        cast_macro, scale_macro, mul_macro )\
+                                        cast_macro, scale_macro, cast_macro2 )\
 IPCVAPI_IMPL( CvStatus, icvGetRectSubPix_##flavor##_C1R,                    \
 ( const srctype* src, int src_step, CvSize src_size,                        \
-  dsttype* dst, int dst_step, CvSize win_size, CvPoint2D32f center ))       \
+  dsttype* dst, int dst_step, CvSize win_size, CvPoint2D32f center ),       \
+  (src, src_step, src_size, dst, dst_step, win_size, center) )              \
 {                                                                           \
     CvPoint ip;                                                             \
-    worktype a, b;                                                          \
+    worktype  a11, a12, a21, a22, b1, b2;                                   \
+    float a, b;                                                             \
     int i, j;                                                               \
                                                                             \
-    center.x -= (win_size.width - 1)*0.5f;                                  \
-    center.y -= (win_size.height - 1)*0.5f;                                 \
+    center.x -= (win_size.width-1)*0.5f;                                    \
+    center.y -= (win_size.height-1)*0.5f;                                   \
                                                                             \
     ip.x = cvFloor( center.x );                                             \
     ip.y = cvFloor( center.y );                                             \
                                                                             \
-    a = scale_macro( center.x - ip.x );                                     \
-    b = scale_macro( center.y - ip.y );                                     \
+    a = center.x - ip.x;                                                    \
+    b = center.y - ip.y;                                                    \
+    a11 = scale_macro((1.f-a)*(1.f-b));                                     \
+    a12 = scale_macro(a*(1.f-b));                                           \
+    a21 = scale_macro((1.f-a)*b);                                           \
+    a22 = scale_macro(a*b);                                                 \
+    b1 = scale_macro(1.f - b);                                              \
+    b2 = scale_macro(b);                                                    \
                                                                             \
     src_step /= sizeof( src[0] );                                           \
                                                                             \
@@ -351,15 +269,29 @@ IPCVAPI_IMPL( CvStatus, icvGetRectSubPix_##flavor##_C1R,                    \
         for( i = 0; i < win_size.height; i++, src += src_step,              \
                                               (char*&)dst += dst_step )     \
         {                                                                   \
-            for( j = 0; j < win_size.width; j++ )                           \
+            for( j = 0; j <= win_size.width - 2; j += 2 )                   \
             {                                                               \
-                worktype s0 = cast_macro(src[j]);                           \
-                worktype s1 = cast_macro(src[j + src_step]);                \
+                worktype s0 = cast_macro(src[j])*a11 +                      \
+                              cast_macro(src[j+1])*a12 +                    \
+                              cast_macro(src[j+src_step])*a21 +             \
+                              cast_macro(src[j+src_step+1])*a22;            \
+                worktype s1 = cast_macro(src[j+1])*a11 +                    \
+                              cast_macro(src[j+2])*a12 +                    \
+                              cast_macro(src[j+src_step+1])*a21 +           \
+                              cast_macro(src[j+src_step+2])*a22;            \
                                                                             \
-                s0 += mul_macro( a, (cast_macro(src[j + 1]) - s0));         \
-                s1 += mul_macro( a, (cast_macro(src[j+src_step+1]) - s1));  \
+                dst[j] = (dsttype)cast_macro2(s0);                          \
+                dst[j+1] = (dsttype)cast_macro2(s1);                        \
+            }                                                               \
                                                                             \
-                dst[j] = (dsttype)(s0 + mul_macro( b, (s1 - s0)));          \
+            for( ; j < win_size.width; j++ )                                \
+            {                                                               \
+                worktype s0 = cast_macro(src[j])*a11 +                      \
+                              cast_macro(src[j+1])*a12 +                    \
+                              cast_macro(src[j+src_step])*a21 +             \
+                              cast_macro(src[j+src_step+1])*a22;            \
+                                                                            \
+                dst[j] = (dsttype)cast_macro2(s0);                          \
             }                                                               \
         }                                                                   \
     }                                                                       \
@@ -379,29 +311,28 @@ IPCVAPI_IMPL( CvStatus, icvGetRectSubPix_##flavor##_C1R,                    \
                                                                             \
             for( j = 0; j < r.x; j++ )                                      \
             {                                                               \
-                worktype s0 = cast_macro(src[r.x]);                         \
-                worktype s1 = cast_macro(src2[r.x]);                        \
+                worktype s0 = cast_macro(src[r.x])*b1 +                     \
+                              cast_macro(src2[r.x])*b2;                     \
                                                                             \
-                dst[j] = (dsttype)(s0 + mul_macro( b, (s1 - s0)));          \
+                dst[j] = (dsttype)cast_macro2(s0);                          \
             }                                                               \
                                                                             \
             for( ; j < r.width; j++ )                                       \
             {                                                               \
-                worktype s0 = cast_macro(src[j]);                           \
-                worktype s1 = cast_macro(src2[j]);                          \
+                worktype s0 = cast_macro(src[j])*a11 +                      \
+                              cast_macro(src[j+1])*a12 +                    \
+                              cast_macro(src2[j])*a21 +                     \
+                              cast_macro(src2[j+1])*a22;                    \
                                                                             \
-                s0 += mul_macro( a, (cast_macro(src[j + 1]) - s0));         \
-                s1 += mul_macro( a, (cast_macro(src2[j + 1]) - s1));        \
-                                                                            \
-                dst[j] = (dsttype)(s0 + mul_macro( b, (s1 - s0)));          \
+                dst[j] = (dsttype)cast_macro2(s0);                          \
             }                                                               \
                                                                             \
             for( ; j < win_size.width; j++ )                                \
             {                                                               \
-                worktype s0 = cast_macro(src[r.width]);                     \
-                worktype s1 = cast_macro(src2[r.width]);                    \
+                worktype s0 = cast_macro(src[r.width])*b1 +                 \
+                              cast_macro(src2[r.width])*b2;                 \
                                                                             \
-                dst[j] = (dsttype)(s0 + mul_macro( b, (s1 - s0)));          \
+                dst[j] = (dsttype)cast_macro2(s0);                          \
             }                                                               \
                                                                             \
             if( i < r.height )                                              \
@@ -417,14 +348,15 @@ IPCVAPI_IMPL( CvStatus, icvGetRectSubPix_##flavor##_C1R,                    \
                                         cast_macro, scale_macro, mul_macro )\
 IPCVAPI_IMPL( CvStatus, icvGetRectSubPix_##flavor##_C3R,                    \
 ( const srctype* src, int src_step, CvSize src_size,                        \
-  dsttype* dst, int dst_step, CvSize win_size, CvPoint2D32f center ))       \
+  dsttype* dst, int dst_step, CvSize win_size, CvPoint2D32f center ),       \
+  (src, src_step, src_size, dst, dst_step, win_size, center) )              \
 {                                                                           \
     CvPoint ip;                                                             \
     worktype a, b;                                                          \
     int i, j;                                                               \
                                                                             \
-    center.x -= (win_size.width - 1)*0.5f;                                  \
-    center.y -= (win_size.height - 1)*0.5f;                                 \
+    center.x -= (win_size.width-1)*0.5f;                                    \
+    center.y -= (win_size.height-1)*0.5f;                                   \
                                                                             \
     ip.x = cvFloor( center.x );                                             \
     ip.y = cvFloor( center.y );                                             \
@@ -542,11 +474,11 @@ IPCVAPI_IMPL( CvStatus, icvGetRectSubPix_##flavor##_C3R,                    \
 #define ICV_SHIFT             16
 #define ICV_SCALE(x)          cvRound((x)*(1 << ICV_SHIFT))
 #define ICV_MUL_SCALE(x,y)    (((x)*(y) + (1 << (ICV_SHIFT-1))) >> ICV_SHIFT)
+#define ICV_DESCALE(x)        (((x)+(1 << (ICV_SHIFT-1))) >> ICV_SHIFT)
 
-
-ICV_DEF_GET_RECT_SUB_PIX_FUNC( 8u, uchar, uchar, int, CV_NOP, ICV_SCALE, ICV_MUL_SCALE )
-ICV_DEF_GET_RECT_SUB_PIX_FUNC( 32f, float, float, float, CV_NOP, CV_NOP, CV_MUL )
-ICV_DEF_GET_RECT_SUB_PIX_FUNC( 8u32f, uchar, float, float, CV_8TO32F, CV_NOP, CV_MUL )
+ICV_DEF_GET_RECT_SUB_PIX_FUNC( 8u, uchar, uchar, int, CV_NOP, ICV_SCALE, ICV_DESCALE )
+ICV_DEF_GET_RECT_SUB_PIX_FUNC( 32f, float, float, float, CV_NOP, CV_NOP, CV_NOP )
+ICV_DEF_GET_RECT_SUB_PIX_FUNC( 8u32f, uchar, float, float, CV_8TO32F, CV_NOP, CV_NOP )
 
 ICV_DEF_GET_RECT_SUB_PIX_FUNC_C3( 8u, uchar, uchar, int, CV_NOP, ICV_SCALE, ICV_MUL_SCALE )
 ICV_DEF_GET_RECT_SUB_PIX_FUNC_C3( 32f, float, float, float, CV_NOP, CV_NOP, CV_MUL )
@@ -604,8 +536,8 @@ cvGetRectSubPix( const void* srcarr, void* dstarr, CvPoint2D32f center )
     if( (cn != 1 && cn != 3) || !CV_ARE_CNS_EQ( src, dst ))
         CV_ERROR( CV_StsUnsupportedFormat, "" );
 
-    src_size = icvGetMatSize( src );
-    dst_size = icvGetMatSize( dst );
+    src_size = cvGetMatSize( src );
+    dst_size = cvGetMatSize( dst );
 
     if( dst_size.width > src_size.width || dst_size.height > src_size.height )
         CV_ERROR( CV_StsBadSize, "destination ROI must be smaller than source ROI" );
@@ -634,7 +566,7 @@ cvGetRectSubPix( const void* srcarr, void* dstarr, CvPoint2D32f center )
 
 #define GET_X(X,Y)  ((X)*A11 + (Y)*A12 + b1)
 #define GET_Y(X,Y)  ((X)*A21 + (Y)*A22 + b2)
-#define PTR_AT(X,Y) (src + (Y)*srcStep + (X))
+#define PTR_AT(X,Y) (src + (Y)*src_step + (X))
 
 #define CLIP_X(x) (unsigned)(x) < (unsigned)src_size.width ?  \
                   (x) : (x) < 0 ? 0 : src_size.width - 1
@@ -646,24 +578,26 @@ cvGetRectSubPix( const void* srcarr, void* dstarr, CvPoint2D32f center )
 #define ICV_DEF_GET_QUADRANGLE_SUB_PIX_FUNC( flavor, srctype, dsttype,      \
                                              worktype, cast_macro, cvt )    \
 IPCVAPI_IMPL( CvStatus, icvGetQuadrangleSubPix_##flavor##_C1R,              \
-              ( const srctype * src, int srcStep, CvSize src_size,          \
-                dsttype *dst, int dstStep, CvSize win_size,                 \
+              ( const srctype * src, int src_step, CvSize src_size,         \
+                dsttype *dst, int dst_step, CvSize win_size,                \
                 const float *matrix, int fill_outliers,                     \
-                dsttype* fillval ))                                         \
+                dsttype* fillval ),                                         \
+                (src, src_step, src_size, dst, dst_step, win_size,          \
+                matrix, fill_outliers, fillval) )                           \
 {                                                                           \
     int x, y, x0, y0, x1, y1;                                               \
-    float  A11 = matrix[0], A12 = matrix[1], b1 = matrix[2];                \
-    float  A21 = matrix[3], A22 = matrix[4], b2 = matrix[5];                \
+    float  A11 = matrix[0], A12 = matrix[1], b1 = matrix[2] - 0.5f;         \
+    float  A21 = matrix[3], A22 = matrix[4], b2 = matrix[5] - 0.5f;         \
     dsttype fv = *fillval;                                                  \
     int left = -(win_size.width >> 1), right = win_size.width + left - 1;   \
     int top = -(win_size.height >> 1), bottom = win_size.height + top - 1;  \
                                                                             \
-    srcStep /= sizeof(srctype);                                             \
-    dstStep /= sizeof(dsttype);                                             \
+    src_step /= sizeof(srctype);                                            \
+    dst_step /= sizeof(dsttype);                                            \
                                                                             \
     dst -= left;                                                            \
                                                                             \
-    for( y = top; y <= bottom; y++, dst += dstStep )                        \
+    for( y = top; y <= bottom; y++, dst += dst_step )                       \
     {                                                                       \
         float xs = GET_X( left, y );                                        \
         float ys = GET_Y( left, y );                                        \
@@ -691,8 +625,8 @@ IPCVAPI_IMPL( CvStatus, icvGetQuadrangleSubPix_##flavor##_C1R,              \
                 ys += A21;                                                  \
                                                                             \
                 p0 = cvt(ptr[0]) + a * (cvt(ptr[1]) - cvt(ptr[0]));         \
-                p1 = cvt(ptr[srcStep]) + a * (cvt(ptr[srcStep + 1]) -       \
-                                              cvt(ptr[srcStep]));           \
+                p1 = cvt(ptr[src_step]) + a * (cvt(ptr[src_step + 1]) -     \
+                                              cvt(ptr[src_step]));          \
                 dst[x] = cast_macro(p0 + b * (p1 - p0));                    \
             }                                                               \
         }                                                                   \
@@ -718,8 +652,8 @@ IPCVAPI_IMPL( CvStatus, icvGetQuadrangleSubPix_##flavor##_C1R,              \
                     const srctype *ptr = PTR_AT( ixs, iys );                \
                                                                             \
                     p0 = cvt(ptr[0]) + a * (cvt(ptr[1]) - cvt(ptr[0]));     \
-                    p1 = cvt(ptr[srcStep]) + a * (cvt(ptr[srcStep + 1]) -   \
-                                                  cvt(ptr[srcStep]));       \
+                    p1 = cvt(ptr[src_step]) + a * (cvt(ptr[src_step + 1]) - \
+                                                  cvt(ptr[src_step]));      \
                                                                             \
                     dst[x] = cast_macro(p0 + b * (p1 - p0));                \
                 }                                                           \
@@ -756,25 +690,27 @@ IPCVAPI_IMPL( CvStatus, icvGetQuadrangleSubPix_##flavor##_C1R,              \
 
 
 #define ICV_DEF_GET_QUADRANGLE_SUB_PIX_FUNC_C3( flavor, srctype, dsttype,   \
-                                             worktype, cast_macro, cvt )    \
+                                                worktype, cast_macro, cvt ) \
 IPCVAPI_IMPL( CvStatus, icvGetQuadrangleSubPix_##flavor##_C3R,              \
-              ( const srctype * src, int srcStep, CvSize src_size,          \
-                dsttype *dst, int dstStep, CvSize win_size,                 \
+              ( const srctype * src, int src_step, CvSize src_size,         \
+                dsttype *dst, int dst_step, CvSize win_size,                \
                 const float *matrix, int fill_outliers,                     \
-                dsttype* fillval ))                                         \
+                dsttype* fillval ),                                         \
+                (src, src_step, src_size, dst, dst_step, win_size,          \
+                matrix, fill_outliers, fillval) )                           \
 {                                                                           \
     int x, y, x0, y0, x1, y1;                                               \
-    float  A11 = matrix[0], A12 = matrix[1], b1 = matrix[2];                \
-    float  A21 = matrix[3], A22 = matrix[4], b2 = matrix[5];                \
+    float  A11 = matrix[0], A12 = matrix[1], b1 = matrix[2] - 0.5f;         \
+    float  A21 = matrix[3], A22 = matrix[4], b2 = matrix[5] - 0.5f;         \
     int left = -(win_size.width >> 1), right = win_size.width + left - 1;   \
     int top = -(win_size.height >> 1), bottom = win_size.height + top - 1;  \
                                                                             \
-    srcStep /= sizeof(srctype);                                             \
-    dstStep /= sizeof(dsttype);                                             \
+    src_step /= sizeof(srctype);                                            \
+    dst_step /= sizeof(dsttype);                                            \
                                                                             \
     dst -= left*3;                                                          \
                                                                             \
-    for( y = top; y <= bottom; y++, dst += dstStep )                        \
+    for( y = top; y <= bottom; y++, dst += dst_step )                       \
     {                                                                       \
         float xs = GET_X( left, y );                                        \
         float ys = GET_Y( left, y );                                        \
@@ -802,18 +738,18 @@ IPCVAPI_IMPL( CvStatus, icvGetQuadrangleSubPix_##flavor##_C3R,              \
                 ys += A21;                                                  \
                                                                             \
                 p0 = cvt(ptr[0]) + a * (cvt(ptr[3]) - cvt(ptr[0]));         \
-                p1 = cvt(ptr[srcStep]) + a * (cvt(ptr[srcStep + 3]) -       \
-                                              cvt(ptr[srcStep]));           \
+                p1 = cvt(ptr[src_step]) + a * (cvt(ptr[src_step + 3]) -     \
+                                              cvt(ptr[src_step]));          \
                 dst[x*3] = cast_macro(p0 + b * (p1 - p0));                  \
                                                                             \
                 p0 = cvt(ptr[1]) + a * (cvt(ptr[4]) - cvt(ptr[1]));         \
-                p1 = cvt(ptr[srcStep+1]) + a * (cvt(ptr[srcStep + 4]) -     \
-                                                cvt(ptr[srcStep + 1]));     \
+                p1 = cvt(ptr[src_step+1]) + a * (cvt(ptr[src_step + 4]) -   \
+                                                cvt(ptr[src_step + 1]));    \
                 dst[x*3+1] = cast_macro(p0 + b * (p1 - p0));                \
                                                                             \
                 p0 = cvt(ptr[2]) + a * (cvt(ptr[5]) - cvt(ptr[2]));         \
-                p1 = cvt(ptr[srcStep+2]) + a * (cvt(ptr[srcStep + 5]) -     \
-                                                cvt(ptr[srcStep + 2]));     \
+                p1 = cvt(ptr[src_step+2]) + a * (cvt(ptr[src_step + 5]) -   \
+                                                cvt(ptr[src_step + 2]));    \
                 dst[x*3+2] = cast_macro(p0 + b * (p1 - p0));                \
             }                                                               \
         }                                                                   \
@@ -839,18 +775,18 @@ IPCVAPI_IMPL( CvStatus, icvGetQuadrangleSubPix_##flavor##_C3R,              \
                     const srctype *ptr = PTR_AT( ixs*3, iys );              \
                                                                             \
                     p0 = cvt(ptr[0]) + a * (cvt(ptr[3]) - cvt(ptr[0]));     \
-                    p1 = cvt(ptr[srcStep]) + a * (cvt(ptr[srcStep + 3]) -   \
-                                                         cvt(ptr[srcStep]));\
+                    p1 = cvt(ptr[src_step]) + a * (cvt(ptr[src_step + 3]) - \
+                                                   cvt(ptr[src_step]));     \
                     dst[x*3] = cast_macro(p0 + b * (p1 - p0));              \
                                                                             \
                     p0 = cvt(ptr[1]) + a * (cvt(ptr[4]) - cvt(ptr[1]));     \
-                    p1 = cvt(ptr[srcStep+1]) + a * (cvt(ptr[srcStep + 4]) - \
-                                                    cvt(ptr[srcStep + 1])); \
+                    p1 = cvt(ptr[src_step+1]) + a * (cvt(ptr[src_step + 4])-\
+                                                    cvt(ptr[src_step + 1]));\
                     dst[x*3+1] = cast_macro(p0 + b * (p1 - p0));            \
                                                                             \
                     p0 = cvt(ptr[2]) + a * (cvt(ptr[5]) - cvt(ptr[2]));     \
-                    p1 = cvt(ptr[srcStep+2]) + a * (cvt(ptr[srcStep + 5]) - \
-                                                    cvt(ptr[srcStep + 2])); \
+                    p1 = cvt(ptr[src_step+2]) + a * (cvt(ptr[src_step + 5])-\
+                                                    cvt(ptr[src_step + 2]));\
                     dst[x*3+2] = cast_macro(p0 + b * (p1 - p0));            \
                 }                                                           \
                 else if( !fill_outliers )                                   \
@@ -929,7 +865,7 @@ typedef CvStatus (CV_STDCALL *CvGetQuadrangleSubPixFunc)(
 
 CV_IMPL void
 cvGetQuadrangleSubPix( const void* srcarr, void* dstarr,
-                       const void* matrix, int fillOutliers,
+                       const CvMat* mat, int fillOutliers,
                        CvScalar fillValue )
 {
     static  CvFuncTable  gq_tab[2];
@@ -940,7 +876,6 @@ cvGetQuadrangleSubPix( const void* srcarr, void* dstarr,
 
     CvMat srcstub, *src = (CvMat*)srcarr;
     CvMat dststub, *dst = (CvMat*)dstarr;
-    CvMat matstub, *mat = (CvMat*)matrix;
     CvSize src_size, dst_size;
     CvGetQuadrangleSubPixFunc func;
     double buf[12];
@@ -960,15 +895,15 @@ cvGetQuadrangleSubPix( const void* srcarr, void* dstarr,
         CV_CALL( dst = cvGetMat( dst, &dststub ));
 
     if( !CV_IS_MAT(mat))
-        CV_CALL( mat = cvGetMat( mat, &matstub ));
+        CV_ERROR( CV_StsBadArg, "map matrix is not valid" );
 
     cn = CV_MAT_CN( src->type );
 
     if( (cn != 1 && cn != 3) || !CV_ARE_CNS_EQ( src, dst ))
         CV_ERROR( CV_StsUnsupportedFormat, "" );
 
-    src_size = icvGetMatSize( src );
-    dst_size = icvGetMatSize( dst );
+    src_size = cvGetMatSize( src );
+    dst_size = cvGetMatSize( dst );
 
     /*if( dst_size.width > src_size.width || dst_size.height > src_size.height )
         CV_ERROR( CV_StsBadSize, "destination ROI must not be larger than source ROI" );*/

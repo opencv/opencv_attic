@@ -53,19 +53,6 @@ typedef struct
 }
 icvDerProductEx;
 
-
-IPCVAPI( CvStatus , icvCalcOpticalFlowHS_8u32fR,( uchar*  imgA,
-                                                  uchar*  imgB,
-                                                  int     imgStep,
-                                                  CvSize imgSize,
-                                                  int     usePrevious,
-                                                  float*  velocityX,
-                                                  float*  velocityY,
-                                                  int     velStep,
-                                                  float   lambda,
-                                                  CvTermCriteria criteria ))
-
-
 /*F///////////////////////////////////////////////////////////////////////////////////////
 //    Name: icvCalcOpticalFlowHS_8u32fR (Horn & Schunck method )
 //    Purpose: calculate Optical flow for 2 images using Horn & Schunck algorithm
@@ -95,15 +82,17 @@ IPCVAPI( CvStatus , icvCalcOpticalFlowHS_8u32fR,( uchar*  imgA,
 //
 //
 //F*/
-IPCVAPI_IMPL( CvStatus, icvCalcOpticalFlowHS_8u32fR, (uchar * imgA,
-                                                      uchar * imgB,
-                                                      int imgStep,
-                                                      CvSize imgSize,
-                                                      int usePrevious,
-                                                      float *velocityX,
-                                                      float *velocityY,
-                                                      int velStep,
-                                                      float lambda, CvTermCriteria criteria) )
+static CvStatus CV_STDCALL
+icvCalcOpticalFlowHS_8u32fR( uchar*  imgA,
+                             uchar*  imgB,
+                             int     imgStep,
+                             CvSize imgSize,
+                             int     usePrevious,
+                             float*  velocityX,
+                             float*  velocityY,
+                             int     velStep,
+                             float   lambda,
+                             CvTermCriteria criteria )
 {
     /* Loops indexes */
     int i, j, k, address;
@@ -166,20 +155,20 @@ IPCVAPI_IMPL( CvStatus, icvCalcOpticalFlowHS_8u32fR, (uchar * imgA,
     /****************************************************************************************/
     for( k = 0; k < 2; k++ )
     {
-        MemX[k] = (float *) icvAlloc( (imgSize.height) * sizeof( float ));
+        MemX[k] = (float *) cvAlloc( (imgSize.height) * sizeof( float ));
 
         if( MemX[k] == NULL )
             NoMem = 1;
-        MemY[k] = (float *) icvAlloc( (imgSize.width) * sizeof( float ));
+        MemY[k] = (float *) cvAlloc( (imgSize.width) * sizeof( float ));
 
         if( MemY[k] == NULL )
             NoMem = 1;
 
-        VelBufX[k] = (float *) icvAlloc( imageWidth * sizeof( float ));
+        VelBufX[k] = (float *) cvAlloc( imageWidth * sizeof( float ));
 
         if( VelBufX[k] == NULL )
             NoMem = 1;
-        VelBufY[k] = (float *) icvAlloc( imageWidth * sizeof( float ));
+        VelBufY[k] = (float *) cvAlloc( imageWidth * sizeof( float ));
 
         if( VelBufY[k] == NULL )
             NoMem = 1;
@@ -187,7 +176,7 @@ IPCVAPI_IMPL( CvStatus, icvCalcOpticalFlowHS_8u32fR, (uchar * imgA,
 
     BufferSize = imageHeight * imageWidth;
 
-    II = (icvDerProductEx *) icvAlloc( BufferSize * sizeof( icvDerProductEx ));
+    II = (icvDerProductEx *) cvAlloc( BufferSize * sizeof( icvDerProductEx ));
     if( (II == NULL) )
         NoMem = 1;
 
@@ -196,19 +185,19 @@ IPCVAPI_IMPL( CvStatus, icvCalcOpticalFlowHS_8u32fR, (uchar * imgA,
         for( k = 0; k < 2; k++ )
         {
             if( MemX[k] )
-                icvFree( (void **) &MemX[k] );
+                cvFree( (void **) &MemX[k] );
 
             if( MemY[k] )
-                icvFree( (void **) &MemY[k] );
+                cvFree( (void **) &MemY[k] );
 
             if( VelBufX[k] )
-                icvFree( (void **) &VelBufX[k] );
+                cvFree( (void **) &VelBufX[k] );
 
             if( VelBufY[k] )
-                icvFree( (void **) &VelBufY[k] );
+                cvFree( (void **) &VelBufY[k] );
         }
         if( II )
-            icvFree( (void **) &II );
+            cvFree( (void **) &II );
         return CV_OUTOFMEM_ERR;
     }
 /****************************************************************************************\
@@ -467,7 +456,7 @@ IPCVAPI_IMPL( CvStatus, icvCalcOpticalFlowHS_8u32fR, (uchar * imgA,
         memcpy( &velocityY[imageWidth * (imageHeight - 1)],
                 VelBufY[(imageHeight - 1) & 1], imageWidth * sizeof( float ));
 
-        if( (criteria.type & CV_TERMCRIT_ITER) && (iter == criteria.maxIter) )
+        if( (criteria.type & CV_TERMCRIT_ITER) && (iter == criteria.max_iter) )
             Stop = 1;
         if( (criteria.type & CV_TERMCRIT_EPS) && (Eps < criteria.epsilon) )
             Stop = 1;
@@ -475,12 +464,12 @@ IPCVAPI_IMPL( CvStatus, icvCalcOpticalFlowHS_8u32fR, (uchar * imgA,
     /* Free memory */
     for( k = 0; k < 2; k++ )
     {
-        icvFree( (void **) &MemX[k] );
-        icvFree( (void **) &MemY[k] );
-        icvFree( (void **) &VelBufX[k] );
-        icvFree( (void **) &VelBufY[k] );
+        cvFree( (void **) &MemX[k] );
+        cvFree( (void **) &MemY[k] );
+        cvFree( (void **) &VelBufX[k] );
+        cvFree( (void **) &VelBufY[k] );
     }
-    icvFree( (void **) &II );
+    cvFree( (void **) &II );
 
     return CV_OK;
 } /*icvCalcOpticalFlowHS_8u32fR*/
@@ -537,7 +526,7 @@ cvCalcOpticalFlowHS( const void* srcarrA, const void* srcarrB, int usePrevious,
         CV_ERROR( CV_BadStep, "source and destination images have different step" );
 
     IPPI_CALL( icvCalcOpticalFlowHS_8u32fR( (uchar*)srcA->data.ptr, (uchar*)srcB->data.ptr,
-                                            srcA->step, icvGetMatSize( srcA ), usePrevious,
+                                            srcA->step, cvGetMatSize( srcA ), usePrevious,
                                             velx->data.fl, vely->data.fl,
                                             velx->step, (float)lambda, criteria ));
     __END__;

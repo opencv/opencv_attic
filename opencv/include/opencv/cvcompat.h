@@ -49,10 +49,10 @@
 
 #include <string.h>
 
-#if _MSC_VER>=1200 && !defined __ICL
-    #define CV_UNREFERENCED(arg)  (arg)
-#else
+#ifdef __cplusplus
     #define CV_UNREFERENCED(arg)
+#else
+    #define CV_UNREFERENCED(arg) arg
 #endif
 
 #define CvMatType int
@@ -150,9 +150,9 @@ CV_INLINE void  cvMean_StdDev( const CvArr* image, double* mean,
 }
 
 
-CV_INLINE void cvmPerspectiveProject( const CvArr* mat, const CvArr* src,
+CV_INLINE void cvmPerspectiveProject( const CvMat* mat, const CvArr* src,
                                       CvArr* dst );
-CV_INLINE void cvmPerspectiveProject( const CvArr* mat, const CvArr* src,
+CV_INLINE void cvmPerspectiveProject( const CvMat* mat, const CvArr* src,
                                       CvArr* dst )
 {
     CvMat tsrc, tdst;
@@ -173,9 +173,94 @@ CV_INLINE void cvFillImage( CvArr* mat, double color )
     right_bottom.x--;
     right_bottom.y--;
 
-    cvRectangle( mat, left_top, right_bottom, color, CV_FILLED );
+    cvRectangle( mat, left_top, right_bottom,
+                 cvColorToScalar( color, cvGetElemType(mat)),
+                 CV_FILLED, 8, 0 );
 }
 
+
+#define cvCvtPixToPlane cvSplit
+#define cvCvtPlaneToPix cvMerge
+
+typedef struct CvRandState
+{
+    CvRNG     state;    /* RNG state (the current seed and carry)*/
+    int       disttype; /* distribution type */
+    CvScalar  param[2]; /* parameters of RNG */
+}
+CvRandState;
+
+
+/* Changes RNG range while preserving RNG state */
+CV_INLINE  void  cvRandSetRange( CvRandState* state, double param1,
+                                 double param2, int index CV_DEFAULT(-1));
+CV_INLINE  void  cvRandSetRange( CvRandState* state, double param1,
+                                 double param2, int index )
+{
+    if( !state )
+    {
+        cvError( CV_StsNullPtr, "cvRandSetRange", "Null pointer to RNG state", "cvcompat.h", 0 );
+        return;
+    }
+
+    if( (unsigned)(index + 1) > 4 )
+    {
+        cvError( CV_StsOutOfRange, "cvRandSetRange", "index is not in -1..3", "cvcompat.h", 0 );
+        return;
+    }
+
+    if( index < 0 )
+    {
+        state->param[0].val[0] = state->param[0].val[1] =
+        state->param[0].val[2] = state->param[0].val[3] = param1;
+        state->param[1].val[0] = state->param[1].val[1] = 
+        state->param[1].val[2] = state->param[1].val[3] = param2;
+    }
+    else
+    {
+        state->param[0].val[index] = param1;
+        state->param[1].val[index] = param2;
+    }
+}
+
+
+CV_INLINE  void  cvRandInit( CvRandState* state, double param1,
+                             double param2, int seed,
+                             int disttype CV_DEFAULT(CV_RAND_UNI));
+CV_INLINE  void  cvRandInit( CvRandState* state, double param1,
+                             double param2, int seed, int disttype )
+{
+    if( !state )
+    {
+        cvError( CV_StsNullPtr, "cvRandInit", "Null pointer to RNG state", "cvcompat.h", 0 );
+        return;
+    }
+
+    if( disttype != CV_RAND_UNI && disttype != CV_RAND_NORMAL )
+    {
+        cvError( CV_StsBadFlag, "cvRandInit", "Unknown distribution type", "cvcompat.h", 0 );
+        return;
+    }
+
+    state->state = (uint64)(seed ? seed : -1);
+    state->disttype = disttype;
+    cvRandSetRange( state, param1, param2, -1 );
+}
+
+
+/* Fills array with random numbers */
+CV_INLINE void cvRand( CvRandState* state, CvArr* arr );
+CV_INLINE void cvRand( CvRandState* state, CvArr* arr )
+{
+    if( !state )
+    {
+        cvError( CV_StsNullPtr, "cvRand", "Null pointer to RNG state", "cvcompat.h", 0 );
+        return;
+    }
+    cvRandArr( &state->state, arr, state->disttype, state->param[0], state->param[1] ); 
+}
+
+#define cvRandNext( _state ) cvRandInt( &(_state)->state )
 
 CV_INLINE void cvbRand( CvRandState* state, float* dst, int len );
 CV_INLINE void cvbRand( CvRandState* state, float* dst, int len )
@@ -270,8 +355,8 @@ CV_INLINE  void  cvbFastLog( const double* x, float* y, int len )
 }
 
 
-CV_INLINE  CvRect  cvContourBoundingRect( const void* point_set, int update CV_DEFAULT(0));
-CV_INLINE  CvRect  cvContourBoundingRect( const void* point_set, int update )
+CV_INLINE  CvRect  cvContourBoundingRect( void* point_set, int update CV_DEFAULT(0));
+CV_INLINE  CvRect  cvContourBoundingRect( void* point_set, int update )
 {
     return cvBoundingRect( point_set, update );
 }
@@ -279,9 +364,8 @@ CV_INLINE  CvRect  cvContourBoundingRect( const void* point_set, int update )
 
 CV_INLINE double cvPseudoInverse( const CvArr* src, CvArr* dst,
                                   int flags CV_DEFAULT(0));
-CV_INLINE double cvPseudoInverse( const CvArr* src, CvArr* dst, int flags )
+CV_INLINE double cvPseudoInverse( const CvArr* src, CvArr* dst, int CV_UNREFERENCED(flags) )
 {
-    CV_UNREFERENCED( flags );
     return cvInvert( src, dst, CV_SVD );
 }
 
@@ -327,13 +411,11 @@ CV_INLINE double cvPseudoInverse( const CvArr* src, CvArr* dst, int flags )
 /* Calculates exact convex hull of 2d point set */
 CV_INLINE void cvConvexHull( CvPoint* points, int num_points, CvRect* bound_rect,
                              int orientation, int* hull, int* hullsize );
-CV_INLINE void cvConvexHull( CvPoint* points, int num_points, CvRect* bound_rect,
+CV_INLINE void cvConvexHull( CvPoint* points, int num_points, CvRect* CV_UNREFERENCED(bound_rect),
                              int orientation, int* hull, int* hullsize )
 {
     CvMat points1 = cvMat( 1, num_points, CV_32SC2, points );
     CvMat hull1 = cvMat( 1, num_points, CV_32SC1, hull );
-
-    CV_UNREFERENCED( bound_rect );
     
     cvConvexHull2( &points1, &hull1, orientation, 0 );
     *hullsize = hull1.cols;
@@ -359,7 +441,8 @@ CV_INLINE void cvMinAreaRect( CvPoint* points, int n,
                               CvPoint2D32f* vect1,
                               CvPoint2D32f* vect2 );
 CV_INLINE void cvMinAreaRect( CvPoint* points, int n,
-                              int left, int bottom, int right, int top,
+                              int CV_UNREFERENCED(left), int CV_UNREFERENCED(bottom),
+                              int CV_UNREFERENCED(right), int CV_UNREFERENCED(top),
                               CvPoint2D32f* anchor,
                               CvPoint2D32f* vect1,
                               CvPoint2D32f* vect2 )
@@ -378,10 +461,13 @@ CV_INLINE void cvMinAreaRect( CvPoint* points, int n,
     CV_UNREFERENCED( (left, bottom, right, top) );
 }
 
+typedef int CvDisType;
+typedef int CvChainApproxMethod;
+typedef int CvContourRetrievalMode;
 
-CV_INLINE  void  cvFitLine3D( CvPoint3D32f* points, int count, CvDisType dist,
+CV_INLINE  void  cvFitLine3D( CvPoint3D32f* points, int count, int dist,
                               void *param, float reps, float aeps, float* line );
-CV_INLINE  void  cvFitLine3D( CvPoint3D32f* points, int count, CvDisType dist,
+CV_INLINE  void  cvFitLine3D( CvPoint3D32f* points, int count, int dist,
                               void *param, float reps, float aeps, float* line )
 {
     CvMat mat = cvMat( 1, count, CV_32FC3, points );
@@ -391,9 +477,9 @@ CV_INLINE  void  cvFitLine3D( CvPoint3D32f* points, int count, CvDisType dist,
 }
 
 /* Fits a line into set of 2d points in a robust way (M-estimator technique) */ 
-CV_INLINE  void  cvFitLine2D( CvPoint2D32f* points, int count, CvDisType dist,
+CV_INLINE  void  cvFitLine2D( CvPoint2D32f* points, int count, int dist,
                               void *param, float reps, float aeps, float* line );
-CV_INLINE  void  cvFitLine2D( CvPoint2D32f* points, int count, CvDisType dist,
+CV_INLINE  void  cvFitLine2D( CvPoint2D32f* points, int count, int dist,
                               void *param, float reps, float aeps, float* line )
 {
     CvMat mat = cvMat( 1, count, CV_32FC2, points );
@@ -408,6 +494,26 @@ CV_INLINE  void cvFitEllipse( const CvPoint2D32f* points, int count, CvBox2D* bo
 {
     CvMat mat = cvMat( 1, count, CV_32FC2, (void*)points );
     *box = cvFitEllipse2( &mat );
+}
+
+/* Projects 2d points to one of standard coordinate planes
+   (i.e. removes one of coordinates) */
+CV_INLINE  void  cvProject3D( CvPoint3D32f* points3D, int count,
+                              CvPoint2D32f* points2D,
+                              int xIndx CV_DEFAULT(0),
+                              int yIndx CV_DEFAULT(1));
+CV_INLINE  void  cvProject3D( CvPoint3D32f* points3D, int count,
+                              CvPoint2D32f* points2D, int xIndx, int yIndx )
+{
+    CvMat src = cvMat( 1, count, CV_32FC3, points3D );
+    CvMat dst = cvMat( 1, count, CV_32FC2, points2D );
+    float m[6] = {0,0,0,0,0,0};
+    CvMat M = cvMat( 2, 3, CV_32F, m );
+    
+    assert( (unsigned)xIndx < 3 && (unsigned)yIndx < 3 );
+    m[xIndx] = m[yIndx+3] = 1.f;
+
+    cvTransform( &src, &dst, &M, NULL );
 }
 
 
@@ -448,7 +554,7 @@ CV_INLINE  int  cvHoughLines( CvArr* image, double rho,
     cvHoughLines2( image, &linesMat, CV_HOUGH_STANDARD,
                    rho, theta, threshold, 0, 0 );
 
-    return linesMat.rows;
+    return linesMat.cols;
 }
 
 
@@ -465,7 +571,7 @@ CV_INLINE  int  cvHoughLinesP( CvArr* image, double rho,
     cvHoughLines2( image, &linesMat, CV_HOUGH_PROBABILISTIC,
                    rho, theta, threshold, lineLength, lineGap );
 
-    return linesMat.rows;
+    return linesMat.cols;
 }
 
 
@@ -480,7 +586,7 @@ CV_INLINE  int  cvHoughLinesSDiv( CvArr* image, double rho, int srn,
     cvHoughLines2( image, &linesMat, CV_HOUGH_MULTI_SCALE,
                    rho, theta, threshold, srn, stn );
 
-    return linesMat.rows;
+    return linesMat.cols;
 }
 
 
@@ -488,15 +594,12 @@ CV_INLINE  int  cvHoughLinesSDiv( CvArr* image, double rho, int srn,
 CV_INLINE  void  cvFindFundamentalMatrix( int* points1, int* points2,
                             int numpoints, int method, float* matrix );
 CV_INLINE  void  cvFindFundamentalMatrix( int* points1, int* points2,
-                            int numpoints, int method, float* matrix )
+                            int numpoints, int CV_UNREFERENCED(method), float* matrix )
 {
     CvMat* pointsMat1;
     CvMat* pointsMat2;
     CvMat fundMatr = cvMat(3,3,CV_32F,matrix);
     int i, curr = 0;
-#ifndef __BORLANDC__
-    method = method;
-#endif
 
     pointsMat1 = cvCreateMat(3,numpoints,CV_64F);
     pointsMat2 = cvCreateMat(3,numpoints,CV_64F);
@@ -522,13 +625,13 @@ CV_INLINE  void  cvFindFundamentalMatrix( int* points1, int* points2,
 
 CV_INLINE  float  cvCalcEMD( const float* signature1, int size1,
                              const float* signature2, int size2,
-                             int dims, CvDisType dist_type CV_DEFAULT(CV_DIST_L2),
+                             int dims, int dist_type CV_DEFAULT(CV_DIST_L2),
                              CvDistanceFunction dist_func CV_DEFAULT(0),
                              float* lower_bound CV_DEFAULT(0),
                              void* user_param CV_DEFAULT(0));
 CV_INLINE  float  cvCalcEMD( const float* signature1, int size1,
                              const float* signature2, int size2,
-                             int dims, CvDisType dist_type,
+                             int dims, int dist_type,
                              CvDistanceFunction dist_func,
                              float* lower_bound, void* user_param )
 {
@@ -555,26 +658,82 @@ CV_INLINE  void  cvKMeans( int num_clusters, float** samples,
     cvReleaseMat( &samples_mat );
 }
 
+
+CV_INLINE void  cvStartScanGraph( CvGraph* graph, CvGraphScanner* scanner,
+                                  CvGraphVtx* vtx CV_DEFAULT(NULL),
+                                  int mask CV_DEFAULT(CV_GRAPH_ALL_ITEMS));
+CV_INLINE void  cvStartScanGraph( CvGraph* graph, CvGraphScanner* scanner,
+                                  CvGraphVtx* vtx, int mask )
+{
+    CvGraphScanner* temp_scanner;
+    
+    if( !scanner )
+        cvError( CV_StsNullPtr, "cvStartScanGraph", "Null scanner pointer", "cvcompat.h", 0 );
+
+    temp_scanner = cvCreateGraphScanner( graph, vtx, mask );
+    *scanner = *temp_scanner;
+    cvFree( (void**)&temp_scanner );
+}
+
+
+CV_INLINE  void  cvEndScanGraph( CvGraphScanner* scanner );
+CV_INLINE  void  cvEndScanGraph( CvGraphScanner* scanner )
+{
+    if( !scanner )
+        cvError( CV_StsNullPtr, "cvEndScanGraph", "Null scanner pointer", "cvcompat.h", 0 );
+
+    if( scanner->stack )
+    {
+        CvGraphScanner* temp_scanner = (CvGraphScanner*)cvAlloc( sizeof(*temp_scanner) );
+        *temp_scanner = *scanner;
+        cvReleaseGraphScanner( &temp_scanner );
+        memset( scanner, 0, sizeof(*scanner) );
+    }
+}
+
+
 #define cvKalmanUpdateByTime  cvKalmanPredict
 #define cvKalmanUpdateByMeasurement cvKalmanCorrect
 
-/* Creates hand mask image given several points on the hand */
-OPENCVAPI  void  cvCreateHandMask( CvSeq* hand_points,
-                                   IplImage *img_mask, CvRect *roi);
+/* old drawing functions */
+CV_INLINE  void  cvLineAA( CvArr* img, CvPoint pt1, CvPoint pt2,
+                           double color, int scale CV_DEFAULT(0));
+CV_INLINE  void  cvLineAA( CvArr* img, CvPoint pt1, CvPoint pt2,
+                           double color, int scale )
+{
+    cvLine( img, pt1, pt2, cvColorToScalar(color, cvGetElemType(img)), 1, CV_AA, scale );
+}
 
-/* Finds hand region in range image data */
-OPENCVAPI  void  cvFindHandRegion (CvPoint3D32f* points, int count,
-                                CvSeq* indexs,
-                                float* line, CvSize2D32f size, int flag,
-                                CvPoint3D32f* center,
-                                CvMemStorage* storage, CvSeq **numbers);
+CV_INLINE  void  cvCircleAA( CvArr* img, CvPoint center, int radius,
+                             double color, int scale CV_DEFAULT(0) );
+CV_INLINE  void  cvCircleAA( CvArr* img, CvPoint center, int radius,
+                             double color, int scale )
+{
+    cvCircle( img, center, radius, cvColorToScalar(color, cvGetElemType(img)), 1, CV_AA, scale );
+}
 
-/* Finds hand region in range image data (advanced version) */
-OPENCVAPI  void  cvFindHandRegionA( CvPoint3D32f* points, int count,
-                                CvSeq* indexs,
-                                float* line, CvSize2D32f size, int jc,
-                                CvPoint3D32f* center,
-                                CvMemStorage* storage, CvSeq **numbers);
+CV_INLINE  void  cvEllipseAA( CvArr* img, CvPoint center, CvSize axes,
+                              double angle, double start_angle,
+                              double end_angle, double color,
+                              int scale CV_DEFAULT(0) );
+CV_INLINE  void  cvEllipseAA( CvArr* img, CvPoint center, CvSize axes,
+                              double angle, double start_angle,
+                              double end_angle, double color, int scale )
+{
+    cvEllipse( img, center, axes, angle, start_angle, end_angle,
+               cvColorToScalar(color, cvGetElemType(img)), 1, CV_AA, scale );
+}
+
+CV_INLINE  void  cvPolyLineAA( CvArr* img, CvPoint** pts, int* npts, int contours,
+                               int is_closed, double color, int scale CV_DEFAULT(0) );
+CV_INLINE  void  cvPolyLineAA( CvArr* img, CvPoint** pts, int* npts, int contours,
+                               int is_closed, double color, int scale )
+{
+    cvPolyLine( img, pts, npts, contours, is_closed,
+                cvColorToScalar(color, cvGetElemType(img)),
+                1, CV_AA, scale );
+}
+
 
 /****************************************************************************************\
 *                                   Pixel Access Macros                                  *
@@ -737,7 +896,7 @@ typedef struct _CvPixelPosition32f
 /*  pos    - position structure                                                 */
 /*  shift  - direction ( it's value must be one of the CV_SHIFT_… constants ) */
 /*  cs     - number of the image channels                                       */
-#define CV_MOVE_PARAM( pos, shift, cs )                                           \
+#define CV_MOVE_PARAM( pos, shift, cs )                                             \
     ( (pos).currline += (pos).step_arr[(shift)>>2], (pos).x += ((shift)&3)-2,       \
     ((pos).currline != (pos).topline && (pos).currline != (pos).bottomline &&       \
     (pos).x >= 0 && (pos).x < (pos).width) ? (pos).currline + (pos).x*(cs) : 0 )
@@ -747,7 +906,7 @@ typedef struct _CvPixelPosition32f
 /*  pos    - position structure                                                  */
 /*  shift  - direction ( it's value must be one of the CV_SHIFT_… constants )  */
 /*  cs     - number of the image channels                                        */
-#define CV_MOVE_PARAM_WRAP( pos, shift, cs )                                      \
+#define CV_MOVE_PARAM_WRAP( pos, shift, cs )                                        \
     ( (pos).currline += (pos).step_arr[(shift)>>2],                                 \
     (pos).currline = ((pos).currline == (pos).topline ?                             \
     (pos).bottomline - (pos).step :                                                 \

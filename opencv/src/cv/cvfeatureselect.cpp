@@ -39,11 +39,10 @@
 //
 //M*/
 #include "_cv.h"
-#include "_cvutils.h"
 
 #define  cmp_features( f1, f2 )  (*(f1) > *(f2))
 
-CV_IMPLEMENT_QSORT( icvSortFeatures, int *, cmp_features );
+static CV_IMPLEMENT_QSORT( icvSortFeatures, int *, cmp_features )
 
 void
 cvGoodFeaturesToTrack( const void* image, void* eigImage, void* tempImage,
@@ -103,11 +102,11 @@ cvGoodFeaturesToTrack( const void* image, void* eigImage, void* tempImage,
     if( CV_MAT_CN(img->type) != 1 ||
         CV_MAT_CN(eig->type) != 1 ||
         CV_MAT_CN(tmp->type) != 1 )
-        CV_ERROR( CV_BadNumChannels, icvUnsupportedFormat );
+        CV_ERROR( CV_BadNumChannels, cvUnsupportedFormat );
 
     if( CV_MAT_DEPTH(tmp->type) != CV_32F ||
         CV_MAT_DEPTH(eig->type) != CV_32F )
-        CV_ERROR( CV_BadDepth, icvUnsupportedFormat );
+        CV_ERROR( CV_BadDepth, cvUnsupportedFormat );
 
     if( !corners || !corner_count )
         CV_ERROR( CV_StsNullPtr, "" );
@@ -126,7 +125,7 @@ cvGoodFeaturesToTrack( const void* image, void* eigImage, void* tempImage,
 
     min_dist = cvRound( min_distance * min_distance );
 
-    size = icvGetMatSize( img );
+    size = cvGetMatSize( img );
     ptr_data = (int**)(tmp->data.ptr);
     eig_data = (int*)(eig->data.ptr);
     tmp_data = (int*)(tmp->data.ptr);

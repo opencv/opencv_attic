@@ -83,7 +83,7 @@ cvFindCornerSubPix( const void* srcarr, CvPoint2D32f* corners,
     if( win.width <= 0 || win.height <= 0 )
         CV_ERROR( CV_StsBadSize, "" );
 
-    size = icvGetMatSize( src );
+    size = cvGetMatSize( src );
 
     if( size.width < win_w + 4 || size.height < win_h + 4 )
         CV_ERROR( CV_StsBadSize, "" );
@@ -93,7 +93,7 @@ cvFindCornerSubPix( const void* srcarr, CvPoint2D32f* corners,
     {
     case CV_TERMCRIT_ITER:
         eps = 0.f;
-        max_iters = criteria.maxIter;
+        max_iters = criteria.max_iter;
         break;
     case CV_TERMCRIT_EPS:
         eps = criteria.epsilon;
@@ -101,7 +101,7 @@ cvFindCornerSubPix( const void* srcarr, CvPoint2D32f* corners,
         break;
     case CV_TERMCRIT_ITER | CV_TERMCRIT_EPS:
         eps = criteria.epsilon;
-        max_iters = criteria.maxIter;
+        max_iters = criteria.max_iter;
         break;
     default:
         assert( 0 );

@@ -49,7 +49,7 @@ struct CvPOSITObject
     float* img_vecs;
 };
 
-void icvPseudoInverse3D( float *a, float *b, int n, int method );
+static void icvPseudoInverse3D( float *a, float *b, int n, int method );
 
 static  CvStatus  icvCreatePOSITObject( CvPoint3D32f *points,
                                         int numPoints,
@@ -78,8 +78,8 @@ static  CvStatus  icvCreatePOSITObject( CvPoint3D32f *points,
         return CV_NULLPTR_ERR;
 
     /* memory allocation */
-    pObject = (CvPOSITObject *) icvAlloc( sizeof( CvPOSITObject ) +
-                                          inv_matr_size + obj_vec_size + img_vec_size );
+    pObject = (CvPOSITObject *) cvAlloc( sizeof( CvPOSITObject ) +
+                                         inv_matr_size + obj_vec_size + img_vec_size );
 
     if( !pObject )
         return CV_OUTOFMEM_ERR;
@@ -140,7 +140,7 @@ static  CvStatus  icvPOSIT( CvPOSITObject *pObject, CvPoint2D32f *imagePoints,
         return CV_BADFLAG_ERR;
     if( (criteria.type & CV_TERMCRIT_EPS) && criteria.epsilon < 0 )
         return CV_BADFACTOR_ERR;
-    if( (criteria.type & CV_TERMCRIT_ITER) && criteria.maxIter <= 0 )
+    if( (criteria.type & CV_TERMCRIT_ITER) && criteria.max_iter <= 0 )
         return CV_BADFACTOR_ERR;
 
     while( !converged )
@@ -231,7 +231,7 @@ static  CvStatus  icvPOSIT( CvPOSITObject *pObject, CvPoint2D32f *imagePoints,
 
         count++;
         converged = ((criteria.type & CV_TERMCRIT_EPS) && (diff < criteria.epsilon));
-        converged |= ((criteria.type & CV_TERMCRIT_ITER) && (count == criteria.maxIter));
+        converged |= ((criteria.type & CV_TERMCRIT_ITER) && (count == criteria.max_iter));
     }
     invScale = 1 / scale;
     translation[0] = imagePoints[0].x * invScale;
@@ -244,7 +244,7 @@ static  CvStatus  icvPOSIT( CvPOSITObject *pObject, CvPoint2D32f *imagePoints,
 
 static  CvStatus  icvReleasePOSITObject( CvPOSITObject ** ppObject )
 {
-    icvFree( ppObject );
+    cvFree( (void**)ppObject );
     return CV_NO_ERR;
 }
 

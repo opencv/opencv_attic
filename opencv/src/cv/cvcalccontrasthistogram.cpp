@@ -87,7 +87,7 @@ IPCVAPI_IMPL( CvStatus, icvCalcContrastHist8uC1R, (uchar ** img, int step, CvSiz
 
     j = hist->dims[0] * hist->mdims[0];
 
-    int *n = (int *) icvAlloc( (long) hist->dims[0] * sizeof( int ));
+    int *n = (int *)cvAlloc( (size_t)hist->dims[0] * sizeof( int ));
 
     if( hist->type == CV_HIST_ARRAY )
     {
@@ -157,7 +157,7 @@ IPCVAPI_IMPL( CvStatus, icvCalcContrastHist8uC1R, (uchar ** img, int step, CvSiz
         }
     }
 
-    icvFree( &n );
+    cvFree( &n );
     return CV_NO_ERR;
 }
 
@@ -202,7 +202,7 @@ IPCVAPI_IMPL( CvStatus, icvCalcContrastHistMask8uC1R, (uchar ** img, int step,
 
     j = hist->dims[0] * hist->mdims[0];
 
-    int *n = (int *) icvAlloc( (long) hist->dims[0] * sizeof( int ));
+    int *n = (int *)cvAlloc( (size_t) hist->dims[0] * sizeof( int ));
 
     if( hist->type == CV_HIST_ARRAY )
     {
@@ -285,7 +285,7 @@ IPCVAPI_IMPL( CvStatus, icvCalcContrastHistMask8uC1R, (uchar ** img, int step,
         }
     }
 
-    icvFree( &n );
+    cvFree( &n );
     return CV_NO_ERR;
 }
 
