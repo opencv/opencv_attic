@@ -1,167 +1,214 @@
 Basic Installation
 ==================
 
-   These are generic installation instructions.
+Windows
+=======
 
-   The `configure' shell script attempts to guess correct values for
-various system-dependent variables used during compilation.  It uses
-those values to create a `Makefile' in each directory of the package.
-It may also create one or more `.h' files containing system-dependent
-definitions.  Finally, it creates a shell script `config.status' that
-you can run in the future to recreate the current configuration, a file
-`config.cache' that saves the results of its tests to speed up
-reconfiguring, and a file `config.log' containing compiler output
-(useful mainly for debugging `configure').
+    Installation under Windows is pretty strightforward.
+    Download executable installation from SourceForge and run it.
+    It installs OpenCV, registers DirectShow filters and performs
+    other post-installation procedures.
+    After that you can start using OpenCV.
 
-   If you need to do unusual things to compile the package, please try
-to figure out how `configure' could check whether to do them, and mail
-diffs or instructions to the address given in the `README' so they can
-be considered for the next release.  If at some point `config.cache'
-contains results you don't want to keep, you may remove or edit it.
+    Also, it is possible to build core OpenCV binaries manually
+    from source distribution for Linux (though, executable installation
+    for Windows includes the source code as well):
 
-   The file `configure.in' is used to create `configure' by a program
-called `autoconf'.  You only need `configure.in' if you want to change
-it or regenerate `configure' using a newer version of `autoconf'.
+    + Download and unpack the OpenCV-*.tar.gz package in some directory,
+      e.g. C:\MySoft\ (that root folder is referred further as <opencv_root>)
+      The tree should look like
+      <opencv_root>
+            _make
+            apps
+                ...
+            cxcore
+                include
+                src
+                make
+            cv
+                include
+                src
+                make
+            cvaux
+                ...
+            ...
 
-The simplest way to compile this package is:
+    + Add <opencv_root>\bin to the system path. On Windows2000/WindowsXP it can be done
+      the path can be modified at
+      MyComputer--[right button click]-->Properties->Advanced->Environment Variables.
+      
+    + By default, highgui requires external graphic libraries,
+      so if you do not have them at <opencv_root>/otherlibs/_graphics/, you will
+      have to modify highgui project settings and/or
+      <opencv_root>/otherlibs/highgui/Makefile.*:
+      1) remove HAVE_JPEG, HAVE_TIFF and HAVE_PNG from preprocessor definitions
+      2) remove libjpeg.lib, libtiff.lib, libpng.lib and zlib.lib from linker options.
+      The resultant light-weight version of highgui can still read & write most
+      of jpeg's, bmp's, uncompressed tiff's, pxm's and sun raster images;
+      capture video from AVI or camera via VFW and write AVIs via VFW.
 
-  1. `cd' to the directory containing the package's source code and type
-     `./configure' to configure the package for your system.  If you're
-     using `csh' on an old version of System V, you might need to type
-     `sh ./configure' instead to prevent `csh' from trying to execute
-     `configure' itself.
+   Building OpenCV from sources
+   ----------------------------
 
-     Running `configure' takes a while.  While running, it prints some
-     messages telling which features it is checking for.
+   You need to have some C/C++ compiler. Below are some variants considered:
 
-  2. Type `make' to compile the package.
+     === Microsoft Visual C++ (6.0 or higher) ===:
 
-  3. Type `make install' to install the programs and any data files and
-     documentation.
+     ** Prerequisities:
 
-  4. You can remove the program binaries and object files from the
-     source code directory by typing `make clean'.  
+       * To build DirectShow filters, install DirectX SDK
+       as described in <opencv_root>\docs\faq.htm or <opencv_root>\cv\include\cvstreams.h.
 
-Compilers and Options
-=====================
+       * To build MIL-enabled version highgui, install MIL (Matrox Imaging Library)
+       add include and library paths within Developer Studio,
+       add HAVE_MIL to preprocessor definitions for highgui
+       (also, see the note about libjpeg etc. above)
 
-   Some systems require unusual options for compilation or linking that
-the `configure' script does not know about.  You can give `configure'
-initial values for variables by setting them in the environment.  Using
-a Bourne-compatible shell, you can do that on the command line like
-this:
-     CC=c89 CFLAGS=-O2 LIBS=-lposix ./configure
+     ** Building the main part of OpenCV
 
-Or on systems that have the `env' program, you can do it like this:
-     env CPPFLAGS=-I/usr/local/include LDFLAGS=-s ./configure
+       * Open <opencv_root>\_make\opencv.dsw (for MSVC 6.0) or
+       <opencv_root>\_make\opencv.sln (for MSVC .NET 2003).
 
-Compiling For Multiple Architectures
-====================================
+       * Choose from menu Build->Batch Build->Build.
 
-   You can compile the package for more than one kind of computer at the
-same time, by placing the object files for each architecture in their
-own directory.  To do this, you must use a version of `make' that
-supports the `VPATH' variable, such as GNU `make'.  `cd' to the
-directory where you want the object files and executables to go and run
-the `configure' script.  `configure' automatically checks for the
-source code in the directory that `configure' is in and in `..'.
+     ** Building DirectShow-related part.
 
-   If you have to use a `make' that does not supports the `VPATH'
-variable, you have to compile the package for one architecture at a time
-in the source code directory.  After you have installed the package for
-one architecture, use `make distclean' before reconfiguring for another
-architecture.
+       * Open <opencv_root>\_make\opencv_directshow.dsw (for MSVC 6.0) or
+       <opencv_root>\_make\opencv_directshow.sln (for MSVC .NET 2003).
 
-Installation Names
-==================
+       * Choose from menu Build->Batch Build->Build.
 
-   By default, `make install' will install the package's files in
-`/usr/local/bin', `/usr/local/man', etc.  You can specify an
-installation prefix other than `/usr/local' by giving `configure' the
-option `--prefix=PATH'.
+     === Intel compiler 6.0 or greater ===
 
-   You can specify separate installation prefixes for
-architecture-specific files and architecture-independent files.  If you
-give `configure' the option `--exec-prefix=PATH', the package will use
-PATH as the prefix for installing programs and libraries.
-Documentation and other data files will still use the regular prefix.
+        Intel compiler can not be used alone to build OpenCV. You will
+        need Microsoft Visual C++, Borland C++ Builder X, or Platform SDK
+        (+ free Microsoft C++ .NET 2003 Command-line Toolset).
 
-   If the package supports it, you can cause programs to be installed
-with an extra prefix or suffix on their names by giving `configure' the
-option `--program-prefix=PREFIX' or `--program-suffix=SUFFIX'.
+        + In case of Microsoft Visual C++ 6.0 select Intel Compiler from menu
+          Tools->Intel(R) C++ Compiler Selection Tool.
+        
+        + In case of Microsoft Visual Studio .NET 2003 you may force all or
+          selected projects to use Intel Compiler  (right click on the project name
+          in the solution browser window -> Convert to use Intel(R) C++ Project System)
 
-Optional Features
-=================
+        + In case of Borland C++ BuilderX (see below) select Intel compiler toolset for
+          any given project (support for Intel Compiler must be installed)
 
-   Some packages pay attention to `--enable-FEATURE' options to
-`configure', where FEATURE indicates an optional part of the package.
-They may also pay attention to `--with-PACKAGE' options, where PACKAGE
-is something like `gnu-as' or `x' (for the X Window System).  The
-`README' should mention any `--enable-' and `--with-' options that the
-package recognizes.
+        + Otherwise (including case of Platform SDK)
+        run "nmake /f makefile.icl" from within <OpenCV>\_make folder.
 
-   For packages that use the X Window System, `configure' can usually
-find the X include and library files automatically, but if it doesn't,
-you can use the `configure' options `--x-includes=DIR' and
-`--x-libraries=DIR' to specify their locations.
+        The produced binaries are compatible with Visual C++.
 
-Specifying the System Type
-==========================
+     === Borland C++ 5.6.1 (Borland C++ BuilderX) or greater ===
 
-   There may be some features `configure' can not figure out
-automatically, but needs to determine by the type of host the package
-will run on.  Usually `configure' can figure that out, but if it prints
-a message saying it can not guess the host type, give it the
-`--host=TYPE' option.  TYPE can either be a short name for the system
-type, such as `sun4', or a canonical name with three fields:
-     CPU-COMPANY-SYSTEM
+        * Open <OpenCV>\_make\cbuilderx\opencv.bpgr, 
+        * Select the menu item "Project -> Make Project Group"
+        
+        * In case if you wish to use command line (or if you have free Borland C++ 5.5),
+          run "make -f makefile.bcc" from within <OpenCV>\_make folder.
 
-See the file `config.sub' for the possible values of each field.  If
-`config.sub' isn't included in this package, then this package doesn't
-need to know the host type.
+          For Borland C++ 5.5, make sure <BorlandC_root>\bin is in the system path
+          and <BorlandC_root>\bin\bcc32.cfg contains:
+           -I<BorlandC_root>\bcc\include -L<BorlandC_root>\bcc\lib -L<BorlandC_root>\bcc\lib\psdk
+          (where <BorlandC_root> denotes the root folder of Borland C++ installation)
 
-   If you are building compiler tools for cross-compiling, you can also
-use the `--target=TYPE' option to select the type of system they will
-produce code for and the `--build=TYPE' option to select the type of
-system on which you are compiling the package.
+     === MINGW GNU C/C++ 3.x or greater ===
 
-Sharing Defaults
-================
+       * Run mingw32-make -f makefile.gcc from within <OpenCV>\_make folder.
 
-   If you want to set default values for `configure' scripts to share,
-you can create a site shell script called `config.site' that gives
-default values for variables like `CC', `cache_file', and `prefix'.
-`configure' looks for `PREFIX/share/config.site' if it exists, then
-`PREFIX/etc/config.site' if it exists.  Or, you can set the
-`CONFIG_SITE' environment variable to the location of the site script.
-A warning: not all `configure' scripts look for a site script.
+       Make sure that <gcc_root>\bin is in the system path.
+       To build VFW-enabled highgui, read instructions in
+       <opencv_root>\otherlibs\_graphics\readme.txt
 
-Operation Controls
-==================
 
-   `configure' recognizes the following options to control how it
-operates.
+   How to test built OpenCV binaries
+   ---------------------------------
 
-`--cache-file=FILE'
-     Use and save the results of the tests in FILE instead of
-     `./config.cache'.  Set FILE to `/dev/null' to disable caching, for
-     debugging `configure'.
+   Run samples at <opencv_root>\samples\c.
+   (Note: some of the demos need an AVI file or a camera, e.g. motempl.c)
+   
+   or run algorithmic tests: <opencv_root>\bin\cxcoretest.exe, <opencv_root>\bin\cvtest.exe.
+   It will produce cxcoretest.sum and cvtest.sum, respectively, that should hopefully
+   contain all OK's.
 
-`--help'
-     Print a summary of the options to `configure', and exit.
+   How to add support for other compiler, or how to update the makefiles
+   if OpenCV has changed, or how to add more projects
+   ---------------------------------------------------------------------
 
-`--quiet'
-`--silent'
-`-q'
-     Do not print messages saying which checks are being made.
+   Look at <opencv_root>\utils\gen_make.py. It looks at .dsp files in the specified
+   folders and generates makefiles for all compilers it knows. GCC is now handled
+   a little bit ugly, because linker couldn't handle too long lists of files and
+   I don't know if it is possible to use temporary inline files.
 
-`--srcdir=DIR'
-     Look for the package's source code in directory DIR.  Usually
-     `configure' can determine that directory automatically.
+Linux
+=====
 
-`--version'
-     Print the version of Autoconf used to generate the `configure'
-     script, and exit.
+   There are no prebuilt binaries for Linux version (because of different
+   C++-incompatible versions of GCC in different distributions), so you'd have
+   to build it from sources.
+   The following has been tested on Slackware 10.0 (GCC 3.3.*)
 
-`configure' also accepts some other, not widely useful, options.
+   That's what you need to build fully-functionaly libraries and demos:
+   ======
 
+   + GTK+ 2.x or higher.
+
+   + libpng, libjpeg and libtiff with development files.
+
+   + libavcodec from ffmpeg 0.4.8 + headers.
+     Earlier version do not work with OpenCV because of different API.
+     libavcodec is LGPL software, so to use it with non-GPL software (such as OpenCV)
+     you need to build and use a _shared_ library libavcodec.so.*:
+        get ffmpeg-0.4.8 from ffmpeg.sourceforge.net
+        ./configure --enable-shared
+        make
+        make install
+        you will have got: /usr/local/lib/libavcodec.so.* &
+                           /usr/local/include/ffmpeg/*.h
+
+   Now build OpenCV:  
+   ======
+   
+   a) if your distribution uses RPM, you may build RPMs via:
+         rpmbuild -ta OpenCV-x.y.z.tar.gz" (for RH 8.x) or
+         rpm -ta OpenCV-x.y.z.tar.gz" (for others)
+      where OpenCV-x.y.z.tar.gz should be put to /usr/src/redhat/SOURCES/ or
+      similar folder  
+
+      it will build OpenCV-x.y.z.*.rpm (there is no OpenCV-devel,
+      everything is in one package)
+      
+      then install it by:
+        rpm -i OpenCV-x.y.z.*.rpm
+        
+      --nodeps is needed in this version, because it can not find
+        libavcodec.so, even if it is in the path (a weird bug somewhere).
+
+   b) if your distribution does not support RPM, build and install it
+      in Unix/Linux traditional way:
+
+      ./configure
+      make
+      make install # as root
+      ldconfig # as root
+
+   both a&b (post-install))
+      
+      default installation path is /usr/local/lib and /usr/local/include/opencv,
+      so you need to add /usr/local/lib to /etc/ld.so.conf (and run ldconfig after)
+
+   How to test OpenCV:
+   =======
+
+   + run /usr/local/bin/cvtest
+         /usr/local/bin/cxcoretest
+   
+   + or
+     compile and run simple c examples at
+     /usr/local/share/opencv/samples, e.g.:
+
+     g++ `opencv-config --cxxflags` -o morphology morphology.c `opencv-config --libs`.
+     Plain gcc won't work because of unresolved c++-specific symbols (located in highgui?)
+   
+
+   

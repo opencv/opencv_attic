@@ -1,3 +1,5 @@
+(if you noticed that some names are missing, please mail to vadim.pisarevsky@intel.com)
+
 Original OpenCV committee (vision, functionality proposals etc.):
 -----------------------------------------------------------------
 Dr. Gary Bradski
@@ -8,63 +10,79 @@ Prof. Pietro Perona
 Prof. Stan Sclaroff
 Prof. Carlo Tomasi
 
-People who helped to make OpenCV the real thing
-(if you noticed that some names are missing, please mail to vadim.pisarevsky@intel.com)
+People who helped to improve OpenCV a lot
 ---------------------------------------------------------------------------------------
-
 Name                  Company (by the moment       Remarks
                     of contribution/cooperation)
 
 Alekseev, Aleksey       Intel Corp.                IppCV testing
 Boldyrev, Sergey        Intel Corp.                rpm spec & linux makefiles
+Bradley, David          Princeton Univ.            Haar classifier for profile faces
 Breen, Ed               ???                        EiC intepreter, used for Hawk
-Devernay, Frederic      INRIA (?)                  Patch for cvcam (Linux version)
+Devernay, Frederic      INRIA (?)                  Patch for cvcam (Linux version), cv, highgui.
 Don Murray              PointGrey                  PointGrey SDK and patches for stereo gesture recognition code
 Dubey, Premnath         ???                        Patch for cvcam (Windows version)
 Halsall, Chris          Open Source Solutions Inc  O-Reilly papers on OpenCV,
                                                    calibration app for Linux (is not supported now?)
                                                    patches for Linux version
 Khamenya, Valery        BioVisioN AG               OpenCV CVS repository at SourceForge
+Kruppa, Hannes          ETH Zurich                 Haar classifier for fullbody, lowerbody, upperbody detection.
+Lundin, Magnus          ???                        Patches and new functionality for Linux version of highgui
+Muehlmann, Karsten      Lehrstuhl fur Informatik V  Another stereo correspondence code (not included yet)
+Philomin, Vasanth       PHILIPS (?)                Several bug reports/fixes on face detection etc.
 Rodyushkin, Konstantin  Intel Corp.                applications OpenCV to 3dFace caused a few bug reports, functionality proposals
 Schaefer, Dirk          MD-Mathematische Dienste GmbH  original code for Bayer->RGB pattern conversion
+Schiele, Bernt          ETH Zurich                 Haar classifier for fullbody, lowerbody, upperbody detection.
 Veretennikov, Eugene    Intel Corp.                Testing, comp. geometry functions
 Wayne W. Cheng          SoftIntegration            Ch C/C++ intepreter, OpenCV Ch toolbox (proposal + SDK)
-Muehlmann, Karsten      Lehrstuhl fur Informatik V  Another stereo correspondence code (not included yet)
 
-Active OpenCV forum participants (who helped us):
+OpenCV includes modified versions of the following software:
+------------------------------------------------------------
+
++ Gaussian Random Number Generator by George Marsaglia et al. (see cxcore/src/cxrand.cpp)
+
++ SVD from SLATEC (see cxcore/src/cxsvd.cpp)
+
++ Small inline math functions and macros by Agner Fog,
+    Bruce Holloway et al., Ken Turkowski (see cxcore/include/cxtypes.h)
+
++ Quicksort implementation from University of California, Berkeley
+  (see cxcore/include/cxmisc.h and cxcore/src/cxdatastructs.cpp)
+
++ Earth Mover Distance and RGB->Lab conversion by Yossi Rubner
+  (see cv/src/cvemd.cpp and cv/src/cvcolor.cpp)
+
+Active OpenCV forum participants:
+---------------------------------
 (!TODO: more info needed)
 
 Barbaresi, Abramo
 Betti, Gabriele
 Cao, Ning
-Cawkwell, Jack 
+Cawkwell, Jack
 Chen, Gen-Nan
-Cheng, Michael 
+Cheng, Michael
 Fritz, Frank
 Iannizotto, Giancarlo
 Lu, Le
-Kunz, Clay 
-Ming, Li 
+Kunz, Clay
+Mellor, J. P.
+Ming, Li
 Philomin, Vasanth
-Zayed, Mohamed 
-Rocha, Jairo 
+Zayed, Mohamed
+Rocha, Jairo
 Stewart, James Andr.
 
-
+BUG reports:
 ------------
 
-BUG reports:
-
+(see also ChangeLog)
+Rocha, Carlos Andres
 Small, Daniel;
-Carlos Andres Rocha;
-Shavit, Adi;
+Shavit, Adi
 Zivkovic, Zoran
 and other people from OpenCV forum at www.yahoogroups.com
 
 ------------
-
 ...
-
-
-
 
