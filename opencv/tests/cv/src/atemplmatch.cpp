@@ -38,380 +38,285 @@
 // the use of this software, even if advised of the possibility of such damage.
 //
 //M*/
+
 #include "cvtest.h"
 
-#include <stdlib.h>
-#include <assert.h>
-#include <limits.h>
-#include <float.h>
-
-static char* funcs[] =
+class CV_TemplMatchTest : public CvArrTest
 {
-    "cvMatchTemplate"
+public:
+    CV_TemplMatchTest();
+    int write_default_params(CvFileStorage* fs);
+
+protected:
+    int support_testing_modes();
+    int read_params( CvFileStorage* fs );
+    void get_test_array_types_and_sizes( int test_case_idx, CvSize** sizes, int** types );
+    void get_minmax_bounds( int i, int j, int type, CvScalar* low, CvScalar* high );
+    double get_success_error_level( int test_case_idx, int i, int j );
+    void run_func();
+    void prepare_to_validation( int );
+    int max_template_size;
+    int method;
 };
 
-static char *test_desc = "Test for template matching functions";
 
-/* actual parameters */
-static int min_img_size, max_img_size;
-static int img_size_delta_type, img_size_delta;
-static int min_templ_size;
-static int templ_size_delta_type, templ_size_delta;
-static int base_iters;
-
-/* which tests have to run */
-static int dt_l = 0, dt_h = 2,
-           meth_l = 0, meth_h = 5;
-
-static int init_templ_match_params = 0;
-
-static const int img8u_range = 255;
-static const float img32f_range = 100.f;
-static const int img32f_bits = 23;
-
-static void read_templ_match_params( void )
+CV_TemplMatchTest::CV_TemplMatchTest()
+    : CvArrTest( "match-template", "cvMatchTemplate", "" )
 {
-    if( !init_templ_match_params )
+    test_array[INPUT].push(NULL);
+    test_array[INPUT].push(NULL);
+    test_array[OUTPUT].push(NULL);
+    test_array[REF_OUTPUT].push(NULL);
+    element_wise_relative_error = false;
+    max_template_size = 100;
+    method = 0;
+}
+
+
+int CV_TemplMatchTest::read_params( CvFileStorage* fs )
+{
+    int code = CvArrTest::read_params( fs );
+    if( code < 0 )
+        return code;
+
+    if( ts->get_testing_mode() == CvTS::CORRECTNESS_CHECK_MODE )
     {
-        int  data_types, method;
+        max_template_size = cvReadInt( find_param( fs, "max_template_size" ), max_template_size );
+        max_template_size = cvTsClipInt( max_template_size, 1, 100 );
+    }
 
-        /* Determine which tests are needed to run */
-        trsCaseRead( &data_types,"/a/8u/32f", "a",
-            "a - all, 8u - unsigned char, 32f - float" );
-        if( data_types != 0 ) dt_l = dt_h = data_types - 1;
+    return code;
+}
 
-        trsCaseRead( &method,"/a/sd/sdn/cr/crn/cf/cfn", "a",
-            "\n\ta   - all"
-            "\n\tsd  - squared diff"
-            "\n\tsdn - normed squared diff"
-            "\n\tcr  - cross correlation"
-            "\n\tcrn - normed cross correlation"
-            "\n\tcf  - correlation coefficient"
-            "\n\tcrn - normed correlation coefficient");
-        if( method != 0 ) meth_l = meth_h = method - 1;
 
-        /* read tests params */
-        trsiRead( &min_img_size, "3", "Minimal width or height of image" );
-        trsiRead( &max_img_size, "32", "Maximal width or height of image" );
-        trsCaseRead( &img_size_delta_type,"/a/m", "m", "a - add, m - multiply" );
-        trsiRead( &img_size_delta, "3", "Image size step(factor)" );
-        trsiRead( &min_templ_size, "1", "Minimal width or height of template" );
-        trsCaseRead( &templ_size_delta_type,"/a/m", "a", "a - add, m - multiply" );
-        trsiRead( &templ_size_delta, "3", "Image size step(factor)" );
-        trsiRead( &base_iters, "1000", "Base number of iterations" );
+int CV_TemplMatchTest::write_default_params( CvFileStorage* fs )
+{
+    int code = CvArrTest::write_default_params( fs );
+    if( code < 0 )
+        return code;
+    
+    if( ts->get_testing_mode() == CvTS::CORRECTNESS_CHECK_MODE )
+    {
+        write_param( fs, "max_template_size", max_template_size );
+    }
 
-        init_templ_match_params = 1;
+    return code;
+}
+
+
+void CV_TemplMatchTest::get_minmax_bounds( int i, int j, int type, CvScalar* low, CvScalar* high )
+{
+    CvArrTest::get_minmax_bounds( i, j, type, low, high );
+    int depth = CV_MAT_DEPTH(type);
+    if( depth == CV_32F )
+    {
+        *low = cvScalarAll(-10.);
+        *high = cvScalarAll(10.);
     }
 }
 
 
-static double calc_mean( IplImage* src )
+void CV_TemplMatchTest::get_test_array_types_and_sizes( int test_case_idx,
+                                                CvSize** sizes, int** types )
 {
-    double mean;
-    atsCalcImageStatistics( src, 0, 0, 0, 0, 0,
-                            0, 0, &mean, 0, 0, 0, 0, 0 );
-    return mean;
+    CvRNG* rng = ts->get_rng();
+    int depth = test_case_idx*2/test_case_count, cn = cvTsRandInt(rng) ? 3 : 1;
+    CvArrTest::get_test_array_types_and_sizes( test_case_idx, sizes, types );
+    depth = depth == 0 ? CV_8U : CV_32F;
+
+    types[INPUT][0] = types[INPUT][1] = CV_MAKETYPE(depth,cn);
+    types[OUTPUT][0] = types[REF_OUTPUT][0] = CV_32FC1;
+
+    sizes[INPUT][1].width = cvTsRandInt(rng)%MIN(sizes[INPUT][1].width,max_template_size) + 1;
+    sizes[INPUT][1].height = cvTsRandInt(rng)%MIN(sizes[INPUT][1].height,max_template_size) + 1;
+
+    sizes[OUTPUT][0].width = sizes[INPUT][0].width - sizes[INPUT][1].width + 1;
+    sizes[OUTPUT][0].height = sizes[INPUT][0].height - sizes[INPUT][1].height + 1;
+    sizes[REF_OUTPUT][0] = sizes[OUTPUT][0];
+
+    method = cvTsRandInt(rng)%6;
 }
 
 
-static void match_templ_etalon( IplImage* src, IplImage* templ, IplImage* dst,
-                                CvTemplMatchMethod method )
+int CV_TemplMatchTest::support_testing_modes()
 {
-    float*   dst_data = 0;
-    int      dst_step = 0;
-    int      depth = 0;
-    int      i, j;
-    CvSize  src_sz, templ_sz, dst_sz;
-    IplROI*  src_roi = src->roi;
-    IplROI   tsrc_roi;
+    return CvTS::CORRECTNESS_CHECK_MODE; // for now disable the timing test
+}
 
-    int      is_normed, is_centered;
-    double   nrmT = 1, deltaT = 0;
 
-    atsGetImageInfo( src,   0, 0, &src_sz, &depth, 0, 0 );
-    atsGetImageInfo( templ, 0, 0, &templ_sz, 0, 0, 0 );
-    atsGetImageInfo( dst, (void**)&dst_data, &dst_step, &dst_sz, 0, 0, 0 );
+double CV_TemplMatchTest::get_success_error_level( int /*test_case_idx*/, int /*i*/, int /*j*/ )
+{
+    return 1e-4;
+}
 
-    assert( depth == IPL_DEPTH_32F );
-    assert( templ_sz.width <= src_sz.width &&
-            templ_sz.height <= src_sz.height &&
-            dst_sz.width == src_sz.width - templ_sz.width + 1 &&
-            dst_sz.height == src_sz.height - templ_sz.height + 1 );
 
-    src->roi = &tsrc_roi;
-    tsrc_roi.coi = 0;
-    tsrc_roi.width = templ_sz.width;
-    tsrc_roi.height = templ_sz.height;
+void CV_TemplMatchTest::run_func()
+{
+    cvMatchTemplate( test_array[INPUT][0], test_array[INPUT][1], test_array[OUTPUT][0], method );
+}
 
-    is_normed = method == CV_TM_SQDIFF_NORMED ||
-                method == CV_TM_CCORR_NORMED ||
-                method == CV_TM_CCOEFF_NORMED;
 
-    is_centered = method == CV_TM_CCOEFF || method == CV_TM_CCOEFF_NORMED;
+static cvTsMatchTemplate( const CvMat* img, const CvMat* templ, CvMat* result, int method )
+{
+    int i, j, k, l;
+    int depth = CV_MAT_DEPTH(img->type), cn = CV_MAT_CN(img->type);
+    int width_n = templ->cols*cn, height = templ->rows;
+    int a_step = img->step / CV_ELEM_SIZE(img->type & CV_MAT_DEPTH_MASK);
+    int b_step = templ->step / CV_ELEM_SIZE(templ->type & CV_MAT_DEPTH_MASK);
+    CvScalar b_mean, b_sdv;
+    double b_denom = 1., b_sum2 = 0;
+    int area = templ->rows*templ->cols;
 
-    if( is_centered ) deltaT = calc_mean( templ );
-    if( is_normed ) nrmT = atsCrossCorr( templ, templ, deltaT, deltaT );
-    dst_step /= 4;
+    cvTsMeanStdDevNonZero( templ, 0, &b_mean, &b_sdv, 0 );
 
-    for( i = 0; i < dst_sz.height; i++ )
+    for( i = 0; i < cn; i++ )
+        b_sum2 += (b_sdv.val[i]*b_sdv.val[i] + b_mean.val[i]*b_mean.val[i])*area;
+    
+    if( method & 1 )
     {
-        for( j = 0; j < dst_sz.width; j++ )
+        b_denom = 0;
+        if( method != CV_TM_CCOEFF_NORMED )
         {
-            double val = 0, nrmS = 1, deltaS = 0;
+            b_denom = b_sum2;
+        }
+        else
+        {
+            for( i = 0; i < cn; i++ )
+                b_denom += b_sdv.val[i]*b_sdv.val[i]*area;
+        }
+        b_denom = sqrt(b_denom);
+        if( b_denom == 0 )
+            b_denom = 1.;
+    }
 
-            tsrc_roi.xOffset = j;
-            tsrc_roi.yOffset = i;
+    assert( CV_TM_SQDIFF <= method && method <= CV_TM_CCOEFF_NORMED );
 
-            if( is_centered ) deltaS = calc_mean( src );
-            if( is_normed ) nrmS = atsCrossCorr( src, src, deltaS, deltaS );
+    for( i = 0; i < result->rows; i++ )
+    {
+        for( j = 0; j < result->cols; j++ )
+        {
+            CvScalar a_sum = { 0, 0, 0, 0 }, a_sum2 = { 0, 0, 0, 0 };
+            CvScalar ccorr = { 0, 0, 0, 0 };
+            double value = 0.;
             
-            switch( method )
+            if( depth == CV_8U )
             {
-            case CV_TM_SQDIFF_NORMED:
-            case CV_TM_SQDIFF:
-                val = cvNorm( src, templ, CV_L2 );
-                val *= val;
-                break;
-            default:
-                val = atsCrossCorr( src, templ, deltaS, deltaT );
-            }
-
-            if( is_normed )
-            {
-                double denom = sqrt(nrmS)*sqrt(nrmT);
-                if( denom > FLT_EPSILON )
+                const uchar* a = img->data.ptr + i*img->step + j*cn;
+                const uchar* b = templ->data.ptr;
+                
+                if( cn == 1 || method < CV_TM_CCOEFF )
                 {
-                    val /= denom;
-                    val = val < -1 ? -1 : val > 1 ? 1 : val;
+                    for( k = 0; k < height; k++, a += a_step, b += b_step )
+                        for( l = 0; l < width_n; l++ )
+                        {
+                            ccorr.val[0] += a[l]*b[l];
+                            a_sum.val[0] += a[l];
+                            a_sum2.val[0] += a[l]*a[l];
+                        }
                 }
                 else
-                    val = method == CV_TM_SQDIFF_NORMED ? 0 : 1;
+                {
+                    for( k = 0; k < height; k++, a += a_step, b += b_step )
+                        for( l = 0; l < width_n; l += 3 )
+                        {
+                            ccorr.val[0] += a[l]*b[l];
+                            ccorr.val[1] += a[l+1]*b[l+1];
+                            ccorr.val[2] += a[l+2]*b[l+2];
+                            a_sum.val[0] += a[l];
+                            a_sum.val[1] += a[l+1];
+                            a_sum.val[2] += a[l+2];
+                            a_sum2.val[0] += a[l]*a[l];
+                            a_sum2.val[1] += a[l+1]*a[l+1];
+                            a_sum2.val[2] += a[l+2]*a[l+2];
+                        }
+                }
             }
-            dst_data[i*dst_step + j] = (float)val;
+            else
+            {
+                const float* a = (const float*)(img->data.ptr + i*img->step) + j*cn;
+                const float* b = (const float*)templ->data.ptr;
+                
+                if( cn == 1 || method < CV_TM_CCOEFF )
+                {
+                    for( k = 0; k < height; k++, a += a_step, b += b_step )
+                        for( l = 0; l < width_n; l++ )
+                        {
+                            ccorr.val[0] += a[l]*b[l];
+                            a_sum.val[0] += a[l];
+                            a_sum2.val[0] += a[l]*a[l];
+                        }
+                }
+                else
+                {
+                    for( k = 0; k < height; k++, a += a_step, b += b_step )
+                        for( l = 0; l < width_n; l += 3 )
+                        {
+                            ccorr.val[0] += a[l]*b[l];
+                            ccorr.val[1] += a[l+1]*b[l+1];
+                            ccorr.val[2] += a[l+2]*b[l+2];
+                            a_sum.val[0] += a[l];
+                            a_sum.val[1] += a[l+1];
+                            a_sum.val[2] += a[l+2];
+                            a_sum2.val[0] += a[l]*a[l];
+                            a_sum2.val[1] += a[l+1]*a[l+1];
+                            a_sum2.val[2] += a[l+2]*a[l+2];
+                        }
+                }
+            }
+
+            switch( method )
+            {
+            case CV_TM_CCORR:
+            case CV_TM_CCORR_NORMED:
+                value = ccorr.val[0];
+                break;
+            case CV_TM_SQDIFF:
+            case CV_TM_SQDIFF_NORMED:
+                value = (a_sum2.val[0] + b_sum2 - 2*ccorr.val[0]);
+                break;
+            default:
+                value = (ccorr.val[0] - a_sum.val[0]*b_mean.val[0]+
+                         ccorr.val[1] - a_sum.val[1]*b_mean.val[1]+
+                         ccorr.val[2] - a_sum.val[2]*b_mean.val[2]);
+            }
+
+            if( method & 1 )
+            {
+                double denom;
+                
+                // calc denominator
+                if( method != CV_TM_CCOEFF_NORMED )
+                {
+                    denom = a_sum2.val[0] + a_sum2.val[1] + a_sum2.val[2];
+                }
+                else
+                {
+                    denom = a_sum2.val[0] - (a_sum.val[0]*a_sum.val[0])/area;
+                    denom += a_sum2.val[1] - (a_sum.val[1]*a_sum.val[1])/area;
+                    denom += a_sum2.val[2] - (a_sum.val[2]*a_sum.val[2])/area;
+                }
+                denom = sqrt(denom)*b_denom;
+                if( denom < 1e-7 )
+                    value = method > CV_TM_SQDIFF_NORMED;
+                else
+                {
+                    value /= denom;
+                    if( fabs(value) > 1 )
+                        value = value < 0 ? -1. : 1.;
+                }
+            }
+            
+            ((float*)(result->data.ptr + result->step*i))[j] = (float)value;
         }
     }
-
-    src->roi = src_roi;
 }
 
 
-/* ///////////////////// match_templ_test ///////////////////////// */
-
-static int match_templ_test( void* arg )
+void CV_TemplMatchTest::prepare_to_validation( int /*test_case_idx*/ )
 {
-    double success_error_level = 2;
-    double success_error_level_normed = 0.01;
-
-    int   param     = (int)arg;
-    int   depth     = param/6;
-    int   method    = param%6;
-
-    int   is_normed = method == CV_TM_SQDIFF_NORMED ||
-                      method == CV_TM_CCORR_NORMED ||
-                      method == CV_TM_CCOEFF_NORMED;
-
-    int   seed = atsGetSeed();
-
-    /* position where the maximum error occured */
-    int   merr_w = 0, merr_h = 0, merr_tw = 0, merr_th = 0, merr_iter = 0;
-
-    /* test parameters */
-    int     w = 0, h = 0, tw = 0, th = 0, i = 0;
-    double  max_err = 0.;
-    int     code = TRS_OK;
-
-    IplROI       src_roi, templ_roi, dst_roi;
-    IplImage    *src_img, *templ_img, *dst_img, *dst2_img;
-    IplImage    *srcfl_img = 0, *templfl_img = 0;
-    AtsRandState rng_state;
-
-    atsRandInit( &rng_state, 0, 1, seed );
-
-    read_templ_match_params();
-
-    if( !(ATS_RANGE( depth, dt_l, dt_h+1 ) &&
-          ATS_RANGE( method, meth_l, meth_h+1 ))) return TRS_UNDEF;
-
-    depth = depth == 1 ? IPL_DEPTH_32F : IPL_DEPTH_8U;
-
-    src_img = atsCreateImage( max_img_size, max_img_size, depth, 1, 0 );
-    templ_img = atsCreateImage( max_img_size, max_img_size, depth, 1, 0 );
-    dst_img = atsCreateImage( max_img_size, max_img_size, IPL_DEPTH_32F, 1, 0 );
-    dst2_img = atsCreateImage( max_img_size, max_img_size, IPL_DEPTH_32F, 1, 0 );
-
-    if( depth != IPL_DEPTH_32F )
-    {
-        srcfl_img = atsCreateImage( max_img_size, max_img_size, IPL_DEPTH_32F, 1, 0 );
-        templfl_img = atsCreateImage( max_img_size, max_img_size, IPL_DEPTH_32F, 1, 0 );
-    }
-    else
-    {
-        srcfl_img = src_img;
-        templfl_img = templ_img;
-    }
-    
-    src_img->roi = srcfl_img->roi = &src_roi;
-    templ_img->roi = templfl_img->roi = &templ_roi;
-    dst_img->roi = dst2_img->roi = &dst_roi;
-
-    src_roi.coi = dst_roi.coi = templ_roi.coi = 0;
-
-    src_roi.xOffset = src_roi.yOffset =
-    templ_roi.xOffset = templ_roi.yOffset =     
-    dst_roi.xOffset = dst_roi.yOffset = 0;
-
-    switch( depth )
-    {
-    case IPL_DEPTH_8U:
-        atsRandSetBounds( &rng_state, 0, img8u_range );
-        break;
-    case IPL_DEPTH_32F:
-        atsRandSetBounds( &rng_state, -img32f_range, img32f_range );
-        atsRandSetFloatBits( &rng_state, img32f_bits );
-        break;
-    }
-
-    for( h = min_img_size; h <= max_img_size; )
-    {
-        for( w = min_img_size; w <= max_img_size; )
-        {
-            int th_limit = h < 50 ? h : h/2;
-            int tw_limit = w < 50 ? w : w/2;
-
-            src_roi.width = w;
-            src_roi.height = h;
-
-            atsFillRandomImageEx( src_img, &rng_state );
-            
-            for( th = min_templ_size; th <= th_limit; )
-            {
-                for( tw = min_templ_size; tw <= tw_limit; )
-                {
-                    int  denom = (w - min_img_size + 1)*(h - min_img_size + 1)*
-                                 (tw - min_templ_size+1)*(th - min_templ_size+1);
-                    int  iters = (base_iters*2 + denom)/(2*denom);
-
-                    templ_roi.width = tw;
-                    templ_roi.height = th;
-
-                    dst_roi.width = w - tw + 1;
-                    dst_roi.height = h - th + 1;
-
-                    if( iters < 1 ) iters = 1;
-
-                    for( i = 0; i < iters; i++ )
-                    {
-                        double err;
-                        atsFillRandomImageEx( templ_img, &rng_state );
-
-                        if( depth != IPL_DEPTH_32F )
-                        {
-                            atsConvert( src_img, srcfl_img );
-                            atsConvert( templ_img, templfl_img );
-                        }
-
-                        match_templ_etalon( srcfl_img, templfl_img, dst2_img,
-                                            (CvTemplMatchMethod)method );
-
-                        /* call the library function */
-                        cvMatchTemplate( src_img, templ_img, dst_img,
-                                         (CvTemplMatchMethod)method );
-
-                        err = cvNorm( dst_img, dst2_img, CV_C );
-
-                        if( err > max_err )
-                        {
-                            merr_w    = w;
-                            merr_h    = h;
-                            merr_tw   = tw;
-                            merr_th   = th;
-                            merr_iter = i;
-                            max_err   = err;
-                            if( max_err > (is_normed ? success_error_level_normed : success_error_level))
-                            {
-                                code = TRS_FAIL;
-                                goto test_exit;
-                            }
-                        }
-                    }
-                    ATS_INCREASE( tw, templ_size_delta_type, templ_size_delta );
-                }
-                ATS_INCREASE( th, templ_size_delta_type, templ_size_delta );
-            }
-            ATS_INCREASE( w, img_size_delta_type, img_size_delta );
-        } /* end of the loop by w */
-        ATS_INCREASE( h, img_size_delta_type, img_size_delta );
-    }  /* end of the loop by h */
-
-test_exit:
-
-    dst_img->roi = dst2_img->roi = 0;
-    atsReleaseImage( dst_img );
-    
-    src_img->roi = srcfl_img->roi = 0;
-    atsReleaseImage( src_img );
-
-    templ_img->roi = templfl_img->roi = 0;
-    atsReleaseImage( templ_img );
-
-    if( depth != IPL_DEPTH_32F )
-    {
-        atsReleaseImage( srcfl_img );
-        atsReleaseImage( templfl_img );
-    }
-
-    //if( code == TRS_OK )
-    {
-        trsWrite( ATS_LST, "Max err is %g at w = %d, h = %d, "
-                           "tw = %d, th = %d, iter = %d, seed = %08x",
-                           max_err, merr_w, merr_h, merr_tw, merr_th,
-                           merr_iter, seed );
-
-        return trsResult( code, code == TRS_OK ? "No errors" : "Bad accuracy" );
-    }
-    /*else
-    {
-        trsWrite( ATS_LST, "Fatal error at w = %d, h = %d, "
-                           "tw = %d, th = %d, iter = %d, seed = %08x",
-                           w, h, tw, th, i, seed );
-        return trsResult( TRS_FAIL, "Function returns error code" );
-    }*/
+    cvTsMatchTemplate( &test_mat[INPUT][0], &test_mat[INPUT][1],
+                       &test_mat[REF_OUTPUT][0], method );
 }
 
 
-#define MTEMPL_SQDIFF_8U          0
-#define MTEMPL_SQDIFF_NORMED_8U   1
-#define MTEMPL_CCORR_8U           2
-#define MTEMPL_CCORR_NORMED_8U    3
-#define MTEMPL_CCOEFF_8U          4
-#define MTEMPL_CCOEFF_NORMED_8U   5
-
-#define MTEMPL_SQDIFF_32F         6
-#define MTEMPL_SQDIFF_NORMED_32F  7
-#define MTEMPL_CCORR_32F          8
-#define MTEMPL_CCORR_NORMED_32F   9
-#define MTEMPL_CCOEFF_32F        10
-#define MTEMPL_CCOEFF_NORMED_32F 11
-
-
-void InitAMatchTemplate( void )
-{
-    /* Registering test functions */
-    trsRegArg( funcs[0], test_desc, atsAlgoClass, match_templ_test, MTEMPL_SQDIFF_8U );
-    trsRegArg( funcs[0], test_desc, atsAlgoClass, match_templ_test, MTEMPL_SQDIFF_NORMED_8U );
-    trsRegArg( funcs[0], test_desc, atsAlgoClass, match_templ_test, MTEMPL_CCORR_8U );
-    trsRegArg( funcs[0], test_desc, atsAlgoClass, match_templ_test, MTEMPL_CCORR_NORMED_8U );
-    trsRegArg( funcs[0], test_desc, atsAlgoClass, match_templ_test, MTEMPL_CCOEFF_8U );
-    trsRegArg( funcs[0], test_desc, atsAlgoClass, match_templ_test, MTEMPL_CCOEFF_NORMED_8U );
-
-    trsRegArg( funcs[0], test_desc, atsAlgoClass, match_templ_test, MTEMPL_SQDIFF_32F );
-    trsRegArg( funcs[0], test_desc, atsAlgoClass, match_templ_test, MTEMPL_SQDIFF_NORMED_32F );
-    trsRegArg( funcs[0], test_desc, atsAlgoClass, match_templ_test, MTEMPL_CCORR_32F );
-    trsRegArg( funcs[0], test_desc, atsAlgoClass, match_templ_test, MTEMPL_CCORR_NORMED_32F );
-    trsRegArg( funcs[0], test_desc, atsAlgoClass, match_templ_test, MTEMPL_CCOEFF_32F );
-    trsRegArg( funcs[0], test_desc, atsAlgoClass, match_templ_test, MTEMPL_CCOEFF_NORMED_32F );
-} /* InitAMatchTemplate */
-
-
-/* End of file. */
-
+CV_TemplMatchTest templ_match;

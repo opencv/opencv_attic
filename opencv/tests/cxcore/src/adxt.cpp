@@ -572,6 +572,8 @@ void CxCore_DXTBaseTestImpl::get_test_array_types_and_sizes( int test_case_idx,
 
     //size.width = size.width % 10 + 1;
     //size.height = size.width % 10 + 1;
+    //size.width = 1;
+    //flags &= ~CV_DXT_ROWS;
     temp_dst = false;
 
     if( flags & CV_DXT_ROWS && (bits&1024) )

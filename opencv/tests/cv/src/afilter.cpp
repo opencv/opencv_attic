@@ -80,7 +80,7 @@ CV_FilterBaseTest::CV_FilterBaseTest( const char* test_name, const char* test_fu
 
 int CV_FilterBaseTest::read_params( CvFileStorage* fs )
 {
-    int code = CvTest::read_params( fs );
+    int code = CvArrTest::read_params( fs );
     if( code < 0 )
         return code;
 
@@ -1872,4 +1872,265 @@ void CV_PreCornerDetectTest::prepare_to_validation( int /*test_case_idx*/ )
 
 
 CV_PreCornerDetectTest precorner;
+
+
+///////// integral /////////
+class CV_IntegralTest : public CvArrTest
+{
+public:
+    CV_IntegralTest();
+
+protected:
+    int support_testing_modes();
+    void get_test_array_types_and_sizes( int test_case_idx, CvSize** sizes, int** types );
+    void get_minmax_bounds( int i, int j, int type, CvScalar* low, CvScalar* high );
+    double get_success_error_level( int test_case_idx, int i, int j );
+    void run_func();
+    void prepare_to_validation( int );
+};
+
+
+CV_IntegralTest::CV_IntegralTest()
+    : CvArrTest( "integral", "cvIntegral", "" )
+{
+    test_array[INPUT].push(NULL);
+    test_array[OUTPUT].push(NULL);
+    test_array[OUTPUT].push(NULL);
+    test_array[OUTPUT].push(NULL);
+    test_array[REF_OUTPUT].push(NULL);
+    test_array[REF_OUTPUT].push(NULL);
+    test_array[REF_OUTPUT].push(NULL);
+    test_array[TEMP].push(NULL);
+    test_array[TEMP].push(NULL);
+    test_array[TEMP].push(NULL);
+    test_array[TEMP].push(NULL);
+    test_array[TEMP].push(NULL);
+    element_wise_relative_error = false;
+}
+
+
+void CV_IntegralTest::get_minmax_bounds( int i, int j, int type, CvScalar* low, CvScalar* high )
+{
+    CvArrTest::get_minmax_bounds( i, j, type, low, high );
+    int depth = CV_MAT_DEPTH(type);
+    if( depth == CV_32F )
+    {
+        *low = cvScalarAll(-10.);
+        *high = cvScalarAll(10.);
+    }
+}
+
+
+void CV_IntegralTest::get_test_array_types_and_sizes( int test_case_idx,
+                                                CvSize** sizes, int** types )
+{
+    CvRNG* rng = ts->get_rng();
+    int depth = test_case_idx*2/test_case_count, sum_depth;
+    int cn = cvTsRandInt(rng) % 3 + 1;
+    CvArrTest::get_test_array_types_and_sizes( test_case_idx, sizes, types );
+    CvSize sum_size;
+    
+    depth = depth == 0 ? CV_8U : CV_32F;
+    cn += cn == 2;
+    sum_depth = depth == CV_8U && (cvTsRandInt(rng) & 1) == 1 ? CV_32S : CV_64F;
+
+    //sizes[INPUT][0].width = 1;
+
+    types[INPUT][0] = CV_MAKETYPE(depth,cn);
+    types[OUTPUT][0] = types[REF_OUTPUT][0] =
+        types[OUTPUT][2] = types[REF_OUTPUT][2] = CV_MAKETYPE(sum_depth, cn);
+    types[OUTPUT][1] = types[REF_OUTPUT][1] = CV_MAKETYPE(CV_64F, cn);
+
+    sum_size.width = sizes[INPUT][0].width + 1;
+    sum_size.height = sizes[INPUT][0].height + 1;
+
+    sizes[OUTPUT][0] = sizes[REF_OUTPUT][0] = sum_size;
+    sizes[OUTPUT][1] = sizes[REF_OUTPUT][1] =
+        sizes[OUTPUT][2] = sizes[REF_OUTPUT][2] = cvSize(0,0);
+
+    if( cvTsRandInt(rng) % 3 > 0 )
+    {
+        sizes[OUTPUT][1] = sizes[REF_OUTPUT][1] = sum_size;
+        if( cvTsRandInt(rng) % 2 > 0 && cn == 1 )
+            sizes[REF_OUTPUT][2] = sizes[OUTPUT][2] = sum_size;
+    }
+
+    types[TEMP][0] = CV_MAKETYPE(depth,1);
+    types[TEMP][1] = CV_MAKETYPE(CV_32F,1);
+    types[TEMP][2] = types[TEMP][3] = types[TEMP][4] = CV_MAKETYPE(CV_64F,1);
+
+    sizes[TEMP][0] = cn > 1 ? sizes[INPUT][0] : cvSize(0,0);
+    sizes[TEMP][1] = depth == CV_8U ? sum_size : cvSize(0,0);
+
+    sizes[TEMP][2] = cn > 1 || sum_depth == CV_32S ? sizes[OUTPUT][0] : cvSize(0,0);
+    sizes[TEMP][3] = cn > 1 ? sizes[OUTPUT][1] : cvSize(0,0);
+    sizes[TEMP][4] = cn > 1 || sum_depth == CV_32S ? sizes[OUTPUT][2] : cvSize(0,0);
+}
+
+
+int CV_IntegralTest::support_testing_modes()
+{
+    return CvTS::CORRECTNESS_CHECK_MODE; // for now disable the timing test
+}
+
+
+double CV_IntegralTest::get_success_error_level( int /*test_case_idx*/, int i, int j )
+{
+    int depth = CV_MAT_DEPTH(test_mat[i][j].type);
+    return depth == CV_32S ? 0 : 1e-10;
+}
+
+
+void CV_IntegralTest::run_func()
+{
+    cvIntegral( test_array[INPUT][0], test_array[OUTPUT][0],
+                test_array[OUTPUT][1], test_array[OUTPUT][2] );
+}
+
+
+static void
+cvTsIntegral( const CvMat* img, const CvMat* sum, const CvMat* sqsum, const CvMat* tilted )
+{
+    const float* data = img->data.fl;
+    double* sdata = sum->data.db;
+    double* sqdata = sqsum ? sqsum->data.db : 0;
+    double* tdata = tilted ? tilted->data.db : 0;
+    int step = img->step/sizeof(data[0]);
+    int sstep = sum->step/sizeof(sdata[0]);
+    int sqstep = sqsum ? sqsum->step/sizeof(sqdata[0]) : 0;
+    int tstep = tilted ? tilted->step/sizeof(tdata[0]) : 0;
+    CvSize size = cvGetMatSize( img );
+
+    memset( sdata, 0, (size.width+1)*sizeof(sdata[0]) );
+    if( sqsum )
+        memset( sqdata, 0, (size.width+1)*sizeof(sqdata[0]) );
+    if( tilted )
+        memset( tdata, 0, (size.width+1)*sizeof(tdata[0]) );
+
+    for( ; size.height--; data += step )
+    {
+        double s = 0, sq = 0;
+        int x;
+        sdata += sstep;
+        sqdata += sqstep;
+        tdata += tstep;
+
+        for( x = 0; x <= size.width; x++ )
+        {
+            double t = x > 0 ? data[x-1] : 0, ts = t;
+            s += t;
+            sq += t*t;
+            
+            sdata[x] = s + sdata[x - sstep];
+            if( sqdata )
+                sqdata[x] = sq + sqdata[x - sqstep];
+            
+            if( !tdata )
+                continue;
+            
+            if( x == 0 )
+                ts += tdata[-tstep+1];
+            else
+            {
+                ts += tdata[x-tstep-1];
+                if( data > img->data.fl )
+                {
+                    ts += data[x-step-1];
+                    if( x < size.width )
+                        ts += tdata[x-tstep+1] - tdata[x-tstep*2];
+                }
+            }
+
+            tdata[x] = ts;
+        }
+    }
+}
+
+
+void CV_IntegralTest::prepare_to_validation( int /*test_case_idx*/ )
+{
+    CvMat* src0 = &test_mat[INPUT][0];
+    int i, cn = CV_MAT_CN(src0->type), depth = CV_MAT_DEPTH(src0->type);
+    CvMat* plane = cn > 1 ? &test_mat[TEMP][0] : 0;
+    CvMat  ibuf, *plane32f = 0;
+
+    CvMat* sum0 = &test_mat[REF_OUTPUT][0];
+    CvMat* sqsum0 = test_array[REF_OUTPUT][1] ? &test_mat[REF_OUTPUT][1] : 0;
+    CvMat* tsum0 = test_array[REF_OUTPUT][2] ? &test_mat[REF_OUTPUT][2] : 0;
+
+    CvMat* sum1 = test_array[TEMP][2] ? &test_mat[TEMP][2] : sum0;
+    CvMat* sqsum1 = test_array[TEMP][3] ? &test_mat[TEMP][3] : sqsum0;
+    CvMat* tsum1 = test_array[TEMP][4] ? &test_mat[TEMP][4] : tsum0;
+    CvMat  buf, *ptr = 0;
+
+    if( depth == CV_8U )
+    {
+        ibuf = test_mat[TEMP][1];
+        plane32f = &ibuf;
+        plane32f->cols--;
+        plane32f->rows--;
+        plane32f->type &= ~CV_MAT_CONT_FLAG;
+
+        if( CV_MAT_DEPTH(sum0->type) == CV_32S && cn > 1 )
+        {
+            // in case of 8u->32s integral transform aliase the temporary output buffer with temporary input buffer
+            buf = test_mat[TEMP][1];
+            ptr = &buf;
+            ptr->type = (ptr->type & ~CV_MAT_DEPTH_MASK) | CV_32S;
+        }
+    }
+
+    for( i = 0; i < cn; i++ )
+    {
+        CvMat* sptr = src0;
+        CvMat* dptr;
+        if( cn > 1 )
+        {
+            cvTsExtract( sptr, plane, i );
+            sptr = plane;
+        }
+
+        if( CV_MAT_DEPTH(sptr->type) != CV_32F )
+        {
+            cvTsConvert( sptr, plane32f );
+            sptr = plane32f;
+        }
+
+        cvTsIntegral( sptr, sum1, sqsum1, tsum1 );
+        if( sum1 != sum0 )
+        {
+            dptr = sum1;
+            if( ptr )
+            {
+                cvTsConvert( dptr, ptr );
+                dptr = ptr;
+            }
+            if( cn == 1 )
+                cvTsConvert( dptr, sum0 );
+            else
+                cvTsInsert( dptr, sum0, i );
+        }
+
+        if( tsum1 != tsum0 )
+        {
+            dptr = tsum1;
+            if( ptr )
+            {
+                cvTsConvert( dptr, ptr );
+                dptr = ptr;
+            }
+            if( cn == 1 )
+                cvTsConvert( dptr, tsum0 );
+            else
+                cvTsInsert( dptr, tsum0, i );
+        }
+
+        if( sqsum1 != sqsum0 )
+            cvTsInsert( sqsum1, sqsum0, i );
+    }
+}
+
+
+CV_IntegralTest integral_test;
+
 
