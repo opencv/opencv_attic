@@ -1,6 +1,6 @@
 """
 Usage: check_doc.py > log.txt
-The scripts parses different opencv modules
+The script parses different opencv modules
 (that are described by instances of class Comp below) and
 checks for typical errors in headers and docs, for consistence and for completeness.
 Due to its simplicity, it falsely reports some bugs, that should be

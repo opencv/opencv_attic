@@ -1,7 +1,7 @@
 lib_LTLIBRARIES = libcvaux.la
 
 libcvaux_la_SOURCES = camshift.cpp cv3dtracker.cpp cvaux.cpp \
-    cvauxutils.cpp cvcalibfilter.cpp cvcorrespond.cpp cvcorrimages.cpp \
+    cvauxutils.cpp cvcalibfilter.cpp cvcorrimages.cpp \
     cvcreatehandmask.cpp cvdpstereo.cpp cveigenobjects.cpp cvepilines.cpp \
     cvface.cpp cvfacedetection.cpp cvfacetemplate.cpp cvfindface.cpp \
     cvfindhandregion.cpp cvhmm.cpp cvhmm1d.cpp cvhmmobs.cpp cvlcm.cpp \
