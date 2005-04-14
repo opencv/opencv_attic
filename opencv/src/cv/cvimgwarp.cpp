@@ -1109,7 +1109,7 @@ cvWarpAffine( const CvArr* srcarr, CvArr* dstarr, const CvMat* matrix,
         "Transformation matrix should be 2x3 floating-point single-channel matrix" );
 
     if( flags & CV_WARP_INVERSE_MAP )
-        cvConvertScale( matrix, &invAb );
+        cvConvertScale( matrix, &dstAb );
     else
     {
         // [R|t] -> [R^-1 | -(R^-1)*t]
