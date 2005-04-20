@@ -382,7 +382,7 @@ cvCalcGlobalOrientation( const void* orientation, const void* maskimg, const voi
                     rel_angle += (rel_angle < -180 ? 360 : 0);
                     rel_angle += (rel_angle > 180 ? -360 : 0);
 
-                    if( fabs(rel_angle) < 90 )
+                    if( abs(rel_angle) < 90 )
                     {
                         shift_orient += weight * rel_angle;
                         shift_weight += weight;
