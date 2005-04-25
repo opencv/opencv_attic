@@ -162,7 +162,6 @@ typedef void CvArr;
 #define  CV_SIGN(a)     CV_CMP((a),0)
 
 
-CV_INLINE  int  cvRound( double value );
 CV_INLINE  int  cvRound( double value )
 {
 #if defined WIN32 && defined _MSC_VER
@@ -186,7 +185,6 @@ CV_INLINE  int  cvRound( double value )
 }
 
 
-CV_INLINE  int  cvFloor( double value );
 CV_INLINE  int  cvFloor( double value )
 {
     int temp = cvRound(value);
@@ -196,7 +194,6 @@ CV_INLINE  int  cvFloor( double value )
 }
 
 
-CV_INLINE  int  cvCeil( double value );
 CV_INLINE  int  cvCeil( double value )
 {
     int temp = cvRound(value);
@@ -208,7 +205,6 @@ CV_INLINE  int  cvCeil( double value )
 #define cvInvSqrt(value) ((float)(1./sqrt(value)))
 #define cvSqrt(value)  ((float)sqrt((value)))
 
-CV_INLINE int cvIsNaN( double value );
 CV_INLINE int cvIsNaN( double value )
 {
 #if 1/*defined _MSC_VER || defined __BORLANDC__
@@ -223,7 +219,6 @@ CV_INLINE int cvIsNaN( double value )
 }
 
 
-CV_INLINE int cvIsInf( double value );
 CV_INLINE int cvIsInf( double value )
 {
 #if 1/*defined _MSC_VER || defined __BORLANDC__
@@ -242,15 +237,13 @@ CV_INLINE int cvIsInf( double value )
 
 typedef uint64 CvRNG;
 
-CV_INLINE CvRNG cvRNG( int64 seed CV_DEFAULT(-1));
-CV_INLINE CvRNG cvRNG( int64 seed )
+CV_INLINE CvRNG cvRNG( int64 seed CV_DEFAULT(-1))
 {
     CvRNG rng = (uint64)(seed ? seed : (int64)-1);
     return rng;
 }
 
 /* returns random 32-bit unsigned integer */
-CV_INLINE unsigned cvRandInt( CvRNG* rng );
 CV_INLINE unsigned cvRandInt( CvRNG* rng )
 {
     uint64 temp = *rng;
@@ -260,7 +253,6 @@ CV_INLINE unsigned cvRandInt( CvRNG* rng )
 }
 
 /* returns random floating-point number between 0 and 1 */
-CV_INLINE double cvRandReal( CvRNG* rng );
 CV_INLINE double cvRandReal( CvRNG* rng )
 {
     return cvRandInt(rng)*2.3283064365386962890625e-10 /* 2^-32 */;
@@ -544,8 +536,7 @@ CvMat;
 /* inline constructor. No data is allocated internally!!!
    (use together with cvCreateData, or use cvCreateMat instead to
    get a matrix with allocated data) */
-CV_INLINE CvMat cvMat( int rows, int cols, int type, void* data CV_DEFAULT(NULL));
-CV_INLINE CvMat cvMat( int rows, int cols, int type, void* data )
+CV_INLINE CvMat cvMat( int rows, int cols, int type, void* data CV_DEFAULT(NULL))
 {
     CvMat m;
 
@@ -574,7 +565,6 @@ CV_INLINE CvMat cvMat( int rows, int cols, int type, void* data )
     (*(elemtype*)CV_MAT_ELEM_PTR_FAST( mat, row, col, sizeof(elemtype)))
 
 
-CV_INLINE  double  cvmGet( const CvMat* mat, int row, int col );
 CV_INLINE  double  cvmGet( const CvMat* mat, int row, int col )
 {
     int type;
@@ -593,7 +583,6 @@ CV_INLINE  double  cvmGet( const CvMat* mat, int row, int col )
 }
 
 
-CV_INLINE  void  cvmSet( CvMat* mat, int row, int col, double value );
 CV_INLINE  void  cvmSet( CvMat* mat, int row, int col, double value )
 {
     int type;
@@ -769,7 +758,6 @@ typedef struct CvRect
 }
 CvRect;
 
-CV_INLINE  CvRect  cvRect( int x, int y, int width, int height );
 CV_INLINE  CvRect  cvRect( int x, int y, int width, int height )
 {
     CvRect r;
@@ -783,7 +771,6 @@ CV_INLINE  CvRect  cvRect( int x, int y, int width, int height )
 }
 
 
-CV_INLINE  IplROI  cvRectToROI( CvRect rect, int coi CV_DEFAULT(0));
 CV_INLINE  IplROI  cvRectToROI( CvRect rect, int coi )
 {
     IplROI roi;
@@ -797,7 +784,6 @@ CV_INLINE  IplROI  cvRectToROI( CvRect rect, int coi )
 }
 
 
-CV_INLINE  CvRect  cvROIToRect( IplROI roi );
 CV_INLINE  CvRect  cvROIToRect( IplROI roi )
 {
     return cvRect( roi.xOffset, roi.yOffset, roi.width, roi.height );
@@ -819,7 +805,6 @@ typedef struct CvTermCriteria
 }
 CvTermCriteria;
 
-CV_INLINE  CvTermCriteria  cvTermCriteria( int type, int max_iter, double epsilon );
 CV_INLINE  CvTermCriteria  cvTermCriteria( int type, int max_iter, double epsilon )
 {
     CvTermCriteria t;
@@ -842,7 +827,6 @@ typedef struct CvPoint
 CvPoint;
 
 
-CV_INLINE  CvPoint  cvPoint( int x, int y );
 CV_INLINE  CvPoint  cvPoint( int x, int y )
 {
     CvPoint p;
@@ -862,7 +846,6 @@ typedef struct CvPoint2D32f
 CvPoint2D32f;
 
 
-CV_INLINE  CvPoint2D32f  cvPoint2D32f( double x, double y );
 CV_INLINE  CvPoint2D32f  cvPoint2D32f( double x, double y )
 {
     CvPoint2D32f p;
@@ -874,14 +857,12 @@ CV_INLINE  CvPoint2D32f  cvPoint2D32f( double x, double y )
 }
 
 
-CV_INLINE  CvPoint2D32f  cvPointTo32f( CvPoint point );
 CV_INLINE  CvPoint2D32f  cvPointTo32f( CvPoint point )
 {
     return cvPoint2D32f( (float)point.x, (float)point.y );
 }
 
 
-CV_INLINE  CvPoint  cvPointFrom32f( CvPoint2D32f point );
 CV_INLINE  CvPoint  cvPointFrom32f( CvPoint2D32f point )
 {
     CvPoint ipt;
@@ -901,7 +882,6 @@ typedef struct CvPoint3D32f
 CvPoint3D32f;
 
 
-CV_INLINE  CvPoint3D32f  cvPoint3D32f( double x, double y, double z );
 CV_INLINE  CvPoint3D32f  cvPoint3D32f( double x, double y, double z )
 {
     CvPoint3D32f p;
@@ -922,7 +902,6 @@ typedef struct CvPoint2D64f
 CvPoint2D64f;
 
 
-CV_INLINE  CvPoint2D64f  cvPoint2D64f( double x, double y );
 CV_INLINE  CvPoint2D64f  cvPoint2D64f( double x, double y )
 {
     CvPoint2D64f p;
@@ -943,7 +922,6 @@ typedef struct CvPoint3D64f
 CvPoint3D64f;
 
 
-CV_INLINE  CvPoint3D64f  cvPoint3D64f( double x, double y, double z );
 CV_INLINE  CvPoint3D64f  cvPoint3D64f( double x, double y, double z )
 {
     CvPoint3D64f p;
@@ -965,7 +943,6 @@ typedef struct
 }
 CvSize;
 
-CV_INLINE  CvSize  cvSize( int width, int height );
 CV_INLINE  CvSize  cvSize( int width, int height )
 {
     CvSize s;
@@ -984,7 +961,6 @@ typedef struct CvSize2D32f
 CvSize2D32f;
 
 
-CV_INLINE  CvSize2D32f  cvSize2D32f( double width, double height );
 CV_INLINE  CvSize2D32f  cvSize2D32f( double width, double height )
 {
     CvSize2D32f s;
@@ -1012,7 +988,6 @@ typedef struct CvSlice
 }
 CvSlice;
 
-CV_INLINE  CvSlice  cvSlice( int start, int end );
 CV_INLINE  CvSlice  cvSlice( int start, int end )
 {
     CvSlice slice;
@@ -1035,8 +1010,7 @@ typedef struct CvScalar
 CvScalar;
 
 CV_INLINE  CvScalar  cvScalar( double val0, double val1 CV_DEFAULT(0),
-                                double val2 CV_DEFAULT(0), double val3 CV_DEFAULT(0));
-CV_INLINE  CvScalar  cvScalar( double val0, double val1, double val2, double val3 )
+                               double val2 CV_DEFAULT(0), double val3 CV_DEFAULT(0))
 {
     CvScalar scalar;
     scalar.val[0] = val0; scalar.val[1] = val1;
@@ -1045,7 +1019,6 @@ CV_INLINE  CvScalar  cvScalar( double val0, double val1, double val2, double val
 }
 
 
-CV_INLINE  CvScalar  cvRealScalar( double val0 );
 CV_INLINE  CvScalar  cvRealScalar( double val0 )
 {
     CvScalar scalar;
@@ -1054,7 +1027,6 @@ CV_INLINE  CvScalar  cvRealScalar( double val0 )
     return scalar;
 }
 
-CV_INLINE  CvScalar  cvScalarAll( double val0123 );
 CV_INLINE  CvScalar  cvScalarAll( double val0123 )
 {
     CvScalar scalar;
@@ -1562,8 +1534,7 @@ typedef struct CvAttrList
 CvAttrList;
 
 CV_INLINE CvAttrList cvAttrList( const char** attr CV_DEFAULT(NULL),
-                                 CvAttrList* next CV_DEFAULT(NULL) );
-CV_INLINE CvAttrList cvAttrList( const char** attr, CvAttrList* next )
+                                 CvAttrList* next CV_DEFAULT(NULL) )
 {
     CvAttrList l;
     l.attr = attr;

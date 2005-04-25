@@ -1947,7 +1947,7 @@ CV_IMPL  int  cvCheckArr( const CvArr* arr, int flags,
         if( status < 0 )  
         {
             if( status != CV_BADRANGE_ERR || !(flags & CV_CHECK_QUIET))
-                CV_ERROR_FROM_STATUS( status );
+                CV_ERROR( CV_StsOutOfRange, "CheckArray failed" );
 
             result = 0;
         }

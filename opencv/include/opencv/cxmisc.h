@@ -216,21 +216,18 @@
 
 #define  cvUnsupportedFormat "Unsupported format"
 
-CV_INLINE void* cvAlignPtr( const void* ptr, int align = 32 );
-CV_INLINE void* cvAlignPtr( const void* ptr, int align )
+CV_INLINE void* cvAlignPtr( const void* ptr, int align=32 )
 {
     assert( (align & (align-1)) == 0 );
     return (void*)( ((size_t)ptr + align - 1) & ~(size_t)(align-1) );
 }
 
-CV_INLINE size_t cvAlign( size_t size, int align );
 CV_INLINE size_t cvAlign( size_t size, int align )
 {
     assert( (align & (align-1)) == 0 );
     return (size + align - 1) & ~(size_t)(align-1);
 }
 
-CV_INLINE  CvSize  cvGetMatSize( const CvMat* mat );
 CV_INLINE  CvSize  cvGetMatSize( const CvMat* mat )
 {
     CvSize size = { mat->width, mat->height };
@@ -252,7 +249,6 @@ CvFastDiv;
 
 #define CV_FAST_DIV_SHIFT 32
 
-CV_INLINE CvFastDiv cvFastDiv( int divisor );
 CV_INLINE CvFastDiv cvFastDiv( int divisor )
 {
     CvFastDiv fastdiv;
