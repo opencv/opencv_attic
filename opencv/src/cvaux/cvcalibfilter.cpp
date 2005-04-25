@@ -807,7 +807,7 @@ bool CvCalibFilter::Rectify( CvMat** srcarr, CvMat** dstarr )
 
                     cvComputePerspectiveMap(stereo.coeffs[i], tmpMap);
 
-                    cvConvertMap(src,tmpMap,rectMap[i],1);
+                    //cvConvertMap(src,tmpMap,rectMap[i],1);
 
                     cvReleaseMat(&tmpMap);
 

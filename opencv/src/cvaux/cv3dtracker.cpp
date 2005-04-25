@@ -248,7 +248,7 @@ CV_IMPL CvBool cv3dTrackerCalibrateCameras(int num_cameras,
         CvMat rotVectDescr = cvMat(3, 1, CV_32FC1, rotVect);
 
         /* Calc rotation matrix by Rodrigues Transform */
-        cvRodrigues(&rotMatrDescr, &rotVectDescr, 0, CV_RODRIGUES_V2M);
+        cvRodrigues2( &rotVectDescr, &rotMatrDescr );
 
         //combine the two transformations into one matrix
         //order is important! rotations are not commutative
