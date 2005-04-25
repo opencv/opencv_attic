@@ -3110,7 +3110,7 @@ cvReshape( const CvArr* array, CvMat* header,
 
     total_width = mat->cols * CV_MAT_CN( mat->type );
 
-    if( new_cn > total_width )
+    if( (new_cn > total_width || total_width % new_cn != 0) && new_rows == 0 )
         new_rows = mat->rows * total_width / new_cn;
 
     if( new_rows == 0 || new_rows == mat->rows )
