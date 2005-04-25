@@ -1320,7 +1320,7 @@ it does less checks for array type and array element type and it
 checks for the row and column ranges only in debug mode.</p>
 
 
-<hr><h3><a name="decl_cvClear*D">Clear*D</a></h3>
+<hr><h3><a name="decl_cvClearND">ClearND</a></h3>
 <p class="Blurb">Clears the particular array element</p>
 <pre>
 void cvClearND( CvArr* arr, int* idx );
@@ -1328,7 +1328,7 @@ void cvClearND( CvArr* arr, int* idx );
 <dt>arr<dd>Input array.
 <dt>idx<dd>Array of the element indices
 </dl><p>
-The function <a href="#decl_cvClear*D">cvClearND</a> clears (sets to zero)
+The function <a href="#decl_cvClearND">cvClearND</a> clears (sets to zero)
 the particular element of dense array or deletes the element of sparse array.
 If the element does not exists, the function does nothing.</p>
 
@@ -1564,7 +1564,9 @@ void cvLUT( const CvArr* src, CvArr* dst, const CvArr* lut );
 <dt>dst<dd>Destination array of arbitrary depth and of the same number of channels as the
 source array.
 <dt>lut<dd>Look-up table of 256 elements; should have the same depth as the
-destination array.
+destination array. In case of multi-channel source and destination arrays, the table
+should either have a single-channel (in this case the same table is used for all channels),
+or the same number of channels as the source/destination array.
 </dl><p>
 The function <code>cvLUT</code> fills the destination array with values
 from the look-up table. Indices of the entries are taken from the source array. That is, the
@@ -2331,7 +2333,7 @@ Real or complex floating-point matrices are supported</p>
 
 
 <hr><h3><a name="decl_cvTransform">Transform</a></h3>
-<p class="Blurb">Performs matrix transform on every element of array</p>
+<p class="Blurb">Performs matrix transform of every array element</p>
 <pre>
 void cvTransform( const CvArr* src, CvArr* dst, const CvMat* transmat, const CvMat* shiftvec=NULL );
 </pre><p><dl>
@@ -2848,6 +2850,28 @@ dst(I)=C,  src(I)=0
 </pre>
 Where <code>C</code> is large negative number (&asymp;-700 in the current implementation)</p>
 
+
+<hr><h3><a name="decl_cvSolveCubic">SolveCubic</a></h3>
+<p class="Blurb">Finds real roots of a cubic equation</p>
+<pre>
+void cvSolveCubic( const CvArr* coeffs, CvArr* roots );
+</pre><p><dl>
+<dt>coeffs<dd>The equation coefficients, array of 3 or 4 elements.
+<dt>roots<dd>The output array of real roots. Should have 3 elements.
+</dl><p>
+The function <code>cvSolveCubic</code> finds real roots of a cubic equation:</p>
+<pre>
+coeffs[0]*x<sup>3</sup> + coeffs[1]*x<sup>2</sup> + coeffs[2]*x + coeffs[3] = 0
+(if coeffs is 4-element vector)
+
+or
+
+x<sup>3</sup> + coeffs[0]*x<sup>2</sup> + coeffs[1]*x + coeffs[2] = 0
+(if coeffs is 3-element vector)
+</pre>
+
+<p>The function returns the number of real roots found. The roots are stored
+to <code>root</code> array, which is padded with zeros if there is only one root.</p>
 
 <hr><h2><a name="cxcore_arrays_rng">Random Number Generation</a></h2>
 
@@ -6909,7 +6933,7 @@ process the data.</p>
 <td width="25%"><a href="#decl_cvCreateMatND">CreateMatND</a></td>
 </tr>
 <tr>
-<td width="25%"><a href="#decl_cvClear*D">Clear*D</a></td>
+<td width="25%"><a href="#decl_cvClearND">ClearND</a></td>
 <td width="25%"><a href="#decl_cvCmpS">CmpS</a></td>
 <td width="25%"><a href="#decl_cvCreateMatNDHeader">CreateMatNDHeader</a></td>
 </tr>
