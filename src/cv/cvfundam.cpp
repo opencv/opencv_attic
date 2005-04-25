@@ -38,2135 +38,1194 @@
 // the use of this software, even if advised of the possibility of such damage.
 //
 //M*/
+
 #include "_cv.h"
 
-/* Valery Mosyagin */
+/* Evaluation of Fundamental Matrix from point correspondences.
+   The original code has been written by Valery Mosyagin */
 
-/*=====================================================================================*/
-/* new version of fundamental matrix functions */
-/*=====================================================================================*/
+/* The algorithms (except for RANSAC) and the notation have been taken from
+   Zhengyou Zhang's research report
+   "Determining the Epipolar Geometry and its Uncertainty: A Review"
+   that can be found at http://www-sop.inria.fr/robotvis/personnel/zzhang/zzhang-eng.html */
 
-static int icvComputeFundamental7Point(CvMat* points1,CvMat* points2,
-                                     CvMat* fundMatr);
-
-static int icvComputeFundamental8Point(CvMat* points1,CvMat* points2,
-                                     CvMat* fundMatr);
-
-
-static int icvComputeFundamentalRANSAC(   CvMat* points1,CvMat* points2,
-                                        CvMat* fundMatr,
-                                        double threshold,/* threshold for good point. Distance from epipolar line */
-                                        double p,/* probability of good result. Usually = 0.99 */
-                                        CvMat* status);
-
-static int icvComputeFundamentalLMedS(   CvMat* points1,CvMat* points2,
-                                        CvMat* fundMatr,
-                                        double threshold,/* threshold for good point. Distance from epipolar line */
-                                        double p,/* probability of good result. Usually = 0.99 */
-                                        CvMat* status);
-
-static void icvMakeFundamentalSingular(CvMat* fundMatr);
-
-static void icvNormalizeFundPoints(    CvMat* points,
-                                CvMat* transfMatr);
-
-static void icvMake2DPoints(CvMat* srcPoint,CvMat* dstPoint);
-
-static void icvMake3DPoints(const CvMat* srcPoint,CvMat* dstPoint);
-
-static int icvCubicV( double a2, double a1, double a0, double *squares );
-
-/*=====================================================================================*/
-
-/*F///////////////////////////////////////////////////////////////////////////////////////
-//    Name:    cvFindFundamentalMat
-//    Purpose: find fundamental matrix for given points using 
-//    Context:
-//    Parameters:
-//      points1  - points on first image. Size of matrix 2xN or 3xN
-//      points2  - points on second image Size of matrix 2xN or 3xN
-//      fundMatr - found fundamental matrix (or matrixes for 7-point). Size 3x3 or 9x3
-//      method   - method for computing fundamental matrix
-//                 CV_FM_7POINT - for 7-point algorithm. Number of points == 7
-//                 CV_FM_8POINT - for 8-point algorithm. Number of points >= 8
-//                 CV_FM_RANSAC - for RANSAC  algorithm. Number of points >= 8
-//                 CV_FM_LMEDS  - for LMedS   algorithm. Number of points >= 8
-//      param1 and param2 uses for RANSAC method
-//        param1 - threshold distance from point to epipolar line.
-//                 If distance less than threshold point is good.
-//        param2 - probability. Usually = 0.99
-//        status - array, every element of which will be set to 1 if the point was good
-//                 and used for computation. 0 else. (for RANSAC and LMedS only)
-//                 (it is optional parameter, can be NULL)
-//
-//    Returns:
-//      number of found matrixes 
-//F*/
-CV_IMPL int
-cvFindFundamentalMat( CvMat* points1,
-                      CvMat* points2,
-                      CvMat* fundMatr,
-                      int    method,
-                      double param1,
-                      double param2,
-                      CvMat* status )
+/************************************** 7-point algorithm *******************************/
+static int
+icvFMatrix_7Point( const CvPoint2D64f* m0, const CvPoint2D64f* m1, double* fmatrix )
 {
-    int result = -1;
-
-    CvMat* wpoints[2]={0,0};
-    CvMat* tmpPoints[2]={0,0};
+    double a[7*9], w[7], v[9*9], c[4], r[3];
+    double* f1, *f2;
+    double t0, t1, t2;
+    CvMat A = cvMat( 7, 9, CV_64F, a );
+    CvMat V = cvMat( 9, 9, CV_64F, v );
+    CvMat W = cvMat( 7, 1, CV_64F, w );
+    CvMat coeffs = cvMat( 1, 4, CV_64F, c );
+    CvMat roots = cvMat( 1, 3, CV_64F, r );
+    int i, k, n;
     
-    CV_FUNCNAME( "icvComputeFundamentalMat" );
+    assert( m0 && m1 && fmatrix );
+
+    // form a linear system: i-th row of A(=a) represents
+    // the equation: (m1[i], 1)'*F*(m0[i], 1) = 0
+    for( i = 0; i < 7; i++ )
+    {
+        double x0 = m0[i].x, y0 = m0[i].y;
+        double x1 = m1[i].x, y1 = m1[i].y;
+        
+        a[i*9+0] = x1*x0;
+        a[i*9+1] = x1*y0;
+        a[i*9+2] = x1;
+        a[i*9+3] = y1*x0;
+        a[i*9+4] = y1*y0;
+        a[i*9+5] = y1;   
+        a[i*9+6] = x0;
+        a[i*9+7] = y0;
+        a[i*9+8] = 1;
+    }
+    
+    // A*(f11 f12 ... f33)' = 0 is singular (7 equations for 9 variables), so
+    // the solution is linear subspace of dimensionality 2.
+    // => use the last two singular vectors as a basis of the space
+    // (according to SVD properties)
+    cvSVD( &A, &W, 0, &V, CV_SVD_MODIFY_A + CV_SVD_V_T );
+    f1 = v + 7*9;
+    f2 = v + 8*9;
+
+    // f1, f2 is a basis => lambda*f1 + mu*f2 is an arbitrary f. matrix.
+    // as it is determined up to a scale, normalize lambda & mu (lambda + mu = 1),
+    // so f ~ lambda*f1 + (1 - lambda)*f2.
+    // use the additional constraint det(f) = det(lambda*f1 + (1-lambda)*f2) to find lambda.
+    // it will be a cubic equation.
+    // find c - polynomial coefficients.
+    for( i = 0; i < 9; i++ )
+        f1[i] -= f2[i];
+
+    t0 = f2[4]*f2[8] - f2[5]*f2[7];
+    t1 = f2[3]*f2[8] - f2[5]*f2[6];
+    t2 = f2[3]*f2[7] - f2[4]*f2[6];
+
+    c[3] = f2[0]*t0 - f2[1]*t1 + f2[2]*t2;
+
+    c[2] = f1[0]*t0 - f1[1]*t1 + f1[2]*t2 -
+           f1[3]*(f2[1]*f2[8] - f2[2]*f2[7]) +
+           f1[4]*(f2[0]*f2[8] - f2[2]*f2[6]) -
+           f1[5]*(f2[0]*f2[7] - f2[1]*f2[6]) +
+           f1[6]*(f2[1]*f2[5] - f2[2]*f2[4]) -
+           f1[7]*(f2[0]*f2[5] - f2[2]*f2[3]) +
+           f1[8]*(f2[0]*f2[4] - f2[1]*f2[3]);
+
+    t0 = f1[4]*f1[8] - f1[5]*f1[7];
+    t1 = f1[3]*f1[8] - f1[5]*f1[6];
+    t2 = f1[3]*f1[7] - f1[4]*f1[6];
+
+    c[1] = f2[0]*t0 - f2[1]*t1 + f2[2]*t2 -
+           f2[3]*(f1[1]*f1[8] - f1[2]*f1[7]) +
+           f2[4]*(f1[0]*f1[8] - f1[2]*f1[6]) -
+           f2[5]*(f1[0]*f1[7] - f1[1]*f1[6]) +
+           f2[6]*(f1[1]*f1[5] - f1[2]*f1[4]) -
+           f2[7]*(f1[0]*f1[5] - f1[2]*f1[3]) +
+           f2[8]*(f1[0]*f1[4] - f1[1]*f1[3]);
+
+    c[0] = f1[0]*t0 - f1[1]*t1 + f1[2]*t2;
+    
+    // solve the cubic equation; there can be 1 to 3 roots ...
+    n = cvSolveCubic( &coeffs, &roots );
+
+    if( n < 1 || n > 3 )
+        return n;
+
+    for( k = 0; k < n; k++, fmatrix += 9 )
+    {
+        // for each root form the fundamental matrix
+        double lambda = r[k], mu = 1.;
+        double s = f1[8]*r[k] + f2[8];
+
+        // normalize each matrix, so that F(3,3) (~fmatrix[8]) == 1
+        if( s )
+        {
+            mu = 1./s;
+            lambda *= mu;
+            fmatrix[8] = 1.;
+        }
+        else
+            fmatrix[8] = 0.;
+
+        for( i = 0; i < 8; i++ )
+            fmatrix[i] = f1[i]*lambda + f2[i]*mu;
+    }
+
+    return n;
+}
+
+
+/*************************************** 8-point algorithm ******************************/
+static int
+icvFMatrix_8Point( const CvPoint2D64f* m0, const CvPoint2D64f* m1,
+                   const uchar* mask, int count, double* fmatrix )
+{
+    int result = 0;
+    CvMat* A = 0;
+    
+    double w[9], v[9*9];
+    CvMat W = cvMat( 1, 9, CV_64F, w);
+    CvMat V = cvMat( 9, 9, CV_64F, v);
+    CvMat U, F0, TF;
+    
+    int i, good_count = 0;
+    CvPoint2D64f m0c = {0,0}, m1c = {0,0}, m0q = {0,0}, m1q = {0,0};
+    double t, scale0, scale1;
+    double* a;
+    int a_step;
+
+    CV_FUNCNAME( "icvFMatrix_8Point" );
+
     __BEGIN__;
 
-    tmpPoints[0] = points1;
-    tmpPoints[1] = points2;
-    int numRealPoints[2];
-    int numPoints = 0;
+    assert( m0 && m1 && fmatrix );
 
-    /* work with points */
+    // compute centers and average distances for each of the two point sets
+    for( i = 0; i < count; i++ )
+        if( !mask || mask[i] )
+        {
+            double x = m0[i].x, y = m0[i].y;
+            m0c.x += x; m0c.y += y;
+            m0q.x += x*x; m0q.y += y*y;
+
+            x = m1[i].x, y = m1[i].y;
+            m1c.x += x; m1c.y += y;
+            m1q.x += x*x; m1q.y += y*y;
+            good_count++;
+        }
+
+    if( good_count < 8 )
+        EXIT;
+
+    // calculate the normalizing transformations for each of the point sets:
+    // after the transformation each set will have the mass center at the coordinate origin
+    // and the average distance from the origin will be ~sqrt(2).
+    t = 1./good_count;
+    m0c.x *= t; m0c.y *= t;
+    scale0 = t * sqrt( m0q.x + m0q.y - good_count*(m0c.x*m0c.x + m0c.y*m0c.y) );
+    m1c.x *= t; m1c.y *= t;
+    scale1 = t * sqrt( m1q.x + m1q.y - good_count*(m1c.x*m1c.x + m1c.y*m1c.y) );
+
+    if( scale0 < FLT_EPSILON || scale1 < FLT_EPSILON )
+        EXIT;
+
+    scale0 = sqrt(2.)/scale0;
+    scale1 = sqrt(2.)/scale1;
+
+    CV_CALL( A = cvCreateMat( good_count, 9, CV_64F ));
+    a = A->data.db;
+    a_step = A->step / sizeof(a[0]);
+
+    // form a linear system: for each selected pair of points m0 & m1,
+    // the row of A(=a) represents the equation: (m1, 1)'*F*(m0, 1) = 0
+    for( i = 0; i < count; i++ )
     {
-        int i;
-        for( i = 0; i < 2; i++ )
+        if( !mask || mask[i] )
         {
-            int realW,realH;
-            realW = tmpPoints[i]->cols;
-            realH = tmpPoints[i]->rows;
-
-            int goodW,goodH;
-            goodW = realW > realH ? realW : realH;
-            goodH = realW < realH ? realW : realH;
-
-            if( goodH != 2 && goodH != 3 )
-            {
-                CV_ERROR(CV_StsBadPoint,"Number of coordinates of points must be 2 or 3");
-            }
-
-            wpoints[i] = cvCreateMat(2,goodW,CV_64F);
-
-            numRealPoints[i] = goodW;
-
-            /* Test for transpose point matrix */
-            if( realW != goodW )
-            {/* need to transpose point matrix */
-                CvMat* tmpPointMatr = 0;
-                tmpPointMatr = cvCreateMat(goodH,goodW,CV_64F);
-                cvTranspose(tmpPoints[i],tmpPointMatr);
-                cvMake2DPoints(tmpPointMatr,wpoints[i]);
-                cvReleaseMat(&tmpPointMatr);
-            }
-            else
-            {
-                cvMake2DPoints(tmpPoints[i],wpoints[i]);
-            }
-
+            double x0 = (m0[i].x - m0c.x)*scale0;
+            double y0 = (m0[i].y - m0c.y)*scale0;
+            double x1 = (m1[i].x - m1c.x)*scale1;
+            double y1 = (m1[i].y - m1c.y)*scale1;
+            
+            a[0] = x1*x0;
+            a[1] = x1*y0;
+            a[2] = x1;
+            a[3] = y1*x0;
+            a[4] = y1*y0;
+            a[5] = y1;   
+            a[6] = x0;
+            a[7] = y0;
+            a[8] = 1;
+            a += a_step;
         }
-
-        if( numRealPoints[0] != numRealPoints[1] )
-        {
-            CV_ERROR(CV_StsBadPoint,"Number of points must be the same");
-        }
-
-        numPoints = numRealPoints[0];
     }
 
-    /* work with status if use functions which don't compute it */
-    if( status && (method == CV_FM_7POINT || method == CV_FM_8POINT ))
+    cvSVD( A, &W, 0, &V, CV_SVD_MODIFY_A + CV_SVD_V_T );
+    
+    for( i = 0; i < 8; i++ )
     {
+        if( fabs(w[i]) < FLT_EPSILON )
+            break;
+    }
+
+    if( i < 7 )
+        EXIT;
+
+    F0 = cvMat( 3, 3, CV_64F, v + 9*8 ); // take the last column of v as a solution of Af = 0
+    
+    // make F0 singular (of rank 2) by decomposing it with SVD,
+    // zeroing the last diagonal element of W and then composing the matrices back.
+
+    // use v as a temporary storage for different 3x3 matrices
+    W = U = V = TF = F0;
+    W.data.db = v;
+    U.data.db = v + 9;
+    V.data.db = v + 18;
+    TF.data.db = v + 27;
+
+    cvSVD( &F0, &W, &U, &V, CV_SVD_MODIFY_A + CV_SVD_U_T + CV_SVD_V_T );
+    W.data.db[8] = 0.;
+
+    // F0 <- U*diag([W(1), W(2), 0])*V'
+    cvGEMM( &U, &W, 1., 0, 0., &TF, CV_GEMM_A_T );
+    cvGEMM( &TF, &V, 1., 0, 0., &F0, 0/*CV_GEMM_B_T*/ );
+    
+    // apply the transformation that is inverse
+    // to what we used to normalize the point coordinates 
+    {
+        double tt0[] = { scale0, 0, -scale0*m0c.x, 0, scale0, -scale0*m0c.y, 0, 0, 1 };
+        double tt1[] = { scale1, 0, -scale1*m1c.x, 0, scale1, -scale1*m1c.y, 0, 0, 1 };
+        CvMat T0, T1;
+        T0 = T1 = F0;
+        T0.data.db = tt0;
+        T1.data.db = tt1;
         
-        if( !CV_IS_MAT(status) )
-        {
-            CV_ERROR(CV_StsBadPoint,"status is not a matrix");
-        }
+        // F0 <- T1'*F0*T0
+        cvGEMM( &T1, &F0, 1., 0, 0., &TF, CV_GEMM_A_T );
+        F0.data.db = fmatrix;
+        cvGEMM( &TF, &T0, 1., 0, 0., &F0, 0 );
 
-
-        if( !CV_IS_MAT(points1))
-        {
-            CV_ERROR(CV_StsBadPoint,"Points1 not a matrix");
-        }
-
-        if( status->cols != numPoints || status->rows != 1 )
-        {
-            CV_ERROR(CV_StsBadPoint,"Size of status must be 1xN");
-        }
-
-        int i;
-        for( i = 0; i < status->cols; i++)
-        {
-            cvmSet(status,0,i,1.0);
-        }
-
+        // make F(3,3) = 1
+        if( fabs(F0.data.db[8]) > FLT_EPSILON )
+            cvScale( &F0, &F0, 1./F0.data.db[8] );
     }
 
-
-    switch( method )
-    {
-        case CV_FM_7POINT: result = icvComputeFundamental7Point(wpoints[1], wpoints[0], fundMatr);break;
-
-        case CV_FM_8POINT: result = icvComputeFundamental8Point(wpoints[1],wpoints[0], fundMatr);break;
-
-        case CV_FM_LMEDS : result = icvComputeFundamentalLMedS(   wpoints[1],wpoints[0], fundMatr,
-                                        param1,param2,status);break;
-
-        case CV_FM_RANSAC: result = icvComputeFundamentalRANSAC(   wpoints[1],wpoints[0], fundMatr,
-                                        param1,param2,status);break;
-
-        //default:return -1/*ERROR*/;
-    }
+    result = 1;
 
     __END__;
 
-    cvReleaseMat(&wpoints[0]);
-    cvReleaseMat(&wpoints[1]);
+    cvReleaseMat( &A );
+    return result;
+}
+
+
+/************************************ RANSAC algorithm **********************************/
+static int
+icvFMatrix_RANSAC( const CvPoint2D64f* m0, const CvPoint2D64f* m1,
+                   uchar* mask, int count, double* fmatrix,
+                   double threshold, double p,
+                   unsigned rng_seed, int use_8point )
+{
+    int result = 0;
+    
+    const int max_random_iters = 1000;
+    const int sample_size = 7;
+    uchar* curr_mask = 0;
+    uchar* temp_mask = 0;
+    
+    CV_FUNCNAME( "icvFMatrix_RANSAC" );
+
+    __BEGIN__;
+
+    double ff[9*3];
+    CvRNG rng = cvRNG(rng_seed);
+    int i, j, k, sample_count, max_samples = 500;
+    int best_good_count = 0;
+
+    assert( m0 && m1 && fmatrix && 0 < p && p < 1 && threshold > 0 );
+
+    threshold *= threshold;
+
+    CV_CALL( curr_mask = (uchar*)cvAlloc( count ));
+    if( !mask && use_8point )
+    {
+        CV_CALL( temp_mask = (uchar*)cvAlloc( count ));
+        mask = temp_mask;
+    }
+
+    // find the best fundamental matrix (giving the least backprojection error)
+    // by picking at most <max_samples> 7-tuples of corresponding points
+    // <max_samples> may be updated (decreased) within the loop based on statistics of outliers
+    for( sample_count = 0; sample_count < max_samples; sample_count++ )
+    {
+        int idx[sample_size], n;
+        CvPoint2D64f ms0[sample_size], ms1[sample_size];
+
+        // choose random <sample_size> (=7) points
+        for( i = 0; i < sample_size; i++ )
+        {
+            for( k = 0; k < max_random_iters; k++ )
+            {
+                idx[i] = cvRandInt(&rng) % count;
+                for( j = 0; j < i; j++ )
+                    if( idx[j] == idx[i] )
+                        break;
+                if( j == i )
+                {
+                    ms0[i] = m0[idx[i]];
+                    ms1[i] = m1[idx[i]];
+                    break;
+                }
+            }
+            if( k >= max_random_iters )
+                break;
+        }
+
+        if( i < sample_size )
+            continue;
+
+        // find 1 or 3 fundamental matrices out of the 7 point correspondences
+        n = icvFMatrix_7Point( ms0, ms1, ff );
+
+        if( n < 1 || n > 3 )
+            continue;
+        
+        // for each matrix calculate the backprojection error
+        // (distance to the corresponding epipolar lines) for each point and thus find
+        // the number of in-liers.
+        for( k = 0; k < n; k++ )
+        {
+            const double* f = ff + k*9;
+            int good_count = 0;
+
+            for( i = 0; i < count; i++ )
+            {
+                double d0, d1, s0, s1;
+
+                double a = f[0]*m0[i].x + f[1]*m0[i].y + f[2];
+                double b = f[3]*m0[i].x + f[4]*m0[i].y + f[5];
+                double c = f[6]*m0[i].x + f[7]*m0[i].y + f[8];
+
+                s1 = a*a + b*b;
+                d1 = m1[i].x*a + m1[i].y*b + c;
+
+                a = f[0]*m1[i].x + f[3]*m1[i].y + f[6];
+                b = f[1]*m1[i].x + f[4]*m1[i].y + f[7];
+                c = f[2]*m1[i].x + f[5]*m1[i].y + f[8];
+
+                s0 = a*a + b*b;
+                d0 = m0[i].x*a + m0[i].y*b + c;
+
+                curr_mask[i] = d1*d1 < threshold*s1 && d0*d0 < threshold*s0;
+                good_count += curr_mask[i];
+            }
+
+            if( good_count > MAX( best_good_count, 6 ) )
+            {
+                double ep, t;
+                int new_max_samples;
+
+                // update the current best fundamental matrix and "goodness" flags
+                if( mask )
+                    memcpy( mask, curr_mask, count );
+                memcpy( fmatrix, f, 9*sizeof(f[0]));
+                best_good_count = good_count;
+
+                // try to update (decrease) <max_samples>
+                ep = (double)(count - good_count)/count;
+                t = log(1. - p);
+                new_max_samples = cvRound(t/log(1. - pow(ep, 7.)));
+
+                max_samples = MIN( new_max_samples, max_samples );
+            }
+        }
+    }
+
+    if( best_good_count < 7 )
+        EXIT;
+
+    result = 1;
+
+    // optionally, use 8-point algorithm to compute fundamental matrix using only the in-liers
+    if( best_good_count >= 8 && use_8point )
+        result = icvFMatrix_8Point( m0, m1, mask, count, fmatrix );
+
+    __END__;
+
+    cvFree( (void**)&temp_mask );
+    cvFree( (void**)&curr_mask );
 
     return result;
 }
 
-/*=====================================================================================*/
 
-/* Computes 1 or 3 fundamental matrixes using 7-point algorithm */
-static int icvComputeFundamental7Point(CvMat* points1, CvMat* points2, CvMat* fundMatr)
-{
+/***************************** Least Median of Squares algorithm ************************/
 
-    CvMat* squares = 0;
-    int numberRoots = 0;
-    
-    CV_FUNCNAME( "icvComputeFundamental7Point" );
-    __BEGIN__;
-    
-    /* Test correct of input data */
+static CV_IMPLEMENT_QSORT( icvSortDistances, int, CV_LT );
 
-    if( !CV_IS_MAT(points1) || !CV_IS_MAT(points2)|| !CV_IS_MAT(fundMatr))
-    {
-        CV_ERROR(CV_StsBadPoint,"Not a matrixes");
-    }
-
-    if( !CV_ARE_TYPES_EQ( points1, points2 ))
-    {
-        CV_ERROR( CV_StsUnmatchedSizes, "Data types of points unmatched" );    
-    }
-
-    int numPoint;
-    numPoint = points1->cols;
-    
-    /*int type;
-    type = points1->type;*/
-    
-    if( numPoint != points2->cols )
-    {
-        CV_ERROR( CV_StsBadSize, "Number of points not equal" );
-    }
-    if( numPoint != 7 )
-    {
-        CV_ERROR( CV_StsBadSize, "Number of points must be 7" );
-    }
-
-    if( points1->rows != 2 && points1->rows != 3 )
-    {
-        CV_ERROR( CV_StsBadSize, "Number of coordinates of points1 must be 2 or 3" );
-    }
-
-    if( points2->rows != 2 && points2->rows != 3 )
-    {
-        CV_ERROR( CV_StsBadSize, "Number of coordinates of points2 must be 2 or 3" );
-    }
-
-    if( ( fundMatr->rows != 3 && fundMatr->rows != 9 )|| fundMatr->cols != 3 )
-    {
-        CV_ERROR( CV_StsBadSize, "Size of fundMatr must be 3x3 or 9x3" );
-    }
-
-    squares = cvCreateMat(2,3,CV_64F);
-
-
-    /* Make it Normalize points if need */
-    double wPoints1_dat[2*7];
-    double wPoints2_dat[2*7];
-    CvMat wPoints1;
-    CvMat wPoints2;
-    wPoints1 = cvMat(2,7,CV_64F,wPoints1_dat);
-    wPoints2 = cvMat(2,7,CV_64F,wPoints2_dat);
-
-    icvMake2DPoints(points1,&wPoints1);
-    icvMake2DPoints(points2,&wPoints2);
-
-    /* fill matrix U */
-
-    int currPoint;
-    CvMat matrU;
-    double matrU_dat[7*9];
-    matrU = cvMat(7,9,CV_64F,matrU_dat);
-
-    double* currDataLine;
-    currDataLine = matrU_dat;
-    for( currPoint = 0; currPoint < 7; currPoint++ )
-    {
-        double x1,y1,x2,y2;
-        x1 = cvmGet(&wPoints1,0,currPoint);
-        y1 = cvmGet(&wPoints1,1,currPoint);
-        x2 = cvmGet(&wPoints2,0,currPoint);
-        y2 = cvmGet(&wPoints2,1,currPoint);
-
-        currDataLine[0] = x1*x2;
-        currDataLine[1] = x1*y2;
-        currDataLine[2] = x1;
-        currDataLine[3] = y1*x2;
-        currDataLine[4] = y1*y2;
-        currDataLine[5] = y1;
-        currDataLine[6] = x2;
-        currDataLine[7] = y2;
-        currDataLine[8] = 1;
-
-        currDataLine += 9;
-    }
-
-    CvMat matrUU;
-    CvMat matrSS;
-    CvMat matrVV;
-    double matrUU_dat[7*7];
-    double matrSS_dat[7*9];
-    double matrVV_dat[9*9];
-    matrUU = cvMat(7,7,CV_64F,matrUU_dat);
-    matrSS = cvMat(7,9,CV_64F,matrSS_dat);
-    matrVV = cvMat(9,9,CV_64F,matrVV_dat);
-
-    cvSVD( &matrU, &matrSS, &matrUU, &matrVV, 0/*CV_SVD_V_T*/ );/* get transposed matrix V */
-
-    double F111,F112,F113;
-    double F121,F122,F123;
-    double F131,F132,F133;
-
-    double F211,F212,F213;
-    double F221,F222,F223;
-    double F231,F232,F233;
-
-    F111=cvmGet(&matrVV,0,7);
-    F112=cvmGet(&matrVV,1,7);
-    F113=cvmGet(&matrVV,2,7);
-    F121=cvmGet(&matrVV,3,7);
-    F122=cvmGet(&matrVV,4,7);
-    F123=cvmGet(&matrVV,5,7);
-    F131=cvmGet(&matrVV,6,7);
-    F132=cvmGet(&matrVV,7,7);
-    F133=cvmGet(&matrVV,8,7);
-    
-    F211=cvmGet(&matrVV,0,8);
-    F212=cvmGet(&matrVV,1,8);
-    F213=cvmGet(&matrVV,2,8);
-    F221=cvmGet(&matrVV,3,8);
-    F222=cvmGet(&matrVV,4,8);
-    F223=cvmGet(&matrVV,5,8);
-    F231=cvmGet(&matrVV,6,8);
-    F232=cvmGet(&matrVV,7,8);
-    F233=cvmGet(&matrVV,8,8);
-
-    double a,b,c,d;
-
-    a =   F231*F112*F223 + F231*F212*F123 - F231*F212*F223 + F231*F113*F122 -
-          F231*F113*F222 - F231*F213*F122 + F231*F213*F222 - F131*F112*F223 -
-          F131*F212*F123 + F131*F212*F223 - F131*F113*F122 + F131*F113*F222 +
-          F131*F213*F122 - F131*F213*F222 + F121*F212*F133 - F121*F212*F233 +
-          F121*F113*F132 - F121*F113*F232 - F121*F213*F132 + F121*F213*F232 +
-          F221*F112*F133 - F221*F112*F233 - F221*F212*F133 + F221*F212*F233 -
-          F221*F113*F132 + F221*F113*F232 + F221*F213*F132 - F221*F213*F232 +
-          F121*F112*F233 - F111*F222*F133 + F111*F222*F233 - F111*F123*F132 +
-          F111*F123*F232 + F111*F223*F132 - F111*F223*F232 - F211*F122*F133 +
-          F211*F122*F233 + F211*F222*F133 - F211*F222*F233 + F211*F123*F132 -
-          F211*F123*F232 - F211*F223*F132 + F211*F223*F232 + F111*F122*F133 -
-          F111*F122*F233 - F121*F112*F133 + F131*F112*F123 - F231*F112*F123;
-    
-    b =   2*F231*F213*F122 - 3*F231*F213*F222 + F231*F112*F123   - 2*F231*F112*F223 -
-          2*F231*F212*F123 + 3*F231*F212*F223 - F231*F113*F122   + 2*F231*F113*F222 +
-          F131*F212*F123   - 2*F131*F212*F223 - F131*F113*F222   - F131*F213*F122   +
-          2*F131*F213*F222 + F121*F113*F232   + F121*F213*F132   - 2*F121*F213*F232 -
-          F221*F112*F133   + 2*F221*F112*F233 + 2*F221*F212*F133 - 3*F221*F212*F233 +
-          F221*F113*F132   - 2*F221*F113*F232 - 2*F221*F213*F132 + 3*F221*F213*F232 +
-          F131*F112*F223   - 2*F211*F122*F233 - 2*F211*F222*F133 + 3*F211*F222*F233 -
-          F211*F123*F132   + 2*F211*F123*F232 + 2*F211*F223*F132 - 3*F211*F223*F232 -
-          F121*F112*F233   - F121*F212*F133   + 2*F121*F212*F233 - 2*F111*F222*F233 -
-          F111*F123*F232   - F111*F223*F132   + 2*F111*F223*F232 + F111*F122*F233   +
-          F111*F222*F133   + F211*F122*F133;
-    
-    c =   F231*F112*F223   + F231*F212*F123   - 3*F231*F212*F223 - F231*F113*F222   -
-          F231*F213*F122   + 3*F231*F213*F222 + F131*F212*F223   - F131*F213*F222   +
-          F121*F213*F232   - F221*F112*F233   - F221*F212*F133   + 3*F221*F212*F233 +
-          F221*F113*F232   + F221*F213*F132   - 3*F221*F213*F232 + F211*F122*F233   +
-          F211*F222*F133   - 3*F211*F222*F233 - F211*F123*F232   - F211*F223*F132   +
-          3*F211*F223*F232 - F121*F212*F233   + F111*F222*F233   - F111*F223*F232;
-    
-    d =   F221*F213*F232 - F211*F223*F232 + F211*F222*F233 - F221*F212*F233 +
-          F231*F212*F223 - F231*F213*F222;
-
-    /* find root */
-    double coeffs_dat[4];
-    CvMat coeffs;
-    coeffs = cvMat(1,4,CV_64F,coeffs_dat);
-
-    cvmSet(&coeffs,0,0,a);
-    cvmSet(&coeffs,0,1,b);
-    cvmSet(&coeffs,0,2,c);
-    cvmSet(&coeffs,0,3,d);
-
-    int numCubRoots;
-    numCubRoots = cvSolveCubic(&coeffs,squares);
-
-    /* take real solution */
-    /* Need test all roots */
-
-    int i;
-    for( i = 0; i < numCubRoots; i++ )
-    {
-        if( fabs(cvmGet(squares,1,i)) < 1e-8 )
-        {//It is real square. (Im==0)
-
-            double sol;
-            sol = cvmGet(squares,0,i);
-            //F=sol*F1+(1-sol)*F2;
-
-            int t;
-            for( t = 0; t < 9; t++ )
-            {
-                double f1,f2;
-                f1 = cvmGet(&matrVV,t,7);
-                f2 = cvmGet(&matrVV,t,8);
-
-                double s = f1 * sol + (1-sol) * f2;
-                cvmSet(fundMatr,numberRoots*3 + t/3,t%3,s);
-            }
-            numberRoots++;
-
-            if( fundMatr->rows == 3 )/* not enough space to store more than one root */
-                break;
-        }
-    }
-
-    /* scale fundamental matrix */
-    for( i = 0; i < numberRoots; i++ )
-    {
-
-        double fsc;
-        fsc = cvmGet(fundMatr,i*3+2,2);
-        if( fabs(fsc) > 1e-8 )
-        {
-            CvMat subFund;
-            cvGetSubArr( fundMatr, &subFund, cvRect(0,i*3,3,3) );
-            cvScale(&subFund,&subFund,1.0/fsc);
-        }
-    }
-
-    __END__;
-
-    cvReleaseMat(&squares);
-
-
-    return numberRoots;
-}    
-
-
-/*=====================================================================================*/
-
-static int icvComputeFundamental8Point(CvMat* points1,CvMat* points2, CvMat* fundMatr)
-{
-    CvMat* wpoints[2]={0,0};
-    CvMat* preFundMatr = 0;
-    CvMat* sqdists = 0;
-    CvMat* matrA = 0;
-    CvMat* matrU = 0;
-    CvMat* matrW = 0;
-    CvMat* matrV = 0;
-
-    int numFundMatrs = 0;
-
-    CV_FUNCNAME( "icvComputeFundamental8Point" );
-    __BEGIN__;
-    
-    /* Test correct of input data */
-
-    if( !CV_IS_MAT(points1) || !CV_IS_MAT(points2)|| !CV_IS_MAT(fundMatr))
-    {
-        CV_ERROR(CV_StsBadPoint,"Not a matrixes");
-    }
-
-    if( !CV_ARE_TYPES_EQ( points1, points2 ))
-    {
-        CV_ERROR( CV_StsUnmatchedSizes, "Data types of points unmatched" );    
-    }
-
-    int numPoint;
-    numPoint = points1->cols;
-    
-    /*int type;
-    type = points1->type;*/
-    
-    if( numPoint != points2->cols )
-    {
-        CV_ERROR( CV_StsBadSize, "Number of points not equal" );
-    }
-    if( numPoint < 8 )
-    {
-        CV_ERROR( CV_StsBadSize, "Number of points must be at least 8" );
-    }
-
-    if( points1->rows > 3 || points1->rows < 2 )
-    {
-        CV_ERROR( CV_StsBadSize, "Number of coordinates of points1 must be 2 or 3" );
-    }
-
-    if( points2->rows > 3 || points2->rows < 2 )
-    {
-        CV_ERROR( CV_StsBadSize, "Number of coordinates of points2 must be 2 or 3" );
-    }
-
-    if( fundMatr->rows != 3 || fundMatr->cols != 3 )
-    {
-        CV_ERROR( CV_StsBadSize, "Size of fundMatr must be 3x3" );
-    }
-
-    /* allocate data */
-    CV_CALL( wpoints[0] = cvCreateMat(2,numPoint,CV_64F) );
-    CV_CALL( wpoints[1] = cvCreateMat(2,numPoint,CV_64F) );
-    CV_CALL( matrA = cvCreateMat(numPoint,9,CV_64F) );
-    CV_CALL( preFundMatr = cvCreateMat(3,3,CV_64F) );
-    CV_CALL( matrU = cvCreateMat(numPoint,numPoint,CV_64F) );
-    CV_CALL( matrW = cvCreateMat(numPoint,9,CV_64F) );
-    CV_CALL( matrV = cvCreateMat(9,9,CV_64F) );
-    CV_CALL( sqdists = cvCreateMat(1,numPoint,CV_64F) );
-
-    /* Create working points with just x,y */
-
-    CvMat transfMatr[2];
-    double transfMatr1_dat[9];
-    double transfMatr2_dat[9];
-    transfMatr[0] = cvMat(3,3,CV_64F,transfMatr1_dat);
-    transfMatr[1] = cvMat(3,3,CV_64F,transfMatr2_dat);
-    
-    {/* transform to x,y.  tranform point and compute transform matrixes */
-        icvMake2DPoints(points1,wpoints[0]);
-        icvMake2DPoints(points2,wpoints[1]);
-
-        icvNormalizeFundPoints( wpoints[0],&transfMatr[0]);
-        icvNormalizeFundPoints( wpoints[1],&transfMatr[1]);
-        
-        /* we have normalized working points wpoints[0] and wpoints[1] */
-        /* build matrix A from points coordinates */
-
-        int currPoint;
-        for( currPoint = 0; currPoint < numPoint; currPoint++ )
-        {
-            CvMat rowA;
-            double x1,y1;
-            double x2,y2;
-
-            x1 = cvmGet(wpoints[0],0,currPoint);
-            y1 = cvmGet(wpoints[0],1,currPoint);
-            x2 = cvmGet(wpoints[1],0,currPoint);
-            y2 = cvmGet(wpoints[1],1,currPoint);
-
-            cvGetRow(matrA,&rowA,currPoint);
-            rowA.data.db[0] = x1*x2;
-            rowA.data.db[1] = x1*y2;
-            rowA.data.db[2] = x1;
-
-            rowA.data.db[3] = y1*x2;
-            rowA.data.db[4] = y1*y2;
-            rowA.data.db[5] = y1;
-
-            rowA.data.db[6] = x2;
-            rowA.data.db[7] = y2;
-            rowA.data.db[8] = 1;
-        }
-    }
-
-    /* We have matrix A. Compute svd(A). We need last column of V */
-
-    
-    cvSVD( matrA, matrW, matrU, matrV, CV_SVD_V_T );/* get transposed matrix V */
-
-    /* Compute number of non zero eigen values */
-    int numEig;
-    numEig = 0;
-    {
-        int i;
-        for( i = 0; i < 8; i++ )
-        {
-            if( cvmGet(matrW,i,i) < 1e-8 )
-            {
-                break;
-            }
-        }
-
-        numEig = i;
-
-    }
-
-    if( numEig < 5 )
-    {/* Bad points */
-        numFundMatrs = 0;
-    }
-    else
-    {
-        numFundMatrs = 1;
-
-        /* copy last row of matrix V to precomputed fundamental matrix */
-
-        CvMat preF;
-        cvGetRow(matrV,&preF,8);
-        cvReshape(&preF,preFundMatr,1,3);
-
-        /* Apply singularity condition */
-        icvMakeFundamentalSingular(preFundMatr);
-    
-        /* Denormalize fundamental matrix */
-        /* Compute transformation for normalization */
-
-        CvMat wfundMatr;
-        double wfundMatr_dat[9];
-        wfundMatr = cvMat(3,3,CV_64F,wfundMatr_dat);
-    
-        {/*  Freal = T1'*Fpre*T2 */
-            double tmpMatr_dat[9];
-            double tmptransfMatr_dat[9];
-        
-            CvMat tmpMatr = cvMat(3,3,CV_64F,tmpMatr_dat);
-            CvMat tmptransfMatr = cvMat(3,3,CV_64F,tmptransfMatr_dat);
-
-            cvTranspose(&transfMatr[0],&tmptransfMatr);
-        
-            cvMatMul(&tmptransfMatr,preFundMatr,&tmpMatr);
-            cvMatMul(&tmpMatr,&transfMatr[1],&wfundMatr);
-        }
-
-        /* scale fundamental matrix */
-        double fsc;
-        fsc = cvmGet(&wfundMatr,2,2);
-        if( fabs(fsc) > 1.0e-8 )
-        {
-            cvScale(&wfundMatr,&wfundMatr,1.0/fsc);
-        }
-    
-        /* copy result fundamental matrix */
-        cvConvert( &wfundMatr, fundMatr );
-
-    }
-
-
-    __END__;
-    
-    cvReleaseMat(&matrU);
-    cvReleaseMat(&matrW);
-    cvReleaseMat(&matrV);
-    cvReleaseMat(&preFundMatr);
-    cvReleaseMat(&matrA);
-    cvReleaseMat(&wpoints[0]);
-    cvReleaseMat(&wpoints[1]);
-    cvReleaseMat(&sqdists);
-
-    return numFundMatrs;
-}
-
-/*=====================================================================================*/
-
-/* Computes fundamental matrix using RANSAC method */
-/*  */
-static int icvComputeFundamentalRANSAC(   CvMat* points1,CvMat* points2,
-                                        CvMat* fundMatr,
-                                        double threshold,/* Threshold for good points */
-                                        double p,/* Probability of good result. */
-                                        CvMat* status)    
-{
-    CvMat* wpoints1 = 0;
-    CvMat* wpoints2 = 0;
-    CvMat* corrLines1 = 0;
-    CvMat* corrLines2 = 0;
-    CvMat* bestPoints1 = 0;
-    CvMat* bestPoints2 = 0;
-
-    int* flags = 0;
-    int* bestFlags = 0;
-    int numFundMatr = 0;
-    
-    CV_FUNCNAME( "icvComputeFundamentalRANSAC" );
-    __BEGIN__;
-
-    /* Test correct of input data */
-
-    if( !CV_IS_MAT(points1) || !CV_IS_MAT(points2)|| !CV_IS_MAT(fundMatr))
-    {
-        CV_ERROR(CV_StsBadPoint,"points1 or points2 or funMatr are not a matrixes");
-    }
-
-    int numPoint;
-    numPoint = points1->cols;
-    
-    /*int type;
-    type = points1->type;*/
-    
-    if( numPoint != points2->cols )
-    {
-        CV_ERROR( CV_StsBadSize, "Number of points not equals" );
-    }
-    if( numPoint < 8 )
-    {
-        CV_ERROR( CV_StsBadSize, "Number of points must be >= 8" );
-    }
-
-    if( points1->rows != 2 && points1->rows != 3 )
-    {
-        CV_ERROR( CV_StsBadSize, "Number of coordinates of points1 must be 2 or 3" );
-    }
-
-    if( points2->rows != 2 && points2->rows != 3 )
-    {
-        CV_ERROR( CV_StsBadSize, "Number of coordinates of points2 must be 2 or 3" );
-    }
-
-    if( fundMatr->rows != 3 || fundMatr->cols != 3 )
-    {
-        CV_ERROR( CV_StsBadSize, "Size of fundMatr must be 3x3" );
-    }
-
-    if( status )
-    {/* status is present test it */
-        if( !CV_IS_MAT(status) )
-        {
-            CV_ERROR(CV_StsBadPoint,"status is not a matrix");
-        }
-
-        if( status->cols != numPoint || status->rows != 1 )
-        {
-            CV_ERROR(CV_StsBadPoint,"Size of status must be 1xN");
-        }
-    }
-       
-    /* We will choose adaptive number of N (samples) */
-
-    /* Convert points to 64F working points */
-
-    CV_CALL( flags = (int*)cvAlloc(numPoint * sizeof(int)) );
-    CV_CALL( bestFlags = (int*)cvAlloc(numPoint * sizeof(int)) );
-    CV_CALL( wpoints1 = cvCreateMat(3,numPoint,CV_64F) );
-    CV_CALL( wpoints2 = cvCreateMat(3,numPoint,CV_64F) );
-    CV_CALL( corrLines1 = cvCreateMat(3,numPoint,CV_64F));
-    CV_CALL( corrLines2 = cvCreateMat(3,numPoint,CV_64F));
-    CV_CALL( bestPoints1 = cvCreateMat(3,numPoint,CV_64F));
-    CV_CALL( bestPoints2 = cvCreateMat(3,numPoint,CV_64F));
-
-    icvMake3DPoints(points1,wpoints1);
-    icvMake3DPoints(points2,wpoints2);
-        
-    {
-        int wasCount = 0;  //count of choosing samples
-        int maxGoodPoints = 0;
-        int numGoodPoints = 0;
-
-        double bestFund_dat[9];
-        CvMat  bestFund;
-        bestFund = cvMat(3,3,CV_64F,bestFund_dat);
-
-        /* choosen points */        
-        int NumSamples = 500;/* Initial need number of samples */
-        while( wasCount < NumSamples )
-        {
-            /* select samples */
-            int randNumbs[7];
-            int i;
-            int newnum;
-            int pres;
-            for( i = 0; i < 7; i++ )
-            {
-                do
-                {
-                    newnum = rand()%numPoint;
-
-                    /* test this number */
-                    pres = 0;
-                    int test;
-                    for( test = 0; test < i; test++ )
-                    {
-                        if( randNumbs[test] == newnum )
-                        {
-                            pres = 1;
-                            break;
-                        }
-                    }
-                }
-                while( pres );
-                randNumbs[i] = newnum;
-            }
-            /* random numbers of points was generated */
-            /* select points */
-
-            double selPoints1_dat[2*7];
-            double selPoints2_dat[2*7];
-            CvMat selPoints1;
-            CvMat selPoints2;
-            selPoints1 = cvMat(2,7,CV_64F,selPoints1_dat);
-            selPoints2 = cvMat(2,7,CV_64F,selPoints2_dat);
-            /* copy points */
-            int t;
-            for( t = 0; t < 7; t++ )
-            {
-                double x,y;
-                x = cvmGet(wpoints1,0,randNumbs[t]);
-                y = cvmGet(wpoints1,1,randNumbs[t]);
-                cvmSet(&selPoints1,0,t,x);
-                cvmSet(&selPoints1,1,t,y);
-                
-                x = cvmGet(wpoints2,0,randNumbs[t]);
-                y = cvmGet(wpoints2,1,randNumbs[t]);
-                cvmSet(&selPoints2,0,t,x);
-                cvmSet(&selPoints2,1,t,y);
-            }
-
-            /* Compute fundamental matrix using 7-points algorithm */
-
-            double fundTriple_dat[27];
-            CvMat fundTriple;
-            fundTriple = cvMat(9,3,CV_64F,fundTriple_dat);
-
-            int numFund = icvComputeFundamental7Point(&selPoints1,&selPoints2,&fundTriple);
-
-            //double fund7_dat[9];
-            CvMat fund7;
-            //fund7 = cvMat(3,3,CV_64F,fund7_dat);
-
-            /* get sub matrix */
-            for( int currFund = 0; currFund < numFund; currFund++ )
-            {
-                cvGetSubArr(&fundTriple,&fund7,cvRect(0,currFund*3,3,3));
-                {
-                    /* Compute inliers for this fundamental matrix */
-                    /* Compute distances for points and correspond lines */
-                    {
-                        /* Create corresponde lines */
-                    
-                        cvComputeCorrespondEpilines(wpoints1,2,&fund7,corrLines2);
-                        cvComputeCorrespondEpilines(wpoints2,1,&fund7,corrLines1);
-                        /* compute distances for points and number of good points */
-                        int i;
-                        numGoodPoints = 0;
-                        for( i = 0; i < numPoint; i++ )
-                        {
-                            CvMat pnt1,pnt2;
-                            CvMat lin1,lin2;
-                            cvGetCol(wpoints1,&pnt1,i);
-                            cvGetCol(corrLines1,&lin1,i);
-                            cvGetCol(wpoints2,&pnt2,i);
-                            cvGetCol(corrLines2,&lin2,i);
-                            double dist1,dist2;
-                            dist1 = fabs(cvDotProduct(&pnt1,&lin1));
-                            dist2 = fabs(cvDotProduct(&pnt2,&lin2));
-                            flags[i] = ( dist1 < threshold && dist2 < threshold )?1:0;
-                            numGoodPoints += flags[i];
-                        }
-                    }
-                }
-
-                if( numGoodPoints > maxGoodPoints )
-                {/* good matrix */
-                    cvCopy(&fund7,&bestFund);
-                    maxGoodPoints = numGoodPoints;
-                    /* copy best flags */
-                    int i;
-                    for(i=0;i<numPoint;i++)
-                    {
-                        bestFlags[i] = flags[i];
-                    }
-
-                    /* Recompute new number of need steps */
-
-                    /* Adaptive number of samples to count*/
-                    double ep = 1 - (double)numGoodPoints / (double)numPoint;
-                    if( ep == 1 )
-                    {
-                        ep = 0.5;//if there is not good points set ration of outliers to 50%
-                    }
-            
-                    double newNumSamples = log(1-p);
-                    newNumSamples /= log(1-pow(1-ep,7));
-
-                    if( newNumSamples < (double)NumSamples )
-                    {
-                        NumSamples = cvRound(newNumSamples);
-                    }
-
-                }
-            }
-            
-            wasCount++;
-        }
-
-        /* we have best 7-point fundamental matrix. */
-        /* and best points */
-        /* use these points to improve matrix */
-
-        /* collect best points */
-        /* copy points */
-        
-        /* Test number of points. And if number >=8 improove found fundamental matrix  */
-
-        if( maxGoodPoints < 7 )
-        {
-            /* Fundamental matrix not found */
-            numFundMatr = 0;
-        }
-        else
-        {
-            if( maxGoodPoints > 7 )
-            {
-                /* Found >= 8 point. Improove matrix */
-                int i;
-                int currPnt;
-                currPnt = 0;
-
-                for( i = 0; i < numPoint; i++ )
-                {
-                    if( bestFlags[i] )
-                    {
-                        CvMat wPnt;
-                        CvMat bestPnt;
-                        cvGetCol( wpoints1,&wPnt, i );
-                        cvGetCol( bestPoints1,&bestPnt, currPnt );
-                        cvCopy(&wPnt,&bestPnt);
-                        cvGetCol( wpoints2,&wPnt, i );
-                        cvGetCol( bestPoints2,&bestPnt, currPnt );
-                        cvCopy(&wPnt,&bestPnt);
-                        currPnt++;
-                    }
-                }
-
-                CvMat wbestPnts1;
-                CvMat wbestPnts2;
-
-                cvGetSubArr( bestPoints1, &wbestPnts1, cvRect(0,0,maxGoodPoints,3) );
-                cvGetSubArr( bestPoints2, &wbestPnts2, cvRect(0,0,maxGoodPoints,3) );
-
-                /* best points was collectet. Improve fundamental matrix */
-                /* Just use 8-point algorithm */
-                double impFundMatr_dat[9];
-                CvMat impFundMatr;
-                impFundMatr = cvMat(3,3,CV_64F,impFundMatr_dat);
-                numFundMatr = icvComputeFundamental8Point(&wbestPnts1,&wbestPnts2,&impFundMatr);
-
-                cvConvert(&impFundMatr,fundMatr);        
-                //cvConvert(&bestFund,fundMatr); // This line must be deleted
-            }
-            else
-            {
-                /* 7 point. Just copy to result */
-                cvConvert(&bestFund,fundMatr);
-                numFundMatr = 1;
-            }
-
-            /* copy flag to status if need */
-            if( status )
-            {
-                for( int i = 0; i < numPoint; i++)
-                {
-                    cvmSet(status,0,i,(double)bestFlags[i]);
-                }
-            }
-        }
-
-
-    }
-
-    __END__;
-
-    /* free allocated memory */
-    
-    cvReleaseMat(&corrLines1);
-    cvReleaseMat(&corrLines2);
-    cvReleaseMat(&wpoints1);
-    cvReleaseMat(&wpoints2);
-    cvReleaseMat(&bestPoints1);
-    cvReleaseMat(&bestPoints2);
-    cvFree((void**)&flags);
-    cvFree((void**)&bestFlags);
-
-    return numFundMatr;
-}//icvComputeFundamentalRANSAC
-
-/*=====================================================================================*/
-
-static void icvCompPointLineDists(CvMat* points,CvMat* lines,CvMat* distances)
-{/* Line must be normalized */
-    
-    int numPoints;
-    numPoints = points->cols;
-    if( numPoints != lines->cols && numPoints != distances->cols )
-    {
-        //printf("Size if arrays not equals\n");
-        return;//error
-    }
-
-    int i;
-    for( i = 0; i < numPoints; i++ )
-    {
-        CvMat pnt;
-        CvMat lin;
-        cvGetCol(points,&pnt,i);
-        cvGetCol(lines,&lin,i);
-        double dist;
-        dist = fabs(cvDotProduct(&pnt,&lin));
-        cvmSet(distances,0,i,dist);
-    }
-
-    return;
-}
-
-/*=====================================================================================*/
-
-
-
-#define _compVals( v1, v2 )  ((v1) < (v2))
-
-/* Create function to sort vector */
-static CV_IMPLEMENT_QSORT( _SortCvMatVect, double, _compVals )
-
-/*=====================================================================================*/
-static int icvComputeFundamentalLMedS(    CvMat* points1,CvMat* points2,
-                                    CvMat* fundMatr,
-                                    double threshold,/* Threshold for good points */
-                                    double p,/* Probability of good result. */
-                                    CvMat* status)    
-{
-    CvMat* wpoints1 = 0;
-    CvMat* wpoints2 = 0;
-    CvMat* corrLines1 = 0;
-    CvMat* corrLines2 = 0;
-    CvMat* bestPoints1 = 0;
-    CvMat* bestPoints2 = 0;
-    CvMat* dists1 = 0;
-    CvMat* dists2 = 0;
-    CvMat* distsSq1 = 0;
-    CvMat* distsSq2 = 0;
-    CvMat* allDists = 0;
-
-    int* flags = 0;
-    int* bestFlags = 0;
-    int numFundMatr = 0;
-    
-    CV_FUNCNAME( "icvComputeFundamentalLMedS" );
-    __BEGIN__;
-
-    /* Test correct of input data */
-
-    if( !CV_IS_MAT(points1) || !CV_IS_MAT(points2)|| !CV_IS_MAT(fundMatr))
-    {
-        CV_ERROR(CV_StsBadPoint,"Not a matrixes");
-    }
-
-    int numPoint;
-    numPoint = points1->cols;
-    
-    /*int type;
-    type = points1->type;*/
-    
-    if( numPoint != points2->cols )
-    {
-        CV_ERROR( CV_StsBadSize, "Number of points not equal" );
-    }
-    if( numPoint < 8 )
-    {
-        CV_ERROR( CV_StsBadSize, "Number of points must be >= 8" );
-    }
-
-    if( points1->rows != 2 && points1->rows != 3 )
-    {
-        CV_ERROR( CV_StsBadSize, "Number of coordinates of points1 must be 2 or 3" );
-    }
-
-    if( points2->rows != 2 && points2->rows != 3 )
-    {
-        CV_ERROR( CV_StsBadSize, "Number of coordinates of points2 must be 2 or 3" );
-    }
-
-    if( fundMatr->rows != 3 || fundMatr->cols != 3 )
-    {
-        CV_ERROR( CV_StsBadSize, "Size of fundMatr must be 3x3" );
-    }
-
-    if( status )
-    {/* status is present test it */
-        if( !CV_IS_MAT(status) )
-        {
-            CV_ERROR(CV_StsBadPoint,"status is not a matrix");
-        }
-
-        if( status->cols != numPoint || status->rows != 1 )
-        {
-            CV_ERROR(CV_StsBadPoint,"Size of status must be 1xN");
-        }
-    }
-       
-    /* We will choose adaptive number of N (samples) */
-
-    /* Convert points to 64F working points */
-
-    CV_CALL( flags = (int*)cvAlloc(numPoint * sizeof(int)) );
-    CV_CALL( bestFlags = (int*)cvAlloc(numPoint * sizeof(int)) );
-    CV_CALL( wpoints1 = cvCreateMat(3,numPoint,CV_64F) );
-    CV_CALL( wpoints2 = cvCreateMat(3,numPoint,CV_64F) );
-    CV_CALL( corrLines1 = cvCreateMat(3,numPoint,CV_64F));
-    CV_CALL( corrLines2 = cvCreateMat(3,numPoint,CV_64F));
-    CV_CALL( bestPoints1 = cvCreateMat(3,numPoint,CV_64F));
-    CV_CALL( bestPoints2 = cvCreateMat(3,numPoint,CV_64F));
-    CV_CALL( dists1 = cvCreateMat(1,numPoint,CV_64F));
-    CV_CALL( dists2 = cvCreateMat(1,numPoint,CV_64F));
-    CV_CALL( distsSq1 = cvCreateMat(1,numPoint,CV_64F));
-    CV_CALL( distsSq2 = cvCreateMat(1,numPoint,CV_64F));
-    CV_CALL( allDists = cvCreateMat(1,numPoint,CV_64F));
-
-    icvMake3DPoints(points1,wpoints1);
-    icvMake3DPoints(points2,wpoints2);
-    
-    {
-        int NumSamples = 500;//Maximux number of steps
-        int wasCount = 0;  //count of choosing samples
-
-        double goodMean = FLT_MAX;
-        double currMean;
-
-        int numGoodPoints = 0;
-
-        double bestFund_dat[9];
-        CvMat  bestFund;
-        bestFund = cvMat(3,3,CV_64F,bestFund_dat);
-
-        /* choosen points */        
-        while( wasCount < NumSamples )
-        {
-            /* select samples */
-            int randNumbs[7];
-            int i;
-            int newnum;
-            int pres;
-            for( i = 0; i < 7; i++ )
-            {
-                do
-                {
-                    newnum = rand()%numPoint;
-
-                    /* test this number */
-                    pres = 0;
-                    int test;
-                    for( test = 0; test < i; test++ )
-                    {
-                        if( randNumbs[test] == newnum )
-                        {
-                            pres = 1;
-                            break;
-                        }
-                    }
-                }
-                while( pres );
-                randNumbs[i] = newnum;
-            }
-            /* random numbers of points was generated */
-            /* select points */
-
-            double selPoints1_dat[2*7];
-            double selPoints2_dat[2*7];
-            CvMat selPoints1;
-            CvMat selPoints2;
-            selPoints1 = cvMat(2,7,CV_64F,selPoints1_dat);
-            selPoints2 = cvMat(2,7,CV_64F,selPoints2_dat);
-            /* copy points */
-            int t;
-            for( t = 0; t < 7; t++ )
-            {
-                double x,y;
-                x = cvmGet(wpoints1,0,randNumbs[t]);
-                y = cvmGet(wpoints1,1,randNumbs[t]);
-                cvmSet(&selPoints1,0,t,x);
-                cvmSet(&selPoints1,1,t,y);
-                
-                x = cvmGet(wpoints2,0,randNumbs[t]);
-                y = cvmGet(wpoints2,1,randNumbs[t]);
-                cvmSet(&selPoints2,0,t,x);
-                cvmSet(&selPoints2,1,t,y);
-            }
-            /* Compute fundamental matrix using 7-points algorithm */
-
-            double fundTriple_dat[27];
-            CvMat fundTriple;
-            fundTriple = cvMat(9,3,CV_64F,fundTriple_dat);
-
-            int numFund = icvComputeFundamental7Point(&selPoints1,&selPoints2,&fundTriple);
-
-            //double fund7_dat[9];
-            CvMat fund7;
-            //fund7 = cvMat(3,3,CV_64F,fund7_dat);
-
-            /* get sub matrix */
-            for( int currFund = 0; currFund < numFund; currFund++ )
-            {
-
-                cvGetSubArr(&fundTriple,&fund7,cvRect(0,currFund*3,3,3));
-                {
-                    /* Compute median error for this matrix */
-                    {
-                        cvComputeCorrespondEpilines(wpoints1,2,&fund7,corrLines2);
-                        cvComputeCorrespondEpilines(wpoints2,1,&fund7,corrLines1);
-
-                        icvCompPointLineDists(wpoints1,corrLines1,dists1);
-                        icvCompPointLineDists(wpoints2,corrLines2,dists2);
-
-                        /* add distances for points (d1*d1+d2*d2) */
-                        cvMul(dists1,dists1,distsSq1);
-                        cvMul(dists2,dists2,distsSq2);
-
-                        cvAdd(distsSq1,distsSq2,allDists);
-
-                        /* sort distances */
-                        _SortCvMatVect(allDists->data.db,numPoint,0);
-
-                        /* get median error */
-                        currMean = allDists->data.db[numPoint/2];
-                    }
-                }
-
-                if( currMean < goodMean )
-                {/* good matrix */
-                    cvCopy(&fund7,&bestFund);
-                    goodMean = currMean;
-
-                    /* Compute number of good points using threshold */
-                    int i;
-                    numGoodPoints = 0;
-                    for( i = 0 ; i < numPoint; i++ )
-                    {
-                        if( dists1->data.db[i] < threshold && dists2->data.db[i] < threshold )
-                        {
-                            numGoodPoints++;
-                        }
-                    }
-
-
-                    /* Compute adaptive number of steps */
-                    double ep = 1 - (double)numGoodPoints / (double)numPoint;
-                    if( ep == 1 )
-                    {
-                        ep = 0.5;//if there is not good points set ration of outliers to 50%
-                    }
-
-                    double newNumSamples = log(1-p);
-                    newNumSamples /= log(1-pow(1-ep,7));
-                    if( newNumSamples < (double)NumSamples )
-                    {
-                        NumSamples = cvRound(newNumSamples);
-                    }
-                }
-            }
-
-            wasCount++;
-        }
-
-        /* Select just good points using threshold */
-        /* Compute distances for all points for best fundamental matrix */
-
-        /* Test if we have computed fundamental matrix*/
-        if( goodMean == FLT_MAX )
-        {
-            numFundMatr = 0;
-
-        }
-        else
-        {/* we have computed fundamental matrix */
-            {
-                cvComputeCorrespondEpilines(wpoints1,2,&bestFund,corrLines2);
-                cvComputeCorrespondEpilines(wpoints2,1,&bestFund,corrLines1);
-
-                icvCompPointLineDists(wpoints1,corrLines1,dists1);
-                icvCompPointLineDists(wpoints2,corrLines2,dists2);
-
-                /* test dist for each point and set status for each point if need */
-                int i;
-                int currPnt = 0;
-                for( i = 0; i < numPoint; i++ )
-                {
-                    if( dists1->data.db[i] < threshold && dists2->data.db[i] < threshold )
-                    {
-                        CvMat wPnt;
-                        CvMat bestPnt;
-                        cvGetCol( wpoints1,&wPnt, i );
-                        cvGetCol( bestPoints1,&bestPnt, currPnt );
-                        cvCopy(&wPnt,&bestPnt);
-                        cvGetCol( wpoints2,&wPnt, i );
-                        cvGetCol( bestPoints2,&bestPnt, currPnt );
-                        cvCopy(&wPnt,&bestPnt);
-                        currPnt++;
-                                        
-                        if( status )
-                            cvmSet(status,0,i,1.0);
-                    }
-                    else
-                    {
-                        if( status )
-                            cvmSet(status,0,i,0.0);
-                    }
-
-                }
-                numGoodPoints = currPnt;
-            }
-
-            /* we have best 7-point fundamental matrix. */
-            /* and best points */
-            /* use these points to improove matrix */
-
-            /* Test number of points. And if number >=8 improove found fundamental matrix  */
-
-            if( numGoodPoints < 7 )
-            {
-                /* Fundamental matrix not found */
-                numFundMatr = 0;
-            }
-            else
-            {
-                if( numGoodPoints > 7 )
-                {
-                    /* Found >= 8 point. Improove matrix */
-
-                    CvMat wbestPnts1;
-                    CvMat wbestPnts2;
-
-                    cvGetSubArr( bestPoints1, &wbestPnts1, cvRect(0,0,numGoodPoints,3) );
-                    cvGetSubArr( bestPoints2, &wbestPnts2, cvRect(0,0,numGoodPoints,3) );
-
-                    /* best points was collectet. Improve fundamental matrix */
-                    /* Just use 8-point algorithm */
-                    double impFundMatr_dat[9];
-                    CvMat impFundMatr;
-                    impFundMatr = cvMat(3,3,CV_64F,impFundMatr_dat);
-                    numFundMatr = icvComputeFundamental8Point(&wbestPnts1,&wbestPnts2,&impFundMatr);
-
-                    cvConvert(&impFundMatr,fundMatr);        
-                }
-                else
-                {
-                    /* 7 point. Just copy to result */
-                    cvConvert(&bestFund,fundMatr);
-                    numFundMatr = 1;
-                }
-            }
-
-        }
-    }
-
-    __END__;
-
-    /* free allocated memory */
-    
-    cvReleaseMat(&corrLines1);
-    cvReleaseMat(&corrLines2);
-    cvReleaseMat(&wpoints1);
-    cvReleaseMat(&wpoints2);
-    cvReleaseMat(&bestPoints1);
-    cvReleaseMat(&bestPoints2);
-    cvReleaseMat(&dists1);
-    cvReleaseMat(&dists2);
-    cvReleaseMat(&distsSq1);
-    cvReleaseMat(&distsSq2);
-    cvReleaseMat(&allDists);
-    cvFree((void**)&flags);
-    cvFree((void**)&bestFlags);
-
-    return numFundMatr;
-}//icvComputeFundamentalLMedS
-
-/*=====================================================================================*/
-
-
-
-static void icvMakeFundamentalSingular(CvMat* fundMatr)
-{
-    CV_FUNCNAME( "icvFundSingular" );
-    __BEGIN__;
-
-    if( !CV_IS_MAT(fundMatr) )
-    {
-        CV_ERROR(CV_StsBadPoint,"Input data is not matrix");
-    }
-    
-    if( fundMatr->rows != 3 || fundMatr->cols != 3 )
-    {
-        CV_ERROR( CV_StsBadSize, "Size of fundametal matrix must be 3x3" );
-    }
-
-    
-    {/* Apply singularity condition */
-        CvMat matrFU;
-        CvMat matrFW;
-        CvMat matrFVt;
-        CvMat tmpMatr;
-        CvMat preFundMatr;
-        double matrFU_dat[9];
-        double matrFW_dat[9];
-        double matrFVt_dat[9];
-        double tmpMatr_dat[9];
-        double preFundMatr_dat[9];
-
-        
-        matrFU  = cvMat(3,3,CV_64F,matrFU_dat);
-        matrFW  = cvMat(3,3,CV_64F,matrFW_dat);
-        matrFVt = cvMat(3,3,CV_64F,matrFVt_dat);
-        tmpMatr = cvMat(3,3,CV_64F,tmpMatr_dat);
-        preFundMatr = cvMat(3,3,CV_64F,preFundMatr_dat);
-
-        cvConvert(fundMatr,&preFundMatr);
-        cvSVD( &preFundMatr, &matrFW, &matrFU, &matrFVt, CV_SVD_V_T );
-        cvmSet(&matrFW,2,2,0);
-        /* multiply U*W*V' */
-
-        cvMatMul(&matrFU,&matrFW,&tmpMatr);
-        cvMatMul(&tmpMatr,&matrFVt,&preFundMatr);
-        cvConvert(&preFundMatr,fundMatr);
-    }
-    
-
-    __END__;
-}
-
-
-/*=====================================================================================*/
-/* Normalize points for computing fundamental matrix */
-/* and compute transform matrix */
-/* Points:  2xN  */
-/* Matrix:  3x3 */
-/* place centroid of points to (0,0) */
-/* set mean distance from (0,0) by sqrt(2) */
-
-static void icvNormalizeFundPoints( CvMat* points, CvMat* transfMatr )
-{
-    CvMat* subwpointsx = 0;
-    CvMat* subwpointsy = 0;
-    CvMat* sqdists     = 0;
-    CvMat* pointsxx    = 0;
-    CvMat* pointsyy    = 0;
-
-    int numPoint;
-    double shiftx,shifty; 
-    double meand;
-    double scale;
-
-    CvMat tmpwpointsx;
-    CvMat tmpwpointsy;
-
-    CvScalar sumx;
-    CvScalar sumy;
-
-    CV_FUNCNAME( "icvNormalizeFundPoints" );
-    __BEGIN__;
-    
-    /* Test for correct input data */
-
-    if( !CV_IS_MAT(points) || !CV_IS_MAT(transfMatr) )
-    {
-        CV_ERROR(CV_StsBadPoint,"Input data is not matrixes");
-    }
-    
-    numPoint = points->cols;
-    
-    if( numPoint < 1 )
-    {
-        CV_ERROR( CV_StsBadSize, "Number of points must be at least 1" );
-    }
-
-    if( points->rows != 2 )
-    {
-        CV_ERROR( CV_StsBadSize, "Number of coordinates of points1 must be 2" );
-    }
-
-    if( transfMatr->rows != 3 || transfMatr->cols != 3 )
-    {
-        CV_ERROR( CV_StsBadSize, "Size of transform matrix must be 3x3" );
-    }
-
-    CV_CALL( subwpointsx  =  cvCreateMat(1,numPoint,CV_64F) );
-    CV_CALL( subwpointsy  =  cvCreateMat(1,numPoint,CV_64F) );
-    CV_CALL( sqdists      =  cvCreateMat(1,numPoint,CV_64F) );
-    CV_CALL( pointsxx     =  cvCreateMat(1,numPoint,CV_64F) );
-    CV_CALL( pointsyy     =  cvCreateMat(1,numPoint,CV_64F) );
-
-    /* get x,y coordinates of points */
-    
-    {
-        cvGetRow( points, &tmpwpointsx, 0 );
-        cvGetRow( points, &tmpwpointsy, 1 );
-
-        /* Copy to working data 64F */
-        cvConvert(&tmpwpointsx,subwpointsx);
-        cvConvert(&tmpwpointsy,subwpointsy);
-    }
-
-    /* Compute center of points */
-
-    sumx = cvSum(subwpointsx);
-    sumy = cvSum(subwpointsy);
-
-    sumx.val[0] /= (double)numPoint;
-    sumy.val[0] /= (double)numPoint;
-
-    shiftx = sumx.val[0];
-    shifty = sumy.val[0];
-
-    /* Shift points center to 0 */
-
-    cvSubS( subwpointsx, sumx, subwpointsx);
-    cvSubS( subwpointsy, sumy, subwpointsy);
-
-    /* Compute x*x and y*y */        
-
-    cvMul(subwpointsx,subwpointsx,pointsxx);
-    cvMul(subwpointsy,subwpointsy,pointsyy);
-    
-    /* add  */
-    cvAdd( pointsxx, pointsyy, sqdists);
-
-    /* compute sqrt of each component*/
-    
-    cvPow(sqdists,sqdists,0.5);
-
-    /* in vector sqdists we have distances */
-    /* compute mean value and scale */
-    
-    meand = cvAvg(sqdists).val[0];
-    
-    if( fabs(meand) > 1e-8  )
-    {
-        scale = 0.70710678118654752440084436210485/meand;
-    }
-    else
-    {
-        scale = 1.0;
-    }
-
-    /* scale working points */    
-    cvScale(subwpointsx,subwpointsx,scale);
-    cvScale(subwpointsy,subwpointsy,scale);
-
-    /* copy output data */
-    {
-        cvGetRow( points, &tmpwpointsx, 0 );
-        cvGetRow( points, &tmpwpointsy, 1 );
-
-        /* Copy to output data 64F */
-        cvConvert(subwpointsx,&tmpwpointsx);
-        cvConvert(subwpointsy,&tmpwpointsy);
-    }
-
-    /* Set transform matrix */
-    
-    cvmSet(transfMatr,0,0, scale);
-    cvmSet(transfMatr,0,1, 0);
-    cvmSet(transfMatr,0,2, -scale*shiftx);
-
-    cvmSet(transfMatr,1,0, 0);
-    cvmSet(transfMatr,1,1, scale);
-    cvmSet(transfMatr,1,2, -scale*shifty);
-
-    cvmSet(transfMatr,2,0, 0);
-    cvmSet(transfMatr,2,1, 0);
-    cvmSet(transfMatr,2,2, 1);
-
-    __END__;
-    
-    /* Free data */
-    cvReleaseMat(&subwpointsx);
-    cvReleaseMat(&subwpointsy);
-    cvReleaseMat(&sqdists);
-    cvReleaseMat(&pointsxx);
-    cvReleaseMat(&pointsyy);
-
-}
-
-/*=====================================================================================*/
-// Solve cubic equation and returns number of roots
-// Also returns 0 if all values are possible
-// Test for very big coefficients
-// Input params 1x3 or 1x4
-CV_IMPL int cvSolveCubic(CvMat* coeffs,CvMat* result)
-{/* solve a*x^3 + b+x^2 + c*x + d = 0 */
-    /* coeffs a,b,c,d or b,c,d if a== 1*/
-    /* test input params */
-    /* result 2x3  */
-
-    int numRoots = 0;
-
-    CV_FUNCNAME( "icvSolveCubic" );
-    __BEGIN__;
-    
-    /* Test correct of input data */
-
-    if( !CV_IS_MAT(coeffs) || !CV_IS_MAT(result) )
-    {
-        CV_ERROR(CV_StsBadPoint,"Not a matrixes");
-    }
-
-    if( !(coeffs->rows == 1 && (coeffs->cols == 3 || coeffs->cols == 4) ))
-    {
-        CV_ERROR( CV_StsBadSize, "Number of coeffs must be 3 or 4" );
-    }
-
-
-    double squares[6];
-    double cc[4];
-    cc[0] = cvmGet(coeffs,0,0);
-    cc[1] = cvmGet(coeffs,0,1);
-    cc[2] = cvmGet(coeffs,0,2);
-
-    if( fabs(cc[0]) > FLT_MAX || fabs(cc[1]) > FLT_MAX || fabs(cc[2]) > FLT_MAX )
-    {
-        return 0;//Coeffs too big
-    }
-
-    double a0,a1,a2;
-    if( coeffs->cols == 3 )
-    {
-        a0 = cc[0];
-        a1 = cc[1];
-        a2 = cc[2];
-        numRoots = icvCubicV(a0,a1,a2,squares);
-    }
-    else
-    {// We have for coeffs
-        /* Test for very big coeffs */
-        cc[3] = cvmGet(coeffs,0,3);
-
-        if( fabs(cc[3]) > FLT_MAX )
-        {
-            return 0;//Coeffs too big
-        }
-
-        double a = cc[0];
-        if( fabs(a) > FLT_MIN)
-        {
-            a = 1. / a;
-            a0 = cc[1] * a;
-            a1 = cc[2] * a;
-            a2 = cc[3] * a;
-            numRoots = icvCubicV(a0,a1,a2,squares);
-        }
-        else
-        {// It's a square eqaution.
-            double a,b,c;
-            a = cc[1];
-            b = cc[2];
-            c = cc[3];
-            if( fabs(a) > 1e-8 )
-            {
-                double D;
-                D = b*b-4*a*c;
-                if( D > FLT_MIN )
-                {// Two roots
-                    numRoots = 2;
-                    squares[0] = (-b + sqrt(D))/(2*a);
-                    squares[1] = 0;
-                    squares[2] = (-b - sqrt(D))/(2*a);
-                    squares[3] = 0;
-                }
-                else
-                {
-                    if( D < FLT_MIN  )
-                    {/* Two Im values */
-                        numRoots = 2;
-                        squares[0] = (-b)/(2*a);
-                        squares[1] = (  sqrt(-D))/(2*a);
-
-                        squares[2] = (-b)/(2*a);
-                        squares[3] = ( -sqrt(-D))/(2*a);
-                    }
-                    else
-                    {/* D==0 */
-                        numRoots = 2;
-                        squares[0] = (-b)/(2*a);
-                        squares[1] = 0;
-                        squares[2] = (-b)/(2*a);
-                        squares[3] = 0;
-                    }
-                }
-            }
-            else
-            {// Linear equation
-                if( fabs(b) > FLT_MIN )
-                {
-                    squares[0] = -c/b;
-                    squares[1] = 0;
-                    numRoots = 1;
-                }
-                else
-                {
-                    if( fabs(c) > FLT_MIN)
-                    {
-                        numRoots = 0;
-                    }
-                    else
-                    {
-                        /* All values are posible */
-                        numRoots = 0;// !!!
-                        //cvmSet(result,0,0,0);
-                        //cvmSet(result,1,0,0);
-                    }
-                }
-            }
-        }
-    }
-
-    /* copy result  */
-    int i;
-
-    for( i=0;i<numRoots;i++ )
-    {
-        cvmSet(result,0,i,squares[i*2]);
-        cvmSet(result,1,i,squares[i*2+1]);
-    }
-    __END__;
-
-    return numRoots;
-}
-
-/*=====================================================================================*/
-void cvMake2DPoints(CvMat* srcPoint,CvMat* dstPoint)
-{
-    icvMake2DPoints(srcPoint,dstPoint);
-    return;
-}
-
-/* 
-  Convert 2D or 3D points to 2D points
-
-  for 3D: x = x/z;
-          y = y/z
-  for 2D just copy and maybe convert type
-
-  Source and destiantion may be the same and in this case src must be 2D
-*/
-static void icvMake2DPoints(CvMat* srcPoint,CvMat* dstPoint)
-{
-    CvMat* submatx = 0;
-    CvMat* submaty = 0;
-    CvMat* submatz = 0;
-
-    CV_FUNCNAME( "icvMake2DPoints" );
-    __BEGIN__;
-    
-    if( !CV_IS_MAT(srcPoint) || !CV_IS_MAT(dstPoint) )
-    {
-        CV_ERROR(CV_StsBadPoint,"Not a matrixes");
-    }
-
-    int numPoint;
-    numPoint = srcPoint->cols;
-        
-    if( numPoint != dstPoint->cols )
-    {
-        CV_ERROR( CV_StsBadSize, "Number of points not equal" );
-    }
-    if( numPoint < 1 )
-    {
-        CV_ERROR( CV_StsBadSize, "Number of points must > 0" );
-    }
-
-    if( srcPoint->rows > 3 || srcPoint->rows < 2 )
-    {
-        CV_ERROR( CV_StsBadSize, "Number of coordinates of srcPoint must be 2 or 3" );
-    }
-
-    if( dstPoint->rows != 2 )
-    {
-        CV_ERROR( CV_StsBadSize, "Number of coordinates of dstPoint must be 2" );
-    }
-
-    CV_CALL( submatx = cvCreateMat(1,numPoint,CV_64F) );
-    CV_CALL( submaty = cvCreateMat(1,numPoint,CV_64F) );
-    CV_CALL( submatz = cvCreateMat(1,numPoint,CV_64F) );
-
-    CvMat subwpointsx;
-    CvMat subwpointsy;
-    
-    CvMat tmpSubmatx;
-    CvMat tmpSubmaty;
-    CvMat tmpSubmatz;
-    
-    cvGetRow( dstPoint, &subwpointsx, 0 );
-    cvGetRow( dstPoint, &subwpointsy, 1 );
-    
-    cvGetRow( srcPoint, &tmpSubmatx, 0 );
-    cvGetRow( srcPoint, &tmpSubmaty, 1 );
-    
-    cvConvert(&tmpSubmatx,submatx);
-    cvConvert(&tmpSubmaty,submaty);
-
-    if( srcPoint->rows == 3 )
-    {
-        cvGetRow( srcPoint, &tmpSubmatz, 2 );
-        cvConvert(&tmpSubmatz,submatz);
-        
-        cvDiv( submatx, submatz, &subwpointsx);
-        cvDiv( submaty, submatz, &subwpointsy);
-    }
-    else
-    {
-        cvConvert(submatx,&subwpointsx);
-        cvConvert(submaty,&subwpointsy);
-    }
-
-    __END__;
-
-    cvReleaseMat(&submatx);
-    cvReleaseMat(&submaty);
-    cvReleaseMat(&submatz);
-}
-
-/*=====================================================================================*/
-
-void cvMake3DPoints(CvMat* srcPoint,CvMat* dstPoint)
-{
-    icvMake3DPoints((const CvMat*)srcPoint,dstPoint);
-    return;
-}
-
-
-/* 
-  Convert 2D or 3D points to 3D points
-
-  for 2D: x = x;
-          y = y;
-          z = 1;
-          
-  for 3D: x = x;
-          y = y;
-          z = z;
-          
-  Source and destiantion may be the same and in this case src must be 2D
-*/
-static void icvMake3DPoints(const CvMat* srcPoint,CvMat* dstPoint)
-{
-    CvMat* tmpSubmatz = 0;
-
-    CV_FUNCNAME( "icvMake3DPoints" );
-    __BEGIN__;
-    
-    if( !CV_IS_MAT(srcPoint) || !CV_IS_MAT(dstPoint) )
-    {
-        CV_ERROR(CV_StsBadPoint,"Not a matrixes");
-    }
-
-    int numPoint;
-    numPoint = srcPoint->cols;
-        
-    if( numPoint != dstPoint->cols )
-    {
-        CV_ERROR( CV_StsBadSize, "Number of points not equal" );
-    }
-    if( numPoint < 1 )
-    {
-        CV_ERROR( CV_StsBadSize, "Number of points must > 0" );
-    }
-
-    if( srcPoint->rows > 3 || srcPoint->rows < 2 )
-    {
-        CV_ERROR( CV_StsBadSize, "Number of coordinates of srcPoint must be 2 or 3" );
-    }
-
-    if( dstPoint->rows != 3 )
-    {
-        CV_ERROR( CV_StsBadSize, "Number of coordinates of dstPoint must be 3" );
-    }
-
-    CV_CALL( tmpSubmatz = cvCreateMat(1,numPoint,CV_64F) );
-    
-    if( srcPoint->rows == 3 )
-    {
-        /* Just copy all points */
-        cvConvert(srcPoint,dstPoint);
-    }
-    else
-    {
-        CvMat subwpointsx;
-        CvMat subwpointsy;
-        CvMat subwpointsz;
-        
-        cvGetRow( dstPoint, &subwpointsx, 0 );
-        cvGetRow( dstPoint, &subwpointsy, 1 );
-        cvGetRow( dstPoint, &subwpointsz, 2 );
-        
-        CvMat tmpSubmatx;
-        CvMat tmpSubmaty;
-        
-        cvGetRow( srcPoint, &tmpSubmatx, 0 );
-        cvGetRow( srcPoint, &tmpSubmaty, 1 );
-
-        cvConvert( &tmpSubmatx, &subwpointsx );
-        cvConvert( &tmpSubmaty, &subwpointsy );
-        
-        /* fill z by 1 */
-        int i;
-        for( i = 0; i < numPoint; i++ )
-        {
-            cvmSet(&subwpointsz,0,i,1.0);
-        }
-    }
-
-    __END__;
-
-    cvReleaseMat(&tmpSubmatz);
-}
-
-/*=====================================================================================*/
-CV_IMPL void
-cvComputeCorrespondEpilines(const CvMat* points,int pointImageID,const CvMat* fundMatr,CvMat* corrLines)
-{
-
-    CvMat* wpoints = 0;
-    CvMat* wcorrLines = 0;
-
-    pointImageID = 3-pointImageID;
-
-    CV_FUNCNAME( "icvComputeCorrespondEpilines" );
-    __BEGIN__;
-    
-    /* Test correct of input data */
-
-    if( !CV_IS_MAT(points) || !CV_IS_MAT(fundMatr)|| !CV_IS_MAT(corrLines))
-    {
-        CV_ERROR(CV_StsBadPoint,"Not a matrixes");
-    }
-
-    /*  */
-
-    int numPoint;
-    numPoint = points->cols;
-    
-    if( numPoint != corrLines->cols )
-    {
-        CV_ERROR( CV_StsBadSize, "Number of points and lines are not equal" );
-    }
-
-    if( numPoint < 1 )
-    {
-        CV_ERROR( CV_StsBadSize, "Number of points must > 0" );
-    }
-
-    if( points->rows != 2 && points->rows != 3 )
-    {
-        CV_ERROR( CV_StsBadSize, "Number of coordinates of points1 must be 2 or 3" );
-    }
-
-    if( corrLines->rows != 3 )
-    {
-        CV_ERROR( CV_StsBadSize, "Number of coordinates of corrLines must be 3" );
-    }
-
-    if( fundMatr->rows != 3 || fundMatr->cols != 3 )
-    {
-        CV_ERROR( CV_StsBadSize, "Size of fundMatr must be 3x3" );
-    }
-
-    double wfundMatr_dat[9];
-    CvMat wfundMatr;
-    wfundMatr = cvMat(3,3,CV_64F,wfundMatr_dat);
-    cvConvert(fundMatr,&wfundMatr);
-
-    if( pointImageID == 1 )
-    {// get transformed fundamental matrix
-        double tmpMatr_dat[9];
-        CvMat tmpMatr;
-        tmpMatr = cvMat(3,3,CV_64F,tmpMatr_dat);
-        cvConvert(fundMatr,&tmpMatr);
-        cvTranspose(&tmpMatr,&wfundMatr);
-    }
-    else if( pointImageID != 2 )
-    {
-        CV_ERROR( CV_StsBadArg, "Image ID must be 1 or 2" );
-    }
-    /* if wfundMatr we have good fundamental matrix */
-    /* compute corr epi line for given points */
-
-    CV_CALL( wpoints = cvCreateMat(3,numPoint,CV_64F) );
-    CV_CALL( wcorrLines = cvCreateMat(3,numPoint,CV_64F) );
-
-
-    /* if points has 2 coordinates trandform them to 3D */
-    icvMake3DPoints(points,wpoints);
-
-    cvMatMul(&wfundMatr,wpoints,wcorrLines);
-
-    /* normalise line coordinates */
-    int i;
-    for( i = 0; i < numPoint; i++ )
-    {
-        CvMat line;
-        cvGetCol(wcorrLines,&line,i);
-        double a,b;
-        a = cvmGet(&line,0,0);
-        b = cvmGet(&line,1,0);
-        double nv;
-        nv = sqrt(a*a+b*b);
-        cvConvertScale(&line,&line,1.0 / nv);        
-    }
-    cvConvert(wcorrLines,corrLines);
-
-
-    __END__;
-
-    cvReleaseMat(&wpoints);
-    cvReleaseMat(&wcorrLines);
-
-}
-
-/*=====================================================================================*/
-
-#define SIGN(x) ( (x)<0 ? -1:((x)>0?1:0 ) )
-//#define REAL_ZERO(x) ( (x) < EPSILON && (x) > -EPSILON)
-#define REAL_ZERO(x) ( (x) < 1e-8 && (x) > -1e-8)
-
-/* function return squares for cubic equation. 6 params - two for each square (Re,Im) */
+/* the algorithm is quite similar to RANSAC, but here we choose the matrix that gives
+   the least median of d(m0[i], F'*m1[i])^2 + d(m1[i], F*m0[i])^2 (0<=i<count),
+   instead of choosing the matrix that gives the least number of outliers (as it is done in RANSAC) */
 static int
-icvCubicV( double a2, double a1, double a0, double *squares )
+icvFMatrix_LMedS( const CvPoint2D64f* m0, const CvPoint2D64f* m1,
+                  uchar* mask, int count, double* fmatrix,
+                  double threshold, double p,
+                  unsigned rng_seed, int use_8point )
 {
-    double p, q, D, c1, c2, b1, b2, ro1, ro2, fi1, fi2;
-    double x[6][3];
-    int i, j, t;
+    int result = 0;
 
-    if( !squares )
-        return CV_BADFACTOR_ERR;
+    const int max_random_iters = 1000;
+    const int sample_size = 7;
 
-    if( fabs(a0) > FLT_MAX || fabs(a1) > FLT_MAX || fabs(a2) > FLT_MAX )
-    {
-        return 0;//Coeffs too big
-    }
-
-
-    p = a1 - a2 * a2 / 3;
-    q = (9 * a1 * a2 - 27 * a0 - 2 * a2 * a2 * a2) / 27;
-    D = q * q / 4 + p * p * p / 27;
-
-    if( fabs(p) > FLT_MAX || fabs(q) > FLT_MAX || fabs(D) > FLT_MAX )
-    {
-        return 0;//Coeffs too big
-    }
+    float* dist = 0;
+    uchar* curr_mask = 0;
+    uchar* temp_mask = 0;
     
-    if( D < 0 )
+    CV_FUNCNAME( "icvFMatrix_LMedS" );
+
+    __BEGIN__;
+
+    double ff[9*3];
+    CvRNG rng = cvRNG(rng_seed);
+    int i, j, k, sample_count, max_samples = 500;
+    double least_median = DBL_MAX, median;
+    int best_good_count = 0;
+
+    assert( m0 && m1 && fmatrix && 0 < p && p < 1 && threshold > 0 );
+
+    threshold *= threshold;
+
+    CV_CALL( curr_mask = (uchar*)cvAlloc( count ));
+    CV_CALL( dist = (float*)cvAlloc( count*sizeof(dist[0]) ));
+
+    if( !mask && use_8point )
     {
+        CV_CALL( temp_mask = (uchar*)cvAlloc( count ));
+        mask = temp_mask;
+    }
 
-        c1 = q / 2;
-        c2 = c1;
-        b1 = sqrt( -D );
-        b2 = -b1;
+    // find the best fundamental matrix (giving the least backprojection error)
+    // by picking at most <max_samples> 7-tuples of corresponding points
+    // <max_samples> may be updated (decreased) within the loop based on statistics of outliers
+    for( sample_count = 0; sample_count < max_samples; sample_count++ )
+    {
+        int idx[sample_size], n;
+        CvPoint2D64f ms0[sample_size], ms1[sample_size];
 
-        ro1 = sqrt( c1 * c1 - D );
-        ro2 = ro1;
+        // choose random <sample_size> (=7) points
+        for( i = 0; i < sample_size; i++ )
+        {
+            for( k = 0; k < max_random_iters; k++ )
+            {
+                idx[i] = cvRandInt(&rng) % count;
+                for( j = 0; j < i; j++ )
+                    if( idx[j] == idx[i] )
+                        break;
+                if( j == i )
+                {
+                    ms0[i] = m0[idx[i]];
+                    ms1[i] = m1[idx[i]];
+                    break;
+                }
+            }
+            if( k >= max_random_iters )
+                break;
+        }
 
-        fi1 = atan2( b1, c1 );
-        fi2 = -fi1;
+        if( i < sample_size )
+            continue;
+
+        // find 1 or 3 fundamental matrix out of the 7 point correspondences
+        n = icvFMatrix_7Point( ms0, ms1, ff );
+        
+        if( n < 1 || n > 3 )
+            continue;
+
+        // for each matrix calculate the backprojection error
+        // (distance to the corresponding epipolar lines) for each point and thus find
+        // the number of in-liers.
+        for( k = 0; k < n; k++ )
+        {
+            const double* f = ff + k*9;
+            int good_count = 0;
+
+            for( i = 0; i < count; i++ )
+            {
+                double d0, d1, s;
+
+                double a = f[0]*m0[i].x + f[1]*m0[i].y + f[2];
+                double b = f[3]*m0[i].x + f[4]*m0[i].y + f[5];
+                double c = f[6]*m0[i].x + f[7]*m0[i].y + f[8];
+
+                s = 1./(a*a + b*b);
+                d1 = m1[i].x*a + m1[i].y*b + c;
+                d1 = s*d1*d1;
+
+                a = f[0]*m1[i].x + f[3]*m1[i].y + f[6];
+                b = f[1]*m1[i].x + f[4]*m1[i].y + f[7];
+                c = f[2]*m1[i].x + f[5]*m1[i].y + f[8];
+
+                s = 1./(a*a + b*b);
+                d0 = m0[i].x*a + m0[i].y*b + c;
+                d0 = s*d0*d0;
+
+                curr_mask[i] = d1 < threshold && d0 < threshold;
+                good_count += curr_mask[i];
+
+                dist[i] = (float)(d0 + d1);
+            }
+
+            icvSortDistances( (int*)dist, count, 0 );
+            median = (double)dist[count/2];
+
+            if( median < least_median )
+            {
+                double ep, t;
+                int new_max_samples;
+                
+                // update the current best fundamental matrix and "goodness" flags
+                if( mask )
+                    memcpy( mask, curr_mask, count );
+                memcpy( fmatrix, f, 9*sizeof(f[0]));
+                least_median = median;
+                best_good_count = good_count;
+
+                // try to update (decrease) <max_samples>
+                ep = (double)(count - good_count)/count;
+                t = log(1. - p);
+                new_max_samples = cvRound(t/log(1. - pow(ep, 7.)));
+
+                max_samples = MIN( new_max_samples, max_samples );
+            }
+        }
+    }
+
+    if( best_good_count < 7 )
+        EXIT;
+
+    result = 1;
+
+    // optionally, use 8-point algorithm to compute fundamental matrix using only the in-liers
+    if( best_good_count >= 8 && use_8point )
+        result = icvFMatrix_8Point( m0, m1, mask, count, fmatrix );
+
+    __END__;
+
+    cvFree( (void**)&temp_mask );
+    cvFree( (void**)&curr_mask );
+    cvFree( (void**)&dist );
+
+    return result;
+}
+
+
+CV_IMPL int
+cvFindFundamentalMat( const CvMat* points0, const CvMat* points1,
+                      CvMat* fmatrix, int method,
+                      double param1, double param2, CvMat* status )
+{
+    const unsigned rng_seed = 0xffffffff;
+    int result = 0;
+    int pt_alloc_flag[2] = { 0, 0 };
+    int i, k;
+    CvPoint2D64f* pt[2] = { 0, 0 };
+    CvMat* _status = 0;
+
+    CV_FUNCNAME( "cvFindFundamentalMat" );
+
+    __BEGIN__;
+
+    int count, dims;
+    int depth, cn;
+    uchar* status_data = 0;
+    double fmatrix_data0[9*3];
+    double* fmatrix_data = 0;
+
+    if( !CV_IS_MAT(points0) )
+        CV_ERROR( !points0 ? CV_StsNullPtr : CV_StsBadArg, "points0 is not a valid matrix" );
+
+    if( !CV_IS_MAT(points1) )
+        CV_ERROR( !points1 ? CV_StsNullPtr : CV_StsBadArg, "points1 is not a valid matrix" );
+
+    if( !CV_ARE_TYPES_EQ(points0, points1) )
+        CV_ERROR( CV_StsUnmatchedFormats, "The matrices of points should have the same data type" );
+
+    if( !CV_ARE_SIZES_EQ(points0, points1) )
+        CV_ERROR( CV_StsUnmatchedSizes, "The matrices of points should have the same size" );
+
+    depth = CV_MAT_DEPTH(points0->type);
+    cn = CV_MAT_CN(points0->type);
+    if( depth != CV_32S && depth != CV_32F && depth != CV_64F || cn != 1 && cn != 2 && cn != 3 )
+        CV_ERROR( CV_StsUnsupportedFormat, "The format of point matrices is unsupported" );
+
+    if( points0->rows > points0->cols )
+    {
+        dims = cn*points0->cols;
+        count = points0->rows;
     }
     else
     {
-
-        c1 = q / 2 + sqrt( D );
-        c2 = q / 2 - sqrt( D );
-        b1 = 0;
-        b2 = 0;
-
-        ro1 = fabs( c1 );
-        ro2 = fabs( c2 );
-        fi1 = CV_PI * (1 - SIGN( c1 )) / 2;
-        fi2 = CV_PI * (1 - SIGN( c2 )) / 2;
-    }                           /* if */
-
-    for( i = 0; i < 6; i++ )
-    {
-
-        x[i][0] = -a2 / 3;
-        x[i][1] = 0;
-        x[i][2] = 0;
-
-        squares[i] = x[i][i % 2];
-    }                           /* for */
-
-    if( !REAL_ZERO( ro1 ))
-    {
-        c1 = SIGN( ro1 ) * pow( fabs( ro1 ), 1. / 3 );
-        c1 -= SIGN( ro1 ) * p / 3. * pow( fabs( ro1 ), -1. / 3 );
-
-        c2 = SIGN( ro1 ) * pow( fabs( ro1 ), 1. / 3 );
-        c2 += SIGN( ro1 ) * p / 3. * pow( fabs( ro1 ), -1. / 3 );
-    }                           /* if */
-
-    if( !REAL_ZERO( ro2 ))
-    {
-        b1 = SIGN( ro2 ) * pow( fabs( ro2 ), 1. / 3 );
-        b1 -= SIGN( ro2 ) * p / 3. * pow( fabs( ro2 ), -1. / 3 );
-
-        b2 = SIGN( ro2 ) * pow( fabs( ro2 ), 1. / 3 );
-        b2 += SIGN( ro2 ) * p / 3. * pow( fabs( ro2 ), -1. / 3 );
+        if( points0->rows > 1 && cn > 1 || points0->rows == 1 && cn == 1 )
+            CV_ERROR( CV_StsBadSize, "The point matrices do not have a proper layout (2xn, 3xn, nx2 or nx3)" );
+        dims = cn * points0->rows;
+        count = points0->cols;
     }
 
-    for( i = 0; i < 6; i++ )
+    if( dims != 2 && dims != 3 )
+        CV_ERROR( CV_StsOutOfRange, "The dimensionality of points must be 2 or 3" );
+
+    if( method == CV_FM_7POINT && count != 7 ||
+        method != CV_FM_7POINT && count < 7 + (method == CV_FM_8POINT) )
+        CV_ERROR( CV_StsOutOfRange,
+        "The number of points must be 7 for 7-point algorithm, "
+        ">=8 for 8-point algorithm and >=7 for other algorithms" );
+
+    if( !CV_IS_MAT(fmatrix) )
+        CV_ERROR( !fmatrix ? CV_StsNullPtr : CV_StsBadArg, "fmatrix is not a valid matrix" );
+
+    if( CV_MAT_TYPE(fmatrix->type) != CV_32FC1 && CV_MAT_TYPE(fmatrix->type) != CV_64FC1 )
+        CV_ERROR( CV_StsUnsupportedFormat, "fundamental matrix must have 32fC1 or 64fC1 type" );
+
+    if( fmatrix->cols != 3 || (fmatrix->rows != 3 && (method != CV_FM_7POINT || fmatrix->rows != 9)))
+        CV_ERROR( CV_StsBadSize, "fundamental matrix must be 3x3 or 3x9 (for 7-point method only)" );
+
+    fmatrix_data = fmatrix->data.db;
+    if( !CV_IS_MAT_CONT(fmatrix->type) || CV_MAT_TYPE(fmatrix->type) != CV_64FC1 ||
+        method == CV_FM_7POINT && fmatrix->rows != 9 )
+        fmatrix_data = fmatrix_data0;
+
+    if( status )
     {
+        if( !CV_IS_MAT(status) )
+            CV_ERROR( CV_StsBadArg, "The output status is not a valid matrix" );
 
-        if( i < 3 )
+        if( status->cols != 1 && status->rows != 1 || status->cols + status->rows - 1 != count )
+            CV_ERROR( CV_StsUnmatchedSizes,
+            "The status matrix must have the same size as the point matrices" );
+
+        if( method == CV_FM_7POINT || method == CV_FM_8POINT )
+            cvSet( status, cvScalarAll(1.) );
+        else
         {
-
-            if( !REAL_ZERO( ro1 ))
+            status_data = status->data.ptr;
+            if( !CV_IS_MAT_CONT(status->type) || !CV_IS_MASK_ARR(status) )
             {
-
-                x[i][0] = cos( fi1 / 3. + 2 * CV_PI * (i % 3) / 3. ) * c1 - a2 / 3;
-                x[i][1] = sin( fi1 / 3. + 2 * CV_PI * (i % 3) / 3. ) * c2;
+                CV_CALL( _status = cvCreateMat( status->rows, status->cols, CV_8UC1 ));
+                status_data = _status->data.ptr;
             }
-            else
-            {
+        }
+    }
 
-                //x[i][2] = 1;!!!
-            }                   /* if */
+    for( k = 0; k < 2; k++ )
+    {
+        const CvMat* spt = k == 0 ? points0 : points1;
+        CvPoint2D64f* dpt = pt[k] = (CvPoint2D64f*)spt->data.db;
+        int plane_stride, stride, elem_size;
+    
+        if( CV_IS_MAT_CONT(spt->type) && CV_MAT_DEPTH(spt->type) == CV_64F &&
+            dims == 2 && (spt->rows == 1 || spt->rows == count) )
+            continue;
+
+        elem_size = CV_ELEM_SIZE(depth);
+
+        if( spt->rows == dims )
+        {
+            plane_stride = spt->step / elem_size;
+            stride = 1;
         }
         else
         {
+            plane_stride = 1;
+            stride = spt->rows == 1 ? dims : spt->step / elem_size;
+        }
 
-            if( !REAL_ZERO( ro2 ))
-            {
+        CV_CALL( dpt = pt[k] = (CvPoint2D64f*)cvAlloc( count*sizeof(dpt[0]) ));
+        pt_alloc_flag[k] = 1;
 
-                x[i][0] = cos( fi2 / 3. + 2 * CV_PI * (i % 3) / 3. ) * b1 - a2 / 3;
-                x[i][1] = sin( fi2 / 3. + 2 * CV_PI * (i % 3) / 3. ) * b2;
-            }
-            else
-            {
-
-                //x[i][2] = 1;!!!
-            }                   /* if */
-        }                       /* if */
-    }                           /* for */
-
-    t = 0;
-
-    //int numRoots = 6;
-    for( i = 0; i < 6 && t < 6; i++ )
-    {
-
-        if( !x[i][2] )
+        if( depth == CV_32F )
         {
-
-            squares[t++] = x[i][0];
-            squares[t++] = x[i][1];
-            x[i][2] = 1;
-
-            for( j = i + 1; j < 6; j++ )
-            {/* delete equal root from rest */
-
-                if( !x[j][2] && REAL_ZERO( x[i][0] - x[j][0] )
-                    && REAL_ZERO( x[i][1] - x[j][1] ))
+            const float* xp = spt->data.fl;
+            const float* yp = xp + plane_stride;
+            const float* zp = dims == 3 ? yp + plane_stride : 0;
+            
+            for( i = 0; i < count; i++ )
+            {
+                double x = *xp, y = *yp;
+                xp += stride;
+                yp += stride;
+                if( dims == 3 )
                 {
+                    double z = *zp;
+                    zp += stride;
+                    z = z ? 1./z : 1.;
+                    x *= z;
+                    y *= z;
+                }
+                dpt[i].x = x;
+                dpt[i].y = y;
+            }
+        }
+        else
+        {
+            const double* xp = spt->data.db;
+            const double* yp = xp + plane_stride;
+            const double* zp = dims == 3 ? yp + plane_stride : 0;
+            
+            for( i = 0; i < count; i++ )
+            {
+                double x = *xp, y = *yp;
+                xp += stride;
+                yp += stride;
+                if( dims == 3 )
+                {
+                    double z = *zp;
+                    zp += stride;
+                    z = z ? 1./z : 1.;
+                    x *= z;
+                    y *= z;
+                }
+                dpt[i].x = x;
+                dpt[i].y = y;
+            }
+        }
+    }
 
-                    x[j][2] = 1;
-                    break;
-                }               /* if */
-            }                   /* for */
-        }                       /* if */
-    }                           /* for */
-    return 3;
-}                               /* icvCubic */
+    if( method == CV_FM_7POINT )
+        result = icvFMatrix_7Point( pt[0], pt[1], fmatrix_data );
+    else if( method == CV_FM_8POINT )
+        result = icvFMatrix_8Point( pt[0], pt[1], 0, count, fmatrix_data );
+    else
+    {
+        if( param1 < 0 )
+            CV_ERROR( CV_StsOutOfRange, "param1 (threshold) must be > 0" );
 
-/*=====================================================================================*/
+        if( param2 < 0 || param2 > 1 )
+            CV_ERROR( CV_StsOutOfRange, "param2 (confidence level) must be between 0 and 1" );
 
+        if( param2 == 0 || param2 == 1 )
+            param2 = 0.99;
+
+        if( method < CV_FM_RANSAC_ONLY )
+            result = icvFMatrix_LMedS( pt[0], pt[1], status_data, count, fmatrix_data,
+                                       param1, param2, rng_seed, method & CV_FM_8POINT );
+        else
+            result = icvFMatrix_RANSAC( pt[0], pt[1], status_data, count, fmatrix_data,
+                                        param1, param2, rng_seed, method & CV_FM_8POINT );
+    }
+
+    if( result && fmatrix->data.db != fmatrix_data )
+    {
+        CvMat hdr;
+        cvZero( fmatrix );
+        hdr = cvMat( MIN(fmatrix->rows, result*3), fmatrix->cols, CV_64F, fmatrix_data );
+        cvConvert( &hdr, fmatrix );
+    }
+
+    if( status && status_data && status->data.ptr != status_data )
+        cvConvert( _status, status );
+
+    __END__;
+
+    cvReleaseMat( &_status );
+    for( k = 0; k < 2; k++ )
+        if( pt_alloc_flag[k] )
+            cvFree( (void**)&pt[k] );
+
+    return result;
+}
+
+
+CV_IMPL void
+cvComputeCorrespondEpilines( const CvMat* points, int pointImageID,
+                             const CvMat* fmatrix, CvMat* lines )
+{
+    CV_FUNCNAME( "cvComputeCorrespondEpilines" );
+    
+    __BEGIN__;
+
+    int abc_stride, abc_plane_stride, abc_elem_size;
+    int plane_stride, stride, elem_size;
+    int i, dims, count, depth, cn, abc_dims, abc_count, abc_depth, abc_cn;
+    uchar *ap, *bp, *cp;
+    const uchar *xp, *yp, *zp;
+    double f[9];
+    CvMat F = cvMat( 3, 3, CV_64F, f );
+
+    if( !CV_IS_MAT(points) )
+        CV_ERROR( !points ? CV_StsNullPtr : CV_StsBadArg, "points parameter is not a valid matrix" );
+
+    depth = CV_MAT_DEPTH(points->type);
+    cn = CV_MAT_CN(points->type);
+    if( depth != CV_32F && depth != CV_64F || cn != 1 && cn != 2 && cn != 3 )
+        CV_ERROR( CV_StsUnsupportedFormat, "The format of point matrix is unsupported" );
+
+    if( points->rows > points->cols )
+    {
+        dims = cn*points->cols;
+        count = points->rows;
+    }
+    else
+    {
+        if( points->rows > 1 && cn > 1 || points->rows == 1 && cn == 1 )
+            CV_ERROR( CV_StsBadSize, "The point matrix does not have a proper layout (2xn, 3xn, nx2 or nx3)" );
+        dims = cn * points->rows;
+        count = points->cols;
+    }
+
+    if( dims != 2 && dims != 3 )
+        CV_ERROR( CV_StsOutOfRange, "The dimensionality of points must be 2 or 3" );
+
+    if( !CV_IS_MAT(fmatrix) )
+        CV_ERROR( !fmatrix ? CV_StsNullPtr : CV_StsBadArg, "fmatrix is not a valid matrix" );
+
+    if( CV_MAT_TYPE(fmatrix->type) != CV_32FC1 && CV_MAT_TYPE(fmatrix->type) != CV_64FC1 )
+        CV_ERROR( CV_StsUnsupportedFormat, "fundamental matrix must have 32fC1 or 64fC1 type" );
+
+    if( fmatrix->cols != 3 || fmatrix->rows != 3 )
+        CV_ERROR( CV_StsBadSize, "fundamental matrix must be 3x3" );
+
+    if( !CV_IS_MAT(lines) )
+        CV_ERROR( !lines ? CV_StsNullPtr : CV_StsBadArg, "lines parameter is not a valid matrix" );
+
+    abc_depth = CV_MAT_DEPTH(lines->type);
+    abc_cn = CV_MAT_CN(lines->type);
+    if( abc_depth != CV_32F && abc_depth != CV_64F || abc_cn != 1 && abc_cn != 3 )
+        CV_ERROR( CV_StsUnsupportedFormat, "The format of the matrix of lines is unsupported" );
+
+    if( lines->rows > lines->cols )
+    {
+        abc_dims = abc_cn*lines->cols;
+        abc_count = lines->rows;
+    }
+    else
+    {
+        if( lines->rows > 1 && abc_cn > 1 || lines->rows == 1 && abc_cn == 1 )
+            CV_ERROR( CV_StsBadSize, "The lines matrix does not have a proper layout (3xn or nx3)" );
+        abc_dims = abc_cn * lines->rows;
+        abc_count = lines->cols;
+    }
+
+    if( abc_dims != 3 )
+        CV_ERROR( CV_StsOutOfRange, "The lines matrix does not have a proper layout (3xn or nx3)" );
+
+    if( abc_count != count )
+        CV_ERROR( CV_StsUnmatchedSizes, "The numbers of points and lines are different" );
+
+    elem_size = CV_ELEM_SIZE(depth);
+    abc_elem_size = CV_ELEM_SIZE(abc_depth);
+
+    if( points->rows == dims )
+    {
+        plane_stride = points->step;
+        stride = elem_size;
+    }
+    else
+    {
+        plane_stride = elem_size;
+        stride = points->rows == 1 ? dims*elem_size : points->step;
+    }
+
+    if( lines->rows == 3 )
+    {
+        abc_plane_stride = lines->step;
+        abc_stride = abc_elem_size;
+    }
+    else
+    {
+        abc_plane_stride = abc_elem_size;
+        abc_stride = lines->rows == 1 ? 3*abc_elem_size : lines->step;
+    }
+
+    CV_CALL( cvConvert( fmatrix, &F ));
+    if( pointImageID == 2 )
+        cvTranspose( &F, &F );
+    
+    xp = points->data.ptr;
+    yp = xp + plane_stride;
+    zp = dims == 3 ? yp + plane_stride : 0;
+
+    ap = lines->data.ptr;
+    bp = ap + abc_plane_stride;
+    cp = bp + abc_plane_stride;
+        
+    for( i = 0; i < count; i++ )
+    {
+        double x, y, z = 1.;
+        double a, b, c, nu;
+
+        if( depth == CV_32F )
+        {
+            x = *(float*)xp; y = *(float*)yp;
+            if( zp )
+                z = *(float*)zp, zp += stride;
+        }
+        else
+        {
+            x = *(double*)xp; y = *(double*)yp;
+            if( zp )
+                z = *(double*)zp, zp += stride;
+        }
+
+        xp += stride; yp += stride;
+
+        a = f[0]*x + f[1]*y + f[2]*z;
+        b = f[3]*x + f[4]*y + f[5]*z;
+        c = f[6]*x + f[7]*y + f[8]*z;
+        nu = a*a + b*b;
+        nu = nu ? 1./sqrt(nu) : 1.; 
+        a *= nu; b *= nu; c *= nu;
+
+        if( abc_depth == CV_32F )
+        {
+            *(float*)ap = (float)a;
+            *(float*)bp = (float)b;
+            *(float*)cp = (float)c;
+        }
+        else
+        {
+            *(double*)ap = a;
+            *(double*)bp = b;
+            *(double*)cp = c;
+        }
+
+        ap += abc_stride;
+        bp += abc_stride;
+        cp += abc_stride;
+    }
+
+    __END__;
+}
+
+
+CV_IMPL void
+cvConvertPointsHomogenious( const CvMat* src, CvMat* dst )
+{
+    CvMat* temp = 0;
+    CvMat* denom = 0;
+
+    CV_FUNCNAME( "cvConvertPointsHomogenious" );
+
+    __BEGIN__;
+    
+    int i, s_count, s_dims, d_count, d_dims;
+    CvMat _src, _dst, _ones;
+    CvMat* ones = 0;
+
+    if( !CV_IS_MAT(src) )
+        CV_ERROR( !src ? CV_StsNullPtr : CV_StsBadArg,
+        "The input parameter is not a valid matrix" );
+
+    if( !CV_IS_MAT(dst) )
+        CV_ERROR( !dst ? CV_StsNullPtr : CV_StsBadArg,
+        "The output parameter is not a valid matrix" );
+
+    if( src == dst || src->data.ptr == dst->data.ptr )
+    {
+        if( src != dst && (!CV_ARE_TYPES_EQ(src, dst) || !CV_ARE_SIZES_EQ(src,dst)) )
+            CV_ERROR( CV_StsBadArg, "Invalid inplace operation" );
+        EXIT;
+    }
+
+    if( src->rows > src->cols )
+    {
+        if( !((src->cols > 1) ^ (CV_MAT_CN(src->type) > 1)) )
+            CV_ERROR( CV_StsBadSize, "Either the number of channels or columns or rows must be =1" );
+
+        s_dims = CV_MAT_CN(src->type)*src->cols;
+        s_count = src->rows;
+    }
+    else
+    {
+        if( !((src->rows > 1) ^ (CV_MAT_CN(src->type) > 1)) )
+            CV_ERROR( CV_StsBadSize, "Either the number of channels or columns or rows must be =1" );
+
+        s_dims = CV_MAT_CN(src->type)*src->rows;
+        s_count = src->cols;
+    }
+
+    if( src->rows == 1 || src->cols == 1 )
+        src = cvReshape( src, &_src, 1, s_count );
+
+    if( dst->rows > dst->cols )
+    {
+        if( !((dst->cols > 1) ^ (CV_MAT_CN(dst->type) > 1)) )
+            CV_ERROR( CV_StsBadSize,
+            "Either the number of channels or columns or rows in the input matrix must be =1" );
+
+        d_dims = CV_MAT_CN(dst->type)*dst->cols;
+        d_count = dst->rows;
+    }
+    else
+    {
+        if( !((dst->rows > 1) ^ (CV_MAT_CN(dst->type) > 1)) )
+            CV_ERROR( CV_StsBadSize,
+            "Either the number of channels or columns or rows in the output matrix must be =1" );
+
+        d_dims = CV_MAT_CN(dst->type)*dst->rows;
+        d_count = dst->cols;
+    }
+
+    if( dst->rows == 1 || dst->cols == 1 )
+        dst = cvReshape( dst, &_dst, 1, d_count );
+
+    if( s_count != d_count )
+        CV_ERROR( CV_StsUnmatchedSizes, "Both matrices must have the same number of points" );
+
+    if( CV_MAT_DEPTH(src->type) < CV_32F || CV_MAT_DEPTH(dst->type) < CV_32F )
+        CV_ERROR( CV_StsUnsupportedFormat,
+        "Both matrices must be floating-point (single or double precision)" );
+
+    if( s_dims < 2 || s_dims > 4 || d_dims < 2 || d_dims > 4 )
+        CV_ERROR( CV_StsOutOfRange,
+        "Both input and output point dimensionality must be 2, 3 or 4" );
+
+    if( s_dims < d_dims - 1 || s_dims > d_dims + 1 )
+        CV_ERROR( CV_StsUnmatchedSizes,
+        "The dimensionalities of input and output point sets differ too much" );
+
+    if( s_dims == d_dims - 1 )
+    {
+        if( d_count == dst->rows )
+        {
+            ones = cvGetSubRect( dst, &_ones, cvRect( s_dims, 0, 1, d_count ));
+            dst = cvGetSubRect( dst, &_dst, cvRect( 0, 0, s_dims, d_count ));
+        }
+        else
+        {
+            ones = cvGetSubRect( dst, &_ones, cvRect( 0, s_dims, d_count, 1 ));
+            dst = cvGetSubRect( dst, &_dst, cvRect( 0, 0, d_count, s_dims ));
+        }
+    }
+
+    if( s_dims <= d_dims )
+    {
+        if( src->rows == dst->rows && src->cols == dst->cols )
+        {
+            if( CV_ARE_TYPES_EQ( src, dst ) )
+                cvCopy( src, dst );
+            else
+                cvConvert( src, dst );
+        }
+        else
+        {
+            if( !CV_ARE_TYPES_EQ( src, dst ))
+            {
+                CV_CALL( temp = cvCreateMat( src->rows, src->cols, dst->type ));
+                cvConvert( src, temp );
+                src = temp;
+            }
+            cvTranspose( src, dst );
+        }
+        
+        if( ones )
+            cvSet( ones, cvRealScalar(1.) );
+    }
+    else
+    {
+        int s_plane_stride, s_stride, d_plane_stride, d_stride, elem_size;
+        
+        if( !CV_ARE_TYPES_EQ( src, dst ))
+        {
+            CV_CALL( temp = cvCreateMat( src->rows, src->cols, dst->type ));
+            cvConvert( src, temp );
+            src = temp;
+        }
+
+        elem_size = CV_ELEM_SIZE(src->type);
+
+        if( s_count == src->cols )
+            s_plane_stride = src->step / elem_size, s_stride = 1;
+        else
+            s_stride = src->step / elem_size, s_plane_stride = 1;
+
+        if( d_count == dst->cols )
+            d_plane_stride = dst->step / elem_size, d_stride = 1;
+        else
+            d_stride = dst->step / elem_size, d_plane_stride = 1;
+
+        CV_CALL( denom = cvCreateMat( 1, d_count, dst->type ));
+
+        if( CV_MAT_DEPTH(dst->type) == CV_32F )
+        {
+            const float* xs = src->data.fl;
+            const float* ys = xs + s_plane_stride;
+            const float* zs = 0;
+            const float* ws = xs + (s_dims - 1)*s_plane_stride;
+
+            float* iw = denom->data.fl;
+
+            float* xd = dst->data.fl;
+            float* yd = xd + d_plane_stride;
+            float* zd = 0;
+
+            if( d_dims == 3 )
+            {
+                zs = ys + s_plane_stride;
+                zd = yd + d_plane_stride;
+            }
+
+            for( i = 0; i < d_count; i++, ws += s_stride )
+            {
+                float t = *ws;
+                iw[i] = t ? t : 1.f;
+            }
+
+            cvDiv( 0, denom, denom );
+            
+            if( d_dims == 3 )
+                for( i = 0; i < d_count; i++ )
+                {
+                    float w = iw[i];
+                    float x = *xs * w, y = *ys * w, z = *zs * w;
+                    xs += s_stride; ys += s_stride; zs += s_stride;
+                    *xd = x; *yd = y; *zd = z;
+                    xd += d_stride; yd += d_stride; zd += d_stride;
+                }
+            else
+                for( i = 0; i < d_count; i++ )
+                {
+                    float w = iw[i];
+                    float x = *xs * w, y = *ys * w;
+                    xs += s_stride; ys += s_stride;
+                    *xd = x; *yd = y;
+                    xd += d_stride; yd += d_stride;
+                }
+        }
+        else
+        {
+            const double* xs = src->data.db;
+            const double* ys = xs + s_plane_stride;
+            const double* zs = 0;
+            const double* ws = xs + (s_dims - 1)*s_plane_stride;
+
+            double* iw = denom->data.db;
+
+            double* xd = dst->data.db;
+            double* yd = xd + d_plane_stride;
+            double* zd = 0;
+
+            if( d_dims == 3 )
+            {
+                zs = ys + s_plane_stride;
+                zd = yd + d_plane_stride;
+            }
+
+            for( i = 0; i < d_count; i++, ws += s_stride )
+            {
+                double t = *ws;
+                iw[i] = t ? t : 1.;
+            }
+
+            cvDiv( 0, denom, denom );
+            
+            if( d_dims == 3 )
+                for( i = 0; i < d_count; i++ )
+                {
+                    double w = iw[i];
+                    double x = *xs * w, y = *ys * w, z = *zs * w;
+                    xs += s_stride; ys += s_stride; zs += s_stride;
+                    *xd = x; *yd = y; *zd = z;
+                    xd += d_stride; yd += d_stride; zd += d_stride;
+                }
+            else
+                for( i = 0; i < d_count; i++ )
+                {
+                    double w = iw[i];
+                    double x = *xs * w, y = *ys * w;
+                    xs += s_stride; ys += s_stride;
+                    *xd = x; *yd = y;
+                    xd += d_stride; yd += d_stride;
+                }
+        }
+    }
+
+    __END__;
+
+    cvReleaseMat( &denom );
+    cvReleaseMat( &temp );
+}
+
+/* End of file. */

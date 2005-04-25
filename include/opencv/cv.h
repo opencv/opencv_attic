@@ -613,7 +613,6 @@ CVAPI(CvSubdiv2D*)  cvCreateSubdiv2D( int subdiv_type, int header_size,
 /************************* high-level subdivision functions ***************************/
 
 /* Simplified Delaunay diagram creation */
-CV_INLINE  CvSubdiv2D* cvCreateSubdivDelaunay2D( CvRect rect, CvMemStorage* storage );
 CV_INLINE  CvSubdiv2D* cvCreateSubdivDelaunay2D( CvRect rect, CvMemStorage* storage )
 {
     CvSubdiv2D* subdiv = cvCreateSubdiv2D( CV_SEQ_KIND_SUBDIV2D, sizeof(*subdiv),
@@ -649,26 +648,22 @@ CVAPI(CvSubdiv2DPoint*) cvFindNearestPoint2D( CvSubdiv2D* subdiv, CvPoint2D32f p
 
 /************ Basic quad-edge navigation and operations ************/
 
-CV_INLINE  CvSubdiv2DEdge  cvSubdiv2DNextEdge( CvSubdiv2DEdge edge );
 CV_INLINE  CvSubdiv2DEdge  cvSubdiv2DNextEdge( CvSubdiv2DEdge edge )
 {
     return  CV_SUBDIV2D_NEXT_EDGE(edge);
 }
 
 
-CV_INLINE  CvSubdiv2DEdge  cvSubdiv2DRotateEdge( CvSubdiv2DEdge edge, int rotate );
 CV_INLINE  CvSubdiv2DEdge  cvSubdiv2DRotateEdge( CvSubdiv2DEdge edge, int rotate )
 {
     return  (edge & ~3) + ((edge + rotate) & 3);
 }
 
-CV_INLINE  CvSubdiv2DEdge  cvSubdiv2DSymEdge( CvSubdiv2DEdge edge );
 CV_INLINE  CvSubdiv2DEdge  cvSubdiv2DSymEdge( CvSubdiv2DEdge edge )
 {
     return edge ^ 2;
 }
 
-CV_INLINE  CvSubdiv2DEdge  cvSubdiv2DGetEdge( CvSubdiv2DEdge edge, CvNextEdgeType type );
 CV_INLINE  CvSubdiv2DEdge  cvSubdiv2DGetEdge( CvSubdiv2DEdge edge, CvNextEdgeType type )
 {
     CvQuadEdge2D* e = (CvQuadEdge2D*)(edge & ~3);
@@ -677,7 +672,6 @@ CV_INLINE  CvSubdiv2DEdge  cvSubdiv2DGetEdge( CvSubdiv2DEdge edge, CvNextEdgeTyp
 }
 
 
-CV_INLINE  CvSubdiv2DPoint*  cvSubdiv2DEdgeOrg( CvSubdiv2DEdge edge );
 CV_INLINE  CvSubdiv2DPoint*  cvSubdiv2DEdgeOrg( CvSubdiv2DEdge edge )
 {
     CvQuadEdge2D* e = (CvQuadEdge2D*)(edge & ~3);
@@ -685,7 +679,6 @@ CV_INLINE  CvSubdiv2DPoint*  cvSubdiv2DEdgeOrg( CvSubdiv2DEdge edge )
 }
 
 
-CV_INLINE  CvSubdiv2DPoint*  cvSubdiv2DEdgeDst( CvSubdiv2DEdge edge );
 CV_INLINE  CvSubdiv2DPoint*  cvSubdiv2DEdgeDst( CvSubdiv2DEdge edge )
 {
     CvQuadEdge2D* e = (CvQuadEdge2D*)(edge & ~3);
@@ -693,7 +686,6 @@ CV_INLINE  CvSubdiv2DPoint*  cvSubdiv2DEdgeDst( CvSubdiv2DEdge edge )
 }
 
 
-CV_INLINE  double  cvTriangleArea( CvPoint2D32f a, CvPoint2D32f b, CvPoint2D32f c );
 CV_INLINE  double  cvTriangleArea( CvPoint2D32f a, CvPoint2D32f b, CvPoint2D32f c )
 {
     return (b.x - a.x) * (c.y - a.y) - (b.y - a.y) * (c.x - a.x);
@@ -864,9 +856,7 @@ CVAPI(void)  cvCalcArrHist( CvArr** arr, CvHistogram* hist,
 
 CV_INLINE  void  cvCalcHist( IplImage** image, CvHistogram* hist,
                              int accumulate CV_DEFAULT(0),
-                             const CvArr* mask CV_DEFAULT(NULL) );
-CV_INLINE  void  cvCalcHist( IplImage** image, CvHistogram* hist,
-                             int accumulate, const CvArr* mask )
+                             const CvArr* mask CV_DEFAULT(NULL) )
 {
     cvCalcArrHist( (CvArr**)image, hist, accumulate, mask );
 }
@@ -1051,111 +1041,61 @@ CVAPI(int) cvRunHaarClassifierCascade( CvHaarClassifierCascade* cascade,
 *                     Camera Calibration and Rectification functions                     *
 \****************************************************************************************/
 
-/* The function corrects radial and tangential image distortion using known
-   matrix of the camera intrinsic parameters and distortion coefficients */
-CVAPI(void)  cvUnDistortOnce( const CvArr* src, CvArr* dst,
-                              const float* intrinsic_matrix,
-                              const float* distortion_coeffs,
-                              int interpolate CV_DEFAULT(1) );
+/* transforms the input image to compensate lens distortion */
+CVAPI(void) cvUndistort2( const CvArr* src, CvArr* dst,
+                          const CvMat* intrinsic_matrix,
+                          const CvMat* distortion_coeffs );
 
-/* The function calculates map of distorted points indices and
-   interpolation coefficients for cvUnDistort function using known
-   matrix of the camera intrinsic parameters and distortion coefficients */
-CVAPI(void)  cvUnDistortInit( const CvArr* src, CvArr* undistortion_map,
-                              const float* intrinsic_matrix,
-                              const float* distortion_coeffs,
-                              int interpolate CV_DEFAULT(1) );
+/* computes transformation map from intrinsic camera parameters
+   that can used by cvRemap */
+CVAPI(void) cvInitUndistortMap( const CvMat* intrinsic_matrix,
+                                const CvMat* distortion_coeffs,
+                                CvArr* mapx, CvArr* mapy );
 
-/* The function corrects radial and tangential image distortion
-   using previousely calculated (via cvUnDistortInit) map */
-CVAPI(void)  cvUnDistort( const CvArr* src, CvArr* dst, const CvArr* undistortion_map,
-                          int interpolate CV_DEFAULT(1));
+/* converts rotation vector to rotation matrix or vice versa */
+CVAPI(int) cvRodrigues2( const CvMat* src, CvMat* dst,
+                         CvMat* jacobian CV_DEFAULT(0) );
 
-/* The function converts floating-point pixel coordinate map to
-   faster fixed-point map, used by cvUnDistort (cvRemap) */
-CVAPI(void)  cvConvertMap( const CvArr* src, const CvArr* map_xy,
-                           CvArr* map_fast, int iterpolate CV_DEFAULT(1) );
+/* finds perspective transformation between the object plane and image (view) plane */
+CVAPI(void) cvFindHomography( const CvMat* src_points,
+                              const CvMat* dst_points,
+                              CvMat* homography );
 
-/* Calibrates camera using multiple views of calibration pattern */
-CVAPI(void)  cvCalibrateCamera( int           image_count,
-                                int*          point_counts,
-                                CvSize        image_size,
-                                CvPoint2D32f* image_points,
-                                CvPoint3D32f* object_points,
-                                CvVect32f     distortion_coeffs,
-                                CvMatr32f     camera_matrix,
-                                CvVect32f     translation_vectors,
-                                CvMatr32f     rotation_matrixes,
-                                int           use_intrinsic_guess);
+/* projects object points to the view plane using
+   the specified extrinsic and intrinsic camera parameters */
+CVAPI(void) cvProjectPoints2( const CvMat* object_points, const CvMat* rotation_vector,
+                              const CvMat* translation_vector, const CvMat* intrinsic_matrix,
+                              const CvMat* distortion_coeffs, CvMat* image_points,
+                              CvMat* dpdrot CV_DEFAULT(NULL), CvMat* dpdt CV_DEFAULT(NULL),
+                              CvMat* dpdf CV_DEFAULT(NULL), CvMat* dpdc CV_DEFAULT(NULL),
+                              CvMat* dpddist CV_DEFAULT(NULL) );
 
-/* Variant of the previous function that takes double-precision parameters */
-CVAPI(void)  cvCalibrateCamera_64d( int           image_count,
-                                    int*          point_counts,
-                                    CvSize        image_size,
-                                    CvPoint2D64f* image_points,
-                                    CvPoint3D64f* object_points,
-                                    CvVect64d     distortion_coeffs,
-                                    CvMatr64d     camera_matrix,
-                                    CvVect64d     translation_vectors,
-                                    CvMatr64d     rotation_matrixes,
-                                    int           use_intrinsic_guess);
+/* finds extrinsic camera parameters from
+   a few known corresponding point pairs and intrinsic parameters */
+CVAPI(void) cvFindExtrinsicCameraParams2( const CvMat* object_points,
+                                          const CvMat* image_points,
+                                          const CvMat* intrinsic_matrix,
+                                          const CvMat* distortion_coeffs,
+                                          CvMat* rotation_vector,
+                                          CvMat* translation_vector );
 
-/* Find 3d position of object given intrinsic camera parameters,
-   3d model of the object and projection of the object into view plane */
-CVAPI(void)  cvFindExtrinsicCameraParams( int           point_count,
-                                          CvSize        image_size,
-                                          CvPoint2D32f* image_points,
-                                          CvPoint3D32f* object_points,
-                                          CvVect32f     focal_length,
-                                          CvPoint2D32f  principal_point,
-                                          CvVect32f     distortion_coeffs,
-                                          CvVect32f     rotation_vector,
-                                          CvVect32f     translation_vector);
+#define CV_CALIB_USE_INTRINSIC_GUESS  1
+#define CV_CALIB_FIX_ASPECT_RATIO     2
+#define CV_CALIB_FIX_PRINCIPAL_POINT  4
+#define CV_CALIB_ZERO_TANGENT_DIST    8
 
-/* Variant of the previous function that takes double-precision parameters */
-CVAPI(void)  cvFindExtrinsicCameraParams_64d( int           point_count,
-                                              CvSize        image_size,
-                                              CvPoint2D64f* image_points,
-                                              CvPoint3D64f* object_points,
-                                              CvVect64d     focal_length,
-                                              CvPoint2D64f  principal_point,
-                                              CvVect64d     distortion_coeffs,
-                                              CvVect64d     rotation_vector,
-                                              CvVect64d     translation_vector);
+/* finds intrinsic and extrinsic camera parameters
+   from a few views of known calibration pattern */
+CVAPI(void) cvCalibrateCamera2( const CvMat* object_points,
+                                const CvMat* image_points,
+                                const CvMat* point_counts,
+                                CvSize image_size,
+                                CvMat* intrinsic_matrix,
+                                CvMat* distortion_coeffs,
+                                CvMat* rotation_vectors CV_DEFAULT(NULL),
+                                CvMat* translation_vectors CV_DEFAULT(NULL),
+                                int flags CV_DEFAULT(0) );
 
-
-/* Rodrigues transform */
-#define CV_RODRIGUES_M2V  0
-#define CV_RODRIGUES_V2M  1
-
-/* Converts rotation_matrix matrix to rotation_matrix vector or vice versa */
-CVAPI(void)  cvRodrigues( CvMat* rotation_matrix, CvMat* rotation_vector,
-                          CvMat* jacobian, int conv_type);
-
-/* Does reprojection of 3d object points to the view plane */
-CVAPI(void)  cvProjectPoints( int             point_count,
-                              CvPoint3D64f*   object_points,
-                              CvVect64d       rotation_vector,
-                              CvVect64d       translation_vector,
-                              CvVect64d       focal_length,
-                              CvPoint2D64f    principal_point,
-                              CvVect64d       distortion,
-                              CvPoint2D64f*   image_points,
-                              CvVect64d       deriv_points_rotation_matrix,
-                              CvVect64d       deriv_points_translation_vect,
-                              CvVect64d       deriv_points_focal,
-                              CvVect64d       deriv_points_principal_point,
-                              CvVect64d       deriv_points_distortion_coeffs);
-
-/* Simpler version of the previous function */
-CVAPI(void) cvProjectPointsSimple( int point_count,
-                                  CvPoint3D64f * object_points,
-                                  CvVect64d rotation_matrix,
-                                  CvVect64d translation_vector,
-                                  CvMatr64d camera_matrix,
-                                  CvVect64d distortion,
-                                  CvPoint2D64f* image_points);
-                                    
 /* Detects corners on a chess-board */
 CVAPI(int)  cvFindChessBoardCornerGuesses( const CvArr* image, CvArr* thresh,
                                            CvMemStorage* storage, CvSize board_size,
@@ -1181,19 +1121,21 @@ CVAPI(void)  cvReleasePOSITObject( CvPOSITObject**  posit_object );
 /****************************************************************************************\
 *                                 Epipolar Geometry                                      *
 \****************************************************************************************/
-CVAPI(void) cvMake2DPoints( CvMat* src, CvMat* dst );
-CVAPI(void) cvMake3DPoints( CvMat* src, CvMat* dst );
-CVAPI(int) cvSolveCubic( CvMat* coeffs, CvMat* roots );
+
+CVAPI(void) cvConvertPointsHomogenious( const CvMat* src, CvMat* dst );
 
 /* Calculates fundamental matrix given a set of corresponding points */
 #define CV_FM_7POINT 1
 #define CV_FM_8POINT 2
-#define CV_FM_RANSAC 3
-#define CV_FM_LMEDS  4 
-CVAPI(int) cvFindFundamentalMat( CvMat* points1, CvMat* points2,
-                                 CvMat* fundamental_matrix, int method,
-                                 double param1, double param2,
-                                 CvMat* status CV_DEFAULT(0) );
+#define CV_FM_LMEDS_ONLY  4
+#define CV_FM_RANSAC_ONLY 8
+#define CV_FM_LMEDS (CV_FM_LMEDS_ONLY + CV_FM_8POINT)
+#define CV_FM_RANSAC (CV_FM_RANSAC_ONLY + CV_FM_8POINT)
+CVAPI(int) cvFindFundamentalMat( const CvMat* points1, const CvMat* points2,
+                                 CvMat* fundamental_matrix,
+                                 int method CV_DEFAULT(CV_FM_RANSAC),
+                                 double param1 CV_DEFAULT(1.), double param2 CV_DEFAULT(0.99),
+                                 CvMat* status CV_DEFAULT(NULL) );
 
 /* For each input point on one of images
    computes parameters of the corresponding

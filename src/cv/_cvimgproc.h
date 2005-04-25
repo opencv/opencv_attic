@@ -184,4 +184,17 @@ int icvIPPFilterNextStripe( const CvMat* src, CvMat* temp, int y,
 int icvIPPSepFilter( const CvMat* src, CvMat* dst, const CvMat* kernelX,
                      const CvMat* kernelY, CvPoint anchor );
 
+#define ICV_WARP_SHIFT          10
+#define ICV_WARP_MASK           ((1 << ICV_WARP_SHIFT) - 1)
+
+#define ICV_LINEAR_TAB_SIZE     (ICV_WARP_MASK+1)
+extern float icvLinearCoeffs[(ICV_LINEAR_TAB_SIZE+1)*2];
+void icvInitLinearCoeffTab();
+
+#define ICV_CUBIC_TAB_SIZE   (ICV_WARP_MASK+1)
+extern float icvCubicCoeffs[(ICV_CUBIC_TAB_SIZE+1)*2];
+
+void icvInitCubicCoeffTab();
+
+
 #endif /*_CV_INTERNAL_H_*/

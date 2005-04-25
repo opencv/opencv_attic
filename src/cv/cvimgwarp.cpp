@@ -50,8 +50,6 @@
 
 /************** interpolation constants and tables ***************/
 
-#define ICV_WARP_SHIFT          10
-#define ICV_WARP_MASK           ((1 << ICV_WARP_SHIFT) - 1)
 #define ICV_WARP_MUL_ONE_8U(x)  ((x) << ICV_WARP_SHIFT)
 #define ICV_WARP_DESCALE_8U(x)  CV_DESCALE((x), ICV_WARP_SHIFT*2)
 #define ICV_WARP_CLIP_X(x)      ((unsigned)(x) < (unsigned)ssize.width ? \
@@ -59,10 +57,9 @@
 #define ICV_WARP_CLIP_Y(y)      ((unsigned)(y) < (unsigned)ssize.height ? \
                                 (y) : (y) < 0 ? 0 : ssize.height - 1)
 
-#define ICV_LINEAR_TAB_SIZE     (ICV_WARP_MASK+1)
-static float icvLinearCoeffs[(ICV_LINEAR_TAB_SIZE+1)*2];
+float icvLinearCoeffs[(ICV_LINEAR_TAB_SIZE+1)*2];
 
-static void icvInitLinearCoeffTab()
+void icvInitLinearCoeffTab()
 {
     static int inittab = 0;
     if( !inittab )
@@ -79,10 +76,9 @@ static void icvInitLinearCoeffTab()
 }
 
 
-#define ICV_CUBIC_TAB_SIZE   (ICV_WARP_MASK+1)
-static float icvCubicCoeffs[(ICV_CUBIC_TAB_SIZE+1)*2];
+float icvCubicCoeffs[(ICV_CUBIC_TAB_SIZE+1)*2];
 
-static void icvInitCubicCoeffTab()
+void icvInitCubicCoeffTab()
 {
     static int inittab = 0;
     if( !inittab )
@@ -1151,10 +1147,10 @@ cvWarpAffine( const CvArr* srcarr, CvArr* dstarr, const CvMat* matrix,
             if( flags & CV_WARP_FILL_OUTLIERS )
                 cvSet( dst, fillval );
 
-            IPPI_CALL( ipp_func( src->data.ptr, ssize, srcstep, srcroi,
-                                 dst->data.ptr, dststep, dstroi,
-                                 dstAb.data.db, 1 << method ));
-            EXIT;
+            if( ipp_func( src->data.ptr, ssize, srcstep, srcroi,
+                          dst->data.ptr, dststep, dstroi,
+                          dstAb.data.db, 1 << method ) >= 0 )
+                EXIT;
         }
     }
 
@@ -1607,8 +1603,8 @@ icvRemap_Bicubic_##flavor##_CnR( const arrtype* src, int srcstep, CvSize ssize, 
                          int cn, const arrtype* fillval )                       \
 {                                                                               \
     int i, j, k;                                                                \
-    ssize.width -= 2;                                                           \
-    ssize.height -= 2;                                                          \
+    ssize.width = MAX( ssize.width - 3, 0 );                                    \
+    ssize.height = MAX( ssize.height - 3, 0 );                                  \
                                                                                 \
     srcstep /= sizeof(src[0]);                                                  \
     dststep /= sizeof(dst[0]);                                                  \
