@@ -600,54 +600,6 @@ IPCVAPI_EX(CvStatus, icvDistanceTransform_5x5_8u32f_C1R,
       int dstStep, CvSize roiSize, const float* pMetrics ))
 
 /****************************************************************************************\
-*                                      Lens undistortion                                 *
-\****************************************************************************************/
-
-IPCVAPI_EX( CvStatus, icvUnDistort1_8u_C1R,
-    "ippiUnDistort1_8u_C1R", CV_PLUGINS1(CV_PLUGIN_IPPCV),
-    ( const uchar* srcImage, int srcStep,
-    uchar* dstImage, int dstStep,
-    CvSize size, const float* intrMatrix,
-    const float* distCoeffs, int interToggle ))
-
-IPCVAPI_EX( CvStatus, icvUnDistort1_8u_C3R,
-    "ippiUnDistort1_8u_C3R", CV_PLUGINS1(CV_PLUGIN_IPPCV),
-    ( const uchar* srcImage, int srcStep,
-    uchar* dstImage, int dstStep,
-    CvSize size, const float* intrMatrix,
-    const float* distCoeffs, int interToggle ))
-
-IPCVAPI_EX( CvStatus, icvUnDistortEx_8u_C1R,
-    "ippiUnDistortEx_8u_C1R", CV_PLUGINS1(CV_PLUGIN_IPPCV),
-    ( const uchar* srcImage, int srcStep,
-    uchar* dstImage, int dstStep,
-    CvSize size, const float* intrMatrix,
-    const float* distCoeffs, int interToggle ))
-
-IPCVAPI_EX( CvStatus, icvUnDistortEx_8u_C3R,
-    "ippiUnDistortEx_8u_C3R", CV_PLUGINS1(CV_PLUGIN_IPPCV),    
-    ( const uchar* srcImage, int srcStep,
-    uchar* dstImage, int dstStep,
-    CvSize size, const float* intrMatrix,
-    const float* distCoeffs, int interToggle ))
-
-IPCVAPI_EX( CvStatus, icvUnDistortInit,
-    "ippiUnDistortInit", CV_PLUGINS1(CV_PLUGIN_IPPCV),    
-    ( int srcStep, int* map, int mapStep, CvSize size,
-      const float* intrMatrix, const float* distCoeffs,
-      int interToggle, int pixSize ))
-
-IPCVAPI_EX( CvStatus, icvUnDistort_8u_C1R,
-    "ippiUnDistort_8u_C1R", CV_PLUGINS1(CV_PLUGIN_IPPCV),        
-    ( const uchar* srcImage, int srcStep, const int* map, int mapstep,
-      uchar* dstImage, int dstStep, CvSize size, int interToggle ))
-
-IPCVAPI_EX( CvStatus, icvUnDistort_8u_C3R,
-    "ippiUnDistort_8u_C3R", CV_PLUGINS1(CV_PLUGIN_IPPCV),        
-    ( const uchar* srcImage, int srcStep, const int* map, int mapstep,
-      uchar* dstImage, int dstStep, CvSize size, int interToggle ))
-
-/****************************************************************************************\
 *                               Thresholding functions                                   *
 \****************************************************************************************/
 
