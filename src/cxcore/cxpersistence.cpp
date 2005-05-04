@@ -806,7 +806,7 @@ icvYMLSkipSpaces( CvFileStorage* fs, char* ptr, int min_indent, int max_comment_
                 CV_PARSE_ERROR( "Incorrect indentation" );
             break;
         }
-        else if( *ptr == '\0' || *ptr == '\n' )
+        else if( *ptr == '\0' || *ptr == '\n' || *ptr == '\r' )
         {
             int max_size = fs->buffer_end - fs->buffer_start;
             ptr = fgets( fs->buffer_start, max_size, fs->file );
@@ -822,7 +822,7 @@ icvYMLSkipSpaces( CvFileStorage* fs, char* ptr, int min_indent, int max_comment_
             else
             {
                 int l = strlen(ptr);
-                if( ptr[l-1] != '\n' && !feof(fs->file) )
+                if( ptr[l-1] != '\n' && ptr[l-1] != '\r' && !feof(fs->file) )
                     CV_PARSE_ERROR( "Too long string or a last string w/o newline" );
             }
 
@@ -1701,7 +1701,7 @@ icvXMLSkipSpaces( CvFileStorage* fs, char* ptr, int mode )
         if( !cv_isprint(*ptr) )
         {
             int max_size = fs->buffer_end - fs->buffer_start;
-            if( *ptr != '\0' && *ptr != '\n' )
+            if( *ptr != '\0' && *ptr != '\n' && *ptr != '\r' )
                 CV_PARSE_ERROR( "Invalid character in the stream" );
             ptr = fgets( fs->buffer_start, max_size, fs->file );
             if( !ptr )
@@ -1714,7 +1714,7 @@ icvXMLSkipSpaces( CvFileStorage* fs, char* ptr, int mode )
             else
             {
                 int l = strlen(ptr);
-                if( ptr[l-1] != '\n' && !feof(fs->file) )
+                if( ptr[l-1] != '\n' && ptr[l-1] != '\r' && !feof(fs->file) )
                     CV_PARSE_ERROR( "Too long string or a last string w/o newline" );
             }
             fs->lineno++;
