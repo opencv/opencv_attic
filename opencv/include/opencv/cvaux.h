@@ -1155,27 +1155,27 @@ typedef struct CvBGStatModel
 //      first_frame   - frame from video sequence
 //      model_type – type of BG model (CV_BG_MODEL_MOG, CV_BG_MODEL_FGD,…)
 //      parameters  - (optional) if NULL the default parameters of the algorithm will be used
-CvBGStatModel* cvCreateBGStatModel( IplImage* first_frame, int model_type, void* parameters CV_DEFAULT(NULL) );
+CVAPI(CvBGStatModel*) cvCreateBGStatModel( IplImage* first_frame, int model_type, void* parameters CV_DEFAULT(NULL) );
 
 
 //  Function cvReleaseBGStatModel releases memory used by BGStatModel
 // parameters:
 //      bg_model   - pointer to CvBGStatModel structure
-void cvReleaseBGStatModel(CvBGStatModel** bg_model );
+CVAPI(void) cvReleaseBGStatModel(CvBGStatModel** bg_model );
 
 
 //  Function cvUpdateBGStatModel updates statistical model and returns number of found foreground regions
 // parameters:
 //      curr_frame  - current frame from video sequence
 //      bg_model   - pointer to CvBGStatModel structure
-int  cvUpdateBGStatModel( IplImage* curr_frame, CvBGStatModel*  bg_model );
+CVAPI(int)  cvUpdateBGStatModel( IplImage* curr_frame, CvBGStatModel*  bg_model );
 
 //  Function cvRefineForegroundMaskBySegm preforms FG post-processing based on segmentation
 //    (all pixels of the segment will be classified as FG if majority of pixels of the region are FG).
 // parameters:
 //      segments - pointer to result of segmentation (for example MeanShiftSegmentation)
 //      bg_model - pointer to CvBGStatModel structure
-void cvRefineForegroundMaskBySegm( CvSeq* segments, CvBGStatModel*  bg_model );
+CVAPI(void) cvRefineForegroundMaskBySegm( CvSeq* segments, CvBGStatModel*  bg_model );
 
 
 //default paremeters of foreground detection algorithm
@@ -1242,32 +1242,9 @@ typedef struct CvFGDStatModel
     CvFGDStatModelParams   params;
 }CvFGDStatModel;
 
-
-//  Function cvCreateFGDStatModel initializes foreground detection process
-// parameters:
-//      first_frame - frame from video sequence
-//      parameters  - (optional) if NULL default parameters of the algorithm will be used
-//      p_model     - pointer to CvFGDStatModel structure
-int  cvCreateFGDStatModel( IplImage*              first_frame,
-                           CvFGDStatModelParams*  parameters,
-                           CvFGDStatModel*        p_model );
-
-//  Function cvReleaseFGDModel releazes memory needed for foreground detection process
-// parameters:
-//      p_model     - pointer to CvFGDStatModel structure
-void cvReleaseFGDStatModel( CvFGDStatModel* stats );
-
-
-//  Function cvUpdateCvFGDStatModel updates statistical model and returns number of foreground regions
-// parameters:
-//      curr_frame  - current frame from video sequence
-//      p_model     - pointer to CvFGDStatModel structure
-int  cvUpdateFGDStatModel( IplImage*        curr_frame,
-                           CvFGDStatModel*  model );
-
-int  cvChangeDetection( IplImage*  prev_frame,
-                        IplImage*  curr_frame,
-                        IplImage*  change_mask );
+CVAPI(int)  cvChangeDetection( IplImage*  prev_frame,
+                               IplImage*  curr_frame,
+                               IplImage*  change_mask );
 
 #ifdef __cplusplus
 }
