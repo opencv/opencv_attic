@@ -40,12 +40,35 @@
 
 #include "_cvaux.h"
 
+//  Function cvCreateFGDStatModel initializes foreground detection process
+// parameters:
+//      first_frame - frame from video sequence
+//      parameters  - (optional) if NULL default parameters of the algorithm will be used
+//      p_model     - pointer to CvFGDStatModel structure
+int  cvCreateFGDStatModel( IplImage*              first_frame,
+                           CvFGDStatModelParams*  parameters,
+                           CvFGDStatModel*        p_model );
+
+//  Function cvReleaseFGDModel releazes memory needed for foreground detection process
+// parameters:
+//      p_model     - pointer to CvFGDStatModel structure
+void cvReleaseFGDStatModel( CvFGDStatModel* stats );
+
+
+//  Function cvUpdateCvFGDStatModel updates statistical model and returns number of foreground regions
+// parameters:
+//      curr_frame  - current frame from video sequence
+//      p_model     - pointer to CvFGDStatModel structure
+int  cvUpdateFGDStatModel( IplImage*        curr_frame,
+                           CvFGDStatModel*  model );
+
+
 //Function cvCreateBGStatModel creates and returns initialized BG model
 // parameters:
 //      first_frame   - frame from video sequence
 //      model_type – type of BG model (CV_BG_MODEL_FGD,…)
 //      parameters  - (optional) if NULL the default parameters of the algorithm will be used
-CvBGStatModel* cvCreateBGStatModel( IplImage* first_frame, int model_type, void* params )
+CV_IMPL CvBGStatModel* cvCreateBGStatModel( IplImage* first_frame, int model_type, void* params )
 {
     CvBGStatModel*  bg_model = NULL;
 
@@ -67,7 +90,7 @@ CvBGStatModel* cvCreateBGStatModel( IplImage* first_frame, int model_type, void*
 //  Function cvReleaseBGStatModel releases memory used by BGStatModel
 // parameters:
 //      bg_model   - pointer to CvBGStatModel structure
-void  cvReleaseBGStatModel(CvBGStatModel** bg_model )
+CV_IMPL void  cvReleaseBGStatModel(CvBGStatModel** bg_model )
 {
     CvBGStatModel* model = *bg_model;
     if( model->type == CV_BG_MODEL_FGD )
@@ -82,7 +105,7 @@ void  cvReleaseBGStatModel(CvBGStatModel** bg_model )
 // parameters:
 //      curr_frame  - current frame from video sequence
 //      bg_model   - pointer to CvBGStatModel structure
-int  cvUpdateBGStatModel( IplImage* curr_frame, CvBGStatModel*  bg_model )
+CV_IMPL int  cvUpdateBGStatModel( IplImage* curr_frame, CvBGStatModel*  bg_model )
 {
     if( bg_model->type == CV_BG_MODEL_FGD )
         return cvUpdateFGDStatModel( curr_frame, (CvFGDStatModel*)bg_model );
@@ -97,7 +120,7 @@ int  cvUpdateBGStatModel( IplImage* curr_frame, CvBGStatModel*  bg_model )
 // parameters:
 //      segments - pointer to result of segmentation (for example MeanShiftSegmentation)
 //      bg_model - pointer to CvBGStatModel structure
-void cvRefineForegroundMaskBySegm( CvSeq* segments, CvBGStatModel*  bg_model )
+CV_IMPL void cvRefineForegroundMaskBySegm( CvSeq* segments, CvBGStatModel*  bg_model )
 {
 	IplImage* tmp_image = cvCreateImage(cvSize(bg_model->foreground->width,bg_model->foreground->height),
 							IPL_DEPTH_8U, 1);
