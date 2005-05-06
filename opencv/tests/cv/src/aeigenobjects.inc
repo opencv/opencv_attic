@@ -305,19 +305,19 @@ int  _cvCalcEigenObjects_8u32fR_q( int      nObjects,
             bf[j] *= m;
 
 /* Calculation of covariance matrix */
-    c  = (float*)icvAlloc ( sizeof(float)*nObjects*nObjects );
+    c  = (float*)cvAlloc ( sizeof(float)*nObjects*nObjects );
     if(c==NULL) return CV_OUTOFMEM_ERR;
 
     r = _cvCalcCovarMatrix_8u32fR_q ( nObjects, objects, objStep,
                                      avg, 4*avgStep, size, c );
-    if(r) { icvFree((void**)&c );  return r; }
+    if(r) { cvFree((void**)&c );  return r; }
 
 /* Calculation of eigenvalues & eigenvectors */
-    ev = (float*)icvAlloc ( sizeof(float)*nObjects*nObjects );
-    if(ev==NULL) { icvFree((void**)&c );  return CV_OUTOFMEM_ERR; }
+    ev = (float*)cvAlloc ( sizeof(float)*nObjects*nObjects );
+    if(ev==NULL) { cvFree((void**)&c );  return CV_OUTOFMEM_ERR; }
 
     _cvJacobiEigens_32f( c, ev, eigVals, nObjects, 0.0f );
-    icvFree((void**)&c );
+    cvFree((void**)&c );
 
     for(i=0; i<*nEigObjs; i++) if( fabs(eigVals[i]/eigVals[0]) < *eps ) break;
     *nEigObjs = i;
@@ -345,7 +345,7 @@ int  _cvCalcEigenObjects_8u32fR_q( int      nObjects,
         }
     }
 
-    icvFree((void**)&ev );
+    cvFree((void**)&ev );
     return CV_NO_ERR;
 } /* --- End of _cvCalcEigenObjects_8u32fR --- */
 /*______________________________________________________________________________________*/

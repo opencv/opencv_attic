@@ -337,7 +337,7 @@ void CV_DisTransTest::get_timing_test_array_types_and_sizes( int test_case_idx,
     types[OUTPUT][1] = CV_32SC1;
 
     if( !fill_labels )
-        sizes[OUTPUT][0] = whole_sizes[OUTPUT][0] = cvSize(0,0);
+        sizes[OUTPUT][1] = whole_sizes[OUTPUT][1] = cvSize(0,0);
 }
 
 

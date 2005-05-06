@@ -123,8 +123,8 @@ static int pyrlk_test( void )
     }
 
     /* allocate adidtional buffers */
-    v2 = (CvPoint2D32f*)icvAlloc( n*sizeof(v2[0]));
-    status = (char*)icvAlloc(n*sizeof(status[0]));
+    v2 = (CvPoint2D32f*)cvAlloc( n*sizeof(v2[0]));
+    status = (char*)cvAlloc(n*sizeof(status[0]));
 
     /* read first image */
     strcpy( filename, filepath );
@@ -192,8 +192,8 @@ static int pyrlk_test( void )
 test_exit:
 
     /* release occupied memory */
-    icvFree( &status );
-    icvFree( &v2 );
+    cvFree( (void**)&status );
+    cvFree( (void**)&v2 );
     free( u );
     free( v );
     if( imgI ) atsReleaseImage( imgI );

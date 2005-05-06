@@ -40,9 +40,210 @@
 //M*/
 
 #include "cvtest.h"
-#ifdef WIN32
-#include <conio.h>
+
+#if 0
+class CV_ProjectPointsTest : public CvArrTest
+{
+public:
+    CV_ProjectPointsTest();
+
+protected:
+    int read_params( CvFileStorage* fs );
+    void fill_array( int test_case_idx, int i, int j, CvMat* arr );
+    int prepare_test_case( int test_case_idx );
+    void get_test_array_types_and_sizes( int test_case_idx, CvSize** sizes, int** types );
+    double get_success_error_level( int test_case_idx, int i, int j );
+    void run_func();
+    void prepare_to_validation( int );
+
+    bool calc_jacobians;
+};
+
+
+CV_ProjectPointsTest::CV_ProjectPointsTest()
+    : CvArrTest( "3d-ProjectPoints", "cvProjectPoints2", "" )
+{
+    test_array[INPUT].push(NULL);  // rotation vector
+    test_array[OUTPUT].push(NULL); // rotation matrix 
+    test_array[OUTPUT].push(NULL); // jacobian (J)
+    test_array[OUTPUT].push(NULL); // rotation vector (backward transform result)
+    test_array[OUTPUT].push(NULL); // inverse transform jacobian (J1)
+    test_array[OUTPUT].push(NULL); // J*J1 (or J1*J) == I(3x3)
+    test_array[REF_OUTPUT].push(NULL);
+    test_array[REF_OUTPUT].push(NULL);
+    test_array[REF_OUTPUT].push(NULL);
+    test_array[REF_OUTPUT].push(NULL);
+    test_array[REF_OUTPUT].push(NULL);
+
+    element_wise_relative_error = false;
+    calc_jacobians = false;
+
+    support_testing_modes = CvTS::CORRECTNESS_CHECK_MODE;
+    default_timing_param_names = 0;
+}
+
+
+int CV_ProjectPointsTest::read_params( CvFileStorage* fs )
+{
+    int code = CvArrTest::read_params( fs );
+    return code;
+}
+
+
+void CV_ProjectPointsTest::get_test_array_types_and_sizes(
+    int /*test_case_idx*/, CvSize** sizes, int** types )
+{
+    CvRNG* rng = ts->get_rng();
+    int depth = cvTsRandInt(rng) % 2 == 0 ? CV_32F : CV_64F;
+    int i, code;
+    
+    code = cvTsRandInt(rng) % 3;
+    types[INPUT][0] = CV_MAKETYPE(depth, 1);
+
+    if( code == 0 )
+    {
+        sizes[INPUT][0] = cvSize(1,1);
+        types[INPUT][0] = CV_MAKETYPE(depth, 3);
+    }
+    else if( code == 1 )
+        sizes[INPUT][0] = cvSize(3,1);
+    else
+        sizes[INPUT][0] = cvSize(1,3);
+
+    sizes[OUTPUT][0] = cvSize(3, 3);
+    types[OUTPUT][0] = CV_MAKETYPE(depth, 1);
+
+    types[OUTPUT][1] = CV_MAKETYPE(depth, 1);
+
+    if( cvTsRandInt(rng) % 2 )
+        sizes[OUTPUT][1] = cvSize(3,9);
+    else
+        sizes[OUTPUT][1] = cvSize(9,3);
+
+    types[OUTPUT][2] = types[INPUT][0];
+    sizes[OUTPUT][2] = sizes[INPUT][0];
+
+    types[OUTPUT][3] = types[OUTPUT][1];
+    sizes[OUTPUT][3] = cvSize(sizes[OUTPUT][1].height, sizes[OUTPUT][1].width);
+
+    types[OUTPUT][4] = types[OUTPUT][1];
+    sizes[OUTPUT][4] = cvSize(3,3);
+
+    calc_jacobians = 1;//cvTsRandInt(rng) % 3 != 0;
+    if( !calc_jacobians )
+        sizes[OUTPUT][1] = sizes[OUTPUT][3] = sizes[OUTPUT][4] = cvSize(0,0);
+
+    for( i = 0; i < 5; i++ )
+    {
+        types[REF_OUTPUT][i] = types[OUTPUT][i];
+        sizes[REF_OUTPUT][i] = sizes[OUTPUT][i];
+    }
+}
+
+
+double CV_ProjectPointsTest::get_success_error_level( int /*test_case_idx*/, int /*i*/, int j )
+{
+    return j == 4 ? 1e-2 : 1e-2;
+}
+
+
+void CV_ProjectPointsTest::fill_array( int /*test_case_idx*/, int /*i*/, int /*j*/, CvMat* arr )
+{
+    double r[3], theta0, theta1, f;
+    CvMat _r = cvMat( arr->rows, arr->cols, CV_MAKETYPE(CV_64F,CV_MAT_CN(arr->type)), r );
+    CvRNG* rng = ts->get_rng();
+
+    r[0] = cvTsRandReal(rng)*CV_PI*2;
+    r[1] = cvTsRandReal(rng)*CV_PI*2;
+    r[2] = cvTsRandReal(rng)*CV_PI*2;
+
+    theta0 = sqrt(r[0]*r[0] + r[1]*r[1] + r[2]*r[2]);
+    theta1 = fmod(theta0, CV_PI*2);
+
+    if( theta1 > CV_PI )
+        theta1 = -(CV_PI*2 - theta1);
+
+    f = theta1/(theta0 ? theta0 : 1);
+    r[0] *= f;
+    r[1] *= f;
+    r[2] *= f;
+
+    cvTsConvert( &_r, arr );
+}
+
+
+int CV_ProjectPointsTest::prepare_test_case( int test_case_idx )
+{
+    int code = CvArrTest::prepare_test_case( test_case_idx );
+    return code;
+}
+
+
+void CV_ProjectPointsTest::run_func()
+{
+    CvMat *v2m_jac = 0, *m2v_jac = 0;
+    if( calc_jacobians )
+    {
+        v2m_jac = &test_mat[OUTPUT][1];
+        m2v_jac = &test_mat[OUTPUT][3];
+    }
+
+    cvProjectPoints2( &test_mat[INPUT][0], &test_mat[OUTPUT][0], v2m_jac );
+    cvProjectPoints2( &test_mat[OUTPUT][0], &test_mat[OUTPUT][2], m2v_jac );
+}
+
+
+void CV_ProjectPointsTest::prepare_to_validation( int /*test_case_idx*/ )
+{
+    const CvMat* vec = &test_mat[INPUT][0];
+    CvMat* m = &test_mat[REF_OUTPUT][0];
+    CvMat* vec2 = &test_mat[REF_OUTPUT][2];
+    CvMat* v2m_jac = 0, *m2v_jac = 0;
+    double theta0, theta1;
+
+    if( calc_jacobians )
+    {
+        v2m_jac = &test_mat[REF_OUTPUT][1];
+        m2v_jac = &test_mat[REF_OUTPUT][3];
+    }
+
+
+    cvTsProjectPoints( vec, m, v2m_jac );
+    cvTsProjectPoints( m, vec2, m2v_jac );
+    cvTsCopy( vec, vec2 );
+
+    theta0 = cvNorm( vec2, 0, CV_L2 );
+    theta1 = fmod( theta0, CV_PI*2 );
+
+    if( theta1 > CV_PI )
+        theta1 = -(CV_PI*2 - theta1);
+    cvScale( vec2, vec2, theta1/(theta0 ? theta0 : 1) );
+    
+    if( calc_jacobians )
+    {
+        //cvInvert( v2m_jac, m2v_jac, CV_SVD );
+        if( cvNorm(&test_mat[OUTPUT][3],0,CV_C) < 1000 )
+        {
+            cvTsGEMM( &test_mat[OUTPUT][1], &test_mat[OUTPUT][3],
+                      1, 0, 0, &test_mat[OUTPUT][4],
+                      v2m_jac->rows == 3 ? 0 : CV_GEMM_A_T + CV_GEMM_B_T );
+        }
+        else
+        {
+            cvTsSetIdentity( &test_mat[OUTPUT][4], cvScalarAll(1.) );
+            cvTsCopy( &test_mat[REF_OUTPUT][2], &test_mat[OUTPUT][2] );
+        }
+        cvTsSetIdentity( &test_mat[REF_OUTPUT][4], cvScalarAll(1.) );
+    }
+}
+
+
+CV_ProjectPointsTest ProjectPoints_test;
+
 #endif
+
+
+#if 1
 
 static char *cTestName[] = 
 {
@@ -89,7 +290,7 @@ static int calibrationTest(void *)
     int             currImage;
     int             currPoint;
 
-    int             useIntrinsicGuess;
+    int             calibFlags;
     char            i_dat_file[100];
 
     const char*     i_datafiles = "datafiles.txt";
@@ -265,8 +466,14 @@ static int calibrationTest(void *)
             }
         }
         
-        useIntrinsicGuess = 0;
-        
+        calibFlags = /*CV_CALIB_FIX_PRINCIPAL_POINT +*/ CV_CALIB_ZERO_TANGENT_DIST +
+                     CV_CALIB_FIX_ASPECT_RATIO /*+ CV_CALIB_USE_INTRINSIC_GUESS*/;
+        memset( cameraMatrix, 0, 9*sizeof(cameraMatrix[0]) );
+        cameraMatrix[0] = cameraMatrix[4] = 807.;
+        cameraMatrix[2] = (imageSize.width - 1)*0.5;
+        cameraMatrix[5] = (imageSize.height - 1)*0.5;
+        cameraMatrix[8] = 1.;
+
         /* Now we can calibrate camera */
         cvCalibrateCamera_64d(  numImages,
                                 numbers,
@@ -277,7 +484,7 @@ static int calibrationTest(void *)
                                 cameraMatrix,
                                 transVects,
                                 rotMatrs,
-                                useIntrinsicGuess );
+                                calibFlags );
 
         /* ---- Reproject points to the image ---- */
         for( currImage = 0; currImage < numImages; currImage++ )
@@ -428,4 +635,5 @@ void InitACalibration( void )
     trsRegArg(cFuncName[0],cTestName[0],cTestClass,calibrationTest, 0); 
 } /* InitACalibration */
 
+#endif
 

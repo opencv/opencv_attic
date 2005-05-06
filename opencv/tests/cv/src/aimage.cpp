@@ -54,7 +54,7 @@ static int depths[] = { IPL_DEPTH_8U, IPL_DEPTH_8S, IPL_DEPTH_16S,
                         IPL_DEPTH_32S, IPL_DEPTH_32F, IPL_DEPTH_64F, 0};
 static int channels[] = {1, 2, 3, 4, 0};
 
-static char* imageData = (char*)icvAlloc(10000);
+static char* imageData = (char*)cvAlloc(10000);
 
 const int align = 4;
 
