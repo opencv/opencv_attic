@@ -65,6 +65,7 @@ protected:
     int prepare_test_case( int test_case_idx );
     void get_test_array_types_and_sizes( int test_case_idx, CvSize** sizes, int** types );
     void get_minmax_bounds( int i, int j, int type, CvScalar* low, CvScalar* high );
+    void fill_array( int test_case_idx, int i, int j, CvMat* arr );
 
     int interpolation;
     int max_interpolation;
@@ -128,6 +129,12 @@ void CV_ImgWarpBaseTestImpl::get_test_array_types_and_sizes( int test_case_idx,
     interpolation = cvTsRandInt(rng) % max_interpolation;
 }
 
+
+void CV_ImgWarpBaseTestImpl::fill_array( int test_case_idx, int i, int j, CvMat* arr )
+{
+    if( i != INPUT || j != 0 )
+        CvArrTest::fill_array( test_case_idx, i, j, arr );
+}
 
 int CV_ImgWarpBaseTestImpl::prepare_test_case( int test_case_idx )
 {
@@ -420,201 +427,55 @@ CV_ResizeTest warp_resize_test;
 
 /////////////////////////
 
-class CV_WarpAffineTest : public CV_ImgWarpBaseTest
+void cvTsRemap( const CvMat* src, CvMat* dst, CvMat* dst0,
+                const CvMat* mapx, const CvMat* mapy,
+                int interpolation=CV_INTER_LINEAR )
 {
-public:
-    CV_WarpAffineTest();
+    int x, y, k;
+    int drows = dst->rows, dcols = dst->cols;
+    int srows = src->rows, scols = src->cols;
+    uchar* sptr0 = src->data.ptr;
+    int depth = CV_MAT_DEPTH(src->type), cn = CV_MAT_CN(src->type);
+    int elem_size = CV_ELEM_SIZE(src->type);
+    int step = src->step / CV_ELEM_SIZE(depth);
+    int delta;
 
-protected:
-    void get_test_array_types_and_sizes( int test_case_idx, CvSize** sizes, int** types );
-    void run_func();
-    int prepare_test_case( int test_case_idx );
-    void prepare_to_validation( int /*test_case_idx*/ );
-    double get_success_error_level( int test_case_idx, int i, int j );
-
-    int write_default_params(CvFileStorage* fs);
-    void get_timing_test_array_types_and_sizes( int test_case_idx, CvSize** sizes, int** types,
-                                                CvSize** whole_sizes, bool *are_images );
-    void print_timing_params( int test_case_idx, char* ptr, int params_left );
-};
-
-
-CV_WarpAffineTest::CV_WarpAffineTest()
-    : CV_ImgWarpBaseTest( "warp-affine", "cvWarpAffine", true )
-{
-    //spatial_scale_zoom = spatial_scale_decimate;
-    spatial_scale_decimate = spatial_scale_zoom;
-
-    default_timing_param_names = imgwarp_affine_param_names;
-}
-
-
-int CV_WarpAffineTest::write_default_params( CvFileStorage* fs )
-{
-    int code = CV_ImgWarpBaseTest::write_default_params( fs );
-    if( code < 0 )
-        return code;
-    
-    if( ts->get_testing_mode() == CvTS::TIMING_MODE )
+    if( interpolation != CV_INTER_CUBIC )
     {
-        int i;
-        start_write_param( fs );
-
-        cvStartWriteStruct( fs, "rotate_scale", CV_NODE_SEQ+CV_NODE_FLOW );
-        for( i = 0; imgwarp_affine_rotate_scale[i][0] >= 0; i++ )
-        {
-            cvStartWriteStruct( fs, 0, CV_NODE_SEQ+CV_NODE_FLOW );
-            cvWriteRawData( fs, imgwarp_affine_rotate_scale[i], 4, "d" );
-            cvEndWriteStruct(fs);
-        }
-        cvEndWriteStruct(fs);
-    }
-
-    return code;
-}
-
-
-void CV_WarpAffineTest::get_test_array_types_and_sizes( int test_case_idx, CvSize** sizes, int** types )
-{
-    CV_ImgWarpBaseTest::get_test_array_types_and_sizes( test_case_idx, sizes, types );
-    CvSize sz = sizes[INPUT][0];
-    // run for the second time to get output of a different size
-    CV_ImgWarpBaseTest::get_test_array_types_and_sizes( test_case_idx, sizes, types );
-    sizes[INPUT][0] = sz;
-    sizes[INPUT][1] = cvSize( 3, 2 );
-}
-
-
-void CV_WarpAffineTest::get_timing_test_array_types_and_sizes( int test_case_idx,
-                CvSize** sizes, int** types, CvSize** whole_sizes, bool *are_images )
-{
-    CV_ImgWarpBaseTest::get_timing_test_array_types_and_sizes( test_case_idx, sizes, types,
-                                                               whole_sizes, are_images );
-
-    sizes[INPUT][1] = whole_sizes[INPUT][1] = cvSize(3,2);
-    types[INPUT][1] = CV_64FC1;
-
-    interpolation = CV_INTER_LINEAR;
-}
-
-
-void CV_WarpAffineTest::print_timing_params( int test_case_idx, char* ptr, int params_left )
-{
-    double coeffs[4];
-    const CvFileNode* node = find_timing_param( "rotate_scale" );
-    assert( node && CV_NODE_IS_SEQ(node->tag) );
-    cvReadRawData( ts->get_file_storage(), node, coeffs, "4d" );
-    
-    sprintf( ptr, "fx=%.2f,fy=%.2f,angle=%.1fdeg,scale=%.1f,", coeffs[0], coeffs[1], coeffs[2], coeffs[3] );
-    ptr += strlen(ptr);
-    params_left -= 4;
-
-    CV_ImgWarpBaseTest::print_timing_params( test_case_idx, ptr, params_left );
-}
-
-
-void CV_WarpAffineTest::run_func()
-{
-    cvWarpAffine( test_array[INPUT][0], test_array[INPUT_OUTPUT][0], &test_mat[INPUT][1] );
-}
-
-
-double CV_WarpAffineTest::get_success_error_level( int /*test_case_idx*/, int /*i*/, int /*j*/ )
-{
-    int depth = CV_MAT_DEPTH(test_mat[INPUT][0].type);
-    return depth == CV_8U ? 16 : depth == CV_16U ? 1024 : 5e-2;
-}
-
-
-int CV_WarpAffineTest::prepare_test_case( int test_case_idx )
-{
-    CvRNG* rng = ts->get_rng();
-    int code = CV_ImgWarpBaseTest::prepare_test_case( test_case_idx );
-    const CvMat* src = &test_mat[INPUT][0];
-    const CvMat* dst = &test_mat[INPUT_OUTPUT][0]; 
-    CvMat* mat = &test_mat[INPUT][1];
-    CvPoint2D32f center;
-    double scale, angle;
-
-    if( code <= 0 )
-        return code;
-
-    if( ts->get_testing_mode() == CvTS::CORRECTNESS_CHECK_MODE )
-    {
-        double buf[6];
-        CvMat tmp = cvMat( 2, 3, mat->type, buf );
-
-        center.x = (float)((cvTsRandReal(rng)*1.2 - 0.1)*src->cols);
-        center.y = (float)((cvTsRandReal(rng)*1.2 - 0.1)*src->rows);
-        angle = cvTsRandReal(rng)*360;
-        scale = ((double)dst->rows/src->rows + (double)dst->cols/src->cols)*0.5;
-        cv2DRotationMatrix( center, angle, scale, mat );
-        cvRandArr( rng, &tmp, CV_RAND_NORMAL, cvScalarAll(1.), cvScalarAll(0.01) );
-        cvMaxS( &tmp, 0.9, &tmp );
-        cvMinS( &tmp, 1.1, &tmp );
-        cvMul( &tmp, mat, mat, 1. );
+        delta = 0;
+        scols -= 1; srows -= 1;
     }
     else
     {
-        double coeffs[4];
-        const CvFileNode* node = find_timing_param( "rotate_scale" );
-
-        assert( node && CV_NODE_IS_SEQ(node->tag) );
-        cvReadRawData( ts->get_file_storage(), node, coeffs, "4d" );
-
-        center.x = (float)(coeffs[0]*src->cols);
-        center.y = (float)(coeffs[1]*src->rows);
-        angle = coeffs[2];
-        scale = coeffs[3];
-        cv2DRotationMatrix( center, angle, scale, mat );
+        delta = 1;
+        scols = MAX(scols - 3, 0);
+        srows = MAX(srows - 3, 0);
     }
-
-    return code;
-}
-
-
-void CV_WarpAffineTest::prepare_to_validation( int /*test_case_idx*/ )
-{
-    CvMat* src = &test_mat[INPUT][0];
-    CvMat* dst = &test_mat[REF_INPUT_OUTPUT][0];
-    CvMat* dst1 = &test_mat[INPUT_OUTPUT][0];
-    int x, y, k;
-    int elem_size = CV_ELEM_SIZE(src->type);
-    int srows = src->rows, scols = src->cols;
-    int drows = dst->rows, dcols = dst->cols;
-    int depth = CV_MAT_DEPTH(src->type), cn = CV_MAT_CN(src->type);
-    int step = src->step / CV_ELEM_SIZE(depth);
-    const uchar* sptr0 = src->data.ptr;
-    double m[6], tm[6];
-    CvMat srcAb = cvMat(2, 3, CV_64FC1, tm ), A, b, invA, invAb, dstAb = cvMat( 2, 3, CV_64FC1, m );
-
-    //cvInvert( &tM, &M, CV_LU );
-    // [R|t] -> [R^-1 | -(R^-1)*t]
-    cvTsConvert( &test_mat[INPUT][1], &srcAb );
-    cvGetCols( &srcAb, &A, 0, 2 );
-    cvGetCol( &srcAb, &b, 2 );
-    cvGetCols( &dstAb, &invA, 0, 2 );
-    cvGetCol( &dstAb, &invAb, 2 );
-    cvInvert( &A, &invA, CV_SVD );
-    cvGEMM( &invA, &b, -1, 0, 0, &invAb );
-
-    cvTsZero( dst );
 
     for( y = 0; y < drows; y++ )
     {
         uchar* dptr = dst->data.ptr + dst->step*y;
-        
+        const float* mx = (const float*)(mapx->data.ptr + mapx->step*y);
+        const float* my = (const float*)(mapy->data.ptr + mapy->step*y);
+
         for( x = 0; x < dcols; x++, dptr += elem_size )
         {
-            double xs = x*m[0] + y*m[1] + m[2];
-            double ys = x*m[3] + y*m[4] + m[5];
+            double xs = mx[x];
+            double ys = my[x];
             int ixs = cvFloor(xs);
             int iys = cvFloor(ys);
 
-            if( (unsigned)ixs >= (unsigned)(scols - 1) ||
-                (unsigned)iys >= (unsigned)(srows - 1))
+            if( (unsigned)(ixs - delta) >= (unsigned)scols ||
+                (unsigned)(iys - delta) >= (unsigned)srows )
             {
-                memset( dst1->data.ptr + dst1->step*y + x*elem_size, 0, elem_size );
+                for( k = 0; k < elem_size; k++ )
+                    dptr[k] = 0;
+                if( dst0 )
+                {
+                    uchar* dptr0 = dst0->data.ptr + dst0->step*y + x*elem_size;
+                    for( k = 0; k < elem_size; k++ )
+                        dptr0[k] = 0;
+                }
                 continue;
             }
 
@@ -681,6 +542,206 @@ void CV_WarpAffineTest::prepare_to_validation( int /*test_case_idx*/ )
     }
 }
 
+/////////////////////////
+
+class CV_WarpAffineTest : public CV_ImgWarpBaseTest
+{
+public:
+    CV_WarpAffineTest();
+
+protected:
+    void get_test_array_types_and_sizes( int test_case_idx, CvSize** sizes, int** types );
+    void run_func();
+    int prepare_test_case( int test_case_idx );
+    void prepare_to_validation( int /*test_case_idx*/ );
+    double get_success_error_level( int test_case_idx, int i, int j );
+
+    int write_default_params(CvFileStorage* fs);
+    void get_timing_test_array_types_and_sizes( int test_case_idx, CvSize** sizes, int** types,
+                                                CvSize** whole_sizes, bool *are_images );
+    void print_timing_params( int test_case_idx, char* ptr, int params_left );
+};
+
+
+CV_WarpAffineTest::CV_WarpAffineTest()
+    : CV_ImgWarpBaseTest( "warp-affine", "cvWarpAffine", true )
+{
+    //spatial_scale_zoom = spatial_scale_decimate;
+    test_array[TEMP].push(NULL);
+    test_array[TEMP].push(NULL);
+    
+    spatial_scale_decimate = spatial_scale_zoom;
+
+    default_timing_param_names = imgwarp_affine_param_names;
+}
+
+
+int CV_WarpAffineTest::write_default_params( CvFileStorage* fs )
+{
+    int code = CV_ImgWarpBaseTest::write_default_params( fs );
+    if( code < 0 )
+        return code;
+    
+    if( ts->get_testing_mode() == CvTS::TIMING_MODE )
+    {
+        int i;
+        start_write_param( fs );
+
+        cvStartWriteStruct( fs, "rotate_scale", CV_NODE_SEQ+CV_NODE_FLOW );
+        for( i = 0; imgwarp_affine_rotate_scale[i][0] >= 0; i++ )
+        {
+            cvStartWriteStruct( fs, 0, CV_NODE_SEQ+CV_NODE_FLOW );
+            cvWriteRawData( fs, imgwarp_affine_rotate_scale[i], 4, "d" );
+            cvEndWriteStruct(fs);
+        }
+        cvEndWriteStruct(fs);
+    }
+
+    return code;
+}
+
+
+void CV_WarpAffineTest::get_test_array_types_and_sizes( int test_case_idx, CvSize** sizes, int** types )
+{
+    CV_ImgWarpBaseTest::get_test_array_types_and_sizes( test_case_idx, sizes, types );
+    CvSize sz = sizes[INPUT][0];
+    // run for the second time to get output of a different size
+    CV_ImgWarpBaseTest::get_test_array_types_and_sizes( test_case_idx, sizes, types );
+    sizes[INPUT][0] = sz;
+    sizes[INPUT][1] = cvSize( 3, 2 );
+    sizes[TEMP][0] = sizes[TEMP][1] = sizes[INPUT_OUTPUT][0];
+    types[TEMP][0] = types[TEMP][1] = CV_32FC1;
+}
+
+
+void CV_WarpAffineTest::get_timing_test_array_types_and_sizes( int test_case_idx,
+                CvSize** sizes, int** types, CvSize** whole_sizes, bool *are_images )
+{
+    CV_ImgWarpBaseTest::get_timing_test_array_types_and_sizes( test_case_idx, sizes, types,
+                                                               whole_sizes, are_images );
+
+    sizes[INPUT][1] = whole_sizes[INPUT][1] = cvSize(3,2);
+    sizes[TEMP][0] = whole_sizes[TEMP][0] =
+        sizes[TEMP][1] = whole_sizes[TEMP][1] = cvSize(0,0);
+    types[INPUT][1] = CV_64FC1;
+
+    interpolation = CV_INTER_LINEAR;
+}
+
+
+void CV_WarpAffineTest::print_timing_params( int test_case_idx, char* ptr, int params_left )
+{
+    double coeffs[4];
+    const CvFileNode* node = find_timing_param( "rotate_scale" );
+    assert( node && CV_NODE_IS_SEQ(node->tag) );
+    cvReadRawData( ts->get_file_storage(), node, coeffs, "4d" );
+    
+    sprintf( ptr, "fx=%.2f,fy=%.2f,angle=%.1fdeg,scale=%.1f,", coeffs[0], coeffs[1], coeffs[2], coeffs[3] );
+    ptr += strlen(ptr);
+    params_left -= 4;
+
+    CV_ImgWarpBaseTest::print_timing_params( test_case_idx, ptr, params_left );
+}
+
+
+void CV_WarpAffineTest::run_func()
+{
+    cvWarpAffine( test_array[INPUT][0], test_array[INPUT_OUTPUT][0],
+                  &test_mat[INPUT][1], interpolation );
+}
+
+
+double CV_WarpAffineTest::get_success_error_level( int /*test_case_idx*/, int /*i*/, int /*j*/ )
+{
+    int depth = CV_MAT_DEPTH(test_mat[INPUT][0].type);
+    return depth == CV_8U ? 16 : depth == CV_16U ? 1024 : 5e-2;
+}
+
+
+int CV_WarpAffineTest::prepare_test_case( int test_case_idx )
+{
+    CvRNG* rng = ts->get_rng();
+    int code = CV_ImgWarpBaseTest::prepare_test_case( test_case_idx );
+    const CvMat* src = &test_mat[INPUT][0];
+    const CvMat* dst = &test_mat[INPUT_OUTPUT][0]; 
+    CvMat* mat = &test_mat[INPUT][1];
+    CvPoint2D32f center;
+    double scale, angle;
+
+    if( code <= 0 )
+        return code;
+
+    if( ts->get_testing_mode() == CvTS::CORRECTNESS_CHECK_MODE )
+    {
+        double buf[6];
+        CvMat tmp = cvMat( 2, 3, mat->type, buf );
+
+        center.x = (float)((cvTsRandReal(rng)*1.2 - 0.1)*src->cols);
+        center.y = (float)((cvTsRandReal(rng)*1.2 - 0.1)*src->rows);
+        angle = cvTsRandReal(rng)*360;
+        scale = ((double)dst->rows/src->rows + (double)dst->cols/src->cols)*0.5;
+        cv2DRotationMatrix( center, angle, scale, mat );
+        cvRandArr( rng, &tmp, CV_RAND_NORMAL, cvScalarAll(1.), cvScalarAll(0.01) );
+        cvMaxS( &tmp, 0.9, &tmp );
+        cvMinS( &tmp, 1.1, &tmp );
+        cvMul( &tmp, mat, mat, 1. );
+    }
+    else
+    {
+        double coeffs[4];
+        const CvFileNode* node = find_timing_param( "rotate_scale" );
+
+        assert( node && CV_NODE_IS_SEQ(node->tag) );
+        cvReadRawData( ts->get_file_storage(), node, coeffs, "4d" );
+
+        center.x = (float)(coeffs[0]*src->cols);
+        center.y = (float)(coeffs[1]*src->rows);
+        angle = coeffs[2];
+        scale = coeffs[3];
+        cv2DRotationMatrix( center, angle, scale, mat );
+    }
+
+    return code;
+}
+
+
+void CV_WarpAffineTest::prepare_to_validation( int /*test_case_idx*/ )
+{
+    CvMat* src = &test_mat[INPUT][0];
+    CvMat* dst = &test_mat[REF_INPUT_OUTPUT][0];
+    CvMat* dst0 = &test_mat[INPUT_OUTPUT][0];
+    CvMat* mapx = &test_mat[TEMP][0];
+    CvMat* mapy = &test_mat[TEMP][1];
+    int x, y;
+    double m[6], tm[6];
+    CvMat srcAb = cvMat(2, 3, CV_64FC1, tm ), A, b, invA, invAb, dstAb = cvMat( 2, 3, CV_64FC1, m );
+
+    //cvInvert( &tM, &M, CV_LU );
+    // [R|t] -> [R^-1 | -(R^-1)*t]
+    cvTsConvert( &test_mat[INPUT][1], &srcAb );
+    cvGetCols( &srcAb, &A, 0, 2 );
+    cvGetCol( &srcAb, &b, 2 );
+    cvGetCols( &dstAb, &invA, 0, 2 );
+    cvGetCol( &dstAb, &invAb, 2 );
+    cvInvert( &A, &invA, CV_SVD );
+    cvGEMM( &invA, &b, -1, 0, 0, &invAb );
+
+    for( y = 0; y < dst->rows; y++ )
+    {
+        float* mx = (float*)(mapx->data.ptr + y*mapx->step);
+        float* my = (float*)(mapy->data.ptr + y*mapy->step);
+
+        for( x = 0; x < dst->cols; x++ )
+        {
+            mx[x] = (float)(x*m[0] + y*m[1] + m[2]);
+            my[x] = (float)(x*m[3] + y*m[4] + m[5]);
+        }
+    }
+
+    cvTsRemap( src, dst, dst0, mapx, mapy );
+}
+
+
 CV_WarpAffineTest warp_affine_test;
 
 
@@ -710,6 +771,9 @@ CV_WarpPerspectiveTest::CV_WarpPerspectiveTest()
     : CV_ImgWarpBaseTest( "warp-perspective", "cvWarpPerspective", true )
 {
     //spatial_scale_zoom = spatial_scale_decimate;
+    test_array[TEMP].push(NULL);
+    test_array[TEMP].push(NULL);
+
     spatial_scale_decimate = spatial_scale_zoom;
     default_timing_param_names = imgwarp_perspective_param_names;
 }
@@ -748,6 +812,9 @@ void CV_WarpPerspectiveTest::get_test_array_types_and_sizes( int test_case_idx, 
     CV_ImgWarpBaseTest::get_test_array_types_and_sizes( test_case_idx, sizes, types );
     sizes[INPUT][0] = sz;
     sizes[INPUT][1] = cvSize( 3, 3 );
+
+    sizes[TEMP][0] = sizes[TEMP][1] = sizes[INPUT_OUTPUT][0];
+    types[TEMP][0] = types[TEMP][1] = CV_32FC1;
 }
 
 
@@ -758,6 +825,8 @@ void CV_WarpPerspectiveTest::get_timing_test_array_types_and_sizes( int test_cas
                                                                whole_sizes, are_images );
 
     sizes[INPUT][1] = whole_sizes[INPUT][1] = cvSize(3,3);
+    sizes[TEMP][0] = whole_sizes[TEMP][0] =
+        sizes[TEMP][1] = whole_sizes[TEMP][1] = cvSize(0,0);
     types[INPUT][1] = CV_64FC1;
 
     interpolation = CV_INTER_LINEAR;
@@ -772,7 +841,8 @@ void CV_WarpPerspectiveTest::print_timing_params( int test_case_idx, char* ptr, 
 
 void CV_WarpPerspectiveTest::run_func()
 {
-    cvWarpPerspective( test_array[INPUT][0], test_array[INPUT_OUTPUT][0], &test_mat[INPUT][1] );
+    cvWarpPerspective( test_array[INPUT][0], test_array[INPUT_OUTPUT][0],
+                       &test_mat[INPUT][1], interpolation );
 }
 
 
@@ -844,14 +914,10 @@ void CV_WarpPerspectiveTest::prepare_to_validation( int /*test_case_idx*/ )
 {
     CvMat* src = &test_mat[INPUT][0];
     CvMat* dst = &test_mat[REF_INPUT_OUTPUT][0];
-    CvMat* dst1 = &test_mat[INPUT_OUTPUT][0];
-    int x, y, k;
-    int elem_size = CV_ELEM_SIZE(src->type);
-    int srows = src->rows, scols = src->cols;
-    int drows = dst->rows, dcols = dst->cols;
-    int depth = CV_MAT_DEPTH(src->type), cn = CV_MAT_CN(src->type);
-    int step = src->step / CV_ELEM_SIZE(depth);
-    const uchar* sptr0 = src->data.ptr;
+    CvMat* dst0 = &test_mat[INPUT_OUTPUT][0];
+    CvMat* mapx = &test_mat[TEMP][0];
+    CvMat* mapy = &test_mat[TEMP][1];
+    int x, y;
     double m[9], tm[9];
     CvMat srcM = cvMat(3, 3, CV_64FC1, tm ), dstM = cvMat( 3, 3, CV_64FC1, m );
 
@@ -860,95 +926,593 @@ void CV_WarpPerspectiveTest::prepare_to_validation( int /*test_case_idx*/ )
     cvTsConvert( &test_mat[INPUT][1], &srcM );
     cvInvert( &srcM, &dstM, CV_SVD );
 
-    cvTsZero( dst );
-
-    for( y = 0; y < drows; y++ )
+    for( y = 0; y < dst->rows; y++ )
     {
-        uchar* dptr = dst->data.ptr + dst->step*y;
-        
-        for( x = 0; x < dcols; x++, dptr += elem_size )
+        float* mx = (float*)(mapx->data.ptr + y*mapx->step);
+        float* my = (float*)(mapy->data.ptr + y*mapy->step);
+
+        for( x = 0; x < dst->cols; x++ )
         {
             double xs = x*m[0] + y*m[1] + m[2];
             double ys = x*m[3] + y*m[4] + m[5];
             double ds = x*m[6] + y*m[7] + m[8];
-            int ixs, iys;
             
             ds = ds ? 1./ds : 0;
             xs *= ds;
             ys *= ds;
-            ixs = cvFloor(xs);
-            iys = cvFloor(ys);
-
-            if( (unsigned)ixs >= (unsigned)(scols - 1) ||
-                (unsigned)iys >= (unsigned)(srows - 1))
-            {
-                memset( dst1->data.ptr + dst1->step*y + x*elem_size, 0, elem_size );
-                continue;
-            }
-
-            xs -= ixs;
-            ys -= iys;
             
-            switch( depth )
-            {
-            case CV_8U:
-                {
-                const uchar* sptr = sptr0 + iys*step + ixs*cn;
-                for( k = 0; k < cn; k++ )
-                {
-                    double v00 = sptr[k];
-                    double v01 = sptr[cn + k];
-                    double v10 = sptr[step + k];
-                    double v11 = sptr[step + cn + k];
-
-                    v00 = v00 + xs*(v01 - v00);
-                    v10 = v10 + xs*(v11 - v10);
-                    v00 = v00 + ys*(v10 - v00);
-                    dptr[k] = (uchar)cvRound(v00);
-                }
-                }
-                break;
-            case CV_16U:
-                {
-                const ushort* sptr = (const ushort*)sptr0 + iys*step + ixs*cn;
-                for( k = 0; k < cn; k++ )
-                {
-                    double v00 = sptr[k];
-                    double v01 = sptr[cn + k];
-                    double v10 = sptr[step + k];
-                    double v11 = sptr[step + cn + k];
-
-                    v00 = v00 + xs*(v01 - v00);
-                    v10 = v10 + xs*(v11 - v10);
-                    v00 = v00 + ys*(v10 - v00);
-                    ((ushort*)dptr)[k] = (ushort)cvRound(v00);
-                }
-                }
-                break;
-            case CV_32F:
-                {
-                const float* sptr = (const float*)sptr0 + iys*step + ixs*cn;
-                for( k = 0; k < cn; k++ )
-                {
-                    double v00 = sptr[k];
-                    double v01 = sptr[cn + k];
-                    double v10 = sptr[step + k];
-                    double v11 = sptr[step + cn + k];
-
-                    v00 = v00 + xs*(v01 - v00);
-                    v10 = v10 + xs*(v11 - v10);
-                    v00 = v00 + ys*(v10 - v00);
-                    ((float*)dptr)[k] = (float)v00;
-                }
-                }
-                break;
-            default:
-                assert(0);
-            }
+            mx[x] = (float)xs;
+            my[x] = (float)ys;
         }
     }
+
+    cvTsRemap( src, dst, dst0, mapx, mapy );
 }
 
 
 CV_WarpPerspectiveTest warp_perspective_test;
 
+
+
+/////////////////////////
+
+void cvTsInitUndistortMap( const CvMat* _a0, const CvMat* _k0, CvMat* mapx, CvMat* mapy )
+{
+    int u, v;
+    double a[9], k[4];
+    CvMat _a = cvMat(3, 3, CV_64F, a);
+    CvMat _k = cvMat(_k0->rows,_k0->cols,
+        CV_MAKETYPE(CV_64F,CV_MAT_CN(_k0->type)),k);
+    double fx, fy, cx, cy, ifx, ify;
+    
+    cvTsConvert( _a0, &_a );
+    cvTsConvert( _k0, &_k );
+    fx = a[0]; fy = a[4]; cx = a[2]; cy = a[5];
+    ifx = 1./fx; ify = 1./fy;
+
+    for( v = 0; v < mapy->rows; v++ )
+    {
+        float* mx = (float*)(mapx->data.ptr + v*mapx->step);
+        float* my = (float*)(mapy->data.ptr + v*mapy->step);
+        
+        for( u = 0; u < mapy->cols; u++ )
+        {
+            double x = (u - cx)*ifx;
+            double y = (v - cy)*ify;
+            double x2 = x*x, y2 = y*y;
+            double r2 = x2 + y2;
+            double cdist = 1 + r2*(k[0] + k[1]*r2);
+            double x1 = x*cdist + k[2]*2*x*y + k[3]*(r2 + 2*x2);
+            double y1 = y*cdist + k[3]*2*x*y + k[2]*(r2 + 2*y2);
+            mx[u] = (float)(x1*fx + cx);
+            my[u] = (float)(y1*fy + cy);
+        }
+    }
+}
+
+
+static double remap_undistort_params[] = { 0.5, 0.5, 0.5, 0.5, 0.01, -0.01, 0.001, -0.001 };
+
+class CV_RemapTest : public CV_ImgWarpBaseTest
+{
+public:
+    CV_RemapTest();
+
+protected:
+    void get_test_array_types_and_sizes( int test_case_idx, CvSize** sizes, int** types );
+    void run_func();
+    int prepare_test_case( int test_case_idx );
+    void prepare_to_validation( int /*test_case_idx*/ );
+    double get_success_error_level( int test_case_idx, int i, int j );
+    void fill_array( int test_case_idx, int i, int j, CvMat* arr );
+
+    int write_default_params(CvFileStorage* fs);
+    void get_timing_test_array_types_and_sizes( int test_case_idx, CvSize** sizes, int** types,
+                                                CvSize** whole_sizes, bool *are_images );
+    void print_timing_params( int test_case_idx, char* ptr, int params_left );
+};
+
+
+CV_RemapTest::CV_RemapTest()
+    : CV_ImgWarpBaseTest( "warp-remap", "cvRemap", true )
+{
+    //spatial_scale_zoom = spatial_scale_decimate;
+    test_array[INPUT].push(NULL);
+    test_array[INPUT].push(NULL);
+
+    spatial_scale_decimate = spatial_scale_zoom;
+    //default_timing_param_names = imgwarp_perspective_param_names;
+    support_testing_modes = CvTS::CORRECTNESS_CHECK_MODE;
+    default_timing_param_names = 0;
+}
+
+
+int CV_RemapTest::write_default_params( CvFileStorage* fs )
+{
+    int code = CV_ImgWarpBaseTest::write_default_params( fs );
+    if( code < 0 )
+        return code;
+    
+    if( ts->get_testing_mode() == CvTS::TIMING_MODE )
+    {
+        int i;
+        start_write_param( fs );
+
+        cvStartWriteStruct( fs, "params", CV_NODE_SEQ+CV_NODE_FLOW );
+        for( i = 0; i < 8; i++ )
+            cvWriteReal( fs, 0, remap_undistort_params[i] );
+        cvEndWriteStruct(fs);
+    }
+
+    return code;
+}
+
+
+void CV_RemapTest::get_test_array_types_and_sizes( int test_case_idx, CvSize** sizes, int** types )
+{
+    CV_ImgWarpBaseTest::get_test_array_types_and_sizes( test_case_idx, sizes, types );
+    types[INPUT][1] = types[INPUT][2] = CV_32FC1;
+}
+
+
+void CV_RemapTest::fill_array( int test_case_idx, int i, int j, CvMat* arr )
+{
+    if( i != INPUT )
+        CV_ImgWarpBaseTestImpl::fill_array( test_case_idx, i, j, arr );
+}
+
+void CV_RemapTest::get_timing_test_array_types_and_sizes( int test_case_idx,
+        CvSize** sizes, int** types, CvSize** whole_sizes, bool *are_images )
+{
+    CV_ImgWarpBaseTest::get_timing_test_array_types_and_sizes( test_case_idx, sizes, types,
+                                                               whole_sizes, are_images );
+    types[INPUT][1] = types[INPUT][2] = CV_32FC1;
+    interpolation = CV_INTER_LINEAR;
+}
+
+
+void CV_RemapTest::print_timing_params( int test_case_idx, char* ptr, int params_left )
+{
+    CV_ImgWarpBaseTest::print_timing_params( test_case_idx, ptr, params_left );
+}
+
+
+void CV_RemapTest::run_func()
+{
+    cvRemap( test_array[INPUT][0], test_array[INPUT_OUTPUT][0],
+             test_array[INPUT][1], test_array[INPUT][2], interpolation );
+}
+
+
+double CV_RemapTest::get_success_error_level( int /*test_case_idx*/, int /*i*/, int /*j*/ )
+{
+    int depth = CV_MAT_DEPTH(test_mat[INPUT][0].type);
+    return depth == CV_8U ? 16 : depth == CV_16U ? 1024 : 5e-2;
+}
+
+
+int CV_RemapTest::prepare_test_case( int test_case_idx )
+{
+    CvRNG* rng = ts->get_rng();
+    int code = CV_ImgWarpBaseTest::prepare_test_case( test_case_idx );
+    const CvMat* src = &test_mat[INPUT][0];
+    double a[9] = {0,0,0,0,0,0,0,0,1}, k[4];
+    CvMat _a = cvMat( 3, 3, CV_64F, a );
+    CvMat _k = cvMat( 4, 1, CV_64F, k );
+    double sz = MAX(src->rows, src->cols);
+
+    if( code <= 0 )
+        return code;
+
+    if( ts->get_testing_mode() == CvTS::CORRECTNESS_CHECK_MODE )
+    {
+        double aspect_ratio = cvTsRandReal(rng)*0.6 + 0.7;
+        a[2] = (src->cols - 1)*0.5 + cvTsRandReal(rng)*10 - 5;
+        a[5] = (src->rows - 1)*0.5 + cvTsRandReal(rng)*10 - 5;
+        a[0] = sz/(0.9 - cvTsRandReal(rng)*0.6);
+        a[4] = aspect_ratio*a[0];
+        k[0] = cvTsRandReal(rng)*0.06 - 0.03;
+        k[1] = cvTsRandReal(rng)*0.06 - 0.03;
+        if( k[0]*k[1] > 0 )
+            k[1] = -k[1];
+        k[2] = cvTsRandReal(rng)*0.004 - 0.002;
+        k[3] = cvTsRandReal(rng)*0.004 - 0.002;
+    }
+    else
+    {
+        int i;
+        a[2] = (src->cols - 1)*remap_undistort_params[0];
+        a[5] = (src->rows - 1)*remap_undistort_params[1];
+        a[0] = sz/remap_undistort_params[2];
+        a[4] = sz/remap_undistort_params[3];
+        for( i = 0; i < 4; i++ )
+            k[i] = remap_undistort_params[i+4];
+    }
+
+    cvTsInitUndistortMap( &_a, &_k, &test_mat[INPUT][1], &test_mat[INPUT][2] );
+    return code;
+}
+
+
+void CV_RemapTest::prepare_to_validation( int /*test_case_idx*/ )
+{
+    CvMat* dst = &test_mat[REF_INPUT_OUTPUT][0];
+    CvMat* dst0 = &test_mat[INPUT_OUTPUT][0];
+    int nr = interpolation == CV_INTER_CUBIC ? 2 : 1, nc = nr;
+    CvMat part;
+    cvTsRemap( &test_mat[INPUT][0], dst, dst0,
+               &test_mat[INPUT][1], &test_mat[INPUT][2],
+               interpolation );
+    nr = MIN(nr, dst->rows);
+    nc = MIN(nc, dst->cols);
+    cvGetRows( dst, &part, dst->rows - nr, dst->rows ); 
+    cvTsZero( &part );
+    cvGetRows( dst0, &part, dst->rows - nr, dst->rows ); 
+    cvTsZero( &part );
+    cvGetCols( dst, &part, dst->cols - nc, dst->cols ); 
+    cvTsZero( &part );
+    cvGetCols( dst0, &part, dst->cols - nc, dst->cols ); 
+    cvTsZero( &part );
+}
+
+
+CV_RemapTest remap_test;
+
+
+////////////////////////////// undistort /////////////////////////////////
+
+class CV_UndistortTest : public CV_ImgWarpBaseTest
+{
+public:
+    CV_UndistortTest();
+
+protected:
+    void get_test_array_types_and_sizes( int test_case_idx, CvSize** sizes, int** types );
+    void run_func();
+    int prepare_test_case( int test_case_idx );
+    void prepare_to_validation( int /*test_case_idx*/ );
+    double get_success_error_level( int test_case_idx, int i, int j );
+    void fill_array( int test_case_idx, int i, int j, CvMat* arr );
+
+    int write_default_params(CvFileStorage* fs);
+    void get_timing_test_array_types_and_sizes( int test_case_idx, CvSize** sizes, int** types,
+                                                CvSize** whole_sizes, bool *are_images );
+    void print_timing_params( int test_case_idx, char* ptr, int params_left );
+};
+
+
+CV_UndistortTest::CV_UndistortTest()
+    : CV_ImgWarpBaseTest( "warp-undistort", "cvUndistort2", true )
+{
+    //spatial_scale_zoom = spatial_scale_decimate;
+    test_array[INPUT].push(NULL);
+    test_array[INPUT].push(NULL);
+
+    spatial_scale_decimate = spatial_scale_zoom;
+    //default_timing_param_names = imgwarp_perspective_param_names;
+    support_testing_modes = CvTS::CORRECTNESS_CHECK_MODE;
+    default_timing_param_names = 0;
+}
+
+
+int CV_UndistortTest::write_default_params( CvFileStorage* fs )
+{
+    int code = CV_ImgWarpBaseTest::write_default_params( fs );
+    if( code < 0 )
+        return code;
+    
+    if( ts->get_testing_mode() == CvTS::TIMING_MODE )
+    {
+        int i;
+        start_write_param( fs );
+
+        cvStartWriteStruct( fs, "params", CV_NODE_SEQ+CV_NODE_FLOW );
+        for( i = 0; i < 8; i++ )
+            cvWriteReal( fs, 0, remap_undistort_params[i] );
+        cvEndWriteStruct(fs);
+    }
+
+    return code;
+}
+
+
+void CV_UndistortTest::get_test_array_types_and_sizes( int test_case_idx, CvSize** sizes, int** types )
+{
+    CvRNG* rng = ts->get_rng();
+    CV_ImgWarpBaseTest::get_test_array_types_and_sizes( test_case_idx, sizes, types );
+    int type = types[INPUT][0];
+    type = CV_MAKETYPE( CV_8U, CV_MAT_CN(type) ); 
+    types[INPUT][0] = types[INPUT_OUTPUT][0] = types[REF_INPUT_OUTPUT][0] = type;
+    types[INPUT][1] = cvTsRandInt(rng)%2 ? CV_64F : CV_32F;
+    types[INPUT][2] = cvTsRandInt(rng)%2 ? CV_64F : CV_32F;
+    sizes[INPUT][1] = cvSize(3,3);
+    sizes[INPUT][2] = cvTsRandInt(rng)%2 ? cvSize(4,1) : cvSize(1,4);
+    interpolation = CV_INTER_LINEAR;
+}
+
+
+void CV_UndistortTest::fill_array( int test_case_idx, int i, int j, CvMat* arr )
+{
+    if( i != INPUT )
+        CV_ImgWarpBaseTestImpl::fill_array( test_case_idx, i, j, arr );
+}
+
+void CV_UndistortTest::get_timing_test_array_types_and_sizes( int test_case_idx,
+        CvSize** sizes, int** types, CvSize** whole_sizes, bool *are_images )
+{
+    CV_ImgWarpBaseTest::get_timing_test_array_types_and_sizes( test_case_idx, sizes, types,
+                                                               whole_sizes, are_images );
+    types[INPUT][1] = types[INPUT][2] = CV_32FC1;
+    interpolation = CV_INTER_LINEAR;
+}
+
+
+void CV_UndistortTest::print_timing_params( int test_case_idx, char* ptr, int params_left )
+{
+    CV_ImgWarpBaseTest::print_timing_params( test_case_idx, ptr, params_left );
+}
+
+
+void CV_UndistortTest::run_func()
+{
+    cvUndistort2( test_array[INPUT][0], test_array[INPUT_OUTPUT][0],
+                  &test_mat[INPUT][1], &test_mat[INPUT][2] );
+}
+
+
+double CV_UndistortTest::get_success_error_level( int /*test_case_idx*/, int /*i*/, int /*j*/ )
+{
+    int depth = CV_MAT_DEPTH(test_mat[INPUT][0].type);
+    return depth == CV_8U ? 16 : depth == CV_16U ? 1024 : 5e-2;
+}
+
+
+int CV_UndistortTest::prepare_test_case( int test_case_idx )
+{
+    CvRNG* rng = ts->get_rng();
+    int code = CV_ImgWarpBaseTest::prepare_test_case( test_case_idx );
+    const CvMat* src = &test_mat[INPUT][0];
+    double k[4], a[9] = {0,0,0,0,0,0,0,0,1};
+    double sz = MAX(src->rows, src->cols);
+    CvMat* _a0 = &test_mat[INPUT][1], *_k0 = &test_mat[INPUT][2];
+    CvMat _a = cvMat(3,3,CV_64F,a);
+    CvMat _k = cvMat(_k0->rows,_k0->cols, CV_MAKETYPE(CV_64F,CV_MAT_CN(_k0->type)),k);
+
+    if( code <= 0 )
+        return code;
+
+    if( ts->get_testing_mode() == CvTS::CORRECTNESS_CHECK_MODE )
+    {
+        double aspect_ratio = cvTsRandReal(rng)*0.6 + 0.7;
+        a[2] = (src->cols - 1)*0.5 + cvTsRandReal(rng)*10 - 5;
+        a[5] = (src->rows - 1)*0.5 + cvTsRandReal(rng)*10 - 5;
+        a[0] = sz/(0.9 - cvTsRandReal(rng)*0.6);
+        a[4] = aspect_ratio*a[0];
+        k[0] = cvTsRandReal(rng)*0.06 - 0.03;
+        k[1] = cvTsRandReal(rng)*0.06 - 0.03;
+        if( k[0]*k[1] > 0 )
+            k[1] = -k[1];
+        k[2] = cvTsRandReal(rng)*0.004 - 0.002;
+        k[3] = cvTsRandReal(rng)*0.004 - 0.002;
+    }
+    else
+    {
+        int i;
+        a[2] = (src->cols - 1)*remap_undistort_params[0];
+        a[5] = (src->rows - 1)*remap_undistort_params[1];
+        a[0] = sz/remap_undistort_params[2];
+        a[4] = sz/remap_undistort_params[3];
+        for( i = 0; i < 4; i++ )
+            k[i] = remap_undistort_params[i+4];
+    }
+
+    cvTsConvert( &_a, _a0 );
+    cvTsConvert( &_k, _k0 );
+
+    return code;
+}
+
+
+void CV_UndistortTest::prepare_to_validation( int /*test_case_idx*/ )
+{
+    CvMat* src = &test_mat[INPUT][0];
+    CvMat* dst = &test_mat[REF_INPUT_OUTPUT][0];
+    CvMat* dst0 = &test_mat[INPUT_OUTPUT][0];
+    CvMat* mapx = cvCreateMat( dst->rows, dst->cols, CV_32FC1 );
+    CvMat* mapy = cvCreateMat( dst->rows, dst->cols, CV_32FC1 );
+    CvMat part;
+    int nr = 1, nc = nr;
+    cvTsInitUndistortMap( &test_mat[INPUT][1], &test_mat[INPUT][2],
+                          mapx, mapy );
+    cvTsRemap( src, dst, dst0, mapx, mapy, interpolation );
+    cvGetRows( dst, &part, 0, nr ); 
+    cvTsZero( &part );
+    cvGetRows( dst0, &part, 0, nr ); 
+    cvTsZero( &part );
+    cvGetRows( dst, &part, dst->rows - nr, dst->rows ); 
+    cvTsZero( &part );
+    cvGetRows( dst0, &part, dst->rows - nr, dst->rows ); 
+    cvTsZero( &part );
+
+    cvGetCols( dst, &part, 0, nc ); 
+    cvTsZero( &part );
+    cvGetCols( dst0, &part, 0, nc ); 
+    cvTsZero( &part );
+    cvGetCols( dst, &part, dst->cols - nc, dst->cols ); 
+    cvTsZero( &part );
+    cvGetCols( dst0, &part, dst->cols - nc, dst->cols ); 
+    cvTsZero( &part );
+}
+
+
+CV_UndistortTest undistort_test;
+
+
+
+class CV_UndistortMapTest : public CvArrTest
+{
+public:
+    CV_UndistortMapTest();
+
+protected:
+    void get_test_array_types_and_sizes( int test_case_idx, CvSize** sizes, int** types );
+    void run_func();
+    int prepare_test_case( int test_case_idx );
+    void prepare_to_validation( int /*test_case_idx*/ );
+    double get_success_error_level( int test_case_idx, int i, int j );
+    void fill_array( int test_case_idx, int i, int j, CvMat* arr );
+
+    int write_default_params(CvFileStorage* fs);
+    void get_timing_test_array_types_and_sizes( int test_case_idx, CvSize** sizes, int** types,
+                                                CvSize** whole_sizes, bool *are_images );
+    void print_timing_params( int test_case_idx, char* ptr, int params_left );
+};
+
+
+CV_UndistortMapTest::CV_UndistortMapTest()
+    : CvArrTest( "warp-undistort-map", "cvInitUndistortMap", "" )
+{
+    test_array[INPUT].push(NULL);
+    test_array[INPUT].push(NULL);
+    test_array[OUTPUT].push(NULL);
+    test_array[OUTPUT].push(NULL);
+    test_array[REF_OUTPUT].push(NULL);
+    test_array[REF_OUTPUT].push(NULL);
+
+    element_wise_relative_error = false;
+
+    support_testing_modes = CvTS::CORRECTNESS_CHECK_MODE;
+    default_timing_param_names = 0;
+}
+
+
+int CV_UndistortMapTest::write_default_params( CvFileStorage* fs )
+{
+    int code = CvArrTest::write_default_params( fs );
+    if( code < 0 )
+        return code;
+    
+    if( ts->get_testing_mode() == CvTS::TIMING_MODE )
+    {
+        int i;
+        start_write_param( fs );
+
+        cvStartWriteStruct( fs, "params", CV_NODE_SEQ+CV_NODE_FLOW );
+        for( i = 0; i < 8; i++ )
+            cvWriteReal( fs, 0, remap_undistort_params[i] );
+        cvEndWriteStruct(fs);
+    }
+
+    return code;
+}
+
+
+void CV_UndistortMapTest::get_test_array_types_and_sizes( int test_case_idx, CvSize** sizes, int** types )
+{
+    CvRNG* rng = ts->get_rng();
+    CvArrTest::get_test_array_types_and_sizes( test_case_idx, sizes, types );
+    int depth = cvTsRandInt(rng)%2 ? CV_64F : CV_32F;
+    CvSize sz = sizes[OUTPUT][0];
+    types[INPUT][0] = types[INPUT][1] = depth;
+    types[OUTPUT][0] = types[OUTPUT][1] = 
+        types[REF_OUTPUT][0] = types[REF_OUTPUT][1] = CV_32F;
+    sizes[INPUT][0] = cvSize(3,3);
+    sizes[INPUT][1] = cvTsRandInt(rng)%2 ? cvSize(4,1) : cvSize(1,4);
+
+    sz.width = MAX(sz.width,16);
+    sz.height = MAX(sz.height,16);
+    sizes[OUTPUT][0] = sizes[OUTPUT][1] =
+        sizes[REF_OUTPUT][0] = sizes[REF_OUTPUT][1] = sz;
+}
+
+
+void CV_UndistortMapTest::fill_array( int test_case_idx, int i, int j, CvMat* arr )
+{
+    if( i != INPUT )
+        CvArrTest::fill_array( test_case_idx, i, j, arr );
+}
+
+void CV_UndistortMapTest::get_timing_test_array_types_and_sizes( int test_case_idx,
+        CvSize** sizes, int** types, CvSize** whole_sizes, bool *are_images )
+{
+    CvArrTest::get_timing_test_array_types_and_sizes( test_case_idx, sizes, types,
+                                                      whole_sizes, are_images );
+}
+
+
+void CV_UndistortMapTest::print_timing_params( int test_case_idx, char* ptr, int params_left )
+{
+    CvArrTest::print_timing_params( test_case_idx, ptr, params_left );
+}
+
+
+void CV_UndistortMapTest::run_func()
+{
+    cvInitUndistortMap( &test_mat[INPUT][0], &test_mat[INPUT][1],
+                        test_array[OUTPUT][0], test_array[OUTPUT][1] );
+}
+
+
+double CV_UndistortMapTest::get_success_error_level( int /*test_case_idx*/, int /*i*/, int /*j*/ )
+{
+    return 1e-4;
+}
+
+
+int CV_UndistortMapTest::prepare_test_case( int test_case_idx )
+{
+    CvRNG* rng = ts->get_rng();
+    int code = CvArrTest::prepare_test_case( test_case_idx );
+    const CvMat* mapx = &test_mat[OUTPUT][0];
+    double k[4], a[9] = {0,0,0,0,0,0,0,0,1};
+    double sz = MAX(mapx->rows, mapx->cols);
+    CvMat* _a0 = &test_mat[INPUT][0], *_k0 = &test_mat[INPUT][1];
+    CvMat _a = cvMat(3,3,CV_64F,a);
+    CvMat _k = cvMat(_k0->rows,_k0->cols, CV_MAKETYPE(CV_64F,CV_MAT_CN(_k0->type)),k);
+
+    if( code <= 0 )
+        return code;
+
+    if( ts->get_testing_mode() == CvTS::CORRECTNESS_CHECK_MODE )
+    {
+        double aspect_ratio = cvTsRandReal(rng)*0.6 + 0.7;
+        a[2] = (mapx->cols - 1)*0.5 + cvTsRandReal(rng)*10 - 5;
+        a[5] = (mapx->rows - 1)*0.5 + cvTsRandReal(rng)*10 - 5;
+        a[0] = sz/(0.9 - cvTsRandReal(rng)*0.6);
+        a[4] = aspect_ratio*a[0];
+        k[0] = cvTsRandReal(rng)*0.06 - 0.03;
+        k[1] = cvTsRandReal(rng)*0.06 - 0.03;
+        if( k[0]*k[1] > 0 )
+            k[1] = -k[1];
+        k[2] = cvTsRandReal(rng)*0.004 - 0.002;
+        k[3] = cvTsRandReal(rng)*0.004 - 0.002;
+    }
+    else
+    {
+        int i;
+        a[2] = (mapx->cols - 1)*remap_undistort_params[0];
+        a[5] = (mapx->rows - 1)*remap_undistort_params[1];
+        a[0] = sz/remap_undistort_params[2];
+        a[4] = sz/remap_undistort_params[3];
+        for( i = 0; i < 4; i++ )
+            k[i] = remap_undistort_params[i+4];
+    }
+
+    cvTsConvert( &_a, _a0 );
+    cvTsConvert( &_k, _k0 );
+
+    return code;
+}
+
+
+void CV_UndistortMapTest::prepare_to_validation( int /*test_case_idx*/ )
+{
+    cvTsInitUndistortMap( &test_mat[INPUT][0], &test_mat[INPUT][1],
+                          &test_mat[REF_OUTPUT][0], &test_mat[REF_OUTPUT][1] );
+}
+
+
+CV_UndistortMapTest undistortmap_test;
+
+
+/* End of file. */

@@ -215,14 +215,14 @@ static int fmaKMeans(void)
     crit = cvTermCriteria( CV_TERMCRIT_EPS|CV_TERMCRIT_ITER, lMaxNumIter, flEpsilon );
     
     //allocate vectors
-    vectors = (float**)icvAlloc( lNumVect * sizeof(float*) );
+    vectors = (float**)cvAlloc( lNumVect * sizeof(float*) );
     for( i = 0; i < lNumVect; i++ )
     {
-        vectors[i] = (float*)icvAlloc( lVectSize * sizeof( float ) );
+        vectors[i] = (float*)cvAlloc( lVectSize * sizeof( float ) );
     }
 
-    output = (int*)icvAlloc( lNumVect * sizeof(int) );
-    etalon_output = (int*)icvAlloc( lNumVect * sizeof(int) );
+    output = (int*)cvAlloc( lNumVect * sizeof(int) );
+    etalon_output = (int*)cvAlloc( lNumVect * sizeof(int) );
     
     //fill input vectors
     for( i = 0; i < lNumVect; i++ )
@@ -270,11 +270,11 @@ static int fmaKMeans(void)
     //free memory
     for( i = 0; i < lNumVect; i++ )
     {
-        icvFree( &(vectors[i]) );
+        cvFree( (void**)&(vectors[i]) );
     }
-    icvFree(&vectors);
-    icvFree(&output);
-    icvFree(&etalon_output);      
+    cvFree((void**)&vectors);
+    cvFree((void**)&output);
+    cvFree((void**)&etalon_output);      
    
    if( lErrors == 0 ) return trsResult( TRS_OK, "No errors fixed for this text" );
     else return trsResult( TRS_FAIL, "Detected %d errors", lErrors );

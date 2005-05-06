@@ -58,14 +58,6 @@
 extern "C"{
 #endif
 
-#ifndef min
-#define min(a,b) (a) > (b) ? (b) : (a)
-#endif
-
-#ifndef max
-#define max(a,b) (a) < (b) ? (b) : (a)
-#endif
-
 #ifndef IPL_DEPTH_MASK
 #define IPL_DEPTH_MASK 255
 #endif
@@ -329,34 +321,6 @@ CvPoint2D32f atsRandPoint2D32f( AtsRandState* rng_state, CvSize size );
 IplImage*  atsCreateImage( int w, int h, int depth, int nch, int clear_flag );
 void atsReleaseImage( IplImage* img );
 
-/* Extracts ROI data from the image and writes it in a single row */
-void       atsGetDataFromImage( IplImage *img, void *data );
-
-/* Writes linear data to the image ROI */
-void       atsPutDataToImage( IplImage *img, void *data );
-
-
-typedef void (*AtsBinArithmMaskFunc)( const CvArr* src1, const CvArr* src2,
-                                     CvArr* dst, const CvArr* mask );
-
-typedef void (*AtsUnArithmMaskFunc)( const CvArr* src, CvScalar scalar,
-                                     CvArr* dst, const CvArr* mask );
-
-typedef void (*AtsBinArithmFunc)( const CvArr* src1, const CvArr* src2, CvArr* dst );
-
-void atsLinearFunc( const CvArr* src1arr, CvScalar alpha,
-                    const CvArr* src2arr, CvScalar beta,
-                    CvScalar gamma, CvArr* dstarr );
-
-void atsMul( const CvArr* src1arr, const CvArr* src2arr, CvArr* dstarr );
-
-#define ATS_LOGIC_AND  0
-#define ATS_LOGIC_OR   1
-#define ATS_LOGIC_XOR  2
-
-void atsLogic( const CvArr* src1arr, const CvArr* src2arr, CvArr* dstarr, int op );
-void atsLogicS( const CvArr* src1arr, CvScalar scalar, CvArr* dstarr, int op );
-
 /*
    Retrieves various information about the image:
    *pData     - pointer to the whole image or ROI (if presents)
@@ -373,77 +337,10 @@ void       atsGetImageInfo( IplImage* img, void** pData, int* pStep,
                             int* pBtPix );
 
 /*
-   The function applies min filter using specified structuring element.
-*/
-void       atsMinFilterEx( IplImage* src, IplImage* dst, IplConvKernel* B );
-
-/*
-   The function applies max filter using specified structuring element.
-*/
-void       atsMaxFilterEx( IplImage* src, IplImage* dst, IplConvKernel* B );
-
-
-/*
-   Create IplConvKernelFP for calclulating derivative
-*/
-IplConvKernelFP* atsCalcDervConvKernel( int Xorder, int Yorder, int apertureSize, int origin );
-
-/*
-   Replicates left and right ROI borders dx times,
-   top and bottom ROI borders dy times.
-*/
-void atsReplicateBorders( IplImage* img, int dx, int dy );
-
-
-/*
-   The convolution function.
-   Supports only 32fC1 images
-*/
-void atsConvolve( IplImage* src, IplImage* dst, IplConvKernelFP* ker );
-
-void atsConvolveSep2D( IplImage* src, IplImage* dst,
-                       IplConvKernelFP* kerX, IplConvKernelFP* kerY );
-
-IplConvKernelFP* atsCreateConvKernelFP( int cols, int rows,
-                                        int anchorX, int anchorY,
-                                        float* data );
-
-void atsDeleteConvKernelFP( IplConvKernelFP*& kernel );
-
-IplConvKernel* atsCreateConvKernel( int cols, int rows,
-                                    int anchorX, int anchorY,
-                                    int* data, int shiftR );
-
-void atsDeleteConvKernel( IplConvKernel*& kernel );
-
-/* This function calculates  kernels for Sobel operators */ 
-void atsCalcKernel( int   datatype,
-                 int   Xorder,
-                 int   Yorder,
-                 int   apertureSize,
-                 char* KerX,
-                 char* KerY,
-                 CvSize* kerLens,
-                 int origin);
-
-/*
    Fills the whole image or selected ROI by random numbers.
    Supports only 8u, 8s and 32f formats
 */
 void       atsFillRandomImageEx( IplImage *img, AtsRandState* state );
-
-/* dst(x,y) = scale*src(x,y) + shift */
-void  atsScaleAddImage( IplImage* src, IplImage* dst, double scale, double shift );
-/* dst(x,y) = abs(scale*src(x,y) + shift) */
-void  atsScaleAddAbsImage( IplImage* src, IplImage* dst, double scale, double shift );
-
-/******************************************************************************/
-/*                             Matrix functions                               */
-/******************************************************************************/
-
-double atsDot( const CvMat* mat1, CvMat* mat2 );
-void atsAXPY( double alpha, const CvMat* matX, CvMat* matY );
-void atsMatMul( const CvMat* mat1, const CvMat* mat2, CvMat* mat3 );
 
 /******************************************************************************/
 /*                             Image statistics                               */
@@ -472,39 +369,6 @@ int       atsCannyStatistics(uchar* src,
                              int* components,
                              int* in_edges);
 
-
-typedef struct
-{
-    /* spatial moments */
-    double  m00;
-    double  m10, m01;
-    double  m20, m11, m02;
-    double  m30, m21, m12, m03;
-
-    /* central moments */
-    double  mu20, mu11, mu02;
-    double  mu30, mu21, mu12, mu03;
-
-    /* normalized central moments */
-    double  nu20, nu11, nu02;
-    double  nu30, nu21, nu12, nu03;
-}
-AtsMomentState;
-
-
-/*
-  Function calculates spatial and central moments up to third order.
-  <binary> mode means that pixels values treated as 1 if they are non zero and 0 if zero.
-*/
-void    atsCalcMoments( IplImage* img, AtsMomentState* state, int binary );
-
-/*
-  Convert internal representation to explicit form
-*/
-void  atsGetMoments( CvMoments* istate, AtsMomentState* astate );
-
-/* calculates  sum (imgA(x,y) - deltaA)*(imgB(x,y) - deltaB) */
-double atsCrossCorr( IplImage* imgA, IplImage* imgB, double deltaA, double deltaB );
 
 /* creates contour which consist of convex hull vertices */
 /* hull is CvSeq<CvPoint*>                               */
@@ -538,14 +402,6 @@ void  atsClearBorder( IplImage* img );
 void  atsGenerateBlobImage( IplImage* img, int min_blob_size, int max_blob_size,
                             int blob_count, int min_brightness, int max_brightness,
                             AtsRandState* rng_state );
-
-/******************************************************************************/
-/*                             Display routines                               */ 
-/******************************************************************************/
-
-int   atsCreateWindow( const char* name, CvPoint wnd_org, CvSize wnd_size );
-void  atsDisplayImage( IplImage* img, int window, CvPoint dst_org, CvSize dst_size );
-void  atsDestroyWindow( int window );
 
 /******************************************************************************/
 /*                     Reading images from file                               */
@@ -624,34 +480,9 @@ typedef CvSeq* ( *Contour )( CvMemStorage* storage );
             else trsWrite( ATS_CON | ATS_LST, "ok\n" );      \
         }
 
-#define _CV_C            1
-#define _CV_L1           2
-#define _CV_L2           4
-#define _CV_RELATIVE     8
-
-#define _CV_RELATIVE_C   (_CV_RELATIVE | _CV_C)
-#define _CV_RELATIVE_L1  (_CV_RELATIVE | _CV_L1)
-#define _CV_RELATIVE_L2  (_CV_RELATIVE | _CV_L2)
-
-#define _CV_DIFF        16
-
-#define _CV_DIFF_C   (_CV_DIFF | _CV_C)
-#define _CV_DIFF_L1  (_CV_DIFF | _CV_L1)
-#define _CV_DIFF_L2  (_CV_DIFF | _CV_L2)
-
-
-#define CV_ORIGIN_TL  0
-#define CV_ORIGIN_BL  1
-
-void* icvAlloc_( int lSize );
-void  icvFree_( void** ptr );
-
-void* _dbgAlloc_( int size, const char* file, int line);
-void  _dbgFree_( void** pptr,const char* file, int line);
-
-#define icvAlloc( size ) icvAlloc_( size )
-#define icvFree( ptr ) icvFree_( (void**)(ptr) )
-
+int cvTsRodrigues( const CvMat* src, CvMat* dst, CvMat* jacobian=0 );
+void cvTsConvertHomogenious( const CvMat* src, CvMat* dst );
+void cvTsConvertHomogenious( const CvMat* src, CvMat* dst );
 
 #ifdef __cplusplus
 }

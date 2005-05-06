@@ -46,7 +46,7 @@ int atsCheckConvexHull( CvPoint* Pts, int psize, int* hull, int hsize, int orien
     int  i;
     int errors = 0;
 
-    CvPoint* hullvect = (CvPoint*)icvAlloc( hsize * sizeof(CvSize) );
+    CvPoint* hullvect = (CvPoint*)cvAlloc( hsize * sizeof(CvSize) );
 
     for ( i = 1 ; i < hsize; i++ )
     {
@@ -92,7 +92,7 @@ int atsCheckConvexHull( CvPoint* Pts, int psize, int* hull, int hsize, int orien
                 errors++;
         }
     }
-    icvFree(&hullvect);
+    cvFree((void**)&hullvect);
     /*assert( errors == 0); */
     return errors;    
 }
@@ -101,7 +101,7 @@ int atsCheckConvexHullP( CvPoint* Pts, int psize, CvPoint** hull, int hsize, int
     int  i;
     int errors = 0;
 
-    CvPoint* hullvect = (CvPoint*)icvAlloc( hsize * sizeof(CvSize) );
+    CvPoint* hullvect = (CvPoint*)cvAlloc( hsize * sizeof(CvSize) );
 
     for ( i = 1 ; i < hsize; i++ )
     {
@@ -147,7 +147,7 @@ int atsCheckConvexHullP( CvPoint* Pts, int psize, CvPoint** hull, int hsize, int
                 errors++;
         }
     }
-    icvFree(&hullvect);
+    cvFree((void**)&hullvect);
     /*assert( errors == 0); */
     return errors;    
 }
@@ -201,8 +201,8 @@ static int fmaConvexHull(void* prm)
     }
         
     /* Allocating image */
-    Pts = (CvPoint*)icvAlloc( lNumPoints * sizeof(CvPoint) );
-    hull = (int*)icvAlloc( lNumPoints * sizeof(int) );
+    Pts = (CvPoint*)cvAlloc( lNumPoints * sizeof(CvPoint) );
+    hull = (int*)cvAlloc( lNumPoints * sizeof(int) );
     
     for( j = 0; j < lLoopsProp; j++ )
     {
@@ -291,8 +291,8 @@ static int fmaConvexHullContour(void* prm)
     storage = cvCreateMemStorage(0);
     cvClearMemStorage( storage );
    
-    points =  (CvPoint*)icvAlloc( lNumPoints * sizeof(CvPoint) );
-    pointers = (CvPoint**)icvAlloc( lNumPoints * sizeof(CvPoint*) );
+    points =  (CvPoint*)cvAlloc( lNumPoints * sizeof(CvPoint) );
+    pointers = (CvPoint**)cvAlloc( lNumPoints * sizeof(CvPoint*) );
     
     for( j = 0; j < lLoopsProp; j++ )
     {
@@ -360,8 +360,8 @@ static int fmaConvexHullContour(void* prm)
         
     } /* for */
 
-    icvFree(&points);
-    icvFree(&pointers);
+    cvFree((void**)&points);
+    cvFree((void**)&pointers);
     cvReleaseMemStorage(&storage);
     
    if( lErrors == 0 ) return trsResult( TRS_OK, "No errors fixed for this test" );

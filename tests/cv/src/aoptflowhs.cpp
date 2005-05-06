@@ -106,15 +106,15 @@ static int fmaCalcOpticalFlowHS( void )
     IplImage* testVelocityX = cvCreateImage( cvSize(lImageWidth,lImageHeight), IPL_DEPTH_32F, 1 );
     IplImage* testVelocityY = cvCreateImage( cvSize(lImageWidth,lImageHeight), IPL_DEPTH_32F, 1 );
 
-    VelocityX = (float*)icvAlloc(  lImageWidth*lImageHeight * sizeof(float) );
-    VelocityY = (float*)icvAlloc(  lImageWidth*lImageHeight * sizeof(float) );
+    VelocityX = (float*)cvAlloc(  lImageWidth*lImageHeight * sizeof(float) );
+    VelocityY = (float*)cvAlloc(  lImageWidth*lImageHeight * sizeof(float) );
 
-    auxVelocityX = (float*)icvAlloc(  lImageWidth*lImageHeight * sizeof(float) );
-    auxVelocityY = (float*)icvAlloc(  lImageWidth*lImageHeight * sizeof(float) );
+    auxVelocityX = (float*)cvAlloc(  lImageWidth*lImageHeight * sizeof(float) );
+    auxVelocityY = (float*)cvAlloc(  lImageWidth*lImageHeight * sizeof(float) );
 
-    DerX = (float*)icvAlloc( lImageWidth*lImageHeight * sizeof(float) );
-    DerY = (float*)icvAlloc( lImageWidth*lImageHeight * sizeof(float) );
-    DerT = (float*)icvAlloc( lImageWidth*lImageHeight * sizeof(float) );
+    DerX = (float*)cvAlloc( lImageWidth*lImageHeight * sizeof(float) );
+    DerY = (float*)cvAlloc( lImageWidth*lImageHeight * sizeof(float) );
+    DerT = (float*)cvAlloc( lImageWidth*lImageHeight * sizeof(float) );
 
     /* Filling images */
     ats1bInitRandom( 0, 255, (uchar*)imgA->imageData, lImageWidth * lImageHeight );
@@ -400,15 +400,15 @@ for( usePrevious = 0; usePrevious < 2; usePrevious++ )
 }
 
     /* Free memory */
-    icvFree( (void**)&VelocityX );
-    icvFree( (void**)&VelocityY );
-    icvFree( (void**)&auxVelocityX );
-    icvFree( (void**)&auxVelocityY );
+    cvFree( (void**)&VelocityX );
+    cvFree( (void**)&VelocityY );
+    cvFree( (void**)&auxVelocityX );
+    cvFree( (void**)&auxVelocityY );
 
 
-    icvFree( (void**)&DerX );
-    icvFree( (void**)&DerY );
-    icvFree( (void**)&DerT );
+    cvFree( (void**)&DerX );
+    cvFree( (void**)&DerY );
+    cvFree( (void**)&DerT );
 
     cvReleaseImage( &imgA );
     cvReleaseImage( &imgB );

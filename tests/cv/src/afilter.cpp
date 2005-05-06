@@ -261,8 +261,11 @@ CV_MorphologyBaseTestImpl::CV_MorphologyBaseTestImpl( const char* test_name, con
 {
     shape = -1;
     element = 0;
-
+    size_list = filter_sizes;
+    whole_size_list = filter_whole_sizes;
     depth_list = morph_depths;
+    cn_list = filter_channels;
+
     element = 0;
 }
 
@@ -1028,7 +1031,7 @@ void CV_SmoothBaseTest::print_timing_params( int test_case_idx, char* ptr, int p
 {
     sprintf( ptr, "%dx%d,%s,", aperture_size.width, aperture_size.height, smooth_type );
     ptr += strlen(ptr);
-    params_left--;
+    params_left -= 2;
 
     CV_FilterBaseTest::print_timing_params( test_case_idx, ptr, params_left );
 }

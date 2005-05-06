@@ -64,8 +64,8 @@ void testFill( float*    img,
 			   float     SegThresh,
 			   CvConnectedComp* region)
 {
-    CvPoint* CurStack = (CvPoint*)icvAlloc(imgSize.height*imgSize.width*sizeof(CvPoint));
-    CvPoint* NextStack = (CvPoint*)icvAlloc(imgSize.height*imgSize.width*sizeof(CvPoint));
+    CvPoint* CurStack = (CvPoint*)cvAlloc(imgSize.height*imgSize.width*sizeof(CvPoint));
+    CvPoint* NextStack = (CvPoint*)cvAlloc(imgSize.height*imgSize.width*sizeof(CvPoint));
     CvPoint* Temp;
     int ownstep=step/4;
     int RPstep=itsstep/4;
@@ -134,8 +134,8 @@ again:
     region->rect.width = XMax - XMin + 1;
     region->rect.height = YMax - YMin + 1;
     region->value = cvScalar(nv);
-    icvFree(&CurStack);
-    icvFree(&NextStack);
+    cvFree((void**)&CurStack);
+    cvFree((void**)&NextStack);
     return;
 }
 

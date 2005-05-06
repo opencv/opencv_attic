@@ -115,8 +115,8 @@ static int fmaPOSIT(void)
     criteria.max_iter = 10000;
 
     /* Allocating source arrays; */
-    obj_points = (CvPoint3D32f*)icvAlloc( 8 * sizeof(CvPoint3D32f) );
-    img_points = (CvPoint2D32f*)icvAlloc( 8 * sizeof(CvPoint2D32f) );
+    obj_points = (CvPoint3D32f*)cvAlloc( 8 * sizeof(CvPoint3D32f) );
+    img_points = (CvPoint2D32f*)cvAlloc( 8 * sizeof(CvPoint2D32f) );
 
     /* Fill points arrays with values */
 
@@ -244,8 +244,8 @@ static int fmaPOSIT(void)
                             translation.data.fl[2] );  
     }
 
-    icvFree( &obj_points );
-    icvFree( &img_points );
+    cvFree( (void**)&obj_points );
+    cvFree( (void**)&img_points );
 
     cvmFree( &true_rotationX );
     cvmFree( &true_rotationY );

@@ -104,12 +104,12 @@ static int fmaCalcOpticalFlowLK( void )
     IplImage* testVelocityX = cvCreateImage( cvSize(lImageWidth,lImageHeight), IPL_DEPTH_32F, 1 );
     IplImage* testVelocityY = cvCreateImage( cvSize(lImageWidth,lImageHeight), IPL_DEPTH_32F, 1 );
 
-    VelocityX = (float*)icvAlloc(  lImageWidth * lImageHeight * sizeof(float) );
-    VelocityY = (float*)icvAlloc(  lImageWidth * lImageHeight * sizeof(float) );
+    VelocityX = (float*)cvAlloc(  lImageWidth * lImageHeight * sizeof(float) );
+    VelocityY = (float*)cvAlloc(  lImageWidth * lImageHeight * sizeof(float) );
 
-    DerivativeX = (float*)icvAlloc( lImageWidth * lImageHeight * sizeof(float) );
-    DerivativeY = (float*)icvAlloc( lImageWidth * lImageHeight * sizeof(float) );
-    DerivativeT = (float*)icvAlloc( lImageWidth * lImageHeight * sizeof(float) );
+    DerivativeX = (float*)cvAlloc( lImageWidth * lImageHeight * sizeof(float) );
+    DerivativeY = (float*)cvAlloc( lImageWidth * lImageHeight * sizeof(float) );
+    DerivativeT = (float*)cvAlloc( lImageWidth * lImageHeight * sizeof(float) );
 
     winSize.height = lWinHeight;
     winSize.width =  lWinWidth;
@@ -274,12 +274,12 @@ static int fmaCalcOpticalFlowLK( void )
             }
         }
     }
-    icvFree( (void**)&VelocityX );
-    icvFree( (void**)&VelocityY );
+    cvFree( (void**)&VelocityX );
+    cvFree( (void**)&VelocityY );
     
-    icvFree( (void**)&DerivativeX );
-    icvFree( (void**)&DerivativeY );
-    icvFree( (void**)&DerivativeT );
+    cvFree( (void**)&DerivativeX );
+    cvFree( (void**)&DerivativeY );
+    cvFree( (void**)&DerivativeT );
 
     cvReleaseImage( &imgA );
     cvReleaseImage( &imgB );

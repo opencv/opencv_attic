@@ -175,19 +175,19 @@ static int fmaEigenObjects( void )
     n = obj_width * obj_height;
     sizex = obj_width,  sizey = obj_height;
 
-    Objs     = (IplImage**)icvAlloc(sizeof(IplImage*) * obj_number );
-    EigObjs  = (IplImage**)icvAlloc(sizeof(IplImage*) * m1         );
-    EigObjs0 = (IplImage**)icvAlloc(sizeof(IplImage*) * m1         );
+    Objs     = (IplImage**)cvAlloc(sizeof(IplImage*) * obj_number );
+    EigObjs  = (IplImage**)cvAlloc(sizeof(IplImage*) * m1         );
+    EigObjs0 = (IplImage**)cvAlloc(sizeof(IplImage*) * m1         );
 
-    objs     = (uchar**)icvAlloc(sizeof(uchar*) * obj_number     );
-    eigObjs  = (float**)icvAlloc(sizeof(float*) * m1             );
-    eigObjs0 = (float**)icvAlloc(sizeof(float*) * m1             );
-    covMatr  = (float*) icvAlloc(sizeof(float)  * obj_number * obj_number );
-    covMatr0 = (float*) icvAlloc(sizeof(float)  * obj_number * obj_number );
-    coeffs   = (float*) icvAlloc(sizeof(float*) * m1             );
-    coeffs0  = (float*) icvAlloc(sizeof(float*) * m1             );
-    eigVal   = (float*) icvAlloc(sizeof(float)  * obj_number     );
-    eigVal0  = (float*) icvAlloc(sizeof(float)  * obj_number     );
+    objs     = (uchar**)cvAlloc(sizeof(uchar*) * obj_number     );
+    eigObjs  = (float**)cvAlloc(sizeof(float*) * m1             );
+    eigObjs0 = (float**)cvAlloc(sizeof(float*) * m1             );
+    covMatr  = (float*) cvAlloc(sizeof(float)  * obj_number * obj_number );
+    covMatr0 = (float*) cvAlloc(sizeof(float)  * obj_number * obj_number );
+    coeffs   = (float*) cvAlloc(sizeof(float*) * m1             );
+    coeffs0  = (float*) cvAlloc(sizeof(float*) * m1             );
+    eigVal   = (float*) cvAlloc(sizeof(float)  * obj_number     );
+    eigVal0  = (float*) cvAlloc(sizeof(float)  * obj_number     );
 
     size.width = obj_width;  size.height = obj_height;
     atsRandInit( &state, 0, 255, 13 );
@@ -737,18 +737,18 @@ trsWrite(TW_RUN|TW_CON, "\n ROI   supported\n" );
         }
     }
 
-    icvFree( (void**)&objs     );
-    icvFree( (void**)&eigObjs  );
-    icvFree( (void**)&eigObjs0 );
-    icvFree( (void**)&coeffs   );
-    icvFree( (void**)&coeffs0  );
-    icvFree( (void**)&eigVal   );
-    icvFree( (void**)&eigVal0  );
-    icvFree( (void**)&Objs     );
-    icvFree( (void**)&EigObjs  );
-    icvFree( (void**)&EigObjs0 );
-    icvFree( (void**)&covMatr  );
-    icvFree( (void**)&covMatr0 );
+    cvFree( (void**)&objs     );
+    cvFree( (void**)&eigObjs  );
+    cvFree( (void**)&eigObjs0 );
+    cvFree( (void**)&coeffs   );
+    cvFree( (void**)&coeffs0  );
+    cvFree( (void**)&eigVal   );
+    cvFree( (void**)&eigVal0  );
+    cvFree( (void**)&Objs     );
+    cvFree( (void**)&EigObjs  );
+    cvFree( (void**)&EigObjs0 );
+    cvFree( (void**)&covMatr  );
+    cvFree( (void**)&covMatr0 );
 
 trsWrite(TW_RUN|TW_CON, "\n Errors number: %d\n", err );
 
