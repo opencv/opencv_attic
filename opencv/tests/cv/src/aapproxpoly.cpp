@@ -41,6 +41,7 @@
 
 #include "cvtest.h"
 #include <limits.h>
+
 extern Contour Contours[];
 
 static char cTestName[]  = "Contours Approximation";
@@ -133,8 +134,8 @@ bool GetContour( int /*type*/, CvSeq** Seq, int* d,
         max_x = MAX( max_x, pt.x );
         max_y = MAX( max_y, pt.y );
 
-        min_x = min( min_x, pt.x );
-        min_y = min( min_y, pt.y );
+        min_x = MIN( min_x, pt.x );
+        min_y = MIN( min_y, pt.y );
     }
 
     *d = (max_x - min_x)*(max_x - min_x) + (max_y - min_y)*(max_y - min_y);
