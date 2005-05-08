@@ -155,11 +155,11 @@ Linux
 
    + libpng, libjpeg and libtiff with development files.
 
-   + libavcodec from ffmpeg 0.4.8 + headers.
+   + libavcodec from ffmpeg 0.4.9-pre1 + headers.
      Earlier version do not work with OpenCV because of different API.
      libavcodec is LGPL software, so to use it with non-GPL software (such as OpenCV)
      you need to build and use a _shared_ library libavcodec.so.*:
-        get ffmpeg-0.4.8 from ffmpeg.sourceforge.net
+        get ffmpeg-0.4.9-pre1 from ffmpeg.sourceforge.net
         ./configure --enable-shared
         make
         make install
