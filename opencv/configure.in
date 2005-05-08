@@ -24,7 +24,7 @@ AC_CONFIG_AUX_DIR([autotools])
 AC_CONFIG_MACRO_DIR([autotools/aclocal])
 
 # put CVS revision of this configure.in into the resulting configure script
-AC_REVISION($Revision: 1.10 $)
+AC_REVISION($Revision: 1.11 $)
 
 # Detect the canonical host and target build environment
 AC_CANONICAL_HOST
@@ -255,7 +255,7 @@ dnl *********** set up SWIG if wrappers are wanted ***********
 dnl
 if test x"$setup_swig" = x"yes" ; then
     AC_MSG_NOTICE([Checking for SWIG])
-    AC_PATH_SWIG()
+    AC_PATH_SWIG([1.3.24])
     if test -n "$SWIG" ; then
         SWIG_ENABLE_CXX()
         SWIG_MULTI_MODULE_SUPPORT()
@@ -297,6 +297,8 @@ otherlibs/Makefile
 otherlibs/highgui/Makefile
 interfaces/Makefile
 interfaces/swig/Makefile
+interfaces/swig/filtered/Makefile
+interfaces/swig/python/Makefile
 tests/Makefile
 tests/trs/Makefile
 tests/cv/Makefile

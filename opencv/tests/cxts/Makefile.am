@@ -1,10 +1,9 @@
-lib_LIBRARIES = libcxts.a
+INCLUDES = -I. -I$(top_srcdir)/cxcore/include -I$(top_srcdir)/tests
+AM_CFLAGS = @CFLAGS@ @DEBUG@
 
-libcxts_a_SOURCES = cxts.cpp cxts_arrtest.cpp cxts_math.cpp
+check_LIBRARIES = libcxts.a
 
-noinst_HEADERS = _cxts.h cxts.h
+libcxts_a_SOURCES = _cxts.h cxts.h cxts.cpp cxts_arrtest.cpp cxts_math.cpp
 
 EXTRA_DIST = cxts.dsp cxts.vcproj precomp.cpp
 
-INCLUDES = -I. -I../../cxcore/include -I../..
-AM_CFLAGS = @CFLAGS@ @DEBUG@

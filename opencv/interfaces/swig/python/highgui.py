@@ -4,7 +4,7 @@
 
 import _highgui
 
-def _swig_setattr(self,class_type,name,value):
+def _swig_setattr_nondynamic(self,class_type,name,value,static=1):
     if (name == "this"):
         if isinstance(value, class_type):
             self.__dict__[name] = value.this
@@ -13,7 +13,13 @@ def _swig_setattr(self,class_type,name,value):
             return
     method = class_type.__swig_setmethods__.get(name,None)
     if method: return method(self,value)
-    self.__dict__[name] = value
+    if (not static) or hasattr(self,name) or (name == "thisown"):
+        self.__dict__[name] = value
+    else:
+        raise AttributeError("You cannot add attributes to %s" % self)
+
+def _swig_setattr(self,class_type,name,value):
+    return _swig_setattr_nondynamic(self,class_type,name,value,0)
 
 def _swig_getattr(self,class_type,name):
     method = class_type.__swig_getmethods__.get(name,None)
@@ -30,6 +36,7 @@ except AttributeError:
 del types
 
 
+import cv
 
 cvInitSystem = _highgui.cvInitSystem
 CV_WINDOW_AUTOSIZE = _highgui.CV_WINDOW_AUTOSIZE
@@ -129,7 +136,7 @@ class CvvImage(_object):
     __swig_getmethods__ = {}
     __getattr__ = lambda self, name: _swig_getattr(self, CvvImage, name)
     def __repr__(self):
-        return "<C CvvImage instance at %s>" % (self.this,)
+        return "<%s.%s; proxy of C++ CvvImage instance at %s>" % (self.__class__.__module__, self.__class__.__name__, self.this,)
     def __init__(self, *args):
         _swig_setattr(self, CvvImage, 'this', _highgui.new_CvvImage(*args))
         _swig_setattr(self, CvvImage, 'thisown', 1)
@@ -137,6 +144,7 @@ class CvvImage(_object):
         try:
             if self.thisown: destroy(self)
         except: pass
+
     def Create(*args): return _highgui.CvvImage_Create(*args)
     def Load(*args): return _highgui.CvvImage_Load(*args)
     def LoadRect(*args): return _highgui.CvvImage_LoadRect(*args)

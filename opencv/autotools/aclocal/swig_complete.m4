@@ -76,12 +76,16 @@ AC_DEFUN([SWIG_MULTI_MODULE_SUPPORT],[
 	[swig_tmp=( `echo $SWIG_VERSION | sed 's/[^0-9]\+/ /g'` )]
 	[swig_tmp=$(( 1000000 * ${swig_tmp[0]:-0} + 1000 * ${swig_tmp[1]:-0} + ${swig_tmp[2]:-0} ))]
 	if test -n "$SWIG_VERSION"; then
-		if test $swig_tmp -ge "1003020" ; then
-			SWIG="$SWIG -noruntime"
-			AC_MSG_RESULT([new syntax (SWIG >= 1.3.20)])
+		if test $swig_tmp -ge "1003024" ; then
+			AC_MSG_RESULT([always working (SWIG >= 1.3.24)])
 		else
-			SWIG="$SWIG -c"
-			AC_MSG_RESULT([old syntax (SWIG < 1.3.20)])
+			if test $swig_tmp -ge "1003020" ; then
+				SWIG="$SWIG -noruntime"
+				AC_MSG_RESULT([interim syntax (SWIG >= 1.3.20 < 1.3.24)])
+			else
+				SWIG="$SWIG -c"
+				AC_MSG_RESULT([old syntax (SWIG < 1.3.20)])
+			fi
 		fi
 	else
 		AC_MSG_WARN([SWIG version number unknown - couldn't set flags for multi module support])
@@ -103,8 +107,21 @@ AC_DEFUN([SWIG_PYTHON],[
 	AC_REQUIRE([AC_PATH_SWIG])
 	AC_REQUIRE([AM_PATH_PYTHON])
 	test "x$1" != "xno" || swig_shadow=" -noproxy"
+
+	[swig_tmp=( `echo $SWIG_VERSION | sed 's/[^0-9]\+/ /g'` )]
+	[swig_tmp=$(( 1000000 * ${swig_tmp[0]:-0} + 1000 * ${swig_tmp[1]:-0} + ${swig_tmp[2]:-0} ))]
+	if test -n "$SWIG_VERSION"; then
+		if test $swig_tmp -ge "1003024" ; then
+			SWIG_PYTHON_LIBS=""
+		else
+			SWIG_PYTHON_LIBS="$SWIG_RUNTIME_LIBS_DIR -lswigpy"
+		fi
+	else
+		AC_MSG_WARN([SWIG version number unknown - couldn't set python libs])
+	fi
+
 	AC_SUBST([SWIG_PYTHON_OPT],  "-python$swig_shadow")
-	AC_SUBST([SWIG_PYTHON_LIBS], "$SWIG_RUNTIME_LIBS_DIR -lswigpy")
+	AC_SUBST([SWIG_PYTHON_LIBS])
 ])
 
 # PYTHON_DEVEL()

@@ -1,11 +1,8 @@
-noinst_PROGRAMS = cxcoretest
+INCLUDES = -I$(top_srcdir)/cxcore/include -I$(top_srcdir)/tests/cxts
 
-cxcoretest_SOURCES = aarithm.cpp adatastruct.cpp adxt.cpp amath.cpp cxcoretest_main.cpp
+check_PROGRAMS = cxcoretest
 
-noinst_HEADERS = cxcoretest.h
+cxcoretest_SOURCES = cxcoretest.h aarithm.cpp adatastruct.cpp adxt.cpp amath.cpp cxcoretest_main.cpp
+cxcoretest_LDADD = -L$(top_builddir)/cxcore/src -lcxcore -L$(top_builddir)/tests/cxts -lcxts
 
 EXTRA_DIST = precomp.cpp cxcoretest.dsp cxcoretest.vcproj
-
-INCLUDES = -I. -I../../../cxcore/include -I../../cxts -I../../..
-
-cxcoretest_LDADD = -L../../../cxcore/src -lcxcore -L../../cxts -lcxts

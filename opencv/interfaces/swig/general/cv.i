@@ -45,7 +45,7 @@
 //             Institute of Communications Engineering, RWTH Aachen University
 
 
-%module cv
+%module(package="opencv") cv
 
 
 %{
@@ -61,6 +61,7 @@
 // A couple of typemaps helps wrapping OpenCV functions in a sensible way
 %include "./memory.i"
 %include "./typemaps.i"
+%include "./doublepointers.i"
 
 // Now include the filtered OpenCV constants and prototypes (includes cxcore as well)
 %include "../filtered/constants.h"

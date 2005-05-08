@@ -16,13 +16,12 @@ libcv_la_SOURCES = \
     cvswitcher.cpp cvtables.cpp cvtemplmatch.cpp cvthresh.cpp \
     cvundistort.cpp cvutils.cpp
 
-include_HEADERS =
 noinst_HEADERS = _cv.h _cvgeom.h _cvimgproc.h _cvipp.h _cvlist.h _cvmatrix.h
 EXTRA_DIST = cv.dsp cv.vcproj cv.rc resource.h
 
 libcv_la_LDFLAGS = -no-undefined -version-info @LT_VERSION@ @LDFLAGS@
-libcv_la_LIBADD  = ../../cxcore/src/libcxcore.la
+libcv_la_LIBADD  = $(top_builddir)/cxcore/src/libcxcore.la
 
 LIBS = -ldl -lpthread -lm
 
-INCLUDES = -I. -I../include -I../../cxcore/include -I../..
+INCLUDES = -I. -I$(top_srcdir)/cv/include -I$(top_srcdir)/cxcore/include -I$(top_srcdir)

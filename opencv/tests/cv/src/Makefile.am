@@ -1,6 +1,9 @@
-noinst_PROGRAMS = cvtest
+INCLUDES = -I. -I../../trs -I../../cxts -I../../../otherlibs/highgui -I../../../cxcore/include -I../../../cv/include -I../../../cv/src -I../../../cvaux/include
+
+check_PROGRAMS = cvtest
 
 cvtest_SOURCES = \
+    aeigenobjects.inc apixelaccess.inc cvtest.h \
     aaccum.cpp aadaptthresh.cpp aapproxpoly.cpp acalccontrasthist.cpp \
     acameracalibration.cpp acamshift.cpp acanny.cpp achesscorners.cpp \
     acolor.cpp acondens.cpp acontourcollection.cpp acontourmoments.cpp \
@@ -16,18 +19,12 @@ cvtest_SOURCES = \
     asamplers.cpp asnakes.cpp asubdivisions.cpp atemplmatch.cpp \
     athresh.cpp ats.cpp aundistort.cpp canny.cpp cvtest.cpp \
     tsysa.cpp ucontours.cpp ugraphics.cpp uiplutils.cpp ureadfile.cpp
-
-# here you should add all header files, which contains the functionality
-# of your shared lib (published for the users)
-include_HEADERS =
-
-# here you should add all header files, which shouldn't be installed
-noinst_HEADERS = aeigenobjects.inc apixelaccess.inc cvtest.h
+cvtest_LDADD = \
+    -L$(top_builddir)/cv/src -lcv \
+    -L$(top_builddir)/cxcore/src -lcxcore \
+    -L$(top_builddir)/tests/trs -ltrs \
+    -L$(top_builddir)/tests/cxts -lcxts \
+    -L$(top_builddir)/cvaux/src -lcvaux \
+    -L$(top_builddir)/otherlibs/highgui -lhighgui
 
 EXTRA_DIST = cvtest.dsp cvtest.vcproj
-
-INCLUDES = -I. -I../../trs -I../../cxts -I../../../otherlibs/highgui -I../../../cxcore/include -I../../../cv/include -I../../../cv/src -I../../../cvaux/include
-
-#cvtest_LDADD = -L../../../cv/src -lcv -L../../../otherlibs/highgui -lhighgui -L../../trs -ltrs -L../../../cvaux/src -lcvaux -L../../../cxcore/src -Lcxcore
-cvtest_LDADD = -L../../../cv/src -lcv -L../../../cxcore/src -lcxcore -L../../trs -ltrs -L../../cxts -lcxts -L../../../cvaux/src -lcvaux -L../../../otherlibs/highgui -lhighgui
-

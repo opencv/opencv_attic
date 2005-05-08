@@ -45,11 +45,13 @@
 //             Institute of Communications Engineering, RWTH Aachen University
 
 
-%module highgui
+%module(package="opencv") highgui
 
 %{
 #include "highgui.h"
 %}
+
+%import "./cv.i"
 
 %include "./memory.i"
 %include "./typemaps.i"
