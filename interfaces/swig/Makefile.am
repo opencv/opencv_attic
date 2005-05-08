@@ -13,7 +13,8 @@ AM_CPPFLAGS = \
   $(CV_INCLUDES)                     \
   -DCV_NO_BACKWARD_COMPATIBILITY
 
-EXTRA_DIST            = filtered general python
+SUBDIRS = filtered python
+EXTRA_DIST = general
 
 
 # Conditional targets ################################################################
@@ -43,37 +44,3 @@ _highgui_la_CXXFLAGS   = $(PYTHON_CSPEC)
 _highgui_la_LIBADD     = $(top_builddir)/otherlibs/highgui/libhighgui.la
 _highgui_la_LDFLAGS    = -module -avoid-version -no-undefined $(PYTHON_LSPEC) -L$(SWIG_PYTHON_LIBS)
 
-
-# SWIG ###############################################################################
-
-# the following rules keep wrappers up to date, if SWIG is present
-if UPDATE_SWIG_WRAPPERS
-
-# this rule creates a single SWIG parseable header from cv.h and cxcore.h, etc.
-filtered/cv.h: $(top_srcdir)/cv/include/cv.h $(top_srcdir)/cv/include/cvtypes.h \
-               $(top_srcdir)/cxcore/include/cxcore.h $(top_srcdir)/cxcore/include/cxtypes.h \
-               $(top_srcdir)/cxcore/include/cxerror.h Makefile
-	$(CPP) $(AM_CPPFLAGS) $(CPPFLAGS) -DSKIP_INCLUDES -o $@ $(top_srcdir)/cv/include/cv.h
-
-# this rule creates a single SWIG parseable header from cv.h and cxcore.h, etc.
-filtered/constants.h: $(top_srcdir)/cv/include/cv.h $(top_srcdir)/cv/include/cvtypes.h \
-               $(top_srcdir)/cxcore/include/cxcore.h $(top_srcdir)/cxcore/include/cxtypes.h \
-               $(top_srcdir)/cxcore/include/cxerror.h Makefile
-	$(PYTHON) $(top_srcdir)/utils/extract_constants.py $(top_srcdir)/cxcore/include/cxcore.h   > $@
-	$(PYTHON) $(top_srcdir)/utils/extract_constants.py $(top_srcdir)/cxcore/include/cxtypes.h >> $@
-	$(PYTHON) $(top_srcdir)/utils/extract_constants.py $(top_srcdir)/cxcore/include/cxerror.h >> $@
-	$(PYTHON) $(top_srcdir)/utils/extract_constants.py $(top_srcdir)/cv/include/cv.h          >> $@
-	$(PYTHON) $(top_srcdir)/utils/extract_constants.py $(top_srcdir)/cv/include/cvtypes.h     >> $@
-
-# this rule creates the Python wrapper sources for cxcore and cv
-python/_cv.cpp: python/cv.i python/imagedata.i python/error.h python/error.cpp         \
-                general/cv.i general/memory.i general/typemaps.i general/extensions.i  \
-                filtered/cv.h filtered/constants.h Makefile
-	$(SWIG) $(SWIG_PYTHON_OPT) $(CV_INCLUDES) -outdir python -o $@ $<
-
-# this rule creates the Python wrapper sources for highgui
-python/_highgui.cpp: python/highgui.i general/highgui.i general/typemaps.i general/memory.i \
-                     $(top_srcdir)/otherlibs/highgui/highgui.h Makefile
-	$(SWIG) $(SWIG_PYTHON_OPT) $(CV_INCLUDES) -DSKIP_INCLUDES -outdir python -o $@ $<
-
-endif

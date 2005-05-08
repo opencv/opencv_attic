@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#! /usr/bin/env python
 """
 This script extracts #defines from those OpenCV headers that can't be
 directly parsed by current SWIG versions and must be pre-filtered by
