@@ -94,7 +94,7 @@ cvMeanShift( const void* imgProb, CvRect windowIn,
 
     for( i = 0; i < criteria.max_iter; i++ )
     {
-        int dx, dy;
+        int dx, dy, delta;
         double inv_m00;
 
         CV_CALL( cvGetSubRect( mat, &cur_win, cur_rect )); 
@@ -112,14 +112,14 @@ cvMeanShift( const void* imgProb, CvRect windowIn,
         cur_rect.y += dy; 
 
         if( cur_rect.x < 0 )
-            cur_rect.x = 0;
-        else if( cur_rect.x + cur_rect.width > mat->width )
-            cur_rect.x = mat->width - cur_rect.width;
+            dx += cur_rect.x, cur_rect.x = 0;
+        else if( (delta = cur_rect.x + cur_rect.width - mat->width) > 0 )
+            dx -= delta, cur_rect.x -= delta;
 
         if( cur_rect.y < 0 )
-            cur_rect.y = 0;
-        else if( cur_rect.y + cur_rect.height > mat->height )
-            cur_rect.y = mat->height - cur_rect.height;
+            dy += cur_rect.y, cur_rect.y = 0;
+        else if( (delta = cur_rect.y + cur_rect.height - mat->height) > 0 )
+            dy -= delta, cur_rect.y -= delta;
 
         /* Check for coverage centers mass & window */
         if( dx*dx + dy*dy < eps )
