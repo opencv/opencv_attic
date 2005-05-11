@@ -76,13 +76,16 @@ binPROGRAMS_INSTALL = $(INSTALL_PROGRAM)
 PROGRAMS = $(bin_PROGRAMS)
 am_opencv_createsamples_OBJECTS = createsamples.$(OBJEXT)
 opencv_createsamples_OBJECTS = $(am_opencv_createsamples_OBJECTS)
-opencv_createsamples_LDADD = $(LDADD)
+am__DEPENDENCIES_1 = $(top_builddir)/otherlibs/highgui/libhighgui.la \
+	$(top_builddir)/cv/src/libcv.la \
+	$(top_builddir)/cxcore/src/libcxcore.la libcvhaartraining.a
+opencv_createsamples_DEPENDENCIES = $(am__DEPENDENCIES_1)
 am_opencv_haartraining_OBJECTS = haartraining.$(OBJEXT)
 opencv_haartraining_OBJECTS = $(am_opencv_haartraining_OBJECTS)
-opencv_haartraining_LDADD = $(LDADD)
+opencv_haartraining_DEPENDENCIES = $(am__DEPENDENCIES_1)
 am_opencv_performance_OBJECTS = performance.$(OBJEXT)
 opencv_performance_OBJECTS = $(am_opencv_performance_OBJECTS)
-opencv_performance_LDADD = $(LDADD)
+opencv_performance_DEPENDENCIES = $(am__DEPENDENCIES_1)
 DEFAULT_INCLUDES = -I. -I$(srcdir) -I$(top_builddir)
 depcomp = $(SHELL) $(top_srcdir)/autotools/depcomp
 am__depfiles_maybe = depfiles
@@ -149,10 +152,7 @@ INSTALL_SCRIPT = @INSTALL_SCRIPT@
 INSTALL_STRIP_PROGRAM = @INSTALL_STRIP_PROGRAM@
 LDFLAGS = @LDFLAGS@
 LIBOBJS = @LIBOBJS@
-LIBS = -L$(top_builddir)/otherlibs/highgui -lhighgui \
-       -L$(top_builddir)/cv/src -lcv \
-       -L$(top_builddir)/cxcore/src -lcxcore
-
+LIBS = @LIBS@
 LIBTOOL = @LIBTOOL@
 LN_S = @LN_S@
 LTLIBOBJS = @LTLIBOBJS@
@@ -241,18 +241,34 @@ target_cpu = @target_cpu@
 target_os = @target_os@
 target_vendor = @target_vendor@
 lib_LIBRARIES = libcvhaartraining.a
-libcvhaartraining_a_SOURCES = cvboost.cpp cvhaarclassifier.cpp cvhaartraining.cpp cvcommon.cpp cvsamples.cpp
+ALL_CV_LIBS = \
+	$(top_builddir)/otherlibs/highgui/libhighgui.la \
+	$(top_builddir)/cv/src/libcv.la                 \
+	$(top_builddir)/cxcore/src/libcxcore.la         \
+	libcvhaartraining.a
+
+libcvhaartraining_a_SOURCES = \
+	cvboost.cpp           \
+	cvhaarclassifier.cpp  \
+	cvhaartraining.cpp    \
+	cvcommon.cpp          \
+	cvsamples.cpp
+
 opencv_haartraining_SOURCES = haartraining.cpp
+opencv_haartraining_LDADD = $(ALL_CV_LIBS)
 opencv_createsamples_SOURCES = createsamples.cpp
+opencv_createsamples_LDADD = $(ALL_CV_LIBS)
 opencv_performance_SOURCES = performance.cpp
+opencv_performance_LDADD = $(ALL_CV_LIBS)
 noinst_HEADERS = cvclassifier.h _cvhaartraining.h _cvcommon.h
 EXTRA_DIST = 
-INCLUDES = -I$(top_srcdir)/cxcore/include -I$(top_srcdir)/cv/include \
-           -I$(top_srcdir)/otherlibs/highgui -I. -I$(top_srcdir)/apps/haartraining/include
+INCLUDES = \
+	-I$(top_srcdir)/cxcore/include    \
+	-I$(top_srcdir)/cv/include        \
+	-I$(top_srcdir)/otherlibs/highgui \
+	-I$(srcdir)/../include            \
+	-I.
 
-opencv_haartraining_LDFLAGS = -L. -lcvhaartraining
-opencv_createsamples_LDFLAGS = -L. -lcvhaartraining
-opencv_performance_LDFLAGS = -L. -lcvhaartraining
 all: all-am
 
 .SUFFIXES:
