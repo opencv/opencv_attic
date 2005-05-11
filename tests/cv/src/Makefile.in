@@ -78,7 +78,12 @@ am_cvtest_OBJECTS = aaccum.$(OBJEXT) aadaptthresh.$(OBJEXT) \
 	tsysa.$(OBJEXT) ucontours.$(OBJEXT) ugraphics.$(OBJEXT) \
 	uiplutils.$(OBJEXT) ureadfile.$(OBJEXT)
 cvtest_OBJECTS = $(am_cvtest_OBJECTS)
-cvtest_DEPENDENCIES =
+cvtest_DEPENDENCIES = $(top_builddir)/cv/src/libcv.la \
+	$(top_builddir)/cxcore/src/libcxcore.la \
+	$(top_builddir)/tests/trs/libtrs.a \
+	$(top_builddir)/tests/cxts/libcxts.a \
+	$(top_builddir)/cvaux/src/libcvaux.la \
+	$(top_builddir)/otherlibs/highgui/libhighgui.la
 DEFAULT_INCLUDES = -I. -I$(srcdir) -I$(top_builddir)
 depcomp = $(SHELL) $(top_srcdir)/autotools/depcomp
 am__depfiles_maybe = depfiles
@@ -236,7 +241,15 @@ target_alias = @target_alias@
 target_cpu = @target_cpu@
 target_os = @target_os@
 target_vendor = @target_vendor@
-INCLUDES = -I. -I../../trs -I../../cxts -I../../../otherlibs/highgui -I../../../cxcore/include -I../../../cv/include -I../../../cv/src -I../../../cvaux/include
+INCLUDES = \
+	-I.                               \
+	-I$(top_srcdir)/tests/trs         \
+	-I$(top_srcdir)/tests/cxts        \
+	-I$(top_srcdir)/otherlibs/highgui \
+	-I$(top_srcdir)/cxcore/include    \
+	-I$(top_srcdir)/cv/include        \
+	-I$(top_srcdir)/cvaux/include
+
 cvtest_SOURCES = \
     aeigenobjects.inc apixelaccess.inc cvtest.h \
     aaccum.cpp aadaptthresh.cpp aapproxpoly.cpp acalccontrasthist.cpp \
@@ -256,12 +269,12 @@ cvtest_SOURCES = \
     tsysa.cpp ucontours.cpp ugraphics.cpp uiplutils.cpp ureadfile.cpp
 
 cvtest_LDADD = \
-    -L$(top_builddir)/cv/src -lcv \
-    -L$(top_builddir)/cxcore/src -lcxcore \
-    -L$(top_builddir)/tests/trs -ltrs \
-    -L$(top_builddir)/tests/cxts -lcxts \
-    -L$(top_builddir)/cvaux/src -lcvaux \
-    -L$(top_builddir)/otherlibs/highgui -lhighgui
+	$(top_builddir)/cv/src/libcv.la                 \
+	$(top_builddir)/cxcore/src/libcxcore.la         \
+	$(top_builddir)/tests/trs/libtrs.a              \
+	$(top_builddir)/tests/cxts/libcxts.a            \
+	$(top_builddir)/cvaux/src/libcvaux.la           \
+	$(top_builddir)/otherlibs/highgui/libhighgui.la
 
 EXTRA_DIST = cvtest.dsp cvtest.vcproj
 all: all-am
