@@ -1,4 +1,11 @@
-INCLUDES = -I. -I../../trs -I../../cxts -I../../../otherlibs/highgui -I../../../cxcore/include -I../../../cv/include -I../../../cv/src -I../../../cvaux/include
+INCLUDES =                                \
+	-I.                               \
+	-I$(top_srcdir)/tests/trs         \
+	-I$(top_srcdir)/tests/cxts        \
+	-I$(top_srcdir)/otherlibs/highgui \
+	-I$(top_srcdir)/cxcore/include    \
+	-I$(top_srcdir)/cv/include        \
+	-I$(top_srcdir)/cvaux/include
 
 check_PROGRAMS = cvtest
 
@@ -19,12 +26,13 @@ cvtest_SOURCES = \
     asamplers.cpp asnakes.cpp asubdivisions.cpp atemplmatch.cpp \
     athresh.cpp ats.cpp aundistort.cpp canny.cpp cvtest.cpp \
     tsysa.cpp ucontours.cpp ugraphics.cpp uiplutils.cpp ureadfile.cpp
-cvtest_LDADD = \
-    -L$(top_builddir)/cv/src -lcv \
-    -L$(top_builddir)/cxcore/src -lcxcore \
-    -L$(top_builddir)/tests/trs -ltrs \
-    -L$(top_builddir)/tests/cxts -lcxts \
-    -L$(top_builddir)/cvaux/src -lcvaux \
-    -L$(top_builddir)/otherlibs/highgui -lhighgui
+
+cvtest_LDADD =                                          \
+	$(top_builddir)/cv/src/libcv.la                 \
+	$(top_builddir)/cxcore/src/libcxcore.la         \
+	$(top_builddir)/tests/trs/libtrs.a              \
+	$(top_builddir)/tests/cxts/libcxts.a            \
+	$(top_builddir)/cvaux/src/libcvaux.la           \
+	$(top_builddir)/otherlibs/highgui/libhighgui.la
 
 EXTRA_DIST = cvtest.dsp cvtest.vcproj
