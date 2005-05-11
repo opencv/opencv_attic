@@ -25,4 +25,4 @@
 # or
 #DEFAULT (echo ""; id; echo %{sVv}; date; cat) >> $CVSROOT/CVSROOT/commitlog
 CVSROOT /cvsroot/sitedocs/CVSROOT/cvstools/syncmail %{sVv} neurosurg@users.sourceforge.net
-DEFAULT /cvsroot/sitedocs/CVSROOT/cvstools/syncmai %{sVv} opencvlibrary-cvs@lists.sourceforge.net
+DEFAULT /cvsroot/sitedocs/CVSROOT/cvstools/syncmail %{sVv} opencvlibrary-cvs@lists.sourceforge.net
