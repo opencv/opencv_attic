@@ -1013,8 +1013,14 @@ static void icvCloseAVIWriter( CvAVI_VFW_Writer* writer )
 }
 
 
+// philipg.  Made this code capable of writing 8bpp gray scale bitmaps
+typedef struct tagBITMAPINFO_8Bit {
+    BITMAPINFOHEADER bmiHeader;
+    RGBQUAD          bmiColors[256];
+} BITMAPINFOHEADER_8BIT;
+
 static int icvInitAVIWriter( CvAVI_VFW_Writer* writer, int fourcc,
-                             double fps, CvSize frameSize )
+                             double fps, CvSize frameSize, int is_color )
 {
     if( writer && writer->avifile )
     {
@@ -1023,8 +1029,18 @@ static int icvInitAVIWriter( CvAVI_VFW_Writer* writer, int fourcc,
 
         assert( frameSize.width > 0 && frameSize.height > 0 );
 
-        BITMAPINFOHEADER bmih = icvBitmapHeader( frameSize.width, frameSize.height, 24 );
-        
+        BITMAPINFOHEADER_8BIT bmih;
+        int i;
+
+        bmih.bmiHeader = icvBitmapHeader( frameSize.width, frameSize.height, is_color ? 24 : 8 );
+        for( i = 0; i < 256; i++ )
+        {
+            bmih.bmiColors[i].rgbBlue = (BYTE)i;
+            bmih.bmiColors[i].rgbGreen = (BYTE)i;
+            bmih.bmiColors[i].rgbRed = (BYTE)i;
+            bmih.bmiColors[i].rgbReserved = 0;
+        }
+
         memset( &aviinfo, 0, sizeof(aviinfo));
         aviinfo.fccType = streamtypeVIDEO;
         aviinfo.fccHandler = 0;
@@ -1044,7 +1060,7 @@ static int icvInitAVIWriter( CvAVI_VFW_Writer* writer, int fourcc,
             copts.dwBytesPerSecond = 0; 
             copts.dwFlags = AVICOMPRESSF_VALID; 
             copts.lpFormat = &bmih; 
-            copts.cbFormat = sizeof(bmih); 
+            copts.cbFormat = (is_color ? sizeof(BITMAPINFOHEADER) : sizeof(bmih));
             copts.lpParms = 0; 
             copts.cbParms = 0; 
             copts.dwInterleaveEvery = 0;
@@ -1055,14 +1071,14 @@ static int icvInitAVIWriter( CvAVI_VFW_Writer* writer, int fourcc,
                 if( AVIMakeCompressedStream( &writer->compressed,
                     writer->uncompressed, pcopts, 0 ) == AVIERR_OK &&
                     // check that the resolution was not changed
-                    bmih.biWidth == frameSize.width &&
-                    bmih.biHeight == frameSize.height &&
+                    bmih.bmiHeader.biWidth == frameSize.width &&
+                    bmih.bmiHeader.biHeight == frameSize.height &&
                     AVIStreamSetFormat( writer->compressed, 0, &bmih, sizeof(bmih)) == AVIERR_OK )
                     {
                         writer->fps = fps;
                         writer->fourcc = (int)copts.fccHandler;
                         writer->frameSize = frameSize;
-                        writer->tempFrame = cvCreateImage( frameSize, 8, 3 );
+                        writer->tempFrame = cvCreateImage( frameSize, 8, (is_color ? 3 : 1) );
                         return 1;
                     }
             }
@@ -1073,8 +1089,8 @@ static int icvInitAVIWriter( CvAVI_VFW_Writer* writer, int fourcc,
 }
 
 
-CV_IMPL CvVideoWriter* cvCreateAVIWriter( const char* filename, int fourcc,
-                                          double fps, CvSize frameSize )
+CV_IMPL CvVideoWriter* cvCreateVideoWriter( const char* filename, int fourcc,
+                                            double fps, CvSize frameSize, int is_color )
 {
     CvAVI_VFW_Writer* writer = (CvAVI_VFW_Writer*)cvAlloc( sizeof(CvAVI_VFW_Writer));
     memset( writer, 0, sizeof(*writer));
@@ -1085,7 +1101,7 @@ CV_IMPL CvVideoWriter* cvCreateAVIWriter( const char* filename, int fourcc,
     {
         if( frameSize.width > 0 && frameSize.height > 0 )
         {
-            if( !icvInitAVIWriter( writer, fourcc, fps, frameSize ))
+            if( !icvInitAVIWriter( writer, fourcc, fps, frameSize, is_color ))
                 cvReleaseVideoWriter( (CvVideoWriter**)&writer );
         }
         else if( fourcc == -1 )
@@ -1110,11 +1126,13 @@ CV_IMPL int cvWriteFrame( CvVideoWriter* _writer, const IplImage* image )
     CvAVI_VFW_Writer* writer = (CvAVI_VFW_Writer*)_writer;
     
     if( writer && (writer->compressed ||
-        icvInitAVIWriter( writer, writer->fourcc, writer->fps, writer->frameSize )))
+        icvInitAVIWriter( writer, writer->fourcc, writer->fps,
+                          writer->frameSize, image->nChannels > 1 )))
     {
-        if( image->origin == 0 )
+        if( image->nChannels != writer->tempFrame->nChannels || image->origin == 0 )
         {
-            cvFlip( image, writer->tempFrame, 0 );
+            cvConvertImage( image, writer->tempFrame,
+                image->origin == 0 ? CV_CVTIMG_FLIP : 0 );
             image = (const IplImage*)writer->tempFrame;
         }
         if( AVIStreamWrite( writer->compressed, writer->pos++, 1, image->imageData,
@@ -1442,7 +1460,7 @@ CV_IMPL CvCapture* cvCaptureFromCAM( int index )
 
 
 CV_IMPL CvVideoWriter* cvCreateVideoWriter( const char* /*filename*/, int /*fourcc*/,
-                                            double /*fps*/, CvSize /*frameSize*/ )
+                                            double /*fps*/, CvSize /*frameSize*/, int /*is_color*/ )
 {
     fprintf( stderr, "HIGHGUI ERROR: Writing to video files is not supported\n" );
     return 0;
