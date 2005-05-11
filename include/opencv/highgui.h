@@ -215,11 +215,11 @@ CVAPI(CvCapture*) cvCaptureFromFile( const char* filename );
 /* start capturing frames from camera: index = camera_index + domain_offset (CV_CAP_*) */
 CVAPI(CvCapture*) cvCaptureFromCAM( int index );
 
-/*just grab frame, return 1 if success, 0 if fail 
+/* grab a frame, return 1 on success, 0 on fail. 
   this function is thought to be fast               */  
 CVAPI(int) cvGrabFrame( CvCapture* capture );
 
-/*get frame grabbed with cvGrabFrame(..) 
+/* get the frame grabbed with cvGrabFrame(..) 
   This function may apply some frame processing like 
   frame decompression, flipping etc.
   !!!DO NOT RELEASE or MODIFY the retrieved frame!!! */
@@ -253,7 +253,8 @@ typedef struct CvVideoWriter CvVideoWriter;
 
 /* initialize video file writer */
 CVAPI(CvVideoWriter*) cvCreateVideoWriter( const char* filename, int fourcc,
-                                           double fps, CvSize frame_size );
+                                           double fps, CvSize frame_size,
+                                           int is_color CV_DEFAULT(1));
 
 /* write frame to video file */
 CVAPI(int) cvWriteFrame( CvVideoWriter* writer, const IplImage* image );
