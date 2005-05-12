@@ -19,6 +19,9 @@
 
 # depending on the Automake conditionals set by configure, we will build the various
 # script language interfaces that SWIG is capable of generating wrappers for
+
+SOURCES = $(_cv_la_SOURCES) $(_highgui_la_SOURCES)
+
 srcdir = @srcdir@
 top_srcdir = @top_srcdir@
 VPATH = @srcdir@
@@ -43,7 +46,8 @@ build_triplet = @build@
 host_triplet = @host@
 target_triplet = @target@
 subdir = interfaces/swig/python
-DIST_COMMON = $(srcdir)/Makefile.am $(srcdir)/Makefile.in
+DIST_COMMON = $(am__pkgpython_PYTHON_DIST) $(srcdir)/Makefile.am \
+	$(srcdir)/Makefile.in
 ACLOCAL_M4 = $(top_srcdir)/aclocal.m4
 am__aclocal_m4_deps = $(top_srcdir)/autotools/aclocal/az_python.m4 \
 	$(top_srcdir)/autotools/aclocal/pkg.m4 \
@@ -54,8 +58,52 @@ am__configure_deps = $(am__aclocal_m4_deps) $(CONFIGURE_DEPENDENCIES) \
 mkinstalldirs = $(SHELL) $(top_srcdir)/autotools/mkinstalldirs
 CONFIG_HEADER = $(top_builddir)/cvconfig.h
 CONFIG_CLEAN_FILES =
-SOURCES =
-DIST_SOURCES =
+am__vpath_adj_setup = srcdirstrip=`echo "$(srcdir)" | sed 's|.|.|g'`;
+am__vpath_adj = case $$p in \
+    $(srcdir)/*) f=`echo "$$p" | sed "s|^$$srcdirstrip/||"`;; \
+    *) f=$$p;; \
+  esac;
+am__strip_dir = `echo $$p | sed -e 's|^.*/||'`;
+am__installdirs = "$(DESTDIR)$(pkgpythondir)" \
+	"$(DESTDIR)$(pkgpythondir)"
+pkgpythonLTLIBRARIES_INSTALL = $(INSTALL)
+LTLIBRARIES = $(pkgpython_LTLIBRARIES)
+_cv_la_DEPENDENCIES = $(top_builddir)/cv/src/libcv.la
+am__cv_la_OBJECTS = _cv_la-_cv.lo _cv_la-error.lo
+_cv_la_OBJECTS = $(am__cv_la_OBJECTS)
+@BUILD_PYTHON_WRAPPERS_TRUE@am__cv_la_rpath = -rpath $(pkgpythondir)
+_highgui_la_DEPENDENCIES =  \
+	$(top_builddir)/otherlibs/highgui/libhighgui.la
+am__highgui_la_OBJECTS = _highgui_la-_highgui.lo
+_highgui_la_OBJECTS = $(am__highgui_la_OBJECTS)
+@BUILD_PYTHON_WRAPPERS_TRUE@am__highgui_la_rpath = -rpath \
+@BUILD_PYTHON_WRAPPERS_TRUE@	$(pkgpythondir)
+DEFAULT_INCLUDES = -I. -I$(srcdir) -I$(top_builddir)
+depcomp = $(SHELL) $(top_srcdir)/autotools/depcomp
+am__depfiles_maybe = depfiles
+CXXCOMPILE = $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) \
+	$(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS)
+LTCXXCOMPILE = $(LIBTOOL) --tag=CXX --mode=compile $(CXX) $(DEFS) \
+	$(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) \
+	$(AM_CXXFLAGS) $(CXXFLAGS)
+CXXLD = $(CXX)
+CXXLINK = $(LIBTOOL) --tag=CXX --mode=link $(CXXLD) $(AM_CXXFLAGS) \
+	$(CXXFLAGS) $(AM_LDFLAGS) $(LDFLAGS) -o $@
+COMPILE = $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) \
+	$(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS)
+LTCOMPILE = $(LIBTOOL) --tag=CC --mode=compile $(CC) $(DEFS) \
+	$(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) \
+	$(AM_CFLAGS) $(CFLAGS)
+CCLD = $(CC)
+LINK = $(LIBTOOL) --tag=CC --mode=link $(CCLD) $(AM_CFLAGS) $(CFLAGS) \
+	$(AM_LDFLAGS) $(LDFLAGS) -o $@
+SOURCES = $(_cv_la_SOURCES) $(_highgui_la_SOURCES)
+DIST_SOURCES = $(_cv_la_SOURCES) $(_highgui_la_SOURCES)
+am__pkgpython_PYTHON_DIST = __init__.py cv.py adaptors.py highgui.py
+pkgpythonPYTHON_INSTALL = $(INSTALL_DATA)
+py_compile = $(top_srcdir)/autotools/py-compile
+ETAGS = etags
+CTAGS = ctags
 DISTFILES = $(DIST_COMMON) $(DIST_SOURCES) $(TEXINFOS) $(EXTRA_DIST)
 ACLOCAL = @ACLOCAL@
 AMDEP_FALSE = @AMDEP_FALSE@
@@ -199,9 +247,36 @@ AM_CPPFLAGS = \
   $(CV_INCLUDES)                     \
   -DCV_NO_BACKWARD_COMPATIBILITY
 
+
+# Conditional targets #######################################################
+@BUILD_PYTHON_WRAPPERS_TRUE@pkgpython_LTLIBRARIES = _cv.la _highgui.la
+@BUILD_PYTHON_WRAPPERS_TRUE@pkgpython_PYTHON = \
+@BUILD_PYTHON_WRAPPERS_TRUE@    __init__.py    \
+@BUILD_PYTHON_WRAPPERS_TRUE@    cv.py          \
+@BUILD_PYTHON_WRAPPERS_TRUE@    adaptors.py    \
+@BUILD_PYTHON_WRAPPERS_TRUE@    highgui.py
+
+
+# Python #####################################################################
+_cv_la_SOURCES = _cv.cpp error.cpp error.h \
+		    $(builddir)/../filtered/cv.h \
+		    $(builddir)/../filtered/constants.h
+
+_cv_la_CXXFLAGS = $(PYTHON_CSPEC)
+_cv_la_LIBADD = $(top_builddir)/cv/src/libcv.la
+_cv_la_LDFLAGS = -module -avoid-version -no-undefined $(PYTHON_LSPEC) \
+		    -L$(SWIG_PYTHON_LIBS)
+
+_highgui_la_SOURCES = _highgui.cpp $(top_srcdir)/otherlibs/highgui/highgui.h
+_highgui_la_CXXFLAGS = $(PYTHON_CSPEC)
+_highgui_la_LIBADD = $(top_builddir)/otherlibs/highgui/libhighgui.la
+_highgui_la_LDFLAGS = -module -avoid-version -no-undefined $(PYTHON_LSPEC) \
+			 -L$(SWIG_PYTHON_LIBS)
+
 all: all-am
 
 .SUFFIXES:
+.SUFFIXES: .cpp .lo .o .obj
 $(srcdir)/Makefile.in:  $(srcdir)/Makefile.am  $(am__configure_deps)
 	@for dep in $?; do \
 	  case '$(am__configure_deps)' in \
@@ -231,6 +306,89 @@ $(top_srcdir)/configure:  $(am__configure_deps)
 	cd $(top_builddir) && $(MAKE) $(AM_MAKEFLAGS) am--refresh
 $(ACLOCAL_M4):  $(am__aclocal_m4_deps)
 	cd $(top_builddir) && $(MAKE) $(AM_MAKEFLAGS) am--refresh
+install-pkgpythonLTLIBRARIES: $(pkgpython_LTLIBRARIES)
+	@$(NORMAL_INSTALL)
+	test -z "$(pkgpythondir)" || $(mkdir_p) "$(DESTDIR)$(pkgpythondir)"
+	@list='$(pkgpython_LTLIBRARIES)'; for p in $$list; do \
+	  if test -f $$p; then \
+	    f=$(am__strip_dir) \
+	    echo " $(LIBTOOL) --mode=install $(pkgpythonLTLIBRARIES_INSTALL) $(INSTALL_STRIP_FLAG) '$$p' '$(DESTDIR)$(pkgpythondir)/$$f'"; \
+	    $(LIBTOOL) --mode=install $(pkgpythonLTLIBRARIES_INSTALL) $(INSTALL_STRIP_FLAG) "$$p" "$(DESTDIR)$(pkgpythondir)/$$f"; \
+	  else :; fi; \
+	done
+
+uninstall-pkgpythonLTLIBRARIES:
+	@$(NORMAL_UNINSTALL)
+	@set -x; list='$(pkgpython_LTLIBRARIES)'; for p in $$list; do \
+	  p=$(am__strip_dir) \
+	  echo " $(LIBTOOL) --mode=uninstall rm -f '$(DESTDIR)$(pkgpythondir)/$$p'"; \
+	  $(LIBTOOL) --mode=uninstall rm -f "$(DESTDIR)$(pkgpythondir)/$$p"; \
+	done
+
+clean-pkgpythonLTLIBRARIES:
+	-test -z "$(pkgpython_LTLIBRARIES)" || rm -f $(pkgpython_LTLIBRARIES)
+	@list='$(pkgpython_LTLIBRARIES)'; for p in $$list; do \
+	  dir="`echo $$p | sed -e 's|/[^/]*$$||'`"; \
+	  test "$$dir" != "$$p" || dir=.; \
+	  echo "rm -f \"$${dir}/so_locations\""; \
+	  rm -f "$${dir}/so_locations"; \
+	done
+_cv.la: $(_cv_la_OBJECTS) $(_cv_la_DEPENDENCIES) 
+	$(CXXLINK) $(am__cv_la_rpath) $(_cv_la_LDFLAGS) $(_cv_la_OBJECTS) $(_cv_la_LIBADD) $(LIBS)
+_highgui.la: $(_highgui_la_OBJECTS) $(_highgui_la_DEPENDENCIES) 
+	$(CXXLINK) $(am__highgui_la_rpath) $(_highgui_la_LDFLAGS) $(_highgui_la_OBJECTS) $(_highgui_la_LIBADD) $(LIBS)
+
+mostlyclean-compile:
+	-rm -f *.$(OBJEXT)
+
+distclean-compile:
+	-rm -f *.tab.c
+
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/_cv_la-_cv.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/_cv_la-error.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/_highgui_la-_highgui.Plo@am__quote@
+
+.cpp.o:
+@am__fastdepCXX_TRUE@	if $(CXXCOMPILE) -MT $@ -MD -MP -MF "$(DEPDIR)/$*.Tpo" -c -o $@ $<; \
+@am__fastdepCXX_TRUE@	then mv -f "$(DEPDIR)/$*.Tpo" "$(DEPDIR)/$*.Po"; else rm -f "$(DEPDIR)/$*.Tpo"; exit 1; fi
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	source='$<' object='$@' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCXX_FALSE@	$(CXXCOMPILE) -c -o $@ $<
+
+.cpp.obj:
+@am__fastdepCXX_TRUE@	if $(CXXCOMPILE) -MT $@ -MD -MP -MF "$(DEPDIR)/$*.Tpo" -c -o $@ `$(CYGPATH_W) '$<'`; \
+@am__fastdepCXX_TRUE@	then mv -f "$(DEPDIR)/$*.Tpo" "$(DEPDIR)/$*.Po"; else rm -f "$(DEPDIR)/$*.Tpo"; exit 1; fi
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	source='$<' object='$@' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCXX_FALSE@	$(CXXCOMPILE) -c -o $@ `$(CYGPATH_W) '$<'`
+
+.cpp.lo:
+@am__fastdepCXX_TRUE@	if $(LTCXXCOMPILE) -MT $@ -MD -MP -MF "$(DEPDIR)/$*.Tpo" -c -o $@ $<; \
+@am__fastdepCXX_TRUE@	then mv -f "$(DEPDIR)/$*.Tpo" "$(DEPDIR)/$*.Plo"; else rm -f "$(DEPDIR)/$*.Tpo"; exit 1; fi
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	source='$<' object='$@' libtool=yes @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCXX_FALSE@	$(LTCXXCOMPILE) -c -o $@ $<
+
+_cv_la-_cv.lo: _cv.cpp
+@am__fastdepCXX_TRUE@	if $(LIBTOOL) --tag=CXX --mode=compile $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(_cv_la_CXXFLAGS) $(CXXFLAGS) -MT _cv_la-_cv.lo -MD -MP -MF "$(DEPDIR)/_cv_la-_cv.Tpo" -c -o _cv_la-_cv.lo `test -f '_cv.cpp' || echo '$(srcdir)/'`_cv.cpp; \
+@am__fastdepCXX_TRUE@	then mv -f "$(DEPDIR)/_cv_la-_cv.Tpo" "$(DEPDIR)/_cv_la-_cv.Plo"; else rm -f "$(DEPDIR)/_cv_la-_cv.Tpo"; exit 1; fi
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	source='_cv.cpp' object='_cv_la-_cv.lo' libtool=yes @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCXX_FALSE@	$(LIBTOOL) --tag=CXX --mode=compile $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(_cv_la_CXXFLAGS) $(CXXFLAGS) -c -o _cv_la-_cv.lo `test -f '_cv.cpp' || echo '$(srcdir)/'`_cv.cpp
+
+_cv_la-error.lo: error.cpp
+@am__fastdepCXX_TRUE@	if $(LIBTOOL) --tag=CXX --mode=compile $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(_cv_la_CXXFLAGS) $(CXXFLAGS) -MT _cv_la-error.lo -MD -MP -MF "$(DEPDIR)/_cv_la-error.Tpo" -c -o _cv_la-error.lo `test -f 'error.cpp' || echo '$(srcdir)/'`error.cpp; \
+@am__fastdepCXX_TRUE@	then mv -f "$(DEPDIR)/_cv_la-error.Tpo" "$(DEPDIR)/_cv_la-error.Plo"; else rm -f "$(DEPDIR)/_cv_la-error.Tpo"; exit 1; fi
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	source='error.cpp' object='_cv_la-error.lo' libtool=yes @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCXX_FALSE@	$(LIBTOOL) --tag=CXX --mode=compile $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(_cv_la_CXXFLAGS) $(CXXFLAGS) -c -o _cv_la-error.lo `test -f 'error.cpp' || echo '$(srcdir)/'`error.cpp
+
+_highgui_la-_highgui.lo: _highgui.cpp
+@am__fastdepCXX_TRUE@	if $(LIBTOOL) --tag=CXX --mode=compile $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(_highgui_la_CXXFLAGS) $(CXXFLAGS) -MT _highgui_la-_highgui.lo -MD -MP -MF "$(DEPDIR)/_highgui_la-_highgui.Tpo" -c -o _highgui_la-_highgui.lo `test -f '_highgui.cpp' || echo '$(srcdir)/'`_highgui.cpp; \
+@am__fastdepCXX_TRUE@	then mv -f "$(DEPDIR)/_highgui_la-_highgui.Tpo" "$(DEPDIR)/_highgui_la-_highgui.Plo"; else rm -f "$(DEPDIR)/_highgui_la-_highgui.Tpo"; exit 1; fi
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	source='_highgui.cpp' object='_highgui_la-_highgui.lo' libtool=yes @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCXX_FALSE@	$(LIBTOOL) --tag=CXX --mode=compile $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(_highgui_la_CXXFLAGS) $(CXXFLAGS) -c -o _highgui_la-_highgui.lo `test -f '_highgui.cpp' || echo '$(srcdir)/'`_highgui.cpp
 
 mostlyclean-libtool:
 	-rm -f *.lo
@@ -241,12 +399,82 @@ clean-libtool:
 distclean-libtool:
 	-rm -f libtool
 uninstall-info-am:
+install-pkgpythonPYTHON: $(pkgpython_PYTHON)
+	@$(NORMAL_INSTALL)
+	test -z "$(pkgpythondir)" || $(mkdir_p) "$(DESTDIR)$(pkgpythondir)"
+	@list='$(pkgpython_PYTHON)'; dlist=''; for p in $$list; do\
+	  if test -f "$$p"; then b=; else b="$(srcdir)/"; fi; \
+	  if test -f $$b$$p; then \
+	    f=$(am__strip_dir) \
+	    dlist="$$dlist $$f"; \
+	    echo " $(pkgpythonPYTHON_INSTALL) '$$b$$p' '$(DESTDIR)$(pkgpythondir)/$$f'"; \
+	    $(pkgpythonPYTHON_INSTALL) "$$b$$p" "$(DESTDIR)$(pkgpythondir)/$$f"; \
+	  else :; fi; \
+	done; \
+	if test -n "$$dlist"; then \
+	  if test -z "$(DESTDIR)"; then \
+	    PYTHON=$(PYTHON) $(py_compile) --basedir "$(pkgpythondir)" $$dlist; \
+	  else \
+	    PYTHON=$(PYTHON) $(py_compile) --destdir "$(DESTDIR)" --basedir "$(pkgpythondir)" $$dlist; \
+	  fi; \
+	else :; fi
+
+uninstall-pkgpythonPYTHON:
+	@$(NORMAL_UNINSTALL)
+	@list='$(pkgpython_PYTHON)'; dlist=''; for p in $$list; do\
+	  f=$(am__strip_dir) \
+	  rm -f "$(DESTDIR)$(pkgpythondir)/$$f"; \
+	  rm -f "$(DESTDIR)$(pkgpythondir)/$${f}c"; \
+	  rm -f "$(DESTDIR)$(pkgpythondir)/$${f}o"; \
+	done
+
+ID: $(HEADERS) $(SOURCES) $(LISP) $(TAGS_FILES)
+	list='$(SOURCES) $(HEADERS) $(LISP) $(TAGS_FILES)'; \
+	unique=`for i in $$list; do \
+	    if test -f "$$i"; then echo $$i; else echo $(srcdir)/$$i; fi; \
+	  done | \
+	  $(AWK) '    { files[$$0] = 1; } \
+	       END { for (i in files) print i; }'`; \
+	mkid -fID $$unique
 tags: TAGS
-TAGS:
 
+TAGS:  $(HEADERS) $(SOURCES)  $(TAGS_DEPENDENCIES) \
+		$(TAGS_FILES) $(LISP)
+	tags=; \
+	here=`pwd`; \
+	list='$(SOURCES) $(HEADERS)  $(LISP) $(TAGS_FILES)'; \
+	unique=`for i in $$list; do \
+	    if test -f "$$i"; then echo $$i; else echo $(srcdir)/$$i; fi; \
+	  done | \
+	  $(AWK) '    { files[$$0] = 1; } \
+	       END { for (i in files) print i; }'`; \
+	if test -z "$(ETAGS_ARGS)$$tags$$unique"; then :; else \
+	  test -n "$$unique" || unique=$$empty_fix; \
+	  $(ETAGS) $(ETAGSFLAGS) $(AM_ETAGSFLAGS) $(ETAGS_ARGS) \
+	    $$tags $$unique; \
+	fi
 ctags: CTAGS
-CTAGS:
+CTAGS:  $(HEADERS) $(SOURCES)  $(TAGS_DEPENDENCIES) \
+		$(TAGS_FILES) $(LISP)
+	tags=; \
+	here=`pwd`; \
+	list='$(SOURCES) $(HEADERS)  $(LISP) $(TAGS_FILES)'; \
+	unique=`for i in $$list; do \
+	    if test -f "$$i"; then echo $$i; else echo $(srcdir)/$$i; fi; \
+	  done | \
+	  $(AWK) '    { files[$$0] = 1; } \
+	       END { for (i in files) print i; }'`; \
+	test -z "$(CTAGS_ARGS)$$tags$$unique" \
+	  || $(CTAGS) $(CTAGSFLAGS) $(AM_CTAGSFLAGS) $(CTAGS_ARGS) \
+	     $$tags $$unique
 
+GTAGS:
+	here=`$(am__cd) $(top_builddir) && pwd` \
+	  && cd $(top_srcdir) \
+	  && gtags -i $(GTAGS_ARGS) $$here
+
+distclean-tags:
+	-rm -f TAGS ID GTAGS GRTAGS GSYMS GPATH tags
 
 distdir: $(DISTFILES)
 	@srcdirstrip=`echo "$(srcdir)" | sed 's|.|.|g'`; \
@@ -277,8 +505,11 @@ distdir: $(DISTFILES)
 	done
 check-am: all-am
 check: check-am
-all-am: Makefile
+all-am: Makefile $(LTLIBRARIES)
 installdirs:
+	for dir in "$(DESTDIR)$(pkgpythondir)" "$(DESTDIR)$(pkgpythondir)"; do \
+	  test -z "$$dir" || $(mkdir_p) "$$dir"; \
+	done
 install: install-am
 install-exec: install-exec-am
 install-data: install-data-am
@@ -305,11 +536,14 @@ maintainer-clean-generic:
 	@echo "it deletes files that may require special tools to rebuild."
 clean: clean-am
 
-clean-am: clean-generic clean-libtool mostlyclean-am
+clean-am: clean-generic clean-libtool clean-pkgpythonLTLIBRARIES \
+	mostlyclean-am
 
 distclean: distclean-am
+	-rm -rf ./$(DEPDIR)
 	-rm -f Makefile
-distclean-am: clean-am distclean-generic distclean-libtool
+distclean-am: clean-am distclean-compile distclean-generic \
+	distclean-libtool distclean-tags
 
 dvi: dvi-am
 
@@ -321,7 +555,7 @@ info: info-am
 
 info-am:
 
-install-data-am:
+install-data-am: install-pkgpythonLTLIBRARIES install-pkgpythonPYTHON
 
 install-exec-am:
 
@@ -332,12 +566,14 @@ install-man:
 installcheck-am:
 
 maintainer-clean: maintainer-clean-am
+	-rm -rf ./$(DEPDIR)
 	-rm -f Makefile
 maintainer-clean-am: distclean-am maintainer-clean-generic
 
 mostlyclean: mostlyclean-am
 
-mostlyclean-am: mostlyclean-generic mostlyclean-libtool
+mostlyclean-am: mostlyclean-compile mostlyclean-generic \
+	mostlyclean-libtool
 
 pdf: pdf-am
 
@@ -347,32 +583,47 @@ ps: ps-am
 
 ps-am:
 
-uninstall-am: uninstall-info-am
+uninstall-am: uninstall-info-am uninstall-pkgpythonLTLIBRARIES \
+	uninstall-pkgpythonPYTHON
 
-.PHONY: all all-am check check-am clean clean-generic clean-libtool \
-	distclean distclean-generic distclean-libtool distdir dvi \
-	dvi-am html html-am info info-am install install-am \
-	install-data install-data-am install-exec install-exec-am \
-	install-info install-info-am install-man install-strip \
-	installcheck installcheck-am installdirs maintainer-clean \
-	maintainer-clean-generic mostlyclean mostlyclean-generic \
-	mostlyclean-libtool pdf pdf-am ps ps-am uninstall uninstall-am \
-	uninstall-info-am
+.PHONY: CTAGS GTAGS all all-am check check-am clean clean-generic \
+	clean-libtool clean-pkgpythonLTLIBRARIES ctags distclean \
+	distclean-compile distclean-generic distclean-libtool \
+	distclean-tags distdir dvi dvi-am html html-am info info-am \
+	install install-am install-data install-data-am install-exec \
+	install-exec-am install-info install-info-am install-man \
+	install-pkgpythonLTLIBRARIES install-pkgpythonPYTHON \
+	install-strip installcheck installcheck-am installdirs \
+	maintainer-clean maintainer-clean-generic mostlyclean \
+	mostlyclean-compile mostlyclean-generic mostlyclean-libtool \
+	pdf pdf-am ps ps-am tags uninstall uninstall-am \
+	uninstall-info-am uninstall-pkgpythonLTLIBRARIES \
+	uninstall-pkgpythonPYTHON
 
 
-# SWIG ###############################################################################
+# SWIG #######################################################################
 
 # the following rules keep wrappers up to date, if SWIG is present
 
 # this rule creates the Python wrapper sources for cxcore and cv
-@UPDATE_SWIG_WRAPPERS_TRUE@_cv.cpp: cv.i imagedata.i error.h error.cpp         \
-@UPDATE_SWIG_WRAPPERS_TRUE@         ../general/cv.i ../general/memory.i ../general/typemaps.i ../general/extensions.i ../general/doublepointers.i \
-@UPDATE_SWIG_WRAPPERS_TRUE@         ../filtered/cv.h ../filtered/constants.h Makefile
+@UPDATE_SWIG_WRAPPERS_TRUE@_cv.cpp: cv.i imagedata.i error.h error.cpp    \
+@UPDATE_SWIG_WRAPPERS_TRUE@         $(srcdir)/../general/cv.i             \
+@UPDATE_SWIG_WRAPPERS_TRUE@         $(srcdir)/../general/memory.i         \
+@UPDATE_SWIG_WRAPPERS_TRUE@         $(srcdir)/../general/typemaps.i       \
+@UPDATE_SWIG_WRAPPERS_TRUE@         $(srcdir)/../general/extensions.i     \
+@UPDATE_SWIG_WRAPPERS_TRUE@         $(srcdir)/../general/doublepointers.i \
+@UPDATE_SWIG_WRAPPERS_TRUE@         $(srcdir)/../filtered/cv.h            \
+@UPDATE_SWIG_WRAPPERS_TRUE@         $(srcdir)/../filtered/constants.h     \
+@UPDATE_SWIG_WRAPPERS_TRUE@         Makefile
 @UPDATE_SWIG_WRAPPERS_TRUE@	$(SWIG) $(SWIG_PYTHON_OPT) $(CV_INCLUDES) -o $@ $<
 
 # this rule creates the Python wrapper sources for highgui
-@UPDATE_SWIG_WRAPPERS_TRUE@_highgui.cpp: highgui.i ../general/highgui.i ../general/typemaps.i ../general/memory.i \
-@UPDATE_SWIG_WRAPPERS_TRUE@              $(top_srcdir)/otherlibs/highgui/highgui.h Makefile python
+@UPDATE_SWIG_WRAPPERS_TRUE@_highgui.cpp: highgui.i                                 \
+@UPDATE_SWIG_WRAPPERS_TRUE@              $(srcdir)/../general/highgui.i            \
+@UPDATE_SWIG_WRAPPERS_TRUE@	      $(srcdir)/../general/typemaps.i           \
+@UPDATE_SWIG_WRAPPERS_TRUE@              $(srcdir)/../general/memory.i             \
+@UPDATE_SWIG_WRAPPERS_TRUE@	      $(top_srcdir)/otherlibs/highgui/highgui.h \
+@UPDATE_SWIG_WRAPPERS_TRUE@              Makefile
 @UPDATE_SWIG_WRAPPERS_TRUE@	$(SWIG) $(SWIG_PYTHON_OPT) $(CV_INCLUDES) -DSKIP_INCLUDES -o $@ $<
 # Tell versions [3.59,3.63) of GNU make to not export all variables.
 # Otherwise a system limit (for SysV at least) may be exceeded.
