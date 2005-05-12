@@ -1696,7 +1696,7 @@ SWIG_Check_double(PyObject* obj)
   return SWIG_AsVal_double(obj, (double*)0);
 }
 
-extern "C" CvVideoWriter *cvCreateVideoWriter(char const *,int,double,CvSize);
+extern "C" CvVideoWriter *cvCreateVideoWriter(char const *,int,double,CvSize,int);
 extern "C" int cvWriteFrame(CvVideoWriter *,IplImage const *);
 extern "C" void cvReleaseVideoWriter(CvVideoWriter **);
 
@@ -1791,15 +1791,9 @@ static PyObject *_wrap_cvShowImage(PyObject *, PyObject *args) {
         SWIG_arg_fail(1);SWIG_fail;
     }
     {
-        int err = SWIG_ConvertPtr
-        (
-        obj1,
-        (void **) &arg2, 
-        SWIGTYPE_p__IplImage, 
-        SWIG_POINTER_EXCEPTION
-        );
-        if (err == -1)
-        return 0; 
+        if ((SWIG_ConvertPtr(obj1,(void **)(&arg2),0,SWIG_POINTER_EXCEPTION|0))== -1) {
+            SWIG_arg_fail(2);SWIG_fail;
+        }
     }
     {
         try {
@@ -2191,15 +2185,9 @@ static PyObject *_wrap_cvSaveImage(PyObject *, PyObject *args) {
         SWIG_arg_fail(1);SWIG_fail;
     }
     {
-        int err = SWIG_ConvertPtr
-        (
-        obj1,
-        (void **) &arg2, 
-        SWIGTYPE_p__IplImage, 
-        SWIG_POINTER_EXCEPTION
-        );
-        if (err == -1)
-        return 0; 
+        if ((SWIG_ConvertPtr(obj1,(void **)(&arg2),0,SWIG_POINTER_EXCEPTION|0))== -1) {
+            SWIG_arg_fail(2);SWIG_fail;
+        }
     }
     {
         try {
@@ -2230,26 +2218,14 @@ static PyObject *_wrap_cvConvertImage(PyObject *, PyObject *args) {
     
     if(!PyArg_ParseTuple(args,(char *)"OO|O:cvConvertImage",&obj0,&obj1,&obj2)) goto fail;
     {
-        int err = SWIG_ConvertPtr
-        (
-        obj0,
-        (void **) &arg1, 
-        SWIGTYPE_p__IplImage, 
-        SWIG_POINTER_EXCEPTION
-        );
-        if (err == -1)
-        return 0; 
+        if ((SWIG_ConvertPtr(obj0,(void **)(&arg1),0,SWIG_POINTER_EXCEPTION|0))== -1) {
+            SWIG_arg_fail(1);SWIG_fail;
+        }
     }
     {
-        int err = SWIG_ConvertPtr
-        (
-        obj1,
-        (void **) &arg2, 
-        SWIGTYPE_p__IplImage, 
-        SWIG_POINTER_EXCEPTION
-        );
-        if (err == -1)
-        return 0; 
+        if ((SWIG_ConvertPtr(obj1,(void **)(&arg2),0,SWIG_POINTER_EXCEPTION|0))== -1) {
+            SWIG_arg_fail(2);SWIG_fail;
+        }
     }
     if (obj2) {
         {
@@ -2536,13 +2512,15 @@ static PyObject *_wrap_cvCreateVideoWriter(PyObject *, PyObject *args) {
     int arg2 ;
     double arg3 ;
     CvSize arg4 ;
+    int arg5 = (int) 1 ;
     CvVideoWriter *result;
     PyObject * obj0 = 0 ;
     PyObject * obj1 = 0 ;
     PyObject * obj2 = 0 ;
     PyObject * obj3 = 0 ;
+    PyObject * obj4 = 0 ;
     
-    if(!PyArg_ParseTuple(args,(char *)"OOOO:cvCreateVideoWriter",&obj0,&obj1,&obj2,&obj3)) goto fail;
+    if(!PyArg_ParseTuple(args,(char *)"OOOO|O:cvCreateVideoWriter",&obj0,&obj1,&obj2,&obj3,&obj4)) goto fail;
     if (!SWIG_AsCharPtr(obj0, (char**)&arg1)) {
         SWIG_arg_fail(1);SWIG_fail;
     }
@@ -2564,9 +2542,15 @@ static PyObject *_wrap_cvCreateVideoWriter(PyObject *, PyObject *args) {
         if (SWIG_arg_fail(4)) SWIG_fail;
         arg4 = *argp;
     }
+    if (obj4) {
+        {
+            arg5 = (int)(SWIG_As_int(obj4)); 
+            if (SWIG_arg_fail(5)) SWIG_fail;
+        }
+    }
     {
         try {
-            result = (CvVideoWriter *)cvCreateVideoWriter((char const *)arg1,arg2,arg3,arg4);
+            result = (CvVideoWriter *)cvCreateVideoWriter((char const *)arg1,arg2,arg3,arg4,arg5);
         } 
         catch (...) 
         {
