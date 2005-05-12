@@ -16,31 +16,3 @@ AM_CPPFLAGS = \
 SUBDIRS = filtered python
 EXTRA_DIST = general
 
-
-# Conditional targets ################################################################
-
-if BUILD_PYTHON_WRAPPERS
-
-  pkgpython_LTLIBRARIES = _cv.la _highgui.la
-
-  pkgpython_PYTHON      = \
-    python/__init__.py    \
-    python/cv.py          \
-    python/adaptors.py    \
-    python/highgui.py
-
-endif
-
-
-# Python #############################################################################
-
-_cv_la_SOURCES    = python/_cv.cpp python/error.cpp python/error.h filtered/cv.h filtered/constants.h
-_cv_la_CXXFLAGS   = $(PYTHON_CSPEC)
-_cv_la_LIBADD     = $(top_builddir)/cv/src/libcv.la
-_cv_la_LDFLAGS    = -module -avoid-version -no-undefined $(PYTHON_LSPEC) -L$(SWIG_PYTHON_LIBS)
-
-_highgui_la_SOURCES    = python/_highgui.cpp $(top_srcdir)/otherlibs/highgui/highgui.h
-_highgui_la_CXXFLAGS   = $(PYTHON_CSPEC)
-_highgui_la_LIBADD     = $(top_builddir)/otherlibs/highgui/libhighgui.la
-_highgui_la_LDFLAGS    = -module -avoid-version -no-undefined $(PYTHON_LSPEC) -L$(SWIG_PYTHON_LIBS)
-
