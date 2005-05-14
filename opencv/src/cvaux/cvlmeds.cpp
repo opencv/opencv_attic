@@ -196,7 +196,7 @@ icvChoose7( int *ml, int *mr, int num, int *ml7, int *mr7 )
 CvStatus
 icvCubic( double a2, double a1, double a0, double *squares )
 {
-    double p, q, D, c1, c2, b1, b2, ro1, ro2, fi1, fi2;
+    double p, q, D, c1, c2, b1, b2, ro1, ro2, fi1, fi2, tt;
     double x[6][3];
     int i, j, t;
 
@@ -247,20 +247,16 @@ icvCubic( double a2, double a1, double a0, double *squares )
 
     if( !REAL_ZERO( ro1 ))
     {
-        c1 = SIGN( ro1 ) * pow( fabs( ro1 ), 1. / 3 );
-        c1 -= SIGN( ro1 ) * p / 3. * pow( fabs( ro1 ), -1. / 3 );
-
-        c2 = SIGN( ro1 ) * pow( fabs( ro1 ), 1. / 3 );
-        c2 += SIGN( ro1 ) * p / 3. * pow( fabs( ro1 ), -1. / 3 );
+        tt = SIGN( ro1 ) * pow( fabs( ro1 ), 0.333333333333 );
+        c1 = tt - p / (3. * tt);
+        c2 = tt + p / (3. * tt);
     }                           /* if */
 
     if( !REAL_ZERO( ro2 ))
     {
-        b1 = SIGN( ro2 ) * pow( fabs( ro2 ), 1. / 3 );
-        b1 -= SIGN( ro2 ) * p / 3. * pow( fabs( ro2 ), -1. / 3 );
-
-        b2 = SIGN( ro2 ) * pow( fabs( ro2 ), 1. / 3 );
-        b2 += SIGN( ro2 ) * p / 3. * pow( fabs( ro2 ), -1. / 3 );
+        tt = SIGN( ro2 ) * pow( fabs( ro2 ), 0.333333333333 );
+        b1 = tt - p / (3. * tt);
+        b2 = tt + p / (3. * tt);
     }                           /* if */
 
     for( i = 0; i < 6; i++ )
