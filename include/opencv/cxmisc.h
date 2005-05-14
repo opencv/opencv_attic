@@ -623,12 +623,13 @@ CvStatus;
 }
 
 #define CV_PLUGIN_NONE      0
-#define CV_PLUGIN_OPTCV     1
-#define CV_PLUGIN_IPPCV     2
-#define CV_PLUGIN_IPPI      3
-#define CV_PLUGIN_IPPS      4
-#define CV_PLUGIN_IPPVM     5
-#define CV_PLUGIN_MKL       8
+#define CV_PLUGIN_OPTCV     1 /* custom "emerged" ippopencv library */
+#define CV_PLUGIN_IPPCV     2 /* IPP: computer vision */
+#define CV_PLUGIN_IPPI      3 /* IPP: image processing */
+#define CV_PLUGIN_IPPS      4 /* IPP: signal processing */
+#define CV_PLUGIN_IPPVM     5 /* IPP: vector math functions */
+#define CV_PLUGIN_IPPCC     6 /* IPP: color space conversion */
+#define CV_PLUGIN_MKL       8 /* Intel Math Kernel Library */
 
 #define CV_PLUGIN_MAX      16
 
