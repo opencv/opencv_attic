@@ -233,10 +233,9 @@ icvAdjustRect( const void* srcptr, int src_step, int pix_size,
 
 #define  ICV_DEF_GET_RECT_SUB_PIX_FUNC( flavor, srctype, dsttype, worktype, \
                                         cast_macro, scale_macro, cast_macro2 )\
-IPCVAPI_IMPL( CvStatus, icvGetRectSubPix_##flavor##_C1R,                    \
+CvStatus CV_STDCALL icvGetRectSubPix_##flavor##_C1R                         \
 ( const srctype* src, int src_step, CvSize src_size,                        \
-  dsttype* dst, int dst_step, CvSize win_size, CvPoint2D32f center ),       \
-  (src, src_step, src_size, dst, dst_step, win_size, center) )              \
+  dsttype* dst, int dst_step, CvSize win_size, CvPoint2D32f center )        \
 {                                                                           \
     CvPoint ip;                                                             \
     worktype  a11, a12, a21, a22, b1, b2;                                   \
@@ -265,6 +264,11 @@ IPCVAPI_IMPL( CvStatus, icvGetRectSubPix_##flavor##_C1R,                    \
     {                                                                       \
         /* extracted rectangle is totally inside the image */               \
         src += ip.y * src_step + ip.x;                                      \
+                                                                            \
+        if( icvCopySubpix_##flavor##_C1R_p &&                               \
+            icvCopySubpix_##flavor##_C1R_p( src, src_step, dst, dst_step,   \
+                                            win_size, a, b ) >= 0 )         \
+            return CV_OK;                                                   \
                                                                             \
         for( i = 0; i < win_size.height; i++, src += src_step,              \
                                               (char*&)dst += dst_step )     \
@@ -346,10 +350,9 @@ IPCVAPI_IMPL( CvStatus, icvGetRectSubPix_##flavor##_C1R,                    \
 
 #define  ICV_DEF_GET_RECT_SUB_PIX_FUNC_C3( flavor, srctype, dsttype, worktype, \
                                         cast_macro, scale_macro, mul_macro )\
-IPCVAPI_IMPL( CvStatus, icvGetRectSubPix_##flavor##_C3R,                    \
+static CvStatus CV_STDCALL icvGetRectSubPix_##flavor##_C3R                  \
 ( const srctype* src, int src_step, CvSize src_size,                        \
-  dsttype* dst, int dst_step, CvSize win_size, CvPoint2D32f center ),       \
-  (src, src_step, src_size, dst, dst_step, win_size, center) )              \
+  dsttype* dst, int dst_step, CvSize win_size, CvPoint2D32f center )        \
 {                                                                           \
     CvPoint ip;                                                             \
     worktype a, b;                                                          \
@@ -476,13 +479,17 @@ IPCVAPI_IMPL( CvStatus, icvGetRectSubPix_##flavor##_C3R,                    \
 #define ICV_MUL_SCALE(x,y)    (((x)*(y) + (1 << (ICV_SHIFT-1))) >> ICV_SHIFT)
 #define ICV_DESCALE(x)        (((x)+(1 << (ICV_SHIFT-1))) >> ICV_SHIFT)
 
+icvCopySubpix_8u_C1R_t icvCopySubpix_8u_C1R_p = 0;
+icvCopySubpix_8u32f_C1R_t icvCopySubpix_8u32f_C1R_p = 0;
+icvCopySubpix_32f_C1R_t icvCopySubpix_32f_C1R_p = 0;
+
 ICV_DEF_GET_RECT_SUB_PIX_FUNC( 8u, uchar, uchar, int, CV_NOP, ICV_SCALE, ICV_DESCALE )
-ICV_DEF_GET_RECT_SUB_PIX_FUNC( 32f, float, float, float, CV_NOP, CV_NOP, CV_NOP )
 ICV_DEF_GET_RECT_SUB_PIX_FUNC( 8u32f, uchar, float, float, CV_8TO32F, CV_NOP, CV_NOP )
+ICV_DEF_GET_RECT_SUB_PIX_FUNC( 32f, float, float, float, CV_NOP, CV_NOP, CV_NOP )
 
 ICV_DEF_GET_RECT_SUB_PIX_FUNC_C3( 8u, uchar, uchar, int, CV_NOP, ICV_SCALE, ICV_MUL_SCALE )
-ICV_DEF_GET_RECT_SUB_PIX_FUNC_C3( 32f, float, float, float, CV_NOP, CV_NOP, CV_MUL )
 ICV_DEF_GET_RECT_SUB_PIX_FUNC_C3( 8u32f, uchar, float, float, CV_8TO32F, CV_NOP, CV_MUL )
+ICV_DEF_GET_RECT_SUB_PIX_FUNC_C3( 32f, float, float, float, CV_NOP, CV_NOP, CV_MUL )
 
 
 #define  ICV_DEF_INIT_SUBPIX_TAB( FUNCNAME, FLAG )                  \
@@ -516,7 +523,7 @@ cvGetRectSubPix( const void* srcarr, void* dstarr, CvPoint2D32f center )
     CvMat dststub, *dst = (CvMat*)dstarr;
     CvSize src_size, dst_size;
     CvGetRectSubPixFunc func;
-    int cn;
+    int cn, src_step, dst_step;
 
     if( !inittab )
     {
@@ -538,6 +545,8 @@ cvGetRectSubPix( const void* srcarr, void* dstarr, CvPoint2D32f center )
 
     src_size = cvGetMatSize( src );
     dst_size = cvGetMatSize( dst );
+    src_step = src->step ? src->step : CV_STUB_STEP;
+    dst_step = dst->step ? dst->step : CV_STUB_STEP;
 
     if( dst_size.width > src_size.width || dst_size.height > src_size.height )
         CV_ERROR( CV_StsBadSize, "destination ROI must be smaller than source ROI" );
@@ -557,130 +566,83 @@ cvGetRectSubPix( const void* srcarr, void* dstarr, CvPoint2D32f center )
     if( !func )
         CV_ERROR( CV_StsUnsupportedFormat, "" );
 
-    IPPI_CALL( func( src->data.ptr, src->step, src_size,
-                     dst->data.ptr, dst->step, dst_size, center ));
+    IPPI_CALL( func( src->data.ptr, src_step, src_size,
+                     dst->data.ptr, dst_step, dst_size, center ));
 
     __END__;
 }
 
 
-#define GET_X(X,Y)  ((X)*A11 + (Y)*A12 + b1)
-#define GET_Y(X,Y)  ((X)*A21 + (Y)*A22 + b2)
-#define PTR_AT(X,Y) (src + (Y)*src_step + (X))
-
-#define CLIP_X(x) (unsigned)(x) < (unsigned)src_size.width ?  \
-                  (x) : (x) < 0 ? 0 : src_size.width - 1
-
-#define CLIP_Y(y) (unsigned)(y) < (unsigned)src_size.height ? \
-                  (y) : (y) < 0 ? 0 : src_size.height - 1
-
+#define ICV_32F8U(x)  ((uchar)cvRound(x))
 
 #define ICV_DEF_GET_QUADRANGLE_SUB_PIX_FUNC( flavor, srctype, dsttype,      \
                                              worktype, cast_macro, cvt )    \
-IPCVAPI_IMPL( CvStatus, icvGetQuadrangleSubPix_##flavor##_C1R,              \
-              ( const srctype * src, int src_step, CvSize src_size,         \
-                dsttype *dst, int dst_step, CvSize win_size,                \
-                const float *matrix, int fill_outliers,                     \
-                dsttype* fillval ),                                         \
-                (src, src_step, src_size, dst, dst_step, win_size,          \
-                matrix, fill_outliers, fillval) )                           \
+static CvStatus CV_STDCALL                                                  \
+icvGetQuadrangleSubPix_##flavor##_C1R                                       \
+( const srctype * src, int src_step, CvSize src_size,                       \
+  dsttype *dst, int dst_step, CvSize win_size, const float *matrix )        \
 {                                                                           \
-    int x, y, x0, y0, x1, y1;                                               \
-    float  A11 = matrix[0], A12 = matrix[1], b1 = matrix[2] - 0.5f;         \
-    float  A21 = matrix[3], A22 = matrix[4], b2 = matrix[5] - 0.5f;         \
-    dsttype fv = *fillval;                                                  \
-    int left = -(win_size.width >> 1), right = win_size.width + left - 1;   \
-    int top = -(win_size.height >> 1), bottom = win_size.height + top - 1;  \
+    int x, y;                                                               \
+    float dx = (win_size.width - 1)*0.5f;                                   \
+    float dy = (win_size.height - 1)*0.5f;                                  \
+    float A11 = matrix[0], A12 = matrix[1], A13 = matrix[2]-A11*dx-A12*dy;  \
+    float A21 = matrix[3], A22 = matrix[4], A23 = matrix[5]-A21*dx-A22*dy;  \
                                                                             \
     src_step /= sizeof(srctype);                                            \
     dst_step /= sizeof(dsttype);                                            \
                                                                             \
-    dst -= left;                                                            \
-                                                                            \
-    for( y = top; y <= bottom; y++, dst += dst_step )                       \
+    for( y = 0; y < win_size.height; y++, dst += dst_step )                 \
     {                                                                       \
-        float xs = GET_X( left, y );                                        \
-        float ys = GET_Y( left, y );                                        \
-        float xe = GET_X( right, y );                                       \
-        float ye = GET_Y( right, y );                                       \
+        float xs = A12*y + A13;                                             \
+        float ys = A22*y + A23;                                             \
+        float xe = A11*(win_size.width-1) + A12*y + A13;                    \
+        float ye = A21*(win_size.height-1) + A22*y + A23;                   \
                                                                             \
         if( (unsigned)cvFloor(xs) < (unsigned)(src_size.width - 1) &&       \
             (unsigned)cvFloor(ys) < (unsigned)(src_size.height - 1) &&      \
             (unsigned)cvFloor(xe) < (unsigned)(src_size.width - 1) &&       \
             (unsigned)cvFloor(ye) < (unsigned)(src_size.height - 1))        \
         {                                                                   \
-            for( x = left; x <= right; x++ )                                \
+            for( x = 0; x < win_size.width; x++ )                           \
             {                                                               \
-                worktype p0, p1;                                            \
-                float a, b;                                                 \
-                                                                            \
                 int ixs = cvFloor( xs );                                    \
                 int iys = cvFloor( ys );                                    \
-                const srctype *ptr = PTR_AT( ixs, iys );                    \
-                                                                            \
-                a = xs - ixs;                                               \
-                b = ys - iys;                                               \
-                                                                            \
+                const srctype *ptr = src + src_step*iys + ixs;              \
+                float a = xs - ixs, b = ys - iys, a1 = 1.f - a;             \
+                worktype p0 = cvt(ptr[0])*a1 + cvt(ptr[1])*a;               \
+                worktype p1 = cvt(ptr[src_step])*a1 + cvt(ptr[src_step+1])*a;\
                 xs += A11;                                                  \
                 ys += A21;                                                  \
                                                                             \
-                p0 = cvt(ptr[0]) + a * (cvt(ptr[1]) - cvt(ptr[0]));         \
-                p1 = cvt(ptr[src_step]) + a * (cvt(ptr[src_step + 1]) -     \
-                                              cvt(ptr[src_step]));          \
                 dst[x] = cast_macro(p0 + b * (p1 - p0));                    \
             }                                                               \
         }                                                                   \
         else                                                                \
         {                                                                   \
-            for( x = left; x <= right; x++ )                                \
+            for( x = 0; x < win_size.width; x++ )                           \
             {                                                               \
+                int ixs = cvFloor( xs ), iys = cvFloor( ys );               \
+                float a = xs - ixs, b = ys - iys, a1 = 1.f - a;             \
+                const srctype *ptr0, *ptr1;                                 \
                 worktype p0, p1;                                            \
-                float a, b;                                                 \
+                xs += A11; ys += A21;                                       \
                                                                             \
-                int ixs = cvFloor( xs );                                    \
-                int iys = cvFloor( ys );                                    \
+                if( (unsigned)iys < (unsigned)(src_size.height-1) )         \
+                    ptr0 = src + src_step*iys, ptr1 = ptr0 + src_step;      \
+                else                                                        \
+                    ptr0 = ptr1 = src + (iys < 0 ? 0 : src_size.height-1)*src_step; \
                                                                             \
-                a = xs - ixs;                                               \
-                b = ys - iys;                                               \
-                                                                            \
-                xs += A11;                                                  \
-                ys += A21;                                                  \
-                                                                            \
-                if( (unsigned)ixs < (unsigned)(src_size.width - 1) &&       \
-                    (unsigned)iys < (unsigned)(src_size.height - 1) )       \
+                if( (unsigned)ixs < (unsigned)(src_size.width-1) )          \
                 {                                                           \
-                    const srctype *ptr = PTR_AT( ixs, iys );                \
-                                                                            \
-                    p0 = cvt(ptr[0]) + a * (cvt(ptr[1]) - cvt(ptr[0]));     \
-                    p1 = cvt(ptr[src_step]) + a * (cvt(ptr[src_step + 1]) - \
-                                                  cvt(ptr[src_step]));      \
-                                                                            \
-                    dst[x] = cast_macro(p0 + b * (p1 - p0));                \
-                }                                                           \
-                else if( !fill_outliers )                                   \
-                {                                                           \
-                    /* the slowest branch */                                \
-                    worktype t0, t1;                                        \
-                                                                            \
-                    x0 = CLIP_X( ixs );                                     \
-                    y0 = CLIP_Y( iys );                                     \
-                    x1 = CLIP_X( ixs + 1 );                                 \
-                    y1 = CLIP_Y( iys + 1 );                                 \
-                                                                            \
-                    t0 = cvt(*PTR_AT( x0, y0 ));                            \
-                    t1 = cvt(*PTR_AT( x1, y0 ));                            \
-                    p0 = t0 + a * (t1 - t0);                                \
-                                                                            \
-                    t0 = cvt(*PTR_AT( x0, y1 ));                            \
-                    t1 = cvt(*PTR_AT( x1, y1 ));                            \
-                    p1 = t0 + a * (t1 - t0);                                \
-                    p0 = p0 + b * (p1 - p0);                                \
-                    dst[x] = cast_macro(p0);                                \
+                    p0 = cvt(ptr0[ixs])*a1 + cvt(ptr0[ixs+1])*a;            \
+                    p1 = cvt(ptr1[ixs])*a1 + cvt(ptr1[ixs+1])*a;            \
                 }                                                           \
                 else                                                        \
                 {                                                           \
-                    dst[x] = fv;                                            \
+                    ixs = ixs < 0 ? 0 : src_size.width - 1;                 \
+                    p0 = cvt(ptr0[ixs]); p1 = cvt(ptr1[ixs]);               \
                 }                                                           \
+                dst[x] = cast_macro(p0 + b * (p1 - p0));                    \
             }                                                               \
         }                                                                   \
     }                                                                       \
@@ -691,149 +653,95 @@ IPCVAPI_IMPL( CvStatus, icvGetQuadrangleSubPix_##flavor##_C1R,              \
 
 #define ICV_DEF_GET_QUADRANGLE_SUB_PIX_FUNC_C3( flavor, srctype, dsttype,   \
                                                 worktype, cast_macro, cvt ) \
-IPCVAPI_IMPL( CvStatus, icvGetQuadrangleSubPix_##flavor##_C3R,              \
-              ( const srctype * src, int src_step, CvSize src_size,         \
-                dsttype *dst, int dst_step, CvSize win_size,                \
-                const float *matrix, int fill_outliers,                     \
-                dsttype* fillval ),                                         \
-                (src, src_step, src_size, dst, dst_step, win_size,          \
-                matrix, fill_outliers, fillval) )                           \
+static CvStatus CV_STDCALL                                                  \
+icvGetQuadrangleSubPix_##flavor##_C3R                                       \
+( const srctype * src, int src_step, CvSize src_size,                       \
+  dsttype *dst, int dst_step, CvSize win_size, const float *matrix )        \
 {                                                                           \
-    int x, y, x0, y0, x1, y1;                                               \
-    float  A11 = matrix[0], A12 = matrix[1], b1 = matrix[2] - 0.5f;         \
-    float  A21 = matrix[3], A22 = matrix[4], b2 = matrix[5] - 0.5f;         \
-    int left = -(win_size.width >> 1), right = win_size.width + left - 1;   \
-    int top = -(win_size.height >> 1), bottom = win_size.height + top - 1;  \
+    int x, y;                                                               \
+    float dx = (win_size.width - 1)*0.5f;                                   \
+    float dy = (win_size.height - 1)*0.5f;                                  \
+    float A11 = matrix[0], A12 = matrix[1], A13 = matrix[2]-A11*dx-A12*dy;  \
+    float A21 = matrix[3], A22 = matrix[4], A23 = matrix[5]-A21*dx-A22*dy;  \
                                                                             \
     src_step /= sizeof(srctype);                                            \
     dst_step /= sizeof(dsttype);                                            \
                                                                             \
-    dst -= left*3;                                                          \
-                                                                            \
-    for( y = top; y <= bottom; y++, dst += dst_step )                       \
+    for( y = 0; y < win_size.height; y++, dst += dst_step )                 \
     {                                                                       \
-        float xs = GET_X( left, y );                                        \
-        float ys = GET_Y( left, y );                                        \
-        float xe = GET_X( right, y );                                       \
-        float ye = GET_Y( right, y );                                       \
+        float xs = A12*y + A13;                                             \
+        float ys = A22*y + A23;                                             \
+        float xe = A11*(win_size.width-1) + A12*y + A13;                    \
+        float ye = A21*(win_size.height-1) + A22*y + A23;                   \
                                                                             \
         if( (unsigned)cvFloor(xs) < (unsigned)(src_size.width - 1) &&       \
             (unsigned)cvFloor(ys) < (unsigned)(src_size.height - 1) &&      \
             (unsigned)cvFloor(xe) < (unsigned)(src_size.width - 1) &&       \
             (unsigned)cvFloor(ye) < (unsigned)(src_size.height - 1))        \
         {                                                                   \
-            for( x = left; x <= right; x++ )                                \
+            for( x = 0; x < win_size.width; x++ )                           \
             {                                                               \
-                worktype p0, p1;                                            \
-                float a, b;                                                 \
-                                                                            \
                 int ixs = cvFloor( xs );                                    \
                 int iys = cvFloor( ys );                                    \
-                const srctype *ptr = PTR_AT( ixs*3, iys );                  \
-                                                                            \
-                a = xs - ixs;                                               \
-                b = ys - iys;                                               \
-                                                                            \
+                const srctype *ptr = src + src_step*iys + ixs*3;            \
+                float a = xs - ixs, b = ys - iys, a1 = 1.f - a;             \
+                worktype p0, p1;                                            \
                 xs += A11;                                                  \
                 ys += A21;                                                  \
                                                                             \
-                p0 = cvt(ptr[0]) + a * (cvt(ptr[3]) - cvt(ptr[0]));         \
-                p1 = cvt(ptr[src_step]) + a * (cvt(ptr[src_step + 3]) -     \
-                                              cvt(ptr[src_step]));          \
+                p0 = cvt(ptr[0])*a1 + cvt(ptr[3])*a;                        \
+                p1 = cvt(ptr[src_step])*a1 + cvt(ptr[src_step+3])*a;        \
                 dst[x*3] = cast_macro(p0 + b * (p1 - p0));                  \
                                                                             \
-                p0 = cvt(ptr[1]) + a * (cvt(ptr[4]) - cvt(ptr[1]));         \
-                p1 = cvt(ptr[src_step+1]) + a * (cvt(ptr[src_step + 4]) -   \
-                                                cvt(ptr[src_step + 1]));    \
+                p0 = cvt(ptr[1])*a1 + cvt(ptr[4])*a;                        \
+                p1 = cvt(ptr[src_step+1])*a1 + cvt(ptr[src_step+4])*a;      \
                 dst[x*3+1] = cast_macro(p0 + b * (p1 - p0));                \
                                                                             \
-                p0 = cvt(ptr[2]) + a * (cvt(ptr[5]) - cvt(ptr[2]));         \
-                p1 = cvt(ptr[src_step+2]) + a * (cvt(ptr[src_step + 5]) -   \
-                                                cvt(ptr[src_step + 2]));    \
+                p0 = cvt(ptr[2])*a1 + cvt(ptr[5])*a;                        \
+                p1 = cvt(ptr[src_step+2])*a1 + cvt(ptr[src_step+5])*a;      \
                 dst[x*3+2] = cast_macro(p0 + b * (p1 - p0));                \
             }                                                               \
         }                                                                   \
         else                                                                \
         {                                                                   \
-            for( x = left; x <= right; x++ )                                \
+            for( x = 0; x < win_size.width; x++ )                           \
             {                                                               \
-                worktype p0, p1;                                            \
-                float a, b;                                                 \
+                int ixs = cvFloor(xs), iys = cvFloor(ys);                   \
+                float a = xs - ixs, b = ys - iys;                           \
+                const srctype *ptr0, *ptr1;                                 \
+                xs += A11; ys += A21;                                       \
                                                                             \
-                int ixs = cvFloor( xs );                                    \
-                int iys = cvFloor( ys );                                    \
+                if( (unsigned)iys < (unsigned)(src_size.height-1) )         \
+                    ptr0 = src + src_step*iys, ptr1 = ptr0 + src_step;      \
+                else                                                        \
+                    ptr0 = ptr1 = src + (iys < 0 ? 0 : src_size.height-1)*src_step; \
                                                                             \
-                a = xs - ixs;                                               \
-                b = ys - iys;                                               \
-                                                                            \
-                xs += A11;                                                  \
-                ys += A21;                                                  \
-                                                                            \
-                if( (unsigned)ixs < (unsigned)(src_size.width - 1) &&       \
-                    (unsigned)iys < (unsigned)(src_size.height - 1) )       \
+                if( (unsigned)ixs < (unsigned)(src_size.width - 1) )        \
                 {                                                           \
-                    const srctype *ptr = PTR_AT( ixs*3, iys );              \
-                                                                            \
-                    p0 = cvt(ptr[0]) + a * (cvt(ptr[3]) - cvt(ptr[0]));     \
-                    p1 = cvt(ptr[src_step]) + a * (cvt(ptr[src_step + 3]) - \
-                                                   cvt(ptr[src_step]));     \
+                    float a1 = 1.f - a;                                     \
+                    worktype p0, p1;                                        \
+                    ptr0 += ixs*3; ptr1 += ixs*3;                           \
+                    p0 = cvt(ptr0[0])*a1 + cvt(ptr0[3])*a;                  \
+                    p1 = cvt(ptr1[0])*a1 + cvt(ptr1[3])*a;                  \
                     dst[x*3] = cast_macro(p0 + b * (p1 - p0));              \
                                                                             \
-                    p0 = cvt(ptr[1]) + a * (cvt(ptr[4]) - cvt(ptr[1]));     \
-                    p1 = cvt(ptr[src_step+1]) + a * (cvt(ptr[src_step + 4])-\
-                                                    cvt(ptr[src_step + 1]));\
+                    p0 = cvt(ptr0[1])*a1 + cvt(ptr0[4])*a;                  \
+                    p1 = cvt(ptr1[1])*a1 + cvt(ptr1[4])*a;                  \
                     dst[x*3+1] = cast_macro(p0 + b * (p1 - p0));            \
                                                                             \
-                    p0 = cvt(ptr[2]) + a * (cvt(ptr[5]) - cvt(ptr[2]));     \
-                    p1 = cvt(ptr[src_step+2]) + a * (cvt(ptr[src_step + 5])-\
-                                                    cvt(ptr[src_step + 2]));\
+                    p0 = cvt(ptr0[2])*a1 + cvt(ptr0[5])*a;                  \
+                    p1 = cvt(ptr1[2])*a1 + cvt(ptr1[5])*a;                  \
                     dst[x*3+2] = cast_macro(p0 + b * (p1 - p0));            \
-                }                                                           \
-                else if( !fill_outliers )                                   \
-                {                                                           \
-                    /* the slowest branch */                                \
-                    worktype t0, t1;                                        \
-                                                                            \
-                    x0 = CLIP_X( ixs );                                     \
-                    y0 = CLIP_Y( iys );                                     \
-                    x1 = CLIP_X( ixs + 1 );                                 \
-                    y1 = CLIP_Y( iys + 1 );                                 \
-                                                                            \
-                    t0 = cvt(*PTR_AT( x0*3, y0 ));                          \
-                    t1 = cvt(*PTR_AT( x1*3, y0 ));                          \
-                    p0 = t0 + a * (t1 - t0);                                \
-                                                                            \
-                    t0 = cvt(*PTR_AT( x0*3, y1 ));                          \
-                    t1 = cvt(*PTR_AT( x1*3, y1 ));                          \
-                    p1 = t0 + a * (t1 - t0);                                \
-                    p0 = p0 + b * (p1 - p0);                                \
-                    dst[x*3] = cast_macro(p0);                              \
-                                                                            \
-                    t0 = cvt(*PTR_AT( x0*3+1, y0 ));                        \
-                    t1 = cvt(*PTR_AT( x1*3+1, y0 ));                        \
-                    p0 = t0 + a * (t1 - t0);                                \
-                                                                            \
-                    t0 = cvt(*PTR_AT( x0*3+1, y1 ));                        \
-                    t1 = cvt(*PTR_AT( x1*3+1, y1 ));                        \
-                    p1 = t0 + a * (t1 - t0);                                \
-                    p0 = p0 + b * (p1 - p0);                                \
-                    dst[x*3+1] = cast_macro(p0);                            \
-                                                                            \
-                    t0 = cvt(*PTR_AT( x0*3+2, y0 ));                        \
-                    t1 = cvt(*PTR_AT( x1*3+2, y0 ));                        \
-                    p0 = t0 + a * (t1 - t0);                                \
-                                                                            \
-                    t0 = cvt(*PTR_AT( x0*3+2, y1 ));                        \
-                    t1 = cvt(*PTR_AT( x1*3+2, y1 ));                        \
-                    p1 = t0 + a * (t1 - t0);                                \
-                    p0 = p0 + b * (p1 - p0);                                \
-                    dst[x*3+2] = cast_macro(p0);                            \
                 }                                                           \
                 else                                                        \
                 {                                                           \
-                    dst[x*3] = fillval[0];                                  \
-                    dst[x*3+1] = fillval[1];                                \
-                    dst[x*3+2] = fillval[2];                                \
+                    float b1 = 1.f - b;                                     \
+                    ixs = ixs < 0 ? 0 : src_size.width - 1;                 \
+                    ptr0 += ixs*3; ptr1 += ixs*3;                           \
+                                                                            \
+                    dst[x*3] = cast_macro(cvt(ptr0[0])*b1 + cvt(ptr1[0])*b);\
+                    dst[x*3+1]=cast_macro(cvt(ptr0[1])*b1 + cvt(ptr1[1])*b);\
+                    dst[x*3+2]=cast_macro(cvt(ptr0[2])*b1 + cvt(ptr1[2])*b);\
                 }                                                           \
             }                                                               \
         }                                                                   \
@@ -843,7 +751,17 @@ IPCVAPI_IMPL( CvStatus, icvGetQuadrangleSubPix_##flavor##_C3R,              \
 }
 
 
-#define ICV_32F8U(x)  ((uchar)cvRound(x))
+/*#define srctype uchar
+#define dsttype uchar
+#define worktype float
+#define cvt CV_8TO32F
+#define cast_macro ICV_32F8U
+
+#undef srctype
+#undef dsttype
+#undef worktype
+#undef cvt
+#undef cast_macro*/
 
 ICV_DEF_GET_QUADRANGLE_SUB_PIX_FUNC( 8u, uchar, uchar, float, ICV_32F8U, CV_8TO32F )
 ICV_DEF_GET_QUADRANGLE_SUB_PIX_FUNC( 32f, float, float, float, CV_NOP, CV_NOP )
@@ -860,13 +778,10 @@ typedef CvStatus (CV_STDCALL *CvGetQuadrangleSubPixFunc)(
                                          const void* src, int src_step,
                                          CvSize src_size, void* dst,
                                          int dst_step, CvSize win_size,
-                                         const float* matrix, int fill_outliers,
-                                         const void* fillvalue );
+                                         const float* matrix );
 
 CV_IMPL void
-cvGetQuadrangleSubPix( const void* srcarr, void* dstarr,
-                       const CvMat* mat, int fillOutliers,
-                       CvScalar fillValue )
+cvGetQuadrangleSubPix( const void* srcarr, void* dstarr, const CvMat* mat )
 {
     static  CvFuncTable  gq_tab[2];
     static  int inittab = 0;
@@ -878,8 +793,8 @@ cvGetQuadrangleSubPix( const void* srcarr, void* dstarr,
     CvMat dststub, *dst = (CvMat*)dstarr;
     CvSize src_size, dst_size;
     CvGetQuadrangleSubPixFunc func;
-    double buf[12];
-    int cn;
+    float m[6];
+    int k, cn;
 
     if( !inittab )
     {
@@ -908,12 +823,29 @@ cvGetQuadrangleSubPix( const void* srcarr, void* dstarr,
     /*if( dst_size.width > src_size.width || dst_size.height > src_size.height )
         CV_ERROR( CV_StsBadSize, "destination ROI must not be larger than source ROI" );*/
 
-    CV_CALL( cvScalarToRawData( &fillValue, buf, dst->type, 1 ));
-    
-    if( !CV_IS_MAT_CONT( mat->type ) ||
-        CV_MAT_DEPTH( mat->type ) != CV_32F ||
-        mat->width*mat->height != 6 )
-        CV_ERROR( CV_StsBadArg, "Matrix argument must be continuous array of 6 floats" );
+    if( mat->rows != 2 || mat->cols != 3 )
+        CV_ERROR( CV_StsBadArg,
+        "Transformation matrix must be 2x3" );
+
+    if( CV_MAT_TYPE( mat->type ) == CV_32FC1 )
+    {
+        for( k = 0; k < 3; k++ )
+        {
+            m[k] = mat->data.fl[k];
+            m[3 + k] = ((float*)(mat->data.ptr + mat->step))[k];
+        }
+    }
+    else if( CV_MAT_TYPE( mat->type ) == CV_64FC1 )
+    {
+        for( k = 0; k < 3; k++ )
+        {
+            m[k] = (float)mat->data.db[k];
+            m[3 + k] = (float)((double*)(mat->data.ptr + mat->step))[k];
+        }
+    }
+    else
+        CV_ERROR( CV_StsUnsupportedFormat,
+            "The transformation matrix should have 32fC1 or 64fC1 type" );
 
     if( CV_ARE_DEPTHS_EQ( src, dst ))
     {
@@ -931,8 +863,7 @@ cvGetQuadrangleSubPix( const void* srcarr, void* dstarr,
         CV_ERROR( CV_StsUnsupportedFormat, "" );
 
     IPPI_CALL( func( src->data.ptr, src->step, src_size,
-                     dst->data.ptr, dst->step, dst_size,
-                     mat->data.fl, fillOutliers, buf ));
+                     dst->data.ptr, dst->step, dst_size, m ));
 
     __END__;
 }
