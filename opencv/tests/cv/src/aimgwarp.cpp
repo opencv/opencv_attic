@@ -1515,4 +1515,414 @@ void CV_UndistortMapTest::prepare_to_validation( int /*test_case_idx*/ )
 CV_UndistortMapTest undistortmap_test;
 
 
+
+////////////////////////////// GetRectSubPix /////////////////////////////////
+
+static const CvSize rectsubpix_sizes[] = {{11, 11}, {21,21}, {41,41},{-1,-1}};
+
+static void
+cvTsGetQuadrangeSubPix( const CvMat* src, CvMat* dst, double* a )
+{
+    int y, x, k, cn;
+    int sstep = src->step / sizeof(float);
+    int scols = src->cols, srows = src->rows;
+    
+    assert( CV_MAT_DEPTH(src->type) == CV_32F &&
+            CV_ARE_TYPES_EQ(src, dst));
+
+    cn = CV_MAT_CN(dst->type);
+
+    for( y = 0; y < dst->rows; y++ )
+        for( x = 0; x < dst->cols; x++ )
+        {
+            float* d = (float*)(dst->data.ptr + y*dst->step) + x*cn;
+            float sx = (float)(a[0]*x + a[1]*y + a[2]);
+            float sy = (float)(a[3]*x + a[4]*y + a[5]);
+            int ix = cvFloor(sx), iy = cvFloor(sy);
+            int dx = cn, dy = sstep;
+            const float* s;
+            sx -= ix; sy -= iy;
+
+            if( (unsigned)ix >= (unsigned)(scols-1) )
+                ix = ix < 0 ? 0 : scols - 1, sx = 0, dx = 0;
+            if( (unsigned)iy >= (unsigned)(srows-1) )
+                iy = iy < 0 ? 0 : srows - 1, sy = 0, dy = 0;
+
+            s = src->data.fl + sstep*iy + ix*cn;
+            for( k = 0; k < cn; k++, s++ )
+            {
+                float t0 = s[0] + sx*(s[dx] - s[0]);
+                float t1 = s[dy] + sx*(s[dy + dx] - s[dy]);
+                d[k] = t0 + sy*(t1 - t0);
+            }
+        }
+}
+
+
+class CV_GetRectSubPixTest : public CV_ImgWarpBaseTest
+{
+public:
+    CV_GetRectSubPixTest();
+
+protected:
+    void get_test_array_types_and_sizes( int test_case_idx, CvSize** sizes, int** types );
+    void run_func();
+    int prepare_test_case( int test_case_idx );
+    void prepare_to_validation( int /*test_case_idx*/ );
+    double get_success_error_level( int test_case_idx, int i, int j );
+    void fill_array( int test_case_idx, int i, int j, CvMat* arr );
+
+    int write_default_params(CvFileStorage* fs);
+    void get_timing_test_array_types_and_sizes( int test_case_idx, CvSize** sizes, int** types,
+                                                CvSize** whole_sizes, bool *are_images );
+    void print_timing_params( int test_case_idx, char* ptr, int params_left );
+    CvPoint2D32f center;
+};
+
+
+CV_GetRectSubPixTest::CV_GetRectSubPixTest()
+    : CV_ImgWarpBaseTest( "warp-subpix-rect", "cvGetRectSubPix", false )
+{
+    //spatial_scale_zoom = spatial_scale_decimate;
+    spatial_scale_decimate = spatial_scale_zoom;
+    //default_timing_param_names = imgwarp_perspective_param_names;
+    support_testing_modes = CvTS::CORRECTNESS_CHECK_MODE;
+    default_timing_param_names = 0;
+}
+
+
+int CV_GetRectSubPixTest::write_default_params( CvFileStorage* fs )
+{
+    int code = CV_ImgWarpBaseTest::write_default_params( fs );
+    if( code < 0 )
+        return code;
+    
+    if( ts->get_testing_mode() == CvTS::TIMING_MODE )
+    {
+        int i;
+        start_write_param( fs );
+
+        cvStartWriteStruct( fs, "rect_size", CV_NODE_SEQ+CV_NODE_FLOW );
+        for( i = 0; rectsubpix_sizes[i].width > 0; i++ )
+        {
+            cvStartWriteStruct( fs, 0, CV_NODE_SEQ+CV_NODE_FLOW );
+            cvWriteInt( fs, 0, rectsubpix_sizes[i].width );
+            cvWriteInt( fs, 0, rectsubpix_sizes[i].height );
+            cvEndWriteStruct(fs);
+        }
+        cvEndWriteStruct(fs);
+    }
+
+    return code;
+}
+
+
+void CV_GetRectSubPixTest::get_test_array_types_and_sizes( int test_case_idx, CvSize** sizes, int** types )
+{
+    CvRNG* rng = ts->get_rng();
+    CV_ImgWarpBaseTest::get_test_array_types_and_sizes( test_case_idx, sizes, types );
+    int src_depth = test_case_idx*2/test_case_count, dst_depth;
+    int cn = cvTsRandInt(rng) % 2 ? 3 : 1;
+    CvSize src_size, dst_size;
+    
+    dst_depth = src_depth = src_depth == 0 ? CV_8U : CV_32F;
+    if( src_depth < CV_32F && cvTsRandInt(rng) % 2 )
+        dst_depth = CV_32F;
+    
+    types[INPUT][0] = CV_MAKETYPE(src_depth,cn);
+    types[INPUT_OUTPUT][0] = types[REF_INPUT_OUTPUT][0] = CV_MAKETYPE(dst_depth,cn);
+
+    src_size = sizes[INPUT][0];
+    dst_size.width = cvRound(sqrt(cvTsRandReal(rng)*src_size.width) + 1);
+    dst_size.height = cvRound(sqrt(cvTsRandReal(rng)*src_size.height) + 1);
+    dst_size.width = MIN(dst_size.width,src_size.width);
+    dst_size.height = MIN(dst_size.width,src_size.height);
+    sizes[INPUT_OUTPUT][0] = sizes[REF_INPUT_OUTPUT][0] = dst_size;
+    
+    center.x = (float)(cvTsRandReal(rng)*src_size.width);
+    center.y = (float)(cvTsRandReal(rng)*src_size.height);
+    interpolation = CV_INTER_LINEAR;
+}
+
+
+void CV_GetRectSubPixTest::fill_array( int test_case_idx, int i, int j, CvMat* arr )
+{
+    if( i != INPUT )
+        CV_ImgWarpBaseTestImpl::fill_array( test_case_idx, i, j, arr );
+}
+
+void CV_GetRectSubPixTest::get_timing_test_array_types_and_sizes( int test_case_idx,
+        CvSize** sizes, int** types, CvSize** whole_sizes, bool *are_images )
+{
+    CV_ImgWarpBaseTest::get_timing_test_array_types_and_sizes( test_case_idx, sizes, types,
+                                                               whole_sizes, are_images );
+    interpolation = CV_INTER_LINEAR;
+}
+
+
+void CV_GetRectSubPixTest::print_timing_params( int test_case_idx, char* ptr, int params_left )
+{
+    CV_ImgWarpBaseTest::print_timing_params( test_case_idx, ptr, params_left );
+}
+
+
+void CV_GetRectSubPixTest::run_func()
+{
+    cvGetRectSubPix( test_array[INPUT][0], test_array[INPUT_OUTPUT][0], center );
+}
+
+
+double CV_GetRectSubPixTest::get_success_error_level( int /*test_case_idx*/, int /*i*/, int /*j*/ )
+{
+    int in_depth = CV_MAT_DEPTH(test_mat[INPUT][0].type);
+    int out_depth = CV_MAT_DEPTH(test_mat[INPUT_OUTPUT][0].type);
+
+    return in_depth >= CV_32F ? 1e-3 : out_depth >= CV_32F ? 1e-2 : 1;
+}
+
+
+int CV_GetRectSubPixTest::prepare_test_case( int test_case_idx )
+{
+    return CV_ImgWarpBaseTest::prepare_test_case( test_case_idx );
+}
+
+
+void CV_GetRectSubPixTest::prepare_to_validation( int /*test_case_idx*/ )
+{
+    CvMat* src0 = &test_mat[INPUT][0];
+    CvMat* dst0 = &test_mat[REF_INPUT_OUTPUT][0];
+    CvMat* src = src0, *dst = dst0;
+    int ftype = CV_MAKETYPE(CV_32F,CV_MAT_CN(src0->type));
+    double a[] = { 1, 0, center.x - dst->cols*0.5 + 0.5,
+                   0, 1, center.y - dst->rows*0.5 + 0.5 };
+    if( CV_MAT_DEPTH(src->type) != CV_32F )
+    {
+        src = cvCreateMat( src0->rows, src0->cols, ftype );
+        cvTsConvert( src0, src );
+    }
+
+    if( CV_MAT_DEPTH(dst->type) != CV_32F )
+        dst = cvCreateMat( dst0->rows, dst0->cols, ftype );
+
+    cvTsGetQuadrangeSubPix( src, dst, a );
+
+    if( dst != dst0 )
+    {
+        cvTsConvert( dst, dst0 );
+        cvReleaseMat( &dst );
+    }
+    if( src != src0 )
+        cvReleaseMat( &src );
+}
+
+
+CV_GetRectSubPixTest subpix_rect_test;
+
+
+class CV_GetQuadSubPixTest : public CV_ImgWarpBaseTest
+{
+public:
+    CV_GetQuadSubPixTest();
+
+protected:
+    void get_test_array_types_and_sizes( int test_case_idx, CvSize** sizes, int** types );
+    void run_func();
+    int prepare_test_case( int test_case_idx );
+    void prepare_to_validation( int /*test_case_idx*/ );
+    double get_success_error_level( int test_case_idx, int i, int j );
+
+    int write_default_params(CvFileStorage* fs);
+    void get_timing_test_array_types_and_sizes( int test_case_idx, CvSize** sizes, int** types,
+                                                CvSize** whole_sizes, bool *are_images );
+    void print_timing_params( int test_case_idx, char* ptr, int params_left );
+};
+
+
+CV_GetQuadSubPixTest::CV_GetQuadSubPixTest()
+    : CV_ImgWarpBaseTest( "warp-subpix-quad", "cvGetQuadSubPix", true )
+{
+    //spatial_scale_zoom = spatial_scale_decimate;
+    spatial_scale_decimate = spatial_scale_zoom;
+    //default_timing_param_names = imgwarp_affine_param_names;
+    support_testing_modes = CvTS::CORRECTNESS_CHECK_MODE;
+    default_timing_param_names = 0;
+}
+
+
+int CV_GetQuadSubPixTest::write_default_params( CvFileStorage* fs )
+{
+    int code = CV_ImgWarpBaseTest::write_default_params( fs );
+    if( code < 0 )
+        return code;
+    
+    if( ts->get_testing_mode() == CvTS::TIMING_MODE )
+    {
+        int i;
+        start_write_param( fs );
+
+        cvStartWriteStruct( fs, "rotate_scale", CV_NODE_SEQ+CV_NODE_FLOW );
+        for( i = 0; imgwarp_affine_rotate_scale[i][0] >= 0; i++ )
+        {
+            cvStartWriteStruct( fs, 0, CV_NODE_SEQ+CV_NODE_FLOW );
+            cvWriteRawData( fs, imgwarp_affine_rotate_scale[i], 4, "d" );
+            cvEndWriteStruct(fs);
+        }
+        cvEndWriteStruct(fs);
+    }
+
+    return code;
+}
+
+
+void CV_GetQuadSubPixTest::get_test_array_types_and_sizes( int test_case_idx, CvSize** sizes, int** types )
+{
+    int min_size = 4;
+    CV_ImgWarpBaseTest::get_test_array_types_and_sizes( test_case_idx, sizes, types );
+    CvSize sz = sizes[INPUT][0], dsz;
+    CvRNG* rng = ts->get_rng();
+    int msz, src_depth = test_case_idx*2/test_case_count, dst_depth;
+    int cn = cvTsRandInt(rng) % 2 ? 3 : 1;
+    
+    dst_depth = src_depth = src_depth == 0 ? CV_8U : CV_32F;
+    if( src_depth < CV_32F && cvTsRandInt(rng) % 2 )
+        dst_depth = CV_32F;
+    
+    types[INPUT][0] = CV_MAKETYPE(src_depth,cn);
+    types[INPUT_OUTPUT][0] = types[REF_INPUT_OUTPUT][0] = CV_MAKETYPE(dst_depth,cn);
+
+    sz.width = MAX(sz.width,min_size);
+    sz.height = MAX(sz.height,min_size);
+    sizes[INPUT][0] = sz;
+    msz = MIN( sz.width, sz.height );
+
+    dsz.width = cvRound(sqrt(cvTsRandReal(rng)*msz) + 1);
+    dsz.height = cvRound(sqrt(cvTsRandReal(rng)*msz) + 1);
+    dsz.width = MIN(dsz.width,msz);
+    dsz.height = MIN(dsz.width,msz);
+    dsz.width = MAX(dsz.width,min_size);
+    dsz.height = MAX(dsz.height,min_size);
+    sizes[INPUT_OUTPUT][0] = sizes[REF_INPUT_OUTPUT][0] = dsz;
+    sizes[INPUT][1] = cvSize( 3, 2 );
+}
+
+
+void CV_GetQuadSubPixTest::get_timing_test_array_types_and_sizes( int test_case_idx,
+                CvSize** sizes, int** types, CvSize** whole_sizes, bool *are_images )
+{
+    CV_ImgWarpBaseTest::get_timing_test_array_types_and_sizes( test_case_idx, sizes, types,
+                                                               whole_sizes, are_images );
+
+    sizes[INPUT][1] = whole_sizes[INPUT][1] = cvSize(3,2);
+    sizes[TEMP][0] = whole_sizes[TEMP][0] =
+        sizes[TEMP][1] = whole_sizes[TEMP][1] = cvSize(0,0);
+    types[INPUT][1] = CV_64FC1;
+
+    interpolation = CV_INTER_LINEAR;
+}
+
+
+void CV_GetQuadSubPixTest::print_timing_params( int test_case_idx, char* ptr, int params_left )
+{
+    double coeffs[4];
+    const CvFileNode* node = find_timing_param( "rotate_scale" );
+    assert( node && CV_NODE_IS_SEQ(node->tag) );
+    cvReadRawData( ts->get_file_storage(), node, coeffs, "4d" );
+    
+    sprintf( ptr, "fx=%.2f,fy=%.2f,angle=%.1fdeg,scale=%.1f,", coeffs[0], coeffs[1], coeffs[2], coeffs[3] );
+    ptr += strlen(ptr);
+    params_left -= 4;
+
+    CV_ImgWarpBaseTest::print_timing_params( test_case_idx, ptr, params_left );
+}
+
+
+void CV_GetQuadSubPixTest::run_func()
+{
+    cvGetQuadrangleSubPix( test_array[INPUT][0],
+        test_array[INPUT_OUTPUT][0], &test_mat[INPUT][1] );
+}
+
+
+double CV_GetQuadSubPixTest::get_success_error_level( int /*test_case_idx*/, int /*i*/, int /*j*/ )
+{
+    int in_depth = CV_MAT_DEPTH(test_mat[INPUT][0].type);
+    //int out_depth = CV_MAT_DEPTH(test_mat[INPUT_OUTPUT][0].type);
+
+    return in_depth >= CV_32F ? 1e-2 : 4;
+}
+
+
+int CV_GetQuadSubPixTest::prepare_test_case( int test_case_idx )
+{
+    CvRNG* rng = ts->get_rng();
+    int code = CV_ImgWarpBaseTest::prepare_test_case( test_case_idx );
+    const CvMat* src = &test_mat[INPUT][0];
+    CvMat* mat = &test_mat[INPUT][1];
+    CvPoint2D32f center;
+    double scale, angle;
+
+    if( code <= 0 )
+        return code;
+
+    if( ts->get_testing_mode() == CvTS::CORRECTNESS_CHECK_MODE )
+    {
+        double a[6];
+        CvMat A = cvMat( 2, 3, CV_64FC1, a );
+
+        center.x = (float)((cvTsRandReal(rng)*1.2 - 0.1)*src->cols);
+        center.y = (float)((cvTsRandReal(rng)*1.2 - 0.1)*src->rows);
+        angle = cvTsRandReal(rng)*360;
+        scale = cvTsRandReal(rng)*0.2 + 0.9;
+        
+        // y = Ax + b -> x = A^-1(y - b) = A^-1*y - A^-1*b
+        scale = 1./scale;
+        angle = angle*(CV_PI/180.);
+        a[0] = a[4] = cos(angle)*scale;
+        a[1] = sin(angle)*scale;
+        a[3] = -a[1];
+        a[2] = center.x - a[0]*center.x - a[1]*center.y;
+        a[5] = center.y - a[3]*center.x - a[4]*center.y;
+        cvTsConvert( &A, mat );
+    }
+
+    return code;
+}
+
+
+void CV_GetQuadSubPixTest::prepare_to_validation( int /*test_case_idx*/ )
+{
+    CvMat* src0 = &test_mat[INPUT][0];
+    CvMat* dst0 = &test_mat[REF_INPUT_OUTPUT][0];
+    CvMat* src = src0, *dst = dst0;
+    int ftype = CV_MAKETYPE(CV_32F,CV_MAT_CN(src0->type));
+    double a[6], dx = (dst0->cols - 1)*0.5, dy = (dst0->rows - 1)*0.5;
+    CvMat A = cvMat( 2, 3, CV_64F, a );
+
+    if( CV_MAT_DEPTH(src->type) != CV_32F )
+    {
+        src = cvCreateMat( src0->rows, src0->cols, ftype );
+        cvTsConvert( src0, src );
+    }
+
+    if( CV_MAT_DEPTH(dst->type) != CV_32F )
+        dst = cvCreateMat( dst0->rows, dst0->cols, ftype );
+
+    cvTsConvert( &test_mat[INPUT][1], &A );
+    a[2] -= a[0]*dx + a[1]*dy;
+    a[5] -= a[3]*dx + a[4]*dy;
+    cvTsGetQuadrangeSubPix( src, dst, a );
+
+    if( dst != dst0 )
+    {
+        cvTsConvert( dst, dst0 );
+        cvReleaseMat( &dst );
+    }
+
+    if( src != src0 )
+        cvReleaseMat( &src );
+}
+
+
+CV_GetQuadSubPixTest warp_subpix_quad_test;
+
 /* End of file. */

@@ -1095,6 +1095,8 @@ double CV_ColorLabTest::get_success_error_level( int /*test_case_idx*/, int i, i
 }
 
 
+static const double _1_3 = 0.333333333333;
+
 void CV_ColorLabTest::convert_row_bgr2abc_32f_c3( const float* src_row, float* dst_row, int n )
 {
     int depth = CV_MAT_DEPTH(test_mat[INPUT][0].type);
@@ -1121,7 +1123,7 @@ void CV_ColorLabTest::convert_row_bgr2abc_32f_c3( const float* src_row, float* d
 
         if( Y > 0.008856 )
         {
-            fY = (float)pow((double)Y,0.3333333333333333333);
+            fY = (float)pow((double)Y,_1_3);
             L = 116.f*fY - 16.f;
         }
         else
@@ -1131,12 +1133,12 @@ void CV_ColorLabTest::convert_row_bgr2abc_32f_c3( const float* src_row, float* d
         }
 
         if( X > 0.008856 )
-            fX = (float)pow((double)X,0.3333333333333333333);
+            fX = (float)pow((double)X,_1_3);
         else
             fX = 7.787f*X + 16.f/116.f;
 
         if( Z > 0.008856 )
-            fZ = (float)pow((double)Z,0.3333333333333333333);
+            fZ = (float)pow((double)Z,_1_3);
         else
             fZ = 7.787f*Z + 16.f/116.f;
 
@@ -1266,7 +1268,7 @@ void CV_ColorLuvTest::convert_row_bgr2abc_32f_c3( const float* src_row, float* d
         else
         {
             if( Y > 0.008856f )
-                L = (float)(116.*pow((double)Y,0.33333333333333) - 16.);
+                L = (float)(116.*pow((double)Y,_1_3) - 16.);
             else
                 L = 903.3f * Y;
             
