@@ -221,7 +221,7 @@ cvInitUndistortMap( const CvMat* A, const CvMat* dist_coeffs,
     CvMat mapxstub, *_mapx = (CvMat*)mapxarr;
     CvMat mapystub, *_mapy = (CvMat*)mapyarr;
     float *mapx, *mapy;
-    CvMat _a = cvMat( 3, 3, CV_64F, a ), _k;
+    CvMat _a = cvMat( 3, 3, CV_32F, a ), _k;
     int mapxstep, mapystep;
     int u, v;
     float u0, v0, fx, fy, _fx, _fy, k1, k2, p1, p2;
@@ -255,7 +255,7 @@ cvInitUndistortMap( const CvMat* A, const CvMat* dist_coeffs,
 
     cvConvert( A, &_a );
     _k = cvMat( dist_coeffs->rows, dist_coeffs->cols,
-                CV_MAKETYPE(CV_64F, CV_MAT_CN(dist_coeffs->type)), k );
+                CV_MAKETYPE(CV_32F, CV_MAT_CN(dist_coeffs->type)), k );
     cvConvert( dist_coeffs, &_k );
 
     u0 = a[2]; v0 = a[5];
