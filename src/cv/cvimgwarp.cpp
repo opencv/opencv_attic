@@ -1405,7 +1405,8 @@ cvWarpPerspective( const CvArr* srcarr, CvArr* dstarr,
             type == CV_32FC3 ? icvWarpPerspectiveBack_32f_C3R_p :
             type == CV_32FC4 ? icvWarpPerspectiveBack_32f_C4R_p : 0;
         
-        if( ipp_func && CV_INTER_NN <= method && method <= CV_INTER_AREA )
+        if( ipp_func && CV_INTER_NN <= method && method <= CV_INTER_AREA &&
+            MIN(ssize.width,ssize.height) >= 4 && MIN(dsize.width,dsize.height) >= 4 )
         {
             int srcstep = src->step ? src->step : CV_STUB_STEP;
             int dststep = dst->step ? dst->step : CV_STUB_STEP;

@@ -196,5 +196,14 @@ extern float icvCubicCoeffs[(ICV_CUBIC_TAB_SIZE+1)*2];
 
 void icvInitCubicCoeffTab();
 
+CvStatus CV_STDCALL icvGetRectSubPix_8u_C1R
+( const uchar* src, int src_step, CvSize src_size,
+  uchar* dst, int dst_step, CvSize win_size, CvPoint2D32f center );
+CvStatus CV_STDCALL icvGetRectSubPix_8u32f_C1R
+( const uchar* src, int src_step, CvSize src_size,
+  float* dst, int dst_step, CvSize win_size, CvPoint2D32f center );
+CvStatus CV_STDCALL icvGetRectSubPix_32f_C1R
+( const float* src, int src_step, CvSize src_size,
+  float* dst, int dst_step, CvSize win_size, CvPoint2D32f center );
 
 #endif /*_CV_INTERNAL_H_*/

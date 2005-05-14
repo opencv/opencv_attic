@@ -365,9 +365,7 @@ CVAPI(void)  cvGetRectSubPix( const CvArr* src, CvArr* dst, CvPoint2D32f center 
                                      with fractional coordinates)
 */
 CVAPI(void)  cvGetQuadrangleSubPix( const CvArr* src, CvArr* dst,
-                                    const CvMat* map_matrix,
-                                    int fill_outliers CV_DEFAULT(0),
-                                    CvScalar fill_value CV_DEFAULT(cvScalarAll(0)));
+                                    const CvMat* map_matrix );
 
 /* Methods for comparing two array */
 #define  CV_TM_SQDIFF        0

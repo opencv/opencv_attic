@@ -185,46 +185,6 @@ IPCV_ACCUM( 32f, float, float )
 #undef IPCV_ACCUM
 
 /****************************************************************************************\
-*                                        Samplers                                        *
-\****************************************************************************************/
-
-////////////////////////////////////// GetRectSubPix ////////////////////////////////////////
-
-#define IPCV_GET_RECT_SUB_PIX( flavor, cn, srctype, dsttype )       \
-IPCVAPI_EX( CvStatus, icvGetRectSubPix_##flavor##_C##cn##R,         \
-"ippiGetRectSubPix_" #flavor "_C" #cn "R",                          \
-CV_PLUGINS1(CV_PLUGIN_IPPCV),                                       \
-( const srctype* src, int src_step, CvSize src_size,                \
-  dsttype* dst, int dst_step, CvSize win_size, CvPoint2D32f center ))
-
-IPCV_GET_RECT_SUB_PIX( 8u, 1, uchar, uchar )
-IPCV_GET_RECT_SUB_PIX( 8u32f, 1, uchar, float )
-IPCV_GET_RECT_SUB_PIX( 32f, 1, float, float )
-
-IPCV_GET_RECT_SUB_PIX( 8u, 3, uchar, uchar )
-IPCV_GET_RECT_SUB_PIX( 8u32f, 3, uchar, float )
-IPCV_GET_RECT_SUB_PIX( 32f, 3, float, float )
-
-#define IPCV_GET_QUADRANGLE_SUB_PIX( flavor, cn, srctype, dsttype ) \
-IPCVAPI_EX( CvStatus, icvGetQuadrangleSubPix_##flavor##_C##cn##R,   \
-"ippiGetQuadrangeRectSubPix_" #flavor "_C" #cn "R",                 \
-CV_PLUGINS1(CV_PLUGIN_IPPCV),                                       \
-( const srctype* src, int src_step, CvSize src_size,                \
-  dsttype* dst, int dst_step, CvSize win_size,                      \
-  const float *matrix, int fillOutliers, dsttype* fillValue ))
-
-IPCV_GET_QUADRANGLE_SUB_PIX( 8u, 1, uchar, uchar )
-IPCV_GET_QUADRANGLE_SUB_PIX( 8u32f, 1, uchar, float )
-IPCV_GET_QUADRANGLE_SUB_PIX( 32f, 1, float, float )
-
-IPCV_GET_QUADRANGLE_SUB_PIX( 8u, 3, uchar, uchar )
-IPCV_GET_QUADRANGLE_SUB_PIX( 8u32f, 3, uchar, float )
-IPCV_GET_QUADRANGLE_SUB_PIX( 32f, 3, float, float )
-
-#undef IPCV_GET_RECT_SUB_PIX
-#undef IPCV_GET_QUADRANGLE_SUB_PIX
-
-/****************************************************************************************\
 *                                       Pyramids                                         *
 \****************************************************************************************/
 
@@ -663,16 +623,28 @@ IPCVAPI_EX( CvStatus, icvUndistortRadial_##flavor##_C##cn##R,                   
 ICV_UNDISTORT_RADIAL( 8u, 1, uchar )
 ICV_UNDISTORT_RADIAL( 8u, 3, uchar )
 
+#undef ICV_UNDISTORT_RADIAL
 
 /****************************************************************************************\
 *                            Subpixel-accurate rectangle extraction                      *
 \****************************************************************************************/
 
-/*IPCVAPI_EX( CvStatus, icvCopySubpixIntersect_8u_C1R,
-           "ippiCopySubpixIntersect_8u_C1R", CV_PLUGINS1(CV_PLUGIN_IPPCV),
-           ( const uchar* pSrc, int srcStep, CvSize srcRoiSize,
-             uchar* pDst, int dstStep, CvSize dstRoiSize,
-             CvPoint2D32f point, CvPoint *pMin, CvPoint *pMax ))*/
+#define ICV_COPY_SUBPIX( flavor, cn, srctype, dsttype )                     \
+IPCVAPI_EX( CvStatus, icvCopySubpix_##flavor##_C##cn##R,                    \
+    "ippiCopySubpix_" #flavor "_C" #cn "R", CV_PLUGINS1(CV_PLUGIN_IPPCV),   \
+    ( const srctype* pSrc, int srcStep, dsttype* pDst, int dstStep,         \
+    CvSize size, float dx, float dy ))
+
+ICV_COPY_SUBPIX( 8u, 1, uchar, uchar )
+ICV_COPY_SUBPIX( 8u32f, 1, uchar, float )
+//ICV_COPY_SUBPIX( 32f, 1, float, float )
+
+IPCVAPI_EX( CvStatus, icvCopySubpix_32f_C1R,
+    "ippiCopySubpix_32f_C1R", 0,
+    ( const float* pSrc, int srcStep, float* pDst, int dstStep,
+    CvSize size, float dx, float dy ))
+
+#undef ICV_COPY_SUBPIX
 
 /****************************************************************************************\
 *                                Lucas-Kanade Optical Flowl                              *
