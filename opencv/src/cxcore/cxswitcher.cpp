@@ -247,7 +247,7 @@ typedef void* HMODULE;
 #define DLL_DEBUG_FLAG ""
 #endif
 
-#define VERBOSE_LOADING 0
+#define VERBOSE_LOADING 1
 
 #if VERBOSE_LOADING
 #define ICV_PRINTF(args)  printf args; fflush(stdout)
@@ -286,14 +286,11 @@ icvUpdatePluginFuncTab( CvPluginFuncInfo* func_tab )
     // ippopencv substitutes all the other IPP modules
     if( plugins[CV_PLUGIN_OPTCV].handle != 0 )
     {
-        assert( plugins[CV_PLUGIN_IPPCV].handle == 0 &&
-                plugins[CV_PLUGIN_IPPI].handle == 0 &&
-                plugins[CV_PLUGIN_IPPS].handle == 0 && 
-                plugins[CV_PLUGIN_IPPVM].handle == 0 );
-        plugins[CV_PLUGIN_IPPCV].handle = 
-        plugins[CV_PLUGIN_IPPI].handle = 
-        plugins[CV_PLUGIN_IPPS].handle = 
-        plugins[CV_PLUGIN_IPPVM].handle = plugins[CV_PLUGIN_OPTCV].handle;
+        for( i = 2; i < CV_PLUGIN_MKL; i++ )
+        {
+            assert( plugins[i].handle == 0 );
+            plugins[i].handle = plugins[CV_PLUGIN_OPTCV].handle;
+        }
     }
 
     // 2. try to find corresponding functions in ipp* and reassign pointers to them
@@ -377,10 +374,8 @@ icvUpdatePluginFuncTab( CvPluginFuncInfo* func_tab )
 
     if( plugins[CV_PLUGIN_OPTCV].handle != 0 )
     {
-        plugins[CV_PLUGIN_IPPCV].handle = 
-        plugins[CV_PLUGIN_IPPI].handle = 
-        plugins[CV_PLUGIN_IPPS].handle = 
-        plugins[CV_PLUGIN_IPPVM].handle = 0;
+        for( i = 2; i < CV_PLUGIN_MKL; i++ )
+            plugins[i].handle = 0;
     }
 
     return loaded_functions;
@@ -462,6 +457,7 @@ cvUseOptimized( int load_flag )
     plugins[CV_PLUGIN_IPPI].basename = "ippi";
     plugins[CV_PLUGIN_IPPS].basename = "ipps";
     plugins[CV_PLUGIN_IPPVM].basename = "ippvm";
+    plugins[CV_PLUGIN_IPPCC].basename = "ippcc";
     plugins[CV_PLUGIN_MKL].basename = "mkl_";
 
     // try to load optimized dlls

@@ -563,10 +563,12 @@ IPCVAPI_EX( CvStatus, icvCheckArray_64f_C1R,
 /*                    Affine transformations of matrix/image elements                   */
 /****************************************************************************************/
 
-#define IPCV_TRANSFORM( suffix, ipp_suffix, cn )                                \
-IPCVAPI_EX( CvStatus, icvColorTwist##suffix##_C##cn##R,                         \
-        "ippiColorTwist" #ipp_suffix "_C" #cn "R", CV_PLUGINS1(CV_PLUGIN_IPPI), \
-        ( const void* src, int srcstep, void* dst, int dststep,                 \
+#define IPCV_TRANSFORM( suffix, ipp_suffix, cn )                \
+IPCVAPI_EX( CvStatus, icvColorTwist##suffix##_C##cn##R,         \
+        "ippiColorTwist" #ipp_suffix "_C" #cn                   \
+        "R,ippiColorTwist" #ipp_suffix "_C" #cn "R",            \
+        CV_PLUGINS2(CV_PLUGIN_IPPI, CV_PLUGIN_IPPCC),           \
+        ( const void* src, int srcstep, void* dst, int dststep, \
           CvSize roisize, const float* twist_matrix ))
 
 IPCV_TRANSFORM( _8u, 32f_8u, 3 )
@@ -579,7 +581,8 @@ IPCV_TRANSFORM( _32f, _32f, 4 )
 
 #define IPCV_TRANSFORM_N1( suffix )                             \
 IPCVAPI_EX( CvStatus, icvColorToGray##suffix,                   \
-        "ippiColorToGray" #suffix, CV_PLUGINS1(CV_PLUGIN_IPPI), \
+        "ippiColorToGray" #suffix ",ippiColorToGray" #suffix,   \
+        CV_PLUGINS2(CV_PLUGIN_IPPI,CV_PLUGIN_IPPCC),            \
         ( const void* src, int srcstep, void* dst, int dststep, \
           CvSize roisize, const float* coeffs ))
 
