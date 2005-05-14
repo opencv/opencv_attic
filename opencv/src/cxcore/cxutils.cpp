@@ -374,7 +374,9 @@ cvSolveCubic( const CvMat* coeffs, CvMat* roots )
         }
         else
         {
-            double e = pow( sqrt(-d) + fabs(R), 1./3 );
+            double e;
+            d = sqrt(-d);
+            e = pow(d + fabs(R), 0.333333333333);
             if( R > 0 )
                 e = -e;
             x0 = (e + Q / e) - a1 * (1./3);
