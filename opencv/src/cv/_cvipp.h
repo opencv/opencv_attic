@@ -481,9 +481,11 @@ IPCV_FILTER( Row_32f, Row_32f, 4, int, int )
 *                                  Color Transformations                                 *
 \****************************************************************************************/
 
-#define IPCV_COLOR( funcname, ipp_funcname, flavor )                          \
-IPCVAPI_EX( CvStatus, icv##funcname##_##flavor##_C3R,                         \
-        "ippi" #ipp_funcname "_" #flavor "_C3R", CV_PLUGINS1(CV_PLUGIN_IPPI), \
+#define IPCV_COLOR( funcname, ipp_funcname, flavor )                            \
+IPCVAPI_EX( CvStatus, icv##funcname##_##flavor##_C3R,                           \
+        "ippi" #ipp_funcname "_" #flavor "_C3R,"                                \
+        "ippi" #ipp_funcname "_" #flavor "_C3R",                                \
+        CV_PLUGINS2(CV_PLUGIN_IPPI,CV_PLUGIN_IPPCC),                            \
         ( const void* src, int srcstep, void* dst, int dststep, CvSize size ))
 
 IPCV_COLOR( RGB2XYZ, RGBToXYZ, 8u )
@@ -609,14 +611,14 @@ IPCVAPI_EX( CvStatus, icvUndistortGetSize, "ippiUndistortGetSize",
             CV_PLUGINS1(CV_PLUGIN_IPPCV), ( CvSize roiSize, int *pBufsize ))
 
 IPCVAPI_EX( CvStatus, icvCreateMapCameraUndistort_32f_C1R,
-            "ippiCreateMapCameraUndistort_32f_C1", CV_PLUGINS1(CV_PLUGIN_IPPCV),
+            "ippiCreateMapCameraUndistort_32f_C1R", CV_PLUGINS1(CV_PLUGIN_IPPCV),
             (float *pxMap, int xStep, float *pyMap, int yStep, CvSize roiSize,
             float fx, float fy, float cx, float cy, float k1, float k2,
             float p1, float p2, uchar *pBuffer ))
 
 #define ICV_UNDISTORT_RADIAL( flavor, cn, arrtype )                                 \
 IPCVAPI_EX( CvStatus, icvUndistortRadial_##flavor##_C##cn##R,                       \
-    "ippiUndistort_" #flavor "_C" #cn "R", CV_PLUGINS1(CV_PLUGIN_IPPCV),            \
+    "ippiUndistortRadial_" #flavor "_C" #cn "R", CV_PLUGINS1(CV_PLUGIN_IPPCV),      \
     ( const arrtype* pSrc, int srcStep, uchar* pDst, int dstStep, CvSize roiSize,   \
       float fx, float fy, float cx, float cy, float k1, float k2, uchar *pBuffer ))
 
@@ -650,7 +652,7 @@ IPCVAPI_EX( CvStatus, icvCopySubpix_32f_C1R,
 *                                Lucas-Kanade Optical Flowl                              *
 \****************************************************************************************/
 
-/*IPCVAPI_EX( CvStatus, icvOpticalFlowPyrLKInitAlloc_8u_C1R,
+IPCVAPI_EX( CvStatus, icvOpticalFlowPyrLKInitAlloc_8u_C1R,
             "ippiOpticalFlowPyrLKInitAlloc_8u_C1R", CV_PLUGINS1(CV_PLUGIN_IPPCV),
             ( void** ppState, CvSize roiSize, int winSize, int hint ))
 
@@ -663,7 +665,7 @@ IPCVAPI_EX( CvStatus, icvOpticalFlowPyrLK_8u_C1R,
             ( CvPyramid *pPyr1, CvPyramid *pPyr2,
             const float *pPrev, float* pNext, char *pStatus,
             float *pError, int numFeat, int winSize,
-            int maxLev, int maxIter, float threshold, void* state ))*/
+            int maxLev, int maxIter, float threshold, void* state ))
 
 #endif /*_CV_IPP_H_*/
 

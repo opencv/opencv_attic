@@ -187,7 +187,7 @@ cvUndistort2( const CvArr* _src, CvArr* _dst, const CvMat* A, const CvMat* dist_
             cn == 1 ? (CvUndistortRadialIPPFunc)icvUndistortRadial_8u_C1R_p :
                       (CvUndistortRadialIPPFunc)icvUndistortRadial_8u_C3R_p;
 
-        if( func && icvUndistortGetSize_p( size, &buf_size ) && buf_size > 0 )
+        if( func && icvUndistortGetSize_p( size, &buf_size ) >= 0 && buf_size > 0 )
         {
             CV_CALL( buffer = (uchar*)cvAlloc( buf_size ));
             if( func( src->data.ptr, src_step, dst->data.ptr,

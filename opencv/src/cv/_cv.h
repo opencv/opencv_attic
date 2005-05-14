@@ -96,6 +96,17 @@ CV_EXTERN_C_FUNCPTR( void (CV_CDECL * CvWriteNodeFunction)(void* seq,void* node)
 
 #define _CvConvState CvFilterState
 
+typedef struct CvPyramid
+{
+    uchar **ptr;
+    CvSize *sz;
+    double *rate;
+    int *step;
+    uchar *state;
+    int level;
+}
+CvPyramid;
+
 #include "_cvipp.h"
 #include "_cvmatrix.h"
 #include "_cvgeom.h"
