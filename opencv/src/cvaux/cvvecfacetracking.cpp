@@ -168,16 +168,14 @@ struct CvFaceTracker
         if (NULL == imgGray || NULL == imgThresh)
             return FALSE;
         
-        m[0] = (float)cos(-dbRotateAngle*CV_PI/180.);
+        /*m[0] = (float)cos(-dbRotateAngle*CV_PI/180.);
         m[1] = (float)sin(-dbRotateAngle*CV_PI/180.);
         m[2] = (float)ptRotate.x;
         m[3] = -m[1];
         m[4] = m[0];
-        m[5] = (float)ptRotate.y;
-        
-        /*iplGetRotateShift(ptRotate.x, ptRotate.y, angle, &xShift, &yShift);
-        iplRotate(img, imgGray, angle, xShift, yShift, CV_INTER_LINEAR | IPL_SMOOTH_EDGE);*/
-        cvGetQuadrangleSubPix( img, imgGray, &mat, 1, cvScalarAll(0));
+        m[5] = (float)ptRotate.y;*/
+        cv2DRotationMatrix( cvPointTo32f(ptRotate), -dbRotateAngle, 1., &mat );
+        cvWarpAffine( img, imgGray, &mat );
         
         if (NULL == mstgContours)
             mstgContours = cvCreateMemStorage();
