@@ -247,7 +247,7 @@ typedef void* HMODULE;
 #define DLL_DEBUG_FLAG ""
 #endif
 
-#define VERBOSE_LOADING 1
+#define VERBOSE_LOADING 0
 
 #if VERBOSE_LOADING
 #define ICV_PRINTF(args)  printf args; fflush(stdout)
