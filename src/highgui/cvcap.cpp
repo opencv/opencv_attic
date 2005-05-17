@@ -1459,6 +1459,256 @@ CV_IMPL CvCapture* cvCaptureFromCAM( int index )
 }
 
 
+#ifdef HAVE_FFMPEG
+
+typedef struct CvAVI_FFMPEG_Writer
+{
+    AVCodec         * codec;
+    AVCodecContext  * context;
+    uint8_t         * outbuf;
+    uint32_t          outbuf_size;
+    FILE            * outfile;
+    
+    AVFrame         * picture;
+    AVFrame         * rgb_picture;
+    uint8_t         * picbuf;
+} CvAVI_FFMPEG_Writer;
+
+
+// shorthand for specifying correct four character code cookies
+#ifndef MKTAG
+#define MKTAG(a,b,c,d) (a | (b << 8) | (c << 16) | (d << 24))
+#endif
+
+
+/**
+ * the following function is a modified version of code
+ * found in ffmpeg-0.4.9-pre1/libavcodec/avcodec.c
+ */
+static AVCodec* icv_avcodec_find_by_fcc_FFMPEG(uint32_t fcc)
+{
+    // translation table
+    static const struct fcc_to_avcodecid {
+        enum CodecID codec;
+        uint32_t list[4]; // maybe we could map more fcc to same codec
+    } lc[] = {
+    { CODEC_ID_H263, { MKTAG('U', '2', '6', '3'), 0 } },
+    { CODEC_ID_H263I, { MKTAG('I', '2', '6', '3'), 0 } },
+    { CODEC_ID_MSMPEG4V3, { MKTAG('D', 'I', 'V', '3'), 0 } },
+    { CODEC_ID_MPEG4, { MKTAG('D', 'I', 'V', 'X'),  MKTAG('D', 'X', '5', '0'), 0 } },
+    { CODEC_ID_MSMPEG4V2, { MKTAG('M', 'P', '4', '2'), 0 } },
+    { CODEC_ID_MJPEG, { MKTAG('M', 'J', 'P', 'G'), 0 } },
+    { CODEC_ID_MPEG1VIDEO, { MKTAG('P', 'I', 'M', '1'), 0 } },
+    { CODEC_ID_AC3, { 0x2000, 0 } },
+    { CODEC_ID_MP2, { 0x50, 0x55, 0 } },
+    { CODEC_ID_FLV1, { MKTAG('F', 'L', 'V', '1'), 0 } },
+        
+    { CODEC_ID_NONE, {0}}
+    };
+    const struct fcc_to_avcodecid* c;
+    
+    for (c = lc; c->codec != CODEC_ID_NONE; c++)
+    {
+        int i = 0;
+        while (c->list[i] != 0)
+            if (c->list[i++] == fcc)
+        		//		return avcodec_find_decoder(c->codec); // original line
+        		return avcodec_find_encoder(c->codec);
+    }
+    
+    return NULL;
+}
+
+/**
+ * the following function is a modified version of code
+ * found in ffmpeg-0.4.9-pre1/output_example.c
+ */
+static AVFrame *icv_alloc_picture_FFMPEG(int pix_fmt, int width, int height)
+{
+    AVFrame * picture;
+    uint8_t * picture_buf;
+    int size;
+    
+    picture = avcodec_alloc_frame();
+    if (!picture)
+        return NULL;
+    size = avpicture_get_size(pix_fmt, width, height);
+    picture_buf = (uint8_t *) cvAlloc(size);
+    if (!picture_buf) 
+    {
+        av_free(picture);
+        return NULL;
+    }
+    avpicture_fill((AVPicture *)picture, picture_buf, 
+                   pix_fmt, width, height);
+    return picture;
+}
+
+
+/// Create a video writer object that uses FFMPEG
+CV_IMPL CvVideoWriter* cvCreateVideoWriter( const char * filename, int fourcc,
+                                            double fps, CvSize frameSize, int /*is_color*/ )
+{
+    
+    CV_FUNCNAME( "cvCreateVideoWriter" );
+    __BEGIN__;
+    
+    // check arguments
+    CV_ASSERT (filename);
+    CV_ASSERT (fps > 0);
+    CV_ASSERT (frameSize.width > 0  &&  frameSize.height > 0);
+    
+
+    // allocate memory for structure...
+    CvAVI_FFMPEG_Writer * writer = (CvAVI_FFMPEG_Writer *) cvAlloc( sizeof(CvAVI_FFMPEG_Writer));
+    memset (writer, 0, sizeof (*writer));
+    
+    // tell FFMPEG to register codecs
+    av_register_all();
+    
+    // lookup codec using the four character code
+    writer->codec = icv_avcodec_find_by_fcc_FFMPEG( fourcc );
+    if (!(writer->codec))
+        CV_ERROR( CV_StsBadArg, "input_array or output_array are not valid matrices" );
+    
+    // alloc memory for context
+    writer->context     = avcodec_alloc_context();
+    CV_ASSERT (writer->context);
+    
+    // create / prepare rgb_picture (used for color conversion)    
+    writer->rgb_picture = avcodec_alloc_frame();
+    CV_ASSERT (writer->rgb_picture);
+    
+    // create / prepare picture (used for encoding)...    
+    writer->picture     = icv_alloc_picture_FFMPEG(writer->context->pix_fmt, frameSize.width, frameSize.height);
+    CV_ASSERT (writer->picture);
+    
+    // set parameters in context as desired...    
+    writer->context->bit_rate         = 400000;      // TODO: BITRATE SETTINGS!
+    writer->context->width            = frameSize.width;  
+    writer->context->height           = frameSize.height;
+    writer->context->frame_rate       = static_cast<int> (fps);
+    writer->context->frame_rate_bas   =  1;
+    writer->context->gop_size         = 10;
+    writer->context->max_b_frames     =  0;          // TODO: WHAT TO DO WITH B-FRAMES IN OTHER CODECS?
+    
+    // try to open codec, exit if it fails
+    if ( avcodec_open(writer->context, writer->codec) < 0)
+    {
+        fprintf(stderr, "HIGHGUI ERROR: Couldn't open codec\n");
+        
+        cvFree ( & writer->picture->data[0] );
+        av_free(   writer->picture );
+        av_free(   writer->rgb_picture );
+        av_free(   writer->context );
+        cvFree ( & writer );
+        
+        return 0;
+    }
+    
+    // open output file
+    writer->outfile = fopen(filename, "wb");
+    if (!(writer->outfile))
+    {
+        fprintf(stderr, "HIGHGUI ERROR: Couldn't open file %s\n", filename);
+        
+        avcodec_close(writer->context);
+        cvFree ( & writer->picture->data[0] );
+        av_free(   writer->picture );
+        av_free(   writer->rgb_picture );
+        av_free(   writer->context );
+        cvFree ( & writer );
+        
+        return 0;
+    }
+    
+    // alloc image and output buffer
+    writer->outbuf_size = avpicture_get_size (writer->context->pix_fmt, frameSize.width, frameSize.height);
+    writer->outbuf      = (uint8_t *) cvAlloc (writer->outbuf_size);
+    if (! (writer->outbuf))
+    {
+        fprintf(stderr, "HIGHGUI ERROR: Couldn't allocate memory for output buffer\n");
+    
+        fclose (writer->outfile);
+        avcodec_close(writer->context);
+        cvFree ( & writer->picture->data[0] );
+        av_free(   writer->picture );
+        av_free(   writer->rgb_picture );
+        av_free(   writer->context );
+        cvFree ( & writer );
+        
+        return 0;
+    }
+    
+    __END__;
+    
+    // return what we got
+    return (CvVideoWriter *) writer;
+}
+
+/// write a frame with FFMPEG
+CV_IMPL int cvWriteFrame( CvVideoWriter * writer, const IplImage * image )
+{
+    
+    CV_FUNCNAME ( "cvWriteFrame" );
+    __BEGIN__;
+    
+    // check parameters
+    CV_ASSERT ( image );
+    CV_ASSERT ( image->nChannels == 3 );
+    CV_ASSERT ( image->depth == IPL_DEPTH_8U );
+
+    
+    // check if buffer sizes match
+    OPENCV_ASSERT ( image->imageSize == avpicture_get_size (PIX_FMT_BGR24, image->width, image->height),
+                    "cvWriteFrame( CvVideoWriter *, const IplImage *)", "illegal image->imageSize");
+    
+    CvAVI_FFMPEG_Writer * mywriter = (CvAVI_FFMPEG_Writer*)writer;
+    
+    // let rgb_picture point to the raw data buffer of 'image'
+    avpicture_fill((AVPicture *)mywriter->rgb_picture, (uint8_t *) image->imageData, 
+                   PIX_FMT_BGR24, image->width, image->height);
+    
+    // convert to the color format needed by the codec
+    img_convert((AVPicture *)mywriter->picture, mywriter->context->pix_fmt,
+                (AVPicture *)mywriter->rgb_picture, PIX_FMT_BGR24, 
+                image->width, image->height);
+    
+    // encode frame
+    int outsize = avcodec_encode_video(mywriter->context, mywriter->outbuf,
+                                       mywriter->outbuf_size, mywriter->picture);
+    
+    // write out data
+    fwrite(mywriter->outbuf, 1, outsize, mywriter->outfile);
+    
+    __END__;
+    
+    return CV_StsOk;
+}
+
+/// close video output stream and free associated memory
+CV_IMPL void cvReleaseVideoWriter( CvVideoWriter ** writer )
+{
+    // nothing to do if already released
+    if ( !(*writer) )
+        return;
+    
+    // release data structures in reverse order
+    CvAVI_FFMPEG_Writer * mywriter = (CvAVI_FFMPEG_Writer*)(*writer);
+    fclose(mywriter->outfile);
+    avcodec_close(mywriter->context);
+    cvFree ( & mywriter->picture->data[0] );
+    av_free(   mywriter->picture );
+    av_free(   mywriter->rgb_picture );
+    av_free(   mywriter->context );
+    cvFree ( writer );
+
+    // mark as released
+    (*writer) = 0;
+}
+
+#else // !HAVE_FFMPEG
+
 CV_IMPL CvVideoWriter* cvCreateVideoWriter( const char* /*filename*/, int /*fourcc*/,
                                             double /*fps*/, CvSize /*frameSize*/, int /*is_color*/ )
 {
@@ -1477,6 +1727,7 @@ CV_IMPL void cvReleaseVideoWriter( CvVideoWriter** /*writer*/ )
 {
 }
 
+#endif // HAVE_FFMPEG
 
 #endif /* Linux version */
 
