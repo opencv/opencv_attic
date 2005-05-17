@@ -107,12 +107,12 @@ typedef int CVStatus;
                 cvError((status),(func),(context),__FILE__,__LINE__)
 
 #define OPENCV_ERRCHK(func,context)                                 \
-                ((cvGetErrStatus() >= 0) ? CV_StsOk                 \
-                : OPENCV_ERROR(CV_StsBackTrace,(func),(context)))
+                {if (cvGetErrStatus() >= 0)                         \
+                 {OPENCV_ERROR(CV_StsBackTrace,(func),(context)));}}
 
 #define OPENCV_ASSERT(expr,func,context)                            \
-                ((expr) ? CV_StsOk                                  \
-                : OPENCV_ERROR(CV_StsInternal,(func),(context)))
+                {if (expr)                                          \
+                 {OPENCV_ERROR(CV_StsInternal,(func),(context)));}}
 
 #define OPENCV_RSTERR() (cvSetErrStatus(CV_StsOk))
 
