@@ -1320,15 +1320,15 @@ static double icvGetPropertyAVI_FFMPEG( CvCaptureAVI_FFMPEG* capture, int proper
     switch( property_id )
     {
     case CV_CAP_PROP_POS_MSEC:
-        if(capture->ic->start_time != AV_NOPTS_VALUE)
+        if(capture->ic->start_time != static_cast<double>(AV_NOPTS_VALUE))
 	    return (double)(timestamp - capture->ic->start_time)*1000/(double)AV_TIME_BASE;
         break;
     case CV_CAP_PROP_POS_FRAMES:
-	if(capture->video_st->cur_dts != AV_NOPTS_VALUE)
+	if(capture->video_st->cur_dts != static_cast<double>(AV_NOPTS_VALUE))
 	    return (double)capture->video_st->cur_dts-1;
 	break;
     case CV_CAP_PROP_POS_AVI_RATIO:
-	if(capture->ic->start_time != AV_NOPTS_VALUE && capture->ic->duration != AV_NOPTS_VALUE)
+	if(capture->ic->start_time != static_cast<double>(AV_NOPTS_VALUE) && capture->ic->duration != static_cast<double>(AV_NOPTS_VALUE))
 	    return (double)(timestamp-capture->ic->start_time)/(double)capture->ic->duration;
 	break;
     case CV_CAP_PROP_FRAME_WIDTH:
@@ -1433,7 +1433,7 @@ CV_IMPL CvCapture* cvCaptureFromFile( const char* filename )
 
 CV_IMPL CvCapture* cvCaptureFromFile( const char* filename )
 {
-    fprintf( stderr, "HIGHGUI ERROR: Unsupported function. Rebuilt OpenCV with FFMPEG support\n" );
+    fprintf( stderr, "HIGHGUI ERROR: Unsupported function. Rebuild OpenCV with FFMPEG support!\n" );
     return 0;
 }
 
@@ -1549,14 +1549,10 @@ static AVFrame *icv_alloc_picture_FFMPEG(int pix_fmt, int width, int height)
 CV_IMPL CvVideoWriter* cvCreateVideoWriter( const char * filename, int fourcc,
                                             double fps, CvSize frameSize, int /*is_color*/ )
 {
-    
-    CV_FUNCNAME( "cvCreateVideoWriter" );
-    __BEGIN__;
-    
     // check arguments
-    CV_ASSERT (filename);
-    CV_ASSERT (fps > 0);
-    CV_ASSERT (frameSize.width > 0  &&  frameSize.height > 0);
+    assert (filename);
+    assert (fps > 0);
+    assert (frameSize.width > 0  &&  frameSize.height > 0);
     
 
     // allocate memory for structure...
@@ -1564,31 +1560,34 @@ CV_IMPL CvVideoWriter* cvCreateVideoWriter( const char * filename, int fourcc,
     memset (writer, 0, sizeof (*writer));
     
     // tell FFMPEG to register codecs
-    av_register_all();
+    av_register_all ();
     
     // lookup codec using the four character code
-    writer->codec = icv_avcodec_find_by_fcc_FFMPEG( fourcc );
+    writer->codec = icv_avcodec_find_by_fcc_FFMPEG (fourcc);
     if (!(writer->codec))
-        CV_ERROR( CV_StsBadArg, "input_array or output_array are not valid matrices" );
+    {
+      fprintf(stderr, "HIGHGUI ERROR: Unsupported video codec.\n");
+      return 0;
+    }
     
     // alloc memory for context
     writer->context     = avcodec_alloc_context();
-    CV_ASSERT (writer->context);
+    assert (writer->context);
     
     // create / prepare rgb_picture (used for color conversion)    
     writer->rgb_picture = avcodec_alloc_frame();
-    CV_ASSERT (writer->rgb_picture);
+    assert (writer->rgb_picture);
     
     // create / prepare picture (used for encoding)...    
     writer->picture     = icv_alloc_picture_FFMPEG(writer->context->pix_fmt, frameSize.width, frameSize.height);
-    CV_ASSERT (writer->picture);
+    assert (writer->picture);
     
     // set parameters in context as desired...    
     writer->context->bit_rate         = 400000;      // TODO: BITRATE SETTINGS!
     writer->context->width            = frameSize.width;  
     writer->context->height           = frameSize.height;
     writer->context->frame_rate       = static_cast<int> (fps);
-    writer->context->frame_rate_bas   =  1;
+    writer->context->frame_rate_base  =  1;
     writer->context->gop_size         = 10;
     writer->context->max_b_frames     =  0;          // TODO: WHAT TO DO WITH B-FRAMES IN OTHER CODECS?
     
@@ -1597,11 +1596,11 @@ CV_IMPL CvVideoWriter* cvCreateVideoWriter( const char * filename, int fourcc,
     {
         fprintf(stderr, "HIGHGUI ERROR: Couldn't open codec\n");
         
-        cvFree ( & writer->picture->data[0] );
+        cvFree ( (void **) & writer->picture->data[0] );
         av_free(   writer->picture );
         av_free(   writer->rgb_picture );
         av_free(   writer->context );
-        cvFree ( & writer );
+        cvFree ( (void **) & writer );
         
         return 0;
     }
@@ -1613,11 +1612,11 @@ CV_IMPL CvVideoWriter* cvCreateVideoWriter( const char * filename, int fourcc,
         fprintf(stderr, "HIGHGUI ERROR: Couldn't open file %s\n", filename);
         
         avcodec_close(writer->context);
-        cvFree ( & writer->picture->data[0] );
+        cvFree ( (void **) & writer->picture->data[0] );
         av_free(   writer->picture );
         av_free(   writer->rgb_picture );
         av_free(   writer->context );
-        cvFree ( & writer );
+        cvFree ( (void **) & writer );
         
         return 0;
     }
@@ -1631,16 +1630,14 @@ CV_IMPL CvVideoWriter* cvCreateVideoWriter( const char * filename, int fourcc,
     
         fclose (writer->outfile);
         avcodec_close(writer->context);
-        cvFree ( & writer->picture->data[0] );
+        cvFree ( (void **) & writer->picture->data[0] );
         av_free(   writer->picture );
         av_free(   writer->rgb_picture );
         av_free(   writer->context );
-        cvFree ( & writer );
+        cvFree ( (void **) & writer );
         
         return 0;
     }
-    
-    __END__;
     
     // return what we got
     return (CvVideoWriter *) writer;
@@ -1650,20 +1647,17 @@ CV_IMPL CvVideoWriter* cvCreateVideoWriter( const char * filename, int fourcc,
 CV_IMPL int cvWriteFrame( CvVideoWriter * writer, const IplImage * image )
 {
     
-    CV_FUNCNAME ( "cvWriteFrame" );
-    __BEGIN__;
-    
     // check parameters
-    CV_ASSERT ( image );
-    CV_ASSERT ( image->nChannels == 3 );
-    CV_ASSERT ( image->depth == IPL_DEPTH_8U );
+    assert ( image );
+    assert ( image->nChannels == 3 );
+    assert ( image->depth == IPL_DEPTH_8U );
 
     
-    // check if buffer sizes match
-    OPENCV_ASSERT ( image->imageSize == avpicture_get_size (PIX_FMT_BGR24, image->width, image->height),
-                    "cvWriteFrame( CvVideoWriter *, const IplImage *)", "illegal image->imageSize");
+    // check if buffer sizes match, i.e. image has expected format (size, channels, bitdepth, alignment)
+    assert (image->imageSize == avpicture_get_size (PIX_FMT_BGR24, image->width, image->height));
     
-    CvAVI_FFMPEG_Writer * mywriter = (CvAVI_FFMPEG_Writer*)writer;
+    // typecast from opaque data type to implemented struct
+    CvAVI_FFMPEG_Writer * mywriter = (CvAVI_FFMPEG_Writer*) writer;
     
     // let rgb_picture point to the raw data buffer of 'image'
     avpicture_fill((AVPicture *)mywriter->rgb_picture, (uint8_t *) image->imageData, 
@@ -1681,7 +1675,6 @@ CV_IMPL int cvWriteFrame( CvVideoWriter * writer, const IplImage * image )
     // write out data
     fwrite(mywriter->outbuf, 1, outsize, mywriter->outfile);
     
-    __END__;
     
     return CV_StsOk;
 }
@@ -1697,11 +1690,11 @@ CV_IMPL void cvReleaseVideoWriter( CvVideoWriter ** writer )
     CvAVI_FFMPEG_Writer * mywriter = (CvAVI_FFMPEG_Writer*)(*writer);
     fclose(mywriter->outfile);
     avcodec_close(mywriter->context);
-    cvFree ( & mywriter->picture->data[0] );
+    cvFree ( (void **) & mywriter->picture->data[0] );
     av_free(   mywriter->picture );
     av_free(   mywriter->rgb_picture );
     av_free(   mywriter->context );
-    cvFree ( writer );
+    cvFree ( (void **) writer );
 
     // mark as released
     (*writer) = 0;
@@ -1712,7 +1705,7 @@ CV_IMPL void cvReleaseVideoWriter( CvVideoWriter ** writer )
 CV_IMPL CvVideoWriter* cvCreateVideoWriter( const char* /*filename*/, int /*fourcc*/,
                                             double /*fps*/, CvSize /*frameSize*/, int /*is_color*/ )
 {
-    fprintf( stderr, "HIGHGUI ERROR: Writing to video files is not supported\n" );
+    fprintf( stderr, "HIGHGUI ERROR: Unsupported function. Rebuild OpenCV with FFMPEG support!\n" );
     return 0;
 }
 
