@@ -74,9 +74,9 @@ am_cvtest_OBJECTS = aaccum.$(OBJEXT) aadaptthresh.$(OBJEXT) \
 	aposit.$(OBJEXT) apyrsegmentation.$(OBJEXT) \
 	asamplers.$(OBJEXT) asnakes.$(OBJEXT) asubdivisions.$(OBJEXT) \
 	atemplmatch.$(OBJEXT) athresh.$(OBJEXT) ats.$(OBJEXT) \
-	aundistort.$(OBJEXT) canny.$(OBJEXT) cvtest.$(OBJEXT) \
-	tsysa.$(OBJEXT) ucontours.$(OBJEXT) ugraphics.$(OBJEXT) \
-	uiplutils.$(OBJEXT) ureadfile.$(OBJEXT)
+	canny.$(OBJEXT) cvtest.$(OBJEXT) tsysa.$(OBJEXT) \
+	ucontours.$(OBJEXT) ugraphics.$(OBJEXT) uiplutils.$(OBJEXT) \
+	ureadfile.$(OBJEXT)
 cvtest_OBJECTS = $(am_cvtest_OBJECTS)
 cvtest_DEPENDENCIES = $(top_builddir)/cv/src/libcv.la \
 	$(top_builddir)/cxcore/src/libcxcore.la \
@@ -265,7 +265,7 @@ cvtest_SOURCES = \
     amotiontemplates.cpp amotseg.cpp aoptflowhs.cpp aoptflowlk.cpp \
     aoptflowpyrlk.cpp apixelaccess.cpp aposit.cpp apyrsegmentation.cpp \
     asamplers.cpp asnakes.cpp asubdivisions.cpp atemplmatch.cpp \
-    athresh.cpp ats.cpp aundistort.cpp canny.cpp cvtest.cpp \
+    athresh.cpp ats.cpp canny.cpp cvtest.cpp \
     tsysa.cpp ucontours.cpp ugraphics.cpp uiplutils.cpp ureadfile.cpp
 
 cvtest_LDADD = \
@@ -380,7 +380,6 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/atemplmatch.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/athresh.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/ats.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/aundistort.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/canny.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/cvtest.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/tsysa.Po@am__quote@
