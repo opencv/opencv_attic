@@ -24,7 +24,7 @@ cvtest_SOURCES = \
     amotiontemplates.cpp amotseg.cpp aoptflowhs.cpp aoptflowlk.cpp \
     aoptflowpyrlk.cpp apixelaccess.cpp aposit.cpp apyrsegmentation.cpp \
     asamplers.cpp asnakes.cpp asubdivisions.cpp atemplmatch.cpp \
-    athresh.cpp ats.cpp aundistort.cpp canny.cpp cvtest.cpp \
+    athresh.cpp ats.cpp canny.cpp cvtest.cpp \
     tsysa.cpp ucontours.cpp ugraphics.cpp uiplutils.cpp ureadfile.cpp
 
 cvtest_LDADD =                                          \
