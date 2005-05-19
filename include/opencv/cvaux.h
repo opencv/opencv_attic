@@ -867,11 +867,10 @@ typedef unsigned char CvBool;
 typedef struct
 {
     int id;
-    CvPoint p;
+    CvPoint2D32f p; // pgruebele: So we do not loose precision, this needs to be float
 } Cv3dTracker2dTrackedObject;
 
-CV_INLINE Cv3dTracker2dTrackedObject cv3dTracker2dTrackedObject(int id, CvPoint p);
-CV_INLINE Cv3dTracker2dTrackedObject cv3dTracker2dTrackedObject(int id, CvPoint p)
+CV_INLINE Cv3dTracker2dTrackedObject cv3dTracker2dTrackedObject(int id, CvPoint2D32f p)
 {
     Cv3dTracker2dTrackedObject r;
     r.id = id;
@@ -885,7 +884,6 @@ typedef struct
     CvPoint3D32f p;             // location of the tracked object
 } Cv3dTrackerTrackedObject;
 
-CV_INLINE Cv3dTracker2dTrackedObject cv3dTracker2dTrackedObject(int id, CvPoint p);
 CV_INLINE Cv3dTrackerTrackedObject cv3dTrackerTrackedObject(int id, CvPoint3D32f p)
 {
     Cv3dTrackerTrackedObject r;

@@ -61,7 +61,7 @@ static void DrawEtalon(IplImage *img, CvPoint2D32f *corners,
                        int corner_count, CvSize etalon_size, int draw_ordered);
 static void MultMatrix(float rm[4][4], const float m1[4][4], const float m2[4][4]);
 static void MultVectorMatrix(float rv[4], const float v[4], const float m[4][4]);
-static CvPoint3D32f ImageCStoWorldCS(const Cv3dTrackerCameraInfo &camera_info, CvPoint p);
+static CvPoint3D32f ImageCStoWorldCS(const Cv3dTrackerCameraInfo &camera_info, CvPoint2D32f p);
 static bool intersection(CvPoint3D32f o1, CvPoint3D32f p1,
                          CvPoint3D32f o2, CvPoint3D32f p2,
                          CvPoint3D32f &r1, CvPoint3D32f &r2);
@@ -545,7 +545,7 @@ static bool intersection(CvPoint3D32f o1, CvPoint3D32f p1,
 
 // Convert from image to camera space by transforming point p in
 // the image plane by the camera matrix.
-static CvPoint3D32f ImageCStoWorldCS(const Cv3dTrackerCameraInfo &camera_info, CvPoint p)
+static CvPoint3D32f ImageCStoWorldCS(const Cv3dTrackerCameraInfo &camera_info, CvPoint2D32f p)
 {
     float tp[4];
     tp[0] = (float)p.x - camera_info.principal_point.x;
