@@ -79,6 +79,11 @@
 extern "C" {
 #endif
 
+// pgruebele: export this for external use.  It is a practical function
+CVAPI(int) cvEllipse2Poly( CvPoint center, CvSize axes,
+                 int angle, int arc_start, int arc_end, CvPoint * pts, int delta );
+
+
 /****************************************************************************************\
 *          Array allocation, deallocation, initialization and access to elements         *
 \****************************************************************************************/

@@ -820,8 +820,8 @@ icvSinCos( int angle, float *cosval, float *sinval )
 /* 
    constructs polygon that represents elliptic arc.
 */
-static int
-icvEllipse2Poly( CvPoint center, CvSize axes, int angle,
+CV_IMPL int
+cvEllipse2Poly( CvPoint center, CvSize axes, int angle,
                  int arc_start, int arc_end, CvPoint* pts, int delta )
 {
     float alpha, beta;
@@ -897,7 +897,7 @@ icvEllipseEx( CvMat* img, CvPoint center, CvSize axes,
     delta = (MAX(axes.width,axes.height)+(XY_ONE>>1))>>XY_SHIFT;
     delta = delta < 3 ? 90 : delta < 10 ? 30 : delta < 15 ? 18 : 5;
 
-    count = icvEllipse2Poly( center, axes, angle, arc_start, arc_end, v, delta );
+    count = cvEllipse2Poly( center, axes, angle, arc_start, arc_end, v, delta );
 
     if( thickness >= 0 )
     {
