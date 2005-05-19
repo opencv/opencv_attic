@@ -79,11 +79,6 @@
 extern "C" {
 #endif
 
-// pgruebele: export this for external use.  It is a practical function
-CVAPI(int) cvEllipse2Poly( CvPoint center, CvSize axes,
-                 int angle, int arc_start, int arc_end, CvPoint * pts, int delta );
-
-
 /****************************************************************************************\
 *          Array allocation, deallocation, initialization and access to elements         *
 \****************************************************************************************/
@@ -1315,6 +1310,15 @@ CVAPI(void)  cvGetTextSize( const char* text_string, const CvFont* font,
    packed color value, otherwise the first channels (depending on arrtype)
    of destination scalar are set to the same value = <color> */
 CVAPI(CvScalar)  cvColorToScalar( double packed_color, int arrtype );
+
+/* Returns the polygon points which make up the given ellipse.  The ellipse is define by
+   the box of size 'axes' rotated 'angle' around the 'center'.  A partial sweep
+   of the ellipse arc can be done by spcifying arc_start and arc_end to be something
+   other than 0 and 360, respectively.  The input array 'pts' must be large enough to
+   hold the result.  The total number of points stored into 'pts' is returned by this
+   function. */
+CVAPI(int) cvEllipse2Poly( CvPoint center, CvSize axes,
+                 int angle, int arc_start, int arc_end, CvPoint * pts, int delta );
 
 /* Draws contour outlines or filled interiors on the image */
 CVAPI(void)  cvDrawContours( CvArr *img, CvSeq* contour,
