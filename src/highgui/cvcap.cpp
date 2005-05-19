@@ -1123,25 +1123,31 @@ CV_IMPL CvVideoWriter* cvCreateVideoWriter( const char* filename, int fourcc,
 
 CV_IMPL int cvWriteFrame( CvVideoWriter* _writer, const IplImage* image )
 {
-    CvAVI_VFW_Writer* writer = (CvAVI_VFW_Writer*)_writer;
-    
-    if( writer && (writer->compressed ||
-        icvInitAVIWriter( writer, writer->fourcc, writer->fps,
-                          writer->frameSize, image->nChannels > 1 )))
-    {
-        if( image->nChannels != writer->tempFrame->nChannels || image->origin == 0 )
-        {
-            cvConvertImage( image, writer->tempFrame,
-                image->origin == 0 ? CV_CVTIMG_FLIP : 0 );
-            image = (const IplImage*)writer->tempFrame;
-        }
-        if( AVIStreamWrite( writer->compressed, writer->pos++, 1, image->imageData,
-                            image->imageSize, AVIIF_KEYFRAME, 0, 0 ) == AVIERR_OK )
-        {
-            return 1;
-        }
-    }
-    return 0;
+	CvAVI_VFW_Writer* writer = (CvAVI_VFW_Writer*)_writer;
+
+	if( writer && (writer->compressed ||
+		icvInitAVIWriter( writer, writer->fourcc, writer->fps,
+							writer->frameSize, image->nChannels > 1 )))
+	{
+		if (image->nChannels != writer->tempFrame->nChannels)
+		{
+			cvConvertImage( image, writer->tempFrame,
+				image->origin == 0 ? CV_CVTIMG_FLIP : 0 );
+			image = (const IplImage*)writer->tempFrame;
+		}
+		// If only flipping is needed, do not call cvConvertImage because when source and destination are single channel, cvConvertImage fails.
+		else if (image->origin == 0)
+		{
+			cvFlip( image, writer->tempFrame, 0 );
+			image = (const IplImage*)writer->tempFrame;
+		}
+		if( AVIStreamWrite( writer->compressed, writer->pos++, 1, image->imageData,
+							image->imageSize, AVIIF_KEYFRAME, 0, 0 ) == AVIERR_OK )
+		{
+			return 1;
+		}
+	}
+	return 0;
 }
 
 
