@@ -394,7 +394,7 @@ icvSVD_64f( double* a, int lda, int m, int n,
 
         for( i = m1 - 1; i >= 0; i-- )
         {
-            double h, s;
+            double s;
             int lh = nu - i;
 
             l = m - i;
@@ -438,7 +438,7 @@ icvSVD_64f( double* a, int lda, int m, int n,
 
         for( i = n1 - 1; i >= 0; i-- )
         {
-            double h, s;
+            double s;
             int lh = nv - i;
 
             l = n - i;
@@ -487,7 +487,7 @@ icvSVD_64f( double* a, int lda, int m, int n,
 
         for( ;; )               /* do iterations */
         {
-            double c, s, f, g, h, x, y;
+            double c, s, f, g, x, y;
             int flag = 0;
 
             /* test for splitting */
@@ -510,7 +510,7 @@ icvSVD_64f( double* a, int lda, int m, int n,
 
                 for( i = l; i <= k; i++ )
                 {
-                    double f = s * e[i];
+                    f = s * e[i];
 
                     e[i] *= c;
 
@@ -791,7 +791,7 @@ icvSVD_32f( float* a, int lda, int m, int n,
 
         for( i = m1 - 1; i >= 0; i-- )
         {
-            double h, s;
+            double s;
             int lh = nu - i;
 
             l = m - i;
@@ -835,7 +835,7 @@ icvSVD_32f( float* a, int lda, int m, int n,
 
         for( i = n1 - 1; i >= 0; i-- )
         {
-            double h, s;
+            double s;
             int lh = nv - i;
 
             l = n - i;
@@ -884,7 +884,7 @@ icvSVD_32f( float* a, int lda, int m, int n,
 
         for( ;; )               /* do iterations */
         {
-            double c, s, f, g, h, x, y;
+            double c, s, f, g, x, y;
             int flag = 0;
 
             /* test for splitting */
@@ -907,8 +907,7 @@ icvSVD_32f( float* a, int lda, int m, int n,
 
                 for( i = l; i <= k; i++ )
                 {
-                    double f = s * e[i];
-
+                    f = s * e[i];
                     e[i] = (float)(e[i]*c);
 
                     if( anorm + fabs( f ) == anorm )

@@ -3665,12 +3665,10 @@ icvWriteSparseMat( CvFileStorage* fs, const char* name,
     }
 
     cvSeqSort( elements, icvSortIdxCmpFunc, &dims ); 
-    
     cvStartReadSeq( elements, &reader, 0 );
 
     for( i = 0; i < elements->total; i++ )
     {
-        CvSparseNode* node;
         int* idx;
         void* val;
         int k = 0;
@@ -4639,9 +4637,8 @@ icvReadGraph( CvFileStorage* fs, CvFileNode* node )
         int elem_count = k == 0 ? vtx_count : edge_count;
         char* dst_ptr = read_buf;
         int read_max = read_buf_size /MAX(src_elem_size, 1), read_count = 0;
-        CvFileNode* node = k == 0 ? vtx_node : edge_node;
         CvSeqReader reader;
-        cvStartReadRawData( fs, node, &reader );
+        cvStartReadRawData( fs, k == 0 ? vtx_node : edge_node, &reader );
 
         for( i = 0; i < elem_count; i++ )
         {
@@ -4798,7 +4795,7 @@ cvRegisterType( const CvTypeInfo* _info )
 
     for( i = 0; i < len; i++ )
     {
-        char c = _info->type_name[i];
+        c = _info->type_name[i];
         if( !isalnum(c) && c != '-' && c != '_' )
             CV_ERROR( CV_StsBadArg,
             "Type name should contain only letters, digits, - and _" );

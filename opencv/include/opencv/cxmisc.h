@@ -39,7 +39,7 @@
 //
 //M*/
 
-/* This is mostly internal use header, which content is likely to change.
+/* The header is mostly for internal use and it is likely to change.
    It contains some macro definitions that are used in cxcore, cv, cvaux
    and, probably, other libraries. If you need some of this functionality,
    the safe way is to copy it into your code and rename the macros.
@@ -237,6 +237,7 @@ CV_INLINE  CvSize  cvGetMatSize( const CvMat* mat )
 #define  CV_DESCALE(x,n)     (((x) + (1 << ((n)-1))) >> (n))
 #define  CV_FLT_TO_FIX(x,n)  cvRound((x)*(1<<(n)))
 
+#if 0
 /* This is a small engine for performing fast division of multiple numbers
    by the same constant. Most compilers do it too if they know the divisor value
    at compile-time. The algorithm was taken from Agner Fog's optimization guide
@@ -268,6 +269,7 @@ CV_INLINE CvFastDiv cvFastDiv( int divisor )
 
 #define CV_FAST_UDIV( x, fastdiv )  \
     ((int)(((uint64)((x)*2 + (fastdiv).delta))*(fastdiv).scale>>CV_FAST_DIV_SHIFT))
+#endif
 
 #define CV_MEMCPY_CHAR( dst, src, len )                                             \
 {                                                                                   \

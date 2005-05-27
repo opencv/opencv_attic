@@ -111,10 +111,9 @@ cvKMeans2( const CvArr* samples_arr, int cluster_count,
         for( i = 0; i < sample_count; i++ )
         {
             float* s = (float*)(samples->data.ptr + i*samples->step);
-            int k = labels->data.i[i*ids_delta];
+            k = labels->data.i[i*ids_delta];
             double* c = (double*)(centers->data.ptr + k*centers->step);
-            j = 0;
-            for( ; j <= dims - 4; j += 4 )
+            for( j = 0; j <= dims - 4; j += 4 )
             {
                 double t0 = c[j] + s[j];
                 double t1 = c[j+1] + s[j+1];
@@ -147,7 +146,7 @@ cvKMeans2( const CvArr* samples_arr, int cluster_count,
             }
             else
             {
-                int i = cvRandInt( &rng ) % sample_count;
+                i = cvRandInt( &rng ) % sample_count;
                 float* s = (float*)(samples->data.ptr + i*samples->step);
                 for( j = 0; j < dims; j++ )
                     c[j] = s[j];

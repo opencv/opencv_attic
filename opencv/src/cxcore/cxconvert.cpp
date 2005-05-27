@@ -748,7 +748,7 @@ icvCvtScaleAbsTo_8u_C1R( const uchar* src, int srcstep,
         }
         break;
     case  CV_16U:
-        if( fabs( scale ) <= 1. && shift == 0 )
+        if( fabs( scale ) <= 1. && fabs(shift) < DBL_EPSILON )
         {
             int iscale = cvRound(scale*(1 << ICV_FIX_SHIFT));
 

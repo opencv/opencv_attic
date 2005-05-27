@@ -276,7 +276,7 @@ icvDFTInit( int n0, int nf, int* factors, int* itab, int elem_size, void* _wave,
                 int shift = 10 - m;
                 for( i = 0; i <= n - 4; i += 4 )
                 {
-                    int j = (icvRevTable[i>>2]>>shift)*a;
+                    j = (icvRevTable[i>>2]>>shift)*a;
                     itab[i] = j;
                     itab[i+1] = j + na2;
                     itab[i+2] = j + na4;
@@ -289,7 +289,7 @@ icvDFTInit( int n0, int nf, int* factors, int* itab, int elem_size, void* _wave,
                 for( i = 0; i < n; i += 4 )
                 {
                     int i4 = i >> 2;
-                    int j = icvBitRev(i4,shift)*a;
+                    j = icvBitRev(i4,shift)*a;
                     itab[i] = j;
                     itab[i+1] = j + na2;
                     itab[i+2] = j + na4;
@@ -654,13 +654,12 @@ icvDFT_64fc( const CvComplex64f* src, CvComplex64f* dst, int n,
 
                 for( j = 1, dw = dw0; j < nx; j++, dw += dw0 )
                 {
-                    CvComplex64f* v = dst + i + j;
-
-                    double r0 = v[nx].re*wave[dw].re - v[nx].im*wave[dw].im;
-                    double i0 = v[nx].re*wave[dw].im + v[nx].im*wave[dw].re;
-                    double i2 = v[nx*2].re*wave[dw*2].re - v[nx*2].im*wave[dw*2].im;
-                    double r2 = v[nx*2].re*wave[dw*2].im + v[nx*2].im*wave[dw*2].re;
-                    double r1 = r0 + i2, i1 = i0 + r2;
+                    v = dst + i + j;
+                    r0 = v[nx].re*wave[dw].re - v[nx].im*wave[dw].im;
+                    i0 = v[nx].re*wave[dw].im + v[nx].im*wave[dw].re;
+                    i2 = v[nx*2].re*wave[dw*2].re - v[nx*2].im*wave[dw*2].im;
+                    r2 = v[nx*2].re*wave[dw*2].im + v[nx*2].im*wave[dw*2].re;
+                    r1 = r0 + i2; i1 = i0 + r2;
                     
                     r2 = icv_sin_120*(i0 - r2); i2 = icv_sin_120*(i2 - r0);
                     r0 = v[0].re; i0 = v[0].im;
@@ -809,7 +808,7 @@ icvDFT_64fc( const CvComplex64f* src, CvComplex64f* dst, int n,
         }
     }
 
-    if( scale != 1. )
+    if( fabs(scale - 1.) > DBL_EPSILON )
     {
         double re_scale = scale, im_scale = scale;
         if( inv )
@@ -1076,13 +1075,12 @@ icvDFT_32fc( const CvComplex32f* src, CvComplex32f* dst, int n,
 
                 for( j = 1, dw = dw0; j < nx; j++, dw += dw0 )
                 {
-                    CvComplex32f* v = dst + i + j;
-
-                    double r0 = v[nx].re*wave[dw].re - v[nx].im*wave[dw].im;
-                    double i0 = v[nx].re*wave[dw].im + v[nx].im*wave[dw].re;
-                    double i2 = v[nx*2].re*wave[dw*2].re - v[nx*2].im*wave[dw*2].im;
-                    double r2 = v[nx*2].re*wave[dw*2].im + v[nx*2].im*wave[dw*2].re;
-                    double r1 = r0 + i2, i1 = i0 + r2;
+                    v = dst + i + j;
+                    r0 = v[nx].re*wave[dw].re - v[nx].im*wave[dw].im;
+                    i0 = v[nx].re*wave[dw].im + v[nx].im*wave[dw].re;
+                    i2 = v[nx*2].re*wave[dw*2].re - v[nx*2].im*wave[dw*2].im;
+                    r2 = v[nx*2].re*wave[dw*2].im + v[nx*2].im*wave[dw*2].re;
+                    r1 = r0 + i2; i1 = i0 + r2;
                     
                     r2 = icv_sin_120*(i0 - r2); i2 = icv_sin_120*(i2 - r0);
                     r0 = v[0].re; i0 = v[0].im;
@@ -1162,7 +1160,7 @@ icvDFT_32fc( const CvComplex32f* src, CvComplex32f* dst, int n,
                 {
                     CvComplex32f* v = dst + i + j;
                     CvComplex32f v_0 = v[0];
-                    CvComplex64f vn_0 = v_0;
+                    CvComplex64f vn_0(v_0);
 
                     if( j == 0 )
                     {
@@ -1207,7 +1205,7 @@ icvDFT_32fc( const CvComplex32f* src, CvComplex32f* dst, int n,
 
                     for( p = 1, k = nx; p <= factor2; p++, k += nx )
                     {
-                        CvComplex64f s0 = v_0, s1 = v_0;
+                        CvComplex64f s0(v_0), s1 = s0;
                         d = dd = dw_f*p;
 
                         for( q = 0; q < factor2; q++ )
@@ -1234,7 +1232,7 @@ icvDFT_32fc( const CvComplex32f* src, CvComplex32f* dst, int n,
         }
     }
 
-    if( scale != 1. )
+    if( fabs(scale - 1.) > DBL_EPSILON )
     {
         double re_scale = scale, im_scale = scale;
         if( inv )

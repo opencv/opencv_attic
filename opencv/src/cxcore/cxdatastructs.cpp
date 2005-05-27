@@ -1026,7 +1026,7 @@ cvEndWriteSeq( CvSeqWriter * writer )
     /* truncate the last block */
     if( writer->block && writer->seq->storage )
     {
-        CvSeq *seq = writer->seq;
+        seq = writer->seq;
         CvMemStorage *storage = seq->storage;
         char *storage_block_max = (char *) storage->top + storage->block_size;
 
@@ -1040,9 +1040,6 @@ cvEndWriteSeq( CvSeqWriter * writer )
         }
     }
 
-    seq = writer->seq;
-
-    /*writer->seq = 0; */
     writer->ptr = 0;
 
     __END__;

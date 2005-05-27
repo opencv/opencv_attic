@@ -362,7 +362,6 @@ cvSub( const void* srcarr1, const void* srcarr2,
             CvArr* arrs[] = { src1, src2, dst };
             CvMatND stubs[3];
             CvNArrayIterator iterator;
-            CvFunc2D_3A func;
 
             if( maskarr )
                 CV_ERROR( CV_StsBadMask,
@@ -837,7 +836,6 @@ cvAdd( const void* srcarr1, const void* srcarr2,
             CvArr* arrs[] = { src1, src2, dst };
             CvMatND stubs[3];
             CvNArrayIterator iterator;
-            CvFunc2D_3A func;
 
             if( maskarr )
                 CV_ERROR( CV_StsBadMask,
@@ -1438,7 +1436,6 @@ cvMul( const void* srcarr1, const void* srcarr2, void* dstarr, double scale )
         CvArr* arrs[] = { src1, src2, dst };
         CvMatND stubs[3];
         CvNArrayIterator iterator;
-        CvScaledElWiseFunc func;
 
         CV_CALL( cvInitNArrayIterator( 3, arrs, 0, stubs, &iterator ));
 
@@ -1937,8 +1934,8 @@ icvAddWeighted_8u_fast_C1R( const uchar* src1, int step1, double alpha,
 
             for( i = 0; i <= size.width - 4; i += 4 )
             {
-                int t0 = CV_FAST_CAST_8U((tab1[src1[i]] + tab2[src2[i]]) >> shift);
-                int t1 = CV_FAST_CAST_8U((tab1[src1[i+1]] + tab2[src2[i+1]]) >> shift);
+                t0 = CV_FAST_CAST_8U((tab1[src1[i]] + tab2[src2[i]]) >> shift);
+                t1 = CV_FAST_CAST_8U((tab1[src1[i+1]] + tab2[src2[i+1]]) >> shift);
 
                 dst[i] = (uchar)t0;
                 dst[i+1] = (uchar)t1;
@@ -1952,7 +1949,7 @@ icvAddWeighted_8u_fast_C1R( const uchar* src1, int step1, double alpha,
 
             for( ; i < size.width; i++ )
             {
-                int t0 = CV_FAST_CAST_8U((tab1[src1[i]] + tab2[src2[i]]) >> shift);
+                t0 = CV_FAST_CAST_8U((tab1[src1[i]] + tab2[src2[i]]) >> shift);
                 dst[i] = (uchar)t0;
             }
         }
@@ -1966,8 +1963,8 @@ icvAddWeighted_8u_fast_C1R( const uchar* src1, int step1, double alpha,
             
             for( i = 0; i <= size.width - 4; i += 4 )
             {
-                int t0 = (tab1[src1[i]] + tab2[src2[i]]) >> shift;
-                int t1 = (tab1[src1[i+1]] + tab2[src2[i+1]]) >> shift;
+                t0 = (tab1[src1[i]] + tab2[src2[i]]) >> shift;
+                t1 = (tab1[src1[i+1]] + tab2[src2[i+1]]) >> shift;
 
                 dst[i] = CV_CAST_8U( t0 );
                 dst[i+1] = CV_CAST_8U( t1 );
@@ -1981,7 +1978,7 @@ icvAddWeighted_8u_fast_C1R( const uchar* src1, int step1, double alpha,
 
             for( ; i < size.width; i++ )
             {
-                int t0 = (tab1[src1[i]] + tab2[src2[i]]) >> shift;
+                t0 = (tab1[src1[i]] + tab2[src2[i]]) >> shift;
                 dst[i] = CV_CAST_8U( t0 );
             }
         }

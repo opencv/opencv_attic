@@ -313,7 +313,7 @@ icvGEMMSingleMul_##flavor( const arrtype* a_data, size_t a_step,            \
     }                                                                       \
     else                                                                    \
     {                                                                       \
-        int m = d_size.width;                                               \
+        m = d_size.width;                                                   \
         worktype* d_buf = (worktype*)cvStackAlloc(m*sizeof(d_buf[0]));      \
                                                                             \
         for( i = 0; i < d_size.height; i++, _a_data += a_step0,             \
@@ -1102,7 +1102,7 @@ cvGEMM( const CvArr* Aarr, const CvArr* Barr, double alpha,
             uchar* d_buf = 0;
             int i, j, k, di = 0, dj = 0, dk = 0;
             int dm0, dn0, dk0;
-            int a_step0, a_step1, b_step = B->step, b_step0, b_step1, c_step0, c_step1;
+            int a_step0, a_step1, b_step0, b_step1, c_step0, c_step1;
             int work_elem_size = elem_size << (CV_MAT_DEPTH(type) == CV_32F ? 1 : 0);
             CvGEMMBlockMulFunc block_mul_func = (CvGEMMBlockMulFunc)block_mul_tab.fn_2d[type];
             CvGEMMStoreFunc store_func = (CvGEMMStoreFunc)store_tab.fn_2d[type];
@@ -1186,23 +1186,23 @@ cvGEMM( const CvArr* Aarr, const CvArr* Barr, double alpha,
                         int _a_step = A->step;
                         const uchar* _b = B->data.ptr + k*b_step0 + j*b_step1;
                         int _b_step = b_step;
-                        CvSize a_size;
+                        CvSize a_bl_size;
 
                         dk = dk0;
                         if( k + dk >= len || 8*(k + dk) + dk > 8*len )
                             dk = len - k;
 
                         if( !is_a_t )
-                            a_size.width = dk, a_size.height = di;
+                            a_bl_size.width = dk, a_bl_size.height = di;
                         else
-                            a_size.width = di, a_size.height = dk;
+                            a_bl_size.width = di, a_bl_size.height = dk;
 
                         if( a_buf && is_a_t )
                         {
                             int t;
                             _a_step = dk*elem_size;
-                            icvGEMM_TransposeBlock( _a, A->step, a_buf, _a_step, a_size, elem_size );
-                            CV_SWAP( a_size.width, a_size.height, t );
+                            icvGEMM_TransposeBlock( _a, A->step, a_buf, _a_step, a_bl_size, elem_size );
+                            CV_SWAP( a_bl_size.width, a_bl_size.height, t );
                             _a = a_buf;
                         }
                 
@@ -1221,10 +1221,10 @@ cvGEMM( const CvArr* Aarr, const CvArr* Barr, double alpha,
 
                         if( dk0 < len )
                             block_mul_func( _a, _a_step, _b, _b_step, _d, _d_step,
-                                            a_size, cvSize(dj,di), flags );
+                                            a_bl_size, cvSize(dj,di), flags );
                         else
                             single_mul_func( _a, _a_step, _b, _b_step, _c, C->step, _d, _d_step,
-                                             a_size, cvSize(dj,di), alpha, beta, flags );
+                                             a_bl_size, cvSize(dj,di), alpha, beta, flags );
                         flags |= 16;
                     }
 
@@ -1760,12 +1760,13 @@ cvTransform( const CvArr* srcarr, CvArr* dstarr,
                        type == CV_16UC3 ? icvColorTwist_16u_C3R_p :
                        type == CV_16SC3 ? icvColorTwist_16s_C3R_p :
                        type == CV_32FC3 ? icvColorTwist_32f_C3R_p :
-                       type == CV_32FC4 && buffer[4] == 0 && buffer[9] == 0 &&
-                       buffer[14] == 0 && buffer[19] == 0 ? icvColorTwist_32f_C4R_p : 0;
+                       type == CV_32FC4 && fabs(buffer[4]) < DBL_EPSILON &&
+                       fabs(buffer[9]) < DBL_EPSILON && fabs(buffer[14]) < DBL_EPSILON &&
+                       fabs(buffer[19]) < DBL_EPSILON ? icvColorTwist_32f_C4R_p : 0;
         else if( dst_cn == 1 && (cn == 3 || cn == 4) &&
                  buffer[0] >= 0 && buffer[1] >= 0 && buffer[2] >= 0 &&
                  buffer[0] + buffer[1] + buffer[2] <= 1.01 &&
-                 buffer[3] == 0 && (cn == 3 || buffer[4] == 0) )
+                 fabs(buffer[3]) < DBL_EPSILON && (cn == 3 || fabs(buffer[4]) < DBL_EPSILON) )
         {
             if( cn == 3 )
                 ipp_func = type == CV_8UC3 ? icvColorToGray_8u_C3C1R_p :

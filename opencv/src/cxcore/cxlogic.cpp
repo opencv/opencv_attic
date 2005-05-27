@@ -387,7 +387,6 @@ icvLogic( const void* srcarr1, const void* srcarr2, void* dstarr,
         CvArr* arrs[] = { src1, src2, dst };
         CvMatND stubs[3];
         CvNArrayIterator iterator;
-        int type;
 
         if( maskarr )
             CV_ERROR( CV_StsBadMask,
