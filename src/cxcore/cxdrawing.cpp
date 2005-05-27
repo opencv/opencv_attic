@@ -621,7 +621,7 @@ icvLine2( CvMat* img, CvPoint pt1, CvPoint pt2, const void* color )
 
             while( ecount >= 0 )
             {
-                uchar *tptr = ptr + (pt1.y >> XY_SHIFT) * step;
+                tptr = ptr + (pt1.y >> XY_SHIFT) * step;
                 ICV_PUT_POINT();
                 pt1.y += y_step;
                 ptr += 3;
@@ -634,7 +634,7 @@ icvLine2( CvMat* img, CvPoint pt1, CvPoint pt2, const void* color )
 
             while( ecount >= 0 )
             {
-                uchar *tptr = ptr + (pt1.x >> XY_SHIFT) * 3;
+                tptr = ptr + (pt1.x >> XY_SHIFT) * 3;
                 ICV_PUT_POINT();
                 pt1.x += x_step;
                 ptr += step;
@@ -661,7 +661,7 @@ icvLine2( CvMat* img, CvPoint pt1, CvPoint pt2, const void* color )
 
             while( ecount >= 0 )
             {
-                uchar *tptr = ptr + (pt1.y >> XY_SHIFT) * step;
+                tptr = ptr + (pt1.y >> XY_SHIFT) * step;
                 ICV_PUT_POINT();
                 pt1.y += y_step;
                 ptr++;
@@ -674,7 +674,7 @@ icvLine2( CvMat* img, CvPoint pt1, CvPoint pt2, const void* color )
 
             while( ecount >= 0 )
             {
-                uchar *tptr = ptr + (pt1.x >> XY_SHIFT);
+                tptr = ptr + (pt1.x >> XY_SHIFT);
                 ICV_PUT_POINT();
                 pt1.x += x_step;
                 ptr += step;
@@ -699,7 +699,7 @@ icvLine2( CvMat* img, CvPoint pt1, CvPoint pt2, const void* color )
 
             while( ecount >= 0 )
             {
-                uchar *tptr = ptr + (pt1.y >> XY_SHIFT) * step;
+                tptr = ptr + (pt1.y >> XY_SHIFT) * step;
                 ICV_PUT_POINT();
                 pt1.y += y_step;
                 ptr += pix_size;
@@ -712,7 +712,7 @@ icvLine2( CvMat* img, CvPoint pt1, CvPoint pt2, const void* color )
 
             while( ecount >= 0 )
             {
-                uchar *tptr = ptr + (pt1.x >> XY_SHIFT) * pix_size;
+                tptr = ptr + (pt1.x >> XY_SHIFT) * pix_size;
                 ICV_PUT_POINT();
                 pt1.x += x_step;
                 ptr += step;
@@ -822,7 +822,7 @@ icvSinCos( int angle, float *cosval, float *sinval )
 */
 CV_IMPL int
 cvEllipse2Poly( CvPoint center, CvSize axes, int angle,
-                 int arc_start, int arc_end, CvPoint* pts, int delta )
+                int arc_start, int arc_end, CvPoint* pts, int delta )
 {
     float alpha, beta;
     double size_a = axes.width, size_b = axes.height;
@@ -858,7 +858,7 @@ cvEllipse2Poly( CvPoint center, CvSize axes, int angle,
     }
     icvSinCos( angle, &alpha, &beta );
 
-    for( i = arc_start; i < arc_end + delta; i += delta, pts++ )
+    for( i = arc_start; i < arc_end + delta; i += delta )
     {
         double x, y;
         angle = i;
@@ -871,9 +871,13 @@ cvEllipse2Poly( CvPoint center, CvSize axes, int angle,
         y = size_b * icvSinTable[angle];
         pts->x = cvRound( cx + x * alpha - y * beta );
         pts->y = cvRound( cy - x * beta - y * alpha );
+        pts += i == arc_start || pts->x != pts[-1].x || pts->y != pts[-1].y;
     }
 
-    return (int)(pts - pts_origin);
+    i = (int)(pts - pts_origin);
+    for( ; i < 2; i++ )
+        pts_origin[i] = pts_origin[i-1];
+    return i;
 }
 
 
