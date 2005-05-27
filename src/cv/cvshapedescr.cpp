@@ -70,7 +70,7 @@ cvArcLength( const void *array, CvSlice slice, int is_closed )
     else
     {
         is_closed = is_closed > 0;
-        CV_CALL( contour = icvPointSeqFromMat(
+        CV_CALL( contour = cvPointSeqFromMat(
             CV_SEQ_KIND_CURVE | (is_closed ? CV_SEQ_FLAG_CLOSED : 0),
             array, &contour_header, &block ));
     }
@@ -310,7 +310,7 @@ cvMinEnclosingCircle( const void* array, CvPoint2D32f * _center, float *_radius 
     }
     else
     {
-        CV_CALL( sequence = icvPointSeqFromMat(
+        CV_CALL( sequence = cvPointSeqFromMat(
             CV_SEQ_KIND_GENERIC, array, &contour_header, &block ));
     }
 
@@ -715,7 +715,7 @@ cvContourArea( const void *array, CvSlice slice )
     }
     else
     {
-        CV_CALL( contour = icvPointSeqFromMat(
+        CV_CALL( contour = cvPointSeqFromMat(
             CV_SEQ_KIND_CURVE, array, &contour_header, &block ));
     }
 
@@ -1003,7 +1003,7 @@ cvFitEllipse2( const CvArr* array )
     }
     else
     {
-        CV_CALL( ptseq = icvPointSeqFromMat(
+        CV_CALL( ptseq = cvPointSeqFromMat(
             CV_SEQ_KIND_GENERIC, array, &contour_header, &block ));
     }
 
@@ -1050,7 +1050,7 @@ cvBoundingRect( CvArr* array, int update )
     }
     else
     {
-        CV_CALL( ptseq = icvPointSeqFromMat(
+        CV_CALL( ptseq = cvPointSeqFromMat(
             CV_SEQ_KIND_GENERIC, array, &contour_header, &block ));
         calculate = 1;
     }

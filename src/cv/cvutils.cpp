@@ -41,12 +41,12 @@
 
 #include "_cv.h"
 
-CvSeq* icvPointSeqFromMat( int seq_kind, const CvArr* arr,
-                           CvContour* contour_header, CvSeqBlock* block )
+CV_IMPL CvSeq* cvPointSeqFromMat( int seq_kind, const CvArr* arr,
+                                  CvContour* contour_header, CvSeqBlock* block )
 {
     CvSeq* contour = 0;
 
-    CV_FUNCNAME( "icvPointSeqFromMat" );
+    CV_FUNCNAME( "cvPointSeqFromMat" );
 
     assert( arr != 0 && contour_header != 0 && block != 0 );
 

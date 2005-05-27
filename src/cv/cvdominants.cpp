@@ -289,17 +289,13 @@ icvFindDominantPointsIPAN( CvSeq * contour,
     for( i = 0; i < n; i++ )
     {
         int suppressed = 0;
-        int j;
-
         if( sharpness[i] == -1 )
             continue;
 
         for( j = 1; (j <= ptInf[i].right_neigh) && (suppressed == 0); j++ )
         {
             if( sharpness[i] < sharpness[(i + j) % n] )
-            {
                 suppressed = 1;
-            }
         }
 
         for( j = -1; (j >= ptInf[i].left_neigh) && (suppressed == 0); j-- )
@@ -307,17 +303,12 @@ icvFindDominantPointsIPAN( CvSeq * contour,
             int ind = i + j;
 
             ind = (ind < 0) ? (n + ind) : ind;
-
             if( sharpness[i] < sharpness[ind] )
-            {
                 suppressed = 1;
-            }
         }
 
         if( !suppressed )
-        {
             CV_WRITE_SEQ_ELEM( i, writer );
-        }
     }
 
     *corners = cvEndWriteSeq( &writer );

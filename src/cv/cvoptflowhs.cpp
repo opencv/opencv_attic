@@ -341,7 +341,7 @@ icvCalcOpticalFlowHS_8u32fR( uchar*  imgA,
     while( !Stop )
     {
         float Eps = 0;
-        int address = 0;
+        address = 0;
 
         iter++;
 /****************************************************************************************\

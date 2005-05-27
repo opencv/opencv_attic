@@ -647,27 +647,15 @@ cvFitLine( const CvArr* array, int dist, double param,
     else
     {
         CV_CALL( buffer = points = (char*)cvAlloc( ptseq->total*CV_ELEM_SIZE(type) ));
-        
-        if( CV_MAT_DEPTH(type) == CV_32F )
-        {
-            CV_CALL( cvCvtSeqToArray( ptseq, points, CV_WHOLE_SEQ ));
-        }
-        else
-        {
-            /* convert sequence to 32f */
-            float* fldata = (float*)points;
-            CvSeqBlock* block = ptseq->first;
+        CV_CALL( cvCvtSeqToArray( ptseq, points, CV_WHOLE_SEQ ));
 
-            do
-            {
-                int* idata = (int*)block->data;
-                int i, count = block->count*CV_MAT_CN(type);
-                for( i = 0; i < count; i++ )
-                    fldata[i] = (float)idata[i];
-                block = block->next;
-                fldata += count;
-            }
-            while( block != ptseq->first );
+        if( CV_MAT_DEPTH(type) != CV_32F )
+        {
+            int i, total = ptseq->total*CV_MAT_CN(type);
+            assert( CV_MAT_DEPTH(type) == CV_32S );
+
+            for( i = 0; i < total; i++ )
+                ((float*)points)[i] = (float)((int*)points)[i];
         }
     }
 

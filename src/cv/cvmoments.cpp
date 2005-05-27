@@ -50,7 +50,7 @@ icvCompleteMomentState( CvMoments* moments )
     assert( moments != 0 );
     moments->inv_sqrt_m00 = 0;
 
-    if( moments->m00 != 0 )
+    if( fabs(moments->m00) > DBL_EPSILON )
     {
         double inv_m00 = 1. / moments->m00;
         cx = moments->m10 * inv_m00;
@@ -411,7 +411,7 @@ cvMoments( const void* array, CvMoments* moments, int binary )
 
         if( type == CV_32SC2 || type == CV_32FC2 )
         {
-            CV_CALL( contour = icvPointSeqFromMat(
+            CV_CALL( contour = cvPointSeqFromMat(
                 CV_SEQ_KIND_CURVE | CV_SEQ_FLAG_CLOSED,
                 mat, &contour_header, &block ));
         }

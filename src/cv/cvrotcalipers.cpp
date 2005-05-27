@@ -376,7 +376,7 @@ cvMinAreaRect2( const CvArr* array, CvMemStorage* storage )
     }
     else
     {
-        CV_CALL( ptseq = icvPointSeqFromMat(
+        CV_CALL( ptseq = cvPointSeqFromMat(
             CV_SEQ_KIND_GENERIC, array, &contour_header, &block ));
     }
 

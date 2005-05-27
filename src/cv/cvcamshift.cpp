@@ -101,7 +101,7 @@ cvMeanShift( const void* imgProb, CvRect windowIn,
         CV_CALL( cvMoments( &cur_win, &moments ));
 
         /* Calculating center of mass */
-        if( moments.m00 == 0 )
+        if( fabs(moments.m00) < DBL_EPSILON )
             break;
 
         inv_m00 = moments.inv_sqrt_m00*moments.inv_sqrt_m00;
@@ -218,7 +218,7 @@ cvCamShift( const void* imgProb, CvRect windowIn,
     mu20 = moments.mu20;
     mu02 = moments.mu02;
 
-    if( m00 == 0 )
+    if( fabs(m00) < DBL_EPSILON )
         EXIT;
 
     inv_m00 = 1. / m00;

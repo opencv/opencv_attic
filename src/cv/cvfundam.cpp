@@ -141,7 +141,7 @@ icvFMatrix_7Point( const CvPoint2D64f* m0, const CvPoint2D64f* m1, double* fmatr
         double s = f1[8]*r[k] + f2[8];
 
         // normalize each matrix, so that F(3,3) (~fmatrix[8]) == 1
-        if( s )
+        if( fabs(s) > DBL_EPSILON )
         {
             mu = 1./s;
             lambda *= mu;
@@ -785,7 +785,7 @@ cvFindFundamentalMat( const CvMat* points0, const CvMat* points1,
         if( param2 < 0 || param2 > 1 )
             CV_ERROR( CV_StsOutOfRange, "param2 (confidence level) must be between 0 and 1" );
 
-        if( param2 == 0 || param2 == 1 )
+        if( param2 < DBL_EPSILON || param2 > 1 - DBL_EPSILON )
             param2 = 0.99;
 
         if( method < CV_FM_RANSAC_ONLY )
