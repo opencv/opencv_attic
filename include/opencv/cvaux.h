@@ -1134,90 +1134,108 @@ CVAPI(void)  cvDeleteMoire( IplImage*  img );
 #define CV_BG_MODEL_MOG     1
 #define CV_BG_MODEL_FGD_SIMPLE   2
 
+struct CvBGStatModel;
+
+typedef void (CV_CDECL * CvReleaseBGStatModel)( struct CvBGStatModel** bg_model );
+typedef int (CV_CDECL * CvUpdateBGStatModel)( IplImage* curr_frame, struct CvBGStatModel* bg_model );
+
 #define CV_BG_STAT_MODEL_FIELDS()                                                   \
     int             type; /*type of BG model*/                                      \
-    IplImage*       background;  /*8U3C reference background image*/                \
-    IplImage*       foreground;   /*8U1C foreground image*/                         \
-    CvMemStorage*   storage; /*storage for “foreground_regions”*/                   \
+    CvReleaseBGStatModel release;                                                   \
+    CvUpdateBGStatModel update;                                                     \
+    IplImage*       background;   /*8UC3 reference background image*/               \
+    IplImage*       foreground;   /*8UC1 foreground image*/                         \
+    IplImage**      layers;       /*8UC3 reference background image, can be null */ \
+    int             layer_count;  /* can be zero */                                 \
+    CvMemStorage*   storage;      /*storage for “foreground_regions”*/              \
     CvSeq*          foreground_regions /*foreground object contours*/
 
 typedef struct CvBGStatModel
 {
     CV_BG_STAT_MODEL_FIELDS();
-} CvBGStatModel;
+}
+CvBGStatModel;
 
-//////Three basic functions for working with CvBGStatModel model//////////
+// 
 
-//Function cvCreateBGStatModel creates and returns initialized BG model
-// parameters:
-//      first_frame   - frame from video sequence
-//      model_type – type of BG model (CV_BG_MODEL_MOG, CV_BG_MODEL_FGD,…)
-//      parameters  - (optional) if NULL the default parameters of the algorithm will be used
-CVAPI(CvBGStatModel*) cvCreateBGStatModel( IplImage* first_frame, int model_type, void* parameters CV_DEFAULT(NULL) );
+// Releases memory used by BGStatModel
+CV_INLINE void cvReleaseBGStatModel( CvBGStatModel** bg_model )
+{
+    if( bg_model && *bg_model && (*bg_model)->release )
+        (*bg_model)->release( bg_model );
+}
 
+// Updates statistical model and returns number of found foreground regions
+CV_INLINE int cvUpdateBGStatModel( IplImage* current_frame, CvBGStatModel*  bg_model )
+{
+    return bg_model && bg_model->update ? bg_model->update( current_frame, bg_model ) : 0;
+}
 
-//  Function cvReleaseBGStatModel releases memory used by BGStatModel
-// parameters:
-//      bg_model   - pointer to CvBGStatModel structure
-CVAPI(void) cvReleaseBGStatModel(CvBGStatModel** bg_model );
-
-
-//  Function cvUpdateBGStatModel updates statistical model and returns number of found foreground regions
-// parameters:
-//      curr_frame  - current frame from video sequence
-//      bg_model   - pointer to CvBGStatModel structure
-CVAPI(int)  cvUpdateBGStatModel( IplImage* curr_frame, CvBGStatModel*  bg_model );
-
-//  Function cvRefineForegroundMaskBySegm preforms FG post-processing based on segmentation
-//    (all pixels of the segment will be classified as FG if majority of pixels of the region are FG).
+// Performs FG post-processing using segmentation
+// (all pixels of a region will be classified as foreground if majority of pixels of the region are FG).
 // parameters:
 //      segments - pointer to result of segmentation (for example MeanShiftSegmentation)
 //      bg_model - pointer to CvBGStatModel structure
 CVAPI(void) cvRefineForegroundMaskBySegm( CvSeq* segments, CvBGStatModel*  bg_model );
 
+/* Common use change detection function */
+CVAPI(int)  cvChangeDetection( IplImage*  prev_frame,
+                               IplImage*  curr_frame,
+                               IplImage*  change_mask );
 
-//default paremeters of foreground detection algorithm
-#define  CV_FGD_LC              128
-#define  CV_FGD_N1C             15
-#define  CV_FGD_N2C             25
+/*
+  Interface of ACM MM2003 algorithm
+  (Liyuan Li, Weimin Huang, Irene Y.H. Gu, and Qi Tian. 
+  "Foreground Object Detection from Videos Containing Complex Background. ACM MM2003")
+*/
 
-#define  CV_FGD_LCC             64
-#define  CV_FGD_N1CC            25
-#define  CV_FGD_N2CC            40
+/* default paremeters of foreground detection algorithm */
+#define  CV_BGFG_FGD_LC              128
+#define  CV_BGFG_FGD_N1C             15
+#define  CV_BGFG_FGD_N2C             25
 
-#define  CV_FGD_ALPHA_1         0.1f //BG reference image update parameter
-#define  CV_FGD_ALPHA_2         0.005f //stat model update parameter
-//0.002f ~ 1K frame(~45sec), 0.005 ~ 18sec(if 25fps and absolutely static BG)
-#define  CV_FGD_ALPHA_3         0.1f //start value for alpha parameter (to fast initiate statistic model)
+#define  CV_BGFG_FGD_LCC             64
+#define  CV_BGFG_FGD_N1CC            25
+#define  CV_BGFG_FGD_N2CC            40
 
-#define  CV_FGD_DELTA           2
+/* BG reference image update parameter */
+#define  CV_BGFG_FGD_ALPHA_1         0.1f
 
-#define  CV_FGD_T               0.9f
+/* stat model update parameter
+/* 0.002f ~ 1K frame(~45sec), 0.005 ~ 18sec (if 25fps and absolutely static BG) */
+#define  CV_BGFG_FGD_ALPHA_2         0.005f
 
-#define  CV_FGD_MINAREA         15.f
+/* start value for alpha parameter (to fast initiate statistic model) */
+#define  CV_BGFG_FGD_ALPHA_3         0.1f
 
-#define  CV_FGD_BG_UPDATE_TRESH  0.5f
+#define  CV_BGFG_FGD_DELTA           2
 
-//#define PER_PIXEL_STAT // Allocate per-pixel stat data independently
-//#define COMMON_STAT_ARRAY // Mix ctable and cctable into one array (pure AOS for stats)
+#define  CV_BGFG_FGD_T               0.9f
+
+#define  CV_BGFG_FGD_MINAREA         15.f
+
+#define  CV_BGFG_FGD_BG_UPDATE_TRESH 0.5f
 
 typedef struct CvFGDStatModelParams
 {
     int           Lc, N1c, N2c, Lcc, N1cc, N2cc, is_obj_without_holes, perform_morphing;
     float         alpha1, alpha2, alpha3, delta, T, minArea;
-}CvFGDStatModelParams;
+}
+CvFGDStatModelParams;
 
 typedef struct CvBGPixelCStatTable
 {
     float          Pv, Pvb;
     uchar          v[3];
-}CvBGPixelCStatTable;
+}
+CvBGPixelCStatTable;
 
 typedef struct CvBGPixelCCStatTable
 {
     float          Pv, Pvb;
     uchar          v[6];
-}CvBGPixelCCStatTable;
+}
+CvBGPixelCCStatTable;
 
 typedef struct CvBGPixelStat
 {
@@ -1227,7 +1245,8 @@ typedef struct CvBGPixelStat
     CvBGPixelCCStatTable* cctable;
     uchar                 is_trained_st_model;
     uchar                 is_trained_dyn_model;
-}CvBGPixelStat;
+}
+CvBGPixelStat;
 
 
 typedef struct CvFGDStatModel
@@ -1238,11 +1257,71 @@ typedef struct CvFGDStatModel
     IplImage*              Fbd;
     IplImage*              prev_frame;
     CvFGDStatModelParams   params;
-}CvFGDStatModel;
+}
+CvFGDStatModel;
 
-CVAPI(int)  cvChangeDetection( IplImage*  prev_frame,
-                               IplImage*  curr_frame,
-                               IplImage*  change_mask );
+/* Creates FGD model */
+CVAPI(CvBGStatModel*) cvCreateFGDStatModel( IplImage* first_frame,
+                    CvFGDStatModelParams* parameters CV_DEFAULT(NULL));
+
+/* 
+   Interface of Gaussian mixture algorithm
+   (P. KadewTraKuPong and R. Bowden,
+   "An improved adaptive background mixture model for real-time tracking with shadow detection"
+   in Proc. 2nd European Workshp on Advanced Video-Based Surveillance Systems, 2001.")
+*/
+
+#define CV_BGFG_MOG_MAX_NGAUSSIANS 500
+
+/* default parameters of gaussian background detection algorithm */
+#define CV_BGFG_MOG_BACKGROUND_THRESHOLD     0.7     /* threshold sum of weights for background test */
+#define CV_BGFG_MOG_STD_THRESHOLD            2.5     /* lambda=2.5 is 99% */
+#define CV_BGFG_MOG_WINDOW_SIZE              200     /* Learning rate; alpha = 1/CV_GBG_WINDOW_SIZE */
+#define CV_BGFG_MOG_NGAUSSIANS               5       /* = K = number of Gaussians in mixture */
+#define CV_BGFG_MOG_WEIGHT_INIT              0.05
+#define CV_BGFG_MOG_SIGMA_INIT               30
+#define CV_BGFG_MOG_MINAREA                  15.f
+
+
+#define CV_BGFG_MOG_NCOLORS                  3
+
+typedef struct CvGaussBGStatModelParams
+{    
+    int     win_size;               /* = 1/alpha */
+    int     n_gauss;
+    double  bg_threshold, std_threshold, minArea;
+    double  weight_init, variance_init;
+}CvGaussBGStatModelParams;
+
+typedef struct CvGaussBGValues
+{
+    int         match_sum;
+    double      weight;
+    double      variance[CV_BGFG_MOG_NCOLORS];
+    double      mean[CV_BGFG_MOG_NCOLORS];
+}
+CvGaussBGValues;
+
+typedef struct CvGaussBGPoint
+{
+    CvGaussBGValues* g_values;
+}
+CvGaussBGPoint;
+
+
+typedef struct CvGaussBGModel
+{
+    CV_BG_STAT_MODEL_FIELDS();
+    CvGaussBGStatModelParams   params;    
+    CvGaussBGPoint*            g_point;    
+    int                        countFrames;
+}
+CvGaussBGModel;
+
+
+/* Creates Gaussian mixture background model */
+CVAPI(CvBGStatModel*) cvCreateGaussianBGModel( IplImage* first_frame,
+                CvGaussBGStatModelParams* parameters CV_DEFAULT(NULL));
 
 #ifdef __cplusplus
 }
