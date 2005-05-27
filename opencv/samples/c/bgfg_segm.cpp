@@ -26,7 +26,7 @@ int main(int argc, char** argv)
     cvNamedWindow("FG", 1);
 
     //create BG model
-    CvBGStatModel* bg_model = cvCreateBGStatModel( tmp_frame, CV_BG_MODEL_FGD );
+    CvBGStatModel* bg_model = cvCreateFGDStatModel( tmp_frame );
     
     for( int fr = 1;tmp_frame; tmp_frame = cvQueryFrame(cap), fr++ )
     {
