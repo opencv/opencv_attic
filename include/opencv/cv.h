@@ -788,6 +788,19 @@ CVAPI(CvRect)  cvMaxRect( const CvRect* rect1, const CvRect* rect2 );
 /* Finds coordinates of the box vertices */
 CVAPI(void) cvBoxPoints( CvBox2D box, CvPoint2D32f pt[4] );
 
+/* Initializes sequence header for a matrix (column or row vector) of points -
+   a wrapper for cvMakeSeqHeaderForArray (it does not initialize bounding rectangle!!!) */
+CVAPI(CvSeq*) cvPointSeqFromMat( int seq_kind, const CvArr* mat,
+                                 CvContour* contour_header,
+                                 CvSeqBlock* block );
+
+/* Checks whether the point is inside polygon, outside, on an edge (at a vertex).
+   Returns positive, negative or zero value, correspondingly.
+   Optionally, measures a signed distance between
+   the point and the nearest polygon edge (measure_dist=1) */
+CVAPI(double) cvPointPolygonTest( const CvArr* contour,
+                                  CvPoint2D32f pt, int measure_dist );
+
 /****************************************************************************************\
 *                                  Histogram functions                                   *
 \****************************************************************************************/
@@ -877,6 +890,9 @@ CVAPI(void)  cvCalcArrBackProjectPatch( CvArr** image, CvArr* dst, CvSize range,
 /* calculates probabilistic density (divides one histogram by another) */
 CVAPI(void)  cvCalcProbDensity( const CvHistogram* hist1, const CvHistogram* hist2,
                                 CvHistogram* dst_hist, double scale CV_DEFAULT(255) );
+
+/* equalizes histogram of 8-bit single-channel image */
+CVAPI(void)  cvEqualizeHist( const CvArr* src, CvArr* dst );
 
 
 #define  CV_VALUE  1
@@ -1094,11 +1110,15 @@ CVAPI(void) cvCalibrateCamera2( const CvMat* object_points,
                                 CvMat* translation_vectors CV_DEFAULT(NULL),
                                 int flags CV_DEFAULT(0) );
 
-/* Detects corners on a chess-board */
-CVAPI(int)  cvFindChessBoardCornerGuesses( const CvArr* image, CvArr* thresh,
-                                           CvMemStorage* storage, CvSize board_size,
-                                           CvPoint2D32f* corners,
-                                           int* corner_count CV_DEFAULT(NULL));
+#define CV_CALIB_CB_ADAPTIVE_THRESH  1
+#define CV_CALIB_CB_NORMALIZE_IMAGE  2
+#define CV_CALIB_CB_FILTER_QUADS     4 
+
+/* Detects corners on a chessboard calibration pattern */
+CVAPI(int) cvFindChessboardCorners( const void* image, CvSize pattern_size,
+                                    CvPoint2D32f* corners,
+                                    int* corner_count CV_DEFAULT(NULL),
+                                    int flags CV_DEFAULT(CV_CALIB_CB_ADAPTIVE_THRESH) );
 
 typedef struct CvPOSITObject CvPOSITObject;
 
