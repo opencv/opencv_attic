@@ -54,34 +54,45 @@ static double* _cv_max_element( double* start, double* end )
     return p;
 }
 
+static void CV_CDECL icvReleaseFGDStatModel( CvFGDStatModel** model );
+static int CV_CDECL icvUpdateFGDStatModel( IplImage* curr_frame,
+                                           CvFGDStatModel*  model );
 
 //  Function cvCreateFGDStatModel initializes foreground detection process
 // parameters:
 //      first_frame - frame from video sequence
 //      parameters  - (optional) if NULL default parameters of the algorithm will be used
 //      p_model     - pointer to CvFGDStatModel structure
-int  cvCreateFGDStatModel( IplImage*              first_frame,
-                           CvFGDStatModelParams*  parameters,
-                           CvFGDStatModel*        p_model )
+CV_IMPL CvBGStatModel*
+cvCreateFGDStatModel( IplImage* first_frame, CvFGDStatModelParams* parameters )
 {
-    int                  i, j;
+    CvFGDStatModel* p_model = 0;
+    
+    CV_FUNCNAME( "cvCreateFGDStatModel" );
+
+    __BEGIN__;
+    
+    int i, j, k, pixel_count, buf_size;
     CvFGDStatModelParams params;
+
+    if( !CV_IS_IMAGE(first_frame) )
+        CV_ERROR( CV_StsBadArg, "Invalid or NULL first_frame parameter" );
 
     //init parameters
     if( parameters == NULL )
     {
-        params.Lc = CV_FGD_LC;
-        params.N1c = CV_FGD_N1C;
-        params.N2c = CV_FGD_N2C;
-        params.Lcc = CV_FGD_LCC;
-        params.N1cc = CV_FGD_N1CC;
-        params.N2cc = CV_FGD_N2CC;
-        params.delta = CV_FGD_DELTA;
-        params.alpha1 = CV_FGD_ALPHA_1;
-        params.alpha2 = CV_FGD_ALPHA_2;
-        params.alpha3 = CV_FGD_ALPHA_3;
-        params.T = CV_FGD_T;
-        params.minArea = CV_FGD_MINAREA;
+        params.Lc = CV_BGFG_FGD_LC;
+        params.N1c = CV_BGFG_FGD_N1C;
+        params.N2c = CV_BGFG_FGD_N2C;
+        params.Lcc = CV_BGFG_FGD_LCC;
+        params.N1cc = CV_BGFG_FGD_N1CC;
+        params.N2cc = CV_BGFG_FGD_N2CC;
+        params.delta = CV_BGFG_FGD_DELTA;
+        params.alpha1 = CV_BGFG_FGD_ALPHA_1;
+        params.alpha2 = CV_BGFG_FGD_ALPHA_2;
+        params.alpha3 = CV_BGFG_FGD_ALPHA_3;
+        params.T = CV_BGFG_FGD_T;
+        params.minArea = CV_BGFG_FGD_MINAREA;
         params.is_obj_without_holes = 1;
         params.perform_morphing = 1;
     }
@@ -90,159 +101,172 @@ int  cvCreateFGDStatModel( IplImage*              first_frame,
         params = *parameters;
     }
 
-    //init storages
-    p_model->pixel_stat = (CvBGPixelStat*)cvAlloc(first_frame->width*first_frame->height*sizeof(CvBGPixelStat));
-    if( !p_model->pixel_stat ) return 0;
-    memset( p_model->pixel_stat, 0, first_frame->width*first_frame->height*sizeof(CvBGPixelStat) );
-
-    for( i = 0; i < first_frame->height; i++ )
-    {
-        for( j = 0; j < first_frame->width; j++ )
-        {
-            p_model->pixel_stat[i*first_frame->width+j].ctable =
-                (CvBGPixelCStatTable*)cvAlloc(params.N2c*sizeof(CvBGPixelCStatTable));
-            if( !p_model->pixel_stat[i*first_frame->width+j].ctable ) return 0;
-            memset( p_model->pixel_stat[i*first_frame->width+j].ctable, 0, params.N2c*sizeof(CvBGPixelCStatTable));
-
-            p_model->pixel_stat[i*first_frame->width+j].cctable =
-                (CvBGPixelCCStatTable*)cvAlloc(params.N2cc*sizeof(CvBGPixelCCStatTable));
-            if( !p_model->pixel_stat[i*first_frame->width+j].cctable ) return 0;
-            memset( p_model->pixel_stat[i*first_frame->width+j].cctable, 0, params.N2cc*sizeof(CvBGPixelCCStatTable));
-        }
-    }
-
+    CV_CALL( p_model = (CvFGDStatModel*)cvAlloc( sizeof(*p_model) ));
+    memset( p_model, 0, sizeof(*p_model) );
+    p_model->type = CV_BG_MODEL_FGD;
+    p_model->release = (CvReleaseBGStatModel)icvReleaseFGDStatModel;
+    p_model->update = (CvUpdateBGStatModel)icvUpdateFGDStatModel;;
     p_model->params = params;
 
-    //init temporary images
-    p_model->Ftd = cvCreateImage(cvSize(first_frame->width, first_frame->height), IPL_DEPTH_8U, 1);
-    if( !p_model->Ftd ) return 0;
-    p_model->Fbd = cvCreateImage(cvSize(first_frame->width, first_frame->height), IPL_DEPTH_8U, 1);
-    if( !p_model->Fbd ) return 0;
-    p_model->foreground = cvCreateImage(cvSize(first_frame->width, first_frame->height), IPL_DEPTH_8U, 1);
-    if( !p_model->foreground ) return 0;
+    //init storages
+    pixel_count = first_frame->width*first_frame->height;
+    
+    buf_size = pixel_count*sizeof(p_model->pixel_stat[0]);
+    CV_CALL( p_model->pixel_stat = (CvBGPixelStat*)cvAlloc(buf_size) );
+    memset( p_model->pixel_stat, 0, buf_size );
+    
+    buf_size = pixel_count*params.N2c*sizeof(p_model->pixel_stat[0].ctable[0]);
+    CV_CALL( p_model->pixel_stat[0].ctable = (CvBGPixelCStatTable*)cvAlloc(buf_size) );
+    memset( p_model->pixel_stat[0].ctable, 0, buf_size );
 
-	p_model->background = cvCloneImage(first_frame);
-    if( !p_model->background ) return 0;
-    p_model->prev_frame = cvCloneImage(first_frame);
-    if( !p_model->prev_frame ) return 0;
+    buf_size = pixel_count*params.N2cc*sizeof(p_model->pixel_stat[0].cctable[0]);
+    CV_CALL( p_model->pixel_stat[0].cctable = (CvBGPixelCCStatTable*)cvAlloc(buf_size) );
+    memset( p_model->pixel_stat[0].cctable, 0, buf_size );
 
-    p_model->storage = cvCreateMemStorage();
-    if( !p_model->storage ) return 0;
-
-    return 1;
-}
-
-//  Function cvReleaseFGDStatModel releazes memory needed for foreground detection process
-// parameters:
-//      p_model     - pointer to CvBGStatModel structure
-void cvReleaseFGDStatModel( CvFGDStatModel* model )
-{
-    for( int i = 0; i < model->Fbd->height; i++ )
-    {
-        for( int j = 0; j < model->Fbd->width; j++ )
+    for( i = 0, k = 0; i < first_frame->height; i++ )
+        for( j = 0; j < first_frame->width; j++, k++ )
         {
-            cvFree((void**)&model->pixel_stat[i*model->Fbd->width+j].ctable);
-            cvFree((void**)&model->pixel_stat[i*model->Fbd->width+j].cctable);
+            p_model->pixel_stat[k].ctable = p_model->pixel_stat[0].ctable + k*params.N2c;
+            p_model->pixel_stat[k].cctable = p_model->pixel_stat[0].cctable + k*params.N2cc;
         }
-    }
-    cvFree( (void**)&model->pixel_stat ); model->pixel_stat=0;
 
-    cvReleaseImage( &model->Ftd ); model->Ftd=0;
-    cvReleaseImage( &model->Fbd ); model->Fbd=0;
-    cvReleaseImage( &model->foreground ); model->foreground=0;
-    cvReleaseImage( &model->background ); model->background=0;
-    cvReleaseImage( &model->prev_frame ); model->prev_frame=0;
-    cvReleaseMemStorage(&model->storage); model->storage=0;
+    //init temporary images
+    CV_CALL( p_model->Ftd = cvCreateImage(cvSize(first_frame->width, first_frame->height), IPL_DEPTH_8U, 1));
+    CV_CALL( p_model->Fbd = cvCreateImage(cvSize(first_frame->width, first_frame->height), IPL_DEPTH_8U, 1));
+    CV_CALL( p_model->foreground = cvCreateImage(cvSize(first_frame->width, first_frame->height), IPL_DEPTH_8U, 1));
+
+	CV_CALL( p_model->background = cvCloneImage(first_frame));
+    CV_CALL( p_model->prev_frame = cvCloneImage(first_frame));
+    CV_CALL( p_model->storage = cvCreateMemStorage());
+
+    __END__;
+
+    if( cvGetErrStatus() < 0 )
+    {
+        if( p_model && p_model->release )
+            p_model->release( (CvBGStatModel**)&p_model );
+        else
+            cvFree( (void**)&p_model );
+    }
+
+    return (CvBGStatModel*)p_model;
 }
 
 
+static void CV_CDECL
+icvReleaseFGDStatModel( CvFGDStatModel** _model )
+{
+    CV_FUNCNAME( "icvReleaseFGDStatModel" );
 
-//  Function cvChangeDetectionFGD performs change detection for Foreground detection algorithm
+    __BEGIN__;
+    
+    if( !_model )
+        CV_ERROR( CV_StsNullPtr, "" );
+
+    if( *_model )
+    {
+        CvFGDStatModel* model = *_model;
+        if( model->pixel_stat )
+        {
+            cvFree( (void**)&model->pixel_stat[0].ctable );
+            cvFree( (void**)&model->pixel_stat[0].cctable );
+            cvFree( (void**)&model->pixel_stat );
+        }
+
+        cvReleaseImage( &model->Ftd );
+        cvReleaseImage( &model->Fbd );
+        cvReleaseImage( &model->foreground );
+        cvReleaseImage( &model->background );
+        cvReleaseImage( &model->prev_frame );
+        cvReleaseMemStorage(&model->storage);
+
+        cvFree( (void**)_model );
+    }
+
+    __END__;
+}
+
+//  Function cvChangeDetection performs change detection for Foreground detection algorithm
 // parameters:
 //      prev_frame -
 //      curr_frame -
 //      change_mask -
-int  cvChangeDetection( IplImage*  prev_frame,
-                        IplImage*  curr_frame,
-                        IplImage*  change_mask )
+CV_IMPL int
+cvChangeDetection( IplImage*  prev_frame,
+                   IplImage*  curr_frame,
+                   IplImage*  change_mask )
 {
     int i, j, b, x, y, thres;
+    const int PIXELRANGE=256;
+
     if( !prev_frame || !curr_frame || !change_mask ||
         prev_frame->nChannels != 3 || curr_frame->nChannels != 3 || change_mask->nChannels != 1 ||
         prev_frame->depth != IPL_DEPTH_8U || curr_frame->depth != IPL_DEPTH_8U || change_mask->depth != IPL_DEPTH_8U ||
         !CV_ARE_SIZES_EQ( prev_frame, curr_frame ) || !CV_ARE_SIZES_EQ( prev_frame, change_mask ) ) return 0;
 
+    cvZero ( change_mask );
 
-	const int PIXELRANGE=256;
+    // All operations per colour
+    for (b=0 ; b<prev_frame->nChannels ; b++) {
+        // create histogram
 
-    //CvSize size = { curr_frame->width, curr_frame->height };
-
-
-	cvZero ( change_mask );
-
-	// All operations per colour
-	for (b=0 ; b<prev_frame->nChannels ; b++) {
-		// create histogram
-
-		long HISTOGRAM[PIXELRANGE]; 
+        long HISTOGRAM[PIXELRANGE]; 
         for (i=0 ; i<PIXELRANGE; i++) HISTOGRAM[i]=0;
-
-		for (y=0 ; y<curr_frame->height ; y++)
+        
+        for (y=0 ; y<curr_frame->height ; y++)
         {
-			uchar* rowStart1 = (uchar*)curr_frame->imageData + y * curr_frame->widthStep + b;
-			uchar* rowStart2 = (uchar*)prev_frame->imageData + y * prev_frame->widthStep + b;
-			for (x=0 ; x<curr_frame->width ; x++, rowStart1+=curr_frame->nChannels, rowStart2+=prev_frame->nChannels) {
-				int diff = abs( int(*rowStart1) - int(*rowStart2) );
-				HISTOGRAM[diff]++;
-			}
-		}
+            uchar* rowStart1 = (uchar*)curr_frame->imageData + y * curr_frame->widthStep + b;
+            uchar* rowStart2 = (uchar*)prev_frame->imageData + y * prev_frame->widthStep + b;
+            for (x=0 ; x<curr_frame->width ; x++, rowStart1+=curr_frame->nChannels, rowStart2+=prev_frame->nChannels) {
+                int diff = abs( int(*rowStart1) - int(*rowStart2) );
+                HISTOGRAM[diff]++;
+            }
+        }
 
-
-		double relativeVariance[PIXELRANGE];
+        double relativeVariance[PIXELRANGE];
         for (i=0 ; i<PIXELRANGE; i++) relativeVariance[i]=0;
 
-
-		for (thres=PIXELRANGE-2; thres>=0 ; thres--)
+        for (thres=PIXELRANGE-2; thres>=0 ; thres--)
         {
-//            fprintf(stderr, "Iter %d\n", thres);
-			double sum=0;
-			double sqsum=0;
-			int count=0;
-//            fprintf(stderr, "Iter %d entering loop\n", thres);
-			for (j=thres ; j<PIXELRANGE ; j++) {
-				sum   += double(j)*double(HISTOGRAM[j]);
-				sqsum += double(j*j)*double(HISTOGRAM[j]);
-				count += HISTOGRAM[j];
-			}
+            //            fprintf(stderr, "Iter %d\n", thres);
+            double sum=0;
+            double sqsum=0;
+            int count=0;
+            //            fprintf(stderr, "Iter %d entering loop\n", thres);
+            for (j=thres ; j<PIXELRANGE ; j++) {
+                sum   += double(j)*double(HISTOGRAM[j]);
+                sqsum += double(j*j)*double(HISTOGRAM[j]);
+                count += HISTOGRAM[j];
+            }
             count = count == 0 ? 1 : count;
-//            fprintf(stderr, "Iter %d finishing loop\n", thres);
-			double my = sum / count;
-			double sigma = sqrt( sqsum/count - my*my);
-//            fprintf(stderr, "Iter %d sum=%g sqsum=%g count=%d sigma = %g\n", thres, sum, sqsum, count, sigma);
-//            fprintf(stderr, "Writing to %x\n", &(relativeVariance[thres]));
-			relativeVariance[thres] = sigma;
-//            fprintf(stderr, "Iter %d finished\n", thres);
-		}
-		// find maximum
+            //            fprintf(stderr, "Iter %d finishing loop\n", thres);
+            double my = sum / count;
+            double sigma = sqrt( sqsum/count - my*my);
+            //            fprintf(stderr, "Iter %d sum=%g sqsum=%g count=%d sigma = %g\n", thres, sum, sqsum, count, sigma);
+            //            fprintf(stderr, "Writing to %x\n", &(relativeVariance[thres]));
+            relativeVariance[thres] = sigma;
+            //            fprintf(stderr, "Iter %d finished\n", thres);
+        }
+        // find maximum
         uchar bestThres = 0;
 
-		double* pBestThres = _cv_max_element(relativeVariance, relativeVariance+PIXELRANGE);
-		bestThres = (uchar)(*pBestThres); if (bestThres <10) bestThres=10;
+        double* pBestThres = _cv_max_element(relativeVariance, relativeVariance+PIXELRANGE);
+        bestThres = (uchar)(*pBestThres); if (bestThres <10) bestThres=10;
 
-		for (y=0 ; y<prev_frame->height ; y++)
+        for (y=0 ; y<prev_frame->height ; y++)
         {
-			uchar* rowStart1 = (uchar*)(curr_frame->imageData) + y * curr_frame->widthStep + b;
-			uchar* rowStart2 = (uchar*)(prev_frame->imageData) + y * prev_frame->widthStep + b;
-			uchar* rowStart3 = (uchar*)(change_mask->imageData) + y * change_mask->widthStep;
-			for (x = 0; x < curr_frame->width; x++, rowStart1+=curr_frame->nChannels,
-				rowStart2+=prev_frame->nChannels, rowStart3+=change_mask->nChannels) {
-				// OR between different color channels
-				int diff = abs( int(*rowStart1) - int(*rowStart2) );
-				if ( diff > bestThres)
-					*rowStart3 |=255;
-			}
-		}
-	}
+            uchar* rowStart1 = (uchar*)(curr_frame->imageData) + y * curr_frame->widthStep + b;
+            uchar* rowStart2 = (uchar*)(prev_frame->imageData) + y * prev_frame->widthStep + b;
+            uchar* rowStart3 = (uchar*)(change_mask->imageData) + y * change_mask->widthStep;
+            for (x = 0; x < curr_frame->width; x++, rowStart1+=curr_frame->nChannels,
+                rowStart2+=prev_frame->nChannels, rowStart3+=change_mask->nChannels) {
+                // OR between different color channels
+                int diff = abs( int(*rowStart1) - int(*rowStart2) );
+                if ( diff > bestThres)
+                    *rowStart3 |=255;
+            }
+        }
+    }
 
     return 1;
 }
@@ -263,8 +287,8 @@ int  cvChangeDetection( IplImage*  prev_frame,
 // parameters:
 //      curr_frame  - current frame from video sequence
 //      p_model     - pointer to CvFGDStatModel structure
-int  cvUpdateFGDStatModel( IplImage*        curr_frame,
-                           CvFGDStatModel*  model )
+static int CV_CDECL
+icvUpdateFGDStatModel( IplImage* curr_frame, CvFGDStatModel*  model )
 {
     int            mask_step = model->Ftd->widthStep;
     CvSeq         *first_seq = NULL, *prev_seq = NULL, *seq = NULL;
@@ -299,7 +323,7 @@ int  cvUpdateFGDStatModel( IplImage*        curr_frame,
                 //uchar* prev_data = (uchar*)(prev_frame->imageData)+i*prev_frame->widthStep+j*3;
 
                 int val = 0;
-			    // is it a motion pixel?
+                // is it a motion pixel?
                 if( ((uchar*)model->Ftd->imageData)[i*mask_step+j] )
                 {
                     if( !stat->is_trained_dyn_model ) val = 1;
@@ -388,7 +412,7 @@ int  cvUpdateFGDStatModel( IplImage*        curr_frame,
     }
 
     //check ALL BG update condition
-    if( ((float)FG_pixels_count/(model->Ftd->width*model->Ftd->height)) > CV_FGD_BG_UPDATE_TRESH )
+    if( ((float)FG_pixels_count/(model->Ftd->width*model->Ftd->height)) > CV_BGFG_FGD_BG_UPDATE_TRESH )
     {
          for( i = 0; i < model->Ftd->height; i++ )
              for( j = 0; j < model->Ftd->width; j++ )
@@ -427,9 +451,9 @@ int  cvUpdateFGDStatModel( IplImage*        curr_frame,
                 // find best Vi match
                 for(k = 0; PV_CC(k) && k < model->params.N2cc; k++ )
                 {
-					// Exponential decay of memory
-					PV_CC(k)  *= (1-alpha);
-					PVB_CC(k) *= (1-alpha);
+                    // Exponential decay of memory
+                    PV_CC(k)  *= (1-alpha);
+                    PVB_CC(k) *= (1-alpha);
                     if( PV_CC(k) < MIN_PV )
                     {
                         PV_CC(k) = 0;
@@ -438,10 +462,10 @@ int  cvUpdateFGDStatModel( IplImage*        curr_frame,
                     }
 
                     dist = 0;
-					for( l = 0; l < 3; l++ )
-					{
-						int val = abs( V_CC(k,l) - prev_data[l] );
-						if( val > deltaCC ) break;
+                    for( l = 0; l < 3; l++ )
+                    {
+                        int val = abs( V_CC(k,l) - prev_data[l] );
+                        if( val > deltaCC ) break;
                         dist += val;
                         val = abs( V_CC(k,l+3) - curr_data[l] );
                         if( val > deltaCC) break;
@@ -466,15 +490,15 @@ int  cvUpdateFGDStatModel( IplImage*        curr_frame,
                         V_CC(indx,l) = prev_data[l];
                         V_CC(indx,l+3) = curr_data[l];
                     }
-				}
+                }
                 else
-				{//update
-					PV_CC(indx) += alpha;
-					if( !((uchar*)model->foreground->imageData)[i*mask_step+j] )
-					{
-						PVB_CC(indx) += alpha;
-					}
-				}
+                {//update
+                    PV_CC(indx) += alpha;
+                    if( !((uchar*)model->foreground->imageData)[i*mask_step+j] )
+                    {
+                        PVB_CC(indx) += alpha;
+                    }
+                }
 
                 //re-sort CCt table by Pv
                 for( k = 0; k < indx; k++ )
@@ -494,16 +518,16 @@ int  cvUpdateFGDStatModel( IplImage*        curr_frame,
                 }
 
 
-				float sum1=0, sum2=0;
+                float sum1=0, sum2=0;
                 //check "once-off" changes
                 for(k = 0; PV_CC(k) && k < model->params.N1cc; k++ )
                 {
-					sum1 += PV_CC(k);
-					sum2 += PVB_CC(k);
+                    sum1 += PV_CC(k);
+                    sum2 += PVB_CC(k);
                 }
                 if( sum1 > model->params.T ) stat->is_trained_dyn_model = 1;
-
-				diff = sum1 - stat->Pbcc * sum2;
+                
+                diff = sum1 - stat->Pbcc * sum2;
                 //update stat table
                 if( diff >  model->params.T )
                 {
@@ -535,7 +559,7 @@ int  cvUpdateFGDStatModel( IplImage*        curr_frame,
                 //find best Vi match
                 for( k = 0; k < model->params.N2c; k++ )
                 {
-					// Exponential decay of memory
+                    // Exponential decay of memory
                     PV_C(k) *= (1-alpha);
                     PVB_C(k) *= (1-alpha);
                     if( PV_C(k) < MIN_PV )
@@ -544,8 +568,8 @@ int  cvUpdateFGDStatModel( IplImage*        curr_frame,
                         PVB_C(k) = 0;
                         continue;
                     }
-
-					dist = 0;
+                    
+                    dist = 0;
                     for( l = 0; l < 3; l++ )
                     {
                         int val = abs( V_C(k,l) - curr_data[l] );
@@ -562,21 +586,21 @@ int  cvUpdateFGDStatModel( IplImage*        curr_frame,
                 if( indx < 0 )
                 {//N2th elem in the table is replaced by a new features
                     indx = model->params.N2c - 1;
-                     PV_C(indx) = alpha;
+                    PV_C(indx) = alpha;
                     PVB_C(indx) = alpha;
                     //udate Vt
                     for( l = 0; l < 3; l++ )
                     {
                         V_C(indx,l) = curr_data[l];
                     }
-				} else
-				{//update
-					PV_C(indx) += alpha;
-					if( !((uchar*)model->foreground->imageData)[i*mask_step+j] )
-					{
-						PVB_C(indx) += alpha;
-					}
-				}
+                } else
+                {//update
+                    PV_C(indx) += alpha;
+                    if( !((uchar*)model->foreground->imageData)[i*mask_step+j] )
+                    {
+                        PVB_C(indx) += alpha;
+                    }
+                }
 
                 //re-sort Ct table by Pv
                 for( k = 0; k < indx; k++ )
@@ -596,13 +620,13 @@ int  cvUpdateFGDStatModel( IplImage*        curr_frame,
                 }
 
                 //check "once-off" changes
-				float sum1=0, sum2=0;
+                float sum1=0, sum2=0;
                 for( k = 0; PV_C(k) && k < model->params.N1c; k++ )
                 {
-   					sum1 += PV_C(k);
-					sum2 += PVB_C(k);
+                    sum1 += PV_C(k);
+                    sum2 += PVB_C(k);
                 }
-				diff = sum1 - stat->Pbc * sum2;
+                diff = sum1 - stat->Pbc * sum2;
                 if( sum1 > model->params.T ) stat->is_trained_st_model = 1;
 
                 //update stat table
@@ -619,34 +643,34 @@ int  cvUpdateFGDStatModel( IplImage*        curr_frame,
             }//if !(change detection) at pixel (i,j)
 
             //update the reference BG image
-			if( !((uchar*)model->foreground->imageData)[i*mask_step+j])
-			{
-				uchar* ptr = ((uchar*)model->background->imageData) + i*model->background->widthStep+j*3;
+            if( !((uchar*)model->foreground->imageData)[i*mask_step+j])
+            {
+                uchar* ptr = ((uchar*)model->background->imageData) + i*model->background->widthStep+j*3;
                 
                 if( !((uchar*)model->Ftd->imageData)[i*mask_step+j] &&
-					!((uchar*)model->Fbd->imageData)[i*mask_step+j] )
-				{
-					//apply IIR filter
-					for( l = 0; l < 3; l++ )
-					{
+                    !((uchar*)model->Fbd->imageData)[i*mask_step+j] )
+                {
+                    //apply IIR filter
+                    for( l = 0; l < 3; l++ )
+                    {
                         int a = cvRound(ptr[l]*(1 - model->params.alpha1) + model->params.alpha1*curr_data[l]);
                         ptr[l] = (uchar)a;
                         //((uchar*)model->background->imageData)[i*model->background->widthStep+j*3+l]*=(1 - model->params.alpha1);
-						//((uchar*)model->background->imageData)[i*model->background->widthStep+j*3+l] += model->params.alpha1*curr_data[l];
-					}
-				}
+                        //((uchar*)model->background->imageData)[i*model->background->widthStep+j*3+l] += model->params.alpha1*curr_data[l];
+                    }
+                }
                 else
                 {
-					//background change is detected
-					for( l = 0; l < 3; l++ )
-					{
-						//((uchar*)model->background->imageData)[i*model->background->widthStep+j*3+l] = curr_data[l];
+                    //background change is detected
+                    for( l = 0; l < 3; l++ )
+                    {
+                        //((uchar*)model->background->imageData)[i*model->background->widthStep+j*3+l] = curr_data[l];
                         ptr[l] = curr_data[l];
-					}
-				}
+                    }
+                }
             }
-        }//j..
-    }//i..
+        }//j
+    }//i
 
     //keep prev frame
     cvCopy( curr_frame, model->prev_frame );
@@ -654,3 +678,4 @@ int  cvUpdateFGDStatModel( IplImage*        curr_frame,
     return region_count;
 }
 
+/* End of file. */
