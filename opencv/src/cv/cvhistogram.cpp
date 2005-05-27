@@ -237,7 +237,7 @@ cvNormalizeHist( CvHistogram* hist, double factor )
         CvMat mat;
         CV_CALL( cvGetMat( hist->bins, &mat, 0, 1 ));
         CV_CALL( sum = cvSum( &mat ).val[0] );
-        if( sum == 0 )
+        if( fabs(sum) < DBL_EPSILON )
             sum = 1;
         CV_CALL( cvScale( &mat, &mat, factor/sum, 0 ));
     }
@@ -254,7 +254,7 @@ cvNormalizeHist( CvHistogram* hist, double factor )
             sum += *(float*)CV_NODE_VAL(mat,node);
         }
 
-        if( sum == 0 )
+        if( fabs(sum) < DBL_EPSILON )
             sum = 1;
         scale = (float)(factor/sum);
 
@@ -444,7 +444,7 @@ cvCompareHist( const CvHistogram* hist1,
             {
                 double a = ptr1[i] - ptr2[i];
                 double b = ptr1[i] + ptr2[i];
-                if( b != 0 )
+                if( fabs(b) > DBL_EPSILON )
                     result += a*a/b;
             }
             break;
@@ -469,7 +469,7 @@ cvCompareHist( const CvHistogram* hist1,
 
                 num = s12 - s1*s2*scale;
                 denom2 = (s11 - s1*s1*scale)*(s22 - s2*s2*scale);
-                result = denom2 != 0 ? num/sqrt(denom2) : 1;
+                result = fabs(denom2) > DBL_EPSILON ? num/sqrt(denom2) : 1;
             }
             break;
         case CV_COMP_INTERSECT:
@@ -507,15 +507,15 @@ cvCompareHist( const CvHistogram* hist1,
                  node1 != 0; node1 = cvGetNextSparseNode( &iterator ))
             {
                 double v1 = *(float*)CV_NODE_VAL(mat1,node1);
-                uchar* node2 = cvPtrND( mat2, CV_NODE_IDX(mat1,node1), 0, 0, &node1->hashval );
-                if( !node2 )
+                uchar* node2_data = cvPtrND( mat2, CV_NODE_IDX(mat1,node1), 0, 0, &node1->hashval );
+                if( !node2_data )
                     result += v1;
                 else
                 {
-                    double v2 = *(float*)node2;
+                    double v2 = *(float*)node2_data;
                     double a = v1 - v2;
                     double b = v1 + v2;
-                    if( b != 0 )
+                    if( fabs(b) > DBL_EPSILON )
                         result += a*a/b;
                 }
             }
@@ -539,10 +539,11 @@ cvCompareHist( const CvHistogram* hist1,
                      node1 != 0; node1 = cvGetNextSparseNode( &iterator ))
                 {
                     double v1 = *(float*)CV_NODE_VAL(mat1,node1);
-                    uchar* node2 = cvPtrND( mat2, CV_NODE_IDX(mat1,node1), 0, 0, &node1->hashval );
-                    if( node2 )
+                    uchar* node2_data = cvPtrND( mat2, CV_NODE_IDX(mat1,node1),
+                                                 0, 0, &node1->hashval );
+                    if( node2_data )
                     {
-                        double v2 = *(float*)node2;
+                        double v2 = *(float*)node2_data;
                         s12 += v1*v2;
                     }
                     s1 += v1;
@@ -559,7 +560,7 @@ cvCompareHist( const CvHistogram* hist1,
 
                 num = s12 - s1*s2*scale;
                 denom2 = (s11 - s1*s1*scale)*(s22 - s2*s2*scale);
-                result = denom2 != 0 ? num/sqrt(denom2) : 1;
+                result = fabs(denom2) > DBL_EPSILON ? num/sqrt(denom2) : 1;
             }
             break;
         case CV_COMP_INTERSECT:
@@ -568,10 +569,11 @@ cvCompareHist( const CvHistogram* hist1,
                      node1 != 0; node1 = cvGetNextSparseNode( &iterator ))
                 {
                     float v1 = *(float*)CV_NODE_VAL(mat1,node1);
-                    uchar* node2 = cvPtrND( mat2, CV_NODE_IDX(mat1,node1), 0, 0, &node1->hashval );
-                    if( node2 )
+                    uchar* node2_data = cvPtrND( mat2, CV_NODE_IDX(mat1,node1),
+                                                 0, 0, &node1->hashval );
+                    if( node2_data )
                     {
-                        float v2 = *(float*)node2;
+                        float v2 = *(float*)node2_data;
                         if( v1 <= v2 )
                             result += v1;
                         else
@@ -1421,7 +1423,7 @@ cvCalcArrHist( CvArr** img, CvHistogram* hist,
     {
         size.width *= size.height;
         size.height = 1;
-        maskstep = step = CV_AUTOSTEP;
+        maskstep = step = CV_STUB_STEP;
     }
 
     if( !CV_IS_SPARSE_HIST(hist))
@@ -2049,7 +2051,7 @@ cvCalcArrBackProject( CvArr** img, CvArr* dst, const CvHistogram* hist )
     {
         size.width *= size.height;
         size.height = 1;
-        dststep = step = CV_AUTOSTEP;
+        dststep = step = CV_STUB_STEP;
     }
 
     if( CV_MAT_DEPTH(mat0->type) > CV_8S && !CV_HIST_HAS_RANGES(hist))
@@ -2246,6 +2248,46 @@ cvCalcProbDensity( const CvHistogram* hist, const CvHistogram* hist_mask,
         }
         while( cvNextNArraySlice( &iterator ));
     }
+
+    __END__;
+}
+
+
+CV_IMPL void cvEqualizeHist( const CvArr* src, CvArr* dst )
+{
+    CvHistogram* hist = 0;
+    CvMat* lut = 0;
+    
+    CV_FUNCNAME( "cvEqualizeHist" );
+
+    __BEGIN__;
+
+    int i, hist_sz = 256;
+    CvSize img_sz;
+    float scale;
+    float* h;
+    int sum = 0;
+    int type;
+    
+    CV_CALL( type = cvGetElemType( src ));
+    if( type != CV_8UC1 )
+        CV_ERROR( CV_StsUnsupportedFormat, "Only 8uC1 images are supported" );
+
+    CV_CALL( hist = cvCreateHist( 1, &hist_sz, CV_HIST_ARRAY ));
+    CV_CALL( lut = cvCreateMat( 1, 256, CV_8UC1 ));
+    CV_CALL( cvCalcArrHist( (CvArr**)&src, hist ));
+    CV_CALL( img_sz = cvGetSize( src ));
+    scale = 255.f/(img_sz.width*img_sz.height);
+    h = (float*)cvPtr1D( hist->bins, 0 );
+
+    for( i = 0; i < hist_sz; i++ )
+    {
+        sum += cvRound(h[i]);
+        lut->data.ptr[i] = (uchar)cvRound(sum*scale);
+    }
+
+    lut->data.ptr[0] = 0;
+    CV_CALL( cvLUT( src, dst, lut ));
 
     __END__;
 }
