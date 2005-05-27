@@ -1433,7 +1433,6 @@ icvFindContoursInInterval( const CvArr* src,
             CvLinkedRunPoint* p00;
             CvLinkedRunPoint* p01;
             CvSeq* contour;
-            CvSeqWriter writer;
 
             CV_READ_SEQ_ELEM( p00, reader );
             p01 = p00;

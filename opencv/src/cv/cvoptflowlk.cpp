@@ -176,8 +176,6 @@ icvCalcOpticalFlowLK_8u32fR( uchar * imgA,
     GaussY[0] = 1;
     for( i = 1; i < winWidth; i++ )
     {
-        int j;
-
         GaussX[i] = 1;
         for( j = i - 1; j > 0; j-- )
         {
@@ -186,8 +184,6 @@ icvCalcOpticalFlowLK_8u32fR( uchar * imgA,
     }
     for( i = 1; i < winHeight; i++ )
     {
-        int j;
-
         GaussY[i] = 1;
         for( j = i - 1; j > 0; j-- )
         {
@@ -282,7 +278,7 @@ icvCalcOpticalFlowLK_8u32fR( uchar * imgA,
             /*Here we calculate derivatives for line of image */
             int address;
 
-            int i = ConvLine;
+            i = ConvLine;
             int L1 = i - 1;
             int L2 = i;
             int L3 = i + 1;

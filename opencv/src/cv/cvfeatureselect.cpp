@@ -184,8 +184,8 @@ cvGoodFeaturesToTrack( const void* image, void* eigImage, void* tempImage,
     for( i = 0; i < k; i++ )
     {
         int j = count, ofs = (uchar*)(ptr_data[i]) - eig->data.ptr;
-        int y = ofs / eig->step;
-        int x = (ofs - y * eig->step)/sizeof(float);
+        y = ofs / eig->step;
+        x = (ofs - y * eig->step)/sizeof(float);
 
         if( min_dist != 0 )
         {

@@ -261,7 +261,7 @@ cvConvexHull2( const CvArr* array, void* hull_storage,
     }
     else
     {
-        CV_CALL( ptseq = icvPointSeqFromMat(
+        CV_CALL( ptseq = cvPointSeqFromMat(
             CV_SEQ_KIND_GENERIC, array, &contour_header, &block ));
     }
 
@@ -530,7 +530,7 @@ cvConvexityDefects( const CvArr* array,
     }
     else
     {
-        CV_CALL( ptseq = icvPointSeqFromMat(
+        CV_CALL( ptseq = cvPointSeqFromMat(
             CV_SEQ_KIND_GENERIC, array, &contour_header, &block ));
     }
 
@@ -730,7 +730,7 @@ cvCheckContourConvexity( const CvArr* array )
     }
     else
     {
-        CV_CALL( contour = icvPointSeqFromMat(
+        CV_CALL( contour = cvPointSeqFromMat(
             CV_SEQ_KIND_CURVE|CV_SEQ_FLAG_CLOSED, array, &contour_header, &block ));
     }
 

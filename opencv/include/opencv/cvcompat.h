@@ -576,6 +576,18 @@ CV_INLINE  void  cvFindFundamentalMatrix( int* points1, int* points2,
 }
 
 
+
+CV_INLINE int
+cvFindChessBoardCornerGuesses( const void* arr, void* CV_UNREFERENCED(thresharr),
+                               CvMemStorage * CV_UNREFERENCED(storage),
+                               CvSize pattern_size, CvPoint2D32f * corners,
+                               int *corner_count )
+{
+    return cvFindChessboardCorners( arr, pattern_size, corners,
+                                    corner_count, CV_CALIB_CB_ADAPTIVE_THRESH );
+}
+
+
 /* Calibrates camera using multiple views of calibration pattern */
 CV_INLINE void cvCalibrateCamera( int image_count, int* _point_counts,
     CvSize image_size, CvPoint2D32f* _image_points, CvPoint3D32f* _object_points,

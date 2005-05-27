@@ -119,7 +119,7 @@ icvApproximateChainTC89( CvChain*               chain,
        that have zero 1-curvature */
     for( i = 0; i < count; i++ )
     {
-        int s, prev_code = *reader.prev_elem;
+        int prev_code = *reader.prev_elem;
 
         reader.prev_elem = reader.ptr;
         CV_READ_CHAIN_POINT( pt, reader );
@@ -208,9 +208,8 @@ icvApproximateChainTC89( CvChain*               chain,
             for( j = k, s = 0; j > 0; j-- )
             {
                 double temp_num;
-                float temp;
-                int sk;
-                int dx1, dy1, dx2, dy2;
+                float t;
+                int sk, dx1, dy1, dx2, dy2;
 
                 i1 = i - j;
                 i1 += i1 < 0 ? len : 0;
@@ -230,10 +229,10 @@ icvApproximateChainTC89( CvChain*               chain,
                     (float) (temp_num /
                              sqrt( ((double)dx1 * dx1 + (double)dy1 * dy1) *
                                    ((double)dx2 * dx2 + (double)dy2 * dy2) ));
-                temp = (float) (temp_num + 1.1);
-                sk = *((int *) &temp);
+                t = (float) (temp_num + 1.1);
+                sk = *((int*)&t);
 
-                assert( 0 <= temp && temp <= 2.2 );
+                assert( 0 <= t && t <= 2.2 );
                 if( j < k && sk <= s )
                     break;
 
@@ -394,9 +393,7 @@ icvApproximateChainTC89( CvChain*               chain,
 
     do
     {
-        CvPoint pt = current->pt;
-
-        CV_WRITE_SEQ_ELEM( pt, writer );
+        CV_WRITE_SEQ_ELEM( current->pt, writer );
         current = current->next;
     }
     while( current != 0 );
@@ -828,7 +825,7 @@ cvApproxPoly( const void*  array, int  header_size,
     }
     else
     {
-        CV_CALL( src_seq = icvPointSeqFromMat(
+        CV_CALL( src_seq = cvPointSeqFromMat(
             CV_SEQ_KIND_CURVE | (parameter2 ? CV_SEQ_FLAG_CLOSED : 0),
             array, &contour_header, &block ));
     }

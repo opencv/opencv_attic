@@ -708,7 +708,8 @@ cvResize( const CvArr* srcarr, CvArr* dstarr, int method )
             int iscale_x = cvRound(scale_x);
             int iscale_y = cvRound(scale_y);
 
-            if( scale_x == iscale_x && scale_y == iscale_y )
+            if( fabs(scale_x - iscale_x) < DBL_EPSILON &&
+                fabs(scale_y - iscale_y) < DBL_EPSILON )
             {
                 int area = iscale_x*iscale_y;
                 int srcstep = src->step / CV_ELEM_SIZE(depth);

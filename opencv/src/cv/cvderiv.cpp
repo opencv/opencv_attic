@@ -934,7 +934,7 @@ CvStatus CV_STDCALL icvSobel_32f_C1R( const float* pSrc, int srcStep,
 *                                      S C H A R R                                       *
 \****************************************************************************************/
 
-CvFilterState* CV_STDCALL
+static CvFilterState* CV_STDCALL
 icvScharrInitAlloc( int roiwidth, int datatype, int origin, int dx, int dy )
 {
     return icvSobelInitAlloc( roiwidth, datatype, CV_SCHARR, origin, dx, dy );
@@ -1868,7 +1868,7 @@ cvSobel( const void* srcarr, void* dstarr, int dx, int dy, int aperture_size )
             int stripe_buf_size = 1 << 15; // the optimal value may depend on CPU cache,
                                            // overhead of current IPP code etc.
             const uchar* shifted_ptr;
-            int y, dy = 0;
+            int y, delta_y = 0;
             int temp_step;
             int dst_step = dst->step ? dst->step : CV_STUB_STEP;
             CvSize stripe_size;
@@ -1879,9 +1879,9 @@ cvSobel( const void* srcarr, void* dstarr, int dx, int dy, int aperture_size )
                 el_anchor.y*temp->step + el_anchor.x*CV_ELEM_SIZE(depth);
             temp_step = temp->step ? temp->step : CV_STUB_STEP;
 
-            for( y = 0; y < src->rows; y += dy )
+            for( y = 0; y < src->rows; y += delta_y )
             {
-                dy = icvIPPFilterNextStripe( src, temp, y, el_size, el_anchor );
+                delta_y = icvIPPFilterNextStripe( src, temp, y, el_size, el_anchor );
                 stripe_size.width = size.width;
                 stripe_size.height = dy;
 

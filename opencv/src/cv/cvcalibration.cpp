@@ -38,7 +38,17 @@
 // the use of this software, even if advised of the possibility of such damage.
 //
 //M*/
+
 #include "_cv.h"
+
+/*
+    This is stright forward port v2 of Matlab calibration engine by Jean-Yves Bouguet
+    that is (in a large extent) based on the paper:
+    Z. Zhang. "A flexible new technique for camera calibration".
+    IEEE Transactions on Pattern Analysis and Machine Intelligence, 22(11):1330-1334, 2000.
+
+    The 1st initial port was done by Valery Mosyagin.
+*/
 
 static void
 icvGaussNewton( const CvMat* J, const CvMat* err, CvMat* delta,
@@ -1238,9 +1248,9 @@ icvInitIntrinsicParams2D( const CvMat* obj_points,
     a[4] = sqrt(fabs(1./f[1]));
     if( aspect_ratio != 0 )
     {
-        double f = (a[0] + a[4])/(aspect_ratio + 1.);
-        a[0] = aspect_ratio*f;
-        a[4] = f;
+        double tf = (a[0] + a[4])/(aspect_ratio + 1.);
+        a[0] = aspect_ratio*tf;
+        a[4] = tf;
     }
 
     cvConvert( &_a, intrinsic_matrix );
@@ -1339,15 +1349,15 @@ cvCalibrateCamera2( const CvMat* obj_points,
 
     for( i = 0; i < img_count; i++ )
     {
-        int count = counts->data.i[i];
-        if( count < 4 )
+        int temp_count = counts->data.i[i];
+        if( temp_count < 4 )
         {
             char buf[100];
             sprintf( buf, "The number of points in the view #%d is <4", i );
             CV_ERROR( CV_StsOutOfRange, buf );
         }
-        max_count = MAX( max_count, count );
-        total += count;
+        max_count = MAX( max_count, temp_count );
+        total += temp_count;
     }
 
     dims = CV_MAT_CN(obj_points->type)*(obj_points->rows == 1 ? 1 : obj_points->cols);
@@ -1402,7 +1412,8 @@ cvCalibrateCamera2( const CvMat* obj_points,
             CV_ERROR( CV_StsOutOfRange, "Principal point must be within the image" );
         if( fabs(a[1]) > 1e-5 )
             CV_ERROR( CV_StsOutOfRange, "Non-zero skew is not supported by the function" );
-        if( fabs(a[3]) + fabs(a[6]) + fabs(a[7]) + fabs(a[8]-1) > 1e-4 )
+        if( fabs(a[3]) > 1e-5 || fabs(a[6]) > 1e-5 ||
+            fabs(a[7]) > 1e-5 || fabs(a[8]-1) > 1e-5 )
             CV_ERROR( CV_StsOutOfRange,
                 "The intrinsic matrix must have [fx 0 cx; 0 fy cy; 0 0 1] shape" );
         a[1] = a[3] = a[6] = a[7] = 0.;

@@ -1506,7 +1506,7 @@ icvHLS2BGRx_32f_C3CnR( const float* src, int srcstep, float* dst, int dststep,
     {
         int block_size = MIN(1 << 10, size.width);
         float* buffer;
-        int i, di, k;
+        int di, k;
         CvStatus status = CV_OK;
 
         buffer = (float*)cvStackAlloc( block_size*3*sizeof(buffer[0]) );
@@ -2061,8 +2061,7 @@ icvLuv2BGRx_32f_C3CnR( const float* src, int srcstep, float* dst, int dststep,
             else
             {
                 y = L * (1.f/labLScale2_32f);
-                if( L == 0 )
-                    L = 0.001f;
+                L = MAX( L, 0.001f );
             }
 
             t = 1.f/(13.f * L);

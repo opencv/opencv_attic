@@ -1059,7 +1059,7 @@ cvFloodFill( CvArr* arr, CvPoint seed_point,
     {
         if( lo_diff.val[i] < 0 || up_diff.val[i] < 0 )
             CV_ERROR( CV_StsBadArg, "lo_diff and up_diff must be non-negative" );
-        is_simple &= lo_diff.val[i] == 0 && up_diff.val[i] == 0;
+        is_simple &= fabs(lo_diff.val[i]) < DBL_EPSILON && fabs(up_diff.val[i]) < DBL_EPSILON;
     }
 
     size = cvGetMatSize( img );
@@ -1106,7 +1106,7 @@ cvFloodFill( CvArr* arr, CvPoint seed_point,
         }
 
         {
-            int i, width = tempMask ? mask->step : size.width + 2;
+            int width = tempMask ? mask->step : size.width + 2;
             uchar* mask_row = mask->data.ptr + mask->step;
             memset( mask_row - mask->step, 1, width );
 
@@ -1119,8 +1119,6 @@ cvFloodFill( CvArr* arr, CvPoint seed_point,
             memset( mask_row, 1, width );
         }
 
-        //cvScalarToRawData( &lo_diff, &ld_buf, type, 0 );
-        //cvScalarToRawData( &up_diff, &ud_buf, type, 0 );
         if( depth == CV_8U )
             for( i = 0; i < cn; i++ )
             {

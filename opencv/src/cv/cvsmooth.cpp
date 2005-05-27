@@ -791,7 +791,7 @@ icvBlur_32f_CnR( const float* pSrc, int srcStep,
     int starting_flag = 0;
     int width_rest = width_n & (CV_MORPH_ALIGN - 1);
     float scale = (float)(1./state->divisor);
-    int no_scale = state->divisor == 1;
+    int no_scale = fabs(state->divisor - 1) < DBL_EPSILON;
 
     srcStep /= sizeof(float);
     dstStep /= sizeof(float);
@@ -2628,7 +2628,7 @@ cvSmooth( const void* srcarr, void* dstarr, int smoothtype,
     src_step = src->step;
     dst_step = dst->step;
     if( size.height == 1 )
-        src_step = dst_step = CV_AUTOSTEP;
+        src_step = dst_step = CV_STUB_STEP;
 
     if( CV_MAT_CN(type) == 2 )
         CV_ERROR( CV_BadNumChannels, "Unsupported number of channels" );
@@ -2665,7 +2665,6 @@ cvSmooth( const void* srcarr, void* dstarr, int smoothtype,
             const uchar* shifted_ptr;
             int y, dy = 0;
             int temp_step;
-            int dst_step = dst->step ? dst->step : CV_STUB_STEP;
 
             CV_CALL( temp = icvIPPFilterInit( src, stripe_size, el_size ));
             

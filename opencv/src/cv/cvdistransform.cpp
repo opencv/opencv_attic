@@ -551,6 +551,7 @@ cvDistTransform( const void* srcarr, void* dstarr,
         else
         {
             CvSeq *contours = 0;
+            CvPoint top_left = {0,0}, bottom_right = {size.width-1,size.height-1};
             int label;
 
             CV_CALL( st = cvCreateMemStorage() );
@@ -560,10 +561,13 @@ cvDistTransform( const void* srcarr, void* dstarr,
                             CV_RETR_CCOMP, CV_CHAIN_APPROX_SIMPLE );
             cvZero( labels );
             for( label = 1; contours != 0; contours = contours->h_next, label++ )
-                cvDrawContours( labels, contours, cvScalarAll(label), cvScalarAll(label), -255, -1, 8 );
+            {
+                CvScalar area_color = cvScalarAll(label);
+                cvDrawContours( labels, contours, area_color, area_color, -255, -1, 8 );
+            }
 
             cvCopy( src, src_copy );
-            cvRectangle( src_copy, cvPoint(0,0), cvPoint(size.width-1,size.height-1), cvScalarAll(255), 1, 8 );
+            cvRectangle( src_copy, top_left, bottom_right, cvScalarAll(255), 1, 8 );
 
             icvDistanceTransformEx_5x5_C1R( src_copy->data.ptr, src_copy->step, temp->data.i, temp->step,
                         dst->data.fl, dst->step, labels->data.i, labels->step, size, _mask );

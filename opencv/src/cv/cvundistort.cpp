@@ -180,7 +180,7 @@ cvUndistort2( const CvArr* _src, CvArr* _dst, const CvMat* A, const CvMat* dist_
     src_step = src->step ? src->step : CV_STUB_STEP;
     dst_step = dst->step ? dst->step : CV_STUB_STEP;
 
-    if( fabs((double)k[2]) + fabs((double)k[3]) < 1e-5 && icvUndistortGetSize_p )
+    if( fabs((double)k[2]) < 1e-5 && fabs((double)k[3]) < 1e-5 && icvUndistortGetSize_p )
     {
         int buf_size = 0;
         CvUndistortRadialIPPFunc func =

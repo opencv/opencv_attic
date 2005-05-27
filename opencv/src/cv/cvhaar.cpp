@@ -862,7 +862,7 @@ cvHaarDetectObjects( const CvArr* _img,
         for( pass = 0; pass < npass; pass++ )
         {
 #ifdef _OPENMP
-    #pragma omp parallel for shared(hid_cascade, stop_height, seq, ystep, temp, size, win_size, pass, npass, sum, p0, p1, p2 ,p3, pq0, pq1, pq2, pq3, stage_offset) 
+    #pragma omp parallel for shared(cascade, stop_height, seq, ystep, temp, win_size, pass, npass, sum, p0, p1, p2, p3, pq0, pq1, pq2, pq3, stage_offset)
 #endif // _OPENMP
 
             for( int _iy = 0; _iy < stop_height; _iy++ )

@@ -776,7 +776,7 @@ icv##name##Any_##flavor( arrtype* src, int srcstep,                         \
                                                                             \
                 while( kp != ker_ptr )                                      \
                 {                                                           \
-                    arrtype* tp = *kp++;                                    \
+                    tp = *kp++;                                             \
                     t = tp[x]; update_extr_macro( val0, t );                \
                     t = tp[x + 1]; update_extr_macro( val1, t );            \
                     t = tp[x + 2]; update_extr_macro( val2, t );            \
@@ -1089,7 +1089,7 @@ icvMorphOp( const void* srcarr, void* dstarr, IplConvKernel* element,
         if( rect_func || any_func )
         {
             int y, dy = 0;
-            int i, el_len = el_size.width*el_size.height;
+            int el_len = el_size.width*el_size.height;
             int temp_step;
             uchar* el_mask = 0;
             const uchar* shifted_ptr;

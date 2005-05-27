@@ -649,6 +649,8 @@ cvFilter2D( const CvArr* _src, CvArr* _dst, const CvMat* _kernel, CvPoint anchor
 
     size = cvGetMatSize( src );
     depth = CV_MAT_DEPTH(type);
+    src_step = src->step;
+    dst_step = dst->step ? dst->step : CV_STUB_STEP;
 
     if( icvFilter_8u_C1R_p && (src->rows >= ipp_lower_limit || src->cols >= ipp_lower_limit) )
     {
@@ -672,7 +674,6 @@ cvFilter2D( const CvArr* _src, CvArr* _dst, const CvMat* _kernel, CvPoint anchor
             const uchar* shifted_ptr;
             int i, j, y, dy = 0;
             int temp_step;
-            int dst_step = dst->step ? dst->step : CV_STUB_STEP;
 
             // mirror the kernel around the center
             for( i = 0; i < (el_size.height+1)/2; i++ )
@@ -720,11 +721,8 @@ cvFilter2D( const CvArr* _src, CvArr* _dst, const CvMat* _kernel, CvPoint anchor
     if( !func )
         CV_ERROR( CV_StsUnsupportedFormat, "" );
 
-    src_step = src->step;
-    dst_step = dst->step;
-
     if( size.height == 1 )
-        src_step = dst_step = CV_AUTOSTEP;
+        src_step = dst_step = CV_STUB_STEP;
 
     IPPI_CALL( func( src->data.ptr, src_step, dst->data.ptr,
                      dst_step, &size, state, 0 ));

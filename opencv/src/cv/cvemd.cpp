@@ -974,14 +974,13 @@ icvRussel( CvEMDState * state )
         prev_u = &u_head;
         for( cur_u = u_head.next; cur_u != 0; cur_u = cur_u->next )
         {
-            int i = cur_u - u;
+            i = cur_u - u;
             float *delta_row = delta[i];
 
             prev_v = &v_head;
             for( cur_v = v_head.next; cur_v != 0; cur_v = cur_v->next )
             {
-                int j = cur_v - v;
-
+                j = cur_v - v;
                 if( min_delta > delta_row[j] )
                 {
                     min_delta = delta_row[j];
@@ -1007,8 +1006,7 @@ icvRussel( CvEMDState * state )
         {
             for( cur_v = v_head.next; cur_v != 0; cur_v = cur_v->next )
             {
-                int j = cur_v - v;
-
+                j = cur_v - v;
                 if( cur_v->val == cost[min_i][j] )      /* column j needs updating */
                 {
                     float max_val = -CV_EMD_INF;
@@ -1028,9 +1026,7 @@ icvRussel( CvEMDState * state )
                     if( fabs( diff ) < eps )
                     {
                         for( cur_u = u_head.next; cur_u != 0; cur_u = cur_u->next )
-                        {
                             delta[cur_u - u][j] += diff;
-                        }
                     }
                 }
             }
@@ -1039,8 +1035,7 @@ icvRussel( CvEMDState * state )
         {
             for( cur_u = u_head.next; cur_u != 0; cur_u = cur_u->next )
             {
-                int i = cur_u - u;
-
+                i = cur_u - u;
                 if( cur_u->val == cost[i][min_j] )      /* row i needs updating */
                 {
                     float max_val = -CV_EMD_INF;
@@ -1061,9 +1056,7 @@ icvRussel( CvEMDState * state )
                     if( fabs( diff ) < eps )
                     {
                         for( cur_v = v_head.next; cur_v != 0; cur_v = cur_v->next )
-                        {
                             delta[i][cur_v - v] += diff;
-                        }
                     }
                 }
             }
