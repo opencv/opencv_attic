@@ -94,35 +94,56 @@ icvInitProcessorInfo( CvProcessorInfo* cpu_info )
     GetSystemInfo( &sys );
 
     if( sys.wProcessorArchitecture == PROCESSOR_ARCHITECTURE_INTEL &&
-        sys.dwProcessorType == PROCESSOR_INTEL_PENTIUM )
+        sys.dwProcessorType == PROCESSOR_INTEL_PENTIUM && sys.wProcessorLevel >= 6 )
     {
-        static const char cpuid_code[] =
-            "\x53\x56\x57\xb8\x01\x00\x00\x00\x0f\xa2\x5f\x5e\x5b\xc3";
-        typedef int64 (CV_CDECL * func_ptr)(void);
-        func_ptr cpuid = (func_ptr)(void*)cpuid_code;
         int version = 0, features = 0, family = 0;
         int id = 0;
-        int64 cpuid_val;
         HKEY key = 0;
         
         cpu_info->count = (int)sys.dwNumberOfProcessors; 
-        unsigned long freq = 0, sz = sizeof(freq);
+        unsigned long val = 0, sz = sizeof(val);
 
         if( RegOpenKeyEx( HKEY_LOCAL_MACHINE, "HARDWARE\\DESCRIPTION\\SYSTEM\\CentralProcessor\\0\\",
             0, KEY_QUERY_VALUE, &key ) >= 0 )
         {
-            if( RegQueryValueEx( key, "~MHz", 0, 0, (uchar*)&freq, &sz ) >= 0 )
-                cpu_info->frequency = (double)freq;
+            if( RegQueryValueEx( key, "~MHz", 0, 0, (uchar*)&val, &sz ) >= 0 )
+                cpu_info->frequency = (double)val;
             RegCloseKey( key );
         }
 
-        cpuid_val = cpuid();
-        version = (int)cpuid_val;
-        features = (int)(cpuid_val >> 32);
+#if defined WIN32 && defined _MSC_VER
+        __asm
+        {
+            /* use CPUID to determine the features supported */
+            pushfd
+            mov   eax, 1
+            push  ebx
+            push  esi
+            push  edi
+            _emit 0x0f
+            _emit 0xa2
+            pop   edi
+            pop   esi
+            pop   ebx
+            mov   version, eax
+            mov   features, edx
+            popfd
+        }
+#else
+        {
+            static const char cpuid_code[] =
+                "\x53\x56\x57\xb8\x01\x00\x00\x00\x0f\xa2\x5f\x5e\x5b\xc3";
+            typedef int64 (CV_CDECL * func_ptr)(void);
+            func_ptr cpuid = (func_ptr)(void*)cpuid_code;
+            int64 cpuid_val = cpuid();
+            version = (int)cpuid_val;
+            features = (int)(cpuid_val >> 32);
+        }
+#endif
 
-        #define ICV_CPUID_M6     ((1<<15)|(1<<23))  /* cmov + mmx */
-        #define ICV_CPUID_A6     ((1<<25)|ICV_CPUID_M6) /* <all above> + xmm */
-        #define ICV_CPUID_W7     ((1<<26)|ICV_CPUID_A6) /* <all above> + emm */
+        #define ICV_CPUID_M6     ((1<<15)|(1<<23))  /* cmov + MMX */
+        #define ICV_CPUID_A6     ((1<<25)|ICV_CPUID_M6) /* <all above> + SSE */
+        #define ICV_CPUID_W7     ((1<<26)|ICV_CPUID_A6) /* <all above> + SSE2 */
 
         family = (version >> 8) & 15;
         if( family >= 6 && (features & ICV_CPUID_M6) != 0 ) /* Pentium II or higher */
@@ -608,9 +629,18 @@ CV_IMPL  int64  cvGetTickCount( void )
 
     if( CV_GET_PROC_ARCH(cpu_info->model) == CV_PROC_IA32_GENERIC )
     {
+#if defined WIN32 && defined _MSC_VER        
+        __asm _emit 0x0f;
+        __asm _emit 0x31;
+#elif __GNUC__ > 2
+        int64 t;
+        asm volatile (".byte 0xf; .byte 0x31" /* "rdtsc" */ : "=A" (t));
+        return t;
+#else
         static const char code[] = "\x0f\x31\xc3";
         rdtsc_func func = (rdtsc_func)(void*)code;
         return func();
+#endif
     }
     else
     {

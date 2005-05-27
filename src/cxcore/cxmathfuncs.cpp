@@ -1701,7 +1701,7 @@ CV_IMPL void cvPow( const CvArr* srcarr, CvArr* dstarr, double power )
 
     depth = CV_MAT_DEPTH( src->type );
 
-    if( ipower == power )
+    if( fabs(ipower - power) < DBL_EPSILON )
     {
         if( !inittab )
         {
@@ -1762,7 +1762,7 @@ CV_IMPL void cvPow( const CvArr* srcarr, CvArr* dstarr, double power )
             pow_func( src_data, dst_data, size.width, ipower );
         }
     }
-    else if( fabs(power) == 0.5 )
+    else if( fabs(fabs(power) - 0.5) < DBL_EPSILON )
     {
         CvSqrtFunc sqrt_func = power < 0 ? 
             (depth == CV_32F ? (CvSqrtFunc)icvInvSqrt_32f : (CvSqrtFunc)icvInvSqrt_64f) :

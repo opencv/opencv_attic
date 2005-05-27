@@ -528,11 +528,11 @@ cvSet( void* arr, CvScalar value, const void* maskarr )
     {
         if( CV_IS_MATND(mat))
         {
-            CvMatND stub;
+            CvMatND nstub;
             CvNArrayIterator iterator;
             int pix_size1;
             
-            CV_CALL( cvInitNArrayIterator( 1, &arr, maskarr, &stub, &iterator ));
+            CV_CALL( cvInitNArrayIterator( 1, &arr, maskarr, &nstub, &iterator ));
 
             type = CV_MAT_TYPE(iterator.hdr[0]->type);
             pix_size = icvPixSize[type];
@@ -705,10 +705,10 @@ cvSetZero( CvArr* arr )
     {
         if( CV_IS_MATND(mat))
         {
-            CvMatND stub;
+            CvMatND nstub;
             CvNArrayIterator iterator;
             
-            CV_CALL( cvInitNArrayIterator( 1, &arr, 0, &stub, &iterator ));
+            CV_CALL( cvInitNArrayIterator( 1, &arr, 0, &nstub, &iterator ));
             iterator.size.width *= icvPixSize[CV_MAT_TYPE(iterator.hdr[0]->type)];
 
             if( iterator.size.width <= CV_MAX_INLINE_MAT_OP_SIZE*(int)sizeof(double) )

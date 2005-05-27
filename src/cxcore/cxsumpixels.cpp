@@ -412,11 +412,11 @@ cvSum( const CvArr* arr )
     {
         if( CV_IS_MATND(mat) )
         {
-            CvMatND stub;
+            CvMatND nstub;
             CvNArrayIterator iterator;
             int pass_hint;
 
-            CV_CALL( cvInitNArrayIterator( 1, (void**)&mat, 0, &stub, &iterator ));
+            CV_CALL( cvInitNArrayIterator( 1, (void**)&mat, 0, &nstub, &iterator ));
 
             type = CV_MAT_TYPE(iterator.hdr[0]->type);
 
@@ -596,11 +596,11 @@ cvCountNonZero( const CvArr* img )
     {
         if( CV_IS_MATND(mat) )
         {
-            CvMatND stub;
+            CvMatND nstub;
             CvNArrayIterator iterator;
             CvFunc2D_1A1P func;
 
-            CV_CALL( cvInitNArrayIterator( 1, (void**)&mat, 0, &stub, &iterator ));
+            CV_CALL( cvInitNArrayIterator( 1, (void**)&mat, 0, &nstub, &iterator ));
 
             type = CV_MAT_TYPE(iterator.hdr[0]->type);
 

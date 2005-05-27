@@ -831,8 +831,6 @@ icvGetNodePtr( CvSparseMat* mat, int* idx, int* _type,
 
     if( !ptr && create_node )
     {
-        CvSparseNode* node;
-        
         if( mat->heap->active_count >= mat->hashsize*CV_SPARSE_HASH_RATIO )
         {
             void** newtable;
