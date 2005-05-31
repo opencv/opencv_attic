@@ -129,6 +129,17 @@ icvInitProcessorInfo( CvProcessorInfo* cpu_info )
             mov   features, edx
             popfd
         }
+#elif defined WIN32 && __GNUC__ > 2
+        asm volatile
+        (
+            "movl $1,%%eax\n\t"
+            ".byte 0x0f; .byte 0xa2\n\t"
+            "movl %%eax, %0\n\t"
+            "movl %%edx, %1\n\t"
+            : "=r"(version), "=r" (features)
+            :
+            : "%ebx", "%esi", "%edi"
+        );
 #else
         {
             static const char cpuid_code[] =
