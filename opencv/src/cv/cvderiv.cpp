@@ -284,7 +284,7 @@ CvStatus CV_STDCALL icvSobel_8u16s_C1R( const uchar* pSrc, int srcStep,
                 continue;
             }
 
-            need_copy |= src_height == 1;
+            need_copy |= src_height == 0;
 
             if( ker_width > 1 )
             {
@@ -647,7 +647,7 @@ CvStatus CV_STDCALL icvSobel_32f_C1R( const float* pSrc, int srcStep,
                 continue;
             }
 
-            need_copy |= src_height == 1;
+            need_copy |= src_height == 0;
 
             if( ker_width > 1 )
             {
@@ -1081,7 +1081,7 @@ icvLaplace_8u16s_C1R( const uchar* pSrc, int srcStep,
                 continue;
             }
 
-            need_copy |= src_height == 1;
+            need_copy |= src_height == 0;
 
             {
                 uchar* tbufc = (uchar*)tbufw;
@@ -1413,7 +1413,7 @@ icvLaplace_32f_C1R( const float* pSrc, int srcStep,
                 continue;
             }
 
-            need_copy |= src_height == 1;
+            need_copy |= src_height == 0;
 
             {
                 float* tbufc = (float*)tbufw;
@@ -1883,7 +1883,7 @@ cvSobel( const void* srcarr, void* dstarr, int dx, int dy, int aperture_size )
             {
                 delta_y = icvIPPFilterNextStripe( src, temp, y, el_size, el_anchor );
                 stripe_size.width = size.width;
-                stripe_size.height = dy;
+                stripe_size.height = delta_y;
 
                 if( ipp_sobel_func )
                 {
