@@ -325,7 +325,7 @@ icvBlur_8u_CnR( uchar* src, int srcStep,
                 continue;
             }
 
-            need_copy |= src_height == 1;
+            need_copy |= src_height == 0;
 
             if( ker_width > 1 )
             {
@@ -609,7 +609,7 @@ icvBlur_8u16s_C1R( const uchar* pSrc, int srcStep,
                 continue;
             }
 
-            need_copy |= src_height == 1;
+            need_copy |= src_height == 0;
 
             if( ker_width > 1 )
             {
@@ -838,7 +838,7 @@ icvBlur_32f_CnR( const float* pSrc, int srcStep,
                 continue;
             }
 
-            need_copy |= src_height == 1;
+            need_copy |= src_height == 0;
 
             if( ker_width > 1 )
             {
@@ -1164,7 +1164,7 @@ icvGaussianBlur_small_8u_CnR( uchar* src, int srcStep,
                 continue;
             }
 
-            need_copy |= src_height == 1;
+            need_copy |= src_height == 0;
 
             if( ker_width > 1 )
             {
@@ -1539,7 +1539,7 @@ icvGaussianBlur_8u_CnR( uchar* src, int srcStep,
                     continue;
                 }
 
-                need_copy |= src_height == 1;
+                need_copy |= src_height == 0;
 
                 if( ker_width > 1 )
                 {
@@ -1815,7 +1815,7 @@ icvGaussianBlur_32f_CnR( float* src, int srcStep,
                 continue;
             }
 
-            need_copy |= src_height == 1;
+            need_copy |= src_height == 0;
 
             if( ker_width > 1 )
             {
