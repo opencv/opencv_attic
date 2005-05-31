@@ -1120,6 +1120,11 @@ CVAPI(int) cvFindChessboardCorners( const void* image, CvSize pattern_size,
                                     int* corner_count CV_DEFAULT(NULL),
                                     int flags CV_DEFAULT(CV_CALIB_CB_ADAPTIVE_THRESH) );
 
+/* Draws individual chessboard corners or the whole chessboard detected */
+CVAPI(void) cvDrawChessboardCorners( CvArr* image, CvSize pattern_size,
+                                     CvPoint2D32f* corners,
+                                     int count, int pattern_was_found );
+
 typedef struct CvPOSITObject CvPOSITObject;
 
 /* Allocates and initializes CvPOSITObject structure before doing cvPOSIT */
