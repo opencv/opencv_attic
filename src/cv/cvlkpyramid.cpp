@@ -260,6 +260,8 @@ icvCalcOpticalFlowPyrLK_8uC1R( const uchar* imgA, const uchar* imgB,
     uchar *pyr_buffer = 0;
     uchar *buffer = 0;
     int bufferBytes = 0;
+    float* _error = 0;
+    char* _status = 0;
 
     uchar **imgI = 0;
     uchar **imgJ = 0;
@@ -325,11 +327,40 @@ icvCalcOpticalFlowPyrLK_8uC1R( const uchar* imgA, const uchar* imgB,
         ipp_pyrA.state = ipp_pyrB.state = 0;
         ipp_pyrA.level = ipp_pyrB.level = level;
 
-        result = icvOpticalFlowPyrLK_8u_C1R_p( &ipp_pyrA, &ipp_pyrB,
+        if( !error )
+        {
+            _error = (float*)cvAlloc( count*sizeof(_error[0]) );
+            if( !_error )
+            {
+                result = CV_OUTOFMEM_ERR;
+                goto func_exit;
+            }
+            error = _error;
+        }
+
+        if( !status )
+        {
+            _status = (char*)cvAlloc( count*sizeof(_status[0]) );
+            if( !_status )
+            {
+                result = CV_OUTOFMEM_ERR;
+                goto func_exit;
+            }
+            status = _status;
+        }
+
+        for( i = 0; i < count; i++ )
+            featuresB[i] = featuresA[i];
+
+        if( icvOpticalFlowPyrLK_8u_C1R_p( &ipp_pyrA, &ipp_pyrB,
             (const float*)featuresA, (float*)featuresB, status, error, count,
-            winSize.width, level, criteria.max_iter,
-            (float)criteria.epsilon, ipp_optflow_state );// >= 0 )
-            //goto func_exit;
+            winSize.width*2 + 1, level, criteria.max_iter,
+            (float)criteria.epsilon, ipp_optflow_state ) >= 0 )
+        {
+            for( i = 0; i < count; i++ )
+                status[i] = status[i] == 0;
+            goto func_exit;
+        }
     }
 
     /* buffer_size = <size for patches> + <size for pyramids> */
@@ -531,6 +562,8 @@ func_exit:
 
     cvFree( (void**)&pyr_buffer );
     cvFree( (void**)&buffer );
+    cvFree( (void**)&_error );
+    cvFree( (void**)&_status );
 
     return result;
 #undef MAX_LEVEL
