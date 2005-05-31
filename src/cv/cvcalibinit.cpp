@@ -987,4 +987,117 @@ icvGenerateQuads( CvCBQuad **out_quads, CvCBCorner **out_corners,
     return quad_count;
 }
 
+
+CV_IMPL void
+cvDrawChessboardCorners( CvArr* _image, CvSize pattern_size,
+                         CvPoint2D32f* corners, int count, int found )
+{
+    CV_FUNCNAME( "cvDrawChessboardCorners" );
+
+    __BEGIN__;
+    
+    const int shift = 0;
+    const int radius = 4;
+    const int r = radius*(1 << shift);
+    int i;
+    CvMat stub, *image;
+    double scale = 1;
+    int type, cn, line_type;
+
+    CV_CALL( image = cvGetMat( _image, &stub ));
+
+    type = CV_MAT_TYPE(image->type);
+    cn = CV_MAT_CN(type);
+    if( cn != 1 && cn != 3 && cn != 4 )
+        CV_ERROR( CV_StsUnsupportedFormat, "Number of channels must be 1, 3 or 4" );
+
+    switch( CV_MAT_DEPTH(image->type) )
+    {
+    case CV_8U:
+        scale = 1;
+        break;
+    case CV_16U:
+        scale = 256;
+        break;
+    case CV_32F:
+        scale = 1./255;
+        break;
+    default:
+        CV_ERROR( CV_StsUnsupportedFormat,
+            "Only 8-bit, 16-bit or floating-point 32-bit images are supported" );
+    }
+
+    line_type = type == CV_8UC1 || type == CV_8UC3 ? CV_AA : 8;
+    
+    if( !found )
+    {
+        CvScalar color = {0,0,255};
+        if( cn == 1 )
+            color = cvScalarAll(200);
+        color.val[0] *= scale;
+        color.val[1] *= scale;
+        color.val[2] *= scale;
+        color.val[3] *= scale;
+        
+        for( i = 0; i < count; i++ )
+        {
+            CvPoint pt;
+            pt.x = cvRound(corners[i].x*(1 << shift));
+            pt.y = cvRound(corners[i].y*(1 << shift));
+            cvLine( image, cvPoint( pt.x - r, pt.y - r ),
+                    cvPoint( pt.x + r, pt.y + r ), color, 1, line_type, shift );
+            cvLine( image, cvPoint( pt.x - r, pt.y + r),
+                    cvPoint( pt.x + r, pt.y - r), color, 1, line_type, shift );
+            cvCircle( image, pt, r+(1<<shift), color, 1, line_type, shift );
+        }
+    }
+    else
+    {
+        int x, y;
+        CvPoint prev_pt = {0, 0};
+        const int line_max = 7;
+        static const CvScalar line_colors[line_max] =
+        {
+            {0,0,255},
+            {0,128,255},
+            {0,200,200},
+            {0,255,0},
+            {200,200,0},
+            {255,0,0},
+            {255,0,255}
+        };
+
+        for( y = 0, i = 0; y < pattern_size.height; y++ )
+        {
+            CvScalar color = line_colors[y % line_max];
+            if( cn == 1 )
+                color = cvScalarAll(200);
+            color.val[0] *= scale;
+            color.val[1] *= scale;
+            color.val[2] *= scale;
+            color.val[3] *= scale;
+
+            for( x = 0; x < pattern_size.width; x++, i++ )
+            {
+                CvPoint pt;
+                pt.x = cvRound(corners[i].x*(1 << shift));
+                pt.y = cvRound(corners[i].y*(1 << shift));
+
+                if( i != 0 )
+                    cvLine( image, prev_pt, pt, color, 1, line_type, shift );
+
+                cvLine( image, cvPoint(pt.x - r, pt.y - r),
+                        cvPoint(pt.x + r, pt.y + r), color, 1, line_type, shift );
+                cvLine( image, cvPoint(pt.x - r, pt.y + r),
+                        cvPoint(pt.x + r, pt.y - r), color, 1, line_type, shift );
+                cvCircle( image, pt, r+(1<<shift), color, 1, line_type, shift );
+                prev_pt = pt;
+            }
+        }
+    }
+
+    __END__;
+}
+
+
 /* End of file. */
