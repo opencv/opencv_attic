@@ -422,7 +422,7 @@ cvRodrigues2( const CvMat* src, CvMat* dst, CvMat* jacobian )
         cvMulTransposed( &_R, &_A, 0 );
 
         A[0] -= 1.; A[4] -= 1.; A[8] -= 1.;
-        if( cvNorm(&_A, 0, CV_C) > 1e-1 || fabs(cvDet(&_R) - 1) > 1e-2 )
+        if( cvNorm(&_A, 0, CV_C) > 9e-1 || fabs(cvDet(&_R) - 1) > 9e-1 )
         {
             cvZero(dst);
             if( jacobian )
