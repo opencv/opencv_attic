@@ -1022,11 +1022,11 @@ cvEndWriteSeq( CvSeqWriter * writer )
         CV_ERROR( CV_StsNullPtr, "" );
 
     CV_CALL( cvFlushSeqWriter( writer ));
+    seq = writer->seq;
 
     /* truncate the last block */
     if( writer->block && writer->seq->storage )
     {
-        seq = writer->seq;
         CvMemStorage *storage = seq->storage;
         char *storage_block_max = (char *) storage->top + storage->block_size;
 
@@ -2540,11 +2540,12 @@ cvSeqInvert( CvSeq* seq )
     __BEGIN__;
 
     CvSeqReader left_reader, right_reader;
-    int elem_size = seq->elem_size;
+    int elem_size;
     int i, count;
 
     CV_CALL( cvStartReadSeq( seq, &left_reader, 0 ));
     CV_CALL( cvStartReadSeq( seq, &right_reader, 1 ));
+    elem_size = seq->elem_size;
     count = seq->total >> 1;
 
     for( i = 0; i < count; i++ )
