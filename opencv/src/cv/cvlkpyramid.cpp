@@ -135,9 +135,9 @@ icvInitPyramidalAlgorithm( const uchar * imgA, const uchar * imgB,
     assert( pyrBytes <= imgSize.width * imgSize.height * (int) sizeof( imgA[0] ) * 4 / 3 );
 
     /* buffer_size = <size for patches> + <size for pyramids> */
-    bufferBytes = (level1 >= 0) * ((pyrA == 0) + (pyrB == 0)) * pyrBytes +
+    bufferBytes = (int)((level1 >= 0) * ((pyrA == 0) + (pyrB == 0)) * pyrBytes +
         (sizeof( imgI[0][0] ) * 2 + sizeof( step[0][0] ) +
-         sizeof(size[0][0]) + sizeof( scale[0][0] )) * level1;
+         sizeof(size[0][0]) + sizeof( scale[0][0] )) * level1);
 
     *buffer = (uchar *)cvAlloc( bufferBytes );
     if( !buffer[0] )

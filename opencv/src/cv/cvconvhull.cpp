@@ -210,7 +210,7 @@ icvCalcAndWritePtIndices( CvPoint** pointer, int* stack, int start, int end,
     {
         CvPoint* ptr = (CvPoint*)pointer[stack[i]];
         CvSeqBlock* block = ptseq->first;
-        while( (unsigned)(idx = ptr - (CvPoint*)block->data) >= (unsigned)block->count )
+        while( (unsigned)(idx = (int)(ptr - (CvPoint*)block->data)) >= (unsigned)block->count )
         {
             block = block->next;
             if( block == ptseq->first )

@@ -46,10 +46,10 @@
 #define ICV_ALIGNED_SEQ_BLOCK_SIZE  \
     (int)cvAlign(sizeof(CvSeqBlock), CV_STRUCT_ALIGN)
 
-CV_INLINE size_t
-cvAlignLeft( size_t size, int align )
+CV_INLINE int
+cvAlignLeft( int size, int align )
 {
-    return size & ~(size_t)(align-1);
+    return size & -align;
 }
 
 #define CV_GET_LAST_ELEM( seq, block ) \
@@ -393,9 +393,12 @@ cvMemStorageAlloc( CvMemStorage* storage, size_t size )
     if( !storage )
         CV_ERROR( CV_StsNullPtr, "NULL storage pointer" );
 
+    if( size > INT_MAX )
+        CV_ERROR( CV_StsOutOfRange, "Too large memory block is requested" );
+
     assert( storage->free_space % CV_STRUCT_ALIGN == 0 );
 
-    if( storage->free_space < size )
+    if( (size_t)storage->free_space < size )
     {
         size_t max_free_space = cvAlignLeft(storage->block_size - sizeof(CvMemBlock), CV_STRUCT_ALIGN);
         if( max_free_space < size )
@@ -406,7 +409,7 @@ cvMemStorageAlloc( CvMemStorage* storage, size_t size )
 
     ptr = ICV_FREE_PTR(storage);
     assert( (size_t)ptr % CV_STRUCT_ALIGN == 0 );
-    storage->free_space = cvAlignLeft(storage->free_space - size, CV_STRUCT_ALIGN );
+    storage->free_space = cvAlignLeft(storage->free_space - (int)size, CV_STRUCT_ALIGN );
 
     __END__;
 
@@ -422,7 +425,7 @@ cvMemStorageAllocString( CvMemStorage* storage, const char* ptr, int len )
 
     __BEGIN__;
 
-    str.len = len >= 0 ? len : strlen(ptr);
+    str.len = len >= 0 ? len : (int)strlen(ptr);
     CV_CALL( str.ptr = (char*)cvMemStorageAlloc( storage, str.len + 1 ));
     memcpy( str.ptr, ptr, str.len );
     str.ptr[str.len] = '\0';
@@ -485,7 +488,7 @@ CV_IMPL void
 cvSetSeqBlockSize( CvSeq *seq, int delta_elements )
 {
     int elem_size;
-    size_t useful_block_size;
+    int useful_block_size;
 
     CV_FUNCNAME( "cvSetSeqBlockSize" );
 
@@ -505,7 +508,7 @@ cvSetSeqBlockSize( CvSeq *seq, int delta_elements )
         delta_elements = (1 << 10) / elem_size;
         delta_elements = MAX( delta_elements, 1 );
     }
-    if( (size_t)delta_elements * elem_size > useful_block_size )
+    if( delta_elements * elem_size > useful_block_size )
     {
         delta_elements = useful_block_size / elem_size;
         if( delta_elements == 0 )
@@ -585,9 +588,9 @@ cvSeqElemIdx( const CvSeq* seq, const void* _element, CvSeqBlock** _block )
             if( _block )
                 *_block = block;
             if( elem_size <= ICV_SHIFT_TAB_MAX && (id = icvPower2ShiftTab[elem_size - 1]) >= 0 )
-                id = (element - block->data) >> id;
+                id = (int)((size_t)(element - block->data) >> id);
             else
-                id = (element - block->data) / elem_size;
+                id = (int)((size_t)(element - block->data) / elem_size);
             id += block->start_index - seq->first->start_index;
             break;
         }
@@ -657,7 +660,7 @@ cvCvtSeqToArray( const CvSeq *seq, void *array, CvSlice slice )
 
     do
     {
-        int count = reader.block_max - reader.ptr;
+        int count = (int)(reader.block_max - reader.ptr);
         if( count > total )
             count = total;
 
@@ -761,19 +764,19 @@ icvGrowSeq( CvSeq *seq, int in_front_of )
            and it's big enough then enlarge the last block
            (this can happen only if the new block is added to the end of sequence */
         if( (unsigned)(ICV_FREE_PTR(storage) - seq->block_max) < CV_STRUCT_ALIGN &&
-            storage->free_space >= (size_t)seq->elem_size && !in_front_of )
+            storage->free_space >= seq->elem_size && !in_front_of )
         {
             int delta = storage->free_space / elem_size;
 
             delta = MIN( delta, delta_elems ) * elem_size;
             seq->block_max += delta;
-            storage->free_space = cvAlignLeft(((char*)storage->top + storage->block_size) -
-                                              seq->block_max, CV_STRUCT_ALIGN );
+            storage->free_space = cvAlignLeft((int)(((char*)storage->top + storage->block_size) -
+                                              seq->block_max), CV_STRUCT_ALIGN );
             EXIT;
         }
         else
         {
-            size_t delta = (size_t)elem_size * delta_elems + ICV_ALIGNED_SEQ_BLOCK_SIZE;
+            int delta = elem_size * delta_elems + ICV_ALIGNED_SEQ_BLOCK_SIZE;
 
             /* try to allocate <delta_elements> elements */
             if( storage->free_space < delta )
@@ -873,7 +876,7 @@ icvFreeSeqBlock( CvSeq *seq, int in_front_of )
 
     if( block == block->prev )  /* single block case */
     {
-        block->count = (seq->block_max - block->data) + block->start_index * seq->elem_size;
+        block->count = (int)(seq->block_max - block->data) + block->start_index * seq->elem_size;
         block->data = seq->block_max - block->count;
         seq->first = 0;
         seq->ptr = seq->block_max = 0;
@@ -886,7 +889,7 @@ icvFreeSeqBlock( CvSeq *seq, int in_front_of )
             block = block->prev;
             assert( seq->ptr == block->data );
 
-            block->count = seq->block_max - seq->ptr;
+            block->count = (int)(seq->block_max - seq->ptr);
             seq->block_max = seq->ptr = block->prev->data +
                 block->prev->count * seq->elem_size;
         }
@@ -991,7 +994,7 @@ cvFlushSeqWriter( CvSeqWriter * writer )
         CvSeqBlock *first_block = writer->seq->first;
         CvSeqBlock *block = first_block;
 
-        writer->block->count = (writer->ptr - writer->block->data) / seq->elem_size;
+        writer->block->count = (int)((writer->ptr - writer->block->data) / seq->elem_size);
         assert( writer->block->count > 0 );
 
         do
@@ -1035,7 +1038,7 @@ cvEndWriteSeq( CvSeqWriter * writer )
         if( (unsigned)((storage_block_max - storage->free_space)
             - seq->block_max) < CV_STRUCT_ALIGN )
         {
-            storage->free_space = cvAlignLeft(storage_block_max - seq->ptr, CV_STRUCT_ALIGN);
+            storage->free_space = cvAlignLeft((int)(storage_block_max - seq->ptr), CV_STRUCT_ALIGN);
             seq->block_max = seq->ptr;
         }
     }
@@ -1178,9 +1181,9 @@ cvGetSeqReaderPos( CvSeqReader* reader )
 
     elem_size = reader->seq->elem_size;
     if( elem_size <= ICV_SHIFT_TAB_MAX && (index = icvPower2ShiftTab[elem_size - 1]) >= 0 )
-        index = (reader->ptr - reader->block_min) >> index;
+        index = (int)((reader->ptr - reader->block_min) >> index);
     else
-        index = (reader->ptr - reader->block_min) / elem_size;
+        index = (int)((reader->ptr - reader->block_min) / elem_size);
 
     index += reader->block->start_index - reader->delta_index;
 
@@ -1264,7 +1267,7 @@ cvSetSeqReaderPos( CvSeqReader* reader, int index, int is_relative )
         {
             while( ptr + index >= reader->block_max )
             {
-                int delta = reader->block_max - ptr;
+                int delta = (int)(reader->block_max - ptr);
                 index -= delta;
                 reader->block = block = block->next;
                 reader->block_min = ptr = block->data;
@@ -1276,7 +1279,7 @@ cvSetSeqReaderPos( CvSeqReader* reader, int index, int is_relative )
         {
             while( ptr + index < reader->block_min )
             {
-                int delta = ptr - reader->block_min;
+                int delta = (int)(ptr - reader->block_min);
                 index += delta;
                 reader->block = block = block->prev;
                 reader->block_min = block->data;
@@ -1486,7 +1489,7 @@ cvSeqInsert( CvSeq *seq, int before_index, void *element )
             delta_index = seq->first->start_index;
             block = seq->first->prev;
             block->count++;
-            block_size = ptr - block->data;
+            block_size = (int)(ptr - block->data);
 
             while( before_index < block->start_index - delta_index )
             {
@@ -1604,7 +1607,7 @@ cvSeqRemove( CvSeq *seq, int index )
         front = index < total >> 1;
         if( !front )
         {
-            block_size = block->count * elem_size - (ptr - block->data);
+            block_size = block->count * elem_size - (int)(ptr - block->data);
 
             while( block != seq->first->prev )  /* while not the last block */
             {
@@ -1623,7 +1626,7 @@ cvSeqRemove( CvSeq *seq, int index )
         else
         {
             ptr += elem_size;
-            block_size = ptr - block->data;
+            block_size = (int)(ptr - block->data);
 
             while( block != seq->first )
             {
@@ -1671,7 +1674,7 @@ cvSeqPushMulti( CvSeq *seq, void *_elements, int count, int front )
     {
         while( count > 0 )
         {
-            int delta = (seq->block_max - seq->ptr) / elem_size;
+            int delta = (int)((seq->block_max - seq->ptr) / elem_size);
 
             delta = MIN( delta, count );
             if( delta > 0 )
@@ -1856,7 +1859,7 @@ cvSeqSlice( const CvSeq* seq, CvSlice slice, CvMemStorage* storage, int copy_dat
     {
         cvStartReadSeq( seq, &reader, 0 );
         cvSetSeqReaderPos( &reader, slice.start_index, 0 );
-        count = (reader.block_max - reader.ptr)/elem_size;
+        count = (int)((reader.block_max - reader.ptr)/elem_size);
 
         do
         {
@@ -2142,7 +2145,7 @@ CV_IMPL void
 cvSeqSort( CvSeq* seq, CvCmpFunc cmp_func, void* aux )
 {         
     int elem_size;
-    size_t isort_thresh = 7;
+    int isort_thresh = 7;
     CvSeqReader left, right;
     int sp = 0;
 
@@ -2183,11 +2186,11 @@ cvSeqSort( CvSeq* seq, CvCmpFunc cmp_func, void* aux )
 
         for(;;)
         {
-            size_t i, n, m;
+            int i, n, m;
             CvSeqReader ptr, ptr2;
 
             if( left.block == right.block )
-                n = right.ptr - left.ptr + elem_size;
+                n = (int)(right.ptr - left.ptr) + elem_size;
             else
             {
                 n = cvGetSeqReaderPos( &right );
@@ -3119,7 +3122,7 @@ cvGraphAddEdgeByPtr( CvGraph* graph,
     edge->next[1] = end_vtx->first;
     start_vtx->first = end_vtx->first = edge;
 
-    delta = (size_t)(graph->edges->elem_size - sizeof(*edge))/sizeof(int);
+    delta = (graph->edges->elem_size - sizeof(*edge))/sizeof(int);
     if( _edge )
     {
         if( delta > 0 )

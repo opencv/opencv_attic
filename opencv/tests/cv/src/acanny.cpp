@@ -87,7 +87,7 @@ static int fmaCanny( void* arg )
 
     }
 
-    if( (int)arg != data_type && (int)data_type != 2 ) return TRS_UNDEF;
+    if( (int)(size_t)arg != data_type && (int)data_type != 2 ) return TRS_UNDEF;
 
     roi.height = lImageHeight;
     roi.width  = lImageWidth;
@@ -105,7 +105,7 @@ static int fmaCanny( void* arg )
     trsWrite( ATS_CON, " %d connected components were found" , Components );
     /* Run CVL function to check it */
 
-    switch ( (int)arg )
+    switch ( (int)(size_t)arg )
     {
     case DEPTH_8U:
         {

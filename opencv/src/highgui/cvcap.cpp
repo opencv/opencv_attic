@@ -41,7 +41,7 @@
 
 #include "_highgui.h"
 
-#ifdef WIN32
+#if defined WIN32 || defined WIN64
 
 #include <vfw.h>
 #if _MSC_VER >= 1200
@@ -415,7 +415,7 @@ static int icvOpenCAM_VFW( CvCaptureCAM_VFW* capture, int wIndex )
         memset( &capture->caps, 0, sizeof(capture->caps));
         capDriverGetCaps( hWndC, &capture->caps, sizeof(&capture->caps));
         ::MoveWindow( hWndC, 0, 0, 320, 240, TRUE );
-        capSetUserData( hWndC, (long)capture );
+        capSetUserData( hWndC, (size_t)capture );
         capSetCallbackOnFrame( hWndC, FrameCallbackProc ); 
         CAPTUREPARMS p;
         capCaptureGetSetup(hWndC,&p,sizeof(CAPTUREPARMS));

@@ -371,7 +371,7 @@ bool  GrFmtPxMWriter::WriteImage( const uchar* data, int step,
                  '2' + (channels > 1 ? 1 : 0) + (isBinary ? 3 : 0),
                  width, height );
 
-        m_strm.PutBytes( buffer, strlen(buffer) );
+        m_strm.PutBytes( buffer, (int)strlen(buffer) );
 
         for( y = 0; y < height; y++, data += step )
         {
@@ -410,7 +410,7 @@ bool  GrFmtPxMWriter::WriteImage( const uchar* data, int step,
 
                 *ptr++ = '\n';
 
-                m_strm.PutBytes( buffer, ptr - buffer );
+                m_strm.PutBytes( buffer, (int)(ptr - buffer) );
             }
         }
         delete[] buffer;

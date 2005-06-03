@@ -42,7 +42,7 @@
 #ifndef __CXTS_INTERNAL_H__
 #define __CXTS_INTERNAL_H__
 
-#if defined WIN32 && (_MSC_VER >= 1200 || defined _ICL)
+#if (defined WIN32 || defined WIN64) && (_MSC_VER >= 1200 || defined _ICL)
 #pragma warning( disable: 4514 )
 #endif
 

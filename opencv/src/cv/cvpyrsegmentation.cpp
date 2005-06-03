@@ -1384,7 +1384,7 @@ static CvStatus icvUpdatePyrLinks_8u_C3
 static void
 icvExpandBaseLevelC1( _CvPyramid * base_p, _CvPyramid * p, _CvPyramidBase * start, int width )
 {
-    int x = (_CvPyramidBase *) base_p - start;
+    int x = (int)((_CvPyramidBase *) base_p - start);
     int y = x / width;
 
     x -= y * width;
@@ -1557,7 +1557,7 @@ static void
 icvExpandBaseLevelC3( _CvPyramidC3 * base_p, _CvPyramidC3 * p,
                       _CvPyramidBaseC3 * start, int width )
 {
-    int x = (_CvPyramidBaseC3 *) base_p - start;
+    int x = (int)((_CvPyramidBaseC3 *) base_p - start);
     int y = x / width;
 
     x -= y * width;

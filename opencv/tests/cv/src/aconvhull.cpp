@@ -189,7 +189,7 @@ static int fmaConvexHull(void* prm)
    
     int minx = 1000000, maxx = -10000;
     int miny = 1000000, maxy = -10000;
-    long lParam = (long)prm;
+    long lParam = (long)(size_t)prm;
     
     if(!read_param)
     {
@@ -267,7 +267,7 @@ static int fmaConvexHullContour(void* prm)
    
     int minx = 1000000, maxx = -10000;
     int miny = 1000000, maxy = -10000;
-    long lParam = (long)prm;
+    long lParam = (long)(size_t)prm;
 
     CvPoint* points;
     CvPoint** pointers;

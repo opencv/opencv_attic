@@ -274,7 +274,7 @@ icvUniformImgSegm(  CvImgObsInfo* obs_info, CvEHMM* hmm )
         //bad line (division )
         int superstate = (int)((i * hmm->num_states)*inv_y);/* /obs_info->obs_y; */
         
-        int index = hmm->u.ehmm[superstate].u.state - first_state;
+        int index = (int)(hmm->u.ehmm[superstate].u.state - first_state);
 
         for (j = 0; j < obs_info->obs_x; j++, counter++)
         {
@@ -917,7 +917,7 @@ icvEstimateTransProb( CvImgObsInfo** obs_info_array, int num_img, CvEHMM* hmm )
                 int begin_ind;
 
                 superstate = info->state[2 * counter];
-                begin_ind = hmm->u.ehmm[superstate].u.state - first_state;
+                begin_ind = (int)(hmm->u.ehmm[superstate].u.state - first_state);
                 state = info->state[ 2 * counter + 1] - begin_ind; 
                 
                 if (j < info->obs_y - 1)
@@ -1336,7 +1336,7 @@ static float CV_STDCALL icvEViterbi( CvImgObsInfo* obs_info, CvEHMM* hmm )
         for (j = 0; j < obs_info->obs_x; j++, counter++)
         {
             int superstate = super_q[i];
-            int state = hmm->u.ehmm[superstate].u.state - first_state;
+            int state = (int)(hmm->u.ehmm[superstate].u.state - first_state);
             
             obs_info->state[2 * counter] = superstate;
             obs_info->state[2 * counter + 1] = state + q[superstate][i][j];

@@ -279,7 +279,7 @@ uchar* FillUniColor( uchar* data, uchar*& line_end,
         if( end > line_end )
             end = line_end;
 
-        count3 -= end - data;
+        count3 -= (int)(end - data);
         
         for( ; data < end; data += 3 )
         {
@@ -311,7 +311,7 @@ uchar* FillUniGray( uchar* data, uchar*& line_end,
         if( end > line_end )
             end = line_end;
 
-        count -= end - data;
+        count -= (int)(end - data);
         
         for( ; data < end; data++ )
         {

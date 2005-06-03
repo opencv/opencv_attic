@@ -372,6 +372,15 @@ cvMatchTemplate( const CvArr* _img, const CvArr* _templ, CvArr* _result, int met
                                  templ->step ? templ->step : CV_STUB_STEP,
                                  templ_size, result->data.ptr,
                                  result->step ? result->step : CV_STUB_STEP ));
+            for( i = 0; i < result->rows; i++ )
+            {
+                float* rrow = (float*)(result->data.ptr + i*result->step);
+                for( j = 0; j < result->cols; j++ )
+                {
+                    if( fabs(rrow[j]) > 1. )
+                        rrow[j] = rrow[j] < 0 ? -1.f : 1.f;
+                }
+            }
             EXIT;
         }
     }

@@ -1292,8 +1292,13 @@ int CV_UndistortTest::prepare_test_case( int test_case_idx )
         k[1] = cvTsRandReal(rng)*0.06 - 0.03;
         if( k[0]*k[1] > 0 )
             k[1] = -k[1];
-        k[2] = cvTsRandReal(rng)*0.004 - 0.002;
-        k[3] = cvTsRandReal(rng)*0.004 - 0.002;
+        if( cvTsRandInt(rng)%4 != 0 )
+        {
+            k[2] = cvTsRandReal(rng)*0.004 - 0.002;
+            k[3] = cvTsRandReal(rng)*0.004 - 0.002;
+        }
+        else
+            k[2] = k[3] = 0;
     }
     else
     {

@@ -71,7 +71,7 @@ static int steps;
 static int foaCamShiftC1R( void* prm )
 {
     /* Some variables */
-    long       lParam  = (long)prm;
+    long       lParam  = (long)(size_t)prm;
     int        Flvr = (lParam >> 4) & 0xf;
     int        depth = (Flvr == ATS_8U ? IPL_DEPTH_8U : IPL_DEPTH_32F);
     int        Type = lParam & 0xf;

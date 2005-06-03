@@ -249,7 +249,7 @@ GrFmtReader* GrFmtFactoriesList::FindReader( const char* filename )
 
     if( f )
     {
-        sign_len = fread( signature, 1, sign_len, f );
+        sign_len = (int)fread( signature, 1, sign_len, f );
         fclose(f);
 
         pos = GetFirstFactoryPos();

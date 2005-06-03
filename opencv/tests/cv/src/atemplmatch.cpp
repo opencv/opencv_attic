@@ -365,8 +365,8 @@ static void cvTsMatchTemplate( const CvMat* img, const CvMat* templ, CvMat* resu
                     denom += a_sum2.val[1] - (a_sum.val[1]*a_sum.val[1])/area;
                     denom += a_sum2.val[2] - (a_sum.val[2]*a_sum.val[2])/area;
                 }
-                denom = sqrt(denom)*b_denom;
-                if( denom == 0 )
+                denom = sqrt(fabs(denom))*b_denom;
+                if( fabs(denom) < 1e-2 )
                     value = method > CV_TM_SQDIFF_NORMED ? -1 : 1;
                 else
                 {
