@@ -1154,7 +1154,7 @@ cvLoadHaarClassifierCascade( const char* directory, CvSize orig_window_size )
     if( !directory )
         CV_ERROR( CV_StsNullPtr, "Null path is passed" );
 
-    n = strlen(directory)-1;
+    n = (int)strlen(directory)-1;
     slash = directory[n] == '\\' || directory[n] == '/' ? "" : "/";
 
     /* try to read the classifier from directory */

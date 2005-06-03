@@ -183,7 +183,7 @@ cvGoodFeaturesToTrack( const void* image, void* eigImage, void* tempImage,
     /* select the strongest features */
     for( i = 0; i < k; i++ )
     {
-        int j = count, ofs = (uchar*)(ptr_data[i]) - eig->data.ptr;
+        int j = count, ofs = (int)((uchar*)(ptr_data[i]) - eig->data.ptr);
         y = ofs / eig->step;
         x = (ofs - y * eig->step)/sizeof(float);
 

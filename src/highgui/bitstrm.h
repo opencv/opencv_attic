@@ -75,16 +75,16 @@ public:
     
 protected:
     
+    jmp_buf m_jmp_buf;
     uchar*  m_start;
     uchar*  m_end;
     uchar*  m_current;
+    FILE*   m_file;
     int     m_unGetsize;
     int     m_block_size;
     int     m_block_pos;
-    FILE*   m_file;
-    bool    m_is_opened;
-    jmp_buf m_jmp_buf;
     bool    m_jmp_set;
+    bool    m_is_opened;
 
     virtual void  ReadBlock();
     virtual void  Release();

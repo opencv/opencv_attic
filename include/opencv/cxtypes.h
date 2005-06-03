@@ -48,14 +48,18 @@
   #include <string.h>
   #include <float.h>
   #ifndef __BORLANDC__
-  #include <math.h>
+    #include <math.h>
   #else
-  #include <fastmath.h>
+    #include <fastmath.h>
+  #endif
+
+  #if defined WIN64 && defined EM64T && defined _MSC_VER
+    #include <emmintrin.h>
   #endif
 
   #ifdef HAVE_IPL
       #ifndef __IPL_H__
-          #ifdef WIN32
+          #if defined WIN32 || defined WIN64
               #include <ipl.h>
           #else
               #include <ipl/ipl.h>
@@ -125,6 +129,14 @@ typedef unsigned char uchar;
 typedef unsigned short ushort;
 #endif
 
+#ifndef CV_SSE2
+  #if defined __SSE2__ || defined _MM_SHUFFLE2 || (defined WIN64 && defined EM64T && defined _MSC_VER)
+    #define CV_SSE2 1
+  #else
+    #define CV_SSE2 0
+  #endif
+#endif
+
 /* CvArr* is used to pass arbitrary array-like data structures
    into the functions where the particular
    array type is recognized at runtime */
@@ -161,10 +173,12 @@ typedef void CvArr;
 #define  CV_CMP(a,b)    (((a) > (b)) - ((a) < (b)))
 #define  CV_SIGN(a)     CV_CMP((a),0)
 
-
 CV_INLINE  int  cvRound( double value )
 {
-#if defined WIN32 && defined _MSC_VER
+#if CV_SSE2
+    __m128d t = _mm_load_sd( &value );
+    return _mm_cvtsd_si32(t);
+#elif defined WIN32 && !defined WIN64 && defined _MSC_VER
     int t;
     __asm
     {
@@ -187,23 +201,33 @@ CV_INLINE  int  cvRound( double value )
 
 CV_INLINE  int  cvFloor( double value )
 {
+#if CV_SSE2
+    __m128d t = _mm_load_sd( &value );
+    int i = _mm_cvtsd_si32(t);
+    return i - _mm_movemask_pd(_mm_cmplt_sd(t,_mm_cvtsi32_sd(t,i)));
+#else
     int temp = cvRound(value);
     float diff = (float)(value - temp);
-    
     return temp - (*(int*)&diff < 0);
+#endif
 }
 
 
 CV_INLINE  int  cvCeil( double value )
 {
+#if CV_SSE2
+    __m128d t = _mm_load_sd( &value );
+    int i = _mm_cvtsd_si32(t);
+    return i + _mm_movemask_pd(_mm_cmpgt_sd(t,_mm_cvtsi32_sd(t,i)));
+#else
     int temp = cvRound(value);
     float diff = (float)(temp - value);
-    
     return temp + (*(int*)&diff < 0);
+#endif
 }
 
 #define cvInvSqrt(value) ((float)(1./sqrt(value)))
-#define cvSqrt(value)  ((float)sqrt((value)))
+#define cvSqrt(value)  ((float)sqrt(value))
 
 CV_INLINE int cvIsNaN( double value )
 {
@@ -1051,12 +1075,12 @@ CvMemBlock;
 
 typedef struct CvMemStorage
 {
-    int     signature;
+    int signature;
     CvMemBlock* bottom;/* first allocated block */
     CvMemBlock* top;   /* current memory block - top of the stack */
     struct  CvMemStorage* parent; /* borrows new blocks from */
-    size_t  block_size;  /* block size */
-    size_t  free_space;  /* free space in the current block */
+    int block_size;  /* block size */
+    int free_space;  /* free space in the current block */
 }
 CvMemStorage;
 
@@ -1068,7 +1092,7 @@ CvMemStorage;
 typedef struct CvMemStoragePos
 {
     CvMemBlock* top;
-    size_t  free_space;
+    int free_space;
 }
 CvMemStoragePos;
 

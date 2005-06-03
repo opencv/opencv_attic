@@ -68,7 +68,8 @@
 #define CV_PROC_IA32_PII            (CV_PROC_IA32_GENERIC|(2 << CV_PROC_SHIFT))
 #define CV_PROC_IA32_PIII           (CV_PROC_IA32_GENERIC|(3 << CV_PROC_SHIFT))
 #define CV_PROC_IA32_P4             (CV_PROC_IA32_GENERIC|(4 << CV_PROC_SHIFT))
-#define CV_PROC_IA64_GENERIC        2
+#define CV_PROC_IA64_ITANIUM        2
+#define CV_PROC_IA64_EM64T          3
 #define CV_GET_PROC_ARCH(model)     ((model) & CV_PROC_ARCH_MASK)
 
 typedef struct CvProcessorInfo
@@ -78,7 +79,6 @@ typedef struct CvProcessorInfo
     double frequency; // clocks per microsecond
 }
 CvProcessorInfo;
-
 
 /*
    determine processor type
@@ -90,7 +90,18 @@ icvInitProcessorInfo( CvProcessorInfo* cpu_info )
     cpu_info->model = CV_PROC_GENERIC;
 
 #if defined WIN32 || defined WIN64
+
+#ifndef PROCESSOR_ARCHITECTURE_AMD64
+#define PROCESSOR_ARCHITECTURE_AMD64 9
+#endif
+
+#ifndef PROCESSOR_ARCHITECTURE_IA32_ON_WIN64
+#define PROCESSOR_ARCHITECTURE_IA32_ON_WIN64 10
+#endif
+
     SYSTEM_INFO sys;
+    LARGE_INTEGER freq;
+
     GetSystemInfo( &sys );
 
     if( sys.wProcessorArchitecture == PROCESSOR_ARCHITECTURE_INTEL &&
@@ -111,7 +122,9 @@ icvInitProcessorInfo( CvProcessorInfo* cpu_info )
             RegCloseKey( key );
         }
 
-#if defined WIN32 && defined _MSC_VER
+#ifdef WIN64
+        assert(0);
+#elif defined WIN32 && defined _MSC_VER
         __asm
         {
             /* use CPUID to determine the features supported */
@@ -167,11 +180,12 @@ icvInitProcessorInfo( CvProcessorInfo* cpu_info )
     }
     else
     {
-        LARGE_INTEGER freq;
-#ifdef WIN64
-        if( sys.wProcessorArchitecture == PROCESSOR_ARCHITECTURE_INTEL &&
-            sys.dwProcessorType == PROCESSOR_ARCHITECTURE_IA64 )
-            cpu_info->model = CV_PROC_IA64_GENERIC;
+#if defined EM64T
+        if( sys.wProcessorArchitecture == PROCESSOR_ARCHITECTURE_AMD64 )
+            cpu_info->model = CV_PROC_IA64_EM64T;
+#elif defined WIN64
+        if( sys.wProcessorArchitecture == PROCESSOR_ARCHITECTURE_IA64 )
+            cpu_info->model = CV_PROC_IA64_ITANIUM;
 #endif
         if( QueryPerformanceFrequency( &freq ) ) 
             cpu_info->frequency = (double)freq.QuadPart;
@@ -472,13 +486,13 @@ cvUseOptimized( int load_flag )
     CvModuleInfo* module;
     const CvProcessorInfo* cpu_info = icvGetProcessorInfo();
     int arch = CV_GET_PROC_ARCH(cpu_info->model);
-    const char* opencv_suffix = "096";
+    const char* opencv_suffix = "097";
     const char* ipp_suffix = arch == CV_PROC_IA32_GENERIC ? "20" :
-                             arch == CV_PROC_IA64_GENERIC ? "6420" : 0;
+                             arch == CV_PROC_IA64_ITANIUM ? "6420" : 0;
     const char* mkl_suffix = arch == CV_PROC_IA32_GENERIC ?
                 (cpu_info->model >= CV_PROC_IA32_P4 ? "p4" :
                  cpu_info->model >= CV_PROC_IA32_PIII ? "p3" : "def") :
-                 arch == CV_PROC_IA64_GENERIC ? "itp" : 0;
+                 arch == CV_PROC_IA64_ITANIUM ? "itp" : 0;
 
     for( i = 0; i < CV_PLUGIN_MAX; i++ )
         plugins[i].basename = 0;
@@ -507,7 +521,7 @@ cvUseOptimized( int load_flag )
             continue;
 
         if( load_flag && plugins[i].basename &&
-            (arch == CV_PROC_IA32_GENERIC || arch == CV_PROC_IA64_GENERIC) )
+            (arch == CV_PROC_IA32_GENERIC || arch == CV_PROC_IA64_ITANIUM) )
         {
             const char* suffix = i == CV_PLUGIN_OPTCV ? opencv_suffix :
                             i < CV_PLUGIN_MKL ? ipp_suffix : mkl_suffix;
@@ -640,7 +654,7 @@ CV_IMPL  int64  cvGetTickCount( void )
 
     if( CV_GET_PROC_ARCH(cpu_info->model) == CV_PROC_IA32_GENERIC )
     {
-#if defined WIN32 && defined _MSC_VER        
+#if defined WIN32 && !defined WIN64 && defined _MSC_VER        
         __asm _emit 0x0f;
         __asm _emit 0x31;
 #elif __GNUC__ > 2

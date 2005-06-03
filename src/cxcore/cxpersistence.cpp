@@ -314,8 +314,9 @@ icvFSDoResize( CvFileStorage* fs, char* ptr, int len )
 
     __BEGIN__;
     
-    int written_len = ptr - fs->buffer_start;
-    int new_size = MAX( written_len + len, (fs->buffer_end - fs->buffer_start)*3/2 );
+    int written_len = (int)(ptr - fs->buffer_start);
+    int new_size = (int)((fs->buffer_end - fs->buffer_start)*3/2);
+    new_size = MAX( written_len + len, new_size );
     CV_CALL( new_ptr = (char*)cvAlloc( new_size + 256 ));
     fs->buffer = new_ptr + (fs->buffer - fs->buffer_start);
     if( written_len > 0 )
@@ -808,7 +809,7 @@ icvYMLSkipSpaces( CvFileStorage* fs, char* ptr, int min_indent, int max_comment_
         }
         else if( *ptr == '\0' || *ptr == '\n' || *ptr == '\r' )
         {
-            int max_size = fs->buffer_end - fs->buffer_start;
+            int max_size = (int)(fs->buffer_end - fs->buffer_start);
             ptr = fgets( fs->buffer_start, max_size, fs->file );
             if( !ptr )
             {
@@ -821,7 +822,7 @@ icvYMLSkipSpaces( CvFileStorage* fs, char* ptr, int min_indent, int max_comment_
             }
             else
             {
-                int l = strlen(ptr);
+                int l = (int)strlen(ptr);
                 if( ptr[l-1] != '\n' && ptr[l-1] != '\r' && !feof(fs->file) )
                     CV_PARSE_ERROR( "Too long string or a last string w/o newline" );
             }
@@ -867,7 +868,7 @@ icvYMLParseKey( CvFileStorage* fs, char* ptr,
     if( endptr == ptr )
         CV_PARSE_ERROR( "An empty key" );
     
-    CV_CALL( str_hash_node = cvGetHashedKey( fs, ptr, endptr - ptr, 1 ));
+    CV_CALL( str_hash_node = cvGetHashedKey( fs, ptr, (int)(endptr - ptr), 1 ));
     CV_CALL( *value_placeholder = cvGetFileNode( fs, map_node, str_hash_node, 1 ));
     ptr = saveptr;
 
@@ -905,7 +906,7 @@ icvYMLParseValue( CvFileStorage* fs, char* ptr, CvFileNode* node,
         endptr = ptr++;
         do d = *++endptr;
         while( cv_isprint(d) && d != ' ' );
-        len = endptr - ptr;
+        len = (int)(endptr - ptr);
         if( len == 0 )
             CV_PARSE_ERROR( "Empty type name" );
         d = *endptr;
@@ -1133,7 +1134,7 @@ force_string:
                 do c = *--str_end;
                 while( str_end > ptr && c == ' ' );
                 str_end++;
-                CV_CALL( node->data.str = cvMemStorageAllocString( fs->memstorage, ptr, str_end - ptr ));
+                CV_CALL( node->data.str = cvMemStorageAllocString( fs->memstorage, ptr, (int)(str_end - ptr) ));
                 ptr = endptr;
                 EXIT;
             }
@@ -1145,7 +1146,7 @@ force_string:
         CV_CALL( icvFSCreateCollection( fs, struct_flags +
                     (node->info ? CV_NODE_USER : 0), node ));
         
-        indent = ptr - fs->buffer_start;
+        indent = (int)(ptr - fs->buffer_start);
         is_simple = 1;
 
         for(;;)
@@ -1300,7 +1301,7 @@ icvYMLWrite( CvFileStorage* fs, const char* key, const char* data, const char* c
 
     if( key )
     {
-        keylen = strlen(key);
+        keylen = (int)strlen(key);
         if( keylen == 0 )
             CV_ERROR( CV_StsBadArg, "The key is an empty" );
 
@@ -1309,7 +1310,7 @@ icvYMLWrite( CvFileStorage* fs, const char* key, const char* data, const char* c
     }
 
     if( data )
-        datalen = strlen(data);
+        datalen = (int)strlen(data);
 
     if( CV_NODE_IS_FLOW(struct_flags) )
     {
@@ -1317,7 +1318,7 @@ icvYMLWrite( CvFileStorage* fs, const char* key, const char* data, const char* c
         ptr = fs->buffer;
         if( !CV_NODE_IS_EMPTY(struct_flags) )
             *ptr++ = ',';
-        new_offset = (ptr - fs->buffer_start) + keylen + datalen;
+        new_offset = (int)(ptr - fs->buffer_start) + keylen + datalen;
         if( new_offset > fs->wrap_margin && new_offset - fs->struct_indent > 10 )
         {
             fs->buffer = ptr;
@@ -1530,7 +1531,7 @@ icvYMLWriteString( CvFileStorage* fs, const char* key,
     if( !str )
         CV_ERROR( CV_StsNullPtr, "Null string pointer" );
 
-    len = strlen(str);
+    len = (int)strlen(str);
     if( len > CV_FS_MAX_LEN )
         CV_ERROR( CV_StsBadArg, "The written string is too long" );
 
@@ -1598,7 +1599,7 @@ icvYMLWriteComment( CvFileStorage* fs, const char* comment, int eol_comment )
     if( !comment )
         CV_ERROR( CV_StsNullPtr, "Null comment" );
 
-    len = strlen(comment);
+    len = (int)strlen(comment);
     eol = strchr(comment, '\n');
     multiline = eol != 0;
     ptr = fs->buffer;
@@ -1615,7 +1616,7 @@ icvYMLWriteComment( CvFileStorage* fs, const char* comment, int eol_comment )
         *ptr++ = ' ';
         if( eol )
         {
-            ptr = icvFSResizeWriteBuffer( fs, ptr, eol - comment + 1 );
+            ptr = icvFSResizeWriteBuffer( fs, ptr, (int)(eol - comment) + 1 );
             memcpy( ptr, comment, eol - comment + 1 );
             fs->buffer = ptr + (eol - comment);
             comment = eol + 1;
@@ -1623,7 +1624,7 @@ icvYMLWriteComment( CvFileStorage* fs, const char* comment, int eol_comment )
         }
         else
         {
-            len = strlen(comment);
+            len = (int)strlen(comment);
             ptr = icvFSResizeWriteBuffer( fs, ptr, len );
             memcpy( ptr, comment, len );
             fs->buffer = ptr + len;
@@ -1700,7 +1701,7 @@ icvXMLSkipSpaces( CvFileStorage* fs, char* ptr, int mode )
         
         if( !cv_isprint(*ptr) )
         {
-            int max_size = fs->buffer_end - fs->buffer_start;
+            int max_size = (int)(fs->buffer_end - fs->buffer_start);
             if( *ptr != '\0' && *ptr != '\n' && *ptr != '\r' )
                 CV_PARSE_ERROR( "Invalid character in the stream" );
             ptr = fgets( fs->buffer_start, max_size, fs->file );
@@ -1713,7 +1714,7 @@ icvXMLSkipSpaces( CvFileStorage* fs, char* ptr, int mode )
             }
             else
             {
-                int l = strlen(ptr);
+                int l = (int)strlen(ptr);
                 if( ptr[l-1] != '\n' && ptr[l-1] != '\r' && !feof(fs->file) )
                     CV_PARSE_ERROR( "Too long string or a last string w/o newline" );
             }
@@ -1919,7 +1920,7 @@ icvXMLParseValue( CvFileStorage* fs, char* ptr, CvFileNode* node,
                                 while( isalnum(c) );
                                 if( c != ';' )
                                     CV_PARSE_ERROR( "Invalid character in the symbol entity name" );
-                                len = endptr - ptr;
+                                len = (int)(endptr - ptr);
                                 if( len == 2 && memcmp( ptr, "lt", 4 ) == 0 )
                                     c = '<';
                                 else if( len == 2 && memcmp( ptr, "gt", 4 ) == 0 )
@@ -2030,7 +2031,7 @@ icvXMLParseTag( CvFileStorage* fs, char* ptr, CvStringHashNode** _tag,
         do c = *++endptr;
         while( isalnum(c) || c == '_' || c == '-' );
 
-        CV_CALL( attrname = cvGetHashedKey( fs, ptr, endptr - ptr, 1 ));
+        CV_CALL( attrname = cvGetHashedKey( fs, ptr, (int)(endptr - ptr), 1 ));
         ptr = endptr;
 
         if( !tagname )
@@ -2226,7 +2227,7 @@ icvXMLWriteTag( CvFileStorage* fs, const char* key, int tag_type, CvAttrList lis
     else if( key[0] == '_' && key[1] == '\0' )
         CV_ERROR( CV_StsBadArg, "A single _ is a reserved tag name" );
 
-    len = strlen( key );
+    len = (int)strlen( key );
     *ptr++ = '<';
     if( tag_type == CV_XML_CLOSING_TAG )
     {
@@ -2254,8 +2255,8 @@ icvXMLWriteTag( CvFileStorage* fs, const char* key, int tag_type, CvAttrList lis
         
         for( ; attr && attr[0] != 0; attr += 2 )
         {
-            int len0 = strlen(attr[0]);
-            int len1 = strlen(attr[1]);
+            int len0 = (int)strlen(attr[0]);
+            int len1 = (int)strlen(attr[1]);
 
             ptr = icvFSResizeWriteBuffer( fs, ptr, len0 + len1 + 4 );
             *ptr++ = ' ';
@@ -2399,7 +2400,7 @@ icvXMLWriteScalar( CvFileStorage* fs, const char* key, const char* data, int len
     else
     {
         char* ptr = fs->buffer;
-        int new_offset = (ptr - fs->buffer_start) + len;
+        int new_offset = (int)(ptr - fs->buffer_start) + len;
 
         if( key )
             CV_ERROR( CV_StsBadArg, "elements with keys can not be written to sequence" );
@@ -2430,7 +2431,7 @@ icvXMLWriteInt( CvFileStorage* fs, const char* key, int value )
     __BEGIN__;
     
     char buf[128], *ptr = icv_itoa( value, buf, 10 );
-    int len = strlen(ptr);
+    int len = (int)strlen(ptr);
     icvXMLWriteScalar( fs, key, ptr, len );
     
     __END__;    
@@ -2445,7 +2446,7 @@ icvXMLWriteReal( CvFileStorage* fs, const char* key, double value )
     __BEGIN__;
     
     char buf[128];
-    int len = strlen( icvDoubleToString( buf, value ));
+    int len = (int)strlen( icvDoubleToString( buf, value ));
     icvXMLWriteScalar( fs, key, buf, len );
     
     __END__;    
@@ -2466,7 +2467,7 @@ icvXMLWriteString( CvFileStorage* fs, const char* key, const char* str, int quot
     if( !str )
         CV_ERROR( CV_StsNullPtr, "Null string pointer" );
 
-    len = strlen(str);
+    len = (int)strlen(str);
     if( len > CV_FS_MAX_LEN )
         CV_ERROR( CV_StsBadArg, "The written string is too long" );
 
@@ -2528,7 +2529,7 @@ icvXMLWriteString( CvFileStorage* fs, const char* key, const char* str, int quot
 
         if( need_quote )
             *data++ = '\"';
-        len = data - buf - !need_quote;
+        len = (int)(data - buf) - !need_quote;
         *data++ = '\0';
         data = buf + !need_quote;
     }
@@ -2557,7 +2558,7 @@ icvXMLWriteComment( CvFileStorage* fs, const char* comment, int eol_comment )
     if( strstr(comment, "--") != 0 )
         CV_ERROR( CV_StsBadArg, "Double hyphen \'--\' is not allowed in the comments" );
 
-    len = strlen(comment);
+    len = (int)strlen(comment);
     eol = strchr(comment, '\n');
     multiline = eol != 0;
     ptr = fs->buffer;
@@ -2588,7 +2589,7 @@ icvXMLWriteComment( CvFileStorage* fs, const char* comment, int eol_comment )
         {
             if( eol )
             {
-                ptr = icvFSResizeWriteBuffer( fs, ptr, eol - comment + 1 );
+                ptr = icvFSResizeWriteBuffer( fs, ptr, (int)(eol - comment) + 1 );
                 memcpy( ptr, comment, eol - comment + 1 );
                 ptr += eol - comment;
                 comment = eol + 1;
@@ -2596,7 +2597,7 @@ icvXMLWriteComment( CvFileStorage* fs, const char* comment, int eol_comment )
             }
             else
             {
-                len = strlen(comment);
+                len = (int)strlen(comment);
                 ptr = icvFSResizeWriteBuffer( fs, ptr, len );
                 memcpy( ptr, comment, len );
                 ptr += len;
@@ -2868,7 +2869,7 @@ icvDecodeFormat( const char* dt, int* fmt_pairs, int max_len )
 
     __BEGIN__;
 
-    int i = 0, k = 0, len = dt ? strlen(dt) : 0;
+    int i = 0, k = 0, len = dt ? (int)strlen(dt) : 0;
     
     if( !dt || !len )
         EXIT;
@@ -2888,7 +2889,7 @@ icvDecodeFormat( const char* dt, int* fmt_pairs, int max_len )
             {
                 char* endptr = 0;
                 count = (int)strtol( dt+k, &endptr, 10 );
-                k = endptr - dt - 1;
+                k = (int)(endptr - dt) - 1;
             }
 
             if( count <= 0 )
@@ -2903,7 +2904,7 @@ icvDecodeFormat( const char* dt, int* fmt_pairs, int max_len )
                 CV_ERROR( CV_StsBadArg, "Invalid data type specification" );
             if( fmt_pairs[i] == 0 )
                 fmt_pairs[i] = 1;
-            fmt_pairs[i+1] = pos - icvTypeSymbol;
+            fmt_pairs[i+1] = (int)(pos - icvTypeSymbol);
             if( i > 0 && fmt_pairs[i+1] == fmt_pairs[i-1] )
                 fmt_pairs[i-2] += fmt_pairs[i];
             else
@@ -3065,14 +3066,14 @@ cvWriteRawData( CvFileStorage* fs, const void* _data, int len, const char* dt )
 
                 if( fs->is_xml )
                 {
-                    int buf_len = strlen(ptr);
+                    int buf_len = (int)strlen(ptr);
                     CV_CALL( icvXMLWriteScalar( fs, 0, ptr, buf_len ));
                 }
                 else
                     CV_CALL( icvYMLWrite( fs, 0, ptr, cvFuncName ));
             }
 
-            offset = data - data0;
+            offset = (int)(data - data0);
         }
     }
 
@@ -3250,7 +3251,7 @@ cvReadRawDataSlice( const CvFileStorage* fs, CvSeqReader* reader,
                     goto end_loop;
             }
 
-            offset = data - data0;
+            offset = (int)(data - data0);
         }
     }
 
@@ -4791,7 +4792,7 @@ cvRegisterType( const CvTypeInfo* _info )
     if( !isalpha(c) && c != '_' )
         CV_ERROR( CV_StsBadArg, "Type name should start with a letter or _" );
 
-    len = strlen(_info->type_name);
+    len = (int)strlen(_info->type_name);
 
     for( i = 0; i < len; i++ )
     {

@@ -68,7 +68,7 @@ static int aContourMoments(void *arg)
 /*    CvPoint cp[] ={0,0, 5,5, 5,0, 0,5};*/
 /*    CvPoint cp[] ={5,0, 10,5, 5,10, 0,5};*/
 /*	CvPoint cp[] ={0,0, 5,5, 5,0, 10,5, 10,0, 15,5, 15,0};*/
-    int algr = (int) arg;
+    int algr = (int)(size_t)arg;
     int width = 128;
     int height = 128;
     int kp = 5;

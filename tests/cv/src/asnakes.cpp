@@ -83,7 +83,7 @@ static char* file_name[] =
 static int data_type = 0;
 static int fmaSnakes( void* arg )
 {
-    int lParam = (int)arg;
+    int lParam = (int)(size_t)arg;
     FILE* file;
     char abs_file_name[_MAX_PATH];
     char rel_path[_MAX_PATH];

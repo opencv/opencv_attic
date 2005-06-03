@@ -667,7 +667,7 @@ cvCreateSparseMat( int dims, const int* sizes, int type )
     arr->refcount = 0;
     memcpy( arr->size, sizes, dims*sizeof(sizes[0]));
 
-    arr->valoffset = (int)cvAlign(sizeof(void*) + sizeof(int), pix_size1 );
+    arr->valoffset = (int)cvAlign(sizeof(CvSparseNode), pix_size1);
     arr->idxoffset = (int)cvAlign(arr->valoffset + pix_size, sizeof(int));
     size = (int)cvAlign(arr->idxoffset + dims*sizeof(int), sizeof(CvSetElem));
 
@@ -1096,7 +1096,7 @@ cvSetData( CvArr* arr, void* data, int step )
             img->imageData = img->imageDataOrigin = (char*)data;
 
             if( (((int)(size_t)data | step) & 7) == 0 &&
-                cvAlign(img->width * pix_size, 8) == (size_t)step )
+                cvAlign(img->width * pix_size, 8) == step )
             {
                 img->align = 8;
             }

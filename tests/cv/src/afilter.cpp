@@ -995,12 +995,16 @@ void CV_SmoothBaseTest::get_test_array_types_and_sizes( int test_case_idx,
     int depth = test_case_idx*2/test_case_count;
     int cn = CV_MAT_CN(types[INPUT][0]);
     depth = depth == 0 ? CV_8U : CV_32F;
+    //depth = CV_32F;
+    //sizes[INPUT][0] = sizes[OUTPUT][0] = sizes[REF_OUTPUT][0] = cvSize(22,8);
     types[INPUT][0] = types[TEMP][0] =
         types[OUTPUT][0] = types[REF_OUTPUT][0] = CV_MAKETYPE(depth,cn);
     anchor.x = cvTsRandInt(rng)%(max_aperture_size/2+1);
     anchor.y = cvTsRandInt(rng)%(max_aperture_size/2+1);
     aperture_size.width = anchor.x*2 + 1;
     aperture_size.height = anchor.y*2 + 1;
+    //aperture_size = cvSize(9,9);
+    //anchor = cvPoint(aperture_size.width/2, aperture_size.height/2);
     sizes[INPUT][1] = aperture_size;
     sizes[TEMP][0].width = sizes[INPUT][0].width + aperture_size.width - 1;
     sizes[TEMP][0].height = sizes[INPUT][0].height + aperture_size.height - 1;

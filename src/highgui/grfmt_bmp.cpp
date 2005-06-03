@@ -292,7 +292,7 @@ bool  GrFmtBmpReader::ReadData( uchar* data, int step, int color )
                     }
                     else
                     {
-                        int x_shift3 = line_end - data;
+                        int x_shift3 = (int)(line_end - data);
                         int y_shift = m_height - y;
 
                         if( code == 2 )
@@ -383,7 +383,7 @@ decode_rle4_bad: ;
                     }
                     else
                     {
-                        int x_shift3 = line_end - data;
+                        int x_shift3 = (int)(line_end - data);
                         int y_shift = m_height - y;
                         
                         if( code || !line_end_flag || x_shift3 < width3 )
@@ -507,7 +507,7 @@ bool  GrFmtBmpWriter::WriteImage( const uchar* data, int step,
         PaletteEntry palette[256];
         
         // write signature 'BM'
-        m_strm.PutBytes( fmtSignBmp, strlen(fmtSignBmp) );
+        m_strm.PutBytes( fmtSignBmp, (int)strlen(fmtSignBmp) );
 
         // write file header
         m_strm.PutDWord( fileStep*height + headerSize ); // file size

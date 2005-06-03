@@ -41,17 +41,42 @@
 
 #include "_highgui.h"
 
-#ifdef WIN32
+#if defined WIN32 || defined WIN64
 
 #if _MSC_VER >= 1200
 #pragma warning( disable: 4710 )
 #endif
 
-#include "commctrl.h"
+#include <commctrl.h>
+#include <winuser.h>
 #include <stdlib.h>
 #include <string.h>
 #include <stdio.h>
 #include <assert.h>
+
+#if defined WIN64 || defined EM64T
+
+#define icvGetWindowLongPtr GetWindowLongPtr
+#define icvSetWindowLongPtr SetWindowLongPtr
+#define icvGetClassLongPtr  GetClassLongPtr
+
+#define CV_USERDATA GWLP_USERDATA
+#define CV_WNDPROC GWLP_WNDPROC
+#define CV_HCURSOR GCLP_HCURSOR
+#define CV_HBRBACKGROUND GCLP_HBRBACKGROUND
+
+#else
+
+#define icvGetWindowLongPtr GetWindowLong
+#define icvSetWindowLongPtr( hwnd, id, ptr ) SetWindowLong( hwnd, id, (size_t)ptr )
+#define icvGetClassLongPtr GetClassLong
+
+#define CV_USERDATA GWL_USERDATA
+#define CV_WNDPROC GWL_WNDPROC
+#define CV_HCURSOR GCL_HCURSOR
+#define CV_HBRBACKGROUND GCL_HBRBACKGROUND
+
+#endif
 
 void  FillBitmapInfo( BITMAPINFO* bmi, int width, int height, int bpp, int origin )
 {
@@ -209,7 +234,7 @@ static CvWindow* icvFindWindowByName( const char* name )
 
 static CvWindow* icvWindowByHWND( HWND hwnd )
 {
-    CvWindow* window = (CvWindow*)GetWindowLong( hwnd, GWL_USERDATA );
+    CvWindow* window = (CvWindow*)icvGetWindowLongPtr( hwnd, CV_USERDATA );
     return window != 0 && hg_windows != 0 &&
            window->signature == CV_WINDOW_MAGIC_VAL ? window : 0;
 }
@@ -217,7 +242,7 @@ static CvWindow* icvWindowByHWND( HWND hwnd )
 
 static CvTrackbar* icvTrackbarByHWND( HWND hwnd )
 {
-    CvTrackbar* trackbar = (CvTrackbar*)GetWindowLong( hwnd, GWL_USERDATA );
+    CvTrackbar* trackbar = (CvTrackbar*)icvGetWindowLongPtr( hwnd, CV_USERDATA );
     return trackbar != 0 && trackbar->signature == CV_TRACKBAR_MAGIC_VAL &&
            trackbar->hwnd == hwnd ? trackbar : 0;
 }
@@ -365,7 +390,7 @@ CV_IMPL int cvNamedWindow( const char* name, int flags )
 
     ShowWindow(hWnd, SW_SHOW);
 
-    len = strlen(name);
+    len = (int)strlen(name);
     CV_CALL( window = (CvWindow*)cvAlloc(sizeof(CvWindow) + len + 1));
 
     window->signature = CV_WINDOW_MAGIC_VAL;
@@ -388,8 +413,8 @@ CV_IMPL int cvNamedWindow( const char* name, int flags )
     if( hg_windows )
         hg_windows->prev = window;
     hg_windows = window;
-    SetWindowLong( hWnd, GWL_USERDATA, (long)window );
-    SetWindowLong( mainhWnd, GWL_USERDATA, (long)window );
+    icvSetWindowLongPtr( hWnd, CV_USERDATA, (LONG_PTR)window );
+    icvSetWindowLongPtr( mainhWnd, CV_USERDATA, (LONG_PTR)window );
 
     // Recalculate window position
     icvUpdateWindowPos( window );
@@ -409,8 +434,8 @@ static void icvRemoveWindow( CvWindow* window )
     GetWindowRect( window->frame, &wrect );
     icvSaveWindowPos( window->name, cvPoint(wrect.left, wrect.top) );
 
-    SetWindowLong( window->hwnd, GWL_USERDATA, (long)0 );
-    SetWindowLong( window->frame, GWL_USERDATA, (long)0 );
+    icvSetWindowLongPtr( window->hwnd, CV_USERDATA, (LONG_PTR)0 );
+    icvSetWindowLongPtr( window->frame, CV_USERDATA, (LONG_PTR)0 );
 
     if( window->prev )
         window->prev->next = window->next;
@@ -431,7 +456,7 @@ static void icvRemoveWindow( CvWindow* window )
     for( trackbar = window->toolbar.first; trackbar != 0; )
     {
         CvTrackbar* next = trackbar->next;
-        SetWindowLong( trackbar->hwnd, GWL_USERDATA, (long)0 );
+        icvSetWindowLongPtr( trackbar->hwnd, CV_USERDATA, (LONG_PTR)0 );
         cvFree( (void**)&trackbar );
         trackbar = next;
     }
@@ -763,7 +788,7 @@ MainWindowProc( HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam )
             ret = CombineRgn(rgn, rgn, rgn2, RGN_DIFF);
 
             if(ret != NULLREGION && ret != ERROR)
-                FillRgn(hdc, rgn, (HBRUSH)GetClassLong(hwnd, GCL_HBRBACKGROUND));
+                FillRgn(hdc, rgn, (HBRUSH)icvGetClassLongPtr(hwnd, CV_HBRBACKGROUND));
         }
         return 1;
     }
@@ -904,7 +929,7 @@ static LRESULT CALLBACK HighGUIProc( HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM
         break;
 
     case WM_SETCURSOR:
-        SetCursor((HCURSOR)GetClassLong(hwnd, GCL_HCURSOR));
+        SetCursor((HCURSOR)icvGetClassLongPtr(hwnd, CV_HCURSOR));
         return 0;
 
     case WM_KEYDOWN:
@@ -918,13 +943,13 @@ static LRESULT CALLBACK HighGUIProc( HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM
 
 static LRESULT CALLBACK WindowProc( HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam )
 {
-    int ret;
+    LRESULT ret;
 
     if( hg_on_preprocess )
     {
         int was_processed = 0;
         int ret = hg_on_preprocess(hwnd, uMsg, wParam, lParam, &was_processed);
-        if(was_processed)
+        if( was_processed )
             return ret;
     }
 	ret = HighGUIProc(hwnd, uMsg, wParam, lParam);
@@ -933,7 +958,7 @@ static LRESULT CALLBACK WindowProc( HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM 
     {
         int was_processed = 0;
         int ret = hg_on_postprocess(hwnd, uMsg, wParam, lParam, &was_processed);
-        if(was_processed)
+        if( was_processed )
             return ret;
     }
 
@@ -957,7 +982,7 @@ static void icvUpdateTrackbar( CvTrackbar* trackbar, int pos )
         if( trackbar->notify )
             trackbar->notify(pos);
 
-        name_len = strlen(trackbar->name);
+        name_len = (int)strlen(trackbar->name);
 
         if( name_len > max_name_len )
         {
@@ -991,7 +1016,7 @@ static LRESULT CALLBACK HGToolbarProc( HWND hwnd, UINT uMsg, WPARAM wParam, LPAR
     case WM_HSCROLL:
         {
             HWND slider = (HWND)lParam;
-            int pos = SendMessage(slider, TBM_GETPOS, 0, 0);
+            int pos = (int)SendMessage(slider, TBM_GETPOS, 0, 0);
             CvTrackbar* trackbar = icvTrackbarByHWND( slider );
 
             if( trackbar )
@@ -1007,7 +1032,7 @@ static LRESULT CALLBACK HGToolbarProc( HWND hwnd, UINT uMsg, WPARAM wParam, LPAR
     case WM_NCCALCSIZE:
         {
             LRESULT ret = CallWindowProc(window->toolbar.toolBarProc, hwnd, uMsg, wParam, lParam);
-            int rows = SendMessage(hwnd, TB_GETROWS, 0, 0);
+            int rows = (int)SendMessage(hwnd, TB_GETROWS, 0, 0);
 
             if(window->toolbar.rows != rows)
             {
@@ -1165,7 +1190,7 @@ cvCreateTrackbar( const char* trackbar_name, const char* window_name,
         ButtonInfo tbis;
         RECT rect;
         int bcount;
-        int len = strlen( trackbar_name );
+        int len = (int)strlen( trackbar_name );
 
         // create toolbar if it is not created yet
         if( !window->toolbar.toolbar )
@@ -1185,17 +1210,17 @@ cvCreateTrackbar( const char* trackbar_name, const char* window_name,
             window->toolbar.pos = 0;
             window->toolbar.rows = 0;
             window->toolbar.toolBarProc =
-                (WNDPROC)GetWindowLong(window->toolbar.toolbar, GWL_WNDPROC);
+                (WNDPROC)icvGetWindowLongPtr(window->toolbar.toolbar, CV_WNDPROC);
 
             icvUpdateWindowPos(window);
 
             // Subclassing from toolbar
-            SetWindowLong(window->toolbar.toolbar, GWL_WNDPROC, (LONG)HGToolbarProc);
-            SetWindowLong(window->toolbar.toolbar, GWL_USERDATA, (LONG)window);
+            icvSetWindowLongPtr(window->toolbar.toolbar, CV_WNDPROC, (LONG_PTR)HGToolbarProc);
+            icvSetWindowLongPtr(window->toolbar.toolbar, CV_USERDATA, (LONG_PTR)window);
         }
 
         /* Retrieve current buttons count */
-        bcount = SendMessage(window->toolbar.toolbar, TB_BUTTONCOUNT, 0, 0);
+        bcount = (int)SendMessage(window->toolbar.toolbar, TB_BUTTONCOUNT, 0, 0);
 
         if(bcount > 1)
         {
@@ -1209,7 +1234,7 @@ cvCreateTrackbar( const char* trackbar_name, const char* window_name,
             SendMessage(window->toolbar.toolbar, TB_ADDBUTTONS, 1, (LPARAM)&tbs);
 
             // Retrieve current buttons count
-            bcount = SendMessage(window->toolbar.toolbar, TB_BUTTONCOUNT, 0, 0);
+            bcount = (int)SendMessage(window->toolbar.toolbar, TB_BUTTONCOUNT, 0, 0);
         }
 
         /* Add a button which we're going to cover with the slider */
@@ -1254,7 +1279,7 @@ cvCreateTrackbar( const char* trackbar_name, const char* window_name,
                             rect.left + HG_BUDDY_WIDTH, rect.top,
                             rect.right - rect.left - HG_BUDDY_WIDTH,
                             rect.bottom - rect.top, window->toolbar.toolbar,
-                            (HMENU)bcount, hg_hinstance, 0);
+                            (HMENU)(size_t)bcount, hg_hinstance, 0);
 
         sprintf(slider_name,"Buddy%p", val);
         trackbar->buddy = CreateWindowEx(0, "STATIC", slider_name,
@@ -1263,7 +1288,7 @@ cvCreateTrackbar( const char* trackbar_name, const char* window_name,
                             HG_BUDDY_WIDTH, rect.bottom - rect.top,
                             window->toolbar.toolbar, 0, hg_hinstance, 0);
 
-        SetWindowLong( trackbar->hwnd, GWL_USERDATA, (LONG)trackbar );
+        icvSetWindowLongPtr( trackbar->hwnd, CV_USERDATA, (LONG_PTR)trackbar );
 
         /* Minimize the number of rows */
         SendMessage( window->toolbar.toolbar, TB_SETROWS,

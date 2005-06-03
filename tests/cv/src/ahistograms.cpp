@@ -45,7 +45,7 @@
 
 static int foaHistGetQueryValue(void* _type)
 {
-    CvHistType type = (CvHistType)(int)_type;
+    CvHistType type = (CvHistType)(size_t)_type;
     static int c_dimss;
     static int dims;
     static int init = 0;
@@ -132,7 +132,7 @@ static int foaHistGetQueryValue(void* _type)
 
 static int foaHistMinMaxValue(void* _type)
 {
-    CvHistType type = (CvHistType)(int)_type;
+    CvHistType type = (CvHistType)(size_t)_type;
     static int c_dimss;
     static int dims;
     static int init = 0;
@@ -231,7 +231,7 @@ static int foaHistMinMaxValue(void* _type)
 
 static int foaNormalizeHist(void* _type)
 {
-    CvHistType type = (CvHistType)(int)_type;
+    CvHistType type = (CvHistType)(size_t)_type;
     static int c_dimss;
     static int dims;
     static int init = 0;
@@ -305,7 +305,7 @@ static int foaNormalizeHist(void* _type)
 
 static int foaThreshHist(void* _type)
 {
-    CvHistType type = (CvHistType)(int)_type;
+    CvHistType type = (CvHistType)(size_t)_type;
     static int c_dimss;
     static int dims;
     static int init = 0;
@@ -392,7 +392,7 @@ static int icvGetHistSize( const CvHistogram* hist )
 
 static int foaHistCompare(void* _type)
 {
-    CvHistType type = (CvHistType)(int)_type;
+    CvHistType type = (CvHistType)(size_t)_type;
     static int c_dimss;
     static int dims;
     static int init = 0;
@@ -495,7 +495,7 @@ static int foaHistCompare(void* _type)
 
 static int foaCopyHist(void* _type)
 {
-    CvHistType type = (CvHistType)(int)_type;
+    CvHistType type = (CvHistType)(size_t)_type;
     static int c_dimss;
     static int dims;
     static int init = 0;
@@ -554,7 +554,7 @@ static int foaCopyHist(void* _type)
 
 static int foaCalcHist(void* _type)
 {
-    CvHistType type = (CvHistType)(int)_type;
+    CvHistType type = (CvHistType)(size_t)_type;
     static int c_dimss;
     static int dims;
     static int init = 0;
@@ -722,7 +722,7 @@ static int foaCalcHist(void* _type)
 
 static int foaCalcHistMask(void* _type)
 {
-    CvHistType type = (CvHistType)(int)_type;
+    CvHistType type = (CvHistType)(size_t)_type;
     static int c_dimss;
     static int dims;
     static int init = 0;
@@ -901,7 +901,7 @@ static int foaCalcHistMask(void* _type)
 
 static int foaBackProject(void* _type)
 {
-    CvHistType type = (CvHistType)(int)_type;
+    CvHistType type = (CvHistType)(size_t)_type;
     static int c_dimss;
     static int dims;
     static int init = 0;
@@ -1200,7 +1200,7 @@ static int myBackProjectPatch(IplImage** src8u, IplImage** src32f,
 
 static int foaBackProjectPatch(void* _type)
 {
-    CvHistType type = (CvHistType)(int)_type;
+    CvHistType type = (CvHistType)(size_t)_type;
     static int c_dimss;
     static int dims;
     static int init = 0;
@@ -1327,7 +1327,7 @@ static int foaBayesianProb(void* _type)
 {
     int errors = 0;
 
-    CvHistType type = (CvHistType)(int)_type;
+    CvHistType type = (CvHistType)(size_t)_type;
     static int c_dimss;
     static int dims;
     static int init = 0;

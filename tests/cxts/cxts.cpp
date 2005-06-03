@@ -44,7 +44,7 @@
 #include <stdarg.h>
 #include <fcntl.h>
 #include <time.h>
-#ifdef WIN32
+#if defined WIN32 || defined WIN64
 #include <io.h>
 #else
 #include <unistd.h>
@@ -65,7 +65,7 @@ int CvTest::test_count = 0;
 #define CV_TS_GREEN  2
 #define CV_TS_RED    4
 
-#ifdef WIN32
+#if defined WIN32 || defined WIN64
 #include <windows.h>
 
 #ifdef _MSC_VER
@@ -254,7 +254,7 @@ CvTestMemoryManager::CvTestMemoryManager( CvTS* _test_system )
 {
     ts = _test_system;
     guard_pattern = "THIS IS A GUARD PATTERN!";
-    guard_size = strlen(guard_pattern);
+    guard_size = (int)strlen(guard_pattern);
     block_align = CV_MALLOC_ALIGN;
     track_blocks = 0;
     marks_top = 0;
@@ -286,11 +286,11 @@ void CvTestMemoryManager::clear_and_check( int min_index )
         CvTestAllocBlock* prev = block->prev;
         if( block->index < min_index )
             break;
-        leak_size += block->size;
+        leak_size += (int)block->size;
         leak_block_count++;
         alloc_index = block->index;
         mem_addr = block->data;
-        mem_size = block->size;
+        mem_size = (int)block->size;
         free_block( block );
         block = prev;
     }
@@ -912,7 +912,7 @@ void CvTest::print_time( int /*test_case_idx*/, double /*time_usecs*/ )
 
 int CvTest::update_progress( int progress, int test_case_idx, int count, double dt )
 {
-    int width = 60 - strlen(get_name());
+    int width = 60 - (int)strlen(get_name());
     if( count > 0 )
     {
         int t = cvRound( ((double)test_case_idx * width)/count );
@@ -1055,7 +1055,7 @@ const char* CvTS::str_from_code( int code )
 
 void CvTS::make_output_stream_base_name( const char* config_name )
 {
-    int k, len = strlen( config_name );
+    int k, len = (int)strlen( config_name );
 
     if( ostrm_base_name )
         free( ostrm_base_name );
@@ -1119,7 +1119,7 @@ int CvTS::find_written_param( CvTest* test, const char* paramname, int valtype, 
     const char* testname = test->get_name();
     bool add_to_list = test->get_func_list()[0] == '\0';
     char buffer[256];
-    int paramname_len = strlen(paramname);
+    int paramname_len = (int)strlen(paramname);
     int paramval_len = valtype == CV_NODE_INT ? sizeof(int) :
         valtype == CV_NODE_REAL ? sizeof(double) : -1;
     const char* name = CvTest::get_parent_name( testname, buffer );
@@ -1135,7 +1135,7 @@ int CvTS::find_written_param( CvTest* test, const char* paramname, int valtype, 
 
     while( name )
     {
-        int i, len = strlen(buffer);
+        int i, len = (int)strlen(buffer);
         buffer[len] = '.';
         memcpy( buffer + len + 1, paramname, paramname_len + 1 );
         for( i = 0; i < written_params->size(); i++ )
@@ -1157,10 +1157,10 @@ int CvTS::find_written_param( CvTest* test, const char* paramname, int valtype, 
 
     if( add_to_list )
     {
-        int bufsize, fullname_len = strlen(testname) + paramname_len + 2;
+        int bufsize, fullname_len = (int)strlen(testname) + paramname_len + 2;
         CvTsParamVal* param;
         if( paramval_len < 0 )
-            paramval_len = strlen((const char*)val) + 1;
+            paramval_len = (int)strlen((const char*)val) + 1;
         bufsize = sizeof(*param) + fullname_len + paramval_len;
         param = (CvTsParamVal*)malloc(bufsize);
         param->fullname = (const char*)(param + 1);
@@ -1631,10 +1631,10 @@ static char* cv_strnstr( const char* str, int len,
         return (char*)strstr( str, pattern );
 
     if( len < 0 )
-        len = strlen( str );
+        len = (int)strlen( str );
 
     if( pattern_len < 0 )
-        pattern_len = strlen( pattern );
+        pattern_len = (int)strlen( pattern );
 
     for( i = 0; i < len - pattern_len + 1; i++ )
     {
@@ -1674,16 +1674,16 @@ int CvTS::filter( CvTest* test )
             ptr = (char*)strchr( pattern, '*' );
             if( ptr )
             {
-                len = ptr - pattern;
+                len = (int)(ptr - pattern);
                 have_wildcard = 1;
             }
             else
             {
-                len = strlen( pattern );
+                len = (int)strlen( pattern );
                 have_wildcard = 0;
             }
 
-            t_name_len = strlen( test->get_name() );
+            t_name_len = (int)strlen( test->get_name() );
             found = (t_name_len == len || have_wildcard && t_name_len > len) &&
                     (len == 0 || memcmp( test->get_name(), pattern, len ) == 0);
             if( endptr )
@@ -1703,7 +1703,7 @@ int CvTS::filter( CvTest* test )
     else
     {
         assert( params.test_filter_mode == CHOOSE_FUNCTIONS );
-        int glob_len = strlen( pattern );
+        int glob_len = (int)strlen( pattern );
         const char* ptr = test->get_func_list();
         const char *tmp_ptr;
 
@@ -1731,7 +1731,7 @@ int CvTS::filter( CvTest* test )
             {
                 assert( endptr[1] == ':' );
                 endptr = endptr + 2;
-                name_len = endptr - name_ptr;
+                name_len = (int)(endptr - name_ptr);
 
                 // find the first occurence of the class name
                 // in pattern
@@ -1773,7 +1773,7 @@ int CvTS::filter( CvTest* test )
                         do c = *++endptr;
                         while( isalnum(c) || c == '_' );
                     
-                        method_name_len = endptr - method_name_ptr;
+                        method_name_len = (int)(endptr - method_name_ptr);
                     
                         // search for class_name::* or
                         // class_name::{...method_name...}
@@ -1788,12 +1788,12 @@ int CvTS::filter( CvTest* test )
                             tmp_ptr2 = strchr( tmp_ptr, '}' );
                             assert( tmp_ptr2 );
 
-                            if( cv_strnstr( tmp_ptr, tmp_ptr2 - tmp_ptr + 1,
+                            if( cv_strnstr( tmp_ptr, (int)(tmp_ptr2 - tmp_ptr) + 1,
                                              method_name_ptr, method_name_len, 1 ))
                                 return 1;
 
                             tmp_ptr = cv_strnstr( tmp_ptr2, glob_len -
-                                                   (tmp_ptr2 - pattern),
+                                                   (int)(tmp_ptr2 - pattern),
                                                    name_ptr, name_len, 1 );
                         }
                         while( tmp_ptr );
@@ -1810,7 +1810,7 @@ int CvTS::filter( CvTest* test )
             else
             {
                 assert( !c || isspace(c) || c == ',' );
-                name_len = endptr - name_ptr;
+                name_len = (int)(endptr - name_ptr);
                 tmp_ptr = pattern;
 
                 for(;;)
@@ -1818,7 +1818,7 @@ int CvTS::filter( CvTest* test )
                     const char *tmp_ptr2, *tmp_ptr3;
 
                     tmp_ptr = cv_strnstr( tmp_ptr, glob_len -
-                        (tmp_ptr - pattern), name_ptr, name_len, 1 );
+                        (int)(tmp_ptr - pattern), name_ptr, name_len, 1 );
 
                     if( !tmp_ptr )
                         break;

@@ -47,6 +47,8 @@
 #ifndef _CXCORE_MISC_H_
 #define _CXCORE_MISC_H_
 
+#include <limits.h>
+
 /****************************************************************************************\
 *                              Compile-time tuning parameters                            *
 \****************************************************************************************/
@@ -75,7 +77,7 @@
 #define  CV_MALLOC_ALIGN    32
 
 /* default alignment for dynamic data strucutures, resided in storages. */
-#define  CV_STRUCT_ALIGN    sizeof(double)
+#define  CV_STRUCT_ALIGN    ((int)sizeof(double))
 
 /* default storage block size */
 #define  CV_STORAGE_BLOCK_SIZE   ((1<<16) - 128)
@@ -127,7 +129,7 @@
 
 #define CV_IMPL CV_EXTERN_C
 
-#if _MSC_VER >= 1200 || defined __ICL
+#if defined WIN32 && !defined WIN64 && (_MSC_VER >= 1200 || defined __ICL)
     #define CV_DBG_BREAK() __asm int 3
 #else
     #define CV_DBG_BREAK() assert(0);
@@ -222,10 +224,10 @@ CV_INLINE void* cvAlignPtr( const void* ptr, int align=32 )
     return (void*)( ((size_t)ptr + align - 1) & ~(size_t)(align-1) );
 }
 
-CV_INLINE size_t cvAlign( size_t size, int align )
+CV_INLINE int cvAlign( int size, int align )
 {
-    assert( (align & (align-1)) == 0 );
-    return (size + align - 1) & ~(size_t)(align-1);
+    assert( (align & (align-1)) == 0 && size < INT_MAX );
+    return (size + align - 1) & -align;
 }
 
 CV_INLINE  CvSize  cvGetMatSize( const CvMat* mat )
@@ -404,7 +406,7 @@ CV_INLINE CvFastDiv cvFastDiv( int divisor )
 #define CV_IMPLEMENT_QSORT_EX( func_name, T, LT, user_data_type )                   \
 void func_name( T *array, size_t total, user_data_type aux )                        \
 {                                                                                   \
-    long isort_thresh = 7;                                                          \
+    int isort_thresh = 7;                                                           \
     T t;                                                                            \
     int sp = 0;                                                                     \
                                                                                     \
@@ -430,7 +432,7 @@ void func_name( T *array, size_t total, user_data_type aux )                    
                                                                                     \
         for(;;)                                                                     \
         {                                                                           \
-            long i, n = right - left + 1, m;                                        \
+            int i, n = (int)(right - left) + 1, m;                                  \
             T* ptr;                                                                 \
             T* ptr2;                                                                \
                                                                                     \
@@ -527,15 +529,15 @@ void func_name( T *array, size_t total, user_data_type aux )                    
                     goto insert_sort;                                               \
                 }                                                                   \
                                                                                     \
-                n = MIN( left1 - left0, left - left1 );                             \
+                n = MIN( (int)(left1 - left0), (int)(left - left1) );               \
                 for( i = 0; i < n; i++ )                                            \
                     CV_SWAP( left0[i], left[i-n], t );                              \
                                                                                     \
-                n = MIN( right0 - right1, right1 - right );                         \
+                n = MIN( (int)(right0 - right1), (int)(right1 - right) );           \
                 for( i = 0; i < n; i++ )                                            \
                     CV_SWAP( left[i], right0[i-n+1], t );                           \
-                n = left - left1;                                                   \
-                m = right1 - right;                                                 \
+                n = (int)(left - left1);                                            \
+                m = (int)(right1 - right);                                          \
                 if( n > 1 )                                                         \
                 {                                                                   \
                     if( m > 1 )                                                     \

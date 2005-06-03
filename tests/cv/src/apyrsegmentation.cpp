@@ -64,7 +64,7 @@ static int aPyrSegmentation(void* agr)
 
 /*    ippiPoint cp3[] ={130,130, 150,130, 150,150, 130,150};  */
 /*	CvPoint cp[] ={0,0, 5,5, 5,0, 10,5, 10,0, 15,5, 15,0};  */
-    int chanels = (int)agr;    /* number of the color chanels  */
+    int chanels = (int)(size_t)agr;    /* number of the color chanels  */
     int width = 128;
     int height = 128;
     int nPoints = 4;

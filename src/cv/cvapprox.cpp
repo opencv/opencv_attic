@@ -162,7 +162,7 @@ icvApproximateChainTC89( CvChain*               chain,
         CvPoint pt0;
         int k, l = 0, d_num = 0;
 
-        i = current - array;
+        i = (int)(current - array);
         pt0 = array[i].pt;
 
         /* determine support region */
@@ -254,7 +254,7 @@ icvApproximateChainTC89( CvChain*               chain,
         int k2 = current->k >> 1;
 
         s = current->s;
-        i = current - array;
+        i = (int)(current - array);
 
         for( j = 1; j <= k2; j++ )
         {
@@ -293,7 +293,7 @@ icvApproximateChainTC89( CvChain*               chain,
         if( current->k == 1 )
         {
             s = current->s;
-            i = current - array;
+            i = (int)(current - array);
 
             i1 = i - 1;
             i1 += i1 < 0 ? len : 0;
@@ -341,7 +341,7 @@ icvApproximateChainTC89( CvChain*               chain,
 
         if( i1 == 0 && i2 == len - 1 )  /* only two points */
         {
-            i1 = array[0].next - array;
+            i1 = (int)(array[0].next - array);
             array[len] = array[0];      /* move to the end */
             array[len].next = 0;
             array[len - 1].next = array + len;

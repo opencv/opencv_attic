@@ -69,8 +69,8 @@ matr_info;
 static float matr_dist( const float* x, const float* y, void* param )
 {
     matr_info* mi = (matr_info*)param;
-    int i = x - mi->x_origin - 1;
-    int j = y - mi->y_origin - 1;
+    int i = (int)(x - mi->x_origin) - 1;
+    int j = (int)(y - mi->y_origin) - 1;
     assert( 0 <= i && i < mi->rows &&
             0 <= j && j < mi->cols );
     return  mi->matr[i*mi->cols + j];

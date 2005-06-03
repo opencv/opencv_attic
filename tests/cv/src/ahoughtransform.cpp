@@ -45,9 +45,9 @@
 #include <math.h>
 #include <float.h>
 
-static const int HT_STANDARD = 1;
-static const int HT_PP = 2;
-static const int HT_MD = 3;
+#define HT_STANDARD (size_t)1
+#define HT_PP (size_t)2
+#define HT_MD (size_t)3
 
 static char* func_names[] = {"cvHoughTransform", "cvHoughTransformP", "cvHoughTransformSDiv"};
 static char* test_desc[] = { "Run the hough transform function"};
@@ -67,7 +67,7 @@ int test_ht(void* arg)
     int lineLength = 10, lineGap = 2;
     int w = 100; /* width and height of the rect */
     int h = 100;
-    int type = int(arg);
+    int type = (int)(size_t)arg;
     IplImage* image; /* Source and destination images */
     image = cvCreateImage( cvSize(w, h), 8, 1 );
     cvZero(image);

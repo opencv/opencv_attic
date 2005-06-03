@@ -332,12 +332,12 @@ void CvArrTest::print_time( int test_case_idx, double time_clocks )
     ptr = strchr( tested_functions, ',' );
     if( ptr )
     {
-        len = ptr - tested_functions;
+        len = (int)(ptr - tested_functions);
         strncpy( str, tested_functions, len );
     }
     else
     {
-        len = strlen( tested_functions );
+        len = (int)strlen( tested_functions );
         strcpy( str, tested_functions );
     }
     ptr = str + len;

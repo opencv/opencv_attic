@@ -659,7 +659,8 @@ int CxCore_SeqBaseTest::test_multi_create()
             {
                 CV_CALL( cxcore_struct[struct_idx] = cvEndWriteSeq( writer + struct_idx ));
                 /* del index */
-                memmove( index + k, index + k + 1, (cur_count - k - 1)*sizeof(int));
+                for( ; k < cur_count-1; k++ )
+                    index[k] = index[k+1];
                 break;
             }
             

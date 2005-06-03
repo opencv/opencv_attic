@@ -59,7 +59,7 @@ const ulong bs_bit_mask[] = {
 void bsBSwapBlock( uchar *start, uchar *end )
 {
     ulong* data = (ulong*)start;
-    int    i, size = (end - start+3)/4;
+    int i, size = (int)(end - start+3)/4;
 
     for( i = 0; i < size; i++ )
     {
@@ -113,7 +113,7 @@ RBaseStream::~RBaseStream()
 
 void  RBaseStream::ReadBlock()
 {
-    int readed;
+    size_t readed;
     assert( m_file != 0 );
 
     // copy unget buffer
@@ -209,7 +209,7 @@ void  RBaseStream::SetPos( int pos )
 int  RBaseStream::GetPos()
 {
     assert( IsOpened() );
-    return m_block_pos - m_block_size + (m_current - m_start);
+    return m_block_pos - m_block_size + (int)(m_current - m_start);
 }
 
 void  RBaseStream::Skip( int bytes )
@@ -260,7 +260,7 @@ void  RLByteStream::GetBytes( void* buffer, int count, int* readed )
 
         for(;;)
         {
-            l = m_end - m_current;
+            l = (int)(m_end - m_current);
             if( l > count ) l = count;
             if( l > 0 ) break;
             ReadBlock();
@@ -381,7 +381,7 @@ void  RLBitStream::ReadBlock()
 void  RLBitStream::SetPos( int pos )
 {
     RBaseStream::SetPos(pos);
-    int offset = m_current - m_end;
+    int offset = (int)(m_current - m_end);
     m_current = m_end + (offset & -4);
     m_bit_idx = (offset&3)*8;
 }
@@ -491,7 +491,7 @@ void  RMBitStream::ReadBlock()
 void  RMBitStream::SetPos( int pos )
 {
     RBaseStream::SetPos(pos);
-    int offset = m_current - m_end;
+    int offset = (int)(m_current - m_end);
     m_current = m_end + ((offset - 1) & -4);
     m_bit_idx = (32 - (offset&3)*8) & 31;
 }
@@ -744,7 +744,7 @@ void  WBaseStream::Allocate()
 
 void  WBaseStream::WriteBlock()
 {
-    int size = m_current - m_start;
+    int size = (int)(m_current - m_start);
     assert( m_file != 0 );
 
     //fseek( m_file, m_block_pos, SEEK_SET );
@@ -810,7 +810,7 @@ void  WBaseStream::SetBlockSize( int block_size )
 int  WBaseStream::GetPos()
 {
     assert( IsOpened() );
-    return m_block_pos + (m_current - m_start);
+    return m_block_pos + (int)(m_current - m_start);
 }
 
 
@@ -836,7 +836,7 @@ void WLByteStream::PutBytes( const void* buffer, int count )
 
     while( count )
     {
-        int l = m_end - m_current;
+        int l = (int)(m_end - m_current);
         
         if( l > count )
             l = count;
