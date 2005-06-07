@@ -2696,7 +2696,7 @@ cvOpenFileStorage( const char* filename, CvMemStorage* dststorage, int flags )
             if( !append )
                 fputs( "%YAML:1.0\n", fs->file );
             else
-                fputs( "---\n", fs->file );
+                fputs( "...\n---\n", fs->file );
             fs->start_write_struct = icvYMLStartWriteStruct;
             fs->end_write_struct = icvYMLEndWriteStruct;
             fs->write_int = icvYMLWriteInt;
