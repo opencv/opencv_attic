@@ -186,7 +186,7 @@ CV_INLINE  int  cvRound( double value )
         fistp t;
     }
     return t;
-#elif __GNUC__ > 3
+#elif __GNUC__ > 2
     return (int)lrint( value );
 #else
     /*
@@ -1548,6 +1548,7 @@ typedef struct CvFileStorage CvFileStorage;
 #define CV_STORAGE_WRITE         1
 #define CV_STORAGE_WRITE_TEXT    CV_STORAGE_WRITE
 #define CV_STORAGE_WRITE_BINARY  CV_STORAGE_WRITE
+#define CV_STORAGE_APPEND        2
 
 /* list of attributes */
 typedef struct CvAttrList
