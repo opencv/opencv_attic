@@ -2630,6 +2630,7 @@ cvOpenFileStorage( const char* filename, CvMemStorage* dststorage, int flags )
     __BEGIN__;
 
     int default_block_size = 1 << 18;
+    bool append = (flags & 3) == CV_STORAGE_APPEND;
 
     if( !filename )
         CV_ERROR( CV_StsNullPtr, "NULL filename" );
@@ -2644,8 +2645,8 @@ cvOpenFileStorage( const char* filename, CvMemStorage* dststorage, int flags )
     strcpy( fs->filename, filename );
 
     fs->flags = CV_FILE_STORAGE;
-    fs->write_mode = flags != 0;
-    fs->file = fopen( fs->filename, fs->write_mode ? "wt" : "rt" );
+    fs->write_mode = (flags & 3) != 0;
+    fs->file = fopen( fs->filename, !fs->write_mode ? "rt" : !append ? "wt" : "a+t" );
     if( !fs->file )
         EXIT;
 
@@ -2666,6 +2667,9 @@ cvOpenFileStorage( const char* filename, CvMemStorage* dststorage, int flags )
         // and factor=4 for YAML ( as we use 4 bytes for non ASCII characters (e.g. \xAB))
         int buf_size = CV_FS_MAX_LEN*(fs->is_xml ? 6 : 4) + 1024;
 
+        if( append )
+            fseek( fs->file, 0, SEEK_END );
+
         fs->write_stack = cvCreateSeq( 0, sizeof(CvSeq), fs->is_xml ?
                 sizeof(CvXMLStackRecord) : sizeof(int), fs->memstorage );
         fs->is_first = 1;
@@ -2676,7 +2680,8 @@ cvOpenFileStorage( const char* filename, CvMemStorage* dststorage, int flags )
         if( fs->is_xml )
         {
             CV_CALL( fs->strstorage = cvCreateChildMemStorage( fs->memstorage ));
-            fputs( "<?xml version=\"1.0\"?>\n", fs->file );
+            if( !append )
+                fputs( "<?xml version=\"1.0\"?>\n", fs->file );
             fputs( "<opencv_storage>\n", fs->file );
             fs->start_write_struct = icvXMLStartWriteStruct;
             fs->end_write_struct = icvXMLEndWriteStruct;
@@ -2688,7 +2693,10 @@ cvOpenFileStorage( const char* filename, CvMemStorage* dststorage, int flags )
         }
         else
         {
-            fputs( "%YAML:1.0\n", fs->file );
+            if( !append )
+                fputs( "%YAML:1.0\n", fs->file );
+            else
+                fputs( "---\n", fs->file );
             fs->start_write_struct = icvYMLStartWriteStruct;
             fs->end_write_struct = icvYMLEndWriteStruct;
             fs->write_int = icvYMLWriteInt;
