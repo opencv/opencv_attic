@@ -38009,15 +38009,11 @@ static PyObject *_wrap_cvGetQuadrangleSubPix(PyObject *, PyObject *args) {
     CvArr *arg1 = (CvArr *) 0 ;
     CvArr *arg2 = (CvArr *) 0 ;
     CvMat *arg3 = (CvMat *) 0 ;
-    int arg4 ;
-    CvScalar arg5 ;
     PyObject * obj0 = 0 ;
     PyObject * obj1 = 0 ;
     PyObject * obj2 = 0 ;
-    PyObject * obj3 = 0 ;
-    PyObject * obj4 = 0 ;
     
-    if(!PyArg_ParseTuple(args,(char *)"OOOOO:cvGetQuadrangleSubPix",&obj0,&obj1,&obj2,&obj3,&obj4)) goto fail;
+    if(!PyArg_ParseTuple(args,(char *)"OOO:cvGetQuadrangleSubPix",&obj0,&obj1,&obj2)) goto fail;
     {
         if ((SWIG_ConvertPtr(obj0,(void **)(&arg1),0,SWIG_POINTER_EXCEPTION|0))== -1) {
             SWIG_arg_fail(1);SWIG_fail;
@@ -38031,22 +38027,8 @@ static PyObject *_wrap_cvGetQuadrangleSubPix(PyObject *, PyObject *args) {
     SWIG_Python_ConvertPtr(obj2, (void **)&arg3, SWIGTYPE_p_CvMat, SWIG_POINTER_EXCEPTION | 0);
     if (SWIG_arg_fail(3)) SWIG_fail;
     {
-        arg4 = (int)(SWIG_As_int(obj3)); 
-        if (SWIG_arg_fail(4)) SWIG_fail;
-    }
-    {
-        CvScalar * argp;
-        SWIG_Python_ConvertPtr(obj4, (void **)&argp, SWIGTYPE_p_CvScalar, SWIG_POINTER_EXCEPTION);
-        if (SWIG_arg_fail(5)) SWIG_fail;
-        if (argp == NULL) {
-            SWIG_null_ref("CvScalar");
-        }
-        if (SWIG_arg_fail(5)) SWIG_fail;
-        arg5 = *argp;
-    }
-    {
         try {
-            cvGetQuadrangleSubPix((CvArr const *)arg1,arg2,(CvMat const *)arg3,arg4,arg5);
+            cvGetQuadrangleSubPix((CvArr const *)arg1,arg2,(CvMat const *)arg3);
         } 
         catch (...) 
         {
