@@ -28,6 +28,7 @@ $(PACKAGE)-$(VERSION).tar.gz: dist
 
 dist-hook:
 	rm -rf `find $(distdir) -name CVS`
+	chmod u+x $(srcdir)/utils/unix2dos.py
 	find $(distdir) -name *.dsw -exec $(srcdir)/utils/unix2dos.py {} \;
 	find $(distdir) -name *.dsp -exec $(srcdir)/utils/unix2dos.py {} \;
 

@@ -24,7 +24,7 @@ AC_CONFIG_AUX_DIR([autotools])
 AC_CONFIG_MACRO_DIR([autotools/aclocal])
 
 # put CVS revision of this configure.in into the resulting configure script
-AC_REVISION($Revision: 1.11 $)
+AC_REVISION($Revision: 1.12 $)
 
 # Detect the canonical host and target build environment
 AC_CANONICAL_HOST
@@ -33,6 +33,10 @@ AC_CANONICAL_TARGET
 # setup automake - we need >= 1.6 because of python and aclocal support
 AM_CONFIG_HEADER([cvconfig.h])
 AM_INIT_AUTOMAKE([1.6 foreign])
+
+# use 'ugly' maintainer-mode flag to help CVS users that don't want to
+# help developing OpenCV but just need to compile the latest version
+AM_MAINTAINER_MODE
 
 # substitute versionnumbers
 AC_SUBST(MMAJOR,     [opencv_major_version])
