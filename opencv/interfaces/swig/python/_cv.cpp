@@ -2067,27 +2067,6 @@ SWIG_Check_float(PyObject* obj)
 #define SWIG_From_float PyFloat_FromDouble
 /*@@*/
 
-
-SWIGINTERNSHORT unsigned long
-SWIG_As_unsigned_SS_long(PyObject* obj)
-{
-  unsigned long v;
-  if (!SWIG_AsVal_unsigned_SS_long(obj, &v)) {
-    /*
-      this is needed to make valgrind/purify happier. 
-     */
-    memset((void*)&v, 0, sizeof(unsigned long));
-  }
-  return v;
-}
-
-  
-SWIGINTERNSHORT int
-SWIG_Check_unsigned_SS_long(PyObject* obj)
-{
-  return SWIG_AsVal_unsigned_SS_long(obj, (unsigned long*)0);
-}
-
 static void delete_CvMemStorage(CvMemStorage *self){ CvMemStorage   * dummy = self; cvReleaseMemStorage         (& dummy); }
 
 /* returns SWIG_OLDOBJ if the input is a raw char*, SWIG_PYSTR if is a PyString */
@@ -2142,6 +2121,27 @@ typedef union {
         CvFileNodeHash* map;
     } CvFileNode_data;
 
+
+
+SWIGINTERNSHORT unsigned long
+SWIG_As_unsigned_SS_long(PyObject* obj)
+{
+  unsigned long v;
+  if (!SWIG_AsVal_unsigned_SS_long(obj, &v)) {
+    /*
+      this is needed to make valgrind/purify happier. 
+     */
+    memset((void*)&v, 0, sizeof(unsigned long));
+  }
+  return v;
+}
+
+  
+SWIGINTERNSHORT int
+SWIG_Check_unsigned_SS_long(PyObject* obj)
+{
+  return SWIG_AsVal_unsigned_SS_long(obj, (unsigned long*)0);
+}
 
 static void delete_CvGraphScanner(CvGraphScanner *self){ CvGraphScanner * dummy = self; cvReleaseGraphScanner       (& dummy); }
 
@@ -8898,7 +8898,7 @@ static PyObject *_wrap_CvMemStorage_parent_get(PyObject *, PyObject *args) {
 static PyObject *_wrap_CvMemStorage_block_size_set(PyObject *, PyObject *args) {
     PyObject *resultobj;
     CvMemStorage *arg1 = (CvMemStorage *) 0 ;
-    size_t arg2 ;
+    int arg2 ;
     PyObject * obj0 = 0 ;
     PyObject * obj1 = 0 ;
     
@@ -8906,7 +8906,7 @@ static PyObject *_wrap_CvMemStorage_block_size_set(PyObject *, PyObject *args) {
     SWIG_Python_ConvertPtr(obj0, (void **)&arg1, SWIGTYPE_p_CvMemStorage, SWIG_POINTER_EXCEPTION | 0);
     if (SWIG_arg_fail(1)) SWIG_fail;
     {
-        arg2 = (size_t)(SWIG_As_unsigned_SS_long(obj1)); 
+        arg2 = (int)(SWIG_As_int(obj1)); 
         if (SWIG_arg_fail(2)) SWIG_fail;
     }
     if (arg1) (arg1)->block_size = arg2;
@@ -8921,16 +8921,16 @@ static PyObject *_wrap_CvMemStorage_block_size_set(PyObject *, PyObject *args) {
 static PyObject *_wrap_CvMemStorage_block_size_get(PyObject *, PyObject *args) {
     PyObject *resultobj;
     CvMemStorage *arg1 = (CvMemStorage *) 0 ;
-    size_t result;
+    int result;
     PyObject * obj0 = 0 ;
     
     if(!PyArg_ParseTuple(args,(char *)"O:CvMemStorage_block_size_get",&obj0)) goto fail;
     SWIG_Python_ConvertPtr(obj0, (void **)&arg1, SWIGTYPE_p_CvMemStorage, SWIG_POINTER_EXCEPTION | 0);
     if (SWIG_arg_fail(1)) SWIG_fail;
-    result =  ((arg1)->block_size);
+    result = (int) ((arg1)->block_size);
     
     {
-        resultobj = SWIG_From_unsigned_SS_long((unsigned long)(result)); 
+        resultobj = SWIG_From_int((int)(result)); 
     }
     return resultobj;
     fail:
@@ -8941,7 +8941,7 @@ static PyObject *_wrap_CvMemStorage_block_size_get(PyObject *, PyObject *args) {
 static PyObject *_wrap_CvMemStorage_free_space_set(PyObject *, PyObject *args) {
     PyObject *resultobj;
     CvMemStorage *arg1 = (CvMemStorage *) 0 ;
-    size_t arg2 ;
+    int arg2 ;
     PyObject * obj0 = 0 ;
     PyObject * obj1 = 0 ;
     
@@ -8949,7 +8949,7 @@ static PyObject *_wrap_CvMemStorage_free_space_set(PyObject *, PyObject *args) {
     SWIG_Python_ConvertPtr(obj0, (void **)&arg1, SWIGTYPE_p_CvMemStorage, SWIG_POINTER_EXCEPTION | 0);
     if (SWIG_arg_fail(1)) SWIG_fail;
     {
-        arg2 = (size_t)(SWIG_As_unsigned_SS_long(obj1)); 
+        arg2 = (int)(SWIG_As_int(obj1)); 
         if (SWIG_arg_fail(2)) SWIG_fail;
     }
     if (arg1) (arg1)->free_space = arg2;
@@ -8964,16 +8964,16 @@ static PyObject *_wrap_CvMemStorage_free_space_set(PyObject *, PyObject *args) {
 static PyObject *_wrap_CvMemStorage_free_space_get(PyObject *, PyObject *args) {
     PyObject *resultobj;
     CvMemStorage *arg1 = (CvMemStorage *) 0 ;
-    size_t result;
+    int result;
     PyObject * obj0 = 0 ;
     
     if(!PyArg_ParseTuple(args,(char *)"O:CvMemStorage_free_space_get",&obj0)) goto fail;
     SWIG_Python_ConvertPtr(obj0, (void **)&arg1, SWIGTYPE_p_CvMemStorage, SWIG_POINTER_EXCEPTION | 0);
     if (SWIG_arg_fail(1)) SWIG_fail;
-    result =  ((arg1)->free_space);
+    result = (int) ((arg1)->free_space);
     
     {
-        resultobj = SWIG_From_unsigned_SS_long((unsigned long)(result)); 
+        resultobj = SWIG_From_int((int)(result)); 
     }
     return resultobj;
     fail:
@@ -9054,7 +9054,7 @@ static PyObject *_wrap_CvMemStoragePos_top_get(PyObject *, PyObject *args) {
 static PyObject *_wrap_CvMemStoragePos_free_space_set(PyObject *, PyObject *args) {
     PyObject *resultobj;
     CvMemStoragePos *arg1 = (CvMemStoragePos *) 0 ;
-    size_t arg2 ;
+    int arg2 ;
     PyObject * obj0 = 0 ;
     PyObject * obj1 = 0 ;
     
@@ -9062,7 +9062,7 @@ static PyObject *_wrap_CvMemStoragePos_free_space_set(PyObject *, PyObject *args
     SWIG_Python_ConvertPtr(obj0, (void **)&arg1, SWIGTYPE_p_CvMemStoragePos, SWIG_POINTER_EXCEPTION | 0);
     if (SWIG_arg_fail(1)) SWIG_fail;
     {
-        arg2 = (size_t)(SWIG_As_unsigned_SS_long(obj1)); 
+        arg2 = (int)(SWIG_As_int(obj1)); 
         if (SWIG_arg_fail(2)) SWIG_fail;
     }
     if (arg1) (arg1)->free_space = arg2;
@@ -9077,16 +9077,16 @@ static PyObject *_wrap_CvMemStoragePos_free_space_set(PyObject *, PyObject *args
 static PyObject *_wrap_CvMemStoragePos_free_space_get(PyObject *, PyObject *args) {
     PyObject *resultobj;
     CvMemStoragePos *arg1 = (CvMemStoragePos *) 0 ;
-    size_t result;
+    int result;
     PyObject * obj0 = 0 ;
     
     if(!PyArg_ParseTuple(args,(char *)"O:CvMemStoragePos_free_space_get",&obj0)) goto fail;
     SWIG_Python_ConvertPtr(obj0, (void **)&arg1, SWIGTYPE_p_CvMemStoragePos, SWIG_POINTER_EXCEPTION | 0);
     if (SWIG_arg_fail(1)) SWIG_fail;
-    result =  ((arg1)->free_space);
+    result = (int) ((arg1)->free_space);
     
     {
-        resultobj = SWIG_From_unsigned_SS_long((unsigned long)(result)); 
+        resultobj = SWIG_From_int((int)(result)); 
     }
     return resultobj;
     fail:
@@ -26410,6 +26410,81 @@ static PyObject *_wrap_cvColorToScalar(PyObject *, PyObject *args) {
 }
 
 
+static PyObject *_wrap_cvEllipse2Poly(PyObject *, PyObject *args) {
+    PyObject *resultobj;
+    CvPoint arg1 ;
+    CvSize arg2 ;
+    int arg3 ;
+    int arg4 ;
+    int arg5 ;
+    CvPoint *arg6 = (CvPoint *) 0 ;
+    int arg7 ;
+    int result;
+    PyObject * obj0 = 0 ;
+    PyObject * obj1 = 0 ;
+    PyObject * obj2 = 0 ;
+    PyObject * obj3 = 0 ;
+    PyObject * obj4 = 0 ;
+    PyObject * obj5 = 0 ;
+    PyObject * obj6 = 0 ;
+    
+    if(!PyArg_ParseTuple(args,(char *)"OOOOOOO:cvEllipse2Poly",&obj0,&obj1,&obj2,&obj3,&obj4,&obj5,&obj6)) goto fail;
+    {
+        CvPoint * argp;
+        SWIG_Python_ConvertPtr(obj0, (void **)&argp, SWIGTYPE_p_CvPoint, SWIG_POINTER_EXCEPTION);
+        if (SWIG_arg_fail(1)) SWIG_fail;
+        if (argp == NULL) {
+            SWIG_null_ref("CvPoint");
+        }
+        if (SWIG_arg_fail(1)) SWIG_fail;
+        arg1 = *argp;
+    }
+    {
+        CvSize * argp;
+        SWIG_Python_ConvertPtr(obj1, (void **)&argp, SWIGTYPE_p_CvSize, SWIG_POINTER_EXCEPTION);
+        if (SWIG_arg_fail(2)) SWIG_fail;
+        if (argp == NULL) {
+            SWIG_null_ref("CvSize");
+        }
+        if (SWIG_arg_fail(2)) SWIG_fail;
+        arg2 = *argp;
+    }
+    {
+        arg3 = (int)(SWIG_As_int(obj2)); 
+        if (SWIG_arg_fail(3)) SWIG_fail;
+    }
+    {
+        arg4 = (int)(SWIG_As_int(obj3)); 
+        if (SWIG_arg_fail(4)) SWIG_fail;
+    }
+    {
+        arg5 = (int)(SWIG_As_int(obj4)); 
+        if (SWIG_arg_fail(5)) SWIG_fail;
+    }
+    SWIG_Python_ConvertPtr(obj5, (void **)&arg6, SWIGTYPE_p_CvPoint, SWIG_POINTER_EXCEPTION | 0);
+    if (SWIG_arg_fail(6)) SWIG_fail;
+    {
+        arg7 = (int)(SWIG_As_int(obj6)); 
+        if (SWIG_arg_fail(7)) SWIG_fail;
+    }
+    {
+        try {
+            result = (int)cvEllipse2Poly(arg1,arg2,arg3,arg4,arg5,arg6,arg7);
+        } 
+        catch (...) 
+        {
+            return NULL;
+        } 
+    }
+    {
+        resultobj = SWIG_From_int((int)(result)); 
+    }
+    return resultobj;
+    fail:
+    return NULL;
+}
+
+
 static PyObject *_wrap_cvDrawContours(PyObject *, PyObject *args) {
     PyObject *resultobj;
     CvArr *arg1 = (CvArr *) 0 ;
@@ -40821,6 +40896,96 @@ static PyObject *_wrap_cvBoxPoints(PyObject *, PyObject *args) {
 }
 
 
+static PyObject *_wrap_cvPointSeqFromMat(PyObject *, PyObject *args) {
+    PyObject *resultobj;
+    int arg1 ;
+    CvArr *arg2 = (CvArr *) 0 ;
+    CvContour *arg3 = (CvContour *) 0 ;
+    CvSeqBlock *arg4 = (CvSeqBlock *) 0 ;
+    CvSeq *result;
+    PyObject * obj0 = 0 ;
+    PyObject * obj1 = 0 ;
+    PyObject * obj2 = 0 ;
+    PyObject * obj3 = 0 ;
+    
+    if(!PyArg_ParseTuple(args,(char *)"OOOO:cvPointSeqFromMat",&obj0,&obj1,&obj2,&obj3)) goto fail;
+    {
+        arg1 = (int)(SWIG_As_int(obj0)); 
+        if (SWIG_arg_fail(1)) SWIG_fail;
+    }
+    {
+        if ((SWIG_ConvertPtr(obj1,(void **)(&arg2),0,SWIG_POINTER_EXCEPTION|0))== -1) {
+            SWIG_arg_fail(2);SWIG_fail;
+        }
+    }
+    SWIG_Python_ConvertPtr(obj2, (void **)&arg3, SWIGTYPE_p_CvContour, SWIG_POINTER_EXCEPTION | 0);
+    if (SWIG_arg_fail(3)) SWIG_fail;
+    SWIG_Python_ConvertPtr(obj3, (void **)&arg4, SWIGTYPE_p_CvSeqBlock, SWIG_POINTER_EXCEPTION | 0);
+    if (SWIG_arg_fail(4)) SWIG_fail;
+    {
+        try {
+            result = (CvSeq *)cvPointSeqFromMat(arg1,(CvArr const *)arg2,arg3,arg4);
+        } 
+        catch (...) 
+        {
+            return NULL;
+        } 
+    }
+    resultobj = SWIG_NewPointerObj((void*)(result), SWIGTYPE_p_CvSeq, 0);
+    return resultobj;
+    fail:
+    return NULL;
+}
+
+
+static PyObject *_wrap_cvPointPolygonTest(PyObject *, PyObject *args) {
+    PyObject *resultobj;
+    CvArr *arg1 = (CvArr *) 0 ;
+    CvPoint2D32f arg2 ;
+    int arg3 ;
+    double result;
+    PyObject * obj0 = 0 ;
+    PyObject * obj1 = 0 ;
+    PyObject * obj2 = 0 ;
+    
+    if(!PyArg_ParseTuple(args,(char *)"OOO:cvPointPolygonTest",&obj0,&obj1,&obj2)) goto fail;
+    {
+        if ((SWIG_ConvertPtr(obj0,(void **)(&arg1),0,SWIG_POINTER_EXCEPTION|0))== -1) {
+            SWIG_arg_fail(1);SWIG_fail;
+        }
+    }
+    {
+        CvPoint2D32f * argp;
+        SWIG_Python_ConvertPtr(obj1, (void **)&argp, SWIGTYPE_p_CvPoint2D32f, SWIG_POINTER_EXCEPTION);
+        if (SWIG_arg_fail(2)) SWIG_fail;
+        if (argp == NULL) {
+            SWIG_null_ref("CvPoint2D32f");
+        }
+        if (SWIG_arg_fail(2)) SWIG_fail;
+        arg2 = *argp;
+    }
+    {
+        arg3 = (int)(SWIG_As_int(obj2)); 
+        if (SWIG_arg_fail(3)) SWIG_fail;
+    }
+    {
+        try {
+            result = (double)cvPointPolygonTest((CvArr const *)arg1,arg2,arg3);
+        } 
+        catch (...) 
+        {
+            return NULL;
+        } 
+    }
+    {
+        resultobj = SWIG_From_double((double)(result)); 
+    }
+    return resultobj;
+    fail:
+    return NULL;
+}
+
+
 static PyObject *_wrap_cvCreateHist(PyObject *, PyObject *args) {
     PyObject *resultobj;
     int arg1 ;
@@ -41526,6 +41691,40 @@ static PyObject *_wrap_cvCalcProbDensity(PyObject *, PyObject *args) {
     {
         try {
             cvCalcProbDensity((CvHistogram const *)arg1,(CvHistogram const *)arg2,arg3,arg4);
+        } 
+        catch (...) 
+        {
+            return NULL;
+        } 
+    }
+    Py_INCREF(Py_None); resultobj = Py_None;
+    return resultobj;
+    fail:
+    return NULL;
+}
+
+
+static PyObject *_wrap_cvEqualizeHist(PyObject *, PyObject *args) {
+    PyObject *resultobj;
+    CvArr *arg1 = (CvArr *) 0 ;
+    CvArr *arg2 = (CvArr *) 0 ;
+    PyObject * obj0 = 0 ;
+    PyObject * obj1 = 0 ;
+    
+    if(!PyArg_ParseTuple(args,(char *)"OO:cvEqualizeHist",&obj0,&obj1)) goto fail;
+    {
+        if ((SWIG_ConvertPtr(obj0,(void **)(&arg1),0,SWIG_POINTER_EXCEPTION|0))== -1) {
+            SWIG_arg_fail(1);SWIG_fail;
+        }
+    }
+    {
+        if ((SWIG_ConvertPtr(obj1,(void **)(&arg2),0,SWIG_POINTER_EXCEPTION|0))== -1) {
+            SWIG_arg_fail(2);SWIG_fail;
+        }
+    }
+    {
+        try {
+            cvEqualizeHist((CvArr const *)arg1,arg2);
         } 
         catch (...) 
         {
@@ -42993,52 +43192,47 @@ static PyObject *_wrap_cvCalibrateCamera2(PyObject *, PyObject *args) {
 }
 
 
-static PyObject *_wrap_cvFindChessBoardCornerGuesses(PyObject *, PyObject *args) {
+static PyObject *_wrap_cvFindChessboardCorners(PyObject *, PyObject *args) {
     PyObject *resultobj;
-    CvArr *arg1 = (CvArr *) 0 ;
-    CvArr *arg2 = (CvArr *) 0 ;
-    CvMemStorage *arg3 = (CvMemStorage *) 0 ;
-    CvSize arg4 ;
-    CvPoint2D32f *arg5 = (CvPoint2D32f *) 0 ;
-    int *arg6 = (int *) 0 ;
+    void *arg1 = (void *) 0 ;
+    CvSize arg2 ;
+    CvPoint2D32f *arg3 = (CvPoint2D32f *) 0 ;
+    int *arg4 = (int *) 0 ;
+    int arg5 ;
     int result;
     PyObject * obj0 = 0 ;
     PyObject * obj1 = 0 ;
     PyObject * obj2 = 0 ;
     PyObject * obj3 = 0 ;
     PyObject * obj4 = 0 ;
-    PyObject * obj5 = 0 ;
     
-    if(!PyArg_ParseTuple(args,(char *)"OOOOOO:cvFindChessBoardCornerGuesses",&obj0,&obj1,&obj2,&obj3,&obj4,&obj5)) goto fail;
+    if(!PyArg_ParseTuple(args,(char *)"OOOOO:cvFindChessboardCorners",&obj0,&obj1,&obj2,&obj3,&obj4)) goto fail;
     {
         if ((SWIG_ConvertPtr(obj0,(void **)(&arg1),0,SWIG_POINTER_EXCEPTION|0))== -1) {
             SWIG_arg_fail(1);SWIG_fail;
         }
     }
     {
-        if ((SWIG_ConvertPtr(obj1,(void **)(&arg2),0,SWIG_POINTER_EXCEPTION|0))== -1) {
-            SWIG_arg_fail(2);SWIG_fail;
-        }
-    }
-    SWIG_Python_ConvertPtr(obj2, (void **)&arg3, SWIGTYPE_p_CvMemStorage, SWIG_POINTER_EXCEPTION | 0);
-    if (SWIG_arg_fail(3)) SWIG_fail;
-    {
         CvSize * argp;
-        SWIG_Python_ConvertPtr(obj3, (void **)&argp, SWIGTYPE_p_CvSize, SWIG_POINTER_EXCEPTION);
-        if (SWIG_arg_fail(4)) SWIG_fail;
+        SWIG_Python_ConvertPtr(obj1, (void **)&argp, SWIGTYPE_p_CvSize, SWIG_POINTER_EXCEPTION);
+        if (SWIG_arg_fail(2)) SWIG_fail;
         if (argp == NULL) {
             SWIG_null_ref("CvSize");
         }
-        if (SWIG_arg_fail(4)) SWIG_fail;
-        arg4 = *argp;
+        if (SWIG_arg_fail(2)) SWIG_fail;
+        arg2 = *argp;
     }
-    SWIG_Python_ConvertPtr(obj4, (void **)&arg5, SWIGTYPE_p_CvPoint2D32f, SWIG_POINTER_EXCEPTION | 0);
-    if (SWIG_arg_fail(5)) SWIG_fail;
-    SWIG_Python_ConvertPtr(obj5, (void **)&arg6, SWIGTYPE_p_int, SWIG_POINTER_EXCEPTION | 0);
-    if (SWIG_arg_fail(6)) SWIG_fail;
+    SWIG_Python_ConvertPtr(obj2, (void **)&arg3, SWIGTYPE_p_CvPoint2D32f, SWIG_POINTER_EXCEPTION | 0);
+    if (SWIG_arg_fail(3)) SWIG_fail;
+    SWIG_Python_ConvertPtr(obj3, (void **)&arg4, SWIGTYPE_p_int, SWIG_POINTER_EXCEPTION | 0);
+    if (SWIG_arg_fail(4)) SWIG_fail;
+    {
+        arg5 = (int)(SWIG_As_int(obj4)); 
+        if (SWIG_arg_fail(5)) SWIG_fail;
+    }
     {
         try {
-            result = (int)cvFindChessBoardCornerGuesses((CvArr const *)arg1,arg2,arg3,arg4,arg5,arg6);
+            result = (int)cvFindChessboardCorners((void const *)arg1,arg2,arg3,arg4,arg5);
         } 
         catch (...) 
         {
@@ -43048,6 +43242,61 @@ static PyObject *_wrap_cvFindChessBoardCornerGuesses(PyObject *, PyObject *args)
     {
         resultobj = SWIG_From_int((int)(result)); 
     }
+    return resultobj;
+    fail:
+    return NULL;
+}
+
+
+static PyObject *_wrap_cvDrawChessboardCorners(PyObject *, PyObject *args) {
+    PyObject *resultobj;
+    CvArr *arg1 = (CvArr *) 0 ;
+    CvSize arg2 ;
+    CvPoint2D32f *arg3 = (CvPoint2D32f *) 0 ;
+    int arg4 ;
+    int arg5 ;
+    PyObject * obj0 = 0 ;
+    PyObject * obj1 = 0 ;
+    PyObject * obj2 = 0 ;
+    PyObject * obj3 = 0 ;
+    PyObject * obj4 = 0 ;
+    
+    if(!PyArg_ParseTuple(args,(char *)"OOOOO:cvDrawChessboardCorners",&obj0,&obj1,&obj2,&obj3,&obj4)) goto fail;
+    {
+        if ((SWIG_ConvertPtr(obj0,(void **)(&arg1),0,SWIG_POINTER_EXCEPTION|0))== -1) {
+            SWIG_arg_fail(1);SWIG_fail;
+        }
+    }
+    {
+        CvSize * argp;
+        SWIG_Python_ConvertPtr(obj1, (void **)&argp, SWIGTYPE_p_CvSize, SWIG_POINTER_EXCEPTION);
+        if (SWIG_arg_fail(2)) SWIG_fail;
+        if (argp == NULL) {
+            SWIG_null_ref("CvSize");
+        }
+        if (SWIG_arg_fail(2)) SWIG_fail;
+        arg2 = *argp;
+    }
+    SWIG_Python_ConvertPtr(obj2, (void **)&arg3, SWIGTYPE_p_CvPoint2D32f, SWIG_POINTER_EXCEPTION | 0);
+    if (SWIG_arg_fail(3)) SWIG_fail;
+    {
+        arg4 = (int)(SWIG_As_int(obj3)); 
+        if (SWIG_arg_fail(4)) SWIG_fail;
+    }
+    {
+        arg5 = (int)(SWIG_As_int(obj4)); 
+        if (SWIG_arg_fail(5)) SWIG_fail;
+    }
+    {
+        try {
+            cvDrawChessboardCorners(arg1,arg2,arg3,arg4,arg5);
+        } 
+        catch (...) 
+        {
+            return NULL;
+        } 
+    }
+    Py_INCREF(Py_None); resultobj = Py_None;
     return resultobj;
     fail:
     return NULL;
@@ -44364,6 +44613,7 @@ static PyMethodDef SwigMethods[] = {
 	 { (char *)"cvPutText", _wrap_cvPutText, METH_VARARGS, NULL},
 	 { (char *)"cvGetTextSize", _wrap_cvGetTextSize, METH_VARARGS, NULL},
 	 { (char *)"cvColorToScalar", _wrap_cvColorToScalar, METH_VARARGS, NULL},
+	 { (char *)"cvEllipse2Poly", _wrap_cvEllipse2Poly, METH_VARARGS, NULL},
 	 { (char *)"cvDrawContours", _wrap_cvDrawContours, METH_VARARGS, NULL},
 	 { (char *)"cvLUT", _wrap_cvLUT, METH_VARARGS, NULL},
 	 { (char *)"CvTreeNodeIterator_node_set", _wrap_CvTreeNodeIterator_node_set, METH_VARARGS, NULL},
@@ -44912,6 +45162,8 @@ static PyMethodDef SwigMethods[] = {
 	 { (char *)"cvFitEllipse2", _wrap_cvFitEllipse2, METH_VARARGS, NULL},
 	 { (char *)"cvMaxRect", _wrap_cvMaxRect, METH_VARARGS, NULL},
 	 { (char *)"cvBoxPoints", _wrap_cvBoxPoints, METH_VARARGS, NULL},
+	 { (char *)"cvPointSeqFromMat", _wrap_cvPointSeqFromMat, METH_VARARGS, NULL},
+	 { (char *)"cvPointPolygonTest", _wrap_cvPointPolygonTest, METH_VARARGS, NULL},
 	 { (char *)"cvCreateHist", _wrap_cvCreateHist, METH_VARARGS, NULL},
 	 { (char *)"cvSetHistBinRanges", _wrap_cvSetHistBinRanges, METH_VARARGS, NULL},
 	 { (char *)"cvMakeHistHeaderForArray", _wrap_cvMakeHistHeaderForArray, METH_VARARGS, NULL},
@@ -44928,6 +45180,7 @@ static PyMethodDef SwigMethods[] = {
 	 { (char *)"cvCalcArrBackProject", _wrap_cvCalcArrBackProject, METH_VARARGS, NULL},
 	 { (char *)"cvCalcArrBackProjectPatch", _wrap_cvCalcArrBackProjectPatch, METH_VARARGS, NULL},
 	 { (char *)"cvCalcProbDensity", _wrap_cvCalcProbDensity, METH_VARARGS, NULL},
+	 { (char *)"cvEqualizeHist", _wrap_cvEqualizeHist, METH_VARARGS, NULL},
 	 { (char *)"cvSnakeImage", _wrap_cvSnakeImage, METH_VARARGS, NULL},
 	 { (char *)"cvCalcImageHomography", _wrap_cvCalcImageHomography, METH_VARARGS, NULL},
 	 { (char *)"cvDistTransform", _wrap_cvDistTransform, METH_VARARGS, NULL},
@@ -44955,7 +45208,8 @@ static PyMethodDef SwigMethods[] = {
 	 { (char *)"cvProjectPoints2", _wrap_cvProjectPoints2, METH_VARARGS, NULL},
 	 { (char *)"cvFindExtrinsicCameraParams2", _wrap_cvFindExtrinsicCameraParams2, METH_VARARGS, NULL},
 	 { (char *)"cvCalibrateCamera2", _wrap_cvCalibrateCamera2, METH_VARARGS, NULL},
-	 { (char *)"cvFindChessBoardCornerGuesses", _wrap_cvFindChessBoardCornerGuesses, METH_VARARGS, NULL},
+	 { (char *)"cvFindChessboardCorners", _wrap_cvFindChessboardCorners, METH_VARARGS, NULL},
+	 { (char *)"cvDrawChessboardCorners", _wrap_cvDrawChessboardCorners, METH_VARARGS, NULL},
 	 { (char *)"cvCreatePOSITObject", _wrap_cvCreatePOSITObject, METH_VARARGS, NULL},
 	 { (char *)"cvPOSIT", _wrap_cvPOSIT, METH_VARARGS, NULL},
 	 { (char *)"cvReleasePOSITObject", _wrap_cvReleasePOSITObject, METH_VARARGS, NULL},
@@ -45097,7 +45351,7 @@ static swig_type_info _swigt__p_CvSeqWriter[] = {{"_p_CvSeqWriter", 0, "CvSeqWri
 static swig_type_info _swigt__p_f_int_int_int_p_char_p_char_int_int_int_int_int_p_IplROI_p_IplImage_p_void_p_IplTileInfo__p__IplImage[] = {{"_p_f_int_int_int_p_char_p_char_int_int_int_int_int_p_IplROI_p_IplImage_p_void_p_IplTileInfo__p__IplImage", 0, "_IplImage *(*)(int,int,int,char *,char *,int,int,int,int,int,IplROI *,IplImage *,void *,IplTileInfo *)|Cv_iplCreateImageHeader", 0, 0, 0, 0},{"_p_f_int_int_int_p_char_p_char_int_int_int_int_int_p_IplROI_p_IplImage_p_void_p_IplTileInfo__p__IplImage", 0, 0, 0, 0, 0, 0},{0, 0, 0, 0, 0, 0, 0}};
 static swig_type_info _swigt__p_p_CvSubdiv2DPoint[] = {{"_p_p_CvSubdiv2DPoint", 0, "CvSubdiv2DPoint **", 0, 0, 0, 0},{"_p_p_CvSubdiv2DPoint", 0, 0, 0, 0, 0, 0},{0, 0, 0, 0, 0, 0, 0}};
 static swig_type_info _swigt__p_CvSubdiv2DPoint[] = {{"_p_CvSubdiv2DPoint", 0, "CvSubdiv2DPoint *", 0, 0, 0, 0},{"_p_CvSubdiv2DPoint", 0, 0, 0, 0, 0, 0},{0, 0, 0, 0, 0, 0, 0}};
-static swig_type_info _swigt__p_CvContour[] = {{"_p_CvContour", 0, "CvContour *|CvPoint2DSeq *", 0, 0, 0, 0},{"_p_CvContour", 0, 0, 0, 0, 0, 0},{0, 0, 0, 0, 0, 0, 0}};
+static swig_type_info _swigt__p_CvContour[] = {{"_p_CvContour", 0, "CvContour *", 0, 0, 0, 0},{"_p_CvContour", 0, 0, 0, 0, 0, 0},{0, 0, 0, 0, 0, 0, 0}};
 static swig_type_info _swigt__p_unsigned_int[] = {{"_p_unsigned_int", 0, "unsigned int *", 0, 0, 0, 0},{"_p_unsigned_int", 0, 0, 0, 0, 0, 0},{0, 0, 0, 0, 0, 0, 0}};
 static swig_type_info _swigt__p_CvAvgComp[] = {{"_p_CvAvgComp", 0, "CvAvgComp *", 0, 0, 0, 0},{"_p_CvAvgComp", 0, 0, 0, 0, 0, 0},{0, 0, 0, 0, 0, 0, 0}};
 static swig_type_info _swigt__p_CvSize[] = {{"_p_CvSize", 0, "CvSize *", 0, 0, 0, 0},{"_p_CvSize", 0, 0, 0, 0, 0, 0},{0, 0, 0, 0, 0, 0, 0}};
@@ -46145,6 +46399,9 @@ SWIGEXPORT(void) SWIG_init(void) {
         PyDict_SetItemString(d,"CV_STORAGE_WRITE_BINARY", SWIG_From_int((int)(1))); 
     }
     {
+        PyDict_SetItemString(d,"CV_STORAGE_APPEND", SWIG_From_int((int)(2))); 
+    }
+    {
         PyDict_SetItemString(d,"CV_NODE_NONE", SWIG_From_int((int)(0))); 
     }
     {
@@ -46734,6 +46991,15 @@ SWIGEXPORT(void) SWIG_init(void) {
     }
     {
         PyDict_SetItemString(d,"CV_CALIB_ZERO_TANGENT_DIST", SWIG_From_int((int)(8))); 
+    }
+    {
+        PyDict_SetItemString(d,"CV_CALIB_CB_ADAPTIVE_THRESH", SWIG_From_int((int)(1))); 
+    }
+    {
+        PyDict_SetItemString(d,"CV_CALIB_CB_NORMALIZE_IMAGE", SWIG_From_int((int)(2))); 
+    }
+    {
+        PyDict_SetItemString(d,"CV_CALIB_CB_FILTER_QUADS", SWIG_From_int((int)(4))); 
     }
     {
         PyDict_SetItemString(d,"CV_FM_7POINT", SWIG_From_int((int)(1))); 
