@@ -456,6 +456,8 @@
 
 #define CV_STORAGE_WRITE_BINARY  CV_STORAGE_WRITE
 
+#define CV_STORAGE_APPEND        2
+
 #define CV_NODE_NONE        0
 
 #define CV_NODE_INT         1
@@ -849,6 +851,12 @@
 #define CV_CALIB_FIX_PRINCIPAL_POINT  4
 
 #define CV_CALIB_ZERO_TANGENT_DIST    8
+
+#define CV_CALIB_CB_ADAPTIVE_THRESH  1
+
+#define CV_CALIB_CB_NORMALIZE_IMAGE  2
+
+#define CV_CALIB_CB_FILTER_QUADS     4 
 
 #define CV_FM_7POINT 1
 

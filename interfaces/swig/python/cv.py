@@ -218,6 +218,7 @@ CV_STORAGE_READ = _cv.CV_STORAGE_READ
 CV_STORAGE_WRITE = _cv.CV_STORAGE_WRITE
 CV_STORAGE_WRITE_TEXT = _cv.CV_STORAGE_WRITE_TEXT
 CV_STORAGE_WRITE_BINARY = _cv.CV_STORAGE_WRITE_BINARY
+CV_STORAGE_APPEND = _cv.CV_STORAGE_APPEND
 CV_NODE_NONE = _cv.CV_NODE_NONE
 CV_NODE_INT = _cv.CV_NODE_INT
 CV_NODE_INTEGER = _cv.CV_NODE_INTEGER
@@ -415,6 +416,9 @@ CV_CALIB_USE_INTRINSIC_GUESS = _cv.CV_CALIB_USE_INTRINSIC_GUESS
 CV_CALIB_FIX_ASPECT_RATIO = _cv.CV_CALIB_FIX_ASPECT_RATIO
 CV_CALIB_FIX_PRINCIPAL_POINT = _cv.CV_CALIB_FIX_PRINCIPAL_POINT
 CV_CALIB_ZERO_TANGENT_DIST = _cv.CV_CALIB_ZERO_TANGENT_DIST
+CV_CALIB_CB_ADAPTIVE_THRESH = _cv.CV_CALIB_CB_ADAPTIVE_THRESH
+CV_CALIB_CB_NORMALIZE_IMAGE = _cv.CV_CALIB_CB_NORMALIZE_IMAGE
+CV_CALIB_CB_FILTER_QUADS = _cv.CV_CALIB_CB_FILTER_QUADS
 CV_FM_7POINT = _cv.CV_FM_7POINT
 CV_FM_8POINT = _cv.CV_FM_8POINT
 CV_FM_LMEDS_ONLY = _cv.CV_FM_LMEDS_ONLY
@@ -2933,6 +2937,8 @@ cvGetTextSize = _cv.cvGetTextSize
 
 cvColorToScalar = _cv.cvColorToScalar
 
+cvEllipse2Poly = _cv.cvEllipse2Poly
+
 cvDrawContours = _cv.cvDrawContours
 
 cvLUT = _cv.cvLUT
@@ -4219,6 +4225,10 @@ cvMaxRect = _cv.cvMaxRect
 
 cvBoxPoints = _cv.cvBoxPoints
 
+cvPointSeqFromMat = _cv.cvPointSeqFromMat
+
+cvPointPolygonTest = _cv.cvPointPolygonTest
+
 cvCreateHist = _cv.cvCreateHist
 
 cvSetHistBinRanges = _cv.cvSetHistBinRanges
@@ -4250,6 +4260,8 @@ cvCalcArrBackProject = _cv.cvCalcArrBackProject
 cvCalcArrBackProjectPatch = _cv.cvCalcArrBackProjectPatch
 
 cvCalcProbDensity = _cv.cvCalcProbDensity
+
+cvEqualizeHist = _cv.cvEqualizeHist
 
 cvSnakeImage = _cv.cvSnakeImage
 
@@ -4305,7 +4317,9 @@ cvFindExtrinsicCameraParams2 = _cv.cvFindExtrinsicCameraParams2
 
 cvCalibrateCamera2 = _cv.cvCalibrateCamera2
 
-cvFindChessBoardCornerGuesses = _cv.cvFindChessBoardCornerGuesses
+cvFindChessboardCorners = _cv.cvFindChessboardCorners
+
+cvDrawChessboardCorners = _cv.cvDrawChessboardCorners
 
 cvCreatePOSITObject = _cv.cvCreatePOSITObject
 
