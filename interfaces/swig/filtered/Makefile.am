@@ -13,6 +13,12 @@ AM_CPPFLAGS = \
   $(CV_INCLUDES)                     \
   -DCV_NO_BACKWARD_COMPATIBILITY
 
+# a work-around to force the build of cv.h and constants.h
+# maybe there is a better way...
+noinst_SCRIPTS = headers_generated
+
+headers_generated: cv.h constants.h
+	touch headers_generated
 
 # SWIG ###############################################################################
 
