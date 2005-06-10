@@ -24,7 +24,7 @@ AC_CONFIG_AUX_DIR([autotools])
 AC_CONFIG_MACRO_DIR([autotools/aclocal])
 
 # put CVS revision of this configure.in into the resulting configure script
-AC_REVISION($Revision: 1.12 $)
+AC_REVISION($Revision: 1.13 $)
 
 # Detect the canonical host and target build environment
 AC_CANONICAL_HOST
@@ -336,10 +336,17 @@ Configuration:
     Use v4l:                  ${have_v4l}
 
     Build wrappers for
-    - Python                  ${enable_python}
-    SWIG is at                ${SWIG}
+    - Python                  ${enable_python}])
 
-    Build demo apps           ${with_apps}
+if test -n "$SWIG" ; then
+AC_MSG_RESULT([    SWIG is at                ${SWIG}
+])
+else
+AC_MSG_RESULT([    SWIG is at                No swig detected. Use existing files.
+])
+fi
+
+AC_MSG_RESULT([    Build demo apps           ${with_apps}
 
 Now run make ...
 ])
