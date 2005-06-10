@@ -32,14 +32,18 @@ AC_DEFUN([AC_PATH_SWIG],[
 
 				if test $swig_required_version -gt $swig_tmp ; then
 					AC_MSG_WARN([SWIG version $1 is required, you have $SWIG_VERSION])
+					SWIG=""
 				fi
 			fi
 		else
 			AC_MSG_WARN([cannot determine SWIG version])
+			SWIG=""
 		fi
 
-		SWIG_RUNTIME_LIBS_DIR="${SWIG%/bin*}/lib"
-		AC_MSG_NOTICE([SWIG runtime library directory is '$SWIG_RUNTIME_LIBS_DIR'])
+		if test -n "$SWIG" ; then
+			SWIG_RUNTIME_LIBS_DIR="${SWIG%/bin*}/lib"
+			AC_MSG_NOTICE([SWIG runtime library directory is '$SWIG_RUNTIME_LIBS_DIR'])
+		fi
 	fi
 	AC_SUBST([SWIG_VERSION])
 	AC_SUBST([SWIG_RUNTIME_LIBS_DIR])
