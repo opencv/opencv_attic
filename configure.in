@@ -24,7 +24,7 @@ AC_CONFIG_AUX_DIR([autotools])
 AC_CONFIG_MACRO_DIR([autotools/aclocal])
 
 # put CVS revision of this configure.in into the resulting configure script
-AC_REVISION($Revision: 1.13 $)
+AC_REVISION($Revision: 1.14 $)
 
 # Detect the canonical host and target build environment
 AC_CANONICAL_HOST
@@ -312,6 +312,7 @@ tests/cxcore/Makefile
 tests/cxcore/src/Makefile
 samples/Makefile
 samples/c/Makefile
+samples/python/Makefile
 apps/Makefile
 apps/haartraining/Makefile
 apps/haartraining/include/Makefile
