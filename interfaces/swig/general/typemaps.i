@@ -67,26 +67,6 @@
 /* include exception.i, so we can generate exceptions when we found errors */
 %include "exception.i"
 
-/* I have commented this, because this cause problems with for example */
-/* cvConvertScale */
-/**
- * This is used to allow functions expecting an IplImage to be 
- * called with CvArr.
- */
-/* %typemap(in) CvArr *  */
-/* {  */
-/*     int err = SWIG_ConvertPtr */
-/*         ( */
-/* 	 $input, */
-/* 	 (void **) &$1,  */
-/* 	 $descriptor(IplImage *),  */
-/* 	 SWIG_POINTER_EXCEPTION */
-/* 	 ); */
-/*     if (err == -1) */
-/*         return 0;  */
-/* } */
-/* %typemap(in) const CvArr* = CvArr*; */
-
 /* map one list of integer to the two parameters dimention/sizes */
 %typemap(in) (int dims, int* sizes) {
     int i;
@@ -149,3 +129,80 @@
  */
 %apply float *OUTPUT {float *min_value};
 %apply float *OUTPUT {float *max_value};
+
+/**
+ * the input argument of cvConvexHull2 "const CvArr *input" is converted from 
+ * a list of CvPoint().
+ */
+%typemap(in) (const CvArr *input){
+    int i;
+
+    /* get the size of the input array */
+    int size = PyList_Size ($input);
+
+    /* allocate the points matrix necessary for calling cvConvexHull2 */
+    CvPoint* points = (CvPoint *)malloc (size * sizeof (points[0]));
+    CvMat pointMat = cvMat (1, size, CV_32SC2, points);
+    $1 = &pointMat;
+
+    /* allocat the output matrix to get the result of the call */
+    int *hull = (int*)malloc (size * sizeof (hull[0]));
+    hullMat2 = cvMat (1, size, CV_32SC1, hull);
+
+    /* extract all the objects from the input list, and fill the
+       points matrix */
+    for (i = 0; i < size; i++) {
+
+	/* get the current item */
+	PyObject *item = PyList_GetItem ($input, i);
+
+	/* convert from a Python CvPoint pointer to a C CvPoint pointer */
+	CvPoint *p = NULL;
+	SWIG_Python_ConvertPtr (item, (void **)&p, $descriptor(CvPoint *),
+				SWIG_POINTER_EXCEPTION);
+
+	/* extract the x and y positions */
+	points [i].x = p->x;
+	points [i].y = p->y;
+    }
+}
+
+/**
+ * what we need to cleanup for the input argument of cvConvexHull2
+ * "const CvArr *input"
+ */
+%typemap(freearg) (const CvArr *input){
+    free (((CvMat *)$1)->data.i);
+}
+
+/**
+ * say we want to ignore the output parameter of cvConvexHull2
+ */
+%typemap(in, numinputs=0) (void *hull_storage) (CvMat hullMat) {
+    $1 = &hullMat;
+}
+
+/**
+ * convert the function output parameter hull_storage to a Python
+ * list
+ */
+%typemap(argout) (void *hull_storage) {
+    int i;
+    PyObject *to_return;
+    
+    /* create the list to return */
+    to_return = PyList_New (hullMat$argnum.cols);
+
+    /* extract all the integer values of the result, and add it to the
+       final resulting list */
+    for (i = 0; i < hullMat$argnum.cols; i++) {
+	PyList_SetItem (to_return, i,
+			PyInt_FromLong (hullMat$argnum.data.i [i]));
+    }
+
+    /* some cleanup */
+    free (hullMat$argnum.data.i);
+
+    /* we can now return the value */
+    $result = to_return;
+}
