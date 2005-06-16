@@ -40686,28 +40686,52 @@ static PyObject *_wrap_cvConvexHull2(PyObject *, PyObject *args) {
     int arg3 ;
     int arg4 ;
     CvSeq *result;
+    CvMat hullMat2 ;
     PyObject * obj0 = 0 ;
     PyObject * obj1 = 0 ;
     PyObject * obj2 = 0 ;
-    PyObject * obj3 = 0 ;
     
-    if(!PyArg_ParseTuple(args,(char *)"OOOO:cvConvexHull2",&obj0,&obj1,&obj2,&obj3)) goto fail;
     {
-        if ((SWIG_ConvertPtr(obj0,(void **)(&arg1),0,SWIG_POINTER_EXCEPTION|0))== -1) {
-            SWIG_arg_fail(1);SWIG_fail;
+        arg2 = &hullMat2;
+    }
+    if(!PyArg_ParseTuple(args,(char *)"OOO:cvConvexHull2",&obj0,&obj1,&obj2)) goto fail;
+    {
+        int i;
+        
+        /* get the size of the input array */
+        int size = PyList_Size (obj0);
+        
+        /* allocate the points matrix necessary for calling cvConvexHull2 */
+        CvPoint* points = (CvPoint *)malloc (size * sizeof (points[0]));
+        CvMat pointMat = cvMat (1, size, CV_32SC2, points);
+        arg1 = &pointMat;
+        
+        /* allocat the output matrix to get the result of the call */
+        int *hull = (int*)malloc (size * sizeof (hull[0]));
+        hullMat2 = cvMat (1, size, CV_32SC1, hull);
+        
+        /* extract all the objects from the input list, and fill the
+               points matrix */
+        for (i = 0; i < size; i++) {
+            /* get the current item */
+            PyObject *item = PyList_GetItem (obj0, i);
+            
+            /* convert from a Python CvPoint pointer to a C CvPoint pointer */
+            CvPoint *p = NULL;
+            SWIG_Python_ConvertPtr (item, (void **)&p, SWIGTYPE_p_CvPoint,
+            SWIG_POINTER_EXCEPTION);
+            
+            /* extract the x and y positions */
+            points [i].x = p->x;
+            points [i].y = p->y;
         }
     }
     {
-        if ((SWIG_ConvertPtr(obj1,(void **)(&arg2),0,SWIG_POINTER_EXCEPTION|0))== -1) {
-            SWIG_arg_fail(2);SWIG_fail;
-        }
-    }
-    {
-        arg3 = (int)(SWIG_As_int(obj2)); 
+        arg3 = (int)(SWIG_As_int(obj1)); 
         if (SWIG_arg_fail(3)) SWIG_fail;
     }
     {
-        arg4 = (int)(SWIG_As_int(obj3)); 
+        arg4 = (int)(SWIG_As_int(obj2)); 
         if (SWIG_arg_fail(4)) SWIG_fail;
     }
     {
@@ -40720,8 +40744,34 @@ static PyObject *_wrap_cvConvexHull2(PyObject *, PyObject *args) {
         } 
     }
     resultobj = SWIG_NewPointerObj((void*)(result), SWIGTYPE_p_CvSeq, 0);
+    {
+        int i;
+        PyObject *to_return;
+        
+        /* create the list to return */
+        to_return = PyList_New (hullMat2.cols);
+        
+        /* extract all the integer values of the result, and add it to the
+               final resulting list */
+        for (i = 0; i < hullMat2.cols; i++) {
+            PyList_SetItem (to_return, i,
+            PyInt_FromLong (hullMat2.data.i [i]));
+        }
+        
+        /* some cleanup */
+        free (hullMat2.data.i);
+        
+        /* we can now return the value */
+        resultobj = to_return;
+    }
+    {
+        free (((CvMat *)arg1)->data.i);
+    }
     return resultobj;
     fail:
+    {
+        free (((CvMat *)arg1)->data.i);
+    }
     return NULL;
 }
 
