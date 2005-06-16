@@ -13,6 +13,8 @@ for fn in sys.argv[1:]:
     for l in f.xreadlines():
         if re.match( r"^#define\s+(CV_|IPL_)\w+\s+", l ):
             in_define = 1
+        if re.match (r"^#define\s+CV_MAKETYPE", l):
+            in_define = 1
         if in_define:
             print l[:-1]
             if not l.endswith( "\\\n" ):
