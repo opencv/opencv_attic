@@ -208,6 +208,7 @@ AM_CPPFLAGS = \
 # a work-around to force the build of cv.h and constants.h
 # maybe there is a better way...
 noinst_SCRIPTS = headers_generated
+MOSTLYCLEANFILES = headers_generated cv.h constants.h
 all: all-am
 
 .SUFFIXES:
@@ -303,6 +304,7 @@ install-strip:
 	  `test -z '$(STRIP)' || \
 	    echo "INSTALL_PROGRAM_ENV=STRIPPROG='$(STRIP)'"` install
 mostlyclean-generic:
+	-test -z "$(MOSTLYCLEANFILES)" || rm -f $(MOSTLYCLEANFILES)
 
 clean-generic:
 
@@ -367,7 +369,6 @@ uninstall-am: uninstall-info-am
 	maintainer-clean-generic mostlyclean mostlyclean-generic \
 	mostlyclean-libtool pdf pdf-am ps ps-am uninstall uninstall-am \
 	uninstall-info-am
-
 
 headers_generated: cv.h constants.h
 	touch headers_generated
