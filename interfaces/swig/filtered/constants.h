@@ -234,6 +234,8 @@
 
 #define CV_USRTYPE1 7
 
+#define CV_MAKETYPE(depth,cn) ((depth) + (((cn)-1) << CV_CN_SHIFT))
+
 #define CV_MAKE_TYPE CV_MAKETYPE
 
 #define CV_8UC1 CV_MAKETYPE(CV_8U,1)

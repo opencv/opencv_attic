@@ -46216,6 +46216,90 @@ SWIGEXPORT(void) SWIG_init(void) {
         PyDict_SetItemString(d,"CV_USRTYPE1", SWIG_From_int((int)(7))); 
     }
     {
+        PyDict_SetItemString(d,"CV_8UC1", SWIG_From_int((int)(((0) +(((1) -1)<<3))))); 
+    }
+    {
+        PyDict_SetItemString(d,"CV_8UC2", SWIG_From_int((int)(((0) +(((2) -1)<<3))))); 
+    }
+    {
+        PyDict_SetItemString(d,"CV_8UC3", SWIG_From_int((int)(((0) +(((3) -1)<<3))))); 
+    }
+    {
+        PyDict_SetItemString(d,"CV_8UC4", SWIG_From_int((int)(((0) +(((4) -1)<<3))))); 
+    }
+    {
+        PyDict_SetItemString(d,"CV_8SC1", SWIG_From_int((int)(((1) +(((1) -1)<<3))))); 
+    }
+    {
+        PyDict_SetItemString(d,"CV_8SC2", SWIG_From_int((int)(((1) +(((2) -1)<<3))))); 
+    }
+    {
+        PyDict_SetItemString(d,"CV_8SC3", SWIG_From_int((int)(((1) +(((3) -1)<<3))))); 
+    }
+    {
+        PyDict_SetItemString(d,"CV_8SC4", SWIG_From_int((int)(((1) +(((4) -1)<<3))))); 
+    }
+    {
+        PyDict_SetItemString(d,"CV_16UC1", SWIG_From_int((int)(((2) +(((1) -1)<<3))))); 
+    }
+    {
+        PyDict_SetItemString(d,"CV_16UC2", SWIG_From_int((int)(((2) +(((2) -1)<<3))))); 
+    }
+    {
+        PyDict_SetItemString(d,"CV_16UC3", SWIG_From_int((int)(((2) +(((3) -1)<<3))))); 
+    }
+    {
+        PyDict_SetItemString(d,"CV_16UC4", SWIG_From_int((int)(((2) +(((4) -1)<<3))))); 
+    }
+    {
+        PyDict_SetItemString(d,"CV_16SC1", SWIG_From_int((int)(((3) +(((1) -1)<<3))))); 
+    }
+    {
+        PyDict_SetItemString(d,"CV_16SC2", SWIG_From_int((int)(((3) +(((2) -1)<<3))))); 
+    }
+    {
+        PyDict_SetItemString(d,"CV_16SC3", SWIG_From_int((int)(((3) +(((3) -1)<<3))))); 
+    }
+    {
+        PyDict_SetItemString(d,"CV_16SC4", SWIG_From_int((int)(((3) +(((4) -1)<<3))))); 
+    }
+    {
+        PyDict_SetItemString(d,"CV_32SC1", SWIG_From_int((int)(((4) +(((1) -1)<<3))))); 
+    }
+    {
+        PyDict_SetItemString(d,"CV_32SC2", SWIG_From_int((int)(((4) +(((2) -1)<<3))))); 
+    }
+    {
+        PyDict_SetItemString(d,"CV_32SC3", SWIG_From_int((int)(((4) +(((3) -1)<<3))))); 
+    }
+    {
+        PyDict_SetItemString(d,"CV_32SC4", SWIG_From_int((int)(((4) +(((4) -1)<<3))))); 
+    }
+    {
+        PyDict_SetItemString(d,"CV_32FC1", SWIG_From_int((int)(((5) +(((1) -1)<<3))))); 
+    }
+    {
+        PyDict_SetItemString(d,"CV_32FC2", SWIG_From_int((int)(((5) +(((2) -1)<<3))))); 
+    }
+    {
+        PyDict_SetItemString(d,"CV_32FC3", SWIG_From_int((int)(((5) +(((3) -1)<<3))))); 
+    }
+    {
+        PyDict_SetItemString(d,"CV_32FC4", SWIG_From_int((int)(((5) +(((4) -1)<<3))))); 
+    }
+    {
+        PyDict_SetItemString(d,"CV_64FC1", SWIG_From_int((int)(((6) +(((1) -1)<<3))))); 
+    }
+    {
+        PyDict_SetItemString(d,"CV_64FC2", SWIG_From_int((int)(((6) +(((2) -1)<<3))))); 
+    }
+    {
+        PyDict_SetItemString(d,"CV_64FC3", SWIG_From_int((int)(((6) +(((3) -1)<<3))))); 
+    }
+    {
+        PyDict_SetItemString(d,"CV_64FC4", SWIG_From_int((int)(((6) +(((4) -1)<<3))))); 
+    }
+    {
         PyDict_SetItemString(d,"CV_AUTO_STEP", SWIG_From_int((int)(0x7fffffff))); 
     }
     {
@@ -46315,6 +46399,12 @@ SWIGEXPORT(void) SWIG_init(void) {
         PyDict_SetItemString(d,"CV_SEQ_ELTYPE_MASK", SWIG_From_int((int)(((1<<5) -1)))); 
     }
     {
+        PyDict_SetItemString(d,"CV_SEQ_ELTYPE_POINT", SWIG_From_int((int)(((4) +(((2) -1)<<3))))); 
+    }
+    {
+        PyDict_SetItemString(d,"CV_SEQ_ELTYPE_CODE", SWIG_From_int((int)(((0) +(((1) -1)<<3))))); 
+    }
+    {
         PyDict_SetItemString(d,"CV_SEQ_ELTYPE_GENERIC", SWIG_From_int((int)(0))); 
     }
     {
@@ -46322,6 +46412,9 @@ SWIGEXPORT(void) SWIG_init(void) {
     }
     {
         PyDict_SetItemString(d,"CV_SEQ_ELTYPE_PPOINT", SWIG_From_int((int)(7))); 
+    }
+    {
+        PyDict_SetItemString(d,"CV_SEQ_ELTYPE_INDEX", SWIG_From_int((int)(((4) +(((1) -1)<<3))))); 
     }
     {
         PyDict_SetItemString(d,"CV_SEQ_ELTYPE_GRAPH_EDGE", SWIG_From_int((int)(0))); 
@@ -46334,6 +46427,9 @@ SWIGEXPORT(void) SWIG_init(void) {
     }
     {
         PyDict_SetItemString(d,"CV_SEQ_ELTYPE_CONNECTED_COMP", SWIG_From_int((int)(0))); 
+    }
+    {
+        PyDict_SetItemString(d,"CV_SEQ_ELTYPE_POINT3D", SWIG_From_int((int)(((5) +(((3) -1)<<3))))); 
     }
     {
         PyDict_SetItemString(d,"CV_SEQ_KIND_BITS", SWIG_From_int((int)(5))); 
@@ -46381,10 +46477,37 @@ SWIGEXPORT(void) SWIG_init(void) {
         PyDict_SetItemString(d,"CV_ORIENTED_GRAPH", SWIG_From_int((int)(((3<<5)|(1<<(5+5)))))); 
     }
     {
+        PyDict_SetItemString(d,"CV_SEQ_POINT_SET", SWIG_From_int((int)(((0<<5)|((4) +(((2) -1)<<3)))))); 
+    }
+    {
+        PyDict_SetItemString(d,"CV_SEQ_POINT3D_SET", SWIG_From_int((int)(((0<<5)|((5) +(((3) -1)<<3)))))); 
+    }
+    {
+        PyDict_SetItemString(d,"CV_SEQ_POLYLINE", SWIG_From_int((int)(((1<<5)|((4) +(((2) -1)<<3)))))); 
+    }
+    {
+        PyDict_SetItemString(d,"CV_SEQ_POLYGON", SWIG_From_int((int)(((1<<(5+5))|((1<<5)|((4) +(((2) -1)<<3))))))); 
+    }
+    {
+        PyDict_SetItemString(d,"CV_SEQ_CONTOUR", SWIG_From_int((int)(((1<<(5+5))|((1<<5)|((4) +(((2) -1)<<3))))))); 
+    }
+    {
+        PyDict_SetItemString(d,"CV_SEQ_SIMPLE_POLYGON", SWIG_From_int((int)(((2<<(5+5))|((1<<(5+5))|((1<<5)|((4) +(((2) -1)<<3)))))))); 
+    }
+    {
+        PyDict_SetItemString(d,"CV_SEQ_CHAIN", SWIG_From_int((int)(((1<<5)|((0) +(((1) -1)<<3)))))); 
+    }
+    {
+        PyDict_SetItemString(d,"CV_SEQ_CHAIN_CONTOUR", SWIG_From_int((int)(((1<<(5+5))|((1<<5)|((0) +(((1) -1)<<3))))))); 
+    }
+    {
         PyDict_SetItemString(d,"CV_SEQ_POLYGON_TREE", SWIG_From_int((int)(((2<<5)|0)))); 
     }
     {
         PyDict_SetItemString(d,"CV_SEQ_CONNECTED_COMP", SWIG_From_int((int)(((0<<5)|0)))); 
+    }
+    {
+        PyDict_SetItemString(d,"CV_SEQ_INDEX", SWIG_From_int((int)(((0<<5)|((4) +(((1) -1)<<3)))))); 
     }
     {
         PyDict_SetItemString(d,"CV_STORAGE_READ", SWIG_From_int((int)(0))); 
