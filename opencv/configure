@@ -21975,7 +21975,7 @@ fi
 
 
 
-                                                                                                                                                                                                                                                                                                                                          ac_config_files="$ac_config_files Makefile opencv.pc opencv.spec docs/Makefile data/Makefile cxcore/Makefile cxcore/include/Makefile cxcore/src/Makefile cv/Makefile cv/include/Makefile cv/src/Makefile cvaux/Makefile cvaux/include/Makefile cvaux/src/Makefile otherlibs/Makefile otherlibs/highgui/Makefile interfaces/Makefile interfaces/swig/Makefile interfaces/swig/filtered/Makefile interfaces/swig/python/Makefile tests/Makefile tests/trs/Makefile tests/cv/Makefile tests/cv/src/Makefile tests/cxts/Makefile tests/cxcore/Makefile tests/cxcore/src/Makefile samples/Makefile samples/c/Makefile apps/Makefile apps/haartraining/Makefile apps/haartraining/include/Makefile apps/haartraining/src/Makefile"
+                                                                                                                                                                                                                                                                                                                                                    ac_config_files="$ac_config_files Makefile opencv.pc opencv.spec docs/Makefile data/Makefile cxcore/Makefile cxcore/include/Makefile cxcore/src/Makefile cv/Makefile cv/include/Makefile cv/src/Makefile cvaux/Makefile cvaux/include/Makefile cvaux/src/Makefile otherlibs/Makefile otherlibs/highgui/Makefile interfaces/Makefile interfaces/swig/Makefile interfaces/swig/filtered/Makefile interfaces/swig/python/Makefile tests/Makefile tests/trs/Makefile tests/cv/Makefile tests/cv/src/Makefile tests/cxts/Makefile tests/cxcore/Makefile tests/cxcore/src/Makefile samples/Makefile samples/c/Makefile samples/python/Makefile apps/Makefile apps/haartraining/Makefile apps/haartraining/include/Makefile apps/haartraining/src/Makefile"
 
 cat >confcache <<\_ACEOF
 # This file is a shell script that caches the results of configure
@@ -22590,6 +22590,7 @@ do
   "tests/cxcore/src/Makefile" ) CONFIG_FILES="$CONFIG_FILES tests/cxcore/src/Makefile" ;;
   "samples/Makefile" ) CONFIG_FILES="$CONFIG_FILES samples/Makefile" ;;
   "samples/c/Makefile" ) CONFIG_FILES="$CONFIG_FILES samples/c/Makefile" ;;
+  "samples/python/Makefile" ) CONFIG_FILES="$CONFIG_FILES samples/python/Makefile" ;;
   "apps/Makefile" ) CONFIG_FILES="$CONFIG_FILES apps/Makefile" ;;
   "apps/haartraining/Makefile" ) CONFIG_FILES="$CONFIG_FILES apps/haartraining/Makefile" ;;
   "apps/haartraining/include/Makefile" ) CONFIG_FILES="$CONFIG_FILES apps/haartraining/include/Makefile" ;;
