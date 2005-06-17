@@ -615,6 +615,7 @@ uninstall-am: uninstall-info-am uninstall-pkgpythonLTLIBRARIES \
 @UPDATE_SWIG_WRAPPERS_TRUE@         $(top_srcdir)/interfaces/swig/general/typemaps.i       \
 @UPDATE_SWIG_WRAPPERS_TRUE@         $(top_srcdir)/interfaces/swig/general/extensions.i     \
 @UPDATE_SWIG_WRAPPERS_TRUE@         $(top_srcdir)/interfaces/swig/general/doublepointers.i \
+@UPDATE_SWIG_WRAPPERS_TRUE@         $(top_srcdir)/interfaces/swig/general/sizeof.i         \
 @UPDATE_SWIG_WRAPPERS_TRUE@         ../filtered/cv.h            \
 @UPDATE_SWIG_WRAPPERS_TRUE@         ../filtered/constants.h     \
 @UPDATE_SWIG_WRAPPERS_TRUE@         Makefile

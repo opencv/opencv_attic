@@ -78,7 +78,7 @@ if __name__ == '__main__':
     highgui.cvShowImage ("image", image)
 
     # find the contours
-    nb_contours, contours = cv.cvFindContours (image,
+    nb_contours, contours = cv.cvFindContours (image, cv.sizeof_CvContour,
                                                cv.CV_RETR_TREE,
                                                cv.CV_CHAIN_APPROX_SIMPLE,
                                                cv.cvPoint (0,0))

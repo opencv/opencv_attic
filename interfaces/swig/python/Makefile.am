@@ -57,6 +57,7 @@ _cv.cpp: cv.i imagedata.i error.h error.cpp                     \
          $(top_srcdir)/interfaces/swig/general/typemaps.i       \
          $(top_srcdir)/interfaces/swig/general/extensions.i     \
          $(top_srcdir)/interfaces/swig/general/doublepointers.i \
+         $(top_srcdir)/interfaces/swig/general/sizeof.i         \
          ../filtered/cv.h            \
          ../filtered/constants.h     \
          Makefile
