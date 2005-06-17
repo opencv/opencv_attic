@@ -206,3 +206,73 @@
     /* we can now return the value */
     $result = to_return;
 }
+
+/**
+ * automatic creation of storage when functions need it
+ */
+%typemap(in, numinputs=0) (CvMemStorage *storage) {
+    $1 = cvCreateMemStorage (0);
+}
+
+/**
+ * automatic extraction of header size, used when creating CvSeq
+ */
+%typemap(in, numinputs=0) (int header_size) {
+    $1 = sizeof (CvContour);
+}
+
+/**
+ * this is mainly an "output parameter"
+ * So, just allocate the memory as input
+ */
+%typemap (in, numinputs=0) (CvSeq **first_contour) {
+    CvSeq *seq = (CvSeq *)malloc (sizeof (CvSeq));
+    $1 = &seq;
+}
+
+/**
+ * return the finded contours with all the others parametres
+ */
+%typemap(argout) (CvSeq **first_contour) {
+    PyObject *to_add, *o2;
+
+    /* extract the pointer we want to add to the returned tuple */
+    to_add = SWIG_NewPointerObj (*$1, $descriptor(CvSeq *), 0);
+
+    if ((!$result) || ($result == Py_None)) {
+	/* no other results, so just put current pointer instead */
+        $result = to_add;
+    } else {
+	/* we have other results, so add it to the end */
+
+        if (!PyTuple_Check ($result)) {
+	    /* previous result is not a tuple, so create one and put
+	       previous result and current pointer in it */
+
+	    /* first, save previous result */
+            PyObject *obj_save = $result;
+
+	    /* then, create the tuple */
+            $result = PyTuple_New (1);
+
+	    /* finaly, put the saved value in the tuple */
+            PyTuple_SetItem ($result, 0, obj_save);
+        }
+
+	/* create a new tuple to put in our new pointer python object */
+        PyObject *my_obj = PyTuple_New (1);
+
+	/* put in our new pointer python object */
+        PyTuple_SetItem (my_obj, 0, to_add);
+
+	/* save the previous result */
+        PyObject *obj_save = $result;
+
+	/* concat previous and our new result */
+        $result = PySequence_Concat (obj_save, my_obj);
+
+	/* decrement the usage of no more used objects */
+        Py_DECREF (obj_save);
+        Py_DECREF (my_obj);
+    }
+}
