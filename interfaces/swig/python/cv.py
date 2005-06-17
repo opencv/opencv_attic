@@ -36,6 +36,8 @@ except AttributeError:
 del types
 
 
+sizeof_CvContour = _cv.sizeof_CvContour
+sizeof_CvPoint = _cv.sizeof_CvPoint
 CV_AUTOSTEP = _cv.CV_AUTOSTEP
 CV_MAX_ARR = _cv.CV_MAX_ARR
 CV_NO_DEPTH_CHECK = _cv.CV_NO_DEPTH_CHECK
