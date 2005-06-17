@@ -67,6 +67,8 @@
 /* include exception.i, so we can generate exceptions when we found errors */
 %include "exception.i"
 
+%include "sizeof.i"
+
 /* map one list of integer to the two parameters dimention/sizes */
 %typemap(in) (int dims, int* sizes) {
     int i;
@@ -212,13 +214,6 @@
  */
 %typemap(in, numinputs=0) (CvMemStorage *storage) {
     $1 = cvCreateMemStorage (0);
-}
-
-/**
- * automatic extraction of header size, used when creating CvSeq
- */
-%typemap(in, numinputs=0) (int header_size) {
-    $1 = sizeof (CvContour);
 }
 
 /**
