@@ -229,7 +229,7 @@
  * return the finded contours with all the others parametres
  */
 %typemap(argout) (CvSeq **first_contour) {
-    PyObject *to_add, *o2;
+    PyObject *to_add;
 
     /* extract the pointer we want to add to the returned tuple */
     to_add = SWIG_NewPointerObj (*$1, $descriptor(CvSeq *), 0);
