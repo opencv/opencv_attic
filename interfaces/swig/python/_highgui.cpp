@@ -1711,6 +1711,31 @@ SWIGINTERNSHORT PyObject*
 #ifdef __cplusplus
 extern "C" {
 #endif
+
+
+    /* the wrapping code to enable the use of Python-based callbacks */
+
+    /* a global variable to store the callback... Very uggly */
+    static PyObject *my_cb_func = NULL;
+
+    /* the internal C callback function which is responsible to call
+       the Python real callback function */
+    static void _internal_cb_func (int pos) {
+	PyObject *result;
+
+	/* the argument of the callback ready to be passed to Python code */
+	PyObject *arg1 = PyInt_FromLong (pos);
+
+	/* build the tuple for calling the Python callback */
+	PyObject *arglist = Py_BuildValue ("(O)", arg1);
+
+	/* call the Python callback */
+	result = PyEval_CallObject (my_cb_func, arglist);
+
+	/* cleanup */
+	Py_XDECREF (result);
+    }
+
 static PyObject *_wrap_cvInitSystem(PyObject *, PyObject *args) {
     PyObject *resultobj;
     int arg1 ;
@@ -1992,6 +2017,8 @@ static PyObject *_wrap_cvCreateTrackbar(PyObject *, PyObject *args) {
     int arg4 ;
     CvTrackbarCallback arg5 = (CvTrackbarCallback) 0 ;
     int result;
+    int temp3 ;
+    int res3 = 0 ;
     PyObject * obj0 = 0 ;
     PyObject * obj1 = 0 ;
     PyObject * obj2 = 0 ;
@@ -2005,14 +2032,25 @@ static PyObject *_wrap_cvCreateTrackbar(PyObject *, PyObject *args) {
     if (!SWIG_AsCharPtr(obj1, (char**)&arg2)) {
         SWIG_arg_fail(2);SWIG_fail;
     }
-    SWIG_Python_ConvertPtr(obj2, (void **)&arg3, SWIGTYPE_p_int, SWIG_POINTER_EXCEPTION | 0);
-    if (SWIG_arg_fail(3)) SWIG_fail;
+    {
+        if (!(SWIG_ConvertPtr(obj2,(void **)(&arg3),SWIGTYPE_p_int,0) != -1)) {
+            temp3 = SWIG_As_int(obj2);
+            if (SWIG_arg_fail(3)) SWIG_fail;
+            arg3 = &temp3;
+            res3 = SWIG_NEWOBJ;
+        }
+    }
     {
         arg4 = (int)(SWIG_As_int(obj3)); 
         if (SWIG_arg_fail(4)) SWIG_fail;
     }
-    SWIG_Python_ConvertPtr(obj4, (void **)&arg5, SWIGTYPE_p_f_int__void, SWIG_POINTER_EXCEPTION | 0);
-    if (SWIG_arg_fail(5)) SWIG_fail;
+    {
+        /* memorize the Python address of the callback function */
+        my_cb_func = (PyObject *) obj4;
+        
+        /* prepare to call the C function who will register the callback */
+        arg5 = (CvTrackbarCallback) _internal_cb_func;
+    }
     {
         try {
             result = (int)cvCreateTrackbar((char const *)arg1,(char const *)arg2,arg3,arg4,arg5);
