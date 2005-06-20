@@ -33,7 +33,6 @@ def on_trackbar (position):
         # zero or negative value
         # => get to the nearest face to make it look more funny
         _contours = contours.h_next.h_next.h_next
-        print "TODO..."
         
     # first, clear the image where we will draw contours
     cv.cvSetZero (contours_image)
