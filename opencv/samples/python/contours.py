@@ -6,13 +6,46 @@ print "OpenCV Python version of contours"
 from opencv import cv
 from opencv import highgui
 
+# some default constants
 _SIZE = 500
+_DEFAULT_LEVEL = 3
 
+# definition of some colors
 _red = cv.cvScalar (0, 0, 255, 0);
 _green = cv.cvScalar (0, 255, 0, 0);
-
 _white = cv.cvRealScalar (255)
 _black = cv.cvRealScalar (0)
+
+# the callback on the trackbar, to set the level of contours we want
+# to display
+def on_trackbar (position):
+
+    # create the image for putting in it the founded contours
+    contours_image = cv.cvCreateImage (cv.cvSize (_SIZE, _SIZE), 8, 3)
+
+    # compute the real level of display, given the current position
+    levels = position - 3
+
+    # initialisation
+    _contours = contours
+    
+    if levels <= 0:
+        # zero or negative value
+        # => get to the nearest face to make it look more funny
+        _contours = contours.h_next.h_next.h_next
+        print "TODO..."
+        
+    # first, clear the image where we will draw contours
+    cv.cvSetZero (contours_image)
+    
+    # draw contours in red and green
+    cv.cvDrawContours (contours_image, _contours,
+                       _red, _green,
+                       levels, 3, cv.CV_AA,
+                       cv.cvPoint (0, 0))
+
+    # finally, show the image
+    highgui.cvShowImage ("contours", contours_image)
 
 if __name__ == '__main__':
 
@@ -27,7 +60,6 @@ if __name__ == '__main__':
         dx = (i % 2) * 250 - 30
         dy = (i / 2) * 150
         
-
         cv.cvEllipse (image,
                       cv.cvPoint (dx + 150, dy + 100),
                       cv.cvSize (100, 70),
@@ -83,33 +115,18 @@ if __name__ == '__main__':
                                                cv.CV_CHAIN_APPROX_SIMPLE,
                                                cv.cvPoint (0,0))
 
-    # create the image for putting in it the founded contours
-    contours_image = cv.cvCreateImage (cv.cvSize (_SIZE, _SIZE), 8, 3)
-
+    # comment this out if you do not want approximation
+    contours = cv.cvApproxPoly (contours, cv.sizeof_CvContour,
+                                cv.CV_POLY_APPROX_DP, 3, 1)
+    
     # create the window for the contours
     highgui.cvNamedWindow ("contours", 1)
-    
-    # initialisations
-    k = 0
-    i = 0
 
-    # loop until escape is pressed
-    while k != 27:
+    # create the trackbar, to enable the change of the displayed level
+    highgui.cvCreateTrackbar ("levels+3", "contours", 3, 7, on_trackbar)
 
-        # first, clear the image where we will draw contours
-        cv.cvSetZero (contours_image)
+    # call one time the callback, so we will have the 1st display done
+    on_trackbar (_DEFAULT_LEVEL)
 
-        # draw contours in red and green
-        cv.cvDrawContours (contours_image, contours,
-                           _red, _green,
-                           i, 3, cv.CV_AA,
-                           cv.cvPoint (0, 0))
-
-        # show the final result
-        highgui.cvShowImage ("contours", contours_image)
-
-        # wait a key pressed
-        k = highgui.cvWaitKey (10)
-
-        # next i, to change the number of displayed contours
-        i = (i + 1) % 5
+    # wait a key pressed to end
+    highgui.cvWaitKey (0)

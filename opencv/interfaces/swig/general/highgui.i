@@ -51,11 +51,54 @@
 #include "highgui.h"
 %}
 
+%wrapper %{
+
+    /* the wrapping code to enable the use of Python-based callbacks */
+
+    /* a global variable to store the callback... Very uggly */
+    static PyObject *my_cb_func = NULL;
+
+    /* the internal C callback function which is responsible to call
+       the Python real callback function */
+    static void _internal_cb_func (int pos) {
+	PyObject *result;
+
+	/* the argument of the callback ready to be passed to Python code */
+	PyObject *arg1 = PyInt_FromLong (pos);
+
+	/* build the tuple for calling the Python callback */
+	PyObject *arglist = Py_BuildValue ("(O)", arg1);
+
+	/* call the Python callback */
+	result = PyEval_CallObject (my_cb_func, arglist);
+
+	/* cleanup */
+	Py_XDECREF (result);
+    }
+%}
+
+/**
+ * typemap to memorize the Python callback when doing cvCreateTrackbar ()
+ */
+%typemap(in) CvTrackbarCallback {
+
+    /* memorize the Python address of the callback function */
+    my_cb_func = (PyObject *) $input;
+
+    /* prepare to call the C function who will register the callback */
+    $1 = (CvTrackbarCallback) _internal_cb_func;
+}
+
 %import "./cv.i"
 
 %include "./memory.i"
 %include "./typemaps.i"
 
+/**
+ * int *value  in cvCreateTrackbar() is only used for input.
+ * for output, use the pos in the callback
+ */
+%apply int *INPUT {int *value};
 
 %newobject cvLoadImage;
 
@@ -69,4 +112,5 @@
 
 %extend CvCapture     { ~CvCapture ()     { CvCapture *     dummy = self; cvReleaseCapture     (& dummy); } }
 %extend CvVideoWriter { ~CvVideoWriter () { CvVideoWriter * dummy = self; cvReleaseVideoWriter (& dummy); } }
+
 
