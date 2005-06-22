@@ -46,6 +46,7 @@
 
 
 %include "../general/cv.i"
+%include "../general/nointpb.i"
 
 %{
 #include "error.h"

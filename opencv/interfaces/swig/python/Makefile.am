@@ -52,6 +52,7 @@ if UPDATE_SWIG_WRAPPERS
 
 # this rule creates the Python wrapper sources for cxcore and cv
 _cv.cpp: cv.i imagedata.i error.h error.cpp                     \
+         $(top_srcdir)/interfaces/swig/general/nointpb.i        \
          $(top_srcdir)/interfaces/swig/general/cv.i             \
          $(top_srcdir)/interfaces/swig/general/memory.i         \
          $(top_srcdir)/interfaces/swig/general/typemaps.i       \
@@ -65,6 +66,7 @@ _cv.cpp: cv.i imagedata.i error.h error.cpp                     \
 
 # this rule creates the Python wrapper sources for highgui
 _highgui.cpp: highgui.i                                                  \
+              $(top_srcdir)/interfaces/swig/general/nointpb.i            \
               $(top_srcdir)/interfaces/swig/general/highgui.i            \
 	      $(top_srcdir)/interfaces/swig/general/typemaps.i           \
               $(top_srcdir)/interfaces/swig/general/memory.i             \

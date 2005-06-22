@@ -610,6 +610,7 @@ uninstall-am: uninstall-info-am uninstall-pkgpythonLTLIBRARIES \
 
 # this rule creates the Python wrapper sources for cxcore and cv
 @UPDATE_SWIG_WRAPPERS_TRUE@_cv.cpp: cv.i imagedata.i error.h error.cpp                     \
+@UPDATE_SWIG_WRAPPERS_TRUE@         $(top_srcdir)/interfaces/swig/general/nointpb.i        \
 @UPDATE_SWIG_WRAPPERS_TRUE@         $(top_srcdir)/interfaces/swig/general/cv.i             \
 @UPDATE_SWIG_WRAPPERS_TRUE@         $(top_srcdir)/interfaces/swig/general/memory.i         \
 @UPDATE_SWIG_WRAPPERS_TRUE@         $(top_srcdir)/interfaces/swig/general/typemaps.i       \
@@ -623,6 +624,7 @@ uninstall-am: uninstall-info-am uninstall-pkgpythonLTLIBRARIES \
 
 # this rule creates the Python wrapper sources for highgui
 @UPDATE_SWIG_WRAPPERS_TRUE@_highgui.cpp: highgui.i                                                  \
+@UPDATE_SWIG_WRAPPERS_TRUE@              $(top_srcdir)/interfaces/swig/general/nointpb.i            \
 @UPDATE_SWIG_WRAPPERS_TRUE@              $(top_srcdir)/interfaces/swig/general/highgui.i            \
 @UPDATE_SWIG_WRAPPERS_TRUE@	      $(top_srcdir)/interfaces/swig/general/typemaps.i           \
 @UPDATE_SWIG_WRAPPERS_TRUE@              $(top_srcdir)/interfaces/swig/general/memory.i             \
