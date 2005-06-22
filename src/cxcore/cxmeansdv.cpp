@@ -675,8 +675,8 @@ CV_DEF_INIT_FUNC_TAB_2D( Mean_StdDev, CnCMR )
 CV_IMPL  void
 cvAvgSdv( const CvArr* img, CvScalar* _mean, CvScalar* _sdv, const void* mask )
 {
-    CvScalar mean = {0,0,0,0};
-    CvScalar sdv = {0,0,0,0};
+    CvScalar mean = {{0,0,0,0}};
+    CvScalar sdv = {{0,0,0,0}};
 
     static CvBigFuncTable meansdv_tab;
     static CvFuncTable meansdvcoi_tab;

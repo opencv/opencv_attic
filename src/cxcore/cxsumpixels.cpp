@@ -390,7 +390,7 @@ cvSum( const CvArr* arr )
     static CvFuncTable sumcoi_tab;
     static int inittab = 0;
 
-    CvScalar sum = {0,0,0,0};
+    CvScalar sum = {{0,0,0,0}};
 
     CV_FUNCNAME("cvSum");
 
@@ -430,7 +430,7 @@ cvSum( const CvArr* arr )
        
                 do
                 {
-                    CvScalar temp = {0,0,0,0};
+                    CvScalar temp = {{0,0,0,0}};
                     IPPI_CALL( func( iterator.ptr[0], CV_STUB_STEP,
                                      iterator.size, temp.val ));
                     sum.val[0] += temp.val[0];
@@ -448,7 +448,7 @@ cvSum( const CvArr* arr )
        
                 do
                 {
-                    CvScalar temp = {0,0,0,0};
+                    CvScalar temp = {{0,0,0,0}};
                     IPPI_CALL( func( iterator.ptr[0], CV_STUB_STEP,
                                      iterator.size, temp.val, cvAlgHintAccurate ));
                     sum.val[0] += temp.val[0];

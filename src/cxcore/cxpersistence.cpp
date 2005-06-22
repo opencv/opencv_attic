@@ -2372,8 +2372,12 @@ icvXMLStartNextStream( CvFileStorage* fs )
 
         fs->struct_indent = 0;
         icvXMLFlush(fs);
-        fputs( "</opencv_storage>\n", fs->file );
-        fputs( "<opencv_storage>\n", fs->file );
+        /* XML does not allow multiple top-level elements,
+           so we just put a comment and continue
+           the current (and the only) "stream" */
+        fputs( "\n<!-- next stream -->\n", fs->file );
+        /*fputs( "</opencv_storage>\n", fs->file );
+        fputs( "<opencv_storage>\n", fs->file );*/
         fs->buffer = fs->buffer_start;
     }
 
@@ -4021,7 +4025,7 @@ icvWriteHeaderData( CvFileStorage* fs, const CvSeq* seq,
             unsigned extra_size = seq->header_size - initial_header_size;
             // a heuristic to provide nice defaults for sequences of int's & float's
             if( extra_size % sizeof(int) == 0 )
-                sprintf( header_dt_buf, "%ui", extra_size/sizeof(int) );
+                sprintf( header_dt_buf, "%ui", (int)(extra_size/sizeof(int)) );
             else
                 sprintf( header_dt_buf, "%uu", extra_size );
             header_dt = header_dt_buf;
@@ -4075,7 +4079,7 @@ icvGetFormat( const CvSeq* seq, const char* dt_key, CvAttrList* attr,
         unsigned extra_elem_size = seq->elem_size - initial_elem_size;
         // a heuristic to provide nice defaults for sequences of int's & float's
         if( extra_elem_size % sizeof(int) == 0 )
-            sprintf( dt_buf, "%ui", extra_elem_size/sizeof(int) );
+            sprintf( dt_buf, "%ui", (int)(extra_elem_size/sizeof(int)) );
         else
             sprintf( dt_buf, "%uu", extra_elem_size );
         dt = dt_buf;

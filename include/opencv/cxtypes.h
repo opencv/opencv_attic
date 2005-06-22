@@ -47,14 +47,27 @@
   #include <stdlib.h>
   #include <string.h>
   #include <float.h>
-  #ifndef __BORLANDC__
-    #include <math.h>
-  #else
-    #include <fastmath.h>
-  #endif
 
   #if defined WIN64 && defined EM64T && defined _MSC_VER
     #include <emmintrin.h>
+  #endif
+
+  #if defined __ICL
+    #define CV_ICC   __ICL
+  #elif defined __ICC
+    #define CV_ICC   __ICC
+  #elif defined __ECL
+    #define CV_ICC   __ECL
+  #elif defined __ECC
+    #define CV_ICC   __ECC
+  #endif
+
+  #if defined __BORLANDC__
+    #include <fastmath.h>
+  #elif defined WIN64 && !defined EM64T && defined CV_ICC
+    #include <mathimf.h>
+  #else
+    #include <math.h>
   #endif
 
   #ifdef HAVE_IPL
@@ -186,8 +199,8 @@ CV_INLINE  int  cvRound( double value )
         fistp t;
     }
     return t;
-#elif __GNUC__ > 2
-    return (int)lrint( value );
+#elif (defined __GNUC__ && __GNUC__ > 2) || (defined WIN64 && !defined EM64T && defined CV_ICC)
+    return (int)lrint(value);
 #else
     /*
      the algorithm was taken from Agner Fog's optimization guide

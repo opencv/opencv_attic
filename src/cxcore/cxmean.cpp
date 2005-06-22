@@ -381,7 +381,7 @@ CV_DEF_INIT_FUNC_TAB_2D( Mean, CnCMR )
 CV_IMPL  CvScalar
 cvAvg( const void* img, const void* maskarr )
 {
-    CvScalar mean = {0,0,0,0};
+    CvScalar mean = {{0,0,0,0}};
 
     static CvBigFuncTable mean_tab;
     static CvFuncTable meancoi_tab;
