@@ -46,7 +46,7 @@
 
 #include "_cxcore.h"
 
-#if _MSC_VER >= 1200
+#if defined _MSC_VER && _MSC_VER >= 1200
 #pragma warning( disable: 4115 )        /* type definition in () */
 #endif
 
@@ -342,7 +342,7 @@ icvUpdatePluginFuncTab( CvPluginFuncInfo* func_tab )
     // 2. try to find corresponding functions in ipp* and reassign pointers to them
     for( i = 0; func_tab[i].func_addr != 0; i++ )
     {
-    #if _MSC_VER >= 1200
+    #if defined _MSC_VER && _MSC_VER >= 1200
         #pragma warning( disable: 4054 4055 ) /* converting pointers to code<->data */
     #endif
         char name[100];
@@ -396,7 +396,7 @@ icvUpdatePluginFuncTab( CvPluginFuncInfo* func_tab )
                 ICV_PRINTF(("%s: \t%s\n", name, plugins[idx].name ));
             }
 
-            #if _MSC_VER >= 1200
+            #if defined _MSC_VER && _MSC_VER >= 1200
                 #pragma warning( default: 4054 4055 )
             #endif
         }
@@ -488,11 +488,12 @@ cvUseOptimized( int load_flag )
     int arch = CV_GET_PROC_ARCH(cpu_info->model);
     const char* opencv_suffix = "097";
     const char* ipp_suffix = arch == CV_PROC_IA32_GENERIC ? "20" :
-                             arch == CV_PROC_IA64_ITANIUM ? "6420" : 0;
+                             arch == CV_PROC_IA64_ITANIUM ? "6420" :
+                             arch == CV_PROC_IA64_EM64T ? "em64t" : "";
     const char* mkl_suffix = arch == CV_PROC_IA32_GENERIC ?
                 (cpu_info->model >= CV_PROC_IA32_P4 ? "p4" :
                  cpu_info->model >= CV_PROC_IA32_PIII ? "p3" : "def") :
-                 arch == CV_PROC_IA64_ITANIUM ? "itp" : 0;
+                 arch == CV_PROC_IA64_ITANIUM ? "itp" : "";
 
     for( i = 0; i < CV_PLUGIN_MAX; i++ )
         plugins[i].basename = 0;
@@ -521,7 +522,7 @@ cvUseOptimized( int load_flag )
             continue;
 
         if( load_flag && plugins[i].basename &&
-            (arch == CV_PROC_IA32_GENERIC || arch == CV_PROC_IA64_ITANIUM) )
+            (arch == CV_PROC_IA32_GENERIC || arch == CV_PROC_IA64_ITANIUM || arch == CV_PROC_IA64_EM64T) )
         {
             const char* suffix = i == CV_PLUGIN_OPTCV ? opencv_suffix :
                             i < CV_PLUGIN_MKL ? ipp_suffix : mkl_suffix;
@@ -530,6 +531,7 @@ cvUseOptimized( int load_flag )
                 sprintf( plugins[i].name, DLL_PREFIX "%s%s" DLL_DEBUG_FLAG DLL_SUFFIX,
                     plugins[i].basename, suffix );
             
+                ICV_PRINTF(("loading %s...\n", plugins[i].name )); 
                 plugins[i].handle = LoadLibrary( plugins[i].name );
                 if( plugins[i].handle != 0 )
                 {
