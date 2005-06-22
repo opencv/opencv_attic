@@ -46,6 +46,7 @@
 
 
 %include "../general/highgui.i"
+%include "../general/nointpb.i"
 
 %pythoncode 
 %{
