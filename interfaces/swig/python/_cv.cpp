@@ -1336,6 +1336,28 @@ SWIG_Python_GetTypeList() {
 #endif
 
 
+/* remove the PyInt_AS_LONG if defined, as this cause problems on RedHat */
+#ifdef PyInt_AS_LONG
+#undef PyInt_AS_LONG
+#endif
+
+/* wrapper to the better function PyInt_AsLong, removing problems
+   with RedHat (I hope) */
+static PyAPI_FUNC(long) PyInt_AS_LONG (PyObject *obj) {
+    return PyInt_AsLong (obj);
+}
+
+/* remove the PyFloat_AS_DOUBLE if defined, to prevent errors */
+#ifdef PyFloat_AS_DOUBLE
+#undef PyFloat_AS_DOUBLE
+#endif
+
+/* wrapper to the better function PyFloat_AS_DOUBLE, to prevent errors */
+static PyAPI_FUNC(double) PyFloat_AS_DOUBLE (PyObject *obj) {
+    return PyFloat_AsDouble (obj);
+}
+
+
 /* -------- TYPES TABLE (BEGIN) -------- */
 
 #define  SWIGTYPE_p_CvSparseMatIterator swig_types[0] 
