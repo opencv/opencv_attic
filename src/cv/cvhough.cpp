@@ -67,6 +67,11 @@ typedef struct CvLinePolar
 CvLinePolar;
 
 /*=====================================================================================*/
+
+#define cmp_acc(l1,l2) (aux[l1] > aux[l2])
+
+static CV_IMPLEMENT_QSORT_EX( icvHoughSortAccum, int, cmp_acc, const int* );
+
 /*
 Here image is an input raster;
 step is it's step; size characterizes it's ROI;
@@ -76,19 +81,23 @@ to be a candidate for line. lines is the output
 array of (rho, theta) pairs. linesMax is the buffer size (number of pairs).
 Functions return the actual number of found lines.
 */
-static  CvStatus  icvHoughLines_8uC1R( uchar* image, int step, CvSize size,
-                                       float rho, float theta, int threshold,
-                                       CvSeq *lines, int linesMax )
+static CvStatus
+icvHoughLines_8uC1R( uchar* image, int step, CvSize size,
+                     float rho, float theta, int threshold,
+                     CvSeq *lines, int linesMax )
 {
     int width, height;
     int numangle, numrho;
     int *accum = 0;
+    int *sort_buf=0;
+    int total = 0;
     float *tabSin = 0;
     float *tabCos = 0;
     float ang;
     int r, n;
     int i, j;
     float irho = 1 / rho;
+    double scale;
 
     width = size.width;
     height = size.height;
@@ -102,57 +111,60 @@ static  CvStatus  icvHoughLines_8uC1R( uchar* image, int step, CvSize size,
     numangle = (int) (Pi / theta);
     numrho = (int) (((width + height) * 2 + 1) / rho);
 
-    accum = (int*)cvAlloc( sizeof(accum[0]) * numangle * numrho );
+    accum = (int*)cvAlloc( sizeof(accum[0]) * (numangle+2) * (numrho+2) );
+    sort_buf = (int*)cvAlloc( sizeof(accum[0]) * numangle * numrho );
     tabSin = (float*)cvAlloc( sizeof(float) * numangle );
     tabCos = (float*)cvAlloc( sizeof(float) * numangle );
-    memset( accum, 0, sizeof(accum[0]) * numangle * numrho );
+    memset( accum, 0, sizeof(accum[0]) * (numangle+2) * (numrho+2) );
 
     if( tabSin == 0 || tabCos == 0 || accum == 0 )
         goto func_exit;
 
-    /* May change using mirroring */
     for( ang = 0, n = 0; n < numangle; ang += theta, n++ )
     {
-        tabSin[n] = (float)(sin( ang ) * irho);
-        tabCos[n] = (float)(cos( ang ) * irho);
+        tabSin[n] = (float)(sin(ang) * irho);
+        tabCos[n] = (float)(cos(ang) * irho);
     }
 
+    // stage 1. fill accumulator
     for( j = 0; j < height; j++ )
-    {
         for( i = 0; i < width; i++ )
         {
-            /* Get (i,j) pixel from image */
             if( image[j * step + i] != 0 )
-            {
                 for( n = 0; n < numangle; n++ )
                 {
                     r = cvRound( i * tabCos[n] + j * tabSin[n] );
                     r += (numrho - 1) / 2;
-                    accum[n * numrho + r]++;
+                    accum[(n+1) * (numrho+2) + r+1]++;
                 }
-            }
         }
-    }
 
-    /* Now find local maximums */
-    for( r = 1; r < numrho - 1; r++ )
-    {
-        for( n = 1; n < numangle - 1; n++ )
+    // stage 2. find local maximums 
+    for( r = 0; r < numrho; r++ )
+        for( n = 0; n < numangle; n++ )
         {
-            int base = n * numrho + r;
+            int base = (n+1) * (numrho+2) + r+1;
             if( accum[base] > threshold &&
                 accum[base] > accum[base - 1] && accum[base] > accum[base + 1] &&
-                accum[base] > accum[base - numrho] && accum[base] > accum[base + numrho] )
-            {               /* is it a local maximum */
-                CvLinePolar line;
-                line.rho = (r - (numrho - 1) *0.5f) * rho;
-                line.angle = n * theta;
-                cvSeqPush( lines, &line );
-
-                if( lines->total >= linesMax )
-                    goto func_exit;
-            }
+                accum[base] > accum[base - numrho - 2] && accum[base] > accum[base + numrho + 2] )
+                sort_buf[total++] = base;
         }
+
+    // stage 3. sort the detected lines by accumulator value
+    icvHoughSortAccum( sort_buf, total, accum );
+    
+    // stage 4. store the first min(total,linesMax) lines to the output buffer
+    linesMax = MIN(linesMax, total);
+    scale = 1./(numrho+2);
+    for( i = 0; i < linesMax; i++ )
+    {
+        CvLinePolar line;
+        int idx = sort_buf[i];
+        int n = cvFloor(idx*scale) - 1;
+        int r = idx - (n+1)*(numrho+2) - 1;
+        line.rho = (r - (numrho - 1)*0.5f) * rho;
+        line.angle = n * theta;
+        cvSeqPush( lines, &line );
     }
 
 func_exit:
@@ -168,7 +180,7 @@ func_exit:
 *                     Multi-Scale variant of Classical Hough Transform                   *
 \****************************************************************************************/
 
-#if _MSC_VER >= 1200
+#if defined _MSC_VER && _MSC_VER >= 1200
 #pragma warning( disable: 4714 )
 #endif
 
