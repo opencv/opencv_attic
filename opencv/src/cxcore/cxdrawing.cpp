@@ -1559,7 +1559,7 @@ icvThickLine( CvMat* img, CvPoint p0, CvPoint p1, const void* color,
         int i;
         thickness <<= XY_SHIFT - 1;
 
-        if( r )
+        if( fabs(r) > DBL_EPSILON )
         {
             r = thickness * cvInvSqrt( (float) r );
             dp.x = cvRound( dy * r );

@@ -131,7 +131,7 @@ icvGEMMSingleMul_##flavor( const arrtype* a_data, size_t a_step,            \
                          CvSize a_size, CvSize d_size,                      \
                          double alpha, double beta, int flags )             \
 {                                                                           \
-    int i, j, k, n = a_size.width, m = d_size.width;                        \
+    int i, j, k, n = a_size.width, m = d_size.width, drows = d_size.height; \
     const arrtype *_a_data = a_data, *_b_data = b_data, *_c_data = c_data;  \
     arrtype* a_buf = 0;                                                     \
     size_t a_step0, a_step1, c_step0, c_step1, t_step;                      \
@@ -164,8 +164,8 @@ icvGEMMSingleMul_##flavor( const arrtype* a_data, size_t a_step,            \
                                                                             \
         if( a_step > 1 )                                                    \
         {                                                                   \
-            a_buf = (arrtype*)cvStackAlloc(d_size.height*sizeof(a_data[0]));\
-            for( k = 0; k < d_size.height; k++ )                            \
+            a_buf = (arrtype*)cvStackAlloc(drows*sizeof(a_data[0]));        \
+            for( k = 0; k < drows; k++ )                                    \
                 a_buf[k] = a_data[a_step*k];                                \
             a_data = a_buf;                                                 \
         }                                                                   \
@@ -178,8 +178,8 @@ icvGEMMSingleMul_##flavor( const arrtype* a_data, size_t a_step,            \
             b_data = b_buf;                                                 \
         }                                                                   \
                                                                             \
-        for( i = 0; i < d_size.height; i++, _c_data += c_step0,             \
-                                            d_data += d_step )              \
+        for( i = 0; i < drows; i++, _c_data += c_step0,                     \
+                                    d_data += d_step )                      \
         {                                                                   \
             worktype al = worktype(a_data[i])*alpha;                        \
             c_data = _c_data;                                               \
@@ -211,9 +211,9 @@ icvGEMMSingleMul_##flavor( const arrtype* a_data, size_t a_step,            \
     }                                                                       \
     else if( flags & CV_GEMM_B_T ) /* A * Bt */                             \
     {                                                                       \
-        for( i = 0; i < d_size.height; i++, _a_data += a_step0,             \
-                                            _c_data += c_step0,             \
-                                            d_data += d_step )              \
+        for( i = 0; i < drows; i++, _a_data += a_step0,                     \
+                                    _c_data += c_step0,                     \
+                                    d_data += d_step )                      \
         {                                                                   \
             a_data = _a_data;                                               \
             b_data = _b_data;                                               \
@@ -252,9 +252,9 @@ icvGEMMSingleMul_##flavor( const arrtype* a_data, size_t a_step,            \
     }                                                                       \
     else if( d_size.width*sizeof(d_data[0]) <= 1600 )                       \
     {                                                                       \
-        for( i = 0; i < d_size.height; i++, _a_data += a_step0,             \
-                                            _c_data += c_step0,             \
-                                            d_data += d_step )              \
+        for( i = 0; i < drows; i++, _a_data += a_step0,                     \
+                                    _c_data += c_step0,                     \
+                                    d_data += d_step )                      \
         {                                                                   \
             a_data = _a_data, c_data = _c_data;                             \
                                                                             \
@@ -313,10 +313,9 @@ icvGEMMSingleMul_##flavor( const arrtype* a_data, size_t a_step,            \
     }                                                                       \
     else                                                                    \
     {                                                                       \
-        m = d_size.width;                                                   \
         worktype* d_buf = (worktype*)cvStackAlloc(m*sizeof(d_buf[0]));      \
                                                                             \
-        for( i = 0; i < d_size.height; i++, _a_data += a_step0,             \
+        for( i = 0; i < drows; i++, _a_data += a_step0,                     \
                                             _c_data += c_step0,             \
                                             d_data += d_step )              \
         {                                                                   \

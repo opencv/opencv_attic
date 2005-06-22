@@ -951,7 +951,7 @@ cvCreateData( CvArr* arr )
 
     if( CV_IS_MAT_HDR( arr ))
     {
-        int64 step, total_size;
+        size_t step, total_size;
         CvMat* mat = (CvMat*)arr;
         step = mat->step;
 
@@ -999,7 +999,7 @@ cvCreateData( CvArr* arr )
     {
         CvMatND* mat = (CvMatND*)arr;
         int i;
-        int64 total_size = icvPixSize[CV_MAT_TYPE(mat->type)];
+        size_t total_size = icvPixSize[CV_MAT_TYPE(mat->type)];
 
         if( mat->data.ptr != 0 )
             CV_ERROR( CV_StsError, "Data is already allocated" );
@@ -1013,15 +1013,14 @@ cvCreateData( CvArr* arr )
         {
             for( i = mat->dims - 1; i >= 0; i-- )
             {
-                int64 size = (int64)mat->dim[i].step*mat->dim[i].size;
+                size_t size = (size_t)mat->dim[i].step*mat->dim[i].size;
 
                 if( total_size < size )
                     total_size = size;
             }
         }
         
-        assert( total_size >= 0 );
-        CV_CALL( mat->refcount = (int*)cvAlloc( (size_t)total_size +
+        CV_CALL( mat->refcount = (int*)cvAlloc( total_size +
                                         sizeof(int) + CV_MALLOC_ALIGN ));
         mat->data.ptr = (uchar*)cvAlignPtr( mat->refcount + 1, CV_MALLOC_ALIGN );
         *mat->refcount = 1;
@@ -2177,7 +2176,7 @@ cvPtrND( const CvArr* arr, int* idx, int* _type,
 CV_IMPL  CvScalar
 cvGet1D( const CvArr* arr, int idx )
 {
-    CvScalar scalar = {0,0,0,0};
+    CvScalar scalar = {{0,0,0,0}};
 
     CV_FUNCNAME( "cvGet1D" );
 
@@ -2218,7 +2217,7 @@ cvGet1D( const CvArr* arr, int idx )
 CV_IMPL  CvScalar
 cvGet2D( const CvArr* arr, int y, int x )
 {
-    CvScalar scalar = {0,0,0,0};
+    CvScalar scalar = {{0,0,0,0}};
 
     CV_FUNCNAME( "cvGet2D" );
 
@@ -2258,7 +2257,7 @@ cvGet2D( const CvArr* arr, int y, int x )
 CV_IMPL  CvScalar
 cvGet3D( const CvArr* arr, int z, int y, int x )
 {
-    CvScalar scalar = {0,0,0,0};
+    CvScalar scalar = {{0,0,0,0}};
 
     /*CV_FUNCNAME( "cvGet3D" );*/
 
@@ -2287,7 +2286,7 @@ cvGet3D( const CvArr* arr, int z, int y, int x )
 CV_IMPL  CvScalar
 cvGetND( const CvArr* arr, int* idx )
 {
-    CvScalar scalar = {0,0,0,0};
+    CvScalar scalar = {{0,0,0,0}};
 
     /*CV_FUNCNAME( "cvGetND" );*/
 

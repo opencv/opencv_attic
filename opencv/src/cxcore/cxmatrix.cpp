@@ -120,7 +120,7 @@ cvSetIdentity( CvArr* array, CvScalar value )
 CV_IMPL CvScalar
 cvTrace( const CvArr* array )
 {
-    CvScalar sum = {0,0,0,0};
+    CvScalar sum = {{0,0,0,0}};
     
     CV_FUNCNAME( "cvTrace" );
 

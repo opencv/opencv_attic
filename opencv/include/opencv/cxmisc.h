@@ -119,7 +119,7 @@
 /* ! DO NOT make it an inline function */
 #define cvStackAlloc(size) cvAlignPtr( alloca((size) + CV_MALLOC_ALIGN), CV_MALLOC_ALIGN )
 
-#if defined _MSC_VER || defined __BORLANDC__ || defined __ICL
+#if defined _MSC_VER || defined __BORLANDC__
     #define CV_BIG_INT(n)   n##I64
     #define CV_BIG_UINT(n)  n##UI64
 #else
@@ -129,7 +129,7 @@
 
 #define CV_IMPL CV_EXTERN_C
 
-#if defined WIN32 && !defined WIN64 && (_MSC_VER >= 1200 || defined __ICL)
+#if defined WIN32 && !defined WIN64 && (_MSC_VER >= 1200 || defined CV_ICC)
     #define CV_DBG_BREAK() __asm int 3
 #else
     #define CV_DBG_BREAK() assert(0);

@@ -1286,7 +1286,7 @@ static CvStatus CV_STDCALL                                                      
                            arrtype* dst, int step,                                      \
                            CvSize size, double scale )                                  \
 {                                                                                       \
-    if( scale == 1 )                                                                    \
+    if( fabs(scale - 1.) < DBL_EPSILON )                                                \
     {                                                                                   \
         for( ; size.height--; (char*&)src1+=step1,                                      \
                               (char*&)src2+=step2,                                      \
@@ -1549,8 +1549,8 @@ icvDiv_##flavor##_C1R( const arrtype* src1, int step1,                          
             if( _check_macro_(src2[i]) && _check_macro_(src2[i+1]) &&                   \
                 _check_macro_(src2[i+2]) && _check_macro_(src2[i+3]))                   \
             {                                                                           \
-                double a = _cvt_macro_(src2[i]) * _cvt_macro_(src2[i+1]);               \
-                double b = _cvt_macro_(src2[i+2]) * _cvt_macro_(src2[i+3]);             \
+                double a = (double)_cvt_macro_(src2[i]) * _cvt_macro_(src2[i+1]);       \
+                double b = (double)_cvt_macro_(src2[i+2]) * _cvt_macro_(src2[i+3]);     \
                 double d = scale/(a * b);                                               \
                                                                                         \
                 b *= d;                                                                 \
@@ -1613,8 +1613,8 @@ icvRecip_##flavor##_C1R( const arrtype* src, int step1,                         
             if( _check_macro_(src[i]) && _check_macro_(src[i+1]) &&             \
                 _check_macro_(src[i+2]) && _check_macro_(src[i+3]))             \
             {                                                                   \
-                double a = _cvt_macro_(src[i]) * _cvt_macro_(src[i+1]);         \
-                double b = _cvt_macro_(src[i+2]) * _cvt_macro_(src[i+3]);       \
+                double a = (double)_cvt_macro_(src[i]) * _cvt_macro_(src[i+1]); \
+                double b = (double)_cvt_macro_(src[i+2]) * _cvt_macro_(src[i+3]);\
                 double d = scale/(a * b);                                       \
                                                                                 \
                 b *= d;                                                         \
@@ -1660,11 +1660,20 @@ icvRecip_##flavor##_C1R( const arrtype* src, int step1,                         
     return CV_OK;                                                               \
 }
 
-
 #define div_check_zero_flt(x)  (((int&)(x) & 0x7fffffff) != 0)
 #define div_check_zero_dbl(x)  (((int64&)(x) & CV_BIG_INT(0x7fffffffffffffff)) != 0)
 
+#if defined WIN64 && defined EM64T && defined _MSC_VER && !defined CV_ICC
+#pragma optimize("",off)
+#endif
+
 ICV_DEF_DIV_OP_CASE( 8u, uchar, int, cvRound, CV_CAST_8U, CV_8TO32F, CV_NONZERO )
+
+#if defined WIN64 && defined EM64T && defined _MSC_VER && !defined CV_ICC
+#pragma optimize("",on)
+#endif
+
+
 ICV_DEF_DIV_OP_CASE( 16u, ushort, int, cvRound, CV_CAST_16U, CV_CAST_64F, CV_NONZERO )
 ICV_DEF_DIV_OP_CASE( 16s, short, int, cvRound, CV_CAST_16S, CV_NOP, CV_NONZERO )
 ICV_DEF_DIV_OP_CASE( 32s, int, int, cvRound, CV_CAST_32S, CV_CAST_64F, CV_NONZERO )
