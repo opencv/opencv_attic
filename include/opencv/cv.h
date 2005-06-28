@@ -332,22 +332,6 @@ CVAPI(void) cvGetHuMoments( CvMoments*  moments, CvHuMoments*  hu_moments );
 
 /*********************************** data sampling **************************************/
 
-/* Initializes line iterator. Initially ptr will point to pt1 location in the array.
-   Returns the number of points on the line between the endings. */
-CVAPI(int)  cvInitLineIterator( const CvArr* image, CvPoint pt1, CvPoint pt2,
-                                CvLineIterator* line_iterator,
-                                int connectivity CV_DEFAULT(8));
-
-/* Moves iterator to the next line point */
-#define CV_NEXT_LINE_POINT( line_iterator )                         \
-{                                                                   \
-    int mask =  (line_iterator).err < 0 ? -1 : 0;                   \
-    (line_iterator).err += (line_iterator).minus_delta +            \
-                            ((line_iterator).plus_delta & mask);    \
-    (line_iterator).ptr += (line_iterator).minus_step +             \
-                            ((line_iterator).plus_step & mask);     \
-}
-
 /* Grabs the raster line data into the destination buffer.
    Returns the number of retrieved points. */
 CVAPI(int)  cvSampleLine( const CvArr* image, CvPoint pt1, CvPoint pt2, void* buffer,
@@ -1035,6 +1019,7 @@ CVAPI(CvHaarClassifierCascade*) cvLoadHaarClassifierCascade(
 CVAPI(void) cvReleaseHaarClassifierCascade( CvHaarClassifierCascade** cascade );
 
 #define CV_HAAR_DO_CANNY_PRUNING 1
+#define CV_HAAR_SCALE_IMAGE      2
 
 CVAPI(CvSeq*) cvHaarDetectObjects( const CvArr* image,
                      CvHaarClassifierCascade* cascade,
