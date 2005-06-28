@@ -338,13 +338,12 @@ cvCalcGlobalOrientation( const void* orientation, const void* maskimg, const voi
         double fbase_orient = base_orient;
         float delbound = (float)(curr_mhi_timestamp - mhi_duration);
         CvMat mhi_row, mask_row, orient_row;
-        int x, y;
-        CvSize size = cvGetMatSize( mhi );
+        int x, y, mhi_rows = mhi->rows, mhi_cols = mhi->cols;
 
         if( CV_IS_MAT_CONT( mhi->type & mask->type & orient->type ))
         {
-            size.width *= size.height;
-            size.height = 1;
+            mhi_cols *= mhi_rows;
+            mhi_rows = 1;
         }
 
         cvGetRow( mhi, &mhi_row, 0 );
@@ -362,13 +361,13 @@ cvCalcGlobalOrientation( const void* orientation, const void* maskimg, const voi
            ((x - (t - dt))*254 + dt)/(255*dt) =
            (((x - (t - dt))/dt)*254 + 1)/255 = (((x - low_time)/dt)*254 + 1)/255
          */
-        for( y = 0; y < size.height; y++ )
+        for( y = 0; y < mhi_rows; y++ )
         {
             mhi_row.data.ptr = mhi->data.ptr + mhi->step*y;
             mask_row.data.ptr = mask->data.ptr + mask->step*y;
             orient_row.data.ptr = orient->data.ptr + orient->step*y;
 
-            for( x = 0; x < size.width; x++ )
+            for( x = 0; x < mhi_cols; x++ )
                 if( mask_row.data.ptr[x] != 0 && mhi_row.data.fl[x] > delbound )
                 {
                     /*
