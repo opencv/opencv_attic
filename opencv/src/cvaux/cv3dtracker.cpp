@@ -495,7 +495,7 @@ static inline double det(CvPoint3D32f v1, CvPoint3D32f v2, CvPoint3D32f v3)
 {
     return v1.x*v2.y*v3.z + v1.z*v2.x*v3.y + v1.y*v2.z*v3.x
            - v1.z*v2.y*v3.x - v1.x*v2.z*v3.y - v1.y*v2.x*v3.z;
-};
+}
 
 static CvPoint3D32f operator +(CvPoint3D32f a, CvPoint3D32f b)
 {

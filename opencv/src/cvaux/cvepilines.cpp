@@ -48,6 +48,8 @@
 
 /* Valery Mosyagin */
 
+#undef quad
+
 #define EPS64D 1e-9
 
 int cvComputeEssentialMatrix(  CvMatr32f rotMatr,
@@ -796,6 +798,7 @@ void icvGetCommonArea( CvSize imageSize,
                     CvVect64d coeff21,CvVect64d coeff22,
                     int* result)
 {
+    int res = 0;
     CvPoint2D64d point11;
     CvPoint2D64d point12;
     CvPoint2D64d point21;
@@ -866,7 +869,6 @@ void icvGetCommonArea( CvSize imageSize,
     /* Find crossing of line with image 2 */
     CvPoint2D64d start;
     CvPoint2D64d end;
-    int res;
     icvGetCrossRectDirect( imageSize,
                         corr21[0],corr21[1],corr21[2],
                         &start,&end,
@@ -898,8 +900,6 @@ void icvGetCommonArea( CvSize imageSize,
         coeff11[2] = corr11[2];
         
         /* Set coefs for line 1 image 2 */
-        int res;
-
         icvGetCoefForPiece(    epipole2_2d,point21,
                             &coeff21[0],&coeff21[1],&coeff21[2],
                             &res);
@@ -912,8 +912,6 @@ void icvGetCommonArea( CvSize imageSize,
     else
     {/* Line 1 cross image 2 */
         /* Set coefs for line 1 image 1 */
-        int res;
-
         icvGetCoefForPiece(    epipole1_2d,point11,
                             &coeff11[0],&coeff11[1],&coeff11[2],
                             &res);
@@ -976,8 +974,6 @@ void icvGetCommonArea( CvSize imageSize,
         coeff12[2] = corr12[2];
         
         /* Set coefs for line 1 image 2 */
-        int res;
-
         icvGetCoefForPiece(    epipole2_2d,point22,
                             &coeff22[0],&coeff22[1],&coeff22[2],
                             &res);
@@ -990,8 +986,6 @@ void icvGetCommonArea( CvSize imageSize,
     else
     {/* Line 2 cross image 2 */
         /* Set coefs for line 2 image 1 */
-        int res;
-
         icvGetCoefForPiece(    epipole1_2d,point12,
                             &coeff12[0],&coeff12[1],&coeff12[2],
                             &res);
@@ -2140,7 +2134,7 @@ CV_IMPL IplImage* icvCreateIsometricImage( IplImage* src, IplImage* dst,
     }
 
     return dst;
-};
+}
 
 int
 icvCvt_32f_64d( float *src, double *dst, int size )
