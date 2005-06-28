@@ -1017,6 +1017,24 @@ typedef struct CvBox2D
 }
 CvBox2D;
 
+
+/* Line iterator state */
+typedef struct CvLineIterator
+{
+    /* pointer to the current point */
+    uchar* ptr;
+
+    /* Bresenham algorithm state */
+    int  err;
+    int  plus_delta;
+    int  minus_delta;
+    int  plus_step;
+    int  minus_step;
+}
+CvLineIterator;
+
+
+
 /************************************* CvSlice ******************************************/
 
 typedef struct CvSlice
