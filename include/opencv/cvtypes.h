@@ -63,18 +63,6 @@ typedef struct CvHuMoments
 }
 CvHuMoments;
 
-/* Line iterator state */
-typedef struct CvLineIterator
-{
-    uchar* ptr;
-    int  err;
-    int  plus_delta;
-    int  minus_delta;
-    int  plus_step;
-    int  minus_step;
-}
-CvLineIterator;
-
 /**************************** Connected Component  **************************************/
 
 typedef struct CvConnectedComp
