@@ -1201,7 +1201,7 @@ CVAPI(CvGraph*) cvCloneGraph( const CvGraph* graph, CvMemStorage* storage );
 *       All the functions include parameter color that means rgb value (that may be      *
 *       constructed with CV_RGB macro) for color images and brightness                   *
 *       for grayscale images.                                                            *
-*       If a drawn figure is partially or completely outside the image, it is clipped.   *
+*       If a drawn figure is partially or completely outside of the image, it is clipped.*
 \****************************************************************************************/
 
 #define CV_RGB( r, g, b )  cvScalar( (b), (g), (r), 0 )
@@ -1259,6 +1259,30 @@ CVAPI(void)  cvFillPoly( CvArr* img, CvPoint** pts, int* npts, int contours, CvS
 CVAPI(void)  cvPolyLine( CvArr* img, CvPoint** pts, int* npts, int contours,
                          int is_closed, CvScalar color, int thickness CV_DEFAULT(1),
                          int line_type CV_DEFAULT(8), int shift CV_DEFAULT(0) );
+
+/* Clips the line segment connecting *pt1 and *pt2
+   by the rectangular window
+   (0<=x<img_size.width, 0<=y<img_size.height). */
+CVAPI(int) cvClipLine( CvSize img_size, CvPoint* pt1, CvPoint* pt2 );
+
+/* Initializes line iterator. Initially, line_iterator->ptr will point
+   to pt1 (or pt2, see left_to_right description) location in the image.
+   Returns the number of pixels on the line between the ending points. */
+CVAPI(int)  cvInitLineIterator( const CvArr* image, CvPoint pt1, CvPoint pt2,
+                                CvLineIterator* line_iterator,
+                                int connectivity CV_DEFAULT(8),
+                                int left_to_right CV_DEFAULT(0));
+
+/* Moves iterator to the next line point */
+#define CV_NEXT_LINE_POINT( line_iterator )                     \
+{                                                               \
+    int _line_iterator_mask = (line_iterator).err < 0 ? -1 : 0; \
+    (line_iterator).err += (line_iterator).minus_delta +        \
+        ((line_iterator).plus_delta & _line_iterator_mask);     \
+    (line_iterator).ptr += (line_iterator).minus_step +         \
+        ((line_iterator).plus_step & _line_iterator_mask);      \
+}
+
 
 /* basic font types */
 #define CV_FONT_HERSHEY_SIMPLEX         0
