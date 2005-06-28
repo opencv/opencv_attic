@@ -42,6 +42,8 @@
 #include "_cvaux.h"
 #include <stdio.h>
 
+#undef quad
+
 #if _MSC_VER >= 1200
 #pragma warning( disable: 4701 )
 #endif

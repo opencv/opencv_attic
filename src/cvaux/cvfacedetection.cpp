@@ -372,8 +372,6 @@ void FaceDetection::FindCandidats()
 
 void FaceDetection::PostBoostingFindCandidats(IplImage * FaceImage)
 {
-
-    bool bFound1 = false;
     BoostingFaceTemplate * lpFaceTemplate1;
     RFace * lpFace1; 
     bool bInvalidRect1 = false;
@@ -406,7 +404,7 @@ void FaceDetection::PostBoostingFindCandidats(IplImage * FaceImage)
         
         if ( lpFace1->isFeature(lpRect1) )
         { 
-            bFound1 = true;
+            //bFound1 = true;
             bInvalidRect1 = false;
         }else
             bInvalidRect1 = true;

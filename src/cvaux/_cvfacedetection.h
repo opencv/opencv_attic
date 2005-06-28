@@ -198,7 +198,7 @@ inline MouthFaceTemplate::MouthFaceTemplate(long lNumber,CvRect rect,double dEye
 
 */
 
-};//constructor MouthFaceTemplate(long lNumFeatures,CvRect rect,double dEyeWidth,double dEyeHeight,double dDistanceBetweenEye,double dDistanceEyeAboveMouth);
+}//constructor MouthFaceTemplate(long lNumFeatures,CvRect rect,double dEyeWidth,double dEyeHeight,double dDistanceBetweenEye,double dDistanceEyeAboveMouth);
 
 
 typedef struct CvContourRect
@@ -366,7 +366,7 @@ inline void ReallocImage(IplImage** ppImage, CvSize sz, long lChNum)
     if( pImage == NULL )
         pImage = cvCreateImage( sz, IPL_DEPTH_8U, lChNum);
     *ppImage = pImage;
-};
+}
 
 ////////////
 //class RFaceTemplate
@@ -407,6 +407,6 @@ inline BoostingFaceTemplate::BoostingFaceTemplate(long lNumber,CvRect rect):Face
     m_lpFeaturesList[2].SetWeight(1);
     m_lpFeaturesList[2].SetFeature(true);
 
-};//inline BoostingFaceTemplate::BoostingFaceTemplate(long lNumber,CvRect rect):FaceTemplate(lNumber)
+}//inline BoostingFaceTemplate::BoostingFaceTemplate(long lNumber,CvRect rect):FaceTemplate(lNumber)
 
 #endif // !defined(AFX_FACEDETECTION_H__55865033_D8E5_4DD5_8925_34C2285BB1BE__INCLUDED_)
