@@ -1014,7 +1014,7 @@ protected:
 
 
 CV_RemapTest::CV_RemapTest()
-    : CV_ImgWarpBaseTest( "warp-remap", "cvRemap", true )
+    : CV_ImgWarpBaseTest( "warp-remap", "cvRemap", false )
 {
     //spatial_scale_zoom = spatial_scale_decimate;
     test_array[INPUT].push(NULL);
@@ -1138,7 +1138,7 @@ void CV_RemapTest::prepare_to_validation( int /*test_case_idx*/ )
 {
     CvMat* dst = &test_mat[REF_INPUT_OUTPUT][0];
     CvMat* dst0 = &test_mat[INPUT_OUTPUT][0];
-    int nr = interpolation == CV_INTER_CUBIC ? 2 : 1, nc = nr;
+    int nr = interpolation == CV_INTER_CUBIC ? 3 : 2, nc = nr;
     CvMat part;
     cvTsRemap( &test_mat[INPUT][0], dst, dst0,
                &test_mat[INPUT][1], &test_mat[INPUT][2],
@@ -1182,7 +1182,7 @@ protected:
 
 
 CV_UndistortTest::CV_UndistortTest()
-    : CV_ImgWarpBaseTest( "warp-undistort", "cvUndistort2", true )
+    : CV_ImgWarpBaseTest( "warp-undistort", "cvUndistort2", false )
 {
     //spatial_scale_zoom = spatial_scale_decimate;
     test_array[INPUT].push(NULL);
@@ -1326,10 +1326,12 @@ void CV_UndistortTest::prepare_to_validation( int /*test_case_idx*/ )
     CvMat* mapx = cvCreateMat( dst->rows, dst->cols, CV_32FC1 );
     CvMat* mapy = cvCreateMat( dst->rows, dst->cols, CV_32FC1 );
     CvMat part;
-    int nr = 1, nc = nr;
+    int nr = 2, nc = nr;
     cvTsInitUndistortMap( &test_mat[INPUT][1], &test_mat[INPUT][2],
                           mapx, mapy );
     cvTsRemap( src, dst, dst0, mapx, mapy, interpolation );
+    nr = MIN(nr, dst->rows);
+    nc = MIN(nc, dst->cols);
     cvGetRows( dst, &part, 0, nr ); 
     cvTsZero( &part );
     cvGetRows( dst0, &part, 0, nr ); 
