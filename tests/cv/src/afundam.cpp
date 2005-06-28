@@ -43,14 +43,13 @@
 
 int cvTsRodrigues( const CvMat* src, CvMat* dst, CvMat* jacobian )
 {
-    int depth, elem_size;
+    int depth;
     int i;
     float Jf[27];
     double J[27];
     CvMat _Jf, _J = cvMat( 3, 9, CV_64F, J );
 
     depth = CV_MAT_DEPTH(src->type);
-    elem_size = CV_ELEM_SIZE(src->type);
 
     if( jacobian )
     {

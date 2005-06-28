@@ -46,7 +46,6 @@
 #include <windows.h>
 #endif
 
-#include <math.h>
 #include "cv.h"
 #include "cxmisc.h"
 #include "cvaux.h"

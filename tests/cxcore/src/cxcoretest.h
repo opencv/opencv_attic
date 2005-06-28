@@ -46,7 +46,6 @@
 #include <windows.h>
 #endif
 
-#include <math.h>
 #include "cxcore.h"
 #include "cxmisc.h"
 #include "cxts.h"
