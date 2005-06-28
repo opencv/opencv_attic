@@ -304,6 +304,8 @@ typedef CvStatus (CV_STDCALL * CvIntegralImageFuncCn)(
     const void* src, int srcstep, void* sum, int sumstep,
     void* sqsum, int sqsumstep, CvSize size, int cn );
 
+icvIntegral_8u32s_C1R_t icvIntegral_8u32s_C1R_p = 0;
+icvSqrIntegral_8u32s64f_C1R_t icvSqrIntegral_8u32s64f_C1R_p = 0;
 
 CV_IMPL void
 cvIntegral( const CvArr* image, CvArr* sumImage,
@@ -322,8 +324,10 @@ cvIntegral( const CvArr* image, CvArr* sumImage,
     CvMat tilted_stub, *tilted = (CvMat*)tiltedSumImage;
     int coi0 = 0, coi1 = 0, coi2 = 0, coi3 = 0;
     int depth, cn;
+    int src_step, sum_step, sqsum_step, tilted_step;
     CvIntegralImageFuncC1 func_c1 = 0;
     CvIntegralImageFuncCn func_cn = 0;
+    CvSize size;
 
     if( !inittab )
     {
@@ -393,18 +397,35 @@ cvIntegral( const CvArr* image, CvArr* sumImage,
             CV_ERROR( CV_StsUnsupportedFormat, "This source image format is unsupported" );
     }
 
+    size = cvGetMatSize(src);
+    src_step = src->step ? src->step : CV_STUB_STEP;
+    sum_step = sum->step ? sum->step : CV_STUB_STEP;
+    sqsum_step = !sqsum ? 0 : sqsum->step ? sqsum->step : CV_STUB_STEP;
+    tilted_step = !tilted ? 0 : tilted->step ? tilted->step : CV_STUB_STEP;
+
     if( cn == 1 )
     {
-        IPPI_CALL( func_c1( src->data.ptr, src->step, sum->data.ptr, sum->step,
-                            sqsum ? sqsum->data.ptr : 0, sqsum ? sqsum->step : 0,
-                            tilted ? tilted->data.ptr : 0, tilted ? tilted->step : 0,
-                            cvGetMatSize( src )));
+        if( depth == CV_8U && !tilted && CV_MAT_DEPTH(sum->type) == CV_32S )
+        {
+            if( !sqsum && icvIntegral_8u32s_C1R_p &&
+                icvIntegral_8u32s_C1R_p( src->data.ptr, src_step,
+                            sum->data.i, sum_step, size, 0 ) >= 0 )
+                EXIT;
+            
+            if( sqsum && icvSqrIntegral_8u32s64f_C1R_p &&
+                icvSqrIntegral_8u32s64f_C1R_p( src->data.ptr, src_step, sum->data.i,
+                            sum_step, sqsum->data.db, sqsum_step, size, 0, 0 ) >= 0 )
+                EXIT;
+        }
+
+        IPPI_CALL( func_c1( src->data.ptr, src_step, sum->data.ptr, sum_step,
+                        sqsum ? sqsum->data.ptr : 0, sqsum_step,
+                        tilted ? tilted->data.ptr : 0, tilted_step, size ));
     }
     else
     {
-        IPPI_CALL( func_cn( src->data.ptr, src->step, sum->data.ptr, sum->step,
-                            sqsum ? sqsum->data.ptr : 0, sqsum ? sqsum->step : 0,
-                            cvGetMatSize( src ), cn ));
+        IPPI_CALL( func_cn( src->data.ptr, src_step, sum->data.ptr, sum_step,
+                        sqsum ? sqsum->data.ptr : 0, sqsum_step, size, cn ));
     }
 
     __END__;
