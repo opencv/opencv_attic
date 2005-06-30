@@ -123,7 +123,7 @@ void process_image(int h)
         cvFitEllipse(PointArray2D32f, count, box);
         
         // Draw current contour.
-        cvDrawContours(image04,cont,CV_RGB(255,255,255),CV_RGB(255,255,255),0,1, 8);
+        cvDrawContours(image04,cont,CV_RGB(255,255,255),CV_RGB(255,255,255),0,1,8,cvPoint(0,0));
         
         // Convert ellipse data from float to integer representation.
         center.x = cvRound(box->center.x);

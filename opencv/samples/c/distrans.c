@@ -29,7 +29,7 @@ void on_trackbar( int dummy )
     
     cvThreshold( gray, edge, (float)edge_thresh, (float)edge_thresh, CV_THRESH_BINARY );
     //Distance transform                  
-    cvDistTransform( edge, dist, CV_DIST_L2, CV_DIST_MASK_5, NULL );
+    cvDistTransform( edge, dist, CV_DIST_L2, CV_DIST_MASK_5, NULL, NULL );
 
     cvConvertScale( dist, dist, 5000.0, 0 );
     cvPow( dist, dist, 0.5 );

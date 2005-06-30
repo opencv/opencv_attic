@@ -19,7 +19,7 @@ void on_trackbar(int pos)
     if( _levels <= 0 ) // get to the nearest face to make it look more funny
         _contours = _contours->h_next->h_next->h_next;
     cvZero( cnt_img );
-    cvDrawContours( cnt_img, _contours, CV_RGB(255,0,0), CV_RGB(0,255,0), _levels, 3, CV_AA );
+    cvDrawContours( cnt_img, _contours, CV_RGB(255,0,0), CV_RGB(0,255,0), _levels, 3, CV_AA, cvPoint(0,0) );
     cvShowImage( "contours", cnt_img );
     cvReleaseImage( &cnt_img );
 }
