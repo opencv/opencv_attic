@@ -68,9 +68,9 @@ CvLinePolar;
 
 /*=====================================================================================*/
 
-#define cmp_acc(l1,l2) (aux[l1] > aux[l2])
+#define hough_cmp_gt(l1,l2) (aux[l1] > aux[l2])
 
-static CV_IMPLEMENT_QSORT_EX( icvHoughSortAccum, int, cmp_acc, const int* );
+static CV_IMPLEMENT_QSORT_EX( icvHoughSortDescent32s, int, hough_cmp_gt, const int* );
 
 /*
 Here image is an input raster;
@@ -113,8 +113,8 @@ icvHoughLines_8uC1R( uchar* image, int step, CvSize size,
 
     accum = (int*)cvAlloc( sizeof(accum[0]) * (numangle+2) * (numrho+2) );
     sort_buf = (int*)cvAlloc( sizeof(accum[0]) * numangle * numrho );
-    tabSin = (float*)cvAlloc( sizeof(float) * numangle );
-    tabCos = (float*)cvAlloc( sizeof(float) * numangle );
+    tabSin = (float*)cvAlloc( sizeof(tabSin[0]) * numangle );
+    tabCos = (float*)cvAlloc( sizeof(tabCos[0]) * numangle );
     memset( accum, 0, sizeof(accum[0]) * (numangle+2) * (numrho+2) );
 
     if( tabSin == 0 || tabCos == 0 || accum == 0 )
@@ -145,13 +145,13 @@ icvHoughLines_8uC1R( uchar* image, int step, CvSize size,
         {
             int base = (n+1) * (numrho+2) + r+1;
             if( accum[base] > threshold &&
-                accum[base] > accum[base - 1] && accum[base] > accum[base + 1] &&
-                accum[base] > accum[base - numrho - 2] && accum[base] > accum[base + numrho + 2] )
+                accum[base] > accum[base - 1] && accum[base] >= accum[base + 1] &&
+                accum[base] > accum[base - numrho - 2] && accum[base] >= accum[base + numrho + 2] )
                 sort_buf[total++] = base;
         }
 
     // stage 3. sort the detected lines by accumulator value
-    icvHoughSortAccum( sort_buf, total, accum );
+    icvHoughSortDescent32s( sort_buf, total, accum );
     
     // stage 4. store the first min(total,linesMax) lines to the output buffer
     linesMax = MIN(linesMax, total);
@@ -1041,6 +1041,311 @@ cvHoughLines2( CvArr* src_image, void* lineStorage, int method,
     return result;    
 }
 
+
+/****************************************************************************************\
+*                                     Circle Detection                                   *
+\****************************************************************************************/
+
+static void
+icvHoughCirclesGradient( CvMat* img, float dp, float min_dist,
+                         int canny_threshold, int acc_threshold,
+                         CvSeq* circles, int circles_max )
+{
+    const int SHIFT = 10, ONE = 1 << SHIFT, R_THRESH = 30;
+    CvMat *dx = 0, *dy = 0;
+    CvMat *edges = 0;
+    CvMat *accum = 0;
+    int* sort_buf = 0;
+    CvMat* dist_buf = 0;
+    CvMemStorage* storage = 0;
+    
+    CV_FUNCNAME( "icvHoughCirclesGradient" );
+
+    __BEGIN__;
+
+    int x, y, i, j, center_count, nz_count;
+    int rows, cols, arows, acols;
+    int astep, *adata;
+    float* ddata;
+    CvSize asize;
+    CvSeq *nz, *centers;
+    float idp, dr;
+    CvSeqReader reader;
+
+    CV_CALL( edges = cvCreateMat( img->rows, img->cols, CV_8UC1 ));
+    CV_CALL( cvCanny( img, edges, MAX(canny_threshold/2,1), canny_threshold, 3 ));
+
+    CV_CALL( dx = cvCreateMat( img->rows, img->cols, CV_16SC1 ));
+    CV_CALL( dy = cvCreateMat( img->rows, img->cols, CV_16SC1 ));
+    CV_CALL( cvSobel( img, dx, 1, 0, 3 ));
+    CV_CALL( cvSobel( img, dy, 0, 1, 3 ));
+
+    if( dp < 1.f )
+        dp = 1.f;
+    idp = 1.f/dp;
+    CV_CALL( accum = cvCreateMat( cvCeil(img->rows*idp)+2, cvCeil(img->cols*idp)+2, CV_32SC1 ));
+    CV_CALL( cvZero(accum));
+    asize = cvGetMatSize(accum);
+
+    CV_CALL( storage = cvCreateMemStorage() );
+    CV_CALL( nz = cvCreateSeq( CV_32SC2, sizeof(CvSeq), sizeof(CvPoint), storage ));
+    CV_CALL( centers = cvCreateSeq( CV_32SC1, sizeof(CvSeq), sizeof(int), storage ));
+
+    rows = img->rows;
+    cols = img->cols;
+    arows = accum->rows - 2;
+    acols = accum->cols - 2;
+    adata = accum->data.i;
+    astep = accum->step/sizeof(adata[0]);
+
+    for( y = 0; y < rows; y++ )
+    {
+        const uchar* edges_row = edges->data.ptr + y*edges->step;
+        const short* dx_row = (const short*)(dx->data.ptr + y*dx->step);
+        const short* dy_row = (const short*)(dy->data.ptr + y*dy->step);
+
+        for( x = 0; x < cols; x++ )
+        {
+            float vx, vy;
+            int sx, sy, x0, y0, x1, y1;
+            CvPoint pt;
+            
+            vx = dx_row[x];
+            vy = dy_row[x];
+
+            if( !edges_row[x] || vx == 0 && vy == 0 )
+                continue;
+            
+            if( fabs(vx) < fabs(vy) )
+            {
+                sx = cvRound(vx*ONE/fabs(vy));
+                sy = vy < 0 ? -ONE : ONE;
+            }
+            else
+            {
+                assert( vx != 0 );
+                sy = cvRound(vy*ONE/fabs(vx));
+                sx = vx < 0 ? -ONE : ONE;
+            }
+
+            x0 = cvRound((x*idp)*ONE) + ONE + (ONE/2);
+            y0 = cvRound((y*idp)*ONE) + ONE + (ONE/2);
+
+            for( x1 = x0, y1 = y0;; x1 += sx, y1 += sy )
+            {
+                int x2 = x1 >> SHIFT, y2 = y1 >> SHIFT;
+                if( (unsigned)x2 >= (unsigned)acols ||
+                    (unsigned)y2 >= (unsigned)arows )
+                    break;
+                adata[y2*astep + x2]++;
+            }
+
+            sx = -sx; sy = -sy;
+            for( x1 = x0 + sx, y1 = y0 + sy;; x1 += sx, y1 += sy )
+            {
+                int x2 = x1 >> SHIFT, y2 = y1 >> SHIFT;
+                if( (unsigned)x2 >= (unsigned)acols ||
+                    (unsigned)y2 >= (unsigned)arows )
+                    break;
+                adata[y2*astep + x2]++;
+            }
+
+            pt.x = x; pt.y = y;
+            cvSeqPush( nz, &pt );
+        }
+    }
+
+    nz_count = nz->total;
+    if( !nz_count )
+        EXIT;
+
+    for( y = 1; y < arows - 1; y++ )
+    {
+        for( x = 1; x < acols - 1; x++ )
+        {
+            int base = y*(acols+2) + x;
+            if( adata[base] > acc_threshold &&
+                adata[base] > adata[base-1] && adata[base] > adata[base+1] &&
+                adata[base] > adata[base-acols-2] && adata[base] > adata[base+acols+2] )
+                cvSeqPush(centers, &base);
+        }
+    }
+
+    center_count = centers->total;
+    if( !center_count )
+        EXIT;
+
+    CV_CALL( sort_buf = (int*)cvAlloc( MAX(center_count,nz_count)*sizeof(sort_buf[0]) ));
+    cvCvtSeqToArray( centers, sort_buf );
+
+    icvHoughSortDescent32s( sort_buf, center_count, adata );
+    cvClearSeq( centers );
+    cvSeqPushMulti( centers, sort_buf, center_count );
+
+    CV_CALL( dist_buf = cvCreateMat( 1, nz_count, CV_32FC1 ));
+    ddata = dist_buf->data.fl;
+
+    dr = dp;
+    min_dist = MAX( min_dist, dp );
+    min_dist *= min_dist;
+
+    for( i = 0; i < centers->total; i++ )
+    {
+        int ofs = *(int*)cvGetSeqElem( centers, i );
+        y = ofs/(acols+2) - 1;
+        x = ofs - (y+1)*(acols+2) - 1;
+        float cx = (float)(x*dp), cy = (float)(y*dp);
+        int start_idx = nz_count - 1;
+        float start_dist, prev_dist, dist_sum;
+        float r_best = 0, c[3];
+        int max_count = R_THRESH;
+
+        for( j = 0; j < circles->total; j++ )
+        {
+            float* c = (float*)cvGetSeqElem( circles, j );
+            if( (c[0] - cx)*(c[0] - cx) + (c[1] - cy)*(c[1] - cy) < min_dist )
+                break;
+        }
+
+        if( j < circles->total )
+            continue;
+        
+        cvStartReadSeq( nz, &reader );
+        for( j = 0; j < nz_count; j++ )
+        {
+            CvPoint pt;
+            float _dx, _dy;
+            CV_READ_SEQ_ELEM( pt, reader );
+            _dx = cx - pt.x; _dy = cy - pt.y;
+            ddata[j] = _dx*_dx + _dy*_dy;
+            sort_buf[j] = j;
+        }
+
+        cvPow( dist_buf, dist_buf, 0.5 );
+        icvHoughSortDescent32s( sort_buf, nz_count, (int*)ddata );
+        
+        dist_sum = prev_dist = start_dist = ddata[sort_buf[nz_count-1]];
+        for( j = nz_count - 2; j >= 0; j-- )
+        {
+            float d = ddata[sort_buf[j]];
+            if( d - start_dist > dr )
+            {
+                if( start_idx - j >= max_count )
+                {
+                    r_best = ddata[sort_buf[(j + start_idx)/2]];
+                    max_count = start_idx - j;
+                }
+                start_dist = d;
+                start_idx = j;
+                dist_sum = 0;
+            }
+            dist_sum += d;
+            prev_dist = d;
+        }
+
+        if( max_count > R_THRESH )
+        {
+            c[0] = cx;
+            c[1] = cy;
+            c[2] = (float)r_best;
+            cvSeqPush( circles, c );
+            if( circles->total > circles_max )
+                EXIT;
+        }
+    }
+
+    __END__;
+
+    cvReleaseMat( &dist_buf );
+    cvFree( (void**)&sort_buf );
+    cvReleaseMemStorage( &storage );
+    cvReleaseMat( &edges );
+    cvReleaseMat( &dx );
+    cvReleaseMat( &dy );
+    cvReleaseMat( &accum );
+}
+
+CV_IMPL CvSeq*
+cvHoughCircles( CvArr* src_image, void* circle_storage,
+                int method, double dp, double min_dist,
+                double param1, double param2 )
+{
+    CvSeq* result = 0;
+
+    CV_FUNCNAME( "cvHoughCircles" );
+
+    __BEGIN__;
+    
+    CvMat stub, *img = (CvMat*)src_image;
+    CvMat* mat = 0;
+    CvSeq* circles = 0;
+    CvSeq circles_header;
+    CvSeqBlock circles_block;
+    int circles_max = INT_MAX;
+    int canny_threshold = cvRound(param1);
+    int acc_threshold = cvRound(param2);
+    CvSize size;
+
+    CV_CALL( img = cvGetMat( img, &stub ));
+
+    if( !CV_IS_MASK_ARR(img))
+        CV_ERROR( CV_StsBadArg, "The source image must be 8-bit, single-channel" );
+
+    if( !circle_storage )
+        CV_ERROR( CV_StsNullPtr, "NULL destination" );
+
+    if( dp <= 0 || min_dist <= 0 || canny_threshold <= 0 || acc_threshold <= 0 )
+        CV_ERROR( CV_StsOutOfRange, "dp, min_dist, canny_threshold and acc_threshold must be all positive numbers" );
+
+    if( CV_IS_STORAGE( circle_storage ))
+    {
+        CV_CALL( circles = cvCreateSeq( CV_32FC3, sizeof(CvSeq),
+            sizeof(float)*3, (CvMemStorage*)circle_storage ));
+    }
+    else if( CV_IS_MAT( circle_storage ))
+    {
+        mat = (CvMat*)circle_storage;
+
+        if( !CV_IS_MAT_CONT( mat->type ) || mat->rows != 1 && mat->cols != 1 ||
+            CV_MAT_TYPE(mat->type) != CV_32FC3 )
+            CV_ERROR( CV_StsBadArg,
+            "The destination matrix should be continuous and have a single row or a single column" );
+
+        CV_CALL( circles = cvMakeSeqHeaderForArray( CV_32FC3, sizeof(CvSeq), sizeof(float)*3,
+                mat->data.ptr, mat->rows + mat->cols - 1, &circles_header, &circles_block ));
+        circles_max = circles->total;
+        CV_CALL( cvClearSeq( circles ));
+    }
+    else
+    {
+        CV_ERROR( CV_StsBadArg, "Destination is not CvMemStorage* nor CvMat*" );
+    }
+
+    size = cvGetMatSize(img);
+
+    switch( method )
+    {
+    case CV_HOUGH_GRADIENT:
+          CV_CALL( icvHoughCirclesGradient( img, (float)dp, (float)min_dist,
+              canny_threshold, acc_threshold, circles, circles_max ));
+          break;
+    default:
+        CV_ERROR( CV_StsBadArg, "Unrecognized method id" );
+    }
+
+    if( mat )
+    {
+        if( mat->cols > mat->rows )
+            mat->cols = circles->total;
+        else
+            mat->rows = circles->total;
+    }
+    else
+        result = circles;
+
+    __END__;
+    
+    return result;    
+}
+
 /* End of file. */
-
-
