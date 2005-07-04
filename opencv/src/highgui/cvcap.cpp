@@ -50,6 +50,11 @@
 
 #endif
 
+#if defined WIN64 && defined EM64T && defined _MSC_VER && !defined __ICL
+#pragma optimize("",off)
+#endif
+
+
 /************************* Reading AVIs & Camera data **************************/
 CV_IMPL void cvReleaseCapture( CvCapture** pcapture )
 {

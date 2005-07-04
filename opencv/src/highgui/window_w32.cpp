@@ -65,6 +65,8 @@
 #define CV_HCURSOR GCLP_HCURSOR
 #define CV_HBRBACKGROUND GCLP_HBRBACKGROUND
 
+static const char* trackbar_text = "This is a very very very long dummy trackbar text!";
+
 #else
 
 #define icvGetWindowLongPtr GetWindowLong
@@ -734,7 +736,7 @@ MainWindowProc( HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam )
             {
                 GetWindowRect( window->toolbar.first->hwnd, &rect );
                 minmax->ptMinTrackSize.y += window->toolbar.rows*(rect.bottom - rect.top);
-                minmax->ptMinTrackSize.x = rect.right - rect.left + HG_BUDDY_WIDTH;
+                minmax->ptMinTrackSize.x = MAX(rect.right - rect.left + HG_BUDDY_WIDTH, HG_BUDDY_WIDTH*2);
             }
             return retval;
         }
@@ -1240,9 +1242,14 @@ cvCreateTrackbar( const char* trackbar_name, const char* window_name,
         /* Add a button which we're going to cover with the slider */
         tbs.iBitmap = 0;
         tbs.idCommand = bcount; // Set button id to it's number
-        tbs.iString = 0;
-        tbs.fsStyle = TBSTYLE_GROUP;
         tbs.fsState = TBSTATE_ENABLED;
+#if !defined WIN64 && !defined EM64T
+        tbs.fsStyle = 0;
+        tbs.iString = 0;
+#else
+        tbs.fsStyle = TBSTYLE_AUTOSIZE;
+        tbs.iString = (INT_PTR)trackbar_text;
+#endif
         SendMessage(window->toolbar.toolbar, TB_ADDBUTTONS, 1, (LPARAM)&tbs);
 
         /* Adjust button size to the slider */
@@ -1314,6 +1321,7 @@ cvCreateTrackbar( const char* trackbar_name, const char* window_name,
     trackbar->pos = -1;
     icvUpdateTrackbar( trackbar, pos );
     ShowWindow( trackbar->buddy, SW_SHOW );
+    ShowWindow( trackbar->hwnd, SW_SHOW );
 
     trackbar->notify = on_notify;
     trackbar->data = val;
