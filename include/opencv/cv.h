@@ -991,6 +991,7 @@ CVAPI(void)  cvGoodFeaturesToTrack( const CvArr* image, CvArr* eig_image,
 #define CV_HOUGH_STANDARD 0
 #define CV_HOUGH_PROBABILISTIC 1
 #define CV_HOUGH_MULTI_SCALE 2
+#define CV_HOUGH_GRADIENT 3
 
 /* Finds lines on binary image using one of several methods.
    line_storage is either memory storage or 1 x <max number of lines> CvMat, its
@@ -1002,6 +1003,12 @@ CVAPI(void)  cvGoodFeaturesToTrack( const CvArr* image, CvArr* eig_image,
 CVAPI(CvSeq*)  cvHoughLines2( CvArr* image, void* line_storage, int method, 
                               double rho, double theta, int threshold,
                               double param1 CV_DEFAULT(0), double param2 CV_DEFAULT(0));
+
+/* Finds circles in the image */
+CVAPI(CvSeq*) cvHoughCircles( CvArr* src_image, void* circle_storage,
+                              int method, double dp, double min_dist,
+                              double param1 CV_DEFAULT(100),
+                              double param2 CV_DEFAULT(100));
 
 /* Fits a line into set of 2d or 3d points in a robust way (M-estimator technique) */
 CVAPI(void)  cvFitLine( const CvArr* points, int dist_type, double param,
