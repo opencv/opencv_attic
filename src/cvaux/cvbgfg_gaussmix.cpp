@@ -47,7 +47,7 @@
 //IplImage values of image that are useful
 //int  nSize;         /* sizeof(IplImage) */
 //int  depth;         /* pixel depth in bits: IPL_DEPTH_8U ...*/
-//int  nChannels;	  /* OpenCV functions support 1,2,3 or 4 channels */
+//int  nChannels;     /* OpenCV functions support 1,2,3 or 4 channels */
 //int  width;         /* image width in pixels */
 //int  height;        /* image height in pixels */
 //int  imageSize;     /* image data size in bytes in case of interleaved data)*/
@@ -192,7 +192,7 @@ cvCreateGaussianBGModel( IplImage* first_frame, CvGaussBGStatModelParams* parame
         {
             bg_model->g_point[n].g_values =
                 bg_model->g_point[0].g_values + n*params.n_gauss;
-            bg_model->g_point[n].g_values[0].weight = 1;	//the first value seen has weight one
+            bg_model->g_point[n].g_values[0].weight = 1;    //the first value seen has weight one
             bg_model->g_point[n].g_values[0].match_sum = 1;
             for( m = 0; m < first_frame->nChannels; m++)
             {
@@ -209,7 +209,6 @@ cvCreateGaussianBGModel( IplImage* first_frame, CvGaussBGStatModelParams* parame
                 }
             }
             p += first_frame->nChannels;
-            n++;
         }
     }
     
@@ -262,7 +261,7 @@ icvReleaseGaussianBGModel( CvGaussBGModel** _bg_model )
 static int CV_CDECL
 icvUpdateGaussianBGModel( IplImage* curr_frame, CvGaussBGModel*  bg_model )
 {
-    int i, j;
+    int i, j, k;
     int region_count = 0;
     CvSeq *first_seq = NULL, *prev_seq = NULL, *seq = NULL;
     
@@ -284,8 +283,8 @@ icvUpdateGaussianBGModel( IplImage* curr_frame, CvGaussBGModel*  bg_model )
             double pixel[4];
             int no_match;
             
-            for( i = 0; i < nChannels; i++ )
-                pixel[i] = (uchar)curr_frame->imageData[p+i];
+            for( k = 0; k < nChannels; k++ )
+                pixel[k] = (uchar)curr_frame->imageData[p+k];
             
             no_match = icvMatchTest( pixel, nChannels, match, g_point, &bg_model_params );
             if( bg_model->countFrames == bg_model->params.win_size )
