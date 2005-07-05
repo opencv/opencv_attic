@@ -37,7 +37,7 @@ CvMemStorage* storage = 0; // temporary storage
 //  args - optional parameters
 void  update_mhi( IplImage* img, IplImage* dst, int diff_threshold )
 {
-    double timestamp = clock()/1000.; // get current time in seconds
+    double timestamp = (double)clock()/CLOCKS_PER_SEC; // get current time in seconds
     CvSize size = cvSize(img->width,img->height); // get current frame size
     int i, idx1 = last, idx2;
     IplImage* silh;
@@ -160,11 +160,10 @@ int main(int argc, char** argv)
     if( argc == 1 || (argc == 2 && strlen(argv[1]) == 1 && isdigit(argv[1][0])))
         capture = cvCaptureFromCAM( argc == 2 ? argv[1][0] - '0' : 0 );
     else if( argc == 2 )
-        capture = cvCaptureFromAVI( argv[1] ); 
+        capture = cvCaptureFromFile( argv[1] );
 
     if( capture )
     {
-        
         cvNamedWindow( "Motion", 1 );
         
         for(;;)
