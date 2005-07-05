@@ -1,8 +1,3 @@
-#ifdef _CH_
-#define WIN32
-#error "The file needs cvaux, which is not wrapped yet. Sorry"
-#endif
-
 #ifndef _EiC
 #include "cv.h"
 #include "highgui.h"
@@ -104,6 +99,32 @@ int main( int argc, char** argv )
             cvWaitKey(0);
             cvReleaseImage( &image );
         }
+        else
+        {
+            /* assume it is a text file containing the
+               list of the image filenames to be processed - one per line */
+            FILE* f = fopen( filename, "rt" );
+            if( f )
+            {
+                char buf[1000+1];
+                while( fgets( buf, 1000, f ) )
+                {
+                    int len = (int)strlen(buf);
+                    while( len > 0 && isspace(buf[len-1]) )
+                        len--;
+                    buf[len] = '\0';
+                    image = cvLoadImage( buf, 1 );
+                    if( image )
+                    {
+                        detect_and_draw( image );
+                        cvWaitKey(0);
+                        cvReleaseImage( &image );
+                    }
+                }
+                fclose(f);
+            }
+        }
+
     }
     
     cvDestroyWindow("result");
