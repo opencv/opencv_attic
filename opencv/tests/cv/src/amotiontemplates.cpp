@@ -612,7 +612,7 @@ int CV_MHIGlobalOrientTest::validate_test_results( int test_case_idx )
     int code = CvTS::OK;
     int nz = cvCountNonZero( test_array[INPUT][1] );
 
-    if( nz > 16 && !(min_angle - err_level <= angle &&
+    if( nz > 32 && !(min_angle - err_level <= angle &&
           max_angle + err_level >= angle) &&
         !(min_angle - err_level <= angle+360 &&
           max_angle + err_level >= angle+360) )
