@@ -142,7 +142,7 @@ typedef struct CvEHMM
 }
 CvEHMM;
 
-CVAPI(int)  icvCreate1DHMM( CvEHMM** this_hmm,
+/*CVAPI(int)  icvCreate1DHMM( CvEHMM** this_hmm,
                                    int state_number, int* num_mix, int obs_size );
 
 CVAPI(int)  icvRelease1DHMM( CvEHMM** phmm );
@@ -161,7 +161,7 @@ CVAPI(int)  icvEstimate1DTransProb( Cv1DObsInfo** obs_info_array,
 
 CVAPI(float)  icvViterbi( Cv1DObsInfo* obs_info, CvEHMM* hmm);
 
-CVAPI(int)  icv1DMixSegmL2( CvImgObsInfo** obs_info_array, int num_img, CvEHMM* hmm );
+CVAPI(int)  icv1DMixSegmL2( CvImgObsInfo** obs_info_array, int num_img, CvEHMM* hmm );*/
 
 /*********************************** Embedded HMMs *************************************/
 
@@ -305,16 +305,7 @@ typedef enum CvGraphWeightType
 /*****************************************************************************************/
 
 
-///////////////////////////////////////////////////////////
-// Triangulation
-CVAPI(void) cvDecompPoly( CvContour* cont, CvSubdiv2D** subdiv, CvMemStorage* storage );
-///////////////////////////////////////////////////////////
-
 /*******************************Stereo correspondence*************************************/
-CVAPI(void) icvDrawFilledSegments( CvSeq* seq, IplImage* img, int part );
-
-CVAPI(CvSeq*) cvExtractSingleEdges( IplImage* image, //bw image
-                      CvMemStorage* storage );
 
 typedef struct CvCliqueFinder
 {   
@@ -348,13 +339,12 @@ typedef struct CvCliqueFinder
 #define CLIQUE_FOUND 1
 #define CLIQUE_END   0
 
-CVAPI(void) cvStartFindCliques( CvGraph* graph, CvCliqueFinder* finder, int reverse, 
+/*CVAPI(void) cvStartFindCliques( CvGraph* graph, CvCliqueFinder* finder, int reverse, 
                                    int weighted CV_DEFAULT(0),  int weighted_edges CV_DEFAULT(0));
 CVAPI(int) cvFindNextMaximalClique( CvCliqueFinder* finder, int* clock_rest CV_DEFAULT(0) ); 
 CVAPI(void) cvEndFindCliques( CvCliqueFinder* finder );
 
-CVAPI(void) cvBronKerbosch( CvGraph* graph );                 
-
+CVAPI(void) cvBronKerbosch( CvGraph* graph );*/
 
 
 /*F///////////////////////////////////////////////////////////////////////////////////////
@@ -388,10 +378,10 @@ CVAPI(void) cvBronKerbosch( CvGraph* graph );
 //      weight of subgraph.
 //    Notes:
 //F*/
-CVAPI(float) cvSubgraphWeight( CvGraph *graph, CvSeq *subgraph,
+/*CVAPI(float) cvSubgraphWeight( CvGraph *graph, CvSeq *subgraph,
                                   CvGraphWeightType weight_type CV_DEFAULT(CV_NOT_WEIGHTED),
                                   CvVect32f weight_vtx CV_DEFAULT(0),
-                                  CvMatr32f weight_edge CV_DEFAULT(0) );
+                                  CvMatr32f weight_edge CV_DEFAULT(0) );*/
 
 
 /*F///////////////////////////////////////////////////////////////////////////////////////
@@ -439,7 +429,7 @@ CVAPI(float) cvSubgraphWeight( CvGraph *graph, CvSeq *subgraph,
 //      in cases of CV_WEIGHTED_EDGE and CV_WEIGHTED_ALL weights should be nonnegative.
 //      start_clique has a priority over subgraph_of_ban.
 //F*/
-CVAPI(CvSeq*) cvFindCliqueEx( CvGraph *graph, CvMemStorage *storage,
+/*CVAPI(CvSeq*) cvFindCliqueEx( CvGraph *graph, CvMemStorage *storage,
                                  int is_complementary CV_DEFAULT(0),
                                  CvGraphWeightType weight_type CV_DEFAULT(CV_NOT_WEIGHTED),
                                  CvVect32f weight_vtx CV_DEFAULT(0),
@@ -448,7 +438,7 @@ CVAPI(CvSeq*) cvFindCliqueEx( CvGraph *graph, CvMemStorage *storage,
                                  CvSeq *subgraph_of_ban CV_DEFAULT(0),
                                  float *clique_weight_ptr CV_DEFAULT(0),
                                  int num_generations CV_DEFAULT(3),
-                                 int quality CV_DEFAULT(2) );
+                                 int quality CV_DEFAULT(2) );*/
 
 
 #define CV_UNDEF_SC_PARAM         12345 //default value of parameters
@@ -635,7 +625,7 @@ CVAPI(int) icvComputeStereoLineCoeffs(   CvPoint3D64d pointA,
                                     double gamma,
                                     CvStereoLineCoeff*    coeffs);
 
-CVAPI(int) icvComputeFundMatrEpipoles ( CvMatr64d camMatr1, 
+/*CVAPI(int) icvComputeFundMatrEpipoles ( CvMatr64d camMatr1, 
                                     CvMatr64d     rotMatr1, 
                                     CvVect64d     transVect1,
                                     CvMatr64d     camMatr2,
@@ -643,10 +633,7 @@ CVAPI(int) icvComputeFundMatrEpipoles ( CvMatr64d camMatr1,
                                     CvVect64d     transVect2,
                                     CvPoint2D64d* epipole1,
                                     CvPoint2D64d* epipole2,
-                                    CvMatr64d     fundMatr);
-
-CVAPI(void)
-icvSolveCubic(CvMat* coeffs,CvMat* result);
+                                    CvMatr64d     fundMatr);*/
 
 CVAPI(int) icvGetAngleLine( CvPoint2D64d startPoint, CvSize imageSize,CvPoint2D64d *point1,CvPoint2D64d *point2);
 
@@ -654,12 +641,12 @@ CVAPI(void) icvGetCoefForPiece(   CvPoint2D64d p_start,CvPoint2D64d p_end,
                         double *a,double *b,double *c,
                         int* result);
 
-CVAPI(void) icvGetCommonArea( CvSize imageSize,
+/*CVAPI(void) icvGetCommonArea( CvSize imageSize,
                     CvPoint2D64d epipole1,CvPoint2D64d epipole2,
                     CvMatr64d fundMatr,
                     CvVect64d coeff11,CvVect64d coeff12,
                     CvVect64d coeff21,CvVect64d coeff22,
-                    int* result);
+                    int* result);*/
 
 CVAPI(void) icvComputeeInfiniteProject1(CvMatr64d    rotMatr,
                                      CvMatr64d    camMatr1,
@@ -740,7 +727,7 @@ CVAPI(IplImage*) icvCreateIsometricImage( IplImage* src, IplImage* dst,
 
 CVAPI(void) cvDeInterlace( const CvArr* frame, CvArr* fieldEven, CvArr* fieldOdd );
 
-CVAPI(int) icvSelectBestRt(           int           numImages,
+/*CVAPI(int) icvSelectBestRt(           int           numImages,
                                     int*          numPoints,
                                     CvSize        imageSize,
                                     CvPoint2D32f* imagePoints1,
@@ -759,7 +746,7 @@ CVAPI(int) icvSelectBestRt(           int           numImages,
 
                                     CvMatr32f     bestRotMatr,
                                     CvVect32f     bestTransVect
-                                    );
+                                    );*/
 
 /****************************************************************************************\
 *                                   Contour Morphing                                     *
@@ -1045,9 +1032,9 @@ CVAPI(int) cvReleaseLinearContorModelStorage(CvGraph** Graph);
 CVAPI(void) cvInitPerspectiveTransform( CvSize size, const CvPoint2D32f vertex[4], double matrix[3][3],
                                               CvArr* rectMap );
 
-CVAPI(void) cvInitStereoRectification( CvStereoCamera* params,
+/*CVAPI(void) cvInitStereoRectification( CvStereoCamera* params,
                                              CvArr* rectMap1, CvArr* rectMap2,
-                                             int do_undistortion );
+                                             int do_undistortion );*/
 
 /*************************** View Morphing Functions ************************/
 
@@ -1202,7 +1189,7 @@ CVAPI(int)  cvChangeDetection( IplImage*  prev_frame,
 #define  CV_BGFG_FGD_ALPHA_1         0.1f
 
 /* stat model update parameter
-/* 0.002f ~ 1K frame(~45sec), 0.005 ~ 18sec (if 25fps and absolutely static BG) */
+   0.002f ~ 1K frame(~45sec), 0.005 ~ 18sec (if 25fps and absolutely static BG) */
 #define  CV_BGFG_FGD_ALPHA_2         0.005f
 
 /* start value for alpha parameter (to fast initiate statistic model) */

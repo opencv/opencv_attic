@@ -100,9 +100,9 @@
 #endif // SKIP_INCLUDES
 
 #if defined(_CH_)
-  #pragma package <opencv>
+  #pragma package <chopencv>
   #include <chdl.h>
-  LOAD_CHDL_CODE(highgui,Highgui)
+  LOAD_CHDL(highgui)
 #endif
 
 #ifdef __cplusplus
@@ -144,7 +144,7 @@ typedef void (CV_CDECL *CvTrackbarCallback)(int pos);
 
 /* create trackbar and display it on top of given window, set callback */
 CVAPI(int) cvCreateTrackbar( const char* trackbar_name, const char* window_name,
-                                  int* value, int count, CvTrackbarCallback on_change );
+                             int* value, int count, CvTrackbarCallback on_change );
 
 /* retrieve or set trackbar position */
 CVAPI(int) cvGetTrackbarPos( const char* trackbar_name, const char* window_name );

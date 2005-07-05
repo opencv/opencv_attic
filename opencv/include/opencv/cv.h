@@ -49,9 +49,9 @@
 
 #ifndef SKIP_INCLUDES
   #if defined(_CH_)
-    #pragma package <opencv>
-  #include <chdl.h>
-  LOAD_CHDL_CODE(cv,Cv)
+    #pragma package <chopencv>
+    #include <chdl.h>
+    LOAD_CHDL(cv)
   #endif
 #endif
 
