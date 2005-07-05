@@ -54,6 +54,9 @@
 #include <stdio.h>
 #include <assert.h>
 
+static const char* trackbar_text =
+"                                                                                             ";
+
 #if defined WIN64 || defined EM64T
 
 #define icvGetWindowLongPtr GetWindowLongPtr
@@ -64,8 +67,6 @@
 #define CV_WNDPROC GWLP_WNDPROC
 #define CV_HCURSOR GCLP_HCURSOR
 #define CV_HBRBACKGROUND GCLP_HBRBACKGROUND
-
-static const char* trackbar_text = "This is a very very very long dummy trackbar text!";
 
 #else
 
@@ -533,7 +534,7 @@ static RECT icvCalcWindowRect( CvWindow* window )
 static void icvGetBitmapData( CvWindow* window, SIZE* size, int* channels, void** data )
 {
     BITMAP bmp;
-    GetObject( GetCurrentObject( window->dc, OBJ_BITMAP ), sizeof(bmp), &bmp );
+    GetObject( GetCurrentObject(window->dc, OBJ_BITMAP), sizeof(bmp), &bmp );
 
     if( size )
     {
@@ -882,8 +883,7 @@ static LRESULT CALLBACK HighGUIProc( HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM
             // Determine the bitmap's dimensions
             icvGetBitmapData( window, &size, &nchannels, 0 );
 
-            BeginPaint(hwnd, &paint);
-            hdc = paint.hdc;
+            hdc = BeginPaint(hwnd, &paint);
             SetStretchBltMode(hdc, COLORONCOLOR);
 
             if( nchannels == 1 )
@@ -909,7 +909,7 @@ static LRESULT CALLBACK HighGUIProc( HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM
                 StretchBlt( hdc, 0, 0, rect.right - rect.left, rect.bottom - rect.top,
                             window->dc, 0, 0, size.cx, size.cy, SRCCOPY );
             }
-            DeleteDC(hdc);
+            //DeleteDC(hdc);
             EndPaint(hwnd, &paint);
         }
         else
@@ -1243,7 +1243,7 @@ cvCreateTrackbar( const char* trackbar_name, const char* window_name,
         tbs.iBitmap = 0;
         tbs.idCommand = bcount; // Set button id to it's number
         tbs.fsState = TBSTATE_ENABLED;
-#if !defined WIN64 && !defined EM64T
+#if 0/*!defined WIN64 && !defined EM64T*/
         tbs.fsStyle = 0;
         tbs.iString = 0;
 #else
