@@ -116,8 +116,8 @@ CvStatus CV_STDCALL icvJacobiEigens_32f(float *A, float *V, float *E, int n, flo
         return CV_NULLPTR_ERR;
     if( n <= 0 )
         return CV_BADSIZE_ERR;
-    if( eps < 1.0e-7f )
-        eps = 1.0e-7f;
+    if( eps < DBL_EPSILON )
+        eps = DBL_EPSILON;
 
     /*-------- Prepare --------*/
     for( i = 0; i < n; i++, VV += n, AA += n )
@@ -266,8 +266,8 @@ CvStatus CV_STDCALL icvJacobiEigens_64d(double *A, double *V, double *E, int n, 
         return CV_NULLPTR_ERR;
     if( n <= 0 )
         return CV_BADSIZE_ERR;
-    if( eps < 1.0e-15 )
-        eps = 1.0e-15;
+    if( eps < DBL_EPSILON )
+        eps = DBL_EPSILON;
 
     /*-------- Prepare --------*/
     for( i = 0; i < n; i++, V1 += n, A1 += n )
