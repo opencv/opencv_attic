@@ -1360,13 +1360,13 @@ static PyAPI_FUNC(double) PyFloat_AS_DOUBLE (PyObject *obj) {
 
 /* -------- TYPES TABLE (BEGIN) -------- */
 
-#define  SWIGTYPE_p_CvSparseMatIterator swig_types[0] 
-#define  SWIGTYPE_p_f_p_q_const__void__int swig_types[1] 
-#define  SWIGTYPE_p_CvNArrayIterator swig_types[2] 
-#define  SWIGTYPE_p_f_p_q_const__void_p_q_const__void_p_void__int swig_types[3] 
-#define  SWIGTYPE_p_CvTreeNodeIterator swig_types[4] 
-#define  SWIGTYPE_p_f_p_void_p_void__int swig_types[5] 
-#define  SWIGTYPE_p_CvLineIterator swig_types[6] 
+#define  SWIGTYPE_p_CvLineIterator swig_types[0] 
+#define  SWIGTYPE_p_CvSparseMatIterator swig_types[1] 
+#define  SWIGTYPE_p_f_p_q_const__void__int swig_types[2] 
+#define  SWIGTYPE_p_CvNArrayIterator swig_types[3] 
+#define  SWIGTYPE_p_f_p_q_const__void_p_q_const__void_p_void__int swig_types[4] 
+#define  SWIGTYPE_p_CvTreeNodeIterator swig_types[5] 
+#define  SWIGTYPE_p_f_p_void_p_void__int swig_types[6] 
 #define  SWIGTYPE_p_f_p_p_void__void swig_types[7] 
 #define  SWIGTYPE_p_f_p__IplImage_int_int__void swig_types[8] 
 #define  SWIGTYPE_p_f_p__IplImage_int__void swig_types[9] 
@@ -1402,12 +1402,12 @@ static PyAPI_FUNC(double) PyFloat_AS_DOUBLE (PyObject *obj) {
 #define  SWIGTYPE_std__ptrdiff_t swig_types[39] 
 #define  SWIGTYPE_ptrdiff_t swig_types[40] 
 #define  SWIGTYPE_p_CvContourTree swig_types[41] 
-#define  SWIGTYPE_p_f_p_q_const__void__p_void swig_types[42] 
-#define  SWIGTYPE_p_f_p_CvFileStorage_p_CvFileNode__p_void swig_types[43] 
-#define  SWIGTYPE_p_void swig_types[44] 
-#define  SWIGTYPE_p_p_void swig_types[45] 
-#define  SWIGTYPE_p_CvFileStorage swig_types[46] 
-#define  SWIGTYPE_p_CvMemStorage swig_types[47] 
+#define  SWIGTYPE_p_f_p_CvFileStorage_p_CvFileNode__p_void swig_types[42] 
+#define  SWIGTYPE_p_void swig_types[43] 
+#define  SWIGTYPE_p_p_void swig_types[44] 
+#define  SWIGTYPE_p_CvFileStorage swig_types[45] 
+#define  SWIGTYPE_p_CvMemStorage swig_types[46] 
+#define  SWIGTYPE_p_f_p_q_const__void__p_void swig_types[47] 
 #define  SWIGTYPE_p_p_CvMemStorage swig_types[48] 
 #define  SWIGTYPE_p_f_size_t_p_void__p_void swig_types[49] 
 #define  SWIGTYPE_p_p_CvFileStorage swig_types[50] 
@@ -2286,6 +2286,7 @@ t_output_helper(PyObject* target, PyObject* o) {
 
 
 #include "error.h"
+#include "pycvseq.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -8242,6 +8243,312 @@ static PyObject * CvBox2D_swigregister(PyObject *, PyObject *args) {
     PyObject *obj;
     if (!PyArg_ParseTuple(args,(char*)"O", &obj)) return NULL;
     SWIG_TypeClientData(SWIGTYPE_p_CvBox2D, obj);
+    Py_INCREF(obj);
+    return Py_BuildValue((char *)"");
+}
+static PyObject *_wrap_CvLineIterator_ptr_set(PyObject *, PyObject *args) {
+    PyObject *resultobj;
+    CvLineIterator *arg1 = (CvLineIterator *) 0 ;
+    uchar *arg2 = (uchar *) 0 ;
+    PyObject * obj0 = 0 ;
+    PyObject * obj1 = 0 ;
+    
+    if(!PyArg_ParseTuple(args,(char *)"OO:CvLineIterator_ptr_set",&obj0,&obj1)) goto fail;
+    SWIG_Python_ConvertPtr(obj0, (void **)&arg1, SWIGTYPE_p_CvLineIterator, SWIG_POINTER_EXCEPTION | 0);
+    if (SWIG_arg_fail(1)) SWIG_fail;
+    SWIG_Python_ConvertPtr(obj1, (void **)&arg2, SWIGTYPE_p_unsigned_char, SWIG_POINTER_EXCEPTION | SWIG_POINTER_DISOWN);
+    if (SWIG_arg_fail(2)) SWIG_fail;
+    if (arg1) (arg1)->ptr = arg2;
+    
+    Py_INCREF(Py_None); resultobj = Py_None;
+    return resultobj;
+    fail:
+    return NULL;
+}
+
+
+static PyObject *_wrap_CvLineIterator_ptr_get(PyObject *, PyObject *args) {
+    PyObject *resultobj;
+    CvLineIterator *arg1 = (CvLineIterator *) 0 ;
+    uchar *result;
+    PyObject * obj0 = 0 ;
+    
+    if(!PyArg_ParseTuple(args,(char *)"O:CvLineIterator_ptr_get",&obj0)) goto fail;
+    SWIG_Python_ConvertPtr(obj0, (void **)&arg1, SWIGTYPE_p_CvLineIterator, SWIG_POINTER_EXCEPTION | 0);
+    if (SWIG_arg_fail(1)) SWIG_fail;
+    result = (uchar *) ((arg1)->ptr);
+    
+    resultobj = SWIG_NewPointerObj((void*)(result), SWIGTYPE_p_unsigned_char, 0);
+    return resultobj;
+    fail:
+    return NULL;
+}
+
+
+static PyObject *_wrap_CvLineIterator_err_set(PyObject *, PyObject *args) {
+    PyObject *resultobj;
+    CvLineIterator *arg1 = (CvLineIterator *) 0 ;
+    int arg2 ;
+    PyObject * obj0 = 0 ;
+    PyObject * obj1 = 0 ;
+    
+    if(!PyArg_ParseTuple(args,(char *)"OO:CvLineIterator_err_set",&obj0,&obj1)) goto fail;
+    SWIG_Python_ConvertPtr(obj0, (void **)&arg1, SWIGTYPE_p_CvLineIterator, SWIG_POINTER_EXCEPTION | 0);
+    if (SWIG_arg_fail(1)) SWIG_fail;
+    {
+        arg2 = (int)(SWIG_As_int(obj1)); 
+        if (SWIG_arg_fail(2)) SWIG_fail;
+    }
+    if (arg1) (arg1)->err = arg2;
+    
+    Py_INCREF(Py_None); resultobj = Py_None;
+    return resultobj;
+    fail:
+    return NULL;
+}
+
+
+static PyObject *_wrap_CvLineIterator_err_get(PyObject *, PyObject *args) {
+    PyObject *resultobj;
+    CvLineIterator *arg1 = (CvLineIterator *) 0 ;
+    int result;
+    PyObject * obj0 = 0 ;
+    
+    if(!PyArg_ParseTuple(args,(char *)"O:CvLineIterator_err_get",&obj0)) goto fail;
+    SWIG_Python_ConvertPtr(obj0, (void **)&arg1, SWIGTYPE_p_CvLineIterator, SWIG_POINTER_EXCEPTION | 0);
+    if (SWIG_arg_fail(1)) SWIG_fail;
+    result = (int) ((arg1)->err);
+    
+    {
+        resultobj = SWIG_From_int((int)(result)); 
+    }
+    return resultobj;
+    fail:
+    return NULL;
+}
+
+
+static PyObject *_wrap_CvLineIterator_plus_delta_set(PyObject *, PyObject *args) {
+    PyObject *resultobj;
+    CvLineIterator *arg1 = (CvLineIterator *) 0 ;
+    int arg2 ;
+    PyObject * obj0 = 0 ;
+    PyObject * obj1 = 0 ;
+    
+    if(!PyArg_ParseTuple(args,(char *)"OO:CvLineIterator_plus_delta_set",&obj0,&obj1)) goto fail;
+    SWIG_Python_ConvertPtr(obj0, (void **)&arg1, SWIGTYPE_p_CvLineIterator, SWIG_POINTER_EXCEPTION | 0);
+    if (SWIG_arg_fail(1)) SWIG_fail;
+    {
+        arg2 = (int)(SWIG_As_int(obj1)); 
+        if (SWIG_arg_fail(2)) SWIG_fail;
+    }
+    if (arg1) (arg1)->plus_delta = arg2;
+    
+    Py_INCREF(Py_None); resultobj = Py_None;
+    return resultobj;
+    fail:
+    return NULL;
+}
+
+
+static PyObject *_wrap_CvLineIterator_plus_delta_get(PyObject *, PyObject *args) {
+    PyObject *resultobj;
+    CvLineIterator *arg1 = (CvLineIterator *) 0 ;
+    int result;
+    PyObject * obj0 = 0 ;
+    
+    if(!PyArg_ParseTuple(args,(char *)"O:CvLineIterator_plus_delta_get",&obj0)) goto fail;
+    SWIG_Python_ConvertPtr(obj0, (void **)&arg1, SWIGTYPE_p_CvLineIterator, SWIG_POINTER_EXCEPTION | 0);
+    if (SWIG_arg_fail(1)) SWIG_fail;
+    result = (int) ((arg1)->plus_delta);
+    
+    {
+        resultobj = SWIG_From_int((int)(result)); 
+    }
+    return resultobj;
+    fail:
+    return NULL;
+}
+
+
+static PyObject *_wrap_CvLineIterator_minus_delta_set(PyObject *, PyObject *args) {
+    PyObject *resultobj;
+    CvLineIterator *arg1 = (CvLineIterator *) 0 ;
+    int arg2 ;
+    PyObject * obj0 = 0 ;
+    PyObject * obj1 = 0 ;
+    
+    if(!PyArg_ParseTuple(args,(char *)"OO:CvLineIterator_minus_delta_set",&obj0,&obj1)) goto fail;
+    SWIG_Python_ConvertPtr(obj0, (void **)&arg1, SWIGTYPE_p_CvLineIterator, SWIG_POINTER_EXCEPTION | 0);
+    if (SWIG_arg_fail(1)) SWIG_fail;
+    {
+        arg2 = (int)(SWIG_As_int(obj1)); 
+        if (SWIG_arg_fail(2)) SWIG_fail;
+    }
+    if (arg1) (arg1)->minus_delta = arg2;
+    
+    Py_INCREF(Py_None); resultobj = Py_None;
+    return resultobj;
+    fail:
+    return NULL;
+}
+
+
+static PyObject *_wrap_CvLineIterator_minus_delta_get(PyObject *, PyObject *args) {
+    PyObject *resultobj;
+    CvLineIterator *arg1 = (CvLineIterator *) 0 ;
+    int result;
+    PyObject * obj0 = 0 ;
+    
+    if(!PyArg_ParseTuple(args,(char *)"O:CvLineIterator_minus_delta_get",&obj0)) goto fail;
+    SWIG_Python_ConvertPtr(obj0, (void **)&arg1, SWIGTYPE_p_CvLineIterator, SWIG_POINTER_EXCEPTION | 0);
+    if (SWIG_arg_fail(1)) SWIG_fail;
+    result = (int) ((arg1)->minus_delta);
+    
+    {
+        resultobj = SWIG_From_int((int)(result)); 
+    }
+    return resultobj;
+    fail:
+    return NULL;
+}
+
+
+static PyObject *_wrap_CvLineIterator_plus_step_set(PyObject *, PyObject *args) {
+    PyObject *resultobj;
+    CvLineIterator *arg1 = (CvLineIterator *) 0 ;
+    int arg2 ;
+    PyObject * obj0 = 0 ;
+    PyObject * obj1 = 0 ;
+    
+    if(!PyArg_ParseTuple(args,(char *)"OO:CvLineIterator_plus_step_set",&obj0,&obj1)) goto fail;
+    SWIG_Python_ConvertPtr(obj0, (void **)&arg1, SWIGTYPE_p_CvLineIterator, SWIG_POINTER_EXCEPTION | 0);
+    if (SWIG_arg_fail(1)) SWIG_fail;
+    {
+        arg2 = (int)(SWIG_As_int(obj1)); 
+        if (SWIG_arg_fail(2)) SWIG_fail;
+    }
+    if (arg1) (arg1)->plus_step = arg2;
+    
+    Py_INCREF(Py_None); resultobj = Py_None;
+    return resultobj;
+    fail:
+    return NULL;
+}
+
+
+static PyObject *_wrap_CvLineIterator_plus_step_get(PyObject *, PyObject *args) {
+    PyObject *resultobj;
+    CvLineIterator *arg1 = (CvLineIterator *) 0 ;
+    int result;
+    PyObject * obj0 = 0 ;
+    
+    if(!PyArg_ParseTuple(args,(char *)"O:CvLineIterator_plus_step_get",&obj0)) goto fail;
+    SWIG_Python_ConvertPtr(obj0, (void **)&arg1, SWIGTYPE_p_CvLineIterator, SWIG_POINTER_EXCEPTION | 0);
+    if (SWIG_arg_fail(1)) SWIG_fail;
+    result = (int) ((arg1)->plus_step);
+    
+    {
+        resultobj = SWIG_From_int((int)(result)); 
+    }
+    return resultobj;
+    fail:
+    return NULL;
+}
+
+
+static PyObject *_wrap_CvLineIterator_minus_step_set(PyObject *, PyObject *args) {
+    PyObject *resultobj;
+    CvLineIterator *arg1 = (CvLineIterator *) 0 ;
+    int arg2 ;
+    PyObject * obj0 = 0 ;
+    PyObject * obj1 = 0 ;
+    
+    if(!PyArg_ParseTuple(args,(char *)"OO:CvLineIterator_minus_step_set",&obj0,&obj1)) goto fail;
+    SWIG_Python_ConvertPtr(obj0, (void **)&arg1, SWIGTYPE_p_CvLineIterator, SWIG_POINTER_EXCEPTION | 0);
+    if (SWIG_arg_fail(1)) SWIG_fail;
+    {
+        arg2 = (int)(SWIG_As_int(obj1)); 
+        if (SWIG_arg_fail(2)) SWIG_fail;
+    }
+    if (arg1) (arg1)->minus_step = arg2;
+    
+    Py_INCREF(Py_None); resultobj = Py_None;
+    return resultobj;
+    fail:
+    return NULL;
+}
+
+
+static PyObject *_wrap_CvLineIterator_minus_step_get(PyObject *, PyObject *args) {
+    PyObject *resultobj;
+    CvLineIterator *arg1 = (CvLineIterator *) 0 ;
+    int result;
+    PyObject * obj0 = 0 ;
+    
+    if(!PyArg_ParseTuple(args,(char *)"O:CvLineIterator_minus_step_get",&obj0)) goto fail;
+    SWIG_Python_ConvertPtr(obj0, (void **)&arg1, SWIGTYPE_p_CvLineIterator, SWIG_POINTER_EXCEPTION | 0);
+    if (SWIG_arg_fail(1)) SWIG_fail;
+    result = (int) ((arg1)->minus_step);
+    
+    {
+        resultobj = SWIG_From_int((int)(result)); 
+    }
+    return resultobj;
+    fail:
+    return NULL;
+}
+
+
+static PyObject *_wrap_new_CvLineIterator(PyObject *, PyObject *args) {
+    PyObject *resultobj;
+    CvLineIterator *result;
+    
+    if(!PyArg_ParseTuple(args,(char *)":new_CvLineIterator")) goto fail;
+    {
+        try {
+            result = (CvLineIterator *)new CvLineIterator();
+        } 
+        catch (...) 
+        {
+            return NULL;
+        } 
+    }
+    resultobj = SWIG_NewPointerObj((void*)(result), SWIGTYPE_p_CvLineIterator, 1);
+    return resultobj;
+    fail:
+    return NULL;
+}
+
+
+static PyObject *_wrap_delete_CvLineIterator(PyObject *, PyObject *args) {
+    PyObject *resultobj;
+    CvLineIterator *arg1 = (CvLineIterator *) 0 ;
+    PyObject * obj0 = 0 ;
+    
+    if(!PyArg_ParseTuple(args,(char *)"O:delete_CvLineIterator",&obj0)) goto fail;
+    SWIG_Python_ConvertPtr(obj0, (void **)&arg1, SWIGTYPE_p_CvLineIterator, SWIG_POINTER_EXCEPTION | 0);
+    if (SWIG_arg_fail(1)) SWIG_fail;
+    {
+        try {
+            delete arg1;
+        } 
+        catch (...) 
+        {
+            return NULL;
+        } 
+    }
+    Py_INCREF(Py_None); resultobj = Py_None;
+    return resultobj;
+    fail:
+    return NULL;
+}
+
+
+static PyObject * CvLineIterator_swigregister(PyObject *, PyObject *args) {
+    PyObject *obj;
+    if (!PyArg_ParseTuple(args,(char*)"O", &obj)) return NULL;
+    SWIG_TypeClientData(SWIGTYPE_p_CvLineIterator, obj);
     Py_INCREF(obj);
     return Py_BuildValue((char *)"");
 }
@@ -25771,6 +26078,119 @@ static PyObject *_wrap_cvPolyLine(PyObject *, PyObject *args) {
 }
 
 
+static PyObject *_wrap_cvClipLine(PyObject *, PyObject *args) {
+    PyObject *resultobj;
+    CvSize arg1 ;
+    CvPoint *arg2 = (CvPoint *) 0 ;
+    CvPoint *arg3 = (CvPoint *) 0 ;
+    int result;
+    PyObject * obj0 = 0 ;
+    PyObject * obj1 = 0 ;
+    PyObject * obj2 = 0 ;
+    
+    if(!PyArg_ParseTuple(args,(char *)"OOO:cvClipLine",&obj0,&obj1,&obj2)) goto fail;
+    {
+        CvSize * argp;
+        SWIG_Python_ConvertPtr(obj0, (void **)&argp, SWIGTYPE_p_CvSize, SWIG_POINTER_EXCEPTION);
+        if (SWIG_arg_fail(1)) SWIG_fail;
+        if (argp == NULL) {
+            SWIG_null_ref("CvSize");
+        }
+        if (SWIG_arg_fail(1)) SWIG_fail;
+        arg1 = *argp;
+    }
+    SWIG_Python_ConvertPtr(obj1, (void **)&arg2, SWIGTYPE_p_CvPoint, SWIG_POINTER_EXCEPTION | 0);
+    if (SWIG_arg_fail(2)) SWIG_fail;
+    SWIG_Python_ConvertPtr(obj2, (void **)&arg3, SWIGTYPE_p_CvPoint, SWIG_POINTER_EXCEPTION | 0);
+    if (SWIG_arg_fail(3)) SWIG_fail;
+    {
+        try {
+            result = (int)cvClipLine(arg1,arg2,arg3);
+        } 
+        catch (...) 
+        {
+            return NULL;
+        } 
+    }
+    {
+        resultobj = SWIG_From_int((int)(result)); 
+    }
+    return resultobj;
+    fail:
+    return NULL;
+}
+
+
+static PyObject *_wrap_cvInitLineIterator(PyObject *, PyObject *args) {
+    PyObject *resultobj;
+    CvArr *arg1 = (CvArr *) 0 ;
+    CvPoint arg2 ;
+    CvPoint arg3 ;
+    CvLineIterator *arg4 = (CvLineIterator *) 0 ;
+    int arg5 ;
+    int arg6 ;
+    int result;
+    PyObject * obj0 = 0 ;
+    PyObject * obj1 = 0 ;
+    PyObject * obj2 = 0 ;
+    PyObject * obj3 = 0 ;
+    PyObject * obj4 = 0 ;
+    PyObject * obj5 = 0 ;
+    
+    if(!PyArg_ParseTuple(args,(char *)"OOOOOO:cvInitLineIterator",&obj0,&obj1,&obj2,&obj3,&obj4,&obj5)) goto fail;
+    {
+        if ((SWIG_ConvertPtr(obj0,(void **)(&arg1),0,SWIG_POINTER_EXCEPTION|0))== -1) {
+            SWIG_arg_fail(1);SWIG_fail;
+        }
+    }
+    {
+        CvPoint * argp;
+        SWIG_Python_ConvertPtr(obj1, (void **)&argp, SWIGTYPE_p_CvPoint, SWIG_POINTER_EXCEPTION);
+        if (SWIG_arg_fail(2)) SWIG_fail;
+        if (argp == NULL) {
+            SWIG_null_ref("CvPoint");
+        }
+        if (SWIG_arg_fail(2)) SWIG_fail;
+        arg2 = *argp;
+    }
+    {
+        CvPoint * argp;
+        SWIG_Python_ConvertPtr(obj2, (void **)&argp, SWIGTYPE_p_CvPoint, SWIG_POINTER_EXCEPTION);
+        if (SWIG_arg_fail(3)) SWIG_fail;
+        if (argp == NULL) {
+            SWIG_null_ref("CvPoint");
+        }
+        if (SWIG_arg_fail(3)) SWIG_fail;
+        arg3 = *argp;
+    }
+    SWIG_Python_ConvertPtr(obj3, (void **)&arg4, SWIGTYPE_p_CvLineIterator, SWIG_POINTER_EXCEPTION | 0);
+    if (SWIG_arg_fail(4)) SWIG_fail;
+    {
+        arg5 = (int)(SWIG_As_int(obj4)); 
+        if (SWIG_arg_fail(5)) SWIG_fail;
+    }
+    {
+        arg6 = (int)(SWIG_As_int(obj5)); 
+        if (SWIG_arg_fail(6)) SWIG_fail;
+    }
+    {
+        try {
+            result = (int)cvInitLineIterator((CvArr const *)arg1,arg2,arg3,arg4,arg5,arg6);
+        } 
+        catch (...) 
+        {
+            return NULL;
+        } 
+    }
+    {
+        resultobj = SWIG_From_int((int)(result)); 
+    }
+    return resultobj;
+    fail:
+    return NULL;
+}
+
+
 static PyObject *_wrap_CvFont_font_face_set(PyObject *, PyObject *args) {
     PyObject *resultobj;
     CvFont *arg1 = (CvFont *) 0 ;
@@ -30225,312 +30645,6 @@ static PyObject * CvHuMoments_swigregister(PyObject *, PyObject *args) {
     PyObject *obj;
     if (!PyArg_ParseTuple(args,(char*)"O", &obj)) return NULL;
     SWIG_TypeClientData(SWIGTYPE_p_CvHuMoments, obj);
-    Py_INCREF(obj);
-    return Py_BuildValue((char *)"");
-}
-static PyObject *_wrap_CvLineIterator_ptr_set(PyObject *, PyObject *args) {
-    PyObject *resultobj;
-    CvLineIterator *arg1 = (CvLineIterator *) 0 ;
-    uchar *arg2 = (uchar *) 0 ;
-    PyObject * obj0 = 0 ;
-    PyObject * obj1 = 0 ;
-    
-    if(!PyArg_ParseTuple(args,(char *)"OO:CvLineIterator_ptr_set",&obj0,&obj1)) goto fail;
-    SWIG_Python_ConvertPtr(obj0, (void **)&arg1, SWIGTYPE_p_CvLineIterator, SWIG_POINTER_EXCEPTION | 0);
-    if (SWIG_arg_fail(1)) SWIG_fail;
-    SWIG_Python_ConvertPtr(obj1, (void **)&arg2, SWIGTYPE_p_unsigned_char, SWIG_POINTER_EXCEPTION | SWIG_POINTER_DISOWN);
-    if (SWIG_arg_fail(2)) SWIG_fail;
-    if (arg1) (arg1)->ptr = arg2;
-    
-    Py_INCREF(Py_None); resultobj = Py_None;
-    return resultobj;
-    fail:
-    return NULL;
-}
-
-
-static PyObject *_wrap_CvLineIterator_ptr_get(PyObject *, PyObject *args) {
-    PyObject *resultobj;
-    CvLineIterator *arg1 = (CvLineIterator *) 0 ;
-    uchar *result;
-    PyObject * obj0 = 0 ;
-    
-    if(!PyArg_ParseTuple(args,(char *)"O:CvLineIterator_ptr_get",&obj0)) goto fail;
-    SWIG_Python_ConvertPtr(obj0, (void **)&arg1, SWIGTYPE_p_CvLineIterator, SWIG_POINTER_EXCEPTION | 0);
-    if (SWIG_arg_fail(1)) SWIG_fail;
-    result = (uchar *) ((arg1)->ptr);
-    
-    resultobj = SWIG_NewPointerObj((void*)(result), SWIGTYPE_p_unsigned_char, 0);
-    return resultobj;
-    fail:
-    return NULL;
-}
-
-
-static PyObject *_wrap_CvLineIterator_err_set(PyObject *, PyObject *args) {
-    PyObject *resultobj;
-    CvLineIterator *arg1 = (CvLineIterator *) 0 ;
-    int arg2 ;
-    PyObject * obj0 = 0 ;
-    PyObject * obj1 = 0 ;
-    
-    if(!PyArg_ParseTuple(args,(char *)"OO:CvLineIterator_err_set",&obj0,&obj1)) goto fail;
-    SWIG_Python_ConvertPtr(obj0, (void **)&arg1, SWIGTYPE_p_CvLineIterator, SWIG_POINTER_EXCEPTION | 0);
-    if (SWIG_arg_fail(1)) SWIG_fail;
-    {
-        arg2 = (int)(SWIG_As_int(obj1)); 
-        if (SWIG_arg_fail(2)) SWIG_fail;
-    }
-    if (arg1) (arg1)->err = arg2;
-    
-    Py_INCREF(Py_None); resultobj = Py_None;
-    return resultobj;
-    fail:
-    return NULL;
-}
-
-
-static PyObject *_wrap_CvLineIterator_err_get(PyObject *, PyObject *args) {
-    PyObject *resultobj;
-    CvLineIterator *arg1 = (CvLineIterator *) 0 ;
-    int result;
-    PyObject * obj0 = 0 ;
-    
-    if(!PyArg_ParseTuple(args,(char *)"O:CvLineIterator_err_get",&obj0)) goto fail;
-    SWIG_Python_ConvertPtr(obj0, (void **)&arg1, SWIGTYPE_p_CvLineIterator, SWIG_POINTER_EXCEPTION | 0);
-    if (SWIG_arg_fail(1)) SWIG_fail;
-    result = (int) ((arg1)->err);
-    
-    {
-        resultobj = SWIG_From_int((int)(result)); 
-    }
-    return resultobj;
-    fail:
-    return NULL;
-}
-
-
-static PyObject *_wrap_CvLineIterator_plus_delta_set(PyObject *, PyObject *args) {
-    PyObject *resultobj;
-    CvLineIterator *arg1 = (CvLineIterator *) 0 ;
-    int arg2 ;
-    PyObject * obj0 = 0 ;
-    PyObject * obj1 = 0 ;
-    
-    if(!PyArg_ParseTuple(args,(char *)"OO:CvLineIterator_plus_delta_set",&obj0,&obj1)) goto fail;
-    SWIG_Python_ConvertPtr(obj0, (void **)&arg1, SWIGTYPE_p_CvLineIterator, SWIG_POINTER_EXCEPTION | 0);
-    if (SWIG_arg_fail(1)) SWIG_fail;
-    {
-        arg2 = (int)(SWIG_As_int(obj1)); 
-        if (SWIG_arg_fail(2)) SWIG_fail;
-    }
-    if (arg1) (arg1)->plus_delta = arg2;
-    
-    Py_INCREF(Py_None); resultobj = Py_None;
-    return resultobj;
-    fail:
-    return NULL;
-}
-
-
-static PyObject *_wrap_CvLineIterator_plus_delta_get(PyObject *, PyObject *args) {
-    PyObject *resultobj;
-    CvLineIterator *arg1 = (CvLineIterator *) 0 ;
-    int result;
-    PyObject * obj0 = 0 ;
-    
-    if(!PyArg_ParseTuple(args,(char *)"O:CvLineIterator_plus_delta_get",&obj0)) goto fail;
-    SWIG_Python_ConvertPtr(obj0, (void **)&arg1, SWIGTYPE_p_CvLineIterator, SWIG_POINTER_EXCEPTION | 0);
-    if (SWIG_arg_fail(1)) SWIG_fail;
-    result = (int) ((arg1)->plus_delta);
-    
-    {
-        resultobj = SWIG_From_int((int)(result)); 
-    }
-    return resultobj;
-    fail:
-    return NULL;
-}
-
-
-static PyObject *_wrap_CvLineIterator_minus_delta_set(PyObject *, PyObject *args) {
-    PyObject *resultobj;
-    CvLineIterator *arg1 = (CvLineIterator *) 0 ;
-    int arg2 ;
-    PyObject * obj0 = 0 ;
-    PyObject * obj1 = 0 ;
-    
-    if(!PyArg_ParseTuple(args,(char *)"OO:CvLineIterator_minus_delta_set",&obj0,&obj1)) goto fail;
-    SWIG_Python_ConvertPtr(obj0, (void **)&arg1, SWIGTYPE_p_CvLineIterator, SWIG_POINTER_EXCEPTION | 0);
-    if (SWIG_arg_fail(1)) SWIG_fail;
-    {
-        arg2 = (int)(SWIG_As_int(obj1)); 
-        if (SWIG_arg_fail(2)) SWIG_fail;
-    }
-    if (arg1) (arg1)->minus_delta = arg2;
-    
-    Py_INCREF(Py_None); resultobj = Py_None;
-    return resultobj;
-    fail:
-    return NULL;
-}
-
-
-static PyObject *_wrap_CvLineIterator_minus_delta_get(PyObject *, PyObject *args) {
-    PyObject *resultobj;
-    CvLineIterator *arg1 = (CvLineIterator *) 0 ;
-    int result;
-    PyObject * obj0 = 0 ;
-    
-    if(!PyArg_ParseTuple(args,(char *)"O:CvLineIterator_minus_delta_get",&obj0)) goto fail;
-    SWIG_Python_ConvertPtr(obj0, (void **)&arg1, SWIGTYPE_p_CvLineIterator, SWIG_POINTER_EXCEPTION | 0);
-    if (SWIG_arg_fail(1)) SWIG_fail;
-    result = (int) ((arg1)->minus_delta);
-    
-    {
-        resultobj = SWIG_From_int((int)(result)); 
-    }
-    return resultobj;
-    fail:
-    return NULL;
-}
-
-
-static PyObject *_wrap_CvLineIterator_plus_step_set(PyObject *, PyObject *args) {
-    PyObject *resultobj;
-    CvLineIterator *arg1 = (CvLineIterator *) 0 ;
-    int arg2 ;
-    PyObject * obj0 = 0 ;
-    PyObject * obj1 = 0 ;
-    
-    if(!PyArg_ParseTuple(args,(char *)"OO:CvLineIterator_plus_step_set",&obj0,&obj1)) goto fail;
-    SWIG_Python_ConvertPtr(obj0, (void **)&arg1, SWIGTYPE_p_CvLineIterator, SWIG_POINTER_EXCEPTION | 0);
-    if (SWIG_arg_fail(1)) SWIG_fail;
-    {
-        arg2 = (int)(SWIG_As_int(obj1)); 
-        if (SWIG_arg_fail(2)) SWIG_fail;
-    }
-    if (arg1) (arg1)->plus_step = arg2;
-    
-    Py_INCREF(Py_None); resultobj = Py_None;
-    return resultobj;
-    fail:
-    return NULL;
-}
-
-
-static PyObject *_wrap_CvLineIterator_plus_step_get(PyObject *, PyObject *args) {
-    PyObject *resultobj;
-    CvLineIterator *arg1 = (CvLineIterator *) 0 ;
-    int result;
-    PyObject * obj0 = 0 ;
-    
-    if(!PyArg_ParseTuple(args,(char *)"O:CvLineIterator_plus_step_get",&obj0)) goto fail;
-    SWIG_Python_ConvertPtr(obj0, (void **)&arg1, SWIGTYPE_p_CvLineIterator, SWIG_POINTER_EXCEPTION | 0);
-    if (SWIG_arg_fail(1)) SWIG_fail;
-    result = (int) ((arg1)->plus_step);
-    
-    {
-        resultobj = SWIG_From_int((int)(result)); 
-    }
-    return resultobj;
-    fail:
-    return NULL;
-}
-
-
-static PyObject *_wrap_CvLineIterator_minus_step_set(PyObject *, PyObject *args) {
-    PyObject *resultobj;
-    CvLineIterator *arg1 = (CvLineIterator *) 0 ;
-    int arg2 ;
-    PyObject * obj0 = 0 ;
-    PyObject * obj1 = 0 ;
-    
-    if(!PyArg_ParseTuple(args,(char *)"OO:CvLineIterator_minus_step_set",&obj0,&obj1)) goto fail;
-    SWIG_Python_ConvertPtr(obj0, (void **)&arg1, SWIGTYPE_p_CvLineIterator, SWIG_POINTER_EXCEPTION | 0);
-    if (SWIG_arg_fail(1)) SWIG_fail;
-    {
-        arg2 = (int)(SWIG_As_int(obj1)); 
-        if (SWIG_arg_fail(2)) SWIG_fail;
-    }
-    if (arg1) (arg1)->minus_step = arg2;
-    
-    Py_INCREF(Py_None); resultobj = Py_None;
-    return resultobj;
-    fail:
-    return NULL;
-}
-
-
-static PyObject *_wrap_CvLineIterator_minus_step_get(PyObject *, PyObject *args) {
-    PyObject *resultobj;
-    CvLineIterator *arg1 = (CvLineIterator *) 0 ;
-    int result;
-    PyObject * obj0 = 0 ;
-    
-    if(!PyArg_ParseTuple(args,(char *)"O:CvLineIterator_minus_step_get",&obj0)) goto fail;
-    SWIG_Python_ConvertPtr(obj0, (void **)&arg1, SWIGTYPE_p_CvLineIterator, SWIG_POINTER_EXCEPTION | 0);
-    if (SWIG_arg_fail(1)) SWIG_fail;
-    result = (int) ((arg1)->minus_step);
-    
-    {
-        resultobj = SWIG_From_int((int)(result)); 
-    }
-    return resultobj;
-    fail:
-    return NULL;
-}
-
-
-static PyObject *_wrap_new_CvLineIterator(PyObject *, PyObject *args) {
-    PyObject *resultobj;
-    CvLineIterator *result;
-    
-    if(!PyArg_ParseTuple(args,(char *)":new_CvLineIterator")) goto fail;
-    {
-        try {
-            result = (CvLineIterator *)new CvLineIterator();
-        } 
-        catch (...) 
-        {
-            return NULL;
-        } 
-    }
-    resultobj = SWIG_NewPointerObj((void*)(result), SWIGTYPE_p_CvLineIterator, 1);
-    return resultobj;
-    fail:
-    return NULL;
-}
-
-
-static PyObject *_wrap_delete_CvLineIterator(PyObject *, PyObject *args) {
-    PyObject *resultobj;
-    CvLineIterator *arg1 = (CvLineIterator *) 0 ;
-    PyObject * obj0 = 0 ;
-    
-    if(!PyArg_ParseTuple(args,(char *)"O:delete_CvLineIterator",&obj0)) goto fail;
-    SWIG_Python_ConvertPtr(obj0, (void **)&arg1, SWIGTYPE_p_CvLineIterator, SWIG_POINTER_EXCEPTION | 0);
-    if (SWIG_arg_fail(1)) SWIG_fail;
-    {
-        try {
-            delete arg1;
-        } 
-        catch (...) 
-        {
-            return NULL;
-        } 
-    }
-    Py_INCREF(Py_None); resultobj = Py_None;
-    return resultobj;
-    fail:
-    return NULL;
-}
-
-
-static PyObject * CvLineIterator_swigregister(PyObject *, PyObject *args) {
-    PyObject *obj;
-    if (!PyArg_ParseTuple(args,(char*)"O", &obj)) return NULL;
-    SWIG_TypeClientData(SWIGTYPE_p_CvLineIterator, obj);
     Py_INCREF(obj);
     return Py_BuildValue((char *)"");
 }
@@ -37927,70 +38041,6 @@ static PyObject *_wrap_cvGetHuMoments(PyObject *, PyObject *args) {
 }
 
 
-static PyObject *_wrap_cvInitLineIterator(PyObject *, PyObject *args) {
-    PyObject *resultobj;
-    CvArr *arg1 = (CvArr *) 0 ;
-    CvPoint arg2 ;
-    CvPoint arg3 ;
-    CvLineIterator *arg4 = (CvLineIterator *) 0 ;
-    int arg5 ;
-    int result;
-    PyObject * obj0 = 0 ;
-    PyObject * obj1 = 0 ;
-    PyObject * obj2 = 0 ;
-    PyObject * obj3 = 0 ;
-    PyObject * obj4 = 0 ;
-    
-    if(!PyArg_ParseTuple(args,(char *)"OOOOO:cvInitLineIterator",&obj0,&obj1,&obj2,&obj3,&obj4)) goto fail;
-    {
-        if ((SWIG_ConvertPtr(obj0,(void **)(&arg1),0,SWIG_POINTER_EXCEPTION|0))== -1) {
-            SWIG_arg_fail(1);SWIG_fail;
-        }
-    }
-    {
-        CvPoint * argp;
-        SWIG_Python_ConvertPtr(obj1, (void **)&argp, SWIGTYPE_p_CvPoint, SWIG_POINTER_EXCEPTION);
-        if (SWIG_arg_fail(2)) SWIG_fail;
-        if (argp == NULL) {
-            SWIG_null_ref("CvPoint");
-        }
-        if (SWIG_arg_fail(2)) SWIG_fail;
-        arg2 = *argp;
-    }
-    {
-        CvPoint * argp;
-        SWIG_Python_ConvertPtr(obj2, (void **)&argp, SWIGTYPE_p_CvPoint, SWIG_POINTER_EXCEPTION);
-        if (SWIG_arg_fail(3)) SWIG_fail;
-        if (argp == NULL) {
-            SWIG_null_ref("CvPoint");
-        }
-        if (SWIG_arg_fail(3)) SWIG_fail;
-        arg3 = *argp;
-    }
-    SWIG_Python_ConvertPtr(obj3, (void **)&arg4, SWIGTYPE_p_CvLineIterator, SWIG_POINTER_EXCEPTION | 0);
-    if (SWIG_arg_fail(4)) SWIG_fail;
-    {
-        arg5 = (int)(SWIG_As_int(obj4)); 
-        if (SWIG_arg_fail(5)) SWIG_fail;
-    }
-    {
-        try {
-            result = (int)cvInitLineIterator((CvArr const *)arg1,arg2,arg3,arg4,arg5);
-        } 
-        catch (...) 
-        {
-            return NULL;
-        } 
-    }
-    {
-        resultobj = SWIG_From_int((int)(result)); 
-    }
-    return resultobj;
-    fail:
-    return NULL;
-}
-
-
 static PyObject *_wrap_cvSampleLine(PyObject *, PyObject *args) {
     PyObject *resultobj;
     CvArr *arg1 = (CvArr *) 0 ;
@@ -42705,6 +42755,71 @@ static PyObject *_wrap_cvHoughLines2(PyObject *, PyObject *args) {
 }
 
 
+static PyObject *_wrap_cvHoughCircles(PyObject *, PyObject *args) {
+    PyObject *resultobj;
+    CvArr *arg1 = (CvArr *) 0 ;
+    void *arg2 = (void *) 0 ;
+    int arg3 ;
+    double arg4 ;
+    double arg5 ;
+    double arg6 ;
+    double arg7 ;
+    CvSeq *result;
+    PyObject * obj0 = 0 ;
+    PyObject * obj1 = 0 ;
+    PyObject * obj2 = 0 ;
+    PyObject * obj3 = 0 ;
+    PyObject * obj4 = 0 ;
+    PyObject * obj5 = 0 ;
+    PyObject * obj6 = 0 ;
+    
+    if(!PyArg_ParseTuple(args,(char *)"OOOOOOO:cvHoughCircles",&obj0,&obj1,&obj2,&obj3,&obj4,&obj5,&obj6)) goto fail;
+    {
+        if ((SWIG_ConvertPtr(obj0,(void **)(&arg1),0,SWIG_POINTER_EXCEPTION|0))== -1) {
+            SWIG_arg_fail(1);SWIG_fail;
+        }
+    }
+    {
+        if ((SWIG_ConvertPtr(obj1,(void **)(&arg2),0,SWIG_POINTER_EXCEPTION|0))== -1) {
+            SWIG_arg_fail(2);SWIG_fail;
+        }
+    }
+    {
+        arg3 = (int)(SWIG_As_int(obj2)); 
+        if (SWIG_arg_fail(3)) SWIG_fail;
+    }
+    {
+        arg4 = (double)(SWIG_As_double(obj3)); 
+        if (SWIG_arg_fail(4)) SWIG_fail;
+    }
+    {
+        arg5 = (double)(SWIG_As_double(obj4)); 
+        if (SWIG_arg_fail(5)) SWIG_fail;
+    }
+    {
+        arg6 = (double)(SWIG_As_double(obj5)); 
+        if (SWIG_arg_fail(6)) SWIG_fail;
+    }
+    {
+        arg7 = (double)(SWIG_As_double(obj6)); 
+        if (SWIG_arg_fail(7)) SWIG_fail;
+    }
+    {
+        try {
+            result = (CvSeq *)cvHoughCircles(arg1,arg2,arg3,arg4,arg5,arg6,arg7);
+        } 
+        catch (...) 
+        {
+            return NULL;
+        } 
+    }
+    resultobj = SWIG_NewPointerObj((void*)(result), SWIGTYPE_p_CvSeq, 0);
+    return resultobj;
+    fail:
+    return NULL;
+}
+
+
 static PyObject *_wrap_cvFitLine(PyObject *, PyObject *args) {
     PyObject *resultobj;
     CvArr *arg1 = (CvArr *) 0 ;
@@ -43782,6 +43897,37 @@ static PyObject *_wrap_void_ptrptr_generator(PyObject *, PyObject *args) {
 }
 
 
+static PyObject *_wrap_pyCvGetSeqElemAsPoint(PyObject *, PyObject *args) {
+    PyObject *resultobj;
+    CvSeq *arg1 = (CvSeq *) 0 ;
+    int arg2 ;
+    CvPoint *result;
+    PyObject * obj0 = 0 ;
+    PyObject * obj1 = 0 ;
+    
+    if(!PyArg_ParseTuple(args,(char *)"OO:pyCvGetSeqElemAsPoint",&obj0,&obj1)) goto fail;
+    SWIG_Python_ConvertPtr(obj0, (void **)&arg1, SWIGTYPE_p_CvSeq, SWIG_POINTER_EXCEPTION | 0);
+    if (SWIG_arg_fail(1)) SWIG_fail;
+    {
+        arg2 = (int)(SWIG_As_int(obj1)); 
+        if (SWIG_arg_fail(2)) SWIG_fail;
+    }
+    {
+        try {
+            result = (CvPoint *)pyCvGetSeqElemAsPoint((CvSeq const *)arg1,arg2);
+        } 
+        catch (...) 
+        {
+            return NULL;
+        } 
+    }
+    resultobj = SWIG_NewPointerObj((void*)(result), SWIGTYPE_p_CvPoint, 0);
+    return resultobj;
+    fail:
+    return NULL;
+}
+
+
 static PyMethodDef SwigMethods[] = {
 	 { (char *)"cvRound", _wrap_cvRound, METH_VARARGS, NULL},
 	 { (char *)"cvFloor", _wrap_cvFloor, METH_VARARGS, NULL},
@@ -44060,6 +44206,21 @@ static PyMethodDef SwigMethods[] = {
 	 { (char *)"new_CvBox2D", _wrap_new_CvBox2D, METH_VARARGS, NULL},
 	 { (char *)"delete_CvBox2D", _wrap_delete_CvBox2D, METH_VARARGS, NULL},
 	 { (char *)"CvBox2D_swigregister", CvBox2D_swigregister, METH_VARARGS, NULL},
+	 { (char *)"CvLineIterator_ptr_set", _wrap_CvLineIterator_ptr_set, METH_VARARGS, NULL},
+	 { (char *)"CvLineIterator_ptr_get", _wrap_CvLineIterator_ptr_get, METH_VARARGS, NULL},
+	 { (char *)"CvLineIterator_err_set", _wrap_CvLineIterator_err_set, METH_VARARGS, NULL},
+	 { (char *)"CvLineIterator_err_get", _wrap_CvLineIterator_err_get, METH_VARARGS, NULL},
+	 { (char *)"CvLineIterator_plus_delta_set", _wrap_CvLineIterator_plus_delta_set, METH_VARARGS, NULL},
+	 { (char *)"CvLineIterator_plus_delta_get", _wrap_CvLineIterator_plus_delta_get, METH_VARARGS, NULL},
+	 { (char *)"CvLineIterator_minus_delta_set", _wrap_CvLineIterator_minus_delta_set, METH_VARARGS, NULL},
+	 { (char *)"CvLineIterator_minus_delta_get", _wrap_CvLineIterator_minus_delta_get, METH_VARARGS, NULL},
+	 { (char *)"CvLineIterator_plus_step_set", _wrap_CvLineIterator_plus_step_set, METH_VARARGS, NULL},
+	 { (char *)"CvLineIterator_plus_step_get", _wrap_CvLineIterator_plus_step_get, METH_VARARGS, NULL},
+	 { (char *)"CvLineIterator_minus_step_set", _wrap_CvLineIterator_minus_step_set, METH_VARARGS, NULL},
+	 { (char *)"CvLineIterator_minus_step_get", _wrap_CvLineIterator_minus_step_get, METH_VARARGS, NULL},
+	 { (char *)"new_CvLineIterator", _wrap_new_CvLineIterator, METH_VARARGS, NULL},
+	 { (char *)"delete_CvLineIterator", _wrap_delete_CvLineIterator, METH_VARARGS, NULL},
+	 { (char *)"CvLineIterator_swigregister", CvLineIterator_swigregister, METH_VARARGS, NULL},
 	 { (char *)"CvSlice_start_index_set", _wrap_CvSlice_start_index_set, METH_VARARGS, NULL},
 	 { (char *)"CvSlice_start_index_get", _wrap_CvSlice_start_index_get, METH_VARARGS, NULL},
 	 { (char *)"CvSlice_end_index_set", _wrap_CvSlice_end_index_set, METH_VARARGS, NULL},
@@ -44704,6 +44865,8 @@ static PyMethodDef SwigMethods[] = {
 	 { (char *)"cvFillConvexPoly", _wrap_cvFillConvexPoly, METH_VARARGS, NULL},
 	 { (char *)"cvFillPoly", _wrap_cvFillPoly, METH_VARARGS, NULL},
 	 { (char *)"cvPolyLine", _wrap_cvPolyLine, METH_VARARGS, NULL},
+	 { (char *)"cvClipLine", _wrap_cvClipLine, METH_VARARGS, NULL},
+	 { (char *)"cvInitLineIterator", _wrap_cvInitLineIterator, METH_VARARGS, NULL},
 	 { (char *)"CvFont_font_face_set", _wrap_CvFont_font_face_set, METH_VARARGS, NULL},
 	 { (char *)"CvFont_font_face_get", _wrap_CvFont_font_face_get, METH_VARARGS, NULL},
 	 { (char *)"CvFont_ascii_set", _wrap_CvFont_ascii_set, METH_VARARGS, NULL},
@@ -44863,21 +45026,6 @@ static PyMethodDef SwigMethods[] = {
 	 { (char *)"new_CvHuMoments", _wrap_new_CvHuMoments, METH_VARARGS, NULL},
 	 { (char *)"delete_CvHuMoments", _wrap_delete_CvHuMoments, METH_VARARGS, NULL},
 	 { (char *)"CvHuMoments_swigregister", CvHuMoments_swigregister, METH_VARARGS, NULL},
-	 { (char *)"CvLineIterator_ptr_set", _wrap_CvLineIterator_ptr_set, METH_VARARGS, NULL},
-	 { (char *)"CvLineIterator_ptr_get", _wrap_CvLineIterator_ptr_get, METH_VARARGS, NULL},
-	 { (char *)"CvLineIterator_err_set", _wrap_CvLineIterator_err_set, METH_VARARGS, NULL},
-	 { (char *)"CvLineIterator_err_get", _wrap_CvLineIterator_err_get, METH_VARARGS, NULL},
-	 { (char *)"CvLineIterator_plus_delta_set", _wrap_CvLineIterator_plus_delta_set, METH_VARARGS, NULL},
-	 { (char *)"CvLineIterator_plus_delta_get", _wrap_CvLineIterator_plus_delta_get, METH_VARARGS, NULL},
-	 { (char *)"CvLineIterator_minus_delta_set", _wrap_CvLineIterator_minus_delta_set, METH_VARARGS, NULL},
-	 { (char *)"CvLineIterator_minus_delta_get", _wrap_CvLineIterator_minus_delta_get, METH_VARARGS, NULL},
-	 { (char *)"CvLineIterator_plus_step_set", _wrap_CvLineIterator_plus_step_set, METH_VARARGS, NULL},
-	 { (char *)"CvLineIterator_plus_step_get", _wrap_CvLineIterator_plus_step_get, METH_VARARGS, NULL},
-	 { (char *)"CvLineIterator_minus_step_set", _wrap_CvLineIterator_minus_step_set, METH_VARARGS, NULL},
-	 { (char *)"CvLineIterator_minus_step_get", _wrap_CvLineIterator_minus_step_get, METH_VARARGS, NULL},
-	 { (char *)"new_CvLineIterator", _wrap_new_CvLineIterator, METH_VARARGS, NULL},
-	 { (char *)"delete_CvLineIterator", _wrap_delete_CvLineIterator, METH_VARARGS, NULL},
-	 { (char *)"CvLineIterator_swigregister", CvLineIterator_swigregister, METH_VARARGS, NULL},
 	 { (char *)"CvConnectedComp_area_set", _wrap_CvConnectedComp_area_set, METH_VARARGS, NULL},
 	 { (char *)"CvConnectedComp_area_get", _wrap_CvConnectedComp_area_get, METH_VARARGS, NULL},
 	 { (char *)"CvConnectedComp_value_set", _wrap_CvConnectedComp_value_set, METH_VARARGS, NULL},
@@ -45211,7 +45359,6 @@ static PyMethodDef SwigMethods[] = {
 	 { (char *)"cvGetCentralMoment", _wrap_cvGetCentralMoment, METH_VARARGS, NULL},
 	 { (char *)"cvGetNormalizedCentralMoment", _wrap_cvGetNormalizedCentralMoment, METH_VARARGS, NULL},
 	 { (char *)"cvGetHuMoments", _wrap_cvGetHuMoments, METH_VARARGS, NULL},
-	 { (char *)"cvInitLineIterator", _wrap_cvInitLineIterator, METH_VARARGS, NULL},
 	 { (char *)"cvSampleLine", _wrap_cvSampleLine, METH_VARARGS, NULL},
 	 { (char *)"cvGetRectSubPix", _wrap_cvGetRectSubPix, METH_VARARGS, NULL},
 	 { (char *)"cvGetQuadrangleSubPix", _wrap_cvGetQuadrangleSubPix, METH_VARARGS, NULL},
@@ -45313,6 +45460,7 @@ static PyMethodDef SwigMethods[] = {
 	 { (char *)"cvFindCornerSubPix", _wrap_cvFindCornerSubPix, METH_VARARGS, NULL},
 	 { (char *)"cvGoodFeaturesToTrack", _wrap_cvGoodFeaturesToTrack, METH_VARARGS, NULL},
 	 { (char *)"cvHoughLines2", _wrap_cvHoughLines2, METH_VARARGS, NULL},
+	 { (char *)"cvHoughCircles", _wrap_cvHoughCircles, METH_VARARGS, NULL},
 	 { (char *)"cvFitLine", _wrap_cvFitLine, METH_VARARGS, NULL},
 	 { (char *)"cvLoadHaarClassifierCascade", _wrap_cvLoadHaarClassifierCascade, METH_VARARGS, NULL},
 	 { (char *)"cvReleaseHaarClassifierCascade", _wrap_cvReleaseHaarClassifierCascade, METH_VARARGS, NULL},
@@ -45338,19 +45486,20 @@ static PyMethodDef SwigMethods[] = {
 	 { (char *)"function_ptr_generator", _wrap_function_ptr_generator, METH_VARARGS, NULL},
 	 { (char *)"void_ptr_generator", _wrap_void_ptr_generator, METH_VARARGS, NULL},
 	 { (char *)"void_ptrptr_generator", _wrap_void_ptrptr_generator, METH_VARARGS, NULL},
+	 { (char *)"pyCvGetSeqElemAsPoint", _wrap_pyCvGetSeqElemAsPoint, METH_VARARGS, NULL},
 	 { NULL, NULL, 0, NULL }
 };
 
 
 /* -------- TYPE CONVERSION AND EQUIVALENCE RULES (BEGIN) -------- */
 
+static swig_type_info _swigt__p_CvLineIterator[] = {{"_p_CvLineIterator", 0, "CvLineIterator *", 0, 0, 0, 0},{"_p_CvLineIterator", 0, 0, 0, 0, 0, 0},{0, 0, 0, 0, 0, 0, 0}};
 static swig_type_info _swigt__p_CvSparseMatIterator[] = {{"_p_CvSparseMatIterator", 0, "CvSparseMatIterator *", 0, 0, 0, 0},{"_p_CvSparseMatIterator", 0, 0, 0, 0, 0, 0},{0, 0, 0, 0, 0, 0, 0}};
 static swig_type_info _swigt__p_f_p_q_const__void__int[] = {{"_p_f_p_q_const__void__int", 0, "int (*)(void const *)|CvIsInstanceFunc", 0, 0, 0, 0},{"_p_f_p_q_const__void__int", 0, 0, 0, 0, 0, 0},{0, 0, 0, 0, 0, 0, 0}};
 static swig_type_info _swigt__p_CvNArrayIterator[] = {{"_p_CvNArrayIterator", 0, "CvNArrayIterator *", 0, 0, 0, 0},{"_p_CvNArrayIterator", 0, 0, 0, 0, 0, 0},{0, 0, 0, 0, 0, 0, 0}};
 static swig_type_info _swigt__p_f_p_q_const__void_p_q_const__void_p_void__int[] = {{"_p_f_p_q_const__void_p_q_const__void_p_void__int", 0, "int (*)(void const *,void const *,void *)|CvCmpFunc", 0, 0, 0, 0},{"_p_f_p_q_const__void_p_q_const__void_p_void__int", 0, 0, 0, 0, 0, 0},{0, 0, 0, 0, 0, 0, 0}};
 static swig_type_info _swigt__p_CvTreeNodeIterator[] = {{"_p_CvTreeNodeIterator", 0, "CvTreeNodeIterator *", 0, 0, 0, 0},{"_p_CvTreeNodeIterator", 0, 0, 0, 0, 0, 0},{0, 0, 0, 0, 0, 0, 0}};
 static swig_type_info _swigt__p_f_p_void_p_void__int[] = {{"_p_f_p_void_p_void__int", 0, "int (*)(void *,void *)|CvFreeFunc", 0, 0, 0, 0},{"_p_f_p_void_p_void__int", 0, 0, 0, 0, 0, 0},{0, 0, 0, 0, 0, 0, 0}};
-static swig_type_info _swigt__p_CvLineIterator[] = {{"_p_CvLineIterator", 0, "CvLineIterator *", 0, 0, 0, 0},{"_p_CvLineIterator", 0, 0, 0, 0, 0, 0},{0, 0, 0, 0, 0, 0, 0}};
 static swig_type_info _swigt__p_f_p_p_void__void[] = {{"_p_f_p_p_void__void", 0, "void (*)(void **)|CvReleaseFunc", 0, 0, 0, 0},{"_p_f_p_p_void__void", 0, 0, 0, 0, 0, 0},{0, 0, 0, 0, 0, 0, 0}};
 static swig_type_info _swigt__p_f_p__IplImage_int_int__void[] = {{"_p_f_p__IplImage_int_int__void", 0, "void (*)(_IplImage *,int,int)|Cv_iplAllocateImageData", 0, 0, 0, 0},{"_p_f_p__IplImage_int_int__void", 0, 0, 0, 0, 0, 0},{0, 0, 0, 0, 0, 0, 0}};
 static swig_type_info _swigt__p_f_p__IplImage_int__void[] = {{"_p_f_p__IplImage_int__void", 0, "void (*)(_IplImage *,int)|Cv_iplDeallocate", 0, 0, 0, 0},{"_p_f_p__IplImage_int__void", 0, 0, 0, 0, 0, 0},{0, 0, 0, 0, 0, 0, 0}};
@@ -45386,12 +45535,12 @@ static swig_type_info _swigt__p_CvRandState[] = {{"_p_CvRandState", 0, "CvRandSt
 static swig_type_info _swigt__std__ptrdiff_t[] = {{"_std__ptrdiff_t", 0, "std::ptrdiff_t", 0, 0, 0, 0},{"_std__ptrdiff_t", 0, 0, 0, 0, 0, 0},{0, 0, 0, 0, 0, 0, 0}};
 static swig_type_info _swigt__ptrdiff_t[] = {{"_ptrdiff_t", 0, "ptrdiff_t", 0, 0, 0, 0},{"_ptrdiff_t", 0, 0, 0, 0, 0, 0},{0, 0, 0, 0, 0, 0, 0}};
 static swig_type_info _swigt__p_CvContourTree[] = {{"_p_CvContourTree", 0, "CvContourTree *", 0, 0, 0, 0},{"_p_CvContourTree", 0, 0, 0, 0, 0, 0},{0, 0, 0, 0, 0, 0, 0}};
-static swig_type_info _swigt__p_f_p_q_const__void__p_void[] = {{"_p_f_p_q_const__void__p_void", 0, "void *(*)(void const *)|CvCloneFunc", 0, 0, 0, 0},{"_p_f_p_q_const__void__p_void", 0, 0, 0, 0, 0, 0},{0, 0, 0, 0, 0, 0, 0}};
 static swig_type_info _swigt__p_f_p_CvFileStorage_p_CvFileNode__p_void[] = {{"_p_f_p_CvFileStorage_p_CvFileNode__p_void", 0, "void *(*)(CvFileStorage *,CvFileNode *)|CvReadFunc", 0, 0, 0, 0},{"_p_f_p_CvFileStorage_p_CvFileNode__p_void", 0, 0, 0, 0, 0, 0},{0, 0, 0, 0, 0, 0, 0}};
 static swig_type_info _swigt__p_void[] = {{"_p_void", 0, "void *", 0, 0, 0, 0},{"_p_void", 0, 0, 0, 0, 0, 0},{0, 0, 0, 0, 0, 0, 0}};
 static swig_type_info _swigt__p_p_void[] = {{"_p_p_void", 0, "void **", 0, 0, 0, 0},{"_p_p_void", 0, 0, 0, 0, 0, 0},{0, 0, 0, 0, 0, 0, 0}};
 static swig_type_info _swigt__p_CvFileStorage[] = {{"_p_CvFileStorage", 0, "CvFileStorage *", 0, 0, 0, 0},{"_p_CvFileStorage", 0, 0, 0, 0, 0, 0},{0, 0, 0, 0, 0, 0, 0}};
 static swig_type_info _swigt__p_CvMemStorage[] = {{"_p_CvMemStorage", 0, "CvMemStorage *", 0, 0, 0, 0},{"_p_CvMemStorage", 0, 0, 0, 0, 0, 0},{0, 0, 0, 0, 0, 0, 0}};
+static swig_type_info _swigt__p_f_p_q_const__void__p_void[] = {{"_p_f_p_q_const__void__p_void", 0, "void *(*)(void const *)|CvCloneFunc", 0, 0, 0, 0},{"_p_f_p_q_const__void__p_void", 0, 0, 0, 0, 0, 0},{0, 0, 0, 0, 0, 0, 0}};
 static swig_type_info _swigt__p_p_CvMemStorage[] = {{"_p_p_CvMemStorage", 0, "CvMemStorage **", 0, 0, 0, 0},{"_p_p_CvMemStorage", 0, 0, 0, 0, 0, 0},{0, 0, 0, 0, 0, 0, 0}};
 static swig_type_info _swigt__p_f_size_t_p_void__p_void[] = {{"_p_f_size_t_p_void__p_void", 0, "void *(*)(size_t,void *)|CvAllocFunc", 0, 0, 0, 0},{"_p_f_size_t_p_void__p_void", 0, 0, 0, 0, 0, 0},{0, 0, 0, 0, 0, 0, 0}};
 static swig_type_info _swigt__p_p_CvFileStorage[] = {{"_p_p_CvFileStorage", 0, "CvFileStorage **", 0, 0, 0, 0},{"_p_p_CvFileStorage", 0, 0, 0, 0, 0, 0},{0, 0, 0, 0, 0, 0, 0}};
@@ -45486,13 +45635,13 @@ static swig_type_info _swigt__p_CvPoint2D64f[] = {{"_p_CvPoint2D64f", 0, "CvPoin
 static swig_type_info _swigt__p_CvHaarFeature[] = {{"_p_CvHaarFeature", 0, "CvHaarFeature *", 0, 0, 0, 0},{"_p_CvHaarFeature", 0, 0, 0, 0, 0, 0},{0, 0, 0, 0, 0, 0, 0}};
 
 static swig_type_info *swig_types_initial[] = {
+_swigt__p_CvLineIterator, 
 _swigt__p_CvSparseMatIterator, 
 _swigt__p_f_p_q_const__void__int, 
 _swigt__p_CvNArrayIterator, 
 _swigt__p_f_p_q_const__void_p_q_const__void_p_void__int, 
 _swigt__p_CvTreeNodeIterator, 
 _swigt__p_f_p_void_p_void__int, 
-_swigt__p_CvLineIterator, 
 _swigt__p_f_p_p_void__void, 
 _swigt__p_f_p__IplImage_int_int__void, 
 _swigt__p_f_p__IplImage_int__void, 
@@ -45528,12 +45677,12 @@ _swigt__p_CvRandState,
 _swigt__std__ptrdiff_t, 
 _swigt__ptrdiff_t, 
 _swigt__p_CvContourTree, 
-_swigt__p_f_p_q_const__void__p_void, 
 _swigt__p_f_p_CvFileStorage_p_CvFileNode__p_void, 
 _swigt__p_void, 
 _swigt__p_p_void, 
 _swigt__p_CvFileStorage, 
 _swigt__p_CvMemStorage, 
+_swigt__p_f_p_q_const__void__p_void, 
 _swigt__p_p_CvMemStorage, 
 _swigt__p_f_size_t_p_void__p_void, 
 _swigt__p_p_CvFileStorage, 
@@ -47225,7 +47374,13 @@ SWIGEXPORT(void) SWIG_init(void) {
         PyDict_SetItemString(d,"CV_HOUGH_MULTI_SCALE", SWIG_From_int((int)(2))); 
     }
     {
+        PyDict_SetItemString(d,"CV_HOUGH_GRADIENT", SWIG_From_int((int)(3))); 
+    }
+    {
         PyDict_SetItemString(d,"CV_HAAR_DO_CANNY_PRUNING", SWIG_From_int((int)(1))); 
+    }
+    {
+        PyDict_SetItemString(d,"CV_HAAR_SCALE_IMAGE", SWIG_From_int((int)(2))); 
     }
     {
         PyDict_SetItemString(d,"CV_CALIB_USE_INTRINSIC_GUESS", SWIG_From_int((int)(1))); 

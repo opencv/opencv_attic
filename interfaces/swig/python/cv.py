@@ -454,7 +454,9 @@ CV_FLOODFILL_MASK_ONLY = _cv.CV_FLOODFILL_MASK_ONLY
 CV_HOUGH_STANDARD = _cv.CV_HOUGH_STANDARD
 CV_HOUGH_PROBABILISTIC = _cv.CV_HOUGH_PROBABILISTIC
 CV_HOUGH_MULTI_SCALE = _cv.CV_HOUGH_MULTI_SCALE
+CV_HOUGH_GRADIENT = _cv.CV_HOUGH_GRADIENT
 CV_HAAR_DO_CANNY_PRUNING = _cv.CV_HAAR_DO_CANNY_PRUNING
+CV_HAAR_SCALE_IMAGE = _cv.CV_HAAR_SCALE_IMAGE
 CV_CALIB_USE_INTRINSIC_GUESS = _cv.CV_CALIB_USE_INTRINSIC_GUESS
 CV_CALIB_FIX_ASPECT_RATIO = _cv.CV_CALIB_FIX_ASPECT_RATIO
 CV_CALIB_FIX_PRINCIPAL_POINT = _cv.CV_CALIB_FIX_PRINCIPAL_POINT
@@ -1340,6 +1342,47 @@ class CvBox2DPtr(CvBox2D):
         if not hasattr(self,"thisown"): _swig_setattr(self, CvBox2D, 'thisown', 0)
         _swig_setattr(self, CvBox2D,self.__class__,CvBox2D)
 _cv.CvBox2D_swigregister(CvBox2DPtr)
+
+class CvLineIterator(_object):
+    __swig_setmethods__ = {}
+    __setattr__ = lambda self, name, value: _swig_setattr(self, CvLineIterator, name, value)
+    __swig_getmethods__ = {}
+    __getattr__ = lambda self, name: _swig_getattr(self, CvLineIterator, name)
+    def __repr__(self):
+        return "<%s.%s; proxy of C++ CvLineIterator instance at %s>" % (self.__class__.__module__, self.__class__.__name__, self.this,)
+    __swig_setmethods__["ptr"] = _cv.CvLineIterator_ptr_set
+    __swig_getmethods__["ptr"] = _cv.CvLineIterator_ptr_get
+    if _newclass:ptr = property(_cv.CvLineIterator_ptr_get, _cv.CvLineIterator_ptr_set)
+    __swig_setmethods__["err"] = _cv.CvLineIterator_err_set
+    __swig_getmethods__["err"] = _cv.CvLineIterator_err_get
+    if _newclass:err = property(_cv.CvLineIterator_err_get, _cv.CvLineIterator_err_set)
+    __swig_setmethods__["plus_delta"] = _cv.CvLineIterator_plus_delta_set
+    __swig_getmethods__["plus_delta"] = _cv.CvLineIterator_plus_delta_get
+    if _newclass:plus_delta = property(_cv.CvLineIterator_plus_delta_get, _cv.CvLineIterator_plus_delta_set)
+    __swig_setmethods__["minus_delta"] = _cv.CvLineIterator_minus_delta_set
+    __swig_getmethods__["minus_delta"] = _cv.CvLineIterator_minus_delta_get
+    if _newclass:minus_delta = property(_cv.CvLineIterator_minus_delta_get, _cv.CvLineIterator_minus_delta_set)
+    __swig_setmethods__["plus_step"] = _cv.CvLineIterator_plus_step_set
+    __swig_getmethods__["plus_step"] = _cv.CvLineIterator_plus_step_get
+    if _newclass:plus_step = property(_cv.CvLineIterator_plus_step_get, _cv.CvLineIterator_plus_step_set)
+    __swig_setmethods__["minus_step"] = _cv.CvLineIterator_minus_step_set
+    __swig_getmethods__["minus_step"] = _cv.CvLineIterator_minus_step_get
+    if _newclass:minus_step = property(_cv.CvLineIterator_minus_step_get, _cv.CvLineIterator_minus_step_set)
+    def __init__(self, *args):
+        _swig_setattr(self, CvLineIterator, 'this', _cv.new_CvLineIterator(*args))
+        _swig_setattr(self, CvLineIterator, 'thisown', 1)
+    def __del__(self, destroy=_cv.delete_CvLineIterator):
+        try:
+            if self.thisown: destroy(self)
+        except: pass
+
+
+class CvLineIteratorPtr(CvLineIterator):
+    def __init__(self, this):
+        _swig_setattr(self, CvLineIterator, 'this', this)
+        if not hasattr(self,"thisown"): _swig_setattr(self, CvLineIterator, 'thisown', 0)
+        _swig_setattr(self, CvLineIterator,self.__class__,CvLineIterator)
+_cv.CvLineIterator_swigregister(CvLineIteratorPtr)
 
 class CvSlice(_object):
     __swig_setmethods__ = {}
@@ -2918,6 +2961,10 @@ cvFillConvexPoly = _cv.cvFillConvexPoly
 cvFillPoly = _cv.cvFillPoly
 
 cvPolyLine = _cv.cvPolyLine
+
+cvClipLine = _cv.cvClipLine
+
+cvInitLineIterator = _cv.cvInitLineIterator
 class CvFont(_object):
     __swig_setmethods__ = {}
     __setattr__ = lambda self, name, value: _swig_setattr(self, CvFont, name, value)
@@ -3265,47 +3312,6 @@ class CvHuMomentsPtr(CvHuMoments):
         if not hasattr(self,"thisown"): _swig_setattr(self, CvHuMoments, 'thisown', 0)
         _swig_setattr(self, CvHuMoments,self.__class__,CvHuMoments)
 _cv.CvHuMoments_swigregister(CvHuMomentsPtr)
-
-class CvLineIterator(_object):
-    __swig_setmethods__ = {}
-    __setattr__ = lambda self, name, value: _swig_setattr(self, CvLineIterator, name, value)
-    __swig_getmethods__ = {}
-    __getattr__ = lambda self, name: _swig_getattr(self, CvLineIterator, name)
-    def __repr__(self):
-        return "<%s.%s; proxy of C++ CvLineIterator instance at %s>" % (self.__class__.__module__, self.__class__.__name__, self.this,)
-    __swig_setmethods__["ptr"] = _cv.CvLineIterator_ptr_set
-    __swig_getmethods__["ptr"] = _cv.CvLineIterator_ptr_get
-    if _newclass:ptr = property(_cv.CvLineIterator_ptr_get, _cv.CvLineIterator_ptr_set)
-    __swig_setmethods__["err"] = _cv.CvLineIterator_err_set
-    __swig_getmethods__["err"] = _cv.CvLineIterator_err_get
-    if _newclass:err = property(_cv.CvLineIterator_err_get, _cv.CvLineIterator_err_set)
-    __swig_setmethods__["plus_delta"] = _cv.CvLineIterator_plus_delta_set
-    __swig_getmethods__["plus_delta"] = _cv.CvLineIterator_plus_delta_get
-    if _newclass:plus_delta = property(_cv.CvLineIterator_plus_delta_get, _cv.CvLineIterator_plus_delta_set)
-    __swig_setmethods__["minus_delta"] = _cv.CvLineIterator_minus_delta_set
-    __swig_getmethods__["minus_delta"] = _cv.CvLineIterator_minus_delta_get
-    if _newclass:minus_delta = property(_cv.CvLineIterator_minus_delta_get, _cv.CvLineIterator_minus_delta_set)
-    __swig_setmethods__["plus_step"] = _cv.CvLineIterator_plus_step_set
-    __swig_getmethods__["plus_step"] = _cv.CvLineIterator_plus_step_get
-    if _newclass:plus_step = property(_cv.CvLineIterator_plus_step_get, _cv.CvLineIterator_plus_step_set)
-    __swig_setmethods__["minus_step"] = _cv.CvLineIterator_minus_step_set
-    __swig_getmethods__["minus_step"] = _cv.CvLineIterator_minus_step_get
-    if _newclass:minus_step = property(_cv.CvLineIterator_minus_step_get, _cv.CvLineIterator_minus_step_set)
-    def __init__(self, *args):
-        _swig_setattr(self, CvLineIterator, 'this', _cv.new_CvLineIterator(*args))
-        _swig_setattr(self, CvLineIterator, 'thisown', 1)
-    def __del__(self, destroy=_cv.delete_CvLineIterator):
-        try:
-            if self.thisown: destroy(self)
-        except: pass
-
-
-class CvLineIteratorPtr(CvLineIterator):
-    def __init__(self, this):
-        _swig_setattr(self, CvLineIterator, 'this', this)
-        if not hasattr(self,"thisown"): _swig_setattr(self, CvLineIterator, 'thisown', 0)
-        _swig_setattr(self, CvLineIterator,self.__class__,CvLineIterator)
-_cv.CvLineIterator_swigregister(CvLineIteratorPtr)
 
 class CvConnectedComp(_object):
     __swig_setmethods__ = {}
@@ -4130,8 +4136,6 @@ cvGetNormalizedCentralMoment = _cv.cvGetNormalizedCentralMoment
 
 cvGetHuMoments = _cv.cvGetHuMoments
 
-cvInitLineIterator = _cv.cvInitLineIterator
-
 cvSampleLine = _cv.cvSampleLine
 
 cvGetRectSubPix = _cv.cvGetRectSubPix
@@ -4334,6 +4338,8 @@ cvGoodFeaturesToTrack = _cv.cvGoodFeaturesToTrack
 
 cvHoughLines2 = _cv.cvHoughLines2
 
+cvHoughCircles = _cv.cvHoughCircles
+
 cvFitLine = _cv.cvFitLine
 
 cvLoadHaarClassifierCascade = _cv.cvLoadHaarClassifierCascade
@@ -4383,6 +4389,8 @@ function_ptr_generator = _cv.function_ptr_generator
 void_ptr_generator = _cv.void_ptr_generator
 
 void_ptrptr_generator = _cv.void_ptrptr_generator
+
+pyCvGetSeqElemAsPoint = _cv.pyCvGetSeqElemAsPoint
 __doc__ = """
 OpenCV is the Intel Open CV library, an open source effort to provide
 computer vision algorithms for standard PC hardware.

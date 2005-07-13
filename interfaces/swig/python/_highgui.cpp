@@ -1338,10 +1338,10 @@ SWIG_Python_GetTypeList() {
 
 /* -------- TYPES TABLE (BEGIN) -------- */
 
-#define  SWIGTYPE_p_CvLineIterator swig_types[0] 
-#define  SWIGTYPE_p_CvTreeNodeIterator swig_types[1] 
-#define  SWIGTYPE_p_CvNArrayIterator swig_types[2] 
-#define  SWIGTYPE_p_CvSparseMatIterator swig_types[3] 
+#define  SWIGTYPE_p_CvTreeNodeIterator swig_types[0] 
+#define  SWIGTYPE_p_CvNArrayIterator swig_types[1] 
+#define  SWIGTYPE_p_CvSparseMatIterator swig_types[2] 
+#define  SWIGTYPE_p_CvLineIterator swig_types[3] 
 #define  SWIGTYPE_p_f_int__void swig_types[4] 
 #define  SWIGTYPE_p_f_int_int_int_int_p_void__void swig_types[5] 
 #define  SWIGTYPE_p_CvFileNode swig_types[6] 
@@ -3577,10 +3577,10 @@ static PyMethodDef SwigMethods[] = {
 
 /* -------- TYPE CONVERSION AND EQUIVALENCE RULES (BEGIN) -------- */
 
-static swig_type_info _swigt__p_CvLineIterator[] = {{"_p_CvLineIterator", 0, "CvLineIterator *", 0, 0, 0, 0},{"_p_CvLineIterator", 0, 0, 0, 0, 0, 0},{0, 0, 0, 0, 0, 0, 0}};
 static swig_type_info _swigt__p_CvTreeNodeIterator[] = {{"_p_CvTreeNodeIterator", 0, "CvTreeNodeIterator *", 0, 0, 0, 0},{"_p_CvTreeNodeIterator", 0, 0, 0, 0, 0, 0},{0, 0, 0, 0, 0, 0, 0}};
 static swig_type_info _swigt__p_CvNArrayIterator[] = {{"_p_CvNArrayIterator", 0, "CvNArrayIterator *", 0, 0, 0, 0},{"_p_CvNArrayIterator", 0, 0, 0, 0, 0, 0},{0, 0, 0, 0, 0, 0, 0}};
 static swig_type_info _swigt__p_CvSparseMatIterator[] = {{"_p_CvSparseMatIterator", 0, "CvSparseMatIterator *", 0, 0, 0, 0},{"_p_CvSparseMatIterator", 0, 0, 0, 0, 0, 0},{0, 0, 0, 0, 0, 0, 0}};
+static swig_type_info _swigt__p_CvLineIterator[] = {{"_p_CvLineIterator", 0, "CvLineIterator *", 0, 0, 0, 0},{"_p_CvLineIterator", 0, 0, 0, 0, 0, 0},{0, 0, 0, 0, 0, 0, 0}};
 static swig_type_info _swigt__p_f_int__void[] = {{"_p_f_int__void", 0, "void (*)(int)|CvTrackbarCallback", 0, 0, 0, 0},{"_p_f_int__void", 0, 0, 0, 0, 0, 0},{0, 0, 0, 0, 0, 0, 0}};
 static swig_type_info _swigt__p_f_int_int_int_int_p_void__void[] = {{"_p_f_int_int_int_int_p_void__void", 0, "void (*)(int,int,int,int,void *)|CvMouseCallback", 0, 0, 0, 0},{"_p_f_int_int_int_int_p_void__void", 0, 0, 0, 0, 0, 0},{0, 0, 0, 0, 0, 0, 0}};
 static swig_type_info _swigt__p_CvFileNode[] = {{"_p_CvFileNode", 0, "CvFileNode *", 0, 0, 0, 0},{"_p_CvFileNode", 0, 0, 0, 0, 0, 0},{0, 0, 0, 0, 0, 0, 0}};
@@ -3673,10 +3673,10 @@ static swig_type_info _swigt__p_CvPoint2D64f[] = {{"_p_CvPoint2D64f", 0, "CvPoin
 static swig_type_info _swigt__p_CvHaarFeature[] = {{"_p_CvHaarFeature", 0, "CvHaarFeature *", 0, 0, 0, 0},{"_p_CvHaarFeature", 0, 0, 0, 0, 0, 0},{0, 0, 0, 0, 0, 0, 0}};
 
 static swig_type_info *swig_types_initial[] = {
-_swigt__p_CvLineIterator, 
 _swigt__p_CvTreeNodeIterator, 
 _swigt__p_CvNArrayIterator, 
 _swigt__p_CvSparseMatIterator, 
+_swigt__p_CvLineIterator, 
 _swigt__p_f_int__void, 
 _swigt__p_f_int_int_int_int_p_void__void, 
 _swigt__p_CvFileNode, 
