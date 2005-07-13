@@ -32,6 +32,7 @@ endif
 # Python #####################################################################
 
 _cv_la_SOURCES    = _cv.cpp error.cpp error.h \
+                    pycvseq.cpp pycvseq.h \
                     ../filtered/cv.h \
                     ../filtered/constants.h
 _cv_la_CXXFLAGS   = $(PYTHON_CSPEC)
@@ -52,6 +53,7 @@ if UPDATE_SWIG_WRAPPERS
 
 # this rule creates the Python wrapper sources for cxcore and cv
 _cv.cpp: cv.i imagedata.i error.h error.cpp                     \
+         pycvseq.cpp pycvseq.h                                  \
          $(top_srcdir)/interfaces/swig/general/nointpb.i        \
          $(top_srcdir)/interfaces/swig/general/cv.i             \
          $(top_srcdir)/interfaces/swig/general/memory.i         \
