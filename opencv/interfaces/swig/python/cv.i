@@ -50,6 +50,7 @@
 
 %{
 #include "error.h"
+#include "pycvseq.h"
 %}
 
 // Accessors for the IplImage data structure are defined here
@@ -57,6 +58,10 @@
 
 // We integrate OpenCV error handling into the Python exception mechanism
 %include "./error.h"
+
+
+// include some wrappers to manipulate CvSeq types
+%include "./pycvseq.h"
 
 %pythoncode 
 %{
