@@ -1120,8 +1120,8 @@ int CvTS::find_written_param( CvTest* test, const char* paramname, int valtype, 
     bool add_to_list = test->get_func_list()[0] == '\0';
     char buffer[256];
     int paramname_len = (int)strlen(paramname);
-    int paramval_len = valtype == CV_NODE_INT ? sizeof(int) :
-        valtype == CV_NODE_REAL ? sizeof(double) : -1;
+    int paramval_len = valtype == CV_NODE_INT ? (int)sizeof(int) :
+        valtype == CV_NODE_REAL ? (int)sizeof(double) : -1;
     const char* name = CvTest::get_parent_name( testname, buffer );
 
     if( !fs )
