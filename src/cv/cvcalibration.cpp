@@ -408,9 +408,8 @@ cvRodrigues2( const CvMat* src, CvMat* dst, CvMat* jacobian )
     }
     else if( src->cols == 3 && src->rows == 3 )
     {
-        double R[9], A[9], rx, ry, rz;
+        double R[9], rx, ry, rz;
         CvMat _R = cvMat( 3, 3, CV_64F, R );
-        CvMat _A = cvMat( 3, 3, CV_64F, A );
         double theta, s, c;
         int step = dst->rows > 1 ? dst->step / elem_size : 1;
         
@@ -419,10 +418,7 @@ cvRodrigues2( const CvMat* src, CvMat* dst, CvMat* jacobian )
             CV_ERROR( CV_StsBadSize, "Output matrix must be 1x3 or 3x1" );
 
         cvConvert( src, &_R );
-        cvMulTransposed( &_R, &_A, 0 );
-
-        A[0] -= 1.; A[4] -= 1.; A[8] -= 1.;
-        if( cvNorm(&_A, 0, CV_C) > 9e-1 || fabs(cvDet(&_R) - 1) > 9e-1 )
+        if( !cvCheckArr( &_R, CV_CHECK_RANGE+CV_CHECK_QUIET, -100, 100 ) )
         {
             cvZero(dst);
             if( jacobian )
