@@ -1151,7 +1151,7 @@ cvPyrDown( const void* srcarr, void* dstarr, int _filter )
 
 /* MSVC .NET 2003 spends a long time building this, thus, as the code
    is not performance-critical, we turn off the optimization here */
-#if _MSC_VER > 1300 && !defined __ICL
+#if defined _MSC_VER && _MSC_VER > 1300 && !defined CV_ICC
 #pragma optimize("", off)
 #endif
 

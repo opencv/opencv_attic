@@ -52,7 +52,7 @@
 #endif /*_LIST_INLINE*/
 
 #if defined DECLARE_LIST
-#if _MSC_VER >= 1200
+#if defined _MSC_VER && _MSC_VER >= 1200
     #pragma warning("DECLARE_LIST macro is already defined!")
 #endif
 #endif /*DECLARE_LIST*/

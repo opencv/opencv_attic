@@ -42,10 +42,6 @@
 
 #define _FP double
 
-#if _MSC_VER >= 1200
-#pragma warning (disable:4701)
-#endif
-
 static CvStatus
 icvFitLine2D_wods( CvPoint2D32f * points, int _count, float *weights, float *line )
 {
