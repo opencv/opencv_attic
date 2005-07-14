@@ -40,10 +40,6 @@
 //M*/
 #include "_cv.h"
 
-#if _MSC_VER >= 1200
-#pragma warning (disable:4710)  // function '...' not inlined
-#endif
-
 CV_IMPL CvSubdiv2D *
 cvCreateSubdiv2D( int subdiv_type, int header_size,
                   int vtx_size, int quadedge_size, CvMemStorage * storage )
