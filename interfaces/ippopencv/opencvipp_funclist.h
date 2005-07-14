@@ -43,7 +43,7 @@
 *                                      Copy/Set                                          *
 \****************************************************************************************/
 
-/* temporary disable ipp zero and copy functions as they affect subsequent functions' performance */
+#ifndef IPP5
 IPPAPI( IppStatus, ippiCopy_8u_C1R, ( const uchar* src, int src_step,
                              uchar* dst, int dst_step, IppiSize size ))
 
@@ -89,6 +89,8 @@ IPCV_BIN_ARITHM( Add )
 IPCV_BIN_ARITHM( Sub )
 
 #undef IPCV_BIN_ARITHM
+
+#endif
 
 /****************************************************************************************\
 *                                     Logical operations                                 *
@@ -175,13 +177,13 @@ IPPAPI( IppStatus, ippiSum_##flavor##_C4R,( const srctype* img, int imgstep,\
 #define IPCV_DEF_SUM_HINT( flavor, srctype )                                \
 IPPAPI( IppStatus, ippiSum_##flavor##_C1R,                                  \
                         ( const srctype* img, int imgstep,                  \
-                          IppiSize size, double* sum, IppHintAlgorithm ))   \
+                          IppiSize size, double* sum, IppHintAlgorithm hint ))   \
 IPPAPI( IppStatus, ippiSum_##flavor##_C3R,                                  \
                         ( const srctype* img, int imgstep,                  \
-                          IppiSize size, double* sum, IppHintAlgorithm ))   \
+                          IppiSize size, double* sum, IppHintAlgorithm hint ))   \
 IPPAPI( IppStatus, ippiSum_##flavor##_C4R,                                  \
                         ( const srctype* img, int imgstep,                  \
-                          IppiSize size, double* sum, IppHintAlgorithm ))
+                          IppiSize size, double* sum, IppHintAlgorithm hint ))
 
 IPCV_DEF_SUM_NOHINT( 8u, uchar )
 IPCV_DEF_SUM_NOHINT( 16s, short )
@@ -215,18 +217,18 @@ IPPAPI( IppStatus, ippiNormDiff_L2_##flavor##_C1R,                              
 IPPAPI( IppStatus, ippiNorm_Inf_##flavor##_C1R, ( const srctype* img, int imgstep,      \
                                                   IppiSize size, double* norm ))        \
 IPPAPI( IppStatus, ippiNorm_L1_##flavor##_C1R, ( const srctype* img, int imgstep,       \
-                                IppiSize size, double* norm, IppHintAlgorithm ))        \
+                                IppiSize size, double* norm, IppHintAlgorithm hint ))        \
 IPPAPI( IppStatus, ippiNorm_L2_##flavor##_C1R, ( const srctype* img, int imgstep,       \
-                                IppiSize size, double* norm, IppHintAlgorithm ))        \
+                                IppiSize size, double* norm, IppHintAlgorithm hint ))        \
 IPPAPI( IppStatus, ippiNormDiff_Inf_##flavor##_C1R, ( const srctype* img1, int imgstep1,\
                                                       const srctype* img2, int imgstep2,\
                                                       IppiSize size, double* norm ))    \
 IPPAPI( IppStatus, ippiNormDiff_L1_##flavor##_C1R, ( const srctype* img1, int imgstep1, \
                                                      const srctype* img2, int imgstep2, \
-                                IppiSize size, double* norm, IppHintAlgorithm))         \
+                                IppiSize size, double* norm, IppHintAlgorithm hint ))         \
 IPPAPI( IppStatus, ippiNormDiff_L2_##flavor##_C1R, ( const srctype* img1, int imgstep1, \
                                                      const srctype* img2, int imgstep2, \
-                                IppiSize size, double* norm, IppHintAlgorithm ))
+                                IppiSize size, double* norm, IppHintAlgorithm hint ))
 
 #define IPCV_DEF_NORM_MASK_C1( flavor, srctype )                                        \
 IPPAPI( IppStatus, ippiNorm_Inf_##flavor##_C1MR, ( const srctype* img, int imgstep,     \
@@ -325,6 +327,18 @@ IPCV_PIX_PLANE( 32f, int )
 /*                            Math routines and RNGs                                    */
 /****************************************************************************************/
 
+#ifdef IPP5
+
+IPPAPI( IppStatus, ippsSqrt_32f, ( const float* src, float* dst, int len ))
+IPPAPI( IppStatus, ippsSqrt_64f, ( const double* src, double* dst, int len ))
+
+IPPAPI( IppStatus, ippsLn_32f, ( const float *x, float *y, int n ) )
+IPPAPI( IppStatus, ippsLn_64f, ( const double *x, double *y, int n ) )
+IPPAPI( IppStatus, ippsExp_32f, ( const float *x, float *y, int n ) )
+IPPAPI( IppStatus, ippsExp_64f, ( const double *x, double *y, int n ) )
+
+#else
+
 IPPAPI( IppStatus, ippsInvSqrt_32f_A21, ( const float* src, float* dst, int len ))
 IPPAPI( IppStatus, ippsSqrt_32f_A21, ( const float* src, float* dst, int len ))
 IPPAPI( IppStatus, ippsInvSqrt_64f_A50, ( const double* src, double* dst, int len ))
@@ -334,6 +348,9 @@ IPPAPI( IppStatus, ippsLn_32f_A21, ( const float *x, float *y, int n ) )
 IPPAPI( IppStatus, ippsLn_64f_A50, ( const double *x, double *y, int n ) )
 IPPAPI( IppStatus, ippsExp_32f_A21, ( const float *x, float *y, int n ) )
 IPPAPI( IppStatus, ippsExp_64f_A50, ( const double *x, double *y, int n ) )
+
+#endif
+
 IPPAPI( IppStatus, ippibFastArctan_32f, ( const float* y, const float* x, float* angle, int len ))
 
 /****************************************************************************************/
@@ -374,8 +391,9 @@ IPCV_TRANSFORM_N1( _32f_AC4C1R )
 /****************************************************************************************/
 
 #define IPCV_DFT( init_flavor, fwd_flavor, inv_flavor )                                 \
-IPPAPI( IppStatus, ippsDFTInitAlloc_##init_flavor, ( void**, int, int, IppHintAlgorithm ))\
-IPPAPI( IppStatus, ippsDFTFree_##init_flavor, ( void* ))                                \
+IPPAPI( IppStatus, ippsDFTInitAlloc_##init_flavor, ( void** state, int len, int flag,   \
+                                                     IppHintAlgorithm hint ))           \
+IPPAPI( IppStatus, ippsDFTFree_##init_flavor, ( void* state ))                          \
 IPPAPI( IppStatus, ippsDFTGetBufSize_##init_flavor, ( const void* spec, int* buf_size ))\
 IPPAPI( IppStatus, ippsDFTFwd_##fwd_flavor, ( const void* src, void* dst,               \
                                               const void* spec, void* buffer ))         \
@@ -579,33 +597,86 @@ IPCV_WARPPERSPECTIVE_BACK( 32f, 4 )
 
 #undef IPCV_WARPPERSPECTIVE_BACK
 
+#define IPCV_WARPPERSPECTIVE( flavor, cn )                              \
+IPPAPI( IppStatus, ippiWarpPerspective_##flavor##_C##cn##R,             \
+    (const void* src, IppiSize srcsize, int srcstep, IppiRect srcroi,   \
+    void* dst, int dststep, IppiRect dstroi,                            \
+    const double* coeffs, int interpolate ))
+
+IPCV_WARPPERSPECTIVE( 8u, 1 )
+IPCV_WARPPERSPECTIVE( 8u, 3 )
+IPCV_WARPPERSPECTIVE( 8u, 4 )
+
+IPCV_WARPPERSPECTIVE( 32f, 1 )
+IPCV_WARPPERSPECTIVE( 32f, 3 )
+IPCV_WARPPERSPECTIVE( 32f, 4 )
+
+#undef IPCV_WARPPERSPECTIVE
+
+#define IPCV_REMAP( flavor, cn )                                        \
+IPPAPI( IppStatus, ippiRemap_##flavor##_C##cn##R,                       \
+    ( const void* src, IppiSize srcsize, int srcstep, IppiRect srcroi,  \
+      const float* xmap, int xmapstep, const float* ymap, int ymapstep, \
+      void* dst, int dststep, IppiSize dstsize, int interpolation )) 
+
+IPCV_REMAP( 8u, 1 )
+IPCV_REMAP( 8u, 3 )
+IPCV_REMAP( 8u, 4 )
+
+IPCV_REMAP( 32f, 1 )
+IPCV_REMAP( 32f, 3 )
+IPCV_REMAP( 32f, 4 )
+
+#undef IPCV_REMAP
+
 /****************************************************************************************\
 *                                      Morphology                                        *
 \****************************************************************************************/
 
-#define IPCV_MORPHOLOGY( minmaxtype, morphtype, flavor, cn )            \
+#define IPCV_MINMAX( minmaxtype, flavor, cn )                           \
 IPPAPI( IppStatus, ippiFilter##minmaxtype##_##flavor##_C##cn##R,        \
             ( const void* src, int srcstep, void* dst, int dststep,     \
-              IppiSize roi, IppiSize esize, IppiPoint anchor ))         \
+              IppiSize roi, IppiSize esize, IppiPoint anchor ))
+
+IPCV_MINMAX( Min, 8u, 1 )
+IPCV_MINMAX( Min, 8u, 3 )
+IPCV_MINMAX( Min, 8u, 4 )
+IPCV_MINMAX( Min, 32f, 1 )
+IPCV_MINMAX( Min, 32f, 3 )
+IPCV_MINMAX( Min, 32f, 4 )
+IPCV_MINMAX( Max, 8u, 1 )
+IPCV_MINMAX( Max, 8u, 3 )
+IPCV_MINMAX( Max, 8u, 4 )
+IPCV_MINMAX( Max, 32f, 1 )
+IPCV_MINMAX( Max, 32f, 3 )
+IPCV_MINMAX( Max, 32f, 4 )
+
+#undef IPCV_MINMAX
+
+#ifndef IPP5
+
+#define IPCV_MORPHOLOGY( morphtype, flavor, cn )                        \
 IPPAPI( IppStatus, ippi##morphtype##_##flavor##_C##cn##R,               \
             ( const void* src, int srcstep, void* dst, int dststep,     \
               IppiSize roi, const uchar* element,                       \
               IppiSize esize, IppiPoint anchor ))
 
-IPCV_MORPHOLOGY( Min, Erode, 8u, 1 )
-IPCV_MORPHOLOGY( Min, Erode, 8u, 3 )
-IPCV_MORPHOLOGY( Min, Erode, 8u, 4 )
-IPCV_MORPHOLOGY( Min, Erode, 32f, 1 )
-IPCV_MORPHOLOGY( Min, Erode, 32f, 3 )
-IPCV_MORPHOLOGY( Min, Erode, 32f, 4 )
-IPCV_MORPHOLOGY( Max, Dilate, 8u, 1 )
-IPCV_MORPHOLOGY( Max, Dilate, 8u, 3 )
-IPCV_MORPHOLOGY( Max, Dilate, 8u, 4 )
-IPCV_MORPHOLOGY( Max, Dilate, 32f, 1 )
-IPCV_MORPHOLOGY( Max, Dilate, 32f, 3 )
-IPCV_MORPHOLOGY( Max, Dilate, 32f, 4 )
+IPCV_MORPHOLOGY( Erode, 8u, 1 )
+IPCV_MORPHOLOGY( Erode, 8u, 3 )
+IPCV_MORPHOLOGY( Erode, 8u, 4 )
+IPCV_MORPHOLOGY( Erode, 32f, 1 )
+IPCV_MORPHOLOGY( Erode, 32f, 3 )
+IPCV_MORPHOLOGY( Erode, 32f, 4 )
+IPCV_MORPHOLOGY( Dilate, 8u, 1 )
+IPCV_MORPHOLOGY( Dilate, 8u, 3 )
+IPCV_MORPHOLOGY( Dilate, 8u, 4 )
+IPCV_MORPHOLOGY( Dilate, 32f, 1 )
+IPCV_MORPHOLOGY( Dilate, 32f, 3 )
+IPCV_MORPHOLOGY( Dilate, 32f, 4 )
 
 #undef IPCV_MORPHOLOGY
+
+#endif
 
 /****************************************************************************************\
 *                                 Smoothing Filters                                      *
@@ -755,6 +826,29 @@ IPPAPI( IppStatus, ippiUpdateMotionHistory_8u32f_C1IR,
     ( const uchar* silIm, int silStep, float* mhiIm, int mhiStep,
       IppiSize size,float  timestamp, float  mhi_duration ))
 
+/****************************************************************************************\
+*                                 Template Matching                                      *
+\****************************************************************************************/
+
+#define ICV_MATCHTEMPLATE( flavor, arrtype )                        \
+IPPAPI( IppStatus, ippiCrossCorrValid_Norm_##flavor##_C1R,          \
+        ( const arrtype* pSrc, int srcStep, IppiSize srcRoiSize,    \
+        const arrtype* pTpl, int tplStep, IppiSize tplRoiSize,      \
+        float* pDst, int dstStep ))                                 \
+IPPAPI( IppStatus, ippiCrossCorrValid_NormLevel_##flavor##_C1R,     \
+        ( const arrtype* pSrc, int srcStep, IppiSize srcRoiSize,    \
+        const arrtype* pTpl, int tplStep, IppiSize tplRoiSize,      \
+        float* pDst, int dstStep ))                                 \
+IPPAPI( IppStatus, ippiSqrDistanceValid_Norm_##flavor##_C1R,        \
+        ( const arrtype* pSrc, int srcStep, IppiSize srcRoiSize,    \
+        const arrtype* pTpl, int tplStep, IppiSize tplRoiSize,      \
+        float* pDst, int dstStep ))
+
+ICV_MATCHTEMPLATE( 8u32f, Ipp8u )
+ICV_MATCHTEMPLATE( 32f, float )
+
+#undef ICV_MATCHTEMPLATE
+
 /****************************************************************************************/
 /*                                Distance Transform                                    */
 /****************************************************************************************/
@@ -770,3 +864,78 @@ IPPAPI(IppStatus, ippiDistanceTransform_5x5_8u32f_C1R,
 IPPAPI( IppStatus, ippiGetDistanceTransformMask, ( int maskType, float* pMetrics ))
 
 
+#ifdef IPP5
+
+/****************************************************************************************\
+*                                 Radial Distortion Removal                              *
+\****************************************************************************************/
+
+IPPAPI(IppStatus, ippiUndistortGetSize, (IppiSize roiSize, int *pBufsize))
+
+IPPAPI(IppStatus, ippiCreateMapCameraUndistort_32f_C1R, (Ipp32f *pxMap, int xStep,
+                  Ipp32f *pyMap, int yStep, IppiSize roiSize,
+                  Ipp32f fx, Ipp32f fy, Ipp32f cx, Ipp32f cy,
+                  Ipp32f k1, Ipp32f k2, Ipp32f p1, Ipp32f p2, Ipp8u *pBuffer))
+
+IPPAPI(IppStatus, ippiUndistortRadial_8u_C1R, (const Ipp8u* pSrc, int srcStep,
+                         Ipp8u* pDst, int dstStep, IppiSize roiSize, Ipp32f fx, Ipp32f fy,
+                         Ipp32f cx, Ipp32f cy, Ipp32f k1, Ipp32f k2, Ipp8u *pBuffer))
+
+IPPAPI(IppStatus, ippiUndistortRadial_8u_C3R, (const Ipp8u* pSrc, int srcStep,
+                         Ipp8u* pDst, int dstStep, IppiSize roiSize, Ipp32f fx, Ipp32f fy,
+                         Ipp32f cx, Ipp32f cy, Ipp32f k1, Ipp32f k2, Ipp8u *pBuffer))
+
+/****************************************************************************************\
+*                            Subpixel-accurate rectangle extraction                      *
+\****************************************************************************************/
+
+IPPAPI(IppStatus, ippiCopySubpix_8u_C1R,  (const Ipp8u* pSrc, int srcStep,
+                  Ipp8u* pDst, int dstStep, IppiSize roiSize, Ipp32f dx, Ipp32f dy))
+
+IPPAPI(IppStatus, ippiCopySubpix_8u32f_C1R,  (const Ipp8u* pSrc, int srcStep,
+                  Ipp32f* pDst, int dstStep, IppiSize roiSize, Ipp32f dx, Ipp32f dy))
+
+IPPAPI(IppStatus, ippiCopySubpix_32f_C1R,  (const Ipp32f* pSrc, int srcStep,
+                  Ipp32f* pDst, int dstStep, IppiSize roiSize, Ipp32f dx, Ipp32f dy))
+
+/****************************************************************************************\
+*                                Lucas-Kanade Optical Flow                               *
+\****************************************************************************************/
+
+IPPAPI(IppStatus, ippiOpticalFlowPyrLKInitAlloc_8u_C1R, (void** ppState,
+       IppiSize roiSize, int winSize, IppHintAlgorithm hint))
+
+IPPAPI(IppStatus, ippiOpticalFlowPyrLKFree_8u_C1R, (void* pState))
+
+IPPAPI(IppStatus, ippiOpticalFlowPyrLK_8u_C1R, (void *pPyr1, void *pPyr2,
+                         const Ipp32f *pPrev, Ipp32f *pNext, Ipp8s *pStatus, Ipp32f *pError,
+                         int numFeat, int winSize, int maxLev, int maxIter, Ipp32f threshold,
+                         void *pState))
+
+/****************************************************************************************\
+*                                 Haar Object Detector                                   *
+\****************************************************************************************/
+
+IPPAPI(IppStatus, ippiIntegral_8u32s_C1R,  (const Ipp8u* pSrc, int srcStep,
+                  Ipp32s* pDst, int dstStep, IppiSize roiSize, Ipp32s val))
+
+IPPAPI(IppStatus, ippiSqrIntegral_8u32s64f_C1R,  (const Ipp8u* pSrc, int srcStep,
+                  Ipp32s* pDst, int dstStep, Ipp64f* pSqr, int sqrStep, IppiSize roiSize,
+                  Ipp32s val, Ipp64f valSqr))
+
+IPPAPI(IppStatus, ippiRectStdDev_32s32f_C1R,  (const Ipp32s* pSrc, int srcStep,
+                         const Ipp64f* pSqr, int sqrStep, Ipp32f* pDst, int dstStep,
+                         IppiSize roiSize, IppiRect rect))
+
+IPPAPI(IppStatus, ippiHaarClassifierInitAlloc_32f, (void **pState,
+                 const IppiRect* pFeature, const Ipp32f* pWeight, const Ipp32f* pThreshold,
+                 const Ipp32f* pVal1, const Ipp32f* pVal2, const int* pNum, int length))
+
+IPPAPI(IppStatus, ippiHaarClassifierFree_32f,(void *pState))
+
+IPPAPI(IppStatus, ippiApplyHaarClassifier_32s32f_C1R, (const Ipp32s* pSrc, int srcStep,
+                         const Ipp32f* pNorm, int normStep, Ipp8u* pMask, int maskStep,
+                         IppiSize roi, int *pPositive, Ipp32f threshold,
+                         void *pState))
+
+#endif
