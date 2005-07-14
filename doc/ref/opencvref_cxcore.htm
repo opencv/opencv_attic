@@ -110,6 +110,40 @@
 </pre>
 
 
+<hr><h3><a name="decl_CvPoint2D64f">CvPoint2D64f</a></h3>
+<p class="Blurb">2D point with double precision floating-point coordinates</p>
+<pre>
+    typedef struct CvPoint2D64f
+    {
+        double x; /* x-coordinate, usually zero-based */
+        double y; /* y-coordinate, usually zero-based */
+    }
+    CvPoint2D64f;
+
+    /* the constructor function */
+    inline CvPoint2D64f cvPoint2D64f( double x, double y );
+
+    /* conversion from CvPoint */
+    inline CvPoint2D64f cvPointTo64f( CvPoint point );
+</pre>
+
+
+<hr><h3><a name="decl_CvPoint3D64f">CvPoint3D64f</a></h3>
+<p class="Blurb">3D point with double precision floating-point coordinates</p>
+<pre>
+    typedef struct CvPoint3D64f
+    {
+        double x; /* x-coordinate, usually zero-based */
+        double y; /* y-coordinate, usually zero-based */
+        double z; /* z-coordinate, usually zero-based */
+    }
+    CvPoint3D64f;
+
+    /* the constructor function */
+    inline CvPoint3D64f cvPoint3D64f( double x, double y, double z );
+</pre>
+
+
 <hr><h3><a name="decl_CvSize">CvSize</a></h3>
 <p class="Blurb">pixel-accurate size of a rectangle</p>
 <pre>
@@ -5172,6 +5206,97 @@ int main( int argc, char** argv )
 </p>
 
 
+<hr><h3><a name="decl_cvInitLineIterator">InitLineIterator</a></h3>
+<p class="Blurb">Initializes line iterator</p>
+<pre>
+int cvInitLineIterator( const CvArr* image, CvPoint pt1, CvPoint pt2,
+                        CvLineIterator* line_iterator, int connectivity=8,
+                        int left_to_right=0 );
+</pre><p><dl>
+<dt>image<dd>Image to sample the line from.
+<dt>pt1<dd>First ending point of the line segment.
+<dt>pt2<dd>Second ending point of the line segment.
+<dt>line_iterator<dd>Pointer to the line iterator state structure.
+<dt>connectivity<dd>The scanned line connectivity, 4 or 8.
+<dt>left_to_right<dd>The flag, indicating whether the line should be always scanned from the
+left-most point to the right-most out of <code>pt1</code> and <code>pt2</code> (<code>left_to_right&ne;0</code>),
+or it is scanned in the specified order, from <code>pt1</code> to <code>pt2</code> (<code>left_to_right=0</code>).
+</dl><p>
+The function <code>cvInitLineIterator</code> initializes the line iterator and returns the
+number of pixels between two end points. Both points must be inside the image.
+After the iterator has been initialized, all the points on the raster line that
+connects the two ending points may be retrieved by successive calls of
+<code>CV_NEXT_LINE_POINT</code> point. The points on the line are calculated one by one using
+4-connected or 8-connected Bresenham algorithm.</p>
+<h4>Example. Using line iterator to calculate sum of pixel values along the color line</h4>
+<pre>
+    CvScalar sum_line_pixels( IplImage* image, CvPoint pt1, CvPoint pt2 )
+    {
+        CvLineIterator iterator;
+        int blue_sum = 0, green_sum = 0, red_sum = 0;
+        int count = cvInitLineIterator( image, pt1, pt2, &iterator, 8, 0 );
+
+        for( int i = 0; i &lt; count; i++ ){
+            blue_sum += iterator.ptr[0];
+            green_sum += iterator.ptr[1];
+            red_sum += iterator.ptr[2];
+            CV_NEXT_LINE_POINT(iterator);
+
+            /* print the pixel coordinates: demonstrates how to calculate the coordinates */
+            {
+            int offset, x, y;
+            /* assume that ROI is not set, otherwise need to take it into account. */
+            offset = iterator.ptr - (uchar*)(image->imageData);
+            y = offset/image->widthStep;
+            x = (offset - y*image->widthStep)/(3*sizeof(uchar) /* size of pixel */);
+            printf("(%d,%d)\n", x, y );
+            }
+        }
+        return cvScalar( blue_sum, green_sum, red_sum );
+    }
+</pre>
+
+
+<hr><h3><a name="decl_cvClipLine">ClipLine</a></h3>
+<p class="Blurb">Clips the line against the image rectangle</p>
+<pre>
+int cvClipLine( CvSize img_size, CvPoint* pt1, CvPoint* pt2 );
+</pre><p><dl>
+<dt>img_size<dd>Size of the image.
+<dt>pt1<dd>First ending point of the line segment. It is modified by the function.
+<dt>pt2<dd>Second ending point of the line segment. It is modified by the function.
+</dl><p>
+The function <code>cvClipLine</code> calculates a part of the line segment which is entirely in the image.
+It returns 0 if the line segment is completely outside the image and 1 otherwise.
+</p>
+
+
+<hr><h3><a name="decl_cvEllipse2Poly">Ellipse2Poly</a></h3>
+<p class="Blurb">Approximates elliptic arc with polyline</p>
+<pre>
+int cvEllipse2Poly( CvPoint center, CvSize axes,
+                    int angle, int arc_start,
+                    int arc_end, CvPoint* pts, int delta );
+</pre><p><dl>
+<dt>center<dd>Center of the arc.
+<dt>axes<dd>Half-sizes of the arc. See <a href="#decl_cvEllipse">cvEllipse</a>.
+<dt>angle<dd>Rotation angle of the ellipse in degrees. See <a href="#decl_cvEllipse">cvEllipse</a>.
+<dt>start_angle<dd>Starting angle of the elliptic arc.
+<dt>end_angle<dd>Ending angle of the elliptic arc.
+<dt>pts<dd>The array of points, filled by the function.
+<dt>delta<dd>Angle between the subsequent polyline vertices, approximation accuracy.
+So, the total number of output points will ceil((end_angle - start_angle)/delta) + 1 at max.
+</dl><p>
+The function <code>cvEllipse2Poly</code> computes vertices of the polyline that approximates the specified elliptic arc.
+It is used by <a href="#decl_cvEllipse">cvEllipse</a>.
+</p>
+
+
+<hr><h3><a name="decl_cvClipLine">ClipLine</a></h3>
+CVAPI(int) cvEllipse2Poly( CvPoint center, CvSize axes,
+                 int angle, int arc_start, int arc_end, CvPoint * pts, int delta );
+
+
 <hr><h1><a name="cxcore_persistence">Data Persistence and RTTI</a></h1>
 
 <hr><h2><a name="cxcore_persistence_ds">File Storage</a></h2>
@@ -6909,66 +7034,71 @@ process the data.</p>
 <table width="100%">
 <tr>
 <td width="25%"><a href="#decl_cvCalcCovarMatrix">CalcCovarMatrix</a></td>
+<td width="25%"><a href="#decl_cvCloneImage">CloneImage</a></td>
+<td width="25%"><a href="#decl_cvCreateGraphScanner">CreateGraphScanner</a></td>
+</tr>
+<tr>
+<td width="25%"><a href="#decl_cvCartToPolar">CartToPolar</a></td>
 <td width="25%"><a href="#decl_cvCloneMat">CloneMat</a></td>
 <td width="25%"><a href="#decl_cvCreateImage">CreateImage</a></td>
 </tr>
 <tr>
-<td width="25%"><a href="#decl_cvCartToPolar">CartToPolar</a></td>
+<td width="25%"><a href="#decl_cvCbrt">Cbrt</a></td>
 <td width="25%"><a href="#decl_cvCloneMatND">CloneMatND</a></td>
 <td width="25%"><a href="#decl_cvCreateImageHeader">CreateImageHeader</a></td>
 </tr>
 <tr>
-<td width="25%"><a href="#decl_cvCbrt">Cbrt</a></td>
+<td width="25%"><a href="#decl_cvCheckArr">CheckArr</a></td>
 <td width="25%"><a href="#decl_cvCloneSeq">CloneSeq</a></td>
 <td width="25%"><a href="#decl_cvCreateMat">CreateMat</a></td>
 </tr>
 <tr>
-<td width="25%"><a href="#decl_cvCheckArr">CheckArr</a></td>
+<td width="25%"><a href="#decl_cvCircle">Circle</a></td>
 <td width="25%"><a href="#decl_cvCloneSparseMat">CloneSparseMat</a></td>
 <td width="25%"><a href="#decl_cvCreateMatHeader">CreateMatHeader</a></td>
 </tr>
 <tr>
-<td width="25%"><a href="#decl_cvCircle">Circle</a></td>
+<td width="25%"><a href="#decl_cvClearGraph">ClearGraph</a></td>
 <td width="25%"><a href="#decl_cvCmp">Cmp</a></td>
 <td width="25%"><a href="#decl_cvCreateMatND">CreateMatND</a></td>
 </tr>
 <tr>
-<td width="25%"><a href="#decl_cvClearND">ClearND</a></td>
+<td width="25%"><a href="#decl_cvClearMemStorage">ClearMemStorage</a></td>
 <td width="25%"><a href="#decl_cvCmpS">CmpS</a></td>
 <td width="25%"><a href="#decl_cvCreateMatNDHeader">CreateMatNDHeader</a></td>
 </tr>
 <tr>
-<td width="25%"><a href="#decl_cvClearGraph">ClearGraph</a></td>
+<td width="25%"><a href="#decl_cvClearND">ClearND</a></td>
 <td width="25%"><a href="#decl_cvConvertScale">ConvertScale</a></td>
 <td width="25%"><a href="#decl_cvCreateMemStorage">CreateMemStorage</a></td>
 </tr>
 <tr>
-<td width="25%"><a href="#decl_cvClearMemStorage">ClearMemStorage</a></td>
+<td width="25%"><a href="#decl_cvClearSeq">ClearSeq</a></td>
 <td width="25%"><a href="#decl_cvConvertScaleAbs">ConvertScaleAbs</a></td>
 <td width="25%"><a href="#decl_cvCreateSeq">CreateSeq</a></td>
 </tr>
 <tr>
-<td width="25%"><a href="#decl_cvClearSeq">ClearSeq</a></td>
+<td width="25%"><a href="#decl_cvClearSet">ClearSet</a></td>
 <td width="25%"><a href="#decl_cvCopy">Copy</a></td>
 <td width="25%"><a href="#decl_cvCreateSet">CreateSet</a></td>
 </tr>
 <tr>
-<td width="25%"><a href="#decl_cvClearSet">ClearSet</a></td>
+<td width="25%"><a href="#decl_cvClipLine">ClipLine</a></td>
 <td width="25%"><a href="#decl_cvCountNonZero">CountNonZero</a></td>
 <td width="25%"><a href="#decl_cvCreateSparseMat">CreateSparseMat</a></td>
 </tr>
 <tr>
-<td width="25%"><a href="#decl_cvClone">Clone</a></td>
+<td width="25%"><a href="#decl_cvClipLine">ClipLine</a></td>
 <td width="25%"><a href="#decl_cvCreateChildMemStorage">CreateChildMemStorage</a></td>
 <td width="25%"><a href="#decl_cvCrossProduct">CrossProduct</a></td>
 </tr>
 <tr>
-<td width="25%"><a href="#decl_cvCloneGraph">CloneGraph</a></td>
+<td width="25%"><a href="#decl_cvClone">Clone</a></td>
 <td width="25%"><a href="#decl_cvCreateData">CreateData</a></td>
 <td width="25%"><a href="#decl_cvCvtSeqToArray">CvtSeqToArray</a></td>
 </tr>
 <tr>
-<td width="25%"><a href="#decl_cvCloneImage">CloneImage</a></td>
+<td width="25%"><a href="#decl_cvCloneGraph">CloneGraph</a></td>
 <td width="25%"><a href="#decl_cvCreateGraph">CreateGraph</a></td>
 <td width="25%%"></td>
 </tr>
@@ -6995,17 +7125,17 @@ process the data.</p>
 <table width="100%">
 <tr>
 <td width="25%"><a href="#decl_cvEigenVV">EigenVV</a></td>
+<td width="25%"><a href="#decl_cvEndWriteSeq">EndWriteSeq</a></td>
+<td width="25%"><a href="#decl_cvErrorStr">ErrorStr</a></td>
+</tr>
+<tr>
+<td width="25%"><a href="#decl_cvEllipse">Ellipse</a></td>
 <td width="25%"><a href="#decl_cvEndWriteStruct">EndWriteStruct</a></td>
 <td width="25%"><a href="#decl_cvExp">Exp</a></td>
 </tr>
 <tr>
-<td width="25%"><a href="#decl_cvEllipse">Ellipse</a></td>
+<td width="25%"><a href="#decl_cvEllipse2Poly">Ellipse2Poly</a></td>
 <td width="25%"><a href="#decl_cvError">Error</a></td>
-<td width="25%%"></td>
-</tr>
-<tr>
-<td width="25%"><a href="#decl_cvEndWriteSeq">EndWriteSeq</a></td>
-<td width="25%"><a href="#decl_cvErrorStr">ErrorStr</a></td>
 <td width="25%%"></td>
 </tr>
 </table>
@@ -7037,105 +7167,105 @@ process the data.</p>
 <tr>
 <td width="25%"><a href="#decl_cvGEMM">GEMM</a></td>
 <td width="25%"><a href="#decl_cvGetImageROI">GetImageROI</a></td>
-<td width="25%"><a href="#decl_cvGetTickFrequency">GetTickFrequency</a></td>
+<td width="25%"><a href="#decl_cvGetTickCount">GetTickCount</a></td>
 </tr>
 <tr>
 <td width="25%"><a href="#decl_cvGet*D">Get*D</a></td>
 <td width="25%"><a href="#decl_cvGetMat">GetMat</a></td>
-<td width="25%"><a href="#decl_cvGraphAddEdge">GraphAddEdge</a></td>
+<td width="25%"><a href="#decl_cvGetTickFrequency">GetTickFrequency</a></td>
 </tr>
 <tr>
 <td width="25%"><a href="#decl_cvGetCol">GetCol</a></td>
 <td width="25%"><a href="#decl_cvGetModuleInfo">GetModuleInfo</a></td>
-<td width="25%"><a href="#decl_cvGraphAddEdgeByPtr">GraphAddEdgeByPtr</a></td>
+<td width="25%"><a href="#decl_cvGraphAddEdge">GraphAddEdge</a></td>
 </tr>
 <tr>
 <td width="25%"><a href="#decl_cvGetDiag">GetDiag</a></td>
 <td width="25%"><a href="#decl_cvGetNextSparseNode">GetNextSparseNode</a></td>
-<td width="25%"><a href="#decl_cvGraphAddVtx">GraphAddVtx</a></td>
+<td width="25%"><a href="#decl_cvGraphAddEdgeByPtr">GraphAddEdgeByPtr</a></td>
 </tr>
 <tr>
 <td width="25%"><a href="#decl_cvGetDims">GetDims</a></td>
+<td width="25%"><a href="#decl_cvGetOptimalDFTSize">GetOptimalDFTSize</a></td>
+<td width="25%"><a href="#decl_cvGraphAddVtx">GraphAddVtx</a></td>
+</tr>
+<tr>
+<td width="25%"><a href="#decl_cvGetElemType">GetElemType</a></td>
 <td width="25%"><a href="#decl_cvGetRawData">GetRawData</a></td>
 <td width="25%"><a href="#decl_cvGraphEdgeIdx">GraphEdgeIdx</a></td>
 </tr>
 <tr>
-<td width="25%"><a href="#decl_cvGetElemType">GetElemType</a></td>
+<td width="25%"><a href="#decl_cvGetErrMode">GetErrMode</a></td>
 <td width="25%"><a href="#decl_cvGetReal*D">GetReal*D</a></td>
 <td width="25%"><a href="#decl_cvGraphRemoveEdge">GraphRemoveEdge</a></td>
 </tr>
 <tr>
-<td width="25%"><a href="#decl_cvGetErrMode">GetErrMode</a></td>
+<td width="25%"><a href="#decl_cvGetErrStatus">GetErrStatus</a></td>
 <td width="25%"><a href="#decl_cvGetRootFileNode">GetRootFileNode</a></td>
 <td width="25%"><a href="#decl_cvGraphRemoveEdgeByPtr">GraphRemoveEdgeByPtr</a></td>
 </tr>
 <tr>
-<td width="25%"><a href="#decl_cvGetErrStatus">GetErrStatus</a></td>
+<td width="25%"><a href="#decl_cvGetFileNode">GetFileNode</a></td>
 <td width="25%"><a href="#decl_cvGetRow">GetRow</a></td>
 <td width="25%"><a href="#decl_cvGraphRemoveVtx">GraphRemoveVtx</a></td>
 </tr>
 <tr>
-<td width="25%"><a href="#decl_cvGetFileNode">GetFileNode</a></td>
+<td width="25%"><a href="#decl_cvGetFileNodeByName">GetFileNodeByName</a></td>
 <td width="25%"><a href="#decl_cvGetSeqElem">GetSeqElem</a></td>
 <td width="25%"><a href="#decl_cvGraphRemoveVtxByPtr">GraphRemoveVtxByPtr</a></td>
 </tr>
 <tr>
-<td width="25%"><a href="#decl_cvGetFileNodeByName">GetFileNodeByName</a></td>
+<td width="25%"><a href="#decl_cvGetFileNodeName">GetFileNodeName</a></td>
 <td width="25%"><a href="#decl_cvGetSeqReaderPos">GetSeqReaderPos</a></td>
 <td width="25%"><a href="#decl_cvGraphVtxDegree">GraphVtxDegree</a></td>
 </tr>
 <tr>
-<td width="25%"><a href="#decl_cvGetFileNodeName">GetFileNodeName</a></td>
+<td width="25%"><a href="#decl_cvGetGraphVtx">GetGraphVtx</a></td>
 <td width="25%"><a href="#decl_cvGetSetElem">GetSetElem</a></td>
 <td width="25%"><a href="#decl_cvGraphVtxDegreeByPtr">GraphVtxDegreeByPtr</a></td>
 </tr>
 <tr>
-<td width="25%"><a href="#decl_cvGetGraphVtx">GetGraphVtx</a></td>
+<td width="25%"><a href="#decl_cvGetHashedKey">GetHashedKey</a></td>
 <td width="25%"><a href="#decl_cvGetSize">GetSize</a></td>
 <td width="25%"><a href="#decl_cvGraphVtxIdx">GraphVtxIdx</a></td>
 </tr>
 <tr>
-<td width="25%"><a href="#decl_cvGetHashedKey">GetHashedKey</a></td>
+<td width="25%"><a href="#decl_cvGetImage">GetImage</a></td>
 <td width="25%"><a href="#decl_cvGetSubRect">GetSubRect</a></td>
 <td width="25%"><a href="#decl_cvGuiBoxReport">GuiBoxReport</a></td>
 </tr>
 <tr>
-<td width="25%"><a href="#decl_cvGetImage">GetImage</a></td>
+<td width="25%"><a href="#decl_cvGetImageCOI">GetImageCOI</a></td>
 <td width="25%"><a href="#decl_cvGetTextSize">GetTextSize</a></td>
 <td width="25%"><a href="#decl_cvmGet">Get</a></td>
-</tr>
-<tr>
-<td width="25%"><a href="#decl_cvGetImageCOI">GetImageCOI</a></td>
-<td width="25%"><a href="#decl_cvGetTickCount">GetTickCount</a></td>
-<td width="25%%"></td>
 </tr>
 </table>
 <hr><h3>I</h3>
 <table width="100%">
 <tr>
 <td width="25%"><a href="#decl_cvInRange">InRange</a></td>
+<td width="25%"><a href="#decl_cvInitLineIterator">InitLineIterator</a></td>
+<td width="25%"><a href="#decl_cvInsertNodeIntoTree">InsertNodeIntoTree</a></td>
+</tr>
+<tr>
+<td width="25%"><a href="#decl_cvInRangeS">InRangeS</a></td>
 <td width="25%"><a href="#decl_cvInitMatHeader">InitMatHeader</a></td>
 <td width="25%"><a href="#decl_cvInvSqrt">InvSqrt</a></td>
 </tr>
 <tr>
-<td width="25%"><a href="#decl_cvInRangeS">InRangeS</a></td>
+<td width="25%"><a href="#decl_cvIncRefData">IncRefData</a></td>
 <td width="25%"><a href="#decl_cvInitMatNDHeader">InitMatNDHeader</a></td>
 <td width="25%"><a href="#decl_cvInvert">Invert</a></td>
 </tr>
 <tr>
-<td width="25%"><a href="#decl_cvIncRefData">IncRefData</a></td>
+<td width="25%"><a href="#decl_cvInitFont">InitFont</a></td>
 <td width="25%"><a href="#decl_cvInitSparseMatIterator">InitSparseMatIterator</a></td>
 <td width="25%"><a href="#decl_cvIsInf">IsInf</a></td>
 </tr>
 <tr>
-<td width="25%"><a href="#decl_cvInitFont">InitFont</a></td>
+<td width="25%"><a href="#decl_cvInitImageHeader">InitImageHeader</a></td>
 <td width="25%"><a href="#decl_cvInitTreeNodeIterator">InitTreeNodeIterator</a></td>
 <td width="25%"><a href="#decl_cvIsNaN">IsNaN</a></td>
-</tr>
-<tr>
-<td width="25%"><a href="#decl_cvInitImageHeader">InitImageHeader</a></td>
-<td width="25%"><a href="#decl_cvInsertNodeIntoTree">InsertNodeIntoTree</a></td>
-<td width="25%%"></td>
 </tr>
 </table>
 <hr><h3>K</h3>
@@ -7304,37 +7434,37 @@ process the data.</p>
 <tr>
 <td width="25%"><a href="#decl_cvSave">Save</a></td>
 <td width="25%"><a href="#decl_cvSet">Set</a></td>
-<td width="25%"><a href="#decl_cvSplit">Split</a></td>
+<td width="25%"><a href="#decl_cvSolveCubic">SolveCubic</a></td>
 </tr>
 <tr>
 <td width="25%"><a href="#decl_cvSaveMemStoragePos">SaveMemStoragePos</a></td>
 <td width="25%"><a href="#decl_cvSet*D">Set*D</a></td>
-<td width="25%"><a href="#decl_cvSqrt">Sqrt</a></td>
+<td width="25%"><a href="#decl_cvSplit">Split</a></td>
 </tr>
 <tr>
 <td width="25%"><a href="#decl_cvScaleAdd">ScaleAdd</a></td>
 <td width="25%"><a href="#decl_cvSetAdd">SetAdd</a></td>
-<td width="25%"><a href="#decl_cvStartAppendToSeq">StartAppendToSeq</a></td>
+<td width="25%"><a href="#decl_cvSqrt">Sqrt</a></td>
 </tr>
 <tr>
 <td width="25%"><a href="#decl_cvSeqElemIdx">SeqElemIdx</a></td>
 <td width="25%"><a href="#decl_cvSetData">SetData</a></td>
-<td width="25%"><a href="#decl_cvStartNextStream">StartNextStream</a></td>
+<td width="25%"><a href="#decl_cvStartAppendToSeq">StartAppendToSeq</a></td>
 </tr>
 <tr>
 <td width="25%"><a href="#decl_cvSeqInsert">SeqInsert</a></td>
 <td width="25%"><a href="#decl_cvSetErrMode">SetErrMode</a></td>
-<td width="25%"><a href="#decl_cvStartReadRawData">StartReadRawData</a></td>
+<td width="25%"><a href="#decl_cvStartNextStream">StartNextStream</a></td>
 </tr>
 <tr>
 <td width="25%"><a href="#decl_cvSeqInsertSlice">SeqInsertSlice</a></td>
 <td width="25%"><a href="#decl_cvSetErrStatus">SetErrStatus</a></td>
-<td width="25%"><a href="#decl_cvStartReadSeq">StartReadSeq</a></td>
+<td width="25%"><a href="#decl_cvStartReadRawData">StartReadRawData</a></td>
 </tr>
 <tr>
 <td width="25%"><a href="#decl_cvSeqInvert">SeqInvert</a></td>
 <td width="25%"><a href="#decl_cvSetIPLAllocators">SetIPLAllocators</a></td>
-<td width="25%"><a href="#decl_cvCreateGraphScanner">CreateGraphScanner</a></td>
+<td width="25%"><a href="#decl_cvStartReadSeq">StartReadSeq</a></td>
 </tr>
 <tr>
 <td width="25%"><a href="#decl_cvSeqPartition">SeqPartition</a></td>
