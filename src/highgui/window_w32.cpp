@@ -273,9 +273,9 @@ icvLoadWindowPos( const char* name )
         RegQueryValueEx(hkey, "Left", NULL, &dwType, (BYTE*)&pos.x, &dwSize);
         RegQueryValueEx(hkey, "Top", NULL, &dwType, (BYTE*)&pos.y, &dwSize);
 
-        if( pos.x != CW_USEDEFAULT && (pos.x < -200 || pos.x > 3000) )
+        if( pos.x != (int)CW_USEDEFAULT && (pos.x < -200 || pos.x > 3000) )
             pos.x = 100;
-        if( pos.y != CW_USEDEFAULT && (pos.y < -200 || pos.y > 3000) )
+        if( pos.y != (int)CW_USEDEFAULT && (pos.y < -200 || pos.y > 3000) )
             pos.y = 100;
 
         RegCloseKey(hkey);
@@ -1247,6 +1247,9 @@ cvCreateTrackbar( const char* trackbar_name, const char* window_name,
         tbs.fsStyle = 0;
         tbs.iString = 0;
 #else
+#ifndef TBSTYLE_AUTOSIZE
+#define TBSTYLE_AUTOSIZE        0x0010
+#endif
         tbs.fsStyle = TBSTYLE_AUTOSIZE;
         tbs.iString = (INT_PTR)trackbar_text;
 #endif
