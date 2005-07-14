@@ -202,7 +202,7 @@
 
 #define  CV_ZERO_OBJ(x)  memset((x), 0, sizeof(*(x)))
 
-#define  CV_DIM(static_array) (sizeof(static_array)/sizeof((static_array)[0]))
+#define  CV_DIM(static_array) ((int)(sizeof(static_array)/sizeof((static_array)[0])))
 
 #define  CV_UN_ENTRY_C1(worktype)           \
     worktype s0 = scalar[0]
