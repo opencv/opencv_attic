@@ -174,7 +174,7 @@ cvPointPolygonTest( const CvArr* _contour, CvPoint2D32f pt, int measure_dist )
     CvSeqReader reader;
     int i, total, counter = 0;
     int is_float;
-    double min_dist_num = DBL_MAX, min_dist_denom = 1;
+    double min_dist_num = FLT_MAX, min_dist_denom = 1;
     CvPoint ip = {0,0};
 
     if( !CV_IS_SEQ(contour) )
@@ -310,7 +310,7 @@ cvPointPolygonTest( const CvArr* _contour, CvPoint2D32f pt, int measure_dist )
         
                 if( dx1*dx + dy1*dy <= 0 )
                     dist_num = dx1*dx1 + dy1*dy1;
-                else if( -dx2*dx - dy2*dy <= 0 )
+                else if( dx2*dx + dy2*dy >= 0 )
                     dist_num = dx2*dx2 + dy2*dy2;
                 else
                 {
