@@ -146,7 +146,7 @@ cvGoodFeaturesToTrack( const void* image, void* eigImage, void* tempImage,
     {
         CV_CALL( cvCornerMinEigenVal( img, eig, block_size, 3 ));
     }
-    CV_CALL( cvMinMaxLoc( eig, 0, &max_val, 0, 0 ));
+    CV_CALL( cvMinMaxLoc( eig, 0, &max_val, 0, 0, mask ));
     CV_CALL( cvThreshold( eig, eig, max_val * quality_level,
                           0, CV_THRESH_TOZERO ));
     CV_CALL( cvDilate( eig, tmp ));
