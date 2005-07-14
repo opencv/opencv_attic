@@ -53,7 +53,7 @@ static CvPluginFuncInfo cv_ipp_tab[] =
     {0, 0, 0, 0, 0}
 };
 
-static CvModuleInfo cv_module = { 0, "cv", "beta 4.1 (0.9.7)", cv_ipp_tab };
+static CvModuleInfo cv_module = { 0, "cv", "beta 5 (0.9.7)", cv_ipp_tab };
 static int loaded_functions = cvRegisterModule( &cv_module );
 
 /* End of file. */
