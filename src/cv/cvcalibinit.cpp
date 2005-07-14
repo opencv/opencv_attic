@@ -40,8 +40,9 @@
 //M*/
 
 /************************************************************************************\
-    This is improved variant of chessboard corner detection algorithm that uses
-    a graph of connected quads as in the code contributed by Vladimir Vezhnevets.
+    This is improved variant of chessboard corner detection algorithm that
+    uses a graph of connected quads. It is based on the code contributed
+    by Vladimir Vezhnevets and Philip Gruebele.
     Here is the copyright notice from the original Vladimir's code:
     ===============================================================
 
