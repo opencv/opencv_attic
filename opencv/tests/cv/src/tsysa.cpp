@@ -48,7 +48,6 @@ void InitACanny();
 void InitAChessCorners();
 void InitAConDens();
 void InitAContours();
-void InitAConvexHull();
 void InitADistanceTransform();
 void InitAEMD();
 void InitAFitEllipse();
@@ -64,7 +63,6 @@ void InitAImageToHMMObs();
 void InitAKalman();
 void InitAKMeans();
 void InitAMeanShift();
-void InitAMinAreaRect();
 void InitAMotSeg();
 void InitAOptFlowPyrLK();
 void InitAPixelAccess();
@@ -112,7 +110,6 @@ int main(int argC,char *argV[])
     InitAConDens();
     InitAContours();
     InitAContourMoments();
-    InitAConvexHull();
     InitACreateContourTree();
     InitAEigenObjects();
     InitAEMD();
@@ -129,7 +126,6 @@ int main(int argC,char *argV[])
     InitAMatchContours();
     InitAMatchContourTrees();
     InitAMeanShift();
-    InitAMinAreaRect();
     // InitAMotSeg(); // test is not up-to-date
     InitAOptFlowPyrLK();
     InitAPixelAccess();
