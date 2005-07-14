@@ -11,6 +11,7 @@
 <li><a href="#highgui_loadsave">Loading and Saving Images</a>
 <li><a href="#highgui_video">Video I/O</a>
 <li><a href="#highgui_utils">Utility and System Functions</a>
+<li><a href="#highgui_func_index">Alphabetical List of Functions</a>
 </ul>
 
 
@@ -264,11 +265,6 @@ Currently the following file formats are supported:
 <li>TIFF files - TIFF, TIF.
 </ul>
 </p>
-<!-- <p>
-If &quot;filename&quot; does not contain full path, the file is searched in the
-current directory and in directories specified by <a href="#decl_cvAddSearchPath">cvAddSearchPath</a>
-</p> -->
-
 
 <hr><h3><a name="decl_cvSaveImage">cvSaveImage</a></h3>
 <p class="Blurb">Saves an image to the file</p>
@@ -279,7 +275,10 @@ int cvSaveImage( const char* filename, const CvArr* image );
 <dt>image<dd>Image to be saved.
 </dl><p>
 The function <code>cvSaveImage</code>
-saves the image to the specified file. Only 8-bit single-channel or 3-channel
+saves the image to the specified file.
+The image format is chosen depending on the <code>filename</code> extension, see
+<a href="#decl_cvLoadImage">cvLoadImage</a>.
+Only 8-bit single-channel or 3-channel
 (with &#39;BGR&#39; channel order) images can be saved using this function.
 If the format, depth or channel order is different, use <code>cvCvtScale</code>
 and <code>cvCvtColor</code> to convert it before saving, or use
@@ -440,7 +439,7 @@ video files: <code>CV_CAP_PROP_POS_MSEC, CV_CAP_PROP_POS_FRAMES, CV_CAP_PROP_POS
 <p class="Blurb">Creates video file writer</p>
 <pre>
 typedef struct CvVideoWriter CvVideoWriter;
-CvVideoWriter* cvCreateVideoWriter( const char* filename, int fourcc, double fps, CvSize frame_size );
+CvVideoWriter* cvCreateVideoWriter( const char* filename, int fourcc, double fps, CvSize frame_size, int is_color=1 );
 </pre><dl>
 <dt>filename<dd>Name of the output video file.
 <dt>fourcc<dd>4-character code of codec used to compress the frames.
@@ -451,11 +450,12 @@ CvVideoWriter* cvCreateVideoWriter( const char* filename, int fourcc, double fps
               from dialog.
 <dt>fps<dd>Framerate of the created video stream.
 <dt>frame_size<dd>Size of video frames.
+<dt>is_color<dd>If it is not zero, the encoder will expect and encode color frames, otherwise it will work
+with grayscale frames (the flag is currently supported on Windows only).
 </dl><p>
 The function <code>cvCreateVideoWriter</code>
 creates video writer structure.
 </p>
-<p><b>NOTE</b>: Writing to video files is currently implemented only on Win32</p>
 
 <hr><h3><a name="decl_cvReleaseVideoWriter">cvReleaseVideoWriter</a></h3>
 <p class="Blurb">Releases AVI writer</p>
@@ -500,20 +500,6 @@ be used to customize a look of HighGUI windows and controls.
 </p>
 
 
-<!-- <hr><h3><a name="decl_cvAddSearchPath">cvAddSearchPath</a></h3>
-<p class="Blurb">Adds the specified path to the list of search
-paths;</p>
-<pre>/* add folder to the image search path (used by cvLoadImage) */
-void cvAddSearchPath( const char* path );</pre>
-  <dl>
-<dt>path<dd>Path to add to the search list.
-</dl><p>
-The function <code>cvAddSearchPath</code>
-adds the specified folder to the search path list. The search path list is used
-by <a href="#decl_cvLoadImage">cvLoadImage</a> function.
-</p> -->
-
-
 <hr><h3><a name="decl_cvConvertImage">cvConvertImage</a></h3>
 <p class="Blurb">Converts one image to another with optional vertical flip</p>
 <pre>
@@ -533,6 +519,117 @@ void cvConvertImage( const CvArr* src, CvArr* dst, int flags=0 );
 The function <code>cvConvertImage</code>
 converts one image to another and flips the result vertically if required.
 The function is used by <a href="#decl_cvShowImage">cvShowImage</a>.</p>
+
+<hr><h1><a name="highgui_func_index">Alphabetical List of Functions</a></h1>
+
+<hr><h3>C</h3>
+<table width="100%">
+<tr>
+<td width="25%"><a href="#decl_cvCaptureFromCAM">CaptureFromCAM</a></td>
+<td width="25%"><a href="#decl_cvConvertImage">ConvertImage</a></td>
+<td width="25%"><a href="#decl_cvCreateVideoWriter">CreateVideoWriter</a></td>
+</tr>
+<tr>
+<td width="25%"><a href="#decl_cvCaptureFromFile">CaptureFromFile</a></td>
+<td width="25%"><a href="#decl_cvCreateTrackbar">CreateTrackbar</a></td>
+<td width="25%%"></td>
+</tr>
+</table>
+<hr><h3>D</h3>
+<table width="100%">
+<tr>
+<td width="25%"><a href="#decl_cvDestroyAllWindows">DestroyAllWindows</a></td>
+<td width="25%"><a href="#decl_cvDestroyWindow">DestroyWindow</a></td>
+<td width="25%%"></td>
+</tr>
+</table>
+<hr><h3>G</h3>
+<table width="100%">
+<tr>
+<td width="25%"><a href="#decl_cvGetCaptureProperty">GetCaptureProperty</a></td>
+<td width="25%"><a href="#decl_cvGetWindowHandle">GetWindowHandle</a></td>
+<td width="25%"><a href="#decl_cvGrabFrame">GrabFrame</a></td>
+</tr>
+<tr>
+<td width="25%"><a href="#decl_cvGetTrackbarPos">GetTrackbarPos</a></td>
+<td width="25%"><a href="#decl_cvGetWindowName">GetWindowName</a></td>
+<td width="25%%"></td>
+</tr>
+</table>
+<hr><h3>I</h3>
+<table width="100%">
+<tr>
+<td width="25%"><a href="#decl_cvInitSystem">InitSystem</a></td>
+<td width="25%%"></td>
+<td width="25%%"></td>
+</tr>
+</table>
+<hr><h3>L</h3>
+<table width="100%">
+<tr>
+<td width="25%"><a href="#decl_cvLoadImage">LoadImage</a></td>
+<td width="25%%"></td>
+<td width="25%%"></td>
+</tr>
+</table>
+<hr><h3>M</h3>
+<table width="100%">
+<tr>
+<td width="25%"><a href="#decl_cvMoveWindow">MoveWindow</a></td>
+<td width="25%%"></td>
+<td width="25%%"></td>
+</tr>
+</table>
+<hr><h3>N</h3>
+<table width="100%">
+<tr>
+<td width="25%"><a href="#decl_cvNamedWindow">NamedWindow</a></td>
+<td width="25%%"></td>
+<td width="25%%"></td>
+</tr>
+</table>
+<hr><h3>Q</h3>
+<table width="100%">
+<tr>
+<td width="25%"><a href="#decl_cvQueryFrame">QueryFrame</a></td>
+<td width="25%%"></td>
+<td width="25%%"></td>
+</tr>
+</table>
+<hr><h3>R</h3>
+<table width="100%">
+<tr>
+<td width="25%"><a href="#decl_cvReleaseCapture">ReleaseCapture</a></td>
+<td width="25%"><a href="#decl_cvResizeWindow">ResizeWindow</a></td>
+<td width="25%%"></td>
+</tr>
+<tr>
+<td width="25%"><a href="#decl_cvReleaseVideoWriter">ReleaseVideoWriter</a></td>
+<td width="25%"><a href="#decl_cvRetrieveFrame">RetrieveFrame</a></td>
+<td width="25%%"></td>
+</tr>
+</table>
+<hr><h3>S</h3>
+<table width="100%">
+<tr>
+<td width="25%"><a href="#decl_cvSaveImage">SaveImage</a></td>
+<td width="25%"><a href="#decl_cvSetMouseCallback">SetMouseCallback</a></td>
+<td width="25%"><a href="#decl_cvShowImage">ShowImage</a></td>
+</tr>
+<tr>
+<td width="25%"><a href="#decl_cvSetCaptureProperty">SetCaptureProperty</a></td>
+<td width="25%"><a href="#decl_cvSetTrackbarPos">SetTrackbarPos</a></td>
+<td width="25%%"></td>
+</tr>
+</table>
+<hr><h3>W</h3>
+<table width="100%">
+<tr>
+<td width="25%"><a href="#decl_cvWaitKey">WaitKey</a></td>
+<td width="25%"><a href="#decl_cvWriteFrame">WriteFrame</a></td>
+<td width="25%%"></td>
+</tr>
+</table>
 
 </body>
 </html>
