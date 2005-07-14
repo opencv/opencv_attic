@@ -307,12 +307,11 @@ icvUpdateFGDStatModel( IplImage* curr_frame, CvFGDStatModel*  model )
     cvChangeDetection( prev_frame, curr_frame, model->Ftd );
     cvChangeDetection( model->background, curr_frame, model->Fbd );
 
-
-   for( i = 0; i < model->Ftd->height; i++ )
-   {
+    for( i = 0; i < model->Ftd->height; i++ )
+    {
         for( j = 0; j < model->Ftd->width; j++ )
         {
-            if( (uchar*)model->Fbd->imageData[i*mask_step+j] || (uchar*)model->Ftd->imageData[i*mask_step+j] )
+            if( ((uchar*)model->Fbd->imageData)[i*mask_step+j] || ((uchar*)model->Ftd->imageData)[i*mask_step+j] )
             {
                 float Pb=0, Pv=0, Pvb=0;
                 CvBGPixelStat* stat = model->pixel_stat + i * model->Ftd->width + j;
