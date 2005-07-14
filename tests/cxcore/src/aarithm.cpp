@@ -1020,14 +1020,14 @@ protected:
     void prepare_to_validation( int test_case_idx );
     int write_default_params( CvFileStorage* fs );
     bool are_images;
-    int coi, is_split;
+    int is_split, coi; 
     void* hdrs[4];
 };
 
 
 CxCore_SplitMergeBaseTest::CxCore_SplitMergeBaseTest( const char* test_name,
     const char* test_funcs, int _is_split )
-    : CxCore_MemTest( test_name, test_funcs, 0, false ), is_split(_is_split), are_images(false), coi(0)
+    : CxCore_MemTest( test_name, test_funcs, 0, false ), are_images(false), is_split(_is_split), coi(0)
 {
     test_array[INPUT].pop();
     if( is_split )

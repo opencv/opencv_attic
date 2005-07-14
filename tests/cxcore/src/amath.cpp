@@ -2290,7 +2290,7 @@ protected:
 
 
 CxCore_InvertTest::CxCore_InvertTest() :
-    CxCore_MatrixTest( "matrix-invert", "cvInvert, cvSVD, cvSVBkSb", 1, 1, false, false, 1 ), method(0), result(0.), rank(0)
+    CxCore_MatrixTest( "matrix-invert", "cvInvert, cvSVD, cvSVBkSb", 1, 1, false, false, 1 ), method(0), rank(0), result(0.)
 {
     test_case_count = 100;
     max_log_array_size = 7;
@@ -2481,7 +2481,7 @@ protected:
 
 
 CxCore_SolveTest::CxCore_SolveTest() :
-    CxCore_MatrixTest( "matrix-solve", "cvSolve, cvSVD, cvSVBkSb", 2, 1, false, false, 1 ), method(0), result(0.), rank(0)
+    CxCore_MatrixTest( "matrix-solve", "cvSolve, cvSVD, cvSVBkSb", 2, 1, false, false, 1 ), method(0), rank(0), result(0.)
 {
     test_case_count = 100;
     max_log_array_size = 7;

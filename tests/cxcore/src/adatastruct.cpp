@@ -1098,7 +1098,7 @@ void CxCore_SeqBaseTest::run( int )
     int i;
     double t;
 
-    CV_FUNCNAME( "CxCore_SeqBaseTest::run" );
+    //CV_FUNCNAME( "CxCore_SeqBaseTest::run" );
 
     __BEGIN__;
 
@@ -1554,7 +1554,7 @@ void CxCore_SetTest::run( int )
             int pure_elem_size = cvRound( exp(t * CV_LOG2) );
             int elem_size = pure_elem_size + sizeof(int);
             elem_size = (elem_size + sizeof(size_t) - 1) & ~(sizeof(size_t)-1);
-            elem_size = MAX( elem_size, sizeof(CvSetElem) );
+            elem_size = MAX( elem_size, (int)sizeof(CvSetElem) );
             elem_size = MIN( elem_size, (int)(storage->block_size - sizeof(void*) - sizeof(CvMemBlock) - sizeof(CvSeqBlock)) );
             pure_elem_size = MIN( pure_elem_size, elem_size-(int)sizeof(CvSetElem) );
             
