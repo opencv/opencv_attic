@@ -169,11 +169,11 @@ Linux
    Now build OpenCV:  
    ======
    
-   a) if your distribution uses RPM, you may build RPMs via:
-         rpmbuild -ta OpenCV-x.y.z.tar.gz" (for RH 8.x) or
-         rpm -ta OpenCV-x.y.z.tar.gz" (for others)
+   a) if your distribution uses RPM, you may build RPMs using:
+         rpmbuild -ta OpenCV-x.y.z.tar.gz (for RPM 4.x or later) or
+         rpm -ta OpenCV-x.y.z.tar.gz" (for eariler versions of RPM)
       where OpenCV-x.y.z.tar.gz should be put to /usr/src/redhat/SOURCES/ or
-      similar folder  
+      similar directory  
 
       it will build OpenCV-x.y.z.*.rpm (there is no OpenCV-devel,
       everything is in one package)
@@ -232,5 +232,21 @@ Linux
      g++ `pkg-config --cflags opencv` -o morphology morphology.c `pkg-config --libs opencv`
      Plain gcc won't work because of unresolved c++-specific symbols (located in highgui?)
    
+   How to make OpenCV use IPP:
+   =======
 
+   + install IPP.
+     Let's assume, it installs to /opt/intel/ipp/4.1/ia32.
    
+   + add <install_path>/bin and <install_path>/bin/linux32
+     (for example, /opt/intel/ipp/4.1/ia32/bin and /opt/intel/ipp/4.1/ia32/bin/linux32)
+     to LD_LIBRARY_PATH in your initialization script (.bashrc or similar):
+
+     LD_LIBRARY_PATH=/opt/intel/ipp/4.1/ia32/bin:/opt/intel/ipp/4.1/ia32/bin/linux32:$LD_LIBRARY_PATH
+     export LD_LIBRARY_PATH
+
+     or add these two directories, one per line, to /etc/ld.so.conf and run
+     ldconfig as root.
+
+   + that's it. Now OpenCV should be able to locate IPP shared libraries and make use of them.
+
