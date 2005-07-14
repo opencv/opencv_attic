@@ -380,14 +380,13 @@ cvMinEnclosingCircle( const void* array, CvPoint2D32f * _center, float *_radius 
     for( k = 0; k < max_iters; k++ )
     {
         double min_delta = 0, delta;
+        CvPoint2D32f ptfl;
         
         icvFindEnslosingCicle4pts_32f( pts, &center, &radius );
         cvStartReadSeq( sequence, &reader, 0 );
 
         for( i = 0; i < count; i++ )
         {
-            CvPoint2D32f ptfl;
-
             if( !is_float )
             {
                 ptfl.x = (float)((CvPoint*)reader.ptr)->x;
@@ -402,14 +401,44 @@ cvMinEnclosingCircle( const void* array, CvPoint2D32f * _center, float *_radius 
             delta = icvIsPtInCircle( ptfl, center, radius );
             if( delta < min_delta )
             {
-                pts[3] = ptfl;
                 min_delta = delta;
-                //break;
+                pts[3] = ptfl;
             }
         }
         result = min_delta >= 0;
         if( result )
             break;
+    }
+
+    if( !result )
+    {
+        cvStartReadSeq( sequence, &reader, 0 );
+        radius = 0.f;
+
+        for( i = 0; i < count; i++ )
+        {
+            CvPoint2D32f ptfl;
+            float t, dx, dy;
+
+            if( !is_float )
+            {
+                ptfl.x = (float)((CvPoint*)reader.ptr)->x;
+                ptfl.y = (float)((CvPoint*)reader.ptr)->y;
+            }
+            else
+            {
+                ptfl = *(CvPoint2D32f*)reader.ptr;
+            }
+
+            CV_NEXT_SEQ_ELEM( sequence->elem_size, reader );
+            dx = center.x - ptfl.x;
+            dy = center.y - ptfl.y;
+            t = dx*dx + dy*dy;
+            radius = MAX(radius,t);
+        }
+
+        radius = (float)sqrt(radius);
+        result = 1;
     }
 
     __END__;
