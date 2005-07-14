@@ -4,8 +4,10 @@ OpenCV authors and major code algorithm/code contributors.
 Name                    Company (by the moment     Remarks
                         of contribution)
 
+Asbach, Mark            ???                        New-style Linux makefiles, SWIG wrappers
 Abrosimov, Dmitry       Intel Corp.                Optimization, Eigen objects
 Bradski, Gary           Intel Corp.                Idea and Vision, Leading, CAMSHIFT & MHI algorithms and more ...
+Bornet, Olivier         ???                        New-style Linux makefiles, SWIG & specialized Python wrappers 
 Bouguet, Jean-Yves      Intel Corp.                Algorithms for Camera calibration, calibration toolbox for MATLAB,
                                                    and LK in pyramids
 Bovyrin, Alexander      Intel Corp.                Contours, Stereo 
@@ -14,7 +16,6 @@ Cherepanova, Tatiana    Novosibirsk University     Face tracking
 Cherepennikov, Valery   Intel Corp.                Optimization, matrices, estimators (Kalman, ConDensation) and more ...
 Chudinovich, Boris      Intel Corp.                Ideas and algorithms on contours and comp. geometry functions
 Cowperthwaite, David    Intel Corp.                3d Tracker
-Cox, Cory               Intel Corp.                3d Tracker
 Davies, Bob             Intel Corp.                First OpenCV installation program, communications with user group, tech. advisor
 Eaton, Daniel           ???                        Texture descriptors code
 Eruhimov, Victor        Intel Corp.                Hough & distance transforms, stereo, Hawk, HighGUI and more ...
@@ -22,11 +23,11 @@ Grachev, Ilya           Intel Corp.                TCL/TK demos (cvlkdemo, cvcsd
 Khudyakov, Vasily       Novosibirsk University     Face feature detection
 Kuranov, Alexander      Intel Corp.                Matlab wrappers, Face detection code, haartraining and related applications 
 Kuriakin, Valery        Intel Corp.                Started OpenCV project in Nizhny Novrogod Lab
-Lantz, Philip           Intel Corp.                3d Tracker
 Lienhart, Rainer        Intel Corp.                Haar feature-based face detection algorithm and the original code
+Lantz, Philip           Intel Corp.                3d Tracker
 Molinov, Sergey         Intel Corp.                HMM face recognition code, POSIT, snakes, optical flow, stereo and more ...
 Mosyagin, Valery        Intel Corp.                View morphing, camera calibration code (C),
-                                                   fundamental matrices estimation
+                                                   fundamental matrix estimation
 Nefian, Ara             Intel Corp.                Algorithm for HMM face recognition
 Oblomov, Sergey         Intel Corp.                Camshift and histogram code, linux scripts and makefiles, optimization and more ...
 Pisarevsky, Vadim       Intel Corp.                OpenCV hacker :)
