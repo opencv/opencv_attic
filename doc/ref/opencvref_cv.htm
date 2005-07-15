@@ -1382,8 +1382,8 @@ from grayscale, one may use <a href="#decl_cvThreshold">cvThreshold</a>, <a href
 The function modifies the source image content.
 <dt>storage<dd>Container of the retrieved contours.
 <dt>first_contour<dd>Output parameter, will contain the pointer to the first outer contour.
-<dt>header_size<dd>Size of the sequence header, >=sizeof(<a href="#decl_CvChain">CvChain</a>) if <code>method</code>=CV_CHAIN_CODE,
-                  and >=sizeof(CvContour) otherwise.
+<dt>header_size<dd>Size of the sequence header, &gt;=sizeof(<a href="#decl_CvChain">CvChain</a>) if <code>method</code>=CV_CHAIN_CODE,
+                  and &gt;=sizeof(CvContour) otherwise.
 <dt>mode<dd>Retrieval mode.
 <ul>
 <li><code>CV_RETR_EXTERNAL</code> - retrive only the extreme outer contours
@@ -1432,8 +1432,8 @@ CvContourScanner cvStartFindContours( CvArr* image, CvMemStorage* storage,
 </pre><p><dl>
 <dt>image<dd>The source 8-bit single channel binary image.
 <dt>storage<dd>Container of the retrieved contours.
-<dt>header_size<dd>Size of the sequence header, >=sizeof(<a href="#decl_CvChain">CvChain</a>) if <code>method</code>=CV_CHAIN_CODE,
-                  and >=sizeof(CvContour) otherwise.
+<dt>header_size<dd>Size of the sequence header, &gt;=sizeof(<a href="#decl_CvChain">CvChain</a>) if <code>method</code>=CV_CHAIN_CODE,
+                  and &gt;=sizeof(CvContour) otherwise.
 <dt>mode<dd>Retrieval mode; see <a href="#decl_cvFindContours">cvFindContours</a>.
 <dt>method<dd>Approximation method. It has the same meaning as in <a href="#decl_cvFindContours">cvFindContours</a>,
 but CV_LINK_RUNS can not be used here.
@@ -1853,21 +1853,15 @@ Thus, the function provides a very fast way to compute approximate Voronoi diagr
 <hr><h3><a name="decl_CvHistogram">CvHistogram</a></h3>
 <p class="Blurb">Muti-dimensional histogram</p>
 <pre>
-    typedef struct CvHistogram
-    {
-        int header_size; /* header&#146;s size */
-        CvHistType type; /* type of histogram */
-        int flags; /* histogram flags */
-        int c_dims; /* the histogram dimensionality */
-        int dims[CV_HIST_MAX_DIM]; /* every dimension size */
-        int mdims[CV_HIST_MAX_DIM]; /* coefficients for fast access to element */
-        /* &m[a,b,c] = m + a*mdims[0] + b*mdims[1] + c*mdims[2] */
-        float* thresh[CV_HIST_MAX_DIM]; /* bin boundaries arrays for every dimension */
-        float* array; /* all the histogram data, expanded into the single row */
-    struct CvNode* root; /* root of balanced tree storing histogram bins */
-        CvSet* set; /* pointer to memory storage (for the balanced tree) */
-        int* chdims[CV_HIST_MAX_DIM]; /* cache data for fast calculating */
-    } CvHistogram;
+typedef struct CvHistogram
+{
+    int     type;
+    CvArr*  bins;
+    float   thresh[CV_MAX_DIM][2]; /* for uniform histograms */
+    float** thresh2; /* for non-uniform histograms */
+    CvMatND mat; /* embedded matrix header for array histograms */
+}
+CvHistogram;
 </pre>
 
 <hr><h3><a name="decl_cvCreateHist">CreateHist</a></h3>
