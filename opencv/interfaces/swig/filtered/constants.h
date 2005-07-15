@@ -806,11 +806,13 @@
 
 #define CV_COUNTER_CLOCKWISE 2
 
-#define CV_COMP_CORREL      0
+#define CV_COMP_CORREL        0
 
-#define CV_COMP_CHISQR      1
+#define CV_COMP_CHISQR        1
 
-#define CV_COMP_INTERSECT   2
+#define CV_COMP_INTERSECT     2
+
+#define CV_COMP_BHATTACHARYYA 3
 
 #define  CV_VALUE  1
 

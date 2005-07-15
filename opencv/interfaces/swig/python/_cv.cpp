@@ -47326,6 +47326,9 @@ SWIGEXPORT(void) SWIG_init(void) {
         PyDict_SetItemString(d,"CV_COMP_INTERSECT", SWIG_From_int((int)(2))); 
     }
     {
+        PyDict_SetItemString(d,"CV_COMP_BHATTACHARYYA", SWIG_From_int((int)(3))); 
+    }
+    {
         PyDict_SetItemString(d,"CV_VALUE", SWIG_From_int((int)(1))); 
     }
     {

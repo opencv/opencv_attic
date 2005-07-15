@@ -3087,6 +3087,7 @@ static double cvTriangleArea( CvPoint2D32f a, CvPoint2D32f b, CvPoint2D32f c )
 
 
 
+
  double cvCompareHist( const CvHistogram* hist1,
                               const CvHistogram* hist2,
                               int method);
@@ -3159,11 +3160,11 @@ static void cvCalcHist( IplImage** image, CvHistogram* hist,
                               int mask_size ,
                               const float* mask ,
                               CvArr* labels );
-# 916 "../../../cv/include/cv.h"
+# 917 "../../../cv/include/cv.h"
  void cvThreshold( const CvArr* src, CvArr* dst,
                           double threshold, double max_value,
                           int threshold_type );
-# 928 "../../../cv/include/cv.h"
+# 929 "../../../cv/include/cv.h"
  void cvAdaptiveThreshold( const CvArr* src, CvArr* dst, double max_value,
                                   int adaptive_method ,
                                   int threshold_type ,
@@ -3226,7 +3227,7 @@ static void cvCalcHist( IplImage** image, CvHistogram* hist,
                                    int block_size ,
                                    int use_harris ,
                                    double k );
-# 1003 "../../../cv/include/cv.h"
+# 1004 "../../../cv/include/cv.h"
  CvSeq* cvHoughLines2( CvArr* image, void* line_storage, int method,
                               double rho, double theta, int threshold,
                               double param1 , double param2 );
@@ -3311,7 +3312,7 @@ static void cvCalcHist( IplImage** image, CvHistogram* hist,
                                           const CvMat* distortion_coeffs,
                                           CvMat* rotation_vector,
                                           CvMat* translation_vector );
-# 1095 "../../../cv/include/cv.h"
+# 1096 "../../../cv/include/cv.h"
  void cvCalibrateCamera2( const CvMat* object_points,
                                 const CvMat* image_points,
                                 const CvMat* point_counts,
@@ -3358,7 +3359,7 @@ typedef struct CvPOSITObject CvPOSITObject;
 
 
  void cvConvertPointsHomogenious( const CvMat* src, CvMat* dst );
-# 1149 "../../../cv/include/cv.h"
+# 1150 "../../../cv/include/cv.h"
  int cvFindFundamentalMat( const CvMat* points1, const CvMat* points2,
                                  CvMat* fundamental_matrix,
                                  int method ,
