@@ -400,12 +400,15 @@ static int foaHistCompare(void* _type)
 
     CvHistogram* hist1 = 0;
     CvHistogram* hist2 = 0;
+    CvHistogram* hist1_norm = 0;
+    CvHistogram* hist2_norm = 0;
 
     int c_dims;
     int d[CV_HIST_MAX_DIM + 1];
     double intersect, exp_intersect;
     double correl, exp_correl;
     double chisqr, exp_chisqr;
+    double bhattacharyya, exp_bhattacharyya;
     double m1, m2, m3, mn1, mn2;
     int size;
     int i;
@@ -426,6 +429,8 @@ static int foaHistCompare(void* _type)
         for( i = 0; i < c_dims; i++ ) d[i] = dims;
         hist1 = cvCreateHist( c_dims, d, type );
         hist2 = cvCreateHist( c_dims, d, type );
+        hist1_norm = cvCreateHist( c_dims, d, type );
+        hist2_norm = cvCreateHist( c_dims, d, type );
 
         /*Filling histograms*/
         /*hist1: y = x / size*/
@@ -442,24 +447,36 @@ static int foaHistCompare(void* _type)
         mn1 /= size;
         mn2 /= size;
 
+	/* create normalized histograms for BHATTACHARYYA tests */
+        cvCopyHist( hist1, &hist1_norm );
+        cvCopyHist( hist2, &hist2_norm );
+        cvNormalizeHist( hist1_norm, 1 );
+        cvNormalizeHist( hist2_norm, 1 );
+
         intersect = cvCompareHist( hist1, hist2, CV_COMP_INTERSECT );
         correl = cvCompareHist( hist1, hist2, CV_COMP_CORREL );
         chisqr = cvCompareHist( hist1, hist2, CV_COMP_CHISQR );
+        bhattacharyya = cvCompareHist( hist1_norm, hist2_norm,
+				       CV_COMP_BHATTACHARYYA );
 
         for( i = 0, exp_intersect = 0, exp_chisqr = 0,
              m1 = m2 = m3 = 0; i < size; i++ )
         {
             float a = cvQueryHistValue_1D(hist1, i);
             float b = cvQueryHistValue_1D(hist2, i);
+            float a_norm = cvQueryHistValue_1D(hist1_norm, i);
+            float b_norm = cvQueryHistValue_1D(hist2_norm, i);
             exp_intersect += MIN( a, b );
             if( a + b != 0 )
                 exp_chisqr += (a-b)*(a-b)/(a+b);
             m1 += (a - mn1) * (b - mn2);
             m2 += (b - mn2) * (b - mn2);
             m3 += (a - mn1) * (a - mn1);
+	    exp_bhattacharyya += sqrt (a_norm * b_norm);
         }
 
         exp_correl = m1 / sqrt( m2 * m3 );
+	exp_bhattacharyya = sqrt (1 - exp_bhattacharyya);
 
         if( fabs( intersect - exp_intersect ) > thresh * exp_intersect )
         {
@@ -478,6 +495,13 @@ static int foaHistCompare(void* _type)
         if( fabs( chisqr - exp_chisqr ) > thresh )
         {
             msg = "chi square gives wrong result"; 
+            code = TRS_FAIL;
+            break;
+        }
+
+        if( fabs( bhattacharyya - exp_bhattacharyya ) > thresh )
+        {
+            msg = "bhattacharyya gives wrong result"; 
             code = TRS_FAIL;
             break;
         }
