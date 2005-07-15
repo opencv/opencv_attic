@@ -2057,6 +2057,7 @@ double cvCompareHist( const CvHistogram* hist1, const CvHistogram* hist2, int me
 <li>CV_COMP_CORREL
 <li>CV_COMP_CHISQR
 <li>CV_COMP_INTERSECT
+<li>CV_COMP_BHATTACHARYYA
 </ul>
 </dl><p>
 The function <code>cvCompareHist</code> compares two dense histograms using
@@ -2073,8 +2074,12 @@ d(H<sub>1</sub>,H<sub>2</sub>)=sum<sub>I</sub>[(H<sub>1</sub>(I)-H<sub>2</sub>(I
 
 Intersection (method=CV_COMP_INTERSECT):
 d(H<sub>1</sub>,H<sub>2</sub>)=sum<sub>I</sub>max(H<sub>1</sub>(I),H<sub>2</sub>(I))
+
+Bhattacharyya distance (method=CV_COMP_BHATTACHARYYA):
+d(H<sub>1</sub>,H<sub>2</sub>)=sqrt(1-sum<sub>I</sub>(sqrt(H<sub>1</sub>(I)&bull;H<sub>2</sub>(I))))
 </pre>
 <p>The function returns <code>d(H<sub>1</sub>,H<sub>2</sub>)</code> value.</p>
+<p>Note: the method <code>CV_COMP_BHATTACHARYYA</code> only works with normalized histograms.
 <p>To compare sparse histogram or more general sparse configurations of weighted points,
 consider using <a href="#decl_cvCalcEMD2">cvCalcEMD2</a> function.</p>
 

@@ -825,9 +825,10 @@ CVAPI(void)  cvNormalizeHist( CvHistogram* hist, double factor );
 /* Clear all histogram bins that are below the threshold */
 CVAPI(void)  cvThreshHist( CvHistogram* hist, double threshold );
 
-#define CV_COMP_CORREL      0
-#define CV_COMP_CHISQR      1
-#define CV_COMP_INTERSECT   2
+#define CV_COMP_CORREL        0
+#define CV_COMP_CHISQR        1
+#define CV_COMP_INTERSECT     2
+#define CV_COMP_BHATTACHARYYA 3
 
 /* Compares two histogram */
 CVAPI(double)  cvCompareHist( const CvHistogram* hist1,

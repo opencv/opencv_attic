@@ -483,6 +483,14 @@ cvCompareHist( const CvHistogram* hist1,
                     result += b;
             }
             break;
+	case CV_COMP_BHATTACHARYYA:
+	    for (i = 0; i < total; i++ )
+	    {
+		result += cvSqrt ( ptr1 [i] * ptr2 [i]);
+	    }
+	    result = cvSqrt (1. - result);
+	    break;
+
         default:
             CV_ERROR( CV_StsBadArg, "Unknown comparison method" );
         }
@@ -580,6 +588,23 @@ cvCompareHist( const CvHistogram* hist1,
                             result += v2;
                     }
                 }
+            }
+            break;
+        case CV_COMP_BHATTACHARYYA:
+            {
+                for( node1 = cvInitSparseMatIterator( mat1, &iterator );
+                     node1 != 0; node1 = cvGetNextSparseNode( &iterator ))
+                {
+                    float v1 = *(float*)CV_NODE_VAL(mat1,node1);
+                    uchar* node2_data = cvPtrND( mat2, CV_NODE_IDX(mat1,node1),
+                                                 0, 0, &node1->hashval );
+                    if( node2_data )
+                    {
+                        float v2 = *(float*)node2_data;
+			result += cvSqrt (v1 * v2);
+                    }
+                }
+		result = cvSqrt (1. - result);
             }
             break;
         default:
