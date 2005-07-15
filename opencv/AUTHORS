@@ -7,7 +7,7 @@ Name                    Company (by the moment     Remarks
 Asbach, Mark            ???                        New-style Linux makefiles, SWIG wrappers
 Abrosimov, Dmitry       Intel Corp.                Optimization, Eigen objects
 Bradski, Gary           Intel Corp.                Idea and Vision, Leading, CAMSHIFT & MHI algorithms and more ...
-Bornet, Olivier         ???                        New-style Linux makefiles, SWIG & specialized Python wrappers 
+Bornet, Olivier         IDIAP Research Institute   New-style Linux makefiles, SWIG & specialized Python wrappers 
 Bouguet, Jean-Yves      Intel Corp.                Algorithms for Camera calibration, calibration toolbox for MATLAB,
                                                    and LK in pyramids
 Bovyrin, Alexander      Intel Corp.                Contours, Stereo 
