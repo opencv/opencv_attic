@@ -41,6 +41,8 @@
 
 #include "_cvaux.h"
 
+#if 0
+
 #include <float.h>
 #include <limits.h>
 #include <stdio.h>
@@ -703,8 +705,5 @@ void cvBronKerbosch( CvGraph* graph )
 
 }//end cvBronKerbosch
 
-
-
-
-
+#endif
 

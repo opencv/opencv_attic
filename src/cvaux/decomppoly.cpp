@@ -40,6 +40,9 @@
 //M*/
 
 #include "_cvaux.h"
+
+#if 0
+
 #include <malloc.h>
 //#include "decomppoly.h"
 
@@ -619,6 +622,8 @@ void cvDecompPoly( CvContour* cont,
     return;
 
 } // cvDecompPoly
+
+#endif
 
 // End of file decomppoly.cpp
 

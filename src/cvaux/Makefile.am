@@ -3,7 +3,7 @@ lib_LTLIBRARIES = libcvaux.la
 libcvaux_la_SOURCES = \
     camshift.cpp             cv3dtracker.cpp          cvaux.cpp \
     cvauxutils.cpp           cvbgfg_acmmm2003.cpp     cvbgfg_common.cpp \
-    cvbgfg_gaussmix.cpp      cvcalibfilter.cpp        cvclique.cpp \
+    cvbgfg_gaussmix.cpp      cvcalibfilter.cpp \
     cvcontourex.cpp          cvcorrespond.cpp         cvcorrimages.cpp \
     cvcreatehandmask.cpp     cvdpstereo.cpp           cveigenobjects.cpp \
     cvepilines.cpp           cvface.cpp               cvfacedetection.cpp \ 
@@ -15,8 +15,7 @@ libcvaux_la_SOURCES = \
     cvmorphcontours.cpp      cvmorphing.cpp           cvprewarp.cpp \
     cvscanlines.cpp          cvsegment.cpp            cvsubdiv2.cpp \
     cvtexture.cpp            cvtrifocal.cpp           cvvecfacetracking.cpp \
-    cvvideo.cpp              decomppoly.cpp           enmin.cpp \
-    extendededges.cpp        precomp.cpp              
+    cvvideo.cpp              extendededges.cpp        precomp.cpp              
 
 EXTRA_DIST = cvaux.dsp cvaux.vcproj cvaux.rc resource.h
 
