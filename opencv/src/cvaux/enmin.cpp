@@ -41,7 +41,7 @@
 
 #include "_cvaux.h"
 
-#ifdef WIN32 /* make sure it builds under Linux whenever it is included into Makefile.am or not. */
+#if 0
 
 //#include "windows.h"
 
@@ -1376,5 +1376,6 @@ CCvGraphCutMorpher::CCvGraphCutMorpher()
     m_isStorageAllocated = false;
 }
 
-#endif /* WIN32 */
+#endif
+
 /* End of file */
