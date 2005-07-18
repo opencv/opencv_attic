@@ -408,7 +408,7 @@ static int foaHistCompare(void* _type)
     double intersect, exp_intersect;
     double correl, exp_correl;
     double chisqr, exp_chisqr;
-    double bhattacharyya, exp_bhattacharyya;
+    double bhattacharyya, exp_bhattacharyya = 0;
     double m1, m2, m3, mn1, mn2;
     int size;
     int i;
