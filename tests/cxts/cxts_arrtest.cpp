@@ -83,7 +83,7 @@ int CvArrTest::write_default_params( CvFileStorage* fs )
     int code = CvTest::write_default_params( fs );
     if( code < 0 )
         return code;
-    
+
     if( ts->get_testing_mode() == CvTS::CORRECTNESS_CHECK_MODE )
     {
         write_param( fs, "test_case_count", test_case_count );
@@ -124,7 +124,7 @@ int CvArrTest::write_default_params( CvFileStorage* fs )
         }
 
         write_int_list( fs, "channels", cn_list, -1, -1 );
-        
+
         if( optional_mask )
         {
             static const int use_mask[] = { 0, 1 };
@@ -209,7 +209,7 @@ void CvArrTest::get_timing_test_array_types_and_sizes( int /*test_case_idx*/, Cv
     int i, j;
     int depth = 0, channels = 1;
     CvSize size = {1,1}, whole_size = size;
-    
+
     if( size_node && CV_NODE_IS_SEQ(size_node->tag) )
     {
         CvSeq* seq = size_node->data.seq;
@@ -329,7 +329,7 @@ void CvArrTest::print_time( int test_case_idx, double time_clocks )
     if( out_type < 0 )
         out_type = in_type;
 
-    ptr = strchr( tested_functions, ',' );
+    ptr = strchr( (char*)tested_functions, ',' );
     if( ptr )
     {
         len = (int)(ptr - tested_functions);
@@ -387,7 +387,7 @@ void CvArrTest::print_time( int test_case_idx, double time_clocks )
         sprintf( ptr, "%.1f,%n", cpe, &len );
     ptr += len;
     sprintf( ptr, "%g", time_clocks/cvGetTickFrequency() );
-    
+
     ts->printf( CvTS::CSV, "%s\n", str );
 }
 
@@ -486,7 +486,7 @@ int CvArrTest::prepare_test_case( int test_case_idx )
                         else
                             roi.x = 1;
                     }
-                    
+
                     if( whole_size.height > size.height )
                     {
                         if( !is_timing_test )
