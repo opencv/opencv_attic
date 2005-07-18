@@ -416,8 +416,8 @@ CV_IMPL int cvNamedWindow( const char* name, int flags )
     if( hg_windows )
         hg_windows->prev = window;
     hg_windows = window;
-    icvSetWindowLongPtr( hWnd, CV_USERDATA, (LONG_PTR)window );
-    icvSetWindowLongPtr( mainhWnd, CV_USERDATA, (LONG_PTR)window );
+    icvSetWindowLongPtr( hWnd, CV_USERDATA, window );
+    icvSetWindowLongPtr( mainhWnd, CV_USERDATA, window );
 
     // Recalculate window position
     icvUpdateWindowPos( window );
@@ -437,8 +437,8 @@ static void icvRemoveWindow( CvWindow* window )
     GetWindowRect( window->frame, &wrect );
     icvSaveWindowPos( window->name, cvPoint(wrect.left, wrect.top) );
 
-    icvSetWindowLongPtr( window->hwnd, CV_USERDATA, (LONG_PTR)0 );
-    icvSetWindowLongPtr( window->frame, CV_USERDATA, (LONG_PTR)0 );
+    icvSetWindowLongPtr( window->hwnd, CV_USERDATA, 0 );
+    icvSetWindowLongPtr( window->frame, CV_USERDATA, 0 );
 
     if( window->prev )
         window->prev->next = window->next;
@@ -459,7 +459,7 @@ static void icvRemoveWindow( CvWindow* window )
     for( trackbar = window->toolbar.first; trackbar != 0; )
     {
         CvTrackbar* next = trackbar->next;
-        icvSetWindowLongPtr( trackbar->hwnd, CV_USERDATA, (LONG_PTR)0 );
+        icvSetWindowLongPtr( trackbar->hwnd, CV_USERDATA, 0 );
         cvFree( (void**)&trackbar );
         trackbar = next;
     }
@@ -1217,8 +1217,8 @@ cvCreateTrackbar( const char* trackbar_name, const char* window_name,
             icvUpdateWindowPos(window);
 
             // Subclassing from toolbar
-            icvSetWindowLongPtr(window->toolbar.toolbar, CV_WNDPROC, (LONG_PTR)HGToolbarProc);
-            icvSetWindowLongPtr(window->toolbar.toolbar, CV_USERDATA, (LONG_PTR)window);
+            icvSetWindowLongPtr(window->toolbar.toolbar, CV_WNDPROC, HGToolbarProc);
+            icvSetWindowLongPtr(window->toolbar.toolbar, CV_USERDATA, window);
         }
 
         /* Retrieve current buttons count */
@@ -1298,7 +1298,7 @@ cvCreateTrackbar( const char* trackbar_name, const char* window_name,
                             HG_BUDDY_WIDTH, rect.bottom - rect.top,
                             window->toolbar.toolbar, 0, hg_hinstance, 0);
 
-        icvSetWindowLongPtr( trackbar->hwnd, CV_USERDATA, (LONG_PTR)trackbar );
+        icvSetWindowLongPtr( trackbar->hwnd, CV_USERDATA, trackbar );
 
         /* Minimize the number of rows */
         SendMessage( window->toolbar.toolbar, TB_SETROWS,
