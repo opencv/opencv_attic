@@ -112,7 +112,7 @@ CV_ColorCvtBaseTestImpl::CV_ColorCvtBaseTestImpl( const char* test_name, const c
     depth_list = cvtcolor_depths_8_16_32;
 
     fwd_code_str = inv_code_str = 0;
-    
+
     default_timing_param_names = 0;
 }
 
@@ -152,7 +152,7 @@ void CV_ColorCvtBaseTestImpl::get_test_array_types_and_sizes( int test_case_idx,
     CvRNG* rng = ts->get_rng();
     int depth, cn;
     CvArrTest::get_test_array_types_and_sizes( test_case_idx, sizes, types );
-    
+
     if( allow_16u && allow_32f )
     {
         depth = cvTsRandInt(rng) % 3;
@@ -728,14 +728,14 @@ void CV_ColorHSVTest::convert_row_bgr2abc_32f_c3( const float* src_row, float* d
         {
             s = diff/(v + FLT_EPSILON);
             diff = 1.f/diff;
-            
+
             h = r == v ? (g - b)*diff :
                 g == v ? 2 + (b - r)*diff : 4 + (r - g)*diff;
 
             if( h < 0 )
                 h += 6;
         }
-        
+
         dst_row[j] = h*h_scale;
         dst_row[j+1] = s*scale;
         dst_row[j+2] = v*scale;
@@ -769,7 +769,7 @@ void CV_ColorHSVTest::convert_row_abc2bgr_32f_c3( const float* src_row, float* d
             float p = v*(1 - s);
             float q = v*(1 - s*f);
             float t = v*(1 - s*(1 - f));
-            
+
             if( i == 0 )
                 r = v, g = t, b = p;
             else if( i == 1 )
@@ -860,14 +860,14 @@ void CV_ColorHLSTest::convert_row_bgr2abc_32f_c3( const float* src_row, float* d
             l = (v + vmin)*0.5f;
             s = l <= 0.5f ? diff / (v + vmin) : diff / (2 - v - vmin);
             diff = 1.f/diff;
-            
+
             h = r == v ? (g - b)*diff :
                 g == v ? 2 + (b - r)*diff : 4 + (r - g)*diff;
 
             if( h < 0 )
                 h += 6;
         }
-        
+
         dst_row[j] = h*h_scale;
         dst_row[j+1] = l*scale;
         dst_row[j+2] = s*scale;
@@ -1144,7 +1144,7 @@ void CV_ColorLabTest::convert_row_bgr2abc_32f_c3( const float* src_row, float* d
 
         a = 500.f*(fX - fY);
         b = 200.f*(fY - fZ);
-        
+
         dst_row[j] = L*Lscale;
         dst_row[j+1] = a + ab_bias;
         dst_row[j+2] = b + ab_bias;
@@ -1168,7 +1168,7 @@ void CV_ColorLabTest::convert_row_abc2bgr_32f_c3( const float* src_row, float* d
         float L = src_row[j]*Lscale;
         float a = src_row[j+1] - ab_bias;
         float b = src_row[j+2] - ab_bias;
-        
+
         float P = (L + 16.f)*(1.f/116.f);
         float X = (P + a*0.002f);
         float Z = (P - b*0.005f);
@@ -1179,7 +1179,7 @@ void CV_ColorLabTest::convert_row_abc2bgr_32f_c3( const float* src_row, float* d
         float r = M[0]*X + M[1]*Y + M[2]*Z;
         float g = M[3]*X + M[4]*Y + M[5]*Z;
         b = M[6]*X + M[7]*Y + M[8]*Z;
-        
+
         dst_row[j] = b;
         dst_row[j+1] = g;
         dst_row[j+2] = r;
@@ -1234,7 +1234,7 @@ void CV_ColorLuvTest::convert_row_bgr2abc_32f_c3( const float* src_row, float* d
     int depth = CV_MAT_DEPTH(test_mat[INPUT][0].type);
     float Lscale = depth == CV_8U ? 255.f/100.f : depth == CV_16U ? 65535.f/100.f : 1.f;
     int j;
-    
+
     float M[9];
     float un = 4.f*Xn/(Xn + 15.f*1.f + 3*Zn);
     float vn = 9.f*1.f/(Xn + 15.f*1.f + 3*Zn);
@@ -1271,7 +1271,7 @@ void CV_ColorLuvTest::convert_row_bgr2abc_32f_c3( const float* src_row, float* d
                 L = (float)(116.*pow((double)Y,_1_3) - 16.);
             else
                 L = 903.3f * Y;
-            
+
             d = 1.f/d;
             u = 13*L*(4*X*d - un);
             v = 13*L*(9*Y*d - vn);
@@ -1312,7 +1312,7 @@ void CV_ColorLuvTest::convert_row_abc2bgr_32f_c3( const float* src_row, float* d
         float v = (src_row[j+2] - v_bias)*v_scale;
         float X, Y, Z;
 
-        if( L >= 8 ) 
+        if( L >= 8 )
         {
             Y = (L + 16.f)*(1.f/116.f);
             Y = Y*Y*Y;
@@ -1333,7 +1333,7 @@ void CV_ColorLuvTest::convert_row_abc2bgr_32f_c3( const float* src_row, float* d
         float r = M[0]*X + M[1]*Y + M[2]*Z;
         float g = M[3]*X + M[4]*Y + M[5]*Z;
         float b = M[6]*X + M[7]*Y + M[8]*Z;
-        
+
         dst_row[j] = b;
         dst_row[j+1] = g;
         dst_row[j+2] = r;
@@ -1372,7 +1372,7 @@ void CV_ColorRGBTest::get_test_array_types_and_sizes( int test_case_idx, CvSize*
     CvRNG* rng = ts->get_rng();
     CV_ColorCvtBaseTest::get_test_array_types_and_sizes( test_case_idx, sizes, types );
     int cn = CV_MAT_CN(types[INPUT][0]);
-   
+
     dst_bits = 24;
 
     if( cvTsRandInt(rng) % 3 == 0 )
@@ -1424,14 +1424,14 @@ void CV_ColorRGBTest::convert_forward( const CvMat* src, CvMat* dst )
 {
     int depth = CV_MAT_DEPTH(src->type);
     int cn = CV_MAT_CN(src->type);
-#if defined _DEBUG || defined DEBUG
+/*#if defined _DEBUG || defined DEBUG
     int dst_cn = CV_MAT_CN(dst->type);
-#endif
+#endif*/
     int i, j, cols = src->cols;
     int g_rshift = dst_bits == 16 ? 2 : 3;
     int r_lshift = dst_bits == 16 ? 11 : 10;
 
-    assert( (cn == 3 || cn == 4) && (dst_cn == 3 || (dst_cn == 2 && depth == CV_8U)) );
+    //assert( (cn == 3 || cn == 4) && (dst_cn == 3 || (dst_cn == 2 && depth == CV_8U)) );
 
     for( i = 0; i < src->rows; i++ )
     {
@@ -1509,14 +1509,14 @@ void CV_ColorRGBTest::convert_backward( const CvMat* /*src*/, const CvMat* src, 
 {
     int depth = CV_MAT_DEPTH(src->type);
     int cn = CV_MAT_CN(dst->type);
-#if defined _DEBUG || defined DEBUG
+/*#if defined _DEBUG || defined DEBUG
     int src_cn = CV_MAT_CN(src->type);
-#endif
+#endif*/
     int i, j, cols = src->cols;
     int g_lshift = dst_bits == 16 ? 2 : 3;
     int r_rshift = dst_bits == 16 ? 11 : 10;
 
-    assert( (cn == 3 || cn == 4) && (src_cn == 3 || (src_cn == 2 && depth == CV_8U)) );
+    //assert( (cn == 3 || cn == 4) && (src_cn == 3 || (src_cn == 2 && depth == CV_8U)) );
 
     for( i = 0; i < src->rows; i++ )
     {
