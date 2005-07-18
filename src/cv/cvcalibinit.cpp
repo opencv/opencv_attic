@@ -54,9 +54,9 @@
     Reliability additions and modifications made by Philip Gruebele.
     <a href="mailto:pgruebele@cox.net">pgruebele@cox.net</a>
 
-\************************************************************************************/ 
+\************************************************************************************/
 
-#include <_cv.h>
+#include "_cv.h"
 
 //=====================================================================================
 // Implementation for the enhanced calibration object detection
@@ -127,7 +127,7 @@ int cvFindChessboardCorners( const void* arr, CvSize pattern_size,
     CvMat* norm_img = 0;
     CvMat* thresh_img = 0;
     CvMemStorage* storage = 0;
-    
+
     CvCBQuad *quads = 0, **quad_group = 0;
     CvCBCorner *corners = 0, **corner_group = 0;
 
@@ -155,7 +155,7 @@ int cvFindChessboardCorners( const void* arr, CvSize pattern_size,
 
     CV_CALL( storage = cvCreateMemStorage(0) );
     CV_CALL( thresh_img = cvCreateMat( img->rows, img->cols, CV_8UC1 ));
-    
+
     if( CV_MAT_CN(img->type) != 1 || (flags & CV_CALIB_CB_NORMALIZE_IMAGE) )
     {
         // equalize the input image histogram -
@@ -197,7 +197,7 @@ int cvFindChessboardCorners( const void* arr, CvSize pattern_size,
             // Make dilation before the thresholding.
             // It splits chessboard corners
             //cvDilate( img, thresh_img, 0, 1 );
-            
+
             // empiric threshold level
             double mean = cvMean( img );
             int thresh_level = cvRound( mean - 10 );
@@ -259,7 +259,7 @@ int cvFindChessboardCorners( const void* arr, CvSize pattern_size,
         cvFree( (void**)&quads );
         cvFree( (void**)&corners );
     }
-      
+
     __END__;
 
     cvReleaseMemStorage( &storage );
@@ -294,7 +294,7 @@ icvCleanFoundConnectedQuads( int quad_count, CvCBQuad **quad_group, CvSize patte
     // try to eliminate duplicates or ones which don't belong to the pattern rectangle...
     if( quad_count <= count )
         EXIT;
-    
+
     // create an array of quadrangle centers
     CV_CALL( centers = (CvPoint2D32f *)cvAlloc( sizeof(centers[0])*quad_count ));
     CV_CALL( temp_storage = cvCreateMemStorage(0));
@@ -345,7 +345,7 @@ icvCleanFoundConnectedQuads( int quad_count, CvCBQuad **quad_group, CvSize patte
             centers[skip] = temp;
             double hull_area = fabs(cvContourArea(hull, CV_WHOLE_SEQ));
 
-            // remember smallest box area 
+            // remember smallest box area
             if( hull_area < min_box_area )
             {
                 min_box_area = hull_area;
@@ -460,7 +460,7 @@ icvCheckQuadGroup( CvCBQuad **quad_group, int quad_count,
     int hist[5] = {0,0,0,0,0};
     CvCBCorner* first = 0, *first2 = 0, *right, *cur, *below, *c;
     CV_CALL( corners = (CvCBCorner**)cvAlloc( quad_count*4*sizeof(corners[0]) ));
-    
+
     // build dual graph, which vertices are internal quad corners
     // and two vertices are connected iff they lie on the same quad edge
     for( i = 0; i < quad_count; i++ )
@@ -483,7 +483,7 @@ icvCheckQuadGroup( CvCBQuad **quad_group, int quad_count,
                 //   - a quad with two neighbors     - with ROW2
                 // make the rest of internal corners with ROW_
                 int row_flag = q->count == 1 ? ROW1 : q->count == 2 ? ROW2 : ROW_;
-                
+
                 if( a->row == 0 )
                 {
                     corners[corner_count++] = a;
@@ -652,7 +652,7 @@ icvCheckQuadGroup( CvCBQuad **quad_group, int quad_count,
     if( width != pattern_size.width )
     {
         CV_SWAP( width, height, k );
-        
+
         memcpy( corners, out_corners, corner_count*sizeof(corners[0]) );
         for( i = 0; i < height; i++ )
             for( j = 0; j < width; j++ )
@@ -709,7 +709,7 @@ static void icvFindQuadNeighbors( CvCBQuad *quads, int quad_count )
     for( idx = 0; idx < quad_count; idx++ )
     {
         CvCBQuad* cur_quad = &quads[idx];
-        
+
         // choose the points of the current quadrangle that are close to
         // some points of the other quadrangles
         // (it can happen for split corners (due to dilation) of the
@@ -760,7 +760,7 @@ static void icvFindQuadNeighbors( CvCBQuad *quads, int quad_count )
             {
                 // If another point from our current quad is closer to the found corner
                 // than the current one, then we don't count this one after all.
-                // This is necessary to support small squares where otherwise the wrong 
+                // This is necessary to support small squares where otherwise the wrong
                 // corner will get matched to closest_quad;
                 closest_corner = closest_quad->corners[closest_corner_idx];
 
@@ -775,7 +775,7 @@ static void icvFindQuadNeighbors( CvCBQuad *quads, int quad_count )
                     if( dx * dx + dy * dy < min_dist )
                         break;
                 }
-                
+
                 if( j < 4 || cur_quad->count >= 4 || closest_quad->count >= 4 )
                     continue;
 
@@ -996,7 +996,7 @@ cvDrawChessboardCorners( CvArr* _image, CvSize pattern_size,
     CV_FUNCNAME( "cvDrawChessboardCorners" );
 
     __BEGIN__;
-    
+
     const int shift = 0;
     const int radius = 4;
     const int r = radius*(1 << shift);
@@ -1029,7 +1029,7 @@ cvDrawChessboardCorners( CvArr* _image, CvSize pattern_size,
     }
 
     line_type = type == CV_8UC1 || type == CV_8UC3 ? CV_AA : 8;
-    
+
     if( !found )
     {
         CvScalar color = {{0,0,255}};
@@ -1039,7 +1039,7 @@ cvDrawChessboardCorners( CvArr* _image, CvSize pattern_size,
         color.val[1] *= scale;
         color.val[2] *= scale;
         color.val[3] *= scale;
-        
+
         for( i = 0; i < count; i++ )
         {
             CvPoint pt;
