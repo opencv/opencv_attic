@@ -530,11 +530,16 @@ static RECT icvCalcWindowRect( CvWindow* window )
     return rect;
 }
 
-
-static void icvGetBitmapData( CvWindow* window, SIZE* size, int* channels, void** data )
+// returns TRUE if there is a problem such as ERROR_IO_PENDING.
+static bool icvGetBitmapData( CvWindow* window, SIZE* size, int* channels, void** data )
 {
     BITMAP bmp;
-    GetObject( GetCurrentObject(window->dc, OBJ_BITMAP), sizeof(bmp), &bmp );
+    GdiFlush();
+    HGDIOBJ h = GetCurrentObject( window->dc, OBJ_BITMAP );
+    if (h == NULL)
+        return true;
+    int num = GetObject(h, sizeof(bmp), &bmp );
+    assert(num);
 
     if( size )
     {
@@ -547,6 +552,8 @@ static void icvGetBitmapData( CvWindow* window, SIZE* size, int* channels, void*
 
     if( data )
         *data = bmp.bmBits;
+
+	return false;
 }
 
 
@@ -614,9 +621,12 @@ cvShowImage( const char* name, const CvArr* arr )
     if( window->image )
         icvGetBitmapData( window, &size, &channels, &dst_ptr );
 
+	bool changed_size = false; // philipg
     if( size.cx != image->width || size.cy != image->height || channels != channels0 )
     {
-        uchar buffer[sizeof(BITMAPINFO) + 255*sizeof(RGBQUAD)];
+		changed_size = true;
+
+		uchar buffer[sizeof(BITMAPINFO) + 255*sizeof(RGBQUAD)];
         BITMAPINFO* binfo = (BITMAPINFO*)buffer;
 
         DeleteObject( SelectObject( window->dc, window->image ));
@@ -636,9 +646,12 @@ cvShowImage( const char* name, const CvArr* arr )
                      dst_ptr, (size.cx * channels + 3) & -4 );
     cvConvertImage( image, &dst, origin == 0 ? CV_CVTIMG_FLIP : 0 );
 
-    icvUpdateWindowPos(window);
+	// ony resize window if needed
+	if (changed_size)
+		icvUpdateWindowPos(window);
     InvalidateRect(window->hwnd, 0, 0);
-    UpdateWindow(window->hwnd);
+	// philipg: this is not needed and just slows things down
+//    UpdateWindow(window->hwnd);
 
     __END__;
 }
