@@ -1050,7 +1050,7 @@ static int icvInitAVIWriter( CvAVI_VFW_Writer* writer, int fourcc,
         aviinfo.fccType = streamtypeVIDEO;
         aviinfo.fccHandler = 0;
 		// use highest possible accuracy for dwRate/dwScale
-		aviinfo.dwScale = 0x7FFFFFFF / fps;
+		aviinfo.dwScale = (DWORD)((double)0x7FFFFFFF / fps);
 		aviinfo.dwRate = cvRound(fps * aviinfo.dwScale);
         aviinfo.rcFrame.top = aviinfo.rcFrame.left = 0;
         aviinfo.rcFrame.right = frameSize.width;
