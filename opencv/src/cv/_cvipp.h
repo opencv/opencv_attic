@@ -380,7 +380,7 @@ IPCV_FILTER_MEDIAN( 8u, 4 )
 
 #define IPCV_FILTER_BOX( flavor, cn )                                               \
 IPCVAPI_EX( CvStatus, icvFilterBox_##flavor##_C##cn##R,                             \
-            "ippiFilterBox_" #flavor "_C" #cn "R", CV_PLUGINS1(CV_PLUGIN_IPPI),     \
+            "ippiFilterBox_" #flavor "_C" #cn "R", 0/*CV_PLUGINS1(CV_PLUGIN_IPPI)*/,\
             ( const void* src, int srcstep, void* dst, int dststep,                 \
               CvSize roi, CvSize ksize, CvPoint anchor ))
 
