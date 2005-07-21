@@ -102,7 +102,7 @@ int cvTsRodrigues( const CvMat* src, CvMat* dst, CvMat* jacobian )
             CvMat _omegav = cvMat(3, 3, CV_64F, omegav);
             CvMat _A = cvMat(3, 3, CV_64F, A);
             CvMat _R = cvMat(3, 3, CV_64F, R);
-            
+
             cvSetIdentity( &_R, cvRealScalar(alpha) );
             cvScaleAdd( &_omegav, cvRealScalar(beta), &_R, &_R );
             cvScaleAdd( &_A, cvRealScalar(gamma), &_R, &_R );
@@ -136,7 +136,7 @@ int cvTsRodrigues( const CvMat* src, CvMat* dst, CvMat* jacobian )
                 CvMat _dRdm1_part;
                 CvMat _t0 = cvMat( 9, 4, CV_64FC1, t0 );
                 CvMat _t1 = cvMat( 9, 4, CV_64FC1, dRdm1 );
-            
+
                 // m1 = [alpha, beta, gamma, omegav; A]
                 memset( dm1dm2, 0, sizeof(dm1dm2) );
                 dm1dm2[3] = -beta;
@@ -160,25 +160,25 @@ int cvTsRodrigues( const CvMat* src, CvMat* dst, CvMat* jacobian )
 
                 CvMat _dm1dw = cvMat( 3, 9, CV_64FC1, dm1dw );
                 CvMat _dm1dm2_part;
-            
+
                 cvGetSubRect( &_dm1dm2, &_dm1dm2_part, cvRect(0,12,3,9) );
                 cvTranspose( &_dm1dw, &_dm1dm2_part );
 
                 memset( dRdm1, 0, sizeof(dRdm1) );
                 dRdm1[0*21] = dRdm1[4*21] = dRdm1[8*21] = 1;
 
-                cvGetCol( &_dRdm1, &_dRdm1_part, 1 ); 
+                cvGetCol( &_dRdm1, &_dRdm1_part, 1 );
                 cvTranspose( &_omegav, &_omegav );
                 cvReshape( &_omegav, &_omegav, 1, 1 );
                 cvTranspose( &_omegav, &_dRdm1_part );
 
-                cvGetCol( &_dRdm1, &_dRdm1_part, 2 ); 
+                cvGetCol( &_dRdm1, &_dRdm1_part, 2 );
                 cvReshape( &_A, &_A, 1, 1 );
                 cvTranspose( &_A, &_dRdm1_part );
 
                 cvGetSubRect( &_dRdm1, &_dRdm1_part, cvRect(3,0,9,9) );
                 cvSetIdentity( &_dRdm1_part, cvScalarAll(beta) );
-                
+
                 cvGetSubRect( &_dRdm1, &_dRdm1_part, cvRect(12,0,9,9) );
                 cvSetIdentity( &_dRdm1_part, cvScalarAll(gamma) );
 
@@ -228,13 +228,13 @@ int cvTsRodrigues( const CvMat* src, CvMat* dst, CvMat* jacobian )
         {
             double dtheta_dtr = -1./sqrt(1 - tr*tr);
             double vth = 1/(2*beta);
-            
+
             // om1 = [R(3,2) - R(2,3), R(1,3) - R(3,1), R(2,1) - R(1,2)]'
             double om1[] = { R[7] - R[5], R[2] - R[6], R[3] - R[1] };
             // om = om1*vth
             // r = om*theta
             double d3 = vth*theta;
-            
+
             r[0] = om1[0]*d3; r[1] = om1[1]*d3; r[2] = om1[2]*d3;
             cvConvert( &_r, dst );
 
@@ -262,19 +262,19 @@ int cvTsRodrigues( const CvMat* src, CvMat* dst, CvMat* jacobian )
                     0, 0, vth, om1[2], 0,
                     0, 0, 0, 0, 1
                 };
-                double domegadvar2[] = 
+                double domegadvar2[] =
                 {
                     theta, 0, 0, om1[0]*vth,
                     0, theta, 0, om1[1]*vth,
                     0, 0, theta, om1[2]*vth
                 };
-            
+
                 CvMat _dvardR = cvMat( 5, 9, CV_64FC1, dvardR );
                 CvMat _dvar2dvar = cvMat( 4, 5, CV_64FC1, dvar2dvar );
                 CvMat _domegadvar2 = cvMat( 3, 4, CV_64FC1, domegadvar2 );
                 double t0[3*5];
                 CvMat _t0 = cvMat( 3, 5, CV_64FC1, t0 );
-            
+
                 cvMatMul( &_domegadvar2, &_dvar2dvar, &_t0 );
                 cvMatMul( &_t0, &_dvardR, &_J );
             }
@@ -409,7 +409,7 @@ cvTsConvertHomogenious( const CvMat* src, CvMat* dst )
 
     s = src->data.db;
     d = dst->data.db;
-    
+
     if( sdims <= ddims )
     {
         int wstep = dstep2*(ddims - 1);
@@ -434,7 +434,7 @@ cvTsConvertHomogenious( const CvMat* src, CvMat* dst )
     else
     {
         int wstep = sstep2*(sdims - 1);
-        
+
         for( i = 0; i < count; i++, s += sstep1, d += dstep1 )
         {
             double w = s[wstep];
@@ -482,7 +482,7 @@ cvTsProjectPoints( const CvMat* _3d, const CvMat* Rt, const CvMat* A,
     }
 
     temp = cvCreateMat( 1, count, CV_64FC3 );
-   
+
     for( i = 0; i < count; i++ )
     {
         const double* M = _3d->data.db + i*3;
@@ -531,7 +531,7 @@ CV_RodriguesTest::CV_RodriguesTest()
     : CvArrTest( "_3d-rodrigues", "cvRodrigues2", "" )
 {
     test_array[INPUT].push(NULL);  // rotation vector
-    test_array[OUTPUT].push(NULL); // rotation matrix 
+    test_array[OUTPUT].push(NULL); // rotation matrix
     test_array[OUTPUT].push(NULL); // jacobian (J)
     test_array[OUTPUT].push(NULL); // rotation vector (backward transform result)
     test_array[OUTPUT].push(NULL); // inverse transform jacobian (J1)
@@ -563,7 +563,7 @@ void CV_RodriguesTest::get_test_array_types_and_sizes(
     CvRNG* rng = ts->get_rng();
     int depth = cvTsRandInt(rng) % 2 == 0 ? CV_32F : CV_64F;
     int i, code;
-    
+
     code = cvTsRandInt(rng) % 3;
     types[INPUT][0] = CV_MAKETYPE(depth, 1);
 
@@ -614,28 +614,33 @@ double CV_RodriguesTest::get_success_error_level( int /*test_case_idx*/, int /*i
 }
 
 
-void CV_RodriguesTest::fill_array( int /*test_case_idx*/, int /*i*/, int /*j*/, CvMat* arr )
+void CV_RodriguesTest::fill_array( int test_case_idx, int i, int j, CvMat* arr )
 {
-    double r[3], theta0, theta1, f;
-    CvMat _r = cvMat( arr->rows, arr->cols, CV_MAKETYPE(CV_64F,CV_MAT_CN(arr->type)), r );
-    CvRNG* rng = ts->get_rng();
+    if( i == INPUT && j == 0 )
+    {
+        double r[3], theta0, theta1, f;
+        CvMat _r = cvMat( arr->rows, arr->cols, CV_MAKETYPE(CV_64F,CV_MAT_CN(arr->type)), r );
+        CvRNG* rng = ts->get_rng();
 
-    r[0] = cvTsRandReal(rng)*CV_PI*2;
-    r[1] = cvTsRandReal(rng)*CV_PI*2;
-    r[2] = cvTsRandReal(rng)*CV_PI*2;
+        r[0] = cvTsRandReal(rng)*CV_PI*2;
+        r[1] = cvTsRandReal(rng)*CV_PI*2;
+        r[2] = cvTsRandReal(rng)*CV_PI*2;
 
-    theta0 = sqrt(r[0]*r[0] + r[1]*r[1] + r[2]*r[2]);
-    theta1 = fmod(theta0, CV_PI*2);
+        theta0 = sqrt(r[0]*r[0] + r[1]*r[1] + r[2]*r[2]);
+        theta1 = fmod(theta0, CV_PI*2);
 
-    if( theta1 > CV_PI )
-        theta1 = -(CV_PI*2 - theta1);
+        if( theta1 > CV_PI )
+            theta1 = -(CV_PI*2 - theta1);
 
-    f = theta1/(theta0 ? theta0 : 1);
-    r[0] *= f;
-    r[1] *= f;
-    r[2] *= f;
+        f = theta1/(theta0 ? theta0 : 1);
+        r[0] *= f;
+        r[1] *= f;
+        r[2] *= f;
 
-    cvTsConvert( &_r, arr );
+        cvTsConvert( &_r, arr );
+    }
+    else
+        CvArrTest::fill_array( test_case_idx, i, j, arr );
 }
 
 
@@ -685,7 +690,7 @@ void CV_RodriguesTest::prepare_to_validation( int /*test_case_idx*/ )
     if( theta1 > CV_PI )
         theta1 = -(CV_PI*2 - theta1);
     cvScale( vec2, vec2, theta1/(theta0 ? theta0 : 1) );
-    
+
     if( calc_jacobians )
     {
         //cvInvert( v2m_jac, m2v_jac, CV_SVD );
@@ -785,7 +790,7 @@ void CV_FundamentalMatTest::get_test_array_types_and_sizes( int /*test_case_idx*
     int pt_depth = cvTsRandInt(rng) % 2 == 0 ? CV_32F : CV_64F;
     double pt_count_exp = cvTsRandReal(rng)*6 + 1;
     int pt_count = cvRound(exp(pt_count_exp));
-    
+
     dims = cvTsRandInt(rng) % 2 + 2;
     method = 1 << (cvTsRandInt(rng) % 4);
 
@@ -814,7 +819,7 @@ void CV_FundamentalMatTest::get_test_array_types_and_sizes( int /*test_case_idx*
                 sizes[INPUT][0] = cvSize(1, pt_count);
         }
     }
-    
+
     sizes[INPUT][1] = sizes[INPUT][0];
     types[INPUT][1] = types[INPUT][0];
 
@@ -851,7 +856,7 @@ void CV_FundamentalMatTest::fill_array( int test_case_idx, int i, int j, CvMat* 
     CvMat T;
     double* p = arr->data.db;
     CvRNG* rng = ts->get_rng();
-    
+
     if( i != INPUT )
     {
         CvArrTest::fill_array( test_case_idx, i, j, arr );
@@ -886,7 +891,7 @@ void CV_FundamentalMatTest::fill_array( int test_case_idx, int i, int j, CvMat* 
         t[7] = cvTsRandReal(rng)*cube_size;
         t[11] = cvTsRandReal(rng)*cube_size;
         T = cvMat( 3, 4, CV_64F, t );
-        cvTsConvert( &T, arr ); 
+        cvTsConvert( &T, arr );
         }
         break;
     case 4:
@@ -913,7 +918,7 @@ int CV_FundamentalMatTest::prepare_test_case( int test_case_idx )
         double Idata[] = { 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0 };
         CvMat I = cvMat( 3, 4, CV_64F, Idata );
         int k;
-        
+
         for( k = 0; k < 2; k++ )
         {
             const CvMat* Rt = k == 0 ? &I : &test_mat[INPUT][3];
@@ -942,7 +947,7 @@ void CV_FundamentalMatTest::prepare_to_validation( int test_case_idx )
     const CvMat* A2 = &test_mat[INPUT][5];
     double f0[9];
     CvMat F0 = cvMat( 3, 3, CV_64FC1, f0 );
-    
+
     double _invA1[9], _invA2[9], temp[9];
     CvMat invA1 = cvMat( 3, 3, CV_64F, _invA1 );
     CvMat invA2 = cvMat( 3, 3, CV_64F, _invA2 );
@@ -950,7 +955,7 @@ void CV_FundamentalMatTest::prepare_to_validation( int test_case_idx )
     CvMat T = cvMat( 3, 3, CV_64F, temp );
 
     cvSetData( &R, Rt->data.db, Rt->step ); // R = Rt(:,1:3)
-    
+
     // F = (A2^-T)*[t]_x*R*(A1^-1)
     cvInvert( A1, &invA1, CV_SVD );
     cvInvert( A2, &invA2, CV_SVD );
@@ -977,7 +982,7 @@ void CV_FundamentalMatTest::prepare_to_validation( int test_case_idx )
     uchar* mtfm2 = test_mat[OUTPUT][1].data.ptr;
     double* f_prop1 = test_mat[REF_OUTPUT][0].data.db;
     double* f_prop2 = test_mat[OUTPUT][0].data.db;
-    
+
     int i, pt_count = test_mat[INPUT][2].cols;
     CvMat* p1 = cvCreateMat( 1, pt_count, CV_64FC2 );
     CvMat* p2 = cvCreateMat( 1, pt_count, CV_64FC2 );
@@ -1273,7 +1278,7 @@ double CV_ComputeEpilinesTest::get_success_error_level( int /*test_case_idx*/, i
 void CV_ComputeEpilinesTest::fill_array( int test_case_idx, int i, int j, CvMat* arr )
 {
     CvRNG* rng = ts->get_rng();
-    
+
     if( i == INPUT && j == 0 )
     {
         CvMat* temp = cvCreateMat( 1, pt_count, CV_MAKETYPE(CV_64FC1,dims) );
@@ -1319,7 +1324,7 @@ void CV_ComputeEpilinesTest::prepare_to_validation( int /*test_case_idx*/ )
         d = d ? 1./d : 1.;
         l[0] = t0*d; l[1] = t1*d; l[2] = t2*d;
     }
-    
+
     cvTsConvertHomogenious( lines, &test_mat[REF_OUTPUT][0] );
     cvReleaseMat( &pt );
     cvReleaseMat( &lines );
