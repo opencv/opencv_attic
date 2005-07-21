@@ -6,7 +6,7 @@
    The real and the estimated points are connected with yellow line segment,
    the real and the measured points are connected with red line segment.
    (if Kalman filter works correctly,
-    the distance yellow segment should be shorter than the red one).
+    the yellow segment should be shorter than the red one).
    Pressing any key (except ESC) will reset the tracking with a different speed.
    Pressing ESC will stop the program.
 */
