@@ -1,8 +1,8 @@
 =============================================================================
-                               OpenCV snapshot
+                      OpenCV beta 5, Thursday, July 21, 2005
 =============================================================================
 
->>> New functionality: <<<
+>>> New functionality/features: <<<
   -  (Linux) Support for more cameras has been added in highgui.
      Different versions of libdc1394 can now be used.
      (thanks to Frederic Devernay for the new versions of cvcap_dc1394.cpp,
@@ -14,41 +14,89 @@
      (thanks to Frederic Devernay for new version of cvcap.cpp and patches for
      configure script)
 
+  -  (Linux) Python wrappers for OpenCV have been created
+     by Olivier Bornet and Mark Asbach using SWIG.
+     See opencv/interfaces/python and opencv/samples/python.
+     While the wrappers should be OS-independent,
+     so far they have been built on Linux only.
+
+  -  OpenCV now builds and runs on 64-bit platforms: EM64T (a.k.a. AMD64)
+     and IA64 (Itanium). Extra configurations have been added to project files
+     for MsDevStudio 6.0.
+
+  -  Performance tests for cxcore and part of cv have been created.
+     the output format is plain csv and is similar to the one used in IPP.
+     run "cxcoretest -t" and "cvtest -t".
+
+  -  Haartraining now automatically produces .xml database along
+     with the usual directory tree.
+
+  -  Script for creating custom dynamic library for a subset of IPP, used by OpenCV,
+     has been created. Look at opencv/interfaces/ipp
+
+  -  Several new functions have been added: Background/foreground segmentation
+     (see cvaux/include/cvaux.h, "Background/foreground segmentation" section and
+     cvaux/src/), cvHoughCircles (circle detection), cvPointPolygonTest,
+     cvRemap (generic geometrical transformation), cvLogPolar (log-polar transform),
+     cvEqualizeHist (histogram equalization), cvCornerHarris (Harris corner detector).
+
+  -  Camera calibration and epipolar geometry functions have been completely rewritten,
+     API was simplified, and docs updated.
+
+  -  New checkerboard detection algorithm (based on Vladimir Vezhnevets' code)
+     is now used.
+
   -  cvCvtColor supports new color models (HLS, CIE L*u*v*),
      for every RGB->something transformation the inverse is provided,
      32f format is completely supported, 16u is partially supported.
 
-  -  Performance tests for cxcore and part of cv have been created.
+  -  Distance transform was extended to find the nearest connected component
+     of zero pixels for every pixel, not only the distance to it.
 
-  -  Script for creating custom dynamic library for a subset of IPP, used by OpenCV,
-     has been created. Look at opencv/ipp/custom
+  -  (Windows) Highgui now remembers positions of a last few opened windows in registry.
 
 >>> Optimizations: <<<
-  -  IPP morphology is finally back (in beta 4 it has been turned off).
-     Inplace operations now give correct results.
-     C version of morphology with a rectangular element is now 1.5 to 2+ times faster.
+  -  The following functions have been optimized by using IPP when it is available:
+     morphology, linear and non-linear filtering (cvFilter2D, cvSobel, cvSmooth),
+     template matching, color conversions, geometrical transformations (cvResize,
+     cvWarpAffine, cvWarpPerspective, cvRemap), image moments
+     
+     And more with new IPP 5.0 (beta):
+     haar object detection, LK optical flow with pyramids, undistortion.
 
   -  MatchTemplate has been completely rewritten to use DFT that resulted in
      1 or 2 order(s) of magnitude faster operation.
-     Color images are now accepted (output is 1-channel anyway).
+     Color images are now accepted (output is always 1-channel).
 
-  -  Morphology with rectangular element is 1.5-2x faster. IPP morphology support is back.
+  -  C version of morphology with rectangular elements is ~1.5-2x faster than in beta 4.
 
-  -  Most of statistical functions have been rewritten with a noticeable speed gain.
+  -  Most of image statistics functions have been rewritten with a noticeable performance gain.
 
-  -  Support for many functions has been added. The new areas covered include:
-     geometrical transformations (image resize, affine and perspective warping),
-     color conversions, linear and non-linear filters (cvSobel,
-     cvSmooth (CV_BLUR, CV_GAUSSIAN and CV_MEDIAN modes), cvFilter2D, cvErode & cvDilate),
-     moments.
+  -  A few other functions have been optimized: threshold,
+     background statistics accumulation, corner detectors (cvCornerMinEigenVal,
+     cvCornerEigenValsVecs, cvPreCornerDetect), distance transform, median filter (3x3),
+     lens undistortion
 
 >>> Bug fixes: <<<
 
-  -  cvSmooth with Gaussian blur handled 4-channel images incorrectly (thanks to
-     Sam Hocevar for the patch)
+  -  A lot of bugs have been fixed, thanks to all the people who submitted bug reports
+     and/or patches. The following functions have been fixed (this is incomplete list):
 
-  -  Drawing functions worked incorrectly with 16-bit images (thanks to deforest
-     for the report)
+     * cvFilter2D (crashed on floating-point images)
+     * cvDFT (bug in processing of long power-of-2 series),
+     * cvWarpPerspective & cvWarpPerspectiveQMatrix,
+     * cvSobel, cvErode, cvDilate, cvSmooth (occasionally ran beyond buffer boundaries)
+     * cvApproxPoly (left extra points on edges)
+     * cvConvexHull (handled 32f case incorrently)
+     * cvMinEnclosingCircle (sometimes the circle is not enclosing: fixed partially)
+     * cvFitEllipse (produced wrong results quite often, now it is much better)
+     * cvCanny (bug in non-maxima suppression stage)
+     * drawing functions (handled 16-bit images incorrectly)
+     * persistence functions (cvLoad, cvSave, cvRead*, cvWrite* etc.) (several bugs)
+     * color conversions (several bugs)
+     * cvResize (bottom row processing)
+     * Haartraining (several bugs)
+     * motion templates (a few bugs)
 
 =============================================================================
                    OpenCV beta 4, Friday, August 13, 2004
