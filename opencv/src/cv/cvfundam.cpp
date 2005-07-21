@@ -62,7 +62,7 @@ icvFMatrix_7Point( const CvPoint2D64f* m0, const CvPoint2D64f* m1, double* fmatr
     CvMat coeffs = cvMat( 1, 4, CV_64F, c );
     CvMat roots = cvMat( 1, 3, CV_64F, r );
     int i, k, n;
-    
+
     assert( m0 && m1 && fmatrix );
 
     // form a linear system: i-th row of A(=a) represents
@@ -71,18 +71,18 @@ icvFMatrix_7Point( const CvPoint2D64f* m0, const CvPoint2D64f* m1, double* fmatr
     {
         double x0 = m0[i].x, y0 = m0[i].y;
         double x1 = m1[i].x, y1 = m1[i].y;
-        
+
         a[i*9+0] = x1*x0;
         a[i*9+1] = x1*y0;
         a[i*9+2] = x1;
         a[i*9+3] = y1*x0;
         a[i*9+4] = y1*y0;
-        a[i*9+5] = y1;   
+        a[i*9+5] = y1;
         a[i*9+6] = x0;
         a[i*9+7] = y0;
         a[i*9+8] = 1;
     }
-    
+
     // A*(f11 f12 ... f33)' = 0 is singular (7 equations for 9 variables), so
     // the solution is linear subspace of dimensionality 2.
     // => use the last two singular vectors as a basis of the space
@@ -127,7 +127,7 @@ icvFMatrix_7Point( const CvPoint2D64f* m0, const CvPoint2D64f* m1, double* fmatr
            f2[8]*(f1[0]*f1[4] - f1[1]*f1[3]);
 
     c[0] = f1[0]*t0 - f1[1]*t1 + f1[2]*t2;
-    
+
     // solve the cubic equation; there can be 1 to 3 roots ...
     n = cvSolveCubic( &coeffs, &roots );
 
@@ -165,12 +165,12 @@ icvFMatrix_8Point( const CvPoint2D64f* m0, const CvPoint2D64f* m1,
 {
     int result = 0;
     CvMat* A = 0;
-    
+
     double w[9], v[9*9];
     CvMat W = cvMat( 1, 9, CV_64F, w);
     CvMat V = cvMat( 9, 9, CV_64F, v);
     CvMat U, F0, TF;
-    
+
     int i, good_count = 0;
     CvPoint2D64f m0c = {0,0}, m1c = {0,0}, m0q = {0,0}, m1q = {0,0};
     double t, scale0, scale1;
@@ -229,13 +229,13 @@ icvFMatrix_8Point( const CvPoint2D64f* m0, const CvPoint2D64f* m1,
             double y0 = (m0[i].y - m0c.y)*scale0;
             double x1 = (m1[i].x - m1c.x)*scale1;
             double y1 = (m1[i].y - m1c.y)*scale1;
-            
+
             a[0] = x1*x0;
             a[1] = x1*y0;
             a[2] = x1;
             a[3] = y1*x0;
             a[4] = y1*y0;
-            a[5] = y1;   
+            a[5] = y1;
             a[6] = x0;
             a[7] = y0;
             a[8] = 1;
@@ -244,7 +244,7 @@ icvFMatrix_8Point( const CvPoint2D64f* m0, const CvPoint2D64f* m1,
     }
 
     cvSVD( A, &W, 0, &V, CV_SVD_MODIFY_A + CV_SVD_V_T );
-    
+
     for( i = 0; i < 8; i++ )
     {
         if( fabs(w[i]) < FLT_EPSILON )
@@ -255,7 +255,7 @@ icvFMatrix_8Point( const CvPoint2D64f* m0, const CvPoint2D64f* m1,
         EXIT;
 
     F0 = cvMat( 3, 3, CV_64F, v + 9*8 ); // take the last column of v as a solution of Af = 0
-    
+
     // make F0 singular (of rank 2) by decomposing it with SVD,
     // zeroing the last diagonal element of W and then composing the matrices back.
 
@@ -272,9 +272,9 @@ icvFMatrix_8Point( const CvPoint2D64f* m0, const CvPoint2D64f* m1,
     // F0 <- U*diag([W(1), W(2), 0])*V'
     cvGEMM( &U, &W, 1., 0, 0., &TF, CV_GEMM_A_T );
     cvGEMM( &TF, &V, 1., 0, 0., &F0, 0/*CV_GEMM_B_T*/ );
-    
+
     // apply the transformation that is inverse
-    // to what we used to normalize the point coordinates 
+    // to what we used to normalize the point coordinates
     {
         double tt0[] = { scale0, 0, -scale0*m0c.x, 0, scale0, -scale0*m0c.y, 0, 0, 1 };
         double tt1[] = { scale1, 0, -scale1*m1c.x, 0, scale1, -scale1*m1c.y, 0, 0, 1 };
@@ -282,7 +282,7 @@ icvFMatrix_8Point( const CvPoint2D64f* m0, const CvPoint2D64f* m1,
         T0 = T1 = F0;
         T0.data.db = tt0;
         T1.data.db = tt1;
-        
+
         // F0 <- T1'*F0*T0
         cvGEMM( &T1, &F0, 1., 0, 0., &TF, CV_GEMM_A_T );
         F0.data.db = fmatrix;
@@ -310,12 +310,12 @@ icvFMatrix_RANSAC( const CvPoint2D64f* m0, const CvPoint2D64f* m1,
                    unsigned rng_seed, int use_8point )
 {
     int result = 0;
-    
+
     const int max_random_iters = 1000;
     const int sample_size = 7;
     uchar* curr_mask = 0;
     uchar* temp_mask = 0;
-    
+
     CV_FUNCNAME( "icvFMatrix_RANSAC" );
 
     __BEGIN__;
@@ -372,7 +372,7 @@ icvFMatrix_RANSAC( const CvPoint2D64f* m0, const CvPoint2D64f* m1,
 
         if( n < 1 || n > 3 )
             continue;
-        
+
         // for each matrix calculate the backprojection error
         // (distance to the corresponding epipolar lines) for each point and thus find
         // the number of in-liers.
@@ -405,7 +405,7 @@ icvFMatrix_RANSAC( const CvPoint2D64f* m0, const CvPoint2D64f* m1,
 
             if( good_count > MAX( best_good_count, 6 ) )
             {
-                double ep, t;
+                double ep, lp, lep;
                 int new_max_samples;
 
                 // update the current best fundamental matrix and "goodness" flags
@@ -416,10 +416,15 @@ icvFMatrix_RANSAC( const CvPoint2D64f* m0, const CvPoint2D64f* m1,
 
                 // try to update (decrease) <max_samples>
                 ep = (double)(count - good_count)/count;
-                t = log(1. - p);
-                new_max_samples = cvRound(t/log(1. - pow(ep, 7.)));
-
-                max_samples = MIN( new_max_samples, max_samples );
+                lp = log(1. - p);
+                lep = log(1. - pow(ep,7.));
+                if( lp < lep || lep >= 0 )
+                    break;
+                else
+                {
+                    new_max_samples = cvRound(lp/lep);
+                    max_samples = MIN( new_max_samples, max_samples );
+                }
             }
         }
     }
@@ -463,7 +468,7 @@ icvFMatrix_LMedS( const CvPoint2D64f* m0, const CvPoint2D64f* m1,
     float* dist = 0;
     uchar* curr_mask = 0;
     uchar* temp_mask = 0;
-    
+
     CV_FUNCNAME( "icvFMatrix_LMedS" );
 
     __BEGIN__;
@@ -520,7 +525,7 @@ icvFMatrix_LMedS( const CvPoint2D64f* m0, const CvPoint2D64f* m1,
 
         // find 1 or 3 fundamental matrix out of the 7 point correspondences
         n = icvFMatrix_7Point( ms0, ms1, ff );
-        
+
         if( n < 1 || n > 3 )
             continue;
 
@@ -563,9 +568,9 @@ icvFMatrix_LMedS( const CvPoint2D64f* m0, const CvPoint2D64f* m1,
 
             if( median < least_median )
             {
-                double ep, t;
+                double ep, lp, lep;
                 int new_max_samples;
-                
+
                 // update the current best fundamental matrix and "goodness" flags
                 if( mask )
                     memcpy( mask, curr_mask, count );
@@ -575,10 +580,15 @@ icvFMatrix_LMedS( const CvPoint2D64f* m0, const CvPoint2D64f* m1,
 
                 // try to update (decrease) <max_samples>
                 ep = (double)(count - good_count)/count;
-                t = log(1. - p);
-                new_max_samples = cvRound(t/log(1. - pow(ep, 7.)));
-
-                max_samples = MIN( new_max_samples, max_samples );
+                lp = log(1. - p);
+                lep = log(1. - pow(ep,7.));
+                if( lp < lep || lep >= 0 )
+                    break;
+                else
+                {
+                    new_max_samples = cvRound(lp/lep);
+                    max_samples = MIN( new_max_samples, max_samples );
+                }
             }
         }
     }
@@ -704,7 +714,7 @@ cvFindFundamentalMat( const CvMat* points0, const CvMat* points1,
         const CvMat* spt = k == 0 ? points0 : points1;
         CvPoint2D64f* dpt = pt[k] = (CvPoint2D64f*)spt->data.db;
         int plane_stride, stride, elem_size;
-    
+
         if( CV_IS_MAT_CONT(spt->type) && CV_MAT_DEPTH(spt->type) == CV_64F &&
             dims == 2 && (spt->rows == 1 || spt->rows == count) )
             continue;
@@ -730,7 +740,7 @@ cvFindFundamentalMat( const CvMat* points0, const CvMat* points1,
             const float* xp = spt->data.fl;
             const float* yp = xp + plane_stride;
             const float* zp = dims == 3 ? yp + plane_stride : 0;
-            
+
             for( i = 0; i < count; i++ )
             {
                 double x = *xp, y = *yp;
@@ -753,7 +763,7 @@ cvFindFundamentalMat( const CvMat* points0, const CvMat* points1,
             const double* xp = spt->data.db;
             const double* yp = xp + plane_stride;
             const double* zp = dims == 3 ? yp + plane_stride : 0;
-            
+
             for( i = 0; i < count; i++ )
             {
                 double x = *xp, y = *yp;
@@ -823,7 +833,7 @@ cvComputeCorrespondEpilines( const CvMat* points, int pointImageID,
                              const CvMat* fmatrix, CvMat* lines )
 {
     CV_FUNCNAME( "cvComputeCorrespondEpilines" );
-    
+
     __BEGIN__;
 
     int abc_stride, abc_plane_stride, abc_elem_size;
@@ -922,7 +932,7 @@ cvComputeCorrespondEpilines( const CvMat* points, int pointImageID,
     CV_CALL( cvConvert( fmatrix, &F ));
     if( pointImageID == 2 )
         cvTranspose( &F, &F );
-    
+
     xp = points->data.ptr;
     yp = xp + plane_stride;
     zp = dims == 3 ? yp + plane_stride : 0;
@@ -930,7 +940,7 @@ cvComputeCorrespondEpilines( const CvMat* points, int pointImageID,
     ap = lines->data.ptr;
     bp = ap + abc_plane_stride;
     cp = bp + abc_plane_stride;
-        
+
     for( i = 0; i < count; i++ )
     {
         double x, y, z = 1.;
@@ -955,7 +965,7 @@ cvComputeCorrespondEpilines( const CvMat* points, int pointImageID,
         b = f[3]*x + f[4]*y + f[5]*z;
         c = f[6]*x + f[7]*y + f[8]*z;
         nu = a*a + b*b;
-        nu = nu ? 1./sqrt(nu) : 1.; 
+        nu = nu ? 1./sqrt(nu) : 1.;
         a *= nu; b *= nu; c *= nu;
 
         if( abc_depth == CV_32F )
@@ -989,7 +999,7 @@ cvConvertPointsHomogenious( const CvMat* src, CvMat* dst )
     CV_FUNCNAME( "cvConvertPointsHomogenious" );
 
     __BEGIN__;
-    
+
     int i, s_count, s_dims, d_count, d_dims;
     CvMat _src, _dst, _ones;
     CvMat* ones = 0;
@@ -1099,14 +1109,14 @@ cvConvertPointsHomogenious( const CvMat* src, CvMat* dst )
             }
             cvTranspose( src, dst );
         }
-        
+
         if( ones )
             cvSet( ones, cvRealScalar(1.) );
     }
     else
     {
         int s_plane_stride, s_stride, d_plane_stride, d_stride, elem_size;
-        
+
         if( !CV_ARE_TYPES_EQ( src, dst ))
         {
             CV_CALL( temp = cvCreateMat( src->rows, src->cols, dst->type ));
@@ -1154,7 +1164,7 @@ cvConvertPointsHomogenious( const CvMat* src, CvMat* dst )
             }
 
             cvDiv( 0, denom, denom );
-            
+
             if( d_dims == 3 )
                 for( i = 0; i < d_count; i++ )
                 {
@@ -1200,7 +1210,7 @@ cvConvertPointsHomogenious( const CvMat* src, CvMat* dst )
             }
 
             cvDiv( 0, denom, denom );
-            
+
             if( d_dims == 3 )
                 for( i = 0; i < d_count; i++ )
                 {
