@@ -421,7 +421,7 @@ IplConvKernelFP;
 
 /* for storing double-precision
    floating point data in IplImage's */
-#define IPL_DEPTH_64F  64 
+#define IPL_DEPTH_64F  64
 
 /* get reference to pixel at (col,row),
    for multi-channel images (col) should be multiplied by number of channels */
@@ -1085,7 +1085,10 @@ CV_INLINE  CvScalar  cvRealScalar( double val0 )
 CV_INLINE  CvScalar  cvScalarAll( double val0123 )
 {
     CvScalar scalar;
-    scalar.val[0] = scalar.val[1] = scalar.val[2] = scalar.val[3] = val0123;
+    scalar.val[0] = val0123;
+    scalar.val[1] = val0123;
+    scalar.val[2] = val0123;
+    scalar.val[3] = val0123;
     return scalar;
 }
 
