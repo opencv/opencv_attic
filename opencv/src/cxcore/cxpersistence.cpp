@@ -2628,6 +2628,7 @@ CV_IMPL CvFileStorage*
 cvOpenFileStorage( const char* filename, CvMemStorage* dststorage, int flags )
 {
     CvFileStorage* fs = 0;
+    char* xml_buf = 0;
 
     CV_FUNCNAME("cvOpenFileStorage" );
 
@@ -2683,10 +2684,48 @@ cvOpenFileStorage( const char* filename, CvMemStorage* dststorage, int flags )
         fs->buffer_end = fs->buffer_start + buf_size;
         if( fs->is_xml )
         {
+            int file_size = (int)ftell( fs->file );
             CV_CALL( fs->strstorage = cvCreateChildMemStorage( fs->memstorage ));
-            if( !append )
+            if( !append || file_size == 0 )
+            {
                 fputs( "<?xml version=\"1.0\"?>\n", fs->file );
-            fputs( "<opencv_storage>\n", fs->file );
+                fputs( "<opencv_storage>\n", fs->file );
+            }
+            else
+            {
+                int xml_buf_size = 1 << 10;
+                char substr[] = "</opencv_storage>";
+                int last_occurence = -1;
+                xml_buf_size = MIN(xml_buf_size, file_size);
+                fseek( fs->file, -xml_buf_size, SEEK_END );
+                CV_CALL(xml_buf = (char*)cvAlloc( xml_buf_size+2 ));
+                // find the last occurence of </opencv_storage>
+                for(;;)
+                {
+                    int line_offset = ftell( fs->file );
+                    char* ptr0 = fgets( xml_buf, xml_buf_size, fs->file ), *ptr;
+                    if( !ptr0 )
+                        break;
+                    ptr = ptr0;
+                    for(;;)
+                    {
+                        ptr = strstr( ptr, substr );
+                        if( !ptr )
+                            break;
+                        last_occurence = line_offset + (ptr - ptr0);
+                        ptr += strlen(substr);
+                    }
+                }
+                if( last_occurence < 0 )
+                    CV_ERROR( CV_StsError, "Could not find </opencv_storage> in the end of file.\n" );
+                fclose( fs->file );
+                fs->file = fopen( fs->filename, "r+t" );
+                fseek( fs->file, last_occurence, SEEK_SET );
+                // replace the last "</opencv_storage>" with " <!-- resumed -->", which has the same length
+                fputs( " <!-- resumed -->", fs->file );
+                fseek( fs->file, 0, SEEK_END );
+                fputs( "\n", fs->file );
+            }
             fs->start_write_struct = icvXMLStartWriteStruct;
             fs->end_write_struct = icvXMLEndWriteStruct;
             fs->write_int = icvXMLWriteInt;
@@ -2759,6 +2798,8 @@ cvOpenFileStorage( const char* filename, CvMemStorage* dststorage, int flags )
             fs->file = 0;
         }
     }
+
+    cvFree( (void**)&xml_buf );
 
     return  fs;
 }
@@ -4025,7 +4066,7 @@ icvWriteHeaderData( CvFileStorage* fs, const CvSeq* seq,
             unsigned extra_size = seq->header_size - initial_header_size;
             // a heuristic to provide nice defaults for sequences of int's & float's
             if( extra_size % sizeof(int) == 0 )
-                sprintf( header_dt_buf, "%ui", (int)(extra_size/sizeof(int)) );
+                sprintf( header_dt_buf, "%ui", (unsigned)(extra_size/sizeof(int)) );
             else
                 sprintf( header_dt_buf, "%uu", extra_size );
             header_dt = header_dt_buf;
@@ -4079,7 +4120,7 @@ icvGetFormat( const CvSeq* seq, const char* dt_key, CvAttrList* attr,
         unsigned extra_elem_size = seq->elem_size - initial_elem_size;
         // a heuristic to provide nice defaults for sequences of int's & float's
         if( extra_elem_size % sizeof(int) == 0 )
-            sprintf( dt_buf, "%ui", (int)(extra_elem_size/sizeof(int)) );
+            sprintf( dt_buf, "%ui", (unsigned)(extra_elem_size/sizeof(int)) );
         else
             sprintf( dt_buf, "%uu", extra_elem_size );
         dt = dt_buf;
