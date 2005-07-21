@@ -524,7 +524,7 @@ icvSVD_64f( double* a, int lda, int m, int n,
                     s = -f / h;
 
                     if( uT )
-                        icvGivens_64f( m, uT + lduT * (i - 1), uT + lduT * i, c, s );
+                        icvGivens_64f( m, uT + lduT * (l - 1), uT + lduT * i, c, s );
                 }
             }
 
@@ -920,7 +920,7 @@ icvSVD_32f( float* a, int lda, int m, int n,
                     s = -f / h;
 
                     if( uT )
-                        icvGivens_32f( m, uT + lduT * (i - 1), uT + lduT * i, c, s );
+                        icvGivens_32f( m, uT + lduT * (l - 1), uT + lduT * i, c, s );
                 }
             }
 
@@ -1292,12 +1292,14 @@ cvSVD( CvArr* aarr, CvArr* warr, CvArr* uarr, CvArr* varr, int flags )
             CV_ERROR( CV_StsUnmatchedFormats, "" );
 
         if( u_rows != m || (u_cols != m && u_cols != n))
-            CV_ERROR( CV_StsUnmatchedSizes, "U matrix has unappropriate size" );
+            CV_ERROR( CV_StsUnmatchedSizes, !t_svd ? "U matrix has unappropriate size" :
+                                                     "V matrix has unappropriate size" );
             
         temp_u = (u_rows != u_cols && !(flags & CV_SVD_U_T)) || u->data.ptr==a->data.ptr;
 
         if( w_is_mat && u_cols != w_rows )
-            CV_ERROR( CV_StsUnmatchedSizes, "U and W have incompatible sizes" );
+            CV_ERROR( CV_StsUnmatchedSizes, !t_svd ? "U and W have incompatible sizes" :
+                                                     "V and W have incompatible sizes" );
     }
     else
     {
@@ -1328,10 +1330,12 @@ cvSVD( CvArr* aarr, CvArr* warr, CvArr* uarr, CvArr* varr, int flags )
             CV_ERROR( CV_StsUnmatchedFormats, "" );
 
         if( v_rows != n || v_cols != n )
-            CV_ERROR( CV_StsUnmatchedSizes, "V matrix has unappropriate size" );
+            CV_ERROR( CV_StsUnmatchedSizes, t_svd ? "U matrix has unappropriate size" :
+                                                    "V matrix has unappropriate size" );
 
         if( w_is_mat && w_cols != v_cols )
-            CV_ERROR( CV_StsUnmatchedSizes, "V and W have incompatible sizes" );
+            CV_ERROR( CV_StsUnmatchedSizes, t_svd ? "U and W have incompatible sizes" :
+                                                    "V and W have incompatible sizes" );
     }
     else
     {
