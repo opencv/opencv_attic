@@ -691,6 +691,8 @@ IPCV_FILTER_MEDIAN( 8u, 1 )
 IPCV_FILTER_MEDIAN( 8u, 3 )
 IPCV_FILTER_MEDIAN( 8u, 4 )
 
+#ifdef IPP5
+
 #define IPCV_FILTER_BOX( flavor, cn )                               \
 IPPAPI( IppStatus, ippiFilterBox_##flavor##_C##cn##R,               \
             ( const void* src, int srcstep, void* dst, int dststep, \
@@ -704,6 +706,8 @@ IPCV_FILTER_BOX( 32f, 3 )
 IPCV_FILTER_BOX( 32f, 4 )
 
 #undef IPCV_FILTER_BOX
+
+#endif
 
 /****************************************************************************************\
 *                                 Derivative Filters                                     *
