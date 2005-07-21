@@ -1256,7 +1256,7 @@ cvCreateTrackbar( const char* trackbar_name, const char* window_name,
         tbs.iBitmap = 0;
         tbs.idCommand = bcount; // Set button id to it's number
         tbs.fsState = TBSTATE_ENABLED;
-#if 0/*!defined WIN64 && !defined EM64T*/
+#if !defined WIN64 && !defined EM64T
         tbs.fsStyle = 0;
         tbs.iString = 0;
 #else
