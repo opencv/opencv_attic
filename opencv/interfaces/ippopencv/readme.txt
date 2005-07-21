@@ -28,3 +28,9 @@ Note, that in order to ship ippopencv*.dll with commercial products one
 must obtain a commercial license for IPP. This tool is only a specialized
 version of customdll example included into IPP distribution
 (<IPP>/tools/customdll) and it is provided for OpenCV users convenience.
+
+
+A note for Linux users: while the ippopencv project has not been ported on Linux yet,
+it should be possible to build custom shared library using the example from IPP
+for Linux distribution and opencvipp_funclist.h as the list of functions.
+
