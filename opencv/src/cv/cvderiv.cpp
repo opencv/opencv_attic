@@ -52,7 +52,7 @@ static int icvCalcKer( char *kernel, int order, int size,
     int i, j;
     int* kerI = (int*)kernel;
     int type = -1;
-    
+
     if( size != CV_SCHARR )
     {
         if( size == 3 )
@@ -158,7 +158,7 @@ CvFilterState* icvSobelInitAlloc( int roiwidth, int datatype, int size,
     CV_FUNCNAME( "icvSobelInitAlloc" );
 
     __BEGIN__;
-    
+
     if( size == CV_SCHARR )
     {
         if( dx + dy != 1 )
@@ -191,7 +191,7 @@ CvFilterState* icvSobelInitAlloc( int roiwidth, int datatype, int size,
     {
     CvSize element_size = { x_size, y_size };
     CvPoint element_anchor = { x_size/2, y_size/2 };
-    
+
     state = icvFilterInitAlloc( roiwidth, worktype, 1, element_size, element_anchor, ker,
                                 ICV_MAKE_SEPARABLE_KERNEL(x_filter_type, y_filter_type) );
     }
@@ -418,13 +418,13 @@ CvStatus CV_STDCALL icvSobel_8u16s_C1R( const uchar* pSrc, int srcStep,
                         int val0, val1;
                         val0 = trow2[x] - trow1[x];
                         val1 = trow2[x + 1] - trow1[x + 1];
-                
+
                         tdst2[x + 0] = (short)val0;
                         tdst2[x + 1] = (short)val1;
-                
+
                         val0 = trow2[x + 2] - trow1[x + 2];
                         val1 = trow2[x + 3] - trow1[x + 3];
-                
+
                         tdst2[x + 2] = (short)val0;
                         tdst2[x + 3] = (short)val1;
                     }
@@ -470,13 +470,13 @@ CvStatus CV_STDCALL icvSobel_8u16s_C1R( const uchar* pSrc, int srcStep,
                         int val0, val1;
                         val0 = trow[x]*2 + trow1[x] + trow2[x];
                         val1 = trow[x + 1]*2 + trow1[x+1] + trow2[x+1];
-                
+
                         tdst2[x + 0] = (short)val0;
                         tdst2[x + 1] = (short)val1;
-                
+
                         val0 = trow[x + 2]*2 + trow1[x+2] + trow2[x+2];
                         val1 = trow[x + 3]*2 + trow1[x+3] + trow2[x+3];
-                
+
                         tdst2[x + 2] = (short)val0;
                         tdst2[x + 3] = (short)val1;
                     }
@@ -490,13 +490,13 @@ CvStatus CV_STDCALL icvSobel_8u16s_C1R( const uchar* pSrc, int srcStep,
                         int val0, val1;
                         val0 = trow[x]*10 + (trow1[x] + trow2[x])*3;
                         val1 = trow[x + 1]*10 + (trow1[x+1] + trow2[x+1])*3;
-                
+
                         tdst2[x + 0] = (short)val0;
                         tdst2[x + 1] = (short)val1;
-                
+
                         val0 = trow[x + 2]*10 + (trow1[x+2] + trow2[x+2])*3;
                         val1 = trow[x + 3]*10 + (trow1[x+3] + trow2[x+3])*3;
-                
+
                         tdst2[x + 2] = (short)val0;
                         tdst2[x + 3] = (short)val1;
                     }
@@ -609,7 +609,11 @@ CvStatus CV_STDCALL icvSobel_32f_C1R( const float* pSrc, int srcStep,
     if( stage == CV_WHOLE || stage == CV_START )
     {
         for( i = 0; i < ker_height; i++ )
+        {
             rows[i] = (float*)(state->buffer + state->buffer_step * i);
+            for( x = width; (x&3) != 0; x++ )
+                rows[i][x] = 0.f;
+        }
 
         crows = ker_y;
         if( stage != CV_WHOLE )
@@ -781,13 +785,13 @@ CvStatus CV_STDCALL icvSobel_32f_C1R( const float* pSrc, int srcStep,
                         double val0, val1;
                         val0 = trow2[x] - trow1[x];
                         val1 = trow2[x + 1] - trow1[x + 1];
-                
+
                         tdst2[x + 0] = (float)val0;
                         tdst2[x + 1] = (float)val1;
-                
+
                         val0 = trow2[x + 2] - trow1[x + 2];
                         val1 = trow2[x + 3] - trow1[x + 3];
-                
+
                         tdst2[x + 2] = (float)val0;
                         tdst2[x + 3] = (float)val1;
                     }
@@ -833,13 +837,13 @@ CvStatus CV_STDCALL icvSobel_32f_C1R( const float* pSrc, int srcStep,
                         double val0, val1;
                         val0 = trow[x]*2 + trow1[x] + trow2[x];
                         val1 = trow[x + 1]*2 + trow1[x+1] + trow2[x+1];
-                
+
                         tdst2[x + 0] = (float)val0;
                         tdst2[x + 1] = (float)val1;
-                
+
                         val0 = trow[x + 2]*2 + trow1[x+2] + trow2[x+2];
                         val1 = trow[x + 3]*2 + trow1[x+3] + trow2[x+3];
-                
+
                         tdst2[x + 2] = (float)val0;
                         tdst2[x + 3] = (float)val1;
                     }
@@ -853,13 +857,13 @@ CvStatus CV_STDCALL icvSobel_32f_C1R( const float* pSrc, int srcStep,
                         double val0, val1;
                         val0 = trow[x]*10 + (trow1[x] + trow2[x])*3;
                         val1 = trow[x + 1]*10 + (trow1[x+1] + trow2[x+1])*3;
-                
+
                         tdst2[x + 0] = (float)val0;
                         tdst2[x + 1] = (float)val1;
-                
+
                         val0 = trow[x + 2]*10 + (trow1[x+2] + trow2[x+2])*3;
                         val1 = trow[x + 3]*10 + (trow1[x+3] + trow2[x+3])*3;
-                
+
                         tdst2[x + 2] = (float)val0;
                         tdst2[x + 3] = (float)val1;
                     }
@@ -979,7 +983,7 @@ icvLaplaceInitAlloc( int roiwidth, int datatype, int size )
     CV_FUNCNAME( "icvLaplaceInitAlloc" );
 
     __BEGIN__;
-    
+
     if( (size&1) == 0 || size < 1 || size > MAX_KERNEL_SIZE )
         CV_ERROR( CV_StsBadSize, "Aperture size can be 1, 3, 5 or 7" );
 
@@ -1214,15 +1218,15 @@ icvLaplace_8u16s_C1R( const uchar* pSrc, int srcStep,
                            trow[x+width]*2 + trow1[x+width] + trow2[x+width];
                     val1 = trow[x+1]*2 + trow1[x+1] + trow2[x+1] -
                            trow[x+1+width]*2 + trow1[x+1+width] + trow2[x+1+width];
-            
+
                     tdst2[x + 0] = (short)val0;
                     tdst2[x + 1] = (short)val1;
-            
+
                     val0 = trow[x+2]*2 + trow1[x+2] + trow2[x+2] -
                            trow[x+2+width]*2 + trow1[x+2+width] + trow2[x+2+width];
                     val1 = trow[x+3]*2 + trow1[x+3] + trow2[x+3] -
                            trow[x+3+width]*2 + trow1[x+3+width] + trow2[x+3+width];
-            
+
                     tdst2[x + 2] = (short)val0;
                     tdst2[x + 3] = (short)val1;
                 }
@@ -1236,15 +1240,15 @@ icvLaplace_8u16s_C1R( const uchar* pSrc, int srcStep,
                            trow[x+width]*2 + trow1[x+width] + trow2[x+width];
                     val1 = trow[x+1] -
                            trow[x+1+width]*2 + trow1[x+1+width] + trow2[x+1+width];
-            
+
                     tdst2[x + 0] = (short)val0;
                     tdst2[x + 1] = (short)val1;
-            
+
                     val0 = trow[x+2] -
                            trow[x+2+width]*2 + trow1[x+2+width] + trow2[x+2+width];
                     val1 = trow[x+3] -
                            trow[x+3+width]*2 + trow1[x+3+width] + trow2[x+3+width];
-            
+
                     tdst2[x + 2] = (short)val0;
                     tdst2[x + 3] = (short)val1;
                 }
@@ -1261,15 +1265,15 @@ icvLaplace_8u16s_C1R( const uchar* pSrc, int srcStep,
                        trow0[x+width] + trow4[x+width] - 2*trow[x+width];
                 val1 = trow0[x+1] + trow4[x+1] + (trow1[x+1] + trow3[x+1])*4 + trow[x+1]*6 +
                        trow0[x+1+width] + trow4[x+1+width] - 2*trow[x+1+width];
-            
+
                 tdst2[x + 0] = (short)val0;
                 tdst2[x + 1] = (short)val1;
-            
+
                 val0 = trow0[x+2] + trow4[x+2] + (trow1[x+2] + trow3[x+2])*4 + trow[x+2]*6 +
                        trow0[x+2+width] + trow4[x+2+width] - 2*trow[x+2+width];
                 val1 = trow0[x+3] + trow4[x+3] + (trow1[x+3] + trow3[x+3])*4 + trow[x+3]*6 +
                        trow0[x+3+width] + trow4[x+3+width] - 2*trow[x+3+width];
-            
+
                 tdst2[x + 2] = (short)val0;
                 tdst2[x + 3] = (short)val1;
             }
@@ -1375,7 +1379,11 @@ icvLaplace_32f_C1R( const float* pSrc, int srcStep,
     if( stage == CV_WHOLE || stage == CV_START )
     {
         for( i = 0; i < ker_height; i++ )
+        {
             rows[i] = (float*)(state->buffer + state->buffer_step * i);
+            for( x = width; (x&3) != 0; x++ )
+                rows[i][x] = rows[i][x+width] = 0.f;
+        }
 
         crows = ker_y;
         if( stage != CV_WHOLE )
@@ -1546,15 +1554,15 @@ icvLaplace_32f_C1R( const float* pSrc, int srcStep,
                            trow[x+width]*2 + trow1[x+width] + trow2[x+width];
                     val1 = trow[x+1]*2 + trow1[x+1] + trow2[x+1] -
                            trow[x+1+width]*2 + trow1[x+1+width] + trow2[x+1+width];
-            
+
                     tdst2[x + 0] = (float)val0;
                     tdst2[x + 1] = (float)val1;
-            
+
                     val0 = trow[x+2]*2 + trow1[x+2] + trow2[x+2] -
                            trow[x+2+width]*2 + trow1[x+2+width] + trow2[x+2+width];
                     val1 = trow[x+3]*2 + trow1[x+3] + trow2[x+3] -
                            trow[x+3+width]*2 + trow1[x+3+width] + trow2[x+3+width];
-            
+
                     tdst2[x + 2] = (float)val0;
                     tdst2[x + 3] = (float)val1;
                 }
@@ -1568,15 +1576,15 @@ icvLaplace_32f_C1R( const float* pSrc, int srcStep,
                            trow[x+width]*2 + trow1[x+width] + trow2[x+width];
                     val1 = trow[x+1] -
                            trow[x+1+width]*2 + trow1[x+1+width] + trow2[x+1+width];
-            
+
                     tdst2[x + 0] = (float)val0;
                     tdst2[x + 1] = (float)val1;
-            
+
                     val0 = trow[x+2] -
                            trow[x+2+width]*2 + trow1[x+2+width] + trow2[x+2+width];
                     val1 = trow[x+3] -
                            trow[x+3+width]*2 + trow1[x+3+width] + trow2[x+3+width];
-            
+
                     tdst2[x + 2] = (float)val0;
                     tdst2[x + 3] = (float)val1;
                 }
@@ -1593,15 +1601,15 @@ icvLaplace_32f_C1R( const float* pSrc, int srcStep,
                        trow0[x+width] + trow4[x+width] - 2*trow[x+width];
                 val1 = trow0[x+1] + trow4[x+1] + (trow1[x+1] + trow3[x+1])*4 + trow[x+1]*6 +
                        trow0[x+1+width] + trow4[x+1+width] - 2*trow[x+1+width];
-            
+
                 tdst2[x + 0] = (float)val0;
                 tdst2[x + 1] = (float)val1;
-            
+
                 val0 = trow0[x+2] + trow4[x+2] + (trow1[x+2] + trow3[x+2])*4 + trow[x+2]*6 +
                        trow0[x+2+width] + trow4[x+2+width] - 2*trow[x+2+width];
                 val1 = trow0[x+3] + trow4[x+3] + (trow1[x+3] + trow3[x+3])*4 + trow[x+3]*6 +
                        trow0[x+3+width] + trow4[x+3+width] - 2*trow[x+3+width];
-            
+
                 tdst2[x + 2] = (float)val0;
                 tdst2[x + 3] = (float)val1;
             }
@@ -1680,7 +1688,7 @@ void icvSepConvSmall3_32f( float*  src, int src_step,
 {
     int  dst_width, buffer_step = 0;
     int  x, y;
-    
+
     assert( src && dst && src_size.width > 2 && src_size.height > 2 &&
             (src_step & 3) == 0 && (dst_step & 3) == 0 &&
             (kx || ky) && (buffer || !kx || !ky));
@@ -1692,7 +1700,7 @@ void icvSepConvSmall3_32f( float*  src, int src_step,
 
     if( !kx )
     {
-        /* set vars, so that vertical convolution 
+        /* set vars, so that vertical convolution
            will write results into destination ROI and
            horizontal convolution won't run */
         src_size.width = dst_width;
@@ -1702,11 +1710,11 @@ void icvSepConvSmall3_32f( float*  src, int src_step,
     }
 
     assert( src_step >= src_size.width && dst_step >= dst_width );
-    
+
     src_size.height -= 3;
     if( !ky )
     {
-        /* set vars, so that vertical convolution won't run and 
+        /* set vars, so that vertical convolution won't run and
            horizontal convolution will write results into destination ROI and */
         src_size.height += 3;
         buffer_step = src_step;
@@ -1874,7 +1882,7 @@ cvSobel( const void* srcarr, void* dstarr, int dx, int dy, int aperture_size )
             CvSize stripe_size;
 
             CV_CALL( temp = icvIPPFilterInit( src, stripe_buf_size, el_size ));
-            
+
             shifted_ptr = temp->data.ptr +
                 el_anchor.y*temp->step + el_anchor.x*CV_ELEM_SIZE(depth);
             temp_step = temp->step ? temp->step : CV_STUB_STEP;
@@ -1933,7 +1941,7 @@ cvLaplace( const void* srcarr, void* dstarr, int aperture_size )
 {
     static CvFuncTable laplace_tab;
     static int inittab = 0;
-    
+
     CV_FUNCNAME( "cvLaplace" );
 
     CvFilterState *state = 0;
