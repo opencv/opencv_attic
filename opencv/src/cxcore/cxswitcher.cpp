@@ -110,8 +110,8 @@ icvInitProcessorInfo( CvProcessorInfo* cpu_info )
         int version = 0, features = 0, family = 0;
         int id = 0;
         HKEY key = 0;
-        
-        cpu_info->count = (int)sys.dwNumberOfProcessors; 
+
+        cpu_info->count = (int)sys.dwNumberOfProcessors;
         unsigned long val = 0, sz = sizeof(val);
 
         if( RegOpenKeyEx( HKEY_LOCAL_MACHINE, "HARDWARE\\DESCRIPTION\\SYSTEM\\CentralProcessor\\0\\",
@@ -122,9 +122,7 @@ icvInitProcessorInfo( CvProcessorInfo* cpu_info )
             RegCloseKey( key );
         }
 
-#ifdef WIN64
-        assert(0);
-#elif defined WIN32 && defined _MSC_VER
+#if defined WIN32 && (defined _MSC_VER || defined __BORLANDC__ && __BORLANDC__>=0x560)
         __asm
         {
             /* use CPUID to determine the features supported */
@@ -133,8 +131,13 @@ icvInitProcessorInfo( CvProcessorInfo* cpu_info )
             push  ebx
             push  esi
             push  edi
+#ifdef __BORLANDC__
+            db 0fh
+            db 0a2h
+#else
             _emit 0x0f
             _emit 0xa2
+#endif
             pop   edi
             pop   esi
             pop   ebx
@@ -174,7 +177,7 @@ icvInitProcessorInfo( CvProcessorInfo* cpu_info )
             id = features & ICV_CPUID_W7;
 
         cpu_info->model = id == ICV_CPUID_W7 ? CV_PROC_IA32_P4 :
-                          id == ICV_CPUID_A6 ? CV_PROC_IA32_PIII : 
+                          id == ICV_CPUID_A6 ? CV_PROC_IA32_PIII :
                           id == ICV_CPUID_M6 ? CV_PROC_IA32_PII :
                           CV_PROC_IA32_GENERIC;
     }
@@ -187,7 +190,7 @@ icvInitProcessorInfo( CvProcessorInfo* cpu_info )
         if( sys.wProcessorArchitecture == PROCESSOR_ARCHITECTURE_IA64 )
             cpu_info->model = CV_PROC_IA64_ITANIUM;
 #endif
-        if( QueryPerformanceFrequency( &freq ) ) 
+        if( QueryPerformanceFrequency( &freq ) )
             cpu_info->frequency = (double)freq.QuadPart;
     }
 #else
@@ -318,7 +321,7 @@ static int
 icvUpdatePluginFuncTab( CvPluginFuncInfo* func_tab )
 {
     int i, loaded_functions = 0;
-    
+
     // 1. reset pointers
     for( i = 0; func_tab[i].func_addr != 0; i++ )
     {
@@ -401,7 +404,7 @@ icvUpdatePluginFuncTab( CvPluginFuncInfo* func_tab )
             #endif
         }
     }
-    
+
 #if VERBOSE_LOADING
     {
     int not_loaded = 0;
@@ -432,7 +435,7 @@ CV_IMPL int
 cvRegisterModule( const CvModuleInfo* module )
 {
     CvModuleInfo* module_copy = 0;
-    
+
     CV_FUNCNAME( "cvRegisterModule" );
 
     __BEGIN__;
@@ -530,17 +533,17 @@ cvUseOptimized( int load_flag )
             {
                 sprintf( plugins[i].name, DLL_PREFIX "%s%s" DLL_DEBUG_FLAG DLL_SUFFIX,
                     plugins[i].basename, suffix );
-            
-                ICV_PRINTF(("loading %s...\n", plugins[i].name )); 
+
+                ICV_PRINTF(("loading %s...\n", plugins[i].name ));
                 plugins[i].handle = LoadLibrary( plugins[i].name );
                 if( plugins[i].handle != 0 )
                 {
-                    ICV_PRINTF(("%s loaded\n", plugins[i].name )); 
+                    ICV_PRINTF(("%s loaded\n", plugins[i].name ));
                     loaded_modules++;
                 }
                 if( plugins[i].handle != 0 )
                     break;
-                
+
                 if( strcmp( suffix, "p4" ) == 0 )
                     suffix = "p3";
                 else if( strcmp( suffix, "p3" ) == 0 )
@@ -620,7 +623,7 @@ cvGetModuleInfo( const char* name, const char **version, const char **plugin_lis
             *version = joint_verinfo;
         }
     }
-    
+
     if( plugin_list )
     {
         char* ptr = plugin_list_buf;
@@ -656,14 +659,19 @@ CV_IMPL  int64  cvGetTickCount( void )
 
     if( CV_GET_PROC_ARCH(cpu_info->model) == CV_PROC_IA32_GENERIC )
     {
-#if defined WIN32 && !defined WIN64 && defined _MSC_VER        
+#if defined WIN32 && !defined WIN64 && (defined _MSC_VER || defined __BORLANDC__ && __BORLANDC__>=0x560)
+    #ifdef __BORLANDC__
+        __asm db 0fh
+        __asm db 31h
+    #else
         __asm _emit 0x0f;
         __asm _emit 0x31;
-#elif __GNUC__ > 2
+    #endif
+#elif (defined __GNUC__ || defined CV_ICC) && defined __i386__
         int64 t;
         asm volatile (".byte 0xf; .byte 0x31" /* "rdtsc" */ : "=A" (t));
         return t;
-#else
+#elif
         static const char code[] = "\x0f\x31\xc3";
         rdtsc_func func = (rdtsc_func)(void*)code;
         return func();
