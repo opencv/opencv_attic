@@ -2,7 +2,7 @@
 
 [Setup]
 AppName=Intel(R) Open Source Computer Vision Library
-AppVerName=Intel(R) Open Source Computer Vision Library, beta 4
+AppVerName=Intel(R) Open Source Computer Vision Library, beta 5
 AppCopyright=Copyright (C) 2000-2002 Intel Corporation
 DefaultDirName={pf}\OpenCV
 DefaultGroupName=OpenCV
@@ -10,7 +10,7 @@ DefaultGroupName=OpenCV
 SourceDir=..
 Compression=bzip/9
 LicenseFile="docs\license.txt"
-OutputBaseFilename=OpenCV_b4a
+OutputBaseFilename=OpenCV_b5
 ; uncomment the following line if you want your installation to run on NT 3.51 too.
 ; MinVersion=4,3.51
 
@@ -18,7 +18,7 @@ OutputBaseFilename=OpenCV_b4a
 
 ; workspaces
 Name: "{app}\_make"
-Name: "{app}\_make\cbuilderx"
+;Name: "{app}\_make\cbuilderx"
 
 ; cxcore
 Name: "{app}\cxcore"
@@ -53,56 +53,52 @@ Name: "{app}\otherlibs\cvcam\src\windows"
 Name: "{app}\otherlibs\cvcam\src\unix"
 
 ; interfaces
-;Name: "{app}\interfaces"
-;Name: "{app}\interfaces\ch"
-;Name: "{app}\interfaces\ch\Devel"
-;Name: "{app}\interfaces\ch\Devel\include"
-;Name: "{app}\interfaces\ch\Devel\createchf"
-;Name: "{app}\interfaces\ch\Devel\c"
-;Name: "{app}\interfaces\ch\Devel\c\cv"
-;Name: "{app}\interfaces\ch\Devel\c\highgui"
-;Name: "{app}\interfaces\ch\Devel\lib.handmade"
-;Name: "{app}\interfaces\ch\OpenCV"
-;Name: "{app}\interfaces\ch\OpenCV\bin"
-;Name: "{app}\interfaces\ch\OpenCV\include"
-;Name: "{app}\interfaces\ch\OpenCV\lib"
-;Name: "{app}\interfaces\ch\OpenCV\dl"
-;Name: "{app}\interfaces\ch\OpenCV\demos"
+Name: "{app}\interfaces"
+Name: "{app}\interfaces\ch"
+Name: "{app}\interfaces\ch\c"
+Name: "{app}\interfaces\ch\c\handmade"
+Name: "{app}\interfaces\ch\c\handmade\cv"
+Name: "{app}\interfaces\ch\c\handmade\cvcam"
+Name: "{app}\interfaces\ch\c\handmade\cxcore"
+Name: "{app}\interfaces\ch\c\handmade\highgui"
+Name: "{app}\interfaces\ch\chfcreate"
+Name: "{app}\interfaces\ch\chfhandmade"
+Name: "{app}\interfaces\ch\demos"
+Name: "{app}\interfaces\ch\demos\data"
+Name: "{app}\interfaces\ch\demos\data\haarcascades"
 
-;Name: "{app}\interfaces\matlab"
-;Name: "{app}\interfaces\matlab\src"
-;Name: "{app}\interfaces\matlab\toolbox"
-;Name: "{app}\interfaces\matlab\toolbox\opencv"
-;Name: "{app}\interfaces\matlab\toolbox\opencv\cvdemos"
+Name: "{app}\interfaces\ipp"
+
+Name: "{app}\interfaces\swig"
+Name: "{app}\interfaces\swig\filtered"
+Name: "{app}\interfaces\swig\general"
+Name: "{app}\interfaces\swig\python"
 
 ; documentation
 Name: "{app}\docs"
 Name: "{app}\docs\ref"
 Name: "{app}\docs\ref\pics"
 Name: "{app}\docs\papers"
-;Name: "{app}\docs\appPage"
-;Name: "{app}\docs\appPage\3dTracker"
-;Name: "{app}\docs\appPage\Calibration"
-;Name: "{app}\docs\appPage\CamShift"
-;Name: "{app}\docs\appPage\ConDensation"
-;Name: "{app}\docs\appPage\FaceRecognition"
-;Name: "{app}\docs\appPage\Kalman"
-;Name: "{app}\docs\appPage\LKTracker"
 
 ; sample code
 Name: "{app}\samples"
 Name: "{app}\samples\c"
+Name: "{app}\samples\python"
 
 ; batch tests
 Name: "{app}\tests"
 Name: "{app}\tests\trs"
+Name: "{app}\tests\cxts"
+Name: "{app}\tests\cxcore"
+Name: "{app}\tests\cxcore\src"
 Name: "{app}\tests\cv"
 Name: "{app}\tests\cv\src"
 Name: "{app}\tests\cv\testdata"
 Name: "{app}\tests\cv\testdata\cameracalibration"
-Name: "{app}\tests\cv\testdata\gesturerecognition"
+;Name: "{app}\tests\cv\testdata\gesturerecognition"
 Name: "{app}\tests\cv\testdata\optflow"
 Name: "{app}\tests\cv\testdata\snakes"
+Name: "{app}\tests\python"
 
 ; utilities
 Name: "{app}\utils"
@@ -150,8 +146,8 @@ Source: "INSTALL"; DestDir: "{app}"
 Source: "_make\opencv*.dsw"; DestDir: "{app}\_make"
 Source: "_make\opencv*.sln"; DestDir: "{app}\_make"
 Source: "_make\makefile.*"; DestDir: "{app}\_make"
-Source: "_make\cbuilderx\*.cbx"; DestDir: "{app}\_make\cbuilderx"
-Source: "_make\cbuilderx\*.bpgr"; DestDir: "{app}\_make\cbuilderx"
+;Source: "_make\cbuilderx\*.cbx"; DestDir: "{app}\_make\cbuilderx"
+;Source: "_make\cbuilderx\*.bpgr"; DestDir: "{app}\_make\cbuilderx"
 
 ; cxcore
 Source: "cxcore\include\*.h*"; DestDir: "{app}\cxcore\include"
@@ -225,26 +221,35 @@ Source: "otherlibs\cvcam\Makefile.*"; DestDir: "{app}\otherlibs\cvcam"
 Source: "otherlibs\cvcam\src\Makefile.*"; DestDir: "{app}\otherlibs\cvcam\src"
 
 ; interfaces
-;Source: "interfaces\ch\ReadMe.txt"; DestDir: "{app}\interfaces\ch"
-;Source: "interfaces\ch\Devel\*.ch"; DestDir: "{app}\interfaces\ch\Devel"
-;Source: "interfaces\ch\Devel\include\*.h"; DestDir: "{app}\interfaces\ch\Devel\include"
-;Source: "interfaces\ch\Devel\createchf\*.h"; DestDir: "{app}\interfaces\ch\Devel\createchf"
-;Source: "interfaces\ch\Devel\c\cv\*.c"; DestDir: "{app}\interfaces\ch\Devel\c\cv"
-;Source: "interfaces\ch\Devel\c\cv\Makefile"; DestDir: "{app}\interfaces\ch\Devel\c\cv"
-;Source: "interfaces\ch\Devel\c\highgui\*.c"; DestDir: "{app}\interfaces\ch\Devel\c\highgui"
-;Source: "interfaces\ch\Devel\c\highgui\Makefile"; DestDir: "{app}\interfaces\ch\Devel\c\highgui"
-;Source: "interfaces\ch\Devel\c\cvcam\*.c"; DestDir: "{app}\interfaces\ch\Devel\c\cvcam"
-;Source: "interfaces\ch\Devel\c\cvcam\Makefile"; DestDir: "{app}\interfaces\ch\Devel\c\cvcam"
-;Source: "interfaces\ch\Devel\lib.handmade\*.chf"; DestDir: "{app}\interfaces\ch\Devel\lib.handmade"
-;Source: "interfaces\ch\OpenCV\lib\*.chf"; DestDir: "{app}\interfaces\ch\OpenCV\lib"
-;Source: "interfaces\ch\OpenCV\dl\*.dl"; DestDir: "{app}\interfaces\ch\OpenCV\dl"
-; add files from CV (because Inno handles duplicated files, this won't increase install size)
-;Source: "cv\include\*.h*"; DestDir: "{app}\interfaces\ch\OpenCV\include"
-;Source: "otherlibs\highgui\highgui.h"; DestDir: "{app}\interfaces\ch\OpenCV\include"
-;Source: "otherlibs\cvcam\include\cvcam.h"; DestDir: "{app}\interfaces\ch\OpenCV\include"
-;Source: "bin\cv.dll"; DestDir: "{app}\interfaces\ch\OpenCV\bin"
-;Source: "bin\highgui.dll"; DestDir: "{app}\interfaces\ch\OpenCV\bin"
-;Source: "bin\cvcam.dll"; DestDir: "{app}\interfaces\ch\OpenCV\bin"
+Source: "interfaces\Makefile.*"; DestDir: "{app}\interfaces"
+
+Source: "interfaces\ch\Makefile"; DestDir: "{app}\interfaces\ch"
+Source: "interfaces\ch\pkg*.ch"; DestDir: "{app}\interfaces\ch"
+Source: "interfaces\ch\readme.txt"; DestDir: "{app}\interfaces\ch"
+Source: "interfaces\ch\c\Makefile*"; DestDir: "{app}\interfaces\ch\c"
+Source: "interfaces\ch\c\handmade\cv\*.c"; DestDir: "{app}\interfaces\ch\c\handmade\cv"
+Source: "interfaces\ch\c\handmade\cvcam\*.c"; DestDir: "{app}\interfaces\ch\c\handmade\cvcam"
+Source: "interfaces\ch\c\handmade\cxcore\*.c"; DestDir: "{app}\interfaces\ch\c\handmade\cxcore"
+Source: "interfaces\ch\c\handmade\highgui\*.c"; DestDir: "{app}\interfaces\ch\c\handmade\highgui"
+Source: "interfaces\ch\chfhandmade\*.chf"; DestDir: "{app}\interfaces\ch\chfhandmade"
+Source: "interfaces\ch\demos\*.ch"; DestDir: "{app}\interfaces\ch\demos"
+
+Source: "interfaces\ipp\*.c"; DestDir: "{app}\interfaces\ipp"
+Source: "interfaces\ipp\*.h"; DestDir: "{app}\interfaces\ipp"
+Source: "interfaces\ipp\*.def"; DestDir: "{app}\interfaces\ipp"
+Source: "interfaces\ipp\*.ds*"; DestDir: "{app}\interfaces\ipp"
+Source: "interfaces\ipp\*.py"; DestDir: "{app}\interfaces\ipp"
+Source: "interfaces\ipp\*.txt"; DestDir: "{app}\interfaces\ipp"
+
+Source: "interfaces\swig\Makefile.*"; DestDir: "{app}\interfaces\swig"
+Source: "interfaces\swig\filtered\Makefile.*"; DestDir: "{app}\interfaces\swig\filtered"
+Source: "interfaces\swig\filtered\*.h"; DestDir: "{app}\interfaces\swig\filtered"
+Source: "interfaces\swig\general\*.i"; DestDir: "{app}\interfaces\swig\general"
+Source: "interfaces\swig\python\Makefile.*"; DestDir: "{app}\interfaces\swig\python"
+Source: "interfaces\swig\python\*.py"; DestDir: "{app}\interfaces\swig\python"
+Source: "interfaces\swig\python\*.i"; DestDir: "{app}\interfaces\swig\python"
+Source: "interfaces\swig\python\*.c*"; DestDir: "{app}\interfaces\swig\python"
+Source: "interfaces\swig\python\*.h"; DestDir: "{app}\interfaces\swig\python"
 
 ;Source: "interfaces\matlab\ReadMe.txt"; DestDir: "{app}\interfaces\matlab"
 ;Source: "interfaces\matlab\src\*.c*"; DestDir: "{app}\interfaces\matlab\src"
@@ -271,28 +276,6 @@ Source: "docs\ref\pics\*.png"; DestDir: "{app}\docs\ref\pics"
 ;Source: "docs\ref\pics\Makefile.*"; DestDir: "{app}\docs\ref\pics"
 Source: "docs\papers\*.pdf"; DestDir: "{app}\docs\papers"
 Source: "docs\papers\*.ps"; DestDir: "{app}\docs\papers"
-;Source: "docs\appPage\appindex.htm"; DestDir: "{app}\docs\appPage"
-;Source: "docs\appPage\*.png"; DestDir: "{app}\docs\appPage"
-;Source: "docs\appPage\3dTracker\*.htm*"; DestDir: "{app}\docs\appPage\3dTracker"
-;Source: "docs\appPage\3dTracker\*.png"; DestDir: "{app}\docs\appPage\3dTracker"
-;Source: "docs\appPage\Calibration\*.htm*"; DestDir: "{app}\docs\appPage\Calibration"
-;Source: "docs\appPage\Calibration\*.png"; DestDir: "{app}\docs\appPage\Calibration"
-;Source: "docs\appPage\Calibration\*.jp*"; DestDir: "{app}\docs\appPage\Calibration"
-;Source: "docs\appPage\CamShift\*.htm*"; DestDir: "{app}\docs\appPage\CamShift"
-;Source: "docs\appPage\CamShift\*.png"; DestDir: "{app}\docs\appPage\CamShift"
-;Source: "docs\appPage\CamShift\*.jp*"; DestDir: "{app}\docs\appPage\CamShift"
-;Source: "docs\appPage\ConDensation\*.htm*"; DestDir: "{app}\docs\appPage\ConDensation"
-;Source: "docs\appPage\ConDensation\*.png"; DestDir: "{app}\docs\appPage\ConDensation"
-;Source: "docs\appPage\ConDensation\*.jp*"; DestDir: "{app}\docs\appPage\ConDensation"
-;Source: "docs\appPage\FaceRecognition\*.htm*"; DestDir: "{app}\docs\appPage\FaceRecognition"
-;Source: "docs\appPage\FaceRecognition\*.png"; DestDir: "{app}\docs\appPage\FaceRecognition"
-;Source: "docs\appPage\FaceRecognition\*.jp*"; DestDir: "{app}\docs\appPage\FaceRecognition"
-;Source: "docs\appPage\Kalman\*.htm*"; DestDir: "{app}\docs\appPage\Kalman"
-;Source: "docs\appPage\Kalman\*.png"; DestDir: "{app}\docs\appPage\Kalman"
-;Source: "docs\appPage\Kalman\*.jp*"; DestDir: "{app}\docs\appPage\Kalman"
-;Source: "docs\appPage\LKTracker\*.htm*"; DestDir: "{app}\docs\appPage\LKTracker"
-;Source: "docs\appPage\LKTracker\*.png"; DestDir: "{app}\docs\appPage\LKTracker"
-;Source: "docs\appPage\LKTracker\*.jp*"; DestDir: "{app}\docs\appPage\LKTracker"
 
 ; sample code
 Source: "samples\c\*.c*"; DestDir: "{app}\samples\c"
@@ -303,6 +286,9 @@ Source: "samples\c\*.dsp"; DestDir: "{app}\samples\c"
 Source: "samples\c\*.vcproj"; DestDir: "{app}\samples\c"
 Source: "samples\c\Makefile.*"; DestDir: "{app}\samples\c"
 Source: "samples\c\*.exe"; DestDir: "{app}\samples\c"
+
+Source: "samples\python\*.py"; DestDir: "{app}\samples\python"
+Source: "samples\python\Makefile.*"; DestDir: "{app}\samples\python"
 
 ; batch tests
 Source: "tests\Makefile.*"; DestDir: "{app}\tests"
@@ -319,7 +305,7 @@ Source: "tests\cv\src\*.dsp"; DestDir: "{app}\tests\cv\src"
 Source: "tests\cv\src\*.vcproj"; DestDir: "{app}\tests\cv\src"
 Source: "tests\cv\src\*.inc"; DestDir: "{app}\tests\cv\src"
 Source: "tests\cv\testdata\cameracalibration\*.*"; DestDir: "{app}\tests\cv\testdata\cameracalibration"
-Source: "tests\cv\testdata\gesturerecognition\*.*"; DestDir: "{app}\tests\cv\testdata\gesturerecognition"
+;Source: "tests\cv\testdata\gesturerecognition\*.*"; DestDir: "{app}\tests\cv\testdata\gesturerecognition"
 Source: "tests\cv\testdata\optflow\*.*"; DestDir: "{app}\tests\cv\testdata\optflow"
 Source: "tests\cv\testdata\snakes\*.*"; DestDir: "{app}\tests\cv\testdata\snakes"
 Source: "tests\cxts\*.c*"; DestDir: "{app}\tests\cxts"
@@ -332,16 +318,18 @@ Source: "tests\cxcore\src\*.h*"; DestDir: "{app}\tests\cxcore\src"
 Source: "tests\cxcore\src\*.dsp"; DestDir: "{app}\tests\cxcore\src"
 Source: "tests\cxcore\src\*.vcproj"; DestDir: "{app}\tests\cxcore\src"
 Source: "tests\cxcore\src\Makefile.*"; DestDir: "{app}\tests\cxcore\src"
+Source: "tests\python\readme"; DestDir: "{app}\tests\python"
+Source: "tests\python\*.py"; DestDir: "{app}\tests\python"
 
 ; utilities
 Source: "utils\*.cmd"; DestDir: "{app}\utils"
 Source: "utils\*.py"; DestDir: "{app}\utils"
 Source: "utils\*.iss"; DestDir: "{app}\utils"
-Source: "utils\Makefile.*"; DestDir: "{app}\utils"
+;Source: "utils\Makefile.*"; DestDir: "{app}\utils"
 Source: "utils\cvinfo\*.c*"; DestDir: "{app}\utils\cvinfo"
 Source: "utils\cvinfo\*.dsp"; DestDir: "{app}\utils\cvinfo"
 Source: "utils\cvinfo\*.vcproj"; DestDir: "{app}\utils\cvinfo"
-Source: "utils\cvinfo\Makefile.*"; DestDir: "{app}\utils\cvinfo"
+;Source: "utils\cvinfo\Makefile.*"; DestDir: "{app}\utils\cvinfo"
 
 ; direct show filters
 ;Source: "filters\*.*"; DestDir: "{app}\filters"
@@ -421,13 +409,13 @@ Source: "apps\HaarTraining\doc\*.htm*"; DestDir: "{app}\apps\HaarTraining\doc"
 Source: "bin\cvinfo.exe"; DestDir: "{app}\bin"
 Source: "bin\cvtest.exe"; DestDir: "{app}\bin"
 Source: "bin\cxcoretest.exe"; DestDir: "{app}\bin"
-Source: "bin\cxcore096.dll"; DestDir: "{app}\bin"
-Source: "bin\cv096.dll"; DestDir: "{app}\bin"
-Source: "bin\highgui096.dll"; DestDir: "{app}\bin"
-Source: "bin\cvaux096.dll"; DestDir: "{app}\bin"
+Source: "bin\cxcore097.dll"; DestDir: "{app}\bin"
+Source: "bin\cv097.dll"; DestDir: "{app}\bin"
+Source: "bin\highgui097.dll"; DestDir: "{app}\bin"
+Source: "bin\cvaux097.dll"; DestDir: "{app}\bin"
 Source: "bin\cxts001.dll"; DestDir: "{app}\bin"
 Source: "bin\trs.dll"; DestDir: "{app}\bin"
-Source: "bin\cvcam096.dll"; DestDir: "{app}\bin"
+Source: "bin\cvcam097.dll"; DestDir: "{app}\bin"
 Source: "bin\haartraining.exe"; DestDir: "{app}\bin"
 Source: "bin\createsamples.exe"; DestDir: "{app}\bin"
 Source: "bin\performance.exe"; DestDir: "{app}\bin"
