@@ -16,3 +16,6 @@ AM_CPPFLAGS = \
 SUBDIRS = filtered python
 EXTRA_DIST = general
 
+# remove non-wanted files in the archive
+dist-hook:
+	rm -f `find $(distdir)/general/ ! -name '*.i' -type f`
