@@ -210,7 +210,7 @@
 
 #define CV_TYPE_NAME_IMAGE "opencv-image"
 
-#define IPL_DEPTH_64F  64 
+#define IPL_DEPTH_64F  64
 
 #define CV_CN_MAX     4
 

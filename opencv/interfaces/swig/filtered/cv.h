@@ -624,7 +624,10 @@ static CvScalar cvRealScalar( double val0 )
 static CvScalar cvScalarAll( double val0123 )
 {
     CvScalar scalar;
-    scalar.val[0] = scalar.val[1] = scalar.val[2] = scalar.val[3] = val0123;
+    scalar.val[0] = val0123;
+    scalar.val[1] = val0123;
+    scalar.val[2] = val0123;
+    scalar.val[3] = val0123;
     return scalar;
 }
 
@@ -679,13 +682,13 @@ typedef struct CvSeqBlock
     char* data;
 }
 CvSeqBlock;
-# 1168 "../../../cxcore/include/cxtypes.h"
+# 1171 "../../../cxcore/include/cxtypes.h"
 typedef struct CvSeq
 {
     int flags; int header_size; struct CvSeq* h_prev; struct CvSeq* h_next; struct CvSeq* v_prev; struct CvSeq* v_next; int total; int elem_size; char* block_max; char* ptr; int delta_elems; CvMemStorage* storage; CvSeqBlock* free_blocks; CvSeqBlock* first;
 }
 CvSeq;
-# 1188 "../../../cxcore/include/cxtypes.h"
+# 1191 "../../../cxcore/include/cxtypes.h"
 typedef struct CvSetElem
 {
     int flags; struct CvSetElem* next_free;
@@ -702,7 +705,7 @@ typedef struct CvSet
     int flags; int header_size; struct CvSeq* h_prev; struct CvSeq* h_next; struct CvSeq* v_prev; struct CvSeq* v_next; int total; int elem_size; char* block_max; char* ptr; int delta_elems; CvMemStorage* storage; CvSeqBlock* free_blocks; CvSeqBlock* first; CvSetElem* free_elems; int active_count;
 }
 CvSet;
-# 1241 "../../../cxcore/include/cxtypes.h"
+# 1244 "../../../cxcore/include/cxtypes.h"
 typedef struct CvGraphEdge
 {
     int flags; float weight; struct CvGraphEdge* next[2]; struct CvGraphVtx* vtx[2];
@@ -721,7 +724,7 @@ typedef struct CvGraphVtx2D
     CvPoint2D32f* ptr;
 }
 CvGraphVtx2D;
-# 1268 "../../../cxcore/include/cxtypes.h"
+# 1271 "../../../cxcore/include/cxtypes.h"
 typedef struct CvGraph
 {
     int flags; int header_size; struct CvSeq* h_prev; struct CvSeq* h_next; struct CvSeq* v_prev; struct CvSeq* v_next; int total; int elem_size; char* block_max; char* ptr; int delta_elems; CvMemStorage* storage; CvSeqBlock* free_blocks; CvSeqBlock* first; CvSetElem* free_elems; int active_count; CvSet* edges;
@@ -752,23 +755,23 @@ typedef struct CvContour
 CvContour;
 
 typedef CvContour CvPoint2DSeq;
-# 1435 "../../../cxcore/include/cxtypes.h"
+# 1438 "../../../cxcore/include/cxtypes.h"
 typedef struct CvSeqWriter
 {
     int header_size; CvSeq* seq; CvSeqBlock* block; char* ptr; char* block_min; char* block_max;
     int reserved[4];
 }
 CvSeqWriter;
-# 1454 "../../../cxcore/include/cxtypes.h"
+# 1457 "../../../cxcore/include/cxtypes.h"
 typedef struct CvSeqReader
 {
     int header_size; CvSeq* seq; CvSeqBlock* block; char* ptr; char* block_min; char* block_max; int delta_index; char* prev_elem;
     int reserved[4];
 }
 CvSeqReader;
-# 1575 "../../../cxcore/include/cxtypes.h"
+# 1578 "../../../cxcore/include/cxtypes.h"
 typedef struct CvFileStorage CvFileStorage;
-# 1585 "../../../cxcore/include/cxtypes.h"
+# 1588 "../../../cxcore/include/cxtypes.h"
 typedef struct CvAttrList
 {
     const char** attr;
@@ -787,7 +790,7 @@ static CvAttrList cvAttrList( const char** attr ,
 }
 
 struct CvTypeInfo;
-# 1638 "../../../cxcore/include/cxtypes.h"
+# 1641 "../../../cxcore/include/cxtypes.h"
 typedef struct CvString
 {
     int len;
