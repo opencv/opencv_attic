@@ -108,7 +108,7 @@ CV_IMPL CvSeq* cvPointSeqFromMat( int seq_kind, const CvArr* arr,
 
 CvStatus CV_STDCALL icvJacobiEigens_32f(float *A, float *V, float *E, int n, float eps)
 {
-    int i, j, k, ind;
+    int i, j, k, ind, iters = 0;
     float *AA = A, *VV = V;
     double Amax, anorm = 0, ax;
 
@@ -137,7 +137,7 @@ CvStatus CV_STDCALL icvJacobiEigens_32f(float *A, float *V, float *E, int n, flo
     ax = anorm * eps / n;
     Amax = anorm;
 
-    while( Amax > ax )
+    while( Amax > ax && iters++ < 100 )
     {
         Amax /= n;
         do                      /* while (ind) */
@@ -258,7 +258,7 @@ CvStatus CV_STDCALL icvJacobiEigens_32f(float *A, float *V, float *E, int n, flo
 
 CvStatus CV_STDCALL icvJacobiEigens_64d(double *A, double *V, double *E, int n, double eps)
 {
-    int i, j, k, p, q, ind;
+    int i, j, k, p, q, ind, iters = 0;
     double *A1 = A, *V1 = V, *A2 = A, *V2 = V;
     double Amax = 0.0, anorm = 0.0, ax;
 
@@ -287,7 +287,7 @@ CvStatus CV_STDCALL icvJacobiEigens_64d(double *A, double *V, double *E, int n, 
     ax = anorm * eps / n;
     Amax = anorm;
 
-    while( Amax > ax )
+    while( Amax > ax && iters++ < 100 )
     {
         Amax /= n;
         do                      /* while (ind) */
