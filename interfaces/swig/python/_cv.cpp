@@ -1336,6 +1336,12 @@ SWIG_Python_GetTypeList() {
 #endif
 
 
+/* define the PyAPI_FUNC macro if it doesn't exist, for example with Python
+   version below 2.3... But not really tested... */
+#ifndef PyAPI_FUNC
+#       define PyAPI_FUNC(RTYPE) RTYPE
+#endif
+
 /* remove the PyInt_AS_LONG if defined, as this cause problems on RedHat */
 #ifdef PyInt_AS_LONG
 #undef PyInt_AS_LONG
