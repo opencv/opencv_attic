@@ -78,8 +78,8 @@ static void icvInsertionSortGaussians( CvGaussBGPoint* g_point, double* sort_key
  */
 static int icvMatchTest( double* src_pixel, int nChannels, int* match, 
                  const CvGaussBGPoint* g_point, const CvGaussBGStatModelParams *bg_model_params );
-static int icvMatchTest2( double* src_pixel, int nChannels, int* match, 
-                 const CvGaussBGPoint* g_point, const CvGaussBGStatModelParams *bg_model_params );
+/*static int icvMatchTest2( double* src_pixel, int nChannels, int* match, 
+                 const CvGaussBGPoint* g_point, const CvGaussBGStatModelParams *bg_model_params );*/
 
 
 /* 
