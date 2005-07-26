@@ -81,6 +81,7 @@ CV_IMPL CvSeq* cvPointSeqFromMat( int seq_kind, const CvArr* arr,
     return contour;
 }
 
+#if 0
 
 /*F///////////////////////////////////////////////////////////////////////////////////////
 //    Names:      icvJacobiEigens_32f, icvJacobiEigens_64d
@@ -404,6 +405,7 @@ CvStatus CV_STDCALL icvJacobiEigens_64d(double *A, double *V, double *E, int n, 
     return CV_NO_ERR;
 }
 
+#endif
 
 #define ICV_COPY_REPLICATE_BORDER_FUNC( flavor, arrtype, cn )   \
 IPCVAPI_IMPL( CvStatus,                                         \

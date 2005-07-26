@@ -102,7 +102,6 @@ static CvStatus
 icvFitLine3D_wods( CvPoint3D32f * points, int count, float *weights, float *line )
 {
     int i;
-    CvStatus ret;
     float w0 = 0;
     float x0 = 0, y0 = 0, z0 = 0;
     float x2 = 0, y2 = 0, z2 = 0, xy = 0, yz = 0, xz = 0;
@@ -187,13 +186,13 @@ icvFitLine3D_wods( CvPoint3D32f * points, int count, float *weights, float *line
 
     /* Searching for a eigenvector of det corresponding to the minimal eigenvalue */
 #if 1
-    ret = icvJacobiEigens_32f( det, evc, evl, 3, 0 );
-    if( ret != CV_NO_ERR )
     {
-        return ret;
-    }
-
+    CvMat _det = cvMat( 3, 3, CV_32F, det );
+    CvMat _evc = cvMat( 3, 3, CV_32F, evc );
+    CvMat _evl = cvMat( 3, 1, CV_32F, evl );
+    cvEigenVV( &_det, &_evc, &_evl, 0 ); 
     i = evl[0] < evl[1] ? (evl[0] < evl[2] ? 0 : 2) : (evl[1] < evl[2] ? 1 : 2);
+    }
 #else
     {
         CvMat _det = cvMat( 3, 3, CV_32F, det );
