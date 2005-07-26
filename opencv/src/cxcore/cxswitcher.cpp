@@ -122,7 +122,7 @@ icvInitProcessorInfo( CvProcessorInfo* cpu_info )
             RegCloseKey( key );
         }
 
-#if defined WIN32 && (defined _MSC_VER || defined __BORLANDC__ && __BORLANDC__>=0x560)
+#if defined WIN32 && !defined WIN64 && (defined _MSC_VER || defined __BORLANDC__ && __BORLANDC__>=0x560)
         __asm
         {
             /* use CPUID to determine the features supported */
@@ -671,7 +671,7 @@ CV_IMPL  int64  cvGetTickCount( void )
         int64 t;
         asm volatile (".byte 0xf; .byte 0x31" /* "rdtsc" */ : "=A" (t));
         return t;
-#elif
+#else
         static const char code[] = "\x0f\x31\xc3";
         rdtsc_func func = (rdtsc_func)(void*)code;
         return func();
