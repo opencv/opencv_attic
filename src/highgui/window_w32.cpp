@@ -538,8 +538,8 @@ static bool icvGetBitmapData( CvWindow* window, SIZE* size, int* channels, void*
     HGDIOBJ h = GetCurrentObject( window->dc, OBJ_BITMAP );
     if (h == NULL)
         return true;
-    int num = GetObject(h, sizeof(bmp), &bmp );
-    assert(num);
+    if (GetObject(h, sizeof(bmp), &bmp) == 0)
+        return true;
 
     if( size )
     {
