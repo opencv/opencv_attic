@@ -68,7 +68,7 @@
 static CvStatus CV_STDCALL
 icvJacobiEigens_32f(float *A, float *V, float *E, int n, float eps)
 {
-    int i, j, k, ind;
+    int i, j, k, ind, iters = 0;
     float *AA = A, *VV = V;
     double Amax, anorm = 0, ax;
 
@@ -97,7 +97,7 @@ icvJacobiEigens_32f(float *A, float *V, float *E, int n, float eps)
     ax = anorm * eps / n;
     Amax = anorm;
 
-    while( Amax > ax )
+    while( Amax > ax && iters++ < 100 )
     {
         Amax /= n;
         do                      /* while (ind) */
@@ -219,7 +219,7 @@ icvJacobiEigens_32f(float *A, float *V, float *E, int n, float eps)
 static CvStatus CV_STDCALL
 icvJacobiEigens_64d(double *A, double *V, double *E, int n, double eps)
 {
-    int i, j, k, p, q, ind;
+    int i, j, k, p, q, ind, iters = 0;
     double *A1 = A, *V1 = V, *A2 = A, *V2 = V;
     double Amax = 0.0, anorm = 0.0, ax;
 
@@ -248,7 +248,7 @@ icvJacobiEigens_64d(double *A, double *V, double *E, int n, double eps)
     ax = anorm * eps / n;
     Amax = anorm;
 
-    while( Amax > ax )
+    while( Amax > ax && iters++ < 100 )
     {
         Amax /= n;
         do                      /* while (ind) */
@@ -388,30 +388,34 @@ cvEigenVV( CvArr* srcarr, CvArr* evectsarr, CvArr* evalsarr, double eps )
         CV_CALL( evals = cvGetMat( evals, &estub2 ));
 
     if( src->cols != src->rows )
-        CV_ERROR( CV_StsUnmatchedSizes, " source is not quadratic matrix" );
+        CV_ERROR( CV_StsUnmatchedSizes, "source is not quadratic matrix" );
+
     if( !CV_ARE_SIZES_EQ( src, evects) )
-        CV_ERROR( CV_StsUnmatchedSizes, "evects has inappropriate size" );
-    if( evals->rows != src->rows || evals->cols != 1 )
-        CV_ERROR( CV_StsBadSize, " evals has inappropriate size" );
+        CV_ERROR( CV_StsUnmatchedSizes, "eigenvectors matrix has inappropriate size" );
+
+    if( (evals->rows != src->rows || evals->cols != 1) &&
+        (evals->cols != src->rows || evals->rows != 1))
+        CV_ERROR( CV_StsBadSize, "eigenvalues vector has inappropriate size" );
 
     if( !CV_ARE_TYPES_EQ( src, evects ) || !CV_ARE_TYPES_EQ( src, evals ))
-        CV_ERROR( CV_StsUnmatchedFormats, " evals has inappropriate size" );
+        CV_ERROR( CV_StsUnmatchedFormats,
+        "input matrix, eigenvalues and eigenvectors must have the same type" );
 
     if( !CV_IS_MAT_CONT( src->type & evals->type & evects->type ))
-        CV_ERROR( CV_BadStep, "All the matrix should be continuous" );
+        CV_ERROR( CV_BadStep, "all the matrices must be continuous" );
 
     if( CV_MAT_TYPE(src->type) == CV_32FC1 )
     {
         IPPI_CALL( icvJacobiEigens_32f( src->data.fl,
                                         evects->data.fl,
-                                        evals->data.fl, src->cols, (float) eps ));
+                                        evals->data.fl, src->cols, (float)eps ));
 
     }
     else if( CV_MAT_TYPE(src->type) == CV_64FC1 )
     {
         IPPI_CALL( icvJacobiEigens_64d( src->data.db,
                                         evects->data.db,
-                                        evals->data.db, src->cols, (float) eps ));
+                                        evals->data.db, src->cols, eps ));
     }
     else
     {
