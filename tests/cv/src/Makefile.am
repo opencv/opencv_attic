@@ -17,7 +17,7 @@ cvtest_SOURCES = \
     acontours.cpp acontoursmatch.cpp aconvhull.cpp acreatecontourtree.cpp \
     adistancetransform.cpp adrawing.cpp adrawing_regress.cpp \
     aeigenobjects.cpp aemd.cpp aerrhandle.cpp afilter.cpp afitellipse.cpp \
-    afitlines.cpp afloodfill.cpp agesturerecognition.cpp \
+    afitlines.cpp afloodfill.cpp afundam.cpp agesturerecognition.cpp \
     ahistograms.cpp ahmmobs.cpp ahoughtransform.cpp aimage.cpp \
     aimgwarp.cpp akalman.cpp akmeans.cpp amatchcontourtrees.cpp \
     ameanshift.cpp amemorytest.cpp aminarearect.cpp amoments.cpp \
