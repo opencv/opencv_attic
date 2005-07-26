@@ -775,8 +775,6 @@ cvContourArea( const void *array, CvSlice slice )
 static CvStatus icvFitEllipse_32f( CvSeq* points, CvBox2D* box )
 {
     CvStatus status = CV_OK;
-    CvStatus status1;
-
     float u[6];
 
     CvMatr32f D = 0;
@@ -801,6 +799,8 @@ static CvStatus icvFitEllipse_32f( CvSeq* points, CvBox2D* box )
     int n = points->total;
     CvSeqReader reader;
     int is_float = CV_SEQ_ELTYPE(points) == CV_32FC2;
+
+    CvMat _S, _EIGVECS, _EIGVALS;
 
     /* create matrix D of  input points */
     D = icvCreateMatrix_32f( 6, n );
@@ -865,8 +865,12 @@ static CvStatus icvFitEllipse_32f( CvSeq* points, CvBox2D* box )
     C[12] = 2.f; //icvSetElement_32f( C, 6, 6, 2, 0, 2.f );
     
     /* find eigenvalues */
-    status1 = icvJacobiEigens_32f( S, INVEIGV, eigenvalues, 6, 0.f );
-    assert( status1 == CV_OK );
+    //status1 = icvJacobiEigens_32f( S, INVEIGV, eigenvalues, 6, 0.f );
+    //assert( status1 == CV_OK );
+    _S = cvMat( 6, 6, CV_32F, S );
+    _EIGVECS = cvMat( 6, 6, CV_32F, INVEIGV );
+    _EIGVALS = cvMat( 6, 1, CV_32F, eigenvalues );
+    cvEigenVV( &_S, &_EIGVECS, &_EIGVALS, 0 );
 
     //avoid troubles with small negative values
     for( i = 0; i < 6; i++ )
@@ -886,10 +890,12 @@ static CvStatus icvFitEllipse_32f( CvSeq* points, CvBox2D* box )
     icvMulMatrix_32f( TMP1, 6, 6, INVQ, 6, 6, TMP2 );
 
     /* find its eigenvalues and vectors */
-    status1 = icvJacobiEigens_32f( TMP2, INVEIGV, eigenvalues, 6, 0.f );
-    assert( status1 == CV_OK );
-    /* search for positive eigenvalue */
+    //status1 = icvJacobiEigens_32f( TMP2, INVEIGV, eigenvalues, 6, 0.f );
+    //assert( status1 == CV_OK );
+    _S = cvMat( 6, 6, CV_32F, TMP2 );
+    cvEigenVV( &_S, &_EIGVECS, &_EIGVALS, 0 );
 
+    /* search for positive eigenvalue */
     for( i = 0; i < 3; i++ )
     {
         if( eigenvalues[i] > 0 )
@@ -913,7 +919,6 @@ static CvStatus icvFitEllipse_32f( CvSeq* points, CvBox2D* box )
 
     /* now find truthful eigenvector */
     icvTransformVector_32f( INVQ, &INVEIGV[index * 6], u, 6, 6 );
-    assert( status1 == CV_OK );
     /* extract vector components */
     a = u[0];
     b = u[1];
@@ -985,8 +990,12 @@ static CvStatus icvFitEllipse_32f( CvSeq* points, CvBox2D* box )
     TMP1[1] = TMP1[2] = b * 0.5f;
     TMP1[3] = c;
 
-    status1 = icvJacobiEigens_32f( TMP1, INVEIGV, eigenvalues, 2, 0.f );
-    assert( status1 == CV_OK );
+    //status1 = icvJacobiEigens_32f( TMP1, INVEIGV, eigenvalues, 2, 0.f );
+    //assert( status1 == CV_OK );
+    _S = cvMat( 2, 2, CV_32F, TMP1 );
+    _EIGVECS = cvMat( 2, 2, CV_32F, INVEIGV );
+    _EIGVALS = cvMat( 2, 1, CV_32F, eigenvalues );
+    cvEigenVV( &_S, &_EIGVECS, &_EIGVALS, 0 );
 
     /* exteract axis length from eigenvectors */
     box->size.height = 2 * cvInvSqrt( eigenvalues[0] );
@@ -1005,7 +1014,7 @@ error:
     if( D )
         icvDeleteMatrix( D );
 
-    return status1 < 0 ? status1 : status;
+    return status;
 }
 
 

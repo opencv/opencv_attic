@@ -400,12 +400,6 @@ CV_INLINE void icvCvt_64d_32f( const double* src, float* dst, int len )
         dst[i] = (float)src[i];
 }
 
-CvStatus CV_STDCALL icvJacobiEigens_32f(float *A, float *V,
-                                        float *E, int n, float eps);
-
-CvStatus CV_STDCALL icvJacobiEigens_64d(double *A, double *V,
-                                        double *E, int n, double eps);
-
 #endif/*_CV_MATRIX_H_*/
 
 /* End of file. */
