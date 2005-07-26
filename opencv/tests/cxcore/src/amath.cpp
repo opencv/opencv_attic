@@ -994,7 +994,7 @@ void CxCore_TraceTest::prepare_to_validation( int )
 {
     CvMat* mat = &test_mat[INPUT][0];
     int i, j, count = MIN( mat->rows, mat->cols );
-    CvScalar trace = {0,0,0,0};
+    CvScalar trace = {{0,0,0,0}};
 
     for( i = 0; i < count; i++ )
     {
@@ -1094,7 +1094,7 @@ void CxCore_CrossProductTest::run_func()
 
 void CxCore_CrossProductTest::prepare_to_validation( int )
 {
-    CvScalar a = {0,0,0,0}, b = {0,0,0,0}, c = {0,0,0,0};
+    CvScalar a = {{0,0,0,0}}, b = {{0,0,0,0}}, c = {{0,0,0,0}};
 
     if( test_mat[INPUT][0].rows > 1 )
     {
