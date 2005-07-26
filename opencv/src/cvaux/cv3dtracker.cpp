@@ -330,15 +330,15 @@ static void DrawEtalon(IplImage *img, CvPoint2D32f *corners,
     int x, y;
     CvPoint prev_pt = { 0, 0 };
     static const CvScalar rgb_colors[] = {
-        {0,0,255},
-        {0,128,255},
-        {0,200,200},
-        {0,255,0},
-        {200,200,0},
-        {255,0,0},
-        {255,0,255} };
+        {{0,0,255}},
+        {{0,128,255}},
+        {{0,200,200}},
+        {{0,255,0}},
+        {{200,200,0}},
+        {{255,0,0}},
+        {{255,0,255}} };
     static const CvScalar gray_colors[] = {
-        {80}, {120}, {160}, {200}, {100}, {140}, {180}
+        {{80}}, {{120}}, {{160}}, {{200}}, {{100}}, {{140}}, {{180}}
     };
     const CvScalar* colors = img->nChannels == 3 ? rgb_colors : gray_colors;
 
