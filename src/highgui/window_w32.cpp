@@ -60,7 +60,7 @@ static const char* trackbar_text =
 #if defined WIN64 || defined EM64T
 
 #define icvGetWindowLongPtr GetWindowLongPtr
-#define icvSetWindowLongPtr SetWindowLongPtr
+#define icvSetWindowLongPtr( hwnd, id, ptr ) SetWindowLongPtr( hwnd, id, (LONG_PTR)(ptr) )
 #define icvGetClassLongPtr  GetClassLongPtr
 
 #define CV_USERDATA GWLP_USERDATA
