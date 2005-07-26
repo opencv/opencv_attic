@@ -50,7 +50,7 @@ am__aclocal_m4_deps = $(top_srcdir)/autotools/aclocal/az_python.m4 \
 	$(top_srcdir)/configure.in
 am__configure_deps = $(am__aclocal_m4_deps) $(CONFIGURE_DEPENDENCIES) \
 	$(ACLOCAL_M4)
-mkinstalldirs = $(SHELL) $(top_srcdir)/autotools/mkinstalldirs
+mkinstalldirs = $(install_sh) -d
 CONFIG_HEADER = $(top_builddir)/cvconfig.h
 CONFIG_CLEAN_FILES =
 am__vpath_adj_setup = srcdirstrip=`echo "$(srcdir)" | sed 's|.|.|g'`;
@@ -64,15 +64,17 @@ libLTLIBRARIES_INSTALL = $(INSTALL)
 LTLIBRARIES = $(lib_LTLIBRARIES)
 libcvaux_la_DEPENDENCIES = $(top_builddir)/cv/src/libcv.la
 am_libcvaux_la_OBJECTS = camshift.lo cv3dtracker.lo cvaux.lo \
-	cvauxutils.lo cvcalibfilter.lo cvcorrimages.lo \
-	cvcreatehandmask.lo cvdpstereo.lo cveigenobjects.lo \
-	cvepilines.lo cvface.lo cvfacedetection.lo cvfacetemplate.lo \
-	cvfindface.lo cvfindhandregion.lo cvhmm.lo cvhmm1d.lo \
-	cvhmmobs.lo cvlcm.lo cvlee.lo cvlevmar.lo \
-	cvlevmarprojbandle.lo cvlevmartrif.lo cvlines.lo cvlmeds.lo \
-	cvmat.lo cvmorphcontours.lo cvmorphing.lo cvprewarp.lo \
-	cvscanlines.lo cvsegment.lo cvsubdiv2.lo cvtexture.lo \
-	cvtrifocal.lo cvvecfacetracking.lo cvvideo.lo precomp.lo
+	cvauxutils.lo cvbgfg_acmmm2003.lo cvbgfg_common.lo \
+	cvbgfg_gaussmix.lo cvcalibfilter.lo cvclique.lo \
+	cvcorrespond.lo cvcorrimages.lo cvcreatehandmask.lo \
+	cvdpstereo.lo cveigenobjects.lo cvepilines.lo cvface.lo \
+	cvfacedetection.lo cvfacetemplate.lo cvfindface.lo \
+	cvfindhandregion.lo cvhmm1d.lo cvhmm.lo cvhmmobs.lo cvlcm.lo \
+	cvlee.lo cvlevmar.lo cvlevmarprojbandle.lo cvlevmartrif.lo \
+	cvlines.lo cvlmeds.lo cvmat.lo cvmorphcontours.lo \
+	cvmorphing.lo cvprewarp.lo cvscanlines.lo cvsegment.lo \
+	cvsubdiv2.lo cvtexture.lo cvtrifocal.lo cvvecfacetracking.lo \
+	cvvideo.lo decomppoly.lo enmin.lo extendededges.lo precomp.lo
 libcvaux_la_OBJECTS = $(am_libcvaux_la_OBJECTS)
 DEFAULT_INCLUDES = -I. -I$(srcdir) -I$(top_builddir)
 depcomp = $(SHELL) $(top_srcdir)/autotools/depcomp
@@ -229,15 +231,19 @@ target_cpu = @target_cpu@
 target_os = @target_os@
 target_vendor = @target_vendor@
 lib_LTLIBRARIES = libcvaux.la
-libcvaux_la_SOURCES = camshift.cpp cv3dtracker.cpp cvaux.cpp \
-    cvauxutils.cpp cvcalibfilter.cpp cvcorrimages.cpp \
-    cvcreatehandmask.cpp cvdpstereo.cpp cveigenobjects.cpp cvepilines.cpp \
-    cvface.cpp cvfacedetection.cpp cvfacetemplate.cpp cvfindface.cpp \
-    cvfindhandregion.cpp cvhmm.cpp cvhmm1d.cpp cvhmmobs.cpp cvlcm.cpp \
-    cvlee.cpp cvlevmar.cpp cvlevmarprojbandle.cpp cvlevmartrif.cpp \
-    cvlines.cpp cvlmeds.cpp cvmat.cpp cvmorphcontours.cpp cvmorphing.cpp \
-    cvprewarp.cpp cvscanlines.cpp cvsegment.cpp cvsubdiv2.cpp cvtexture.cpp \
-    cvtrifocal.cpp cvvecfacetracking.cpp cvvideo.cpp precomp.cpp
+libcvaux_la_SOURCES = \
+    camshift.cpp cv3dtracker.cpp cvaux.cpp cvauxutils.cpp \
+    cvbgfg_acmmm2003.cpp cvbgfg_common.cpp cvbgfg_gaussmix.cpp \
+    cvcalibfilter.cpp cvclique.cpp cvcorrespond.cpp cvcorrimages.cpp \
+    cvcreatehandmask.cpp cvdpstereo.cpp cveigenobjects.cpp \
+    cvepilines.cpp cvface.cpp cvfacedetection.cpp cvfacetemplate.cpp \
+    cvfindface.cpp cvfindhandregion.cpp cvhmm1d.cpp cvhmm.cpp \
+    cvhmmobs.cpp cvlcm.cpp cvlee.cpp cvlevmar.cpp cvlevmarprojbandle.cpp \
+    cvlevmartrif.cpp cvlines.cpp cvlmeds.cpp cvmat.cpp cvmorphcontours.cpp \
+    cvmorphing.cpp cvprewarp.cpp cvscanlines.cpp cvsegment.cpp \
+    cvsubdiv2.cpp cvtexture.cpp cvtrifocal.cpp cvvecfacetracking.cpp \
+    cvvideo.cpp decomppoly.cpp enmin.cpp extendededges.cpp \
+    precomp.cpp
 
 EXTRA_DIST = cvaux.dsp cvaux.vcproj cvaux.rc resource.h
 include_HEADERS = 
@@ -318,7 +324,12 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/cv3dtracker.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/cvaux.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/cvauxutils.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/cvbgfg_acmmm2003.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/cvbgfg_common.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/cvbgfg_gaussmix.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/cvcalibfilter.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/cvclique.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/cvcorrespond.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/cvcorrimages.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/cvcreatehandmask.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/cvdpstereo.Plo@am__quote@
@@ -350,6 +361,9 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/cvtrifocal.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/cvvecfacetracking.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/cvvideo.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/decomppoly.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/enmin.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/extendededges.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/precomp.Plo@am__quote@
 
 .cpp.o:
