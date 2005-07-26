@@ -48,7 +48,7 @@ am__aclocal_m4_deps = $(top_srcdir)/autotools/aclocal/az_python.m4 \
 	$(top_srcdir)/configure.in
 am__configure_deps = $(am__aclocal_m4_deps) $(CONFIGURE_DEPENDENCIES) \
 	$(ACLOCAL_M4)
-mkinstalldirs = $(SHELL) $(top_srcdir)/autotools/mkinstalldirs
+mkinstalldirs = $(install_sh) -d
 CONFIG_HEADER = $(top_builddir)/cvconfig.h
 CONFIG_CLEAN_FILES =
 am_cvtest_OBJECTS = aaccum.$(OBJEXT) aadaptthresh.$(OBJEXT) \
@@ -62,10 +62,10 @@ am_cvtest_OBJECTS = aaccum.$(OBJEXT) aadaptthresh.$(OBJEXT) \
 	adrawing.$(OBJEXT) adrawing_regress.$(OBJEXT) \
 	aeigenobjects.$(OBJEXT) aemd.$(OBJEXT) aerrhandle.$(OBJEXT) \
 	afilter.$(OBJEXT) afitellipse.$(OBJEXT) afitlines.$(OBJEXT) \
-	afloodfill.$(OBJEXT) agesturerecognition.$(OBJEXT) \
-	ahistograms.$(OBJEXT) ahmmobs.$(OBJEXT) \
-	ahoughtransform.$(OBJEXT) aimage.$(OBJEXT) aimgwarp.$(OBJEXT) \
-	akalman.$(OBJEXT) akmeans.$(OBJEXT) \
+	afloodfill.$(OBJEXT) afundam.$(OBJEXT) \
+	agesturerecognition.$(OBJEXT) ahistograms.$(OBJEXT) \
+	ahmmobs.$(OBJEXT) ahoughtransform.$(OBJEXT) aimage.$(OBJEXT) \
+	aimgwarp.$(OBJEXT) akalman.$(OBJEXT) akmeans.$(OBJEXT) \
 	amatchcontourtrees.$(OBJEXT) ameanshift.$(OBJEXT) \
 	amemorytest.$(OBJEXT) aminarearect.$(OBJEXT) \
 	amoments.$(OBJEXT) amotiontemplates.$(OBJEXT) \
@@ -261,7 +261,7 @@ cvtest_SOURCES = \
     acontours.cpp acontoursmatch.cpp aconvhull.cpp acreatecontourtree.cpp \
     adistancetransform.cpp adrawing.cpp adrawing_regress.cpp \
     aeigenobjects.cpp aemd.cpp aerrhandle.cpp afilter.cpp afitellipse.cpp \
-    afitlines.cpp afloodfill.cpp agesturerecognition.cpp \
+    afitlines.cpp afloodfill.cpp afundam.cpp agesturerecognition.cpp \
     ahistograms.cpp ahmmobs.cpp ahoughtransform.cpp aimage.cpp \
     aimgwarp.cpp akalman.cpp akmeans.cpp amatchcontourtrees.cpp \
     ameanshift.cpp amemorytest.cpp aminarearect.cpp amoments.cpp \
@@ -356,6 +356,7 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/afitellipse.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/afitlines.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/afloodfill.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/afundam.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/agesturerecognition.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/ahistograms.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/ahmmobs.Po@am__quote@
