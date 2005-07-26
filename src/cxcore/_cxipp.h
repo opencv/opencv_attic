@@ -222,7 +222,6 @@ IPCV_DEF_MEAN_SDV( 64f, double )
 
 //////////////////////////////////// MinMaxIndx /////////////////////////////////////////
 
-
 #define IPCV_DEF_MIN_MAX_LOC( flavor, srctype, extrtype )       \
 IPCVAPI_EX( CvStatus, icvMinMaxIndx_##flavor##_C1R,             \
 "ippiMinMaxIndx_" #flavor "_C1R", CV_PLUGINS1(CV_PLUGIN_IPPCV), \
@@ -237,14 +236,29 @@ IPCVAPI_EX( CvStatus, icvMinMaxIndx_##flavor##_C1MR,            \
   CvSize size, extrtype* minVal, extrtype* maxVal,              \
   CvPoint* minLoc, CvPoint* maxLoc ))
 
-IPCV_DEF_MIN_MAX_LOC( 8u, uchar, float )
-IPCV_DEF_MIN_MAX_LOC( 16u, ushort, float )
-IPCV_DEF_MIN_MAX_LOC( 16s, short, float )
-IPCV_DEF_MIN_MAX_LOC( 32s, int, double )
-IPCV_DEF_MIN_MAX_LOC( 32f, float, float )
-IPCV_DEF_MIN_MAX_LOC( 64f, double, double )
+#define IPCV_DEF_MIN_MAX_LOC_NO_MASK( flavor, srctype, extrtype ) \
+IPCVAPI_EX( CvStatus, icvMinMaxIndx_##flavor##_C1R,             \
+"ippiMinMaxIndx_" #flavor "_C1R", CV_PLUGINS1(CV_PLUGIN_IPPCV), \
+( const srctype* img, int imgstep,                              \
+  CvSize size, extrtype* minVal, extrtype* maxVal,              \
+  CvPoint* minLoc, CvPoint* maxLoc ))                           \
+                                                                \
+IPCVAPI_EX( CvStatus, icvMinMaxIndx_##flavor##_C1MR,            \
+"ippiMinMaxIndx_" #flavor "_C1MR", 0/*CV_PLUGINS1(CV_PLUGIN_IPPCV)*/,\
+( const srctype* img, int imgstep,                              \
+  const uchar* mask, int maskStep,                              \
+  CvSize size, extrtype* minVal, extrtype* maxVal,              \
+  CvPoint* minLoc, CvPoint* maxLoc ))
 
-#undef IPCV_MIN_MAX_LOC
+IPCV_DEF_MIN_MAX_LOC_NO_MASK( 8u, uchar, float )
+IPCV_DEF_MIN_MAX_LOC_NO_MASK( 16u, ushort, float )
+IPCV_DEF_MIN_MAX_LOC_NO_MASK( 16s, short, float )
+IPCV_DEF_MIN_MAX_LOC_NO_MASK( 32s, int, double )
+IPCV_DEF_MIN_MAX_LOC_NO_MASK( 32f, float, float )
+IPCV_DEF_MIN_MAX_LOC_NO_MASK( 64f, double, double )
+
+#undef IPCV_DEF_MIN_MAX_LOC
+#undef IPCV_DEF_MIN_MAX_LOC_NO_MASK
 
 ////////////////////////////////////////// Sum //////////////////////////////////////////
 
