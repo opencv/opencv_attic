@@ -10,7 +10,7 @@ DefaultGroupName=OpenCV
 SourceDir=..
 Compression=bzip/9
 LicenseFile="docs\license.txt"
-OutputBaseFilename=OpenCV_b5
+OutputBaseFilename=OpenCV_b5a
 ; uncomment the following line if you want your installation to run on NT 3.51 too.
 ; MinVersion=4,3.51
 
@@ -44,6 +44,11 @@ Name: "{app}\otherlibs"
 Name: "{app}\otherlibs\_graphics"
 Name: "{app}\otherlibs\_graphics\include"
 Name: "{app}\otherlibs\_graphics\lib"
+Name: "{app}\otherlibs\_graphics\src"
+Name: "{app}\otherlibs\_graphics\src\libjpeg"
+Name: "{app}\otherlibs\_graphics\src\libpng"
+Name: "{app}\otherlibs\_graphics\src\libtiff"
+Name: "{app}\otherlibs\_graphics\src\zlib"
 Name: "{app}\otherlibs\highgui"
 Name: "{app}\otherlibs\cvcam"
 Name: "{app}\otherlibs\cvcam\include"
@@ -194,6 +199,29 @@ Source: "otherlibs\_graphics\include\*.h"; DestDir: "{app}\otherlibs\_graphics\i
 Source: "otherlibs\_graphics\lib\*.a"; DestDir: "{app}\otherlibs\_graphics\lib"
 Source: "otherlibs\_graphics\lib\*.lib"; DestDir: "{app}\otherlibs\_graphics\lib"
 Source: "otherlibs\_graphics\readme.txt"; DestDir: "{app}\otherlibs\_graphics"
+
+Source: "otherlibs\_graphics\src\*.dsw"; DestDir: "{app}\otherlibs\_graphics\src"
+
+Source: "otherlibs\_graphics\src\libjpeg\*.c"; DestDir: "{app}\otherlibs\_graphics\src\libjpeg"
+Source: "otherlibs\_graphics\src\libjpeg\*.h"; DestDir: "{app}\otherlibs\_graphics\src\libjpeg"
+Source: "otherlibs\_graphics\src\libjpeg\*.dsp"; DestDir: "{app}\otherlibs\_graphics\src\libjpeg"
+Source: "otherlibs\_graphics\src\libjpeg\makefile.*"; DestDir: "{app}\otherlibs\_graphics\src\libjpeg"
+Source: "otherlibs\_graphics\src\libjpeg\readme"; DestDir: "{app}\otherlibs\_graphics\src\libjpeg"
+
+Source: "otherlibs\_graphics\src\libpng\*.c"; DestDir: "{app}\otherlibs\_graphics\src\libpng"
+Source: "otherlibs\_graphics\src\libpng\*.dsp"; DestDir: "{app}\otherlibs\_graphics\src\libpng"
+Source: "otherlibs\_graphics\src\libpng\readme"; DestDir: "{app}\otherlibs\_graphics\src\libpng"
+
+Source: "otherlibs\_graphics\src\libtiff\*.c*"; DestDir: "{app}\otherlibs\_graphics\src\libtiff"
+Source: "otherlibs\_graphics\src\libtiff\*.h*"; DestDir: "{app}\otherlibs\_graphics\src\libtiff"
+Source: "otherlibs\_graphics\src\libtiff\*.dsp"; DestDir: "{app}\otherlibs\_graphics\src\libtiff"
+Source: "otherlibs\_graphics\src\libtiff\*.def"; DestDir: "{app}\otherlibs\_graphics\src\libtiff"
+Source: "otherlibs\_graphics\src\libtiff\Makefile.*"; DestDir: "{app}\otherlibs\_graphics\src\libtiff"
+
+Source: "otherlibs\_graphics\src\zlib\*.c"; DestDir: "{app}\otherlibs\_graphics\src\zlib"
+Source: "otherlibs\_graphics\src\zlib\*.h"; DestDir: "{app}\otherlibs\_graphics\src\zlib"
+Source: "otherlibs\_graphics\src\zlib\*.dsp"; DestDir: "{app}\otherlibs\_graphics\src\zlib"
+Source: "otherlibs\_graphics\src\zlib\readme"; DestDir: "{app}\otherlibs\_graphics\src\zlib"
 
 ; otherlibs: highgui
 Source: "otherlibs\highgui\*.c*"; DestDir: "{app}\otherlibs\highgui"
