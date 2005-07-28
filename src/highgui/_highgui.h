@@ -108,5 +108,12 @@ CvCapture* icvOpenCAM_DC1394( int wIndex );
 #endif
 #endif
 
+#ifdef WIN32
+CvCapture* icvOpenCAM_VFW( int wIndex );
+#ifdef HAVE_MIL
+CvCapture* icvOpenCAM_MIL( int wIndex );
+#endif
+#endif
+
 #endif /* __HIGHGUI_H_ */
 
