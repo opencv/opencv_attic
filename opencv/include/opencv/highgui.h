@@ -211,6 +211,7 @@ CVAPI(CvCapture*) cvCaptureFromFile( const char* filename );
 #define CV_CAP_IEEE1394 300
 #define CV_CAP_DC1394   300
 #define CV_CAP_CMU1394  300
+#define CV_CAP_STEREO   400
 
 /* start capturing frames from camera: index = camera_index + domain_offset (CV_CAP_*) */
 CVAPI(CvCapture*) cvCaptureFromCAM( int index );
@@ -240,6 +241,8 @@ CVAPI(void) cvReleaseCapture( CvCapture** capture );
 #define CV_CAP_PROP_FPS            5
 #define CV_CAP_PROP_FOURCC         6
 #define CV_CAP_PROP_FRAME_COUNT    7 
+#define CV_CAP_PROP_FORMAT         8
+#define CV_CAP_PROP_MODE           9
 
 /* retrieve or set capture properties */
 CVAPI(double) cvGetCaptureProperty( CvCapture* capture, int property_id );
