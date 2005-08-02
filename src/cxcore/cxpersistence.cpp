@@ -3160,6 +3160,10 @@ cvStartReadRawData( const CvFileStorage* fs, const CvFileNode* src, CvSeqReader*
     {
         CV_CALL( cvStartReadSeq( src->data.seq, reader, 0 ));
     }
+    else if( node_type == CV_NODE_NONE )
+    {
+        memset( reader, 0, sizeof(*reader) );
+    }
     else
         CV_ERROR( CV_StsBadArg, "The file node should be a numerical scalar or a sequence" );
 
@@ -3507,7 +3511,8 @@ icvWriteMat( CvFileStorage* fs, const char* name,
 static int
 icvFileNodeSeqLen( CvFileNode* node )
 {
-    return CV_NODE_IS_COLLECTION(node->tag) ? node->data.seq->total : 1;
+    return CV_NODE_IS_COLLECTION(node->tag) ? node->data.seq->total :
+           CV_NODE_TYPE(node->tag) != CV_NODE_NONE;
 }
 
 
