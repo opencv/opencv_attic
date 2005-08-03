@@ -45,11 +45,13 @@ static void
 icvAdaptiveThreshold_MeanC( const CvMat* src, CvMat* dst, int method,
                             int maxValue, int type, int size, double delta )
 {
-    CvMat* mean = 0;
-    
     CV_FUNCNAME( "icvAdaptiveThreshold_MeanC" );
 
     __BEGIN__;
+
+    int i, j, rows, cols;
+    int idelta = type == CV_THRESH_BINARY ? cvCeil(delta) : cvFloor(delta);
+    uchar tab[768];
 
     if( size <= 1 || (size&1) == 0 )
         CV_ERROR( CV_StsOutOfRange, "Neighborhood size must be >=3 and odd (3, 5, 7, ...)" );
@@ -60,18 +62,30 @@ icvAdaptiveThreshold_MeanC( const CvMat* src, CvMat* dst, int method,
         EXIT;
     }
 
-    CV_CALL( mean=cvCreateMat( src->rows, src->cols, CV_8UC1 ));
-    CV_CALL( cvSmooth( src, mean, method == CV_ADAPTIVE_THRESH_MEAN_C ?
+    rows = src->rows;
+    cols = src->cols;
+    CV_CALL( cvSmooth( src, dst, method == CV_ADAPTIVE_THRESH_MEAN_C ?
                        CV_BLUR : CV_GAUSSIAN, size, size ));
-    CV_CALL( cvSubS( mean, cvRealScalar( delta ), mean ));
-    CV_CALL( cvCmp( src, mean, dst, type == CV_THRESH_BINARY ? CV_CMP_GT : CV_CMP_LT ));
+    if( maxValue > 255 )
+        maxValue = 255;
 
-    if( maxValue < 255 )
-        CV_CALL( cvAndS( dst, cvScalarAll( maxValue ), dst ));
+    if( type == CV_THRESH_BINARY )
+        for( i = 0; i < 768; i++ )
+            tab[i] = (uchar)(i - 255 > -idelta ? maxValue : 0);
+    else
+        for( i = 0; i < 768; i++ )
+            tab[i] = (uchar)(i - 255 < -idelta ? maxValue : 0);
+
+    for( i = 0; i < rows; i++ )
+    {
+        const uchar* s = src->data.ptr + i*src->step;
+        uchar* d = dst->data.ptr + i*dst->step;
+
+        for( j = 0; j < cols; j++ )
+            d[j] = tab[s[j] - d[j] + 255];
+    }
 
     __END__;
-
-    cvReleaseMat( &mean );
 }
 
 
