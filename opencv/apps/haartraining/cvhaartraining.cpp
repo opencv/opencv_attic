@@ -2365,7 +2365,7 @@ void cvCreateTreeCascadeClassifier( const char* dirname,
                             posweight = (equalweights)
                                 ? 1.0F / (total_pos + negcount) : (0.5F / total_pos);
                             negweight = (equalweights)
-                                ? 1.0F / (total_pos + negcount) : (0.5F / total_pos);
+                                ? 1.0F / (total_pos + negcount) : (0.5F / negcount);
 
                             icvSetWeightsAndClasses( training_data,
                                 poscount, posweight, 1.0F, negcount, negweight, 0.0F );
