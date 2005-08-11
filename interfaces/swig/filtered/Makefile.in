@@ -205,10 +205,14 @@ AM_CPPFLAGS = \
   -DCV_NO_BACKWARD_COMPATIBILITY
 
 
+# SWIG ###############################################################################
+
+# the following rules keep wrappers up to date, if SWIG is present
+
 # a work-around to force the build of cv.h and constants.h
 # maybe there is a better way...
-noinst_SCRIPTS = headers_generated
-MOSTLYCLEANFILES = headers_generated cv.h constants.h
+@UPDATE_SWIG_WRAPPERS_TRUE@noinst_SCRIPTS = headers_generated
+@UPDATE_SWIG_WRAPPERS_TRUE@MOSTLYCLEANFILES = headers_generated cv.h constants.h
 all: all-am
 
 .SUFFIXES:
@@ -370,12 +374,8 @@ uninstall-am: uninstall-info-am
 	mostlyclean-libtool pdf pdf-am ps ps-am uninstall uninstall-am \
 	uninstall-info-am
 
-headers_generated: cv.h constants.h
-	touch headers_generated
-
-# SWIG ###############################################################################
-
-# the following rules keep wrappers up to date, if SWIG is present
+@UPDATE_SWIG_WRAPPERS_TRUE@headers_generated: cv.h constants.h
+@UPDATE_SWIG_WRAPPERS_TRUE@	touch headers_generated
 
 # this rule creates a single SWIG parseable header from cv.h and cxcore.h, etc.
 @UPDATE_SWIG_WRAPPERS_TRUE@cv.h: $(top_srcdir)/cv/include/cv.h $(top_srcdir)/cv/include/cvtypes.h \
