@@ -726,7 +726,6 @@ static CvCaptureVTable captureCAM_MIL_vtable =
 
 /// if given an index from 0 to 99 -- return any old interface
 /// else, cause an error if the preferred is not available
-#include <iostream>
 CV_IMPL CvCapture* cvCaptureFromCAM( int index )
 {
     int i, domains[] = { CV_CAP_IEEE1394, CV_CAP_STEREO, CV_CAP_VFW, CV_CAP_MIL, -1 };
