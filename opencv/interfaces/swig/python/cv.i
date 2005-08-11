@@ -46,7 +46,10 @@
 
 
 %include "../general/cv.i"
-%include "../general/nointpb.i"
+
+// include python-specific files
+%include "./nointpb.i"
+%include "./pytypemaps.i"
 
 %{
 #include "error.h"
