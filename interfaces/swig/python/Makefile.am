@@ -54,9 +54,9 @@ _highgui_la_LDFLAGS    = -module -avoid-version -no-undefined $(PYTHON_LSPEC) \
 if UPDATE_SWIG_WRAPPERS
 
 # this rule creates the Python wrapper sources for cxcore and cv
-_cv.cpp: cv.i imagedata.i error.h error.cpp                     \
+_cv.cpp: cv.i imagedata.i nointpb.i pytypemaps.i                \
+         error.cpp error.h                                      \
          pycvseq.cpp pycvseq.h                                  \
-         $(top_srcdir)/interfaces/swig/general/nointpb.i        \
          $(top_srcdir)/interfaces/swig/general/cv.i             \
          $(top_srcdir)/interfaces/swig/general/memory.i         \
          $(top_srcdir)/interfaces/swig/general/typemaps.i       \
@@ -69,8 +69,7 @@ _cv.cpp: cv.i imagedata.i error.h error.cpp                     \
 	$(SWIG) $(SWIG_PYTHON_OPT) $(CV_INCLUDES) -o $@ $<
 
 # this rule creates the Python wrapper sources for highgui
-_highgui.cpp: highgui.i                                                  \
-              $(top_srcdir)/interfaces/swig/general/nointpb.i            \
+_highgui.cpp: highgui.i nointpb.i pytypemaps.i                           \
               $(top_srcdir)/interfaces/swig/general/highgui.i            \
 	      $(top_srcdir)/interfaces/swig/general/typemaps.i           \
               $(top_srcdir)/interfaces/swig/general/memory.i             \
