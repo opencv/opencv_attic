@@ -553,7 +553,7 @@ static bool icvGetBitmapData( CvWindow* window, SIZE* size, int* channels, void*
     if( data )
         *data = bmp.bmBits;
 
-    return false;
+	return false;
 }
 
 
@@ -605,7 +605,6 @@ cvShowImage( const char* name, const CvArr* arr )
     const int channels0 = 3;
     int origin = 0;
     CvMat stub, dst, *image;
-    bool changed_size = false;
 
     if( !name )
         CV_ERROR( CV_StsNullPtr, "NULL name" );
@@ -619,14 +618,17 @@ cvShowImage( const char* name, const CvArr* arr )
 
     CV_CALL( image = cvGetMat( arr, &stub ));
 
-    if( window->image )
-        icvGetBitmapData( window, &size, &channels, &dst_ptr );
+    if (window->image)
+		// if there is something wrong with these system calls, we cannot display image...
+		if (icvGetBitmapData( window, &size, &channels, &dst_ptr ))
+			return;
 
+	bool changed_size = false; // philipg
     if( size.cx != image->width || size.cy != image->height || channels != channels0 )
     {
-        changed_size = true;
+		changed_size = true;
 
-        uchar buffer[sizeof(BITMAPINFO) + 255*sizeof(RGBQUAD)];
+		uchar buffer[sizeof(BITMAPINFO) + 255*sizeof(RGBQUAD)];
         BITMAPINFO* binfo = (BITMAPINFO*)buffer;
 
         DeleteObject( SelectObject( window->dc, window->image ));
@@ -646,11 +648,11 @@ cvShowImage( const char* name, const CvArr* arr )
                      dst_ptr, (size.cx * channels + 3) & -4 );
     cvConvertImage( image, &dst, origin == 0 ? CV_CVTIMG_FLIP : 0 );
 
-    // ony resize window if needed
-    if (changed_size)
-        icvUpdateWindowPos(window);
+	// ony resize window if needed
+	if (changed_size)
+		icvUpdateWindowPos(window);
     InvalidateRect(window->hwnd, 0, 0);
-    // philipg: this is not needed and just slows things down
+	// philipg: this is not needed and just slows things down
 //    UpdateWindow(window->hwnd);
 
     __END__;
@@ -967,9 +969,9 @@ static LRESULT CALLBACK WindowProc( HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM 
         if( was_processed )
             return ret;
     }
-    ret = HighGUIProc(hwnd, uMsg, wParam, lParam);
+	ret = HighGUIProc(hwnd, uMsg, wParam, lParam);
 
-    if(hg_on_postprocess)
+	if(hg_on_postprocess)
     {
         int was_processed = 0;
         int ret = hg_on_postprocess(hwnd, uMsg, wParam, lParam, &was_processed);
@@ -1256,7 +1258,7 @@ cvCreateTrackbar( const char* trackbar_name, const char* window_name,
         tbs.iBitmap = 0;
         tbs.idCommand = bcount; // Set button id to it's number
         tbs.fsState = TBSTATE_ENABLED;
-#if !defined WIN64 && !defined EM64T
+#if 0/*!defined WIN64 && !defined EM64T*/
         tbs.fsStyle = 0;
         tbs.iString = 0;
 #else
