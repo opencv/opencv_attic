@@ -13,6 +13,7 @@ AM_CPPFLAGS = \
   $(CV_INCLUDES)                     \
   -DCV_NO_BACKWARD_COMPATIBILITY
 
+EXTRA_DIST = setup-for-win.py
 
 # Conditional targets #######################################################
 

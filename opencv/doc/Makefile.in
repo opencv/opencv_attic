@@ -213,7 +213,8 @@ nobase_dist_opencvdoc_DATA = cvcam.rtf faq.htm index.htm \
     ref/pics/maxrect.png ref/pics/memstorage1.png \
     ref/pics/memstorage2.png ref/pics/minareabox.png \
     ref/pics/quadedge.png ref/pics/right.jpg \
-    ref/pics/subdiv.png ref/pics/threshold.png
+    ref/pics/subdiv.png ref/pics/threshold.png \
+    python-wrappers-on-windows.txt
 
 all: all-am
 
