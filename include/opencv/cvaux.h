@@ -596,7 +596,7 @@ CVAPI(int) icvStereoCalibration( int numImages,
 
 CVAPI(int) icvComputeRestStereoParams(CvStereoCamera *stereoparams);
 
-CVAPI(void) cvComputePerspectiveMap(const double coeffs[3][3], CvArr* rectMap);
+CVAPI(void) cvComputePerspectiveMap( const double coeffs[3][3], CvArr* rectMapX, CvArr* rectMapY );
 
 CVAPI(int) icvComCoeffForLine(   CvPoint2D64d point1,
                             CvPoint2D64d point2,
@@ -1439,11 +1439,11 @@ protected:
     CvCamera cameraParams[MAX_CAMERAS];
     CvStereoCamera stereo;
     CvPoint2D32f* points[MAX_CAMERAS];
-    CvMat*  undistMap[MAX_CAMERAS];
+    CvMat*  undistMap[MAX_CAMERAS][2];
     CvMat*  undistImg;
     int     latestCounts[MAX_CAMERAS];
     CvPoint2D32f* latestPoints[MAX_CAMERAS];
-    CvMat*  rectMap[MAX_CAMERAS];
+    CvMat*  rectMap[MAX_CAMERAS][2];
 
     /* Added by Valery */
     //CvStereoCamera stereoParams;
