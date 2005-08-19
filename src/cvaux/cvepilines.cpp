@@ -2448,41 +2448,43 @@ void icvComputePerspectiveCoeffs(const CvPoint2D32f srcQuad[4],const CvPoint2D32
 
 /*--------------------------------------------------------------------------------------*/
 
-CV_IMPL void cvComputePerspectiveMap(const double coeffs[3][3], CvArr* rectMap)
+CV_IMPL void cvComputePerspectiveMap(const double c[3][3], CvArr* rectMapX, CvArr* rectMapY )
 {
-    /*  */
     CV_FUNCNAME( "cvComputePerspectiveMap" );
+
     __BEGIN__;
+
     CvSize size;
-    CvMat  mapstub;
-    CvMat *map = (CvMat*)rectMap;
+    CvMat  stubx, *mapx = (CvMat*)rectMapX;
+    CvMat  stuby, *mapy = (CvMat*)rectMapY;
+    int i, j;
 
-    CV_CALL( map = cvGetMat( map, &mapstub ));
+    CV_CALL( mapx = cvGetMat( mapx, &stubx ));
+    CV_CALL( mapy = cvGetMat( mapy, &stuby ));
 
-    if( CV_MAT_TYPE( map->type ) != CV_32FC2 )
+    if( CV_MAT_TYPE( mapx->type ) != CV_32FC1 || CV_MAT_TYPE( mapy->type ) != CV_32FC1 )
         CV_ERROR( CV_StsUnsupportedFormat, "" );
 
-    size.width  = map->width;
-    size.height = map->height;
+    size = cvGetMatSize(mapx);
+    assert( fabs(c[2][2] - 1.) < FLT_EPSILON );
     
-    int i,j;
-    double* c;
-    c = (double*)coeffs;
     for( i = 0; i < size.height; i++ )
     {
-        CvPoint2D32f* maprow = (CvPoint2D32f*)(map->data.ptr + map->step*i);
+        float* mx = (float*)(mapx->data.ptr + mapx->step*i);
+        float* my = (float*)(mapy->data.ptr + mapy->step*i);
+
         for( j = 0; j < size.width; j++ )
         {
-            double w = 1./(c[6]*j + c[7]*i + 1.);
-            double x = (c[0]*j + c[1]*i + c[2])*w;
-            double y = (c[3]*j + c[4]*i + c[5])*w;
+            double w = 1./(c[2][0]*j + c[2][1]*i + 1.);
+            double x = (c[0][0]*j + c[0][1]*i + c[0][2])*w;
+            double y = (c[1][0]*j + c[1][1]*i + c[1][2])*w;
 
-            maprow[j].x = (float)x;
-            maprow[j].y = (float)y;
+            mx[j] = (float)x;
+            my[j] = (float)y;
         }
     }
-    __END__;
 
+    __END__;
 }
 
 /*--------------------------------------------------------------------------------------*/

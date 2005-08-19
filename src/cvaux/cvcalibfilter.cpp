@@ -217,8 +217,10 @@ void CvCalibFilter::SetCameraCount( int count )
         {
             cvFree( (void**)(points + i) );
             cvFree( (void**)(latestPoints + i) );
-            cvReleaseMat( undistMap + i );
-            cvReleaseMat( rectMap + i );
+            cvReleaseMat( &undistMap[i][0] );
+            cvReleaseMat( &undistMap[i][1] );
+            cvReleaseMat( &rectMap[i][0] );
+            cvReleaseMat( &rectMap[i][1] );
         }
 
         memset( latestCounts, 0, sizeof(latestPoints) );
@@ -249,8 +251,10 @@ void CvCalibFilter::Stop( bool calibrate )
     // deallocate undistortion maps
     for( i = 0; i < cameraCount; i++ )
     {
-        cvReleaseMat( undistMap + i );
-        cvReleaseMat( rectMap + i );
+        cvReleaseMat( &undistMap[i][0] );
+        cvReleaseMat( &undistMap[i][1] );
+        cvReleaseMat( &rectMap[i][0] );
+        cvReleaseMat( &rectMap[i][1] );
     }
 
     if( calibrate && framesAccepted > 0 )
@@ -796,27 +800,16 @@ bool CvCalibFilter::Rectify( CvMat** srcarr, CvMat** dstarr )
 
                 cvZero( dst );
 
-                if( !rectMap[i] || rectMap[i]->width != src->width ||
-                    rectMap[i]->height != src->height )
+                if( !rectMap[i][0] || rectMap[i][0]->width != src->width ||
+                    rectMap[i][0]->height != src->height )
                 {
-
-                    cvReleaseMat( &rectMap[i] );
-
-                    CvMat* tmpMap;
-                    tmpMap = cvCreateMat(stereo.warpSize.height,stereo.warpSize.width,CV_32FC2);
-
-                    rectMap[i] = cvCreateMat(stereo.warpSize.height,stereo.warpSize.width,CV_32SC3);
-
-                    cvComputePerspectiveMap(stereo.coeffs[i], tmpMap);
-
-                    //cvConvertMap(src,tmpMap,rectMap[i],1);
-
-                    cvReleaseMat(&tmpMap);
-
-
+                    cvReleaseMat( &rectMap[i][0] );
+                    cvReleaseMat( &rectMap[i][1] );
+                    rectMap[i][0] = cvCreateMat(stereo.warpSize.height,stereo.warpSize.width,CV_32FC1);
+                    rectMap[i][1] = cvCreateMat(stereo.warpSize.height,stereo.warpSize.width,CV_32FC1);
+                    cvComputePerspectiveMap(stereo.coeffs[i], rectMap[i][0], rectMap[i][1]);
                 }
-
-                cvUnDistort( src, dst, rectMap[i], 1 );
+                cvRemap( src, dst, rectMap[i][0], rectMap[i][1] );
             }
         }
     }
@@ -875,19 +868,25 @@ bool CvCalibFilter::Undistort( CvMat** srcarr, CvMat** dstarr )
                 }
 
             #if 1
-                if( !undistMap[i] || undistMap[i]->width != src->width ||
-                    undistMap[i]->height != src->height )
                 {
-                    cvReleaseMat( undistMap + i );
-                    undistMap[i] = cvCreateMat( src->height, src->width, CV_32SC3 );
-                    cvUnDistortInit( src, undistMap[i], cameraParams[i].matrix,
-                                     cameraParams[i].distortion, 1 );
+                CvMat A = cvMat( 3, 3, CV_32FC1, cameraParams[i].matrix );
+                CvMat k = cvMat( 1, 4, CV_32FC1, cameraParams[i].distortion );
+
+                if( !undistMap[i][0] || undistMap[i][0]->width != src->width ||
+                     undistMap[i][0]->height != src->height )
+                {
+                    cvReleaseMat( &undistMap[i][0] );
+                    cvReleaseMat( &undistMap[i][1] );
+                    undistMap[i][0] = cvCreateMat( src->height, src->width, CV_32FC1 );
+                    undistMap[i][1] = cvCreateMat( src->height, src->width, CV_32FC1 );
+                    cvInitUndistortMap( &A, &k, undistMap[i][0], undistMap[i][1] );
                 }
 
-                cvUnDistort( src, dst, undistMap[i], 1 );
+                cvRemap( src, dst, undistMap[i][0], undistMap[i][1] );
             #else
-                cvUnDistortOnce( src, dst, cameraParams[i].matrix, cameraParams[i].distortion, 1 );
+                cvUndistort2( src, dst, &A, &k );
             #endif
+                }
             }
         }
     }
