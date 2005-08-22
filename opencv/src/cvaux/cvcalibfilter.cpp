@@ -402,8 +402,10 @@ bool CvCalibFilter::FindEtalon( CvMat** mats )
             switch( etalonType )
             {
             case CV_CALIB_ETALON_CHESSBOARD:
-                {
-                cvCvtColor( mats[i], grayImg, CV_BGR2GRAY );
+                if( CV_MAT_CN(cvGetElemType(mats[i])) == 1 )
+                    cvCopy( mats[i], grayImg );
+                else
+                    cvCvtColor( mats[i], grayImg, CV_BGR2GRAY );
                 found = cvFindChessBoardCornerGuesses( grayImg, tempImg, storage,
                                                        cvSize( cvRound(etalonParams[0]),
                                                        cvRound(etalonParams[1])),
@@ -412,7 +414,6 @@ bool CvCalibFilter::FindEtalon( CvMat** mats )
                     cvFindCornerSubPix( grayImg, latestPoints[i], tempPointCount,
                                         cvSize(5,5), cvSize(-1,-1),
                                         cvTermCriteria(CV_TERMCRIT_ITER|CV_TERMCRIT_EPS,10,0.1));
-                }
                 break;
             default:
                 assert(0);
