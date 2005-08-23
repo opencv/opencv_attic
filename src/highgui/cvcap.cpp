@@ -729,17 +729,17 @@ static CvCaptureVTable captureCAM_MIL_vtable =
 CV_IMPL CvCapture* cvCaptureFromCAM( int index )
 {
     int i, domains[] = { CV_CAP_IEEE1394, CV_CAP_STEREO, CV_CAP_VFW, CV_CAP_MIL, -1 };
-	
-	// interpret preferred interface
-	int pref = (index / 100) * 100;
+    
+    // interpret preferred interface
+    int pref = (index / 100) * 100;
 
-	
-	// if 0 -- autodetect
-	if(pref!=0){
-		domains[0]=pref;
+    
+    // if 0 -- autodetect
+    if(pref!=0){
+        domains[0]=pref;
         index %= 100;
-		domains[1]=-1;
-	}
+        domains[1]=-1;
+    }
 
     for( i = 0; domains[i] >= 0; i++ )
     {
@@ -747,20 +747,20 @@ CV_IMPL CvCapture* cvCaptureFromCAM( int index )
         {
 #if defined(HAVE_TYZX)
 // pending interface for tyzx stereo camera
-		case CV_CAP_STEREO:
-			{
-			CvCaptureCAM_TYZX* capture = (CvCaptureCAM_TYZX*) cvAlloc( sizeof(*capture));
-			memset( capture, 0, sizeof(*capture));
+        case CV_CAP_STEREO:
+            {
+            CvCaptureCAM_TYZX* capture = (CvCaptureCAM_TYZX*) cvAlloc( sizeof(*capture));
+            memset( capture, 0, sizeof(*capture));
             capture->vtable = &captureCAM_TYZX_vtable;
 
             if( icvOpenCAM_TYZX( capture, index ))
                 return (CvCapture*)capture;
 
             cvReleaseCapture( (CvCapture**)&capture );
-			break;
-			}
+            break;
+            }
 #endif //HAVE_TYZX
-		case CV_CAP_VFW:
+        case CV_CAP_VFW:
             {
             CvCaptureCAM_VFW* capture = (CvCaptureCAM_VFW*)cvAlloc( sizeof(*capture));
             memset( capture, 0, sizeof(*capture));
@@ -1103,7 +1103,7 @@ static int icvGrabFrameAVI_FFMPEG( CvCaptureAVI_FFMPEG* capture )
 {
     int ret, valid=0;
     AVPacket pkt1, *pkt = &pkt1;
-    int len1, got_picture;
+    int got_picture;
 
     if( !capture || !capture->ic || !capture->video_st )
     return 0;
@@ -1112,18 +1112,16 @@ static int icvGrabFrameAVI_FFMPEG( CvCaptureAVI_FFMPEG* capture )
     if(ret < 0)
         goto the_end;
 
-    len1 = avcodec_decode_video(&capture->video_st->codec, 
+    avcodec_decode_video(&capture->video_st->codec, 
                     capture->picture, &got_picture, 
                     pkt->data, pkt->size);
-    if (got_picture) {
-        capture->picture_pts = pkt->pts;
+    capture->picture_pts = pkt->pts;
+    av_free_packet(pkt);
+    if (got_picture)
         break;
     }
-        av_free_packet(pkt);
-    }
     valid = 1;
-    
- the_end:
+the_end:
     return valid;
 }
 
