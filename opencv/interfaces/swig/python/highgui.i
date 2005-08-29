@@ -45,8 +45,6 @@
 //             Institute of Communications Engineering, RWTH Aachen University
 
 
-%include "../general/highgui.i"
-
 // include python-specific files
 %include "./nointpb.i"
 %include "./pytypemaps.i"
@@ -88,6 +86,8 @@
     /* prepare to call the C function who will register the callback */
     $1 = (CvTrackbarCallback) _internal_cb_func;
 }
+
+%include "../general/highgui.i"
 
 %pythoncode 
 %{

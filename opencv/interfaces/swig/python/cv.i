@@ -45,11 +45,11 @@
 //             Institute of Communications Engineering, RWTH Aachen University
 
 
-%include "../general/cv.i"
-
 // include python-specific files
 %include "./nointpb.i"
 %include "./pytypemaps.i"
+
+%include "../general/cv.i"
 
 %{
 #include "error.h"
