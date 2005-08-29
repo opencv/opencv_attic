@@ -1336,6 +1336,34 @@ SWIG_Python_GetTypeList() {
 #endif
 
 
+/* define the PyAPI_FUNC macro if it doesn't exist, for example with Python
+   version below 2.3... But not really tested... */
+#ifndef PyAPI_FUNC
+#       define PyAPI_FUNC(RTYPE) RTYPE
+#endif
+
+/* remove the PyInt_AS_LONG if defined, as this cause problems on RedHat */
+#ifdef PyInt_AS_LONG
+#undef PyInt_AS_LONG
+#endif
+
+/* wrapper to the better function PyInt_AsLong, removing problems
+   with RedHat (I hope) */
+static PyAPI_FUNC(long) PyInt_AS_LONG (PyObject *obj) {
+    return PyInt_AsLong (obj);
+}
+
+/* remove the PyFloat_AS_DOUBLE if defined, to prevent errors */
+#ifdef PyFloat_AS_DOUBLE
+#undef PyFloat_AS_DOUBLE
+#endif
+
+/* wrapper to the better function PyFloat_AS_DOUBLE, to prevent errors */
+static PyAPI_FUNC(double) PyFloat_AS_DOUBLE (PyObject *obj) {
+    return PyFloat_AsDouble (obj);
+}
+
+
 /* -------- TYPES TABLE (BEGIN) -------- */
 
 #define  SWIGTYPE_p_CvTreeNodeIterator swig_types[0] 
@@ -1711,6 +1739,31 @@ SWIGINTERNSHORT PyObject*
 #ifdef __cplusplus
 extern "C" {
 #endif
+
+
+    /* the wrapping code to enable the use of Python-based callbacks */
+
+    /* a global variable to store the callback... Very uggly */
+    static PyObject *my_cb_func = NULL;
+
+    /* the internal C callback function which is responsible to call
+       the Python real callback function */
+    static void _internal_cb_func (int pos) {
+	PyObject *result;
+
+	/* the argument of the callback ready to be passed to Python code */
+	PyObject *arg1 = PyInt_FromLong (pos);
+
+	/* build the tuple for calling the Python callback */
+	PyObject *arglist = Py_BuildValue ("(O)", arg1);
+
+	/* call the Python callback */
+	result = PyEval_CallObject (my_cb_func, arglist);
+
+	/* cleanup */
+	Py_XDECREF (result);
+    }
+
 static PyObject *_wrap_cvInitSystem(PyObject *, PyObject *args) {
     PyObject *resultobj;
     int arg1 ;
@@ -2019,8 +2072,13 @@ static PyObject *_wrap_cvCreateTrackbar(PyObject *, PyObject *args) {
         arg4 = (int)(SWIG_As_int(obj3)); 
         if (SWIG_arg_fail(4)) SWIG_fail;
     }
-    SWIG_Python_ConvertPtr(obj4, (void **)&arg5, SWIGTYPE_p_f_int__void, SWIG_POINTER_EXCEPTION | 0);
-    if (SWIG_arg_fail(5)) SWIG_fail;
+    {
+        /* memorize the Python address of the callback function */
+        my_cb_func = (PyObject *) obj4;
+        
+        /* prepare to call the C function who will register the callback */
+        arg5 = (CvTrackbarCallback) _internal_cb_func;
+    }
     {
         try {
             result = (int)cvCreateTrackbar((char const *)arg1,(char const *)arg2,arg3,arg4,arg5);
@@ -3497,31 +3555,6 @@ static PyObject * CvvImage_swigregister(PyObject *, PyObject *args) {
     Py_INCREF(obj);
     return Py_BuildValue((char *)"");
 }
-
-
-    /* the wrapping code to enable the use of Python-based callbacks */
-
-    /* a global variable to store the callback... Very uggly */
-    static PyObject *my_cb_func = NULL;
-
-    /* the internal C callback function which is responsible to call
-       the Python real callback function */
-    static void _internal_cb_func (int pos) {
-	PyObject *result;
-
-	/* the argument of the callback ready to be passed to Python code */
-	PyObject *arg1 = PyInt_FromLong (pos);
-
-	/* build the tuple for calling the Python callback */
-	PyObject *arglist = Py_BuildValue ("(O)", arg1);
-
-	/* call the Python callback */
-	result = PyEval_CallObject (my_cb_func, arglist);
-
-	/* cleanup */
-	Py_XDECREF (result);
-    }
-
 static PyMethodDef SwigMethods[] = {
 	 { (char *)"cvInitSystem", _wrap_cvInitSystem, METH_VARARGS, NULL},
 	 { (char *)"cvNamedWindow", _wrap_cvNamedWindow, METH_VARARGS, NULL},
