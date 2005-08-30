@@ -1091,7 +1091,7 @@ cvFindExtrinsicCameraParams2( const CvMat* obj_points,
             L[23] = y;
         }
 
-        cvMulTransposed( &_L, &_LL, 1 );
+        cvMulTransposed( _L, &_LL, 1 );
         cvSVD( &_LL, &_LW, 0, &_LV, CV_SVD_MODIFY_A + CV_SVD_V_T );
         _RRt = cvMat( 3, 4, CV_64F, LV + 11*12 );
         cvGetCols( &_RRt, &_RR, 0, 3 );
@@ -1327,7 +1327,7 @@ cvCalibrateCamera2( const CvMat* obj_points,
         if( !CV_IS_MAT(t_vecs) || t_depth != CV_32F && t_depth != CV_64F ||
             (t_vecs->rows != img_count || t_vecs->cols*cn != 3) &&
             (t_vecs->rows != 1 || t_vecs->cols != img_count || cn != 3) )
-            CV_ERROR( CV_StsBadArg, "the output array of rotation vectors must be 3-channel "
+            CV_ERROR( CV_StsBadArg, "the output array of translation vectors must be 3-channel "
                 "1xn or nx1 array or 1-channel nx3 array, where n is the number of views" );
     }
 
