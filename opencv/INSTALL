@@ -222,8 +222,15 @@ Linux
    How to test OpenCV:
    =======
 
-   + run /usr/local/bin/cvtest
-         /usr/local/bin/cxcoretest
+   + You can compile test programs using the traditional check target
+     of automake projects:
+
+        make check
+
+     Then, you can run the folowing test programs:
+
+        tests/cv/src/cvtest
+        tests/cxcore/src/cxcoretest
    
    + or
      compile and run simple c examples at
