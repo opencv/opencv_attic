@@ -2517,7 +2517,22 @@ void cvCreateTreeCascadeClassifier( const char* dirname,
 
         } while( leaves );
 
-    } /* if( nstages > 0 )
+        /* save the cascade to xml file */
+        {
+            char xml_path[1024];
+            int len = strlen(dirname);
+            CvHaarClassifierCascade* cascade = 0;
+            strcpy( xml_path, dirname );
+            if( xml_path[len-1] == '\\' || xml_path[len-1] == '/' )
+                len--;
+            strcpy( xml_path + len, ".xml" );
+            cascade = cvLoadHaarClassifierCascade( dirname, cvSize(winwidth,winheight) );
+            if( cascade )
+                cvSave( xml_path, cascade );
+            cvReleaseHaarClassifierCascade( &cascade );
+        }
+
+    } /* if( nstages > 0 ) */
 
     /* check cascade performance */
     printf( "\nCascade performance\n" );
