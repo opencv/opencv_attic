@@ -104,6 +104,15 @@ I modified the following:
   - Correct source lines with compiler warning messages
   - Information message from v4l/v4l2 detection
 
+Fifth Patch: Sept 7, 2005 Csaba Kertesz sign@freemail.hu
+For Release:  OpenCV-Linux Beta5 OpenCV-0.9.7
+
+I modified the following:
+  - SN9C10x chip based webcams support
+  - New methods are internal:
+    bayer2rgb24, sonix_decompress -> decoder routines for SN9C10x decoding from Takafumi Mizuno <taka-qce@ls-a.jp> with his pleasure :)
+  - Tested succesful with Genius VideoCam Notebook (V4L2)
+
 make & enjoy!
 
 */
@@ -195,9 +204,15 @@ struct buffer
 
 static unsigned int n_buffers = 0;
 
+/* Additional V4L2 pixelformats support for Sonix SN9C10x base webcams */
+#define V4L2_PIX_FMT_SBGGR8  825770306
+#define V4L2_PIX_FMT_SN9C10X 808532307
+
 int  PALETTE_BGR24 = 0,
      PALETTE_YVU420 = 0,
-     PALETTE_YUV411P = 0;
+     PALETTE_YUV411P = 0,
+     PALETTE_SBGGR8 = 0,
+     PALETTE_SN9C10X = 0;
 
 typedef struct CvCaptureCAM_V4L
 {
@@ -450,6 +465,25 @@ int autosetup_capture_mode_v4l2(CvCaptureCAM_V4L* capture)
   if (try_palette_v4l2(capture, V4L2_PIX_FMT_YUV411P) == 0)
   {
     PALETTE_YUV411P = 1;
+  }
+  else
+  if (try_palette_v4l2(capture, V4L2_PIX_FMT_SBGGR8) == 0)
+  {
+    PALETTE_SBGGR8 = 1;
+  }
+  else
+  if (try_palette_v4l2(capture, V4L2_PIX_FMT_SN9C10X) == 0)
+  {
+    PALETTE_SN9C10X = 1;
+
+    if (-1 == xioctl (capture->deviceHandle, VIDIOC_G_JPEGCOMP, &capture->compr))
+      errno_exit ("VIDIOC_G_JPEGCOMP");
+	 
+    capture->compr.quality = 0;
+
+    if (-1 == xioctl (capture->deviceHandle, VIDIOC_S_JPEGCOMP, &capture->compr))
+         errno_exit ("VIDIOC_S_JPEGCOMP");
+
   } else
   {
 
@@ -1228,6 +1262,260 @@ yuv411p_to_rgb24(int width, int height,
 }
 
 
+/*
+ * BAYER2RGB24 ROUTINE TAKEN FROM:
+ *
+ * Sonix SN9C10x based webcam basic I/F routines
+ * Takafumi Mizuno <taka-qce@ls-a.jp>
+ *
+ */
+
+void bayer2rgb24(long int WIDTH, long int HEIGHT, unsigned char *src, unsigned char *dst)
+{
+    long int i;
+    unsigned char *rawpt, *scanpt;
+    long int size;
+
+    rawpt = src;
+    scanpt = dst;
+    size = WIDTH*HEIGHT;
+
+    for ( i = 0; i < size; i++ ) {
+  if ( (i/WIDTH) % 2 == 0 ) {
+      if ( (i % 2) == 0 ) {
+    /* B */
+    if ( (i > WIDTH) && ((i % WIDTH) > 0) ) {
+        *scanpt++ = (*(rawpt-WIDTH-1)+*(rawpt-WIDTH+1)+
+         *(rawpt+WIDTH-1)+*(rawpt+WIDTH+1))/4;	/* R */
+        *scanpt++ = (*(rawpt-1)+*(rawpt+1)+
+         *(rawpt+WIDTH)+*(rawpt-WIDTH))/4;	/* G */
+        *scanpt++ = *rawpt;					/* B */
+    } else {
+        /* first line or left column */
+        *scanpt++ = *(rawpt+WIDTH+1);		/* R */
+        *scanpt++ = (*(rawpt+1)+*(rawpt+WIDTH))/2;	/* G */
+        *scanpt++ = *rawpt;				/* B */
+    }
+      } else {
+    /* (B)G */
+    if ( (i > WIDTH) && ((i % WIDTH) < (WIDTH-1)) ) {
+        *scanpt++ = (*(rawpt+WIDTH)+*(rawpt-WIDTH))/2;	/* R */
+        *scanpt++ = *rawpt;					/* G */
+        *scanpt++ = (*(rawpt-1)+*(rawpt+1))/2;		/* B */
+    } else {
+        /* first line or right column */
+        *scanpt++ = *(rawpt+WIDTH);	/* R */
+        *scanpt++ = *rawpt;		/* G */
+        *scanpt++ = *(rawpt-1);	/* B */
+    }
+      }
+  } else {
+      if ( (i % 2) == 0 ) {
+    /* G(R) */
+    if ( (i < (WIDTH*(HEIGHT-1))) && ((i % WIDTH) > 0) ) {
+        *scanpt++ = (*(rawpt-1)+*(rawpt+1))/2;		/* R */
+        *scanpt++ = *rawpt;					/* G */
+        *scanpt++ = (*(rawpt+WIDTH)+*(rawpt-WIDTH))/2;	/* B */
+    } else {
+        /* bottom line or left column */
+        *scanpt++ = *(rawpt+1);		/* R */
+        *scanpt++ = *rawpt;			/* G */
+        *scanpt++ = *(rawpt-WIDTH);		/* B */
+    }
+      } else {
+    /* R */
+    if ( i < (WIDTH*(HEIGHT-1)) && ((i % WIDTH) < (WIDTH-1)) ) {
+        *scanpt++ = *rawpt;					/* R */
+        *scanpt++ = (*(rawpt-1)+*(rawpt+1)+
+         *(rawpt-WIDTH)+*(rawpt+WIDTH))/4;	/* G */
+        *scanpt++ = (*(rawpt-WIDTH-1)+*(rawpt-WIDTH+1)+
+         *(rawpt+WIDTH-1)+*(rawpt+WIDTH+1))/4;	/* B */
+    } else {
+        /* bottom line or right column */
+        *scanpt++ = *rawpt;				/* R */
+        *scanpt++ = (*(rawpt-1)+*(rawpt-WIDTH))/2;	/* G */
+        *scanpt++ = *(rawpt-WIDTH-1);		/* B */
+    }
+      }
+  }
+  rawpt++;
+    }
+
+}
+
+
+#define CLAMP(x)	((x)<0?0:((x)>255)?255:(x))
+
+typedef struct {
+  int is_abs;
+  int len;
+  int val;
+} code_table_t;
+
+
+/* local storage */
+static code_table_t table[256];
+static int init_done = 0;
+
+
+/*
+  sonix_decompress_init
+  =====================
+    pre-calculates a locally stored table for efficient huffman-decoding.
+
+  Each entry at index x in the table represents the codeword
+  present at the MSB of byte x.
+
+*/
+void sonix_decompress_init(void)
+{
+  int i;
+  int is_abs, val, len;
+
+  for (i = 0; i < 256; i++) {
+    is_abs = 0;
+    val = 0;
+    len = 0;
+    if ((i & 0x80) == 0) {
+      /* code 0 */
+      val = 0;
+      len = 1;
+    }
+    else if ((i & 0xE0) == 0x80) {
+      /* code 100 */
+      val = +4;
+      len = 3;
+    }
+    else if ((i & 0xE0) == 0xA0) {
+      /* code 101 */
+      val = -4;
+      len = 3;
+    }
+    else if ((i & 0xF0) == 0xD0) {
+      /* code 1101 */
+      val = +11;
+      len = 4;
+    }
+    else if ((i & 0xF0) == 0xF0) {
+      /* code 1111 */
+      val = -11;
+      len = 4;
+    }
+    else if ((i & 0xF8) == 0xC8) {
+      /* code 11001 */
+      val = +20;
+      len = 5;
+    }
+    else if ((i & 0xFC) == 0xC0) {
+      /* code 110000 */
+      val = -20;
+      len = 6;
+    }
+    else if ((i & 0xFC) == 0xC4) {
+      /* code 110001xx: unknown */
+      val = 0;
+      len = 8;
+    }
+    else if ((i & 0xF0) == 0xE0) {
+      /* code 1110xxxx */
+      is_abs = 1;
+      val = (i & 0x0F) << 4;
+      len = 8;
+    }
+    table[i].is_abs = is_abs;
+    table[i].val = val;
+    table[i].len = len;
+  }
+
+  init_done = 1;
+}
+
+
+/*
+  sonix_decompress
+  ================
+    decompresses an image encoded by a SN9C101 camera controller chip.
+
+  IN	width
+    height
+    inp		pointer to compressed frame (with header already stripped)
+  OUT	outp	pointer to decompressed frame
+
+  Returns 0 if the operation was successful.
+  Returns <0 if operation failed.
+
+*/
+int sonix_decompress(int width, int height, unsigned char *inp, unsigned char *outp)
+{
+  int row, col;
+  int val;
+  int bitpos;
+  unsigned char code;
+  unsigned char *addr;
+
+  if (!init_done) {
+    /* do sonix_decompress_init first! */
+    return -1;
+  }
+
+  bitpos = 0;
+  for (row = 0; row < height; row++) {
+
+    col = 0;
+
+
+
+    /* first two pixels in first two rows are stored as raw 8-bit */
+    if (row < 2) {
+      addr = inp + (bitpos >> 3);
+      code = (addr[0] << (bitpos & 7)) | (addr[1] >> (8 - (bitpos & 7)));
+      bitpos += 8;
+      *outp++ = code;
+
+      addr = inp + (bitpos >> 3);
+      code = (addr[0] << (bitpos & 7)) | (addr[1] >> (8 - (bitpos & 7)));
+      bitpos += 8;
+      *outp++ = code;
+
+      col += 2;
+    }
+
+    while (col < width) {
+      /* get bitcode from bitstream */
+      addr = inp + (bitpos >> 3);
+      code = (addr[0] << (bitpos & 7)) | (addr[1] >> (8 - (bitpos & 7)));
+
+      /* update bit position */
+      bitpos += table[code].len;
+
+      /* calculate pixel value */
+      val = table[code].val;
+      if (!table[code].is_abs) {
+        /* value is relative to top and left pixel */
+        if (col < 2) {
+          /* left column: relative to top pixel */
+          val += outp[-2*width];
+        }
+        else if (row < 2) {
+          /* top row: relative to left pixel */
+          val += outp[-2];
+        }
+        else {
+          /* main area: average of left pixel and top pixel */
+          val += (outp[-2] + outp[-2*width]) / 2;
+        }
+      }
+
+      /* store pixel */
+      *outp++ = CLAMP(val);
+      col++;
+    }
+  }
+
+  return 0;
+}
+
+
 static IplImage* icvRetrieveFrameCAM_V4L( CvCaptureCAM_V4L* capture) {
 
  
@@ -1292,6 +1580,55 @@ static IplImage* icvRetrieveFrameCAM_V4L( CvCaptureCAM_V4L* capture) {
                        capture->form.fmt.pix.height,
                        (unsigned char*)(capture->buffers[capture->bufferIndex].start),
                        (unsigned char*)capture->frame.imageData);
+
+    if (PALETTE_SBGGR8 == 1)
+    {
+      bayer2rgb24(capture->form.fmt.pix.width,
+                  capture->form.fmt.pix.height,
+                  (unsigned char*)capture->buffers[capture->bufferIndex].start,
+                  (unsigned char*)capture->frame.imageData);
+      
+      /* Change BGR to RGB */
+      unsigned char trash;
+      
+      for (int i = 0; i < capture->frame.imageSize; i++)
+        if (i % 3 == 1)
+        {
+          trash = capture->frame.imageData[i+1];
+         
+          capture->frame.imageData[i+1] = capture->frame.imageData[i-1];
+        
+          capture->frame.imageData[i-1] = trash;
+        }
+    }
+
+    if (PALETTE_SN9C10X == 1)
+    {
+      sonix_decompress_init();
+      
+      sonix_decompress(capture->form.fmt.pix.width,
+                       capture->form.fmt.pix.height,
+                       (unsigned char*)capture->buffers[capture->bufferIndex].start,
+                       (unsigned char*)capture->buffers[(capture->bufferIndex+1) % capture->req.count].start);
+
+      bayer2rgb24(capture->form.fmt.pix.width,
+                  capture->form.fmt.pix.height,
+                  (unsigned char*)capture->buffers[(capture->bufferIndex+1) % capture->req.count].start,
+                  (unsigned char*)capture->frame.imageData);
+
+      /* Change BGR to RGB */
+      unsigned char trash;
+      
+      for (int i = 0; i < capture->frame.imageSize; i++)
+        if (i % 3 == 1)
+        {
+          trash = capture->frame.imageData[i+1];
+         
+          capture->frame.imageData[i+1] = capture->frame.imageData[i-1];
+        
+          capture->frame.imageData[i-1] = trash;
+        }
+    }
 
   } else {
 
