@@ -2315,6 +2315,9 @@ CV_IMPL void cvEqualizeHist( const CvArr* src, CvArr* dst )
     CV_CALL( cvLUT( src, dst, lut ));
 
     __END__;
+
+    cvReleaseHist(&hist);
+    cvReleaseMat(&lut);
 }
 
 /* End of file. */
