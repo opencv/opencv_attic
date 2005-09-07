@@ -48,7 +48,7 @@
   #include <string.h>
   #include <float.h>
 
-  #if defined WIN64 && defined EM64T && defined _MSC_VER
+  #if defined WIN64 && defined EM64T && defined _MSC_VER || defined __SSE2__
     #include <emmintrin.h>
   #endif
 
