@@ -204,10 +204,6 @@ struct buffer
 
 static unsigned int n_buffers = 0;
 
-/* Additional V4L2 pixelformats support for Sonix SN9C10x base webcams */
-#define V4L2_PIX_FMT_SBGGR8  825770306
-#define V4L2_PIX_FMT_SN9C10X 808532307
-
 int  PALETTE_BGR24 = 0,
      PALETTE_YVU420 = 0,
      PALETTE_YUV411P = 0,
@@ -1657,7 +1653,9 @@ static IplImage* icvRetrieveFrameCAM_V4L( CvCaptureCAM_V4L* capture) {
           (unsigned char*)capture->frame.imageData);
         break;
       default:
-        fprintf( stderr, "HIGHGUI ERROR: V4L: Cannot convert from palette %d to RGB\n");
+        fprintf( stderr,
+		 "HIGHGUI ERROR: V4L: Cannot convert from palette %d to RGB\n",
+		 capture->imageProperties.palette);
 
         return 0;
     }
