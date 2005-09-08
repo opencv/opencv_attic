@@ -45,6 +45,7 @@ static void
 icvAdaptiveThreshold_MeanC( const CvMat* src, CvMat* dst, int method,
                             int maxValue, int type, int size, double delta )
 {
+    CvMat* mean = 0;
     CV_FUNCNAME( "icvAdaptiveThreshold_MeanC" );
 
     __BEGIN__;
@@ -64,7 +65,13 @@ icvAdaptiveThreshold_MeanC( const CvMat* src, CvMat* dst, int method,
 
     rows = src->rows;
     cols = src->cols;
-    CV_CALL( cvSmooth( src, dst, method == CV_ADAPTIVE_THRESH_MEAN_C ?
+
+    if( src->data.ptr != dst->data.ptr )
+        mean = dst;
+    else
+        CV_CALL( mean = cvCreateMat( rows, cols, CV_8UC1 ));
+
+    CV_CALL( cvSmooth( src, mean, method == CV_ADAPTIVE_THRESH_MEAN_C ?
                        CV_BLUR : CV_GAUSSIAN, size, size ));
     if( maxValue > 255 )
         maxValue = 255;
@@ -79,13 +86,17 @@ icvAdaptiveThreshold_MeanC( const CvMat* src, CvMat* dst, int method,
     for( i = 0; i < rows; i++ )
     {
         const uchar* s = src->data.ptr + i*src->step;
+        const uchar* m = mean->data.ptr + i*mean->step;
         uchar* d = dst->data.ptr + i*dst->step;
 
         for( j = 0; j < cols; j++ )
-            d[j] = tab[s[j] - d[j] + 255];
+            d[j] = tab[s[j] - m[j] + 255];
     }
 
     __END__;
+
+    if( mean != dst )
+        cvReleaseMat( &mean );
 }
 
 
