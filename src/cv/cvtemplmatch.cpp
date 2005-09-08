@@ -41,90 +41,29 @@
 
 #include "_cv.h"
 
-#define ICV_DECL_CROSSCORR_DIRECT( flavor, arrtype, corrtype, worktype )    \
-static CvStatus CV_STDCALL                                                  \
-icvCrossCorrDirect_##flavor##_CnR( const arrtype* img0, int imgstep,        \
-    CvSize imgsize, const arrtype* templ0, int templstep, CvSize templsize, \
-    corrtype* corr, int corrstep, CvSize corrsize, int cn )                 \
-{                                                                           \
-    int x, i, j;                                                            \
-    double* corrrow = 0;                                                    \
-                                                                            \
-    if( templsize.height > 1 )                                              \
-        corrrow = (double*)cvStackAlloc( corrsize.width*sizeof(corrrow[0]));\
-    templsize.width *= cn;                                                  \
-    imgsize.width *= cn;                                                    \
-    corrstep /= sizeof(corr[0]);                                            \
-    imgstep /= sizeof(img0[0]);                                             \
-    templstep /= sizeof(templ0[0]);                                         \
-                                                                            \
-    for( ; corrsize.height--; corr += corrstep, img0 += imgstep )           \
-    {                                                                       \
-        const arrtype* img = img0;                                          \
-        const arrtype* templ = templ0;                                      \
-                                                                            \
-        for( i = 0; i < templsize.height; i++, img += imgstep,              \
-                                          templ += templstep )              \
-        {                                                                   \
-            for( x = 0; x < corrsize.width; x++, img += cn )                \
-            {                                                               \
-                worktype sum = 0;                                           \
-                int len = MIN( templsize.width, imgsize.width - x*cn );     \
-                double t;                                                   \
-                for( j = 0; j <= len - 4; j += 4 )                          \
-                    sum += (worktype)(img[j])*templ[j] +                    \
-                           (worktype)(img[j+1])*templ[j+1] +                \
-                           (worktype)(img[j+2])*templ[j+2] +                \
-                           (worktype)(img[j+3])*templ[j+3];                 \
-                                                                            \
-                for( ; j < len; j++ )                                       \
-                    sum += (worktype)(img[j])*templ[j];                     \
-                t = sum;                                                    \
-                if( i > 0 )                                                 \
-                    t += corrrow[x];                                        \
-                if( i < templsize.height-1 )                                \
-                    corrrow[x] = t;                                         \
-                else                                                        \
-                    corr[x] = (corrtype)t;                                  \
-            }                                                               \
-                                                                            \
-            img -= corrsize.width*cn;                                       \
-        }                                                                   \
-    }                                                                       \
-                                                                            \
-    return CV_OK;                                                           \
-}
-
-
-ICV_DECL_CROSSCORR_DIRECT( 8u32f, uchar, float, int )
-ICV_DECL_CROSSCORR_DIRECT( 32f, float, float, double )
-ICV_DECL_CROSSCORR_DIRECT( 64f, double, double, double )
-
-typedef CvStatus (CV_STDCALL * CvCrossCorrDirectFunc)(
-    const void* img, int imgstep, CvSize imgsize,
-    const void* templ, int templstep, CvSize templsize,
-    void* corr, int corrstep, CvSize corrsize, int cn );
-
-
 static void
 icvCrossCorr( const CvArr* _img, const CvArr* _templ, CvArr* _corr )
 {
+    const double block_scale = 4.5;
+    const int min_block_size = 256;
     CvMat* dft_img = 0;
     CvMat* dft_templ = 0;
     CvMat* temp = 0;
     
-    CV_FUNCNAME( "cvCrossCorr" );
+    CV_FUNCNAME( "icvCrossCorr" );
     
     __BEGIN__;
 
-    CvMat stub, *img = (CvMat*)_img;
+    CvMat istub, *img = (CvMat*)_img;
     CvMat tstub, *templ = (CvMat*)_templ;
     CvMat cstub, *corr = (CvMat*)_corr;
-    CvSize imgsize, templsize, corrsize, dftsize;
-    int i, depth, cn, corr_type;
-    double O_direct, O_fast;
+    CvMat sstub, pstub, dstub, *src, *dst;
+    CvSize imgsize, templsize, corrsize, dftsize, blocksize;
+    CvMat* planes[] = { 0, 0, 0, 0 };
+    int x, y, i, depth, cn, corr_type, yofs;
+    int reuse_templ_spectrum = 0;
 
-    CV_CALL( img = cvGetMat( img, &stub ));
+    CV_CALL( img = cvGetMat( img, &istub ));
     CV_CALL( templ = cvGetMat( templ, &tstub ));
     CV_CALL( corr = cvGetMat( corr, &cstub ));
 
@@ -163,89 +102,55 @@ icvCrossCorr( const CvArr* _img, const CvArr* _templ, CvArr* _corr )
     imgsize = cvGetMatSize(img);
     templsize = cvGetSize(templ);
     corrsize = cvGetSize(corr);
-    dftsize.width = cvGetOptimalDFTSize(imgsize.width + templsize.width - 1);
+
+    blocksize.width = cvRound(templsize.width*block_scale);
+    blocksize.width = MAX( blocksize.width, min_block_size - templsize.width + 1 );
+    blocksize.width = MIN( blocksize.width, corrsize.width );
+    blocksize.height = cvRound(templsize.height*block_scale);
+    blocksize.height = MAX( blocksize.height, min_block_size - templsize.height + 1 );
+    blocksize.height = MIN( blocksize.height, corrsize.height );
+
+    dftsize.width = cvGetOptimalDFTSize(blocksize.width + templsize.width - 1);
     if( dftsize.width == 1 )
         dftsize.width = 2;
-    dftsize.height = cvGetOptimalDFTSize(imgsize.height + templsize.height - 1);
+    dftsize.height = cvGetOptimalDFTSize(blocksize.height + templsize.height - 1);
     if( dftsize.width <= 0 || dftsize.height <= 0 )
         CV_ERROR( CV_StsOutOfRange, "the input arrays are too big" );
 
-    // determine which method to use for correlation.
-    O_direct = (double)corrsize.width * corrsize.height *
-               (double)templsize.width * templsize.height; // approximate formulae
+    // recompute block size
+    blocksize.width = dftsize.width - templsize.width + 1;
+    blocksize.width = MIN( blocksize.width, corrsize.width );
+    blocksize.height = dftsize.height - templsize.height + 1;
+    blocksize.height = MIN( blocksize.height, corrsize.height );
 
-    // calculate it in two steps to avoid icc remark
-    O_fast = (imgsize.height + templsize.height + corrsize.height)*
-             (double)dftsize.width*log((double)dftsize.width);
-    O_fast = (O_fast + 3*dftsize.width*(double)dftsize.height*log((double)dftsize.height))/CV_LOG2;
+    reuse_templ_spectrum = blocksize.width < corrsize.width ||
+                           blocksize.height < corrsize.height; 
 
-    if( O_direct < O_fast )
+    CV_CALL( dft_img = cvCreateMat( dftsize.height, dftsize.width, corr_type ));
+    CV_CALL( dft_templ = cvCreateMat( dftsize.height*
+        (reuse_templ_spectrum ? cn : 1), dftsize.width, corr_type ));
+
+    if( cn > 1 && depth != CV_MAT_DEPTH(corr_type) )
+        CV_CALL( temp = cvCreateMat( blocksize.height + templsize.height - 1,
+            blocksize.width + templsize.width - 1, depth ));
+
+    if( reuse_templ_spectrum )
     {
-        CvCrossCorrDirectFunc corr_func = 0;
-        if( depth == CV_8U && corr_type == CV_32F )
-            corr_func = (CvCrossCorrDirectFunc)icvCrossCorrDirect_8u32f_CnR;
-        else if( depth == CV_32F && corr_type == CV_32F )
-            corr_func = (CvCrossCorrDirectFunc)icvCrossCorrDirect_32f_CnR;
-        else if( depth == CV_64F && corr_type == CV_64F )
-            corr_func = (CvCrossCorrDirectFunc)icvCrossCorrDirect_64f_CnR;
-        else
-            CV_ERROR( CV_StsUnsupportedFormat,
-            "Unsupported combination of input and output formats" );
-
-        IPPI_CALL( corr_func( img->data.ptr, img->step, imgsize,
-                              templ->data.ptr, templ->step, templsize,
-                              corr->data.ptr, corr->step, corrsize, cn ));
-    }
-    else
-    {
-        CV_CALL( dft_img = cvCreateMat( dftsize.height, dftsize.width, corr_type ));
-        CV_CALL( dft_templ = cvCreateMat( dftsize.height, dftsize.width, corr_type ));
-
-        if( cn > 1 && depth != CV_MAT_DEPTH(corr_type) )
-        {
-            CV_CALL( temp = cvCreateMat( imgsize.height, imgsize.width, depth ));
-        }
-
+        // compute DFT of each template plane
         for( i = 0; i < cn; i++ )
         {
-            CvMat dftstub, srcstub;
-            CvMat* src = img, *dst = &dftstub;
-            CvMat* planes[] = { 0, 0, 0, 0 };
-            cvGetSubRect( dft_img, dst, cvRect(0,0,img->cols,img->rows));
-            
-            if( cn > 1 )
-            {
-                planes[i] = temp ? temp : dst;
-                cvSplit( img, planes[0], planes[1], planes[2], planes[3] );
-                src = planes[i];
-            }
-
-            if( dst != src )
-            {
-                if( CV_ARE_TYPES_EQ(src, dst) )
-                    cvCopy( src, dst );
-                else
-                    cvConvert( src, dst );
-            }
-
-            cvGetSubRect( dft_img, dst, cvRect(img->cols, 0,
-                          dft_img->cols - img->cols, img->rows) );
-            cvZero( dst );
-            cvDFT( dft_img, dft_img, CV_DXT_FORWARD, img->rows );
+            yofs = i*dftsize.height;
 
             src = templ;
-            cvGetSubRect( dft_templ, dst, cvRect(0,0,templ->cols,templ->rows));
-            
+            dst = cvGetSubRect( dft_templ, &dstub, cvRect(0,yofs,templ->cols,templ->rows));
+        
             if( cn > 1 )
             {
-                planes[i] = dst;
-                if( temp )
-                {
-                    planes[i] = &srcstub;
-                    cvGetSubRect( temp, planes[i], cvRect(0,0,templ->cols,templ->rows) );
-                }
+                planes[i] = !temp ? dst :
+                    cvGetSubRect( temp, &pstub, cvRect(0,0,templ->cols,templ->rows) );
                 cvSplit( templ, planes[0], planes[1], planes[2], planes[3] );
                 src = planes[i];
+                planes[i] = 0;
             }
 
             if( dst != src )
@@ -256,19 +161,97 @@ icvCrossCorr( const CvArr* _img, const CvArr* _templ, CvArr* _corr )
                     cvConvert( src, dst );
             }
 
-            cvGetSubRect( dft_templ, dst, cvRect(templ->cols, 0,
+            cvGetSubRect( dft_templ, dst, cvRect(templ->cols, yofs,
                           dft_templ->cols - templ->cols, templ->rows) );
             cvZero( dst );
-            cvDFT( dft_templ, dft_templ, CV_DXT_FORWARD, templ->rows );
+            cvGetSubRect( dft_templ, dst, cvRect(0,yofs,dftsize.width,dftsize.height) );
+            cvDFT( dst, dst, CV_DXT_FORWARD, templ->rows );
+        }
+    }
 
-            cvMulSpectrums( dft_img, dft_templ, dft_img, CV_DXT_MUL_CONJ );
-            cvDFT( dft_img, dft_img, CV_DXT_INV_SCALE );
-            
-            cvGetSubRect( dft_img, dst, cvRect(0,0,corr->cols,corr->rows) );
-            if( i == 0 )
-                cvCopy( dst, corr );
-            else
-                cvAdd( corr, dst, corr );
+    // calculate correlation by blocks
+    for( y = 0; y < corrsize.height; y += blocksize.height )
+    {
+        for( x = 0; x < corrsize.width; x += blocksize.width )
+        {
+            CvSize csz = { blocksize.width, blocksize.height }, isz;
+            csz.width = MIN( csz.width, corr->cols - x );
+            csz.height = MIN( csz.height, corr->rows - y );
+            isz.width = csz.width + templ->cols - 1;
+            isz.height = csz.height + templ->rows - 1;
+
+            for( i = 0; i < cn; i++ )
+            {
+                yofs = i*dftsize.height;
+
+                src = cvGetSubRect( img, &sstub, cvRect(x,y,isz.width,isz.height) );
+                dst = cvGetSubRect( dft_img, &dstub, cvRect(0,0,isz.width,isz.height));
+
+                if( cn > 1 )
+                {
+                    planes[i] = !temp ? dst :
+                        cvGetSubRect( temp, &pstub, cvRect(0,0,isz.width,isz.height));
+                    cvSplit( src, planes[0], planes[1], planes[2], planes[3] );
+                    src = planes[i];
+                    planes[i] = 0;
+                }
+
+                if( dst != src )
+                {
+                    if( CV_ARE_TYPES_EQ(src, dst) )
+                        cvCopy( src, dst );
+                    else
+                        cvConvert( src, dst );
+                }
+
+                cvGetSubRect( dft_img, dst, cvRect(isz.width, 0,
+                      dftsize.width - isz.width,dftsize.height) );
+                cvZero( dst );
+
+                cvDFT( dft_img, dft_img, CV_DXT_FORWARD, isz.height );
+
+                if( reuse_templ_spectrum )
+                    cvGetSubRect( dft_templ, dst, cvRect(0,yofs,dftsize.width,dftsize.height) );
+                else
+                {
+                    src = templ;
+                    dst = cvGetSubRect( dft_templ, &dstub, cvRect(0,0,templ->cols,templ->rows));
+        
+                    if( cn > 1 )
+                    {
+                        planes[i] = !temp ? dst :
+                            cvGetSubRect( temp, &pstub, cvRect(0,0,templ->cols,templ->rows) );
+                        cvSplit( src, planes[0], planes[1], planes[2], planes[3] );
+                        src = planes[i];
+                        planes[i] = 0;
+                    }
+
+                    if( dst != src )
+                    {
+                        if( CV_ARE_TYPES_EQ(src, dst) )
+                            cvCopy( src, dst );
+                        else
+                            cvConvert( src, dst );
+                    }
+
+                    cvGetSubRect( dft_templ, dst, cvRect(templ->cols, 0,
+                                  dft_templ->cols - templ->cols, templ->rows) );
+                    cvZero( dst );
+                    cvGetSubRect( dft_templ, dst, cvRect(0,0,dftsize.width,dftsize.height) );
+                    cvDFT( dst, dst, CV_DXT_FORWARD, templ->rows );
+                }
+
+                cvMulSpectrums( dft_img, dst, dft_img, CV_DXT_MUL_CONJ );
+                cvDFT( dft_img, dft_img, CV_DXT_INV_SCALE, csz.height );
+
+                src = cvGetSubRect( dft_img, &sstub, cvRect(0,0,csz.width,csz.height) );
+                dst = cvGetSubRect( corr, &dstub, cvRect(x,y,csz.width,csz.height) );
+
+                if( i == 0 )
+                    cvCopy( src, dst );
+                else
+                    cvAdd( src, dst, dst );
+            }
         }
     }
 
@@ -278,7 +261,6 @@ icvCrossCorr( const CvArr* _img, const CvArr* _templ, CvArr* _corr )
     cvReleaseMat( &dft_templ );
     cvReleaseMat( &temp );
 }
-
 
 /***************************** IPP Match Template Functions ******************************/
 
