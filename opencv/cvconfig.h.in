@@ -3,6 +3,9 @@
 /* V4L capturing support */
 #undef HAVE_CAMV4L
 
+/* V4L2 capturing support */
+#undef HAVE_CAMV4L2
+
 /* IEEE1394 capturing support */
 #undef HAVE_DC1394
 
