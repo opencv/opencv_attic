@@ -24,7 +24,7 @@ AC_CONFIG_AUX_DIR([autotools])
 AC_CONFIG_MACRO_DIR([autotools/aclocal])
 
 # put CVS revision of this configure.in into the resulting configure script
-AC_REVISION($Revision: 1.14 $)
+AC_REVISION($Revision: 1.15 $)
 
 # Detect the canonical host and target build environment
 AC_CANONICAL_HOST
@@ -231,6 +231,20 @@ AC_CHECK_HEADER([linux/videodev.h],
                 [ have_v4l=no ])
 
 dnl
+dnl ****************** V4L2 Support **************************
+dnl
+AC_CHECK_HEADER([linux/videodev2.h],
+                [
+                  AC_DEFINE(HAVE_CAMV4L2,,[V4L2 capturing support])
+                  have_v4l2=yes
+                ],
+                [ have_v4l2=no ],
+		[[
+		#include <asm/types.h>
+		#include <sys/time.h>
+		]])
+
+dnl
 dnl ****************** SWIG wrappers ************************
 dnl
 setup_swig=no
@@ -335,6 +349,7 @@ Configuration:
     Use ffmpeg:               ${have_ffmpeg}
     Use dc1394 & raw1394:     ${have_dc1394}
     Use v4l:                  ${have_v4l}
+    Use v4l2:                 ${have_v4l2}
 
     Build wrappers for
     - Python                  ${enable_python}])
