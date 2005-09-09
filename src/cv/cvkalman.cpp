@@ -81,7 +81,7 @@ cvCreateKalman( int DP, int MP, int CP )
     cvZero( kalman->measurement_matrix );
 
     CV_CALL( kalman->measurement_noise_cov = cvCreateMat( MP, MP, CV_32FC1 ));
-    cvSetIdentity( kalman->process_noise_cov );
+    cvSetIdentity( kalman->measurement_noise_cov );
 
     CV_CALL( kalman->error_cov_pre = cvCreateMat( DP, DP, CV_32FC1 ));
     
