@@ -1101,27 +1101,41 @@ exit_func:
 
 static int icvGrabFrameAVI_FFMPEG( CvCaptureAVI_FFMPEG* capture )
 {
-    int ret, valid=0;
-    AVPacket pkt1, *pkt = &pkt1;
+    int valid=0;
+    static bool bFirstTime = true;
+    static AVPacket pkt;
     int got_picture;
 
-    if( !capture || !capture->ic || !capture->video_st )
-    return 0;
-    for(;;) {
-    ret = av_read_frame(capture->ic, pkt);
-    if(ret < 0)
-        goto the_end;
-
-    avcodec_decode_video(&capture->video_st->codec, 
-                    capture->picture, &got_picture, 
-                    pkt->data, pkt->size);
-    capture->picture_pts = pkt->pts;
-    av_free_packet(pkt);
-    if (got_picture)
-        break;
+    // First time we're called, set packet.data to NULL to indicate it
+    // doesn't have to be freed
+    if (bFirstTime) {
+        bFirstTime = false;
+        pkt.data = NULL;
     }
-    valid = 1;
-the_end:
+
+    if( !capture || !capture->ic || !capture->video_st )
+	return 0;
+
+    // free last packet if exist
+    if (pkt.data != NULL) {
+	av_free_packet (&pkt);
+    }
+
+    // get the next frame
+    while ((0 == valid) && (av_read_frame(capture->ic, &pkt) >= 0)) {
+
+	avcodec_decode_video(&capture->video_st->codec, 
+			     capture->picture, &got_picture, 
+			     pkt.data, pkt.size);
+
+	if (got_picture) {
+	    // we have a new picture, so memorize it
+	    capture->picture_pts = pkt.pts;
+	    valid = 1;
+	}
+    }
+    
+    // return if we have a new picture or not
     return valid;
 }
 
