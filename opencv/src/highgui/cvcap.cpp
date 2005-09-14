@@ -1020,8 +1020,12 @@ static void icvCloseAVI_FFMPEG( CvCaptureAVI_FFMPEG* capture )
 
     if( capture->video_st )
     {
+#if LIBAVFORMAT_BUILD > 4628
+        avcodec_close( capture->video_st->codec );
+#else
         avcodec_close( &capture->video_st->codec );
-    capture->video_st = NULL;
+#endif
+	capture->video_st = NULL;
     }
 
     if( capture->ic )
@@ -1060,7 +1064,11 @@ static int icvOpenAVI_FFMPEG( CvCaptureAVI_FFMPEG* capture, const char* filename
     goto exit_func;
     }
     for(i = 0; i < ic->nb_streams; i++) {
+#if LIBAVFORMAT_BUILD > 4628
+        AVCodecContext *enc = ic->streams[i]->codec;
+#else
         AVCodecContext *enc = &ic->streams[i]->codec;
+#endif
         AVCodec *codec;
     if( CODEC_TYPE_VIDEO == enc->codec_type && video_index < 0) {
         video_index = i;
@@ -1124,9 +1132,15 @@ static int icvGrabFrameAVI_FFMPEG( CvCaptureAVI_FFMPEG* capture )
     // get the next frame
     while ((0 == valid) && (av_read_frame(capture->ic, &pkt) >= 0)) {
 
+#if LIBAVFORMAT_BUILD > 4628
+	avcodec_decode_video(capture->video_st->codec, 
+			     capture->picture, &got_picture, 
+			     pkt.data, pkt.size);
+#else
 	avcodec_decode_video(&capture->video_st->codec, 
 			     capture->picture, &got_picture, 
 			     pkt.data, pkt.size);
+#endif
 
 	if (got_picture) {
 	    // we have a new picture, so memorize it
@@ -1144,9 +1158,19 @@ static const IplImage* icvRetrieveFrameAVI_FFMPEG( CvCaptureAVI_FFMPEG* capture 
 {
     if( !capture || !capture->video_st || !capture->picture->data[0] )
     return 0;
+#if LIBAVFORMAT_BUILD > 4628
     img_convert( (AVPicture*)&capture->rgb_picture, PIX_FMT_BGR24,
-         (AVPicture*)capture->picture, capture->video_st->codec.pix_fmt,
-         capture->video_st->codec.width, capture->video_st->codec.height );
+		 (AVPicture*)capture->picture,
+		 capture->video_st->codec->pix_fmt,
+		 capture->video_st->codec->width,
+		 capture->video_st->codec->height );
+#else
+    img_convert( (AVPicture*)&capture->rgb_picture, PIX_FMT_BGR24,
+		 (AVPicture*)capture->picture,
+		 capture->video_st->codec.pix_fmt,
+		 capture->video_st->codec.width,
+		 capture->video_st->codec.height );
+#endif
     return &capture->frame;
 }
 
@@ -1183,11 +1207,19 @@ static double icvGetPropertyAVI_FFMPEG( CvCaptureAVI_FFMPEG* capture, int proper
         return capture->frame.height;
     break;
     case CV_CAP_PROP_FPS:
+#if LIBAVCODEC_BUILD > 4753
+	return av_q2d (capture->video_st->r_frame_rate);
+#else
         return (double)capture->video_st->codec.frame_rate
-        / (double)capture->video_st->codec.frame_rate_base;
+	    / (double)capture->video_st->codec.frame_rate_base;
+#endif
     break;
     case CV_CAP_PROP_FOURCC:
+#if LIBAVFORMAT_BUILD > 4628
+	return (double)capture->video_st->codec->codec_tag;
+#else
         return (double)capture->video_st->codec.codec_tag;
+#endif
     break;
     }
     return 0;
@@ -1434,8 +1466,13 @@ CV_IMPL CvVideoWriter* cvCreateVideoWriter( const char * filename, int fourcc,
     writer->context->bit_rate         = 400000;      // TODO: BITRATE SETTINGS!
     writer->context->width            = frameSize.width;  
     writer->context->height           = frameSize.height;
+#if LIBAVCODEC_BUILD > 4753
+    writer->context->time_base.num    = 1;
+    writer->context->time_base.den    = static_cast<int> (fps);
+#else
     writer->context->frame_rate       = static_cast<int> (fps);
     writer->context->frame_rate_base  =  1;
+#endif
     writer->context->gop_size         = 10;
     writer->context->max_b_frames     =  0;          // TODO: WHAT TO DO WITH B-FRAMES IN OTHER CODECS?
     
