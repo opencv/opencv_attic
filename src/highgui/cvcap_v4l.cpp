@@ -113,6 +113,16 @@ I modified the following:
     bayer2rgb24, sonix_decompress -> decoder routines for SN9C10x decoding from Takafumi Mizuno <taka-qce@ls-a.jp> with his pleasure :)
   - Tested succesful with Genius VideoCam Notebook (V4L2)
 
+Sixth Patch: Sept 10, 2005 Csaba Kertesz sign@freemail.hu
+For Release:  OpenCV-Linux Beta5 OpenCV-0.9.7
+
+I added the following:
+  - Add capture control support (hue, saturation, brightness, contrast, gain)
+  - Get and change V4L capture controls (hue, saturation, brightness, contrast)
+  - New method is internal:
+    icvSetControl -> set capture controls
+  - Tested succesful with Creative Vista (V4L)
+
 make & enjoy!
 
 */
@@ -1763,42 +1773,82 @@ static IplImage* icvRetrieveFrameCAM_V4L( CvCaptureCAM_V4L* capture) {
    return(&capture->frame);
 }
 
-static double icvGetPropertyCAM_V4L( CvCaptureCAM_V4L* capture, int property_id ){
+static double icvGetPropertyCAM_V4L (CvCaptureCAM_V4L* capture,
+				     int property_id ) {
+
+  double retval = -1;
 
 #ifdef HAVE_CAMV4L2
 
   if (V4L2_SUPPORT == 1)
   {
 
-    if (-1 == xioctl (capture->deviceHandle, VIDIOC_G_FMT, &capture->form))
-      errno_exit ("VIDIOC_S_FMT");
+      if (-1 == xioctl (capture->deviceHandle, VIDIOC_G_FMT, &capture->form))
+	  errno_exit ("VIDIOC_S_FMT");
 
-     switch (property_id) {
-       case CV_CAP_PROP_FRAME_WIDTH:
-         return((unsigned long)capture->form.fmt.pix.width);
-       case CV_CAP_PROP_FRAME_HEIGHT:
-         return((unsigned long)capture->form.fmt.pix.height);
-     }
-
-     return 0;
-
+      switch (property_id) {
+      case CV_CAP_PROP_FRAME_WIDTH:
+	  retval = capture->form.fmt.pix.width;
+	  break;
+      case CV_CAP_PROP_FRAME_HEIGHT:
+	  retval = capture->form.fmt.pix.height;
+	  break;
+      }
   } else
 #endif /* HAVE_CAMV4L2 */
   {
 
-    if (ioctl(capture->deviceHandle, VIDIOCGWIN, &capture->captureWindow) < 0) {
-      icvCloseCAM_V4L(capture);
-      return 0;
+    if (ioctl (capture->deviceHandle,
+	       VIDIOCGWIN, &capture->captureWindow) < 0) {
+	fprintf (stderr,
+		 "HIGHGUI ERROR: V4L: "
+		 "Unable to determine size of incoming image\n");
+	icvCloseCAM_V4L(capture);
+	return -1;
     }
 
+    if (ioctl (capture->deviceHandle,
+	       VIDIOCGPICT, &capture->imageProperties) < 0)
+    {
+	fprintf (stderr,
+		 "HIGHGUI ERROR: V4L: "
+		 "Unable to get properties of device\n");
+	icvCloseCAM_V4L(capture);
+	return -1;
+    }
+    
     switch (property_id) {
-       case CV_CAP_PROP_FRAME_WIDTH:
-         return((double)capture->captureWindow.width);
-       case CV_CAP_PROP_FRAME_HEIGHT:
-         return((double)capture->captureWindow.height);
+    case CV_CAP_PROP_FRAME_WIDTH:
+	retval = capture->captureWindow.width;
+	break;
+    case CV_CAP_PROP_FRAME_HEIGHT:
+	retval = capture->captureWindow.height;
+	break;
+    case CV_CAP_PROP_BRIGHTNESS:
+	retval = capture->imageProperties.brightness;
+	break;
+    case CV_CAP_PROP_CONTRAST:
+	retval = capture->imageProperties.contrast;
+	break;
+    case CV_CAP_PROP_SATURATION:
+	retval = capture->imageProperties.colour;
+	break;
+    case CV_CAP_PROP_HUE:
+	retval = capture->imageProperties.hue;
+	break;
+    case CV_CAP_PROP_GAIN:
+	fprintf(stderr,
+		"HIGHGUI ERROR: V4L: Gain control in V4L is not supported\n");
+	return -1;
+	break;
+    default:
+	fprintf(stderr,
+		"HIGHGUI ERROR: V4L: getting property #%d is not supported\n",
+		property_id);
+
     }
 
-    return 0;
+    return retval;
 
   }
 
@@ -1875,33 +1925,107 @@ static int icvSetVideoSize( CvCaptureCAM_V4L* capture, int w, int h) {
   return 0;
 
 }
+
+static int icvSetControl (CvCaptureCAM_V4L* capture,
+			  int property_id, double value) {
+  
+#ifdef HAVE_CAMV4L2
+
+  if (V4L2_SUPPORT == 1)
+  {
+
+  } else
+#endif /* HAVE_CAMV4L2 */
+  {
+
+    int v4l_value = (int)value;
+    
+    if (v4l_value < 0)
+      v4l_value = 0;
+    if (v4l_value > 0xffff)
+      v4l_value = 0xffff;
+  
+    switch (property_id) {
+    case CV_CAP_PROP_BRIGHTNESS:
+      capture->imageProperties.brightness = v4l_value;
+      break;
+    case CV_CAP_PROP_CONTRAST:
+      capture->imageProperties.contrast = v4l_value;
+      break;
+    case CV_CAP_PROP_SATURATION:
+      capture->imageProperties.colour = v4l_value;
+      break;
+    case CV_CAP_PROP_HUE:
+      capture->imageProperties.hue = v4l_value;
+      break;
+    case CV_CAP_PROP_GAIN:
+	fprintf(stderr,
+		"HIGHGUI ERROR: V4L: Gain control in V4L is not supported\n");
+	return -1;
+    default:
+	fprintf(stderr,
+		"HIGHGUI ERROR: V4L: property #%d is not supported\n",
+		property_id);
+    }
+    
+    if (ioctl(capture->deviceHandle, VIDIOCSPICT, &capture->imageProperties)
+	< 0)
+    {
+       fprintf(stderr,
+	       "HIGHGUI ERROR: V4L: Unable to set video informations\n");
+       icvCloseCAM_V4L(capture);
+       return -1;
+    }
+    
+    return 0;
+  }
+   
+  return 0;
+}
  
-static int icvSetPropertyCAM_V4L( CvCaptureCAM_V4L* capture, int property_id, double value ){
+static int icvSetPropertyCAM_V4L( CvCaptureCAM_V4L* capture,
+				  int property_id, double value ){
     static int width = 0, height = 0;
     int retval;
 
-    /* two subsequent calls setting WIDTH and HEIGHT will change the video size */
+    /* initialization */
+    retval = 0;
+
+    /* two subsequent calls setting WIDTH and HEIGHT will change
+       the video size */
     /* the first one will return an error, though. */
-   switch (property_id) {
-       case CV_CAP_PROP_FRAME_WIDTH:
-       width = cvRound(value);
-       if(width !=0 && height != 0) {
-           retval = icvSetVideoSize( capture, width, height);
-           width = height = 0;
-           return retval;
-       }
-       break;
-       case CV_CAP_PROP_FRAME_HEIGHT:
-       height = cvRound(value);
-       if(width !=0 && height != 0) {
-           retval = icvSetVideoSize( capture, width, height);
-           width = height = 0;
-           return retval;
-       }
-       break;
-   }
-   return 0;
-};
+
+    switch (property_id) {
+    case CV_CAP_PROP_FRAME_WIDTH:
+	width = cvRound(value);
+	if(width !=0 && height != 0) {
+	    retval = icvSetVideoSize( capture, width, height);
+	    width = height = 0;
+	}
+	break;
+    case CV_CAP_PROP_FRAME_HEIGHT:
+	height = cvRound(value);
+	if(width !=0 && height != 0) {
+	    retval = icvSetVideoSize( capture, width, height);
+	    width = height = 0;
+	}
+	break;
+    case CV_CAP_PROP_BRIGHTNESS:
+    case CV_CAP_PROP_CONTRAST:
+    case CV_CAP_PROP_SATURATION:
+    case CV_CAP_PROP_HUE:
+    case CV_CAP_PROP_GAIN:
+	retval = icvSetControl(capture, property_id, value);
+	break;
+    default:
+	fprintf(stderr,
+		"HIGHGUI ERROR: V4L: setting property #%d is not supported\n",
+		property_id);
+    }
+
+    /* return the the status */
+    return retval;
+}
 
 static void icvCloseCAM_V4L( CvCaptureCAM_V4L* capture ){
    /* Deallocate space - Hopefully, no leaks */ 
