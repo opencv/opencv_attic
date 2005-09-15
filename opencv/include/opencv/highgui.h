@@ -243,6 +243,12 @@ CVAPI(void) cvReleaseCapture( CvCapture** capture );
 #define CV_CAP_PROP_FRAME_COUNT    7 
 #define CV_CAP_PROP_FORMAT         8
 #define CV_CAP_PROP_MODE           9
+#define CV_CAP_PROP_BRIGHTNESS    10
+#define CV_CAP_PROP_CONTRAST      11
+#define CV_CAP_PROP_SATURATION    12
+#define CV_CAP_PROP_HUE           13
+#define CV_CAP_PROP_GAIN          14
+
 
 /* retrieve or set capture properties */
 CVAPI(double) cvGetCaptureProperty( CvCapture* capture, int property_id );
