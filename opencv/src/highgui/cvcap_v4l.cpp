@@ -599,7 +599,8 @@ void v4l2_scan_controls_enumerate_menu(CvCaptureCAM_V4L* capture)
        (int)capture->querymenu.index <= capture->queryctrl.maximum;
        capture->querymenu.index++)
   {
-    if (0 == ioctl (capture->deviceHandle, VIDIOC_QUERYMENU, &capture->querymenu))
+    if (0 == xioctl (capture->deviceHandle, VIDIOC_QUERYMENU,
+		     &capture->querymenu))
     {
 //      printf (" %s\n", capture->querymenu.name);
     } else {
@@ -620,7 +621,8 @@ void v4l2_scan_controls(CvCaptureCAM_V4L* capture)
        capture->queryctrl.id++)
   {
 
-    if (0 == ioctl (capture->deviceHandle, VIDIOC_QUERYCTRL, &capture->queryctrl))
+    if (0 == xioctl (capture->deviceHandle, VIDIOC_QUERYCTRL,
+		     &capture->queryctrl))
     {
 
       if (capture->queryctrl.flags & V4L2_CTRL_FLAG_DISABLED)
@@ -681,7 +683,8 @@ void v4l2_scan_controls(CvCaptureCAM_V4L* capture)
        capture->queryctrl.id++)
   {
 
-    if (0 == ioctl (capture->deviceHandle, VIDIOC_QUERYCTRL, &capture->queryctrl))
+    if (0 == xioctl (capture->deviceHandle, VIDIOC_QUERYCTRL,
+		     &capture->queryctrl))
     {
 
       if (capture->queryctrl.flags & V4L2_CTRL_FLAG_DISABLED)
@@ -988,12 +991,15 @@ CvCapture* icvOpenCAM_V4L( int index ) {
        capture->captureWindow.flags = 0;
        capture->captureWindow.clips = 0;
        capture->captureWindow.clipcount = 0;
-       if (ioctl(capture->deviceHandle, VIDIOCSWIN, &capture->captureWindow) == -1) {
+       if (xioctl(capture->deviceHandle, VIDIOCSWIN,
+		  &capture->captureWindow) == -1) {
        //printf("cannot get a %dx%d image.\n", DEFAULT_V4L_WIDTH, DEFAULT_V4L_HEIGHT);
        }
        /* Get window info again, to get the real value */
-       if(ioctl(capture->deviceHandle, VIDIOCGWIN, &capture->captureWindow) == -1) {
-         fprintf( stderr, "HIGHGUI ERROR: V4L/V4L2: Could not obtain specifics of capture window.\n\n");
+       if(xioctl(capture->deviceHandle, VIDIOCGWIN,
+		 &capture->captureWindow) == -1) {
+         fprintf( stderr, "HIGHGUI ERROR: V4L/V4L2: "
+		  "Could not obtain specifics of capture window.\n\n");
          icvCloseCAM_V4L(capture);
          return NULL;
        }
@@ -1979,6 +1985,10 @@ static double icvGetPropertyCAM_V4L (CvCaptureCAM_V4L* capture,
   if (V4L2_SUPPORT == 1)
   {
 
+      /* default value for min and max */
+      int v4l2_min = 0;
+      int v4l2_max = 255;
+
       if (-1 == xioctl (capture->deviceHandle, VIDIOC_G_FMT, &capture->form))
 	  errno_exit ("VIDIOC_G_FMT");
 
@@ -2015,8 +2025,8 @@ static double icvGetPropertyCAM_V4L (CvCaptureCAM_V4L* capture,
 	return -1;
       }
 
-      if (-1 == ioctl (capture->deviceHandle, VIDIOC_G_CTRL,
-		       &capture->control)) {
+      if (-1 == xioctl (capture->deviceHandle, VIDIOC_G_CTRL,
+			&capture->control)) {
 
 	  fprintf( stderr, "HIGHGUI ERROR: V4L2: ");
 	  switch (property_id) {
@@ -2040,13 +2050,39 @@ static double icvGetPropertyCAM_V4L (CvCaptureCAM_V4L* capture,
 	  return -1;
       }
 
-     return capture->control.value;
+      /* get the min/max values */
+      switch (property_id) {
+
+      case CV_CAP_PROP_BRIGHTNESS:
+	  v4l2_min = capture->v4l2_brightness_min;
+	  v4l2_max = capture->v4l2_brightness_max;
+	  break;
+      case CV_CAP_PROP_CONTRAST:
+	  v4l2_min = capture->v4l2_contrast_min;
+	  v4l2_max = capture->v4l2_contrast_max;
+	  break;
+      case CV_CAP_PROP_SATURATION:
+	  v4l2_min = capture->v4l2_saturation_min;
+	  v4l2_max = capture->v4l2_saturation_max;
+	  break;
+      case CV_CAP_PROP_HUE:
+	  v4l2_min = capture->v4l2_hue_min;
+	  v4l2_max = capture->v4l2_hue_max;
+	  break;
+      case CV_CAP_PROP_GAIN:
+	  v4l2_min = capture->v4l2_gain_min;
+	  v4l2_max = capture->v4l2_gain_max;
+	  break;
+      }
+
+      /* all was OK, so convert to 0.0 - 1.0 range, and return the value */
+      return (capture->control.value - v4l2_min) / (v4l2_max - v4l2_min);
 
   } else
 #endif /* HAVE_CAMV4L2 */
   {
 
-    double retval = -1;
+    int retval = -1;
 
     if (ioctl (capture->deviceHandle,
 	       VIDIOCGWIN, &capture->captureWindow) < 0) {
@@ -2097,7 +2133,13 @@ static double icvGetPropertyCAM_V4L (CvCaptureCAM_V4L* capture,
 		property_id);
     }
 
-    return retval;
+    if (retval == -1) {
+	/* there was a problem */
+	return -1;
+    }
+
+    /* all was OK, so convert to 0.0 - 1.0 range, and return the value */
+    return float (retval) / 0xFFFF;
 
   }
 
@@ -2178,166 +2220,99 @@ static int icvSetVideoSize( CvCaptureCAM_V4L* capture, int w, int h) {
 static int icvSetControl (CvCaptureCAM_V4L* capture,
 			  int property_id, double value) {
   
+  /* limitation of the input value */
+  if (value < 0.0) {
+    value = 0.0;
+  } else if (value > 1.0) {
+    value = 1.0;
+  }
+
 #ifdef HAVE_CAMV4L2
 
   if (V4L2_SUPPORT == 1)
   {
 
-    if (property_id == CV_CAP_PROP_BRIGHTNESS)
-    {
+    /* default value for min and max */
+    int v4l2_min = 0;
+    int v4l2_max = 255;
 
-      memset(&capture->control, 0, sizeof(capture->control));
+    /* initialisations */
+    memset(&capture->control, 0, sizeof(capture->control));
 
-      capture->control.id = V4L2_CID_BRIGHTNESS;
+    /* set which control we want to set */
+    switch (property_id) {
 
-      if (0 == ioctl (capture->deviceHandle, VIDIOC_G_CTRL, &capture->control))
-      {
+    case CV_CAP_PROP_BRIGHTNESS:
+	capture->control.id = V4L2_CID_BRIGHTNESS;
+	break;
+    case CV_CAP_PROP_CONTRAST:
+	capture->control.id = V4L2_CID_CONTRAST;
+	break;
+    case CV_CAP_PROP_SATURATION:
+	capture->control.id = V4L2_CID_SATURATION;
+	break;
+    case CV_CAP_PROP_HUE:
+	capture->control.id = V4L2_CID_HUE;
+	break;
+    case CV_CAP_PROP_GAIN:
+	capture->control.id = V4L2_CID_GAIN;
+	break;
+    default:
+	fprintf(stderr,
+		"HIGHGUI ERROR: V4L2: setting property #%d is not supported\n",
+		property_id);
+	return -1;
+    }
 
-        if ((int)value < capture->v4l2_brightness_min)
-        {
-          capture->control.value = capture->v4l2_brightness_min;
-        } else
-        if ((int)value > capture->v4l2_brightness_max)
-        {
-          capture->control.value = capture->v4l2_brightness_max;
-        } else {
-          capture->control.value = (int)value;
-	}
-        
-        /* The driver may clamp the value or return ERANGE, ignored here */
-        if (-1 == ioctl (capture->deviceHandle, VIDIOC_S_CTRL, &capture->control) && errno != ERANGE)
-        {
-          perror ("VIDIOC_S_CTRL");
+    /* get the min and max values */
+    if (-1 == xioctl (capture->deviceHandle,
+		      VIDIOC_G_CTRL, &capture->control)) {
+          perror ("VIDIOC_G_CTRL for getting min/max values");
 	  return -1;
-        }
-      }
     }
 
-    if (property_id == CV_CAP_PROP_CONTRAST)
-    {
+    /* get the min/max values */
+    switch (property_id) {
 
-      memset(&capture->control, 0, sizeof(capture->control));
-
-      capture->control.id = V4L2_CID_CONTRAST;
-
-      if (0 == ioctl (capture->deviceHandle, VIDIOC_G_CTRL, &capture->control))
-      {
-
-        if ((int)value < capture->v4l2_contrast_min)
-        {
-          capture->control.value = capture->v4l2_contrast_min;
-        } else
-        if ((int)value > capture->v4l2_contrast_max)
-        {
-          capture->control.value = capture->v4l2_contrast_max;
-        } else
-          capture->control.value = (int)value;
-        
-        /* The driver may clamp the value or return ERANGE, ignored here */
-        if (-1 == ioctl (capture->deviceHandle, VIDIOC_S_CTRL, &capture->control) && errno != ERANGE)
-        {
-          perror ("VIDIOC_S_CTRL");
-          return -1;
-        }
-      }
+    case CV_CAP_PROP_BRIGHTNESS:
+	v4l2_min = capture->v4l2_brightness_min;
+	v4l2_max = capture->v4l2_brightness_max;
+	break;
+    case CV_CAP_PROP_CONTRAST:
+	v4l2_min = capture->v4l2_contrast_min;
+	v4l2_max = capture->v4l2_contrast_max;
+	break;
+    case CV_CAP_PROP_SATURATION:
+	v4l2_min = capture->v4l2_saturation_min;
+	v4l2_max = capture->v4l2_saturation_max;
+	break;
+    case CV_CAP_PROP_HUE:
+	v4l2_min = capture->v4l2_hue_min;
+	v4l2_max = capture->v4l2_hue_max;
+	break;
+    case CV_CAP_PROP_GAIN:
+	v4l2_min = capture->v4l2_gain_min;
+	v4l2_max = capture->v4l2_gain_max;
+	break;
     }
 
-    if (property_id == CV_CAP_PROP_SATURATION)
-    {
+    /* set the value we want to set to the scaled the value */
+    capture->control.value = (int)(value * (v4l2_max - v4l2_min) + v4l2_min);
 
-      memset(&capture->control, 0, sizeof(capture->control));
-
-      capture->control.id = V4L2_CID_SATURATION;
-
-      if (0 == ioctl (capture->deviceHandle, VIDIOC_G_CTRL, &capture->control))
-      {
-
-        if ((int)value < capture->v4l2_saturation_min)
-        {
-          capture->control.value = capture->v4l2_saturation_min;
-        } else
-        if ((int)value > capture->v4l2_saturation_max)
-        {
-          capture->control.value = capture->v4l2_saturation_max;
-        } else
-          capture->control.value = (int)value;
-        
-        /* The driver may clamp the value or return ERANGE, ignored here */
-        if (-1 == ioctl (capture->deviceHandle, VIDIOC_S_CTRL, &capture->control) && errno != ERANGE)
-        {
-          perror ("VIDIOC_S_CTRL");
-          return -1;
-        }
-      }
+    /* The driver may clamp the value or return ERANGE, ignored here */
+    if (-1 == xioctl (capture->deviceHandle,
+		      VIDIOC_S_CTRL, &capture->control) && errno != ERANGE) {
+	perror ("VIDIOC_S_CTRL");
+	return -1;
     }
-
-    if (property_id == CV_CAP_PROP_HUE)
-    {
-
-      memset(&capture->control, 0, sizeof(capture->control));
-
-      capture->control.id = V4L2_CID_HUE;
-
-      if (0 == ioctl (capture->deviceHandle, VIDIOC_G_CTRL, &capture->control))
-      {
-
-        if ((int)value < capture->v4l2_hue_min)
-        {
-          capture->control.value = capture->v4l2_hue_min;
-        } else
-        if ((int)value > capture->v4l2_hue_max)
-        {
-          capture->control.value = capture->v4l2_hue_max;
-        } else
-          capture->control.value = (int)value;
-        
-        /* The driver may clamp the value or return ERANGE, ignored here */
-        if (-1 == ioctl (capture->deviceHandle, VIDIOC_S_CTRL, &capture->control) && errno != ERANGE)
-        {
-          perror ("VIDIOC_S_CTRL");
-          return -1;
-        }
-      }
-    }
-  
-    if (property_id == CV_CAP_PROP_GAIN)
-    {
-
-      memset(&capture->control, 0, sizeof(capture->control));
-
-      capture->control.id = V4L2_CID_GAIN;
-
-      if (0 == ioctl (capture->deviceHandle, VIDIOC_G_CTRL, &capture->control))
-      {
-
-        if ((int)value < capture->v4l2_gain_min)
-        {
-          capture->control.value = capture->v4l2_gain_min;
-        } else
-        if ((int)value > capture->v4l2_gain_max)
-        {
-          capture->control.value = capture->v4l2_gain_max;
-        } else
-          capture->control.value = (int)value;
-        
-        /* The driver may clamp the value or return ERANGE, ignored here */
-        if (-1 == ioctl (capture->deviceHandle, VIDIOC_S_CTRL, &capture->control) && errno != ERANGE)
-        {
-          perror ("VIDIOC_S_CTRL");
-          return -1;
-        }
-      }
-    }  
   } else
 #endif /* HAVE_CAMV4L2 */
   {
 
-    int v4l_value = (int)value;
-    
-    if (v4l_value < 0)
-      v4l_value = 0;
-    if (v4l_value > 0xffff)
-      v4l_value = 0xffff;
+    int v4l_value;
+
+    /* scale the value to the wanted integer one */
+    v4l_value = (int)(0xFFFF * value);
   
     switch (property_id) {
     case CV_CAP_PROP_BRIGHTNESS:
@@ -2360,6 +2335,7 @@ static int icvSetControl (CvCaptureCAM_V4L* capture,
 	fprintf(stderr,
 		"HIGHGUI ERROR: V4L: property #%d is not supported\n",
 		property_id);
+	return -1;
     }
     
     if (ioctl(capture->deviceHandle, VIDIOCSPICT, &capture->imageProperties)
