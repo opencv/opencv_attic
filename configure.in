@@ -24,7 +24,7 @@ AC_CONFIG_AUX_DIR([autotools])
 AC_CONFIG_MACRO_DIR([autotools/aclocal])
 
 # put CVS revision of this configure.in into the resulting configure script
-AC_REVISION($Revision: 1.15 $)
+AC_REVISION($Revision: 1.16 $)
 
 # Detect the canonical host and target build environment
 AC_CANONICAL_HOST
@@ -180,6 +180,12 @@ PKG_CHECK_MODULES(GTK, "gtk+-2.0 gdk-pixbuf-2.0", [have_gtk=yes
 AC_SUBST(GTK_CFLAGS)
 AC_SUBST(GTK_LIBS)
 
+PKG_CHECK_MODULES(GTHREAD, "gthread-2.0", [have_gthread=yes
+                  AC_DEFINE(HAVE_GTHREAD,,[GTK+ 2.0 Thread support])], have_gthread=no )
+AC_SUBST(GTHREAD_CFLAGS)
+AC_SUBST(GTHREAD_LIBS)
+
+										 
 dnl
 dnl ****************** FFMPEG configuration **********************
 dnl
@@ -342,6 +348,7 @@ Configuration:
     Install path:             ${prefix}
     
     Use gtk+ 2.x:             ${have_gtk}
+    Use threaded HighGUI      ${have_gthread}
     Use libjpeg:              ${have_jpeg}
     Use zlib:                 ${have_zlib}
     Use libpng:               ${have_png}
