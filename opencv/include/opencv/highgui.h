@@ -116,6 +116,8 @@
 /* this function is used to set some external parameters in case of X Window */
 CVAPI(int) cvInitSystem( int argc, char** argv );
 
+CVAPI(int) cvStartWindowThread();
+
 #define CV_WINDOW_AUTOSIZE  1
 /* create window */
 CVAPI(int) cvNamedWindow( const char* name, int flags );

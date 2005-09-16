@@ -223,6 +223,9 @@ CV_IMPL int cvInitSystem( int, char** )
     return 0;
 }
 
+CV_IMPL int cvStartWindowThread(){
+	return 0;
+}
 
 static CvWindow* icvFindWindowByName( const char* name )
 {
