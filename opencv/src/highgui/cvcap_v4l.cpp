@@ -2038,6 +2038,7 @@ static double icvGetPropertyCAM_V4L (CvCaptureCAM_V4L* capture,
               break;
           case CV_CAP_PROP_SATURATION:
               fprintf (stderr, "Saturation");
+              break;
           case CV_CAP_PROP_HUE:
               fprintf (stderr, "Hue");
               break;
@@ -2076,7 +2077,7 @@ static double icvGetPropertyCAM_V4L (CvCaptureCAM_V4L* capture,
       }
 
       /* all was OK, so convert to 0.0 - 1.0 range, and return the value */
-      return (capture->control.value - v4l2_min) / (v4l2_max - v4l2_min);
+      return ((float)capture->control.value - v4l2_min) / (v4l2_max - v4l2_min);
 
   } else
 #endif /* HAVE_CAMV4L2 */
