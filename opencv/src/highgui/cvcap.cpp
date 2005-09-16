@@ -1025,7 +1025,7 @@ static void icvCloseAVI_FFMPEG( CvCaptureAVI_FFMPEG* capture )
 #else
         avcodec_close( &capture->video_st->codec );
 #endif
-	capture->video_st = NULL;
+        capture->video_st = NULL;
     }
 
     if( capture->ic )
@@ -1122,31 +1122,31 @@ static int icvGrabFrameAVI_FFMPEG( CvCaptureAVI_FFMPEG* capture )
     }
 
     if( !capture || !capture->ic || !capture->video_st )
-	return 0;
+        return 0;
 
     // free last packet if exist
     if (pkt.data != NULL) {
-	av_free_packet (&pkt);
+        av_free_packet (&pkt);
     }
 
     // get the next frame
     while ((0 == valid) && (av_read_frame(capture->ic, &pkt) >= 0)) {
 
 #if LIBAVFORMAT_BUILD > 4628
-	avcodec_decode_video(capture->video_st->codec, 
-			     capture->picture, &got_picture, 
-			     pkt.data, pkt.size);
+        avcodec_decode_video(capture->video_st->codec, 
+                             capture->picture, &got_picture, 
+                             pkt.data, pkt.size);
 #else
-	avcodec_decode_video(&capture->video_st->codec, 
-			     capture->picture, &got_picture, 
-			     pkt.data, pkt.size);
+        avcodec_decode_video(&capture->video_st->codec, 
+                             capture->picture, &got_picture, 
+                             pkt.data, pkt.size);
 #endif
 
-	if (got_picture) {
-	    // we have a new picture, so memorize it
-	    capture->picture_pts = pkt.pts;
-	    valid = 1;
-	}
+        if (got_picture) {
+            // we have a new picture, so memorize it
+            capture->picture_pts = pkt.pts;
+            valid = 1;
+        }
     }
     
     // return if we have a new picture or not
@@ -1160,16 +1160,16 @@ static const IplImage* icvRetrieveFrameAVI_FFMPEG( CvCaptureAVI_FFMPEG* capture 
     return 0;
 #if LIBAVFORMAT_BUILD > 4628
     img_convert( (AVPicture*)&capture->rgb_picture, PIX_FMT_BGR24,
-		 (AVPicture*)capture->picture,
-		 capture->video_st->codec->pix_fmt,
-		 capture->video_st->codec->width,
-		 capture->video_st->codec->height );
+                 (AVPicture*)capture->picture,
+                 capture->video_st->codec->pix_fmt,
+                 capture->video_st->codec->width,
+                 capture->video_st->codec->height );
 #else
     img_convert( (AVPicture*)&capture->rgb_picture, PIX_FMT_BGR24,
-		 (AVPicture*)capture->picture,
-		 capture->video_st->codec.pix_fmt,
-		 capture->video_st->codec.width,
-		 capture->video_st->codec.height );
+                 (AVPicture*)capture->picture,
+                 capture->video_st->codec.pix_fmt,
+                 capture->video_st->codec.width,
+                 capture->video_st->codec.height );
 #endif
     return &capture->frame;
 }
@@ -1208,15 +1208,15 @@ static double icvGetPropertyAVI_FFMPEG( CvCaptureAVI_FFMPEG* capture, int proper
     break;
     case CV_CAP_PROP_FPS:
 #if LIBAVCODEC_BUILD > 4753
-	return av_q2d (capture->video_st->r_frame_rate);
+        return av_q2d (capture->video_st->r_frame_rate);
 #else
         return (double)capture->video_st->codec.frame_rate
-	    / (double)capture->video_st->codec.frame_rate_base;
+            / (double)capture->video_st->codec.frame_rate_base;
 #endif
     break;
     case CV_CAP_PROP_FOURCC:
 #if LIBAVFORMAT_BUILD > 4628
-	return (double)capture->video_st->codec->codec_tag;
+        return (double)capture->video_st->codec->codec_tag;
 #else
         return (double)capture->video_st->codec.codec_tag;
 #endif
