@@ -4263,6 +4263,21 @@ SWIGEXPORT(void) SWIG_init(void) {
         PyDict_SetItemString(d,"CV_CAP_PROP_MODE", SWIG_From_int((int)(9))); 
     }
     {
+        PyDict_SetItemString(d,"CV_CAP_PROP_BRIGHTNESS", SWIG_From_int((int)(10))); 
+    }
+    {
+        PyDict_SetItemString(d,"CV_CAP_PROP_CONTRAST", SWIG_From_int((int)(11))); 
+    }
+    {
+        PyDict_SetItemString(d,"CV_CAP_PROP_SATURATION", SWIG_From_int((int)(12))); 
+    }
+    {
+        PyDict_SetItemString(d,"CV_CAP_PROP_HUE", SWIG_From_int((int)(13))); 
+    }
+    {
+        PyDict_SetItemString(d,"CV_CAP_PROP_GAIN", SWIG_From_int((int)(14))); 
+    }
+    {
         PyDict_SetItemString(d,"HG_AUTOSIZE", SWIG_From_int((int)(1))); 
     }
 }
