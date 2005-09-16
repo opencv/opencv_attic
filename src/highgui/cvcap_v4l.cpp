@@ -532,7 +532,7 @@ int autosetup_capture_mode_v4l2(CvCaptureCAM_V4L* capture)
 
     if (-1 == xioctl (capture->deviceHandle, VIDIOC_G_JPEGCOMP, &capture->compr))
       errno_exit ("VIDIOC_G_JPEGCOMP");
-	 
+         
     capture->compr.quality = 0;
 
     if (-1 == xioctl (capture->deviceHandle, VIDIOC_S_JPEGCOMP, &capture->compr))
@@ -600,7 +600,7 @@ void v4l2_scan_controls_enumerate_menu(CvCaptureCAM_V4L* capture)
        capture->querymenu.index++)
   {
     if (0 == xioctl (capture->deviceHandle, VIDIOC_QUERYMENU,
-		     &capture->querymenu))
+                     &capture->querymenu))
     {
 //      printf (" %s\n", capture->querymenu.name);
     } else {
@@ -622,7 +622,7 @@ void v4l2_scan_controls(CvCaptureCAM_V4L* capture)
   {
 
     if (0 == xioctl (capture->deviceHandle, VIDIOC_QUERYCTRL,
-		     &capture->queryctrl))
+                     &capture->queryctrl))
     {
 
       if (capture->queryctrl.flags & V4L2_CTRL_FLAG_DISABLED)
@@ -684,7 +684,7 @@ void v4l2_scan_controls(CvCaptureCAM_V4L* capture)
   {
 
     if (0 == xioctl (capture->deviceHandle, VIDIOC_QUERYCTRL,
-		     &capture->queryctrl))
+                     &capture->queryctrl))
     {
 
       if (capture->queryctrl.flags & V4L2_CTRL_FLAG_DISABLED)
@@ -846,9 +846,9 @@ CvCapture* icvOpenCAM_V4L( int index ) {
    {
      fprintf (stderr, "HIGHGUI ERROR: V4L"
 #ifdef HAVE_CAMV4L2
-	      "/V4L2"
+              "/V4L2"
 #endif /* HAVE_CAMV4L2 */
-	      ": device %s: Unable to open for READ ONLY\n", deviceName);
+              ": device %s: Unable to open for READ ONLY\n", deviceName);
 
      return NULL;
    }
@@ -861,9 +861,9 @@ CvCapture* icvOpenCAM_V4L( int index ) {
    {
      fprintf (stderr, "HIGHGUI ERROR: V4L"
 #ifdef HAVE_CAMV4L2
-	      "/V4L2"
+              "/V4L2"
 #endif /* HAVE_CAMV4L2 */
-	      ": device %s: Unable to query number of channels\n", deviceName);
+              ": device %s: Unable to query number of channels\n", deviceName);
 
      return NULL;
    }
@@ -893,7 +893,7 @@ CvCapture* icvOpenCAM_V4L( int index ) {
      if ((capture->capability.type & VID_TYPE_CAPTURE) == 0) {
        /* Nope. */
        fprintf( stderr, "HIGHGUI ERROR: V4L: "
-		"device %s is unable to capture video memory.\n",deviceName);
+                "device %s is unable to capture video memory.\n",deviceName);
        icvCloseCAM_V4L(capture);
        return NULL;
      }
@@ -963,7 +963,7 @@ CvCapture* icvOpenCAM_V4L( int index ) {
 
      if(ioctl(capture->deviceHandle, VIDIOCGWIN, &capture->captureWindow) == -1) {
        fprintf( stderr, "HIGHGUI ERROR: V4L: "
-		"Could not obtain specifics of capture window.\n\n");
+                "Could not obtain specifics of capture window.\n\n");
        icvCloseCAM_V4L(capture);
        return NULL;
      }
@@ -992,14 +992,14 @@ CvCapture* icvOpenCAM_V4L( int index ) {
        capture->captureWindow.clips = 0;
        capture->captureWindow.clipcount = 0;
        if (xioctl(capture->deviceHandle, VIDIOCSWIN,
-		  &capture->captureWindow) == -1) {
+                  &capture->captureWindow) == -1) {
        //printf("cannot get a %dx%d image.\n", DEFAULT_V4L_WIDTH, DEFAULT_V4L_HEIGHT);
        }
        /* Get window info again, to get the real value */
        if(xioctl(capture->deviceHandle, VIDIOCGWIN,
-		 &capture->captureWindow) == -1) {
+                 &capture->captureWindow) == -1) {
          fprintf( stderr, "HIGHGUI ERROR: V4L/V4L2: "
-		  "Could not obtain specifics of capture window.\n\n");
+                  "Could not obtain specifics of capture window.\n\n");
          icvCloseCAM_V4L(capture);
          return NULL;
        }
@@ -1147,14 +1147,14 @@ static int read_frame_v4l2(CvCaptureCAM_V4L* capture)
 
         CLEAR (buf);
 
-       	buf.type = V4L2_BUF_TYPE_VIDEO_CAPTURE;
-       	buf.memory = V4L2_MEMORY_MMAP;
+        buf.type = V4L2_BUF_TYPE_VIDEO_CAPTURE;
+        buf.memory = V4L2_MEMORY_MMAP;
 
-    		if (-1 == xioctl (capture->deviceHandle, VIDIOC_DQBUF, &buf)) {
+                if (-1 == xioctl (capture->deviceHandle, VIDIOC_DQBUF, &buf)) {
         errno_exit ("VIDIOC_DQBUF");
-            		switch (errno) {
-            		case EAGAIN:
-                    		return 0;
+                        switch (errno) {
+                        case EAGAIN:
+                                return 0;
 
       case EIO:
         /* Could ignore EIO, see spec. */
@@ -1210,7 +1210,7 @@ static void mainloop_v4l2(CvCaptureCAM_V4L* capture)
                         }
 
       if (read_frame_v4l2 (capture))
-                    		break;
+                                break;
   
       /* EAGAIN - continue select loop. */
                 }
@@ -1585,55 +1585,55 @@ void bayer2rgb24(long int WIDTH, long int HEIGHT, unsigned char *src, unsigned c
     /* B */
     if ( (i > WIDTH) && ((i % WIDTH) > 0) ) {
         *scanpt++ = (*(rawpt-WIDTH-1)+*(rawpt-WIDTH+1)+
-         *(rawpt+WIDTH-1)+*(rawpt+WIDTH+1))/4;	/* R */
+         *(rawpt+WIDTH-1)+*(rawpt+WIDTH+1))/4;  /* R */
         *scanpt++ = (*(rawpt-1)+*(rawpt+1)+
-         *(rawpt+WIDTH)+*(rawpt-WIDTH))/4;	/* G */
-        *scanpt++ = *rawpt;					/* B */
+         *(rawpt+WIDTH)+*(rawpt-WIDTH))/4;      /* G */
+        *scanpt++ = *rawpt;                                     /* B */
     } else {
         /* first line or left column */
-        *scanpt++ = *(rawpt+WIDTH+1);		/* R */
-        *scanpt++ = (*(rawpt+1)+*(rawpt+WIDTH))/2;	/* G */
-        *scanpt++ = *rawpt;				/* B */
+        *scanpt++ = *(rawpt+WIDTH+1);           /* R */
+        *scanpt++ = (*(rawpt+1)+*(rawpt+WIDTH))/2;      /* G */
+        *scanpt++ = *rawpt;                             /* B */
     }
       } else {
     /* (B)G */
     if ( (i > WIDTH) && ((i % WIDTH) < (WIDTH-1)) ) {
-        *scanpt++ = (*(rawpt+WIDTH)+*(rawpt-WIDTH))/2;	/* R */
-        *scanpt++ = *rawpt;					/* G */
-        *scanpt++ = (*(rawpt-1)+*(rawpt+1))/2;		/* B */
+        *scanpt++ = (*(rawpt+WIDTH)+*(rawpt-WIDTH))/2;  /* R */
+        *scanpt++ = *rawpt;                                     /* G */
+        *scanpt++ = (*(rawpt-1)+*(rawpt+1))/2;          /* B */
     } else {
         /* first line or right column */
-        *scanpt++ = *(rawpt+WIDTH);	/* R */
-        *scanpt++ = *rawpt;		/* G */
-        *scanpt++ = *(rawpt-1);	/* B */
+        *scanpt++ = *(rawpt+WIDTH);     /* R */
+        *scanpt++ = *rawpt;             /* G */
+        *scanpt++ = *(rawpt-1); /* B */
     }
       }
   } else {
       if ( (i % 2) == 0 ) {
     /* G(R) */
     if ( (i < (WIDTH*(HEIGHT-1))) && ((i % WIDTH) > 0) ) {
-        *scanpt++ = (*(rawpt-1)+*(rawpt+1))/2;		/* R */
-        *scanpt++ = *rawpt;					/* G */
-        *scanpt++ = (*(rawpt+WIDTH)+*(rawpt-WIDTH))/2;	/* B */
+        *scanpt++ = (*(rawpt-1)+*(rawpt+1))/2;          /* R */
+        *scanpt++ = *rawpt;                                     /* G */
+        *scanpt++ = (*(rawpt+WIDTH)+*(rawpt-WIDTH))/2;  /* B */
     } else {
         /* bottom line or left column */
-        *scanpt++ = *(rawpt+1);		/* R */
-        *scanpt++ = *rawpt;			/* G */
-        *scanpt++ = *(rawpt-WIDTH);		/* B */
+        *scanpt++ = *(rawpt+1);         /* R */
+        *scanpt++ = *rawpt;                     /* G */
+        *scanpt++ = *(rawpt-WIDTH);             /* B */
     }
       } else {
     /* R */
     if ( i < (WIDTH*(HEIGHT-1)) && ((i % WIDTH) < (WIDTH-1)) ) {
-        *scanpt++ = *rawpt;					/* R */
+        *scanpt++ = *rawpt;                                     /* R */
         *scanpt++ = (*(rawpt-1)+*(rawpt+1)+
-         *(rawpt-WIDTH)+*(rawpt+WIDTH))/4;	/* G */
+         *(rawpt-WIDTH)+*(rawpt+WIDTH))/4;      /* G */
         *scanpt++ = (*(rawpt-WIDTH-1)+*(rawpt-WIDTH+1)+
-         *(rawpt+WIDTH-1)+*(rawpt+WIDTH+1))/4;	/* B */
+         *(rawpt+WIDTH-1)+*(rawpt+WIDTH+1))/4;  /* B */
     } else {
         /* bottom line or right column */
-        *scanpt++ = *rawpt;				/* R */
-        *scanpt++ = (*(rawpt-1)+*(rawpt-WIDTH))/2;	/* G */
-        *scanpt++ = *(rawpt-WIDTH-1);		/* B */
+        *scanpt++ = *rawpt;                             /* R */
+        *scanpt++ = (*(rawpt-1)+*(rawpt-WIDTH))/2;      /* G */
+        *scanpt++ = *(rawpt-WIDTH-1);           /* B */
     }
       }
   }
@@ -1643,7 +1643,7 @@ void bayer2rgb24(long int WIDTH, long int HEIGHT, unsigned char *src, unsigned c
 }
 
 
-#define CLAMP(x)	((x)<0?0:((x)>255)?255:(x))
+#define CLAMP(x)        ((x)<0?0:((x)>255)?255:(x))
 
 typedef struct {
   int is_abs;
@@ -1735,10 +1735,10 @@ void sonix_decompress_init(void)
   ================
     decompresses an image encoded by a SN9C101 camera controller chip.
 
-  IN	width
+  IN    width
     height
-    inp		pointer to compressed frame (with header already stripped)
-  OUT	outp	pointer to decompressed frame
+    inp         pointer to compressed frame (with header already stripped)
+  OUT   outp    pointer to decompressed frame
 
   Returns 0 if the operation was successful.
   Returns <0 if operation failed.
@@ -1966,8 +1966,8 @@ static IplImage* icvRetrieveFrameCAM_V4L( CvCaptureCAM_V4L* capture) {
         break;
       default:
         fprintf( stderr,
-		 "HIGHGUI ERROR: V4L: Cannot convert from palette %d to RGB\n",
-		 capture->imageProperties.palette);
+                 "HIGHGUI ERROR: V4L: Cannot convert from palette %d to RGB\n",
+                 capture->imageProperties.palette);
 
         return 0;
     }
@@ -1978,7 +1978,7 @@ static IplImage* icvRetrieveFrameCAM_V4L( CvCaptureCAM_V4L* capture) {
 }
 
 static double icvGetPropertyCAM_V4L (CvCaptureCAM_V4L* capture,
-				     int property_id ) {
+                                     int property_id ) {
 
 #ifdef HAVE_CAMV4L2
 
@@ -1990,13 +1990,13 @@ static double icvGetPropertyCAM_V4L (CvCaptureCAM_V4L* capture,
       int v4l2_max = 255;
 
       if (-1 == xioctl (capture->deviceHandle, VIDIOC_G_FMT, &capture->form))
-	  errno_exit ("VIDIOC_G_FMT");
+          errno_exit ("VIDIOC_G_FMT");
 
       switch (property_id) {
       case CV_CAP_PROP_FRAME_WIDTH:
-	  return capture->form.fmt.pix.width;
+          return capture->form.fmt.pix.width;
       case CV_CAP_PROP_FRAME_HEIGHT:
-	  return capture->form.fmt.pix.height;
+          return capture->form.fmt.pix.height;
       }
 
       /* initialize the control structure */
@@ -2004,75 +2004,75 @@ static double icvGetPropertyCAM_V4L (CvCaptureCAM_V4L* capture,
 
       switch (property_id) {
       case CV_CAP_PROP_BRIGHTNESS:
-	  capture->control.id = V4L2_CID_BRIGHTNESS;
-	  break;
+          capture->control.id = V4L2_CID_BRIGHTNESS;
+          break;
       case CV_CAP_PROP_CONTRAST:
-	  capture->control.id = V4L2_CID_CONTRAST;
-	  break;
+          capture->control.id = V4L2_CID_CONTRAST;
+          break;
       case CV_CAP_PROP_SATURATION:
-	  capture->control.id = V4L2_CID_SATURATION;
-	  break;
+          capture->control.id = V4L2_CID_SATURATION;
+          break;
       case CV_CAP_PROP_HUE:
-	  capture->control.id = V4L2_CID_HUE;
-	  break;
+          capture->control.id = V4L2_CID_HUE;
+          break;
       case CV_CAP_PROP_GAIN:
-	  capture->control.id = V4L2_CID_GAIN;
-	  break;
+          capture->control.id = V4L2_CID_GAIN;
+          break;
       default:
-	fprintf(stderr,
-		"HIGHGUI ERROR: V4L2: getting property #%d is not supported\n",
-		property_id);
-	return -1;
+        fprintf(stderr,
+                "HIGHGUI ERROR: V4L2: getting property #%d is not supported\n",
+                property_id);
+        return -1;
       }
 
       if (-1 == xioctl (capture->deviceHandle, VIDIOC_G_CTRL,
-			&capture->control)) {
+                        &capture->control)) {
 
-	  fprintf( stderr, "HIGHGUI ERROR: V4L2: ");
-	  switch (property_id) {
-	  case CV_CAP_PROP_BRIGHTNESS:
-	      fprintf (stderr, "Brightness");
-	      break;
-	  case CV_CAP_PROP_CONTRAST:
-	      fprintf (stderr, "Contrast");
-	      break;
-	  case CV_CAP_PROP_SATURATION:
-	      fprintf (stderr, "Saturation");
-	  case CV_CAP_PROP_HUE:
-	      fprintf (stderr, "Hue");
-	      break;
-	  case CV_CAP_PROP_GAIN:
-	      fprintf (stderr, "Gain");
-	      break;
-	  }
-	  fprintf (stderr, " is not supported by your device\n");
+          fprintf( stderr, "HIGHGUI ERROR: V4L2: ");
+          switch (property_id) {
+          case CV_CAP_PROP_BRIGHTNESS:
+              fprintf (stderr, "Brightness");
+              break;
+          case CV_CAP_PROP_CONTRAST:
+              fprintf (stderr, "Contrast");
+              break;
+          case CV_CAP_PROP_SATURATION:
+              fprintf (stderr, "Saturation");
+          case CV_CAP_PROP_HUE:
+              fprintf (stderr, "Hue");
+              break;
+          case CV_CAP_PROP_GAIN:
+              fprintf (stderr, "Gain");
+              break;
+          }
+          fprintf (stderr, " is not supported by your device\n");
 
-	  return -1;
+          return -1;
       }
 
       /* get the min/max values */
       switch (property_id) {
 
       case CV_CAP_PROP_BRIGHTNESS:
-	  v4l2_min = capture->v4l2_brightness_min;
-	  v4l2_max = capture->v4l2_brightness_max;
-	  break;
+          v4l2_min = capture->v4l2_brightness_min;
+          v4l2_max = capture->v4l2_brightness_max;
+          break;
       case CV_CAP_PROP_CONTRAST:
-	  v4l2_min = capture->v4l2_contrast_min;
-	  v4l2_max = capture->v4l2_contrast_max;
-	  break;
+          v4l2_min = capture->v4l2_contrast_min;
+          v4l2_max = capture->v4l2_contrast_max;
+          break;
       case CV_CAP_PROP_SATURATION:
-	  v4l2_min = capture->v4l2_saturation_min;
-	  v4l2_max = capture->v4l2_saturation_max;
-	  break;
+          v4l2_min = capture->v4l2_saturation_min;
+          v4l2_max = capture->v4l2_saturation_max;
+          break;
       case CV_CAP_PROP_HUE:
-	  v4l2_min = capture->v4l2_hue_min;
-	  v4l2_max = capture->v4l2_hue_max;
-	  break;
+          v4l2_min = capture->v4l2_hue_min;
+          v4l2_max = capture->v4l2_hue_max;
+          break;
       case CV_CAP_PROP_GAIN:
-	  v4l2_min = capture->v4l2_gain_min;
-	  v4l2_max = capture->v4l2_gain_max;
-	  break;
+          v4l2_min = capture->v4l2_gain_min;
+          v4l2_max = capture->v4l2_gain_max;
+          break;
       }
 
       /* all was OK, so convert to 0.0 - 1.0 range, and return the value */
@@ -2085,57 +2085,57 @@ static double icvGetPropertyCAM_V4L (CvCaptureCAM_V4L* capture,
     int retval = -1;
 
     if (ioctl (capture->deviceHandle,
-	       VIDIOCGWIN, &capture->captureWindow) < 0) {
-	fprintf (stderr,
-		 "HIGHGUI ERROR: V4L: "
-		 "Unable to determine size of incoming image\n");
-	icvCloseCAM_V4L(capture);
-	return -1;
+               VIDIOCGWIN, &capture->captureWindow) < 0) {
+        fprintf (stderr,
+                 "HIGHGUI ERROR: V4L: "
+                 "Unable to determine size of incoming image\n");
+        icvCloseCAM_V4L(capture);
+        return -1;
     }
 
     if (ioctl (capture->deviceHandle,
-	       VIDIOCGPICT, &capture->imageProperties) < 0)
+               VIDIOCGPICT, &capture->imageProperties) < 0)
     {
-	fprintf (stderr,
-		 "HIGHGUI ERROR: V4L: "
-		 "Unable to get properties of device\n");
-	icvCloseCAM_V4L(capture);
-	return -1;
+        fprintf (stderr,
+                 "HIGHGUI ERROR: V4L: "
+                 "Unable to get properties of device\n");
+        icvCloseCAM_V4L(capture);
+        return -1;
     }
     
     switch (property_id) {
     case CV_CAP_PROP_FRAME_WIDTH:
-	retval = capture->captureWindow.width;
-	break;
+        retval = capture->captureWindow.width;
+        break;
     case CV_CAP_PROP_FRAME_HEIGHT:
-	retval = capture->captureWindow.height;
-	break;
+        retval = capture->captureWindow.height;
+        break;
     case CV_CAP_PROP_BRIGHTNESS:
-	retval = capture->imageProperties.brightness;
-	break;
+        retval = capture->imageProperties.brightness;
+        break;
     case CV_CAP_PROP_CONTRAST:
-	retval = capture->imageProperties.contrast;
-	break;
+        retval = capture->imageProperties.contrast;
+        break;
     case CV_CAP_PROP_SATURATION:
-	retval = capture->imageProperties.colour;
-	break;
+        retval = capture->imageProperties.colour;
+        break;
     case CV_CAP_PROP_HUE:
-	retval = capture->imageProperties.hue;
-	break;
+        retval = capture->imageProperties.hue;
+        break;
     case CV_CAP_PROP_GAIN:
-	fprintf(stderr,
-		"HIGHGUI ERROR: V4L: Gain control in V4L is not supported\n");
-	return -1;
-	break;
+        fprintf(stderr,
+                "HIGHGUI ERROR: V4L: Gain control in V4L is not supported\n");
+        return -1;
+        break;
     default:
-	fprintf(stderr,
-		"HIGHGUI ERROR: V4L: getting property #%d is not supported\n",
-		property_id);
+        fprintf(stderr,
+                "HIGHGUI ERROR: V4L: getting property #%d is not supported\n",
+                property_id);
     }
 
     if (retval == -1) {
-	/* there was a problem */
-	return -1;
+        /* there was a problem */
+        return -1;
     }
 
     /* all was OK, so convert to 0.0 - 1.0 range, and return the value */
@@ -2218,7 +2218,7 @@ static int icvSetVideoSize( CvCaptureCAM_V4L* capture, int w, int h) {
 }
 
 static int icvSetControl (CvCaptureCAM_V4L* capture,
-			  int property_id, double value) {
+                          int property_id, double value) {
   
   /* limitation of the input value */
   if (value < 0.0) {
@@ -2243,57 +2243,57 @@ static int icvSetControl (CvCaptureCAM_V4L* capture,
     switch (property_id) {
 
     case CV_CAP_PROP_BRIGHTNESS:
-	capture->control.id = V4L2_CID_BRIGHTNESS;
-	break;
+        capture->control.id = V4L2_CID_BRIGHTNESS;
+        break;
     case CV_CAP_PROP_CONTRAST:
-	capture->control.id = V4L2_CID_CONTRAST;
-	break;
+        capture->control.id = V4L2_CID_CONTRAST;
+        break;
     case CV_CAP_PROP_SATURATION:
-	capture->control.id = V4L2_CID_SATURATION;
-	break;
+        capture->control.id = V4L2_CID_SATURATION;
+        break;
     case CV_CAP_PROP_HUE:
-	capture->control.id = V4L2_CID_HUE;
-	break;
+        capture->control.id = V4L2_CID_HUE;
+        break;
     case CV_CAP_PROP_GAIN:
-	capture->control.id = V4L2_CID_GAIN;
-	break;
+        capture->control.id = V4L2_CID_GAIN;
+        break;
     default:
-	fprintf(stderr,
-		"HIGHGUI ERROR: V4L2: setting property #%d is not supported\n",
-		property_id);
-	return -1;
+        fprintf(stderr,
+                "HIGHGUI ERROR: V4L2: setting property #%d is not supported\n",
+                property_id);
+        return -1;
     }
 
     /* get the min and max values */
     if (-1 == xioctl (capture->deviceHandle,
-		      VIDIOC_G_CTRL, &capture->control)) {
+                      VIDIOC_G_CTRL, &capture->control)) {
           perror ("VIDIOC_G_CTRL for getting min/max values");
-	  return -1;
+          return -1;
     }
 
     /* get the min/max values */
     switch (property_id) {
 
     case CV_CAP_PROP_BRIGHTNESS:
-	v4l2_min = capture->v4l2_brightness_min;
-	v4l2_max = capture->v4l2_brightness_max;
-	break;
+        v4l2_min = capture->v4l2_brightness_min;
+        v4l2_max = capture->v4l2_brightness_max;
+        break;
     case CV_CAP_PROP_CONTRAST:
-	v4l2_min = capture->v4l2_contrast_min;
-	v4l2_max = capture->v4l2_contrast_max;
-	break;
+        v4l2_min = capture->v4l2_contrast_min;
+        v4l2_max = capture->v4l2_contrast_max;
+        break;
     case CV_CAP_PROP_SATURATION:
-	v4l2_min = capture->v4l2_saturation_min;
-	v4l2_max = capture->v4l2_saturation_max;
-	break;
+        v4l2_min = capture->v4l2_saturation_min;
+        v4l2_max = capture->v4l2_saturation_max;
+        break;
     case CV_CAP_PROP_HUE:
-	v4l2_min = capture->v4l2_hue_min;
-	v4l2_max = capture->v4l2_hue_max;
-	break;
+        v4l2_min = capture->v4l2_hue_min;
+        v4l2_max = capture->v4l2_hue_max;
+        break;
     case CV_CAP_PROP_GAIN:
-	v4l2_min = capture->v4l2_gain_min;
-	v4l2_max = capture->v4l2_gain_max;
-	break;
+        v4l2_min = capture->v4l2_gain_min;
+        v4l2_max = capture->v4l2_gain_max;
+        break;
     }
 
     /* set the value we want to set to the scaled the value */
@@ -2301,9 +2301,9 @@ static int icvSetControl (CvCaptureCAM_V4L* capture,
 
     /* The driver may clamp the value or return ERANGE, ignored here */
     if (-1 == xioctl (capture->deviceHandle,
-		      VIDIOC_S_CTRL, &capture->control) && errno != ERANGE) {
-	perror ("VIDIOC_S_CTRL");
-	return -1;
+                      VIDIOC_S_CTRL, &capture->control) && errno != ERANGE) {
+        perror ("VIDIOC_S_CTRL");
+        return -1;
     }
   } else
 #endif /* HAVE_CAMV4L2 */
@@ -2328,21 +2328,21 @@ static int icvSetControl (CvCaptureCAM_V4L* capture,
       capture->imageProperties.hue = v4l_value;
       break;
     case CV_CAP_PROP_GAIN:
-	fprintf(stderr,
-		"HIGHGUI ERROR: V4L: Gain control in V4L is not supported\n");
-	return -1;
+        fprintf(stderr,
+                "HIGHGUI ERROR: V4L: Gain control in V4L is not supported\n");
+        return -1;
     default:
-	fprintf(stderr,
-		"HIGHGUI ERROR: V4L: property #%d is not supported\n",
-		property_id);
-	return -1;
+        fprintf(stderr,
+                "HIGHGUI ERROR: V4L: property #%d is not supported\n",
+                property_id);
+        return -1;
     }
     
     if (ioctl(capture->deviceHandle, VIDIOCSPICT, &capture->imageProperties)
-	< 0)
+        < 0)
     {
        fprintf(stderr,
-	       "HIGHGUI ERROR: V4L: Unable to set video informations\n");
+               "HIGHGUI ERROR: V4L: Unable to set video informations\n");
        icvCloseCAM_V4L(capture);
        return -1;
     }
@@ -2354,7 +2354,7 @@ static int icvSetControl (CvCaptureCAM_V4L* capture,
 }
  
 static int icvSetPropertyCAM_V4L( CvCaptureCAM_V4L* capture,
-				  int property_id, double value ){
+                                  int property_id, double value ){
     static int width = 0, height = 0;
     int retval;
 
@@ -2367,30 +2367,30 @@ static int icvSetPropertyCAM_V4L( CvCaptureCAM_V4L* capture,
 
     switch (property_id) {
     case CV_CAP_PROP_FRAME_WIDTH:
-	width = cvRound(value);
-	if(width !=0 && height != 0) {
-	    retval = icvSetVideoSize( capture, width, height);
-	    width = height = 0;
-	}
-	break;
+        width = cvRound(value);
+        if(width !=0 && height != 0) {
+            retval = icvSetVideoSize( capture, width, height);
+            width = height = 0;
+        }
+        break;
     case CV_CAP_PROP_FRAME_HEIGHT:
-	height = cvRound(value);
-	if(width !=0 && height != 0) {
-	    retval = icvSetVideoSize( capture, width, height);
-	    width = height = 0;
-	}
-	break;
+        height = cvRound(value);
+        if(width !=0 && height != 0) {
+            retval = icvSetVideoSize( capture, width, height);
+            width = height = 0;
+        }
+        break;
     case CV_CAP_PROP_BRIGHTNESS:
     case CV_CAP_PROP_CONTRAST:
     case CV_CAP_PROP_SATURATION:
     case CV_CAP_PROP_HUE:
     case CV_CAP_PROP_GAIN:
-	retval = icvSetControl(capture, property_id, value);
-	break;
+        retval = icvSetControl(capture, property_id, value);
+        break;
     default:
-	fprintf(stderr,
-		"HIGHGUI ERROR: V4L: setting property #%d is not supported\n",
-		property_id);
+        fprintf(stderr,
+                "HIGHGUI ERROR: V4L: setting property #%d is not supported\n",
+                property_id);
     }
 
     /* return the the status */
