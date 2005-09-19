@@ -18,6 +18,9 @@
 /* FFMpeg video codecs library */
 #undef HAVE_FFMPEG
 
+/* GTK+ 2.0 Thread support */
+#undef HAVE_GTHREAD
+
 /* GTK+ 2.x toolkit */
 #undef HAVE_GTK
 
