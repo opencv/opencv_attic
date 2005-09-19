@@ -38,6 +38,8 @@ del types
 
 
 cvInitSystem = _highgui.cvInitSystem
+
+cvStartWindowThread = _highgui.cvStartWindowThread
 CV_WINDOW_AUTOSIZE = _highgui.CV_WINDOW_AUTOSIZE
 
 cvNamedWindow = _highgui.cvNamedWindow

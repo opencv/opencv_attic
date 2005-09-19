@@ -1581,6 +1581,7 @@ SWIG_Check_int(PyObject* obj)
 #define SWIG_From_int PyInt_FromLong
 /*@@*/
 
+extern "C" int cvStartWindowThread();
 extern "C" int cvNamedWindow(char const *,int);
 
 /* returns SWIG_OLDOBJ if the input is a raw char*, SWIG_PYSTR if is a PyString */
@@ -1783,6 +1784,29 @@ static PyObject *_wrap_cvInitSystem(PyObject *, PyObject *args) {
     {
         try {
             result = (int)cvInitSystem(arg1,arg2);
+        } 
+        catch (...) 
+        {
+            return NULL;
+        } 
+    }
+    {
+        resultobj = SWIG_From_int((int)(result)); 
+    }
+    return resultobj;
+    fail:
+    return NULL;
+}
+
+
+static PyObject *_wrap_cvStartWindowThread(PyObject *, PyObject *args) {
+    PyObject *resultobj;
+    int result;
+    
+    if(!PyArg_ParseTuple(args,(char *)":cvStartWindowThread")) goto fail;
+    {
+        try {
+            result = (int)cvStartWindowThread();
         } 
         catch (...) 
         {
@@ -3557,6 +3581,7 @@ static PyObject * CvvImage_swigregister(PyObject *, PyObject *args) {
 }
 static PyMethodDef SwigMethods[] = {
 	 { (char *)"cvInitSystem", _wrap_cvInitSystem, METH_VARARGS, NULL},
+	 { (char *)"cvStartWindowThread", _wrap_cvStartWindowThread, METH_VARARGS, NULL},
 	 { (char *)"cvNamedWindow", _wrap_cvNamedWindow, METH_VARARGS, NULL},
 	 { (char *)"cvShowImage", _wrap_cvShowImage, METH_VARARGS, NULL},
 	 { (char *)"cvResizeWindow", _wrap_cvResizeWindow, METH_VARARGS, NULL},
