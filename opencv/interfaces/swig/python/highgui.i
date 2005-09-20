@@ -59,6 +59,10 @@
     /* the internal C callback function which is responsible to call
        the Python real callback function */
     static void _internal_cb_func (int pos) {
+	
+	/* Must ensure this thread has a lock on the interpreter */
+	PyGILState_STATE state = PyGILState_Ensure();
+
 	PyObject *result;
 
 	/* the argument of the callback ready to be passed to Python code */
@@ -72,6 +76,9 @@
 
 	/* cleanup */
 	Py_XDECREF (result);
+
+	/* Release Interpreter lock */
+	PyGILState_Release(state);
     }
 %}
 
@@ -86,6 +93,14 @@
     /* prepare to call the C function who will register the callback */
     $1 = (CvTrackbarCallback) _internal_cb_func;
 }
+
+/* HighGUI Python module initialization
+ * needed for callbacks to work in a threaded environment 
+ */
+%init %{
+	PyEval_InitThreads();
+%}
+
 
 %include "../general/highgui.i"
 
