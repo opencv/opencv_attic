@@ -1750,6 +1750,10 @@ extern "C" {
     /* the internal C callback function which is responsible to call
        the Python real callback function */
     static void _internal_cb_func (int pos) {
+	
+	/* Must ensure this thread has a lock on the interpreter */
+	PyGILState_STATE state = PyGILState_Ensure();
+
 	PyObject *result;
 
 	/* the argument of the callback ready to be passed to Python code */
@@ -1763,6 +1767,9 @@ extern "C" {
 
 	/* cleanup */
 	Py_XDECREF (result);
+
+	/* Release Interpreter lock */
+	PyGILState_Release(state);
     }
 
 static PyObject *_wrap_cvInitSystem(PyObject *, PyObject *args) {
@@ -4169,6 +4176,9 @@ SWIGEXPORT(void) SWIG_init(void) {
         typeinit = 1;
     }
     SWIG_InstallConstants(d,swig_const_table);
+    
+    
+    PyEval_InitThreads();
     
     {
         PyDict_SetItemString(d,"CV_WINDOW_AUTOSIZE", SWIG_From_int((int)(1))); 
