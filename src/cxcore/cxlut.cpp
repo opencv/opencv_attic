@@ -257,7 +257,10 @@ cvLUT( const void* srcarr, void* dstarr, const void* lutarr )
 
     size = cvGetMatSize( src );
     if( lut_cn == 1 )
+    {
         size.width *= cn;
+        type &= ~CV_MAT_CN_MASK;
+    }
     src_step = src->step;
     dst_step = dst->step;
 
@@ -280,6 +283,9 @@ cvLUT( const void* srcarr, void* dstarr, const void* lutarr )
 
         lut_data = shuffled_lut;
     }
+
+    if( lut_cn > 4 )
+        CV_ERROR( CV_StsOutOfRange, "The number of LUT channels must be 1, 2, 3 or 4" );
 
     func = (CvLUT_TransformFunc)(lut_tab.fn_2d[type]);
     if( !func )

@@ -318,6 +318,9 @@ cvInRange( const void* srcarr1, const void* srcarr2,
         dst_step = dst->step;
     }
 
+    if( CV_MAT_CN(type) > 4 )
+        CV_ERROR( CV_StsOutOfRange, "The number of channels must be 1, 2, 3 or 4" );
+
     func = (CvFunc2D_4A)(inrange_tab.fn_2d[type]);
 
     if( !func )
@@ -394,13 +397,16 @@ cvInRangeS( const void* srcarr, CvScalar lower, CvScalar upper, void* dstarr )
         dst_step = dst->step;
     }
 
+    if( CV_MAT_CN(type) > 4 )
+        CV_ERROR( CV_StsOutOfRange, "The number of channels must be 1, 2, 3 or 4" );
+
     func = (CvInRangeCFunc)(inrange_tab.fn_2d[type]);
 
     if( !func )
         CV_ERROR( CV_StsUnsupportedFormat, "" );
 
     cvScalarToRawData( &lower, buf, sctype, 0 );
-    cvScalarToRawData( &upper, (char*)buf + icvPixSize[sctype], sctype, 0 );
+    cvScalarToRawData( &upper, (char*)buf + CV_ELEM_SIZE(sctype), sctype, 0 );
 
     IPPI_CALL( func( src1->data.ptr, src1_step, dst->data.ptr,
                      dst_step, size, buf ));

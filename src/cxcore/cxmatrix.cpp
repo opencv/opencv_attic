@@ -71,7 +71,7 @@ cvSetIdentity( CvArr* array, CvScalar value )
     len = CV_IMIN( size.width, size.height );
 
     type = CV_MAT_TYPE(mat->type);
-    pix_size = icvPixSize[type];
+    pix_size = CV_ELEM_SIZE(type);
     size.width *= pix_size;
 
     if( CV_IS_MAT_CONT( mat->type ))
@@ -448,7 +448,7 @@ cvTranspose( const CvArr* srcarr, CvArr* dstarr )
     }
 
     type = CV_MAT_TYPE( src->type );
-    pix_size = icvPixSize[type];
+    pix_size = CV_ELEM_SIZE(type);
     size = cvGetMatSize( src );
 
     if( dstarr == srcarr )

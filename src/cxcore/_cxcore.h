@@ -76,7 +76,6 @@ extern const ushort icv8x16uSqrTab[];
 
 extern const char* icvHersheyGlyphs[];
 
-extern const int icvPixSize[];
 extern const signed char icvDepthToType[];
 
 #define icvIplToCvDepth( depth ) \

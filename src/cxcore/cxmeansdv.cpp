@@ -702,11 +702,15 @@ cvAvgSdv( const CvArr* img, CvScalar* _mean, CvScalar* _sdv, const void* mask )
         inittab = 1;
     }
 
-    CV_CALL( mat = cvGetMat( mat, &stub, &coi ));
+    if( !CV_IS_MAT(mat) )
+        CV_CALL( mat = cvGetMat( mat, &stub, &coi ));
 
     type = CV_MAT_TYPE( mat->type );
-    size = cvGetMatSize( mat );
 
+    if( CV_MAT_CN(type) > 4 && coi == 0 )
+        CV_ERROR( CV_StsOutOfRange, "The input array must have at most 4 channels unless COI is set" );
+
+    size = cvGetMatSize( mat );
     mat_step = mat->step;
 
     if( !mask )

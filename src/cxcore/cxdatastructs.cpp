@@ -463,7 +463,7 @@ cvCreateSeq( int seq_flags, int header_size, int elem_size, CvMemStorage * stora
     seq->flags = (seq_flags & ~CV_MAGIC_MASK) | CV_SEQ_MAGIC_VAL;
     {
         int elemtype = CV_MAT_TYPE(seq_flags);
-        int typesize = icvPixSize[elemtype];
+        int typesize = CV_ELEM_SIZE(elemtype);
 
         if( elemtype != CV_SEQ_ELTYPE_GENERIC &&
             typesize != 0 && typesize != elem_size )
@@ -703,7 +703,7 @@ cvMakeSeqHeaderForArray( int seq_flags, int header_size, int elem_size,
     seq->flags = (seq_flags & ~CV_MAGIC_MASK) | CV_SEQ_MAGIC_VAL;
     {
         int elemtype = CV_MAT_TYPE(seq_flags);
-        int typesize = icvPixSize[elemtype];
+        int typesize = CV_ELEM_SIZE(elemtype);
 
         if( elemtype != CV_SEQ_ELTYPE_GENERIC &&
             typesize != 0 && typesize != elem_size )
@@ -1424,7 +1424,7 @@ cvSeqPopFront( CvSeq *seq, void *element )
     block = seq->first;
 
     if( element )
-        memcpy( element, block->data, elem_size );
+        CV_MEMCPY_AUTO( element, block->data, elem_size );
     block->data += elem_size;
     block->start_index++;
     seq->total--;
@@ -2006,7 +2006,7 @@ cvSeqInsertSlice( CvSeq* seq, int index, const CvArr* from_arr )
             CV_ERROR( CV_StsBadArg, "The source array must be 1d coninuous vector" );
 
         CV_CALL( from = cvMakeSeqHeaderForArray( CV_SEQ_KIND_GENERIC, sizeof(from_header),
-                                                 icvPixSize[CV_MAT_TYPE(mat->type)],
+                                                 CV_ELEM_SIZE(mat->type),
                                                  mat->data.ptr, mat->cols + mat->rows - 1,
                                                  &from_header, &block ));
     }

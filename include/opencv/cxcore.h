@@ -445,6 +445,12 @@ CVAPI(void)  cvMerge( const CvArr* src0, const CvArr* src1,
                       const CvArr* src2, const CvArr* src3,
                       CvArr* dst );
 
+/* Copies several channels from input arrays to
+   certain channels of output arrays */
+CVAPI(void)  cvMixChannels( const CvArr** src, int src_count,
+                            CvArr** dst, int dst_count,
+                            const int* from_to, int pair_count );
+
 /* Performs linear transformation on every source array element:
    dst(x,y,c) = scale*src(x,y,c)+shift.
    Arbitrary combination of input and output array depths are allowed

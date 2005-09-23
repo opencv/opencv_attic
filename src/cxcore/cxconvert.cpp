@@ -42,7 +42,7 @@
 #include "_cxcore.h"
 
 /****************************************************************************************\
-*                             Conversion pixel -> plane                                  *
+*                            Splitting/extracting array channels                         *
 \****************************************************************************************/
 
 #define  ICV_DEF_PX2PL2PX_ENTRY_C2( arrtype_ptr, ptr )  \
@@ -211,7 +211,7 @@ ICV_DEF_COPY_PX2PL_FUNC_2D_COI( int64, 64f )
 
 
 /****************************************************************************************\
-*                             Conversion plane -> pixel                                  *
+*                            Merging/inserting array channels                            *
 \****************************************************************************************/
 
 
@@ -638,6 +638,272 @@ cvMerge( const void* srcarr0, const void* srcarr1, const void* srcarr2,
     __END__;
 }
 
+
+/****************************************************************************************\
+*                       Generalized split/merge: mixing channels                         *
+\****************************************************************************************/
+
+#define  ICV_DEF_MIX_CH_FUNC_2D( arrtype, flavor )              \
+static CvStatus CV_STDCALL                                      \
+icvMixChannels_##flavor##( const arrtype** src, int* sdelta0,   \
+                           int* sdelta1, arrtype** dst,         \
+                           int* ddelta0, int* ddelta1,          \
+                           int n, CvSize size )                 \
+{                                                               \
+    int i, k;                                                   \
+    int block_size0 = n == 1 ? size.width : 1024;               \
+                                                                \
+    for( ; size.height--; )                                     \
+    {                                                           \
+        int remaining = size.width;                             \
+        for( ; remaining > 0; )                                 \
+        {                                                       \
+            int block_size = MIN( remaining, block_size0 );     \
+            for( k = 0; k < n; k++ )                            \
+            {                                                   \
+                const arrtype* s = src[k];                      \
+                arrtype* d = dst[k];                            \
+                int ds = sdelta1[k], dd = ddelta1[k];           \
+                if( s )                                         \
+                {                                               \
+                    for( i = 0; i <= block_size - 2; i += 2,    \
+                                        s += ds*2, d += dd*2 )  \
+                    {                                           \
+                        arrtype t0 = s[0], t1 = s[ds];          \
+                        d[0] = t0; d[dd] = t1;                  \
+                    }                                           \
+                    if( i < block_size )                        \
+                        d[0] = s[0], s += ds, d += dd;          \
+                    src[k] = s;                                 \
+                }                                               \
+                else                                            \
+                {                                               \
+                    for( i=0; i <= block_size-2; i+=2, d+=dd*2 )\
+                        d[0] = d[dd] = 0;                       \
+                    if( i < block_size )                        \
+                        d[0] = 0, d += dd;                      \
+                }                                               \
+                dst[k] = d;                                     \
+            }                                                   \
+            remaining -= block_size;                            \
+        }                                                       \
+        for( k = 0; k < n; k++ )                                \
+            src[k] += sdelta0[k], dst[k] += ddelta0[k];         \
+    }                                                           \
+                                                                \
+    return CV_OK;                                               \
+}
+
+
+ICV_DEF_MIX_CH_FUNC_2D( uchar, 8u )
+ICV_DEF_MIX_CH_FUNC_2D( ushort, 16u )
+ICV_DEF_MIX_CH_FUNC_2D( int, 32s )
+ICV_DEF_MIX_CH_FUNC_2D( int64, 64s )
+
+static void
+icvInitMixChannelsTab( CvFuncTable* tab )
+{
+    tab->fn_2d[CV_8U] = (void*)icvMixChannels_8u;
+    tab->fn_2d[CV_8S] = (void*)icvMixChannels_8u;
+    tab->fn_2d[CV_16U] = (void*)icvMixChannels_16u;
+    tab->fn_2d[CV_16S] = (void*)icvMixChannels_16u;
+    tab->fn_2d[CV_32S] = (void*)icvMixChannels_32s;
+    tab->fn_2d[CV_32F] = (void*)icvMixChannels_32s;
+    tab->fn_2d[CV_64F] = (void*)icvMixChannels_64s;
+}
+
+typedef CvStatus (CV_STDCALL * CvMixChannelsFunc)( const void** src, int* sdelta0,
+        int* sdelta1, void** dst, int* ddelta0, int* ddelta1, int n, CvSize size );
+
+CV_IMPL void
+cvMixChannels( const CvArr** src, int src_count,
+               CvArr** dst, int dst_count,
+               const int* from_to, int pair_count )
+{
+    static CvFuncTable mixcn_tab;
+    static int inittab = 0;
+    uchar* buffer = 0;
+    int heap_alloc = 0;
+    
+    CV_FUNCNAME( "cvMixChannels" );
+
+    __BEGIN__;
+    
+    CvSize size = {0,0};
+    int depth = -1, elem_size = 1;
+    int *sdelta0 = 0, *sdelta1 = 0, *ddelta0 = 0, *ddelta1 = 0;
+    uchar **sptr = 0, **dptr = 0;
+    uchar **src0 = 0, **dst0 = 0;
+    int* src_cn = 0, *dst_cn = 0;
+    int* src_step = 0, *dst_step = 0;
+    int buf_size, i, k;
+    int cont_flag = CV_MAT_CONT_FLAG;
+    CvMixChannelsFunc func;
+
+    if( !inittab )
+    {
+        icvInitMixChannelsTab( &mixcn_tab );
+        inittab = 1;
+    }
+
+    src_count = MAX( src_count, 0 );
+
+    if( !src && src_count > 0 )
+        CV_ERROR( CV_StsNullPtr, "The input array of arrays is NULL" );
+
+    if( !dst )
+        CV_ERROR( CV_StsNullPtr, "The output array of arrays is NULL" );
+
+    if( dst_count <= 0 || pair_count <= 0 )
+        CV_ERROR( CV_StsOutOfRange,
+        "The number of output arrays and the number of copied channels must be positive" );
+
+    if( !from_to )
+        CV_ERROR( CV_StsNullPtr, "The array of copied channel indices is NULL" );
+
+    buf_size = (src_count + dst_count + 2)*
+        (sizeof(src0[0]) + sizeof(src_cn[0]) + sizeof(src_step[0])) + 
+        pair_count*2*(sizeof(sptr[0]) + sizeof(sdelta0[0]) + sizeof(sdelta1[0]));
+
+    if( buf_size > CV_MAX_LOCAL_SIZE )
+    {
+        CV_CALL( buffer = (uchar*)cvAlloc( buf_size ) );
+        heap_alloc = 1;
+    }
+    else
+        buffer = (uchar*)cvStackAlloc( buf_size );
+
+    src0 = (uchar**)buffer;
+    dst0 = src0 + src_count;
+    src_cn = (int*)(dst0 + dst_count);
+    dst_cn = src_cn + src_count + 1;
+    src_step = dst_cn + dst_count + 1;
+    dst_step = src_step + src_count;
+
+    sptr = (uchar**)cvAlignPtr( dst_step + dst_count, (int)sizeof(void*) );
+    dptr = sptr + pair_count;
+    sdelta0 = (int*)(dptr + pair_count);
+    sdelta1 = sdelta0 + pair_count;
+    ddelta0 = sdelta1 + pair_count;
+    ddelta1 = ddelta0 + pair_count;
+
+    src_cn[0] = dst_cn[0] = 0;
+
+    for( k = 0; k < 2; k++ )
+    {
+        for( i = 0; i < (k == 0 ? src_count : dst_count); i++ )
+        {
+            CvMat stub, *mat = (CvMat*)(k == 0 ? src[i] : dst[i]);
+            int cn;
+        
+            if( !CV_IS_MAT(mat) )
+                CV_CALL( mat = cvGetMat( mat, &stub ));
+        
+            if( depth < 0 )
+            {
+                depth = CV_MAT_DEPTH(mat->type);
+                elem_size = CV_ELEM_SIZE1(depth);
+                size = cvGetMatSize(mat);
+            }
+
+            if( CV_MAT_DEPTH(mat->type) != depth )
+                CV_ERROR( CV_StsUnmatchedFormats, "All the arrays must have the same bit depth" );
+
+            if( mat->cols != size.width || mat->rows != size.height )
+                CV_ERROR( CV_StsUnmatchedSizes, "All the arrays must have the same size" );
+
+            if( k == 0 )
+            {
+                src0[i] = mat->data.ptr;
+                cn = CV_MAT_CN(mat->type);
+                src_cn[i+1] = src_cn[i] + cn;
+                src_step[i] = mat->step / elem_size - size.width * cn;
+            }
+            else
+            {
+                dst0[i] = mat->data.ptr;
+                cn = CV_MAT_CN(mat->type);
+                dst_cn[i+1] = dst_cn[i] + cn;
+                dst_step[i] = mat->step / elem_size - size.width * cn;
+            }
+
+            cont_flag &= mat->type;
+        }
+    }
+
+    if( cont_flag )
+    {
+        size.width *= size.height;
+        size.height = 1;
+    }
+
+    for( i = 0; i < pair_count; i++ )
+    {
+        for( k = 0; k < 2; k++ )
+        {
+            int cn = from_to[i*2 + k];
+            const int* cn_arr = k == 0 ? src_cn : dst_cn;
+            int a = 0, b = k == 0 ? src_count-1 : dst_count-1;
+
+            if( cn < 0 || cn >= cn_arr[b+1] )
+            {
+                if( k == 0 && cn < 0 )
+                {
+                    sptr[i] = 0;
+                    sdelta0[i] = sdelta1[i] = 0;
+                    continue;
+                }
+                else
+                {
+                    char err_str[100];
+                    sprintf( err_str, "channel index #%d in the array of pairs is negative "
+                        "or exceeds the total number of channels in all the %s arrays", i*2+k,
+                        k == 0 ? "input" : "output" );
+                    CV_ERROR( CV_StsOutOfRange, err_str );
+                }
+            }
+
+            while( a <= b )
+            {
+                int m = (a + b) >> 1;
+                if( cn >= cn_arr[m+1] )
+                    a = m;
+                else if( cn < cn_arr[m] )
+                    b = m;
+                else
+                {
+                    a = m;
+                    break;
+                }
+            }
+            
+            if( k == 0 )
+            {
+                sptr[i] = src0[a] + (cn - cn_arr[a])*elem_size;
+                sdelta1[i] = cn_arr[a+1] - cn_arr[a];
+                sdelta0[i] = src_step[a];
+            }
+            else
+            {
+                dptr[i] = dst0[a] + (cn - cn_arr[a])*elem_size;
+                ddelta1[i] = cn_arr[a+1] - cn_arr[a];
+                ddelta0[i] = dst_step[a];
+            }
+        }
+    }
+
+    func = (CvMixChannelsFunc)mixcn_tab.fn_2d[depth];
+    if( !func )
+        CV_ERROR( CV_StsUnsupportedFormat, "The data type is not supported by the function" );
+
+    IPPI_CALL( func( (const void**)sptr, sdelta0, sdelta1, (void**)dptr,
+                     ddelta0, ddelta1, pair_count, size )); 
+
+    __END__;
+
+    if( buffer && heap_alloc )
+        cvFree( (void**)buffer );
+}
 
 
 /****************************************************************************************\

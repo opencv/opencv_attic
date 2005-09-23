@@ -1777,7 +1777,7 @@ cvDFT( const CvArr* srcarr, CvArr* dstarr, int flags, int nonzero_rows )
     }
 
     src0 = src;
-    elem_size = icvPixSize[src->type & CV_MAT_DEPTH_MASK];
+    elem_size = CV_ELEM_SIZE1(src->type);
     complex_elem_size = elem_size*2;
 
     // check types and sizes
@@ -2617,7 +2617,7 @@ cvDCT( const CvArr* srcarr, CvArr* dstarr, int flags )
     }
 
     depth = CV_MAT_DEPTH(src->type);
-    elem_size = icvPixSize[depth];
+    elem_size = CV_ELEM_SIZE1(depth);
     complex_elem_size = elem_size*2;
 
     // check types and sizes
