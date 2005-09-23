@@ -980,7 +980,7 @@ icvMorphOp( const void* srcarr, void* dstarr, IplConvKernel* element,
     CvSize size, el_size;
     CvPoint el_anchor;
     int el_shape;
-    int type, depth;
+    int type, depth, cn;
 
     if( !inittab )
     {
@@ -1020,6 +1020,7 @@ icvMorphOp( const void* srcarr, void* dstarr, IplConvKernel* element,
 
     type = CV_MAT_TYPE( src->type );
     depth = CV_MAT_DEPTH( type );
+    cn = CV_MAT_CN( type );
 
     if( iterations == 0 || (element && element->nCols == 1 && element->nRows == 1))
     {
@@ -1134,9 +1135,12 @@ icvMorphOp( const void* srcarr, void* dstarr, IplConvKernel* element,
         }
     }
 
+    if( depth != CV_8U && depth != CV_32F || cn == 2 || cn > 4 )
+        CV_ERROR( CV_StsUnsupportedFormat, "" );
+
     CV_CALL( state = icvMorphologyInitAlloc( src->width,
-        depth == CV_8U ? cv8u : cv32f, CV_MAT_CN(type),
-        el_size, el_anchor, el_shape, element ? element->values : 0 ));
+        depth == CV_8U ? cv8u : cv32f, cn, el_size, el_anchor,
+        el_shape, element ? element->values : 0 ));
 
     func = (CvMorphFunc)(morph_tab[(el_shape != CV_SHAPE_RECT)*2 + mop].fn_2d[depth]);
     if( !func )
