@@ -362,7 +362,7 @@ cvCopy( const void* srcarr, void* dstarr, const void* maskarr )
             CvNArrayIterator iterator;
 
             CV_CALL( cvInitNArrayIterator( 2, arrs, maskarr, stubs, &iterator ));
-            pix_size = icvPixSize[CV_MAT_TYPE(iterator.hdr[0]->type)];
+            pix_size = CV_ELEM_SIZE(iterator.hdr[0]->type);
 
             if( !maskarr )
             {
@@ -535,8 +535,8 @@ cvSet( void* arr, CvScalar value, const void* maskarr )
             CV_CALL( cvInitNArrayIterator( 1, &arr, maskarr, &nstub, &iterator ));
 
             type = CV_MAT_TYPE(iterator.hdr[0]->type);
-            pix_size = icvPixSize[type];
-            pix_size1 = icvPixSize[type & ~CV_MAT_CN_MASK];
+            pix_size1 = CV_ELEM_SIZE1(type);
+            pix_size = pix_size1*CV_MAT_CN(type);
 
             CV_CALL( cvScalarToRawData( &value, buf, type, maskarr == 0 ));
 
@@ -577,7 +577,7 @@ cvSet( void* arr, CvScalar value, const void* maskarr )
     }
 
     type = CV_MAT_TYPE( mat->type );
-    pix_size = icvPixSize[type];
+    pix_size = CV_ELEM_SIZE(type);
     size = cvGetMatSize( mat );
     mat_step = mat->step;
 
@@ -627,7 +627,7 @@ cvSet( void* arr, CvScalar value, const void* maskarr )
         CV_CALL( cvScalarToRawData( &value, buf, type, 1 ));
 
         IPPI_CALL( icvSet_8u_C1R( mat->data.ptr, mat_step, size, buf,
-                                  icvPixSize[type & ~CV_MAT_CN_MASK]));
+                                  CV_ELEM_SIZE1(type)));
     }
     else
     {
@@ -709,7 +709,7 @@ cvSetZero( CvArr* arr )
             CvNArrayIterator iterator;
             
             CV_CALL( cvInitNArrayIterator( 1, &arr, 0, &nstub, &iterator ));
-            iterator.size.width *= icvPixSize[CV_MAT_TYPE(iterator.hdr[0]->type)];
+            iterator.size.width *= CV_ELEM_SIZE(iterator.hdr[0]->type);
 
             if( iterator.size.width <= CV_MAX_INLINE_MAT_OP_SIZE*(int)sizeof(double) )
             {
@@ -747,7 +747,7 @@ cvSetZero( CvArr* arr )
     }
 
     size = cvGetMatSize( mat );
-    size.width *= icvPixSize[CV_MAT_TYPE(mat->type)];
+    size.width *= CV_ELEM_SIZE(mat->type);
     mat_step = mat->step;
 
     if( CV_IS_MAT_CONT( mat->type ))
@@ -966,7 +966,7 @@ cvFlip( const CvArr* srcarr, CvArr* dstarr, int flip_mode )
         CV_ERROR( CV_StsUnmatchedSizes, "" );
 
     size = cvGetMatSize( src );
-    pix_size = icvPixSize[CV_MAT_TYPE( src->type )];
+    pix_size = CV_ELEM_SIZE( src->type );
 
     if( flip_mode == 0 )
     {
@@ -1041,7 +1041,7 @@ cvRepeat( const CvArr* srcarr, CvArr* dstarr )
 
     srcsize = cvGetMatSize( src );
     dstsize = cvGetMatSize( dst );
-    pix_size = icvPixSize[CV_MAT_TYPE( src->type )];
+    pix_size = CV_ELEM_SIZE( src->type );
 
     for( y = 0, k = 0; y < dstsize.height; y++ )
     {

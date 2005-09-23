@@ -447,7 +447,12 @@ cvAvg( const void* img, const void* maskarr )
 
         if( CV_MAT_CN(type) == 1 || coi == 0 )
         {
-            CvFunc2D_2A1P func = (CvFunc2D_2A1P)(mean_tab.fn_2d[type]);
+            CvFunc2D_2A1P func;
+
+            if( CV_MAT_CN(type) > 4 )
+                CV_ERROR( CV_StsOutOfRange, "The input array must have at most 4 channels unless COI is set" );
+
+            func = (CvFunc2D_2A1P)(mean_tab.fn_2d[type]);
 
             if( !func )
                 CV_ERROR( CV_StsBadArg, cvUnsupportedFormat );

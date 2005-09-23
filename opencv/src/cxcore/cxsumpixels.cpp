@@ -419,6 +419,8 @@ cvSum( const CvArr* arr )
             CV_CALL( cvInitNArrayIterator( 1, (void**)&mat, 0, &nstub, &iterator ));
 
             type = CV_MAT_TYPE(iterator.hdr[0]->type);
+            if( CV_MAT_CN(type) > 4 )
+                CV_ERROR( CV_StsOutOfRange, "The input array must have at most 4 channels" );
 
             pass_hint = CV_MAT_DEPTH(type) == CV_32F;
 
@@ -508,6 +510,10 @@ cvSum( const CvArr* arr )
     if( CV_MAT_CN(type) == 1 || coi == 0 )
     {
         int pass_hint = CV_MAT_DEPTH(type) == CV_32F;
+
+        if( CV_MAT_CN(type) > 4 )
+            CV_ERROR( CV_StsOutOfRange, "The input array must have at most 4 channels" );
+
         if( !pass_hint )
         {
             CvFunc2D_1A1P func = (CvFunc2D_1A1P)(sum_tab.fn_2d[type]);

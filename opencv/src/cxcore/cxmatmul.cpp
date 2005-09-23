@@ -1673,6 +1673,9 @@ cvTransform( const CvArr* srcarr, CvArr* dstarr,
     cn = CV_MAT_CN( type );
     dst_cn = CV_MAT_CN( dst->type );
 
+    if( cn > 4 || dst_cn > 4 )
+        CV_ERROR( CV_StsOutOfRange, "Both input and output array must have at most 4 channels" );
+
     if( !CV_IS_MAT( rot ))
         CV_CALL( rot = cvGetMat( rot, &rotstub, &coi ));
 
@@ -2281,6 +2284,9 @@ cvScaleAdd( const CvArr* srcarr1, CvScalar scale,
         icvInitMulAddCTable( &muladds_tab );
         inittab = 1;
     }
+
+    if( CV_MAT_CN(type) > 2 )
+        CV_ERROR( CV_StsOutOfRange, "The function only supports 1- and 2-channel arrays" );
 
     {
         CvFunc2D_3A1P func = (CvFunc2D_3A1P)(muladds_tab.fn_2d[type]);

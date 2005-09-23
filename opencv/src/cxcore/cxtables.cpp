@@ -53,21 +53,6 @@ const signed char icvDepthToType[] =
     CV_32F, CV_32S, -1, -1, -1, -1, -1, -1, CV_64F, -1
 };
 
-const int icvPixSize[] =
-{
-    sizeof(uchar)*1, sizeof(char)*1, sizeof(ushort)*1, sizeof(short)*1,
-    sizeof(int)*1, sizeof(float)*1, sizeof(double)*1, 0,
-    
-    sizeof(uchar)*2, sizeof(char)*2, sizeof(ushort)*2, sizeof(short)*2,
-    sizeof(int)*2, sizeof(float)*2, sizeof(double)*2, 0,
-    
-    sizeof(uchar)*3, sizeof(char)*3, sizeof(ushort)*3, sizeof(short)*3,
-    sizeof(int)*3, sizeof(float)*3, sizeof(double)*3, 0,
-    
-    sizeof(uchar)*4, sizeof(char)*4, sizeof(ushort)*4, sizeof(short)*4,
-    sizeof(int)*4, sizeof(float)*4, sizeof(double)*4, 0
-};
-
 const float icv8x32fTab[] =
 {
     -128.f, -127.f, -126.f, -125.f, -124.f, -123.f, -122.f, -121.f,

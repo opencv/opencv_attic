@@ -1345,7 +1345,7 @@ cvSVD( CvArr* aarr, CvArr* warr, CvArr* uarr, CvArr* varr, int flags )
     }
 
     type = CV_MAT_TYPE( a->type );
-    pix_size = icvPixSize[type];
+    pix_size = CV_ELEM_SIZE(type);
     buf_size = n*2 + m;
 
     if( !(flags & CV_SVD_MODIFY_A) )
@@ -1488,7 +1488,7 @@ cvSVBkSb( const CvArr* warr, const CvArr* uarr,
         CV_ERROR( CV_StsUnmatchedFormats, "All matrices must have the same type" );
 
     type = CV_MAT_TYPE( w->type );
-    pix_size = icvPixSize[type];
+    pix_size = CV_ELEM_SIZE(type);
 
     if( !(flags & CV_SVD_U_T) )
     {

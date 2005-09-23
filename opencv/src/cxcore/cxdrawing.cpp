@@ -187,7 +187,7 @@ cvInitLineIterator( const CvArr* img, CvPoint pt1, CvPoint pt2,
         CV_ERROR( CV_StsBadPoint,
             "One of the ending points is outside of the image, use cvClipLine" );
 
-    bt_pix0 = bt_pix = icvPixSize[CV_MAT_TYPE(mat->type)];
+    bt_pix0 = bt_pix = CV_ELEM_SIZE(mat->type);
     step = mat->step;
 
     dx = pt2.x - pt1.x;
@@ -259,7 +259,7 @@ icvLine( CvMat* mat, CvPoint pt1, CvPoint pt2,
     if( cvClipLine( cvGetMatSize(mat), &pt1, &pt2 ))
     {
         CvLineIterator iterator;
-        int pix_size = icvPixSize[CV_MAT_TYPE(mat->type)];
+        int pix_size = CV_ELEM_SIZE(mat->type);
         int i, count;
         
         if( connectivity == 0 )
@@ -998,7 +998,7 @@ icvFillConvexPoly( CvMat* img, CvPoint *v, int npts, const void* color, int line
     int xmin, xmax, ymin, ymax;
     uchar* ptr = img->data.ptr;
     CvSize size = cvGetMatSize( img );
-    int pix_size = icvPixSize[CV_MAT_TYPE(img->type)];
+    int pix_size = CV_ELEM_SIZE(img->type);
     CvPoint p0;
     int delta1, delta2;
 
@@ -1249,7 +1249,7 @@ icvFillEdgeCollection( CvMat* img, CvContour* edges, const void* color )
     CvSize size = cvGetMatSize(img);
     CvPolyEdge* e;
     int y_max = INT_MIN;
-    int pix_size = icvPixSize[CV_MAT_TYPE(img->type)];
+    int pix_size = CV_ELEM_SIZE(img->type);
 
     __BEGIN__;
     
@@ -1407,7 +1407,7 @@ icvCircle( CvMat* img, CvPoint center, int radius, const void* color, int fill )
 {
     CvSize size = cvGetMatSize( img );
     int step = img->step;
-    int pix_size = icvPixSize[CV_MAT_TYPE(img->type)];
+    int pix_size = CV_ELEM_SIZE(img->type);
     uchar* ptr = (uchar*)(img->data.ptr);
     int err = 0, dx = radius, dy = 0, plus = 1, minus = (radius << 1) - 1;
     int inside = center.x >= radius && center.x < size.width - radius &&
