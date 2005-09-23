@@ -742,7 +742,7 @@ cvResize( const CvArr* srcarr, CvArr* dstarr, int method )
                 CvDecimateAlpha* xofs;
                 CvResizeAreaFunc func = (CvResizeAreaFunc)area_tab.fn_2d[depth];
 
-                if( !func )
+                if( !func || cn > 4 )
                     CV_ERROR( CV_StsUnsupportedFormat, "" );
 
                 buf_size = buf_len*2*sizeof(float) + ssize.width*2*sizeof(CvDecimateAlpha);
@@ -1122,6 +1122,8 @@ cvWarpAffine( const CvArr* srcarr, CvArr* dstarr, const CvMat* matrix,
     type = CV_MAT_TYPE(src->type);
     depth = CV_MAT_DEPTH(type);
     cn = CV_MAT_CN(type);
+    if( cn > 4 )
+        CV_ERROR( CV_BadNumChannels, "" );
 
     ssize = cvGetMatSize(src);
     dsize = cvGetMatSize(dst);
@@ -1392,6 +1394,8 @@ cvWarpPerspective( const CvArr* srcarr, CvArr* dstarr,
     type = CV_MAT_TYPE(src->type);
     depth = CV_MAT_DEPTH(type);
     cn = CV_MAT_CN(type);
+    if( cn > 4 )
+        CV_ERROR( CV_BadNumChannels, "" );
     
     ssize = cvGetMatSize(src);
     dsize = cvGetMatSize(dst);
@@ -1768,6 +1772,8 @@ cvRemap( const CvArr* srcarr, CvArr* dstarr,
     type = CV_MAT_TYPE(src->type);
     depth = CV_MAT_DEPTH(type);
     cn = CV_MAT_CN(type);
+    if( cn > 4 )
+        CV_ERROR( CV_BadNumChannels, "" );
     
     ssize = cvGetMatSize(src);
     dsize = cvGetMatSize(dst);
