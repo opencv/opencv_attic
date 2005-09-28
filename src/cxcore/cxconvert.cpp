@@ -645,7 +645,7 @@ cvMerge( const void* srcarr0, const void* srcarr1, const void* srcarr2,
 
 #define  ICV_DEF_MIX_CH_FUNC_2D( arrtype, flavor )              \
 static CvStatus CV_STDCALL                                      \
-icvMixChannels_##flavor##( const arrtype** src, int* sdelta0,   \
+icvMixChannels_##flavor( const arrtype** src, int* sdelta0,     \
                            int* sdelta1, arrtype** dst,         \
                            int* ddelta0, int* ddelta1,          \
                            int n, CvSize size )                 \
