@@ -62,9 +62,19 @@ if __name__ == '__main__':
     highgui.cvMoveWindow ('Camera', 10, 10)
     highgui.cvMoveWindow ('Histogram', 10, 270)
 
+    try:
+        # try to get the device number from the command line
+        device = int (sys.argv [1])
+
+        # got it ! so remove it from the arguments
+        del sys.argv [1]
+    except (IndexError, ValueError):
+        # no device number on the command line, assume we want the 1st device
+        device = 0
+
     if len (sys.argv) == 1:
         # no argument on the command line, try to use the camera
-        capture = highgui.cvCaptureFromCAM (0)
+        capture = highgui.cvCaptureFromCAM (device)
 
         # set the wanted image size from the camera
         highgui.cvSetCaptureProperty (capture,
@@ -177,6 +187,6 @@ if __name__ == '__main__':
         # handle events
         k = highgui.cvWaitKey (10)
 
-        if k == 27:
+        if k % 0x100 == 27:
             # user has press the ESC key, so exit
             break
