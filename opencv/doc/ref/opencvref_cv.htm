@@ -14,7 +14,7 @@
 <li><a href="#cv_imgproc_morphology">Morphological Operations</a>
 <li><a href="#cv_imgproc_filters">Filters and Color Conversion</a>
 <li><a href="#cv_imgproc_pyramids">Pyramids and the Applications</a>
-<li><a href="#cv_imgproc_ccomp">Connected Components</a>
+<li><a href="#cv_imgproc_ccomp">Connected Components and Contour Retrieval</a>
 <li><a href="#cv_imgproc_moments">Image and Contour Moments</a>
 <li><a href="#cv_imgproc_special">Special Image Transforms</a>
 <li><a href="#cv_imgproc_histograms">Histograms</a>
@@ -1292,7 +1292,7 @@ There may be more than one connected component per a  cluster.
 or equal size</p>
 
 
-<hr><h2><a name="cv_imgproc_ccomp">Connected Components</a></h2>
+<hr><h2><a name="cv_imgproc_ccomp">Connected Components and Contour Retrieval</a></h2>
 
 <hr><h3><a name="decl_CvConnectedComp">CvConnectedComp</a></h3>
 <p class="Blurb">Connected component</p>
@@ -1417,8 +1417,8 @@ the number of retrieved contours. The pointer <code>first_contour</code> is fill
 It will contain pointer to the first most outer contour or NULL if no contours is detected (if the image is completely black).
 Other contours may be reached from <code>first_contour</code> using <code>h_next</code> and <code>v_next</code> links.
 The sample in <a href="#decl_cvDrawContours">cvDrawContours</a> discussion shows how to use contours for connected component
-detection. Contours can be also used for shape analysis and object recognition - see <code>squares</code>
-sample in CVPR 2001 tutorial course located at SourceForge site.</p>
+detection. Contours can be also used for shape analysis and object recognition - see <code>squares.c</code>
+in OpenCV sample directory.</p>
 
 
 <hr><h3><a name="decl_cvStartFindContours">StartFindContours</a></h3>
@@ -1730,7 +1730,7 @@ neighbor circles may be falsely detected in addition to a true one. If it is too
  (the lower one will be twice smaller).
 <dt>param2<dd>The second method-specific parameter.
  In case of <code>CV_HOUGH_GRADIENT</code> it is accumulator threshold at the center detection stage.
- The smaller it is, the more false circles may be detected. Still, circles, corresponding to the larger accumulator
+ The smaller it is, the more false circles may be detected. Circles, corresponding to the larger accumulator
  values, will be returned first.
 </dl><p>
 The function <code>cvHoughCircles</code> finds circles in grayscale image using some modification of Hough transform.</p>
@@ -1751,12 +1751,13 @@ int main(int argc, char** argv)
         cvSmooth( gray, gray, CV_GAUSSIAN, 9, 9 ); // smooth it, otherwise a lot of false circles may be detected
         CvSeq* circles = cvHoughCircles( gray, storage, CV_HOUGH_GRADIENT, 2, gray->height/4, 200, 100 );
         int i;
-        for( i = 0; i < c->total; i++ )
+        for( i = 0; i < circles->total; i++ )
         {
-             float* p = (float*)cvGetSeqElem( c, i );
+             float* p = (float*)cvGetSeqElem( circles, i );
+             cvCircle( img, cvPoint(cvRound(p[0]),cvRound(p[1])), 3, CV_RGB(0,255,0), -1, 8, 0 );
              cvCircle( img, cvPoint(cvRound(p[0]),cvRound(p[1])), cvRound(p[2]), CV_RGB(255,0,0), 3, 8, 0 );
         }
-        cvNamedWindow( "cicles", 1 );
+        cvNamedWindow( "circles", 1 );
         cvShowImage( "circles", img );
     }
     return 0;
