@@ -766,15 +766,16 @@ cvContourArea( const void *array, CvSlice slice )
 }
 
 
+#if 0
 /* for now this function works bad with singular cases
    You can see in the code, that when some troubles with
    matrices or some variables occur -
    box filled with zero values is returned.
    However in general function works fine.
 */
-static CvStatus icvFitEllipse_32f( CvSeq* points, CvBox2D* box )
+static void
+icvFitEllipse_32f( CvSeq* points, CvBox2D* box )
 {
-    CvStatus status = CV_OK;
     float u[6];
 
     CvMatr32f D = 0;
@@ -914,7 +915,7 @@ static CvStatus icvFitEllipse_32f( CvSeq* points, CvBox2D* box )
         box->center.x = box->center.y = 
         box->size.width = box->size.height = 
         box->angle = 0.f;
-        goto error;
+        return;
     }
 
     /* now find truthful eigenvector */
@@ -947,7 +948,7 @@ static CvStatus icvFitEllipse_32f( CvSeq* points, CvBox2D* box )
             box->center.x = box->center.y = 
             box->size.width = box->size.height = 
             box->angle = 0.f;
-            goto error;
+            return;
         }
            
         a *= scale;
@@ -971,7 +972,7 @@ static CvStatus icvFitEllipse_32f( CvSeq* points, CvBox2D* box )
             box->center.x = box->center.y = 
             box->size.width = box->size.height = 
             box->angle = 0.f;
-            goto error;
+            return;
         }
 
         scale = -1.f / f;
@@ -1002,27 +1003,25 @@ static CvStatus icvFitEllipse_32f( CvSeq* points, CvBox2D* box )
     box->size.width = 2 * cvInvSqrt( eigenvalues[1] );
 
     if ( !(box->size.height && box->size.width) )
-    {
         assert(0);
-    }
 
     /* calc angle */
-    box->angle = cvFastArctan( INVEIGV[3], INVEIGV[2] );
-
-error:
+    box->angle = (float)(atan2( INVEIGV[3], INVEIGV[2] )*180/CV_PI);
 
     if( D )
         icvDeleteMatrix( D );
-
-    return status;
 }
+#endif
 
-
+/*
+ *	New fitellipse algorithm, contributed by Dr. Daniel Weiss
+ */
 CV_IMPL CvBox2D
 cvFitEllipse2( const CvArr* array )
 {
     CvBox2D box;
-    
+    double* Ad = 0, *bd = 0;
+
     CV_FUNCNAME( "cvFitEllipse2" );
 
     memset( &box, 0, sizeof(box));
@@ -1032,6 +1031,12 @@ cvFitEllipse2( const CvArr* array )
     CvContour contour_header;
     CvSeq* ptseq = 0;
     CvSeqBlock block;
+    CvSeqReader reader;
+    int i, n;
+    double gfp[5], rp[5], t;
+    int is_float;
+    CvMat A, b, x;
+    const double min_eps = 1e-6;
 
     if( CV_IS_SEQ( array ))
     {
@@ -1045,12 +1050,103 @@ cvFitEllipse2( const CvArr* array )
             CV_SEQ_KIND_GENERIC, array, &contour_header, &block ));
     }
 
-    if( ptseq->total < 6 )
+    n = ptseq->total;
+    if( n < 5 )
         CV_ERROR( CV_StsBadSize, "Number of points should be >= 6" );
+    //icvFitEllipse_32f( ptseq, &box );
+    //EXIT;
 
-    IPPI_CALL( icvFitEllipse_32f( ptseq, &box ));
+    CV_CALL( Ad = (double*)cvAlloc( n*5*sizeof(Ad[0]) ));
+    CV_CALL( bd = (double*)cvAlloc( n*sizeof(bd[0]) ));
+
+    // first fit for parameters A - E
+    A = cvMat( n, 5, CV_64F, Ad );
+    b = cvMat( n, 1, CV_64F, bd );
+    x = cvMat( 5, 1, CV_64F, gfp );
+
+    cvStartReadSeq( ptseq, &reader );
+    is_float = CV_SEQ_ELTYPE(ptseq) == CV_32FC2;
+
+    for( i = 0; i < n; i++ )
+    {
+        CvPoint2D32f p;
+        if( is_float )
+            p = *(CvPoint2D32f*)(reader.ptr);
+        else
+        {
+            p.x = (float)((int*)reader.ptr)[0];
+            p.y = (float)((int*)reader.ptr)[1];
+        }
+        CV_NEXT_SEQ_ELEM( sizeof(p), reader );
+
+        bd[i] = 10000.0; // 1.0?
+        Ad[i*5] = -p.x * p.x; // A - C signs inverted as proposed by APP
+        Ad[i*5 + 1] = -p.y * p.y;
+        Ad[i*5 + 2] = -p.x * p.y;
+        Ad[i*5 + 3] = p.x;
+        Ad[i*5 + 4] = p.y;
+    }
+    
+    cvSolve( &A, &b, &x, CV_SVD );
+
+    // now use general-form parameters A - E to find the ellipse center:
+    // differentiate general form wrt x/y to get two equations for cx and cy
+    A = cvMat( 2, 2, CV_64F, Ad );
+    b = cvMat( 2, 1, CV_64F, bd );
+    x = cvMat( 2, 1, CV_64F, rp );
+    Ad[0] = 2 * gfp[0];
+    Ad[1] = Ad[2] = gfp[2];
+    Ad[3] = 2 * gfp[1];
+    bd[0] = gfp[3];
+    bd[1] = gfp[4];
+    cvSolve( &A, &b, &x, CV_SVD );
+
+    // re-fit for parameters A - C with those center coordinates
+    A = cvMat( n, 3, CV_64F, Ad );
+    b = cvMat( n, 1, CV_64F, bd );
+    x = cvMat( 3, 1, CV_64F, gfp );
+    for( i = 0; i < n; i++ )
+    {
+        CvPoint2D32f p;
+        if( is_float )
+            p = *(CvPoint2D32f*)(reader.ptr);
+        else
+        {
+            p.x = (float)((int*)reader.ptr)[0];
+            p.y = (float)((int*)reader.ptr)[1];
+        }
+        CV_NEXT_SEQ_ELEM( sizeof(p), reader );
+        bd[i] = 1.0;
+        Ad[i * 3] = (p.x - rp[0]) * (p.x - rp[0]);
+        Ad[i * 3 + 1] = (p.y - rp[1]) * (p.y - rp[1]);
+        Ad[i * 3 + 2] = (p.x - rp[0]) * (p.y - rp[1]);
+    }
+    cvSolve(&A, &b, &x, CV_SVD);
+
+    // store angle and radii
+    rp[4] = -0.5 * atan2(gfp[2], gfp[1] - gfp[0]); // convert from APP angle usage
+    t = sin(-2.0 * rp[4]);
+    if( fabs(t) > fabs(gfp[2])*min_eps )
+        t = gfp[2]/t;
+    else
+        t = gfp[1] - gfp[0];
+    rp[2] = fabs(gfp[0] + gfp[1] - t);
+    if( rp[2] > min_eps )
+        rp[2] = sqrt(2.0 / rp[2]);
+    rp[3] = fabs(gfp[0] + gfp[1] + t);
+    if( rp[3] > min_eps )
+        rp[3] = sqrt(2.0 / rp[3]);
+
+    box.center.x = (float)rp[0];
+    box.center.y = (float)rp[1];
+    box.size.width = (float)(rp[2]*2);
+    box.size.height = (float)(rp[3]*2);
+    box.angle = (float)(rp[4]*180/CV_PI);
 
     __END__;
+
+    cvFree( (void**)&Ad );
+    cvFree( (void**)&bd );
 
     return box;
 }
