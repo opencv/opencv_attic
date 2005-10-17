@@ -241,3 +241,60 @@
         Py_DECREF (my_obj);
     }
 }
+
+/**
+ * IplImage ** image can be either one IplImage or one array of IplImage
+ * (for example like in cvCalcHist() )
+ * From Python, the array of IplImage can be a tuple.
+ */
+%typemap(in) (IplImage** image) {
+
+    IplImage * one_image;
+
+    /* first, check if this is just one IplImage */
+    /* if this is just one IplImage, one_image will receive it */
+    if ((SWIG_ConvertPtr($input, (void **) &one_image,
+			 $descriptor(IplImage *),
+			 0)) != -1) {
+
+	/* Yes, just one IplImage, so pass it to the called function */
+	$1 = &one_image;
+
+    } else if PyTuple_Check ($input) {
+
+	/* This is a tuple, so we need to test each element and pass
+	   them to the called function */
+
+	IplImage ** many_images;
+	int i;
+
+	/* get the size of the tuple */
+	int nb = PyTuple_Size ($input);
+
+	/* allocate the necessary place */
+	many_images = (IplImage **)malloc (nb * sizeof (IplImage *));
+
+	for (i = 0; i < nb; i++) {
+
+	    /* convert the current tuple element to a IplImage *, and
+	       store to many_images [i] */
+	    SWIG_ConvertPtr(PyTuple_GetItem ($input, i),
+			    (void **) &(many_images [i]),
+			    $descriptor(IplImage *),
+			    0);
+
+	    /* check that the current item is a correct type */
+	    if (SWIG_arg_fail ($argnum)) {
+		/* incorrect ! */
+		SWIG_fail;
+	    }
+	}
+
+	/* what to give to the called function */
+	$1 = many_images;
+
+    } else {
+	/* not a IplImage, not a tuple, this is wrong */
+	return 0;
+    }
+}
