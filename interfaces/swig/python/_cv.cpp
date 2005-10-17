@@ -16764,7 +16764,51 @@ static PyObject *_wrap_cvReleaseImageHeader(PyObject *, PyObject *args) {
     
     if(!PyArg_ParseTuple(args,(char *)"O:cvReleaseImageHeader",&obj0)) goto fail;
     {
-        IplImage * buffer; if ((SWIG_ConvertPtr(obj0, (void **) &buffer, SWIGTYPE_p__IplImage, 1)) == -1) return 0; arg1=&buffer; 
+        IplImage * one_image;
+        
+        /* first, check if this is just one IplImage */
+        /* if this is just one IplImage, one_image will receive it */
+        if ((SWIG_ConvertPtr(obj0, (void **) &one_image,
+        SWIGTYPE_p__IplImage,
+        0)) != -1) {
+            /* Yes, just one IplImage, so pass it to the called function */
+            arg1 = &one_image;
+            
+        } else if PyTuple_Check (obj0) {
+            /* This is a tuple, so we need to test each element and pass
+            	   them to the called function */
+            
+            IplImage ** many_images;
+            int i;
+            
+            /* get the size of the tuple */
+            int nb = PyTuple_Size (obj0);
+            
+            /* allocate the necessary place */
+            many_images = (IplImage **)malloc (nb * sizeof (IplImage *));
+            
+            for (i = 0; i < nb; i++) {
+                /* convert the current tuple element to a IplImage *, and
+                	       store to many_images [i] */
+                SWIG_ConvertPtr(PyTuple_GetItem (obj0, i),
+                (void **) &(many_images [i]),
+                SWIGTYPE_p__IplImage,
+                0);
+                
+                /* check that the current item is a correct type */
+                if (SWIG_arg_fail (1)) {
+                    /* incorrect ! */
+                    SWIG_fail;
+                }
+            }
+            
+            /* what to give to the called function */
+            arg1 = many_images;
+            
+        } else {
+            /* not a IplImage, not a tuple, this is wrong */
+            return 0;
+        }
     }
     {
         try {
@@ -16789,7 +16833,51 @@ static PyObject *_wrap_cvReleaseImage(PyObject *, PyObject *args) {
     
     if(!PyArg_ParseTuple(args,(char *)"O:cvReleaseImage",&obj0)) goto fail;
     {
-        IplImage * buffer; if ((SWIG_ConvertPtr(obj0, (void **) &buffer, SWIGTYPE_p__IplImage, 1)) == -1) return 0; arg1=&buffer; 
+        IplImage * one_image;
+        
+        /* first, check if this is just one IplImage */
+        /* if this is just one IplImage, one_image will receive it */
+        if ((SWIG_ConvertPtr(obj0, (void **) &one_image,
+        SWIGTYPE_p__IplImage,
+        0)) != -1) {
+            /* Yes, just one IplImage, so pass it to the called function */
+            arg1 = &one_image;
+            
+        } else if PyTuple_Check (obj0) {
+            /* This is a tuple, so we need to test each element and pass
+            	   them to the called function */
+            
+            IplImage ** many_images;
+            int i;
+            
+            /* get the size of the tuple */
+            int nb = PyTuple_Size (obj0);
+            
+            /* allocate the necessary place */
+            many_images = (IplImage **)malloc (nb * sizeof (IplImage *));
+            
+            for (i = 0; i < nb; i++) {
+                /* convert the current tuple element to a IplImage *, and
+                	       store to many_images [i] */
+                SWIG_ConvertPtr(PyTuple_GetItem (obj0, i),
+                (void **) &(many_images [i]),
+                SWIGTYPE_p__IplImage,
+                0);
+                
+                /* check that the current item is a correct type */
+                if (SWIG_arg_fail (1)) {
+                    /* incorrect ! */
+                    SWIG_fail;
+                }
+            }
+            
+            /* what to give to the called function */
+            arg1 = many_images;
+            
+        } else {
+            /* not a IplImage, not a tuple, this is wrong */
+            return 0;
+        }
     }
     {
         try {
@@ -41716,7 +41804,51 @@ static PyObject *_wrap_cvCalcHist(PyObject *, PyObject *args) {
     
     if(!PyArg_ParseTuple(args,(char *)"OOOO:cvCalcHist",&obj0,&obj1,&obj2,&obj3)) goto fail;
     {
-        IplImage * buffer; if ((SWIG_ConvertPtr(obj0, (void **) &buffer, SWIGTYPE_p__IplImage, 1)) == -1) return 0; arg1=&buffer; 
+        IplImage * one_image;
+        
+        /* first, check if this is just one IplImage */
+        /* if this is just one IplImage, one_image will receive it */
+        if ((SWIG_ConvertPtr(obj0, (void **) &one_image,
+        SWIGTYPE_p__IplImage,
+        0)) != -1) {
+            /* Yes, just one IplImage, so pass it to the called function */
+            arg1 = &one_image;
+            
+        } else if PyTuple_Check (obj0) {
+            /* This is a tuple, so we need to test each element and pass
+            	   them to the called function */
+            
+            IplImage ** many_images;
+            int i;
+            
+            /* get the size of the tuple */
+            int nb = PyTuple_Size (obj0);
+            
+            /* allocate the necessary place */
+            many_images = (IplImage **)malloc (nb * sizeof (IplImage *));
+            
+            for (i = 0; i < nb; i++) {
+                /* convert the current tuple element to a IplImage *, and
+                	       store to many_images [i] */
+                SWIG_ConvertPtr(PyTuple_GetItem (obj0, i),
+                (void **) &(many_images [i]),
+                SWIGTYPE_p__IplImage,
+                0);
+                
+                /* check that the current item is a correct type */
+                if (SWIG_arg_fail (1)) {
+                    /* incorrect ! */
+                    SWIG_fail;
+                }
+            }
+            
+            /* what to give to the called function */
+            arg1 = many_images;
+            
+        } else {
+            /* not a IplImage, not a tuple, this is wrong */
+            return 0;
+        }
     }
     SWIG_Python_ConvertPtr(obj1, (void **)&arg2, SWIGTYPE_p_CvHistogram, SWIG_POINTER_EXCEPTION | 0);
     if (SWIG_arg_fail(2)) SWIG_fail;
