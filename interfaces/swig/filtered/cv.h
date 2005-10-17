@@ -6,7 +6,7 @@
 # 1 "../../../cxcore/include/cxcore.h" 1
 # 69 "../../../cxcore/include/cxcore.h"
 # 1 "../../../cxcore/include/cxtypes.h" 1
-# 136 "../../../cxcore/include/cxtypes.h"
+# 140 "../../../cxcore/include/cxtypes.h"
 typedef long long int64;
 typedef unsigned long long uint64;
 
@@ -14,14 +14,18 @@ typedef unsigned long long uint64;
 
 typedef unsigned char uchar;
 typedef unsigned short ushort;
-# 156 "../../../cxcore/include/cxtypes.h"
+
+
+
+
+
 typedef void CvArr;
-# 189 "../../../cxcore/include/cxtypes.h"
+# 185 "../../../cxcore/include/cxtypes.h"
 static int cvRound( double value )
 {
-# 203 "../../../cxcore/include/cxtypes.h"
+# 199 "../../../cxcore/include/cxtypes.h"
     return (int)lrint(value);
-# 212 "../../../cxcore/include/cxtypes.h"
+# 208 "../../../cxcore/include/cxtypes.h"
 }
 
 
@@ -107,7 +111,7 @@ static double cvRandReal( CvRNG* rng )
 {
     return cvRandInt(rng)*2.3283064365386962890625e-10 ;
 }
-# 339 "../../../cxcore/include/cxtypes.h"
+# 335 "../../../cxcore/include/cxtypes.h"
 typedef struct _IplImage
 {
     int nSize;
@@ -175,7 +179,7 @@ typedef struct _IplConvKernelFP
     float *values;
 }
 IplConvKernelFP;
-# 507 "../../../cxcore/include/cxtypes.h"
+# 513 "../../../cxcore/include/cxtypes.h"
 typedef struct CvMat
 {
     int type;
@@ -192,35 +196,35 @@ typedef struct CvMat
         float* fl;
         double* db;
     } data;
-# 537 "../../../cxcore/include/cxtypes.h"
+# 543 "../../../cxcore/include/cxtypes.h"
     int rows;
     int cols;
 
 
 }
 CvMat;
-# 576 "../../../cxcore/include/cxtypes.h"
+# 587 "../../../cxcore/include/cxtypes.h"
 static CvMat cvMat( int rows, int cols, int type, void* data )
 {
     CvMat m;
 
     assert( (unsigned)((type) & ((1 << 3) - 1)) <= 6 );
-    type = ((type) & ((1 << 3)*4 - 1));
-    m.type = 0x42420000 | (1 << 9) | type;
+    type = ((type) & ((1 << 3)*64 - 1));
+    m.type = 0x42420000 | (1 << 14) | type;
     m.cols = cols;
     m.rows = rows;
-    m.step = rows > 1 ? m.cols*(((((type) & ((4 - 1) << 3)) >> 3) + 1) << ((((sizeof(size_t)/4+1)*16384|0x3a50) >> ((type) & ((1 << 3) - 1))*2) & 3)) : 0;
+    m.step = rows > 1 ? m.cols*(((((type) & ((64 - 1) << 3)) >> 3) + 1) << ((((sizeof(size_t)/4+1)*16384|0x3a50) >> ((type) & ((1 << 3) - 1))*2) & 3)) : 0;
     m.data.ptr = (uchar*)data;
     m.refcount = NULL;
 
     return m;
 }
-# 605 "../../../cxcore/include/cxtypes.h"
+# 616 "../../../cxcore/include/cxtypes.h"
 static double cvmGet( const CvMat* mat, int row, int col )
 {
     int type;
 
-    type = ((mat->type) & ((1 << 3)*4 - 1));
+    type = ((mat->type) & ((1 << 3)*64 - 1));
     assert( (unsigned)row < (unsigned)mat->rows &&
             (unsigned)col < (unsigned)mat->cols );
 
@@ -237,7 +241,7 @@ static double cvmGet( const CvMat* mat, int row, int col )
 static void cvmSet( CvMat* mat, int row, int col, double value )
 {
     int type;
-    type = ((mat->type) & ((1 << 3)*4 - 1));
+    type = ((mat->type) & ((1 << 3)*64 - 1));
     assert( (unsigned)row < (unsigned)mat->rows &&
             (unsigned)col < (unsigned)mat->cols );
 
@@ -254,10 +258,10 @@ static void cvmSet( CvMat* mat, int row, int col, double value )
 static int cvCvToIplDepth( int type )
 {
     int depth = ((type) & ((1 << 3) - 1));
-    return (((((depth) & ((4 - 1) << 3)) >> 3) + 1) << ((((sizeof(size_t)/4+1)*16384|0x3a50) >> ((depth) & ((1 << 3) - 1))*2) & 3))*8 | (depth == 1 || depth == 3 ||
+    return ((((sizeof(size_t)<<28)|0x8442211) >> ((depth) & ((1 << 3) - 1))*4) & 15)*8 | (depth == 1 || depth == 3 ||
            depth == 4 ? 0x80000000 : 0);
 }
-# 658 "../../../cxcore/include/cxtypes.h"
+# 669 "../../../cxcore/include/cxtypes.h"
 typedef struct CvMatND
 {
     int type;
@@ -281,7 +285,7 @@ typedef struct CvMatND
     dim[32];
 }
 CvMatND;
-# 696 "../../../cxcore/include/cxtypes.h"
+# 707 "../../../cxcore/include/cxtypes.h"
 struct CvSet;
 
 typedef struct CvSparseMat
@@ -297,7 +301,7 @@ typedef struct CvSparseMat
     int size[32];
 }
 CvSparseMat;
-# 721 "../../../cxcore/include/cxtypes.h"
+# 732 "../../../cxcore/include/cxtypes.h"
 typedef struct CvSparseNode
 {
     unsigned hashval;
@@ -312,9 +316,9 @@ typedef struct CvSparseMatIterator
     int curidx;
 }
 CvSparseMatIterator;
-# 743 "../../../cxcore/include/cxtypes.h"
+# 754 "../../../cxcore/include/cxtypes.h"
 typedef int CvHistType;
-# 759 "../../../cxcore/include/cxtypes.h"
+# 770 "../../../cxcore/include/cxtypes.h"
 typedef struct CvHistogram
 {
     int type;
@@ -324,7 +328,7 @@ typedef struct CvHistogram
     CvMatND mat;
 }
 CvHistogram;
-# 789 "../../../cxcore/include/cxtypes.h"
+# 800 "../../../cxcore/include/cxtypes.h"
 typedef struct CvRect
 {
     int x;
@@ -682,13 +686,13 @@ typedef struct CvSeqBlock
     char* data;
 }
 CvSeqBlock;
-# 1171 "../../../cxcore/include/cxtypes.h"
+# 1182 "../../../cxcore/include/cxtypes.h"
 typedef struct CvSeq
 {
     int flags; int header_size; struct CvSeq* h_prev; struct CvSeq* h_next; struct CvSeq* v_prev; struct CvSeq* v_next; int total; int elem_size; char* block_max; char* ptr; int delta_elems; CvMemStorage* storage; CvSeqBlock* free_blocks; CvSeqBlock* first;
 }
 CvSeq;
-# 1191 "../../../cxcore/include/cxtypes.h"
+# 1202 "../../../cxcore/include/cxtypes.h"
 typedef struct CvSetElem
 {
     int flags; struct CvSetElem* next_free;
@@ -705,7 +709,7 @@ typedef struct CvSet
     int flags; int header_size; struct CvSeq* h_prev; struct CvSeq* h_next; struct CvSeq* v_prev; struct CvSeq* v_next; int total; int elem_size; char* block_max; char* ptr; int delta_elems; CvMemStorage* storage; CvSeqBlock* free_blocks; CvSeqBlock* first; CvSetElem* free_elems; int active_count;
 }
 CvSet;
-# 1244 "../../../cxcore/include/cxtypes.h"
+# 1255 "../../../cxcore/include/cxtypes.h"
 typedef struct CvGraphEdge
 {
     int flags; float weight; struct CvGraphEdge* next[2]; struct CvGraphVtx* vtx[2];
@@ -724,7 +728,7 @@ typedef struct CvGraphVtx2D
     CvPoint2D32f* ptr;
 }
 CvGraphVtx2D;
-# 1271 "../../../cxcore/include/cxtypes.h"
+# 1282 "../../../cxcore/include/cxtypes.h"
 typedef struct CvGraph
 {
     int flags; int header_size; struct CvSeq* h_prev; struct CvSeq* h_next; struct CvSeq* v_prev; struct CvSeq* v_next; int total; int elem_size; char* block_max; char* ptr; int delta_elems; CvMemStorage* storage; CvSeqBlock* free_blocks; CvSeqBlock* first; CvSetElem* free_elems; int active_count; CvSet* edges;
@@ -755,23 +759,21 @@ typedef struct CvContour
 CvContour;
 
 typedef CvContour CvPoint2DSeq;
-# 1438 "../../../cxcore/include/cxtypes.h"
+# 1449 "../../../cxcore/include/cxtypes.h"
 typedef struct CvSeqWriter
 {
     int header_size; CvSeq* seq; CvSeqBlock* block; char* ptr; char* block_min; char* block_max;
-    int reserved[4];
 }
 CvSeqWriter;
-# 1457 "../../../cxcore/include/cxtypes.h"
+# 1467 "../../../cxcore/include/cxtypes.h"
 typedef struct CvSeqReader
 {
     int header_size; CvSeq* seq; CvSeqBlock* block; char* ptr; char* block_min; char* block_max; int delta_index; char* prev_elem;
-    int reserved[4];
 }
 CvSeqReader;
-# 1578 "../../../cxcore/include/cxtypes.h"
+# 1587 "../../../cxcore/include/cxtypes.h"
 typedef struct CvFileStorage CvFileStorage;
-# 1588 "../../../cxcore/include/cxtypes.h"
+# 1597 "../../../cxcore/include/cxtypes.h"
 typedef struct CvAttrList
 {
     const char** attr;
@@ -790,7 +792,7 @@ static CvAttrList cvAttrList( const char** attr ,
 }
 
 struct CvTypeInfo;
-# 1641 "../../../cxcore/include/cxtypes.h"
+# 1650 "../../../cxcore/include/cxtypes.h"
 typedef struct CvString
 {
     int len;
@@ -1230,13 +1232,19 @@ CvNArrayIterator;
 
 
 
+ void cvMixChannels( const CvArr** src, int src_count,
+                            CvArr** dst, int dst_count,
+                            const int* from_to, int pair_count );
+
+
+
 
 
 
  void cvConvertScale( const CvArr* src, CvArr* dst,
                              double scale ,
                              double shift );
-# 466 "../../../cxcore/include/cxcore.h"
+# 472 "../../../cxcore/include/cxcore.h"
  void cvConvertScaleAbs( const CvArr* src, CvArr* dst,
                                 double scale ,
                                 double shift );
@@ -1337,7 +1345,7 @@ static void cvSubS( const CvArr* src, CvScalar value, CvArr* dst,
 
  void cvInRangeS( const CvArr* src, CvScalar lower,
                        CvScalar upper, CvArr* dst );
-# 578 "../../../cxcore/include/cxcore.h"
+# 584 "../../../cxcore/include/cxcore.h"
  void cvCmp( const CvArr* src1, const CvArr* src2, CvArr* dst, int cmp_op );
 
 
@@ -1360,7 +1368,7 @@ static void cvSubS( const CvArr* src, CvScalar value, CvArr* dst,
 
 
  void cvAbsDiffS( const CvArr* src, CvArr* dst, CvScalar value );
-# 608 "../../../cxcore/include/cxcore.h"
+# 614 "../../../cxcore/include/cxcore.h"
  void cvCartToPolar( const CvArr* x, const CvArr* y,
                             CvArr* magnitude, CvArr* angle ,
                             int angle_in_degrees );
@@ -1416,7 +1424,7 @@ static void cvSubS( const CvArr* src, CvScalar value, CvArr* dst,
 
 
  void cvCrossProduct( const CvArr* src1, const CvArr* src2, CvArr* dst );
-# 673 "../../../cxcore/include/cxcore.h"
+# 679 "../../../cxcore/include/cxcore.h"
  void cvGEMM( const CvArr* src1, const CvArr* src2, double alpha,
                      const CvArr* src3, double beta, CvArr* dst,
                      int tABC );
@@ -1447,7 +1455,7 @@ static void cvSubS( const CvArr* src, CvScalar value, CvArr* dst,
 
  void cvFlip( const CvArr* src, CvArr* dst ,
                      int flip_mode );
-# 711 "../../../cxcore/include/cxcore.h"
+# 717 "../../../cxcore/include/cxcore.h"
  void cvSVD( CvArr* A, CvArr* W, CvArr* U ,
                      CvArr* V , int flags );
 
@@ -1482,7 +1490,7 @@ static void cvSubS( const CvArr* src, CvScalar value, CvArr* dst,
 
 
  void cvSetIdentity( CvArr* mat, CvScalar value );
-# 760 "../../../cxcore/include/cxcore.h"
+# 766 "../../../cxcore/include/cxcore.h"
  void cvCalcCovarMatrix( const CvArr** vects, int count,
                                 CvArr* cov_mat, CvArr* avg, int flags );
 
@@ -1512,11 +1520,11 @@ static void cvSubS( const CvArr* src, CvScalar value, CvArr* dst,
                           CvPoint* min_loc ,
                           CvPoint* max_loc ,
                           const CvArr* mask );
-# 806 "../../../cxcore/include/cxcore.h"
+# 812 "../../../cxcore/include/cxcore.h"
  double cvNorm( const CvArr* arr1, const CvArr* arr2 ,
                        int norm_type ,
                        const CvArr* mask );
-# 826 "../../../cxcore/include/cxcore.h"
+# 832 "../../../cxcore/include/cxcore.h"
  void cvDFT( const CvArr* src, CvArr* dst, int flags,
                     int nonzero_rows );
 
@@ -1734,7 +1742,7 @@ static CvSetElem* cvSetNew( CvSet* set_header )
     if( elem )
     {
         set_header->free_elems = elem->next_free;
-        elem->flags = elem->flags & ((1 << 24) - 1);
+        elem->flags = elem->flags & ((1 << 26) - 1);
         set_header->active_count++;
     }
     else
@@ -1748,7 +1756,7 @@ static void cvSetRemoveByPtr( CvSet* set_header, void* elem )
     CvSetElem* _elem = (CvSetElem*)elem;
     assert( _elem->flags >= 0 );
     _elem->next_free = set_header->free_elems;
-    _elem->flags = (_elem->flags & ((1 << 24) - 1)) | (1 << (sizeof(int)*8-1));
+    _elem->flags = (_elem->flags & ((1 << 26) - 1)) | (1 << (sizeof(int)*8-1));
     set_header->free_elems = _elem;
     set_header->active_count--;
 }
@@ -1816,7 +1824,7 @@ static CvSetElem* cvGetSetElem( const CvSet* set_header, int index )
 
  int cvGraphVtxDegree( const CvGraph* graph, int vtx_idx );
  int cvGraphVtxDegreeByPtr( const CvGraph* graph, const CvGraphVtx* vtx );
-# 1160 "../../../cxcore/include/cxcore.h"
+# 1166 "../../../cxcore/include/cxcore.h"
 typedef struct CvGraphScanner
 {
     CvGraphVtx* vtx;
@@ -1843,7 +1851,7 @@ CvGraphScanner;
 
 
  CvGraph* cvCloneGraph( const CvGraph* graph, CvMemStorage* storage );
-# 1207 "../../../cxcore/include/cxcore.h"
+# 1213 "../../../cxcore/include/cxcore.h"
  void cvLine( CvArr* img, CvPoint pt1, CvPoint pt2,
                      CvScalar color, int thickness ,
                      int line_type , int shift );
@@ -1906,7 +1914,7 @@ static void cvEllipseBox( CvArr* img, CvBox2D box, CvScalar color,
                                 CvLineIterator* line_iterator,
                                 int connectivity ,
                                 int left_to_right );
-# 1297 "../../../cxcore/include/cxcore.h"
+# 1303 "../../../cxcore/include/cxcore.h"
 typedef struct CvFont
 {
     int font_face;
@@ -2089,7 +2097,7 @@ typedef IplImage* (* Cv_iplCloneImage)(const IplImage*);
                                Cv_iplDeallocate deallocate,
                                Cv_iplCreateROI create_roi,
                                Cv_iplCloneImage clone_image );
-# 1491 "../../../cxcore/include/cxcore.h"
+# 1497 "../../../cxcore/include/cxcore.h"
  CvFileStorage* cvOpenFileStorage( const char* filename,
                                           CvMemStorage* memstorage,
                                           int flags );
@@ -2866,7 +2874,7 @@ CvAvgComp;
 
 static CvSubdiv2D* cvCreateSubdivDelaunay2D( CvRect rect, CvMemStorage* storage )
 {
-    CvSubdiv2D* subdiv = cvCreateSubdiv2D( (4 << 5), sizeof(*subdiv),
+    CvSubdiv2D* subdiv = cvCreateSubdiv2D( (4 << 9), sizeof(*subdiv),
                          sizeof(CvSubdiv2DPoint), sizeof(CvQuadEdge2D), storage );
 
     cvInitSubdivDelaunay2D( subdiv, rect );
