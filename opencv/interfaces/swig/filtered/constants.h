@@ -206,13 +206,15 @@
 
 #define IPL_IMAGE_ROI    4
 
+#define IPL_BORDER_REFLECT_101    4
+
 #define IPL_IMAGE_MAGIC_VAL  ((int)sizeof(IplImage))
 
 #define CV_TYPE_NAME_IMAGE "opencv-image"
 
 #define IPL_DEPTH_64F  64
 
-#define CV_CN_MAX     4
+#define CV_CN_MAX     64
 
 #define CV_CN_SHIFT   3
 
@@ -304,13 +306,13 @@
 
 #define CV_MAT_TYPE_MASK        (CV_DEPTH_MAX*CV_CN_MAX - 1)
 
-#define CV_MAT_CONT_FLAG_SHIFT  9
+#define CV_MAT_CONT_FLAG_SHIFT  14
 
 #define CV_MAT_CONT_FLAG        (1 << CV_MAT_CONT_FLAG_SHIFT)
 
 #define CV_IS_CONT_MAT          CV_IS_MAT_CONT
 
-#define CV_MAT_TEMP_FLAG_SHIFT  10
+#define CV_MAT_TEMP_FLAG_SHIFT  15
 
 #define CV_MAT_TEMP_FLAG        (1 << CV_MAT_TEMP_FLAG_SHIFT)
 
@@ -362,7 +364,7 @@
 
 #define CV_TYPE_NAME_SEQ_TREE        "opencv-sequence-tree"
 
-#define CV_SET_ELEM_IDX_MASK   ((1 << 24) - 1)
+#define CV_SET_ELEM_IDX_MASK   ((1 << 26) - 1)
 
 #define CV_SET_ELEM_FREE_FLAG  (1 << (sizeof(int)*8-1))
 
@@ -372,7 +374,7 @@
 
 #define CV_SET_MAGIC_VAL             0x42980000
 
-#define CV_SEQ_ELTYPE_BITS           5
+#define CV_SEQ_ELTYPE_BITS           9
 
 #define CV_SEQ_ELTYPE_MASK           ((1 << CV_SEQ_ELTYPE_BITS) - 1)
 
@@ -398,7 +400,7 @@
 
 #define CV_SEQ_ELTYPE_POINT3D        CV_32FC3  /* (x,y,z)  */
 
-#define CV_SEQ_KIND_BITS        5
+#define CV_SEQ_KIND_BITS        3
 
 #define CV_SEQ_KIND_MASK        (((1 << CV_SEQ_KIND_BITS) - 1)<<CV_SEQ_ELTYPE_BITS)
 

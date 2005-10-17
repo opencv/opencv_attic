@@ -142,6 +142,7 @@ IPL_BORDER_WRAP = _cv.IPL_BORDER_WRAP
 IPL_IMAGE_HEADER = _cv.IPL_IMAGE_HEADER
 IPL_IMAGE_DATA = _cv.IPL_IMAGE_DATA
 IPL_IMAGE_ROI = _cv.IPL_IMAGE_ROI
+IPL_BORDER_REFLECT_101 = _cv.IPL_BORDER_REFLECT_101
 CV_TYPE_NAME_IMAGE = _cv.CV_TYPE_NAME_IMAGE
 IPL_DEPTH_64F = _cv.IPL_DEPTH_64F
 CV_CN_MAX = _cv.CV_CN_MAX
@@ -2085,9 +2086,6 @@ class CvSeqWriter(_object):
     __swig_setmethods__["block_max"] = _cv.CvSeqWriter_block_max_set
     __swig_getmethods__["block_max"] = _cv.CvSeqWriter_block_max_get
     if _newclass:block_max = property(_cv.CvSeqWriter_block_max_get, _cv.CvSeqWriter_block_max_set)
-    __swig_setmethods__["reserved"] = _cv.CvSeqWriter_reserved_set
-    __swig_getmethods__["reserved"] = _cv.CvSeqWriter_reserved_get
-    if _newclass:reserved = property(_cv.CvSeqWriter_reserved_get, _cv.CvSeqWriter_reserved_set)
     def __init__(self, *args):
         _swig_setattr(self, CvSeqWriter, 'this', _cv.new_CvSeqWriter(*args))
         _swig_setattr(self, CvSeqWriter, 'thisown', 1)
@@ -2135,9 +2133,6 @@ class CvSeqReader(_object):
     __swig_setmethods__["prev_elem"] = _cv.CvSeqReader_prev_elem_set
     __swig_getmethods__["prev_elem"] = _cv.CvSeqReader_prev_elem_get
     if _newclass:prev_elem = property(_cv.CvSeqReader_prev_elem_get, _cv.CvSeqReader_prev_elem_set)
-    __swig_setmethods__["reserved"] = _cv.CvSeqReader_reserved_set
-    __swig_getmethods__["reserved"] = _cv.CvSeqReader_reserved_get
-    if _newclass:reserved = property(_cv.CvSeqReader_reserved_get, _cv.CvSeqReader_reserved_set)
     def __init__(self, *args):
         _swig_setattr(self, CvSeqReader, 'this', _cv.new_CvSeqReader(*args))
         _swig_setattr(self, CvSeqReader, 'thisown', 1)
@@ -2640,6 +2635,8 @@ cvSetZero = _cv.cvSetZero
 cvSplit = _cv.cvSplit
 
 cvMerge = _cv.cvMerge
+
+cvMixChannels = _cv.cvMixChannels
 
 cvConvertScale = _cv.cvConvertScale
 
