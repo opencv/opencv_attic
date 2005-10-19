@@ -250,6 +250,7 @@ CVAPI(void) cvReleaseCapture( CvCapture** capture );
 #define CV_CAP_PROP_SATURATION    12
 #define CV_CAP_PROP_HUE           13
 #define CV_CAP_PROP_GAIN          14
+#define CV_CAP_PROP_CONVERT_RGB   15
 
 
 /* retrieve or set capture properties */
