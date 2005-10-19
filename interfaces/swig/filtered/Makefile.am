@@ -29,7 +29,7 @@ MOSTLYCLEANFILES = headers_generated cv.h constants.h
 cv.h: $(top_srcdir)/cv/include/cv.h $(top_srcdir)/cv/include/cvtypes.h \
       $(top_srcdir)/cxcore/include/cxcore.h $(top_srcdir)/cxcore/include/cxtypes.h \
       $(top_srcdir)/cxcore/include/cxerror.h Makefile
-	$(CPP) $(AM_CPPFLAGS) $(CPPFLAGS) -DSKIP_INCLUDES -o $@ $(top_srcdir)/cv/include/cv.h
+	$(CPP) -x c++ $(AM_CPPFLAGS) $(CPPFLAGS) -DSKIP_INCLUDES -o $@ $(top_srcdir)/cv/include/cv.h
 
 # this rule creates a single SWIG parseable header from cv.h and cxcore.h, etc.
 constants.h: $(top_srcdir)/cv/include/cv.h $(top_srcdir)/cv/include/cvtypes.h \
