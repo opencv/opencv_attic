@@ -1619,7 +1619,7 @@ SWIG_Check_int(PyObject* obj)
 }
 
 
-  /*@/usr/share/swig1.3/python/pymacros.swg,66,SWIG_define@*/
+  /*@/usr/share/swig/1.3.25/python/pymacros.swg,66,SWIG_define@*/
 #define SWIG_From_int PyInt_FromLong
 /*@@*/
 
@@ -1713,7 +1713,7 @@ extern "C" IplImage *cvQueryFrame(CvCapture *);
 extern "C" void cvReleaseCapture(CvCapture **);
 extern "C" double cvGetCaptureProperty(CvCapture *,int);
 
-  /*@/usr/share/swig1.3/python/pymacros.swg,66,SWIG_define@*/
+  /*@/usr/share/swig/1.3.25/python/pymacros.swg,66,SWIG_define@*/
 #define SWIG_From_double PyFloat_FromDouble
 /*@@*/
 
@@ -4662,6 +4662,9 @@ SWIGEXPORT void SWIG_init(void) {
     }
     {
         PyDict_SetItemString(d,"CV_CAP_PROP_GAIN", SWIG_From_int((int)(14))); 
+    }
+    {
+        PyDict_SetItemString(d,"CV_CAP_PROP_CONVERT_RGB", SWIG_From_int((int)(15))); 
     }
     {
         PyDict_SetItemString(d,"HG_AUTOSIZE", SWIG_From_int((int)(1))); 
