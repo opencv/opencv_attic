@@ -108,14 +108,20 @@ if __name__ == '__main__':
     highgui.cvNamedWindow ("image", 1)
     highgui.cvShowImage ("image", image)
 
+    # create the storage area
+    storage = cv.cvCreateMemStorage (0)
+    
     # find the contours
-    nb_contours, contours = cv.cvFindContours (image, cv.sizeof_CvContour,
+    nb_contours, contours = cv.cvFindContours (image,
+                                               storage,
+                                               cv.sizeof_CvContour,
                                                cv.CV_RETR_TREE,
                                                cv.CV_CHAIN_APPROX_SIMPLE,
                                                cv.cvPoint (0,0))
 
     # comment this out if you do not want approximation
     contours = cv.cvApproxPoly (contours, cv.sizeof_CvContour,
+                                storage,
                                 cv.CV_POLY_APPROX_DP, 3, 1)
     
     # create the window for the contours
