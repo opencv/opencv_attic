@@ -101,6 +101,10 @@
  */
 %apply float *OUTPUT {float *min_value};
 %apply float *OUTPUT {float *max_value};
+/**
+ * map output parameters of cvMinMaxLoc
+ */
+%apply double *OUTPUT {double* min_val, double* max_val};
 
 /**
  * the input argument of cvConvexHull2 "const CvArr *input" is converted from 
@@ -291,3 +295,4 @@
 	return 0;
     }
 }
+
