@@ -383,7 +383,7 @@ uninstall-am: uninstall-info-am
 @UPDATE_SWIG_WRAPPERS_TRUE@cv.h: $(top_srcdir)/cv/include/cv.h $(top_srcdir)/cv/include/cvtypes.h \
 @UPDATE_SWIG_WRAPPERS_TRUE@      $(top_srcdir)/cxcore/include/cxcore.h $(top_srcdir)/cxcore/include/cxtypes.h \
 @UPDATE_SWIG_WRAPPERS_TRUE@      $(top_srcdir)/cxcore/include/cxerror.h Makefile
-@UPDATE_SWIG_WRAPPERS_TRUE@	$(CPP) $(AM_CPPFLAGS) $(CPPFLAGS) -DSKIP_INCLUDES -o $@ $(top_srcdir)/cv/include/cv.h
+@UPDATE_SWIG_WRAPPERS_TRUE@	$(CPP) -x c++ $(AM_CPPFLAGS) $(CPPFLAGS) -DSKIP_INCLUDES -o $@ $(top_srcdir)/cv/include/cv.h
 
 # this rule creates a single SWIG parseable header from cv.h and cxcore.h, etc.
 @UPDATE_SWIG_WRAPPERS_TRUE@constants.h: $(top_srcdir)/cv/include/cv.h $(top_srcdir)/cv/include/cvtypes.h \
