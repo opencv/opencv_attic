@@ -44,6 +44,8 @@
 //             Mark Asbach       <asbach@ient.rwth-aachen.de>
 //             Institute of Communications Engineering, RWTH Aachen University
 
+// direct SWIG to generate python docstrings
+%feature("autodoc", 1);
 
 // include python-specific files
 %include "./nointpb.i"
