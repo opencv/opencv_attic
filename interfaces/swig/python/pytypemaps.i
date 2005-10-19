@@ -180,13 +180,6 @@
 }
 
 /**
- * automatic creation of storage when functions need it
- */
-%typemap(in, numinputs=0) (CvMemStorage *storage) {
-    $1 = cvCreateMemStorage (0);
-}
-
-/**
  * this is mainly an "output parameter"
  * So, just allocate the memory as input
  */
