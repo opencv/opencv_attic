@@ -1,9 +1,3 @@
-#! /usr/bin/env python
-# opencv/__init__.py
-
-# 2004-03-16, Mark Asbach       <asbach@ient.rwth-aachen.de>
-#             Institute of Communications Engineering, RWTH Aachen University
-
 #########################################################################################
 #
 #  IMPORTANT: READ BEFORE DOWNLOADING, COPYING, INSTALLING OR USING.
@@ -44,6 +38,9 @@
 # the use of this software, even if advised of the possibility of such damage.
 #
 #########################################################################################
+
+# 2004-03-16, Mark Asbach       <asbach@ient.rwth-aachen.de>
+#             Institute of Communications Engineering, RWTH Aachen University
 
 """
 OpenCV is the Intel Open CV library, an open source effort to provide
