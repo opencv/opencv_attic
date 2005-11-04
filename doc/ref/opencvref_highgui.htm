@@ -244,7 +244,11 @@ within some environment that takes care of event processing.
 <hr><h3><a name="decl_cvLoadImage">cvLoadImage</a></h3>
 <p class="Blurb">Loads an image from file</p>
 <pre>
-IplImage* cvLoadImage( const char* filename, int iscolor=1 );
+#define CV_LOAD_IMAGE_COLOR       1
+#define CV_LOAD_IMAGE_GRAYSCALE   0
+#define CV_LOAD_IMAGE_UNCHANGED  -1
+
+IplImage* cvLoadImage( const char* filename, int iscolor=CV_LOAD_IMAGE_COLOR );
 </pre><dl>
 <dt>filename<dd>Name of file to be loaded.
 <dt>iscolor<dd>Specifies colorness of the loaded image:<br>

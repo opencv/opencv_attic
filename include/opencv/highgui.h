@@ -176,11 +176,16 @@ typedef void (CV_CDECL *CvMouseCallback )(int event, int x, int y, int flags, vo
 CVAPI(void) cvSetMouseCallback( const char* window_name, CvMouseCallback on_mouse,
                                 void* param CV_DEFAULT(NULL));
 
-/*load image from file 
+
+#define CV_LOAD_IMAGE_COLOR       1
+#define CV_LOAD_IMAGE_GRAYSCALE   0
+#define CV_LOAD_IMAGE_UNCHANGED  -1
+
+/* load image from file 
   iscolor: >0 - output image is always color,
             0 - output image is always grayscale,
            <0 - output image is color or grayscale dependending on the file */
-CVAPI(IplImage*) cvLoadImage( const char* filename, int iscolor CV_DEFAULT(1));
+CVAPI(IplImage*) cvLoadImage( const char* filename, int iscolor CV_DEFAULT(CV_LOAD_IMAGE_COLOR));
 
 /* save image to file */
 CVAPI(int) cvSaveImage( const char* filename, const CvArr* image );
