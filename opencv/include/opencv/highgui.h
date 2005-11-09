@@ -209,16 +209,25 @@ typedef struct CvCapture CvCapture;
 /* start capturing frames from video file */
 CVAPI(CvCapture*) cvCaptureFromFile( const char* filename );
 
-#define CV_CAP_ANY      0
-#define CV_CAP_MIL      100
-#define CV_CAP_VFW      200
+#define CV_CAP_ANY      0     // autodetect
+
+#define CV_CAP_MIL      100   // MIL proprietary drivers
+
+#define CV_CAP_VFW      200   // platform native
 #define CV_CAP_V4L      200
 #define CV_CAP_V4L2     200
-#define CV_CAP_FIREWARE 300
+
+#define CV_CAP_FIREWARE 300   // IEEE 1394 drivers
 #define CV_CAP_IEEE1394 300
 #define CV_CAP_DC1394   300
 #define CV_CAP_CMU1394  300
-#define CV_CAP_STEREO   400
+
+#define CV_CAP_STEREO   400   // TYZX proprietary drivers
+#define CV_CAP_TYZX     400
+#define CV_TYZX_LEFT    400
+#define CV_TYZX_RIGHT   401
+#define CV_TYZX_COLOR   402
+#define CV_TYZX_Z       403
 
 /* start capturing frames from camera: index = camera_index + domain_offset (CV_CAP_*) */
 CVAPI(CvCapture*) cvCaptureFromCAM( int index );

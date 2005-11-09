@@ -745,7 +745,8 @@ void v4l2_scan_controls(CvCaptureCAM_V4L* capture)
 
 #endif /* HAVE_CAMV4L2 */
 
-CvCapture* icvOpenCAM_V4L( int index ) {
+CvCapture * cvCaptureFromCAM_V4L (int index)
+{
    static int autoindex=0;
    int detect_v4l = 0;
 

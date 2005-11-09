@@ -223,7 +223,8 @@ void icvInitCapture_DC1394(){
 	}
 };
 
-CvCapture* icvOpenCAM_DC1394( int index ){
+CvCapture * cvCaptureFromCAM_DC1394 (int index)
+{
 	quadlet_t modes[8], formats;
 	int i;
 
