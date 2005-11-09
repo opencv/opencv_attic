@@ -338,7 +338,7 @@ static CvCaptureVTable captureAVI_FFMPEG_vtable =
 };
 
 
-CvCapture* cvCaptureFromFile( const char* filename )
+CvCapture* cvCaptureFromFile_FFMPEG( const char* filename )
 {
     CvCaptureAVI_FFMPEG* capture = 0;
 
@@ -356,6 +356,7 @@ CvCapture* cvCaptureFromFile( const char* filename )
     return (CvCapture*)capture;
 }
 
+#if 0
 
 typedef struct CvAVI_FFMPEG_Writer
 {
@@ -603,7 +604,7 @@ CV_IMPL void cvReleaseVideoWriter( CvVideoWriter ** writer )
     (*writer) = 0;
 }
 
-#if 0
+#endif
 
 typedef struct CvAVI_FFMPEG_Writer
 {

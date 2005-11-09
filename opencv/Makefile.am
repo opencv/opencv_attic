@@ -11,14 +11,10 @@ else
 endif
 SUBDIRS = cxcore cv cvaux otherlibs interfaces $(APPS_DIR) tests samples data docs
 
-## Any directories you want a part of the distribution should be listed
-## here, as well as have a Makefile generated at the end of configure.in
-##
-## This only works for subdirectories one level deep.
-DIST_SUBDIRS = $(SUBDIRS) apps
-
 # All the rest of the distributed files
-EXTRA_DIST = THANKS COPYING INSTALL README NEWS ChangeLog opencv.spec opencv.spec.in opencv.pc.in opencv.pc _make utils autotools
+EXTRA_DIST = THANKS COPYING INSTALL README NEWS ChangeLog \
+             opencv.spec opencv.spec.in opencv.pc.in opencv.pc \
+             _make utils autotools apps
 
 pkgconfigdir = $(libdir)/pkgconfig
 pkgconfig_DATA = opencv.pc
