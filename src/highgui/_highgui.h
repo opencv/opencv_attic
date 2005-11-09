@@ -73,23 +73,23 @@ void  FillBitmapInfo( BITMAPINFO* bmi, int width, int height, int bpp, int origi
 
 #define CV_CAPTURE_BASE_API_COUNT 6
 
-typedef void (CV_CDECL* CvCaptureCloseFunc)( CvCapture* capture );
-typedef int (CV_CDECL* CvCaptureGrabFrameFunc)( CvCapture* capture );
-typedef IplImage* (CV_CDECL* CvCaptureRetrieveFrameFunc)( CvCapture* capture );
-typedef double (CV_CDECL* CvCaptureGetPropertyFunc)( CvCapture* capture, int id );
-typedef int (CV_CDECL* CvCaptureSetPropertyFunc)( CvCapture* capture,
-                                                  int id, double value );
-typedef const char* (CV_CDECL* CvCaptureGetDescriptionFunc)( CvCapture* capture );
+typedef void         (CV_CDECL* CvCaptureCloseFunc)         ( CvCapture* capture );
+typedef int          (CV_CDECL* CvCaptureGrabFrameFunc)     ( CvCapture* capture );
+typedef IplImage   * (CV_CDECL* CvCaptureRetrieveFrameFunc) ( CvCapture* capture );
+typedef double       (CV_CDECL* CvCaptureGetPropertyFunc)   ( CvCapture* capture, int id );
+typedef int          (CV_CDECL* CvCaptureSetPropertyFunc)   ( CvCapture* capture,
+                                                              int id, double value );
+typedef const char * (CV_CDECL* CvCaptureGetDescriptionFunc)( CvCapture* capture );
 
 typedef struct CvCaptureVTable
 {
-    int     count;
-    CvCaptureCloseFunc close;
-    CvCaptureGrabFrameFunc grab_frame;
-    CvCaptureRetrieveFrameFunc retrieve_frame;
-    CvCaptureGetPropertyFunc get_property;
-    CvCaptureSetPropertyFunc set_property;
-    CvCaptureGetDescriptionFunc get_description;
+    int                           count;
+    CvCaptureCloseFunc            close;
+    CvCaptureGrabFrameFunc        grab_frame;
+    CvCaptureRetrieveFrameFunc    retrieve_frame;
+    CvCaptureGetPropertyFunc      get_property;
+    CvCaptureSetPropertyFunc      set_property;
+    CvCaptureGetDescriptionFunc   get_description;
 }
 CvCaptureVTable;
 
@@ -99,21 +99,38 @@ typedef struct CvCapture
 }
 CvCapture;
 
-#ifndef WIN32
-#ifdef HAVE_CAMV4L
-CvCapture* icvOpenCAM_V4L( int wIndex );
+
+#if defined (HAVE_CAMV4L) || defined (HAVE_CAMV4L2)
+CvCapture * cvCaptureFromCAM_V4L( int index );
 #endif
+
 #ifdef HAVE_DC1394
-CvCapture* icvOpenCAM_DC1394( int wIndex );
+CvCapture * cvCaptureFromCAM_DC1394( int index );
 #endif
+
+#ifdef HAVE_MIL
+CvCapture* cvCaptureFromCAM_MIL( int index );
+#endif
+
+#ifdef HAVE_CMU1394
+CvCapture * cvCaptureFromCAM_CMU( int index );
+#endif
+
+#ifdef HAVE_TYZX
+CV_IMPL CvCapture * cvCaptureFromCAM_TYZX( int index );
 #endif
 
 #ifdef WIN32
-CvCapture* icvOpenCAM_VFW( int wIndex );
-#ifdef HAVE_MIL
-CvCapture* icvOpenCAM_MIL( int wIndex );
+CvCapture* cvCaptureFromCAM_VFW( int index );
+CvCapture* cvCaptureFromFile_VFW( int index );
 #endif
+
+#ifdef HAVE_FFMPEG
+CvCapture* cvCaptureFromFile_FFMPEG( const char* filename );
+#endif
+
+#ifdef HAVE_QUICKTIME
+CvCapture* cvCaptureFromFile_QT( const char* filename );
 #endif
 
 #endif /* __HIGHGUI_H_ */
-

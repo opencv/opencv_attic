@@ -40,13 +40,48 @@
 //M*/
 
 #include "_highgui.h"
-#include "cvcap_cmu.h"
 
 #ifdef WIN32
 
 /****************** Capturing video from camera via CMU lib *******************/
 
 #if defined(HAVE_CMU1394)
+
+// This firewire capability added by Philip Gruebele (pgruebele@cox.net).
+// For this to work you need to install the CMU firewire DCAM drivers,
+// located at http://www-2.cs.cmu.edu/~iwan/1394/.
+#include "1394camera.h"
+
+typedef struct CvCaptureCAM_CMU
+{
+    CvCaptureVTable* vtable;
+	int 	fps;    // 0-5
+	int 	mode;   // 0-7
+	int 	format; // 0-2, 7 ?
+    int     index;
+	IplImage * image;
+    IplImage* rgb_frame;
+}
+CvCaptureCAM_CMU;
+
+int icvOpenCAM_CMU(CvCaptureCAM_CMU * capture, int wIndex );
+int icvSetPropertyCAM_CMU( CvCaptureCAM_CMU* capture, int property_id, double value );
+void icvCloseCAM_CMU( CvCaptureCAM_CMU* capture );
+int icvGrabFrameCAM_CMU( CvCaptureCAM_CMU* capture );
+IplImage* icvRetrieveFrameCAM_CMU( CvCaptureCAM_CMU* capture ); 
+double icvGetPropertyCAM_CMU( CvCaptureCAM_CMU* capture, int property_id );
+int icvSetPropertyCAM_CMU( CvCaptureCAM_CMU* capture, int property_id, double value );
+
+static CvCaptureVTable captureCAM_CMU_vtable =
+{
+	6,
+	(CvCaptureCloseFunc)icvCloseCAM_CMU,
+	(CvCaptureGrabFrameFunc)icvGrabFrameCAM_CMU,
+	(CvCaptureRetrieveFrameFunc)icvRetrieveFrameCAM_CMU,
+	(CvCaptureGetPropertyFunc)icvGetPropertyCAM_CMU,
+	(CvCaptureSetPropertyFunc)icvSetPropertyCAM_CMU,
+	(CvCaptureGetDescriptionFunc)0
+};
 
 // CMU 1394 camera stuff.
 // This firewire capability added by Philip Gruebele (pgruebele@cox.net) 
@@ -462,6 +497,18 @@ int icvSetPropertyCAM_CMU( CvCaptureCAM_CMU* capture, int property_id, double va
 	return retval;
 }
 
+CvCapture * cvCaptureFromCAM_CMU (int index)
+{
+	CvCaptureCAM_CMU* capture = (CvCaptureCAM_CMU*)cvAlloc( sizeof(*capture));
+	memset( capture, 0, sizeof(*capture));
+	capture->vtable = &captureCAM_CMU_vtable;
+
+	if( icvOpenCAM_CMU( capture, index ))
+		return (CvCapture*)capture;
+
+	cvReleaseCapture( (CvCapture**)&capture );
+	return 0;
+}
 
 #endif // CMU
 #endif // WIN32

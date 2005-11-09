@@ -40,18 +40,49 @@
 //M*/
 
 #include "_highgui.h"
-#include "cvcap_tyzx.h"
+#include <DeepSeaIF.h>
 
-#ifdef WIN32
-#if defined(HAVE_TYZX)
 #if _MSC_VER >= 1200
-#pragma comment(lib,"DeepSeaIF.lib")
+	#pragma comment(lib,"DeepSeaIF.lib")
 #endif
 
-DeepSeaIF * g_tyzx_camera = 0;
-int g_tyzx_refcount = 0;
 
-int icvOpenCAM_TYZX(CvCaptureCAM_TYZX * capture, int index )
+/****************** Capturing video from TYZX stereo camera  *******************/
+/** Initially developed by Roman Stanchak rstanchak@yahoo.com                  */
+
+typedef struct CvCaptureCAM_TYZX
+{
+    CvCaptureVTable* vtable;
+	int index;
+    IplImage* image;
+}
+CvCaptureCAM_TYZX;
+
+static int        icvOpenCAM_TYZX          (CvCaptureCAM_TYZX * capture, int wIndex );
+static int        icvSetPropertyCAM_TYZX   (CvCaptureCAM_TYZX* capture, int property_id, double value );
+static void       icvCloseCAM_TYZX         (CvCaptureCAM_TYZX* capture );
+static int        icvGrabFrameCAM_TYZX     (CvCaptureCAM_TYZX* capture );
+static IplImage * icvRetrieveFrameCAM_TYZX (CvCaptureCAM_TYZX* capture ); 
+static double     icvGetPropertyCAM_TYZX   (CvCaptureCAM_TYZX* capture, int property_id );
+static int        icvSetPropertyCAM_TYZX   (CvCaptureCAM_TYZX* capture, int property_id, double value );
+
+static CvCaptureVTable captureCAM_TYZX_vtable =
+{
+	6,
+	(CvCaptureCloseFunc)icvCloseCAM_TYZX,
+	(CvCaptureGrabFrameFunc)icvGrabFrameCAM_TYZX,
+	(CvCaptureRetrieveFrameFunc)icvRetrieveFrameCAM_TYZX,
+	(CvCaptureGetPropertyFunc)icvGetPropertyCAM_TYZX,
+	(CvCaptureSetPropertyFunc)icvSetPropertyCAM_TYZX,
+	(CvCaptureGetDescriptionFunc)0
+};
+
+
+
+DeepSeaIF * g_tyzx_camera   = 0;
+int         g_tyzx_refcount = 0;
+
+static int icvOpenCAM_TYZX(CvCaptureCAM_TYZX * capture, int index )
 {
 	if(!g_tyzx_camera){
 		g_tyzx_camera = new DeepSeaIF;
@@ -82,7 +113,7 @@ int icvOpenCAM_TYZX(CvCaptureCAM_TYZX * capture, int index )
 	return 1;
 }
 
-void icvCloseCAM_TYZX( CvCaptureCAM_TYZX* capture )
+static void icvCloseCAM_TYZX( CvCaptureCAM_TYZX* capture )
 {
 	if( capture && capture->image )
 	{
@@ -95,18 +126,19 @@ void icvCloseCAM_TYZX( CvCaptureCAM_TYZX* capture )
 	}
 }
 
-
-int icvGrabFrameCAM_TYZX( CvCaptureCAM_TYZX*  )
+static int icvGrabFrameCAM_TYZX (CvCaptureCAM_TYZX * )
 {
 	return g_tyzx_camera && g_tyzx_camera->grab();
 }
 
-void icvAllocateImageCAM_TYZX( CvCaptureCAM_TYZX* capture ){
+static void icvAllocateImageCAM_TYZX (CvCaptureCAM_TYZX * capture)
+{
 	int depth, nch;
 	CvSize size;
 
 	// assume we want to resize
-	if(capture->image){
+	if(capture->image)
+	{
 		cvReleaseImage(&(capture->image));
 	}
 
@@ -133,7 +165,7 @@ void icvAllocateImageCAM_TYZX( CvCaptureCAM_TYZX* capture ){
 }
 
 /// Copy 'grabbed' image into capture buffer and return it.
-IplImage* icvRetrieveFrameCAM_TYZX( CvCaptureCAM_TYZX* capture )
+static IplImage * icvRetrieveFrameCAM_TYZX (CvCaptureCAM_TYZX * capture)
 {
 	if(!capture || !g_tyzx_camera) return 0;
 
@@ -144,8 +176,8 @@ IplImage* icvRetrieveFrameCAM_TYZX( CvCaptureCAM_TYZX* capture )
 
 	// copy camera image into buffer.
 	// tempting to reference TYZX memory directly to avoid copying.
-	switch(capture->index){
-
+	switch (capture->index)
+	{
 		case CV_TYZX_RIGHT:
 			memcpy(capture->image->imageData, g_tyzx_camera->getRImage(), capture->image->imageSize);
 			break;
@@ -161,11 +193,11 @@ IplImage* icvRetrieveFrameCAM_TYZX( CvCaptureCAM_TYZX* capture )
 	return capture->image;
 }
 
-
-double icvGetPropertyCAM_TYZX( CvCaptureCAM_TYZX* capture, int property_id )
+static double icvGetPropertyCAM_TYZX (CvCaptureCAM_TYZX * capture, int property_id)
 {
 	CvSize size;
-	switch(capture->index){
+	switch(capture->index)
+	{
 		case CV_TYZX_LEFT:
 			size = cvSize(g_tyzx_camera->intensityWidth(), g_tyzx_camera->intensityHeight());
 			break;
@@ -176,8 +208,9 @@ double icvGetPropertyCAM_TYZX( CvCaptureCAM_TYZX* capture, int property_id )
 			size = cvSize(g_tyzx_camera->zWidth(), g_tyzx_camera->zHeight());
 			break;
 		default:
-			size=cvSize(0,0);
+			size = cvSize(0,0);
 	}
+	
 	switch( property_id )
 	{
 		case CV_CAP_PROP_FRAME_WIDTH:
@@ -185,15 +218,25 @@ double icvGetPropertyCAM_TYZX( CvCaptureCAM_TYZX* capture, int property_id )
 		case CV_CAP_PROP_FRAME_HEIGHT:
 			return size.height;
 	}
+	
 	return 0;
 }
 
-int icvSetPropertyCAM_TYZX( CvCaptureCAM_TYZX* , int , double  ){
+static int icvSetPropertyCAM_TYZX (CvCaptureCAM_TYZX *, int, double )
+{
 	int retval = -1;
 	return retval;
 }
 
+CvCapture * cvCaptureFromCAM_TYZX (int index)
+{
+	CvCaptureCAM_TYZX * capture = (CvCaptureCAM_TYZX*) cvAlloc( sizeof(*capture));
+	memset( capture, 0, sizeof(*capture));
+	capture->vtable = &captureCAM_TYZX_vtable;
 
-#endif // TYZX
-#endif // WIN32
+	if (icvOpenCAM_TYZX( capture, index ))
+		return (CvCapture*)capture;
 
+	cvReleaseCapture( (CvCapture**)&capture );
+	return 0;
+}
