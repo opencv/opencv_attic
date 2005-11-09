@@ -24,7 +24,7 @@ AC_CONFIG_AUX_DIR([autotools])
 AC_CONFIG_MACRO_DIR([autotools/aclocal])
 
 # put CVS revision of this configure.in into the resulting configure script
-AC_REVISION($Revision: 1.16 $)
+AC_REVISION($Revision: 1.17 $)
 
 # Detect the canonical host and target build environment
 AC_CANONICAL_HOST
@@ -201,6 +201,8 @@ AC_CHECK_HEADER(ffmpeg/avcodec.h,
     FFMPEGLIBS="-lavcodec -lavformat"],,[-lavcodec])]))
 
 AC_SUBST(FFMPEGLIBS)
+AM_CONDITIONAL([BUILD_FFMPEG], [test x$have_ffmpeg = xyes])
+
 
 dnl
 dnl ****************** IEEE1394 support **************************
@@ -225,30 +227,51 @@ fi
 
 LIBS="$SAVELIBS"
 AC_SUBST(IEEE1394LIBS)
+AM_CONDITIONAL([BUILD_DC1394], [test x$have_dc1394 = xyes])
+
 
 dnl
 dnl ****************** V4L Support **************************
 dnl
+
+have_v4l=no
+have_v4l2=no
+have_v4l1or2=no
 AC_CHECK_HEADER([linux/videodev.h],
                 [
                   AC_DEFINE(HAVE_CAMV4L,,[V4L capturing support])
                   have_v4l=yes
+				  have_v4l1or2=yes
                 ],
-                [ have_v4l=no ])
-
-dnl
-dnl ****************** V4L2 Support **************************
-dnl
+                [ have_v4l=no  ])
 AC_CHECK_HEADER([linux/videodev2.h],
                 [
                   AC_DEFINE(HAVE_CAMV4L2,,[V4L2 capturing support])
                   have_v4l2=yes
+				  have_v4l1or2=yes
                 ],
                 [ have_v4l2=no ],
 		[[
 		#include <asm/types.h>
 		#include <sys/time.h>
 		]])
+
+AM_CONDITIONAL([BUILD_V4L], [test x$have_v4l1or2 = xyes])
+
+
+dnl
+dnl ************** QuickTime configuration ******************
+dnl
+
+#have_quicktime=yes
+#QUICKTIME_LIBS="-framework QuickTime -framework Carbon"
+have_quicktime=no
+QUICKTIME_CFLAGS=
+QUICKTIME_LIBS=
+AC_SUBST(QUICKTIME_CFLAGS)
+AC_SUBST(QUICKTIME_LIBS)
+AM_CONDITIONAL([BUILD_QUICKTIME], [test x$have_quicktime = xyes])
+
 
 dnl
 dnl ****************** SWIG wrappers ************************
@@ -286,6 +309,8 @@ if test x"$setup_swig" = x"yes" ; then
     fi
 fi
 AM_CONDITIONAL([UPDATE_SWIG_WRAPPERS],  [test -n "$SWIG"])
+
+
 
 dnl
 dnl ****************** Parallelization ***********************
@@ -357,6 +382,7 @@ Configuration:
     Use dc1394 & raw1394:     ${have_dc1394}
     Use v4l:                  ${have_v4l}
     Use v4l2:                 ${have_v4l2}
+	Use QuickTime:            ${have_quicktime}
 
     Build wrappers for
     - Python                  ${enable_python}])
