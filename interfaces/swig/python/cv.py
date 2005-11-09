@@ -570,11 +570,11 @@ class IplImage(_object):
             if self.thisown: destroy(self)
         except: pass
 
-    def imageData_set(*args):
+    def imageData_set(*args): 
         """imageData_set(self, PyObject object)"""
         return _cv.IplImage_imageData_set(*args)
 
-    def imageData_get(*args):
+    def imageData_get(*args): 
         """imageData_get(self) -> PyObject"""
         return _cv.IplImage_imageData_get(*args)
 

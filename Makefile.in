@@ -137,10 +137,11 @@ ACLOCAL_AMFLAGS = -I ./autotools/aclocal
 @BUILD_APPS_FALSE@APPS_DIR = 
 SUBDIRS = cxcore cv cvaux otherlibs interfaces $(APPS_DIR) tests samples data docs
 
-DIST_SUBDIRS = $(SUBDIRS) apps
-
 # All the rest of the distributed files
-EXTRA_DIST = THANKS COPYING INSTALL README NEWS ChangeLog opencv.spec opencv.spec.in opencv.pc.in opencv.pc _make utils autotools
+EXTRA_DIST = THANKS COPYING INSTALL README NEWS ChangeLog \
+             opencv.spec opencv.spec.in opencv.pc.in opencv.pc \
+             _make utils autotools apps
+
 
 pkgconfigdir = $(libdir)/pkgconfig
 pkgconfig_DATA = opencv.pc
@@ -163,6 +164,8 @@ DIST_COMMON = README AUTHORS COPYING ChangeLog INSTALL Makefile.am \
 	autotools/ltmain.sh autotools/missing autotools/mkinstalldirs \
 	autotools/py-compile configure configure.in cvconfig.h.in \
 	opencv.pc.in opencv.spec.in
+DIST_SUBDIRS = cxcore cv cvaux otherlibs interfaces apps tests samples \
+	data docs
 all: cvconfig.h
 	$(MAKE) $(AM_MAKEFLAGS) all-recursive
 
