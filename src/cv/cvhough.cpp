@@ -168,6 +168,7 @@ icvHoughLines_8uC1R( uchar* image, int step, CvSize size,
     }
 
 func_exit:
+    cvFree( (void**)&sort_buf );
     cvFree( (void**)&tabSin );
     cvFree( (void**)&tabCos );
     cvFree( (void**)&accum );
