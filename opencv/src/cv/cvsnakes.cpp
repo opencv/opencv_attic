@@ -101,10 +101,12 @@ icvSnake8uC1R( unsigned char *src,
     uchar *map = NULL;
     int map_width = ((roi.width - 1) >> 3) + 1;
     int map_height = ((roi.height - 1) >> 3) + 1;
-    short *dx = NULL;
-    short *dy = NULL;
-    _CvConvState *pX;
-    _CvConvState *pY;
+    CvSepFilter pX, pY;
+    #define TILE_SIZE 10        
+    short dx[TILE_SIZE*TILE_SIZE], dy[TILE_SIZE*TILE_SIZE];
+    CvMat _dx = cvMat( TILE_SIZE, TILE_SIZE, CV_16SC1, dx );
+    CvMat _dy = cvMat( TILE_SIZE, TILE_SIZE, CV_16SC1, dy );
+    CvMat _src = cvMat( roi.height, roi.width, CV_8UC1, src );
 
     /* inner buffer of convolution process */
     //char ConvBuffer[400];
@@ -140,8 +142,8 @@ icvSnake8uC1R( unsigned char *src,
 
     if( scheme == _CV_SNAKE_GRAD )
     {
-        dx = (short *) cvAlloc( 10 * 10 * sizeof( short ));
-        dy = (short *) cvAlloc( 10 * 10 * sizeof( short ));
+        pX.init_deriv( roi.width, CV_8UC1, CV_16SC1, 1, 0, 3 );
+        pY.init_deriv( roi.width, CV_8UC1, CV_16SC1, 0, 1, 3 );
 
         gradient = (float *) cvAlloc( roi.height * roi.width * sizeof( float ));
 
@@ -291,29 +293,18 @@ icvSnake8uC1R( unsigned char *src,
                         if( map[y * map_width + x] == 0 )
                         {
                             int l, m;							
-                            CvSize g_roi;
-                            uchar *source;
 
                             /* evaluate block location */
                             int upshift = y ? 1 : 0;
                             int leftshift = x ? 1 : 0;
                             int bottomshift = MIN( 1, roi.height - ((y + 1) << 3) );
                             int rightshift = MIN( 1, roi.width - ((x + 1) << 3) );
+                            CvRect g_roi = { x*8 - leftshift, y*8 - upshift,
+                                leftshift + 8 + rightshift, upshift + 8 + bottomshift };
 
-                            source =
-                                src + ((y << 3) - upshift) * srcStep + (x << 3) - leftshift;
-                            g_roi.height = upshift + 8 + bottomshift;
-                            g_roi.width = leftshift + 8 + rightshift;
+                            pX.process( &_src, &_dx, g_roi );
+                            pY.process( &_src, &_dy, g_roi );
 
-                            
-							pX = icvSobelInitAlloc( g_roi.width, cv8u, 3, CV_ORIGIN_TL, 1, 0 );
-							pY = icvSobelInitAlloc( g_roi.width, cv8u, 3, CV_ORIGIN_TL, 0, 1 );
-
-                            icvSobel_8u16s_C1R( source, srcStep, dx, 20, &g_roi, pX, 0 );
-                            icvSobel_8u16s_C1R( source, srcStep, dy, 20, &g_roi, pY, 0 );
-
-                            icvFilterFree( &pX );
-                            icvFilterFree( &pY );
                             for( l = 0; l < 8 + bottomshift; l++ )
                             {
                                 for( m = 0; m < 8 + rightshift; m++ )
@@ -406,8 +397,6 @@ icvSnake8uC1R( unsigned char *src,
     {
         cvFree( (void**)&gradient );
         cvFree( (void**)&map );
-        cvFree( (void**)&dx );
-        cvFree( (void**)&dy );
     }
     return CV_OK;
 }

@@ -187,9 +187,8 @@ static void
 icvCornerEigenValsVecs( const CvMat* src, CvMat* eigenv, int block_size,
                         int aperture_size, int op_type, double k=0. )
 {
-    CvFilterState* dxstate = 0;
-    CvFilterState* dystate = 0;
-    CvFilterState* blurstate = 0;
+    CvSepFilter dx_filter, dy_filter;
+    CvBoxFilter blur_filter;
     CvMat *tempsrc = 0;
     CvMat *Dx = 0, *Dy = 0, *cov = 0;
     CvMat *sqrt_buf = 0;
@@ -208,11 +207,12 @@ icvCornerEigenValsVecs( const CvMat* src, CvMat* eigenv, int block_size,
     int stage = CV_START;
     CvSobelFixedIPPFunc ipp_sobel_vert = 0, ipp_sobel_horiz = 0;
     CvFilterFixedIPPFunc ipp_scharr_vert = 0, ipp_scharr_horiz = 0;
-    CvFilterFunc opencv_derv_func = 0;
     CvSize el_size, size, stripe_size;
     int aligned_width;
     CvPoint el_anchor;
     double factorx, factory;
+    bool use_ipp = false;
+    CvMat _cov2, *cov2 = &_cov2;
 
     if( block_size < 3 || !(block_size & 1) )
         CV_ERROR( CV_StsOutOfRange, "averaging window size must be an odd number >= 3" );
@@ -265,32 +265,31 @@ icvCornerEigenValsVecs( const CvMat* src, CvMat* eigenv, int block_size,
                       el_anchor.x*CV_ELEM_SIZE(depth);
         temp_step = tempsrc->step ? tempsrc->step : CV_STUB_STEP;
         max_dy = tempsrc->rows - aperture_size + 1;
+        use_ipp = true;
     }
     else
     {
         ipp_sobel_vert = ipp_sobel_horiz = 0;
         ipp_scharr_vert = ipp_scharr_horiz = 0;
-        CV_CALL( dxstate = icvSobelInitAlloc( size.width, datatype, aperture_size0,
-                                              CV_ORIGIN_TL, 1, 0 ));
-        CV_CALL( dystate = icvSobelInitAlloc( size.width, datatype, aperture_size0,
-                                              CV_ORIGIN_TL, 0, 1 ));
+
+        CV_CALL( dx_filter.init_deriv( size.width, depth, d_depth, 1, 0, aperture_size0 ));
+        CV_CALL( dy_filter.init_deriv( size.width, depth, d_depth, 0, 1, aperture_size0 ));
         max_dy = buf_size / src->cols;
         max_dy = MAX( max_dy, aperture_size + block_size );
-        opencv_derv_func = depth == CV_8U ? (CvFilterFunc)icvSobel_8u16s_C1R :
-                                            (CvFilterFunc)icvSobel_32f_C1R;
     }
 
     CV_CALL( Dx = cvCreateMat( max_dy, aligned_width, d_depth ));
     CV_CALL( Dy = cvCreateMat( max_dy, aligned_width, d_depth ));
     CV_CALL( cov = cvCreateMat( max_dy + block_size + 1, size.width, CV_32FC3 ));
+    _cov2 = *cov;
     CV_CALL( sqrt_buf = cvCreateMat( 2, size.width, CV_32F ));
+    Dx->cols = Dy->cols = size.width;
 
-    if( opencv_derv_func )
+    if( !use_ipp )
         max_dy -= aperture_size - 1;
     d_step = Dx->step ? Dx->step : CV_STUB_STEP;
 
-    CV_CALL( blurstate = icvBlurInitAlloc( size.width, cv32f, 3, block_size ));
-    blurstate->divisor = 1; // avoid scaling
+    CV_CALL(blur_filter.init(size.width, CV_32FC3, CV_32FC3, 0, cvSize(block_size,block_size)));
     stripe_size = size;
 
     factorx = (double)(1 << (aperture_size - 1)) * block_size;
@@ -304,18 +303,14 @@ icvCornerEigenValsVecs( const CvMat* src, CvMat* eigenv, int block_size,
 
     for( y = 0; y < size.height; y += delta )
     {
-        if( opencv_derv_func )
+        if( !use_ipp )
         {
             delta = MIN( size.height - y, max_dy );
             if( y + delta == size.height )
                 stage = stage & CV_START ? CV_START + CV_END : CV_END;
-            
-            stripe_size.height = delta;
-            IPPI_CALL( opencv_derv_func( src->data.ptr + y*src->step, src->step, Dx->data.ptr,
-                                         Dx->step, &stripe_size, dxstate, stage ));
-            stripe_size.height = delta;
-            IPPI_CALL( opencv_derv_func( src->data.ptr + y*src->step, src->step, Dy->data.ptr,
-                                         Dy->step, &stripe_size, dystate, stage ));
+            dx_filter.process( src, Dx, cvRect(0,y,-1,delta), cvPoint(0,0), stage );
+            stripe_size.height = dy_filter.process( src, Dy, cvRect(0,y,-1,delta),
+                                                    cvPoint(0,0), stage );
         }
         else
         {
@@ -378,9 +373,9 @@ icvCornerEigenValsVecs( const CvMat* src, CvMat* eigenv, int block_size,
         if( y + stripe_size.height >= size.height )
             stage = stage & CV_START ? CV_START + CV_END : CV_END;
 
-        IPPI_CALL( icvBlur_32f_CnR( cov->data.fl, cov->step,
-                                    cov->data.fl, cov->step,
-                                    &stripe_size, blurstate, stage ));
+        cov->rows = stripe_size.height;
+        stripe_size.height = blur_filter.process(cov,cov2,
+            cvRect(0,0,-1,-1),cvPoint(0,0),stage);
 
         if( op_type == ICV_MINEIGENVAL )
             icvCalcMinEigenVal( cov->data.fl, cov->step,
@@ -396,15 +391,11 @@ icvCornerEigenValsVecs( const CvMat* src, CvMat* eigenv, int block_size,
                 stripe_size, sqrt_buf );
 
         dst_y += stripe_size.height;
-
         stage = CV_MIDDLE;
     }
 
     __END__;
 
-    icvFilterFree( &dxstate );
-    icvFilterFree( &dystate );
-    icvFilterFree( &blurstate );
     cvReleaseMat( &Dx );
     cvReleaseMat( &Dy );
     cvReleaseMat( &cov );
@@ -499,11 +490,7 @@ cvCornerEigenValsAndVecs( const void* srcarr, void* eigenvarr,
 CV_IMPL void
 cvPreCornerDetect( const void* srcarr, void* dstarr, int aperture_size )
 {
-    CvFilterState* dxstate = 0;
-    CvFilterState* dystate = 0;
-    CvFilterState* d2xstate = 0;
-    CvFilterState* d2ystate = 0;
-    CvFilterState* dxystate = 0;
+    CvSepFilter dx_filter, dy_filter, d2x_filter, d2y_filter, dxy_filter;
     CvMat *Dx = 0, *Dy = 0, *D2x = 0, *D2y = 0, *Dxy = 0;
     CvMat *tempsrc = 0;
     
@@ -521,13 +508,13 @@ cvPreCornerDetect( const void* srcarr, void* dstarr, int aperture_size )
     CvSobelFixedIPPFunc ipp_sobel_vert = 0, ipp_sobel_horiz = 0,
                         ipp_sobel_vert_second = 0, ipp_sobel_horiz_second = 0,
                         ipp_sobel_cross = 0;
-    CvFilterFunc opencv_derv_func = 0;
     CvSize el_size, size, stripe_size;
     int aligned_width;
     CvPoint el_anchor;
     double factor;
     CvMat stub, *src = (CvMat*)srcarr;
     CvMat dststub, *dst = (CvMat*)dstarr;
+    bool use_ipp = false;
 
     CV_CALL( src = cvGetMat( srcarr, &stub ));
     CV_CALL( dst = cvGetMat( dst, &dststub ));
@@ -584,25 +571,19 @@ cvPreCornerDetect( const void* srcarr, void* dstarr, int aperture_size )
                       el_anchor.x*CV_ELEM_SIZE(depth);
         temp_step = tempsrc->step ? tempsrc->step : CV_STUB_STEP;
         max_dy = tempsrc->rows - aperture_size + 1;
+        use_ipp = true;
     }
     else
     {
         ipp_sobel_vert = ipp_sobel_horiz = 0;
         ipp_sobel_vert_second = ipp_sobel_horiz_second = ipp_sobel_cross = 0;
-        CV_CALL( dxstate = icvSobelInitAlloc( size.width, datatype, aperture_size,
-                                              CV_ORIGIN_TL, 1, 0 ));
-        CV_CALL( dystate = icvSobelInitAlloc( size.width, datatype, aperture_size,
-                                              CV_ORIGIN_TL, 0, 1 ));
-        CV_CALL( d2xstate = icvSobelInitAlloc( size.width, datatype, aperture_size,
-                                               CV_ORIGIN_TL, 2, 0 ));
-        CV_CALL( d2ystate = icvSobelInitAlloc( size.width, datatype, aperture_size,
-                                               CV_ORIGIN_TL, 0, 2 ));
-        CV_CALL( dxystate = icvSobelInitAlloc( size.width, datatype, aperture_size,
-                                               CV_ORIGIN_TL, 1, 1 ));
+        dx_filter.init_deriv( size.width, depth, d_depth, 1, 0, aperture_size );
+        dy_filter.init_deriv( size.width, depth, d_depth, 0, 1, aperture_size );
+        d2x_filter.init_deriv( size.width, depth, d_depth, 2, 0, aperture_size );
+        d2y_filter.init_deriv( size.width, depth, d_depth, 0, 2, aperture_size );
+        dxy_filter.init_deriv( size.width, depth, d_depth, 1, 1, aperture_size );
         max_dy = buf_size / src->cols;
         max_dy = MAX( max_dy, aperture_size );
-        opencv_derv_func = depth == CV_8U ? (CvFilterFunc)icvSobel_8u16s_C1R :
-                                            (CvFilterFunc)icvSobel_32f_C1R;
     }
 
     CV_CALL( Dx = cvCreateMat( max_dy, aligned_width, d_depth ));
@@ -610,8 +591,9 @@ cvPreCornerDetect( const void* srcarr, void* dstarr, int aperture_size )
     CV_CALL( D2x = cvCreateMat( max_dy, aligned_width, d_depth ));
     CV_CALL( D2y = cvCreateMat( max_dy, aligned_width, d_depth ));
     CV_CALL( Dxy = cvCreateMat( max_dy, aligned_width, d_depth ));
+    Dx->cols = Dy->cols = D2x->cols = D2y->cols = Dxy->cols = size.width;
 
-    if( opencv_derv_func )
+    if( !use_ipp )
         max_dy -= aperture_size - 1;
     d_step = Dx->step ? Dx->step : CV_STUB_STEP;
 
@@ -626,27 +608,20 @@ cvPreCornerDetect( const void* srcarr, void* dstarr, int aperture_size )
 
     for( y = 0; y < size.height; y += delta )
     {
-        if( opencv_derv_func )
+        if( !use_ipp )
         {
             delta = MIN( size.height - y, max_dy );
+            CvRect roi = cvRect(0,y,size.width,delta);
+            CvPoint origin=cvPoint(0,0);
+
             if( y + delta == size.height )
                 stage = stage & CV_START ? CV_START + CV_END : CV_END;
             
-            stripe_size.height = delta;
-            IPPI_CALL( opencv_derv_func( src->data.ptr + y*src->step, src->step, Dx->data.ptr,
-                                         d_step, &stripe_size, dxstate, stage ));
-            stripe_size.height = delta;
-            IPPI_CALL( opencv_derv_func( src->data.ptr + y*src->step, src->step, Dy->data.ptr,
-                                         d_step, &stripe_size, dystate, stage ));
-            stripe_size.height = delta;
-            IPPI_CALL( opencv_derv_func( src->data.ptr + y*src->step, src->step, D2x->data.ptr,
-                                         d_step, &stripe_size, d2xstate, stage ));
-            stripe_size.height = delta;
-            IPPI_CALL( opencv_derv_func( src->data.ptr + y*src->step, src->step, D2y->data.ptr,
-                                         d_step, &stripe_size, d2ystate, stage ));
-            stripe_size.height = delta;
-            IPPI_CALL( opencv_derv_func( src->data.ptr + y*src->step, src->step, Dxy->data.ptr,
-                                         d_step, &stripe_size, dxystate, stage ));
+            dx_filter.process(src,Dx,roi,origin,stage);
+            dy_filter.process(src,Dy,roi,origin,stage);
+            d2x_filter.process(src,D2x,roi,origin,stage);
+            d2y_filter.process(src,D2y,roi,origin,stage);
+            stripe_size.height = dxy_filter.process(src,Dxy,roi,origin,stage);
         }
         else
         {
@@ -709,11 +684,6 @@ cvPreCornerDetect( const void* srcarr, void* dstarr, int aperture_size )
 
     __END__;
 
-    icvFilterFree( &dxstate );
-    icvFilterFree( &dystate );
-    icvFilterFree( &d2xstate );
-    icvFilterFree( &d2ystate );
-    icvFilterFree( &dxystate );
     cvReleaseMat( &Dx );
     cvReleaseMat( &Dy );
     cvReleaseMat( &D2x );
