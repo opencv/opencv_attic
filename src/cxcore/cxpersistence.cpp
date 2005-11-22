@@ -3396,6 +3396,10 @@ icvWriteFileNode( CvFileStorage* fs, const char* name, const CvFileNode* node )
         icvWriteCollection( fs, node );
         fs->end_write_struct( fs );
         break;
+    case CV_NODE_NONE:
+        fs->start_write_struct( fs, name, CV_NODE_SEQ, 0 );
+        fs->end_write_struct( fs );
+        break;
     default:
         CV_ERROR( CV_StsBadFlag, "Unknown type of file node" );
     }
