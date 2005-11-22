@@ -448,8 +448,6 @@ cvSub( const void* srcarr1, const void* srcarr2,
                     const float* src2data = (const float*)(src2->data.ptr);
                     float* dstdata = (float*)(dst->data.ptr);
 
-                    size.width *= size.height*cn;
-
                     do
                     {
                         dstdata[len-1] = (float)(src2data[len-1] - src1data[len-1]);
@@ -921,8 +919,6 @@ cvAdd( const void* srcarr1, const void* srcarr2,
                     const float* src1data = (const float*)(src1->data.ptr);
                     const float* src2data = (const float*)(src2->data.ptr);
                     float* dstdata = (float*)(dst->data.ptr);
-
-                    size.width *= size.height*cn;
 
                     do
                     {
@@ -1861,46 +1857,46 @@ cvDiv( const void* srcarr1, const void* srcarr2, void* dstarr, double scale )
 
 /******************************* A D D   W E I G T E D ******************************/
 
-#define ICV_DEF_ADD_WEIGHTED_OP(flavor, arrtype, worktype, load_macro,                  \
-                                     cast_macro1, cast_macro2)                          \
-static CvStatus CV_STDCALL                                                              \
-icvAddWeighted_##flavor##_C1R( const arrtype* src1, int step1, double alpha,            \
-                               const arrtype* src2, int step2, double beta,             \
-                               double gamma, arrtype* dst, int step, CvSize size )      \
-{                                                                                       \
-    for( ; size.height--; (char*&)src1 += step1, (char*&)src2 += step2,                 \
-                          (char*&)dst += step )                                         \
-    {                                                                                   \
-        int i;                                                                          \
-                                                                                        \
-        for( i = 0; i <= size.width - 4; i += 4 )                                       \
-        {                                                                               \
-            worktype t0 = cast_macro1(load_macro((src1)[i])*alpha +                     \
-                                      load_macro((src2)[i])*beta + gamma);              \
-            worktype t1 = cast_macro1(load_macro((src1)[i+1])*alpha +                   \
-                                      load_macro((src2)[i+1])*beta + gamma);            \
-                                                                                        \
-            (dst)[i] = cast_macro2( t0 );                                               \
-            (dst)[i+1] = cast_macro2( t1 );                                             \
-                                                                                        \
-            t0 = cast_macro1(load_macro((src1)[i+2])*alpha +                            \
-                             load_macro((src2)[i+2])*beta + gamma);                     \
-            t1 = cast_macro1(load_macro((src1)[i+3])*alpha +                            \
-                             load_macro((src2)[i+3])*beta + gamma);                     \
-                                                                                        \
-            (dst)[i+2] = cast_macro2( t0 );                                             \
-            (dst)[i+3] = cast_macro2( t1 );                                             \
-        }                                                                               \
-                                                                                        \
-        for( ; i < size.width; i++ )                                                    \
-        {                                                                               \
-            worktype t0 = cast_macro1(load_macro((src1)[i])*alpha +                     \
-                                      load_macro((src2)[i])*beta + gamma);              \
-            (dst)[i] = cast_macro2( t0 );                                               \
-        }                                                                               \
-    }                                                                                   \
-                                                                                        \
-    return CV_OK;                                                                       \
+#define ICV_DEF_ADD_WEIGHTED_OP(flavor, arrtype, worktype, load_macro,          \
+                                     cast_macro1, cast_macro2)                  \
+static CvStatus CV_STDCALL                                                      \
+icvAddWeighted_##flavor##_C1R( const arrtype* src1, int step1, double alpha,    \
+                               const arrtype* src2, int step2, double beta,     \
+                               double gamma, arrtype* dst, int step, CvSize size )\
+{                                                                               \
+    for( ; size.height--; (char*&)src1 += step1, (char*&)src2 += step2,         \
+                          (char*&)dst += step )                                 \
+    {                                                                           \
+        int i;                                                                  \
+                                                                                \
+        for( i = 0; i <= size.width - 4; i += 4 )                               \
+        {                                                                       \
+            worktype t0 = cast_macro1(load_macro((src1)[i])*alpha +             \
+                                      load_macro((src2)[i])*beta + gamma);      \
+            worktype t1 = cast_macro1(load_macro((src1)[i+1])*alpha +           \
+                                      load_macro((src2)[i+1])*beta + gamma);    \
+                                                                                \
+            (dst)[i] = cast_macro2( t0 );                                       \
+            (dst)[i+1] = cast_macro2( t1 );                                     \
+                                                                                \
+            t0 = cast_macro1(load_macro((src1)[i+2])*alpha +                    \
+                             load_macro((src2)[i+2])*beta + gamma);             \
+            t1 = cast_macro1(load_macro((src1)[i+3])*alpha +                    \
+                             load_macro((src2)[i+3])*beta + gamma);             \
+                                                                                \
+            (dst)[i+2] = cast_macro2( t0 );                                     \
+            (dst)[i+3] = cast_macro2( t1 );                                     \
+        }                                                                       \
+                                                                                \
+        for( ; i < size.width; i++ )                                            \
+        {                                                                       \
+            worktype t0 = cast_macro1(load_macro((src1)[i])*alpha +             \
+                                      load_macro((src2)[i])*beta + gamma);      \
+            (dst)[i] = cast_macro2( t0 );                                       \
+        }                                                                       \
+    }                                                                           \
+                                                                                \
+    return CV_OK;                                                               \
 }
 
 
