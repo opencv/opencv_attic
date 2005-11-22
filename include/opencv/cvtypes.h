@@ -100,9 +100,8 @@ typedef struct CvChainPtReader
 {
     CV_SEQ_READER_FIELDS()
     char      code;
-    CvPoint  pt;
+    CvPoint   pt;
     char      deltas[8][2];
-    int       reserved[2];
 }
 CvChainPtReader;
 

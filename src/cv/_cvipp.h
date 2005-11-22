@@ -46,55 +46,21 @@
 *                                  Creating Borders                                      *
 \****************************************************************************************/
 
-#define IPCV_COPY_BORDER( bordertype, flavor, arrtype )                             \
+#define IPCV_COPY_BORDER( bordertype, flavor )                                      \
 IPCVAPI_EX( CvStatus, icvCopy##bordertype##Border_##flavor,                         \
             "ippiCopy" #bordertype "Border_" #flavor, CV_PLUGINS1(CV_PLUGIN_IPPI),  \
-            ( const arrtype* pSrc,  int srcStep, CvSize srcRoiSize,                 \
-                    arrtype* pDst,  int dstStep, CvSize dstRoiSize,                 \
+            ( const void* pSrc,  int srcStep, CvSize srcRoiSize,                    \
+                    void* pDst,  int dstStep, CvSize dstRoiSize,                    \
                     int topBorderWidth, int leftBorderWidth ))
 
-IPCV_COPY_BORDER( Replicate, 8u_C1R, uchar )
-IPCV_COPY_BORDER( Replicate, 16s_C1R, ushort )
-IPCV_COPY_BORDER( Replicate, 8u_C3R, uchar )
-IPCV_COPY_BORDER( Replicate, 32s_C1R, int )
-IPCV_COPY_BORDER( Replicate, 16s_C3R, ushort )
-IPCV_COPY_BORDER( Replicate, 16s_C4R, int )
-IPCV_COPY_BORDER( Replicate, 32s_C3R, int )
-IPCV_COPY_BORDER( Replicate, 32s_C4R, int )
-IPCV_COPY_BORDER( Replicate, 64f_C3R, int )
-IPCV_COPY_BORDER( Replicate, 64f_C4R, int )
-
-#undef IPCV_COPY_BORDER
-
-#define IPCV_COPY_CONST_BORDER_C1( flavor, arrtype )                                \
-IPCVAPI_EX( CvStatus, icvCopyConstBorder_##flavor,                                  \
-            "ippiCopyConstBorder_" #flavor, CV_PLUGINS1(CV_PLUGIN_IPPI),            \
-            ( const arrtype* pSrc,  int srcStep, CvSize srcRoiSize,                 \
-                    arrtype* pDst,  int dstStep, CvSize dstRoiSize,                 \
-                    int topBorderWidth, int leftBorderWidth, arrtype value ))
-
-IPCV_COPY_CONST_BORDER_C1( 8u_C1R, uchar )
-IPCV_COPY_CONST_BORDER_C1( 16s_C1R, ushort )
-IPCV_COPY_CONST_BORDER_C1( 32s_C1R, int )
-
-#undef IPCV_COPY_CONST_BORDER_C1
-
-#define IPCV_COPY_CONST_BORDER_CN( flavor, arrtype )                                \
-IPCVAPI_EX( CvStatus, icvCopyConstBorder_##flavor,                                  \
-            "ippiCopyConstBorder_" #flavor, CV_PLUGINS1(CV_PLUGIN_IPPI),            \
-            ( const arrtype* pSrc,  int srcStep, CvSize srcRoiSize,                 \
-                    arrtype* pDst,  int dstStep, CvSize dstRoiSize,                 \
-                    int topBorderWidth, int leftBorderWidth, const arrtype* value ))
-
-IPCV_COPY_CONST_BORDER_CN( 8u_C3R, uchar )
-IPCV_COPY_CONST_BORDER_CN( 16s_C3R, ushort )
-IPCV_COPY_CONST_BORDER_CN( 16s_C4R, int )
-IPCV_COPY_CONST_BORDER_CN( 32s_C3R, int )
-IPCV_COPY_CONST_BORDER_CN( 32s_C4R, int )
-IPCV_COPY_CONST_BORDER_CN( 64f_C3R, int )
-IPCV_COPY_CONST_BORDER_CN( 64f_C4R, int )
-
-#undef IPCV_COPY_CONST_BORDER_CN
+IPCV_COPY_BORDER( Replicate, 8u_C1R )
+IPCV_COPY_BORDER( Replicate, 16s_C1R )
+IPCV_COPY_BORDER( Replicate, 8u_C3R )
+IPCV_COPY_BORDER( Replicate, 32s_C1R )
+IPCV_COPY_BORDER( Replicate, 16s_C3R )
+IPCV_COPY_BORDER( Replicate, 16s_C4R )
+IPCV_COPY_BORDER( Replicate, 32s_C3R )
+IPCV_COPY_BORDER( Replicate, 32s_C4R )
 
 /****************************************************************************************\
 *                                        Moments                                         *

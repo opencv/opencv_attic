@@ -42,60 +42,6 @@
 #ifndef _CV_IMG_PROC_H_
 #define _CV_IMG_PROC_H_
 
-#define ICV_KERNEL_TYPE_MASK        (15<<16)
-#define ICV_GENERIC_KERNEL          (0<<16)
-#define ICV_SEPARABLE_KERNEL        (1<<16)
-#define ICV_BINARY_KERNEL           (2<<16)
-
-#define ICV_KERNEL_TYPE(flags)      ((flags) & ICV_KERNEL_TYPE_MASK)
-
-#define ICV_MAKE_SEPARABLE_KERNEL( x_type, y_type ) \
-    (ICV_SEPARABLE_KERNEL | ((x_type)&255) | (((y_type)&255) << 8))
-
-#define ICV_X_KERNEL_TYPE(flags)    ((flags) & 255)
-#define ICV_Y_KERNEL_TYPE(flags)    (((flags) >> 8) & 255)
-#define ICV_SYMMETRIC_KERNEL        1
-#define ICV_ASYMMETRIC_KERNEL       2
-
-#define ICV_1_2_1_KERNEL            (4*1+ICV_SYMMETRIC_KERNEL)
-#define ICV_m1_0_1_KERNEL           (4*2+ICV_ASYMMETRIC_KERNEL)
-#define ICV_1_m2_1_KERNEL           (4*3+ICV_SYMMETRIC_KERNEL)
-#define ICV_3_10_3_KERNEL           (4*4+ICV_SYMMETRIC_KERNEL)
-#define ICV_DEFAULT_GAUSSIAN_KERNEL ICV_SYMMETRIC_KERNEL
-#define ICV_CUSTOM_GAUSSIAN_KERNEL  (4+ICV_SYMMETRIC_KERNEL)
-
-#define ICV_MAKE_BINARY_KERNEL( shape ) \
-    (ICV_BINARY_KERNEL | (int)(shape))
-
-#define ICV_BINARY_KERNEL_SHAPE(flags) ((flags) & 255)
-
-typedef struct CvFilterState
-{
-    /* kernel data */
-    int ker_width;
-    int ker_height;
-    int ker_x;
-    int ker_y;
-    int kerType;
-    uchar *ker0;
-    uchar *ker1;
-    double divisor;
-
-    /* image data */
-    int max_width;
-    CvDataType dataType;
-    int channels;
-    int origin;
-
-    /* cyclic buffer */
-    char *buffer;
-    int buffer_step;
-    int crows;
-    char **rows;
-    char *tbuf;
-}
-CvFilterState;
-
 #define  CV_COPY( dst, src, len, idx ) \
     for( (idx) = 0; (idx) < (len); (idx)++) (dst)[idx] = (src)[idx]
 
@@ -105,35 +51,6 @@ CvFilterState;
 /* performs convolution of 2d floating-point array with 3x1, 1x3 or separable 3x3 mask */
 void icvSepConvSmall3_32f( float* src, int src_step, float* dst, int dst_step,
             CvSize src_size, const float* kx, const float* ky, float* buffer );
-
-CvFilterState* icvFilterInitAlloc(
-    int roiWidth, CvDataType dataType, int channels, CvSize elSize,
-    CvPoint elAnchor, const void* elData, int elementFlags );
-
-void icvFilterFree( CvFilterState ** morphState );
-
-CvFilterState* icvSobelInitAlloc( int roiwidth, int depth, int kerSize,
-                                  int origin, int dx, int dy );
-
-CvStatus CV_STDCALL icvSobel_8u16s_C1R( const uchar* pSrc, int srcStep,
-                                        short* pDst, int dstStep, CvSize* roiSize,
-                                        struct CvFilterState* state, int stage );
-
-CvStatus CV_STDCALL icvSobel_32f_C1R( const float* pSrc, int srcStep,
-                                      float* pDst, int dstStep, CvSize* roiSize,
-                                      struct CvFilterState* state, int stage );
-
-CvFilterState* icvBlurInitAlloc( int roiWidth, int depth, int channels, int kerSize );
-
-CvStatus CV_STDCALL icvBlur_8u16s_C1R( const uchar* pSrc, int srcStep,
-                                       short* pDst, int dstStep, CvSize* roiSize,
-                                       struct CvFilterState* state, int stage );
-
-CvStatus CV_STDCALL icvBlur_32f_CnR( const float* pSrc, int srcStep,
-                                     float* pDst, int dstStep, CvSize* roiSize,
-                                     struct CvFilterState* state, int stage );
-
-#define icvBlur_32f_C1R icvBlur_32f_CnR
 
 typedef CvStatus (CV_STDCALL * CvSobelFixedIPPFunc)
 ( const void* src, int srcstep, void* dst, int dststep, CvSize roi, int aperture );
@@ -149,32 +66,15 @@ typedef CvStatus (CV_STDCALL * CvFilterFixedIPPFunc)
 
 #define CV_MORPH_ALIGN  4
 
-typedef CvStatus( CV_STDCALL* CvFilterFunc )( const void* src, int src_step,
-                                              void* dst, int dst_step,
-                                              CvSize* size, struct CvFilterState * state,
-                                              int stage );
-
-#define CvMorphFunc CvFilterFunc
-
 #define CV_WHOLE   0
 #define CV_START   1
 #define CV_END     2
 #define CV_MIDDLE  4
 
-typedef CvStatus (CV_STDCALL * CvCopyNonConstBorderFunc)(
-    const void* src, int srcstep, CvSize srcsize,
-    void* dst, int dststep, CvSize dstsize, int top, int left );
-
-typedef CvStatus (CV_STDCALL * CvCopyConstBorderFunc_Cn)(
-    const void* src, int srcstep, CvSize srcsize,
-    void* dst, int dststep, CvSize dstsize,
-    int top, int left, const void* value );
-
-CvCopyNonConstBorderFunc icvGetCopyNonConstBorderFunc(
-    int pixsize, int bordertype=IPL_BORDER_REPLICATE );
-
-CvCopyConstBorderFunc_Cn icvGetCopyConstBorderFunc_Cn(
-    int pixsize );
+CvStatus CV_STDCALL
+icvCopyReplicateBorder_8u( const uchar* src, int srcstep, CvSize srcroi,
+                           uchar* dst, int dststep, CvSize dstroi,
+                           int left, int right, int cn, const uchar* value = 0 );
 
 CvMat* icvIPPFilterInit( const CvMat* src, int stripe_size, CvSize ksize );
 

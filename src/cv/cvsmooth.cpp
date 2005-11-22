@@ -42,1985 +42,353 @@
 #include "_cv.h"
 
 /****************************************************************************************\
-                                    Initialization
+                                         Box Filter
 \****************************************************************************************/
 
-CvFilterState* icvFilterInitAlloc(
-             int roiWidth, CvDataType dataType, int channels,
-             CvSize elSize, CvPoint elAnchor,
-             const void* elData, int elementType )
-{
-    CvFilterState *state = 0;
-    const int align = sizeof(size_t);
-    int ker_size = 0;
-    int buffer_step = 0;
-    int buffer_size;
-    int bt_pix, bt_pix_n;
-    int aligned_hdr_size = cvAlign((int)sizeof(*state),align);
-    int temp_lines = 2;
-    int binaryElement = ICV_KERNEL_TYPE(elementType) == ICV_BINARY_KERNEL;
-    int separableElement = ICV_KERNEL_TYPE(elementType) == ICV_SEPARABLE_KERNEL;
-    char *ptr;
+static void icvSumRow_8u32s( const uchar* src0, int* dst, void* params );
+static void icvSumRow_32f64f( const float* src0, double* dst, void* params );
+static void icvSumCol_32s8u( const int** src, uchar* dst, int dst_step,
+                             int count, void* params );
+static void icvSumCol_32s16s( const int** src, short* dst, int dst_step,
+                             int count, void* params );
+static void icvSumCol_64f32f( const double** src, float* dst, int dst_step,
+                              int count, void* params );
 
-    CV_FUNCNAME( "icvFilterInitAlloc" );
+CvBoxFilter::CvBoxFilter()
+{
+    min_depth = CV_32S;
+    sum = 0;
+    sum_count = 0;
+    normalized = false;
+}
+
+
+CvBoxFilter::CvBoxFilter( int _max_width, int _src_type, int _dst_type,
+                          bool _normalized, CvSize _ksize,
+                          CvPoint _anchor, int _border_mode,
+                          CvScalar _border_value )
+{
+    min_depth = CV_32S;
+    sum = 0;
+    sum_count = 0;
+    normalized = false;
+    init( _max_width, _src_type, _dst_type, _normalized,
+          _ksize, _anchor, _border_mode, _border_value );
+
+}
+
+
+void CvBoxFilter::init( int _max_width, int _src_type, int _dst_type,
+                        bool _normalized, CvSize _ksize,
+                        CvPoint _anchor, int _border_mode,
+                        CvScalar _border_value )
+{
+    CV_FUNCNAME( "CvBoxFilter::init" );
 
     __BEGIN__;
+    
+    sum = 0;
+    normalized = _normalized;
 
-    if( roiWidth <= 0 )
-        CV_ERROR( CV_StsOutOfRange, "image width <= 0" );
-    if( dataType != cv8u && dataType != cv32s && dataType != cv32f )
-        CV_ERROR( CV_StsUnsupportedFormat, "dataType is not CV_8U, CV_32S or CV_32F" );
-    if( channels < 1 || channels > 4 )
-        CV_ERROR( CV_StsUnsupportedFormat, "number of channels is not within 1..4" );
-    if( elSize.width <= 0 || elSize.height <= 0 )
-        CV_ERROR( CV_StsBadSize, "aperture width <= 0 or aperture height <= 0" );
-    if( (unsigned) elAnchor.x >= (unsigned) elSize.width ||
-        (unsigned) elAnchor.y >= (unsigned) elSize.height )
-        CV_ERROR( CV_StsOutOfRange, "anchor point is outside the aperture" );
+    if( normalized && CV_MAT_TYPE(_src_type) != CV_MAT_TYPE(_dst_type) ||
+        !normalized && CV_MAT_CN(_src_type) != CV_MAT_CN(_dst_type))
+        CV_ERROR( CV_StsUnmatchedFormats,
+        "In case of normalized box filter input and output must have the same type.\n"
+        "In case of unnormalized box filter the number of input and output channels must be the same" );
 
-    bt_pix = dataType == cv8u ? 1 : dataType == cv32s ? sizeof(int) : sizeof(float);
-    bt_pix_n = bt_pix * channels;
+    min_depth = CV_MAT_DEPTH(_src_type) == CV_8U ? CV_32S : CV_64F;
 
-    if( elData )
-        ker_size = binaryElement ? (elSize.width + 1) * elSize.height * 2 :
-                   separableElement ? (elSize.width + elSize.height)*bt_pix :
-                                      elSize.width * elSize.height * bt_pix;
+    CvBaseImageFilter::init( _max_width, _src_type, _dst_type, 1, _ksize,
+                             _anchor, _border_mode, _border_value );
+    
+    scale = normalized ? 1./(ksize.width*ksize.height) : 1;
 
-    buffer_step = cvAlign((roiWidth + elSize.width+1 + CV_MORPH_ALIGN*4)*bt_pix_n, align);
+    if( CV_MAT_DEPTH(src_type) == CV_8U )
+        x_func = (CvRowFilterFunc)icvSumRow_8u32s;
+    else if( CV_MAT_DEPTH(src_type) == CV_32F )
+        x_func = (CvRowFilterFunc)icvSumRow_32f64f;
+    else
+        CV_ERROR( CV_StsUnsupportedFormat, "Unknown/unsupported input image format" );
 
-    buffer_size = (elSize.height + temp_lines) * (buffer_step + sizeof(void*)) +
-                  ker_size + aligned_hdr_size + elSize.width * bt_pix_n + align*4;
-
-    buffer_size = cvAlign(buffer_size + align, align);
-
-    CV_CALL( state = (CvFilterState*)cvAlloc( buffer_size ));
-
-    ptr = (char*)state;
-    state->buffer_step = buffer_step;
-    state->crows = 0;
-
-    state->ker_x = elAnchor.x;
-    state->ker_y = elAnchor.y;
-    state->ker_height = elSize.height;
-    state->ker_width = elSize.width;
-    state->kerType = elementType;
-    state->divisor = 1;
-
-    state->max_width = roiWidth;
-    state->dataType = dataType;
-    state->channels = channels;
-    state->origin = 0;
-    ptr += aligned_hdr_size + align;
-
-    state->buffer = ptr;
-    ptr += buffer_step * elSize.height;
-
-    state->tbuf = ptr;
-    ptr += buffer_step * temp_lines;
-
-    state->rows = (char**)ptr;
-    ptr += sizeof(state->rows[0])*elSize.height;
-
-    state->ker0 = state->ker1 = 0;
-
-    if( elData )
+    if( CV_MAT_DEPTH(dst_type) == CV_8U )
     {
-        state->ker0 = (uchar*)ptr;
-
-        if( binaryElement )
-        {
-            int i, mask_size = elSize.width * elSize.height;
-            state->ker1 = 0;
-
-            for( i = 0; i < mask_size; i++ )
-            {
-                int t = ((int*)elData)[i] ? -1 : 0;
-                state->ker0[i] = (uchar)t;
-            }
-        }
-        else
-        {
-            memcpy( state->ker0, elData, ker_size );
-            state->ker1 = (uchar*)(separableElement ? ptr + elSize.width*bt_pix : 0);
-        }
+        if( !normalized )
+            CV_ERROR( CV_StsBadArg, "Only normalized box filter can be used for 8u->8u transformation" );
+        y_func = (CvColumnFilterFunc)icvSumCol_32s8u;
+    }
+    else if( CV_MAT_DEPTH(dst_type) == CV_16S )
+    {
+        if( normalized || CV_MAT_DEPTH(src_type) != CV_8U )
+            CV_ERROR( CV_StsBadArg, "Only 8u->16s unnormalized box filter is supported in case of 16s output" );
+        y_func = (CvColumnFilterFunc)icvSumCol_32s16s;
+    }
+    else if( CV_MAT_DEPTH(dst_type) == CV_32F )
+    {
+        if( CV_MAT_DEPTH(src_type) != CV_32F )
+            CV_ERROR( CV_StsBadArg, "Only 32f->32f box filter (normalized or not) is supported in case of 32f output" );
+        y_func = (CvColumnFilterFunc)icvSumCol_64f32f;
     }
 
     __END__;
-
-    if( cvGetErrStatus() < 0 )
-        icvFilterFree( &state );
-
-    return state;
 }
 
 
-void icvFilterFree( CvFilterState** filterState )
+void CvBoxFilter::start_process( CvSlice x_range, int width )
 {
-    cvFree( (void**)filterState );
-}
+    CvBaseImageFilter::start_process( x_range, width );
+    int i, psz = CV_ELEM_SIZE(work_type);
+    uchar* s;
+    buf_end -= buf_step;
+    buf_max_count--;
+    assert( buf_max_count >= max_ky*2 + 1 );
+    s = sum = buf_end + cvAlign((width + ksize.width - 1)*CV_ELEM_SIZE(src_type), ALIGN);
+    sum_count = 0;
 
-
-#define SMALL_GAUSSIAN_SIZE  7
-
-static void
-icvCalcGaussianKernel( int n, double sigma, float* kernel )
-{
-    static const float small_gaussian_tab[][SMALL_GAUSSIAN_SIZE] =
-    {
-        {1.f},
-        {0.25f, 0.5f, 0.25f},
-        {0.0625f, 0.25f, 0.375f, 0.25f, 0.0625f},
-        {0.03125, 0.109375, 0.21875, 0.28125, 0.21875, 0.109375, 0.03125}
-    };
-
-    if( n <= SMALL_GAUSSIAN_SIZE && sigma <= 0 )
-    {
-        assert( n%2 == 1 );
-        memcpy( kernel, small_gaussian_tab[n>>1], n*sizeof(kernel[0]));
-    }
-    else
-    {
-        double sigmaX = sigma > 0 ? sigma : (n/2 - 1)*0.3 + 0.8;
-        double scale2X = -0.5/(sigmaX*sigmaX);
-        double sum = 1.;
-        int i;
-        sum = kernel[n/2] = 1.f;
-
-        for( i = 1; i <= n/2; i++ )
-        {
-            kernel[n/2+i] = kernel[n/2-i] = (float)exp(scale2X*i*i);
-            sum += kernel[n/2+i]*2;
-        }
-
-        sum = 1./sum;
-        for( i = 0; i <= n/2; i++ )
-            kernel[n/2+i] = kernel[n/2-i] = (float)(kernel[n/2+i]*sum);
-    }
-}
-
-
-static CvFilterState*
-icvSmoothInitAlloc( int width, CvDataType /*dataType*/, int channels,
-                    CvSize el_size, int smoothtype, double sigma )
-{
-    CvFilterState* filterState = 0;
-    CvPoint el_anchor = { el_size.width/2, el_size.height/2 };
-    float* kx = 0;
-
-    if( smoothtype == CV_GAUSSIAN )
-    {
-        kx = (float*)cvStackAlloc( (el_size.width + el_size.height)*sizeof(kx[0]));
-        float* ky = kx + el_size.width;
-
-        icvCalcGaussianKernel( el_size.width, sigma, kx );
-        if( el_size.width == el_size.height )
-            memcpy( ky, kx, el_size.width*sizeof(kx[0]) );
-        else
-            icvCalcGaussianKernel( el_size.height, sigma, ky );
-    }
-
-    filterState = icvFilterInitAlloc( width, cv32f, channels, el_size, el_anchor,
-                                      kx, ICV_SEPARABLE_KERNEL );
-
-    if( filterState )
-    {
-        if( smoothtype == CV_BLUR )
-            filterState->divisor = el_size.width * el_size.height;
-        else if( smoothtype == CV_GAUSSIAN )
-        {
-            filterState->divisor = (double)(1 << el_size.width) * (1 << el_size.height);
-            filterState->kerType = (filterState->kerType & ~255) |
-                (sigma > 0 ? ICV_CUSTOM_GAUSSIAN_KERNEL : ICV_DEFAULT_GAUSSIAN_KERNEL);
-        }
-    }
-
-    return filterState;
+    width *= psz;
+    for( i = 0; i < width; i++ )
+        s[i] = (uchar)0;
 }
 
 
 static void
-icvSmoothFree( CvFilterState ** filterState )
+icvSumRow_8u32s( const uchar* src, int* dst, void* params )
 {
-    icvFilterFree( filterState );
+    const CvBoxFilter* state = (const CvBoxFilter*)params;
+    int ksize = state->get_kernel_size().width;
+    int width = state->get_width();
+    int cn = CV_MAT_CN(state->get_src_type());
+    int i, k;
+
+    width = (width - 1)*cn; ksize *= cn;
+
+    for( k = 0; k < cn; k++, src++, dst++ )
+    {
+        int s = 0;
+        for( i = 0; i < ksize; i += cn )
+            s += src[i];
+        dst[0] = s;
+        for( i = 0; i < width; i += cn )
+        {
+            s += src[i+ksize] - src[i];
+            dst[i+cn] = s;
+        }
+    }
 }
 
 
-/****************************************************************************************\
-                                      Simple Blur
-\****************************************************************************************/
-
-static CvStatus CV_STDCALL
-icvBlur_8u_CnR( uchar* src, int srcStep,
-                uchar* dst, int dstStep, CvSize * roiSize,
-                CvFilterState* state, int stage )
+static void
+icvSumRow_32f64f( const float* src, double* dst, void* params )
 {
-    int width = roiSize->width;
-    int src_height = roiSize->height;
-    int dst_height = src_height;
-    int x, y = 0, i;
+    const CvBoxFilter* state = (const CvBoxFilter*)params;
+    int ksize = state->get_kernel_size().width;
+    int width = state->get_width();
+    int cn = CV_MAT_CN(state->get_src_type());
+    int i, k;
 
-    int ker_x = state->ker_x;
-    int ker_y = state->ker_y;
-    int ker_width = state->ker_width;
-    int ker_height = state->ker_height;
-    int ker_right = ker_width - ker_x;
+    width = (width - 1)*cn; ksize *= cn;
 
-    int crows = state->crows;
-    int **rows = (int**)(state->rows);
-    uchar *tbuf = (uchar*)(state->tbuf);
-    int   *sumbuf = (int*)((char*)state->tbuf + state->buffer_step);
-    int *trow, *trow2;
-
-    int channels = state->channels;
-    int ker_x_n = ker_x * channels;
-    int ker_width_n = ker_width * channels;
-    int ker_right_n = ker_right * channels;
-    int width_n = width * channels;
-
-    int is_small_width = width <= ker_width;
-    int starting_flag = 0;
-    int width_rest = width_n & (CV_MORPH_ALIGN - 1);
-    int divisor = cvRound(state->divisor);
-    double inv_divisor = divisor ? 1./divisor : 0.;
-
-    if( stage == CV_START + CV_END )
-        stage = CV_WHOLE;
-
-    /* initialize cyclic buffer when starting */
-    if( stage == CV_WHOLE || stage == CV_START )
+    for( k = 0; k < cn; k++, src++, dst++ )
     {
-        for( i = 0; i < ker_height; i++ )
-            rows[i] = (int*)(state->buffer + state->buffer_step * i);
-
-        crows = ker_y;
-        if( stage != CV_WHOLE )
-            dst_height -= ker_height - ker_y - 1;
-        starting_flag = 1;
-    }
-
-    if( stage == CV_END )
-        dst_height += ker_height - ker_y - 1;
-
-    do
-    {
-        int need_copy = is_small_width | (y == 0);
-        uchar *tsrc;
-        int *tdst;
-        uchar *tdst2;
-        int *saved_row = rows[ker_y];
-
-        /* fill cyclic buffer - horizontal filtering */
-        for( ; crows < ker_height; crows++ )
+        double s = 0;
+        for( i = 0; i < ksize; i += cn )
+            s += src[i];
+        dst[0] = s;
+        for( i = 0; i < width; i += cn )
         {
-            tsrc = src - ker_x_n;
-            tdst = rows[crows];
-
-            if( src_height-- <= 0 )
-            {
-                if( stage != CV_WHOLE && stage != CV_END )
-                    break;
-                /* duplicate last row */
-                trow = rows[crows - 1];
-                CV_COPY( tdst, trow, width_n, x );
-                continue;
-            }
-
-            need_copy |= src_height == 0;
-
-            if( ker_width > 1 )
-            {
-                if( need_copy )
-                {
-                    tsrc = tbuf - ker_x_n;
-                    CV_COPY( tbuf, src, width_n, x );
-                }
-                else
-                {
-                    CV_COPY( tbuf - ker_x_n, src - ker_x_n, ker_x_n, x );
-                    CV_COPY( tbuf, src + width_n, ker_right_n, x );
-                }
-
-                /* make replication borders */
-                for( i = ker_x_n - 1; i >= 0; i-- )
-                    tsrc[i] = tsrc[i + channels];
-                for( i = width_n + ker_x_n; i < width_n + ker_width_n; i++ )
-                    tsrc[i] = tsrc[i - channels];
-
-                if( channels == 1 )
-                {
-                    int t0 = 0;
-
-                    for( i = 0; i < ker_width_n - 1; i++ )
-                        t0 += tsrc[i];
-
-                    /* horizontal blurring */
-                    for( i = ker_width_n; i < width_n + ker_width_n; i++ )
-                    {
-                        t0 += tsrc[i-1];
-                        tdst[i-ker_width_n] = t0;
-                        t0 -= tsrc[i - ker_width_n];
-                    }
-                }
-                else if( channels == 3 )
-                {
-                    int t0 = 0, t1 = 0, t2 = 0;
-
-                    for( i = 0; i < ker_width_n - 3; i += 3 )
-                    {
-                        t0 += tsrc[i];
-                        t1 += tsrc[i+1];
-                        t2 += tsrc[i+2];
-                    }
-
-                    /* horizontal blurring */
-                    for( i = ker_width_n; i < width_n + ker_width_n; i += 3 )
-                    {
-                        t0 += tsrc[i-3];
-                        t1 += tsrc[i-2];
-                        t2 += tsrc[i-1];
-                        tdst[i-ker_width_n] = t0;
-                        tdst[i-ker_width_n+1] = t1;
-                        tdst[i-ker_width_n+2] = t2;
-                        t0 -= tsrc[i - ker_width_n];
-                        t1 -= tsrc[i - ker_width_n + 1];
-                        t2 -= tsrc[i - ker_width_n + 2];
-                    }
-                }
-                else            /* channels == 4 */
-                {
-                    int t0 = 0, t1 = 0, t2 = 0, t3 = 0;
-
-                    for( i = 0; i < ker_width_n - 4; i += 4 )
-                    {
-                        t0 += tsrc[i];
-                        t1 += tsrc[i+1];
-                        t2 += tsrc[i+2];
-                        t3 += tsrc[i+3];
-                    }
-
-                    /* horizontal blurring */
-                    for( i = ker_width_n; i < width_n + ker_width_n; i += 4 )
-                    {
-                        t0 += tsrc[i-4];
-                        t1 += tsrc[i-3];
-                        t2 += tsrc[i-2];
-                        t3 += tsrc[i-1];
-                        tdst[i-ker_width_n] = t0;
-                        tdst[i-ker_width_n+1] = t1;
-                        tdst[i-ker_width_n+2] = t2;
-                        tdst[i-ker_width_n+3] = t3;
-                        t0 -= tsrc[i - ker_width_n];
-                        t1 -= tsrc[i - ker_width_n + 1];
-                        t2 -= tsrc[i - ker_width_n + 2];
-                        t3 -= tsrc[i - ker_width_n + 3];
-                    }
-                }
-
-                if( !need_copy )
-                {
-                    /* restore borders */
-                    CV_COPY( src - ker_x_n, tbuf - ker_x_n, ker_x_n, x );
-                    CV_COPY( src + width_n, tbuf, ker_right_n, x );
-                }
-            }
-            else
-            {
-                CV_COPY( tdst, tsrc + ker_x_n, width_n, x );
-            }
-
-            if( crows < ker_height )
-                src += srcStep;
-        }
-
-        if( starting_flag )
-        {
-            starting_flag = 0;
-
-            for( x = 0; x < width_n; x++ )
-            {
-                int t = rows[ker_y][x];
-                for( i = 0; i < ker_y; i++ ) // copy border
-                    rows[i][x] = t;
-
-                t *= ker_y;
-                for( i = ker_y; i < ker_height - 1; i++ ) // accumulate initial sum
-                    t += rows[i][x];
-                sumbuf[x] = t;
-            }
-        }
-
-        /* vertical convolution */
-        if( crows != ker_height )
-            break;
-
-        tdst2 = dst;
-
-        if( width_rest )
-        {
-            need_copy = width_n < CV_MORPH_ALIGN || y == dst_height - 1;
-
-            if( need_copy )
-                tdst2 = tbuf;
-            else
-                CV_COPY( tbuf + width_n, dst + width_n, CV_MORPH_ALIGN, x );
-        }
-
-        trow = rows[0];
-        trow2 = rows[ker_height-1];
-
-        for( x = 0; x < width_n; x += 4 )
-        {
-            int val0, val1, t0, t1;
-
-            val0 = sumbuf[x];
-            val1 = sumbuf[x+1];
-
-            val0 += trow2[x];
-            val1 += trow2[x+1];
-
-            t0 = cvRound(val0*inv_divisor);
-            t1 = cvRound(val1*inv_divisor);
-
-            tdst2[x] = (uchar)t0;
-            tdst2[x+1] = (uchar)t1;
-
-            sumbuf[x] = val0 - trow[x];
-            sumbuf[x+1] = val1 - trow[x+1];
-
-            val0 = sumbuf[x+2];
-            val1 = sumbuf[x+3];
-
-            val0 += trow2[x+2];
-            val1 += trow2[x+3];
-
-            t0 = cvRound(val0*inv_divisor);
-            t1 = cvRound(val1*inv_divisor);
-
-            tdst2[x+2] = (uchar)t0;
-            tdst2[x+3] = (uchar)t1;
-
-            sumbuf[x+2] = val0 - trow[x+2];
-            sumbuf[x+3] = val1 - trow[x+3];
-        }
-
-        if( width_rest )
-        {
-            if( need_copy )
-                CV_COPY( dst, tbuf, width_n, x );
-            else
-                CV_COPY( dst + width_n, tbuf + width_n, CV_MORPH_ALIGN, x );
-        }
-
-        rows[ker_y] = saved_row;
-
-        /* rotate buffer */
-        {
-            int *t = rows[0];
-
-            CV_COPY( rows, rows + 1, ker_height - 1, i );
-            rows[i] = t;
-            crows--;
-            dst += dstStep;
+            s += (double)src[i+ksize] - src[i];
+            dst[i+cn] = s;
         }
     }
-    while( ++y < dst_height );
-
-    roiSize->height = y;
-    state->crows = crows;
-
-    return CV_OK;
 }
 
 
-CvStatus CV_STDCALL
-icvBlur_8u16s_C1R( const uchar* pSrc, int srcStep,
-                   short* dst, int dstStep, CvSize * roiSize,
-                   CvFilterState* state, int stage )
+static void
+icvSumCol_32s8u( const int** src, uchar* dst,
+                 int dst_step, int count, void* params )
 {
-    uchar* src = (uchar*)pSrc;
-    int width = roiSize->width;
-    int src_height = roiSize->height;
-    int dst_height = src_height;
-    int x, y = 0, i;
+#define BLUR_SHIFT 16    
+    CvBoxFilter* state = (CvBoxFilter*)params;
+    int ksize = state->get_kernel_size().height;
+    int i, width = state->get_width();
+    int cn = CV_MAT_CN(state->get_src_type());
+    double scale = state->get_scale();
+    int iscale = cvFloor(scale*(1 << BLUR_SHIFT));
+    int* sum = (int*)state->get_sum_buf();
+    int* _sum_count = state->get_sum_count_ptr();
+    int sum_count = *_sum_count;
 
-    int ker_x = state->ker_x;
-    int ker_y = state->ker_y;
-    int ker_width = state->ker_width;
-    int ker_height = state->ker_height;
-    int ker_right = ker_width - ker_x;
+    width *= cn;
+    src += sum_count;
+    count += ksize - 1 - sum_count;
 
-    int crows = state->crows;
-    int **rows = (int**)(state->rows);
-    short *tbufw = (short*)(state->tbuf);
-    int   *sumbuf = (int*)((char*)state->tbuf + state->buffer_step);
-    int *trow, *trow2;
-
-    int channels = state->channels;
-    int ker_x_n = ker_x * channels;
-    int ker_width_n = ker_width * channels;
-    int ker_right_n = ker_right * channels;
-    int width_n = width * channels;
-
-    int is_small_width = width <= ker_width;
-    int starting_flag = 0;
-    int width_rest = width_n & (CV_MORPH_ALIGN - 1);
-
-    /*if( stage == CV_START + CV_END )
-        stage = CV_WHOLE;*/
-
-    /* initialize cyclic buffer when starting */
-    if( stage == CV_WHOLE || stage == CV_START )
+    for( ; count--; src++ )
     {
-        for( i = 0; i < ker_height; i++ )
-            rows[i] = (int*)(state->buffer + state->buffer_step * i);
-
-        crows = ker_y;
-        if( stage != CV_WHOLE )
-            dst_height -= ker_height - ker_y - 1;
-        starting_flag = 1;
-    }
-
-    if( stage == CV_END )
-        dst_height += ker_height - ker_y - 1;
-
-    dstStep /= sizeof(dst[0]);
-
-    do
-    {
-        int need_copy = is_small_width | (y == 0);
-        uchar *tsrc;
-        int *tdst;
-        short *tdst2;
-        int *saved_row = rows[ker_y];
-
-        /* fill cyclic buffer - horizontal filtering */
-        for( ; crows < ker_height; crows++ )
+        const int* sp = src[0];
+        if( sum_count+1 < ksize )
         {
-            tsrc = src - ker_x_n;
-            tdst = rows[crows];
-
-            if( src_height-- <= 0 )
+            for( i = 0; i <= width - 2; i += 2 )
             {
-                if( stage != CV_WHOLE && stage != CV_END )
-                    break;
-                /* duplicate last row */
-                trow = rows[crows - 1];
-                CV_COPY( tdst, trow, width_n, x );
-                continue;
+                int s0 = sum[i] + sp[i], s1 = sum[i+1] + sp[i+1];
+                sum[i] = s0; sum[i+1] = s1;
             }
 
-            need_copy |= src_height == 0;
+            for( ; i < width; i++ )
+                sum[i] += sp[i];
 
-            if( ker_width > 1 )
-            {
-                uchar* tbuf = (uchar*)tbufw;
-
-                if( need_copy )
-                {
-                    tsrc = tbuf - ker_x_n;
-                    CV_COPY( tbuf, src, width_n, x );
-                }
-                else
-                {
-                    CV_COPY( tbuf - ker_x_n, src - ker_x_n, ker_x_n, x );
-                    CV_COPY( tbuf, src + width_n, ker_right_n, x );
-                }
-
-                {
-                    /* make replication borders */
-                    uchar pix = tsrc[ker_x];
-                    int t0 = 0;
-
-                    CV_SET( tsrc, pix, ker_x, x );
-
-                    pix = tsrc[width + ker_x - 1];
-                    CV_SET( tsrc + width + ker_x, pix, ker_right, x );
-
-                    for( i = 0; i < ker_width_n - 1; i++ )
-                        t0 += tsrc[i];
-
-                    /* horizontal blurring */
-                    for( i = ker_width_n; i < width_n + ker_width_n; i++ )
-                    {
-                        t0 += tsrc[i-1];
-                        tdst[i-ker_width_n] = t0;
-                        t0 -= tsrc[i - ker_width_n];
-                    }
-                }
-
-                if( !need_copy )
-                {
-                    /* restore borders */
-                    CV_COPY( src - ker_x_n, tbuf - ker_x_n, ker_x_n, x );
-                    CV_COPY( src + width_n, tbuf, ker_right_n, x );
-                }
-            }
-            else
-            {
-                CV_COPY( tdst, tsrc + ker_x_n, width_n, x );
-            }
-
-            if( crows < ker_height )
-                src += srcStep;
-        }
-
-        if( starting_flag )
-        {
-            starting_flag = 0;
-
-            for( x = 0; x < width_n; x++ )
-            {
-                int t = rows[ker_y][x];
-                for( i = 0; i < ker_y; i++ ) // copy border
-                    rows[i][x] = t;
-
-                t *= ker_y;
-                for( i = ker_y; i < ker_height - 1; i++ ) // accumulate initial sum
-                    t += rows[i][x];
-                sumbuf[x] = t;
-            }
-        }
-
-        /* vertical convolution */
-        if( crows != ker_height )
-            break;
-
-        tdst2 = dst;
-
-        if( width_rest )
-        {
-            need_copy = width_n < CV_MORPH_ALIGN || y == dst_height - 1;
-
-            if( need_copy )
-                tdst2 = tbufw;
-            else
-                CV_COPY( tbufw + width_n, dst + width_n, CV_MORPH_ALIGN, x );
-        }
-
-        trow = rows[0];
-        trow2 = rows[ker_height-1];
-
-        for( x = 0; x < width_n; x += 4 )
-        {
-            int val0, val1;
-
-            val0 = sumbuf[x];
-            val1 = sumbuf[x+1];
-
-            val0 += trow2[x];
-            val1 += trow2[x+1];
-
-            tdst2[x] = CV_CAST_16S(val0);
-            tdst2[x+1] = CV_CAST_16S(val1);
-
-            sumbuf[x] = val0 - trow[x];
-            sumbuf[x+1] = val1 - trow[x+1];
-
-            val0 = sumbuf[x+2];
-            val1 = sumbuf[x+3];
-
-            val0 += trow2[x+2];
-            val1 += trow2[x+3];
-
-            tdst2[x+2] = CV_CAST_16S(val0);
-            tdst2[x+3] = CV_CAST_16S(val1);
-
-            sumbuf[x+2] = val0 - trow[x+2];
-            sumbuf[x+3] = val1 - trow[x+3];
-        }
-
-        if( width_rest )
-        {
-            if( need_copy )
-                CV_COPY( dst, tbufw, width_n, x );
-            else
-                CV_COPY( dst + width_n, tbufw + width_n, CV_MORPH_ALIGN, x );
-        }
-
-        rows[ker_y] = saved_row;
-
-        /* rotate buffer */
-        {
-            int *t = rows[0];
-
-            CV_COPY( rows, rows + 1, ker_height - 1, i );
-            rows[i] = t;
-            crows--;
-            dst += dstStep;
-        }
-    }
-    while( ++y < dst_height );
-
-    roiSize->height = y;
-    state->crows = crows;
-
-    return CV_OK;
-}
-
-
-CvStatus CV_STDCALL
-icvBlur_32f_CnR( const float* pSrc, int srcStep,
-                 float* dst, int dstStep, CvSize * roiSize,
-                 CvFilterState* state, int stage )
-{
-    float* src = (float*)pSrc;
-    int width = roiSize->width;
-    int src_height = roiSize->height;
-    int dst_height = src_height;
-    int x, y = 0, i;
-
-    int ker_x = state->ker_x;
-    int ker_y = state->ker_y;
-    int ker_width = state->ker_width;
-    int ker_height = state->ker_height;
-    int ker_right = ker_width - ker_x;
-
-    int crows = state->crows;
-    float **rows = (float**)(state->rows);
-    float *tbuf = (float*)(state->tbuf);
-    float *sumbuf = (float*)((char*)state->tbuf + state->buffer_step);
-    float *trow, *trow2;
-
-    int channels = state->channels;
-    int ker_x_n = ker_x * channels;
-    int ker_width_n = ker_width * channels;
-    int ker_right_n = ker_right * channels;
-    int width_n = width * channels;
-
-    int is_small_width = width <= ker_width;
-    int starting_flag = 0;
-    int width_rest = width_n & (CV_MORPH_ALIGN - 1);
-    float scale = (float)(1./state->divisor);
-    int no_scale = fabs(state->divisor - 1) < DBL_EPSILON;
-
-    srcStep /= sizeof(float);
-    dstStep /= sizeof(float);
-
-    if( stage == CV_START + CV_END )
-        stage = CV_WHOLE;
-
-    /* initialize cyclic buffer when starting */
-    if( stage == CV_WHOLE || stage == CV_START )
-    {
-        for( i = 0; i < ker_height; i++ )
-        {
-            rows[i] = (float*)(state->buffer + state->buffer_step * i);
-            for( x = width_n; (x&3) != 0; x++ )
-                rows[i][x] = 0.f;
-        }
-        for( x = width_n; (x&3) != 0; x++ )
-             sumbuf[x] = 0.f;
-
-        crows = ker_y;
-        if( stage != CV_WHOLE )
-            dst_height -= ker_height - ker_y - 1;
-        starting_flag = 1;
-    }
-
-    if( stage == CV_END )
-        dst_height += ker_height - ker_y - 1;
-
-    do
-    {
-        int need_copy = is_small_width | (y == 0);
-        float *tsrc;
-        float *tdst;
-        float *tdst2;
-        float *saved_row = rows[ker_y];
-
-        /* fill cyclic buffer - horizontal filtering */
-        for( ; crows < ker_height; crows++ )
-        {
-            tsrc = src - ker_x_n;
-            tdst = rows[crows];
-
-            if( src_height-- <= 0 )
-            {
-                if( stage != CV_WHOLE && stage != CV_END )
-                    break;
-                /* duplicate last row */
-                trow = rows[crows - 1];
-                CV_COPY( tdst, trow, width_n, x );
-                continue;
-            }
-
-            need_copy |= src_height == 0;
-
-            if( ker_width > 1 )
-            {
-                if( need_copy )
-                {
-                    tsrc = tbuf - ker_x_n;
-                    CV_COPY( tbuf, src, width_n, x );
-                }
-                else
-                {
-                    CV_COPY( tbuf - ker_x_n, src - ker_x_n, ker_x_n, x );
-                    CV_COPY( tbuf, src + width_n, ker_right_n, x );
-                }
-
-                /* make replication borders */
-                for( i = ker_x_n - 1; i >= 0; i-- )
-                    tsrc[i] = tsrc[i + channels];
-                for( i = width_n + ker_x_n; i < width_n + ker_width_n; i++ )
-                    tsrc[i] = tsrc[i - channels];
-
-                /* horizontal blurring */
-                if( channels == 1 )
-                {
-                    float t0 = 0;
-                    for( i = 0; i < ker_width_n - 1; i++ )
-                        t0 += tsrc[i];
-
-                    for( i = ker_width_n; i < width_n + ker_width_n; i++ )
-                    {
-                        t0 += tsrc[i-1];
-                        tdst[i-ker_width_n] = t0;
-                        t0 -= tsrc[i - ker_width_n];
-                    }
-                }
-                else if( channels == 3 )
-                {
-                    float t0 = 0, t1 = 0, t2 = 0;
-                    for( i = 0; i < ker_width_n - 3; i += 3 )
-                    {
-                        t0 += tsrc[i];
-                        t1 += tsrc[i+1];
-                        t2 += tsrc[i+2];
-                    }
-
-                    for( i = ker_width_n; i < width_n + ker_width_n; i += 3 )
-                    {
-                        t0 += tsrc[i-3];
-                        t1 += tsrc[i-2];
-                        t2 += tsrc[i-1];
-                        tdst[i-ker_width_n] = t0;
-                        tdst[i-ker_width_n+1] = t1;
-                        tdst[i-ker_width_n+2] = t2;
-                        t0 -= tsrc[i - ker_width_n];
-                        t1 -= tsrc[i - ker_width_n + 1];
-                        t2 -= tsrc[i - ker_width_n + 2];
-                    }
-                }
-                else            /* channels == 4 */
-                {
-                    float t0 = 0, t1 = 0, t2 = 0, t3 = 0;
-                    for( i = 0; i < ker_width_n - 4; i += 4 )
-                    {
-                        t0 += tsrc[i];
-                        t1 += tsrc[i+1];
-                        t2 += tsrc[i+2];
-                        t3 += tsrc[i+3];
-                    }
-
-                    /* horizontal blurring */
-                    for( i = ker_width_n; i < width_n + ker_width_n; i += 4 )
-                    {
-                        t0 += tsrc[i-4];
-                        t1 += tsrc[i-3];
-                        t2 += tsrc[i-2];
-                        t3 += tsrc[i-1];
-                        tdst[i-ker_width_n] = t0;
-                        tdst[i-ker_width_n+1] = t1;
-                        tdst[i-ker_width_n+2] = t2;
-                        tdst[i-ker_width_n+3] = t3;
-                        t0 -= tsrc[i - ker_width_n];
-                        t1 -= tsrc[i - ker_width_n + 1];
-                        t2 -= tsrc[i - ker_width_n + 2];
-                        t3 -= tsrc[i - ker_width_n + 3];
-                    }
-                }
-
-                if( !need_copy )
-                {
-                    /* restore borders */
-                    CV_COPY( src - ker_x_n, tbuf - ker_x_n, ker_x_n, x );
-                    CV_COPY( src + width_n, tbuf, ker_right_n, x );
-                }
-            }
-            else
-            {
-                CV_COPY( tdst, tsrc + ker_x_n, width_n, x );
-            }
-
-            if( crows < ker_height )
-                src += srcStep;
-        }
-
-        if( starting_flag )
-        {
-            starting_flag = 0;
-
-            for( x = 0; x < width_n; x++ )
-            {
-                float t = rows[ker_y][x];
-                for( i = 0; i < ker_y; i++ ) // copy border
-                    rows[i][x] = t;
-
-                t *= ker_y;
-                for( i = ker_y; i < ker_height - 1; i++ ) // accumulate initial sum
-                    t += rows[i][x];
-                sumbuf[x] = t;
-            }
-        }
-
-        /* vertical convolution */
-        if( crows != ker_height )
-            break;
-
-        tdst2 = dst;
-
-        if( width_rest )
-        {
-            need_copy = width_n < CV_MORPH_ALIGN || y == dst_height - 1;
-
-            if( need_copy )
-                tdst2 = tbuf;
-            else
-                CV_COPY( tbuf + width_n, dst + width_n, CV_MORPH_ALIGN, x );
-        }
-
-        trow = rows[0];
-        trow2 = rows[ker_height-1];
-
-        if( no_scale )
-        {
-            for( x = 0; x < width_n; x += 4 )
-            {
-                float val0, val1;
-
-                val0 = sumbuf[x];
-                val1 = sumbuf[x+1];
-
-                val0 += trow2[x];
-                val1 += trow2[x+1];
-
-                tdst2[x] = (float)val0;
-                tdst2[x+1] = (float)val1;
-
-                sumbuf[x] = val0 - trow[x];
-                sumbuf[x+1] = val1 - trow[x+1];
-
-                val0 = sumbuf[x+2];
-                val1 = sumbuf[x+3];
-
-                val0 += trow2[x+2];
-                val1 += trow2[x+3];
-
-                tdst2[x+2] = (float)val0;
-                tdst2[x+3] = (float)val1;
-
-                sumbuf[x+2] = val0 - trow[x+2];
-                sumbuf[x+3] = val1 - trow[x+3];
-            }
+            sum_count++;
         }
         else
         {
-            for( x = 0; x < width_n; x += 4 )
+            const int* sm = src[-ksize+1];
+            for( i = 0; i <= width - 2; i += 2 )
             {
-                float val0, val1, t0, t1;
-
-                val0 = sumbuf[x];
-                val1 = sumbuf[x+1];
-
-                val0 += trow2[x];
-                val1 += trow2[x+1];
-
-                t0 = val0 * scale;
-                t1 = val1 * scale;
-
-                tdst2[x] = (float)t0;
-                tdst2[x+1] = (float)t1;
-
-                sumbuf[x] = val0 - trow[x];
-                sumbuf[x+1] = val1 - trow[x+1];
-
-                val0 = sumbuf[x+2];
-                val1 = sumbuf[x+3];
-
-                val0 += trow2[x+2];
-                val1 += trow2[x+3];
-
-                t0 = val0 * scale;
-                t1 = val1 * scale;
-
-                tdst2[x+2] = (float)t0;
-                tdst2[x+3] = (float)t1;
-
-                sumbuf[x+2] = val0 - trow[x+2];
-                sumbuf[x+3] = val1 - trow[x+3];
+                int s0 = sum[i] + sp[i], s1 = sum[i+1] + sp[i+1];
+                int t0 = CV_DESCALE(s0*iscale, BLUR_SHIFT), t1 = CV_DESCALE(s1*iscale, BLUR_SHIFT);
+                s0 -= sm[i]; s1 -= sm[i+1];
+                sum[i] = s0; sum[i+1] = s1;
+                dst[i] = (uchar)t0; dst[i+1] = (uchar)t1;
             }
-        }
 
-        if( width_rest )
-        {
-            if( need_copy )
-                CV_COPY( dst, tbuf, width_n, x );
-            else
-                CV_COPY( dst + width_n, tbuf + width_n, CV_MORPH_ALIGN, x );
-        }
-
-        rows[ker_y] = saved_row;
-
-        /* rotate buffer */
-        {
-            float *t = rows[0];
-
-            CV_COPY( rows, rows + 1, ker_height - 1, i );
-            rows[i] = t;
-            crows--;
-            dst += dstStep;
+            for( ; i < width; i++ )
+            {
+                int s0 = sum[i] + sp[i], t0 = CV_DESCALE(s0*iscale, BLUR_SHIFT);
+                sum[i] = s0 - sm[i]; dst[i] = (uchar)t0;
+            }
+            dst += dst_step;
         }
     }
-    while( ++y < dst_height );
 
-    roiSize->height = y;
-    state->crows = crows;
-
-    return CV_OK;
+    *_sum_count = sum_count;
+#undef BLUR_SHIFT
 }
 
 
-CvFilterState* icvBlurInitAlloc( int roiWidth, int depth, int channels, int size )
+static void
+icvSumCol_32s16s( const int** src, short* dst,
+                  int dst_step, int count, void* params )
 {
-    return icvSmoothInitAlloc( roiWidth, (CvDataType)depth, channels,
-                               cvSize(size,size), CV_BLUR_NO_SCALE, 0 );
-}
+    CvBoxFilter* state = (CvBoxFilter*)params;
+    int ksize = state->get_kernel_size().height;
+    int i, width = state->get_width();
+    int cn = CV_MAT_CN(state->get_src_type());
+    int* sum = (int*)state->get_sum_buf();
+    int* _sum_count = state->get_sum_count_ptr();
+    int sum_count = *_sum_count;
 
+    dst_step /= sizeof(dst[0]);
+    width *= cn;
+    src += sum_count;
+    count += ksize - 1 - sum_count;
 
-/****************************************************************************************\
-                                    Gaussian Blur
-\****************************************************************************************/
-
-static CvStatus CV_STDCALL
-icvGaussianBlur_small_8u_CnR( uchar* src, int srcStep,
-                              uchar* dst, int dstStep, CvSize * roiSize,
-                              CvFilterState* state, int stage )
-{
-    int width = roiSize->width;
-    int src_height = roiSize->height;
-    int dst_height = src_height;
-    int x, y = 0, i;
-
-    int ker_width = state->ker_width;
-    int ker_height = state->ker_height;
-    int ker_x = ker_width/2;
-    int ker_y = ker_height/2;
-    int ker_right = ker_width - ker_x;
-
-    int crows = state->crows;
-    int **rows = (int**)(state->rows);
-    uchar *tbuf = (uchar*)(state->tbuf);
-    int *trow = 0;
-
-    int channels = state->channels;
-    int ker_x_n = ker_x * channels;
-    int ker_right_n = ker_right * channels;
-    int ker_width_n = ker_width * channels;
-    int width_n = width * channels;
-
-    int is_small_width = width <= ker_width;
-    int starting_flag = 0;
-    int width_rest = width_n & (CV_MORPH_ALIGN - 1);
-    int rshift = ker_width + ker_height - 2;
-    int delta = 1 << (rshift - 1);
-
-    assert( ker_width <= SMALL_GAUSSIAN_SIZE &&
-            ker_height <= SMALL_GAUSSIAN_SIZE );
-
-    if( stage == CV_START + CV_END )
-        stage = CV_WHOLE;
-
-    /* initialize cyclic buffer when starting */
-    if( stage == CV_WHOLE || stage == CV_START )
+    for( ; count--; src++ )
     {
-        for( i = 0; i < ker_height; i++ )
-            rows[i] = (int*)(state->buffer + state->buffer_step * i);
-
-        crows = ker_y;
-        if( stage != CV_WHOLE )
-            dst_height -= ker_height - ker_y - 1;
-        starting_flag = 1;
-    }
-
-    if( stage == CV_END )
-        dst_height += ker_height - ker_y - 1;
-
-    do
-    {
-        int need_copy = is_small_width | (y == 0);
-        uchar *tsrc;
-        int *tdst;
-        uchar *tdst2;
-        int *saved_row = rows[ker_y];
-
-        /* fill cyclic buffer - horizontal filtering */
-        for( ; crows < ker_height; crows++ )
+        const int* sp = src[0];
+        if( sum_count+1 < ksize )
         {
-            tsrc = src - ker_x_n;
-            tdst = rows[crows];
-
-            if( src_height-- <= 0 )
+            for( i = 0; i <= width - 2; i += 2 )
             {
-                if( stage != CV_WHOLE && stage != CV_END )
-                    break;
-                /* duplicate last row */
-                trow = rows[crows - 1];
-                CV_COPY( tdst, trow, width_n, x );
-                continue;
+                int s0 = sum[i] + sp[i], s1 = sum[i+1] + sp[i+1];
+                sum[i] = s0; sum[i+1] = s1;
             }
 
-            need_copy |= src_height == 0;
+            for( ; i < width; i++ )
+                sum[i] += sp[i];
 
-            if( ker_width > 1 )
-            {
-                if( need_copy )
-                {
-                    tsrc = tbuf - ker_x_n;
-                    CV_COPY( tbuf, src, width_n, x );
-                }
-                else
-                {
-                    CV_COPY( tbuf - ker_x_n, src - ker_x_n, ker_x_n, x );
-                    CV_COPY( tbuf, src + width_n, ker_right_n, x );
-                }
-
-                /* make replication borders */
-                for( i = ker_x_n - 1; i >= 0; i-- )
-                    tsrc[i] = tsrc[i + channels];
-                for( i = width_n + ker_x_n; i < width_n + ker_width_n; i++ )
-                    tsrc[i] = tsrc[i - channels];
-
-                if( channels == 1 )
-                {
-                    /* horizontal blurring */
-                    if( ker_width == 3 )
-                    {
-                        for( i = 0; i < width_n; i++ )
-                            tdst[i] = tsrc[i+1]*2 + tsrc[i] + tsrc[i + 2];
-                    }
-                    else if( ker_width == 5 )
-                    {
-                        for( i = 0; i < width_n; i++ )
-                            tdst[i] = tsrc[i+2]*6 + (tsrc[i+1] + tsrc[i+3])*4 +
-                                      tsrc[i] + tsrc[i+4];
-                    }
-                    else if( ker_width == 7 )
-                    {
-                        for( i = 0; i < width_n; i++ )
-                            tdst[i] = tsrc[i+3]*18 + (tsrc[i+2] + tsrc[i+4])*14 +
-                                (tsrc[i+1] + tsrc[i+5])*7 + (tsrc[i] + tsrc[i+6])*2;
-                    }
-                }
-                else if( channels == 3 )
-                {
-                    /* horizontal blurring */
-                    if( ker_width == 3 )
-                    {
-                        for( i = 0; i < width_n; i += 3 )
-                        {
-                            int t0 = tsrc[i + 3]*2 + tsrc[i] + tsrc[i+6];
-                            int t1 = tsrc[i + 4]*2 + tsrc[i+1] + tsrc[i+7];
-                            int t2 = tsrc[i + 5]*2 + tsrc[i+2] + tsrc[i+8];
-
-                            tdst[i] = t0;
-                            tdst[i+1] = t1;
-                            tdst[i+2] = t2;
-                        }
-                    }
-                    else if( ker_width == 5 )
-                    {
-                        for( i = 0; i < width_n; i += 3 )
-                        {
-                            int t0 = tsrc[i+6]*6 + (tsrc[i+3] + tsrc[i+9])*4 +
-                                     tsrc[i]+tsrc[i+12];
-                            int t1 = tsrc[i+7]*6 + (tsrc[i+4] + tsrc[i+10])*4 +
-                                     tsrc[i+1]+tsrc[i+13];
-                            int t2 = tsrc[i+8]*6 + (tsrc[i+5] + tsrc[i+11])*4 +
-                                     tsrc[i+2]+tsrc[i+14];
-
-                            tdst[i] = t0;
-                            tdst[i+1] = t1;
-                            tdst[i+2] = t2;
-                        }
-                    }
-                    else
-                    {
-                        assert( ker_width == 7 );
-                        for( i = 0; i < width_n; i += 3 )
-                        {
-                            int t0 = tsrc[i+9]*18 + (tsrc[i+6] + tsrc[i+12])*14 +
-                                     (tsrc[i+3]+tsrc[i+15])*7 + (tsrc[i] + tsrc[i+18])*2;
-                            int t1 = tsrc[i+10]*18 + (tsrc[i+7] + tsrc[i+13])*14 +
-                                     (tsrc[i+4]+tsrc[i+16])*7 + (tsrc[i+1] + tsrc[i+19])*2;
-                            int t2 = tsrc[i+11]*18 + (tsrc[i+8] + tsrc[i+14])*14 +
-                                     (tsrc[i+5]+tsrc[i+17])*7 + (tsrc[i+2] + tsrc[i+20])*2;
-
-                            tdst[i] = t0;
-                            tdst[i+1] = t1;
-                            tdst[i+2] = t2;
-                        }
-                    }
-                }
-                else   /* channels == 4 */
-                {
-                    /* horizontal blurring */
-                    if( ker_width == 3 )
-                    {
-                        for( i = 0; i < width_n; i += 4 )
-                        {
-                            int t0 = tsrc[i + 4]*2 + tsrc[i] + tsrc[i+8];
-                            int t1 = tsrc[i + 5]*2 + tsrc[i+1] + tsrc[i+9];
-                            int t2 = tsrc[i + 6]*2 + tsrc[i+2] + tsrc[i+10];
-                            int t3 = tsrc[i + 7]*2 + tsrc[i+3] + tsrc[i+11];
-
-                            tdst[i] = t0;
-                            tdst[i+1] = t1;
-                            tdst[i+2] = t2;
-                            tdst[i+3] = t3;
-                        }
-                    }
-                    else if( ker_width == 5 )
-                    {
-                        for( i = 0; i < width_n; i += 4 )
-                        {
-                            int t0 = tsrc[i+8]*6 + (tsrc[i+4] + tsrc[i+12])*4 +
-                                     tsrc[i]+tsrc[i+16];
-                            int t1 = tsrc[i+9]*6 + (tsrc[i+5] + tsrc[i+13])*4 +
-                                     tsrc[i+1]+tsrc[i+17];
-                            int t2 = tsrc[i+10]*6 + (tsrc[i+6] + tsrc[i+14])*4 +
-                                     tsrc[i+2]+tsrc[i+18];
-                            int t3 = tsrc[i+11]*6 + (tsrc[i+7] + tsrc[i+15])*4 +
-                                     tsrc[i+2]+tsrc[i+19];
-
-                            tdst[i] = t0;
-                            tdst[i+1] = t1;
-                            tdst[i+2] = t2;
-                            tdst[i+3] = t3;
-                        }
-                    }
-                    else
-                    {
-                        assert( ker_width == 7 );
-                        for( i = 0; i < width_n; i += 4 )
-                        {
-                            int t0 = tsrc[i+12]*18 + (tsrc[i+8] + tsrc[i+16])*14 +
-                                     (tsrc[i+4]+tsrc[i+20])*7 + (tsrc[i] + tsrc[i+24])*2;
-                            int t1 = tsrc[i+13]*18 + (tsrc[i+9] + tsrc[i+17])*14 +
-                                     (tsrc[i+5]+tsrc[i+21])*7 + (tsrc[i+1] + tsrc[i+25])*2;
-                            int t2 = tsrc[i+14]*18 + (tsrc[i+10] + tsrc[i+18])*14 +
-                                     (tsrc[i+6]+tsrc[i+22])*7 + (tsrc[i+2] + tsrc[i+26])*2;
-                            int t3 = tsrc[i+15]*18 + (tsrc[i+11] + tsrc[i+19])*14 +
-                                     (tsrc[i+7]+tsrc[i+23])*7 + (tsrc[i+3] + tsrc[i+27])*2;
-
-                            tdst[i] = t0;
-                            tdst[i+1] = t1;
-                            tdst[i+2] = t2;
-                            tdst[i+3] = t3;
-                        }
-                    }
-                }
-
-                if( !need_copy )
-                {
-                    /* restore borders */
-                    CV_COPY( src - ker_x_n, tbuf - ker_x_n, ker_x_n, x );
-                    CV_COPY( src + width_n, tbuf, ker_right_n, x );
-                }
-            }
-            else
-            {
-                CV_COPY( tdst, tsrc + ker_x_n, width_n, x );
-            }
-
-            if( crows < ker_height )
-                src += srcStep;
-        }
-
-        if( starting_flag )
-        {
-            starting_flag = 0;
-            trow = rows[ker_y];
-
-            for( i = 0; i < ker_y; i++ )
-            {
-                tdst = rows[i];
-                CV_COPY( tdst, trow, width_n, x );
-            }
-        }
-
-        /* vertical convolution */
-        if( crows != ker_height )
-            break;
-
-        tdst2 = dst;
-
-        if( width_rest )
-        {
-            need_copy = width_n < CV_MORPH_ALIGN || y == dst_height - 1;
-
-            if( need_copy )
-                tdst2 = tbuf;
-            else
-                CV_COPY( tbuf + width_n, dst + width_n, CV_MORPH_ALIGN, x );
-        }
-
-        trow = rows[ker_y];
-
-        if( ker_height == 1 )
-        {
-            for( x = 0; x < width_n; x += 4 )
-            {
-                int val0, val1, val2, val3;
-
-                val0 = trow[x];
-                val1 = trow[x + 1];
-                val2 = trow[x + 2];
-                val3 = trow[x + 3];
-
-                tdst2[x + 0] = (uchar)((val0 + delta) >> rshift);
-                tdst2[x + 1] = (uchar)((val1 + delta) >> rshift);
-                tdst2[x + 2] = (uchar)((val2 + delta) >> rshift);
-                tdst2[x + 3] = (uchar)((val3 + delta) >> rshift);
-            }
-        }
-        else if( ker_height == 3 )
-        {
-            int *trow1 = rows[0], *trow2 = rows[2];
-
-            for( x = 0; x < width_n; x += 4 )
-            {
-                int val0, val1;
-                val0 = (trow[x]*2 + trow1[x] + trow2[x] + delta) >> rshift;
-                val1 = (trow[x + 1]*2 + trow1[x+1] + trow2[x+1] + delta) >> rshift;
-
-                tdst2[x + 0] = (uchar)val0;
-                tdst2[x + 1] = (uchar)val1;
-
-                val0 = (trow[x + 2]*2 + trow1[x+2] + trow2[x+2] + delta) >> rshift;
-                val1 = (trow[x + 3]*2 + trow1[x+3] + trow2[x+3] + delta) >> rshift;
-
-                tdst2[x + 2] = (uchar)val0;
-                tdst2[x + 3] = (uchar)val1;
-            }
-        }
-        else if( ker_height == 5 )
-        {
-            int *trow1 = rows[0], *trow2 = rows[1],
-                *trow3 = rows[3], *trow4 = rows[4];
-
-            for( x = 0; x < width_n; x++ )
-            {
-                int val0 = (trow[x]*6 + (trow2[x] + trow3[x])*4 +
-                            trow1[x] + trow4[x] + delta) >> rshift;
-                tdst2[x] = (uchar)val0;
-            }
+            sum_count++;
         }
         else
         {
-            int *trow1 = rows[0], *trow2 = rows[1],
-                *trow3 = rows[2], *trow4 = rows[4],
-                *trow5 = rows[5], *trow6 = rows[6];
-
-            for( x = 0; x < width_n; x++ )
+            const int* sm = src[-ksize+1];
+            for( i = 0; i <= width - 2; i += 2 )
             {
-                int val0 = (trow[x]*18 + (trow3[x] + trow4[x])*14 +
-                    (trow2[x] + trow5[x])*7 + (trow1[x] + trow6[x])*2 + delta) >> rshift;
-                tdst2[x] = (uchar)val0;
+                int s0 = sum[i] + sp[i], s1 = sum[i+1] + sp[i+1];
+                dst[i] = (short)s0; dst[i+1] = (short)s1;
+                s0 -= sm[i]; s1 -= sm[i+1];
+                sum[i] = s0; sum[i+1] = s1;
             }
-        }
 
-        if( width_rest )
-        {
-            if( need_copy )
-                CV_COPY( dst, tbuf, width_n, x );
-            else
-                CV_COPY( dst + width_n, tbuf + width_n, CV_MORPH_ALIGN, x );
-        }
-
-        rows[ker_y] = saved_row;
-
-        /* rotate buffer */
-        {
-            int *t = rows[0];
-
-            CV_COPY( rows, rows + 1, ker_height - 1, i );
-            rows[i] = t;
-            crows--;
-            dst += dstStep;
+            for( ; i < width; i++ )
+            {
+                int s0 = sum[i] + sp[i];
+                dst[i] = (short)s0;
+                sum[i] = s0 - sm[i];
+            }
+            dst += dst_step;
         }
     }
-    while( ++y < dst_height );
 
-    roiSize->height = y;
-    state->crows = crows;
-
-    return CV_OK;
+    *_sum_count = sum_count;
 }
 
 
-static CvStatus CV_STDCALL
-icvGaussianBlur_8u_CnR( uchar* src, int srcStep,
-                        uchar* dst, int dstStep, CvSize * roiSize,
-                        CvFilterState* state, int stage )
+static void
+icvSumCol_64f32f( const double** src, float* dst,
+                  int dst_step, int count, void* params )
 {
-    if( state->ker_width <= SMALL_GAUSSIAN_SIZE &&
-        state->ker_height <= SMALL_GAUSSIAN_SIZE &&
-        ICV_X_KERNEL_TYPE(state->kerType) == ICV_DEFAULT_GAUSSIAN_KERNEL )
+    CvBoxFilter* state = (CvBoxFilter*)params;
+    int ksize = state->get_kernel_size().height;
+    int i, width = state->get_width();
+    int cn = CV_MAT_CN(state->get_src_type());
+    double scale = state->get_scale();
+    bool normalized = state->is_normalized();
+    double* sum = (double*)state->get_sum_buf();
+    int* _sum_count = state->get_sum_count_ptr();
+    int sum_count = *_sum_count;
+
+    dst_step /= sizeof(dst[0]);
+    width *= cn;
+    src += sum_count;
+    count += ksize - 1 - sum_count;
+
+    for( ; count--; src++ )
     {
-        return icvGaussianBlur_small_8u_CnR( src, srcStep, dst, dstStep,
-                                             roiSize, state, stage );
-    }
-    else
-    {
-        int width = roiSize->width;
-        int src_height = roiSize->height;
-        int dst_height = src_height;
-        int x, y = 0, i;
-
-        int ker_width = state->ker_width;
-        int ker_height = state->ker_height;
-        int ker_x = ker_width/2;
-        int ker_y = ker_height/2;
-        int ker_right = ker_width - ker_x;
-
-        int crows = state->crows;
-        float **rows = (float**)(state->rows);
-        uchar *tbuf = (uchar*)(state->tbuf);
-        float *trow = 0;
-
-        int channels = state->channels;
-        int ker_x_n = ker_x * channels;
-        int ker_right_n = ker_right * channels;
-        int width_n = width * channels;
-        int ker_width_n = ker_width * channels;
-
-        float* fmaskX = (float*)(state->ker0) + ker_x;
-        float* fmaskY = (float*)(state->ker1) + ker_y;
-        double fmX0 = fmaskX[0], fmY0 = fmaskY[0];
-
-        int is_small_width = width <= ker_width;
-        int starting_flag = 0;
-        int width_rest = width_n & (CV_MORPH_ALIGN - 1);
-
-        if( stage == CV_START + CV_END )
-            stage = CV_WHOLE;
-
-        /* initialize cyclic buffer when starting */
-        if( stage == CV_WHOLE || stage == CV_START )
+        const double* sp = src[0];
+        if( sum_count+1 < ksize )
         {
-            for( i = 0; i < ker_height; i++ )
+            for( i = 0; i <= width - 2; i += 2 )
             {
-                rows[i] = (float*)(state->buffer + state->buffer_step * i);
-                for( x = width_n; (x&3) != 0; x++ )
-                    rows[i][x] = 0.f;
+                assert(fabs(sum[i]) + fabs(sp[i]) < 1e5);
+                double s0 = sum[i] + sp[i], s1 = sum[i+1] + sp[i+1];
+                sum[i] = s0; sum[i+1] = s1;
             }
 
-            crows = ker_y;
-            if( stage != CV_WHOLE )
-                dst_height -= ker_height - ker_y - 1;
-            starting_flag = 1;
+            for( ; i < width; i++ )
+                sum[i] += sp[i];
+
+            sum_count++;
         }
-
-        if( stage == CV_END )
-            dst_height += ker_height - ker_y - 1;
-
-        do
+        else
         {
-            int need_copy = is_small_width | (y == 0);
-            uchar *tsrc;
-            float *tdst;
-            uchar *tdst2;
-            float *saved_row = rows[ker_y];
-
-            /* fill cyclic buffer - horizontal filtering */
-            for( ; crows < ker_height; crows++ )
-            {
-                tsrc = src - ker_x_n;
-                tdst = rows[crows];
-
-                if( src_height-- <= 0 )
+            const double* sm = src[-ksize+1];
+            if( normalized )
+                for( i = 0; i <= width - 2; i += 2 )
                 {
-                    if( stage != CV_WHOLE && stage != CV_END )
-                        break;
-                    /* duplicate last row */
-                    trow = rows[crows - 1];
-                    CV_COPY( tdst, trow, width_n, x );
-                    continue;
+                    double s0 = sum[i] + sp[i], s1 = sum[i+1] + sp[i+1];
+                    double t0 = s0*scale, t1 = s1*scale;
+                    s0 -= sm[i]; s1 -= sm[i+1];
+                    dst[i] = (float)t0; dst[i+1] = (float)t1;
+                    sum[i] = s0; sum[i+1] = s1;
                 }
-
-                need_copy |= src_height == 0;
-
-                if( ker_width > 1 )
-                {
-                    if( need_copy )
-                    {
-                        tsrc = tbuf - ker_x_n;
-                        CV_COPY( tbuf, src, width_n, x );
-                    }
-                    else
-                    {
-                        CV_COPY( tbuf - ker_x_n, src - ker_x_n, ker_x_n, x );
-                        CV_COPY( tbuf, src + width_n, ker_right_n, x );
-                    }
-
-                    /* make replication borders */
-                    for( i = ker_x_n - 1; i >= 0; i-- )
-                        tsrc[i] = tsrc[i + channels];
-                    for( i = width_n + ker_x_n; i < width_n + ker_width_n; i++ )
-                        tsrc[i] = tsrc[i - channels];
-
-                    /* horizontal blurring */
-                    if( channels == 1 )
-                    {
-                        for( i = 0; i < width_n; i++ )
-                        {
-                            int j;
-                            double t0 = CV_8TO32F(tsrc[i + ker_x_n])*fmX0;
-
-                            for( j = 1; j <= ker_x; j++ )
-                                t0 += (CV_8TO32F(tsrc[i+ker_x_n+j]) +
-                                       CV_8TO32F(tsrc[i+ker_x_n-j]))*(double)fmaskX[j];
-
-                            ((float*)tdst)[i] = (float)t0;
-                        }
-                    }
-                    else if( channels == 3 )
-                    {
-                        for( i = 0; i < width_n; i += 3 )
-                        {
-                            int j;
-                            double t0 = CV_8TO32F(tsrc[i + ker_x_n])*fmX0;
-                            double t1 = CV_8TO32F(tsrc[i + ker_x_n + 1])*fmX0;
-                            double t2 = CV_8TO32F(tsrc[i + ker_x_n + 2])*fmX0;
-
-                            for( j = 1; j <= ker_x; j++ )
-                            {
-                                int j3 = j*3;
-                                double m = fmaskX[j];
-                                t0 += (CV_8TO32F(tsrc[i+ker_x_n+j3]) +
-                                       CV_8TO32F(tsrc[i+ker_x_n-j3]))*m;
-                                t1 += (CV_8TO32F(tsrc[i+ker_x_n+j3+1]) +
-                                       CV_8TO32F(tsrc[i+ker_x_n-j3+1]))*m;
-                                t2 += (CV_8TO32F(tsrc[i+ker_x_n+j3+2]) +
-                                       CV_8TO32F(tsrc[i+ker_x_n-j3+2]))*m;
-                            }
-
-                            tdst[i] = (float)t0;
-                            tdst[i+1] = (float)t1;
-                            tdst[i+2] = (float)t2;
-                        }
-                    }
-                    else    /* channels == 4 */
-                    {
-                        for( i = 0; i < width_n; i += 4 )
-                        {
-                            int j;
-                            double t0 = CV_8TO32F(tsrc[i + ker_x_n])*fmX0;
-                            double t1 = CV_8TO32F(tsrc[i + ker_x_n + 1])*fmX0;
-                            double t2 = CV_8TO32F(tsrc[i + ker_x_n + 2])*fmX0;
-                            double t3 = CV_8TO32F(tsrc[i + ker_x_n + 3])*fmX0;
-
-                            for( j = 1; j <= ker_x; j++ )
-                            {
-                                int j4 = j*4;
-                                double m = fmaskX[j];
-                                t0 += (CV_8TO32F(tsrc[i+ker_x_n+j4]) +
-                                       CV_8TO32F(tsrc[i+ker_x_n-j4]))*m;
-                                t1 += (CV_8TO32F(tsrc[i+ker_x_n+j4+1]) +
-                                       CV_8TO32F(tsrc[i+ker_x_n-j4+1]))*m;
-                                t2 += (CV_8TO32F(tsrc[i+ker_x_n+j4+2]) +
-                                       CV_8TO32F(tsrc[i+ker_x_n-j4+2]))*m;
-                                t3 += (CV_8TO32F(tsrc[i+ker_x_n+j4+3]) +
-                                       CV_8TO32F(tsrc[i+ker_x_n-j4+3]))*m;
-                            }
-
-                            tdst[i] = (float)t0;
-                            tdst[i+1] = (float)t1;
-                            tdst[i+2] = (float)t2;
-                            tdst[i+3] = (float)t3;
-                        }
-                    }
-
-                    if( !need_copy )
-                    {
-                        /* restore borders */
-                        CV_COPY( src - ker_x_n, tbuf - ker_x_n, ker_x_n, x );
-                        CV_COPY( src + width_n, tbuf, ker_right_n, x );
-                    }
-                }
-                else
-                {
-                    CV_COPY( tdst, tsrc + ker_x_n, width_n, x );
-                }
-
-                if( crows < ker_height )
-                    src += srcStep;
-            }
-
-            if( starting_flag )
-            {
-                starting_flag = 0;
-                trow = rows[ker_y];
-
-                for( i = 0; i < ker_y; i++ )
-                {
-                    tdst = rows[i];
-                    CV_COPY( tdst, trow, width_n, x );
-                }
-            }
-
-            /* vertical convolution */
-            if( crows != ker_height )
-                break;
-
-            tdst2 = dst;
-
-            if( width_rest )
-            {
-                need_copy = width_n < CV_MORPH_ALIGN || y == dst_height - 1;
-
-                if( need_copy )
-                    tdst2 = tbuf;
-                else
-                    CV_COPY( tbuf + width_n, dst + width_n, CV_MORPH_ALIGN, x );
-            }
-
-            trow = rows[ker_y];
-
-            for( x = 0; x < width_n; x += 4 )
-            {
-                double val0, val1, val2, val3;
-
-                val0 = trow[x]*fmY0;
-                val1 = trow[x + 1]*fmY0;
-                val2 = trow[x + 2]*fmY0;
-                val3 = trow[x + 3]*fmY0;
-
-                for( i = 1; i <= ker_y; i++ )
-                {
-                    float *trow1, *trow2;
-                    double m = fmaskY[i];
-                    trow1 = rows[ker_y - i];
-                    trow2 = rows[ker_y + i];
-                    val0 += (trow1[x] + trow2[x])*m;
-                    val1 += (trow1[x+1] + trow2[x+1])*m;
-                    val2 += (trow1[x+2] + trow2[x+2])*m;
-                    val3 += (trow1[x+3] + trow2[x+3])*m;
-                }
-
-                tdst2[x + 0] = (uchar)cvRound(val0);
-                tdst2[x + 1] = (uchar)cvRound(val1);
-                tdst2[x + 2] = (uchar)cvRound(val2);
-                tdst2[x + 3] = (uchar)cvRound(val3);
-            }
-
-            if( width_rest )
-            {
-                if( need_copy )
-                    CV_COPY( dst, tbuf, width_n, x );
-                else
-                    CV_COPY( dst + width_n, tbuf + width_n, CV_MORPH_ALIGN, x );
-            }
-
-            rows[ker_y] = saved_row;
-
-            /* rotate buffer */
-            {
-                float *t = rows[0];
-
-                CV_COPY( rows, rows + 1, ker_height - 1, i );
-                rows[i] = t;
-                crows--;
-                dst += dstStep;
-            }
-        }
-        while( ++y < dst_height );
-
-        roiSize->height = y;
-        state->crows = crows;
-
-        return CV_OK;
-    }
-}
-
-
-static CvStatus CV_STDCALL
-icvGaussianBlur_32f_CnR( float* src, int srcStep,
-                         float* dst, int dstStep, CvSize * roiSize,
-                         CvFilterState* state, int stage )
-{
-    int width = roiSize->width;
-    int src_height = roiSize->height;
-    int dst_height = src_height;
-    int x, y = 0, i;
-
-    int ker_width = state->ker_width;
-    int ker_height = state->ker_height;
-    int ker_x = ker_width/2;
-    int ker_y = ker_height/2;
-    int ker_right = ker_width - ker_x;
-
-    int crows = state->crows;
-    float **rows = (float**)(state->rows);
-    float *tbuf = (float*)(state->tbuf);
-    float *trow = 0;
-
-    int channels = state->channels;
-    int ker_x_n = ker_x * channels;
-    int ker_right_n = ker_right * channels;
-    int width_n = width * channels;
-    int ker_width_n = ker_width * channels;
-
-    float* fmaskX = (float*)(state->ker0) + ker_x;
-    float* fmaskY = (float*)(state->ker1) + ker_y;
-    double fmX0 = fmaskX[0], fmY0 = fmaskY[0];
-
-    int is_small_width = width <= ker_width;
-    int starting_flag = 0;
-    int width_rest = width_n & (CV_MORPH_ALIGN - 1);
-
-    srcStep /= sizeof(src[0]);
-    dstStep /= sizeof(dst[0]);
-
-    if( stage == CV_START + CV_END )
-        stage = CV_WHOLE;
-
-    /* initialize cyclic buffer when starting */
-    if( stage == CV_WHOLE || stage == CV_START )
-    {
-        for( i = 0; i < ker_height; i++ )
-        {
-            rows[i] = (float*)(state->buffer + state->buffer_step * i);
-            for( x = width_n; (x&3) != 0; x++ )
-                rows[i][x] = 0.f;
-        }
-
-        crows = ker_y;
-        if( stage != CV_WHOLE )
-            dst_height -= ker_height - ker_y - 1;
-        starting_flag = 1;
-    }
-
-    if( stage == CV_END )
-        dst_height += ker_height - ker_y - 1;
-
-    do
-    {
-        int need_copy = is_small_width | (y == 0);
-        float *tsrc;
-        float *tdst;
-        float *tdst2;
-        float *saved_row = rows[ker_y];
-
-        /* fill cyclic buffer - horizontal filtering */
-        for( ; crows < ker_height; crows++ )
-        {
-            tsrc = src - ker_x_n;
-            tdst = rows[crows];
-
-            if( src_height-- <= 0 )
-            {
-                if( stage != CV_WHOLE && stage != CV_END )
-                    break;
-                /* duplicate last row */
-                trow = rows[crows - 1];
-                CV_COPY( tdst, trow, width_n, x );
-                continue;
-            }
-
-            need_copy |= src_height == 0;
-
-            if( ker_width > 1 )
-            {
-                if( need_copy )
-                {
-                    tsrc = tbuf - ker_x_n;
-                    CV_COPY( tbuf, src, width_n, x );
-                }
-                else
-                {
-                    CV_COPY( tbuf - ker_x_n, src - ker_x_n, ker_x_n, x );
-                    CV_COPY( tbuf, src + width_n, ker_right_n, x );
-                }
-
-                /* make replication borders */
-                for( i = ker_x_n - 1; i >= 0; i-- )
-                    tsrc[i] = tsrc[i + channels];
-                for( i = width_n + ker_x_n; i < width_n + ker_width_n; i++ )
-                    tsrc[i] = tsrc[i - channels];
-
-                /* horizontal blurring */
-                if( channels == 1 )
-                {
-                    for( i = 0; i < width_n; i++ )
-                    {
-                        int j;
-                        double t0 = (tsrc[i + ker_x_n])*fmX0;
-
-                        for( j = 1; j <= ker_x; j++ )
-                            t0 += ((tsrc[i+ker_x_n+j]) +
-                                   (tsrc[i+ker_x_n-j]))*(double)fmaskX[j];
-
-                        ((float*)tdst)[i] = (float)t0;
-                    }
-                }
-                else if( channels == 3 )
-                {
-                    for( i = 0; i < width_n; i += 3 )
-                    {
-                        int j;
-                        double t0 = (tsrc[i + ker_x_n])*fmX0;
-                        double t1 = (tsrc[i + ker_x_n + 1])*fmX0;
-                        double t2 = (tsrc[i + ker_x_n + 2])*fmX0;
-
-                        for( j = 1; j <= ker_x; j++ )
-                        {
-                            int j3 = j*3;
-                            double m = fmaskX[j];
-                            t0 += ((tsrc[i+ker_x_n+j3]) +
-                                   (tsrc[i+ker_x_n-j3]))*m;
-                            t1 += ((tsrc[i+ker_x_n+j3+1]) +
-                                   (tsrc[i+ker_x_n-j3+1]))*m;
-                            t2 += ((tsrc[i+ker_x_n+j3+2]) +
-                                   (tsrc[i+ker_x_n-j3+2]))*m;
-                        }
-
-                        tdst[i] = (float)t0;
-                        tdst[i+1] = (float)t1;
-                        tdst[i+2] = (float)t2;
-                    }
-                }
-                else    /* channels == 4 */
-                {
-                    for( i = 0; i < width_n; i += 4 )
-                    {
-                        int j;
-                        double t0 = (tsrc[i + ker_x_n])*fmX0;
-                        double t1 = (tsrc[i + ker_x_n + 1])*fmX0;
-                        double t2 = (tsrc[i + ker_x_n + 2])*fmX0;
-                        double t3 = (tsrc[i + ker_x_n + 3])*fmX0;
-
-                        for( j = 1; j <= ker_x; j++ )
-                        {
-                            int j4 = j*4;
-                            double m = fmaskX[j];
-                            t0 += ((tsrc[i+ker_x_n+j4]) +
-                                   (tsrc[i+ker_x_n-j4]))*m;
-                            t1 += ((tsrc[i+ker_x_n+j4+1]) +
-                                   (tsrc[i+ker_x_n-j4+1]))*m;
-                            t2 += ((tsrc[i+ker_x_n+j4+2]) +
-                                   (tsrc[i+ker_x_n-j4+2]))*m;
-                            t3 += ((tsrc[i+ker_x_n+j4+3]) +
-                                   (tsrc[i+ker_x_n-j4+3]))*m;
-                        }
-
-                        tdst[i] = (float)t0;
-                        tdst[i+1] = (float)t1;
-                        tdst[i+2] = (float)t2;
-                        tdst[i+3] = (float)t3;
-                    }
-                }
-
-                if( !need_copy )
-                {
-                    /* restore borders */
-                    CV_COPY( src - ker_x_n, tbuf - ker_x_n, ker_x_n, x );
-                    CV_COPY( src + width_n, tbuf, ker_right_n, x );
-                }
-            }
             else
+                for( i = 0; i <= width - 2; i += 2 )
+                {
+                    assert(fabs(sum[i]) + fabs(sp[i]) + fabs(sm[i]) < 1e5);
+                    double s0 = sum[i] + sp[i], s1 = sum[i+1] + sp[i+1];
+                    dst[i] = (float)s0; dst[i+1] = (float)s1;
+                    s0 -= sm[i]; s1 -= sm[i+1];
+                    sum[i] = s0; sum[i+1] = s1;
+                }
+
+            for( ; i < width; i++ )
             {
-                CV_COPY( tdst, tsrc + ker_x_n, width_n, x );
+                double s0 = sum[i] + sp[i], t0 = s0*scale;
+                sum[i] = s0 - sm[i]; dst[i] = (float)t0;
             }
-
-            if( crows < ker_height )
-                src += srcStep;
-        }
-
-        if( starting_flag )
-        {
-            starting_flag = 0;
-            trow = rows[ker_y];
-
-            for( i = 0; i < ker_y; i++ )
-            {
-                tdst = rows[i];
-                CV_COPY( tdst, trow, width_n, x );
-            }
-        }
-
-        /* vertical convolution */
-        if( crows != ker_height )
-            break;
-
-        tdst2 = dst;
-
-        if( width_rest )
-        {
-            need_copy = width_n < CV_MORPH_ALIGN || y == dst_height - 1;
-
-            if( need_copy )
-                tdst2 = tbuf;
-            else
-                CV_COPY( tbuf + width_n, dst + width_n, CV_MORPH_ALIGN, x );
-        }
-
-        trow = rows[ker_y];
-
-        for( x = 0; x < width_n; x += 4 )
-        {
-            double val0, val1, val2, val3;
-
-            val0 = trow[x]*fmY0;
-            val1 = trow[x + 1]*fmY0;
-            val2 = trow[x + 2]*fmY0;
-            val3 = trow[x + 3]*fmY0;
-
-            for( i = 1; i <= ker_y; i++ )
-            {
-                float *trow1, *trow2;
-                double m = fmaskY[i];
-                trow1 = rows[ker_y - i];
-                trow2 = rows[ker_y + i];
-                val0 += (trow1[x] + trow2[x])*m;
-                val1 += (trow1[x+1] + trow2[x+1])*m;
-                val2 += (trow1[x+2] + trow2[x+2])*m;
-                val3 += (trow1[x+3] + trow2[x+3])*m;
-            }
-
-            tdst2[x + 0] = (float)val0;
-            tdst2[x + 1] = (float)val1;
-            tdst2[x + 2] = (float)val2;
-            tdst2[x + 3] = (float)val3;
-        }
-
-        if( width_rest )
-        {
-            if( need_copy )
-                CV_COPY( dst, tbuf, width_n, x );
-            else
-                CV_COPY( dst + width_n, tbuf + width_n, CV_MORPH_ALIGN, x );
-        }
-
-        rows[ker_y] = saved_row;
-
-        /* rotate buffer */
-        {
-            float *t = rows[0];
-
-            CV_COPY( rows, rows + 1, ker_height - 1, i );
-            rows[i] = t;
-            crows--;
-            dst += dstStep;
+            dst += dst_step;
         }
     }
-    while( ++y < dst_height );
 
-    roiSize->height = y;
-    state->crows = crows;
-
-    return CV_OK;
+    *_sum_count = sum_count;
 }
 
 
@@ -2033,16 +401,14 @@ icvGaussianBlur_32f_CnR( float* src, int srcStep,
 
 static CvStatus CV_STDCALL
 icvMedianBlur_8u_CnR( uchar* src, int src_step, uchar* dst, int dst_step,
-                      CvSize* roiSize, int* param, int /*stub */ )
+                      CvSize size, int m, int cn )
 {
     #define N  16
     int     zone0[4][N];
     int     zone1[4][N*N];
     int     x, y;
-    int     cn = param[0];
-    int     m = param[1], n2 = m*m/2;
+    int     n2 = m*m/2;
     int     nx = (m + 1)/2 - 1;
-    CvSize  size = *roiSize;
     uchar*  src_max = src + size.height*src_step;
     uchar*  src_right = src + size.width*cn;
 
@@ -2080,24 +446,15 @@ icvMedianBlur_8u_CnR( uchar* src, int src_step, uchar* dst, int dst_step,
                 int p3 = src1[x0], p4 = src1[x1], p5 = src1[x2];
                 int p6 = src2[x0], p7 = src2[x1], p8 = src2[x2];
 
-                CV_MINMAX_8U(p1, p2);
-                CV_MINMAX_8U(p4, p5);
-                CV_MINMAX_8U(p7, p8);
-                CV_MINMAX_8U(p0, p1);
-                CV_MINMAX_8U(p3, p4);
-                CV_MINMAX_8U(p6, p7);
-                CV_MINMAX_8U(p1, p2);
-                CV_MINMAX_8U(p4, p5);
-                CV_MINMAX_8U(p7, p8);
-                CV_MINMAX_8U(p0, p3);
-                CV_MINMAX_8U(p5, p8);
-                CV_MINMAX_8U(p4, p7);
-                CV_MINMAX_8U(p3, p6);
-                CV_MINMAX_8U(p1, p4);
-                CV_MINMAX_8U(p2, p5);
-                CV_MINMAX_8U(p4, p7);
-                CV_MINMAX_8U(p4, p2);
-                CV_MINMAX_8U(p6, p4);
+                CV_MINMAX_8U(p1, p2); CV_MINMAX_8U(p4, p5);
+                CV_MINMAX_8U(p7, p8); CV_MINMAX_8U(p0, p1);
+                CV_MINMAX_8U(p3, p4); CV_MINMAX_8U(p6, p7);
+                CV_MINMAX_8U(p1, p2); CV_MINMAX_8U(p4, p5);
+                CV_MINMAX_8U(p7, p8); CV_MINMAX_8U(p0, p3);
+                CV_MINMAX_8U(p5, p8); CV_MINMAX_8U(p4, p7);
+                CV_MINMAX_8U(p3, p6); CV_MINMAX_8U(p1, p4);
+                CV_MINMAX_8U(p2, p5); CV_MINMAX_8U(p4, p7);
+                CV_MINMAX_8U(p4, p2); CV_MINMAX_8U(p6, p4);
                 CV_MINMAX_8U(p4, p2);
                 dst[x1] = (uchar)p4;
             }
@@ -2109,24 +466,15 @@ icvMedianBlur_8u_CnR( uchar* src, int src_step, uchar* dst, int dst_step,
                 int p6 = src2[x-cn], p7 = src2[x], p8 = src2[x+cn];
                 int t;
 
-                CV_MINMAX_8U(p1, p2);
-                CV_MINMAX_8U(p4, p5);
-                CV_MINMAX_8U(p7, p8);
-                CV_MINMAX_8U(p0, p1);
-                CV_MINMAX_8U(p3, p4);
-                CV_MINMAX_8U(p6, p7);
-                CV_MINMAX_8U(p1, p2);
-                CV_MINMAX_8U(p4, p5);
-                CV_MINMAX_8U(p7, p8);
-                CV_MINMAX_8U(p0, p3);
-                CV_MINMAX_8U(p5, p8);
-                CV_MINMAX_8U(p4, p7);
-                CV_MINMAX_8U(p3, p6);
-                CV_MINMAX_8U(p1, p4);
-                CV_MINMAX_8U(p2, p5);
-                CV_MINMAX_8U(p4, p7);
-                CV_MINMAX_8U(p4, p2);
-                CV_MINMAX_8U(p6, p4);
+                CV_MINMAX_8U(p1, p2); CV_MINMAX_8U(p4, p5);
+                CV_MINMAX_8U(p7, p8); CV_MINMAX_8U(p0, p1);
+                CV_MINMAX_8U(p3, p4); CV_MINMAX_8U(p6, p7);
+                CV_MINMAX_8U(p1, p2); CV_MINMAX_8U(p4, p5);
+                CV_MINMAX_8U(p7, p8); CV_MINMAX_8U(p0, p3);
+                CV_MINMAX_8U(p5, p8); CV_MINMAX_8U(p4, p7);
+                CV_MINMAX_8U(p3, p6); CV_MINMAX_8U(p1, p4);
+                CV_MINMAX_8U(p2, p5); CV_MINMAX_8U(p4, p7);
+                CV_MINMAX_8U(p4, p2); CV_MINMAX_8U(p6, p4);
                 CV_MINMAX_8U(p4, p2);
 
                 dst[x] = (uchar)p4;
@@ -2278,14 +626,9 @@ icvMedianBlur_8u_CnR( uchar* src, int src_step, uchar* dst, int dst_step,
 static CvStatus CV_STDCALL
 icvBilateralFiltering_8u_CnR( uchar* src, int srcStep,
                               uchar* dst, int dstStep,
-                              CvSize* roiSize, int* param, int /*stub*/ )
+                              CvSize size, double sigma_color,
+                              double sigma_space, int channels )
 {
-    CvSize size = *roiSize;
-
-    int channels = param[0];
-    double sigma_color = param[1];
-    double sigma_space = param[2];
-
     double i2sigma_color = 1./(sigma_color*sigma_color);
     double i2sigma_space = 1./(sigma_space*sigma_space);
 
@@ -2508,26 +851,6 @@ icvBilateralFiltering_8u_CnR( uchar* src, int srcStep,
 #undef COLOR_DISTANCE_C3
 }
 
-
-static void icvInitSmoothTab( CvFuncTable* blur_no_scale_tab,
-                              CvFuncTable* blur_tab, CvFuncTable* gaussian_tab,
-                              CvFuncTable* median_tab, CvFuncTable* bilateral_tab )
-{
-    blur_no_scale_tab->fn_2d[CV_8U] = (void*)icvBlur_8u16s_C1R;
-    blur_no_scale_tab->fn_2d[CV_32F] = (void*)icvBlur_32f_CnR;
-
-    blur_tab->fn_2d[CV_8U] = (void*)icvBlur_8u_CnR;
-    blur_tab->fn_2d[CV_32F] = (void*)icvBlur_32f_CnR;
-
-    gaussian_tab->fn_2d[CV_8U] = (void*)icvGaussianBlur_8u_CnR;
-    gaussian_tab->fn_2d[CV_32F] = (void*)icvGaussianBlur_32f_CnR;
-
-    median_tab->fn_2d[CV_8U] = (void*)icvMedianBlur_8u_CnR;
-
-    bilateral_tab->fn_2d[CV_8U] = (void*)icvBilateralFiltering_8u_CnR;
-}
-
-
 //////////////////////////////// IPP smoothing functions /////////////////////////////////
 
 icvFilterMedian_8u_C1R_t icvFilterMedian_8u_C1R_p = 0;
@@ -2548,36 +871,25 @@ typedef CvStatus (CV_STDCALL * CvSmoothFixedIPPFunc)
 //////////////////////////////////////////////////////////////////////////////////////////
 
 CV_IMPL void
-cvSmooth( const void* srcarr, void* dstarr, int smoothtype,
-          int param1, int param2, double param3 )
+cvSmooth( const void* srcarr, void* dstarr, int smooth_type,
+          int param1, int param2, double param3, double param4 )
 {
-    static CvFuncTable smooth_tab[5];
-    static int inittab = 0;
-    CvFilterState *state = 0;
+    CvBoxFilter box_filter;
+    CvSepFilter gaussian_filter;
+
     CvMat* temp = 0;
 
     CV_FUNCNAME( "cvSmooth" );
 
     __BEGIN__;
 
-    CvFilterFunc func = 0;
     int coi1 = 0, coi2 = 0;
     CvMat srcstub, *src = (CvMat*)srcarr;
     CvMat dststub, *dst = (CvMat*)dstarr;
     CvSize size;
-    int type, depth, dsttype;
-    int src_step, dst_step;
-    int nonlin_param[] = { 0, param1, param2 };
-    void* ptr = nonlin_param;
-    double sigma = 0;
-
-    if( !inittab )
-    {
-        icvInitSmoothTab( smooth_tab + CV_BLUR_NO_SCALE, smooth_tab + CV_BLUR,
-                          smooth_tab + CV_GAUSSIAN, smooth_tab + CV_MEDIAN,
-                          smooth_tab + CV_BILATERAL );
-        inittab = 1;
-    }
+    int src_type, dst_type, depth, cn;
+    double sigma1 = 0, sigma2 = 0;
+    bool have_ipp = icvFilterBox_8u_C1R_p != 0;
 
     CV_CALL( src = cvGetMat( src, &srcstub, &coi1 ));
     CV_CALL( dst = cvGetMat( dst, &dststub, &coi2 ));
@@ -2585,89 +897,68 @@ cvSmooth( const void* srcarr, void* dstarr, int smoothtype,
     if( coi1 != 0 || coi2 != 0 )
         CV_ERROR( CV_BadCOI, "" );
 
-    type = CV_MAT_TYPE( src->type );
-    dsttype = CV_MAT_TYPE( dst->type );
-
-    if( smoothtype > 0 && !CV_ARE_TYPES_EQ( src, dst ) ||
-        smoothtype == 0 &&
-        !(type == CV_8UC1 && dsttype == CV_16SC1 ||
-          type == CV_32FC1 && dsttype == CV_32FC1 ))
-        CV_ERROR( CV_StsUnmatchedFormats, "" );
+    src_type = CV_MAT_TYPE( src->type );
+    dst_type = CV_MAT_TYPE( dst->type );
+    depth = CV_MAT_DEPTH(src_type);
+    cn = CV_MAT_CN(src_type);
+    size = cvGetMatSize(src);
 
     if( !CV_ARE_SIZES_EQ( src, dst ))
         CV_ERROR( CV_StsUnmatchedSizes, "" );
 
-    size = cvGetMatSize( src );
+    if( smooth_type != CV_BLUR_NO_SCALE && !CV_ARE_TYPES_EQ( src, dst ))
+        CV_ERROR( CV_StsUnmatchedFormats,
+        "The specified smoothing algorithm requires input and ouput arrays be of the same type" );
 
-    depth = CV_MAT_DEPTH(type);
-    nonlin_param[0] = CV_MAT_CN(type);
-
-    if( (unsigned)smoothtype > CV_BILATERAL )
-        CV_ERROR( CV_StsBadArg, "Unsupported smoothing type" );
-
-    if( (smoothtype == CV_MEDIAN || smoothtype == CV_BILATERAL) &&
-        src->data.ptr == dst->data.ptr )
-        CV_ERROR( CV_StsBadArg,
-        "Inplace operation is not supported for that type of smoothing" );
-
-    if( smoothtype == CV_BILATERAL )
+    if( smooth_type == CV_BLUR || smooth_type == CV_BLUR_NO_SCALE ||
+        smooth_type == CV_GAUSSIAN || smooth_type == CV_MEDIAN )
     {
-        if( param1 < 0 || param2 < 0 )
-            CV_ERROR( CV_StsOutOfRange,
-            "Thresholds in bilaral filtering should not bee negative" );
-        param1 += param1 == 0;
-        param2 += param2 == 0;
-    }
-    else /* simple blurring, gaussian, median */
-    {
-        sigma = param3;
-
         // automatic detection of kernel size from sigma
-        if( smoothtype == CV_GAUSSIAN && param1 == 0 && sigma > 0 )
-            param1 = cvRound(sigma*(depth == CV_8U ? 3 : 4)*2 + 1)|1;
+        if( smooth_type == CV_GAUSSIAN )
+        {
+            sigma1 = param3;
+            sigma2 = param4 ? param4 : param3;
+
+            if( param1 == 0 && sigma1 > 0 )
+                param1 = cvRound(sigma1*(depth == CV_8U ? 3 : 4)*2 + 1)|1;
+            if( param2 == 0 && sigma2 > 0 )
+                param2 = cvRound(sigma2*(depth == CV_8U ? 3 : 4)*2 + 1)|1;
+        }
 
         if( param2 == 0 )
             param2 = size.height == 1 ? 1 : param1;
         if( param1 < 1 || (param1 & 1) == 0 || param2 < 1 || (param2 & 1) == 0 )
             CV_ERROR( CV_StsOutOfRange,
-                "One of aperture dimensions is incorrect (should be >=1 and odd)" );
+                "Both mask width and height must be >=1 and odd" );
 
-        if( param1 == 1 && param2 == 1 && CV_ARE_TYPES_EQ(src,dst) )
+        if( param1 == 1 && param2 == 1 )
         {
-            cvCopy( src, dst );
+            cvConvert( src, dst );
             EXIT;
         }
     }
 
-    src_step = src->step;
-    dst_step = dst->step;
-    if( size.height == 1 )
-        src_step = dst_step = CV_STUB_STEP;
-
-    if( CV_MAT_CN(type) == 2 )
-        CV_ERROR( CV_BadNumChannels, "Unsupported number of channels" );
-
-    if( (smoothtype == CV_BLUR || smoothtype == CV_MEDIAN) && icvFilterBox_8u_C1R_p &&
+    if( have_ipp && (smooth_type == CV_BLUR || smooth_type == CV_MEDIAN) &&
         size.width >= param1 && size.height >= param2 && param1 > 1 && param2 > 1 )
     {
         CvSmoothFixedIPPFunc ipp_median_box_func = 0;
 
-        if( smoothtype == CV_BLUR )
+        if( smooth_type == CV_BLUR )
         {
             ipp_median_box_func =
-                type == CV_8UC1 ? icvFilterBox_8u_C1R_p :
-                type == CV_8UC3 ? icvFilterBox_8u_C3R_p :
-                type == CV_8UC4 ? icvFilterBox_8u_C4R_p :
-                type == CV_32FC1 ? icvFilterBox_32f_C1R_p :
-                type == CV_32FC3 ? icvFilterBox_32f_C3R_p :
-                type == CV_32FC4 ? icvFilterBox_32f_C4R_p : 0;
+                src_type == CV_8UC1 ? icvFilterBox_8u_C1R_p :
+                src_type == CV_8UC3 ? icvFilterBox_8u_C3R_p :
+                src_type == CV_8UC4 ? icvFilterBox_8u_C4R_p :
+                src_type == CV_32FC1 ? icvFilterBox_32f_C1R_p :
+                src_type == CV_32FC3 ? icvFilterBox_32f_C3R_p :
+                src_type == CV_32FC4 ? icvFilterBox_32f_C4R_p : 0;
         }
-        else if( smoothtype == CV_MEDIAN )
+        else if( smooth_type == CV_MEDIAN )
         {
             ipp_median_box_func =
-                type == CV_8UC1 ? icvFilterMedian_8u_C1R_p :
-                type == CV_8UC3 ? icvFilterMedian_8u_C3R_p :
-                type == CV_8UC4 ? icvFilterMedian_8u_C4R_p : 0;
+                src_type == CV_8UC1 ? icvFilterMedian_8u_C1R_p :
+                src_type == CV_8UC3 ? icvFilterMedian_8u_C3R_p :
+                src_type == CV_8UC4 ? icvFilterMedian_8u_C4R_p : 0;
         }
 
         if( ipp_median_box_func )
@@ -2675,15 +966,15 @@ cvSmooth( const void* srcarr, void* dstarr, int smoothtype,
             CvSize el_size = { param1, param2 };
             CvPoint el_anchor = { param1/2, param2/2 };
             int stripe_size = 1 << 14; // the optimal value may depend on CPU cache,
-                                       // overhead of current IPP code etc.
+                                       // overhead of the current IPP code etc.
             const uchar* shifted_ptr;
             int y, dy = 0;
-            int temp_step;
+            int temp_step, dst_step = dst->step;
 
             CV_CALL( temp = icvIPPFilterInit( src, stripe_size, el_size ));
 
             shifted_ptr = temp->data.ptr +
-                el_anchor.y*temp->step + el_anchor.x*CV_ELEM_SIZE(type);
+                el_anchor.y*temp->step + el_anchor.x*CV_ELEM_SIZE(src_type);
             temp_step = temp->step ? temp->step : CV_STUB_STEP;
 
             for( y = 0; y < src->rows; y += dy )
@@ -2696,49 +987,68 @@ cvSmooth( const void* srcarr, void* dstarr, int smoothtype,
             EXIT;
         }
     }
-    else if( smoothtype == CV_GAUSSIAN &&
-             icvFilterBox_8u_C1R_p /* this is to check that IPP is loaded */ &&
-             size.width >= param1*3 && size.height >= param2 && param1 > 1 && param2 > 1 )
+
+    if( smooth_type == CV_BLUR || smooth_type == CV_BLUR_NO_SCALE )
+    {
+        CV_CALL( box_filter.init( src->cols, src_type, dst_type,
+            smooth_type == CV_BLUR, cvSize(param1, param2) ));
+        CV_CALL( box_filter.process( src, dst ));
+    }
+    else if( smooth_type == CV_MEDIAN )
+    {
+        if( depth != CV_8U || cn != 1 && cn != 3 && cn != 4 )
+            CV_ERROR( CV_StsUnsupportedFormat,
+            "Median filter only supports 8uC1, 8uC3 and 8uC4 images" );
+
+        IPPI_CALL( icvMedianBlur_8u_CnR( src->data.ptr, src->step,
+            dst->data.ptr, dst->step, size, param1, cn ));
+    }
+    else if( smooth_type == CV_GAUSSIAN )
     {
         CvSize ksize = { param1, param2 };
         float* kx = (float*)cvStackAlloc( ksize.width*sizeof(kx[0]) );
         float* ky = (float*)cvStackAlloc( ksize.height*sizeof(ky[0]) );
         CvMat KX = cvMat( 1, ksize.width, CV_32F, kx );
         CvMat KY = cvMat( 1, ksize.height, CV_32F, ky );
-        int done = 0;
-
-        icvCalcGaussianKernel( ksize.width, sigma, kx );
-        if( ksize.width != ksize.height )
-            icvCalcGaussianKernel( ksize.height, sigma, ky );
+        
+        CvSepFilter::init_gaussian_kernel( &KX, sigma1 );
+        if( ksize.width != ksize.height || fabs(sigma1 - sigma2) > FLT_EPSILON )
+            CvSepFilter::init_gaussian_kernel( &KY, sigma2 );
         else
             KY.data.fl = kx;
-
-        CV_CALL( done = icvIPPSepFilter( src, dst, &KX, &KY,
+        
+        if( have_ipp && size.width >= param1*3 &&
+            size.height >= param2 && param1 > 1 && param2 > 1 )
+        {
+            int done;
+            CV_CALL( done = icvIPPSepFilter( src, dst, &KX, &KY,
                         cvPoint(ksize.width/2,ksize.height/2)));
-        if( done )
-            EXIT;
-    }
+            if( done )
+                EXIT;
+        }
 
-    if( smoothtype <= CV_GAUSSIAN )
+        CV_CALL( gaussian_filter.init( src->cols, src_type, dst_type, &KX, &KY ));
+        CV_CALL( gaussian_filter.process( src, dst ));
+    }
+    else if( smooth_type == CV_BILATERAL )
     {
-        CV_CALL( state = icvSmoothInitAlloc( src->width, depth < CV_32F ? cv32s : cv32f,
-            CV_MAT_CN(type), cvSize(param1, smoothtype <= CV_GAUSSIAN ? param2 : param1),
-            smoothtype, sigma ));
-        ptr = state;
+        if( param1 < 0 || param2 < 0 )
+            CV_ERROR( CV_StsOutOfRange,
+            "Thresholds in bilaral filtering should not bee negative" );
+        param1 += param1 == 0;
+        param2 += param2 == 0;
+
+        if( depth != CV_8U || cn != 1 && cn != 3 )
+            CV_ERROR( CV_StsUnsupportedFormat,
+            "Bilateral filter only supports 8uC1 and 8uC3 images" );
+
+        IPPI_CALL( icvBilateralFiltering_8u_CnR( src->data.ptr, src->step,
+            dst->data.ptr, dst->step, size, param1, param2, cn ));
     }
-
-    func = (CvFilterFunc)(smooth_tab[smoothtype].fn_2d[depth]);
-
-    if( !func )
-        CV_ERROR( CV_StsUnsupportedFormat, "" );
-
-    IPPI_CALL( func( src->data.ptr, src_step, dst->data.ptr,
-                     dst_step, &size, (CvFilterState*)ptr, 0 ));
 
     __END__;
 
     cvReleaseMat( &temp );
-    icvSmoothFree( &state );
 }
 
 /* End of file. */
