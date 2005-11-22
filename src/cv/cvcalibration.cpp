@@ -1145,6 +1145,7 @@ cvFindExtrinsicCameraParams2( const CvMat* obj_points,
     __END__;
 
     cvReleaseMat( &_M );
+    cvReleaseMat( &_Mxy );
     cvReleaseMat( &_m );
     cvReleaseMat( &_mn );
     cvReleaseMat( &_L );
