@@ -348,8 +348,9 @@ CV_INLINE CvFastDiv cvFastDiv( int divisor )
   ----------------------------------------------
   Using this macro user can declare customized sort function that can be much faster
   than built-in qsort function because of lower overhead on elements
-  comparison and exchange. The macro takes "cmp" macro which semantics is the same
-  as semantics of comparison function passed to qsort function.
+  comparison and exchange. The macro takes less_than (or LT) argument - a macro or function
+  that takes 2 arguments returns non-zero if the first argument should be before the second
+  one in the sorted sequence and zero otherwise.
 
   Example:
 
@@ -359,7 +360,7 @@ CV_INLINE CvFastDiv cvFastDiv( int divisor )
     The code is:
     ------------------------------------------------------------------------------
            #define cmp_pts( pt1, pt2 ) \
-               ((pt1).y - (pt2).y ? (pt1).y - (pt2).y : (pt1).x - (pt2).x)
+               ((pt1).y < (pt2).y || ((pt1).y < (pt2).y && (pt1).x < (pt2).x))
 
            [static] CV_IMPLEMENT_QSORT( icvSortPoints, CvPoint, cmp_pts )
     ------------------------------------------------------------------------------
