@@ -52,6 +52,7 @@
 #define CV_START   1
 #define CV_END     2
 #define CV_MIDDLE  4
+#define CV_ISOLATED_ROI 8
 
 typedef void (*CvRowFilterFunc)( const uchar* src, uchar* dst, void* params );
 typedef void (*CvColumnFilterFunc)( uchar** src, uchar* dst, int dst_step, int count, void* params );
@@ -103,7 +104,7 @@ public:
     */
     virtual int process( const CvMat* _src, CvMat* _dst,
                          CvRect _src_roi=cvRect(0,0,-1,-1),
-                         CvPoint _dst_origin=cvPoint(0,0), int _phase=0 );
+                         CvPoint _dst_origin=cvPoint(0,0), int _flags=0 );
     /* retrieve various parameters of the filtering object */
     int get_src_type() const { return src_type; }
     int get_dst_type() const { return dst_type; }
