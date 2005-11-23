@@ -100,7 +100,7 @@ icvCopyReplicateBorder_8u( const uchar* src, int srcstep, CvSize srcroi,
                            uchar* dst, int dststep, CvSize dstroi,
                            int top, int left, int cn, const uchar* )
 {
-    const isz = (int)sizeof(int);
+    const int isz = (int)sizeof(int);
     int i, j;
 
     if( icvCopyReplicateBorder_8u_C1R_p )
@@ -169,12 +169,12 @@ icvCopyReplicateBorder_8u( const uchar* src, int srcstep, CvSize srcroi,
 }
 
 
-CvStatus CV_STDCALL
+static CvStatus CV_STDCALL
 icvCopyReflect101Border_8u( const uchar* src, int srcstep, CvSize srcroi,
                             uchar* dst, int dststep, CvSize dstroi,
                             int top, int left, int cn )
 {
-    const isz = (int)sizeof(int);
+    const int isz = (int)sizeof(int);
     int i, j, k, t, dj, tab_size, int_mode = 0;
     const int* isrc = (const int*)src;
     int* idst = (int*)dst, *tab;
@@ -307,7 +307,7 @@ icvCopyConstBorder_8u( const uchar* src, int srcstep, CvSize srcroi,
                        uchar* dst, int dststep, CvSize dstroi,
                        int top, int left, int cn, const uchar* value )
 {
-    const isz = (int)sizeof(int);
+    const int isz = (int)sizeof(int);
     int i, j, k;
     if( (cn | srcstep | dststep | (size_t)src | (size_t)dst | (size_t)value) % isz == 0 )
     {
