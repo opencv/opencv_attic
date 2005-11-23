@@ -203,7 +203,7 @@ icvCornerEigenValsVecs( const CvMat* src, CvMat* eigenv, int block_size,
     int aperture_size0 = aperture_size;
     int temp_step = 0, d_step;
     uchar* shifted_ptr = 0;
-    int depth, d_depth, datatype;
+    int depth, d_depth;
     int stage = CV_START;
     CvSobelFixedIPPFunc ipp_sobel_vert = 0, ipp_sobel_horiz = 0;
     CvFilterFixedIPPFunc ipp_scharr_vert = 0, ipp_scharr_horiz = 0;
@@ -212,7 +212,6 @@ icvCornerEigenValsVecs( const CvMat* src, CvMat* eigenv, int block_size,
     CvPoint el_anchor;
     double factorx, factory;
     bool use_ipp = false;
-    CvMat _cov2, *cov2 = &_cov2;
 
     if( block_size < 3 || !(block_size & 1) )
         CV_ERROR( CV_StsOutOfRange, "averaging window size must be an odd number >= 3" );
@@ -223,7 +222,6 @@ icvCornerEigenValsVecs( const CvMat* src, CvMat* eigenv, int block_size,
     
     depth = CV_MAT_DEPTH(src->type);
     d_depth = depth == CV_8U ? CV_16S : CV_32F;
-    datatype = depth == CV_8U ? cv8u : cv32f;
 
     size = cvGetMatSize(src);
     aligned_width = cvAlign(size.width, 4);
@@ -281,7 +279,6 @@ icvCornerEigenValsVecs( const CvMat* src, CvMat* eigenv, int block_size,
     CV_CALL( Dx = cvCreateMat( max_dy, aligned_width, d_depth ));
     CV_CALL( Dy = cvCreateMat( max_dy, aligned_width, d_depth ));
     CV_CALL( cov = cvCreateMat( max_dy + block_size + 1, size.width, CV_32FC3 ));
-    _cov2 = *cov;
     CV_CALL( sqrt_buf = cvCreateMat( 2, size.width, CV_32F ));
     Dx->cols = Dy->cols = size.width;
 
@@ -373,9 +370,8 @@ icvCornerEigenValsVecs( const CvMat* src, CvMat* eigenv, int block_size,
         if( y + stripe_size.height >= size.height )
             stage = stage & CV_START ? CV_START + CV_END : CV_END;
 
-        cov->rows = stripe_size.height;
-        stripe_size.height = blur_filter.process(cov,cov2,
-            cvRect(0,0,-1,-1),cvPoint(0,0),stage);
+        stripe_size.height = blur_filter.process(cov,cov,
+            cvRect(0,0,-1,stripe_size.height),cvPoint(0,0),stage+CV_ISOLATED_ROI);
 
         if( op_type == ICV_MINEIGENVAL )
             icvCalcMinEigenVal( cov->data.fl, cov->step,
@@ -503,7 +499,7 @@ cvPreCornerDetect( const void* srcarr, void* dstarr, int aperture_size )
     int i, j, y, dst_y = 0, max_dy, delta = 0;
     int temp_step = 0, d_step;
     uchar* shifted_ptr = 0;
-    int depth, d_depth, datatype;
+    int depth, d_depth;
     int stage = CV_START;
     CvSobelFixedIPPFunc ipp_sobel_vert = 0, ipp_sobel_horiz = 0,
                         ipp_sobel_vert_second = 0, ipp_sobel_horiz_second = 0,
@@ -535,7 +531,6 @@ cvPreCornerDetect( const void* srcarr, void* dstarr, int aperture_size )
     
     depth = CV_MAT_DEPTH(src->type);
     d_depth = depth == CV_8U ? CV_16S : CV_32F;
-    datatype = depth == CV_8U ? cv8u : cv32f;
 
     size = cvGetMatSize(src);
     aligned_width = cvAlign(size.width, 4);
