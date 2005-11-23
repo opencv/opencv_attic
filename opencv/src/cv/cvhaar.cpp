@@ -44,6 +44,10 @@
 #include "_cv.h"
 #include <stdio.h>
 
+#ifdef _OPENMP
+#include "omp.h"
+#endif
+
 /* these settings affect the quality of detection: change with care */
 #define CV_ADJUST_FEATURES 1
 #define CV_ADJUST_WEIGHTS  0
@@ -191,10 +195,6 @@ icvCreateHidHaarClassifierCascade( CvHaarClassifierCascade* cascade )
     CvHidHaarTreeNode* haar_node_ptr;
     CvSize orig_window_size;
     int has_tilted_features = 0;
-    int can_use_ipp = icvHaarClassifierInitAlloc_32f_p != 0 &&
-                      icvHaarClassifierFree_32f_p != 0 &&
-                      icvApplyHaarClassifier_32s32f_C1R_p != 0 &&
-                      icvRectStdDev_32s32f_C1R_p != 0;
     int max_count = 0;
 
     if( !CV_IS_HAAR_CLASSIFIER(cascade) )
@@ -339,7 +339,16 @@ icvCreateHidHaarClassifierCascade( CvHaarClassifierCascade* cascade )
         }
     }
 
-    can_use_ipp &= !out->has_tilted_features && !out->is_tree && out->is_stump_based;
+    //
+    // NOTE: Currently, OpenMP is implemented and IPP modes are incompatible.
+    // 
+#ifndef _OPENMP
+    {
+    int can_use_ipp = icvHaarClassifierInitAlloc_32f_p != 0 &&
+        icvHaarClassifierFree_32f_p != 0 &&
+                      icvApplyHaarClassifier_32s32f_C1R_p != 0 &&
+                      icvRectStdDev_32s32f_C1R_p != 0 &&
+                      !out->has_tilted_features && !out->is_tree && out->is_stump_based;
 
     if( can_use_ipp )
     {
@@ -392,6 +401,8 @@ icvCreateHidHaarClassifierCascade( CvHaarClassifierCascade* cascade )
             cvFree( (void**)&out->ipp_stages );
         }
     }
+    }
+#endif
 
     cascade->hid_cascade = out;
     assert( (char*)haar_node_ptr - (char*)out <= datasize );
@@ -438,7 +449,7 @@ cvSetImagesForHaarClassifierCascade( CvHaarClassifierCascade* _cascade,
     CvMat tilted_stub, *tilted = (CvMat*)_tilted_sum;
     CvHidHaarClassifierCascade* cascade;
     int coi0 = 0, coi1 = 0;
-    int i, j, k, l;
+    int i;
     CvRect equ_rect;
     double weight_scale;
 
@@ -511,8 +522,14 @@ cvSetImagesForHaarClassifierCascade( CvHaarClassifierCascade* _cascade,
 
     /* init pointers in haar features according to real window size and
        given image pointers */
+    {
+#ifdef _OPENMP
+    int max_threads = omp_get_num_procs();
+    #pragma omp parallel for num_threads(max_threads), schedule(dynamic) 
+#endif // _OPENMP
     for( i = 0; i < _cascade->count; i++ )
     {
+        int j, k, l;
         for( j = 0; j < cascade->stage_classifier[i].count; j++ )
         {
             for( l = 0; l < cascade->stage_classifier[i].classifier[j].count; l++ )
@@ -646,6 +663,7 @@ cvSetImagesForHaarClassifierCascade( CvHaarClassifierCascade* _cascade,
                 hidfeature->rect[0].weight = (float)(-sum0/area0);
             } /* l */
         } /* j */
+    }
     }
 
     __END__;
@@ -847,7 +865,9 @@ cvHaarDetectObjects( const CvArr* _img,
                      CvMemStorage* storage, double scale_factor,
                      int min_neighbors, int flags, CvSize min_size )
 {
+    #define MAX_MAX_THREADS 128
     int split_stage = 2;
+
     CvMat stub, *img = (CvMat*)_img;
     CvMat *temp = 0, *sum = 0, *tilted = 0, *sqsum = 0, *norm_img = 0, *sumcanny = 0, *img_small = 0;
     CvSeq* seq = 0;
@@ -856,13 +876,19 @@ cvHaarDetectObjects( const CvArr* _img,
     CvSeq* result_seq = 0;
     CvMemStorage* temp_storage = 0;
     CvAvgComp* comps = 0;
+    int i;
+    
+#ifdef _OPENMP
+    CvSeq* seq_thread[MAX_MAX_THREADS] = {0};
+    int max_threads = 0;
+#endif
     
     CV_FUNCNAME( "cvHaarDetectObjects" );
 
     __BEGIN__;
 
     double factor;
-    int i, npass = 2, coi;
+    int npass = 2, coi;
     int do_canny_pruning = flags & CV_HAAR_DO_CANNY_PRUNING;
 
     if( !CV_IS_HAAR_CLASSIFIER(cascade) )
@@ -882,6 +908,18 @@ cvHaarDetectObjects( const CvArr* _img,
     CV_CALL( sum = cvCreateMat( img->rows + 1, img->cols + 1, CV_32SC1 ));
     CV_CALL( sqsum = cvCreateMat( img->rows + 1, img->cols + 1, CV_64FC1 ));
     CV_CALL( temp_storage = cvCreateChildMemStorage( storage ));
+
+#ifdef _OPENMP
+    max_threads = omp_get_num_procs();
+    max_threads = MIN( max_threads, MAX_MAX_THREADS );
+    for( i = 0; i < max_threads; i++ )
+    {
+        CvMemStorage* temp_storage_thread;
+        CV_CALL( temp_storage_thread = cvCreateMemStorage(0));
+        CV_CALL( seq_thread[i] = cvCreateSeq( 0, sizeof(CvSeq),
+                        sizeof(CvRect), temp_storage_thread ));
+    }
+#endif
 
     if( !cascade->hid_cascade )
         CV_CALL( icvCreateHidHaarClassifierCascade(cascade) );
@@ -1056,11 +1094,9 @@ cvHaarDetectObjects( const CvArr* _img,
 
             for( pass = 0; pass < npass; pass++ )
             {
-    #ifdef _OPENMP
-    #pragma omp parallel for shared(cascade, stop_height, seq, ystep, temp, \
-        win_size, pass, npass, sum, p0, p1, p2, p3, pq0, pq1, pq2, pq3, stage_offset)
-    #endif // _OPENMP
-
+#ifdef _OPENMP
+    #pragma omp parallel for num_threads(max_threads), schedule(dynamic)
+#endif
                 for( int _iy = 0; _iy < stop_height; _iy++ )
                 {
                     int iy = cvRound(_iy*ystep);
@@ -1090,9 +1126,6 @@ cvHaarDetectObjects( const CvArr* _img,
                             }
 
                             result = cvRunHaarClassifierCascade( cascade, cvPoint(ix,iy), 0 );
-    #ifdef _OPENMP
-    #pragma omp critical
-    #endif
                             if( result > 0 )
                             {
                                 if( pass < npass - 1 )
@@ -1100,7 +1133,11 @@ cvHaarDetectObjects( const CvArr* _img,
                                 else
                                 {
                                     CvRect rect = cvRect(ix,iy,win_size.width,win_size.height);
+#ifndef _OPENMP
                                     cvSeqPush( seq, &rect );
+#else
+                                    cvSeqPush( seq_thread[omp_get_thread_num()], &rect );
+#endif
                                 }
                             }
                             if( result < 0 )
@@ -1110,15 +1147,16 @@ cvHaarDetectObjects( const CvArr* _img,
                         {
                             int result = cvRunHaarClassifierCascade( cascade, cvPoint(ix,iy),
                                                                      stage_offset );
-    #ifdef _OPENMP
-    #pragma omp critical
-    #endif
                             if( result > 0 )
                             {
                                 if( pass == npass - 1 )
                                 {
                                     CvRect rect = cvRect(ix,iy,win_size.width,win_size.height);
+#ifndef _OPENMP
                                     cvSeqPush( seq, &rect );
+#else
+                                    cvSeqPush( seq_thread[omp_get_thread_num()], &rect );
+#endif
                                 }
                             }
                             else
@@ -1131,6 +1169,18 @@ cvHaarDetectObjects( const CvArr* _img,
             }
         }
     }
+
+#ifdef _OPENMP
+	// gather the results
+	for( i = 0; i < max_threads; i++ )
+	{
+		CvSeq* s = seq_thread[i];
+        int j, total = s->total;
+        CvSeqBlock* b = s->first;
+        for( j = 0; j < total; j += b->count, b = b->next )
+            cvSeqPushMulti( seq, b->data, b->count );
+	}
+#endif
 
     if( min_neighbors != 0 )
     {
@@ -1203,6 +1253,14 @@ cvHaarDetectObjects( const CvArr* _img,
     }
 
     __END__;
+
+#ifdef _OPENMP
+	for( i = 0; i < max_threads; i++ )
+	{
+		if( seq_thread[i] )
+            cvReleaseMemStorage( &seq_thread[i]->storage );
+	}
+#endif
 
     cvReleaseMemStorage( &temp_storage );
     cvReleaseMat( &sum );
