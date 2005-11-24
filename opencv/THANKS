@@ -35,7 +35,7 @@ Rodyushkin, Konstantin  Intel Corp.                applications OpenCV to 3dFace
 Schaefer, Dirk          MD-Mathematische Dienste GmbH  original code for Bayer->RGB pattern conversion
 Schiele, Bernt          ETH Zurich                 Haar classifier for fullbody, lowerbody, upperbody detection.
 Veretennikov, Eugene    Intel Corp.                Testing, comp. geometry functions
-Vezhnevets, Vladimir    ???                        New algorithm for chessboard detection
+Vezhnevets, Vladimir    MSU Graphics and Media Lab New algorithm for chessboard detection
 Wayne W. Cheng          SoftIntegration            Ch C/C++ intepreter, OpenCV Ch toolbox (proposal + SDK)
 Wood, Travis            ???                        Patches for highgui (video capturing in Linux)
 
