@@ -51,10 +51,8 @@
 #endif
 
 
-
-CV_IMPL CvCapture* cvCaptureFromFile_VFW (const char* filename);
-CV_IMPL CvCapture* cvCaptureFromCAM_VFW  (int index);
-
+CvCapture* cvCaptureFromFile_VFW (const char* filename);
+CvCapture* cvCaptureFromCAM_VFW  (int index);
 
 /********************* Capturing video from AVI via VFW ************************/
 
@@ -267,7 +265,7 @@ static CvCaptureVTable captureAVI_VFW_vtable =
 };
 
 
-CV_IMPL CvCapture* cvCaptureFromFile_VFW (const char* filename)
+CvCapture* cvCaptureFromFile_VFW (const char* filename)
 {
     CvCaptureAVI_VFW* capture = 0;
 
