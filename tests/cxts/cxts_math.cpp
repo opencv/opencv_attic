@@ -2879,6 +2879,9 @@ void cvTsMinMaxFilter( const CvMat* a, CvMat* b, const IplConvKernel* kernel, in
                 offset[k++] = (i - kernel->anchorY)*a_step + (j - kernel->anchorX)*cn;
         }
 
+    if( k == 0 )
+        offset[k++] = 0;
+
     ker_size = k;
 
     a_data = a->data.ptr + kernel->anchorY*a->step + kernel->anchorX*CV_ELEM_SIZE(a->type);
