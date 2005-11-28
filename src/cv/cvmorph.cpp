@@ -649,7 +649,6 @@ cvCreateStructuringElementEx( int cols, int rows,
 {
     IplConvKernel *element = 0;
     int i, size = rows * cols;
-    int *vals;
     int element_size = sizeof(*element) + size*sizeof(element->values[0]);
 
     CV_FUNCNAME( "cvCreateStructuringElementEx" );
@@ -673,7 +672,7 @@ cvCreateStructuringElementEx( int cols, int rows,
     element->anchorX = anchorX;
     element->anchorY = anchorY;
     element->nShiftR = shape < CV_SHAPE_ELLIPSE ? shape : CV_SHAPE_CUSTOM;
-    element->values = vals = (int*)(element + 1);
+    element->values = (int*)(element + 1);
 
     if( shape == CV_SHAPE_CUSTOM )
     {
@@ -736,10 +735,10 @@ icvMorphOp( const void* srcarr, void* dstarr, IplConvKernel* element,
     CvMat srcstub, *src = (CvMat*)srcarr;
     CvMat dststub, *dst = (CvMat*)dstarr;
     CvMat el_hdr, *el = 0;
-    CvSize size, el_size;
+    CvSize el_size;
     CvPoint el_anchor;
     int el_shape;
-    int type, depth, cn;
+    int type;
 
     if( !CV_IS_MAT(src) )
         CV_CALL( src = cvGetMat( src, &srcstub, &coi1 ));
@@ -773,8 +772,6 @@ icvMorphOp( const void* srcarr, void* dstarr, IplConvKernel* element,
         CV_ERROR( CV_BadCOI, "" );
 
     type = CV_MAT_TYPE( src->type );
-    depth = CV_MAT_DEPTH( type );
-    cn = CV_MAT_CN( type );
 
     if( iterations == 0 || (element && element->nCols == 1 && element->nRows == 1))
     {
@@ -899,7 +896,6 @@ icvMorphOp( const void* srcarr, void* dstarr, IplConvKernel* element,
     CV_CALL( morphology.init( mop, src->cols, src->type,
                     el_shape, el, el_size, el_anchor ));
 
-    size = cvGetMatSize( src );
     for( i = 0; i < iterations; i++ )
     {
         CV_CALL( morphology.process( src, dst ));

@@ -148,6 +148,7 @@ cvCreateMatHeader( int rows, int cols, int type )
     arr->cols = cols;
     arr->data.ptr = 0;
     arr->refcount = 0;
+    arr->hdr_refcount = 1;
 
     icvCheckHuge( arr );
 
@@ -186,6 +187,7 @@ cvInitMatHeader( CvMat* arr, int rows, int cols,
     arr->cols = cols;
     arr->data.ptr = (uchar*)data;
     arr->refcount = 0;
+    arr->hdr_refcount = 0;
 
     mask = (arr->rows <= 1) - 1;
     pix_size = CV_ELEM_SIZE(type);
@@ -366,6 +368,7 @@ cvCreateMatNDHeader( int dims, const int* sizes, int type )
     CV_CALL( arr = (CvMatND*)cvAlloc( sizeof(*arr) ));
     
     CV_CALL( cvInitMatNDHeader( arr, dims, sizes, type, 0 ));
+    arr->hdr_refcount = 1;
 
     __END__;
 
@@ -446,6 +449,7 @@ cvGetMatND( const CvArr* arr, CvMatND* matnd, int* coi )
 
         matnd->data.ptr = mat->data.ptr;
         matnd->refcount = 0;
+        matnd->hdr_refcount = 0;
         matnd->type = mat->type;
         matnd->dims = 2;
         matnd->dim[0].size = mat->rows;
@@ -665,6 +669,7 @@ cvCreateSparseMat( int dims, const int* sizes, int type )
     arr->type = CV_SPARSE_MAT_MAGIC_VAL | type;
     arr->dims = dims;
     arr->refcount = 0;
+    arr->hdr_refcount = 1;
     memcpy( arr->size, sizes, dims*sizeof(sizes[0]));
 
     arr->valoffset = (int)cvAlign(sizeof(CvSparseNode), pix_size1);
@@ -1556,6 +1561,7 @@ cvGetRows( const CvArr* arr, CvMat* submat,
     submat->type = (mat->type | (submat->step == 0 ? CV_MAT_CONT_FLAG : 0)) &
                    (delta_row != 1 ? ~CV_MAT_CONT_FLAG : -1);
     submat->refcount = 0;
+    submat->hdr_refcount = 0;
     res = submat;
     }
     
@@ -1603,6 +1609,7 @@ cvGetCols( const CvArr* arr, CvMat* submat, int start_col, int end_col )
     submat->type = mat->type & (submat->step && submat->cols < mat->cols ?
                                 ~CV_MAT_CONT_FLAG : -1);
     submat->refcount = 0;
+    submat->hdr_refcount = 0;
     res = submat;
     }
     
@@ -1672,6 +1679,7 @@ cvGetDiag( const CvArr* arr, CvMat* submat, int diag )
     else
         submat->type |= CV_MAT_CONT_FLAG;
     submat->refcount = 0;
+    submat->hdr_refcount = 0;
     res = submat;
     
     __END__;
@@ -2845,6 +2853,7 @@ cvGetMat( const CvArr* array, CvMat* mat,
             size2 = matnd->dims == 1 ? 1 : matnd->dim[1].size;
 
         mat->refcount = 0;
+        mat->hdr_refcount = 0;
         mat->data.ptr = matnd->data.ptr;
         mat->rows = size1;
         mat->cols = size2;
@@ -2911,13 +2920,17 @@ cvReshapeMatND( const CvArr* arr,
         CvMat* mat = (CvMat*)arr;
         CvMat* header = (CvMat*)_header;
         int* refcount = 0;
+        int  hdr_refcount = 0;
         int  total_width, new_rows, cn;
 
         if( sizeof_header != sizeof(CvMat))
             CV_ERROR( CV_StsBadArg, "The header should be CvMat" );
 
         if( mat == header )
+        {
             refcount = mat->refcount;
+            hdr_refcount = mat->hdr_refcount;
+        }
         else if( !CV_IS_MAT( mat ))
             CV_CALL( mat = cvGetMat( mat, header, &coi, 1 ));
 
@@ -2965,6 +2978,7 @@ cvReshapeMatND( const CvArr* arr,
         header->step = header->cols * CV_ELEM_SIZE(mat->type);
         header->step &= new_rows > 1 ? -1 : 0;
         header->refcount = refcount;
+        header->hdr_refcount = hdr_refcount;
     }
     else
     {
@@ -2992,6 +3006,7 @@ cvReshapeMatND( const CvArr* arr,
             {
                 memcpy( header, mat, sizeof(*header));
                 header->refcount = 0;
+                header->hdr_refcount = 0;
             }
 
             header->dim[header->dims-1].size = new_size;
@@ -3037,7 +3052,10 @@ cvReshapeMatND( const CvArr* arr,
                 "Number of elements in the original and reshaped array is different" );
 
             if( header != mat )
+            {
                 header->refcount = 0;
+                header->hdr_refcount = 0;
+            }
 
             header->dims = new_dims;
             header->type = mat->type;
@@ -3096,6 +3114,7 @@ cvReshape( const CvArr* array, CvMat* header,
     {
         *header = *mat;
         header->refcount = 0;
+        header->hdr_refcount = 0;
     }
 
     total_width = mat->cols * CV_MAT_CN( mat->type );

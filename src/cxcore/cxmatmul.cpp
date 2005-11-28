@@ -1037,7 +1037,6 @@ cvGEMM( const CvArr* Aarr, const CvArr* Barr, double alpha,
 
         if( blas_func )
         {
-            CvComplex64f _alpha, _beta;
             const char* transa = flags & CV_GEMM_A_T ? "t" : "n";
             const char* transb = flags & CV_GEMM_B_T ? "t" : "n";
             int lda, ldb, ldd;
@@ -1055,18 +1054,26 @@ cvGEMM( const CvArr* Aarr, const CvArr* Barr, double alpha,
 
             if( CV_MAT_DEPTH(type) == CV_32F )
             {
+                CvComplex32f _alpha, _beta;
+                
                 lda = A->step/sizeof(float);
                 ldb = b_step/sizeof(float);
                 ldd = D->step/sizeof(float);
-                ((CvComplex32f&)_alpha).re = (float)alpha;
-                ((CvComplex32f&)_alpha).im = 0;
-                ((CvComplex32f&)_beta).re = C->data.ptr ? (float)beta : 0;
-                ((CvComplex32f&)_beta).im = 0;
+                _alpha.re = (float)alpha;
+                _alpha.im = 0;
+                _beta.re = C->data.ptr ? (float)beta : 0;
+                _beta.im = 0;
                 if( CV_MAT_CN(type) == 2 )
                     lda /= 2, ldb /= 2, ldd /= 2;
+
+                blas_func( transb, transa, &d_size.width, &d_size.height, &len,
+                       &_alpha, B->data.ptr, &ldb, A->data.ptr, &lda,
+                       &_beta, D->data.ptr, &ldd );
             }
             else
             {
+                CvComplex64f _alpha, _beta;
+                
                 lda = A->step/sizeof(double);
                 ldb = b_step/sizeof(double);
                 ldd = D->step/sizeof(double);
@@ -1076,11 +1083,11 @@ cvGEMM( const CvArr* Aarr, const CvArr* Barr, double alpha,
                 _beta.im = 0;
                 if( CV_MAT_CN(type) == 2 )
                     lda /= 2, ldb /= 2, ldd /= 2;
-            }
 
-            blas_func( transb, transa, &d_size.width, &d_size.height, &len,
+                blas_func( transb, transa, &d_size.width, &d_size.height, &len,
                        &_alpha, B->data.ptr, &ldb, A->data.ptr, &lda,
                        &_beta, D->data.ptr, &ldd );
+            }
         }
         else if( d_size.height <= block_lin_size/2 || d_size.width <= block_lin_size/2 || len <= 10 ||
             d_size.width <= block_lin_size && d_size.height <= block_lin_size && len <= block_lin_size )
@@ -1810,10 +1817,10 @@ cvTransform( const CvArr* srcarr, CvArr* dstarr,
                             ltab[j*cn + i] = CV_CAST_8U(t);
                         }
                     }
-                    lut_func = cn == 1 ? icvLUT_Transform8u_8u_C1R :
-                               cn == 2 ? icvLUT_Transform8u_8u_C2R :
-                               cn == 3 ? icvLUT_Transform8u_8u_C3R :
-                               icvLUT_Transform8u_8u_C4R;
+                    lut_func = cn == 1 ? (CvLUT_TransformFunc)icvLUT_Transform8u_8u_C1R :
+                               cn == 2 ? (CvLUT_TransformFunc)icvLUT_Transform8u_8u_C2R :
+                               cn == 3 ? (CvLUT_TransformFunc)icvLUT_Transform8u_8u_C3R :
+                               (CvLUT_TransformFunc)icvLUT_Transform8u_8u_C4R;
                 }
                 else
                     diag_func = (CvDiagTransformFunc)(diag_transform_tab.fn_2d[type]);
@@ -1924,8 +1931,9 @@ icvPerspectiveTransform_##flavor##_C2R( const arrtype* src, int srcstep,        
 {                                                                                       \
     int i;                                                                              \
     size.width *= 2;                                                                    \
+    srcstep /= sizeof(src[0]); dststep /= sizeof(dst[0]);                               \
                                                                                         \
-    for( ; size.height--; (char*&)src += srcstep, (char*&)dst += dststep )              \
+    for( ; size.height--; src += srcstep, dst += dststep )                              \
     {                                                                                   \
         for( i = 0; i < size.width; i += 2 )                                            \
         {                                                                               \
@@ -1958,8 +1966,9 @@ icvPerspectiveTransform_##flavor##_C3R( const arrtype* src, int srcstep,        
 {                                                                                       \
     int i;                                                                              \
     size.width *= 3;                                                                    \
+    srcstep /= sizeof(src[0]); dststep /= sizeof(dst[0]);                               \
                                                                                         \
-    for( ; size.height--; (char*&)src += srcstep, (char*&)dst += dststep )              \
+    for( ; size.height--; src += srcstep, dst += dststep )                              \
     {                                                                                   \
         for( i = 0; i < size.width; i += 3 )                                            \
         {                                                                               \
@@ -2171,10 +2180,10 @@ icvMulAddC_##flavor( const arrtype* src1, int srcstep1,                     \
 {                                                                           \
     entry(scalartype);                                                      \
     size.width *= (cn);                                                     \
+    srcstep1 /= sizeof(src1[0]); srcstep2 /= sizeof(src2[0]);               \
+    dststep /= sizeof(dst[0]);                                              \
                                                                             \
-    for( ; size.height--; (char*&)src1 += srcstep1,                         \
-                          (char*&)src2 += srcstep2,                         \
-                          (char*&)dst += dststep )                          \
+    for( ; size.height--; src1+=srcstep1, src2+=srcstep2, dst+=dststep )    \
     {                                                                       \
         ICV_DEF_MULADDC_CASE_C##cn( arrtype, scalartype, src1, src2,        \
                                     dst, size.width )                       \
@@ -2316,10 +2325,9 @@ icvDotProductShifted_##flavor##_C1R( const srctype* vec1, int vecstep1,         
                                      CvSize size, double* _result )                     \
 {                                                                                       \
     double result = 0;                                                                  \
+    vecstep1 /= sizeof(vec1[0]); vecstep2 /= sizeof(vec2[0]); avgstep /= sizeof(avg[0]);\
                                                                                         \
-    for( ; size.height--; (char*&)vec1 += vecstep1,                                     \
-                          (char*&)vec2 += vecstep2,                                     \
-                          (char*&)avg += avgstep )                                      \
+    for( ; size.height--; vec1 += vecstep1, vec2 += vecstep2, avg += avgstep )          \
     {                                                                                   \
         int x;                                                                          \
         for( x = 0; x <= size.width - 4; x += 4 )                                       \
@@ -2374,12 +2382,14 @@ icvExtProductShifted_##flavor##_C1R( const srctype* vec, int vecstep,           
 {                                                                                       \
     int x, y, dstsize = size.width * size.height;                                       \
                                                                                         \
-    for( y = 0; y < size.height; y++, (char*&)vec += vecstep, (char*&)avg += avgstep )  \
+    vecstep /= sizeof(vec[0]); avgstep /= sizeof(avg[0]);                               \
+    for( y = 0; y < size.height; y++, vec += vecstep, avg += avgstep )                  \
         for( x = 0; x < size.width; x++ )                                               \
             *tempbuf++ = load_macro(vec[x]) - avg[x];                                   \
     tempbuf -= dstsize;                                                                 \
                                                                                         \
-    for( y = 0; y < dstsize; y++, (char*&)dst += dststep )                              \
+    dststep /= sizeof(dst[0]);                                                          \
+    for( y = 0; y < dstsize; y++, dst += dststep )                                      \
     {                                                                                   \
         double ty = tempbuf[y];                                                         \
         for( x = 0; x <= y - 3; x += 4 )                                                \
@@ -2813,18 +2823,21 @@ icvMulTransposedR_##flavor( const arrtype* src, int srcstep,                    
             return CV_OUTOFMEM_ERR;                                             \
     }                                                                           \
                                                                                 \
+    srcstep /= sizeof(src[0]); dststep /= sizeof(dst[0]);                       \
+    deltastep /= sizeof(delta[0]);                                              \
+                                                                                \
     if( !delta )                                                                \
-        for( i = 0; i < size.width; i++, (char*&)tdst += dststep )              \
+        for( i = 0; i < size.width; i++, tdst += dststep )                      \
         {                                                                       \
             for( k = 0; k < size.height; k++ )                                  \
-                col_buf[k] = ((arrtype*)((char*)src + k*srcstep))[i];           \
+                col_buf[k] = src[k*srcstep+i];                                  \
                                                                                 \
             for( j = i; j <= size.width - 4; j += 4 )                           \
             {                                                                   \
                 double s0 = 0, s1 = 0, s2 = 0, s3 = 0;                          \
                 const arrtype *tsrc = src + j;                                  \
                                                                                 \
-                for( k = 0; k < size.height; k++, (char*&)tsrc += srcstep )     \
+                for( k = 0; k < size.height; k++, tsrc += srcstep )             \
                 {                                                               \
                     double a = col_buf[k];                                      \
                     s0 += a * tsrc[0];                                          \
@@ -2844,18 +2857,17 @@ icvMulTransposedR_##flavor( const arrtype* src, int srcstep,                    
                 double s0 = 0;                                                  \
                 const arrtype *tsrc = src + j;                                  \
                                                                                 \
-                for( k = 0; k < size.height; k++, (char*&)tsrc += srcstep )     \
+                for( k = 0; k < size.height; k++, tsrc += srcstep )             \
                     s0 += col_buf[k] * tsrc[0];                                 \
                                                                                 \
                 tdst[j] = (arrtype)s0;                                          \
             }                                                                   \
         }                                                                       \
     else                                                                        \
-        for( i = 0; i < size.width; i++, (char*&)tdst += dststep )              \
+        for( i = 0; i < size.width; i++, tdst += dststep )                      \
         {                                                                       \
             for( k = 0; k < size.height; k++ )                                  \
-                col_buf[k] = ((arrtype*)((char*)src + k*srcstep))[i] -          \
-                             ((arrtype*)((char*)delta + k*deltastep))[i];       \
+                col_buf[k] = src[k*srcstep+i] - delta[k*deltastep+i];           \
                                                                                 \
             for( j = i; j <= size.width - 4; j += 4 )                           \
             {                                                                   \
@@ -2863,8 +2875,7 @@ icvMulTransposedR_##flavor( const arrtype* src, int srcstep,                    
                 const arrtype *tsrc = src + j;                                  \
                 const arrtype *d = delta + j;                                   \
                                                                                 \
-                for( k = 0; k < size.height; k++, (char*&)tsrc += srcstep,      \
-                                                  (char*&)d += deltastep )      \
+                for( k = 0; k < size.height; k++, tsrc+=srcstep, d+=deltastep ) \
                 {                                                               \
                     double a = col_buf[k];                                      \
                     s0 += a * (tsrc[0] - d[0]);                                 \
@@ -2885,8 +2896,7 @@ icvMulTransposedR_##flavor( const arrtype* src, int srcstep,                    
                 const arrtype *tsrc = src + j;                                  \
                 const arrtype *d = delta + j;                                   \
                                                                                 \
-                for( k = 0; k < size.height; k++, (char*&)tsrc += srcstep,      \
-                                                  (char*&)d += deltastep )      \
+                for( k = 0; k < size.height; k++, tsrc+=srcstep, d+=deltastep ) \
                     s0 += col_buf[k] * (tsrc[0] - d[0]);                        \
                                                                                 \
                 tdst[j] = (arrtype)s0;                                          \
@@ -2896,8 +2906,7 @@ icvMulTransposedR_##flavor( const arrtype* src, int srcstep,                    
     /* fill the lower part of the destination matrix */                         \
     for( i = 1; i < size.width; i++ )                                           \
         for( j = 0; j < i; j++ )                                                \
-            ((arrtype*)((uchar*)dst + dststep*i))[j] =                          \
-                ((arrtype*)((uchar*)dst + dststep*j))[i];                       \
+            dst[dststep*i + j] = dst[dststep*j + i];                            \
                                                                                 \
     if( col_buf && !local_alloc )                                               \
         cvFree( (void**)&col_buf );                                             \
@@ -2916,13 +2925,16 @@ icvMulTransposedL_##flavor( const arrtype* src, int srcstep,                    
     int i, j, k;                                                                \
     arrtype* tdst = dst;                                                        \
                                                                                 \
+    srcstep /= sizeof(src[0]); dststep /= sizeof(dst[0]);                       \
+    deltastep /= sizeof(delta[0]);                                              \
+                                                                                \
     if( !delta )                                                                \
-        for( i = 0; i < size.height; i++, (char*&)tdst += dststep )             \
+        for( i = 0; i < size.height; i++, tdst += dststep )                     \
             for( j = i; j < size.height; j++ )                                  \
             {                                                                   \
                 double s = 0;                                                   \
-                const arrtype *tsrc1 =(const arrtype*)((uchar*)src + i*srcstep);\
-                const arrtype *tsrc2 =(const arrtype*)((uchar*)src + j*srcstep);\
+                const arrtype *tsrc1 = src + i*srcstep;                         \
+                const arrtype *tsrc2 = src + j*srcstep;                         \
                                                                                 \
                 for( k = 0; k <= size.width - 4; k += 4 )                       \
                     s += tsrc1[k]*tsrc2[k] + tsrc1[k+1]*tsrc2[k+1] +            \
@@ -2949,10 +2961,10 @@ icvMulTransposedL_##flavor( const arrtype* src, int srcstep,                    
                 return CV_OUTOFMEM_ERR;                                         \
         }                                                                       \
                                                                                 \
-        for( i = 0; i < size.height; i++, (char*&)tdst += dststep )             \
+        for( i = 0; i < size.height; i++, tdst += dststep )                     \
         {                                                                       \
-            const arrtype *tsrc1 =(const arrtype*)((uchar*)src + i*srcstep);    \
-            const arrtype *tdelta1 =(const arrtype*)((uchar*)delta+i*deltastep);\
+            const arrtype *tsrc1 = src + i*srcstep;                             \
+            const arrtype *tdelta1 = delta + i*deltastep;                       \
                                                                                 \
             for( k = 0; k < size.width; k++ )                                   \
                 row_buf[k] = tsrc1[k] - tdelta1[k];                             \
@@ -2960,10 +2972,8 @@ icvMulTransposedL_##flavor( const arrtype* src, int srcstep,                    
             for( j = i; j < size.height; j++ )                                  \
             {                                                                   \
                 double s = 0;                                                   \
-                const arrtype *tsrc2 =                                          \
-                    (const arrtype*)((uchar*)src + j*srcstep);                  \
-                const arrtype *tdelta2 =                                        \
-                    (const arrtype*)((uchar*)delta + j*deltastep);              \
+                const arrtype *tsrc2 = src + j*srcstep;                         \
+                const arrtype *tdelta2 = delta + j*deltastep;                   \
                                                                                 \
                 for( k = 0; k <= size.width - 4; k += 4 )                       \
                     s += row_buf[k]*(tsrc2[k] - tdelta2[k]) +                   \
@@ -2983,8 +2993,7 @@ icvMulTransposedL_##flavor( const arrtype* src, int srcstep,                    
     /* fill the lower part of the destination matrix */                         \
     for( j = 0; j < size.height - 1; j++ )                                      \
         for( i = j; i < size.height; i++ )                                      \
-            ((arrtype*)((uchar*)dst + dststep*i))[j] =                          \
-                ((arrtype*)((uchar*)dst + dststep*j))[i];                       \
+            dst[dststep*i + j] = dst[dststep*j + i];                            \
                                                                                 \
     return CV_NO_ERR;                                                           \
 }
@@ -3109,8 +3118,9 @@ icvDotProduct_##flavor##_C1R( const arrtype* src1, int step1,           \
                               CvSize size, sumtype* _sum )              \
 {                                                                       \
     sumtype sum = 0;                                                    \
+    step1 /= sizeof(src1[0]); step2 /= sizeof(src2[0]);                 \
                                                                         \
-    for( ; size.height--; (char*&)src1 += step1, (char*&)src2 += step2 )\
+    for( ; size.height--; src1 += step1, src2 += step2 )                \
     {                                                                   \
         int i;                                                          \
                                                                         \
@@ -3242,7 +3252,7 @@ cvDotProduct( const CvArr* srcAarr, const CvArr* srcBarr )
                      size, &result ));
 
     if( depth < CV_32S )
-        result = (double)(int64&)result;
+        result = (double)*(int64*)&result;
 
     __END__;
 

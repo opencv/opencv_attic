@@ -165,8 +165,9 @@ icvMinMaxIndx_##flavor##_C1R,( const srctype* src, int step,                    
                               (src, step, size, minVal, maxVal, minLoc, maxLoc) )   \
 {                                                                                   \
     _entry_( _cast_macro_, _toggle_, srctype, temptype, 1 );                        \
+    step /= sizeof(src[0]);                                                         \
                                                                                     \
-    for( ; size.height--; (char*&)src += step )                                     \
+    for( ; size.height--; src += step )                                             \
     {                                                                               \
         ICV_DEF_MINMAXLOC_1D_CASE_C1( _cast_macro_, _toggle_, temptype, src, width, \
                                       min_val, max_val, min_loc, max_loc, loc );    \
@@ -187,8 +188,9 @@ icvMinMaxIndx_##flavor##_CnCR( const srctype* src, int step,                    
 {                                                                                   \
     (src) += coi - 1;                                                               \
     _entry_( _cast_macro_, _toggle_, srctype, temptype, cn );                       \
+    step /= sizeof(src[0]);                                                         \
                                                                                     \
-    for( ; size.height--; (char*&)src += step )                                     \
+    for( ; size.height--; src += step )                                             \
     {                                                                               \
         ICV_DEF_MINMAXLOC_1D_CASE_COI( _cast_macro_, _toggle_, temptype, src, width,\
                                        min_val, max_val, min_loc, max_loc, loc, cn);\
@@ -244,16 +246,16 @@ ICV_DEF_MINMAXLOC_ALL_FLT( 64f, double, int64, _as_int64_,
     temptype min_val = 0, max_val = 0;                              \
     int min_loc = -1, max_loc = -1;                                 \
     int x = 0, y, loc = 0, width = size.width;                      \
+    step /= sizeof(src[0]);                                         \
                                                                     \
-    if( (int)(width*(cn)*sizeof(srctype)) == step &&                \
-        width == maskStep )                                         \
+    if( width*(cn) == step && width == maskStep )                   \
     {                                                               \
         width *= size.height;                                       \
         size.height = 1;                                            \
     }                                                               \
                                                                     \
-    for( y = 0; y < size.height; y++, (char*&)src += step,          \
-                                      (char*&)mask += maskStep )    \
+    for( y = 0; y < size.height; y++, src += step,                  \
+                                      mask += maskStep )            \
     {                                                               \
         for( x = 0; x < width; x++, loc++ )                         \
             if( mask[x] != 0 )                                      \
@@ -283,8 +285,7 @@ icvMinMaxIndx_##flavor##_C1MR,( const srctype* src, int step,                   
 {                                                                               \
     _entry_( _cast_macro_, _toggle_, srctype, temptype, 1 );                    \
                                                                                 \
-    for( ; y < size.height; y++, (char*&)src += step,                           \
-                                 (char*&)mask += maskStep )                     \
+    for( ; y < size.height; y++, src += step, mask += maskStep )                \
     {                                                                           \
         for( ; x < width; x++, (loc)++ )                                        \
         {                                                                       \
@@ -323,8 +324,7 @@ icvMinMaxIndx_##flavor##_CnCMR( const srctype* src, int step,                   
     (src) += coi - 1;                                                           \
     _entry_( _cast_macro_, _toggle_, srctype, temptype, cn );                   \
                                                                                 \
-    for( ; y < size.height; y++, (char*&)src += step,                           \
-                                 (char*&)mask += maskStep )                     \
+    for( ; y < size.height; y++, src += step, mask += maskStep )                \
     {                                                                           \
         for( ; x < width; x++, (loc)++ )                                        \
         {                                                                       \

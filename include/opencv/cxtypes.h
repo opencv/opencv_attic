@@ -544,6 +544,7 @@ typedef struct CvMat
     int cols;
 #endif
 
+    int hdr_refcount;
 }
 CvMat;
 
@@ -596,6 +597,7 @@ CV_INLINE CvMat cvMat( int rows, int cols, int type, void* data CV_DEFAULT(NULL)
     m.step = rows > 1 ? m.cols*CV_ELEM_SIZE(type) : 0;
     m.data.ptr = (uchar*)data;
     m.refcount = NULL;
+    m.hdr_refcount = 0;
 
     return m;
 }
@@ -672,6 +674,8 @@ typedef struct CvMatND
     int dims;
 
     int* refcount;
+    int hdr_refcount;
+
     union
     {
         uchar* ptr;
@@ -711,6 +715,8 @@ typedef struct CvSparseMat
     int type;
     int dims;
     int* refcount;
+    int hdr_refcount;
+
     struct CvSet* heap;
     void** hashtable;
     int hashsize;

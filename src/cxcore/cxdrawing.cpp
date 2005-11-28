@@ -1176,10 +1176,10 @@ icvCollectPolyEdges( CvMat* img, CvSeq* v, CvContour* edges,
         else
         {
             assert( shift == 0 );
-            pt0.x = cvRound(((float&)pt0.x + offset.x) * XY_ONE);
-            pt0.y = cvRound((float&)pt0.y + offset.y);
-            pt1.x = cvRound(((float&)pt1.x + offset.x) * XY_ONE);
-            pt1.y = cvRound((float&)pt1.y + offset.y);
+            pt0.x = cvRound((*(float*)&pt0.x + offset.x) * XY_ONE);
+            pt0.y = cvRound(*(float*)&pt0.y + offset.y);
+            pt1.x = cvRound((*(float*)&pt1.x + offset.x) * XY_ONE);
+            pt1.y = cvRound(*(float*)&pt1.y + offset.y);
         }
 
         if( line_type < CV_AA )
@@ -2535,31 +2535,35 @@ cvDrawContours( void*  img,  CvSeq*  contour,
                 int shift = 0;
                 
                 count -= !CV_IS_SEQ_CLOSED(contour);
-                CV_READ_SEQ_ELEM( pt1, reader );
                 if( elem_type == CV_32SC2 )
                 {
+                    CV_READ_SEQ_ELEM( pt1, reader );
                     pt1.x += offset.x;
                     pt1.y += offset.y;
                 }
                 else
                 {
-                    pt1.x = cvRound( ((float&)pt1.x + offset.x) * XY_ONE );
-                    pt1.y = cvRound( ((float&)pt1.y + offset.y) * XY_ONE );
+                    CvPoint2D32f pt1f;
+                    CV_READ_SEQ_ELEM( pt1f, reader );
+                    pt1.x = cvRound( (pt1f.x + offset.x) * XY_ONE );
+                    pt1.y = cvRound( (pt1f.y + offset.y) * XY_ONE );
                     shift = XY_SHIFT;
                 }
 
                 for( i = 0; i < count; i++ )
                 {
-                    CV_READ_SEQ_ELEM( pt2, reader );
                     if( elem_type == CV_32SC2 )
                     {
+                        CV_READ_SEQ_ELEM( pt2, reader );
                         pt2.x += offset.x;
                         pt2.y += offset.y;
                     }
                     else
                     {
-                        pt2.x = cvRound( (float&)pt2.x * XY_ONE );
-                        pt2.y = cvRound( (float&)pt2.y * XY_ONE );
+                        CvPoint2D32f pt2f;
+                        CV_READ_SEQ_ELEM( pt2f, reader );
+                        pt2.x = cvRound( pt2f.x * XY_ONE );
+                        pt2.y = cvRound( pt2f.y * XY_ONE );
                     }
                     icvThickLine( mat, pt1, pt2, clr, thickness, line_type, 2, shift );
                     pt1 = pt2;
