@@ -58,7 +58,7 @@ icvCrossCorr( const CvArr* _img, const CvArr* _templ, CvArr* _corr )
     CvMat tstub, *templ = (CvMat*)_templ;
     CvMat cstub, *corr = (CvMat*)_corr;
     CvMat sstub, pstub, dstub, *src, *dst;
-    CvSize imgsize, templsize, corrsize, dftsize, blocksize;
+    CvSize templsize, corrsize, dftsize, blocksize;
     CvMat* planes[] = { 0, 0, 0, 0 };
     int x, y, i, depth, cn, corr_type, yofs;
     int reuse_templ_spectrum = 0;
@@ -99,7 +99,6 @@ icvCrossCorr( const CvArr* _img, const CvArr* _templ, CvArr* _corr )
     cn = CV_MAT_CN(img->type);
     corr_type = CV_MAT_TYPE(corr->type);
 
-    imgsize = cvGetMatSize(img);
     templsize = cvGetSize(templ);
     corrsize = cvGetSize(corr);
 

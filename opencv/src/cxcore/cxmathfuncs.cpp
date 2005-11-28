@@ -1825,19 +1825,20 @@ IPCVAPI_IMPL( CvStatus, icvCheckArray_32f_C1R,
 
     if( flags & CV_CHECK_RANGE )
     {
-        (float&)a = (float)min_val;
-        (float&)b = (float)max_val;
+        *(float*)&a = (float)min_val;
+        *(float*)&b = (float)max_val;
     }
     else
     {
-        (float&)a = -FLT_MAX;
-        (float&)b = FLT_MAX;
+        *(float*)&a = -FLT_MAX;
+        *(float*)&b = FLT_MAX;
     }
 
     a = CV_TOGGLE_FLT(a);
     b = CV_TOGGLE_FLT(b);
 
-    for( ; size.height--; (char*&)src += srcstep )
+    srcstep /= sizeof(src[0]);
+    for( ; size.height--; src += srcstep )
     {
         int i;
         for( i = 0; i < size.width; i++ )
@@ -1869,19 +1870,20 @@ IPCVAPI_IMPL( CvStatus,  icvCheckArray_64f_C1R,
 
     if( flags & CV_CHECK_RANGE )
     {
-        (double&)a = min_val;
-        (double&)b = max_val;
+        *(double*)&a = min_val;
+        *(double*)&b = max_val;
     }
     else
     {
-        (double&)a = -DBL_MAX;
-        (double&)b = DBL_MAX;
+        *(double*)&a = -DBL_MAX;
+        *(double*)&b = DBL_MAX;
     }
 
     a = CV_TOGGLE_DBL(a);
     b = CV_TOGGLE_DBL(b);
 
-    for( ; size.height--; (char*&)src += srcstep )
+    srcstep /= sizeof(src[0]);
+    for( ; size.height--; src += srcstep )
     {
         int i;
         for( i = 0; i < size.width; i++ )

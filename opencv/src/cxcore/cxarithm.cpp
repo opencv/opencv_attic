@@ -138,11 +138,11 @@ IPCVAPI_IMPL( CvStatus, name,                                               \
       type* dst, int step, CvSize size ),                                   \
       (src1, step1, src2, step2, dst, step, size) )                         \
 {                                                                           \
+    step1/=sizeof(src1[0]); step2/=sizeof(src2[0]); step/=sizeof(dst[0]);   \
+                                                                            \
     if( size.width == 1 )                                                   \
     {                                                                       \
-        for( ; size.height--; (char*&)src1 += step1,                        \
-                              (char*&)src2 += step2,                        \
-                              (char*&)dst += step )                         \
+        for( ; size.height--; src1 += step1, src2 += step2, dst += step )   \
         {                                                                   \
             worktype t0 = __op__((src1)[0],(src2)[0]);                      \
             (dst)[0] = cast_macro( t0 );                                    \
@@ -150,9 +150,7 @@ IPCVAPI_IMPL( CvStatus, name,                                               \
     }                                                                       \
     else                                                                    \
     {                                                                       \
-        for( ; size.height--; (char*&)src1 += step1,                        \
-                              (char*&)src2 += step2,                        \
-                              (char*&)dst += step )                         \
+        for( ; size.height--; src1 += step1, src2 += step2, dst += step )   \
         {                                                                   \
             ICV_DEF_BIN_ARI_OP_CASE( __op__, worktype,                      \
                                      cast_macro, size.width );              \
@@ -169,11 +167,11 @@ IPCVAPI_IMPL( CvStatus, name,                                               \
       type* dst, int step, CvSize size, int /*scalefactor*/ ),              \
       (src1, step1, src2, step2, dst, step, size, 0) )                      \
 {                                                                           \
+    step1/=sizeof(src1[0]); step2/=sizeof(src2[0]); step/=sizeof(dst[0]);   \
+                                                                            \
     if( size.width == 1 )                                                   \
     {                                                                       \
-        for( ; size.height--; (char*&)src1 += step1,                        \
-                              (char*&)src2 += step2,                        \
-                              (char*&)dst += step )                         \
+        for( ; size.height--; src1 += step1, src2 += step2, dst += step )   \
         {                                                                   \
             worktype t0 = __op__((src1)[0],(src2)[0]);                      \
             (dst)[0] = cast_macro( t0 );                                    \
@@ -181,9 +179,7 @@ IPCVAPI_IMPL( CvStatus, name,                                               \
     }                                                                       \
     else                                                                    \
     {                                                                       \
-        for( ; size.height--; (char*&)src1 += step1,                        \
-                              (char*&)src2 += step2,                        \
-                              (char*&)dst += step )                         \
+        for( ; size.height--; src1 += step1, src2 += step2, dst += step )   \
         {                                                                   \
             ICV_DEF_BIN_ARI_OP_CASE( __op__, worktype,                      \
                                      cast_macro, size.width );              \
@@ -251,10 +247,11 @@ static CvStatus CV_STDCALL name                                             \
     ( const type* src, int step1, type* dst, int step,                      \
       CvSize size, const worktype* scalar )                                 \
 {                                                                           \
+    step1 /= sizeof(src[0]); step /= sizeof(dst[0]);                        \
+                                                                            \
     if( size.width == 1 )                                                   \
     {                                                                       \
-        for( ; size.height--; (char*&)src += step1,                         \
-                              (char*&)dst += step )                         \
+        for( ; size.height--; src += step1, dst += step )                   \
         {                                                                   \
             worktype t0 = __op__(*(scalar),*(src));                         \
             *(dst) = cast_macro( t0 );                                      \
@@ -262,8 +259,7 @@ static CvStatus CV_STDCALL name                                             \
     }                                                                       \
     else                                                                    \
     {                                                                       \
-        for( ; size.height--; (char*&)src += step1,                         \
-                              (char*&)dst += step )                         \
+        for( ; size.height--; src += step1, dst += step )                   \
         {                                                                   \
             const type *tsrc = src;                                         \
             type *tdst = dst;                                               \
@@ -1282,11 +1278,11 @@ static CvStatus CV_STDCALL                                                      
                            arrtype* dst, int step,                                      \
                            CvSize size, double scale )                                  \
 {                                                                                       \
+    step1 /= sizeof(src1[0]); step2 /= sizeof(src2[0]); step /= sizeof(dst[0]);         \
+                                                                                        \
     if( fabs(scale - 1.) < DBL_EPSILON )                                                \
     {                                                                                   \
-        for( ; size.height--; (char*&)src1+=step1,                                      \
-                              (char*&)src2+=step2,                                      \
-                              (char*&)dst+=step )                                       \
+        for( ; size.height--; src1+=step1, src2+=step2, dst+=step )                     \
         {                                                                               \
             int i;                                                                      \
             for( i = 0; i <= size.width - 4; i += 4 )                                   \
@@ -1313,9 +1309,7 @@ static CvStatus CV_STDCALL                                                      
     }                                                                                   \
     else                                                                                \
     {                                                                                   \
-        for( ; size.height--; (char*&)src1+=step1,                                      \
-                              (char*&)src2+=step2,                                      \
-                              (char*&)dst+=step )                                       \
+        for( ; size.height--; src1+=step1, src2+=step2, dst+=step )                     \
         {                                                                               \
             int i;                                                                      \
             for( i = 0; i <= size.width - 4; i += 4 )                                   \
@@ -1537,7 +1531,9 @@ icvDiv_##flavor##_C1R( const arrtype* src1, int step1,                          
                        arrtype* dst, int step,                                          \
                        CvSize size, double scale )                                      \
 {                                                                                       \
-    for( ; size.height--; (char*&)src1+=step1, (char*&)src2+=step2, (char*&)dst+=step ) \
+    step1 /= sizeof(src1[0]); step2 /= sizeof(src2[0]); step /= sizeof(dst[0]);         \
+                                                                                        \
+    for( ; size.height--; src1+=step1, src2+=step2, dst+=step )                         \
     {                                                                                   \
         int i;                                                                          \
         for( i = 0; i <= size.width - 4; i += 4 )                                       \
@@ -1601,7 +1597,9 @@ icvRecip_##flavor##_C1R( const arrtype* src, int step1,                         
                          arrtype* dst, int step,                                \
                          CvSize size, double scale )                            \
 {                                                                               \
-    for( ; size.height--; (char*&)src+=step1, (char*&)dst+=step )               \
+    step1 /= sizeof(src[0]); step /= sizeof(dst[0]);                            \
+                                                                                \
+    for( ; size.height--; src+=step1, dst+=step )                               \
     {                                                                           \
         int i;                                                                  \
         for( i = 0; i <= size.width - 4; i += 4 )                               \
@@ -1656,8 +1654,8 @@ icvRecip_##flavor##_C1R( const arrtype* src, int step1,                         
     return CV_OK;                                                               \
 }
 
-#define div_check_zero_flt(x)  (((int&)(x) & 0x7fffffff) != 0)
-#define div_check_zero_dbl(x)  (((int64&)(x) & CV_BIG_INT(0x7fffffffffffffff)) != 0)
+#define div_check_zero_flt(x)  ((*(int*)&(x) & 0x7fffffff) != 0)
+#define div_check_zero_dbl(x)  ((*(int64*)&(x) & CV_BIG_INT(0x7fffffffffffffff)) != 0)
 
 #if defined WIN64 && defined EM64T && defined _MSC_VER && !defined CV_ICC
 #pragma optimize("",off)
@@ -1864,8 +1862,9 @@ icvAddWeighted_##flavor##_C1R( const arrtype* src1, int step1, double alpha,    
                                const arrtype* src2, int step2, double beta,     \
                                double gamma, arrtype* dst, int step, CvSize size )\
 {                                                                               \
-    for( ; size.height--; (char*&)src1 += step1, (char*&)src2 += step2,         \
-                          (char*&)dst += step )                                 \
+    step1 /= sizeof(src1[0]); step2 /= sizeof(src2[0]); step /= sizeof(dst[0]); \
+                                                                                \
+    for( ; size.height--; src1 += step1, src2 += step2, dst += step )           \
     {                                                                           \
         int i;                                                                  \
                                                                                 \

@@ -63,6 +63,7 @@ cvGoodFeaturesToTrack( const void* image, void* eigImage, void* tempImage,
     int count = 0;
     int x, y, i, k = 0;
     int min_dist;
+    int eig_step, tmp_step;
 
     /* when selecting points, use integer coordinates */
     CvPoint *ptr = (CvPoint *) corners;
@@ -163,11 +164,14 @@ cvGoodFeaturesToTrack( const void* image, void* eigImage, void* tempImage,
         mask_step = mask->step;
     }
 
+    eig_step = eig->step / sizeof(eig_data[0]);
+    tmp_step = tmp->step / sizeof(tmp_data[0]);
+
     /* collect list of pointers to features - put them into temporary image */
     for( y = 1, k = 0; y < size.height - 1; y++ )
     {
-        (char*&)eig_data += eig->step;
-        (char*&)tmp_data += tmp->step;
+        eig_data += eig_step;
+        tmp_data += tmp_step;
         mask_data += mask_step;
 
         for( x = 1; x < size.width - 1; x++ )

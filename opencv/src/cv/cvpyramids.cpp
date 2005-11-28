@@ -92,9 +92,10 @@ icvPyrDownG5x5_##flavor##_CnR( const type* src, int srcstep, type* dst,         
     int  fst = 0, lst = size.height <= PD_SZ/2 ? size.height : PD_SZ/2 + 1;             \
                                                                                         \
     assert( Cs == 1 || Cs == 3 );                                                       \
+    srcstep /= sizeof(src[0]); dststep /= sizeof(dst[0]);                               \
                                                                                         \
     /* main loop */                                                                     \
-    for( y = 0; y < size.height; y += 2, (char*&)dst += dststep )                       \
+    for( y = 0; y < size.height; y += 2, dst += dststep )                               \
     {                                                                                   \
         /* set first and last indices of buffer rows which are need to be filled */     \
         int x, y1, k = top_row;                                                         \
@@ -117,7 +118,7 @@ icvPyrDownG5x5_##flavor##_CnR( const type* src, int srcstep, type* dst,         
         if( Cs == 1 )                                                                   \
         {                                                                               \
             if( size.width > PD_SZ/2 )                                                  \
-                for( y1 = fst; y1 < lst; y1++, (char*&)src += srcstep )                 \
+                for( y1 = fst; y1 < lst; y1++, src += srcstep )                         \
                 {                                                                       \
                     worktype *row = rows[y1];                                           \
                                                                                         \
@@ -133,14 +134,14 @@ icvPyrDownG5x5_##flavor##_CnR( const type* src, int srcstep, type* dst,         
                     }                                                                   \
                 }                                                                       \
             else                                                                        \
-                for( y1 = fst; y1 < lst; y1++, (char*&)src += srcstep )                 \
+                for( y1 = fst; y1 < lst; y1++, src += srcstep )                         \
                 {                                                                       \
                     rows[y1][0] = PD_SINGULAR( src[0], src[1] );                        \
                 }                                                                       \
         }                                                                               \
         else /* Cs == 3 */                                                              \
         {                                                                               \
-            for( y1 = fst; y1 < lst; y1++, (char*&)src += srcstep )                     \
+            for( y1 = fst; y1 < lst; y1++, src += srcstep )                             \
             {                                                                           \
                 worktype *row = rows[y1];                                               \
                                                                                         \
@@ -287,9 +288,10 @@ icvPyrUpG5x5_##flavor##_CnR( const type* src, int srcstep, type* dst,           
     int fst = 0, lst = size.height <= PU_SZ/2 ? size.height : PU_SZ/2 + 1;              \
                                                                                         \
     assert( Cs == 1 || Cs == 3 );                                                       \
+    srcstep /= sizeof(src[0]); dststep /= sizeof(dst[0]);                               \
                                                                                         \
     /* main loop */                                                                     \
-    for( y = 0; y < size.height; y++, (char*&)dst += 2 * dststep )                      \
+    for( y = 0; y < size.height; y++, dst += 2 * dststep )                              \
     {                                                                                   \
         int x, y1, k = top_row;                                                         \
         worktype *row0, *row1, *row2;                                                   \
@@ -306,12 +308,12 @@ icvPyrUpG5x5_##flavor##_CnR( const type* src, int srcstep, type* dst,           
         row0 = rows[0];                                                                 \
         row1 = rows[1];                                                                 \
         row2 = rows[2];                                                                 \
-        dst1 = (type*)((char*)dst + dststep);                                           \
+        dst1 = dst + dststep;                                                           \
                                                                                         \
         /* fill new buffer rows with filtered source (horizontal conv) */               \
         if( Cs == 1 )                                                                   \
             if( size.width > PU_SZ / 2 )                                                \
-                for( y1 = fst; y1 < lst; y1++, (char*&)src += srcstep )                 \
+                for( y1 = fst; y1 < lst; y1++, src += srcstep )                         \
                 {                                                                       \
                     worktype *row = rows[y1];                                           \
                                                                                         \
@@ -329,7 +331,7 @@ icvPyrUpG5x5_##flavor##_CnR( const type* src, int srcstep, type* dst,           
                     }                                                                   \
                 }                                                                       \
             else                /* size.width <= PU_SZ/2 */                             \
-                for( y1 = fst; y1 < lst; y1++, (char*&)src += srcstep )                 \
+                for( y1 = fst; y1 < lst; y1++, src += srcstep )                         \
                 {                                                                       \
                     worktype *row = rows[y1];                                           \
                     worktype val = src[0];                                              \
@@ -338,7 +340,7 @@ icvPyrUpG5x5_##flavor##_CnR( const type* src, int srcstep, type* dst,           
                     row[1] = PU_SINGULAR_ZI( val );                                     \
                 }                                                                       \
         else                    /* Cs == 3 */                                           \
-            for( y1 = fst; y1 < lst; y1++, (char*&)src += srcstep )                     \
+            for( y1 = fst; y1 < lst; y1++, src += srcstep )                             \
             {                                                                           \
                 worktype *row = rows[y1];                                               \
                                                                                         \

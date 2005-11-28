@@ -54,7 +54,7 @@ cvSetIdentity( CvArr* array, CvScalar value )
 
     CvMat stub, *mat = (CvMat*)array;
     CvSize size;
-    int i, len, step;
+    int i, k, len, step;
     int type, pix_size;
     uchar* data = 0;
     double buf[4];
@@ -89,24 +89,33 @@ cvSetIdentity( CvArr* array, CvScalar value )
 
     if( type == CV_32FC1 )
     {
-        *((float*)buf) = (float)value.val[0];
+        float val = (float)value.val[0];
+        float* _data = (float*)data;
+        step /= sizeof(_data[0]);
+        len *= step;
 
-        for( i = 0; i < len; i++, (char*&)data += step )
-            *((float*)data) = *((float*)buf);
+        for( i = 0; i < len; i += step )
+            _data[i] = val;
     }
     else if( type == CV_64FC1 )
     {
-        buf[0] = value.val[0];
-        
-        for( i = 0; i < len; i++, (char*&)data += step )
-            *((double*)data) = buf[0];
+        double val = value.val[0];
+        double* _data = (double*)data;
+        step /= sizeof(_data[0]);
+        len *= step;
+
+        for( i = 0; i < len; i += step )
+            _data[i] = val;
     }
     else
     {
+        uchar* val_ptr = (uchar*)buf;
         cvScalarToRawData( &value, buf, type, 0 );
+        len *= step;
 
-        for( i = 0; i < len; i++, (char*&)data += step )
-            memcpy( data, buf, pix_size );
+        for( i = 0; i < len; i += step )
+            for( k = 0; k < pix_size; k++ )
+                data[i+k] = val_ptr[k];
     }
 
     __END__;
@@ -169,200 +178,215 @@ cvTrace( const CvArr* array )
 
 /////////////////// macros for inplace transposition of square matrix ////////////////////
 
-#define ICV_DEF_TRANSP_INP_CASE_C1( arrtype, arr, step, len )   \
-{                                                               \
-    arrtype* arr1 = arr;                                        \
-                                                                \
-    while( --len )                                              \
-    {                                                           \
-        (char*&)arr += step, arr1++;                            \
-        arrtype* arr2 = arr;                                    \
-        arrtype* arr3 = arr1;                                   \
-                                                                \
-        do                                                      \
-        {                                                       \
-            arrtype t0 = arr2[0];                               \
-            arrtype t1 = arr3[0];                               \
-            arr2[0] = t1;                                       \
-            arr3[0] = t0;                                       \
-                                                                \
-            arr2++;                                             \
-            (char*&)arr3 += step;                               \
-        }                                                       \
-        while( arr2 != arr3  );                                 \
-    }                                                           \
+#define ICV_DEF_TRANSP_INP_CASE_C1( \
+    arrtype, len )                  \
+{                                   \
+    arrtype* arr1 = arr;            \
+    step /= sizeof(arr[0]);         \
+                                    \
+    while( --len )                  \
+    {                               \
+        arr += step, arr1++;        \
+        arrtype* arr2 = arr;        \
+        arrtype* arr3 = arr1;       \
+                                    \
+        do                          \
+        {                           \
+            arrtype t0 = arr2[0];   \
+            arrtype t1 = arr3[0];   \
+            arr2[0] = t1;           \
+            arr3[0] = t0;           \
+                                    \
+            arr2++;                 \
+            arr3 += step;           \
+        }                           \
+        while( arr2 != arr3  );     \
+    }                               \
 }
 
 
-#define ICV_DEF_TRANSP_INP_CASE_C3( arrtype, arr, step, len )   \
-{                                                               \
-    arrtype* arr1 = arr;                                        \
-    int y;                                                      \
-                                                                \
-    for( y = 1; y < len; y++ )                                  \
-    {                                                           \
-        (char*&)arr += step, arr1 += 3;                         \
-        arrtype* arr2 = arr;                                    \
-        arrtype* arr3 = arr1;                                   \
-                                                                \
-        for( ; arr2 != arr3; arr2 += 3, (char*&)arr3 += step )  \
-        {                                                       \
-            arrtype t0 = arr2[0];                               \
-            arrtype t1 = arr3[0];                               \
-            arr2[0] = t1;                                       \
-            arr3[0] = t0;                                       \
-            t0 = arr2[1];                                       \
-            t1 = arr3[1];                                       \
-            arr2[1] = t1;                                       \
-            arr3[1] = t0;                                       \
-            t0 = arr2[2];                                       \
-            t1 = arr3[2];                                       \
-            arr2[2] = t1;                                       \
-            arr3[2] = t0;                                       \
-        }                                                       \
-    }                                                           \
+#define ICV_DEF_TRANSP_INP_CASE_C3( \
+    arrtype, len )                  \
+{                                   \
+    arrtype* arr1 = arr;            \
+    int y;                          \
+    step /= sizeof(arr[0]);         \
+                                    \
+    for( y = 1; y < len; y++ )      \
+    {                               \
+        arr += step, arr1 += 3;     \
+        arrtype* arr2 = arr;        \
+        arrtype* arr3 = arr1;       \
+                                    \
+        for( ; arr2!=arr3; arr2+=3, \
+                        arr3+=step )\
+        {                           \
+            arrtype t0 = arr2[0];   \
+            arrtype t1 = arr3[0];   \
+            arr2[0] = t1;           \
+            arr3[0] = t0;           \
+            t0 = arr2[1];           \
+            t1 = arr3[1];           \
+            arr2[1] = t1;           \
+            arr3[1] = t0;           \
+            t0 = arr2[2];           \
+            t1 = arr3[2];           \
+            arr2[2] = t1;           \
+            arr3[2] = t0;           \
+        }                           \
+    }                               \
 }
 
 
-#define ICV_DEF_TRANSP_INP_CASE_C4( arrtype, arr, step, len )   \
-{                                                               \
-    arrtype* arr1 = arr;                                        \
-    int y;                                                      \
-                                                                \
-    for( y = 1; y < len; y++ )                                  \
-    {                                                           \
-        (char*&)arr += step, arr1 += 4;                         \
-        arrtype* arr2 = arr;                                    \
-        arrtype* arr3 = arr1;                                   \
-                                                                \
-        for( ; arr2 != arr3; arr2 += 4, (char*&)arr3 += step )  \
-        {                                                       \
-            arrtype t0 = arr2[0];                               \
-            arrtype t1 = arr3[0];                               \
-            arr2[0] = t1;                                       \
-            arr3[0] = t0;                                       \
-            t0 = arr2[1];                                       \
-            t1 = arr3[1];                                       \
-            arr2[1] = t1;                                       \
-            arr3[1] = t0;                                       \
-            t0 = arr2[2];                                       \
-            t1 = arr3[2];                                       \
-            arr2[2] = t1;                                       \
-            arr3[2] = t0;                                       \
-            t0 = arr2[3];                                       \
-            t1 = arr3[3];                                       \
-            arr2[3] = t1;                                       \
-            arr3[3] = t0;                                       \
-        }                                                       \
-    }                                                           \
+#define ICV_DEF_TRANSP_INP_CASE_C4( \
+    arrtype, len )                  \
+{                                   \
+    arrtype* arr1 = arr;            \
+    int y;                          \
+    step /= sizeof(arr[0]);         \
+                                    \
+    for( y = 1; y < len; y++ )      \
+    {                               \
+        arr += step, arr1 += 4;     \
+        arrtype* arr2 = arr;        \
+        arrtype* arr3 = arr1;       \
+                                    \
+        for( ; arr2!=arr3; arr2+=4, \
+                        arr3+=step )\
+        {                           \
+            arrtype t0 = arr2[0];   \
+            arrtype t1 = arr3[0];   \
+            arr2[0] = t1;           \
+            arr3[0] = t0;           \
+            t0 = arr2[1];           \
+            t1 = arr3[1];           \
+            arr2[1] = t1;           \
+            arr3[1] = t0;           \
+            t0 = arr2[2];           \
+            t1 = arr3[2];           \
+            arr2[2] = t1;           \
+            arr3[2] = t0;           \
+            t0 = arr2[3];           \
+            t1 = arr3[3];           \
+            arr2[3] = t1;           \
+            arr3[3] = t0;           \
+        }                           \
+    }                               \
 }
 
 
 //////////////// macros for non-inplace transposition of rectangular matrix //////////////
 
-#define ICV_DEF_TRANSP_CASE_C1( arrtype, src, srcstep,                              \
-                                dst, dststep, size )                                \
-{                                                                                   \
-    int x, y;                                                                       \
-                                                                                    \
-    for( y = 0; y <= size.height - 2; y += 2, (char*&)src += 2*srcstep, dst += 2 )  \
-    {                                                                               \
-        const arrtype* src1 = (const arrtype*)((char*)src + srcstep);               \
-        uchar* dst1 = (uchar*)dst;                                                  \
-                                                                                    \
-        for( x = 0; x <= size.width - 2; x += 2, dst1 += dststep )                  \
-        {                                                                           \
-            arrtype t0 = src[x];                                                    \
-            arrtype t1 = src1[x];                                                   \
-            ((arrtype*)dst1)[0] = t0;                                               \
-            ((arrtype*)dst1)[1] = t1;                                               \
-                                                                                    \
-            dst1 += dststep;                                                        \
-                                                                                    \
-            t0 = src[x + 1];                                                        \
-            t1 = src1[x + 1];                                                       \
-            ((arrtype*)dst1)[0] = t0;                                               \
-            ((arrtype*)dst1)[1] = t1;                                               \
-        }                                                                           \
-                                                                                    \
-        if( x < size.width )                                                        \
-        {                                                                           \
-            arrtype t0 = src[x];                                                    \
-            arrtype t1 = src1[x];                                                   \
-            ((arrtype*)dst1)[0] = t0;                                               \
-            ((arrtype*)dst1)[1] = t1;                                               \
-        }                                                                           \
-    }                                                                               \
-                                                                                    \
-    if( y < size.height )                                                           \
-    {                                                                               \
-        uchar* dst1 = (uchar*)dst;                                                  \
-        for( x = 0; x <= size.width - 2; x += 2, dst1 += 2*dststep )                \
-        {                                                                           \
-            arrtype t0 = src[x];                                                    \
-            arrtype t1 = src[x + 1];                                                \
-            ((arrtype*)dst1)[0] = t0;                                               \
-            ((arrtype*)(dst1 + dststep))[0] = t1;                                   \
-        }                                                                           \
-                                                                                    \
-        if( x < size.width )                                                        \
-        {                                                                           \
-            arrtype t0 = src[x];                                                    \
-            ((arrtype*)dst1)[0] = t0;                                               \
-        }                                                                           \
-    }                                                                               \
+#define ICV_DEF_TRANSP_CASE_C1( arrtype )       \
+{                                               \
+    int x, y;                                   \
+    srcstep /= sizeof(src[0]);                  \
+    dststep /= sizeof(dst[0]);                  \
+                                                \
+    for( y = 0; y <= size.height - 2; y += 2,   \
+                src += 2*srcstep, dst += 2 )    \
+    {                                           \
+        const arrtype* src1 = src + srcstep;    \
+        arrtype* dst1 = dst;                    \
+                                                \
+        for( x = 0; x <= size.width - 2;        \
+                x += 2, dst1 += dststep )       \
+        {                                       \
+            arrtype t0 = src[x];                \
+            arrtype t1 = src1[x];               \
+            dst1[0] = t0;                       \
+            dst1[1] = t1;                       \
+            dst1 += dststep;                    \
+                                                \
+            t0 = src[x + 1];                    \
+            t1 = src1[x + 1];                   \
+            dst1[0] = t0;                       \
+            dst1[1] = t1;                       \
+        }                                       \
+                                                \
+        if( x < size.width )                    \
+        {                                       \
+            arrtype t0 = src[x];                \
+            arrtype t1 = src1[x];               \
+            dst1[0] = t0;                       \
+            dst1[1] = t1;                       \
+        }                                       \
+    }                                           \
+                                                \
+    if( y < size.height )                       \
+    {                                           \
+        arrtype* dst1 = dst;                    \
+        for( x = 0; x <= size.width - 2;        \
+                x += 2, dst1 += 2*dststep )     \
+        {                                       \
+            arrtype t0 = src[x];                \
+            arrtype t1 = src[x + 1];            \
+            dst1[0] = t0;                       \
+            dst1[dststep] = t1;                 \
+        }                                       \
+                                                \
+        if( x < size.width )                    \
+        {                                       \
+            arrtype t0 = src[x];                \
+            dst1[0] = t0;                       \
+        }                                       \
+    }                                           \
 }
 
 
-#define ICV_DEF_TRANSP_CASE_C3( arrtype, src, srcstep,                              \
-                                dst, dststep, size )                                \
-{                                                                                   \
-    size.width *= 3;                                                                \
-                                                                                    \
-    for( ; size.height--; (char*&)src += srcstep, dst += 3 )                        \
-    {                                                                               \
-        int x;                                                                      \
-        arrtype* dst1 = dst;                                                        \
-                                                                                    \
-        for( x = 0; x < size.width; x += 3, (char*&)dst1 += dststep )               \
-        {                                                                           \
-            arrtype t0 = src[x];                                                    \
-            arrtype t1 = src[x + 1];                                                \
-            arrtype t2 = src[x + 2];                                                \
-                                                                                    \
-            dst1[0] = t0;                                                           \
-            dst1[1] = t1;                                                           \
-            dst1[2] = t2;                                                           \
-        }                                                                           \
-    }                                                                               \
+#define ICV_DEF_TRANSP_CASE_C3( arrtype )       \
+{                                               \
+    size.width *= 3;                            \
+    srcstep /= sizeof(src[0]);                  \
+    dststep /= sizeof(dst[0]);                  \
+                                                \
+    for( ; size.height--; src+=srcstep, dst+=3 )\
+    {                                           \
+        int x;                                  \
+        arrtype* dst1 = dst;                    \
+                                                \
+        for( x = 0; x < size.width; x += 3,     \
+                            dst1 += dststep )   \
+        {                                       \
+            arrtype t0 = src[x];                \
+            arrtype t1 = src[x + 1];            \
+            arrtype t2 = src[x + 2];            \
+                                                \
+            dst1[0] = t0;                       \
+            dst1[1] = t1;                       \
+            dst1[2] = t2;                       \
+        }                                       \
+    }                                           \
 }
 
 
-#define ICV_DEF_TRANSP_CASE_C4( arrtype, src, srcstep,                              \
-                                dst, dststep, size )                                \
-{                                                                                   \
-    size.width *= 4;                                                                \
-                                                                                    \
-    for( ; size.height--; (char*&)src += srcstep, dst += 4 )                        \
-    {                                                                               \
-        int x;                                                                      \
-        arrtype* dst1 = dst;                                                        \
-                                                                                    \
-        for( x = 0; x < size.width; x += 4, (char*&)dst1 += dststep )               \
-        {                                                                           \
-            arrtype t0 = src[x];                                                    \
-            arrtype t1 = src[x + 1];                                                \
-                                                                                    \
-            dst1[0] = t0;                                                           \
-            dst1[1] = t1;                                                           \
-                                                                                    \
-            t0 = src[x + 2];                                                        \
-            t1 = src[x + 3];                                                        \
-                                                                                    \
-            dst1[2] = t0;                                                           \
-            dst1[3] = t1;                                                           \
-        }                                                                           \
-    }                                                                               \
+#define ICV_DEF_TRANSP_CASE_C4( arrtype )       \
+{                                               \
+    size.width *= 4;                            \
+    srcstep /= sizeof(src[0]);                  \
+    dststep /= sizeof(dst[0]);                  \
+                                                \
+    for( ; size.height--; src+=srcstep, dst+=4 )\
+    {                                           \
+        int x;                                  \
+        arrtype* dst1 = dst;                    \
+                                                \
+        for( x = 0; x < size.width; x += 4,     \
+                            dst1 += dststep )   \
+        {                                       \
+            arrtype t0 = src[x];                \
+            arrtype t1 = src[x + 1];            \
+                                                \
+            dst1[0] = t0;                       \
+            dst1[1] = t1;                       \
+                                                \
+            t0 = src[x + 2];                    \
+            t1 = src[x + 3];                    \
+                                                \
+            dst1[2] = t0;                       \
+            dst1[3] = t1;                       \
+        }                                       \
+    }                                           \
 }
 
 
@@ -372,9 +396,7 @@ icvTranspose_##flavor( arrtype* arr, int step, CvSize size )\
 {                                                           \
     assert( size.width == size.height );                    \
                                                             \
-    ICV_DEF_TRANSP_INP_CASE_C##cn( arrtype, arr,            \
-                                   step, size.width )       \
-                                                            \
+    ICV_DEF_TRANSP_INP_CASE_C##cn( arrtype, size.width )    \
     return CV_OK;                                           \
 }
 
@@ -384,9 +406,7 @@ static CvStatus CV_STDCALL                                  \
 icvTranspose_##flavor( const arrtype* src, int srcstep,     \
                     arrtype* dst, int dststep, CvSize size )\
 {                                                           \
-    ICV_DEF_TRANSP_CASE_C##cn( arrtype, src, srcstep,       \
-                               dst, dststep, size )         \
-                                                            \
+    ICV_DEF_TRANSP_CASE_C##cn( arrtype )                    \
     return CV_OK;                                           \
 }
 

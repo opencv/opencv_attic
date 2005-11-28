@@ -261,8 +261,9 @@ static CvStatus CV_STDCALL icv##name##_##flavor##_CnCR                          
                                                                                          \
     if( coi )                                                                            \
         img += coi - 1;                                                                  \
+    step /= sizeof(img[0]);                                                              \
                                                                                          \
-    for( y = 0; y < size.height; sy += 2 * y + 1, y++, (char*&)img += step )             \
+    for( y = 0; y < size.height; sy += 2 * y + 1, y++, img += step )                     \
     {                                                                                    \
         temptype  x0 = 0;                                                                \
         temptype  x1 = 0;                                                                \

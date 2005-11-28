@@ -47,7 +47,7 @@
 
 CV_IMPL int
 cvSampleLine( const void* img, CvPoint pt1, CvPoint pt2,
-              void* buffer, int connectivity )
+              void* _buffer, int connectivity )
 {
     int count = -1;
     
@@ -58,6 +58,7 @@ cvSampleLine( const void* img, CvPoint pt1, CvPoint pt2,
     int i, coi = 0, pix_size;
     CvMat stub, *mat = (CvMat*)img;
     CvLineIterator iterator;
+    uchar* buffer = (uchar*)_buffer;
 
     CV_CALL( mat = cvGetMat( mat, &stub, &coi ));
 
@@ -73,7 +74,7 @@ cvSampleLine( const void* img, CvPoint pt1, CvPoint pt2,
     for( i = 0; i < count; i++ )
     {
         CV_MEMCPY_AUTO( buffer, iterator.ptr, pix_size );
-        (char*&)buffer += pix_size;
+        buffer += pix_size;
         CV_NEXT_LINE_POINT( iterator );
     }
 
@@ -167,7 +168,8 @@ CvStatus CV_STDCALL icvGetRectSubPix_##flavor##_C1R                         \
     b1 = scale_macro(1.f - b);                                              \
     b2 = scale_macro(b);                                                    \
                                                                             \
-    src_step /= sizeof( src[0] );                                           \
+    src_step /= sizeof(src[0]);                                             \
+    dst_step /= sizeof(dst[0]);                                             \
                                                                             \
     if( 0 <= ip.x && ip.x + win_size.width < src_size.width &&              \
         0 <= ip.y && ip.y + win_size.height < src_size.height )             \
@@ -176,12 +178,13 @@ CvStatus CV_STDCALL icvGetRectSubPix_##flavor##_C1R                         \
         src += ip.y * src_step + ip.x;                                      \
                                                                             \
         if( icvCopySubpix_##flavor##_C1R_p &&                               \
-            icvCopySubpix_##flavor##_C1R_p( src, src_step, dst, dst_step,   \
+            icvCopySubpix_##flavor##_C1R_p( src, src_step*sizeof(src[0]),   \
+                                            dst, dst_step*sizeof(dst[0]),   \
                                             win_size, a, b ) >= 0 )         \
             return CV_OK;                                                   \
                                                                             \
         for( i = 0; i < win_size.height; i++, src += src_step,              \
-                                              (char*&)dst += dst_step )     \
+                                              dst += dst_step )             \
         {                                                                   \
             for( j = 0; j <= win_size.width - 2; j += 2 )                   \
             {                                                               \
@@ -216,7 +219,7 @@ CvStatus CV_STDCALL icvGetRectSubPix_##flavor##_C1R                         \
         src = (const srctype*)icvAdjustRect( src, src_step*sizeof(*src),    \
                                sizeof(*src), src_size, win_size,ip, &r);    \
                                                                             \
-        for( i = 0; i < win_size.height; i++, (char*&)dst += dst_step )     \
+        for( i = 0; i < win_size.height; i++, dst += dst_step )             \
         {                                                                   \
             const srctype *src2 = src + src_step;                           \
                                                                             \
@@ -278,6 +281,7 @@ static CvStatus CV_STDCALL icvGetRectSubPix_##flavor##_C3R                  \
     b = scale_macro( center.y - ip.y );                                     \
                                                                             \
     src_step /= sizeof( src[0] );                                           \
+    dst_step /= sizeof( dst[0] );                                           \
                                                                             \
     if( 0 <= ip.x && ip.x + win_size.width < src_size.width &&              \
         0 <= ip.y && ip.y + win_size.height < src_size.height )             \
@@ -286,7 +290,7 @@ static CvStatus CV_STDCALL icvGetRectSubPix_##flavor##_C3R                  \
         src += ip.y * src_step + ip.x*3;                                    \
                                                                             \
         for( i = 0; i < win_size.height; i++, src += src_step,              \
-                                              (char*&)dst += dst_step )     \
+                                              dst += dst_step )             \
         {                                                                   \
             for( j = 0; j < win_size.width; j++ )                           \
             {                                                               \
@@ -317,7 +321,7 @@ static CvStatus CV_STDCALL icvGetRectSubPix_##flavor##_C3R                  \
         src = (const srctype*)icvAdjustRect( src, src_step*sizeof(*src),    \
                              sizeof(*src)*3, src_size, win_size, ip, &r );  \
                                                                             \
-        for( i = 0; i < win_size.height; i++, (char*&)dst += dst_step )     \
+        for( i = 0; i < win_size.height; i++, dst += dst_step )             \
         {                                                                   \
             const srctype *src2 = src + src_step;                           \
                                                                             \

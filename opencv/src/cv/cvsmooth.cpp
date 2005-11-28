@@ -347,7 +347,6 @@ icvSumCol_64f32f( const double** src, float* dst,
         {
             for( i = 0; i <= width - 2; i += 2 )
             {
-                assert(fabs(sum[i]) + fabs(sp[i]) < 1e5);
                 double s0 = sum[i] + sp[i], s1 = sum[i+1] + sp[i+1];
                 sum[i] = s0; sum[i+1] = s1;
             }
@@ -372,7 +371,6 @@ icvSumCol_64f32f( const double** src, float* dst,
             else
                 for( i = 0; i <= width - 2; i += 2 )
                 {
-                    assert(fabs(sum[i]) + fabs(sp[i]) + fabs(sm[i]) < 1e5);
                     double s0 = sum[i] + sp[i], s1 = sum[i+1] + sp[i+1];
                     dst[i] = (float)s0; dst[i+1] = (float)s1;
                     s0 -= sm[i]; s1 -= sm[i+1];
