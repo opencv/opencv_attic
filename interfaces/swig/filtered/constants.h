@@ -598,6 +598,8 @@
 
 #define CV_SCHARR -1
 
+#define CV_MAX_SOBEL_KSIZE 7
+
 #define  CV_BGR2BGRA    0
 
 #define  CV_RGB2RGBA    CV_BGR2BGRA
@@ -841,6 +843,8 @@
 #define CV_FLOODFILL_FIXED_RANGE (1 << 16)
 
 #define CV_FLOODFILL_MASK_ONLY   (1 << 17)
+
+#define CV_CANNY_L2_GRADIENT  (1 << 31)
 
 #define CV_HOUGH_STANDARD 0
 
