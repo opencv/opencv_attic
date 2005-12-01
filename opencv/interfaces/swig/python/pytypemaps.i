@@ -144,6 +144,66 @@
 }
 
 /**
+ * the input argument of cvPolyLine "CvPoint** pts" is converted from 
+ * a "list of list" (aka. an array) of CvPoint().
+ * The next parameters "int* npts" and "int contours" are computed from
+ * the givne list.
+ */
+%typemap(in) (CvPoint** pts, int* npts, int contours){
+    int i;
+    int j;
+    int size2 = -1;
+    CvPoint **points = NULL;
+    int *nb_vertex = NULL;
+
+    /* get the number of polylines input array */
+    int size1 = PyList_Size ($input);
+    $3 = size1;
+
+    for (i = 0; i < size1; i++) {
+
+	/* get the current item */
+	PyObject *line = PyList_GetItem ($input, i);
+
+	/* get the size of the current polyline */
+	size2 = PyList_Size (line);
+
+	if (points == NULL) {
+	    /* create the points array */
+	    points = (CvPoint **)malloc (size1 * sizeof (CvPoint *));
+
+	    /* point to the created array for passing info to the C function */
+	    $1 = points;
+
+	    /* create the array for memorizing the vertex */
+	    nb_vertex = (int *)malloc (size1 * sizeof (int));
+	    $2 = nb_vertex;
+
+	}
+
+	/* allocate the necessary memory to store the points */
+	points [i] = (CvPoint *)malloc (size2 * sizeof (CvPoint));
+	    
+	/* memorize the size of the polyline in the vertex list */
+	nb_vertex [i] = size2;
+
+	for (j = 0; j < size2; j++) {
+	    /* get the current item */
+	    PyObject *item = PyList_GetItem (line, j);
+
+	    /* convert from a Python CvPoint pointer to a C CvPoint pointer */
+	    CvPoint *p = NULL;
+	    SWIG_Python_ConvertPtr (item, (void **)&p, $descriptor(CvPoint *),
+				    SWIG_POINTER_EXCEPTION);
+
+	    /* extract the x and y positions */
+	    points [i][j].x = p->x;
+	    points [i][j].y = p->y;
+	}
+    }
+}
+
+/**
  * what we need to cleanup for the input argument of cvConvexHull2
  * "const CvArr *input"
  */
@@ -293,5 +353,124 @@
     } else {
 	/* not a IplImage, not a tuple, this is wrong */
 	return 0;
+    }
+}
+
+/**
+ * Map the CvFont * parameter from the cvInitFont() as an output parameter
+ */
+%typemap (in, numinputs=1) (CvFont* font, int font_face) {
+    $1 = (CvFont *)malloc (sizeof (CvFont));
+    $2 = (int)(SWIG_As_int($input)); 
+    if (SWIG_arg_fail($argnum)) SWIG_fail;
+}
+%typemap(argout) (CvFont* font, int font_face) {
+    PyObject *to_add;
+
+    /* extract the pointer we want to add to the returned tuple */
+    to_add = SWIG_NewPointerObj ($1, $descriptor(CvFont *), 0);
+
+    if ((!$result) || ($result == Py_None)) {
+	/* no other results, so just put current pointer instead */
+        $result = to_add;
+    } else {
+	/* we have other results, so add it to the end */
+
+        if (!PyTuple_Check ($result)) {
+	    /* previous result is not a tuple, so create one and put
+	       previous result and current pointer in it */
+
+	    /* first, save previous result */
+            PyObject *obj_save = $result;
+
+	    /* then, create the tuple */
+            $result = PyTuple_New (1);
+
+	    /* finaly, put the saved value in the tuple */
+            PyTuple_SetItem ($result, 0, obj_save);
+        }
+
+	/* create a new tuple to put in our new pointer python object */
+        PyObject *my_obj = PyTuple_New (1);
+
+	/* put in our new pointer python object */
+        PyTuple_SetItem (my_obj, 0, to_add);
+
+	/* save the previous result */
+        PyObject *obj_save = $result;
+
+	/* concat previous and our new result */
+        $result = PySequence_Concat (obj_save, my_obj);
+
+	/* decrement the usage of no more used objects */
+        Py_DECREF (obj_save);
+        Py_DECREF (my_obj);
+    }
+}
+
+/**
+ * these are output parameters for cvGetTextSize
+ */
+%typemap (in, numinputs=0) (CvSize* text_size, int* baseline) {
+    CvSize *size = (CvSize *)malloc (sizeof (CvSize));
+    int *baseline = (int *)malloc (sizeof (int));
+    $1 = size;
+    $2 = baseline;
+}
+
+/**
+ * return the finded parameters for cvGetTextSize
+ */
+%typemap(argout) (CvSize* text_size, int* baseline) {
+    PyObject *to_add_1;
+    PyObject *to_add_2;
+
+    /* extract the pointers we want to add to the returned tuple */
+    to_add_1 = SWIG_NewPointerObj ($1, $descriptor(CvSize *), 0);
+    to_add_2 = PyInt_FromLong (*$2);
+
+    if ((!$result) || ($result == Py_None)) {
+	/* no other results, so just add our values */
+
+	/* create a new tuple to put in our new pointer python objects */
+        $result = PyTuple_New (2);
+
+	/* put in our new pointer python objects */
+        PyTuple_SetItem ($result, 0, to_add_1);
+        PyTuple_SetItem ($result, 1, to_add_2);
+
+    } else {
+	/* we have other results, so add it to the end */
+
+        if (!PyTuple_Check ($result)) {
+	    /* previous result is not a tuple, so create one and put
+	       previous result and current pointer in it */
+
+	    /* first, save previous result */
+            PyObject *obj_save = $result;
+
+	    /* then, create the tuple */
+            $result = PyTuple_New (1);
+
+	    /* finaly, put the saved value in the tuple */
+            PyTuple_SetItem ($result, 0, obj_save);
+        }
+
+	/* create a new tuple to put in our new pointer python object */
+        PyObject *my_obj = PyTuple_New (2);
+
+	/* put in our new pointer python object */
+        PyTuple_SetItem (my_obj, 0, to_add_1);
+        PyTuple_SetItem (my_obj, 1, to_add_2);
+
+	/* save the previous result */
+        PyObject *obj_save = $result;
+
+	/* concat previous and our new result */
+        $result = PySequence_Concat (obj_save, my_obj);
+
+	/* decrement the usage of no more used objects */
+        Py_DECREF (obj_save);
+        Py_DECREF (my_obj);
     }
 }
