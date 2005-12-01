@@ -331,6 +331,7 @@ CV_GAUSSIAN = _cv.CV_GAUSSIAN
 CV_MEDIAN = _cv.CV_MEDIAN
 CV_BILATERAL = _cv.CV_BILATERAL
 CV_SCHARR = _cv.CV_SCHARR
+CV_MAX_SOBEL_KSIZE = _cv.CV_MAX_SOBEL_KSIZE
 CV_BGR2BGRA = _cv.CV_BGR2BGRA
 CV_RGB2RGBA = _cv.CV_RGB2RGBA
 CV_BGRA2BGR = _cv.CV_BGRA2BGR
@@ -453,6 +454,7 @@ CV_ADAPTIVE_THRESH_MEAN_C = _cv.CV_ADAPTIVE_THRESH_MEAN_C
 CV_ADAPTIVE_THRESH_GAUSSIAN_C = _cv.CV_ADAPTIVE_THRESH_GAUSSIAN_C
 CV_FLOODFILL_FIXED_RANGE = _cv.CV_FLOODFILL_FIXED_RANGE
 CV_FLOODFILL_MASK_ONLY = _cv.CV_FLOODFILL_MASK_ONLY
+CV_CANNY_L2_GRADIENT = _cv.CV_CANNY_L2_GRADIENT
 CV_HOUGH_STANDARD = _cv.CV_HOUGH_STANDARD
 CV_HOUGH_PROBABILISTIC = _cv.CV_HOUGH_PROBABILISTIC
 CV_HOUGH_MULTI_SCALE = _cv.CV_HOUGH_MULTI_SCALE
@@ -570,11 +572,11 @@ class IplImage(_object):
             if self.thisown: destroy(self)
         except: pass
 
-    def imageData_set(*args): 
+    def imageData_set(*args):
         """imageData_set(self, PyObject object)"""
         return _cv.IplImage_imageData_set(*args)
 
-    def imageData_get(*args): 
+    def imageData_get(*args):
         """imageData_get(self) -> PyObject"""
         return _cv.IplImage_imageData_get(*args)
 
@@ -734,6 +736,9 @@ class CvMat(_object):
     __swig_setmethods__["refcount"] = _cv.CvMat_refcount_set
     __swig_getmethods__["refcount"] = _cv.CvMat_refcount_get
     if _newclass:refcount = property(_cv.CvMat_refcount_get, _cv.CvMat_refcount_set)
+    __swig_setmethods__["hdr_refcount"] = _cv.CvMat_hdr_refcount_set
+    __swig_getmethods__["hdr_refcount"] = _cv.CvMat_hdr_refcount_get
+    if _newclass:hdr_refcount = property(_cv.CvMat_hdr_refcount_get, _cv.CvMat_hdr_refcount_set)
     __swig_getmethods__["data"] = _cv.CvMat_data_get
     if _newclass:data = property(_cv.CvMat_data_get)
     def __del__(self, destroy=_cv.delete_CvMat):
@@ -821,6 +826,9 @@ class CvMatND(_object):
     __swig_setmethods__["refcount"] = _cv.CvMatND_refcount_set
     __swig_getmethods__["refcount"] = _cv.CvMatND_refcount_get
     if _newclass:refcount = property(_cv.CvMatND_refcount_get, _cv.CvMatND_refcount_set)
+    __swig_setmethods__["hdr_refcount"] = _cv.CvMatND_hdr_refcount_set
+    __swig_getmethods__["hdr_refcount"] = _cv.CvMatND_hdr_refcount_get
+    if _newclass:hdr_refcount = property(_cv.CvMatND_hdr_refcount_get, _cv.CvMatND_hdr_refcount_set)
     __swig_getmethods__["dim"] = _cv.CvMatND_dim_get
     if _newclass:dim = property(_cv.CvMatND_dim_get)
     __swig_getmethods__["data"] = _cv.CvMatND_data_get
@@ -937,6 +945,9 @@ class CvSparseMat(_object):
     __swig_setmethods__["refcount"] = _cv.CvSparseMat_refcount_set
     __swig_getmethods__["refcount"] = _cv.CvSparseMat_refcount_get
     if _newclass:refcount = property(_cv.CvSparseMat_refcount_get, _cv.CvSparseMat_refcount_set)
+    __swig_setmethods__["hdr_refcount"] = _cv.CvSparseMat_hdr_refcount_set
+    __swig_getmethods__["hdr_refcount"] = _cv.CvSparseMat_hdr_refcount_get
+    if _newclass:hdr_refcount = property(_cv.CvSparseMat_hdr_refcount_get, _cv.CvSparseMat_hdr_refcount_set)
     __swig_setmethods__["heap"] = _cv.CvSparseMat_heap_set
     __swig_getmethods__["heap"] = _cv.CvSparseMat_heap_get
     if _newclass:heap = property(_cv.CvSparseMat_heap_get, _cv.CvSparseMat_heap_set)
@@ -3694,16 +3705,15 @@ def cvFillConvexPoly(*args):
 
 def cvFillPoly(*args):
     """
-    cvFillPoly(CvArr img, CvPoint pts, int npts, int contours, CvScalar color, 
-        int line_type=8, int shift=0)
+    cvFillPoly(CvArr img, CvPoint pts, CvScalar color, int line_type=8, 
+        int shift=0)
     """
     return _cv.cvFillPoly(*args)
 
 def cvPolyLine(*args):
     """
-    cvPolyLine(CvArr img, CvPoint pts, int npts, int contours, int is_closed, 
-        CvScalar color, int thickness=1, 
-        int line_type=8, int shift=0)
+    cvPolyLine(CvArr img, CvPoint pts, int is_closed, CvScalar color, 
+        int thickness=1, int line_type=8, int shift=0)
     """
     return _cv.cvPolyLine(*args)
 
@@ -3776,8 +3786,8 @@ _cv.CvFont_swigregister(CvFontPtr)
 
 def cvInitFont(*args):
     """
-    cvInitFont(CvFont font, int font_face, double hscale, double vscale, 
-        double shear=0, int thickness=1, int line_type=8)
+    cvInitFont(CvFont font, double hscale, double vscale, double shear=0, 
+        int thickness=1, int line_type=8)
     """
     return _cv.cvInitFont(*args)
 
@@ -3786,7 +3796,7 @@ def cvPutText(*args):
     return _cv.cvPutText(*args)
 
 def cvGetTextSize(*args):
-    """cvGetTextSize(char text_string, CvFont font, CvSize text_size, int baseline)"""
+    """cvGetTextSize(char text_string, CvFont font, CvSize text_size)"""
     return _cv.cvGetTextSize(*args)
 
 def cvColorToScalar(*args):
@@ -4351,9 +4361,6 @@ class CvChainPtReader(_object):
     __swig_setmethods__["deltas"] = _cv.CvChainPtReader_deltas_set
     __swig_getmethods__["deltas"] = _cv.CvChainPtReader_deltas_get
     if _newclass:deltas = property(_cv.CvChainPtReader_deltas_get, _cv.CvChainPtReader_deltas_set)
-    __swig_setmethods__["reserved"] = _cv.CvChainPtReader_reserved_set
-    __swig_getmethods__["reserved"] = _cv.CvChainPtReader_reserved_get
-    if _newclass:reserved = property(_cv.CvChainPtReader_reserved_get, _cv.CvChainPtReader_reserved_set)
     def __init__(self, *args):
         """__init__(self) -> CvChainPtReader"""
         _swig_setattr(self, CvChainPtReader, 'this', _cv.new_CvChainPtReader(*args))
@@ -5096,7 +5103,7 @@ def cvCopyMakeBorder(*args):
 def cvSmooth(*args):
     """
     cvSmooth(CvArr src, CvArr dst, int smoothtype=2, int param1=3, 
-        int param2=0, double param3=0)
+        int param2=0, double param3=0, double param4=0)
     """
     return _cv.cvSmooth(*args)
 
@@ -5884,6 +5891,561 @@ def cvComputeCorrespondEpilines(*args):
         CvMat correspondent_lines)
     """
     return _cv.cvComputeCorrespondEpilines(*args)
+class CvBaseImageFilter(_object):
+    """Proxy of C++ CvBaseImageFilter class"""
+    __swig_setmethods__ = {}
+    __setattr__ = lambda self, name, value: _swig_setattr(self, CvBaseImageFilter, name, value)
+    __swig_getmethods__ = {}
+    __getattr__ = lambda self, name: _swig_getattr(self, CvBaseImageFilter, name)
+    def __repr__(self):
+        return "<%s.%s; proxy of C++ CvBaseImageFilter instance at %s>" % (self.__class__.__module__, self.__class__.__name__, self.this,)
+    def __init__(self, *args):
+        """
+        __init__(self) -> CvBaseImageFilter
+        __init__(self, int _max_width, int _src_type, int _dst_type, bool _is_separable, 
+            CvSize _ksize, CvPoint _anchor=cvPoint(-1,-1), 
+            int _border_mode=1, CvScalar _border_value=cvScalarAll(0)) -> CvBaseImageFilter
+        __init__(self, int _max_width, int _src_type, int _dst_type, bool _is_separable, 
+            CvSize _ksize, CvPoint _anchor=cvPoint(-1,-1), 
+            int _border_mode=1) -> CvBaseImageFilter
+        __init__(self, int _max_width, int _src_type, int _dst_type, bool _is_separable, 
+            CvSize _ksize, CvPoint _anchor=cvPoint(-1,-1)) -> CvBaseImageFilter
+        __init__(self, int _max_width, int _src_type, int _dst_type, bool _is_separable, 
+            CvSize _ksize) -> CvBaseImageFilter
+        """
+        _swig_setattr(self, CvBaseImageFilter, 'this', _cv.new_CvBaseImageFilter(*args))
+        _swig_setattr(self, CvBaseImageFilter, 'thisown', 1)
+    def __del__(self, destroy=_cv.delete_CvBaseImageFilter):
+        """__del__(self)"""
+        try:
+            if self.thisown: destroy(self)
+        except: pass
+
+    def init(*args):
+        """
+        init(self, int _max_width, int _src_type, int _dst_type, bool _is_separable, 
+            CvSize _ksize, CvPoint _anchor=cvPoint(-1,-1), 
+            int _border_mode=1, CvScalar _border_value=cvScalarAll(0))
+        init(self, int _max_width, int _src_type, int _dst_type, bool _is_separable, 
+            CvSize _ksize, CvPoint _anchor=cvPoint(-1,-1), 
+            int _border_mode=1)
+        init(self, int _max_width, int _src_type, int _dst_type, bool _is_separable, 
+            CvSize _ksize, CvPoint _anchor=cvPoint(-1,-1))
+        init(self, int _max_width, int _src_type, int _dst_type, bool _is_separable, 
+            CvSize _ksize)
+        """
+        return _cv.CvBaseImageFilter_init(*args)
+
+    def clear(*args):
+        """clear(self)"""
+        return _cv.CvBaseImageFilter_clear(*args)
+
+    def process(*args):
+        """
+        process(self, CvMat _src, CvMat _dst, CvRect _src_roi=cvRect(0,0,-1,-1), 
+            CvPoint _dst_origin=cvPoint(0,0), int _flags=0) -> int
+        process(self, CvMat _src, CvMat _dst, CvRect _src_roi=cvRect(0,0,-1,-1), 
+            CvPoint _dst_origin=cvPoint(0,0)) -> int
+        process(self, CvMat _src, CvMat _dst, CvRect _src_roi=cvRect(0,0,-1,-1)) -> int
+        process(self, CvMat _src, CvMat _dst) -> int
+        """
+        return _cv.CvBaseImageFilter_process(*args)
+
+    def get_src_type(*args):
+        """get_src_type(self) -> int"""
+        return _cv.CvBaseImageFilter_get_src_type(*args)
+
+    def get_dst_type(*args):
+        """get_dst_type(self) -> int"""
+        return _cv.CvBaseImageFilter_get_dst_type(*args)
+
+    def get_work_type(*args):
+        """get_work_type(self) -> int"""
+        return _cv.CvBaseImageFilter_get_work_type(*args)
+
+    def get_kernel_size(*args):
+        """get_kernel_size(self) -> CvSize"""
+        return _cv.CvBaseImageFilter_get_kernel_size(*args)
+
+    def get_anchor(*args):
+        """get_anchor(self) -> CvPoint"""
+        return _cv.CvBaseImageFilter_get_anchor(*args)
+
+    def get_width(*args):
+        """get_width(self) -> int"""
+        return _cv.CvBaseImageFilter_get_width(*args)
+
+    def get_x_filter_func(*args):
+        """get_x_filter_func(self) -> CvRowFilterFunc"""
+        return _cv.CvBaseImageFilter_get_x_filter_func(*args)
+
+    def get_y_filter_func(*args):
+        """get_y_filter_func(self) -> CvColumnFilterFunc"""
+        return _cv.CvBaseImageFilter_get_y_filter_func(*args)
+
+
+class CvBaseImageFilterPtr(CvBaseImageFilter):
+    def __init__(self, this):
+        _swig_setattr(self, CvBaseImageFilter, 'this', this)
+        if not hasattr(self,"thisown"): _swig_setattr(self, CvBaseImageFilter, 'thisown', 0)
+        _swig_setattr(self, CvBaseImageFilter,self.__class__,CvBaseImageFilter)
+_cv.CvBaseImageFilter_swigregister(CvBaseImageFilterPtr)
+
+class CvSepFilter(CvBaseImageFilter):
+    """Proxy of C++ CvSepFilter class"""
+    __swig_setmethods__ = {}
+    for _s in [CvBaseImageFilter]: __swig_setmethods__.update(_s.__swig_setmethods__)
+    __setattr__ = lambda self, name, value: _swig_setattr(self, CvSepFilter, name, value)
+    __swig_getmethods__ = {}
+    for _s in [CvBaseImageFilter]: __swig_getmethods__.update(_s.__swig_getmethods__)
+    __getattr__ = lambda self, name: _swig_getattr(self, CvSepFilter, name)
+    def __repr__(self):
+        return "<%s.%s; proxy of C++ CvSepFilter instance at %s>" % (self.__class__.__module__, self.__class__.__name__, self.this,)
+    def __init__(self, *args):
+        """
+        __init__(self) -> CvSepFilter
+        __init__(self, int _max_width, int _src_type, int _dst_type, CvMat _kx, 
+            CvMat _ky, CvPoint _anchor=cvPoint(-1,-1), 
+            int _border_mode=1, CvScalar _border_value=cvScalarAll(0)) -> CvSepFilter
+        __init__(self, int _max_width, int _src_type, int _dst_type, CvMat _kx, 
+            CvMat _ky, CvPoint _anchor=cvPoint(-1,-1), 
+            int _border_mode=1) -> CvSepFilter
+        __init__(self, int _max_width, int _src_type, int _dst_type, CvMat _kx, 
+            CvMat _ky, CvPoint _anchor=cvPoint(-1,-1)) -> CvSepFilter
+        __init__(self, int _max_width, int _src_type, int _dst_type, CvMat _kx, 
+            CvMat _ky) -> CvSepFilter
+        """
+        _swig_setattr(self, CvSepFilter, 'this', _cv.new_CvSepFilter(*args))
+        _swig_setattr(self, CvSepFilter, 'thisown', 1)
+    def init(*args):
+        """
+        init(self, int _max_width, int _src_type, int _dst_type, CvMat _kx, 
+            CvMat _ky, CvPoint _anchor=cvPoint(-1,-1), 
+            int _border_mode=1, CvScalar _border_value=cvScalarAll(0))
+        init(self, int _max_width, int _src_type, int _dst_type, CvMat _kx, 
+            CvMat _ky, CvPoint _anchor=cvPoint(-1,-1), 
+            int _border_mode=1)
+        init(self, int _max_width, int _src_type, int _dst_type, CvMat _kx, 
+            CvMat _ky, CvPoint _anchor=cvPoint(-1,-1))
+        init(self, int _max_width, int _src_type, int _dst_type, CvMat _kx, 
+            CvMat _ky)
+        """
+        return _cv.CvSepFilter_init(*args)
+
+    def init_deriv(*args):
+        """
+        init_deriv(self, int _max_width, int _src_type, int _dst_type, int dx, 
+            int dy, int aperture_size, int flags=0)
+        init_deriv(self, int _max_width, int _src_type, int _dst_type, int dx, 
+            int dy, int aperture_size)
+        """
+        return _cv.CvSepFilter_init_deriv(*args)
+
+    def init_gaussian(*args):
+        """
+        init_gaussian(self, int _max_width, int _src_type, int _dst_type, int gaussian_size, 
+            double sigma)
+        """
+        return _cv.CvSepFilter_init_gaussian(*args)
+
+    def clear(*args):
+        """clear(self)"""
+        return _cv.CvSepFilter_clear(*args)
+
+    def get_x_kernel(*args):
+        """get_x_kernel(self) -> CvMat"""
+        return _cv.CvSepFilter_get_x_kernel(*args)
+
+    def get_y_kernel(*args):
+        """get_y_kernel(self) -> CvMat"""
+        return _cv.CvSepFilter_get_y_kernel(*args)
+
+    def get_x_kernel_flags(*args):
+        """get_x_kernel_flags(self) -> int"""
+        return _cv.CvSepFilter_get_x_kernel_flags(*args)
+
+    def get_y_kernel_flags(*args):
+        """get_y_kernel_flags(self) -> int"""
+        return _cv.CvSepFilter_get_y_kernel_flags(*args)
+
+    GENERIC = _cv.CvSepFilter_GENERIC
+    ASYMMETRICAL = _cv.CvSepFilter_ASYMMETRICAL
+    SYMMETRICAL = _cv.CvSepFilter_SYMMETRICAL
+    POSITIVE = _cv.CvSepFilter_POSITIVE
+    SUM_TO_1 = _cv.CvSepFilter_SUM_TO_1
+    INTEGER = _cv.CvSepFilter_INTEGER
+    NORMALIZE_KERNEL = _cv.CvSepFilter_NORMALIZE_KERNEL
+    FLIP_KERNEL = _cv.CvSepFilter_FLIP_KERNEL
+    def init_gaussian_kernel(*args):
+        """
+        init_gaussian_kernel(CvMat kernel, double sigma=-1)
+        init_gaussian_kernel(CvMat kernel)
+        """
+        return _cv.CvSepFilter_init_gaussian_kernel(*args)
+
+    if _newclass:init_gaussian_kernel = staticmethod(init_gaussian_kernel)
+    __swig_getmethods__["init_gaussian_kernel"] = lambda x: init_gaussian_kernel
+    def init_sobel_kernel(*args):
+        """
+        init_sobel_kernel(CvMat _kx, CvMat _ky, int dx, int dy, int flags=0)
+        init_sobel_kernel(CvMat _kx, CvMat _ky, int dx, int dy)
+        """
+        return _cv.CvSepFilter_init_sobel_kernel(*args)
+
+    if _newclass:init_sobel_kernel = staticmethod(init_sobel_kernel)
+    __swig_getmethods__["init_sobel_kernel"] = lambda x: init_sobel_kernel
+    def init_scharr_kernel(*args):
+        """
+        init_scharr_kernel(CvMat _kx, CvMat _ky, int dx, int dy, int flags=0)
+        init_scharr_kernel(CvMat _kx, CvMat _ky, int dx, int dy)
+        """
+        return _cv.CvSepFilter_init_scharr_kernel(*args)
+
+    if _newclass:init_scharr_kernel = staticmethod(init_scharr_kernel)
+    __swig_getmethods__["init_scharr_kernel"] = lambda x: init_scharr_kernel
+    def __del__(self, destroy=_cv.delete_CvSepFilter):
+        """__del__(self)"""
+        try:
+            if self.thisown: destroy(self)
+        except: pass
+
+
+class CvSepFilterPtr(CvSepFilter):
+    def __init__(self, this):
+        _swig_setattr(self, CvSepFilter, 'this', this)
+        if not hasattr(self,"thisown"): _swig_setattr(self, CvSepFilter, 'thisown', 0)
+        _swig_setattr(self, CvSepFilter,self.__class__,CvSepFilter)
+_cv.CvSepFilter_swigregister(CvSepFilterPtr)
+
+def CvSepFilter_init_gaussian_kernel(*args):
+    """
+    init_gaussian_kernel(CvMat kernel, double sigma=-1)
+    CvSepFilter_init_gaussian_kernel(CvMat kernel)
+    """
+    return _cv.CvSepFilter_init_gaussian_kernel(*args)
+
+def CvSepFilter_init_sobel_kernel(*args):
+    """
+    init_sobel_kernel(CvMat _kx, CvMat _ky, int dx, int dy, int flags=0)
+    CvSepFilter_init_sobel_kernel(CvMat _kx, CvMat _ky, int dx, int dy)
+    """
+    return _cv.CvSepFilter_init_sobel_kernel(*args)
+
+def CvSepFilter_init_scharr_kernel(*args):
+    """
+    init_scharr_kernel(CvMat _kx, CvMat _ky, int dx, int dy, int flags=0)
+    CvSepFilter_init_scharr_kernel(CvMat _kx, CvMat _ky, int dx, int dy)
+    """
+    return _cv.CvSepFilter_init_scharr_kernel(*args)
+
+class CvLinearFilter(CvBaseImageFilter):
+    """Proxy of C++ CvLinearFilter class"""
+    __swig_setmethods__ = {}
+    for _s in [CvBaseImageFilter]: __swig_setmethods__.update(_s.__swig_setmethods__)
+    __setattr__ = lambda self, name, value: _swig_setattr(self, CvLinearFilter, name, value)
+    __swig_getmethods__ = {}
+    for _s in [CvBaseImageFilter]: __swig_getmethods__.update(_s.__swig_getmethods__)
+    __getattr__ = lambda self, name: _swig_getattr(self, CvLinearFilter, name)
+    def __repr__(self):
+        return "<%s.%s; proxy of C++ CvLinearFilter instance at %s>" % (self.__class__.__module__, self.__class__.__name__, self.this,)
+    def __init__(self, *args):
+        """
+        __init__(self) -> CvLinearFilter
+        __init__(self, int _max_width, int _src_type, int _dst_type, CvMat _kernel, 
+            CvPoint _anchor=cvPoint(-1,-1), int _border_mode=1, 
+            CvScalar _border_value=cvScalarAll(0)) -> CvLinearFilter
+        __init__(self, int _max_width, int _src_type, int _dst_type, CvMat _kernel, 
+            CvPoint _anchor=cvPoint(-1,-1), int _border_mode=1) -> CvLinearFilter
+        __init__(self, int _max_width, int _src_type, int _dst_type, CvMat _kernel, 
+            CvPoint _anchor=cvPoint(-1,-1)) -> CvLinearFilter
+        __init__(self, int _max_width, int _src_type, int _dst_type, CvMat _kernel) -> CvLinearFilter
+        """
+        _swig_setattr(self, CvLinearFilter, 'this', _cv.new_CvLinearFilter(*args))
+        _swig_setattr(self, CvLinearFilter, 'thisown', 1)
+    def init(*args):
+        """
+        init(self, int _max_width, int _src_type, int _dst_type, CvMat _kernel, 
+            CvPoint _anchor=cvPoint(-1,-1), int _border_mode=1, 
+            CvScalar _border_value=cvScalarAll(0))
+        init(self, int _max_width, int _src_type, int _dst_type, CvMat _kernel, 
+            CvPoint _anchor=cvPoint(-1,-1), int _border_mode=1)
+        init(self, int _max_width, int _src_type, int _dst_type, CvMat _kernel, 
+            CvPoint _anchor=cvPoint(-1,-1))
+        init(self, int _max_width, int _src_type, int _dst_type, CvMat _kernel)
+        """
+        return _cv.CvLinearFilter_init(*args)
+
+    def clear(*args):
+        """clear(self)"""
+        return _cv.CvLinearFilter_clear(*args)
+
+    def get_kernel(*args):
+        """get_kernel(self) -> CvMat"""
+        return _cv.CvLinearFilter_get_kernel(*args)
+
+    def get_kernel_sparse_buf(*args):
+        """get_kernel_sparse_buf(self) -> uchar"""
+        return _cv.CvLinearFilter_get_kernel_sparse_buf(*args)
+
+    def get_kernel_sparse_count(*args):
+        """get_kernel_sparse_count(self) -> int"""
+        return _cv.CvLinearFilter_get_kernel_sparse_count(*args)
+
+    def __del__(self, destroy=_cv.delete_CvLinearFilter):
+        """__del__(self)"""
+        try:
+            if self.thisown: destroy(self)
+        except: pass
+
+
+class CvLinearFilterPtr(CvLinearFilter):
+    def __init__(self, this):
+        _swig_setattr(self, CvLinearFilter, 'this', this)
+        if not hasattr(self,"thisown"): _swig_setattr(self, CvLinearFilter, 'thisown', 0)
+        _swig_setattr(self, CvLinearFilter,self.__class__,CvLinearFilter)
+_cv.CvLinearFilter_swigregister(CvLinearFilterPtr)
+
+class CvBoxFilter(CvBaseImageFilter):
+    """Proxy of C++ CvBoxFilter class"""
+    __swig_setmethods__ = {}
+    for _s in [CvBaseImageFilter]: __swig_setmethods__.update(_s.__swig_setmethods__)
+    __setattr__ = lambda self, name, value: _swig_setattr(self, CvBoxFilter, name, value)
+    __swig_getmethods__ = {}
+    for _s in [CvBaseImageFilter]: __swig_getmethods__.update(_s.__swig_getmethods__)
+    __getattr__ = lambda self, name: _swig_getattr(self, CvBoxFilter, name)
+    def __repr__(self):
+        return "<%s.%s; proxy of C++ CvBoxFilter instance at %s>" % (self.__class__.__module__, self.__class__.__name__, self.this,)
+    def __init__(self, *args):
+        """
+        __init__(self) -> CvBoxFilter
+        __init__(self, int _max_width, int _src_type, int _dst_type, bool _normalized, 
+            CvSize _ksize, CvPoint _anchor=cvPoint(-1,-1), 
+            int _border_mode=1, CvScalar _border_value=cvScalarAll(0)) -> CvBoxFilter
+        __init__(self, int _max_width, int _src_type, int _dst_type, bool _normalized, 
+            CvSize _ksize, CvPoint _anchor=cvPoint(-1,-1), 
+            int _border_mode=1) -> CvBoxFilter
+        __init__(self, int _max_width, int _src_type, int _dst_type, bool _normalized, 
+            CvSize _ksize, CvPoint _anchor=cvPoint(-1,-1)) -> CvBoxFilter
+        __init__(self, int _max_width, int _src_type, int _dst_type, bool _normalized, 
+            CvSize _ksize) -> CvBoxFilter
+        """
+        _swig_setattr(self, CvBoxFilter, 'this', _cv.new_CvBoxFilter(*args))
+        _swig_setattr(self, CvBoxFilter, 'thisown', 1)
+    def init(*args):
+        """
+        init(self, int _max_width, int _src_type, int _dst_type, bool _normalized, 
+            CvSize _ksize, CvPoint _anchor=cvPoint(-1,-1), 
+            int _border_mode=1, CvScalar _border_value=cvScalarAll(0))
+        init(self, int _max_width, int _src_type, int _dst_type, bool _normalized, 
+            CvSize _ksize, CvPoint _anchor=cvPoint(-1,-1), 
+            int _border_mode=1)
+        init(self, int _max_width, int _src_type, int _dst_type, bool _normalized, 
+            CvSize _ksize, CvPoint _anchor=cvPoint(-1,-1))
+        init(self, int _max_width, int _src_type, int _dst_type, bool _normalized, 
+            CvSize _ksize)
+        """
+        return _cv.CvBoxFilter_init(*args)
+
+    def is_normalized(*args):
+        """is_normalized(self) -> bool"""
+        return _cv.CvBoxFilter_is_normalized(*args)
+
+    def get_scale(*args):
+        """get_scale(self) -> double"""
+        return _cv.CvBoxFilter_get_scale(*args)
+
+    def get_sum_buf(*args):
+        """get_sum_buf(self) -> uchar"""
+        return _cv.CvBoxFilter_get_sum_buf(*args)
+
+    def get_sum_count_ptr(*args):
+        """get_sum_count_ptr(self) -> int"""
+        return _cv.CvBoxFilter_get_sum_count_ptr(*args)
+
+    def __del__(self, destroy=_cv.delete_CvBoxFilter):
+        """__del__(self)"""
+        try:
+            if self.thisown: destroy(self)
+        except: pass
+
+
+class CvBoxFilterPtr(CvBoxFilter):
+    def __init__(self, this):
+        _swig_setattr(self, CvBoxFilter, 'this', this)
+        if not hasattr(self,"thisown"): _swig_setattr(self, CvBoxFilter, 'thisown', 0)
+        _swig_setattr(self, CvBoxFilter,self.__class__,CvBoxFilter)
+_cv.CvBoxFilter_swigregister(CvBoxFilterPtr)
+
+class CvLaplaceFilter(CvSepFilter):
+    """Proxy of C++ CvLaplaceFilter class"""
+    __swig_setmethods__ = {}
+    for _s in [CvSepFilter]: __swig_setmethods__.update(_s.__swig_setmethods__)
+    __setattr__ = lambda self, name, value: _swig_setattr(self, CvLaplaceFilter, name, value)
+    __swig_getmethods__ = {}
+    for _s in [CvSepFilter]: __swig_getmethods__.update(_s.__swig_getmethods__)
+    __getattr__ = lambda self, name: _swig_getattr(self, CvLaplaceFilter, name)
+    def __repr__(self):
+        return "<%s.%s; proxy of C++ CvLaplaceFilter instance at %s>" % (self.__class__.__module__, self.__class__.__name__, self.this,)
+    def __init__(self, *args):
+        """
+        __init__(self) -> CvLaplaceFilter
+        __init__(self, int _max_width, int _src_type, int _dst_type, bool _normalized, 
+            int _ksize, int _border_mode=1, 
+            CvScalar _border_value=cvScalarAll(0)) -> CvLaplaceFilter
+        __init__(self, int _max_width, int _src_type, int _dst_type, bool _normalized, 
+            int _ksize, int _border_mode=1) -> CvLaplaceFilter
+        __init__(self, int _max_width, int _src_type, int _dst_type, bool _normalized, 
+            int _ksize) -> CvLaplaceFilter
+        """
+        _swig_setattr(self, CvLaplaceFilter, 'this', _cv.new_CvLaplaceFilter(*args))
+        _swig_setattr(self, CvLaplaceFilter, 'thisown', 1)
+    def init(*args):
+        """
+        init(self, int _max_width, int _src_type, int _dst_type, bool _normalized, 
+            int _ksize, int _border_mode=1, 
+            CvScalar _border_value=cvScalarAll(0))
+        init(self, int _max_width, int _src_type, int _dst_type, bool _normalized, 
+            int _ksize, int _border_mode=1)
+        init(self, int _max_width, int _src_type, int _dst_type, bool _normalized, 
+            int _ksize)
+        """
+        return _cv.CvLaplaceFilter_init(*args)
+
+    def is_normalized(*args):
+        """is_normalized(self) -> bool"""
+        return _cv.CvLaplaceFilter_is_normalized(*args)
+
+    def is_basic_laplacian(*args):
+        """is_basic_laplacian(self) -> bool"""
+        return _cv.CvLaplaceFilter_is_basic_laplacian(*args)
+
+    def __del__(self, destroy=_cv.delete_CvLaplaceFilter):
+        """__del__(self)"""
+        try:
+            if self.thisown: destroy(self)
+        except: pass
+
+
+class CvLaplaceFilterPtr(CvLaplaceFilter):
+    def __init__(self, this):
+        _swig_setattr(self, CvLaplaceFilter, 'this', this)
+        if not hasattr(self,"thisown"): _swig_setattr(self, CvLaplaceFilter, 'thisown', 0)
+        _swig_setattr(self, CvLaplaceFilter,self.__class__,CvLaplaceFilter)
+_cv.CvLaplaceFilter_swigregister(CvLaplaceFilterPtr)
+
+class CvMorphology(CvBaseImageFilter):
+    """Proxy of C++ CvMorphology class"""
+    __swig_setmethods__ = {}
+    for _s in [CvBaseImageFilter]: __swig_setmethods__.update(_s.__swig_setmethods__)
+    __setattr__ = lambda self, name, value: _swig_setattr(self, CvMorphology, name, value)
+    __swig_getmethods__ = {}
+    for _s in [CvBaseImageFilter]: __swig_getmethods__.update(_s.__swig_getmethods__)
+    __getattr__ = lambda self, name: _swig_getattr(self, CvMorphology, name)
+    def __repr__(self):
+        return "<%s.%s; proxy of C++ CvMorphology instance at %s>" % (self.__class__.__module__, self.__class__.__name__, self.this,)
+    def __init__(self, *args):
+        """
+        __init__(self) -> CvMorphology
+        __init__(self, int _operation, int _max_width, int _src_dst_type, 
+            int _element_shape, CvMat _element, CvSize _ksize=cvSize(0,0), 
+            CvPoint _anchor=cvPoint(-1,-1), 
+            int _border_mode=1, CvScalar _border_value=cvScalarAll(0)) -> CvMorphology
+        __init__(self, int _operation, int _max_width, int _src_dst_type, 
+            int _element_shape, CvMat _element, CvSize _ksize=cvSize(0,0), 
+            CvPoint _anchor=cvPoint(-1,-1), 
+            int _border_mode=1) -> CvMorphology
+        __init__(self, int _operation, int _max_width, int _src_dst_type, 
+            int _element_shape, CvMat _element, CvSize _ksize=cvSize(0,0), 
+            CvPoint _anchor=cvPoint(-1,-1)) -> CvMorphology
+        __init__(self, int _operation, int _max_width, int _src_dst_type, 
+            int _element_shape, CvMat _element, CvSize _ksize=cvSize(0,0)) -> CvMorphology
+        __init__(self, int _operation, int _max_width, int _src_dst_type, 
+            int _element_shape, CvMat _element) -> CvMorphology
+        """
+        _swig_setattr(self, CvMorphology, 'this', _cv.new_CvMorphology(*args))
+        _swig_setattr(self, CvMorphology, 'thisown', 1)
+    def init(*args):
+        """
+        init(self, int _operation, int _max_width, int _src_dst_type, 
+            int _element_shape, CvMat _element, CvSize _ksize=cvSize(0,0), 
+            CvPoint _anchor=cvPoint(-1,-1), 
+            int _border_mode=1, CvScalar _border_value=cvScalarAll(0))
+        init(self, int _operation, int _max_width, int _src_dst_type, 
+            int _element_shape, CvMat _element, CvSize _ksize=cvSize(0,0), 
+            CvPoint _anchor=cvPoint(-1,-1), 
+            int _border_mode=1)
+        init(self, int _operation, int _max_width, int _src_dst_type, 
+            int _element_shape, CvMat _element, CvSize _ksize=cvSize(0,0), 
+            CvPoint _anchor=cvPoint(-1,-1))
+        init(self, int _operation, int _max_width, int _src_dst_type, 
+            int _element_shape, CvMat _element, CvSize _ksize=cvSize(0,0))
+        init(self, int _operation, int _max_width, int _src_dst_type, 
+            int _element_shape, CvMat _element)
+        """
+        return _cv.CvMorphology_init(*args)
+
+    def clear(*args):
+        """clear(self)"""
+        return _cv.CvMorphology_clear(*args)
+
+    def get_element(*args):
+        """get_element(self) -> CvMat"""
+        return _cv.CvMorphology_get_element(*args)
+
+    def get_element_shape(*args):
+        """get_element_shape(self) -> int"""
+        return _cv.CvMorphology_get_element_shape(*args)
+
+    def get_operation(*args):
+        """get_operation(self) -> int"""
+        return _cv.CvMorphology_get_operation(*args)
+
+    def get_element_sparse_buf(*args):
+        """get_element_sparse_buf(self) -> uchar"""
+        return _cv.CvMorphology_get_element_sparse_buf(*args)
+
+    def get_element_sparse_count(*args):
+        """get_element_sparse_count(self) -> int"""
+        return _cv.CvMorphology_get_element_sparse_count(*args)
+
+    RECT = _cv.CvMorphology_RECT
+    CROSS = _cv.CvMorphology_CROSS
+    ELLIPSE = _cv.CvMorphology_ELLIPSE
+    CUSTOM = _cv.CvMorphology_CUSTOM
+    BINARY = _cv.CvMorphology_BINARY
+    GRAYSCALE = _cv.CvMorphology_GRAYSCALE
+    ERODE = _cv.CvMorphology_ERODE
+    DILATE = _cv.CvMorphology_DILATE
+    def init_binary_element(*args):
+        """
+        init_binary_element(CvMat _element, int _element_shape, CvPoint _anchor=cvPoint(-1,-1))
+        init_binary_element(CvMat _element, int _element_shape)
+        """
+        return _cv.CvMorphology_init_binary_element(*args)
+
+    if _newclass:init_binary_element = staticmethod(init_binary_element)
+    __swig_getmethods__["init_binary_element"] = lambda x: init_binary_element
+    def __del__(self, destroy=_cv.delete_CvMorphology):
+        """__del__(self)"""
+        try:
+            if self.thisown: destroy(self)
+        except: pass
+
+
+class CvMorphologyPtr(CvMorphology):
+    def __init__(self, this):
+        _swig_setattr(self, CvMorphology, 'this', this)
+        if not hasattr(self,"thisown"): _swig_setattr(self, CvMorphology, 'thisown', 0)
+        _swig_setattr(self, CvMorphology,self.__class__,CvMorphology)
+_cv.CvMorphology_swigregister(CvMorphologyPtr)
+
+def CvMorphology_init_binary_element(*args):
+    """
+    init_binary_element(CvMat _element, int _element_shape, CvPoint _anchor=cvPoint(-1,-1))
+    CvMorphology_init_binary_element(CvMat _element, int _element_shape)
+    """
+    return _cv.CvMorphology_init_binary_element(*args)
+
 
 def SendErrorToPython(*args):
     """

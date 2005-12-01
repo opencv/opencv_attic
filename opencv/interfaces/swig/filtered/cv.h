@@ -1,6 +1,6 @@
 # 1 "../../../cv/include/cv.h"
-# 1 "<eingebaut>"
-# 1 "<Kommandozeile>"
+# 1 "<built-in>"
+# 1 "<command line>"
 # 1 "../../../cv/include/cv.h"
 # 58 "../../../cv/include/cv.h"
 # 1 "../../../cxcore/include/cxcore.h" 1
@@ -214,9 +214,10 @@ typedef struct CvMat
 
 
 
+    int hdr_refcount;
 }
 CvMat;
-# 587 "../../../cxcore/include/cxtypes.h"
+# 588 "../../../cxcore/include/cxtypes.h"
 inline CvMat cvMat( int rows, int cols, int type, void* data = NULL)
 {
     CvMat m;
@@ -229,10 +230,11 @@ inline CvMat cvMat( int rows, int cols, int type, void* data = NULL)
     m.step = rows > 1 ? m.cols*(((((type) & ((64 - 1) << 3)) >> 3) + 1) << ((((sizeof(size_t)/4+1)*16384|0x3a50) >> ((type) & ((1 << 3) - 1))*2) & 3)) : 0;
     m.data.ptr = (uchar*)data;
     m.refcount = NULL;
+    m.hdr_refcount = 0;
 
     return m;
 }
-# 616 "../../../cxcore/include/cxtypes.h"
+# 618 "../../../cxcore/include/cxtypes.h"
 inline double cvmGet( const CvMat* mat, int row, int col )
 {
     int type;
@@ -274,13 +276,15 @@ inline int cvCvToIplDepth( int type )
     return ((((sizeof(size_t)<<28)|0x8442211) >> ((depth) & ((1 << 3) - 1))*4) & 15)*8 | (depth == 1 || depth == 3 ||
            depth == 4 ? 0x80000000 : 0);
 }
-# 669 "../../../cxcore/include/cxtypes.h"
+# 671 "../../../cxcore/include/cxtypes.h"
 typedef struct CvMatND
 {
     int type;
     int dims;
 
     int* refcount;
+    int hdr_refcount;
+
     union
     {
         uchar* ptr;
@@ -298,7 +302,7 @@ typedef struct CvMatND
     dim[32];
 }
 CvMatND;
-# 707 "../../../cxcore/include/cxtypes.h"
+# 711 "../../../cxcore/include/cxtypes.h"
 struct CvSet;
 
 typedef struct CvSparseMat
@@ -306,6 +310,8 @@ typedef struct CvSparseMat
     int type;
     int dims;
     int* refcount;
+    int hdr_refcount;
+
     struct CvSet* heap;
     void** hashtable;
     int hashsize;
@@ -314,7 +320,7 @@ typedef struct CvSparseMat
     int size[32];
 }
 CvSparseMat;
-# 732 "../../../cxcore/include/cxtypes.h"
+# 738 "../../../cxcore/include/cxtypes.h"
 typedef struct CvSparseNode
 {
     unsigned hashval;
@@ -329,9 +335,9 @@ typedef struct CvSparseMatIterator
     int curidx;
 }
 CvSparseMatIterator;
-# 754 "../../../cxcore/include/cxtypes.h"
+# 760 "../../../cxcore/include/cxtypes.h"
 typedef int CvHistType;
-# 770 "../../../cxcore/include/cxtypes.h"
+# 776 "../../../cxcore/include/cxtypes.h"
 typedef struct CvHistogram
 {
     int type;
@@ -341,7 +347,7 @@ typedef struct CvHistogram
     CvMatND mat;
 }
 CvHistogram;
-# 800 "../../../cxcore/include/cxtypes.h"
+# 806 "../../../cxcore/include/cxtypes.h"
 typedef struct CvRect
 {
     int x;
@@ -699,13 +705,13 @@ typedef struct CvSeqBlock
     char* data;
 }
 CvSeqBlock;
-# 1182 "../../../cxcore/include/cxtypes.h"
+# 1188 "../../../cxcore/include/cxtypes.h"
 typedef struct CvSeq
 {
     int flags; int header_size; struct CvSeq* h_prev; struct CvSeq* h_next; struct CvSeq* v_prev; struct CvSeq* v_next; int total; int elem_size; char* block_max; char* ptr; int delta_elems; CvMemStorage* storage; CvSeqBlock* free_blocks; CvSeqBlock* first;
 }
 CvSeq;
-# 1202 "../../../cxcore/include/cxtypes.h"
+# 1208 "../../../cxcore/include/cxtypes.h"
 typedef struct CvSetElem
 {
     int flags; struct CvSetElem* next_free;
@@ -722,7 +728,7 @@ typedef struct CvSet
     int flags; int header_size; struct CvSeq* h_prev; struct CvSeq* h_next; struct CvSeq* v_prev; struct CvSeq* v_next; int total; int elem_size; char* block_max; char* ptr; int delta_elems; CvMemStorage* storage; CvSeqBlock* free_blocks; CvSeqBlock* first; CvSetElem* free_elems; int active_count;
 }
 CvSet;
-# 1255 "../../../cxcore/include/cxtypes.h"
+# 1261 "../../../cxcore/include/cxtypes.h"
 typedef struct CvGraphEdge
 {
     int flags; float weight; struct CvGraphEdge* next[2]; struct CvGraphVtx* vtx[2];
@@ -741,7 +747,7 @@ typedef struct CvGraphVtx2D
     CvPoint2D32f* ptr;
 }
 CvGraphVtx2D;
-# 1282 "../../../cxcore/include/cxtypes.h"
+# 1288 "../../../cxcore/include/cxtypes.h"
 typedef struct CvGraph
 {
     int flags; int header_size; struct CvSeq* h_prev; struct CvSeq* h_next; struct CvSeq* v_prev; struct CvSeq* v_next; int total; int elem_size; char* block_max; char* ptr; int delta_elems; CvMemStorage* storage; CvSeqBlock* free_blocks; CvSeqBlock* first; CvSetElem* free_elems; int active_count; CvSet* edges;
@@ -772,21 +778,21 @@ typedef struct CvContour
 CvContour;
 
 typedef CvContour CvPoint2DSeq;
-# 1449 "../../../cxcore/include/cxtypes.h"
+# 1455 "../../../cxcore/include/cxtypes.h"
 typedef struct CvSeqWriter
 {
     int header_size; CvSeq* seq; CvSeqBlock* block; char* ptr; char* block_min; char* block_max;
 }
 CvSeqWriter;
-# 1467 "../../../cxcore/include/cxtypes.h"
+# 1473 "../../../cxcore/include/cxtypes.h"
 typedef struct CvSeqReader
 {
     int header_size; CvSeq* seq; CvSeqBlock* block; char* ptr; char* block_min; char* block_max; int delta_index; char* prev_elem;
 }
 CvSeqReader;
-# 1587 "../../../cxcore/include/cxtypes.h"
+# 1593 "../../../cxcore/include/cxtypes.h"
 typedef struct CvFileStorage CvFileStorage;
-# 1597 "../../../cxcore/include/cxtypes.h"
+# 1603 "../../../cxcore/include/cxtypes.h"
 typedef struct CvAttrList
 {
     const char** attr;
@@ -805,7 +811,7 @@ inline CvAttrList cvAttrList( const char** attr = NULL,
 }
 
 struct CvTypeInfo;
-# 1650 "../../../cxcore/include/cxtypes.h"
+# 1656 "../../../cxcore/include/cxtypes.h"
 typedef struct CvString
 {
     int len;
@@ -2328,10 +2334,9 @@ typedef struct CvChainPtReader
     char code;
     CvPoint pt;
     char deltas[8][2];
-    int reserved[2];
 }
 CvChainPtReader;
-# 117 "../../../cv/include/cvtypes.h"
+# 116 "../../../cv/include/cvtypes.h"
 typedef struct CvContourTree
 {
     int flags; int header_size; struct CvSeq* h_prev; struct CvSeq* h_next; struct CvSeq* v_prev; struct CvSeq* v_next; int total; int elem_size; char* block_max; char* ptr; int delta_elems; CvMemStorage* storage; CvSeqBlock* free_blocks; CvSeqBlock* first;
@@ -2353,7 +2358,7 @@ CvConvexityDefect;
 
 
 typedef size_t CvSubdiv2DEdge;
-# 151 "../../../cv/include/cvtypes.h"
+# 150 "../../../cv/include/cvtypes.h"
 typedef struct CvQuadEdge2D
 {
     int flags; struct CvSubdiv2DPoint* pt[4]; CvSubdiv2DEdge next[4];
@@ -2365,7 +2370,7 @@ typedef struct CvSubdiv2DPoint
     int flags; CvSubdiv2DEdge first; CvPoint2D32f pt;
 }
 CvSubdiv2DPoint;
-# 171 "../../../cv/include/cvtypes.h"
+# 170 "../../../cv/include/cvtypes.h"
 typedef struct CvSubdiv2D
 {
     int flags; int header_size; struct CvSeq* h_prev; struct CvSeq* h_next; struct CvSeq* v_prev; struct CvSeq* v_next; int total; int elem_size; char* block_max; char* ptr; int delta_elems; CvMemStorage* storage; CvSeqBlock* free_blocks; CvSeqBlock* first; CvSetElem* free_elems; int active_count; CvSet* edges; int quad_edges; int is_geometry_valid; CvSubdiv2DEdge recent_edge; CvPoint2D32f topleft; CvPoint2D32f bottomright;
@@ -2395,7 +2400,7 @@ typedef enum CvNextEdgeType
     CV_PREV_AROUND_RIGHT = 0x02
 }
 CvNextEdgeType;
-# 217 "../../../cv/include/cvtypes.h"
+# 216 "../../../cv/include/cvtypes.h"
 typedef enum CvFilter
 {
     CV_GAUSSIAN_5x5 = 7
@@ -2495,7 +2500,7 @@ typedef struct CvKalman
     CvMat* temp5;
 }
 CvKalman;
-# 328 "../../../cv/include/cvtypes.h"
+# 327 "../../../cv/include/cvtypes.h"
 typedef struct CvHaarFeature
 {
     int tilted;
@@ -2562,12 +2567,12 @@ extern "C" void cvSmooth( const CvArr* src, CvArr* dst,
                       int smoothtype = 2,
                       int param1 = 3,
                       int param2 = 0,
-                      double param3 = 0 );
+                      double param3 = 0,
+                      double param4 = 0);
 
 
 extern "C" void cvFilter2D( const CvArr* src, CvArr* dst, const CvMat* kernel,
                         CvPoint anchor = cvPoint(-1,-1));
-
 
 
 extern "C" void cvIntegral( const CvArr* image, CvArr* sum,
@@ -2589,20 +2594,12 @@ extern "C" void cvPyrDown( const CvArr* src, CvArr* dst,
 
 extern "C" void cvPyrUp( const CvArr* src, CvArr* dst,
                       int filter = CV_GAUSSIAN_5x5 );
-# 123 "../../../cv/include/cv.h"
-extern "C" void cvPyrSegmentation( IplImage* src,
-                              IplImage* dst,
-                              CvMemStorage* storage,
-                              CvSeq** comp,
+# 125 "../../../cv/include/cv.h"
+extern "C" void cvPyrSegmentation( IplImage* src, IplImage* dst,
+                              CvMemStorage* storage, CvSeq** comp,
                               int level, double threshold1,
                               double threshold2 );
-
-
-
-
-
-
-
+# 137 "../../../cv/include/cv.h"
 extern "C" void cvSobel( const CvArr* src, CvArr* dst,
                     int xorder, int yorder,
                     int aperture_size = 3);
@@ -2610,9 +2607,9 @@ extern "C" void cvSobel( const CvArr* src, CvArr* dst,
 
 extern "C" void cvLaplace( const CvArr* src, CvArr* dst,
                       int aperture_size = 3 );
-# 240 "../../../cv/include/cv.h"
+# 241 "../../../cv/include/cv.h"
 extern "C" void cvCvtColor( const CvArr* src, CvArr* dst, int code );
-# 251 "../../../cv/include/cv.h"
+# 252 "../../../cv/include/cv.h"
 extern "C" void cvResize( const CvArr* src, CvArr* dst,
                        int interpolation = 1);
 
@@ -2641,6 +2638,7 @@ extern "C" void cvRemap( const CvArr* src, CvArr* dst,
                       int flags = 1 +8,
                       CvScalar fillval = cvScalarAll(0) );
 
+
 extern "C" void cvLogPolar( const CvArr* src, CvArr* dst,
                          CvPoint2D32f center, double M,
                          int flags = 1 +8);
@@ -2660,7 +2658,6 @@ extern "C" void cvReleaseStructuringElement( IplConvKernel** element );
 
 
 
-
 extern "C" void cvErode( const CvArr* src, CvArr* dst,
                       IplConvKernel* element = NULL,
                       int iterations = 1 );
@@ -2670,11 +2667,10 @@ extern "C" void cvErode( const CvArr* src, CvArr* dst,
 extern "C" void cvDilate( const CvArr* src, CvArr* dst,
                        IplConvKernel* element = NULL,
                        int iterations = 1 );
-# 316 "../../../cv/include/cv.h"
+# 317 "../../../cv/include/cv.h"
 extern "C" void cvMorphologyEx( const CvArr* src, CvArr* dst,
                              CvArr* temp, IplConvKernel* element,
                              int operation, int iterations = 1 );
-
 
 
 extern "C" void cvMoments( const CvArr* arr, CvMoments* moments, int binary = 0);
@@ -3214,12 +3210,7 @@ extern "C" void cvFloodFill( CvArr* image, CvPoint seed_point,
                           CvConnectedComp* comp = NULL,
                           int flags = 4,
                           CvArr* mask = NULL);
-
-
-
-
-
-
+# 953 "../../../cv/include/cv.h"
 extern "C" void cvCanny( const CvArr* image, CvArr* edges, double threshold1,
                       double threshold2, int aperture_size = 3 );
 
@@ -3260,7 +3251,7 @@ extern "C" void cvGoodFeaturesToTrack( const CvArr* image, CvArr* eig_image,
                                    int block_size = 3,
                                    int use_harris = 0,
                                    double k = 0.04 );
-# 1004 "../../../cv/include/cv.h"
+# 1006 "../../../cv/include/cv.h"
 extern "C" CvSeq* cvHoughLines2( CvArr* image, void* line_storage, int method,
                               double rho, double theta, int threshold,
                               double param1 = 0, double param2 = 0);
@@ -3345,7 +3336,7 @@ extern "C" void cvFindExtrinsicCameraParams2( const CvMat* object_points,
                                           const CvMat* distortion_coeffs,
                                           CvMat* rotation_vector,
                                           CvMat* translation_vector );
-# 1096 "../../../cv/include/cv.h"
+# 1098 "../../../cv/include/cv.h"
 extern "C" void cvCalibrateCamera2( const CvMat* object_points,
                                 const CvMat* image_points,
                                 const CvMat* point_counts,
@@ -3392,7 +3383,7 @@ extern "C" void cvReleasePOSITObject( CvPOSITObject** posit_object );
 
 
 extern "C" void cvConvertPointsHomogenious( const CvMat* src, CvMat* dst );
-# 1150 "../../../cv/include/cv.h"
+# 1152 "../../../cv/include/cv.h"
 extern "C" int cvFindFundamentalMat( const CvMat* points1, const CvMat* points2,
                                  CvMat* fundamental_matrix,
                                  int method = (8 + 2),
@@ -3409,3 +3400,248 @@ extern "C" void cvComputeCorrespondEpilines( const CvMat* points,
 
 
 }
+
+
+
+# 1 "../../../cv/include/cv.hpp" 1
+# 57 "../../../cv/include/cv.hpp"
+typedef void (*CvRowFilterFunc)( const uchar* src, uchar* dst, void* params );
+typedef void (*CvColumnFilterFunc)( uchar** src, uchar* dst, int dst_step, int count, void* params );
+
+class CvBaseImageFilter
+{
+public:
+    CvBaseImageFilter();
+
+    CvBaseImageFilter( int _max_width, int _src_type, int _dst_type,
+                       bool _is_separable, CvSize _ksize,
+                       CvPoint _anchor=cvPoint(-1,-1),
+                       int _border_mode=1,
+                       CvScalar _border_value=cvScalarAll(0) );
+    virtual ~CvBaseImageFilter();
+# 82 "../../../cv/include/cv.hpp"
+    virtual void init( int _max_width, int _src_type, int _dst_type,
+                       bool _is_separable, CvSize _ksize,
+                       CvPoint _anchor=cvPoint(-1,-1),
+                       int _border_mode=1,
+                       CvScalar _border_value=cvScalarAll(0) );
+
+
+    virtual void clear();
+# 105 "../../../cv/include/cv.hpp"
+    virtual int process( const CvMat* _src, CvMat* _dst,
+                         CvRect _src_roi=cvRect(0,0,-1,-1),
+                         CvPoint _dst_origin=cvPoint(0,0), int _flags=0 );
+
+    int get_src_type() const { return src_type; }
+    int get_dst_type() const { return dst_type; }
+    int get_work_type() const { return work_type; }
+    CvSize get_kernel_size() const { return ksize; }
+    CvPoint get_anchor() const { return anchor; }
+    int get_width() const { return prev_x_range.end_index - prev_x_range.start_index; }
+    CvRowFilterFunc get_x_filter_func() const { return x_func; }
+    CvColumnFilterFunc get_y_filter_func() const { return y_func; }
+
+protected:
+
+    virtual void get_work_params();
+
+
+
+    virtual void start_process( CvSlice x_range, int width );
+
+
+    virtual void make_y_border( int row_count, int top_rows, int bottom_rows );
+
+    virtual int fill_cyclic_buffer( const uchar* src, int src_step,
+                                    int y, int y1, int y2 );
+
+    enum { ALIGN=32 };
+
+    int max_width;
+
+    int min_depth, src_type, dst_type, work_type;
+
+
+
+    CvRowFilterFunc x_func;
+    CvColumnFilterFunc y_func;
+
+    uchar* buffer;
+    uchar** rows;
+    int top_rows, bottom_rows, max_rows;
+    uchar *buf_start, *buf_end, *buf_head, *buf_tail;
+    int buf_size, buf_step, buf_count, buf_max_count;
+
+    bool is_separable;
+    CvSize ksize;
+    CvPoint anchor;
+    int max_ky, border_mode;
+    CvScalar border_value;
+    uchar* const_row;
+    int* border_tab;
+    int border_tab_sz1, border_tab_sz;
+
+    CvSlice prev_x_range;
+    int prev_width;
+};
+
+
+
+class CvSepFilter : public CvBaseImageFilter
+{
+public:
+    CvSepFilter();
+    CvSepFilter( int _max_width, int _src_type, int _dst_type,
+                 const CvMat* _kx, const CvMat* _ky,
+                 CvPoint _anchor=cvPoint(-1,-1),
+                 int _border_mode=1,
+                 CvScalar _border_value=cvScalarAll(0) );
+    virtual void init( int _max_width, int _src_type, int _dst_type,
+                       const CvMat* _kx, const CvMat* _ky,
+                       CvPoint _anchor=cvPoint(-1,-1),
+                       int _border_mode=1,
+                       CvScalar _border_value=cvScalarAll(0) );
+    virtual void init_deriv( int _max_width, int _src_type, int _dst_type,
+                             int dx, int dy, int aperture_size, int flags=0 );
+    virtual void init_gaussian( int _max_width, int _src_type, int _dst_type,
+                                int gaussian_size, double sigma );
+    virtual void clear();
+    const CvMat* get_x_kernel() const { return kx; }
+    const CvMat* get_y_kernel() const { return ky; }
+    int get_x_kernel_flags() const { return kx_flags; }
+    int get_y_kernel_flags() const { return ky_flags; }
+
+    enum { GENERIC=0, ASYMMETRICAL=1, SYMMETRICAL=2, POSITIVE=4, SUM_TO_1=8, INTEGER=16 };
+    enum { NORMALIZE_KERNEL=1, FLIP_KERNEL=2 };
+
+    static void init_gaussian_kernel( CvMat* kernel, double sigma=-1 );
+    static void init_sobel_kernel( CvMat* _kx, CvMat* _ky, int dx, int dy, int flags=0 );
+    static void init_scharr_kernel( CvMat* _kx, CvMat* _ky, int dx, int dy, int flags=0 );
+
+protected:
+    CvMat *kx, *ky;
+    int kx_flags, ky_flags;
+};
+
+
+
+class CvLinearFilter : public CvBaseImageFilter
+{
+public:
+    CvLinearFilter();
+    CvLinearFilter( int _max_width, int _src_type, int _dst_type,
+                    const CvMat* _kernel,
+                    CvPoint _anchor=cvPoint(-1,-1),
+                    int _border_mode=1,
+                    CvScalar _border_value=cvScalarAll(0) );
+    virtual void init( int _max_width, int _src_type, int _dst_type,
+                       const CvMat* _kernel,
+                       CvPoint _anchor=cvPoint(-1,-1),
+                       int _border_mode=1,
+                       CvScalar _border_value=cvScalarAll(0) );
+    virtual void clear();
+    const CvMat* get_kernel() const { return kernel; }
+    uchar* get_kernel_sparse_buf() { return k_sparse; }
+    int get_kernel_sparse_count() const { return k_sparse_count; }
+
+protected:
+    CvMat *kernel;
+    uchar* k_sparse;
+    int k_sparse_count;
+};
+
+
+
+class CvBoxFilter : public CvBaseImageFilter
+{
+public:
+    CvBoxFilter();
+    CvBoxFilter( int _max_width, int _src_type, int _dst_type,
+                 bool _normalized, CvSize _ksize,
+                 CvPoint _anchor=cvPoint(-1,-1),
+                 int _border_mode=1,
+                 CvScalar _border_value=cvScalarAll(0) );
+    virtual void init( int _max_width, int _src_type, int _dst_type,
+                       bool _normalized, CvSize _ksize,
+                       CvPoint _anchor=cvPoint(-1,-1),
+                       int _border_mode=1,
+                       CvScalar _border_value=cvScalarAll(0) );
+    bool is_normalized() const { return normalized; }
+    double get_scale() const { return scale; }
+    uchar* get_sum_buf() { return sum; }
+    int* get_sum_count_ptr() { return &sum_count; }
+
+protected:
+    virtual void start_process( CvSlice x_range, int width );
+
+    uchar* sum;
+    int sum_count;
+    bool normalized;
+    double scale;
+};
+
+
+
+class CvLaplaceFilter : public CvSepFilter
+{
+public:
+    CvLaplaceFilter();
+    CvLaplaceFilter( int _max_width, int _src_type, int _dst_type,
+                     bool _normalized, int _ksize,
+                     int _border_mode=1,
+                     CvScalar _border_value=cvScalarAll(0) );
+    virtual void init( int _max_width, int _src_type, int _dst_type,
+                       bool _normalized, int _ksize,
+                       int _border_mode=1,
+                       CvScalar _border_value=cvScalarAll(0) );
+    bool is_normalized() const { return normalized; }
+    bool is_basic_laplacian() const { return basic_laplacian; }
+protected:
+    void get_work_params();
+
+    bool basic_laplacian;
+    bool normalized;
+};
+
+
+
+class CvMorphology : public CvBaseImageFilter
+{
+public:
+    CvMorphology();
+    CvMorphology( int _operation, int _max_width, int _src_dst_type,
+                  int _element_shape, CvMat* _element,
+                  CvSize _ksize=cvSize(0,0), CvPoint _anchor=cvPoint(-1,-1),
+                  int _border_mode=1,
+                  CvScalar _border_value=cvScalarAll(0) );
+    virtual void init( int _operation, int _max_width, int _src_dst_type,
+                       int _element_shape, CvMat* _element,
+                       CvSize _ksize=cvSize(0,0), CvPoint _anchor=cvPoint(-1,-1),
+                       int _border_mode=1,
+                       CvScalar _border_value=cvScalarAll(0) );
+    virtual void clear();
+    const CvMat* get_element() const { return element; }
+    int get_element_shape() const { return el_shape; }
+    int get_operation() const { return operation; }
+    uchar* get_element_sparse_buf() { return el_sparse; }
+    int get_element_sparse_count() const { return el_sparse_count; }
+
+    enum { RECT=0, CROSS=1, ELLIPSE=2, CUSTOM=100, BINARY = 0, GRAYSCALE=256 };
+    enum { ERODE=0, DILATE=1 };
+
+    static void init_binary_element( CvMat* _element, int _element_shape,
+                                     CvPoint _anchor=cvPoint(-1,-1) );
+protected:
+
+    void start_process( CvSlice x_range, int width );
+    int fill_cyclic_buffer( const uchar* src, int src_step,
+                            int y0, int y1, int y2 );
+    uchar* el_sparse;
+    int el_sparse_count;
+
+    CvMat *element;
+    int el_shape;
+    int operation;
+};
+# 1172 "../../../cv/include/cv.h" 2
