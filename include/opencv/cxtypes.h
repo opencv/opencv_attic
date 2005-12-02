@@ -517,6 +517,7 @@ typedef struct CvMat
 
     /* for internal use only */
     int* refcount;
+    int hdr_refcount;
 
     union
     {
@@ -544,7 +545,6 @@ typedef struct CvMat
     int cols;
 #endif
 
-    int hdr_refcount;
 }
 CvMat;
 
