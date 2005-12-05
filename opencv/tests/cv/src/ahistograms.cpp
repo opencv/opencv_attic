@@ -393,10 +393,10 @@ static int icvGetHistSize( const CvHistogram* hist )
 static int foaHistCompare(void* _type)
 {
     CvHistType type = (CvHistType)(size_t)_type;
-    static int c_dimss;
-    static int dims;
+    static int c_dimss = 6;
+    static int dims = 10;
+    static float thresh = 0.0001f;
     static int init = 0;
-    static float thresh;
 
     CvHistogram* hist1 = 0;
     CvHistogram* hist2 = 0;
@@ -408,7 +408,7 @@ static int foaHistCompare(void* _type)
     double intersect, exp_intersect;
     double correl, exp_correl;
     double chisqr, exp_chisqr;
-    double bhattacharyya, exp_bhattacharyya = 0;
+    double bhattacharyya, exp_bhattacharyya;
     double m1, m2, m3, mn1, mn2;
     int size;
     int i;
@@ -421,6 +421,7 @@ static int foaHistCompare(void* _type)
         trsiRead( &c_dimss, "6", "Number of dimensions" );
         trsiRead( &dims, "10", "Size of every dimension" );
         trssRead( &thresh, "0.0001", "Max error value" );
+        thresh = MAX(thresh, 1e-4f);
     }
 
     for( c_dims = 1; c_dims <= c_dimss; c_dims++ )
@@ -447,7 +448,7 @@ static int foaHistCompare(void* _type)
         mn1 /= size;
         mn2 /= size;
 
-	/* create normalized histograms for BHATTACHARYYA tests */
+        /* create normalized histograms for BHATTACHARYYA tests */
         cvCopyHist( hist1, &hist1_norm );
         cvCopyHist( hist2, &hist2_norm );
         cvNormalizeHist( hist1_norm, 1 );
@@ -456,10 +457,10 @@ static int foaHistCompare(void* _type)
         intersect = cvCompareHist( hist1, hist2, CV_COMP_INTERSECT );
         correl = cvCompareHist( hist1, hist2, CV_COMP_CORREL );
         chisqr = cvCompareHist( hist1, hist2, CV_COMP_CHISQR );
-        bhattacharyya = cvCompareHist( hist1_norm, hist2_norm,
-				       CV_COMP_BHATTACHARYYA );
+        bhattacharyya = cvCompareHist( hist1, hist2,
+                                       CV_COMP_BHATTACHARYYA );
 
-        for( i = 0, exp_intersect = 0, exp_chisqr = 0,
+        for( i = 0, exp_intersect = 0, exp_chisqr = 0, exp_bhattacharyya = 0,
              m1 = m2 = m3 = 0; i < size; i++ )
         {
             float a = cvQueryHistValue_1D(hist1, i);
@@ -472,11 +473,11 @@ static int foaHistCompare(void* _type)
             m1 += (a - mn1) * (b - mn2);
             m2 += (b - mn2) * (b - mn2);
             m3 += (a - mn1) * (a - mn1);
-	    exp_bhattacharyya += sqrt (a_norm * b_norm);
+            exp_bhattacharyya += sqrt (a_norm * b_norm);
         }
 
         exp_correl = m1 / sqrt( m2 * m3 );
-	exp_bhattacharyya = sqrt (1 - exp_bhattacharyya);
+        exp_bhattacharyya = sqrt (1 - exp_bhattacharyya);
 
         if( fabs( intersect - exp_intersect ) > thresh * exp_intersect )
         {
@@ -508,6 +509,8 @@ static int foaHistCompare(void* _type)
 
         cvReleaseHist( &hist1 );
         cvReleaseHist( &hist2 );
+        cvReleaseHist( &hist1_norm );
+        cvReleaseHist( &hist2_norm );
     }
 
     cvReleaseHist( &hist1 );
@@ -1442,7 +1445,7 @@ static int foaBayesianProb(void* _type)
 
 void InitAHistograms()
 {
-    trsRegArg( "cvGetHistValue_1D, cvGetHistValue_2D, cvGetHistValue_3D, cvGetHistValue_nD, "
+    /*trsRegArg( "cvGetHistValue_1D, cvGetHistValue_2D, cvGetHistValue_3D, cvGetHistValue_nD, "
                "cvQueryHistValue_1D, cvQueryHistValue_2D, cvQueryHistValue_3D, cvQueryHistValue_nD",
                "Histogram Get/Query functions algorithm test",
                "Algorithm", foaHistGetQueryValue, CV_HIST_ARRAY );
@@ -1471,20 +1474,20 @@ void InitAHistograms()
     trsRegArg( "cvThreshHist",
                "Histogram cvThreshHist function algorithm test",
                "Algorithm", foaThreshHist, CV_HIST_TREE );
-
+    */
     trsRegArg( "cvCompareHist",
                "Histogram comparing function algorithm test",
                "Algorithm", foaHistCompare, CV_HIST_ARRAY );
-    //trsRegArg( "cvCompareHist",
-    //           "Histogram comparing function algorithm test",
-    //           "Algorithm", foaHistCompare, CV_HIST_TREE );
-    
+    trsRegArg( "cvCompareHist",
+               "Histogram comparing function algorithm test",
+               "Algorithm", foaHistCompare, CV_HIST_TREE );
+    /*
     trsRegArg( "cvCopyHist",
                "Histogram copying function algorithm test",
                "Algorithm", foaCopyHist, CV_HIST_ARRAY );
-    //trsRegArg( "cvCopyHist",
-    //           "Histogram copying function algorithm test",
-    //           "Algorithm", foaCopyHist, CV_HIST_TREE );
+    trsRegArg( "cvCopyHist",
+               "Histogram copying function algorithm test",
+               "Algorithm", foaCopyHist, CV_HIST_TREE );
 
     trsRegArg( "cvCalcHist",
                "Histogram calculation function algorithm test",
@@ -1516,9 +1519,9 @@ void InitAHistograms()
     trsRegArg( "cvCalcBayesianProb",
                "Bayesian Prob calculation function algorithm test",
                "Algorithm", foaBayesianProb, CV_HIST_ARRAY );
-    //trsRegArg( "cvCalcBayesianProb",
-    //           "Bayesian Prob calculation function algorithm test",
-    //           "Algorithm", foaBayesianProb, CV_HIST_TREE );*/
+    trsRegArg( "cvCalcBayesianProb",
+               "Bayesian Prob calculation function algorithm test",
+               "Algorithm", foaBayesianProb, CV_HIST_TREE );*/
 }
 
 
