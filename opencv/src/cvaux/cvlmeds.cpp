@@ -132,16 +132,16 @@ icvLMedS( int *points1, int *points2, int numPoints, CvMatrix3 * fundamentalMatr
         if( done == -1 )
         {
 
-            cvFree( (void**)&mr );
-            cvFree( (void**)&ml );
+            cvFree( &mr );
+            cvFree( &ml );
             return CV_OUTOFMEM_ERR;
         }                       /* if */
 
         if( done > 7 )
             error = icvPoints8( new_ml, new_mr, new_num, F );
 
-        cvFree( (void**)&new_mr );
-        cvFree( (void**)&new_ml );
+        cvFree( &new_mr );
+        cvFree( &new_ml );
 
     }
     else
@@ -438,12 +438,12 @@ icvMedian( int *ml, int *mr, int num, double *F )
     if( icvSort( deviation, num ) != CV_NO_ERR )
     {
 
-        cvFree( (void**)&deviation );
+        cvFree( &deviation );
         return -1;
     }                           /* if */
 
     value = deviation[num / 2];
-    cvFree( (void**)&deviation );
+    cvFree( &deviation );
     return value;
 
 }                               /* cs_Median */
@@ -538,7 +538,7 @@ icvBoltingPoints( int *ml, int *mr,
     if( !new_ml )
     {
 
-        cvFree( (void**)&index );
+        cvFree( &index );
         return -1;
     }                           /* if */
 
@@ -547,8 +547,8 @@ icvBoltingPoints( int *ml, int *mr,
     if( !new_mr )
     {
 
-        cvFree( (void**)&new_ml );
-        cvFree( (void**)&index );
+        cvFree( &new_ml );
+        cvFree( &index );
         return -1;
     }                           /* if */
 
@@ -571,7 +571,7 @@ icvBoltingPoints( int *ml, int *mr,
             i += 3;
     }                           /* for */
 
-    cvFree( (void**)&index );
+    cvFree( &index );
     return length;
 
 }                               /* cs_BoltingPoints */
@@ -600,7 +600,7 @@ icvPoints8( int *ml, int *mr, int num, double *F )
         if( its++ > 1e+2 )
         {
 
-            cvFree( (void**)&U );
+            cvFree( &U );
             return CV_BADFACTOR_ERR;
         }                       /* if */
 
@@ -615,7 +615,7 @@ icvPoints8( int *ml, int *mr, int num, double *F )
             if( REAL_ZERO( l1 ) && REAL_ZERO( l2 ))
             {
 
-                cvFree( (void**)&U );
+                cvFree( &U );
                 return CV_BADFACTOR_ERR;
             }                   /* if */
 
@@ -627,7 +627,7 @@ icvPoints8( int *ml, int *mr, int num, double *F )
             if( REAL_ZERO( l1 ) && REAL_ZERO( l2 ))
             {
 
-                cvFree( (void**)&U );
+                cvFree( &U );
                 return CV_BADFACTOR_ERR;
             }                   /* if */
 
@@ -662,7 +662,7 @@ icvPoints8( int *ml, int *mr, int num, double *F )
         icvAnalyticPoints8( U, num, F );
     }                           /* while */
 
-    cvFree( (void**)&U );
+    cvFree( &U );
     return CV_NO_ERR;
 
 }                               /* cs_Points8 */
@@ -698,7 +698,7 @@ icvAnalyticPoints8( double *A, int num, double *F )
 
     if( !f )
     {
-        cvFree( (void**)&U );
+        cvFree( &U );
         return -1;
     }                           /* if */
 
@@ -706,8 +706,8 @@ icvAnalyticPoints8( double *A, int num, double *F )
 
     if( !temp2 )
     {
-        cvFree( (void**)&f );
-        cvFree( (void**)&U );
+        cvFree( &f );
+        cvFree( &U );
         return -1;
     }                           /* if */
 
@@ -715,9 +715,9 @@ icvAnalyticPoints8( double *A, int num, double *F )
 
     if( !A_short )
     {
-        cvFree( (void**)&temp2 );
-        cvFree( (void**)&f );
-        cvFree( (void**)&U );
+        cvFree( &temp2 );
+        cvFree( &f );
+        cvFree( &U );
         return -1;
     }                           /* if */
 
@@ -832,10 +832,10 @@ icvAnalyticPoints8( double *A, int num, double *F )
         }                       /* if */
     }                           /* for */
 
-    cvFree( (void**)&A_short );
-    cvFree( (void**)&temp2 );
-    cvFree( (void**)&f );
-    cvFree( (void**)&U );
+    cvFree( &A_short );
+    cvFree( &temp2 );
+    cvFree( &f );
+    cvFree( &U );
 
     return best_norm;
 
@@ -1403,7 +1403,7 @@ icvSingularValueDecomposition( int M,
         }                       /* if */
     }                           /* for */
 
-    cvFree( (void**)&rv1 );
+    cvFree( &rv1 );
 
     return error;
 
@@ -1512,7 +1512,7 @@ icvGaussMxN( double *A, double *B, int M, int N, double **solutions )
             if( !REAL_ZERO( B[j] ))
             {
 
-                cvFree( (void**)&variables );
+                cvFree( &variables );
                 return -1;      /* if system is antithetic */
             }                   /* if */
         }                       /* for */
@@ -1529,7 +1529,7 @@ icvGaussMxN( double *A, double *B, int M, int N, double **solutions )
 
         if( *solutions == 0 )
         {
-            cvFree( (void**)&variables );
+            cvFree( &variables );
             return -1;
         }
 
@@ -1563,7 +1563,7 @@ icvGaussMxN( double *A, double *B, int M, int N, double **solutions )
             }                   /* for */
         }                       /* for */
 
-        cvFree( (void**)&variables );
+        cvFree( &variables );
         return N - M;
     }                           /* if */
 
@@ -1585,7 +1585,7 @@ icvGaussMxN( double *A, double *B, int M, int N, double **solutions )
         }                       /* for */
     }                           /* for */
 
-    cvFree( (void**)&variables );
+    cvFree( &variables );
     return 0;
 
 }                               /* icvGaussMxN */
@@ -1747,18 +1747,18 @@ icvPoint7( int *ml, int *mr, double *F, int *amount )
                 }               /* if */
             }                   /* for */
 
-            cvFree( (void**)&solutions );
+            cvFree( &solutions );
             return error;
         }
         else
         {
-            cvFree( (void**)&solutions );
+            cvFree( &solutions );
         }                       /* if */
 
     }
     else
     {
-        cvFree( (void**)&solutions );
+        cvFree( &solutions );
     }                           /* if */
 
     return error;

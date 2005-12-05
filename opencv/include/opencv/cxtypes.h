@@ -151,6 +151,22 @@ typedef unsigned short ushort;
    array type is recognized at runtime */
 typedef void CvArr;
 
+typedef union Cv32suf
+{
+    int i;
+    unsigned u;
+    float f;
+}
+Cv32suf;
+
+typedef union Cv64suf
+{
+    int64 i;
+    uint64 u;
+    double f;
+}
+Cv64suf;
+
 /****************************************************************************************\
 *                             Common macros and inline functions                         *
 \****************************************************************************************/
@@ -202,8 +218,9 @@ CV_INLINE  int  cvRound( double value )
      the algorithm was taken from Agner Fog's optimization guide
      at http://www.agner.org/assem
      */
-    double temp = value + 6755399441055744.0;
-    return (int)*((uint64*)&temp);
+    Cv64suf temp;
+    temp.f = value + 6755399441055744.0;
+    return (int)temp.u;
 #endif
 }
 
@@ -216,8 +233,9 @@ CV_INLINE  int  cvFloor( double value )
     return i - _mm_movemask_pd(_mm_cmplt_sd(t,_mm_cvtsi32_sd(t,i)));
 #else
     int temp = cvRound(value);
-    float diff = (float)(value - temp);
-    return temp - (*(int*)&diff < 0);
+    Cv32suf diff;
+    diff.f = (float)(value - temp);
+    return temp - (diff.i < 0);
 #endif
 }
 
@@ -230,8 +248,9 @@ CV_INLINE  int  cvCeil( double value )
     return i + _mm_movemask_pd(_mm_cmpgt_sd(t,_mm_cvtsi32_sd(t,i)));
 #else
     int temp = cvRound(value);
-    float diff = (float)(temp - value);
-    return temp + (*(int*)&diff < 0);
+    Cv32suf diff;
+    diff.f = (float)(temp - value);
+    return temp + (diff.i < 0);
 #endif
 }
 
@@ -245,9 +264,10 @@ CV_INLINE int cvIsNaN( double value )
 #elif defined __GNUC__
     return isnan(value);
 #else*/
-    unsigned lo = (unsigned)*(uint64*)&value;
-    unsigned hi = (unsigned)(*(uint64*)&value >> 32);
-    return (hi & 0x7fffffff) + (lo != 0) > 0x7ff00000;
+    Cv64suf ieee754;
+    ieee754.f = value;
+    return ((unsigned)(ieee754.u >> 32) & 0x7fffffff) +
+           ((unsigned)ieee754.u != 0) > 0x7ff00000;
 #endif
 }
 
@@ -259,9 +279,10 @@ CV_INLINE int cvIsInf( double value )
 #elif defined __GNUC__
     return isinf(value);
 #else*/
-    unsigned lo = (unsigned)*(uint64*)&value;
-    unsigned hi = (unsigned)(*(uint64*)&value >> 32);
-    return (hi & 0x7fffffff) == 0x7ff00000 && lo == 0;
+    Cv64suf ieee754;
+    ieee754.f = value;
+    return ((unsigned)(ieee754.u >> 32) & 0x7fffffff) == 0x7ff00000 &&
+           (unsigned)ieee754.u == 0;
 #endif
 }
 
@@ -1555,7 +1576,7 @@ CvSeqReader;
     (_pt) = (reader).pt;                                                \
     if( (reader).ptr )                                                  \
     {                                                                   \
-        CV_READ_SEQ_ELEM( (reader).code, (*((CvSeqReader*)&(reader)))); \
+        CV_READ_SEQ_ELEM( (reader).code, (reader));                     \
         assert( ((reader).code & ~7) == 0 );                            \
         (reader).pt.x += (reader).deltas[(int)(reader).code][0];        \
         (reader).pt.y += (reader).deltas[(int)(reader).code][1];        \

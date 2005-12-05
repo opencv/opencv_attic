@@ -82,8 +82,8 @@ CvCalibFilter::CvCalibFilter()
 CvCalibFilter::~CvCalibFilter()
 {
     SetCameraCount(0);
-    cvFree( (void**)(&etalonParams));
-    cvFree( (void**)(&etalonPoints));
+    cvFree( &etalonParams );
+    cvFree( &etalonPoints );
     cvReleaseMat( &grayImg );
     cvReleaseMat( &tempImg );
     cvReleaseMat( &undistImg );
@@ -99,11 +99,11 @@ bool CvCalibFilter::SetEtalon( CvCalibEtalonType type, double* params,
     Stop();
 
     for( i = 0; i < MAX_CAMERAS; i++ )
-        cvFree( (void**)(latestPoints + i) );
+        cvFree( latestPoints + i );
 
     if( type == CV_CALIB_ETALON_USER || type != etalonType )
     {
-        cvFree( (void**)&etalonParams );
+        cvFree( &etalonParams );
     }
 
     etalonType = type;
@@ -147,7 +147,7 @@ bool CvCalibFilter::SetEtalon( CvCalibEtalonType type, double* params,
 
     if( etalonPointCount != pointCount )
     {
-        cvFree( (void**)&etalonPoints );
+        cvFree( &etalonPoints );
         etalonPointCount = pointCount;
         etalonPoints = (CvPoint2D32f*)cvAlloc( arrSize );
     }
@@ -215,8 +215,8 @@ void CvCalibFilter::SetCameraCount( int count )
     {
         for( int i = 0; i < cameraCount; i++ )
         {
-            cvFree( (void**)(points + i) );
-            cvFree( (void**)(latestPoints + i) );
+            cvFree( points + i );
+            cvFree( latestPoints + i );
             cvReleaseMat( &undistMap[i][0] );
             cvReleaseMat( &undistMap[i][1] );
             cvReleaseMat( &rectMap[i][0] );
@@ -331,10 +331,10 @@ void CvCalibFilter::Stop( bool calibrate )
 
         }
 
-        cvFree( (void**)&buffer );
-        cvFree( (void**)&counts );
-        cvFree( (void**)&rotMatr );
-        cvFree( (void**)&transVect );
+        cvFree( &buffer );
+        cvFree( &counts );
+        cvFree( &rotMatr );
+        cvFree( &transVect );
     }
 
     framesAccepted = 0;
@@ -459,7 +459,7 @@ bool CvCalibFilter::Push( const CvPoint2D32f** pts )
         if( maxPoints < newMaxPoints )
         {
             CvPoint2D32f* prev = points[i];
-            cvFree( (void**)(points + i) );
+            cvFree( points + i );
             points[i] = (CvPoint2D32f*)cvAlloc( newMaxPoints * sizeof(prev[0]));
             memcpy( points[i], prev, maxPoints * sizeof(prev[0]));
         }

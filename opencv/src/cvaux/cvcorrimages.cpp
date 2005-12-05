@@ -165,7 +165,7 @@ int icvCreateFeaturePoints(IplImage *image, CvMat *points, CvMat *status)
     cvReleaseImage(&grayImage);
     cvReleaseImage(&eigImage);
     cvReleaseImage(&tmpImage);
-    cvFree((void**)&cornerPoints);
+    cvFree(&cornerPoints);
 
     return foundFeaturePoints;
 }
@@ -420,12 +420,12 @@ int icvFindCorrForGivenPoints( IplImage *image1,/* Image 1 */
     __END__;
 
     /* Free allocated memory */
-    cvFree((void**)&cornerPoints1);
-    cvFree((void**)&cornerPoints2);
-    cvFree((void**)&status);
-    cvFree((void**)&errors);
-    cvFree((void**)&tmpPoints1);
-    cvFree((void**)&tmpPoints2);
+    cvFree(&cornerPoints1);
+    cvFree(&cornerPoints2);
+    cvFree(&status);
+    cvFree(&errors);
+    cvFree(&tmpPoints1);
+    cvFree(&tmpPoints2);
     cvReleaseMat( &pStatus );
     cvReleaseImage( &grayImage1 );
     cvReleaseImage( &grayImage2 );

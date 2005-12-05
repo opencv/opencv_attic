@@ -344,7 +344,7 @@ icvCalcCovarMatrixEx_8u32fR( int nObjects, void *input, int objStep1,
             }
         }                       /* igr */
 
-        cvFree( (void **) &buffer2 );
+        cvFree( &buffer2 );
     }                           /* if() */
 
     else
@@ -558,7 +558,7 @@ icvCalcEigenObjects_8u32fR( int nObjects, void* input, int objStep,
         if( buffer == NULL )
         {
             if( buf )
-                cvFree( (void **) &buf );
+                cvFree( &buf );
             return CV_OUTOFMEM_ERR;
         }
     }
@@ -582,9 +582,9 @@ icvCalcEigenObjects_8u32fR( int nObjects, void* input, int objStep,
             if( r )
             {
                 if( buffer )
-                    cvFree( (void **) &buffer );
+                    cvFree( &buffer );
                 if( buf )
-                    cvFree( (void **) &buf );
+                    cvFree( &buf );
                 return r;
             }
         }
@@ -606,9 +606,9 @@ icvCalcEigenObjects_8u32fR( int nObjects, void* input, int objStep,
     if( c == NULL )
     {
         if( buffer )
-            cvFree( (void **) &buffer );
+            cvFree( &buffer );
         if( buf )
-            cvFree( (void **) &buf );
+            cvFree( &buf );
         return CV_OUTOFMEM_ERR;
     }
 
@@ -616,11 +616,11 @@ icvCalcEigenObjects_8u32fR( int nObjects, void* input, int objStep,
                                       (uchar *) buffer, userData, avg, 4 * avgStep, size, c );
     if( r )
     {
-        cvFree( (void **) &c );
+        cvFree( &c );
         if( buffer )
-            cvFree( (void **) &buffer );
+            cvFree( &buffer );
         if( buf )
-            cvFree( (void **) &buf );
+            cvFree( &buf );
         return r;
     }
 
@@ -629,11 +629,11 @@ icvCalcEigenObjects_8u32fR( int nObjects, void* input, int objStep,
 
     if( ev == NULL )
     {
-        cvFree( (void **) &c );
+        cvFree( &c );
         if( buffer )
-            cvFree( (void **) &buffer );
+            cvFree( &buffer );
         if( buf )
-            cvFree( (void **) &buf );
+            cvFree( &buf );
         return CV_OUTOFMEM_ERR;
     }
 
@@ -643,28 +643,28 @@ icvCalcEigenObjects_8u32fR( int nObjects, void* input, int objStep,
 
         if( eigVals == NULL )
         {
-            cvFree( (void **) &c );
-            cvFree( (void **) &ev );
+            cvFree( &c );
+            cvFree( &ev );
             if( buffer )
-                cvFree( (void **) &buffer );
+                cvFree( &buffer );
             if( buf )
-                cvFree( (void **) &buf );
+                cvFree( &buf );
             return CV_OUTOFMEM_ERR;
         }
         iev = 1;
     }
 
     r = icvJacobiEigens_32f( c, ev, eigVals, nObjects, 0.0f );
-    cvFree( (void **) &c );
+    cvFree( &c );
     if( r )
     {
-        cvFree( (void **) &ev );
+        cvFree( &ev );
         if( buffer )
-            cvFree( (void **) &buffer );
+            cvFree( &buffer );
         if( buf )
-            cvFree( (void **) &buf );
+            cvFree( &buf );
         if( iev )
-            cvFree( (void **) &eigVals );
+            cvFree( &eigVals );
         return r;
     }
 
@@ -714,13 +714,13 @@ icvCalcEigenObjects_8u32fR( int nObjects, void* input, int objStep,
                     r = (CvStatus)read_callback( io, (void *) buf, userData );
                     if( r )
                     {
-                        cvFree( (void **) &ev );
+                        cvFree( &ev );
                         if( iev )
-                            cvFree( (void **) &eigVals );
+                            cvFree( &eigVals );
                         if( buffer )
-                            cvFree( (void **) &buffer );
+                            cvFree( &buffer );
                         if( buf )
-                            cvFree( (void **) &buf );
+                            cvFree( &buf );
                         return r;
                     }
                 }
@@ -766,13 +766,13 @@ icvCalcEigenObjects_8u32fR( int nObjects, void* input, int objStep,
                 r = (CvStatus)write_callback( ie, (void *) be, userData );
                 if( r )
                 {
-                    cvFree( (void **) &ev );
+                    cvFree( &ev );
                     if( iev )
-                        cvFree( (void **) &eigVals );
+                        cvFree( &eigVals );
                     if( buffer )
-                        cvFree( (void **) &buffer );
+                        cvFree( &buffer );
                     if( buf )
-                        cvFree( (void **) &buf );
+                        cvFree( &buf );
                     return r;
                 }
             }
@@ -803,13 +803,13 @@ icvCalcEigenObjects_8u32fR( int nObjects, void* input, int objStep,
                 r = (CvStatus)read_callback( k, (void *) buf, userData );
                 if( r )
                 {
-                    cvFree( (void **) &ev );
+                    cvFree( &ev );
                     if( iev )
-                        cvFree( (void **) &eigVals );
+                        cvFree( &eigVals );
                     if( buffer )
-                        cvFree( (void **) &buffer );
+                        cvFree( &buffer );
                     if( buf )
-                        cvFree( (void **) &buf );
+                        cvFree( &buf );
                     return r;
                 }
             }
@@ -848,16 +848,16 @@ icvCalcEigenObjects_8u32fR( int nObjects, void* input, int objStep,
         }                       /* k */
     }                           /* else */
 
-    cvFree( (void **) &ev );
+    cvFree( &ev );
     if( iev )
-        cvFree( (void **) &eigVals );
+        cvFree( &eigVals );
     else
         for( i = 0; i < m1; i++ )
             eigVals[i] = 1.f / (eigVals[i] * eigVals[i]);
     if( buffer )
-        cvFree( (void **) &buffer );
+        cvFree( &buffer );
     if( buf )
-        cvFree( (void **) &buf );
+        cvFree( &buf );
     return CV_NO_ERR;
 }
 
@@ -1000,19 +1000,19 @@ icvEigenDecomposite_8u32fR( uchar * obj, int objStep, int nEigObjs,
 
             if( r )
             {
-                cvFree( (void **) &buffer );
+                cvFree( &buffer );
                 return r;
             }
             w = icvCalcDecompCoeff_8u32fR( obj, objStep, buffer,
                                             eigStep, avg, avgStep, size );
             if( w < -1.0e29f )
             {
-                cvFree( (void **) &buffer );
+                cvFree( &buffer );
                 return CV_NOTDEFINED_ERR;
             }
             coeffs[i] = w;
         }
-        cvFree( (void **) &buffer );
+        cvFree( &buffer );
     }
 
     else
@@ -1098,7 +1098,7 @@ icvEigenProjection_8u32fR( int nEigObjs, void *eigInput, int eigStep,
 
         if( buffer == NULL )
         {
-            cvFree( (void **) &buf );
+            cvFree( &buf );
             return CV_OUTOFMEM_ERR;
         }
         eigStep = size.width;
@@ -1115,8 +1115,8 @@ icvEigenProjection_8u32fR( int nEigObjs, void *eigInput, int eigStep,
 
             if( r )
             {
-                cvFree( (void **) &buf );
-                cvFree( (void **) &buffer );
+                cvFree( &buf );
+                cvFree( &buffer );
                 return r;
             }
         }
@@ -1151,9 +1151,9 @@ icvEigenProjection_8u32fR( int nEigObjs, void *eigInput, int eigStep,
             rest[j] = (uchar) w;
         }
 
-    cvFree( (void **) &buf );
+    cvFree( &buf );
     if( ioFlags )
-        cvFree( (void **) &buffer );
+        cvFree( &buffer );
     return CV_NO_ERR;
 }
 
@@ -1238,7 +1238,7 @@ cvCalcCovarMatrixEx( int  nObjects, void*  input, int  ioFlags,
                                               avg_step,
                                               avg_size,
                                               covarMatrix ));
-        cvFree( (void**) &objects );
+        cvFree( &objects );
     }
 
     else
@@ -1394,8 +1394,8 @@ cvCalcEigenObjects( int       nObjects,
                                                  (void*) eigs, eig_step, obj_size,
                                                  ioFlags, ioBufSize, userData,
                                                  calcLimit, avg_data, avg_step, eigVals ));
-            cvFree( (void**) &objs );
-            cvFree( (void**) &eigs );
+            cvFree( &objs );
+            cvFree( &eigs );
             break;
         }
 
@@ -1441,7 +1441,7 @@ cvCalcEigenObjects( int       nObjects,
                                                  avg_data,
                                                  avg_step,
                                                  eigVals   ));
-            cvFree( (void **) &objs );
+            cvFree( &objs );
             break;
         }
 
@@ -1487,7 +1487,7 @@ cvCalcEigenObjects( int       nObjects,
                                                  avg_data,
                                                  avg_step,
                                                  eigVals   ));
-            cvFree( (void **) &eigs );
+            cvFree( &eigs );
             break;
         }
     case CV_EIGOBJ_INPUT_CALLBACK | CV_EIGOBJ_OUTPUT_CALLBACK:
@@ -1669,7 +1669,7 @@ cvEigenDecomposite( IplImage* obj,
                                              avg_step,
                                              obj_size,
                                              coeffs   ));
-        cvFree( (void **) &eigs );
+        cvFree( &eigs );
     }
 
     else
@@ -1786,7 +1786,7 @@ cvEigenProjection( void*     eigInput,
                                             proj_data,
                                             proj_step,
                                             avg_size   ));
-        cvFree( (void **) &eigs );
+        cvFree( &eigs );
     }
 
     else

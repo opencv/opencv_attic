@@ -203,12 +203,12 @@ cvCreateGLCM( const IplImage* srcImage,
 
     __END__;
 
-    cvFree( (void**)&memorySteps );
-    cvFree( (void**)&stepDirections );
+    cvFree( &memorySteps );
+    cvFree( &stepDirections );
 
     if( cvGetErrStatus() < 0 )
     {
-        cvFree( (void**)&newGLCM );
+        cvFree( &newGLCM );
     }
 
     return newGLCM;
@@ -236,26 +236,26 @@ cvReleaseGLCM( CvGLCM** GLCM, int flag )
         {
             if( (*GLCM)->matrices[ matrixLoop ] )
             {
-                cvFree( (void**)((*GLCM)->matrices[ matrixLoop ]) );
-                cvFree( (void**)((*GLCM)->matrices + matrixLoop) );
+                cvFree( (*GLCM)->matrices[matrixLoop] );
+                cvFree( (*GLCM)->matrices + matrixLoop );
             }
         }
 
-        cvFree( (void**)&((*GLCM)->matrices) );
+        cvFree( &((*GLCM)->matrices) );
     }
 
     if( (flag == CV_GLCM_DESC || flag == CV_GLCM_ALL) && (*GLCM)->descriptors )
     {
         for( matrixLoop = 0; matrixLoop < (*GLCM)->numMatrices; matrixLoop++ )
         {
-            cvFree( (void**)((*GLCM)->descriptors + matrixLoop) );
+            cvFree( (*GLCM)->descriptors + matrixLoop );
         }
-        cvFree( (void**)&((*GLCM)->descriptors) );
+        cvFree( &((*GLCM)->descriptors) );
     }
 
     if( flag == CV_GLCM_ALL )
     {
-        cvFree( (void**)GLCM );
+        cvFree( GLCM );
     }
 
     __END__;
@@ -349,7 +349,7 @@ icvCreateGLCM_LookupTable_8u_C1R( const uchar* srcImageData,
 
     __END__;
 
-    cvFree( (void**)&stepIncrementsCounter );
+    cvFree( &stepIncrementsCounter );
 
     if( cvGetErrStatus() < 0 )
         cvReleaseGLCM( &destGLCM, CV_GLCM_GLCM );

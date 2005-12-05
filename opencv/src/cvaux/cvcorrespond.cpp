@@ -100,7 +100,7 @@ icvDynamicCorrespond( int *first,       /* first sequence of runs */
 
     if( matchEdges == 0 )
     {
-        cvFree( (void**)&costTable );
+        cvFree( &costTable );
         return CV_OUTOFMEM_ERR;
     }
 
@@ -311,8 +311,8 @@ icvDynamicCorrespond( int *first,       /* first sequence of runs */
 
     }                           /* while */
 
-    cvFree( (void**)&costTable );
-    cvFree( (void**)&matchEdges );
+    cvFree( &costTable );
+    cvFree( &matchEdges );
 
     return CV_NO_ERR;
 }                               /* icvDynamicCorrespond */

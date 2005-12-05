@@ -297,8 +297,8 @@ CV_IMPL CvBool cv3dTrackerCalibrateCameras(int num_cameras,
 exit:
     cvReleaseImage(&gray_img);
     cvReleaseImage(&tmp_img);
-    cvFree((void **)&object_points);
-    cvFree((void **)&points);
+    cvFree(&object_points);
+    cvFree(&points);
 
     return cameras_done == num_cameras;
 }

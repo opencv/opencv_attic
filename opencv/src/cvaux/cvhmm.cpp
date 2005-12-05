@@ -92,10 +92,10 @@ static CvStatus CV_STDCALL icvReleaseObsInfo( CvImgObsInfo** p_obs_info )
 {
     CvImgObsInfo* obs_info = p_obs_info[0];
 
-    cvFree( (void**)&(obs_info->obs) );
-    cvFree( (void**)&(obs_info->mix) );
-    cvFree( (void**)&(obs_info->state) ); 
-    cvFree( (void**)&(obs_info) );
+    cvFree( &(obs_info->obs) );
+    cvFree( &(obs_info->mix) );
+    cvFree( &(obs_info->state) ); 
+    cvFree( &(obs_info) );
 
     p_obs_info[0] = NULL;
 
@@ -209,15 +209,15 @@ static CvStatus CV_STDCALL icvRelease2DHMM( CvEHMM** phmm )
     if (hmm->obsProb != NULL)
     {
         int* tmp = ((int*)(hmm->obsProb)) - 3;
-        cvFree( (void**)&(tmp)  );
+        cvFree( &(tmp)  );
     }
 
-    cvFree( (void**)&(hmm->u.ehmm->u.state->mu) );
-    cvFree( (void**)&(hmm->u.ehmm->u.state) );
+    cvFree( &(hmm->u.ehmm->u.state->mu) );
+    cvFree( &(hmm->u.ehmm->u.state) );
 
 
     /* free hmm structures */
-    cvFree( (void**)phmm );
+    cvFree( phmm );
 
     phmm[0] = NULL;
 
@@ -487,16 +487,16 @@ icvInitMixSegm( CvImgObsInfo** obs_info_array, int num_img, CvEHMM* hmm )
     
     for (i = 0; i < total; i++)
     {
-        cvFree( (void**)&(a_class[i]) );
-        cvFree( (void**)&(samples[i]) );
-        cvFree( (void**)&(samples_mix[i]) );
+        cvFree( &(a_class[i]) );
+        cvFree( &(samples[i]) );
+        cvFree( &(samples_mix[i]) );
     }
 
-    cvFree( (void**)&a_class );
-    cvFree( (void**)&samples );
-    cvFree( (void**)&samples_mix );
-    cvFree( (void**)&counter );
-    cvFree( (void**)&num_samples );  
+    cvFree( &a_class );
+    cvFree( &samples );
+    cvFree( &samples_mix );
+    cvFree( &counter );
+    cvFree( &num_samples );  
     
     return CV_NO_ERR;
 }
@@ -638,7 +638,7 @@ static CvStatus CV_STDCALL icvEstimateObsProb( CvImgObsInfo* obs_info, CvEHMM* h
         if ( need_size > (*total) ) 
         {
             int* buffer = ((int*)(hmm->obsProb)) - 3;
-            cvFree( (void**)&buffer);
+            cvFree( &buffer);
             buffer = (int*)cvAlloc( need_size + 3 * sizeof(int));
             buffer[0] = need_size;
             buffer[1] = obs_info->obs_y;
@@ -832,7 +832,7 @@ static CvStatus CV_STDCALL icvEstimateObsProb( CvImgObsInfo* obs_info, CvEHMM* h
             }
         }
 
-        if( log_mix_prob != local_log_mix_prob ) cvFree( (void**)&log_mix_prob );
+        if( log_mix_prob != local_log_mix_prob ) cvFree( &log_mix_prob );
         return res;
 #undef MAX_BUF_SIZE
     }
@@ -1253,8 +1253,8 @@ icvViterbiSegmentation( int num_states, int /*num_obs*/, CvMatr32f transP,
     }            
     
     /* memory free */
-    cvFree( (void**)&m_pi );
-    cvFree( (void**)&m_csi );
+    cvFree( &m_pi );
+    cvFree( &m_csi );
     icvDeleteMatrix( m_Gamma );   
        
     return CV_NO_ERR;
@@ -1351,13 +1351,13 @@ static float CV_STDCALL icvEViterbi( CvImgObsInfo* obs_info, CvEHMM* hmm )
     {
         for (j = 0; j < obs_info->obs_y ; j++)
         {
-            cvFree( (void**)&q[i][j] );
+            cvFree( &q[i][j] );
         }
-        cvFree( (void**)&q[i] );
+        cvFree( &q[i] );
     }
     
-    cvFree( (void**)&q );
-    cvFree( (void**)&super_q );
+    cvFree( &q );
+    cvFree( &super_q );
     
     return log_likelihood;
 }  
