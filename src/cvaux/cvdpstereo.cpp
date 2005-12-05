@@ -466,10 +466,10 @@ void icvFindStereoCorrespondenceByBirchfieldDP( uchar* src1, uchar* src2,
     }
 
     //release resources
-    cvFree( (void**)&dsi );    
-    cvFree( (void**)&edges );    
-    cvFree( (void**)&cells );        
-    cvFree( (void**)&rData );        
+    cvFree( &dsi );    
+    cvFree( &edges );    
+    cvFree( &cells );        
+    cvFree( &rData );        
 }
 
 

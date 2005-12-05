@@ -146,7 +146,7 @@ cvCreateFGDStatModel( IplImage* first_frame, CvFGDStatModelParams* parameters )
         if( p_model && p_model->release )
             p_model->release( (CvBGStatModel**)&p_model );
         else
-            cvFree( (void**)&p_model );
+            cvFree( &p_model );
     }
 
     return (CvBGStatModel*)p_model;
@@ -168,9 +168,9 @@ icvReleaseFGDStatModel( CvFGDStatModel** _model )
         CvFGDStatModel* model = *_model;
         if( model->pixel_stat )
         {
-            cvFree( (void**)&model->pixel_stat[0].ctable );
-            cvFree( (void**)&model->pixel_stat[0].cctable );
-            cvFree( (void**)&model->pixel_stat );
+            cvFree( &model->pixel_stat[0].ctable );
+            cvFree( &model->pixel_stat[0].cctable );
+            cvFree( &model->pixel_stat );
         }
 
         cvReleaseImage( &model->Ftd );
@@ -180,7 +180,7 @@ icvReleaseFGDStatModel( CvFGDStatModel** _model )
         cvReleaseImage( &model->prev_frame );
         cvReleaseMemStorage(&model->storage);
 
-        cvFree( (void**)_model );
+        cvFree( _model );
     }
 
     __END__;

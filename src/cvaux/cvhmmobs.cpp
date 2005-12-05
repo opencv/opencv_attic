@@ -303,7 +303,7 @@ icvImgToObs_DCT_8u32f_C1R( uchar * img, int imgStep, CvSize roi,
         }
     }
 
-    cvFree( (void**)&buffer );
+    cvFree( &buffer );
     return CV_NO_ERR;
 }
 
@@ -500,7 +500,7 @@ icvImgToObs_DCT_32f_C1R( float * img, int imgStep, CvSize roi,
         }
     }
 
-    cvFree( (void**)&buffer );
+    cvFree( &buffer );
     return CV_NO_ERR;
 }
 

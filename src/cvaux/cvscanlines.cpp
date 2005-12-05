@@ -79,7 +79,7 @@ icvGetNormalVector3( CvMatrix3 * Matrix, float *v )
         res = 1;
 
     if( solutions )
-        cvFree( (void**)&solutions );
+        cvFree( &solutions );
 
     if( res )
         return CV_BADFACTOR_ERR;

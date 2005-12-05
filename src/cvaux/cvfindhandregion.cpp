@@ -237,11 +237,11 @@ icvFindHandRegion( CvPoint3D32f * points, int count,
 
   M_END:
     if( tmp_number != NULL )
-        cvFree( (void**)&tmp_number );
+        cvFree( &tmp_number );
     if( bin_counts != NULL )
-        cvFree( (void**)&bin_counts );
+        cvFree( &bin_counts );
     if( vv != NULL )
-        cvFree( (void**)&vv );
+        cvFree( &vv );
     if( sub != NULL ) icvDeleteVector (sub);
     if( cros != NULL ) icvDeleteVector (cros);
 
@@ -554,13 +554,13 @@ icvFindHandRegionA( CvPoint3D32f * points, int count,
 
   M_END:
     if( tmp_number != NULL )
-        cvFree( (void**)&tmp_number );
+        cvFree( &tmp_number );
 //    if(bin_countsj != NULL) cvFree( &bin_countsj );
     if( bin_counts != NULL )
-        cvFree( (void**)&bin_counts );
+        cvFree( &bin_counts );
 
     if( vv != NULL )
-        cvFree( (void**)&vv );
+        cvFree( &vv );
 
     if( sub != NULL ) icvDeleteVector (sub);
     if( cros != NULL ) icvDeleteVector (cros);
