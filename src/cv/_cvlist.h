@@ -176,10 +176,10 @@ void prefix##destroy_list_##type(_CVLIST* l)\
     while(cur)\
     {\
         next = *(void**)cur;\
-        cvFree((void**)&cur);\
+        cvFree(&cur);\
         cur = next;\
     }\
-    cvFree((void**)&l);\
+    cvFree(&l);\
 }\
 CVPOS prefix##get_head_pos_##type(_CVLIST* l)\
 {\

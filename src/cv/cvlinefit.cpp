@@ -384,8 +384,8 @@ static CvStatus  icvFitLine2D( CvPoint2D32f * points, int count, int dist,
     {
         if( ret != CV_NO_ERR )
         {
-            cvFree( (void**)&w );
-            cvFree( (void**)&r );
+            cvFree( &w );
+            cvFree( &r );
             return ret;
         }
 
@@ -409,8 +409,8 @@ static CvStatus  icvFitLine2D( CvPoint2D32f * points, int count, int dist,
                     // Return...
                     memcpy( line, _line, 4 * sizeof( float ));
 
-                    cvFree( (void**)&w );
-                    cvFree( (void**)&r );
+                    cvFree( &w );
+                    cvFree( &r );
                     return CV_NO_ERR;
                 }
 
@@ -442,8 +442,8 @@ static CvStatus  icvFitLine2D( CvPoint2D32f * points, int count, int dist,
         ret = icvFitLine2D_wods( points, count, w, _line );
     }
 
-    cvFree( (void**)&w );
-    cvFree( (void**)&r );
+    cvFree( &w );
+    cvFree( &r );
     return CV_BADCONVERGENCE_ERR;
 }
 
@@ -512,8 +512,8 @@ static CvStatus  icvFitLine3D( CvPoint3D32f * points, int count, int dist,
     {
         if( ret != CV_NO_ERR )
         {
-            cvFree( (void**)&w );
-            cvFree( (void**)&r );
+            cvFree( &w );
+            cvFree( &r );
             return ret;
         }
 
@@ -547,8 +547,8 @@ static CvStatus  icvFitLine3D( CvPoint3D32f * points, int count, int dist,
                     // Return...
                     memcpy( line, _line, 6 * sizeof( float ));
 
-                    cvFree( (void**)&w );
-                    cvFree( (void**)&r );
+                    cvFree( &w );
+                    cvFree( &r );
                     return CV_NO_ERR;
                 }
 
@@ -579,8 +579,8 @@ static CvStatus  icvFitLine3D( CvPoint3D32f * points, int count, int dist,
         ret = icvFitLine3D_wods( points, count, w, _line );
     }
 
-    cvFree( (void**)&w );
-    cvFree( (void**)&r );
+    cvFree( &w );
+    cvFree( &r );
     return CV_BADCONVERGENCE_ERR;
 }
 
@@ -670,7 +670,7 @@ cvFitLine( const CvArr* array, int dist, double param,
 
     __END__;
 
-    cvFree( (void**)&buffer );
+    cvFree( &buffer );
 }
 
 /* End of file. */

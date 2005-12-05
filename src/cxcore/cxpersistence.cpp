@@ -404,11 +404,11 @@ cvReleaseFileStorage( CvFileStorage** p_fs )
 
         cvReleaseMemStorage( &fs->strstorage );
 
-        cvFree( (void**)&fs->buffer_start );
+        cvFree( &fs->buffer_start );
         cvReleaseMemStorage( &fs->memstorage );
 
         memset( fs, 0, sizeof(*fs) );
-        cvFree( (void**)&fs );
+        cvFree( &fs );
     }
 
     __END__;
@@ -694,7 +694,12 @@ cvGetFileNodeFromSeq( CvFileStorage* fs,
 static char*
 icvDoubleToString( char* buf, double value )
 {
-    unsigned ieee754_hi = (unsigned)(*(uint64*)&value >> 32);
+    Cv64suf val;
+    unsigned ieee754_hi;
+
+    val.f = value;
+    ieee754_hi = (unsigned)(val.u >> 32);
+
     if( (ieee754_hi & 0x7ff00000) != 0x7ff00000 )
     {
         int ivalue = cvRound(value);
@@ -709,7 +714,7 @@ icvDoubleToString( char* buf, double value )
     }
     else
     {
-        unsigned ieee754_lo = (unsigned)*(uint64*)&value;
+        unsigned ieee754_lo = (unsigned)val.u;
         if( (ieee754_hi & 0x7fffffff) + (ieee754_lo != 0) > 0x7ff00000 )
             strcpy( buf, ".Nan" );
         else
@@ -723,7 +728,11 @@ icvDoubleToString( char* buf, double value )
 static char*
 icvFloatToString( char* buf, float value )
 {
-    unsigned ieee754 = *(unsigned*)&value;
+    Cv32suf val;
+    unsigned ieee754;
+    val.f = value;
+    ieee754 = val.u;
+
     if( (ieee754 & 0x7f800000) != 0x7f800000 )
     {
         int ivalue = cvRound(value);
@@ -2780,7 +2789,7 @@ cvOpenFileStorage( const char* filename, CvMemStorage* dststorage, int flags )
         //cvSetErrMode( mode );
 
         // release resources that we do not need anymore
-        cvFree( (void**)&fs->buffer_start );
+        cvFree( &fs->buffer_start );
         fs->buffer = fs->buffer_end = 0;
     }
 
@@ -2799,7 +2808,7 @@ cvOpenFileStorage( const char* filename, CvMemStorage* dststorage, int flags )
         }
     }
 
-    cvFree( (void**)&xml_buf );
+    cvFree( &xml_buf );
 
     return  fs;
 }
@@ -4573,8 +4582,8 @@ icvWriteGraph( CvFileStorage* fs, const char* name,
 
     __END__;
 
-    cvFree( (void**)&write_buf );
-    cvFree( (void**)&flag_buf );
+    cvFree( &write_buf );
+    cvFree( &flag_buf );
 }
 
 
@@ -4757,8 +4766,8 @@ icvReadGraph( CvFileStorage* fs, CvFileNode* node )
 
     __END__;
 
-    cvFree( (void**)&read_buf );
-    cvFree( (void**)&vtx_buf );
+    cvFree( &read_buf );
+    cvFree( &vtx_buf );
 
     return ptr;
 }
@@ -4903,7 +4912,7 @@ cvUnregisterType( const char* type_name )
         if( !icvFirstType || !icvLastType )
             icvFirstType = icvLastType = 0;
 
-        cvFree( (void**)&info );
+        cvFree( &info );
     }
 
     __END__;

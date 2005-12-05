@@ -89,7 +89,8 @@ CVAPI(void*)  cvAlloc( size_t size );
    to clear pointer to the data after releasing it.
    Passing pointer to NULL pointer is Ok: nothing happens in this case
 */
-CVAPI(void)   cvFree( void** ptr );
+CVAPI(void)   cvFree_( void* ptr );
+#define cvFree(ptr) (cvFree_(*(ptr)), *(ptr)=0)
 
 /* Allocates and initializes IplImage header */
 CVAPI(IplImage*)  cvCreateImageHeader( CvSize size, int depth, int channels );
@@ -148,12 +149,20 @@ CVAPI(void)  cvReleaseMat( CvMat** mat );
    it reaches 0 */
 CV_INLINE  void  cvDecRefData( CvArr* arr )
 {
-    if( CV_IS_MAT( arr ) || CV_IS_MATND( arr ))
+    if( CV_IS_MAT( arr ))
     {
-        CvMat* mat = (CvMat*)arr; /* the first few fields of CvMat and CvMatND are the same */
+        CvMat* mat = (CvMat*)arr;
         mat->data.ptr = NULL;
         if( mat->refcount != NULL && --*mat->refcount == 0 )
-            cvFree( (void**)&mat->refcount );
+            cvFree( &mat->refcount );
+        mat->refcount = NULL;
+    }
+    else if( CV_IS_MATND( arr ))
+    {
+        CvMatND* mat = (CvMatND*)arr;
+        mat->data.ptr = NULL;
+        if( mat->refcount != NULL && --*mat->refcount == 0 )
+            cvFree( &mat->refcount );
         mat->refcount = NULL;
     }
 }
@@ -162,9 +171,15 @@ CV_INLINE  void  cvDecRefData( CvArr* arr )
 CV_INLINE  int  cvIncRefData( CvArr* arr )
 {
     int refcount = 0;
-    if( CV_IS_MAT( arr ) || CV_IS_MATND( arr ))
+    if( CV_IS_MAT( arr ))
     {
         CvMat* mat = (CvMat*)arr;
+        if( mat->refcount != NULL )
+            refcount = ++*mat->refcount;
+    }
+    else if( CV_IS_MATND( arr ))
+    {
+        CvMatND* mat = (CvMatND*)arr;
         if( mat->refcount != NULL )
             refcount = ++*mat->refcount;
     }
@@ -1027,7 +1042,7 @@ CVAPI(int)  cvSeqPartition( const CvSeq* seq, CvMemStorage* storage,
                             CvSeq** labels, CvCmpFunc is_equal, void* userdata );
 
 /************ Internal sequence functions ************/
-CVAPI(void)  cvChangeSeqBlock( CvSeqReader* reader, int direction );
+CVAPI(void)  cvChangeSeqBlock( void* reader, int direction );
 CVAPI(void)  cvCreateSeqBlock( CvSeqWriter* writer );
 
 

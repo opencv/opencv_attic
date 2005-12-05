@@ -885,7 +885,7 @@ icvPyrDownBorder_##flavor##_CnR( const arrtype *src, int src_step, CvSize src_si
     }                                                                                   \
                                                                                         \
     if( !local_alloc )                                                                  \
-        cvFree( (void**)&buf0 );                                                        \
+        cvFree( &buf0 );                                                                \
                                                                                         \
     return CV_OK;                                                                       \
 }

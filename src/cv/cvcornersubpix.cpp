@@ -259,7 +259,7 @@ cvFindCornerSubPix( const void* srcarr, CvPoint2D32f* corners,
     __CLEANUP__;
     __END__;
 
-    cvFree( (void**)&buffer );
+    cvFree( &buffer );
 }
 
 /* End of file. */

@@ -145,6 +145,8 @@ icvCalcOpticalFlowLK_8u32fR( uchar * imgA,
     /* auxiliary */
     int NoMem = 0;
 
+    velStep /= sizeof(velocityX[0]);
+
     /* Checking bad arguments */
     if( imgA == NULL )
         return CV_NULLPTR_ERR;
@@ -222,15 +224,15 @@ icvCalcOpticalFlowLK_8u32fR( uchar * imgA,
         for( k = 0; k < 2; k++ )
         {
             if( MemX[k] )
-                cvFree( (void **) &MemX[k] );
+                cvFree( &MemX[k] );
 
             if( MemY[k] )
-                cvFree( (void **) &MemY[k] );
+                cvFree( &MemY[k] );
         }
         if( II )
-            cvFree( (void **) &II );
+            cvFree( &II );
         if( WII )
-            cvFree( (void **) &WII );
+            cvFree( &WII );
 
         return CV_OUTOFMEM_ERR;
     }
@@ -530,8 +532,8 @@ icvCalcOpticalFlowLK_8u32fR( uchar * imgA,
                 * End of Solving Linear System                                                           *
                 \****************************************************************************************/
             }                   /*for */
-            *((char **) &velocityX) += velStep;
-            *((char **) &velocityY) += velStep;
+            velocityX += velStep;
+            velocityY += velStep;
         }                       /*for */
         PixelLine++;
         ConvLine++;
@@ -540,11 +542,11 @@ icvCalcOpticalFlowLK_8u32fR( uchar * imgA,
     /* Free memory */
     for( k = 0; k < 2; k++ )
     {
-        cvFree( (void **) &MemX[k] );
-        cvFree( (void **) &MemY[k] );
+        cvFree( &MemX[k] );
+        cvFree( &MemY[k] );
     }
-    cvFree( (void **) &II );
-    cvFree( (void **) &WII );
+    cvFree( &II );
+    cvFree( &WII );
 
     return CV_OK;
 } /*icvCalcOpticalFlowLK_8u32fR*/

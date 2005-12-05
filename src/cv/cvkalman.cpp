@@ -156,7 +156,7 @@ cvReleaseKalman( CvKalman** _kalman )
     memset( kalman, 0, sizeof(*kalman));
 
     /* deallocating the structure */
-    cvFree( (void**)_kalman );
+    cvFree( _kalman );
 
     __END__;
 }

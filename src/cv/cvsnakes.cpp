@@ -152,7 +152,7 @@ icvSnake8uC1R( unsigned char *src,
         map = (uchar *) cvAlloc( map_width * map_height );
         if( !map )
         {
-            cvFree( (void**)&gradient );
+            cvFree( &gradient );
             return CV_OUTOFMEM_ERR;
         }
         /* clear map - no gradient computed */
@@ -388,15 +388,15 @@ icvSnake8uC1R( unsigned char *src,
             converged = 1;
     }
 
-    cvFree( (void**)&Econt );
-    cvFree( (void**)&Ecurv );
-    cvFree( (void**)&Eimg );
-    cvFree( (void**)&E );
+    cvFree( &Econt );
+    cvFree( &Ecurv );
+    cvFree( &Eimg );
+    cvFree( &E );
 
     if( scheme == _CV_SNAKE_GRAD )
     {
-        cvFree( (void**)&gradient );
-        cvFree( (void**)&map );
+        cvFree( &gradient );
+        cvFree( &map );
     }
     return CV_OK;
 }

@@ -150,6 +150,8 @@ icvCalcOpticalFlowBM_8u32fR( uchar * imgA, uchar * imgB,
     int patch_ofs = blSize & -8;
     int64 patch_mask = (((int64) 1) << (blSize - patch_ofs * 8)) - 1;
 
+    velStep /= sizeof(velocityX[0]);
+
     if( patch_ofs == blSize )
         patch_mask = (int64) - 1;
 
@@ -177,7 +179,7 @@ icvCalcOpticalFlowBM_8u32fR( uchar * imgA, uchar * imgB,
                                sizeof( CvPoint ));
     if( !ss )
     {
-        cvFree( (void**)&blockA );
+        cvFree( &blockA );
         return CV_OUTOFMEM_ERR;
     }
 
@@ -327,25 +329,17 @@ icvCalcOpticalFlowBM_8u32fR( uchar * imgA, uchar * imgB,
 \****************************************************************************************/
     if( usePrev )
     {
-        float *vel = velocityX;
+        float *velxf = velocityX, *velyf = velocityY;
+        int* velx = (int*)velocityX, *vely = (int*)velocityY;
 
-        for( i = 0; i < NumberBlocksY; i++ )
+        for( i = 0; i < NumberBlocksY; i++, velxf += velStep, velyf += velStep,
+                                            velx += velStep, vely += velStep )
         {
             for( j = 0; j < NumberBlocksX; j++ )
             {
-                *((int *) (&vel[j])) = cvRound( vel[j] );
+                int vx = cvRound( velxf[j] ), vy = cvRound( velyf[j] );
+                velx[j] = vx; vely[j] = vy;
             }
-            *((char **) &vel) += velStep;
-        }
-
-        vel = velocityY;
-        for( i = 0; i < NumberBlocksY; i++ )
-        {
-            for( j = 0; j < NumberBlocksX; j++ )
-            {
-                *((int *) (&vel[j])) = cvRound( vel[j] );
-            }
-            *((char **) &vel) += velStep;
         }
     }
 /****************************************************************************************\
@@ -521,8 +515,8 @@ icvCalcOpticalFlowBM_8u32fR( uchar * imgA, uchar * imgB,
             X1 += blockSize.width;
 
         }                       /*for */
-        *((char **) &int_velocityX) += velStep;
-        *((char **) &int_velocityY) += velStep;
+        int_velocityX += velStep;
+        int_velocityY += velStep;
 
         imgA += DownStep;
         Y1 += blockSize.height;
@@ -532,34 +526,22 @@ icvCalcOpticalFlowBM_8u32fR( uchar * imgA, uchar * imgB,
 * Converting fixed point velocities to floating point                                    *
 \****************************************************************************************/
     {
-        int *vel = (int *) velocityX;
+        float *velxf = velocityX, *velyf = velocityY;
+        int* velx = (int*)velocityX, *vely = (int*)velocityY;
 
-        for( i = 0; i < NumberBlocksY; i++ )
+        for( i = 0; i < NumberBlocksY; i++, velxf += velStep, velyf += velStep,
+                                            velx += velStep, vely += velStep )
         {
             for( j = 0; j < NumberBlocksX; j++ )
             {
-                float tmp = (float) vel[j] * back;
-
-                *((float *) (&vel[j])) = tmp;
+                float vx = (float)velx[j]*back, vy = (float)vely[j]*back;
+                velxf[j] = vx; velyf[j] = vy;
             }
-            *((char **) &vel) += velStep;
-        }
-
-        vel = (int *) velocityY;
-        for( i = 0; i < NumberBlocksY; i++ )
-        {
-            for( j = 0; j < NumberBlocksX; j++ )
-            {
-                float tmp = (float) vel[j] * back;
-
-                *((float *) (&vel[j])) = tmp;
-            }
-            *((char **) &vel) += velStep;
         }
     }
 
-    cvFree( (void**)&ss );
-    cvFree( (void**)&blockA );
+    cvFree( &ss );
+    cvFree( &blockA );
     
     return CV_OK;
 }                               /*cvCalcOpticalFlowBM_8u */

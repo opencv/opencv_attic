@@ -105,7 +105,7 @@ CvMorphology::CvMorphology( int _operation, int _max_width, int _src_dst_type,
 void CvMorphology::clear()
 {
     cvReleaseMat( &element );
-    cvFree( (void**)&el_sparse );
+    cvFree( &el_sparse );
     CvBaseImageFilter::clear();
 }
 
@@ -706,7 +706,7 @@ cvReleaseStructuringElement( IplConvKernel ** element )
 
     if( !element )
         CV_ERROR( CV_StsNullPtr, "" );
-    cvFree( (void**)element );
+    cvFree( element );
 
     __END__;
 }

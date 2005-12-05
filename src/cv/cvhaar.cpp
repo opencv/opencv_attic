@@ -167,8 +167,8 @@ icvReleaseHidHaarClassifierCascade( CvHidHaarClassifierCascade** _cascade )
                     icvHaarClassifierFree_32f_p( cascade->ipp_stages[i] );
             }
         }
-        cvFree( (void**)&cascade->ipp_stages );
-        cvFree( (void**)_cascade );
+        cvFree( &cascade->ipp_stages );
+        cvFree( _cascade );
     }
 }
 
@@ -398,7 +398,7 @@ icvCreateHidHaarClassifierCascade( CvHaarClassifierCascade* cascade )
             for( j = 0; j < i; j++ )
                 if( icvHaarClassifierFree_32f_p && out->ipp_stages[i] )
                     icvHaarClassifierFree_32f_p( out->ipp_stages[i] );
-            cvFree( (void**)&out->ipp_stages );
+            cvFree( &out->ipp_stages );
         }
     }
     }
@@ -412,12 +412,12 @@ icvCreateHidHaarClassifierCascade( CvHaarClassifierCascade* cascade )
     if( cvGetErrStatus() < 0 )
         icvReleaseHidHaarClassifierCascade( &out );
 
-    cvFree( (void**)&ipp_features );
-    cvFree( (void**)&ipp_weights );
-    cvFree( (void**)&ipp_thresholds );
-    cvFree( (void**)&ipp_val1 );
-    cvFree( (void**)&ipp_val2 );
-    cvFree( (void**)&ipp_counts );
+    cvFree( &ipp_features );
+    cvFree( &ipp_weights );
+    cvFree( &ipp_thresholds );
+    cvFree( &ipp_val1 );
+    cvFree( &ipp_val2 );
+    cvFree( &ipp_counts );
 
     return out;
 }
@@ -1270,7 +1270,7 @@ cvHaarDetectObjects( const CvArr* _img,
     cvReleaseMat( &sumcanny );
     cvReleaseMat( &norm_img );
     cvReleaseMat( &img_small );
-    cvFree( (void**)&comps );
+    cvFree( &comps );
 
     return result_seq;
 }
@@ -1460,7 +1460,7 @@ cvLoadHaarClassifierCascade( const char* directory, CvSize orig_window_size )
     __END__;
 
     if( input_cascade )
-        cvFree( (void**)&input_cascade );
+        cvFree( &input_cascade );
 
     if( cvGetErrStatus() < 0 )
         cvReleaseHaarClassifierCascade( &cascade );
@@ -1480,12 +1480,11 @@ cvReleaseHaarClassifierCascade( CvHaarClassifierCascade** _cascade )
         for( i = 0; i < cascade->count; i++ )
         {
             for( j = 0; j < cascade->stage_classifier[i].count; j++ )
-                cvFree( (void**)
-                    &(cascade->stage_classifier[i].classifier[j].haar_feature) );
-            cvFree( (void**) &(cascade->stage_classifier[i].classifier) );
+                cvFree( &cascade->stage_classifier[i].classifier[j].haar_feature );
+            cvFree( &cascade->stage_classifier[i].classifier );
         }
         icvReleaseHidHaarClassifierCascade( &cascade->hid_cascade );
-        cvFree( (void**)_cascade );
+        cvFree( _cascade );
     }
 }
 

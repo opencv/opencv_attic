@@ -571,7 +571,7 @@ cvSub( const void* srcarr1, const void* srcarr2,
     __END__;
 
     if( !local_alloc )
-        cvFree( (void**)&buffer );
+        cvFree( &buffer );
 }
 
 
@@ -792,7 +792,7 @@ cvSubRS( const void* srcarr, CvScalar scalar, void* dstarr, const void* maskarr 
     __END__;
 
     if( !local_alloc )
-        cvFree( (void**)&buffer );
+        cvFree( &buffer );
 }
 
 
@@ -1043,7 +1043,7 @@ cvAdd( const void* srcarr1, const void* srcarr2,
     __END__;
 
     if( !local_alloc )
-        cvFree( (void**)&buffer );
+        cvFree( &buffer );
 }
 
 
@@ -1264,7 +1264,7 @@ cvAddS( const void* srcarr, CvScalar scalar, void* dstarr, const void* maskarr )
     __END__;
 
     if( !local_alloc )
-        cvFree( (void**)&buffer );
+        cvFree( &buffer );
 }
 
 
@@ -1522,8 +1522,8 @@ cvMul( const void* srcarr1, const void* srcarr2, void* dstarr, double scale )
 
 /***************************************** D I V ****************************************/
 
-#define ICV_DEF_DIV_OP_CASE( flavor, arrtype, worktype, _cast_macro1_,                  \
-                             _cast_macro2_, _cvt_macro_, _check_macro_ )                \
+#define ICV_DEF_DIV_OP_CASE( flavor, arrtype, worktype, checktype, _start_row_macro_,   \
+    _cast_macro1_, _cast_macro2_, _cvt_macro_, _check_macro_, isrc )                    \
                                                                                         \
 static CvStatus CV_STDCALL                                                              \
 icvDiv_##flavor##_C1R( const arrtype* src1, int step1,                                  \
@@ -1535,11 +1535,11 @@ icvDiv_##flavor##_C1R( const arrtype* src1, int step1,                          
                                                                                         \
     for( ; size.height--; src1+=step1, src2+=step2, dst+=step )                         \
     {                                                                                   \
-        int i;                                                                          \
+        _start_row_macro_(checktype, src2);                                             \
         for( i = 0; i <= size.width - 4; i += 4 )                                       \
         {                                                                               \
-            if( _check_macro_(src2[i]) && _check_macro_(src2[i+1]) &&                   \
-                _check_macro_(src2[i+2]) && _check_macro_(src2[i+3]))                   \
+            if( _check_macro_(isrc[i]) && _check_macro_(isrc[i+1]) &&                   \
+                _check_macro_(isrc[i+2]) && _check_macro_(isrc[i+3]))                   \
             {                                                                           \
                 double a = (double)_cvt_macro_(src2[i]) * _cvt_macro_(src2[i+1]);       \
                 double b = (double)_cvt_macro_(src2[i+2]) * _cvt_macro_(src2[i+3]);     \
@@ -1560,13 +1560,13 @@ icvDiv_##flavor##_C1R( const arrtype* src1, int step1,                          
             }                                                                           \
             else                                                                        \
             {                                                                           \
-                worktype z0 = _check_macro_(src2[i]) ?                                  \
+                worktype z0 = _check_macro_(isrc[i]) ?                                  \
                    _cast_macro1_(_cvt_macro_(src1[i])*scale/_cvt_macro_(src2[i])) : 0;  \
-                worktype z1 = _check_macro_(src2[i+1]) ?                                \
+                worktype z1 = _check_macro_(isrc[i+1]) ?                                \
                    _cast_macro1_(_cvt_macro_(src1[i+1])*scale/_cvt_macro_(src2[i+1])):0;\
-                worktype z2 = _check_macro_(src2[i+2]) ?                                \
+                worktype z2 = _check_macro_(isrc[i+2]) ?                                \
                    _cast_macro1_(_cvt_macro_(src1[i+2])*scale/_cvt_macro_(src2[i+2])):0;\
-                worktype z3 = _check_macro_(src2[i+3]) ?                                \
+                worktype z3 = _check_macro_(isrc[i+3]) ?                                \
                    _cast_macro1_(_cvt_macro_(src1[i+3])*scale/_cvt_macro_(src2[i+3])):0;\
                                                                                         \
                 dst[i] = _cast_macro2_(z0);                                             \
@@ -1578,9 +1578,8 @@ icvDiv_##flavor##_C1R( const arrtype* src1, int step1,                          
                                                                                         \
         for( ; i < size.width; i++ )                                                    \
         {                                                                               \
-            worktype z0 = _check_macro_(src2[i]) ?                                      \
+            worktype z0 = _check_macro_(isrc[i]) ?                                      \
                 _cast_macro1_(_cvt_macro_(src1[i])*scale/_cvt_macro_(src2[i])) : 0;     \
-                                                                                        \
             dst[i] = _cast_macro2_(z0);                                                 \
         }                                                                               \
     }                                                                                   \
@@ -1589,8 +1588,9 @@ icvDiv_##flavor##_C1R( const arrtype* src1, int step1,                          
 }
 
 
-#define ICV_DEF_RECIP_OP_CASE( flavor, arrtype, worktype, _cast_macro1_,        \
-                             _cast_macro2_, _cvt_macro_, _check_macro_ )        \
+#define ICV_DEF_RECIP_OP_CASE( flavor, arrtype, worktype, checktype,            \
+    _start_row_macro_, _cast_macro1_, _cast_macro2_,                            \
+    _cvt_macro_, _check_macro_, isrc )                                          \
                                                                                 \
 static CvStatus CV_STDCALL                                                      \
 icvRecip_##flavor##_C1R( const arrtype* src, int step1,                         \
@@ -1601,11 +1601,11 @@ icvRecip_##flavor##_C1R( const arrtype* src, int step1,                         
                                                                                 \
     for( ; size.height--; src+=step1, dst+=step )                               \
     {                                                                           \
-        int i;                                                                  \
+        _start_row_macro_(checktype, src);                                      \
         for( i = 0; i <= size.width - 4; i += 4 )                               \
         {                                                                       \
-            if( _check_macro_(src[i]) && _check_macro_(src[i+1]) &&             \
-                _check_macro_(src[i+2]) && _check_macro_(src[i+3]))             \
+            if( _check_macro_(isrc[i]) && _check_macro_(isrc[i+1]) &&           \
+                _check_macro_(isrc[i+2]) && _check_macro_(isrc[i+3]))           \
             {                                                                   \
                 double a = (double)_cvt_macro_(src[i]) * _cvt_macro_(src[i+1]); \
                 double b = (double)_cvt_macro_(src[i+2]) * _cvt_macro_(src[i+3]);\
@@ -1626,13 +1626,13 @@ icvRecip_##flavor##_C1R( const arrtype* src, int step1,                         
             }                                                                   \
             else                                                                \
             {                                                                   \
-                worktype z0 = _check_macro_(src[i]) ?                           \
+                worktype z0 = _check_macro_(isrc[i]) ?                          \
                    _cast_macro1_(scale/_cvt_macro_(src[i])) : 0;                \
-                worktype z1 = _check_macro_(src[i+1]) ?                         \
+                worktype z1 = _check_macro_(isrc[i+1]) ?                        \
                    _cast_macro1_(scale/_cvt_macro_(src[i+1])):0;                \
-                worktype z2 = _check_macro_(src[i+2]) ?                         \
+                worktype z2 = _check_macro_(isrc[i+2]) ?                        \
                    _cast_macro1_(scale/_cvt_macro_(src[i+2])):0;                \
-                worktype z3 = _check_macro_(src[i+3]) ?                         \
+                worktype z3 = _check_macro_(isrc[i+3]) ?                        \
                    _cast_macro1_(scale/_cvt_macro_(src[i+3])):0;                \
                                                                                 \
                 dst[i] = _cast_macro2_(z0);                                     \
@@ -1644,9 +1644,8 @@ icvRecip_##flavor##_C1R( const arrtype* src, int step1,                         
                                                                                 \
         for( ; i < size.width; i++ )                                            \
         {                                                                       \
-            worktype z0 = _check_macro_(src[i]) ?                               \
+            worktype z0 = _check_macro_(isrc[i]) ?                              \
                 _cast_macro1_(scale/_cvt_macro_(src[i])) : 0;                   \
-                                                                                \
             dst[i] = _cast_macro2_(z0);                                         \
         }                                                                       \
     }                                                                           \
@@ -1654,32 +1653,51 @@ icvRecip_##flavor##_C1R( const arrtype* src, int step1,                         
     return CV_OK;                                                               \
 }
 
-#define div_check_zero_flt(x)  ((*(int*)&(x) & 0x7fffffff) != 0)
-#define div_check_zero_dbl(x)  ((*(int64*)&(x) & CV_BIG_INT(0x7fffffffffffffff)) != 0)
+
+#define div_start_row_int(checktype, divisor) \
+    int i
+
+#define div_start_row_flt(checktype, divisor) \
+    const checktype* isrc = (const checktype*)divisor; int i
+
+#define div_check_zero_flt(x)  (((x) & 0x7fffffff) != 0)
+#define div_check_zero_dbl(x)  (((x) & CV_BIG_INT(0x7fffffffffffffff)) != 0)
 
 #if defined WIN64 && defined EM64T && defined _MSC_VER && !defined CV_ICC
 #pragma optimize("",off)
 #endif
 
-ICV_DEF_DIV_OP_CASE( 8u, uchar, int, cvRound, CV_CAST_8U, CV_8TO32F, CV_NONZERO )
+ICV_DEF_DIV_OP_CASE( 8u, uchar, int, uchar, div_start_row_int,
+                     cvRound, CV_CAST_8U, CV_8TO32F, CV_NONZERO, src2 )
 
 #if defined WIN64 && defined EM64T && defined _MSC_VER && !defined CV_ICC
 #pragma optimize("",on)
 #endif
 
 
-ICV_DEF_DIV_OP_CASE( 16u, ushort, int, cvRound, CV_CAST_16U, CV_CAST_64F, CV_NONZERO )
-ICV_DEF_DIV_OP_CASE( 16s, short, int, cvRound, CV_CAST_16S, CV_NOP, CV_NONZERO )
-ICV_DEF_DIV_OP_CASE( 32s, int, int, cvRound, CV_CAST_32S, CV_CAST_64F, CV_NONZERO )
-ICV_DEF_DIV_OP_CASE( 32f, float, double, CV_NOP, CV_CAST_32F, CV_NOP, div_check_zero_flt )
-ICV_DEF_DIV_OP_CASE( 64f, double, double, CV_NOP, CV_CAST_64F, CV_NOP, div_check_zero_dbl )
+ICV_DEF_DIV_OP_CASE( 16u, ushort, int, ushort, div_start_row_int,
+                     cvRound, CV_CAST_16U, CV_CAST_64F, CV_NONZERO, src2 )
+ICV_DEF_DIV_OP_CASE( 16s, short, int, short, div_start_row_int,
+                     cvRound, CV_CAST_16S, CV_NOP, CV_NONZERO, src2 )
+ICV_DEF_DIV_OP_CASE( 32s, int, int, int, div_start_row_int,
+                     cvRound, CV_CAST_32S, CV_CAST_64F, CV_NONZERO, src2 )
+ICV_DEF_DIV_OP_CASE( 32f, float, double, int, div_start_row_flt,
+                     CV_NOP, CV_CAST_32F, CV_NOP, div_check_zero_flt, isrc )
+ICV_DEF_DIV_OP_CASE( 64f, double, double, int64, div_start_row_flt,
+                     CV_NOP, CV_CAST_64F, CV_NOP, div_check_zero_dbl, isrc )
 
-ICV_DEF_RECIP_OP_CASE( 8u, uchar, int, cvRound, CV_CAST_8U, CV_8TO32F, CV_NONZERO )
-ICV_DEF_RECIP_OP_CASE( 16u, ushort, int, cvRound, CV_CAST_16U, CV_CAST_64F, CV_NONZERO )
-ICV_DEF_RECIP_OP_CASE( 16s, short, int, cvRound, CV_CAST_16S, CV_NOP, CV_NONZERO )
-ICV_DEF_RECIP_OP_CASE( 32s, int, int, cvRound, CV_CAST_32S, CV_CAST_64F, CV_NONZERO )
-ICV_DEF_RECIP_OP_CASE( 32f, float, double, CV_NOP, CV_CAST_32F, CV_NOP, div_check_zero_flt )
-ICV_DEF_RECIP_OP_CASE( 64f, double, double, CV_NOP, CV_CAST_64F, CV_NOP, div_check_zero_dbl )
+ICV_DEF_RECIP_OP_CASE( 8u, uchar, int, uchar, div_start_row_int,
+                       cvRound, CV_CAST_8U, CV_8TO32F, CV_NONZERO, src )
+ICV_DEF_RECIP_OP_CASE( 16u, ushort, int, ushort, div_start_row_int,
+                       cvRound, CV_CAST_16U, CV_CAST_64F, CV_NONZERO, src )
+ICV_DEF_RECIP_OP_CASE( 16s, short, int, short, div_start_row_int,
+                       cvRound, CV_CAST_16S, CV_NOP, CV_NONZERO, src )
+ICV_DEF_RECIP_OP_CASE( 32s, int, int, int, div_start_row_int,
+                       cvRound, CV_CAST_32S, CV_CAST_64F, CV_NONZERO, src )
+ICV_DEF_RECIP_OP_CASE( 32f, float, double, int, div_start_row_flt,
+                       CV_NOP, CV_CAST_32F, CV_NOP, div_check_zero_flt, isrc  )
+ICV_DEF_RECIP_OP_CASE( 64f, double, double, int64, div_start_row_flt,
+                       CV_NOP, CV_CAST_64F, CV_NOP, div_check_zero_dbl, isrc )
 
 ICV_DEF_INIT_ARITHM_FUNC_TAB( Div, C1R )
 ICV_DEF_INIT_ARITHM_FUNC_TAB( Recip, C1R )

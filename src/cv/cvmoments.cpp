@@ -500,7 +500,7 @@ cvMoments( const void* array, CvMoments* moments, int binary )
     if( ippmomentstate )
         icvMomentFree_64f_p( ippmomentstate );
 
-    cvFree( (void**)&tiles );
+    cvFree( &tiles );
 }
 
 /*F///////////////////////////////////////////////////////////////////////////////////////

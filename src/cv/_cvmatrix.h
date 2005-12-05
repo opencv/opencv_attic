@@ -57,7 +57,7 @@
 #define icvCreateMatrix_32f( w, h )  (float*)cvAlloc( (w)*(h)*sizeof(float))
 #define icvCreateMatrix_64d( w, h )  (double*)cvAlloc( (w)*(h)*sizeof(double))
 
-#define icvDeleteVector( vec )  cvFree( (void**)&(vec) )
+#define icvDeleteVector( vec )  cvFree( &(vec) )
 #define icvDeleteMatrix icvDeleteVector
 
 #define icvAddMatrix_32f( src1, src2, dst, w, h ) \

@@ -63,8 +63,13 @@ static const int icvAtanSign[8] =
 CV_IMPL float
 cvFastArctan( float y, float x )
 {
-    int ix = *((int *) &x), iy = *((int *) &y);
-    int ygx, idx = (ix < 0) * 2 + (iy < 0) * 4;
+    Cv32suf _x, _y;
+    int ix, iy, ygx, idx;
+    double z;
+
+    _x.f = x; _y.f = y;
+    ix = _x.i; iy = _y.i;
+    idx = (ix < 0) * 2 + (iy < 0) * 4;
 
     ix &= 0x7fffffff;
     iy &= 0x7fffffff;
@@ -78,28 +83,27 @@ cvFastArctan( float y, float x )
     ix ^= iy & ygx;
     iy ^= ix & ygx;
     ix ^= iy & ygx;
-    iy ^= icvAtanSign[idx];
 
-    /* set ix to non zero */
-    ix |= 1;
+    _y.i = iy ^ icvAtanSign[idx];
 
-    {
-        double z = *((float *) &iy) / *((float *) &ix);
-        return (float)((_CV_ATAN_CF0*fabs(z) + _CV_ATAN_CF1)*z + icvAtanTab[idx]);
-    }
+    /* ix = ix != 0 ? ix : 1.f */
+    _x.i = ((ix ^ CV_1F) & ((ix == 0) - 1)) ^ CV_1F;
+    
+    z = _y.f / _x.f;
+    return (float)((_CV_ATAN_CF0*fabs(z) + _CV_ATAN_CF1)*z + icvAtanTab[idx]);
 }
 
 
 IPCVAPI_IMPL( CvStatus, icvFastArctan_32f,
-    (const float *y, const float *x, float *angle, int len ), (y, x, angle, len) )
+    (const float *__y, const float *__x, float *angle, int len ), (__y, __x, angle, len) )
 {
     int i = 0;
+    const int *y = (const int*)__y, *x = (const int*)__x;
 
     if( !(y && x && angle && len >= 0) )
         return CV_BADFACTOR_ERR;
 
     /* unrolled by 4 loop */
-#if 1
     for( ; i <= len - 4; i += 4 )
     {
         int j, idx[4];
@@ -109,8 +113,9 @@ IPCVAPI_IMPL( CvStatus, icvFastArctan_32f,
         /* calc numerators and denominators */
         for( j = 0; j < 4; j++ )
         {
-            int ix = *((int *) &x[i + j]), iy = *((int *) &y[i + j]);
+            int ix = x[i + j], iy = y[i + j];
             int ygx, k = (ix < 0) * 2 + (iy < 0) * 4;
+            Cv32suf _x, _y;
 
             ix &= 0x7fffffff;
             iy &= 0x7fffffff;
@@ -124,13 +129,14 @@ IPCVAPI_IMPL( CvStatus, icvFastArctan_32f,
             ix ^= iy & ygx;
             iy ^= ix & ygx;
             ix ^= iy & ygx;
-            iy ^= icvAtanSign[k];
+            
+            _y.i = iy ^ icvAtanSign[k];
 
             /* ix = ix != 0 ? ix : 1.f */
-            ix = ((ix ^ CV_1F) & ((ix == 0) - 1)) ^ CV_1F;
+            _x.i = ((ix ^ CV_1F) & ((ix == 0) - 1)) ^ CV_1F;
             idx[j] = k;
-            yf[j] = *(float *) &iy;
-            d *= (xf[j] = *(float *) &ix);
+            yf[j] = _y.f;
+            d *= (xf[j] = _x.f);
         }
 
         d = 1. / d;
@@ -154,13 +160,11 @@ IPCVAPI_IMPL( CvStatus, icvFastArctan_32f,
             angle[i+3] = z3;
         }
     }
-#endif
 
     /* process the rest */
     for( ; i < len; i++ )
-    {
-        angle[i] = cvFastArctan( y[i], x[i] );
-    }
+        angle[i] = cvFastArctan( __y[i], __x[i] );
+
     return CV_OK;
 }
 
@@ -172,14 +176,19 @@ IPCVAPI_IMPL( CvStatus, icvFastArctan_32f,
 CV_IMPL  float  cvCbrt( float value )
 {
     float fr;
-    int ix = *(int*)&value, s = ix & 0x80000000;
+    Cv32suf v, m;
+    int ix, s;
     int ex, shx;
-    ix &= 0x7fffffff;
+
+    v.f = value;
+    ix = v.i & 0x7fffffff;
+    s = v.i & 0x80000000;
     ex = (ix >> 23) - 127;
     shx = ex % 3;
     shx -= shx >= 0 ? 3 : 0;
     ex = (ex - shx) / 3; /* exponent of cube root */
-    *(int*)&fr = (ix & ((1<<23)-1)) | ((shx + 127)<<23);
+    v.i = (ix & ((1<<23)-1)) | ((shx + 127)<<23);
+    fr = v.f;
 
     /* 0.125 <= fr < 1.0 */
     /* Use quartic rational polynomial with error < 2^(-24) */
@@ -195,9 +204,10 @@ CV_IMPL  float  cvCbrt( float value )
     1.0));
 
     /* fr *= 2^ex * sign */
-    *(int*)&fr = (*(int*)&fr + (ex << 23) + s) & (*(int*)&value*2 != 0 ? -1 : 0);
-
-    return(fr);
+    m.f = value;
+    v.f = fr;
+    v.i = (v.i + (ex << 23) + s) & (m.i*2 != 0 ? -1 : 0);
+    return v.f;
 }
 
 //static const double _0_5 = 0.5, _1_5 = 1.5;
@@ -258,37 +268,37 @@ IPCVAPI_IMPL( CvStatus, icvInvSqrt_64f, (const double *src, double *dst, int len
 }
 
 
-#define ICV_DEF_SQR_MAGNITUDE_FUNC( flavor, arrtype, magtype )          \
-static CvStatus CV_STDCALL                                              \
-icvSqrMagnitude_##flavor( const arrtype* x, const arrtype* y,           \
-                          magtype* mag, int len )                       \
-{                                                                       \
-    int i;                                                              \
-                                                                        \
-    for( i = 0; i <= len - 4; i += 4 )                                  \
-    {                                                                   \
-        magtype x0 = (magtype)x[i], y0 = (magtype)y[i];                 \
-        magtype x1 = (magtype)x[i+1], y1 = (magtype)y[i+1];             \
-                                                                        \
-        x0 = x0*x0 + y0*y0;                                             \
-        x1 = x1*x1 + y1*y1;                                             \
-        mag[i] = x0;                                                    \
-        mag[i+1] = x1;                                                  \
-        x0 = (magtype)x[i+2], y0 = (magtype)y[i+2];                     \
-        x1 = (magtype)x[i+3], y1 = (magtype)y[i+3];                     \
-        x0 = x0*x0 + y0*y0;                                             \
-        x1 = x1*x1 + y1*y1;                                             \
-        mag[i+2] = x0;                                                  \
-        mag[i+3] = x1;                                                  \
-    }                                                                   \
-                                                                        \
-    for( ; i < len; i++ )                                               \
-    {                                                                   \
-        magtype x0 = (magtype)x[i], y0 = (magtype)y[i];                 \
-        mag[i] = x0*x0 + y0*y0;                                         \
-    }                                                                   \
-                                                                        \
-    return CV_OK;                                                       \
+#define ICV_DEF_SQR_MAGNITUDE_FUNC(flavor, arrtype, magtype)\
+static CvStatus CV_STDCALL                                  \
+icvSqrMagnitude_##flavor(const arrtype* x, const arrtype* y,\
+                         magtype* mag, int len)             \
+{                                                           \
+    int i;                                                  \
+                                                            \
+    for( i = 0; i <= len - 4; i += 4 )                      \
+    {                                                       \
+        magtype x0 = (magtype)x[i], y0 = (magtype)y[i];     \
+        magtype x1 = (magtype)x[i+1], y1 = (magtype)y[i+1]; \
+                                                            \
+        x0 = x0*x0 + y0*y0;                                 \
+        x1 = x1*x1 + y1*y1;                                 \
+        mag[i] = x0;                                        \
+        mag[i+1] = x1;                                      \
+        x0 = (magtype)x[i+2], y0 = (magtype)y[i+2];         \
+        x1 = (magtype)x[i+3], y1 = (magtype)y[i+3];         \
+        x0 = x0*x0 + y0*y0;                                 \
+        x1 = x1*x1 + y1*y1;                                 \
+        mag[i+2] = x0;                                      \
+        mag[i+3] = x1;                                      \
+    }                                                       \
+                                                            \
+    for( ; i < len; i++ )                                   \
+    {                                                       \
+        magtype x0 = (magtype)x[i], y0 = (magtype)y[i];     \
+        mag[i] = x0*x0 + y0*y0;                             \
+    }                                                       \
+                                                            \
+    return CV_OK;                                           \
 }
 
 
@@ -775,7 +785,7 @@ static const double exp_prescale = 1.4426950408889634073599246810019 * (1 << EXP
 static const double exp_postscale = 1./(1 << EXPTAB_SCALE);
 static const double exp_max_val = 3000.*(1 << EXPTAB_SCALE); // log10(DBL_MAX) < 3000
 
-IPCVAPI_IMPL( CvStatus, icvExp_32f, ( const float *x, float *y, int n ), (x, y, n) )
+IPCVAPI_IMPL( CvStatus, icvExp_32f, ( const float *_x, float *y, int n ), (_x, y, n) )
 {
     static const double
         EXPPOLY_32F_A4 = 1.000000000000002438532970795181890933776 / EXPPOLY_32F_A0,
@@ -789,6 +799,7 @@ IPCVAPI_IMPL( CvStatus, icvExp_32f, ( const float *x, float *y, int n ), (x, y, 
 
     int i = 0;
     DBLINT buf[4];
+    const Cv32suf* x = (const Cv32suf*)_x;
 
     if( !x || !y )
         return CV_NULLPTR_ERR;
@@ -799,23 +810,23 @@ IPCVAPI_IMPL( CvStatus, icvExp_32f, ( const float *x, float *y, int n ), (x, y, 
 
     for( ; i <= n - 4; i += 4 )
     {
-        double x0 = x[i] * exp_prescale;
-        double x1 = x[i + 1] * exp_prescale;
-        double x2 = x[i + 2] * exp_prescale;
-        double x3 = x[i + 3] * exp_prescale;
+        double x0 = x[i].f * exp_prescale;
+        double x1 = x[i + 1].f * exp_prescale;
+        double x2 = x[i + 2].f * exp_prescale;
+        double x3 = x[i + 3].f * exp_prescale;
         int val0, val1, val2, val3, t;
 
-        if( ((*(int64*)&x[i] >> 23) & 255) > 127 + 10 )
-            x0 = x[i] < 0 ? -exp_max_val : exp_max_val;
+        if( ((x[i].i >> 23) & 255) > 127 + 10 )
+            x0 = x[i].i < 0 ? -exp_max_val : exp_max_val;
 
-        if( ((*(int64*)&x[i+1] >> 23) & 255) > 127 + 10 )
-            x1 = x[i+1] < 0 ? -exp_max_val : exp_max_val;
+        if( ((x[i+1].i >> 23) & 255) > 127 + 10 )
+            x1 = x[i+1].i < 0 ? -exp_max_val : exp_max_val;
 
-        if( ((*(int64*)&x[i+2] >> 23) & 255) > 127 + 10 )
-            x2 = x[i+2] < 0 ? -exp_max_val : exp_max_val;
+        if( ((x[i+2].i >> 23) & 255) > 127 + 10 )
+            x2 = x[i+2].i < 0 ? -exp_max_val : exp_max_val;
 
-        if( ((*(int64*)&x[i+3] >> 23) & 255) > 127 + 10 )
-            x3 = x[i+3] < 0 ? -exp_max_val : exp_max_val;
+        if( ((x[i+3].i >> 23) & 255) > 127 + 10 )
+            x3 = x[i+3].i < 0 ? -exp_max_val : exp_max_val;
 
         val0 = cvRound(x0);
         val1 = cvRound(x1);
@@ -858,11 +869,11 @@ IPCVAPI_IMPL( CvStatus, icvExp_32f, ( const float *x, float *y, int n ), (x, y, 
 
     for( ; i < n; i++ )
     {
-        double x0 = x[i] * exp_prescale;
+        double x0 = x[i].f * exp_prescale;
         int val0, t;
 
-        if( ((*(int64*)&x[i] >> 23) & 255) > 127 + 10 )
-            x0 = x[i] < 0 ? -exp_max_val : exp_max_val;
+        if( ((x[i].i >> 23) & 255) > 127 + 10 )
+            x0 = x[i].i < 0 ? -exp_max_val : exp_max_val;
 
         val0 = cvRound(x0);
         t = (val0 >> EXPTAB_SCALE) + 1023;
@@ -878,7 +889,7 @@ IPCVAPI_IMPL( CvStatus, icvExp_32f, ( const float *x, float *y, int n ), (x, y, 
 }
 
 
-IPCVAPI_IMPL( CvStatus, icvExp_64f, ( const double *x, double *y, int n ), (x, y, n) )
+IPCVAPI_IMPL( CvStatus, icvExp_64f, ( const double *_x, double *y, int n ), (_x, y, n) )
 {
     static const double
         A5 = .99999999999999999998285227504999 / EXPPOLY_32F_A0,
@@ -893,6 +904,7 @@ IPCVAPI_IMPL( CvStatus, icvExp_64f, ( const double *x, double *y, int n ), (x, y
 
     int i = 0;
     DBLINT buf[4];
+    const Cv64suf* x = (const Cv64suf*)_x;
 
     if( !x || !y )
         return CV_NULLPTR_ERR;
@@ -903,25 +915,29 @@ IPCVAPI_IMPL( CvStatus, icvExp_64f, ( const double *x, double *y, int n ), (x, y
 
     for( ; i <= n - 4; i += 4 )
     {
-        double x0 = x[i] * exp_prescale;
-        double x1 = x[i + 1] * exp_prescale;
-        double x2 = x[i + 2] * exp_prescale;
-        double x3 = x[i + 3] * exp_prescale;
+        double x0 = x[i].f * exp_prescale;
+        double x1 = x[i + 1].f * exp_prescale;
+        double x2 = x[i + 2].f * exp_prescale;
+        double x3 = x[i + 3].f * exp_prescale;
 
         double y0, y1, y2, y3;
         int val0, val1, val2, val3, t;
 
-        if( ((int)(*(int64*)&x[i] >> 52) & 2047) > 1023 + 10 )
-            x0 = x[i] < 0 ? -exp_max_val : exp_max_val;
+        t = (int)(x[i].i >> 52);
+        if( (t & 2047) > 1023 + 10 )
+            x0 = t < 0 ? -exp_max_val : exp_max_val;
 
-        if( ((int)(*(int64*)&x[i+1] >> 52) & 2047) > 1023 + 10 )
-            x1 = x[i+1] < 0 ? -exp_max_val : exp_max_val;
+        t = (int)(x[i+1].i >> 52);
+        if( (t & 2047) > 1023 + 10 )
+            x1 = t < 0 ? -exp_max_val : exp_max_val;
 
-        if( ((int)(*(int64*)&x[i+2] >> 52) & 2047) > 1023 + 10 )
-            x2 = x[i+2] < 0 ? -exp_max_val : exp_max_val;
+        t = (int)(x[i+2].i >> 52);
+        if( (t & 2047) > 1023 + 10 )
+            x2 = t < 0 ? -exp_max_val : exp_max_val;
 
-        if( ((int)(*(int64*)&x[i+3] >> 52) & 2047) > 1023 + 10 )
-            x3 = x[i+3] < 0 ? -exp_max_val : exp_max_val;
+        t = (int)(x[i+3].i >> 52);
+        if( (t & 2047) > 1023 + 10 )
+            x3 = t < 0 ? -exp_max_val : exp_max_val;
 
         val0 = cvRound(x0);
         val1 = cvRound(x1);
@@ -964,11 +980,12 @@ IPCVAPI_IMPL( CvStatus, icvExp_64f, ( const double *x, double *y, int n ), (x, y
 
     for( ; i < n; i++ )
     {
-        double x0 = x[i] * exp_prescale;
+        double x0 = x[i].f * exp_prescale;
         int val0, t;
 
-        if( ((int)(*(int64*)&x[i] >> 52) & 2047) > 1023 + 10 )
-            x0 = x[i] < 0 ? -exp_max_val : exp_max_val;
+        t = (int)(x[i].i >> 52);
+        if( (t & 2047) > 1023 + 10 )
+            x0 = t < 0 ? -exp_max_val : exp_max_val;
 
         val0 = cvRound(x0);
         t = (val0 >> EXPTAB_SCALE) + 1023;
@@ -1336,7 +1353,7 @@ static const double icvLogTab[] = {
 #define LOGTAB_TRANSLATE(x,h) (((x) - 1.)*icvLogTab[(h)+1])
 static const double ln_2 = 0.69314718055994530941723212145818;
 
-IPCVAPI_IMPL( CvStatus, icvLog_32f, ( const float *x, float *y, int n ), (x, y, n) )
+IPCVAPI_IMPL( CvStatus, icvLog_32f, ( const float *_x, float *y, int n ), (_x, y, n) )
 {
     static const double shift[] = { 0, -1./512 };
     static const double
@@ -1354,6 +1371,8 @@ IPCVAPI_IMPL( CvStatus, icvLog_32f, ( const float *x, float *y, int n ), (x, y, 
         float f;
     }
     buf[4];
+    
+    const int* x = (const int*)_x;
 
     if( !x || !y )
         return CV_NULLPTR_ERR;
@@ -1366,8 +1385,8 @@ IPCVAPI_IMPL( CvStatus, icvLog_32f, ( const float *x, float *y, int n ), (x, y, 
         double y0, y1, y2, y3;
         int h0, h1, h2, h3;
 
-        h0 = ((int*)x)[i];
-        h1 = ((int*)x)[i+1];
+        h0 = x[i];
+        h1 = x[i+1];
         buf[0].i = (h0 & LOGTAB_MASK2_32F) | (127 << 23);
         buf[1].i = (h1 & LOGTAB_MASK2_32F) | (127 << 23);
 
@@ -1380,8 +1399,8 @@ IPCVAPI_IMPL( CvStatus, icvLog_32f, ( const float *x, float *y, int n ), (x, y, 
         y0 += icvLogTab[h0];
         y1 += icvLogTab[h1];
 
-        h2 = ((int*)x)[i+2];
-        h3 = ((int*)x)[i+3];
+        h2 = x[i+2];
+        h3 = x[i+3];
 
         x0 = LOGTAB_TRANSLATE( buf[0].f, h0 );
         x1 = LOGTAB_TRANSLATE( buf[1].f, h1 );
@@ -1416,7 +1435,7 @@ IPCVAPI_IMPL( CvStatus, icvLog_32f, ( const float *x, float *y, int n ), (x, y, 
 
     for( ; i < n; i++ )
     {
-        int h0 = ((int*)x)[i];
+        int h0 = x[i];
         double x0, y0;
 
         y0 = (((h0 >> 23) & 0xff) - 127) * ln_2;
@@ -1815,7 +1834,9 @@ IPCVAPI_IMPL( CvStatus, icvCheckArray_32f_C1R,
     ( const float* src, int srcstep, CvSize size, int flags, double min_val, double max_val ),
      (src, srcstep, size, flags, min_val, max_val) )
 {
-    int a, b;
+    Cv32suf a, b;
+    int ia, ib;
+    const int* isrc = (const int*)src;
     
     if( !src )
         return CV_NULLPTR_ERR;
@@ -1825,29 +1846,28 @@ IPCVAPI_IMPL( CvStatus, icvCheckArray_32f_C1R,
 
     if( flags & CV_CHECK_RANGE )
     {
-        *(float*)&a = (float)min_val;
-        *(float*)&b = (float)max_val;
+        a.f = (float)min_val;
+        b.f = (float)max_val;
     }
     else
     {
-        *(float*)&a = -FLT_MAX;
-        *(float*)&b = FLT_MAX;
+        a.f = -FLT_MAX;
+        b.f = FLT_MAX;
     }
 
-    a = CV_TOGGLE_FLT(a);
-    b = CV_TOGGLE_FLT(b);
+    ia = CV_TOGGLE_FLT(a.i);
+    ib = CV_TOGGLE_FLT(b.i);
 
-    srcstep /= sizeof(src[0]);
-    for( ; size.height--; src += srcstep )
+    srcstep /= sizeof(isrc[0]);
+    for( ; size.height--; isrc += srcstep )
     {
         int i;
         for( i = 0; i < size.width; i++ )
         {
-            int val = ((int*)src)[i];
-
+            int val = isrc[i];
             val = CV_TOGGLE_FLT(val);
 
-            if( val < a || val >= b )
+            if( val < ia || val >= ib )
                 return CV_BADRANGE_ERR;
         }
     }
@@ -1860,7 +1880,9 @@ IPCVAPI_IMPL( CvStatus,  icvCheckArray_64f_C1R,
     ( const double* src, int srcstep, CvSize size, int flags, double min_val, double max_val ),
     (src, srcstep, size, flags, min_val, max_val) )
 {
-    int64 a, b;
+    Cv64suf a, b;
+    int64 ia, ib;
+    const int64* isrc = (const int64*)src;
     
     if( !src )
         return CV_NULLPTR_ERR;
@@ -1870,29 +1892,28 @@ IPCVAPI_IMPL( CvStatus,  icvCheckArray_64f_C1R,
 
     if( flags & CV_CHECK_RANGE )
     {
-        *(double*)&a = min_val;
-        *(double*)&b = max_val;
+        a.f = min_val;
+        b.f = max_val;
     }
     else
     {
-        *(double*)&a = -DBL_MAX;
-        *(double*)&b = DBL_MAX;
+        a.f = -DBL_MAX;
+        b.f = DBL_MAX;
     }
 
-    a = CV_TOGGLE_DBL(a);
-    b = CV_TOGGLE_DBL(b);
+    ia = CV_TOGGLE_DBL(a.i);
+    ib = CV_TOGGLE_DBL(b.i);
 
-    srcstep /= sizeof(src[0]);
-    for( ; size.height--; src += srcstep )
+    srcstep /= sizeof(isrc[0]);
+    for( ; size.height--; isrc += srcstep )
     {
         int i;
         for( i = 0; i < size.width; i++ )
         {
-            int64 val = ((int64*)src)[i];
-
+            int64 val = isrc[i];
             val = CV_TOGGLE_DBL(val);
 
-            if( val < a || val >= b )
+            if( val < ia || val >= ib )
                 return CV_BADRANGE_ERR;
         }
     }

@@ -330,7 +330,7 @@ icvLogicS( const void* srcarr, CvScalar* scalar, void* dstarr,
     __END__;
 
     if( !local_alloc )
-        cvFree( (void**)&buffer );
+        cvFree( &buffer );
 }
 
 
@@ -499,7 +499,7 @@ icvLogic( const void* srcarr1, const void* srcarr2, void* dstarr,
     __END__;
 
     if( !local_alloc )
-        cvFree( (void**)&buffer );
+        cvFree( &buffer );
 }
 
 ICV_DEF_BIN_LOG_OP_2D( CV_XOR, Xor )

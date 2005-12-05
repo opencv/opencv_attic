@@ -70,7 +70,7 @@ CvLinePolar;
 
 #define hough_cmp_gt(l1,l2) (aux[l1] > aux[l2])
 
-static CV_IMPLEMENT_QSORT_EX( icvHoughSortDescent32s, int, hough_cmp_gt, const int* );
+static CV_IMPLEMENT_QSORT_EX( icvHoughSortDescent32s, int, hough_cmp_gt, const int* )
 
 /*
 Here image is an input raster;
@@ -168,10 +168,10 @@ icvHoughLines_8uC1R( uchar* image, int step, CvSize size,
     }
 
 func_exit:
-    cvFree( (void**)&sort_buf );
-    cvFree( (void**)&tabSin );
-    cvFree( (void**)&tabCos );
-    cvFree( (void**)&accum );
+    cvFree( &sort_buf );
+    cvFree( &tabSin );
+    cvFree( &tabCos );
+    cvFree( &accum );
 
     return CV_OK;
 }
@@ -477,11 +477,11 @@ static  CvStatus  icvHoughLinesSDiv_8uC1R( uchar * image_src, int step, CvSize s
 func_exit:
     h_destroy_list__index( list );
 
-    cvFree( (void**)&sinTable );
-    cvFree( (void**)&x );
-    cvFree( (void**)&y );
-    cvFree( (void**)&caccum );
-    cvFree( (void**)&buffer );
+    cvFree( &sinTable );
+    cvFree( &x );
+    cvFree( &y );
+    cvFree( &caccum );
+    cvFree( &buffer );
 
     return CV_OK;
 }
@@ -920,12 +920,12 @@ static  CvStatus  icvHoughLinesP_8uC1R( uchar * image_src, int step, CvSize size
         }
     }
 func_exit:
-    cvFree( (void**)&x );
-    cvFree( (void**)&y );
-    cvFree( (void**)&map );
-    cvFree( (void**)&sinTable );
-    cvFree( (void**)&iaccum );
-    cvFree( (void**)&caccum );
+    cvFree( &x );
+    cvFree( &y );
+    cvFree( &map );
+    cvFree( &sinTable );
+    cvFree( &iaccum );
+    cvFree( &caccum );
 
     return CV_OK;
 }
@@ -1258,7 +1258,7 @@ icvHoughCirclesGradient( CvMat* img, float dp, float min_dist,
     __END__;
 
     cvReleaseMat( &dist_buf );
-    cvFree( (void**)&sort_buf );
+    cvFree( &sort_buf );
     cvReleaseMemStorage( &storage );
     cvReleaseMat( &edges );
     cvReleaseMat( &dx );

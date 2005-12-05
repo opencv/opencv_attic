@@ -324,7 +324,7 @@ icvCalcPGH( const CvSeq * contour, float *pgh, int angle_dim, int dist_dim )
     }
 
     if( buffer != local_buffer_ptr )
-        cvFree( (void**)&buffer );
+        cvFree( &buffer );
 
     return CV_OK;
 }

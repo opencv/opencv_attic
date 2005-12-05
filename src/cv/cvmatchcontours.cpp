@@ -223,8 +223,8 @@ CV_IMPL  double
 cvMatchContourTrees( const CvContourTree* tree1, const CvContourTree* tree2,
                      int method, double threshold )
 {
-    _CvTrianAttr **ptr_p1, **ptr_p2;    /*pointers to the pointer's buffer */
-    _CvTrianAttr **ptr_n1, **ptr_n2;    /*pointers to the pointer's buffer */
+    _CvTrianAttr **ptr_p1 = 0, **ptr_p2 = 0;    /*pointers to the pointer's buffer */
+    _CvTrianAttr **ptr_n1 = 0, **ptr_n2 = 0;    /*pointers to the pointer's buffer */
     _CvTrianAttr **ptr11, **ptr12, **ptr21, **ptr22;
 
     int lpt1, lpt2, lpt, flag, flag_n, i, j, ibuf, ibuf1;
@@ -386,10 +386,10 @@ cvMatchContourTrees( const CvContourTree* tree1, const CvContourTree* tree2,
 
     __END__;
 
-    cvFree( (void**)&ptr_n2 );
-    cvFree( (void**)&ptr_n1 );
-    cvFree( (void**)&ptr_p2 );
-    cvFree( (void**)&ptr_p1 );
+    cvFree( &ptr_n2 );
+    cvFree( &ptr_n1 );
+    cvFree( &ptr_p2 );
+    cvFree( &ptr_p1 );
 
     return result;
 }

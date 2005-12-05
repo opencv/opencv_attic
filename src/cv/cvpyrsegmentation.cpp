@@ -128,6 +128,10 @@ static void icvMaxRoi1( _CvRect16u *max_rect, int x, int y );
                                        (float)fabs((a).green - (b).green),  \
                                        (float)fabs((a).blue - (b).blue))*/
 
+#define _CV_NEXT_BASE_C1(p,n) (_CvPyramid*)((char*)(p) + (n)*sizeof(_CvPyramidBase))
+#define _CV_NEXT_BASE_C3(p,n) (_CvPyramidC3*)((char*)(p) + (n)*sizeof(_CvPyramidBaseC3))
+
+
 CV_INLINE float icvRGBDist_Max( const _CvRGBf& a, const _CvRGBf& b )
 {
     float tr = (float)fabs(a.red - b.red);
@@ -430,8 +434,11 @@ icvPyrSegmentation8uC1R( uchar * src_image, int src_step,
                         {
                             p_cur[j].c = p_prev->c;
                         }
-                        *(char **) &p_prev += l == 0 ?
-                            2 * sizeof( _CvPyramidBase ) : 2 * sizeof( _CvPyramid );
+                        
+                        if( l == 0 )
+                            p_prev = _CV_NEXT_BASE_C1(p_prev,2);
+                        else
+                            p_prev += 2;
                     }
 
                     if( p_cur[size.width].a == 0 )
@@ -475,8 +482,7 @@ icvPyrSegmentation8uC1R( uchar * src_image, int src_step,
 
                         if( l == 0 )
                         {
-                            *(char **) &p_prev +=
-                                sizeof( _CvPyramidBase ) << (int) (j * 2 < step - 2);
+                            p_prev = _CV_NEXT_BASE_C1(p_prev, 1 << (int)(j * 2 < step - 2));
                         }
                         else
                         {
@@ -495,8 +501,8 @@ icvPyrSegmentation8uC1R( uchar * src_image, int src_step,
                 }
                 else
                 {
-                    *(char **) &p_prev = (char *) p_row_prev + step *
-                        (l == 0 ? sizeof( _CvPyramidBase ) : sizeof( _CvPyramid ));
+                    p_prev = (_CvPyramid*)((char*)p_row_prev + step *
+                        (l == 0 ? sizeof(_CvPyramidBase) : sizeof(_CvPyramid)));
                 }
             }
         }
@@ -550,15 +556,14 @@ icvPyrSegmentation8uC1R( uchar * src_image, int src_step,
 
                 assert( p != 0 );
                 if( p != &stub )
-                {
-                    *(int *) &(p_cur->c) = *(int *) &(p->c);
-                }
+                    p_cur->c = p->c;
 
                 if( l == 0 )
                 {
+                    Cv32suf _c;
                     /* copy the segmented values to destination image */
-                    dst_image[j] = (uchar) * (int *) &(p_cur->c);
-                    *(char **) &p_cur += sizeof( _CvPyramidBase );
+                    _c.f = p_cur->c; dst_image[j] = (uchar)_c.i;
+                    p_cur = _CV_NEXT_BASE_C1(p_cur, 1);
                 }
                 else
                 {
@@ -571,7 +576,7 @@ icvPyrSegmentation8uC1R( uchar * src_image, int src_step,
     }
   M_END:
 
-    cvFree( (void**)&buffer );
+    cvFree( &buffer );
     cvReleaseMemStorage( &temp_storage );
 
     if( status == CV_OK )
@@ -852,8 +857,11 @@ icvPyrSegmentation8uC3R( uchar * src_image, int src_step,
                         {
                             p_cur[j].c = p_prev->c;
                         }
-                        *(char **) &p_prev += l == 0 ?
-                            2 * sizeof( _CvPyramidBaseC3 ) : 2 * sizeof( _CvPyramidC3 );
+                        
+                        if( l == 0 )
+                            p_prev = _CV_NEXT_BASE_C3( p_prev, 2 );
+                        else
+                            p_prev += 2;
                     }
 
                     if( p_cur[size.width].a == 0 )
@@ -904,8 +912,7 @@ icvPyrSegmentation8uC3R( uchar * src_image, int src_step,
 
                         if( l == 0 )
                         {
-                            *(char **) &p_prev +=
-                                sizeof( _CvPyramidBaseC3 ) << (int) (j * 2 < step - 2);
+                            p_prev = _CV_NEXT_BASE_C3( p_prev, 1 << (int)(j * 2 < step - 2));
                         }
                         else
                         {
@@ -924,8 +931,8 @@ icvPyrSegmentation8uC3R( uchar * src_image, int src_step,
                 }
                 else
                 {
-                    *(char **) &p_prev = (char *) p_row_prev + step *
-                        (l == 0 ? sizeof( _CvPyramidBaseC3 ) : sizeof( _CvPyramidC3 ));
+                    p_prev = (_CvPyramidC3*)((char*)p_row_prev + step *
+                        (l == 0 ? sizeof( _CvPyramidBaseC3 ) : sizeof( _CvPyramidC3 )));
                 }
             }
         }
@@ -985,11 +992,12 @@ icvPyrSegmentation8uC3R( uchar * src_image, int src_step,
 
                 if( l == 0 )
                 {
+                    Cv32suf _c;
                     /* copy the segmented values to destination image */
-                    dst_image[j * 3] = (uchar) * (int *) &(p_cur->c.blue);
-                    dst_image[j * 3 + 1] = (uchar) * (int *) &(p_cur->c.green);
-                    dst_image[j * 3 + 2] = (uchar) * (int *) &(p_cur->c.red);
-                    *(char **) &p_cur += sizeof( _CvPyramidBaseC3 );
+                    _c.f = p_cur->c.blue; dst_image[j*3] = (uchar)_c.i;
+                    _c.f = p_cur->c.green; dst_image[j*3+1] = (uchar)_c.i;
+                    _c.f = p_cur->c.red; dst_image[j*3+2] = (uchar)_c.i;
+                    p_cur = _CV_NEXT_BASE_C3(p_cur,1);
                 }
                 else
                 {
@@ -1003,7 +1011,7 @@ icvPyrSegmentation8uC3R( uchar * src_image, int src_step,
 
   M_END:
 
-    cvFree( (void**)&buffer );
+    cvFree( &buffer );
     cvReleaseMemStorage( &temp_storage );
 
     if( status == CV_OK )
@@ -1068,7 +1076,7 @@ static CvStatus icvUpdatePyrLinks_8u_C1
                 if( layer == 0 )
                 {
                     p->a++;
-                    (*(_CvPyramidBase **) & p_cur)++;
+                    p_cur = (_CvPyramid*)((char*)p_cur + sizeof(_CvPyramidBase));
                     if( is_last_iter )
                         icvMaxRoi1( &(p->rect), j, i );
                 }
@@ -1093,7 +1101,7 @@ static CvStatus icvUpdatePyrLinks_8u_C1
                 }
                 if( layer == 0 )
                 {
-                    (*(_CvPyramidBase **) & p_cur)++;
+                    p_cur = _CV_NEXT_BASE_C1(p_cur,1);
                 }
                 else
                 {
@@ -1138,7 +1146,7 @@ static CvStatus icvUpdatePyrLinks_8u_C1
                 if( layer == 0 )
                 {
                     p->a++;
-                    (*(_CvPyramidBase **) & p_cur)++;
+                    p_cur = _CV_NEXT_BASE_C1(p_cur,1);
                     if( is_last_iter )
                         icvMaxRoi1( &(p->rect), j + 1, i );
                 }
@@ -1163,7 +1171,7 @@ static CvStatus icvUpdatePyrLinks_8u_C1
                 }
                 if( layer == 0 )
                 {
-                    (*(_CvPyramidBase **) & p_cur)++;
+                    p_cur = _CV_NEXT_BASE_C1(p_cur,1);
                 }
                 else
                 {
@@ -1248,7 +1256,7 @@ static CvStatus icvUpdatePyrLinks_8u_C3
                 if( layer == 0 )
                 {
                     p->a++;
-                    (*(_CvPyramidBaseC3 **) & p_cur)++;
+                    p_cur = _CV_NEXT_BASE_C3(p_cur,1);
                     if( is_last_iter )
                         icvMaxRoi1( &(p->rect), j, i );
                 }
@@ -1274,7 +1282,7 @@ static CvStatus icvUpdatePyrLinks_8u_C3
 
                 if( layer == 0 )
                 {
-                    (*(_CvPyramidBaseC3 **) & p_cur)++;
+                    p_cur = _CV_NEXT_BASE_C3(p_cur,1);
                 }
                 else
                 {
@@ -1317,7 +1325,7 @@ static CvStatus icvUpdatePyrLinks_8u_C3
                 if( layer == 0 )
                 {
                     p->a++;
-                    (*(_CvPyramidBaseC3 **) & p_cur)++;
+                    p_cur = _CV_NEXT_BASE_C3(p_cur,1);
                     if( is_last_iter )
                         icvMaxRoi1( &(p->rect), j + 1, i );
                 }
@@ -1342,7 +1350,7 @@ static CvStatus icvUpdatePyrLinks_8u_C3
                 }
                 if( layer == 0 )
                 {
-                    (*(_CvPyramidBaseC3 **) & p_cur)++;
+                    p_cur = _CV_NEXT_BASE_C3(p_cur,1);
                 }
                 else
                 {
@@ -1419,6 +1427,7 @@ icvSegmentClusterC1( CvSeq * cmp_seq, CvSeq * res_seq,
         {
             CvConnectedComp comp;
             _CvPyramid *cmp = (_CvPyramid *) (((_CvListNode *) reader.ptr)->data);
+            Cv32suf _c;
 
             if( cmp < first_level_end )
             {
@@ -1427,9 +1436,9 @@ icvSegmentClusterC1( CvSeq * cmp_seq, CvSeq * res_seq,
                 cmp = &temp_cmp;
             }
 
-            c = cvRound( cmp->c );
-            *(int *) &(cmp->c) = c;
-            comp.value = cvRealScalar(c);
+            _c.i = cvRound( cmp->c );
+            cmp->c = _c.f;
+            comp.value = cvRealScalar(_c.i);
             comp.area = cmp->a;
             comp.rect.x = cmp->rect.x1;
             comp.rect.y = cmp->rect.y1;
@@ -1527,8 +1536,9 @@ icvSegmentClusterC1( CvSeq * cmp_seq, CvSeq * res_seq,
 
             while( node )
             {
+                Cv32suf _c;
                 cmp = (_CvPyramid *) (node->data);
-                *(int *) &(cmp->c) = c;
+                _c.i = c; cmp->c = _c.f;
                 node = node->next;
             }
 
@@ -1594,6 +1604,7 @@ icvSegmentClusterC3( CvSeq * cmp_seq, CvSeq * res_seq,
         {
             CvConnectedComp comp;
             _CvPyramidC3 *cmp = (_CvPyramidC3 *) (((_CvListNode *) reader.ptr)->data);
+            Cv32suf _c;
 
             if( cmp < first_level_end )
             {
@@ -1605,9 +1616,9 @@ icvSegmentClusterC3( CvSeq * cmp_seq, CvSeq * res_seq,
             c_blue = cvRound( cmp->c.blue );
             c_green = cvRound( cmp->c.green );
             c_red = cvRound( cmp->c.red );
-            ((int *) &(cmp->c))[0] = c_blue;
-            ((int *) &(cmp->c))[1] = c_green;
-            ((int *) &(cmp->c))[2] = c_red;
+            _c.i = c_blue; cmp->c.blue = _c.f;
+            _c.i = c_green; cmp->c.green = _c.f;
+            _c.i = c_red; cmp->c.red = _c.f;
             comp.value = cvScalar( c_blue, c_green, c_red );
             comp.area = cmp->a;
             comp.rect.x = cmp->rect.x1;
@@ -1714,10 +1725,11 @@ icvSegmentClusterC3( CvSeq * cmp_seq, CvSeq * res_seq,
 
             while( node )
             {
+                Cv32suf _c;
                 cmp = (_CvPyramidC3 *) (node->data);
-                ((int *) &(cmp->c))[0] = c_blue;
-                ((int *) &(cmp->c))[1] = c_green;
-                ((int *) &(cmp->c))[2] = c_red;
+                _c.i = c_blue; cmp->c.blue = _c.f;
+                _c.i = c_green; cmp->c.green = _c.f;
+                _c.i = c_red; cmp->c.red = _c.f;
                 node = node->next;
             }
 

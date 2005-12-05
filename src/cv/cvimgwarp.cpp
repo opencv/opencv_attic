@@ -1958,8 +1958,8 @@ cvLogPolar( const CvArr* srcarr, CvArr* dstarr,
 
     __END__;
 
-    cvFree( (void**)&exp_tab );
-    cvFree( (void**)&buf );
+    cvFree( &exp_tab );
+    cvFree( &buf );
     cvReleaseMat( &mapx );
     cvReleaseMat( &mapy );
 }

@@ -116,22 +116,15 @@ CV_IMPL  void*  cvAlloc( size_t size )
 }
 
 
-CV_IMPL  void  cvFree( void** pptr )
+CV_IMPL  void  cvFree_( void* ptr )
 {
-    CV_FUNCNAME( "cvFree" );
+    CV_FUNCNAME( "cvFree_" );
 
     __BEGIN__;
 
-    CVStatus status;
-    
-    if( !pptr )
-        CV_ERROR( CV_StsNullPtr, "Null double pointer is passed" );
-
-    if( *pptr )
+    if( ptr )
     {
-        void* ptr = *pptr;
-        *pptr = 0;
-        status = p_cvFree( ptr, p_cvAllocUserData );
+        CVStatus status = p_cvFree( ptr, p_cvAllocUserData );
         if( status < 0 )
             CV_ERROR( status, "Deallocation error" );
     }

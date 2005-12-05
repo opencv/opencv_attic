@@ -185,19 +185,19 @@ icvCalcOpticalFlowHS_8u32fR( uchar*  imgA,
         for( k = 0; k < 2; k++ )
         {
             if( MemX[k] )
-                cvFree( (void **) &MemX[k] );
+                cvFree( &MemX[k] );
 
             if( MemY[k] )
-                cvFree( (void **) &MemY[k] );
+                cvFree( &MemY[k] );
 
             if( VelBufX[k] )
-                cvFree( (void **) &VelBufX[k] );
+                cvFree( &VelBufX[k] );
 
             if( VelBufY[k] )
-                cvFree( (void **) &VelBufY[k] );
+                cvFree( &VelBufY[k] );
         }
         if( II )
-            cvFree( (void **) &II );
+            cvFree( &II );
         return CV_OUTOFMEM_ERR;
     }
 /****************************************************************************************\
@@ -464,12 +464,12 @@ icvCalcOpticalFlowHS_8u32fR( uchar*  imgA,
     /* Free memory */
     for( k = 0; k < 2; k++ )
     {
-        cvFree( (void **) &MemX[k] );
-        cvFree( (void **) &MemY[k] );
-        cvFree( (void **) &VelBufX[k] );
-        cvFree( (void **) &VelBufY[k] );
+        cvFree( &MemX[k] );
+        cvFree( &MemY[k] );
+        cvFree( &VelBufX[k] );
+        cvFree( &VelBufY[k] );
     }
-    cvFree( (void **) &II );
+    cvFree( &II );
 
     return CV_OK;
 } /*icvCalcOpticalFlowHS_8u32fR*/

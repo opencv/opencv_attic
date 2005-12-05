@@ -323,7 +323,7 @@ cvStartFindContours( void* _img, CvMemStorage* storage,
     __END__;
 
     if( cvGetErrStatus() < 0 )
-        cvFree( (void **)&scanner );
+        cvFree( &scanner );
 
     return scanner;
 }
@@ -1103,7 +1103,7 @@ cvEndFindContours( CvContourScanner * _scanner )
             cvReleaseMemStorage( &(scanner->cinfo_storage) );
 
         first = scanner->frame.v_next;
-        cvFree( (void**)_scanner );
+        cvFree( _scanner );
     }
 
     __END__;

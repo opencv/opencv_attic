@@ -476,7 +476,7 @@ cvRegisterModule( const CvModuleInfo* module )
     __END__;
 
     if( cvGetErrStatus() < 0 && module_copy )
-        cvFree( (void**)&module_copy );
+        cvFree( &module_copy );
 
     return module_copy ? 0 : -1;
 }

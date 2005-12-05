@@ -119,7 +119,7 @@ cvCreateMemStorage( int block_size )
     __END__;
 
     if( cvGetErrStatus() < 0 )
-        cvFree( (void**)&storage );
+        cvFree( &storage );
 
     return storage;
 }
@@ -143,7 +143,7 @@ cvCreateChildMemStorage( CvMemStorage * parent )
     __END__;
 
     if( cvGetErrStatus() < 0 )
-        cvFree( (void**)&storage );
+        cvFree( &storage );
 
     return storage;
 }
@@ -192,7 +192,7 @@ icvDestroyMemStorage( CvMemStorage* storage )
         }
         else
         {
-            cvFree( (void**)&temp );
+            cvFree( &temp );
         }
     }
 
@@ -221,7 +221,7 @@ cvReleaseMemStorage( CvMemStorage** storage )
     if( st )
     {
         CV_CALL( icvDestroyMemStorage( st ));
-        cvFree( (void**)&st );
+        cvFree( &st );
     }
 
     __END__;
@@ -1139,11 +1139,13 @@ cvStartReadSeq( const CvSeq *seq, CvSeqReader * reader, int reverse )
 
 /* changes the current reading block to the previous or to the next */
 CV_IMPL void
-cvChangeSeqBlock( CvSeqReader * reader, int direction )
+cvChangeSeqBlock( void* _reader, int direction )
 {
     CV_FUNCNAME( "cvChangeSeqBlock" );
 
     __BEGIN__;
+
+    CvSeqReader* reader = (CvSeqReader*)_reader;
     
     if( !reader )
         CV_ERROR( CV_StsNullPtr, "" );
@@ -3463,7 +3465,7 @@ cvCreateGraphScanner( CvGraph* graph, CvGraphVtx* vtx, int mask )
     if( cvGetErrStatus() < 0 )
     {
         cvReleaseMemStorage( &child_storage );
-        cvFree( (void**)&scanner );
+        cvFree( &scanner );
     }
 
     return scanner;
@@ -3484,7 +3486,7 @@ cvReleaseGraphScanner( CvGraphScanner** scanner )
     {
         if( (*scanner)->stack )
             CV_CALL( cvReleaseMemStorage( &((*scanner)->stack->storage)));
-        cvFree( (void**)scanner );
+        cvFree( scanner );
     }
 
     __END__;
@@ -3731,8 +3733,8 @@ cvCloneGraph( const CvGraph* graph, CvMemStorage* storage )
 
     __END__;
 
-    cvFree( (void**)&flag_buffer );
-    cvFree( (void**)&ptr_buffer );
+    cvFree( &flag_buffer );
+    cvFree( &ptr_buffer );
 
     if( cvGetErrStatus() < 0 )
         result = 0;

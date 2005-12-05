@@ -705,7 +705,6 @@ cvCmpS( const void* srcarr, double value, void* dstarr, int cmp_op )
     CvMat srcstub1, *src1 = (CvMat*)srcarr;
     CvMat dststub,  *dst = (CvMat*)dstarr;
     CvSize size;
-    double buf;
     int ival = 0;
 
     if( !inittab )
@@ -796,10 +795,7 @@ cvCmpS( const void* srcarr, double value, void* dstarr, int cmp_op )
                 EXIT;
             }
         }
-        *(int*)&buf = ival;
     }
-    else
-        buf = value;
 
     ipp_cmp_op = cmp_op == CV_CMP_EQ ? cvCmpEq :
                  cmp_op == CV_CMP_GE ? cvCmpGreaterEq : cvCmpGreater;
@@ -824,8 +820,16 @@ cvCmpS( const void* srcarr, double value, void* dstarr, int cmp_op )
         if( !func )
             CV_ERROR( CV_StsUnsupportedFormat, "" );
 
-        IPPI_CALL( func( src1->data.ptr, src1_step, dst->data.ptr,
-                         dst_step, size, &buf ));
+        if( type <= CV_32S )
+        {
+            IPPI_CALL( func( src1->data.ptr, src1_step, dst->data.ptr,
+                             dst_step, size, &ival ));
+        }
+        else
+        {
+            IPPI_CALL( func( src1->data.ptr, src1_step, dst->data.ptr,
+                             dst_step, size, &value ));
+        }
     }
 
     if( invflag )

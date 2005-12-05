@@ -46,12 +46,15 @@ IPCVAPI_IMPL( CvStatus, icvUpdateMotionHistory_8u32f_C1IR,
      CvSize size, float timestamp, float mhi_duration),
      (silIm, silStep, mhiIm, mhiStep, size, timestamp, mhi_duration) )
 {
-    int y;
-    int delbound;
+    int x, y;
 
     /* function processes floating-point images using integer arithmetics */
-    int ts = *((int *) &timestamp);
+    Cv32suf v;
+    int ts, delbound;
     int *mhi = (int *) mhiIm;
+
+    v.f = timestamp;
+    ts = v.i;
 
     if( !silIm || !mhiIm )
         return CV_NULLPTR_ERR;
@@ -65,9 +68,11 @@ IPCVAPI_IMPL( CvStatus, icvUpdateMotionHistory_8u32f_C1IR,
         return CV_BADFACTOR_ERR;
 
     mhi_duration = timestamp - mhi_duration;
-    delbound = CV_TOGGLE_FLT( (*(int *) &mhi_duration) );
 
-    mhiStep /= CV_SIZEOF_FLOAT;
+    v.f = mhi_duration;
+    delbound = CV_TOGGLE_FLT( v.i );
+
+    mhiStep /= sizeof(mhi[0]);
 
     if( mhiStep == size.width && silStep == size.width )
     {
@@ -77,9 +82,6 @@ IPCVAPI_IMPL( CvStatus, icvUpdateMotionHistory_8u32f_C1IR,
 
     if( delbound > 0 )
         for( y = 0; y < size.height; y++, silIm += silStep, mhi += mhiStep )
-        {
-            int x;
-
             for( x = 0; x < size.width; x++ )
             {
                 int val = mhi[x];
@@ -89,12 +91,8 @@ IPCVAPI_IMPL( CvStatus, icvUpdateMotionHistory_8u32f_C1IR,
                 val ^= (ts ^ val) & ((silIm[x] == 0) - 1);
                 mhi[x] = val;
             }
-        }
     else
         for( y = 0; y < size.height; y++, silIm += silStep, mhi += mhiStep )
-        {
-            int x;
-
             for( x = 0; x < size.width; x++ )
             {
                 int val = mhi[x];
@@ -104,7 +102,6 @@ IPCVAPI_IMPL( CvStatus, icvUpdateMotionHistory_8u32f_C1IR,
                 val ^= (ts ^ val) & ((silIm[x] == 0) - 1);
                 mhi[x] = val;
             }
-        }
 
     return CV_OK;
 }
@@ -421,9 +418,8 @@ cvSegmentMotion( const CvArr* mhiimg, CvArr* segmask, CvMemStorage* storage,
 
     CvMat  mhistub, *mhi = (CvMat*)mhiimg;
     CvMat  maskstub, *mask = (CvMat*)segmask;
-    float  ts = (float)timestamp;
-    float  comp_idx = 1;
-    float  stub_val = FLT_MAX*0.1f;
+    Cv32suf v, comp_idx;
+    int stub_val, ts;
     int x, y;
 
     if( !storage )
@@ -443,6 +439,10 @@ cvSegmentMotion( const CvArr* mhiimg, CvArr* segmask, CvMemStorage* storage,
     cvZero( mask );
     CV_CALL( components = cvCreateSeq( CV_SEQ_KIND_GENERIC, sizeof(CvSeq),
                                        sizeof(CvConnectedComp), storage ));
+    
+    v.f = (float)timestamp; ts = v.i;
+    v.f = FLT_MAX*0.1f; stub_val = v.i;
+    comp_idx.f = 1;
 
     for( y = 0; y < mhi->rows; y++ )
     {
@@ -450,7 +450,7 @@ cvSegmentMotion( const CvArr* mhiimg, CvArr* segmask, CvMemStorage* storage,
         for( x = 0; x < mhi->cols; x++ )
         {
             if( mhi_row[x] == 0 )
-                mhi_row[x] = (int&)stub_val;
+                mhi_row[x] = stub_val;
         }
     }
 
@@ -461,7 +461,7 @@ cvSegmentMotion( const CvArr* mhiimg, CvArr* segmask, CvMemStorage* storage,
 
         for( x = 0; x < mhi->cols; x++ )
         {
-            if( mhi_row[x] == (int&)ts && mask8u_row[x] == 0 )
+            if( mhi_row[x] == ts && mask8u_row[x] == 0 )
             {
                 CvConnectedComp comp;
                 int x1, y1;
@@ -483,11 +483,11 @@ cvSegmentMotion( const CvArr* mhiimg, CvArr* segmask, CvMemStorage* storage,
                         if( mask8u_row1[x1] > 1 )
                         {
                             mask8u_row1[x1] = 1;
-                            mask_row1[x1] = (int&)comp_idx;
+                            mask_row1[x1] = comp_idx.i;
                         }
                     }
                 }
-                comp_idx++;
+                comp_idx.f++;
                 cvSeqPush( components, &comp );
             }
         }
@@ -498,7 +498,7 @@ cvSegmentMotion( const CvArr* mhiimg, CvArr* segmask, CvMemStorage* storage,
         int* mhi_row = (int*)(mhi->data.ptr + y*mhi->step);
         for( x = 0; x < mhi->cols; x++ )
         {
-            if( mhi_row[x] == (int&)stub_val )
+            if( mhi_row[x] == stub_val )
                 mhi_row[x] = 0;
         }
     }
@@ -506,7 +506,6 @@ cvSegmentMotion( const CvArr* mhiimg, CvArr* segmask, CvMemStorage* storage,
     __END__;
 
     cvReleaseMat( &mask8u );
-
     return components;
 }
 

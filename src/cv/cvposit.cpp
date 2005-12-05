@@ -244,7 +244,7 @@ static  CvStatus  icvPOSIT( CvPOSITObject *pObject, CvPoint2D32f *imagePoints,
 
 static  CvStatus  icvReleasePOSITObject( CvPOSITObject ** ppObject )
 {
-    cvFree( (void**)ppObject );
+    cvFree( ppObject );
     return CV_NO_ERR;
 }
 

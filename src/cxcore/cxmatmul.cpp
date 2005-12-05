@@ -1248,9 +1248,9 @@ cvGEMM( const CvArr* Aarr, const CvArr* Barr, double alpha,
     __END__;
 
     if( buffer && !local_alloc )
-        cvFree( (void**)&buffer );
+        cvFree( &buffer );
     if( block_buffer )
-        cvFree( (void**)&block_buffer );
+        cvFree( &block_buffer );
 }
 
 
@@ -2667,7 +2667,7 @@ cvCalcCovarMatrix( const CvArr** vecarr, int count,
 
     __END__;
 
-    cvFree( (void**)&vecdata );
+    cvFree( &vecdata );
     cvReleaseMat( &tempvec );
 }
 
@@ -2788,7 +2788,7 @@ cvMahalanobis( const CvArr* srcAarr, const CvArr* srcBarr, CvArr* matarr )
     __END__;
 
     if( buffer && !local_alloc )
-        cvFree( (void**)&buffer );
+        cvFree( &buffer );
 
     return  dist;
 }
@@ -2909,7 +2909,7 @@ icvMulTransposedR_##flavor( const arrtype* src, int srcstep,                    
             dst[dststep*i + j] = dst[dststep*j + i];                            \
                                                                                 \
     if( col_buf && !local_alloc )                                               \
-        cvFree( (void**)&col_buf );                                             \
+        cvFree( &col_buf );                                                     \
                                                                                 \
     return CV_NO_ERR;                                                           \
 }
@@ -2987,7 +2987,7 @@ icvMulTransposedL_##flavor( const arrtype* src, int srcstep,                    
         }                                                                       \
                                                                                 \
         if( row_buf && !local_alloc )                                           \
-            cvFree( (void**)&row_buf );                                         \
+            cvFree( &row_buf );                                                 \
     }                                                                           \
                                                                                 \
     /* fill the lower part of the destination matrix */                         \
@@ -3161,7 +3161,8 @@ cvDotProduct( const CvArr* srcAarr, const CvArr* srcBarr )
     static CvFuncTable tab_2d;
     static int inittab = 0;
 
-    double result = 0;
+    Cv64suf result;
+    result.f = 0;
     
     CV_FUNCNAME( "cvDotProduct" );
 
@@ -3223,9 +3224,11 @@ cvDotProduct( const CvArr* srcAarr, const CvArr* srcBarr )
             {
                 float* mA = srcA->data.fl;
                 float* mB = srcB->data.fl;
+                double sum = 0;
                 do
-                    result += (double)mA[size.width - 1]*mB[size.width - 1];
+                    sum += (double)mA[size.width - 1]*mB[size.width - 1];
                 while( --size.width );
+                result.f = sum;
                 EXIT;
             }
             
@@ -3233,13 +3236,14 @@ cvDotProduct( const CvArr* srcAarr, const CvArr* srcBarr )
             {
                 double* mA = srcA->data.db;
                 double* mB = srcB->data.db;
+                double sum = 0;
                 do
-                    result += mA[size.width - 1]*mB[size.width - 1];
+                    sum += mA[size.width - 1]*mB[size.width - 1];
                 while( --size.width );
+                result.f = sum;
                 EXIT;
             }
         }
-
         size.height = 1;
     }
 
@@ -3252,11 +3256,11 @@ cvDotProduct( const CvArr* srcAarr, const CvArr* srcBarr )
                      size, &result ));
 
     if( depth < CV_32S )
-        result = (double)*(int64*)&result;
+        result.f = (double)result.i;
 
     __END__;
 
-    return result;
+    return result.f;
 }
 
 /* End of file. */
