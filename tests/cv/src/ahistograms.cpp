@@ -1445,7 +1445,7 @@ static int foaBayesianProb(void* _type)
 
 void InitAHistograms()
 {
-    /*trsRegArg( "cvGetHistValue_1D, cvGetHistValue_2D, cvGetHistValue_3D, cvGetHistValue_nD, "
+    trsRegArg( "cvGetHistValue_1D, cvGetHistValue_2D, cvGetHistValue_3D, cvGetHistValue_nD, "
                "cvQueryHistValue_1D, cvQueryHistValue_2D, cvQueryHistValue_3D, cvQueryHistValue_nD",
                "Histogram Get/Query functions algorithm test",
                "Algorithm", foaHistGetQueryValue, CV_HIST_ARRAY );
@@ -1474,14 +1474,13 @@ void InitAHistograms()
     trsRegArg( "cvThreshHist",
                "Histogram cvThreshHist function algorithm test",
                "Algorithm", foaThreshHist, CV_HIST_TREE );
-    */
+
     trsRegArg( "cvCompareHist",
                "Histogram comparing function algorithm test",
                "Algorithm", foaHistCompare, CV_HIST_ARRAY );
     trsRegArg( "cvCompareHist",
                "Histogram comparing function algorithm test",
                "Algorithm", foaHistCompare, CV_HIST_TREE );
-    /*
     trsRegArg( "cvCopyHist",
                "Histogram copying function algorithm test",
                "Algorithm", foaCopyHist, CV_HIST_ARRAY );
@@ -1519,7 +1518,7 @@ void InitAHistograms()
     trsRegArg( "cvCalcBayesianProb",
                "Bayesian Prob calculation function algorithm test",
                "Algorithm", foaBayesianProb, CV_HIST_ARRAY );
-    trsRegArg( "cvCalcBayesianProb",
+    /*trsRegArg( "cvCalcBayesianProb",
                "Bayesian Prob calculation function algorithm test",
                "Algorithm", foaBayesianProb, CV_HIST_TREE );*/
 }
