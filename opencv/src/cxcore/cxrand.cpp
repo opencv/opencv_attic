@@ -163,23 +163,23 @@ icvRand_##flavor##_C1R( arrtype* arr, int step, CvSize size,            \
         for( i = 0; i <= size.width - 4; i += 4 )                       \
         {                                                               \
             worktype f0, f1;                                            \
-            unsigned t0, t1;                                            \
+            Cv32suf t0, t1;                                             \
                                                                         \
             temp = ICV_RNG_NEXT(temp);                                  \
-            t0 = ICV_CVT_FLT(temp);                                     \
+            t0.u = ICV_CVT_FLT(temp);                                   \
             temp = ICV_RNG_NEXT(temp);                                  \
-            t1 = ICV_CVT_FLT(temp);                                     \
-            f0 = cast_macro1( *(float*)&t0 * p[i + 12] + p[i] );        \
-            f1 = cast_macro1( *(float*)&t1 * p[i + 13] + p[i + 1] );    \
+            t1.u = ICV_CVT_FLT(temp);                                   \
+            f0 = cast_macro1( t0.f * p[i + 12] + p[i] );                \
+            f1 = cast_macro1( t1.f * p[i + 13] + p[i + 1] );            \
             arr[i] = cast_macro2(f0);                                   \
             arr[i+1] = cast_macro2(f1);                                 \
                                                                         \
             temp = ICV_RNG_NEXT(temp);                                  \
-            t0 = ICV_CVT_FLT(temp);                                     \
+            t0.u = ICV_CVT_FLT(temp);                                   \
             temp = ICV_RNG_NEXT(temp);                                  \
-            t1 = ICV_CVT_FLT(temp);                                     \
-            f0 = cast_macro1( *(float*)&t0 * p[i + 14] + p[i + 2] );    \
-            f1 = cast_macro1( *(float*)&t1 * p[i + 15] + p[i + 3] );    \
+            t1.u = ICV_CVT_FLT(temp);                                   \
+            f0 = cast_macro1( t0.f * p[i + 14] + p[i + 2] );            \
+            f1 = cast_macro1( t1.f * p[i + 15] + p[i + 3] );            \
             arr[i+2] = cast_macro2(f0);                                 \
             arr[i+3] = cast_macro2(f1);                                 \
                                                                         \
@@ -193,11 +193,11 @@ icvRand_##flavor##_C1R( arrtype* arr, int step, CvSize size,            \
         for( ; i < size.width; i++ )                                    \
         {                                                               \
             worktype f0;                                                \
-            unsigned t0;                                                \
+            Cv32suf t0;                                                 \
                                                                         \
             temp = ICV_RNG_NEXT(temp);                                  \
-            t0 = ICV_CVT_FLT(temp);                                     \
-            f0 = cast_macro1( *(float*)&t0 * p[i + 12] + p[i] );        \
+            t0.u = ICV_CVT_FLT(temp);                                   \
+            f0 = cast_macro1( t0.f * p[i + 12] + p[i] );                \
             arr[i] = cast_macro2(f0);                                   \
         }                                                               \
     }                                                                   \
@@ -222,23 +222,23 @@ icvRand_64f_C1R( double* arr, int step, CvSize size,
         for( i = 0; i <= size.width - 4; i += 4 )
         {
             double f0, f1;
-            uint64 t0, t1;
+            Cv64suf t0, t1;
 
             temp = ICV_RNG_NEXT(temp);
-            t0 = ICV_CVT_DBL(temp);
+            t0.u = ICV_CVT_DBL(temp);
             temp = ICV_RNG_NEXT(temp);
-            t1 = ICV_CVT_DBL(temp);
-            f0 = *(double*)&t0 * p[i + 12] + p[i];
-            f1 = *(double*)&t1 * p[i + 13] + p[i + 1];
+            t1.u = ICV_CVT_DBL(temp);
+            f0 = t0.f * p[i + 12] + p[i];
+            f1 = t1.f * p[i + 13] + p[i + 1];
             arr[i] = f0;
             arr[i+1] = f1;
 
             temp = ICV_RNG_NEXT(temp);
-            t0 = ICV_CVT_DBL(temp);
+            t0.u = ICV_CVT_DBL(temp);
             temp = ICV_RNG_NEXT(temp);
-            t1 = ICV_CVT_DBL(temp);
-            f0 = *(double*)&t0 * p[i + 14] + p[i + 2];
-            f1 = *(double*)&t1 * p[i + 15] + p[i + 3];
+            t1.u = ICV_CVT_DBL(temp);
+            f0 = t0.f * p[i + 14] + p[i + 2];
+            f1 = t1.f * p[i + 15] + p[i + 3];
             arr[i+2] = f0;
             arr[i+3] = f1;
 
@@ -252,11 +252,11 @@ icvRand_64f_C1R( double* arr, int step, CvSize size,
         for( ; i < size.width; i++ )
         {
             double f0;
-            uint64 t0;
+            Cv64suf t0;
 
             temp = ICV_RNG_NEXT(temp);
-            t0 = ICV_CVT_DBL(temp);
-            f0 = *(double*)&t0 * p[i + 12] + p[i];
+            t0.u = ICV_CVT_DBL(temp);
+            f0 = t0.f * p[i + 12] + p[i];
             arr[i] = f0;
         }
     }

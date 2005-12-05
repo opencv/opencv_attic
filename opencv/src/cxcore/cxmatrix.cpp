@@ -842,7 +842,7 @@ cvDet( const CvArr* arr )
     __END__;
 
     if( buffer && !local_alloc )
-        cvFree( (void**)&buffer );
+        cvFree( &buffer );
 
     return result;
 }
@@ -1101,7 +1101,7 @@ cvInvert( const CvArr* srcarr, CvArr* dstarr, int method )
     __END__;
 
     if( buffer && !local_alloc )
-        cvFree( (void**)&buffer );
+        cvFree( &buffer );
 
     if( u || v || w )
     {
@@ -1368,7 +1368,7 @@ cvSolve( const CvArr* A, const CvArr* b, CvArr* x, int method )
     __END__;
 
     if( buffer && !local_alloc )
-        cvFree( (void**)&buffer );
+        cvFree( &buffer );
 
     if( u || v || w )
     {

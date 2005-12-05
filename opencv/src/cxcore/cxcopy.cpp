@@ -314,7 +314,7 @@ cvCopy( const void* srcarr, void* dstarr, const void* maskarr )
 
             if( src1->heap->active_count >= dst1->hashsize*CV_SPARSE_HASH_RATIO )
             {
-                CV_CALL( cvFree( (void**)(&dst1->hashtable) ));
+                CV_CALL( cvFree( &dst1->hashtable ));
                 dst1->hashsize = src1->hashsize;
                 CV_CALL( dst1->hashtable =
                     (void**)cvAlloc( dst1->hashsize*sizeof(dst1->hashtable[0])));

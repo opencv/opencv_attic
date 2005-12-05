@@ -240,10 +240,10 @@ static int
 icvIsRightOf( CvPoint2D32f& pt, CvSubdiv2DEdge edge )
 {
     CvSubdiv2DPoint *org = cvSubdiv2DEdgeOrg(edge), *dst = cvSubdiv2DEdgeDst(edge);
-    float cw_area = (float)cvTriangleArea( pt, dst->pt, org->pt );
-    int iarea = (int&)cw_area;
+    Cv32suf cw_area;
+    cw_area.f = (float)cvTriangleArea( pt, dst->pt, org->pt );
 
-    return (iarea > 0)*2 - (iarea + iarea != 0);
+    return (cw_area.i > 0)*2 - (cw_area.i*2 != 0);
 }
 
 
@@ -718,10 +718,9 @@ cvCalcSubdivVoronoi2D( CvSubdiv2D * subdiv )
 static int
 icvIsRightOf2( const CvPoint2D32f& pt, const CvPoint2D32f& org, const CvPoint2D32f& diff )
 {
-    float cw_area = (org.x - pt.x)*diff.y - (org.y - pt.y)*diff.x;
-    int iarea = (int&)cw_area;
-
-    return (iarea > 0)*2 - (iarea + iarea != 0);
+    Cv32suf cw_area;
+    cw_area.f = (org.x - pt.x)*diff.y - (org.y - pt.y)*diff.x;
+    return (cw_area.i > 0)*2 - (cw_area.i*2 != 0);
 }
 
 

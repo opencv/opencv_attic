@@ -236,7 +236,7 @@ cvReleaseMat( CvMat** array )
         *array = 0;
 
         cvDecRefData( arr );
-        cvFree( (void**)&arr );
+        cvFree( &arr );
     }
 
     __END__;
@@ -715,8 +715,8 @@ cvReleaseSparseMat( CvSparseMat** array )
         *array = 0;
 
         cvReleaseMemStorage( &arr->heap->storage );
-        cvFree( (void**)(&arr->hashtable) );
-        cvFree( (void**)&arr );
+        cvFree( &arr->hashtable );
+        cvFree( &arr );
     }
 
     __END__;
@@ -859,7 +859,7 @@ icvGetNodePtr( CvSparseMat* mat, int* idx, int* _type,
                 node = next;
             }
 
-            CV_CALL( cvFree( (void**)&mat->hashtable ));
+            cvFree( &mat->hashtable );
             mat->hashtable = newtable;
             mat->hashsize = newsize;
             tabidx = hashval & (newsize - 1);
@@ -1159,9 +1159,9 @@ cvReleaseData( CvArr* arr )
 
         if( !CvIPL.deallocate )
         {
-            char* ptr = img->imageData;
+            char* ptr = img->imageDataOrigin;
             img->imageData = img->imageDataOrigin = 0;
-            cvFree( (void**)&ptr );
+            cvFree( &ptr );
         }
         else
         {
@@ -1977,7 +1977,22 @@ cvPtr1D( const CvArr* arr, int idx, int* _type )
     }
     else if( CV_IS_SPARSE_MAT( arr ))
     {
-        ptr = icvGetNodePtr( (CvSparseMat*)arr, &idx, _type, 1, 0 );
+        CvSparseMat* m = (CvSparseMat*)arr;
+        if( m->dims == 1 )
+            ptr = icvGetNodePtr( (CvSparseMat*)arr, &idx, _type, 1, 0 );
+        else
+        {
+            int i, n = m->dims;
+            int* _idx = (int*)cvStackAlloc(n*sizeof(_idx[0]));
+            
+            for( i = n - 1; i >= 0; i-- )
+            {
+                int t = idx / m->size[i];
+                _idx[i] = idx - t*m->size[i];
+                idx = t;
+            }
+            ptr = icvGetNodePtr( (CvSparseMat*)arr, _idx, _type, 1, 0 );
+        }
     }
     else
     {
@@ -2205,7 +2220,7 @@ cvGet1D( const CvArr* arr, int idx )
 
         ptr = mat->data.ptr + (size_t)idx*pix_size;
     }
-    else if( !CV_IS_SPARSE_MAT( arr ))
+    else if( !CV_IS_SPARSE_MAT( arr ) || ((CvSparseMat*)arr)->dims > 1 )
         ptr = cvPtr1D( arr, idx, &type );
     else
         ptr = icvGetNodePtr( (CvSparseMat*)arr, &idx, &type, 0, 0 );
@@ -2341,7 +2356,7 @@ cvGetReal1D( const CvArr* arr, int idx )
 
         ptr = mat->data.ptr + (size_t)idx*pix_size;
     }
-    else if( !CV_IS_SPARSE_MAT( arr ))
+    else if( !CV_IS_SPARSE_MAT( arr ) || ((CvSparseMat*)arr)->dims > 1 )
         ptr = cvPtr1D( arr, idx, &type );
     else
         ptr = icvGetNodePtr( (CvSparseMat*)arr, &idx, &type, 0, 0 );
@@ -2389,7 +2404,6 @@ cvGetReal2D( const CvArr* arr, int y, int x )
     else
     {
         int idx[] = { y, x };
-        
         ptr = icvGetNodePtr( (CvSparseMat*)arr, idx, &type, 0, 0 );
     }
 
@@ -2500,7 +2514,7 @@ cvSet1D( CvArr* arr, int idx, CvScalar scalar )
 
         ptr = mat->data.ptr + (size_t)idx*pix_size;
     }
-    else if( !CV_IS_SPARSE_MAT( arr ))
+    else if( !CV_IS_SPARSE_MAT( arr ) || ((CvSparseMat*)arr)->dims > 1 )
         ptr = cvPtr1D( arr, idx, &type );
     else
         ptr = icvGetNodePtr( (CvSparseMat*)arr, &idx, &type, -1, 0 );
@@ -2616,7 +2630,7 @@ cvSetReal1D( CvArr* arr, int idx, double value )
 
         ptr = mat->data.ptr + (size_t)idx*pix_size;
     }
-    else if( !CV_IS_SPARSE_MAT( arr ))
+    else if( !CV_IS_SPARSE_MAT( arr ) || ((CvSparseMat*)arr)->dims > 1 )
         ptr = cvPtr1D( arr, idx, &type );
     else
         ptr = icvGetNodePtr( (CvSparseMat*)arr, &idx, &type, -1, 0 );
@@ -3406,8 +3420,8 @@ cvReleaseImageHeader( IplImage** image )
         
         if( !CvIPL.deallocate )
         {
-            cvFree( (void**)&(img->roi) );
-            cvFree( (void**)&img );
+            cvFree( &img->roi );
+            cvFree( &img );
         }
         else
         {
@@ -3505,7 +3519,7 @@ cvResetImageROI( IplImage* image )
     {
         if( !CvIPL.deallocate )
         {
-            CV_CALL( cvFree( (void**)&(image->roi) ));
+            cvFree( &image->roi );
         }
         else
         {

@@ -905,7 +905,7 @@ cvMixChannels( const CvArr** src, int src_count,
     __END__;
 
     if( buffer && heap_alloc )
-        cvFree( (void**)buffer );
+        cvFree( &buffer );
 }
 
 

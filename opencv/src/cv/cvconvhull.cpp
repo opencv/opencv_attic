@@ -499,8 +499,8 @@ finish_hull:
 
     __END__;
 
-    cvFree( (void**)&pointer );
-    cvFree( (void**)&stack );
+    cvFree( &pointer );
+    cvFree( &stack );
 
     return hull;
 }

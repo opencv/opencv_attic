@@ -1163,9 +1163,8 @@ icvCollectPolyEdges( CvMat* img, CvSeq* v, CvContour* edges,
     {
         CvPoint pt0, pt1, t0, t1;
         CvPolyEdge edge;
-        
         CV_READ_EDGE( pt0, pt1, reader );
-
+        
         if( elem_type == CV_32SC2 )
         {
             pt0.x = (pt0.x + offset.x) << (XY_SHIFT - shift);
@@ -1175,11 +1174,15 @@ icvCollectPolyEdges( CvMat* img, CvSeq* v, CvContour* edges,
         }
         else
         {
+            Cv32suf x, y;
             assert( shift == 0 );
-            pt0.x = cvRound((*(float*)&pt0.x + offset.x) * XY_ONE);
-            pt0.y = cvRound(*(float*)&pt0.y + offset.y);
-            pt1.x = cvRound((*(float*)&pt1.x + offset.x) * XY_ONE);
-            pt1.y = cvRound(*(float*)&pt1.y + offset.y);
+
+            x.i = pt0.x; y.i = pt0.y;
+            pt0.x = cvRound((x.f + offset.x) * XY_ONE);
+            pt0.y = cvRound(y.f + offset.y);
+            x.i = pt1.x; y.i = pt1.y;
+            pt1.x = cvRound((x.f + offset.x) * XY_ONE);
+            pt1.y = cvRound(y.f + offset.y);
         }
 
         if( line_type < CV_AA )

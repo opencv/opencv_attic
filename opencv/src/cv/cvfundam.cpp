@@ -440,8 +440,8 @@ icvFMatrix_RANSAC( const CvPoint2D64f* m0, const CvPoint2D64f* m1,
 
     __END__;
 
-    cvFree( (void**)&temp_mask );
-    cvFree( (void**)&curr_mask );
+    cvFree( &temp_mask );
+    cvFree( &curr_mask );
 
     return result;
 }
@@ -449,7 +449,7 @@ icvFMatrix_RANSAC( const CvPoint2D64f* m0, const CvPoint2D64f* m1,
 
 /***************************** Least Median of Squares algorithm ************************/
 
-static CV_IMPLEMENT_QSORT( icvSortDistances, int, CV_LT );
+static CV_IMPLEMENT_QSORT( icvSortDistances, int, CV_LT )
 
 /* the algorithm is quite similar to RANSAC, but here we choose the matrix that gives
    the least median of d(m0[i], F'*m1[i])^2 + d(m1[i], F*m0[i])^2 (0<=i<count),
@@ -604,9 +604,9 @@ icvFMatrix_LMedS( const CvPoint2D64f* m0, const CvPoint2D64f* m1,
 
     __END__;
 
-    cvFree( (void**)&temp_mask );
-    cvFree( (void**)&curr_mask );
-    cvFree( (void**)&dist );
+    cvFree( &temp_mask );
+    cvFree( &curr_mask );
+    cvFree( &dist );
 
     return result;
 }
@@ -822,7 +822,7 @@ cvFindFundamentalMat( const CvMat* points0, const CvMat* points1,
     cvReleaseMat( &_status );
     for( k = 0; k < 2; k++ )
         if( pt_alloc_flag[k] )
-            cvFree( (void**)&pt[k] );
+            cvFree( &pt[k] );
 
     return result;
 }

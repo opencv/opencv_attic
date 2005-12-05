@@ -940,15 +940,17 @@ icvDFT_32fc( const CvComplex32f* src, CvComplex32f* dst, int n,
 
         if( inv )
         {
+            // conjugate the vector - i.e. invert sign of the imaginary part
+            int* idst = (int*)dst;
             for( i = 0; i <= n - 2; i += 2 )
             {
-                int t0 = *((int*)&dst[i].im) ^ 0x80000000;
-                int t1 = *((int*)&dst[i+1].im) ^ 0x80000000;
-                *((int*)&dst[i].im) = t0; *((int*)&dst[i+1].im) = t1;
+                int t0 = idst[i*2+1] ^ 0x80000000;
+                int t1 = idst[i*2+3] ^ 0x80000000;
+                idst[i*2+1] = t0; idst[i*2+3] = t1;
             }
 
             if( i < n )
-                *((int*)&dst[i].im) ^= 0x80000000;
+                idst[2*i+1] ^= 0x80000000;
         }
     }
 
@@ -2167,7 +2169,7 @@ cvDFT( const CvArr* srcarr, CvArr* dstarr, int flags, int nonzero_rows )
     __END__;
 
     if( buffer && !local_alloc )
-        cvFree( (void**)&buffer );
+        cvFree( &buffer );
 
     if( spec_c )
     {
@@ -2779,7 +2781,7 @@ cvDCT( const CvArr* srcarr, CvArr* dstarr, int flags )
     }
 
     if( buffer && !local_alloc )
-        cvFree( (void**)&buffer );
+        cvFree( &buffer );
 }
 
 

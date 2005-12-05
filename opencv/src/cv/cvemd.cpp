@@ -321,7 +321,7 @@ cvCalcEMD2( const CvArr* signature_arr1,
     __END__;
 
     if( state.buffer && state.buffer != local_buffer_ptr )
-        cvFree( (void**)&(state.buffer) );
+        cvFree( &state.buffer );
 
     return emd;
 }

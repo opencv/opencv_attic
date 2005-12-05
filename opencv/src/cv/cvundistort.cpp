@@ -202,7 +202,7 @@ cvUndistort2( const CvArr* _src, CvArr* _dst, const CvMat* A, const CvMat* dist_
 
     __END__;
 
-    cvFree( (void**)&buffer );
+    cvFree( &buffer );
 }
 
 

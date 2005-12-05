@@ -256,8 +256,8 @@ int cvFindChessboardCorners( const void* arr, CvSize pattern_size,
             }
         }
 
-        cvFree( (void**)&quads );
-        cvFree( (void**)&corners );
+        cvFree( &quads );
+        cvFree( &corners );
     }
 
     __END__;
@@ -265,10 +265,10 @@ int cvFindChessboardCorners( const void* arr, CvSize pattern_size,
     cvReleaseMemStorage( &storage );
     cvReleaseMat( &norm_img );
     cvReleaseMat( &thresh_img );
-    cvFree( (void**)&quads );
-    cvFree( (void**)&corners );
-    cvFree( (void**)&quad_group );
-    cvFree( (void**)&corner_group );
+    cvFree( &quads );
+    cvFree( &corners );
+    cvFree( &quad_group );
+    cvFree( &corner_group );
 
     return found;
 }
@@ -387,7 +387,7 @@ icvCleanFoundConnectedQuads( int quad_count, CvCBQuad **quad_group, CvSize patte
     __END__;
 
     cvReleaseMemStorage( &temp_storage );
-    cvFree( (void**)&centers );
+    cvFree( &centers );
 
     return quad_count;
 }
@@ -692,7 +692,7 @@ icvCheckQuadGroup( CvCBQuad **quad_group, int quad_count,
         result = -corner_count;
     }
 
-    cvFree( (void**)&corners );
+    cvFree( &corners );
 
     return result;
 }
@@ -978,9 +978,9 @@ icvGenerateQuads( CvCBQuad **out_quads, CvCBCorner **out_corners,
     if( cvGetErrStatus() < 0 )
     {
         if( out_quads )
-            cvFree( (void**)out_quads );
+            cvFree( out_quads );
         if( out_corners )
-            cvFree( (void**)out_corners );
+            cvFree( out_corners );
         quad_count = 0;
     }
 

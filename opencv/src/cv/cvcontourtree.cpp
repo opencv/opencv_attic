@@ -577,12 +577,12 @@ icvCreateContourTree( const CvSeq * contour, CvMemStorage * storage,
 
   M_END:
 
-    cvFree( (void**)&ptr_n );
-    cvFree( (void**)&ptr_p );
-    cvFree( (void**)&num_n );
-    cvFree( (void**)&num_p );
-    cvFree( (void**)&pt_n );
-    cvFree( (void**)&pt_p );
+    cvFree( &ptr_n );
+    cvFree( &ptr_p );
+    cvFree( &num_n );
+    cvFree( &num_p );
+    cvFree( &pt_n );
+    cvFree( &pt_p );
 
     return status;
 }
@@ -797,8 +797,8 @@ cvContourFromContourTree( const CvContourTree*  tree,
     __CLEANUP__;
     __END__;
 
-    cvFree( (void**)&level_buf );
-    cvFree( (void**)&ptr_buf );
+    cvFree( &level_buf );
+    cvFree( &ptr_buf );
 
     return contour;
 }

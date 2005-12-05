@@ -83,7 +83,7 @@ CvBaseImageFilter::CvBaseImageFilter( int _max_width, int _src_type, int _dst_ty
 
 void CvBaseImageFilter::clear()
 {
-    cvFree( (void**)&buffer );
+    cvFree( &buffer );
     rows = 0;
 }
 
@@ -2060,7 +2060,7 @@ CvLinearFilter::CvLinearFilter( int _max_width, int _src_type, int _dst_type,
 void CvLinearFilter::clear()
 {
     cvReleaseMat( &kernel );
-    cvFree( (void**)&k_sparse );
+    cvFree( &k_sparse );
     CvBaseImageFilter::clear();
 }
 

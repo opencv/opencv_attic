@@ -1442,7 +1442,7 @@ cvSVD( CvArr* aarr, CvArr* warr, CvArr* uarr, CvArr* varr, int flags )
     __END__;
 
     if( buffer && !local_alloc )
-        cvFree( (void**)&buffer );
+        cvFree( &buffer );
 }
 
 
@@ -1616,7 +1616,7 @@ cvSVBkSb( const CvArr* warr, const CvArr* uarr,
     __END__;
 
     if( buffer && !local_alloc )
-        cvFree( (void**)&buffer );
+        cvFree( &buffer );
 }
 
 /* End of file. */

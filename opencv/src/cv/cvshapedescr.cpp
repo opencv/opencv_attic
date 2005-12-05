@@ -532,7 +532,7 @@ icvMemCopy( double **buf1, double **buf2, double **buf3, int *b_max )
         memcpy( *buf2, *buf3, bb * sizeof( double ));
 
         *buf3 = *buf2;
-        cvFree( (void**)buf1 );
+        cvFree( buf1 );
         *buf1 = NULL;
     }
     else
@@ -546,7 +546,7 @@ icvMemCopy( double **buf1, double **buf2, double **buf3, int *b_max )
         memcpy( *buf1, *buf3, bb * sizeof( double ));
 
         *buf3 = *buf1;
-        cvFree( (void**)buf2 );
+        cvFree( buf2 );
         *buf2 = NULL;
     }
     return CV_OK;
@@ -711,9 +711,9 @@ static CvStatus icvContourSecArea( CvSeq * contour, CvSlice slice, double *area 
             (*area) += fabs( p_are[i] );
 
         if( p_are1 != NULL )
-            cvFree( (void**)&p_are1 );
+            cvFree( &p_are1 );
         else if( p_are2 != NULL )
-            cvFree( (void**)&p_are2 );
+            cvFree( &p_are2 );
 
         return CV_OK;
     }
@@ -1145,8 +1145,8 @@ cvFitEllipse2( const CvArr* array )
 
     __END__;
 
-    cvFree( (void**)&Ad );
-    cvFree( (void**)&bd );
+    cvFree( &Ad );
+    cvFree( &bd );
 
     return box;
 }
@@ -1225,6 +1225,7 @@ cvBoundingRect( CvArr* array, int update )
             else
             {
                 CvPoint pt;
+                Cv32suf v;
                 /* init values */
                 CV_READ_SEQ_ELEM( pt, reader );
                 xmin = xmax = CV_TOGGLE_FLT(pt.x);
@@ -1249,18 +1250,14 @@ cvBoundingRect( CvArr* array, int update )
                         ymax = pt.y;
                 }
 
-                xmin = CV_TOGGLE_FLT(xmin);
-                ymin = CV_TOGGLE_FLT(ymin);
-                xmax = CV_TOGGLE_FLT(xmax);
-                ymax = CV_TOGGLE_FLT(ymax);
-
-                xmin = cvFloor( (float&)xmin );
-                ymin = cvFloor( (float&)ymin );
+                v.i = CV_TOGGLE_FLT(xmin); xmin = cvFloor(v.f);
+                v.i = CV_TOGGLE_FLT(ymin); ymin = cvFloor(v.f);
                 /* because right and bottom sides of
-                   the bounding rectangle are not inclusive,
-                   cvFloor is used here (instead of cvCeil) */
-                xmax = cvFloor( (float&)xmax );
-                ymax = cvFloor( (float&)ymax );
+                   the bounding rectangle are not inclusive
+                   (note +1 in width and height calculation below),
+                   cvFloor is used here instead of cvCeil */
+                v.i = CV_TOGGLE_FLT(xmax); xmax = cvFloor(v.f);
+                v.i = CV_TOGGLE_FLT(ymax); ymax = cvFloor(v.f);
             }
 
             rect.x = xmin;

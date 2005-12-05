@@ -159,9 +159,9 @@ cvReleaseHist( CvHistogram **hist )
         }
         
         if( temp->thresh2 )
-            cvFree( (void**)&temp->thresh2 );
+            cvFree( &temp->thresh2 );
 
-        cvFree( (void**)&temp );
+        cvFree( &temp );
     }
 
     __END__;
@@ -276,11 +276,12 @@ cvGetMinMaxHistValue( const CvHistogram* hist,
                       int* idx_min, int* idx_max )
 {
     double minVal, maxVal;
-    int dims, size[CV_MAX_DIM];
 
     CV_FUNCNAME( "cvGetMinMaxHistValue" );
 
     __BEGIN__;
+
+    int i, dims, size[CV_MAX_DIM];
 
     if( !CV_IS_HIST(hist) )
         CV_ERROR( CV_StsBadArg, "Invalid histogram header" );
@@ -338,10 +339,12 @@ cvGetMinMaxHistValue( const CvHistogram* hist,
         CvSparseMat* mat = (CvSparseMat*)hist->bins;
         CvSparseMatIterator iterator;
         CvSparseNode *node;
-        int minv = CV_POS_INF;
-        int maxv = CV_NEG_INF;
+        int minv = INT_MAX;
+        int maxv = INT_MIN;
         CvSparseNode* minNode = 0;
         CvSparseNode* maxNode = 0;
+        const int *_idx_min = 0, *_idx_max = 0;
+        Cv32suf m;
 
         for( node = cvInitSparseMatIterator( mat, &iterator );
              node != 0; node = cvGetNextSparseNode( &iterator ))
@@ -361,26 +364,24 @@ cvGetMinMaxHistValue( const CvHistogram* hist,
             }
         }
 
-        if( !minNode )
+        if( minNode )
         {
-            assert( !maxNode );
-            minVal = maxVal = 0;
-            if( idx_min )
-                memset( idx_min, -1, dims*sizeof(idx_min[0]));
-            if( idx_max )
-                memset( idx_max, -1, dims*sizeof(idx_max[0]));
+            _idx_min = CV_NODE_IDX(mat,minNode);
+            _idx_max = CV_NODE_IDX(mat,maxNode);
+            m.i = CV_TOGGLE_FLT(minv); minVal = m.f;
+            m.i = CV_TOGGLE_FLT(maxv); maxVal = m.f;
         }
         else
         {
-            assert( maxNode );
-            minv = CV_TOGGLE_FLT(minv);
-            maxv = CV_TOGGLE_FLT(maxv);
-            minVal = (float&)minv;
-            maxVal = (float&)maxv;
+            minVal = maxVal = 0;
+        }
+
+        for( i = 0; i < dims; i++ )
+        {
             if( idx_min )
-                memcpy( idx_min, (uchar*)minNode+mat->idxoffset, dims*sizeof(idx_min[0]));
+                idx_min[i] = _idx_min ? _idx_min[i] : -1;
             if( idx_max )
-                memcpy( idx_max, (uchar*)maxNode+mat->idxoffset, dims*sizeof(idx_max[0]));
+                idx_max[i] = _idx_max ? _idx_max[i] : -1;
         }
     }
 
@@ -483,14 +484,23 @@ cvCompareHist( const CvHistogram* hist1,
                     result += b;
             }
             break;
-	case CV_COMP_BHATTACHARYYA:
-	    for (i = 0; i < total; i++ )
-	    {
-		result += cvSqrt ( ptr1 [i] * ptr2 [i]);
-	    }
-	    result = cvSqrt (1. - result);
-	    break;
-
+        case CV_COMP_BHATTACHARYYA:
+            {
+                double s1 = 0, s2 = 0;
+                for( i = 0; i < total; i++ )
+                {
+                    double a = ptr1[i];
+                    double b = ptr2[i];
+                    result += sqrt(a*b);
+                    s1 += a;
+                    s2 += b;
+                }
+                s1 *= s2;
+                s1 = fabs(s1) > FLT_EPSILON ? 1./sqrt(s1) : 1.;
+                result = 1. - result*s1;
+                result = sqrt(MAX(result,0.));
+            }
+            break;
         default:
             CV_ERROR( CV_StsBadArg, "Unknown comparison method" );
         }
@@ -592,19 +602,33 @@ cvCompareHist( const CvHistogram* hist1,
             break;
         case CV_COMP_BHATTACHARYYA:
             {
+                double s1 = 0, s2 = 0;
+                
                 for( node1 = cvInitSparseMatIterator( mat1, &iterator );
                      node1 != 0; node1 = cvGetNextSparseNode( &iterator ))
                 {
-                    float v1 = *(float*)CV_NODE_VAL(mat1,node1);
+                    double v1 = *(float*)CV_NODE_VAL(mat1,node1);
                     uchar* node2_data = cvPtrND( mat2, CV_NODE_IDX(mat1,node1),
                                                  0, 0, &node1->hashval );
+                    s1 += v1;
                     if( node2_data )
                     {
-                        float v2 = *(float*)node2_data;
-			result += cvSqrt (v1 * v2);
+                        double v2 = *(float*)node2_data;
+                        result += sqrt(v1 * v2);
                     }
                 }
-		result = cvSqrt (1. - result);
+
+                for( node1 = cvInitSparseMatIterator( mat2, &iterator );
+                     node1 != 0; node1 = cvGetNextSparseNode( &iterator ))
+                {
+                    double v2 = *(float*)CV_NODE_VAL(mat2,node1);
+                    s2 += v2;
+                }
+
+                s1 *= s2;
+                s1 = fabs(s1) > FLT_EPSILON ? 1./sqrt(s1) : 1.;
+                result = 1. - result*s1;
+                result = sqrt(MAX(result,0.));
             }
             break;
         default:
@@ -1474,8 +1498,8 @@ cvCalcArrHist( CvArr** img, CvHistogram* hist,
         for( node = cvInitSparseMatIterator( mat, &iterator );
              node != 0; node = cvGetNextSparseNode( &iterator ))
         {
-            int& val = *(int*)CV_NODE_VAL( mat, node );
-            val = cvRound( (float&)val );
+            Cv32suf* val = (Cv32suf*)CV_NODE_VAL( mat, node );
+            val->i = cvRound( val->f );
         }
     }
 
@@ -1508,8 +1532,8 @@ cvCalcArrHist( CvArr** img, CvHistogram* hist,
         for( node = cvInitSparseMatIterator( mat, &iterator );
              node != 0; node = cvGetNextSparseNode( &iterator ))
         {
-            int& val = *(int*)CV_NODE_VAL( mat, node );
-            (float&)val = (float)val;
+            Cv32suf* val = (Cv32suf*)CV_NODE_VAL( mat, node );
+            val->f = (float)val->i;
         }
     }
     
@@ -1742,7 +1766,7 @@ static CvStatus CV_STDCALL
             }
         }
 
-        cvFree( (void**)&buffer );
+        cvFree( &buffer );
     }
     else
     {

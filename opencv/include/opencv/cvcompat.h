@@ -842,7 +842,7 @@ CV_INLINE void  cvStartScanGraph( CvGraph* graph, CvGraphScanner* scanner,
 
     temp_scanner = cvCreateGraphScanner( graph, vtx, mask );
     *scanner = *temp_scanner;
-    cvFree( (void**)&temp_scanner );
+    cvFree( &temp_scanner );
 }
 
 

@@ -340,13 +340,14 @@ icvFloodFill_32f_CnIR( int* pImage, int step, CvSize roi, CvPoint seed,
 
     if( region )
     {
+        Cv32suf v0, v1, v2;
         region->area = area;
         region->rect.x = XMin;
         region->rect.y = YMin;
         region->rect.width = XMax - XMin + 1;
         region->rect.height = YMax - YMin + 1;
-        region->value = cvScalar((float&)newVal[0],
-            (float&)newVal[1], (float&)newVal[2], 0);
+        v0.i = newVal[0]; v1.i = newVal[1]; v2.i = newVal[2];
+        region->value = cvScalar( v0.f, v1.f, v2.f );
     }
 
     return CV_NO_ERR;
@@ -1141,7 +1142,7 @@ cvFloodFill( CvArr* arr, CvPoint seed_point,
 
     __END__;
 
-    cvFree( (void**)&buffer );
+    cvFree( &buffer );
     cvReleaseMat( &tempMask );
 }
 

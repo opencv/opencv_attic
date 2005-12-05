@@ -313,18 +313,18 @@ icvFindDominantPointsIPAN( CvSeq * contour,
 
     *corners = cvEndWriteSeq( &writer );
 
-    cvFree( (void**)&sharpness );
-    cvFree( (void**)&distance );
-    cvFree( (void**)&ptInf );
+    cvFree( &sharpness );
+    cvFree( &distance );
+    cvFree( &ptInf );
 
     return status;
 
   error:
     /* dmax is so big (more than contour diameter)
        that algorithm could become infinite cycle */
-    cvFree( (void**)&sharpness );
-    cvFree( (void**)&distance );
-    cvFree( (void**)&ptInf );
+    cvFree( &sharpness );
+    cvFree( &distance );
+    cvFree( &ptInf );
 
     return CV_BADRANGE_ERR;
 }

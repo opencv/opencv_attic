@@ -123,20 +123,23 @@ cvReleaseConDensation( CvConDensation ** ConDensation )
     if( !ConDensation )
         CV_ERROR( CV_StsNullPtr, "" );
 
+    if( !CD )
+        EXIT;
+
     /* freeing the memory */
-	cvFree( (void**)&CD->State );
-    cvFree( (void**)&CD->DynamMatr);
-    cvFree( (void**)&CD->flConfidence );
-    cvFree( (void**)&CD->flCumulative );
-    cvFree( (void**)&CD->flSamples[0] );
-    cvFree( (void**)&CD->flNewSamples[0] );
-    cvFree( (void**)&CD->flSamples );
-    cvFree( (void**)&CD->flNewSamples );
-    cvFree( (void**)&CD->Temp );
-    cvFree( (void**)&CD->RandS );
-    cvFree( (void**)&CD->RandomSample );
+	cvFree( &CD->State );
+    cvFree( &CD->DynamMatr);
+    cvFree( &CD->flConfidence );
+    cvFree( &CD->flCumulative );
+    cvFree( &CD->flSamples[0] );
+    cvFree( &CD->flNewSamples[0] );
+    cvFree( &CD->flSamples );
+    cvFree( &CD->flNewSamples );
+    cvFree( &CD->Temp );
+    cvFree( &CD->RandS );
+    cvFree( &CD->RandomSample );
     /* release structure */
-    cvFree( (void**)ConDensation );
+    cvFree( ConDensation );
     
     __END__;
 

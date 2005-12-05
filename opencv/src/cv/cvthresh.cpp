@@ -116,8 +116,11 @@ icvThresh_32f_C1R( const float *src, int src_step, float *dst, int dst_step,
     int i, j;
     const int* isrc = (const int*)src;
     int* idst = (int*)dst;
-    int iThresh = CV_TOGGLE_FLT( (int &) thresh );
-    int iMax = (int &) maxval;
+    Cv32suf v;
+    int iThresh, iMax;
+
+    v.f = thresh; iThresh = CV_TOGGLE_FLT(v.i);
+    v.f = maxval; iMax = v.i;
 
     src_step /= sizeof(src[0]);
     dst_step /= sizeof(dst[0]);
