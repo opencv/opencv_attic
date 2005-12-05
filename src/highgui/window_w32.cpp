@@ -463,11 +463,11 @@ static void icvRemoveWindow( CvWindow* window )
     {
         CvTrackbar* next = trackbar->next;
         icvSetWindowLongPtr( trackbar->hwnd, CV_USERDATA, 0 );
-        cvFree( (void**)&trackbar );
+        cvFree( &trackbar );
         trackbar = next;
     }
 
-    cvFree( (void**)&window );
+    cvFree( &window );
 }
 
 

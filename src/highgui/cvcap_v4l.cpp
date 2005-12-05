@@ -1842,7 +1842,7 @@ static IplImage* icvRetrieveFrameCAM_V4L( CvCaptureCAM_V4L* capture) {
 
     if(((unsigned long)capture->frame.width != capture->form.fmt.pix.width)
        || ((unsigned long)capture->frame.height != capture->form.fmt.pix.height)) {
-        cvFree((void**)&capture->frame.imageData);
+        cvFree(&capture->frame.imageData);
         cvInitImageHeader( &capture->frame,
               cvSize( capture->form.fmt.pix.width,
                   capture->form.fmt.pix.height ),
@@ -1856,7 +1856,7 @@ static IplImage* icvRetrieveFrameCAM_V4L( CvCaptureCAM_V4L* capture) {
 
     if((capture->frame.width != capture->mmaps[capture->bufferIndex].width)
       || (capture->frame.height != capture->mmaps[capture->bufferIndex].height)) {
-       cvFree((void**)&capture->frame.imageData);
+       cvFree(&capture->frame.imageData);
        cvInitImageHeader( &capture->frame,
               cvSize( capture->captureWindow.width,
                   capture->captureWindow.height ),
@@ -2430,7 +2430,7 @@ static void icvCloseCAM_V4L( CvCaptureCAM_V4L* capture ){
 
      if (capture->deviceHandle > 0) close(capture->deviceHandle);
 
-     if (capture->frame.imageData) cvFree((void**)&capture->frame.imageData);
+     if (capture->frame.imageData) cvFree(&capture->frame.imageData);
       //cvFree((void **)capture);
    }
 };

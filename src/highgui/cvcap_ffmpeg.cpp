@@ -85,7 +85,7 @@ static void icvCloseAVI_FFMPEG( CvCaptureAVI_FFMPEG* capture )
     }
 
     if( capture->rgb_picture.data[0] )
-        cvFree( (void**)&capture->rgb_picture.data[0] );
+        cvFree( &capture->rgb_picture.data[0] );
 
     memset( &capture->frame, 0, sizeof(capture->frame));
 }
@@ -749,11 +749,11 @@ CV_IMPL CvVideoWriter* cvCreateVideoWriter( const char * filename, int fourcc,
     {
         fprintf(stderr, "HIGHGUI ERROR: Couldn't open codec\n");
         
-        cvFree ( (void **) & writer->picture->data[0] );
+        cvFree ( & writer->picture->data[0] );
         av_free(   writer->picture );
         av_free(   writer->rgb_picture );
         av_free(   writer->context );
-        cvFree ( (void **) & writer );
+        cvFree ( & writer );
         
         return 0;
     }
@@ -765,11 +765,11 @@ CV_IMPL CvVideoWriter* cvCreateVideoWriter( const char * filename, int fourcc,
         fprintf(stderr, "HIGHGUI ERROR: Couldn't open file %s\n", filename);
         
         avcodec_close(writer->context);
-        cvFree ( (void **) & writer->picture->data[0] );
+        cvFree ( & writer->picture->data[0] );
         av_free(   writer->picture );
         av_free(   writer->rgb_picture );
         av_free(   writer->context );
-        cvFree ( (void **) & writer );
+        cvFree ( & writer );
         
         return 0;
     }
@@ -783,11 +783,11 @@ CV_IMPL CvVideoWriter* cvCreateVideoWriter( const char * filename, int fourcc,
     
         fclose (writer->outfile);
         avcodec_close(writer->context);
-        cvFree ( (void **) & writer->picture->data[0] );
+        cvFree ( & writer->picture->data[0] );
         av_free(   writer->picture );
         av_free(   writer->rgb_picture );
         av_free(   writer->context );
-        cvFree ( (void **) & writer );
+        cvFree ( & writer );
         
         return 0;
     }
@@ -843,11 +843,11 @@ CV_IMPL void cvReleaseVideoWriter( CvVideoWriter ** writer )
     CvAVI_FFMPEG_Writer * mywriter = (CvAVI_FFMPEG_Writer*)(*writer);
     fclose(mywriter->outfile);
     avcodec_close(mywriter->context);
-    cvFree ( (void **) & mywriter->picture->data[0] );
+    cvFree ( & mywriter->picture->data[0] );
     av_free(   mywriter->picture );
     av_free(   mywriter->rgb_picture );
     av_free(   mywriter->context );
-    cvFree ( (void **) writer );
+    cvFree ( writer );
 
     // mark as released
     (*writer) = 0;

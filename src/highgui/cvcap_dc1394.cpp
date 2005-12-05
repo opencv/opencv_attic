@@ -359,7 +359,7 @@ static void icvCloseCAM_DC1394( CvCaptureCAM_DC1394* capture ){
 	dc1394_stop_iso_transmission(capture->handle, capture->camera->node);
 	/* Deallocate space for RGBA data */ 
 	if(capture->convert){
-		cvFree((void**)&capture->frame.imageData);
+		cvFree(&capture->frame.imageData);
 	}
 }
 
