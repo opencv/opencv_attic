@@ -306,6 +306,7 @@ icvCalcOpticalFlowPyrLK_8uC1R( const uchar* imgA, const uchar* imgB,
     if( result < 0 )
         goto func_exit;
 
+#if 0
     if( icvOpticalFlowPyrLKInitAlloc_8u_C1R_p &&
         icvOpticalFlowPyrLKFree_8u_C1R_p &&
         icvOpticalFlowPyrLK_8u_C1R_p &&
@@ -362,6 +363,7 @@ icvCalcOpticalFlowPyrLK_8uC1R( const uchar* imgA, const uchar* imgB,
             goto func_exit;
         }
     }
+#endif
 
     /* buffer_size = <size for patches> + <size for pyramids> */
     bufferBytes = (srcPatchLen + patchLen * 3) * sizeof( patchI[0] );
@@ -560,10 +562,10 @@ func_exit:
     if( ipp_optflow_state )
         icvOpticalFlowPyrLKFree_8u_C1R_p( ipp_optflow_state );
 
-    cvFree( (void**)&pyr_buffer );
-    cvFree( (void**)&buffer );
-    cvFree( (void**)&_error );
-    cvFree( (void**)&_status );
+    cvFree( &pyr_buffer );
+    cvFree( &buffer );
+    cvFree( &_error );
+    cvFree( &_status );
 
     return result;
 #undef MAX_LEVEL
@@ -898,8 +900,8 @@ static  CvStatus  icvCalcAffineFlowPyrLK_8uC1R( uchar * imgA, uchar * imgB,
 
   func_exit:
 
-    cvFree( (void**)&pyr_buffer );
-    cvFree( (void**)&buffer );
+    cvFree( &pyr_buffer );
+    cvFree( &buffer );
 
     return result;
 #undef MAX_LEVEL
