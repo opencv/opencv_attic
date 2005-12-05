@@ -347,15 +347,19 @@ cvAddSearchPath( const char* path )
 }
 #endif
 
-CV_IMPL IplImage*
-cvLoadImage( const char* filename, int iscolor )
+static void*
+icvLoadImage( const char* filename, int iscolor, bool load_as_matrix )
 {
     GrFmtReader* reader = 0;
     IplImage* image = 0;
+    CvMat hdr, *matrix = 0;
 
     CV_FUNCNAME( "cvLoadImage" );
 
     __BEGIN__;
+
+    CvSize size;
+    int cn;
 
     if( !filename || strlen(filename) == 0 )
         CV_ERROR( CV_StsNullPtr, "null filename" );
@@ -367,21 +371,29 @@ cvLoadImage( const char* filename, int iscolor )
     if( !reader->ReadHeader() )
         EXIT;
 
+    size.width = reader->GetWidth();
+    size.height = reader->GetHeight();
+
+    iscolor = iscolor > 0 || (iscolor < 0 && reader->IsColor());
+    cn = iscolor ? 3 : 1;
+
+    if( load_as_matrix )
     {
-        CvSize size;
-        size.width = reader->GetWidth();
-        size.height = reader->GetHeight();
+        CV_CALL( matrix = cvCreateMat( size.height, size.width, CV_MAKETYPE(CV_8U,cn) ));
+    }
+    else
+    {
+        CV_CALL( image = cvCreateImage( size, IPL_DEPTH_8U, cn ));
+        matrix = cvGetMat( image, &hdr );
+    }
 
-        iscolor = iscolor > 0 || (iscolor < 0 && reader->IsColor());
-
-        CV_CALL( image = cvCreateImage( size, IPL_DEPTH_8U, iscolor ? 3 : 1 ));
-
-        if( !reader->ReadData( (unsigned char*)(image->imageData),
-                               image->widthStep, iscolor ))
-        {
+    if( !reader->ReadData( matrix->data.ptr, matrix->step, iscolor ))
+    {
+        if( image )
             cvReleaseImage( &image );
-            EXIT;
-        }
+        else
+            cvReleaseMat( &matrix );
+        EXIT;
     }
 
     __END__;
@@ -389,9 +401,27 @@ cvLoadImage( const char* filename, int iscolor )
     delete reader;
 
     if( cvGetErrStatus() < 0 )
-        cvReleaseImage( &image );
+    {
+        if( image )
+            cvReleaseImage( &image );
+        else
+            cvReleaseMat( &matrix );
+    }
 
-    return image;
+    return image ? (void*)image : (void*)matrix;
+}
+
+
+CV_IMPL IplImage*
+cvLoadImage( const char* filename, int iscolor )
+{
+    return (IplImage*)icvLoadImage( filename, iscolor, false );
+}
+
+CV_IMPL CvMat*
+cvLoadImageM( const char* filename, int iscolor )
+{
+    return (CvMat*)icvLoadImage( filename, iscolor, true );
 }
 
 

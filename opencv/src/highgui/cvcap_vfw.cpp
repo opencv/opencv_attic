@@ -676,7 +676,7 @@ CV_IMPL void cvReleaseVideoWriter( CvVideoWriter** writer )
     if( writer && *writer )
     {
         icvCloseAVIWriter( (CvAVI_VFW_Writer*)*writer );
-        cvFree( (void**)writer );
+        cvFree( writer );
     }
 }
 

@@ -100,6 +100,11 @@ typedef struct CvCapture
 CvCapture;
 
 
+#ifdef WIN32
+#define HAVE_VFW 1
+#endif
+
+
 #if defined (HAVE_CAMV4L) || defined (HAVE_CAMV4L2)
 CvCapture * cvCaptureFromCAM_V4L( int index );
 #endif
@@ -122,7 +127,7 @@ CV_IMPL CvCapture * cvCaptureFromCAM_TYZX( int index );
 
 #ifdef WIN32
 CvCapture* cvCaptureFromCAM_VFW( int index );
-CvCapture* cvCaptureFromFile_VFW( int index );
+CvCapture* cvCaptureFromFile_VFW( const char* filename );
 #endif
 
 #ifdef HAVE_FFMPEG

@@ -61,7 +61,7 @@ CV_IMPL void cvReleaseCapture( CvCapture** pcapture )
             capture->vtable->count >= CV_CAPTURE_BASE_API_COUNT &&
             capture->vtable->close )
             capture->vtable->close( capture );
-        cvFree( (void**)pcapture );
+        cvFree( pcapture );
     }
 }
 

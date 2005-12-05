@@ -186,6 +186,7 @@ CVAPI(void) cvSetMouseCallback( const char* window_name, CvMouseCallback on_mous
             0 - output image is always grayscale,
            <0 - output image is color or grayscale dependending on the file */
 CVAPI(IplImage*) cvLoadImage( const char* filename, int iscolor CV_DEFAULT(CV_LOAD_IMAGE_COLOR));
+CVAPI(CvMat*) cvLoadImageM( const char* filename, int iscolor CV_DEFAULT(CV_LOAD_IMAGE_COLOR));
 
 /* save image to file */
 CVAPI(int) cvSaveImage( const char* filename, const CvArr* image );
