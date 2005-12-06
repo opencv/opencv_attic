@@ -595,7 +595,7 @@ cvFitLine( const CvArr* array, int dist, double param,
     __BEGIN__;
 
     char* points = 0;
-    CvContour contour_header;
+    union { CvContour contour; CvSeq seq; } header;
     CvSeqBlock block;
     CvSeq* ptseq = (CvSeq*)array;
     int type;
@@ -628,7 +628,7 @@ cvFitLine( const CvArr* array, int dist, double param,
 
         CV_CALL( ptseq = cvMakeSeqHeaderForArray(
             CV_SEQ_KIND_GENERIC|type, sizeof(CvContour), CV_ELEM_SIZE(type), mat->data.ptr,
-            mat->width + mat->height - 1, (CvSeq*)&contour_header, &block ));
+            mat->width + mat->height - 1, &header.seq, &block ));
     }
 
     if( reps < 0 || aeps < 0 )

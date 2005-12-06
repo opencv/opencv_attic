@@ -1091,6 +1091,13 @@ cvStartReadSeq( const CvSeq *seq, CvSeqReader * reader, int reverse )
 
     CV_FUNCNAME( "cvStartReadSeq" );
 
+    if( reader )
+    {
+        reader->seq = 0;
+        reader->block = 0;
+        reader->ptr = reader->block_max = reader->block_min = 0;
+    }
+
     __BEGIN__;
 
     if( !seq || !reader )

@@ -292,6 +292,7 @@ cvCalcGlobalOrientation( const void* orientation, const void* maskimg, const voi
     CvMat  mhistub, *mhi = (CvMat*)mhiimg;
     CvMat  maskstub, *mask = (CvMat*)maskimg;
     CvMat  orientstub, *orient = (CvMat*)orientation;
+    void*  _orient;
     float _ranges[] = { 0, 360 };
     float* ranges = _ranges;
     int base_orient;
@@ -318,7 +319,8 @@ cvCalcGlobalOrientation( const void* orientation, const void* maskimg, const voi
 
     // calculate histogram of different orientation values
     CV_CALL( hist = cvCreateHist( 1, &hist_size, CV_HIST_ARRAY, &ranges ));
-    cvCalcArrHist( (CvArr**)&orient, hist, 0, mask );
+    _orient = orient;
+    cvCalcArrHist( &_orient, hist, 0, mask );
 
     // find the maximum index (the dominant orientation)
     cvGetMinMaxHistValue( hist, 0, 0, 0, &base_orient );
