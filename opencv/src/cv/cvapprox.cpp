@@ -552,7 +552,7 @@ icvApproxPolyDP_32s( CvSeq* src_contour, int header_size,
         end_pt = *(CvPoint*)(reader.ptr);
         start_pt = *(CvPoint*)cvGetSeqElem( src_contour, -1 );
 
-        if( start_pt.x == end_pt.x && start_pt.y == end_pt.y )
+        if( start_pt.x != end_pt.x || start_pt.y != end_pt.y )
         {
             slice.start_index = 0;
             slice.end_index = count - 1;
@@ -637,7 +637,7 @@ icvApproxPolyDP_32s( CvSeq* src_contour, int header_size,
             for( i = slice.start_index + 1; i < slice.end_index; i++ )
             {
                 CV_READ_SEQ_ELEM( pt, reader );
-                dist = abs(pt.y - start_pt.y) * dx - (pt.x - start_pt.x) * dy;
+                dist = abs((pt.y - start_pt.y) * dx - (pt.x - start_pt.x) * dy);
 
                 if( dist > max_dist )
                 {
@@ -756,7 +756,8 @@ icvApproxPolyDP_32f( CvSeq* src_contour, int header_size,
         end_pt = *(CvPoint2D32f*)(reader.ptr);
         start_pt = *(CvPoint2D32f*)cvGetSeqElem( src_contour, -1 );
 
-        if( start_pt.x == end_pt.x && start_pt.y == end_pt.y )
+        if( fabs(start_pt.x - end_pt.x) > FLT_EPSILON ||
+            fabs(start_pt.y - end_pt.y) > FLT_EPSILON )
         {
             slice.start_index = 0;
             slice.end_index = count - 1;
