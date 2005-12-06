@@ -979,7 +979,10 @@ cvFindNextContour( CvContourScanner scanner )
                 }
                 else
                 {
-                    cvSetAdd( scanner->cinfo_set, 0, (CvSetElem **) & l_cinfo );
+                    union { _CvContourInfo* ci; CvSetElem* se; } v;
+                    v.ci = l_cinfo;
+                    cvSetAdd( scanner->cinfo_set, 0, &v.se );
+                    l_cinfo = v.ci;
 
                     result = icvFetchContourEx( img + x - is_hole, step,
                                                 cvPoint( origin.x + scanner->offset.x,

@@ -3587,7 +3587,7 @@ icvWriteMatND( CvFileStorage* fs, const char* name,
 
     __BEGIN__;
 
-    const CvMatND* mat = (const CvMatND*)struct_ptr;
+    void* mat = (void*)struct_ptr;
     CvMatND stub;
     CvNArrayIterator iterator;
     int dims, sizes[CV_MAX_DIM];
@@ -3600,10 +3600,10 @@ icvWriteMatND( CvFileStorage* fs, const char* name,
     cvStartWriteStruct( fs, "sizes", CV_NODE_SEQ + CV_NODE_FLOW );
     cvWriteRawData( fs, sizes, dims, "i" );
     cvEndWriteStruct( fs );
-    cvWriteString( fs, "dt", icvEncodeFormat( CV_MAT_TYPE(mat->type), dt ), 0 );
+    cvWriteString( fs, "dt", icvEncodeFormat( cvGetElemType(mat), dt ), 0 );
     cvStartWriteStruct( fs, "data", CV_NODE_SEQ + CV_NODE_FLOW );
     
-    CV_CALL( cvInitNArrayIterator( 1, (void**)&mat, 0, &stub, &iterator ));
+    CV_CALL( cvInitNArrayIterator( 1, &mat, 0, &stub, &iterator ));
 
     do
         cvWriteRawData( fs, iterator.ptr[0], iterator.size.width, dt );

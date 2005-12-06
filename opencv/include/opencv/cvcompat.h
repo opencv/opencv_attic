@@ -163,15 +163,7 @@ CV_INLINE void cvmPerspectiveProject( const CvMat* mat, const CvArr* src, CvArr*
 
 CV_INLINE void cvFillImage( CvArr* mat, double color )
 {
-    CvPoint left_top = { 0, 0 }, right_bottom = { 0, 0 };
-
-    cvGetRawData( mat, 0, 0, (CvSize*)&right_bottom );
-    right_bottom.x--;
-    right_bottom.y--;
-
-    cvRectangle( mat, left_top, right_bottom,
-                 cvColorToScalar( color, cvGetElemType(mat)),
-                 CV_FILLED, 8, 0 );
+    cvSet( mat, cvColorToScalar(color, cvGetElemType(mat)), 0 );
 }
 
 
@@ -777,29 +769,29 @@ CV_INLINE void cvUnDistortInit( const CvArr* CV_UNREFERENCED(src),
                                 const float* A, const float* k,
                                 int CV_UNREFERENCED(interpolate) )
 {
-    float* data;
+    union { uchar* ptr; float* fl; } data;
     CvSize sz;
-    cvGetRawData( undistortion_map, (uchar**)&data, 0, &sz );
+    cvGetRawData( undistortion_map, &data.ptr, 0, &sz );
     assert( sz.width >= 8 );
     /* just save the intrinsic parameters to the map */
-    data[0] = A[0]; data[1] = A[4];
-    data[2] = A[2]; data[3] = A[5];
-    data[4] = k[0]; data[5] = k[1];
-    data[6] = k[2]; data[7] = k[3];
+    data.fl[0] = A[0]; data.fl[1] = A[4];
+    data.fl[2] = A[2]; data.fl[3] = A[5];
+    data.fl[4] = k[0]; data.fl[5] = k[1];
+    data.fl[6] = k[2]; data.fl[7] = k[3];
 }
 
 CV_INLINE void  cvUnDistort( const CvArr* src, CvArr* dst,
                              const CvArr* undistortion_map,
                              int CV_UNREFERENCED(interpolate) )
 {
-    float* data;
+    union { uchar* ptr; float* fl; } data;
     float a[] = {0,0,0,0,0,0,0,0,1};
     CvSize sz;
-    cvGetRawData( undistortion_map, (uchar**)&data, 0, &sz );
+    cvGetRawData( undistortion_map, &data.ptr, 0, &sz );
     assert( sz.width >= 8 );
-    a[0] = data[0]; a[4] = data[1];
-    a[2] = data[2]; a[5] = data[3];
-    cvUnDistortOnce( src, dst, a, data + 4, 1 ); 
+    a[0] = data.fl[0]; a[4] = data.fl[1];
+    a[2] = data.fl[2]; a[5] = data.fl[3];
+    cvUnDistortOnce( src, dst, a, data.fl + 4, 1 ); 
 }
 
 

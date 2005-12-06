@@ -240,7 +240,8 @@ cvConvexHull2( const CvArr* array, void* hull_storage,
     CvMat* mat = 0;
     CvSeqReader reader;
     CvSeqWriter writer;
-    CvContour contour_header, hull_header;
+    CvContour contour_header;
+    union { CvContour c; CvSeq s; } hull_header;
     CvSeqBlock block, hullblock;
     CvSeq* ptseq = 0;
     CvSeq* hullseq = 0;
@@ -305,7 +306,7 @@ cvConvexHull2( const CvArr* array, void* hull_storage,
         CV_CALL( hullseq = cvMakeSeqHeaderForArray(
             CV_SEQ_KIND_CURVE|CV_MAT_TYPE(mat->type)|CV_SEQ_FLAG_CLOSED,
             sizeof(contour_header), CV_ELEM_SIZE(mat->type), mat->data.ptr,
-            mat->cols + mat->rows - 1, (CvSeq*)&hull_header, &hullblock ));
+            mat->cols + mat->rows - 1, &hull_header.s, &hullblock ));
 
         cvClearSeq( hullseq );
     }
@@ -526,7 +527,7 @@ cvConvexityDefects( const CvArr* array,
     int rev_orientation;
 
     CvContour contour_header;
-    CvContour hull_header;
+    union { CvContour c; CvSeq s; } hull_header;
     CvSeqBlock block, hullblock;
     CvSeq *ptseq = (CvSeq*)array, *hull = (CvSeq*)hullarray;
 
@@ -580,8 +581,8 @@ cvConvexityDefects( const CvArr* array,
         
         CV_CALL( hull = cvMakeSeqHeaderForArray(
             CV_SEQ_KIND_CURVE|CV_MAT_TYPE(mat->type)|CV_SEQ_FLAG_CLOSED,
-            sizeof(hull_header), CV_ELEM_SIZE(mat->type), mat->data.ptr,
-            mat->cols + mat->rows - 1, (CvSeq*)&hull_header, &hullblock ));
+            sizeof(CvContour), CV_ELEM_SIZE(mat->type), mat->data.ptr,
+            mat->cols + mat->rows - 1, &hull_header.s, &hullblock ));
     }
 
     is_index = CV_SEQ_ELTYPE(hull) == CV_SEQ_ELTYPE_INDEX;

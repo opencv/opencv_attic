@@ -1121,19 +1121,27 @@ cvFloodFill( CvArr* arr, CvPoint seed_point,
         }
 
         if( depth == CV_8U )
+        {
+            uchar* l = (uchar*)ld_buf;
+            uchar* u = (uchar*)ud_buf;
             for( i = 0; i < cn; i++ )
             {
                 int t = cvFloor(lo_diff.val[i]);
-                ((uchar*)ld_buf)[i] = CV_CAST_8U(t);
+                l[i] = CV_CAST_8U(t);
                 t = cvFloor(up_diff.val[i]);
-                ((uchar*)ud_buf)[i] = CV_CAST_8U(t);
+                u[i] = CV_CAST_8U(t);
             }
+        }
         else
+        {
+            float* l = (float*)ld_buf;
+            float* u = (float*)ud_buf;
             for( i = 0; i < cn; i++ )
             {
-                ((float*)ld_buf)[i] = (float)lo_diff.val[i];
-                ((float*)ud_buf)[i] = (float)up_diff.val[i];
+                l[i] = (float)lo_diff.val[i];
+                u[i] = (float)up_diff.val[i];
             }
+        }
 
         IPPI_CALL( func( img->data.ptr, img->step, mask->data.ptr, mask->step,
                          size, seed_point, &nv_buf, &ld_buf, &ud_buf,

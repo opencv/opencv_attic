@@ -474,7 +474,7 @@ cvRandArr( CvRNG* rng, CvArr* arr, int disttype, CvScalar param1, CvScalar param
     if( CV_IS_MATND(mat) )
     {
         iterator = &iterator_state;
-        CV_CALL( cvInitNArrayIterator( 1, (void**)&mat, 0, &stub_nd, iterator ));
+        CV_CALL( cvInitNArrayIterator( 1, &arr, 0, &stub_nd, iterator ));
         type = CV_MAT_TYPE(iterator->hdr[0]->type);
         size = iterator->size;
         is_nd = 1;

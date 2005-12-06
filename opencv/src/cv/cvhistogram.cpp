@@ -151,7 +151,7 @@ cvReleaseHist( CvHistogram **hist )
         *hist = 0;
 
         if( CV_IS_SPARSE_HIST( temp ))
-            cvReleaseSparseMat( (CvSparseMat**)&temp->bins );
+            cvRelease( &temp->bins );
         else
         {
             cvReleaseData( temp->bins );
@@ -434,9 +434,13 @@ cvCompareHist( const CvHistogram* hist1,
 
     if( !CV_IS_SPARSE_MAT(hist1->bins))
     {
-        float *ptr1 = 0, *ptr2 = 0;
-        CV_CALL( cvGetRawData( hist1->bins, (uchar**)&ptr1 ));
-        CV_CALL( cvGetRawData( hist2->bins, (uchar**)&ptr2 ));
+        union { float* fl; uchar* ptr; } v;
+        float *ptr1, *ptr2;
+        v.fl = 0;
+        CV_CALL( cvGetRawData( hist1->bins, &v.ptr ));
+        ptr1 = v.fl;
+        CV_CALL( cvGetRawData( hist2->bins, &v.ptr ));
+        ptr2 = v.fl;
 
         switch( method )
         {
@@ -1513,7 +1517,11 @@ cvCalcArrHist( CvArr** img, CvHistogram* hist,
         IPPI_CALL( icvCalcHist_8u_C1R( ptr, step, maskptr, maskstep, size, hist ));
 	    break;
     case CV_32F:
-	    IPPI_CALL( icvCalcHist_32f_C1R( (float**)ptr, step, maskptr, maskstep, size, hist ));
+        {
+        union { uchar** ptr; float** fl; } v;
+        v.ptr = ptr;
+	    IPPI_CALL( icvCalcHist_32f_C1R( v.fl, step, maskptr, maskstep, size, hist ));
+        }
 	    break;
     default:
         CV_ERROR( CV_StsUnsupportedFormat, "Unsupported array type" );
@@ -2113,8 +2121,12 @@ cvCalcArrBackProject( CvArr** img, CvArr* dst, const CvHistogram* hist )
         IPPI_CALL( icvCalcBackProject_8u_C1R( ptr, step, dstptr, dststep, size, hist ));
 	    break;
     case CV_32F:
-	    IPPI_CALL( icvCalcBackProject_32f_C1R( (float**)ptr, step,
+        {
+        union { uchar** ptr; float** fl; } v;
+        v.ptr = ptr;
+	    IPPI_CALL( icvCalcBackProject_32f_C1R( v.fl, step,
                                 (float*)dstptr, dststep, size, hist ));
+        }
 	    break;
     default:
         CV_ERROR( CV_StsUnsupportedFormat, "Unsupported array type" );

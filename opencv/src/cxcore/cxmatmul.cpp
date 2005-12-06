@@ -611,6 +611,7 @@ cvGEMM( const CvArr* Aarr, const CvArr* Barr, double alpha,
     static CvBigFuncTable single_mul_tab, block_mul_tab, store_tab;
     static int inittab = 0;
     static double zero[] = {0,0,0,0};
+    static float zerof[] = {0,0,0,0};
     
     uchar* buffer = 0;
     int local_alloc = 0;
@@ -873,7 +874,7 @@ cvGEMM( const CvArr* Aarr, const CvArr* Barr, double alpha,
                    c_step = C->step/sizeof(c[0]);
 
             if( !c )
-                c = (const float*)zero;
+                c = zerof;
 
             switch( len )
             {
@@ -891,7 +892,7 @@ cvGEMM( const CvArr* Aarr, const CvArr* Barr, double alpha,
                 else if( a != d )
                 {
                     int c_step0 = 1;
-                    if( c == (const float*)zero )
+                    if( c == zerof )
                     {
                         c_step0 = 0;
                         c_step = 1;
@@ -924,7 +925,7 @@ cvGEMM( const CvArr* Aarr, const CvArr* Barr, double alpha,
                 else if( a != d )
                 {
                     int c_step0 = 1;
-                    if( c == (const float*)zero )
+                    if( c == zerof )
                     {
                         c_step0 = 0;
                         c_step = 1;
@@ -962,7 +963,7 @@ cvGEMM( const CvArr* Aarr, const CvArr* Barr, double alpha,
                 else if( len <= 16 && a != d )
                 {
                     int c_step0 = 1;
-                    if( c == (const float*)zero )
+                    if( c == zerof )
                     {
                         c_step0 = 0;
                         c_step = 1;

@@ -412,11 +412,12 @@ cvSum( const CvArr* arr )
     {
         if( CV_IS_MATND(mat) )
         {
+            void* matnd = (void*)mat;
             CvMatND nstub;
             CvNArrayIterator iterator;
             int pass_hint;
 
-            CV_CALL( cvInitNArrayIterator( 1, (void**)&mat, 0, &nstub, &iterator ));
+            CV_CALL( cvInitNArrayIterator( 1, &matnd, 0, &nstub, &iterator ));
 
             type = CV_MAT_TYPE(iterator.hdr[0]->type);
             if( CV_MAT_CN(type) > 4 )
@@ -574,7 +575,7 @@ CV_DEF_INIT_FUNC_TAB_2D( CountNonZero, C1R )
 CV_DEF_INIT_FUNC_TAB_2D( CountNonZero, CnCR )
 
 CV_IMPL int
-cvCountNonZero( const CvArr* img )
+cvCountNonZero( const CvArr* arr )
 {
     static CvFuncTable nz_tab;
     static CvFuncTable nzcoi_tab;
@@ -589,7 +590,7 @@ cvCountNonZero( const CvArr* img )
     int type, coi = 0;
     int mat_step;
     CvSize size;
-    CvMat stub, *mat = (CvMat*)img;
+    CvMat stub, *mat = (CvMat*)arr;
 
     if( !inittab )
     {
@@ -602,11 +603,12 @@ cvCountNonZero( const CvArr* img )
     {
         if( CV_IS_MATND(mat) )
         {
+            void* matnd = (void*)arr;
             CvMatND nstub;
             CvNArrayIterator iterator;
             CvFunc2D_1A1P func;
 
-            CV_CALL( cvInitNArrayIterator( 1, (void**)&mat, 0, &nstub, &iterator ));
+            CV_CALL( cvInitNArrayIterator( 1, &matnd, 0, &nstub, &iterator ));
 
             type = CV_MAT_TYPE(iterator.hdr[0]->type);
 
