@@ -531,7 +531,7 @@ IPCVAPI_EX(CvStatus, icvDistanceTransform_5x5_8u32f_C1R,
 *                               Thresholding functions                                   *
 \****************************************************************************************/
 
-IPCVAPI_EX( CvStatus, icvCompareC_8u_C1R,
+IPCVAPI_EX( CvStatus, icvCompareC_8u_C1R_cv,
             "ippiCompareC_8u_C1R", CV_PLUGINS1(CV_PLUGIN_IPPI),
             ( const uchar* src1, int srcstep1, uchar scalar,
               uchar* dst, int dststep, CvSize size, int cmp_op ))

@@ -194,7 +194,7 @@ icvThresh_32f_C1R( const float *src, int src_step, float *dst, int dst_step,
 
 
 icvAndC_8u_C1R_t icvAndC_8u_C1R_p = 0;
-icvCompareC_8u_C1R_t icvCompareC_8u_C1R_p = 0;
+icvCompareC_8u_C1R_cv_t icvCompareC_8u_C1R_cv_p = 0;
 icvThreshold_GTVal_8u_C1R_t icvThreshold_GTVal_8u_C1R_p = 0;
 icvThreshold_GTVal_32f_C1R_t icvThreshold_GTVal_32f_C1R_p = 0;
 icvThreshold_LTVal_8u_C1R_t icvThreshold_LTVal_8u_C1R_p = 0;
@@ -302,9 +302,9 @@ cvThreshold( const void* srcarr, void* dstarr, double thresh, double maxval, int
 
         if( type == CV_THRESH_BINARY || type == CV_THRESH_BINARY_INV )
         {
-            if( icvCompareC_8u_C1R_p && icvAndC_8u_C1R_p )
+            if( icvCompareC_8u_C1R_cv_p && icvAndC_8u_C1R_p )
             {
-                IPPI_CALL( icvCompareC_8u_C1R_p( src->data.ptr, src_step,
+                IPPI_CALL( icvCompareC_8u_C1R_cv_p( src->data.ptr, src_step,
                     (uchar)ithresh, dst->data.ptr, dst_step, roi,
                     type == CV_THRESH_BINARY ? cvCmpGreater : cvCmpLessEq ));
 
