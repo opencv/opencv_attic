@@ -228,13 +228,15 @@ CV_IMPL CvSeq*
 cvConvexHull2( const CvArr* array, void* hull_storage,
                int orientation, int return_points )
 {
-    CvSeq* hull = 0;
+    union { CvContour* c; CvSeq* s; } hull;
     CvPoint** pointer = 0;
     CvPoint2D32f** pointerf = 0;
     int* stack = 0;
     
     CV_FUNCNAME( "cvConvexHull2" );
     
+    hull.s = 0;
+
     __BEGIN__;
 
     CvMat* mat = 0;
@@ -491,8 +493,8 @@ finish_hull:
     }
     else
     {
-        hull = hullseq;
-        ((CvContour*)hull)->rect = cvBoundingRect( ptseq, ptseq == (CvSeq*)&contour_header );
+        hull.s = hullseq;
+        hull.c->rect = cvBoundingRect( ptseq, ptseq == (CvSeq*)&contour_header );
         
         /*if( ptseq != (CvSeq*)&contour_header )
             hullseq->v_prev = ptseq;*/
@@ -503,7 +505,7 @@ finish_hull:
     cvFree( &pointer );
     cvFree( &stack );
 
-    return hull;
+    return hull.s;
 }
 
 

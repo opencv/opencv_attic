@@ -1027,7 +1027,8 @@ cvFloodFill( CvArr* arr, CvPoint seed_point,
 
     int i, type, depth, cn, is_simple, idx;
     int buffer_size, connectivity = flags & 255;
-    double nv_buf[4] = {0,0,0,0}, ld_buf[4] = {0,0,0,0}, ud_buf[4] = {0,0,0,0};
+    double nv_buf[4] = {0,0,0,0};
+    union { uchar b[4]; float f[4]; } ld_buf, ud_buf;
     CvMat stub, *img = (CvMat*)arr;
     CvMat maskstub, *mask = (CvMat*)maskarr;
     CvSize size;
@@ -1121,30 +1122,22 @@ cvFloodFill( CvArr* arr, CvPoint seed_point,
         }
 
         if( depth == CV_8U )
-        {
-            uchar* l = (uchar*)ld_buf;
-            uchar* u = (uchar*)ud_buf;
             for( i = 0; i < cn; i++ )
             {
                 int t = cvFloor(lo_diff.val[i]);
-                l[i] = CV_CAST_8U(t);
+                ld_buf.b[i] = CV_CAST_8U(t);
                 t = cvFloor(up_diff.val[i]);
-                u[i] = CV_CAST_8U(t);
+                ld_buf.b[i] = CV_CAST_8U(t);
             }
-        }
         else
-        {
-            float* l = (float*)ld_buf;
-            float* u = (float*)ud_buf;
             for( i = 0; i < cn; i++ )
             {
-                l[i] = (float)lo_diff.val[i];
-                u[i] = (float)up_diff.val[i];
+                ld_buf.f[i] = (float)lo_diff.val[i];
+                ld_buf.f[i] = (float)up_diff.val[i];
             }
-        }
 
         IPPI_CALL( func( img->data.ptr, img->step, mask->data.ptr, mask->step,
-                         size, seed_point, &nv_buf, &ld_buf, &ud_buf,
+                         size, seed_point, &nv_buf, ld_buf.f, ud_buf.f,
                          comp, flags, buffer, buffer_size, cn ));
     }
 
