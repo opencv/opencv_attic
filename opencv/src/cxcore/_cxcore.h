@@ -314,13 +314,28 @@ CvStatus CV_STDCALL icvLUT_Transform8u_8u_C4R( const uchar* src, int srcstep, uc
 typedef CvStatus (CV_STDCALL * CvLUT_TransformFunc)( const void* src, int srcstep, void* dst,
                                                      int dststep, CvSize size, const void* lut );
 
-#define  icvLUT_Transform8u_8s_C1R(src,srcstep,dst,dststep,size,lut) \
-    icvLUT_Transform8u_8u_C1R(src,srcstep,(uchar*)(dst),dststep,size,(uchar*)(lut))
+CV_INLINE CvStatus
+icvLUT_Transform8u_8s_C1R( const uchar* src, int srcstep, char* dst,
+                            int dststep, CvSize size, const char* lut )
+{
+    return icvLUT_Transform8u_8u_C1R( src, srcstep, (uchar*)dst,
+                                      dststep, size, (const uchar*)lut );
+}
 
-#define  icvLUT_Transform8u_16s_C1R(src,srcstep,dst,dststep,size,lut) \
-    icvLUT_Transform8u_16u_C1R(src,srcstep,(ushort*)(dst),dststep,size,(ushort*)(lut))
+CV_INLINE CvStatus
+icvLUT_Transform8u_16s_C1R( const uchar* src, int srcstep, short* dst,
+                            int dststep, CvSize size, const short* lut )
+{
+    return icvLUT_Transform8u_16u_C1R( src, srcstep, (ushort*)dst,
+                                       dststep, size, (const ushort*)lut );
+}
 
-#define  icvLUT_Transform8u_32f_C1R(src,srcstep,dst,dststep,size,lut) \
-    icvLUT_Transform8u_32s_C1R(src,srcstep,(int*)(dst),dststep,size,(int*)(lut))
+CV_INLINE CvStatus
+icvLUT_Transform8u_32f_C1R( const uchar* src, int srcstep, float* dst,
+                            int dststep, CvSize size, const float* lut )
+{
+    return icvLUT_Transform8u_32s_C1R( src, srcstep, (int*)dst,
+                                       dststep, size, (const int*)lut );
+}
 
 #endif /*_CXCORE_INTERNAL_H_*/
