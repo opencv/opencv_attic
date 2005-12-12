@@ -200,7 +200,7 @@ bool  GrFmtPxMReader::ReadData( uchar* data, int step, int color )
     uchar* gray_palette = pal_buffer;
     uchar* bgr = bgr_buffer;
     int  src_pitch = (m_width*m_bpp + 7)/8;
-    int  nch = color ? 3 : 1;
+    int  nch = m_iscolor ? 3 : 1;
     int  width3 = m_width*nch;
     int  i, x, y;
 
