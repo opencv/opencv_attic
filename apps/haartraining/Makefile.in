@@ -74,9 +74,10 @@ binPROGRAMS_INSTALL = $(INSTALL_PROGRAM)
 PROGRAMS = $(bin_PROGRAMS)
 am_opencv_createsamples_OBJECTS = createsamples.$(OBJEXT)
 opencv_createsamples_OBJECTS = $(am_opencv_createsamples_OBJECTS)
-am__DEPENDENCIES_1 = $(top_builddir)/otherlibs/highgui/libhighgui.la \
+am__DEPENDENCIES_1 = libcvhaartraining.a \
+	$(top_builddir)/otherlibs/highgui/libhighgui.la \
 	$(top_builddir)/cv/src/libcv.la \
-	$(top_builddir)/cxcore/src/libcxcore.la libcvhaartraining.a
+	$(top_builddir)/cxcore/src/libcxcore.la
 opencv_createsamples_DEPENDENCIES = $(am__DEPENDENCIES_1)
 am_opencv_haartraining_OBJECTS = haartraining.$(OBJEXT)
 opencv_haartraining_OBJECTS = $(am_opencv_haartraining_OBJECTS)
@@ -255,17 +256,17 @@ target_os = @target_os@
 target_vendor = @target_vendor@
 lib_LIBRARIES = libcvhaartraining.a
 ALL_CV_LIBS = \
-	$(top_builddir)/otherlibs/highgui/libhighgui.la \
-	$(top_builddir)/cv/src/libcv.la                 \
-	$(top_builddir)/cxcore/src/libcxcore.la         \
-	libcvhaartraining.a
+    libcvhaartraining.a                             \
+    $(top_builddir)/otherlibs/highgui/libhighgui.la \
+    $(top_builddir)/cv/src/libcv.la                 \
+    $(top_builddir)/cxcore/src/libcxcore.la
 
 libcvhaartraining_a_SOURCES = \
-	cvboost.cpp           \
-	cvhaarclassifier.cpp  \
-	cvhaartraining.cpp    \
-	cvcommon.cpp          \
-	cvsamples.cpp
+    cvboost.cpp           \
+    cvhaarclassifier.cpp  \
+    cvhaartraining.cpp    \
+    cvcommon.cpp          \
+    cvsamples.cpp
 
 opencv_haartraining_SOURCES = haartraining.cpp
 opencv_haartraining_LDADD = $(ALL_CV_LIBS)
@@ -276,11 +277,11 @@ opencv_performance_LDADD = $(ALL_CV_LIBS)
 noinst_HEADERS = cvclassifier.h _cvhaartraining.h _cvcommon.h
 EXTRA_DIST = 
 INCLUDES = \
-	-I$(top_srcdir)/cxcore/include    \
-	-I$(top_srcdir)/cv/include        \
-	-I$(top_srcdir)/otherlibs/highgui \
-	-I$(srcdir)/../include            \
-	-I.
+    -I$(top_srcdir)/cxcore/include    \
+    -I$(top_srcdir)/cv/include        \
+    -I$(top_srcdir)/otherlibs/highgui \
+    -I$(srcdir)/../include            \
+    -I.
 
 all: all-am
 
