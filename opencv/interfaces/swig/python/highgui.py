@@ -1,9 +1,9 @@
-# This file was created automatically by SWIG.
+# This file was created automatically by SWIG 1.3.27.
 # Don't modify this file, modify the SWIG interface instead.
-# This file is compatible with both classic and new-style classes.
 
 import _highgui
 
+# This file is compatible with both classic and new-style classes.
 def _swig_setattr_nondynamic(self,class_type,name,value,static=1):
     if (name == "this"):
         if isinstance(value, class_type):
@@ -119,6 +119,10 @@ CV_LOAD_IMAGE_UNCHANGED = _highgui.CV_LOAD_IMAGE_UNCHANGED
 def cvLoadImage(*args):
     """cvLoadImage(char filename, int iscolor=1)"""
     return _highgui.cvLoadImage(*args)
+
+def cvLoadImageM(*args):
+    """cvLoadImageM(char filename, int iscolor=1) -> CvMat"""
+    return _highgui.cvLoadImageM(*args)
 
 def cvSaveImage(*args):
     """cvSaveImage(char filename, CvArr image) -> int"""
@@ -294,7 +298,7 @@ class CvvImagePtr(CvvImage):
     def __init__(self, this):
         _swig_setattr(self, CvvImage, 'this', this)
         if not hasattr(self,"thisown"): _swig_setattr(self, CvvImage, 'thisown', 0)
-        _swig_setattr(self, CvvImage,self.__class__,CvvImage)
+        self.__class__ = CvvImage
 _highgui.CvvImage_swigregister(CvvImagePtr)
 
 __doc__ = """HighGUI provides minimalistic user interface parts and video input/output.
@@ -307,6 +311,7 @@ This wrapper was semi-automatically created from the C/C++ headers and therefore
 contains no Python documentation. Because all identifiers are identical to their
 C/C++ counterparts, you can consult the standard manuals that come with OpenCV.
 """
+
 
 
 
