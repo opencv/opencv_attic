@@ -104,16 +104,13 @@ def Ipl2PIL(input):
         
     modes = mode_list[key]
 
-    # calculate stride
-    stride = input.widthStep - (modes[2] * input.width)
-
     return PIL.Image.fromstring(
         modes[1], # mode
         (input.width, input.height), # size tuple
         input.imageData_get(), # data
         "raw",
         modes[0], # raw mode
-        stride, # stride
+        input.widthStep, # stride
         orientation # orientation
         )
 
@@ -184,7 +181,10 @@ def PIL2NumPy(input):
     
     modes = mode_list[input.mode]    
     
-    shape = (input.size[0], input.size[1], modes[1])
+    if modes[1]>1:
+        shape = (input.size[1], input.size[0], modes[1])
+    else:
+        shape = (input.size[1], input.size[0])
     
     result = Numeric.array_constructor(
         shape,
