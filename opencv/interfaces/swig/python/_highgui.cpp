@@ -1813,12 +1813,13 @@ extern "C" {
 
     /* the wrapping code to enable the use of Python-based callbacks */
 
-    /* a global variable to store the callback... Very uggly */
-    static PyObject *my_cb_func = NULL;
+    /* global variables to store the callbacks... Very uggly */
+    static PyObject *my_tb_cb_func = NULL;
+    static PyObject *my_mouse_cb_func = NULL;
 
     /* the internal C callback function which is responsible to call
-       the Python real callback function */
-    static void _internal_cb_func (int pos) {
+       the Python real trackbar callback function */
+    static void _internal_tb_cb_func (int pos) {
 	
 	/* Must ensure this thread has a lock on the interpreter */
 	PyGILState_STATE state = PyGILState_Ensure();
@@ -1832,7 +1833,38 @@ extern "C" {
 	PyObject *arglist = Py_BuildValue ("(O)", arg1);
 
 	/* call the Python callback */
-	result = PyEval_CallObject (my_cb_func, arglist);
+	result = PyEval_CallObject (my_tb_cb_func, arglist);
+
+	/* cleanup */
+	Py_XDECREF (result);
+
+	/* Release Interpreter lock */
+	PyGILState_Release(state);
+    }
+
+    /* the internal C callback function which is responsible to call
+       the Python real trackbar callback function */
+    static void _internal_mouse_cb_func (int event, int x, int y,
+					 int flags, void* param) {
+	
+	/* Must ensure this thread has a lock on the interpreter */
+	PyGILState_STATE state = PyGILState_Ensure();
+
+	PyObject *result;
+
+	/* the argument of the callback ready to be passed to Python code */
+	PyObject *arg1 = PyInt_FromLong (event);
+	PyObject *arg2 = PyInt_FromLong (x);
+	PyObject *arg3 = PyInt_FromLong (y);
+	PyObject *arg4 = PyInt_FromLong (flags);
+	PyObject *arg5 = PyLong_FromVoidPtr (param);
+
+	/* build the tuple for calling the Python callback */
+	PyObject *arglist = Py_BuildValue ("(OOOOO)",
+					   arg1, arg2, arg3, arg4, arg5);
+
+	/* call the Python callback */
+	result = PyEval_CallObject (my_mouse_cb_func, arglist);
 
 	/* cleanup */
 	Py_XDECREF (result);
@@ -2174,10 +2206,10 @@ static PyObject *_wrap_cvCreateTrackbar(PyObject *, PyObject *args) {
     }
     {
         /* memorize the Python address of the callback function */
-        my_cb_func = (PyObject *) obj4;
+        my_tb_cb_func = (PyObject *) obj4;
         
         /* prepare to call the C function who will register the callback */
-        arg5 = (CvTrackbarCallback) _internal_cb_func;
+        arg5 = (CvTrackbarCallback) _internal_tb_cb_func;
     }
     {
         try {
@@ -2279,8 +2311,13 @@ static PyObject *_wrap_cvSetMouseCallback(PyObject *, PyObject *args) {
     if (!SWIG_AsCharPtr(obj0, (char**)&arg1)) {
         SWIG_arg_fail(1);SWIG_fail;
     }
-    SWIG_Python_ConvertPtr(obj1, (void **)&arg2, SWIGTYPE_p_f_int_int_int_int_p_void__void, SWIG_POINTER_EXCEPTION | 0);
-    if (SWIG_arg_fail(2)) SWIG_fail;
+    {
+        /* memorize the Python address of the callback function */
+        my_mouse_cb_func = (PyObject *) obj1;
+        
+        /* prepare to call the C function who will register the callback */
+        arg2 = (CvMouseCallback) _internal_mouse_cb_func;
+    }
     if (obj2) {
         {
             if ((SWIG_ConvertPtr(obj2,reinterpret_cast<void ** >(&arg3),0,SWIG_POINTER_EXCEPTION|0))== -1) {
