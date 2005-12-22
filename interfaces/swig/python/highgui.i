@@ -53,12 +53,13 @@
 
     /* the wrapping code to enable the use of Python-based callbacks */
 
-    /* a global variable to store the callback... Very uggly */
-    static PyObject *my_cb_func = NULL;
+    /* global variables to store the callbacks... Very uggly */
+    static PyObject *my_tb_cb_func = NULL;
+    static PyObject *my_mouse_cb_func = NULL;
 
     /* the internal C callback function which is responsible to call
-       the Python real callback function */
-    static void _internal_cb_func (int pos) {
+       the Python real trackbar callback function */
+    static void _internal_tb_cb_func (int pos) {
 	
 	/* Must ensure this thread has a lock on the interpreter */
 	PyGILState_STATE state = PyGILState_Ensure();
@@ -72,7 +73,38 @@
 	PyObject *arglist = Py_BuildValue ("(O)", arg1);
 
 	/* call the Python callback */
-	result = PyEval_CallObject (my_cb_func, arglist);
+	result = PyEval_CallObject (my_tb_cb_func, arglist);
+
+	/* cleanup */
+	Py_XDECREF (result);
+
+	/* Release Interpreter lock */
+	PyGILState_Release(state);
+    }
+
+    /* the internal C callback function which is responsible to call
+       the Python real trackbar callback function */
+    static void _internal_mouse_cb_func (int event, int x, int y,
+					 int flags, void* param) {
+	
+	/* Must ensure this thread has a lock on the interpreter */
+	PyGILState_STATE state = PyGILState_Ensure();
+
+	PyObject *result;
+
+	/* the argument of the callback ready to be passed to Python code */
+	PyObject *arg1 = PyInt_FromLong (event);
+	PyObject *arg2 = PyInt_FromLong (x);
+	PyObject *arg3 = PyInt_FromLong (y);
+	PyObject *arg4 = PyInt_FromLong (flags);
+	PyObject *arg5 = PyLong_FromVoidPtr (param);
+
+	/* build the tuple for calling the Python callback */
+	PyObject *arglist = Py_BuildValue ("(OOOOO)",
+					   arg1, arg2, arg3, arg4, arg5);
+
+	/* call the Python callback */
+	result = PyEval_CallObject (my_mouse_cb_func, arglist);
 
 	/* cleanup */
 	Py_XDECREF (result);
@@ -88,10 +120,22 @@
 %typemap(in) CvTrackbarCallback {
 
     /* memorize the Python address of the callback function */
-    my_cb_func = (PyObject *) $input;
+    my_tb_cb_func = (PyObject *) $input;
 
     /* prepare to call the C function who will register the callback */
-    $1 = (CvTrackbarCallback) _internal_cb_func;
+    $1 = (CvTrackbarCallback) _internal_tb_cb_func;
+}
+
+/**
+ * typemap to memorize the Python callback when doing cvSetMouseCallback ()
+ */
+%typemap(in) CvMouseCallback {
+
+    /* memorize the Python address of the callback function */
+    my_mouse_cb_func = (PyObject *) $input;
+
+    /* prepare to call the C function who will register the callback */
+    $1 = (CvMouseCallback) _internal_mouse_cb_func;
 }
 
 /* HighGUI Python module initialization
