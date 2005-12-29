@@ -44,10 +44,6 @@
 #include "_cv.h"
 #include <stdio.h>
 
-#ifdef _OPENMP
-#include "omp.h"
-#endif
-
 /* these settings affect the quality of detection: change with care */
 #define CV_ADJUST_FEATURES 1
 #define CV_ADJUST_WEIGHTS  0
@@ -524,7 +520,7 @@ cvSetImagesForHaarClassifierCascade( CvHaarClassifierCascade* _cascade,
        given image pointers */
     {
 #ifdef _OPENMP
-    int max_threads = omp_get_num_procs();
+    int max_threads = cvGetNumThreads();
     #pragma omp parallel for num_threads(max_threads), schedule(dynamic) 
 #endif // _OPENMP
     for( i = 0; i < _cascade->count; i++ )
@@ -865,7 +861,6 @@ cvHaarDetectObjects( const CvArr* _img,
                      CvMemStorage* storage, double scale_factor,
                      int min_neighbors, int flags, CvSize min_size )
 {
-    #define MAX_MAX_THREADS 128
     int split_stage = 2;
 
     CvMat stub, *img = (CvMat*)_img;
@@ -879,7 +874,7 @@ cvHaarDetectObjects( const CvArr* _img,
     int i;
     
 #ifdef _OPENMP
-    CvSeq* seq_thread[MAX_MAX_THREADS] = {0};
+    CvSeq* seq_thread[CV_MAX_THREADS] = {0};
     int max_threads = 0;
 #endif
     
@@ -910,8 +905,7 @@ cvHaarDetectObjects( const CvArr* _img,
     CV_CALL( temp_storage = cvCreateChildMemStorage( storage ));
 
 #ifdef _OPENMP
-    max_threads = omp_get_num_procs();
-    max_threads = MIN( max_threads, MAX_MAX_THREADS );
+    max_threads = cvGetNumThreads();
     for( i = 0; i < max_threads; i++ )
     {
         CvMemStorage* temp_storage_thread;
