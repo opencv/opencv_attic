@@ -697,4 +697,46 @@ CV_IMPL  double  cvGetTickFrequency()
     return icvGetProcessorInfo()->frequency;
 }
 
+
+static int icvNumThreads = 0;
+static int icvNumProcs = 0;
+
+CV_IMPL int cvGetNumThreads(void)
+{
+    if( !icvNumProcs )
+        cvSetNumThreads(0);
+    return icvNumThreads;
+}
+
+CV_IMPL void cvSetNumThreads( int threads )
+{
+    if( !icvNumProcs )
+    {
+#ifdef _OPENMP
+        icvNumProcs = omp_get_num_procs();
+        icvNumProcs = MIN( icvNumProcs, CV_MAX_THREADS );
+#else
+        icvNumProcs = 1;
+#endif
+    }
+
+    if( threads <= 0 )
+        threads = icvNumProcs;
+    else
+        threads = MIN( threads, icvNumProcs );
+
+    icvNumThreads = threads;
+}
+
+
+CV_IMPL int cvGetThreadNum(void)
+{
+#ifdef _OPENMP
+    return omp_get_thread_num();
+#else
+    return 0;
+#endif
+}
+
+
 /* End of file. */

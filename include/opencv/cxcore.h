@@ -1677,7 +1677,15 @@ CVAPI(void*) cvLoad( const char* filename,
 /* helper functions for RNG initialization and accurate time measurement:
    uses internal clock counter on x86 */
 CVAPI(int64)  cvGetTickCount( void );
-CVAPI(double) cvGetTickFrequency( void ); 
+CVAPI(double) cvGetTickFrequency( void );
+
+/*********************************** Multi-Threading ************************************/
+
+/* retrieve/set the number of threads used in OpenMP implementations */
+CVAPI(int)  cvGetNumThreads();
+CVAPI(void) cvSetNumThreads( int threads );
+/* get index of the thread being executed */
+CVAPI(int)  cvGetThreadNum();
 
 #ifdef __cplusplus
 }

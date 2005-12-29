@@ -48,6 +48,9 @@
 #define _CXCORE_MISC_H_
 
 #include <limits.h>
+#ifdef _OPENMP
+#include "omp.h"
+#endif
 
 /****************************************************************************************\
 *                              Compile-time tuning parameters                            *
@@ -93,6 +96,13 @@
 
 /* max length of strings */
 #define  CV_MAX_STRLEN  1024
+
+/* maximum possible number of threads in parallel implementations */
+#ifdef _OPENMP
+#define CV_MAX_THREADS 128
+#else
+#define CV_MAX_THREADS 1
+#endif
 
 #if 0 /*def  CV_CHECK_FOR_NANS*/
     #define CV_CHECK_NANS( arr ) cvCheckArray((arr))  
