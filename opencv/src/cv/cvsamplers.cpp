@@ -388,6 +388,114 @@ static CvStatus CV_STDCALL icvGetRectSubPix_##flavor##_C3R                  \
 }
 
 
+
+CvStatus CV_STDCALL icvGetRectSubPix_8u32f_C1R
+( const uchar* src, int src_step, CvSize src_size,
+  float* dst, int dst_step, CvSize win_size, CvPoint2D32f center )
+{
+    CvPoint ip;
+    float  a12, a22, b1, b2;
+    float a, b;
+    double s = 0;
+    int i, j;
+
+    center.x -= (win_size.width-1)*0.5f;
+    center.y -= (win_size.height-1)*0.5f;
+
+    ip.x = cvFloor( center.x );
+    ip.y = cvFloor( center.y );
+
+    if( win_size.width <= 0 || win_size.height <= 0 )
+        return CV_BADRANGE_ERR;
+
+    a = center.x - ip.x;
+    b = center.y - ip.y;
+    a = MAX(a,0.0001f);
+    a12 = a*(1.f-b);
+    a22 = a*b;
+    b1 = 1.f - b;
+    b2 = b;
+    s = (1. - a)/a;
+
+    src_step /= sizeof(src[0]);
+    dst_step /= sizeof(dst[0]);
+
+    if( 0 <= ip.x && ip.x + win_size.width < src_size.width &&
+        0 <= ip.y && ip.y + win_size.height < src_size.height )
+    {
+        // extracted rectangle is totally inside the image
+        src += ip.y * src_step + ip.x;
+
+#if 0
+        if( icvCopySubpix_8u32f_C1R_p &&
+            icvCopySubpix_8u32f_C1R_p( src, src_step, dst,
+                dst_step*sizeof(dst[0]), win_size, a, b ) >= 0 )
+            return CV_OK;
+#endif
+
+        for( ; win_size.height--; src += src_step, dst += dst_step )
+        {
+            float prev = (1 - a)*(b1*CV_8TO32F(src[0]) + b2*CV_8TO32F(src[src_step]));
+            for( j = 0; j < win_size.width; j++ )
+            {
+                float t = a12*CV_8TO32F(src[j+1]) + a22*CV_8TO32F(src[j+1+src_step]);
+                dst[j] = prev + t;
+                prev = (float)(t*s);
+            }
+        }
+    }
+    else
+    {
+        CvRect r;
+
+        src = (const uchar*)icvAdjustRect( src, src_step*sizeof(*src),
+                               sizeof(*src), src_size, win_size,ip, &r);
+
+        for( i = 0; i < win_size.height; i++, dst += dst_step )
+        {
+            const uchar *src2 = src + src_step;
+
+            if( i < r.y || i >= r.height )
+                src2 -= src_step;
+
+            for( j = 0; j < r.x; j++ )
+            {
+                float s0 = CV_8TO32F(src[r.x])*b1 +
+                           CV_8TO32F(src2[r.x])*b2;
+
+                dst[j] = (float)(s0);
+            }
+
+            if( j < r.width )
+            {
+                float prev = (1 - a)*(b1*CV_8TO32F(src[j]) + b2*CV_8TO32F(src2[j]));
+
+                for( ; j < r.width; j++ )
+                {
+                    float t = a12*CV_8TO32F(src[j+1]) + a22*CV_8TO32F(src2[j+1]);
+                    dst[j] = prev + t;
+                    prev = (float)(t*s);
+                }
+            }
+
+            for( ; j < win_size.width; j++ )
+            {
+                float s0 = CV_8TO32F(src[r.width])*b1 +
+                           CV_8TO32F(src2[r.width])*b2;
+
+                dst[j] = (float)(s0);
+            }
+
+            if( i < r.height )
+                src = src2;
+        }
+    }
+
+    return CV_OK;
+}
+
+
+
 #define ICV_SHIFT             16
 #define ICV_SCALE(x)          cvRound((x)*(1 << ICV_SHIFT))
 #define ICV_MUL_SCALE(x,y)    (((x)*(y) + (1 << (ICV_SHIFT-1))) >> ICV_SHIFT)
@@ -398,7 +506,7 @@ icvCopySubpix_8u32f_C1R_t icvCopySubpix_8u32f_C1R_p = 0;
 icvCopySubpix_32f_C1R_t icvCopySubpix_32f_C1R_p = 0;
 
 ICV_DEF_GET_RECT_SUB_PIX_FUNC( 8u, uchar, uchar, int, CV_NOP, ICV_SCALE, ICV_DESCALE )
-ICV_DEF_GET_RECT_SUB_PIX_FUNC( 8u32f, uchar, float, float, CV_8TO32F, CV_NOP, CV_NOP )
+//ICV_DEF_GET_RECT_SUB_PIX_FUNC( 8u32f, uchar, float, float, CV_8TO32F, CV_NOP, CV_NOP )
 ICV_DEF_GET_RECT_SUB_PIX_FUNC( 32f, float, float, float, CV_NOP, CV_NOP, CV_NOP )
 
 ICV_DEF_GET_RECT_SUB_PIX_FUNC_C3( 8u, uchar, uchar, int, CV_NOP, ICV_SCALE, ICV_MUL_SCALE )
