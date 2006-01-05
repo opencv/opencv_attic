@@ -132,6 +132,12 @@ I added the following:
     v4l2_scan_controls_enumerate_menu, v4l2_scan_controls -> detect capture control intervals
   - Tested succesful with Genius VideoCam Notebook (V4L2)
 
+8th patch: Jan 5, 2006, Olivier.Bornet@idiap.ch
+Add support of V4L2_PIX_FMT_YUYV and V4L2_PIX_FMT_MJPEG.
+With this patch, new webcams of Logitech, like QuickCam Fusion works.
+Note: For use these webcams, look at the UVC driver at
+http://linux-uvc.berlios.de/
+
 make & enjoy!
 
 */
@@ -243,7 +249,8 @@ int  PALETTE_BGR24 = 0,
      PALETTE_YUV411P = 0,
      PALETTE_YUYV = 0,
      PALETTE_SBGGR8 = 0,
-     PALETTE_SN9C10X = 0;
+     PALETTE_SN9C10X = 0,
+     PALETTE_MJPEG = 0;
 
 typedef struct CvCaptureCAM_V4L
 {
@@ -522,6 +529,20 @@ int autosetup_capture_mode_v4l2(CvCaptureCAM_V4L* capture)
     PALETTE_YUV411P = 1;
   }
   else
+
+#ifdef HAVE_JPEG
+#ifdef __USE_GNU
+      /* support for MJPEG is only available with libjpeg and gcc,
+	 because it's use libjepg and fmemopen()
+      */
+  if (try_palette_v4l2(capture, V4L2_PIX_FMT_MJPEG) == 0)
+  {
+    PALETTE_MJPEG = 1;
+  }
+  else
+#endif
+#endif
+
   if (try_palette_v4l2(capture, V4L2_PIX_FMT_YUYV) == 0)
   {
     PALETTE_YUYV = 1;
@@ -1617,6 +1638,116 @@ yuyv_to_rgb24 (int width, int height, unsigned char *src, unsigned char *dst)
    }
 }
 
+#ifdef HAVE_JPEG
+#ifdef __USE_GNU
+/* support for MJPEG is only available with libjpeg and gcc,
+   because it's use libjepg and fmemopen()
+*/
+
+/* include headers to be able to use libjpeg and GrFmtJpegReader */
+#include "grfmts.h"
+extern "C" {
+#include "jpeglib.h"
+}
+
+/* define a new class for using fmemopen() instead of fopen() */
+class MyMJpegReader : public GrFmtJpegReader {
+public:
+    MyMJpegReader (unsigned char *src, size_t src_size);
+    bool  ReadHeader ();
+protected:
+    unsigned char *my_src;
+    size_t my_src_size;
+};
+
+/////////////////////// Error processing /////////////////////
+
+typedef struct GrFmtJpegErrorMgr
+{
+    struct jpeg_error_mgr pub;    /* "parent" structure */
+    jmp_buf setjmp_buffer;        /* jump label */
+}
+GrFmtJpegErrorMgr;
+
+
+METHODDEF(void)
+error_exit( j_common_ptr cinfo )
+{
+    GrFmtJpegErrorMgr* err_mgr = (GrFmtJpegErrorMgr*)(cinfo->err);
+    
+    /* Return control to the setjmp point */
+    longjmp( err_mgr->setjmp_buffer, 1 );
+}
+
+/////////////////////// MyMJpegReader ///////////////////
+
+/* constructor just call the parent constructor, but without real filename */
+MyMJpegReader::MyMJpegReader (unsigned char *src, size_t src_size)
+    : GrFmtJpegReader ("/dev/null") {
+    /* memorize the given src memory area, with it's size */
+    my_src = src;
+    my_src_size = src_size;
+}
+
+/* 
+   MyMJpegReader::ReadHeader is almost like GrFmtJpegReader::ReadHeader,
+   just use fmemopen() instead of fopen()
+*/
+bool  MyMJpegReader::ReadHeader () {
+    bool result = false;
+    Close();
+
+    jpeg_decompress_struct* cinfo = new jpeg_decompress_struct;
+    GrFmtJpegErrorMgr* jerr = new GrFmtJpegErrorMgr;
+
+    cinfo->err = jpeg_std_error(&jerr->pub);
+    jerr->pub.error_exit = error_exit;
+
+    m_cinfo = cinfo;
+    m_jerr = jerr;
+
+    if( setjmp( jerr->setjmp_buffer ) == 0 )
+    {
+        jpeg_create_decompress( cinfo );
+
+        m_f = fmemopen( my_src, my_src_size, "rb" );
+        if( m_f )
+        {
+            jpeg_stdio_src( cinfo, m_f );
+            jpeg_read_header( cinfo, TRUE );
+
+            m_width = cinfo->image_width;
+            m_height = cinfo->image_height;
+            m_iscolor = cinfo->num_components > 1;
+
+            result = true;
+        }
+    }
+
+    if( !result )
+        Close();
+
+    return result;
+}
+
+/* convert from mjpeg to rgb24 */
+static void 
+mjpeg_to_rgb24 (int width, int height,
+		unsigned char *src, int length,
+		unsigned char *dst)
+{
+    /* use a MyMJpegReader reader for doing the conversion */
+    MyMJpegReader* reader = 0;
+    reader = new MyMJpegReader (src, length);
+    reader->ReadHeader ();
+    reader->ReadData (dst, width * 3, 1 );
+    delete reader;
+
+}
+
+#endif
+#endif
+
 /*
  * BAYER2RGB24 ROUTINE TAKEN FROM:
  *
@@ -1942,6 +2073,21 @@ static IplImage* icvRetrieveFrameCAM_V4L( CvCaptureCAM_V4L* capture) {
                        capture->form.fmt.pix.height,
                        (unsigned char*)(capture->buffers[capture->bufferIndex].start),
                        (unsigned char*)capture->frame.imageData);
+
+#ifdef HAVE_JPEG
+#ifdef __USE_GNU
+    /* support for MJPEG is only available with libjpeg and gcc,
+       because it's use libjepg and fmemopen()
+    */
+    if (PALETTE_MJPEG == 1)
+      mjpeg_to_rgb24(capture->form.fmt.pix.width,
+		     capture->form.fmt.pix.height,
+		     (unsigned char*)(capture->buffers[capture->bufferIndex]
+				      .start),
+		     capture->buffers[capture->bufferIndex].length,
+		     (unsigned char*)capture->frame.imageData);
+#endif
+#endif
 
     if (PALETTE_YUYV == 1)
 	yuyv_to_rgb24(capture->form.fmt.pix.width,
