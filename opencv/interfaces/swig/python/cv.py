@@ -4225,6 +4225,18 @@ def cvGetTickCount(*args):
 def cvGetTickFrequency(*args):
     """cvGetTickFrequency() -> double"""
     return _cv.cvGetTickFrequency(*args)
+
+def cvGetNumThreads(*args):
+    """cvGetNumThreads() -> int"""
+    return _cv.cvGetNumThreads(*args)
+
+def cvSetNumThreads(*args):
+    """cvSetNumThreads(int threads)"""
+    return _cv.cvSetNumThreads(*args)
+
+def cvGetThreadNum(*args):
+    """cvGetThreadNum() -> int"""
+    return _cv.cvGetThreadNum(*args)
 class CvMoments(_object):
     """Proxy of C++ CvMoments class"""
     __swig_setmethods__ = {}

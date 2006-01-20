@@ -19666,8 +19666,22 @@ static PyObject *_wrap_cvPtrND(PyObject *, PyObject *args) {
             SWIG_arg_fail(1);SWIG_fail;
         }
     }
-    SWIG_Python_ConvertPtr(obj1, (void **)&arg2, SWIGTYPE_p_int, SWIG_POINTER_EXCEPTION | 0);
-    if (SWIG_arg_fail(2)) SWIG_fail;
+    {
+        int i;
+        int size;
+        
+        /* get the size of the dimention array */
+        size = PyList_Size (obj1);
+        
+        /* allocate the needed memory */
+        arg2 = (int *)malloc (size * sizeof (int));
+        
+        /* extract all the integer values from the list */
+        for (i = 0; i < size; i++) {
+            PyObject *item = PyList_GetItem (obj1, i);
+            arg2 [i] = (int)PyInt_AsLong (item);
+        }
+    }
     if (obj2) {
         SWIG_Python_ConvertPtr(obj2, (void **)&arg3, SWIGTYPE_p_int, SWIG_POINTER_EXCEPTION | 0);
         if (SWIG_arg_fail(3)) SWIG_fail;
@@ -19844,8 +19858,22 @@ static PyObject *_wrap_cvGetND(PyObject *, PyObject *args) {
             SWIG_arg_fail(1);SWIG_fail;
         }
     }
-    SWIG_Python_ConvertPtr(obj1, (void **)&arg2, SWIGTYPE_p_int, SWIG_POINTER_EXCEPTION | 0);
-    if (SWIG_arg_fail(2)) SWIG_fail;
+    {
+        int i;
+        int size;
+        
+        /* get the size of the dimention array */
+        size = PyList_Size (obj1);
+        
+        /* allocate the needed memory */
+        arg2 = (int *)malloc (size * sizeof (int));
+        
+        /* extract all the integer values from the list */
+        for (i = 0; i < size; i++) {
+            PyObject *item = PyList_GetItem (obj1, i);
+            arg2 [i] = (int)PyInt_AsLong (item);
+        }
+    }
     {
         try {
             result = cvGetND((void const *)arg1,arg2);
@@ -20006,8 +20034,22 @@ static PyObject *_wrap_cvGetRealND(PyObject *, PyObject *args) {
             SWIG_arg_fail(1);SWIG_fail;
         }
     }
-    SWIG_Python_ConvertPtr(obj1, (void **)&arg2, SWIGTYPE_p_int, SWIG_POINTER_EXCEPTION | 0);
-    if (SWIG_arg_fail(2)) SWIG_fail;
+    {
+        int i;
+        int size;
+        
+        /* get the size of the dimention array */
+        size = PyList_Size (obj1);
+        
+        /* allocate the needed memory */
+        arg2 = (int *)malloc (size * sizeof (int));
+        
+        /* extract all the integer values from the list */
+        for (i = 0; i < size; i++) {
+            PyObject *item = PyList_GetItem (obj1, i);
+            arg2 [i] = (int)PyInt_AsLong (item);
+        }
+    }
     {
         try {
             result = (double)cvGetRealND((void const *)arg1,arg2);
@@ -20194,8 +20236,22 @@ static PyObject *_wrap_cvSetND(PyObject *, PyObject *args) {
             SWIG_arg_fail(1);SWIG_fail;
         }
     }
-    SWIG_Python_ConvertPtr(obj1, (void **)&arg2, SWIGTYPE_p_int, SWIG_POINTER_EXCEPTION | 0);
-    if (SWIG_arg_fail(2)) SWIG_fail;
+    {
+        int i;
+        int size;
+        
+        /* get the size of the dimention array */
+        size = PyList_Size (obj1);
+        
+        /* allocate the needed memory */
+        arg2 = (int *)malloc (size * sizeof (int));
+        
+        /* extract all the integer values from the list */
+        for (i = 0; i < size; i++) {
+            PyObject *item = PyList_GetItem (obj1, i);
+            arg2 [i] = (int)PyInt_AsLong (item);
+        }
+    }
     {
         CvScalar * argp;
         SWIG_Python_ConvertPtr(obj2, (void **)&argp, SWIGTYPE_p_CvScalar, SWIG_POINTER_EXCEPTION);
@@ -20372,8 +20428,22 @@ static PyObject *_wrap_cvSetRealND(PyObject *, PyObject *args) {
             SWIG_arg_fail(1);SWIG_fail;
         }
     }
-    SWIG_Python_ConvertPtr(obj1, (void **)&arg2, SWIGTYPE_p_int, SWIG_POINTER_EXCEPTION | 0);
-    if (SWIG_arg_fail(2)) SWIG_fail;
+    {
+        int i;
+        int size;
+        
+        /* get the size of the dimention array */
+        size = PyList_Size (obj1);
+        
+        /* allocate the needed memory */
+        arg2 = (int *)malloc (size * sizeof (int));
+        
+        /* extract all the integer values from the list */
+        for (i = 0; i < size; i++) {
+            PyObject *item = PyList_GetItem (obj1, i);
+            arg2 [i] = (int)PyInt_AsLong (item);
+        }
+    }
     {
         arg3 = static_cast<double >(SWIG_As_double(obj2)); 
         if (SWIG_arg_fail(3)) SWIG_fail;
@@ -20407,8 +20477,22 @@ static PyObject *_wrap_cvClearND(PyObject *, PyObject *args) {
             SWIG_arg_fail(1);SWIG_fail;
         }
     }
-    SWIG_Python_ConvertPtr(obj1, (void **)&arg2, SWIGTYPE_p_int, SWIG_POINTER_EXCEPTION | 0);
-    if (SWIG_arg_fail(2)) SWIG_fail;
+    {
+        int i;
+        int size;
+        
+        /* get the size of the dimention array */
+        size = PyList_Size (obj1);
+        
+        /* allocate the needed memory */
+        arg2 = (int *)malloc (size * sizeof (int));
+        
+        /* extract all the integer values from the list */
+        for (i = 0; i < size; i++) {
+            PyObject *item = PyList_GetItem (obj1, i);
+            arg2 [i] = (int)PyInt_AsLong (item);
+        }
+    }
     {
         try {
             cvClearND(arg1,arg2);
@@ -31048,6 +31132,78 @@ static PyObject *_wrap_cvGetTickFrequency(PyObject *, PyObject *args) {
     }
     {
         resultobj = SWIG_From_double(static_cast<double >(result)); 
+    }
+    return resultobj;
+    fail:
+    return NULL;
+}
+
+
+static PyObject *_wrap_cvGetNumThreads(PyObject *, PyObject *args) {
+    PyObject *resultobj = NULL;
+    int result;
+    
+    if(!PyArg_ParseTuple(args,(char *)":cvGetNumThreads")) goto fail;
+    {
+        try {
+            result = (int)cvGetNumThreads();
+        } 
+        catch (...) 
+        {
+            return NULL;
+        } 
+    }
+    {
+        resultobj = SWIG_From_int(static_cast<int >(result)); 
+    }
+    return resultobj;
+    fail:
+    return NULL;
+}
+
+
+static PyObject *_wrap_cvSetNumThreads(PyObject *, PyObject *args) {
+    PyObject *resultobj = NULL;
+    int arg1 ;
+    PyObject * obj0 = 0 ;
+    
+    if(!PyArg_ParseTuple(args,(char *)"O:cvSetNumThreads",&obj0)) goto fail;
+    {
+        arg1 = static_cast<int >(SWIG_As_int(obj0)); 
+        if (SWIG_arg_fail(1)) SWIG_fail;
+    }
+    {
+        try {
+            cvSetNumThreads(arg1);
+        } 
+        catch (...) 
+        {
+            return NULL;
+        } 
+    }
+    Py_INCREF(Py_None); resultobj = Py_None;
+    return resultobj;
+    fail:
+    return NULL;
+}
+
+
+static PyObject *_wrap_cvGetThreadNum(PyObject *, PyObject *args) {
+    PyObject *resultobj = NULL;
+    int result;
+    
+    if(!PyArg_ParseTuple(args,(char *)":cvGetThreadNum")) goto fail;
+    {
+        try {
+            result = (int)cvGetThreadNum();
+        } 
+        catch (...) 
+        {
+            return NULL;
+        } 
+    }
+    {
+        resultobj = SWIG_From_int(static_cast<int >(result)); 
     }
     return resultobj;
     fail:
@@ -54809,6 +54965,9 @@ static PyMethodDef SwigMethods[] = {
 	 { (char *)"cvLoad", _wrap_cvLoad, METH_VARARGS, NULL},
 	 { (char *)"cvGetTickCount", _wrap_cvGetTickCount, METH_VARARGS, NULL},
 	 { (char *)"cvGetTickFrequency", _wrap_cvGetTickFrequency, METH_VARARGS, NULL},
+	 { (char *)"cvGetNumThreads", _wrap_cvGetNumThreads, METH_VARARGS, NULL},
+	 { (char *)"cvSetNumThreads", _wrap_cvSetNumThreads, METH_VARARGS, NULL},
+	 { (char *)"cvGetThreadNum", _wrap_cvGetThreadNum, METH_VARARGS, NULL},
 	 { (char *)"CvMoments_m00_set", _wrap_CvMoments_m00_set, METH_VARARGS, NULL},
 	 { (char *)"CvMoments_m00_get", _wrap_CvMoments_m00_get, METH_VARARGS, NULL},
 	 { (char *)"CvMoments_m10_set", _wrap_CvMoments_m10_set, METH_VARARGS, NULL},
