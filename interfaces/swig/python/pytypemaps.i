@@ -56,6 +56,25 @@
     }
 }
 
+/* map one list of integer to the parameter idx of
+   cvGetND, cvSetND, cvClearND, cvGetRealND, cvSetRealND and cvClearRealND */
+%typemap(in) (int* idx) {
+    int i;
+    int size;
+
+    /* get the size of the dimention array */
+    size = PyList_Size ($input);
+
+    /* allocate the needed memory */
+    $1 = (int *)malloc (size * sizeof (int));
+
+    /* extract all the integer values from the list */
+    for (i = 0; i < size; i++) {
+	PyObject *item = PyList_GetItem ($input, i);
+	$1 [i] = (int)PyInt_AsLong (item);
+    }
+}
+
 /* map a list of list of float to an matrix of floats*/
 %typemap(in) float** ranges {
     int i1;
