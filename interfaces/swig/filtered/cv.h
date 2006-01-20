@@ -2326,6 +2326,14 @@ extern "C" int64 cvGetTickCount( void );
 extern "C" double cvGetTickFrequency( void );
 
 
+
+
+extern "C" int cvGetNumThreads();
+extern "C" void cvSetNumThreads( int threads );
+
+extern "C" int cvGetThreadNum();
+
+
 }
 # 59 "../../../cv/include/cv.h" 2
 # 1 "../../../cv/include/cvtypes.h" 1
