@@ -24,7 +24,7 @@ AC_CONFIG_AUX_DIR([autotools])
 AC_CONFIG_MACRO_DIR([autotools/aclocal])
 
 # put CVS revision of this configure.in into the resulting configure script
-AC_REVISION($Revision: 1.18 $)
+AC_REVISION($Revision: 1.19 $)
 
 # Detect the canonical host and target build environment
 AC_CANONICAL_HOST
@@ -263,11 +263,18 @@ dnl
 dnl ************** QuickTime configuration ******************
 dnl
 
-#have_quicktime=yes
-#QUICKTIME_LIBS="-framework QuickTime -framework Carbon"
-have_quicktime=no
 QUICKTIME_CFLAGS=
 QUICKTIME_LIBS=
+AC_CHECK_HEADER([QuickTime/QuickTime.h],
+                [
+                  AC_DEFINE(HAVE_QUICKTIME,,[Apple QuickTime])
+                  have_quicktime=yes
+                ],
+                [ have_quicktime=no ])
+if test x$have_quicktime = xyes; then
+  QUICKTIME_LIBS="-Xlinker -framework -Xlinker QuickTime -Xlinker -framework -Xlinker Carbon"
+fi
+
 AC_SUBST(QUICKTIME_CFLAGS)
 AC_SUBST(QUICKTIME_LIBS)
 AM_CONDITIONAL([BUILD_QUICKTIME], [test x$have_quicktime = xyes])

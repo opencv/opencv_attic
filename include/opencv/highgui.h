@@ -230,6 +230,8 @@ CVAPI(CvCapture*) cvCaptureFromFile( const char* filename );
 #define CV_TYZX_COLOR   402
 #define CV_TYZX_Z       403
 
+#define CV_CAP_QT       500   // QuickTime
+
 /* start capturing frames from camera: index = camera_index + domain_offset (CV_CAP_*) */
 CVAPI(CvCapture*) cvCaptureFromCAM( int index );
 
