@@ -120,81 +120,83 @@ CV_IMPL int cvSetCaptureProperty( CvCapture* capture, int id, double value )
  */
 CV_IMPL CvCapture * cvCaptureFromCAM (int index)
 {
-    int  domains[] = { CV_CAP_IEEE1394,   // identical to CV_CAP_DC1394 
-		       CV_CAP_STEREO, 
-		       CV_CAP_VFW,        // identical to CV_CAP_V4L
-		       CV_CAP_MIL, 
-		       -1 };
+    int  domains[] = 
+	{
+		CV_CAP_IEEE1394,   // identical to CV_CAP_DC1394 
+		CV_CAP_STEREO, 
+		CV_CAP_VFW,        // identical to CV_CAP_V4L
+		CV_CAP_MIL, 
+		CV_CAP_QT
+		-1 
+	};
 	
 
     // interpret preferred interface (0 = autodetect)
     int pref = (index / 100) * 100;
-    if (pref) {
-	domains[0]=pref;
-	index %= 100;
-	domains[1]=-1;
+    if (pref) 
+	{
+		domains[0]=pref;
+		index %= 100;
+		domains[1]=-1;
     }
 
     // try every possibly installed camera API
-    for (int i = 0; domains[i] >= 0; i++) {
+    for (int i = 0; domains[i] >= 0; i++) 
+	{
 
-	/* local variable to memorize the captured device */
-	CvCapture *capture;
+		// local variable to memorize the captured device
+		CvCapture *capture;
 
-        switch (domains[i]) {
-#ifdef HAVE_TYZX
-        case CV_CAP_STEREO:
-	    capture = cvCaptureFromCAM_TYZX (index);
-	    if (capture) {
-		/* found ! */
-		return capture;
-	    }
-#endif
+		switch (domains[i]) 
+		{
+		#ifdef HAVE_TYZX
+		case CV_CAP_STEREO:
+			capture = cvCaptureFromCAM_TYZX (index);
+			if (capture)
+				return capture;
+		#endif
 
-#if   defined (HAVE_VFW)
-        case CV_CAP_VFW:
-	    capture = cvCaptureFromCAM_VFW (index);
-	    if (capture) {
-		/* found ! */
-		return capture;
-	    }
-#elif defined (HAVE_CAMV4L) || defined (HAVE_CAMV4L2)
-        case CV_CAP_V4L:
-	    capture = cvCaptureFromCAM_V4L (index);
-	    if (capture) {
-		/* found ! */
-		return capture;
-	    }
-#endif
+		#if   defined (HAVE_VFW)
+		case CV_CAP_VFW:
+			capture = cvCaptureFromCAM_VFW (index);
+			if (capture) 
+				return capture;
+		#elif defined (HAVE_CAMV4L) || defined (HAVE_CAMV4L2)
+		case CV_CAP_V4L:
+			capture = cvCaptureFromCAM_V4L (index);
+			if (capture) 
+				return capture;
+		#endif
 
-#if   defined (HAVE_DC1394)
-        case CV_CAP_DC1394:
-	    capture = cvCaptureFromCAM_DC1394 (index);
-	    if (capture) {
-		/* found ! */
-		return capture;
-	    }
-#elif defined (HAVE_CMU1394)        
-        case CV_CAP_IEEE1394:
-	    capture = cvCaptureFromCAM_CMU (index);
-	    if (capture) {
-		/* found ! */
-		return capture;
-	    }
-#endif
+		#if   defined (HAVE_DC1394)
+		case CV_CAP_DC1394:
+			capture = cvCaptureFromCAM_DC1394 (index);
+			if (capture)
+				return capture;
+		#elif defined (HAVE_CMU1394)        
+			case CV_CAP_IEEE1394:
+			capture = cvCaptureFromCAM_CMU (index);
+			if (capture)
+				return capture;
+		#endif
 
-#ifdef HAVE_MIL
-        case CV_CAP_MIL:
-	    capture = cvCaptureFromCAM_MIL (index);
-	    if (capture) {
-		/* found ! */
-		return capture;
-	    }
-#endif
+		#ifdef HAVE_MIL
+		case CV_CAP_MIL:
+			capture = cvCaptureFromCAM_MIL (index);
+			if (capture) 
+				return capture;
+		#endif
 		
+		#ifdef HAVE_QUICKTIME
+		case CV_CAP_QT:
+			capture = cvCaptureFromCAM_QT (index);
+			if (capture)
+				return capture;
+		#endif
         }
     }
 
+	// failed open a camera
     return 0;
 }
 

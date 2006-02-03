@@ -51,6 +51,9 @@
 /* Define to 1 if you have the `png_set_tRNS_to_alpha' function. */
 #undef HAVE_PNG_SET_TRNS_TO_ALPHA
 
+/* Apple QuickTime */
+#undef HAVE_QUICKTIME
+
 /* Define to 1 if you have the <stdint.h> header file. */
 #undef HAVE_STDINT_H
 

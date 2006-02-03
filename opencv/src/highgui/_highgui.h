@@ -135,7 +135,8 @@ CvCapture* cvCaptureFromFile_FFMPEG( const char* filename );
 #endif
 
 #ifdef HAVE_QUICKTIME
-CvCapture* cvCaptureFromFile_QT( const char* filename );
+CvCapture * cvCaptureFromFile_QT (const char  * filename);
+CvCapture * cvCaptureFromCAM_QT  (const int     index);
 #endif
 
 #endif /* __HIGHGUI_H_ */
