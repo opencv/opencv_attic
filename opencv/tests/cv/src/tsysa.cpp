@@ -95,7 +95,7 @@ int main(int argC,char *argV[])
 #ifdef WIN32
     atsInitModuleTestData( argV[0], "../tests/cv/testdata" );
 #else
-    atsInitModuleTestData( argV[0], "../testdata" );
+    atsInitModuleTestData( argV[0], "../../testdata" );
 #endif
     //atsLoadPrimitives( 1 );
 
