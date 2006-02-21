@@ -68,8 +68,8 @@ static int pyrlk_test( void )
     int     pt_cmpd = 0;
     int     pt_exceed = 0;
     int     merr_i = 0, merr_j = 0, merr_k = 0;
-    char    filepath[100];
-    char    filename[100];
+    char    filepath[1000];
+    char    filename[1000];
     const   char* i_pts_file = "lk_prev.dat";
     const   char* j_pts_file = "lk_next.dat";
     const   char* i_img_file = "rock_1.bmp";
