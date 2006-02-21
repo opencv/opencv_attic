@@ -2285,7 +2285,7 @@ static double icvGetPropertyCAM_V4L (CvCaptureCAM_V4L* capture,
       }
 
       /* all was OK, so convert to 0.0 - 1.0 range, and return the value */
-      return ((float)capture->control.value - v4l2_min) / (v4l2_max - v4l2_min);
+      return ((float)capture->control.value - v4l2_min + 1) / (v4l2_max - v4l2_min);
 
   } else
 #endif /* HAVE_CAMV4L2 */
@@ -2302,16 +2302,6 @@ static double icvGetPropertyCAM_V4L (CvCaptureCAM_V4L* capture,
         return -1;
     }
 
-    if (ioctl (capture->deviceHandle,
-               VIDIOCGPICT, &capture->imageProperties) < 0)
-    {
-        fprintf (stderr,
-                 "HIGHGUI ERROR: V4L: "
-                 "Unable to get properties of device\n");
-        icvCloseCAM_V4L(capture);
-        return -1;
-    }
-    
     switch (property_id) {
     case CV_CAP_PROP_FRAME_WIDTH:
         retval = capture->captureWindow.width;
