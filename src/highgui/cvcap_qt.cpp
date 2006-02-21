@@ -884,7 +884,7 @@ static const void * icvRetrieveFrame_QT_Cam (CvCapture_QT_Cam * capture)
 #else 
 #pragma mark Capturing using Sequence Grabber
 
-extern "C" static OSErr icvDataProc_QT_Cam (SGChannel channel, Ptr raw_data, long len, long *, long, TimeValue, short, long refCon)
+static OSErr icvDataProc_QT_Cam (SGChannel channel, Ptr raw_data, long len, long *, long, TimeValue, short, long refCon)
 {
 	CvCapture_QT_Cam  * capture = (CvCapture_QT_Cam *) refCon;
 	CodecFlags          ignore;
