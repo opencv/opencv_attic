@@ -108,8 +108,8 @@ static int chess_corner_test( void )
     const char* error_string = all_is_ok;
 
     /* test parameters */
-    char   filepath[100];
-    char   filename[100];
+    char   filepath[1000];
+    char   filename[1000];
 
     CvPoint2D32f*  u = 0;
     CvPoint2D32f*  v = 0;
