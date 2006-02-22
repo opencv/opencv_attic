@@ -4719,6 +4719,9 @@ SWIGEXPORT void SWIG_init(void) {
         PyDict_SetItemString(d,"CV_TYZX_Z", SWIG_From_int(static_cast<int >(403))); 
     }
     {
+        PyDict_SetItemString(d,"CV_CAP_QT", SWIG_From_int(static_cast<int >(500))); 
+    }
+    {
         PyDict_SetItemString(d,"CV_CAP_PROP_POS_MSEC", SWIG_From_int(static_cast<int >(0))); 
     }
     {
