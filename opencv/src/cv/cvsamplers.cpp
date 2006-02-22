@@ -605,32 +605,32 @@ icvGetQuadrangleSubPix_##flavor##_C1R                                       \
   dsttype *dst, int dst_step, CvSize win_size, const float *matrix )        \
 {                                                                           \
     int x, y;                                                               \
-    float dx = (win_size.width - 1)*0.5f;                                   \
-    float dy = (win_size.height - 1)*0.5f;                                  \
-    float A11 = matrix[0], A12 = matrix[1], A13 = matrix[2]-A11*dx-A12*dy;  \
-    float A21 = matrix[3], A22 = matrix[4], A23 = matrix[5]-A21*dx-A22*dy;  \
+    double dx = (win_size.width - 1)*0.5;                                   \
+    double dy = (win_size.height - 1)*0.5;                                  \
+    double A11 = matrix[0], A12 = matrix[1], A13 = matrix[2]-A11*dx-A12*dy; \
+    double A21 = matrix[3], A22 = matrix[4], A23 = matrix[5]-A21*dx-A22*dy; \
                                                                             \
     src_step /= sizeof(srctype);                                            \
     dst_step /= sizeof(dsttype);                                            \
                                                                             \
     for( y = 0; y < win_size.height; y++, dst += dst_step )                 \
     {                                                                       \
-        float xs = A12*y + A13;                                             \
-        float ys = A22*y + A23;                                             \
-        float xe = A11*(win_size.width-1) + A12*y + A13;                    \
-        float ye = A21*(win_size.height-1) + A22*y + A23;                   \
+        double xs = A12*y + A13;                                            \
+        double ys = A22*y + A23;                                            \
+        double xe = A11*(win_size.width-1) + A12*y + A13;                   \
+        double ye = A21*(win_size.height-1) + A22*y + A23;                  \
                                                                             \
-        if( (unsigned)cvFloor(xs) < (unsigned)(src_size.width - 1) &&       \
-            (unsigned)cvFloor(ys) < (unsigned)(src_size.height - 1) &&      \
-            (unsigned)cvFloor(xe) < (unsigned)(src_size.width - 1) &&       \
-            (unsigned)cvFloor(ye) < (unsigned)(src_size.height - 1))        \
+        if( (unsigned)(cvFloor(xs)-1) < (unsigned)(src_size.width - 3) &&   \
+            (unsigned)(cvFloor(ys)-1) < (unsigned)(src_size.height - 3) &&  \
+            (unsigned)(cvFloor(xe)-1) < (unsigned)(src_size.width - 3) &&   \
+            (unsigned)(cvFloor(ye)-1) < (unsigned)(src_size.height - 3))    \
         {                                                                   \
             for( x = 0; x < win_size.width; x++ )                           \
             {                                                               \
                 int ixs = cvFloor( xs );                                    \
                 int iys = cvFloor( ys );                                    \
                 const srctype *ptr = src + src_step*iys + ixs;              \
-                float a = xs - ixs, b = ys - iys, a1 = 1.f - a;             \
+                double a = xs - ixs, b = ys - iys, a1 = 1.f - a;            \
                 worktype p0 = cvt(ptr[0])*a1 + cvt(ptr[1])*a;               \
                 worktype p1 = cvt(ptr[src_step])*a1 + cvt(ptr[src_step+1])*a;\
                 xs += A11;                                                  \
@@ -644,7 +644,7 @@ icvGetQuadrangleSubPix_##flavor##_C1R                                       \
             for( x = 0; x < win_size.width; x++ )                           \
             {                                                               \
                 int ixs = cvFloor( xs ), iys = cvFloor( ys );               \
-                float a = xs - ixs, b = ys - iys, a1 = 1.f - a;             \
+                double a = xs - ixs, b = ys - iys, a1 = 1.f - a;            \
                 const srctype *ptr0, *ptr1;                                 \
                 worktype p0, p1;                                            \
                 xs += A11; ys += A21;                                       \
@@ -681,32 +681,32 @@ icvGetQuadrangleSubPix_##flavor##_C3R                                       \
   dsttype *dst, int dst_step, CvSize win_size, const float *matrix )        \
 {                                                                           \
     int x, y;                                                               \
-    float dx = (win_size.width - 1)*0.5f;                                   \
-    float dy = (win_size.height - 1)*0.5f;                                  \
-    float A11 = matrix[0], A12 = matrix[1], A13 = matrix[2]-A11*dx-A12*dy;  \
-    float A21 = matrix[3], A22 = matrix[4], A23 = matrix[5]-A21*dx-A22*dy;  \
+    double dx = (win_size.width - 1)*0.5;                                   \
+    double dy = (win_size.height - 1)*0.5;                                  \
+    double A11 = matrix[0], A12 = matrix[1], A13 = matrix[2]-A11*dx-A12*dy; \
+    double A21 = matrix[3], A22 = matrix[4], A23 = matrix[5]-A21*dx-A22*dy; \
                                                                             \
     src_step /= sizeof(srctype);                                            \
     dst_step /= sizeof(dsttype);                                            \
                                                                             \
     for( y = 0; y < win_size.height; y++, dst += dst_step )                 \
     {                                                                       \
-        float xs = A12*y + A13;                                             \
-        float ys = A22*y + A23;                                             \
-        float xe = A11*(win_size.width-1) + A12*y + A13;                    \
-        float ye = A21*(win_size.height-1) + A22*y + A23;                   \
+        double xs = A12*y + A13;                                            \
+        double ys = A22*y + A23;                                            \
+        double xe = A11*(win_size.width-1) + A12*y + A13;                   \
+        double ye = A21*(win_size.height-1) + A22*y + A23;                  \
                                                                             \
-        if( (unsigned)cvFloor(xs) < (unsigned)(src_size.width - 1) &&       \
-            (unsigned)cvFloor(ys) < (unsigned)(src_size.height - 1) &&      \
-            (unsigned)cvFloor(xe) < (unsigned)(src_size.width - 1) &&       \
-            (unsigned)cvFloor(ye) < (unsigned)(src_size.height - 1))        \
+        if( (unsigned)(cvFloor(xs)-1) < (unsigned)(src_size.width - 3) &&   \
+            (unsigned)(cvFloor(ys)-1) < (unsigned)(src_size.height - 3) &&  \
+            (unsigned)(cvFloor(xe)-1) < (unsigned)(src_size.width - 3) &&   \
+            (unsigned)(cvFloor(ye)-1) < (unsigned)(src_size.height - 3))    \
         {                                                                   \
             for( x = 0; x < win_size.width; x++ )                           \
             {                                                               \
                 int ixs = cvFloor( xs );                                    \
                 int iys = cvFloor( ys );                                    \
                 const srctype *ptr = src + src_step*iys + ixs*3;            \
-                float a = xs - ixs, b = ys - iys, a1 = 1.f - a;             \
+                double a = xs - ixs, b = ys - iys, a1 = 1.f - a;            \
                 worktype p0, p1;                                            \
                 xs += A11;                                                  \
                 ys += A21;                                                  \
@@ -729,7 +729,7 @@ icvGetQuadrangleSubPix_##flavor##_C3R                                       \
             for( x = 0; x < win_size.width; x++ )                           \
             {                                                               \
                 int ixs = cvFloor(xs), iys = cvFloor(ys);                   \
-                float a = xs - ixs, b = ys - iys;                           \
+                double a = xs - ixs, b = ys - iys;                          \
                 const srctype *ptr0, *ptr1;                                 \
                 xs += A11; ys += A21;                                       \
                                                                             \
@@ -740,7 +740,7 @@ icvGetQuadrangleSubPix_##flavor##_C3R                                       \
                                                                             \
                 if( (unsigned)ixs < (unsigned)(src_size.width - 1) )        \
                 {                                                           \
-                    float a1 = 1.f - a;                                     \
+                    double a1 = 1.f - a;                                    \
                     worktype p0, p1;                                        \
                     ptr0 += ixs*3; ptr1 += ixs*3;                           \
                     p0 = cvt(ptr0[0])*a1 + cvt(ptr0[3])*a;                  \
@@ -757,7 +757,7 @@ icvGetQuadrangleSubPix_##flavor##_C3R                                       \
                 }                                                           \
                 else                                                        \
                 {                                                           \
-                    float b1 = 1.f - b;                                     \
+                    double b1 = 1.f - b;                                    \
                     ixs = ixs < 0 ? 0 : src_size.width - 1;                 \
                     ptr0 += ixs*3; ptr1 += ixs*3;                           \
                                                                             \
