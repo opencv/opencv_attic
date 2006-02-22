@@ -156,6 +156,7 @@ CV_TYZX_LEFT = _highgui.CV_TYZX_LEFT
 CV_TYZX_RIGHT = _highgui.CV_TYZX_RIGHT
 CV_TYZX_COLOR = _highgui.CV_TYZX_COLOR
 CV_TYZX_Z = _highgui.CV_TYZX_Z
+CV_CAP_QT = _highgui.CV_CAP_QT
 
 def cvCaptureFromCAM(*args):
     """cvCaptureFromCAM(int index) -> CvCapture"""
