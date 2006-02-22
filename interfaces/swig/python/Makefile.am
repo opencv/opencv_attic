@@ -42,7 +42,7 @@ _cv_la_LIBADD     = $(top_builddir)/cv/src/libcv.la
 _cv_la_LDFLAGS    = -module -avoid-version -no-undefined $(PYTHON_LSPEC) \
                     -L$(SWIG_PYTHON_LIBS)
 
-_highgui_la_SOURCES    = _highgui.cpp ../../../otherlibs/highgui/highgui.h \
+_highgui_la_SOURCES    = _highgui.cpp $(top_srcdir)/otherlibs/highgui/highgui.h \
                          highgui.i
 _highgui_la_CXXFLAGS   = $(PYTHON_CSPEC)
 _highgui_la_LIBADD     = $(top_builddir)/otherlibs/highgui/libhighgui.la
