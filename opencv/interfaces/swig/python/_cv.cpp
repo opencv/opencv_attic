@@ -40703,6 +40703,8 @@ static PyObject *_wrap_cvCalcOpticalFlowPyrLK(PyObject *, PyObject *args) {
     float *arg11 = (float *) 0 ;
     CvTermCriteria arg12 ;
     int arg13 ;
+    int tmpCount6 ;
+    int tmpCountStatus10 ;
     PyObject * obj0 = 0 ;
     PyObject * obj1 = 0 ;
     PyObject * obj2 = 0 ;
@@ -40715,9 +40717,8 @@ static PyObject *_wrap_cvCalcOpticalFlowPyrLK(PyObject *, PyObject *args) {
     PyObject * obj9 = 0 ;
     PyObject * obj10 = 0 ;
     PyObject * obj11 = 0 ;
-    PyObject * obj12 = 0 ;
     
-    if(!PyArg_ParseTuple(args,(char *)"OOOOOOOOOOOOO:cvCalcOpticalFlowPyrLK",&obj0,&obj1,&obj2,&obj3,&obj4,&obj5,&obj6,&obj7,&obj8,&obj9,&obj10,&obj11,&obj12)) goto fail;
+    if(!PyArg_ParseTuple(args,(char *)"OOOOOOOOOOOO:cvCalcOpticalFlowPyrLK",&obj0,&obj1,&obj2,&obj3,&obj4,&obj5,&obj6,&obj7,&obj8,&obj9,&obj10,&obj11)) goto fail;
     {
         if ((SWIG_ConvertPtr(obj0,reinterpret_cast<void ** >(&arg1),0,SWIG_POINTER_EXCEPTION|0))== -1) {
             SWIG_arg_fail(1);SWIG_fail;
@@ -40738,17 +40739,43 @@ static PyObject *_wrap_cvCalcOpticalFlowPyrLK(PyObject *, PyObject *args) {
             SWIG_arg_fail(4);SWIG_fail;
         }
     }
-    SWIG_Python_ConvertPtr(obj4, (void **)&arg5, SWIGTYPE_p_CvPoint2D32f, SWIG_POINTER_EXCEPTION | 0);
-    if (SWIG_arg_fail(5)) SWIG_fail;
-    SWIG_Python_ConvertPtr(obj5, (void **)&arg6, SWIGTYPE_p_CvPoint2D32f, SWIG_POINTER_EXCEPTION | 0);
-    if (SWIG_arg_fail(6)) SWIG_fail;
     {
-        arg7 = static_cast<int >(SWIG_As_int(obj6)); 
-        if (SWIG_arg_fail(7)) SWIG_fail;
+        int i;
+        int size;
+        
+        /* get the size of the input array */
+        size = PyList_Size (obj4);
+        
+        /* allocate the needed memory */
+        arg5 = (CvPoint2D32f *)malloc (size * sizeof (CvPoint2D32f));
+        
+        /* extract all the points values from the list */
+        for (i = 0; i < size; i++) {
+            PyObject *item = PyList_GetItem (obj4, i);
+            
+            CvPoint2D32f *p = NULL;
+            SWIG_Python_ConvertPtr (item, (void **)&p,
+            SWIGTYPE_p_CvPoint2D32f,
+            SWIG_POINTER_EXCEPTION);
+            arg5 [i].x = p->x;
+            arg5 [i].y = p->y;
+        }
+    }
+    {
+        /* as input, we only need the size of the wanted features */
+        
+        /* memorize the size of the wanted features */
+        tmpCount6 = (int)PyInt_AsLong (obj5);
+        
+        /* create the array for the C call */
+        arg6 = (CvPoint2D32f *)malloc (tmpCount6 * sizeof (CvPoint2D32f));
+        
+        /* the size of the array for the C call */
+        arg7 = tmpCount6;
     }
     {
         CvSize * argp;
-        SWIG_Python_ConvertPtr(obj7, (void **)&argp, SWIGTYPE_p_CvSize, SWIG_POINTER_EXCEPTION);
+        SWIG_Python_ConvertPtr(obj6, (void **)&argp, SWIGTYPE_p_CvSize, SWIG_POINTER_EXCEPTION);
         if (SWIG_arg_fail(8)) SWIG_fail;
         if (argp == NULL) {
             SWIG_null_ref("CvSize");
@@ -40757,17 +40784,23 @@ static PyObject *_wrap_cvCalcOpticalFlowPyrLK(PyObject *, PyObject *args) {
         arg8 = *argp;
     }
     {
-        arg9 = static_cast<int >(SWIG_As_int(obj8)); 
+        arg9 = static_cast<int >(SWIG_As_int(obj7)); 
         if (SWIG_arg_fail(9)) SWIG_fail;
     }
-    if (!SWIG_AsCharPtr(obj9, (char**)&arg10)) {
-        SWIG_arg_fail(10);SWIG_fail;
+    {
+        /* as input, we still need the size of the status array */
+        
+        /* memorize the size of the status array */
+        tmpCountStatus10 = (int)PyInt_AsLong (obj8);
+        
+        /* create the status array for the C call */
+        arg10 = (char *)malloc (tmpCountStatus10 * sizeof (char));
     }
-    SWIG_Python_ConvertPtr(obj10, (void **)&arg11, SWIGTYPE_p_float, SWIG_POINTER_EXCEPTION | 0);
+    SWIG_Python_ConvertPtr(obj9, (void **)&arg11, SWIGTYPE_p_float, SWIG_POINTER_EXCEPTION | 0);
     if (SWIG_arg_fail(11)) SWIG_fail;
     {
         CvTermCriteria * argp;
-        SWIG_Python_ConvertPtr(obj11, (void **)&argp, SWIGTYPE_p_CvTermCriteria, SWIG_POINTER_EXCEPTION);
+        SWIG_Python_ConvertPtr(obj10, (void **)&argp, SWIGTYPE_p_CvTermCriteria, SWIG_POINTER_EXCEPTION);
         if (SWIG_arg_fail(12)) SWIG_fail;
         if (argp == NULL) {
             SWIG_null_ref("CvTermCriteria");
@@ -40776,7 +40809,7 @@ static PyObject *_wrap_cvCalcOpticalFlowPyrLK(PyObject *, PyObject *args) {
         arg12 = *argp;
     }
     {
-        arg13 = static_cast<int >(SWIG_As_int(obj12)); 
+        arg13 = static_cast<int >(SWIG_As_int(obj11)); 
         if (SWIG_arg_fail(13)) SWIG_fail;
     }
     {
@@ -40789,6 +40822,108 @@ static PyObject *_wrap_cvCalcOpticalFlowPyrLK(PyObject *, PyObject *args) {
         } 
     }
     Py_INCREF(Py_None); resultobj = Py_None;
+    {
+        int i;
+        PyObject *to_add;
+        
+        /* create the list to return */
+        to_add = PyList_New (tmpCount6);
+        
+        /* extract all the points values of the result, and add it to the
+               final resulting list */
+        for (i = 0; i < tmpCount6; i++) {
+            PyList_SetItem (to_add, i,
+            SWIG_NewPointerObj (&(arg6 [i]),
+            SWIGTYPE_p_CvPoint2D32f, 0));
+        }
+        
+        if ((!resultobj) || (resultobj == Py_None)) {
+            /* no other results, so just put current pointer instead */
+            resultobj = to_add;
+        } else {
+            /* we have other results, so add it to the end */
+            
+            if (!PyTuple_Check (resultobj)) {
+                /* previous result is not a tuple, so create one and put
+                	       previous result and current pointer in it */
+                
+                /* first, save previous result */
+                PyObject *obj_save = resultobj;
+                
+                /* then, create the tuple */
+                resultobj = PyTuple_New (1);
+                
+                /* finaly, put the saved value in the tuple */
+                PyTuple_SetItem (resultobj, 0, obj_save);
+            }
+            
+            /* create a new tuple to put in our new pointer python object */
+            PyObject *my_obj = PyTuple_New (1);
+            
+            /* put in our new pointer python object */
+            PyTuple_SetItem (my_obj, 0, to_add);
+            
+            /* save the previous result */
+            PyObject *obj_save = resultobj;
+            
+            /* concat previous and our new result */
+            resultobj = PySequence_Concat (obj_save, my_obj);
+            
+            /* decrement the usage of no more used objects */
+            Py_DECREF (obj_save);
+            Py_DECREF (my_obj);
+        }
+    }
+    {
+        int i;
+        PyObject *to_add;
+        
+        /* create the list to return */
+        to_add = PyList_New (tmpCountStatus10);
+        
+        /* extract all the integer values of the result, and add it to the
+               final resulting list */
+        for (i = 0; i < tmpCountStatus10; i++) {
+            PyList_SetItem (to_add, i, PyBool_FromLong (arg10 [i]));
+        }
+        
+        if ((!resultobj) || (resultobj == Py_None)) {
+            /* no other results, so just put current pointer instead */
+            resultobj = to_add;
+        } else {
+            /* we have other results, so add it to the end */
+            
+            if (!PyTuple_Check (resultobj)) {
+                /* previous result is not a tuple, so create one and put
+                	       previous result and current pointer in it */
+                
+                /* first, save previous result */
+                PyObject *obj_save = resultobj;
+                
+                /* then, create the tuple */
+                resultobj = PyTuple_New (1);
+                
+                /* finaly, put the saved value in the tuple */
+                PyTuple_SetItem (resultobj, 0, obj_save);
+            }
+            
+            /* create a new tuple to put in our new pointer python object */
+            PyObject *my_obj = PyTuple_New (1);
+            
+            /* put in our new pointer python object */
+            PyTuple_SetItem (my_obj, 0, to_add);
+            
+            /* save the previous result */
+            PyObject *obj_save = resultobj;
+            
+            /* concat previous and our new result */
+            resultobj = PySequence_Concat (obj_save, my_obj);
+            
+            /* decrement the usage of no more used objects */
+            Py_DECREF (obj_save);
+            Py_DECREF (my_obj);
+        }
+    }
     return resultobj;
     fail:
     return NULL;
@@ -44487,23 +44622,37 @@ static PyObject *_wrap_cvFindCornerSubPix(PyObject *, PyObject *args) {
     PyObject * obj2 = 0 ;
     PyObject * obj3 = 0 ;
     PyObject * obj4 = 0 ;
-    PyObject * obj5 = 0 ;
     
-    if(!PyArg_ParseTuple(args,(char *)"OOOOOO:cvFindCornerSubPix",&obj0,&obj1,&obj2,&obj3,&obj4,&obj5)) goto fail;
+    if(!PyArg_ParseTuple(args,(char *)"OOOOO:cvFindCornerSubPix",&obj0,&obj1,&obj2,&obj3,&obj4)) goto fail;
     {
         if ((SWIG_ConvertPtr(obj0,reinterpret_cast<void ** >(&arg1),0,SWIG_POINTER_EXCEPTION|0))== -1) {
             SWIG_arg_fail(1);SWIG_fail;
         }
     }
-    SWIG_Python_ConvertPtr(obj1, (void **)&arg2, SWIGTYPE_p_CvPoint2D32f, SWIG_POINTER_EXCEPTION | 0);
-    if (SWIG_arg_fail(2)) SWIG_fail;
     {
-        arg3 = static_cast<int >(SWIG_As_int(obj2)); 
-        if (SWIG_arg_fail(3)) SWIG_fail;
+        int i;
+        
+        /* get the size of the input array */
+        arg3 = PyList_Size (obj1);
+        
+        /* allocate the needed memory */
+        arg2 = (CvPoint2D32f *)malloc (arg3 * sizeof (CvPoint2D32f));
+        
+        /* extract all the points values from the list */
+        for (i = 0; i < arg3; i++) {
+            PyObject *item = PyList_GetItem (obj1, i);
+            
+            CvPoint2D32f *p = NULL;
+            SWIG_Python_ConvertPtr (item, (void **)&p,
+            SWIGTYPE_p_CvPoint2D32f,
+            SWIG_POINTER_EXCEPTION);
+            arg2 [i].x = p->x;
+            arg2 [i].y = p->y;
+        }
     }
     {
         CvSize * argp;
-        SWIG_Python_ConvertPtr(obj3, (void **)&argp, SWIGTYPE_p_CvSize, SWIG_POINTER_EXCEPTION);
+        SWIG_Python_ConvertPtr(obj2, (void **)&argp, SWIGTYPE_p_CvSize, SWIG_POINTER_EXCEPTION);
         if (SWIG_arg_fail(4)) SWIG_fail;
         if (argp == NULL) {
             SWIG_null_ref("CvSize");
@@ -44513,7 +44662,7 @@ static PyObject *_wrap_cvFindCornerSubPix(PyObject *, PyObject *args) {
     }
     {
         CvSize * argp;
-        SWIG_Python_ConvertPtr(obj4, (void **)&argp, SWIGTYPE_p_CvSize, SWIG_POINTER_EXCEPTION);
+        SWIG_Python_ConvertPtr(obj3, (void **)&argp, SWIGTYPE_p_CvSize, SWIG_POINTER_EXCEPTION);
         if (SWIG_arg_fail(5)) SWIG_fail;
         if (argp == NULL) {
             SWIG_null_ref("CvSize");
@@ -44523,7 +44672,7 @@ static PyObject *_wrap_cvFindCornerSubPix(PyObject *, PyObject *args) {
     }
     {
         CvTermCriteria * argp;
-        SWIG_Python_ConvertPtr(obj5, (void **)&argp, SWIGTYPE_p_CvTermCriteria, SWIG_POINTER_EXCEPTION);
+        SWIG_Python_ConvertPtr(obj4, (void **)&argp, SWIGTYPE_p_CvTermCriteria, SWIG_POINTER_EXCEPTION);
         if (SWIG_arg_fail(6)) SWIG_fail;
         if (argp == NULL) {
             SWIG_null_ref("CvTermCriteria");
@@ -44560,6 +44709,7 @@ static PyObject *_wrap_cvGoodFeaturesToTrack(PyObject *, PyObject *args) {
     int arg9 = (int) 3 ;
     int arg10 = (int) 0 ;
     double arg11 = (double) 0.04 ;
+    int tmpCount4 ;
     PyObject * obj0 = 0 ;
     PyObject * obj1 = 0 ;
     PyObject * obj2 = 0 ;
@@ -44570,9 +44720,8 @@ static PyObject *_wrap_cvGoodFeaturesToTrack(PyObject *, PyObject *args) {
     PyObject * obj7 = 0 ;
     PyObject * obj8 = 0 ;
     PyObject * obj9 = 0 ;
-    PyObject * obj10 = 0 ;
     
-    if(!PyArg_ParseTuple(args,(char *)"OOOOOOO|OOOO:cvGoodFeaturesToTrack",&obj0,&obj1,&obj2,&obj3,&obj4,&obj5,&obj6,&obj7,&obj8,&obj9,&obj10)) goto fail;
+    if(!PyArg_ParseTuple(args,(char *)"OOOOOO|OOOO:cvGoodFeaturesToTrack",&obj0,&obj1,&obj2,&obj3,&obj4,&obj5,&obj6,&obj7,&obj8,&obj9)) goto fail;
     {
         if ((SWIG_ConvertPtr(obj0,reinterpret_cast<void ** >(&arg1),0,SWIG_POINTER_EXCEPTION|0))== -1) {
             SWIG_arg_fail(1);SWIG_fail;
@@ -44588,40 +44737,48 @@ static PyObject *_wrap_cvGoodFeaturesToTrack(PyObject *, PyObject *args) {
             SWIG_arg_fail(3);SWIG_fail;
         }
     }
-    SWIG_Python_ConvertPtr(obj3, (void **)&arg4, SWIGTYPE_p_CvPoint2D32f, SWIG_POINTER_EXCEPTION | 0);
-    if (SWIG_arg_fail(4)) SWIG_fail;
-    SWIG_Python_ConvertPtr(obj4, (void **)&arg5, SWIGTYPE_p_int, SWIG_POINTER_EXCEPTION | 0);
-    if (SWIG_arg_fail(5)) SWIG_fail;
     {
-        arg6 = static_cast<double >(SWIG_As_double(obj5)); 
+        /* as input, we still need the size of the corners array */
+        
+        /* memorize the size of the status corners */
+        tmpCount4 = (int)PyInt_AsLong (obj3);
+        
+        /* create the corners array for the C call */
+        arg4 = (CvPoint2D32f *)malloc (tmpCount4 * sizeof (CvPoint2D32f));
+        
+        /* the size of the array for the C call */
+        arg5 = &tmpCount4;
+    }
+    {
+        arg6 = static_cast<double >(SWIG_As_double(obj4)); 
         if (SWIG_arg_fail(6)) SWIG_fail;
     }
     {
-        arg7 = static_cast<double >(SWIG_As_double(obj6)); 
+        arg7 = static_cast<double >(SWIG_As_double(obj5)); 
         if (SWIG_arg_fail(7)) SWIG_fail;
     }
-    if (obj7) {
+    if (obj6) {
         {
-            if ((SWIG_ConvertPtr(obj7,reinterpret_cast<void ** >(&arg8),0,SWIG_POINTER_EXCEPTION|0))== -1) {
+            if ((SWIG_ConvertPtr(obj6,reinterpret_cast<void ** >(&arg8),0,SWIG_POINTER_EXCEPTION|0))== -1) {
                 SWIG_arg_fail(8);SWIG_fail;
             }
         }
     }
+    if (obj7) {
+        {
+            arg9 = static_cast<int >(SWIG_As_int(obj7)); 
+            if (SWIG_arg_fail(9)) SWIG_fail;
+        }
+    }
     if (obj8) {
         {
-            arg9 = static_cast<int >(SWIG_As_int(obj8)); 
-            if (SWIG_arg_fail(9)) SWIG_fail;
+            arg10 = static_cast<int >(SWIG_As_int(obj8)); 
+            if (SWIG_arg_fail(10)) SWIG_fail;
         }
     }
     if (obj9) {
         {
-            arg10 = static_cast<int >(SWIG_As_int(obj9)); 
-            if (SWIG_arg_fail(10)) SWIG_fail;
-        }
-    }
-    if (obj10) {
-        {
-            arg11 = static_cast<double >(SWIG_As_double(obj10)); 
+            arg11 = static_cast<double >(SWIG_As_double(obj9)); 
             if (SWIG_arg_fail(11)) SWIG_fail;
         }
     }
@@ -44635,6 +44792,58 @@ static PyObject *_wrap_cvGoodFeaturesToTrack(PyObject *, PyObject *args) {
         } 
     }
     Py_INCREF(Py_None); resultobj = Py_None;
+    {
+        int i;
+        PyObject *to_add;
+        
+        /* create the list to return */
+        to_add = PyList_New (tmpCount4);
+        
+        /* extract all the integer values of the result, and add it to the
+               final resulting list */
+        for (i = 0; i < tmpCount4; i++) {
+            PyList_SetItem (to_add, i,
+            SWIG_NewPointerObj (&(arg4 [i]),
+            SWIGTYPE_p_CvPoint2D32f, 0));
+        }
+        
+        if ((!resultobj) || (resultobj == Py_None)) {
+            /* no other results, so just put current pointer instead */
+            resultobj = to_add;
+        } else {
+            /* we have other results, so add it to the end */
+            
+            if (!PyTuple_Check (resultobj)) {
+                /* previous result is not a tuple, so create one and put
+                	       previous result and current pointer in it */
+                
+                /* first, save previous result */
+                PyObject *obj_save = resultobj;
+                
+                /* then, create the tuple */
+                resultobj = PyTuple_New (1);
+                
+                /* finaly, put the saved value in the tuple */
+                PyTuple_SetItem (resultobj, 0, obj_save);
+            }
+            
+            /* create a new tuple to put in our new pointer python object */
+            PyObject *my_obj = PyTuple_New (1);
+            
+            /* put in our new pointer python object */
+            PyTuple_SetItem (my_obj, 0, to_add);
+            
+            /* save the previous result */
+            PyObject *obj_save = resultobj;
+            
+            /* concat previous and our new result */
+            resultobj = PySequence_Concat (obj_save, my_obj);
+            
+            /* decrement the usage of no more used objects */
+            Py_DECREF (obj_save);
+            Py_DECREF (my_obj);
+        }
+    }
     return resultobj;
     fail:
     return NULL;
@@ -45426,13 +45635,13 @@ static PyObject *_wrap_cvFindChessboardCorners(PyObject *, PyObject *args) {
     int *arg4 = (int *) NULL ;
     int arg5 = (int) 1 ;
     int result;
+    int tmpCount3 ;
     PyObject * obj0 = 0 ;
     PyObject * obj1 = 0 ;
     PyObject * obj2 = 0 ;
     PyObject * obj3 = 0 ;
-    PyObject * obj4 = 0 ;
     
-    if(!PyArg_ParseTuple(args,(char *)"OOO|OO:cvFindChessboardCorners",&obj0,&obj1,&obj2,&obj3,&obj4)) goto fail;
+    if(!PyArg_ParseTuple(args,(char *)"OOO|O:cvFindChessboardCorners",&obj0,&obj1,&obj2,&obj3)) goto fail;
     {
         if ((SWIG_ConvertPtr(obj0,reinterpret_cast<void ** >(&arg1),0,SWIG_POINTER_EXCEPTION|0))== -1) {
             SWIG_arg_fail(1);SWIG_fail;
@@ -45448,15 +45657,21 @@ static PyObject *_wrap_cvFindChessboardCorners(PyObject *, PyObject *args) {
         if (SWIG_arg_fail(2)) SWIG_fail;
         arg2 = *argp;
     }
-    SWIG_Python_ConvertPtr(obj2, (void **)&arg3, SWIGTYPE_p_CvPoint2D32f, SWIG_POINTER_EXCEPTION | 0);
-    if (SWIG_arg_fail(3)) SWIG_fail;
-    if (obj3) {
-        SWIG_Python_ConvertPtr(obj3, (void **)&arg4, SWIGTYPE_p_int, SWIG_POINTER_EXCEPTION | 0);
-        if (SWIG_arg_fail(4)) SWIG_fail;
+    {
+        /* as input, we still need the size of the corners array */
+        
+        /* memorize the size of the status corners */
+        tmpCount3 = (int)PyInt_AsLong (obj2);
+        
+        /* create the corners array for the C call */
+        arg3 = (CvPoint2D32f *)malloc (tmpCount3 * sizeof (CvPoint2D32f));
+        
+        /* the size of the array for the C call */
+        arg4 = &tmpCount3;
     }
-    if (obj4) {
+    if (obj3) {
         {
-            arg5 = static_cast<int >(SWIG_As_int(obj4)); 
+            arg5 = static_cast<int >(SWIG_As_int(obj3)); 
             if (SWIG_arg_fail(5)) SWIG_fail;
         }
     }
@@ -45471,6 +45686,58 @@ static PyObject *_wrap_cvFindChessboardCorners(PyObject *, PyObject *args) {
     }
     {
         resultobj = SWIG_From_int(static_cast<int >(result)); 
+    }
+    {
+        int i;
+        PyObject *to_add;
+        
+        /* create the list to return */
+        to_add = PyList_New (tmpCount3);
+        
+        /* extract all the integer values of the result, and add it to the
+               final resulting list */
+        for (i = 0; i < tmpCount3; i++) {
+            PyList_SetItem (to_add, i,
+            SWIG_NewPointerObj (&(arg3 [i]),
+            SWIGTYPE_p_CvPoint2D32f, 0));
+        }
+        
+        if ((!resultobj) || (resultobj == Py_None)) {
+            /* no other results, so just put current pointer instead */
+            resultobj = to_add;
+        } else {
+            /* we have other results, so add it to the end */
+            
+            if (!PyTuple_Check (resultobj)) {
+                /* previous result is not a tuple, so create one and put
+                	       previous result and current pointer in it */
+                
+                /* first, save previous result */
+                PyObject *obj_save = resultobj;
+                
+                /* then, create the tuple */
+                resultobj = PyTuple_New (1);
+                
+                /* finaly, put the saved value in the tuple */
+                PyTuple_SetItem (resultobj, 0, obj_save);
+            }
+            
+            /* create a new tuple to put in our new pointer python object */
+            PyObject *my_obj = PyTuple_New (1);
+            
+            /* put in our new pointer python object */
+            PyTuple_SetItem (my_obj, 0, to_add);
+            
+            /* save the previous result */
+            PyObject *obj_save = resultobj;
+            
+            /* concat previous and our new result */
+            resultobj = PySequence_Concat (obj_save, my_obj);
+            
+            /* decrement the usage of no more used objects */
+            Py_DECREF (obj_save);
+            Py_DECREF (my_obj);
+        }
     }
     return resultobj;
     fail:
@@ -45489,9 +45756,8 @@ static PyObject *_wrap_cvDrawChessboardCorners(PyObject *, PyObject *args) {
     PyObject * obj1 = 0 ;
     PyObject * obj2 = 0 ;
     PyObject * obj3 = 0 ;
-    PyObject * obj4 = 0 ;
     
-    if(!PyArg_ParseTuple(args,(char *)"OOOOO:cvDrawChessboardCorners",&obj0,&obj1,&obj2,&obj3,&obj4)) goto fail;
+    if(!PyArg_ParseTuple(args,(char *)"OOOO:cvDrawChessboardCorners",&obj0,&obj1,&obj2,&obj3)) goto fail;
     {
         if ((SWIG_ConvertPtr(obj0,reinterpret_cast<void ** >(&arg1),0,SWIG_POINTER_EXCEPTION|0))== -1) {
             SWIG_arg_fail(1);SWIG_fail;
@@ -45507,14 +45773,29 @@ static PyObject *_wrap_cvDrawChessboardCorners(PyObject *, PyObject *args) {
         if (SWIG_arg_fail(2)) SWIG_fail;
         arg2 = *argp;
     }
-    SWIG_Python_ConvertPtr(obj2, (void **)&arg3, SWIGTYPE_p_CvPoint2D32f, SWIG_POINTER_EXCEPTION | 0);
-    if (SWIG_arg_fail(3)) SWIG_fail;
     {
-        arg4 = static_cast<int >(SWIG_As_int(obj3)); 
-        if (SWIG_arg_fail(4)) SWIG_fail;
+        int i;
+        
+        /* get the size of the input array */
+        arg4 = PyList_Size (obj2);
+        
+        /* allocate the needed memory */
+        arg3 = (CvPoint2D32f *)malloc (arg4 * sizeof (CvPoint2D32f));
+        
+        /* extract all the points values from the list */
+        for (i = 0; i < arg4; i++) {
+            PyObject *item = PyList_GetItem (obj2, i);
+            
+            CvPoint2D32f *p = NULL;
+            SWIG_Python_ConvertPtr (item, (void **)&p,
+            SWIGTYPE_p_CvPoint2D32f,
+            SWIG_POINTER_EXCEPTION);
+            arg3 [i].x = p->x;
+            arg3 [i].y = p->y;
+        }
     }
     {
-        arg5 = static_cast<int >(SWIG_As_int(obj4)); 
+        arg5 = static_cast<int >(SWIG_As_int(obj3)); 
         if (SWIG_arg_fail(5)) SWIG_fail;
     }
     {
