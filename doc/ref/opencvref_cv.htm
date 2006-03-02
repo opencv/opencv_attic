@@ -3616,15 +3616,14 @@ level #<code>level</code> ; the total size of <code>(image_width+8)*image_height
 is sufficient.
 <dt>curr_pyr<dd>Similar to <code>prev_pyr</code>, used for the second frame.
 <dt>prev_features<dd>Array of points for which the flow needs to be found.
-<dt>curr_features<dd>Array of 2D points containing calculated new positions of input
-<dt>features<dd>in the second image.
+<dt>curr_features<dd>Array of 2D points containing calculated new positions of input features in the second image.
 <dt>count<dd>Number of feature points.
 <dt>win_size<dd>Size of the search window of each pyramid level.
 <dt>level<dd>Maximal pyramid level number. If <code>0</code> , pyramids are not used (single level),
 if <code>1</code> , two levels are used, etc.
 <dt>status<dd>Array. Every element of the array is set to <code>1</code> if the flow for the
 corresponding feature has been found, <code>0</code> otherwise.
-<dt>error<dd>Array of double numbers containing difference between patches around the
+<dt>track_error<dd>Array of double numbers containing difference between patches around the
 original and moved points. Optional parameter; can be <code>NULL </code>.
 <dt>criteria<dd>Specifies when the iteration process of finding the flow for each point
 on each pyramid level should be stopped.
