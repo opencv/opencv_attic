@@ -5408,8 +5408,8 @@ def cvCalcOpticalFlowPyrLK(*args):
     """
     cvCalcOpticalFlowPyrLK(CvArr prev, CvArr curr, CvArr prev_pyr, CvArr curr_pyr, 
         CvPoint2D32f prev_features, CvPoint2D32f curr_features, 
-        int count, CvSize win_size, int level, 
-        char status, float track_error, CvTermCriteria criteria, 
+        CvSize win_size, int level, char status, 
+        float track_error, CvTermCriteria criteria, 
         int flags)
     """
     return _cv.cvCalcOpticalFlowPyrLK(*args)
@@ -5814,17 +5814,17 @@ def cvCornerHarris(*args):
 
 def cvFindCornerSubPix(*args):
     """
-    cvFindCornerSubPix(CvArr image, CvPoint2D32f corners, int count, CvSize win, 
-        CvSize zero_zone, CvTermCriteria criteria)
+    cvFindCornerSubPix(CvArr image, CvPoint2D32f corners, CvSize win, CvSize zero_zone, 
+        CvTermCriteria criteria)
     """
     return _cv.cvFindCornerSubPix(*args)
 
 def cvGoodFeaturesToTrack(*args):
     """
     cvGoodFeaturesToTrack(CvArr image, CvArr eig_image, CvArr temp_image, CvPoint2D32f corners, 
-        int corner_count, double quality_level, 
-        double min_distance, CvArr mask=None, 
-        int block_size=3, int use_harris=0, double k=0.04)
+        double quality_level, double min_distance, 
+        CvArr mask=None, int block_size=3, 
+        int use_harris=0, double k=0.04)
     """
     return _cv.cvGoodFeaturesToTrack(*args)
 
@@ -5928,14 +5928,14 @@ def cvCalibrateCamera2(*args):
 def cvFindChessboardCorners(*args):
     """
     cvFindChessboardCorners(void image, CvSize pattern_size, CvPoint2D32f corners, 
-        int corner_count=None, int flags=1) -> int
+        int flags=1) -> int
     """
     return _cv.cvFindChessboardCorners(*args)
 
 def cvDrawChessboardCorners(*args):
     """
     cvDrawChessboardCorners(CvArr image, CvSize pattern_size, CvPoint2D32f corners, 
-        int count, int pattern_was_found)
+        int pattern_was_found)
     """
     return _cv.cvDrawChessboardCorners(*args)
 
