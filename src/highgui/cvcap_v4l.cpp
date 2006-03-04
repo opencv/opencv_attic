@@ -138,6 +138,14 @@ With this patch, new webcams of Logitech, like QuickCam Fusion works.
 Note: For use these webcams, look at the UVC driver at
 http://linux-uvc.berlios.de/
 
+9th patch: Mar 4, 2006, Olivier.Bornet@idiap.ch
+- try V4L2 before V4L, because some devices are V4L2 by default,
+  but they try to implement the V4L compatibility layer.
+  So, I think this is better to support V4L2 before V4L.
+- better separation between V4L2 and V4L initialization. (this was needed to support
+  some drivers working, but not fully with V4L2. (so, we do not know when we
+  need to switch from V4L2 to V4L.
+
 make & enjoy!
 
 */
@@ -567,13 +575,8 @@ int autosetup_capture_mode_v4l2(CvCaptureCAM_V4L* capture)
 
   } else
   {
-
-    fprintf( stderr, "HIGHGUI ERROR: V4L2: Unable to set palette.\n");
-
     icvCloseCAM_V4L(capture);
-    
     return -1;
-
   }
   
   return 0;
@@ -606,7 +609,6 @@ int autosetup_capture_mode_v4l(CvCaptureCAM_V4L* capture)
       //printf("negotiated palette YUV420P\n");
   }
   else {
-    fprintf( stderr, "HIGHGUI ERROR: V4L: Unable to set Palette.\n");
     icvCloseCAM_V4L(capture);
     return -1;
   }
@@ -770,18 +772,297 @@ void v4l2_scan_controls(CvCaptureCAM_V4L* capture)
 
 }
 
+static int _capture_V4L2 (CvCaptureCAM_V4L *capture, char *deviceName)
+{
+   int detect_v4l2 = 0;
+
+   detect_v4l2 = try_init_v4l2(capture, deviceName);
+
+   /* Init V4L2 control variables */
+   capture->v4l2_brightness = 0;
+   capture->v4l2_contrast = 0;
+   capture->v4l2_saturation = 0;
+   capture->v4l2_hue = 0;
+   capture->v4l2_gain = 0;
+
+   capture->v4l2_brightness_min = 0;
+   capture->v4l2_contrast_min = 0;
+   capture->v4l2_saturation_min = 0;
+   capture->v4l2_hue_min = 0;
+   capture->v4l2_gain_min = 0;
+
+   capture->v4l2_brightness_max = 0;
+   capture->v4l2_contrast_max = 0;
+   capture->v4l2_saturation_max = 0;
+   capture->v4l2_hue_max = 0;
+   capture->v4l2_gain_max = 0;
+     
+   /* Scan V4L2 controls */
+   v4l2_scan_controls(capture);
+
+   if (detect_v4l2 == -1)
+   {
+     fprintf (stderr, "HIGHGUI ERROR: V4L2"
+              ": device %s: Unable to open for READ ONLY\n", deviceName);
+
+     return -1;
+   }
+
+   if (detect_v4l2 <= 0)
+   {
+     fprintf (stderr, "HIGHGUI ERROR: V4L2"
+              ": device %s: Unable to query number of channels\n", deviceName);
+
+     return -1;
+   }
+   
+   if (detect_v4l2 == 1)
+   {
+     V4L2_SUPPORT = 1;
+   }
+
+
+   if ((capture->cap.capabilities & V4L2_CAP_VIDEO_CAPTURE) == 0) {
+      /* Nope. */
+      fprintf( stderr, "HIGHGUI ERROR: V4L2: device %s is unable to capture video memory.\n",deviceName);
+      icvCloseCAM_V4L(capture);
+      return -1;
+   }
+
+   /* The following code sets the CHANNEL_NUMBER of the video input.  Some video sources
+   have sub "Channel Numbers".  For a typical V4L TV capture card, this is usually 1.
+   I myself am using a simple NTSC video input capture card that uses the value of 1.
+   If you are not in North America or have a different video standard, you WILL have to change
+   the following settings and recompile/reinstall.  This set of settings is based on
+   the most commonly encountered input video source types (like my bttv card) */
+
+   if(capture->inp.index > 0) {
+       capture->inp.index = CHANNEL_NUMBER;
+       /* Set only channel number to CHANNEL_NUMBER */
+       /* V4L2 have a status field from selected video mode */
+       if (-1 == xioctl (capture->deviceHandle, VIDIOC_ENUMINPUT, &capture->inp))
+       {
+         fprintf (stderr, "HIGHGUI ERROR: V4L2: Aren't able to set channel number\n");
+     
+         exit (EXIT_FAILURE);
+       }
+   } /* End if */
+
+   /* Find Window info */
+   capture->form.type = V4L2_BUF_TYPE_VIDEO_CAPTURE;
+        
+   if (-1 == xioctl (capture->deviceHandle, VIDIOC_G_FMT, &capture->form)) {
+       fprintf( stderr, "HIGHGUI ERROR: V4L2: Could not obtain specifics of capture window.\n\n");
+       icvCloseCAM_V4L(capture);
+       return -1;
+   }
+
+   if (V4L2_SUPPORT == 0)
+   {
+   }
+
+   if (autosetup_capture_mode_v4l2(capture) == -1)
+       return -1;
+
+   icvSetVideoSize(capture, DEFAULT_V4L_WIDTH, DEFAULT_V4L_HEIGHT);
+
+   unsigned int min;
+
+   /* Buggy driver paranoia. */
+   min = capture->form.fmt.pix.width * 2;
+
+   if (capture->form.fmt.pix.bytesperline < min)
+       capture->form.fmt.pix.bytesperline = min;
+
+   min = capture->form.fmt.pix.bytesperline * capture->form.fmt.pix.height;
+ 
+   if (capture->form.fmt.pix.sizeimage < min)
+       capture->form.fmt.pix.sizeimage = min;
+
+   CLEAR (capture->req);
+
+   capture->req.count               = 2;
+   capture->req.type                = V4L2_BUF_TYPE_VIDEO_CAPTURE;
+   capture->req.memory              = V4L2_MEMORY_MMAP;
+
+   if (-1 == xioctl (capture->deviceHandle, VIDIOC_REQBUFS, &capture->req))
+   {
+       if (EINVAL == errno)
+       {
+         fprintf (stderr, "%s does not support memory mapping\n", deviceName);
+
+         exit (EXIT_FAILURE);
+       } else {
+         errno_exit ("VIDIOC_REQBUFS");
+       }
+   }
+
+   if (capture->req.count < 2)
+   {
+       fprintf (stderr, "Insufficient buffer memory on %s\n", deviceName);
+
+       exit (EXIT_FAILURE);
+   }
+
+   for (n_buffers = 0; n_buffers < capture->req.count; ++n_buffers)
+   {
+       struct v4l2_buffer buf;
+
+       CLEAR (buf);
+
+       buf.type = V4L2_BUF_TYPE_VIDEO_CAPTURE;
+       buf.memory = V4L2_MEMORY_MMAP;
+       buf.index = n_buffers;
+
+       if (-1 == xioctl (capture->deviceHandle, VIDIOC_QUERYBUF, &buf))
+         errno_exit ("VIDIOC_QUERYBUF");
+
+       capture->buffers[n_buffers].length = buf.length;
+       capture->buffers[n_buffers].start =
+         mmap (NULL /* start anywhere */,
+               buf.length,
+               PROT_READ | PROT_WRITE /* required */,
+               MAP_SHARED /* recommended */,
+               capture->deviceHandle, buf.m.offset);
+
+       if (MAP_FAILED == capture->buffers[n_buffers].start)
+         errno_exit ("mmap");
+   }
+
+   /* Set up Image data */
+   cvInitImageHeader( &capture->frame,
+                      cvSize( capture->captureWindow.width,
+                              capture->captureWindow.height ),
+                      IPL_DEPTH_8U, 3, IPL_ORIGIN_TL, 4 );
+   /* Allocate space for RGBA data */
+   capture->frame.imageData = (char *)cvAlloc(capture->frame.imageSize);
+   
+   return 1;
+}; /* End _capture_V4L2 */
+
 #endif /* HAVE_CAMV4L2 */
+
+static int _capture_V4L (CvCaptureCAM_V4L *capture, char *deviceName)
+{
+   int detect_v4l = 0;
+
+   detect_v4l = try_init_v4l(capture, deviceName);
+
+   if ((detect_v4l == -1)
+       )
+   {
+     fprintf (stderr, "HIGHGUI ERROR: V4L"
+              ": device %s: Unable to open for READ ONLY\n", deviceName);
+
+     return -1;
+   }
+
+   if ((detect_v4l <= 0)
+       )
+   {
+     fprintf (stderr, "HIGHGUI ERROR: V4L"
+              ": device %s: Unable to query number of channels\n", deviceName);
+
+     return -1;
+   }
+   
+   {
+     if ((capture->capability.type & VID_TYPE_CAPTURE) == 0) {
+       /* Nope. */
+       fprintf( stderr, "HIGHGUI ERROR: V4L: "
+                "device %s is unable to capture video memory.\n",deviceName);
+       icvCloseCAM_V4L(capture);
+       return -1;
+     }
+
+   }
+
+
+   /* The following code sets the CHANNEL_NUMBER of the video input.  Some video sources
+   have sub "Channel Numbers".  For a typical V4L TV capture card, this is usually 1.
+   I myself am using a simple NTSC video input capture card that uses the value of 1.
+   If you are not in North America or have a different video standard, you WILL have to change
+   the following settings and recompile/reinstall.  This set of settings is based on
+   the most commonly encountered input video source types (like my bttv card) */
+
+   {
+
+     if(capture->capability.channels>0) {
+
+       struct video_channel selectedChannel;
+
+       selectedChannel.channel=CHANNEL_NUMBER;
+       if (ioctl(capture->deviceHandle, VIDIOCGCHAN , &selectedChannel) != -1) {
+          /* set the video mode to ( VIDEO_MODE_PAL, VIDEO_MODE_NTSC, VIDEO_MODE_SECAM) */
+          selectedChannel.norm = VIDEO_MODE_NTSC;
+          if (ioctl(capture->deviceHandle, VIDIOCSCHAN , &selectedChannel) == -1) {
+             /* Could not set selected channel - Oh well */
+             //printf("\n%d, %s not NTSC capable.\n",selectedChannel.channel, selectedChannel.name);
+          } /* End if */
+       } /* End if */ 
+     } /* End if */
+
+   }
+
+   {
+
+     if(ioctl(capture->deviceHandle, VIDIOCGWIN, &capture->captureWindow) == -1) {
+       fprintf( stderr, "HIGHGUI ERROR: V4L: "
+                "Could not obtain specifics of capture window.\n\n");
+       icvCloseCAM_V4L(capture);
+       return -1;
+     }
+
+   }
+
+   {
+
+     if (autosetup_capture_mode_v4l(capture) == -1)
+       return -1;
+
+   }
+
+   {
+
+     ioctl(capture->deviceHandle, VIDIOCGMBUF, &capture->memoryBuffer);
+     capture->memoryMap  = (char *)mmap(0, 
+                                   capture->memoryBuffer.size,
+                                   PROT_READ | PROT_WRITE,
+                                   MAP_SHARED,
+                                   capture->deviceHandle,
+                                   0);
+     if (capture->memoryMap == MAP_FAILED) {
+        fprintf( stderr, "HIGHGUI ERROR: V4L: Mapping Memmory from video source error: %s\n", strerror(errno));
+        icvCloseCAM_V4L(capture);
+     }
+
+     /* Set up video_mmap structure pointing to this memory mapped area so each image may be
+        retrieved from an index value */
+     capture->mmaps = (struct video_mmap *)
+                 (malloc(capture->memoryBuffer.frames * sizeof(struct video_mmap)));
+     if (!capture->mmaps) {
+        fprintf( stderr, "HIGHGUI ERROR: V4L: Could not memory map video frames.\n");
+        icvCloseCAM_V4L(capture);
+        return -1;
+     }
+
+   }
+
+   /* Set up Image data */
+   cvInitImageHeader( &capture->frame,
+                      cvSize( capture->captureWindow.width,
+                              capture->captureWindow.height ),
+                      IPL_DEPTH_8U, 3, IPL_ORIGIN_TL, 4 );
+   /* Allocate space for RGBA data */
+   capture->frame.imageData = (char *)cvAlloc(capture->frame.imageSize);
+   
+   return 1;
+}; /* End _capture_V4L */
 
 CvCapture * cvCaptureFromCAM_V4L (int index)
 {
    static int autoindex=0;
-   int detect_v4l = 0;
 
-#ifdef HAVE_CAMV4L2
-   int detect_v4l2 = 0;
-#endif /* HAVE_CAMV4L2 */
-
-   struct video_channel selectedChannel;
    char deviceName[MAX_DEVICE_DRIVER_NAME];
    
    
@@ -823,346 +1104,17 @@ CvCapture * cvCaptureFromCAM_V4L (int index)
    capture->vtable = &captureCAM_V4L_vtable;
    capture->FirstCapture = 1;
    
-#ifdef HAVE_CAMV4L2
-   V4L2_SUPPORT = 0;
-#endif /* HAVE_CAMV4L2 */
-
-   detect_v4l = try_init_v4l(capture, deviceName);
-
-#ifdef HAVE_CAMV4L2
-   if (detect_v4l <= 0)
-   {
-
-     detect_v4l2 = try_init_v4l2(capture, deviceName);
-
-     /* Init V4L2 control variables */
-     capture->v4l2_brightness = 0;
-     capture->v4l2_contrast = 0;
-     capture->v4l2_saturation = 0;
-     capture->v4l2_hue = 0;
-     capture->v4l2_gain = 0;
-
-     capture->v4l2_brightness_min = 0;
-     capture->v4l2_contrast_min = 0;
-     capture->v4l2_saturation_min = 0;
-     capture->v4l2_hue_min = 0;
-     capture->v4l2_gain_min = 0;
-
-     capture->v4l2_brightness_max = 0;
-     capture->v4l2_contrast_max = 0;
-     capture->v4l2_saturation_max = 0;
-     capture->v4l2_hue_max = 0;
-     capture->v4l2_gain_max = 0;
-     
-     /* Scan V4L2 controls */
-     v4l2_scan_controls(capture);
-
-   }
-
-#endif /* HAVE_CAMV4L2 */
-
-   //if (detect_v4l == 1)
-   //{
-   //  fprintf (stderr, "HIGHGUI Detect: V4L: device %s\n", deviceName);
-   //}
-
-   if ((detect_v4l == -1)
-#ifdef HAVE_CAMV4L2
-       && (detect_v4l2 == -1)
-#endif /* HAVE_CAMV4L2 */
-       )
-   {
-     fprintf (stderr, "HIGHGUI ERROR: V4L"
-#ifdef HAVE_CAMV4L2
-              "/V4L2"
-#endif /* HAVE_CAMV4L2 */
-              ": device %s: Unable to open for READ ONLY\n", deviceName);
-
-     return NULL;
-   }
-
-   if ((detect_v4l <= 0)
-#ifdef HAVE_CAMV4L2
-       && (detect_v4l2 <= 0)
-#endif /* HAVE_CAMV4L2 */
-       )
-   {
-     fprintf (stderr, "HIGHGUI ERROR: V4L"
-#ifdef HAVE_CAMV4L2
-              "/V4L2"
-#endif /* HAVE_CAMV4L2 */
-              ": device %s: Unable to query number of channels\n", deviceName);
-
-     return NULL;
-   }
-   
-#ifdef HAVE_CAMV4L2
-   if (detect_v4l2 == 1)
-   {
-     //fprintf (stderr, "HIGHGUI Detect: V4L2: device %s\n", deviceName);
-     V4L2_SUPPORT = 1;
-   }
-
-
-   /* Can this device capture video to memory? */
-   if (V4L2_SUPPORT == 1)
-   {
-
-     if ((capture->cap.capabilities & V4L2_CAP_VIDEO_CAPTURE) == 0) {
-      /* Nope. */
-      fprintf( stderr, "HIGHGUI ERROR: V4L2: device %s is unable to capture video memory.\n",deviceName);
-      icvCloseCAM_V4L(capture);
-      return NULL;
-     }
-
-   } else
-#endif /* HAVE_CAMV4L2 */
-   {
-     if ((capture->capability.type & VID_TYPE_CAPTURE) == 0) {
-       /* Nope. */
-       fprintf( stderr, "HIGHGUI ERROR: V4L: "
-                "device %s is unable to capture video memory.\n",deviceName);
+   if (_capture_V4L2 (capture, deviceName) == -1) {
        icvCloseCAM_V4L(capture);
-       return NULL;
-     }
-
-   }
-
-
-   /* The following code sets the CHANNEL_NUMBER of the video input.  Some video sources
-   have sub "Channel Numbers".  For a typical V4L TV capture card, this is usually 1.
-   I myself am using a simple NTSC video input capture card that uses the value of 1.
-   If you are not in North America or have a different video standard, you WILL have to change
-   the following settings and recompile/reinstall.  This set of settings is based on
-   the most commonly encountered input video source types (like my bttv card) */
-
-#ifdef HAVE_CAMV4L2
-
-   if (V4L2_SUPPORT == 1)
-   {
-
-     if(capture->inp.index > 0) {
-       capture->inp.index = CHANNEL_NUMBER;
-       /* Set only channel number to CHANNEL_NUMBER */
-       /* V4L2 have a status field from selected video mode */
-       if (-1 == xioctl (capture->deviceHandle, VIDIOC_ENUMINPUT, &capture->inp))
-       {
-         fprintf (stderr, "HIGHGUI ERROR: V4L2: Aren't able to set channel number\n");
-     
-         exit (EXIT_FAILURE);
+       V4L2_SUPPORT = 0;
+       if (_capture_V4L (capture, deviceName) == -1) {
+	   icvCloseCAM_V4L(capture);
+	   return NULL;
        }
-     } /* End if */
-
-   } else
-#endif /* HAVE_CAMV4L2 */
-   {
-
-     if(capture->capability.channels>0) {
-       selectedChannel.channel=CHANNEL_NUMBER;
-       if (ioctl(capture->deviceHandle, VIDIOCGCHAN , &selectedChannel) != -1) {
-          /* set the video mode to ( VIDEO_MODE_PAL, VIDEO_MODE_NTSC, VIDEO_MODE_SECAM) */
-          selectedChannel.norm = VIDEO_MODE_NTSC;
-          if (ioctl(capture->deviceHandle, VIDIOCSCHAN , &selectedChannel) == -1) {
-             /* Could not set selected channel - Oh well */
-             //printf("\n%d, %s not NTSC capable.\n",selectedChannel.channel, selectedChannel.name);
-          } /* End if */
-       } /* End if */ 
-     } /* End if */
-
+   } else {
+       V4L2_SUPPORT = 1;
    }
 
-#ifdef HAVE_CAMV4L2
-
-   /* Find Window info */
-   if (V4L2_SUPPORT == 1)
-   {
-
-     capture->form.type = V4L2_BUF_TYPE_VIDEO_CAPTURE;
-        
-     if (-1 == xioctl (capture->deviceHandle, VIDIOC_G_FMT, &capture->form)) {
-       fprintf( stderr, "HIGHGUI ERROR: V4L2: Could not obtain specifics of capture window.\n\n");
-       icvCloseCAM_V4L(capture);
-       return NULL;
-     }
-
-   } else
-#endif /* HAVE_CAMV4L2 */
-   {
-
-     if(ioctl(capture->deviceHandle, VIDIOCGWIN, &capture->captureWindow) == -1) {
-       fprintf( stderr, "HIGHGUI ERROR: V4L: "
-                "Could not obtain specifics of capture window.\n\n");
-       icvCloseCAM_V4L(capture);
-       return NULL;
-     }
-
-   }
-
-#ifdef HAVE_CAMV4L2
-
-   if (V4L2_SUPPORT == 0)
-   {
-     /* Don't scale the image by default if there is hardware scaling */
-     /* Else, choose the image size closest to DEFAULT_V4L_WIDTH x DEFAULT_V4L_HEIGHT */
-     if(((capture->capability.type & VID_TYPE_SCALES) == 0) &&
-        (capture->captureWindow.width < DEFAULT_V4L_WIDTH) &&
-        (capture->captureWindow.height < DEFAULT_V4L_HEIGHT)) {
-       /* If your card can open a bigger window, it will be attempted here.  I have a version
-      of this program that returns the "Property" set ability, but it is buggy.  It also
-      handles multiple cameras for stereo work.  Contact TW if you would like to use it */
-       //printf("trying to get a %dx%d image.\n", DEFAULT_V4L_WIDTH, DEFAULT_V4L_HEIGHT);
-       capture->captureWindow.x = 0;
-       capture->captureWindow.y = 0;
-       capture->captureWindow.width  = DEFAULT_V4L_WIDTH;
-       capture->captureWindow.height = DEFAULT_V4L_HEIGHT;
-       capture->captureWindow.chromakey = 0;
-       capture->captureWindow.flags = 0;
-       capture->captureWindow.clips = 0;
-       capture->captureWindow.clipcount = 0;
-       if (xioctl(capture->deviceHandle, VIDIOCSWIN,
-                  &capture->captureWindow) == -1) {
-       //printf("cannot get a %dx%d image.\n", DEFAULT_V4L_WIDTH, DEFAULT_V4L_HEIGHT);
-       }
-       /* Get window info again, to get the real value */
-       if(xioctl(capture->deviceHandle, VIDIOCGWIN,
-                 &capture->captureWindow) == -1) {
-         fprintf( stderr, "HIGHGUI ERROR: V4L/V4L2: "
-                  "Could not obtain specifics of capture window.\n\n");
-         icvCloseCAM_V4L(capture);
-         return NULL;
-       }
-     }
-
-   }
-
-#endif /* HAVE_CAMV4L2 */
-
-#ifdef HAVE_CAMV4L2
-
-   /* Find Picture info */
-   if (V4L2_SUPPORT == 1)
-   {
-   
-     if (autosetup_capture_mode_v4l2(capture) == -1)
-       return NULL;
-
-     icvSetVideoSize(capture, DEFAULT_V4L_WIDTH, DEFAULT_V4L_HEIGHT);
-
-     unsigned int min;
-
-     /* Buggy driver paranoia. */
-     min = capture->form.fmt.pix.width * 2;
-
-     if (capture->form.fmt.pix.bytesperline < min)
-       capture->form.fmt.pix.bytesperline = min;
-
-     min = capture->form.fmt.pix.bytesperline * capture->form.fmt.pix.height;
- 
-     if (capture->form.fmt.pix.sizeimage < min)
-       capture->form.fmt.pix.sizeimage = min;
-
-   } else
-#endif /* HAVE_CAMV4L2 */
-   {
-
-     if (autosetup_capture_mode_v4l(capture) == -1)
-       return NULL;
-
-   }
-
-#ifdef HAVE_CAMV4L2
-
-   /* Setup mapped memory io */
-
-   if (V4L2_SUPPORT == 1)
-   {
-
-     CLEAR (capture->req);
-
-     capture->req.count               = 2;
-     capture->req.type                = V4L2_BUF_TYPE_VIDEO_CAPTURE;
-     capture->req.memory              = V4L2_MEMORY_MMAP;
-
-     if (-1 == xioctl (capture->deviceHandle, VIDIOC_REQBUFS, &capture->req))
-     {
-       if (EINVAL == errno)
-       {
-         fprintf (stderr, "%s does not support memory mapping\n", deviceName);
-
-         exit (EXIT_FAILURE);
-       } else {
-         errno_exit ("VIDIOC_REQBUFS");
-       }
-     }
-
-     if (capture->req.count < 2)
-     {
-       fprintf (stderr, "Insufficient buffer memory on %s\n", deviceName);
-
-       exit (EXIT_FAILURE);
-     }
-
-     for (n_buffers = 0; n_buffers < capture->req.count; ++n_buffers)
-     {
-       struct v4l2_buffer buf;
-
-       CLEAR (buf);
-
-       buf.type = V4L2_BUF_TYPE_VIDEO_CAPTURE;
-       buf.memory = V4L2_MEMORY_MMAP;
-       buf.index = n_buffers;
-
-       if (-1 == xioctl (capture->deviceHandle, VIDIOC_QUERYBUF, &buf))
-         errno_exit ("VIDIOC_QUERYBUF");
-
-       capture->buffers[n_buffers].length = buf.length;
-       capture->buffers[n_buffers].start =
-         mmap (NULL /* start anywhere */,
-               buf.length,
-               PROT_READ | PROT_WRITE /* required */,
-               MAP_SHARED /* recommended */,
-               capture->deviceHandle, buf.m.offset);
-
-       if (MAP_FAILED == capture->buffers[n_buffers].start)
-         errno_exit ("mmap");
-     }
-
-   } else
-#endif /* HAVE_CAMV4L2 */
-   {
-
-     ioctl(capture->deviceHandle, VIDIOCGMBUF, &capture->memoryBuffer);
-     capture->memoryMap  = (char *)mmap(0, 
-                                   capture->memoryBuffer.size,
-                                   PROT_READ | PROT_WRITE,
-                                   MAP_SHARED,
-                                   capture->deviceHandle,
-                                   0);
-     if (capture->memoryMap == MAP_FAILED) {
-        fprintf( stderr, "HIGHGUI ERROR: V4L: Mapping Memmory from video source error: %s\n", strerror(errno));
-        icvCloseCAM_V4L(capture);
-     }
-
-     /* Set up video_mmap structure pointing to this memory mapped area so each image may be
-        retrieved from an index value */
-     capture->mmaps = (struct video_mmap *)
-                 (malloc(capture->memoryBuffer.frames * sizeof(struct video_mmap)));
-     if (!capture->mmaps) {
-        fprintf( stderr, "HIGHGUI ERROR: V4L: Could not memory map video frames.\n");
-        icvCloseCAM_V4L(capture);
-        return NULL;
-     }
-
-   }
-
-   /* Set up Image data */
-   cvInitImageHeader( &capture->frame,
-                      cvSize( capture->captureWindow.width,
-                              capture->captureWindow.height ),
-                      IPL_DEPTH_8U, 3, IPL_ORIGIN_TL, 4 );
-   /* Allocate space for RGBA data */
-   capture->frame.imageData = (char *)cvAlloc(capture->frame.imageSize);
-   
    return (CvCapture *)capture;
 }; /* End icvOpenCAM_V4L */
 
