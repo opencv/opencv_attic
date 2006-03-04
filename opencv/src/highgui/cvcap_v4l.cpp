@@ -1104,16 +1104,20 @@ CvCapture * cvCaptureFromCAM_V4L (int index)
    capture->vtable = &captureCAM_V4L_vtable;
    capture->FirstCapture = 1;
    
+#ifdef HAVE_CAMV4L2
    if (_capture_V4L2 (capture, deviceName) == -1) {
        icvCloseCAM_V4L(capture);
        V4L2_SUPPORT = 0;
+#endif  /* HAVE_CAMV4L2 */
        if (_capture_V4L (capture, deviceName) == -1) {
-	   icvCloseCAM_V4L(capture);
-	   return NULL;
+           icvCloseCAM_V4L(capture);
+           return NULL;
        }
+#ifdef HAVE_CAMV4L2
    } else {
        V4L2_SUPPORT = 1;
    }
+#endif  /* HAVE_CAMV4L2 */
 
    return (CvCapture *)capture;
 }; /* End icvOpenCAM_V4L */
