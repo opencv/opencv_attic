@@ -126,7 +126,7 @@ CV_IMPL CvCapture * cvCaptureFromCAM (int index)
 		CV_CAP_STEREO, 
 		CV_CAP_VFW,        // identical to CV_CAP_V4L
 		CV_CAP_MIL, 
-		CV_CAP_QT
+		CV_CAP_QT,
 		-1 
 	};
 	
