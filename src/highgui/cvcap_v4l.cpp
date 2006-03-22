@@ -778,27 +778,29 @@ static int _capture_V4L2 (CvCaptureCAM_V4L *capture, char *deviceName)
 
    detect_v4l2 = try_init_v4l2(capture, deviceName);
 
-   /* Init V4L2 control variables */
-   capture->v4l2_brightness = 0;
-   capture->v4l2_contrast = 0;
-   capture->v4l2_saturation = 0;
-   capture->v4l2_hue = 0;
-   capture->v4l2_gain = 0;
+   if (detect_v4l2 == 1) {
+       /* Init V4L2 control variables */
+       capture->v4l2_brightness = 0;
+       capture->v4l2_contrast = 0;
+       capture->v4l2_saturation = 0;
+       capture->v4l2_hue = 0;
+       capture->v4l2_gain = 0;
 
-   capture->v4l2_brightness_min = 0;
-   capture->v4l2_contrast_min = 0;
-   capture->v4l2_saturation_min = 0;
-   capture->v4l2_hue_min = 0;
-   capture->v4l2_gain_min = 0;
+       capture->v4l2_brightness_min = 0;
+       capture->v4l2_contrast_min = 0;
+       capture->v4l2_saturation_min = 0;
+       capture->v4l2_hue_min = 0;
+       capture->v4l2_gain_min = 0;
 
-   capture->v4l2_brightness_max = 0;
-   capture->v4l2_contrast_max = 0;
-   capture->v4l2_saturation_max = 0;
-   capture->v4l2_hue_max = 0;
-   capture->v4l2_gain_max = 0;
+       capture->v4l2_brightness_max = 0;
+       capture->v4l2_contrast_max = 0;
+       capture->v4l2_saturation_max = 0;
+       capture->v4l2_hue_max = 0;
+       capture->v4l2_gain_max = 0;
      
-   /* Scan V4L2 controls */
-   v4l2_scan_controls(capture);
+       /* Scan V4L2 controls */
+       v4l2_scan_controls(capture);
+   }
 
    if (detect_v4l2 == -1)
    {
