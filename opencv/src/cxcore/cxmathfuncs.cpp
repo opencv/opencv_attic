@@ -704,7 +704,15 @@ cvPolarToCart( const CvArr* magarr, const CvArr* anglearr,
 
 typedef union
 {
-    int i[2];
+    struct {
+#ifdef __BIG_ENDIAN__
+        int hi;
+        int lo;
+#else
+        int lo;
+        int hi;
+#endif
+    } i;
     double d;
 }
 DBLINT;
@@ -806,7 +814,7 @@ IPCVAPI_IMPL( CvStatus, icvExp_32f, ( const float *_x, float *y, int n ), (_x, y
     if( n <= 0 )
         return CV_BADSIZE_ERR;
 
-    buf[0].i[0] = buf[1].i[0] = buf[2].i[0] = buf[3].i[0] = 0;
+    buf[0].i.lo = buf[1].i.lo = buf[2].i.lo = buf[3].i.lo = 0;
 
     for( ; i <= n - 4; i += 4 )
     {
@@ -840,19 +848,19 @@ IPCVAPI_IMPL( CvStatus, icvExp_32f, ( const float *_x, float *y, int n ), (_x, y
 
         t = (val0 >> EXPTAB_SCALE) + 1023;
         t = (t | ((t < 2047) - 1)) & (((t < 0) - 1) & 2047);
-        buf[0].i[1] = t << 20;
+        buf[0].i.hi = t << 20;
 
         t = (val1 >> EXPTAB_SCALE) + 1023;
         t = (t | ((t < 2047) - 1)) & (((t < 0) - 1) & 2047);
-        buf[1].i[1] = t << 20;
+        buf[1].i.hi = t << 20;
 
         t = (val2 >> EXPTAB_SCALE) + 1023;
         t = (t | ((t < 2047) - 1)) & (((t < 0) - 1) & 2047);
-        buf[2].i[1] = t << 20;
+        buf[2].i.hi = t << 20;
 
         t = (val3 >> EXPTAB_SCALE) + 1023;
         t = (t | ((t < 2047) - 1)) & (((t < 0) - 1) & 2047);
-        buf[3].i[1] = t << 20;
+        buf[3].i.hi = t << 20;
 
         x0 = buf[0].d * icvExpTab[val0 & EXPTAB_MASK] * EXPPOLY( x0 );
         x1 = buf[1].d * icvExpTab[val1 & EXPTAB_MASK] * EXPPOLY( x1 );
@@ -879,7 +887,7 @@ IPCVAPI_IMPL( CvStatus, icvExp_32f, ( const float *_x, float *y, int n ), (_x, y
         t = (val0 >> EXPTAB_SCALE) + 1023;
         t = (t | ((t < 2047) - 1)) & (((t < 0) - 1) & 2047);
 
-        buf[0].i[1] = t << 20;
+        buf[0].i.hi = t << 20;
         x0 = (x0 - val0)*exp_postscale;
 
         y[i] = (float)(buf[0].d * icvExpTab[val0 & EXPTAB_MASK] * EXPPOLY(x0));
@@ -911,7 +919,7 @@ IPCVAPI_IMPL( CvStatus, icvExp_64f, ( const double *_x, double *y, int n ), (_x,
     if( n <= 0 )
         return CV_BADSIZE_ERR;
 
-    buf[0].i[0] = buf[1].i[0] = buf[2].i[0] = buf[3].i[0] = 0;
+    buf[0].i.lo = buf[1].i.lo = buf[2].i.lo = buf[3].i.lo = 0;
 
     for( ; i <= n - 4; i += 4 )
     {
@@ -951,19 +959,19 @@ IPCVAPI_IMPL( CvStatus, icvExp_64f, ( const double *_x, double *y, int n ), (_x,
 
         t = (val0 >> EXPTAB_SCALE) + 1023;
         t = (t | ((t < 2047) - 1)) & (((t < 0) - 1) & 2047);
-        buf[0].i[1] = t << 20;
+        buf[0].i.hi = t << 20;
 
         t = (val1 >> EXPTAB_SCALE) + 1023;
         t = (t | ((t < 2047) - 1)) & (((t < 0) - 1) & 2047);
-        buf[1].i[1] = t << 20;
+        buf[1].i.hi = t << 20;
 
         t = (val2 >> EXPTAB_SCALE) + 1023;
         t = (t | ((t < 2047) - 1)) & (((t < 0) - 1) & 2047);
-        buf[2].i[1] = t << 20;
+        buf[2].i.hi = t << 20;
 
         t = (val3 >> EXPTAB_SCALE) + 1023;
         t = (t | ((t < 2047) - 1)) & (((t < 0) - 1) & 2047);
-        buf[3].i[1] = t << 20;
+        buf[3].i.hi = t << 20;
 
         y0 = buf[0].d * icvExpTab[val0 & EXPTAB_MASK] * EXPPOLY( x0 );
         y1 = buf[1].d * icvExpTab[val1 & EXPTAB_MASK] * EXPPOLY( x1 );
@@ -991,7 +999,7 @@ IPCVAPI_IMPL( CvStatus, icvExp_64f, ( const double *_x, double *y, int n ), (_x,
         t = (val0 >> EXPTAB_SCALE) + 1023;
         t = (t | ((t < 2047) - 1)) & (((t < 0) - 1) & 2047);
 
-        buf[0].i[1] = t << 20;
+        buf[0].i.hi = t << 20;
         x0 = (x0 - val0)*exp_postscale;
 
         y[i] = buf[0].d * icvExpTab[val0 & EXPTAB_MASK] * EXPPOLY( x0 );
@@ -1485,23 +1493,23 @@ IPCVAPI_IMPL( CvStatus, icvLog_64f, ( const double *x, double *y, int n ), (x, y
         double y0, y1, y2, y3;
         int h0, h1, h2, h3;
 
-        h0 = X[i].i[0];
-        h1 = X[i + 1].i[0];
-        buf[0].i[0] = h0;
-        buf[1].i[0] = h1;
+        h0 = X[i].i.lo;
+        h1 = X[i + 1].i.lo;
+        buf[0].i.lo = h0;
+        buf[1].i.lo = h1;
         
-        h0 = X[i].i[1];
-        h1 = X[i + 1].i[1];
-        buf[0].i[1] = (h0 & LOGTAB_MASK2) | (1023 << 20);
-        buf[1].i[1] = (h1 & LOGTAB_MASK2) | (1023 << 20);
+        h0 = X[i].i.hi;
+        h1 = X[i + 1].i.hi;
+        buf[0].i.hi = (h0 & LOGTAB_MASK2) | (1023 << 20);
+        buf[1].i.hi = (h1 & LOGTAB_MASK2) | (1023 << 20);
 
         y0 = (((h0 >> 20) & 0x7ff) - 1023) * ln_2;
         y1 = (((h1 >> 20) & 0x7ff) - 1023) * ln_2;
 
-        h2 = X[i + 2].i[0];
-        h3 = X[i + 3].i[0];
-        buf[2].i[0] = h2;
-        buf[3].i[0] = h3;
+        h2 = X[i + 2].i.lo;
+        h3 = X[i + 3].i.lo;
+        buf[2].i.lo = h2;
+        buf[3].i.lo = h3;
 
         h0 = (h0 >> (20 - LOGTAB_SCALE - 1)) & LOGTAB_MASK * 2;
         h1 = (h1 >> (20 - LOGTAB_SCALE - 1)) & LOGTAB_MASK * 2;
@@ -1509,14 +1517,14 @@ IPCVAPI_IMPL( CvStatus, icvLog_64f, ( const double *x, double *y, int n ), (x, y
         y0 += icvLogTab[h0];
         y1 += icvLogTab[h1];
 
-        h2 = X[i + 2].i[1];
-        h3 = X[i + 3].i[1];
+        h2 = X[i + 2].i.hi;
+        h3 = X[i + 3].i.hi;
 
         x0 = LOGTAB_TRANSLATE( buf[0].d, h0 );
         x1 = LOGTAB_TRANSLATE( buf[1].d, h1 );
 
-        buf[2].i[1] = (h2 & LOGTAB_MASK2) | (1023 << 20);
-        buf[3].i[1] = (h3 & LOGTAB_MASK2) | (1023 << 20);
+        buf[2].i.hi = (h2 & LOGTAB_MASK2) | (1023 << 20);
+        buf[3].i.hi = (h3 & LOGTAB_MASK2) | (1023 << 20);
 
         y2 = (((h2 >> 20) & 0x7ff) - 1023) * ln_2;
         y3 = (((h3 >> 20) & 0x7ff) - 1023) * ln_2;
@@ -1545,12 +1553,12 @@ IPCVAPI_IMPL( CvStatus, icvLog_64f, ( const double *x, double *y, int n ), (x, y
 
     for( ; i < n; i++ )
     {
-        int h0 = X[i].i[1];
+        int h0 = X[i].i.hi;
         double xq;
         double x0, y0 = (((h0 >> 20) & 0x7ff) - 1023) * ln_2;
 
-        buf[0].i[1] = (h0 & LOGTAB_MASK2) | (1023 << 20);
-        buf[0].i[0] = X[i].i[0];
+        buf[0].i.hi = (h0 & LOGTAB_MASK2) | (1023 << 20);
+        buf[0].i.lo = X[i].i.lo;
         h0 = (h0 >> (20 - LOGTAB_SCALE - 1)) & LOGTAB_MASK * 2;
 
         y0 += icvLogTab[h0];
