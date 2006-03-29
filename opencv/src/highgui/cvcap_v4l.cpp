@@ -415,6 +415,8 @@ int try_palette_v4l2(CvCaptureCAM_V4L* capture, unsigned long colorspace)
   capture->form.type                = V4L2_BUF_TYPE_VIDEO_CAPTURE;
   capture->form.fmt.pix.pixelformat = colorspace;
   capture->form.fmt.pix.field       = V4L2_FIELD_INTERLACED;
+  capture->form.fmt.pix.width = DEFAULT_V4L_WIDTH;
+  capture->form.fmt.pix.height = DEFAULT_V4L_HEIGHT;
   
   if (-1 == xioctl (capture->deviceHandle, VIDIOC_S_FMT, &capture->form))
       return -1;
@@ -497,6 +499,7 @@ int try_init_v4l2(CvCaptureCAM_V4L* capture, char *deviceName)
 
   if (detect == 0)
   {
+    CLEAR (capture->cap);
     if (-1 == xioctl (capture->deviceHandle, VIDIOC_QUERYCAP, &capture->cap))
     {
       detect = 0;
@@ -505,6 +508,7 @@ int try_init_v4l2(CvCaptureCAM_V4L* capture, char *deviceName)
     }
       else
     {
+      CLEAR (capture->capability);
       capture->capability.type = capture->cap.capabilities;
      
       /* Query channels number */
@@ -521,7 +525,6 @@ int try_init_v4l2(CvCaptureCAM_V4L* capture, char *deviceName)
 
 int autosetup_capture_mode_v4l2(CvCaptureCAM_V4L* capture)
 {
-
   if (try_palette_v4l2(capture, V4L2_PIX_FMT_BGR24) == 0)
   {
     PALETTE_BGR24 = 1;
@@ -565,9 +568,11 @@ int autosetup_capture_mode_v4l2(CvCaptureCAM_V4L* capture)
   {
     PALETTE_SN9C10X = 1;
 
+    CLEAR (capture->compr);
     if (-1 == xioctl (capture->deviceHandle, VIDIOC_G_JPEGCOMP, &capture->compr))
       errno_exit ("VIDIOC_G_JPEGCOMP");
          
+    CLEAR (capture->compr);
     capture->compr.quality = 0;
 
     if (-1 == xioctl (capture->deviceHandle, VIDIOC_S_JPEGCOMP, &capture->compr))
@@ -622,7 +627,7 @@ int autosetup_capture_mode_v4l(CvCaptureCAM_V4L* capture)
 void v4l2_scan_controls_enumerate_menu(CvCaptureCAM_V4L* capture)
 {
 //  printf (" Menu items:\n");
-  memset (&capture->querymenu, 0, sizeof (capture->querymenu));
+  CLEAR (capture->querymenu);
   capture->querymenu.id = capture->queryctrl.id;
   for (capture->querymenu.index = capture->queryctrl.minimum;
        (int)capture->querymenu.index <= capture->queryctrl.maximum;
@@ -643,12 +648,16 @@ void v4l2_scan_controls_enumerate_menu(CvCaptureCAM_V4L* capture)
 void v4l2_scan_controls(CvCaptureCAM_V4L* capture)
 {
 
-  memset (&capture->queryctrl, 0, sizeof(capture->queryctrl));
+  __u32 ctrl_id;
 
-  for (capture->queryctrl.id = V4L2_CID_BASE;
-       capture->queryctrl.id < V4L2_CID_LASTP1;
-       capture->queryctrl.id++)
+  for (ctrl_id = V4L2_CID_BASE;
+       ctrl_id < V4L2_CID_LASTP1;
+       ctrl_id++)
   {
+
+    /* set the id we will query now */
+    CLEAR (capture->queryctrl);
+    capture->queryctrl.id = ctrl_id;
 
     if (0 == xioctl (capture->deviceHandle, VIDIOC_QUERYCTRL,
                      &capture->queryctrl))
@@ -708,9 +717,12 @@ void v4l2_scan_controls(CvCaptureCAM_V4L* capture)
 
   }
 
-  for (capture->queryctrl.id = V4L2_CID_PRIVATE_BASE;;
-       capture->queryctrl.id++)
+  for (ctrl_id = V4L2_CID_PRIVATE_BASE;;ctrl_id++)
   {
+
+    /* set the id we will query now */
+    CLEAR (capture->queryctrl);
+    capture->queryctrl.id = ctrl_id;
 
     if (0 == xioctl (capture->deviceHandle, VIDIOC_QUERYCTRL,
                      &capture->queryctrl))
@@ -823,6 +835,7 @@ static int _capture_V4L2 (CvCaptureCAM_V4L *capture, char *deviceName)
    the most commonly encountered input video source types (like my bttv card) */
 
    if(capture->inp.index > 0) {
+       CLEAR (capture->inp);
        capture->inp.index = CHANNEL_NUMBER;
        /* Set only channel number to CHANNEL_NUMBER */
        /* V4L2 have a status field from selected video mode */
@@ -835,6 +848,7 @@ static int _capture_V4L2 (CvCaptureCAM_V4L *capture, char *deviceName)
    } /* End if */
 
    /* Find Window info */
+   CLEAR (capture->form);
    capture->form.type = V4L2_BUF_TYPE_VIDEO_CAPTURE;
         
    if (-1 == xioctl (capture->deviceHandle, VIDIOC_G_FMT, &capture->form)) {
@@ -2139,6 +2153,7 @@ static double icvGetPropertyCAM_V4L (CvCaptureCAM_V4L* capture,
       int v4l2_min = 0;
       int v4l2_max = 255;
 
+      CLEAR (capture->form);
       if (-1 == xioctl (capture->deviceHandle, VIDIOC_G_FMT, &capture->form))
           errno_exit ("VIDIOC_G_FMT");
 
@@ -2150,7 +2165,7 @@ static double icvGetPropertyCAM_V4L (CvCaptureCAM_V4L* capture,
       }
 
       /* initialize the control structure */
-      memset (&capture->control, 0, sizeof (capture->control));
+      CLEAR (capture->form);
 
       switch (property_id) {
       case CV_CAP_PROP_BRIGHTNESS:
@@ -2293,6 +2308,7 @@ static int icvSetVideoSize( CvCaptureCAM_V4L* capture, int w, int h) {
   if (V4L2_SUPPORT == 1)
   {
 
+    CLEAR (capture->crop);
     capture->crop.type = V4L2_BUF_TYPE_VIDEO_CAPTURE;
     capture->crop.c.left       = 0; 
     capture->crop.c.top        = 0; 
@@ -2302,6 +2318,7 @@ static int icvSetVideoSize( CvCaptureCAM_V4L* capture, int w, int h) {
     /* set the crop area, but don't exit if the device don't support croping */
     xioctl (capture->deviceHandle, VIDIOC_S_CROP, &capture->crop);
 
+    CLEAR (capture->form);
     capture->form.type = V4L2_BUF_TYPE_VIDEO_CAPTURE;
     capture->form.fmt.pix.width = w; 
     capture->form.fmt.pix.height = h;
@@ -2311,8 +2328,10 @@ static int icvSetVideoSize( CvCaptureCAM_V4L* capture, int w, int h) {
     capture->form.fmt.win.clipcount = 0;
     capture->form.fmt.pix.field = V4L2_FIELD_NONE;
   
-    if (-1 == xioctl (capture->deviceHandle, VIDIOC_S_FMT, &capture->form))
-      errno_exit ("VIDIOC_S_FMT");
+    /* don't test if the set of the size is ok, because some device
+       don't allow changing the size, and we will get the real size
+       later */
+    xioctl (capture->deviceHandle, VIDIOC_S_FMT, &capture->form);
 
     /* Get window info again, to get the real value */
       
@@ -2378,7 +2397,7 @@ static int icvSetControl (CvCaptureCAM_V4L* capture,
     int v4l2_max = 255;
 
     /* initialisations */
-    memset(&capture->control, 0, sizeof(capture->control));
+    CLEAR (capture->control);
 
     /* set which control we want to set */
     switch (property_id) {
