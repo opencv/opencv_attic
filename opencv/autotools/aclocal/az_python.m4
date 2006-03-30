@@ -295,6 +295,16 @@ else:
     strLibFW = dictConfig.get("PYTHONFRAMEWORKPREFIX")
     if strLibFW and (strLibFW != ""):
         strLinkSpec += " -F%s" % (strLibFW)
+    strLibPL = dictConfig.get("LIBPL")
+    if strLibPL and (strLibPL != ""):
+        strLinkSpec += " -L%s" % (strLibPL)
+    # Construct the Python Library Name.
+    strTmplte = " -lpython%d.%d"
+    if (sys.platform == "win32") or (sys.platform == "os2emx"):
+        strTmplte = " -lpython%d%d"
+    strWrk = strTmplte % ( (sys.hexversion >> 24),
+                            ((sys.hexversion >> 16) & 0xff))
+    strLinkSpec += strWrk
 strLinkSpec += " %s" % (dictConfig.get('LINKFORSHARED'))
 print strLinkSpec
         ])
