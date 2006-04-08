@@ -39,6 +39,10 @@
 //
 //M*/
 
+#ifdef HAVE_CONFIG_H
+#include <cvconfig.h>
+#endif
+
 #include "_cxcore.h"
 
 #define ICV_MATH_BLOCK_SIZE  256
@@ -705,7 +709,7 @@ cvPolarToCart( const CvArr* magarr, const CvArr* anglearr,
 typedef union
 {
     struct {
-#ifdef __BIG_ENDIAN__
+#ifdef WORDS_BIGENDIAN
         int hi;
         int lo;
 #else
