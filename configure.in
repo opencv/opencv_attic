@@ -24,7 +24,7 @@ AC_CONFIG_AUX_DIR([autotools])
 AC_CONFIG_MACRO_DIR([autotools/aclocal])
 
 # put CVS revision of this configure.in into the resulting configure script
-AC_REVISION($Revision: 1.19 $)
+AC_REVISION($Revision: 1.20 $)
 
 # Detect the canonical host and target build environment
 AC_CANONICAL_HOST
@@ -54,6 +54,8 @@ AC_PROG_CC
 AC_PROG_CPP
 AC_PROG_LIBTOOL
 
+dnl Check endianness
+AC_C_BIGENDIAN
 
 dnl
 dnl **************** Ask for building all parts ***************
