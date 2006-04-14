@@ -785,13 +785,13 @@ icvGetQuadrangleSubPix_##flavor##_C3R                                       \
 #undef cvt
 #undef cast_macro*/
 
-ICV_DEF_GET_QUADRANGLE_SUB_PIX_FUNC( 8u, uchar, uchar, float, ICV_32F8U, CV_8TO32F )
-ICV_DEF_GET_QUADRANGLE_SUB_PIX_FUNC( 32f, float, float, float, CV_NOP, CV_NOP )
-ICV_DEF_GET_QUADRANGLE_SUB_PIX_FUNC( 8u32f, uchar, float, float, CV_NOP, CV_8TO32F )
+ICV_DEF_GET_QUADRANGLE_SUB_PIX_FUNC( 8u, uchar, uchar, double, ICV_32F8U, CV_8TO32F )
+ICV_DEF_GET_QUADRANGLE_SUB_PIX_FUNC( 32f, float, float, double, CV_CAST_32F, CV_NOP )
+ICV_DEF_GET_QUADRANGLE_SUB_PIX_FUNC( 8u32f, uchar, float, double, CV_CAST_32F, CV_8TO32F )
 
-ICV_DEF_GET_QUADRANGLE_SUB_PIX_FUNC_C3( 8u, uchar, uchar, float, ICV_32F8U, CV_8TO32F )
-ICV_DEF_GET_QUADRANGLE_SUB_PIX_FUNC_C3( 32f, float, float, float, CV_NOP, CV_NOP )
-ICV_DEF_GET_QUADRANGLE_SUB_PIX_FUNC_C3( 8u32f, uchar, float, float, CV_NOP, CV_8TO32F )
+ICV_DEF_GET_QUADRANGLE_SUB_PIX_FUNC_C3( 8u, uchar, uchar, double, ICV_32F8U, CV_8TO32F )
+ICV_DEF_GET_QUADRANGLE_SUB_PIX_FUNC_C3( 32f, float, float, double, CV_CAST_32F, CV_NOP )
+ICV_DEF_GET_QUADRANGLE_SUB_PIX_FUNC_C3( 8u32f, uchar, float, double, CV_CAST_32F, CV_8TO32F )
 
 ICV_DEF_INIT_SUBPIX_TAB( GetQuadrangleSubPix, C1R )
 ICV_DEF_INIT_SUBPIX_TAB( GetQuadrangleSubPix, C3R )
