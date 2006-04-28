@@ -203,12 +203,12 @@ if __name__ == '__main__':
             points [1].append (cv.cvPointTo32f (pt))
 
             # refine the corner locations
-            cv.cvFindCornerSubPix (
+            points [1][-1] = cv.cvFindCornerSubPix (
                 grey,
                 [points [1][-1]],
                 cv.cvSize (win_size, win_size), cv.cvSize (-1, -1),
                 cv.cvTermCriteria (cv.CV_TERMCRIT_ITER | cv.CV_TERMCRIT_EPS,
-                                   20, 0.03))
+                                   20, 0.03))[0]
 
             # we are no more in "add_remove_pt" mode
             add_remove_pt = False

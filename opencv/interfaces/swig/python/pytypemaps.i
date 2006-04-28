@@ -380,7 +380,7 @@
  */
 %typemap (in, numinputs=1) (CvFont* font, int font_face) {
     $1 = (CvFont *)malloc (sizeof (CvFont));
-    $2 = (int)(SWIG_As_int($input)); 
+    $2 = (int)PyInt_AsLong ($input);
     if (SWIG_arg_fail($argnum)) SWIG_fail;
 }
 %typemap(argout) (CvFont* font, int font_face) {
@@ -634,7 +634,7 @@
     }
 }
 
-/* map one list of points to the two parameters dimenssion/sizes
+/* map one list of points to the two parameters dimension/sizes
  for cvCalcOpticalFlowPyrLK */
 %typemap(in) (CvPoint2D32f* prev_features) {
     int i;
@@ -732,16 +732,21 @@
     }
 }
 
-/* map one list of points to the two parameters dimenssion/sizes
+/* map one list of points to the two parameters dimension/sizes
    for cvFindCornerSubPix */
-%typemap(in) (CvPoint2D32f* corners, int count) {
+%typemap(in, numinputs=1) (CvPoint2D32f* corners, int count)
+     (int cornersCount, CvPoint2D32f* corners){
     int i;
 
     /* get the size of the input array */
-    $2 = PyList_Size ($input);
+    cornersCount = PyList_Size ($input);
+    $2 = cornersCount;
 
     /* allocate the needed memory */
-    $1 = (CvPoint2D32f *)malloc ($2 * sizeof (CvPoint2D32f));
+    corners = (CvPoint2D32f *)malloc ($2 * sizeof (CvPoint2D32f));
+    $1 = corners;
+
+    /* the size of the array for the C call */
 
     /* extract all the points values from the list */
     for (i = 0; i < $2; i++) {
@@ -753,5 +758,62 @@
 				SWIG_POINTER_EXCEPTION);
 	$1 [i].x = p->x;
 	$1 [i].y = p->y;
+    }
+
+}
+
+/**
+ * the corners returned by cvFindCornerSubPix
+ */
+%typemap(argout) (CvPoint2D32f* corners, int count) {
+    int i;
+    PyObject *to_add;
+
+    /* create the list to return */
+    to_add = PyList_New (cornersCount$argnum);
+
+    /* extract all the corner values of the result, and add it to the
+       final resulting list */
+    for (i = 0; i < cornersCount$argnum; i++) {
+	PyList_SetItem (to_add, i,
+			SWIG_NewPointerObj (&(corners$argnum [i]),
+					    $descriptor(CvPoint2D32f *), 0));
+    }
+
+    if ((!$result) || ($result == Py_None)) {
+	/* no other results, so just put current pointer instead */
+        $result = to_add;
+    } else {
+	/* we have other results, so add it to the end */
+
+        if (!PyTuple_Check ($result)) {
+	    /* previous result is not a tuple, so create one and put
+	       previous result and current pointer in it */
+
+	    /* first, save previous result */
+            PyObject *obj_save = $result;
+
+	    /* then, create the tuple */
+            $result = PyTuple_New (1);
+
+	    /* finaly, put the saved value in the tuple */
+            PyTuple_SetItem ($result, 0, obj_save);
+        }
+
+	/* create a new tuple to put in our new pointer python object */
+        PyObject *my_obj = PyTuple_New (1);
+
+	/* put in our new pointer python object */
+        PyTuple_SetItem (my_obj, 0, to_add);
+
+	/* save the previous result */
+        PyObject *obj_save = $result;
+
+	/* concat previous and our new result */
+        $result = PySequence_Concat (obj_save, my_obj);
+
+	/* decrement the usage of no more used objects */
+        Py_DECREF (obj_save);
+        Py_DECREF (my_obj);
     }
 }
