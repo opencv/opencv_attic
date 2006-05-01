@@ -25,14 +25,15 @@ if BUILD_PYTHON_WRAPPERS
     __init__.py    \
     cv.py          \
     adaptors.py    \
-    highgui.py
+    highgui.py 	   \
+	matlab_syntax.py
 
 endif
 
 
 # Python #####################################################################
 
-_cv_la_SOURCES    = _cv.cpp error.cpp error.h \
+_cv_la_SOURCES    = _cv.cpp error.cpp error.h pyhelpers.cpp pyhelpers.h \
                     pycvseq.cpp pycvseq.h \
                     ../filtered/cv.h \
                     ../filtered/constants.h \
@@ -42,7 +43,8 @@ _cv_la_LIBADD     = $(top_builddir)/cv/src/libcv.la
 _cv_la_LDFLAGS    = -module -avoid-version -no-undefined $(PYTHON_LSPEC) \
                     -L$(SWIG_PYTHON_LIBS)
 
-_highgui_la_SOURCES    = _highgui.cpp $(top_srcdir)/otherlibs/highgui/highgui.h \
+_highgui_la_SOURCES    = _highgui.cpp pyhelpers.cpp pyhelpers.h \
+						 $(top_srcdir)/otherlibs/highgui/highgui.h \
                          highgui.i
 _highgui_la_CXXFLAGS   = $(PYTHON_CSPEC)
 _highgui_la_LIBADD     = $(top_builddir)/otherlibs/highgui/libhighgui.la
@@ -55,8 +57,10 @@ _highgui_la_LDFLAGS    = -module -avoid-version -no-undefined $(PYTHON_LSPEC) \
 if UPDATE_SWIG_WRAPPERS
 
 # this rule creates the Python wrapper sources for cxcore and cv
-_cv.cpp: cv.i imagedata.i nointpb.i pytypemaps.i                \
+_cv.cpp: cv.i cvmacros.i imagedata.i cvarr.i 					\
+	     nointpb.i pytypemaps.i                                 \
          error.cpp error.h                                      \
+         pyhelpers.h pyhelpers.cpp                              \
          pycvseq.cpp pycvseq.h                                  \
          $(top_srcdir)/interfaces/swig/general/cv.i             \
          $(top_srcdir)/interfaces/swig/general/memory.i         \
@@ -77,5 +81,8 @@ _highgui.cpp: highgui.i nointpb.i pytypemaps.i                           \
 	      $(top_srcdir)/otherlibs/highgui/highgui.h                  \
               Makefile
 	$(SWIG) $(SWIG_PYTHON_OPT) $(CV_INCLUDES) -DSKIP_INCLUDES -o $@ $<
+	
+cvmacros.i: $(top_srcdir)/cxcore/include/cxtypes.h Makefile
+	$(PYTHON) $(top_srcdir)/utils/extract_macros.py $(top_srcdir)/cxcore/include/cxtypes.h   > $@
 
 endif

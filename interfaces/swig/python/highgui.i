@@ -44,7 +44,10 @@
 //             Mark Asbach       <asbach@ient.rwth-aachen.de>
 //             Institute of Communications Engineering, RWTH Aachen University
 
-
+%{
+	#include <cxtypes.h>
+	#include "pyhelpers.h"
+%}
 // include python-specific files
 %include "./nointpb.i"
 %include "./pytypemaps.i"
