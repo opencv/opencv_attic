@@ -39,6 +39,9 @@
 //
 //M*/
 
+%{
+	#include "pyhelpers.h"
+%}
 
 // 2004-03-16, Gabriel Schreiber <schreiber@ient.rwth-aachen.de>
 //             Mark Asbach       <asbach@ient.rwth-aachen.de>
@@ -58,8 +61,12 @@
 #include "pycvseq.h"
 %}
 
-// Accessors for the IplImage data structure are defined here
+// Accessors for the CvMat and IplImage data structure are defined here
+%include "./cvarr.i"
+
 %include "./imagedata.i"
+
+%include "./cvmacros.i"
 
 // We integrate OpenCV error handling into the Python exception mechanism
 %include "./error.h"
@@ -67,6 +74,7 @@
 
 // include some wrappers to manipulate CvSeq types
 %include "./pycvseq.h"
+
 
 %pythoncode 
 %{

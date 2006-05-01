@@ -39,7 +39,90 @@
 //
 //M*/
 
-/* map one list of integer to the two parameters dimention/sizes */
+/* if python sequence type, convert to CvMat or CvMatND */
+%{
+static CvArr * PyObject_to_CvArr(PyObject * obj, bool * freearg){
+	CvArr * cvarr;
+	*freearg = false;
+
+	// check if OpenCV type
+	if( PySwigObject_Check(obj) ){
+		SWIG_ConvertPtr(obj, (void**)&cvarr, 0, SWIG_POINTER_EXCEPTION);
+	}
+	else if(PyList_Check(obj) || PyTuple_Check(obj)){
+		cvarr = PySequence_to_CvArr( obj );
+		*freearg = (cvarr != NULL);
+	}
+	else {
+		SWIG_ConvertPtr(obj, (void**)&cvarr, 0, SWIG_POINTER_EXCEPTION);
+	}
+	return cvarr;
+}
+%}
+%typemap(in) (CvArr *) (bool freearg=false){
+	$1 = PyObject_to_CvArr($input, &freearg);
+}
+%typemap(freearg) (CvArr *) {
+	if($1!=NULL && freearg$argnum){
+		cvReleaseData( $1 );
+		cvFree(&($1));
+	}
+}
+%typecheck(SWIG_TYPECHECK_POINTER) CvArr * {
+	void *ptr;
+	if(PyList_Check($input) || PyTuple_Check($input)) {
+		$1 = 1;
+	}
+	else if (SWIG_ConvertPtr($input, (void **) &ptr, 0, 0) == -1) {
+		$1 = 0;
+		PyErr_Clear();
+	}
+	else{
+		$1 = 1;
+	}
+}
+
+// for cvReshape, cvGetRow, where header is passed, then filled in
+%typemap(in, numinputs=0) CvMat * OUTPUT (CvMat * header) {
+	header = (CvMat *)malloc(sizeof(CvMat));
+   	$1 = header;
+}
+
+%apply CvMat *OUTPUT {CvMat * header};
+%apply CvMat *OUTPUT {CvMat * submat};
+
+/* map scalar or sequence to CvScalar */
+%typemap(in) (CvScalar) {
+	CvScalar val;
+	CvScalar * ptr;
+	if( SWIG_ConvertPtr($input, (void **)&ptr, $descriptor( CvScalar * ), 0 ) == -1)
+	{
+		if(PyObject_to_CvScalar($input, &val)==-1){
+	    	SWIG_exception (SWIG_TypeError, "could not convert to CvScalar");
+			return NULL;
+		}
+	}
+	else{
+		val = *ptr;
+	}
+	$1=val;
+}
+
+/* typemap for cvGetDims */
+%typemap(in) (const CvArr * arr, int * sizes = NULL) (CvArr * myarr, int mysizes[CV_MAX_DIM]){
+	SWIG_Python_ConvertPtr($input, (void **) &myarr, 0, SWIG_POINTER_EXCEPTION);
+	$1=myarr;
+	$2=mysizes;
+}
+
+%typemap(argout) (const CvArr * arr, int * sizes = NULL) {
+	int len = PyInt_AsLong( $result );
+	PyObject * obj = PyTuple_FromIntArray( $2, len );
+	Py_DECREF( $result );
+	$result = obj;
+}
+				
+/* map one list of integer to the two parameters dimension/sizes */
 %typemap(in) (int dims, int* sizes) {
     int i;
 
@@ -280,42 +363,7 @@
     /* extract the pointer we want to add to the returned tuple */
     to_add = SWIG_NewPointerObj (*$1, $descriptor(CvSeq *), 0);
 
-    if ((!$result) || ($result == Py_None)) {
-	/* no other results, so just put current pointer instead */
-        $result = to_add;
-    } else {
-	/* we have other results, so add it to the end */
-
-        if (!PyTuple_Check ($result)) {
-	    /* previous result is not a tuple, so create one and put
-	       previous result and current pointer in it */
-
-	    /* first, save previous result */
-            PyObject *obj_save = $result;
-
-	    /* then, create the tuple */
-            $result = PyTuple_New (1);
-
-	    /* finaly, put the saved value in the tuple */
-            PyTuple_SetItem ($result, 0, obj_save);
-        }
-
-	/* create a new tuple to put in our new pointer python object */
-        PyObject *my_obj = PyTuple_New (1);
-
-	/* put in our new pointer python object */
-        PyTuple_SetItem (my_obj, 0, to_add);
-
-	/* save the previous result */
-        PyObject *obj_save = $result;
-
-	/* concat previous and our new result */
-        $result = PySequence_Concat (obj_save, my_obj);
-
-	/* decrement the usage of no more used objects */
-        Py_DECREF (obj_save);
-        Py_DECREF (my_obj);
-    }
+	$result = SWIG_AppendResult($result, &to_add, 1);
 }
 
 /**
@@ -380,7 +428,7 @@
  */
 %typemap (in, numinputs=1) (CvFont* font, int font_face) {
     $1 = (CvFont *)malloc (sizeof (CvFont));
-    $2 = (int)PyInt_AsLong ($input);
+    $2 = (int)PyInt_AsLong ($input); 
     if (SWIG_arg_fail($argnum)) SWIG_fail;
 }
 %typemap(argout) (CvFont* font, int font_face) {
@@ -389,42 +437,7 @@
     /* extract the pointer we want to add to the returned tuple */
     to_add = SWIG_NewPointerObj ($1, $descriptor(CvFont *), 0);
 
-    if ((!$result) || ($result == Py_None)) {
-	/* no other results, so just put current pointer instead */
-        $result = to_add;
-    } else {
-	/* we have other results, so add it to the end */
-
-        if (!PyTuple_Check ($result)) {
-	    /* previous result is not a tuple, so create one and put
-	       previous result and current pointer in it */
-
-	    /* first, save previous result */
-            PyObject *obj_save = $result;
-
-	    /* then, create the tuple */
-            $result = PyTuple_New (1);
-
-	    /* finaly, put the saved value in the tuple */
-            PyTuple_SetItem ($result, 0, obj_save);
-        }
-
-	/* create a new tuple to put in our new pointer python object */
-        PyObject *my_obj = PyTuple_New (1);
-
-	/* put in our new pointer python object */
-        PyTuple_SetItem (my_obj, 0, to_add);
-
-	/* save the previous result */
-        PyObject *obj_save = $result;
-
-	/* concat previous and our new result */
-        $result = PySequence_Concat (obj_save, my_obj);
-
-	/* decrement the usage of no more used objects */
-        Py_DECREF (obj_save);
-        Py_DECREF (my_obj);
-    }
+	$result = SWIG_AppendResult($result, &to_add, 1);
 }
 
 /**
@@ -441,58 +454,15 @@
  * return the finded parameters for cvGetTextSize
  */
 %typemap(argout) (CvSize* text_size, int* baseline) {
-    PyObject *to_add_1;
-    PyObject *to_add_2;
+    PyObject * to_add[2];
 
     /* extract the pointers we want to add to the returned tuple */
-    to_add_1 = SWIG_NewPointerObj ($1, $descriptor(CvSize *), 0);
-    to_add_2 = PyInt_FromLong (*$2);
+    to_add[1] = SWIG_NewPointerObj ($1, $descriptor(CvSize *), 0);
+    to_add[2] = PyInt_FromLong (*$2);
 
-    if ((!$result) || ($result == Py_None)) {
-	/* no other results, so just add our values */
-
-	/* create a new tuple to put in our new pointer python objects */
-        $result = PyTuple_New (2);
-
-	/* put in our new pointer python objects */
-        PyTuple_SetItem ($result, 0, to_add_1);
-        PyTuple_SetItem ($result, 1, to_add_2);
-
-    } else {
-	/* we have other results, so add it to the end */
-
-        if (!PyTuple_Check ($result)) {
-	    /* previous result is not a tuple, so create one and put
-	       previous result and current pointer in it */
-
-	    /* first, save previous result */
-            PyObject *obj_save = $result;
-
-	    /* then, create the tuple */
-            $result = PyTuple_New (1);
-
-	    /* finaly, put the saved value in the tuple */
-            PyTuple_SetItem ($result, 0, obj_save);
-        }
-
-	/* create a new tuple to put in our new pointer python object */
-        PyObject *my_obj = PyTuple_New (2);
-
-	/* put in our new pointer python object */
-        PyTuple_SetItem (my_obj, 0, to_add_1);
-        PyTuple_SetItem (my_obj, 1, to_add_2);
-
-	/* save the previous result */
-        PyObject *obj_save = $result;
-
-	/* concat previous and our new result */
-        $result = PySequence_Concat (obj_save, my_obj);
-
-	/* decrement the usage of no more used objects */
-        Py_DECREF (obj_save);
-        Py_DECREF (my_obj);
-    }
+	$result = SWIG_AppendResult($result, to_add, 2);
 }
+
 
 /**
  * curr_features is output parameter for cvCalcOpticalFlowPyrLK
@@ -505,7 +475,7 @@
     tmpCount = (int)PyInt_AsLong ($input);
 
     /* create the array for the C call */
-    $1 = (CvPoint2D32f *)malloc (tmpCount * sizeof (CvPoint2D32f));
+    $1 = (CvPoint2D32f *) malloc(tmpCount * sizeof (CvPoint2D32f));
 
     /* the size of the array for the C call */
     $2 = tmpCount;
@@ -529,42 +499,7 @@
 					    $descriptor(CvPoint2D32f *), 0));
     }
 
-    if ((!$result) || ($result == Py_None)) {
-	/* no other results, so just put current pointer instead */
-        $result = to_add;
-    } else {
-	/* we have other results, so add it to the end */
-
-        if (!PyTuple_Check ($result)) {
-	    /* previous result is not a tuple, so create one and put
-	       previous result and current pointer in it */
-
-	    /* first, save previous result */
-            PyObject *obj_save = $result;
-
-	    /* then, create the tuple */
-            $result = PyTuple_New (1);
-
-	    /* finaly, put the saved value in the tuple */
-            PyTuple_SetItem ($result, 0, obj_save);
-        }
-
-	/* create a new tuple to put in our new pointer python object */
-        PyObject *my_obj = PyTuple_New (1);
-
-	/* put in our new pointer python object */
-        PyTuple_SetItem (my_obj, 0, to_add);
-
-	/* save the previous result */
-        PyObject *obj_save = $result;
-
-	/* concat previous and our new result */
-        $result = PySequence_Concat (obj_save, my_obj);
-
-	/* decrement the usage of no more used objects */
-        Py_DECREF (obj_save);
-        Py_DECREF (my_obj);
-    }
+	$result = SWIG_AppendResult($result, &to_add, 1);
 }
 
 /**
@@ -593,48 +528,13 @@
     /* extract all the integer values of the result, and add it to the
        final resulting list */
     for (i = 0; i < tmpCountStatus$argnum; i++) {
-	PyList_SetItem (to_add, i, PyBool_FromLong ($1 [i]));
+		PyList_SetItem (to_add, i, PyBool_FromLong ($1 [i]));
     }
 
-    if ((!$result) || ($result == Py_None)) {
-	/* no other results, so just put current pointer instead */
-        $result = to_add;
-    } else {
-	/* we have other results, so add it to the end */
-
-        if (!PyTuple_Check ($result)) {
-	    /* previous result is not a tuple, so create one and put
-	       previous result and current pointer in it */
-
-	    /* first, save previous result */
-            PyObject *obj_save = $result;
-
-	    /* then, create the tuple */
-            $result = PyTuple_New (1);
-
-	    /* finaly, put the saved value in the tuple */
-            PyTuple_SetItem ($result, 0, obj_save);
-        }
-
-	/* create a new tuple to put in our new pointer python object */
-        PyObject *my_obj = PyTuple_New (1);
-
-	/* put in our new pointer python object */
-        PyTuple_SetItem (my_obj, 0, to_add);
-
-	/* save the previous result */
-        PyObject *obj_save = $result;
-
-	/* concat previous and our new result */
-        $result = PySequence_Concat (obj_save, my_obj);
-
-	/* decrement the usage of no more used objects */
-        Py_DECREF (obj_save);
-        Py_DECREF (my_obj);
-    }
+	$result = SWIG_AppendResult($result, &to_add, 1); 
 }
 
-/* map one list of points to the two parameters dimension/sizes
+/* map one list of points to the two parameters dimenssion/sizes
  for cvCalcOpticalFlowPyrLK */
 %typemap(in) (CvPoint2D32f* prev_features) {
     int i;
@@ -694,42 +594,7 @@
 					    $descriptor(CvPoint2D32f *), 0));
     }
 
-    if ((!$result) || ($result == Py_None)) {
-	/* no other results, so just put current pointer instead */
-        $result = to_add;
-    } else {
-	/* we have other results, so add it to the end */
-
-        if (!PyTuple_Check ($result)) {
-	    /* previous result is not a tuple, so create one and put
-	       previous result and current pointer in it */
-
-	    /* first, save previous result */
-            PyObject *obj_save = $result;
-
-	    /* then, create the tuple */
-            $result = PyTuple_New (1);
-
-	    /* finaly, put the saved value in the tuple */
-            PyTuple_SetItem ($result, 0, obj_save);
-        }
-
-	/* create a new tuple to put in our new pointer python object */
-        PyObject *my_obj = PyTuple_New (1);
-
-	/* put in our new pointer python object */
-        PyTuple_SetItem (my_obj, 0, to_add);
-
-	/* save the previous result */
-        PyObject *obj_save = $result;
-
-	/* concat previous and our new result */
-        $result = PySequence_Concat (obj_save, my_obj);
-
-	/* decrement the usage of no more used objects */
-        Py_DECREF (obj_save);
-        Py_DECREF (my_obj);
-    }
+    $result = SWIG_AppendResult($result, &to_add, 1);
 }
 
 /* map one list of points to the two parameters dimension/sizes
@@ -737,6 +602,11 @@
 %typemap(in, numinputs=1) (CvPoint2D32f* corners, int count)
      (int cornersCount, CvPoint2D32f* corners){
     int i;
+
+	if(!PyList_Check($input)){
+		PyErr_SetString(PyExc_TypeError, "cvFindCornerSubPix: Expected a list");
+		return NULL;
+	}
 
     /* get the size of the input array */
     cornersCount = PyList_Size ($input);
@@ -780,40 +650,43 @@
 					    $descriptor(CvPoint2D32f *), 0));
     }
 
-    if ((!$result) || ($result == Py_None)) {
-	/* no other results, so just put current pointer instead */
-        $result = to_add;
-    } else {
-	/* we have other results, so add it to the end */
-
-        if (!PyTuple_Check ($result)) {
-	    /* previous result is not a tuple, so create one and put
-	       previous result and current pointer in it */
-
-	    /* first, save previous result */
-            PyObject *obj_save = $result;
-
-	    /* then, create the tuple */
-            $result = PyTuple_New (1);
-
-	    /* finaly, put the saved value in the tuple */
-            PyTuple_SetItem ($result, 0, obj_save);
-        }
-
-	/* create a new tuple to put in our new pointer python object */
-        PyObject *my_obj = PyTuple_New (1);
-
-	/* put in our new pointer python object */
-        PyTuple_SetItem (my_obj, 0, to_add);
-
-	/* save the previous result */
-        PyObject *obj_save = $result;
-
-	/* concat previous and our new result */
-        $result = PySequence_Concat (obj_save, my_obj);
-
-	/* decrement the usage of no more used objects */
-        Py_DECREF (obj_save);
-        Py_DECREF (my_obj);
-    }
+	$result = SWIG_AppendResult( $result, &to_add, 1);
 }
+
+#if 0
+/**
+ * return the corners for cvFindChessboardCorners
+ * TODO: fix this to work simultaneously with cvFindCornerSubPix
+ */
+%typemap(in, numinputs=1) (CvSize pattern_size, CvPoint2D32f * corners, int * corner_count) 
+     (int tmpCount) {
+	CvSize * pattern_size;
+	if( SWIG_ConvertPtr($input, (void **)&pattern_size, $descriptor( CvSize * ), SWIG_POINTER_EXCEPTION ) == -1){
+		return NULL;
+	}
+
+    tmpCount = pattern_size->width*pattern_size->height;
+	CvPoint2D32f * c = (CvPoint2D32f *) malloc(sizeof(CvPoint2D32f)*tmpCount);
+	$1 = *pattern_size;
+	$2 = c;
+	$3 = NULL;
+}
+%typemap(argout) (CvPoint2D32f * corners, int * corner_count) {
+    PyObject *to_add_1;
+
+    /* extract the pointers we want to add to the returned tuple */
+    to_add_1 = SWIG_NewPointerObj ($1, $descriptor(CvPoint2D32f *), 0);
+
+	$result = SWIG_AppendResult($result, &to_add_1, 1);
+}
+#endif
+
+/**
+ * return the matrices for cvCameraCalibrate
+ */
+%typemap(in, numinputs=0) (CvMat * intrinsic_matrix, CvMat * distortion_coeffs)
+{
+	$1 = cvCreateMat(3,3,CV_32F);
+	$2 = cvCreateMat(4,1,CV_32F);
+}
+

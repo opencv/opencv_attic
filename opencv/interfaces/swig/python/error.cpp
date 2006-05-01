@@ -74,7 +74,7 @@ int SendErrorToPython
     std::stringstream message;
     message   
         << " openCV Error:"
-        << "\n        Status=" << status
+        << "\n        Status=" << cvErrorStr(status)
         << "\n        function name=" << (func_name ? func_name : "unknown")
         << "\n        error message=" << (err_msg ? err_msg : "unknown")
         << "\n        file_name=" << (file_name ? file_name : "unknown")
