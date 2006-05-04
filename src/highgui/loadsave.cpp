@@ -327,6 +327,13 @@ GrFmtWriter* CvImageFilters::FindWriter( const char* filename ) const
 *                         HighGUI loading & saving function implementation               *
 \****************************************************************************************/
 
+static int icvSetCXCOREBindings(void)
+{
+    return CV_SET_IMAGE_IO_FUNCTIONS();
+}
+
+int cxcore_bindings_initialized = icvSetCXCOREBindings();
+
 // global image I/O filters
 static CvImageFilters  g_Filters;
 
