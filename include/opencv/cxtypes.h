@@ -211,7 +211,7 @@ CV_INLINE  int  cvRound( double value )
         fistp t;
     }
     return t;
-#elif (defined __GNUC__ && __GNUC__ > 2) || (defined WIN64 && !defined EM64T && defined CV_ICC)
+#elif (defined HAVE_LRINT) || (defined WIN64 && !defined EM64T && defined CV_ICC)
     return (int)lrint(value);
 #else
     /*

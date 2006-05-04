@@ -26,30 +26,10 @@ if BUILD_PYTHON_WRAPPERS
     cv.py          \
     adaptors.py    \
     highgui.py 	   \
-	matlab_syntax.py
+    matlab_syntax.py
 
 endif
 
-
-# Python #####################################################################
-
-_cv_la_SOURCES    = _cv.cpp error.cpp error.h pyhelpers.cpp pyhelpers.h \
-                    pycvseq.cpp pycvseq.h \
-                    ../filtered/cv.h \
-                    ../filtered/constants.h \
-                    cv.i imagedata.i
-_cv_la_CXXFLAGS   = $(PYTHON_CSPEC)
-_cv_la_LIBADD     = $(top_builddir)/cv/src/libcv.la
-_cv_la_LDFLAGS    = -module -avoid-version -no-undefined $(PYTHON_LSPEC) \
-                    -L$(SWIG_PYTHON_LIBS)
-
-_highgui_la_SOURCES    = _highgui.cpp pyhelpers.cpp pyhelpers.h \
-						 $(top_srcdir)/otherlibs/highgui/highgui.h \
-                         highgui.i
-_highgui_la_CXXFLAGS   = $(PYTHON_CSPEC)
-_highgui_la_LIBADD     = $(top_builddir)/otherlibs/highgui/libhighgui.la
-_highgui_la_LDFLAGS    = -module -avoid-version -no-undefined $(PYTHON_LSPEC) \
-                         -L$(SWIG_PYTHON_LIBS)
 
 # SWIG #######################################################################
 
@@ -58,7 +38,7 @@ if UPDATE_SWIG_WRAPPERS
 
 # this rule creates the Python wrapper sources for cxcore and cv
 _cv.cpp: cv.i cvmacros.i imagedata.i cvarr.i 					\
-	     nointpb.i pytypemaps.i                                 \
+         nointpb.i pytypemaps.i                                 \
          error.cpp error.h                                      \
          pyhelpers.h pyhelpers.cpp                              \
          pycvseq.cpp pycvseq.h                                  \
@@ -86,3 +66,23 @@ cvmacros.i: $(top_srcdir)/cxcore/include/cxtypes.h Makefile
 	$(PYTHON) $(top_srcdir)/utils/extract_macros.py $(top_srcdir)/cxcore/include/cxtypes.h   > $@
 
 endif
+
+
+# Python #####################################################################
+
+_cv_la_SOURCES    = _cv.cpp error.cpp error.h pyhelpers.cpp pyhelpers.h \
+                    pycvseq.cpp pycvseq.h \
+                    cv.i imagedata.i cvarr.i nointpb.i pytypemaps.i
+_cv_la_CXXFLAGS   = $(PYTHON_CSPEC)
+_cv_la_LIBADD     = $(top_builddir)/cv/src/libcv.la
+_cv_la_LDFLAGS    = -module -avoid-version -no-undefined $(PYTHON_LSPEC) \
+                    -L$(SWIG_PYTHON_LIBS)
+#_cv_la_DEPENDENCIES = ../filtered/cv.h ../filtered/constants.h
+
+_highgui_la_SOURCES    = _highgui.cpp pyhelpers.cpp pyhelpers.h \
+                         highgui.i
+_highgui_la_CXXFLAGS     = $(PYTHON_CSPEC)
+_highgui_la_LIBADD       = $(top_builddir)/otherlibs/highgui/libhighgui.la
+_highgui_la_LDFLAGS      = -module -avoid-version -no-undefined $(PYTHON_LSPEC) \
+                           -L$(SWIG_PYTHON_LIBS)
+#_highgui_la_DEPENDENCIES = $(top_srcdir)/otherlibs/highgui/highgui.h
