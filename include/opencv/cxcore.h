@@ -1689,6 +1689,8 @@ CVAPI(int)  cvGetThreadNum();
 
 #ifdef __cplusplus
 }
+
+#include "cxcore.hpp"
 #endif
 
 #endif /*_CXCORE_H_*/
