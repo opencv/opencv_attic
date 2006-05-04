@@ -39,11 +39,11 @@
 //
 //M*/
 
+#include "_cxcore.h"
+
 #ifdef HAVE_CONFIG_H
 #include <cvconfig.h>
 #endif
-
-#include "_cxcore.h"
 
 #define ICV_MATH_BLOCK_SIZE  256
 
