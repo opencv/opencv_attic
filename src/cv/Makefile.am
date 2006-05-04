@@ -17,7 +17,7 @@ libcv_la_SOURCES = \
     cvkalman.cpp cvlinefit.cpp cvlkpyramid.cpp cvmatchcontours.cpp \
     cvmoments.cpp cvmorph.cpp cvmotempl.cpp cvoptflowbm.cpp cvoptflowhs.cpp \
     cvoptflowlk.cpp cvpgh.cpp cvposit.cpp cvprecomp.cpp cvpyramids.cpp \
-    cvpyrsegmentation.cpp cvrotcalipers.cpp cvsamplers.cpp cvshapedescr.cpp \
+    cvpyrsegmentation.cpp cvrotcalipers.cpp cvsamplers.cpp cvsegmentation.cpp cvshapedescr.cpp \
     cvsmooth.cpp cvsnakes.cpp cvsubdivision2d.cpp cvsumpixels.cpp \
     cvswitcher.cpp cvtables.cpp cvtemplmatch.cpp cvthresh.cpp \
     cvundistort.cpp cvutils.cpp
