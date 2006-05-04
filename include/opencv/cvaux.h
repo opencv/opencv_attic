@@ -1454,11 +1454,8 @@ protected:
     bool    isCalibrated;
 };
 
-#endif
-
-
-#ifdef __cplusplus
 #include "cvaux.hpp"
+#include "cvvidsurv.hpp"
 /*#include "cvmat.hpp"*/
 #endif
 
