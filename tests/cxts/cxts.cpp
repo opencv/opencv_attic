@@ -1525,7 +1525,7 @@ const char* CvTS::get_libs_info( const char** addon_modules )
 void CvTS::print_summary_header( int streams )
 {
     char csv_header[256], *ptr = csv_header;
-    int i, len;
+    int i;
 
     printf( streams, "Engine: %s\n", version );
     time_t t1;
@@ -1541,15 +1541,13 @@ void CvTS::print_summary_header( int streams )
     printf( streams, "Optimized Low-level Plugin\'s: %s\n", plugins );
     printf( streams, "=================================================\n");
 
-    len = 0;
-    sprintf( ptr, "funcName,dataType,channels,size,%n", &len );
-    ptr += len;
+    sprintf( ptr, "funcName,dataType,channels,size," );
+    ptr += strlen(ptr);
 
     for( i = 0; i < CvTest::TIMING_EXTRA_PARAMS; i++ )
     {
-        len = 0;
-        sprintf( ptr, "param%d,%n", i, &len );
-        ptr += len;
+        sprintf( ptr, "param%d,", i );
+        ptr += strlen(ptr);
     }
 
     sprintf( ptr, "CPE,Time(uSecs)" );

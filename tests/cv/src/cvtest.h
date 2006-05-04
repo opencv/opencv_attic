@@ -42,6 +42,17 @@
 #ifndef _CVTEST_H_
 #define _CVTEST_H_
 
+/****************************************************************************************/
+/*                                Warnings Disabling                                    */
+/****************************************************************************************/
+#if _MSC_VER > 1000
+#pragma warning(disable : 4514) /* unreferenced inline function has been */
+                                /* removed                               */
+#pragma warning(disable : 4127) /* conditional expression is constant    */
+                                /* for no warnings in _ASSERT            */
+#pragma warning(disable : 4996) /* deprecated function */
+#endif
+
 #ifdef WIN32
 #include <windows.h>
 #endif
@@ -104,17 +115,6 @@ typedef unsigned short      ushort;
 #else
     typedef long long int64;
 #endif
-#endif
-
-
-/****************************************************************************************/
-/*                                Warnings Disabling                                    */
-/****************************************************************************************/
-#if _MSC_VER > 1000
-#pragma warning(disable : 4514) /* unreferenced inline function has been */
-                                /* removed                               */
-#pragma warning(disable : 4127) /* conditional expression is constant    */
-                                /* for no warnings in _ASSERT            */
 #endif
 
 

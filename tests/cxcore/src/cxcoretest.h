@@ -58,6 +58,7 @@
                                 /* removed                               */
 #pragma warning(disable : 4127) /* conditional expression is constant    */
                                 /* for no warnings in _ASSERT            */
+#pragma warning(disable : 4996) /* deprecated function */
 #endif
 
 #endif /* _CXCORE_TEST_H_ */
