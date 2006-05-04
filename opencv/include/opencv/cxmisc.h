@@ -47,6 +47,10 @@
 #ifndef _CXCORE_MISC_H_
 #define _CXCORE_MISC_H_
 
+#ifdef HAVE_CONFIG_H
+    #include "cvconfig.h"
+#endif
+
 #include <limits.h>
 #ifdef _OPENMP
 #include "omp.h"
@@ -115,15 +119,19 @@
 \****************************************************************************************/
 
 /* get alloca declaration */
-#if defined WIN32 || defined WIN64
-    #if defined _MSC_VER || defined __BORLANDC__
-        #include <malloc.h>
-    #endif
-#endif
-
 #ifdef __GNUC__
     #undef alloca
     #define alloca __builtin_alloca
+#elif defined WIN32 || defined WIN64
+    #if defined _MSC_VER || defined __BORLANDC__
+        #include <malloc.h>
+    #endif
+#elif defined HAVE_ALLOCA_H
+    #include <alloca.h>
+#elif defined HAVE_ALLOCA
+    #include <stdlib.h>
+#elif
+    #error
 #endif
 
 /* ! DO NOT make it an inline function */

@@ -130,8 +130,12 @@ CvCapture* cvCaptureFromCAM_VFW( int index );
 CvCapture* cvCaptureFromFile_VFW( const char* filename );
 #endif
 
+#ifdef HAVE_XINE
+CvCapture* cvCaptureFromFile_XINE   (const char* filename);
+#endif
+
 #ifdef HAVE_FFMPEG
-CvCapture* cvCaptureFromFile_FFMPEG( const char* filename );
+CvCapture* cvCaptureFromFile_FFMPEG (const char* filename);
 #endif
 
 #ifdef HAVE_QUICKTIME

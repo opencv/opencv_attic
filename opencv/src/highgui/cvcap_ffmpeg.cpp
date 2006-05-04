@@ -504,8 +504,7 @@ CV_IMPL CvVideoWriter* cvCreateVideoWriter( const char * filename, int fourcc,
 	// tell FFMPEG to register codecs
 	av_register_all ();
 
-	/* auto detect the output format from the name. default is
-       mpeg. */
+	/* auto detect the output format from the name. default is mpeg. */
 	writer->fmt = guess_format(NULL, filename, NULL);
 	if (!writer->fmt) {
 		CV_ERROR( CV_StsUnsupportedFormat, "Could not deduce output format from file extension");
@@ -566,7 +565,8 @@ CV_IMPL CvVideoWriter* cvCreateVideoWriter( const char * filename, int fourcc,
         writer->outbuf = (uint8_t *) malloc(writer->outbuf_size);
     }
 
-	bool need_color_convert = c->pix_fmt != PIX_FMT_BGR24;
+	bool need_color_convert;
+        need_color_convert = c->pix_fmt != PIX_FMT_BGR24;
 
     /* allocate the encoded raw picture */
     writer->picture = icv_alloc_picture_FFMPEG(c->pix_fmt, c->width, c->height, need_color_convert);

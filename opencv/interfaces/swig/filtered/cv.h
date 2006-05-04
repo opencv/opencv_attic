@@ -1,6 +1,6 @@
 # 1 "../../../cv/include/cv.h"
-# 1 "<built-in>"
-# 1 "<command line>"
+# 1 "<eingebaut>"
+# 1 "<Kommandozeile>"
 # 1 "../../../cv/include/cv.h"
 # 58 "../../../cv/include/cv.h"
 # 1 "../../../cxcore/include/cxcore.h" 1
@@ -39,9 +39,11 @@ Cv64suf;
 # 201 "../../../cxcore/include/cxtypes.h"
 inline int cvRound( double value )
 {
-# 215 "../../../cxcore/include/cxtypes.h"
-    return (int)lrint(value);
-# 225 "../../../cxcore/include/cxtypes.h"
+# 221 "../../../cxcore/include/cxtypes.h"
+    Cv64suf temp;
+    temp.f = value + 6755399441055744.0;
+    return (int)temp.u;
+
 }
 
 

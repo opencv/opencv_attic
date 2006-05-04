@@ -13,6 +13,8 @@ AM_CPPFLAGS = \
   $(CV_INCLUDES)                     \
   -DCV_NO_BACKWARD_COMPATIBILITY
 
+EXTRA_DIST = cv.h constants.h
+
 # SWIG ###############################################################################
 
 # the following rules keep wrappers up to date, if SWIG is present
@@ -23,7 +25,7 @@ if UPDATE_SWIG_WRAPPERS
 noinst_SCRIPTS = headers_generated
 headers_generated: cv.h constants.h
 	touch headers_generated
-MOSTLYCLEANFILES = headers_generated cv.h constants.h
+MOSTLYCLEANFILES = headers_generated
 
 # this rule creates a single SWIG parseable header from cv.h and cxcore.h, etc.
 cv.h: $(top_srcdir)/cv/include/cv.h $(top_srcdir)/cv/include/cvtypes.h \

@@ -24,7 +24,7 @@ AC_CONFIG_AUX_DIR([autotools])
 AC_CONFIG_MACRO_DIR([autotools/aclocal])
 
 # put CVS revision of this configure.in into the resulting configure script
-AC_REVISION($Revision: 1.20 $)
+AC_REVISION($Revision: 1.21 $)
 
 # Detect the canonical host and target build environment
 AC_CANONICAL_HOST
@@ -45,8 +45,10 @@ AC_SUBST(MSUBMINOR,  [opencv_subminor_version])
 AC_SUBST(VERSION,    [opencv_version])
 AC_SUBST(LT_VERSION, [opencv_lt_version])
 
-# disable building static libraries
+# disable building static libraries,
+# allow Cygwin to build DLLs
 AC_DISABLE_STATIC
+AC_LIBTOOL_WIN32_DLL
 
 # checks for programs.
 AC_PROG_CXX
@@ -54,39 +56,106 @@ AC_PROG_CC
 AC_PROG_CPP
 AC_PROG_LIBTOOL
 
-dnl Check endianness
-AC_C_BIGENDIAN
 
-dnl
-dnl **************** Ask for building all parts ***************
-dnl
-AC_ARG_WITH([apps],
-        [AS_HELP_STRING([--with-apps],[build demo applications])],
-        [with_apps=$withval],
-        [with_apps="no"])
-AM_CONDITIONAL([BUILD_APPS], [test x"$with_apps" = x"yes"])
+######################################################################
+# the following interpret 'with' and 'enable' switches.
+# some of these switches trigger checks that can be found further 
+# below in this configure script
+
+# does the user want aggressive optimization?
+AC_ARG_ENABLE([debug],
+              [AS_HELP_STRING([--enable-debug],[build debug version without optimization])],
+              [debug=$enableval], 
+              [debug=no])
+
+# does the user want to build demo applications?
+AC_ARG_ENABLE([apps],
+              [AS_HELP_STRING([--enable-apps],[build demo applications])],
+              [enable_apps=$enableval],
+              [enable_apps="no"])
+AM_CONDITIONAL([BUILD_APPS], [test x"$enable_apps" = x"yes"])
 
 
-dnl Add compiler-specific optimization flags
-dnl Check whether to include debugging code
+# the following checks reflect the dependencies of OpenCV on other
+# libraries that do the actual work for video I/O or windowing 
+# subsystem. On some platforms there are ambiguities that a user
+# can influence. There is also additional logic to be found in code
+# later code lines that tries to do sensible decisions on what to use
+
+# does the user want to compile python modules as well?
+AC_ARG_WITH([swig], 
+            [AS_HELP_STRING([--with-swig],[use swig wrapper generator])],
+            [with_swig=$withval],
+            [with_swig=auto])
+
+# does the user want to compile python modules as well?
+AC_ARG_WITH([python], 
+            [AS_HELP_STRING([--with-python],[use python for wrapping])],
+            [with_python=$withval],
+            [with_python=yes])
+
+# does the user want OpenCV to use xine video libraries?
+AC_ARG_WITH([xine],
+            [AS_HELP_STRING([--with-xine],[use xine libraries (see LICENSE)])],
+            [with_xine=$withval],
+            [with_xine=no])
+
+# does the user want OpenCV to use ffmpeg video libraries?
+AC_ARG_WITH([ffmpeg],
+            [AS_HELP_STRING([--with-ffmpeg],[use ffmpeg libraries (see LICENSE)])],
+            [with_ffmpeg=$withval],
+            [with_ffmpeg=auto])
+
+# does the user want OpenCV to use libraw1394/libdc1394 for video input?
+AC_ARG_WITH([1394libs],
+            [AS_HELP_STRING([--with-1394libs],[use libraw1394/libdc1394])],
+            [with_1394libs=$withval],
+            [with_1394libs=auto])
+
+# does the user want OpenCV to use the video4linux kernel module?
+AC_ARG_WITH([v4l],
+            [AS_HELP_STRING([--with-v4l],[use video4linux])],
+            [with_v4l=$withval],
+            [with_v4l=auto])
+
+# does the user want OpenCV to use QuickTime video libraries?
+AC_ARG_WITH([quicktime],
+            [AS_HELP_STRING([--with-quicktime],[use QuickTime libraries])],
+            [with_quicktime=$withval],
+            [with_quicktime=yes])
+
+# does the user want OpenCV to use the Carbon GUI of Mac OS X?
+AC_ARG_WITH([carbon],
+            [AS_HELP_STRING([--with-carbon],[use Carbon windows])],
+            [with_carbon=$withval],
+            [with_carbon=yes])
+
+# does the user want OpenCV to use GTK+ 2.0 for the GUI?
+AC_ARG_WITH([gtk],
+            [AS_HELP_STRING([--with-gtk],[use gtk+ 2.0 windows])],
+            [with_gtk=$withval],
+            [with_gtk=auto])
+
+
+######################################################################
+# getting the code to compile
 
 # cure annoying default arguments for CFLAGS and CXXFLAGS
-if test x"$CFLAGS" = x"-g -O2" ; then
+# that autoconf automatically sets in GNU environments if
+# no CFLAGS or CXXFLAGS were manually given
+if test x"$CFLAGS" = "x-g -O2" ; then
     CFLAGS=""
 fi
-if test x"$CXXFLAGS" = x"-g -O2" ; then
+if test x"$CXXFLAGS" = "x-g -O2" ; then
     CXXFLAGS=""
 fi
 
-
+# see if the user wants aggressive optimizations of the code,
+# check whether to include debugging code
 AC_MSG_CHECKING([whether to build debug version (no optimization)])
-dnl See if the user wants aggressive optimizations of the code
-AC_ARG_ENABLE(debug,
-  [  --enable-debug          build debug version (no optimization) [default=no]],
-  [debug=yes], [debug=no])
-if test x"$debug" = x"yes"; then
+if test x"$debug" = "xyes"; then
     AC_MSG_RESULT([yes])
-    if test x"$ac_cv_c_compiler_gnu" = x"yes"; then
+    if test x"$ac_cv_c_compiler_gnu" = "xyes"; then
         CXXFLAGS="-ggdb -O0 -DDEBUG -D_DEBUG $CXXFLAGS"
     fi
 else
@@ -94,12 +163,12 @@ else
     AC_MSG_NOTICE( TARGET=$target )
     case $target in
     i686-*-*)
-        if test x"$ac_cv_c_compiler_gnu" = x"yes"; then
+        if test x"$ac_cv_c_compiler_gnu" = "xyes"; then
             CXXFLAGS="-g -march=i686 -ffast-math -fomit-frame-pointer $CXXFLAGS"
         fi
         ;;
     *-*-*)
-    if test x"$ac_cv_c_compiler_gnu" = x"yes"; then
+    if test x"$ac_cv_c_compiler_gnu" = "xyes"; then
         CXXFLAGS="-fomit-frame-pointer $CXXFLAGS"
     fi
     ;;    
@@ -107,26 +176,327 @@ else
     CXXFLAGS="-O3 -DNDEBUG $CXXFLAGS"
 fi
 
-if test x"$ac_cv_c_compiler_gnu" = x"yes"; then
+if test x"$ac_cv_c_compiler_gnu" = "xyes"; then
     CXXFLAGS="-Wall -fno-rtti -pipe $CXXFLAGS"
 fi
 
-dnl ******* add libm 'cause it is used by several libraries below ****
-dnl ******* (and by OpenCV itself) ***********************************
+# add libm because it is used by several libraries and OpenCV itself 
 AC_CHECK_LIB(m,pow)
+AC_CHECK_LIB(dl,dlopen)
 
-dnl
-dnl ****************** pkg-config *********************
-dnl 
+# check endianness
+AC_C_BIGENDIAN
 
-AC_PATH_PROG(PKG_CONFIG, pkg-config, no)
-if test x"$PKG_CONFIG" == x"no"; then
-    AC_MSG_ERROR(You have to install pkg-config to compile OpenCV.)
+# check for specific functions that might be missing from
+# certain standard library implementations
+AC_FUNC_ALLOCA
+AC_CHECK_HEADERS([malloc.h])
+AC_CHECK_FUNCS(lrint)
+
+
+######################################################################
+# HighGUI dependencies for windowing system
+
+# honor user selection, 
+# if no selection given check for Carbon first
+if test x"$with_carbon" = "xyes"; then
+
+    # check if other ./configure arguments are valid
+    if test x"$with_gtk" = "xyes"; then
+        AC_MSG_ERROR([You cannot specify --with-carbon and --with-gtk at the same time])
+    fi
+
+    # header presence and usability seem to be enough
+    AC_CHECK_HEADER([Carbon/Carbon.h],
+                    [
+                      AC_DEFINE(HAVE_CARBON,,[Carbon windowing environment])
+                      CARBON_LIBS="-Xlinker -framework -Xlinker Carbon"
+                      have_carbon=yes
+                    ],
+                    [
+                      have_carbon=no 
+                      with_carbon=no
+                    ])
+
+    # don't check alternatives if carbon was found
+    if test x"$have_carbon" = "xyes"; then
+        if test x"$with_gtk" = "xauto"; then
+            with_gtk=no
+        fi
+    fi
+else
+    have_carbon=no
+    if test ! x"$with_carbon" = "xno"; then
+        AC_MSG_WARN([unexpected arguments for option --with-carbon, continuing assuming 'no'])
+    fi
 fi
+AC_SUBST(CARBON_CFLAGS)
+AC_SUBST(CARBON_LIBS)
+AM_CONDITIONAL([BUILD_CARBON], [test x"$have_carbon" = "xyes"])
 
-dnl
-dnl ***************** Image codecs configuration *****************
-dnl
+# use GTK+ 2.x (or later) for windowing 
+# if carbon not present or not wanted (--without-carbon)
+if test x"$with_gtk" = "xno"; then
+    have_gtk=no
+    have_gthread=no
+else
+
+    # check if ./configure arguments are valid
+    if test x"$with_gtk" = "xauto"; then
+       with_gtk=yes
+    fi
+    if test x"$with_gtk" = "xyes"; then
+    
+        # pkg-config is needed for GTK+
+        AC_PATH_PROG(PKG_CONFIG, pkg-config, no)
+        if test x"$PKG_CONFIG" == "xno"; then
+            AC_MSG_ERROR([You have to install pkg-config to compile OpenCV with GTK+])
+        fi
+    
+        PKG_CHECK_MODULES(GTK, "gtk+-2.0 gdk-pixbuf-2.0", 
+                          [
+                            have_gtk=yes 
+                            AC_DEFINE(HAVE_GTK,,[GTK+ 2.x toolkit])
+                          ],
+                          [ have_gtk=no ])
+    
+        PKG_CHECK_MODULES(GTHREAD, "gthread-2.0",
+                          [
+                            have_gthread=yes
+                            AC_DEFINE(HAVE_GTHREAD,,[GTK+ 2.0 Thread support])
+                          ],
+                          [ have_gthread=no ])
+    else
+        # if we get here then --with-gtk was not called with 'yes','no' or 'auto'
+        AC_MSG_WARN([unexpected arguments for option --with-gtk, continuing assuming 'no'])
+        have_gtk=no
+        have_gthread=no
+    fi
+fi
+AC_SUBST(GTK_CFLAGS)
+AC_SUBST(GTK_LIBS)
+AC_SUBST(GTHREAD_CFLAGS)
+AC_SUBST(GTHREAD_LIBS)
+
+
+######################################################################
+# HighGUI dependencies for video I/O
+
+# if QuickTime is present, it will override everything else,
+# (unless '--without-quicktime' was given)
+if test x"$with_quicktime" = "xyes"; then
+
+    # check other ./configure flags
+    if test x"$with_ffmpeg" = "xyes"; then
+        AC_MSG_ERROR([You cannot specify --with-quicktime and --with-ffmpeg at the same time])
+    fi
+    if test x"$with_xine" = "xyes"; then
+        AC_MSG_ERROR([You cannot specify --with-quicktime and --with-xine at the same time])
+    fi
+    if test x"$with_1394libs" = "xyes"; then
+        AC_MSG_ERROR([You cannot specify --with-quicktime and --with-1394libs at the same time])
+    fi
+    if test x"$with_v4l" = "xyes"; then
+        AC_MSG_ERROR([You cannot specify --with-quicktime and --with-v4l at the same time])
+    fi
+    
+    # header presence and usability seem to be enough
+    AC_CHECK_HEADER([QuickTime/QuickTime.h],
+                    [
+                      AC_DEFINE(HAVE_QUICKTIME,,[QuickTime video libraries])
+                      have_quicktime=yes
+                    ],
+                    [ have_quicktime=no ])
+    
+    # specify quicktime libraries
+    if test x"$have_quicktime" = "xyes"; then
+        QUICKTIME_LIBS="-Xlinker -framework -Xlinker QuickTime"
+ 
+        # don't check alternatives if quicktime was found
+        if test x"$with_ffmpeg" = "xauto"; then
+            with_ffmpeg=no
+        fi
+        if test x"$with_xine" = "xauto"; then
+            with_xine=no
+        fi
+        if test x"$with_1394libs" = "xauto"; then
+            with_1394libs=no
+        fi
+        if test x"$with_v4l" = "xauto"; then
+            with_v4l=no
+        fi
+    fi
+else
+    # check if ./configure arguments are valid
+    have_quicktime=no
+    if test ! x"$with_quicktime" = "xno"; then
+        AC_MSG_WARN([unexpected arguments for option --with-quicktime, continuing assuming 'no'])
+    fi
+fi
+AC_SUBST(QUICKTIME_CFLAGS)
+AC_SUBST(QUICKTIME_LIBS)
+AM_CONDITIONAL([BUILD_QUICKTIME], [test x"$have_quicktime" = "xyes"])
+
+# prefer XINE over FFMPEG for video reading because it is quick, has a cleaner API
+# and allows for easy seeking with some formats
+if test x"$with_xine" = "xno"; then
+    have_xine=no
+    # XINE_LIBS=""
+else
+
+    # check if ./configure arguments are valid
+    if test x"$with_xine" = "xauto"; then
+       with_xine=yes
+    fi
+    if test x"$with_xine" = "xyes"; then
+        AC_CHECK_HEADER(xine.h,
+                        AC_CHECK_LIB(xine, xine_init,
+                                    [
+                                      have_xine=yes
+                                      AC_DEFINE(HAVE_XINE,,[Xine video library])
+                                      XINE_LIBS="-lxine"
+                                    ],
+                                    [ have_xine=no ]),
+                        [ have_xine=no ])
+    else
+        # if we get here then --with-xine was not called with 'yes','no' or 'auto'
+        AC_MSG_WARN([unexpected arguments for option --with-xine, continuing assuming 'no'])
+        have_xine=no
+    fi
+fi
+AC_SUBST(XINE_LIBS)
+AM_CONDITIONAL([BUILD_XINE], [test x"$have_xine" = "xyes"])
+
+# unfortunately, xine does not feature video writing,
+# so we have to resort to FFMPEG here
+if test x"$with_ffmpeg" = "xno"; then
+    have_ffmpeg=no
+    # FFMPEGLIBS=""
+else
+
+    # check if ./configure arguments are valid
+    if test x"$with_ffmpeg" = "xauto"; then
+       with_ffmpeg=yes
+    fi
+    if test x"$with_ffmpeg" = "xyes"; then
+        AC_CHECK_HEADER(ffmpeg/avcodec.h,
+                        AC_CHECK_LIB(avcodec, avcodec_decode_video,
+                                     [
+                                       AC_CHECK_LIB(avformat, av_open_input_file,
+                                                    [
+                                                      have_ffmpeg=yes
+                                                      AC_DEFINE(HAVE_FFMPEG,,[FFMpeg video library])
+                                                      FFMPEGLIBS="-lavcodec -lavformat"
+                                                    ],
+                                                    [ have_ffmpeg=no ],
+                                                    [-lavcodec])
+                                     ],
+                                     [ have_ffmpeg=no ]),
+                        [ have_ffmpeg=no ])
+    else
+        # if we get here then --with-ffmpeg was not called with 'yes','no' or 'auto'
+        AC_MSG_WARN([unexpected arguments for option --with-ffmpeg, continuing assuming 'no'])
+        have_ffmpeg=no
+    fi
+fi
+AC_SUBST(FFMPEGLIBS)
+AM_CONDITIONAL([BUILD_FFMPEG], [test x"$have_ffmpeg" = "xyes"])
+
+# IEEE1394 / FireWire video video i/o with libdc1394, libraw1394
+# (can be managed by QuickTime as well)
+if test x"$with_1394libs" = "xno"; then
+    have_raw1394=no
+    have_dc1394=no
+    # IEEE1394LIBS=""
+else
+
+    # check if ./configure arguments are valid
+    if test x"$with_1394libs" = "xauto"; then
+       with_1394libs=yes
+    fi
+    if test x"$with_1394libs" = "xyes"; then
+    
+        SAVELIBS="$LIBS"
+        have_raw1394=no
+        have_dc1394=no
+        
+        AC_CHECK_HEADER(libraw1394/raw1394.h,
+                        AC_CHECK_LIB(raw1394, raw1394_new_handle, 
+                                     [
+                                       have_raw1394=yes
+                                       LIBS="-lm -lraw1394 $LIBS"
+                                     ]))
+        
+        if test x"$have_raw1394" = "xyes"; then
+            AC_CHECK_HEADER(libdc1394/dc1394_control.h,
+                            AC_CHECK_LIB(dc1394_control, dc1394_camera_on, 
+                                         [
+                                           have_dc1394=yes
+                                           AC_DEFINE(HAVE_DC1394,,[IEEE1394 capturing support])
+                                           AC_EGREP_HEADER(do_extra_buffering, libdc1394/dc1394_control.h,
+                                                           [AC_DEFINE(HAVE_DC1394_095,,[libdc1394 0.9.4 or 0.9.5])])
+                                           IEEE1394LIBS="-lm -lraw1394 -ldc1394_control"
+                                         ]))
+        fi
+        
+        LIBS="$SAVELIBS"
+    else
+        # if we get here then --with-1394libs was not called with 'yes','no' or 'auto'
+        AC_MSG_WARN([unexpected arguments for option --with-1394libs, continuing assuming 'no'])
+        have_dc1394=no
+    fi
+fi
+AC_SUBST(IEEE1394LIBS)
+AM_CONDITIONAL([BUILD_DC1394], [test x"$have_dc1394" = "xyes"])
+
+# Video for Linux (V4L) 
+# we support version 1 and 2 currently
+if test x"$with_v4l" = "xno"; then
+    have_v4l=no
+    have_v4l2=no
+    have_v4l1or2=no
+else
+    # check if ./configure arguments are valid
+    if test x"$with_v4l" = "xauto"; then
+       with_v4l=yes
+    fi
+    if test x"$with_v4l" = "xyes"; then
+        AC_CHECK_HEADER([linux/videodev.h],
+                        [
+                          AC_DEFINE(HAVE_CAMV4L,,[V4L capturing support])
+                          have_v4l=yes
+                          have_v4l1or2=yes
+                        ],
+                        [ 
+                          have_v4l=no
+                          have_v4l1or2=no
+                        ])
+        AC_CHECK_HEADER([linux/videodev2.h],
+                        [
+                          AC_DEFINE(HAVE_CAMV4L2,,[V4L2 capturing support])
+                          have_v4l2=yes
+                          have_v4l1or2=yes
+                        ],
+                        [ have_v4l2=no ],
+                [[
+                #include <asm/types.h>
+                #include <sys/time.h>
+                ]])
+    else
+        # if we get here then --with-v4l was not called with 'yes','no' or 'auto'
+        AC_MSG_WARN([unexpected arguments for option --with-v4l, continuing assuming 'no'])
+		have_v4l=no
+		have_v4l2=no
+        have_v4l1or2=no
+    fi
+
+fi
+AM_CONDITIONAL([BUILD_V4L], [test x"$have_v4l1or2" = "xyes"])
+
+
+######################################################################
+# HighGUI dependencies for image I/O
+
 SAVELIBS="$LIBS"
 IMAGELIBS=""
 
@@ -134,163 +504,69 @@ AC_SUBST(IMAGELIBS)
 
 have_jpeg=no
 AC_CHECK_HEADER(jpeglib.h,
-    AC_CHECK_LIB(jpeg, jpeg_destroy_decompress,
-    [have_jpeg=yes
-    AC_DEFINE(HAVE_JPEG,,[IJG JPEG codec])
-    IMAGELIBS="$IMAGELIBS -ljpeg"]))
+                AC_CHECK_LIB(jpeg, jpeg_destroy_decompress,
+                             [
+                               have_jpeg=yes
+                               AC_DEFINE(HAVE_JPEG,,[IJG JPEG codec])
+                               IMAGELIBS="$IMAGELIBS -ljpeg"
+                             ]))
 
 have_zlib=no
-have_png=no
 AC_CHECK_HEADER(zlib.h,
-    AC_CHECK_LIB(z, gzopen,
-    [have_zlib=yes
-    AC_DEFINE(HAVE_ZLIB,,[LZ77 compression/decompression library (used for PNG)])
-    IMAGELIBS="$IMAGELIBS -lz -lm"
-    LIBS="$LIBS -lz -lm"]))
+                AC_CHECK_LIB(z, gzopen,
+                             [
+                               have_zlib=yes
+                               AC_DEFINE(HAVE_ZLIB,,[LZ77 compression/decompression library (used for PNG)])
+                               IMAGELIBS="$IMAGELIBS -lz -lm"
+                               LIBS="$LIBS -lz -lm"
+                             ]))
 
-AC_CHECK_HEADER(png.h, AC_DEFINE(HAVE_PNG_H,,[png.h needs to be included]))
-AC_CHECK_HEADER([libpng/png.h], AC_DEFINE(HAVE_LIBPNG_PNG_H,,[libpng/png.h needs to be included]))
-
-if test x"$ac_cv_header_png_h" = x"yes" -o x"$ac_cv_header_libpng_png_h" = x"yes"; then
+have_png=no
+AC_CHECK_HEADER(png.h, 
+                [
+                  AC_DEFINE(HAVE_PNG_H,,[png.h needs to be included])
+                  have_png=yes
+                ])
+AC_CHECK_HEADER([libpng/png.h], 
+                [
+                  AC_DEFINE(HAVE_LIBPNG_PNG_H,,[libpng/png.h needs to be included])
+                  have_png=yes
+                ])
+if test x"$have_png" = "xyes"; then
     AC_CHECK_LIB(png12, png_read_image,
-    [have_png=yes
-    AC_DEFINE(HAVE_PNG,,[PNG codec])
-    IMAGELIBS="-lpng12 $IMAGELIBS"
-    LIBS="-lpng12 $LIBS"
-    AC_CHECK_FUNCS(png_get_valid png_set_tRNS_to_alpha)])
+                 [
+                   have_png=yes
+                   AC_DEFINE(HAVE_PNG,,[PNG codec])
+                   IMAGELIBS="-lpng12 $IMAGELIBS"
+                   LIBS="-lpng12 $LIBS"
+                   AC_CHECK_FUNCS(png_get_valid png_set_tRNS_to_alpha)
+                 ],
+                 [ have_png=no ])
 fi
 
 have_tiff=no
 AC_CHECK_HEADER(tiff.h,
-    AC_CHECK_LIB(tiff, TIFFReadRGBAStrip,
-    [have_tiff=yes
-    AC_DEFINE(HAVE_TIFF,,[TIFF codec])
-    IMAGELIBS="$IMAGELIBS -ltiff"
-    LIBS="$LIBS -ltiff"]))
+                AC_CHECK_LIB(tiff, TIFFReadRGBAStrip,
+                             [
+                               have_tiff=yes
+                               AC_DEFINE(HAVE_TIFF,,[TIFF codec])
+                               IMAGELIBS="$IMAGELIBS -ltiff"
+                               LIBS="$LIBS -ltiff"
+                             ]))
 
-dnl Restore original LIBS settings...
+# Restore original LIBS settings...
 LIBS="$SAVELIBS"
 AC_SUBST(IMAGELIBS)
 
 
-dnl
-dnl ****************** GTK+ 2.x (or later) *********************
-dnl 
+######################################################################
+# SWIG wrappers
 
-PKG_CHECK_MODULES(GTK, "gtk+-2.0 gdk-pixbuf-2.0", [have_gtk=yes
-                  AC_DEFINE(HAVE_GTK,,[GTK+ 2.x toolkit])], have_gtk=no )
-AC_SUBST(GTK_CFLAGS)
-AC_SUBST(GTK_LIBS)
-
-PKG_CHECK_MODULES(GTHREAD, "gthread-2.0", [have_gthread=yes
-                  AC_DEFINE(HAVE_GTHREAD,,[GTK+ 2.0 Thread support])], have_gthread=no )
-AC_SUBST(GTHREAD_CFLAGS)
-AC_SUBST(GTHREAD_LIBS)
-
-										 
-dnl
-dnl ****************** FFMPEG configuration **********************
-dnl
-
-FFMPEGLIBS=""
-have_ffmpeg=no
-
-AC_CHECK_HEADER(ffmpeg/avcodec.h,
-    AC_CHECK_LIB(avcodec, avcodec_decode_video,
-    [AC_CHECK_LIB(avformat, av_open_input_file,
-    [have_ffmpeg=yes
-    AC_DEFINE(HAVE_FFMPEG,,[FFMpeg video codecs library])
-    FFMPEGLIBS="-lavcodec -lavformat"],,[-lavcodec])]))
-
-AC_SUBST(FFMPEGLIBS)
-AM_CONDITIONAL([BUILD_FFMPEG], [test x$have_ffmpeg = xyes])
-
-
-dnl
-dnl ****************** IEEE1394 support **************************
-dnl
-
-SAVELIBS="$LIBS"
-IEEE1394LIBS=""
-have_raw1394=no
-have_dc1394=no
-AC_CHECK_HEADER(libraw1394/raw1394.h,
-    AC_CHECK_LIB(raw1394, raw1394_new_handle, [have_raw1394=yes
-        LIBS="-lm -lraw1394 $LIBS"]))
-
-if test x"$have_raw1394" = x"yes"; then
-    AC_CHECK_HEADER(libdc1394/dc1394_control.h,
-        AC_CHECK_LIB(dc1394_control, dc1394_camera_on, [have_dc1394=yes
-        AC_DEFINE(HAVE_DC1394,,[IEEE1394 capturing support])
-    AC_EGREP_HEADER(do_extra_buffering, libdc1394/dc1394_control.h,
-    [AC_DEFINE(HAVE_DC1394_095,,[libdc1394 0.9.4 or 0.9.5])])
-        IEEE1394LIBS="-lm -lraw1394 -ldc1394_control"]))
-fi
-
-LIBS="$SAVELIBS"
-AC_SUBST(IEEE1394LIBS)
-AM_CONDITIONAL([BUILD_DC1394], [test x$have_dc1394 = xyes])
-
-
-dnl
-dnl ****************** V4L Support **************************
-dnl
-
-have_v4l=no
-have_v4l2=no
-have_v4l1or2=no
-AC_CHECK_HEADER([linux/videodev.h],
-                [
-                  AC_DEFINE(HAVE_CAMV4L,,[V4L capturing support])
-                  have_v4l=yes
-				  have_v4l1or2=yes
-                ],
-                [ have_v4l=no  ])
-AC_CHECK_HEADER([linux/videodev2.h],
-                [
-                  AC_DEFINE(HAVE_CAMV4L2,,[V4L2 capturing support])
-                  have_v4l2=yes
-				  have_v4l1or2=yes
-                ],
-                [ have_v4l2=no ],
-		[[
-		#include <asm/types.h>
-		#include <sys/time.h>
-		]])
-
-AM_CONDITIONAL([BUILD_V4L], [test x$have_v4l1or2 = xyes])
-
-
-dnl
-dnl ************** QuickTime configuration ******************
-dnl
-
-QUICKTIME_CFLAGS=
-QUICKTIME_LIBS=
-AC_CHECK_HEADER([QuickTime/QuickTime.h],
-                [
-                  AC_DEFINE(HAVE_QUICKTIME,,[Apple QuickTime])
-                  have_quicktime=yes
-                ],
-                [ have_quicktime=no ])
-if test x$have_quicktime = xyes; then
-  QUICKTIME_LIBS="-Xlinker -framework -Xlinker QuickTime -Xlinker -framework -Xlinker Carbon"
-fi
-
-AC_SUBST(QUICKTIME_CFLAGS)
-AC_SUBST(QUICKTIME_LIBS)
-AM_CONDITIONAL([BUILD_QUICKTIME], [test x$have_quicktime = xyes])
-
-
-dnl
-dnl ****************** SWIG wrappers ************************
-dnl
-setup_swig=no
-AC_ARG_ENABLE([python], 
-              [AS_HELP_STRING([--enable-python],[build python wrappers])],
-              [enable_python=$enableval],
-              [enable_python=no])
-if test x"$enable_python" = x"yes"; then
+# currently there is only python.
+# If additional wrapper languages / SWIG modules
+# get available for OpenCV, we will have a --with-LANGUAGE switch
+# for every wrapper language
+if test x"$with_python" = "xyes"; then
     AC_MSG_NOTICE([Checking for necessary tools to build python wrappers])
 
     # we need Python now
@@ -300,30 +576,61 @@ if test x"$enable_python" = x"yes"; then
     AZ_PYTHON_CSPEC()
     AZ_PYTHON_LSPEC()
 
-    # it would be nice to have SWIG on board
+    # check for swig python library
     SWIG_PYTHON()
-    setup_swig=yes
-fi
-AM_CONDITIONAL([BUILD_PYTHON_WRAPPERS], [test x$enable_python = x"yes"])
-
-dnl
-dnl *********** set up SWIG if wrappers are wanted ***********
-dnl
-if test x"$setup_swig" = x"yes" ; then
-    AC_MSG_NOTICE([Checking for SWIG])
-    AC_PATH_SWIG([1.3.24])
-    if test -n "$SWIG" ; then
-        SWIG_ENABLE_CXX()
-        SWIG_MULTI_MODULE_SUPPORT()
+    
+    # if not explicitly forbidden, check for swig also
+    if test x"$with_swig" = "xauto"; then
+       with_swig=yes
+    fi
+    
+    # okay now
+    have_python=yes
+else
+    # check if ./configure arguments are valid
+    if test x"$with_python" = "xno"; then
+        have_python=no
+    else
+        # if we get here then --with-python was not called with 'yes','no' or 'auto'
+        AC_MSG_WARN([unexpected arguments for option --with-python, continuing assuming 'no'])
+        have_python=no
     fi
 fi
-AM_CONDITIONAL([UPDATE_SWIG_WRAPPERS],  [test -n "$SWIG"])
+AM_CONDITIONAL([BUILD_PYTHON_WRAPPERS], [test x"$have_python" = "xyes"])
+
+# check for swig itself
+SWIG=""
+if test x"$with_swig" = "xyes"; then
+    AC_MSG_NOTICE([Checking for SWIG])
+    AC_PATH_SWIG([1.3.24])
+    if test -n "$SWIG"; then
+        SWIG_ENABLE_CXX()
+        SWIG_MULTI_MODULE_SUPPORT()
+        have_swig=yes
+    else
+        have_swig=no
+    fi
+else
+    if test x"$with_swig" = "xno"; then
+        have_swig=no
+    else
+        if test x"$with_swig" = "xauto"; then
+            # no (python) wrapper will be generated
+            # we don't need to check for SWIG
+            have_swig=no
+        else
+            # if we get here then --with-swig was not called with 'yes','no' or 'auto'
+            AC_MSG_WARN([unexpected arguments for option --with-swig, continuing assuming 'no'])
+            have_swig=no
+        fi
+    fi
+fi
+AM_CONDITIONAL([UPDATE_SWIG_WRAPPERS], [test x"$have_swig" = "xyes"])
 
 
-
-dnl
-dnl ****************** Parallelization ***********************
-dnl
+######################################################################
+# Parallelization
+#
 #CXXOPENMP="no"
 #
 #AC_ARG_WITH(openmp, dnl
@@ -375,36 +682,39 @@ apps/haartraining/src/Makefile
 AC_OUTPUT
 
 AC_MSG_RESULT([
-Configuration:
+General configuration ================================================
     Compiler:                 ${CXX} 
     CXXFLAGS:                 ${CXXFLAGS}
-
+    
     Install path:             ${prefix}
     
+HighGUI configuration ================================================
+
+    Windowing system --------------
+    Use Carbon / Mac OS X:    ${have_carbon}
     Use gtk+ 2.x:             ${have_gtk}
-    Use threaded HighGUI      ${have_gthread}
+    Use gthread:              ${have_gthread}
+    
+    Image I/O ---------------------
     Use libjpeg:              ${have_jpeg}
     Use zlib:                 ${have_zlib}
     Use libpng:               ${have_png}
     Use libtiff:              ${have_tiff}
+    
+    Video I/O ---------------------
+    Use QuickTime / Mac OS X: ${have_quicktime}
+    Use xine:                 ${have_xine}
     Use ffmpeg:               ${have_ffmpeg}
     Use dc1394 & raw1394:     ${have_dc1394}
     Use v4l:                  ${have_v4l}
     Use v4l2:                 ${have_v4l2}
-    Use QuickTime:            ${have_quicktime}
+    
+Wrappers for other languages =========================================
+    SWIG                      ${SWIG}
+    Python                    ${with_python}
 
-    Build wrappers for
-    - Python                  ${enable_python}])
-
-if test -n "$SWIG" ; then
-AC_MSG_RESULT([    SWIG is at                ${SWIG}
-])
-else
-AC_MSG_RESULT([    SWIG is at                No swig detected. Use existing files.
-])
-fi
-
-AC_MSG_RESULT([    Build demo apps           ${with_apps}
+Additional build settings ============================================
+    Build demo apps           ${enable_apps}
 
 Now run make ...
 ])
