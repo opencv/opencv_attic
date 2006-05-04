@@ -127,6 +127,14 @@ CVAPI(void) cvPyrSegmentation( IplImage* src, IplImage* dst,
                               int level, double threshold1,
                               double threshold2 );
 
+/* Filters image using meanshift algorithm */
+CVAPI(void) cvPyrMeanShiftFiltering( const CvArr* src, CvArr* dst, 
+    double sp0, double sr, int max_level CV_DEFAULT(1),
+    CvTermCriteria termcrit CV_DEFAULT(cvTermCriteria(CV_TERMCRIT_ITER+CV_TERMCRIT_EPS,5,1)));
+
+/* Segments image using seed "markers" */
+CVAPI(void) cvWatershed( const CvArr* image, CvArr* markers );
+
 
 #define CV_SCHARR -1
 #define CV_MAX_SOBEL_KSIZE 7
@@ -895,7 +903,8 @@ CVAPI(void)  cvCalcImageHomography( float* line, CvPoint3D32f* center,
                                     float* intrinsic, float* homography );
 
 #define CV_DIST_MASK_3   3
-#define CV_DIST_MASK_5   5 
+#define CV_DIST_MASK_5   5
+#define CV_DIST_MASK_PRECISE 0
 
 /* Applies distance transform to binary image */
 CVAPI(void)  cvDistTransform( const CvArr* src, CvArr* dst,

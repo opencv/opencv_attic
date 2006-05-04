@@ -441,6 +441,150 @@ icvGetDistanceTransformMask( int maskType, float *metrics )
 }
 
 
+static void
+icvTrueDistTrans( const CvMat* src, CvMat* dst )
+{
+    CvMat* buffer = 0;
+
+    CV_FUNCNAME( "cvDistTransform2" );
+
+    __BEGIN__;
+
+    int i, m, n;
+    int sstep, dstep;
+    const float inf = 1e6f;
+    int thread_count = cvGetNumThreads();
+    int pass1_sz, pass2_sz;
+
+    if( !CV_ARE_SIZES_EQ( src, dst ))
+        CV_ERROR( CV_StsUnmatchedSizes, "" );
+
+    if( CV_MAT_TYPE(src->type) != CV_8UC1 ||
+        CV_MAT_TYPE(dst->type) != CV_32FC1 )
+        CV_ERROR( CV_StsUnsupportedFormat,
+        "The input image must have 8uC1 type and the output one must have 32fC1 type" );
+
+    m = src->rows;
+    n = src->cols;
+
+    // (see stage 1 below):
+    // sqr_tab: 2*m, sat_tab: 3*m + 1, d: m*thread_count,
+    pass1_sz = src->rows*(5 + thread_count) + 1;
+    // (see stage 2):
+    // sqr_tab & inv_tab: n each; f & v: n*thread_count each; z: (n+1)*thread_count
+    pass2_sz = src->cols*(2 + thread_count*3) + thread_count;
+    CV_CALL( buffer = cvCreateMat( 1, MAX(pass1_sz, pass2_sz), CV_32FC1 ));
+
+    sstep = src->step;
+    dstep = dst->step / sizeof(float);
+
+    // stage 1: compute 1d distance transform of each column
+    {
+    float* sqr_tab = buffer->data.fl;
+    int* sat_tab = (int*)(sqr_tab + m*2);
+    const int shift = m*2;
+
+    for( i = 0; i < m; i++ )
+        sqr_tab[i] = (float)(i*i);
+    for( i = m; i < m*2; i++ )
+        sqr_tab[i] = inf;
+    for( i = 0; i < shift; i++ )
+        sat_tab[i] = 0;
+    for( ; i <= m*3; i++ )
+        sat_tab[i] = i - shift;
+
+#ifdef _OPENMP
+    #pragma omp parallel for num_threads(thread_count)
+#endif
+    for( i = 0; i < n; i++ )
+    {
+        const uchar* sptr = src->data.ptr + i + (m-1)*sstep;
+        float* dptr = dst->data.fl + i;
+        int* d = (int*)(sat_tab + m*3+1+m*cvGetThreadNum());
+        int j, dist = m-1;
+
+        for( j = m-1; j >= 0; j--, sptr -= sstep )
+        {
+            dist = (dist + 1) & (sptr[0] == 0 ? 0 : -1);
+            d[j] = dist;
+        }
+
+        dist = m-1;
+        for( j = 0; j < m; j++, dptr += dstep )
+        {
+            dist = dist + 1 - sat_tab[dist + 1 - d[j] + shift];
+            d[j] = dist;
+            dptr[0] = sqr_tab[dist];
+        }
+    }
+    }
+
+    // stage 2: compute modified distance transform for each row
+    {
+    float* inv_tab = buffer->data.fl;
+    float* sqr_tab = inv_tab + n;
+
+    inv_tab[0] = sqr_tab[0] = 0.f;
+    for( i = 1; i < n; i++ )
+    {
+        inv_tab[i] = (float)(0.5/i);
+        sqr_tab[i] = (float)(i*i);
+    }
+
+#ifdef _OPENMP
+    #pragma omp parallel for num_threads(thread_count), schedule(dynamic)
+#endif
+    for( i = 0; i < m; i++ )
+    {
+        float* d = (float*)(dst->data.ptr + i*dst->step);
+        float* f = sqr_tab + n + (n*3+1)*cvGetThreadNum();
+        float* z = f + n;
+        int* v = (int*)(z + n + 1);
+        int p, q, k;
+
+        v[0] = 0;
+        z[0] = -inf;
+        z[1] = inf;
+        f[0] = d[0];
+
+        for( q = 1, k = 0; q < n; q++ )
+        {
+            float fq = d[q];
+            f[q] = fq;
+
+            for(;;k--)
+            {
+                p = v[k];
+                float s = (fq + sqr_tab[q] - d[p] - sqr_tab[p])*inv_tab[q - p];
+                if( s > z[k] )
+                {
+                    k++;
+                    v[k] = q;
+                    z[k] = s;
+                    z[k+1] = inf;
+                    break;
+                }
+            }
+        }
+
+        for( q = 0, k = 0; q < n; q++ )
+        {
+            while( z[k+1] < q )
+                k++;
+            p = v[k];
+            d[q] = sqr_tab[abs(q - p)] + f[p];
+        }
+    }
+    }
+
+    cvPow( dst, dst, 0.5 );
+
+    __END__;
+
+    cvReleaseMat( &buffer );
+}
+
+
 /*********************************** IPP functions *********************************/
 
 icvDistanceTransform_3x3_8u32f_C1R_t icvDistanceTransform_3x3_8u32f_C1R_p = 0;
@@ -488,14 +632,20 @@ cvDistTransform( const void* srcarr, void* dstarr,
     if( !CV_ARE_SIZES_EQ( src, dst ))
         CV_ERROR( CV_StsUnmatchedSizes, "the source and the destination images must be of the same size" );
 
-    if( maskSize != CV_DIST_MASK_3 && maskSize != CV_DIST_MASK_5 )
-        CV_ERROR( CV_StsBadSize, "Mask size should be 3 or 5" );
+    if( maskSize != CV_DIST_MASK_3 && maskSize != CV_DIST_MASK_5 && maskSize != CV_DIST_MASK_PRECISE )
+        CV_ERROR( CV_StsBadSize, "Mask size should be 3 or 5 or 0 (presize)" );
 
     if( distType == CV_DIST_C || distType == CV_DIST_L1 )
         maskSize = !labels ? CV_DIST_MASK_3 : CV_DIST_MASK_5;
     else if( distType == CV_DIST_L2 && labels )
         maskSize = CV_DIST_MASK_5;
 
+    if( maskSize == CV_DIST_MASK_PRECISE )
+    {
+        CV_CALL( icvTrueDistTrans( src, dst ));
+        EXIT;
+    }
+    
     if( labels )
     {
         CV_CALL( labels = cvGetMat( labels, &lstub ));
