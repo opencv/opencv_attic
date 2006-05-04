@@ -1103,7 +1103,7 @@ icvFilterRowSymm_##flavor( const srctype* src,                      \
 
 
 ICV_FILTER_ROW_SYMM( 8u32f, uchar, float, CV_8TO32F )
-ICV_FILTER_ROW_SYMM( 16s32f, short, float, CV_8TO32F )
+ICV_FILTER_ROW_SYMM( 16s32f, short, float, CV_NOP )
 
 
 static void
