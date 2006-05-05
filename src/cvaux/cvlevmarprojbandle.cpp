@@ -46,6 +46,8 @@
 #include <limits.h>
 //#include "cv.h"
 
+#include <stdio.h>
+
 void icvReconstructPoints4DStatus(CvMat** projPoints, CvMat **projMatrs, CvMat** presPoints, CvMat *points4D,int numImages,CvMat **projError=0);
 
 /* Valery Mosyagin */
