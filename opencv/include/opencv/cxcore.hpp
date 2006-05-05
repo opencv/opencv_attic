@@ -147,20 +147,28 @@ public:
 
     uchar* roi_row(int y)
     {
+        assert(0<=y);
+        assert(!image ?
+                1 : image->roi ?
+                y<image->roi->height : y<image->height);
+        
         return !image ? 0 :
-            !image->roi ? assert(0<=y && y<image->height),
+            !image->roi ?
                 (uchar*)(image->imageData + y*image->widthStep) :
-            assert(0<=y && y<image->roi->height),
                 (uchar*)(image->imageData + (y+image->roi->yOffset)*image->widthStep +
                 image->roi->xOffset*((image->depth & 255)>>3)*image->nChannels);
     }
 
     const uchar* roi_row(int y) const
     {
+        assert(0<=y);
+        assert(!image ?
+                1 : image->roi ?
+                y<image->roi->height : y<image->height); 
+
         return !image ? 0 :
-            !image->roi ? assert(0<=y && y<image->height),
+            !image->roi ?
                 (const uchar*)(image->imageData + y*image->widthStep) :
-            assert(0<=y && y<image->roi->height),
                 (const uchar*)(image->imageData + (y+image->roi->yOffset)*image->widthStep +
                 image->roi->xOffset*((image->depth & 255)>>3)*image->nChannels);
     }
