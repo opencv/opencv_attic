@@ -46,6 +46,9 @@
 #include <limits.h>
 //#include "cv.h"
 //#include "windows.h"
+
+#include <stdio.h>
+
 /* Valery Mosyagin */
 
 /* Function defenitions */
