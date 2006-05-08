@@ -457,8 +457,8 @@ static CvArr * PyObject_to_CvArr(PyObject * obj, bool * freearg){
     PyObject * to_add[2];
 
     /* extract the pointers we want to add to the returned tuple */
-    to_add[1] = SWIG_NewPointerObj ($1, $descriptor(CvSize *), 0);
-    to_add[2] = PyInt_FromLong (*$2);
+    to_add[0] = SWIG_NewPointerObj ($1, $descriptor(CvSize *), 0);
+    to_add[1] = PyInt_FromLong (*$2);
 
 	$result = SWIG_AppendResult($result, to_add, 2);
 }
