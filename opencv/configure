@@ -23362,7 +23362,13 @@ echo "$as_me: PYTHON_LSPEC=${az_python_output}" >&6;}
     fi
 
 
-    # check for swig python library
+    # if not explicitly forbidden, check for swig also
+    if test x"$with_swig" = "xauto"; then
+       with_swig=yes
+    fi
+
+    if test x"$with_swig" = "xyes"; then
+        # check for swig python library
 
 	# Extract the first word of "swig", so it can be a program name with args.
 set dummy swig; ac_word=$2
@@ -23465,10 +23471,6 @@ echo "$as_me: WARNING: SWIG version number unknown - couldn't set python libs" >
 
 
 
-
-    # if not explicitly forbidden, check for swig also
-    if test x"$with_swig" = "xauto"; then
-       with_swig=yes
     fi
 
     # okay now
