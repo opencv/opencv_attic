@@ -21,8 +21,13 @@ PyObject * SWIG_SetResult(PyObject * result, PyObject * obj);
 /** helper function to append one or more objects to the swig $result array */
 PyObject * SWIG_AppendResult(PyObject * result, PyObject ** to_add, int num);
 
-/** helper function to convert python scalar or sequence to CvScalar */
-int PyObject_to_CvScalar(PyObject * obj, CvScalar * val);
+/** helper function to convert python scalar or sequence to int, float or double arrays */
+double PyObject_AsDouble(PyObject * obj);
+long PyObject_AsLong(PyObject * obj);
+
+int PyObject_AsDoubleArray(PyObject * obj, double * array, int len);
+int PyObject_AsLongArray(  PyObject * obj, int * array, int len);
+int PyObject_AsFloatArray(PyObject * obj, float * array, int len);
 
 /** convert python sequence to CvArr -- returned array must be freed by the caller */
 CvArr * PySequence_to_CvArr( PyObject * obj );

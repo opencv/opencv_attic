@@ -445,6 +445,7 @@ CV_VALUE = _cv.CV_VALUE
 CV_ARRAY = _cv.CV_ARRAY
 CV_DIST_MASK_3 = _cv.CV_DIST_MASK_3
 CV_DIST_MASK_5 = _cv.CV_DIST_MASK_5
+CV_DIST_MASK_PRECISE = _cv.CV_DIST_MASK_PRECISE
 CV_THRESH_BINARY = _cv.CV_THRESH_BINARY
 CV_THRESH_BINARY_INV = _cv.CV_THRESH_BINARY_INV
 CV_THRESH_TRUNC = _cv.CV_THRESH_TRUNC
@@ -642,7 +643,7 @@ class IplImage(_object):
             if self.thisown: destroy(self)
         except: pass
 
-    def __add__(*args): 
+    def __add__(*args):
         """
         __add__(self, CvArr arg)
         __add__(self, CvScalar arg)
@@ -650,7 +651,7 @@ class IplImage(_object):
         """
         return _cv.IplImage___add__(*args)
 
-    def __sub__(*args): 
+    def __sub__(*args):
         """
         __sub__(self, CvArr arg)
         __sub__(self, CvScalar arg)
@@ -658,7 +659,7 @@ class IplImage(_object):
         """
         return _cv.IplImage___sub__(*args)
 
-    def __radd__(*args): 
+    def __radd__(*args):
         """
         __radd__(self, CvArr arg)
         __radd__(self, CvScalar arg)
@@ -666,7 +667,7 @@ class IplImage(_object):
         """
         return _cv.IplImage___radd__(*args)
 
-    def __rsub__(*args): 
+    def __rsub__(*args):
         """
         __rsub__(self, CvArr arg)
         __rsub__(self, CvScalar arg)
@@ -674,35 +675,35 @@ class IplImage(_object):
         """
         return _cv.IplImage___rsub__(*args)
 
-    def __mul__(*args): 
+    def __mul__(*args):
         """
         __mul__(self,  arg) -> CvArr
         __mul__(self, double arg) -> CvArr
         """
         return _cv.IplImage___mul__(*args)
 
-    def __rmul__(*args): 
+    def __rmul__(*args):
         """
         __rmul__(self, CvArr arg)
         __rmul__(self, double arg) -> CvArr
         """
         return _cv.IplImage___rmul__(*args)
 
-    def __div__(*args): 
+    def __div__(*args):
         """
         __div__(self, CvArr arg)
         __div__(self, double arg) -> CvArr
         """
         return _cv.IplImage___div__(*args)
 
-    def __rdiv__(*args): 
+    def __rdiv__(*args):
         """
         __rdiv__(self, CvArr arg)
         __rdiv__(self, double arg) -> CvArr
         """
         return _cv.IplImage___rdiv__(*args)
 
-    def __or__(*args): 
+    def __or__(*args):
         """
         __or__(self, CvArr arg)
         __or__(self, CvScalar arg)
@@ -710,7 +711,7 @@ class IplImage(_object):
         """
         return _cv.IplImage___or__(*args)
 
-    def __and__(*args): 
+    def __and__(*args):
         """
         __and__(self, CvArr arg)
         __and__(self, CvScalar arg)
@@ -718,7 +719,7 @@ class IplImage(_object):
         """
         return _cv.IplImage___and__(*args)
 
-    def __xor__(*args): 
+    def __xor__(*args):
         """
         __xor__(self, CvArr arg)
         __xor__(self, CvScalar arg)
@@ -726,102 +727,102 @@ class IplImage(_object):
         """
         return _cv.IplImage___xor__(*args)
 
-    def __ror__(*args): 
+    def __ror__(*args):
         """
         __ror__(self, CvScalar arg)
         __ror__(self, double arg)
         """
         return _cv.IplImage___ror__(*args)
 
-    def __rand__(*args): 
+    def __rand__(*args):
         """
         __rand__(self, CvScalar arg)
         __rand__(self, double arg)
         """
         return _cv.IplImage___rand__(*args)
 
-    def __rxor__(*args): 
+    def __rxor__(*args):
         """
         __rxor__(self, CvScalar arg)
         __rxor__(self, double arg)
         """
         return _cv.IplImage___rxor__(*args)
 
-    def __eq__(*args): 
+    def __eq__(*args):
         """
         __eq__(self,  arg) -> CvArr
         __eq__(self, double arg) -> CvArr
         """
         return _cv.IplImage___eq__(*args)
 
-    def __gt__(*args): 
+    def __gt__(*args):
         """
         __gt__(self,  arg) -> CvArr
         __gt__(self, double arg) -> CvArr
         """
         return _cv.IplImage___gt__(*args)
 
-    def __ge__(*args): 
+    def __ge__(*args):
         """
         __ge__(self,  arg) -> CvArr
         __ge__(self, double arg) -> CvArr
         """
         return _cv.IplImage___ge__(*args)
 
-    def __lt__(*args): 
+    def __lt__(*args):
         """
         __lt__(self,  arg) -> CvArr
         __lt__(self, double arg) -> CvArr
         """
         return _cv.IplImage___lt__(*args)
 
-    def __le__(*args): 
+    def __le__(*args):
         """
         __le__(self,  arg) -> CvArr
         __le__(self, double arg) -> CvArr
         """
         return _cv.IplImage___le__(*args)
 
-    def __ne__(*args): 
+    def __ne__(*args):
         """
         __ne__(self,  arg) -> CvArr
         __ne__(self, double arg) -> CvArr
         """
         return _cv.IplImage___ne__(*args)
 
-    def __req__(*args): 
+    def __req__(*args):
         """__req__(self, double arg) -> CvArr"""
         return _cv.IplImage___req__(*args)
 
-    def __rgt__(*args): 
+    def __rgt__(*args):
         """__rgt__(self, double arg) -> CvArr"""
         return _cv.IplImage___rgt__(*args)
 
-    def __rge__(*args): 
+    def __rge__(*args):
         """__rge__(self, double arg) -> CvArr"""
         return _cv.IplImage___rge__(*args)
 
-    def __rlt__(*args): 
+    def __rlt__(*args):
         """__rlt__(self, double arg) -> CvArr"""
         return _cv.IplImage___rlt__(*args)
 
-    def __rle__(*args): 
+    def __rle__(*args):
         """__rle__(self, double arg) -> CvArr"""
         return _cv.IplImage___rle__(*args)
 
-    def __rne__(*args): 
+    def __rne__(*args):
         """__rne__(self, double arg) -> CvArr"""
         return _cv.IplImage___rne__(*args)
 
-    def __pow__(*args): 
+    def __pow__(*args):
         """__pow__(self, double arg)"""
         return _cv.IplImage___pow__(*args)
 
-    def __str__(*args): 
+    def __str__(*args):
         """__str__(self) -> char"""
         return _cv.IplImage___str__(*args)
 
-    def __setitem__(*args): 
+    def __setitem__(*args):
         """
         __setitem__(self, PyObject object, double val)
         __setitem__(self, PyObject object, CvScalar val)
@@ -829,15 +830,15 @@ class IplImage(_object):
         """
         return _cv.IplImage___setitem__(*args)
 
-    def __getitem__(*args): 
+    def __getitem__(*args):
         """__getitem__(self, PyObject object)"""
         return _cv.IplImage___getitem__(*args)
 
-    def imageData_set(*args): 
+    def imageData_set(*args):
         """imageData_set(self, PyObject object)"""
         return _cv.IplImage_imageData_set(*args)
 
-    def imageData_get(*args): 
+    def imageData_get(*args):
         """imageData_get(self) -> PyObject"""
         return _cv.IplImage_imageData_get(*args)
 
@@ -1008,7 +1009,7 @@ class CvMat(_object):
             if self.thisown: destroy(self)
         except: pass
 
-    def __add__(*args): 
+    def __add__(*args):
         """
         __add__(self, CvArr arg) -> CvMat
         __add__(self, CvScalar arg) -> CvMat
@@ -1016,7 +1017,7 @@ class CvMat(_object):
         """
         return _cv.CvMat___add__(*args)
 
-    def __sub__(*args): 
+    def __sub__(*args):
         """
         __sub__(self, CvArr arg) -> CvMat
         __sub__(self, CvScalar arg) -> CvMat
@@ -1024,7 +1025,7 @@ class CvMat(_object):
         """
         return _cv.CvMat___sub__(*args)
 
-    def __radd__(*args): 
+    def __radd__(*args):
         """
         __radd__(self, CvArr arg) -> CvMat
         __radd__(self, CvScalar arg) -> CvMat
@@ -1032,7 +1033,7 @@ class CvMat(_object):
         """
         return _cv.CvMat___radd__(*args)
 
-    def __rsub__(*args): 
+    def __rsub__(*args):
         """
         __rsub__(self, CvArr arg) -> CvMat
         __rsub__(self, CvScalar arg) -> CvMat
@@ -1040,35 +1041,35 @@ class CvMat(_object):
         """
         return _cv.CvMat___rsub__(*args)
 
-    def __mul__(*args): 
+    def __mul__(*args):
         """
         __mul__(self, CvMat arg) -> CvArr
         __mul__(self, double arg) -> CvArr
         """
         return _cv.CvMat___mul__(*args)
 
-    def __rmul__(*args): 
+    def __rmul__(*args):
         """
         __rmul__(self, CvArr arg) -> CvMat
         __rmul__(self, double arg) -> CvArr
         """
         return _cv.CvMat___rmul__(*args)
 
-    def __div__(*args): 
+    def __div__(*args):
         """
         __div__(self, CvArr arg) -> CvMat
         __div__(self, double arg) -> CvArr
         """
         return _cv.CvMat___div__(*args)
 
-    def __rdiv__(*args): 
+    def __rdiv__(*args):
         """
         __rdiv__(self, CvArr arg) -> CvMat
         __rdiv__(self, double arg) -> CvArr
         """
         return _cv.CvMat___rdiv__(*args)
 
-    def __or__(*args): 
+    def __or__(*args):
         """
         __or__(self, CvArr arg) -> CvMat
         __or__(self, CvScalar arg) -> CvMat
@@ -1076,7 +1077,7 @@ class CvMat(_object):
         """
         return _cv.CvMat___or__(*args)
 
-    def __and__(*args): 
+    def __and__(*args):
         """
         __and__(self, CvArr arg) -> CvMat
         __and__(self, CvScalar arg) -> CvMat
@@ -1084,7 +1085,7 @@ class CvMat(_object):
         """
         return _cv.CvMat___and__(*args)
 
-    def __xor__(*args): 
+    def __xor__(*args):
         """
         __xor__(self, CvArr arg) -> CvMat
         __xor__(self, CvScalar arg) -> CvMat
@@ -1092,102 +1093,102 @@ class CvMat(_object):
         """
         return _cv.CvMat___xor__(*args)
 
-    def __ror__(*args): 
+    def __ror__(*args):
         """
         __ror__(self, CvScalar arg) -> CvMat
         __ror__(self, double arg) -> CvMat
         """
         return _cv.CvMat___ror__(*args)
 
-    def __rand__(*args): 
+    def __rand__(*args):
         """
         __rand__(self, CvScalar arg) -> CvMat
         __rand__(self, double arg) -> CvMat
         """
         return _cv.CvMat___rand__(*args)
 
-    def __rxor__(*args): 
+    def __rxor__(*args):
         """
         __rxor__(self, CvScalar arg) -> CvMat
         __rxor__(self, double arg) -> CvMat
         """
         return _cv.CvMat___rxor__(*args)
 
-    def __eq__(*args): 
+    def __eq__(*args):
         """
         __eq__(self, CvMat arg) -> CvArr
         __eq__(self, double arg) -> CvArr
         """
         return _cv.CvMat___eq__(*args)
 
-    def __gt__(*args): 
+    def __gt__(*args):
         """
         __gt__(self, CvMat arg) -> CvArr
         __gt__(self, double arg) -> CvArr
         """
         return _cv.CvMat___gt__(*args)
 
-    def __ge__(*args): 
+    def __ge__(*args):
         """
         __ge__(self, CvMat arg) -> CvArr
         __ge__(self, double arg) -> CvArr
         """
         return _cv.CvMat___ge__(*args)
 
-    def __lt__(*args): 
+    def __lt__(*args):
         """
         __lt__(self, CvMat arg) -> CvArr
         __lt__(self, double arg) -> CvArr
         """
         return _cv.CvMat___lt__(*args)
 
-    def __le__(*args): 
+    def __le__(*args):
         """
         __le__(self, CvMat arg) -> CvArr
         __le__(self, double arg) -> CvArr
         """
         return _cv.CvMat___le__(*args)
 
-    def __ne__(*args): 
+    def __ne__(*args):
         """
         __ne__(self, CvMat arg) -> CvArr
         __ne__(self, double arg) -> CvArr
         """
         return _cv.CvMat___ne__(*args)
 
-    def __req__(*args): 
+    def __req__(*args):
         """__req__(self, double arg) -> CvArr"""
         return _cv.CvMat___req__(*args)
 
-    def __rgt__(*args): 
+    def __rgt__(*args):
         """__rgt__(self, double arg) -> CvArr"""
         return _cv.CvMat___rgt__(*args)
 
-    def __rge__(*args): 
+    def __rge__(*args):
         """__rge__(self, double arg) -> CvArr"""
         return _cv.CvMat___rge__(*args)
 
-    def __rlt__(*args): 
+    def __rlt__(*args):
         """__rlt__(self, double arg) -> CvArr"""
         return _cv.CvMat___rlt__(*args)
 
-    def __rle__(*args): 
+    def __rle__(*args):
         """__rle__(self, double arg) -> CvArr"""
         return _cv.CvMat___rle__(*args)
 
-    def __rne__(*args): 
+    def __rne__(*args):
         """__rne__(self, double arg) -> CvArr"""
         return _cv.CvMat___rne__(*args)
 
-    def __pow__(*args): 
+    def __pow__(*args):
         """__pow__(self, double arg) -> CvMat"""
         return _cv.CvMat___pow__(*args)
 
-    def __str__(*args): 
+    def __str__(*args):
         """__str__(self) -> char"""
         return _cv.CvMat___str__(*args)
 
-    def __setitem__(*args): 
+    def __setitem__(*args):
         """
         __setitem__(self, PyObject object, double val)
         __setitem__(self, PyObject object, CvScalar val)
@@ -1195,7 +1196,7 @@ class CvMat(_object):
         """
         return _cv.CvMat___setitem__(*args)
 
-    def __getitem__(*args): 
+    def __getitem__(*args):
         """__getitem__(self, PyObject object) -> CvMat"""
         return _cv.CvMat___getitem__(*args)
 
@@ -4619,6 +4620,290 @@ def cvSetNumThreads(*args):
 def cvGetThreadNum(*args):
     """cvGetThreadNum() -> int"""
     return _cv.cvGetThreadNum(*args)
+class CvImage(_object):
+    """Proxy of C++ CvImage class"""
+    __swig_setmethods__ = {}
+    __setattr__ = lambda self, name, value: _swig_setattr(self, CvImage, name, value)
+    __swig_getmethods__ = {}
+    __getattr__ = lambda self, name: _swig_getattr(self, CvImage, name)
+    def __repr__(self):
+        return "<%s.%s; proxy of C++ CvImage instance at %s>" % (self.__class__.__module__, self.__class__.__name__, self.this,)
+    def __init__(self, *args):
+        """
+        __init__(self) -> CvImage
+        __init__(self, CvSize size, int depth, int channels) -> CvImage
+        __init__(self,  img) -> CvImage
+        __init__(self, CvImage img) -> CvImage
+        __init__(self, char filename, char imgname=0) -> CvImage
+        __init__(self, char filename) -> CvImage
+        __init__(self, CvFileStorage fs, char mapname, char imgname) -> CvImage
+        __init__(self, CvFileStorage fs, char seqname, int idx) -> CvImage
+        """
+        _swig_setattr(self, CvImage, 'this', _cv.new_CvImage(*args))
+        _swig_setattr(self, CvImage, 'thisown', 1)
+    def __del__(self, destroy=_cv.delete_CvImage):
+        """__del__(self)"""
+        try:
+            if self.thisown: destroy(self)
+        except: pass
+
+    def clone(*args):
+        """clone(self) -> CvImage"""
+        return _cv.CvImage_clone(*args)
+
+    def attach(*args):
+        """
+        attach(self,  img, bool use_refcount=True)
+        attach(self,  img)
+        """
+        return _cv.CvImage_attach(*args)
+
+    def detach(*args):
+        """detach(self)"""
+        return _cv.CvImage_detach(*args)
+
+    def read(*args):
+        """
+        read(self, char filename, char imgname=0) -> bool
+        read(self, char filename) -> bool
+        read(self, CvFileStorage fs, char mapname, char imgname) -> bool
+        read(self, CvFileStorage fs, char seqname, int idx) -> bool
+        """
+        return _cv.CvImage_read(*args)
+
+    def write(*args):
+        """
+        write(self, char filename, char imgname)
+        write(self, CvFileStorage fs, char imgname)
+        """
+        return _cv.CvImage_write(*args)
+
+    def show(*args):
+        """show(self, char window_name)"""
+        return _cv.CvImage_show(*args)
+
+    def is_valid(*args):
+        """is_valid(self) -> bool"""
+        return _cv.CvImage_is_valid(*args)
+
+    def width(*args):
+        """width(self) -> int"""
+        return _cv.CvImage_width(*args)
+
+    def height(*args):
+        """height(self) -> int"""
+        return _cv.CvImage_height(*args)
+
+    def roi_size(*args):
+        """roi_size(self) -> CvSize"""
+        return _cv.CvImage_roi_size(*args)
+
+    def roi(*args):
+        """roi(self) -> CvRect"""
+        return _cv.CvImage_roi(*args)
+
+    def coi(*args):
+        """coi(self) -> int"""
+        return _cv.CvImage_coi(*args)
+
+    def set_roi(*args):
+        """set_roi(self, CvRect roi)"""
+        return _cv.CvImage_set_roi(*args)
+
+    def reset_roi(*args):
+        """reset_roi(self)"""
+        return _cv.CvImage_reset_roi(*args)
+
+    def set_coi(*args):
+        """set_coi(self, int coi)"""
+        return _cv.CvImage_set_coi(*args)
+
+    def depth(*args):
+        """depth(self) -> int"""
+        return _cv.CvImage_depth(*args)
+
+    def channels(*args):
+        """channels(self) -> int"""
+        return _cv.CvImage_channels(*args)
+
+    def pix_size(*args):
+        """pix_size(self) -> int"""
+        return _cv.CvImage_pix_size(*args)
+
+    def data(*args):
+        """
+        data(self) -> uchar
+        data(self) -> uchar
+        """
+        return _cv.CvImage_data(*args)
+
+    def step(*args):
+        """step(self) -> int"""
+        return _cv.CvImage_step(*args)
+
+    def origin(*args):
+        """origin(self) -> int"""
+        return _cv.CvImage_origin(*args)
+
+    def roi_row(*args):
+        """
+        roi_row(self, int y) -> uchar
+        roi_row(self, int y) -> uchar
+        """
+        return _cv.CvImage_roi_row(*args)
+
+
+class CvImagePtr(CvImage):
+    def __init__(self, this):
+        _swig_setattr(self, CvImage, 'this', this)
+        if not hasattr(self,"thisown"): _swig_setattr(self, CvImage, 'thisown', 0)
+        _swig_setattr(self, CvImage,self.__class__,CvImage)
+_cv.CvImage_swigregister(CvImagePtr)
+
+class CvMatrix(_object):
+    """Proxy of C++ CvMatrix class"""
+    __swig_setmethods__ = {}
+    __setattr__ = lambda self, name, value: _swig_setattr(self, CvMatrix, name, value)
+    __swig_getmethods__ = {}
+    __getattr__ = lambda self, name: _swig_getattr(self, CvMatrix, name)
+    def __repr__(self):
+        return "<%s.%s; proxy of C++ CvMatrix instance at %s>" % (self.__class__.__module__, self.__class__.__name__, self.this,)
+    def __init__(self, *args):
+        """
+        __init__(self) -> CvMatrix
+        __init__(self, int rows, int cols, int type) -> CvMatrix
+        __init__(self, int rows, int cols, int type, CvMat hdr, void data=0, 
+            int step=0x7fffffff) -> CvMatrix
+        __init__(self, int rows, int cols, int type, CvMat hdr, void data=0) -> CvMatrix
+        __init__(self, int rows, int cols, int type, CvMat hdr) -> CvMatrix
+        __init__(self, int rows, int cols, int type, CvMemStorage storage, 
+            bool alloc_data=True) -> CvMatrix
+        __init__(self, int rows, int cols, int type, CvMemStorage storage) -> CvMatrix
+        __init__(self, int rows, int cols, int type, void data, int step=0x7fffffff) -> CvMatrix
+        __init__(self, int rows, int cols, int type, void data) -> CvMatrix
+        __init__(self, CvMat m) -> CvMatrix
+        __init__(self, CvMatrix m) -> CvMatrix
+        __init__(self, char filename, char matname=0) -> CvMatrix
+        __init__(self, char filename) -> CvMatrix
+        __init__(self, CvFileStorage fs, char mapname, char matname) -> CvMatrix
+        __init__(self, CvFileStorage fs, char seqname, int idx) -> CvMatrix
+        """
+        _swig_setattr(self, CvMatrix, 'this', _cv.new_CvMatrix(*args))
+        _swig_setattr(self, CvMatrix, 'thisown', 1)
+    def __del__(self, destroy=_cv.delete_CvMatrix):
+        """__del__(self)"""
+        try:
+            if self.thisown: destroy(self)
+        except: pass
+
+    def clone(*args):
+        """clone(self) -> CvMatrix"""
+        return _cv.CvMatrix_clone(*args)
+
+    def set(*args):
+        """set(self, CvMat m, bool add_ref)"""
+        return _cv.CvMatrix_set(*args)
+
+    def addref(*args):
+        """addref(self)"""
+        return _cv.CvMatrix_addref(*args)
+
+    def release(*args):
+        """release(self)"""
+        return _cv.CvMatrix_release(*args)
+
+    def read(*args):
+        """
+        read(self, char filename, char matname=0) -> bool
+        read(self, char filename) -> bool
+        read(self, CvFileStorage fs, char mapname, char matname) -> bool
+        read(self, CvFileStorage fs, char seqname, int idx) -> bool
+        """
+        return _cv.CvMatrix_read(*args)
+
+    def write(*args):
+        """
+        write(self, char filename, char matname)
+        write(self, CvFileStorage fs, char matname)
+        """
+        return _cv.CvMatrix_write(*args)
+
+    def show(*args):
+        """show(self, char window_name)"""
+        return _cv.CvMatrix_show(*args)
+
+    def is_valid(*args):
+        """is_valid(self) -> bool"""
+        return _cv.CvMatrix_is_valid(*args)
+
+    def rows(*args):
+        """rows(self) -> int"""
+        return _cv.CvMatrix_rows(*args)
+
+    def cols(*args):
+        """cols(self) -> int"""
+        return _cv.CvMatrix_cols(*args)
+
+    def size(*args):
+        """size(self) -> CvSize"""
+        return _cv.CvMatrix_size(*args)
+
+    def type(*args):
+        """type(self) -> int"""
+        return _cv.CvMatrix_type(*args)
+
+    def depth(*args):
+        """depth(self) -> int"""
+        return _cv.CvMatrix_depth(*args)
+
+    def channels(*args):
+        """channels(self) -> int"""
+        return _cv.CvMatrix_channels(*args)
+
+    def pix_size(*args):
+        """pix_size(self) -> int"""
+        return _cv.CvMatrix_pix_size(*args)
+
+    def data(*args):
+        """
+        data(self) -> uchar
+        data(self) -> uchar
+        """
+        return _cv.CvMatrix_data(*args)
+
+    def step(*args):
+        """step(self) -> int"""
+        return _cv.CvMatrix_step(*args)
+
+    def set_data(*args):
+        """
+        set_data(self, void data, int step=0x7fffffff)
+        set_data(self, void data)
+        """
+        return _cv.CvMatrix_set_data(*args)
+
+    def row(*args):
+        """
+        row(self, int i) -> uchar
+        row(self, int i) -> uchar
+        """
+        return _cv.CvMatrix_row(*args)
+
+
+class CvMatrixPtr(CvMatrix):
+    def __init__(self, this):
+        _swig_setattr(self, CvMatrix, 'this', this)
+        if not hasattr(self,"thisown"): _swig_setattr(self, CvMatrix, 'thisown', 0)
+        _swig_setattr(self, CvMatrix,self.__class__,CvMatrix)
+_cv.CvMatrix_swigregister(CvMatrixPtr)
+
+
+def cvSetImageIOFunctions(*args):
+    """
+    cvSetImageIOFunctions(CvLoadImageFunc _load_image, CvLoadImageMFunc _load_image_m, 
+        CvSaveImageFunc _save_image, CvShowImageFunc _show_image) -> int
+    """
+    return _cv.cvSetImageIOFunctions(*args)
 class CvMoments(_object):
     """Proxy of C++ CvMoments class"""
     __swig_setmethods__ = {}
@@ -5594,6 +5879,17 @@ def cvPyrSegmentation(*args):
     """
     return _cv.cvPyrSegmentation(*args)
 
+def cvPyrMeanShiftFiltering(*args):
+    """
+    cvPyrMeanShiftFiltering(CvArr src, CvArr dst, double sp0, double sr, int max_level=1, 
+        CvTermCriteria termcrit=cvTermCriteria(1 +2,5,1))
+    """
+    return _cv.cvPyrMeanShiftFiltering(*args)
+
+def cvWatershed(*args):
+    """cvWatershed(CvArr image, CvArr markers)"""
+    return _cv.cvWatershed(*args)
+
 def cvSobel(*args):
     """cvSobel(CvArr src, CvArr dst, int xorder, int yorder, int aperture_size=3)"""
     return _cv.cvSobel(*args)
@@ -6384,7 +6680,7 @@ class CvBaseImageFilter(_object):
             if self.thisown: destroy(self)
         except: pass
 
-    def init(*args): 
+    def init(*args):
         """
         init(self, int _max_width, int _src_type, int _dst_type, bool _is_separable, 
             CvSize _ksize, CvPoint _anchor=cvPoint(-1,-1), 
@@ -6399,11 +6695,11 @@ class CvBaseImageFilter(_object):
         """
         return _cv.CvBaseImageFilter_init(*args)
 
-    def clear(*args): 
+    def clear(*args):
         """clear(self)"""
         return _cv.CvBaseImageFilter_clear(*args)
 
-    def process(*args): 
+    def process(*args):
         """
         process(self, CvMat _src, CvMat _dst, CvRect _src_roi=cvRect(0,0,-1,-1), 
             CvPoint _dst_origin=cvPoint(0,0), int _flags=0) -> int
@@ -6414,35 +6710,35 @@ class CvBaseImageFilter(_object):
         """
         return _cv.CvBaseImageFilter_process(*args)
 
-    def get_src_type(*args): 
+    def get_src_type(*args):
         """get_src_type(self) -> int"""
         return _cv.CvBaseImageFilter_get_src_type(*args)
 
-    def get_dst_type(*args): 
+    def get_dst_type(*args):
         """get_dst_type(self) -> int"""
         return _cv.CvBaseImageFilter_get_dst_type(*args)
 
-    def get_work_type(*args): 
+    def get_work_type(*args):
         """get_work_type(self) -> int"""
         return _cv.CvBaseImageFilter_get_work_type(*args)
 
-    def get_kernel_size(*args): 
+    def get_kernel_size(*args):
         """get_kernel_size(self) -> CvSize"""
         return _cv.CvBaseImageFilter_get_kernel_size(*args)
 
-    def get_anchor(*args): 
+    def get_anchor(*args):
         """get_anchor(self) -> CvPoint"""
         return _cv.CvBaseImageFilter_get_anchor(*args)
 
-    def get_width(*args): 
+    def get_width(*args):
         """get_width(self) -> int"""
         return _cv.CvBaseImageFilter_get_width(*args)
 
-    def get_x_filter_func(*args): 
+    def get_x_filter_func(*args):
         """get_x_filter_func(self) -> CvRowFilterFunc"""
         return _cv.CvBaseImageFilter_get_x_filter_func(*args)
 
-    def get_y_filter_func(*args): 
+    def get_y_filter_func(*args):
         """get_y_filter_func(self) -> CvColumnFilterFunc"""
         return _cv.CvBaseImageFilter_get_y_filter_func(*args)
 
@@ -6480,7 +6776,7 @@ class CvSepFilter(CvBaseImageFilter):
         """
         _swig_setattr(self, CvSepFilter, 'this', _cv.new_CvSepFilter(*args))
         _swig_setattr(self, CvSepFilter, 'thisown', 1)
-    def init(*args): 
+    def init(*args):
         """
         init(self, int _max_width, int _src_type, int _dst_type, CvMat _kx, 
             CvMat _ky, CvPoint _anchor=cvPoint(-1,-1), 
@@ -6495,7 +6791,7 @@ class CvSepFilter(CvBaseImageFilter):
         """
         return _cv.CvSepFilter_init(*args)
 
-    def init_deriv(*args): 
+    def init_deriv(*args):
         """
         init_deriv(self, int _max_width, int _src_type, int _dst_type, int dx, 
             int dy, int aperture_size, int flags=0)
@@ -6504,30 +6800,30 @@ class CvSepFilter(CvBaseImageFilter):
         """
         return _cv.CvSepFilter_init_deriv(*args)
 
-    def init_gaussian(*args): 
+    def init_gaussian(*args):
         """
         init_gaussian(self, int _max_width, int _src_type, int _dst_type, int gaussian_size, 
             double sigma)
         """
         return _cv.CvSepFilter_init_gaussian(*args)
 
-    def clear(*args): 
+    def clear(*args):
         """clear(self)"""
         return _cv.CvSepFilter_clear(*args)
 
-    def get_x_kernel(*args): 
+    def get_x_kernel(*args):
         """get_x_kernel(self) -> CvMat"""
         return _cv.CvSepFilter_get_x_kernel(*args)
 
-    def get_y_kernel(*args): 
+    def get_y_kernel(*args):
         """get_y_kernel(self) -> CvMat"""
         return _cv.CvSepFilter_get_y_kernel(*args)
 
-    def get_x_kernel_flags(*args): 
+    def get_x_kernel_flags(*args):
         """get_x_kernel_flags(self) -> int"""
         return _cv.CvSepFilter_get_x_kernel_flags(*args)
 
-    def get_y_kernel_flags(*args): 
+    def get_y_kernel_flags(*args):
         """get_y_kernel_flags(self) -> int"""
         return _cv.CvSepFilter_get_y_kernel_flags(*args)
 
@@ -6539,12 +6835,33 @@ class CvSepFilter(CvBaseImageFilter):
     INTEGER = _cv.CvSepFilter_INTEGER
     NORMALIZE_KERNEL = _cv.CvSepFilter_NORMALIZE_KERNEL
     FLIP_KERNEL = _cv.CvSepFilter_FLIP_KERNEL
-    __swig_getmethods__["init_gaussian_kernel"] = lambda x: _cv.CvSepFilter_init_gaussian_kernel
-    if _newclass:init_gaussian_kernel = staticmethod(_cv.CvSepFilter_init_gaussian_kernel)
-    __swig_getmethods__["init_sobel_kernel"] = lambda x: _cv.CvSepFilter_init_sobel_kernel
-    if _newclass:init_sobel_kernel = staticmethod(_cv.CvSepFilter_init_sobel_kernel)
-    __swig_getmethods__["init_scharr_kernel"] = lambda x: _cv.CvSepFilter_init_scharr_kernel
-    if _newclass:init_scharr_kernel = staticmethod(_cv.CvSepFilter_init_scharr_kernel)
+    def init_gaussian_kernel(*args):
+        """
+        init_gaussian_kernel(CvMat kernel, double sigma=-1)
+        init_gaussian_kernel(CvMat kernel)
+        """
+        return _cv.CvSepFilter_init_gaussian_kernel(*args)
+
+    if _newclass:init_gaussian_kernel = staticmethod(init_gaussian_kernel)
+    __swig_getmethods__["init_gaussian_kernel"] = lambda x: init_gaussian_kernel
+    def init_sobel_kernel(*args):
+        """
+        init_sobel_kernel(CvMat _kx, CvMat _ky, int dx, int dy, int flags=0)
+        init_sobel_kernel(CvMat _kx, CvMat _ky, int dx, int dy)
+        """
+        return _cv.CvSepFilter_init_sobel_kernel(*args)
+
+    if _newclass:init_sobel_kernel = staticmethod(init_sobel_kernel)
+    __swig_getmethods__["init_sobel_kernel"] = lambda x: init_sobel_kernel
+    def init_scharr_kernel(*args):
+        """
+        init_scharr_kernel(CvMat _kx, CvMat _ky, int dx, int dy, int flags=0)
+        init_scharr_kernel(CvMat _kx, CvMat _ky, int dx, int dy)
+        """
+        return _cv.CvSepFilter_init_scharr_kernel(*args)
+
+    if _newclass:init_scharr_kernel = staticmethod(init_scharr_kernel)
+    __swig_getmethods__["init_scharr_kernel"] = lambda x: init_scharr_kernel
     def __del__(self, destroy=_cv.delete_CvSepFilter):
         """__del__(self)"""
         try:
@@ -6604,7 +6921,7 @@ class CvLinearFilter(CvBaseImageFilter):
         """
         _swig_setattr(self, CvLinearFilter, 'this', _cv.new_CvLinearFilter(*args))
         _swig_setattr(self, CvLinearFilter, 'thisown', 1)
-    def init(*args): 
+    def init(*args):
         """
         init(self, int _max_width, int _src_type, int _dst_type, CvMat _kernel, 
             CvPoint _anchor=cvPoint(-1,-1), int _border_mode=1, 
@@ -6617,19 +6934,19 @@ class CvLinearFilter(CvBaseImageFilter):
         """
         return _cv.CvLinearFilter_init(*args)
 
-    def clear(*args): 
+    def clear(*args):
         """clear(self)"""
         return _cv.CvLinearFilter_clear(*args)
 
-    def get_kernel(*args): 
+    def get_kernel(*args):
         """get_kernel(self) -> CvMat"""
         return _cv.CvLinearFilter_get_kernel(*args)
 
-    def get_kernel_sparse_buf(*args): 
+    def get_kernel_sparse_buf(*args):
         """get_kernel_sparse_buf(self) -> uchar"""
         return _cv.CvLinearFilter_get_kernel_sparse_buf(*args)
 
-    def get_kernel_sparse_count(*args): 
+    def get_kernel_sparse_count(*args):
         """get_kernel_sparse_count(self) -> int"""
         return _cv.CvLinearFilter_get_kernel_sparse_count(*args)
 
@@ -6673,7 +6990,7 @@ class CvBoxFilter(CvBaseImageFilter):
         """
         _swig_setattr(self, CvBoxFilter, 'this', _cv.new_CvBoxFilter(*args))
         _swig_setattr(self, CvBoxFilter, 'thisown', 1)
-    def init(*args): 
+    def init(*args):
         """
         init(self, int _max_width, int _src_type, int _dst_type, bool _normalized, 
             CvSize _ksize, CvPoint _anchor=cvPoint(-1,-1), 
@@ -6688,19 +7005,19 @@ class CvBoxFilter(CvBaseImageFilter):
         """
         return _cv.CvBoxFilter_init(*args)
 
-    def is_normalized(*args): 
+    def is_normalized(*args):
         """is_normalized(self) -> bool"""
         return _cv.CvBoxFilter_is_normalized(*args)
 
-    def get_scale(*args): 
+    def get_scale(*args):
         """get_scale(self) -> double"""
         return _cv.CvBoxFilter_get_scale(*args)
 
-    def get_sum_buf(*args): 
+    def get_sum_buf(*args):
         """get_sum_buf(self) -> uchar"""
         return _cv.CvBoxFilter_get_sum_buf(*args)
 
-    def get_sum_count_ptr(*args): 
+    def get_sum_count_ptr(*args):
         """get_sum_count_ptr(self) -> int"""
         return _cv.CvBoxFilter_get_sum_count_ptr(*args)
 
@@ -6741,7 +7058,7 @@ class CvLaplaceFilter(CvSepFilter):
         """
         _swig_setattr(self, CvLaplaceFilter, 'this', _cv.new_CvLaplaceFilter(*args))
         _swig_setattr(self, CvLaplaceFilter, 'thisown', 1)
-    def init(*args): 
+    def init(*args):
         """
         init(self, int _max_width, int _src_type, int _dst_type, bool _normalized, 
             int _ksize, int _border_mode=1, 
@@ -6753,11 +7070,11 @@ class CvLaplaceFilter(CvSepFilter):
         """
         return _cv.CvLaplaceFilter_init(*args)
 
-    def is_normalized(*args): 
+    def is_normalized(*args):
         """is_normalized(self) -> bool"""
         return _cv.CvLaplaceFilter_is_normalized(*args)
 
-    def is_basic_laplacian(*args): 
+    def is_basic_laplacian(*args):
         """is_basic_laplacian(self) -> bool"""
         return _cv.CvLaplaceFilter_is_basic_laplacian(*args)
 
@@ -6806,7 +7123,7 @@ class CvMorphology(CvBaseImageFilter):
         """
         _swig_setattr(self, CvMorphology, 'this', _cv.new_CvMorphology(*args))
         _swig_setattr(self, CvMorphology, 'thisown', 1)
-    def init(*args): 
+    def init(*args):
         """
         init(self, int _operation, int _max_width, int _src_dst_type, 
             int _element_shape, CvMat _element, CvSize _ksize=cvSize(0,0), 
@@ -6826,27 +7143,27 @@ class CvMorphology(CvBaseImageFilter):
         """
         return _cv.CvMorphology_init(*args)
 
-    def clear(*args): 
+    def clear(*args):
         """clear(self)"""
         return _cv.CvMorphology_clear(*args)
 
-    def get_element(*args): 
+    def get_element(*args):
         """get_element(self) -> CvMat"""
         return _cv.CvMorphology_get_element(*args)
 
-    def get_element_shape(*args): 
+    def get_element_shape(*args):
         """get_element_shape(self) -> int"""
         return _cv.CvMorphology_get_element_shape(*args)
 
-    def get_operation(*args): 
+    def get_operation(*args):
         """get_operation(self) -> int"""
         return _cv.CvMorphology_get_operation(*args)
 
-    def get_element_sparse_buf(*args): 
+    def get_element_sparse_buf(*args):
         """get_element_sparse_buf(self) -> uchar"""
         return _cv.CvMorphology_get_element_sparse_buf(*args)
 
-    def get_element_sparse_count(*args): 
+    def get_element_sparse_count(*args):
         """get_element_sparse_count(self) -> int"""
         return _cv.CvMorphology_get_element_sparse_count(*args)
 
@@ -6858,8 +7175,15 @@ class CvMorphology(CvBaseImageFilter):
     GRAYSCALE = _cv.CvMorphology_GRAYSCALE
     ERODE = _cv.CvMorphology_ERODE
     DILATE = _cv.CvMorphology_DILATE
-    __swig_getmethods__["init_binary_element"] = lambda x: _cv.CvMorphology_init_binary_element
-    if _newclass:init_binary_element = staticmethod(_cv.CvMorphology_init_binary_element)
+    def init_binary_element(*args):
+        """
+        init_binary_element(CvMat _element, int _element_shape, CvPoint _anchor=cvPoint(-1,-1))
+        init_binary_element(CvMat _element, int _element_shape)
+        """
+        return _cv.CvMorphology_init_binary_element(*args)
+
+    if _newclass:init_binary_element = staticmethod(init_binary_element)
+    __swig_getmethods__["init_binary_element"] = lambda x: init_binary_element
     def __del__(self, destroy=_cv.delete_CvMorphology):
         """__del__(self)"""
         try:
