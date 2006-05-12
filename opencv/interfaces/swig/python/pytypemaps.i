@@ -59,6 +59,7 @@ static CvArr * PyObject_to_CvArr(PyObject * obj, bool * freearg){
 	return cvarr;
 }
 %}
+
 %typemap(in) (CvArr *) (bool freearg=false){
 	$1 = PyObject_to_CvArr($input, &freearg);
 }
@@ -91,13 +92,13 @@ static CvArr * PyObject_to_CvArr(PyObject * obj, bool * freearg){
 %apply CvMat *OUTPUT {CvMat * header};
 %apply CvMat *OUTPUT {CvMat * submat};
 
-/* map scalar or sequence to CvScalar */
+/* map scalar or sequence to CvScalar, CvPoint2D32f, CvPoint */
 %typemap(in) (CvScalar) {
 	CvScalar val;
 	CvScalar * ptr;
 	if( SWIG_ConvertPtr($input, (void **)&ptr, $descriptor( CvScalar * ), 0 ) == -1)
 	{
-		if(PyObject_to_CvScalar($input, &val)==-1){
+		if(PyObject_AsDoubleArray($input, val.val, 4)==-1){
 	    	SWIG_exception (SWIG_TypeError, "could not convert to CvScalar");
 			return NULL;
 		}
@@ -107,6 +108,36 @@ static CvArr * PyObject_to_CvArr(PyObject * obj, bool * freearg){
 	}
 	$1=val;
 }
+%typemap(in) (CvPoint) {
+	CvPoint val;
+	CvPoint *ptr;
+	if( SWIG_ConvertPtr($input, (void**)&ptr, $descriptor(CvPoint *), 0) == -1) {
+		if(PyObject_AsLongArray($input, (int *) &val, 2)==-1){
+			SWIG_exception (SWIG_TypeError, "could not convert to CvPoint");
+			return NULL;
+		}
+	}
+	else{
+		val = *ptr;
+	}
+	$1 = val;
+}
+
+%typemap(in) (CvPoint2D32f) {
+    CvPoint2D32f val;
+    CvPoint2D32f *ptr;
+    if( SWIG_ConvertPtr($input, (void**)&ptr, $descriptor(CvPoint *), 0) == -1) {
+        if(PyObject_AsFloatArray($input, (float *) &val, 2)==-1){
+            SWIG_exception (SWIG_TypeError, "could not convert to CvPoint");
+            return NULL;
+        }
+    }
+    else{
+        val = *ptr;
+    }
+    $1 = val;
+}
+
 
 /* typemap for cvGetDims */
 %typemap(in) (const CvArr * arr, int * sizes = NULL) (CvArr * myarr, int mysizes[CV_MAX_DIM]){
@@ -363,7 +394,7 @@ static CvArr * PyObject_to_CvArr(PyObject * obj, bool * freearg){
     /* extract the pointer we want to add to the returned tuple */
     to_add = SWIG_NewPointerObj (*$1, $descriptor(CvSeq *), 0);
 
-    $result = SWIG_AppendResult($result, &to_add, 1);
+	$result = SWIG_AppendResult($result, &to_add, 1);
 }
 
 /**
@@ -437,7 +468,7 @@ static CvArr * PyObject_to_CvArr(PyObject * obj, bool * freearg){
     /* extract the pointer we want to add to the returned tuple */
     to_add = SWIG_NewPointerObj ($1, $descriptor(CvFont *), 0);
 
-    $result = SWIG_AppendResult($result, &to_add, 1);
+	$result = SWIG_AppendResult($result, &to_add, 1);
 }
 
 /**
@@ -457,10 +488,10 @@ static CvArr * PyObject_to_CvArr(PyObject * obj, bool * freearg){
     PyObject * to_add[2];
 
     /* extract the pointers we want to add to the returned tuple */
-    to_add[0] = SWIG_NewPointerObj ($1, $descriptor(CvSize *), 0);
-    to_add[1] = PyInt_FromLong (*$2);
+    to_add[1] = SWIG_NewPointerObj ($1, $descriptor(CvSize *), 0);
+    to_add[2] = PyInt_FromLong (*$2);
 
-    $result = SWIG_AppendResult($result, to_add, 2);
+	$result = SWIG_AppendResult($result, to_add, 2);
 }
 
 
@@ -499,7 +530,7 @@ static CvArr * PyObject_to_CvArr(PyObject * obj, bool * freearg){
 					    $descriptor(CvPoint2D32f *), 0));
     }
 
-    $result = SWIG_AppendResult($result, &to_add, 1);
+	$result = SWIG_AppendResult($result, &to_add, 1);
 }
 
 /**
@@ -531,7 +562,7 @@ static CvArr * PyObject_to_CvArr(PyObject * obj, bool * freearg){
 		PyList_SetItem (to_add, i, PyBool_FromLong ($1 [i]));
     }
 
-    $result = SWIG_AppendResult($result, &to_add, 1); 
+	$result = SWIG_AppendResult($result, &to_add, 1); 
 }
 
 /* map one list of points to the two parameters dimenssion/sizes
@@ -650,7 +681,7 @@ static CvArr * PyObject_to_CvArr(PyObject * obj, bool * freearg){
 					    $descriptor(CvPoint2D32f *), 0));
     }
 
-    $result = SWIG_AppendResult( $result, &to_add, 1);
+	$result = SWIG_AppendResult( $result, &to_add, 1);
 }
 
 #if 0
@@ -677,7 +708,7 @@ static CvArr * PyObject_to_CvArr(PyObject * obj, bool * freearg){
     /* extract the pointers we want to add to the returned tuple */
     to_add_1 = SWIG_NewPointerObj ($1, $descriptor(CvPoint2D32f *), 0);
 
-    $result = SWIG_AppendResult($result, &to_add_1, 1);
+	$result = SWIG_AppendResult($result, &to_add_1, 1);
 }
 #endif
 
