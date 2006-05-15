@@ -415,12 +415,19 @@ static AVStream *icv_add_video_stream_FFMPEG(AVFormatContext *oc, int codec_tag,
 		return NULL;
 	}
 
+#if LIBAVFORMAT_BUILD > 4628
 	c = st->codec;
-
-    if(codec_tag)
-		c->codec_tag=codec_tag;
-
+#else
+	c = &(st->codec);
+#endif
+#if LIBAVFORMAT_BUILD > 4621 
 	codec_id = av_guess_codec(oc->oformat, NULL, oc->filename, NULL, CODEC_TYPE_VIDEO);
+#else
+	codec_id = oc->oformat->video_codec;
+#endif
+
+    if(codec_tag) c->codec_tag=codec_tag;
+
 	c->codec_id = (CodecID) codec_id;
 	codec = avcodec_find_encoder(c->codec_id);
 
@@ -443,6 +450,7 @@ static AVStream *icv_add_video_stream_FFMPEG(AVFormatContext *oc, int codec_tag,
 		frame_rate_base*=10;
 		frame_rate=cvRound(fps*frame_rate_base);
 	}
+#if LIBAVFORMAT_BUILD > 4752
     c->time_base.den = frame_rate;
     c->time_base.num = frame_rate_base;
 	/* adjust time base for supported framerates */
@@ -462,6 +470,10 @@ static AVStream *icv_add_video_stream_FFMPEG(AVFormatContext *oc, int codec_tag,
 		c->time_base.den= best->num;
 		c->time_base.num= best->den;
 	}
+#else
+	c->frame_rate = frame_rate;
+	c->frame_rate_base = frame_rate_base;
+#endif
 
 	c->gop_size = 12; /* emit one intra frame every twelve frames at most */
 	c->pix_fmt = (PixelFormat) pixel_format;
@@ -540,7 +552,11 @@ CV_IMPL CvVideoWriter* cvCreateVideoWriter( const char * filename, int fourcc,
     AVCodec *codec;
     AVCodecContext *c;
 
-    c = writer->video_st->codec;
+#if LIBAVFORMAT_BUILD > 4628
+    c = (writer->video_st->codec);
+#else
+    c = &(writer->video_st->codec);
+#endif
 
     /* find the video encoder */
     codec = avcodec_find_encoder(c->codec_id);
@@ -605,7 +621,11 @@ CV_IMPL CvVideoWriter* cvCreateVideoWriter( const char * filename, int fourcc,
 int icv_av_write_frame_FFMPEG( AVFormatContext * oc, AVStream * video_st, uint8_t * outbuf, uint32_t outbuf_size, AVFrame * picture ){
 	CV_FUNCNAME("icv_av_write_frame_FFMPEG");
 
+#if LIBAVFORMAT_BUILD > 4628
 	AVCodecContext * c = video_st->codec;
+#else
+	AVCodecContext * c = &(video_st->codec);
+#endif
 	int out_size;
 	int ret;
 
@@ -630,8 +650,11 @@ int icv_av_write_frame_FFMPEG( AVFormatContext * oc, AVStream * video_st, uint8_
         if (out_size > 0) {
             AVPacket pkt;
             av_init_packet(&pkt);
-
-            pkt.pts= av_rescale_q(c->coded_frame->pts, c->time_base, video_st->time_base);
+#if LIBAVFORMAT_BUILD > 4752 
+            pkt.pts = av_rescale_q(c->coded_frame->pts, c->time_base, video_st->time_base);
+#else 
+			pkt.pts = c->coded_frame->pts;
+#endif
             if(c->coded_frame->key_frame)
                 pkt.flags |= PKT_FLAG_KEY;
             pkt.stream_index= video_st->index;
@@ -663,8 +686,11 @@ CV_IMPL int cvWriteFrame( CvVideoWriter * writer, const IplImage * image )
 
 	// typecast from opaque data type to implemented struct
 	CvAVI_FFMPEG_Writer * mywriter = (CvAVI_FFMPEG_Writer*) writer;
+#if LIBAVFORMAT_BUILD > 4628
     AVCodecContext *c = mywriter->video_st->codec;
-
+#else
+	AVCodecContext *c = &(mywriter->video_st->codec);
+#endif
 	// check parameters
 	assert ( image );
 	assert ( image->nChannels == 3 );
@@ -719,7 +745,11 @@ CV_IMPL void cvReleaseVideoWriter( CvVideoWriter ** writer )
 	av_write_trailer(mywriter->oc);
 
 	// free pictures
+#if LIBAVFORMAT_BUILD > 4628
 	if( mywriter->video_st->codec->pix_fmt != PIX_FMT_BGR24){
+#else
+	if( mywriter->video_st->codec.pix_fmt != PIX_FMT_BGR24){
+#endif
 		cvFree(&(mywriter->picture->data[0]));
 	}
 	av_free(mywriter->picture);
@@ -729,7 +759,11 @@ CV_IMPL void cvReleaseVideoWriter( CvVideoWriter ** writer )
     }
 
 	/* close codec */
+#if LIBAVFORMAT_BUILD > 4628
 	avcodec_close(mywriter->video_st->codec);
+#else
+	avcodec_close(&(mywriter->video_st->codec));
+#endif
     
 	av_free(mywriter->outbuf);
 

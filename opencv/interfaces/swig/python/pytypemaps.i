@@ -59,6 +59,7 @@ static CvArr * PyObject_to_CvArr(PyObject * obj, bool * freearg){
 	return cvarr;
 }
 %}
+
 %typemap(in) (CvArr *) (bool freearg=false){
 	$1 = PyObject_to_CvArr($input, &freearg);
 }
@@ -91,13 +92,13 @@ static CvArr * PyObject_to_CvArr(PyObject * obj, bool * freearg){
 %apply CvMat *OUTPUT {CvMat * header};
 %apply CvMat *OUTPUT {CvMat * submat};
 
-/* map scalar or sequence to CvScalar */
+/* map scalar or sequence to CvScalar, CvPoint2D32f, CvPoint */
 %typemap(in) (CvScalar) {
 	CvScalar val;
 	CvScalar * ptr;
 	if( SWIG_ConvertPtr($input, (void **)&ptr, $descriptor( CvScalar * ), 0 ) == -1)
 	{
-		if(PyObject_to_CvScalar($input, &val)==-1){
+		if(PyObject_AsDoubleArray($input, val.val, 4)==-1){
 	    	SWIG_exception (SWIG_TypeError, "could not convert to CvScalar");
 			return NULL;
 		}
@@ -107,6 +108,36 @@ static CvArr * PyObject_to_CvArr(PyObject * obj, bool * freearg){
 	}
 	$1=val;
 }
+%typemap(in) (CvPoint) {
+	CvPoint val;
+	CvPoint *ptr;
+	if( SWIG_ConvertPtr($input, (void**)&ptr, $descriptor(CvPoint *), 0) == -1) {
+		if(PyObject_AsLongArray($input, (int *) &val, 2)==-1){
+			SWIG_exception (SWIG_TypeError, "could not convert to CvPoint");
+			return NULL;
+		}
+	}
+	else{
+		val = *ptr;
+	}
+	$1 = val;
+}
+
+%typemap(in) (CvPoint2D32f) {
+    CvPoint2D32f val;
+    CvPoint2D32f *ptr;
+    if( SWIG_ConvertPtr($input, (void**)&ptr, $descriptor(CvPoint *), 0) == -1) {
+        if(PyObject_AsFloatArray($input, (float *) &val, 2)==-1){
+            SWIG_exception (SWIG_TypeError, "could not convert to CvPoint");
+            return NULL;
+        }
+    }
+    else{
+        val = *ptr;
+    }
+    $1 = val;
+}
+
 
 /* typemap for cvGetDims */
 %typemap(in) (const CvArr * arr, int * sizes = NULL) (CvArr * myarr, int mysizes[CV_MAX_DIM]){

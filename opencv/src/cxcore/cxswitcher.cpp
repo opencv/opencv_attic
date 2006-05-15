@@ -615,9 +615,8 @@ cvGetModuleInfo( const char* name, const char **version, const char **plugin_lis
 
             for( module = icvFirstModule; module != 0; module = module->next )
             {
-                int n = 0;
-                sprintf( ptr, "%s: %s%s%n", module->name, module->version, module->next ? ", " : "", &n );
-                ptr += n;
+                sprintf( ptr, "%s: %s%s", module->name, module->version, module->next ? ", " : "" );
+                ptr += strlen(ptr);
             }
 
             *version = joint_verinfo;
@@ -632,9 +631,8 @@ cvGetModuleInfo( const char* name, const char **version, const char **plugin_lis
         for( i = 0; i < CV_PLUGIN_MAX; i++ )
             if( plugins[i].handle != 0 )
             {
-                int n = 0;
-                sprintf( ptr, "%s, %n", plugins[i].name, &n );
-                ptr += n;
+                sprintf( ptr, "%s, ", plugins[i].name );
+                ptr += strlen(ptr);
             }
 
         if( ptr > plugin_list_buf )

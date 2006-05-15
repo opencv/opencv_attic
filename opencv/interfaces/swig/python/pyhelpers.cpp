@@ -208,51 +208,66 @@ CvRect PySlice_to_CvRect(CvArr * src, PyObject * idx_object){
 	return cvRect(lower[1],lower[0], upper[1]-lower[1], upper[0]-lower[0]);
 }
 
-int PyObject_to_CvScalar(PyObject * obj, CvScalar * val){
-	// First check if it is a CvScalar
-	CvScalar * ptr;
-	if(PyFloat_Check(obj)){
-		*val = cvScalarAll( PyFloat_AsDouble(obj) );
-	}
-	else if(PyInt_Check(obj)){
-		*val = cvScalarAll( PyInt_AsLong(obj) );
-	}
-	else if(PyTuple_Check(obj)){
-		for(int i=0; i<PyTuple_Size(obj) && i<4; i++){
-			PyObject * o = PyTuple_GetItem(obj, i);
-			if(PyFloat_Check(o)){
-				val->val[i] = PyFloat_AsDouble(o);
-			}
-			else if(PyInt_Check(o)){
-				val->val[i] = PyInt_AsLong(o);
-			}
-			else{
-				PyErr_SetString(PyExc_TypeError, "PyObject_CvScalar: Expected a number");
-				return -1;
-			}
+double PyObject_AsDouble(PyObject * obj){
+	if(PyNumber_Check(obj)){
+		if(PyFloat_Check(obj)){
+			return PyFloat_AsDouble(obj);
+		}
+		else if(PyInt_Check(obj)){
+			return (double) PyInt_AsLong(obj);
+		}
+		else if(PyLong_Check(obj)){
+			return (double) PyLong_AsLong(obj);
 		}
 	}
-	else if(PyList_Check(obj)){
-		for(int i=0; i<PyList_Size(obj) && i<4; i++){
-			PyObject * o = PyList_GetItem(obj, i);
-			if(PyFloat_Check(o)){
-				val->val[i] = PyFloat_AsDouble(o);
-			}
-			else if(PyInt_Check(o)){
-				val->val[i] = PyInt_AsLong(o);
-			}
-			else{
-				PyErr_SetString(PyExc_TypeError, "PyObject_CvScalar: Expected a number");
-				return -1;
-			}
-		}
-	}
-	else {
-		PyErr_SetString(PyExc_TypeError, "PyObject_CvScalar: Expected a number or sequence");
-		return -1;
-	}
-	return 0;
+	PyErr_SetString( PyExc_TypeError, "Could not convert python object to Double");
+	return -1;
 }
+
+long PyObject_AsLong(PyObject * obj){
+    if(PyNumber_Check(obj)){
+        if(PyFloat_Check(obj)){
+            return (long) PyFloat_AsDouble(obj);
+        }
+        else if(PyInt_Check(obj)){
+            return PyInt_AsLong(obj);
+        }
+        else if(PyLong_Check(obj)){
+            return PyLong_AsLong(obj);
+        }
+    }
+	PyErr_SetString( PyExc_TypeError, "Could not convert python object to Long");
+	return -1;
+}
+
+#define PyObject_AsArrayImpl(func, ctype, ptype)                              \
+	int func(PyObject * obj, ctype * array, int len){                         \
+	if(PyNumber_Check(obj)){                                                  \
+		memset( array, 0, sizeof(ctype)*len );                                \
+		array[0] = PyObject_As##ptype( obj );                                 \
+	}                                                                         \
+	else if(PySequence_Check(obj)){                                           \
+		int seqsize = PySequence_Size(obj);                                   \
+		for(int i=0; i<len && i<seqsize; i++){                                \
+			if(i<seqsize){                                                    \
+	            array[i] =  PyObject_As##ptype( PySequence_GetItem(obj, i) ); \
+			}                                                                 \
+			else{                                                             \
+				array[i] = 0;                                                 \
+			}                                                                 \
+		}                                                                     \
+	}                                                                         \
+	else{                                                                     \
+		PyErr_SetString( PyExc_TypeError,                                     \
+				"PyObject_CvScalar: Expected a number or sequence" );         \
+		return -1;                                                            \
+	}                                                                         \
+	return 0;                                                                 \
+}
+
+PyObject_AsArrayImpl( PyObject_AsFloatArray, float, Double );
+PyObject_AsArrayImpl( PyObject_AsDoubleArray, double, Double );
+PyObject_AsArrayImpl( PyObject_AsLongArray, int, Long );
 
 CvArr * PySequence_to_CvArr( PyObject * obj ){
 	int dims[CV_MAX_DIM] = {1,1,1};

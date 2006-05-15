@@ -2584,8 +2584,8 @@ icvXMLWriteComment( CvFileStorage* fs, const char* comment, int eol_comment )
     if( !multiline )
     {
         ptr = icvFSResizeWriteBuffer( fs, ptr, len + 9 );
-        len = 0;
-        sprintf( ptr, "<!-- %s -->%n", comment, &len );
+        sprintf( ptr, "<!-- %s -->", comment );
+        len = strlen(ptr);
     }
     else
     {
@@ -2619,9 +2619,8 @@ icvXMLWriteComment( CvFileStorage* fs, const char* comment, int eol_comment )
             fs->buffer = ptr;
             ptr = icvXMLFlush( fs );
         }
-        len = 0;
-        sprintf( ptr, "-->%n", &len );
-        fs->buffer = ptr + len;
+        sprintf( ptr, "-->" );
+        fs->buffer = ptr + 3;
         icvXMLFlush( fs );
     }
     
