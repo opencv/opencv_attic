@@ -824,7 +824,9 @@
 
 #define CV_DIST_MASK_3   3
 
-#define CV_DIST_MASK_5   5 
+#define CV_DIST_MASK_5   5
+
+#define CV_DIST_MASK_PRECISE 0
 
 #define CV_THRESH_BINARY      0  /* value = value > threshold ? max_value : 0       */
 

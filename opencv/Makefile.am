@@ -5,7 +5,8 @@ ACLOCAL_AMFLAGS = -I ./autotools/aclocal
 
 ## Any directories that you want built and installed should go here.
 if BUILD_APPS
-  APPS_DIR = apps
+#  APPS_DIR = apps
+  APPS_DIR =
 else
   APPS_DIR =
 endif
@@ -14,7 +15,8 @@ SUBDIRS = cxcore cv cvaux otherlibs interfaces $(APPS_DIR) tests samples data do
 # All the rest of the distributed files
 EXTRA_DIST = THANKS COPYING INSTALL README NEWS ChangeLog \
              opencv.spec opencv.spec.in opencv.pc.in opencv.pc \
-             _make utils autotools apps
+             utils autotools
+# _make apps filters (temporarily removed for Mac OS X development)
 
 pkgconfigdir = $(libdir)/pkgconfig
 pkgconfig_DATA = opencv.pc

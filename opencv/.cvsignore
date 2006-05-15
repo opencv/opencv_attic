@@ -1,1 +1,1 @@
-_temp bin lib config.* cvconfig.h stamp* *.spec Makefile *.pc
+autom4te.cache _temp bin lib config.* cvconfig.h stamp* *.spec Makefile *.pc
