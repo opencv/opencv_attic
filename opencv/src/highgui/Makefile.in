@@ -132,12 +132,13 @@ pythondir = @pythondir@
 EXTRA_DIST = highgui.dsp highgui.vcproj highgui.rc resource.h    \
     cvcap_cmu.cpp cvcap_tyzx.cpp cvcap_vfw.cpp cvcap_mil.cpp     \
     cvcap_qt.cpp cvcap_dc1394.cpp cvcap_ffmpeg.cpp               \
-    cvcap_v4l.cpp cvcap_xine.cpp
+    cvcap_v4l.cpp cvcap_xine.cpp                                 \
+    window_carbon.cpp window_lnx.cpp window_w32.cpp
 
 
 INCLUDES = -I. -I$(top_srcdir)/cxcore/include \
 	-I$(top_srcdir)/cv/include @GTHREAD_CFLAGS@ @GTK_CFLAGS@ \
-	@QUICKTIME_CFLAGS@
+	@QUICKTIME_CFLAGS@ @CARBON_CFLAGS@
 
 
 lib_LTLIBRARIES = libhighgui.la
@@ -157,12 +158,18 @@ lib_LTLIBRARIES = libhighgui.la
 @BUILD_QUICKTIME_TRUE@TMP_QT = cvcap_qt.cpp
 @BUILD_QUICKTIME_FALSE@TMP_QT = 
 
+@BUILD_CARBON_TRUE@TMP_CARBON = window_carbon.cpp
+@BUILD_CARBON_FALSE@TMP_CARBON = 
+
+@BUILD_GTK_TRUE@TMP_GTK = window_lnx.cpp
+@BUILD_GTK_FALSE@TMP_GTK = 
+
 libhighgui_la_SOURCES = \
     bitstrm.cpp grfmt_base.cpp grfmt_bmp.cpp grfmt_jpeg.cpp      \
     grfmt_png.cpp grfmt_pxm.cpp grfmt_sunras.cpp grfmt_tiff.cpp  \
-    image.cpp loadsave.cpp precomp.cpp utils.cpp window_lnx.cpp  \
-    cvcap.cpp $(TMP_DC1394) $(TMP_V4L) $(TMP_FFMPEG) $(TMP_QT)   \
-    $(TMP_XINE)
+    image.cpp loadsave.cpp precomp.cpp utils.cpp cvcap.cpp       \
+    $(TMP_DC1394) $(TMP_V4L) $(TMP_FFMPEG) $(TMP_QT)             \
+    $(TMP_XINE) $(TMP_GTK) $(TMP_CARBON)
 
 
 libhighguiincludedir = $(includedir)/opencv
@@ -197,11 +204,16 @@ libhighgui_la_DEPENDENCIES = $(top_builddir)/cxcore/src/libcxcore.la \
 @BUILD_QUICKTIME_FALSE@am__objects_4 =
 @BUILD_XINE_TRUE@am__objects_5 = cvcap_xine.lo
 @BUILD_XINE_FALSE@am__objects_5 =
+@BUILD_GTK_TRUE@am__objects_6 = window_lnx.lo
+@BUILD_GTK_FALSE@am__objects_6 =
+@BUILD_CARBON_TRUE@am__objects_7 = window_carbon.lo
+@BUILD_CARBON_FALSE@am__objects_7 =
 am_libhighgui_la_OBJECTS = bitstrm.lo grfmt_base.lo grfmt_bmp.lo \
 	grfmt_jpeg.lo grfmt_png.lo grfmt_pxm.lo grfmt_sunras.lo \
-	grfmt_tiff.lo image.lo loadsave.lo precomp.lo utils.lo \
-	window_lnx.lo cvcap.lo $(am__objects_1) $(am__objects_2) \
-	$(am__objects_3) $(am__objects_4) $(am__objects_5)
+	grfmt_tiff.lo image.lo loadsave.lo precomp.lo utils.lo cvcap.lo \
+	$(am__objects_1) $(am__objects_2) $(am__objects_3) \
+	$(am__objects_4) $(am__objects_5) $(am__objects_6) \
+	$(am__objects_7)
 libhighgui_la_OBJECTS = $(am_libhighgui_la_OBJECTS)
 
 DEFS = @DEFS@
@@ -223,7 +235,8 @@ am__depfiles_maybe = depfiles
 @AMDEP_TRUE@	./$(DEPDIR)/grfmt_sunras.Plo \
 @AMDEP_TRUE@	./$(DEPDIR)/grfmt_tiff.Plo ./$(DEPDIR)/image.Plo \
 @AMDEP_TRUE@	./$(DEPDIR)/loadsave.Plo ./$(DEPDIR)/precomp.Plo \
-@AMDEP_TRUE@	./$(DEPDIR)/utils.Plo ./$(DEPDIR)/window_lnx.Plo
+@AMDEP_TRUE@	./$(DEPDIR)/utils.Plo ./$(DEPDIR)/window_carbon.Plo \
+@AMDEP_TRUE@	./$(DEPDIR)/window_lnx.Plo
 CXXCOMPILE = $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) \
 	$(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS)
 LTCXXCOMPILE = $(LIBTOOL) --mode=compile $(CXX) $(DEFS) \
@@ -304,6 +317,7 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/loadsave.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/precomp.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/utils.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/window_carbon.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/window_lnx.Plo@am__quote@
 
 distclean-depend:

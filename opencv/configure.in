@@ -24,7 +24,7 @@ AC_CONFIG_AUX_DIR([autotools])
 AC_CONFIG_MACRO_DIR([autotools/aclocal])
 
 # put CVS revision of this configure.in into the resulting configure script
-AC_REVISION($Revision: 1.21.2.2 $)
+AC_REVISION($Revision: 1.21.2.3 $)
 
 # Detect the canonical host and target build environment
 AC_CANONICAL_HOST
@@ -199,6 +199,8 @@ AC_CHECK_FUNCS(lrint)
 
 # honor user selection, 
 # if no selection given check for Carbon first
+CARBON_CFLAGS=""
+CARBON_LIBS=""
 if test x"$with_carbon" = "xyes"; then
 
     # check if other ./configure arguments are valid
@@ -236,6 +238,10 @@ AM_CONDITIONAL([BUILD_CARBON], [test x"$have_carbon" = "xyes"])
 
 # use GTK+ 2.x (or later) for windowing 
 # if carbon not present or not wanted (--without-carbon)
+GTK_CFLAGS=""
+GTK_LIBS=""
+GTHREAD_CFLAGS=""
+GTHREAD_LIBS=""
 if test x"$with_gtk" = "xno"; then
     have_gtk=no
     have_gthread=no
@@ -277,6 +283,7 @@ AC_SUBST(GTK_CFLAGS)
 AC_SUBST(GTK_LIBS)
 AC_SUBST(GTHREAD_CFLAGS)
 AC_SUBST(GTHREAD_LIBS)
+AM_CONDITIONAL([BUILD_GTK], [test x"$have_gtk" = "xyes"])
 
 
 ######################################################################
