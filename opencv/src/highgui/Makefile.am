@@ -2,11 +2,11 @@ EXTRA_DIST = highgui.dsp highgui.vcproj highgui.rc resource.h    \
     cvcap_cmu.cpp cvcap_tyzx.cpp cvcap_vfw.cpp cvcap_mil.cpp     \
     cvcap_qt.cpp cvcap_dc1394.cpp cvcap_ffmpeg.cpp               \
     cvcap_v4l.cpp cvcap_xine.cpp                                 \
-    window_carbon.cpp window_lnx.cpp window_w32.cpp
+    window_carbon.cpp window_gtk.cpp window_w32.cpp
 
 INCLUDES = -I. -I$(top_srcdir)/cxcore/include \
-	-I$(top_srcdir)/cv/include @GTHREAD_CFLAGS@ @GTK_CFLAGS@ \
-	@QUICKTIME_CFLAGS@ @CARBON_CFLAGS@
+    -I$(top_srcdir)/cv/include @GTHREAD_CFLAGS@ @GTK_CFLAGS@ \
+    @QUICKTIME_CFLAGS@ @CARBON_CFLAGS@
 
 lib_LTLIBRARIES = libhighgui.la
 
@@ -47,7 +47,7 @@ TMP_CARBON=
 endif
 
 if BUILD_GTK
-TMP_GTK=window_lnx.cpp
+TMP_GTK=window_gtk.cpp
 else
 TMP_GTK=
 endif
@@ -64,10 +64,10 @@ libhighguiincludedir = $(includedir)/opencv
 libhighguiinclude_HEADERS = highgui.h
 
 noinst_HEADERS = _highgui.h bitstrm.h grfmt_base.h grfmt_bmp.h \
-	grfmt_jpeg.h grfmt_pxm.h grfmt_png.h grfmt_sunras.h grfmt_tiff.h grfmts.h utils.h
+    grfmt_jpeg.h grfmt_pxm.h grfmt_png.h grfmt_sunras.h grfmt_tiff.h grfmts.h utils.h
 
 libhighgui_la_LDFLAGS = -no-undefined -version-info @LT_VERSION@ @LDFLAGS@
 
 libhighgui_la_LIBADD  = $(top_builddir)/cxcore/src/libcxcore.la $(top_builddir)/cv/src/libcv.la \
-	@GTHREAD_LIBS@ @GTK_LIBS@ @IMAGELIBS@ @FFMPEGLIBS@ @IEEE1394LIBS@ \
-	@QUICKTIME_LIBS@ @CARBON_LIBS@ @XINE_LIBS@
+    @GTHREAD_LIBS@ @GTK_LIBS@ @IMAGELIBS@ @FFMPEGLIBS@ @IEEE1394LIBS@ \
+    @QUICKTIME_LIBS@ @CARBON_LIBS@ @XINE_LIBS@

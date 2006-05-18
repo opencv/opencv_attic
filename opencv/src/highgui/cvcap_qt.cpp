@@ -1072,3 +1072,23 @@ static const void * icvRetrieveFrame_QT_Cam (CvCapture_QT_Cam * capture)
 
 #endif
 
+
+
+// TODO: implement missing functionality
+CV_IMPL CvVideoWriter* cvCreateVideoWriter( const char * filename, int fourcc,
+                double fps, CvSize frameSize, int /*is_color*/ )
+{
+return 0;
+}
+
+// TODO: implement missing functionality
+CV_IMPL int cvWriteFrame( CvVideoWriter * writer, const IplImage * image )
+{
+return 0;
+}
+
+// TODO: implement missing functionality
+CV_IMPL void cvReleaseVideoWriter( CvVideoWriter ** writer )
+{
+}
+

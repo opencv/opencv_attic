@@ -140,6 +140,13 @@ CV_IMPL int cvInitSystem( int argc, char** argv )
     return 0;
 }
 
+// TODO: implement missing functionality
+CV_IMPL int cvStartWindowThread()
+{
+    return 0;
+}
+
+
 static int icvCountTrackbarInWindow( const CvWindow* window)
 {
     CvTrackbar* trackbar = window->toolbar.first;
