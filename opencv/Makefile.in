@@ -188,7 +188,7 @@ $(top_builddir)/config.status: $(srcdir)/configure $(CONFIG_STATUS_DEPENDENCIES)
 $(srcdir)/configure:  $(srcdir)/configure.in $(ACLOCAL_M4) $(CONFIGURE_DEPENDENCIES)
 	cd $(srcdir) && $(AUTOCONF)
 
-$(ACLOCAL_M4):  configure.in autotools/aclocal/az_python.m4 autotools/aclocal/pkg.m4 autotools/aclocal/swig_complete.m4
+$(ACLOCAL_M4):  configure.in autotools/aclocal/az_python.m4 autotools/aclocal/pkg.m4 autotools/aclocal/swig_complete.m4 autotools/aclocal/version_at_least.m4
 	cd $(srcdir) && $(ACLOCAL) $(ACLOCAL_AMFLAGS)
 
 cvconfig.h: stamp-h1

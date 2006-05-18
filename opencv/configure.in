@@ -15,7 +15,6 @@ m4_define([opencv_version],          [opencv_major_version.opencv_minor_version.
 # - If the interface is the same as the previous version, change to C:R+1:A
 m4_define([opencv_lt_version],       [9:7:9])
 
-
 # init autotools
 AC_PREREQ(2.59)
 AC_INIT([OpenCV],[opencv_version],[opencvlibrary-devel@lists.sourceforge.net])
@@ -24,7 +23,7 @@ AC_CONFIG_AUX_DIR([autotools])
 AC_CONFIG_MACRO_DIR([autotools/aclocal])
 
 # put CVS revision of this configure.in into the resulting configure script
-AC_REVISION($Revision: 1.21.2.3 $)
+AC_REVISION([$Revision: 1.21.2.4 $])
 
 # Detect the canonical host and target build environment
 AC_CANONICAL_HOST
@@ -34,7 +33,7 @@ AC_CANONICAL_TARGET
 AM_CONFIG_HEADER([cvconfig.h])
 AM_INIT_AUTOMAKE([1.6 foreign])
 
-# use 'ugly' maintainer-mode flag to help CVS users that don't want to
+# use 'gly maintainer-mode flag to help CVS users that do not want to
 # help developing OpenCV but just need to compile the latest version
 # AM_MAINTAINER_MODE (temporarily removed for Mac OS X development)
 
@@ -585,12 +584,7 @@ if test x"$with_python" = "xyes"; then
 
     # if not explicitly forbidden, check for swig also
     if test x"$with_swig" = "xauto"; then
-       with_swig=yes
-    fi
-   
-    if test x"$with_swig" = "xyes"; then    
-        # check for swig python library
-        SWIG_PYTHON()
+        with_swig=yes
     fi
     
     # okay now
@@ -612,9 +606,13 @@ SWIG=""
 if test x"$with_swig" = "xyes"; then
     AC_MSG_NOTICE([Checking for SWIG])
     AC_PATH_SWIG([1.3.24])
+    #
     if test -n "$SWIG"; then
         SWIG_ENABLE_CXX()
         SWIG_MULTI_MODULE_SUPPORT()
+
+        # check for swig python library
+        SWIG_PYTHON()
         have_swig=yes
     else
         have_swig=no
