@@ -424,7 +424,7 @@ cvCopy( const void* srcarr, void* dstarr, const void* maskarr )
     {
         int src_step = src->step, dst_step = dst->step;
         size.width *= pix_size;
-        if( CV_IS_MAT_CONT( src->type & dst->type ))
+        if( CV_IS_MAT_CONT( src->type & dst->type ) && (src_step == dst_step) && (src_step == src->width * pix_size))
         {
             size.width *= size.height;
 
