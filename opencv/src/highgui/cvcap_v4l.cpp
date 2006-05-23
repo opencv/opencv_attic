@@ -205,8 +205,6 @@ make & enjoy!
 #include <sys/types.h>
 #include <sys/mman.h>
 
-#include <linux/fs.h>
-#include <linux/kernel.h>
 #include <linux/videodev.h>
 
 #include <string.h>
