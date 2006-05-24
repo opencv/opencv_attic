@@ -198,9 +198,16 @@ bool  GrFmtPngReader::ReadData( uchar* data, int step, int color )
 
             if( m_bit_depth > 8 )
                 png_set_strip_16( png_ptr );
-
-            if( m_color_type & PNG_COLOR_MASK_ALPHA )
-                png_set_strip_alpha( png_ptr );
+	    
+	    /* observation: png_read_image() writes 400 bytes beyond
+             * end of data when reading a 400x118 color png
+             * "mpplus_sand.png".  OpenCV crashes even with demo
+             * programs.  Looking at the loaded image I'd say we get 4
+             * bytes per pixel instead of 3 bytes per pixel.  Test
+             * indicate that it is a good idea to always ask for
+             * stripping alpha..  18.11.2004 Axel Walthelm
+             */
+	    png_set_strip_alpha( png_ptr );
 
             if( m_color_type == PNG_COLOR_TYPE_PALETTE )
                 png_set_palette_to_rgb( png_ptr );
