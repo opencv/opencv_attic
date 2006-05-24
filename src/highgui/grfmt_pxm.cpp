@@ -222,7 +222,7 @@ bool  GrFmtPxMReader::ReadData( uchar* data, int step, int color )
         gray_palette[i] = (uchar)((i*255/m_maxval)^(m_bpp == 1 ? 255 : 0));
     }
 
-    FillGrayPalette( palette, 8, m_bpp == 1 );
+    FillGrayPalette( palette, m_bpp==1 ? 1 : 8 , m_bpp == 1 );
     
     if( setjmp( m_strm.JmpBuf()) == 0 )
     {
