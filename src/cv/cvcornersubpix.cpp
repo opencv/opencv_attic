@@ -77,8 +77,11 @@ cvFindCornerSubPix( const void* srcarr, CvPoint2D32f* corners,
     if( !corners )
         CV_ERROR( CV_StsNullPtr, "" );
 
-    if( count <= 0 )
+    if( count < 0 )
         CV_ERROR( CV_StsBadSize, "" );
+
+    if( count == 0 )
+        EXIT;
 
     if( win.width <= 0 || win.height <= 0 )
         CV_ERROR( CV_StsBadSize, "" );
