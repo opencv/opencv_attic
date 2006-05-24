@@ -804,6 +804,7 @@ bool  GrFmtTiffWriter::WriteImage( const uchar* data, int step,
 
         delete[]  stripOffsets;
         delete[]  stripCounts;
+        delete[] buffer;
 
         result = true;
     }
