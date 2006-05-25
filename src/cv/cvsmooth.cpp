@@ -51,6 +51,8 @@ static void icvSumCol_32s8u( const int** src, uchar* dst, int dst_step,
                              int count, void* params );
 static void icvSumCol_32s16s( const int** src, short* dst, int dst_step,
                              int count, void* params );
+static void icvSumCol_32s32s( const int** src, int* dst, int dst_step,
+                             int count, void* params );
 static void icvSumCol_64f32f( const double** src, float* dst, int dst_step,
                               int count, void* params );
 
@@ -122,12 +124,22 @@ void CvBoxFilter::init( int _max_width, int _src_type, int _dst_type,
             CV_ERROR( CV_StsBadArg, "Only 8u->16s unnormalized box filter is supported in case of 16s output" );
         y_func = (CvColumnFilterFunc)icvSumCol_32s16s;
     }
+	else if( CV_MAT_DEPTH(dst_type) == CV_32S )
+	{
+		if( normalized || CV_MAT_DEPTH(src_type) != CV_8U )
+			CV_ERROR( CV_StsBadArg, "Only 8u->32s unnormalized box filter is supported in case of 32s output");
+
+		y_func = (CvColumnFilterFunc)icvSumCol_32s32s;
+	}
     else if( CV_MAT_DEPTH(dst_type) == CV_32F )
     {
         if( CV_MAT_DEPTH(src_type) != CV_32F )
             CV_ERROR( CV_StsBadArg, "Only 32f->32f box filter (normalized or not) is supported in case of 32f output" );
         y_func = (CvColumnFilterFunc)icvSumCol_64f32f;
     }
+	else{
+		CV_ERROR( CV_StsBadArg, "Unknown/unsupported destination image format" );
+	}
 
     __END__;
 }
@@ -311,6 +323,63 @@ icvSumCol_32s16s( const int** src, short* dst,
             {
                 int s0 = sum[i] + sp[i];
                 dst[i] = (short)s0;
+                sum[i] = s0 - sm[i];
+            }
+            dst += dst_step;
+        }
+    }
+
+    *_sum_count = sum_count;
+}
+
+static void
+icvSumCol_32s32s( const int** src, int * dst,
+                  int dst_step, int count, void* params )
+{
+    CvBoxFilter* state = (CvBoxFilter*)params;
+    int ksize = state->get_kernel_size().height;
+    int i, width = state->get_width();
+    int cn = CV_MAT_CN(state->get_src_type());
+    int* sum = (int*)state->get_sum_buf();
+    int* _sum_count = state->get_sum_count_ptr();
+    int sum_count = *_sum_count;
+
+    dst_step /= sizeof(dst[0]);
+    width *= cn;
+    src += sum_count;
+    count += ksize - 1 - sum_count;
+
+    for( ; count--; src++ )
+    {
+        const int* sp = src[0];
+        if( sum_count+1 < ksize )
+        {
+            for( i = 0; i <= width - 2; i += 2 )
+            {
+                int s0 = sum[i] + sp[i], s1 = sum[i+1] + sp[i+1];
+                sum[i] = s0; sum[i+1] = s1;
+            }
+
+            for( ; i < width; i++ )
+                sum[i] += sp[i];
+
+            sum_count++;
+        }
+        else
+        {
+            const int* sm = src[-ksize+1];
+            for( i = 0; i <= width - 2; i += 2 )
+            {
+                int s0 = sum[i] + sp[i], s1 = sum[i+1] + sp[i+1];
+                dst[i] = s0; dst[i+1] = s1;
+                s0 -= sm[i]; s1 -= sm[i+1];
+                sum[i] = s0; sum[i+1] = s1;
+            }
+
+            for( ; i < width; i++ )
+            {
+                int s0 = sum[i] + sp[i];
+                dst[i] = s0;
                 sum[i] = s0 - sm[i];
             }
             dst += dst_step;
