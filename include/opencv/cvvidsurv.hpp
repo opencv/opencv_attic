@@ -934,11 +934,11 @@ CV_EXPORTS CvBlobTracker* cvCreateBlobTrackerMSPF();
 
 /* =========== tracker integrators trackers =============*/
 /* integrator based on Partical Filtering method */
-CV_EXPORTS CvBlobTracker* cvCreateBlobTrackerIPF();
+//CV_EXPORTS CvBlobTracker* cvCreateBlobTrackerIPF();
 /* rule based integrator */
-CV_EXPORTS CvBlobTracker* cvCreateBlobTrackerIRB();
+//CV_EXPORTS CvBlobTracker* cvCreateBlobTrackerIRB();
 /* integrator based on data fusion used particle filtering */
-CV_EXPORTS CvBlobTracker* cvCreateBlobTrackerIPFDF();
+//CV_EXPORTS CvBlobTracker* cvCreateBlobTrackerIPFDF();
 
 
 
@@ -1065,19 +1065,19 @@ CV_EXPORTS CvBlobTrackAnalysis* cvCreateModuleBlobTrackAnalysisHistPVS();
 CV_EXPORTS CvBlobTrackAnalysis* cvCreateModuleBlobTrackAnalysisHistSS();
 
 /* based on SVM classifier analysis of 2D FV (x,y)*/
-CV_EXPORTS CvBlobTrackAnalysis* cvCreateModuleBlobTrackAnalysisSVMP();
+//CV_EXPORTS CvBlobTrackAnalysis* cvCreateModuleBlobTrackAnalysisSVMP();
 /* based on SVM classifier analysis of 4D FV (x,y,vx,vy)*/
-CV_EXPORTS CvBlobTrackAnalysis* cvCreateModuleBlobTrackAnalysisSVMPV();
+//CV_EXPORTS CvBlobTrackAnalysis* cvCreateModuleBlobTrackAnalysisSVMPV();
 /* based on SVM classifier analysis of 5D FV (x,y,vx,vy,state)*/
-CV_EXPORTS CvBlobTrackAnalysis* cvCreateModuleBlobTrackAnalysisSVMPVS();
+//CV_EXPORTS CvBlobTrackAnalysis* cvCreateModuleBlobTrackAnalysisSVMPVS();
 /* based on SVM classifier analysis of 4D FV (startpos,stoppos)*/
-CV_EXPORTS CvBlobTrackAnalysis* cvCreateModuleBlobTrackAnalysisSVMSS();
+//CV_EXPORTS CvBlobTrackAnalysis* cvCreateModuleBlobTrackAnalysisSVMSS();
 
 /* track analysis based on distance between tracks */
 CV_EXPORTS CvBlobTrackAnalysis* cvCreateModuleBlobTrackAnalysisTrackDist();
 
 /* analizer based on reation Road and height map*/
-CV_EXPORTS CvBlobTrackAnalysis* cvCreateModuleBlobTrackAnalysis3DRoadMap();
+//CV_EXPORTS CvBlobTrackAnalysis* cvCreateModuleBlobTrackAnalysis3DRoadMap();
 
 /* analizer that make OR desicion using set of analizers */
 CV_EXPORTS CvBlobTrackAnalysis* cvCreateModuleBlobTrackAnalysisIOR();
@@ -1088,7 +1088,7 @@ class CV_EXPORTS CvBlobTrackAnalysisHeight: public CvBlobTrackAnalysis
 public:
     virtual double  GetHeight(CvBlob* pB) = 0;
 }; 
-CV_EXPORTS CvBlobTrackAnalysisHeight* cvCreateModuleBlobTrackAnalysisHeightScale();
+//CV_EXPORTS CvBlobTrackAnalysisHeight* cvCreateModuleBlobTrackAnalysisHeightScale();
 
 
 
@@ -1155,9 +1155,9 @@ struct CvTracksTimePos
     int shift1,shift2;
 };
 
-CV_EXPORTS int cvCompareTracks( CvBlobTrackSeq *groundTruth,
+/*CV_EXPORTS int cvCompareTracks( CvBlobTrackSeq *groundTruth,
                    CvBlobTrackSeq *result,
-                   FILE *file);
+                   FILE *file);*/
 
 
 /*  Create functions  */
