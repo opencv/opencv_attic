@@ -152,8 +152,8 @@ CvBlobTrackAnalysis* cvCreateModuleBlobTrackAnalysisIOR()
     pA = cvCreateModuleBlobTrackAnalysisHistPVS();
     pIOR->AddAnalizer(pA, "HIST");
 
-    pA = (CvBlobTrackAnalysis*)cvCreateModuleBlobTrackAnalysisHeightScale();
-    pIOR->AddAnalizer(pA, "SCALE");
+    //pA = (CvBlobTrackAnalysis*)cvCreateModuleBlobTrackAnalysisHeightScale();
+    //pIOR->AddAnalizer(pA, "SCALE");
 
     return (CvBlobTrackAnalysis*)pIOR;
 }/* cvCreateCvBlobTrackAnalysisIOR */
