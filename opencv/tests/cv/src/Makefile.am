@@ -29,8 +29,8 @@ cvtest_SOURCES = \
     tsysa.cpp ucontours.cpp ugraphics.cpp uiplutils.cpp ureadfile.cpp
 
 cvtest_LDADD =                                      \
-	$(top_builddir)/tests/trs/libtrs.a              \
-	$(top_builddir)/tests/cxts/libcxts.a            \
+	$(top_builddir)/tests/trs/libtrs.la             \
+	$(top_builddir)/tests/cxts/libcxts.la           \
 	$(top_builddir)/cxcore/src/libcxcore.la         \
 	$(top_builddir)/cv/src/libcv.la                 \
 	$(top_builddir)/cvaux/src/libcvaux.la           \

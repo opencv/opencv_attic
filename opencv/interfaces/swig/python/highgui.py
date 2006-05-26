@@ -1,9 +1,9 @@
-# This file was created automatically by SWIG.
+# This file was created automatically by SWIG 1.3.27.
 # Don't modify this file, modify the SWIG interface instead.
-# This file is compatible with both classic and new-style classes.
 
 import _highgui
 
+# This file is compatible with both classic and new-style classes.
 def _swig_setattr_nondynamic(self,class_type,name,value,static=1):
     if (name == "this"):
         if isinstance(value, class_type):
@@ -235,29 +235,29 @@ class CvvImage(_object):
             if self.thisown: destroy(self)
         except: pass
 
-    def Create(*args): 
+    def Create(*args):
         """
         Create(self, int width, int height, int bits_per_pixel, int image_origin=0) -> bool
         Create(self, int width, int height, int bits_per_pixel) -> bool
         """
         return _highgui.CvvImage_Create(*args)
 
-    def Load(*args): 
+    def Load(*args):
         """
         Load(self, char filename, int desired_color=1) -> bool
         Load(self, char filename) -> bool
         """
         return _highgui.CvvImage_Load(*args)
 
-    def LoadRect(*args): 
+    def LoadRect(*args):
         """LoadRect(self, char filename, int desired_color, CvRect r) -> bool"""
         return _highgui.CvvImage_LoadRect(*args)
 
-    def Save(*args): 
+    def Save(*args):
         """Save(self, char filename) -> bool"""
         return _highgui.CvvImage_Save(*args)
 
-    def CopyOf(*args): 
+    def CopyOf(*args):
         """
         CopyOf(self, CvvImage image, int desired_color=-1)
         CopyOf(self, CvvImage image)
@@ -266,31 +266,31 @@ class CvvImage(_object):
         """
         return _highgui.CvvImage_CopyOf(*args)
 
-    def GetImage(*args): 
+    def GetImage(*args):
         """GetImage(self)"""
         return _highgui.CvvImage_GetImage(*args)
 
-    def Destroy(*args): 
+    def Destroy(*args):
         """Destroy(self)"""
         return _highgui.CvvImage_Destroy(*args)
 
-    def Width(*args): 
+    def Width(*args):
         """Width(self) -> int"""
         return _highgui.CvvImage_Width(*args)
 
-    def Height(*args): 
+    def Height(*args):
         """Height(self) -> int"""
         return _highgui.CvvImage_Height(*args)
 
-    def Bpp(*args): 
+    def Bpp(*args):
         """Bpp(self) -> int"""
         return _highgui.CvvImage_Bpp(*args)
 
-    def Fill(*args): 
+    def Fill(*args):
         """Fill(self, int color)"""
         return _highgui.CvvImage_Fill(*args)
 
-    def Show(*args): 
+    def Show(*args):
         """Show(self, char window)"""
         return _highgui.CvvImage_Show(*args)
 
@@ -299,7 +299,7 @@ class CvvImagePtr(CvvImage):
     def __init__(self, this):
         _swig_setattr(self, CvvImage, 'this', this)
         if not hasattr(self,"thisown"): _swig_setattr(self, CvvImage, 'thisown', 0)
-        _swig_setattr(self, CvvImage,self.__class__,CvvImage)
+        self.__class__ = CvvImage
 _highgui.CvvImage_swigregister(CvvImagePtr)
 
 __doc__ = """HighGUI provides minimalistic user interface parts and video input/output.
@@ -312,6 +312,7 @@ This wrapper was semi-automatically created from the C/C++ headers and therefore
 contains no Python documentation. Because all identifiers are identical to their
 C/C++ counterparts, you can consult the standard manuals that come with OpenCV.
 """
+
 
 
 

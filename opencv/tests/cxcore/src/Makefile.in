@@ -148,7 +148,7 @@ cxcoretest_SOURCES = \
 	cxcoretest_main.cpp
 
 cxcoretest_LDADD = \
-	$(top_builddir)/tests/cxts/libcxts.a \
+	$(top_builddir)/tests/cxts/libcxts.la \
 	$(top_builddir)/cxcore/src/libcxcore.la
 
 subdir = tests/cxcore/src
@@ -159,7 +159,7 @@ check_PROGRAMS = cxcoretest$(EXEEXT)
 am_cxcoretest_OBJECTS = aarithm.$(OBJEXT) adatastruct.$(OBJEXT) \
 	adxt.$(OBJEXT) amath.$(OBJEXT) cxcoretest_main.$(OBJEXT)
 cxcoretest_OBJECTS = $(am_cxcoretest_OBJECTS)
-cxcoretest_DEPENDENCIES = $(top_builddir)/tests/cxts/libcxts.a \
+cxcoretest_DEPENDENCIES = $(top_builddir)/tests/cxts/libcxts.la \
 	$(top_builddir)/cxcore/src/libcxcore.la
 cxcoretest_LDFLAGS =
 

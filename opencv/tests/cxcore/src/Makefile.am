@@ -15,6 +15,6 @@ cxcoretest_SOURCES =        \
 	amath.cpp           \
 	cxcoretest_main.cpp
 cxcoretest_LDADD = \
-	$(top_builddir)/tests/cxts/libcxts.a \
+	$(top_builddir)/tests/cxts/libcxts.la \
 	$(top_builddir)/cxcore/src/libcxcore.la
 

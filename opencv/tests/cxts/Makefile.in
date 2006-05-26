@@ -134,19 +134,18 @@ EXTRA_DIST = cxts.dsp cxts.vcproj precomp.cpp
 INCLUDES = -I. -I$(top_srcdir)/cxcore/include -I$(top_srcdir)/tests
 AM_CFLAGS = @CFLAGS@ @DEBUG@
 
-check_LIBRARIES = libcxts.a
+check_LTLIBRARIES = libcxts.la
 
-libcxts_a_SOURCES = _cxts.h cxts.h cxts.cpp cxts_arrtest.cpp cxts_math.cpp
-libcxts_a_LIBADD = $(top_builddir)/cxcore/src/libcxcore.la
+libcxts_la_SOURCES = _cxts.h cxts.h cxts.cpp cxts_arrtest.cpp cxts_math.cpp
+libcxts_la_LIBADD = $(top_builddir)/cxcore/src/libcxcore.la
 subdir = tests/cxts
 mkinstalldirs = $(SHELL) $(top_srcdir)/autotools/mkinstalldirs
 CONFIG_HEADER = $(top_builddir)/cvconfig.h
 CONFIG_CLEAN_FILES =
-libcxts_a_AR = $(AR) cru
-libcxts_a_DEPENDENCIES = $(top_builddir)/cxcore/src/libcxcore.la
-am_libcxts_a_OBJECTS = cxts.$(OBJEXT) cxts_arrtest.$(OBJEXT) \
-	cxts_math.$(OBJEXT)
-libcxts_a_OBJECTS = $(am_libcxts_a_OBJECTS)
+libcxts_la_LDFLAGS =
+libcxts_la_DEPENDENCIES = $(top_builddir)/cxcore/src/libcxcore.la
+am_libcxts_la_OBJECTS = cxts.lo cxts_arrtest.lo cxts_math.lo
+libcxts_la_OBJECTS = $(am_libcxts_la_OBJECTS)
 
 DEFS = @DEFS@
 DEFAULT_INCLUDES =  -I. -I$(srcdir) -I$(top_builddir)
@@ -155,8 +154,9 @@ LDFLAGS = @LDFLAGS@
 LIBS = @LIBS@
 depcomp = $(SHELL) $(top_srcdir)/autotools/depcomp
 am__depfiles_maybe = depfiles
-@AMDEP_TRUE@DEP_FILES = ./$(DEPDIR)/cxts.Po ./$(DEPDIR)/cxts_arrtest.Po \
-@AMDEP_TRUE@	./$(DEPDIR)/cxts_math.Po
+@AMDEP_TRUE@DEP_FILES = ./$(DEPDIR)/cxts.Plo \
+@AMDEP_TRUE@	./$(DEPDIR)/cxts_arrtest.Plo \
+@AMDEP_TRUE@	./$(DEPDIR)/cxts_math.Plo
 CXXCOMPILE = $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) \
 	$(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS)
 LTCXXCOMPILE = $(LIBTOOL) --mode=compile $(CXX) $(DEFS) \
@@ -174,9 +174,9 @@ LTCOMPILE = $(LIBTOOL) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) \
 CCLD = $(CC)
 LINK = $(LIBTOOL) --mode=link $(CCLD) $(AM_CFLAGS) $(CFLAGS) \
 	$(AM_LDFLAGS) $(LDFLAGS) -o $@
-DIST_SOURCES = $(libcxts_a_SOURCES)
+DIST_SOURCES = $(libcxts_la_SOURCES)
 DIST_COMMON = Makefile.am Makefile.in
-SOURCES = $(libcxts_a_SOURCES)
+SOURCES = $(libcxts_la_SOURCES)
 
 all: all-am
 
@@ -188,12 +188,16 @@ $(srcdir)/Makefile.in:  Makefile.am  $(top_srcdir)/configure.in $(ACLOCAL_M4)
 Makefile:  $(srcdir)/Makefile.in  $(top_builddir)/config.status
 	cd $(top_builddir) && $(SHELL) ./config.status $(subdir)/$@ $(am__depfiles_maybe)
 
-clean-checkLIBRARIES:
-	-test -z "$(check_LIBRARIES)" || rm -f $(check_LIBRARIES)
-libcxts.a: $(libcxts_a_OBJECTS) $(libcxts_a_DEPENDENCIES) 
-	-rm -f libcxts.a
-	$(libcxts_a_AR) libcxts.a $(libcxts_a_OBJECTS) $(libcxts_a_LIBADD)
-	$(RANLIB) libcxts.a
+clean-checkLTLIBRARIES:
+	-test -z "$(check_LTLIBRARIES)" || rm -f $(check_LTLIBRARIES)
+	@list='$(check_LTLIBRARIES)'; for p in $$list; do \
+	  dir="`echo $$p | sed -e 's|/[^/]*$$||'`"; \
+	  test -z "$dir" && dir=.; \
+	  echo "rm -f \"$${dir}/so_locations\""; \
+	  rm -f "$${dir}/so_locations"; \
+	done
+libcxts.la: $(libcxts_la_OBJECTS) $(libcxts_la_DEPENDENCIES) 
+	$(CXXLINK)  $(libcxts_la_LDFLAGS) $(libcxts_la_OBJECTS) $(libcxts_la_LIBADD) $(LIBS)
 
 mostlyclean-compile:
 	-rm -f *.$(OBJEXT) core *.core
@@ -201,9 +205,9 @@ mostlyclean-compile:
 distclean-compile:
 	-rm -f *.tab.c
 
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/cxts.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/cxts_arrtest.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/cxts_math.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/cxts.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/cxts_arrtest.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/cxts_math.Plo@am__quote@
 
 distclean-depend:
 	-rm -rf ./$(DEPDIR)
@@ -299,7 +303,7 @@ distdir: $(DISTFILES)
 	  fi; \
 	done
 check-am: all-am
-	$(MAKE) $(AM_MAKEFLAGS) $(check_LIBRARIES)
+	$(MAKE) $(AM_MAKEFLAGS) $(check_LTLIBRARIES)
 check: check-am
 all-am: Makefile
 
@@ -331,7 +335,7 @@ maintainer-clean-generic:
 	@echo "it deletes files that may require special tools to rebuild."
 clean: clean-am
 
-clean-am: clean-checkLIBRARIES clean-generic clean-libtool \
+clean-am: clean-checkLTLIBRARIES clean-generic clean-libtool \
 	mostlyclean-am
 
 distclean: distclean-am
@@ -368,7 +372,7 @@ mostlyclean-am: mostlyclean-compile mostlyclean-generic \
 
 uninstall-am: uninstall-info-am
 
-.PHONY: GTAGS all all-am check check-am clean clean-checkLIBRARIES \
+.PHONY: GTAGS all all-am check check-am clean clean-checkLTLIBRARIES \
 	clean-generic clean-libtool distclean distclean-compile \
 	distclean-depend distclean-generic distclean-libtool \
 	distclean-tags distdir dvi dvi-am info info-am install \

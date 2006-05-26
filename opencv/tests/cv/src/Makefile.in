@@ -162,8 +162,8 @@ cvtest_SOURCES = \
 
 
 cvtest_LDADD = \
-	$(top_builddir)/tests/trs/libtrs.a              \
-	$(top_builddir)/tests/cxts/libcxts.a            \
+	$(top_builddir)/tests/trs/libtrs.la             \
+	$(top_builddir)/tests/cxts/libcxts.la           \
 	$(top_builddir)/cxcore/src/libcxcore.la         \
 	$(top_builddir)/cv/src/libcv.la                 \
 	$(top_builddir)/cvaux/src/libcvaux.la           \
@@ -202,8 +202,8 @@ am_cvtest_OBJECTS = aaccum.$(OBJEXT) aadaptthresh.$(OBJEXT) \
 	cvtest.$(OBJEXT) tsysa.$(OBJEXT) ucontours.$(OBJEXT) \
 	ugraphics.$(OBJEXT) uiplutils.$(OBJEXT) ureadfile.$(OBJEXT)
 cvtest_OBJECTS = $(am_cvtest_OBJECTS)
-cvtest_DEPENDENCIES = $(top_builddir)/tests/trs/libtrs.a \
-	$(top_builddir)/tests/cxts/libcxts.a \
+cvtest_DEPENDENCIES = $(top_builddir)/tests/trs/libtrs.la \
+	$(top_builddir)/tests/cxts/libcxts.la \
 	$(top_builddir)/cxcore/src/libcxcore.la \
 	$(top_builddir)/cv/src/libcv.la \
 	$(top_builddir)/cvaux/src/libcvaux.la \
