@@ -175,7 +175,16 @@ void CvMorphology::init( int _operation, int _max_width, int _src_dst_type,
         int cn = CV_MAT_CN(src_type);
         CvPoint* nz_loc;
 
-        CV_CALL( element = cvCreateMat( _ksize.height, _ksize.width, CV_8UC1 ));
+        if( !(element && el_sparse &&
+            _ksize.width == element->cols && _ksize.height == element->rows) )
+        {
+            cvReleaseMat( &element );
+            cvFree( &el_sparse );
+            CV_CALL( element = cvCreateMat( _ksize.height, _ksize.width, CV_8UC1 ));
+            CV_CALL( el_sparse = (uchar*)cvAlloc(
+                ksize.width*ksize.height*(2*sizeof(int) + sizeof(uchar*))));
+        }
+
         if( el_shape == CUSTOM )
         {
             CV_CALL( cvConvert( _element, element ));
@@ -200,9 +209,7 @@ void CvMorphology::init( int _operation, int _max_width, int _src_dst_type,
             else if( depth == CV_32F )
                 y_func = (CvColumnFilterFunc)icvDilateAny_32f;
         }
-
-        CV_CALL( el_sparse = (uchar*)cvAlloc(
-            ksize.width*ksize.height*(2*sizeof(int) + sizeof(uchar*))));
+        
         nz_loc = (CvPoint*)el_sparse;
 
         for( i = 0; i < ksize.height; i++ )
@@ -836,9 +843,9 @@ icvMorphOp( const void* srcarr, void* dstarr, IplConvKernel* element,
                         type == CV_32FC3 ? icvDilateAny_32f_C3R_p :
                         type == CV_32FC4 ? icvDilateAny_32f_C4R_p : 0;
         }
-
         
-        if( rect_func || any_func )
+        if( (rect_func || any_func) && src->cols >= el_size.width &&
+            el_size.width > 1 && el_size.height > 1 )
         {
             int y, dy = 0;
             int el_len = el_size.width*el_size.height;

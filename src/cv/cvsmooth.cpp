@@ -76,7 +76,6 @@ CvBoxFilter::CvBoxFilter( int _max_width, int _src_type, int _dst_type,
     normalized = false;
     init( _max_width, _src_type, _dst_type, _normalized,
           _ksize, _anchor, _border_mode, _border_value );
-
 }
 
 
