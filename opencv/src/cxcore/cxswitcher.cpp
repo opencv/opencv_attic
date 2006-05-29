@@ -490,7 +490,13 @@ cvUseOptimized( int load_flag )
     const CvProcessorInfo* cpu_info = icvGetProcessorInfo();
     int arch = CV_GET_PROC_ARCH(cpu_info->model);
     const char* opencv_suffix = "097";
-    const char* ipp_suffix = arch == CV_PROC_IA32_GENERIC ? "20" :
+    const char* ipp_suffix = arch == CV_PROC_IA32_GENERIC ?
+#ifdef WIN32
+        "-5.1"
+#else
+        "20"
+#endif
+        :
                              arch == CV_PROC_IA64_ITANIUM ? "6420" :
                              arch == CV_PROC_IA64_EM64T ? "em64t" : "";
     const char* mkl_suffix = arch == CV_PROC_IA32_GENERIC ?
@@ -548,6 +554,8 @@ cvUseOptimized( int load_flag )
                     suffix = "p3";
                 else if( strcmp( suffix, "p3" ) == 0 )
                     suffix = "def";
+                else if( strcmp( suffix, "-5.1" ) == 0 )
+                    suffix = "20";
                 else if( strcmp( suffix, "20" ) == 0 )
                     suffix = "";
                 else if( strcmp( suffix, "6420" ) == 0 )
