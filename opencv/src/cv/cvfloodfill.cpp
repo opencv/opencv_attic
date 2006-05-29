@@ -1127,13 +1127,13 @@ cvFloodFill( CvArr* arr, CvPoint seed_point,
                 int t = cvFloor(lo_diff.val[i]);
                 ld_buf.b[i] = CV_CAST_8U(t);
                 t = cvFloor(up_diff.val[i]);
-                ld_buf.b[i] = CV_CAST_8U(t);
+                ud_buf.b[i] = CV_CAST_8U(t);
             }
         else
             for( i = 0; i < cn; i++ )
             {
                 ld_buf.f[i] = (float)lo_diff.val[i];
-                ld_buf.f[i] = (float)up_diff.val[i];
+                ud_buf.f[i] = (float)up_diff.val[i];
             }
 
         IPPI_CALL( func( img->data.ptr, img->step, mask->data.ptr, mask->step,
