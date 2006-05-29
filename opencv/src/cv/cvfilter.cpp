@@ -686,9 +686,19 @@ void CvSepFilter::init( int _max_width, int _src_type, int _dst_type,
     CV_CALL( CvBaseImageFilter::init( _max_width, _src_type, _dst_type, 1, _ksize,
                                       _anchor, _border_mode, _border_value ));
 
-    CV_CALL( kx = cvCreateMat( _kx->rows, _kx->cols, filter_type ));
+    if( !(kx && CV_ARE_SIZES_EQ(kx,_kx)) )
+    {
+        cvReleaseMat( &kx );
+        CV_CALL( kx = cvCreateMat( _kx->rows, _kx->cols, filter_type ));
+    }
+
+    if( !(ky && CV_ARE_SIZES_EQ(ky,_ky)) )
+    {
+        cvReleaseMat( &ky );
+        CV_CALL( ky = cvCreateMat( _ky->rows, _ky->cols, filter_type ));
+    }
+
     CV_CALL( cvConvert( _kx, kx ));
-    CV_CALL( ky = cvCreateMat( _ky->rows, _ky->cols, filter_type ));
     CV_CALL( cvConvert( _ky, ky ));
 
     xsz = kx->rows + kx->cols - 1;
@@ -2092,11 +2102,16 @@ void CvLinearFilter::init( int _max_width, int _src_type, int _dst_type,
     CV_CALL( CvBaseImageFilter::init( _max_width, _src_type, _dst_type,
         false, cvGetMatSize(_kernel), _anchor, _border_mode, _border_value ));
 
-    CV_CALL( kernel = cvCreateMat( ksize.height, ksize.width, CV_32FC1 ));
+    if( !(kernel && k_sparse && ksize.width == kernel->cols && ksize.height == kernel->rows ))
+    {
+        cvReleaseMat( &kernel );
+        cvFree( &k_sparse );
+        CV_CALL( kernel = cvCreateMat( ksize.height, ksize.width, CV_32FC1 ));
+        CV_CALL( k_sparse = (uchar*)cvAlloc(
+            ksize.width*ksize.height*(2*sizeof(int) + sizeof(uchar*) + sizeof(float))));
+    }
+    
     CV_CALL( cvConvert( _kernel, kernel ));
-
-    CV_CALL( k_sparse = (uchar*)cvAlloc(
-        ksize.width*ksize.height*(2*sizeof(int) + sizeof(uchar*) + sizeof(float))));
     
     nz_loc = (CvPoint*)k_sparse;
     for( i = 0; i < ksize.height; i++ )

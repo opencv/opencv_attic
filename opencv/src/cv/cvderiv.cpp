@@ -688,7 +688,7 @@ cvLaplace( const void* srcarr, void* dstarr, int aperture_size )
         (src_type == CV_8UC1 && dst_type == CV_16SC1 ||
         src_type == CV_32FC1 && dst_type == CV_32FC1) )
     {
-        CV_CALL( temp = cvCreateMat( src->rows, src->cols, src_type ));
+        CV_CALL( temp = cvCreateMat( src->rows, src->cols, dst_type ));
         CV_CALL( cvSobel( src, temp, 2, 0, aperture_size ));
         CV_CALL( cvSobel( src, dst, 0, 2, aperture_size ));
         CV_CALL( cvAdd( temp, dst, dst ));
