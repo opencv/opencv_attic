@@ -408,8 +408,11 @@ cvRodrigues2( const CvMat* src, CvMat* dst, CvMat* jacobian )
     }
     else if( src->cols == 3 && src->rows == 3 )
     {
-        double R[9], rx, ry, rz;
+        double R[9], U[9], V[9], W[3], rx, ry, rz;
         CvMat _R = cvMat( 3, 3, CV_64F, R );
+        CvMat _U = cvMat( 3, 3, CV_64F, U );
+        CvMat _V = cvMat( 3, 3, CV_64F, V );
+        CvMat _W = cvMat( 3, 1, CV_64F, W );
         double theta, s, c;
         int step = dst->rows > 1 ? dst->step / elem_size : 1;
         
@@ -425,17 +428,20 @@ cvRodrigues2( const CvMat* src, CvMat* dst, CvMat* jacobian )
                 cvZero(jacobian);
             EXIT;
         }
-            
+        
+        cvSVD( &_R, &_W, &_U, &_V, CV_SVD_MODIFY_A + CV_SVD_U_T + CV_SVD_V_T );
+        cvGEMM( &_U, &_V, 1, 0, 0, &_R, CV_GEMM_A_T );
+        
         rx = R[7] - R[5];
         ry = R[2] - R[6];
         rz = R[3] - R[1];
 
+        s = sqrt((rx*rx + ry*ry + rz*rz)*0.25);
         c = (R[0] + R[4] + R[8] - 1)*0.5;
         c = c > 1. ? 1. : c < -1. ? -1. : c;
         theta = acos(c);
-        s = sin(theta);
 
-        if( fabs(s) < 1e-5 )
+        if( s < 1e-5 )
         {
             double t;
 
@@ -467,7 +473,7 @@ cvRodrigues2( const CvMat* src, CvMat* dst, CvMat* jacobian )
             
             if( jacobian )
             {
-                double t, dtheta_dtr = -1./sqrt(1 - c*c);
+                double t, dtheta_dtr = -1./s;
                 // var1 = [vth;theta]
                 // var = [om1;var1] = [om1;vth;theta]
                 double dvth_dtheta = -vth*c/s;
