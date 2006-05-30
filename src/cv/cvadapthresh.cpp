@@ -81,7 +81,7 @@ icvAdaptiveThreshold_MeanC( const CvMat* src, CvMat* dst, int method,
             tab[i] = (uchar)(i - 255 > -idelta ? maxValue : 0);
     else
         for( i = 0; i < 768; i++ )
-            tab[i] = (uchar)(i - 255 < -idelta ? maxValue : 0);
+            tab[i] = (uchar)(i - 255 <= -idelta ? maxValue : 0);
 
     for( i = 0; i < rows; i++ )
     {
