@@ -167,7 +167,6 @@ cvReleaseHist( CvHistogram **hist )
     __END__;
 }
 
-
 CV_IMPL void
 cvClearHist( CvHistogram *hist )
 {
@@ -2355,6 +2354,186 @@ CV_IMPL void cvEqualizeHist( const CvArr* src, CvArr* dst )
     cvReleaseHist(&hist);
     cvReleaseMat(&lut);
 }
+
+/* Implementation of RTTI and Generic Functions for CvHistogram */
+#define CV_TYPE_NAME_HIST "opencv-hist"
+
+static CvTypeInfo*
+icvInitTypeInfo( CvTypeInfo* info, const char* type_name,
+                 CvIsInstanceFunc is_instance, CvReleaseFunc release,
+                 CvReadFunc read, CvWriteFunc write,
+                 CvCloneFunc clone )
+{           
+    info->flags = 0;
+    info->header_size = sizeof(CvTypeInfo);
+    info->type_name = type_name;
+    info->prev = info->next = 0;
+    info->is_instance = is_instance;
+    info->release = release;
+    info->clone = clone;
+    info->read = read;
+    info->write = write;
+            
+    return info;
+}
+
+static int icvIsHist( const void * ptr ){
+	return CV_IS_HIST( ((CvHistogram*)ptr) );
+}
+
+static CvHistogram * icvCloneHist( const CvHistogram * src ){
+	CvHistogram * dst=NULL;
+	cvCopyHist(src, &dst);
+	return dst;
+}
+
+static void *icvReadHist( CvFileStorage * fs, CvFileNode * node ){
+	CvHistogram * h = (CvHistogram *) cvAlloc( sizeof(CvHistogram) );
+	int is_uniform = 0;
+	int have_ranges = 0;
+
+	CV_FUNCNAME("icvReadHist");
+	__BEGIN__;
+
+	is_uniform = cvReadIntByName( fs, node, "is_uniform", 0 );
+	have_ranges = cvReadIntByName( fs, node, "have_ranges", 0);
+	h->type = CV_HIST_MAGIC_VAL | 
+		      (is_uniform ? CV_HIST_UNIFORM_FLAG : 0) |
+			  (have_ranges ? CV_HIST_RANGES_FLAG : 0);
+
+	if(is_uniform){
+		// read histogram bins
+		CvMatND * mat = (CvMatND *) cvReadByName( fs, node, "mat" );
+		int sizes[CV_MAX_DIM];
+		int i;
+		if(!CV_IS_MATND(mat)){
+			CV_ERROR( CV_StsError, "Expected CvMatND");
+		}
+		for(i=0; i<mat->dims; i++){
+			sizes[i] = mat->dim[i].size;
+		}
+
+		cvInitMatNDHeader( &(h->mat), mat->dims, sizes, mat->type, mat->data.ptr );
+		h->bins = &(h->mat);
+		
+		// take ownership of refcount pointer as well
+		h->mat.refcount = mat->refcount;
+
+		// increase refcount so freeing temp header doesn't free data
+		cvIncRefData( mat ); 
+		
+		// free temporary header
+		cvReleaseMatND( &mat );
+	}
+	else{
+		h->bins = cvReadByName( fs, node, "bins" );
+		if(!CV_IS_SPARSE_MAT(h->bins)){
+			CV_ERROR( CV_StsError, "Unknown Histogram type");
+		}
+	}
+
+	// read thresholds
+	if(have_ranges){
+		int i;
+		int dims;
+		int size[CV_MAX_DIM];
+		int total = 0;
+		CvSeqReader reader;
+		CvFileNode * thresh_node;
+
+		CV_CALL( dims = cvGetDims( h->bins, size ));
+		for( i = 0; i < dims; i++ ){
+			total += size[i]+1;
+		}
+
+		thresh_node = cvGetFileNodeByName( fs, node, "thresh" );
+		if(!thresh_node){
+			CV_ERROR( CV_StsError, "'thresh' node is missing");
+		}
+		cvStartReadRawData( fs, thresh_node, &reader );
+
+		if(is_uniform){
+			for(i=0; i<dims; i++){
+				cvReadRawDataSlice( fs, &reader, 2, h->thresh[i], "f" );
+			}
+		}
+		else{
+			float* dim_ranges;
+			CV_CALL( h->thresh2 = (float**)cvAlloc(
+						dims*sizeof(h->thresh2[0])+
+						total*sizeof(h->thresh2[0][0])));
+			dim_ranges = (float*)(h->thresh2 + dims);
+			for(i=0; i < dims; i++){
+				h->thresh2[i] = dim_ranges;
+				cvReadRawDataSlice( fs, &reader, size[i]+1, dim_ranges, "f" );
+				dim_ranges += size[i] + 1;
+			}
+		}
+
+	}
+	
+	__END__;
+
+	return h;
+}
+
+static void icvWriteHist( CvFileStorage* fs, const char* name, const void* struct_ptr, 
+		CvAttrList attributes ){
+	const CvHistogram * hist = (const CvHistogram *) struct_ptr;
+	int sizes[CV_MAX_DIM];
+	int dims;
+	int i;
+	int is_uniform, have_ranges;
+
+	CV_FUNCNAME("icvWriteHist");
+	__BEGIN__;
+ 
+	cvStartWriteStruct( fs, name, CV_NODE_MAP, CV_TYPE_NAME_HIST );
+
+	is_uniform = (CV_IS_UNIFORM_HIST(hist) ? 1 : 0);
+	have_ranges = (hist->type & CV_HIST_RANGES_FLAG ? 1 : 0);
+	
+	cvWriteInt( fs, "is_uniform", is_uniform );
+	cvWriteInt( fs, "have_ranges", have_ranges );
+	if(CV_IS_UNIFORM_HIST(hist)){
+		cvWrite( fs, "mat", &(hist->mat) );
+	}
+	else if(CV_IS_SPARSE_HIST(hist)){
+		cvWrite( fs, "bins", hist->bins );
+	}
+	else{
+		CV_ERROR( CV_StsError, "Unknown Histogram Type" );
+	}
+
+	// write thresholds
+	if(have_ranges){
+		dims = cvGetDims( hist->bins, sizes );
+		cvStartWriteStruct( fs, "thresh", CV_NODE_SEQ + CV_NODE_FLOW );
+		if(is_uniform){
+			for(i=0; i<dims; i++){
+				cvWriteRawData( fs, hist->thresh[i], 2, "f" );
+			}
+		}
+		else{
+			for(i=0; i<dims; i++){
+				cvWriteRawData( fs, hist->thresh2[i], sizes[i]+1, "f" );
+			}
+		}
+		cvEndWriteStruct( fs );
+	}
+
+	cvEndWriteStruct( fs );
+	__END__;
+}
+
+static int icvRegisterHistogramType(){
+	CvTypeInfo info;
+	icvInitTypeInfo(&info, CV_TYPE_NAME_HIST, icvIsHist, (CvReleaseFunc) cvReleaseHist, icvReadHist, icvWriteHist, (CvCloneFunc) icvCloneHist );
+	cvRegisterType( &info );
+	return 1;
+}
+
+int g_histogram_type_registered = icvRegisterHistogramType();
 
 /* End of file. */
 
