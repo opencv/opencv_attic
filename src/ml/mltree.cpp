@@ -2571,15 +2571,12 @@ CvDTreeNode* CvDTree::predict( const CvMat* _sample,
     sample = _sample->data.fl;
     step = CV_IS_MAT_CONT(_sample->type) ? 1 : _sample->step/sizeof(data[0]);
 
-    if( data->cat_count ) // cache for categorical variables
+    if( data->cat_count && !preprocessed_input ) // cache for categorical variables
     {
         int n = data->cat_count->cols;
         catbuf = (int*)cvStackAlloc(n*sizeof(catbuf[0]));
-        if( !preprocessed_input )
-        {
-            for( i = 0; i < n; i++ )
-                catbuf[i] = -1;
-        }
+        for( i = 0; i < n; i++ )
+            catbuf[i] = -1;
     }
 
     if( _missing )
@@ -2613,12 +2610,13 @@ CvDTreeNode* CvDTree::predict( const CvMat* _sample,
                 dir = val <= split->ord.c ? -1 : 1;
             else // categorical
             {
-                int c = catbuf[ci];
-                if( c < 0 )
+                int c;
+                if( preprocessed_input )
+                    c = cvRound(val);
+                else
                 {
-                    if( preprocessed_input )
-                        c = catbuf[ci] = cvRound(val);
-                    else
+                    c = catbuf[ci];
+                    if( c < 0 )
                     {
                         int a = c = cofs[ci];
                         int b = cofs[ci+1];
