@@ -191,23 +191,6 @@ ICV_PYRUP( 32f, 3 )
 *                                Geometric Transformations                               *
 \****************************************************************************************/
 
-/*#define IPCV_REMAP( flavor, cn, arrtype )                                   \
-IPCVAPI_EX( CvStatus, icvRemap_##flavor##_C##cn##R,                         \
-    "ippiRemap_" #flavor "_C" #cn "R", CV_PLUGINS1(CV_PLUGIN_IPPI),         \
-    ( const arrtype* src, CvSize srcsize, int srcstep, CvSize srcroi,       \
-      const float* xmap, int xmapstep, const float* ymap, int ymapstep,     \
-      arrtype* dst, int dststep, CvSize dstroi, int interpolation ))
-
-IPCV_REMAP( 8u, 1, uchar )
-IPCV_REMAP( 8u, 3, uchar )
-IPCV_REMAP( 8u, 4, uchar )
-
-IPCV_REMAP( 32f, 1, float )
-IPCV_REMAP( 32f, 3, float )
-IPCV_REMAP( 32f, 4, float )
-
-#undef IPCV_REMAP*/
-
 #define IPCV_RESIZE( flavor, cn )                                           \
 IPCVAPI_EX( CvStatus, icvResize_##flavor##_C##cn##R,                        \
             "ippiResize_" #flavor "_C" #cn "R", CV_PLUGINS1(CV_PLUGIN_IPPI),\
@@ -382,6 +365,64 @@ IPCV_FILTER_BOX( 32f, 4 )
 /****************************************************************************************\
 *                                 Derivative Filters                                     *
 \****************************************************************************************/
+
+#define IPCV_FILTER_SOBEL_BORDER( suffix, flavor, srctype )                             \
+IPCVAPI_EX( CvStatus, icvFilterSobel##suffix##GetBufSize_##flavor##_C1R,                \
+    "ippiFilterSobel" #suffix "GetBufferSize_" #flavor "_C1R",                          \
+    CV_PLUGINS1(CV_PLUGIN_IPPCV), ( CvSize roi, int masksize, int* buffersize ))        \
+IPCVAPI_EX( CvStatus, icvFilterSobel##suffix##Border_##flavor##_C1R,                    \
+    "ippiFilterSobel" #suffix "Border_" #flavor "_C1R", CV_PLUGINS1(CV_PLUGIN_IPPCV),   \
+    ( const void* src, int srcstep, void* dst, int dststep, CvSize roi, int masksize,   \
+      int bordertype, srctype bordervalue, void* buffer ))
+
+IPCV_FILTER_SOBEL_BORDER( NegVert, 8u16s, uchar )
+IPCV_FILTER_SOBEL_BORDER( Horiz, 8u16s, uchar )
+IPCV_FILTER_SOBEL_BORDER( VertSecond, 8u16s, uchar )
+IPCV_FILTER_SOBEL_BORDER( HorizSecond, 8u16s, uchar )
+IPCV_FILTER_SOBEL_BORDER( Cross, 8u16s, uchar )
+
+IPCV_FILTER_SOBEL_BORDER( NegVert, 32f, float )
+IPCV_FILTER_SOBEL_BORDER( Horiz, 32f, float )
+IPCV_FILTER_SOBEL_BORDER( VertSecond, 32f, float )
+IPCV_FILTER_SOBEL_BORDER( HorizSecond, 32f, float )
+IPCV_FILTER_SOBEL_BORDER( Cross, 32f, float )
+
+#undef IPCV_FILTER_SOBEL_BORDER
+
+#define IPCV_FILTER_SCHARR_BORDER( suffix, flavor, srctype )                            \
+IPCVAPI_EX( CvStatus, icvFilterScharr##suffix##GetBufSize_##flavor##_C1R,               \
+    "ippiFilterScharr" #suffix "GetBufferSize_" #flavor "_C1R",                         \
+    CV_PLUGINS1(CV_PLUGIN_IPPCV), ( CvSize roi, int* buffersize ))                      \
+IPCVAPI_EX( CvStatus, icvFilterScharr##suffix##Border_##flavor##_C1R,                   \
+    "ippiFilterScharr" #suffix "Border_" #flavor "_C1R", CV_PLUGINS1(CV_PLUGIN_IPPCV),  \
+    ( const void* src, int srcstep, void* dst, int dststep, CvSize roi,                 \
+      int bordertype, srctype bordervalue, void* buffer ))
+
+IPCV_FILTER_SCHARR_BORDER( Vert, 8u16s, uchar )
+IPCV_FILTER_SCHARR_BORDER( Horiz, 8u16s, uchar )
+
+IPCV_FILTER_SCHARR_BORDER( Vert, 32f, float )
+IPCV_FILTER_SCHARR_BORDER( Horiz, 32f, float )
+
+#undef IPCV_FILTER_SCHARR_BORDER
+
+
+#define IPCV_FILTER_LAPLACIAN_BORDER( flavor, srctype )                                 \
+IPCVAPI_EX( CvStatus, icvFilterLaplacianGetBufSize_##flavor##_C1R,                      \
+    "ippiFilterLaplacianGetBufferSize_" #flavor "_C1R",                                 \
+    CV_PLUGINS1(CV_PLUGIN_IPPCV), ( CvSize roi, int masksize, int* buffersize ))        \
+IPCVAPI_EX( CvStatus, icvFilterLaplacianBorder_##flavor##_C1R,                          \
+    "ippiFilterLaplacianBorder_" #flavor "_C1R", CV_PLUGINS1(CV_PLUGIN_IPPCV),          \
+    ( const void* src, int srcstep, void* dst, int dststep, CvSize roi, int masksize,   \
+      int bordertype, srctype bordervalue, void* buffer ))
+
+IPCV_FILTER_LAPLACIAN_BORDER( 8u16s, uchar )
+IPCV_FILTER_LAPLACIAN_BORDER( 32f, float )
+
+#undef IPCV_FILTER_LAPLACIAN_BORDER
+
+
+/////////////////////////////////////////////////////////////////////////////////////////
 
 #define IPCV_FILTER_SOBEL( suffix, ipp_suffix, flavor )                             \
 IPCVAPI_EX( CvStatus, icvFilterSobel##suffix##_##flavor##_C1R,                      \
