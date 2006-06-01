@@ -43,18 +43,43 @@
 #include <limits.h>
 #include <stdio.h>
 
-#define IPCV_MORPHOLOGY_PTRS( morphtype, flavor )                                   \
-icv##morphtype##Rect_##flavor##_C1R_t icv##morphtype##Rect_##flavor##_C1R_p = 0;    \
-icv##morphtype##Rect_##flavor##_C3R_t icv##morphtype##Rect_##flavor##_C3R_p = 0;    \
-icv##morphtype##Rect_##flavor##_C4R_t icv##morphtype##Rect_##flavor##_C4R_p = 0;    \
-icv##morphtype##Any_##flavor##_C1R_t icv##morphtype##Any_##flavor##_C1R_p = 0;      \
-icv##morphtype##Any_##flavor##_C3R_t icv##morphtype##Any_##flavor##_C3R_p = 0;      \
-icv##morphtype##Any_##flavor##_C4R_t icv##morphtype##Any_##flavor##_C4R_p = 0;
+#define IPCV_MORPHOLOGY_PTRS( morphtype, flavor )               \
+    icv##morphtype##Rect_##flavor##_C1R_t                       \
+        icv##morphtype##Rect_##flavor##_C1R_p = 0;              \
+    icv##morphtype##Rect_GetBufSize_##flavor##_C1R_t            \
+        icv##morphtype##Rect_GetBufSize_##flavor##_C1R_p = 0;   \
+    icv##morphtype##Rect_##flavor##_C3R_t                       \
+        icv##morphtype##Rect_##flavor##_C3R_p = 0;              \
+    icv##morphtype##Rect_GetBufSize_##flavor##_C3R_t            \
+        icv##morphtype##Rect_GetBufSize_##flavor##_C3R_p = 0;   \
+    icv##morphtype##Rect_##flavor##_C4R_t                       \
+        icv##morphtype##Rect_##flavor##_C4R_p = 0;              \
+    icv##morphtype##Rect_GetBufSize_##flavor##_C4R_t            \
+        icv##morphtype##Rect_GetBufSize_##flavor##_C4R_p = 0;   \
+                                                                \
+    icv##morphtype##_##flavor##_C1R_t                           \
+        icv##morphtype##_##flavor##_C1R_p = 0;                  \
+    icv##morphtype##_##flavor##_C3R_t                           \
+        icv##morphtype##_##flavor##_C3R_p = 0;                  \
+    icv##morphtype##_##flavor##_C4R_t                           \
+        icv##morphtype##_##flavor##_C4R_p = 0;
+
+#define IPCV_MORPHOLOGY_INITALLOC_PTRS( flavor )                \
+    icvMorphInitAlloc_##flavor##_C1R_t                          \
+        icvMorphInitAlloc_##flavor##_C1R_p = 0;                 \
+    icvMorphInitAlloc_##flavor##_C3R_t                          \
+        icvMorphInitAlloc_##flavor##_C3R_p = 0;                 \
+    icvMorphInitAlloc_##flavor##_C4R_t                          \
+        icvMorphInitAlloc_##flavor##_C4R_p = 0;
 
 IPCV_MORPHOLOGY_PTRS( Erode, 8u )
 IPCV_MORPHOLOGY_PTRS( Erode, 32f )
 IPCV_MORPHOLOGY_PTRS( Dilate, 8u )
 IPCV_MORPHOLOGY_PTRS( Dilate, 32f )
+IPCV_MORPHOLOGY_INITALLOC_PTRS( 8u )
+IPCV_MORPHOLOGY_INITALLOC_PTRS( 32f )
+
+icvMorphFree_t icvMorphFree_p = 0;
 
 /****************************************************************************************\
                      Basic Morphological Operations: Erosion & Dilation
@@ -719,19 +744,29 @@ cvReleaseStructuringElement( IplConvKernel ** element )
 }
 
 
+typedef CvStatus (CV_STDCALL * CvMorphRectGetBufSizeFunc_IPP)
+    ( int width, CvSize el_size, int* bufsize );
+
 typedef CvStatus (CV_STDCALL * CvMorphRectFunc_IPP)
     ( const void* src, int srcstep, void* dst, int dststep,
-      CvSize roi, CvSize elSize, CvPoint elAnchor );
+      CvSize roi, CvSize el_size, CvPoint el_anchor, void* buffer );
 
-typedef CvStatus (CV_STDCALL * CvMorphAnyFunc_IPP)
+typedef CvStatus (CV_STDCALL * CvMorphCustomInitAllocFunc_IPP)
+    ( int width, const uchar* element, CvSize el_size,
+      CvPoint el_anchor, void** morphstate );
+
+typedef CvStatus (CV_STDCALL * CvMorphCustomFunc_IPP)
     ( const void* src, int srcstep, void* dst, int dststep,
-      CvSize roi, const uchar* element, CvSize elSize, CvPoint elAnchor );
+      CvSize roi, int bordertype, void* morphstate );
 
 static void
 icvMorphOp( const void* srcarr, void* dstarr, IplConvKernel* element,
             int iterations, int mop )
 {
     CvMorphology morphology;
+    void* buffer = 0;
+    int local_alloc = 0;
+    void* morphstate = 0;
     CvMat* temp = 0;
 
     CV_FUNCNAME( "icvMorphOp" );
@@ -742,10 +777,11 @@ icvMorphOp( const void* srcarr, void* dstarr, IplConvKernel* element,
     CvMat srcstub, *src = (CvMat*)srcarr;
     CvMat dststub, *dst = (CvMat*)dstarr;
     CvMat el_hdr, *el = 0;
-    CvSize el_size;
+    CvSize size, el_size;
     CvPoint el_anchor;
     int el_shape;
     int type;
+    bool inplace;
 
     if( !CV_IS_MAT(src) )
         CV_CALL( src = cvGetMat( src, &srcstub, &coi1 ));
@@ -779,6 +815,8 @@ icvMorphOp( const void* srcarr, void* dstarr, IplConvKernel* element,
         CV_ERROR( CV_BadCOI, "" );
 
     type = CV_MAT_TYPE( src->type );
+    size = cvGetMatSize( src );
+    inplace = src->data.ptr == dst->data.ptr;
 
     if( iterations == 0 || (element && element->nCols == 1 && element->nRows == 1))
     {
@@ -796,100 +834,173 @@ icvMorphOp( const void* srcarr, void* dstarr, IplConvKernel* element,
     }
     else
     {
-        el_size = cvSize( 1+iterations*2, 1+iterations*2 );
-        el_anchor = cvPoint( iterations, iterations );
+        el_size = cvSize(3,3);
+        el_anchor = cvPoint(1,1);
         el_shape = CV_SHAPE_RECT;
+    }
+
+    if( el_shape == CV_SHAPE_RECT && iterations > 1 )
+    {
+        el_size.width += (el_size.width-1)*iterations;
+        el_size.height += (el_size.height-1)*iterations;
+        el_anchor.x *= iterations;
+        el_anchor.y *= iterations;
         iterations = 1;
     }
 
-    if( icvErodeRect_8u_C1R_p )
+    if( el_shape == CV_SHAPE_RECT && icvErodeRect_GetBufSize_8u_C1R_p )
     {
         CvMorphRectFunc_IPP rect_func = 0;
-        CvMorphAnyFunc_IPP any_func = 0;
+        CvMorphRectGetBufSizeFunc_IPP rect_getbufsize_func = 0;
 
-        if( el_shape == CV_SHAPE_RECT && mop == 0 )
+        if( mop == 0 )
         {
-            rect_func = type == CV_8UC1 ? icvErodeRect_8u_C1R_p :
-                        type == CV_8UC3 ? icvErodeRect_8u_C3R_p :
-                        type == CV_8UC4 ? icvErodeRect_8u_C4R_p :
-                        type == CV_32FC1 ? icvErodeRect_32f_C1R_p :
-                        type == CV_32FC3 ? icvErodeRect_32f_C3R_p :
-                        type == CV_32FC4 ? icvErodeRect_32f_C4R_p : 0;
-        }
-        else if( el_shape == CV_SHAPE_RECT && mop == 1 )
-        {
-            rect_func = type == CV_8UC1 ? icvDilateRect_8u_C1R_p :
-                        type == CV_8UC3 ? icvDilateRect_8u_C3R_p :
-                        type == CV_8UC4 ? icvDilateRect_8u_C4R_p :
-                        type == CV_32FC1 ? icvDilateRect_32f_C1R_p :
-                        type == CV_32FC3 ? icvDilateRect_32f_C3R_p :
-                        type == CV_32FC4 ? icvDilateRect_32f_C4R_p : 0;
-        }
-        else if( mop == 0 )
-        {
-            any_func =  type == CV_8UC1 ? icvErodeAny_8u_C1R_p :
-                        type == CV_8UC3 ? icvErodeAny_8u_C3R_p :
-                        type == CV_8UC4 ? icvErodeAny_8u_C4R_p :
-                        type == CV_32FC1 ? icvErodeAny_32f_C1R_p :
-                        type == CV_32FC3 ? icvErodeAny_32f_C3R_p :
-                        type == CV_32FC4 ? icvErodeAny_32f_C4R_p : 0;
+            if( type == CV_8UC1 )
+                rect_getbufsize_func = icvErodeRect_GetBufSize_8u_C1R_p,
+                rect_func = icvErodeRect_8u_C1R_p;
+            else if( type == CV_8UC3 )
+                rect_getbufsize_func = icvErodeRect_GetBufSize_8u_C3R_p,
+                rect_func = icvErodeRect_8u_C3R_p;
+            else if( type == CV_8UC4 )
+                rect_getbufsize_func = icvErodeRect_GetBufSize_8u_C4R_p,
+                rect_func = icvErodeRect_8u_C4R_p;
+            else if( type == CV_32FC1 )
+                rect_getbufsize_func = icvErodeRect_GetBufSize_32f_C1R_p,
+                rect_func = icvErodeRect_32f_C1R_p;
+            else if( type == CV_32FC3 )
+                rect_getbufsize_func = icvErodeRect_GetBufSize_32f_C3R_p,
+                rect_func = icvErodeRect_32f_C3R_p;
+            else if( type == CV_32FC4 )
+                rect_getbufsize_func = icvErodeRect_GetBufSize_32f_C4R_p,
+                rect_func = icvErodeRect_32f_C4R_p;
         }
         else
         {
-            any_func =  type == CV_8UC1 ? icvDilateAny_8u_C1R_p :
-                        type == CV_8UC3 ? icvDilateAny_8u_C3R_p :
-                        type == CV_8UC4 ? icvDilateAny_8u_C4R_p :
-                        type == CV_32FC1 ? icvDilateAny_32f_C1R_p :
-                        type == CV_32FC3 ? icvDilateAny_32f_C3R_p :
-                        type == CV_32FC4 ? icvDilateAny_32f_C4R_p : 0;
+            if( type == CV_8UC1 )
+                rect_getbufsize_func = icvDilateRect_GetBufSize_8u_C1R_p,
+                rect_func = icvDilateRect_8u_C1R_p;
+            else if( type == CV_8UC3 )
+                rect_getbufsize_func = icvDilateRect_GetBufSize_8u_C3R_p,
+                rect_func = icvDilateRect_8u_C3R_p;
+            else if( type == CV_8UC4 )
+                rect_getbufsize_func = icvDilateRect_GetBufSize_8u_C4R_p,
+                rect_func = icvDilateRect_8u_C4R_p;
+            else if( type == CV_32FC1 )
+                rect_getbufsize_func = icvDilateRect_GetBufSize_32f_C1R_p,
+                rect_func = icvDilateRect_32f_C1R_p;
+            else if( type == CV_32FC3 )
+                rect_getbufsize_func = icvDilateRect_GetBufSize_32f_C3R_p,
+                rect_func = icvDilateRect_32f_C3R_p;
+            else if( type == CV_32FC4 )
+                rect_getbufsize_func = icvDilateRect_GetBufSize_32f_C4R_p,
+                rect_func = icvDilateRect_32f_C4R_p;
         }
-        
-        if( (rect_func || any_func) && src->cols >= el_size.width &&
-            el_size.width > 1 && el_size.height > 1 )
+
+        if( rect_getbufsize_func && rect_func )
         {
-            int y, dy = 0;
-            int el_len = el_size.width*el_size.height;
-            int temp_step;
-            uchar* el_mask = 0;
-            const uchar* shifted_ptr;
-            int stripe_size = 1 << 15; // the optimal value may depend on CPU cache,
-                                       // overhead of current IPP code etc.
-            if( any_func )
+            int bufsize = 0;
+
+            CvStatus status = rect_getbufsize_func( size.width, el_size, &bufsize );
+            if( status >= 0 && bufsize > 0 )
             {
-                el_mask = (uchar*)cvStackAlloc( el_len );
-                for( i = 0; i < el_len; i++ )
-                    el_mask[i] = (uchar)(element->values[i] != 0);
-            }
-
-            CV_CALL( temp = icvIPPFilterInit( src, stripe_size, el_size ));
-            
-            shifted_ptr = temp->data.ptr +
-                el_anchor.y*temp->step + el_anchor.x*CV_ELEM_SIZE(type);
-            temp_step = temp->step ? temp->step : CV_STUB_STEP;
-
-            for( i = 0; i < iterations; i++ )
-            {
-                int dst_step = dst->step ? dst->step : CV_STUB_STEP;
-
-                for( y = 0; y < src->rows; y += dy )
+                if( bufsize < CV_MAX_LOCAL_SIZE )
                 {
-                    dy = icvIPPFilterNextStripe( src, temp, y, el_size, el_anchor );
-                    if( rect_func )
-                    {
-                        IPPI_CALL( rect_func( shifted_ptr, temp_step,
-                            dst->data.ptr + y*dst_step, dst_step, cvSize(src->cols, dy),
-                            el_size, el_anchor ));
-                    }
-                    else
-                    {
-                        IPPI_CALL( any_func( shifted_ptr, temp_step,
-                            dst->data.ptr + y*dst_step, dst_step, cvSize(src->cols, dy),
-                            el_mask, el_size, el_anchor ));
-                    }
+                    buffer = cvStackAlloc( bufsize );
+                    local_alloc = 1;
                 }
-                src = dst;
+                else
+                    CV_CALL( buffer = cvAlloc( bufsize ));
             }
-            EXIT;
+
+            if( status >= 0 )
+            {
+                int src_step, dst_step = dst->step ? dst->step : CV_STUB_STEP;
+
+                if( inplace )
+                {
+                    CV_CALL( temp = cvCloneMat( dst ));
+                    src = temp;
+                }
+                src_step = src->step ? src->step : CV_STUB_STEP;
+
+                status = rect_func( src->data.ptr, src_step, dst->data.ptr,
+                                    dst_step, size, el_size, el_anchor, buffer );
+            }
+            
+            if( status >= 0 )
+                EXIT;
+        }
+    }
+    else if( el_shape == CV_SHAPE_CUSTOM && icvMorphInitAlloc_8u_C1R_p && icvMorphFree_p &&
+             src->data.ptr != dst->data.ptr )
+    {
+        CvMorphCustomFunc_IPP custom_func = 0;
+        CvMorphCustomInitAllocFunc_IPP custom_initalloc_func = 0;
+        const int bordertype = 1; // replication border
+
+        if( type == CV_8UC1 )
+            custom_initalloc_func = icvMorphInitAlloc_8u_C1R_p,
+            custom_func = mop == 0 ? icvErode_8u_C1R_p : icvDilate_8u_C1R_p;
+        else if( type == CV_8UC3 )
+            custom_initalloc_func = icvMorphInitAlloc_8u_C3R_p,
+            custom_func = mop == 0 ? icvErode_8u_C3R_p : icvDilate_8u_C3R_p;
+        else if( type == CV_8UC4 )
+            custom_initalloc_func = icvMorphInitAlloc_8u_C4R_p,
+            custom_func = mop == 0 ? icvErode_8u_C4R_p : icvDilate_8u_C4R_p;
+        else if( type == CV_32FC1 )
+            custom_initalloc_func = icvMorphInitAlloc_32f_C1R_p,
+            custom_func = mop == 0 ? icvErode_32f_C1R_p : icvDilate_32f_C1R_p;
+        else if( type == CV_32FC3 )
+            custom_initalloc_func = icvMorphInitAlloc_32f_C3R_p,
+            custom_func = mop == 0 ? icvErode_32f_C3R_p : icvDilate_32f_C3R_p;
+        else if( type == CV_32FC4 )
+            custom_initalloc_func = icvMorphInitAlloc_32f_C4R_p,
+            custom_func = mop == 0 ? icvErode_32f_C4R_p : icvDilate_32f_C4R_p;
+
+        if( custom_initalloc_func && custom_func )
+        {
+            uchar *src_ptr, *dst_ptr = dst->data.ptr;
+            int src_step, dst_step = dst->step ? dst->step : CV_STUB_STEP;
+            int el_len = el_size.width*el_size.height;
+            uchar* el_mask = (uchar*)cvStackAlloc( el_len );
+            CvStatus status;
+
+            for( i = 0; i < el_len; i++ )
+                el_mask[i] = (uchar)(element->values[i] != 0);
+
+            status = custom_initalloc_func( size.width, el_mask, el_size,
+                                            el_anchor, &morphstate );
+
+            if( status >= 0 && (inplace || iterations > 1) )
+            {
+                CV_CALL( temp = cvCloneMat( dst ));
+                src = temp;
+            }
+
+            src_ptr = src->data.ptr;
+            src_step = src->step ? src->step : CV_STUB_STEP;
+
+            for( i = 0; i < iterations && status >= 0 && morphstate; i++ )
+            {
+                uchar* t_ptr;
+                int t_step;
+                status = custom_func( src_ptr, src_step, dst_ptr, dst_step,
+                                      size, bordertype, morphstate );
+                CV_SWAP( src_ptr, dst_ptr, t_ptr );
+                CV_SWAP( src_step, dst_step, t_step );
+                if( i == 0 && temp )
+                {
+                    dst_ptr = temp->data.ptr;
+                    dst_step = temp->step ? temp->step : CV_STUB_STEP;
+                }
+            }
+
+            if( status >= 0 )
+            {
+                if( iterations % 2 == 0 )
+                    cvCopy( temp, dst );
+                EXIT;
+            }
         }
     }
 
@@ -911,6 +1022,10 @@ icvMorphOp( const void* srcarr, void* dstarr, IplConvKernel* element,
 
     __END__;
 
+    if( !local_alloc )
+        cvFree( &buffer );
+    if( morphstate )
+        icvMorphFree_p( morphstate );
     cvReleaseMat( &temp );
 }
 
