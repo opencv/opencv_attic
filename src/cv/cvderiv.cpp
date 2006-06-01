@@ -106,7 +106,8 @@ void icvSepConvSmall3_32f( float* src, int src_step, float* dst, int dst_step,
                              Sobel & Scharr Derivative Filters
 \****************************************************************************************/
 
-////////////////////////////////// IPP derivative filters ////////////////////////////////
+/////////////////////////////// Old IPP derivative filters ///////////////////////////////
+// still used in corner detectors (see cvcorner.cpp)
 
 icvFilterSobelVert_8u16s_C1R_t icvFilterSobelVert_8u16s_C1R_p = 0;
 icvFilterSobelHoriz_8u16s_C1R_t icvFilterSobelHoriz_8u16s_C1R_p = 0;
@@ -125,13 +126,59 @@ icvFilterScharrHoriz_8u16s_C1R_t icvFilterScharrHoriz_8u16s_C1R_p = 0;
 icvFilterScharrVert_32f_C1R_t icvFilterScharrVert_32f_C1R_p = 0;
 icvFilterScharrHoriz_32f_C1R_t icvFilterScharrHoriz_32f_C1R_p = 0;
 
+///////////////////////////////// New IPP derivative filters /////////////////////////////
+
+#define IPCV_FILTER_PTRS( name )                    \
+icvFilter##name##GetBufSize_8u16s_C1R_t             \
+    icvFilter##name##GetBufSize_8u16s_C1R_p = 0;    \
+icvFilter##name##Border_8u16s_C1R_t                 \
+    icvFilter##name##Border_8u16s_C1R_p = 0;        \
+icvFilter##name##GetBufSize_32f_C1R_t               \
+    icvFilter##name##GetBufSize_32f_C1R_p = 0;      \
+icvFilter##name##Border_32f_C1R_t                   \
+    icvFilter##name##Border_32f_C1R_p = 0;
+
+IPCV_FILTER_PTRS( ScharrHoriz )
+IPCV_FILTER_PTRS( ScharrVert )
+IPCV_FILTER_PTRS( SobelHoriz )
+IPCV_FILTER_PTRS( SobelNegVert )
+IPCV_FILTER_PTRS( SobelHorizSecond )
+IPCV_FILTER_PTRS( SobelVertSecond )
+IPCV_FILTER_PTRS( SobelCross )
+IPCV_FILTER_PTRS( Laplacian )
+
+typedef CvStatus (CV_STDCALL * CvDeriv3x3GetBufSizeIPPFunc)
+    ( CvSize roi, int* bufsize );
+
+typedef CvStatus (CV_STDCALL * CvDerivGetBufSizeIPPFunc)
+    ( CvSize roi, int masksize, int* bufsize );
+
+typedef CvStatus (CV_STDCALL * CvDeriv3x3IPPFunc_8u )
+    ( const void* src, int srcstep, void* dst, int dststep,
+      CvSize size, int bordertype, uchar bordervalue, void* buffer );
+
+typedef CvStatus (CV_STDCALL * CvDeriv3x3IPPFunc_32f )
+    ( const void* src, int srcstep, void* dst, int dststep,
+      CvSize size, int bordertype, float bordervalue, void* buffer );
+
+typedef CvStatus (CV_STDCALL * CvDerivIPPFunc_8u )
+    ( const void* src, int srcstep, void* dst, int dststep,
+      CvSize size, int masksize, int bordertype,
+      uchar bordervalue, void* buffer );
+
+typedef CvStatus (CV_STDCALL * CvDerivIPPFunc_32f )
+    ( const void* src, int srcstep, void* dst, int dststep,
+      CvSize size, int masksize, int bordertype,
+      float bordervalue, void* buffer );
+
 //////////////////////////////////////////////////////////////////////////////////////////
 
 CV_IMPL void
 cvSobel( const void* srcarr, void* dstarr, int dx, int dy, int aperture_size )
 {
     CvSepFilter filter;
-    CvMat* temp = 0;
+    void* buffer = 0;
+    int local_alloc = 0;
 
     CV_FUNCNAME( "cvSobel" );
 
@@ -141,7 +188,6 @@ cvSobel( const void* srcarr, void* dstarr, int dx, int dy, int aperture_size )
     int src_type, dst_type;
     CvMat srcstub, *src = (CvMat*)srcarr;
     CvMat dststub, *dst = (CvMat*)dstarr;
-    int ksize = aperture_size != CV_SCHARR ? aperture_size : 3;
 
     if( !CV_IS_MAT(src) )
         CV_CALL( src = cvGetMat( src, &srcstub ));
@@ -158,76 +204,134 @@ cvSobel( const void* srcarr, void* dstarr, int dx, int dy, int aperture_size )
         CV_ERROR( CV_StsBadArg, "src and dst have different sizes" );
 
     if( ((aperture_size == CV_SCHARR || aperture_size == 3 || aperture_size == 5) &&
-        dx <= 1 && dy <= 1 && icvFilterSobelVert_8u16s_C1R_p) &&
+        dx <= 2 && dy <= 2 && dx + dy <= 2 && icvFilterSobelNegVertBorder_8u16s_C1R_p) &&
         (src_type == CV_8UC1 && dst_type == CV_16SC1 ||
         src_type == CV_32FC1 && dst_type == CV_32FC1) )
     {
-        CvSobelFixedIPPFunc ipp_sobel_func = 0;
-        CvFilterFixedIPPFunc ipp_scharr_func = 0;
+        CvDerivGetBufSizeIPPFunc ipp_sobel_getbufsize_func = 0;
+        CvDerivIPPFunc_8u ipp_sobel_func_8u = 0;
+        CvDerivIPPFunc_32f ipp_sobel_func_32f = 0;
 
-        if( dx == 1 && dy == 0 && aperture_size == CV_SCHARR )
-            ipp_scharr_func = src_type == CV_8U ?
-                icvFilterScharrVert_8u16s_C1R_p : icvFilterScharrVert_32f_C1R_p;
-        else if( dx == 0 && dy == 1 && aperture_size == CV_SCHARR )
-            ipp_scharr_func = src_type == CV_8U ?
-                icvFilterScharrHoriz_8u16s_C1R_p : icvFilterScharrHoriz_32f_C1R_p;
-        else if( dx == 1 && dy == 0 )
-            ipp_sobel_func = src_type == CV_8U ?
-                icvFilterSobelVert_8u16s_C1R_p : icvFilterSobelVert_32f_C1R_p;
-        else if( dx == 0 && dy == 1 )
-            ipp_sobel_func = src_type == CV_8U ?
-                icvFilterSobelHoriz_8u16s_C1R_p : icvFilterSobelHoriz_32f_C1R_p;
-        else if( dx == 2 && dy == 0 )
-            ipp_sobel_func = src_type == CV_8U ?
-                icvFilterSobelVertSecond_8u16s_C1R_p : icvFilterSobelVertSecond_32f_C1R_p;
-        else if( dx == 1 && dy == 1 )
-            ipp_sobel_func = src_type == CV_8U ?
-                icvFilterSobelCross_8u16s_C1R_p : icvFilterSobelCross_32f_C1R_p;
-        else if( dx == 0 && dy == 2 )
-            ipp_sobel_func = src_type == CV_8U ?
-                icvFilterSobelHorizSecond_8u16s_C1R_p : icvFilterSobelHorizSecond_32f_C1R_p;
+        CvDeriv3x3GetBufSizeIPPFunc ipp_scharr_getbufsize_func = 0;
+        CvDeriv3x3IPPFunc_8u ipp_scharr_func_8u = 0;
+        CvDeriv3x3IPPFunc_32f ipp_scharr_func_32f = 0;
 
-        if( ipp_sobel_func || ipp_scharr_func )
+        if( aperture_size == CV_SCHARR )
         {
-            int need_to_negate = (dx == 1 && aperture_size != CV_SCHARR) ^ ((dy == 1) && origin);
-            CvSize el_size = { ksize, ksize };
-            CvPoint el_anchor = { ksize/2, ksize/2 };
-            int stripe_buf_size = 1 << 15; // the optimal value may depend on CPU cache,
-                                           // overhead of current IPP code etc.
-            const uchar* shifted_ptr;
-            int y, delta_y = 0;
-            int temp_step;
-            int dst_step = dst->step ? dst->step : CV_STUB_STEP;
-            CvSize stripe_size, size = cvGetMatSize(src);
-
-            CV_CALL( temp = icvIPPFilterInit( src, stripe_buf_size, el_size ));
-
-            shifted_ptr = temp->data.ptr +
-                el_anchor.y*temp->step + el_anchor.x*CV_ELEM_SIZE(src_type);
-            temp_step = temp->step ? temp->step : CV_STUB_STEP;
-
-            for( y = 0; y < src->rows; y += delta_y )
+            if( dx == 1 && dy == 0 )
             {
-                delta_y = icvIPPFilterNextStripe( src, temp, y, el_size, el_anchor );
-                stripe_size.width = size.width;
-                stripe_size.height = delta_y;
+                if( src_type == CV_8U )
+                    ipp_scharr_func_8u = icvFilterScharrVertBorder_8u16s_C1R_p,
+                    ipp_scharr_getbufsize_func = icvFilterScharrVertGetBufSize_8u16s_C1R_p;
+                else
+                    ipp_scharr_func_32f = icvFilterScharrVertBorder_32f_C1R_p,
+                    ipp_scharr_getbufsize_func = icvFilterScharrVertGetBufSize_32f_C1R_p;
+            }
+            else if( dx == 0 && dy == 1 )
+            {
+                if( src_type == CV_8U )
+                    ipp_scharr_func_8u = icvFilterScharrHorizBorder_8u16s_C1R_p,
+                    ipp_scharr_getbufsize_func = icvFilterScharrHorizGetBufSize_8u16s_C1R_p;
+                else
+                    ipp_scharr_func_32f = icvFilterScharrHorizBorder_32f_C1R_p,
+                    ipp_scharr_getbufsize_func = icvFilterScharrHorizGetBufSize_32f_C1R_p;
+            }
+            else
+                CV_ERROR( CV_StsBadArg, "Scharr filter can only be used to compute 1st image derivatives" );
+        }
+        else
+        {
+            if( dx == 1 && dy == 0 )
+            {
+                if( src_type == CV_8U )
+                    ipp_sobel_func_8u = icvFilterSobelNegVertBorder_8u16s_C1R_p,
+                    ipp_sobel_getbufsize_func = icvFilterSobelNegVertGetBufSize_8u16s_C1R_p;
+                else
+                    ipp_sobel_func_32f = icvFilterSobelNegVertBorder_32f_C1R_p,
+                    ipp_sobel_getbufsize_func = icvFilterSobelNegVertGetBufSize_32f_C1R_p;
+            }
+            else if( dx == 0 && dy == 1 )
+            {
+                if( src_type == CV_8U )
+                    ipp_sobel_func_8u = icvFilterSobelHorizBorder_8u16s_C1R_p,
+                    ipp_sobel_getbufsize_func = icvFilterSobelHorizGetBufSize_8u16s_C1R_p;
+                else
+                    ipp_sobel_func_32f = icvFilterSobelHorizBorder_32f_C1R_p,
+                    ipp_sobel_getbufsize_func = icvFilterSobelHorizGetBufSize_32f_C1R_p;
+            }
+            else if( dx == 2 && dy == 0 )
+            {
+                if( src_type == CV_8U )
+                    ipp_sobel_func_8u = icvFilterSobelVertSecondBorder_8u16s_C1R_p,
+                    ipp_sobel_getbufsize_func = icvFilterSobelVertSecondGetBufSize_8u16s_C1R_p;
+                else
+                    ipp_sobel_func_32f = icvFilterSobelVertSecondBorder_32f_C1R_p,
+                    ipp_sobel_getbufsize_func = icvFilterSobelVertSecondGetBufSize_32f_C1R_p;
+            }
+            else if( dx == 0 && dy == 2 )
+            {
+                if( src_type == CV_8U )
+                    ipp_sobel_func_8u = icvFilterSobelHorizSecondBorder_8u16s_C1R_p,
+                    ipp_sobel_getbufsize_func = icvFilterSobelHorizSecondGetBufSize_8u16s_C1R_p;
+                else
+                    ipp_sobel_func_32f = icvFilterSobelHorizSecondBorder_32f_C1R_p,
+                    ipp_sobel_getbufsize_func = icvFilterSobelHorizSecondGetBufSize_32f_C1R_p;
+            }
+            else if( dx == 1 && dy == 1 )
+            {
+                if( src_type == CV_8U )
+                    ipp_sobel_func_8u = icvFilterSobelCrossBorder_8u16s_C1R_p,
+                    ipp_sobel_getbufsize_func = icvFilterSobelCrossGetBufSize_8u16s_C1R_p;
+                else
+                    ipp_sobel_func_32f = icvFilterSobelCrossBorder_32f_C1R_p,
+                    ipp_sobel_getbufsize_func = icvFilterSobelCrossGetBufSize_32f_C1R_p;
+            }
+        }
 
-                if( ipp_sobel_func )
+        if( (ipp_sobel_func_8u || ipp_sobel_func_32f) && ipp_sobel_getbufsize_func ||
+            (ipp_scharr_func_8u || ipp_scharr_func_32f) && ipp_scharr_getbufsize_func )
+        {
+            int bufsize = 0, masksize = aperture_size == 3 ? 33 : 55;
+            CvSize size = cvGetMatSize( src );
+            uchar* src_ptr = src->data.ptr;
+            uchar* dst_ptr = dst->data.ptr;
+            int src_step = src->step ? src->step : CV_STUB_STEP;
+            int dst_step = dst->step ? dst->step : CV_STUB_STEP;
+            const int bordertype = 1; // replication border
+            CvStatus status;
+
+            status = ipp_sobel_getbufsize_func ?
+                ipp_sobel_getbufsize_func( size, masksize, &bufsize ) :
+                ipp_scharr_getbufsize_func( size, &bufsize );
+
+            if( status >= 0 )
+            {
+                if( bufsize <= CV_MAX_LOCAL_SIZE )
                 {
-                    IPPI_CALL( ipp_sobel_func( shifted_ptr, temp_step,
-                            dst->data.ptr + y*dst_step, dst_step,
-                            stripe_size, ksize*10 + ksize ));
+                    buffer = cvStackAlloc( bufsize );
+                    local_alloc = 1;
                 }
                 else
-                {
-                    IPPI_CALL( ipp_scharr_func( shifted_ptr, temp_step,
-                            dst->data.ptr + y*dst_step, dst_step, stripe_size ));
-                }
+                    CV_CALL( buffer = cvAlloc( bufsize ));
+            
+                status =
+                    ipp_sobel_func_8u ? ipp_sobel_func_8u( src_ptr, src_step, dst_ptr, dst_step,
+                                                           size, masksize, bordertype, 0, buffer ) :
+                    ipp_sobel_func_32f ? ipp_sobel_func_32f( src_ptr, src_step, dst_ptr, dst_step,
+                                                             size, masksize, bordertype, 0, buffer ) :
+                    ipp_scharr_func_8u ? ipp_scharr_func_8u( src_ptr, src_step, dst_ptr, dst_step,
+                                                             size, bordertype, 0, buffer ) :
+                    ipp_scharr_func_32f ? ipp_scharr_func_32f( src_ptr, src_step, dst_ptr, dst_step,
+                                                               size, bordertype, 0, buffer ) : 
+                        CV_NOTDEFINED_ERR;
             }
 
-            if( need_to_negate )
+            if( status >= 0 &&
+                (dx == 0 && dy == 1 && origin || dx == 1 && dy == 1 && !origin)) // negate the output
                 cvSubRS( dst, cvScalarAll(0), dst );
-            EXIT;
+
+            if( status >= 0 )
+                EXIT;
         }
     }
 
@@ -237,7 +341,8 @@ cvSobel( const void* srcarr, void* dstarr, int dx, int dy, int aperture_size )
 
     __END__;
 
-    cvReleaseMat( &temp );
+    if( buffer && !local_alloc )
+        cvFree( &buffer );
 }
 
 
@@ -667,7 +772,8 @@ CV_IMPL void
 cvLaplace( const void* srcarr, void* dstarr, int aperture_size )
 {
     CvLaplaceFilter laplacian;
-    CvMat* temp = 0;
+    void* buffer = 0;
+    int local_alloc = 0;
     
     CV_FUNCNAME( "cvLaplace" );
 
@@ -683,16 +789,56 @@ cvLaplace( const void* srcarr, void* dstarr, int aperture_size )
     src_type = CV_MAT_TYPE(src->type);
     dst_type = CV_MAT_TYPE(dst->type);
 
-    if( icvFilterSobelVertSecond_8u16s_C1R_p &&
-        (aperture_size == 3 || aperture_size == 5) &&
+    if( aperture_size == 3 || aperture_size == 5 &&
         (src_type == CV_8UC1 && dst_type == CV_16SC1 ||
-        src_type == CV_32FC1 && dst_type == CV_32FC1) )
+        src_type == CV_32FC1 && dst_type == CV_32FC1) &&
+        (aperture_size == 3 || src_type < CV_32FC1) )
     {
-        CV_CALL( temp = cvCreateMat( src->rows, src->cols, dst_type ));
-        CV_CALL( cvSobel( src, temp, 2, 0, aperture_size ));
-        CV_CALL( cvSobel( src, dst, 0, 2, aperture_size ));
-        CV_CALL( cvAdd( temp, dst, dst ));
-        EXIT;
+        CvDerivGetBufSizeIPPFunc ipp_laplace_getbufsize_func = 0;
+        CvDerivIPPFunc_8u ipp_laplace_func_8u = 0;
+        CvDerivIPPFunc_32f ipp_laplace_func_32f = 0;
+
+        if( src_type == CV_8U )
+            ipp_laplace_func_8u = icvFilterLaplacianBorder_8u16s_C1R_p,
+            ipp_laplace_getbufsize_func = icvFilterLaplacianGetBufSize_8u16s_C1R_p;
+        else
+            ipp_laplace_func_32f = icvFilterLaplacianBorder_32f_C1R_p,
+            ipp_laplace_getbufsize_func = icvFilterLaplacianGetBufSize_32f_C1R_p;
+
+        if( (ipp_laplace_func_8u || ipp_laplace_func_32f) && ipp_laplace_getbufsize_func )
+        {
+            int bufsize = 0, masksize = aperture_size == 3 ? 33 : 55;
+            CvSize size = cvGetMatSize( src );
+            uchar* src_ptr = src->data.ptr;
+            uchar* dst_ptr = dst->data.ptr;
+            int src_step = src->step ? src->step : CV_STUB_STEP;
+            int dst_step = dst->step ? dst->step : CV_STUB_STEP;
+            const int bordertype = 1; // replication border
+            CvStatus status;
+
+            status = ipp_laplace_getbufsize_func( size, masksize, &bufsize );
+
+            if( status >= 0 )
+            {
+                if( bufsize <= CV_MAX_LOCAL_SIZE )
+                {
+                    buffer = cvStackAlloc( bufsize );
+                    local_alloc = 1;
+                }
+                else
+                    CV_CALL( buffer = cvAlloc( bufsize ));
+            
+                status =
+                    ipp_laplace_func_8u ? ipp_laplace_func_8u( src_ptr, src_step, dst_ptr, dst_step,
+                                                               size, masksize, bordertype, 0, buffer ) :
+                    ipp_laplace_func_32f ? ipp_laplace_func_32f( src_ptr, src_step, dst_ptr, dst_step,
+                                                                 size, masksize, bordertype, 0, buffer ) :
+                        CV_NOTDEFINED_ERR;
+            }
+
+            if( status >= 0 )
+                EXIT;
+        }
     }
 
     CV_CALL( laplacian.init( src->cols, src_type, dst_type,
@@ -701,7 +847,8 @@ cvLaplace( const void* srcarr, void* dstarr, int aperture_size )
 
     __END__;
 
-    cvReleaseMat( &temp );
+    if( buffer && !local_alloc )
+        cvFree( &buffer );
 }
 
 /* End of file. */
