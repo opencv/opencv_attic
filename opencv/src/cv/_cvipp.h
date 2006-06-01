@@ -302,18 +302,19 @@ IPCV_REMAP( 32f, 4 )
 *                                      Morphology                                        *
 \****************************************************************************************/
 
-#define IPCV_MORPHOLOGY( minmaxtype, morphtype, flavor, cn )            \
-IPCVAPI_EX( CvStatus, icv##morphtype##Rect_##flavor##_C##cn##R,         \
-            "ippiFilter" #minmaxtype "_" #flavor "_C" #cn "R",          \
-            CV_PLUGINS1(CV_PLUGIN_IPPI),                                \
-            ( const void* src, int srcstep, void* dst, int dststep,     \
-              CvSize roi, CvSize esize, CvPoint anchor ))               \
-IPCVAPI_EX( CvStatus, icv##morphtype##Any_##flavor##_C##cn##R,          \
-            "ippi" #morphtype "_" #flavor "_C" #cn "R",                 \
-            CV_PLUGINS1(CV_PLUGIN_IPPI),                                \
-            ( const void* src, int srcstep, void* dst, int dststep,     \
-              CvSize roi, const uchar* element,                         \
-              CvSize esize, CvPoint anchor ))
+#define IPCV_MORPHOLOGY( minmaxtype, morphtype, flavor, cn )                    \
+IPCVAPI_EX( CvStatus, icv##morphtype##Rect_##flavor##_C##cn##R,                 \
+    "ippiFilter" #minmaxtype "BorderReplicate_" #flavor "_C" #cn "R",           \
+    CV_PLUGINS1(CV_PLUGIN_IPPCV), ( const void* src, int srcstep, void* dst,    \
+    int dststep, CvSize roi, CvSize esize, CvPoint anchor, void* buffer ))      \
+IPCVAPI_EX( CvStatus, icv##morphtype##Rect_GetBufSize_##flavor##_C##cn##R,      \
+    "ippiFilter" #minmaxtype "GetBufferSize_" #flavor "_C" #cn "R",             \
+    CV_PLUGINS1(CV_PLUGIN_IPPCV), ( int width, CvSize esize, int* bufsize ))    \
+                                                                                \
+IPCVAPI_EX( CvStatus, icv##morphtype##_##flavor##_C##cn##R,                     \
+    "ippi" #morphtype "BorderReplicate_" #flavor "_C" #cn "R",                  \
+    CV_PLUGINS1(CV_PLUGIN_IPPCV), ( const void* src, int srcstep,               \
+    void* dst, int dststep, CvSize roi, int bordertype, void* morphstate ))
 
 IPCV_MORPHOLOGY( Min, Erode, 8u, 1 )
 IPCV_MORPHOLOGY( Min, Erode, 8u, 3 )
@@ -329,6 +330,25 @@ IPCV_MORPHOLOGY( Max, Dilate, 32f, 3 )
 IPCV_MORPHOLOGY( Max, Dilate, 32f, 4 )
 
 #undef IPCV_MORPHOLOGY
+
+#define IPCV_MORPHOLOGY_INIT_ALLOC( flavor, cn )                            \
+IPCVAPI_EX( CvStatus, icvMorphInitAlloc_##flavor##_C##cn##R,                \
+    "ippiMorphologyInitAlloc_" #flavor "_C" #cn "R",                        \
+    CV_PLUGINS1(CV_PLUGIN_IPPCV), ( int width, const uchar* element,        \
+    CvSize esize, CvPoint anchor, void** morphstate ))
+
+IPCV_MORPHOLOGY_INIT_ALLOC( 8u, 1 )
+IPCV_MORPHOLOGY_INIT_ALLOC( 8u, 3 )
+IPCV_MORPHOLOGY_INIT_ALLOC( 8u, 4 )
+IPCV_MORPHOLOGY_INIT_ALLOC( 32f, 1 )
+IPCV_MORPHOLOGY_INIT_ALLOC( 32f, 3 )
+IPCV_MORPHOLOGY_INIT_ALLOC( 32f, 4 )
+
+#undef IPCV_MORPHOLOGY_INIT_ALLOC
+
+IPCVAPI_EX( CvStatus, icvMorphFree, "ippiMorphologyFree",
+    CV_PLUGINS1(CV_PLUGIN_IPPCV), ( void* morphstate ))
+
 
 /****************************************************************************************\
 *                                 Smoothing Filters                                      *
