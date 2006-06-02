@@ -278,6 +278,7 @@ CV_IMPL int
 cvMinEnclosingCircle( const void* array, CvPoint2D32f * _center, float *_radius )
 {
     const int max_iters = 100;
+    const float eps = FLT_EPSILON*2;
     CvPoint2D32f center = { 0, 0 };
     float radius = 0;
     int result = 0;
@@ -437,7 +438,7 @@ cvMinEnclosingCircle( const void* array, CvPoint2D32f * _center, float *_radius 
             radius = MAX(radius,t);
         }
 
-        radius = (float)sqrt(radius);
+        radius = (float)(sqrt(radius)*(1 + eps));
         result = 1;
     }
 
