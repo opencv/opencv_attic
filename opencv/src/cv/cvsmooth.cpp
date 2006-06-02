@@ -280,6 +280,7 @@ icvSumCol_32s16s( const int** src, short* dst,
 {
     CvBoxFilter* state = (CvBoxFilter*)params;
     int ksize = state->get_kernel_size().height;
+    int ktotal = ksize*state->get_kernel_size().width;
     int i, width = state->get_width();
     int cn = CV_MAT_CN(state->get_src_type());
     int* sum = (int*)state->get_sum_buf();
@@ -307,7 +308,7 @@ icvSumCol_32s16s( const int** src, short* dst,
 
             sum_count++;
         }
-        else
+        else if( ktotal < 128 )
         {
             const int* sm = src[-ksize+1];
             for( i = 0; i <= width - 2; i += 2 )
@@ -322,6 +323,25 @@ icvSumCol_32s16s( const int** src, short* dst,
             {
                 int s0 = sum[i] + sp[i];
                 dst[i] = (short)s0;
+                sum[i] = s0 - sm[i];
+            }
+            dst += dst_step;
+        }
+        else
+        {
+            const int* sm = src[-ksize+1];
+            for( i = 0; i <= width - 2; i += 2 )
+            {
+                int s0 = sum[i] + sp[i], s1 = sum[i+1] + sp[i+1];
+                dst[i] = CV_CAST_16S(s0); dst[i+1] = CV_CAST_16S(s1);
+                s0 -= sm[i]; s1 -= sm[i+1];
+                sum[i] = s0; sum[i+1] = s1;
+            }
+
+            for( ; i < width; i++ )
+            {
+                int s0 = sum[i] + sp[i];
+                dst[i] = CV_CAST_16S(s0);
                 sum[i] = s0 - sm[i];
             }
             dst += dst_step;
