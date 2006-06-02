@@ -23,7 +23,7 @@ AC_CONFIG_AUX_DIR([autotools])
 AC_CONFIG_MACRO_DIR([autotools/aclocal])
 
 # put CVS revision of this configure.in into the resulting configure script
-AC_REVISION([$Revision: 1.21.2.4 $])
+AC_REVISION([$Revision: 1.21.2.5 $])
 
 # Detect the canonical host and target build environment
 AC_CANONICAL_HOST
@@ -316,7 +316,7 @@ if test x"$with_quicktime" = "xyes"; then
     
     # specify quicktime libraries
     if test x"$have_quicktime" = "xyes"; then
-        QUICKTIME_LIBS="-Xlinker -framework -Xlinker QuickTime"
+        QUICKTIME_LIBS="-Xlinker -framework -Xlinker QuickTime -Xlinker -framework -Xlinker QuartzCore"
  
         # don't check alternatives if quicktime was found
         if test x"$with_ffmpeg" = "xauto"; then
