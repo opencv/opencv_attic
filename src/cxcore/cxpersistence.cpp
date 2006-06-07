@@ -5132,7 +5132,15 @@ cvSave( const char* filename, const void* struct_ptr,
         ptr++;
         if( ptr == ptr2 )
             CV_ERROR( CV_StsBadArg, "Invalid filename" );
-        for( name = name_buf; ptr < ptr2; )
+		
+		name=name_buf;
+
+		// name must start with letter or '_'
+		if( !isalpha(*ptr) && *ptr!= '_' ){
+			*name++ = '_';
+		}
+
+        while( ptr < ptr2 )
         {
             char c = *ptr++;
             if( !isalnum(c) && c != '-' && c != '_' )
