@@ -1239,7 +1239,7 @@ icvYMLParse( CvFileStorage* fs )
                 else if( is_first )
                     break;
             }
-            else if( isalnum(*ptr) )
+            else if( isalnum(*ptr) || *ptr=='_')
             {
                 if( !is_first )
                     CV_PARSE_ERROR( "The YAML streams must start with '---', except the first one" );
