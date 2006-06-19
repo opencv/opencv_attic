@@ -197,11 +197,9 @@ CV_INLINE CvParamLattice cvDefaultParamLattice( void )
 /* flag values for classifier consturctor <flags> parameter */
 #define CV_SVM_MAGIC_VAL            0x0000FF01
 #define CV_TYPE_NAME_ML_SVM         "opencv-ml-svm"
-#define CV_IS_SVM(model)            CV_IS_CERTAIN_STAT_MODEL(model,CV_SVM_MAGIC_VAL)
 
 #define CV_KNN_MAGIC_VAL            0x0000FF02
 #define CV_TYPE_NAME_ML_KNN         "opencv-ml-knn"
-#define CV_IS_KNN(model)            CV_IS_CERTAIN_STAT_MODEL(model,CV_KNN_MAGIC_VAL)
 
 #define CV_NBAYES_MAGIC_VAL         0x0000FF03
 #define CV_TYPE_NAME_ML_NBAYES      "opencv-ml-bayesian"
@@ -217,11 +215,9 @@ CV_INLINE CvParamLattice cvDefaultParamLattice( void )
 
 #define CV_TREE_MAGIC_VAL           0x0000FF06
 #define CV_TYPE_NAME_ML_TREE        "opencv-ml-tree"
-#define CV_IS_TREE(model)           CV_IS_CERTAIN_STAT_MODEL(model,CV_TREE_MAGIC_VAL)
 
-#define CV_ANN_MAGIC_VAL            0x0000FF07
-#define CV_TYPE_NAME_ML_ANN         "opencv-ml-ann"
-#define CV_IS_ANN(model)            CV_IS_CERTAIN_STAT_MODEL(model,CV_ANN_MAGIC_VAL)
+#define CV_ANN_MLP_MAGIC_VAL        0x0000FF07
+#define CV_TYPE_NAME_ML_ANN_MLP     "opencv-ml-ann-mlp"
 
 #define CV_CNN_MAGIC_VAL            0x0000FF08
 #define CV_TYPE_NAME_ML_CNN         "opencv-ml-cnn"
@@ -341,7 +337,7 @@ public:
 
     virtual void clear();
     int get_max_k() const;
-    int get_dims() const;
+    int get_var_count() const;
     int get_sample_count() const;
     bool is_regression() const;
 
@@ -355,7 +351,7 @@ protected:
         float* neighbor_responses, const float** neighbors, float* dist ) const;
 
     
-    int max_k, dims;
+    int max_k, var_count;
     int total;
     bool regression;
     CvVectors* samples;
@@ -384,13 +380,13 @@ struct CV_EXPORTS CvSVMParams
     double      nu; // for CV_SVM_NU_SVC, CV_SVM_ONE_CLASS, and CV_SVM_NU_SVR
     double      p; // for CV_SVM_EPS_SVR
     CvMat*      class_weights; // for CV_SVM_C_SVC
-    CvTermCriteria criteria; // termination criteria
+    CvTermCriteria term_crit; // termination criteria
 };
 
 
 struct CV_EXPORTS CvSVMKernel
 {
-    typedef void (CvSVMKernel::*Calc)( int vcount, int dims, const float** vecs,
+    typedef void (CvSVMKernel::*Calc)( int vec_count, int vec_size, const float** vecs,
                                        const float* another, float* results );
     CvSVMKernel();
     CvSVMKernel( const CvSVMParams* _params, Calc _calc_func );
@@ -398,22 +394,22 @@ struct CV_EXPORTS CvSVMKernel
     virtual ~CvSVMKernel();
     
     virtual void clear();
-    virtual void calc( int vcount, int dims, const float** vecs, const float* another, float* results );
+    virtual void calc( int vcount, int n, const float** vecs, const float* another, float* results );
 
     const CvSVMParams* params;
     Calc calc_func;
 
-    virtual void calc_non_rbf_base( int vcount, int dims, const float** vecs,
+    virtual void calc_non_rbf_base( int vec_count, int vec_size, const float** vecs,
                                     const float* another, float* results,
                                     double alpha, double beta );
 
-    virtual void calc_linear( int vcount, int dims, const float** vecs,
+    virtual void calc_linear( int vec_count, int vec_size, const float** vecs,
                               const float* another, float* results );
-    virtual void calc_rbf( int vcount, int dims, const float** vecs,
+    virtual void calc_rbf( int vec_count, int vec_size, const float** vecs,
                            const float* another, float* results );
-    virtual void calc_poly( int vcount, int dims, const float** vecs,
+    virtual void calc_poly( int vec_count, int vec_size, const float** vecs,
                             const float* another, float* results );
-    virtual void calc_sigmoid( int vcount, int dims, const float** vecs,
+    virtual void calc_sigmoid( int vec_count, int vec_size, const float** vecs,
                                const float* another, float* results );
 };
 
@@ -444,11 +440,11 @@ public:
     
     CvSVMSolver();
 
-    CvSVMSolver( int count, int dims, const float** samples, char* y,
+    CvSVMSolver( int count, int var_count, const float** samples, char* y,
                  int alpha_count, double* alpha, double Cp, double Cn,
                  CvMemStorage* storage, CvSVMKernel* kernel, GetRow get_row,
                  SelectWorkingSet select_working_set, CalcRho calc_rho );
-    virtual bool create( int count, int dims, const float** samples, char* y,
+    virtual bool create( int count, int var_count, const float** samples, char* y,
                  int alpha_count, double* alpha, double Cp, double Cn,
                  CvMemStorage* storage, CvSVMKernel* kernel, GetRow get_row,
                  SelectWorkingSet select_working_set, CalcRho calc_rho );
@@ -457,21 +453,21 @@ public:
     virtual void clear();
     virtual bool solve_generic( CvSVMSolutionInfo& si );
     
-    virtual bool solve_c_svc( int count, int dims, const float** samples, char* y,
+    virtual bool solve_c_svc( int count, int var_count, const float** samples, char* y,
                               double Cp, double Cn, CvMemStorage* storage,
                               CvSVMKernel* kernel, double* alpha, CvSVMSolutionInfo& si );
-    virtual bool solve_nu_svc( int count, int dims, const float** samples, char* y,
+    virtual bool solve_nu_svc( int count, int var_count, const float** samples, char* y,
                                CvMemStorage* storage, CvSVMKernel* kernel,
                                double* alpha, CvSVMSolutionInfo& si );
-    virtual bool solve_one_class( int count, int dims, const float** samples,
+    virtual bool solve_one_class( int count, int var_count, const float** samples,
                                   CvMemStorage* storage, CvSVMKernel* kernel,
                                   double* alpha, CvSVMSolutionInfo& si );
 
-    virtual bool solve_eps_svr( int count, int dims, const float** samples, const float* y,
+    virtual bool solve_eps_svr( int count, int var_count, const float** samples, const float* y,
                                 CvMemStorage* storage, CvSVMKernel* kernel,
                                 double* alpha, CvSVMSolutionInfo& si );
 
-    virtual bool solve_nu_svr( int count, int dims, const float** samples, const float* y,
+    virtual bool solve_nu_svr( int count, int var_count, const float** samples, const float* y,
                                CvMemStorage* storage, CvSVMKernel* kernel,
                                double* alpha, CvSVMSolutionInfo& si );
 
@@ -479,7 +475,7 @@ public:
     virtual float* get_row( int i, float* dst );
 
     int sample_count;
-    int dims;
+    int var_count;
     int cache_size;
     int cache_line_size;
     const float** samples;
@@ -554,18 +550,28 @@ public:
     virtual const float* get_support_vector(int i) const;
     virtual void clear();
 
+    virtual void save( const char* filename, const char* name=0 );
+    virtual void load( const char* filename, const char* name=0 );
+    
+    virtual void write( CvFileStorage* storage, const char* name );
+    virtual void read( CvFileStorage* storage, CvFileNode* node );
+    int get_var_count() const { return var_idx ? var_idx->cols : var_all; }
+
 protected:
 
     virtual bool set_params( const CvSVMParams& _params );
-    virtual bool train1( int sample_count, int dims, const float** samples,
+    virtual bool train1( int sample_count, int var_count, const float** samples,
                     const void* _responses, double Cp, double Cn,
                     CvMemStorage* _storage, double* alpha, double& rho );
     virtual void create_kernel();
     virtual void create_solver();
 
+    virtual void write_params( CvFileStorage* fs );
+    virtual void read_params( CvFileStorage* fs, CvFileNode* node );
+
     CvSVMParams params;
     CvMat* class_labels;
-    int dims_all;
+    int var_all;
     float** sv;
     int sv_total;
     CvMat* var_idx;
@@ -997,10 +1003,10 @@ public:
     virtual const CvMat* get_var_importance();
     virtual void clear();
 
-    /*virtual bool save( CvFileStorage* fs, const char* name );
-    virtual bool save( const char* filename, const char* name );
-    virtual bool load( CvFileStorage* fs, CvFileNode* parent, const char* name );
-    virtual bool load( const char* filename, const char* name );*/
+    virtual void save( const char* filename, const char* name=0 );
+    virtual void write( CvFileStorage* fs, const char* name );
+    virtual void load( const char* filename, const char* name=0 );
+    virtual void read( CvFileStorage* fs, CvFileNode* node );
 
 protected:
 
@@ -1026,6 +1032,15 @@ protected:
     virtual int cut_tree( int T, int fold, double min_alpha );
     virtual void free_prune_data(bool cut_tree);
     virtual void free_tree();
+
+    virtual void write_train_data_params( CvFileStorage* fs );
+    virtual void read_train_data_params( CvFileStorage* fs, CvFileNode* node );
+    virtual void write_tree_nodes( CvFileStorage* fs );
+    virtual void read_tree_nodes( CvFileStorage* fs, CvFileNode* node );
+    virtual void write_node( CvFileStorage* fs, CvDTreeNode* node );
+    virtual void write_split( CvFileStorage* fs, CvDTreeSplit* split );
+    virtual CvDTreeNode* read_node( CvFileStorage* fs, CvFileNode* node, CvDTreeNode* parent );
+    virtual CvDTreeSplit* read_split( CvFileStorage* fs, CvFileNode* node );
 
     CvDTreeNode* root;
     
@@ -1161,18 +1176,18 @@ class CV_EXPORTS CvANN_MLP
 {
 public:
     CvANN_MLP();
-    CvANN_MLP( const CvMat* _layer_counts,
+    CvANN_MLP( const CvMat* _layer_sizes,
                int _activ_func=SIGMOID_SYM,
                double _f_param1=0, double _f_param2=0 );
 
     virtual ~CvANN_MLP();
 
-    virtual void create( const CvMat* _layer_counts,
-               int _activ_func=SIGMOID_SYM,
-               double _f_param1=0, double _f_param2=0 );
+    virtual void create( const CvMat* _layer_sizes,
+                         int _activ_func=SIGMOID_SYM,
+                         double _f_param1=0, double _f_param2=0 );
 
     virtual int train( const CvMat* _inputs, const CvMat* _outputs,
-                       const CvMat* _sample_idx=0,
+                       const CvMat* _sample_weights, const CvMat* _sample_idx=0,
                        CvANN_MLP_TrainParams _params = CvANN_MLP_TrainParams(),
                        int flags=0 );
     virtual void predict( const CvMat* _inputs,
@@ -1186,17 +1201,25 @@ public:
     // available training flags
     enum { UPDATE_WEIGHTS = 1, NO_INPUT_SCALE = 2, NO_OUTPUT_SCALE = 4 };
 
+    virtual void save( const char* filename, const char* name=0 );
+    virtual void write( CvFileStorage* fs, const char* name );
+    virtual void load( const char* filename, const char* name=0 );
+    virtual void read( CvFileStorage* fs, CvFileNode* node );
+    int get_layer_count() { return layer_sizes ? layer_sizes->cols : 0; }
+    const CvMat* get_layer_sizes() { return layer_sizes; }
+
 protected:
 
     virtual bool prepare_to_train( const CvMat* _inputs, const CvMat* _outputs,
-            const CvMat* _sample_idx, CvANN_MLP_TrainParams _params,
-            CvVectors* _ivecs, CvVectors* _ovecs, int _flags );
+            const CvMat* _sample_weights, const CvMat* _sample_idx,
+            CvANN_MLP_TrainParams _params,
+            CvVectors* _ivecs, CvVectors* _ovecs, double** _sw, int _flags );
 
     // sequential random backpropagation
-    virtual int train_backprop( CvVectors _ivecs, CvVectors _ovecs );
+    virtual int train_backprop( CvVectors _ivecs, CvVectors _ovecs, const double* _sw );
     
     // RPROP algorithm
-    virtual int train_rprop( CvVectors _ivecs, CvVectors _ovecs );
+    virtual int train_rprop( CvVectors _ivecs, CvVectors _ovecs, const double* _sw );
 
     virtual void calc_activ_func( CvMat* xf, const double* bias ) const;
     virtual void calc_activ_func_deriv( CvMat* xf, CvMat* deriv, const double* bias ) const;
@@ -1208,8 +1231,12 @@ protected:
     virtual void calc_input_scale( const CvVectors* vecs, int flags );
     virtual void calc_output_scale( const CvVectors* vecs, int flags );
 
-    CvMat* layer_counts;
+    virtual void write_params( CvFileStorage* fs );
+    virtual void read_params( CvFileStorage* fs, CvFileNode* node );
+
+    CvMat* layer_sizes;
     CvMat* wbuf;
+    CvMat* sample_weights;
     double** weights;
     double f_param1, f_param2;
     double min_val, max_val, min_val1, max_val1;
