@@ -372,6 +372,12 @@ CvLaplaceFilter::CvLaplaceFilter( int _max_width, int _src_type, int _dst_type, 
 }
 
 
+CvLaplaceFilter::~CvLaplaceFilter()
+{
+    clear();
+}
+
+
 void CvLaplaceFilter::get_work_params()
 {
     int min_rows = max_ky*2 + 3, rows = MAX(min_rows,10), row_sz;

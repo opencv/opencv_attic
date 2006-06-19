@@ -170,6 +170,8 @@ public:
                  CvPoint _anchor=cvPoint(-1,-1),
                  int _border_mode=IPL_BORDER_REPLICATE,
                  CvScalar _border_value=cvScalarAll(0) );
+    virtual ~CvSepFilter();
+
     virtual void init( int _max_width, int _src_type, int _dst_type,
                        const CvMat* _kx, const CvMat* _ky,
                        CvPoint _anchor=cvPoint(-1,-1),
@@ -208,6 +210,8 @@ public:
                     CvPoint _anchor=cvPoint(-1,-1),
                     int _border_mode=IPL_BORDER_REPLICATE,
                     CvScalar _border_value=cvScalarAll(0) );
+    virtual ~CvLinearFilter();
+
     virtual void init( int _max_width, int _src_type, int _dst_type,
                        const CvMat* _kernel,
                        CvPoint _anchor=cvPoint(-1,-1),
@@ -240,6 +244,7 @@ public:
                        CvPoint _anchor=cvPoint(-1,-1),
                        int _border_mode=IPL_BORDER_REPLICATE,
                        CvScalar _border_value=cvScalarAll(0) );
+    virtual ~CvBoxFilter();
     bool is_normalized() const { return normalized; }
     double get_scale() const { return scale; }
     uchar* get_sum_buf() { return sum; }
@@ -264,6 +269,7 @@ public:
                      bool _normalized, int _ksize,
                      int _border_mode=IPL_BORDER_REPLICATE,
                      CvScalar _border_value=cvScalarAll(0) );
+    virtual ~CvLaplaceFilter();
     virtual void init( int _max_width, int _src_type, int _dst_type,
                        bool _normalized, int _ksize,
                        int _border_mode=IPL_BORDER_REPLICATE,
@@ -288,6 +294,7 @@ public:
                   CvSize _ksize=cvSize(0,0), CvPoint _anchor=cvPoint(-1,-1),
                   int _border_mode=IPL_BORDER_REPLICATE,
                   CvScalar _border_value=cvScalarAll(0) );
+    virtual ~CvMorphology();
     virtual void init( int _operation, int _max_width, int _src_dst_type,
                        int _element_shape, CvMat* _element,
                        CvSize _ksize=cvSize(0,0), CvPoint _anchor=cvPoint(-1,-1),

@@ -79,6 +79,12 @@ CvBoxFilter::CvBoxFilter( int _max_width, int _src_type, int _dst_type,
 }
 
 
+CvBoxFilter::~CvBoxFilter()
+{
+    clear();
+}
+
+
 void CvBoxFilter::init( int _max_width, int _src_type, int _dst_type,
                         bool _normalized, CvSize _ksize,
                         CvPoint _anchor, int _border_mode,

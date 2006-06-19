@@ -648,6 +648,13 @@ void CvSepFilter::clear()
     CvBaseImageFilter::clear();
 }
 
+
+CvSepFilter::~CvSepFilter()
+{
+    clear();
+}
+
+
 #undef FILTER_BITS
 #define FILTER_BITS 8
 
@@ -2072,6 +2079,12 @@ void CvLinearFilter::clear()
     cvReleaseMat( &kernel );
     cvFree( &k_sparse );
     CvBaseImageFilter::clear();
+}
+
+
+CvLinearFilter::~CvLinearFilter()
+{
+    clear();
 }
 
 
