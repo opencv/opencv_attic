@@ -126,13 +126,14 @@ CV_IMPL int cvInitSystem( int argc, char** argv )
 {
     
     OSErr err = noErr;
-    if( !wasInitialized ) {
+    if( !wasInitialized ) 
+    {
+    
         hg_windows = 0;
         err = InstallApplicationEventHandler(NewEventHandlerUPP( keyHandler),GetEventTypeCount(applicationKeyboardEvents),applicationKeyboardEvents,NULL,NULL);
-        if (err == noErr){
-            fprintf(stdout,"InstallApplicationEventHandler was ok\n");
-        } else {
-            fprintf(stdout,"InstallApplicationEventHandler was not ok\n");
+        if (err != noErr)
+        {
+             fprintf(stderr,"InstallApplicationEventHandler was not ok\n");
         }
         wasInitialized = 1;
     }
@@ -613,6 +614,26 @@ CV_IMPL int cvNamedWindow( const char* name, int flags )
     if (!wasInitialized)
         cvInitSystem(0, NULL);
     
+    // to be able to display a window, we need to be a 'faceful' application
+    // http://lists.apple.com/archives/carbon-dev/2005/Jun/msg01414.html
+    static bool switched_to_faceful = false;
+    if (! switched_to_faceful)
+    {
+        ProcessSerialNumber psn = { 0, kCurrentProcess };
+        OSStatus ret = TransformProcessType (&psn, kProcessTransformToForegroundApplication );
+
+        if (ret == noErr) 
+        {
+            SetFrontProcess( &psn );
+            switched_to_faceful = true;
+        }
+        else
+        {
+            fprintf(stderr, "Failed to tranform process type: %d\n", (int) ret);
+            fflush (stderr);
+        }
+    }
+    
     __BEGIN__;
     
     WindowRef       outWindow = NULL;
@@ -672,6 +693,22 @@ CV_IMPL int cvNamedWindow( const char* name, int flags )
     
     ShowWindow( outWindow );
     result = 1;
+	
+/*	{
+		// thank you sef!
+		// sean writes:
+		// Courtesy of Deric Horn and myself.
+		// 2004.05.28
+		ProcessSerialNumber psn;
+
+		err = GetCurrentProcess(&psn);
+		if (err == noErr)
+		{
+			(void)SetFrontProcess(&psn);
+		}
+	}
+*/
+	
     __END__;
     return result;
 }
