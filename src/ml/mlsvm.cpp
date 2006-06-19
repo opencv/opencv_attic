@@ -40,7 +40,6 @@
 
 #include "_ml.h"
 
-#if 1
 /****************************************************************************************\
                                 COPYRIGHT NOTICE
                                 ----------------
@@ -98,7 +97,7 @@ CvSVMParams::CvSVMParams() :
     svm_type(CvSVM::C_SVC), kernel_type(CvSVM::RBF), degree(0),
     gamma(1), coef0(0), C(1), nu(0), p(0), class_weights(0)
 {
-    criteria = cvTermCriteria( CV_TERMCRIT_ITER+CV_TERMCRIT_EPS, 1000, FLT_EPSILON );
+    term_crit = cvTermCriteria( CV_TERMCRIT_ITER+CV_TERMCRIT_EPS, 1000, FLT_EPSILON );
 }
 
 
@@ -108,9 +107,10 @@ CvSVMParams::CvSVMParams( int _svm_type, int _kernel_type,
     CvMat* _class_weights, CvTermCriteria _term_crit ) :
     svm_type(_svm_type), kernel_type(_kernel_type),
     degree(_degree), gamma(_gamma), coef0(_coef0),
-    C(_C), nu(_nu), p(_p), class_weights(_class_weights), criteria(_term_crit)
+    C(_C), nu(_nu), p(_p), class_weights(_class_weights), term_crit(_term_crit)
 {
 }
+
 
 /////////////////////////////////////// SVM kernel ///////////////////////////////////////
 
@@ -155,7 +155,7 @@ bool CvSVMKernel::create( const CvSVMParams* _params, Calc _calc_func )
 }
 
 
-void CvSVMKernel::calc_non_rbf_base( int vcount, int dims, const float** vecs,
+void CvSVMKernel::calc_non_rbf_base( int vcount, int var_count, const float** vecs,
                                      const float* another, Qfloat* results,
                                      double alpha, double beta )
 {
@@ -164,37 +164,37 @@ void CvSVMKernel::calc_non_rbf_base( int vcount, int dims, const float** vecs,
     {
         const float* sample = vecs[j];
         double s = 0;
-        for( k = 0; k <= dims - 4; k += 4 )
+        for( k = 0; k <= var_count - 4; k += 4 )
             s += sample[k]*another[k] + sample[k+1]*another[k+1] +
                  sample[k+2]*another[k+2] + sample[k+3]*another[k+3];
-        for( ; k < dims; k++ )
+        for( ; k < var_count; k++ )
             s += sample[k]*another[k];
         results[j] = (Qfloat)(s*alpha + beta);
     }
 }
 
 
-void CvSVMKernel::calc_linear( int vcount, int dims, const float** vecs,
+void CvSVMKernel::calc_linear( int vcount, int var_count, const float** vecs,
                                const float* another, Qfloat* results )
 {
-    calc_non_rbf_base( vcount, dims, vecs, another, results, 1, 0 );
+    calc_non_rbf_base( vcount, var_count, vecs, another, results, 1, 0 );
 }
 
 
-void CvSVMKernel::calc_poly( int vcount, int dims, const float** vecs,
+void CvSVMKernel::calc_poly( int vcount, int var_count, const float** vecs,
                              const float* another, Qfloat* results )
 {
     CvMat R = cvMat( 1, vcount, sizeof(Qfloat)==sizeof(float) ? CV_32F : CV_64F, results );
-    calc_non_rbf_base( vcount, dims, vecs, another, results, params->gamma, params->coef0 );
+    calc_non_rbf_base( vcount, var_count, vecs, another, results, params->gamma, params->coef0 );
     cvPow( &R, &R, params->degree );
 }
 
 
-void CvSVMKernel::calc_sigmoid( int vcount, int dims, const float** vecs,
+void CvSVMKernel::calc_sigmoid( int vcount, int var_count, const float** vecs,
                                 const float* another, Qfloat* results )
 {
     int j;
-    calc_non_rbf_base( vcount, dims, vecs, another, results,
+    calc_non_rbf_base( vcount, var_count, vecs, another, results,
                        -2*params->gamma, -2*params->coef0 );
     // TODO: speedup this
     for( j = 0; j < vcount; j++ )
@@ -209,7 +209,7 @@ void CvSVMKernel::calc_sigmoid( int vcount, int dims, const float** vecs,
 }
 
 
-void CvSVMKernel::calc_rbf( int vcount, int dims, const float** vecs,
+void CvSVMKernel::calc_rbf( int vcount, int var_count, const float** vecs,
                             const float* another, Qfloat* results )
 {
     CvMat R = cvMat( 1, vcount, sizeof(Qfloat)==sizeof(float) ? CV_32F : CV_64F, results );
@@ -221,7 +221,7 @@ void CvSVMKernel::calc_rbf( int vcount, int dims, const float** vecs,
         const float* sample = vecs[j];
         double s = 0;
         
-        for( k = 0; k <= dims - 4; k += 4 )
+        for( k = 0; k <= var_count - 4; k += 4 )
         {
             double t0 = sample[k] - another[k];
             double t1 = sample[k+1] - another[k+1];
@@ -234,7 +234,7 @@ void CvSVMKernel::calc_rbf( int vcount, int dims, const float** vecs,
             s += t0*t0 + t1*t1;
         }
 
-        for( ; k < dims; k++ )
+        for( ; k < var_count; k++ )
         {
             double t0 = sample[k] - another[k];
             s += t0*t0;
@@ -246,12 +246,12 @@ void CvSVMKernel::calc_rbf( int vcount, int dims, const float** vecs,
 }
 
 
-void CvSVMKernel::calc( int vcount, int dims, const float** vecs,
+void CvSVMKernel::calc( int vcount, int var_count, const float** vecs,
                         const float* another, Qfloat* results )
 {
     const Qfloat max_val = (Qfloat)(FLT_MAX*1e-3);
     int j;
-    (this->*calc_func)( vcount, dims, vecs, another, results );
+    (this->*calc_func)( vcount, var_count, vecs, another, results );
     for( j = 0; j < vcount; j++ )
     {
         if( results[j] > max_val )
@@ -310,18 +310,18 @@ CvSVMSolver::~CvSVMSolver()
 }
 
 
-CvSVMSolver::CvSVMSolver( int _sample_count, int _dims, const float** _samples, char* _y,
+CvSVMSolver::CvSVMSolver( int _sample_count, int _var_count, const float** _samples, char* _y,
                 int _alpha_count, double* _alpha, double _Cp, double _Cn,
                 CvMemStorage* _storage, CvSVMKernel* _kernel, GetRow _get_row,
                 SelectWorkingSet _select_working_set, CalcRho _calc_rho )
 {
     storage = 0;
-    create( _sample_count, _dims, _samples, _y, _alpha_count, _alpha, _Cp, _Cn,
+    create( _sample_count, _var_count, _samples, _y, _alpha_count, _alpha, _Cp, _Cn,
             _storage, _kernel, _get_row, _select_working_set, _calc_rho );
 }
 
 
-bool CvSVMSolver::create( int _sample_count, int _dims, const float** _samples, char* _y,
+bool CvSVMSolver::create( int _sample_count, int _var_count, const float** _samples, char* _y,
                 int _alpha_count, double* _alpha, double _Cp, double _Cn,
                 CvMemStorage* _storage, CvSVMKernel* _kernel, GetRow _get_row,
                 SelectWorkingSet _select_working_set, CalcRho _calc_rho )
@@ -338,7 +338,7 @@ bool CvSVMSolver::create( int _sample_count, int _dims, const float** _samples, 
     clear();
 
     sample_count = _sample_count;
-    dims = _dims;
+    var_count = _var_count;
     samples = _samples;
     y = _y;
     alpha_count = _alpha_count;
@@ -347,8 +347,8 @@ bool CvSVMSolver::create( int _sample_count, int _dims, const float** _samples, 
 
     C[0] = _Cn;
     C[1] = _Cp;
-    eps = kernel->params->criteria.epsilon;
-    max_iter = kernel->params->criteria.max_iter;
+    eps = kernel->params->term_crit.epsilon;
+    max_iter = kernel->params->term_crit.max_iter;
     storage = cvCreateChildMemStorage( _storage );
 
     b = (double*)cvMemStorageAlloc( storage, alpha_count*sizeof(b[0]));
@@ -430,7 +430,7 @@ float* CvSVMSolver::get_row_base( int i, bool* _existed )
 
     if( !existed )
     {
-        kernel->calc( sample_count, dims, samples, samples[i1], row->data );
+        kernel->calc( sample_count, var_count, samples, samples[i1], row->data );
     }
 
     if( _existed )
@@ -878,13 +878,13 @@ CvSVMSolver::calc_rho_nu_svm( double& rho, double& r )
 ///////////////////////// construct and solve various formulations ///////////////////////
 */
 
-bool CvSVMSolver::solve_c_svc( int _sample_count, int _dims, const float** _samples, char* _y,
+bool CvSVMSolver::solve_c_svc( int _sample_count, int _var_count, const float** _samples, char* _y,
                                double _Cp, double _Cn, CvMemStorage* _storage,
                                CvSVMKernel* _kernel, double* _alpha, CvSVMSolutionInfo& _si )
 {
     int i;
 
-    if( !create( _sample_count, _dims, _samples, _y, _sample_count,
+    if( !create( _sample_count, _var_count, _samples, _y, _sample_count,
                  _alpha, _Cp, _Cn, _storage, _kernel, &CvSVMSolver::get_row_svc,
                  &CvSVMSolver::select_working_set, &CvSVMSolver::calc_rho ))
         return false;
@@ -905,14 +905,14 @@ bool CvSVMSolver::solve_c_svc( int _sample_count, int _dims, const float** _samp
 }
 
 
-bool CvSVMSolver::solve_nu_svc( int _sample_count, int _dims, const float** _samples, char* _y,
+bool CvSVMSolver::solve_nu_svc( int _sample_count, int _var_count, const float** _samples, char* _y,
                                 CvMemStorage* _storage, CvSVMKernel* _kernel,
                                 double* _alpha, CvSVMSolutionInfo& _si )
 {
     int i;
     double sum_pos, sum_neg, inv_r;
 
-    if( !create( _sample_count, _dims, _samples, _y, _sample_count,
+    if( !create( _sample_count, _var_count, _samples, _y, _sample_count,
                  _alpha, 1., 1., _storage, _kernel, &CvSVMSolver::get_row_svc,
                  &CvSVMSolver::select_working_set_nu_svm, &CvSVMSolver::calc_rho_nu_svm ))
         return false;
@@ -952,14 +952,14 @@ bool CvSVMSolver::solve_nu_svc( int _sample_count, int _dims, const float** _sam
 }
 
 
-bool CvSVMSolver::solve_one_class( int _sample_count, int _dims, const float** _samples,
+bool CvSVMSolver::solve_one_class( int _sample_count, int _var_count, const float** _samples,
                                    CvMemStorage* _storage, CvSVMKernel* _kernel,
                                    double* _alpha, CvSVMSolutionInfo& _si )
 {
     int i, n;
     double nu = _kernel->params->nu;
     
-    if( !create( _sample_count, _dims, _samples, 0, _sample_count,
+    if( !create( _sample_count, _var_count, _samples, 0, _sample_count,
                  _alpha, 1., 1., _storage, _kernel, &CvSVMSolver::get_row_one_class,
                  &CvSVMSolver::select_working_set, &CvSVMSolver::calc_rho ))
         return false;
@@ -983,14 +983,14 @@ bool CvSVMSolver::solve_one_class( int _sample_count, int _dims, const float** _
 }
 
 
-bool CvSVMSolver::solve_eps_svr( int _sample_count, int _dims, const float** _samples,
+bool CvSVMSolver::solve_eps_svr( int _sample_count, int _var_count, const float** _samples,
                                  const float* _y, CvMemStorage* _storage,
                                  CvSVMKernel* _kernel, double* _alpha, CvSVMSolutionInfo& _si )
 {
     int i;
     double p = _kernel->params->p, C = _kernel->params->C;
     
-    if( !create( _sample_count, _dims, _samples, 0,
+    if( !create( _sample_count, _var_count, _samples, 0,
                  _sample_count*2, 0, C, C, _storage, _kernel, &CvSVMSolver::get_row_svr,
                  &CvSVMSolver::select_working_set, &CvSVMSolver::calc_rho ))
         return false;
@@ -1019,14 +1019,14 @@ bool CvSVMSolver::solve_eps_svr( int _sample_count, int _dims, const float** _sa
 }
 
 
-bool CvSVMSolver::solve_nu_svr( int _sample_count, int _dims, const float** _samples,
+bool CvSVMSolver::solve_nu_svr( int _sample_count, int _var_count, const float** _samples,
                                 const float* _y, CvMemStorage* _storage,
                                 CvSVMKernel* _kernel, double* _alpha, CvSVMSolutionInfo& _si )
 {
     int i;
     double C = _kernel->params->C, sum;
 
-    if( !create( _sample_count, _dims, _samples, 0,
+    if( !create( _sample_count, _var_count, _samples, 0,
                  _sample_count*2, 0, 1., 1., _storage, _kernel, &CvSVMSolver::get_row_svr,
                  &CvSVMSolver::select_working_set_nu_svm, &CvSVMSolver::calc_rho_nu_svm ))
         return false;
@@ -1089,7 +1089,7 @@ void CvSVM::clear()
     delete solver;
     kernel = 0;
     solver = 0;
-    dims_all = 0;
+    var_all = 0;
     sv = 0;
     sv_total = 0;
 }
@@ -1179,8 +1179,8 @@ bool CvSVM::set_params( const CvSVMParams& _params )
     if( svm_type != C_SVC )
         params.class_weights = 0;
 
-    params.criteria = cvCheckTermCriteria( params.criteria, DBL_EPSILON, INT_MAX );
-    params.criteria.epsilon = MAX( params.criteria.epsilon, DBL_EPSILON );
+    params.term_crit = cvCheckTermCriteria( params.term_crit, DBL_EPSILON, INT_MAX );
+    params.term_crit.epsilon = MAX( params.term_crit.epsilon, DBL_EPSILON );
     ok = true;
 
     __END__;
@@ -1203,7 +1203,7 @@ void CvSVM::create_solver( )
 
 
 // switching function
-bool CvSVM::train1( int sample_count, int dims, const float** samples,
+bool CvSVM::train1( int sample_count, int var_count, const float** samples,
                     const void* _responses, double Cp, double Cn,
                     CvMemStorage* _storage, double* alpha, double& rho )
 {
@@ -1218,15 +1218,15 @@ bool CvSVM::train1( int sample_count, int dims, const float** samples,
 
     si.rho = 0;
 
-    ok = svm_type == C_SVC ? solver->solve_c_svc( sample_count, dims, samples, (char*)_responses,
+    ok = svm_type == C_SVC ? solver->solve_c_svc( sample_count, var_count, samples, (char*)_responses,
                                                   Cp, Cn, _storage, kernel, alpha, si ) :
-         svm_type == NU_SVC ? solver->solve_nu_svc( sample_count, dims, samples, (char*)_responses,
+         svm_type == NU_SVC ? solver->solve_nu_svc( sample_count, var_count, samples, (char*)_responses,
                                                     _storage, kernel, alpha, si ) :
-         svm_type == ONE_CLASS ? solver->solve_one_class( sample_count, dims, samples,
+         svm_type == ONE_CLASS ? solver->solve_one_class( sample_count, var_count, samples,
                                                           _storage, kernel, alpha, si ) :
-         svm_type == EPS_SVR ? solver->solve_eps_svr( sample_count, dims, samples, (float*)_responses,
+         svm_type == EPS_SVR ? solver->solve_eps_svr( sample_count, var_count, samples, (float*)_responses,
                                                       _storage, kernel, alpha, si ) :
-         svm_type == NU_SVR ? solver->solve_nu_svr( sample_count, dims, samples, (float*)_responses,
+         svm_type == NU_SVR ? solver->solve_nu_svr( sample_count, var_count, samples, (float*)_responses,
                                                     _storage, kernel, alpha, si ) : false;
 
     rho = si.rho;
@@ -1249,7 +1249,7 @@ bool CvSVM::train( const CvMat* _train_data, const CvMat* _responses,
 
     __BEGIN__;
 
-    int svm_type, sample_count, dims, sample_size;
+    int svm_type, sample_count, var_count, sample_size;
     int block_size = 1 << 16;
     int i, j, k;
     CvSVMDecisionFunc* df;
@@ -1265,11 +1265,11 @@ bool CvSVM::train( const CvMat* _train_data, const CvMat* _responses,
                                  svm_type == CvSVM::C_SVC ||
                                  svm_type == CvSVM::NU_SVC ? CV_VAR_CATEGORICAL :
                                  CV_VAR_ORDERED, _var_idx, _sample_idx,
-                                 false, &samples, &sample_count, &dims, &dims_all,
+                                 false, &samples, &sample_count, &var_count, &var_all,
                                  &responses, &class_labels, &var_idx ));
 
 
-    sample_size = dims*sizeof(samples[0][0]);
+    sample_size = var_count*sizeof(samples[0][0]);
 
     // make the storage block size large enough to fit all
     // the temporary vectors and output support vectors.
@@ -1292,7 +1292,7 @@ bool CvSVM::train( const CvMat* _train_data, const CvMat* _responses,
             (CvSVMDecisionFunc*)cvAlloc( sizeof(df[0]) ));
 
         df->rho = 0;
-        if( !train1( sample_count, dims, samples, responses, 0, 0, temp_storage, alpha, df->rho ))
+        if( !train1( sample_count, var_count, samples, responses, 0, 0, temp_storage, alpha, df->rho ))
             EXIT;
         cvReleaseMemStorage( &temp_storage );
 
@@ -1396,7 +1396,7 @@ bool CvSVM::train( const CvMat* _train_data, const CvMat* _responses,
                     Cn = class_weights->data.db[j];
                 }
 
-                if( !train1( ci + cj, dims, temp_samples, temp_y,
+                if( !train1( ci + cj, var_count, temp_samples, temp_y,
                              Cp, Cn, temp_storage, alpha, df->rho ))
                     EXIT;
 
@@ -1497,7 +1497,7 @@ float CvSVM::predict( const CvMat* sample ) const
     __BEGIN__;
 
     int class_count;
-    int dims, buf_sz;
+    int var_count, buf_sz;
 
     if( !kernel )
         CV_ERROR( CV_StsBadArg, "The SVM should be trained first" );
@@ -1505,10 +1505,10 @@ float CvSVM::predict( const CvMat* sample ) const
     class_count = class_labels ? class_labels->cols :
                   params.svm_type == ONE_CLASS ? 1 : 0;
 
-    CV_CALL( cvPreparePredictData( sample, dims_all, var_idx,
+    CV_CALL( cvPreparePredictData( sample, var_all, var_idx,
                                    class_count, 0, &row_sample ));
 
-    dims = var_idx ? var_idx->cols : dims_all;
+    var_count = get_var_count();
 
     buf_sz = sv_total*sizeof(buffer[0]) + (class_count+1)*sizeof(int);
     if( buf_sz <= CV_MAX_LOCAL_SIZE )
@@ -1527,7 +1527,7 @@ float CvSVM::predict( const CvMat* sample ) const
         int i, sv_count = df->sv_count;
         double sum = -df->rho;
 
-        kernel->calc( sv_count, dims, (const float**)sv, row_sample, buffer );
+        kernel->calc( sv_count, var_count, (const float**)sv, row_sample, buffer );
         for( i = 0; i < sv_count; i++ )
             sum += buffer[i]*df->alpha[i];
 
@@ -1541,7 +1541,7 @@ float CvSVM::predict( const CvMat* sample ) const
         int i, j, k;
 
         memset( vote, 0, class_count*sizeof(vote[0]));
-        kernel->calc( sv_total, dims, (const float**)sv, row_sample, buffer );
+        kernel->calc( sv_total, var_count, (const float**)sv, row_sample, buffer );
 
         for( i = 0; i < class_count; i++ )
         {
@@ -1580,6 +1580,402 @@ float CvSVM::predict( const CvMat* sample ) const
 }
 
 
+void CvSVM::write_params( CvFileStorage* fs )
+{
+    CV_FUNCNAME( "CvSVM::write_params" );
+
+    __BEGIN__;
+    
+    int svm_type = params.svm_type;
+    int kernel_type = params.kernel_type;
+
+    const char* svm_type_str =
+        svm_type == CvSVM::C_SVC ? "C_SVC" :
+        svm_type == CvSVM::NU_SVC ? "NU_SVC" :
+        svm_type == CvSVM::ONE_CLASS ? "ONE_CLASS" :
+        svm_type == CvSVM::EPS_SVR ? "EPS_SVR" :
+        svm_type == CvSVM::NU_SVR ? "NU_SVR" : 0;
+    const char* kernel_type_str =
+        kernel_type == CvSVM::LINEAR ? "LINEAR" :
+        kernel_type == CvSVM::POLY ? "POLY" :
+        kernel_type == CvSVM::RBF ? "RBF" :
+        kernel_type == CvSVM::SIGMOID ? "SIGMOID" : 0;
+
+    if( svm_type_str )
+        cvWriteString( fs, "svm_type", svm_type_str );
+    else
+        cvWriteInt( fs, "svm_type", svm_type );
+
+    // save kernel
+    cvStartWriteStruct( fs, "kernel", CV_NODE_MAP + CV_NODE_FLOW );
+    
+    if( kernel_type_str )
+        cvWriteString( fs, "type", kernel_type_str );
+    else
+        cvWriteInt( fs, "type", kernel_type );
+
+    if( kernel_type == CvSVM::POLY || !kernel_type_str )
+        cvWriteReal( fs, "degree", params.degree );
+
+    if( kernel_type != CvSVM::LINEAR || !kernel_type_str )
+        cvWriteReal( fs, "gamma", params.gamma );
+
+    if( kernel_type == CvSVM::POLY || kernel_type == CvSVM::SIGMOID || !kernel_type_str )
+        cvWriteReal( fs, "coef0", params.coef0 );
+
+    cvEndWriteStruct(fs);
+
+    if( svm_type == CvSVM::C_SVC || svm_type == CvSVM::EPS_SVR ||
+        svm_type == CvSVM::NU_SVR || !svm_type_str )
+        cvWriteReal( fs, "C", params.C );
+
+    if( svm_type == CvSVM::NU_SVC || svm_type == CvSVM::ONE_CLASS ||
+        svm_type == CvSVM::NU_SVR || !svm_type_str )
+        cvWriteReal( fs, "nu", params.nu );
+
+    if( svm_type == CvSVM::EPS_SVR || !svm_type_str )
+        cvWriteReal( fs, "p", params.p );
+
+    cvStartWriteStruct( fs, "term_criteria", CV_NODE_MAP + CV_NODE_FLOW );
+    if( params.term_crit.type & CV_TERMCRIT_EPS )
+        cvWriteReal( fs, "epsilon", params.term_crit.epsilon );
+    if( params.term_crit.type & CV_TERMCRIT_ITER )
+        cvWriteInt( fs, "iterations", params.term_crit.max_iter );
+    cvEndWriteStruct( fs );
+
+    __END__;
+}
+
+
+void CvSVM::save( const char* filename, const char* name )
+{
+    CvFileStorage* fs = 0;
+    
+    CV_FUNCNAME( "CvSVM::save" );
+
+    __BEGIN__;
+
+    CV_CALL( fs = cvOpenFileStorage( filename, 0, CV_STORAGE_WRITE ));
+    if( !fs )
+        CV_ERROR( CV_StsError, "Could not open the file storage. Check the path and permissions" );
+
+    write( fs, name ? name : "my_svm" );
+
+    __END__;
+
+    cvReleaseFileStorage( &fs );
+}
+
+
+void CvSVM::write( CvFileStorage* fs, const char* name )
+{
+    CV_FUNCNAME( "CvSVM::write" );
+
+    __BEGIN__;
+
+    int i, var_count = get_var_count(), df_count, class_count;
+    const CvSVMDecisionFunc* df = decision_func;
+
+    cvStartWriteStruct( fs, name, CV_NODE_MAP, CV_TYPE_NAME_ML_SVM );
+
+    write_params( fs );
+
+    cvWriteInt( fs, "var_all", var_all );
+    cvWriteInt( fs, "var_count", var_count );
+
+    class_count = class_labels ? class_labels->cols :
+                  params.svm_type == CvSVM::ONE_CLASS ? 1 : 0;
+
+    if( class_count )
+    {
+        cvWriteInt( fs, "class_count", class_count );
+
+        if( class_labels )
+            cvWrite( fs, "class_labels", class_labels );
+
+        if( class_weights )
+            cvWrite( fs, "class_weights", class_weights );
+    }
+
+    if( var_idx )
+        cvWrite( fs, "var_idx", var_idx );
+
+    // write the joint collection of support vectors
+    cvWriteInt( fs, "sv_total", sv_total );
+    cvStartWriteStruct( fs, "support_vectors", CV_NODE_SEQ );
+    for( i = 0; i < sv_total; i++ )
+    {
+        cvStartWriteStruct( fs, 0, CV_NODE_SEQ + CV_NODE_FLOW );
+        cvWriteRawData( fs, sv[i], var_count, "f" );
+        cvEndWriteStruct( fs );
+    }
+
+    cvEndWriteStruct( fs );
+
+    // write decision functions
+    df_count = class_count > 1 ? class_count*(class_count-1)/2 : 1;
+    df = decision_func;
+
+    cvStartWriteStruct( fs, "decision_functions", CV_NODE_SEQ );
+    for( i = 0; i < df_count; i++ )
+    {
+        int sv_count = df[i].sv_count;
+        cvStartWriteStruct( fs, 0, CV_NODE_MAP );
+        cvWriteInt( fs, "sv_count", sv_count );
+        cvWriteReal( fs, "rho", df[i].rho );
+        cvStartWriteStruct( fs, "alpha", CV_NODE_SEQ+CV_NODE_FLOW );
+        cvWriteRawData( fs, df[i].alpha, df[i].sv_count, "d" );
+        cvEndWriteStruct( fs );
+        if( class_count > 1 )
+        {
+            cvStartWriteStruct( fs, "index", CV_NODE_SEQ+CV_NODE_FLOW );
+            cvWriteRawData( fs, df[i].sv_index, df[i].sv_count, "i" );
+            cvEndWriteStruct( fs );
+        }
+        else
+            CV_ASSERT( sv_count == sv_total );
+    }
+    cvEndWriteStruct( fs );
+    cvEndWriteStruct( fs );
+
+    __END__;
+}
+
+
+void CvSVM::read_params( CvFileStorage* fs, CvFileNode* svm_node )
+{
+    CV_FUNCNAME( "CvSVM::read_params" );
+    
+    __BEGIN__;
+    
+    int svm_type, kernel_type;
+    CvSVMParams _params;
+
+    CvFileNode* tmp_node = cvGetFileNodeByName( fs, svm_node, "svm_type" );
+    CvFileNode* kernel_node;
+    if( !tmp_node )
+        CV_ERROR( CV_StsBadArg, "svm_type tag is not found" );
+
+    if( CV_NODE_TYPE(tmp_node->tag) == CV_NODE_INT )
+        svm_type = cvReadInt( tmp_node, -1 );
+    else
+    {
+        const char* svm_type_str = cvReadString( tmp_node, "" );
+        svm_type =
+            strcmp( svm_type_str, "C_SVC" ) == 0 ? CvSVM::C_SVC :
+            strcmp( svm_type_str, "NU_SVC" ) == 0 ? CvSVM::NU_SVC :
+            strcmp( svm_type_str, "ONE_CLASS" ) == 0 ? CvSVM::ONE_CLASS :
+            strcmp( svm_type_str, "EPS_SVR" ) == 0 ? CvSVM::EPS_SVR :
+            strcmp( svm_type_str, "NU_SVR" ) == 0 ? CvSVM::NU_SVR : -1;
+
+        if( svm_type < 0 )
+            CV_ERROR( CV_StsParseError, "Missing of invalid SVM type" );
+    }
+
+    kernel_node = cvGetFileNodeByName( fs, svm_node, "kernel" );
+    if( !kernel_node )
+        CV_ERROR( CV_StsParseError, "SVM kernel tag is not found" );
+
+    tmp_node = cvGetFileNodeByName( fs, kernel_node, "type" );
+    if( !tmp_node )
+        CV_ERROR( CV_StsParseError, "SVM kernel type tag is not found" );
+
+    if( CV_NODE_TYPE(tmp_node->tag) == CV_NODE_INT )
+        kernel_type = cvReadInt( tmp_node, -1 );
+    else
+    {
+        const char* kernel_type_str = cvReadString( tmp_node, "" );
+        kernel_type =
+            strcmp( kernel_type_str, "LINEAR" ) == 0 ? CvSVM::LINEAR :
+            strcmp( kernel_type_str, "POLY" ) == 0 ? CvSVM::POLY :
+            strcmp( kernel_type_str, "RBF" ) == 0 ? CvSVM::RBF :
+            strcmp( kernel_type_str, "SIGMOID" ) == 0 ? CvSVM::SIGMOID : -1;
+
+        if( kernel_type < 0 )
+            CV_ERROR( CV_StsParseError, "Missing of invalid SVM kernel type" );
+    }
+
+    _params.svm_type = svm_type;
+    _params.kernel_type = kernel_type;
+    _params.degree = cvReadRealByName( fs, kernel_node, "degree", 0 );
+    _params.gamma = cvReadRealByName( fs, kernel_node, "gamma", 0 );
+    _params.coef0 = cvReadRealByName( fs, kernel_node, "coef0", 0 );
+
+    _params.C = cvReadRealByName( fs, svm_node, "C", 0 );
+    _params.nu = cvReadRealByName( fs, svm_node, "nu", 0 );
+    _params.p = cvReadRealByName( fs, svm_node, "p", 0 );
+    _params.class_weights = 0;
+
+    tmp_node = cvGetFileNodeByName( fs, svm_node, "term_criteria" );
+    if( tmp_node )
+    {
+        _params.term_crit.epsilon = cvReadRealByName( fs, tmp_node, "epsilon", -1. );
+        _params.term_crit.max_iter = cvReadIntByName( fs, tmp_node, "iterations", -1 );
+        _params.term_crit.type = (_params.term_crit.epsilon >= 0 ? CV_TERMCRIT_EPS : 0) +
+                               (_params.term_crit.max_iter >= 0 ? CV_TERMCRIT_ITER : 0);
+    }
+    else
+        _params.term_crit = cvTermCriteria( CV_TERMCRIT_EPS + CV_TERMCRIT_ITER, 1000, FLT_EPSILON );
+
+    set_params( _params );
+
+    __END__;
+}
+
+
+void CvSVM::load( const char* filename, const char* name )
+{
+    CvFileStorage* fs = 0;
+    
+    CV_FUNCNAME( "CvSVM::load" );
+
+    __BEGIN__;
+
+    CvFileNode* svm_node = 0;
+
+    CV_CALL( fs = cvOpenFileStorage( filename, 0, CV_STORAGE_READ ));
+    if( !fs )
+        CV_ERROR( CV_StsError, "Could not open the file storage. Check the path and permissions" );
+
+    if( name )
+        svm_node = cvGetFileNodeByName( fs, 0, name );
+    else
+    {
+        CvFileNode* root = cvGetRootFileNode( fs );
+        if( root->data.seq->total > 0 )
+            svm_node = (CvFileNode*)cvGetSeqElem( root->data.seq, 0 );
+    }
+
+    read( fs, svm_node );
+
+    __END__;
+
+    cvReleaseFileStorage( &fs );
+}
+
+
+void CvSVM::read( CvFileStorage* fs, CvFileNode* svm_node )
+{
+    const double not_found_dbl = DBL_MAX;
+    
+    CV_FUNCNAME( "CvSVM::read" );
+
+    __BEGIN__;
+
+    int i, var_count, df_count, class_count;
+    int block_size = 1 << 16, sv_size;
+    CvFileNode *sv_node, *df_node;
+    CvSVMDecisionFunc* df;
+    CvSeqReader reader;
+
+    if( !svm_node )
+        CV_ERROR( CV_StsParseError, "The requested element is not found" );
+
+    clear();
+
+    // read SVM parameters
+    read_params( fs, svm_node );
+
+    // and top-level data
+    sv_total = cvReadIntByName( fs, svm_node, "sv_total", -1 );
+    var_all = cvReadIntByName( fs, svm_node, "var_all", -1 );
+    var_count = cvReadIntByName( fs, svm_node, "var_count", var_all );
+    class_count = cvReadIntByName( fs, svm_node, "class_count", 0 );
+
+    if( sv_total <= 0 || var_all <= 0 || var_count <= 0 || var_count > var_all || class_count < 0 )
+        CV_ERROR( CV_StsParseError, "SVM model data is invalid, check sv_count, var_* and class_count tags" );
+
+    CV_CALL( class_labels = (CvMat*)cvReadByName( fs, svm_node, "class_labels" ));
+    CV_CALL( class_weights = (CvMat*)cvReadByName( fs, svm_node, "class_weights" ));
+    CV_CALL( var_idx = (CvMat*)cvReadByName( fs, svm_node, "comp_idx" ));
+
+    if( class_count > 1 && (!class_labels ||
+        !CV_IS_MAT(class_labels) || class_labels->cols != class_count))
+        CV_ERROR( CV_StsParseError, "Array of class labels is missing or invalid" );
+
+    if( var_count < var_all && (!var_idx || !CV_IS_MAT(var_idx) || var_idx->cols != var_count) )
+        CV_ERROR( CV_StsParseError, "var_idx array is missing or invalid" );
+
+    // read support vectors
+    sv_node = cvGetFileNodeByName( fs, svm_node, "support_vectors" );
+    if( !sv_node || !CV_NODE_IS_SEQ(sv_node->tag))
+        CV_ERROR( CV_StsParseError, "Missing or invalid sequence of support vectors" );
+
+    block_size = MAX( block_size, sv_total*(int)sizeof(CvSVMKernelRow));
+    block_size = MAX( block_size, sv_total*2*(int)sizeof(double));
+    block_size = MAX( block_size, var_all*(int)sizeof(double));
+    CV_CALL( storage = cvCreateMemStorage( block_size ));
+    CV_CALL( sv = (float**)cvMemStorageAlloc( storage,
+                                sv_total*sizeof(sv[0]) ));
+    
+    CV_CALL( cvStartReadSeq( sv_node->data.seq, &reader, 0 ));
+    sv_size = var_count*sizeof(sv[0][0]);
+
+    for( i = 0; i < sv_total; i++ )
+    {
+        CvFileNode* sv_elem = (CvFileNode*)reader.ptr;
+        CV_ASSERT( var_count == 1 || (CV_NODE_IS_SEQ(sv_elem->tag) &&
+                   sv_elem->data.seq->total == var_count) );
+
+        CV_CALL( sv[i] = (float*)cvMemStorageAlloc( storage, sv_size ));
+        CV_CALL( cvReadRawData( fs, sv_elem, sv[i], "f" ));
+        CV_NEXT_SEQ_ELEM( sv_node->data.seq->elem_size, reader );
+    }
+
+    // read decision functions
+    df_count = class_count > 1 ? class_count*(class_count-1)/2 : 1;
+    df_node = cvGetFileNodeByName( fs, svm_node, "decision_functions" );
+    if( !df_node || !CV_NODE_IS_SEQ(df_node->tag) ||
+        df_node->data.seq->total != df_count )
+        CV_ERROR( CV_StsParseError, "decision_functions is missing or is not a collection "
+                  "or has a wrong number of elements" );
+    
+    CV_CALL( df = decision_func = (CvSVMDecisionFunc*)cvAlloc( df_count*sizeof(df[0]) ));
+    cvStartReadSeq( df_node->data.seq, &reader, 0 );
+
+    for( i = 0; i < df_count; i++ )
+    {
+        CvFileNode* df_elem = (CvFileNode*)reader.ptr;
+        CvFileNode* alpha_node = cvGetFileNodeByName( fs, df_elem, "alpha" );
+
+        int sv_count = cvReadIntByName( fs, df_elem, "sv_count", -1 );
+        if( sv_count <= 0 )
+            CV_ERROR( CV_StsParseError, "sv_count is missing or non-positive" );
+        df[i].sv_count = sv_count;
+
+        df[i].rho = cvReadRealByName( fs, df_elem, "rho", not_found_dbl );
+        if( fabs(df[i].rho - not_found_dbl) < DBL_EPSILON )
+            CV_ERROR( CV_StsParseError, "rho is missing" );
+
+        if( !alpha_node )
+            CV_ERROR( CV_StsParseError, "alpha is missing in the decision function" );
+
+        CV_CALL( df[i].alpha = (double*)cvMemStorageAlloc( storage,
+                                        sv_count*sizeof(df[i].alpha[0])));
+        CV_ASSERT( sv_count == 1 || CV_NODE_IS_SEQ(alpha_node->tag) &&
+                   alpha_node->data.seq->total == sv_count );
+        CV_CALL( cvReadRawData( fs, alpha_node, df[i].alpha, "d" ));
+
+        if( class_count > 1 )
+        {
+            CvFileNode* index_node = cvGetFileNodeByName( fs, df_elem, "index" );
+            if( !index_node )
+                CV_ERROR( CV_StsParseError, "index is missing in the decision function" );
+            CV_CALL( df[i].sv_index = (int*)cvMemStorageAlloc( storage,
+                                            sv_count*sizeof(df[i].sv_index[0])));
+            CV_ASSERT( sv_count == 1 || CV_NODE_IS_SEQ(index_node->tag) &&
+                   index_node->data.seq->total == sv_count );
+            CV_CALL( cvReadRawData( fs, index_node, df[i].sv_index, "i" ));
+        }
+        else
+            df[i].sv_index = 0;
+    }
+
+    create_kernel();
+
+    __END__;
+}
+
 #if 0
 
 static void*
@@ -1592,7 +1988,7 @@ icvCloneSVM( const void* _src )
     __BEGIN__;
 
     const CvSVMModel* src = (const CvSVMModel*)_src;
-    int dims, class_count;
+    int var_count, class_count;
     int i, sv_total, df_count;
     int sv_size;
 
@@ -1605,7 +2001,7 @@ icvCloneSVM( const void* _src )
     dst->params.weight_labels = 0;
     dst->params.weights = 0;
 
-    dst->dims_all = src->dims_all;
+    dst->var_all = src->var_all;
     if( src->class_labels )
         dst->class_labels = cvCloneMat( src->class_labels );
     if( src->class_weights )
@@ -1613,7 +2009,7 @@ icvCloneSVM( const void* _src )
     if( src->comp_idx )
         dst->comp_idx = cvCloneMat( src->comp_idx );
 
-    dims = src->comp_idx ? src->comp_idx->cols : src->dims_all;
+    var_count = src->comp_idx ? src->comp_idx->cols : src->var_all;
     class_count = src->class_labels ? src->class_labels->cols :
                   src->params.svm_type == CvSVM::ONE_CLASS ? 1 : 0;
     sv_total = dst->sv_total = src->sv_total;
@@ -1621,7 +2017,7 @@ icvCloneSVM( const void* _src )
     CV_CALL( dst->sv = (float**)cvMemStorageAlloc( dst->storage,
                                     sv_total*sizeof(dst->sv[0]) ));
     
-    sv_size = dims*sizeof(dst->sv[0][0]);
+    sv_size = var_count*sizeof(dst->sv[0][0]);
     
     for( i = 0; i < sv_total; i++ )
     {
@@ -1663,355 +2059,6 @@ icvCloneSVM( const void* _src )
     
     return dst;
 }
-
-static void
-icvWriteSVM( CvFileStorage* fs, const char* name,
-             const void* struct_ptr, CvAttrList /*attr*/ )
-                                   
-{
-    CV_FUNCNAME( "icvWriteSVM" );
-    
-    __BEGIN__;
-
-    CvSVMModel* svm = (CvSVMModel*)struct_ptr;
-    CvSVMModelParams* params = &svm->params;
-    CvSVMDecisionFunc* df;
-    int i, class_count, df_count;
-    int dims;
-    
-    CV_ASSERT( CV_IS_SVM(svm) );
-
-    CV_CALL( cvStartWriteStruct( fs, name, CV_NODE_MAP, CV_TYPE_NAME_ML_SVM ));
-
-    // 1. write common parameters
-    cvWriteInt( fs, "dims_all", svm->dims_all );
-    dims = svm->dims_all;
-
-    if( svm->comp_idx )
-    {
-        dims = svm->comp_idx->cols;
-        cvWriteInt( fs, "dims_selected", dims );
-    }
-
-    class_count = svm->class_labels ? svm->class_labels->cols :
-                  svm->params.svm_type == CvSVM::ONE_CLASS ? 1 : 0;
-
-    if( class_count )
-        cvWriteInt( fs, "classes", class_count );
-
-    // 2. write training parameters
-    // 2.1. write SVM type
-    cvWriteString( fs, "svm_type", params->svm_type == CvSVM::C_SVC ? "C_SVC" :
-                                   params->svm_type == CvSVM::NU_SVC ? "NU_SVC" :
-                                   params->svm_type == CvSVM::ONE_CLASS ? "ONE_CLASS" :
-                                   params->svm_type == CvSVM::EPS_SVR ? "EPS_SVR" :
-                                   params->svm_type == CvSVM::NU_SVR ? "NU_SVR" : "???" );
-
-    cvStartWriteStruct( fs, "kernel", CV_NODE_MAP + CV_NODE_FLOW );
-    
-    // 2.2. write kernel parameters
-    cvWriteString( fs, "type", params->kernel_type == CvSVM::LINEAR ? "LINEAR" :
-                               params->kernel_type == CvSVM::POLY ? "POLYMONIAL" :
-                               params->kernel_type == CvSVM::RBF ? "RBF" :
-                               params->kernel_type == CvSVM::SIGMOID ? "SIGMOID" : "???" );
-
-    if( params->kernel_type == CvSVM::POLY )
-        cvWriteReal( fs, "degree", params->degree );
-
-    if( params->kernel_type != CvSVM::LINEAR )
-        cvWriteReal( fs, "gamma", params->gamma );
-
-    if( params->kernel_type == CvSVM::POLY || params->kernel_type == CvSVM::SIGMOID )
-        cvWriteReal( fs, "coef0", params->coef0 );
-
-    cvEndWriteStruct(fs);
-
-    // 2.3. write SVM parameters
-    if( params->svm_type == CvSVM::C_SVC ||
-        params->svm_type == CvSVM::EPS_SVR ||
-        params->svm_type == CvSVM::NU_SVR )
-        cvWriteReal( fs, "C", params->C );
-
-    if( params->svm_type == CvSVM::NU_SVC ||
-        params->svm_type == CvSVM::ONE_CLASS ||
-        params->svm_type == CvSVM::NU_SVR )
-        cvWriteReal( fs, "nu", params->nu );
-
-    if( params->svm_type == CvSVM::EPS_SVR )
-        cvWriteReal( fs, "p", params->p );
-
-    // 2.4. write term. criteria
-    cvStartWriteStruct( fs, "termcriteria", CV_NODE_MAP + CV_NODE_FLOW );
-    if( params->criteria.type & CV_TERMCRIT_EPS )
-        cvWriteReal( fs, "epsilon", params->criteria.epsilon );
-    if( params->criteria.type & CV_TERMCRIT_ITER )
-        cvWriteInt( fs, "iterations", params->criteria.max_iter );
-    cvEndWriteStruct( fs );
-
-    // 3. write weights, labels, comp_idx
-    if( svm->class_labels )
-        cvWrite( fs, "class_labels", svm->class_labels );
-
-    if( svm->class_weights )
-        cvWrite( fs, "class_weights", svm->class_weights );
-
-    if( svm->comp_idx )
-        cvWrite( fs, "comp_idx", svm->comp_idx );
-
-    // 4. write the joint collection of support vectors
-    cvWriteInt( fs, "sv_total", svm->sv_total );
-    cvStartWriteStruct( fs, "support_vectors", CV_NODE_SEQ );
-    for( i = 0; i < svm->sv_total; i++ )
-    {
-        cvStartWriteStruct( fs, 0, CV_NODE_SEQ + CV_NODE_FLOW );
-        cvWriteRawData( fs, svm->sv[i], dims, "f" );
-        cvEndWriteStruct( fs );
-    }
-    cvEndWriteStruct( fs );
-
-    // 4. write decision functions
-    df_count = class_count > 1 ? class_count*(class_count-1)/2 : 1;
-    df = (CvSVMDecisionFunc*)svm->decision_func;
-
-    cvStartWriteStruct( fs, "decision_functions", CV_NODE_SEQ );
-    for( i = 0; i < df_count; i++ )
-    {
-        int sv_count = df[i].sv_count;
-        cvStartWriteStruct( fs, 0, CV_NODE_MAP );
-        cvWriteInt( fs, "sv_count", sv_count );
-        cvWriteReal( fs, "rho", df[i].rho );
-        cvStartWriteStruct( fs, "alpha", CV_NODE_SEQ+CV_NODE_FLOW );
-        cvWriteRawData( fs, df[i].alpha, df[i].sv_count, "d" );
-        cvEndWriteStruct( fs );
-        if( class_count > 1 )
-        {
-            cvStartWriteStruct( fs, "index", CV_NODE_SEQ+CV_NODE_FLOW );
-            cvWriteRawData( fs, df[i].sv_index, df[i].sv_count, "i" );
-            cvEndWriteStruct( fs );
-        }
-        else
-            CV_ASSERT( sv_count == svm->sv_total );
-    }
-    cvEndWriteStruct( fs );
-    cvEndWriteStruct( fs );
-
-    __END__;
-}
-
-
-static void* icvReadSVM( CvFileStorage* fs, CvFileNode* node )
-{
-    CvSVMModel* svm = 0;
-
-    CV_FUNCNAME("icvReadSVM");
-    
-    __BEGIN__;
-
-    int dims, dims_all;
-    int class_count;
-    const char* svm_type_str;
-    const char* kernel_type_str;
-    CvSVMModelParams* params;
-    CvFileNode *kernel_node, *termcrit_node, *sv_node, *df_node;
-    CvSeqReader reader;
-    const double not_found_dbl = DBL_MAX;
-    int block_size = 1 << 16;
-    int i, sv_total, df_count;
-    int sv_size;
-    CvSVMDecisionFunc* df;
-
-    // 0. create initial CvSVMModel structure
-    CV_CALL( svm = icvCreateSVM() );
-    params = &svm->params;
-
-    // 1. read common parameters
-    svm->dims_all = dims_all = cvReadIntByName( fs, node, "dims_all", -1 );
-    dims = cvReadIntByName( fs, node, "dims_selected", dims_all );
-
-    if( dims_all <= 0 || dims <= 0 )
-        CV_ERROR( CV_StsParseError, "Space dimensionality is non-positive in SVM model" );
-
-    class_count = cvReadIntByName( fs, node, "classes", 0 );
-    if( class_count < 0 )
-        CV_ERROR( CV_StsParseError, "Number of classes is negative" );
-
-    // 2. read training parameters
-    // 2.1. read SVM type
-    svm_type_str = cvReadStringByName( fs, node, "svm_type", "" );
-    if( strcmp( svm_type_str, "C_SVC" ) == 0 )
-        params->svm_type = CvSVM::C_SVC;
-    else if( strcmp( svm_type_str, "NU_SVC" ) == 0 )
-        params->svm_type = CvSVM::NU_SVC;
-    else if( strcmp( svm_type_str, "ONE_CLASS" ) == 0 )
-        params->svm_type = CvSVM::ONE_CLASS;
-    else if( strcmp( svm_type_str, "EPS_SVR" ) == 0 )
-        params->svm_type = CvSVM::EPS_SVR;
-    else if( strcmp( svm_type_str, "NU_SVR" ) == 0 )
-        params->svm_type = CvSVM::NU_SVR;
-    else
-        CV_ERROR( CV_StsParseError, "Missing of invalid type of SVM" );
-
-    // 2.2. read kernel parameters
-    kernel_node = cvGetFileNodeByName( fs, node, "kernel" );
-    if( !kernel_node )
-        CV_ERROR( CV_StsParseError, "SVM kernel is missing" );
-
-    kernel_type_str = cvReadStringByName( fs, kernel_node, "type", "" );
-    if( strcmp( kernel_type_str, "LINEAR" ) == 0 )
-        params->kernel_type = CvSVM::LINEAR;
-    else if( strcmp( kernel_type_str, "POLYNOMIAL" ) == 0 )
-        params->kernel_type = CvSVM::POLY;
-    else if( strcmp( kernel_type_str, "RBF" ) == 0 )
-        params->kernel_type = CvSVM::RBF;
-    else if( strcmp( kernel_type_str, "SIGMOID" ) == 0 )
-        params->kernel_type = CvSVM::SIGMOID;
-    else
-        CV_ERROR( CV_StsParseError, "Missing of invalid type of SVM kernel" );
-
-    if( params->kernel_type == CvSVM::POLY )
-        params->degree = cvReadRealByName( fs, kernel_node, "degree", not_found_dbl );
-
-    if( params->kernel_type != CvSVM::LINEAR )
-        params->gamma = cvReadRealByName( fs, kernel_node, "gamma", not_found_dbl );
-
-    if( params->kernel_type == CvSVM::POLY || params->kernel_type == CvSVM::SIGMOID )
-        params->coef0 = cvReadRealByName( fs, kernel_node, "coef0", not_found_dbl );
-
-    if( fabs(params->degree - not_found_dbl) < DBL_EPSILON ||
-        fabs(params->gamma - not_found_dbl) < DBL_EPSILON ||
-        fabs(params->coef0 - not_found_dbl) < DBL_EPSILON )
-        CV_ERROR( CV_StsParseError, "Some of essential kernel parameters are missing" );
-
-    // 2.3. read SVM parameters
-    if( params->svm_type == CvSVM::C_SVC ||
-        params->svm_type == CvSVM::EPS_SVR ||
-        params->svm_type == CvSVM::NU_SVR )
-        params->C = cvReadRealByName( fs, node, "C", not_found_dbl );
-
-    if( params->svm_type == CvSVM::NU_SVC ||
-        params->svm_type == CvSVM::ONE_CLASS ||
-        params->svm_type == CvSVM::NU_SVR )
-        params->nu = cvReadRealByName( fs, node, "nu", not_found_dbl );
-
-    if( params->svm_type == CvSVM::EPS_SVR )
-        params->p = cvReadRealByName( fs, node, "p", not_found_dbl );
-
-    if( fabs(params->C - not_found_dbl) < DBL_EPSILON ||
-        fabs(params->nu - not_found_dbl) < DBL_EPSILON ||
-        fabs(params->p - not_found_dbl) < DBL_EPSILON )
-        CV_ERROR( CV_StsParseError, "Some of essential SVM parameters are missing" );
-
-    // 2.4 read termination criteria
-    termcrit_node = cvGetFileNodeByName( fs, node, "termcriteria" );
-    params->criteria.epsilon = cvReadRealByName( fs, termcrit_node, "epsilon", -1. );
-    params->criteria.max_iter = cvReadIntByName( fs, termcrit_node, "iterations", -1 );
-    if( params->criteria.epsilon >= 0 )
-        params->criteria.type += CV_TERMCRIT_EPS;
-    if( params->criteria.max_iter >= 0 )
-        params->criteria.type += CV_TERMCRIT_ITER;
-    params->criteria = cvCheckTermCriteria( params->criteria, DBL_EPSILON, INT_MAX );
-
-    // 2.5 read class labels, weights, comp_idx
-    CV_CALL( svm->class_labels = (CvMat*)cvReadByName( fs, node, "class_labels" ));
-    CV_CALL( svm->class_weights = (CvMat*)cvReadByName( fs, node, "class_weights" ));
-    CV_CALL( svm->comp_idx = (CvMat*)cvReadByName( fs, node, "comp_idx" ));
-
-    if( class_count > 1 && (!svm->class_labels ||
-        !CV_IS_MAT(svm->class_labels) || svm->class_labels->cols != class_count))
-        CV_ERROR( CV_StsParseError, "Array of class labels is missing or invalid" );
-
-    if( dims < dims_all && (!svm->comp_idx ||
-        !CV_IS_MAT(svm->comp_idx) || svm->comp_idx->cols != dims) )
-        CV_ERROR( CV_StsParseError, "comp_idx array is missing" );
-
-    // 3. read the joint collection of support vectors
-    sv_total = cvReadIntByName( fs, node, "sv_total", -1 );
-    if( sv_total <= 0 )
-        CV_ERROR( CV_StsParseError, "Missing or invalid number of support vectors" );
-
-    sv_node = cvGetFileNodeByName( fs, node, "support_vectors" );
-    if( !sv_node || !CV_NODE_IS_SEQ(sv_node->tag))
-        CV_ERROR( CV_StsParseError, "Missing or invalid sequence of support vectors" );
-
-    block_size = MAX( block_size, sv_total*(int)sizeof(CvSVMKernelRow));
-    block_size = MAX( block_size, sv_total*2*(int)sizeof(double));
-    block_size = MAX( block_size, dims_all*(int)sizeof(double));
-    CV_CALL( svm->storage = cvCreateMemStorage( block_size ));
-    CV_CALL( svm->sv = (float**)cvMemStorageAlloc( svm->storage,
-                                sv_total*sizeof(svm->sv[0]) ));
-    
-    CV_CALL( cvStartReadSeq( sv_node->data.seq, &reader, 0 ));
-    sv_size = dims*sizeof(svm->sv[0][0]);
-
-    for( i = 0; i < sv_total; i++ )
-    {
-        CvFileNode* sv_elem = (CvFileNode*)reader.ptr;
-        CV_ASSERT( dims == 1 || (CV_NODE_IS_SEQ(sv_elem->tag) &&
-                   sv_elem->data.seq->total == dims) );
-
-        CV_CALL( svm->sv[i] = (float*)cvMemStorageAlloc( svm->storage, sv_size ));
-        CV_CALL( cvReadRawData( fs, sv_elem, svm->sv[i], "f" ));
-        CV_NEXT_SEQ_ELEM( sv_node->data.seq->elem_size, reader );
-    }
-
-    // 4. read decision functions
-    df_count = class_count > 1 ? class_count*(class_count-1)/2 : 1;
-    df_node = cvGetFileNodeByName( fs, node, "decision_functions" );
-    if( !df_node || !CV_NODE_IS_SEQ(df_node->tag) ||
-        df_node->data.seq->total != df_count )
-        CV_ERROR( CV_StsParseError, "decision_functions is missing or is not a collection "
-                  "or has a wrong number of elements" );
-    
-    CV_CALL( svm->decision_func = cvAlloc( df_count*sizeof(df[0]) ));
-    df = (CvSVMDecisionFunc*)svm->decision_func;
-    cvStartReadSeq( df_node->data.seq, &reader, 0 );
-
-    for( i = 0; i < df_count; i++ )
-    {
-        CvFileNode* df_elem = (CvFileNode*)reader.ptr;
-        CvFileNode* alpha_node = cvGetFileNodeByName( fs, df_elem, "alpha" );
-
-        int sv_count = cvReadIntByName( fs, df_elem, "sv_count", -1 );
-        if( sv_count <= 0 )
-            CV_ERROR( CV_StsParseError, "sv_count is missing or non-positive" );
-        df[i].sv_count = sv_count;
-
-        df[i].rho = cvReadRealByName( fs, df_elem, "rho", not_found_dbl );
-        if( fabs(df[i].rho - not_found_dbl) < DBL_EPSILON )
-            CV_ERROR( CV_StsParseError, "rho is missing" );
-
-        if( !alpha_node )
-            CV_ERROR( CV_StsParseError, "alpha is missing in the decision function" );
-
-        CV_CALL( df[i].alpha = (double*)cvMemStorageAlloc( svm->storage,
-                                        sv_count*sizeof(df[i].alpha[0])));
-        CV_ASSERT( sv_count == 1 || CV_NODE_IS_SEQ(alpha_node->tag) &&
-                   alpha_node->data.seq->total == sv_count );
-        CV_CALL( cvReadRawData( fs, alpha_node, df[i].alpha, "d" ));
-
-        if( class_count > 1 )
-        {
-            CvFileNode* index_node = cvGetFileNodeByName( fs, df_elem, "index" );
-            if( !index_node )
-                CV_ERROR( CV_StsParseError, "index is missing in the decision function" );
-            CV_CALL( df[i].sv_index = (int*)cvMemStorageAlloc( svm->storage,
-                                            sv_count*sizeof(df[i].sv_index[0])));
-            CV_ASSERT( sv_count == 1 || CV_NODE_IS_SEQ(index_node->tag) &&
-                   index_node->data.seq->total == sv_count );
-            CV_CALL( cvReadRawData( fs, index_node, df[i].sv_index, "i" ));
-        }
-        else
-            df[i].sv_index = 0;
-    }
-
-    __END__;
-
-    if( cvGetErrStatus() < 0 && svm )
-        svm->release( (CvStatModel**)&svm );
-    
-    return svm;
-}
-
 
 static int icvRegisterSVMType()
 {
@@ -2297,6 +2344,5 @@ cvTrainSVM_CrossValidation( const CvMat* train_data, int tflag,
 
 #endif
 
-#endif
 /* End of file. */
 

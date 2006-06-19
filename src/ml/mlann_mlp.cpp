@@ -92,7 +92,7 @@ CvANN_MLP_TrainParams::~CvANN_MLP_TrainParams()
 
 CvANN_MLP::CvANN_MLP()
 {
-    layer_counts = wbuf = 0;
+    layer_sizes = wbuf = 0;
     min_val = max_val = min_val1 = max_val1 = 0.;
     weights = 0;
     rng = cvRNG(-1);
@@ -100,15 +100,15 @@ CvANN_MLP::CvANN_MLP()
 }
 
 
-CvANN_MLP::CvANN_MLP( const CvMat* _layer_counts,
+CvANN_MLP::CvANN_MLP( const CvMat* _layer_sizes,
                       int _activ_func,
                       double _f_param1, double _f_param2 )
 {
-    layer_counts = wbuf = 0;
+    layer_sizes = wbuf = 0;
     min_val = max_val = min_val1 = max_val1 = 0.;
     weights = 0;
     rng = cvRNG(-1);
-    create( _layer_counts, _activ_func, _f_param1, _f_param2 );
+    create( _layer_sizes, _activ_func, _f_param1, _f_param2 );
 }
 
 
@@ -120,7 +120,7 @@ CvANN_MLP::~CvANN_MLP()
 
 void CvANN_MLP::clear()
 {
-    cvReleaseMat( &layer_counts );
+    cvReleaseMat( &layer_sizes );
     cvReleaseMat( &wbuf );
     cvFree( &weights );
     activ_func = SIGMOID_SYM;
@@ -175,10 +175,10 @@ void CvANN_MLP::init_weights()
 {
     int i, j, k;
 
-    for( i = 1; i < layer_counts->cols; i++ )
+    for( i = 1; i < layer_sizes->cols; i++ )
     {
-        int n1 = layer_counts->data.i[i-1];
-        int n2 = layer_counts->data.i[i];
+        int n1 = layer_sizes->data.i[i-1];
+        int n2 = layer_sizes->data.i[i];
         double val = 0, G = n2 > 2 ? 0.7*pow(n1,1./(n2-1)) : 1.;
         double* w = weights[i];
 
@@ -193,7 +193,7 @@ void CvANN_MLP::init_weights()
                 s += val;
             }
             
-            if( i < layer_counts->cols - 1 )
+            if( i < layer_sizes->cols - 1 )
             {
                 s = 1./(s - val);
                 for( k = 0; k <= n1; k++ )
@@ -205,7 +205,7 @@ void CvANN_MLP::init_weights()
 }
 
 
-void CvANN_MLP::create( const CvMat* _layer_counts, int _activ_func,
+void CvANN_MLP::create( const CvMat* _layer_sizes, int _activ_func,
                         double _f_param1, double _f_param2 )
 {
     CV_FUNCNAME( "CvANN_MLP::create" );
@@ -217,20 +217,20 @@ void CvANN_MLP::create( const CvMat* _layer_counts, int _activ_func,
 
     clear();
 
-    if( !CV_IS_MAT(_layer_counts) ||
-        _layer_counts->cols != 1 && _layer_counts->rows != 1 ||
-        CV_MAT_TYPE(_layer_counts->type) != CV_32SC1 )
+    if( !CV_IS_MAT(_layer_sizes) ||
+        _layer_sizes->cols != 1 && _layer_sizes->rows != 1 ||
+        CV_MAT_TYPE(_layer_sizes->type) != CV_32SC1 )
         CV_ERROR( CV_StsBadArg,
         "The array of layer neuron counters must be an integer vector" );
 
     CV_CALL( set_activ_func( _activ_func, _f_param1, _f_param2 ));
 
-    l_count = _layer_counts->rows + _layer_counts->cols - 1;
-    l_src = _layer_counts->data.i;
-    l_step = CV_IS_MAT_CONT(_layer_counts->type) ? 1 :
-                _layer_counts->step / sizeof(l_src[0]);
-    CV_CALL( layer_counts = cvCreateMat( 1, l_count, CV_32SC1 ));
-    l_dst = layer_counts->data.i;
+    l_count = _layer_sizes->rows + _layer_sizes->cols - 1;
+    l_src = _layer_sizes->data.i;
+    l_step = CV_IS_MAT_CONT(_layer_sizes->type) ? 1 :
+                _layer_sizes->step / sizeof(l_src[0]);
+    CV_CALL( layer_sizes = cvCreateMat( 1, l_count, CV_32SC1 ));
+    l_dst = layer_sizes->data.i;
 
     max_count = 0;
     for( i = 0; i < l_count; i++ )
@@ -270,7 +270,7 @@ void CvANN_MLP::predict( const CvMat* _inputs, CvMat* _outputs ) const
     double* buf;
     int i, j, n, dn = 0, l_count, dn0, buf_sz, min_buf_sz;
 
-    if( !layer_counts )
+    if( !layer_sizes )
         CV_ERROR( CV_StsError, "The network has not been initialized" );
 
     if( !CV_IS_MAT(_inputs) || !CV_IS_MAT(_outputs) ||
@@ -281,11 +281,11 @@ void CvANN_MLP::predict( const CvMat* _inputs, CvMat* _outputs ) const
         CV_ERROR( CV_StsBadArg, "Both input and output must be floating-point matrices "
                                 "of the same type and have the same number of rows" );
 
-    if( _inputs->cols != layer_counts->data.i[0] )
+    if( _inputs->cols != layer_sizes->data.i[0] )
         CV_ERROR( CV_StsBadSize, "input matrix must have the same number of columns as "
                                  "the number of neurons in the input layer" );
 
-    if( _outputs->cols != layer_counts->data.i[layer_counts->cols - 1] )
+    if( _outputs->cols != layer_sizes->data.i[layer_sizes->cols - 1] )
         CV_ERROR( CV_StsBadSize, "output matrix must have the same number of columns as "
                                  "the number of neurons in the output layer" );
     n = dn0 = _inputs->rows;
@@ -300,7 +300,7 @@ void CvANN_MLP::predict( const CvMat* _inputs, CvMat* _outputs ) const
     }
 
     buf = (double*)cvStackAlloc( buf_sz*sizeof(buf[0]) );
-    l_count = layer_counts->cols;
+    l_count = layer_sizes->cols;
 
     for( i = 0; i < n; i += dn )
     {
@@ -316,7 +316,7 @@ void CvANN_MLP::predict( const CvMat* _inputs, CvMat* _outputs ) const
         for( j = 1; j < l_count; j++ )
         {
             double* data = buf + (j&1 ? max_count*dn0 : 0);
-            int cols = layer_counts->data.i[j];
+            int cols = layer_sizes->data.i[j];
 
             cvInitMatHeader( layer_out, dn, cols, CV_64F, data );
             cvInitMatHeader( &_w, layer_in->cols, layer_out->cols, CV_64F, weights[j] );
@@ -366,7 +366,7 @@ void CvANN_MLP::scale_output( const CvMat* _src, CvMat* _dst ) const
 {
     int i, j, cols = _src->cols;
     const double* src = _src->data.db;
-    const double* w = weights[layer_counts->cols];
+    const double* w = weights[layer_sizes->cols];
     int step = _dst->step;
 
     if( CV_MAT_TYPE( _dst->type ) == CV_32F )
@@ -568,7 +568,7 @@ void CvANN_MLP::calc_input_scale( const CvVectors* vecs, int flags )
     
     if( reset_weights )
     {
-        int i, j, vcount = layer_counts->data.i[0];
+        int i, j, vcount = layer_sizes->data.i[0];
         int type = vecs->type;
         double a = no_scale ? 1. : 0.;
         
@@ -603,12 +603,12 @@ void CvANN_MLP::calc_input_scale( const CvVectors* vecs, int flags )
 
 void CvANN_MLP::calc_output_scale( const CvVectors* vecs, int flags )
 {
-    int i, j, vcount = layer_counts->data.i[layer_counts->cols-1];
+    int i, j, vcount = layer_sizes->data.i[layer_sizes->cols-1];
     int type = vecs->type;
     double m = min_val, M = max_val, m1 = min_val1, M1 = max_val1;
     bool reset_weights = (flags & UPDATE_WEIGHTS) == 0;
     bool no_scale = (flags & NO_OUTPUT_SCALE) != 0;
-    int l_count = layer_counts->cols;
+    int l_count = layer_sizes->cols;
     double* scale = weights[l_count];
     double* inv_scale = weights[l_count+1];
     int count = vecs->count;
@@ -654,7 +654,7 @@ void CvANN_MLP::calc_output_scale( const CvVectors* vecs, int flags )
                 t = t*scale[j*2] + scale[2*j+1];
                 if( t < m1 || t > M1 )
                     CV_ERROR( CV_StsOutOfRange,
-                    "Some of new output training vector components exceeds the original range too much" );
+                    "Some of new output training vector components run exceed the original range too much" );
             }
         }
     }
@@ -680,12 +680,14 @@ void CvANN_MLP::calc_output_scale( const CvVectors* vecs, int flags )
 
 
 bool CvANN_MLP::prepare_to_train( const CvMat* _inputs, const CvMat* _outputs,
-            const CvMat* _sample_idx, CvANN_MLP_TrainParams _params,
-            CvVectors* _ivecs, CvVectors* _ovecs, int _flags )
+            const CvMat* _sample_weights, const CvMat* _sample_idx,
+            CvANN_MLP_TrainParams _params,
+            CvVectors* _ivecs, CvVectors* _ovecs, double** _sw, int _flags )
 {
     bool ok = false;
     CvMat* sample_idx = 0;
     CvVectors ivecs, ovecs;
+    double* sw = 0;
     int count = 0;
 
     CV_FUNCNAME( "CvANN_MLP::prepare_to_train" );
@@ -696,14 +698,16 @@ bool CvANN_MLP::prepare_to_train( const CvMat* _inputs, const CvMat* _outputs,
     __BEGIN__;
 
     const int* sidx = 0;
-    int i;
+    int i, sw_type = 0, sw_count = 0;
+    int sw_step = 0;
+    double sw_sum = 0;
 
-    if( !layer_counts )
+    if( !layer_sizes )
         CV_ERROR( CV_StsError,
         "The network has not been created. Use method create or the appropriate constructor" );
 
     if( !CV_IS_MAT(_inputs) || CV_MAT_TYPE(_inputs->type) != CV_32FC1 &&
-        CV_MAT_TYPE(_inputs->type) != CV_64FC1 || _inputs->cols != layer_counts->data.i[0] )
+        CV_MAT_TYPE(_inputs->type) != CV_64FC1 || _inputs->cols != layer_sizes->data.i[0] )
         CV_ERROR( CV_StsBadArg,
         "input training data should be a floating-point matrix with"
         "the number of rows equal to the number of training samples and "
@@ -711,7 +715,7 @@ bool CvANN_MLP::prepare_to_train( const CvMat* _inputs, const CvMat* _outputs,
 
     if( !CV_IS_MAT(_outputs) || CV_MAT_TYPE(_outputs->type) != CV_32FC1 &&
         CV_MAT_TYPE(_outputs->type) != CV_64FC1 ||
-        _outputs->cols != layer_counts->data.i[layer_counts->cols - 1] )
+        _outputs->cols != layer_sizes->data.i[layer_sizes->cols - 1] )
         CV_ERROR( CV_StsBadArg,
         "output training data should be a floating-point matrix with"
         "the number of rows equal to the number of training samples and "
@@ -729,6 +733,27 @@ bool CvANN_MLP::prepare_to_train( const CvMat* _inputs, const CvMat* _outputs,
     else
         count = _inputs->rows;
 
+    if( _sample_weights )
+    {
+        if( !CV_IS_MAT(_sample_weights) )
+            CV_ERROR( CV_StsBadArg, "sample_weights (if passed) must be a valid matrix" );
+
+        sw_type = CV_MAT_TYPE(_sample_weights->type);
+        sw_count = _sample_weights->cols + _sample_weights->rows - 1;
+
+        if( sw_type != CV_32FC1 && sw_type != CV_64FC1 ||
+            _sample_weights->cols != 1 && _sample_weights->rows != 1 ||
+            sw_count != count && sw_count != _inputs->rows )
+            CV_ERROR( CV_StsBadArg,
+            "sample_weights must be 1d floating-point vector containing weights "
+            "of all or selected training samples" );
+
+        sw_step = CV_IS_MAT_CONT(_sample_weights->type) ? 1 :
+            _sample_weights->step/CV_ELEM_SIZE(sw_type);
+        
+        CV_CALL( sw = (double*)cvAlloc( count*sizeof(sw[0]) ));
+    }
+
     CV_CALL( ivecs.data.ptr = (uchar**)cvAlloc( count*sizeof(ivecs.data.ptr[0]) ));
     CV_CALL( ovecs.data.ptr = (uchar**)cvAlloc( count*sizeof(ovecs.data.ptr[0]) ));
     
@@ -741,6 +766,25 @@ bool CvANN_MLP::prepare_to_train( const CvMat* _inputs, const CvMat* _outputs,
         int idx = sidx ? sidx[i] : i;
         ivecs.data.ptr[i] = _inputs->data.ptr + idx*_inputs->step;
         ovecs.data.ptr[i] = _outputs->data.ptr + idx*_outputs->step;
+        if( sw )
+        {
+            int si = sw_count == count ? i : idx;
+            double w = sw_type == CV_32FC1 ?
+                (double)_sample_weights->data.fl[si*sw_step] :
+                _sample_weights->data.db[si*sw_step];
+            sw[i] = w;
+            if( w < 0 )
+                CV_ERROR( CV_StsOutOfRange, "some of sample weights are negative" );
+            sw_sum += w;
+        }
+    }
+
+    // normalize weights
+    if( sw )
+    {
+        sw_sum = sw_sum > DBL_EPSILON ? 1./sw_sum : 0;
+        for( i = 0; i < count; i++ )
+            sw[i] *= sw_sum;
     }
 
     calc_input_scale( &ivecs, _flags );
@@ -754,22 +798,26 @@ bool CvANN_MLP::prepare_to_train( const CvMat* _inputs, const CvMat* _outputs,
     {
         cvFree( &ivecs.data.ptr );
         cvFree( &ovecs.data.ptr );
+        cvFree( &sw );
     }
 
     cvReleaseMat( &sample_idx );
     *_ivecs = ivecs;
     *_ovecs = ovecs;
+    *_sw = sw;
 
     return ok;
 }
 
 
 int CvANN_MLP::train( const CvMat* _inputs, const CvMat* _outputs,
-    const CvMat* _sample_idx, CvANN_MLP_TrainParams _params, int flags )
+                      const CvMat* _sample_weights, const CvMat* _sample_idx,
+                      CvANN_MLP_TrainParams _params, int flags )
 {
     const int MAX_ITER = 1000;
     const double DEFAULT_EPSILON = FLT_EPSILON;
     
+    double* sw = 0;
     CvVectors x0, u;
     int iter = -1;
    
@@ -783,8 +831,8 @@ int CvANN_MLP::train( const CvMat* _inputs, const CvMat* _outputs,
     double epsilon;
 
     // initialize training data
-    CV_CALL( prepare_to_train( _inputs, _outputs, _sample_idx,
-                               _params, &x0, &u, flags ));
+    CV_CALL( prepare_to_train( _inputs, _outputs, _sample_weights,
+                               _sample_idx, _params, &x0, &u, &sw, flags ));
     count = x0.count;
 
     // ... and link weights
@@ -805,23 +853,24 @@ int CvANN_MLP::train( const CvMat* _inputs, const CvMat* _outputs,
 
     if( params.train_method == CvANN_MLP_TrainParams::BACKPROP )
     {
-        CV_CALL( iter = train_backprop( x0, u ));
+        CV_CALL( iter = train_backprop( x0, u, sw ));
     }
     else
     {
-        CV_CALL( iter = train_rprop( x0, u ));
+        CV_CALL( iter = train_rprop( x0, u, sw ));
     }
 
     __END__;
 
     cvFree( &x0.data.ptr );
     cvFree( &u.data.ptr );
+    cvFree( &sw );
 
     return iter;
 }
 
 
-int CvANN_MLP::train_backprop( CvVectors x0, CvVectors u )
+int CvANN_MLP::train_backprop( CvVectors x0, CvVectors u, const double* sw )
 {
     CvMat* dw = 0;
     CvMat* buf = 0;
@@ -840,13 +889,13 @@ int CvANN_MLP::train_backprop( CvVectors x0, CvVectors u )
     max_iter = params.term_crit.max_iter*count;
     epsilon = params.term_crit.epsilon*count;
 
-    l_count = layer_counts->cols;
-    ivcount = layer_counts->data.i[0];
-    ovcount = layer_counts->data.i[l_count-1];
+    l_count = layer_sizes->cols;
+    ivcount = layer_sizes->data.i[0];
+    ovcount = layer_sizes->data.i[l_count-1];
 
     // allocate buffers
     for( i = 0; i < l_count; i++ )
-        total += layer_counts->data.i[i] + 1;
+        total += layer_sizes->data.i[i] + 1;
 
     CV_CALL( dw = cvCreateMat( wbuf->rows, wbuf->cols, wbuf->type ));
     cvZero( dw );
@@ -862,7 +911,7 @@ int CvANN_MLP::train_backprop( CvVectors x0, CvVectors u )
     for( j = 0; j < l_count; j++ )
     {
         x[j] = buf_ptr;
-        df[j] = x[j] + layer_counts->data.i[j];
+        df[j] = x[j] + layer_sizes->data.i[j];
         buf_ptr += (df[j] - x[j])*2;
     }
 
@@ -880,6 +929,7 @@ int CvANN_MLP::train_backprop( CvVectors x0, CvVectors u )
     {
         int idx = iter % count;
         double* w = weights[0];
+        double sweight = sw ? count*sw[idx] : 1.;
         CvMat _w, _dw, hdr1, hdr2, ghdr1, ghdr2, _df;
         CvMat *x1 = &hdr1, *x2 = &hdr2, *grad1 = &ghdr1, *grad2 = &ghdr2, *t;
 
@@ -920,7 +970,7 @@ int CvANN_MLP::train_backprop( CvVectors x0, CvVectors u )
         // forward pass, compute y[i]=w*x[i-1], x[i]=f(y[i]), df[i]=f'(y[i])
         for( i = 1; i < l_count; i++ )
         {
-            cvInitMatHeader( x2, 1, layer_counts->data.i[i], CV_64F, x[i] );
+            cvInitMatHeader( x2, 1, layer_sizes->data.i[i], CV_64F, x[i] );
             cvInitMatHeader( &_w, x1->cols, x2->cols, CV_64F, weights[i] );
             cvGEMM( x1, &_w, 1, 0, 0, x2 );
             _df = *x2;
@@ -942,7 +992,7 @@ int CvANN_MLP::train_backprop( CvVectors x0, CvVectors u )
             for( k = 0; k < ovcount; k++ )
             {
                 double t = udata[k]*w[k*2] + w[k*2+1] - x[l_count-1][k];
-                grad1->data.db[k] = t;
+                grad1->data.db[k] = t*sweight;
                 E += t*t;
             }
         }
@@ -952,15 +1002,16 @@ int CvANN_MLP::train_backprop( CvVectors x0, CvVectors u )
             for( k = 0; k < ovcount; k++ )
             {
                 double t = udata[k]*w[k*2] + w[k*2+1] - x[l_count-1][k];
-                grad1->data.db[k] = t;
+                grad1->data.db[k] = t*sweight;
                 E += t*t;
             }
         }
+        E *= sweight;
 
         // backward pass, update weights
         for( i = l_count-1; i > 0; i-- )
         {
-            int n1 = layer_counts->data.i[i-1], n2 = layer_counts->data.i[i];
+            int n1 = layer_sizes->data.i[i-1], n2 = layer_sizes->data.i[i];
             cvInitMatHeader( &_df, 1, n2, CV_64F, df[i] );
             cvMul( grad1, &_df, grad1 );
             cvInitMatHeader( &_w, n1+1, n2, CV_64F, weights[i] );
@@ -992,7 +1043,7 @@ int CvANN_MLP::train_backprop( CvVectors x0, CvVectors u )
 }
 
 
-int CvANN_MLP::train_rprop( CvVectors x0, CvVectors u )
+int CvANN_MLP::train_rprop( CvVectors x0, CvVectors u, const double* sw )
 {
     const int max_buf_sz = 1 << 16;
     CvMat* dw = 0;
@@ -1013,19 +1064,19 @@ int CvANN_MLP::train_rprop( CvVectors x0, CvVectors u )
     double inv_count;
 
     max_iter = params.term_crit.max_iter;
-    epsilon = params.term_crit.epsilon*count;
+    epsilon = params.term_crit.epsilon;
     dw_plus = params.rp_dw_plus;
     dw_minus = params.rp_dw_minus;
     dw_min = params.rp_dw_min;
     dw_max = params.rp_dw_max;
 
-    l_count = layer_counts->cols;
-    ivcount = layer_counts->data.i[0];
-    ovcount = layer_counts->data.i[l_count-1];
+    l_count = layer_sizes->cols;
+    ivcount = layer_sizes->data.i[0];
+    ovcount = layer_sizes->data.i[l_count-1];
 
     // allocate buffers
     for( i = 0; i < l_count; i++ )
-        total += layer_counts->data.i[i];
+        total += layer_sizes->data.i[i];
 
     CV_CALL( dw = cvCreateMat( wbuf->rows, wbuf->cols, wbuf->type ));
     cvSet( dw, cvScalarAll(params.rp_dw0) );
@@ -1049,7 +1100,7 @@ int CvANN_MLP::train_rprop( CvVectors x0, CvVectors u )
     for( i = 0; i < l_count; i++ )
     {
         x[i] = buf_ptr;
-        df[i] = x[i] + layer_counts->data.i[i]*dcount0;
+        df[i] = x[i] + layer_sizes->data.i[i]*dcount0;
         buf_ptr += (df[i] - x[i])*2;
     }
 
@@ -1109,7 +1160,7 @@ int CvANN_MLP::train_rprop( CvVectors x0, CvVectors u )
             // forward pass, compute y[i]=w*x[i-1], x[i]=f(y[i]), df[i]=f'(y[i])
             for( i = 1; i < l_count; i++ )
             {
-                cvInitMatHeader( x2, dcount, layer_counts->data.i[i], CV_64F, x[i] );
+                cvInitMatHeader( x2, dcount, layer_sizes->data.i[i], CV_64F, x[i] );
                 cvInitMatHeader( &_w, x1->cols, x2->cols, CV_64F, weights[i] );
                 cvGEMM( x1, &_w, 1, 0, 0, x2 );
                 _df = *x2;
@@ -1129,12 +1180,15 @@ int CvANN_MLP::train_rprop( CvVectors x0, CvVectors u )
                     const float* udata = u.data.fl[si+i];
                     const double* xdata = x[l_count-1] + i*ovcount;
                     double* gdata = grad1->data.db + i*ovcount;
+                    double sweight = sw ? sw[si+i] : inv_count, E1 = 0;
+
                     for( j = 0; j < ovcount; j++ )
                     {
                         double t = udata[j]*w[j*2] + w[j*2+1] - xdata[j];
-                        gdata[j] = t*inv_count;
-                        E += t*t;
+                        gdata[j] = t*sweight;
+                        E1 += t*t;
                     }
+                    E += sweight*E1;
                 }
             else
                 for( i = 0; i < dcount; i++ )
@@ -1142,18 +1196,21 @@ int CvANN_MLP::train_rprop( CvVectors x0, CvVectors u )
                     const double* udata = u.data.db[si+i];
                     const double* xdata = x[l_count-1] + i*ovcount;
                     double* gdata = grad1->data.db + i*ovcount;
+                    double sweight = sw ? sw[si+i] : inv_count, E1 = 0;
+
                     for( j = 0; j < ovcount; j++ )
                     {
                         double t = udata[j]*w[j*2] + w[j*2+1] - xdata[j];
-                        gdata[j] = t*inv_count;
-                        E += t*t;
+                        gdata[j] = t*sweight;
+                        E1 += t*t;
                     }
+                    E += sweight*E1;
                 }
 
             // backward pass, update dEdw            
             for( i = l_count-1; i > 0; i-- )
             {
-                n1 = layer_counts->data.i[i-1]; n2 = layer_counts->data.i[i];
+                n1 = layer_sizes->data.i[i-1]; n2 = layer_sizes->data.i[i];
                 cvInitMatHeader( &_df, dcount, n2, CV_64F, df[i] );
                 cvMul( grad1, &_df, grad1 );
                 cvInitMatHeader( &_dEdw, n1, n2, CV_64F, dEdw->data.db+(weights[i]-weights[0]) );
@@ -1179,7 +1236,7 @@ int CvANN_MLP::train_rprop( CvVectors x0, CvVectors u )
         // now update weights
         for( i = 1; i < l_count; i++ )
         {
-            n1 = layer_counts->data.i[i-1]; n2 = layer_counts->data.i[i];
+            n1 = layer_sizes->data.i[i-1]; n2 = layer_sizes->data.i[i];
             for( k = 0; k <= n1; k++ )
             {
                 double* wk = weights[i]+k*n2;
@@ -1235,6 +1292,278 @@ int CvANN_MLP::train_rprop( CvVectors x0, CvVectors u )
     cvFree( &x );
 
     return iter;
+}
+
+
+void CvANN_MLP::save( const char* filename, const char* name )
+{
+    CvFileStorage* fs = 0;
+    
+    CV_FUNCNAME( "CvANN_MLP::save" );
+
+    __BEGIN__;
+
+    CV_CALL( fs = cvOpenFileStorage( filename, 0, CV_STORAGE_WRITE ));
+    if( !fs )
+        CV_ERROR( CV_StsError, "Could not open the file storage. Check the path and permissions" );
+
+    write( fs, name ? name : "my_nn" );
+
+    __END__;
+
+    cvReleaseFileStorage( &fs );
+}
+
+
+
+void CvANN_MLP::write_params( CvFileStorage* fs )
+{
+    CV_FUNCNAME( "CvANN_MLP::write_params" );
+
+    __BEGIN__;
+
+    char* activ_func_name = activ_func == IDENTITY ? "IDENTITY" :
+                            activ_func == SIGMOID_SYM ? "SIGMOID_SYM" :
+                            activ_func == GAUSSIAN ? "GAUSSIAN" : 0;
+
+    if( activ_func_name )
+        cvWriteString( fs, "activation_function", activ_func_name );
+    else
+        cvWriteInt( fs, "activation_function", activ_func );
+
+    if( activ_func != IDENTITY )
+    {
+        cvWriteReal( fs, "f_param1", f_param1 );
+        cvWriteReal( fs, "f_param2", f_param2 );
+    }
+
+    cvWriteReal( fs, "min_val", min_val );
+    cvWriteReal( fs, "max_val", max_val );
+    cvWriteReal( fs, "min_val1", min_val1 );
+    cvWriteReal( fs, "max_val1", max_val1 );
+
+    cvStartWriteStruct( fs, "training_params", CV_NODE_MAP );
+    if( params.train_method == CvANN_MLP_TrainParams::BACKPROP )
+    {
+        cvWriteString( fs, "train_method", "BACKPROP" );
+        cvWriteReal( fs, "dw_scale", params.bp_dw_scale );
+        cvWriteReal( fs, "moment_scale", params.bp_moment_scale );
+    }
+    else if( params.train_method == CvANN_MLP_TrainParams::RPROP )
+    {
+        cvWriteString( fs, "train_method", "RPROP" );
+        cvWriteReal( fs, "dw0", params.rp_dw0 );
+        cvWriteReal( fs, "dw_plus", params.rp_dw_plus );
+        cvWriteReal( fs, "dw_minus", params.rp_dw_minus );
+        cvWriteReal( fs, "dw_min", params.rp_dw_min );
+        cvWriteReal( fs, "dw_max", params.rp_dw_max );
+    }
+
+    cvStartWriteStruct( fs, "term_criteria", CV_NODE_MAP + CV_NODE_FLOW );
+    if( params.term_crit.type & CV_TERMCRIT_EPS )
+        cvWriteReal( fs, "epsilon", params.term_crit.epsilon );
+    if( params.term_crit.type & CV_TERMCRIT_ITER )
+        cvWriteInt( fs, "iterations", params.term_crit.max_iter );
+    cvEndWriteStruct( fs );
+
+    cvEndWriteStruct( fs );
+
+    __END__;
+}
+
+
+void CvANN_MLP::write( CvFileStorage* fs, const char* name )
+{
+    CV_FUNCNAME( "CvANN_MLP::write" );
+
+    __BEGIN__;
+
+    int i, l_count = layer_sizes->cols;
+
+    if( !layer_sizes )
+        CV_ERROR( CV_StsError, "The network has not been initialized" );
+
+    cvStartWriteStruct( fs, name, CV_NODE_MAP, CV_TYPE_NAME_ML_ANN_MLP );
+
+    cvWrite( fs, "layer_sizes", layer_sizes );
+
+    write_params( fs );
+    
+    cvStartWriteStruct( fs, "input_scale", CV_NODE_SEQ + CV_NODE_FLOW );
+    cvWriteRawData( fs, weights[0], layer_sizes->data.i[0]*2, "d" );
+    cvEndWriteStruct( fs );
+
+    cvStartWriteStruct( fs, "output_scale", CV_NODE_SEQ + CV_NODE_FLOW );
+    cvWriteRawData( fs, weights[l_count], layer_sizes->data.i[l_count-1]*2, "d" );
+    cvEndWriteStruct( fs );
+
+    cvStartWriteStruct( fs, "inv_output_scale", CV_NODE_SEQ + CV_NODE_FLOW );
+    cvWriteRawData( fs, weights[l_count+1], layer_sizes->data.i[l_count-1]*2, "d" );
+    cvEndWriteStruct( fs );
+
+    cvStartWriteStruct( fs, "weights", CV_NODE_SEQ );
+    for( i = 1; i < l_count; i++ )
+    {
+        cvStartWriteStruct( fs, 0, CV_NODE_SEQ + CV_NODE_FLOW );
+        cvWriteRawData( fs, weights[i], (layer_sizes->data.i[i-1]+1)*layer_sizes->data.i[i], "d" );
+        cvEndWriteStruct( fs );
+    }
+
+    cvEndWriteStruct( fs );
+
+    __END__;
+}
+
+
+void CvANN_MLP::load( const char* filename, const char* name )
+{
+    CvFileStorage* fs = 0;
+    
+    CV_FUNCNAME( "CvANN_MLP::load" );
+
+    __BEGIN__;
+
+    CvFileNode* ann = 0;
+
+    CV_CALL( fs = cvOpenFileStorage( filename, 0, CV_STORAGE_READ ));
+    if( !fs )
+        CV_ERROR( CV_StsError, "Could not open the file storage. Check the path and permissions" );
+
+    if( name )
+        ann = cvGetFileNodeByName( fs, 0, name );
+    else
+    {
+        CvFileNode* root = cvGetRootFileNode( fs );
+        if( root->data.seq->total > 0 )
+            ann = (CvFileNode*)cvGetSeqElem( root->data.seq, 0 );
+    }
+
+    read( fs, ann );
+
+    __END__;
+
+    cvReleaseFileStorage( &fs );
+}
+
+
+void CvANN_MLP::read_params( CvFileStorage* fs, CvFileNode* node )
+{
+    CV_FUNCNAME( "CvANN_MLP::read_params" );
+
+    __BEGIN__;
+
+    const char* activ_func_name = cvReadStringByName( fs, node, "activation_function", 0 );
+    CvFileNode* tparams_node;
+
+    if( activ_func_name )
+        activ_func = strcmp( activ_func_name, "SIGMOID_SYM" ) == 0 ? SIGMOID_SYM :
+                     strcmp( activ_func_name, "IDENTITY" ) == 0 ? IDENTITY :
+                     strcmp( activ_func_name, "GAUSSIAN" ) == 0 ? GAUSSIAN : 0;
+    else
+        activ_func = cvReadIntByName( fs, node, "activation_function" );
+
+    f_param1 = cvReadRealByName( fs, node, "f_param1", 0 );
+    f_param2 = cvReadRealByName( fs, node, "f_param2", 0 );
+    
+    set_activ_func( activ_func, f_param1, f_param2 );
+    
+    min_val = cvReadRealByName( fs, node, "min_val", 0. );
+    max_val = cvReadRealByName( fs, node, "max_val", 1. );
+    min_val1 = cvReadRealByName( fs, node, "min_val1", 0. );
+    max_val1 = cvReadRealByName( fs, node, "max_val1", 1. );
+
+    tparams_node = cvGetFileNodeByName( fs, node, "training_params" );
+    params = CvANN_MLP_TrainParams();
+
+    if( tparams_node )
+    {
+        const char* tmethod_name = cvReadStringByName( fs, tparams_node, "train_method", "" );
+        CvFileNode* tcrit_node;
+
+        if( strcmp( tmethod_name, "BACKPROP" ) == 0 )
+        {
+            params.train_method = CvANN_MLP_TrainParams::BACKPROP;
+            params.bp_dw_scale = cvReadRealByName( fs, tparams_node, "dw_scale", 0 );
+            params.bp_moment_scale = cvReadRealByName( fs, tparams_node, "moment_scale", 0 );
+        }
+        else if( strcmp( tmethod_name, "RPROP" ) == 0 )
+        {
+            params.train_method = CvANN_MLP_TrainParams::RPROP;
+            params.rp_dw0 = cvReadRealByName( fs, tparams_node, "dw0", 0 );
+            params.rp_dw_plus = cvReadRealByName( fs, tparams_node, "dw_plus", 0 );
+            params.rp_dw_minus = cvReadRealByName( fs, tparams_node, "dw_minus", 0 );
+            params.rp_dw_min = cvReadRealByName( fs, tparams_node, "dw_min", 0 );
+            params.rp_dw_max = cvReadRealByName( fs, tparams_node, "dw_max", 0 );
+        }
+
+        tcrit_node = cvGetFileNodeByName( fs, tparams_node, "term_criteria" );
+        if( tcrit_node )
+        {
+            params.term_crit.epsilon = cvReadRealByName( fs, tcrit_node, "epsilon", -1 );
+            params.term_crit.max_iter = cvReadIntByName( fs, tcrit_node, "iterations", -1 );
+            params.term_crit.type = (params.term_crit.epsilon >= 0 ? CV_TERMCRIT_EPS : 0) +
+                                   (params.term_crit.max_iter >= 0 ? CV_TERMCRIT_ITER : 0);
+        }
+    }
+
+    __END__;
+}
+
+
+void CvANN_MLP::read( CvFileStorage* fs, CvFileNode* node )
+{
+    CvMat* _layer_sizes = 0;
+    
+    CV_FUNCNAME( "CvANN_MLP::read" );
+
+    __BEGIN__;
+
+    CvFileNode* w;
+    CvSeqReader reader;
+    int i, l_count;
+
+    _layer_sizes = (CvMat*)cvReadByName( fs, node, "layer_sizes" );
+    CV_CALL( create( _layer_sizes, SIGMOID_SYM, 0, 0 ));
+    l_count = layer_sizes->cols;
+
+    CV_CALL( read_params( fs, node ));
+
+    w = cvGetFileNodeByName( fs, node, "input_scale" );
+    if( !w || CV_NODE_TYPE(w->tag) != CV_NODE_SEQ ||
+        w->data.seq->total != layer_sizes->data.i[0]*2 )
+        CV_ERROR( CV_StsParseError, "input_scale tag is not found or is invalid" );
+
+    CV_CALL( cvReadRawData( fs, w, weights[0], "d" ));
+
+    w = cvGetFileNodeByName( fs, node, "output_scale" );
+    if( !w || CV_NODE_TYPE(w->tag) != CV_NODE_SEQ ||
+        w->data.seq->total != layer_sizes->data.i[l_count-1]*2 )
+        CV_ERROR( CV_StsParseError, "output_scale tag is not found or is invalid" );
+
+    CV_CALL( cvReadRawData( fs, w, weights[l_count], "d" ));
+
+    w = cvGetFileNodeByName( fs, node, "inv_output_scale" );
+    if( !w || CV_NODE_TYPE(w->tag) != CV_NODE_SEQ ||
+        w->data.seq->total != layer_sizes->data.i[l_count-1]*2 )
+        CV_ERROR( CV_StsParseError, "inv_output_scale tag is not found or is invalid" );
+
+    CV_CALL( cvReadRawData( fs, w, weights[l_count+1], "d" ));
+
+    w = cvGetFileNodeByName( fs, node, "weights" );
+    if( !w || CV_NODE_TYPE(w->tag) != CV_NODE_SEQ ||
+        w->data.seq->total != l_count - 1 )
+        CV_ERROR( CV_StsParseError, "weights tag is not found or is invalid" );
+
+    cvStartReadSeq( w->data.seq, &reader );
+
+    for( i = 1; i < l_count; i++ )
+    {
+        w = (CvFileNode*)reader.ptr;
+        CV_CALL( cvReadRawData( fs, w, weights[i], "d" ));
+        CV_NEXT_SEQ_ELEM( reader.seq->elem_size, reader );
+    }
+
+    __END__;
 }
 
 /* End of file. */
