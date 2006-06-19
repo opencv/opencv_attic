@@ -1,3 +1,1 @@
-SUBDIRS = cxts cxcore trs cv
-
-EXTRA_DIST = python
+SUBDIRS = python cxts cxcore trs cv

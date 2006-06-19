@@ -23,7 +23,7 @@ AC_CONFIG_AUX_DIR([autotools])
 AC_CONFIG_MACRO_DIR([autotools/aclocal])
 
 # put CVS revision of this configure.in into the resulting configure script
-AC_REVISION([$Revision: 1.21.2.5 $])
+AC_REVISION([$Revision: 1.21.2.6 $])
 
 # Detect the canonical host and target build environment
 AC_CANONICAL_HOST
@@ -672,6 +672,7 @@ interfaces/swig/Makefile
 interfaces/swig/filtered/Makefile
 interfaces/swig/python/Makefile
 tests/Makefile
+tests/python/Makefile
 tests/trs/Makefile
 tests/cv/Makefile
 tests/cv/src/Makefile

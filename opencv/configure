@@ -24079,7 +24079,7 @@ fi
 
 
 
-                                                                                                                                                                                                                                                                                                            ac_config_files="$ac_config_files Makefile opencv.pc opencv.spec docs/Makefile data/Makefile cxcore/Makefile cxcore/include/Makefile cxcore/src/Makefile cv/Makefile cv/include/Makefile cv/src/Makefile cvaux/Makefile cvaux/include/Makefile cvaux/src/Makefile otherlibs/Makefile otherlibs/highgui/Makefile interfaces/Makefile interfaces/swig/Makefile interfaces/swig/filtered/Makefile interfaces/swig/python/Makefile tests/Makefile tests/trs/Makefile tests/cv/Makefile tests/cv/src/Makefile tests/cxts/Makefile tests/cxcore/Makefile tests/cxcore/src/Makefile samples/Makefile samples/c/Makefile samples/python/Makefile"
+                                                                                                                                                                                                                                                                                                                      ac_config_files="$ac_config_files Makefile opencv.pc opencv.spec docs/Makefile data/Makefile cxcore/Makefile cxcore/include/Makefile cxcore/src/Makefile cv/Makefile cv/include/Makefile cv/src/Makefile cvaux/Makefile cvaux/include/Makefile cvaux/src/Makefile otherlibs/Makefile otherlibs/highgui/Makefile interfaces/Makefile interfaces/swig/Makefile interfaces/swig/filtered/Makefile interfaces/swig/python/Makefile tests/Makefile tests/python/Makefile tests/trs/Makefile tests/cv/Makefile tests/cv/src/Makefile tests/cxts/Makefile tests/cxcore/Makefile tests/cxcore/src/Makefile samples/Makefile samples/c/Makefile samples/python/Makefile"
 
 
 # Removed temporarily for Mac OS X development
@@ -24721,6 +24721,7 @@ do
   "interfaces/swig/filtered/Makefile" ) CONFIG_FILES="$CONFIG_FILES interfaces/swig/filtered/Makefile" ;;
   "interfaces/swig/python/Makefile" ) CONFIG_FILES="$CONFIG_FILES interfaces/swig/python/Makefile" ;;
   "tests/Makefile" ) CONFIG_FILES="$CONFIG_FILES tests/Makefile" ;;
+  "tests/python/Makefile" ) CONFIG_FILES="$CONFIG_FILES tests/python/Makefile" ;;
   "tests/trs/Makefile" ) CONFIG_FILES="$CONFIG_FILES tests/trs/Makefile" ;;
   "tests/cv/Makefile" ) CONFIG_FILES="$CONFIG_FILES tests/cv/Makefile" ;;
   "tests/cv/src/Makefile" ) CONFIG_FILES="$CONFIG_FILES tests/cv/src/Makefile" ;;
