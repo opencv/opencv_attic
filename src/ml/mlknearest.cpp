@@ -75,7 +75,7 @@ void CvKNearest::clear()
         cvFree( &samples );
         samples = next_samples;
     }
-    dims = 0;
+    var_count = 0;
     total = 0;
     max_k = 0;
 }
@@ -83,7 +83,7 @@ void CvKNearest::clear()
 
 int CvKNearest::get_max_k() const { return max_k; }
 
-int CvKNearest::get_dims() const { return dims; }
+int CvKNearest::get_var_count() const { return var_count; }
 
 bool CvKNearest::is_regression() const { return regression; }
 
@@ -114,7 +114,7 @@ bool CvKNearest::train( const CvMat* _train_data, const CvMat* _responses,
         _responses, CV_VAR_ORDERED, 0, _sample_idx, true, (const float***)&_data,
         &_count, &_dims, &_dims_all, &responses, 0, 0 ));
 
-    if( _update_base && _dims != dims )
+    if( _update_base && _dims != var_count )
         CV_ERROR( CV_StsBadArg, "The newly added data have different dimensionality" );
 
     if( !_update_base )
@@ -123,7 +123,7 @@ bool CvKNearest::train( const CvMat* _train_data, const CvMat* _responses,
             CV_ERROR( CV_StsOutOfRange, "max_k must be a positive number" );
         
         regression = _is_regression;
-        dims = _dims;
+        var_count = _dims;
         max_k = _max_k;
     }
 
@@ -150,7 +150,7 @@ bool CvKNearest::train( const CvMat* _train_data, const CvMat* _responses,
 void CvKNearest::find_neighbors_direct( const CvMat* _samples, int k, int start, int end,
                     float* neighbor_responses, const float** neighbors, float* dist ) const
 {
-    int i, j, count = end - start, k1 = 0, k2 = 0, d = dims;
+    int i, j, count = end - start, k1 = 0, k2 = 0, d = var_count;
     CvVectors* s = samples;
 
     for( ; s != 0; s = s->next )
@@ -321,8 +321,8 @@ float CvKNearest::find_nearest( const CvMat* _samples, int k, CvMat* _results,
 
     if( !CV_IS_MAT(_samples) ||
         CV_MAT_TYPE(_samples->type) != CV_32FC1 ||
-        _samples->cols != dims )
-        CV_ERROR( CV_StsBadArg, "Input samples must be floating-point matrix (<num_samples>x<dims>)" );
+        _samples->cols != var_count )
+        CV_ERROR( CV_StsBadArg, "Input samples must be floating-point matrix (<num_samples>x<var_count>)" );
 
     if( _results && (!CV_IS_MAT(_results) ||
         _results->cols != 1 && _results->rows != 1 ||
