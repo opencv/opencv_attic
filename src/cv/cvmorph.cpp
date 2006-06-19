@@ -135,6 +135,12 @@ void CvMorphology::clear()
 }
 
 
+CvMorphology::~CvMorphology()
+{
+    clear();
+}
+
+
 void CvMorphology::init( int _operation, int _max_width, int _src_dst_type,
                          int _element_shape, CvMat* _element,
                          CvSize _ksize, CvPoint _anchor,
