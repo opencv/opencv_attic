@@ -920,6 +920,10 @@ CVAPI(void)  cvDistTransform( const CvArr* src, CvArr* dst,
 #define CV_THRESH_TRUNC       2  /* value = value > threshold ? threshold : value   */
 #define CV_THRESH_TOZERO      3  /* value = value > threshold ? value : 0           */
 #define CV_THRESH_TOZERO_INV  4  /* value = value > threshold ? 0 : value           */
+#define CV_THRESH_MASK        7
+
+#define CV_THRESH_OTSU        8  /* use Otsu algorithm to choose the optimal threshold value;
+                                    combine the flag with one of the above CV_THRESH_* values */
 
 /* Applies fixed-level threshold to grayscale image.
    This is a basic operation applied before retrieving contours */
