@@ -3604,7 +3604,7 @@ cvNextGraphItem( CvGraphScanner* scanner )
                 edge = CV_NEXT_GRAPH_EDGE( edge, vtx );
             }
 
-            if( !edge ) // need to backtrack
+            if( !edge ) /* need to backtrack */
             {
                 if( scanner->stack->total == 0 )
                 {
