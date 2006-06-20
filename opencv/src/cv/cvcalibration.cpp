@@ -359,8 +359,8 @@ cvRodrigues2( const CvMat* src, CvMat* dst, CvMat* jacobian )
             if( jacobian )
             {
                 memset( J, 0, sizeof(J) );
-                J[5] = J[15] = J[19] = 1;
-                J[7] = J[11] = J[21] = -1;
+                J[5] = J[15] = J[19] = -1;
+                J[7] = J[11] = J[21] = 1;
             }
         }
         else
