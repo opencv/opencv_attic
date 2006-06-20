@@ -3564,6 +3564,7 @@ cvNextGraphItem( CvGraphScanner* scanner )
                             if( scanner->mask & CV_GRAPH_TREE_EDGE )
                             {
                                 code = CV_GRAPH_TREE_EDGE;
+                                scanner->vtx = vtx;
                                 scanner->dst = dst;
                                 scanner->edge = edge;
                                 EXIT;
