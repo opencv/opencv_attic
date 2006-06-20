@@ -2,15 +2,15 @@
 
 [Setup]
 AppName=Intel(R) Open Source Computer Vision Library
-AppVerName=Intel(R) Open Source Computer Vision Library, beta 5
-AppCopyright=Copyright (C) 2000-2002 Intel Corporation
+AppVerName=Intel(R) Open Source Computer Vision Library 1.0
+AppCopyright=Copyright (C) 2000-2006 Intel Corporation
 DefaultDirName={pf}\OpenCV
 DefaultGroupName=OpenCV
 ;UninstallDisplayIcon={app}\apps\CamShiftDemo\res\CamShiftDemo.ico
 SourceDir=..
 Compression=bzip/9
 LicenseFile="docs\license.txt"
-OutputBaseFilename=OpenCV_b5a
+OutputBaseFilename=OpenCV_1.0
 ; uncomment the following line if you want your installation to run on NT 3.51 too.
 ; MinVersion=4,3.51
 
@@ -34,6 +34,13 @@ Name: "{app}\cv\src"
 Name: "{app}\cvaux"
 Name: "{app}\cvaux\include"
 Name: "{app}\cvaux\src"
+Name: "{app}\cvaux\src\vs"
+
+; ml
+Name: "{app}\ml"
+Name: "{app}\ml\include"
+Name: "{app}\ml\src"
+
 
 ; training data
 Name: "{app}\data"
@@ -181,12 +188,24 @@ Source: "cv\Makefile.*"; DestDir: "{app}\cv"
 Source: "cvaux\include\*.h*"; DestDir: "{app}\cvaux\include"
 Source: "cvaux\include\Makefile.*"; DestDir: "{app}\cvaux\include"
 Source: "cvaux\src\*.c*"; DestDir: "{app}\cvaux\src"
+Source: "cvaux\src\vs\*.c*"; DestDir: "{app}\cvaux\src\vs"
 Source: "cvaux\src\*.h*"; DestDir: "{app}\cvaux\src"
 Source: "cvaux\src\Makefile.*"; DestDir: "{app}\cvaux\src"
 Source: "cvaux\src\*.rc"; DestDir: "{app}\cvaux\src"
 Source: "cvaux\src\*.dsp"; DestDir: "{app}\cvaux\src"
 Source: "cvaux\src\*.vcproj"; DestDir: "{app}\cvaux\src"
 Source: "cvaux\Makefile.*"; DestDir: "{app}\cvaux"
+
+; ml
+Source: "ml\include\*.h*"; DestDir: "{app}\ml\include"
+Source: "ml\include\Makefile.*"; DestDir: "{app}\ml\include"
+Source: "ml\src\*.c*"; DestDir: "{app}\ml\src"
+Source: "ml\src\*.h*"; DestDir: "{app}\ml\src"
+Source: "ml\src\Makefile.*"; DestDir: "{app}\ml\src"
+Source: "ml\src\*.rc"; DestDir: "{app}\ml\src"
+Source: "ml\src\*.dsp"; DestDir: "{app}\ml\src"
+Source: "ml\src\*.vcproj"; DestDir: "{app}\ml\src"
+Source: "ml\Makefile.*"; DestDir: "{app}\cvaux"
 
 Source: "data\*.txt"; DestDir: "{app}\data"
 Source: "data\haarcascades\*.xml"; DestDir: "{app}\data\haarcascades"
@@ -437,13 +456,14 @@ Source: "apps\HaarTraining\doc\*.htm*"; DestDir: "{app}\apps\HaarTraining\doc"
 Source: "bin\cvinfo.exe"; DestDir: "{app}\bin"
 Source: "bin\cvtest.exe"; DestDir: "{app}\bin"
 Source: "bin\cxcoretest.exe"; DestDir: "{app}\bin"
-Source: "bin\cxcore097.dll"; DestDir: "{app}\bin"
-Source: "bin\cv097.dll"; DestDir: "{app}\bin"
-Source: "bin\highgui097.dll"; DestDir: "{app}\bin"
-Source: "bin\cvaux097.dll"; DestDir: "{app}\bin"
+Source: "bin\cxcore100.dll"; DestDir: "{app}\bin"
+Source: "bin\cv100.dll"; DestDir: "{app}\bin"
+Source: "bin\highgui100.dll"; DestDir: "{app}\bin"
+Source: "bin\cvaux100.dll"; DestDir: "{app}\bin"
+Source: "bin\ml100.dll"; DestDir: "{app}\bin"
 Source: "bin\cxts001.dll"; DestDir: "{app}\bin"
 Source: "bin\trs.dll"; DestDir: "{app}\bin"
-Source: "bin\cvcam097.dll"; DestDir: "{app}\bin"
+Source: "bin\cvcam100.dll"; DestDir: "{app}\bin"
 Source: "bin\haartraining.exe"; DestDir: "{app}\bin"
 Source: "bin\createsamples.exe"; DestDir: "{app}\bin"
 Source: "bin\performance.exe"; DestDir: "{app}\bin"
@@ -472,6 +492,7 @@ Source: "lib\cxcore.lib"; DestDir: "{app}\lib"
 Source: "lib\cv.lib"; DestDir: "{app}\lib"
 Source: "lib\highgui.lib"; DestDir: "{app}\lib"
 Source: "lib\cvaux.lib"; DestDir: "{app}\lib"
+Source: "lib\ml.lib"; DestDir: "{app}\lib"
 Source: "lib\cvhaartraining.lib"; DestDir: "{app}\lib"
 Source: "lib\cxts.lib"; DestDir: "{app}\lib"
 Source: "lib\cvcam.lib"; DestDir: "{app}\lib"
@@ -479,8 +500,8 @@ Source: "lib\trs.lib"; DestDir: "{app}\lib"
 
 [Icons]
 Name: "{group}\OpenCV Workspace MSVC6"; Filename: "{app}\_make\opencv.dsw"
-Name: "{group}\OpenCV Workspace .NET"; Filename: "{app}\_make\opencv.sln"
-Name: "{group}\OpenCV Workspace Borland C++ BuilderX"; Filename: "{app}\_make\cbuilderx\opencv.bpgr"
+Name: "{group}\OpenCV Workspace .NET 2005"; Filename: "{app}\_make\opencv.sln"
+;Name: "{group}\OpenCV Workspace Borland C++ BuilderX"; Filename: "{app}\_make\cbuilderx\opencv.bpgr"
 Name: "{group}\Documentation"; Filename: "{app}\docs\index.htm"
 Name: "{group}\Samples"; Filename: "{app}\samples\c\"
 
