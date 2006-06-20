@@ -166,7 +166,6 @@ void CV_TemplMatchTest::get_test_array_types_and_sizes( int test_case_idx,
 
     sizes[INPUT][1].width = cvTsRandInt(rng)%MIN(sizes[INPUT][1].width,max_template_size) + 1;
     sizes[INPUT][1].height = cvTsRandInt(rng)%MIN(sizes[INPUT][1].height,max_template_size) + 1;
-
     sizes[OUTPUT][0].width = sizes[INPUT][0].width - sizes[INPUT][1].width + 1;
     sizes[OUTPUT][0].height = sizes[INPUT][0].height - sizes[INPUT][1].height + 1;
     sizes[REF_OUTPUT][0] = sizes[OUTPUT][0];
@@ -216,7 +215,10 @@ void CV_TemplMatchTest::print_timing_params( int test_case_idx, char* ptr, int p
 
 double CV_TemplMatchTest::get_success_error_level( int /*test_case_idx*/, int /*i*/, int /*j*/ )
 {
-    return 1e-3;
+    if( method >= CV_TM_CCOEFF && test_mat[INPUT][1].cols*test_mat[INPUT][1].rows <= 2 )
+        return 1e-2;
+    else
+        return 1e-3;
 }
 
 
