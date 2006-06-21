@@ -114,6 +114,8 @@ public:
                 m_ParamFGD.alpha3 = CV_BGFG_FGD_ALPHA_3;
                 m_ParamFGD.T = CV_BGFG_FGD_T;
                 m_ParamFGD.minArea = CV_BGFG_FGD_MINAREA;
+                m_ParamFGD.is_obj_without_holes = 1;
+                m_ParamFGD.perform_morphing = 1;
             }
             AddParam("LC",&m_ParamFGD.Lc);
             AddParam("alpha1",&m_ParamFGD.alpha1);
@@ -127,6 +129,8 @@ public:
             m_LoadName = 0;
             AddParam("SaveName",&m_SaveName);
             AddParam("LoadName",&m_LoadName);
+            AddParam("ObjWithoutHoles",&m_ParamFGD.is_obj_without_holes);
+            AddParam("Morphology",&m_ParamFGD.perform_morphing);
         }
         else if( m_FGType == CV_BG_MODEL_MOG )
         {
