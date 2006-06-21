@@ -331,12 +331,12 @@ icvUpdateFGDStatModel( IplImage* curr_frame, CvFGDStatModel*  model )
                         //compare with stored CCt vectors
                         for( k = 0; PV_CC(k) > model->params.alpha2 && k < model->params.N1cc; k++ )
                         {
-                            if ( abs( V_CC(k,0) - curr_data[0]) <=  deltaCC &&
-                                 abs( V_CC(k,1) - curr_data[1]) <=  deltaCC &&
-                                 abs( V_CC(k,2) - curr_data[2]) <=  deltaCC &&
-                                 abs( V_CC(k,3) - prev_data[0]) <=  deltaCC &&
-                                 abs( V_CC(k,4) - prev_data[1]) <=  deltaCC &&
-                                 abs( V_CC(k,5) - prev_data[2]) <=  deltaCC)
+                            if ( abs( V_CC(k,0) - prev_data[0]) <=  deltaCC &&
+                                 abs( V_CC(k,1) - prev_data[1]) <=  deltaCC &&
+                                 abs( V_CC(k,2) - prev_data[2]) <=  deltaCC &&
+                                 abs( V_CC(k,3) - curr_data[0]) <=  deltaCC &&
+                                 abs( V_CC(k,4) - curr_data[1]) <=  deltaCC &&
+                                 abs( V_CC(k,5) - curr_data[2]) <=  deltaCC)
                             {
                                 Pv += PV_CC(k);
                                 Pvb += PVB_CC(k);
