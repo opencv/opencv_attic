@@ -319,7 +319,7 @@ icvUpdateFGDStatModel( IplImage* curr_frame, CvFGDStatModel*  model )
                 CvBGPixelCCStatTable* cctable = stat->cctable;
     
                 uchar* curr_data = (uchar*)(curr_frame->imageData)+i*curr_frame->widthStep+j*3;
-                //uchar* prev_data = (uchar*)(prev_frame->imageData)+i*prev_frame->widthStep+j*3;
+                uchar* prev_data = (uchar*)(prev_frame->imageData)+i*prev_frame->widthStep+j*3;
 
                 int val = 0;
                 // is it a motion pixel?
@@ -333,7 +333,10 @@ icvUpdateFGDStatModel( IplImage* curr_frame, CvFGDStatModel*  model )
                         {
                             if ( abs( V_CC(k,0) - curr_data[0]) <=  deltaCC &&
                                  abs( V_CC(k,1) - curr_data[1]) <=  deltaCC &&
-                                 abs( V_CC(k,2) - curr_data[2]) <=  deltaCC )
+                                 abs( V_CC(k,2) - curr_data[2]) <=  deltaCC &&
+                                 abs( V_CC(k,3) - prev_data[0]) <=  deltaCC &&
+                                 abs( V_CC(k,4) - prev_data[1]) <=  deltaCC &&
+                                 abs( V_CC(k,5) - prev_data[2]) <=  deltaCC)
                             {
                                 Pv += PV_CC(k);
                                 Pvb += PVB_CC(k);
