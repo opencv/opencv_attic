@@ -126,7 +126,7 @@ static CV_IMPLEMENT_QSORT_EX( icvSortPairs, CvPair32s32f, CV_CMP_PAIRS, int )
 void CvDTreeTrainData::set_data( const CvMat* _train_data, int _tflag,
     const CvMat* _responses, const CvMat* _var_idx, const CvMat* _sample_idx,
     const CvMat* _var_type, const CvMat* _missing_mask, CvDTreeParams _params,
-    bool _shared, CvMat** out_sample_idx, int* out_nsamples_all )
+    bool _shared )
 {
     CvMat* sample_idx = 0;
     CvMat* var_type0 = 0;
@@ -169,8 +169,6 @@ void CvDTreeTrainData::set_data( const CvMat* _train_data, int _tflag,
             mv_step = _missing_mask->step, ms_step = 1;
     }
 
-    if( out_nsamples_all )
-        *out_nsamples_all = sample_all;
     sample_count = sample_all;
     var_count = var_all;
 
@@ -507,10 +505,7 @@ void CvDTreeTrainData::set_data( const CvMat* _train_data, int _tflag,
     __END__;
 
     cvFree( &int_ptr );
-    if( out_sample_idx )
-        *out_sample_idx = sample_idx;
-    else
-        cvReleaseMat( &sample_idx );
+    cvReleaseMat( &sample_idx );
     cvReleaseMat( &var_type0 );
     cvReleaseMat( &tmp_map );
 }
