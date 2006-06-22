@@ -313,7 +313,7 @@ typedef struct CvPluginInfo
 CvPluginInfo;
 
 static CvPluginInfo plugins[CV_PLUGIN_MAX];
-static CvModuleInfo cxcore_module = { 0, "cxcore", "beta 5 (0.9.7)", cxcore_ipp_tab };
+static CvModuleInfo cxcore_module = { 0, "cxcore", "rc (0.9.9)", cxcore_ipp_tab };
 
 static CvModuleInfo *icvFirstModule = 0, *icvLastModule = 0;
 
