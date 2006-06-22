@@ -911,8 +911,7 @@ struct CV_EXPORTS CvDTreeTrainData
                           const CvMat* _sample_idx=0, const CvMat* _var_type=0,
                           const CvMat* _missing_mask=0,
                           CvDTreeParams _params=CvDTreeParams(),
-                          bool _shared=false,
-                          CvMat** out_sample_idx = 0, int* out_nsamples_all = 0 );
+                          bool _shared=false );
 
     virtual void get_vectors( const CvMat* _subsample_idx,
          float* values, uchar* missing, float* responses, bool get_class_idx=false );
@@ -1066,8 +1065,6 @@ public:
     virtual bool train( CvDTreeTrainData* _train_data, const CvMat* _subsample_idx, CvRTrees* forest );
     virtual CvDTreeSplit* find_best_split( CvDTreeNode* n );
 
-protected:
-
     CvRTrees* forest;
 };
 
@@ -1085,13 +1082,15 @@ struct CV_EXPORTS CvRTParams
     const float* priors;
 
     //Parameters for the forest
+    bool calc_var_importance; // true <=> RF processes variable importance
+    bool calc_proximities;    // true <=> RF processes proximities
     int nactive_vars;
     CvTermCriteria term_crit;
 
     CvRTParams() : max_categories(10), max_depth(INT_MAX), min_sample_count(10),
         cv_folds(10), use_surrogates(true), use_1se_rule(true),
         regression_accuracy(0.01f), priors(0),
-        nactive_vars(0)
+        calc_var_importance(false), calc_proximities(false), nactive_vars(0)
     {
         term_crit.epsilon = 0.1;
         term_crit.max_iter = 50;
@@ -1102,12 +1101,14 @@ struct CV_EXPORTS CvRTParams
                 float _regression_accuracy, bool _use_surrogates,
                 int _max_categories, int _cv_folds,
                 bool _use_1se_rule,  const float* _priors,
+                bool _calc_var_importance, bool _calc_proximities,
                 int _nactive_vars, int max_num_of_trees_in_the_forest,
                 float forest_accuracy, int termcrit_type ) :
         max_categories(_max_categories), max_depth(_max_depth),
         min_sample_count(_min_sample_count), use_surrogates(_use_surrogates),
         cv_folds(_cv_folds), use_1se_rule(_use_1se_rule),
         regression_accuracy(_regression_accuracy), priors(_priors),
+        calc_var_importance(_calc_var_importance), calc_proximities(_calc_proximities),
         nactive_vars(_nactive_vars)
     {
         term_crit.epsilon  = forest_accuracy;
@@ -1126,24 +1127,33 @@ public:
                         const CvMat* _sample_idx=0, const CvMat* _var_type=0,
                         const CvMat* _missing_mask=0,
                         CvRTParams params=CvRTParams() );
+    virtual double predict( const CvMat* _sample, CvMat* probs = 0 ) const;
+
+    virtual inline const CvMat* get_var_importance() const;
+    virtual float get_proximity( int i, int j ) const;
+
     virtual void clear();
 
-    bool grow_forest(
-        CvDTreeTrainData* train_data, const CvMat* sample_idx, int nsamples_all,
-        const CvTermCriteria term_crit );
-    int get_class_idx( int label ) const;
+    virtual void save( const char* filename, const char* name=0 );
+    virtual void write( CvFileStorage* fs, const char* name );
+    virtual void load( const char* filename, const char* name=0 );
+    virtual void read( CvFileStorage* fs, CvFileNode* node );
 
-    CvMat* active_var_mask;
     CvRNG rng;
+    CvMat* active_var_mask;
+    int ntrees;
 
 protected:
+    bool grow_forest( CvDTreeTrainData* train_data, const CvTermCriteria term_crit );
 
-    CvMat* class_labels;
     // array of the trees of the forest
     CvForestTree** trees;
-    int ntrees;
+
     int nclasses;
     double oob_error;
+    CvMat* var_importance;
+    CvMat* proximities;
+    int nsamples;
 };
 
 /****************************************************************************************\
