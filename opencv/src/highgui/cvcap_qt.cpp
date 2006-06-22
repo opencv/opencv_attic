@@ -547,7 +547,6 @@ static const void * icvRetrieveFrame_QT_Movie (CvCapture_QT_Movie * capture)
 #pragma mark -
 #pragma mark Capturing from Video Cameras
 
-
 #ifdef USE_VDIG_VERSION
 
 	/// SequenceGrabber state structure for QuickTime
@@ -667,7 +666,7 @@ static int icvSetProperty_QT_Cam (CvCapture_QT_Cam * capture, int property_id, d
 static int icvOpenCamera_QT (CvCapture_QT_Cam * capture, const int index)
 {
 	OPENCV_ASSERT (capture,            "icvOpenCamera_QT", "'capture' is a NULL-pointer");
-	OPENCV_ASSERT (capture->index >=0, "icvOpenCamera_QT", "camera index is negative");
+	OPENCV_ASSERT (index >=0, "icvOpenCamera_QT", "camera index is negative");
 
 	ComponentDescription	component_description;
 	Component				component = 0;
@@ -939,13 +938,69 @@ static int icvOpenCamera_QT (CvCapture_QT_Cam * capture, const int index)
 	
 	PixMapHandle  pixmap       = nil;
 	OSErr         result       = noErr;
-	Rect          defaultRect  = {0, 0, 240, 320};
 	
+	// open sequence grabber component
+	capture->grabber = OpenDefaultComponent (SeqGrabComponentType, 0);
+	OPENCV_ASSERT (capture->grabber, "icvOpenCamera_QT", "couldnt create image");
+	
+	// initialize sequence grabber component
+	result = SGInitialize (capture->grabber);
+	OPENCV_ASSERT (result == noErr, "icvOpenCamera_QT", "couldnt initialize sequence grabber");
+	result = SGSetDataRef (capture->grabber, 0, 0, seqGrabDontMakeMovie);
+	OPENCV_ASSERT (result == noErr, "icvOpenCamera_QT", "couldnt set data reference of sequence grabber");
+	
+	// set up video channel
+	result = SGNewChannel (capture->grabber, VideoMediaType, & (capture->channel));
+	OPENCV_ASSERT (result == noErr, "icvOpenCamera_QT", "couldnt create new video channel");
+	
+	// query natural camera resolution -- this will be wrong, but will be an upper
+	// bound on the actual resolution -- the actual resolution is set below
+	// after starting the frame grabber
+	result = SGGetSrcVideoBounds (capture->channel, & (capture->bounds));
+	OPENCV_ASSERT (result == noErr, "icvOpenCamera_QT", "couldnt set video channel bounds");
+	printf("Video Channel bounds: %d %d %d %d\n", capture->bounds.left, capture->bounds.right, capture->bounds.bottom, capture->bounds.top);
+	result = SGGetVideoRect (capture->channel, & (capture->bounds));
+	OPENCV_ASSERT (result == noErr, "icvOpenCamera_QT", "couldnt set video channel bounds");
+	printf("Video Channel bounds: %d %d %d %d\n", capture->bounds.left, capture->bounds.right, capture->bounds.bottom, capture->bounds.top);
+
 	// create offscreen GWorld
-	capture->bounds = defaultRect;
 	result = QTNewGWorld (& (capture->gworld), k32ARGBPixelFormat, & (capture->bounds), 0, 0, 0);
-	capture->size = cvSize (capture->bounds.right - capture->bounds.left, capture->bounds.bottom - capture->bounds.top);
+	result = SGSetGWorld (capture->grabber, capture->gworld, 0);
+	OPENCV_ASSERT (result == noErr, "icvOpenCamera_QT", "couldnt set GWorld for sequence grabber");
+	result = SGSetChannelBounds (capture->channel, & (capture->bounds));
+	OPENCV_ASSERT (result == noErr, "icvOpenCamera_QT", "couldnt set video channel bounds");
+	result = SGSetChannelUsage (capture->channel, seqGrabRecord);
+	OPENCV_ASSERT (result == noErr, "icvOpenCamera_QT", "couldnt set channel usage");
+
+    // start recording so we can size
+	result = SGStartRecord (capture->grabber);
+	OPENCV_ASSERT (result == noErr, "icvOpenCamera_QT", "couldnt start recording");
+
+	// don't know *actual* resolution until now
+	ImageDescriptionHandle imageDesc = (ImageDescriptionHandle)NewHandle(0);
+	result = SGGetChannelSampleDescription(capture->channel, (Handle)imageDesc);
+	OPENCV_ASSERT( result == noErr, "icvOpenCamera_QT", "couldn't get image size");
+	capture->bounds.right = (**imageDesc).width;
+	capture->bounds.bottom = (**imageDesc).height;
+
+	// stop grabber so that we can reset the parameters to the right size
+	result = SGStop (capture->grabber);
+	OPENCV_ASSERT (result == noErr, "icveClose_QT_Cam", "couldnt stop recording");
+
+	// reset GWorld to correct image size
+	GWorldPtr tmpgworld;
+	result = QTNewGWorld( &tmpgworld, k32ARGBPixelFormat, &(capture->bounds), 0, 0, 0);
 	OPENCV_ASSERT (result == noErr, "icvOpenCamera_QT", "couldnt create offscreen GWorld");
+	result = SGSetGWorld( capture->grabber, tmpgworld, 0);
+	OPENCV_ASSERT (result == noErr, "icvOpenCamera_QT", "couldnt set GWorld for sequence grabber");
+	DisposeGWorld( capture->gworld );
+	capture->gworld = tmpgworld;
+
+	result = SGSetChannelBounds (capture->channel, & (capture->bounds));
+	OPENCV_ASSERT (result == noErr, "icvOpenCamera_QT", "couldnt set video channel bounds");	
+
+	// allocate images
+	capture->size = cvSize (capture->bounds.right - capture->bounds.left, capture->bounds.bottom - capture->bounds.top);
 	
 	// build IplImage header that points to the PixMap of the Movie's GWorld.
 	// unfortunately, cvCvtColor doesn't know ARGB, the QuickTime pixel format,
@@ -961,26 +1016,7 @@ static int icvOpenCamera_QT (CvCapture_QT_Cam * capture, const int index)
 	// create IplImage that hold correctly formatted result
 	capture->image_bgr = cvCreateImage (capture->size, IPL_DEPTH_8U, 3);
 	OPENCV_ASSERT (capture->image_bgr, "icvOpenCamera_QT", "couldnt create image");
-	
-	// open sequence grabber component
-	capture->grabber = OpenDefaultComponent (SeqGrabComponentType, 0);
-	OPENCV_ASSERT (capture->grabber, "icvOpenCamera_QT", "couldnt create image");
-	
-	// initialize sequence grabber component
-	result = SGInitialize (capture->grabber);
-	OPENCV_ASSERT (result == noErr, "icvOpenCamera_QT", "couldnt initialize sequence grabber");
-	result = SGSetDataRef (capture->grabber, 0, 0, seqGrabDontMakeMovie);
-	OPENCV_ASSERT (result == noErr, "icvOpenCamera_QT", "couldnt set data reference of sequence grabber");
-	result = SGSetGWorld (capture->grabber, capture->gworld, 0);
-	OPENCV_ASSERT (result == noErr, "icvOpenCamera_QT", "couldnt set GWorld for sequence grabber");
-	
-	// set up video channel
-	result = SGNewChannel (capture->grabber, VideoMediaType, & (capture->channel));
-	OPENCV_ASSERT (result == noErr, "icvOpenCamera_QT", "couldnt create new video channel");
-	result = SGSetChannelBounds (capture->channel, & (capture->bounds));
-	OPENCV_ASSERT (result == noErr, "icvOpenCamera_QT", "couldnt set video channel bounds");
-	result = SGSetChannelUsage (capture->channel, seqGrabRecord);
-	OPENCV_ASSERT (result == noErr, "icvOpenCamera_QT", "couldnt set channel usage");
+
 	
 	// tell the sequence grabber to invoke our data proc
 	result = SGSetDataProc (capture->grabber, NewSGDataUPP (icvDataProc_QT_Cam), (long) capture);
@@ -989,7 +1025,7 @@ static int icvOpenCamera_QT (CvCapture_QT_Cam * capture, const int index)
 	// start recording
 	result = SGStartRecord (capture->grabber);
 	OPENCV_ASSERT (result == noErr, "icvOpenCamera_QT", "couldnt start recording");
-	
+
 	return 1;
 }
 
