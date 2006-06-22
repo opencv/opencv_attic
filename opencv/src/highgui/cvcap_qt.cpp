@@ -958,10 +958,6 @@ static int icvOpenCamera_QT (CvCapture_QT_Cam * capture, const int index)
 	// after starting the frame grabber
 	result = SGGetSrcVideoBounds (capture->channel, & (capture->bounds));
 	OPENCV_ASSERT (result == noErr, "icvOpenCamera_QT", "couldnt set video channel bounds");
-	printf("Video Channel bounds: %d %d %d %d\n", capture->bounds.left, capture->bounds.right, capture->bounds.bottom, capture->bounds.top);
-	result = SGGetVideoRect (capture->channel, & (capture->bounds));
-	OPENCV_ASSERT (result == noErr, "icvOpenCamera_QT", "couldnt set video channel bounds");
-	printf("Video Channel bounds: %d %d %d %d\n", capture->bounds.left, capture->bounds.right, capture->bounds.bottom, capture->bounds.top);
 
 	// create offscreen GWorld
 	result = QTNewGWorld (& (capture->gworld), k32ARGBPixelFormat, & (capture->bounds), 0, 0, 0);
