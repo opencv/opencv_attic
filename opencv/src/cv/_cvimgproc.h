@@ -71,6 +71,10 @@ typedef CvStatus (CV_STDCALL * CvFilterFixedIPPFunc)
 #define CV_END     2
 #define CV_MIDDLE  4
 
+void
+icvCrossCorr( const CvArr* _img, const CvArr* _templ,
+              CvArr* _corr, CvPoint anchor=cvPoint(0,0) );
+
 CvStatus CV_STDCALL
 icvCopyReplicateBorder_8u( const uchar* src, int srcstep, CvSize srcroi,
                            uchar* dst, int dststep, CvSize dstroi,

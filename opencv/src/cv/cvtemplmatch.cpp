@@ -41,14 +41,14 @@
 
 #include "_cv.h"
 
-static void
-icvCrossCorr( const CvArr* _img, const CvArr* _templ, CvArr* _corr )
+void
+icvCrossCorr( const CvArr* _img, const CvArr* _templ, CvArr* _corr, CvPoint anchor )
 {
     const double block_scale = 4.5;
     const int min_block_size = 256;
     CvMat* dft_img = 0;
     CvMat* dft_templ = 0;
-    CvMat* temp = 0;
+    void* buf = 0;
     
     CV_FUNCNAME( "icvCrossCorr" );
     
@@ -57,199 +57,197 @@ icvCrossCorr( const CvArr* _img, const CvArr* _templ, CvArr* _corr )
     CvMat istub, *img = (CvMat*)_img;
     CvMat tstub, *templ = (CvMat*)_templ;
     CvMat cstub, *corr = (CvMat*)_corr;
-    CvMat sstub, pstub, dstub, *src, *dst;
-    CvSize templsize, corrsize, dftsize, blocksize;
+    CvMat sstub, dstub, *src, *dst, temp;
+    CvSize dftsize, blocksize;
     CvMat* planes[] = { 0, 0, 0, 0 };
-    int x, y, i, depth, cn, corr_type, yofs;
-    int reuse_templ_spectrum = 0;
+    int x, y, i, yofs, buf_size = 0;
+    int depth, templ_depth, corr_depth, max_depth = CV_32F, cn, templ_cn, corr_cn;
 
     CV_CALL( img = cvGetMat( img, &istub ));
     CV_CALL( templ = cvGetMat( templ, &tstub ));
     CV_CALL( corr = cvGetMat( corr, &cstub ));
 
     if( CV_MAT_DEPTH( img->type ) != CV_8U &&
+        CV_MAT_DEPTH( img->type ) != CV_16U &&
         CV_MAT_DEPTH( img->type ) != CV_32F )
         CV_ERROR( CV_StsUnsupportedFormat,
-        "The function supports only 8u and 32f data types" );
+        "The function supports only 8u, 16u and 32f data types" );
 
-    if( CV_MAT_TYPE( corr->type ) != CV_32FC1 &&
-        CV_MAT_TYPE( corr->type ) != CV_64FC1 )
+    if( !CV_ARE_DEPTHS_EQ( img, templ ) && CV_MAT_DEPTH( templ->type ) != CV_32F )
         CV_ERROR( CV_StsUnsupportedFormat,
-        "The correlation output should be single-channel floating-point array" );
+        "Template (kernel) must be of the same depth as the input image, or be 32f" );
+    
+    if( !CV_ARE_DEPTHS_EQ( img, corr ) && CV_MAT_DEPTH( corr->type ) != CV_32F &&
+        CV_MAT_DEPTH( corr->type ) != CV_64F )
+        CV_ERROR( CV_StsUnsupportedFormat,
+        "The output image must have the same depth as the input image, or be 32f/64f" );
 
-    if( !CV_ARE_TYPES_EQ( img, templ ))
-        CV_ERROR( CV_StsUnmatchedSizes, "image and template should have the same type" );
+    if( (!CV_ARE_CNS_EQ( img, corr ) || CV_MAT_CN(templ->type) > 1) &&
+        (CV_MAT_CN( corr->type ) > 1 || !CV_ARE_CNS_EQ( img, templ)) )
+        CV_ERROR( CV_StsUnsupportedFormat,
+        "The output must have the same number of channels as the input (when the template has 1 channel), "
+        "or the output must have 1 channel when the input and the template have the same number of channels" );
 
-    if( img->cols < templ->cols || img->rows < templ->rows )
-    {
-        CvMat* t;
-        CV_SWAP( img, templ, t );
-    }
+    depth = CV_MAT_DEPTH(img->type);
+    cn = CV_MAT_CN(img->type);
+    templ_depth = CV_MAT_DEPTH(templ->type);
+    templ_cn = CV_MAT_CN(templ->type);
+    corr_depth = CV_MAT_DEPTH(corr->type);
+    corr_cn = CV_MAT_CN(corr->type);
+    max_depth = MAX( max_depth, templ_depth );
+    max_depth = MAX( max_depth, depth );
+    max_depth = MAX( max_depth, corr_depth );
+    if( depth > CV_8U )
+        max_depth = CV_64F;
 
     if( img->cols < templ->cols || img->rows < templ->rows )
         CV_ERROR( CV_StsUnmatchedSizes,
-        "Neither of the two input arrays is smaller than the other" );
+        "Such a combination of image and template/filter size is not supported" );
 
     if( corr->rows > img->rows + templ->rows - 1 ||
         corr->cols > img->cols + templ->cols - 1 )
         CV_ERROR( CV_StsUnmatchedSizes,
         "output image should not be greater than (W + w - 1)x(H + h - 1)" );
 
-    depth = CV_MAT_DEPTH(img->type);
-    cn = CV_MAT_CN(img->type);
-    corr_type = CV_MAT_TYPE(corr->type);
+    blocksize.width = cvRound(templ->cols*block_scale);
+    blocksize.width = MAX( blocksize.width, min_block_size - templ->cols + 1 );
+    blocksize.width = MIN( blocksize.width, corr->cols );
+    blocksize.height = cvRound(templ->rows*block_scale);
+    blocksize.height = MAX( blocksize.height, min_block_size - templ->rows + 1 );
+    blocksize.height = MIN( blocksize.height, corr->rows );
 
-    templsize = cvGetSize(templ);
-    corrsize = cvGetSize(corr);
-
-    blocksize.width = cvRound(templsize.width*block_scale);
-    blocksize.width = MAX( blocksize.width, min_block_size - templsize.width + 1 );
-    blocksize.width = MIN( blocksize.width, corrsize.width );
-    blocksize.height = cvRound(templsize.height*block_scale);
-    blocksize.height = MAX( blocksize.height, min_block_size - templsize.height + 1 );
-    blocksize.height = MIN( blocksize.height, corrsize.height );
-
-    dftsize.width = cvGetOptimalDFTSize(blocksize.width + templsize.width - 1);
+    dftsize.width = cvGetOptimalDFTSize(blocksize.width + templ->cols - 1);
     if( dftsize.width == 1 )
         dftsize.width = 2;
-    dftsize.height = cvGetOptimalDFTSize(blocksize.height + templsize.height - 1);
+    dftsize.height = cvGetOptimalDFTSize(blocksize.height + templ->rows - 1);
     if( dftsize.width <= 0 || dftsize.height <= 0 )
         CV_ERROR( CV_StsOutOfRange, "the input arrays are too big" );
 
     // recompute block size
-    blocksize.width = dftsize.width - templsize.width + 1;
-    blocksize.width = MIN( blocksize.width, corrsize.width );
-    blocksize.height = dftsize.height - templsize.height + 1;
-    blocksize.height = MIN( blocksize.height, corrsize.height );
+    blocksize.width = dftsize.width - templ->cols + 1;
+    blocksize.width = MIN( blocksize.width, corr->cols );
+    blocksize.height = dftsize.height - templ->rows + 1;
+    blocksize.height = MIN( blocksize.height, corr->rows );
 
-    reuse_templ_spectrum = blocksize.width < corrsize.width ||
-                           blocksize.height < corrsize.height; 
+    CV_CALL( dft_img = cvCreateMat( dftsize.height, dftsize.width, max_depth ));
+    CV_CALL( dft_templ = cvCreateMat( dftsize.height*templ_cn, dftsize.width, max_depth ));
 
-    CV_CALL( dft_img = cvCreateMat( dftsize.height, dftsize.width, corr_type ));
-    CV_CALL( dft_templ = cvCreateMat( dftsize.height*
-        (reuse_templ_spectrum ? cn : 1), dftsize.width, corr_type ));
+    if( templ_cn > 1 && templ_depth != max_depth )
+        buf_size = templ->cols*templ->rows*CV_ELEM_SIZE(templ_depth);
 
-    if( cn > 1 && depth != CV_MAT_DEPTH(corr_type) )
-        CV_CALL( temp = cvCreateMat( blocksize.height + templsize.height - 1,
-            blocksize.width + templsize.width - 1, depth ));
+    if( cn > 1 && depth != max_depth )
+        buf_size = MAX( buf_size, (blocksize.width + templ->cols - 1)*
+            (blocksize.height + templ->rows - 1)*CV_ELEM_SIZE(depth));
 
-    if( reuse_templ_spectrum )
+    if( corr_depth > 1 && corr_depth != max_depth )
+        buf_size = MAX( buf_size, blocksize.width*blocksize.height*CV_ELEM_SIZE(corr_depth));
+
+    if( buf_size > 0 )
+        CV_CALL( buf = cvAlloc(buf_size) );
+
+    // compute DFT of each template plane
+    for( i = 0; i < templ_cn; i++ )
     {
-        // compute DFT of each template plane
-        for( i = 0; i < cn; i++ )
+        yofs = i*dftsize.height;
+
+        src = templ;
+        dst = cvGetSubRect( dft_templ, &dstub, cvRect(0,yofs,templ->cols,templ->rows));
+    
+        if( templ_cn > 1 )
         {
-            yofs = i*dftsize.height;
-
-            src = templ;
-            dst = cvGetSubRect( dft_templ, &dstub, cvRect(0,yofs,templ->cols,templ->rows));
-        
-            if( cn > 1 )
-            {
-                planes[i] = !temp ? dst :
-                    cvGetSubRect( temp, &pstub, cvRect(0,0,templ->cols,templ->rows) );
-                cvSplit( templ, planes[0], planes[1], planes[2], planes[3] );
-                src = planes[i];
-                planes[i] = 0;
-            }
-
-            if( dst != src )
-            {
-                if( CV_ARE_TYPES_EQ(src, dst) )
-                    cvCopy( src, dst );
-                else
-                    cvConvert( src, dst );
-            }
-
-            cvGetSubRect( dft_templ, dst, cvRect(templ->cols, yofs,
-                          dft_templ->cols - templ->cols, templ->rows) );
-            cvZero( dst );
-            cvGetSubRect( dft_templ, dst, cvRect(0,yofs,dftsize.width,dftsize.height) );
-            cvDFT( dst, dst, CV_DXT_FORWARD, templ->rows );
+            planes[i] = templ_depth == max_depth ? dst :
+                cvInitMatHeader( &temp, templ->rows, templ->cols, templ_depth, buf );
+            cvSplit( templ, planes[0], planes[1], planes[2], planes[3] );
+            src = planes[i];
+            planes[i] = 0;
         }
+
+        if( dst != src )
+            cvConvert( src, dst );
+
+        cvGetSubRect( dft_templ, dst, cvRect(templ->cols, yofs,
+                      dft_templ->cols - templ->cols, templ->rows) );
+        cvZero( dst );
+        cvGetSubRect( dft_templ, dst, cvRect(0,yofs,dftsize.width,dftsize.height) );
+        cvDFT( dst, dst, CV_DXT_FORWARD + CV_DXT_SCALE, templ->rows );
     }
 
     // calculate correlation by blocks
-    for( y = 0; y < corrsize.height; y += blocksize.height )
+    for( y = 0; y < corr->rows; y += blocksize.height )
     {
-        for( x = 0; x < corrsize.width; x += blocksize.width )
+        for( x = 0; x < corr->cols; x += blocksize.width )
         {
             CvSize csz = { blocksize.width, blocksize.height }, isz;
+            int x0 = x - anchor.x, y0 = y - anchor.y;
+            int x1 = MAX( 0, x0 ), y1 = MAX( 0, y0 ), x2, y2;
             csz.width = MIN( csz.width, corr->cols - x );
             csz.height = MIN( csz.height, corr->rows - y );
             isz.width = csz.width + templ->cols - 1;
             isz.height = csz.height + templ->rows - 1;
-
+            x2 = MIN( img->cols, x0 + isz.width );
+            y2 = MIN( img->rows, y0 + isz.height );
+            
             for( i = 0; i < cn; i++ )
             {
+                CvMat dstub1, *dst1;
                 yofs = i*dftsize.height;
 
-                src = cvGetSubRect( img, &sstub, cvRect(x,y,isz.width,isz.height) );
-                dst = cvGetSubRect( dft_img, &dstub, cvRect(0,0,isz.width,isz.height));
+                src = cvGetSubRect( img, &sstub, cvRect(x1,y1,x2-x1,y2-y1) );
+                dst = cvGetSubRect( dft_img, &dstub, cvRect(0,0,isz.width,isz.height) );
+                dst1 = dst;
+                
+                if( x2 - x1 < isz.width || y2 - y1 < isz.height )
+                    dst1 = cvGetSubRect( dft_img, &dstub1,
+                        cvRect( x1 - x0, y1 - y0, x2 - x1, y2 - y1 ));
 
                 if( cn > 1 )
                 {
-                    planes[i] = !temp ? dst :
-                        cvGetSubRect( temp, &pstub, cvRect(0,0,isz.width,isz.height));
+                    planes[i] = dst1;
+                    if( depth != max_depth )
+                        planes[i] = cvInitMatHeader( &temp, y2 - y1, x2 - x1, depth, buf );
                     cvSplit( src, planes[0], planes[1], planes[2], planes[3] );
                     src = planes[i];
                     planes[i] = 0;
                 }
 
-                if( dst != src )
-                {
-                    if( CV_ARE_TYPES_EQ(src, dst) )
-                        cvCopy( src, dst );
-                    else
-                        cvConvert( src, dst );
-                }
+                if( dst1 != src )
+                    cvConvert( src, dst1 );
+
+                if( dst != dst1 )
+                    cvCopyMakeBorder( dst1, dst, cvPoint(x1 - x0, y1 - y0), IPL_BORDER_REPLICATE );
 
                 cvGetSubRect( dft_img, dst, cvRect(isz.width, 0,
                       dftsize.width - isz.width,dftsize.height) );
                 cvZero( dst );
 
                 cvDFT( dft_img, dft_img, CV_DXT_FORWARD, isz.height );
-
-                if( reuse_templ_spectrum )
-                    cvGetSubRect( dft_templ, dst, cvRect(0,yofs,dftsize.width,dftsize.height) );
-                else
-                {
-                    src = templ;
-                    dst = cvGetSubRect( dft_templ, &dstub, cvRect(0,0,templ->cols,templ->rows));
-        
-                    if( cn > 1 )
-                    {
-                        planes[i] = !temp ? dst :
-                            cvGetSubRect( temp, &pstub, cvRect(0,0,templ->cols,templ->rows) );
-                        cvSplit( src, planes[0], planes[1], planes[2], planes[3] );
-                        src = planes[i];
-                        planes[i] = 0;
-                    }
-
-                    if( dst != src )
-                    {
-                        if( CV_ARE_TYPES_EQ(src, dst) )
-                            cvCopy( src, dst );
-                        else
-                            cvConvert( src, dst );
-                    }
-
-                    cvGetSubRect( dft_templ, dst, cvRect(templ->cols, 0,
-                                  dft_templ->cols - templ->cols, templ->rows) );
-                    cvZero( dst );
-                    cvGetSubRect( dft_templ, dst, cvRect(0,0,dftsize.width,dftsize.height) );
-                    cvDFT( dst, dst, CV_DXT_FORWARD, templ->rows );
-                }
+                cvGetSubRect( dft_templ, dst,
+                    cvRect(0,(templ_cn>1?yofs:0),dftsize.width,dftsize.height) );
 
                 cvMulSpectrums( dft_img, dst, dft_img, CV_DXT_MUL_CONJ );
-                cvDFT( dft_img, dft_img, CV_DXT_INV_SCALE, csz.height );
+                cvDFT( dft_img, dft_img, CV_DXT_INVERSE, csz.height );
 
                 src = cvGetSubRect( dft_img, &sstub, cvRect(0,0,csz.width,csz.height) );
                 dst = cvGetSubRect( corr, &dstub, cvRect(x,y,csz.width,csz.height) );
 
-                if( i == 0 )
-                    cvCopy( src, dst );
+                if( corr_cn > 1 )
+                {
+                    planes[i] = src;
+                    if( corr_depth != max_depth )
+                    {
+                        planes[i] = cvInitMatHeader( &temp, csz.height, csz.width, corr_depth, buf );
+                        cvConvert( src, planes[i] );
+                    }
+                    cvMerge( planes[0], planes[1], planes[2], planes[3], dst );
+                    planes[i] = 0;                    
+                }
                 else
-                    cvAdd( src, dst, dst );
+                {
+                    if( i == 0 )
+                        cvConvert( src, dst );
+                    else
+                        cvAcc( src, dst );                    
+                }
             }
         }
     }
@@ -258,8 +256,9 @@ icvCrossCorr( const CvArr* _img, const CvArr* _templ, CvArr* _corr )
 
     cvReleaseMat( &dft_img );
     cvReleaseMat( &dft_templ );
-    cvReleaseMat( &temp );
+    cvFree( &buf );
 }
+
 
 /***************************** IPP Match Template Functions ******************************/
 
@@ -321,6 +320,12 @@ cvMatchTemplate( const CvArr* _img, const CvArr* _templ, CvArr* _result, int met
 
     if( CV_MAT_TYPE( result->type ) != CV_32FC1 )
         CV_ERROR( CV_StsUnsupportedFormat, "output image should have 32f type" );
+
+    if( img->rows < templ->rows || img->cols < templ->cols )
+    {
+        CvMat* t;
+        CV_SWAP( img, templ, t );
+    }
 
     if( result->rows != img->rows - templ->rows + 1 ||
         result->cols != img->cols - templ->cols + 1 )

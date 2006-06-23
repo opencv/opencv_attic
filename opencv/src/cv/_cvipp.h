@@ -47,20 +47,24 @@
 \****************************************************************************************/
 
 #define IPCV_COPY_BORDER( bordertype, flavor )                                      \
-IPCVAPI_EX( CvStatus, icvCopy##bordertype##Border_##flavor,                         \
-            "ippiCopy" #bordertype "Border_" #flavor, CV_PLUGINS1(CV_PLUGIN_IPPI),  \
-            ( const void* pSrc,  int srcStep, CvSize srcRoiSize,                    \
-                    void* pDst,  int dstStep, CvSize dstRoiSize,                    \
-                    int topBorderWidth, int leftBorderWidth ))
+IPCVAPI_EX( CvStatus, icvCopy##bordertype##Border_##flavor##R,                      \
+    "ippiCopy" #bordertype "Border_" #flavor "R", CV_PLUGINS1(CV_PLUGIN_IPPI),      \
+    ( const void* pSrc,  int srcStep, CvSize srcRoiSize, void* pDst,  int dstStep,  \
+      CvSize dstRoiSize, int topBorderHeight, int leftBorderWidth ))                \
+                                                                                    \
+IPCVAPI_EX( CvStatus, icvCopy##bordertype##Border_##flavor##IR,                     \
+    "ippiCopy" #bordertype "Border_" #flavor "IR", CV_PLUGINS1(CV_PLUGIN_IPPI),     \
+    ( const void* pSrc,  int srcDstStep, CvSize srcRoiSize,                         \
+      CvSize dstRoiSize, int topBorderHeight, int leftBorderWidth ))
 
-IPCV_COPY_BORDER( Replicate, 8u_C1R )
-IPCV_COPY_BORDER( Replicate, 16s_C1R )
-IPCV_COPY_BORDER( Replicate, 8u_C3R )
-IPCV_COPY_BORDER( Replicate, 32s_C1R )
-IPCV_COPY_BORDER( Replicate, 16s_C3R )
-IPCV_COPY_BORDER( Replicate, 16s_C4R )
-IPCV_COPY_BORDER( Replicate, 32s_C3R )
-IPCV_COPY_BORDER( Replicate, 32s_C4R )
+IPCV_COPY_BORDER( Replicate, 8u_C1 )
+IPCV_COPY_BORDER( Replicate, 16s_C1 )
+IPCV_COPY_BORDER( Replicate, 8u_C3 )
+IPCV_COPY_BORDER( Replicate, 32s_C1 )
+IPCV_COPY_BORDER( Replicate, 16s_C3 )
+IPCV_COPY_BORDER( Replicate, 16s_C4 )
+IPCV_COPY_BORDER( Replicate, 32s_C3 )
+IPCV_COPY_BORDER( Replicate, 32s_C4 )
 
 /****************************************************************************************\
 *                                        Moments                                         *
