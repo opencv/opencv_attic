@@ -445,6 +445,9 @@ int CvBaseImageFilter::process( const CvMat* src, CvMat* dst,
     int phase = flags & (CV_START|CV_END|CV_MIDDLE);
     bool isolated_roi = (flags & CV_ISOLATED_ROI) != 0;
 
+    //static int test_iter = 0;
+    //printf( "\niter = %d\n", ++test_iter );
+
     if( !CV_IS_MAT(src) )
         CV_ERROR( CV_StsBadArg, "" );
 
@@ -541,9 +544,15 @@ int CvBaseImageFilter::process( const CvMat* src, CvMat* dst,
     for( src_y = src_y1; src_y < src_y2; )
     {
         uchar* bptr;
-        int row_count;
-        int delta = fill_cyclic_buffer( sptr, src->step, src_y, src_y1, src_y2 );
-        
+        int row_count, delta;
+
+        //if( test_iter == 57 )
+        //    printf("buf_count = %d, ", buf_count );
+
+        delta = fill_cyclic_buffer( sptr, src->step, src_y, src_y1, src_y2 );
+        //if( test_iter == 57 )
+        //    printf("delta = %d, old src_y = %d, src_y2 = %d\n", delta, src_y, src_y2 );
+
         src_y += delta;
         sptr += src->step*delta;
 
@@ -571,12 +580,15 @@ int CvBaseImageFilter::process( const CvMat* src, CvMat* dst,
             int count = row_count - max_ky*2;
             if( dst_y + count > dst->rows )
                 CV_ERROR( CV_StsOutOfRange, "The destination image can not fit the result" );
-            //assert( count >= 0 );
+
+            assert( count >= 0 );
             y_func( rows + max_ky - anchor.y, dptr, dst->step, count, this );
+            //if( test_iter == 57 )
+            //    printf("count = %d\n", count );
             row_count -= count;
             dst_y += count;
             dptr += dst->step*count;
-            for( bptr = rows[count]; buf_head != bptr && buf_count > 0; buf_count-- )
+            for( bptr = row_count > 0 ?rows[count] : 0; buf_head != bptr && buf_count > 0; buf_count-- )
             {
                 buf_head += buf_step;
                 if( buf_head >= buf_end )
@@ -2538,6 +2550,8 @@ typedef CvStatus (CV_STDCALL * CvFilterIPPFunc)
 CV_IMPL void
 cvFilter2D( const CvArr* _src, CvArr* _dst, const CvMat* kernel, CvPoint anchor )
 {
+    const int dft_filter_size = 100;
+
     CvLinearFilter filter;
     CvMat* ipp_kernel = 0;
     
@@ -2568,6 +2582,18 @@ cvFilter2D( const CvArr* _src, CvArr* _dst, const CvMat* kernel, CvPoint anchor 
     if( !CV_ARE_TYPES_EQ( src, dst ))
         CV_ERROR( CV_StsUnmatchedFormats, "" );
 
+    if( kernel->cols*kernel->rows >= dft_filter_size &&
+        kernel->cols <= src->cols && kernel->rows <= src->rows )
+    {
+        if( src->data.ptr == dst->data.ptr )
+        {
+            temp = cvCloneMat( src );
+            src = temp;
+        }
+        icvCrossCorr( src, kernel, dst, anchor );
+        EXIT;
+    }
+
     if( icvFilter_8u_C1R_p && (src->rows >= ipp_lower_limit || src->cols >= ipp_lower_limit) )
     {
         CvFilterIPPFunc ipp_func = 
@@ -2584,7 +2610,7 @@ cvFilter2D( const CvArr* _src, CvArr* _dst, const CvMat* kernel, CvPoint anchor 
         if( ipp_func )
         {
             CvSize el_size = { kernel->cols, kernel->rows };
-            CvPoint el_anchor = { el_size.width - anchor.x - 1, el_size.height - anchor.y - 1 };
+            CvPoint el_anchor;
             int stripe_size = 1 << 16; // the optimal value may depend on CPU cache,
                                        // overhead of current IPP code etc.
             const uchar* shifted_ptr;
@@ -2597,6 +2623,8 @@ cvFilter2D( const CvArr* _src, CvArr* _dst, const CvMat* kernel, CvPoint anchor 
             if( (unsigned)anchor.x >= (unsigned)kernel->cols ||
                 (unsigned)anchor.y >= (unsigned)kernel->rows )
                 CV_ERROR( CV_StsOutOfRange, "anchor point is out of kernel" );
+
+            el_anchor = cvPoint( el_size.width - anchor.x - 1, el_size.height - anchor.y - 1 );
 
             CV_CALL( ipp_kernel = cvCreateMat( kernel->rows, kernel->cols, CV_32FC1 ));
             CV_CALL( cvConvert( kernel, ipp_kernel ));
