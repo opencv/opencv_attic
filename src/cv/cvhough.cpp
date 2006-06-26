@@ -557,7 +557,9 @@ icvHoughLinesProbabalistic( CvMat* image,
         CvPoint line_end[2] = {{0,0}, {0,0}};
         float a, b;
         int* adata = accum->data.i;
-        int i, j, k, dx, dy;
+        int i, j, k, x0, y0, dx0, dy0, xflag;
+        int good_line;
+        const int shift = 16;
 
         i = pt->y;
         j = pt->x;
@@ -591,35 +593,36 @@ icvHoughLinesProbabalistic( CvMat* image,
         // along the found line and extract the line segment
         a = -ttab[max_n*2+1];
         b = ttab[max_n*2];
+        x0 = j;
+        y0 = i;
+        if( fabs(a) > fabs(b) )
+        {
+            xflag = 1;
+            dx0 = a > 0 ? 1 : -1;
+            dy0 = cvRound( b*(1 << shift)/fabs(a) );
+            y0 = (y0 << shift) + (1 << (shift-1));
+        }
+        else
+        {
+            xflag = 0;
+            dy0 = b > 0 ? 1 : -1;
+            dx0 = cvRound( a*(1 << shift)/fabs(b) );
+            x0 = (x0 << shift) + (1 << (shift-1));
+        }
+
         for( k = 0; k < 2; k++ )
         {
-            int gap = 0, i1 = i, j1 = j, x = j, y = i;
-            int xflag;
-            const int shift = 16;
+            int gap = 0, x = x0, y = y0, dx = dx0, dy = dy0;
             
             if( k > 0 )
-                a = -a, b = -b;
-
-            if( fabs(a) > fabs(b) )
-            {
-                xflag = 1;
-                dx = a > 0 ? 1 : -1;
-                dy = cvRound( b*(1 << shift)/fabs(a) );
-                y = (y << shift) + (1 << (shift-1));
-            }
-            else
-            {
-                xflag = 0;
-                dy = b > 0 ? 1 : -1;
-                dx = cvRound( a*(1 << shift)/fabs(b) );
-                x = (x << shift) + (1 << (shift-1));
-            }
+                dx = -dx, dy = -dy;
 
             // walk along the line using fixed-point arithmetics,
             // stop at the image border or in case of too big gap
             for( ;; x += dx, y += dy )
             {
                 uchar* mdata;
+                int i1, j1;
 
                 if( xflag )
                 {
@@ -639,36 +642,77 @@ icvHoughLinesProbabalistic( CvMat* image,
 
                 // for each non-zero point:
                 //    update line end,
-                //    subtract 1's from the corresponding accum cells
                 //    clear the mask element
                 //    reset the gap
                 if( *mdata )
                 {
-                    adata = accum->data.i;
-                    for( n = 0; n < numangle; n++, adata += numrho )
-                    {
-                        r = cvRound( j1 * ttab[n*2] + i1 * ttab[n*2+1] );
-                        r += (numrho - 1) / 2;
-                        adata[r]--;
-                    }
-
-                    *mdata = 0;
                     gap = 0;
+                    line_end[k].y = i1;
+                    line_end[k].x = j1;
                 }
                 else if( ++gap > lineGap )
                     break;
             }
-
-            line_end[k].y = i1;
-            line_end[k].x = j1;
         }
 
-        dx = abs(line_end[1].x - line_end[0].x);
-        dy = abs(line_end[1].y - line_end[0].y);
-        if( MAX( dx, dy ) >= lineLength ) // if the line is long enough, store it
+        good_line = abs(line_end[1].x - line_end[0].x) >= lineLength ||
+                    abs(line_end[1].y - line_end[0].y) >= lineLength;
+
+        for( k = 0; k < 2; k++ )
         {
-            CvRect r = { line_end[0].x, line_end[0].y, line_end[1].x, line_end[1].y };
-            cvSeqPush( lines, &r );
+            int x = x0, y = y0, dx = dx0, dy = dy0;
+            
+            if( k > 0 )
+                dx = -dx, dy = -dy;
+
+            // walk along the line using fixed-point arithmetics,
+            // stop at the image border or in case of too big gap
+            for( ;; x += dx, y += dy )
+            {
+                uchar* mdata;
+                int i1, j1;
+
+                if( xflag )
+                {
+                    j1 = x;
+                    i1 = y >> shift;
+                }
+                else
+                {
+                    j1 = x >> shift;
+                    i1 = y;
+                }
+
+                mdata = mdata0 + i1*width + j1;
+
+                // for each non-zero point:
+                //    update line end,
+                //    clear the mask element
+                //    reset the gap
+                if( *mdata )
+                {
+                    if( good_line )
+                    {
+                        adata = accum->data.i;
+                        for( n = 0; n < numangle; n++, adata += numrho )
+                        {
+                            r = cvRound( j1 * ttab[n*2] + i1 * ttab[n*2+1] );
+                            r += (numrho - 1) / 2;
+                            adata[r]--;
+                        }
+                    }
+                    *mdata = 0;
+                }
+
+                if( i1 == line_end[k].y && j1 == line_end[k].x )
+                    break;
+            }
+        }
+
+        if( good_line )
+        {
+            CvRect lr = { line_end[0].x, line_end[0].y, line_end[1].x, line_end[1].y };
+            cvSeqPush( lines, &lr );
             if( lines->total >= linesMax )
                 EXIT;
         }
