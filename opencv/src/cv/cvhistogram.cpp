@@ -2358,25 +2358,6 @@ CV_IMPL void cvEqualizeHist( const CvArr* src, CvArr* dst )
 /* Implementation of RTTI and Generic Functions for CvHistogram */
 #define CV_TYPE_NAME_HIST "opencv-hist"
 
-static CvTypeInfo*
-icvInitTypeInfo( CvTypeInfo* info, const char* type_name,
-                 CvIsInstanceFunc is_instance, CvReleaseFunc release,
-                 CvReadFunc read, CvWriteFunc write,
-                 CvCloneFunc clone )
-{           
-    info->flags = 0;
-    info->header_size = sizeof(CvTypeInfo);
-    info->type_name = type_name;
-    info->prev = info->next = 0;
-    info->is_instance = is_instance;
-    info->release = release;
-    info->clone = clone;
-    info->read = read;
-    info->write = write;
-            
-    return info;
-}
-
 static int icvIsHist( const void * ptr ){
 	return CV_IS_HIST( ((CvHistogram*)ptr) );
 }
@@ -2478,7 +2459,7 @@ static void *icvReadHist( CvFileStorage * fs, CvFileNode * node ){
 }
 
 static void icvWriteHist( CvFileStorage* fs, const char* name, const void* struct_ptr, 
-		CvAttrList attributes ){
+		CvAttrList /*attributes*/ ){
 	const CvHistogram * hist = (const CvHistogram *) struct_ptr;
 	int sizes[CV_MAX_DIM];
 	int dims;
@@ -2526,14 +2507,9 @@ static void icvWriteHist( CvFileStorage* fs, const char* name, const void* struc
 	__END__;
 }
 
-static int icvRegisterHistogramType(){
-	CvTypeInfo info;
-	icvInitTypeInfo(&info, CV_TYPE_NAME_HIST, icvIsHist, (CvReleaseFunc) cvReleaseHist, icvReadHist, icvWriteHist, (CvCloneFunc) icvCloneHist );
-	cvRegisterType( &info );
-	return 1;
-}
 
-int g_histogram_type_registered = icvRegisterHistogramType();
+CvType hist_type( CV_TYPE_NAME_HIST, icvIsHist, (CvReleaseFunc)cvReleaseHist,
+                  icvReadHist, icvWriteHist, (CvCloneFunc)icvCloneHist );
 
 /* End of file. */
 

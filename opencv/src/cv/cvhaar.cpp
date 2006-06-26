@@ -2057,29 +2057,10 @@ icvCloneHaarClassifier( const void* struct_ptr )
     return cascade;
 }
 
-static int
-icvRegisterHaarClassifierType()
-{
-    CV_FUNCNAME( "icvRegisterHaarClassifierType" );
 
-    __BEGIN__;
-
-    CvTypeInfo info;
-
-    info.header_size = sizeof( info );
-    info.is_instance = icvIsHaarClassifier;
-    info.release = (CvReleaseFunc) cvReleaseHaarClassifierCascade;
-    info.read = icvReadHaarClassifier;
-    info.write = icvWriteHaarClassifier;
-    info.clone = icvCloneHaarClassifier;
-    info.type_name = CV_TYPE_NAME_HAAR;
-    CV_CALL( cvRegisterType( &info ) );
-
-    __END__;
-
-    return 1;
-}
-
-static int icv_register_haar_classifier_type = icvRegisterHaarClassifierType();
+CvType haar_type( CV_TYPE_NAME_HAAR, icvIsHaarClassifier,
+                  (CvReleaseFunc)cvReleaseHaarClassifierCascade,
+                  icvReadHaarClassifier, icvWriteHaarClassifier,
+                  icvCloneHaarClassifier );
 
 /* End of file. */
