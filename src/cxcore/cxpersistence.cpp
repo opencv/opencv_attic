@@ -4775,65 +4775,56 @@ icvReadGraph( CvFileStorage* fs, CvFileNode* node )
 *                                    RTTI Functions                                      *
 \****************************************************************************************/
 
-static CvTypeInfo*
-icvInitTypeInfo( CvTypeInfo* info, const char* type_name,
-                 CvIsInstanceFunc is_instance, CvReleaseFunc release,
-                 CvReadFunc read, CvWriteFunc write,
-                 CvCloneFunc clone )
-{
-    info->flags = 0;
-    info->header_size = sizeof(CvTypeInfo);
-    info->type_name = type_name;
-    info->prev = info->next = 0;
-    info->is_instance = is_instance;
-    info->release = release;
-    info->clone = clone;
-    info->read = read;
-    info->write = write;
+CvTypeInfo *CvType::first = 0, *CvType::last = 0;
 
-    return info;
+CvType::CvType( const char* type_name,
+                CvIsInstanceFunc is_instance, CvReleaseFunc release,
+                CvReadFunc read, CvWriteFunc write, CvCloneFunc clone )
+{
+    CvTypeInfo _info;
+    _info.flags = 0;
+    _info.header_size = sizeof(_info);
+    _info.type_name = type_name;
+    _info.prev = _info.next = 0;
+    _info.is_instance = is_instance;
+    _info.release = release;
+    _info.clone = clone;
+    _info.read = read;
+    _info.write = write;
+
+    cvRegisterType( &_info );
+    info = first;
 }
 
 
-static CvTypeInfo *icvFirstType = 0, *icvLastType = 0;
-
-static void
-icvCreateStandardTypes(void)
+CvType::~CvType()
 {
-    CvTypeInfo info;
-    CvTypeInfo dummy_first;
-
-    dummy_first.prev = dummy_first.next = 0;
-    icvFirstType = icvLastType = &dummy_first;
-
-    cvRegisterType( icvInitTypeInfo( &info, CV_TYPE_NAME_SEQ, icvIsSeq,
-                                     icvReleaseSeq, icvReadSeq,
-                                     icvWriteSeqTree /* this is the entry point for
-                                     writing a single sequence too */, icvCloneSeq ));
-    cvRegisterType( icvInitTypeInfo( &info, CV_TYPE_NAME_SEQ_TREE, icvIsSeq,
-                                     icvReleaseSeq, icvReadSeqTree,
-                                     icvWriteSeqTree, icvCloneSeq ));
-    cvRegisterType( icvInitTypeInfo( &info, CV_TYPE_NAME_GRAPH, icvIsGraph,
-                                     icvReleaseGraph, icvReadGraph,
-                                     icvWriteGraph, icvCloneGraph ));
-    cvRegisterType( icvInitTypeInfo( &info, CV_TYPE_NAME_SPARSE_MAT, icvIsSparseMat,
-                                     (CvReleaseFunc)cvReleaseSparseMat, icvReadSparseMat,
-                                     icvWriteSparseMat, (CvCloneFunc)cvCloneSparseMat ));
-    cvRegisterType( icvInitTypeInfo( &info, CV_TYPE_NAME_IMAGE, icvIsImage,
-                                    (CvReleaseFunc)cvReleaseImage,
-                                    icvReadImage, icvWriteImage,
-                                    (CvCloneFunc)cvCloneImage ));
-    cvRegisterType( icvInitTypeInfo( &info, CV_TYPE_NAME_MAT, icvIsMat,
-                                     (CvReleaseFunc)cvReleaseMat, icvReadMat,
-                                     icvWriteMat, (CvCloneFunc)cvCloneMat ));
-    cvRegisterType( icvInitTypeInfo( &info, CV_TYPE_NAME_MATND, icvIsMatND,
-                                     (CvReleaseFunc)cvReleaseMatND, icvReadMatND,
-                                     icvWriteMatND, (CvCloneFunc)cvCloneMatND ));
-
-    icvLastType = icvLastType->prev;
-    icvLastType->next = 0;
+    cvUnregisterType( info->type_name );
 }
 
+
+CvType seq_type( CV_TYPE_NAME_SEQ, icvIsSeq, icvReleaseSeq, icvReadSeq,
+                 icvWriteSeqTree /* this is the entry point for
+                 writing a single sequence too */, icvCloneSeq );
+
+CvType seq_tree_type( CV_TYPE_NAME_SEQ_TREE, icvIsSeq, icvReleaseSeq,
+                      icvReadSeqTree, icvWriteSeqTree, icvCloneSeq );
+
+CvType seq_graph_type( CV_TYPE_NAME_GRAPH, icvIsGraph, icvReleaseGraph,
+                       icvReadGraph, icvWriteGraph, icvCloneGraph );
+
+CvType sparse_mat_type( CV_TYPE_NAME_SPARSE_MAT, icvIsSparseMat,
+                        (CvReleaseFunc)cvReleaseSparseMat, icvReadSparseMat,
+                        icvWriteSparseMat, (CvCloneFunc)cvCloneSparseMat );
+    
+CvType image_type( CV_TYPE_NAME_IMAGE, icvIsImage, (CvReleaseFunc)cvReleaseImage,
+                   icvReadImage, icvWriteImage, (CvCloneFunc)cvCloneImage );
+
+CvType mat_type( CV_TYPE_NAME_MAT, icvIsMat, (CvReleaseFunc)cvReleaseMat,
+                 icvReadMat, icvWriteMat, (CvCloneFunc)cvCloneMat );
+    
+CvType matnd_type( CV_TYPE_NAME_MATND, icvIsMatND, (CvReleaseFunc)cvReleaseMatND,
+                   icvReadMatND, icvWriteMatND, (CvCloneFunc)cvCloneMatND );
 
 CV_IMPL  void
 cvRegisterType( const CvTypeInfo* _info )
@@ -4846,8 +4837,8 @@ cvRegisterType( const CvTypeInfo* _info )
     int i, len;
     char c;
     
-    if( !icvFirstType )
-        icvCreateStandardTypes();
+    //if( !CvType::first )
+    //    icvCreateStandardTypes();
 
     if( !_info || _info->header_size != sizeof(CvTypeInfo) )
         CV_ERROR( CV_StsBadSize, "Invalid type info" );
@@ -4879,8 +4870,13 @@ cvRegisterType( const CvTypeInfo* _info )
     memcpy( (char*)info->type_name, _info->type_name, len + 1 );
 
     info->flags = 0;
-    info->next = icvFirstType;
-    icvFirstType = icvFirstType->prev = info;
+    info->next = CvType::first;
+    info->prev = 0;
+    if( CvType::first )
+        CvType::first->prev = info;
+    else
+        CvType::last = info;
+    CvType::first = info;
 
     __END__;
 }
@@ -4901,15 +4897,15 @@ cvUnregisterType( const char* type_name )
         if( info->prev )
             info->prev->next = info->next;
         else
-            icvFirstType = info->next;
+            CvType::first = info->next;
 
         if( info->next )
             info->next->prev = info->prev;
         else
-            icvLastType = info->prev;
+            CvType::last = info->prev;
 
-        if( !icvFirstType || !icvLastType )
-            icvFirstType = icvLastType = 0;
+        if( !CvType::first || !CvType::last )
+            CvType::first = CvType::last = 0;
 
         cvFree( &info );
     }
@@ -4923,14 +4919,11 @@ cvFirstType( void )
 {
     CvTypeInfo* info = 0;
 
-    /*CV_FUNCNAME("cvFirstType" );*/
+    CV_FUNCNAME("cvFirstType" );
 
     __BEGIN__;
 
-    if( !icvFirstType )
-        icvCreateStandardTypes();
-
-    info = icvFirstType;
+    info = CvType::first;
 
     __END__;
 
@@ -4947,10 +4940,7 @@ cvFindType( const char* type_name )
 
     __BEGIN__;
 
-    if( !icvFirstType )
-        icvCreateStandardTypes();
-
-    for( info = icvFirstType; info != 0; info = info->next )
+    for( info = CvType::first; info != 0; info = info->next )
         if( strcmp( info->type_name, type_name ) == 0 )
             break;
 
@@ -4969,10 +4959,7 @@ cvTypeOf( const void* struct_ptr )
 
     __BEGIN__;
 
-    if( !icvFirstType )
-        icvCreateStandardTypes();
-
-    for( info = icvFirstType; info != 0; info = info->next )
+    for( info = CvType::first; info != 0; info = info->next )
         if( info->is_instance( struct_ptr ))
             break;
 

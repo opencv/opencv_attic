@@ -313,9 +313,33 @@ typedef struct CvPluginInfo
 CvPluginInfo;
 
 static CvPluginInfo plugins[CV_PLUGIN_MAX];
-static CvModuleInfo cxcore_module = { 0, "cxcore", "rc (0.9.9)", cxcore_ipp_tab };
+static CvModuleInfo cxcore_info = { 0, "cxcore", "rc (0.9.9)", cxcore_ipp_tab };
 
-static CvModuleInfo *icvFirstModule = 0, *icvLastModule = 0;
+CvModuleInfo *CvModule::first = 0, *CvModule::last = 0;
+
+CvModule::CvModule( CvModuleInfo* _info )
+{
+    cvRegisterModule( _info );
+    info = last;
+}
+
+CvModule::~CvModule()
+{
+    if( info )
+    {
+        CvModuleInfo* p = first;
+        for( ; p != 0 && p->next != info; p = p->next )
+            ;
+        if( p )
+            p->next = info->next;
+        if( first == info )
+            first = info->next;
+        if( last == info )
+            last = p;
+        cvFree( &info );
+        info = 0;
+    }
+}
 
 static int
 icvUpdatePluginFuncTab( CvPluginFuncInfo* func_tab )
@@ -458,13 +482,13 @@ cvRegisterModule( const CvModuleInfo* module )
     memcpy( (void*)module_copy->version, module->version, version_len + 1 );
     module_copy->next = 0;
 
-    if( icvFirstModule == 0 )
-        icvFirstModule = module_copy;
+    if( CvModule::first == 0 )
+        CvModule::first = module_copy;
     else
-        icvLastModule->next = module_copy;
-    icvLastModule = module_copy;
+        CvModule::last->next = module_copy;
+    CvModule::last = module_copy;
 
-    if( icvFirstModule == icvLastModule )
+    if( CvModule::first == CvModule::last )
     {
         CV_CALL( cvUseOptimized(1));
     }
@@ -566,13 +590,13 @@ cvUseOptimized( int load_flag )
         }
     }
 
-    for( module = icvFirstModule; module != 0; module = module->next )
+    for( module = CvModule::first; module != 0; module = module->next )
         loaded_functions += icvUpdatePluginFuncTab( module->func_tab );
 
     return loaded_functions;
 }
 
-static int loaded_functions = cvRegisterModule( &cxcore_module );
+CvModule cxcore_module( &cxcore_info );
 
 CV_IMPL void
 cvGetModuleInfo( const char* name, const char **version, const char **plugin_list )
@@ -598,7 +622,7 @@ cvGetModuleInfo( const char* name, const char **version, const char **plugin_lis
         {
             size_t i, name_len = strlen(name);
 
-            for( module = icvFirstModule; module != 0; module = module->next )
+            for( module = CvModule::first; module != 0; module = module->next )
             {
                 if( strlen(module->name) == name_len )
                 {
@@ -621,7 +645,7 @@ cvGetModuleInfo( const char* name, const char **version, const char **plugin_lis
         {
             char* ptr = joint_verinfo;
 
-            for( module = icvFirstModule; module != 0; module = module->next )
+            for( module = CvModule::first; module != 0; module = module->next )
             {
                 sprintf( ptr, "%s: %s%s", module->name, module->version, module->next ? ", " : "" );
                 ptr += strlen(ptr);
