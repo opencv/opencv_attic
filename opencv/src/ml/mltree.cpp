@@ -2536,7 +2536,8 @@ void CvDTree::free_prune_data(bool cut_tree)
         node = parent->right;
     }
 
-    cvClearSet( data->cv_heap );
+    if( data->cv_heap )
+        cvClearSet( data->cv_heap );
 }
 
 

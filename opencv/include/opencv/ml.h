@@ -1007,6 +1007,11 @@ public:
     virtual void load( const char* filename, const char* name=0 );
     virtual void read( CvFileStorage* fs, CvFileNode* node );
 
+    virtual void write_train_data_params( CvFileStorage* fs );
+    virtual void read_train_data_params( CvFileStorage* fs, CvFileNode* node );
+    virtual void write_tree_nodes( CvFileStorage* fs );
+    virtual void read_tree_nodes( CvFileStorage* fs, CvFileNode* node );
+
 protected:
 
     virtual bool do_train( const CvMat* _subsample_idx );
@@ -1032,10 +1037,6 @@ protected:
     virtual void free_prune_data(bool cut_tree);
     virtual void free_tree();
 
-    virtual void write_train_data_params( CvFileStorage* fs );
-    virtual void read_train_data_params( CvFileStorage* fs, CvFileNode* node );
-    virtual void write_tree_nodes( CvFileStorage* fs );
-    virtual void read_tree_nodes( CvFileStorage* fs, CvFileNode* node );
     virtual void write_node( CvFileStorage* fs, CvDTreeNode* node );
     virtual void write_split( CvFileStorage* fs, CvDTreeSplit* split );
     virtual CvDTreeNode* read_node( CvFileStorage* fs, CvFileNode* node, CvDTreeNode* parent );
