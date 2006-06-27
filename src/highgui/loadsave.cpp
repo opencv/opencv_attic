@@ -396,10 +396,10 @@ icvLoadImage( const char* filename, int iscolor, bool load_as_matrix )
 
     if( !reader->ReadData( matrix->data.ptr, matrix->step, iscolor ))
     {
-        if( image )
-            cvReleaseImage( &image );
-        else
+        if( load_as_matrix )
             cvReleaseMat( &matrix );
+        else
+            cvReleaseImage( &image );
         EXIT;
     }
 
@@ -409,13 +409,13 @@ icvLoadImage( const char* filename, int iscolor, bool load_as_matrix )
 
     if( cvGetErrStatus() < 0 )
     {
-        if( image )
-            cvReleaseImage( &image );
-        else
+        if( load_as_matrix )
             cvReleaseMat( &matrix );
+        else
+            cvReleaseImage( &image );
     }
 
-    return image ? (void*)image : (void*)matrix;
+    return load_as_matrix ? (void*)matrix : (void*)image;
 }
 
 
