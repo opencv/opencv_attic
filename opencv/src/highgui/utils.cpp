@@ -228,6 +228,48 @@ void icvCvt_BGR5652BGR_8u_C2C3R( const uchar* bgr565, int bgr565_step,
     }
 }
 
+
+void icvCvt_CMYK2BGR_8u_C4C3R( const uchar* cmyk, int cmyk_step,
+                               uchar* bgr, int bgr_step, CvSize size )
+{
+    int i;
+    for( ; size.height--; )
+    {
+        for( i = 0; i < size.width; i++, bgr += 3, cmyk += 4 )
+        {
+            int c = cmyk[0], m = cmyk[1], y = cmyk[2], k = cmyk[3];
+            c = k - ((255 - c)*k>>8);
+            m = k - ((255 - m)*k>>8);
+            y = k - ((255 - y)*k>>8);
+            bgr[2] = (uchar)c; bgr[1] = (uchar)m; bgr[0] = (uchar)y;
+        }
+        bgr += bgr_step - size.width*3;
+        cmyk += cmyk_step - size.width*4;
+    }
+}
+
+
+void icvCvt_CMYK2Gray_8u_C4C1R( const uchar* cmyk, int cmyk_step,
+                                uchar* gray, int gray_step, CvSize size )
+{
+    int i;
+    for( ; size.height--; )
+    {
+        for( i = 0; i < size.width; i++, cmyk += 4 )
+        {
+            int c = cmyk[0], m = cmyk[1], y = cmyk[2], k = cmyk[3];
+            c = k - ((255 - c)*k>>8);
+            m = k - ((255 - m)*k>>8);
+            y = k - ((255 - y)*k>>8);
+            int t = descale( y*cB + m*cG + c*cR, SCALE );
+            gray[i] = (uchar)t;
+        }
+        gray += gray_step;
+        cmyk += cmyk_step - size.width*4;
+    }
+}
+
+
 void CvtPaletteToGray( const PaletteEntry* palette, uchar* grayPalette, int entries )
 {
     int i;

@@ -339,49 +339,75 @@ bool  GrFmtJpegReader::ReadData( uchar* data, int step, int color )
         
         if( setjmp( jerr->setjmp_buffer ) == 0 )
         {
-            int planes = m_iscolor ? 3 : 1;
-            int width_n = m_width * planes;
+            /* check if this is a mjpeg image format */
+            if ( cinfo->ac_huff_tbl_ptrs[0] == NULL &&
+                cinfo->ac_huff_tbl_ptrs[1] == NULL &&
+                cinfo->dc_huff_tbl_ptrs[0] == NULL &&
+                cinfo->dc_huff_tbl_ptrs[1] == NULL )
+            {
+                /* yes, this is a mjpeg image format, so load the correct
+                huffman table */
+                my_jpeg_load_dht( cinfo,
+                    my_jpeg_odml_dht,
+                    cinfo->ac_huff_tbl_ptrs,
+                    cinfo->dc_huff_tbl_ptrs );
+            }
 
-	    /* check if this is a mjpeg image format */
-	    if ( cinfo->ac_huff_tbl_ptrs[0] == NULL &&
-		 cinfo->ac_huff_tbl_ptrs[1] == NULL &&
-		 cinfo->dc_huff_tbl_ptrs[0] == NULL &&
-		 cinfo->dc_huff_tbl_ptrs[1] == NULL ) {
-		/* yes, this is a mjpeg image format, so load the correct
-		   huffman table */
-		my_jpeg_load_dht( cinfo,
-				  my_jpeg_odml_dht,
-				  cinfo->ac_huff_tbl_ptrs,
-				  cinfo->dc_huff_tbl_ptrs );
-	    }
+            if( color > 0 || (m_iscolor && color < 0) )
+            {
+                color = 1;
+                if( cinfo->num_components != 4 )
+                {
+                    cinfo->out_color_space = JCS_RGB;
+                    cinfo->out_color_components = 3;
+                }
+                else
+                {
+                    cinfo->out_color_space = JCS_CMYK;
+                    cinfo->out_color_components = 4;
+                }
+            }
+            else
+            {
+                color = 0;
+                if( cinfo->num_components != 4 )
+                {
+                    cinfo->out_color_space = JCS_GRAYSCALE;
+                    cinfo->out_color_components = 1;
+                }
+                else
+                {
+                    cinfo->out_color_space = JCS_CMYK;
+                    cinfo->out_color_components = 4;
+                }
+            }
 
             jpeg_start_decompress( cinfo );
 
             buffer = (*cinfo->mem->alloc_sarray)((j_common_ptr)cinfo,
-                                              JPOOL_IMAGE, width_n, 1 );
+                                              JPOOL_IMAGE, m_width*4, 1 );
 
             for( ; m_height--; data += step )
             {
                 jpeg_read_scanlines( cinfo, buffer, 1 );
                 if( color )
                 {
-                    if( m_iscolor )
+                    if( cinfo->out_color_components == 3 )
                         icvCvt_RGB2BGR_8u_C3R( buffer[0], 0, data, 0, cvSize(m_width,1) );
                     else
-                        icvCvt_Gray2BGR_8u_C1C3R( buffer[0], 0, data, 0, cvSize(m_width,1) );
+                        icvCvt_CMYK2BGR_8u_C4C3R( buffer[0], 0, data, 0, cvSize(m_width,1) );
                 }
                 else
                 {
-                    if( m_iscolor )
-                        icvCvt_BGR2Gray_8u_C3C1R( buffer[0], 0, data, 0, cvSize(m_width,1), 2 );
-                    else
+                    if( cinfo->out_color_components == 1 )
                         memcpy( data, buffer[0], m_width );
+                    else
+                        icvCvt_CMYK2Gray_8u_C4C1R( buffer[0], 0, data, 0, cvSize(m_width,1) );
                 }
             }
             result = true;
+            jpeg_finish_decompress( cinfo );
         }
-
-        jpeg_finish_decompress( cinfo );
     }
 
     Close();
