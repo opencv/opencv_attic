@@ -90,8 +90,9 @@ cvBoxPoints( CvBox2D box, CvPoint2D32f pt[4] )
 
     __BEGIN__;
     
-    float a = (float)cos(box.angle)*0.5f;
-    float b = (float)sin(box.angle)*0.5f;
+    double angle = box.angle*CV_PI/180.
+    float a = (float)cos(angle)*0.5f;
+    float b = (float)sin(angle)*0.5f;
 
     if( !pt )
         CV_ERROR( CV_StsNullPtr, "NULL vertex array pointer" );
