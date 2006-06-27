@@ -1055,7 +1055,7 @@ typedef struct CvBox2D
     CvPoint2D32f center;  /* center of the box */
     CvSize2D32f  size;    /* box width and length */
     float angle;          /* angle between the horizontal axis
-                             and the first side (i.e. length) in radians */
+                             and the first side (i.e. length) in degrees */
 }
 CvBox2D;
 
