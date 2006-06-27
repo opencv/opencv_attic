@@ -450,10 +450,12 @@ bool CvRTrees::grow_forest( CvDTreeTrainData* train_data, const CvTermCriteria t
     return result;
 }
 
+
 inline const CvMat* CvRTrees::get_var_importance() const
 {
     return var_importance;
 }
+
 
 float CvRTrees::get_proximity( int i, int j ) const
 {
@@ -522,6 +524,8 @@ double CvRTrees::predict( const CvMat* sample, CvMat* missing ) const
 
     return result;
 }
+
+
 void CvRTrees::save( const char* filename, const char* name )
 {
     CvFileStorage* fs = 0;
@@ -540,6 +544,8 @@ void CvRTrees::save( const char* filename, const char* name )
 
     cvReleaseFileStorage( &fs );
 }
+
+
 void CvRTrees::write( CvFileStorage* fs, const char* name )
 {
     CV_FUNCNAME( "CvRTrees::write" );
@@ -570,6 +576,8 @@ void CvRTrees::write( CvFileStorage* fs, const char* name )
 
     __END__;
 }
+
+
 void CvRTrees::load( const char* filename, const char* name )
 {
     CvFileStorage* fs = 0;
@@ -608,6 +616,9 @@ void CvRTrees::read( CvFileStorage* fs, CvFileNode* fnode )
     __BEGIN__;
 
     int nactive_vars, var_count, k;
+    CvSeqReader reader;
+    CvMat submask1, submask2;
+    CvFileNode* trees_node;
 
     clear();
 
@@ -628,22 +639,19 @@ void CvRTrees::read( CvFileStorage* fs, CvFileNode* fnode )
     rng = CvRNG( -1 );
 
     CV_CALL(active_var_mask = cvCreateMat( 1, var_count, CV_8UC1 ));
-    CvMat submask1, submask2;
+    
     cvGetCols( active_var_mask, &submask1, 0, nactive_vars );
     cvGetCols( active_var_mask, &submask2, nactive_vars, var_count );
     cvSet( &submask1, cvScalar(1) );
     cvZero( &submask2 );
 
-    CvFileNode* trees_node = cvGetFileNodeByName( fs, fnode, "trees" );
+    trees_node = cvGetFileNodeByName( fs, fnode, "trees" );
     if( !trees_node || !CV_NODE_IS_SEQ(trees_node->tag) )
         CV_ERROR( CV_StsParseError, "trees tag is missing" );
 
     trees = (CvForestTree**)cvAlloc( sizeof(CvStatModel*)*ntrees );
     memset( trees, 0, sizeof(CvStatModel*)*ntrees );
 
-
-
-    CvSeqReader reader;
     cvStartReadSeq( trees_node->data.seq, &reader );
     if( reader.seq->total != ntrees )
         CV_ERROR( CV_StsParseError, "<ntrees> is not equal to the number of trees saved in file" );
