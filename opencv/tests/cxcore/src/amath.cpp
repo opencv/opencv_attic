@@ -1643,7 +1643,7 @@ void CxCore_TransformTest::print_timing_params( int test_case_idx, char* ptr, in
 double CxCore_TransformTest::get_success_error_level( int test_case_idx, int i, int j )
 {
     int depth = CV_MAT_DEPTH(test_mat[INPUT][0].type);
-    return depth == CV_8U ? 1 : depth == CV_16S || depth == CV_16U ? 8 :
+    return depth <= CV_8S ? 1 : depth <= CV_32S ? 8 :
         CxCore_MatrixTest::get_success_error_level( test_case_idx, i, j );
 }
 
