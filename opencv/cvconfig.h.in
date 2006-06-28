@@ -111,6 +111,9 @@
 /* LZ77 compression/decompression library (used for PNG) */
 #undef HAVE_ZLIB
 
+/* Define when building universal binaries on Mac OS X */
+#undef OPENCV_UNIVERSAL_BUILD
+
 /* Name of package */
 #undef PACKAGE
 
