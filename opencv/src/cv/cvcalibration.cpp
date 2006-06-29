@@ -987,8 +987,7 @@ cvFindExtrinsicCameraParams2( const CvMat* obj_points,
     // (unapply the intrinsic matrix transformation and distortion)
     for( i = 0; i < count; i++ )
     {
-        double x = m[i].x, y = m[i].y;
-        x = (x - cx)*ifx; y = (y - cy)*ify;
+        double x = (m[i].x - cx)*ifx, y = (m[i].y - cy)*ify, x0 = x, y0 = y;
 
         // compensate distortion iteratively
         if( dist_coeffs )
@@ -998,8 +997,8 @@ cvFindExtrinsicCameraParams2( const CvMat* obj_points,
                 double icdist = 1./(1 + k[0]*r2 + k[1]*r2*r2);
                 double delta_x = 2*k[2]*x*y + k[3]*(r2 + 2*x*x);
                 double delta_y = k[2]*(r2 + 2*y*y) + 2*k[3]*x*y;
-                x = (x - delta_x)*icdist;
-                y = (y - delta_y)*icdist;
+                x = (x0 - delta_x)*icdist;
+                y = (y0 - delta_y)*icdist;
             }
         mn[i].x = x; mn[i].y = y;
 
