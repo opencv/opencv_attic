@@ -1058,10 +1058,7 @@ class CvRTrees;
 
 class CV_EXPORTS CvForestTree: public CvDTree
 {
-    virtual CvDTreeSplit* find_best_split( CvDTreeNode* n );
-
 public:
-
     CvForestTree();
     virtual ~CvForestTree();
 
@@ -1070,11 +1067,11 @@ public:
     virtual void share_data( bool share ) { data->shared = share; }
     // if _data == 0, then it will be read from file,
     // otherwise this->data will be assigned to _data
-    virtual void read( CvFileStorage* fs, CvFileNode* node, CvDTreeTrainData** _data = 0 );
-    virtual void write( CvFileStorage* fs,
-                        const char* name,
-                        bool write_train_data_params = false );
+    virtual void read( CvFileStorage* fs, CvFileNode* node, CvRTrees* forest, CvDTreeTrainData** _data = 0 );
+    virtual void write( CvFileStorage* fs, const char* name, bool write_train_data_params = false );
 
+protected:
+    virtual CvDTreeSplit* find_best_split( CvDTreeNode* n );
     CvRTrees* forest;
 };
 

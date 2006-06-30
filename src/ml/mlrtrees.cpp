@@ -143,11 +143,13 @@ CvDTreeSplit* CvForestTree::find_best_split( CvDTreeNode* node )
 }
 
 
-void CvForestTree::read( CvFileStorage* fs, CvFileNode* fnode, CvDTreeTrainData** pdata )
+void CvForestTree::read( CvFileStorage* fs, CvFileNode* fnode, CvRTrees* _forest, CvDTreeTrainData** pdata )
 {
     CV_FUNCNAME( "CvForestTree::read" );
 
     __BEGIN__;
+
+    forest = _forest;
 
     if( pdata && *pdata )
         data = *pdata;
@@ -755,8 +757,7 @@ void CvRTrees::read( CvFileStorage* fs, CvFileNode* fnode )
     for( k = 0; k < ntrees; k++ )
     {
         trees[k] = new CvForestTree();
-        trees[k]->forest = this;
-        CV_CALL(trees[k]->read( fs, (CvFileNode*)reader.ptr, &train_data ));
+        CV_CALL(trees[k]->read( fs, (CvFileNode*)reader.ptr, this, &train_data ));
         CV_NEXT_SEQ_ELEM( reader.seq->elem_size, reader );
     }
 
