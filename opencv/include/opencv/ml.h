@@ -1007,11 +1007,6 @@ public:
     virtual void load( const char* filename, const char* name=0 );
     virtual void read( CvFileStorage* fs, CvFileNode* node );
 
-    virtual void write_train_data_params( CvFileStorage* fs );
-    virtual void read_train_data_params( CvFileStorage* fs, CvFileNode* node );
-    virtual void write_tree_nodes( CvFileStorage* fs );
-    virtual void read_tree_nodes( CvFileStorage* fs, CvFileNode* node );
-
 protected:
 
     virtual bool do_train( const CvMat* _subsample_idx );
@@ -1041,6 +1036,10 @@ protected:
     virtual void write_split( CvFileStorage* fs, CvDTreeSplit* split );
     virtual CvDTreeNode* read_node( CvFileStorage* fs, CvFileNode* node, CvDTreeNode* parent );
     virtual CvDTreeSplit* read_split( CvFileStorage* fs, CvFileNode* node );
+    virtual void write_train_data_params( CvFileStorage* fs );
+    virtual void read_train_data_params( CvFileStorage* fs, CvFileNode* node );
+    virtual void write_tree_nodes( CvFileStorage* fs );
+    virtual void read_tree_nodes( CvFileStorage* fs, CvFileNode* node );
 
     CvDTreeNode* root;
     
@@ -1059,12 +1058,22 @@ class CvRTrees;
 
 class CV_EXPORTS CvForestTree: public CvDTree
 {
+    virtual CvDTreeSplit* find_best_split( CvDTreeNode* n );
+
 public:
 
     CvForestTree();
     virtual ~CvForestTree();
+
     virtual bool train( CvDTreeTrainData* _train_data, const CvMat* _subsample_idx, CvRTrees* forest );
-    virtual CvDTreeSplit* find_best_split( CvDTreeNode* n );
+    virtual int get_var_count() const {return data ? data->var_count : 0;}
+    virtual void share_data( bool share ) { data->shared = share; }
+    // if _data == 0, then it will be read from file,
+    // otherwise this->data will be assigned to _data
+    virtual void read( CvFileStorage* fs, CvFileNode* node, CvDTreeTrainData** _data = 0 );
+    virtual void write( CvFileStorage* fs,
+                        const char* name,
+                        bool write_train_data_params = false );
 
     CvRTrees* forest;
 };
@@ -1128,12 +1137,10 @@ public:
                         const CvMat* _sample_idx=0, const CvMat* _var_type=0,
                         const CvMat* _missing_mask=0,
                         CvRTParams params=CvRTParams() );
-    virtual double predict( const CvMat* _sample, CvMat* probs = 0 ) const;
+    virtual double predict( const CvMat* sample, CvMat* missing = 0 ) const;
 
     virtual inline const CvMat* get_var_importance() const;
     virtual float get_proximity( int i, int j ) const;
-
-    virtual void clear();
 
     virtual void save( const char* filename, const char* name=0 );
     virtual void write( CvFileStorage* fs, const char* name );
@@ -1142,14 +1149,15 @@ public:
 
     CvRNG rng;
     CvMat* active_var_mask;
-    int ntrees;
 
 protected:
+
+    virtual void clear();
     bool grow_forest( CvDTreeTrainData* train_data, const CvTermCriteria term_crit );
 
     // array of the trees of the forest
     CvForestTree** trees;
-
+    int ntrees;
     int nclasses;
     double oob_error;
     CvMat* var_importance;
