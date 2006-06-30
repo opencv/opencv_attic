@@ -649,9 +649,9 @@ cvMerge( const void* srcarr0, const void* srcarr1, const void* srcarr2,
 #define  ICV_DEF_MIX_CH_FUNC_2D( arrtype, flavor )              \
 static CvStatus CV_STDCALL                                      \
 icvMixChannels_##flavor( const arrtype** src, int* sdelta0,     \
-                           int* sdelta1, arrtype** dst,         \
-                           int* ddelta0, int* ddelta1,          \
-                           int n, CvSize size )                 \
+                         int* sdelta1, arrtype** dst,           \
+                         int* ddelta0, int* ddelta1,            \
+                         int n, CvSize size )                   \
 {                                                               \
     int i, k;                                                   \
     int block_size0 = n == 1 ? size.width : 1024;               \
@@ -866,19 +866,8 @@ cvMixChannels( const CvArr** src, int src_count,
                 }
             }
 
-            while( a <= b )
-            {
-                int m = (a + b) >> 1;
-                if( cn >= cn_arr[m+1] )
-                    a = m;
-                else if( cn < cn_arr[m] )
-                    b = m;
-                else
-                {
-                    a = m;
-                    break;
-                }
-            }
+            for( ; cn >= cn_arr[a+1]; a++ )
+                ;
             
             if( k == 0 )
             {
@@ -1519,6 +1508,7 @@ cvConvertScale( const void* srcarr, void* dstarr,
     CvMat  dststub, *dst = (CvMat*)dstarr;
     CvSize size;
     int src_step, dst_step;
+    int no_scale = scale == 1 && shift == 0;
 
     if( !CV_IS_MAT(src) )
     {
@@ -1568,7 +1558,7 @@ cvConvertScale( const void* srcarr, void* dstarr,
             inittab = 1;
         }
 
-        if( scale == 1 && shift == 0 )
+        if( no_scale )
         {
             CvCvtFunc func = (CvCvtFunc)(cvt_tab.fn_2d[CV_MAT_DEPTH(dsttype)]);
             if( !func )
@@ -1597,6 +1587,12 @@ cvConvertScale( const void* srcarr, void* dstarr,
             }
             while( cvNextNArraySlice( &iterator ));
         }
+        EXIT;
+    }
+
+    if( no_scale && CV_ARE_TYPES_EQ( src, dst ) )
+    {
+        cvCopy( src, dst );
         EXIT;
     }
 
@@ -1659,20 +1655,15 @@ cvConvertScale( const void* srcarr, void* dstarr,
     if( !CV_ARE_CNS_EQ( src, dst ))
         CV_ERROR( CV_StsUnmatchedFormats, "" );
 
-    if( scale == 1 && shift == 0 )
+    if( no_scale )
     {
-        if( !CV_ARE_DEPTHS_EQ( src, dst ))
-        {
-            CvCvtFunc func = (CvCvtFunc)(cvt_tab.fn_2d[CV_MAT_DEPTH(dst->type)]);
+        CvCvtFunc func = (CvCvtFunc)(cvt_tab.fn_2d[CV_MAT_DEPTH(dst->type)]);
 
-            if( !func )
-                CV_ERROR( CV_StsUnsupportedFormat, "" );
+        if( !func )
+            CV_ERROR( CV_StsUnsupportedFormat, "" );
 
-            IPPI_CALL( func( src->data.ptr, src_step,
-                       dst->data.ptr, dst_step, size, type ));
-        }
-        else
-            cvCopy( src, dst );
+        IPPI_CALL( func( src->data.ptr, src_step,
+                   dst->data.ptr, dst_step, size, type ));
     }
     else
     {
