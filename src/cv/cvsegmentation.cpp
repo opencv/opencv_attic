@@ -330,8 +330,8 @@ cvPyrMeanShiftFiltering( const CvArr* srcarr, CvArr* dstarr,
     int i, j, level;
     //uchar* submask = 0;
 
-    #define cdiff(ofs0) (tab[c0-dptr[ofs0]+255] >= isr22 || \
-        tab[c1-dptr[(ofs0)+1]+255] >= isr22 || tab[c2-dptr[(ofs0)+2]+255] >= isr22)
+    #define cdiff(ofs0) (tab[c0-dptr[ofs0]+255] + \
+        tab[c1-dptr[(ofs0)+1]+255] + tab[c2-dptr[(ofs0)+2]+255] >= isr22)
 
     memset( src_pyramid, 0, sizeof(src_pyramid) );
     memset( dst_pyramid, 0, sizeof(dst_pyramid) );
