@@ -695,7 +695,7 @@ bool CvCalibFilter::SaveCameraParams( const char* filename )
         return true;
     }
 
-    return false;
+    return true;
 }
 
 
@@ -753,7 +753,7 @@ bool CvCalibFilter::LoadCameraParams( const char* filename )
 
     isCalibrated = true;
     
-    return false;
+    return true;
 }
 
 
@@ -823,7 +823,7 @@ bool CvCalibFilter::Rectify( CvMat** srcarr, CvMat** dstarr )
         }
     }
 
-    return false;
+    return true;
 }
 
 bool CvCalibFilter::Undistort( IplImage** srcarr, IplImage** dstarr )
@@ -901,5 +901,5 @@ bool CvCalibFilter::Undistort( CvMat** srcarr, CvMat** dstarr )
     }
 
 
-    return false;
+    return true;
 }
