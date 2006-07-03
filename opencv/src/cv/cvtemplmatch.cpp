@@ -139,7 +139,7 @@ icvCrossCorr( const CvArr* _img, const CvArr* _templ, CvArr* _corr, CvPoint anch
         buf_size = MAX( buf_size, (blocksize.width + templ->cols - 1)*
             (blocksize.height + templ->rows - 1)*CV_ELEM_SIZE(depth));
 
-    if( corr_depth > 1 && corr_depth != max_depth )
+    if( (corr_cn > 1 || cn > 1) && corr_depth != max_depth )
         buf_size = MAX( buf_size, blocksize.width*blocksize.height*CV_ELEM_SIZE(corr_depth));
 
     if( buf_size > 0 )
@@ -246,7 +246,15 @@ icvCrossCorr( const CvArr* _img, const CvArr* _templ, CvArr* _corr, CvPoint anch
                     if( i == 0 )
                         cvConvert( src, dst );
                     else
-                        cvAcc( src, dst );                    
+                    {
+                        if( max_depth > corr_depth )
+                        {
+                            cvInitMatHeader( &temp, csz.height, csz.width, corr_depth, buf );
+                            cvConvert( src, &temp );
+                            src = &temp;
+                        }
+                        cvAcc( src, dst );
+                    }
                 }
             }
         }
