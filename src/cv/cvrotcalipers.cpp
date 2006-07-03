@@ -462,6 +462,8 @@ cvMinAreaRect2( const CvArr* array, CvMemStorage* storage )
             box.center = points[0];
     }
 
+    box.angle = (float)(box.angle*180/CV_PI);
+
     __END__; 
 
     cvReleaseMemStorage( &temp_storage );
