@@ -46,7 +46,7 @@
 #include <setjmp.h>
 
 #if _MSC_VER >= 1200
-    #pragma warning( disable: 4711 )
+    #pragma warning( disable: 4711 4324 )
 #endif
 
 #define  RBS_THROW_EOS    -123  /* <end of stream> exception code */
