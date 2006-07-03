@@ -1812,7 +1812,7 @@ void cvCombineResponseMaps (CvMat*  _responses,
     {
         if (*old_data[i] == *new_data[j])
         {
-            *new_data[j] = old_data[i] - first;
+            *new_data[j] = (int)(old_data[i] - first);
             i++;
             j++;
         }

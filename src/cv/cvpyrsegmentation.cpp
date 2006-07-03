@@ -482,7 +482,7 @@ icvPyrSegmentation8uC1R( uchar * src_image, int src_step,
 
                         if( l == 0 )
                         {
-                            p_prev = _CV_NEXT_BASE_C1(p_prev, 1 << (int)(j * 2 < step - 2));
+                            p_prev = _CV_NEXT_BASE_C1(p_prev, (j * 2 < step - 2 ? 2 : 1));
                         }
                         else
                         {
@@ -912,7 +912,7 @@ icvPyrSegmentation8uC3R( uchar * src_image, int src_step,
 
                         if( l == 0 )
                         {
-                            p_prev = _CV_NEXT_BASE_C3( p_prev, 1 << (int)(j * 2 < step - 2));
+                            p_prev = _CV_NEXT_BASE_C3( p_prev, (j * 2 < step - 2 ? 2 : 1));
                         }
                         else
                         {
@@ -1444,6 +1444,7 @@ icvSegmentClusterC1( CvSeq * cmp_seq, CvSeq * res_seq,
             comp.rect.y = cmp->rect.y1;
             comp.rect.width = cmp->rect.x2 - cmp->rect.x1;
             comp.rect.height = cmp->rect.y2 - cmp->rect.y1;
+            comp.contour = 0;
 
             CV_WRITE_SEQ_ELEM( comp, writer );
             CV_NEXT_SEQ_ELEM( sizeof( _CvListNode ), reader );
@@ -1548,6 +1549,7 @@ icvSegmentClusterC1( CvSeq * cmp_seq, CvSeq * res_seq,
             comp.rect.y = temp_cmp.rect.y1;
             comp.rect.width = temp_cmp.rect.x2 - temp_cmp.rect.x1;
             comp.rect.height = temp_cmp.rect.y2 - temp_cmp.rect.y1;
+            comp.contour = 0;
 
             CV_WRITE_SEQ_ELEM( comp, writer );
             prev = stub_node.next;
@@ -1625,6 +1627,7 @@ icvSegmentClusterC3( CvSeq * cmp_seq, CvSeq * res_seq,
             comp.rect.y = cmp->rect.y1;
             comp.rect.width = cmp->rect.x2 - cmp->rect.x1;
             comp.rect.height = cmp->rect.y2 - cmp->rect.y1;
+            comp.contour = 0;
 
             CV_WRITE_SEQ_ELEM( comp, writer );
             CV_NEXT_SEQ_ELEM( sizeof( _CvListNode ), reader );
@@ -1739,6 +1742,7 @@ icvSegmentClusterC3( CvSeq * cmp_seq, CvSeq * res_seq,
             comp.rect.y = temp_cmp.rect.y1;
             comp.rect.width = temp_cmp.rect.x2 - temp_cmp.rect.x1;
             comp.rect.height = temp_cmp.rect.y2 - temp_cmp.rect.y1;
+            comp.contour = 0;
 
             CV_WRITE_SEQ_ELEM( comp, writer );
             prev = stub_node.next;

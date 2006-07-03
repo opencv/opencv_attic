@@ -296,6 +296,11 @@ cvCalcGlobalOrientation( const void* orientation, const void* maskimg, const voi
     float _ranges[] = { 0, 360 };
     float* ranges = _ranges;
     int base_orient;
+    double shift_orient = 0, shift_weight = 0, fbase_orient;
+    double a, b;
+    float delbound;
+    CvMat mhi_row, mask_row, orient_row;
+    int x, y, mhi_rows, mhi_cols;
 
     CV_CALL( mhi = cvGetMat( mhi, &mhistub ));
     CV_CALL( mask = cvGetMat( mask, &maskstub ));
@@ -330,71 +335,67 @@ cvCalcGlobalOrientation( const void* orientation, const void* maskimg, const voi
     cvMinMaxLoc( mhi, 0, &curr_mhi_timestamp, 0, 0, mask );
 
     // find the shift relative to the dominant orientation as weighted sum of relative angles
+    a = 254. / 255. / mhi_duration;
+    b = 1. - curr_mhi_timestamp * a;
+    fbase_orient = base_orient;
+    delbound = (float)(curr_mhi_timestamp - mhi_duration);
+    mhi_rows = mhi->rows;
+    mhi_cols = mhi->cols;
+
+    if( CV_IS_MAT_CONT( mhi->type & mask->type & orient->type ))
     {
-        double shift_orient = 0, shift_weight = 0;
-        double a = (254. / 255.) / mhi_duration;
-        double b = 1. - curr_mhi_timestamp * a;
-        double fbase_orient = base_orient;
-        float delbound = (float)(curr_mhi_timestamp - mhi_duration);
-        CvMat mhi_row, mask_row, orient_row;
-        int x, y, mhi_rows = mhi->rows, mhi_cols = mhi->cols;
-
-        if( CV_IS_MAT_CONT( mhi->type & mask->type & orient->type ))
-        {
-            mhi_cols *= mhi_rows;
-            mhi_rows = 1;
-        }
-
-        cvGetRow( mhi, &mhi_row, 0 );
-        cvGetRow( mask, &mask_row, 0 );
-        cvGetRow( orient, &orient_row, 0 );
-
-        /*
-           a = 254/(255*dt)
-           b = 1 - t*a = 1 - 254*t/(255*dur) =
-           (255*dt - 254*t)/(255*dt) =
-           (dt - (t - dt)*254)/(255*dt);
-           --------------------------------------------------------
-           ax + b = 254*x/(255*dt) + (dt - (t - dt)*254)/(255*dt) =
-           (254*x + dt - (t - dt)*254)/(255*dt) =
-           ((x - (t - dt))*254 + dt)/(255*dt) =
-           (((x - (t - dt))/dt)*254 + 1)/255 = (((x - low_time)/dt)*254 + 1)/255
-         */
-        for( y = 0; y < mhi_rows; y++ )
-        {
-            mhi_row.data.ptr = mhi->data.ptr + mhi->step*y;
-            mask_row.data.ptr = mask->data.ptr + mask->step*y;
-            orient_row.data.ptr = orient->data.ptr + orient->step*y;
-
-            for( x = 0; x < mhi_cols; x++ )
-                if( mask_row.data.ptr[x] != 0 && mhi_row.data.fl[x] > delbound )
-                {
-                    /*
-                       orient in 0..360, base_orient in 0..360
-                       -> (rel_angle = orient - base_orient) in -360..360.
-                       rel_angle is translated to -180..180
-                     */
-                    double weight = mhi_row.data.fl[x] * a + b;
-                    int rel_angle = cvRound( orient_row.data.fl[x] - fbase_orient );
-
-                    rel_angle += (rel_angle < -180 ? 360 : 0);
-                    rel_angle += (rel_angle > 180 ? -360 : 0);
-
-                    if( abs(rel_angle) < 90 )
-                    {
-                        shift_orient += weight * rel_angle;
-                        shift_weight += weight;
-                    }
-                }
-        }
-
-        // add the dominant orientation and the relative shift
-        if( shift_weight == 0 )
-            shift_weight = 0.01;
-
-        base_orient = base_orient + cvRound( shift_orient / shift_weight );
+        mhi_cols *= mhi_rows;
+        mhi_rows = 1;
     }
 
+    cvGetRow( mhi, &mhi_row, 0 );
+    cvGetRow( mask, &mask_row, 0 );
+    cvGetRow( orient, &orient_row, 0 );
+
+    /*
+       a = 254/(255*dt)
+       b = 1 - t*a = 1 - 254*t/(255*dur) =
+       (255*dt - 254*t)/(255*dt) =
+       (dt - (t - dt)*254)/(255*dt);
+       --------------------------------------------------------
+       ax + b = 254*x/(255*dt) + (dt - (t - dt)*254)/(255*dt) =
+       (254*x + dt - (t - dt)*254)/(255*dt) =
+       ((x - (t - dt))*254 + dt)/(255*dt) =
+       (((x - (t - dt))/dt)*254 + 1)/255 = (((x - low_time)/dt)*254 + 1)/255
+     */
+    for( y = 0; y < mhi_rows; y++ )
+    {
+        mhi_row.data.ptr = mhi->data.ptr + mhi->step*y;
+        mask_row.data.ptr = mask->data.ptr + mask->step*y;
+        orient_row.data.ptr = orient->data.ptr + orient->step*y;
+
+        for( x = 0; x < mhi_cols; x++ )
+            if( mask_row.data.ptr[x] != 0 && mhi_row.data.fl[x] > delbound )
+            {
+                /*
+                   orient in 0..360, base_orient in 0..360
+                   -> (rel_angle = orient - base_orient) in -360..360.
+                   rel_angle is translated to -180..180
+                 */
+                double weight = mhi_row.data.fl[x] * a + b;
+                int rel_angle = cvRound( orient_row.data.fl[x] - fbase_orient );
+
+                rel_angle += (rel_angle < -180 ? 360 : 0);
+                rel_angle += (rel_angle > 180 ? -360 : 0);
+
+                if( abs(rel_angle) < 90 )
+                {
+                    shift_orient += weight * rel_angle;
+                    shift_weight += weight;
+                }
+            }
+    }
+
+    // add the dominant orientation and the relative shift
+    if( shift_weight == 0 )
+        shift_weight = 0.01;
+
+    base_orient = base_orient + cvRound( shift_orient / shift_weight );
     base_orient -= (base_orient < 360 ? 0 : 360);
     base_orient += (base_orient >= 0 ? 0 : 360);
 

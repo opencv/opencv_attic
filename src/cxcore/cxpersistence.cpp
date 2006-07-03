@@ -2585,7 +2585,7 @@ icvXMLWriteComment( CvFileStorage* fs, const char* comment, int eol_comment )
     {
         ptr = icvFSResizeWriteBuffer( fs, ptr, len + 9 );
         sprintf( ptr, "<!-- %s -->", comment );
-        len = strlen(ptr);
+        len = (int)strlen(ptr);
     }
     else
     {
@@ -2720,7 +2720,7 @@ cvOpenFileStorage( const char* filename, CvMemStorage* dststorage, int flags )
                         ptr = strstr( ptr, substr );
                         if( !ptr )
                             break;
-                        last_occurence = line_offset + (ptr - ptr0);
+                        last_occurence = line_offset + (int)(ptr - ptr0);
                         ptr += strlen(substr);
                     }
                 }
