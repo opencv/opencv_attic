@@ -24,7 +24,7 @@
 <hr><h3><a name="decl_cvNamedWindow">cvNamedWindow</a></h3>
 <p class="Blurb">Creates window</p>
 <pre>
-int cvNamedWindow( const char* name, int flags );
+int cvNamedWindow( const char* name, int flags=CV_WINDOW_AUTOSIZE );
 </pre><dl>
 <dt>name<dd>Name of the window which is used as window identifier and appears in
 the window caption.
@@ -305,14 +305,14 @@ capturing functions.
 
 
 <hr>
-<h3><a name="decl_cvCaptureFromFile">cvCaptureFromFile</a></h3>
+<h3><a name="decl_cvCreateFileCapture">cvCreateFileCapture</a></h3>
 <p class="Blurb">Initializes capturing video from file</p>
 <pre>
-CvCapture* cvCaptureFromFile( const char* filename );
+CvCapture* cvCreateFileCapture( const char* filename );
 </pre><dl>
 <dt>filename<dd>Name of the video file.
 </dl><p>
-The function <code>cvCaptureFromFile</code>
+The function <code>cvCreateFileCapture</code>
 allocates and initialized the CvCapture structure for reading the video stream
 from the specified file.
 </p>
@@ -321,15 +321,15 @@ from the specified file.
 </p>
 
 
-<hr><h3><a name="decl_cvCaptureFromCAM">cvCaptureFromCAM</a></h3>
+<hr><h3><a name="decl_cvCreateCameraCapture">cvCreateCameraCapture</a></h3>
 <p class="Blurb">Initializes capturing video from camera</p>
 <pre>
-CvCapture* cvCaptureFromCAM( int index );
+CvCapture* cvCreateCameraCapture( int index );
 </pre><dl>
 <dt>index<dd>Index of the camera to be used. If there is only one camera or it
 does not matter what camera to use -1 may be passed.
 </dl><p>
-The function <code>cvCaptureFromCAM</code>
+The function <code>cvCreateCameraCapture</code>
 allocates and initialized the CvCapture structure for reading a video stream
 from the camera. Currently two camera interfaces can be used on Windows: Video for
 Windows (VFW) and Matrox Imaging Library (MIL); and two on Linux:
@@ -346,8 +346,8 @@ void cvReleaseCapture( CvCapture** capture );
 <dt>capture<dd>pointer to video capturing structure.
 </dl><p>
 The function <code>cvReleaseCapture</code>
-releases the CvCapture structure allocated by <a href="#decl_cvCaptureFromFile">cvCaptureFromFile</a>
-or <a href="#decl_cvCaptureFromCAM">cvCaptureFromCAM</a>.
+releases the CvCapture structure allocated by <a href="#decl_cvCreateFileCapture">cvCreateFileCapture</a>
+or <a href="#decl_cvCreateCameraCapture">cvCreateCameraCapture</a>.
 </p>
 
 
@@ -529,12 +529,12 @@ The function is used by <a href="#decl_cvShowImage">cvShowImage</a>.</p>
 <hr><h3>C</h3>
 <table width="100%">
 <tr>
-<td width="25%"><a href="#decl_cvCaptureFromCAM">CaptureFromCAM</a></td>
+<td width="25%"><a href="#decl_cvCreateCameraCapture">CreateCameraCapture</a></td>
 <td width="25%"><a href="#decl_cvConvertImage">ConvertImage</a></td>
 <td width="25%"><a href="#decl_cvCreateVideoWriter">CreateVideoWriter</a></td>
 </tr>
 <tr>
-<td width="25%"><a href="#decl_cvCaptureFromFile">CaptureFromFile</a></td>
+<td width="25%"><a href="#decl_cvCreateFileCapture">CreateFileCapture</a></td>
 <td width="25%"><a href="#decl_cvCreateTrackbar">CreateTrackbar</a></td>
 <td width="25%%"></td>
 </tr>

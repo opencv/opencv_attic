@@ -779,7 +779,7 @@ operation, for "top hat" and "black hat".
 <pre>
 void cvSmooth( const CvArr* src, CvArr* dst,
                int smoothtype=CV_GAUSSIAN,
-               int param1=3, int param2=0, double param3=0 );
+               int param1=3, int param2=0, double param3=0, double param4=0 );
 </pre><p><dl>
 <dt>src<dd>The source image.
 <dt>dst<dd>The destination image.
@@ -800,15 +800,17 @@ void cvSmooth( const CvArr* src, CvArr* dst,
 <dt>param1<dd>The first parameter of smoothing operation.
 <dt>param2<dd>The second parameter of smoothing operation. In case of simple scaled/non-scaled and
               Gaussian blur if <code>param2</code> is zero, it is set to <code>param1</code>.
-<dt>param3<dd>In case of Gaussian parameter this parameter may specify Gaussian sigma (standard deviation).
+<dt>param3<dd>In case of Gaussian kernel this parameter may specify Gaussian sigma (standard deviation).
               If it is zero, it is calculated from the kernel size:<br>
               <pre>
               sigma = (n/2 - 1)*0.3 + 0.8, where n=param1 for horizontal kernel,
                                                  n=param2 for vertical kernel.
               </pre>
-              Using standard sigma for small kernels (3&times;3 to 7&times;7) gives better speed.
+              With the standard sigma for small kernels (3&times;3 to 7&times;7) the performance is better.
               If <code>param3</code> is not zero, while <code>param1</code> and <code>param2</code>
               are zeros, the kernel size is calculated from the sigma (to provide accurate enough operation).
+<dt>param4<dd>In case of non-square Gaussian kernel the parameter may be used to specify a different
+              (from <code>param3</code>) sigma in the vertical direction.
 </dl><p>
 The function <code>cvSmooth</code> smooths image using one of several methods. Every of the methods
 has some features and restrictions listed below</p>
@@ -1261,38 +1263,7 @@ then convolves result with the specified filter multiplied by 4 for
 interpolation. So the destination image is four times larger than the source
 image.</p>
 
-<hr><h3><a name="decl_cvPyrSegmentation">PyrSegmentation</a></h3>
-<p class="Blurb">Implements image segmentation by pyramids</p>
-<pre>
-void cvPyrSegmentation( IplImage* src, IplImage* dst,
-                        CvMemStorage* storage, CvSeq** comp,
-                        int level, double threshold1, double threshold2 );
-</pre><p><dl>
-<dt>src<dd>The source image.
-<dt>dst<dd>The destination image.
-<dt>storage<dd>Storage; stores the resulting sequence of connected components.
-<dt>comp<dd>Pointer to the output sequence of the segmented components.
-<dt>level<dd>Maximum level of the pyramid for the segmentation.
-<dt>threshold1<dd>Error threshold for establishing the links.
-<dt>threshold2<dd>Error threshold for the segments clustering.
-</dl><p>
-The function <code>cvPyrSegmentation</code> implements image segmentation by pyramids. The
-pyramid builds up to the level <code>level</code>. The links between any pixel <code>a</code> on level <code>i</code>
-and its candidate father pixel <code>b</code> on the adjacent level are established if
-<div> <code>p(c(a),c(b))&lt;threshold1</code>.
-After the connected components are defined, they are joined into several
-clusters. Any two segments A and B belong to the same cluster, if
-<div> <code>p(c(A),c(B))&lt;threshold2</code>. The input
-image has only one channel, then
-<div><code> p(c&sup1;,c&sup2;)=|c&sup1;-c&sup2;|</code>. If the input image has three channels (red,
-green and blue), then
-<div><code>p(c&sup1;,c&sup2;)=0,3&middot;(c&sup1;<sub>r</sub>-c&sup2;<sub>r</sub>)+0,59&middot;(c&sup1;<sub>g</sub>-c&sup2;<sub>g</sub>)+0,11&middot;(c&sup1;<sub>b</sub>-c&sup2;<sub>b</sub>) </code> .
-There may be more than one connected component per a  cluster.
-<div>The images <code>src</code> and <code>dst</code> should be 8-bit single-channel or 3-channel images
-or equal size</p>
-
-
-<hr><h2><a name="cv_imgproc_ccomp">Connected Components and Contour Retrieval</a></h2>
+<hr><h2><a name="cv_imgproc_ccomp">Image Segmentation, Connected Components and Contour Retrieval</a></h2>
 
 <hr><h3><a name="decl_CvConnectedComp">CvConnectedComp</a></h3>
 <p class="Blurb">Connected component</p>
@@ -1484,6 +1455,101 @@ CvSeq* cvEndFindContours( CvContourScanner* scanner );
 The function <code>cvEndFindContours</code> finishes the scanning process and returns the
 pointer to the first contour on the highest level.</p>
 
+
+<hr><h3><a name="decl_cvPyrSegmentation">PyrSegmentation</a></h3>
+<p class="Blurb">Does image segmentation by pyramids</p>
+<pre>
+void cvPyrSegmentation( IplImage* src, IplImage* dst,
+                        CvMemStorage* storage, CvSeq** comp,
+                        int level, double threshold1, double threshold2 );
+</pre><p><dl>
+<dt>src<dd>The source image.
+<dt>dst<dd>The destination image.
+<dt>storage<dd>Storage; stores the resulting sequence of connected components.
+<dt>comp<dd>Pointer to the output sequence of the segmented components.
+<dt>level<dd>Maximum level of the pyramid for the segmentation.
+<dt>threshold1<dd>Error threshold for establishing the links.
+<dt>threshold2<dd>Error threshold for the segments clustering.
+</dl><p>
+The function <code>cvPyrSegmentation</code> implements image segmentation by pyramids. The
+pyramid builds up to the level <code>level</code>. The links between any pixel <code>a</code> on level <code>i</code>
+and its candidate father pixel <code>b</code> on the adjacent level are established if
+<div> <code>p(c(a),c(b))&lt;threshold1</code>.
+After the connected components are defined, they are joined into several
+clusters. Any two segments A and B belong to the same cluster, if
+<div> <code>p(c(A),c(B))&lt;threshold2</code>. The input
+image has only one channel, then
+<div><code> p(c&sup1;,c&sup2;)=|c&sup1;-c&sup2;|</code>. If the input image has three channels (red,
+green and blue), then
+<div><code>p(c&sup1;,c&sup2;)=0,3&middot;(c&sup1;<sub>r</sub>-c&sup2;<sub>r</sub>)+0,59&middot;(c&sup1;<sub>g</sub>-c&sup2;<sub>g</sub>)+0,11&middot;(c&sup1;<sub>b</sub>-c&sup2;<sub>b</sub>) </code> .
+There may be more than one connected component per a  cluster.
+<div>The images <code>src</code> and <code>dst</code> should be 8-bit single-channel or 3-channel images
+or equal size</p>
+
+
+<hr><h3><a name="decl_cvPyrMeanShiftFiltering">PyrMeanShiftFiltering</a></h3>
+<p class="Blurb">Does meanshift image segmentation</p>
+<pre>
+void cvPyrMeanShiftFiltering( const CvArr* src, CvArr* dst,
+     double sp, double sr, int max_level=1,
+     CvTermCriteria termcrit=cvTermCriteria(CV_TERMCRIT_ITER+CV_TERMCRIT_EPS,5,1));
+</pre><p><dl>
+<dt>src<dd>The source 8-bit 3-channel image.
+<dt>dst<dd>The destination image of the same format and the same size as the source.
+<dt>sp<dd>The spatial window radius.
+<dt>sr<dd>The color window radius.
+<dt>max_level<dd>Maximum level of the pyramid for the segmentation.
+<dt>termcrit<dd>Termination criteria: when to stop meanshift iterations.
+</dl><p>
+The function <code>cvPyrMeanShiftFiltering</code> implements the filtering stage of meanshift
+segmentation, that is, the output of the function is the filtered "posterized" image with
+color gradients and fine-grain texture flattened. At every pixel <code>(X,Y)</code> of the
+input image (or down-sized input image, see below) the function executes meanshift iterations,
+that is, the pixel <code>(X,Y)</code> neighborhood in the joint space-color
+hyperspace is considered:
+<pre>{(x,y): X-sp&le;x&le;X+sp && Y-sp&le;y&le;Y+sp && ||(R,G,B)-(r,g,b)|| &le; sr},</pre>
+where <code>(R,G,B)</code> and <code>(r,g,b)</code> are the vectors of color components
+at <code>(X,Y)</code> and <code>(x,y)</code>, respectively (though, the algorithm does not depend
+on the color space used, so any 3-component color space can be used instead).
+Over the neighborhood the average spatial value <code>(X',Y')</code> and average color vector
+<code>(R',G',B')</code> are found and they act as the neighborhood center on the next iteration:
+<pre>(X,Y)~(X',Y'), (R,G,B)~(R',G',B').</pre>
+After the iterations over, the color components of the initial pixel
+(that is, the pixel from where the iterations started)
+are set to the final value (average color at the last iteration):
+<pre>I(X,Y) &lt;- (R*,G*,B*).</pre>
+
+<p>Then <code>max_level</code>&gt;0, the gaussian pyramid of <code>max_level</code>+1 levels is built,
+and the above procedure is run on the smallest layer. After that, the results are propagated to the
+larger layer and the iterations are run again only on those pixels where the layer colors
+differ much (&gt;<code>sr</code>) from the lower-resolution layer, that is,
+the boundaries of the color regions are clarified. Note, that the results
+will be actually different from the ones obtained by running the meanshift procedure
+on the whole original image (i.e. when <code>max_level</code>==0).</p>
+
+
+<hr><h3><a name="decl_cvWatershed">Watershed</a></h3>
+<p class="Blurb">Does watershed segmentation</p>
+<pre>
+void cvWatershed( const CvArr* image, CvArr* markers );
+</pre><p><dl>
+<dt>image<dd>The input 8-bit 3-channel image.
+<dt>markers<dd>The input/output 32-bit single-channel image (map) of markers.
+</dl><p>
+The function <code>cvWatershed</code> implements one of the variants of watershed,
+non-parametric marker-based segmentation algorithm, described in <a href="#paper_meyer92">[Meyer92]</a>
+Before passing the image to the function, user has to outline roughly the desired regions
+in the image <code>markers</code> with positive (&gt;0) indices, i.e. every region is represented as one or more
+connected components with the pixel values 1, 2, 3 etc. Those components will be "seeds" of the
+future image regions.
+All the other pixels in <code>markers</code>, which relation to the outlined regions is not known
+and should be defined by the algorithm, should be set to 0's. On the output of the function,
+each pixel in <code>markers</code> is set to one of values of the "seed" components, or to -1
+at boundaries between the regions.</p><p>Note, that it is not necessary that every
+two neighbor connected components
+are separated by a watershed boundary (-1's pixels), for example, in case when such tangent components
+exist in the initial marker image. Visual demonstration and usage example of the function can be
+found in OpenCV samples directory; see <code>watershed.cpp</code> demo.</p>
 
 <hr><h2><a name="cv_imgproc_moments">Image and Contour moments</a></h2>
 
@@ -1775,19 +1841,24 @@ void cvDistTransform( const CvArr* src, CvArr* dst, int distance_type=CV_DIST_L2
 <dt>dst<dd>Output image with calculated distances (32-bit floating-point, single-channel).
 <dt>distance_type<dd>Type of distance; can be <code>CV_DIST_L1, CV_DIST_L2, CV_DIST_C</code> or
 <code>CV_DIST_USER</code>.
-<dt>mask_size<dd>Size of distance transform mask; can be 3 or 5. In case of <code>CV_DIST_L1</code> or
+<dt>mask_size<dd>Size of distance transform mask; can be 3, 5 or 0. In case of <code>CV_DIST_L1</code> or
 <code>CV_DIST_C</code> the parameter is forced to 3, because 3&times;3 mask gives the same result
-as 5&times;5 yet it is faster.
+as 5&times;5 yet it is faster. When <code>mask_size</code>==0, a different non-approximate algorithm
+is used to calculate distances.
 <dt>mask<dd>User-defined mask in case of user-defined distance, it consists of 2 numbers
 (horizontal/vertical shift cost, diagonal shift cost) in case of 3&times;3 mask and
 3 numbers (horizontal/vertical shift cost, diagonal shift cost, knight&#146;s move cost)
 in case of 5&times;5 mask.
 <dt>labels<dd>The optional output 2d array of labels of integer type
-              and the same size as <code>src</code> and <code>dst</code>.
+              and the same size as <code>src</code> and <code>dst</code>, can now be used only with
+              <code>mask_size</code>==3 or 5.
 </dl><p>
-The function <code>cvDistTransform</code> calculates the approximated distance from every binary image pixel
-to the nearest zero pixel. For zero pixels the function sets the zero distance, for others it finds
-the shortest path consisting of basic shifts: horizontal, vertical, diagonal or knight&#146;s move (the
+The function <code>cvDistTransform</code> calculates the approximated or exact distance from every binary image pixel
+to the nearest zero pixel. When <code>mask_size</code>==0, the function uses the accurate algorithm
+<a href="#paper_felzenszwalb04">[Felzenszwalb04]</a>. When <code>mask_size</code>==3 or 5, the function
+uses the approximate algorithm <a href="#paper_borgefors86">[Borgefors86]</a>.</p><p>Here is how the approximate
+algorithm works. For zero pixels the function sets the zero distance. For others it finds
+the shortest path to a zero pixel, consisting of basic shifts: horizontal, vertical, diagonal or knight&#146;s move (the
 latest is available for 5&times;5 mask). The overal distance is calculated as a sum of these basic distances.
 Because the distance function should be symmetric, all the horizontal and vertical shifts must have
 the same cost (that is denoted as <code>a</code>), all the diagonal shifts must have the same cost
@@ -2937,8 +3008,8 @@ double cvPointPolygonTest( const CvArr* contour,
 </dl><p>
 The function <code>cvPointPolygonTest</code> determines whether the point is inside contour, outside, or lies
 on an edge (or coinsides with a vertex). It returns positive, negative or zero value, correspondingly.
-When <code>measure_dist=0<code>, the return value is +1, -1 and 0, respectively.
-When <code>measure_dist&ne;0<code>, it is a signed distance between the point and the nearest contour edge.
+When <code>measure_dist=0</code>, the return value is +1, -1 and 0, respectively.
+When <code>measure_dist&ne;0</code>, it is a signed distance between the point and the nearest contour edge.
 </p><p>Here is the sample output of the function, where each image pixel is tested against the contour.</p>
 
 <p><img src="pics/pointpolygon.png" width=200 height=200></p>
@@ -5388,6 +5459,11 @@ Using Temporal Templates. MIT Media Lab Technical Report 402, 1997.
 <li><b>[DeMenthon92]</b> Daniel F. DeMenthon and Larry S. Davis. Model-Based Object Pose in
 25 Lines of Code. In Proceedings of ECCV '92, pp. 335-343, 1992.
 
+<li><a name="paper_felzenszwalb04"><b>[Felzenszwalb04]</b>
+Pedro F. Felzenszwalb and Daniel P. Huttenlocher.
+Distance Transforms of Sampled Functions.
+Cornell Computing and Information Science TR2004-1963.</a>
+
 <li><b>[Fitzgibbon95]</b> Andrew W. Fitzgibbon, R.B.Fisher. A Buyer&#146;s Guide to Conic
 Fitting. Proc.5th British Machine Vision Conference, Birmingham, pp. 513-522,
 1995.
@@ -5418,7 +5494,6 @@ Vision, Proc. of 7th International Joint Conference on
 Artificial Intelligence (IJCAI), pp. 674-679.
 </a>
 
-
 <li><b>[Kass88]</b> M. Kass, A. Witkin, and D. Terzopoulos. Snakes: Active Contour Models,
 International Journal of Computer Vision, pp. 321-331, 1988.
 
@@ -5432,6 +5507,9 @@ This paper, as well as the extended technical report, can be retrieved at
 
 <li><b>[Matas98]</b> J.Matas, C.Galambos, J.Kittler. Progressive Probabilistic Hough
 Transform. British Machine Vision Conference, 1998.
+
+<li><a name="paper_meyer92"><b>[Meyer92]</b>
+Meyer, F. (1992). Color image segmentation. In Proceedings of the International Conference on Image Processing and its Applications, pages 303--306.</a>
 
 <li><b>[Rosenfeld73]</b> A. Rosenfeld and E. Johnston. Angle Detection on Digital Curves.
 IEEE Trans. Computers, 22:875-878, 1973.
