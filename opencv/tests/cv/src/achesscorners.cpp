@@ -61,7 +61,8 @@ static char *test_desc[] =
     "Regression test"
 };
 
-void show_points( IplImage* gray, CvPoint2D32f* u, int u_cnt, CvPoint2D32f* v, int v_cnt )
+void show_points( IplImage* gray, CvPoint2D32f* u, int u_cnt, CvPoint2D32f* v, int v_cnt,
+                  CvSize etalon_size, int was_found )
 {
     CvSize size;
     int i;
@@ -71,7 +72,7 @@ void show_points( IplImage* gray, CvPoint2D32f* u, int u_cnt, CvPoint2D32f* v, i
     IplImage* rgb = cvCreateImage( size, 8, 3 );
     cvMerge( gray, gray, gray, 0, rgb );
 
-    if( v )
+    /*if( v )
     {
         for( i = 0; i < v_cnt; i++ )
         {
@@ -85,7 +86,9 @@ void show_points( IplImage* gray, CvPoint2D32f* u, int u_cnt, CvPoint2D32f* v, i
         {
             cvCircle( rgb, cvPoint(cvRound(u[i].x), cvRound(u[i].y)), 3, CV_RGB(0,255,0), CV_FILLED);
         }
-    }
+    }*/
+
+    cvDrawChessboardCorners( rgb, etalon_size, v, v_cnt, was_found );
 
     cvvNamedWindow( "test", 0 );
     cvvShowImage( "test", rgb );
@@ -202,7 +205,7 @@ static int chess_corner_test( void )
         OPENCV_CALL( result = cvFindChessBoardCornerGuesses(
                      gray, thresh, 0, etalon_size, v + 1, &count ));
 
-        //show_points( gray, 0, etalon_count, v + 1, count );
+        //show_points( gray, 0, etalon_count, v + 1, count, etalon_size, result );
 
         if( !result || count != etalon_count )
         {
