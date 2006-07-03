@@ -106,7 +106,7 @@ public:
                 strcat(m_Desc,": ");
                 strcat(m_Desc,str);
                 strcat(m_Desc,"\n");
-                rest = MAX_DESC - strlen(m_Desc) - 1;
+                rest = MAX_DESC - (int)strlen(m_Desc) - 1;
             }
         }/* next analizer */
         if(m_Desc[0]!=0)return m_Desc;
