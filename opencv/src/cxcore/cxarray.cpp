@@ -417,7 +417,7 @@ cvGetMatND( const CvArr* arr, CvMatND* matnd, int* coi )
 {
     CvMatND* result = 0;
     
-    CV_FUNCNAME( "cvGetMat" );
+    CV_FUNCNAME( "cvGetMatND" );
 
     __BEGIN__;
 
