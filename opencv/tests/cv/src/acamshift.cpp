@@ -165,7 +165,7 @@ static int foaCamShiftC1R( void* prm )
             destIters = cvCamShift( src, Window, criteria, &comp, &box );
             Window = comp.rect;
             destArea = (float) comp.area;
-            destOrientation = box.angle;
+            destOrientation = box.angle*Pi/180;
             destLen = box.size.height;
             destWidth = box.size.width;
         }
