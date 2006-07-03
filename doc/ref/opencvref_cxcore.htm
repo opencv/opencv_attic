@@ -1586,6 +1586,42 @@ For IplImage <a href="#decl_cvCopy">cvCopy</a> with COI set can be also used to 
 </p>
 
 
+<hr><h3><a name="decl_cvMixChannels">MixChannels</a></h3>
+<p class="Blurb">Copies several channels from input arrays to
+   certain channels of output arrays</p>
+<pre>
+void cvMixChannels( const CvArr** src, int src_count,
+                    CvArr** dst, int dst_count,
+                    const int* from_to, int pair_count );
+</pre><p><dl>
+<dt>src<dd>The array of input arrays.
+<dt>src_count<dd>The number of input arrays.
+<dt>dst<dd>The array of output arrays.
+<dt>dst_count<dd>The number of output arrays.
+<dt>from_to<dd>The array of pairs of indices of the planes copied.
+<code>from_to[k*2]</code> is the 0-based index of the input plane,
+and <code>from_to[k*2+1]</code> is the index of the output plane, where the continuous numbering
+of the planes over all the input and over all the output arrays is used.
+When <code>from_to[k*2]</code> is negative, the corresponding output plane is filled with 0's.
+<dt>pair_count<dd>The number of pairs in <code>from_to</code>, or the number of the planes copied.
+</dl><p>
+The function <code>cvMixChannels</code> is a generalized form of <a href="#decl_cvSplit">cvSplit</a> and
+<a href="#decl_cvMerge">cvMerge</a> and some forms of <a href="opencvref_cv.htm#decl_cvCvtColor">cvCvtColor</a>.
+It can be used to change the order of the planes, add/remove alpha
+channel, extract or insert a single plane or multiple planes etc.
+Below is the example, how to split 4-channel RGBA image into 3-channel BGR (i.e. with R&B swapped) and
+separate alpha channel images:</p>
+<pre>
+    CvMat* rgba = cvCreateMat( 100, 100, CV_8UC4 );
+    CvMat* bgr = cvCreateMat( rgba->rows, rgba->cols, CV_8UC3 );
+    CvMat* alpha = cvCreateMat( rgba->rows, rgba->cols, CV_8UC1 );
+    CvArr* out[] = { bgr, alpha };
+    int from_to[] = { 0, 2, 1, 1, 2, 0, 3, 3 };
+    cvSet( rgba, cvScalar(1,2,3,4) );
+    cvMixChannels( (const CvArr**)&rgba, 1, out, 2, from_to, 4 );
+</pre>
+
+
 <hr><h2><a name="cxcore_arrays_arithm_logic">Arithmetic, Logic and Comparison</a></h2>
 
 
@@ -2888,7 +2924,7 @@ Where <code>C</code> is large negative number (&asymp;-700 in the current implem
 <hr><h3><a name="decl_cvSolveCubic">SolveCubic</a></h3>
 <p class="Blurb">Finds real roots of a cubic equation</p>
 <pre>
-void cvSolveCubic( const CvArr* coeffs, CvArr* roots );
+void cvSolveCubic( const CvMat* coeffs, CvMat* roots );
 </pre><p><dl>
 <dt>coeffs<dd>The equation coefficients, array of 3 or 4 elements.
 <dt>roots<dd>The output array of real roots. Should have 3 elements.
@@ -5011,6 +5047,26 @@ given in degrees. The picture below explains the meaning of the parameters.</p>
 </p>
 
 
+<hr><h3><a name="decl_cvEllipseBox">EllipseBox</a></h3>
+<p class="Blurb">Draws simple or thick elliptic arc or fills ellipse sector</p>
+<pre>
+void cvEllipseBox( CvArr* img, CvBox2D box, CvScalar color,
+                   int thickness=1, int line_type=8, int shift=0 );
+</pre><p><dl>
+<dt>img<dd>Image.
+<dt>box<dd>The enclosing box of the ellipse drawn
+<dt>thickness<dd>Thickness of the ellipse boundary.
+<dt>line_type<dd>Type of the ellipse boundary, see <a href="#decl_cvLine">cvLine</a> description.
+<dt>shift<dd>Number of fractional bits in the box vertex coordinates.
+</dl><p>
+The function <code>cvEllipseBox</code> draws a simple or thick ellipse outline,
+or fills an ellipse. The functions provides a convenient way to draw an ellipse
+approximating some shape; that is what <a href="opencvref_cv.htm#decl_cvCamShift">cvCamShift</a>
+and <a href="opencvref_cv.htm#decl_cvFitEllipse">cvFitEllipse</a> do.
+The ellipse drawn is clipped by ROI rectangle. A piecewise-linear
+approximation is used for antialiased arcs and thick arcs.</p>
+
+
 <hr><h3><a name="decl_cvFillPoly">FillPoly</a></h3>
 <p class="Blurb">Fills polygons interior</p>
 <pre>
@@ -5148,7 +5204,7 @@ string when a specified font is used.</p>
 void cvDrawContours( CvArr *img, CvSeq* contour,
                      CvScalar external_color, CvScalar hole_color,
                      int max_level, int thickness=1,
-                     int line_type=8 );
+                     int line_type=8, CvPoint offset=cvPoint(0,0) );
 </pre><p><dl>
 <dt>img<dd>Image where the contours are to be drawn. Like in any other drawing
 function, the contours are clipped with the ROI.
@@ -5163,6 +5219,9 @@ but draws child contours of <code>contour</code> up to abs(<code>max_level</code
 <dt>thickness<dd>Thickness of lines the contours are drawn with. If it is negative (e.g. =CV_FILLED),
 the contour interiors are drawn.
 <dt>line_type<dd>Type of the contour segments, see <a href="#decl_cvLine">cvLine</a> description.
+<dt>offset<dd>Shift all the point coordinates by the specified value.
+              It is useful in case if the contours retrived in some image ROI and
+              then the ROI offset needs to be taken into account during the rendering.
 </dl><p>
 The function <code>cvDrawContours</code> draws contour outlines in the image if <code>thickness</code>&gt;=0
 or fills area bounded by the contours if <code>thickness</code>&lt;0.
@@ -6839,7 +6898,7 @@ functions using <a href="#decl_cvSetMemoryManager">cvSetMemoryManager</a> functi
 <hr><h3><a name="decl_cvFree">Free</a></h3>
 <p class="Blurb">Deallocates memory buffer</p>
 <pre>
-void cvFree( void** ptr );
+void cvFree( T** ptr );
 </pre><p><dl>
 <dt>buffer<dd>Double pointer to released buffer.
 </dl><p>
@@ -7003,6 +7062,43 @@ there are calls to <code>iplCreateImageHeader</code> etc. The function is not ne
 IPL is called only for data processing and all the allocation/deallocation is done by CXCORE,
 or if all the allocation/deallocation is done by IPL and some of OpenCV functions are used to
 process the data.</p>
+
+
+<hr><h3><a name="decl_cvGetNumThreads">GetNumThreads</a></h3>
+<p class="Blurb">Returns the current number of threads used</p>
+<pre>
+int cvGetNumThreads(void);
+</pre>
+<p>
+The function <code>cvGetNumThreads</code> return the current number of threads
+that are used by parallelized (via OpenMP) OpenCV functions.</p>
+
+
+<hr><h3><a name="decl_cvSetNumThreads">SetNumThreads</a></h3>
+<p class="Blurb">Sets the number of threads</p>
+<pre>
+void cvSetNumThreads( int threads=0 );
+</pre><p><dl>
+<dt>threads<dd>The number of threads.
+</dl><p>
+The function <code>cvSetNumThreads</code> sets the number of threads
+that are used by parallelized OpenCV functions. When the argument
+is zero or negative, and at the beginning of the program,
+the number of threads is set to the number of processors in the system,
+as returned by the function <code>omp_get_num_procs()</code> from OpenMP runtime.
+</p>
+
+
+<hr><h3><a name="decl_cvGetThreadNum">GetThreadNum</a></h3>
+<p class="Blurb">Returns index of the current thread</p>
+<pre>
+int cvGetThreadNum( void );
+</pre><p>
+The function <code>cvGetThreadNum</code> returns the index, from 0 to
+<a href="#decl_cvGetNumThreads">cvGetNumThreads</a>()-1, of the thread that called the function.
+It is a wrapper for the function <code>omp_get_thread_num()</code> from OpenMP runtime.
+The retrieved index may be used to access local-thread data inside the parallelized code fragments.
+</p>
 
 
 <hr><h1><a name="cxcore_func_index">Alphabetical List of Functions</a></h1>
@@ -7569,4 +7665,3 @@ process the data.</p>
 
 </body>
 </html>
-
