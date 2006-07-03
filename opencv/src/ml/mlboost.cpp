@@ -1578,7 +1578,7 @@ CvTreeBoostClassifier* icvAllocTREEBOOSTClassifier( int num_internal_nodes )
         (num_internal_nodes + 1) * sizeof( *ptr->val );
 
     CV_CALL( ptr = (CvTreeBoostClassifier*) cvCreateStatModel( CV_STAT_MODEL_MAGIC_VAL,
-        header_size, cvReleaseTREEBOOSTClassifier, cvEvalTREEBOOSTClassifier, NULL ));
+        (int)header_size, cvReleaseTREEBOOSTClassifier, cvEvalTREEBOOSTClassifier, NULL ));
 
     ptr->count = num_internal_nodes;
     
@@ -2754,7 +2754,7 @@ icvAllocBtClassifier( CvBtClassifierTrainParams* train_params )
 
     data_size = sizeof( *bt ) + sizeof( CvBoostTrainState );
     CV_CALL( bt = (CvBtClassifier*) cvCreateStatModel(
-        CV_STAT_MODEL_MAGIC_VAL | CV_BOOST_TREE_MAGIC_VAL, data_size,
+        CV_STAT_MODEL_MAGIC_VAL | CV_BOOST_TREE_MAGIC_VAL, (int)data_size,
         cvReleaseBtClassifier, cvEvalBtClassifier ));
 
     CV_CALL( bt->weak = cvCreateSeq( 0, sizeof( *(bt->weak) ),
@@ -2888,7 +2888,7 @@ icvBtNewTrainData( CvBtClassifier* bt,
             CV_IS_ROW_SAMPLE( flags ) ? total_samples : selected_features,
             CV_IS_ROW_SAMPLE( flags ) ? selected_features : total_samples, CV_32FC1,
             (void*) new_raw_train_data[0],
-            ((char*)new_raw_train_data[1] - (char*)new_raw_train_data[0]) ));
+            (int)(((char*)new_raw_train_data[1] - (char*)new_raw_train_data[0])) ));
     /* the cvPrepareTrainData function always copies train data and rearranges it in 
        a such way that samples are in rows */
     /* ts->flags = flags; */

@@ -1240,7 +1240,7 @@ int CvANN_MLP::train_rprop( CvVectors x0, CvVectors u, const double* sw )
             for( k = 0; k <= n1; k++ )
             {
                 double* wk = weights[i]+k*n2;
-                int delta = wk - weights[0];
+                size_t delta = wk - weights[0];
                 double* dwk = dw->data.db + delta;
                 double* dEdwk = dEdw->data.db + delta;
                 char* prevEk = (char*)(prev_dEdw_sign->data.ptr + delta);

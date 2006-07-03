@@ -1555,7 +1555,7 @@ CvDTreeSplit* CvDTree::find_split_cat_gini( CvDTreeNode* node, int vi )
         double lsum2 = 0, rsum2 = 0;
 
         if( m == 2 )
-            idx = (int_ptr[subset_i] - cjk)/2;
+            idx = (int)(int_ptr[subset_i] - cjk)/2;
         else
         {
             int graycode = (subset_i>>1)^subset_i;
@@ -1626,7 +1626,7 @@ CvDTreeSplit* CvDTree::find_split_cat_gini( CvDTreeNode* node, int vi )
     {
         for( i = 0; i <= best_subset; i++ )
         {
-            idx = (int_ptr[i] - cjk) >> 1;
+            idx = (int)(int_ptr[i] - cjk) >> 1;
             split->subset[idx >> 5] |= 1 << (idx & 31);
         }
     }
@@ -1730,7 +1730,7 @@ CvDTreeSplit* CvDTree::find_split_cat_reg( CvDTreeNode* node, int vi )
 
     for( subset_i = 0; subset_i < mi-1; subset_i++ )
     {
-        int idx = sum_ptr[subset_i] - sum;
+        int idx = (int)(sum_ptr[subset_i] - sum);
         int ni = counts[idx];
 
         if( ni )
@@ -1757,7 +1757,7 @@ CvDTreeSplit* CvDTree::find_split_cat_reg( CvDTreeNode* node, int vi )
     split = data->new_split_cat( vi, (float)best_val );
     for( i = 0; i <= best_subset; i++ )
     {
-        int idx = sum_ptr[i] - sum;
+        int idx = (int)(sum_ptr[i] - sum);
         split->subset[idx >> 5] |= 1 << (idx & 31);
     }
 
@@ -2255,8 +2255,8 @@ void CvDTree::split_node_data( CvDTreeNode* node )
             rdst += d;
         }
 
-        left->num_valid[vi] = ldst - ldst0;
-        right->num_valid[vi] = rdst - rdst0;
+        left->num_valid[vi] = (int)(ldst - ldst0);
+        right->num_valid[vi] = (int)(rdst - rdst0);
 
         // split missing
         for( ; i < n; i++ )

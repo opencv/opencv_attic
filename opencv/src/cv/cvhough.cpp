@@ -475,6 +475,10 @@ icvHoughLinesSDiv( const CvMat* img,
 *                              Probabilistic Hough Transform                             *
 \****************************************************************************************/
 
+#if defined WIN64 && defined EM64T && _MSC_VER == 1400 && !defined CV_ICC
+#pragma optimize("",off)
+#endif
+
 static void
 icvHoughLinesProbabalistic( CvMat* image,
                             float rho, float theta, int threshold,
@@ -725,6 +729,11 @@ icvHoughLinesProbabalistic( CvMat* image,
     cvReleaseMat( &trigtab );
     cvReleaseMemStorage( &storage );
 }
+
+
+#if defined WIN64 && defined EM64T && _MSC_VER == 1400 && !defined CV_ICC
+#pragma optimize("",on)
+#endif
 
 
 /* Wrapper function for standard hough transform */
