@@ -448,6 +448,14 @@ cvMinMaxLoc( const void* img, double* _minVal, double* _maxVal,
                              matmask->data.ptr, mask_step, size, cn, coi,
                              pmin, pmax, &minloc, &maxloc ));
         }
+
+        if( (unsigned)minloc.x < (unsigned)mat->cols &&
+            (unsigned)minloc.y < (unsigned)mat->rows &&
+            matmask->data.ptr[minloc.y*matmask->step + minloc.x] == 0 ||
+            (unsigned)maxloc.x < (unsigned)mat->cols &&
+            (unsigned)maxloc.y < (unsigned)mat->rows &&
+            matmask->data.ptr[maxloc.y*matmask->step + maxloc.x] == 0 )
+            minloc.x = minloc.y = maxloc.x = maxloc.y = -1;
     }
 
     if( depth != CV_32S && depth != CV_64F )
