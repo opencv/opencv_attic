@@ -120,7 +120,7 @@ CVAPI(int) cvStartWindowThread();
 
 #define CV_WINDOW_AUTOSIZE  1
 /* create window */
-CVAPI(int) cvNamedWindow( const char* name, int flags );
+CVAPI(int) cvNamedWindow( const char* name, int flags CV_DEFAULT(CV_WINDOW_AUTOSIZE) );
 
 /* display image within window (highgui windows remember their content) */
 CVAPI(void) cvShowImage( const char* name, const CvArr* image );
@@ -208,7 +208,7 @@ CVAPI(int) cvWaitKey(int delay CV_DEFAULT(0));
 typedef struct CvCapture CvCapture;
 
 /* start capturing frames from video file */
-CVAPI(CvCapture*) cvCaptureFromFile( const char* filename );
+CVAPI(CvCapture*) cvCreateFileCapture( const char* filename );
 
 #define CV_CAP_ANY      0     // autodetect
 
@@ -233,7 +233,7 @@ CVAPI(CvCapture*) cvCaptureFromFile( const char* filename );
 #define CV_CAP_QT       500   // QuickTime
 
 /* start capturing frames from camera: index = camera_index + domain_offset (CV_CAP_*) */
-CVAPI(CvCapture*) cvCaptureFromCAM( int index );
+CVAPI(CvCapture*) cvCreateCameraCapture( int index );
 
 /* grab a frame, return 1 on success, 0 on fail. 
   this function is thought to be fast               */  
@@ -301,6 +301,8 @@ CVAPI(void) cvReleaseVideoWriter( CvVideoWriter** writer );
 
 #ifdef HIGHGUI_BACKWARD_COMPATIBILITY
 
+#define cvCaptureFromFile cvCreateFileCapture
+#define cvCaptureFromCAM cvCreateCameraCapture
 #define cvCaptureFromAVI cvCaptureFromFile
 #define cvCreateAVIWriter cvCreateVideoWriter
 #define cvWriteToAVI cvWriteFrame
