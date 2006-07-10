@@ -195,9 +195,9 @@ int main( int argc, char** argv )
         cvShowImage( "Histogram", histimg );
 
         c = cvWaitKey(10);
-        if( c == 27 )
+        if( (char) c == 27 )
             break;
-        switch( c )
+        switch( (char) c )
         {
         case 'b':
             backproject_mode ^= 1;

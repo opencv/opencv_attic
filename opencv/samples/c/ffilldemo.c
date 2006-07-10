@@ -105,7 +105,7 @@ int main( int argc, char** argv )
             cvShowImage( "image", gray_img );
 
         c = cvWaitKey(0);
-        switch( c )
+        switch( (char) c )
         {
         case '\x1b':
             printf("Exiting ...\n");

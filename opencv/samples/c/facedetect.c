@@ -134,7 +134,7 @@ int main( int argc, char** argv )
 
 void detect_and_draw( IplImage* img )
 {
-    int scale = 1.3;
+    double scale = 1.3;
     IplImage* gray = cvCreateImage( cvSize(img->width,img->height), 8, 1 );
     IplImage* small_img = cvCreateImage( cvSize(img->width/scale,img->height/scale), 8, 1 );
     CvPoint pt1, pt2;

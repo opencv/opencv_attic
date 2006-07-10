@@ -21,7 +21,7 @@ int main( int argc, char** argv )
         
     for(;;)
     {
-        int key;
+        char key;
         int i, count = rand()%100 + 1, hullcount;
         CvPoint pt0;
 #if !ARRAY            
@@ -82,7 +82,7 @@ int main( int argc, char** argv )
 
         cvShowImage( "hull", img );
 
-        key = cvWaitKey(0);
+        key = (char) cvWaitKey(0);
         if( key == 27 || key == 'q' || key == 'Q' ) // 'ESC'
             break;
 

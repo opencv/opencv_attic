@@ -161,9 +161,9 @@ int main( int argc, char** argv )
         cvShowImage( "LkDemo", image );
 
         c = cvWaitKey(10);
-        if( c == 27 )
+        if( (char)c == 27 )
             break;
-        switch( c )
+        switch( (char) c )
         {
         case 'r':
             need_to_init = 1;
