@@ -181,6 +181,7 @@ static int icvGrabFrameAVI_FFMPEG( CvCaptureAVI_FFMPEG* capture )
 
     // get the next frame
     while ((0 == valid) && (av_read_frame(capture->ic, &pkt) >= 0)) {
+		if( pkt.stream_index != capture->video_stream ) continue;
 
 #if LIBAVFORMAT_BUILD > 4628
         avcodec_decode_video(capture->video_st->codec, 
