@@ -227,7 +227,7 @@ int main(int argc, char** argv)
         cvReleaseImage( &img0 );
         // clear memory storage - reset free space position
         cvClearMemStorage( storage );
-        if( c == 27 )
+        if( (char)c == 27 )
             break;
     }
     

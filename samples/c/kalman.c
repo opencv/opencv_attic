@@ -31,7 +31,7 @@ int main(int argc, char** argv)
     CvMat* process_noise = cvCreateMat( 2, 1, CV_32FC1 );
     CvMat* measurement = cvCreateMat( 1, 1, CV_32FC1 );
     CvRNG rng = cvRNG(-1);
-    int code = -1;
+    char code = -1;
 
     cvZero( measurement );
     cvNamedWindow( "Kalman", 1 );
@@ -92,7 +92,7 @@ int main(int argc, char** argv)
             cvMatMulAdd( kalman->transition_matrix, state, process_noise, state );
 
             cvShowImage( "Kalman", img );
-            code = cvWaitKey( 100 );
+            code = (char) cvWaitKey( 100 );
             
             if( code > 0 )
                 break;

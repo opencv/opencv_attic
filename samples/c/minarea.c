@@ -21,7 +21,7 @@ int main( int argc, char** argv )
         
     for(;;)
     {
-        int key;
+        char key;
         int i, count = rand()%100 + 1;
         CvPoint pt0, pt;
         CvBox2D box;
@@ -86,7 +86,7 @@ int main( int argc, char** argv )
 
         cvShowImage( "rect & circle", img );
 
-        key = cvWaitKey(0);
+        key = (char) cvWaitKey(0);
         if( key == 27 || key == 'q' || key == 'Q' ) // 'ESC'
             break;
 

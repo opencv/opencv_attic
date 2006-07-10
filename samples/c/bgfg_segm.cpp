@@ -36,7 +36,7 @@ int main(int argc, char** argv)
         printf( "%.1f\n", t/(cvGetTickFrequency()*1000.) );
         cvShowImage("BG", bg_model->background);
         cvShowImage("FG", bg_model->foreground);
-        int k = cvWaitKey(5);
+        char k = cvWaitKey(5);
         if( k == 27 ) break;
         //printf("frame# %d \r", fr);
     }

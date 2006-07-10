@@ -25,7 +25,7 @@ int main( int argc, char** argv )
         
     for(;;)
     {
-        int key;
+        char key;
         int k, cluster_count = cvRandInt(&rng)%MAX_CLUSTERS + 1;
         int i, sample_count = cvRandInt(&rng)%1000 + 1;
         CvMat* points = cvCreateMat( sample_count, 1, CV_32FC2 );
@@ -74,7 +74,7 @@ int main( int argc, char** argv )
 
         cvShowImage( "clusters", img );
 
-        key = cvWaitKey(0);
+        key = (char) cvWaitKey(0);
         if( key == 27 || key == 'q' || key == 'Q' ) // 'ESC'
             break;
     }
