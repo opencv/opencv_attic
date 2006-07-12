@@ -672,6 +672,9 @@ CVAPI(int)  cvCheckArr( const CvArr* arr, int flags CV_DEFAULT(0),
 CVAPI(void) cvRandArr( CvRNG* rng, CvArr* arr, int dist_type,
                       CvScalar param1, CvScalar param2 );
 
+CVAPI(void) cvRandShuffle( CvArr* mat, CvRNG* rng,
+                           double iter_factor CV_DEFAULT(1.));
+
 /* Finds real roots of a cubic equation */
 CVAPI(int) cvSolveCubic( const CvMat* coeffs, CvMat* roots );
 
@@ -709,7 +712,8 @@ CVAPI(void)  cvPerspectiveTransform( const CvArr* src, CvArr* dst,
 
 /* Calculates (A-delta)*(A-delta)^T (order=0) or (A-delta)^T*(A-delta) (order=1) */
 CVAPI(void) cvMulTransposed( const CvArr* src, CvArr* dst, int order,
-                            const CvArr* delta CV_DEFAULT(NULL) );
+                             const CvArr* delta CV_DEFAULT(NULL),
+                             double scale CV_DEFAULT(1.) );
 
 /* Tranposes matrix. Square matrices can be transposed in-place */
 CVAPI(void)  cvTranspose( const CvArr* src, CvArr* dst );
@@ -778,8 +782,29 @@ CVAPI(void)  cvSetIdentity( CvArr* mat, CvScalar value CV_DEFAULT(cvRealScalar(1
 /* scale the covariance matrix coefficients by number of the vectors */
 #define CV_COVAR_SCALE     4
 
+/* all the input vectors are stored in a single matrix, as its rows */
+#define CV_COVAR_ROWS      8
+
+/* all the input vectors are stored in a single matrix, as its columns */
+#define CV_COVAR_COLS     16
+
 CVAPI(void)  cvCalcCovarMatrix( const CvArr** vects, int count,
                                 CvArr* cov_mat, CvArr* avg, int flags );
+
+#define CV_PCA_DATA_AS_ROW 0 
+#define CV_PCA_DATA_AS_COL 1
+#define CV_PCA_USE_AVG 2
+#define CV_PCA_RET_SDV 4
+#define CV_PCA_RET_EVAL 0
+
+CVAPI(void)  cvCalcPCA( const CvArr* data, CvArr* mean,
+                        CvArr* eigenvals, CvArr* eigenvects, int flags );
+
+CVAPI(void)  cvProjectPCA( const CvArr* data, const CvArr* mean,
+                           const CvArr* eigenvects, CvArr* result );
+
+CVAPI(void)  cvBackProjectPCA( const CvArr* proj, const CvArr* mean,
+                               const CvArr* eigenvects, CvArr* result );
 
 /* Calculates Mahalanobis(weighted) distance */
 CVAPI(double)  cvMahalanobis( const CvArr* vec1, const CvArr* vec2, CvArr* mat );
@@ -815,6 +840,7 @@ CVAPI(void)  cvMinMaxLoc( const CvArr* arr, double* min_val, double* max_val,
 #define CV_NORM_MASK    7
 #define CV_RELATIVE     8
 #define CV_DIFF         16
+#define CV_MINMAX       32
 
 #define CV_DIFF_C       (CV_DIFF | CV_C)
 #define CV_DIFF_L1      (CV_DIFF | CV_L1)
@@ -827,6 +853,20 @@ CVAPI(void)  cvMinMaxLoc( const CvArr* arr, double* min_val, double* max_val,
 CVAPI(double)  cvNorm( const CvArr* arr1, const CvArr* arr2 CV_DEFAULT(NULL),
                        int norm_type CV_DEFAULT(CV_L2),
                        const CvArr* mask CV_DEFAULT(NULL) );
+
+CVAPI(void)  cvNormalize( const CvArr* src, CvArr* dst,
+                          double a, double b CV_DEFAULT(0.),
+                          int norm_type CV_DEFAULT(CV_L2),
+                          const CvArr* mask CV_DEFAULT(NULL) );
+
+
+#define CV_REDUCE_SUM 0
+#define CV_REDUCE_AVG 1
+#define CV_REDUCE_MAX 2
+#define CV_REDUCE_MIN 3
+
+CVAPI(void)  cvReduce( const CvArr* src, CvArr* dst, int dim CV_DEFAULT(-1),
+                       int op CV_DEFAULT(CV_REDUCE_SUM) );
 
 /****************************************************************************************\
 *                      Discrete Linear Transforms and Related Functions                  *
@@ -1275,6 +1315,12 @@ CVAPI(void)  cvPolyLine( CvArr* img, CvPoint** pts, int* npts, int contours,
                          int is_closed, CvScalar color, int thickness CV_DEFAULT(1),
                          int line_type CV_DEFAULT(8), int shift CV_DEFAULT(0) );
 
+#define cvDrawRect cvRectangle
+#define cvDrawLine cvLine
+#define cvDrawCircle cvCircle
+#define cvDrawEllipse cvEllipse
+#define cvDrawPolyLine cvPolyLine
+
 /* Clips the line segment connecting *pt1 and *pt2
    by the rectangular window
    (0<=x<img_size.width, 0<=y<img_size.height). */
@@ -1335,6 +1381,13 @@ CVAPI(void)  cvInitFont( CvFont* font, int font_face,
                          double shear CV_DEFAULT(0),
                          int thickness CV_DEFAULT(1),
                          int line_type CV_DEFAULT(8));
+
+CV_INLINE CvFont cvFont( double scale, int thickness CV_DEFAULT(1) )
+{
+    CvFont font;
+    cvInitFont( &font, CV_FONT_HERSHEY_PLAIN, scale, scale, 0, thickness, CV_AA );
+    return font;
+}
 
 /* Renders text stroke with specified font and color at specified location.
    CvFont should be initialized with cvInitFont */
@@ -1682,10 +1735,10 @@ CVAPI(double) cvGetTickFrequency( void );
 /*********************************** Multi-Threading ************************************/
 
 /* retrieve/set the number of threads used in OpenMP implementations */
-CVAPI(int)  cvGetNumThreads();
-CVAPI(void) cvSetNumThreads( int threads );
+CVAPI(int)  cvGetNumThreads( void );
+CVAPI(void) cvSetNumThreads( int threads CV_DEFAULT(0) );
 /* get index of the thread being executed */
-CVAPI(int)  cvGetThreadNum();
+CVAPI(int)  cvGetThreadNum( void );
 
 #ifdef __cplusplus
 }
