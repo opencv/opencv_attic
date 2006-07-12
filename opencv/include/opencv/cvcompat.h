@@ -890,6 +890,8 @@ CV_INLINE  void  cvPolyLineAA( CvArr* img, CvPoint** pts, int* npts, int contour
 #define cvMake2DPoints cvConvertPointsHomogenious
 #define cvMake3DPoints cvConvertPointsHomogenious
 
+#define cvWarpPerspectiveQMatrix cvGetPerspectiveTransform
+
 /****************************************************************************************\
 *                                   Pixel Access Macros                                  *
 \****************************************************************************************/
