@@ -53,7 +53,7 @@
 #define cv_strnicmp strnicmp
 #elif defined __GNUC__
 #define cv_stricmp strcasecmp
-#define cv_stricmp strncasecmp
+#define cv_strnicmp strncasecmp
 #else
 #error Do not know how to make case-insensitive string comparison on this platform
 #endif
