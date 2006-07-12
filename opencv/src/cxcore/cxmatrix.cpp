@@ -1485,4 +1485,556 @@ cvCrossProduct( const CvArr* srcAarr, const CvArr* srcBarr, CvArr* dstarr )
     __END__;
 }
 
+
+#if 0
+// for data -- each column is data -- 
+// this is opposite the norm b/c of the way cvSVD calculates eigenvalues
+// U can be MxN, but V must be NxN
+// if computing EigenBasis of images NxN is intractable
+//
+// Computes principal component vectors v_i of matrix X
+// s.t. X*v_i = c_i*v_i
+//
+//
+CV_IMPL void
+cvCalcPCA( const CvArr* data, CvArr* avg, CvArr* eigenvals, CvArr* eigenvects, int flags )
+{
+    CV_FUNCNAME( "cvCalcPCA" );
+
+    CvMat col, col0, dataStub;
+    CvMat * data0, *data_mat = (CvMat *) data;  
+    CvMat avg_stub, *avg_mat = (CvMat *) avg;
+    CvMat * S = NULL;
+    bool data_as_col=(flags & CV_PCA_DATA_AS_COL);
+    int numitems;
+    CvScalar inv_numitems;
+
+    __BEGIN__;
+
+
+
+    if(! CV_IS_MAT( data ) ){
+        data_mat = cvGetMat(data, &dataStub);
+    }
+    if(! CV_IS_MAT( avg_mat ) ){
+        avg_mat = cvGetMat(avg, &avg_stub);
+    }
+
+    if(CV_MAT_DEPTH(avg_mat->type) != CV_32F && CV_MAT_DEPTH(avg_mat->type) != CV_64F){
+        CV_ERROR(CV_BadDepth, "Mean must be CV_32F or CV_64F");
+    }
+    if(CV_MAT_DEPTH(data_mat->type) != CV_32F && CV_MAT_DEPTH(data_mat->type) != CV_64F){
+        CV_ERROR(CV_BadDepth, "Data must be CV_32F or CV_64F");
+    }
+
+    // create array for scaled/shifted data 
+    if(data_as_col){
+        printf("%dx%dx%d\n", data_mat->rows, data_mat->cols, CV_MAT_CN(data_mat->type));
+        if(CV_MAT_CN( data_mat->type ) > 1 ){
+            CV_ERROR(CV_BadNumChannels, "Data in column format must be 1-channel");
+        }
+        data0 = cvCloneMat( (const CvMat *) data );
+        printf("%dx%dx%d\n", data_mat->rows, data_mat->cols, CV_MAT_CN(data_mat->type));
+    }
+    else{
+        if( CV_MAT_CN( data_mat->type ) > 1 ){
+            data_mat = cvReshape( data, &dataStub, 1);
+        }
+        data0 = cvCreateMat( data_mat->cols, data_mat->rows, data_mat->type );
+    }
+
+    // fix avg to be 1-channel column vector
+    if( CV_MAT_CN( avg_mat->type ) > 1 || avg_mat->cols > 1){
+        avg_mat = cvReshape( avg, &avg_stub, 1, avg_mat->rows*avg_mat->cols*CV_MAT_CN(avg_mat->type));
+    }
+
+    if( avg_mat->rows != data0->rows ){
+        printf("%dx%d %dx%d\n", data0->rows, data0->cols, avg_mat->rows, avg_mat->cols);
+        CV_ERROR(CV_BadImageSize, "data dimension does not match mean dimensions");
+    }
+
+    if(!eigenvals){
+        S = cvCreateMat( data0->cols, 1, data0->type );
+        eigenvals = S;
+    }
+
+    
+    // compute mean
+    numitems = data0->cols;
+    inv_numitems = cvScalarAll( 1.0/numitems );
+    if((flags & CV_COVAR_USE_AVG)==0){
+        cvZero(avg_mat);
+        if(data_as_col){
+            for(int i=0; i<numitems; i++){
+                cvGetCol(data, &col, i);
+                cvScaleAdd(&col, inv_numitems, avg_mat, avg_mat);
+            }
+        }
+        else{
+            CvMat row;
+            for(int i=0; i<numitems; i++){
+                cvGetRow(data, &row, i);
+                cvReshape(&row, &col, 1, row.cols);
+                cvScaleAdd(&col, inv_numitems, avg_mat, avg_mat);
+            }
+        }
+    }
+    cvCheckArr( avg_mat );
+
+    // center data
+    if(data_as_col){
+        for(int i=0; i<numitems; i++){
+            cvGetCol(data, &col, i);
+            cvGetCol(data0, &col0, i);
+            cvSub(&col, avg_mat, &col0);
+        }
+    }
+    else{
+        CvMat row;
+        for(int i=0; i<numitems; i++){
+            cvGetRow(data, &row, i);
+            cvReshape(&row, &col, 1, data0->rows); // as a column vector
+            cvGetCol(data0, &col0, i);
+            cvSub(&col, avg_mat, &col0);
+        }
+    }
+
+    cvCheckArr(data0);
+
+    // compute eigen vectors
+    //printf("U=%dx%d data=%dx%d\n", data0->rows, data0->cols, ((CvMat *)eigenvects)->rows, ((CvMat *)eigenvects)->cols);
+    // compute A' = U * S * V'
+    cvSVD( data0, eigenvals, eigenvects, NULL, CV_SVD_U_T + CV_SVD_MODIFY_A ); 
+
+    cvReleaseMat( &data0 );
+
+    if(S!=NULL){
+        cvReleaseMat( &S ); 
+    }
+    else{
+        if( (flags & CV_PCA_RET_SDV) != 0){
+            // for standard deviation, need to scale
+            cvScale(eigenvals, eigenvals, sqrt(1.0/(numitems-1)));
+        }
+        else{
+            // singular values of A are square root of eigenvalues of A'A
+            // for eigenvalues of covar matrix, need to scale by 1/nitems
+            cvMul( eigenvals, eigenvals, eigenvals, 1.0/(numitems-1));
+        }
+    }
+
+    __END__;
+}
+#endif
+
+CV_IMPL void
+cvCalcPCA( const CvArr* data_arr, CvArr* avg_arr, CvArr* eigenvals, CvArr* eigenvects, int flags )
+{
+    CvMat* tmp_avg = 0;
+    CvMat* tmp_cov = 0;
+    CvMat* tmp_evals = 0;
+    CvMat* tmp_evects = 0;
+    CvMat* tmp_evects2 = 0;
+    CvMat* tmp_data = 0;
+    
+    CV_FUNCNAME( "cvCalcPCA" );
+
+    __BEGIN__;
+
+    CvMat stub, *data = (CvMat*)data_arr;
+    CvMat astub, *avg = (CvMat*)avg_arr;
+    CvMat evalstub, *evals = (CvMat*)eigenvals;
+    CvMat evectstub, *evects = (CvMat*)eigenvects;
+    int covar_flags = CV_COVAR_SCALE;
+    int i, len, in_count, count, out_count;
+
+    if( !CV_IS_MAT(data) )
+        CV_CALL( data = cvGetMat( data, &stub ));
+
+    if( !CV_IS_MAT(avg) )
+        CV_CALL( avg = cvGetMat( avg, &astub ));
+
+    if( !CV_IS_MAT(evals) )
+        CV_CALL( evals = cvGetMat( evals, &evalstub ));
+
+    if( !CV_IS_MAT(evects) )
+        CV_CALL( evects = cvGetMat( evects, &evectstub ));
+
+    if( CV_MAT_CN(data->type) != 1 || CV_MAT_CN(avg->type) != 1 ||
+        CV_MAT_CN(evals->type) != 1 || CV_MAT_CN(evects->type) != 1 )
+        CV_ERROR( CV_StsUnsupportedFormat, "All the input and output arrays must be 1-channel" );
+
+    if( CV_MAT_DEPTH(avg->type) < CV_32F || !CV_ARE_DEPTHS_EQ(avg, evals) ||
+        !CV_ARE_DEPTHS_EQ(avg, evects) )
+        CV_ERROR( CV_StsUnsupportedFormat, "All the output arrays must have the same type, 32fC1 or 64fC1" );
+
+    if( flags & CV_PCA_DATA_AS_COL )
+    {
+        len = data->rows;
+        in_count = data->cols;
+        covar_flags |= CV_COVAR_COLS;
+
+        if( avg->cols != 1 || avg->rows != len )
+            CV_ERROR( CV_StsBadSize,
+            "The mean (average) vector should be data->rows x 1 when CV_PCA_DATA_AS_COL is used" );
+
+        CV_CALL( tmp_avg = cvCreateMat( len, 1, CV_64F ));
+    }
+    else
+    {
+        len = data->cols;
+        in_count = data->rows;
+        covar_flags |= CV_COVAR_ROWS;
+
+        if( avg->rows != 1 || avg->cols != len )
+            CV_ERROR( CV_StsBadSize,
+            "The mean (average) vector should be 1 x data->cols when CV_PCA_DATA_AS_ROW is used" );
+
+        CV_CALL( tmp_avg = cvCreateMat( 1, len, CV_64F ));
+    }
+
+    count = MIN(len, in_count);
+    out_count = evals->cols + evals->rows - 1;
+    
+    if( (evals->cols != 1 && evals->rows != 1) || out_count > count )
+        CV_ERROR( CV_StsBadSize,
+        "The array of eigenvalues must be 1d vector containing "
+        "no more than min(data->rows,data->cols) elements" );
+
+    if( evects->cols != len || evects->rows != out_count )
+        CV_ERROR( CV_StsBadSize,
+        "The matrix of eigenvalues must have the same number of columns as the input vector length "
+        "and the same number of rows as the number of eigenvalues" );
+
+    // "scrambled" way to compute PCA (when cols(A)>rows(A)):
+    // B = A'A; B*x=b*x; C = AA'; C*y=c*y -> AA'*y=c*y -> A'A*(A'*y)=c*(A'*y) -> c = b, x=A'*y
+    if( len <= in_count )
+        covar_flags |= CV_COVAR_NORMAL;
+
+    CV_CALL( tmp_cov = cvCreateMat( count, count, CV_64F ));
+    CV_CALL( tmp_evals = cvCreateMat( 1, count, CV_64F ));
+    CV_CALL( tmp_evects = cvCreateMat( count, count, CV_64F ));
+
+    CV_CALL( cvCalcCovarMatrix( &data_arr, 0, tmp_cov, tmp_avg, covar_flags ));
+    CV_CALL( cvSVD( tmp_cov, tmp_evals, tmp_evects, 0, CV_SVD_MODIFY_A + CV_SVD_U_T ));
+    tmp_evects->rows = out_count;
+    tmp_evals->cols = out_count;
+    cvZero( evects );
+    cvZero( evals );
+
+    if( covar_flags & CV_COVAR_NORMAL )
+    {
+        CV_CALL( cvConvert( tmp_evects, evects ));
+    }
+    else
+    {
+        // CV_PCA_DATA_AS_ROW: cols(A)>rows(A). x=A'*y -> x'=y'*A
+        // CV_PCA_DATA_AS_COL: rows(A)>cols(A). x=A''*y -> x'=y'*A'
+        int block_count = 0;
+
+        CV_CALL( tmp_data = cvCreateMat( count, count, CV_64F ));
+        CV_CALL( tmp_evects2 = cvCreateMat( count, count, CV_64F ));
+
+        for( i = 0; i < len; i += block_count )
+        {
+            CvMat data_part, tdata_part, part, dst_part;
+            int gemm_flags;
+
+            block_count = MIN( count, len - i );
+
+            if( flags & CV_PCA_DATA_AS_COL )
+            {
+                cvGetRows( data, &data_part, i, i + block_count );
+                cvGetRows( tmp_data, &tdata_part, 0, block_count );
+                gemm_flags = CV_GEMM_A_T + CV_GEMM_B_T;
+            }
+            else
+            {
+                cvGetCols( data, &data_part, i, i + block_count );
+                cvGetCols( tmp_data, &tdata_part, 0, block_count );
+                gemm_flags = CV_GEMM_A_T;
+            }
+            cvGetCols( tmp_evects2, &part, 0, block_count );
+            cvGetCols( evects, &dst_part, i, i + block_count );
+
+            cvConvert( &data_part, &tdata_part );
+            cvGEMM( tmp_evects, &tdata_part, 1, 0, 0, &part, gemm_flags );
+            cvConvert( &part, &dst_part );
+        }
+    }
+
+    if( tmp_evals->rows != out_count )
+        cvReshape( tmp_evals, tmp_evals, 1, out_count );
+
+    if( tmp_evals->rows != evals->rows )
+        cvReshape( tmp_evals, tmp_evals, 1, evals->rows );
+    cvConvert( tmp_evals, evals );
+    cvConvert( tmp_avg, avg );
+
+    __END__;
+
+    cvReleaseMat( &tmp_avg );
+    cvReleaseMat( &tmp_cov );
+    cvReleaseMat( &tmp_evals );
+    cvReleaseMat( &tmp_evects );
+    cvReleaseMat( &tmp_evects2 );
+    cvReleaseMat( &tmp_data );
+}
+
+
+CV_IMPL void
+cvProjectPCA( const CvArr* data_arr, const CvArr* avg_arr,
+              const CvArr* eigenvects, CvArr* result_arr )
+{
+    uchar* buffer = 0;
+    int local_alloc = 0;
+    
+    CV_FUNCNAME( "cvProjectPCA" );
+
+    __BEGIN__;
+
+    CvMat stub, *data = (CvMat*)data_arr;
+    CvMat astub, *avg = (CvMat*)avg_arr;
+    CvMat evectstub, *evects = (CvMat*)eigenvects;
+    CvMat rstub, *result = (CvMat*)result_arr;
+    CvMat avg_repeated;
+    int i, len, in_count;
+    int gemm_flags, as_cols, convert_data;
+    int block_count0, block_count, buf_size, elem_size;
+    uchar* tmp_data_ptr;
+
+    if( !CV_IS_MAT(data) )
+        CV_CALL( data = cvGetMat( data, &stub ));
+
+    if( !CV_IS_MAT(avg) )
+        CV_CALL( avg = cvGetMat( avg, &astub ));
+
+    if( !CV_IS_MAT(evects) )
+        CV_CALL( evects = cvGetMat( evects, &evectstub ));
+
+    if( !CV_IS_MAT(result) )
+        CV_CALL( result = cvGetMat( result, &rstub ));
+
+    if( CV_MAT_CN(data->type) != 1 || CV_MAT_CN(avg->type) != 1 )
+        CV_ERROR( CV_StsUnsupportedFormat, "All the input and output arrays must be 1-channel" );
+
+    if( CV_MAT_TYPE(avg->type) != CV_32FC1 && CV_MAT_TYPE(avg->type) != CV_64FC1 ||
+        !CV_ARE_TYPES_EQ(avg, evects) || !CV_ARE_TYPES_EQ(avg, result) )
+        CV_ERROR( CV_StsUnsupportedFormat,
+        "All the input and output arrays (except for data) must have the same type, 32fC1 or 64fC1" );
+
+    if( (avg->cols != 1 || avg->rows != data->rows) &&
+        (avg->rows != 1 || avg->cols != data->cols) )
+        CV_ERROR( CV_StsBadSize,
+        "The mean (average) vector should be either 1 x data->cols or data->rows x 1" );
+
+    if( avg->cols == 1 )
+    {
+        len = data->rows;
+        in_count = data->cols;
+
+        gemm_flags = CV_GEMM_A_T + CV_GEMM_B_T;
+        as_cols = 1;
+    }
+    else
+    {
+        len = data->cols;
+        in_count = data->rows;
+
+        gemm_flags = CV_GEMM_B_T;
+        as_cols = 0;
+    }
+
+    if( evects->cols != len )
+        CV_ERROR( CV_StsUnmatchedSizes,
+        "Eigenvectors must be stored as rows and be of the same size as input vectors" );
+
+    if( result->cols > evects->rows )
+        CV_ERROR( CV_StsOutOfRange,
+        "The output matrix of coefficients must have the number of columns "
+        "less than or equal to the number of eigenvectors (number of rows in eigenvectors matrix)" );
+
+    evects = cvGetRows( evects, &evectstub, 0, result->cols );
+
+    block_count0 = (1 << 16)/len;
+    block_count0 = MAX( block_count0, 4 );
+    block_count0 = MIN( block_count0, in_count );
+    elem_size = CV_ELEM_SIZE(avg->type);
+    convert_data = CV_MAT_DEPTH(data->type) < CV_MAT_DEPTH(avg->type);
+
+    buf_size = block_count0*len*((block_count0 > 1) + 1)*elem_size;
+
+    if( buf_size < CV_MAX_LOCAL_SIZE )
+    {
+        buffer = (uchar*)cvStackAlloc( buf_size );
+        local_alloc = 1;
+    }
+    else
+        CV_CALL( buffer = (uchar*)cvAlloc( buf_size ));
+
+    tmp_data_ptr = buffer;
+    if( block_count0 > 1 )
+    {
+        avg_repeated = cvMat( as_cols ? len : block_count0,
+                              as_cols ? block_count0 : len, avg->type, buffer );
+        cvRepeat( avg, &avg_repeated );
+        tmp_data_ptr += block_count0*len*elem_size;
+    }
+    else
+        avg_repeated = *avg;
+
+    for( i = 0; i < in_count; i += block_count )
+    {
+        CvMat data_part, norm_data, avg_part, *src = &data_part, out_part;
+        
+        block_count = MIN( block_count0, in_count - i );
+        if( as_cols )
+        {
+            cvGetCols( data, &data_part, i, i + block_count );
+            cvGetCols( &avg_repeated, &avg_part, 0, block_count );
+            norm_data = cvMat( len, block_count, avg->type, tmp_data_ptr );
+        }
+        else
+        {
+            cvGetRows( data, &data_part, i, i + block_count );
+            cvGetRows( &avg_repeated, &avg_part, 0, block_count );
+            norm_data = cvMat( block_count, len, avg->type, tmp_data_ptr );
+        }
+
+        if( convert_data )
+        {
+            cvConvert( src, &norm_data );
+            src = &norm_data;
+        }
+        
+        cvSub( src, &avg_part, &norm_data );
+
+        cvGetRows( result, &out_part, i, i + block_count );
+        cvGEMM( &norm_data, evects, 1, 0, 0, &out_part, gemm_flags );
+    }
+
+    __END__;
+
+    if( !local_alloc )
+        cvFree( &buffer );
+}
+
+
+CV_IMPL void
+cvBackProjectPCA( const CvArr* proj_arr, const CvArr* avg_arr,
+                  const CvArr* eigenvects, CvArr* result_arr )
+{
+    uchar* buffer = 0;
+    int local_alloc = 0;
+    
+    CV_FUNCNAME( "cvProjectPCA" );
+
+    __BEGIN__;
+
+    CvMat pstub, *data = (CvMat*)proj_arr;
+    CvMat astub, *avg = (CvMat*)avg_arr;
+    CvMat evectstub, *evects = (CvMat*)eigenvects;
+    CvMat rstub, *result = (CvMat*)result_arr;
+    CvMat avg_repeated;
+    int i, len, in_count, as_cols;
+    int block_count0, block_count, buf_size, elem_size;
+
+    if( !CV_IS_MAT(data) )
+        CV_CALL( data = cvGetMat( data, &pstub ));
+
+    if( !CV_IS_MAT(avg) )
+        CV_CALL( avg = cvGetMat( avg, &astub ));
+
+    if( !CV_IS_MAT(evects) )
+        CV_CALL( evects = cvGetMat( evects, &evectstub ));
+
+    if( !CV_IS_MAT(result) )
+        CV_CALL( result = cvGetMat( result, &rstub ));
+
+    if( CV_MAT_TYPE(avg->type) != CV_32FC1 && CV_MAT_TYPE(avg->type) != CV_64FC1 ||
+        !CV_ARE_TYPES_EQ(avg, data) || !CV_ARE_TYPES_EQ(avg, evects) || !CV_ARE_TYPES_EQ(avg, result) )
+        CV_ERROR( CV_StsUnsupportedFormat,
+        "All the input and output arrays must have the same type, 32fC1 or 64fC1" );
+
+    if( (avg->cols != 1 || avg->rows != result->rows) &&
+        (avg->rows != 1 || avg->cols != result->cols) )
+        CV_ERROR( CV_StsBadSize,
+        "The mean (average) vector should be either 1 x result->cols or result->rows x 1" );
+
+    if( avg->cols == 1 )
+    {
+        len = result->rows;
+        in_count = result->cols;
+        as_cols = 1;
+    }
+    else
+    {
+        len = result->cols;
+        in_count = result->rows;
+        as_cols = 0;
+    }
+
+    if( evects->cols != len )
+        CV_ERROR( CV_StsUnmatchedSizes,
+        "Eigenvectors must be stored as rows and be of the same size as the output vectors" );
+
+    if( data->cols > evects->rows )
+        CV_ERROR( CV_StsOutOfRange,
+        "The input matrix of coefficients must have the number of columns "
+        "less than or equal to the number of eigenvectors (number of rows in eigenvectors matrix)" );
+
+    evects = cvGetRows( evects, &evectstub, 0, data->cols );
+
+    block_count0 = (1 << 16)/len;
+    block_count0 = MAX( block_count0, 4 );
+    block_count0 = MIN( block_count0, in_count );
+    elem_size = CV_ELEM_SIZE(avg->type);
+
+    buf_size = block_count0*len*(block_count0 > 1)*elem_size;
+
+    if( buf_size < CV_MAX_LOCAL_SIZE )
+    {
+        buffer = (uchar*)cvStackAlloc( MAX(buf_size,16) );
+        local_alloc = 1;
+    }
+    else
+        CV_CALL( buffer = (uchar*)cvAlloc( buf_size ));
+
+    if( block_count0 > 1 )
+    {
+        avg_repeated = cvMat( as_cols ? len : block_count0,
+                              as_cols ? block_count0 : len, avg->type, buffer );
+        cvRepeat( avg, &avg_repeated );
+    }
+    else
+        avg_repeated = *avg;
+
+    for( i = 0; i < in_count; i += block_count )
+    {
+        CvMat data_part, avg_part, out_part;
+        
+        block_count = MIN( block_count0, in_count - i );
+        cvGetRows( data, &data_part, i, i + block_count );
+
+        if( as_cols )
+        {
+            cvGetCols( result, &out_part, i, i + block_count );
+            cvGetCols( &avg_repeated, &avg_part, 0, block_count );
+            cvGEMM( evects, &data_part, 1, &avg_part, 1, &out_part, CV_GEMM_A_T + CV_GEMM_B_T );
+        }
+        else
+        {
+            cvGetRows( result, &out_part, i, i + block_count );
+            cvGetRows( &avg_repeated, &avg_part, 0, block_count );
+            cvGEMM( &data_part, evects, 1, &avg_part, 1, &out_part, 0 );
+        }
+    }
+
+    __END__;
+
+    if( !local_alloc )
+        cvFree( &buffer );
+}
+
+
 /* End of file. */

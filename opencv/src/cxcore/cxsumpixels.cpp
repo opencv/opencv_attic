@@ -674,4 +674,342 @@ cvCountNonZero( const CvArr* arr )
     return  count;
 }
 
+
+/****************************************************************************************\
+*                                Reduce Matrix to Vector                                 *
+\****************************************************************************************/
+
+#define ICV_ACC_ROWS_FUNC( name, flavor, arrtype, acctype,      \
+                           __op__, load_macro )                 \
+static CvStatus CV_STDCALL                                      \
+icv##name##Rows_##flavor##_C1R( const arrtype* src, int srcstep,\
+                           acctype* dst, CvSize size )          \
+{                                                               \
+    int i, width = size.width;                                  \
+    srcstep /= sizeof(src[0]);                                  \
+                                                                \
+    for( i = 0; i < width; i++ )                                \
+        dst[i] = load_macro(src[i]);                            \
+                                                                \
+    for( ; --size.height;  )                                    \
+    {                                                           \
+        src += srcstep;                                         \
+        for( i = 0; i <= width - 4; i += 4 )                    \
+        {                                                       \
+            acctype s0 = load_macro(src[i]);                    \
+            acctype s1 = load_macro(src[i+1]);                  \
+            acctype a0 = dst[i], a1 = dst[i+1];                 \
+            a0 = (acctype)__op__(a0,s0); a1 = (acctype)__op__(a1,s1); \
+            dst[i] = a0; dst[i+1] = a1;                         \
+                                                                \
+            s0 = load_macro(src[i+2]);                          \
+            s1 = load_macro(src[i+3]);                          \
+            a0 = dst[i+2]; a1 = dst[i+3];                       \
+            a0 = (acctype)__op__(a0,s0); a1 = (acctype)__op__(a1,s1);  \
+            dst[i+2] = a0; dst[i+3] = a1;                       \
+        }                                                       \
+                                                                \
+        for( ; i < width; i++ )                                 \
+        {                                                       \
+            acctype s0 = load_macro(src[i]), a0 = dst[i];       \
+            a0 = (acctype)__op__(a0,s0);                        \
+            dst[i] = a0;                                        \
+        }                                                       \
+    }                                                           \
+                                                                \
+    return CV_OK;                                               \
+}
+
+
+#define ICV_ACC_COLS_FUNC_C1( name, flavor, arrtype, worktype, acctype, __op__ )\
+static CvStatus CV_STDCALL                                              \
+icv##name##Cols_##flavor##_C1R( const arrtype* src, int srcstep,        \
+                                acctype* dst, int dststep, CvSize size )\
+{                                                                       \
+    int i, width = size.width;                                          \
+    srcstep /= sizeof(src[0]);                                          \
+    dststep /= sizeof(dst[0]);                                          \
+                                                                        \
+    for( ; size.height--; src += srcstep, dst += dststep )              \
+    {                                                                   \
+        if( width == 1 )                                                \
+            dst[0] = (acctype)src[0];                                   \
+        else                                                            \
+        {                                                               \
+            worktype a0 = src[0], a1 = src[1];                          \
+            for( i = 2; i <= width - 4; i += 4 )                        \
+            {                                                           \
+                worktype s0 = src[i], s1 = src[i+1];                    \
+                a0 = __op__(a0, s0);                                    \
+                a1 = __op__(a1, s1);                                    \
+                s0 = src[i+2]; s1 = src[i+3];                           \
+                a0 = __op__(a0, s0);                                    \
+                a1 = __op__(a1, s1);                                    \
+            }                                                           \
+                                                                        \
+            for( ; i < width; i++ )                                     \
+            {                                                           \
+                worktype s0 = src[i];                                   \
+                a0 = __op__(a0, s0);                                    \
+            }                                                           \
+            a0 = __op__(a0, a1);                                        \
+            dst[0] = (acctype)a0;                                       \
+        }                                                               \
+    }                                                                   \
+                                                                        \
+    return CV_OK;                                                       \
+}
+
+
+#define ICV_ACC_COLS_FUNC_C3( name, flavor, arrtype, worktype, acctype, __op__ ) \
+static CvStatus CV_STDCALL                                              \
+icv##name##Cols_##flavor##_C3R( const arrtype* src, int srcstep,        \
+                                acctype* dst, int dststep, CvSize size )\
+{                                                                       \
+    int i, width = size.width*3;                                        \
+    srcstep /= sizeof(src[0]);                                          \
+    dststep /= sizeof(dst[0]);                                          \
+                                                                        \
+    for( ; size.height--; src += srcstep, dst += dststep )              \
+    {                                                                   \
+        worktype a0 = src[0], a1 = src[1], a2 = src[2];                 \
+        for( i = 3; i < width; i += 3 )                                 \
+        {                                                               \
+            worktype s0 = src[i], s1 = src[i+1], s2 = src[i+2];         \
+            a0 = __op__(a0, s0);                                        \
+            a1 = __op__(a1, s1);                                        \
+            a2 = __op__(a2, s2);                                        \
+        }                                                               \
+                                                                        \
+        dst[0] = (acctype)a0;                                           \
+        dst[1] = (acctype)a1;                                           \
+        dst[2] = (acctype)a2;                                           \
+    }                                                                   \
+                                                                        \
+    return CV_OK;                                                       \
+}
+
+
+#define ICV_ACC_COLS_FUNC_C4( name, flavor, arrtype, worktype, acctype, __op__ ) \
+static CvStatus CV_STDCALL                                              \
+icv##name##Cols_##flavor##_C4R( const arrtype* src, int srcstep,        \
+                                acctype* dst, int dststep, CvSize size )\
+{                                                                       \
+    int i, width = size.width*4;                                        \
+    srcstep /= sizeof(src[0]);                                          \
+    dststep /= sizeof(dst[0]);                                          \
+                                                                        \
+    for( ; size.height--; src += srcstep, dst += dststep )              \
+    {                                                                   \
+        worktype a0 = src[0], a1 = src[1], a2 = src[2], a3 = src[3];    \
+        for( i = 4; i < width; i += 4 )                                 \
+        {                                                               \
+            worktype s0 = src[i], s1 = src[i+1];                        \
+            a0 = __op__(a0, s0);                                        \
+            a1 = __op__(a1, s1);                                        \
+            s0 = src[i+2]; s1 = src[i+3];                               \
+            a2 = __op__(a2, s0);                                        \
+            a3 = __op__(a3, s1);                                        \
+        }                                                               \
+                                                                        \
+        dst[0] = (acctype)a0;                                           \
+        dst[1] = (acctype)a1;                                           \
+        dst[2] = (acctype)a2;                                           \
+        dst[3] = (acctype)a3;                                           \
+    }                                                                   \
+                                                                        \
+    return CV_OK;                                                       \
+}
+
+
+ICV_ACC_ROWS_FUNC( Sum, 8u32s, uchar, int, CV_ADD, CV_NOP )
+ICV_ACC_ROWS_FUNC( Sum, 8u32f, uchar, float, CV_ADD, CV_8TO32F )
+ICV_ACC_ROWS_FUNC( Sum, 16u32f, ushort, float, CV_ADD, CV_NOP )
+ICV_ACC_ROWS_FUNC( Sum, 16u64f, ushort, double, CV_ADD, CV_NOP )
+ICV_ACC_ROWS_FUNC( Sum, 16s32f, short, float, CV_ADD, CV_NOP )
+ICV_ACC_ROWS_FUNC( Sum, 16s64f, short, double, CV_ADD, CV_NOP )
+ICV_ACC_ROWS_FUNC( Sum, 32f, float, float, CV_ADD, CV_NOP )
+ICV_ACC_ROWS_FUNC( Sum, 32f64f, float, double, CV_ADD, CV_NOP )
+ICV_ACC_ROWS_FUNC( Sum, 64f, double, double, CV_ADD, CV_NOP )
+
+ICV_ACC_ROWS_FUNC( Max, 8u, uchar, uchar, CV_MAX_8U, CV_NOP )
+ICV_ACC_ROWS_FUNC( Max, 32f, float, float, MAX, CV_NOP )
+ICV_ACC_ROWS_FUNC( Max, 64f, double, double, MAX, CV_NOP )
+
+ICV_ACC_ROWS_FUNC( Min, 8u, uchar, uchar, CV_MIN_8U, CV_NOP )
+ICV_ACC_ROWS_FUNC( Min, 32f, float, float, MIN, CV_NOP )
+ICV_ACC_ROWS_FUNC( Min, 64f, double, double, MIN, CV_NOP )
+
+ICV_ACC_COLS_FUNC_C1( Sum, 8u32s, uchar, int, int, CV_ADD )
+ICV_ACC_COLS_FUNC_C1( Sum, 8u32f, uchar, int, float, CV_ADD )
+ICV_ACC_COLS_FUNC_C1( Sum, 16u32f, ushort, float, float, CV_ADD )
+ICV_ACC_COLS_FUNC_C1( Sum, 16u64f, ushort, double, double, CV_ADD )
+ICV_ACC_COLS_FUNC_C1( Sum, 16s32f, short, float, float, CV_ADD )
+ICV_ACC_COLS_FUNC_C1( Sum, 16s64f, short, double, double, CV_ADD )
+
+ICV_ACC_COLS_FUNC_C1( Sum, 32f, float, float, float, CV_ADD )
+ICV_ACC_COLS_FUNC_C1( Sum, 32f64f, float, double, double, CV_ADD )
+ICV_ACC_COLS_FUNC_C1( Sum, 64f, double, double, double, CV_ADD )
+ICV_ACC_COLS_FUNC_C3( Sum, 8u32s, uchar, int, int, CV_ADD )
+ICV_ACC_COLS_FUNC_C3( Sum, 8u32f, uchar, int, float, CV_ADD )
+ICV_ACC_COLS_FUNC_C3( Sum, 32f, float, float, float, CV_ADD )
+ICV_ACC_COLS_FUNC_C3( Sum, 64f, double, double, double, CV_ADD )
+ICV_ACC_COLS_FUNC_C4( Sum, 8u32s, uchar, int, int, CV_ADD )
+ICV_ACC_COLS_FUNC_C4( Sum, 8u32f, uchar, int, float, CV_ADD )
+ICV_ACC_COLS_FUNC_C4( Sum, 32f, float, float, float, CV_ADD )
+ICV_ACC_COLS_FUNC_C4( Sum, 64f, double, double, double, CV_ADD )
+
+ICV_ACC_COLS_FUNC_C1( Max, 8u, uchar, int, uchar, CV_MAX_8U )
+ICV_ACC_COLS_FUNC_C1( Max, 32f, float, float, float, MAX )
+ICV_ACC_COLS_FUNC_C1( Max, 64f, double, double, double, MAX )
+
+ICV_ACC_COLS_FUNC_C1( Min, 8u, uchar, int, uchar, CV_MIN_8U )
+ICV_ACC_COLS_FUNC_C1( Min, 32f, float, float, float, MIN )
+ICV_ACC_COLS_FUNC_C1( Min, 64f, double, double, double, MIN )
+
+typedef CvStatus (CV_STDCALL * CvReduceToRowFunc)
+    ( const void* src, int srcstep, void* dst, CvSize size );
+
+typedef CvStatus (CV_STDCALL * CvReduceToColFunc)
+    ( const void* src, int srcstep, void* dst, int dststep, CvSize size );
+
+
+CV_IMPL void
+cvReduce( const CvArr* srcarr, CvArr* dstarr, int dim, int op )
+{
+    CvMat* temp = 0;
+    
+    CV_FUNCNAME( "cvReduce" );
+
+    __BEGIN__;
+
+    CvMat sstub, *src = (CvMat*)srcarr;
+    CvMat dstub, *dst = (CvMat*)dstarr, *dst0;
+    int sdepth, ddepth, cn, op0 = op;
+    CvSize size;
+
+    if( !CV_IS_MAT(src) )
+        CV_CALL( src = cvGetMat( src, &sstub ));
+
+    if( !CV_IS_MAT(dst) )
+        CV_CALL( dst = cvGetMat( dst, &dstub ));
+
+    if( !CV_ARE_CNS_EQ(src, dst) )
+        CV_ERROR( CV_StsUnmatchedFormats, "Input and output arrays must have the same number of channels" );
+
+    sdepth = CV_MAT_DEPTH(src->type);
+    ddepth = CV_MAT_DEPTH(dst->type);
+    cn = CV_MAT_CN(src->type);
+    dst0 = dst;
+
+    size = cvGetMatSize(src);
+
+    if( dim < 0 )
+        dim = src->rows == dst->rows;
+
+    if( dim > 1 )
+        CV_ERROR( CV_StsOutOfRange, "The reduced dimensionality index is out of range" );
+
+    if( dim == 0 && (dst->cols != src->cols || dst->rows != 1) ||
+        dim == 1 && (dst->rows != src->rows || dst->cols != 1) )
+        CV_ERROR( CV_StsBadSize, "The output array size is incorrect" );
+
+    if( op == CV_REDUCE_AVG )
+    {
+        int ttype = sdepth == CV_8U ? CV_MAKETYPE(CV_32S,cn) : dst->type;
+        if( ttype != dst->type )
+            CV_CALL( dst = temp = cvCreateMat( dst->rows, dst->cols, ttype ));
+        op = CV_REDUCE_SUM;
+        ddepth = CV_MAT_DEPTH(ttype);
+    }
+
+    if( op != CV_REDUCE_SUM && op != CV_REDUCE_MAX && op != CV_REDUCE_MIN )
+        CV_ERROR( CV_StsBadArg, "Unknown reduce operation index, must be one of CV_REDUCE_*" );
+
+    if( dim == 0 )
+    {
+        CvReduceToRowFunc rfunc =
+            op == CV_REDUCE_SUM ?
+            (sdepth == CV_8U && ddepth == CV_32S ? (CvReduceToRowFunc)icvSumRows_8u32s_C1R :
+             sdepth == CV_8U && ddepth == CV_32F ? (CvReduceToRowFunc)icvSumRows_8u32f_C1R :
+             sdepth == CV_16U && ddepth == CV_32F ? (CvReduceToRowFunc)icvSumRows_16u32f_C1R :
+             sdepth == CV_16U && ddepth == CV_64F ? (CvReduceToRowFunc)icvSumRows_16u64f_C1R :
+             sdepth == CV_16S && ddepth == CV_32F ? (CvReduceToRowFunc)icvSumRows_16s32f_C1R :
+             sdepth == CV_16S && ddepth == CV_64F ? (CvReduceToRowFunc)icvSumRows_16s64f_C1R :
+             sdepth == CV_32F && ddepth == CV_32F ? (CvReduceToRowFunc)icvSumRows_32f_C1R :
+             sdepth == CV_32F && ddepth == CV_64F ? (CvReduceToRowFunc)icvSumRows_32f64f_C1R :        
+             sdepth == CV_64F && ddepth == CV_64F ? (CvReduceToRowFunc)icvSumRows_64f_C1R : 0) :
+            op == CV_REDUCE_MAX ?
+            (sdepth == CV_8U && ddepth == CV_8U ? (CvReduceToRowFunc)icvMaxRows_8u_C1R :
+             sdepth == CV_32F && ddepth == CV_32F ? (CvReduceToRowFunc)icvMaxRows_32f_C1R :
+             sdepth == CV_64F && ddepth == CV_64F ? (CvReduceToRowFunc)icvMaxRows_64f_C1R : 0) :
+
+            (sdepth == CV_8U && ddepth == CV_8U ? (CvReduceToRowFunc)icvMinRows_8u_C1R :
+             sdepth == CV_32F && ddepth == CV_32F ? (CvReduceToRowFunc)icvMinRows_32f_C1R :
+             sdepth == CV_64F && ddepth == CV_64F ? (CvReduceToRowFunc)icvMinRows_64f_C1R : 0);
+
+        if( !rfunc )
+            CV_ERROR( CV_StsUnsupportedFormat,
+            "Unsupported combination of input and output array formats" );
+
+        size.width *= cn;
+        IPPI_CALL( rfunc( src->data.ptr, src->step ? src->step : CV_STUB_STEP,
+                          dst->data.ptr, size ));
+    }
+    else
+    {
+        CvReduceToColFunc cfunc =
+            op == CV_REDUCE_SUM ?
+            (sdepth == CV_8U && ddepth == CV_32S ?
+            (CvReduceToColFunc)(cn == 1 ? icvSumCols_8u32s_C1R :
+                                cn == 3 ? icvSumCols_8u32s_C3R :
+                                cn == 4 ? icvSumCols_8u32s_C4R : 0) :
+             sdepth == CV_8U && ddepth == CV_32F ?
+            (CvReduceToColFunc)(cn == 1 ? icvSumCols_8u32f_C1R :
+                                cn == 3 ? icvSumCols_8u32f_C3R :
+                                cn == 4 ? icvSumCols_8u32f_C4R : 0) :
+             sdepth == CV_16U && ddepth == CV_32F ?
+            (CvReduceToColFunc)(cn == 1 ? icvSumCols_16u32f_C1R : 0) :
+             sdepth == CV_16U && ddepth == CV_64F ?
+            (CvReduceToColFunc)(cn == 1 ? icvSumCols_16u64f_C1R : 0) :
+             sdepth == CV_16S && ddepth == CV_32F ?
+            (CvReduceToColFunc)(cn == 1 ? icvSumCols_16s32f_C1R : 0) :
+             sdepth == CV_16S && ddepth == CV_64F ?
+            (CvReduceToColFunc)(cn == 1 ? icvSumCols_16s64f_C1R : 0) :
+             sdepth == CV_32F && ddepth == CV_32F ?
+            (CvReduceToColFunc)(cn == 1 ? icvSumCols_32f_C1R :
+                                cn == 3 ? icvSumCols_32f_C3R :
+                                cn == 4 ? icvSumCols_32f_C4R : 0) :
+             sdepth == CV_32F && ddepth == CV_64F ?
+            (CvReduceToColFunc)(cn == 1 ? icvSumCols_32f64f_C1R : 0) :
+             sdepth == CV_64F && ddepth == CV_64F ?
+            (CvReduceToColFunc)(cn == 1 ? icvSumCols_64f_C1R :
+                                cn == 3 ? icvSumCols_64f_C3R :
+                                cn == 4 ? icvSumCols_64f_C4R : 0) : 0) :
+             op == CV_REDUCE_MAX && cn == 1 ?
+             (sdepth == CV_8U && ddepth == CV_8U ? (CvReduceToColFunc)icvMaxCols_8u_C1R :
+              sdepth == CV_32F && ddepth == CV_32F ? (CvReduceToColFunc)icvMaxCols_32f_C1R :
+              sdepth == CV_64F && ddepth == CV_64F ? (CvReduceToColFunc)icvMaxCols_64f_C1R : 0) :
+             op == CV_REDUCE_MIN && cn == 1 ?
+             (sdepth == CV_8U && ddepth == CV_8U ? (CvReduceToColFunc)icvMinCols_8u_C1R :
+              sdepth == CV_32F && ddepth == CV_32F ? (CvReduceToColFunc)icvMinCols_32f_C1R :
+              sdepth == CV_64F && ddepth == CV_64F ? (CvReduceToColFunc)icvMinCols_64f_C1R : 0) : 0;
+
+        if( !cfunc )
+            CV_ERROR( CV_StsUnsupportedFormat,
+            "Unsupported combination of input and output array formats" );
+
+        IPPI_CALL( cfunc( src->data.ptr, src->step ? src->step : CV_STUB_STEP,
+                          dst->data.ptr, dst->step ? dst->step : CV_STUB_STEP, size ));
+    }
+
+    if( op0 == CV_REDUCE_AVG )
+        cvScale( dst, dst0, 1./(dim == 0 ? src->rows : src->cols) );
+
+    __END__;
+
+    if( temp )
+        cvReleaseMat( &temp );
+}
+
 /* End of file. */
