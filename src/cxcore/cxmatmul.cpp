@@ -2465,11 +2465,13 @@ cvCalcCovarMatrix( const CvArr** vecarr, int count,
 
     CvMat covstub, *cov = (CvMat*)covarr;
     CvMat avgstub, *avg = (CvMat*)avgarr;
+    CvMat vecstub0, *vecmat = 0;
     CvSize srcsize, contsize;
     int srctype = 0, dsttype = 0;
     int i, j;
-    int cont_flag;
+    int cont_flag, vec_delta = 0, vec_step = 0;
     int is_covar_normal = (flags & CV_COVAR_NORMAL) != 0;
+    double scale;
 
     if( !inittab )
     {
@@ -2498,6 +2500,42 @@ cvCalcCovarMatrix( const CvArr** vecarr, int count,
     srcsize = cvGetMatSize( avg );
     contsize.width = srcsize.width * srcsize.height;
     contsize.height = 1;
+    cont_flag = avg->type;
+
+    if( flags & (CV_COVAR_ROWS|CV_COVAR_COLS) )
+    {
+        CV_CALL( vecmat = cvGetMat( vecarr[0], &vecstub0 ));
+        srctype = CV_MAT_TYPE(vecmat->type);
+        if( flags & CV_COVAR_COLS )
+        {
+            count = vecmat->cols;
+            if( avg->cols != 1 || avg->rows != vecmat->rows )
+                CV_ERROR( CV_StsUnmatchedSizes,
+                "The number of input vectors does not match to avg vector size" );
+            cont_flag = 0;
+            vec_delta = CV_ELEM_SIZE(vecmat->type);
+            vec_step = vecmat->step;
+        }
+        else
+        {
+            count = vecmat->rows;
+            if( avg->rows != 1 || avg->cols != vecmat->cols )
+                CV_ERROR( CV_StsUnmatchedSizes,
+                "The number of input vectors does not match to avg vector size" );
+            vec_delta = vecmat->step;
+            vec_step = CV_STUB_STEP;
+        }
+        
+        if( !(flags & CV_COVAR_USE_AVG) )
+            CV_CALL( cvReduce( vecmat, avg, -1, CV_REDUCE_AVG ));
+
+        scale = !(flags & CV_COVAR_SCALE) ? 1. : 1./count;
+
+        cvMulTransposed( vecmat, cov, vecmat->rows != cov->rows, avg, scale );
+        EXIT;
+    }
+
+    scale = !(flags & CV_COVAR_SCALE) ? 1. : 1./count;
 
     if( is_covar_normal )
     {
@@ -2514,62 +2552,62 @@ cvCalcCovarMatrix( const CvArr** vecarr, int count,
         CV_ERROR( CV_StsUnmatchedSizes,
         "The vector count and covariance matrix size do not match" );
 
-    CV_CALL( vecdata = (vec_data*)cvAlloc( count*sizeof(vecdata[0])));
-
-    if( !(flags & CV_COVAR_USE_AVG) )
-        cvZero( avg );
-    
-    cont_flag = avg->type;
-
-    for( i = 0; i < count; i++ )
+    if( !(flags & (CV_COVAR_ROWS|CV_COVAR_COLS)) )
     {
-        CvMat vecstub, *vec = (CvMat*)vecarr[i];
-        CvMat* temp;
+        if( !(flags & CV_COVAR_USE_AVG) )
+            cvZero( avg );
 
-        if( !CV_IS_MAT(vec) )
-            CV_CALL( vec = cvGetMat( vec, &vecstub ));
-
-        if( !CV_ARE_SIZES_EQ( vec, avg ))
-            CV_ERROR( CV_StsUnmatchedSizes,
-            "All input vectors and average vector must have the same size" );
-
-        vecdata[i].ptr = vec->data.ptr;
-        vecdata[i].step = vec->step;
-        cont_flag &= vec->type;
-        temp = vec;
-
-        if( i == 0 )
+        CV_CALL( vecdata = (vec_data*)cvAlloc( count*sizeof(vecdata[0])));
+    
+        for( i = 0; i < count; i++ )
         {
-            srctype = CV_MAT_TYPE( vec->type );
-            if( CV_MAT_CN( srctype ) != 1 )
-                CV_ERROR( CV_BadNumChannels, "All vectors must have a single channel" );
-            if( srctype != dsttype && !tempvec && !(flags & CV_COVAR_USE_AVG))
-                CV_CALL( tempvec = cvCreateMat( vec->rows, vec->cols, dsttype ));
+            CvMat vecstub, *vec = (CvMat*)vecarr[i];
+            CvMat* temp;
+
+            if( !CV_IS_MAT(vec) )
+                CV_CALL( vec = cvGetMat( vec, &vecstub ));
+
+            if( !CV_ARE_SIZES_EQ( vec, avg ))
+                CV_ERROR( CV_StsUnmatchedSizes,
+                "All input vectors and average vector must have the same size" );
+
+            vecdata[i].ptr = vec->data.ptr;
+            vecdata[i].step = vec->step;
+            cont_flag &= vec->type;
+            temp = vec;
+            if( i == 0 )
+            {
+                srctype = CV_MAT_TYPE( vec->type );
+                if( CV_MAT_CN( srctype ) != 1 )
+                    CV_ERROR( CV_BadNumChannels, "All vectors must have a single channel" );
+                if( srctype != dsttype && !tempvec && !(flags & CV_COVAR_USE_AVG))
+                    CV_CALL( tempvec = cvCreateMat( vec->rows, vec->cols, dsttype ));
+            }
+            else if( CV_MAT_TYPE(vec->type) != srctype )
+                CV_ERROR( CV_StsUnmatchedFormats,
+                "All input vectors must have the same type" );
+
+            if( !(flags & CV_COVAR_USE_AVG) )
+            {
+                if( tempvec )
+                {
+                    temp = tempvec;
+                    cvConvert( vec, temp );
+                }
+                cvAdd( temp, avg, avg );
+            }
         }
-        else if( CV_MAT_TYPE(vec->type) != srctype )
-            CV_ERROR( CV_StsUnmatchedFormats,
-            "All input vectors must have the same type" );
 
         if( !(flags & CV_COVAR_USE_AVG) )
-        {
-            if( tempvec )
-            {
-                temp = tempvec;
-                cvConvert( vec, temp );
-            }
-
-            cvAdd( temp, avg, avg );
-        }
+            cvScale( avg, avg, 1./count );
     }
 
-    if( !(flags & CV_COVAR_USE_AVG) )
-        cvScale( avg, avg, 1./count );
-
     cont_flag = CV_IS_MAT_CONT( cont_flag );
+    if( cont_flag )
+        srcsize = contsize;
 
     if( !is_covar_normal )
     {
-        double scale = flags & CV_COVAR_SCALE ? 1./contsize.width : 1;
         CvFunc2D_3A1P dot_func =
             (CvFunc2D_3A1P)dot_tab[dsttype == CV_64FC1].fn_2d[CV_MAT_DEPTH(srctype)];
         
@@ -2588,17 +2626,25 @@ cvCalcCovarMatrix( const CvArr** vecarr, int count,
             for( j = a; j != b; j += delta )
             {
                 double result = 0;
-                if( cont_flag )
+                void *v_i, *v_j;
+                int step_i, step_j;
+
+                if( !vecmat )
                 {
-                    dot_func( vecdata[i].ptr, CV_STUB_STEP, vecdata[j].ptr, CV_STUB_STEP,
-                              avg->data.ptr, CV_STUB_STEP, contsize, &result );
+                    v_i = vecdata[i].ptr;
+                    v_j = vecdata[j].ptr;
+                    step_i = vecdata[i].step;
+                    step_j = vecdata[j].step;
                 }
                 else
                 {
-                    dot_func( vecdata[i].ptr, vecdata[i].step,
-                              vecdata[j].ptr, vecdata[j].step,
-                              avg->data.ptr, avg->step, srcsize, &result );
+                    v_i = vecmat->data.ptr + vec_delta*i;
+                    v_j = vecmat->data.ptr + vec_delta*j;
+                    step_i = step_j = vec_step;
                 }
+
+                dot_func( v_i, step_i, v_j, step_j, avg->data.ptr, avg->step, srcsize, &result );
+
                 if( dsttype == CV_64FC1 )
                 {
                     ((double*)(cov->data.ptr + i*cov->step))[j] =
@@ -2614,7 +2660,6 @@ cvCalcCovarMatrix( const CvArr** vecarr, int count,
     }
     else
     {
-        double scale = flags & CV_COVAR_SCALE ? 1./count : 1;
         uchar* cov_ptr = cov->data.ptr;
         int cov_step = cov->step;
         int cov_size = cov->rows;
@@ -2628,16 +2673,21 @@ cvCalcCovarMatrix( const CvArr** vecarr, int count,
         
         for( i = 0; i < count; i++ )
         {
-            if( cont_flag )
-                ext_func( vecdata[i].ptr, CV_STUB_STEP,
-                          avg->data.ptr, CV_STUB_STEP,
-                          cov_ptr, cov_step,
-                          contsize, tempvec->data.ptr );
+            void* v;
+            int vstep;
+            if( !vecmat )
+            {
+                v = vecdata[i].ptr;
+                vstep = vecdata[i].step;
+            }
             else
-                ext_func( vecdata[i].ptr, vecdata[i].step,
-                          avg->data.ptr, avg->step,
-                          cov_ptr, cov_step,
-                          srcsize, tempvec->data.ptr );
+            {
+                v = vecmat->data.ptr + vec_delta*i;
+                vstep = vec_step;
+            }
+
+            ext_func( v, vstep, avg->data.ptr, avg->step,
+                      cov_ptr, cov_step, srcsize, tempvec->data.ptr );
         }
 
         if( dsttype == CV_64FC1 )
@@ -2799,33 +2849,50 @@ cvMahalanobis( const CvArr* srcAarr, const CvArr* srcBarr, CvArr* matarr )
 *                                        cvMulTransposed                                 *
 \****************************************************************************************/
 
-#define ICV_DEF_MULTRANS_R_FUNC( flavor, arrtype )                              \
+#define ICV_DEF_MULTRANS_R_FUNC( flavor, srctype, dsttype, load_macro )         \
 static CvStatus CV_STDCALL                                                      \
-icvMulTransposedR_##flavor( const arrtype* src, int srcstep,                    \
-                       arrtype* dst, int dststep,                               \
-                       const arrtype* delta, int deltastep,                     \
-                       CvSize size )                                            \
+icvMulTransposedR_##flavor( const srctype* src, int srcstep,                    \
+                       dsttype* dst, int dststep,                               \
+                       const dsttype* delta, int deltastep,                     \
+                       CvSize size, int delta_cols, double scale )              \
 {                                                                               \
     int i, j, k;                                                                \
-    arrtype* tdst = dst;                                                        \
-    arrtype* col_buf = 0;                                                       \
+    dsttype* tdst = dst;                                                        \
+    dsttype* col_buf = 0;                                                       \
+    dsttype* delta_buf = 0;                                                     \
     int local_alloc = 0;                                                        \
-    int buf_size = size.height*sizeof(arrtype);                                 \
+    int buf_size = size.height*sizeof(dsttype);                                 \
+                                                                                \
+    if( delta && delta_cols < size.width )                                      \
+    {                                                                           \
+        assert( delta_cols == 1 );                                              \
+        buf_size += 4*buf_size;                                                 \
+    }                                                                           \
                                                                                 \
     if( buf_size <= CV_MAX_LOCAL_SIZE )                                         \
     {                                                                           \
-        col_buf = (arrtype*)cvStackAlloc( buf_size );                           \
+        col_buf = (dsttype*)cvStackAlloc( buf_size );                           \
         local_alloc = 1;                                                        \
     }                                                                           \
     else                                                                        \
     {                                                                           \
-        col_buf = (arrtype*)cvAlloc( buf_size );                                \
+        col_buf = (dsttype*)cvAlloc( buf_size );                                \
         if( !col_buf )                                                          \
             return CV_OUTOFMEM_ERR;                                             \
     }                                                                           \
                                                                                 \
     srcstep /= sizeof(src[0]); dststep /= sizeof(dst[0]);                       \
     deltastep /= sizeof(delta[0]);                                              \
+                                                                                \
+    if( delta && delta_cols < size.width )                                      \
+    {                                                                           \
+        delta_buf = col_buf + size.height;                                      \
+        for( i = 0; i < size.height; i++ )                                      \
+            delta_buf[i*4] = delta_buf[i*4+1] =                                 \
+                delta_buf[i*4+2] = delta_buf[i*4+3] = delta[i*deltastep];       \
+        delta = delta_buf;                                                      \
+        deltastep = deltastep ? 4 : 0;                                          \
+    }                                                                           \
                                                                                 \
     if( !delta )                                                                \
         for( i = 0; i < size.width; i++, tdst += dststep )                      \
@@ -2836,71 +2903,75 @@ icvMulTransposedR_##flavor( const arrtype* src, int srcstep,                    
             for( j = i; j <= size.width - 4; j += 4 )                           \
             {                                                                   \
                 double s0 = 0, s1 = 0, s2 = 0, s3 = 0;                          \
-                const arrtype *tsrc = src + j;                                  \
+                const srctype *tsrc = src + j;                                  \
                                                                                 \
                 for( k = 0; k < size.height; k++, tsrc += srcstep )             \
                 {                                                               \
                     double a = col_buf[k];                                      \
-                    s0 += a * tsrc[0];                                          \
-                    s1 += a * tsrc[1];                                          \
-                    s2 += a * tsrc[2];                                          \
-                    s3 += a * tsrc[3];                                          \
+                    s0 += a * load_macro(tsrc[0]);                              \
+                    s1 += a * load_macro(tsrc[1]);                              \
+                    s2 += a * load_macro(tsrc[2]);                              \
+                    s3 += a * load_macro(tsrc[3]);                              \
                 }                                                               \
                                                                                 \
-                tdst[j] = (arrtype)s0;                                          \
-                tdst[j+1] = (arrtype)s1;                                        \
-                tdst[j+2] = (arrtype)s2;                                        \
-                tdst[j+3] = (arrtype)s3;                                        \
+                tdst[j] = (dsttype)(s0*scale);                                  \
+                tdst[j+1] = (dsttype)(s1*scale);                                \
+                tdst[j+2] = (dsttype)(s2*scale);                                \
+                tdst[j+3] = (dsttype)(s3*scale);                                \
             }                                                                   \
                                                                                 \
             for( ; j < size.width; j++ )                                        \
             {                                                                   \
                 double s0 = 0;                                                  \
-                const arrtype *tsrc = src + j;                                  \
+                const srctype *tsrc = src + j;                                  \
                                                                                 \
                 for( k = 0; k < size.height; k++, tsrc += srcstep )             \
                     s0 += col_buf[k] * tsrc[0];                                 \
                                                                                 \
-                tdst[j] = (arrtype)s0;                                          \
+                tdst[j] = (dsttype)(s0*scale);                                  \
             }                                                                   \
         }                                                                       \
     else                                                                        \
         for( i = 0; i < size.width; i++, tdst += dststep )                      \
         {                                                                       \
-            for( k = 0; k < size.height; k++ )                                  \
-                col_buf[k] = src[k*srcstep+i] - delta[k*deltastep+i];           \
+            if( !delta_buf )                                                    \
+                for( k = 0; k < size.height; k++ )                              \
+                    col_buf[k] = load_macro(src[k*srcstep+i]) - delta[k*deltastep+i]; \
+            else                                                                \
+                for( k = 0; k < size.height; k++ )                              \
+                    col_buf[k] = load_macro(src[k*srcstep+i]) - delta_buf[k*deltastep]; \
                                                                                 \
             for( j = i; j <= size.width - 4; j += 4 )                           \
             {                                                                   \
                 double s0 = 0, s1 = 0, s2 = 0, s3 = 0;                          \
-                const arrtype *tsrc = src + j;                                  \
-                const arrtype *d = delta + j;                                   \
+                const srctype *tsrc = src + j;                                  \
+                const dsttype *d = delta_buf ? delta_buf : delta + j;           \
                                                                                 \
                 for( k = 0; k < size.height; k++, tsrc+=srcstep, d+=deltastep ) \
                 {                                                               \
                     double a = col_buf[k];                                      \
-                    s0 += a * (tsrc[0] - d[0]);                                 \
-                    s1 += a * (tsrc[1] - d[1]);                                 \
-                    s2 += a * (tsrc[2] - d[2]);                                 \
-                    s3 += a * (tsrc[3] - d[3]);                                 \
+                    s0 += a * (load_macro(tsrc[0]) - d[0]);                     \
+                    s1 += a * (load_macro(tsrc[1]) - d[1]);                     \
+                    s2 += a * (load_macro(tsrc[2]) - d[2]);                     \
+                    s3 += a * (load_macro(tsrc[3]) - d[3]);                     \
                 }                                                               \
                                                                                 \
-                tdst[j] = (arrtype)s0;                                          \
-                tdst[j+1] = (arrtype)s1;                                        \
-                tdst[j+2] = (arrtype)s2;                                        \
-                tdst[j+3] = (arrtype)s3;                                        \
+                tdst[j] = (dsttype)(s0*scale);                                  \
+                tdst[j+1] = (dsttype)(s1*scale);                                \
+                tdst[j+2] = (dsttype)(s2*scale);                                \
+                tdst[j+3] = (dsttype)(s3*scale);                                \
             }                                                                   \
                                                                                 \
             for( ; j < size.width; j++ )                                        \
             {                                                                   \
                 double s0 = 0;                                                  \
-                const arrtype *tsrc = src + j;                                  \
-                const arrtype *d = delta + j;                                   \
+                const srctype *tsrc = src + j;                                  \
+                const dsttype *d = delta_buf ? delta_buf : delta + j;           \
                                                                                 \
                 for( k = 0; k < size.height; k++, tsrc+=srcstep, d+=deltastep ) \
-                    s0 += col_buf[k] * (tsrc[0] - d[0]);                        \
+                    s0 += col_buf[k] * (load_macro(tsrc[0]) - d[0]);            \
                                                                                 \
-                tdst[j] = (arrtype)s0;                                          \
+                tdst[j] = (dsttype)(s0*scale);                                  \
             }                                                                   \
         }                                                                       \
                                                                                 \
@@ -2916,15 +2987,15 @@ icvMulTransposedR_##flavor( const arrtype* src, int srcstep,                    
 }
 
 
-#define ICV_DEF_MULTRANS_L_FUNC( flavor, arrtype )                              \
+#define ICV_DEF_MULTRANS_L_FUNC( flavor, srctype, dsttype, load_macro )         \
 static CvStatus CV_STDCALL                                                      \
-icvMulTransposedL_##flavor( const arrtype* src, int srcstep,                    \
-                            arrtype* dst, int dststep,                          \
-                            arrtype* delta, int deltastep,                      \
-                            CvSize size )                                       \
+icvMulTransposedL_##flavor( const srctype* src, int srcstep,                    \
+                            dsttype* dst, int dststep,                          \
+                            dsttype* delta, int deltastep,                      \
+                            CvSize size, int delta_cols, double scale )         \
 {                                                                               \
     int i, j, k;                                                                \
-    arrtype* tdst = dst;                                                        \
+    dsttype* tdst = dst;                                                        \
                                                                                 \
     srcstep /= sizeof(src[0]); dststep /= sizeof(dst[0]);                       \
     deltastep /= sizeof(delta[0]);                                              \
@@ -2934,56 +3005,67 @@ icvMulTransposedL_##flavor( const arrtype* src, int srcstep,                    
             for( j = i; j < size.height; j++ )                                  \
             {                                                                   \
                 double s = 0;                                                   \
-                const arrtype *tsrc1 = src + i*srcstep;                         \
-                const arrtype *tsrc2 = src + j*srcstep;                         \
+                const srctype *tsrc1 = src + i*srcstep;                         \
+                const srctype *tsrc2 = src + j*srcstep;                         \
                                                                                 \
                 for( k = 0; k <= size.width - 4; k += 4 )                       \
                     s += tsrc1[k]*tsrc2[k] + tsrc1[k+1]*tsrc2[k+1] +            \
                          tsrc1[k+2]*tsrc2[k+2] + tsrc1[k+3]*tsrc2[k+3];         \
                 for( ; k < size.width; k++ )                                    \
                     s += tsrc1[k] * tsrc2[k];                                   \
-                tdst[j] = (arrtype)s;                                           \
+                tdst[j] = (dsttype)(s*scale);                                   \
             }                                                                   \
     else                                                                        \
     {                                                                           \
-        arrtype* row_buf = 0;                                                   \
+        dsttype* row_buf = 0;                                                   \
         int local_alloc = 0;                                                    \
-        int buf_size = size.width*sizeof(arrtype);                              \
+        int buf_size = size.width*sizeof(dsttype);                              \
+        dsttype delta_buf[4];                                                   \
+        int delta_shift = delta_cols == size.width ? 4 : 0;                     \
                                                                                 \
         if( buf_size <= CV_MAX_LOCAL_SIZE )                                     \
         {                                                                       \
-            row_buf = (arrtype*)cvStackAlloc( buf_size );                       \
+            row_buf = (dsttype*)cvStackAlloc( buf_size );                       \
             local_alloc = 1;                                                    \
         }                                                                       \
         else                                                                    \
         {                                                                       \
-            row_buf = (arrtype*)cvAlloc( buf_size );                            \
+            row_buf = (dsttype*)cvAlloc( buf_size );                            \
             if( !row_buf )                                                      \
                 return CV_OUTOFMEM_ERR;                                         \
         }                                                                       \
                                                                                 \
         for( i = 0; i < size.height; i++, tdst += dststep )                     \
         {                                                                       \
-            const arrtype *tsrc1 = src + i*srcstep;                             \
-            const arrtype *tdelta1 = delta + i*deltastep;                       \
+            const srctype *tsrc1 = src + i*srcstep;                             \
+            const dsttype *tdelta1 = delta + i*deltastep;                       \
                                                                                 \
-            for( k = 0; k < size.width; k++ )                                   \
-                row_buf[k] = tsrc1[k] - tdelta1[k];                             \
+            if( delta_cols < size.width )                                       \
+                for( k = 0; k < size.width; k++ )                               \
+                    row_buf[k] = tsrc1[k] - tdelta1[0];                         \
+            else                                                                \
+                for( k = 0; k < size.width; k++ )                               \
+                    row_buf[k] = tsrc1[k] - tdelta1[k];                         \
                                                                                 \
             for( j = i; j < size.height; j++ )                                  \
             {                                                                   \
                 double s = 0;                                                   \
-                const arrtype *tsrc2 = src + j*srcstep;                         \
-                const arrtype *tdelta2 = delta + j*deltastep;                   \
-                                                                                \
-                for( k = 0; k <= size.width - 4; k += 4 )                       \
-                    s += row_buf[k]*(tsrc2[k] - tdelta2[k]) +                   \
-                         row_buf[k+1]*(tsrc2[k+1] - tdelta2[k+1]) +             \
-                         row_buf[k+2]*(tsrc2[k+2] - tdelta2[k+2]) +             \
-                         row_buf[k+3]*(tsrc2[k+3] - tdelta2[k+3]);              \
-                for( ; k < size.width; k++ )                                    \
-                    s += row_buf[k]*(tsrc2[k] - tdelta2[k]);                    \
-                tdst[j] = (arrtype)s;                                           \
+                const srctype *tsrc2 = src + j*srcstep;                         \
+                const dsttype *tdelta2 = delta + j*deltastep;                   \
+                if( delta_cols < size.width )                                   \
+                {                                                               \
+                    delta_buf[0] = delta_buf[1] =                               \
+                        delta_buf[2] = delta_buf[3] = tdelta2[0];               \
+                    tdelta2 = delta_buf;                                        \
+                }                                                               \
+                for( k = 0; k <= size.width-4; k += 4, tdelta2 += delta_shift ) \
+                    s += row_buf[k]*(load_macro(tsrc2[k]) - tdelta2[0]) +       \
+                         row_buf[k+1]*(load_macro(tsrc2[k+1]) - tdelta2[1]) +   \
+                         row_buf[k+2]*(load_macro(tsrc2[k+2]) - tdelta2[2]) +   \
+                         row_buf[k+3]*(load_macro(tsrc2[k+3]) - tdelta2[3]);    \
+                for( ; k < size.width; k++, tdelta2++ )                         \
+                    s += row_buf[k]*(load_macro(tsrc2[k]) - tdelta2[0]);        \
+                tdst[j] = (dsttype)(s*scale);                                   \
             }                                                                   \
         }                                                                       \
                                                                                 \
@@ -2999,30 +3081,38 @@ icvMulTransposedL_##flavor( const arrtype* src, int srcstep,                    
     return CV_NO_ERR;                                                           \
 }
 
-ICV_DEF_MULTRANS_R_FUNC( 32f, float )
-ICV_DEF_MULTRANS_R_FUNC( 64f, double )
-ICV_DEF_MULTRANS_L_FUNC( 32f, float )
-ICV_DEF_MULTRANS_L_FUNC( 64f, double )
 
-static void icvInitMulTransposedTable( CvFuncTable* tabL, CvFuncTable* tabR )   \
-{                                                                               \
-    tabL->fn_2d[CV_32F] = (void*)icvMulTransposedL_32f;                         \
-    tabL->fn_2d[CV_64F] = (void*)icvMulTransposedL_64f;                         \
-    tabR->fn_2d[CV_32F] = (void*)icvMulTransposedR_32f;                         \
-    tabR->fn_2d[CV_64F] = (void*)icvMulTransposedR_64f;                         \
-}
+ICV_DEF_MULTRANS_R_FUNC( 8u32f, uchar, float, CV_8TO32F )
+ICV_DEF_MULTRANS_R_FUNC( 8u64f, uchar, double, CV_8TO32F )
+ICV_DEF_MULTRANS_R_FUNC( 32f, float, float, CV_NOP )
+ICV_DEF_MULTRANS_R_FUNC( 32f64f, float, double, CV_NOP )
+ICV_DEF_MULTRANS_R_FUNC( 64f, double, double, CV_NOP )
+ICV_DEF_MULTRANS_R_FUNC( 16u32f, ushort, float, CV_NOP )
+ICV_DEF_MULTRANS_R_FUNC( 16u64f, ushort, double, CV_NOP )
+ICV_DEF_MULTRANS_R_FUNC( 16s32f, short, float, CV_NOP )
+ICV_DEF_MULTRANS_R_FUNC( 16s64f, short, double, CV_NOP )
 
-typedef CvStatus (CV_STDCALL * CvMulTransposedFunc)( const void* src, int srcstep,
-            void* dst, int dststep, const void* delta, int deltastep, CvSize size );
+ICV_DEF_MULTRANS_L_FUNC( 8u32f, uchar, float, CV_8TO32F )
+ICV_DEF_MULTRANS_L_FUNC( 8u64f, uchar, double, CV_8TO32F )
+ICV_DEF_MULTRANS_L_FUNC( 32f, float, float, CV_NOP )
+ICV_DEF_MULTRANS_L_FUNC( 32f64f, float, double, CV_NOP )
+ICV_DEF_MULTRANS_L_FUNC( 64f, double, double, CV_NOP )
+ICV_DEF_MULTRANS_L_FUNC( 16u32f, ushort, float, CV_NOP )
+ICV_DEF_MULTRANS_L_FUNC( 16u64f, ushort, double, CV_NOP )
+ICV_DEF_MULTRANS_L_FUNC( 16s32f, short, float, CV_NOP )
+ICV_DEF_MULTRANS_L_FUNC( 16s64f, short, double, CV_NOP )
+
+
+typedef CvStatus (CV_STDCALL * CvMulTransposedFunc)
+    ( const void* src, int srcstep,
+      void* dst, int dststep, const void* delta,
+      int deltastep, CvSize size, int delta_cols, double scale );
 
 CV_IMPL void
 cvMulTransposed( const CvArr* srcarr, CvArr* dstarr,
-                 int order, const CvArr* deltaarr )
+                 int order, const CvArr* deltaarr, double scale )
 {
     const int gemm_level = 100; // boundary above which GEMM is faster.
-    static CvFuncTable tab[2];
-    static int inittab = 0;
-
     CvMat* src2 = 0;
 
     CV_FUNCNAME( "cvMulTransposed" );
@@ -3032,13 +3122,7 @@ cvMulTransposed( const CvArr* srcarr, CvArr* dstarr,
     CvMat sstub, *src = (CvMat*)srcarr;
     CvMat dstub, *dst = (CvMat*)dstarr;
     CvMat deltastub, *delta = (CvMat*)deltaarr;
-    int type;
-
-    if( !inittab )
-    {
-        icvInitMulTransposedTable( tab + 0, tab + 1 );
-        inittab = 1;
-    }
+    int stype, dtype;
 
     if( !CV_IS_MAT( src ))
         CV_CALL( src = cvGetMat( src, &sstub ));
@@ -3046,18 +3130,16 @@ cvMulTransposed( const CvArr* srcarr, CvArr* dstarr,
     if( !CV_IS_MAT( dst ))
         CV_CALL( dst = cvGetMat( dst, &dstub ));
 
-    if( !CV_ARE_TYPES_EQ( src, dst ))
-        CV_ERROR( CV_StsUnmatchedFormats, "" );
-
     if( delta )
     {
         if( !CV_IS_MAT( delta ))
             CV_CALL( delta = cvGetMat( delta, &deltastub ));
 
-        if( !CV_ARE_TYPES_EQ( src, delta ))
+        if( !CV_ARE_TYPES_EQ( dst, delta ))
             CV_ERROR( CV_StsUnmatchedFormats, "" );
 
-        if( (delta->rows != src->rows && delta->rows != 1) || delta->cols != src->cols )
+        if( (delta->rows != src->rows && delta->rows != 1) ||
+            (delta->cols != src->cols && delta->cols != 1) )
             CV_ERROR( CV_StsUnmatchedSizes, "" );
     }
     else
@@ -3065,9 +3147,11 @@ cvMulTransposed( const CvArr* srcarr, CvArr* dstarr,
         delta = &deltastub;
         delta->data.ptr = 0;
         delta->step = 0;
+        delta->rows = delta->cols = 0;
     }
 
-    type = CV_MAT_TYPE( src->type );
+    stype = CV_MAT_TYPE( src->type );
+    dtype = CV_MAT_TYPE( dst->type );
 
     if( dst->rows != dst->cols )
         CV_ERROR( CV_StsBadSize, "The destination matrix must be square" );
@@ -3076,7 +3160,7 @@ cvMulTransposed( const CvArr* srcarr, CvArr* dstarr,
         (order == 0 && src->rows != dst->rows))
         CV_ERROR( CV_StsUnmatchedSizes, "" );
 
-    if( src->data.ptr == dst->data.ptr ||
+    if( src->data.ptr == dst->data.ptr || stype == dtype &&
         (dst->cols >= gemm_level && dst->rows >= gemm_level &&
          src->cols >= gemm_level && src->rows >= gemm_level))
     {
@@ -3087,18 +3171,45 @@ cvMulTransposed( const CvArr* srcarr, CvArr* dstarr,
             cvSub( src, src2, src2 );
             src = src2;
         }
-        cvGEMM( src, src, 1., 0, 0, dst, order == 0 ? CV_GEMM_B_T : CV_GEMM_A_T ); 
+        cvGEMM( src, src, scale, 0, 0, dst, order == 0 ? CV_GEMM_B_T : CV_GEMM_A_T ); 
     }
     else
     {
         CvMulTransposedFunc func =
-            (CvMulTransposedFunc)(tab[order != 0].fn_2d[CV_MAT_DEPTH(type)]);
+            stype == CV_8U && dtype == CV_32F ?
+            (order ? (CvMulTransposedFunc)icvMulTransposedR_8u32f :
+                    (CvMulTransposedFunc)icvMulTransposedL_8u32f) :
+            stype == CV_8U && dtype == CV_64F ?
+            (order ? (CvMulTransposedFunc)icvMulTransposedR_8u64f :
+                    (CvMulTransposedFunc)icvMulTransposedL_8u64f) :
+            stype == CV_16U && dtype == CV_32F ?
+            (order ? (CvMulTransposedFunc)icvMulTransposedR_16u32f :
+                    (CvMulTransposedFunc)icvMulTransposedL_16u32f) :
+            stype == CV_16U && dtype == CV_64F ?
+            (order ? (CvMulTransposedFunc)icvMulTransposedR_16u64f :
+                    (CvMulTransposedFunc)icvMulTransposedL_16u64f) :
+            stype == CV_16S && dtype == CV_32F ?
+            (order ? (CvMulTransposedFunc)icvMulTransposedR_16s32f :
+                    (CvMulTransposedFunc)icvMulTransposedL_16s32f) :
+            stype == CV_16S && dtype == CV_64F ?
+            (order ? (CvMulTransposedFunc)icvMulTransposedR_16s64f :
+                    (CvMulTransposedFunc)icvMulTransposedL_16s64f) :
+            stype == CV_32F && dtype == CV_32F ?
+            (order ? (CvMulTransposedFunc)icvMulTransposedR_32f :
+                    (CvMulTransposedFunc)icvMulTransposedL_32f) :
+            stype == CV_32F && dtype == CV_64F ?
+            (order ? (CvMulTransposedFunc)icvMulTransposedR_32f64f :
+                    (CvMulTransposedFunc)icvMulTransposedL_32f64f) :
+            stype == CV_64F && dtype == CV_64F ?
+            (order ? (CvMulTransposedFunc)icvMulTransposedR_64f :
+                    (CvMulTransposedFunc)icvMulTransposedL_64f) : 0;
 
         if( !func )
             CV_ERROR( CV_StsUnsupportedFormat, "" );
 
         IPPI_CALL( func( src->data.ptr, src->step, dst->data.ptr, dst->step,
-                         delta->data.ptr, delta->step, cvGetMatSize( src ) ));
+                         delta->data.ptr, delta->step, cvGetMatSize( src ),
+                         delta->cols, scale ));
     }
 
     __END__;
