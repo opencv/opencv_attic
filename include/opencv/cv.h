@@ -129,7 +129,7 @@ CVAPI(void) cvPyrSegmentation( IplImage* src, IplImage* dst,
 
 /* Filters image using meanshift algorithm */
 CVAPI(void) cvPyrMeanShiftFiltering( const CvArr* src, CvArr* dst, 
-    double sp0, double sr, int max_level CV_DEFAULT(1),
+    double sp, double sr, int max_level CV_DEFAULT(1),
     CvTermCriteria termcrit CV_DEFAULT(cvTermCriteria(CV_TERMCRIT_ITER+CV_TERMCRIT_EPS,5,1)));
 
 /* Segments image using seed "markers" */
@@ -275,9 +275,9 @@ CVAPI(void)  cvWarpPerspective( const CvArr* src, CvArr* dst, const CvMat* map_m
                                 CvScalar fillval CV_DEFAULT(cvScalarAll(0)) );
 
 /* Computes perspective transform matrix for mapping src[i] to dst[i] (i=0,1,2,3) */
-CVAPI(CvMat*) cvWarpPerspectiveQMatrix( const CvPoint2D32f* src,
-                                       const CvPoint2D32f* dst,
-                                       CvMat* map_matrix );
+CVAPI(CvMat*) cvGetPerspectiveTransform( const CvPoint2D32f* src,
+                                         const CvPoint2D32f* dst,
+                                         CvMat* map_matrix );
 
 /* Performs generic geometric transformation using the specified coordinate maps */
 CVAPI(void)  cvRemap( const CvArr* src, CvArr* dst,
@@ -1021,7 +1021,7 @@ CVAPI(CvSeq*)  cvHoughLines2( CvArr* image, void* line_storage, int method,
                               double param1 CV_DEFAULT(0), double param2 CV_DEFAULT(0));
 
 /* Finds circles in the image */
-CVAPI(CvSeq*) cvHoughCircles( CvArr* src_image, void* circle_storage,
+CVAPI(CvSeq*) cvHoughCircles( CvArr* image, void* circle_storage,
                               int method, double dp, double min_dist,
                               double param1 CV_DEFAULT(100),
                               double param2 CV_DEFAULT(100));
