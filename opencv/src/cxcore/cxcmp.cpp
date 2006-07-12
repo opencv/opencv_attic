@@ -845,95 +845,91 @@ cvCmpS( const void* srcarr, double value, void* dstarr, int cmp_op )
 \****************************************************************************************/
 
 
-#define ICV_DEF_MINMAX_CASE_C1( __op__, arrtype, worktype, _toggle_macro_ )\
-for( x = 0; x <= size.width - 4; x += 4 )                               \
-{                                                                       \
-    worktype a0 = _toggle_macro_(src1[x]), b0 = _toggle_macro_(src2[x]);\
-    worktype a1 = _toggle_macro_(src1[x+1]), b1 = _toggle_macro_(src2[x+1]);\
-    a0 = __op__( a0, b0 );                                              \
-    a1 = __op__( a1, b1 );                                              \
-    dst[x] = (arrtype)_toggle_macro_(a0);                               \
-    dst[x+1] = (arrtype)_toggle_macro_(a1);                             \
-    a0 = _toggle_macro_(src1[x+2]), b0 = _toggle_macro_(src2[x+2]);     \
-    a1 = _toggle_macro_(src1[x+3]), b1 = _toggle_macro_(src2[x+3]);     \
-    a0 = __op__( a0, b0 );                                              \
-    a1 = __op__( a1, b1 );                                              \
-    dst[x+2] = (arrtype)_toggle_macro_(a0);                             \
-    dst[x+3] = (arrtype)_toggle_macro_(a1);                             \
-}                                                                       \
-                                                                        \
-for( ; x < size.width; x++ )                                            \
-{                                                                       \
-    worktype a0 = _toggle_macro_(src1[x]), b0 = _toggle_macro_(src2[x]);\
-    a0 = __op__( a0, b0 );                                              \
-    dst[x] = (arrtype)_toggle_macro_(a0);                               \
+#define ICV_DEF_MINMAX_FUNC( __op__, name, flavor, arrtype, \
+                             worktype, _toggle_macro_ )     \
+static CvStatus CV_STDCALL                                  \
+icv##name##_##flavor##_C1R( const arrtype* src1, int step1, \
+    const arrtype* src2, int step2,                         \
+    arrtype* dst, int step, CvSize size )                   \
+{                                                           \
+    step1 /= sizeof(src1[0]); step2 /= sizeof(src2[0]);     \
+    step /= sizeof(dst[0]);                                 \
+                                                            \
+    for( ; size.height--; src1 += step1,                    \
+            src2 += step2, dst += step )                    \
+    {                                                       \
+        int x;                                              \
+        for( x = 0; x <= size.width - 4; x += 4 )           \
+        {                                                   \
+            worktype a0 = _toggle_macro_(src1[x]);          \
+            worktype b0 = _toggle_macro_(src2[x]);          \
+            worktype a1 = _toggle_macro_(src1[x+1]);        \
+            worktype b1 = _toggle_macro_(src2[x+1]);        \
+            a0 = __op__( a0, b0 );                          \
+            a1 = __op__( a1, b1 );                          \
+            dst[x] = (arrtype)_toggle_macro_(a0);           \
+            dst[x+1] = (arrtype)_toggle_macro_(a1);         \
+            a0 = _toggle_macro_(src1[x+2]);                 \
+            b0 = _toggle_macro_(src2[x+2]);                 \
+            a1 = _toggle_macro_(src1[x+3]);                 \
+            b1 = _toggle_macro_(src2[x+3]);                 \
+            a0 = __op__( a0, b0 );                          \
+            a1 = __op__( a1, b1 );                          \
+            dst[x+2] = (arrtype)_toggle_macro_(a0);         \
+            dst[x+3] = (arrtype)_toggle_macro_(a1);         \
+        }                                                   \
+                                                            \
+        for( ; x < size.width; x++ )                        \
+        {                                                   \
+            worktype a0 = _toggle_macro_(src1[x]);          \
+            worktype b0 = _toggle_macro_(src2[x]);          \
+            a0 = __op__( a0, b0 );                          \
+            dst[x] = (arrtype)_toggle_macro_(a0);           \
+        }                                                   \
+    }                                                       \
+                                                            \
+    return CV_OK;                                           \
 }
 
 
-#define ICV_DEF_MINMAX_FUNC( __op__, name, flavor, arrtype,             \
-                             worktype, _toggle_macro_ )                 \
-static CvStatus CV_STDCALL                                              \
-icv##name##_##flavor##_C1R( const arrtype* src1, int step1,             \
-                            const arrtype* src2, int step2,             \
-                            arrtype* dst, int step, CvSize size )       \
-{                                                                       \
-    step1 /= sizeof(src1[0]); step2 /= sizeof(src2[0]);                 \
-    step /= sizeof(dst[0]);                                             \
-                                                                        \
-    for( ; size.height--; src1 += step1, src2 += step2, dst += step )   \
-    {                                                                   \
-        int x;                                                          \
-        ICV_DEF_MINMAX_CASE_C1( __op__, arrtype,                        \
-                                worktype, _toggle_macro_ )              \
-    }                                                                   \
-                                                                        \
-    return CV_OK;                                                       \
-}
-
-
-#define ICV_DEF_MINMAX_CONST_CASE_C1( __op__, arrtype, worktype, _toggle_macro_ )\
-for( x = 0; x <= size.width - 4; x += 4 )                       \
-{                                                               \
-    worktype a0 = _toggle_macro_(src1[x]);                      \
-    worktype a1 = _toggle_macro_(src1[x+1]);                    \
-    a0 = __op__( a0, scalar );                                  \
-    a1 = __op__( a1, scalar );                                  \
-    dst[x] = (arrtype)_toggle_macro_(a0);                       \
-    dst[x+1] = (arrtype)_toggle_macro_(a1);                     \
-    a0 = _toggle_macro_(src1[x+2]);                             \
-    a1 = _toggle_macro_(src1[x+3]);                             \
-    a0 = __op__( a0, scalar );                                  \
-    a1 = __op__( a1, scalar );                                  \
-    dst[x+2] = (arrtype)_toggle_macro_(a0);                     \
-    dst[x+3] = (arrtype)_toggle_macro_(a1);                     \
-}                                                               \
-                                                                \
-for( ; x < size.width; x++ )                                    \
-{                                                               \
-    worktype a0 = _toggle_macro_(src1[x]);                      \
-    a0 = __op__( a0, scalar );                                  \
-    dst[x] = (arrtype)_toggle_macro_(a0);                       \
-}
-
-
-#define ICV_DEF_MINMAX_CONST_FUNC( __op__, name, flavor, arrtype,       \
-                                   worktype, _toggle_macro_)            \
-static CvStatus CV_STDCALL                                              \
-icv##name##C_##flavor##_C1R( const arrtype* src1, int step1,            \
-                             arrtype* dst, int step,                    \
-                             CvSize size, worktype* pScalar )           \
-{                                                                       \
-    worktype scalar = _toggle_macro_(*pScalar);                         \
-    step1 /= sizeof(src1[0]); step /= sizeof(dst[0]);                   \
-                                                                        \
-    for( ; size.height--; src1 += step1, dst += step )                  \
-    {                                                                   \
-        int x;                                                          \
-        ICV_DEF_MINMAX_CONST_CASE_C1( __op__, arrtype,                  \
-                                      worktype, _toggle_macro_ )        \
-    }                                                                   \
-                                                                        \
-    return CV_OK;                                                       \
+#define ICV_DEF_MINMAX_CONST_FUNC( __op__, name,            \
+    flavor, arrtype, worktype, _toggle_macro_)              \
+static CvStatus CV_STDCALL                                  \
+icv##name##C_##flavor##_C1R( const arrtype* src1, int step1,\
+                             arrtype* dst, int step,        \
+                             CvSize size, worktype* pScalar)\
+{                                                           \
+    worktype scalar = _toggle_macro_(*pScalar);             \
+    step1 /= sizeof(src1[0]); step /= sizeof(dst[0]);       \
+                                                            \
+    for( ; size.height--; src1 += step1, dst += step )      \
+    {                                                       \
+        int x;                                              \
+        for( x = 0; x <= size.width - 4; x += 4 )           \
+        {                                                   \
+            worktype a0 = _toggle_macro_(src1[x]);          \
+            worktype a1 = _toggle_macro_(src1[x+1]);        \
+            a0 = __op__( a0, scalar );                      \
+            a1 = __op__( a1, scalar );                      \
+            dst[x] = (arrtype)_toggle_macro_(a0);           \
+            dst[x+1] = (arrtype)_toggle_macro_(a1);         \
+            a0 = _toggle_macro_(src1[x+2]);                 \
+            a1 = _toggle_macro_(src1[x+3]);                 \
+            a0 = __op__( a0, scalar );                      \
+            a1 = __op__( a1, scalar );                      \
+            dst[x+2] = (arrtype)_toggle_macro_(a0);         \
+            dst[x+3] = (arrtype)_toggle_macro_(a1);         \
+        }                                                   \
+                                                            \
+        for( ; x < size.width; x++ )                        \
+        {                                                   \
+            worktype a0 = _toggle_macro_(src1[x]);          \
+            a0 = __op__( a0, scalar );                      \
+            dst[x] = (arrtype)_toggle_macro_(a0);           \
+        }                                                   \
+    }                                                       \
+                                                            \
+    return CV_OK;                                           \
 }
 
 
@@ -944,8 +940,7 @@ ICV_DEF_MINMAX_FUNC( _max_op_, Max, flavor, arrtype, worktype, _toggle_macro_ ) 
 ICV_DEF_MINMAX_CONST_FUNC(_min_op_, Min, flavor, arrtype, worktype, _toggle_macro_)\
 ICV_DEF_MINMAX_CONST_FUNC(_max_op_, Max, flavor, arrtype, worktype, _toggle_macro_)
 
-
-ICV_DEF_MINMAX_ALL( 8u, uchar, int, CV_NOP, CV_IMIN, CV_IMAX )
+ICV_DEF_MINMAX_ALL( 8u, uchar, int, CV_NOP, CV_MIN_8U, CV_MAX_8U )
 ICV_DEF_MINMAX_ALL( 16u, ushort, int, CV_NOP, CV_IMIN, CV_IMAX )
 ICV_DEF_MINMAX_ALL( 16s, short, int, CV_NOP, CV_IMIN, CV_IMAX )
 ICV_DEF_MINMAX_ALL( 32s, int, int, CV_NOP, CV_IMIN, CV_IMAX )
@@ -1199,6 +1194,31 @@ icvMinMaxS( const void* srcarr, double value, void* dstarr, int is_max )
                                                  dst_step, size, buf.f ));
             EXIT;
         }
+    }
+
+    if( type == CV_8U && size.width*size.height >= 1024 )
+    {
+        int i;
+        uchar tab[256];
+        CvMat _tab = cvMat( 1, 256, CV_8U, tab );
+
+        if( is_max )
+        {
+            for( i = 0; i < buf.i; i++ )
+                tab[i] = (uchar)buf.i;
+            for( ; i < 256; i++ )
+                tab[i] = (uchar)i;
+        }
+        else
+        {
+            for( i = 0; i < buf.i; i++ )
+                tab[i] = (uchar)i;
+            for( ; i < 256; i++ )
+                tab[i] = (uchar)buf.i;
+        }
+
+        cvLUT( src1, dst, &_tab );
+        EXIT;
     }
 
     IPPI_CALL( func( src1->data.ptr, src1_step, dst->data.ptr,
