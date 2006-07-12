@@ -102,7 +102,7 @@ CV_IMPL  void*  cvAlloc( size_t size )
 
     __BEGIN__;
 
-    if( (unsigned)size > CV_MAX_ALLOC_SIZE )
+    if( (size_t)size > CV_MAX_ALLOC_SIZE )
         CV_ERROR( CV_StsOutOfRange,
                   "Negative or too large argument of cvAlloc function" );
 
