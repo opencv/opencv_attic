@@ -81,6 +81,11 @@ extern const signed char icvDepthToType[];
 #define icvIplToCvDepth( depth ) \
     icvDepthToType[(((depth) & 255) >> 2) + ((depth) < 0)]
 
+extern const uchar icvSaturate8u[];
+#define CV_FAST_CAST_8U(t)   (assert(-256 <= (t) && (t) <= 512), icvSaturate8u[(t)+256])
+#define CV_MIN_8U(a,b)       ((a) - CV_FAST_CAST_8U((a) - (b)))
+#define CV_MAX_8U(a,b)       ((a) + CV_FAST_CAST_8U((b) - (a)))
+
 typedef CvFunc2D_3A1I CvArithmBinMaskFunc2D;
 typedef CvFunc2D_2A1P1I CvArithmUniMaskFunc2D;
 
