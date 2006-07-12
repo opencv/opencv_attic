@@ -1556,8 +1556,8 @@ cvWarpPerspectiveQMatrix( const CvPoint2D32f* src,
  * where:
  *   cij - matrix coefficients
  */
-CV_IMPL CvMat * cvCalcAffineMatrix( const CvPoint2D32f * src, const CvPoint2D32f * dst, CvMat * map_matrix ){
-    CV_FUNCNAME( "cvCalcAffineMatrix" );
+CV_IMPL CvMat * cvGetAffineTransform( const CvPoint2D32f * src, const CvPoint2D32f * dst, CvMat * map_matrix ){
+    CV_FUNCNAME( "cvGetAffineTransform" );
 
     __BEGIN__;
 
