@@ -768,6 +768,9 @@ CVAPI(void)  cvEigenVV( CvArr* mat, CvArr* evects,
 /* Makes an identity matrix (mat_ij = i == j) */
 CVAPI(void)  cvSetIdentity( CvArr* mat, CvScalar value CV_DEFAULT(cvRealScalar(1)) );
 
+/* Fills matrix with given range of numbers */
+CVAPI(CvArr*)  cvRange( CvArr* mat, double start, double end );
+
 /* Calculates covariation matrix for a set of vectors */
 /* transpose([v1-avg, v2-avg,...]) * [v1-avg,v2-avg,...] */
 #define CV_COVAR_SCRAMBLED 0
@@ -794,9 +797,6 @@ CVAPI(void)  cvCalcCovarMatrix( const CvArr** vects, int count,
 #define CV_PCA_DATA_AS_ROW 0 
 #define CV_PCA_DATA_AS_COL 1
 #define CV_PCA_USE_AVG 2
-#define CV_PCA_RET_SDV 4
-#define CV_PCA_RET_EVAL 0
-
 CVAPI(void)  cvCalcPCA( const CvArr* data, CvArr* mean,
                         CvArr* eigenvals, CvArr* eigenvects, int flags );
 
@@ -855,7 +855,7 @@ CVAPI(double)  cvNorm( const CvArr* arr1, const CvArr* arr2 CV_DEFAULT(NULL),
                        const CvArr* mask CV_DEFAULT(NULL) );
 
 CVAPI(void)  cvNormalize( const CvArr* src, CvArr* dst,
-                          double a, double b CV_DEFAULT(0.),
+                          double a CV_DEFAULT(1.), double b CV_DEFAULT(0.),
                           int norm_type CV_DEFAULT(CV_L2),
                           const CvArr* mask CV_DEFAULT(NULL) );
 
