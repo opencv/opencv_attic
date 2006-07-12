@@ -626,4 +626,73 @@ CV_IMPL void cvRandShuffle( CvArr* arr, CvRNG* rng, double iter_factor )
 }
 
 
+CV_IMPL CvArr*
+cvRange( CvArr* arr, double start, double end )
+{
+    int ok = 0;
+    
+    CV_FUNCNAME( "cvRange" );
+
+    __BEGIN__;
+    
+    CvMat stub, *mat = (CvMat*)arr;
+    double delta;
+    int type, step;
+    double val = start;
+    int i, j;
+    int rows, cols;
+    
+    if( !CV_IS_MAT(mat) )
+        CV_CALL( mat = cvGetMat( mat, &stub) );
+
+    rows = mat->rows;
+    cols = mat->cols;
+    type = CV_MAT_TYPE(mat->type);
+    delta = (end-start)/(rows*cols);
+
+    if( CV_IS_MAT_CONT(mat->type) )
+    {
+        cols *= rows;
+        rows = 1;
+        step = 1;
+    }
+    else
+        step = mat->step / CV_ELEM_SIZE(type);
+
+    if( type == CV_32SC1 )
+    {
+        int* idata = mat->data.i;
+        int ival = cvRound(val), idelta = cvRound(delta);
+
+        if( fabs(val - ival) < DBL_EPSILON &&
+            fabs(delta - idelta) < DBL_EPSILON )
+        {
+            for( i = 0; i < rows; i++, idata += step )
+                for( j = 0; j < cols; j++, ival += idelta )
+                    idata[j] = ival;
+        }
+        else
+        {
+            for( i = 0; i < rows; i++, idata += step )
+                for( j = 0; j < cols; j++, val += delta )
+                    idata[j] = cvRound(val);
+        }
+    }
+    else if( type == CV_32FC1 )
+    {
+        float* fdata = mat->data.fl;
+        for( i = 0; i < rows; i++, fdata += step )
+            for( j = 0; j < cols; j++, val += delta )
+                fdata[j] = (float)val;
+    }
+    else
+        CV_ERROR( CV_StsUnsupportedFormat, "The function only supports 32sC1 and 32fC1 datatypes" );
+
+    ok = 1;
+
+    __END__;
+
+    return ok ? arr : 0;
+}
+
 /* End of file. */
