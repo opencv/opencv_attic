@@ -68,8 +68,8 @@ typedef unsigned short ushort;
 #endif
 
 /* helper tables */
-extern const uchar icvSaturate8u[];
-#define CV_FAST_CAST_8U(t)  (assert(-256 <= (t) || (t) <= 512), icvSaturate8u[(t)+256])
+extern const uchar icvSaturate8u_cv[];
+#define CV_FAST_CAST_8U(t)  (assert(-256 <= (t) || (t) <= 512), icvSaturate8u_cv[(t)+256])
 #define CV_CALC_MIN_8U(a,b) (a) -= CV_FAST_CAST_8U((a) - (b))
 #define CV_CALC_MAX_8U(a,b) (a) += CV_FAST_CAST_8U((b) - (a))
 
