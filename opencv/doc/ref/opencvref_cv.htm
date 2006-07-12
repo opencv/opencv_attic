@@ -479,6 +479,22 @@ always changes the whole destination image content.
 To transform a sparse set of points, use <a href="#decl_cvTransform">cvTransform</a>
 function from cxcore.</p>
 
+<hr><h3><a name="decl_cvGetAffineTransform">GetAffineTransform</a></h3>
+<p class="Blurb">Calculates affine transform from 3 corresponding points</p>
+<pre>
+CvMat* cvGetAffineTransform( const CvPoint2D32f* src, const CvPoint2D32f* dst, 
+                             CvMat* map_matrix );
+</pre><p><dl>
+<dt>src<dd>Coordinates of 3 triangle vertices in the source image.
+<dt>dst<dd>Coordinates of the 3 corresponding triangle vertices in the destination image.
+<dt>map_matrix<dd>Pointer to the destination 2&times;3 matrix.
+</dl><p>
+The function <code>cvGetAffineTransform</code> calculates the
+matrix of an affine transform such that:</p>
+<pre>
+(x'<sub>i</sub>,y'<sub>i</sub>)<sup>T</sup>=map_matrix&bull;(x<sub>i</sub>,y<sub>i</sub>,1)<sup>T</sup>
+</pre>
+<p>where <code>dst(i)=(x'<sub>i</sub>,y'<sub>i</sub>), src(i)=(x<sub>i</sub>,y<sub>i</sub>), i=0..2</code>.</p>
 
 <hr><h3><a name="decl_cv2DRotationMatrix">2DRotationMatrix</a></h3>
 <p class="Blurb">Calculates affine matrix of 2d rotation</p>
@@ -534,18 +550,19 @@ For a sparse set of points
 use <a href="#decl_cvPerspectiveTransform">cvPerspectiveTransform</a> function from cxcore.</p>
 
 
-<hr><h3><a name="decl_cvWarpPerspectiveQMatrix">WarpPerspectiveQMatrix</a></h3>
+<hr><h3><a name="decl_cvGetPerspectiveTransform">GetPerspectiveTransform</a></h3>
 <p class="Blurb">Calculates perspective transform from 4 corresponding points</p>
 <pre>
-CvMat* cvWarpPerspectiveQMatrix( const CvPoint2D32f* src,
-                                 const CvPoint2D32f* dst,
-                                 CvMat* map_matrix );
+CvMat* cvGetPerspectiveTransform( const CvPoint2D32f* src, const CvPoint2D32f* dst,
+                                  CvMat* map_matrix );
+
+#define cvWarpPerspectiveQMatrix cvGetPerspectiveTransform
 </pre><p><dl>
 <dt>src<dd>Coordinates of 4 quadrangle vertices in the source image.
 <dt>dst<dd>Coordinates of the 4 corresponding quadrangle vertices in the destination image.
 <dt>map_matrix<dd>Pointer to the destination 3&times;3 matrix.
 </dl><p>
-The function <code>cvWarpPerspectiveQMatrix</code> calculates
+The function <code>cvGetPerspectiveTransform</code> calculates
 matrix of perspective transform such that:</p>
 <pre>
 (t<sub>i</sub>&bull;x'<sub>i</sub>,t<sub>i</sub>&bull;y'<sub>i</sub>,t<sub>i</sub>)<sup>T</sup>=map_matrix&bull;(x<sub>i</sub>,y<sub>i</sub>,1)<sup>T</sup>
@@ -3128,7 +3145,7 @@ typedef struct CvQuadEdge2D
 }
 CvQuadEdge2D;
 </pre><p>
-Quad-edge is a basic element of subdivision, it contains four edges (e, eRot and reversed e & eRot):
+Quad-edge is a basic element of subdivision, it contains four edges (e, eRot (in red) and reversed e &amp; eRot (in green)):
 </p><p>
 <img src="pics/quadedge.png" width=200 height=200>
 </p>

@@ -1538,6 +1538,59 @@ cvWarpPerspectiveQMatrix( const CvPoint2D32f* src,
     return matrix;
 }
 
+/* Calculates coefficients of affine transformation
+ * which maps (xi,yi) to (ui,vi), (i=1,2,3):
+ *      
+ * ui = c00*xi + c01*yi + c02
+ *
+ * vi = c10*xi + c11*yi + c12
+ *
+ * Coefficients are calculated by solving linear system:
+ * / x0 y0  1  0  0  0 \ /c00\ /u0\
+ * | x1 y1  1  0  0  0 | |c01| |u1|
+ * | x2 y2  1  0  0  0 | |c02| |u2|
+ * |  0  0  0 x0 y0  1 | |c10| |v0|
+ * |  0  0  0 x1 y1  1 | |c11| |v1|
+ * \  0  0  0 x2 y2  1 / |c12| |v2|
+ *
+ * where:
+ *   cij - matrix coefficients
+ */
+CV_IMPL CvMat * cvCalcAffineMatrix( const CvPoint2D32f * src, const CvPoint2D32f * dst, CvMat * map_matrix ){
+    CV_FUNCNAME( "cvCalcAffineMatrix" );
+
+    __BEGIN__;
+
+    CvMat mA, mX, mB;
+    double A[6*6];
+    double B[6];
+	double x[6];
+    cvInitMatHeader(&mA, 6, 6, CV_64F, A);
+    cvInitMatHeader(&mB, 6, 1, CV_64F, B);
+	cvInitMatHeader(&mX, 6, 1, CV_64F, x);
+
+	if( !src || !dst || !map_matrix )
+		CV_ERROR( CV_StsNullPtr, "" );
+
+    for(int i=0; i<3; i++){
+        int j = i*12;
+        int k = i*12+6;
+        A[j] = A[k+3] = src[i].x;
+        A[j+1] = A[k+4] = src[i].y;
+        A[j+2] = A[k+5] = 1;
+        A[j+3] = A[j+4] = A[j+5] = 0;
+        A[k] = A[k+1] = A[k+2] = 0;
+        B[i*2] = dst[i].x;
+        B[i*2+1] = dst[i].y;
+    }
+    cvSolve(&mA, &mB, &mX);
+
+    mX = cvMat( 2, 3, CV_64FC1, x );
+	cvConvert( &mX, map_matrix );
+
+	__END__;
+    return map_matrix;
+}
 
 /****************************************************************************************\
 *                          Generic Geometric Transformation: Remap                       *
