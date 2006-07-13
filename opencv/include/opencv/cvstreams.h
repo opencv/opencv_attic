@@ -44,40 +44,46 @@
 
 #ifdef WIN32
 #include <streams.h>  /* !!! IF YOU'VE GOT AN ERROR HERE, PLEASE READ BELOW !!! */
-/***************** How to get Developer Studio understand streams.h ****************\
+/***************** How to get Visual Studio understand streams.h ****************\
 
-You need DirectShow SDK that is now a part of DirectX SDK.
+You need DirectShow SDK that is now a part of Platform SDK
+(Windows Server 2003 SP1 SDK or later),
+and DirectX SDK (2006 April or later).
 
-1. Download DirectX SDK from msdn.microsoft.com/directx/
-   (It's huge, but you can download it by parts).
+1. Download the Platform SDK from
+   http://www.microsoft.com/msdownload/platformsdk/sdkupdate/
+   and DirectX SDK from msdn.microsoft.com/directx/
+   (They are huge, but you can download it by parts).
    If it doesn't work for you, consider HighGUI that can capture video via VFW or MIL
 
-2. Install it TOGETHER WITH SAMPLES.
+2. Install Platform SDK together with DirectShow SDK.
+   Install DirectX (with or without sample code).
 
-3. Open <DirectXSDKInstallFolder>\samples\C++\DirectShow\BaseClasses\baseclasses.{dsw|sln}.
-   If there is no such file, it is that you either didn't install samples or the path has changed,
-   in the latter case search for streams.h and open a workspace file located in the same folder.
+3. Build baseclasses.
+   See <PlatformSDKInstallFolder>\samples\multimedia\directshow\readme.txt.
 
-4. Build the library in both Release in Debug configurations.
+4. Copy the built libraries (called strmbase.lib and strmbasd.lib
+   in Release and Debug versions, respectively) to 
+   <PlatformSDKInstallFolder>\lib.
 
-5. Copy the built libraries (in DirectX 9.x they are called strmbase.lib and strmbasd.lib)
-   to <DirectXSDKInstallFolder>\lib.
-
-6. In Developer Studio add the following paths:
+5. In Developer Studio add the following paths:
       <DirectXSDKInstallFolder>\include
-      <DirectXSDKInstallFolder>\samples\C++\DirectShow\BaseClasses
-    to the includes' search path (at Tools->Options->Directories->Include files
-                                  in case of Developer Studio 6.0)
+      <PlatformSDKInstallFolder>\include
+      <PlatformSDKInstallFolder>\samples\multimedia\directshow\baseclasses
+    to the includes' search path
+    (at Tools->Options->Directories->Include files in case of Visual Studio 6.0,
+     at Tools->Options->Projects and Solutions->VC++ Directories->Include files in case
+     of Visual Studio 2005)
    Add
       <DirectXSDKInstallFolder>\lib
-   to the libraries' search path (at Tools->Options->Directories->Library files
-                                  in case of Developer Studio 6.0)
+      <PlatformSDKInstallFolder>\lib
+   to the libraries' search path (in the same dialog, ...->"Library files" page)
 
-   NOTE: PUT THE ADDED LINES ON THE VERY TOP OF THE LISTS, OTHERWISE YOU WILL STILL GET
-   COMPILER OR LINKER ERRORS. This is necessary, because Developer Studio 6.0 includes some
-   older DirectX headers and libs that conflict with new DirectX SDK versions. 
+   NOTE: PUT THE ADDED LINES ON THE VERY TOP OF THE LISTS, OTHERWISE YOU MAY STILL GET
+   COMPILER OR LINKER ERRORS. This is necessary, because Visual Studio
+   may include older versions of the same headers and libraries. 
 
-7. Enjoy!
+6. Now you can build OpenCV DirectShow filters.
 
 \***********************************************************************************/
 

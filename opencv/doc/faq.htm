@@ -77,43 +77,51 @@ because of <a href="index.htm#ipp">IPP</a>.
 
 <hr><h3>When I try to build one of the
 apps, I get an error, streams.h not found.</h3>
-<p>You need DirectShow SDK that is a part of DirectX SDK.</p>
+<p>You need install and setup DirectShow SDK that is now a part of Platform SDK
+(Windows Server 2003 SP1 SDK or later).
+Here is the procedure:
 <ol>
-<li>Download DirectX SDK from msdn.microsoft.com/directx/
-   (It's huge, but you can download it by parts).
-   If it doesn't work for you, consider HighGUI that can capture video using VFW or MIL
+<li>Download the Platform SDK from
+   <a href="http://www.microsoft.com/msdownload/platformsdk/sdkupdate/">
+    http://www.microsoft.com/msdownload/platformsdk/sdkupdate/</a><br>
+   and DirectX SDK from <a href="http://msdn.microsoft.com/directx/">
+   http://msdn.microsoft.com/directx/</a>
+   (They are huge, but you can download and install them by parts).<br>
+   If it doesn't work for you, consider HighGUI that can capture video via VFW or MIL
 
-<li>Install it TOGETHER WITH SAMPLES.
+<li>Install Platform SDK <em>together</em> with DirectShow SDK.<br>
+   Install DirectX SDK (with or without sample code).
 
-<li>Open &lt;DirectXSDKInstallFolder>\samples\C++\DirectShow\BaseClasses\baseclasses.{dsw|sln}.
-   If there is no such file, it is that you either didn't install samples or the path has changed,
-   in the latter case search for streams.h and open a workspace file located in the same folder.
+<li>Build baseclasses.
+   See &lt;PlatformSDKInstallFolder&gt;\samples\multimedia\directshow\readme.txt.
 
-<li>Build the library in both Release in Debug configurations.
+<li>Copy the built libraries (called strmbase.lib and strmbasd.lib
+   in Release and Debug versions, respectively) to 
+   &lt;PlatformSDKInstallFolder&gt;\lib.
 
-<li>Copy the built libraries (in DirectX 9.x they are called strmbase.lib and strmbasd.lib)
-   to &lt;DirectXSDKInstallFolder&gt;\lib.
+<li>In Developer Studio add the following paths:<br>
+      &lt;DirectXSDKInstallFolder&gt;\include<br>
+      &lt;PlatformSDKInstallFolder&gt;\include<br>
+      &lt;PlatformSDKInstallFolder&gt;\samples\multimedia\directshow\baseclasses<br>
+    to the includes' search path
+    (at Tools->Options->Directories->Include files in case of Visual Studio 6.0,<br>
+     at Tools->Options->Projects and Solutions->VC++ Directories->Include files in case
+     of Visual Studio 2005)<br>
+   Add<br>
+      &lt;DirectXSDKInstallFolder&gt;\lib<br>
+      &lt;PlatformSDKInstallFolder&gt;\lib<br>
+   to the libraries' search path (in the same dialog, ...->"Library files" page)<p>
 
-<li>In Developer Studio add the following paths:<p>
-    &lt;DirectXSDKInstallFolder&gt;\include<br>
-    &lt;DirectXSDKInstallFolder&gt;\samples\C++\DirectShow\BaseClasses<br>
-    to the includes' search path (at Tools->Options->Directories->Include files in case of Developer Studio 6.0)</p>
-    <p>Add
-      &lt;DirectXSDKInstallFolder&gt;\lib
-      to the libraries' search path (at Tools->Options->Directories->Library files
-                                     in case of Developer Studio 6.0)
-     </p>
-   <p><b>NOTE: PUT THE ADDED LINES ON THE VERY TOP OF THE LISTS, OTHERWISE YOU WILL STILL GET
-   COMPILER OR LINKER ERRORS. This is necessary, because Developer Studio 6.0 includes some
-   older DirectX headers and libs that conflict with new DirectX SDK versions.</b></p>
+   NOTE: PUT THE ADDED LINES ON THE VERY TOP OF THE LISTS, OTHERWISE YOU MAY STILL GET
+   COMPILER OR LINKER ERRORS. This is necessary, because Visual Studio
+   may include older versions of the same headers and libraries.</p> 
 
-<li>Enjoy!
+<li>Now you can build OpenCV DirectShow filters.
 </ol>
 
 <hr><h3>After installing DirectX SDK I'm still getting linker error about undefined
      or redefined "TransInPlace" filter class constructors etc.</h3>
-<p>Read the instructions from the previous answer, especially about the order of
-search directories.</p>
+<p>Put the paths to the SDKs' include and lib folders on the top of the search lists.</p>
 
 <hr><h3>When I use try to use cvcam, it just crashes</h3>
 <p>Make sure, you registered ProxyTrans.ax and SyncFilter.ax</p>
