@@ -1492,11 +1492,11 @@ cvWarpPerspective( const CvArr* srcarr, CvArr* dstarr,
  *   cij - matrix coefficients, c22 = 1
  */
 CV_IMPL CvMat*
-cvWarpPerspectiveQMatrix( const CvPoint2D32f* src,
+cvGetPerspectiveTransform( const CvPoint2D32f* src,
                           const CvPoint2D32f* dst,
                           CvMat* matrix )
 {
-    CV_FUNCNAME( "cvGetPerspectiveTransformMatrix" );
+    CV_FUNCNAME( "cvGetPerspectiveTransform" );
 
     __BEGIN__;
 
@@ -1556,7 +1556,9 @@ cvWarpPerspectiveQMatrix( const CvPoint2D32f* src,
  * where:
  *   cij - matrix coefficients
  */
-CV_IMPL CvMat * cvGetAffineTransform( const CvPoint2D32f * src, const CvPoint2D32f * dst, CvMat * map_matrix ){
+CV_IMPL CvMat*
+cvGetAffineTransform( const CvPoint2D32f * src, const CvPoint2D32f * dst, CvMat * map_matrix )
+{
     CV_FUNCNAME( "cvGetAffineTransform" );
 
     __BEGIN__;
@@ -1565,6 +1567,8 @@ CV_IMPL CvMat * cvGetAffineTransform( const CvPoint2D32f * src, const CvPoint2D3
     double A[6*6];
     double B[6];
 	double x[6];
+    int i;
+
     cvInitMatHeader(&mA, 6, 6, CV_64F, A);
     cvInitMatHeader(&mB, 6, 1, CV_64F, B);
 	cvInitMatHeader(&mX, 6, 1, CV_64F, x);
@@ -1572,7 +1576,8 @@ CV_IMPL CvMat * cvGetAffineTransform( const CvPoint2D32f * src, const CvPoint2D3
 	if( !src || !dst || !map_matrix )
 		CV_ERROR( CV_StsNullPtr, "" );
 
-    for(int i=0; i<3; i++){
+    for( i = 0; i < 3; i++ )
+    {
         int j = i*12;
         int k = i*12+6;
         A[j] = A[k+3] = src[i].x;
