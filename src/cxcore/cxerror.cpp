@@ -355,6 +355,10 @@ CV_IMPL void cvError( int code, const char* func_name,
             int terminate = context->error_callback( code, func_name, err_msg,
                                                     file_name, line, context->userdata );
             if( terminate )
+            {
+#ifndef WIN32
+                assert(0); // for post-mortem analysis with GDB
+#endif
                 exit(-abs(terminate));
         }
     }
