@@ -3757,7 +3757,7 @@ ICV_RAND_SHUFFLE( 32S, int )
 ICV_RAND_SHUFFLE( 32F, float )
 
 CV_BOOST_IMPL
-void cvRandShuffle( CvMat* mat )
+void cvRandShuffleVec( CvMat* mat )
 {
     CV_FUNCNAME( "cvRandShuffle" );
 
