@@ -1418,6 +1418,40 @@ The function <code>cvSetZero</code> clears the array. In case of dense arrays
 in case of sparse arrays all the elements are removed.</p>
 
 
+<hr><h3><a name="decl_cvSetIdentity">SetIdentity</a></h3>
+<p class="Blurb">Initializes scaled identity matrix</p>
+<pre>
+void cvSetIdentity( CvArr* mat, CvScalar value=cvRealScalar(1) );
+</pre><p><dl>
+<dt>arr<dd>The matrix to initialize (not necesserily square).
+<dt>value<dd>The value to assign to the diagonal elements.
+</dl><p>
+The function <code>cvSetIdentity</code> initializes scaled identity matrix:</p>
+<pre>
+arr(i,j)=value if i=j,
+       0 otherwise
+</pre>
+
+
+<hr><h3><a name="decl_cvRange">Range</a></h3>
+<p class="Blurb">Fills matrix with given range of numbers</p>
+<pre>
+void cvRange( CvArr* mat, double start, double end );
+</pre><p><dl>
+<dt>mat<dd>The matrix to initialize. It should be single-channel 32-bit, integer or floating-point.
+<dt>start<dd>The lower inclusive boundary of the range.
+<dt>end<dd>The upper exclusive boundary of the range.
+</dl><p>
+The function <code>cvRange</code> initializes the matrix as following:</p>
+<pre>
+arr(i,j)=(end-start)*(i*cols(arr)+j)/(cols(arr)*rows(arr))
+</pre>
+For example, the following code will initilize 1D vector with subsequent integer numbers.
+<pre>
+CvMat* A = cvCreateMat( 1, 10, CV_32S );
+cvRange( A, 0, A->cols ); // A will be initialized as [0,1,2,3,4,5,6,7,8,9]
+</pre>
+
 <!-- *****************************************************************************************
      *****************************************************************************************
      ***************************************************************************************** -->
@@ -1620,6 +1654,27 @@ separate alpha channel images:</p>
     cvSet( rgba, cvScalar(1,2,3,4) );
     cvMixChannels( (const CvArr**)&rgba, 1, out, 2, from_to, 4 );
 </pre>
+
+
+<hr><h3><a name="decl_cvRandShuffle">RandShuffle</a></h3>
+<p class="Blurb">Randomly shuffles the array elements</p>
+<pre>
+void cvRandShuffle( CvArr* mat, CvRNG* rng, double iter_factor=1. );
+</pre><p><dl>
+<dt>mat<dd>The input/output matrix. It is shuffled in-place.
+<dt>rng<dd>The <a href="#cxcore_arrays_rng">Random Number Generator</a>
+           used to shuffle the elements. When the pointer is NULL,
+           a temporary RNG will be created and used.
+<dt>iter_factor<dd>The relative parameter that characterizes intensity of the shuffling performed.
+                   See the description below.
+</dl><p>
+The function <code>cvRandShuffle</code> shuffles the matrix by swapping randomly chosen pairs
+of the matrix elements on each iteration (where each element may contain several components in case of multi-channel arrays).
+The number of iterations (i.e. pairs swapped) is <code>round(iter_factor*rows(mat)*cols(mat))</code>, so
+<code>iter_factor=0</code> means that no shuffling is done,
+<code>iter_factor=1</code> means that the function swaps
+<code>rows(mat)*cols(mat)</code> random pairs etc.
+</p>
 
 
 <hr><h2><a name="cxcore_arrays_arithm_logic">Arithmetic, Logic and Comparison</a></h2>
@@ -2308,26 +2363,37 @@ are combined.
 </p>
 
 
+<hr><h3><a name="decl_cvReduce">Reduce</a></h3>
+<p class="Blurb">Reduces matrix to a vector</p>
+<pre>
+void cvReduce( const CvArr* src, CvArr* dst, int op=CV_REDUCE_SUM );
+</pre><p><dl>
+<dt>src<dd>The input matrix.
+<dt>dst<dd>The output single-row/single-column vector that accumulates
+           somehow all the matrix rows/columns.
+<dt>dim<dd>The dimension index along which the matrix is reduce.
+           0 means that the matrix is reduced to a single row,
+           1 means that the matrix is reduced to a single column.
+           -1 means that the dimension is chosen automatically by analysing the <code>dst</code> size.
+<dt>op<dd>The reduction operation. It can take of the following values:<br>
+           <code>CV_REDUCE_SUM</code> - the output is the sum of all the matrix rows/columns.<br>
+           <code>CV_REDUCE_AVG</code> - the output is the mean vector of all the matrix rows/columns.<br>
+           <code>CV_REDUCE_MAX</code> - the output is the maximum (column/row-wise) of all the matrix rows/columns.<br>
+           <code>CV_REDUCE_MIN</code> - the output is the minimum (column/row-wise) of all the matrix rows/columns.<br>
+</dl><p>
+The function <code>cvReduce</code> reduces matrix to a vector by treating the matrix rows/columns as a set
+of 1D vectors and performing the specified operation on the vectors until a single row/column is obtained.
+For example, the function can be used to compute horizontal and vertical projections of an raster image.
+In case of <code>CV_REDUCE_SUM</code> and <code>CV_REDUCE_AVG</code> the output may have a larger
+element bit-depth to preserve accuracy. And multi-channel arrays are also supported in these two reduction modes.
+</p>
+
+
 <!-- *****************************************************************************************
      *****************************************************************************************
      ***************************************************************************************** -->
 
 <hr><h2><a name="cxcore_arrays_matrix">Linear Algebra</a></h2>
-
-<hr><h3><a name="decl_cvSetIdentity">SetIdentity</a></h3>
-<p class="Blurb">Initializes scaled identity matrix</p>
-<pre>
-void cvSetIdentity( CvArr* mat, CvScalar value=cvRealScalar(1) );
-</pre><p><dl>
-<dt>arr<dd>The matrix to initialize (not necesserily square).
-<dt>value<dd>The value to assign to the diagonal elements.
-</dl><p>
-The function <code>cvSetIdentity</code> initializes scaled identity matrix:</p>
-<pre>
-arr(i,j)=value if i=j,
-       0 otherwise
-</pre>
-
 
 <hr><h3><a name="decl_cvDotProduct">DotProduct</a></h3>
 <p class="Blurb">Calculates dot product of two arrays in Euclidian metrics</p>
@@ -2346,6 +2412,50 @@ accumulated. In particular, <code><a href="#decl_cvDotProduct">cvDotProduct</a>(
 where <code>a</code> is a complex vector, will return <code>||a||<sup>2</sup></code>.
 The function can process multi-dimensional arrays, row by row, layer by layer and so on.</p>
 
+
+<hr><h3><a name="decl_cvNormalize">Normalize</a></h3>
+<p class="Blurb">Normalizes array to a certain norm or value range</p>
+<pre>
+void cvNormalize( const CvArr* src, CvArr* dst,
+                  double a=1, double b=0, int norm_type=CV_L2,
+                  const CvArr* mask=NULL );
+</pre><p><dl>
+<dt>src<dd>The input array.
+<dt>dst<dd>The output array; in-place operation is supported.
+<dt>a<dd>The minimum/maximum value of the output array or the norm of output array.
+<dt>b<dd>The maximum/minimum value of the output array.
+<dt>norm_type<dd>The normalization type. It can take one of the following values:<br>
+    <code>CV_C</code> - the C-norm (maximum of absolute values) of the array is normalized.<br>
+    <code>CV_L1</code> - the L<sub>1</sub>-norm (sum of absolute values) of the array is normalized.<br>
+    <code>CV_L2</code> - the (Euclidian) L<sub>2</sub>-norm of the array is normalized.<br>
+    <code>CV_MINMAX</code> - the array values are scaled and shifted to the specified range.<br>
+<dt>mask<dd>The operation mask. Makes the function consider and normalize only certain array elements.
+</dl><p>
+The function <code>cvNormalize</code> normalizes the input array so that it's norm or value
+range takes the certain value(s).</p>
+<p>When <code>norm_type==CV_MINMAX</code>:
+<pre>
+    dst(i,j)=(src(i,j)-min(src))*(b'-a')/(max(src)-min(src)) + a',  if mask(i,j)!=0
+    dst(i,j)=src(i,j)  otherwise
+</pre>
+where <code>b'=MAX(a,b)</code>, <code>a'=MIN(a,b)</code>;<br>
+<code>min(src)</code> and <code>max(src)</code> are the global minimum and maximum, respectively,
+of the input array, computed over the whole array or the specified subset of it.
+<p>When <code>norm_type!=CV_MINMAX</code>:
+<pre>
+    dst(i,j)=src(i,j)*a/<a href="#decl_cvNorm">cvNorm</a>(src,0,norm_type,mask), if mask(i,j)!=0
+    dst(i,j)=src(i,j)  otherwise
+</pre>
+<p>Here is the short example:</p>
+<pre>
+float v[3] = { 1, 2, 3 };
+CvMat V = cvMat( 1, 3, CV_32F, v );
+
+// make vector v unit-length;
+// equivalent to
+//   for(int i=0;i&lt;3;i++) v[i]/=sqrt(v[0]*v[0]+v[1]*v[1]+v[2]*v[2]);
+cvNormalize( &V, &V );
+</pre>
 
 <hr><h3><a name="decl_cvCrossProduct">CrossProduct</a></h3>
 <p class="Blurb">Calculates cross product of two 3D vectors</p>
@@ -2687,14 +2797,17 @@ void cvCalcCovarMatrix( const CvArr** vects, int count, CvArr* cov_mat, CvArr* a
                        has been already calculated somehow, or if the covariation matrix is calculated by parts - in this case,
                        <code>avg</code> is not a mean vector of the input sub-set of vectors, but rather the mean vector of
                        the whole set.<br>
-                 <code>CV_COVAR_SCALE</code> - if the flag is specified, the covariation matrix is scaled.
-                       In the "normal" mode <code>scale</code> is <code>1./count</code>, in the "scrambled" mode <code>scale</code> is
-                       reciprocal of the total number of elements in every input vector. By default (if the flag is not specified)
-                       the covariation matrix is not scaled (<code>scale=1</code>).
+                 <code>CV_COVAR_SCALE</code> - if the flag is specified, the covariation matrix is scaled by
+                       the number of input vectors.
+                 <code>CV_COVAR_ROWS</code> - Means that all the input vectors are stored as rows of a single matrix, <code>vects[0]</code>.
+                       <code>count</code> is ignored in this case, and <code>avg</code> should be a single-row vector of an appropriate size.
+                 <code>CV_COVAR_COLS</code> - Means that all the input vectors are stored as columns of a single matrix, <code>vects[0]</code>.
+                       <code>count</code> is ignored in this case, and <code>avg</code> should be a single-column vector of an appropriate size.
 </dl><p>
 The function <code>cvCalcCovarMatrix</code> calculates the covariation matrix and, optionally,
 mean vector of the set of input vectors. The function can be used for PCA, for comparing vectors using Mahalanobis distance etc.
 </p>
+
 
 <hr><h3><a name="decl_cvMahalonobis">Mahalonobis</a></h3>
 <p class="Blurb">Calculates Mahalonobis distance between two vectors</p>
@@ -2713,6 +2826,80 @@ d(vec1,vec2)=sqrt( sum<sub>i,j</sub> {mat(i,j)*(vec1(i)-vec2(i))*(vec1(j)-vec2(j
 <p>The covariation matrix may be calculated using <a href="#decl_cvCalcCovarMatrix">cvCalcCovarMatrix</a> function and further
 inverted using <a href="#decl_cvInvert">cvInvert</a> function (CV_SVD method is the preffered one, because the matrix
 might be singular).</p>
+
+
+<hr><h3><a name="decl_cvCalcPCA">CalcPCA</a></h3>
+<p class="Blurb">Performs Principal Component Analysis of a vector set</p>
+<pre>
+void cvCalcPCA( const CvArr* data, CvArr* avg,
+                CvArr* eigenvalues, CvArr* eigenvectors, int flags );
+</pre><p><dl>
+<dt>data<dd>The input data; each vector is either a single row (<code>CV_PCA_DATA_AS_ROW</code>)
+            or a single column (<code>CV_PCA_DATA_AS_COL</code>).
+<dt>avg<dd>The mean (average) vector, computed inside the function or provided by user.
+<dt>eigenvalues<dd>The output eigenvalues of covariation matrix.
+<dt>eigenvectors<dd>The output eigenvectors of covariation matrix (i.e. principal components);
+                    one vector per row.
+<dt>flags<dd>The operation flags, a combination of the following values:<br>
+             <code>CV_PCA_DATA_AS_ROW</code> - the vectors are stored as rows
+             (i.e. all the components of a certain vector are stored continously)<br>
+             <code>CV_PCA_DATA_AS_COL</code> - the vectors are stored as columns
+             (i.e. values of a certain vector component are stored continuously)<br>
+             (the above two flags are mutually exclusive)<br>
+             <code>CV_PCA_USE_AVG</code> - use pre-computed average vector<br>
+</dl><p>
+The function <code>cvCalcPCA</code> performs PCA analysis of the vector set.
+First, it uses <a href="#decl_cvCalcCovarMatrix">cvCalcCovarMatrix</a> to compute covariation matrix
+and then it finds its eigenvalues and eigenvectors. The output number of eigenvalues/eigenvectors
+should be less than or equal to <code>MIN(rows(data),cols(data))</code>.
+
+
+<hr><h3><a name="decl_cvProjectPCA">ProjectPCA</a></h3>
+<p class="Blurb">Projects vectors to the specified subspace</p>
+<pre>
+void cvProjectPCA( const CvArr* data, const CvArr* avg,
+                   const CvArr* eigenvectors, CvArr* result )
+</pre><p><dl>
+<dt>data<dd>The input data; each vector is either a single row
+            or a single column.
+<dt>avg<dd>The mean (average) vector. If it is a single-row vector,
+           it means that the input vectors are stored as rows of <code>data</code>;
+           otherwise, it should be a single-column vector,
+           then the vectors are stored as columns of <code>data</code>.
+<dt>eigenvectors<dd>The eigenvectors (principal components); one vector per row.
+<dt>result<dd>The output matrix of decomposition coefficients. The number of rows must be
+              the same as the number of vectors, the number of columns must
+              be less than or equal to the number of rows in <code>eigenvectors</code>.
+              That it is less, the input vectors are projected into subspace
+              of the first <code>cols(result)</code> principal components.
+</dl><p>
+The function <code>cvProjectPCA</code> projects input vectors to the subspace represented by the
+orthonormal basis (<code>eigenvectors</code>). Before computing the dot products, <code>avg</code>
+vector is subtracted from the input vectors:</p>
+<pre>
+result(i,:)=(data(i,:)-avg)*eigenvectors' // for CV_PCA_DATA_AS_ROW layout.
+</pre>
+
+
+<hr><h3><a name="decl_cvBackProjectPCA">BackProjectPCA</a></h3>
+<p class="Blurb">Reconstructs the original vectors from the projection coefficients</p>
+<pre>
+void cvBackProjectPCA( const CvArr* proj, const CvArr* avg,
+                       const CvArr* eigenvects, CvArr* result );
+</pre><p><dl>
+<dt>proj<dd>The input data; in the same format as <code>result</code> in
+            <a href="#decl_cvProjectPCA">cvProjectPCA</a>.
+<dt>avg<dd>The mean (average) vector. If it is a single-row vector,
+           it means that the output vectors are stored as rows of <code>result</code>;
+           otherwise, it should be a single-column vector,
+           then the vectors are stored as columns of <code>result</code>.
+<dt>eigenvectors<dd>The eigenvectors (principal components); one vector per row.
+<dt>result<dd>The output matrix of reconstructed vectors.
+</dl><p>
+The function <code>cvBackProjectPCA</code> reconstructs the vectors from the projection coefficients:</p>
+<pre>
+result(i,:)=proj(i,:)*eigenvectors + avg // for CV_PCA_DATA_AS_ROW layout.
+</pre>
 
 
 <hr><h2><a name="cxcore_arrays_math">Math Functions</a></h2>
@@ -2924,7 +3111,7 @@ Where <code>C</code> is large negative number (&asymp;-700 in the current implem
 <hr><h3><a name="decl_cvSolveCubic">SolveCubic</a></h3>
 <p class="Blurb">Finds real roots of a cubic equation</p>
 <pre>
-void cvSolveCubic( const CvMat* coeffs, CvMat* roots );
+int cvSolveCubic( const CvMat* coeffs, CvMat* roots );
 </pre><p><dl>
 <dt>coeffs<dd>The equation coefficients, array of 3 or 4 elements.
 <dt>roots<dd>The output array of real roots. Should have 3 elements.
