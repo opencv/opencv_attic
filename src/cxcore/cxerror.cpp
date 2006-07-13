@@ -360,6 +360,7 @@ CV_IMPL void cvError( int code, const char* func_name,
                 assert(0); // for post-mortem analysis with GDB
 #endif
                 exit(-abs(terminate));
+            }
         }
     }
 }
