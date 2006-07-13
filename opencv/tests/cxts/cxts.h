@@ -121,7 +121,7 @@ public:
     const char* get_description() const { return description; }
     const char* get_group_name( char* buffer ) const;
     CvTest* get_next() { return next; }
-    static CvTest* get_first_test() { return first; }
+    static CvTest* get_first_test();
     static const char* get_parent_name( const char* name, char* buffer );
 
     // returns true if and only if the different test cases do not depend on each other
