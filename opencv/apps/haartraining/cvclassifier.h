@@ -726,6 +726,6 @@ void cvWriteTrainData( const char* filename,
  *     Must have CV_8UC1, CV_16SC1, CV_32SC1 or CV_32FC1 type.
  */
 CV_BOOST_API
-void cvRandShuffle( CvMat* vector );
+void cvRandShuffleVec( CvMat* vector );
 
 #endif /* _CVCLASSIFIER_H_ */
