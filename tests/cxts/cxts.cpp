@@ -480,6 +480,10 @@ CvTest::~CvTest()
     clear();
 }
 
+static CvTest* CvTest::get_first_test()
+{ 
+    return first; 
+}
 
 void CvTest::clear()
 {
