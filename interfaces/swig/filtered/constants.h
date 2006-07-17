@@ -54,6 +54,16 @@
 
 #define CV_COVAR_SCALE     4
 
+#define CV_COVAR_ROWS      8
+
+#define CV_COVAR_COLS     16
+
+#define CV_PCA_DATA_AS_ROW 0 
+
+#define CV_PCA_DATA_AS_COL 1
+
+#define CV_PCA_USE_AVG 2
+
 #define CV_C            1
 
 #define CV_L1           2
@@ -66,6 +76,8 @@
 
 #define CV_DIFF         16
 
+#define CV_MINMAX       32
+
 #define CV_DIFF_C       (CV_DIFF | CV_C)
 
 #define CV_DIFF_L1      (CV_DIFF | CV_L1)
@@ -77,6 +89,14 @@
 #define CV_RELATIVE_L1  (CV_RELATIVE | CV_L1)
 
 #define CV_RELATIVE_L2  (CV_RELATIVE | CV_L2)
+
+#define CV_REDUCE_SUM 0
+
+#define CV_REDUCE_AVG 1
+
+#define CV_REDUCE_MAX 2
+
+#define CV_REDUCE_MIN 3
 
 #define CV_DXT_FORWARD  0
 
@@ -824,7 +844,9 @@
 
 #define CV_DIST_MASK_3   3
 
-#define CV_DIST_MASK_5   5 
+#define CV_DIST_MASK_5   5
+
+#define CV_DIST_MASK_PRECISE 0
 
 #define CV_THRESH_BINARY      0  /* value = value > threshold ? max_value : 0       */
 
@@ -835,6 +857,10 @@
 #define CV_THRESH_TOZERO      3  /* value = value > threshold ? value : 0           */
 
 #define CV_THRESH_TOZERO_INV  4  /* value = value > threshold ? 0 : value           */
+
+#define CV_THRESH_MASK        7
+
+#define CV_THRESH_OTSU        8  /* use Otsu algorithm to choose the optimal threshold value;
 
 #define CV_ADAPTIVE_THRESH_MEAN_C  0
 
