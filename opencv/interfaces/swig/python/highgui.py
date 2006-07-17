@@ -1,19 +1,19 @@
-# This file was created automatically by SWIG.
+# This file was created automatically by SWIG 1.3.28.
 # Don't modify this file, modify the SWIG interface instead.
 # This file is compatible with both classic and new-style classes.
 
 import _highgui
-
+import new
+new_instancemethod = new.instancemethod
 def _swig_setattr_nondynamic(self,class_type,name,value,static=1):
+    if (name == "thisown"): return self.this.own(value)
     if (name == "this"):
-        if isinstance(value, class_type):
-            self.__dict__[name] = value.this
-            if hasattr(value,"thisown"): self.__dict__["thisown"] = value.thisown
-            del value.thisown
+        if type(value).__name__ == 'PySwigObject':
+            self.__dict__[name] = value
             return
     method = class_type.__swig_setmethods__.get(name,None)
     if method: return method(self,value)
-    if (not static) or hasattr(self,name) or (name == "thisown"):
+    if (not static) or hasattr(self,name):
         self.__dict__[name] = value
     else:
         raise AttributeError("You cannot add attributes to %s" % self)
@@ -22,6 +22,7 @@ def _swig_setattr(self,class_type,name,value):
     return _swig_setattr_nondynamic(self,class_type,name,value,0)
 
 def _swig_getattr(self,class_type,name):
+    if (name == "thisown"): return self.this.own()
     method = class_type.__swig_getmethods__.get(name,None)
     if method: return method(self)
     raise AttributeError,name
@@ -47,7 +48,7 @@ def cvStartWindowThread(*args):
 CV_WINDOW_AUTOSIZE = _highgui.CV_WINDOW_AUTOSIZE
 
 def cvNamedWindow(*args):
-    """cvNamedWindow(char name, int flags) -> int"""
+    """cvNamedWindow(char name, int flags=1) -> int"""
     return _highgui.cvNamedWindow(*args)
 
 def cvShowImage(*args):
@@ -138,9 +139,9 @@ def cvWaitKey(*args):
     """cvWaitKey(int delay=0) -> int"""
     return _highgui.cvWaitKey(*args)
 
-def cvCaptureFromFile(*args):
-    """cvCaptureFromFile(char filename) -> CvCapture"""
-    return _highgui.cvCaptureFromFile(*args)
+def cvCreateFileCapture(*args):
+    """cvCreateFileCapture(char filename) -> CvCapture"""
+    return _highgui.cvCreateFileCapture(*args)
 CV_CAP_ANY = _highgui.CV_CAP_ANY
 CV_CAP_MIL = _highgui.CV_CAP_MIL
 CV_CAP_VFW = _highgui.CV_CAP_VFW
@@ -158,9 +159,9 @@ CV_TYZX_COLOR = _highgui.CV_TYZX_COLOR
 CV_TYZX_Z = _highgui.CV_TYZX_Z
 CV_CAP_QT = _highgui.CV_CAP_QT
 
-def cvCaptureFromCAM(*args):
-    """cvCaptureFromCAM(int index) -> CvCapture"""
-    return _highgui.cvCaptureFromCAM(*args)
+def cvCreateCameraCapture(*args):
+    """cvCreateCameraCapture(int index) -> CvCapture"""
+    return _highgui.cvCreateCameraCapture(*args)
 
 def cvGrabFrame(*args):
     """cvGrabFrame(CvCapture capture) -> int"""
@@ -224,17 +225,16 @@ class CvvImage(_object):
     __swig_getmethods__ = {}
     __getattr__ = lambda self, name: _swig_getattr(self, CvvImage, name)
     def __repr__(self):
-        return "<%s.%s; proxy of C++ CvvImage instance at %s>" % (self.__class__.__module__, self.__class__.__name__, self.this,)
+        try: strthis = "at 0x%x" %( self.this, ) 
+        except: strthis = "" 
+        return "<%s.%s; proxy of C++ CvvImage instance %s>" % (self.__class__.__module__, self.__class__.__name__, strthis,)
     def __init__(self, *args):
         """__init__(self) -> CvvImage"""
-        _swig_setattr(self, CvvImage, 'this', _highgui.new_CvvImage(*args))
-        _swig_setattr(self, CvvImage, 'thisown', 1)
-    def __del__(self, destroy=_highgui.delete_CvvImage):
-        """__del__(self)"""
-        try:
-            if self.thisown: destroy(self)
-        except: pass
-
+        this = _highgui.new_CvvImage(*args)
+        try: self.this.append(this)
+        except: self.this = this
+    __swig_destroy__ = _highgui.delete_CvvImage
+    __del__ = lambda self : None;
     def Create(*args):
         """
         Create(self, int width, int height, int bits_per_pixel, int image_origin=0) -> bool
@@ -294,13 +294,7 @@ class CvvImage(_object):
         """Show(self, char window)"""
         return _highgui.CvvImage_Show(*args)
 
-
-class CvvImagePtr(CvvImage):
-    def __init__(self, this):
-        _swig_setattr(self, CvvImage, 'this', this)
-        if not hasattr(self,"thisown"): _swig_setattr(self, CvvImage, 'thisown', 0)
-        _swig_setattr(self, CvvImage,self.__class__,CvvImage)
-_highgui.CvvImage_swigregister(CvvImagePtr)
+_highgui.CvvImage_swigregister(CvvImage)
 
 __doc__ = """HighGUI provides minimalistic user interface parts and video input/output.
 
@@ -312,6 +306,7 @@ This wrapper was semi-automatically created from the C/C++ headers and therefore
 contains no Python documentation. Because all identifiers are identical to their
 C/C++ counterparts, you can consult the standard manuals that come with OpenCV.
 """
+
 
 
 
