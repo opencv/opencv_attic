@@ -709,7 +709,7 @@ cvPolarToCart( const CvArr* magarr, const CvArr* anglearr,
 typedef union
 {
     struct {
-#ifdef WORDS_BIGENDIAN
+#if ( defined( WORDS_BIGENDIAN ) && !defined( OPENCV_UNIVERSAL_BUILD ) ) || defined( __BIG_ENDIAN__ )
         int hi;
         int lo;
 #else

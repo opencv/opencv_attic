@@ -9,12 +9,12 @@ if BUILD_APPS
 else
   APPS_DIR =
 endif
-SUBDIRS = cxcore cv cvaux otherlibs interfaces $(APPS_DIR) tests samples data docs
+SUBDIRS = cxcore cv cvaux ml otherlibs interfaces $(APPS_DIR) tests samples data docs
 
 # All the rest of the distributed files
 EXTRA_DIST = THANKS COPYING INSTALL README NEWS ChangeLog \
              opencv.spec opencv.spec.in opencv.pc.in opencv.pc \
-             _make utils autotools apps
+             utils autotools _make apps filters
 
 pkgconfigdir = $(libdir)/pkgconfig
 pkgconfig_DATA = opencv.pc
@@ -43,3 +43,42 @@ install-lib:
 # Run ldconfig after installing the library:
 install-hook:
 	-ldconfig
+
+
+FRAMEWORK_NAME = OpenCV
+FRAMEWORK_VERSION = A
+FRAMEWORK_CURRENT_VERSION = 2
+FRAMEWORK_COMPAT_VERSION = 2
+
+FRAMEWORK_INSTALL_NAME = @executable_path/../Frameworks/$(FRAMEWORK_NAME).framework/Versions/$(FRAMEWORK_VERSION)/$(FRAMEWORK_NAME)
+FRAMEWORK_XHEADERS = ../include/tp_c.h ../include/defs.h
+FRAMEWORK_OFILES = .libs/lib$(FRAMEWORK_NAME).a
+FRAMEWORK_XLIBRARIES = -lpthread
+
+FMWK_CC = g++ -dynamiclib -all_load 
+
+framework: all clean-framework
+	echo "Setting up framework directories..."
+	mkdir -p $(FRAMEWORK_NAME).framework
+	mkdir -p $(FRAMEWORK_NAME).framework/Versions
+	mkdir -p $(FRAMEWORK_NAME).framework/Versions/$(FRAMEWORK_VERSION)
+	mkdir -p $(FRAMEWORK_NAME).framework/Versions/$(FRAMEWORK_VERSION)/Resources
+	mkdir -p $(FRAMEWORK_NAME).framework/Versions/$(FRAMEWORK_VERSION)/Headers
+	echo "Creating framework symlinks..."
+	ln -s $(FRAMEWORK_VERSION) $(FRAMEWORK_NAME).framework/Versions/Current
+	ln -s Versions/Current/Headers $(FRAMEWORK_NAME).framework/Headers
+	ln -s Versions/Current/Resources $(FRAMEWORK_NAME).framework/Resources
+	ln -s Versions/Current/$(FRAMEWORK_NAME) $(FRAMEWORK_NAME).framework/$(FRAMEWORK_NAME)
+	echo "Building framework data..."
+	$(FMWK_CC) -compatibility_version $(FRAMEWORK_COMPAT_VERSION) \
+		-current_version $(FRAMEWORK_CURRENT_VERSION) \
+		-install_name $(FRAMEWORK_INSTALL_NAME) \
+		-o $(FRAMEWORK_NAME).framework/Versions/Current/$(FRAMEWORK_NAME) \
+		$(FRAMEWORK_OFILES) $(FRAMEWORK_XLIBRARIES)
+	cp $(FRAMEWORK_XHEADERS) $(FRAMEWORK_NAME).framework/Headers/
+	cp Info.plist $(FRAMEWORK_NAME).framework/Resources/
+	cp version.plist $(FRAMEWORK_NAME).framework/Resources/
+
+clean-framework:
+	rm -rf $(FRAMEWORK_NAME).framework
+

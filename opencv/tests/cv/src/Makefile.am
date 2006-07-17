@@ -8,7 +8,9 @@ INCLUDES =                                \
 	-I$(top_srcdir)/cvaux/include
 
 check_PROGRAMS = cvtest
-TESTS = $(check_PROGRAMS)
+TESTS          = $(check_PROGRAMS)
+EXTRA_DIST     = cvtest.dsp cvtest.vcproj
+
 
 cvtest_SOURCES = \
     aeigenobjects.inc apixelaccess.inc cvtest.h \
@@ -27,13 +29,10 @@ cvtest_SOURCES = \
     asamplers.cpp asnakes.cpp asubdivisions.cpp atemplmatch.cpp \
     athresh.cpp ats.cpp canny.cpp cvtest.cpp \
     tsysa.cpp ucontours.cpp ugraphics.cpp uiplutils.cpp ureadfile.cpp
-
-cvtest_LDADD =                                      \
-	$(top_builddir)/tests/trs/libtrs.a              \
-	$(top_builddir)/tests/cxts/libcxts.a            \
-	$(top_builddir)/cxcore/src/libcxcore.la         \
-	$(top_builddir)/cv/src/libcv.la                 \
-	$(top_builddir)/cvaux/src/libcvaux.la           \
+cvtest_LDADD =                                           \
+	$(top_builddir)/tests/trs/libtrs.la              \
+	$(top_builddir)/tests/cxts/libcxts.la            \
+	$(top_builddir)/cxcore/src/libcxcore.la          \
+	$(top_builddir)/cv/src/libcv.la                  \
+	$(top_builddir)/cvaux/src/libcvaux.la            \
 	$(top_builddir)/otherlibs/highgui/libhighgui.la
-
-EXTRA_DIST = cvtest.dsp cvtest.vcproj

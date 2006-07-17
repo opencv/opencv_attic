@@ -14,4 +14,4 @@ nobase_dist_opencvdoc_DATA = cvcam.rtf faq.htm index.htm \
     ref/pics/memstorage2.png ref/pics/minareabox.png \
     ref/pics/quadedge.png ref/pics/right.jpg \
     ref/pics/subdiv.png ref/pics/threshold.png \
-    python-wrappers-on-windows.txt
+    python.txt python-wrappers-on-windows.txt

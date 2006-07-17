@@ -5,7 +5,7 @@ INCLUDES =                             \
 	-I$(top_srcdir)/tests/cxts
 
 check_PROGRAMS = cxcoretest
-TESTS = $(check_PROGRAMS)
+TESTS          = $(check_PROGRAMS)
 
 cxcoretest_SOURCES =        \
 	cxcoretest.h        \
@@ -15,6 +15,5 @@ cxcoretest_SOURCES =        \
 	amath.cpp           \
 	cxcoretest_main.cpp
 cxcoretest_LDADD = \
-	$(top_builddir)/tests/cxts/libcxts.a \
+	$(top_builddir)/tests/cxts/libcxts.la \
 	$(top_builddir)/cxcore/src/libcxcore.la
-

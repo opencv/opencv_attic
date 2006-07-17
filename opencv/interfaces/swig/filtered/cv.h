@@ -1,6 +1,6 @@
 # 1 "../../../cv/include/cv.h"
-# 1 "<built-in>"
-# 1 "<command line>"
+# 1 "<eingebaut>"
+# 1 "<Kommandozeile>"
 # 1 "../../../cv/include/cv.h"
 # 58 "../../../cv/include/cv.h"
 # 1 "../../../cxcore/include/cxcore.h" 1
@@ -3026,8 +3026,8 @@ extern "C" void cvWarpAffine( const CvArr* src, CvArr* dst, const CvMat* map_mat
 
 
 extern "C" CvMat* cvGetAffineTransform( const CvPoint2D32f * src,
-                              const CvPoint2D32f * dst,
-            CvMat * map_matrix );
+                                            const CvPoint2D32f * dst,
+                                                                    CvMat * map_matrix );
 
 
 extern "C" CvMat* cv2DRotationMatrix( CvPoint2D32f center, double angle,
