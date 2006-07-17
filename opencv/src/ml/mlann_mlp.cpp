@@ -1322,7 +1322,7 @@ void CvANN_MLP::write_params( CvFileStorage* fs )
 
     __BEGIN__;
 
-    char* activ_func_name = activ_func == IDENTITY ? "IDENTITY" :
+    const char* activ_func_name = activ_func == IDENTITY ? "IDENTITY" :
                             activ_func == SIGMOID_SYM ? "SIGMOID_SYM" :
                             activ_func == GAUSSIAN ? "GAUSSIAN" : 0;
 
