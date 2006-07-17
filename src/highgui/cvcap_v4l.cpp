@@ -570,7 +570,6 @@ int autosetup_capture_mode_v4l2(CvCaptureCAM_V4L* capture)
     if (-1 == xioctl (capture->deviceHandle, VIDIOC_G_JPEGCOMP, &capture->compr))
       errno_exit ("VIDIOC_G_JPEGCOMP");
          
-    CLEAR (capture->compr);
     capture->compr.quality = 0;
 
     if (-1 == xioctl (capture->deviceHandle, VIDIOC_S_JPEGCOMP, &capture->compr))
@@ -2152,6 +2151,7 @@ static double icvGetPropertyCAM_V4L (CvCaptureCAM_V4L* capture,
       int v4l2_max = 255;
 
       CLEAR (capture->form);
+      capture->form.type = V4L2_BUF_TYPE_VIDEO_CAPTURE;
       if (-1 == xioctl (capture->deviceHandle, VIDIOC_G_FMT, &capture->form))
           errno_exit ("VIDIOC_G_FMT");
 
@@ -2163,7 +2163,6 @@ static double icvGetPropertyCAM_V4L (CvCaptureCAM_V4L* capture,
       }
 
       /* initialize the control structure */
-      CLEAR (capture->form);
 
       switch (property_id) {
       case CV_CAP_PROP_BRIGHTNESS:
