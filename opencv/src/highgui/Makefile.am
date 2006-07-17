@@ -8,7 +8,11 @@ INCLUDES = -I. -I$(top_srcdir)/cxcore/include \
     -I$(top_srcdir)/cv/include @GTHREAD_CFLAGS@ @GTK_CFLAGS@ \
     @QUICKTIME_CFLAGS@ @CARBON_CFLAGS@
 
-lib_LTLIBRARIES = libhighgui.la
+noinst_HEADERS     = \
+    _highgui.h bitstrm.h grfmt_base.h grfmt_bmp.h \
+    grfmt_jpeg.h grfmt_pxm.h grfmt_png.h grfmt_sunras.h grfmt_tiff.h grfmts.h utils.h
+noinst_LTLIBRARIES = lib_highgui.la
+lib_LTLIBRARIES    = libhighgui.la
 
 if BUILD_DC1394
 TMP_DC1394=cvcap_dc1394.cpp
@@ -52,22 +56,24 @@ else
 TMP_GTK=
 endif
 
-libhighgui_la_SOURCES = \
+
+# convenience library
+lib_highgui_la_SOURCES = \
     bitstrm.cpp grfmt_base.cpp grfmt_bmp.cpp grfmt_jpeg.cpp      \
     grfmt_png.cpp grfmt_pxm.cpp grfmt_sunras.cpp grfmt_tiff.cpp  \
     image.cpp loadsave.cpp precomp.cpp utils.cpp cvcap.cpp       \
     $(TMP_DC1394) $(TMP_V4L) $(TMP_FFMPEG) $(TMP_QT)             \
     $(TMP_XINE) $(TMP_GTK) $(TMP_CARBON)
+lib_highgui_la_LDFLAGS = -no-undefined @LDFLAGS@
 
+# real library
 libhighguiincludedir = $(includedir)/opencv
-
 libhighguiinclude_HEADERS = highgui.h
-
-noinst_HEADERS = _highgui.h bitstrm.h grfmt_base.h grfmt_bmp.h \
-    grfmt_jpeg.h grfmt_pxm.h grfmt_png.h grfmt_sunras.h grfmt_tiff.h grfmts.h utils.h
-
+libhighgui_la_SOURCES = dummy.cpp
 libhighgui_la_LDFLAGS = -no-undefined -version-info @LT_VERSION@ @LDFLAGS@
-
-libhighgui_la_LIBADD  = $(top_builddir)/cxcore/src/libcxcore.la $(top_builddir)/cv/src/libcv.la \
+libhighgui_la_LIBADD  = \
+    lib_highgui.la \
+    $(top_builddir)/cxcore/src/libcxcore.la \
+    $(top_builddir)/cv/src/libcv.la         \
     @GTHREAD_LIBS@ @GTK_LIBS@ @IMAGELIBS@ @FFMPEGLIBS@ @IEEE1394LIBS@ \
-    @QUICKTIME_LIBS@ @CARBON_LIBS@ @XINE_LIBS@
+    @QUICKTIME_LIBS@ @CARBON_LIBS@ @XINE_LIBS@ @LTLIBOBJS@

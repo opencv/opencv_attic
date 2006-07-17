@@ -5,7 +5,7 @@ This script will test highgui's image saving functionality
 
 # name if this test and it's requirements
 TESTNAME = "cvSaveImage"
-REQUIRED = ["cvLoadImage"]
+REQUIRED = ["cvLoadImagejpg"]
 
 #needed for sys.exit(int), filehandling and .works file checks
 import sys

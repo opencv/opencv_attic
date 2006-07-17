@@ -24,29 +24,34 @@ from opencv.cv      import *
 # some definitions
 win_name = "testing..."
 bar_name = "brightness"
+bar_count= 100
 
-# 'moved' indicator in global namespace
+# 'moved' indicates if trackbar has been moved
 moved = False
 
+# 'range' indicates if trackbar was outside range [0..bar_count]
+range = False
 
+
+# function to call on a trackbar event
 def trackcall( p ):
-	""" Trackbar position must be in [0..255] """
-	if (p > 255 or p < 0):
-		print "(ERROR) trackbar position outside range [0..255]."
-		sys.exit(1)
-	cvConvertScale( image, image2,float(p)/255. );
+	# Trackbar position must be in [0..bar_count]
+	if (p > bar_count or p < 0):
+		globals()["range"] = True
+
+	cvConvertScale( image, image2,float(p)/float(bar_count) )
 	cvShowImage( win_name, image2 );
 	globals()["moved"] = True
 
 
 # create output window
 cvNamedWindow(win_name,CV_WINDOW_AUTOSIZE)
-image  = cvLoadImage("../../samples/c/baboon.jpg")
-image2 = cvLoadImage("../../samples/c/baboon.jpg")
+image  = cvLoadImage("../../data/cvCreateTrackbar.jpg")
+image2 = cvLoadImage("../../data/cvCreateTrackbar.jpg")
 cvShowImage(win_name,image)
 
 # create the trackbar and save return value
-res = cvCreateTrackbar( bar_name, win_name, int(127), int(255), trackcall )
+res = cvCreateTrackbar( bar_name, win_name, 0, bar_count, trackcall )
 
 # check return value
 if res == 0:
@@ -55,7 +60,7 @@ if res == 0:
 	sys.exit(1)
 	
 # init. window with image
-trackcall(127)
+trackcall(bar_count/2)
 # reset 'moved' indicator
 moved = False
 
@@ -65,6 +70,11 @@ print "(HINT) You can complete this test prematurely by pressing any key."
 print "(INFO) In the case of no user input, the test will be remarked as 'FAIL'."
 
 key = cvWaitKey(20000)
+
+if range:
+	# trackbar position value was outside allowed range [0..bar_count]
+	print "(ERROR) Trackbar position was outside range."
+	sys.exit(1)
 
 if not moved and (key==-1):
 	# trackbar has not been moved

@@ -5,7 +5,7 @@ This script will test highgui's cvWaitKey(int) function
 
 # name of this test and it's requirements
 TESTNAME = "cvWaitKey"
-REQUIRED = ["cvInitSystem"]
+REQUIRED = ["cvShowImage"]
 
 # needed for sys.exit(int) and .works file handling
 import sys
@@ -22,6 +22,12 @@ from opencv.highgui import *
 
 # request some user input
 print "(INFO) Press anykey within the next 20 seconds to 'PASS' this test." 
+
+# create a dummy window which reacts on cvWaitKey()
+cvNamedWindow(TESTNAME, CV_WINDOW_AUTOSIZE)
+
+# display an image
+cvShowImage(TESTNAME, cvLoadImage("../../data/cvWaitKey.jpg"))
 
 # wait 20 seconds using cvWaitKey(20000),
 # return 'FAIL' if no key has been pressed.

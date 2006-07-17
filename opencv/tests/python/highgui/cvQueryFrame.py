@@ -26,14 +26,13 @@ from opencv.cv import *
 video = cvCaptureFromFile("/home/asbach/Data/video_test/vd_uncompressed.avi")
 
 # call cvQueryFrame for 30 frames and check if the returned image is ok
-for k in range(0,29):
+for k in range(0,30):
 	image = cvQueryFrame( video )
 
 	if not isinstance(image, opencv.cv.IplImagePtr):
 	# returned image is not a correct IplImage (pointer),
 	# so return an error code
 		sys.exit(77)
-
 
 # ATTENTION: We do not release the video reader, window or any image.
 # This is bad manners, but Python and OpenCV don't care...

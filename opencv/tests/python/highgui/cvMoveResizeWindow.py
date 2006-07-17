@@ -1,6 +1,6 @@
 #! /usr/bin/env python
 """
-This script will test highgui's window functionality
+This script will test highgui's window move/resize functionality
 """
 
 # name of this test and it's requirements
@@ -21,29 +21,21 @@ import opencv
 from opencv.highgui import *
 from opencv.cv import *
 
-# some definitions
-win_name = "testing..."
-
 # create a window
-cvNamedWindow(win_name,CV_WINDOW_AUTOSIZE)
+cvNamedWindow(TESTNAME, CV_WINDOW_AUTOSIZE)
 
 # move the window around
-cvMoveWindow(win_name,   0,   0)
-cvWaitKey(100)
-cvMoveWindow(win_name, 100,   0)
-cvWaitKey(100)
-cvMoveWindow(win_name, 100, 100)
-cvWaitKey(100)
-cvMoveWindow(win_name,   0, 100)
-cvWaitKey(100)
+cvMoveWindow(TESTNAME,   0,   0)
+cvMoveWindow(TESTNAME, 100,   0)
+cvMoveWindow(TESTNAME, 100, 100)
+cvMoveWindow(TESTNAME,   0, 100)
 
 # resize the window
 for i in range(1,10):
-	cvResizeWindow(win_name, i*100, i*100)
-	cvWaitKey(100)
+	cvResizeWindow(TESTNAME, i*100, i*100)
 
 # destroy the window
-cvDestroyWindow( win_name )
+cvDestroyWindow(TESTNAME)
 
 # create flag file for following tests
 works.set_file(TESTNAME)

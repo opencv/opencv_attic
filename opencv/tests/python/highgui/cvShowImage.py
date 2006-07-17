@@ -5,7 +5,7 @@ This script will test highgui's window functionality
 
 # name of this test and it's requirements
 TESTNAME = "cvShowImage"
-REQUIRED = ["cvLoadImage", "cvNamedWindow"]
+REQUIRED = ["cvLoadImagejpg", "cvNamedWindow"]
 
  
 # needed for sys.exit(int) and .works file handling
@@ -29,7 +29,7 @@ win_name = "testing..."
 cvNamedWindow(win_name, CV_WINDOW_AUTOSIZE)
 
 # we expect the image to be loadable, thanks to 'cvLoadImage.works'
-image = cvLoadImage("../../../samples/c/baboon.jpg")
+image = cvLoadImage("../../cvShowImage.jpg")
 
 # try to show image in window
 res = cvShowImage( win_name, image )
@@ -39,9 +39,6 @@ if res == 0:
 	cvDestroyWindow(win_name)
 	sys.exit(1)
 	
-# everything looks fine till this point...
-cvWaitKey(1000)
-
 # destroy window
 cvDestroyWindow(win_name)
 

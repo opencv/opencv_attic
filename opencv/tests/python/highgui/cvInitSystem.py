@@ -1,6 +1,8 @@
 #! /usr/bin/env python
 """
 This script will test highgui's InitSystem function
+ATTENTION: This test doesn't do much, yet, but cvInitSystem
+is called with default parameters on the first highgui function call anyway.
 """
 
 # name of this test and it's requirements
@@ -21,7 +23,10 @@ import opencv
 from opencv import highgui
 
 # try to initialize the highgui system
-res = highgui.cvInitSystem(globals["0,characs)
+# TODO: checken wie ich ein "char *" ueübergebe...
+# res = highgui.cvInitSystem(globals["0,characs)
+# if res != 0:
+#	sys.exit(1)
 
 # create flag file for the following tests
 works.set_file(TESTNAME)

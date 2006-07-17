@@ -1,39 +1,42 @@
 #! /usr/bin/env python
 """
 This script will test highgui's video reading functionality
+for a given parameter RAW formats.
 """
 
-# name of this test and it's requirements
-TESTNAME = "cvCaptureFromFile"
-REQUIRED = []
 
- 
 # needed for sys.exit(int) and .works file handling
 import sys
 import works
+from works import *
 
-# check requirements and delete old flag file, if it exists
-if not works.check_files(REQUIRED,TESTNAME):
-	sys.exit(77)
-
-# import the necessary things for OpenCV
+#import the necessary things for OpenCV
 import opencv
 from opencv.highgui import *
 from opencv.cv import *
 
 
-# create a video reader using the tiny video 'vd_uncompressed.avi'
-video = cvCaptureFromFile("/home/asbach/Data/video_test/vd_uncompressed.avi")
+# some defines
+TESTNAME = "cvCaptureFromFile"
+REQUIRED = []
+PREFIX   = "/home/dols/Source/opencv/data/qcif_"
+EXTENSION= ".avi"
 
-if video is None:
-	print "(ERROR) Couldn't create reader object."
-	sys.exit(1)
 
-# ATTENTION: We do not release the video reader.
-# This is bad manners, but Python and OpenCV don't care...
+# this functions tries to open a videofile
+# using the filename PREFIX+FORMAT.EXTENSION  and returns True/False 
+# on success/fail.
+
+def video_ok( FORMAT ):
 	
-# create flag file for following tests
-works.set_file(TESTNAME)
+	# check requirements and delete old .works file
+	if not works.check_files( REQUIRED, TESTNAME+FORMAT ):
+		return false
 
-# return 0 ('PASS')
-sys.exit(0)
+	video = cvCaptureFromFile(PREFIX+FORMAT+EXTENSION)
+
+	if video is None:
+		sys.exit(1)
+
+	works.set_file( TESTNAME+FORMAT )
+	return True

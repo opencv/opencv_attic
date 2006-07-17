@@ -5,7 +5,7 @@ This script will test highgui's video reading functionality
 
 # name of this test and it's requirements
 TESTNAME = "cvGrabFrame"
-REQUIRED = ["cvCaptureFromFile"]
+REQUIRED = ["cvCaptureFromFileRGBA"]
 
  
 # needed for sys.exit(int) and .works file handling
@@ -27,8 +27,6 @@ video = cvCaptureFromFile("/home/asbach/Data/video_test/vd_uncompressed.avi")
 
 # call cvGrabFrame to grab a frame and save return value
 res = cvGrabFrame(video)
-
-print "res == "+str(res)
 
 if res == 0:
 	print "(ERROR) Couldn't call cvGrabFrame()."

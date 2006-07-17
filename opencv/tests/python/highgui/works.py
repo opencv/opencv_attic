@@ -16,8 +16,7 @@ def check_files( filelist, testname ):
 		for i in range(0,len(filelist)):
 			tmpname = "./"+filelist[i]+".works"
 			if not os.access(tmpname,os.F_OK):
-				print "(ERROR) Skipping test due to previous SKIP(s)/FAIL(s)"
-				print "(ERROR) of test "+filelist[i]
+				print "(INFO) Skipping '"+testname+"' due to SKIP/FAIL of '"+filelist[i]+"'"
 				return False
 
 	# either the filelist is empty (no requirements) or all requirements match

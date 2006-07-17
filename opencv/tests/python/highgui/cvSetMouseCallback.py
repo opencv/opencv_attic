@@ -44,7 +44,8 @@ def callback_function(event,x,y,flag,param):
 # create a window ('cvNamedWindow.works' exists, so it must work)
 cvNamedWindow(win_name,CV_WINDOW_AUTOSIZE)
 # show the baboon in the window ('
-cvShowImage(win_name, cvLoadImage("../../samples/c/baboon.jpg"))
+cvShowImage(win_name, 
+cvLoadImage("../../data/cvSetMouseCallback.jpg"))
 # assign callback function 'callback_function' to window, no parameters used here
 cvSetMouseCallback( win_name, callback_function )
 
@@ -52,11 +53,11 @@ cvSetMouseCallback( win_name, callback_function )
 print "(INFO) Please hover the mouse over the baboon image and press"
 print "(INFO) your available mousebuttons inside the window to 'PASS' this test."
 print "(INFO) You may also perform double-clicks."
-print "(INFO) Press a key on your keyboard to continue."
+print "(INFO) Press a key on your keyboard ot wait 20 seconds to continue."
 print "(HINT) If no mouseevent was detected this test will be remarked as 'FAIL'."
 
-# now wait for user to press a key
-cvWaitKey(0)
+# now wait 20 seconds for user to press a key
+cvWaitKey(20000)
 
 # reset mouse callback
 cvSetMouseCallback( win_name, 0 )

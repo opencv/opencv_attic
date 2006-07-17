@@ -2,11 +2,12 @@ EXTRA_DIST = cv.dsp cv.vcproj cv.rc resource.h
 
 INCLUDES = -I. -I$(top_srcdir)/cv/include -I$(top_srcdir)/cxcore/include -I$(top_srcdir)
 
-noinst_HEADERS = _cv.h _cvgeom.h _cvimgproc.h _cvipp.h _cvlist.h _cvmatrix.h
+noinst_HEADERS     = _cv.h _cvgeom.h _cvimgproc.h _cvipp.h _cvlist.h _cvmatrix.h
+noinst_LTLIBRARIES = lib_cv.la
+lib_LTLIBRARIES    = libcv.la
 
-lib_LTLIBRARIES = libcv.la
-
-libcv_la_SOURCES = \
+# convenience libraries
+lib_cv_la_SOURCES = \
     cvaccum.cpp cvadapthresh.cpp cvapprox.cpp cvcalccontrasthistogram.cpp \
     cvcalcimagehomography.cpp cvcalibinit.cpp cvcalibration.cpp \
     cvcamshift.cpp cvcanny.cpp cvcolor.cpp cvcondens.cpp cvcontours.cpp \
@@ -21,6 +22,11 @@ libcv_la_SOURCES = \
     cvsmooth.cpp cvsnakes.cpp cvsubdivision2d.cpp cvsumpixels.cpp \
     cvswitcher.cpp cvtables.cpp cvtemplmatch.cpp cvthresh.cpp \
     cvundistort.cpp cvutils.cpp
-libcv_la_LDFLAGS = -no-undefined -version-info @LT_VERSION@ @LDFLAGS@
-libcv_la_LIBADD  = $(top_builddir)/cxcore/src/libcxcore.la
+lib_cv_la_LDFLAGS = -no-undefined @LDFLAGS@
 
+# real library
+libcv_la_SOURCES = dummy.cpp
+libcv_la_LDFLAGS = -no-undefined -version-info @LT_VERSION@ @LDFLAGS@
+libcv_la_LIBADD = lib_cv.la \
+    $(top_builddir)/cxcore/src/libcxcore.la \
+    @LTLIBOBJS@
