@@ -44,7 +44,7 @@
 #define __CVVIDEOSURVEILLANCE_H__
 
 /* turn off the functionality until cvaux/src/Makefile.am gets updated */
-#if _MSC_VER >= 1200
+//#if _MSC_VER >= 1200
 
 #include <stdio.h>
 
@@ -1257,8 +1257,6 @@ CV_EXPORTS void cvTestSeqAddNoise(CvTestSeq* pTestSeq, int noise_type = CV_NOISE
 /* add Intensity variation */
 CV_EXPORTS void cvTestSeqAddIntensityVariation(CvTestSeq* pTestSeq, float DI_per_frame, float MinI, float MaxI);
 CV_EXPORTS void cvTestSeqSetFrame(CvTestSeq* pTestSeq, int n);
-
-#endif
 
 #endif
 
