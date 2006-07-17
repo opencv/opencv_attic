@@ -64,12 +64,12 @@ if __name__ == '__main__':
 
     if len (sys.argv) == 1:
         # no argument on the command line, try to use the camera
-        capture = highgui.cvCaptureFromCAM (device)
+        capture = highgui.cvCreateCameraCapture (device)
 
     else:
         # we have an argument on the command line,
         # we can assume this is a file name, so open it
-        capture = highgui.cvCaptureFromFile(sys.argv [1])            
+        capture = highgui.cvCreateFileCapture (sys.argv [1])            
 
     # check that capture device is OK
     if not capture:
@@ -190,6 +190,8 @@ if __name__ == '__main__':
                 new_points.append (the_point)
                 
                 # draw the current point
+                print dir (the_point)
+                print cv.cvPointFrom32f (the_point)
                 cv.cvCircle (image,
                              cv.cvPointFrom32f (the_point),
                              3, cv.cvScalar (0, 255, 0, 0),

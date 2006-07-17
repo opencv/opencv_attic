@@ -34,13 +34,23 @@ if __name__ == '__main__':
     # move the new window to a better place
     highgui.cvMoveWindow ('Camera', 10, 10)
 
+    try:
+        # try to get the device number from the command line
+        device = int (sys.argv [1])
+
+        # got it ! so remove it from the arguments
+        del sys.argv [1]
+    except (IndexError, ValueError):
+        # no device number on the command line, assume we want the 1st device
+        device = 0
+
     if len (sys.argv) == 1:
         # no argument on the command line, try to use the camera
-        capture = highgui.cvCaptureFromCAM (0)
+        capture = highgui.cvCreateCameraCapture (device)
     else:
         # we have an argument on the command line,
         # we can assume this is a file name, so open it
-        capture = highgui.cvCaptureFromFile(sys.argv [1])            
+        capture = highgui.cvCreateFileCapture (sys.argv [1])            
 
     # check that capture device is OK
     if not capture:
