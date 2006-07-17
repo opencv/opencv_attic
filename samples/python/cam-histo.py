@@ -74,7 +74,7 @@ if __name__ == '__main__':
 
     if len (sys.argv) == 1:
         # no argument on the command line, try to use the camera
-        capture = highgui.cvCaptureFromCAM (device)
+        capture = highgui.cvCreateCameraCapture (device)
 
         # set the wanted image size from the camera
         highgui.cvSetCaptureProperty (capture,
@@ -84,7 +84,7 @@ if __name__ == '__main__':
     else:
         # we have an argument on the command line,
         # we can assume this is a file name, so open it
-        capture = highgui.cvCaptureFromFile(sys.argv [1])            
+        capture = highgui.cvCreateFileCapture (sys.argv [1])            
 
     # check that capture device is OK
     if not capture:
