@@ -60,6 +60,7 @@
 
 // Mac OS includes
 #include <Carbon/Carbon.h>
+#include <CoreFoundation/CoreFoundation.h>
 #include <QuickTime/QuickTime.h>
 
 
@@ -546,7 +547,6 @@ static const void * icvRetrieveFrame_QT_Movie (CvCapture_QT_Movie * capture)
 #pragma mark -
 #pragma mark Capturing from Video Cameras
 
-
 #ifdef USE_VDIG_VERSION
 
 	/// SequenceGrabber state structure for QuickTime
@@ -666,7 +666,7 @@ static int icvSetProperty_QT_Cam (CvCapture_QT_Cam * capture, int property_id, d
 static int icvOpenCamera_QT (CvCapture_QT_Cam * capture, const int index)
 {
 	OPENCV_ASSERT (capture,            "icvOpenCamera_QT", "'capture' is a NULL-pointer");
-	OPENCV_ASSERT (capture->index >=0, "icvOpenCamera_QT", "camera index is negative");
+	OPENCV_ASSERT (index >=0, "icvOpenCamera_QT", "camera index is negative");
 
 	ComponentDescription	component_description;
 	Component				component = 0;
@@ -938,13 +938,65 @@ static int icvOpenCamera_QT (CvCapture_QT_Cam * capture, const int index)
 	
 	PixMapHandle  pixmap       = nil;
 	OSErr         result       = noErr;
-	Rect          defaultRect  = {0, 0, 240, 320};
 	
+	// open sequence grabber component
+	capture->grabber = OpenDefaultComponent (SeqGrabComponentType, 0);
+	OPENCV_ASSERT (capture->grabber, "icvOpenCamera_QT", "couldnt create image");
+	
+	// initialize sequence grabber component
+	result = SGInitialize (capture->grabber);
+	OPENCV_ASSERT (result == noErr, "icvOpenCamera_QT", "couldnt initialize sequence grabber");
+	result = SGSetDataRef (capture->grabber, 0, 0, seqGrabDontMakeMovie);
+	OPENCV_ASSERT (result == noErr, "icvOpenCamera_QT", "couldnt set data reference of sequence grabber");
+	
+	// set up video channel
+	result = SGNewChannel (capture->grabber, VideoMediaType, & (capture->channel));
+	OPENCV_ASSERT (result == noErr, "icvOpenCamera_QT", "couldnt create new video channel");
+	
+	// query natural camera resolution -- this will be wrong, but will be an upper
+	// bound on the actual resolution -- the actual resolution is set below
+	// after starting the frame grabber
+	result = SGGetSrcVideoBounds (capture->channel, & (capture->bounds));
+	OPENCV_ASSERT (result == noErr, "icvOpenCamera_QT", "couldnt set video channel bounds");
+
 	// create offscreen GWorld
-	capture->bounds = defaultRect;
 	result = QTNewGWorld (& (capture->gworld), k32ARGBPixelFormat, & (capture->bounds), 0, 0, 0);
-	capture->size = cvSize (capture->bounds.right - capture->bounds.left, capture->bounds.bottom - capture->bounds.top);
+	result = SGSetGWorld (capture->grabber, capture->gworld, 0);
+	OPENCV_ASSERT (result == noErr, "icvOpenCamera_QT", "couldnt set GWorld for sequence grabber");
+	result = SGSetChannelBounds (capture->channel, & (capture->bounds));
+	OPENCV_ASSERT (result == noErr, "icvOpenCamera_QT", "couldnt set video channel bounds");
+	result = SGSetChannelUsage (capture->channel, seqGrabRecord);
+	OPENCV_ASSERT (result == noErr, "icvOpenCamera_QT", "couldnt set channel usage");
+
+    // start recording so we can size
+	result = SGStartRecord (capture->grabber);
+	OPENCV_ASSERT (result == noErr, "icvOpenCamera_QT", "couldnt start recording");
+
+	// don't know *actual* resolution until now
+	ImageDescriptionHandle imageDesc = (ImageDescriptionHandle)NewHandle(0);
+	result = SGGetChannelSampleDescription(capture->channel, (Handle)imageDesc);
+	OPENCV_ASSERT( result == noErr, "icvOpenCamera_QT", "couldn't get image size");
+	capture->bounds.right = (**imageDesc).width;
+	capture->bounds.bottom = (**imageDesc).height;
+
+	// stop grabber so that we can reset the parameters to the right size
+	result = SGStop (capture->grabber);
+	OPENCV_ASSERT (result == noErr, "icveClose_QT_Cam", "couldnt stop recording");
+
+	// reset GWorld to correct image size
+	GWorldPtr tmpgworld;
+	result = QTNewGWorld( &tmpgworld, k32ARGBPixelFormat, &(capture->bounds), 0, 0, 0);
 	OPENCV_ASSERT (result == noErr, "icvOpenCamera_QT", "couldnt create offscreen GWorld");
+	result = SGSetGWorld( capture->grabber, tmpgworld, 0);
+	OPENCV_ASSERT (result == noErr, "icvOpenCamera_QT", "couldnt set GWorld for sequence grabber");
+	DisposeGWorld( capture->gworld );
+	capture->gworld = tmpgworld;
+
+	result = SGSetChannelBounds (capture->channel, & (capture->bounds));
+	OPENCV_ASSERT (result == noErr, "icvOpenCamera_QT", "couldnt set video channel bounds");	
+
+	// allocate images
+	capture->size = cvSize (capture->bounds.right - capture->bounds.left, capture->bounds.bottom - capture->bounds.top);
 	
 	// build IplImage header that points to the PixMap of the Movie's GWorld.
 	// unfortunately, cvCvtColor doesn't know ARGB, the QuickTime pixel format,
@@ -960,26 +1012,7 @@ static int icvOpenCamera_QT (CvCapture_QT_Cam * capture, const int index)
 	// create IplImage that hold correctly formatted result
 	capture->image_bgr = cvCreateImage (capture->size, IPL_DEPTH_8U, 3);
 	OPENCV_ASSERT (capture->image_bgr, "icvOpenCamera_QT", "couldnt create image");
-	
-	// open sequence grabber component
-	capture->grabber = OpenDefaultComponent (SeqGrabComponentType, 0);
-	OPENCV_ASSERT (capture->grabber, "icvOpenCamera_QT", "couldnt create image");
-	
-	// initialize sequence grabber component
-	result = SGInitialize (capture->grabber);
-	OPENCV_ASSERT (result == noErr, "icvOpenCamera_QT", "couldnt initialize sequence grabber");
-	result = SGSetDataRef (capture->grabber, 0, 0, seqGrabDontMakeMovie);
-	OPENCV_ASSERT (result == noErr, "icvOpenCamera_QT", "couldnt set data reference of sequence grabber");
-	result = SGSetGWorld (capture->grabber, capture->gworld, 0);
-	OPENCV_ASSERT (result == noErr, "icvOpenCamera_QT", "couldnt set GWorld for sequence grabber");
-	
-	// set up video channel
-	result = SGNewChannel (capture->grabber, VideoMediaType, & (capture->channel));
-	OPENCV_ASSERT (result == noErr, "icvOpenCamera_QT", "couldnt create new video channel");
-	result = SGSetChannelBounds (capture->channel, & (capture->bounds));
-	OPENCV_ASSERT (result == noErr, "icvOpenCamera_QT", "couldnt set video channel bounds");
-	result = SGSetChannelUsage (capture->channel, seqGrabRecord);
-	OPENCV_ASSERT (result == noErr, "icvOpenCamera_QT", "couldnt set channel usage");
+
 	
 	// tell the sequence grabber to invoke our data proc
 	result = SGSetDataProc (capture->grabber, NewSGDataUPP (icvDataProc_QT_Cam), (long) capture);
@@ -988,7 +1021,7 @@ static int icvOpenCamera_QT (CvCapture_QT_Cam * capture, const int index)
 	// start recording
 	result = SGStartRecord (capture->grabber);
 	OPENCV_ASSERT (result == noErr, "icvOpenCamera_QT", "couldnt start recording");
-	
+
 	return 1;
 }
 
@@ -1072,3 +1105,333 @@ static const void * icvRetrieveFrame_QT_Cam (CvCapture_QT_Cam * capture)
 
 #endif
 
+
+typedef struct CvVideoWriter_QT {
+    DataHandler data_handler;
+    Movie movie;
+    Track track;
+    Media video;
+
+    ICMCompressionSessionRef compression_session_ref;
+
+    TimeValue duration_per_sample;
+} CvVideoWriter_QT;
+
+static TimeScale const TIME_SCALE = 600;
+
+OSStatus icvEncodedFrameOutputCallback(
+    void* writer,
+    ICMCompressionSessionRef compression_session_ref,
+    OSStatus error,
+    ICMEncodedFrameRef encoded_frame_ref,
+    void* reserved
+);
+
+void icvSourceTrackingCallback(
+    void *source_tracking_ref_con,
+    ICMSourceTrackingFlags source_tracking_flags,
+    void *source_frame_ref_con,
+    void *reserved
+);
+
+CV_IMPL CvVideoWriter* cvCreateVideoWriter(
+    const char * filename,
+    int fourcc,
+    double fps,
+    CvSize frame_size,
+    int is_color
+) {
+    CV_FUNCNAME( "cvCreateVideoWriter" );
+
+    CvVideoWriter_QT* video_writer =
+        static_cast<CvVideoWriter_QT*>( cvAlloc( sizeof( CvVideoWriter_QT ) ) );
+    memset( video_writer, 0, sizeof( CvVideoWriter_QT ) );
+
+    Handle data_ref = NULL;
+    OSType data_ref_type;
+    DataHandler data_handler = NULL;
+    Movie movie = NULL;
+    ICMCompressionSessionOptionsRef options_ref = NULL;
+    ICMCompressionSessionRef compression_session_ref = NULL;
+
+    OSErr err = noErr;
+
+    __BEGIN__
+
+    // validate input arguments
+    if ( filename == NULL ) {
+        CV_ERROR( CV_StsBadArg, "Video file name must not be NULL" );
+    }
+    if ( fps <= 0.0 ) {
+        CV_ERROR( CV_StsBadArg, "FPS must be larger than 0.0" );
+    }
+    if ( ( frame_size.width <= 0 ) || ( frame_size.height <= 0 ) ) {
+        CV_ERROR( CV_StsBadArg,
+            "Frame width and height must be larger than 0" );
+    }
+
+    // initialize QuickTime
+    if ( !did_enter_movies ) {
+        err = EnterMovies();
+        if ( err != noErr ) {
+            CV_ERROR( CV_StsInternal, "Unable to initialize QuickTime" );
+        }
+        did_enter_movies = 1;
+    }
+
+    // convert the file name into a data reference
+    CFStringRef out_path = CFStringCreateWithCString( kCFAllocatorDefault,
+        filename, kCFStringEncodingISOLatin1 );
+    CV_ASSERT( out_path != nil );
+    err = QTNewDataReferenceFromFullPathCFString( out_path, kQTPOSIXPathStyle,
+        0, &data_ref, &data_ref_type );
+    CFRelease( out_path );
+    if ( err != noErr ) {
+        CV_ERROR( CV_StsInternal,
+            "Cannot create data reference from file name" );
+    }
+
+    // create a new movie on disk
+    err = CreateMovieStorage( data_ref, data_ref_type, 'TVOD',
+        smCurrentScript, newMovieActive, &data_handler, &movie );
+
+    if ( err != noErr ) {
+        CV_ERROR( CV_StsInternal, "Cannot create movie storage" );
+    }
+
+    // create a track with video
+    Track video_track =
+        NewMovieTrack(
+            movie,
+            FixRatio( frame_size.width, 1 ),
+            FixRatio( frame_size.height, 1 ),
+            kNoVolume
+        );
+    err = GetMoviesError();
+    if ( err != noErr ) {
+        CV_ERROR( CV_StsInternal, "Cannot create video track" );
+    }
+    Media video =
+        NewTrackMedia( video_track, VideoMediaType, TIME_SCALE, nil, 0 );
+    err = GetMoviesError();
+    if ( err != noErr ) {
+        CV_ERROR( CV_StsInternal, "Cannot create video media" );
+    }
+
+    CodecType codecType;
+    switch ( fourcc ) {
+        case CV_FOURCC( 'D', 'I', 'B', ' ' ):
+            codecType = kRawCodecType;
+            break;
+        default:
+            codecType = kRawCodecType;
+            break;
+    }
+
+    // start a compression session
+    err = ICMCompressionSessionOptionsCreate( kCFAllocatorDefault,
+        &options_ref );
+    if ( err != noErr ) {
+        CV_ERROR( CV_StsInternal, "Cannot create compression session options" );
+    }
+    err = ICMCompressionSessionOptionsSetAllowTemporalCompression( options_ref,
+        true );
+    if ( err != noErr) {
+        CV_ERROR( CV_StsInternal, "Cannot enable temporal compression" );
+    }
+    err = ICMCompressionSessionOptionsSetAllowFrameReordering( options_ref,
+        true );
+    if ( err != noErr) {
+        CV_ERROR( CV_StsInternal, "Cannot enable frame reordering" );
+    }
+
+    ICMEncodedFrameOutputRecord encoded_frame_output_record;
+    encoded_frame_output_record.encodedFrameOutputCallback =
+        icvEncodedFrameOutputCallback;
+    encoded_frame_output_record.encodedFrameOutputRefCon =
+        static_cast<void*>( video_writer );
+    encoded_frame_output_record.frameDataAllocator = NULL;
+    
+    err = ICMCompressionSessionCreate( kCFAllocatorDefault, frame_size.width,
+        frame_size.height, codecType, TIME_SCALE, options_ref,
+        NULL /*source_pixel_buffer_attributes*/, &encoded_frame_output_record,
+        &compression_session_ref );
+    ICMCompressionSessionOptionsRelease( options_ref );
+    if ( err != noErr ) {
+        CV_ERROR( CV_StsInternal, "Cannot create compression session" );
+    }
+
+    err = BeginMediaEdits( video );
+    if ( err != noErr ) {
+        CV_ERROR( CV_StsInternal, "Cannot begin media edits" );
+    }
+
+    // fill in the video writer structure
+    video_writer->data_handler = data_handler;
+    video_writer->movie = movie;
+    video_writer->track = video_track;
+    video_writer->video = video;
+    video_writer->compression_session_ref = compression_session_ref;
+    video_writer->duration_per_sample =
+        static_cast<TimeValue>( static_cast<double>( TIME_SCALE ) / fps );
+
+    __END__
+
+    // clean up in case of error (unless error processing mode is
+    // CV_ErrModeLeaf)
+    if ( err != noErr ) {
+        if ( options_ref != NULL ) {
+            ICMCompressionSessionOptionsRelease( options_ref );
+        }
+        if ( compression_session_ref != NULL ) {
+            ICMCompressionSessionRelease( compression_session_ref );
+        }
+        if ( data_handler != NULL ) {
+            CloseMovieStorage( data_handler );
+        }
+        if ( movie != NULL ) {
+            DisposeMovie( movie );
+        }
+        if ( data_ref != NULL ) {
+            DeleteMovieStorage( data_ref, data_ref_type );
+            DisposeHandle( data_ref );
+        }
+        cvFree( reinterpret_cast<void**>( &video_writer ) );
+        video_writer = NULL;
+    }
+
+    return reinterpret_cast<CvVideoWriter*>( video_writer );
+}
+
+CV_IMPL int cvWriteFrame(
+    CvVideoWriter * writer,
+    const IplImage * image
+) {
+    CvVideoWriter_QT* video_writer =
+        reinterpret_cast<CvVideoWriter_QT*>( writer );
+
+    CVPixelBufferRef pixel_buffer_ref = NULL;
+    CVReturn retval =
+        CVPixelBufferCreate(
+            kCFAllocatorDefault,
+            image->width, image->height, k24RGBPixelFormat,
+            NULL /* pixel_buffer_attributes */,
+            &pixel_buffer_ref
+        );
+
+    // convert BGR IPL image to RGB pixel buffer
+    IplImage* image_rgb =
+        cvCreateImageHeader(
+            cvSize( image->width, image->height ),
+            IPL_DEPTH_8U,
+            3
+        );
+
+    retval = CVPixelBufferLockBaseAddress( pixel_buffer_ref, 0 );
+
+    void* base_address = CVPixelBufferGetBaseAddress( pixel_buffer_ref );
+    size_t bytes_per_row = CVPixelBufferGetBytesPerRow( pixel_buffer_ref );
+    cvSetData( image_rgb, base_address, bytes_per_row );
+
+    cvConvertImage( image, image_rgb, CV_CVTIMG_SWAP_RB );
+
+    retval = CVPixelBufferUnlockBaseAddress( pixel_buffer_ref, 0 );
+
+    cvReleaseImageHeader( &image_rgb );
+
+    ICMSourceTrackingCallbackRecord source_tracking_callback_record;
+    source_tracking_callback_record.sourceTrackingCallback =
+        icvSourceTrackingCallback;
+    source_tracking_callback_record.sourceTrackingRefCon = NULL;
+
+    OSStatus status =
+        ICMCompressionSessionEncodeFrame(
+            video_writer->compression_session_ref,
+            pixel_buffer_ref,
+            0,
+            video_writer->duration_per_sample,
+            kICMValidTime_DisplayDurationIsValid,
+            NULL,
+            &source_tracking_callback_record,
+            static_cast<void*>( &pixel_buffer_ref )
+        );
+
+    return 0;
+}
+
+CV_IMPL void cvReleaseVideoWriter( CvVideoWriter ** writer ) {
+    if ( ( writer != NULL ) && ( *writer != NULL ) ) {
+        CvVideoWriter_QT* video_writer =
+            reinterpret_cast<CvVideoWriter_QT*>( *writer );
+
+        // force compression session to complete encoding of outstanding source
+        // frames
+        ICMCompressionSessionCompleteFrames(
+            video_writer->compression_session_ref, TRUE, 0, 0
+        );
+
+        EndMediaEdits( video_writer->video );
+
+        ICMCompressionSessionRelease( video_writer->compression_session_ref );
+
+        InsertMediaIntoTrack(
+            video_writer->track,
+            0,
+            0,
+            GetMediaDuration( video_writer->video ),
+            FixRatio( 1, 1 )
+        );
+
+        UpdateMovieInStorage( video_writer->movie, video_writer->data_handler );
+
+        CloseMovieStorage( video_writer->data_handler );
+
+/*
+        // export to AVI
+        Handle data_ref;
+        OSType data_ref_type;
+        QTNewDataReferenceFromFullPathCFString(
+            CFSTR( "/Users/seibert/Desktop/test.avi" ), kQTPOSIXPathStyle, 0,
+            &data_ref, &data_ref_type
+        );
+
+        ConvertMovieToDataRef( video_writer->movie, NULL, data_ref,
+            data_ref_type, kQTFileTypeAVI, 'TVOD', 0, NULL );
+
+        DisposeHandle( data_ref );
+*/
+
+        DisposeMovie( video_writer->movie );
+
+        cvFree( reinterpret_cast<void**>( &video_writer ) );
+        *writer = NULL;
+    }
+}
+
+OSStatus icvEncodedFrameOutputCallback(
+    void* writer,
+    ICMCompressionSessionRef compression_session_ref,
+    OSStatus error,
+    ICMEncodedFrameRef encoded_frame_ref,
+    void* reserved
+) {
+    CvVideoWriter_QT* video_writer = static_cast<CvVideoWriter_QT*>( writer );
+
+    OSStatus err = AddMediaSampleFromEncodedFrame( video_writer->video,
+        encoded_frame_ref, NULL );
+
+    return err;
+}
+
+void icvSourceTrackingCallback(
+    void *source_tracking_ref_con,
+    ICMSourceTrackingFlags source_tracking_flags,
+    void *source_frame_ref_con,
+    void *reserved
+) {
+    if ( source_tracking_flags & kICMSourceTracking_ReleasedPixelBuffer ) {
+        CVPixelBufferRelease(
+            *static_cast<CVPixelBufferRef*>( source_frame_ref_con )
+        );
+    }
+}

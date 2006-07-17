@@ -4,7 +4,7 @@ OpenCV authors and major code algorithm/code contributors.
 Name                    Company (by the moment     Remarks
                         of contribution)
 
-Asbach, Mark            ???                        New-style Linux makefiles, SWIG wrappers
+Asbach, Mark            RWTH Aachen University     New-style Linux makefiles, SWIG wrappers, Mac OS X porting
 Abrosimov, Dmitry       Intel Corp.                Optimization, Eigen objects
 Bradski, Gary           Intel Corp.                Idea and Vision, Leading, CAMSHIFT & MHI algorithms and more ...
 Bornet, Olivier         IDIAP Research Institute   New-style Linux makefiles, SWIG & specialized Python wrappers 
@@ -34,4 +34,3 @@ Pisarevsky, Vadim       Intel Corp.                OpenCV hacker :)
 Pleskov, Alexander      Intel Corp.                Pyramidal segmentation, gesture recognition code, comp. geometry functions
 Sobolev, Andrey         Moscow State Uni           Contour skeletons and linear-contour model
 Zaguskin, Victor        Intel Corp.                cvcam, vmdemo in tcl/tk
-

@@ -1,0 +1,21 @@
+Dear Python-fan,
+
+we've been working on OpenCV for Python for quite a long time now
+and it's time to show what we achieved so far. The interface seems
+to be mostly complete, still lacking some functions that take
+double pointers as arguments and automatic type conversions are 
+missing. The biggest problem for production use is the improper
+(= missing) memory management. If you use Python/OpenCV for 
+interactive experiments and small prototyping projects, this is
+no big deal, for larger datasets and stability this needs to be
+addressed and solved carefully.
+
+Please take a look at the python samples that ship with OpenCV.
+You will likely find what's necessary to get started with OpenCV
+and Python in the demo code.
+
+Feel free to experiment, find bugs and report them.
+
+
+Mark Asbach <asbach@ient.rwth-aachen.de>
+Aachen, 2004-03-17
