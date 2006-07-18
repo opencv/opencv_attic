@@ -17769,7 +17769,7 @@ SWIGINTERN PyObject *_wrap_cvPointFrom32f(PyObject *SWIGUNUSEDPARM(self), PyObje
     CvPoint2D32f *ptr;
     if( SWIG_ConvertPtr(obj0, (void**)&ptr, SWIGTYPE_p_CvPoint, 0) == -1) {
       if(PyObject_AsFloatArray(obj0, (float *) &val, 2)==-1){
-        SWIG_exception (SWIG_TypeError, "could not convert to CvPoint");
+        SWIG_exception (SWIG_TypeError, "could not convert to CvPoint2D32f");
         return NULL;
       }
     }
@@ -65044,7 +65044,7 @@ SWIGINTERN PyObject *_wrap_cv2DRotationMatrix(PyObject *SWIGUNUSEDPARM(self), Py
     CvPoint2D32f *ptr;
     if( SWIG_ConvertPtr(obj0, (void**)&ptr, SWIGTYPE_p_CvPoint, 0) == -1) {
       if(PyObject_AsFloatArray(obj0, (float *) &val, 2)==-1){
-        SWIG_exception (SWIG_TypeError, "could not convert to CvPoint");
+        SWIG_exception (SWIG_TypeError, "could not convert to CvPoint2D32f");
         return NULL;
       }
     }
@@ -65380,7 +65380,7 @@ SWIGINTERN PyObject *_wrap_cvLogPolar(PyObject *SWIGUNUSEDPARM(self), PyObject *
     CvPoint2D32f *ptr;
     if( SWIG_ConvertPtr(obj2, (void**)&ptr, SWIGTYPE_p_CvPoint, 0) == -1) {
       if(PyObject_AsFloatArray(obj2, (float *) &val, 2)==-1){
-        SWIG_exception (SWIG_TypeError, "could not convert to CvPoint");
+        SWIG_exception (SWIG_TypeError, "could not convert to CvPoint2D32f");
         return NULL;
       }
     }
@@ -66154,7 +66154,7 @@ SWIGINTERN PyObject *_wrap_cvGetRectSubPix(PyObject *SWIGUNUSEDPARM(self), PyObj
     CvPoint2D32f *ptr;
     if( SWIG_ConvertPtr(obj2, (void**)&ptr, SWIGTYPE_p_CvPoint, 0) == -1) {
       if(PyObject_AsFloatArray(obj2, (float *) &val, 2)==-1){
-        SWIG_exception (SWIG_TypeError, "could not convert to CvPoint");
+        SWIG_exception (SWIG_TypeError, "could not convert to CvPoint2D32f");
         return NULL;
       }
     }
@@ -68916,7 +68916,7 @@ SWIGINTERN PyObject *_wrap_cvSubdivDelaunay2DInsert(PyObject *SWIGUNUSEDPARM(sel
     CvPoint2D32f *ptr;
     if( SWIG_ConvertPtr(obj1, (void**)&ptr, SWIGTYPE_p_CvPoint, 0) == -1) {
       if(PyObject_AsFloatArray(obj1, (float *) &val, 2)==-1){
-        SWIG_exception (SWIG_TypeError, "could not convert to CvPoint");
+        SWIG_exception (SWIG_TypeError, "could not convert to CvPoint2D32f");
         return NULL;
       }
     }
@@ -68968,7 +68968,7 @@ SWIGINTERN PyObject *_wrap_cvSubdiv2DLocate(PyObject *SWIGUNUSEDPARM(self), PyOb
     CvPoint2D32f *ptr;
     if( SWIG_ConvertPtr(obj1, (void**)&ptr, SWIGTYPE_p_CvPoint, 0) == -1) {
       if(PyObject_AsFloatArray(obj1, (float *) &val, 2)==-1){
-        SWIG_exception (SWIG_TypeError, "could not convert to CvPoint");
+        SWIG_exception (SWIG_TypeError, "could not convert to CvPoint2D32f");
         return NULL;
       }
     }
@@ -69082,7 +69082,7 @@ SWIGINTERN PyObject *_wrap_cvFindNearestPoint2D(PyObject *SWIGUNUSEDPARM(self), 
     CvPoint2D32f *ptr;
     if( SWIG_ConvertPtr(obj1, (void**)&ptr, SWIGTYPE_p_CvPoint, 0) == -1) {
       if(PyObject_AsFloatArray(obj1, (float *) &val, 2)==-1){
-        SWIG_exception (SWIG_TypeError, "could not convert to CvPoint");
+        SWIG_exception (SWIG_TypeError, "could not convert to CvPoint2D32f");
         return NULL;
       }
     }
@@ -69321,7 +69321,7 @@ SWIGINTERN PyObject *_wrap_cvTriangleArea(PyObject *SWIGUNUSEDPARM(self), PyObje
     CvPoint2D32f *ptr;
     if( SWIG_ConvertPtr(obj0, (void**)&ptr, SWIGTYPE_p_CvPoint, 0) == -1) {
       if(PyObject_AsFloatArray(obj0, (float *) &val, 2)==-1){
-        SWIG_exception (SWIG_TypeError, "could not convert to CvPoint");
+        SWIG_exception (SWIG_TypeError, "could not convert to CvPoint2D32f");
         return NULL;
       }
     }
@@ -69335,7 +69335,7 @@ SWIGINTERN PyObject *_wrap_cvTriangleArea(PyObject *SWIGUNUSEDPARM(self), PyObje
     CvPoint2D32f *ptr;
     if( SWIG_ConvertPtr(obj1, (void**)&ptr, SWIGTYPE_p_CvPoint, 0) == -1) {
       if(PyObject_AsFloatArray(obj1, (float *) &val, 2)==-1){
-        SWIG_exception (SWIG_TypeError, "could not convert to CvPoint");
+        SWIG_exception (SWIG_TypeError, "could not convert to CvPoint2D32f");
         return NULL;
       }
     }
@@ -69349,7 +69349,7 @@ SWIGINTERN PyObject *_wrap_cvTriangleArea(PyObject *SWIGUNUSEDPARM(self), PyObje
     CvPoint2D32f *ptr;
     if( SWIG_ConvertPtr(obj2, (void**)&ptr, SWIGTYPE_p_CvPoint, 0) == -1) {
       if(PyObject_AsFloatArray(obj2, (float *) &val, 2)==-1){
-        SWIG_exception (SWIG_TypeError, "could not convert to CvPoint");
+        SWIG_exception (SWIG_TypeError, "could not convert to CvPoint2D32f");
         return NULL;
       }
     }
@@ -70496,7 +70496,7 @@ SWIGINTERN PyObject *_wrap_cvPointPolygonTest(PyObject *SWIGUNUSEDPARM(self), Py
     CvPoint2D32f *ptr;
     if( SWIG_ConvertPtr(obj1, (void**)&ptr, SWIGTYPE_p_CvPoint, 0) == -1) {
       if(PyObject_AsFloatArray(obj1, (float *) &val, 2)==-1){
-        SWIG_exception (SWIG_TypeError, "could not convert to CvPoint");
+        SWIG_exception (SWIG_TypeError, "could not convert to CvPoint2D32f");
         return NULL;
       }
     }
