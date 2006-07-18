@@ -9,12 +9,13 @@ if BUILD_APPS
 else
   APPS_DIR =
 endif
-SUBDIRS = cxcore cv cvaux ml otherlibs interfaces $(APPS_DIR) tests samples data docs
+SUBDIRS = cxcore cv cvaux ml otherlibs utils interfaces $(APPS_DIR) tests samples data docs
 
 # All the rest of the distributed files
-EXTRA_DIST = THANKS COPYING INSTALL README NEWS ChangeLog \
+#EXTRA_DIST = THANKS COPYING INSTALL README NEWS ChangeLog \
+EXTRA_DIST = THANKS TODO \
              opencv.spec opencv.spec.in opencv.pc.in opencv.pc \
-             utils autotools _make apps filters
+             _make apps filters
 
 pkgconfigdir = $(libdir)/pkgconfig
 pkgconfig_DATA = opencv.pc

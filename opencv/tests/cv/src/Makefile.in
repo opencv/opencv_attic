@@ -281,6 +281,7 @@ INCLUDES = \
 
 TESTS = $(check_PROGRAMS)
 EXTRA_DIST = cvtest.dsp cvtest.vcproj
+MOSTLYCLEANFILES = .lst .sum
 cvtest_SOURCES = \
     aeigenobjects.inc apixelaccess.inc cvtest.h \
     aaccum.cpp aadaptthresh.cpp aapproxpoly.cpp acalccontrasthist.cpp \
@@ -320,9 +321,9 @@ $(srcdir)/Makefile.in:  $(srcdir)/Makefile.am  $(am__configure_deps)
 	      exit 1;; \
 	  esac; \
 	done; \
-	echo ' cd $(top_srcdir) && $(AUTOMAKE) --foreign  tests/cv/src/Makefile'; \
+	echo ' cd $(top_srcdir) && $(AUTOMAKE) --gnu  tests/cv/src/Makefile'; \
 	cd $(top_srcdir) && \
-	  $(AUTOMAKE) --foreign  tests/cv/src/Makefile
+	  $(AUTOMAKE) --gnu  tests/cv/src/Makefile
 .PRECIOUS: Makefile
 Makefile: $(srcdir)/Makefile.in $(top_builddir)/config.status
 	@case '$?' in \
@@ -619,6 +620,7 @@ install-strip:
 	  `test -z '$(STRIP)' || \
 	    echo "INSTALL_PROGRAM_ENV=STRIPPROG='$(STRIP)'"` install
 mostlyclean-generic:
+	-test -z "$(MOSTLYCLEANFILES)" || rm -f $(MOSTLYCLEANFILES)
 
 clean-generic:
 

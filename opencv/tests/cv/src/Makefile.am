@@ -7,10 +7,10 @@ INCLUDES =                                \
 	-I$(top_srcdir)/cv/include        \
 	-I$(top_srcdir)/cvaux/include
 
-check_PROGRAMS = cvtest
-TESTS          = $(check_PROGRAMS)
-EXTRA_DIST     = cvtest.dsp cvtest.vcproj
-
+check_PROGRAMS   = cvtest
+TESTS            = $(check_PROGRAMS)
+EXTRA_DIST       = cvtest.dsp cvtest.vcproj
+MOSTLYCLEANFILES = .lst .sum
 
 cvtest_SOURCES = \
     aeigenobjects.inc apixelaccess.inc cvtest.h \

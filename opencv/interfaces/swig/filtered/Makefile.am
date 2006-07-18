@@ -15,6 +15,9 @@ AM_CPPFLAGS = \
 
 EXTRA_DIST = cv.h constants.h
 
+distcleancheck_listfiles = \
+  find -type f -exec sh -c 'test -f $(scrdir)/{} || echo {}'
+
 # SWIG ###############################################################################
 
 # the following rules keep wrappers up to date, if SWIG is present
