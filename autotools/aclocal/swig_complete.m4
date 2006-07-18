@@ -1,4 +1,9 @@
-# Contributed by Sebastian Huber
+# original version contributed by   Sebastian Huber
+# 
+# this version by                   Mark Asbach
+#                                   Institute of Communications Engineering
+#                                   RWTH Aachen University
+
 
 # SWIG_PROG([required-version = N[.N[.N]]])
 #
@@ -7,59 +12,95 @@
 # if the version of the available SWIG is greater than or equal to the
 # value of the argument.  It should have the format: N[.N[.N]] (N is a
 # number between 0 and 999.  Only the first N is mandatory.)
+#
 AC_DEFUN([SWIG_PROG],[
-	AC_DIAGNOSE([obsolete],[Please replace calls to SWIG_PROG by AC_PATH_SWIG])
-	AC_PATH_SWIG($1)
+  AC_DIAGNOSE([obsolete],[Please replace calls to SWIG_PROG by AC_PATH_SWIG])
+  AC_PATH_SWIG($1)
 ])
 
+
+# AC_PATH_SWIG([required-version = N[.N[.N]]])
+#
+# Checks for the SWIG program.  If found you can (and should) call
+# SWIG via $(SWIG).  You can use the optional first argument to check
+# if the version of the available SWIG is greater than or equal to the
+# value of the argument.  It should have the format: N[.N[.N]] (N is a
+# number between 0 and 999.  Only the first N is mandatory.)
+#
 AC_DEFUN([AC_PATH_SWIG],[
-	AC_PATH_PROG([SWIG],[swig])
-	if test -z "$SWIG" ; then
-		AC_MSG_WARN([cannot find 'swig' program, you may have a look at http://www.swig.org])
-	else
-		AC_MSG_CHECKING([for SWIG version])
-		[SWIG_VERSION=`$SWIG -version 2>&1 | grep 'SWIG Version' | sed 's/.*\([0-9]\+\.[0-9]\+\.[0-9]\+\).*/\1/g'`]
-		AC_MSG_RESULT([$SWIG_VERSION])
-		if test -n "$SWIG_VERSION"; then
-			if test -n "$1" ; then
-				# Calculate the required version number
-				[swig_tmp=( `echo $1 | sed 's/[^0-9]\+/ /g'` )]
-				[swig_required_version=$(( 1000000 * ${swig_tmp[0]:-0} + 1000 * ${swig_tmp[1]:-0} + ${swig_tmp[2]:-0} ))]
-
-				# Calculate the available version number
-				[swig_tmp=( `echo $SWIG_VERSION | sed 's/[^0-9]\+/ /g'` )]
-				[swig_tmp=$(( 1000000 * ${swig_tmp[0]:-0} + 1000 * ${swig_tmp[1]:-0} + ${swig_tmp[2]:-0} ))]
-
-				if test $swig_required_version -gt $swig_tmp ; then
-					AC_MSG_WARN([SWIG version $1 is required, you have $SWIG_VERSION])
-					SWIG=""
-				fi
-			fi
-		else
-			AC_MSG_WARN([cannot determine SWIG version])
-			SWIG=""
-		fi
-
-		if test -n "$SWIG" ; then
-			SWIG_RUNTIME_LIBS_DIR="${SWIG%/bin*}/lib"
-			AC_MSG_NOTICE([SWIG runtime library directory is '$SWIG_RUNTIME_LIBS_DIR'])
-		fi
-	fi
-	AC_SUBST([SWIG_VERSION])
-	AC_SUBST([SWIG_RUNTIME_LIBS_DIR])
+  #
+  # define SWIG as precious variable
+  AC_ARG_VAR([SWIG],[Simplified Wrapper and Interface Generator, used for Python bindings])
+  #
+  # check where to find the swig executable
+  AC_PATH_PROG([SWIG],[swig])
+  if test -n "$SWIG"; then
+    #
+    # inquire version number
+    if test -n "$SWIG"; then
+      AC_MSG_CHECKING([for SWIG version])
+      dnl command is m4 quoted, otherwise, the sed command line breaks on some platforms
+      [SWIG_VERSION=`$SWIG -version 2>&1 | grep 'SWIG Version' | sed -e 's/^[^0-9]*//g' -e 's/ .*//g'`]
+      AC_MSG_RESULT([$SWIG_VERSION])
+    else
+      SWIG_VERSION=""
+    fi
+    #
+    # if a user requested a given number, check for that now
+    if test -n "$1"; then
+      if test -n "$SWIG_VERSION"; then
+        # 
+        # compare version strings
+        AC_VERSION_AT_LEAST([$SWIG_VERSION],[$1])
+        if test x"$ac_version_at_least" = "xyes"; then
+          # everything is perfect
+          :
+        else
+          # version requirement not fulfilled
+          # we could stop with an error, but instead we just pretend 
+          # that there is no swig installed
+          AC_MSG_WARN([SWIG version $1 is required, you have $SWIG_VERSION])
+          SWIG=""
+        fi
+      else
+        # there was no version number available from swig
+        # and because the user has given requirements, we take
+        # this for a version mismatch
+        AC_MSG_WARN([SWIG version $1 is required, you have $SWIG_VERSION])
+        SWIG=""
+      fi
+    else
+      # there was no version number available from swig
+      # but because no requirement was given, just warn and go on
+      AC_MSG_WARN([cannot determine SWIG version])
+    fi
+  fi
+  #
+  # just in case someone wants to link swig libraries,
+  # we try to determine their path
+  if test -n "$SWIG" ; then
+    SWIG_RUNTIME_LIBS_DIR="${SWIG%/bin*}/lib"
+    AC_MSG_NOTICE([SWIG runtime library directory is '$SWIG_RUNTIME_LIBS_DIR'])
+  fi
+  #
+# AC_SUBST([SWIG])  -- already done by AC_PATH_PROG([SWIG],[swig])
+  AC_SUBST([SWIG_VERSION])
+  AC_SUBST([SWIG_RUNTIME_LIBS_DIR])
 ])
+
 
 # SWIG_ENABLE_CXX()
 #
 # Enable SWIG C++ support.  This effects all invocations of $(SWIG).
 AC_DEFUN([SWIG_ENABLE_CXX],[
-	AC_REQUIRE([AC_PATH_SWIG])
-	AC_REQUIRE([AC_PROG_CXX])
-	if test -z "$SWIG" ; then
-		AC_MSG_ERROR([swig not found])
-	fi
-	SWIG="$SWIG -c++"
-])
+  AC_REQUIRE([AC_PATH_SWIG])
+  AC_REQUIRE([AC_PROG_CXX])
+  if test -z "$SWIG" ; then
+    AC_MSG_ERROR([swig not found])
+  fi
+  SWIG="$SWIG -c++"
+]) # SWIG_ENABLE_CXX
+
 
 # SWIG_MULTI_MODULE_SUPPORT()
 #
@@ -69,32 +110,35 @@ AC_DEFUN([SWIG_ENABLE_CXX],[
 # modules for example, use the SWIG_PYTHON() macro and link the
 # modules against $(SWIG_PYTHON_LIBS).
 AC_DEFUN([SWIG_MULTI_MODULE_SUPPORT],[
-	AC_REQUIRE([AC_PATH_SWIG])
-
-	# Calculate the available version number
-	AC_MSG_CHECKING([for swig multi module support])
-	if test -z "$SWIG" ; then
-		AC_MSG_ERROR([swig not found])
-	fi
-
-	[swig_tmp=( `echo $SWIG_VERSION | sed 's/[^0-9]\+/ /g'` )]
-	[swig_tmp=$(( 1000000 * ${swig_tmp[0]:-0} + 1000 * ${swig_tmp[1]:-0} + ${swig_tmp[2]:-0} ))]
-	if test -n "$SWIG_VERSION"; then
-		if test $swig_tmp -ge "1003024" ; then
-			AC_MSG_RESULT([always working (SWIG >= 1.3.24)])
-		else
-			if test $swig_tmp -ge "1003020" ; then
-				SWIG="$SWIG -noruntime"
-				AC_MSG_RESULT([interim syntax (SWIG >= 1.3.20 < 1.3.24)])
-			else
-				SWIG="$SWIG -c"
-				AC_MSG_RESULT([old syntax (SWIG < 1.3.20)])
-			fi
-		fi
-	else
-		AC_MSG_WARN([SWIG version number unknown - couldn't set flags for multi module support])
-	fi
+  AC_REQUIRE([AC_PATH_SWIG])
+  AC_MSG_CHECKING([for swig multi module support])
+  #
+  if test -n "$SWIG_VERSION"; then
+    #
+    AC_VERSION_AT_LEAST([$SWIG_VERSION],[1.3.24])
+    if test x"$ac_version_at_least" = "xyes"; then
+      # perfect!
+      AC_MSG_RESULT([[always working (SWIG >= 1.3.24)]])
+    else
+      #
+      # there were some older versions that need special treatment
+      # in form of additional command line flags and/or library
+      # dependencies
+      AC_VERSION_AT_LEAST([$SWIG_VERSION],[1.3.20])
+      if test x"$ac_version_at_least" = "xyes"; then
+        SWIG="$SWIG -noruntime"
+        AC_MSG_RESULT([[interim syntax (SWIG >= 1.3.20 < 1.3.24)]])
+      else
+        SWIG="$SWIG -c"
+        AC_MSG_RESULT([[old syntax (SWIG < 1.3.20)]])
+      fi
+    fi
+  else
+    AC_MSG_ERROR([SWIG version number unknown - cannot set flags for multi module support])
+  fi
+# AC_SUBST([SWIG]) -- already done by AC_PATH_SWIG()
 ])
+
 
 # SWIG_PYTHON([use-shadow-classes = {no, yes}])
 #
@@ -107,25 +151,26 @@ AC_DEFUN([SWIG_MULTI_MODULE_SUPPORT],[
 # $(SWIG_PYTHON_LIBS) to link against the appropriate library.  It
 # contains the SWIG Python runtime library that is needed by the type
 # check system for example.
+#
 AC_DEFUN([SWIG_PYTHON],[
-	AC_REQUIRE([AC_PATH_SWIG])
-	AC_REQUIRE([AM_PATH_PYTHON])
-	test "x$1" != "xno" || swig_shadow=" -noproxy"
-
-	[swig_tmp=( `echo $SWIG_VERSION | sed 's/[^0-9]\+/ /g'` )]
-	[swig_tmp=$(( 1000000 * ${swig_tmp[0]:-0} + 1000 * ${swig_tmp[1]:-0} + ${swig_tmp[2]:-0} ))]
-	if test -n "$SWIG_VERSION"; then
-		if test $swig_tmp -ge "1003024" ; then
-			SWIG_PYTHON_LIBS=""
-		else
-			SWIG_PYTHON_LIBS="$SWIG_RUNTIME_LIBS_DIR -lswigpy"
-		fi
-	else
-		AC_MSG_WARN([SWIG version number unknown - couldn't set python libs])
-	fi
-
-	AC_SUBST([SWIG_PYTHON_OPT],  "-python$swig_shadow")
-	AC_SUBST([SWIG_PYTHON_LIBS])
+  AC_REQUIRE([AC_PATH_SWIG])
+  AC_REQUIRE([AM_PATH_PYTHON])
+  #
+  test "x$1" != "xno" || swig_shadow=" -noproxy"
+  #
+  if test -n "$SWIG_VERSION"; then
+    AC_VERSION_AT_LEAST([$SWIG_VERSION],[1.3.24])
+    if test x"$ac_version_at_least" = "xyes"; then
+      SWIG_PYTHON_LIBS=""
+    else
+      SWIG_PYTHON_LIBS="$SWIG_RUNTIME_LIBS_DIR -lswigpy"
+    fi
+  else
+    AC_MSG_ERROR([SWIG version number unknown - cannot set python libs])
+  fi
+  #
+  AC_SUBST([SWIG_PYTHON_OPT], "-python$swig_shadow")
+  AC_SUBST([SWIG_PYTHON_LIBS])
 ])
 
 # PYTHON_DEVEL()
@@ -133,7 +178,7 @@ AC_DEFUN([SWIG_PYTHON],[
 # Checks for Python and tries to get the include path to 'Python.h'.
 # It provides the $(PYTHON_CPPFLAGS) and $(PYTHON_LDFLAGS) output variable.
 AC_DEFUN([PYTHON_DEVEL],[
-	AC_REQUIRE([AM_PATH_PYTHON])
+	AC_REQUIRE([AM_PATH_PYTHON])[]dnl
 
 	# Check for Python include path
 	AC_MSG_CHECKING([for Python include path])
