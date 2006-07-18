@@ -1779,7 +1779,7 @@ cvCalcPCA( const CvArr* data_arr, CvArr* avg_arr, CvArr* eigenvals, CvArr* eigen
         {
             CvMat ei;
             cvGetRow( evects, &ei, i );
-            cvNormalize( evects, evects );
+			cvNormalize( &ei, &ei );
         }
     }
 
