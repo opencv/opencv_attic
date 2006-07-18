@@ -865,13 +865,13 @@ struct CvDTreeNode
 
 struct CV_EXPORTS CvDTreeParams
 {
-    int max_categories;
-    int max_depth;
-    int min_sample_count;
-    int cv_folds;
-    bool use_surrogates;
-    bool use_1se_rule;
-    bool truncate_pruned_tree;
+    int   max_categories;
+    int   max_depth;
+    int   min_sample_count;
+    int   cv_folds;
+    bool  use_surrogates;
+    bool  use_1se_rule;
+    bool  truncate_pruned_tree;
     float regression_accuracy;
     const float* priors;
 
@@ -886,8 +886,8 @@ struct CV_EXPORTS CvDTreeParams
                    bool _use_1se_rule, bool _truncate_pruned_tree,
                    const float* _priors ) :
         max_categories(_max_categories), max_depth(_max_depth),
-        min_sample_count(_min_sample_count), use_surrogates(_use_surrogates),
-        cv_folds(_cv_folds), use_1se_rule(_use_1se_rule), 
+        min_sample_count(_min_sample_count), cv_folds (_cv_folds), 
+        use_surrogates(_use_surrogates), use_1se_rule(_use_1se_rule), 
         truncate_pruned_tree(_truncate_pruned_tree),
         regression_accuracy(_regression_accuracy),
         priors(_priors)
@@ -1079,12 +1079,12 @@ protected:
 struct CV_EXPORTS CvRTParams
 {
     // Parameters for a tree
-    int max_categories;
-    int max_depth;
-    int min_sample_count;
-    int cv_folds;
-    bool use_surrogates;
-    bool use_1se_rule;
+    int   max_categories;
+    int   max_depth;
+    int   min_sample_count;
+    int   cv_folds;
+    bool  use_surrogates;
+    bool  use_1se_rule;
     float regression_accuracy;
     const float* priors;
 
@@ -1112,8 +1112,8 @@ struct CV_EXPORTS CvRTParams
                 int _nactive_vars, int max_num_of_trees_in_the_forest,
                 float forest_accuracy, int termcrit_type ) :
         max_categories(_max_categories), max_depth(_max_depth),
-        min_sample_count(_min_sample_count), use_surrogates(_use_surrogates),
-        cv_folds(_cv_folds), use_1se_rule(_use_1se_rule),
+        min_sample_count(_min_sample_count), cv_folds(_cv_folds), 
+        use_surrogates(_use_surrogates), use_1se_rule(_use_1se_rule),
         regression_accuracy(_regression_accuracy), priors(_priors),
         calc_var_importance(_calc_var_importance), calc_proximities(_calc_proximities),
         nactive_vars(_nactive_vars)
