@@ -102,15 +102,15 @@
 
 #define CV_DXT_INVERSE  1
 
-#define CV_DXT_SCALE    2 /* divide result by size of array */
+#define CV_DXT_SCALE    2 
 
 #define CV_DXT_INV_SCALE (CV_DXT_INVERSE + CV_DXT_SCALE)
 
 #define CV_DXT_INVERSE_SCALE CV_DXT_INV_SCALE
 
-#define CV_DXT_ROWS     4 /* transform each row individually */
+#define CV_DXT_ROWS     4 
 
-#define CV_DXT_MUL_CONJ 8 /* conjugate the second argument of cvMulSpectrums */
+#define CV_DXT_MUL_CONJ 8 
 
 #define CV_FRONT 1
 
@@ -166,11 +166,11 @@
 
 #define CV_FONT_VECTOR0    CV_FONT_HERSHEY_SIMPLEX
 
-#define CV_ErrModeLeaf     0   /* Print error and exit program */
+#define CV_ErrModeLeaf     0   
 
-#define CV_ErrModeParent   1   /* Print error and continue */
+#define CV_ErrModeParent   1   
 
-#define CV_ErrModeSilent   2   /* Don't print and continue */
+#define CV_ErrModeSilent   2   
 
 #define CV_PI   3.1415926535897932384626433832795
 
@@ -398,27 +398,27 @@
 
 #define CV_SEQ_ELTYPE_MASK           ((1 << CV_SEQ_ELTYPE_BITS) - 1)
 
-#define CV_SEQ_ELTYPE_POINT          CV_32SC2  /* (x,y) */
+#define CV_SEQ_ELTYPE_POINT          CV_32SC2  
 
-#define CV_SEQ_ELTYPE_CODE           CV_8UC1   /* freeman code: 0..7 */
+#define CV_SEQ_ELTYPE_CODE           CV_8UC1   
 
 #define CV_SEQ_ELTYPE_GENERIC        0
 
 #define CV_SEQ_ELTYPE_PTR            CV_USRTYPE1
 
-#define CV_SEQ_ELTYPE_PPOINT         CV_SEQ_ELTYPE_PTR  /* &(x,y) */
+#define CV_SEQ_ELTYPE_PPOINT         CV_SEQ_ELTYPE_PTR  
 
-#define CV_SEQ_ELTYPE_INDEX          CV_32SC1  /* #(x,y) */
+#define CV_SEQ_ELTYPE_INDEX          CV_32SC1  
 
-#define CV_SEQ_ELTYPE_GRAPH_EDGE     0  /* &next_o, &next_d, &vtx_o, &vtx_d */
+#define CV_SEQ_ELTYPE_GRAPH_EDGE     0  
 
-#define CV_SEQ_ELTYPE_GRAPH_VERTEX   0  /* first_edge, &(x,y) */
+#define CV_SEQ_ELTYPE_GRAPH_VERTEX   0  
 
-#define CV_SEQ_ELTYPE_TRIAN_ATR      0  /* vertex of the binary tree   */
+#define CV_SEQ_ELTYPE_TRIAN_ATR      0  
 
-#define CV_SEQ_ELTYPE_CONNECTED_COMP 0  /* connected component  */
+#define CV_SEQ_ELTYPE_CONNECTED_COMP 0  
 
-#define CV_SEQ_ELTYPE_POINT3D        CV_32FC3  /* (x,y,z)  */
+#define CV_SEQ_ELTYPE_POINT3D        CV_32FC3  
 
 #define CV_SEQ_KIND_BITS        3
 
@@ -496,7 +496,7 @@
 
 #define CV_NODE_STRING      CV_NODE_STR
 
-#define CV_NODE_REF         4 /* not used */
+#define CV_NODE_REF         4 
 
 #define CV_NODE_SEQ         5
 
@@ -504,7 +504,7 @@
 
 #define CV_NODE_TYPE_MASK   7
 
-#define CV_NODE_FLOW        8 /* used only for writing structures to YAML format */
+#define CV_NODE_FLOW        8 
 
 #define CV_NODE_USER        16
 
@@ -514,97 +514,97 @@
 
 #define CV_NODE_SEQ_SIMPLE 256
 
-#define CV_StsOk                    0  /* everithing is ok                */
+#define CV_StsOk                    0  
 
-#define CV_StsBackTrace            -1  /* pseudo error for back trace     */
+#define CV_StsBackTrace            -1  
 
-#define CV_StsError                -2  /* unknown /unspecified error      */
+#define CV_StsError                -2  
 
-#define CV_StsInternal             -3  /* internal error (bad state)      */
+#define CV_StsInternal             -3  
 
-#define CV_StsNoMem                -4  /* insufficient memory             */
+#define CV_StsNoMem                -4  
 
-#define CV_StsBadArg               -5  /* function arg/param is bad       */
+#define CV_StsBadArg               -5  
 
-#define CV_StsBadFunc              -6  /* unsupported function            */
+#define CV_StsBadFunc              -6  
 
-#define CV_StsNoConv               -7  /* iter. didn't converge           */
+#define CV_StsNoConv               -7  
 
-#define CV_StsAutoTrace            -8  /* tracing                         */
+#define CV_StsAutoTrace            -8  
 
-#define CV_HeaderIsNull            -9  /* image header is NULL            */
+#define CV_HeaderIsNull            -9  
 
-#define CV_BadImageSize            -10 /* image size is invalid           */
+#define CV_BadImageSize            -10 
 
-#define CV_BadOffset               -11 /* offset is invalid               */
+#define CV_BadOffset               -11 
 
-#define CV_BadDataPtr              -12 /**/
+#define CV_BadDataPtr              -12 
 
-#define CV_BadStep                 -13 /**/
+#define CV_BadStep                 -13 
 
-#define CV_BadModelOrChSeq         -14 /**/
+#define CV_BadModelOrChSeq         -14 
 
-#define CV_BadNumChannels          -15 /**/
+#define CV_BadNumChannels          -15 
 
-#define CV_BadNumChannel1U         -16 /**/
+#define CV_BadNumChannel1U         -16 
 
-#define CV_BadDepth                -17 /**/
+#define CV_BadDepth                -17 
 
-#define CV_BadAlphaChannel         -18 /**/
+#define CV_BadAlphaChannel         -18 
 
-#define CV_BadOrder                -19 /**/
+#define CV_BadOrder                -19 
 
-#define CV_BadOrigin               -20 /**/
+#define CV_BadOrigin               -20 
 
-#define CV_BadAlign                -21 /**/
+#define CV_BadAlign                -21 
 
-#define CV_BadCallBack             -22 /**/
+#define CV_BadCallBack             -22 
 
-#define CV_BadTileSize             -23 /**/
+#define CV_BadTileSize             -23 
 
-#define CV_BadCOI                  -24 /**/
+#define CV_BadCOI                  -24 
 
-#define CV_BadROISize              -25 /**/
+#define CV_BadROISize              -25 
 
-#define CV_MaskIsTiled             -26 /**/
+#define CV_MaskIsTiled             -26 
 
-#define CV_StsNullPtr                -27 /* null pointer */
+#define CV_StsNullPtr                -27 
 
-#define CV_StsVecLengthErr           -28 /* incorrect vector length */
+#define CV_StsVecLengthErr           -28 
 
-#define CV_StsFilterStructContentErr -29 /* incorr. filter structure content */
+#define CV_StsFilterStructContentErr -29 
 
-#define CV_StsKernelStructContentErr -30 /* incorr. transform kernel content */
+#define CV_StsKernelStructContentErr -30 
 
-#define CV_StsFilterOffsetErr        -31 /* incorrect filter ofset value */
+#define CV_StsFilterOffsetErr        -31 
 
-#define CV_StsBadSize                -201 /* the input/output structure size is incorrect  */
+#define CV_StsBadSize                -201 
 
-#define CV_StsDivByZero              -202 /* division by zero */
+#define CV_StsDivByZero              -202 
 
-#define CV_StsInplaceNotSupported    -203 /* in-place operation is not supported */
+#define CV_StsInplaceNotSupported    -203 
 
-#define CV_StsObjectNotFound         -204 /* request can't be completed */
+#define CV_StsObjectNotFound         -204 
 
-#define CV_StsUnmatchedFormats       -205 /* formats of input/output arrays differ */
+#define CV_StsUnmatchedFormats       -205 
 
-#define CV_StsBadFlag                -206 /* flag is wrong or not supported */  
+#define CV_StsBadFlag                -206 
 
-#define CV_StsBadPoint               -207 /* bad CvPoint */ 
+#define CV_StsBadPoint               -207 
 
-#define CV_StsBadMask                -208 /* bad format of mask (neither 8uC1 nor 8sC1)*/
+#define CV_StsBadMask                -208 
 
-#define CV_StsUnmatchedSizes         -209 /* sizes of input/output structures do not match */
+#define CV_StsUnmatchedSizes         -209 
 
-#define CV_StsUnsupportedFormat      -210 /* the data format/type is not supported by the function*/
+#define CV_StsUnsupportedFormat      -210 
 
-#define CV_StsOutOfRange             -211 /* some of parameters are out of range */
+#define CV_StsOutOfRange             -211 
 
-#define CV_StsParseError             -212 /* invalid syntax/structure of the parsed file */
+#define CV_StsParseError             -212 
 
-#define CV_StsNotImplemented         -213 /* the requested function/feature is not implemented */
+#define CV_StsNotImplemented         -213 
 
-#define CV_StsBadMemBlock            -214 /* an allocated block has been corrupted */
+#define CV_StsBadMemBlock            -214 
 
 #define CV_BLUR_NO_SCALE 0
 
@@ -848,19 +848,19 @@
 
 #define CV_DIST_MASK_PRECISE 0
 
-#define CV_THRESH_BINARY      0  /* value = value > threshold ? max_value : 0       */
+#define CV_THRESH_BINARY      0  
 
-#define CV_THRESH_BINARY_INV  1  /* value = value > threshold ? 0 : max_value       */
+#define CV_THRESH_BINARY_INV  1  
 
-#define CV_THRESH_TRUNC       2  /* value = value > threshold ? threshold : value   */
+#define CV_THRESH_TRUNC       2  
 
-#define CV_THRESH_TOZERO      3  /* value = value > threshold ? value : 0           */
+#define CV_THRESH_TOZERO      3  
 
-#define CV_THRESH_TOZERO_INV  4  /* value = value > threshold ? 0 : value           */
+#define CV_THRESH_TOZERO_INV  4  
 
 #define CV_THRESH_MASK        7
 
-#define CV_THRESH_OTSU        8  /* use Otsu algorithm to choose the optimal threshold value;
+#define CV_THRESH_OTSU        8  
 
 #define CV_ADAPTIVE_THRESH_MEAN_C  0
 
@@ -932,21 +932,21 @@
 
 #define CV_SUBDIV2D_VIRTUAL_POINT_FLAG (1 << 30)
 
-#define CV_DIST_USER    -1  /* User defined distance */
+#define CV_DIST_USER    -1  
 
-#define CV_DIST_L1      1   /* distance = |x1-x2| + |y1-y2| */
+#define CV_DIST_L1      1   
 
-#define CV_DIST_L2      2   /* the simple euclidean distance */
+#define CV_DIST_L2      2   
 
-#define CV_DIST_C       3   /* distance = max(|x1-x2|,|y1-y2|) */
+#define CV_DIST_C       3   
 
-#define CV_DIST_L12     4   /* L1-L2 metric: distance = 2(sqrt(1+x*x/2) - 1)) */
+#define CV_DIST_L12     4   
 
-#define CV_DIST_FAIR    5   /* distance = c^2(|x|/c-log(1+|x|/c)), c = 1.3998 */
+#define CV_DIST_FAIR    5   
 
-#define CV_DIST_WELSCH  6   /* distance = c^2/2(1-exp(-(x/c)^2)), c = 2.9846 */
+#define CV_DIST_WELSCH  6   
 
-#define CV_DIST_HUBER   7   /* distance = |x|<c ? x^2/2 : c(|x|-c/2), c=1.345 */
+#define CV_DIST_HUBER   7   
 
 #define CV_HAAR_MAGIC_VAL    0x42500000
 
