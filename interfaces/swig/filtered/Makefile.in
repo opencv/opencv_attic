@@ -231,6 +231,9 @@ AM_CPPFLAGS = \
   -DCV_NO_BACKWARD_COMPATIBILITY
 
 EXTRA_DIST = cv.h constants.h
+distcleancheck_listfiles = \
+  find -type f -exec sh -c 'test -f $(scrdir)/{} || echo {}'
+
 
 # SWIG ###############################################################################
 
@@ -252,9 +255,9 @@ $(srcdir)/Makefile.in:  $(srcdir)/Makefile.am  $(am__configure_deps)
 	      exit 1;; \
 	  esac; \
 	done; \
-	echo ' cd $(top_srcdir) && $(AUTOMAKE) --foreign  interfaces/swig/filtered/Makefile'; \
+	echo ' cd $(top_srcdir) && $(AUTOMAKE) --gnu  interfaces/swig/filtered/Makefile'; \
 	cd $(top_srcdir) && \
-	  $(AUTOMAKE) --foreign  interfaces/swig/filtered/Makefile
+	  $(AUTOMAKE) --gnu  interfaces/swig/filtered/Makefile
 .PRECIOUS: Makefile
 Makefile: $(srcdir)/Makefile.in $(top_builddir)/config.status
 	@case '$?' in \

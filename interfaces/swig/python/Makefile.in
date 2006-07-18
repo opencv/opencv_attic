@@ -46,8 +46,8 @@ build_triplet = @build@
 host_triplet = @host@
 target_triplet = @target@
 subdir = interfaces/swig/python
-DIST_COMMON = $(am__pkgpython_PYTHON_DIST) $(srcdir)/Makefile.am \
-	$(srcdir)/Makefile.in
+DIST_COMMON = $(am__pkgpython_PYTHON_DIST) $(noinst_PYTHON) \
+	$(srcdir)/Makefile.am $(srcdir)/Makefile.in
 ACLOCAL_M4 = $(top_srcdir)/aclocal.m4
 am__aclocal_m4_deps = $(top_srcdir)/autotools/aclocal/az_python.m4 \
 	$(top_srcdir)/autotools/aclocal/pkg.m4 \
@@ -279,7 +279,10 @@ AM_CPPFLAGS = \
   $(CV_INCLUDES)                     \
   -DCV_NO_BACKWARD_COMPATIBILITY
 
-EXTRA_DIST = setup-for-win.py
+noinst_PYTHON = setup-for-win.py
+distcleancheck_listfiles = \
+  find -type f -exec sh -c 'test -f $(scrdir)/{} || echo {}'
+
 
 # Conditional targets #######################################################
 @BUILD_PYTHON_WRAPPERS_TRUE@pkgpython_LTLIBRARIES = _cv.la _highgui.la
@@ -323,9 +326,9 @@ $(srcdir)/Makefile.in:  $(srcdir)/Makefile.am  $(am__configure_deps)
 	      exit 1;; \
 	  esac; \
 	done; \
-	echo ' cd $(top_srcdir) && $(AUTOMAKE) --foreign  interfaces/swig/python/Makefile'; \
+	echo ' cd $(top_srcdir) && $(AUTOMAKE) --gnu  interfaces/swig/python/Makefile'; \
 	cd $(top_srcdir) && \
-	  $(AUTOMAKE) --foreign  interfaces/swig/python/Makefile
+	  $(AUTOMAKE) --gnu  interfaces/swig/python/Makefile
 .PRECIOUS: Makefile
 Makefile: $(srcdir)/Makefile.in $(top_builddir)/config.status
 	@case '$?' in \

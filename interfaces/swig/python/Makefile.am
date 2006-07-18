@@ -13,7 +13,10 @@ AM_CPPFLAGS = \
   $(CV_INCLUDES)                     \
   -DCV_NO_BACKWARD_COMPATIBILITY
 
-EXTRA_DIST = setup-for-win.py
+noinst_PYTHON = setup-for-win.py
+
+distcleancheck_listfiles = \
+  find -type f -exec sh -c 'test -f $(scrdir)/{} || echo {}'
 
 # Conditional targets #######################################################
 
