@@ -128,7 +128,7 @@ static CvArr * PyObject_to_CvArr(PyObject * obj, bool * freearg){
     CvPoint2D32f *ptr;
     if( SWIG_ConvertPtr($input, (void**)&ptr, $descriptor(CvPoint *), 0) == -1) {
         if(PyObject_AsFloatArray($input, (float *) &val, 2)==-1){
-            SWIG_exception (SWIG_TypeError, "could not convert to CvPoint");
+            SWIG_exception (SWIG_TypeError, "could not convert to CvPoint2D32f");
             return NULL;
         }
     }
