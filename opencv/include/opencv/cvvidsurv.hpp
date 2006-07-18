@@ -93,7 +93,7 @@ public: /* constructor and destructor */
         m_Wnd = 0;
         AddParam("DebugWnd",&m_Wnd);
     }
-    ~CvVSModule()
+    virtual ~CvVSModule()
     {
         CvDefParam* p = m_pParamList;
         for(;p;)
