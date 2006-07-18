@@ -1273,10 +1273,10 @@ static int icvGrabFrameCAM_V4L(CvCaptureCAM_V4L* capture) {
      capture->mmaps[capture->bufferIndex].height = capture->captureWindow.height;
      capture->mmaps[capture->bufferIndex].format = capture->imageProperties.palette;
 
-     if (ioctl(capture->deviceHandle, VIDIOCMCAPTURE, &capture->mmaps[capture->bufferIndex]) == -1) {
-        fprintf( stderr, "HIGHGUI ERROR: V4L: Unable to start next buffer cycle. %s\n", strerror(errno));
-        return(0);
-
+     if (ioctl (capture->deviceHandle, VIDIOCMCAPTURE,
+		&capture->mmaps[capture->bufferIndex]) == -1) {
+	 /* capture is on the way, so just exit */
+	 return 1;
      }
 
      if (capture->bufferIndex == capture->memoryBuffer.frames) {
