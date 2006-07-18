@@ -190,10 +190,8 @@ if __name__ == '__main__':
                 new_points.append (the_point)
                 
                 # draw the current point
-                print dir (the_point)
-                print cv.cvPointFrom32f (the_point)
                 cv.cvCircle (image,
-                             cv.cvPointFrom32f (the_point),
+                             [the_point.x, the_point.y],
                              3, cv.cvScalar (0, 255, 0, 0),
                              -1, 8, 0)
 
