@@ -1631,6 +1631,7 @@ CV_IMPL void
 cvCalcPCA( const CvArr* data_arr, CvArr* avg_arr, CvArr* eigenvals, CvArr* eigenvects, int flags )
 {
     CvMat* tmp_avg = 0;
+    CvMat* tmp_avg_r = 0;
     CvMat* tmp_cov = 0;
     CvMat* tmp_evals = 0;
     CvMat* tmp_evects = 0;
@@ -1736,11 +1737,12 @@ cvCalcPCA( const CvArr* data_arr, CvArr* avg_arr, CvArr* eigenvals, CvArr* eigen
         int block_count = 0;
 
         CV_CALL( tmp_data = cvCreateMat( count, count, CV_64F ));
+        CV_CALL( tmp_avg_r = cvCreateMat( count, count, CV_64F ));
         CV_CALL( tmp_evects2 = cvCreateMat( count, count, CV_64F ));
 
         for( i = 0; i < len; i += block_count )
         {
-            CvMat data_part, tdata_part, part, dst_part;
+            CvMat data_part, tdata_part, part, dst_part, avg_part, tmp_avg_part;
             int gemm_flags;
 
             block_count = MIN( count, len - i );
@@ -1749,25 +1751,37 @@ cvCalcPCA( const CvArr* data_arr, CvArr* avg_arr, CvArr* eigenvals, CvArr* eigen
             {
                 cvGetRows( data, &data_part, i, i + block_count );
                 cvGetRows( tmp_data, &tdata_part, 0, block_count );
-                gemm_flags = CV_GEMM_A_T + CV_GEMM_B_T;
+                cvGetRows( tmp_avg, &avg_part, i, i + block_count );
+                cvGetRows( tmp_avg_r, &tmp_avg_part, 0, block_count );
+                gemm_flags = CV_GEMM_B_T;
             }
             else
             {
                 cvGetCols( data, &data_part, i, i + block_count );
                 cvGetCols( tmp_data, &tdata_part, 0, block_count );
-                gemm_flags = CV_GEMM_A_T;
+                cvGetCols( tmp_avg, &avg_part, i, i + block_count );
+                cvGetCols( tmp_avg_r, &tmp_avg_part, 0, block_count );
+                gemm_flags = 0;
             }
+
             cvGetCols( tmp_evects2, &part, 0, block_count );
             cvGetCols( evects, &dst_part, i, i + block_count );
 
             cvConvert( &data_part, &tdata_part );
+            cvRepeat( &avg_part, &tmp_avg_part );
+            cvSub( &tdata_part, &tmp_avg_part, &tdata_part );
             cvGEMM( tmp_evects, &tdata_part, 1, 0, 0, &part, gemm_flags );
             cvConvert( &part, &dst_part );
         }
-    }
 
-    if( tmp_evals->rows != out_count )
-        cvReshape( tmp_evals, tmp_evals, 1, out_count );
+        // normalize eigenvectors
+        for( i = 0; i < count; i++ )
+        {
+            CvMat ei;
+            cvGetRow( evects, &ei, i );
+            cvNormalize( evects, evects );
+        }
+    }
 
     if( tmp_evals->rows != evals->rows )
         cvReshape( tmp_evals, tmp_evals, 1, evals->rows );
@@ -1777,6 +1791,7 @@ cvCalcPCA( const CvArr* data_arr, CvArr* avg_arr, CvArr* eigenvals, CvArr* eigen
     __END__;
 
     cvReleaseMat( &tmp_avg );
+    cvReleaseMat( &tmp_avg_r );
     cvReleaseMat( &tmp_cov );
     cvReleaseMat( &tmp_evals );
     cvReleaseMat( &tmp_evects );
