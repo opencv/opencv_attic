@@ -147,6 +147,7 @@ icvCanny( const short *dx, int dxstep, const short *dy, int dystep,
         stack[stack_count] = (void*)(d);    \
         stack[stack_count+1] = (void*)(m);  \
         stack_count += 2;                   \
+        *(d)=255;                           \
     }
 
     #define POP2(d,m)                       \
@@ -202,27 +203,22 @@ icvCanny( const short *dx, int dxstep, const short *dy, int dystep,
 
         POP2( d, m );
     
-        if( *d == 0 )
-        {
-            *d = 255;
-
-            if( m[-1] > low && d[-1] == 0 )
-                PUSH2( d - 1, m - 1 );
-            if( m[1] > low && d[1] == 0 )
-                PUSH2( d + 1, m + 1 );
-            if( m[-magstep-1] > low && d[-dststep-1] == 0 )
-                PUSH2( d - dststep - 1, m - magstep - 1 );
-            if( m[-magstep] > low && d[-dststep] == 0 )
-                PUSH2( d - dststep, m - magstep );
-            if( m[-magstep+1] > low && d[-dststep+1] == 0 )
-                PUSH2( d - dststep + 1, m - magstep + 1 );
-            if( m[magstep-1] > low && d[dststep-1] == 0 )
-                PUSH2( d + dststep - 1, m + magstep - 1 );
-            if( m[magstep] > low && d[dststep] == 0 )
-                PUSH2( d + dststep, m + magstep );
-            if( m[magstep+1] > low && d[dststep+1] == 0 )
-                PUSH2( d + dststep + 1, m + magstep + 1 );
-        }
+        if( m[-1] > low && d[-1] == 0 )
+            PUSH2( d - 1, m - 1 );
+        if( m[1] > low && d[1] == 0 )
+            PUSH2( d + 1, m + 1 );
+        if( m[-magstep-1] > low && d[-dststep-1] == 0 )
+            PUSH2( d - dststep - 1, m - magstep - 1 );
+        if( m[-magstep] > low && d[-dststep] == 0 )
+            PUSH2( d - dststep, m - magstep );
+        if( m[-magstep+1] > low && d[-dststep+1] == 0 )
+            PUSH2( d - dststep + 1, m - magstep + 1 );
+        if( m[magstep-1] > low && d[dststep-1] == 0 )
+            PUSH2( d + dststep - 1, m + magstep - 1 );
+        if( m[magstep] > low && d[dststep] == 0 )
+            PUSH2( d + dststep, m + magstep );
+        if( m[magstep+1] > low && d[dststep+1] == 0 )
+            PUSH2( d + dststep + 1, m + magstep + 1 );
     }
     #undef PUSH2
     #undef POP2
