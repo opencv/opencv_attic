@@ -87508,6 +87508,10 @@ SWIGEXPORT void SWIG_init(void) {
   SWIG_Python_SetConstant(d, "CV_HAAR_MAGIC_VAL",SWIG_From_int(static_cast<int >(0x42500000)));
   SWIG_Python_SetConstant(d, "CV_TYPE_NAME_HAAR",SWIG_FromCharPtr("opencv-haar-classifier"));
   SWIG_Python_SetConstant(d, "CV_HAAR_FEATURE_MAX",SWIG_From_int(static_cast<int >(3)));
+  SWIG_Python_SetConstant(d, "CV_MAJOR_VERSION",SWIG_From_int(static_cast<int >(0)));
+  SWIG_Python_SetConstant(d, "CV_MINOR_VERSION",SWIG_From_int(static_cast<int >(9)));
+  SWIG_Python_SetConstant(d, "CV_SUBMINOR_VERSION",SWIG_From_int(static_cast<int >(7)));
+  SWIG_Python_SetConstant(d, "CV_VERSION",SWIG_FromCharPtr("0.9.7"));
   PyDict_SetItemString(d,(char*)"cvar", SWIG_globals());
   SWIG_addvarlink(SWIG_globals(),(char*)"CvModule_first",CvModule_first_get, CvModule_first_set);
   SWIG_addvarlink(SWIG_globals(),(char*)"CvModule_last",CvModule_last_get, CvModule_last_set);
