@@ -69,3 +69,8 @@
 %include "exception.i"
 
 %include "sizeof.i"
+
+/* assign type conversion precedence */
+%typemap(typecheck) CvPoint = SWIGTYPE;
+%typemap(typecheck) CvScalar = SWIGTYPE;
+%typemap(typecheck) CvPoint2D32f = SWIGTYPE;
