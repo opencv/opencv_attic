@@ -57,3 +57,47 @@
 %extend CvHistogram    { ~CvHistogram    () { CvHistogram    * dummy = self; cvReleaseHist               (& dummy); } }
 %extend CvHaarClassifierCascade { ~CvHaarClassifierCascade () { CvHaarClassifierCascade * dummy = self; cvReleaseHaarClassifierCascade  (& dummy); } }
 %extend CvPOSITObject  { ~CvPOSITObject  () { CvPOSITObject  * dummy = self; cvReleasePOSITObject        (& dummy); } }
+
+// string operators for some OpenCV types
+
+%extend CvScalar
+{
+	const char * __str__(){
+		static char str[256];
+		snprintf(str, 256, "[%f, %f, %f, %f]", self->val[0], self->val[1], self->val[2], self->val[3]);
+		return str;
+	}
+	const char * __repr__(){
+		static char str[256];
+		snprintf(str, 256, "cvScalar(%f, %f, %f, %f)", self->val[0], self->val[1], self->val[2], self->val[3]);
+		return str;
+	}
+};
+
+%extend CvPoint2D32f
+{
+	const char * __str__(){
+		static char str[64];
+		snprintf(str, 64, "[%f %f]", self->x, self->y);
+		return str;
+	}
+	const char * __repr__(){
+		static char str[64];
+		snprintf(str, 64, "cvPoint2D32f(%f,%f)", self->x, self->y);
+		return str;
+	}
+};
+
+%extend CvPoint
+{
+	const char * __str__(){
+		static char str[64];
+		snprintf(str, 64, "[%d %d]", self->x, self->y);
+		return str;
+	}
+	const char * __repr__(){
+		static char str[64];
+		snprintf(str, 64, "cvPoint(%d,%d)", self->x, self->y);
+		return str;
+	}
+};
