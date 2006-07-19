@@ -62,11 +62,9 @@
 %}
 
 // Accessors for the CvMat and IplImage data structure are defined here
-%include "./cvarr.i"
+// %include "./cvarr.i"
 
 %include "./imagedata.i"
-
-%include "./cvmacros.i"
 
 // We integrate OpenCV error handling into the Python exception mechanism
 %include "./error.h"
@@ -75,6 +73,8 @@
 // include some wrappers to manipulate CvSeq types
 %include "./pycvseq.h"
 
+// aliases from #defines
+%include "./cvaliases.i"
 
 %pythoncode 
 %{

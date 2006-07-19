@@ -1,5 +1,7 @@
 #define CV_AUTOSTEP  0x7fffffff
 
+#define cvGetSubArr cvGetSubRect
+
 #define CV_MAX_ARR 10
 
 #define CV_NO_DEPTH_CHECK     1
@@ -7,6 +9,14 @@
 #define CV_NO_CN_CHECK        2
 
 #define CV_NO_SIZE_CHECK      4
+
+#define cvZero  cvSetZero
+
+#define cvCvtScale cvConvertScale
+
+#define cvScale  cvConvertScale
+
+#define cvCvtScaleAbs  cvConvertScaleAbs
 
 #define CV_CMP_EQ   0
 
@@ -24,6 +34,8 @@
 
 #define  CV_CHECK_QUIET    2
 
+#define cvCheckArray cvCheckArr
+
 #define CV_RAND_UNI      0
 
 #define CV_RAND_NORMAL   1
@@ -33,6 +45,14 @@
 #define CV_GEMM_B_T 2
 
 #define CV_GEMM_C_T 4
+
+#define cvMatMulAddEx cvGEMM
+
+#define cvMatMulAddS cvTransform
+
+#define cvT cvTranspose
+
+#define cvMirror cvFlip
 
 #define CV_SVD_MODIFY_A   1
 
@@ -45,6 +65,8 @@
 #define CV_SVD 1
 
 #define CV_SVD_SYM 2
+
+#define cvInv cvInvert
 
 #define CV_COVAR_SCRAMBLED 0
 
@@ -63,6 +85,8 @@
 #define CV_PCA_DATA_AS_COL 1
 
 #define CV_PCA_USE_AVG 2
+
+#define cvMahalonobis  cvMahalanobis
 
 #define CV_C            1
 
@@ -112,9 +136,15 @@
 
 #define CV_DXT_MUL_CONJ 8 
 
+#define cvFFT cvDFT
+
 #define CV_FRONT 1
 
 #define CV_BACK 0
+
+#define cvGraphFindEdge cvFindGraphEdge
+
+#define cvGraphFindEdgeByPtr cvFindGraphEdgeByPtr
 
 #define  CV_GRAPH_VERTEX        1
 
@@ -145,6 +175,16 @@
 #define CV_FILLED -1
 
 #define CV_AA 16
+
+#define cvDrawRect cvRectangle
+
+#define cvDrawLine cvLine
+
+#define cvDrawCircle cvCircle
+
+#define cvDrawEllipse cvEllipse
+
+#define cvDrawPolyLine cvPolyLine
 
 #define CV_FONT_HERSHEY_SIMPLEX         0
 

@@ -49,6 +49,9 @@
 
 
 %{
+#include "cxtypes.h"
+#include "cxcore.h"
+#include "cvtypes.h"
 #include "cv.h"
 %}
 
@@ -57,6 +60,9 @@
 #define __attribute__(arg)
 #define __inline  inline
 #define __const   const
+
+// SWIG needs this to be parsed before cv.h
+%include "./cvmacros.i"
 
 // A couple of typemaps helps wrapping OpenCV functions in a sensible way
 %include "./memory.i"
@@ -68,3 +74,4 @@
 %include "../filtered/cv.h"
 
 %include "./extensions.i"
+%include "./cvarr_operators.i"

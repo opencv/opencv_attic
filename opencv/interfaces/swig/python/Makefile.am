@@ -40,7 +40,7 @@ endif
 if UPDATE_SWIG_WRAPPERS
 
 # this rule creates the Python wrapper sources for cxcore and cv
-_cv.cpp: cv.i cvmacros.i imagedata.i cvarr.i 					\
+_cv.cpp: cv.i imagedata.i cvarr.i cvaliases.i                   \
          nointpb.i pytypemaps.i                                 \
          error.cpp error.h                                      \
          pyhelpers.h pyhelpers.cpp                              \
@@ -51,22 +51,27 @@ _cv.cpp: cv.i cvmacros.i imagedata.i cvarr.i 					\
          $(top_srcdir)/interfaces/swig/general/extensions.i     \
          $(top_srcdir)/interfaces/swig/general/doublepointers.i \
          $(top_srcdir)/interfaces/swig/general/sizeof.i         \
+         $(top_srcdir)/interfaces/swig/general/cvmacros.i       \
          ../filtered/cv.h            \
          ../filtered/constants.h     \
          Makefile
 	$(SWIG) $(SWIG_PYTHON_OPT) $(CV_INCLUDES) -o $@ $<
 
 # this rule creates the Python wrapper sources for highgui
-_highgui.cpp: highgui.i nointpb.i pytypemaps.i                           \
-              $(top_srcdir)/interfaces/swig/general/highgui.i            \
-	      $(top_srcdir)/interfaces/swig/general/typemaps.i           \
-              $(top_srcdir)/interfaces/swig/general/memory.i             \
-	      $(top_srcdir)/otherlibs/highgui/highgui.h                  \
+_highgui.cpp: highgui.i nointpb.i pytypemaps.i                  \
+              $(top_srcdir)/interfaces/swig/general/highgui.i   \
+	      $(top_srcdir)/interfaces/swig/general/typemaps.i      \
+              $(top_srcdir)/interfaces/swig/general/memory.i    \
+	      $(top_srcdir)/otherlibs/highgui/highgui.h             \
               Makefile
 	$(SWIG) $(SWIG_PYTHON_OPT) $(CV_INCLUDES) -DSKIP_INCLUDES -o $@ $<
-	
-cvmacros.i: $(top_srcdir)/cxcore/include/cxtypes.h Makefile
-	$(PYTHON) $(top_srcdir)/utils/extract_macros.py $(top_srcdir)/cxcore/include/cxtypes.h   > $@
+
+CV_HEADER_FILES = \
+		   $(top_srcdir)/cxcore/include/cxtypes.h  $(top_srcdir)/cxcore/include/cxcore.h  \
+		  $(top_srcdir)/cv/include/cvtypes.h $(top_srcdir)/cv/include/cv.h          
+
+cvaliases.i: $(CV_HEADER_FILES) Makefile
+	$(PYTHON) $(top_srcdir)/utils/extract_aliases.py $(CV_HEADER_FILES) > $@
 
 endif
 

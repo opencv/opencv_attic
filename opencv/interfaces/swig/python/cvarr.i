@@ -40,7 +40,7 @@
 //M*/
 
 // 2006-02-17  Roman Stanchak <rstancha@cse.wustl.edu>
-
+// 2006-07-19  Moved most operators to general/cvarr_operators.i for use with other languages
 
 /*M//////////////////////////////////////////////////////////////////////////////////////////
 // Macros for extending CvMat and IplImage -- primarily for operator overloading 
@@ -120,38 +120,7 @@
 					  cvCreateImage(cvGetSize(self), 8, 1));
 %enddef
 
-
-/*M//////////////////////////////////////////////////////////////////////////////////////////
-// Actual Operator Declarations
-//////////////////////////////////////////////////////////////////////////////////////////M*/
-
-// Arithmetic operators 
-%wrap_cvArith(__add__, cvAdd);
-%wrap_cvArith(__sub__, cvSub);
-%wrap_cvArith(__radd__, cvAdd);
-%wrap_cvArith(__div__, cvDiv);
-
-// matrix multiply for CvMat
-%wrap_cvGeneric_CvArr(CvMat, CvArr*, __mul__, CvMat *, cvMatMul(self, arg, retarg), 
-				      cvCreateMat(self->rows, self->cols, self->type));
-
-// dot multiply for IplImage
-%wrap_cvGeneric_CvArr(IplImage, CvArr*, __mul__, IplImage *, cvMul(self, arg, retarg), 
-					  cvCreateImage(cvGetSize(self), self->depth, self->nChannels));
-
-
-
-// special case for reverse operations
-%wrap_cvArr_binaryop(__rsub__, CvArr *, cvSub(arg, self, retarg));
-%wrap_cvArr_binaryop(__rdiv__, CvArr *, cvDiv(arg, self, retarg));
-%wrap_cvArr_binaryop(__rmul__, CvArr *, cvMatMul(arg, self, retarg));
-
-%wrap_cvArithS(__add__, cvAddS);
-%wrap_cvArithS(__sub__, cvSubS);
-%wrap_cvArithS(__radd__, cvAddS);
-%wrap_cvArithS(__rsub__, cvSubRS);
-
-// special case for MulS and DivS
+// special case for cvScale, /, * 
 %define %wrap_cvScale(pyfunc, scale)
 %wrap_cvGeneric_CvArr(CvMat, CvArr *, pyfunc, double,
 		cvScale(self, retarg, scale),
@@ -161,36 +130,28 @@
 		cvCreateImage(cvGetSize(self), self->depth, self->nChannels));
 %enddef
 
-%wrap_cvScale(__mul__, arg);
+/*M//////////////////////////////////////////////////////////////////////////////////////////
+// Actual Operator Declarations
+//////////////////////////////////////////////////////////////////////////////////////////M*/
+
+// Arithmetic operators 
+%wrap_cvArith(__radd__, cvAdd);
+
+// special case for reverse operations
+%wrap_cvArr_binaryop(__rsub__, CvArr *, cvSub(arg, self, retarg));
+%wrap_cvArr_binaryop(__rdiv__, CvArr *, cvDiv(arg, self, retarg));
+%wrap_cvArr_binaryop(__rmul__, CvArr *, cvMatMul(arg, self, retarg));
+
+%wrap_cvArithS(__radd__, cvAddS);
+%wrap_cvArithS(__rsub__, cvSubRS);
+
+
 %wrap_cvScale(__rmul__, arg);
-%wrap_cvScale(__div__, 1.0/arg);
 %wrap_cvScale(__rdiv__, 1.0/arg);
 
-//  Logical Operators
-%wrap_cvLogic(__or__, cvOr)
-%wrap_cvLogic(__and__, cvAnd)
-%wrap_cvLogic(__xor__, cvXor)
-
-%wrap_cvLogicS(__or__, cvOrS)
-%wrap_cvLogicS(__and__, cvAndS)
-%wrap_cvLogicS(__xor__, cvXorS)
 %wrap_cvLogicS(__ror__, cvOrS)
 %wrap_cvLogicS(__rand__, cvAndS)
 %wrap_cvLogicS(__rxor__, cvXorS)
-
-%wrap_cvCmp(__eq__, CV_CMP_EQ);
-%wrap_cvCmp(__gt__, CV_CMP_GT);
-%wrap_cvCmp(__ge__, CV_CMP_GE);
-%wrap_cvCmp(__lt__, CV_CMP_LT);
-%wrap_cvCmp(__le__, CV_CMP_LE);
-%wrap_cvCmp(__ne__, CV_CMP_NE);
-
-%wrap_cvCmpS(__eq__, CV_CMP_EQ);
-%wrap_cvCmpS(__gt__, CV_CMP_GT);
-%wrap_cvCmpS(__ge__, CV_CMP_GE);
-%wrap_cvCmpS(__lt__, CV_CMP_LT);
-%wrap_cvCmpS(__le__, CV_CMP_LE);
-%wrap_cvCmpS(__ne__, CV_CMP_NE);
 
 %wrap_cvCmpS(__req__, CV_CMP_EQ);
 %wrap_cvCmpS(__rgt__, CV_CMP_GT);
@@ -232,39 +193,6 @@
 // __int__( self )
 // __long__( self )
 // __float__( self )
-
-// Incremental
-/*
-__iadd__(  self, other)
-__isub__(  self, other)
-__imul__(  self, other)
-__idiv__(  self, other)
-__itruediv__(  self, other)
-__ifloordiv__(  self, other)
-__imod__(  self, other)
-__ipow__(  self, other[, modulo])
-__ilshift__(  self, other)
-__irshift__(  self, other)
-__iand__(  self, other)
-__ixor__(  self, other)
-__ior__(  self, other)
-
-// Reverse operations -- scalar only
-__radd__(  self, other)
-__rsub__(  self, other)
-__rmul__(  self, other)
-__rdiv__(  self, other)
-__rtruediv__(  self, other)
-__rfloordiv__(  self, other)
-__rmod__(  self, other)
-__rdivmod__(  self, other)
-__rpow__(  self, other)
-__rlshift__(  self, other)
-__rrshift__(  self, other)
-__rand__(  self, other)
-__rxor__(  self, other)
-__ror__(  self, other)
-*/
 
 /*M//////////////////////////////////////////////////////////////////////////////////////////
 // Slice access and assignment for CvArr types
@@ -357,3 +285,4 @@ __ror__(  self, other)
 		return cvGetImage(&mat, im);
 	}
 }
+

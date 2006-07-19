@@ -13,8 +13,7 @@ AM_CPPFLAGS = \
   $(CV_INCLUDES)                     \
   -DCV_NO_BACKWARD_COMPATIBILITY
 
-SUBDIRS = filtered python
-EXTRA_DIST = general
+SUBDIRS = filtered general python
 
 # remove non-wanted files in the archive
 dist-hook:
