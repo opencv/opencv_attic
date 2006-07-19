@@ -20,6 +20,12 @@ EXTRA_DIST = THANKS TODO \
 pkgconfigdir = $(libdir)/pkgconfig
 pkgconfig_DATA = opencv.pc
 
+# The directory where the include files will be installed
+libcvincludedir = $(includedir)/opencv
+
+# Which header files to install
+libcvinclude_HEADERS = cvver.h
+
 # Rule to build tar-gzipped distribution package
 $(PACKAGE)-$(VERSION).tar.gz: dist
 

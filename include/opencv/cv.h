@@ -57,6 +57,7 @@
 
 #include "cxcore.h"
 #include "cvtypes.h"
+#include "cvver.h"
 
 #ifdef __cplusplus
 extern "C" {
