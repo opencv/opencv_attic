@@ -1,7 +1,5 @@
 #! /usr/bin/env python
 
-print "OpenCV Python wrapper test"
-
 import sys
 
 # import the necessary things for OpenCV
@@ -53,6 +51,13 @@ def hsv2rgb (hue):
 # so, here is the main part of the program
 
 if __name__ == '__main__':
+
+    # a small welcome
+    print "OpenCV Python wrapper test"
+    print "OpenCV version: %s (%d, %d, %d)" % (cv.CV_VERSION,
+                                               cv.CV_MAJOR_VERSION,
+                                               cv.CV_MINOR_VERSION,
+                                               cv.CV_SUBMINOR_VERSION)
 
     # first, create the necessary windows
     highgui.cvNamedWindow ('Camera', highgui.CV_WINDOW_AUTOSIZE)

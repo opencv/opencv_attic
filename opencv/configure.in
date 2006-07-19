@@ -23,7 +23,7 @@ AC_CONFIG_AUX_DIR([autotools])
 AC_CONFIG_MACRO_DIR([autotools/aclocal])
 
 # put CVS revision of this configure.in into the resulting configure script
-AC_REVISION($Revision: 1.24 $)
+AC_REVISION($Revision: 1.25 $)
 
 # Detect the canonical host and target build environment
 AC_CANONICAL_HOST
@@ -708,6 +708,7 @@ AC_SUBST(DEBUG)
 AC_CONFIG_FILES([Makefile
 opencv.pc
 opencv.spec
+cvver.h
 docs/Makefile
 data/Makefile
 cxcore/Makefile
