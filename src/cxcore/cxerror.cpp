@@ -356,7 +356,7 @@ CV_IMPL void cvError( int code, const char* func_name,
                                                     file_name, line, context->userdata );
             if( terminate )
             {
-#ifndef WIN32
+#if !defined WIN32 && !defined WIN64
                 assert(0); // for post-mortem analysis with GDB
 #endif
                 exit(-abs(terminate));
