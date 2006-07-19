@@ -291,6 +291,10 @@ distcleancheck_listfiles = \
 @BUILD_PYTHON_WRAPPERS_TRUE@    highgui.py 	   \
 @BUILD_PYTHON_WRAPPERS_TRUE@    matlab_syntax.py
 
+@UPDATE_SWIG_WRAPPERS_TRUE@CV_HEADER_FILES = \
+@UPDATE_SWIG_WRAPPERS_TRUE@		   $(top_srcdir)/cxcore/include/cxtypes.h  $(top_srcdir)/cxcore/include/cxcore.h  \
+@UPDATE_SWIG_WRAPPERS_TRUE@		  $(top_srcdir)/cv/include/cvtypes.h $(top_srcdir)/cv/include/cv.h          
+
 
 # Python #####################################################################
 _cv_la_SOURCES = _cv.cpp error.cpp error.h pyhelpers.cpp pyhelpers.h \
@@ -668,7 +672,7 @@ uninstall-am: uninstall-info-am uninstall-pkgpythonLTLIBRARIES \
 # the following rules keep wrappers up to date, if SWIG is present
 
 # this rule creates the Python wrapper sources for cxcore and cv
-@UPDATE_SWIG_WRAPPERS_TRUE@_cv.cpp: cv.i cvmacros.i imagedata.i cvarr.i 					\
+@UPDATE_SWIG_WRAPPERS_TRUE@_cv.cpp: cv.i imagedata.i cvarr.i cvaliases.i                   \
 @UPDATE_SWIG_WRAPPERS_TRUE@         nointpb.i pytypemaps.i                                 \
 @UPDATE_SWIG_WRAPPERS_TRUE@         error.cpp error.h                                      \
 @UPDATE_SWIG_WRAPPERS_TRUE@         pyhelpers.h pyhelpers.cpp                              \
@@ -679,22 +683,23 @@ uninstall-am: uninstall-info-am uninstall-pkgpythonLTLIBRARIES \
 @UPDATE_SWIG_WRAPPERS_TRUE@         $(top_srcdir)/interfaces/swig/general/extensions.i     \
 @UPDATE_SWIG_WRAPPERS_TRUE@         $(top_srcdir)/interfaces/swig/general/doublepointers.i \
 @UPDATE_SWIG_WRAPPERS_TRUE@         $(top_srcdir)/interfaces/swig/general/sizeof.i         \
+@UPDATE_SWIG_WRAPPERS_TRUE@         $(top_srcdir)/interfaces/swig/general/cvmacros.i       \
 @UPDATE_SWIG_WRAPPERS_TRUE@         ../filtered/cv.h            \
 @UPDATE_SWIG_WRAPPERS_TRUE@         ../filtered/constants.h     \
 @UPDATE_SWIG_WRAPPERS_TRUE@         Makefile
 @UPDATE_SWIG_WRAPPERS_TRUE@	$(SWIG) $(SWIG_PYTHON_OPT) $(CV_INCLUDES) -o $@ $<
 
 # this rule creates the Python wrapper sources for highgui
-@UPDATE_SWIG_WRAPPERS_TRUE@_highgui.cpp: highgui.i nointpb.i pytypemaps.i                           \
-@UPDATE_SWIG_WRAPPERS_TRUE@              $(top_srcdir)/interfaces/swig/general/highgui.i            \
-@UPDATE_SWIG_WRAPPERS_TRUE@	      $(top_srcdir)/interfaces/swig/general/typemaps.i           \
-@UPDATE_SWIG_WRAPPERS_TRUE@              $(top_srcdir)/interfaces/swig/general/memory.i             \
-@UPDATE_SWIG_WRAPPERS_TRUE@	      $(top_srcdir)/otherlibs/highgui/highgui.h                  \
+@UPDATE_SWIG_WRAPPERS_TRUE@_highgui.cpp: highgui.i nointpb.i pytypemaps.i                  \
+@UPDATE_SWIG_WRAPPERS_TRUE@              $(top_srcdir)/interfaces/swig/general/highgui.i   \
+@UPDATE_SWIG_WRAPPERS_TRUE@	      $(top_srcdir)/interfaces/swig/general/typemaps.i      \
+@UPDATE_SWIG_WRAPPERS_TRUE@              $(top_srcdir)/interfaces/swig/general/memory.i    \
+@UPDATE_SWIG_WRAPPERS_TRUE@	      $(top_srcdir)/otherlibs/highgui/highgui.h             \
 @UPDATE_SWIG_WRAPPERS_TRUE@              Makefile
 @UPDATE_SWIG_WRAPPERS_TRUE@	$(SWIG) $(SWIG_PYTHON_OPT) $(CV_INCLUDES) -DSKIP_INCLUDES -o $@ $<
 
-@UPDATE_SWIG_WRAPPERS_TRUE@cvmacros.i: $(top_srcdir)/cxcore/include/cxtypes.h Makefile
-@UPDATE_SWIG_WRAPPERS_TRUE@	$(PYTHON) $(top_srcdir)/utils/extract_macros.py $(top_srcdir)/cxcore/include/cxtypes.h   > $@
+@UPDATE_SWIG_WRAPPERS_TRUE@cvaliases.i: $(CV_HEADER_FILES) Makefile
+@UPDATE_SWIG_WRAPPERS_TRUE@	$(PYTHON) $(top_srcdir)/utils/extract_aliases.py $(CV_HEADER_FILES) > $@
 #_highgui_la_DEPENDENCIES = $(top_srcdir)/otherlibs/highgui/highgui.h
 # Tell versions [3.59,3.63) of GNU make to not export all variables.
 # Otherwise a system limit (for SysV at least) may be exceeded.

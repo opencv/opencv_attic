@@ -276,6 +276,8 @@ static CvArr * PyObject_to_CvArr(PyObject * obj, bool * freearg){
     }
 }
 
+
+
 /**
  * the input argument of cvPolyLine "CvPoint** pts" is converted from 
  * a "list of list" (aka. an array) of CvPoint().
@@ -720,4 +722,3 @@ static CvArr * PyObject_to_CvArr(PyObject * obj, bool * freearg){
 	$1 = cvCreateMat(3,3,CV_32F);
 	$2 = cvCreateMat(4,1,CV_32F);
 }
-
