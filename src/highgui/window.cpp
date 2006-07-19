@@ -59,7 +59,7 @@
 // applications or libraries.
 
 
-#define CV_NO_GTK_ERROR(funcname) \
+#define CV_NO_GUI_ERROR(funcname) \
     cvError( CV_StsError, funcname, \
     "The function is not implemented. " \
     "Rebuild the library with Windows, GTK+ 2.x or Carbon support", \
@@ -68,91 +68,91 @@
 
 CV_IMPL int cvNamedWindow( const char*, int )
 {
-    CV_NO_GTK_ERROR("cvNamedWindow");
+    CV_NO_GUI_ERROR("cvNamedWindow");
     return -1;
 }    
 
 CV_IMPL void cvDestroyWindow( const char* )
 {
-    CV_NO_GTK_ERROR( "cvDestroyWindow" );
+    CV_NO_GUI_ERROR( "cvDestroyWindow" );
 }
 
 CV_IMPL void
 cvDestroyAllWindows( void )
 {
-    CV_NO_GTK_ERROR( "cvDestroyAllWindows" );
+    CV_NO_GUI_ERROR( "cvDestroyAllWindows" );
 }
 
 CV_IMPL void
 cvShowImage( const char*, const CvArr* )
 {
-    CV_NO_GTK_ERROR( "cvShowImage" );
+    CV_NO_GUI_ERROR( "cvShowImage" );
 }
 
 CV_IMPL void cvResizeWindow( const char*, int, int )
 {
-    CV_NO_GTK_ERROR( "cvResizeWindow" );
+    CV_NO_GUI_ERROR( "cvResizeWindow" );
 }
 
 CV_IMPL void cvMoveWindow( const char*, int, int )
 {
-    CV_NO_GTK_ERROR( "cvMoveWindow" );
+    CV_NO_GUI_ERROR( "cvMoveWindow" );
 }
 
 CV_IMPL int
 cvCreateTrackbar( const char*, const char*,
                   int*, int, CvTrackbarCallback )
 {
-    CV_NO_GTK_ERROR( "cvCreateTrackbar" );
+    CV_NO_GUI_ERROR( "cvCreateTrackbar" );
     return -1;
 }
 
 CV_IMPL void
 cvSetMouseCallback( const char*, CvMouseCallback, void* )
 {
-    CV_NO_GTK_ERROR( "cvSetMouseCallback" );
+    CV_NO_GUI_ERROR( "cvSetMouseCallback" );
 }
 
 CV_IMPL int cvGetTrackbarPos( const char*, const char* )
 {
-    CV_NO_GTK_ERROR( "cvGetTrackbarPos" );
+    CV_NO_GUI_ERROR( "cvGetTrackbarPos" );
     return -1;
 }
 
 CV_IMPL void cvSetTrackbarPos( const char*, const char*, int )
 {
-    CV_NO_GTK_ERROR( "cvSetTrackbarPos" );
+    CV_NO_GUI_ERROR( "cvSetTrackbarPos" );
 }
 
 CV_IMPL void* cvGetWindowHandle( const char* )
 {
-    CV_NO_GTK_ERROR( "cvGetWindowHandle" );
+    CV_NO_GUI_ERROR( "cvGetWindowHandle" );
     return 0;
 }
     
 CV_IMPL const char* cvGetWindowName( void* )
 {
-    CV_NO_GTK_ERROR( "cvGetWindowName" );
+    CV_NO_GUI_ERROR( "cvGetWindowName" );
     return 0;
 }
 
 CV_IMPL int cvWaitKey( int )
 {
-    CV_NO_GTK_ERROR( "cvWaitKey" );
+    CV_NO_GUI_ERROR( "cvWaitKey" );
     return -1;
 }
 
 CV_IMPL int cvInitSystem( int argc, char** argv )
 {
 
-    CV_NO_GTK_ERROR( "cvInitSystem" );
+    CV_NO_GUI_ERROR( "cvInitSystem" );
     return -1;
 }
 
 CV_IMPL int cvStartWindowThread()
 {
 
-    CV_NO_GTK_ERROR( "cvStartWindowThread" );
+    CV_NO_GUI_ERROR( "cvStartWindowThread" );
     return -1;
 }
 
