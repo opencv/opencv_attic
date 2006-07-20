@@ -212,6 +212,14 @@
 
 #define CV_ErrModeSilent   2   
 
+#define CV_MAJOR_VERSION    0
+
+#define CV_MINOR_VERSION    9
+
+#define CV_SUBMINOR_VERSION 9
+
+#define CV_VERSION          "0.9.9"
+
 #define CV_PI   3.1415926535897932384626433832795
 
 #define CV_LOG2 0.69314718055994530941723212145818
@@ -993,12 +1001,4 @@
 #define CV_TYPE_NAME_HAAR    "opencv-haar-classifier"
 
 #define CV_HAAR_FEATURE_MAX  3
-
-#define CV_MAJOR_VERSION    0
-
-#define CV_MINOR_VERSION    9
-
-#define CV_SUBMINOR_VERSION 7
-
-#define CV_VERSION          "0.9.7"
 
