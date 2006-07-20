@@ -57,7 +57,6 @@
 
 #include "cxcore.h"
 #include "cvtypes.h"
-#include "cvver.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -268,8 +267,8 @@ CVAPI(void)  cvWarpAffine( const CvArr* src, CvArr* dst, const CvMat* map_matrix
 
 /* Computes affine transform matrix for mapping src[i] to dst[i] (i=0,1,2) */
 CVAPI(CvMat*) cvGetAffineTransform( const CvPoint2D32f * src, 
-		                            const CvPoint2D32f * dst, 
-								    CvMat * map_matrix );
+                                    const CvPoint2D32f * dst, 
+                                    CvMat * map_matrix );
 
 /* Computes rotation_matrix matrix */
 CVAPI(CvMat*)  cv2DRotationMatrix( CvPoint2D32f center, double angle,
