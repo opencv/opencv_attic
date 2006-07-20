@@ -136,8 +136,8 @@ void detect_and_draw( IplImage* img )
 {
     double scale = 1.3;
     IplImage* gray = cvCreateImage( cvSize(img->width,img->height), 8, 1 );
-    IplImage* small_img = cvCreateImage( cvSize( (int)(img->width/scale),
-						 (int)(img->height/scale)),
+    IplImage* small_img = cvCreateImage( cvSize( cvRound (img->width/scale),
+						 cvRound (img->height/scale)),
 					 8, 1 );
     CvPoint pt1, pt2;
     int i;
@@ -158,10 +158,10 @@ void detect_and_draw( IplImage* img )
         for( i = 0; i < (faces ? faces->total : 0); i++ )
         {
             CvRect* r = (CvRect*)cvGetSeqElem( faces, i );
-            pt1.x = (int)(r->x*scale);
-            pt2.x = (int)((r->x+r->width)*scale);
-            pt1.y = (int)(r->y*scale);
-            pt2.y = (int)((r->y+r->height)*scale);
+            pt1.x = cvRound (r->x*scale);
+            pt2.x = cvRound ((r->x+r->width)*scale);
+            pt1.y = cvRound (r->y*scale);
+            pt2.y = cvRound ((r->y+r->height)*scale);
             cvRectangle( img, pt1, pt2, CV_RGB(255,0,0), 3, 8, 0 );
         }
     }
