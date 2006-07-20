@@ -53,7 +53,7 @@ static CvPluginFuncInfo cv_ipp_tab[] =
     {0, 0, 0, 0, 0}
 };
 
-static CvModuleInfo cv_info = { 0, "cv", "rc (0.9.9)", cv_ipp_tab };
+static CvModuleInfo cv_info = { 0, "cv", "rc (" CV_VERSION ")", cv_ipp_tab };
 CvModule cv_module( &cv_info );
 
 /* End of file. */
