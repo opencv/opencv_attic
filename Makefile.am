@@ -24,7 +24,7 @@ pkgconfig_DATA = opencv.pc
 libcvincludedir = $(includedir)/opencv
 
 # Which header files to install
-libcvinclude_HEADERS = cvver.h
+libcvinclude_HEADERS =
 
 # Rule to build tar-gzipped distribution package
 $(PACKAGE)-$(VERSION).tar.gz: dist
