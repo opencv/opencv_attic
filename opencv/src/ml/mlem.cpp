@@ -72,7 +72,6 @@
  */
 typedef struct CvEMStatModel
 {
-    CV_STAT_MODEL_FIELDS();
     int dims;
     int nclusters;
     int cov_mat_type;
