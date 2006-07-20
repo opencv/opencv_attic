@@ -33,9 +33,9 @@ MOSTLYCLEANFILES = headers_generated
 # this rule creates a single SWIG parseable header from cv.h and cxcore.h, etc.
 cv.h:
 	$(top_srcdir)/cv/include/cv.h \
-	$(top_builddir)/cvver.h \
 	$(top_srcdir)/cv/include/cvtypes.h \
 	$(top_srcdir)/cxcore/include/cxcore.h \
+	$(top_srcdir)/cxcore/include/cvver.h \
 	$(top_srcdir)/cxcore/include/cxtypes.h \
 	$(top_srcdir)/cxcore/include/cxerror.h Makefile
 	$(CPP) -x c++ -I$(top_builddir) $(AM_CPPFLAGS) $(CPPFLAGS) -DSKIP_INCLUDES -o $@ $(top_srcdir)/cv/include/cv.h
@@ -45,10 +45,10 @@ constants.h: $(top_srcdir)/cv/include/cv.h $(top_srcdir)/cv/include/cvtypes.h \
              $(top_srcdir)/cxcore/include/cxcore.h $(top_srcdir)/cxcore/include/cxtypes.h \
              $(top_srcdir)/cxcore/include/cxerror.h Makefile
 	$(PYTHON) $(top_srcdir)/utils/extract_constants.py $(top_srcdir)/cxcore/include/cxcore.h   > $@
+	$(PYTHON) $(top_srcdir)/utils/extract_constants.py $(top_srcdir)/cxcore/include/cvver.h   >> $@
 	$(PYTHON) $(top_srcdir)/utils/extract_constants.py $(top_srcdir)/cxcore/include/cxtypes.h >> $@
 	$(PYTHON) $(top_srcdir)/utils/extract_constants.py $(top_srcdir)/cxcore/include/cxerror.h >> $@
 	$(PYTHON) $(top_srcdir)/utils/extract_constants.py $(top_srcdir)/cv/include/cv.h          >> $@
 	$(PYTHON) $(top_srcdir)/utils/extract_constants.py $(top_srcdir)/cv/include/cvtypes.h     >> $@
-	$(PYTHON) $(top_srcdir)/utils/extract_constants.py $(top_builddir)/cvver.h                >> $@
 
 endif
