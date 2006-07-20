@@ -312,11 +312,6 @@ cvPrepareTrainData( const char* /*funcname*/,
                     CvMat** out_var_idx,
                     CvMat** out_sample_idx=0 );
 
-/* helper function for allocating CvStatModel */
-CvStatModel*
-cvCreateStatModel( int flags, int header_size, CvStatModelRelease release,
-                   CvStatModelPredict predict, CvStatModelUpdate update CV_DEFAULT(0));
-
 void
 cvSortSamplesByClasses( const float** samples, const CvMat* classes, 
                         int* class_ranges, const uchar** mask CV_DEFAULT(0) );

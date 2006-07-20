@@ -41,15 +41,58 @@
 
 #include "_ml.h"
 
+
+/*
+   CvEMStatModel
+ * dims         - samples' dimension.
+ * nclusters    - number of clusters to cluster samples to.
+ * cov_mat_type - type of covariation matrice (look CvEMStatModelParams).
+ * comp_idx     - vector that contains features' indices to process.
+ * means        - calculated by the EM algorithm set of gaussians' means.
+ * log_weight_div_det - auxilary vector that k-th component is equal to
+                        (-2)*ln(weights_k/det(Sigma_k)^0.5),
+                        where <weights_k> is the weight,
+                        <Sigma_k> is the covariation matrice of k-th cluster.
+ * inv_eigen_values   - set of 1*dims matrices, <inv_eigen_values>[k] contains
+                        inversed eigen values of covariation matrice of the k-th cluster.
+                        In the case of <cov_mat_type> == CV_EM_COV_MAT_DIAGONAL,
+                        inv_eigen_values[k] = Sigma_k^(-1).
+ * covs_rotate_mats   - used only if cov_mat_type == CV_EM_COV_MAT_GENERAL, in all the
+                        other cases it is NULL. <covs_rotate_mats>[k] is the orthogonal
+                        matrice, obtained by the SVD-decomposition of Sigma_k.
+   Both <inv_eigen_values> and <covs_rotate_mats> fields are used for representation of
+   covariation matrices and simplifying EM calculations.
+   For fixed k denote
+   u = covs_rotate_mats[k],
+   v = inv_eigen_values[k],
+   w = v^(-1);
+   if <cov_mat_type> == CV_EM_COV_MAT_GENERAL, then Sigma_k = u w u',
+   else                                             Sigma_k = w.
+   Symbol ' means transposition.
+ */
+typedef struct CvEMStatModel
+{
+    CV_STAT_MODEL_FIELDS();
+    int dims;
+    int nclusters;
+    int cov_mat_type;
+    CvMat* comp_idx;
+    CvMat* log_weight_div_det;
+    CvMat* means;
+    CvMat** inv_eigen_values;
+    CvMat** cov_rotate_mats;
+} CvEMStatModel;
+
+
 /****************************************************************************************\
 *                             Functions' declarations                                    *
 \****************************************************************************************/
 
 /*  Evaluates given vector <sample> using one m-step of EM iteration algorithm. */
-float icvEMPredict( const CvStatModel* model, const CvMat* sample, CvMat* probs );
+//float icvEMPredict( const CvStatModel* model, const CvMat* sample, CvMat* probs );
 
 /* Releases all storages used by cvEMStatModel. */
-void icvEMRelease( CvStatModel** p_model );
+//void icvEMRelease( CvStatModel** p_model );
 
 /* Calculates initial parameters of Gauss Mixture (means, cov. matrices and weights) and
    cluster labels by executing cvKMeans2. <samples64> is an auxilary variable. */
@@ -235,8 +278,8 @@ cvEM(const CvMat*  _samples,
      CvMat*  _probs,
      CvMat*  _means,
      CvMat*  _weights,
-     CvMat** _covs,
-     CvEMStatModel** em_model)
+     CvMat** _covs/*,
+     CvEMStatModel** em_model*/ )
 {
     const float** out_train_data = 0;
     CvMat* samples64             = 0;
@@ -250,10 +293,10 @@ cvEM(const CvMat*  _samples,
     int nclusters                = 0;
     int i;
 
-    if( !_labels && !_probs && !_means && !_covs && !_weights && !em_model )
+    if( !_labels && !_probs && !_means && !_covs && !_weights/* && !em_model*/ )
         return;
-    if( em_model )
-        *em_model = 0;
+    /*if( em_model )
+        *em_model = 0;*/
 
     CV_FUNCNAME("cvEM");
     __BEGIN__;
@@ -404,7 +447,7 @@ cvEM(const CvMat*  _samples,
             CV_CALL(icvFindClusterLabels( transposed_probs, 0, 1, labels ));
     }
     // Saving obtained results
-    if( em_model )
+    /*if( em_model )
     {
         CvEMStatModel* em = 0;
         size_t size;
@@ -443,7 +486,7 @@ cvEM(const CvMat*  _samples,
                 CV_CALL(cvConvert( cov_rotate_mats[i], em->cov_rotate_mats[i] ));
             }
         }
-    }
+    }*/
 
     CV_CALL(cvWritebackLabels( labels, _labels, means, _means, transposed_probs, _probs,
         sample_idx, nsamples_all, comp_idx, dims_all ));
@@ -471,7 +514,7 @@ cvEM(const CvMat*  _samples,
     cvReleaseMat(&transposed_probs);
     cvReleaseMat(&weights);
     cvReleaseMat(&log_weight_div_det);
-    if( !em_model || (cvGetErrStatus() < 0) )
+    //if( !em_model || (cvGetErrStatus() < 0) )
         cvReleaseMat( &comp_idx );
     if( covs )
     {
@@ -491,11 +534,12 @@ cvEM(const CvMat*  _samples,
             cvReleaseMat( &covs_eigen_values[i] );
         cvFree( (void**) &covs_eigen_values );
     }
-    if( cvGetErrStatus() < 0 )
-        cvReleaseStatModel( (CvStatModel**)&em_model );
+    /*if( cvGetErrStatus() < 0 )
+        cvReleaseStatModel( (CvStatModel**)&em_model );*/
 } // End of cvEM
 
 /****************************************************************************************/
+#if 0
 float
 icvEMPredict( const CvStatModel* model, const CvMat* _sample, CvMat* _probs )
 {
@@ -664,6 +708,7 @@ icvEMRelease( CvStatModel** p_model )
     
     __END__;
 } // End of icvEMRelease
+#endif
 
 /****************************************************************************************/
 /* log_weight_div_det[k] = -2*log(weights_k) + log(det(Sigma_k)))
@@ -1310,6 +1355,7 @@ void icvKMeans( const CvArr* samples_arr, int cluster_count,
     cvReleaseMat( &counters );
 } // End of icvKMeans
 
+#if 0
 /****************************************************************************************/
 static int icvIsEMModel( const void* ptr )
 {
@@ -1470,5 +1516,7 @@ static int icvRegisterEMStatModelType()
 } // End of icvRegisterEMStatModelType
 
 static int em = icvRegisterEMStatModelType();
+
+#endif
 
 // End of file
