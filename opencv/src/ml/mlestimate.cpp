@@ -40,6 +40,8 @@
 
 #include "_ml.h"
 
+#if 0
+
 ML_IMPL int
 icvCmpIntegers (const void* a, const void* b) {return *(const int*)a - *(const int*)b;}
 
@@ -720,5 +722,7 @@ cvCrossValidation (const CvMat*            trueData,
 
     return result;
 } // End of cvCrossValidation
+
+#endif
 
 /* End of file */
