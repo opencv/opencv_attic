@@ -40,6 +40,7 @@
 
 #include "_ml.h"
 
+#if 0
 /****************************************************************************************\
 *                         Auxilary functions declarations                                *
 \****************************************************************************************/
@@ -1668,5 +1669,7 @@ static int icvRegisterCNNStatModelType()
 } // End of icvRegisterCNNStatModelType
 
 static int cnn = icvRegisterCNNStatModelType();
+
+#endif
 
 // End of file
