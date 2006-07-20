@@ -68,6 +68,7 @@
 
 #include "cxtypes.h"
 #include "cxerror.h"
+#include "cvver.h"
 
 #ifdef __cplusplus
 extern "C" {
