@@ -81,75 +81,7 @@ struct CvVectors
     } data;
 };
 
-
-#define CV_STAT_MODEL_PARAM_FIELDS() \
-    int flags
-
-typedef struct CvStatModelParams
-{
-    CV_STAT_MODEL_PARAM_FIELDS();
-} CvStatModelParams;
-
-
-struct CvStatModel;
-typedef struct CvStatModelParams CvClassifierTrainParams;
-
-typedef float (CV_CDECL *CvStatModelPredict)
-    ( const struct CvStatModel* model, const CvMat* sample, CvMat* probs /* =0 */ );
-
-typedef void (CV_CDECL *CvStatModelUpdate)
-    ( struct CvStatModel* model, const CvMat* features, int sample_t_flag,
-      const CvMat* responses, const CvStatModelParams* params,
-      const CvMat* comp_idx /* =0 */,
-      const CvMat* sample_idx /* =0 */,
-      const CvMat* type_mask /* =0 */,
-      const CvMat* missing_value_mask /* =0 */ );
-
-typedef void (CV_CDECL *CvStatModelRelease)( struct CvStatModel** model );
-
-typedef void* (CV_CDECL *CvStatModelGetObject)
-    ( struct CvStatModel* model, const void* obj, int objType,
-      int objIndex /* =-1 */);
-
-typedef double (CV_CDECL *CvStatModelGetParamValue)
-    ( struct CvStatModel* model, const void* obj, int paramType,
-      int paramIndex /* =-1 */);
-
-typedef void (CV_CDECL *CvStatModelSetParamValue)
-    ( struct CvStatModel* model, const void* obj, int paramType,
-      int paramIndex /* =-1 */,
-      double paramValue /* =0 */);
-
-typedef void (CV_CDECL *CvStatModelGetParamMat)
-    ( struct CvStatModel* model, const void* obj, int paramType,
-      int paramIndex, /* =-1 */
-      CvMat* paramMat /* =NULL */);
-
-typedef void (CV_CDECL *CvStatModelSetParamMat)
-    ( struct CvStatModel* model, const void* obj, int paramType,
-      int paramIndex, /* =-1 */
-      CvMat* paramMat /* =NULL */);
-
-#define CV_STAT_MODEL_FIELDS()                  \
-    int   flags;                                \
-    int   header_size;                          \
-    CvStatModelRelease          release;        \
-    CvStatModelPredict          predict;        \
-    CvStatModelUpdate           update;         \
-    CvStatModelGetObject        get_object;     \
-    CvStatModelGetParamValue    get_value;      \
-    CvStatModelSetParamValue    set_value;      \
-    CvStatModelGetParamMat      get_mat;        \
-    CvStatModelSetParamMat      set_mat
-
-
-typedef struct CvStatModel
-{
-    CV_STAT_MODEL_FIELDS();
-} CvStatModel;
-
-typedef CvStatModel CvClassifier; /* for compatibility */
-
+#if 0
 /* A structure, representing the lattice range of statmodel parameters.
    It is used for optimizing statmodel parameters by cross-validation method.
    The lattice is logarithmic, so <step> must be greater then 1. */
@@ -176,23 +108,12 @@ CV_INLINE CvParamLattice cvDefaultParamLattice( void )
     CvParamLattice pl = {0,0,0};
     return pl;
 }
-
-/* RTTI */
-#define CV_STAT_MODEL_MAGIC_VAL 0x77440000
-#define CV_CLASSIFIER_MAGIC_VAL CV_STAT_MODEL_MAGIC_VAL
+#endif
 
 /* Variable type */
 #define CV_VAR_NUMERICAL    0
 #define CV_VAR_ORDERED      0
 #define CV_VAR_CATEGORICAL  1
-
-#define CV_IS_STAT_MODEL( model ) ((model)!=0 && \
-    (((CvStatModel*)(model))->flags & CV_MAGIC_MASK) == CV_STAT_MODEL_MAGIC_VAL)
-
-#define CV_IS_CLASSIFIER  CV_IS_STAT_MODEL
-
-#define CV_IS_CERTAIN_STAT_MODEL( model, model_id ) ((model) != 0 && \
-    ((CvStatModel*)(model))->flags == ((model_id) | CV_STAT_MODEL_MAGIC_VAL))
 
 /* flag values for classifier consturctor <flags> parameter */
 #define CV_SVM_MAGIC_VAL            0x0000FF01
@@ -203,15 +124,12 @@ CV_INLINE CvParamLattice cvDefaultParamLattice( void )
 
 #define CV_NBAYES_MAGIC_VAL         0x0000FF03
 #define CV_TYPE_NAME_ML_NBAYES      "opencv-ml-bayesian"
-#define CV_IS_NBAYES(model)         CV_IS_CERTAIN_STAT_MODEL(model,CV_NBAYES_MAGIC_VAL)
 
 #define CV_EM_MAGIC_VAL             0x0000FF04
 #define CV_TYPE_NAME_ML_EM          "opencv-ml-em"
-#define CV_IS_EM(model)             CV_IS_CERTAIN_STAT_MODEL(model,CV_EM_MAGIC_VAL)
 
 #define CV_BOOST_TREE_MAGIC_VAL     0x0000FF05
 #define CV_TYPE_NAME_ML_BOOSTING    "opencv-ml-boost-tree"
-#define CV_IS_BOOST_TREE(model)     CV_IS_CERTAIN_STAT_MODEL(model,CV_BOOST_TREE_MAGIC_VAL)
 
 #define CV_TREE_MAGIC_VAL           0x0000FF06
 #define CV_TYPE_NAME_ML_TREE        "opencv-ml-tree"
@@ -221,104 +139,74 @@ CV_INLINE CvParamLattice cvDefaultParamLattice( void )
 
 #define CV_CNN_MAGIC_VAL            0x0000FF08
 #define CV_TYPE_NAME_ML_CNN         "opencv-ml-cnn"
-#define CV_IS_CNN(model)            CV_IS_CERTAIN_STAT_MODEL(model,CV_CNN_MAGIC_VAL)
 
 #define CV_RTREES_MAGIC_VAL         0x0000FF09
 #define CV_TYPE_NAME_ML_RTREES      "opencv-ml-random-trees"
-#define CV_IS_RTREES(model)         CV_IS_CERTAIN_STAT_MODEL(model,CV_RTREES_MAGIC_VAL)
 
 #define CV_CROSSVAL_MAGIC_VAL       0x0000FF10
 #define CV_TYPE_NAME_ML_CROSSVAL    "opencv-ml-cross-validation"
-#define CV_IS_CROSSVAL(model)       CV_IS_CERTAIN_STAT_MODEL(model,CV_CROSSVAL_MAGIC_VAL)
+
+
+class CV_EXPORTS CvStatModel
+{
+public:
+    virtual ~CvStatModel();
+
+    virtual void clear();
+    
+    virtual void save( const char* filename, const char* name=0 );
+    virtual void load( const char* filename, const char* name=0 );
+    
+    virtual void write( CvFileStorage* storage, const char* name );
+    virtual void read( CvFileStorage* storage, CvFileNode* node );
+};
+
 
 /****************************************************************************************\
-*                           Generic Functions for Statistical Models                     *
+*                                 Normal Bayes Classifier                                *
 \****************************************************************************************/
 
-/* releases stat model */
-CV_INLINE void cvReleaseStatModel( CvStatModel** stat_model )
+class CV_EXPORTS CvNormalBayesClassifier : public CvStatModel
 {
-    if( stat_model && CV_IS_STAT_MODEL(*stat_model) && (*stat_model)->release )
-        (*stat_model)->release( stat_model );
-    else
-        cvRelease( (void**)stat_model );
-}
+public:
+    CvNormalBayesClassifier();
+    virtual ~CvNormalBayesClassifier();
 
-/* loads stat model from file */
-CV_INLINE CvStatModel* cvLoadStatModel( const char* filename,
-                                        const char* name CV_DEFAULT(NULL),
-                                        const char** real_name CV_DEFAULT(NULL) )
-{
-    return  (CvStatModel*)cvLoad( filename, 0, name, real_name );
-}
+    CvNormalBayesClassifier( const CvMat* _train_data, const CvMat* _responses,
+        const CvMat* _var_idx=0, const CvMat* _sample_idx=0 );
+        
+    virtual bool train( const CvMat* _train_data, const CvMat* _responses,
+        const CvMat* _var_idx = 0, const CvMat* _sample_idx=0, bool update=false );
 
-/* saves stat model to file */
-CV_INLINE void cvSaveStatModel( const char* filename, const CvStatModel* stat_model,
-                                const char* name CV_DEFAULT(NULL),
-                                const char* comment CV_DEFAULT(NULL),
-                                CvAttrList attributes CV_DEFAULT(cvAttrList()))
-{
-    cvSave( filename, stat_model, name, comment, attributes );
-}
+    virtual float predict( const CvMat* _samples, CvMat* results=0 ) const;
+    virtual void clear();
 
+    virtual void save( const char* filename, const char* name=0 );
+    virtual void load( const char* filename, const char* name=0 );
+    
+    virtual void write( CvFileStorage* storage, const char* name );
+    virtual void read( CvFileStorage* storage, CvFileNode* node );
 
-/* makes a prediction using a stat model */
-CV_INLINE float cvStatModelPredict( const CvStatModel* stat_model,
-                                    const CvMat* input, CvMat* probs CV_DEFAULT(NULL))
-{
-    if( CV_IS_STAT_MODEL(stat_model) && stat_model->predict )
-        return stat_model->predict( stat_model, input, probs );
-    else
-        cvError( CV_StsNotImplemented, "cvStatModelPredict",
-                 "The stat model does not have \"predict\" method", __FILE__, __LINE__ );
-    return 0;
-}
+protected:
+    int     var_count, var_all;
+    CvMat*  var_idx;
+    CvMat*  cls_labels;
+    CvMat** count;
+    CvMat** sum;
+    CvMat** productsum;
+    CvMat** avg;
+    CvMat** inv_eigen_values;
+    CvMat** cov_rotate_mats;
+    CvMat*  c;
+};
 
-/* makes a prediction at multiple points using a stat model */
-CVAPI(void) cvStatModelMultiPredict( const CvStatModel* stat_model,
-                                    const CvArr* predict_input, int flags,
-                                    CvMat* predict_output,
-                                    CvMat* probs CV_DEFAULT(NULL),
-                                    const CvMat* sample_idx CV_DEFAULT(NULL) );
-
-/****************************************************************************************\
-*                                  Naive Bayes classifier                                *
-\****************************************************************************************/
-
-#define CV_NB_CLASSIFIER_FIELDS()   \
-    int     dims;                   \
-    CvMat*  comp_idx;               \
-    CvMat*  cls_labels;             \
-    CvMat** count;                  \
-    CvMat** sum;                    \
-    CvMat** productsum;             \
-    CvMat** avg;                    \
-    CvMat** inv_eigen_values;       \
-    CvMat** cov_rotate_mats;        \
-    float*  c
-
-typedef struct CvNBClassifier
-{
-    CV_STAT_MODEL_FIELDS();
-    CV_NB_CLASSIFIER_FIELDS();
-} CvNBClassifier;
-
-CVAPI(CvStatModel*) cvCreateNBClassifier(
-    const CvMat* train_data,
-    int    tflag,
-    const CvMat* train_classes,
-    const CvStatModelParams* train_params CV_DEFAULT(0),
-    const CvMat* comp_idx CV_DEFAULT(0),
-    const CvMat* sample_idx CV_DEFAULT(0),
-    const CvMat* type_mask CV_DEFAULT(0),
-    const CvMat* missed_measurements_mask CV_DEFAULT(0));
 
 /****************************************************************************************\
 *                          K-Nearest Neighbour Classifier                                *
 \****************************************************************************************/
 
 // k Nearest Neighbors
-class CV_EXPORTS CvKNearest
+class CV_EXPORTS CvKNearest : public CvStatModel
 {
 public:
     
@@ -332,7 +220,7 @@ public:
                         const CvMat* _sample_idx=0, bool is_regression=false,
                         int _max_k=32, bool _update_base=false );
 
-    virtual float find_nearest( const CvMat* _samples, int k, CvMat* results,
+    virtual float find_nearest( const CvMat* _samples, int k, CvMat* results=0,
         const float** neighbors=0, CvMat* neighbor_responses=0, CvMat* dist=0 ) const;
 
     virtual void clear();
@@ -525,7 +413,7 @@ struct CvSVMDecisionFunc
 
 
 // SVM model
-class CV_EXPORTS CvSVM
+class CV_EXPORTS CvSVM : public CvStatModel
 {
 public:
     // SVM type
@@ -605,101 +493,90 @@ cvTrainSVM_CrossValidation( const CvMat* train_data, int tflag,
 *                                   Boosted trees models                                 *
 \****************************************************************************************/
 
-/* Boosting type */
-#define CV_BT_DISCRETE   0
-#define CV_BT_REAL       1
-#define CV_BT_LOGIT      2
-#define CV_BT_GENTLE     3
+#if 0
 
 /* Boosted trees training parameters */
-typedef struct CvBtClassifierTrainParams
+struct CV_EXPORTS CvBoostTrainParams
 {
-    CV_STAT_MODEL_PARAM_FIELDS();
     int boost_type;
-    int num_iter;
+    int weak_count;
     double infl_trim_rate;
-    int num_splits;
-}
-CvBtClassifierTrainParams;
+    int weak_tree_splits;
 
-typedef struct CvTreeBoostClassifier
+    CvBoostTrainParams();
+    CvBoostTrainParams( int boost_type, int weak_count,
+        double infl_trim_rate, int weak_tree_splits );
+};
+
+
+struct CV_EXPORTS CvBoostWeakTree
 {
-    CV_STAT_MODEL_FIELDS();
     /* number of internal tree nodes (splits) */
     int count;
 
     /* internal nodes (each is array of <count> elements) */
-    int* comp_idx;
+    int* var_idx;
     float* threshold;
     int* left;
     int* right;
 
     /* leaves (array of <count>+1 elements) */
     float* val;
-}
-CvTreeBoostClassifier;
+};
 
-typedef struct CvBtClassifier
+
+class CV_EXPORTS CvBoost : public CvStatModel
 {
-    CV_STAT_MODEL_FIELDS();
-    CvBtClassifierTrainParams params;    
+public:
+    // Type of return value in ::predict
+    enum { VALUE=0, INDEX=1 };
+
+    // Boosting type
+    enum { DISCRETE=0, REAL=1, LOGIT=2, GENTLE=3 };
+
+    CvBoost();
+    virtual ~CvBoost();
+
+    CvBoost( const CvMat* _train_data, int _tflag,
+             const CvMat* _responses, const CvMat* _var_idx=0,
+             const CvMat* _sample_idx=0, const CvMat* _var_type=0,
+             const CvMat* _missing_mask=0,
+             CvBoostTrainParams params=CvBoostTrainParams() );
+        
+    virtual bool train( const CvMat* _train_data, int _tflag,
+             const CvMat* _responses, const CvMat* _var_idx=0,
+             const CvMat* _sample_idx=0, const CvMat* _var_type=0,
+             const CvMat* _missing_mask=0,
+             CvBoostTrainParams params=CvBoostTrainParams(),
+             bool update=false );
+
+    virtual float predict( const CvMat* _sample,
+                           CvMat* weak_responses,
+                           CvSlice slice=CV_WHOLE_SEQ,
+                           int eval_type=VALUE) const;
+
+    virtual void prune( CvSlice slice );
+
+    virtual void clear();
+
+    virtual void save( const char* filename, const char* name=0 );
+    virtual void load( const char* filename, const char* name=0 );
+    
+    virtual void write( CvFileStorage* storage, const char* name );
+    virtual void read( CvFileStorage* storage, CvFileNode* node );
+
+    CvSeq* get_weak_predictors();
+
+protected:
+    CvBoostTrainParams params;    
     CvMat* class_labels;
     int total_features;
     CvSeq* weak; /* weak classifiers (CvTreeBoostClassifier) pointers */
-    CvMat* comp_idx;
+    CvMat* var_idx;
     void* ts;
-}
-CvBtClassifier;
+};
 
-CVAPI(CvStatModel*)
-cvCreateBtClassifier( CvMat* train_data,
-                      int flags,
-                      CvMat* responses,
-                      CvStatModelParams* train_params CV_DEFAULT(0),
-                      CvMat* comp_idx CV_DEFAULT(0),
-                      CvMat* sample_idx CV_DEFAULT(0),
-                      CvMat* type_mask CV_DEFAULT(0),
-                      CvMat* missval_mask CV_DEFAULT(0));
-
-
-/* updates the model by performing iterations */
-CVAPI(void)
-cvUpdateBtClassifier( CvBtClassifier* model,
-                      CvMat* train_data,
-                      int flags,
-                      CvMat* responses,
-                      CvStatModelParams* train_params CV_DEFAULT(0),
-                      CvMat* comp_idx CV_DEFAULT(0),
-                      CvMat* sample_idx CV_DEFAULT(0),
-                      CvMat* type_mask CV_DEFAULT(0),
-                      CvMat* missval_mask CV_DEFAULT(0));
-
-/* evaluation type */
-#define CV_BT_VALUE 0
-#define CV_BT_INDEX 1
-
-/* evaluates each weak classifier */
-CVAPI(float)
-cvEvalWeakClassifiers( const CvBtClassifier* bt, const CvMat* sample,
-                       CvMat* weak_vals, CvSlice slice CV_DEFAULT(CV_WHOLE_SEQ),
-                       int eval_type CV_DEFAULT(CV_BT_VALUE));
-
-/* removes weak classifiers from the model */
-CVAPI(void)
-cvPruneBtClassifier( CvBtClassifier* bt, CvSlice slice );
-
-/* read/write. iteration step */
-#define CV_BT_ITER_STEP         300
-/* read only. number of iterations */
-#define CV_BT_NUM_ITER          301
-/* read/write. 1 by number_of_samples 32fC1 matrix of weights */
-#define CV_BT_WEIGHTS           302
-
-/* read only. number of classes. If value is 0 then it is regression tree. */
-#define CV_MODEL_CLASS_NUM      2
-/* read only. Split rule defined in train parameters structure and used for tree creation. */
-#define CV_MODEL_FEATURE_NUM    5
-
+#endif
 
 /****************************************************************************************\
 *                              Expectation - Maximization                                *
@@ -736,73 +613,28 @@ cvPruneBtClassifier( CvBtClassifier* bt, CvSlice slice );
  k-means. If <means> != NULL, then k-means starts with the initial centers
  equal to <means>.
  */
-#define CV_EM_MODEL_PARAM_FIELDS()  \
-    int nclusters;                  \
-    int cov_mat_type;               \
-    int start_step;                 \
-    CvMat* probs;                   \
-    CvMat* weights;                 \
-    CvMat* means;                   \
-    CvMat** covs;                   \
-    CvTermCriteria term_crit
-
 typedef struct CvEMStatModelParams
 {
-    CV_STAT_MODEL_PARAM_FIELDS();
-    CV_EM_MODEL_PARAM_FIELDS();
-} CvEMStatModelParams;
-
-/*
-   CvEMStatModel
- * dims         - samples' dimension.
- * nclusters    - number of clusters to cluster samples to.
- * cov_mat_type - type of covariation matrice (look CvEMStatModelParams).
- * comp_idx     - vector that contains features' indices to process.
- * means        - calculated by the EM algorithm set of gaussians' means.
- * log_weight_div_det - auxilary vector that k-th component is equal to
-                        (-2)*ln(weights_k/det(Sigma_k)^0.5),
-                        where <weights_k> is the weight,
-                        <Sigma_k> is the covariation matrice of k-th cluster.
- * inv_eigen_values   - set of 1*dims matrices, <inv_eigen_values>[k] contains
-                        inversed eigen values of covariation matrice of the k-th cluster.
-                        In the case of <cov_mat_type> == CV_EM_COV_MAT_DIAGONAL,
-                        inv_eigen_values[k] = Sigma_k^(-1).
- * covs_rotate_mats   - used only if cov_mat_type == CV_EM_COV_MAT_GENERAL, in all the
-                        other cases it is NULL. <covs_rotate_mats>[k] is the orthogonal
-                        matrice, obtained by the SVD-decomposition of Sigma_k.
-   Both <inv_eigen_values> and <covs_rotate_mats> fields are used for representation of
-   covariation matrices and simplifying EM calculations.
-   For fixed k denote
-   u = covs_rotate_mats[k],
-   v = inv_eigen_values[k],
-   w = v^(-1);
-   if <cov_mat_type> == CV_EM_COV_MAT_GENERAL, then Sigma_k = u w u',
-   else                                             Sigma_k = w.
-   Symbol ' means transposition.
- */
-typedef struct CvEMStatModel
-{
-    CV_STAT_MODEL_FIELDS();
-    int dims;
     int nclusters;
     int cov_mat_type;
-    CvMat* comp_idx;
-    CvMat* log_weight_div_det;
+    int start_step;
+    CvMat* probs;
+    CvMat* weights;
     CvMat* means;
-    CvMat** inv_eigen_values;
-    CvMat** cov_rotate_mats;
-} CvEMStatModel;
+    CvMat** covs;
+    CvTermCriteria term_crit;
+} CvEMStatModelParams;
 
 CVAPI(void) cvEM( const CvMat* samples,
                   int tflag, CvMat* labels,
                   const CvEMStatModelParams* params,
-                  const CvMat*  comp_idx CV_DEFAULT(0),
+                  const CvMat*  var_idx CV_DEFAULT(0),
                   const CvMat*  sample_idx CV_DEFAULT(0),
                   CvMat*  probs CV_DEFAULT(0),
                   CvMat*  means CV_DEFAULT(0),
                   CvMat*  weights CV_DEFAULT(0),
-                  CvMat** covs CV_DEFAULT(0),
-                  CvEMStatModel** em_model CV_DEFAULT(0) );
+                  CvMat** covs CV_DEFAULT(0)/*,
+                  CvEMStatModel** em_model CV_DEFAULT(0)*/ );
 
 /****************************************************************************************\
 *                                      Decision Tree                                     *
@@ -835,22 +667,25 @@ struct CvDTreeSplit
 
 struct CvDTreeNode
 {
-    int sample_count;
-    int depth;
-    double value;
     int class_idx;
+    int Tn;
+    double value;
 
     CvDTreeNode* parent;
     CvDTreeNode* left;
     CvDTreeNode* right;
 
+    CvDTreeSplit* split;
+
+    int sample_count;
+    int depth;
     int* num_valid;
     int offset;
     int buf_idx;
     double maxlr;
 
     // global pruning data
-    int Tn, complexity;
+    int complexity;
     double alpha;
     double node_risk, tree_risk, tree_error;
 
@@ -859,7 +694,8 @@ struct CvDTreeNode
     double* cv_node_risk;
     double* cv_node_error;
 
-    CvDTreeSplit* split;
+    int get_num_valid(int vi) { return num_valid ? num_valid[vi] : sample_count; }
+    void set_num_valid(int vi, int n) { if( num_valid ) num_valid[vi] = n; }
 };
 
 
@@ -903,7 +739,7 @@ struct CV_EXPORTS CvDTreeTrainData
                       const CvMat* _sample_idx=0, const CvMat* _var_type=0,
                       const CvMat* _missing_mask=0,
                       CvDTreeParams _params=CvDTreeParams(),
-                      bool _shared=false );
+                      bool _shared=false, bool _add_weights=false );
     virtual ~CvDTreeTrainData();
 
     virtual void set_data( const CvMat* _train_data, int _tflag,
@@ -911,7 +747,7 @@ struct CV_EXPORTS CvDTreeTrainData
                           const CvMat* _sample_idx=0, const CvMat* _var_type=0,
                           const CvMat* _missing_mask=0,
                           CvDTreeParams _params=CvDTreeParams(),
-                          bool _shared=false );
+                          bool _shared=false, bool _add_weights=false );
 
     virtual void get_vectors( const CvMat* _subsample_idx,
          float* values, uchar* missing, float* responses, bool get_class_idx=false );
@@ -930,6 +766,7 @@ struct CV_EXPORTS CvDTreeTrainData
     virtual int* get_cat_var_data( CvDTreeNode* n, int vi );
     virtual CvPair32s32f* get_ord_var_data( CvDTreeNode* n, int vi );
     virtual int get_child_buf_idx( CvDTreeNode* n );
+    virtual float* get_weights( CvDTreeNode* n );
 
     ////////////////////////////////////
 
@@ -946,7 +783,7 @@ struct CV_EXPORTS CvDTreeTrainData
 
     int sample_count, var_all, var_count, max_c_count;
     int ord_var_count, cat_var_count;
-    bool have_cv_labels, have_priors;
+    bool have_cv_labels, have_priors, have_weights;
     bool is_classifier;
 
     int buf_count, buf_size;
@@ -983,7 +820,7 @@ struct CV_EXPORTS CvDTreeTrainData
 };
 
 
-class CV_EXPORTS CvDTree
+class CV_EXPORTS CvDTree : public CvStatModel
 {
 public:
     CvDTree();
@@ -1014,13 +851,14 @@ protected:
     virtual void try_split_node( CvDTreeNode* n );
     virtual void split_node_data( CvDTreeNode* n );
     virtual CvDTreeSplit* find_best_split( CvDTreeNode* n );
-    virtual CvDTreeSplit* find_split_ord_gini( CvDTreeNode* n, int vi );
-    virtual CvDTreeSplit* find_split_cat_gini( CvDTreeNode* n, int vi );
+    virtual CvDTreeSplit* find_split_ord_class( CvDTreeNode* n, int vi );
+    virtual CvDTreeSplit* find_split_cat_class( CvDTreeNode* n, int vi );
     virtual CvDTreeSplit* find_split_ord_reg( CvDTreeNode* n, int vi );
     virtual CvDTreeSplit* find_split_cat_reg( CvDTreeNode* n, int vi );
     virtual CvDTreeSplit* find_surrogate_split_ord( CvDTreeNode* n, int vi );
     virtual CvDTreeSplit* find_surrogate_split_cat( CvDTreeNode* n, int vi );
     virtual double calc_node_dir( CvDTreeNode* node );
+    virtual void complete_node_dir( CvDTreeNode* node );
     virtual void cluster_categories( const int* vectors, int vector_count,
         int var_count, int* sums, int k, int* cluster_labels );
 
@@ -1076,55 +914,40 @@ protected:
 };
 
 
-struct CV_EXPORTS CvRTParams
+struct CV_EXPORTS CvRTParams : public CvDTreeParams
 {
-    // Parameters for a tree
-    int   max_categories;
-    int   max_depth;
-    int   min_sample_count;
-    int   cv_folds;
-    bool  use_surrogates;
-    bool  use_1se_rule;
-    float regression_accuracy;
-    const float* priors;
-
     //Parameters for the forest
     bool calc_var_importance; // true <=> RF processes variable importance
     bool calc_proximities;    // true <=> RF processes proximities
     int nactive_vars;
     CvTermCriteria term_crit;
 
-    CvRTParams() : max_categories(10), max_depth(INT_MAX), min_sample_count(10),
-        cv_folds(10), use_surrogates(true), use_1se_rule(true),
-        regression_accuracy(0.01f), priors(0),
+    CvRTParams() : CvDTreeParams( 5, 10, 0, false, 10, 0, false, false, 0 ),
         calc_var_importance(false), calc_proximities(false), nactive_vars(0)
     {
-        term_crit.epsilon = 0.1;
-        term_crit.max_iter = 50;
-        term_crit.type = CV_TERMCRIT_ITER+CV_TERMCRIT_EPS;
+        term_crit = cvTermCriteria( CV_TERMCRIT_ITER+CV_TERMCRIT_EPS, 50, 0.1 );
     }
 
     CvRTParams( int _max_depth, int _min_sample_count,
                 float _regression_accuracy, bool _use_surrogates,
-                int _max_categories, int _cv_folds,
-                bool _use_1se_rule,  const float* _priors,
+                int _max_categories, const float* _priors,
                 bool _calc_var_importance, bool _calc_proximities,
                 int _nactive_vars, int max_num_of_trees_in_the_forest,
                 float forest_accuracy, int termcrit_type ) :
-        max_categories(_max_categories), max_depth(_max_depth),
-        min_sample_count(_min_sample_count), cv_folds(_cv_folds), 
-        use_surrogates(_use_surrogates), use_1se_rule(_use_1se_rule),
-        regression_accuracy(_regression_accuracy), priors(_priors),
-        calc_var_importance(_calc_var_importance), calc_proximities(_calc_proximities),
+        CvDTreeParams( _max_depth, _min_sample_count, _regression_accuracy,
+                       _use_surrogates, _max_categories, 0,
+                       false, false, _priors ),
+        calc_var_importance(_calc_var_importance),
+        calc_proximities(_calc_proximities),
         nactive_vars(_nactive_vars)
     {
-        term_crit.epsilon  = forest_accuracy;
-        term_crit.max_iter = max_num_of_trees_in_the_forest;
-        term_crit.type     = termcrit_type;
+        term_crit = cvTermCriteria(termcrit_type,
+            max_num_of_trees_in_the_forest, forest_accuracy);
     }
 };
 
-class CV_EXPORTS CvRTrees
+
+class CV_EXPORTS CvRTrees : public CvStatModel
 {
 public:
     CvRTrees();
@@ -1134,9 +957,10 @@ public:
                         const CvMat* _sample_idx=0, const CvMat* _var_type=0,
                         const CvMat* _missing_mask=0,
                         CvRTParams params=CvRTParams() );
-    virtual double predict( const CvMat* sample, CvMat* missing = 0 ) const;
+    virtual float predict( const CvMat* sample, CvMat* missing = 0 ) const;
+    virtual void clear();
 
-    virtual inline const CvMat* get_var_importance() const;
+    virtual const CvMat* get_var_importance();
     virtual float get_proximity( int i, int j ) const;
 
     virtual void save( const char* filename, const char* name=0 );
@@ -1144,12 +968,11 @@ public:
     virtual void load( const char* filename, const char* name=0 );
     virtual void read( CvFileStorage* fs, CvFileNode* node );
 
-    CvRNG rng;
-    CvMat* active_var_mask;
+    CvMat* get_active_var_mask();
+    CvRNG* get_rng();
 
 protected:
 
-    virtual void clear();
     bool grow_forest( CvDTreeTrainData* train_data, const CvTermCriteria term_crit );
 
     // array of the trees of the forest
@@ -1160,6 +983,9 @@ protected:
     CvMat* var_importance;
     CvMat* proximities;
     int nsamples;
+
+    CvRNG rng;
+    CvMat* active_var_mask;
 };
 
 /****************************************************************************************\
@@ -1188,7 +1014,7 @@ struct CV_EXPORTS CvANN_MLP_TrainParams
 };
 
 
-class CV_EXPORTS CvANN_MLP
+class CV_EXPORTS CvANN_MLP : public CvStatModel
 {
 public:
     CvANN_MLP();
@@ -1206,8 +1032,8 @@ public:
                        const CvMat* _sample_weights, const CvMat* _sample_idx=0,
                        CvANN_MLP_TrainParams _params = CvANN_MLP_TrainParams(),
                        int flags=0 );
-    virtual void predict( const CvMat* _inputs,
-                          CvMat* _outputs ) const;
+    virtual float predict( const CvMat* _inputs,
+                           CvMat* _outputs ) const;
 
     virtual void clear();
 
@@ -1262,7 +1088,7 @@ protected:
     CvRNG rng;
 };
 
-
+#if 0
 /****************************************************************************************\
 *                            Convolutional Neural Network                                *
 \****************************************************************************************/
@@ -1547,7 +1373,7 @@ cvCrossValidation( const CvMat*             trueData,
                          CvStatModel**      pCrValModel CV_DEFAULT(0),
                    const CvMat*             typeMask CV_DEFAULT(0),
                    const CvMat*             missedMeasurementMask CV_DEFAULT(0) );
-
+#endif
 
 /****************************************************************************************\
 *                           Auxilary functions declarations                              *
@@ -1565,36 +1391,6 @@ CVAPI(void) cvRandGaussMixture( CvMat* means[],
                                int clsnum,
                                CvMat* sample,
                                CvMat* sampClasses CV_DEFAULT(0) );
-
-
-/* functions to access to internal structure and parameters of stat model */
-CVAPI(void*) cvGetObject( CvStatModel* model, 
-                         void* object, 
-                         int objectType, 
-                         int index CV_DEFAULT(0));
-CVAPI(double) cvGetParamValue( CvStatModel* model, 
-                        void* object, 
-                        int paramType, 
-                        int index CV_DEFAULT(0));
-
-
-CVAPI(void) cvSetParamValue( CvStatModel* model, 
-                      void* object, 
-                      int paramType, 
-                      int index CV_DEFAULT(0),
-                      double value CV_DEFAULT(0));
-
-CVAPI(void) cvGetParamMat( CvStatModel* model, 
-                    void* object, 
-                    int paramType, 
-                    int index CV_DEFAULT(0),
-                    CvMat* mat CV_DEFAULT(0));
-
-CVAPI(void) cvSetParamMat( CvStatModel* model, 
-                    void* object, 
-                    int paramType, 
-                    int index CV_DEFAULT(0),
-                    CvMat* mat CV_DEFAULT(0));
 
 #define CV_TS_CONCENTRIC_SPHERES 0
 
