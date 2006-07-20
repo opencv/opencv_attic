@@ -42,12 +42,12 @@ host_triplet = @host@
 target_triplet = @target@
 DIST_COMMON = README $(am__configure_deps) $(libcvinclude_HEADERS) \
 	$(srcdir)/Makefile.am $(srcdir)/Makefile.in \
-	$(srcdir)/cvconfig.h.in $(srcdir)/cvver.h.in \
-	$(srcdir)/opencv.pc.in $(srcdir)/opencv.spec.in \
-	$(top_srcdir)/configure AUTHORS COPYING ChangeLog INSTALL NEWS \
-	THANKS TODO autotools/config.guess autotools/config.sub \
-	autotools/depcomp autotools/install-sh autotools/ltmain.sh \
-	autotools/missing autotools/mkinstalldirs autotools/py-compile
+	$(srcdir)/cvconfig.h.in $(srcdir)/opencv.pc.in \
+	$(srcdir)/opencv.spec.in $(top_srcdir)/configure AUTHORS \
+	COPYING ChangeLog INSTALL NEWS THANKS TODO \
+	autotools/config.guess autotools/config.sub autotools/depcomp \
+	autotools/install-sh autotools/ltmain.sh autotools/missing \
+	autotools/mkinstalldirs autotools/py-compile
 subdir = .
 ACLOCAL_M4 = $(top_srcdir)/aclocal.m4
 am__aclocal_m4_deps = $(top_srcdir)/autotools/aclocal/az_python.m4 \
@@ -61,7 +61,7 @@ am__CONFIG_DISTCLEAN_FILES = config.status config.cache config.log \
  configure.lineno configure.status.lineno
 mkinstalldirs = $(SHELL) $(top_srcdir)/autotools/mkinstalldirs
 CONFIG_HEADER = cvconfig.h
-CONFIG_CLEAN_FILES = opencv.pc opencv.spec cvver.h
+CONFIG_CLEAN_FILES = opencv.pc opencv.spec
 SOURCES =
 DIST_SOURCES =
 RECURSIVE_TARGETS = all-recursive check-recursive dvi-recursive \
@@ -277,7 +277,7 @@ pkgconfig_DATA = opencv.pc
 libcvincludedir = $(includedir)/opencv
 
 # Which header files to install
-libcvinclude_HEADERS = cvver.h
+libcvinclude_HEADERS = 
 FRAMEWORK_NAME = OpenCV
 FRAMEWORK_VERSION = A
 FRAMEWORK_CURRENT_VERSION = 2
@@ -344,8 +344,6 @@ distclean-hdr:
 opencv.pc: $(top_builddir)/config.status $(srcdir)/opencv.pc.in
 	cd $(top_builddir) && $(SHELL) ./config.status $@
 opencv.spec: $(top_builddir)/config.status $(srcdir)/opencv.spec.in
-	cd $(top_builddir) && $(SHELL) ./config.status $@
-cvver.h: $(top_builddir)/config.status $(srcdir)/cvver.h.in
 	cd $(top_builddir) && $(SHELL) ./config.status $@
 
 mostlyclean-libtool:
@@ -527,7 +525,7 @@ distclean-tags:
 distdir: $(DISTFILES)
 	$(am__remove_distdir)
 	mkdir $(distdir)
-	$(mkdir_p) $(distdir)/. $(distdir)/autotools $(distdir)/autotools/aclocal
+	$(mkdir_p) $(distdir)/. $(distdir)/autotools $(distdir)/autotools/aclocal $(distdir)/cxcore/include
 	@srcdirstrip=`echo "$(srcdir)" | sed 's|.|.|g'`; \
 	topsrcdirstrip=`echo "$(top_srcdir)" | sed 's|.|.|g'`; \
 	list='$(DISTFILES)'; for file in $$list; do \
