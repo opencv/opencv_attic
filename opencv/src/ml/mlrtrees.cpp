@@ -91,8 +91,9 @@ CvDTreeSplit* CvForestTree::find_best_split( CvDTreeNode* node )
     if( forest )
     {
         int var_count;
+        CvRNG* rng = forest->get_rng();
 
-        active_var_mask = forest->active_var_mask;
+        active_var_mask = forest->get_active_var_mask();
         var_count = active_var_mask->cols;
 
         CV_ASSERT( var_count == data->var_count );
@@ -100,8 +101,8 @@ CvDTreeSplit* CvForestTree::find_best_split( CvDTreeNode* node )
         for( vi = 0; vi < var_count; vi++ )
         {
             uchar temp;
-            int i1 = cvRandInt(&forest->rng) % var_count;
-            int i2 = cvRandInt(&forest->rng) % var_count;
+            int i1 = cvRandInt(rng) % var_count;
+            int i2 = cvRandInt(rng) % var_count;
             CV_SWAP( active_var_mask->data.ptr[i1],
                 active_var_mask->data.ptr[i2], temp );
         }
@@ -116,9 +117,9 @@ CvDTreeSplit* CvForestTree::find_best_split( CvDTreeNode* node )
         if( data->is_classifier )
         {
             if( ci >= 0 )
-                split = find_split_cat_gini( node, vi );
+                split = find_split_cat_class( node, vi );
             else
-                split = find_split_ord_gini( node, vi );
+                split = find_split_ord_class( node, vi );
         }
         else
         {
@@ -234,6 +235,17 @@ CvRTrees::~CvRTrees()
 }
 
 
+CvMat* CvRTrees::get_active_var_mask()
+{
+    return active_var_mask;
+}
+
+
+CvRNG* CvRTrees::get_rng()
+{
+    return &rng;
+}
+
 bool CvRTrees::train( const CvMat* _train_data, int _tflag,
                         const CvMat* _responses, const CvMat* _var_idx,
                         const CvMat* _sample_idx, const CvMat* _var_type,
@@ -333,8 +345,8 @@ bool CvRTrees::grow_forest( CvDTreeTrainData* train_data, const CvTermCriteria t
     nsamples = train_data->sample_count;
     nclasses = train_data->get_num_classes();
 
-    trees = (CvForestTree**)cvAlloc( sizeof(CvStatModel*)*max_ntrees );
-    memset( trees, 0, sizeof(CvStatModel*)*max_ntrees );
+    trees = (CvForestTree**)cvAlloc( sizeof(trees[0])*max_ntrees );
+    memset( trees, 0, sizeof(trees[0])*max_ntrees );
 
     if( train_data->is_classifier )
     {
@@ -535,18 +547,8 @@ bool CvRTrees::grow_forest( CvDTreeTrainData* train_data, const CvTermCriteria t
 }
 
 
-inline const CvMat* CvRTrees::get_var_importance() const
+const CvMat* CvRTrees::get_var_importance()
 {
-    CV_FUNCNAME( "CvRTrees::get_proximity" );
-
-    __BEGIN__;
-
-    if( !var_importance )
-        CV_ERROR( CV_StsNullPtr, "The variable importance was not processed. "
-        "Null pointer will be returned.");
-
-    __END__;
-
     return var_importance;
 }
 
@@ -580,7 +582,7 @@ float CvRTrees::get_proximity( int i, int j ) const
 }
 
 
-double CvRTrees::predict( const CvMat* sample, CvMat* missing ) const
+float CvRTrees::predict( const CvMat* sample, CvMat* missing ) const
 {
     double result = -1;
 
@@ -619,7 +621,7 @@ double CvRTrees::predict( const CvMat* sample, CvMat* missing ) const
 
     __END__;
 
-    return result;
+    return (float)result;
 }
 
 
@@ -743,8 +745,8 @@ void CvRTrees::read( CvFileStorage* fs, CvFileNode* fnode )
 
     rng = CvRNG( -1 );
 
-    trees = (CvForestTree**)cvAlloc( sizeof(CvStatModel*)*ntrees );
-    memset( trees, 0, sizeof(CvStatModel*)*ntrees );
+    trees = (CvForestTree**)cvAlloc( sizeof(trees[0])*ntrees );
+    memset( trees, 0, sizeof(trees[0])*ntrees );
 
     trees_fnode = cvGetFileNodeByName( fs, fnode, "trees" );
     if( !trees_fnode || !CV_NODE_IS_SEQ(trees_fnode->tag) )

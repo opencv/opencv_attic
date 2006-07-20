@@ -179,7 +179,7 @@ void CvANN_MLP::init_weights()
     {
         int n1 = layer_sizes->data.i[i-1];
         int n2 = layer_sizes->data.i[i];
-        double val = 0, G = n2 > 2 ? 0.7*pow(n1,1./(n2-1)) : 1.;
+        double val = 0, G = n2 > 2 ? 0.7*pow((double)n1,1./(n2-1)) : 1.;
         double* w = weights[i];
 
         // initialize weights using Nguyen-Widrow algorithm
@@ -261,7 +261,7 @@ void CvANN_MLP::create( const CvMat* _layer_sizes, int _activ_func,
 }
 
 
-void CvANN_MLP::predict( const CvMat* _inputs, CvMat* _outputs ) const
+float CvANN_MLP::predict( const CvMat* _inputs, CvMat* _outputs ) const
 {
     CV_FUNCNAME( "CvANN_MLP::predict" );
 
@@ -331,6 +331,8 @@ void CvANN_MLP::predict( const CvMat* _inputs, CvMat* _outputs ) const
     }
 
     __END__;
+
+    return 0.f;
 }
 
 

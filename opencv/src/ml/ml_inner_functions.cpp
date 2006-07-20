@@ -40,7 +40,40 @@
 
 #include "_ml.h"
 
-// By A.Lange - begin -
+
+CvStatModel::~CvStatModel()
+{
+}
+
+
+void CvStatModel::clear()
+{
+}
+
+
+void CvStatModel::save( const char*, const char* )
+{
+    OPENCV_ERROR( CV_StsNotImplemented, "CvStatModel::save", "" );
+}
+
+
+void CvStatModel::load( const char*, const char* )
+{
+    OPENCV_ERROR( CV_StsNotImplemented, "CvStatModel::load", "" );
+}
+
+
+void CvStatModel::write( CvFileStorage*, const char* )
+{
+    OPENCV_ERROR( CV_StsNotImplemented, "CvStatModel::write", "" );
+}
+
+
+void CvStatModel::read( CvFileStorage*, CvFileNode* )
+{
+    OPENCV_ERROR( CV_StsNotImplemented, "CvStatModel::read", "" );
+}
+
 
 /* Calculates upper triangular matrix S, where A is a symmetrical matrix A=S'*S */
 CV_IMPL void cvChol( CvMat* A, CvMat* S )
@@ -1043,7 +1076,7 @@ cvPrepareTrainData( const char* /*funcname*/,
     return ok;
 }
 
-
+#if 0
 CvStatModel*
 cvCreateStatModel( int flags, int header_size,
                    CvStatModelRelease release,
@@ -1077,7 +1110,7 @@ cvCreateStatModel( int flags, int header_size,
 
     return model;
 }
-
+#endif
 
 typedef struct CvSampleResponsePair
 {
@@ -1519,7 +1552,7 @@ cvWritebackLabels( const CvMat* labels, CvMat* dst_labels,
     __END__;
 }
 
-
+#if 0
 CV_IMPL void
 cvStatModelMultiPredict( const CvStatModel* stat_model,
                          const CvArr* predict_input,
@@ -1739,7 +1772,7 @@ cvStatModelMultiPredict( const CvStatModel* stat_model,
     cvReleaseMat( &sample_idx_buffer );
     cvReleaseMemStorage( &storage );
 }
-
+#endif
 
 // By P. Yarykin - begin -
 

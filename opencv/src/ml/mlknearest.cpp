@@ -383,8 +383,10 @@ float CvKNearest::find_nearest( const CvMat* _samples, int k, CvMat* _results,
         find_neighbors_direct( _samples, k, i, i + blk_count,
                     neighbor_responses, _neighbors, dist );
 
-        write_results( k, k1, i, i + blk_count, neighbor_responses, dist,
-                       _results, _neighbor_responses, _dist, sort_buf );
+        float r = write_results( k, k1, i, i + blk_count, neighbor_responses, dist,
+                                 _results, _neighbor_responses, _dist, sort_buf );
+        if( i == 0 )
+            result = r;
     }
 
     __END__;
