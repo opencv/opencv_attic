@@ -46,6 +46,11 @@ extern "C" {
 #include <ffmpeg/avformat.h>
 }
 
+#ifdef NDEBUG
+#define CV_WARN(message) 
+#else
+#define CV_WARN(message) fprintf(stderr, "warning: %s (%s:%d)\n", message, __FILE__, __LINE__)
+#endif
 
 typedef struct CvCaptureAVI_FFMPEG
 {
@@ -104,14 +109,14 @@ static int icvOpenAVI_FFMPEG( CvCaptureAVI_FFMPEG* capture, const char* filename
 
     err = av_open_input_file(&ic, filename, NULL, 0, NULL);
     if (err < 0) {
-    fprintf(stderr, "HIGHGUI ERROR: AVI: %s: could not open file\n", filename);
-    goto exit_func;
+	    CV_WARN("Error opening file");
+	    goto exit_func;
     }
     capture->ic = ic;
     err = av_find_stream_info(ic);
     if (err < 0) {
-    fprintf(stderr, "HIGHGUI ERROR: AVI: %s: could not find codec parameters\n", filename);
-    goto exit_func;
+	    CV_WARN("Could not find codec parameters");
+	    goto exit_func;
     }
     for(i = 0; i < ic->nb_streams; i++) {
 #if LIBAVFORMAT_BUILD > 4628
@@ -412,7 +417,7 @@ static AVStream *icv_add_video_stream_FFMPEG(AVFormatContext *oc, int codec_tag,
 
 	st = av_new_stream(oc, 0);
 	if (!st) {
-		fprintf(stderr, "Could not alloc stream\n");
+		CV_WARN("Could not allocate stream");
 		return NULL;
 	}
 
