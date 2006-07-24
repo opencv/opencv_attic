@@ -2646,7 +2646,7 @@ The SVD methods calculate a pseudo-inverse matrix if <code>src1</code> is singul
 <hr><h3><a name="decl_cvSolve">Solve</a></h3>
 <p class="Blurb">Solves linear system or least-squares problem</p>
 <pre>
-int cvSolve( const CvArr* src1, const CvArr* src2, CvArr* dst, int method=CV_LU );
+int cvSolve( const CvArr* A, const CvArr* B, CvArr* X, int method=CV_LU );
 </pre><p><dl>
 <dt>A<dd>The source matrix.
 <dt>B<dd>The right-hand part of the linear system.
@@ -2659,7 +2659,7 @@ int cvSolve( const CvArr* src1, const CvArr* src2, CvArr* dst, int method=CV_LU 
 The function <code>cvSolve</code> solves linear system or least-squares problem (the latter
 is possible with SVD methods):</p>
 <pre>
-dst = arg min<sub>X</sub>||src1*X-src2||
+dst = arg min<sub>X</sub>||A*X-B||
 </pre>
 <p>If <code>CV_LU</code> method is used, the function returns 1 if <code>src1</code> is non-singular and
 0 otherwise, in the latter case <code>dst</code> is not valid</p>
