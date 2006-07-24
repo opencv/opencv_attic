@@ -73,6 +73,8 @@ CV_HEADER_FILES = \
 cvaliases.i: $(CV_HEADER_FILES) Makefile
 	$(PYTHON) $(top_srcdir)/utils/extract_aliases.py $(CV_HEADER_FILES) > $@
 
+clean: clean-am
+	rm -f _cv.cpp _highgui.cpp cv.py highgui.py
 endif
 
 
