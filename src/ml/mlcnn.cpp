@@ -201,7 +201,7 @@ cvTrainCNNClassifier( const CvMat* _train_data, int tflag,
     {
         cnn_model->release( (CvStatModel**)&cnn_model );
     }
-    cvFree( (void**)&out_train_data );
+    cvFree( &out_train_data );
     cvReleaseMat( &responses );
 
     return (CvStatModel*)cnn_model;
@@ -306,8 +306,8 @@ static void icvTrainCNNetwork( CvCNNetwork* network,
         cvReleaseMat( &X[k] );
         cvReleaseMat( &dE_dX[k] );
     }
-    cvFree( (void**)&X );
-    cvFree( (void**)&dE_dX );
+    cvFree( &X );
+    cvFree( &dE_dX );
 }
 
 /****************************************************************************************/
@@ -384,9 +384,9 @@ static float icvCNNModelPredict( const CvStatModel* model,
 
     for( k = 0; k <= n_layers; k++ )
         cvReleaseMat( &X[k] );
-    cvFree( (void**)&X );
+    cvFree( &X );
     if( img_data != _image->data.fl )
-        cvFree( (void**)&img_data );
+        cvFree( &img_data );
 
     return ((float) ((CvCNNStatModel*)model)->cls_labels->data.i[best_etal_idx]);
 }
@@ -435,7 +435,7 @@ static void icvCNNModelUpdate(
 
     __END__;
 
-    cvFree( (void**)&out_train_data );
+    cvFree( &out_train_data );
     cvReleaseMat( &responses );
 }
 
@@ -455,7 +455,7 @@ static void icvCNNModelRelease( CvStatModel** cnn_model )
     cvReleaseMat( &cnn->etalons );
     cnn->network->release( &cnn->network );
 
-    cvFree( (void**)&cnn );
+    cvFree( &cnn );
 
     __END__;
 
@@ -485,7 +485,7 @@ ML_IMPL CvCNNetwork* cvCreateCNNetwork( CvCNNLayer* first_layer )
     __END__;
 
     if( cvGetErrStatus() < 0 && network )
-        cvFree( (void**)&network );
+        cvFree( &network );
 
     return network;
 
@@ -563,7 +563,7 @@ static void icvCNNetworkRelease( CvCNNetwork** network_pptr )
     if( k != network->n_layers || layer)
         CV_ERROR( CV_StsBadArg, "Invalid network" );
 
-    cvFree( (void**) &network );
+    cvFree( &network );
 
     __END__;
 }
@@ -622,7 +622,7 @@ static CvCNNLayer* icvCreateCNNLayer( int layer_type, int header_size,
     __END__;
 
     if( cvGetErrStatus() < 0 && layer)
-        cvFree( (void**)&layer );
+        cvFree( &layer );
 
     return layer;
 }
@@ -687,7 +687,7 @@ ML_IMPL CvCNNLayer* cvCreateCNNConvolutionLayer(
     {
         cvReleaseMat( &layer->weights );
         cvReleaseMat( &layer->connect_mask );
-        cvFree( (void**)&layer );
+        cvFree( &layer );
     }
     
     return (CvCNNLayer*)layer;
@@ -750,7 +750,7 @@ ML_IMPL CvCNNLayer* cvCreateCNNSubSamplingLayer(
     if( cvGetErrStatus() < 0 && layer )
     {
         cvReleaseMat( &layer->exp2ssumWX );
-        cvFree( (void**)&layer );
+        cvFree( &layer );
     }
 
     return (CvCNNLayer*)layer;
@@ -801,7 +801,7 @@ ML_IMPL CvCNNLayer* cvCreateCNNFullConnectLayer(
     {
         cvReleaseMat( &layer->exp2ssumWX );
         cvReleaseMat( &layer->weights );
-        cvFree( (void**)&layer );
+        cvFree( &layer );
     }
 
     return (CvCNNLayer*)layer;
@@ -1347,7 +1347,7 @@ static void icvCNNConvolutionRelease( CvCNNLayer** p_layer )
 
     cvReleaseMat( &layer->weights );
     cvReleaseMat( &layer->connect_mask );
-    cvFree( (void**)p_layer );
+    cvFree( p_layer );
 
     __END__;
 }
@@ -1372,7 +1372,7 @@ static void icvCNNSubSamplingRelease( CvCNNLayer** p_layer )
 
     cvReleaseMat( &layer->exp2ssumWX );
     cvReleaseMat( &layer->weights );
-    cvFree( (void**)p_layer );
+    cvFree( p_layer );
 
     __END__;
 }
@@ -1397,7 +1397,7 @@ static void icvCNNFullConnectRelease( CvCNNLayer** p_layer )
 
     cvReleaseMat( &layer->exp2ssumWX );
     cvReleaseMat( &layer->weights );
-    cvFree( (void**)p_layer );
+    cvFree( p_layer );
 
     __END__;
 }
