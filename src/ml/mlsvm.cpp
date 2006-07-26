@@ -1068,6 +1068,8 @@ CvSVM::CvSVM()
     var_idx = 0;
     kernel = 0;
     solver = 0;
+    default_model_name = "my_svm";
+
     clear();
 }
 
@@ -1105,7 +1107,8 @@ CvSVM::CvSVM( const CvMat* _train_data, const CvMat* _responses,
     var_idx = 0;
     kernel = 0;
     solver = 0;
-    clear();
+    default_model_name = "my_svm";
+
     train( _train_data, _responses, _var_idx, _sample_idx, _params );
 }
 
@@ -1255,6 +1258,7 @@ bool CvSVM::train( const CvMat* _train_data, const CvMat* _responses,
     CvSVMDecisionFunc* df;
     double* alpha;
 
+    clear();
     CV_CALL( set_params( _params ));
 
     svm_type = _params.svm_type;
@@ -1647,26 +1651,6 @@ void CvSVM::write_params( CvFileStorage* fs )
 }
 
 
-void CvSVM::save( const char* filename, const char* name )
-{
-    CvFileStorage* fs = 0;
-    
-    CV_FUNCNAME( "CvSVM::save" );
-
-    __BEGIN__;
-
-    CV_CALL( fs = cvOpenFileStorage( filename, 0, CV_STORAGE_WRITE ));
-    if( !fs )
-        CV_ERROR( CV_StsError, "Could not open the file storage. Check the path and permissions" );
-
-    write( fs, name ? name : "my_svm" );
-
-    __END__;
-
-    cvReleaseFileStorage( &fs );
-}
-
-
 void CvSVM::write( CvFileStorage* fs, const char* name )
 {
     CV_FUNCNAME( "CvSVM::write" );
@@ -1820,37 +1804,6 @@ void CvSVM::read_params( CvFileStorage* fs, CvFileNode* svm_node )
     set_params( _params );
 
     __END__;
-}
-
-
-void CvSVM::load( const char* filename, const char* name )
-{
-    CvFileStorage* fs = 0;
-    
-    CV_FUNCNAME( "CvSVM::load" );
-
-    __BEGIN__;
-
-    CvFileNode* svm_node = 0;
-
-    CV_CALL( fs = cvOpenFileStorage( filename, 0, CV_STORAGE_READ ));
-    if( !fs )
-        CV_ERROR( CV_StsError, "Could not open the file storage. Check the path and permissions" );
-
-    if( name )
-        svm_node = cvGetFileNodeByName( fs, 0, name );
-    else
-    {
-        CvFileNode* root = cvGetRootFileNode( fs );
-        if( root->data.seq->total > 0 )
-            svm_node = (CvFileNode*)cvGetSeqElem( root->data.seq, 0 );
-    }
-
-    read( fs, svm_node );
-
-    __END__;
-
-    cvReleaseFileStorage( &fs );
 }
 
 
