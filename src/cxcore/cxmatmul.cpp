@@ -2531,7 +2531,7 @@ cvCalcCovarMatrix( const CvArr** vecarr, int count,
 
         scale = !(flags & CV_COVAR_SCALE) ? 1. : 1./count;
 
-        cvMulTransposed( vecmat, cov, vecmat->rows != cov->rows, avg, scale );
+        cvMulTransposed( vecmat, cov, ((flags & CV_COVAR_ROWS)!=0) ^ ((flags & CV_COVAR_NORMAL)==0), avg, scale );
         EXIT;
     }
 

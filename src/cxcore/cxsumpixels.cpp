@@ -905,7 +905,7 @@ cvReduce( const CvArr* srcarr, CvArr* dstarr, int dim, int op )
     size = cvGetMatSize(src);
 
     if( dim < 0 )
-        dim = src->rows == dst->rows;
+        dim = src->rows > dst->rows ? 0 : src->cols > dst->cols ? 1 : dst->cols == 1;
 
     if( dim > 1 )
         CV_ERROR( CV_StsOutOfRange, "The reduced dimensionality index is out of range" );
