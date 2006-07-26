@@ -150,6 +150,7 @@ CV_INLINE CvParamLattice cvDefaultParamLattice( void )
 class CV_EXPORTS CvStatModel
 {
 public:
+    CvStatModel();
     virtual ~CvStatModel();
 
     virtual void clear();
@@ -159,6 +160,9 @@ public:
     
     virtual void write( CvFileStorage* storage, const char* name );
     virtual void read( CvFileStorage* storage, CvFileNode* node );
+
+protected:
+    const char* default_model_name;
 };
 
 
@@ -181,9 +185,6 @@ public:
     virtual float predict( const CvMat* _samples, CvMat* results=0 ) const;
     virtual void clear();
 
-    virtual void save( const char* filename, const char* name=0 );
-    virtual void load( const char* filename, const char* name=0 );
-    
     virtual void write( CvFileStorage* storage, const char* name );
     virtual void read( CvFileStorage* storage, CvFileNode* node );
 
@@ -438,9 +439,6 @@ public:
     virtual const float* get_support_vector(int i) const;
     virtual void clear();
 
-    virtual void save( const char* filename, const char* name=0 );
-    virtual void load( const char* filename, const char* name=0 );
-    
     virtual void write( CvFileStorage* storage, const char* name );
     virtual void read( CvFileStorage* storage, CvFileNode* node );
     int get_var_count() const { return var_idx ? var_idx->cols : var_all; }
@@ -559,9 +557,6 @@ public:
 
     virtual void clear();
 
-    virtual void save( const char* filename, const char* name=0 );
-    virtual void load( const char* filename, const char* name=0 );
-    
     virtual void write( CvFileStorage* storage, const char* name );
     virtual void read( CvFileStorage* storage, CvFileNode* node );
 
@@ -582,59 +577,81 @@ protected:
 *                              Expectation - Maximization                                *
 \****************************************************************************************/
 
-/* Covariation matrices are supposed to be diagonal with equal diagonal elements */
-#define CV_EM_COV_MAT_SPHERICAL     1
-/* Covariation matrices  are supposed to be diagonal with different diagonal elements */
-#define CV_EM_COV_MAT_DIAGONAL      2
-/* Covariation matrices  are supposed to be general covariation matrices */
-#define CV_EM_COV_MAT_GENERAL       3
-/* The first steps of the EM algorithm */
-#define CV_EM_START_E_STEP      1 // The first step is Expectation
-#define CV_EM_START_M_STEP      2 // The first step is Maximization
-#define CV_EM_START_AUTO_STEP   3 // Start with k-means
-
-/*
-   CvEMStatModelParams
- * nclusters        - number of clusters to cluster samples to.
- * cov_mat_type     - type of covariation matrice: general, diagonal, spherical.
-                      Use constants CV_EM_COV_MAT_SPHERICAL, CV_EM_COV_MAT_DIAGONAL,
-                      CV_EM_COV_MAT_GENERAL to initialize this field.
- * start_step       - the first step of the EM algorithm. Should be one of the following:
-                      CV_EM_START_E_STEP, CV_EM_START_M_STEP, CV_EM_START_AUTO_STEP.
- * probs            - the initial matrice of conditional probabilities (use only in the case
-                      CV_EM_START_M_STEP).
- * weights          - initial weights of gauss mixture (may be NULL).
- * means            - initial means of gauss mixture (may be NULL).
- * covs             - initial covs of gauss mixture (may be NULL).
-                      <weights>, <means> and <covs> should be used only in the case
-                      CV_EM_START_E_STEP.
- * term_crit        - termination criteria of the EM iterative algorithm.
- If <covs> == <weights> == NULL, then initial set of parameters is obtained by using
- k-means. If <means> != NULL, then k-means starts with the initial centers
- equal to <means>.
- */
-typedef struct CvEMStatModelParams
+struct CV_EXPORTS CvEMParams
 {
+    CvEMParams() : nclusters(10), cov_mat_type(1/*CvEM::COV_MAT_DIAGONAL*/),
+        start_step(0/*CvEM::START_AUTO_STEP*/), probs(0), weights(0), means(0), covs(0)
+    {
+        term_crit=cvTermCriteria( CV_TERMCRIT_ITER+CV_TERMCRIT_EPS, 100, FLT_EPSILON );
+    }
+
+    CvEMParams( int _nclusters, int _cov_mat_type=1/*CvEM::COV_MAT_DIAGONAL*/,
+                int _start_step=0/*CvEM::START_AUTO_STEP*/,
+                CvTermCriteria _term_crit=cvTermCriteria(CV_TERMCRIT_ITER+CV_TERMCRIT_EPS, 100, FLT_EPSILON),
+                const CvMat* _probs=0, const CvMat* _weights=0, const CvMat* _means=0, const CvMat** _covs=0 ) :
+                nclusters(_nclusters), cov_mat_type(_cov_mat_type), start_step(_start_step),
+                probs(_probs), weights(_weights), means(_means), covs(_covs), term_crit(_term_crit)
+    {}
+
     int nclusters;
     int cov_mat_type;
     int start_step;
-    CvMat* probs;
-    CvMat* weights;
+    const CvMat* probs;
+    const CvMat* weights;
+    const CvMat* means;
+    const CvMat** covs;
+    CvTermCriteria term_crit;
+};
+
+
+class CV_EXPORTS CvEM : public CvStatModel
+{
+public:
+    // Type of covariation matrices
+    enum { COV_MAT_SPHERICAL=0, COV_MAT_DIAGONAL=1, COV_MAT_GENERIC=2 };
+
+    // The initial step
+    enum { START_E_STEP=1, START_M_STEP=2, START_AUTO_STEP=0 };
+
+    CvEM();
+    CvEM( const CvMat* samples, const CvMat* sample_idx=0,
+          CvEMParams params=CvEMParams(), CvMat* labels=0 );
+    virtual ~CvEM();
+
+    virtual bool train( const CvMat* samples, const CvMat* sample_idx=0,
+                        CvEMParams params=CvEMParams(), CvMat* labels=0 );
+
+    virtual float predict( const CvMat* sample, CvMat* probs ) const;
+    virtual void clear();
+
+    int get_nclusters() const;
+    const CvMat* get_means() const;
+    const CvMat** get_covs() const;
+    const CvMat* get_weights() const;
+    const CvMat* get_probs() const;
+
+protected:
+
+    virtual void set_params( const CvEMParams& params,
+                             const CvVectors& train_data );
+    virtual void init_em( const CvVectors& train_data );
+    virtual double run_em( const CvVectors& train_data );
+    virtual void init_auto( const CvVectors& samples );
+    virtual void kmeans( const CvVectors& train_data, int nclusters,
+                         CvMat* labels, CvTermCriteria criteria,
+                         const CvMat* means );
+    CvEMParams params;
+    double log_likelihood;
+
     CvMat* means;
     CvMat** covs;
-    CvTermCriteria term_crit;
-} CvEMStatModelParams;
+    CvMat* weights;
+    CvMat* probs;
 
-CVAPI(void) cvEM( const CvMat* samples,
-                  int tflag, CvMat* labels,
-                  const CvEMStatModelParams* params,
-                  const CvMat*  var_idx CV_DEFAULT(0),
-                  const CvMat*  sample_idx CV_DEFAULT(0),
-                  CvMat*  probs CV_DEFAULT(0),
-                  CvMat*  means CV_DEFAULT(0),
-                  CvMat*  weights CV_DEFAULT(0),
-                  CvMat** covs CV_DEFAULT(0)/*,
-                  CvEMStatModel** em_model CV_DEFAULT(0)*/ );
+    CvMat* log_weight_div_det;
+    CvMat* inv_eigen_values;
+    CvMat** cov_rotate_mats;
+};
 
 /****************************************************************************************\
 *                                      Decision Tree                                     *
@@ -839,10 +856,8 @@ public:
     virtual const CvMat* get_var_importance();
     virtual void clear();
 
-    virtual void save( const char* filename, const char* name=0 );
-    virtual void write( CvFileStorage* fs, const char* name );
-    virtual void load( const char* filename, const char* name=0 );
     virtual void read( CvFileStorage* fs, CvFileNode* node );
+    virtual void write( CvFileStorage* fs, const char* name );
 
 protected:
 
@@ -957,16 +972,14 @@ public:
                         const CvMat* _sample_idx=0, const CvMat* _var_type=0,
                         const CvMat* _missing_mask=0,
                         CvRTParams params=CvRTParams() );
-    virtual float predict( const CvMat* sample, CvMat* missing = 0 ) const;
+    virtual float predict( const CvMat* sample, const CvMat* missing = 0 ) const;
     virtual void clear();
 
     virtual const CvMat* get_var_importance();
     virtual float get_proximity( int i, int j ) const;
 
-    virtual void save( const char* filename, const char* name=0 );
-    virtual void write( CvFileStorage* fs, const char* name );
-    virtual void load( const char* filename, const char* name=0 );
     virtual void read( CvFileStorage* fs, CvFileNode* node );
+    virtual void write( CvFileStorage* fs, const char* name );
 
     CvMat* get_active_var_mask();
     CvRNG* get_rng();
@@ -1043,10 +1056,9 @@ public:
     // available training flags
     enum { UPDATE_WEIGHTS = 1, NO_INPUT_SCALE = 2, NO_OUTPUT_SCALE = 4 };
 
-    virtual void save( const char* filename, const char* name=0 );
-    virtual void write( CvFileStorage* fs, const char* name );
-    virtual void load( const char* filename, const char* name=0 );
     virtual void read( CvFileStorage* fs, CvFileNode* node );
+    virtual void write( CvFileStorage* storage, const char* name );
+
     int get_layer_count() { return layer_sizes ? layer_sizes->cols : 0; }
     const CvMat* get_layer_sizes() { return layer_sizes; }
 
