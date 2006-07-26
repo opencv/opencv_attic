@@ -247,19 +247,6 @@
 *                       Auxiliary functions declarations                                 *
 \****************************************************************************************/
 
-/* The function is used by FCM to prepare initial centers and by EM to prepare initial
-   means and matrice of probabilities. In the case of centers (means),
-   <src> is initial centers,
-   <cols_idx> - comp_idx, indices of the components,
-   <cols_all> - the dimnesionality of the samples (number of all the components)
-   <dst> - centers on output (should be a matrice CV_64FC1 type, number of rows of <dst>
-   should be equal to the one of <src> and  number of cols of <dst> should be  equal to
-   the number of cols of <src> according to the comp_idx).
-   In case of probabilities, <src> and <dst> are the source and desstination matrices of
-   probabilities, <cols_idx> is sample_idx and cols_all is number of _all_ the samples
-   without taking sample_idx into account. */
-void icvCutCols( const CvMat* src, CvMat* dst, const CvMat* cols_idx, int cols_all );
-
 /* Generates a set of classes centers in quantity <num_of_clusters> that are generated as
    uniform random vectors in parallelepiped, where <data> is concentrated. Vectors in
    <data> should have horizontal orientation. If <centers> != NULL, the function doesn't

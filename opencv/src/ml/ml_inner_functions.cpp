@@ -41,8 +41,15 @@
 #include "_ml.h"
 
 
+CvStatModel::CvStatModel()
+{
+    default_model_name = "my_stat_model";
+}
+
+
 CvStatModel::~CvStatModel()
 {
+    clear();
 }
 
 
@@ -51,15 +58,54 @@ void CvStatModel::clear()
 }
 
 
-void CvStatModel::save( const char*, const char* )
+void CvStatModel::save( const char* filename, const char* name )
 {
-    OPENCV_ERROR( CV_StsNotImplemented, "CvStatModel::save", "" );
+    CvFileStorage* fs = 0;
+    
+    CV_FUNCNAME( "CvStatModel::save" );
+
+    __BEGIN__;
+
+    CV_CALL( fs = cvOpenFileStorage( filename, 0, CV_STORAGE_WRITE ));
+    if( !fs )
+        CV_ERROR( CV_StsError, "Could not open the file storage. Check the path and permissions" );
+
+    write( fs, name ? name : default_model_name );
+
+    __END__;
+
+    cvReleaseFileStorage( &fs );
 }
 
 
-void CvStatModel::load( const char*, const char* )
+void CvStatModel::load( const char* filename, const char* name )
 {
-    OPENCV_ERROR( CV_StsNotImplemented, "CvStatModel::load", "" );
+    CvFileStorage* fs = 0;
+    
+    CV_FUNCNAME( "CvStatModel::load" );
+
+    __BEGIN__;
+
+    CvFileNode* model_node = 0;
+
+    CV_CALL( fs = cvOpenFileStorage( filename, 0, CV_STORAGE_READ ));
+    if( !fs )
+        CV_ERROR( CV_StsError, "Could not open the file storage. Check the path and permissions" );
+
+    if( name )
+        model_node = cvGetFileNodeByName( fs, 0, name );
+    else
+    {
+        CvFileNode* root = cvGetRootFileNode( fs );
+        if( root->data.seq->total > 0 )
+            model_node = (CvFileNode*)cvGetSeqElem( root->data.seq, 0 );
+    }
+
+    read( fs, model_node );
+
+    __END__;
+
+    cvReleaseFileStorage( &fs );
 }
 
 
@@ -214,56 +260,6 @@ CV_IMPL void cvRandGaussMixture( CvMat* means[],
     cvReleaseMat(&vect);    
 }
 
-// By A.Lange - end -
-
-/****************************************************************************************/
-void icvCutCols( const CvMat* src, CvMat* dst, const CvMat* cols_idx, int cols_all )
-{
-    CV_FUNCNAME("icvCutCols");
-    __BEGIN__;
-
-    int rows = dst->rows;
-    int cols = dst->cols;
-    int k;
-    int* comp;
-    char str[128];
-    int ic_type;
-
-    CV_ASSERT( ICV_IS_MAT_OF_TYPE(dst, CV_64FC1) );
-
-    if( !CV_IS_MAT( src ) )
-        CV_ERROR( CV_StsBadArg, "Invalid <src>: it should be a matrice" );
-    ic_type = CV_MAT_TYPE(src->type);
-    if( (ic_type != CV_32FC1) && (ic_type != CV_64FC1 ))
-        CV_ERROR( CV_StsUnsupportedFormat,
-        "Only CV_32FC1 or CV_64FC1 type of <src> is supported" );
-    if( src->rows != rows )
-    {
-        sprintf( str, "Invalid sizes of input arrays" );
-        CV_ERROR( CV_StsBadArg, str );
-    }
-    if( src->cols == cols )
-    {
-        CV_CALL( cvConvert( src, dst ));
-    }
-    else if( src->cols == cols_all )
-    {
-        CvMat ic, c;
-        comp = cols_idx->data.i;
-        CV_CALL( cvGetCol( dst, &c, 0 ) );
-        for( k = 0; k < cols; k++, comp++, c.data.db++ )
-        {
-            CV_CALL( cvGetCol( src, &ic, *comp ));
-            CV_CALL( cvConvert( &ic, &c ));
-        }
-    }
-    else
-    {
-        sprintf( str, "Invalid number of <src> cols" );
-        CV_ERROR( CV_StsBadArg, str );
-    }
-    __END__;
-} // End of icvCutCols
 
 CvMat* icvGenerateRandomClusterCenters ( int seed, const CvMat* data,
                                          int num_of_clusters, CvMat* _centers )
@@ -1076,41 +1072,6 @@ cvPrepareTrainData( const char* /*funcname*/,
     return ok;
 }
 
-#if 0
-CvStatModel*
-cvCreateStatModel( int flags, int header_size,
-                   CvStatModelRelease release,
-                   CvStatModelPredict predict,
-                   CvStatModelUpdate update )
-{
-    CvStatModel* model = 0;
-
-    CV_FUNCNAME( "cvCreateStatModel" );
-
-    __BEGIN__;
-
-    if( !release )
-        CV_ERROR( CV_StsNullPtr, "INTERNAL ERROR: NULL CvStatModelRelease pointer" );
-
-    if( header_size < (int)sizeof(CvStatModel))
-        CV_ERROR( CV_StsBadSize, "INTERNAL ERROR: bad stat model header size" );
-
-    CV_CALL( model = (CvStatModel*)cvAlloc( header_size ));
-    memset( model, 0, header_size );
-    model->flags = flags;
-    model->header_size = header_size;
-    model->release = release;
-    model->predict = predict;
-    model->update = update;
-
-    __END__;
-
-    if( cvGetErrStatus() < 0 )
-        cvFree( (void**)&model );
-
-    return model;
-}
-#endif
 
 typedef struct CvSampleResponsePair
 {
@@ -1181,7 +1142,7 @@ cvSortSamplesByClasses( const float** samples, const CvMat* classes,
 
     __END__;
 
-    cvFree( (void**)&pairs );
+    cvFree( &pairs );
 }
 
 
@@ -1238,7 +1199,9 @@ cvPreparePredictData( const CvArr* _sample, int dims_all,
         if( !CV_IS_MAT(prob) )
             CV_ERROR( CV_StsBadArg, "The output matrix of probabilities is invalid" );
 
-        if( (prob->rows != 1 && prob->cols != 1) || CV_MAT_TYPE(prob->type) != CV_32FC1 )
+        if( (prob->rows != 1 && prob->cols != 1) ||
+            CV_MAT_TYPE(prob->type) != CV_32FC1 &&
+            CV_MAT_TYPE(prob->type) != CV_64FC1 )
             CV_ERROR( CV_StsBadSize,
             "The matrix of probabilities must be 1-dimensional vector of 32fC1 type" );
 
@@ -1355,11 +1318,11 @@ cvPreparePredictData( const CvArr* _sample, int dims_all,
     __END__;
 
     if( inverse_comp_idx )
-        cvFree( (void**)&inverse_comp_idx );
+        cvFree( &inverse_comp_idx );
 
     if( cvGetErrStatus() < 0 && _row_sample )
     {
-        cvFree( (void**)&row_sample );
+        cvFree( &row_sample );
         *_row_sample = 0;
     }
 }
@@ -1766,7 +1729,7 @@ cvStatModelMultiPredict( const CvStatModel* stat_model,
                 sparse_rows[i]->heap->storage = 0;
                 cvReleaseSparseMat( &sparse_rows[i] );
             }
-        cvFree( (void**)&sparse_rows );
+        cvFree( &sparse_rows );
     }
 
     cvReleaseMat( &sample_idx_buffer );

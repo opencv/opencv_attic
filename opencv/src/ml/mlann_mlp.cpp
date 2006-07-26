@@ -96,6 +96,7 @@ CvANN_MLP::CvANN_MLP()
     min_val = max_val = min_val1 = max_val1 = 0.;
     weights = 0;
     rng = cvRNG(-1);
+    default_model_name = "my_nn";
     clear();
 }
 
@@ -108,6 +109,7 @@ CvANN_MLP::CvANN_MLP( const CvMat* _layer_sizes,
     min_val = max_val = min_val1 = max_val1 = 0.;
     weights = 0;
     rng = cvRNG(-1);
+    default_model_name = "my_nn";
     create( _layer_sizes, _activ_func, _f_param1, _f_param2 );
 }
 
@@ -1297,27 +1299,6 @@ int CvANN_MLP::train_rprop( CvVectors x0, CvVectors u, const double* sw )
 }
 
 
-void CvANN_MLP::save( const char* filename, const char* name )
-{
-    CvFileStorage* fs = 0;
-    
-    CV_FUNCNAME( "CvANN_MLP::save" );
-
-    __BEGIN__;
-
-    CV_CALL( fs = cvOpenFileStorage( filename, 0, CV_STORAGE_WRITE ));
-    if( !fs )
-        CV_ERROR( CV_StsError, "Could not open the file storage. Check the path and permissions" );
-
-    write( fs, name ? name : "my_nn" );
-
-    __END__;
-
-    cvReleaseFileStorage( &fs );
-}
-
-
-
 void CvANN_MLP::write_params( CvFileStorage* fs )
 {
     CV_FUNCNAME( "CvANN_MLP::write_params" );
@@ -1414,37 +1395,6 @@ void CvANN_MLP::write( CvFileStorage* fs, const char* name )
     cvEndWriteStruct( fs );
 
     __END__;
-}
-
-
-void CvANN_MLP::load( const char* filename, const char* name )
-{
-    CvFileStorage* fs = 0;
-    
-    CV_FUNCNAME( "CvANN_MLP::load" );
-
-    __BEGIN__;
-
-    CvFileNode* ann = 0;
-
-    CV_CALL( fs = cvOpenFileStorage( filename, 0, CV_STORAGE_READ ));
-    if( !fs )
-        CV_ERROR( CV_StsError, "Could not open the file storage. Check the path and permissions" );
-
-    if( name )
-        ann = cvGetFileNodeByName( fs, 0, name );
-    else
-    {
-        CvFileNode* root = cvGetRootFileNode( fs );
-        if( root->data.seq->total > 0 )
-            ann = (CvFileNode*)cvGetSeqElem( root->data.seq, 0 );
-    }
-
-    read( fs, ann );
-
-    __END__;
-
-    cvReleaseFileStorage( &fs );
 }
 
 

@@ -52,6 +52,7 @@ CvNormalBayesClassifier::CvNormalBayesClassifier()
     inv_eigen_values = 0;
     cov_rotate_mats = 0;
     c = 0;
+    default_model_name = "my_nb";
 }
 
 
@@ -97,6 +98,7 @@ CvNormalBayesClassifier::CvNormalBayesClassifier(
     inv_eigen_values = 0;
     cov_rotate_mats = 0;
     c = 0;
+    default_model_name = "my_nb";
 
     train( _train_data, _responses, _var_idx, _sample_idx );
 }
@@ -389,57 +391,6 @@ float CvNormalBayesClassifier::predict( const CvMat* samples, CvMat* results ) c
         cvFree( &buffer );
 
     return value;
-}
-
-
-void CvNormalBayesClassifier::save( const char* filename, const char* name )
-{
-    CvFileStorage* fs = 0;
-    
-    CV_FUNCNAME( "CvNormalBayesClassifier::save" );
-
-    __BEGIN__;
-
-    CV_CALL( fs = cvOpenFileStorage( filename, 0, CV_STORAGE_WRITE ));
-    if( !fs )
-        CV_ERROR( CV_StsError, "Could not open the file storage. Check the path and permissions" );
-
-    write( fs, name ? name : "my_nb" );
-
-    __END__;
-
-    cvReleaseFileStorage( &fs );
-}
-
-
-void CvNormalBayesClassifier::load( const char* filename, const char* name )
-{
-    CvFileStorage* fs = 0;
-    
-    CV_FUNCNAME( "CvNormalBayesClassifier::load" );
-
-    __BEGIN__;
-
-    CvFileNode* nb_node = 0;
-
-    CV_CALL( fs = cvOpenFileStorage( filename, 0, CV_STORAGE_READ ));
-    if( !fs )
-        CV_ERROR( CV_StsError, "Could not open the file storage. Check the path and permissions" );
-
-    if( name )
-        nb_node = cvGetFileNodeByName( fs, 0, name );
-    else
-    {
-        CvFileNode* root = cvGetRootFileNode( fs );
-        if( root->data.seq->total > 0 )
-            nb_node = (CvFileNode*)cvGetSeqElem( root->data.seq, 0 );
-    }
-
-    read( fs, nb_node );
-
-    __END__;
-
-    cvReleaseFileStorage( &fs );
 }
 
 

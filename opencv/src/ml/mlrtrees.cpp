@@ -207,6 +207,7 @@ CvRTrees::CvRTrees()
     var_importance   = NULL;
     proximities      = NULL;
     rng = cvRNG(0xffffffff);
+    default_model_name = "my_random_trees";
 }
 
 
@@ -582,7 +583,7 @@ float CvRTrees::get_proximity( int i, int j ) const
 }
 
 
-float CvRTrees::predict( const CvMat* sample, CvMat* missing ) const
+float CvRTrees::predict( const CvMat* sample, const CvMat* missing ) const
 {
     double result = -1;
 
@@ -625,27 +626,6 @@ float CvRTrees::predict( const CvMat* sample, CvMat* missing ) const
 }
 
 
-void CvRTrees::save( const char* filename, const char* name )
-{
-    CvFileStorage* fs = 0;
-    
-    CV_FUNCNAME( "CvRTrees::save" );
-
-    __BEGIN__;
-
-    CV_CALL( fs = cvOpenFileStorage( filename, 0, CV_STORAGE_WRITE ));
-    if( !fs )
-        CV_ERROR( CV_StsError,
-        "Could not open the file storage. Check the path and permissions" );
-
-    write( fs, name ? name : "my_random_trees" );
-
-    __END__;
-
-    cvReleaseFileStorage( &fs );
-}
-
-
 void CvRTrees::write( CvFileStorage* fs, const char* name )
 {
     CV_FUNCNAME( "CvRTrees::write" );
@@ -682,38 +662,6 @@ void CvRTrees::write( CvFileStorage* fs, const char* name )
     cvEndWriteStruct( fs ); //CV_TYPE_NAME_ML_RTREES
 
     __END__;
-}
-
-
-void CvRTrees::load( const char* filename, const char* name )
-{
-    CvFileStorage* fs = 0;
-    
-    CV_FUNCNAME( "CvRTrees::load" );
-
-    __BEGIN__;
-
-    CvFileNode* rtrees = 0;
-
-    CV_CALL( fs = cvOpenFileStorage( filename, 0, CV_STORAGE_READ ));
-    if( !fs )
-        CV_ERROR( CV_StsError,
-        "Could not open the file storage. Check the path and permissions" );
-
-    if( name )
-        rtrees = cvGetFileNodeByName( fs, 0, name );
-    else
-    {
-        CvFileNode* root = cvGetRootFileNode( fs );
-        if( root->data.seq->total > 0 )
-            rtrees = (CvFileNode*)cvGetSeqElem( root->data.seq, 0 );
-    }
-
-    read( fs, rtrees );
-
-    __END__;
-
-    cvReleaseFileStorage( &fs );
 }
 
 

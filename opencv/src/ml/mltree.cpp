@@ -965,6 +965,8 @@ CvDTree::CvDTree()
 {
     data = 0;
     var_importance = 0;
+    default_model_name = "my_tree";
+
     clear();
 }
 
@@ -2748,26 +2750,6 @@ const CvMat* CvDTree::get_var_importance()
 }
 
 
-void CvDTree::save( const char* filename, const char* name )
-{
-    CvFileStorage* fs = 0;
-    
-    CV_FUNCNAME( "CvDTree::save" );
-
-    __BEGIN__;
-
-    CV_CALL( fs = cvOpenFileStorage( filename, 0, CV_STORAGE_WRITE ));
-    if( !fs )
-        CV_ERROR( CV_StsError, "Could not open the file storage. Check the path and permissions" );
-
-    write( fs, name ? name : "my_dtree" );
-
-    __END__;
-
-    cvReleaseFileStorage( &fs );
-}
-
-
 void CvDTree::write_train_data_params( CvFileStorage* fs )
 {
     CV_FUNCNAME( "CvDTree::write_train_data_params" );
@@ -2955,37 +2937,6 @@ void CvDTree::write( CvFileStorage* fs, const char* name )
     cvEndWriteStruct( fs );
 
     __END__;
-}
-
-
-void CvDTree::load( const char* filename, const char* name )
-{
-    CvFileStorage* fs = 0;
-    
-    CV_FUNCNAME( "CvDTree::load" );
-
-    __BEGIN__;
-
-    CvFileNode* tree = 0;
-
-    CV_CALL( fs = cvOpenFileStorage( filename, 0, CV_STORAGE_READ ));
-    if( !fs )
-        CV_ERROR( CV_StsError, "Could not open the file storage. Check the path and permissions" );
-
-    if( name )
-        tree = cvGetFileNodeByName( fs, 0, name );
-    else
-    {
-        CvFileNode* root = cvGetRootFileNode( fs );
-        if( root->data.seq->total > 0 )
-            tree = (CvFileNode*)cvGetSeqElem( root->data.seq, 0 );
-    }
-
-    read( fs, tree );
-
-    __END__;
-
-    cvReleaseFileStorage( &fs );
 }
 
 
