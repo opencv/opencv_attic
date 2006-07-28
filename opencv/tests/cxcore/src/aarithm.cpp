@@ -1952,7 +1952,7 @@ CxCore_InRangeSTest inranges_test;
 /////////////////////////// convertscale[abs] ////////////////////////////////////////
 
 static const char* cvt_param_names[] = { "size", "scale", "dst_depth", "depth", 0 };
-static const char* cvt_abs_param_names[] = { "size", "depth" };
+static const char* cvt_abs_param_names[] = { "size", "depth", 0 };
 static const int cvt_scale_flags[] = { 0, 1 };
 
 class CxCore_CvtBaseTestImpl : public CxCore_ArithmTestImpl

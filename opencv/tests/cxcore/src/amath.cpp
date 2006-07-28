@@ -57,7 +57,7 @@
 
 static const CvSize math_sizes[] = {{10,1}, {100,1}, {10000,1}, {-1,-1}};
 static const int math_depths[] = { CV_32F, CV_64F, -1 };
-static const char* math_param_names[] = { "size", "depth" };
+static const char* math_param_names[] = { "size", "depth", 0 };
 
 static const CvSize matrix_sizes[] = {{3,3}, {4,4}, {10,10}, {30,30}, {100,100}, {500,500}, {-1,-1}};
 
@@ -301,7 +301,7 @@ CxCore_LogTest log_test;
 ////////// pow /////////////
 
 static const double math_pow_values[] = { 2., 5., 0.5, -0.5, 1./3, -1./3, CV_PI };
-static const char* math_pow_param_names[] = { "size", "power", "depth" };
+static const char* math_pow_param_names[] = { "size", "power", "depth", 0 };
 static const int math_pow_depths[] = { CV_8U, CV_16U, CV_16S, CV_32S, CV_32F, CV_64F, -1 };
 
 class CxCore_PowTest : public CxCore_MathTest
@@ -1256,7 +1256,7 @@ CxCore_ScaleAddTest scaleadd_test;
 
 ///////////////// gemm /////////////////////
 
-static const char* matrix_gemm_param_names[] = { "size", "add_c", "mul_type", "depth" };
+static const char* matrix_gemm_param_names[] = { "size", "add_c", "mul_type", "depth", 0 };
 static const char* matrix_gemm_mul_types[] = { "AB", "AtB", "ABt", "AtBt", 0 };
 static const int matrix_gemm_add_c_flags[] = { 0, 1 };
 
@@ -1421,7 +1421,7 @@ CxCore_GEMMTest gemm_test;
 
 ///////////////// multransposed /////////////////////
 
-static const char* matrix_multrans_param_names[] = { "size", "use_delta", "mul_type", "depth" };
+static const char* matrix_multrans_param_names[] = { "size", "use_delta", "mul_type", "depth", 0 };
 static const int matrix_multrans_use_delta_flags[] = { 0, 1 };
 static const char* matrix_multrans_mul_types[] = { "AAt", "AtA", 0 };
 
@@ -1567,7 +1567,7 @@ CxCore_MulTransposedTest multransposed_test;
 static const CvSize matrix_transform_sizes[] = {{10,10}, {100,100}, {720,480}, {-1,-1}};
 static const CvSize matrix_transform_whole_sizes[] = {{10,10}, {720,480}, {720,480}, {-1,-1}};
 static const int matrix_transform_channels[] = { 2, 3, 4, -1 };
-static const char* matrix_transform_param_names[] = { "size", "channels", "depth" };
+static const char* matrix_transform_param_names[] = { "size", "channels", "depth", 0 };
 
 class CxCore_TransformTest : public CxCore_MatrixTest
 {
@@ -2298,7 +2298,7 @@ CxCore_DetTest det_test;
 
 ///////////////// invert /////////////////////
 
-static const char* matrix_solve_invert_param_names[] = { "size", "method", "depth" };
+static const char* matrix_solve_invert_param_names[] = { "size", "method", "depth", 0 };
 static const char* matrix_solve_invert_methods[] = { "LU", "SVD", 0 };
 
 class CxCore_InvertTest : public CxCore_MatrixTest
@@ -2656,7 +2656,7 @@ CxCore_SolveTest solve_test;
 
 ///////////////// SVD /////////////////////
 
-static const char* matrix_svd_param_names[] = { "size", "output", "depth" };
+static const char* matrix_svd_param_names[] = { "size", "output", "depth", 0 };
 static const char* matrix_svd_output_modes[] = { "w", "all", 0 };
 
 class CxCore_SVDTest : public CxCore_MatrixTest
