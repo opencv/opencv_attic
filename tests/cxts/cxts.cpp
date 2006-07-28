@@ -1436,6 +1436,9 @@ int CvTS::read_params( CvFileStorage* fs )
                                                      "functions" : "tests", "" );
     params.resource_path = cvReadStringByName( fs, node, "." );
     params.use_optimized = cvReadIntByName( fs, node, "use_optimized", -1 );
+    params.test_case_count_scale = cvReadRealByName( fs, node, "test_case_count_scale", 1. );
+    if( params.test_case_count_scale <= 0 )
+        params.test_case_count_scale = 1.;
     str = cvReadStringByName( fs, node, "seed", 0 );
     params.rng_seed = 0;
     if( str && strlen(str) == 16 )
