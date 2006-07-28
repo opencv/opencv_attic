@@ -116,7 +116,7 @@ void CV_MomentsTest::get_test_array_types_and_sizes( int test_case_idx,
     CvRNG* rng = ts->get_rng();
     CvArrTest::get_test_array_types_and_sizes( test_case_idx, sizes, types );
     int cn = cvTsRandInt(rng) % 4 + 1;
-    int depth = test_case_idx*4/test_case_count;
+    int depth = cvTsRandInt(rng) % 4;
     depth = depth == 0 ? CV_8U : depth == 1 ? CV_16U : depth == 2 ? CV_16S : CV_32F;
     if( cn == 2 )
         cn = 1;

@@ -157,7 +157,7 @@ void CV_TemplMatchTest::get_test_array_types_and_sizes( int test_case_idx,
                                                 CvSize** sizes, int** types )
 {
     CvRNG* rng = ts->get_rng();
-    int depth = test_case_idx*2/test_case_count, cn = cvTsRandInt(rng) & 1 ? 3 : 1;
+    int depth = cvTsRandInt(rng) % 2, cn = cvTsRandInt(rng) & 1 ? 3 : 1;
     CvArrTest::get_test_array_types_and_sizes( test_case_idx, sizes, types );
     depth = depth == 0 ? CV_8U : CV_32F;
 
