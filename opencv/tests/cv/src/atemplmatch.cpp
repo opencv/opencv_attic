@@ -388,6 +388,16 @@ void CV_TemplMatchTest::prepare_to_validation( int /*test_case_idx*/ )
 {
     cvTsMatchTemplate( &test_mat[INPUT][0], &test_mat[INPUT][1],
                        &test_mat[REF_OUTPUT][0], method );
+
+    if( method >= CV_TM_CCOEFF )
+    {
+        // avoid numerical stability problems in singular cases (when the results are near 0)
+        const double delta = 10.;
+        cvTsAdd( &test_mat[REF_OUTPUT][0], cvScalar(1.), 0, cvScalar(0.),
+                 cvScalar(delta), &test_mat[REF_OUTPUT][0], 0 );
+        cvTsAdd( &test_mat[OUTPUT][0], cvScalar(1.), 0, cvScalar(0.),
+                 cvScalar(delta), &test_mat[OUTPUT][0], 0 );
+    }
 }
 
 
