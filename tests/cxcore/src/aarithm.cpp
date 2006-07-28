@@ -172,7 +172,7 @@ void CxCore_ArithmTestImpl::get_test_array_types_and_sizes( int test_case_idx,
                                                             CvSize** sizes, int** types )
 {
     CvRNG* rng = ts->get_rng();
-    int depth = test_case_idx*CV_64F/test_case_count;
+    int depth = cvTsRandInt(rng)%CV_64F;
     int cn = cvTsRandInt(rng) % 4 + 1;
     int i, j;
     CvArrTest::get_test_array_types_and_sizes( test_case_idx, sizes, types );
@@ -1996,9 +1996,9 @@ void CxCore_CvtBaseTestImpl::get_test_array_types_and_sizes( int test_case_idx,
     CvRNG* rng = ts->get_rng();
     int depth = CV_8U, rbits;
     types[INPUT][0] = (types[INPUT][0] & ~CV_MAT_DEPTH_MASK)|
-                    (test_case_idx*6/test_case_count);
+                    cvTsRandInt(rng)%(CV_64F+1);
     if( !calc_abs )
-        depth = cvTsRandInt(rng) % 6;
+        depth = cvTsRandInt(rng) % (CV_64F+1);
     types[OUTPUT][0] = types[REF_OUTPUT][0] = (types[INPUT][0] & ~CV_MAT_DEPTH_MASK)|depth;
 
     rbits = cvTsRandInt(rng);
@@ -2225,7 +2225,7 @@ void CxCore_StatTestImpl::get_test_array_types_and_sizes( int test_case_idx,
                                             CvSize** sizes, int** types )
 {
     CvRNG* rng = ts->get_rng();
-    int depth = test_case_idx*CV_64F/test_case_count;
+    int depth = cvTsRandInt(rng)%(CV_64F+1);
     int cn = cvTsRandInt(rng) % 4 + 1;
     int j, count = test_array[INPUT].size();
     
@@ -2380,12 +2380,18 @@ void CxCore_SumTest::prepare_to_validation( int /*test_case_idx*/ )
 {
     CvScalar mean;
     int nonzero = cvTsMeanStdDevNonZero( &test_mat[INPUT][0], 0, &mean, 0, coi );
-    mean.val[0] *= nonzero;
-    mean.val[1] *= nonzero;
-    mean.val[2] *= nonzero;
-    mean.val[3] *= nonzero;
 
     *(CvScalar*)(test_mat[REF_OUTPUT][0].data.db) = mean;
+    mean = *(CvScalar*)(test_mat[OUTPUT][0].data.db);
+
+    if( nonzero )
+    {
+        mean.val[0] /= nonzero;
+        mean.val[1] /= nonzero;
+        mean.val[2] /= nonzero;
+        mean.val[3] /= nonzero;
+    }
+    *(CvScalar*)(test_mat[OUTPUT][0].data.db) = mean;
 }
 
 CxCore_SumTest sum_test;
@@ -2709,7 +2715,7 @@ void CxCore_NormTest::prepare_to_validation( int /*test_case_idx*/ )
 
     if( norm_type & (CV_DIFF|CV_RELATIVE) )
     {
-        diff = &test_mat[TEMP][0] ? &test_mat[TEMP][0] : a;
+        diff = test_array[TEMP][0] ? &test_mat[TEMP][0] : a;
         cvTsAdd( a, cvScalarAll(1.), b, cvScalarAll(-1.),
                  cvScalarAll(0.), diff, 0 );
     }

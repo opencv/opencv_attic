@@ -558,7 +558,7 @@ void CxCore_DXTBaseTestImpl::get_test_array_types_and_sizes( int test_case_idx,
 {
     CvRNG* rng = ts->get_rng();
     int bits = cvTsRandInt(rng);
-    int depth = test_case_idx*2/test_case_count + CV_32F;
+    int depth = cvTsRandInt(rng)%2 + CV_32F;
     int cn = !allow_complex || !(bits & 256) ? 1 : 2;
     CvSize size;
     CvArrTest::get_test_array_types_and_sizes( test_case_idx, sizes, types );

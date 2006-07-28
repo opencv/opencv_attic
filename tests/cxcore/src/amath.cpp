@@ -99,7 +99,7 @@ void CxCore_MathTestImpl::get_test_array_types_and_sizes( int test_case_idx,
                                                       CvSize** sizes, int** types )
 {
     CvRNG* rng = ts->get_rng();
-    int depth = test_case_idx*2/test_case_count ? CV_64F : CV_32F;
+    int depth = cvTsRandInt(rng)%2 + CV_32F;
     int cn = cvTsRandInt(rng) % 4 + 1, type = CV_MAKETYPE(depth, cn);
     int i, j;
     CvArrTest::get_test_array_types_and_sizes( test_case_idx, sizes, types );
@@ -336,7 +336,7 @@ CxCore_PowTest::CxCore_PowTest()
 void CxCore_PowTest::get_test_array_types_and_sizes( int test_case_idx, CvSize** sizes, int** types )
 {
     CvRNG* rng = ts->get_rng();
-    int depth = test_case_idx*5/test_case_count;
+    int depth = cvTsRandInt(rng) % CV_64F;
     int cn = cvTsRandInt(rng) % 4 + 1;
     int i, j;
     CvArrTest::get_test_array_types_and_sizes( test_case_idx, sizes, types );
@@ -894,7 +894,7 @@ CxCore_MatrixTestImpl::CxCore_MatrixTestImpl( const char* test_name, const char*
 void CxCore_MatrixTestImpl::get_test_array_types_and_sizes( int test_case_idx, CvSize** sizes, int** types )
 {
     CvRNG* rng = ts->get_rng();
-    int depth = test_case_idx*(allow_int ? CV_64F : 2)/test_case_count;
+    int depth = cvTsRandInt(rng) % (allow_int ? CV_64F+1 : 2);
     int cn = cvTsRandInt(rng) % max_cn + 1;
     int i, j;
 
@@ -1066,10 +1066,10 @@ CxCore_CrossProductTest::CxCore_CrossProductTest() :
 }
 
 
-void CxCore_CrossProductTest::get_test_array_types_and_sizes( int test_case_idx, CvSize** sizes, int** types )
+void CxCore_CrossProductTest::get_test_array_types_and_sizes( int /*test_case_idx*/, CvSize** sizes, int** types )
 {
     CvRNG* rng = ts->get_rng();
-    int depth = test_case_idx*2/test_case_count ? CV_64F : CV_32F;
+    int depth = cvTsRandInt(rng) % 2 + CV_32F;
     int cn = cvTsRandInt(rng) & 1 ? 3 : 1, type = CV_MAKETYPE(depth, cn);
     CvSize sz;
 
