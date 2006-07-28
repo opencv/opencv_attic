@@ -72,7 +72,7 @@ void show_points( IplImage* gray, CvPoint2D32f* u, int u_cnt, CvPoint2D32f* v, i
     IplImage* rgb = cvCreateImage( size, 8, 3 );
     cvMerge( gray, gray, gray, 0, rgb );
 
-    /*if( v )
+    if( v )
     {
         for( i = 0; i < v_cnt; i++ )
         {
@@ -86,7 +86,7 @@ void show_points( IplImage* gray, CvPoint2D32f* u, int u_cnt, CvPoint2D32f* v, i
         {
             cvCircle( rgb, cvPoint(cvRound(u[i].x), cvRound(u[i].y)), 3, CV_RGB(0,255,0), CV_FILLED);
         }
-    }*/
+    }
 
     cvDrawChessboardCorners( rgb, etalon_size, v, v_cnt, was_found );
 
