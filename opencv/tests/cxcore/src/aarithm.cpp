@@ -2363,6 +2363,7 @@ public:
 protected:
     void run_func();
     void prepare_to_validation( int test_case_idx );
+    double get_success_error_level( int test_case_idx, int i, int j );
 };
 
 
@@ -2370,6 +2371,15 @@ CxCore_SumTest::CxCore_SumTest()
     : CxCore_StatTest( "stat-sum", "cvSum", 4 /* CvScalar */, false, false, false )
 {
 }
+
+double CxCore_SumTest::get_success_error_level( int /*test_case_idx*/, int /*i*/, int /*j*/ )
+{
+    int depth = CV_MAT_DEPTH(cvGetElemType(test_array[INPUT][0]));
+    if( depth == CV_32F )
+        return FLT_EPSILON*1000;
+    return DBL_EPSILON*10000;
+}
+
 
 void CxCore_SumTest::run_func()
 {
@@ -2384,13 +2394,10 @@ void CxCore_SumTest::prepare_to_validation( int /*test_case_idx*/ )
     *(CvScalar*)(test_mat[REF_OUTPUT][0].data.db) = mean;
     mean = *(CvScalar*)(test_mat[OUTPUT][0].data.db);
 
-    if( nonzero )
-    {
-        mean.val[0] /= nonzero;
-        mean.val[1] /= nonzero;
-        mean.val[2] /= nonzero;
-        mean.val[3] /= nonzero;
-    }
+    mean.val[0] /= nonzero;
+    mean.val[1] /= nonzero;
+    mean.val[2] /= nonzero;
+    mean.val[3] /= nonzero;
     *(CvScalar*)(test_mat[OUTPUT][0].data.db) = mean;
 }
 
