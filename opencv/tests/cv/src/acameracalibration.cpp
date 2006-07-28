@@ -567,40 +567,47 @@ static int calibrationTest(void *)
         if( atsCompDoublePrec(cameraMatrix+0,&goodFcx,1,0.01) != 0 )
         {
             printf("Error in focal length x\n");
+            Errors++;
         }
 
         if( atsCompDoublePrec(cameraMatrix+4,&goodFcy,1,0.01) != 0 )
         {
             printf("Error in focal length y\n");
+            Errors++;
         }            
 
         /* ----- Compare principal points ----- */
         if( atsCompDoublePrec(cameraMatrix+2,&goodCx,1,0.01) != 0 )
         {
             printf("Error in principal point x\n");
+            Errors++;
         }
 
         if( atsCompDoublePrec(cameraMatrix+5,&goodCy,1,0.01) != 0 )
         {
             printf("Error in principal point y\n");
+            Errors++;
         }            
 
         /* ----- Compare distortion ----- */
         if( atsCompDoublePrec(distortion,goodDistortion,4,0.001) != 0 )
         {
             printf("Error in distortion\n");
+            Errors++;
         }
 
         /* ----- Compare rot matrixs ----- */
         if( atsCompDoublePrec(rotMatrs,goodRotMatrs, 9*numImages,0.001) != 0 )
         {
             printf("Error in Rot Matrixes\n");
+            Errors++;
         }
 
         /* ----- Compare rot matrixs ----- */
         if( atsCompDoublePrec(rotMatrs,goodRotMatrs, 3*numImages,0.001) != 0 )
         {
             printf("Error in Trans Vectors\n");
+            Errors++;
         }
 
         fclose(file);
