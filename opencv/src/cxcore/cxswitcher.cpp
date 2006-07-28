@@ -68,8 +68,8 @@
 #define CV_PROC_IA32_PII            (CV_PROC_IA32_GENERIC|(2 << CV_PROC_SHIFT))
 #define CV_PROC_IA32_PIII           (CV_PROC_IA32_GENERIC|(3 << CV_PROC_SHIFT))
 #define CV_PROC_IA32_P4             (CV_PROC_IA32_GENERIC|(4 << CV_PROC_SHIFT))
-#define CV_PROC_IA64_ITANIUM        2
-#define CV_PROC_IA64_EM64T          3
+#define CV_PROC_IA64                2
+#define CV_PROC_EM64T               3
 #define CV_GET_PROC_ARCH(model)     ((model) & CV_PROC_ARCH_MASK)
 
 typedef struct CvProcessorInfo
@@ -185,10 +185,10 @@ icvInitProcessorInfo( CvProcessorInfo* cpu_info )
     {
 #if defined EM64T
         if( sys.wProcessorArchitecture == PROCESSOR_ARCHITECTURE_AMD64 )
-            cpu_info->model = CV_PROC_IA64_EM64T;
+            cpu_info->model = CV_PROC_EM64T;
 #elif defined WIN64
         if( sys.wProcessorArchitecture == PROCESSOR_ARCHITECTURE_IA64 )
-            cpu_info->model = CV_PROC_IA64_ITANIUM;
+            cpu_info->model = CV_PROC_IA64;
 #endif
         if( QueryPerformanceFrequency( &freq ) )
             cpu_info->frequency = (double)freq.QuadPart;
@@ -513,20 +513,18 @@ cvUseOptimized( int load_flag )
     CvModuleInfo* module;
     const CvProcessorInfo* cpu_info = icvGetProcessorInfo();
     int arch = CV_GET_PROC_ARCH(cpu_info->model);
-    const char* opencv_suffix = "097";
-    const char* ipp_suffix = arch == CV_PROC_IA32_GENERIC ?
-#ifdef WIN32
-        "-5.1"
-#else
-        "20"
-#endif
-        :
-                             arch == CV_PROC_IA64_ITANIUM ? "6420" :
-                             arch == CV_PROC_IA64_EM64T ? "em64t" : "";
-    const char* mkl_suffix = arch == CV_PROC_IA32_GENERIC ?
-                (cpu_info->model >= CV_PROC_IA32_P4 ? "p4" :
-                 cpu_info->model >= CV_PROC_IA32_PIII ? "p3" : "def") :
-                 arch == CV_PROC_IA64_ITANIUM ? "itp" : "";
+    
+    static const char* opencv_sfx[] = { "099", "097", 0 };
+    static const char* ipp_sfx_ia32[] = { "-5.1", "", "20", 0 };
+    static const char* ipp_sfx_ia64[] = { "64-5.1", "64", "6420", 0 };
+    static const char* ipp_sfx_em64t[] = { "em64t-5.1", "em64t", 0 };
+    static const char* mkl_sfx_ia32[] = { "p4", "p3", "def", 0 };
+    static const char* mkl_sfx_ia64[] = { "i2p", "itp", 0 };
+    static const char* mkl_sfx_em64t[] = { "def", 0 };
+    const char** ipp_suffix = arch == CV_PROC_IA64 ? ipp_sfx_ia64 :
+                              arch == CV_PROC_EM64T ? ipp_sfx_em64t : ipp_sfx_ia32;
+    const char** mkl_suffix = arch == CV_PROC_IA64 ? mkl_sfx_ia64 :
+                              arch == CV_PROC_EM64T ? mkl_sfx_em64t : mkl_sfx_ia32;
 
     for( i = 0; i < CV_PLUGIN_MAX; i++ )
         plugins[i].basename = 0;
@@ -555,14 +553,14 @@ cvUseOptimized( int load_flag )
             continue;
 
         if( load_flag && plugins[i].basename &&
-            (arch == CV_PROC_IA32_GENERIC || arch == CV_PROC_IA64_ITANIUM || arch == CV_PROC_IA64_EM64T) )
+            (arch == CV_PROC_IA32_GENERIC || arch == CV_PROC_IA64 || arch == CV_PROC_EM64T) )
         {
-            const char* suffix = i == CV_PLUGIN_OPTCV ? opencv_suffix :
+            const char** suffix = i == CV_PLUGIN_OPTCV ? opencv_sfx :
                             i < CV_PLUGIN_MKL ? ipp_suffix : mkl_suffix;
-            for(;;)
+            for( ; *suffix != 0; suffix++ )
             {
                 sprintf( plugins[i].name, DLL_PREFIX "%s%s" DLL_DEBUG_FLAG DLL_SUFFIX,
-                    plugins[i].basename, suffix );
+                    plugins[i].basename, *suffix );
 
                 ICV_PRINTF(("loading %s...\n", plugins[i].name ));
                 plugins[i].handle = LoadLibrary( plugins[i].name );
@@ -572,19 +570,6 @@ cvUseOptimized( int load_flag )
                     loaded_modules++;
                 }
                 if( plugins[i].handle != 0 )
-                    break;
-
-                if( strcmp( suffix, "p4" ) == 0 )
-                    suffix = "p3";
-                else if( strcmp( suffix, "p3" ) == 0 )
-                    suffix = "def";
-                else if( strcmp( suffix, "-5.1" ) == 0 )
-                    suffix = "20";
-                else if( strcmp( suffix, "20" ) == 0 )
-                    suffix = "";
-                else if( strcmp( suffix, "6420" ) == 0 )
-                    suffix = "64";
-                else
                     break;
             }
         }
