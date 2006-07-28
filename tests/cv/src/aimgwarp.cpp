@@ -116,7 +116,7 @@ void CV_ImgWarpBaseTestImpl::get_test_array_types_and_sizes( int test_case_idx,
                                                 CvSize** sizes, int** types )
 {
     CvRNG* rng = ts->get_rng();
-    int depth = test_case_idx*3/test_case_count;
+    int depth = cvTsRandInt(rng) % 3;
     int cn = cvTsRandInt(rng) % 3 + 1;
     CvArrTest::get_test_array_types_and_sizes( test_case_idx, sizes, types );
     depth = depth == 0 ? CV_8U : depth == 1 ? CV_16U : CV_32F;
@@ -1628,7 +1628,7 @@ void CV_GetRectSubPixTest::get_test_array_types_and_sizes( int test_case_idx, Cv
 {
     CvRNG* rng = ts->get_rng();
     CV_ImgWarpBaseTest::get_test_array_types_and_sizes( test_case_idx, sizes, types );
-    int src_depth = test_case_idx*2/test_case_count, dst_depth;
+    int src_depth = cvTsRandInt(rng) % 2, dst_depth;
     int cn = cvTsRandInt(rng) % 2 ? 3 : 1;
     CvSize src_size, dst_size;
     
@@ -1787,7 +1787,7 @@ void CV_GetQuadSubPixTest::get_test_array_types_and_sizes( int test_case_idx, Cv
     CV_ImgWarpBaseTest::get_test_array_types_and_sizes( test_case_idx, sizes, types );
     CvSize sz = sizes[INPUT][0], dsz;
     CvRNG* rng = ts->get_rng();
-    int msz, src_depth = test_case_idx*2/test_case_count, dst_depth;
+    int msz, src_depth = cvTsRandInt(rng) % 2, dst_depth;
     int cn = cvTsRandInt(rng) % 2 ? 3 : 1;
     
     dst_depth = src_depth = src_depth == 0 ? CV_8U : CV_32F;

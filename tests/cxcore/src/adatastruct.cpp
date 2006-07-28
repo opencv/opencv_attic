@@ -450,6 +450,7 @@ int CxCore_DynStructBaseTest::write_default_params( CvFileStorage* fs )
 int CxCore_DynStructBaseTest::read_params( CvFileStorage* fs )
 {
     int code = CvTest::read_params( fs );
+    double sqrt_scale = sqrt(ts->get_test_case_count_scale());
     if( code < 0 )
         return code;
 
@@ -457,6 +458,9 @@ int CxCore_DynStructBaseTest::read_params( CvFileStorage* fs )
     max_struct_size = cvReadInt( find_param( fs, "max_struct_size" ), max_struct_size );
     generations = cvReadInt( find_param( fs, "generations" ), generations );
     iterations = cvReadInt( find_param( fs, "iterations" ), iterations );
+    generations = cvRound(generations*sqrt_scale);
+    iterations = cvRound(iterations*sqrt_scale);
+
     min_log_storage_block_size = cvReadInt( find_param( fs, "min_log_storage_block_size" ),
                                             min_log_storage_block_size );
     max_log_storage_block_size = cvReadInt( find_param( fs, "max_log_storage_block_size" ),

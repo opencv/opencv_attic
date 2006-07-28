@@ -106,7 +106,7 @@ void CV_FloodFillTest::get_test_array_types_and_sizes( int test_case_idx,
     double buf[8];
     CvArrTest::get_test_array_types_and_sizes( test_case_idx, sizes, types );
 
-    depth = test_case_idx*2/test_case_count;
+    depth = cvTsRandInt(rng) % 2;
     depth = depth == 0 ? CV_8U : CV_32F;
     cn = cvTsRandInt(rng) & 1 ? 3 : 1;
 
