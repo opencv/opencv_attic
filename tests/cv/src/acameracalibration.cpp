@@ -466,8 +466,12 @@ static int calibrationTest(void *)
             }
         }
         
-        calibFlags = /*CV_CALIB_FIX_PRINCIPAL_POINT +*/ CV_CALIB_ZERO_TANGENT_DIST +
-                     CV_CALIB_FIX_ASPECT_RATIO /*+ CV_CALIB_USE_INTRINSIC_GUESS*/;
+        calibFlags = 
+                     //CV_CALIB_FIX_PRINCIPAL_POINT +
+                     //CV_CALIB_ZERO_TANGENT_DIST +
+                     //CV_CALIB_FIX_ASPECT_RATIO +
+                     //CV_CALIB_USE_INTRINSIC_GUESS + 
+                     0;
         memset( cameraMatrix, 0, 9*sizeof(cameraMatrix[0]) );
         cameraMatrix[0] = cameraMatrix[4] = 807.;
         cameraMatrix[2] = (imageSize.width - 1)*0.5;
