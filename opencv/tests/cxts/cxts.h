@@ -387,6 +387,9 @@ public:
     // returns the current timing mode
     int get_timing_mode() { return params.timing_mode; }
 
+    // returns the test extensivity scale
+    double get_test_case_count_scale() { return params.test_case_count_scale; }
+
     int find_written_param( CvTest* test, const char* paramname,
                             int valtype, const void* val );
 
@@ -489,6 +492,9 @@ protected:
 
         // whether to use IPP, MKL etc. or not
         int use_optimized;
+
+        // extensivity of the tests, scale factor for test_case_count
+        double test_case_count_scale;
     }
     params;
 
