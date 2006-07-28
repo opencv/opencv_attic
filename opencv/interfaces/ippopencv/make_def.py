@@ -3,16 +3,23 @@ tmp_name = "tmp.h"
 
 ipp_ver = 4
 
-if len(sys.argv) == 2 and sys.argv[1] == "5":
-    ipp_ver = 5
+if len(sys.argv) == 2 and sys.argv[1][0] in "0123456789":
+    ipp_ver = float(sys.argv[1])
 
-os.system( "cpp -DIPP%d opencvipp_funclist.h > %s" % (ipp_ver, tmp_name) );
+iver = int(round(ipp_ver*100))
+
+os.system( "cpp -DIPP=%d opencvipp_funclist.h > %s" % (iver, tmp_name) );
 f = open( tmp_name, "r" )
 ll = f.readlines()
 f.close()
 os.remove( tmp_name )
 
-f = open( "export%d.def" % (ipp_ver,) , "w" )
+if iver % 100 == 0:
+    def_filename = "export%d.def" % (iver/100,)
+else:
+    def_filename = "export%d.def" % (iver/10,)
+
+f = open( def_filename, "w" )
 print >>f, \
 """; The file has been generated automatically from opencvipp_funclist.h.
 ; Do not alter it!
@@ -27,5 +34,3 @@ for l in ll:
         print >> f, "    " + fn
 
 f.close()
-        
-

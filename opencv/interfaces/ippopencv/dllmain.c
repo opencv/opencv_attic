@@ -27,7 +27,7 @@ typedef __int64 int64;
 
 #include "ippcore.h"
 
-#ifndef IPP5
+#if IPP < 500
 #define ippGetCpuType ippCoreGetCpuType
 #endif
 

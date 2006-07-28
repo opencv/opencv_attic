@@ -43,7 +43,7 @@
 *                                      Copy/Set                                          *
 \****************************************************************************************/
 
-#ifndef IPP5
+#if IPP < 500 || IPP >= 510
 IPPAPI( IppStatus, ippiCopy_8u_C1R, ( const uchar* src, int src_step,
                              uchar* dst, int dst_step, IppiSize size ))
 
@@ -73,22 +73,31 @@ IPCV_COPYSET( _32f_C4MR, int, int )
 *                                       Arithmetics                                      *
 \****************************************************************************************/
 
-#define IPCV_BIN_ARITHM( name )                                     \
-IPPAPI( IppStatus, ippi##name##_8u_C1RSfs,                          \
-( const uchar* src1, int srcstep1, const uchar* src2, int srcstep2, \
-  uchar* dst, int dststep, IppiSize size, int scalefactor ))        \
-IPPAPI( IppStatus, ippi##name##_16s_C1RSfs,                         \
-( const short* src1, int srcstep1, const short* src2, int srcstep2, \
-  short* dst, int dststep, IppiSize size, int scalefactor ))        \
-IPPAPI( IppStatus, ippi##name##_32f_C1R,                            \
-( const float* src1, int srcstep1, const float* src2, int srcstep2, \
-  float* dst, int dststep, IppiSize size ))
+#define IPCV_BIN_ARITHM_INT( name, flavor, arrtype )                    \
+IPPAPI( IppStatus, ippi##name##_##flavor##_C1RSfs,                      \
+( const arrtype* src1, int srcstep1, const arrtype* src2, int srcstep2, \
+  arrtype* dst, int dststep, IppiSize size, int scalefactor ))
 
+IPCV_BIN_ARITHM_INT( Add, 8u, uchar )
+IPCV_BIN_ARITHM_INT( Add, 16s, short )
+IPCV_BIN_ARITHM_INT( Sub, 8u, uchar )
+IPCV_BIN_ARITHM_INT( Sub, 16s, short )
 
-IPCV_BIN_ARITHM( Add )
-IPCV_BIN_ARITHM( Sub )
+#if IPP >= 510
+IPCV_BIN_ARITHM_INT( Add, 16u, ushort )
+IPCV_BIN_ARITHM_INT( Sub, 16u, ushort )
+#endif
 
-#undef IPCV_BIN_ARITHM
+#define IPCV_BIN_ARITHM_FLT( name, flavor, arrtype )                    \
+IPPAPI( IppStatus, ippi##name##_##flavor##_C1R,                         \
+( const arrtype* src1, int srcstep1, const arrtype* src2, int srcstep2, \
+  arrtype* dst, int dststep, IppiSize size ))
+
+IPCV_BIN_ARITHM_FLT( Add, 32f, float )
+IPCV_BIN_ARITHM_FLT( Sub, 32f, float )
+
+#undef IPCV_BIN_ARITHM_INT
+#undef IPCV_BIN_ARITHM_FLT
 
 #endif
 
@@ -327,7 +336,7 @@ IPCV_PIX_PLANE( 32f, int )
 /*                            Math routines and RNGs                                    */
 /****************************************************************************************/
 
-#ifdef IPP5
+#if IPP > 400 && IPP < 510
 
 IPPAPI( IppStatus, ippsSqrt_32f, ( const float* src, float* dst, int len ))
 IPPAPI( IppStatus, ippsSqrt_64f, ( const double* src, double* dst, int len ))
@@ -633,6 +642,51 @@ IPCV_REMAP( 32f, 4 )
 *                                      Morphology                                        *
 \****************************************************************************************/
 
+#if IPP >= 510
+
+#define IPCV_MORPHOLOGY( minmaxtype, morphtype, flavor, cn )                    \
+IPPAPI( IppStatus, ippiFilter##minmaxtype##BorderReplicate_##flavor##_C##cn##R, \
+    ( const void* src, int srcstep, void* dst, int dststep, IppiSize roi,       \
+    IppiSize esize, IppiPoint anchor, void* buffer ))                           \
+IPPAPI( IppStatus, ippiFilter##minmaxtype##GetBufferSize_##flavor##_C##cn##R,   \
+    ( int width, IppiSize esize, int* bufsize ))                                \
+IPPAPI( IppStatus, ippi##morphtype##BorderReplicate_##flavor##_C##cn##R,        \
+    ( const void* src, int srcstep, void* dst, int dststep,                     \
+    IppiSize roi, int bordertype, void* morphstate ))
+
+IPCV_MORPHOLOGY( Min, Erode, 8u, 1 )
+IPCV_MORPHOLOGY( Min, Erode, 8u, 3 )
+IPCV_MORPHOLOGY( Min, Erode, 8u, 4 )
+IPCV_MORPHOLOGY( Min, Erode, 32f, 1 )
+IPCV_MORPHOLOGY( Min, Erode, 32f, 3 )
+IPCV_MORPHOLOGY( Min, Erode, 32f, 4 )
+IPCV_MORPHOLOGY( Max, Dilate, 8u, 1 )
+IPCV_MORPHOLOGY( Max, Dilate, 8u, 3 )
+IPCV_MORPHOLOGY( Max, Dilate, 8u, 4 )
+IPCV_MORPHOLOGY( Max, Dilate, 32f, 1 )
+IPCV_MORPHOLOGY( Max, Dilate, 32f, 3 )
+IPCV_MORPHOLOGY( Max, Dilate, 32f, 4 )
+
+#undef IPCV_MORPHOLOGY
+
+#define IPCV_MORPHOLOGY_INIT_ALLOC( flavor, cn )                        \
+IPPAPI( IppStatus, ippiMorphologyInitAlloc_##flavor##_C##cn##R,         \
+    ( int width, const uchar* element, IppiSize esize,                  \
+    IppiPoint anchor, void** morphstate ))
+
+IPCV_MORPHOLOGY_INIT_ALLOC( 8u, 1 )
+IPCV_MORPHOLOGY_INIT_ALLOC( 8u, 3 )
+IPCV_MORPHOLOGY_INIT_ALLOC( 8u, 4 )
+IPCV_MORPHOLOGY_INIT_ALLOC( 32f, 1 )
+IPCV_MORPHOLOGY_INIT_ALLOC( 32f, 3 )
+IPCV_MORPHOLOGY_INIT_ALLOC( 32f, 4 )
+
+#undef IPCV_MORPHOLOGY_INIT_ALLOC
+
+IPPAPI( IppStatus, ippiMorphologyFree, ( void* morphstate ))
+
+#else
+
 #define IPCV_MINMAX( minmaxtype, flavor, cn )                           \
 IPPAPI( IppStatus, ippiFilter##minmaxtype##_##flavor##_C##cn##R,        \
             ( const void* src, int srcstep, void* dst, int dststep,     \
@@ -653,7 +707,7 @@ IPCV_MINMAX( Max, 32f, 4 )
 
 #undef IPCV_MINMAX
 
-#ifndef IPP5
+#if IPP < 500
 
 #define IPCV_MORPHOLOGY( morphtype, flavor, cn )                        \
 IPPAPI( IppStatus, ippi##morphtype##_##flavor##_C##cn##R,               \
@@ -677,6 +731,7 @@ IPCV_MORPHOLOGY( Dilate, 32f, 4 )
 #undef IPCV_MORPHOLOGY
 
 #endif
+#endif
 
 /****************************************************************************************\
 *                                 Smoothing Filters                                      *
@@ -691,7 +746,7 @@ IPCV_FILTER_MEDIAN( 8u, 1 )
 IPCV_FILTER_MEDIAN( 8u, 3 )
 IPCV_FILTER_MEDIAN( 8u, 4 )
 
-#ifdef IPP5
+#if IPP >= 500
 
 #define IPCV_FILTER_BOX( flavor, cn )                               \
 IPPAPI( IppStatus, ippiFilterBox_##flavor##_C##cn##R,               \
@@ -712,6 +767,62 @@ IPCV_FILTER_BOX( 32f, 4 )
 /****************************************************************************************\
 *                                 Derivative Filters                                     *
 \****************************************************************************************/
+
+#if IPP >= 510
+
+#define IPCV_FILTER_SOBEL_BORDER( suffix, flavor, srctype )             \
+IPPAPI( IppStatus, ippiFilterSobel##suffix##GetBufferSize_##flavor##_C1R,\
+    ( IppiSize roi, int masksize, int* buffersize ))                    \
+IPPAPI( IppStatus, ippiFilterSobel##suffix##Border_##flavor##_C1R,      \
+    ( const void* src, int srcstep, void* dst, int dststep,             \
+      IppiSize roi, int masksize, int bordertype,                       \
+      srctype bordervalue, void* buffer ))
+
+IPCV_FILTER_SOBEL_BORDER( NegVert, 8u16s, uchar )
+IPCV_FILTER_SOBEL_BORDER( Horiz, 8u16s, uchar )
+IPCV_FILTER_SOBEL_BORDER( VertSecond, 8u16s, uchar )
+IPCV_FILTER_SOBEL_BORDER( HorizSecond, 8u16s, uchar )
+IPCV_FILTER_SOBEL_BORDER( Cross, 8u16s, uchar )
+
+IPCV_FILTER_SOBEL_BORDER( NegVert, 32f, float )
+IPCV_FILTER_SOBEL_BORDER( Horiz, 32f, float )
+IPCV_FILTER_SOBEL_BORDER( VertSecond, 32f, float )
+IPCV_FILTER_SOBEL_BORDER( HorizSecond, 32f, float )
+IPCV_FILTER_SOBEL_BORDER( Cross, 32f, float )
+
+#undef IPCV_FILTER_SOBEL_BORDER
+
+#define IPCV_FILTER_SCHARR_BORDER( suffix, flavor, srctype )             \
+IPPAPI( IppStatus, ippiFilterScharr##suffix##GetBufferSize_##flavor##_C1R,\
+    ( IppiSize roi, int* buffersize ))                                   \
+IPPAPI( IppStatus, ippiFilterScharr##suffix##Border_##flavor##_C1R,      \
+    ( const void* src, int srcstep, void* dst, int dststep, IppiSize roi,\
+      int bordertype, srctype bordervalue, void* buffer ))
+
+IPCV_FILTER_SCHARR_BORDER( Vert, 8u16s, uchar )
+IPCV_FILTER_SCHARR_BORDER( Horiz, 8u16s, uchar )
+
+IPCV_FILTER_SCHARR_BORDER( Vert, 32f, float )
+IPCV_FILTER_SCHARR_BORDER( Horiz, 32f, float )
+
+#undef IPCV_FILTER_SCHARR_BORDER
+
+
+#define IPCV_FILTER_LAPLACIAN_BORDER( flavor, srctype )         \
+IPPAPI( IppStatus, ippiFilterLaplacianGetBufferSize_##flavor##_C1R,\
+    ( IppiSize roi, int masksize, int* buffersize ))            \
+IPPAPI( IppStatus, ippiFilterLaplacianBorder_##flavor##_C1R,    \
+    ( const void* src, int srcstep, void* dst, int dststep,     \
+      IppiSize roi, int masksize, int bordertype,               \
+      srctype bordervalue, void* buffer ))
+
+IPCV_FILTER_LAPLACIAN_BORDER( 8u16s, uchar )
+IPCV_FILTER_LAPLACIAN_BORDER( 32f, float )
+
+#undef IPCV_FILTER_LAPLACIAN_BORDER
+
+#endif
+
 
 #define IPCV_FILTER_SOBEL( suffix, flavor )                 \
 IPPAPI( IppStatus, ippiFilterSobel##suffix##_##flavor##_C1R,\
@@ -868,7 +979,7 @@ IPPAPI(IppStatus, ippiDistanceTransform_5x5_8u32f_C1R,
 IPPAPI( IppStatus, ippiGetDistanceTransformMask, ( int maskType, float* pMetrics ))
 
 
-#ifdef IPP5
+#if IPP >= 500
 
 /****************************************************************************************\
 *                                 Radial Distortion Removal                              *
