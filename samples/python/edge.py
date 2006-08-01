@@ -31,9 +31,17 @@ def on_trackbar (position):
     highgui.cvShowImage (win_name, col_edge)
 
 if __name__ == '__main__':
+    filename = "../c/fruits.jpg"
+
+    if len(sys.argv)>1:
+        filename = sys.argv[1]
 
     # load the image gived on the command line
-    image = highgui.cvLoadImage (sys.argv [1])
+    image = highgui.cvLoadImage (filename)
+
+    if not image:
+        print "Error loading image '%s'" % filename
+        sys.exit(-1)
 
     # create the output image
     col_edge = cv.cvCreateImage (cv.cvSize (image.width, image.height), 8, 3)
