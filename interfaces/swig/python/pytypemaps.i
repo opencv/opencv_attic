@@ -38,27 +38,8 @@
 // the use of this software, even if advised of the possibility of such damage.
 //
 //M*/
-
-/* if python sequence type, convert to CvMat or CvMatND */
-%{
-static CvArr * PyObject_to_CvArr(PyObject * obj, bool * freearg){
-	CvArr * cvarr;
-	*freearg = false;
-
-	// check if OpenCV type
-	if( PySwigObject_Check(obj) ){
-		SWIG_ConvertPtr(obj, (void**)&cvarr, 0, SWIG_POINTER_EXCEPTION);
-	}
-	else if(PyList_Check(obj) || PyTuple_Check(obj)){
-		cvarr = PySequence_to_CvArr( obj );
-		*freearg = (cvarr != NULL);
-	}
-	else {
-		SWIG_ConvertPtr(obj, (void**)&cvarr, 0, SWIG_POINTER_EXCEPTION);
-	}
-	return cvarr;
-}
-%}
+%include "exception.i"
+%include "./pyhelpers.i"
 
 %typemap(in) (CvArr *) (bool freearg=false){
 	$1 = PyObject_to_CvArr($input, &freearg);
@@ -85,57 +66,27 @@ static CvArr * PyObject_to_CvArr(PyObject * obj, bool * freearg){
 
 // for cvReshape, cvGetRow, where header is passed, then filled in
 %typemap(in, numinputs=0) CvMat * OUTPUT (CvMat * header) {
-	header = (CvMat *)malloc(sizeof(CvMat));
+	header = (CvMat *)cvAlloc(sizeof(CvMat));
    	$1 = header;
 }
+%newobject cvReshape;
+%newobject cvGetRow;
+%newobject cvGetRows;
+%newobject cvGetCol;
+%newobject cvGetCols;
 
 %apply CvMat *OUTPUT {CvMat * header};
 %apply CvMat *OUTPUT {CvMat * submat};
 
 /* map scalar or sequence to CvScalar, CvPoint2D32f, CvPoint */
 %typemap(in) (CvScalar) {
-	CvScalar val;
-	CvScalar * ptr;
-	if( SWIG_ConvertPtr($input, (void **)&ptr, $descriptor( CvScalar * ), 0 ) == -1)
-	{
-		if(PyObject_AsDoubleArray($input, val.val, 4)==-1){
-	    	SWIG_exception (SWIG_TypeError, "could not convert to CvScalar");
-			return NULL;
-		}
-	}
-	else{
-		val = *ptr;
-	}
-	$1=val;
+	$1 = PyObject_to_CvScalar( $input );
 }
 %typemap(in) (CvPoint) {
-	CvPoint val;
-	CvPoint *ptr;
-	if( SWIG_ConvertPtr($input, (void**)&ptr, $descriptor(CvPoint *), 0) == -1) {
-		if(PyObject_AsLongArray($input, (int *) &val, 2)==-1){
-			SWIG_exception (SWIG_TypeError, "could not convert to CvPoint");
-			return NULL;
-		}
-	}
-	else{
-		val = *ptr;
-	}
-	$1 = val;
+	$1 = PyObject_to_CvPoint($input);
 }
-
 %typemap(in) (CvPoint2D32f) {
-    CvPoint2D32f val;
-    CvPoint2D32f *ptr;
-    if( SWIG_ConvertPtr($input, (void**)&ptr, $descriptor(CvPoint *), 0) == -1) {
-        if(PyObject_AsFloatArray($input, (float *) &val, 2)==-1){
-            SWIG_exception (SWIG_TypeError, "could not convert to CvPoint2D32f");
-            return NULL;
-        }
-    }
-    else{
-        val = *ptr;
-    }
-    $1 = val;
+	$1 = PyObject_to_CvPoint2D32f($input);
 }
 
 
@@ -337,6 +288,34 @@ static CvArr * PyObject_to_CvArr(PyObject * obj, bool * freearg){
 	}
     }
 }
+/** Free arguments allocated before the function call */
+%typemap(freearg) (CvPoint **pts, int* npts, int contours){
+	int i;
+	for(i=0;i<$3;i++){
+		free($1[i]);
+	}
+	free($1);
+	free($2);
+}
+
+/** 
+ * The input argument of cvFillConvexPoly is convert from a list of CvPoints to a CvPoint array
+ */
+%typemap(in, numinputs=1) (CvPoint *pts, int npts){
+	int i;
+	int size = PyList_Size($input);
+	CvPoint * points = (CvPoint *)malloc(size*sizeof(CvPoint));
+	for(i=0; i<size; i++){
+		PyObject *item = PyList_GetItem($input, i);
+		points[i] = PyObject_to_CvPoint( item );
+	}
+	$1 = points;
+	$2 = size;
+}
+/** Free arguments allocated before the function call */
+%typemap(freearg) (CvPoint *pts, int npts){
+	free((char *)$1);
+}
 
 /**
  * what we need to cleanup for the input argument of cvConvexHull2
@@ -382,22 +361,24 @@ static CvArr * PyObject_to_CvArr(PyObject * obj, bool * freearg){
  * this is mainly an "output parameter"
  * So, just allocate the memory as input
  */
-%typemap (in, numinputs=0) (CvSeq **first_contour) {
-    CvSeq *seq = (CvSeq *)malloc (sizeof (CvSeq));
+%typemap (in, numinputs=0) (CvSeq ** OUTPUT) (CvSeq * seq) {
     $1 = &seq;
 }
 
 /**
  * return the finded contours with all the others parametres
  */
-%typemap(argout) (CvSeq **first_contour) {
+%typemap(argout) (CvSeq ** OUTPUT) {
     PyObject *to_add;
 
     /* extract the pointer we want to add to the returned tuple */
-    to_add = SWIG_NewPointerObj (*$1, $descriptor(CvSeq *), 0);
+	/* sequence is allocated in CvMemStorage, so python_ownership=0 */
+    to_add = SWIG_NewPointerObj (*$1, $descriptor(CvSeq *), 0); 
 
 	$result = SWIG_AppendResult($result, &to_add, 1);
 }
+%apply CvSeq **OUTPUT {CvSeq **first_contour};
+%apply CvSeq **OUTPUT {CvSeq **comp};
 
 /**
  * IplImage ** image can be either one IplImage or one array of IplImage
@@ -722,3 +703,177 @@ static CvArr * PyObject_to_CvArr(PyObject * obj, bool * freearg){
 	$1 = cvCreateMat(3,3,CV_32F);
 	$2 = cvCreateMat(4,1,CV_32F);
 }
+
+/**
+ * Fix OpenCV inheritance for CvSeq, CvSet, CvGraph
+ * Otherwise, can't call CvSeq functions on CvSet or CvGraph
+*/
+%typemap(in, numinputs=1) (CvSeq *) (CvSeq * ptr)
+{
+	if( SWIG_ConvertPtr($input, (void**)&ptr, $descriptor(CvSeq *), 0) == -1 &&
+	    SWIG_ConvertPtr($input, (void**)&ptr, $descriptor(CvSet *), 0) == -1 &&
+	    SWIG_ConvertPtr($input, (void**)&ptr, $descriptor(CvGraph *), 0) == -1 &&
+	    SWIG_ConvertPtr($input, (void**)&ptr, $descriptor(CvSubdiv2D *), 0) == -1 &&
+	    SWIG_ConvertPtr($input, (void**)&ptr, $descriptor(CvChain *), 0) == -1 &&
+	    SWIG_ConvertPtr($input, (void**)&ptr, $descriptor(CvContour *), 0) == -1 &&
+	    SWIG_ConvertPtr($input, (void**)&ptr, $descriptor(CvContourTree *), 0) == -1 )
+	{
+		SWIG_exception (SWIG_TypeError, "could not convert to CvSeq");
+		return NULL;
+	}
+	$1 = ptr;
+}
+
+%typemap(in, numinputs=1) (CvSet *) (CvSet * ptr)
+{
+	if( SWIG_ConvertPtr($input, (void**)&ptr, $descriptor(CvSet *), 0) == -1 &&
+	    SWIG_ConvertPtr($input, (void**)&ptr, $descriptor(CvGraph *), 0) == -1 &&
+	    SWIG_ConvertPtr($input, (void**)&ptr, $descriptor(CvSubdiv2D *), 0) == -1) 
+	{
+		SWIG_exception (SWIG_TypeError, "could not convert to CvSet");
+		return NULL;
+	}
+	$1 = ptr;
+}
+
+%typemap(in, numinputs=1) (CvGraph *) (CvGraph * ptr)
+{
+	if( SWIG_ConvertPtr($input, (void**)&ptr, $descriptor(CvGraph *), 0) == -1 &&
+	    SWIG_ConvertPtr($input, (void**)&ptr, $descriptor(CvSubdiv2D *), 0) == -1) 
+	{
+		SWIG_exception (SWIG_TypeError, "could not convert to CvGraph");
+		return NULL;
+	}
+	$1 = ptr;
+}
+
+/**
+ * Remap output arguments to multiple return values for cvMinEnclosingCircle
+ */
+%typemap(in, numinputs=0) (CvPoint2D32f * center, float * radius) (CvPoint2D32f * tmp_center, float tmp_radius) 
+{
+	tmp_center = (CvPoint2D32f *) malloc(sizeof(CvPoint2D32f));
+	$1 = tmp_center;
+	$2 = &tmp_radius;
+}
+%typemap(argout) (CvPoint2D32f * center, float * radius)
+{
+    PyObject * to_add[2] = {NULL, NULL};
+	to_add[0] = SWIG_NewPointerObj( tmp_center$argnum, $descriptor(CvPoint2D32f *), 1); 
+	to_add[1] = PyFloat_FromDouble( tmp_radius$argnum );
+
+    $result = SWIG_AppendResult($result, to_add, 2);
+}
+
+/** BoxPoints */
+%typemap(in, numinputs=0) (CvPoint2D32f pt[4]) (CvPoint2D32f tmp_pts[4])
+{
+	$1 = tmp_pts;
+}
+%typemap(argout) (CvPoint2D32f pt[4])
+{
+	PyObject * to_add = PyList_New(4);
+	int i;
+	for(i=0; i<4; i++){
+		CvPoint2D32f * p = new CvPoint2D32f;
+		*p = tmp_pts$argnum[i];
+		PyList_SetItem(to_add, i, SWIG_NewPointerObj( p, $descriptor(CvPoint2D32f *), 1 ) );
+	}
+	$result = SWIG_AppendResult($result, &to_add, 1);
+}
+
+/** Macro to wrap a built-in type that is used as an object like CvRNG and CvSubdiv2DEdge */
+%define %wrap_builtin(type)
+%inline %{
+// Wrapper class
+class type##_Wrapper {
+private:
+	type m_val;
+public:
+	type##_Wrapper( const type & val ) :
+		m_val(val)
+	{
+	}
+	type * ptr() { return &m_val; }
+	type & ref() { return m_val; }
+	bool operator==(const type##_Wrapper & x){
+		return m_val==x.m_val;
+	}
+	bool operator!=(const type##_Wrapper & x){
+		return m_val!=x.m_val;
+	}
+};
+%}
+%typemap(out) type
+{
+	type##_Wrapper * wrapper = new type##_Wrapper( $1 );
+	$result = SWIG_NewPointerObj( wrapper, $descriptor( type##_Wrapper * ), 1 );
+}
+%typemap(out) type *
+{
+	type##_Wrapper * wrapper = new type##_Wrapper( *($1) );
+	$result = SWIG_NewPointerObj( wrapper, $descriptor( type##_Wrapper * ), 1 );
+}
+
+%typemap(in) (type *) (type##_Wrapper * wrapper){
+	if(SWIG_ConvertPtr($input, (void **) &wrapper, $descriptor(type##_Wrapper *), 0)==-1){
+		SWIG_exception( SWIG_TypeError, "could not convert Python object to C value");
+		return NULL;
+	}
+	$1 = wrapper->ptr();
+}
+%typemap(in) (type) (type##_Wrapper * wrapper){
+	if(SWIG_ConvertPtr($input, (void **) &wrapper, $descriptor(type##_Wrapper *), 0)==-1){
+		SWIG_exception( SWIG_TypeError, "could not convert Python object to C value");
+		return NULL;
+	}
+	$1 = wrapper->ref();
+}
+%enddef 
+
+/** Application of wrapper class to built-in types */
+%wrap_builtin(CvRNG);
+%wrap_builtin(CvSubdiv2DEdge);
+
+/**
+ * Allow CvQuadEdge2D to be interpreted as CvSubdiv2DEdge
+ */
+%typemap(in, numinputs=1) (CvSubdiv2DEdge) (CvSubdiv2DEdge_Wrapper * wrapper, CvQuadEdge2D * qedge)
+{
+	if( SWIG_ConvertPtr($input, (void **)&wrapper, $descriptor(CvSubdiv2DEdge_Wrapper *), 0) != -1 ){
+		$1 = wrapper->ref();
+	}
+	else if( SWIG_ConvertPtr($input, (void **)&qedge, $descriptor(CvQuadEdge2D *), 0) != -1 ){
+		$1 = (CvSubdiv2DEdge)qedge;
+	}
+	else{
+		 SWIG_exception( SWIG_TypeError, "could not convert to CvSubdiv2DEdge");
+		 return NULL;
+	}
+}
+
+/**
+ * return the vertex and edge for cvSubdiv2DLocate
+ */
+%typemap(in, numinputs=0) (CvSubdiv2DEdge * edge, CvSubdiv2DPoint ** vertex) 
+	(CvSubdiv2DEdge * tmpEdge, CvSubdiv2DPoint * tmpVertex)
+{
+	$1 = tmpEdge;
+	$2 = &tmpVertex;
+}
+%typemap(argout) (CvSubdiv2DEdge * edge, CvSubdiv2DPoint ** vertex)
+{
+	PyObject * to_add[2] = {NULL, NULL};
+	if(result==CV_PTLOC_INSIDE || result==CV_PTLOC_ON_EDGE){
+		CvSubdiv2DEdge_Wrapper * wrapper = new CvSubdiv2DEdge_Wrapper( *(tmpEdge$argnum) );
+		to_add[0] = SWIG_NewPointerObj( wrapper, $descriptor(CvSubdiv2DEdge_Wrapper *), 0);
+		to_add[1] = Py_None;
+	}
+	if(result==CV_PTLOC_VERTEX){
+		to_add[0] = Py_None;
+		to_add[1] = SWIG_NewPointerObj( tmpVertex$argnum, $descriptor(CvSubdiv2DPoint *), 0);
+	}
+	
+	$result = SWIG_AppendResult($result, to_add, 2);
+}
+

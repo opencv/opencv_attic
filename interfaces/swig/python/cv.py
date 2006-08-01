@@ -42,6 +42,76 @@ except AttributeError:
 del types
 
 
+class CvRNG_Wrapper(_object):
+    """Proxy of C++ CvRNG_Wrapper class"""
+    __swig_setmethods__ = {}
+    __setattr__ = lambda self, name, value: _swig_setattr(self, CvRNG_Wrapper, name, value)
+    __swig_getmethods__ = {}
+    __getattr__ = lambda self, name: _swig_getattr(self, CvRNG_Wrapper, name)
+    __repr__ = _swig_repr
+    def __init__(self, *args): 
+        """__init__(self, CvRNG val) -> CvRNG_Wrapper"""
+        this = _cv.new_CvRNG_Wrapper(*args)
+        try: self.this.append(this)
+        except: self.this = this
+    def ptr(*args):
+        """ptr(self) -> CvRNG"""
+        return _cv.CvRNG_Wrapper_ptr(*args)
+
+    def ref(*args):
+        """ref(self) -> CvRNG"""
+        return _cv.CvRNG_Wrapper_ref(*args)
+
+    def __eq__(*args):
+        """__eq__(self, CvRNG_Wrapper x) -> bool"""
+        return _cv.CvRNG_Wrapper___eq__(*args)
+
+    def __ne__(*args):
+        """__ne__(self, CvRNG_Wrapper x) -> bool"""
+        return _cv.CvRNG_Wrapper___ne__(*args)
+
+    __swig_destroy__ = _cv.delete_CvRNG_Wrapper
+    __del__ = lambda self : None;
+CvRNG_Wrapper_swigregister = _cv.CvRNG_Wrapper_swigregister
+CvRNG_Wrapper_swigregister(CvRNG_Wrapper)
+
+class CvSubdiv2DEdge_Wrapper(_object):
+    """Proxy of C++ CvSubdiv2DEdge_Wrapper class"""
+    __swig_setmethods__ = {}
+    __setattr__ = lambda self, name, value: _swig_setattr(self, CvSubdiv2DEdge_Wrapper, name, value)
+    __swig_getmethods__ = {}
+    __getattr__ = lambda self, name: _swig_getattr(self, CvSubdiv2DEdge_Wrapper, name)
+    __repr__ = _swig_repr
+    def __init__(self, *args): 
+        """__init__(self, CvSubdiv2DEdge val) -> CvSubdiv2DEdge_Wrapper"""
+        this = _cv.new_CvSubdiv2DEdge_Wrapper(*args)
+        try: self.this.append(this)
+        except: self.this = this
+    def ptr(*args):
+        """ptr(self) -> CvSubdiv2DEdge"""
+        return _cv.CvSubdiv2DEdge_Wrapper_ptr(*args)
+
+    def ref(*args):
+        """ref(self) -> CvSubdiv2DEdge"""
+        return _cv.CvSubdiv2DEdge_Wrapper_ref(*args)
+
+    def __eq__(*args):
+        """__eq__(self, CvSubdiv2DEdge_Wrapper x) -> bool"""
+        return _cv.CvSubdiv2DEdge_Wrapper___eq__(*args)
+
+    def __ne__(*args):
+        """__ne__(self, CvSubdiv2DEdge_Wrapper x) -> bool"""
+        return _cv.CvSubdiv2DEdge_Wrapper___ne__(*args)
+
+    __swig_destroy__ = _cv.delete_CvSubdiv2DEdge_Wrapper
+    __del__ = lambda self : None;
+CvSubdiv2DEdge_Wrapper_swigregister = _cv.CvSubdiv2DEdge_Wrapper_swigregister
+CvSubdiv2DEdge_Wrapper_swigregister(CvSubdiv2DEdge_Wrapper)
+
+
+def cvContourPerimeter(*args):
+  """cvContourPerimeter(CvSeq contour) -> double"""
+  return _cv.cvContourPerimeter(*args)
 
 def cvFree(*args):
   """cvFree(void ptr)"""
@@ -486,10 +556,6 @@ def CV_IS_HAAR_CLASSIFIER(*args):
   """CV_IS_HAAR_CLASSIFIER(void haar) -> int"""
   return _cv.CV_IS_HAAR_CLASSIFIER(*args)
 
-def cvContourPerimeter(*args):
-  """cvContourPerimeter(void contour)"""
-  return _cv.cvContourPerimeter(*args)
-
 def cvCalcBackProject(*args):
   """cvCalcBackProject( image, CvArr dst, CvHistogram hist)"""
   return _cv.cvCalcBackProject(*args)
@@ -502,6 +568,7 @@ def cvCalcBackProjectPatch(*args):
   return _cv.cvCalcBackProjectPatch(*args)
 sizeof_CvContour = _cv.sizeof_CvContour
 sizeof_CvPoint = _cv.sizeof_CvPoint
+sizeof_CvSeq = _cv.sizeof_CvSeq
 CV_AUTOSTEP = _cv.CV_AUTOSTEP
 CV_MAX_ARR = _cv.CV_MAX_ARR
 CV_NO_DEPTH_CHECK = _cv.CV_NO_DEPTH_CHECK
@@ -1003,6 +1070,24 @@ class Cv32suf(_object):
 Cv32suf_swigregister = _cv.Cv32suf_swigregister
 Cv32suf_swigregister(Cv32suf)
 
+def cvCvtSeqToArray(*args):
+  """
+    cvCvtSeqToArray(CvSeq seq, CvArr elements, CvSlice slice=cvSlice(0, 0x3fffffff)) -> CvArr
+    cvCvtSeqToArray(CvSeq seq, CvArr elements) -> CvArr
+    """
+  return _cv.cvCvtSeqToArray(*args)
+
+def cvArcLengthOverload(*args):
+  """
+    cvArcLengthOverload(CvSeq seq, CvSlice slice=cvSlice(0, 0x3fffffff), int is_closed=-1) -> double
+    cvArcLengthOverload(CvSeq seq, CvSlice slice=cvSlice(0, 0x3fffffff)) -> double
+    cvArcLengthOverload(CvSeq seq) -> double
+    cvArcLengthOverload(CvArr arr, CvSlice slice=cvSlice(0, 0x3fffffff), int is_closed=-1) -> double
+    cvArcLengthOverload(CvArr arr, CvSlice slice=cvSlice(0, 0x3fffffff)) -> double
+    cvArcLengthOverload(CvArr arr) -> double
+    """
+  return _cv.cvArcLengthOverload(*args)
+
 class Cv64suf(_object):
     """Proxy of C++ Cv64suf class"""
     __swig_setmethods__ = {}
@@ -1230,6 +1315,103 @@ class IplImage(_object):
         __div__(self, double val)
         """
         return _cv.IplImage___div__(*args)
+
+    def __radd__(*args):
+        """
+        __radd__(self, CvArr arg)
+        __radd__(self, CvScalar arg)
+        __radd__(self, double arg)
+        """
+        return _cv.IplImage___radd__(*args)
+
+    def __rsub__(*args):
+        """
+        __rsub__(self, CvArr arg)
+        __rsub__(self, CvScalar arg)
+        __rsub__(self, double arg)
+        """
+        return _cv.IplImage___rsub__(*args)
+
+    def __rmul__(*args):
+        """
+        __rmul__(self, CvArr arg)
+        __rmul__(self, double arg) -> CvArr
+        """
+        return _cv.IplImage___rmul__(*args)
+
+    def __rdiv__(*args):
+        """
+        __rdiv__(self, CvArr arg)
+        __rdiv__(self, double arg) -> CvArr
+        """
+        return _cv.IplImage___rdiv__(*args)
+
+    def __ror__(*args):
+        """
+        __ror__(self, CvScalar arg)
+        __ror__(self, double arg)
+        """
+        return _cv.IplImage___ror__(*args)
+
+    def __rand__(*args):
+        """
+        __rand__(self, CvScalar arg)
+        __rand__(self, double arg)
+        """
+        return _cv.IplImage___rand__(*args)
+
+    def __rxor__(*args):
+        """
+        __rxor__(self, CvScalar arg)
+        __rxor__(self, double arg)
+        """
+        return _cv.IplImage___rxor__(*args)
+
+    def __req__(*args):
+        """__req__(self, double arg) -> CvArr"""
+        return _cv.IplImage___req__(*args)
+
+    def __rgt__(*args):
+        """__rgt__(self, double arg) -> CvArr"""
+        return _cv.IplImage___rgt__(*args)
+
+    def __rge__(*args):
+        """__rge__(self, double arg) -> CvArr"""
+        return _cv.IplImage___rge__(*args)
+
+    def __rlt__(*args):
+        """__rlt__(self, double arg) -> CvArr"""
+        return _cv.IplImage___rlt__(*args)
+
+    def __rle__(*args):
+        """__rle__(self, double arg) -> CvArr"""
+        return _cv.IplImage___rle__(*args)
+
+    def __rne__(*args):
+        """__rne__(self, double arg) -> CvArr"""
+        return _cv.IplImage___rne__(*args)
+
+    def __pow__(*args):
+        """__pow__(self, double arg)"""
+        return _cv.IplImage___pow__(*args)
+
+    def __str__(*args):
+        """__str__(self) -> char"""
+        return _cv.IplImage___str__(*args)
+
+    def __setitem__(*args):
+        """
+        __setitem__(self, PyObject object, double val)
+        __setitem__(self, PyObject object, CvPoint val)
+        __setitem__(self, PyObject object, CvPoint2D32f val)
+        __setitem__(self, PyObject object, CvScalar val)
+        __setitem__(self, PyObject object, CvArr arr)
+        """
+        return _cv.IplImage___setitem__(*args)
+
+    def __getitem__(*args):
+        """__getitem__(self, PyObject object) -> PyObject"""
+        return _cv.IplImage___getitem__(*args)
 
     def imageData_set(*args):
         """imageData_set(self, PyObject object)"""
@@ -1498,6 +1680,103 @@ class CvMat(_object):
         __div__(self, double val) -> CvMat
         """
         return _cv.CvMat___div__(*args)
+
+    def __radd__(*args):
+        """
+        __radd__(self, CvArr arg) -> CvMat
+        __radd__(self, CvScalar arg) -> CvMat
+        __radd__(self, double arg) -> CvMat
+        """
+        return _cv.CvMat___radd__(*args)
+
+    def __rsub__(*args):
+        """
+        __rsub__(self, CvArr arg) -> CvMat
+        __rsub__(self, CvScalar arg) -> CvMat
+        __rsub__(self, double arg) -> CvMat
+        """
+        return _cv.CvMat___rsub__(*args)
+
+    def __rmul__(*args):
+        """
+        __rmul__(self, CvArr arg) -> CvMat
+        __rmul__(self, double arg) -> CvArr
+        """
+        return _cv.CvMat___rmul__(*args)
+
+    def __rdiv__(*args):
+        """
+        __rdiv__(self, CvArr arg) -> CvMat
+        __rdiv__(self, double arg) -> CvArr
+        """
+        return _cv.CvMat___rdiv__(*args)
+
+    def __ror__(*args):
+        """
+        __ror__(self, CvScalar arg) -> CvMat
+        __ror__(self, double arg) -> CvMat
+        """
+        return _cv.CvMat___ror__(*args)
+
+    def __rand__(*args):
+        """
+        __rand__(self, CvScalar arg) -> CvMat
+        __rand__(self, double arg) -> CvMat
+        """
+        return _cv.CvMat___rand__(*args)
+
+    def __rxor__(*args):
+        """
+        __rxor__(self, CvScalar arg) -> CvMat
+        __rxor__(self, double arg) -> CvMat
+        """
+        return _cv.CvMat___rxor__(*args)
+
+    def __req__(*args):
+        """__req__(self, double arg) -> CvArr"""
+        return _cv.CvMat___req__(*args)
+
+    def __rgt__(*args):
+        """__rgt__(self, double arg) -> CvArr"""
+        return _cv.CvMat___rgt__(*args)
+
+    def __rge__(*args):
+        """__rge__(self, double arg) -> CvArr"""
+        return _cv.CvMat___rge__(*args)
+
+    def __rlt__(*args):
+        """__rlt__(self, double arg) -> CvArr"""
+        return _cv.CvMat___rlt__(*args)
+
+    def __rle__(*args):
+        """__rle__(self, double arg) -> CvArr"""
+        return _cv.CvMat___rle__(*args)
+
+    def __rne__(*args):
+        """__rne__(self, double arg) -> CvArr"""
+        return _cv.CvMat___rne__(*args)
+
+    def __pow__(*args):
+        """__pow__(self, double arg) -> CvMat"""
+        return _cv.CvMat___pow__(*args)
+
+    def __str__(*args):
+        """__str__(self) -> char"""
+        return _cv.CvMat___str__(*args)
+
+    def __setitem__(*args):
+        """
+        __setitem__(self, PyObject object, double val)
+        __setitem__(self, PyObject object, CvPoint val)
+        __setitem__(self, PyObject object, CvPoint2D32f val)
+        __setitem__(self, PyObject object, CvScalar val)
+        __setitem__(self, PyObject object, CvArr arr)
+        """
+        return _cv.CvMat___setitem__(*args)
+
+    def __getitem__(*args):
+        """__getitem__(self, PyObject object) -> PyObject"""
+        return _cv.CvMat___getitem__(*args)
 
 CvMat_swigregister = _cv.CvMat_swigregister
 CvMat_swigregister(CvMat)
@@ -3846,9 +4125,9 @@ def cvSetSeqReaderPos(*args):
   """cvSetSeqReaderPos(CvSeqReader reader, int index, int is_relative=0)"""
   return _cv.cvSetSeqReaderPos(*args)
 
-def cvCvtSeqToArray(*args):
-  """cvCvtSeqToArray(CvSeq seq, void elements, CvSlice slice=cvSlice(0, 0x3fffffff)) -> void"""
-  return _cv.cvCvtSeqToArray(*args)
+def cvCvtSeqToVoidPtr(*args):
+  """cvCvtSeqToVoidPtr(CvSeq seq, void elements, CvSlice slice=cvSlice(0, 0x3fffffff)) -> void"""
+  return _cv.cvCvtSeqToVoidPtr(*args)
 
 def cvMakeSeqHeaderForArray(*args):
   """
@@ -4084,7 +4363,7 @@ def cvEllipseBox(*args):
 
 def cvFillConvexPoly(*args):
   """
-    cvFillConvexPoly(CvArr img, CvPoint pts, int npts, CvScalar color, int line_type=8, 
+    cvFillConvexPoly(CvArr img, CvPoint pts, CvScalar color, int line_type=8, 
         int shift=0)
     """
   return _cv.cvFillConvexPoly(*args)
@@ -6002,10 +6281,7 @@ def cvSubdivDelaunay2DInsert(*args):
   return _cv.cvSubdivDelaunay2DInsert(*args)
 
 def cvSubdiv2DLocate(*args):
-  """
-    cvSubdiv2DLocate(CvSubdiv2D subdiv, CvPoint2D32f pt, CvSubdiv2DEdge edge, 
-        CvSubdiv2DPoint vertex=None) -> int
-    """
+  """cvSubdiv2DLocate(CvSubdiv2D subdiv, CvPoint2D32f pt, CvSubdiv2DEdge edge) -> int"""
   return _cv.cvSubdiv2DLocate(*args)
 
 def cvCalcSubdivVoronoi2D(*args):
@@ -6063,9 +6339,9 @@ def cvFindDominantPoints(*args):
     """
   return _cv.cvFindDominantPoints(*args)
 
-def cvArcLength(*args):
-  """cvArcLength(void curve, CvSlice slice=cvSlice(0, 0x3fffffff), int is_closed=-1) -> double"""
-  return _cv.cvArcLength(*args)
+def cvArcLengthVoidPtr(*args):
+  """cvArcLengthVoidPtr(void curve, CvSlice slice=cvSlice(0, 0x3fffffff), int is_closed=-1) -> double"""
+  return _cv.cvArcLengthVoidPtr(*args)
 
 def cvBoundingRect(*args):
   """cvBoundingRect(CvArr points, int update=0) -> CvRect"""
@@ -6080,7 +6356,7 @@ def cvMinAreaRect2(*args):
   return _cv.cvMinAreaRect2(*args)
 
 def cvMinEnclosingCircle(*args):
-  """cvMinEnclosingCircle(CvArr points, CvPoint2D32f center, float radius) -> int"""
+  """cvMinEnclosingCircle(CvArr points, CvPoint2D32f center) -> int"""
   return _cv.cvMinEnclosingCircle(*args)
 
 def cvMatchShapes(*args):
@@ -6988,6 +7264,14 @@ def cvGetSeqElemAsRect(*args):
 def cvGetSeqElemAsSeq(*args):
   """cvGetSeqElemAsSeq(CvSeq seq, int index) -> CvSeq"""
   return _cv.cvGetSeqElemAsSeq(*args)
+
+def cvGetSeqElemAsQuadEdge2D(*args):
+  """cvGetSeqElemAsQuadEdge2D(CvSeq seq, int index) -> CvQuadEdge2D"""
+  return _cv.cvGetSeqElemAsQuadEdge2D(*args)
+
+def cvGetSeqElemAsConnectedComp(*args):
+  """cvGetSeqElemAsConnectedComp(CvSeq seq, int index) -> CvConnectedComp"""
+  return _cv.cvGetSeqElemAsConnectedComp(*args)
 IPL_ALIGN_DWORD=IPL_ALIGN_4BYTES
 IPL_ALIGN_QWORD=IPL_ALIGN_8BYTES
 CV_MAKE_TYPE=CV_MAKETYPE

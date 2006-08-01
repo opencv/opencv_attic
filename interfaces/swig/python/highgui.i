@@ -46,101 +46,208 @@
 
 %{
 	#include <cxtypes.h>
+	#include <cv.h>
+	#include <highgui.h>
 	#include "pyhelpers.h"
 %}
 // include python-specific files
 %include "./nointpb.i"
 %include "./pytypemaps.i"
+%include "exception.i"
 
-%wrapper %{
-
-    /* the wrapping code to enable the use of Python-based callbacks */
-
-    /* global variables to store the callbacks... Very uggly */
-    static PyObject *my_tb_cb_func = NULL;
-    static PyObject *my_mouse_cb_func = NULL;
-
-    /* the internal C callback function which is responsible to call
+/* the wrapping code to enable the use of Python-based mouse callbacks */
+%header %{
+	/* This encapsulates the python callback and user_data for mouse callback */
+	struct PyCvMouseCBData {
+		PyObject * py_func;
+		void * user_data;
+	};
+	/* This encapsulates the python callback and user_data for mouse callback */
+    /* C helper function which is responsible for calling
        the Python real trackbar callback function */
-    static void _internal_tb_cb_func (int pos) {
-	
-	/* Must ensure this thread has a lock on the interpreter */
-	PyGILState_STATE state = PyGILState_Ensure();
+    static void icvPyOnMouse (int event, int x, int y,
+					 int flags, PyCvMouseCBData * param) {
 
-	PyObject *result;
+		/* Must ensure this thread has a lock on the interpreter */
+		PyGILState_STATE state = PyGILState_Ensure();
 
-	/* the argument of the callback ready to be passed to Python code */
-	PyObject *arg1 = PyInt_FromLong (pos);
+		PyObject *result;
 
-	/* build the tuple for calling the Python callback */
-	PyObject *arglist = Py_BuildValue ("(O)", arg1);
+		/* the argument of the callback ready to be passed to Python code */
+		PyObject *arg1 = PyInt_FromLong (event);
+		PyObject *arg2 = PyInt_FromLong (x);
+		PyObject *arg3 = PyInt_FromLong (y);
+		PyObject *arg4 = PyInt_FromLong (flags);
+		PyObject *arg5 = (PyObject *)param->user_data;  // assume this is already a PyObject
 
-	/* call the Python callback */
-	result = PyEval_CallObject (my_tb_cb_func, arglist);
+		/* build the tuple for calling the Python callback */
+		PyObject *arglist = Py_BuildValue ("(OOOOO)",
+				arg1, arg2, arg3, arg4, arg5);
 
-	/* cleanup */
-	Py_XDECREF (result);
+		/* call the Python callback */
+		result = PyEval_CallObject (param->py_func, arglist);
 
-	/* Release Interpreter lock */
-	PyGILState_Release(state);
-    }
+		/* Errors in Python callback get swallowed, so report them here */
+		if(!result){
+			PyErr_Print();
+			cvError( CV_StsInternal, "icvPyOnMouse", "", __FILE__, __LINE__);
+		}
 
-    /* the internal C callback function which is responsible to call
-       the Python real trackbar callback function */
-    static void _internal_mouse_cb_func (int event, int x, int y,
-					 int flags, void* param) {
-	
-	/* Must ensure this thread has a lock on the interpreter */
-	PyGILState_STATE state = PyGILState_Ensure();
+		/* cleanup */
+		Py_XDECREF (result);
 
-	PyObject *result;
-
-	/* the argument of the callback ready to be passed to Python code */
-	PyObject *arg1 = PyInt_FromLong (event);
-	PyObject *arg2 = PyInt_FromLong (x);
-	PyObject *arg3 = PyInt_FromLong (y);
-	PyObject *arg4 = PyInt_FromLong (flags);
-	PyObject *arg5 = PyLong_FromVoidPtr (param);
-
-	/* build the tuple for calling the Python callback */
-	PyObject *arglist = Py_BuildValue ("(OOOOO)",
-					   arg1, arg2, arg3, arg4, arg5);
-
-	/* call the Python callback */
-	result = PyEval_CallObject (my_mouse_cb_func, arglist);
-
-	/* cleanup */
-	Py_XDECREF (result);
-
-	/* Release Interpreter lock */
-	PyGILState_Release(state);
-    }
+		/* Release Interpreter lock */
+		PyGILState_Release(state);
+	}
 %}
+/**
+ * adapt cvSetMouseCallback to use python callback
+ */
+%rename (cvSetMouseCallbackOld) cvSetMouseCallback;
+%rename (cvSetMouseCallback) cvSetMouseCallbackPy;
+%inline %{
+	void cvSetMouseCallbackPy( const char* window_name, PyObject * on_mouse, void* param=NULL ){
+		// TODO potential memory leak if mouse callback is redefined
+		PyCvMouseCBData * py_callback = new PyCvMouseCBData;
+		py_callback->py_func = on_mouse;
+		py_callback->user_data = param ? param : Py_None;
+		cvSetMouseCallback( window_name, (CvMouseCallback) icvPyOnMouse, (void *) py_callback );
+	}
+%}
+
+
+
+/**
+ * The following code enables trackbar callbacks from python.  Unfortunately, there is no 
+ * way to distinguish which trackbar the event originated from, so must hard code a 
+ * fixed number of unique c callback functions using the macros below
+ */
+%wrapper %{
+    /* C helper function which is responsible for calling
+       the Python real trackbar callback function */
+    static void icvPyOnTrackbar( PyObject * py_cb_func, int pos) {
+	
+		/* Must ensure this thread has a lock on the interpreter */
+		PyGILState_STATE state = PyGILState_Ensure();
+
+		PyObject *result;
+
+		/* the argument of the callback ready to be passed to Python code */
+		PyObject *arg1 = PyInt_FromLong (pos);
+
+		/* build the tuple for calling the Python callback */
+		PyObject *arglist = Py_BuildValue ("(O)", arg1);
+
+		/* call the Python callback */
+		result = PyEval_CallObject (py_cb_func, arglist);
+
+		/* Errors in Python callback get swallowed, so report them here */
+		if(!result){
+			PyErr_Print();
+			cvError( CV_StsInternal, "icvPyOnTrackbar", "", __FILE__, __LINE__);
+		}
+
+
+		/* cleanup */
+		Py_XDECREF (result);
+
+		/* Release Interpreter lock */
+		PyGILState_Release(state);
+	}
+
+#define ICV_PY_MAX_CB 10
+
+	struct PyCvTrackbar {
+		CvTrackbarCallback cv_func;
+		PyObject * py_func;
+		PyObject * py_pos;
+	};
+
+	static int my_trackbar_cb_size=0;
+	extern PyCvTrackbar my_trackbar_cb_funcs[ICV_PY_MAX_CB];
+%}
+
+/* Callback table entry */
+%define %ICV_PY_CB_TAB_ENTRY(idx)
+	{(CvTrackbarCallback) icvPyTrackbarCB##idx, NULL, NULL }
+%enddef
+
+/* Table of callbacks */
+%define %ICV_PY_CB_TAB
+%wrapper %{
+	PyCvTrackbar my_trackbar_cb_funcs[ICV_PY_MAX_CB] = {
+		%ICV_PY_CB_TAB_ENTRY(0),
+		%ICV_PY_CB_TAB_ENTRY(1),
+		%ICV_PY_CB_TAB_ENTRY(2),
+		%ICV_PY_CB_TAB_ENTRY(3),
+		%ICV_PY_CB_TAB_ENTRY(4),
+		%ICV_PY_CB_TAB_ENTRY(5),
+		%ICV_PY_CB_TAB_ENTRY(6),
+		%ICV_PY_CB_TAB_ENTRY(7),
+		%ICV_PY_CB_TAB_ENTRY(8),
+		%ICV_PY_CB_TAB_ENTRY(9)
+	};
+%}	 
+%enddef
+
+/* Callback definition */
+%define %ICV_PY_CB_IMPL(idx) 
+%wrapper %{
+static void icvPyTrackbarCB##idx(int pos){                                      
+	if(!my_trackbar_cb_funcs[idx].py_func) return;                              
+	icvPyOnTrackbar( my_trackbar_cb_funcs[idx].py_func, pos );                    
+}                                                                               
+%}
+%enddef
+
+
+%ICV_PY_CB_IMPL(0);
+%ICV_PY_CB_IMPL(1);
+%ICV_PY_CB_IMPL(2);
+%ICV_PY_CB_IMPL(3);
+%ICV_PY_CB_IMPL(4);
+%ICV_PY_CB_IMPL(5);
+%ICV_PY_CB_IMPL(6);
+%ICV_PY_CB_IMPL(7);
+%ICV_PY_CB_IMPL(8);
+%ICV_PY_CB_IMPL(9);
+
+%ICV_PY_CB_TAB;
+
 
 /**
  * typemap to memorize the Python callback when doing cvCreateTrackbar ()
  */
 %typemap(in) CvTrackbarCallback {
 
-    /* memorize the Python address of the callback function */
-    my_tb_cb_func = (PyObject *) $input;
+	if(my_trackbar_cb_size == ICV_PY_MAX_CB){
+		SWIG_exception(SWIG_IndexError, "Exceeded maximum number of trackbars");
+	}
 
-    /* prepare to call the C function who will register the callback */
-    $1 = (CvTrackbarCallback) _internal_tb_cb_func;
+	my_trackbar_cb_size++;
+
+	/* memorize the Python address of the callback function */
+	my_trackbar_cb_funcs[my_trackbar_cb_size-1].py_func = (PyObject *) $input;
+
+	/* prepare to call the C function who will register the callback */
+	$1 = my_trackbar_cb_funcs[ my_trackbar_cb_size-1 ].cv_func;
 }
 
 /**
- * typemap to memorize the Python callback when doing cvSetMouseCallback ()
+ * typemap so that cvWaitKey returns a character in all cases except -1
  */
-%typemap(in) CvMouseCallback {
-
-    /* memorize the Python address of the callback function */
-    my_mouse_cb_func = (PyObject *) $input;
-
-    /* prepare to call the C function who will register the callback */
-    $1 = (CvMouseCallback) _internal_mouse_cb_func;
-}
-
+%rename (cvWaitKeyC) cvWaitKey;
+%rename (cvWaitKey) cvWaitKeyPy;
+%inline %{
+	PyObject * cvWaitKeyPy(int delay=0){
+		int res = cvWaitKey(delay);
+		char str[2]={(char)res,0};
+		if(res==-1){
+			return PyLong_FromLong(-1);
+		}
+		return PyString_FromString(str);
+	}
+%}
 /* HighGUI Python module initialization
  * needed for callbacks to work in a threaded environment 
  */
