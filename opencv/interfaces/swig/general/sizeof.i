@@ -4,3 +4,4 @@
 
 %sizeof (CvContour)
 %sizeof (CvPoint)
+%sizeof (CvSeq)

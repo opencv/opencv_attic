@@ -116,6 +116,5 @@ CvScalar CV_RGB(double r,double g,int b);
 void CV_NEXT_LINE_POINT(CvLineIterator line_iterator);
 void CV_INIT_3X3_DELTAS(double * deltas,int step,int nch);
 int CV_IS_HAAR_CLASSIFIER(void * haar);
-void cvContourPerimeter(const void* contour);
 void cvCalcBackProject(IplImage * image,CvArr * dst,CvHistogram * hist);
 void cvCalcBackProjectPatch(IplImage * image,CvArr * dst,CvSize range,CvHistogram * hist,int method,double factor);
