@@ -2,10 +2,11 @@
 
 int PySwigObject_Check(PyObject *op);
 
+
 PyObject * PyTuple_FromIntArray(int * arr, int len){
 	PyObject * obj = PyTuple_New(len);
 	for(int i=0; i<len; i++){
-		PyTuple_SetItem(obj, i, PyInt_FromLong( arr[i] ) );
+		PyTuple_SetItem(obj, i, PyLong_FromLong( arr[i] ) );
 	}
 	return obj;
 }
@@ -137,10 +138,15 @@ CvRect PySlice_to_CvRect(CvArr * src, PyObject * idx_object){
 	int lower[2], upper[2];
 	int len, start, stop, step, slicelength;
 
-	// might be slice, tuple(slice,idx), tuple(idx, slice), tuple(slice,slice)
+	if(PyInt_Check(idx_object) || PyLong_Check(idx_object)){
+		lower[0] = PyLong_AsLong( idx_object );
+		upper[0] = lower[0] + 1;
+		lower[1] = 0;
+		upper[1] = sz.width;
+	}
 
 	// 1. Slice
-	if(PySlice_Check(idx_object)){
+	else if(PySlice_Check(idx_object)){
 		len = sz.height;
 		if(PySlice_GetIndicesEx( (PySliceObject*)idx_object, len, &start, &stop, &step, &slicelength )!=0){
 			printf("Error in PySlice_GetIndicesEx: returning NULL");
@@ -148,8 +154,8 @@ CvRect PySlice_to_CvRect(CvArr * src, PyObject * idx_object){
 			return cvRect(0,0,0,0);
 		}
 		//printf("PySlice\n");
-		lower[0] = start-1; // use matlab convention of start index = 1
-		upper[0] = stop;    // use matlab convention that slice range is inclusive
+		lower[0] = start; // use c convention of start index = 0
+		upper[0] = stop;    // use c convention
 		lower[1] = 0;
 		upper[1] = sz.width;
 	}
@@ -175,15 +181,15 @@ CvRect PySlice_to_CvRect(CvArr * src, PyObject * idx_object){
 					return cvRect(0,0,0,0);
 				}
 				//printf("PySlice_GetIndecesEx(%d, %d, %d, %d, %d)\n", len, start, stop, step, slicelength);
-				lower[i] = start-1;
+				lower[i] = start;
 				upper[i] = stop;
 
 			}
 
 			// 2b. Integer
-			else if(PyInt_Check(o)){
+			else if(PyInt_Check(o) || PyLong_Check(o)){
 				//printf("PyInt\n");
-				lower[i] = PyInt_AsLong(o)-1;
+				lower[i] = PyLong_AsLong(o);
 				upper[i] = lower[i]+1;
 			}
 
@@ -200,10 +206,13 @@ CvRect PySlice_to_CvRect(CvArr * src, PyObject * idx_object){
 		printf("Expected a slice or sequence: returning NULL");
 		return cvRect(0,0,0,0);
 	}
+
 	lower[0] = MAX(0, lower[0]);
 	lower[1] = MAX(0, lower[1]);
 	upper[0] = MIN(sz.height, upper[0]);
 	upper[1] = MIN(sz.width, upper[1]);
+	assert(lower[0]<upper[0]);
+	assert(lower[1]<upper[1]);
 	//printf("Slice=%d %d %d %d\n", lower[0], upper[0], lower[1], upper[1]);
 	return cvRect(lower[1],lower[0], upper[1]-lower[1], upper[0]-lower[0]);
 }
@@ -213,10 +222,7 @@ double PyObject_AsDouble(PyObject * obj){
 		if(PyFloat_Check(obj)){
 			return PyFloat_AsDouble(obj);
 		}
-		else if(PyInt_Check(obj)){
-			return (double) PyInt_AsLong(obj);
-		}
-		else if(PyLong_Check(obj)){
+		else if(PyInt_Check(obj) || PyLong_Check(obj)){
 			return (double) PyLong_AsLong(obj);
 		}
 	}
@@ -229,45 +235,13 @@ long PyObject_AsLong(PyObject * obj){
         if(PyFloat_Check(obj)){
             return (long) PyFloat_AsDouble(obj);
         }
-        else if(PyInt_Check(obj)){
-            return PyInt_AsLong(obj);
-        }
-        else if(PyLong_Check(obj)){
+        else if(PyInt_Check(obj) || PyLong_Check(obj)){
             return PyLong_AsLong(obj);
         }
     }
 	PyErr_SetString( PyExc_TypeError, "Could not convert python object to Long");
 	return -1;
 }
-
-#define PyObject_AsArrayImpl(func, ctype, ptype)                              \
-	int func(PyObject * obj, ctype * array, int len){                         \
-	if(PyNumber_Check(obj)){                                                  \
-		memset( array, 0, sizeof(ctype)*len );                                \
-		array[0] = PyObject_As##ptype( obj );                                 \
-	}                                                                         \
-	else if(PySequence_Check(obj)){                                           \
-		int seqsize = PySequence_Size(obj);                                   \
-		for(int i=0; i<len && i<seqsize; i++){                                \
-			if(i<seqsize){                                                    \
-	            array[i] =  PyObject_As##ptype( PySequence_GetItem(obj, i) ); \
-			}                                                                 \
-			else{                                                             \
-				array[i] = 0;                                                 \
-			}                                                                 \
-		}                                                                     \
-	}                                                                         \
-	else{                                                                     \
-		PyErr_SetString( PyExc_TypeError,                                     \
-				"PyObject_CvScalar: Expected a number or sequence" );         \
-		return -1;                                                            \
-	}                                                                         \
-	return 0;                                                                 \
-}
-
-PyObject_AsArrayImpl( PyObject_AsFloatArray, float, Double );
-PyObject_AsArrayImpl( PyObject_AsDoubleArray, double, Double );
-PyObject_AsArrayImpl( PyObject_AsLongArray, int, Long );
 
 CvArr * PySequence_to_CvArr( PyObject * obj ){
 	int dims[CV_MAX_DIM] = {1,1,1};

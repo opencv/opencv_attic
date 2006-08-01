@@ -39,59 +39,35 @@
 //
 //M*/
 
-%{
-	#include "pyhelpers.h"
+/* This file contains custom python shadow class code for certain troublesome functions */
+
+/** 
+ * call cvCvtSeqToArray using datastructures, not raw memory
+ */
+%rename(cvCvtSeqToVoidPtr) cvCvtSeqToArray;
+%rename(cvCvtSeqToArray) cvCvtSeqToCvMat;
+%inline %{
+	CvArr * cvCvtSeqToCvMat( const CvSeq* seq, CvArr * elements, CvSlice slice=CV_WHOLE_SEQ){
+		CvMat stub, *mat=(CvMat *)elements;
+		if(!CV_IS_MAT(mat)){
+			mat = cvGetMat(elements, &stub);
+		}
+		cvCvtSeqToArray( seq, mat->data.ptr, slice );
+		return elements;
+	}
 %}
 
-// 2004-03-16, Gabriel Schreiber <schreiber@ient.rwth-aachen.de>
-//             Mark Asbach       <asbach@ient.rwth-aachen.de>
-//             Institute of Communications Engineering, RWTH Aachen University
-
-// direct SWIG to generate python docstrings
-%feature("autodoc", 1);
-
-// include python-specific files
-%include "./nointpb.i"
-%include "./pytypemaps.i"
-%include "./cvshadow.i"
-
-// parse OpenCV headers
-%include "../general/cv.i"
-
-%{
-#include "error.h"
-#include "pycvseq.h"
+%rename(cvArcLengthVoidPtr) cvArcLength;
+%rename(cvArcLength) cvArgLengthOverload;
+/* Wrapper for cvArcLength */
+%inline %{
+double cvArcLengthOverload( const CvSeq * seq, CvSlice slice=CV_WHOLE_SEQ, int is_closed=-1){
+	return cvArcLength( seq, slice, is_closed );
+}
+double cvArcLengthOverload( const CvArr * arr, CvSlice slice=CV_WHOLE_SEQ, int is_closed=-1){
+	return cvArcLength( arr, slice, is_closed );
+}
 %}
+double cvContourPerimeter( const CvSeq * contour );
+//double cvContourPerimeter( const CvArr * arr );
 
-// Accessors for the CvMat and IplImage data structure are defined here
-%include "./cvarr.i"
-
-
-%include "./imagedata.i"
-
-// We integrate OpenCV error handling into the Python exception mechanism
-%include "./error.h"
-
-
-// include some wrappers to manipulate CvSeq types
-%include "./pycvseq.h"
-
-// aliases from #defines
-%include "./cvaliases.i"
-
-%pythoncode 
-%{
-
-__doc__ = """
-OpenCV is the Intel Open CV library, an open source effort to provide
-computer vision algorithms for standard PC hardware.
-
-This wrapper was semi-automatically created from the C/C++ headers and therefore
-contains no Python documentation. Because all identifiers are identical to their
-C/C++ counterparts, you can consult the standard manuals that come with OpenCV.
-"""
-
-# this tells OpenCV not to call exit() on errors but throw a python exception instead
-cvRedirectError(function_ptr_generator(), void_ptr_generator(), void_ptrptr_generator())
-
-%}

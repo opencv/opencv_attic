@@ -220,6 +220,18 @@
 		cvGetSubRect(self, &tmp, subrect);
 		cvSet(&tmp, cvScalarAll(val));
 	}
+	void __setitem__(PyObject * object, CvPoint val){
+		CvMat tmp;
+		CvRect subrect = PySlice_to_CvRect( self, object );
+		cvGetSubRect(self, &tmp, subrect);
+		cvSet(&tmp, cvScalar(val.x, val.y));
+	}
+	void __setitem__(PyObject * object, CvPoint2D32f val){
+		CvMat tmp;
+		CvRect subrect = PySlice_to_CvRect( self, object );
+		cvGetSubRect(self, &tmp, subrect);
+		cvSet(&tmp, cvScalar(val.x, val.y));
+	}
 	void __setitem__(PyObject * object, CvScalar val){
 		CvMat tmp;
 		CvRect subrect = PySlice_to_CvRect( self, object );
@@ -227,19 +239,47 @@
 		cvSet(&tmp, val);
 	}
 
-	// array slice assignement
+	// array slice assignment
 	void __setitem__(PyObject * object, CvArr * arr){
 		CvMat tmp;
 		CvRect subrect = PySlice_to_CvRect( self, object );
 		cvGetSubRect(self, &tmp, subrect);
-		cvCopy(arr, &tmp);
+		cvConvert(arr, &tmp);
 	}
 	
 	// slice access
-	CvMat * __getitem__(PyObject * object){
+	PyObject * __getitem__(PyObject * object){
+		CvMat * mat;
 		CvRect subrect = PySlice_to_CvRect( self, object );
-		CvMat * mat = (CvMat *) cvAlloc(sizeof(CvMat));
-		return cvGetSubRect(self, mat, subrect);
+		if(subrect.width==1 && subrect.height==1){
+			CvScalar * s; 
+            int type = cvGetElemType( self );
+            if(CV_MAT_CN(type) > 1){
+                s = new CvScalar; 
+                *s = cvGet2D( self, subrect.y, subrect.x );
+                return SWIG_NewPointerObj( s, $descriptor(CvScalar *), 1 );
+            }
+            switch(CV_MAT_DEPTH(type)){
+            case CV_8U:
+                return PyLong_FromUnsignedLong( CV_MAT_ELEM(*self, uchar, subrect.y, subrect.x ) );
+            case CV_8S:
+                return PyLong_FromLong( CV_MAT_ELEM(*self, char, subrect.y, subrect.x ) );
+            case CV_16U:
+                return PyLong_FromUnsignedLong( CV_MAT_ELEM(*self, ushort, subrect.y, subrect.x ) );
+            case CV_16S:
+                return PyLong_FromLong( CV_MAT_ELEM(*self, short, subrect.y, subrect.x ) );
+            case CV_32S:
+                return PyLong_FromLong( CV_MAT_ELEM(*self, int, subrect.y, subrect.x ) );
+            case CV_32F:
+                return PyFloat_FromDouble( CV_MAT_ELEM(*self, float, subrect.y, subrect.x) );
+            case CV_64F:
+                return PyFloat_FromDouble( CV_MAT_ELEM(*self, double, subrect.y, subrect.x) );
+            }
+		}
+		mat = (CvMat *) cvAlloc(sizeof(CvMat));
+		cvGetSubRect(self, mat, subrect);
+
+		return SWIG_NewPointerObj( mat, $descriptor(CvMat *), 1 );
 	}
 
 }
@@ -261,6 +301,18 @@
 		cvGetSubRect(self, &tmp, subrect);
 		cvSet(&tmp, cvScalarAll(val));
 	}
+	void __setitem__(PyObject * object, CvPoint val){
+		CvMat tmp;
+		CvRect subrect = PySlice_to_CvRect( self, object );
+		cvGetSubRect(self, &tmp, subrect);
+		cvSet(&tmp, cvScalar(val.x, val.y));
+	}
+	void __setitem__(PyObject * object, CvPoint2D32f val){
+		CvMat tmp;
+		CvRect subrect = PySlice_to_CvRect( self, object );
+		cvGetSubRect(self, &tmp, subrect);
+		cvSet(&tmp, cvScalar(val.x, val.y));
+	}
 	void __setitem__(PyObject * object, CvScalar val){
 		CvMat tmp;
 		CvRect subrect = PySlice_to_CvRect( self, object );
@@ -273,16 +325,47 @@
 		CvMat tmp;
 		CvRect subrect = PySlice_to_CvRect( self, object );
 		cvGetSubRect(self, &tmp, subrect);
-		cvCopy(arr, &tmp);
+		cvConvert(arr, &tmp);
 	}
 
 	// slice access
-	IplImage * __getitem__(PyObject * object){
-		CvRect subrect = PySlice_to_CvRect( self, object );
+	PyObject * __getitem__(PyObject * object){
 		CvMat mat;
-		IplImage * im = (IplImage *) cvAlloc(sizeof(IplImage));
+		IplImage * im;
+		CvRect subrect = PySlice_to_CvRect( self, object );
+		
+		// return scalar if single element
+		if(subrect.width==1 && subrect.height==1){
+			CvScalar * s;
+			int type = cvGetElemType( self );
+			if(CV_MAT_CN(type) > 1){
+				s = new CvScalar;
+			    *s = cvGet2D( self, subrect.y, subrect.x );
+				return SWIG_NewPointerObj( s, $descriptor(CvScalar *), 1 );
+			}
+			switch(CV_MAT_DEPTH(type)){
+			case CV_8U:
+				return PyLong_FromUnsignedLong( CV_IMAGE_ELEM(self, uchar, subrect.y, subrect.x ) );
+			case CV_8S:
+				return PyLong_FromLong( CV_IMAGE_ELEM(self, char, subrect.y, subrect.x ) );
+			case CV_16U:
+				return PyLong_FromUnsignedLong( CV_IMAGE_ELEM(self, ushort, subrect.y, subrect.x ) );
+			case CV_16S:
+				return PyLong_FromLong( CV_IMAGE_ELEM(self, short, subrect.y, subrect.x ) );
+			case CV_32S:
+				return PyLong_FromLong( CV_IMAGE_ELEM(self, int, subrect.y, subrect.x ) );
+			case CV_32F:
+				return PyFloat_FromDouble( CV_IMAGE_ELEM(self, float, subrect.y, subrect.x) );
+			case CV_64F:
+				return PyFloat_FromDouble( CV_IMAGE_ELEM(self, double, subrect.y, subrect.x) );
+			}
+		}
+		
+		// otherwise return image
+		im = (IplImage *) cvAlloc(sizeof(IplImage));
 		cvGetSubRect(self, &mat, subrect);
-		return cvGetImage(&mat, im);
+		cvGetImage(&mat, im);
+		return SWIG_NewPointerObj( im, $descriptor(IplImage *), 1 );
 	}
 }
 

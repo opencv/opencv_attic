@@ -42,6 +42,44 @@ except AttributeError:
 del types
 
 
+class CvRNG_Wrapper(_object):
+    __swig_setmethods__ = {}
+    __setattr__ = lambda self, name, value: _swig_setattr(self, CvRNG_Wrapper, name, value)
+    __swig_getmethods__ = {}
+    __getattr__ = lambda self, name: _swig_getattr(self, CvRNG_Wrapper, name)
+    __repr__ = _swig_repr
+    def __init__(self, *args): 
+        this = _highgui.new_CvRNG_Wrapper(*args)
+        try: self.this.append(this)
+        except: self.this = this
+    def ptr(*args): return _highgui.CvRNG_Wrapper_ptr(*args)
+    def ref(*args): return _highgui.CvRNG_Wrapper_ref(*args)
+    def __eq__(*args): return _highgui.CvRNG_Wrapper___eq__(*args)
+    def __ne__(*args): return _highgui.CvRNG_Wrapper___ne__(*args)
+    __swig_destroy__ = _highgui.delete_CvRNG_Wrapper
+    __del__ = lambda self : None;
+CvRNG_Wrapper_swigregister = _highgui.CvRNG_Wrapper_swigregister
+CvRNG_Wrapper_swigregister(CvRNG_Wrapper)
+
+class CvSubdiv2DEdge_Wrapper(_object):
+    __swig_setmethods__ = {}
+    __setattr__ = lambda self, name, value: _swig_setattr(self, CvSubdiv2DEdge_Wrapper, name, value)
+    __swig_getmethods__ = {}
+    __getattr__ = lambda self, name: _swig_getattr(self, CvSubdiv2DEdge_Wrapper, name)
+    __repr__ = _swig_repr
+    def __init__(self, *args): 
+        this = _highgui.new_CvSubdiv2DEdge_Wrapper(*args)
+        try: self.this.append(this)
+        except: self.this = this
+    def ptr(*args): return _highgui.CvSubdiv2DEdge_Wrapper_ptr(*args)
+    def ref(*args): return _highgui.CvSubdiv2DEdge_Wrapper_ref(*args)
+    def __eq__(*args): return _highgui.CvSubdiv2DEdge_Wrapper___eq__(*args)
+    def __ne__(*args): return _highgui.CvSubdiv2DEdge_Wrapper___ne__(*args)
+    __swig_destroy__ = _highgui.delete_CvSubdiv2DEdge_Wrapper
+    __del__ = lambda self : None;
+CvSubdiv2DEdge_Wrapper_swigregister = _highgui.CvSubdiv2DEdge_Wrapper_swigregister
+CvSubdiv2DEdge_Wrapper_swigregister(CvSubdiv2DEdge_Wrapper)
+
 
 def cvInitSystem(*args):
   """cvInitSystem(int argc, char argv) -> int"""
@@ -115,9 +153,9 @@ CV_EVENT_FLAG_CTRLKEY = _highgui.CV_EVENT_FLAG_CTRLKEY
 CV_EVENT_FLAG_SHIFTKEY = _highgui.CV_EVENT_FLAG_SHIFTKEY
 CV_EVENT_FLAG_ALTKEY = _highgui.CV_EVENT_FLAG_ALTKEY
 
-def cvSetMouseCallback(*args):
-  """cvSetMouseCallback(char window_name, CvMouseCallback on_mouse, void param=None)"""
-  return _highgui.cvSetMouseCallback(*args)
+def cvSetMouseCallbackOld(*args):
+  """cvSetMouseCallbackOld(char window_name, CvMouseCallback on_mouse, void param=None)"""
+  return _highgui.cvSetMouseCallbackOld(*args)
 CV_LOAD_IMAGE_COLOR = _highgui.CV_LOAD_IMAGE_COLOR
 CV_LOAD_IMAGE_GRAYSCALE = _highgui.CV_LOAD_IMAGE_GRAYSCALE
 CV_LOAD_IMAGE_UNCHANGED = _highgui.CV_LOAD_IMAGE_UNCHANGED
@@ -140,9 +178,9 @@ def cvConvertImage(*args):
   """cvConvertImage(CvArr src, CvArr dst, int flags=0)"""
   return _highgui.cvConvertImage(*args)
 
-def cvWaitKey(*args):
-  """cvWaitKey(int delay=0) -> int"""
-  return _highgui.cvWaitKey(*args)
+def cvWaitKeyC(*args):
+  """cvWaitKeyC(int delay=0) -> int"""
+  return _highgui.cvWaitKeyC(*args)
 
 def cvCreateFileCapture(*args):
   """cvCreateFileCapture(char filename) -> CvCapture"""
@@ -298,6 +336,8 @@ class CvvImage(_object):
 
 CvvImage_swigregister = _highgui.CvvImage_swigregister
 CvvImage_swigregister(CvvImage)
+cvSetMouseCallback = _highgui.cvSetMouseCallback
+cvWaitKey = _highgui.cvWaitKey
 
 __doc__ = """HighGUI provides minimalistic user interface parts and video input/output.
 

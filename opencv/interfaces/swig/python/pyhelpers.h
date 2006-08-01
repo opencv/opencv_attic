@@ -3,6 +3,7 @@
 
 #include <Python.h>
 #include <cxcore.h>
+#include <cv.h>
 
 /** convert python index object (tuple, integer, or slice) to CvRect for subsequent cvGetSubMat call */
 CvRect PySlice_to_CvRect(CvArr * src, PyObject * idx_object);
