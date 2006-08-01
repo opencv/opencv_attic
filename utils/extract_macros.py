@@ -68,7 +68,7 @@ ARG_MAP = {
     "deltas":"double *",
     "step":"int",
     "haar":"void *",
-    "contour":"const void*", 
+#    "contour":"const void*",  # handled as a special case in cvshadow
     "range":"CvSize", 
     "nch":"int",
     "method":"int",
