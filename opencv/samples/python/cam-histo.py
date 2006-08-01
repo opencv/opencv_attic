@@ -192,6 +192,6 @@ if __name__ == '__main__':
         # handle events
         k = highgui.cvWaitKey (10)
 
-        if k % 0x100 == 27:
+        if k == '\x1b':
             # user has press the ESC key, so exit
             break

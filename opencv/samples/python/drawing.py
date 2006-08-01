@@ -95,7 +95,7 @@ if __name__ == '__main__':
                                      random.randrange (-height, 2 * height))
         cv.cvPolyLine (image, pt, 1,
                        random_color (random),
-                       random.randrange (-1, 9),
+                       random.randrange (1, 9),
                        line_type, 0)
 
         highgui.cvShowImage (window_name, image)
