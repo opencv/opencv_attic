@@ -80,6 +80,22 @@ typedef struct CvProcessorInfo
 }
 CvProcessorInfo;
 
+#undef MASM_INLINE_ASSEMBLY
+
+#if defined WIN32 && !defined  WIN64
+
+#if defined _MSC_VER
+#define MASM_INLINE_ASSEMBLY 1
+#elif defined __BORLANDC__
+
+#if __BORLANDC__ >= 0x560
+#define MASM_INLINE_ASSEMBLY 1
+#endif
+
+#endif
+
+#endif
+
 /*
    determine processor type
 */
@@ -122,7 +138,7 @@ icvInitProcessorInfo( CvProcessorInfo* cpu_info )
             RegCloseKey( key );
         }
 
-#if defined WIN32 && !defined WIN64 && (defined _MSC_VER || defined __BORLANDC__ && __BORLANDC__>=0x560)
+#ifdef MASM_INLINE_ASSEMBLY
         __asm
         {
             /* use CPUID to determine the features supported */
@@ -674,7 +690,7 @@ CV_IMPL  int64  cvGetTickCount( void )
 
     if( CV_GET_PROC_ARCH(cpu_info->model) == CV_PROC_IA32_GENERIC )
     {
-#if defined WIN32 && !defined WIN64 && (defined _MSC_VER || defined __BORLANDC__ && __BORLANDC__>=0x560)
+#ifdef MASM_INLINE_ASSEMBLY
     #ifdef __BORLANDC__
         __asm db 0fh
         __asm db 31h

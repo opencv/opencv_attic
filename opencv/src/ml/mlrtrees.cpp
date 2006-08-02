@@ -40,9 +40,6 @@
 
 #include "_ml.h"
 
-const float ord_var_epsilon = FLT_EPSILON*2;
-const float ord_nan = FLT_MAX*0.5f;
-
 CvForestTree::CvForestTree()
 {
     forest = NULL;

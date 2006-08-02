@@ -40,7 +40,6 @@
 
 #include "_ml.h"
 
-static const float ord_var_epsilon = FLT_EPSILON*2;
 static const float ord_nan = FLT_MAX*0.5f;
 static const int min_block_size = 1 << 16;
 static const int block_size_delta = 1 << 10;
@@ -300,7 +299,7 @@ void CvDTreeTrainData::set_data( const CvMat* _train_data, int _tflag,
         if( vi < var_count && ci >= 0 ||
             vi == var_count && is_classifier ) // process categorical variable or response
         {
-            int c_count, prev_label, prev_i;
+            int c_count, prev_label;
             int* c_map, *dst = get_cat_var_data( data_root, vi );
 
             // copy data
@@ -369,14 +368,11 @@ void CvDTreeTrainData::set_data( const CvMat* _train_data, int _tflag,
             prev_label = ~*int_ptr[0];
             c_count = -1;
 
-            for( i = 0, prev_i = -1; i < num_valid; i++ )
+            for( i = 0; i < num_valid; i++ )
             {
                 int cur_label = *int_ptr[i];
                 if( cur_label != prev_label )
-                {
                     c_map[++c_count] = prev_label = cur_label;
-                    prev_i = i;
-                }
                 *int_ptr[i] = c_count;
             }
 
@@ -993,6 +989,24 @@ CvDTree::~CvDTree()
 }
 
 
+const CvDTreeNode* CvDTree::get_root() const
+{
+    return root;
+}
+
+
+int CvDTree::get_pruned_tree_idx() const
+{
+    return pruned_tree_idx;
+}
+
+
+CvDTreeTrainData* CvDTree::get_data()
+{
+    return data;
+}
+
+
 bool CvDTree::train( const CvMat* _train_data, int _tflag,
                      const CvMat* _responses, const CvMat* _var_idx,
                      const CvMat* _sample_idx, const CvMat* _var_type,
@@ -1039,16 +1053,16 @@ bool CvDTree::do_train( const CvMat* _subsample_idx )
 {
     bool result = false;
 
-    CV_FUNCNAME( "CvDTree::train" );
+    CV_FUNCNAME( "CvDTree::do_train" );
 
     __BEGIN__;
 
     root = data->subsample_data( _subsample_idx );
 
-    try_split_node(root);
+    CV_CALL( try_split_node(root));
     
     if( data->params.cv_folds > 0 )
-        prune_cv();
+        CV_CALL( prune_cv());
 
     if( !data->shared )
         data->free_train_data();
@@ -2744,6 +2758,8 @@ const CvMat* CvDTree::get_var_importance()
 
             node = parent->right;
         }
+
+        cvNormalize( var_importance, var_importance, 1., 0, CV_L1 );
     }
 
     return var_importance;
@@ -2884,7 +2900,7 @@ void CvDTree::write_node( CvFileStorage* fs, CvDTreeNode* node )
 
 void CvDTree::write_tree_nodes( CvFileStorage* fs )
 {
-    CV_FUNCNAME( "CvDTree::write_tree_nodes" );
+    //CV_FUNCNAME( "CvDTree::write_tree_nodes" );
 
     __BEGIN__;
 
@@ -2918,7 +2934,7 @@ void CvDTree::write_tree_nodes( CvFileStorage* fs )
 
 void CvDTree::write( CvFileStorage* fs, const char* name )
 {
-    CV_FUNCNAME( "CvDTree::write" );
+    //CV_FUNCNAME( "CvDTree::write" );
 
     __BEGIN__;
 

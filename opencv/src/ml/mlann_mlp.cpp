@@ -831,13 +831,12 @@ int CvANN_MLP::train( const CvMat* _inputs, const CvMat* _outputs,
 
     __BEGIN__;
 
-    int count, max_iter;
+    int max_iter;
     double epsilon;
 
     // initialize training data
     CV_CALL( prepare_to_train( _inputs, _outputs, _sample_weights,
                                _sample_idx, _params, &x0, &u, &sw, flags ));
-    count = x0.count;
 
     // ... and link weights
     if( !(flags & UPDATE_WEIGHTS) )
@@ -1301,7 +1300,7 @@ int CvANN_MLP::train_rprop( CvVectors x0, CvVectors u, const double* sw )
 
 void CvANN_MLP::write_params( CvFileStorage* fs )
 {
-    CV_FUNCNAME( "CvANN_MLP::write_params" );
+    //CV_FUNCNAME( "CvANN_MLP::write_params" );
 
     __BEGIN__;
 
@@ -1400,7 +1399,7 @@ void CvANN_MLP::write( CvFileStorage* fs, const char* name )
 
 void CvANN_MLP::read_params( CvFileStorage* fs, CvFileNode* node )
 {
-    CV_FUNCNAME( "CvANN_MLP::read_params" );
+    //CV_FUNCNAME( "CvANN_MLP::read_params" );
 
     __BEGIN__;
 

@@ -209,19 +209,10 @@ CvEM::predict( const CvMat* _sample, CvMat* _probs ) const
 
     int i, k, dims;
     int nclusters;
-    int is_general = 0, is_diagonal = 0, is_spherical = 0;
+    int cov_mat_type = params.cov_mat_type;
     double opt = FLT_MAX;
     size_t size;
     CvMat diff, expo;
-
-    if( params.cov_mat_type == COV_MAT_GENERIC )
-        is_general  = 1;
-    else if( params.cov_mat_type == COV_MAT_DIAGONAL )
-        is_diagonal = 1;
-    else if( params.cov_mat_type == COV_MAT_SPHERICAL )
-        is_spherical  = 1;
-    else
-        CV_ERROR( CV_StsBadArg,"Invalid value of <cov_mat_type>" );
 
     dims = means->cols;
     nclusters = params.nclusters;
@@ -248,7 +239,7 @@ CvEM::predict( const CvMat* _sample, CvMat* _probs ) const
         double cur = log_weight_div_det->data.db[k];
         CvMat* u = cov_rotate_mats[k];
         // cov = u w u'  -->  cov^(-1) = u w^(-1) u'
-        if( is_spherical )
+        if( cov_mat_type == COV_MAT_SPHERICAL )
         {
             double w0 = w[0];
             for( i = 0; i < dims; i++ )
@@ -261,7 +252,7 @@ CvEM::predict( const CvMat* _sample, CvMat* _probs ) const
         {
             for( i = 0; i < dims; i++ )
                 diff.data.db[i] = sample_data[i] - mean_k[i];
-            if( is_general )
+            if( cov_mat_type == COV_MAT_GENERIC )
                 cvGEMM( &diff, u, 1, 0, 0, &diff, CV_GEMM_B_T );
             for( i = 0; i < dims; i++ )
             {

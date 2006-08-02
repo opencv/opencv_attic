@@ -4917,17 +4917,7 @@ cvUnregisterType( const char* type_name )
 CV_IMPL CvTypeInfo*
 cvFirstType( void )
 {
-    CvTypeInfo* info = 0;
-
-    CV_FUNCNAME("cvFirstType" );
-
-    __BEGIN__;
-
-    info = CvType::first;
-
-    __END__;
-
-    return info;
+    return CvType::first;
 }
 
 
@@ -4936,15 +4926,9 @@ cvFindType( const char* type_name )
 {
     CvTypeInfo* info = 0;
 
-    //CV_FUNCNAME("cvFindType" );
-
-    __BEGIN__;
-
     for( info = CvType::first; info != 0; info = info->next )
         if( strcmp( info->type_name, type_name ) == 0 )
             break;
-
-    __END__;
 
     return info;
 }
@@ -4955,15 +4939,9 @@ cvTypeOf( const void* struct_ptr )
 {
     CvTypeInfo* info = 0;
 
-    /*CV_FUNCNAME("cvFindType" );*/
-
-    __BEGIN__;
-
     for( info = CvType::first; info != 0; info = info->next )
         if( info->is_instance( struct_ptr ))
             break;
-
-    __END__;
 
     return info;
 }
@@ -5119,13 +5097,13 @@ cvSave( const char* filename, const void* struct_ptr,
         ptr++;
         if( ptr == ptr2 )
             CV_ERROR( CV_StsBadArg, "Invalid filename" );
-		
-		name=name_buf;
+        
+        name=name_buf;
 
-		// name must start with letter or '_'
-		if( !isalpha(*ptr) && *ptr!= '_' ){
-			*name++ = '_';
-		}
+        // name must start with letter or '_'
+        if( !isalpha(*ptr) && *ptr!= '_' ){
+            *name++ = '_';
+        }
 
         while( ptr < ptr2 )
         {

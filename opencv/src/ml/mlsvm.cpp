@@ -90,7 +90,13 @@
 #pragma warning( disable: 4514 ) /* unreferenced inline functions */
 #endif
 
+#if 1
 typedef float Qfloat;
+#define QFLOAT_TYPE CV_32F
+#else
+typedef double Qfloat;
+#define QFLOAT_TYPE CV_64F
+#endif
 
 // SVM training parameters
 CvSVMParams::CvSVMParams() :
@@ -184,7 +190,7 @@ void CvSVMKernel::calc_linear( int vcount, int var_count, const float** vecs,
 void CvSVMKernel::calc_poly( int vcount, int var_count, const float** vecs,
                              const float* another, Qfloat* results )
 {
-    CvMat R = cvMat( 1, vcount, sizeof(Qfloat)==sizeof(float) ? CV_32F : CV_64F, results );
+    CvMat R = cvMat( 1, vcount, QFLOAT_TYPE, results );
     calc_non_rbf_base( vcount, var_count, vecs, another, results, params->gamma, params->coef0 );
     cvPow( &R, &R, params->degree );
 }
@@ -212,7 +218,7 @@ void CvSVMKernel::calc_sigmoid( int vcount, int var_count, const float** vecs,
 void CvSVMKernel::calc_rbf( int vcount, int var_count, const float** vecs,
                             const float* another, Qfloat* results )
 {
-    CvMat R = cvMat( 1, vcount, sizeof(Qfloat)==sizeof(float) ? CV_32F : CV_64F, results );
+    CvMat R = cvMat( 1, vcount, QFLOAT_TYPE, results );
     double gamma = -params->gamma;
     int j, k;
 

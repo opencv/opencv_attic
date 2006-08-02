@@ -635,7 +635,7 @@ cvPreprocessOrderedResponses( const CvMat* responses, const CvMat* sample_idx, i
 
     __BEGIN__;
 
-    int i, r_type, r_size, r_step;
+    int i, r_type, r_step;
     const int* map = 0;
     float* dst;
     int sample_count = sample_all;
@@ -655,7 +655,6 @@ cvPreprocessOrderedResponses( const CvMat* responses, const CvMat* sample_idx, i
         CV_ERROR( CV_StsUnsupportedFormat, "Unsupported response type" );
 
     r_step = responses->step ? responses->step / CV_ELEM_SIZE(responses->type) : 1;
-    r_size = sample_count;
 
     if( r_type == CV_32FC1 && CV_IS_MAT_CONT(responses->type) && !sample_idx )
     {
@@ -683,7 +682,7 @@ cvPreprocessOrderedResponses( const CvMat* responses, const CvMat* sample_idx, i
         for( i = 0; i < sample_count; i++ )
         {
             int idx = map ? map[i] : i;
-            assert( (unsigned)idx < (unsigned)r_size );
+            assert( (unsigned)idx < (unsigned)sample_all );
             dst[i] = src[idx*r_step];
         }
     }
@@ -693,7 +692,7 @@ cvPreprocessOrderedResponses( const CvMat* responses, const CvMat* sample_idx, i
         for( i = 0; i < sample_count; i++ )
         {
             int idx = map ? map[i] : i;
-            assert( (unsigned)idx < (unsigned)r_size );
+            assert( (unsigned)idx < (unsigned)sample_all );
             dst[i] = (float)src[idx*r_step];
         }
     }
@@ -721,7 +720,7 @@ cvPreprocessCategoricalResponses( const CvMat* responses,
 
     __BEGIN__;
 
-    int i, r_type, r_size, r_step;
+    int i, r_type, r_step;
     int cls_count = 1, prev_cls, prev_i;
     const int* map = 0;
     const int* srci;
@@ -746,7 +745,6 @@ cvPreprocessCategoricalResponses( const CvMat* responses,
         CV_ERROR( CV_StsUnsupportedFormat, "Unsupported response type" );
 
     r_step = responses->step ? responses->step / CV_ELEM_SIZE(responses->type) : 1;
-    r_size = sample_count;
 
     if( sample_idx )
     {
@@ -773,7 +771,7 @@ cvPreprocessCategoricalResponses( const CvMat* responses,
     for( i = 0; i < sample_count; i++ )
     {
         int idx = map ? map[i] : i;
-        assert( (unsigned)idx < (unsigned)r_size );
+        assert( (unsigned)idx < (unsigned)sample_all );
         if( r_type == CV_32SC1 )
             dst[i] = srci[idx*r_step];
         else

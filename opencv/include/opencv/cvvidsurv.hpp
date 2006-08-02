@@ -434,7 +434,7 @@ inline CvBlob cvBlob(float x,float y, float w, float h)
 {
     CvBlob B = {x,y,w,h,0}; 
     return B;
-};
+}
 #define CV_BLOB_MINW 5
 #define CV_BLOB_MINH 5
 #define CV_BLOB_ID(pB) (((CvBlob*)(pB))->ID)
@@ -792,7 +792,7 @@ public:
         CvBlob* pB;
         int ID = 0;
         assert(pBlob);
-        pBlob->ID;
+        //pBlob->ID;
         pB = GetBlob(BlobIndex);
         if(pB)
             pBlob[0] = pB[0];
@@ -1026,7 +1026,7 @@ inline void cvReleaseBlobTrackAnalysis(CvBlobTrackAnalysis** pBTPP)
 }
 
 /* feature vector generation module */
-class CV_EXPORTS CvBlobTrackFVGen:CvVSModule
+class CV_EXPORTS CvBlobTrackFVGen : public CvVSModule
 {
 public:
     virtual void    AddBlob(CvBlob* pBlob) = 0;
@@ -1180,7 +1180,7 @@ public:
     virtual void Scale(float factor = 0, int x = -1, int y = -1) = 0;
     virtual void Release() = 0;
 };
-inline void cvReleaseProb(CvProb** ppProb){ppProb[0]->Release();ppProb[0]=NULL;};
+inline void cvReleaseProb(CvProb** ppProb){ppProb[0]->Release();ppProb[0]=NULL;}
 /* HIST API */
 
 /* some Prob */
@@ -1200,7 +1200,7 @@ inline CvProb* cvCreateProb(int type, int dim, CvSize size = cvSize(1,1), void* 
     if(type == CV_BT_HIST_TYPE_MG2) return cvCreateProbMG2(dim, size, -1);
     if(type == CV_BT_HIST_TYPE_H) return cvCreateProbHist(dim, size);
     return NULL;
-};
+}
 
 
 

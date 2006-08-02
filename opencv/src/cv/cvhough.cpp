@@ -556,7 +556,7 @@ icvHoughLinesProbabalistic( CvMat* image,
     {
         // choose random point out of the remaining ones
         int idx = cvRandInt(&rng) % count;
-        int max_val = threshold-1, max_r = 0, max_n = 0;
+        int max_val = threshold-1, max_n = 0;
         CvPoint* pt = (CvPoint*)cvGetSeqElem( seq, idx );
         CvPoint line_end[2] = {{0,0}, {0,0}};
         float a, b;
@@ -584,7 +584,6 @@ icvHoughLinesProbabalistic( CvMat* image,
             if( max_val < val )
             {
                 max_val = val;
-                max_r = r;
                 max_n = n;
             }
         }
@@ -755,7 +754,6 @@ cvHoughLines2( CvArr* src_image, void* lineStorage, int method,
     CvSeqBlock lines_block;
     int lineType, elemSize;
     int linesMax = INT_MAX;
-    CvSize size;
     int iparam1, iparam2;
 
     CV_CALL( img = cvGetMat( img, &stub ));
@@ -806,7 +804,6 @@ cvHoughLines2( CvArr* src_image, void* lineStorage, int method,
         CV_ERROR( CV_StsBadArg, "Destination is not CvMemStorage* nor CvMat*" );
     }
 
-    size = cvGetMatSize(img);
     iparam1 = cvRound(param1);
     iparam2 = cvRound(param2);
 
@@ -871,7 +868,6 @@ icvHoughCirclesGradient( CvMat* img, float dp, float min_dist,
     int rows, cols, arows, acols;
     int astep, *adata;
     float* ddata;
-    CvSize asize;
     CvSeq *nz, *centers;
     float idp, dr;
     CvSeqReader reader;
@@ -889,7 +885,6 @@ icvHoughCirclesGradient( CvMat* img, float dp, float min_dist,
     idp = 1.f/dp;
     CV_CALL( accum = cvCreateMat( cvCeil(img->rows*idp)+2, cvCeil(img->cols*idp)+2, CV_32SC1 ));
     CV_CALL( cvZero(accum));
-    asize = cvGetMatSize(accum);
 
     CV_CALL( storage = cvCreateMemStorage() );
     CV_CALL( nz = cvCreateSeq( CV_32SC2, sizeof(CvSeq), sizeof(CvPoint), storage ));
@@ -1000,7 +995,7 @@ icvHoughCirclesGradient( CvMat* img, float dp, float min_dist,
         x = ofs - (y+1)*(acols+2) - 1;
         float cx = (float)(x*dp), cy = (float)(y*dp);
         int start_idx = nz_count - 1;
-        float start_dist, prev_dist, dist_sum;
+        float start_dist, dist_sum;
         float r_best = 0, c[3];
         int max_count = R_THRESH;
 
@@ -1028,7 +1023,7 @@ icvHoughCirclesGradient( CvMat* img, float dp, float min_dist,
         cvPow( dist_buf, dist_buf, 0.5 );
         icvHoughSortDescent32s( sort_buf, nz_count, (int*)ddata );
         
-        dist_sum = prev_dist = start_dist = ddata[sort_buf[nz_count-1]];
+        dist_sum = start_dist = ddata[sort_buf[nz_count-1]];
         for( j = nz_count - 2; j >= 0; j-- )
         {
             float d = ddata[sort_buf[j]];
@@ -1044,7 +1039,6 @@ icvHoughCirclesGradient( CvMat* img, float dp, float min_dist,
                 dist_sum = 0;
             }
             dist_sum += d;
-            prev_dist = d;
         }
 
         if( max_count > R_THRESH )
@@ -1088,7 +1082,6 @@ cvHoughCircles( CvArr* src_image, void* circle_storage,
     int circles_max = INT_MAX;
     int canny_threshold = cvRound(param1);
     int acc_threshold = cvRound(param2);
-    CvSize size;
 
     CV_CALL( img = cvGetMat( img, &stub ));
 
@@ -1124,8 +1117,6 @@ cvHoughCircles( CvArr* src_image, void* circle_storage,
     {
         CV_ERROR( CV_StsBadArg, "Destination is not CvMemStorage* nor CvMat*" );
     }
-
-    size = cvGetMatSize(img);
 
     switch( method )
     {
