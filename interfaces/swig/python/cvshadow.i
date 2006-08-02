@@ -41,33 +41,26 @@
 
 /* This file contains custom python shadow class code for certain troublesome functions */
 
-/** 
- * call cvCvtSeqToArray using datastructures, not raw memory
- */
-%rename(cvCvtSeqToVoidPtr) cvCvtSeqToArray;
-%rename(cvCvtSeqToArray) cvCvtSeqToCvMat;
-%inline %{
-	CvArr * cvCvtSeqToCvMat( const CvSeq* seq, CvArr * elements, CvSlice slice=CV_WHOLE_SEQ){
-		CvMat stub, *mat=(CvMat *)elements;
-		if(!CV_IS_MAT(mat)){
-			mat = cvGetMat(elements, &stub);
-		}
-		cvCvtSeqToArray( seq, mat->data.ptr, slice );
-		return elements;
-	}
+%{
+#include "cvshadow.h"
 %}
 
-%rename(cvArcLengthVoidPtr) cvArcLength;
-%rename(cvArcLength) cvArgLengthOverload;
-/* Wrapper for cvArcLength */
-%inline %{
-double cvArcLengthOverload( const CvSeq * seq, CvSlice slice=CV_WHOLE_SEQ, int is_closed=-1){
-	return cvArcLength( seq, slice, is_closed );
-}
-double cvArcLengthOverload( const CvArr * arr, CvSlice slice=CV_WHOLE_SEQ, int is_closed=-1){
-	return cvArcLength( arr, slice, is_closed );
-}
-%}
-double cvContourPerimeter( const CvSeq * contour );
-//double cvContourPerimeter( const CvArr * arr );
+%define %myshadow(function)
+%ignore function;
+%rename (function) function##_Shadow;
+%enddef
+
+%myshadow(cvCvtSeqToArray);
+%myshadow(cvArcLength);
+%myshadow(cvHaarDetectObjects);
+%myshadow(cvSegmentMotion);
+%myshadow(cvApproxPoly);
+%myshadow(cvContourPerimeter);
+
+%include "cvshadow.h"
+
+/* return a typed CvSeq instead of generic for CvSubdiv2D -- see cvseq.i */
+%rename (untyped_edges) CvSubdiv2D::edges;
+%ignore CvSubdiv2D::edges;
+%rename (edges) CvSubdiv2D::typed_edges;
 

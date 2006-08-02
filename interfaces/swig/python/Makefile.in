@@ -69,7 +69,7 @@ pkgpythonLTLIBRARIES_INSTALL = $(INSTALL)
 LTLIBRARIES = $(pkgpython_LTLIBRARIES)
 _cv_la_DEPENDENCIES = $(top_builddir)/cv/src/libcv.la
 am__cv_la_OBJECTS = _cv_la-_cv.lo _cv_la-error.lo _cv_la-pyhelpers.lo \
-	_cv_la-pycvseq.lo
+	_cv_la-cvshadow.lo
 _cv_la_OBJECTS = $(am__cv_la_OBJECTS)
 @BUILD_PYTHON_WRAPPERS_TRUE@am__cv_la_rpath = -rpath $(pkgpythondir)
 _highgui_la_DEPENDENCIES =  \
@@ -298,8 +298,8 @@ distcleancheck_listfiles = \
 
 # Python #####################################################################
 _cv_la_SOURCES = _cv.cpp error.cpp error.h pyhelpers.cpp pyhelpers.h \
-                    pycvseq.cpp pycvseq.h \
-                    cv.i imagedata.i cvarr.i nointpb.i pytypemaps.i
+                    pycvseq.hpp cvshadow.cpp cvshadow.h \
+                    cv.i imagedata.i cvarr.i nointpb.i pytypemaps.i cvseq.i cvshadow.i
 
 _cv_la_CXXFLAGS = $(PYTHON_CSPEC)
 _cv_la_LIBADD = $(top_builddir)/cv/src/libcv.la
@@ -387,8 +387,8 @@ distclean-compile:
 	-rm -f *.tab.c
 
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/_cv_la-_cv.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/_cv_la-cvshadow.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/_cv_la-error.Plo@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/_cv_la-pycvseq.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/_cv_la-pyhelpers.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/_highgui_la-_highgui.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/_highgui_la-pyhelpers.Plo@am__quote@
@@ -435,12 +435,12 @@ _cv_la-pyhelpers.lo: pyhelpers.cpp
 @AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCXX_FALSE@	$(LIBTOOL) --tag=CXX --mode=compile $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(_cv_la_CXXFLAGS) $(CXXFLAGS) -c -o _cv_la-pyhelpers.lo `test -f 'pyhelpers.cpp' || echo '$(srcdir)/'`pyhelpers.cpp
 
-_cv_la-pycvseq.lo: pycvseq.cpp
-@am__fastdepCXX_TRUE@	if $(LIBTOOL) --tag=CXX --mode=compile $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(_cv_la_CXXFLAGS) $(CXXFLAGS) -MT _cv_la-pycvseq.lo -MD -MP -MF "$(DEPDIR)/_cv_la-pycvseq.Tpo" -c -o _cv_la-pycvseq.lo `test -f 'pycvseq.cpp' || echo '$(srcdir)/'`pycvseq.cpp; \
-@am__fastdepCXX_TRUE@	then mv -f "$(DEPDIR)/_cv_la-pycvseq.Tpo" "$(DEPDIR)/_cv_la-pycvseq.Plo"; else rm -f "$(DEPDIR)/_cv_la-pycvseq.Tpo"; exit 1; fi
-@AMDEP_TRUE@@am__fastdepCXX_FALSE@	source='pycvseq.cpp' object='_cv_la-pycvseq.lo' libtool=yes @AMDEPBACKSLASH@
+_cv_la-cvshadow.lo: cvshadow.cpp
+@am__fastdepCXX_TRUE@	if $(LIBTOOL) --tag=CXX --mode=compile $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(_cv_la_CXXFLAGS) $(CXXFLAGS) -MT _cv_la-cvshadow.lo -MD -MP -MF "$(DEPDIR)/_cv_la-cvshadow.Tpo" -c -o _cv_la-cvshadow.lo `test -f 'cvshadow.cpp' || echo '$(srcdir)/'`cvshadow.cpp; \
+@am__fastdepCXX_TRUE@	then mv -f "$(DEPDIR)/_cv_la-cvshadow.Tpo" "$(DEPDIR)/_cv_la-cvshadow.Plo"; else rm -f "$(DEPDIR)/_cv_la-cvshadow.Tpo"; exit 1; fi
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	source='cvshadow.cpp' object='_cv_la-cvshadow.lo' libtool=yes @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCXX_FALSE@	$(LIBTOOL) --tag=CXX --mode=compile $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(_cv_la_CXXFLAGS) $(CXXFLAGS) -c -o _cv_la-pycvseq.lo `test -f 'pycvseq.cpp' || echo '$(srcdir)/'`pycvseq.cpp
+@am__fastdepCXX_FALSE@	$(LIBTOOL) --tag=CXX --mode=compile $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(_cv_la_CXXFLAGS) $(CXXFLAGS) -c -o _cv_la-cvshadow.lo `test -f 'cvshadow.cpp' || echo '$(srcdir)/'`cvshadow.cpp
 
 _highgui_la-_highgui.lo: _highgui.cpp
 @am__fastdepCXX_TRUE@	if $(LIBTOOL) --tag=CXX --mode=compile $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(_highgui_la_CXXFLAGS) $(CXXFLAGS) -MT _highgui_la-_highgui.lo -MD -MP -MF "$(DEPDIR)/_highgui_la-_highgui.Tpo" -c -o _highgui_la-_highgui.lo `test -f '_highgui.cpp' || echo '$(srcdir)/'`_highgui.cpp; \
@@ -673,10 +673,9 @@ uninstall-am: uninstall-info-am uninstall-pkgpythonLTLIBRARIES \
 
 # this rule creates the Python wrapper sources for cxcore and cv
 @UPDATE_SWIG_WRAPPERS_TRUE@_cv.cpp: cv.i imagedata.i cvarr.i cvaliases.i                   \
-@UPDATE_SWIG_WRAPPERS_TRUE@         nointpb.i pytypemaps.i                                 \
+@UPDATE_SWIG_WRAPPERS_TRUE@         nointpb.i pytypemaps.i cvshadow.i cvseq.i              \
 @UPDATE_SWIG_WRAPPERS_TRUE@         error.cpp error.h                                      \
-@UPDATE_SWIG_WRAPPERS_TRUE@         pyhelpers.h pyhelpers.cpp                              \
-@UPDATE_SWIG_WRAPPERS_TRUE@         pycvseq.cpp pycvseq.h                                  \
+@UPDATE_SWIG_WRAPPERS_TRUE@         pyhelpers.h cvshadow.h pycvseq.hpp                     \
 @UPDATE_SWIG_WRAPPERS_TRUE@         $(top_srcdir)/interfaces/swig/general/cv.i             \
 @UPDATE_SWIG_WRAPPERS_TRUE@         $(top_srcdir)/interfaces/swig/general/memory.i         \
 @UPDATE_SWIG_WRAPPERS_TRUE@         $(top_srcdir)/interfaces/swig/general/typemaps.i       \

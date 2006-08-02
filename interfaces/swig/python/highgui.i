@@ -49,6 +49,7 @@
 	#include <cv.h>
 	#include <highgui.h>
 	#include "pyhelpers.h"
+	#include "pycvseq.hpp"
 %}
 // include python-specific files
 %include "./nointpb.i"

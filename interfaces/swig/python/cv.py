@@ -109,9 +109,12 @@ CvSubdiv2DEdge_Wrapper_swigregister = _cv.CvSubdiv2DEdge_Wrapper_swigregister
 CvSubdiv2DEdge_Wrapper_swigregister(CvSubdiv2DEdge_Wrapper)
 
 
-def cvContourPerimeter(*args):
-  """cvContourPerimeter(CvSeq contour) -> double"""
-  return _cv.cvContourPerimeter(*args)
+def cvSegmentMotion(*args):
+  """
+    cvSegmentMotion(CvArr mhi, CvArr seg_mask, CvMemStorage storage, double timestamp, 
+        double seg_thresh) -> CvSeq_ConnectedComp
+    """
+  return _cv.cvSegmentMotion(*args)
 
 def cvFree(*args):
   """cvFree(void ptr)"""
@@ -1072,21 +1075,53 @@ Cv32suf_swigregister(Cv32suf)
 
 def cvCvtSeqToArray(*args):
   """
-    cvCvtSeqToArray(CvSeq seq, CvArr elements, CvSlice slice=cvSlice(0, 0x3fffffff)) -> CvArr
+    cvCvtSeqToArray(CvSeq seq, CvArr elements, CvSlice slice=CV_WHOLE_SEQ) -> CvArr
     cvCvtSeqToArray(CvSeq seq, CvArr elements) -> CvArr
     """
   return _cv.cvCvtSeqToArray(*args)
 
-def cvArcLengthOverload(*args):
+def cvArcLength(*args):
   """
-    cvArcLengthOverload(CvSeq seq, CvSlice slice=cvSlice(0, 0x3fffffff), int is_closed=-1) -> double
-    cvArcLengthOverload(CvSeq seq, CvSlice slice=cvSlice(0, 0x3fffffff)) -> double
-    cvArcLengthOverload(CvSeq seq) -> double
-    cvArcLengthOverload(CvArr arr, CvSlice slice=cvSlice(0, 0x3fffffff), int is_closed=-1) -> double
-    cvArcLengthOverload(CvArr arr, CvSlice slice=cvSlice(0, 0x3fffffff)) -> double
-    cvArcLengthOverload(CvArr arr) -> double
+    cvArcLength(CvSeq seq, CvSlice slice=CV_WHOLE_SEQ, int is_closed=-1) -> double
+    cvArcLength(CvSeq seq, CvSlice slice=CV_WHOLE_SEQ) -> double
+    cvArcLength(CvSeq seq) -> double
+    cvArcLength(CvArr arr, CvSlice slice=CV_WHOLE_SEQ, int is_closed=-1) -> double
+    cvArcLength(CvArr arr, CvSlice slice=CV_WHOLE_SEQ) -> double
+    cvArcLength(CvArr arr) -> double
     """
-  return _cv.cvArcLengthOverload(*args)
+  return _cv.cvArcLength(*args)
+
+def cvContourPerimeter(*args):
+  """
+    cvContourPerimeter(CvSeq seq) -> double
+    cvContourPerimeter(CvArr arr) -> double
+    """
+  return _cv.cvContourPerimeter(*args)
+
+def cvHaarDetectObjects(*args):
+  """
+    cvHaarDetectObjects(CvArr image, CvHaarClassifierCascade cascade, CvMemStorage storage, 
+        double scale_factor=1.1, int min_neighbors=3, 
+        int flags=0, CvSize min_size=cvSize(0,0)) -> CvSeq_Rect
+    cvHaarDetectObjects(CvArr image, CvHaarClassifierCascade cascade, CvMemStorage storage, 
+        double scale_factor=1.1, int min_neighbors=3, 
+        int flags=0) -> CvSeq_Rect
+    cvHaarDetectObjects(CvArr image, CvHaarClassifierCascade cascade, CvMemStorage storage, 
+        double scale_factor=1.1, int min_neighbors=3) -> CvSeq_Rect
+    cvHaarDetectObjects(CvArr image, CvHaarClassifierCascade cascade, CvMemStorage storage, 
+        double scale_factor=1.1) -> CvSeq_Rect
+    cvHaarDetectObjects(CvArr image, CvHaarClassifierCascade cascade, CvMemStorage storage) -> CvSeq_Rect
+    """
+  return _cv.cvHaarDetectObjects(*args)
+
+def cvApproxPoly(*args):
+  """
+    cvApproxPoly(void src_seq, int header_size, CvMemStorage storage, 
+        int method, double parameter, int parameter2=0) -> CvSeq_Point
+    cvApproxPoly(void src_seq, int header_size, CvMemStorage storage, 
+        int method, double parameter) -> CvSeq_Point
+    """
+  return _cv.cvApproxPoly(*args)
 
 class Cv64suf(_object):
     """Proxy of C++ Cv64suf class"""
@@ -2614,6 +2649,31 @@ class CvSeq(_object):
     __swig_setmethods__["first"] = _cv.CvSeq_first_set
     __swig_getmethods__["first"] = _cv.CvSeq_first_get
     if _newclass:first = property(_cv.CvSeq_first_get, _cv.CvSeq_first_set)
+    def __iter__(self):
+    	"""
+    	generator function iterating elements in the sequence
+    	"""
+    	for i in range(self.total):
+    		yield self[i]
+
+    def vrange(self):
+    	"""
+    	generator function iterating along v_next
+    	"""
+    	s = self
+    	while s:
+    		yield s
+    		s = s.v_next
+
+    def hrange(self):
+    	"""
+    	generator function iterating along h_next
+    	"""
+    	s = self
+    	while s:
+    		yield s
+    		s = s.h_next
+
     def __init__(self, *args): 
         """__init__(self) -> CvSeq"""
         this = _cv.new_CvSeq(*args)
@@ -4125,10 +4185,6 @@ def cvSetSeqReaderPos(*args):
   """cvSetSeqReaderPos(CvSeqReader reader, int index, int is_relative=0)"""
   return _cv.cvSetSeqReaderPos(*args)
 
-def cvCvtSeqToVoidPtr(*args):
-  """cvCvtSeqToVoidPtr(CvSeq seq, void elements, CvSlice slice=cvSlice(0, 0x3fffffff)) -> void"""
-  return _cv.cvCvtSeqToVoidPtr(*args)
-
 def cvMakeSeqHeaderForArray(*args):
   """
     cvMakeSeqHeaderForArray(int seq_type, int header_size, int elem_size, void elements, 
@@ -5536,9 +5592,6 @@ class CvSubdiv2D(_object):
     __swig_setmethods__["active_count"] = _cv.CvSubdiv2D_active_count_set
     __swig_getmethods__["active_count"] = _cv.CvSubdiv2D_active_count_get
     if _newclass:active_count = property(_cv.CvSubdiv2D_active_count_get, _cv.CvSubdiv2D_active_count_set)
-    __swig_setmethods__["edges"] = _cv.CvSubdiv2D_edges_set
-    __swig_getmethods__["edges"] = _cv.CvSubdiv2D_edges_get
-    if _newclass:edges = property(_cv.CvSubdiv2D_edges_get, _cv.CvSubdiv2D_edges_set)
     __swig_setmethods__["quad_edges"] = _cv.CvSubdiv2D_quad_edges_set
     __swig_getmethods__["quad_edges"] = _cv.CvSubdiv2D_quad_edges_get
     if _newclass:quad_edges = property(_cv.CvSubdiv2D_quad_edges_get, _cv.CvSubdiv2D_quad_edges_set)
@@ -5554,6 +5607,22 @@ class CvSubdiv2D(_object):
     __swig_setmethods__["bottomright"] = _cv.CvSubdiv2D_bottomright_set
     __swig_getmethods__["bottomright"] = _cv.CvSubdiv2D_bottomright_get
     if _newclass:bottomright = property(_cv.CvSubdiv2D_bottomright_get, _cv.CvSubdiv2D_bottomright_set)
+    __swig_setmethods__["edges"] = _cv.CvSubdiv2D_edges_set
+    __swig_getmethods__["edges"] = _cv.CvSubdiv2D_edges_get
+    if _newclass:edges = property(_cv.CvSubdiv2D_edges_get, _cv.CvSubdiv2D_edges_set)
+    def typed_edges_get(*args):
+        """typed_edges_get(self) -> CvSeq_QuadEdge2D"""
+        return _cv.CvSubdiv2D_typed_edges_get(*args)
+
+    def typed_edges_set(*args):
+        """typed_edges_set(self, CvSeq_QuadEdge2D ?)"""
+        return _cv.CvSubdiv2D_typed_edges_set(*args)
+
+    def __iter__(self):
+    	s = CvSeq_QuadEdge2D.cast(self)
+    	for i in range(s.total):
+    		yield s[i]
+
     def __init__(self, *args): 
         """__init__(self) -> CvSubdiv2D"""
         this = _cv.new_CvSubdiv2D(*args)
@@ -6192,13 +6261,6 @@ def cvCalcGlobalOrientation(*args):
     """
   return _cv.cvCalcGlobalOrientation(*args)
 
-def cvSegmentMotion(*args):
-  """
-    cvSegmentMotion(CvArr mhi, CvArr seg_mask, CvMemStorage storage, double timestamp, 
-        double seg_thresh) -> CvSeq
-    """
-  return _cv.cvSegmentMotion(*args)
-
 def cvAcc(*args):
   """cvAcc(CvArr image, CvArr sum, CvArr mask=None)"""
   return _cv.cvAcc(*args)
@@ -6324,13 +6386,6 @@ def cvTriangleArea(*args):
   """cvTriangleArea(CvPoint2D32f a, CvPoint2D32f b, CvPoint2D32f c) -> double"""
   return _cv.cvTriangleArea(*args)
 
-def cvApproxPoly(*args):
-  """
-    cvApproxPoly(void src_seq, int header_size, CvMemStorage storage, 
-        int method, double parameter, int parameter2=0) -> CvSeq
-    """
-  return _cv.cvApproxPoly(*args)
-
 def cvFindDominantPoints(*args):
   """
     cvFindDominantPoints(CvSeq contour, CvMemStorage storage, int method=1, 
@@ -6338,10 +6393,6 @@ def cvFindDominantPoints(*args):
         double parameter4=0) -> CvSeq
     """
   return _cv.cvFindDominantPoints(*args)
-
-def cvArcLengthVoidPtr(*args):
-  """cvArcLengthVoidPtr(void curve, CvSlice slice=cvSlice(0, 0x3fffffff), int is_closed=-1) -> double"""
-  return _cv.cvArcLengthVoidPtr(*args)
 
 def cvBoundingRect(*args):
   """cvBoundingRect(CvArr points, int update=0) -> CvRect"""
@@ -6614,14 +6665,6 @@ def cvLoadHaarClassifierCascade(*args):
 def cvReleaseHaarClassifierCascade(*args):
   """cvReleaseHaarClassifierCascade(CvHaarClassifierCascade cascade)"""
   return _cv.cvReleaseHaarClassifierCascade(*args)
-
-def cvHaarDetectObjects(*args):
-  """
-    cvHaarDetectObjects(CvArr image, CvHaarClassifierCascade cascade, CvMemStorage storage, 
-        double scale_factor=1.1, int min_neighbors=3, 
-        int flags=0, CvSize min_size=cvSize(0,0)) -> CvSeq
-    """
-  return _cv.cvHaarDetectObjects(*args)
 
 def cvSetImagesForHaarClassifierCascade(*args):
   """
@@ -7229,6 +7272,276 @@ def CvMorphology_init_binary_element(*args):
     """
   return _cv.CvMorphology_init_binary_element(*args)
 
+class CvSeq_Point(CvSeq):
+    """Proxy of C++ CvSeq_Point class"""
+    __swig_setmethods__ = {}
+    for _s in [CvSeq]: __swig_setmethods__.update(_s.__swig_setmethods__)
+    __setattr__ = lambda self, name, value: _swig_setattr(self, CvSeq_Point, name, value)
+    __swig_getmethods__ = {}
+    for _s in [CvSeq]: __swig_getmethods__.update(_s.__swig_getmethods__)
+    __getattr__ = lambda self, name: _swig_getattr(self, CvSeq_Point, name)
+    __repr__ = _swig_repr
+    def cast(*args):
+        """cast(CvSeq seq) -> CvSeq_Point"""
+        return _cv.CvSeq_Point_cast(*args)
+
+    if _newclass:cast = staticmethod(cast)
+    __swig_getmethods__["cast"] = lambda x: cast
+    def __getitem__(*args):
+        """__getitem__(self, int i) -> CvPoint"""
+        return _cv.CvSeq_Point___getitem__(*args)
+
+    def __setitem__(*args):
+        """__setitem__(self, int i, CvPoint obj)"""
+        return _cv.CvSeq_Point___setitem__(*args)
+
+    def append(*args):
+        """append(self, CvPoint obj)"""
+        return _cv.CvSeq_Point_append(*args)
+
+    def pop(*args):
+        """pop(self) -> CvPoint"""
+        return _cv.CvSeq_Point_pop(*args)
+
+    def __init__(self, *args): 
+        """__init__(self) -> CvSeq_Point"""
+        this = _cv.new_CvSeq_Point(*args)
+        try: self.this.append(this)
+        except: self.this = this
+    __swig_destroy__ = _cv.delete_CvSeq_Point
+    __del__ = lambda self : None;
+CvSeq_Point_swigregister = _cv.CvSeq_Point_swigregister
+CvSeq_Point_swigregister(CvSeq_Point)
+
+def CvSeq_Point_cast(*args):
+  """CvSeq_Point_cast(CvSeq seq) -> CvSeq_Point"""
+  return _cv.CvSeq_Point_cast(*args)
+
+class CvSeq_Point2D32f(CvSeq):
+    """Proxy of C++ CvSeq_Point2D32f class"""
+    __swig_setmethods__ = {}
+    for _s in [CvSeq]: __swig_setmethods__.update(_s.__swig_setmethods__)
+    __setattr__ = lambda self, name, value: _swig_setattr(self, CvSeq_Point2D32f, name, value)
+    __swig_getmethods__ = {}
+    for _s in [CvSeq]: __swig_getmethods__.update(_s.__swig_getmethods__)
+    __getattr__ = lambda self, name: _swig_getattr(self, CvSeq_Point2D32f, name)
+    __repr__ = _swig_repr
+    def cast(*args):
+        """cast(CvSeq seq) -> CvSeq_Point2D32f"""
+        return _cv.CvSeq_Point2D32f_cast(*args)
+
+    if _newclass:cast = staticmethod(cast)
+    __swig_getmethods__["cast"] = lambda x: cast
+    def __getitem__(*args):
+        """__getitem__(self, int i) -> CvPoint2D32f"""
+        return _cv.CvSeq_Point2D32f___getitem__(*args)
+
+    def __setitem__(*args):
+        """__setitem__(self, int i, CvPoint2D32f obj)"""
+        return _cv.CvSeq_Point2D32f___setitem__(*args)
+
+    def append(*args):
+        """append(self, CvPoint2D32f obj)"""
+        return _cv.CvSeq_Point2D32f_append(*args)
+
+    def pop(*args):
+        """pop(self) -> CvPoint2D32f"""
+        return _cv.CvSeq_Point2D32f_pop(*args)
+
+    def __init__(self, *args): 
+        """__init__(self) -> CvSeq_Point2D32f"""
+        this = _cv.new_CvSeq_Point2D32f(*args)
+        try: self.this.append(this)
+        except: self.this = this
+    __swig_destroy__ = _cv.delete_CvSeq_Point2D32f
+    __del__ = lambda self : None;
+CvSeq_Point2D32f_swigregister = _cv.CvSeq_Point2D32f_swigregister
+CvSeq_Point2D32f_swigregister(CvSeq_Point2D32f)
+
+def CvSeq_Point2D32f_cast(*args):
+  """CvSeq_Point2D32f_cast(CvSeq seq) -> CvSeq_Point2D32f"""
+  return _cv.CvSeq_Point2D32f_cast(*args)
+
+class CvSeq_Rect(CvSeq):
+    """Proxy of C++ CvSeq_Rect class"""
+    __swig_setmethods__ = {}
+    for _s in [CvSeq]: __swig_setmethods__.update(_s.__swig_setmethods__)
+    __setattr__ = lambda self, name, value: _swig_setattr(self, CvSeq_Rect, name, value)
+    __swig_getmethods__ = {}
+    for _s in [CvSeq]: __swig_getmethods__.update(_s.__swig_getmethods__)
+    __getattr__ = lambda self, name: _swig_getattr(self, CvSeq_Rect, name)
+    __repr__ = _swig_repr
+    def cast(*args):
+        """cast(CvSeq seq) -> CvSeq_Rect"""
+        return _cv.CvSeq_Rect_cast(*args)
+
+    if _newclass:cast = staticmethod(cast)
+    __swig_getmethods__["cast"] = lambda x: cast
+    def __getitem__(*args):
+        """__getitem__(self, int i) -> CvRect"""
+        return _cv.CvSeq_Rect___getitem__(*args)
+
+    def __setitem__(*args):
+        """__setitem__(self, int i, CvRect obj)"""
+        return _cv.CvSeq_Rect___setitem__(*args)
+
+    def append(*args):
+        """append(self, CvRect obj)"""
+        return _cv.CvSeq_Rect_append(*args)
+
+    def pop(*args):
+        """pop(self) -> CvRect"""
+        return _cv.CvSeq_Rect_pop(*args)
+
+    def __init__(self, *args): 
+        """__init__(self) -> CvSeq_Rect"""
+        this = _cv.new_CvSeq_Rect(*args)
+        try: self.this.append(this)
+        except: self.this = this
+    __swig_destroy__ = _cv.delete_CvSeq_Rect
+    __del__ = lambda self : None;
+CvSeq_Rect_swigregister = _cv.CvSeq_Rect_swigregister
+CvSeq_Rect_swigregister(CvSeq_Rect)
+
+def CvSeq_Rect_cast(*args):
+  """CvSeq_Rect_cast(CvSeq seq) -> CvSeq_Rect"""
+  return _cv.CvSeq_Rect_cast(*args)
+
+class CvSeq_Seq(CvSeq):
+    """Proxy of C++ CvSeq_Seq class"""
+    __swig_setmethods__ = {}
+    for _s in [CvSeq]: __swig_setmethods__.update(_s.__swig_setmethods__)
+    __setattr__ = lambda self, name, value: _swig_setattr(self, CvSeq_Seq, name, value)
+    __swig_getmethods__ = {}
+    for _s in [CvSeq]: __swig_getmethods__.update(_s.__swig_getmethods__)
+    __getattr__ = lambda self, name: _swig_getattr(self, CvSeq_Seq, name)
+    __repr__ = _swig_repr
+    def cast(*args):
+        """cast(CvSeq seq) -> CvSeq_Seq"""
+        return _cv.CvSeq_Seq_cast(*args)
+
+    if _newclass:cast = staticmethod(cast)
+    __swig_getmethods__["cast"] = lambda x: cast
+    def __getitem__(*args):
+        """__getitem__(self, int i) -> CvSeq"""
+        return _cv.CvSeq_Seq___getitem__(*args)
+
+    def __setitem__(*args):
+        """__setitem__(self, int i, CvSeq obj)"""
+        return _cv.CvSeq_Seq___setitem__(*args)
+
+    def append(*args):
+        """append(self, CvSeq obj)"""
+        return _cv.CvSeq_Seq_append(*args)
+
+    def pop(*args):
+        """pop(self) -> CvSeq"""
+        return _cv.CvSeq_Seq_pop(*args)
+
+    def __init__(self, *args): 
+        """__init__(self) -> CvSeq_Seq"""
+        this = _cv.new_CvSeq_Seq(*args)
+        try: self.this.append(this)
+        except: self.this = this
+    __swig_destroy__ = _cv.delete_CvSeq_Seq
+    __del__ = lambda self : None;
+CvSeq_Seq_swigregister = _cv.CvSeq_Seq_swigregister
+CvSeq_Seq_swigregister(CvSeq_Seq)
+
+def CvSeq_Seq_cast(*args):
+  """CvSeq_Seq_cast(CvSeq seq) -> CvSeq_Seq"""
+  return _cv.CvSeq_Seq_cast(*args)
+
+class CvSeq_QuadEdge2D(CvSeq):
+    """Proxy of C++ CvSeq_QuadEdge2D class"""
+    __swig_setmethods__ = {}
+    for _s in [CvSeq]: __swig_setmethods__.update(_s.__swig_setmethods__)
+    __setattr__ = lambda self, name, value: _swig_setattr(self, CvSeq_QuadEdge2D, name, value)
+    __swig_getmethods__ = {}
+    for _s in [CvSeq]: __swig_getmethods__.update(_s.__swig_getmethods__)
+    __getattr__ = lambda self, name: _swig_getattr(self, CvSeq_QuadEdge2D, name)
+    __repr__ = _swig_repr
+    def cast(*args):
+        """cast(CvSeq seq) -> CvSeq_QuadEdge2D"""
+        return _cv.CvSeq_QuadEdge2D_cast(*args)
+
+    if _newclass:cast = staticmethod(cast)
+    __swig_getmethods__["cast"] = lambda x: cast
+    def __getitem__(*args):
+        """__getitem__(self, int i) -> CvQuadEdge2D"""
+        return _cv.CvSeq_QuadEdge2D___getitem__(*args)
+
+    def __setitem__(*args):
+        """__setitem__(self, int i, CvQuadEdge2D obj)"""
+        return _cv.CvSeq_QuadEdge2D___setitem__(*args)
+
+    def append(*args):
+        """append(self, CvQuadEdge2D obj)"""
+        return _cv.CvSeq_QuadEdge2D_append(*args)
+
+    def pop(*args):
+        """pop(self) -> CvQuadEdge2D"""
+        return _cv.CvSeq_QuadEdge2D_pop(*args)
+
+    def __init__(self, *args): 
+        """__init__(self) -> CvSeq_QuadEdge2D"""
+        this = _cv.new_CvSeq_QuadEdge2D(*args)
+        try: self.this.append(this)
+        except: self.this = this
+    __swig_destroy__ = _cv.delete_CvSeq_QuadEdge2D
+    __del__ = lambda self : None;
+CvSeq_QuadEdge2D_swigregister = _cv.CvSeq_QuadEdge2D_swigregister
+CvSeq_QuadEdge2D_swigregister(CvSeq_QuadEdge2D)
+
+def CvSeq_QuadEdge2D_cast(*args):
+  """CvSeq_QuadEdge2D_cast(CvSeq seq) -> CvSeq_QuadEdge2D"""
+  return _cv.CvSeq_QuadEdge2D_cast(*args)
+
+class CvSeq_ConnectedComp(CvSeq):
+    """Proxy of C++ CvSeq_ConnectedComp class"""
+    __swig_setmethods__ = {}
+    for _s in [CvSeq]: __swig_setmethods__.update(_s.__swig_setmethods__)
+    __setattr__ = lambda self, name, value: _swig_setattr(self, CvSeq_ConnectedComp, name, value)
+    __swig_getmethods__ = {}
+    for _s in [CvSeq]: __swig_getmethods__.update(_s.__swig_getmethods__)
+    __getattr__ = lambda self, name: _swig_getattr(self, CvSeq_ConnectedComp, name)
+    __repr__ = _swig_repr
+    def cast(*args):
+        """cast(CvSeq seq) -> CvSeq_ConnectedComp"""
+        return _cv.CvSeq_ConnectedComp_cast(*args)
+
+    if _newclass:cast = staticmethod(cast)
+    __swig_getmethods__["cast"] = lambda x: cast
+    def __getitem__(*args):
+        """__getitem__(self, int i) -> CvConnectedComp"""
+        return _cv.CvSeq_ConnectedComp___getitem__(*args)
+
+    def __setitem__(*args):
+        """__setitem__(self, int i, CvConnectedComp obj)"""
+        return _cv.CvSeq_ConnectedComp___setitem__(*args)
+
+    def append(*args):
+        """append(self, CvConnectedComp obj)"""
+        return _cv.CvSeq_ConnectedComp_append(*args)
+
+    def pop(*args):
+        """pop(self) -> CvConnectedComp"""
+        return _cv.CvSeq_ConnectedComp_pop(*args)
+
+    def __init__(self, *args): 
+        """__init__(self) -> CvSeq_ConnectedComp"""
+        this = _cv.new_CvSeq_ConnectedComp(*args)
+        try: self.this.append(this)
+        except: self.this = this
+    __swig_destroy__ = _cv.delete_CvSeq_ConnectedComp
+    __del__ = lambda self : None;
+CvSeq_ConnectedComp_swigregister = _cv.CvSeq_ConnectedComp_swigregister
+CvSeq_ConnectedComp_swigregister(CvSeq_ConnectedComp)
+
+def CvSeq_ConnectedComp_cast(*args):
+  """CvSeq_ConnectedComp_cast(CvSeq seq) -> CvSeq_ConnectedComp"""
+  return _cv.CvSeq_ConnectedComp_cast(*args)
+
 
 def SendErrorToPython(*args):
   """
@@ -7248,30 +7561,6 @@ def void_ptr_generator(*args):
 def void_ptrptr_generator(*args):
   """void_ptrptr_generator() -> void"""
   return _cv.void_ptrptr_generator(*args)
-
-def cvGetSeqElemAsPoint(*args):
-  """cvGetSeqElemAsPoint(CvSeq seq, int index) -> CvPoint"""
-  return _cv.cvGetSeqElemAsPoint(*args)
-
-def cvGetSeqElemAsPoint2D32f(*args):
-  """cvGetSeqElemAsPoint2D32f(CvSeq seq, int index) -> CvPoint2D32f"""
-  return _cv.cvGetSeqElemAsPoint2D32f(*args)
-
-def cvGetSeqElemAsRect(*args):
-  """cvGetSeqElemAsRect(CvSeq seq, int index) -> CvRect"""
-  return _cv.cvGetSeqElemAsRect(*args)
-
-def cvGetSeqElemAsSeq(*args):
-  """cvGetSeqElemAsSeq(CvSeq seq, int index) -> CvSeq"""
-  return _cv.cvGetSeqElemAsSeq(*args)
-
-def cvGetSeqElemAsQuadEdge2D(*args):
-  """cvGetSeqElemAsQuadEdge2D(CvSeq seq, int index) -> CvQuadEdge2D"""
-  return _cv.cvGetSeqElemAsQuadEdge2D(*args)
-
-def cvGetSeqElemAsConnectedComp(*args):
-  """cvGetSeqElemAsConnectedComp(CvSeq seq, int index) -> CvConnectedComp"""
-  return _cv.cvGetSeqElemAsConnectedComp(*args)
 IPL_ALIGN_DWORD=IPL_ALIGN_4BYTES
 IPL_ALIGN_QWORD=IPL_ALIGN_8BYTES
 CV_MAKE_TYPE=CV_MAKETYPE
