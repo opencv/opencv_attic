@@ -373,7 +373,7 @@
 
     /* extract the pointer we want to add to the returned tuple */
 	/* sequence is allocated in CvMemStorage, so python_ownership=0 */
-    to_add = SWIG_NewPointerObj (*$1, $descriptor(CvSeq *), 0); 
+    to_add = SWIG_NewPointerObj (*$1, $descriptor(CvSeq*), 0); 
 
 	$result = SWIG_AppendResult($result, &to_add, 1);
 }

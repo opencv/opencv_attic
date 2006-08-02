@@ -41,10 +41,9 @@ if UPDATE_SWIG_WRAPPERS
 
 # this rule creates the Python wrapper sources for cxcore and cv
 _cv.cpp: cv.i imagedata.i cvarr.i cvaliases.i                   \
-         nointpb.i pytypemaps.i                                 \
+         nointpb.i pytypemaps.i cvshadow.i cvseq.i              \
          error.cpp error.h                                      \
-         pyhelpers.h pyhelpers.cpp                              \
-         pycvseq.cpp pycvseq.h                                  \
+         pyhelpers.h cvshadow.h pycvseq.hpp                     \
          $(top_srcdir)/interfaces/swig/general/cv.i             \
          $(top_srcdir)/interfaces/swig/general/memory.i         \
          $(top_srcdir)/interfaces/swig/general/typemaps.i       \
@@ -81,8 +80,8 @@ endif
 # Python #####################################################################
 
 _cv_la_SOURCES    = _cv.cpp error.cpp error.h pyhelpers.cpp pyhelpers.h \
-                    pycvseq.cpp pycvseq.h \
-                    cv.i imagedata.i cvarr.i nointpb.i pytypemaps.i
+                    pycvseq.hpp cvshadow.cpp cvshadow.h \
+                    cv.i imagedata.i cvarr.i nointpb.i pytypemaps.i cvseq.i cvshadow.i
 _cv_la_CXXFLAGS   = $(PYTHON_CSPEC)
 _cv_la_LIBADD     = $(top_builddir)/cv/src/libcv.la
 _cv_la_LDFLAGS    = -module -avoid-version -no-undefined $(PYTHON_LSPEC) \

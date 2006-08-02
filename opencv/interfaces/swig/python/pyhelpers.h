@@ -33,4 +33,5 @@ int PyObject_AsFloatArray(PyObject * obj, float * array, int len);
 /** convert python sequence to CvArr -- returned array must be freed by the caller */
 CvArr * PySequence_to_CvArr( PyObject * obj );
 
+
 #endif //PYHELPERS_H
