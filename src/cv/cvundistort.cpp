@@ -271,7 +271,7 @@ cvInitUndistortMap( const CvMat* A, const CvMat* dist_coeffs,
 
     size = cvGetMatSize(_mapx);
     
-    if( icvUndistortGetSize_p && icvCreateMapCameraUndistort_32f_C1R_p )
+    /*if( icvUndistortGetSize_p && icvCreateMapCameraUndistort_32f_C1R_p )
     {
         int buf_size = 0;
         if( icvUndistortGetSize_p( size, &buf_size ) && buf_size > 0 )
@@ -282,7 +282,7 @@ cvInitUndistortMap( const CvMat* A, const CvMat* dist_coeffs,
                 a[0], a[4], a[2], a[5], k[0], k[1], k[2], k[3], buffer ) >= 0 )
                 EXIT;
         }
-    }
+    }*/
     
     mapxstep /= sizeof(mapx[0]);
     mapystep /= sizeof(mapy[0]);
@@ -309,6 +309,8 @@ cvInitUndistortMap( const CvMat* A, const CvMat* dist_coeffs,
     }
 
     __END__;
+
+    cvFree( &buffer );
 }
 
 /*  End of file  */
