@@ -44,7 +44,7 @@
 static const char* floodfill_param_names[] = { "size", "channels", "depth", "dist_type", "labels", 0 };
 static const CvSize floodfill_sizes[] = {{320, 240}, {720,480}, {-1,-1}};
 static const CvSize floodfill_whole_sizes[] = {{320, 240}, {720,480}, {-1,-1}};
-static const char* floodfill_types[] = { "fixed_level", "fixed_range", "floating_range", 0 };
+//static const char* floodfill_types[] = { "fixed_level", "fixed_range", "floating_range", 0 };
 static const int floodfill_depths[] = { CV_8U, CV_32F, -1 };
 static const int floodfill_channels[] = { 1, 3, -1 };
 

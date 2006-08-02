@@ -1600,10 +1600,10 @@ void CxCore_TransformTest::get_test_array_types_and_sizes( int test_case_idx, Cv
 {
     CvRNG* rng = ts->get_rng();
     int bits = cvTsRandInt(rng);
-    int depth, cn, dst_cn, mat_cols, mattype;
+    int depth, dst_cn, mat_cols, mattype;
     CxCore_MatrixTest::get_test_array_types_and_sizes( test_case_idx, sizes, types );
 
-    mat_cols = cn = CV_MAT_CN(types[INPUT][0]);
+    mat_cols = CV_MAT_CN(types[INPUT][0]);
     depth = CV_MAT_DEPTH(types[INPUT][0]);
     dst_cn = cvTsRandInt(rng) % 4 + 1;
     types[OUTPUT][0] = types[REF_OUTPUT][0] = CV_MAKETYPE(depth, dst_cn);
@@ -1979,7 +1979,6 @@ void CxCore_CovarMatrixTest::get_test_array_types_and_sizes( int test_case_idx, 
     CvRNG* rng = ts->get_rng();
     int bits = cvTsRandInt(rng);
     int i, single_matrix;
-    CvSize sz;
     CxCore_MatrixTest::get_test_array_types_and_sizes( test_case_idx, sizes, types );
 
     flags = bits & (CV_COVAR_NORMAL | CV_COVAR_USE_AVG | CV_COVAR_SCALE | CV_COVAR_ROWS );
@@ -1998,7 +1997,7 @@ void CxCore_CovarMatrixTest::get_test_array_types_and_sizes( int test_case_idx, 
         types[INPUT][0] = (types[INPUT][0] & ~CV_MAT_DEPTH_MASK) | CV_32F;
 
     sizes[OUTPUT][0] = sizes[REF_OUTPUT][0] = flags & CV_COVAR_NORMAL ? cvSize(len,len) : cvSize(count,count);
-    sizes[INPUT_OUTPUT][0] = sizes[REF_INPUT_OUTPUT][0] = sz = !t_flag ? cvSize(len,1) : cvSize(1,len);
+    sizes[INPUT_OUTPUT][0] = sizes[REF_INPUT_OUTPUT][0] = !t_flag ? cvSize(len,1) : cvSize(1,len);
     sizes[TEMP][0] = sizes[INPUT][0];
 
     types[INPUT_OUTPUT][0] = types[REF_INPUT_OUTPUT][0] =

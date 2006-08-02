@@ -858,6 +858,10 @@ public:
 
     virtual void read( CvFileStorage* fs, CvFileNode* node );
     virtual void write( CvFileStorage* fs, const char* name );
+    
+    const CvDTreeNode* get_root() const;
+    int get_pruned_tree_idx() const;
+    CvDTreeTrainData* get_data();
 
 protected:
 
