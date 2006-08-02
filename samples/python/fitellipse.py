@@ -19,12 +19,6 @@ image02 = None
 image03 = None
 image04 = None
 
-# little helper for iterating through the contours in a sequence
-def parse_contours( seq ):
-    while(seq):
-        yield seq
-        seq = seq.h_next
-    
 def process_image( slider_pos ): 
     """
     Define trackbar callback functon. This function find contours,
@@ -48,7 +42,7 @@ def process_image( slider_pos ):
     cv.cvZero(image04);
     
     # This cycle draw all contours and approximate it by ellipses.
-    for c in parse_contours(cont):
+    for c in cont.hrange():
         count = c.total; # This is number point in contour
 
         # Number point must be more than or equal to 6 (for cv.cvFitEllipse_32f).        
@@ -86,8 +80,6 @@ def process_image( slider_pos ):
         cv.cvEllipse(image04, center, size,
                   box.angle, 0, 360,
                   cv.CV_RGB(0,0,255), 1, cv.CV_AA, 0);
-
-        cont = cont.h_next 
     
     # Show image. HighGUI use.
     highgui.cvShowImage( "Result", image04 );
@@ -125,6 +117,7 @@ if __name__ == '__main__':
     process_image( 1 );
 
     #Wait for a key stroke; the same function arranges events processing                
+    print "Press any key to exit"
     highgui.cvWaitKey(0);
 
     highgui.cvDestroyWindow("Source");
