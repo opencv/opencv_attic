@@ -61,7 +61,7 @@ def update_mhi( img, dst, diff_threshold ):
             color = CV_RGB(255,255,255);
             magnitude = 100.;
         else:  # i-th motion component
-            comp_rect = cvGetSeqElemAsConnectedComp( seq, i ).rect;
+            comp_rect = seq[i].rect 
             if( comp_rect.width + comp_rect.height < 100 ): # reject very small components
                 continue;
             color = CV_RGB(255,0,0);

@@ -35,8 +35,7 @@ def draw_subdiv( img, subdiv, delaunay_color, voronoi_color ):
     total = subdiv.edges.total;
     elem_size = subdiv.edges.elem_size;
 
-    for i in range(total):
-        edge = cvGetSeqElemAsQuadEdge2D( subdiv.edges, i )
+    for edge in subdiv.edges:
         edge_rot = cvSubdiv2DRotateEdge( edge, 1 )
 
         if( CV_IS_SET_ELEM( edge )):
@@ -93,8 +92,7 @@ def paint_voronoi( subdiv, img ):
 
     cvCalcSubdivVoronoi2D( subdiv );
 
-    for i in range(total):
-        edge = cvGetSeqElemAsQuadEdge2D( subdiv.edges, i )
+    for edge in subdiv.edges:
 
         if( CV_IS_SET_ELEM( edge )):
             # left

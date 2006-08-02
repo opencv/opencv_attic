@@ -49,8 +49,7 @@ def detect_and_draw( img ):
         t = cvGetTickCount() - t;
         print "detection time = %gms" % (t/(cvGetTickFrequency()*1000.));
         if faces:
-            for i in range(faces.total):
-                r = cvGetSeqElemAsRect(faces, i)
+            for r in faces:
                 pt1 = cvPoint( int(r.x*image_scale), int(r.y*image_scale))
                 pt2 = cvPoint( int((r.x+r.width)*image_scale), int((r.y+r.height)*image_scale) )
                 cvRectangle( img, pt1, pt2, CV_RGB(255,0,0), 3, 8, 0 );

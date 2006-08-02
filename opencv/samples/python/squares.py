@@ -31,6 +31,8 @@ def findSquares4( img, storage ):
     # create empty sequence that will contain points -
     # 4 points per square (the square's vertices)
     squares = cvCreateSeq( 0, sizeof_CvSeq, sizeof_CvPoint, storage );
+    squares = CvSeq_Point.cast( squares )
+
     # select the maximum ROI in the image
     # with the width and height divisible by 2
     cvSetImageROI( timg, cvRect( 0, 0, sz.width, sz.height ));
@@ -61,11 +63,15 @@ def findSquares4( img, storage ):
             # find contours and store them all as a list
             count, contours = cvFindContours( gray, storage, sizeof_CvContour,
                 CV_RETR_LIST, CV_CHAIN_APPROX_SIMPLE, cvPoint(0,0) );
+
+            if not contours:
+                continue
+            
             # test each contour
-            while contours:
+            for contour in contours.hrange():
                 # approximate contour with accuracy proportional
                 # to the contour perimeter
-                result = cvApproxPoly( contours, sizeof_CvContour, storage,
+                result = cvApproxPoly( contour, sizeof_CvContour, storage,
                     CV_POLY_APPROX_DP, cvContourPerimeter(contours)*0.02, 0 );
                 # square contours should have 4 vertices after approximation
                 # relatively large area (to filter out noisy contours)
@@ -81,10 +87,7 @@ def findSquares4( img, storage ):
                         # find minimum angle between joint
                         # edges (maximum of cosine)
                         if( i >= 2 ):
-                            t = abs(angle(
-                            cvGetSeqElemAsPoint( result, i ),
-                            cvGetSeqElemAsPoint( result, i-2 ),
-                            cvGetSeqElemAsPoint( result, i-1 )));
+                            t = abs(angle( result[i], result[i-2], result[i-1]))
                             if s<t:
                                 s=t
                     # if cosines of all angles are small
@@ -92,10 +95,8 @@ def findSquares4( img, storage ):
                     # vertices to resultant sequence
                     if( s < 0.3 ):
                         for i in range(4):
-                            cvSeqPush( squares,
-                                cvGetSeqElemAsPoint( result, i ));
-                # take the next contour
-                contours = contours.h_next;
+                            squares.append( result[i] )
+
     return squares;
 
 # the function draws all the squares in the image
@@ -106,10 +107,10 @@ def drawSquares( img, squares ):
     while i<squares.total:
         pt = []
         # read 4 vertices
-        pt.append( cvGetSeqElemAsPoint(squares, i) )
-        pt.append( cvGetSeqElemAsPoint(squares, i+1) )
-        pt.append( cvGetSeqElemAsPoint(squares, i+2) )
-        pt.append( cvGetSeqElemAsPoint(squares, i+3) )
+        pt.append( squares[i] )
+        pt.append( squares[i+1] )
+        pt.append( squares[i+2] )
+        pt.append( squares[i+3] )
 
         # draw the square as a closed polyline
         cvPolyLine( cpy, [pt], 1, CV_RGB(0,255,0), 3, CV_AA, 0 );
