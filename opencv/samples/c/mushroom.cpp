@@ -3,7 +3,7 @@
 
 /*
 The sample demonstrates how to build a decision tree for classifying mushrooms.
-It uses the sample base from UCI Repository, here is the link:
+It uses the sample base agaricus-lepiota.data from UCI Repository, here is the link:
 
 Newman, D.J. & Hettich, S. & Blake, C.L. & Merz, C.J. (1998).
 UCI Repository of machine learning databases
