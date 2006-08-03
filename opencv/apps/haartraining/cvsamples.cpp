@@ -824,7 +824,7 @@ void cvCreateTrainingSamples( const char* filename,
 #endif /* CV_VERBOSE */
             }
             icvDestroyBackgroundReaders();
-            cvFree( (void**) &(sample.data.ptr) );
+            cvFree( &(sample.data.ptr) );
             fclose( output );
         } /* if( output != NULL ) */
         
@@ -1171,7 +1171,7 @@ void cvShowVecSamples( const char* filename, int winwidth, int winheight,
             }
             if( scaled_sample && scaled_sample != sample ) cvReleaseMat( &scaled_sample );
             cvReleaseMat( &sample );
-            cvFree( (void**) &file.vector );
+            cvFree( &file.vector );
         }
         fclose( file.input );
     }

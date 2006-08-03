@@ -331,11 +331,11 @@ int main( int argc, char* argv[] )
                     cvvSaveImage( fullname, img );
                 }
 
-                if( det ) { cvFree( (void**)&det ); det = NULL; }
+                if( det ) { cvFree( &det ); det = NULL; }
             } /* if( !error ) */
             
             cvReleaseImage( &img );
-            cvFree( (void**)&ref );
+            cvFree( &ref );
         }
         fclose( info );
         
@@ -360,8 +360,8 @@ int main( int argc, char* argv[] )
                 ((float)neg[i]) / (totalHits + totalMissed) );
         }
 
-        cvFree( (void**)&pos );
-        cvFree( (void**)&neg );
+        cvFree( &pos );
+        cvFree( &neg );
     }
 
     delete[] numclassifiers;
