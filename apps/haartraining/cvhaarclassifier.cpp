@@ -80,7 +80,7 @@ CvIntHaarClassifier* icvCreateCARTHaarClassifier( int count )
 CV_IMPL
 void icvReleaseHaarClassifier( CvIntHaarClassifier** classifier )
 {
-    cvFree( (void**) classifier );
+    cvFree( classifier );
     *classifier = NULL;
 }
 
@@ -162,7 +162,7 @@ void icvReleaseStageHaarClassifier( CvIntHaarClassifier** classifier )
         }
     }
 
-    cvFree( (void**) classifier );
+    cvFree( classifier );
     *classifier = NULL;
 }
 
@@ -219,7 +219,7 @@ void icvReleaseCascadeHaarClassifier( CvIntHaarClassifier** classifier )
         }
     }
 
-    cvFree( (void**) classifier );
+    cvFree( classifier );
     *classifier = NULL;
 }
 
@@ -582,7 +582,7 @@ void icvReleaseTreeCascadeNodes( CvTreeCascadeNode** node )
             while( ptr && ptr->next == NULL ) ptr = ptr->parent;
             if( ptr ) ptr = ptr->next;
 
-            cvFree( (void**) &ptr_ );
+            cvFree( &ptr_ );
         }
     }
 
@@ -597,7 +597,7 @@ void icvReleaseTreeCascadeClassifier( CvIntHaarClassifier** classifier )
     if( classifier && *classifier )
     {
         icvReleaseTreeCascadeNodes( &((CvTreeCascadeClassifier*) *classifier)->root );
-        cvFree( (void**) classifier );
+        cvFree( classifier );
         *classifier = NULL;
     }
 }
@@ -771,7 +771,7 @@ CvIntHaarClassifier* icvLoadTreeCascadeClassifier( const char* filename, int ste
 
     __END__;
 
-    cvFree( (void**) &nodes );
+    cvFree( &nodes );
 
     return (CvIntHaarClassifier*) ptr;
 }

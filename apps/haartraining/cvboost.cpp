@@ -170,7 +170,7 @@ void cvGetSortedIndices( CvMat* val, CvMat* idx, int sortcols )
 CV_BOOST_IMPL
 void cvReleaseStumpClassifier( CvClassifier** classifier )
 {
-    cvFree( (void**) classifier );
+    cvFree( classifier );
     *classifier = 0;
 }
 
@@ -570,7 +570,7 @@ CvClassifier* cvCreateStumpClassifier( CvMat* trainData,
 
     /* END */
 
-    cvFree( (void**) &idx );
+    cvFree( &idx );
 
     if( ((CvStumpTrainParams*) trainParams)->type == CV_CLASSIFICATION_CLASS )
     {
@@ -1079,11 +1079,11 @@ CvClassifier* cvCreateMTStumpClassifier( CvMat* trainData,
         /* free allocated memory */
         if( mat.data.ptr != NULL )
         {
-            cvFree( (void**) &(mat.data.ptr) );
+            cvFree( &(mat.data.ptr) );
         }
         if( t_idx != NULL )
         {
-            cvFree( (void**) &t_idx );
+            cvFree( &t_idx );
         }
     } /* end of parallel region */
 
@@ -1092,7 +1092,7 @@ CvClassifier* cvCreateMTStumpClassifier( CvMat* trainData,
     /* free allocated memory */
     if( filter != NULL )
     {
-        cvFree( (void**) &filter );
+        cvFree( &filter );
     }
 
     if( ((CvMTStumpTrainParams*) trainParams)->type == CV_CLASSIFICATION_CLASS )
@@ -1215,7 +1215,7 @@ float cvEvalCARTClassifierIdx( CvClassifier* classifier, CvMat* sample )
 CV_BOOST_IMPL
 void cvReleaseCARTClassifier( CvClassifier** classifier )
 {
-    cvFree( (void**) classifier );
+    cvFree( classifier );
     *classifier = NULL;
 }
 
@@ -1515,7 +1515,7 @@ CvClassifier* cvCreateCARTClassifier( CvMat* trainData,
         cvReleaseMat( &(list[i].sampleIdx) );
     }
     
-    cvFree( (void**) &intnode );
+    cvFree( &intnode );
 
     return (CvClassifier*) cart;
 }
@@ -2022,7 +2022,7 @@ CvBoostTrainer* cvBoostStartTraining( CvMat* trainClasses,
 CV_BOOST_IMPL
 void cvBoostEndTraining( CvBoostTrainer** trainer )
 {
-    cvFree( (void**) trainer );
+    cvFree( trainer );
     *trainer = NULL;
 }
 
@@ -2272,7 +2272,7 @@ CvBtTrainer* cvBtStart( CvCARTClassifier** trees,
                 trees[i]->val[j] += zero_approx[i];
             }
         }    
-        CV_CALL( cvFree( (void**) &zero_approx ) );
+        CV_CALL( cvFree( &zero_approx ) );
     }
 
     __END__;
@@ -2364,8 +2364,8 @@ void icvBtNext_LADREG( CvCARTClassifier** trees, CvBtTrainer* trainer )
         ptr->val[j] = val;
     }
 
-    cvFree( (void**) &idx );
-    cvFree( (void**) &resp );
+    cvFree( &idx );
+    cvFree( &resp );
     
     trees[0] = ptr;
 }
@@ -2471,9 +2471,9 @@ void icvBtNext_MREG( CvCARTClassifier** trees, CvBtTrainer* trainer )
 
     }
 
-    cvFree( (void**) &resid );
-    cvFree( (void**) &resp );
-    cvFree( (void**) &idx );
+    cvFree( &resid );
+    cvFree( &resp );
+    cvFree( &idx );
     
     trees[0] = ptr;
 }
@@ -2620,9 +2620,9 @@ void icvBtNext_L2CLASS( CvCARTClassifier** trees, CvBtTrainer* trainer )
     }
     
     if( trimmed_idx != NULL ) cvReleaseMat( &trimmed_idx );
-    cvFree( (void**) &sorted_weights );
-    cvFree( (void**) &weights );
-    cvFree( (void**) &idx );
+    cvFree( &sorted_weights );
+    cvFree( &weights );
+    cvFree( &idx );
     
     trees[0] = ptr;
 }
@@ -2785,9 +2785,9 @@ void icvBtNext_LKCLASS( CvCARTClassifier** trees, CvBtTrainer* trainer )
     } /* for each class */
     
     cvReleaseMat( &trimmed_idx );
-    cvFree( (void**) &sorted_weights );
-    cvFree( (void**) &weights );
-    cvFree( (void**) &idx );
+    cvFree( &sorted_weights );
+    cvFree( &weights );
+    cvFree( &idx );
 }
 
 
@@ -2939,7 +2939,7 @@ void cvBtEnd( CvBtTrainer** trainer )
     {
         CV_CALL( cvBoostEndTraining( &((*trainer)->boosttrainer) ) );
     }
-    CV_CALL( cvFree( (void**) trainer ) );
+    CV_CALL( cvFree( trainer ) );
 
     __END__;
 }
@@ -3068,7 +3068,7 @@ float cvEvalBtClassifierK( CvClassifier* classifier, CvMat* sample )
         }
     }
 
-    CV_CALL( cvFree( (void**) &vals ) );
+    CV_CALL( cvFree( &vals ) );
 
     __END__;
 
@@ -3194,7 +3194,7 @@ void cvReleaseBtClassifier( CvClassifier** ptr )
         }
     }
 
-    CV_CALL( cvFree( (void**) ptr ) );
+    CV_CALL( cvFree( ptr ) );
     *ptr = NULL;
 
     __END__;
@@ -3229,7 +3229,7 @@ void cvTuneBtClassifier( CvClassifier* classifier, CvMat*, int flags,
                 (CvBtTrainer*) ((CvBtClassifier*) classifier)->trainer ) );
             CV_CALL( cvSeqPushMulti( ((CvBtClassifier*) classifier)->seq,
                 trees, ((CvBtClassifier*) classifier)->numclasses ) );
-            CV_CALL( cvFree( (void**) &trees ) );
+            CV_CALL( cvFree( &trees ) );
             ((CvBtClassifier*) classifier)->numiter++;
         }
     }
@@ -3373,7 +3373,7 @@ CvClassifier* cvCreateBtClassifier( CvMat* trainData,
         &(((CvBtClassifierTrainParams*) trainParams)->param[0]) ) );
 
     CV_CALL( cvSeqPushMulti( ptr->seq, trees, ptr->numclasses ) );
-    CV_CALL( cvFree( (void**) &trees ) );
+    CV_CALL( cvFree( &trees ) );
     ptr->numiter++;
     
     for( i = 1; i < num_iter; i++ )
@@ -3547,7 +3547,7 @@ CvMat* cvTrimWeights( CvMat* weights, CvMat* idx, float factor )
         
             assert( count == ptr->cols );
         }
-        cvFree( (void**) &sorted_weights );
+        cvFree( &sorted_weights );
     }
 
     __END__;

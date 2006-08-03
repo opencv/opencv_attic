@@ -364,7 +364,7 @@ void icvReleaseIntHaarFeatures( CvIntHaarFeatures** intHaarFeatures )
 {
     if( intHaarFeatures != NULL && (*intHaarFeatures) != NULL )
     {
-        cvFree( (void**) intHaarFeatures );
+        cvFree( intHaarFeatures );
         (*intHaarFeatures) = NULL;
     }
 }
@@ -487,7 +487,7 @@ void icvReleaseHaarTrainingData( CvHaarTrainigData** haarTrainingData )
     {
         icvReleaseHaarTrainingDataCache( haarTrainingData );
 
-        cvFree( (void**) haarTrainingData );
+        cvFree( haarTrainingData );
     }
 }
 
@@ -1117,7 +1117,7 @@ CvIntHaarClassifier* icvCreateCARTStageClassifier( CvHaarTrainingData* data,
     /* CLEANUP */
     cvReleaseMemStorage( &storage );
     cvReleaseMat( &weakTrainVals );
-    cvFree( (void**) &(eval.data.ptr) );
+    cvFree( &(eval.data.ptr) );
     
     return (CvIntHaarClassifier*) stage;
 }
@@ -1214,7 +1214,7 @@ void icvReleaseBackgroundData( CvBackgroundData** data )
 {
     assert( data != NULL && (*data) != NULL );
 
-    cvFree( (void**) data );
+    cvFree( data );
 }
 
 CV_IMPL
@@ -1242,14 +1242,14 @@ void icvReleaseBackgroundReader( CvBackgroundReader** reader )
 
     if( (*reader)->src.data.ptr != NULL )
     {
-        cvFree( (void**) &((*reader)->src.data.ptr) );
+        cvFree( &((*reader)->src.data.ptr) );
     }
     if( (*reader)->img.data.ptr != NULL )
     {
-        cvFree( (void**) &((*reader)->img.data.ptr) );
+        cvFree( &((*reader)->img.data.ptr) );
     }
 
-    cvFree( (void**) reader );
+    cvFree( reader );
 }
 
 CV_IMPL
@@ -1267,12 +1267,12 @@ void icvGetNextFromBackgroundData( CvBackgroundData* data,
 
     if( reader->src.data.ptr != NULL )
     {
-        cvFree( (void**) &(reader->src.data.ptr) );
+        cvFree( &(reader->src.data.ptr) );
         reader->src.data.ptr = NULL;
     }
     if( reader->img.data.ptr != NULL )
     {
-        cvFree( (void**) &(reader->img.data.ptr) );
+        cvFree( &(reader->img.data.ptr) );
         reader->img.data.ptr = NULL;
     }
 
@@ -1541,8 +1541,8 @@ int icvGetHaarTrainingData( CvHaarTrainingData* data, int first, int count,
     }
     if( consumed != NULL ) (*consumed) = consumedcount;
 
-    cvFree( (void**) &(img.data.ptr) );
-    cvFree( (void**) &(sqsum.data.ptr) );
+    cvFree( &(img.data.ptr) );
+    cvFree( &(sqsum.data.ptr) );
 
     return getcount;
 }
@@ -1640,8 +1640,8 @@ int icvGetHaarTrainingDataFromBG( CvHaarTrainingData* data, int first, int count
             
         }
 
-        cvFree( (void**) &(img.data.ptr) );
-        cvFree( (void**) &(sqsum.data.ptr) );
+        cvFree( &(img.data.ptr) );
+        cvFree( &(sqsum.data.ptr) );
 
         #ifdef _OPENMP
         #pragma omp critical (c_consumed_count)
@@ -1732,7 +1732,7 @@ int icvGetHaarTrainingDataFromVec( CvHaarTrainingData* data, int first, int coun
             file.vector = (short*) cvAlloc( sizeof( *file.vector ) * file.vecsize );
             getcount = icvGetHaarTrainingData( data, first, count, cascade,
                 icvGetHaarTraininDataFromVecCallback, &file, consumed );
-            cvFree( (void**) &file.vector );
+            cvFree( &file.vector );
         }
         fclose( file.input );
     }
@@ -2507,7 +2507,7 @@ void cvCreateTreeCascadeClassifier( const char* dirname,
                 
                 cur_split = last_split;
                 last_split = last_split->next;
-                cvFree( (void**) &cur_split );
+                cvFree( &cur_split );
             } /* for each split point */
 
             printf( "Total number of splits: %d\n", total_splits );
