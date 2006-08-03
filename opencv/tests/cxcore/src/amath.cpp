@@ -2102,7 +2102,7 @@ void CxCore_CovarMatrixTest::prepare_to_validation( int )
               t_flag ^ ((flags & CV_COVAR_NORMAL) != 0) ?
               CV_GEMM_A_T : CV_GEMM_B_T );
 
-    cvFree( (void**)&hdr_data );
+    cvFree( &hdr_data );
     temp_hdrs.clear();
 }
 

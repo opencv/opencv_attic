@@ -777,8 +777,8 @@ public:
     }
     ~CvBlobTrackerOneMSPF()
     {
-        if(m_pParticlesResampled)cvFree((void**)&m_pParticlesResampled);
-        if(m_pParticlesPredicted)cvFree((void**)&m_pParticlesPredicted);
+        if(m_pParticlesResampled)cvFree(&m_pParticlesResampled);
+        if(m_pParticlesPredicted)cvFree(&m_pParticlesPredicted);
 #ifdef _OPENMP
         if(m_HistForParalel) delete[] m_HistForParalel;
 #endif
@@ -786,8 +786,8 @@ public:
 private:
     void Realloc()
     {
-        if(m_pParticlesResampled)cvFree((void**)&m_pParticlesResampled);
-        if(m_pParticlesPredicted)cvFree((void**)&m_pParticlesPredicted);
+        if(m_pParticlesResampled)cvFree(&m_pParticlesResampled);
+        if(m_pParticlesPredicted)cvFree(&m_pParticlesPredicted);
         m_pParticlesPredicted = (DefParticle*)cvAlloc(sizeof(DefParticle)*m_ParticleNum);
         m_pParticlesResampled = (DefParticle*)cvAlloc(sizeof(DefParticle)*m_ParticleNum);
     };/* Realloc*/

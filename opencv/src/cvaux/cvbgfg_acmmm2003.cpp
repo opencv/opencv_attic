@@ -143,10 +143,13 @@ cvCreateFGDStatModel( IplImage* first_frame, CvFGDStatModelParams* parameters )
 
     if( cvGetErrStatus() < 0 )
     {
+        CvBGStatModel* base_ptr = (CvBGStatModel*)p_model;
+
         if( p_model && p_model->release )
-            p_model->release( (CvBGStatModel**)&p_model );
+            p_model->release( &base_ptr );
         else
             cvFree( &p_model );
+        p_model = 0;
     }
 
     return (CvBGStatModel*)p_model;

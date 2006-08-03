@@ -724,8 +724,8 @@ static int foaCalcHist(void* _type)
         {
             cvReleaseImage( &src8u[i] );
             cvReleaseImage( &src32f[i] );
-            cvFree( (void**)&thresh[i] );
-            cvFree( (void**)&threshe[i] );
+            cvFree( &thresh[i] );
+            cvFree( &threshe[i] );
         }
         cvReleaseHist( &hist1 );
         cvReleaseHist( &hist2 );
@@ -736,8 +736,8 @@ static int foaCalcHist(void* _type)
     {
         cvReleaseImage( &src8u[i] );
         cvReleaseImage( &src32f[i] );
-        cvFree( (void**)&thresh[i] );
-        cvFree( (void**)&threshe[i] );
+        cvFree( &thresh[i] );
+        cvFree( &threshe[i] );
     }
     cvReleaseHist( &hist1 );
     cvReleaseHist( &hist2 );
@@ -913,8 +913,8 @@ static int foaCalcHistMask(void* _type)
         {
             cvReleaseImage( &src8u[i] );
             cvReleaseImage( &src32f[i] );
-            cvFree( (void**)&thresh[i] );
-            cvFree( (void**)&threshe[i] );
+            cvFree( &thresh[i] );
+            cvFree( &threshe[i] );
         }
         cvReleaseHist( &hist1 );
         cvReleaseHist( &hist2 );
@@ -1088,8 +1088,8 @@ static int foaBackProject(void* _type)
         {
             cvReleaseImage( &src8u[i] );
             cvReleaseImage( &src32f[i] );
-            cvFree( (void**)&thresh[i] );
-            cvFree( (void**)&threshe[i] );
+            cvFree( &thresh[i] );
+            cvFree( &threshe[i] );
         }
 
         cvReleaseImage( &dst8u );
@@ -1104,8 +1104,8 @@ test_exit:
     {
         cvReleaseImage( &src8u[i] );
         cvReleaseImage( &src32f[i] );
-        cvFree( (void**)&thresh[i] );
-        cvFree( (void**)&threshe[i] );
+        cvFree( &thresh[i] );
+        cvFree( &threshe[i] );
     }
 
     cvReleaseImage( &dst8u );
@@ -1212,14 +1212,14 @@ static int myBackProjectPatch(IplImage** src8u, IplImage** src32f,
     cvReleaseHist(&model);
     for(i = 0; i < c_dims; i++)
     {
-        cvFree((void**)&_test8u[i]);
-        cvFree((void**)&_test32f[i]);
+        cvFree( &_test8u[i]);
+        cvFree( &_test32f[i]);
         cvReleaseImageHeader( img8u + i );
         cvReleaseImageHeader( img32f + i );
     }
 
-    cvFree( (void**)&img8u );
-    cvFree( (void**)&img32f );
+    cvFree( &img8u );
+    cvFree( &img32f );
 
     return TRS_OK;
 }
@@ -1335,7 +1335,7 @@ static int foaBackProjectPatch(void* _type)
         {
             cvReleaseImage( &src8u[i] );
             cvReleaseImage( &src32f[i] );
-            cvFree( (void**)&thresh[i] );
+            cvFree( &thresh[i] );
         }
 
         cvReleaseImage( &_dst8u );
@@ -1358,10 +1358,6 @@ static int foaBayesianProb(void* _type)
     static int c_dimss;
     static int dims;
     static int init = 0;
-    static int width;
-    static int height;
-    static int range_width;
-    static int range_height;
     static double acc;
 
     int    c_dims;

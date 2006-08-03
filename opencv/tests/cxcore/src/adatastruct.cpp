@@ -72,7 +72,7 @@ static CvTsSimpleSeq*  cvTsCreateSimpleSeq( int max_count, int elem_size )
 
 static void cvTsReleaseSimpleSeq( CvTsSimpleSeq** seq )
 {
-    cvFree( (void**)seq );
+    cvFree( seq );
 }
 
 
@@ -167,7 +167,7 @@ static CvTsSimpleSet*  cvTsCreateSimpleSet( int max_count, int elem_size )
 
 static void cvTsReleaseSimpleSet( CvTsSimpleSet** set_header )
 {
-    cvFree( (void**)set_header );
+    cvFree( set_header );
 }
 
 
@@ -252,7 +252,7 @@ static void cvTsReleaseSimpleGraph( CvTsSimpleGraph** graph )
     if( *graph )
     {
         cvTsReleaseSimpleSet( &(graph[0]->vtx) );
-        cvFree( (void**)graph );
+        cvFree( graph );
     }
 }
 
@@ -428,8 +428,8 @@ bool CxCore_DynStructBaseTest::can_do_fast_forward()
 void CxCore_DynStructBaseTest::clear()
 {
     cvReleaseMemStorage( &storage );
-    cvFree( (void**)&cxcore_struct );
-    cvFree( (void**)&simple_struct );
+    cvFree( &cxcore_struct );
+    cvFree( &simple_struct );
 }
 
 

@@ -45,7 +45,6 @@
 
 /* Testing parameters */
 static char test_desc[] = "Canny Edge Detector";
-static char TestClass[] = "Algorithm";
 static int lImageWidth;
 static int lImageHeight;
 static int  Sobord;

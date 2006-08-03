@@ -48,7 +48,6 @@ static char TestName[]  = "POSIT algorithm";
 static char TestClass[]   = "Algorithm";
 
 static float flFocalLength;
-static long lMaxIter;
 static float flEpsilon;
 
 typedef float*  Vect32f;
@@ -244,8 +243,8 @@ static int fmaPOSIT(void)
                             translation.data.fl[2] );  
     }
 
-    cvFree( (void**)&obj_points );
-    cvFree( (void**)&img_points );
+    cvFree( &obj_points );
+    cvFree( &img_points );
 
     cvmFree( &true_rotationX );
     cvmFree( &true_rotationY );

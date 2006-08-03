@@ -58,9 +58,6 @@ static char test_desc[] = "Snakes regression test";
 //  Test is considered to be succesfull if resultant positions 
 //  are identical.
 */    
-static char TestClass[] = "Algorithm";
-static int lImageWidth;
-static int lImageHeight;
 static char* func_name[] = 
 {
     "cvSnakeImage"

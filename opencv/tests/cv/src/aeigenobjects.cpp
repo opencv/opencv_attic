@@ -737,18 +737,18 @@ trsWrite(TW_RUN|TW_CON, "\n ROI   supported\n" );
         }
     }
 
-    cvFree( (void**)&objs     );
-    cvFree( (void**)&eigObjs  );
-    cvFree( (void**)&eigObjs0 );
-    cvFree( (void**)&coeffs   );
-    cvFree( (void**)&coeffs0  );
-    cvFree( (void**)&eigVal   );
-    cvFree( (void**)&eigVal0  );
-    cvFree( (void**)&Objs     );
-    cvFree( (void**)&EigObjs  );
-    cvFree( (void**)&EigObjs0 );
-    cvFree( (void**)&covMatr  );
-    cvFree( (void**)&covMatr0 );
+    cvFree( &objs     );
+    cvFree( &eigObjs  );
+    cvFree( &eigObjs0 );
+    cvFree( &coeffs   );
+    cvFree( &coeffs0  );
+    cvFree( &eigVal   );
+    cvFree( &eigVal0  );
+    cvFree( &Objs     );
+    cvFree( &EigObjs  );
+    cvFree( &EigObjs0 );
+    cvFree( &covMatr  );
+    cvFree( &covMatr0 );
 
 trsWrite(TW_RUN|TW_CON, "\n Errors number: %d\n", err );
 

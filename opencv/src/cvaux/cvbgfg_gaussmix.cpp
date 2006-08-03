@@ -218,10 +218,13 @@ cvCreateGaussianBGModel( IplImage* first_frame, CvGaussBGStatModelParams* parame
     
     if( cvGetErrStatus() < 0 )
     {
+        CvBGStatModel* base_ptr = (CvBGStatModel*)bg_model;
+        
         if( bg_model && bg_model->release )
-            bg_model->release( (CvBGStatModel**)&bg_model );
+            bg_model->release( &base_ptr );
         else
             cvFree( &bg_model );
+        bg_model = 0;
     }
     
     return (CvBGStatModel*)bg_model;

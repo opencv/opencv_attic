@@ -192,8 +192,8 @@ static int pyrlk_test( void )
 test_exit:
 
     /* release occupied memory */
-    cvFree( (void**)&status );
-    cvFree( (void**)&v2 );
+    cvFree( &status );
+    cvFree( &v2 );
     free( u );
     free( v );
     if( imgI ) atsReleaseImage( imgI );

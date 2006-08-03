@@ -384,13 +384,13 @@ void cvReleaseCrossValidationModel (CvStatModel** model)
         CV_ERROR (CV_StsBadArg, "");
     }
 
-    cvFree ((void**)&pModel->sampleIdxAll);
-    cvFree ((void**)&pModel->folds);
+    cvFree (&pModel->sampleIdxAll);
+    cvFree (&pModel->folds);
     cvReleaseMat (&pModel->sampleIdxEval);
     cvReleaseMat (&pModel->sampleIdxTrain);
     cvReleaseMat (&pModel->predict_results);
 
-    cvFree ((void**)model);
+    cvFree (model);
 
         __END__
 } // End of cvReleaseCrossValidationModel.

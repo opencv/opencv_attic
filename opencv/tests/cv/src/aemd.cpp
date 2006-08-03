@@ -76,7 +76,7 @@ static float matr_dist( const float* x, const float* y, void* param )
     return  mi->matr[i*mi->cols + j];
 }
 
-static int emd_test( void* arg )
+static int emd_test( void* )
 {
     const double success_error_level = 1e-6;
     #define M 10000
@@ -92,7 +92,6 @@ static int emd_test( void* arg )
                   w2[] = { 30, 20, 70, 30, 60 };
     matr_info mi;
     float emd;
-    arg;
 
     mi.x_origin = w1;
     mi.y_origin = w2;

@@ -139,7 +139,7 @@ public:
     ~CvBGEstimPixHist()
     {
         cvReleaseImage(&bg_image);
-        cvFree((void**)&m_PixHists);
+        cvFree(&m_PixHists);
     }/* destructor */
 
 

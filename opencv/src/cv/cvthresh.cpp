@@ -335,12 +335,13 @@ cvThreshold( const void* srcarr, void* dstarr, double thresh, double maxval, int
         float _ranges[] = { 0, 256 };
         float* ranges = _ranges;
         int hist_size = 256;
+        void* srcarr0 = src;
 
         if( CV_MAT_TYPE(src->type) != CV_8UC1 )
             CV_ERROR( CV_StsNotImplemented, "Otsu method can only be used with 8uC1 images" );
 
         CV_CALL( hist = cvCreateHist( 1, &hist_size, CV_HIST_ARRAY, &ranges ));
-        cvCalcArrHist( (void**)&src, hist );
+        cvCalcArrHist( &srcarr0, hist );
         thresh = cvFloor(icvGetThreshVal_Otsu( hist ));
     }
 
