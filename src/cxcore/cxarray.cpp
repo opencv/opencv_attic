@@ -1052,88 +1052,85 @@ cvSetData( CvArr* arr, void* data, int step )
     if( CV_IS_MAT_HDR(arr) || CV_IS_MATND_HDR(arr) )
         cvReleaseData( arr );
 
-    if( data )
+    if( CV_IS_MAT_HDR( arr ))
     {
-        if( CV_IS_MAT_HDR( arr ))
-        {
-            CvMat* mat = (CvMat*)arr;
-        
-            int type = CV_MAT_TYPE(mat->type);
-            pix_size = CV_ELEM_SIZE(type);
-            min_step = mat->cols*pix_size & ((mat->rows <= 1) - 1);
-
-            if( step != CV_AUTOSTEP )
-            {
-                if( step < min_step && data != 0 )
-                    CV_ERROR_FROM_CODE( CV_BadStep );
-                mat->step = step & ((mat->rows <= 1) - 1);
-            }
-            else
-            {
-                mat->step = min_step;
-            }
+        CvMat* mat = (CvMat*)arr;
     
-            mat->data.ptr = (uchar*)data;
-            mat->type = CV_MAT_MAGIC_VAL | type |
-                        (mat->step==min_step ? CV_MAT_CONT_FLAG : 0);
-            icvCheckHuge( mat );
-        }
-        else if( CV_IS_IMAGE_HDR( arr ))
+        int type = CV_MAT_TYPE(mat->type);
+        pix_size = CV_ELEM_SIZE(type);
+        min_step = mat->cols*pix_size & ((mat->rows <= 1) - 1);
+
+        if( step != CV_AUTOSTEP )
         {
-            IplImage* img = (IplImage*)arr;
-        
-            pix_size = ((img->depth & 255) >> 3)*img->nChannels;
-            min_step = img->width*pix_size;
-
-            if( step != CV_AUTOSTEP && img->height > 1 )
-            {
-                if( step < min_step && data != 0 )
-                    CV_ERROR_FROM_CODE( CV_BadStep );
-                img->widthStep = step;
-            }
-            else
-            {
-                img->widthStep = min_step;
-            }
-
-            img->imageSize = img->widthStep * img->height;
-            img->imageData = img->imageDataOrigin = (char*)data;
-
-            if( (((int)(size_t)data | step) & 7) == 0 &&
-                cvAlign(img->width * pix_size, 8) == step )
-            {
-                img->align = 8;
-            }
-            else
-            {
-                img->align = 4;
-            }
-        }
-        else if( CV_IS_MATND_HDR( arr ))
-        {
-            CvMatND* mat = (CvMatND*)arr;
-            int i;
-            int64 cur_step;
-        
-            if( step != CV_AUTOSTEP )
-                CV_ERROR( CV_BadStep,
-                "For multidimensional array only CV_AUTOSTEP is allowed here" );
-
-            mat->data.ptr = (uchar*)data;
-            cur_step = CV_ELEM_SIZE(mat->type);
-
-            for( i = mat->dims - 1; i >= 0; i-- )
-            {
-                if( cur_step > INT_MAX )
-                    CV_ERROR( CV_StsOutOfRange, "The array is too big" );
-                mat->dim[i].step = (int)cur_step;
-                cur_step *= mat->dim[i].size;
-            }
+            if( step < min_step && data != 0 )
+                CV_ERROR_FROM_CODE( CV_BadStep );
+            mat->step = step & ((mat->rows <= 1) - 1);
         }
         else
         {
-            CV_ERROR( CV_StsBadArg, "unrecognized or unsupported array type" );
+            mat->step = min_step;
         }
+
+        mat->data.ptr = (uchar*)data;
+        mat->type = CV_MAT_MAGIC_VAL | type |
+                    (mat->step==min_step ? CV_MAT_CONT_FLAG : 0);
+        icvCheckHuge( mat );
+    }
+    else if( CV_IS_IMAGE_HDR( arr ))
+    {
+        IplImage* img = (IplImage*)arr;
+    
+        pix_size = ((img->depth & 255) >> 3)*img->nChannels;
+        min_step = img->width*pix_size;
+
+        if( step != CV_AUTOSTEP && img->height > 1 )
+        {
+            if( step < min_step && data != 0 )
+                CV_ERROR_FROM_CODE( CV_BadStep );
+            img->widthStep = step;
+        }
+        else
+        {
+            img->widthStep = min_step;
+        }
+
+        img->imageSize = img->widthStep * img->height;
+        img->imageData = img->imageDataOrigin = (char*)data;
+
+        if( (((int)(size_t)data | step) & 7) == 0 &&
+            cvAlign(img->width * pix_size, 8) == step )
+        {
+            img->align = 8;
+        }
+        else
+        {
+            img->align = 4;
+        }
+    }
+    else if( CV_IS_MATND_HDR( arr ))
+    {
+        CvMatND* mat = (CvMatND*)arr;
+        int i;
+        int64 cur_step;
+    
+        if( step != CV_AUTOSTEP )
+            CV_ERROR( CV_BadStep,
+            "For multidimensional array only CV_AUTOSTEP is allowed here" );
+
+        mat->data.ptr = (uchar*)data;
+        cur_step = CV_ELEM_SIZE(mat->type);
+
+        for( i = mat->dims - 1; i >= 0; i-- )
+        {
+            if( cur_step > INT_MAX )
+                CV_ERROR( CV_StsOutOfRange, "The array is too big" );
+            mat->dim[i].step = (int)cur_step;
+            cur_step *= mat->dim[i].size;
+        }
+    }
+    else
+    {
+        CV_ERROR( CV_StsBadArg, "unrecognized or unsupported array type" );
     }
 
     __END__;

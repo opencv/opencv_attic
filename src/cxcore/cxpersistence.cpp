@@ -3480,7 +3480,7 @@ cvGetFileNodeName( const CvFileNode* file_node )
 static int
 icvIsMat( const void* ptr )
 {
-    return CV_IS_MAT(ptr);
+    return CV_IS_MAT_HDR(ptr);
 }
 
 static void
@@ -3862,7 +3862,7 @@ icvReadSparseMat( CvFileStorage* fs, CvFileNode* node )
 static int
 icvIsImage( const void* ptr )
 {
-    return CV_IS_IMAGE(ptr);
+    return CV_IS_IMAGE_HDR(ptr);
 }
 
 static void
