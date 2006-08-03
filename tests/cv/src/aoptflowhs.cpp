@@ -48,8 +48,6 @@ static char TestClass[] = "Algorithm";
 
 static long lImageWidth;
 static long lImageHeight;
-static long  lNumIterations;
-static float flEpsilon;
 static float lambda;
 
 #define EPSILON 0.0001f
@@ -400,15 +398,15 @@ for( usePrevious = 0; usePrevious < 2; usePrevious++ )
 }
 
     /* Free memory */
-    cvFree( (void**)&VelocityX );
-    cvFree( (void**)&VelocityY );
-    cvFree( (void**)&auxVelocityX );
-    cvFree( (void**)&auxVelocityY );
+    cvFree( &VelocityX );
+    cvFree( &VelocityY );
+    cvFree( &auxVelocityX );
+    cvFree( &auxVelocityY );
 
 
-    cvFree( (void**)&DerX );
-    cvFree( (void**)&DerY );
-    cvFree( (void**)&DerT );
+    cvFree( &DerX );
+    cvFree( &DerY );
+    cvFree( &DerT );
 
     cvReleaseImage( &imgA );
     cvReleaseImage( &imgB );

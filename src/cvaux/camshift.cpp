@@ -204,6 +204,12 @@ CvCamShiftTracker::track_object( const IplImage* cur_frame )
     CvRect rect;
     CvSize bp_size;
     
+    union
+    {
+        void** arr;
+        IplImage** img;
+    } u;
+    
     if( m_comp.rect.width == 0 || m_comp.rect.height == 0 ||
         m_hist == 0 )
     {
@@ -211,7 +217,8 @@ CvCamShiftTracker::track_object( const IplImage* cur_frame )
     }
     
     color_transform( cur_frame );
-    cvCalcBackProject( m_color_planes, m_back_project, m_hist );
+    u.img = m_color_planes;
+    cvCalcArrBackProject( u.arr, m_back_project, m_hist );
     cvAnd( m_back_project, m_mask, m_back_project );
 
     rect = m_comp.rect;

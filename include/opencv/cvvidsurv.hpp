@@ -1042,9 +1042,10 @@ public:
 
 
 /* Trajectory Analyser module */
-class CvBlobTrackAnalysisOne
+class CV_EXPORTS CvBlobTrackAnalysisOne
 {
 public:
+    virtual ~CvBlobTrackAnalysisOne() {};
     virtual int     Process(CvBlob* pBlob, IplImage* pImg, IplImage* pFG) = 0;
     /* return 0 if trajectory is normal
        return >0 if trajectory abnormal */
@@ -1171,6 +1172,7 @@ CV_EXPORTS void cvCreateTracks_AreaErr(CvBlobTrackSeq *TS1, CvBlobTrackSeq *TS2,
 class CV_EXPORTS CvProb
 {
 public:
+    virtual ~CvProb() {};
     /* calculate probability value */ 
     virtual double Value(int* /*comp*/, int /*x*/ = 0, int /*y*/ = 0){return -1;};
     /* update histograpp Pnew = (1-W)*Pold + W*Padd*/

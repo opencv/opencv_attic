@@ -296,7 +296,7 @@ static void icvTestSeqAllocTrans(CvTestSeqElem* p)
             else
                 SET_TRANS_0(pNewTrans+i);
         }
-        if(p->pTrans)cvFree((void**)&p->pTrans);
+        if(p->pTrans)cvFree(&p->pTrans);
         p->pTrans = pNewTrans;
         p->TransNum = num;
     }/* allocate new transforamtion array */
@@ -746,11 +746,11 @@ static void icvTestSeqReleaseAll(CvTestSeqElem** ppElemList)
         }
         if(p->pImg)cvReleaseImage(&p->pImg);
         if(p->pImgMask)cvReleaseImage(&p->pImgMask);
-        if(p->pPos)cvFree((void**)&p->pPos);
-        if(p->pTrans)cvFree((void**)&p->pTrans);
-        if(p->pSize)cvFree((void**)&p->pSize);
+        if(p->pPos)cvFree(&p->pPos);
+        if(p->pTrans)cvFree(&p->pTrans);
+        if(p->pSize)cvFree(&p->pSize);
         p=p->next;
-        cvFree((void**)&pd);
+        cvFree(&pd);
     }/* next element */
     ppElemList[0] = NULL;
 }/* icvTestSeqReleaseAll */

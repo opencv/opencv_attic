@@ -54,12 +54,12 @@ static char *cFuncName[] =
 
 static int aPyrSegmentation(void* agr)
 {
-    CvPoint _cp[] ={33,33, 43,33, 43,43, 33,43}; 
-    CvPoint _cp2[] ={50,50, 70,50, 70,70, 50,70};  
+    CvPoint _cp[] ={{33,33}, {43,33}, {43,43}, {33,43}}; 
+    CvPoint _cp2[] ={{50,50}, {70,50}, {70,70}, {50,70}};  
     CvPoint* cp = _cp;
     CvPoint* cp2 = _cp2;
     CvConnectedComp *dst_comp[3];
-    CvRect rect[3] = {50,50,21,21, 0,0,128,128, 33,33,11,11};
+    CvRect rect[3] = {{50,50,21,21}, {0,0,128,128}, {33,33,11,11}};
     double a[3] = {441.0, 15822.0, 121.0};
 
 /*    ippiPoint cp3[] ={130,130, 150,130, 150,150, 130,150};  */

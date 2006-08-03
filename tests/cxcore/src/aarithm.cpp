@@ -1145,7 +1145,7 @@ void CxCore_SplitMergeBaseTest::print_timing_params( int test_case_idx, char* pt
 
     // at once, delete the headers, though is not very good from structural point of view ...
     for( i = 0; i < 4; i++ )
-        cvReleaseMat( (CvMat**)&hdrs[i] );
+        cvRelease( &hdrs[i] );
 
     CxCore_MemTest::print_timing_params( test_case_idx, ptr, params_left );
 }
@@ -1202,10 +1202,8 @@ void CxCore_SplitMergeBaseTest::prepare_to_validation( int )
                 cvTsExtract( input, h, i );
             else
                 cvTsInsert( h, output, i );
-            if( are_images )
-                cvReleaseImageHeader( (IplImage**)&hdrs[i] );
-            else
-                cvReleaseMat( (CvMat**)&hdrs[i] );
+            cvSetData( hdrs[i], 0, 0 );
+            cvRelease( &hdrs[i] );
             y += sz.height;
         }
     }

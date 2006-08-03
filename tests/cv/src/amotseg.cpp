@@ -134,8 +134,8 @@ again:
     region->rect.width = XMax - XMin + 1;
     region->rect.height = YMax - YMin + 1;
     region->value = cvScalar(nv);
-    cvFree((void**)&CurStack);
-    cvFree((void**)&NextStack);
+    cvFree(&CurStack);
+    cvFree(&NextStack);
     return;
 }
 
@@ -144,7 +144,6 @@ static char TestName[] = "Checking MotionSegmentation";
 static char TestClass[] = "Algorithm";
 static int lImageWidth;
 static int lImageHeight;
-static int  Sobord;
 
 static int  read_param = 0;
 static int  data_types = 0;

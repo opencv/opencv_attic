@@ -206,7 +206,7 @@ CV_IMPL void cvRandSeries( float probs[], int len, int sample[], int amount )
             }
         }
     
-    cvFree((void**)&knots);
+    cvFree(&knots);
 }
 
 /* Generates <sample> from gaussian mixture distribution */
@@ -255,8 +255,8 @@ CV_IMPL void cvRandGaussMixture( CvMat* means[],
         cvReleaseMat(&classes);
     for( i = 0; i < clsnum; i++ )
         cvReleaseMat(&utmats[i]);
-    cvFree((void**)&utmats);
-    cvFree((void**)&sample_clsnum);
+    cvFree(&utmats);
+    cvFree(&sample_clsnum);
     cvReleaseMat(&vect);    
 }
 
@@ -678,7 +678,7 @@ cvPreprocessOrderedResponses( const CvMat* responses, const CvMat* sample_idx, i
     dst = out_responses->data.fl;
     if( r_type == CV_32FC1 )
     {
-        const float* src = src = responses->data.fl;
+        const float* src = responses->data.fl;
         for( i = 0; i < sample_count; i++ )
         {
             int idx = map ? map[i] : i;
@@ -688,7 +688,7 @@ cvPreprocessOrderedResponses( const CvMat* responses, const CvMat* sample_idx, i
     }
     else
     {
-        const int* src = src = responses->data.i;
+        const int* src = responses->data.i;
         for( i = 0; i < sample_count; i++ )
         {
             int idx = map ? map[i] : i;
@@ -1837,8 +1837,8 @@ void cvCombineResponseMaps (CvMat*  _responses,
 
         __END__
 
-    cvFree ((void**)&old_data);
-    cvFree ((void**)&new_data);
+    cvFree(&old_data);
+    cvFree(&new_data);
 
 }
 

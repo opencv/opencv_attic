@@ -426,7 +426,7 @@ public:
     {
         if(m_pSparse)cvReleaseSparseMat(&m_pSparse);
         if(m_pND)cvReleaseMatND(&m_pND);
-        if(m_IDXs) cvFree((void**)&m_IDXs);
+        if(m_IDXs) cvFree(&m_IDXs);
     }
 
     void Realloc(int dim, int* sizes, int type = SPARSE)
@@ -718,10 +718,10 @@ private:
 //            pF->pFVGen->Release();
             m_TrackFGList.DelBlob(i-1);
         }
-        cvFree((void**)&m_pFVi);
-        cvFree((void**)&m_pFViVar);
-        cvFree((void**)&m_pFViVarRes);
-        cvFree((void**)&m_Sizes);
+        cvFree(&m_pFVi);
+        cvFree(&m_pFViVar);
+        cvFree(&m_pFViVarRes);
+        cvFree(&m_Sizes);
     }/* FreeData */
     virtual void ParamUpdate()
     {
@@ -1255,7 +1255,7 @@ public:
             //pF->pFVGen->Release();
         }
         if(m_pStatImg)cvReleaseImage(&m_pStatImg);
-        cvFree((void**)&m_pFV);
+        cvFree(&m_pFV);
     }/* destructor */
 
     /*-----------------  interface --------------------*/

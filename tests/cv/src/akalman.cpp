@@ -48,7 +48,6 @@ static int  Dim;
 static int  Steps;
 
 static int  read_param = 0;
-static int  data_types = 0;
 static double EPSILON = 1.000;
 
 static int fcaKalman( void )

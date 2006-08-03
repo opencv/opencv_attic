@@ -59,7 +59,7 @@ public:
     CvBlobDetectorReal(CvTestSeq* pTestSeq)
     {
         m_pTestSeq = pTestSeq;
-        m_pMem = cvCreateMemStorage(NULL);
+        m_pMem = cvCreateMemStorage(0);
     }
     /* destructor of BlobDetector*/
     ~CvBlobDetectorReal()

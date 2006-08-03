@@ -204,7 +204,7 @@ CV_IMPL int cvInitSystem( int, char** )
         wndc.lpszClassName = "HighGUI class";
         wndc.lpszMenuName = "HighGUI class";
         wndc.hIcon = LoadIcon(0, IDI_APPLICATION);
-        wndc.hCursor = (HCURSOR)LoadCursor(0, MAKEINTRESOURCE(IDC_CROSS));
+        wndc.hCursor = (HCURSOR)LoadCursor(0, (LPSTR)(size_t)IDC_CROSS );
         wndc.hbrBackground = (HBRUSH)GetStockObject(GRAY_BRUSH);
 
         RegisterClass(&wndc);
@@ -539,6 +539,11 @@ static bool icvGetBitmapData( CvWindow* window, SIZE* size, int* channels, void*
     BITMAP bmp;
     GdiFlush();
     HGDIOBJ h = GetCurrentObject( window->dc, OBJ_BITMAP );
+    if( size )
+        size->cx = size->cy = 0;
+    if( data )
+        *data = 0;
+
     if (h == NULL)
         return true;
     if (GetObject(h, sizeof(bmp), &bmp) == 0)
@@ -568,7 +573,7 @@ static void icvUpdateWindowPos( CvWindow* window )
     if( (window->flags & CV_WINDOW_AUTOSIZE) && window->image )
     {
         int i;
-        SIZE size;
+        SIZE size = {0,0};
         icvGetBitmapData( window, &size, 0, 0 );
 
         // Repeat two times because after the first resizing of the mainhWnd window
@@ -858,7 +863,7 @@ static LRESULT CALLBACK HighGUIProc( HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM
         {
             POINT pt;
             RECT rect;
-            SIZE size;
+            SIZE size = {0,0};
 
             int flags = (wParam & MK_LBUTTON ? CV_EVENT_FLAG_LBUTTON : 0)|
                         (wParam & MK_RBUTTON ? CV_EVENT_FLAG_RBUTTON : 0)|
@@ -897,7 +902,7 @@ static LRESULT CALLBACK HighGUIProc( HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM
         if(window->image != 0)
         {
             int nchannels = 3;
-            SIZE size;
+            SIZE size = {0,0};
             PAINTSTRUCT paint;
             HDC hdc;
             RGBQUAD table[256];

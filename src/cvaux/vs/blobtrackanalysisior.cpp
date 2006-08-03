@@ -57,7 +57,7 @@ protected:
 public:
     CvBlobTrackAnalysisIOR()
     {
-        m_AnNum = NULL;
+        m_AnNum = 0;
     }
     ~CvBlobTrackAnalysisIOR()
     {

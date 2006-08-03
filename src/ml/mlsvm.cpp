@@ -1218,7 +1218,7 @@ bool CvSVM::train1( int sample_count, int var_count, const float** samples,
 {
     bool ok = false;
     
-    CV_FUNCNAME( "CvSVM::train1" );
+    //CV_FUNCNAME( "CvSVM::train1" );
 
     __BEGIN__;
 
@@ -1486,7 +1486,7 @@ bool CvSVM::train( const CvMat* _train_data, const CvMat* _responses,
     solver = 0;
     cvReleaseMemStorage( &temp_storage );
     cvReleaseMat( &responses );
-    cvFree( (void**)&samples );
+    cvFree( &samples );
 
     if( cvGetErrStatus() < 0 || !ok )
         clear();
@@ -1592,7 +1592,7 @@ float CvSVM::predict( const CvMat* sample ) const
 
 void CvSVM::write_params( CvFileStorage* fs )
 {
-    CV_FUNCNAME( "CvSVM::write_params" );
+    //CV_FUNCNAME( "CvSVM::write_params" );
 
     __BEGIN__;
     

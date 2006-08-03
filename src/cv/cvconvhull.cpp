@@ -494,7 +494,9 @@ finish_hull:
     else
     {
         hull.s = hullseq;
-        hull.c->rect = cvBoundingRect( ptseq, ptseq == (CvSeq*)&contour_header );
+        hull.c->rect = cvBoundingRect( ptseq,
+            ptseq->header_size < (int)sizeof(CvContour) ||
+            &ptseq->flags == &contour_header.flags );
         
         /*if( ptseq != (CvSeq*)&contour_header )
             hullseq->v_prev = ptseq;*/

@@ -45,7 +45,6 @@
 
 /* Testing parameters */
 static char test_desc[] = "Image Creation & access";
-static char TestClass[] = "Algorithm";
 static char func_name[] = "cvCreateImage cvCreateImageHeader cvSetImageROI cvGetImageROI "
                           "cvSetImageCOI cvCreateImageData cvReleaseImageData "
                           "cvSetImageData cvCloneImage cvCopyImage cvInitImageHeader";
@@ -95,7 +94,7 @@ static int foaImage( void )
         {
             if( depths[i] == IPL_DEPTH_1U && channels[j] != 1 ) // skip for IPL_DEPTH_1U
                 continue;                                       // all non 1 channels
-            if( depths[i] == IPL_DEPTH_8S )
+            if( depths[i] == (int)IPL_DEPTH_8S )
                 continue;
             IplImage* image = cvCreateImageHeader( size, depths[i], channels[j] );
             if( image->width != size.width || image->height != size.height )
@@ -201,7 +200,7 @@ static int foaImage( void )
         {
             if( depths[i] == IPL_DEPTH_1U && channels[j] != 1 ) // skip for IPL_DEPTH_1U
                 continue;                                       // all non 1 channels
-            if( depths[i] == IPL_DEPTH_8S )
+            if( depths[i] == (int)IPL_DEPTH_8S )
                 continue;
             IplImage* src = cvCreateImage( size, depths[i], channels[j] );
             //IplImage* dst = cvCreateImage( size, depths[i], channels[j] );

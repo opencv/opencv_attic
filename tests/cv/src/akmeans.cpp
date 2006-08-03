@@ -44,13 +44,10 @@
                        
 /* Testing parameters */
 static char test_desc[] = "KMeans clustering";
-static char TestClass[] = "Algorithm";
 static char* func_name[] = 
 {
     "cvKMeans"
 };
-
-static int data_type = 0;
 
 //based on Ara Nefian's implementation
 float distance(float* vector_1, float *vector_2, int VecSize)
@@ -270,11 +267,11 @@ static int fmaKMeans(void)
     //free memory
     for( i = 0; i < lNumVect; i++ )
     {
-        cvFree( (void**)&(vectors[i]) );
+        cvFree( &(vectors[i]) );
     }
-    cvFree((void**)&vectors);
-    cvFree((void**)&output);
-    cvFree((void**)&etalon_output);      
+    cvFree(&vectors);
+    cvFree(&output);
+    cvFree(&etalon_output);      
    
    if( lErrors == 0 ) return trsResult( TRS_OK, "No errors fixed for this text" );
     else return trsResult( TRS_FAIL, "Detected %d errors", lErrors );

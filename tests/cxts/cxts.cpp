@@ -72,6 +72,7 @@ int CvTest::test_count = 0;
 #include <eh.h>
 #endif
 
+#ifdef _MSC_VER
 static void cv_seh_translator( unsigned int /*u*/, EXCEPTION_POINTERS* pExp )
 {
     int code = CvTS::FAIL_EXCEPTION;
@@ -105,7 +106,7 @@ static void cv_seh_translator( unsigned int /*u*/, EXCEPTION_POINTERS* pExp )
     }
     throw code;
 }
-
+#endif
 
 #define CV_TS_TRY_BLOCK_BEGIN                   \
     try {

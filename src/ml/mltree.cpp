@@ -236,7 +236,7 @@ void CvDTreeTrainData::set_data( const CvMat* _train_data, int _tflag,
     // allocate root node and the buffer for the whole training data
     max_split_size = cvAlign(sizeof(CvDTreeSplit) +
         (MAX(0,sample_count - 33)/32)*sizeof(int),sizeof(void*));
-    tree_block_size = MAX(sizeof(CvDTreeNode)*8, max_split_size);
+    tree_block_size = MAX((int)sizeof(CvDTreeNode)*8, max_split_size);
     tree_block_size = MAX(tree_block_size + block_size_delta, min_block_size);
     CV_CALL( tree_storage = cvCreateMemStorage( tree_block_size ));
     CV_CALL( node_heap = cvCreateSet( 0, sizeof(*node_heap), sizeof(CvDTreeNode), tree_storage ));
@@ -2970,7 +2970,8 @@ void CvDTree::read_train_data_params( CvFileStorage* fs, CvFileNode* node )
 
     data = new CvDTreeTrainData;
 
-    data->is_classifier = is_classifier = cvReadIntByName( fs, node, "is_classifier" ) != 0;
+    is_classifier = (cvReadIntByName( fs, node, "is_classifier" ) != 0);
+    data->is_classifier = is_classifier;
     data->var_all = cvReadIntByName( fs, node, "var_all" );
     data->var_count = cvReadIntByName( fs, node, "var_count", data->var_all );
     data->cat_var_count = cvReadIntByName( fs, node, "cat_var_count" );
@@ -3088,7 +3089,7 @@ void CvDTree::read_train_data_params( CvFileStorage* fs, CvFileNode* node )
     max_split_size = cvAlign(sizeof(CvDTreeSplit) +
         (MAX(0,data->max_c_count - 33)/32)*sizeof(int),sizeof(void*));
 
-    tree_block_size = MAX(sizeof(CvDTreeNode)*8, max_split_size);
+    tree_block_size = MAX((int)sizeof(CvDTreeNode)*8, max_split_size);
     tree_block_size = MAX(tree_block_size + block_size_delta, min_block_size);
     CV_CALL( data->tree_storage = cvCreateMemStorage( tree_block_size ));
     CV_CALL( data->node_heap = cvCreateSet( 0, sizeof(data->node_heap[0]),

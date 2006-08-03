@@ -218,7 +218,7 @@ void CvRTrees::clear()
     {
         trees[0]->share_data( false );
         delete trees[0];
-        cvFree( (void**) &trees );
+        cvFree( &trees );
     }
 
     cvReleaseMat( &active_var_mask );

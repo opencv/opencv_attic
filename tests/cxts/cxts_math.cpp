@@ -222,7 +222,7 @@ void cvTsCopy( const CvMat* a, CvMat* b, const CvMat* mask )
 
 void cvTsConvert( const CvMat* a, CvMat* b )
 {
-    int i, j, ncols = ncols = b->cols*CV_MAT_CN(b->type);
+    int i, j, ncols = b->cols*CV_MAT_CN(b->type);
     double* buf = 0;
 
     assert( CV_ARE_SIZES_EQ(a,b) && CV_ARE_CNS_EQ(a,b) );
@@ -2241,7 +2241,16 @@ void cvTsLogicS( const CvMat* a, CvScalar s, CvMat* c, int logic_op )
     int i = 0, j = 0, k;
     int cn, ncols, elem_size;
     uchar* b_data;
-    double buf[4];
+    union
+    {
+        uchar ptr[4];
+        char c[4];
+        short s[4];
+        ushort w[4];
+        int i[4];
+        float f[4];
+        double d[4];
+    } buf;
     cn = CV_MAT_CN(a->type);
     elem_size = CV_ELEM_SIZE(a->type);
     ncols = a->cols * elem_size;
@@ -2262,49 +2271,49 @@ void cvTsLogicS( const CvMat* a, CvScalar s, CvMat* c, int logic_op )
             for( k = 0; k < cn; k++ )
             {
                 int val = cvRound(s.val[k]);
-                ((uchar*)buf)[k] = CV_CAST_8U(val);
+                buf.ptr[k] = CV_CAST_8U(val);
             }
             break;
         case CV_8S:
             for( k = 0; k < cn; k++ )
             {
                 int val = cvRound(s.val[k]);
-                ((char*)buf)[k] = CV_CAST_8S(val);
+                buf.c[k] = CV_CAST_8S(val);
             }
             break;
         case CV_16U:
             for( k = 0; k < cn; k++ )
             {
                 int val = cvRound(s.val[k]);
-                ((ushort*)buf)[k] = CV_CAST_16U(val);
+                buf.w[k] = CV_CAST_16U(val);
             }
             break;
         case CV_16S:
             for( k = 0; k < cn; k++ )
             {
                 int val = cvRound(s.val[k]);
-                ((short*)buf)[k] = CV_CAST_16S(val);
+                buf.s[k] = CV_CAST_16S(val);
             }
             break;
         case CV_32S:
             for( k = 0; k < cn; k++ )
             {
                 int val = cvRound(s.val[k]);
-                ((int*)buf)[k] = CV_CAST_32S(val);
+                buf.i[k] = CV_CAST_32S(val);
             }
             break;
         case CV_32F:
             for( k = 0; k < cn; k++ )
             {
                 double val = s.val[k];
-                ((float*)buf)[k] = CV_CAST_32F(val);
+                buf.f[k] = CV_CAST_32F(val);
             }
             break;
         case CV_64F:
             for( k = 0; k < cn; k++ )
             {
                 double val = s.val[k];
-                ((double*)buf)[k] = CV_CAST_64F(val);
+                buf.d[k] = CV_CAST_64F(val);
             }
             break;
         default:
@@ -2313,7 +2322,7 @@ void cvTsLogicS( const CvMat* a, CvScalar s, CvMat* c, int logic_op )
         }
 
         for( j = 0; j < ncols; j += elem_size )
-            memcpy( b_data + j, buf, elem_size );
+            memcpy( b_data + j, buf.ptr, elem_size );
     }
 
     for( i = 0; i < a->rows; i++ )
