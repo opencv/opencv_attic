@@ -2320,7 +2320,7 @@ double CxCore_StatTestImpl::get_success_error_level( int test_case_idx, int i, i
     if( depth == CV_32F )
         return FLT_EPSILON*1000;
     if( depth == CV_64F )
-        return DBL_EPSILON*1000;
+        return DBL_EPSILON*100000;
     else
         return CvArrTest::get_success_error_level( test_case_idx, i, j );
 }
@@ -2375,7 +2375,7 @@ double CxCore_SumTest::get_success_error_level( int /*test_case_idx*/, int /*i*/
     int depth = CV_MAT_DEPTH(cvGetElemType(test_array[INPUT][0]));
     if( depth == CV_32F )
         return FLT_EPSILON*1000;
-    return DBL_EPSILON*10000;
+    return DBL_EPSILON*100000;
 }
 
 
@@ -2499,6 +2499,7 @@ public:
 protected:
     void run_func();
     void prepare_to_validation( int test_case_idx );
+    double get_success_error_level( int test_case_idx, int i, int j );
 };
 
 
@@ -2509,20 +2510,45 @@ CxCore_MeanStdDevTest::CxCore_MeanStdDevTest()
 
 void CxCore_MeanStdDevTest::run_func()
 {
+    /*CvScalar s;
+    CvRNG* rng = ts->get_rng();
+    s.val[0] = cvTsRandReal(rng)*100. - 50.;
+    s.val[1] = cvTsRandReal(rng)*100. - 50.;
+    s.val[2] = cvTsRandReal(rng)*100. - 50.;
+    s.val[3] = cvTsRandReal(rng)*100. - 50.;
+    cvSet( &test_mat[INPUT][0], s );*/
     cvAvgSdv( test_array[INPUT][0],
               &((CvScalar*)(test_mat[OUTPUT][0].data.db))[0],
               &((CvScalar*)(test_mat[OUTPUT][0].data.db))[1],
               test_array[MASK][0] );
 }
 
+double CxCore_MeanStdDevTest::get_success_error_level( int test_case_idx, int i, int j )
+{
+    int depth = CV_MAT_DEPTH(cvGetElemType(test_array[INPUT][0]));
+    if( depth < CV_64F && depth != CV_32S )
+        return CxCore_StatTest::get_success_error_level( test_case_idx, i, j );
+    return DBL_EPSILON*1e6;
+}
+
 void CxCore_MeanStdDevTest::prepare_to_validation( int /*test_case_idx*/ )
 {
     CvScalar mean, stddev;
+    int i;
+    CvMat* output = &test_mat[OUTPUT][0];
+    CvMat* ref_output = &test_mat[REF_OUTPUT][0];
     cvTsMeanStdDevNonZero( &test_mat[INPUT][0],
         test_array[MASK][0] ? &test_mat[MASK][0] : 0,
         &mean, &stddev, coi );
-    ((CvScalar*)(test_mat[REF_OUTPUT][0].data.db))[0] = mean;
-    ((CvScalar*)(test_mat[REF_OUTPUT][0].data.db))[1] = stddev;
+    ((CvScalar*)(ref_output->data.db))[0] = mean;
+    ((CvScalar*)(ref_output->data.db))[1] = stddev;
+    for( i = 0; i < 4; i++ )
+    {
+        output->data.db[i] *= output->data.db[i];
+        output->data.db[i+4] = output->data.db[i+4]*output->data.db[i+4] + 1000;
+        ref_output->data.db[i] *= ref_output->data.db[i];
+        ref_output->data.db[i+4] = ref_output->data.db[i+4]*ref_output->data.db[i+4] + 1000;
+    }
 }
 
 CxCore_MeanStdDevTest mean_stddev_test;
