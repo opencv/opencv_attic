@@ -1,4 +1,91 @@
 =============================================================================
+                      OpenCV RC1, August ???, 2006
+=============================================================================
+
+>>> New functionality/features: <<<
+  - New Compilers/Environments supported:
+     * GCC 4.x 
+     * Visual Studio .NET 2005.
+       Note that: a) Project files .vcproj's and _make\opencv*.sln
+                     have been converted to VS.NET 2005 format, thus they can not
+                     be opened with VS.NET 2003. Instead, one may convert
+                     project files and workspace for Visual Studio 6.0 to VS.NET 2003.
+                  b) The projects can be built for Win32 and x64 (a.k.a. EM64T/AMD64) platforms.
+                  c) OpenMP support is turned on by default.
+     * On MacOSX universal OpenCV binaries are now built by default, so both
+       PPC and Intel Mac's are fully supported.
+     * Borland C++ support has been removed. There is still script
+       utils\gen_make.py available that can generate makefile.bcc's out of
+       MSVC's project files. But it is not been tested.
+
+  - cxcore:
+     * added several new functions:
+       cvMixChannels, cvRandShuffle, cvRange, cvCalcPCA, cvProjectPCA, cvBackProjectPCA,
+       cvNormalize, cvReduce, cvGetNumThreads, cvSetNumThreads, cvGetThreadNum.
+       See docs/ref/opencvref_cxcore.htm for details.
+     * extended cvCalcCovarMatrix, cvMulTransposed
+     * added macros for the library version: see cxcore/include/cvver.h
+     * added C++ classes CvImage and CvMatrix:
+       see cxcore/include/cxcore.hpp and the sample code
+     * the maximum number of channels in matrices has been increased up to 64.
+       though, only the basic functions can handle such images.
+  - cv:
+    * new functions:
+      cvPyrMeanShiftFiltering, cvWatershed, cvGetAffineTransform.
+      see docs/ref/opencvref_cv.htm for details.
+    * extended:
+      cvDistTransform (true distance transform algorithm),
+      cvThresh (Otsu adaptive algorithm),
+      cvCanny (using true gradient as an option)
+    * all the filtering functionality has been reworked,
+      new C++ classes for linear separable and non-separable filtering,
+      morphology, laplace, box filer (blur) have been added.
+      see cv/include/cv.hpp.
+      The older C API is still supported and is preferrable sometimes
+      (e.g. when IPP is used).
+  - cvaux:
+    * new large video surveillance module has been added
+      (cvaux/src/vs and cvaux/include/cvvidsurv.h).
+      It implements smart blob tracking. See the description at docs/vidsurv)
+  - ml (stands for Machine Learining):
+    * this is a completely new C++ module containing classes for statistical
+      classification, regression and clustering. See docs/ref/opencvref_ml.htm.
+  - highgui:
+    * the whole video capturing code has been restructured and split by modules,
+      better function names have been introduced (older names are supported via macros)
+    * Quicktime (MacOSX) and Xine (Linux, (attention: watch the license!)) support added.
+    * many small and big improvements have been made
+      in most of the video capturing modules
+    * a helper thread can be used to refresh highgui windows content w/o having to
+      call cvWaitKey() (Linux only).
+
+  - Bindings/interfaces:
+    * IPP 5.1.* is not supported and this is a recommended version of IPP
+      to use with OpenCV. One may build custom IPP DLL for easier binary
+      redistribution (see interfaces/ipp)
+    * Python bindings have been greatly improved and extended
+      (see interfaces/swig[/python] and samples/python).
+
+>>> Optimizations: <<<
+  -  The following filtering functions have been greatly optimized
+     using the new IPP 5.1 functionality:
+     cvSobel, cvLaplace, cvErode, cvDilate.
+  -  cvFilter2D now runs much faster with larger kernels (using DFT-based method)
+  -  Several functions have been parallelized with OpenMP:
+     cvHaarDetectObjects, cvCalcOpticalFlowPyrLK, cvDistTransform (the new algorithm only),
+     so they should run ~50-80% faster on dual core CPUs, when the code is built
+     with Intel compiler or MSVC2005 (as the precompiled OpenCV binaries are).
+
+>>> Bug fixes: <<<
+
+  -  A lot of bugs have been fixed. We would like to thanks to all the people
+     who submitted bug reports and/or patches.
+     This is incomplete list of the bugs fixed.
+
+     * cvFilter2D (CVS version crashed occasionally)
+     [TODO]
+
+=============================================================================
                       OpenCV beta 5, Thursday, July 21, 2005
 =============================================================================
 
