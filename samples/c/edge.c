@@ -16,7 +16,7 @@ IplImage *image = 0, *cedge = 0, *gray = 0, *edge = 0;
 // define a trackbar callback
 void on_trackbar(int h)
 {
-    cvSmooth( gray, edge, CV_BLUR, 3, 3, 0 );
+    cvSmooth( gray, edge, CV_BLUR, 3, 3, 0, 0 );
     cvNot( gray, edge );
 
     // Run the edge detector on grayscale
