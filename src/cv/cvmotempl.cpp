@@ -175,7 +175,7 @@ cvCalcMotionGradient( const CvArr* mhiimg, CvArr* maskimg,
     CvSize size;
     int x, y;
 
-    float  gradient_epsilon = 1e-4f * aperture_size;
+    float  gradient_epsilon = 1e-4f * aperture_size * aperture_size;
     float  min_delta, max_delta;
 
     CV_CALL( mhi = cvGetMat( mhi, &mhistub ));
@@ -235,6 +235,7 @@ cvCalcMotionGradient( const CvArr* mhiimg, CvArr* maskimg,
         {
             float dY = dY_max_row.data.fl[x];
             float dX = dX_min_row.data.fl[x];
+
             if( fabs(dX) < gradient_epsilon && fabs(dY) < gradient_epsilon )
             {
                 mask_row.data.ptr[x] = 0;
@@ -261,6 +262,7 @@ cvCalcMotionGradient( const CvArr* mhiimg, CvArr* maskimg,
         for( x = 0; x < size.width; x++ )
         {
             float d0 = dY_max_row.data.fl[x] - dX_min_row.data.fl[x];
+
             if( mask_row.data.ptr[x] == 0 || d0 < min_delta || max_delta < d0 )
             {
                 mask_row.data.ptr[x] = 0;
