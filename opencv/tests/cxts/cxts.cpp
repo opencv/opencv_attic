@@ -1660,9 +1660,16 @@ static char* cv_strnstr( const char* str, int len,
 int CvTS::filter( CvTest* test )
 {
     const char* pattern = params.test_filter_pattern;
+    int inverse = 0;
+
+    if( pattern && pattern[0] == '!' )
+    {
+        inverse = 1;
+        pattern++;
+    }
 
     if( !pattern || strcmp( pattern, "" ) == 0 || strcmp( pattern, "*" ) == 0 )
-        return 1;
+        return 1 ^ inverse;
 
     if( params.test_filter_mode == CHOOSE_TESTS )
     {
@@ -1704,7 +1711,7 @@ int CvTS::filter( CvTest* test )
                 break;
         }
 
-        return found;
+        return found ^ inverse;
     }
     else
     {
@@ -1747,7 +1754,7 @@ int CvTS::filter( CvTest* test )
                 if( *endptr == '*' )
                 {
                     if( name_first_match )
-                        return 1;
+                        return 1 ^ inverse;
                 }
                 else
                 {
@@ -1796,7 +1803,7 @@ int CvTS::filter( CvTest* test )
 
                             if( cv_strnstr( tmp_ptr, (int)(tmp_ptr2 - tmp_ptr) + 1,
                                              method_name_ptr, method_name_len, 1 ))
-                                return 1;
+                                return 1 ^ inverse;
 
                             tmp_ptr = cv_strnstr( tmp_ptr2, glob_len -
                                                    (int)(tmp_ptr2 - pattern),
@@ -1832,11 +1839,11 @@ int CvTS::filter( CvTest* test )
                     // make sure it is not a method
                     tmp_ptr2 = strchr( tmp_ptr, '}' );
                     if( !tmp_ptr2 )
-                        return 1;
+                        return 1 ^ inverse;
 
                     tmp_ptr3 = strchr( tmp_ptr, '{' );
                     if( tmp_ptr3 < tmp_ptr2 )
-                        return 1;
+                        return 1 ^ inverse;
 
                     tmp_ptr = tmp_ptr2 + 1;
                 }
@@ -1852,7 +1859,7 @@ int CvTS::filter( CvTest* test )
             ptr = endptr;
         }
 
-        return 0;
+        return 0 ^ inverse;
     }
 }
 
