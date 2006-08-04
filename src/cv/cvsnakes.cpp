@@ -102,7 +102,8 @@ icvSnake8uC1R( unsigned char *src,
     int map_width = ((roi.width - 1) >> 3) + 1;
     int map_height = ((roi.height - 1) >> 3) + 1;
     CvSepFilter pX, pY;
-    #define TILE_SIZE 10        
+    #define WTILE_SIZE 8
+    #define TILE_SIZE (WTILE_SIZE + 2)        
     short dx[TILE_SIZE*TILE_SIZE], dy[TILE_SIZE*TILE_SIZE];
     CvMat _dx = cvMat( TILE_SIZE, TILE_SIZE, CV_16SC1, dx );
     CvMat _dy = cvMat( TILE_SIZE, TILE_SIZE, CV_16SC1, dy );
@@ -142,8 +143,8 @@ icvSnake8uC1R( unsigned char *src,
 
     if( scheme == _CV_SNAKE_GRAD )
     {
-        pX.init_deriv( roi.width, CV_8UC1, CV_16SC1, 1, 0, 3 );
-        pY.init_deriv( roi.width, CV_8UC1, CV_16SC1, 0, 1, 3 );
+        pX.init_deriv( TILE_SIZE+2, CV_8UC1, CV_16SC1, 1, 0, 3 );
+        pY.init_deriv( TILE_SIZE+2, CV_8UC1, CV_16SC1, 0, 1, 3 );
 
         gradient = (float *) cvAlloc( roi.height * roi.width * sizeof( float ));
 
@@ -287,8 +288,8 @@ icvSnake8uC1R( unsigned char *src,
                     if( scheme == _CV_SNAKE_GRAD )
                     {
                         /* look at map and check status */
-                        int x = (pt[i].x + k) >> 3;
-                        int y = (pt[i].y + j) >> 3;
+                        int x = (pt[i].x + k)/WTILE_SIZE;
+                        int y = (pt[i].y + j)/WTILE_SIZE;
 
                         if( map[y * map_width + x] == 0 )
                         {
@@ -297,23 +298,25 @@ icvSnake8uC1R( unsigned char *src,
                             /* evaluate block location */
                             int upshift = y ? 1 : 0;
                             int leftshift = x ? 1 : 0;
-                            int bottomshift = MIN( 1, roi.height - ((y + 1) << 3) );
-                            int rightshift = MIN( 1, roi.width - ((x + 1) << 3) );
-                            CvRect g_roi = { x*8 - leftshift, y*8 - upshift,
-                                leftshift + 8 + rightshift, upshift + 8 + bottomshift };
+                            int bottomshift = MIN( 1, roi.height - (y + 1)*WTILE_SIZE );
+                            int rightshift = MIN( 1, roi.width - (x + 1)*WTILE_SIZE );
+                            CvRect g_roi = { x*WTILE_SIZE - leftshift, y*WTILE_SIZE - upshift,
+                                leftshift + WTILE_SIZE + rightshift, upshift + WTILE_SIZE + bottomshift };
+                            CvMat _src1;
+                            cvGetSubArr( &_src, &_src1, g_roi );
 
-                            pX.process( &_src, &_dx, g_roi );
-                            pY.process( &_src, &_dy, g_roi );
+                            pX.process( &_src1, &_dx );
+                            pY.process( &_src1, &_dy );
 
-                            for( l = 0; l < 8 + bottomshift; l++ )
+                            for( l = 0; l < WTILE_SIZE + bottomshift; l++ )
                             {
-                                for( m = 0; m < 8 + rightshift; m++ )
+                                for( m = 0; m < WTILE_SIZE + rightshift; m++ )
                                 {
-                                    gradient[((y << 3) + l) * roi.width + (x << 3) + m] =
-                                        (float) (dx[(l + upshift) * 10 + m + leftshift] *
-                                                 dx[(l + upshift) * 10 + m + leftshift] +
-                                                 dy[(l + upshift) * 10 + m + leftshift] *
-                                                 dy[(l + upshift) * 10 + m + leftshift]);
+                                    gradient[(y*WTILE_SIZE + l) * roi.width + x*WTILE_SIZE + m] =
+                                        (float) (dx[(l + upshift) * TILE_SIZE + m + leftshift] *
+                                                 dx[(l + upshift) * TILE_SIZE + m + leftshift] +
+                                                 dy[(l + upshift) * TILE_SIZE + m + leftshift] *
+                                                 dy[(l + upshift) * TILE_SIZE + m + leftshift]);
                                 }
                             }
                             map[y * map_width + x] = 1;
