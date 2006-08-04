@@ -203,14 +203,20 @@ int cvTsRodrigues( const CvMat* src, CvMat* dst, CvMat* jacobian )
     }
     else if( src->cols == 3 && src->rows == 3 )
     {
-        double R[9], A[9], I[9], r[3];
+        double R[9], A[9], I[9], r[3], W[3], U[9], V[9];
         double tr, alpha, beta, theta;
         CvMat _R = cvMat( 3, 3, CV_64F, R );
         CvMat _A = cvMat( 3, 3, CV_64F, A );
         CvMat _I = cvMat( 3, 3, CV_64F, I );
         CvMat _r = cvMat( dst->rows, dst->cols, CV_MAKETYPE(CV_64F, CV_MAT_CN(dst->type)), r );
+        CvMat _W = cvMat( 1, 3, CV_64F, W );
+        CvMat _U = cvMat( 3, 3, CV_64F, U );
+        CvMat _V = cvMat( 3, 3, CV_64F, V );
 
         cvConvert( src, &_R );
+        cvSVD( &_R, &_W, &_U, &_V, CV_SVD_MODIFY_A + CV_SVD_U_T + CV_SVD_V_T );
+        cvGEMM( &_U, &_V, 1, 0, 0, &_R, CV_GEMM_A_T );
+
         cvMulTransposed( &_R, &_A, 0 );
         cvSetIdentity( &_I );
 
