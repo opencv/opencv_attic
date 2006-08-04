@@ -23,7 +23,7 @@ AC_CONFIG_AUX_DIR([autotools])
 AC_CONFIG_MACRO_DIR([autotools/aclocal])
 
 # put CVS revision of this configure.in into the resulting configure script
-AC_REVISION($Revision: 1.27 $)
+AC_REVISION($Revision: 1.28 $)
 
 # Detect the canonical host and target build environment
 AC_CANONICAL_HOST
@@ -785,3 +785,9 @@ Additional build settings ============================================
 
 Now run make ...
 ])
+
+if test x"$have_xine" = "xyes"; then
+    AC_MSG_NOTICE([
+    ATTENTION: highgui will be built with xine support,
+           thus it will be a subject to GNU Public License])
+fi
