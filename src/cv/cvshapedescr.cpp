@@ -1177,9 +1177,10 @@ cvBoundingRect( CvArr* array, int update )
 
         if( ptseq->header_size < (int)sizeof(CvContour))
         {
-            if( update == 1 )
+            /*if( update == 1 )
                 CV_ERROR( CV_StsBadArg, "The header is too small to fit the rectangle, "
-                                        "so it could not be updated" );
+                                        "so it could not be updated" );*/
+            update = 0;
             calculate = 1;
         }
     }
