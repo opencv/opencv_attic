@@ -200,7 +200,7 @@ void CvBaseImageFilter::start_process( CvSlice x_range, int width )
 {
     int mode = border_mode;
     int pix_sz = CV_ELEM_SIZE(src_type), work_pix_sz = CV_ELEM_SIZE(work_type);
-    int bsz = buf_size, bw = width, bw1 = width + ksize.width - 1;
+    int bsz = buf_size, bw = x_range.end_index - x_range.start_index, bw1 = bw + ksize.width - 1;
     int tr_step = cvAlign(bw1*pix_sz, ALIGN );
     int i, j, k, ofs;
     
@@ -408,7 +408,6 @@ int CvBaseImageFilter::fill_cyclic_buffer( const uchar* src, int src_step,
     return y - y0;
 }
 
-
 int CvBaseImageFilter::process( const CvMat* src, CvMat* dst,
                                 CvRect src_roi, CvPoint dst_origin, int flags )
 {
@@ -444,9 +443,6 @@ int CvBaseImageFilter::process( const CvMat* src, CvMat* dst,
     uchar *sptr = 0, *dptr;
     int phase = flags & (CV_START|CV_END|CV_MIDDLE);
     bool isolated_roi = (flags & CV_ISOLATED_ROI) != 0;
-
-    //static int test_iter = 0;
-    //printf( "\niter = %d\n", ++test_iter );
 
     if( !CV_IS_MAT(src) )
         CV_ERROR( CV_StsBadArg, "" );
@@ -546,12 +542,7 @@ int CvBaseImageFilter::process( const CvMat* src, CvMat* dst,
         uchar* bptr;
         int row_count, delta;
 
-        //if( test_iter == 57 )
-        //    printf("buf_count = %d, ", buf_count );
-
         delta = fill_cyclic_buffer( sptr, src->step, src_y, src_y1, src_y2 );
-        //if( test_iter == 57 )
-        //    printf("delta = %d, old src_y = %d, src_y2 = %d\n", delta, src_y, src_y2 );
 
         src_y += delta;
         sptr += src->step*delta;
@@ -583,8 +574,6 @@ int CvBaseImageFilter::process( const CvMat* src, CvMat* dst,
 
             assert( count >= 0 );
             y_func( rows + max_ky - anchor.y, dptr, dst->step, count, this );
-            //if( test_iter == 57 )
-            //    printf("count = %d\n", count );
             row_count -= count;
             dst_y += count;
             dptr += dst->step*count;
