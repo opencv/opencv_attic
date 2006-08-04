@@ -188,15 +188,6 @@ static int subdiv_test( void )
             CvPoint2D32f pt = atsRandPoint2D32f( &rng_state, size );
             double minDistance;
 
-            /*if( i == 30 && j == 13 )
-            {
-                putchar('.');
-                printf("(x,y) = (%f, %f)\n", pt.x, pt.y );
-                printf("rect = (xl,yl,xh,yh) = (%f,%f,%f,%f)\n",
-                       subdiv->topleft.x, subdiv->topleft.y,
-                       subdiv->bottomright.x, subdiv->bottomright.y );
-            }*/
-
             CvSubdiv2DPoint* point = cvFindNearestPoint2D( subdiv, pt );
             CvSeqReader reader;
 
