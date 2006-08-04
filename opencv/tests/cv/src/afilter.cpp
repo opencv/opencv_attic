@@ -2076,9 +2076,6 @@ cvTsCornerEigenValsVecs( const CvMat* _src, CvMat* eigenv, CvMat* ocv_eigenv,
                 double l2 = 0.5*(a + c - d);
                 double x1, y1, x2, y2, s;
 
-                /*if( j == (202/6) && i == 426 )
-                    putchar('.');*/
-
                 if( fabs(a - l1) + fabs(b) >= 1e-3 )
                     x1 = b, y1 = l1 - a;
                 else
