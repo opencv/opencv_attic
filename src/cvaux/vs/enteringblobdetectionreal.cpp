@@ -150,7 +150,7 @@ public:
 };
 
 /* Blob detector creator  */
-CvBlobDetector* cvCreateBlobDetectorReal(CvTestSeq* pTestSeq){return new CvBlobDetectorReal(pTestSeq);};
+CvBlobDetector* cvCreateBlobDetectorReal(CvTestSeq* pTestSeq){return new CvBlobDetectorReal(pTestSeq);}
 
 
 
