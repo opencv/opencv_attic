@@ -147,7 +147,7 @@ public:
 CvBlobTrackerAuto* cvCreateBlobTrackerAuto1(CvBlobTrackerAutoParam1* param)
 {
     return (CvBlobTrackerAuto*)new CvBlobTrackerAuto1(param);
-};
+}
 
 /* Constructor of auto blob tracker*/
 CvBlobTrackerAuto1::CvBlobTrackerAuto1(CvBlobTrackerAutoParam1* param):m_BlobList(sizeof(CvBlobTrackAuto))

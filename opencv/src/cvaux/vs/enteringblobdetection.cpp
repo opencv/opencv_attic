@@ -549,7 +549,7 @@ private:
 };
 
 /* Blob detector creator (sole interface function for this file) */
-CvBlobDetector* cvCreateBlobDetectorCC(){return new CvBlobDetectorCC;};
+CvBlobDetector* cvCreateBlobDetectorCC(){return new CvBlobDetectorCC;}
 
 /* Constructor of BlobDetector */
 CvBlobDetectorCC::CvBlobDetectorCC() :

@@ -202,7 +202,7 @@ typedef struct CvTestSeq_
 }CvTestSeq_;
 
 
-CvSize cvTestSeqGetImageSize(CvTestSeq* pTestSeq){return cvSize(((CvTestSeq_*)(pTestSeq))->pImg->width,((CvTestSeq_*)(pTestSeq))->pImg->height);};
+CvSize cvTestSeqGetImageSize(CvTestSeq* pTestSeq){return cvSize(((CvTestSeq_*)(pTestSeq))->pImg->width,((CvTestSeq_*)(pTestSeq))->pImg->height);}
 int cvTestSeqFrameNum(CvTestSeq* pTestSeq){return ((CvTestSeq_*)(pTestSeq))->FrameNum;}
 static void icvTestSeqCreateMask(IplImage* pImg,IplImage* pImgMask, int threshold)
 {
