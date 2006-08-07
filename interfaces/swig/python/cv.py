@@ -1,19 +1,19 @@
-# This file was created automatically by SWIG 1.3.29.
+# This file was created automatically by SWIG 1.3.27.
 # Don't modify this file, modify the SWIG interface instead.
-# This file is compatible with both classic and new-style classes.
 
 import _cv
-import new
-new_instancemethod = new.instancemethod
+
+# This file is compatible with both classic and new-style classes.
 def _swig_setattr_nondynamic(self,class_type,name,value,static=1):
-    if (name == "thisown"): return self.this.own(value)
     if (name == "this"):
-        if type(value).__name__ == 'PySwigObject':
-            self.__dict__[name] = value
+        if isinstance(value, class_type):
+            self.__dict__[name] = value.this
+            if hasattr(value,"thisown"): self.__dict__["thisown"] = value.thisown
+            del value.thisown
             return
     method = class_type.__swig_setmethods__.get(name,None)
     if method: return method(self,value)
-    if (not static) or hasattr(self,name):
+    if (not static) or hasattr(self,name) or (name == "thisown"):
         self.__dict__[name] = value
     else:
         raise AttributeError("You cannot add attributes to %s" % self)
@@ -22,15 +22,9 @@ def _swig_setattr(self,class_type,name,value):
     return _swig_setattr_nondynamic(self,class_type,name,value,0)
 
 def _swig_getattr(self,class_type,name):
-    if (name == "thisown"): return self.this.own()
     method = class_type.__swig_getmethods__.get(name,None)
     if method: return method(self)
     raise AttributeError,name
-
-def _swig_repr(self):
-    try: strthis = "proxy of " + self.this.__repr__()
-    except: strthis = ""
-    return "<%s.%s; %s >" % (self.__class__.__module__, self.__class__.__name__, strthis,)
 
 import types
 try:
@@ -48,12 +42,12 @@ class CvRNG_Wrapper(_object):
     __setattr__ = lambda self, name, value: _swig_setattr(self, CvRNG_Wrapper, name, value)
     __swig_getmethods__ = {}
     __getattr__ = lambda self, name: _swig_getattr(self, CvRNG_Wrapper, name)
-    __repr__ = _swig_repr
-    def __init__(self, *args): 
+    def __repr__(self):
+        return "<%s.%s; proxy of C++ CvRNG_Wrapper instance at %s>" % (self.__class__.__module__, self.__class__.__name__, self.this,)
+    def __init__(self, *args):
         """__init__(self, CvRNG val) -> CvRNG_Wrapper"""
-        this = _cv.new_CvRNG_Wrapper(*args)
-        try: self.this.append(this)
-        except: self.this = this
+        _swig_setattr(self, CvRNG_Wrapper, 'this', _cv.new_CvRNG_Wrapper(*args))
+        _swig_setattr(self, CvRNG_Wrapper, 'thisown', 1)
     def ptr(*args):
         """ptr(self) -> CvRNG"""
         return _cv.CvRNG_Wrapper_ptr(*args)
@@ -70,10 +64,19 @@ class CvRNG_Wrapper(_object):
         """__ne__(self, CvRNG_Wrapper x) -> bool"""
         return _cv.CvRNG_Wrapper___ne__(*args)
 
-    __swig_destroy__ = _cv.delete_CvRNG_Wrapper
-    __del__ = lambda self : None;
-CvRNG_Wrapper_swigregister = _cv.CvRNG_Wrapper_swigregister
-CvRNG_Wrapper_swigregister(CvRNG_Wrapper)
+    def __del__(self, destroy=_cv.delete_CvRNG_Wrapper):
+        """__del__(self)"""
+        try:
+            if self.thisown: destroy(self)
+        except: pass
+
+
+class CvRNG_WrapperPtr(CvRNG_Wrapper):
+    def __init__(self, this):
+        _swig_setattr(self, CvRNG_Wrapper, 'this', this)
+        if not hasattr(self,"thisown"): _swig_setattr(self, CvRNG_Wrapper, 'thisown', 0)
+        self.__class__ = CvRNG_Wrapper
+_cv.CvRNG_Wrapper_swigregister(CvRNG_WrapperPtr)
 
 class CvSubdiv2DEdge_Wrapper(_object):
     """Proxy of C++ CvSubdiv2DEdge_Wrapper class"""
@@ -81,12 +84,12 @@ class CvSubdiv2DEdge_Wrapper(_object):
     __setattr__ = lambda self, name, value: _swig_setattr(self, CvSubdiv2DEdge_Wrapper, name, value)
     __swig_getmethods__ = {}
     __getattr__ = lambda self, name: _swig_getattr(self, CvSubdiv2DEdge_Wrapper, name)
-    __repr__ = _swig_repr
-    def __init__(self, *args): 
+    def __repr__(self):
+        return "<%s.%s; proxy of C++ CvSubdiv2DEdge_Wrapper instance at %s>" % (self.__class__.__module__, self.__class__.__name__, self.this,)
+    def __init__(self, *args):
         """__init__(self, CvSubdiv2DEdge val) -> CvSubdiv2DEdge_Wrapper"""
-        this = _cv.new_CvSubdiv2DEdge_Wrapper(*args)
-        try: self.this.append(this)
-        except: self.this = this
+        _swig_setattr(self, CvSubdiv2DEdge_Wrapper, 'this', _cv.new_CvSubdiv2DEdge_Wrapper(*args))
+        _swig_setattr(self, CvSubdiv2DEdge_Wrapper, 'thisown', 1)
     def ptr(*args):
         """ptr(self) -> CvSubdiv2DEdge"""
         return _cv.CvSubdiv2DEdge_Wrapper_ptr(*args)
@@ -103,472 +106,481 @@ class CvSubdiv2DEdge_Wrapper(_object):
         """__ne__(self, CvSubdiv2DEdge_Wrapper x) -> bool"""
         return _cv.CvSubdiv2DEdge_Wrapper___ne__(*args)
 
-    __swig_destroy__ = _cv.delete_CvSubdiv2DEdge_Wrapper
-    __del__ = lambda self : None;
-CvSubdiv2DEdge_Wrapper_swigregister = _cv.CvSubdiv2DEdge_Wrapper_swigregister
-CvSubdiv2DEdge_Wrapper_swigregister(CvSubdiv2DEdge_Wrapper)
+    def __del__(self, destroy=_cv.delete_CvSubdiv2DEdge_Wrapper):
+        """__del__(self)"""
+        try:
+            if self.thisown: destroy(self)
+        except: pass
+
+
+class CvSubdiv2DEdge_WrapperPtr(CvSubdiv2DEdge_Wrapper):
+    def __init__(self, this):
+        _swig_setattr(self, CvSubdiv2DEdge_Wrapper, 'this', this)
+        if not hasattr(self,"thisown"): _swig_setattr(self, CvSubdiv2DEdge_Wrapper, 'thisown', 0)
+        self.__class__ = CvSubdiv2DEdge_Wrapper
+_cv.CvSubdiv2DEdge_Wrapper_swigregister(CvSubdiv2DEdge_WrapperPtr)
 
 
 def cvSegmentMotion(*args):
-  """
+    """
     cvSegmentMotion(CvArr mhi, CvArr seg_mask, CvMemStorage storage, double timestamp, 
         double seg_thresh) -> CvSeq_ConnectedComp
     """
-  return _cv.cvSegmentMotion(*args)
+    return _cv.cvSegmentMotion(*args)
 
 def cvFree(*args):
-  """cvFree(void ptr)"""
-  return _cv.cvFree(*args)
+    """cvFree(void ptr)"""
+    return _cv.cvFree(*args)
 
 def CV_READ_CHAIN_POINT(*args):
-  """CV_READ_CHAIN_POINT(CvPoint _pt, CvChainPtReader reader)"""
-  return _cv.CV_READ_CHAIN_POINT(*args)
+    """CV_READ_CHAIN_POINT(CvPoint _pt, CvChainPtReader reader)"""
+    return _cv.CV_READ_CHAIN_POINT(*args)
 
 def CV_MAT_ELEM_PTR(*args):
-  """CV_MAT_ELEM_PTR(CvMat mat, int row, int col) -> void"""
-  return _cv.CV_MAT_ELEM_PTR(*args)
+    """CV_MAT_ELEM_PTR(CvMat mat, int row, int col) -> void"""
+    return _cv.CV_MAT_ELEM_PTR(*args)
 
 def CV_MAT_ELEM_PTR_FAST(*args):
-  """CV_MAT_ELEM_PTR_FAST(CvMat mat, int row, int col, int pix_size) -> void"""
-  return _cv.CV_MAT_ELEM_PTR_FAST(*args)
+    """CV_MAT_ELEM_PTR_FAST(CvMat mat, int row, int col, int pix_size) -> void"""
+    return _cv.CV_MAT_ELEM_PTR_FAST(*args)
 
 def CV_NODE_VAL(*args):
-  """CV_NODE_VAL(CvSparseMat mat, CvSparseNode node) -> void"""
-  return _cv.CV_NODE_VAL(*args)
+    """CV_NODE_VAL(CvSparseMat mat, CvSparseNode node) -> void"""
+    return _cv.CV_NODE_VAL(*args)
 
 def CV_NODE_IDX(*args):
-  """CV_NODE_IDX(CvSparseMat mat, CvSparseNode node) -> int"""
-  return _cv.CV_NODE_IDX(*args)
+    """CV_NODE_IDX(CvSparseMat mat, CvSparseNode node) -> int"""
+    return _cv.CV_NODE_IDX(*args)
 
 def CV_SUBDIV2D_NEXT_EDGE(*args):
-  """CV_SUBDIV2D_NEXT_EDGE(CvSubdiv2DEdge edge) -> CvQuadEdge2D"""
-  return _cv.CV_SUBDIV2D_NEXT_EDGE(*args)
+    """CV_SUBDIV2D_NEXT_EDGE(CvSubdiv2DEdge edge) -> CvQuadEdge2D"""
+    return _cv.CV_SUBDIV2D_NEXT_EDGE(*args)
 
 def CV_SWAP(*args):
-  """CV_SWAP(int a, int b, int t)"""
-  return _cv.CV_SWAP(*args)
+    """CV_SWAP(int a, int b, int t)"""
+    return _cv.CV_SWAP(*args)
 
 def CV_IMIN(*args):
-  """CV_IMIN(int a, int b) -> int"""
-  return _cv.CV_IMIN(*args)
+    """CV_IMIN(int a, int b) -> int"""
+    return _cv.CV_IMIN(*args)
 
 def CV_IMAX(*args):
-  """CV_IMAX(int a, int b) -> int"""
-  return _cv.CV_IMAX(*args)
+    """CV_IMAX(int a, int b) -> int"""
+    return _cv.CV_IMAX(*args)
 
 def CV_IABS(*args):
-  """CV_IABS(int a) -> int"""
-  return _cv.CV_IABS(*args)
+    """CV_IABS(int a) -> int"""
+    return _cv.CV_IABS(*args)
 
 def CV_CMP(*args):
-  """CV_CMP(int a, int b)"""
-  return _cv.CV_CMP(*args)
+    """CV_CMP(int a, int b)"""
+    return _cv.CV_CMP(*args)
 
 def CV_SIGN(*args):
-  """CV_SIGN(int a)"""
-  return _cv.CV_SIGN(*args)
+    """CV_SIGN(int a)"""
+    return _cv.CV_SIGN(*args)
 
 def cvInvSqrt(*args):
-  """cvInvSqrt(double value)"""
-  return _cv.cvInvSqrt(*args)
+    """cvInvSqrt(double value)"""
+    return _cv.cvInvSqrt(*args)
 
 def cvSqrt(*args):
-  """cvSqrt(double value)"""
-  return _cv.cvSqrt(*args)
+    """cvSqrt(double value)"""
+    return _cv.cvSqrt(*args)
 
 def CV_IS_IMAGE_HDR(*args):
-  """CV_IS_IMAGE_HDR(CvArr img) -> int"""
-  return _cv.CV_IS_IMAGE_HDR(*args)
+    """CV_IS_IMAGE_HDR(CvArr img) -> int"""
+    return _cv.CV_IS_IMAGE_HDR(*args)
 
 def CV_IS_IMAGE(*args):
-  """CV_IS_IMAGE(CvArr img) -> int"""
-  return _cv.CV_IS_IMAGE(*args)
+    """CV_IS_IMAGE(CvArr img) -> int"""
+    return _cv.CV_IS_IMAGE(*args)
 
 def CV_MAKETYPE(*args):
-  """CV_MAKETYPE(int depth, int cn) -> int"""
-  return _cv.CV_MAKETYPE(*args)
+    """CV_MAKETYPE(int depth, int cn) -> int"""
+    return _cv.CV_MAKETYPE(*args)
 
 def CV_8UC(*args):
-  """CV_8UC(int n) -> int"""
-  return _cv.CV_8UC(*args)
+    """CV_8UC(int n) -> int"""
+    return _cv.CV_8UC(*args)
 
 def CV_8SC(*args):
-  """CV_8SC(int n) -> int"""
-  return _cv.CV_8SC(*args)
+    """CV_8SC(int n) -> int"""
+    return _cv.CV_8SC(*args)
 
 def CV_16UC(*args):
-  """CV_16UC(int n) -> int"""
-  return _cv.CV_16UC(*args)
+    """CV_16UC(int n) -> int"""
+    return _cv.CV_16UC(*args)
 
 def CV_16SC(*args):
-  """CV_16SC(int n) -> int"""
-  return _cv.CV_16SC(*args)
+    """CV_16SC(int n) -> int"""
+    return _cv.CV_16SC(*args)
 
 def CV_32SC(*args):
-  """CV_32SC(int n) -> int"""
-  return _cv.CV_32SC(*args)
+    """CV_32SC(int n) -> int"""
+    return _cv.CV_32SC(*args)
 
 def CV_32FC(*args):
-  """CV_32FC(int n) -> int"""
-  return _cv.CV_32FC(*args)
+    """CV_32FC(int n) -> int"""
+    return _cv.CV_32FC(*args)
 
 def CV_64FC(*args):
-  """CV_64FC(int n) -> int"""
-  return _cv.CV_64FC(*args)
+    """CV_64FC(int n) -> int"""
+    return _cv.CV_64FC(*args)
 
 def CV_MAT_CN(*args):
-  """CV_MAT_CN(int flags) -> int"""
-  return _cv.CV_MAT_CN(*args)
+    """CV_MAT_CN(int flags) -> int"""
+    return _cv.CV_MAT_CN(*args)
 
 def CV_MAT_DEPTH(*args):
-  """CV_MAT_DEPTH(int flags) -> int"""
-  return _cv.CV_MAT_DEPTH(*args)
+    """CV_MAT_DEPTH(int flags) -> int"""
+    return _cv.CV_MAT_DEPTH(*args)
 
 def CV_MAT_TYPE(*args):
-  """CV_MAT_TYPE(int flags) -> int"""
-  return _cv.CV_MAT_TYPE(*args)
+    """CV_MAT_TYPE(int flags) -> int"""
+    return _cv.CV_MAT_TYPE(*args)
 
 def CV_IS_MAT_CONT(*args):
-  """CV_IS_MAT_CONT(int flags) -> int"""
-  return _cv.CV_IS_MAT_CONT(*args)
+    """CV_IS_MAT_CONT(int flags) -> int"""
+    return _cv.CV_IS_MAT_CONT(*args)
 
 def CV_IS_TEMP_MAT(*args):
-  """CV_IS_TEMP_MAT(int flags) -> int"""
-  return _cv.CV_IS_TEMP_MAT(*args)
+    """CV_IS_TEMP_MAT(int flags) -> int"""
+    return _cv.CV_IS_TEMP_MAT(*args)
 
 def CV_IS_MAT_HDR(*args):
-  """CV_IS_MAT_HDR(CvMat mat) -> int"""
-  return _cv.CV_IS_MAT_HDR(*args)
+    """CV_IS_MAT_HDR(CvMat mat) -> int"""
+    return _cv.CV_IS_MAT_HDR(*args)
 
 def CV_IS_MAT(*args):
-  """CV_IS_MAT(CvMat mat) -> int"""
-  return _cv.CV_IS_MAT(*args)
+    """CV_IS_MAT(CvMat mat) -> int"""
+    return _cv.CV_IS_MAT(*args)
 
 def CV_IS_MASK_ARR(*args):
-  """CV_IS_MASK_ARR(CvMat mat) -> int"""
-  return _cv.CV_IS_MASK_ARR(*args)
+    """CV_IS_MASK_ARR(CvMat mat) -> int"""
+    return _cv.CV_IS_MASK_ARR(*args)
 
 def CV_ARE_TYPES_EQ(*args):
-  """CV_ARE_TYPES_EQ(CvMat mat1, CvMat mat2) -> int"""
-  return _cv.CV_ARE_TYPES_EQ(*args)
+    """CV_ARE_TYPES_EQ(CvMat mat1, CvMat mat2) -> int"""
+    return _cv.CV_ARE_TYPES_EQ(*args)
 
 def CV_ARE_CNS_EQ(*args):
-  """CV_ARE_CNS_EQ(CvMat mat1, CvMat mat2) -> int"""
-  return _cv.CV_ARE_CNS_EQ(*args)
+    """CV_ARE_CNS_EQ(CvMat mat1, CvMat mat2) -> int"""
+    return _cv.CV_ARE_CNS_EQ(*args)
 
 def CV_ARE_DEPTHS_EQ(*args):
-  """CV_ARE_DEPTHS_EQ(CvMat mat1, CvMat mat2) -> int"""
-  return _cv.CV_ARE_DEPTHS_EQ(*args)
+    """CV_ARE_DEPTHS_EQ(CvMat mat1, CvMat mat2) -> int"""
+    return _cv.CV_ARE_DEPTHS_EQ(*args)
 
 def CV_ARE_SIZES_EQ(*args):
-  """CV_ARE_SIZES_EQ(CvMat mat1, CvMat mat2) -> int"""
-  return _cv.CV_ARE_SIZES_EQ(*args)
+    """CV_ARE_SIZES_EQ(CvMat mat1, CvMat mat2) -> int"""
+    return _cv.CV_ARE_SIZES_EQ(*args)
 
 def CV_IS_MAT_CONST(*args):
-  """CV_IS_MAT_CONST(CvMat mat) -> int"""
-  return _cv.CV_IS_MAT_CONST(*args)
+    """CV_IS_MAT_CONST(CvMat mat) -> int"""
+    return _cv.CV_IS_MAT_CONST(*args)
 
 def CV_ELEM_SIZE1(*args):
-  """CV_ELEM_SIZE1(int type) -> int"""
-  return _cv.CV_ELEM_SIZE1(*args)
+    """CV_ELEM_SIZE1(int type) -> int"""
+    return _cv.CV_ELEM_SIZE1(*args)
 
 def CV_ELEM_SIZE(*args):
-  """CV_ELEM_SIZE(int type) -> int"""
-  return _cv.CV_ELEM_SIZE(*args)
+    """CV_ELEM_SIZE(int type) -> int"""
+    return _cv.CV_ELEM_SIZE(*args)
 
 def CV_IS_MATND_HDR(*args):
-  """CV_IS_MATND_HDR(CvMat mat) -> int"""
-  return _cv.CV_IS_MATND_HDR(*args)
+    """CV_IS_MATND_HDR(CvMat mat) -> int"""
+    return _cv.CV_IS_MATND_HDR(*args)
 
 def CV_IS_MATND(*args):
-  """CV_IS_MATND(CvMat mat) -> int"""
-  return _cv.CV_IS_MATND(*args)
+    """CV_IS_MATND(CvMat mat) -> int"""
+    return _cv.CV_IS_MATND(*args)
 
 def CV_IS_SPARSE_MAT_HDR(*args):
-  """CV_IS_SPARSE_MAT_HDR(CvMat mat) -> int"""
-  return _cv.CV_IS_SPARSE_MAT_HDR(*args)
+    """CV_IS_SPARSE_MAT_HDR(CvMat mat) -> int"""
+    return _cv.CV_IS_SPARSE_MAT_HDR(*args)
 
 def CV_IS_SPARSE_MAT(*args):
-  """CV_IS_SPARSE_MAT(CvMat mat) -> int"""
-  return _cv.CV_IS_SPARSE_MAT(*args)
+    """CV_IS_SPARSE_MAT(CvMat mat) -> int"""
+    return _cv.CV_IS_SPARSE_MAT(*args)
 
 def CV_IS_HIST(*args):
-  """CV_IS_HIST(CvHistogram hist) -> int"""
-  return _cv.CV_IS_HIST(*args)
+    """CV_IS_HIST(CvHistogram hist) -> int"""
+    return _cv.CV_IS_HIST(*args)
 
 def CV_IS_UNIFORM_HIST(*args):
-  """CV_IS_UNIFORM_HIST(CvHistogram hist) -> int"""
-  return _cv.CV_IS_UNIFORM_HIST(*args)
+    """CV_IS_UNIFORM_HIST(CvHistogram hist) -> int"""
+    return _cv.CV_IS_UNIFORM_HIST(*args)
 
 def CV_IS_SPARSE_HIST(*args):
-  """CV_IS_SPARSE_HIST(CvHistogram hist) -> int"""
-  return _cv.CV_IS_SPARSE_HIST(*args)
+    """CV_IS_SPARSE_HIST(CvHistogram hist) -> int"""
+    return _cv.CV_IS_SPARSE_HIST(*args)
 
 def CV_HIST_HAS_RANGES(*args):
-  """CV_HIST_HAS_RANGES(CvHistogram hist) -> int"""
-  return _cv.CV_HIST_HAS_RANGES(*args)
+    """CV_HIST_HAS_RANGES(CvHistogram hist) -> int"""
+    return _cv.CV_HIST_HAS_RANGES(*args)
 
 def CV_IS_STORAGE(*args):
-  """CV_IS_STORAGE(CvMemStorage storage) -> int"""
-  return _cv.CV_IS_STORAGE(*args)
+    """CV_IS_STORAGE(CvMemStorage storage) -> int"""
+    return _cv.CV_IS_STORAGE(*args)
 
 def CV_IS_SET_ELEM(*args):
-  """CV_IS_SET_ELEM(void ptr) -> int"""
-  return _cv.CV_IS_SET_ELEM(*args)
+    """CV_IS_SET_ELEM(void ptr) -> int"""
+    return _cv.CV_IS_SET_ELEM(*args)
 
 def CV_IS_SEQ(*args):
-  """CV_IS_SEQ(CvSeq seq) -> int"""
-  return _cv.CV_IS_SEQ(*args)
+    """CV_IS_SEQ(CvSeq seq) -> int"""
+    return _cv.CV_IS_SEQ(*args)
 
 def CV_IS_SET(*args):
-  """CV_IS_SET(CvSet set) -> int"""
-  return _cv.CV_IS_SET(*args)
+    """CV_IS_SET(CvSet set) -> int"""
+    return _cv.CV_IS_SET(*args)
 
 def CV_SEQ_ELTYPE(*args):
-  """CV_SEQ_ELTYPE(CvSeq seq) -> int"""
-  return _cv.CV_SEQ_ELTYPE(*args)
+    """CV_SEQ_ELTYPE(CvSeq seq) -> int"""
+    return _cv.CV_SEQ_ELTYPE(*args)
 
 def CV_SEQ_KIND(*args):
-  """CV_SEQ_KIND(CvSeq seq) -> int"""
-  return _cv.CV_SEQ_KIND(*args)
+    """CV_SEQ_KIND(CvSeq seq) -> int"""
+    return _cv.CV_SEQ_KIND(*args)
 
 def CV_IS_SEQ_INDEX(*args):
-  """CV_IS_SEQ_INDEX(CvSeq seq) -> int"""
-  return _cv.CV_IS_SEQ_INDEX(*args)
+    """CV_IS_SEQ_INDEX(CvSeq seq) -> int"""
+    return _cv.CV_IS_SEQ_INDEX(*args)
 
 def CV_IS_SEQ_CURVE(*args):
-  """CV_IS_SEQ_CURVE(CvSeq seq) -> int"""
-  return _cv.CV_IS_SEQ_CURVE(*args)
+    """CV_IS_SEQ_CURVE(CvSeq seq) -> int"""
+    return _cv.CV_IS_SEQ_CURVE(*args)
 
 def CV_IS_SEQ_CLOSED(*args):
-  """CV_IS_SEQ_CLOSED(CvSeq seq) -> int"""
-  return _cv.CV_IS_SEQ_CLOSED(*args)
+    """CV_IS_SEQ_CLOSED(CvSeq seq) -> int"""
+    return _cv.CV_IS_SEQ_CLOSED(*args)
 
 def CV_IS_SEQ_CONVEX(*args):
-  """CV_IS_SEQ_CONVEX(CvSeq seq) -> int"""
-  return _cv.CV_IS_SEQ_CONVEX(*args)
+    """CV_IS_SEQ_CONVEX(CvSeq seq) -> int"""
+    return _cv.CV_IS_SEQ_CONVEX(*args)
 
 def CV_IS_SEQ_HOLE(*args):
-  """CV_IS_SEQ_HOLE(CvSeq seq) -> int"""
-  return _cv.CV_IS_SEQ_HOLE(*args)
+    """CV_IS_SEQ_HOLE(CvSeq seq) -> int"""
+    return _cv.CV_IS_SEQ_HOLE(*args)
 
 def CV_IS_SEQ_SIMPLE(*args):
-  """CV_IS_SEQ_SIMPLE(CvSeq seq) -> int"""
-  return _cv.CV_IS_SEQ_SIMPLE(*args)
+    """CV_IS_SEQ_SIMPLE(CvSeq seq) -> int"""
+    return _cv.CV_IS_SEQ_SIMPLE(*args)
 
 def CV_IS_SEQ_POINT_SET(*args):
-  """CV_IS_SEQ_POINT_SET(CvSeq seq) -> int"""
-  return _cv.CV_IS_SEQ_POINT_SET(*args)
+    """CV_IS_SEQ_POINT_SET(CvSeq seq) -> int"""
+    return _cv.CV_IS_SEQ_POINT_SET(*args)
 
 def CV_IS_SEQ_POINT_SUBSET(*args):
-  """CV_IS_SEQ_POINT_SUBSET(CvSeq seq) -> int"""
-  return _cv.CV_IS_SEQ_POINT_SUBSET(*args)
+    """CV_IS_SEQ_POINT_SUBSET(CvSeq seq) -> int"""
+    return _cv.CV_IS_SEQ_POINT_SUBSET(*args)
 
 def CV_IS_SEQ_POLYLINE(*args):
-  """CV_IS_SEQ_POLYLINE(CvSeq seq) -> int"""
-  return _cv.CV_IS_SEQ_POLYLINE(*args)
+    """CV_IS_SEQ_POLYLINE(CvSeq seq) -> int"""
+    return _cv.CV_IS_SEQ_POLYLINE(*args)
 
 def CV_IS_SEQ_POLYGON(*args):
-  """CV_IS_SEQ_POLYGON(CvSeq seq) -> int"""
-  return _cv.CV_IS_SEQ_POLYGON(*args)
+    """CV_IS_SEQ_POLYGON(CvSeq seq) -> int"""
+    return _cv.CV_IS_SEQ_POLYGON(*args)
 
 def CV_IS_SEQ_CHAIN(*args):
-  """CV_IS_SEQ_CHAIN(CvSeq seq) -> int"""
-  return _cv.CV_IS_SEQ_CHAIN(*args)
+    """CV_IS_SEQ_CHAIN(CvSeq seq) -> int"""
+    return _cv.CV_IS_SEQ_CHAIN(*args)
 
 def CV_IS_SEQ_CONTOUR(*args):
-  """CV_IS_SEQ_CONTOUR(CvSeq seq) -> int"""
-  return _cv.CV_IS_SEQ_CONTOUR(*args)
+    """CV_IS_SEQ_CONTOUR(CvSeq seq) -> int"""
+    return _cv.CV_IS_SEQ_CONTOUR(*args)
 
 def CV_IS_SEQ_CHAIN_CONTOUR(*args):
-  """CV_IS_SEQ_CHAIN_CONTOUR(CvSeq seq) -> int"""
-  return _cv.CV_IS_SEQ_CHAIN_CONTOUR(*args)
+    """CV_IS_SEQ_CHAIN_CONTOUR(CvSeq seq) -> int"""
+    return _cv.CV_IS_SEQ_CHAIN_CONTOUR(*args)
 
 def CV_IS_SEQ_POLYGON_TREE(*args):
-  """CV_IS_SEQ_POLYGON_TREE(CvSeq seq) -> int"""
-  return _cv.CV_IS_SEQ_POLYGON_TREE(*args)
+    """CV_IS_SEQ_POLYGON_TREE(CvSeq seq) -> int"""
+    return _cv.CV_IS_SEQ_POLYGON_TREE(*args)
 
 def CV_IS_GRAPH(*args):
-  """CV_IS_GRAPH(CvSeq seq) -> int"""
-  return _cv.CV_IS_GRAPH(*args)
+    """CV_IS_GRAPH(CvSeq seq) -> int"""
+    return _cv.CV_IS_GRAPH(*args)
 
 def CV_IS_GRAPH_ORIENTED(*args):
-  """CV_IS_GRAPH_ORIENTED(CvSeq seq) -> int"""
-  return _cv.CV_IS_GRAPH_ORIENTED(*args)
+    """CV_IS_GRAPH_ORIENTED(CvSeq seq) -> int"""
+    return _cv.CV_IS_GRAPH_ORIENTED(*args)
 
 def CV_IS_SUBDIV2D(*args):
-  """CV_IS_SUBDIV2D(CvSeq seq) -> int"""
-  return _cv.CV_IS_SUBDIV2D(*args)
+    """CV_IS_SUBDIV2D(CvSeq seq) -> int"""
+    return _cv.CV_IS_SUBDIV2D(*args)
 
 def CV_WRITE_SEQ_ELEM_VAR(*args):
-  """CV_WRITE_SEQ_ELEM_VAR(void elem_ptr, CvSeqWriter writer)"""
-  return _cv.CV_WRITE_SEQ_ELEM_VAR(*args)
+    """CV_WRITE_SEQ_ELEM_VAR(void elem_ptr, CvSeqWriter writer)"""
+    return _cv.CV_WRITE_SEQ_ELEM_VAR(*args)
 
 def CV_WRITE_SEQ_ELEM(*args):
-  """CV_WRITE_SEQ_ELEM(CvPoint elem, CvSeqWriter writer)"""
-  return _cv.CV_WRITE_SEQ_ELEM(*args)
+    """CV_WRITE_SEQ_ELEM(CvPoint elem, CvSeqWriter writer)"""
+    return _cv.CV_WRITE_SEQ_ELEM(*args)
 
 def CV_NEXT_SEQ_ELEM(*args):
-  """CV_NEXT_SEQ_ELEM(int elem_size, CvSeqReader reader)"""
-  return _cv.CV_NEXT_SEQ_ELEM(*args)
+    """CV_NEXT_SEQ_ELEM(int elem_size, CvSeqReader reader)"""
+    return _cv.CV_NEXT_SEQ_ELEM(*args)
 
 def CV_PREV_SEQ_ELEM(*args):
-  """CV_PREV_SEQ_ELEM(int elem_size, CvSeqReader reader)"""
-  return _cv.CV_PREV_SEQ_ELEM(*args)
+    """CV_PREV_SEQ_ELEM(int elem_size, CvSeqReader reader)"""
+    return _cv.CV_PREV_SEQ_ELEM(*args)
 
 def CV_READ_SEQ_ELEM(*args):
-  """CV_READ_SEQ_ELEM(CvPoint elem, CvSeqReader reader)"""
-  return _cv.CV_READ_SEQ_ELEM(*args)
+    """CV_READ_SEQ_ELEM(CvPoint elem, CvSeqReader reader)"""
+    return _cv.CV_READ_SEQ_ELEM(*args)
 
 def CV_REV_READ_SEQ_ELEM(*args):
-  """CV_REV_READ_SEQ_ELEM(CvPoint elem, CvSeqReader reader)"""
-  return _cv.CV_REV_READ_SEQ_ELEM(*args)
+    """CV_REV_READ_SEQ_ELEM(CvPoint elem, CvSeqReader reader)"""
+    return _cv.CV_REV_READ_SEQ_ELEM(*args)
 
 def CV_CURRENT_POINT(*args):
-  """CV_CURRENT_POINT(CvSeqReader reader) -> CvPoint"""
-  return _cv.CV_CURRENT_POINT(*args)
+    """CV_CURRENT_POINT(CvSeqReader reader) -> CvPoint"""
+    return _cv.CV_CURRENT_POINT(*args)
 
 def CV_PREV_POINT(*args):
-  """CV_PREV_POINT(CvSeqReader reader) -> CvPoint"""
-  return _cv.CV_PREV_POINT(*args)
+    """CV_PREV_POINT(CvSeqReader reader) -> CvPoint"""
+    return _cv.CV_PREV_POINT(*args)
 
 def CV_READ_EDGE(*args):
-  """CV_READ_EDGE(CvPoint pt1, CvPoint pt2, CvSeqReader reader)"""
-  return _cv.CV_READ_EDGE(*args)
+    """CV_READ_EDGE(CvPoint pt1, CvPoint pt2, CvSeqReader reader)"""
+    return _cv.CV_READ_EDGE(*args)
 
 def CV_NEXT_GRAPH_EDGE(*args):
-  """CV_NEXT_GRAPH_EDGE(CvGraphEdge edge, CvGraphVtx vertex) -> CvGraphEdge"""
-  return _cv.CV_NEXT_GRAPH_EDGE(*args)
+    """CV_NEXT_GRAPH_EDGE(CvGraphEdge edge, CvGraphVtx vertex) -> CvGraphEdge"""
+    return _cv.CV_NEXT_GRAPH_EDGE(*args)
 
 def CV_NODE_TYPE(*args):
-  """CV_NODE_TYPE(int flags) -> int"""
-  return _cv.CV_NODE_TYPE(*args)
+    """CV_NODE_TYPE(int flags) -> int"""
+    return _cv.CV_NODE_TYPE(*args)
 
 def CV_NODE_IS_INT(*args):
-  """CV_NODE_IS_INT(int flags) -> int"""
-  return _cv.CV_NODE_IS_INT(*args)
+    """CV_NODE_IS_INT(int flags) -> int"""
+    return _cv.CV_NODE_IS_INT(*args)
 
 def CV_NODE_IS_REAL(*args):
-  """CV_NODE_IS_REAL(int flags) -> int"""
-  return _cv.CV_NODE_IS_REAL(*args)
+    """CV_NODE_IS_REAL(int flags) -> int"""
+    return _cv.CV_NODE_IS_REAL(*args)
 
 def CV_NODE_IS_STRING(*args):
-  """CV_NODE_IS_STRING(int flags) -> int"""
-  return _cv.CV_NODE_IS_STRING(*args)
+    """CV_NODE_IS_STRING(int flags) -> int"""
+    return _cv.CV_NODE_IS_STRING(*args)
 
 def CV_NODE_IS_SEQ(*args):
-  """CV_NODE_IS_SEQ(int flags) -> int"""
-  return _cv.CV_NODE_IS_SEQ(*args)
+    """CV_NODE_IS_SEQ(int flags) -> int"""
+    return _cv.CV_NODE_IS_SEQ(*args)
 
 def CV_NODE_IS_MAP(*args):
-  """CV_NODE_IS_MAP(int flags) -> int"""
-  return _cv.CV_NODE_IS_MAP(*args)
+    """CV_NODE_IS_MAP(int flags) -> int"""
+    return _cv.CV_NODE_IS_MAP(*args)
 
 def CV_NODE_IS_COLLECTION(*args):
-  """CV_NODE_IS_COLLECTION(int flags) -> int"""
-  return _cv.CV_NODE_IS_COLLECTION(*args)
+    """CV_NODE_IS_COLLECTION(int flags) -> int"""
+    return _cv.CV_NODE_IS_COLLECTION(*args)
 
 def CV_NODE_IS_FLOW(*args):
-  """CV_NODE_IS_FLOW(int flags) -> int"""
-  return _cv.CV_NODE_IS_FLOW(*args)
+    """CV_NODE_IS_FLOW(int flags) -> int"""
+    return _cv.CV_NODE_IS_FLOW(*args)
 
 def CV_NODE_IS_EMPTY(*args):
-  """CV_NODE_IS_EMPTY(int flags) -> int"""
-  return _cv.CV_NODE_IS_EMPTY(*args)
+    """CV_NODE_IS_EMPTY(int flags) -> int"""
+    return _cv.CV_NODE_IS_EMPTY(*args)
 
 def CV_NODE_IS_USER(*args):
-  """CV_NODE_IS_USER(int flags) -> int"""
-  return _cv.CV_NODE_IS_USER(*args)
+    """CV_NODE_IS_USER(int flags) -> int"""
+    return _cv.CV_NODE_IS_USER(*args)
 
 def CV_NODE_HAS_NAME(*args):
-  """CV_NODE_HAS_NAME(int flags) -> int"""
-  return _cv.CV_NODE_HAS_NAME(*args)
+    """CV_NODE_HAS_NAME(int flags) -> int"""
+    return _cv.CV_NODE_HAS_NAME(*args)
 
 def CV_NODE_SEQ_IS_SIMPLE(*args):
-  """CV_NODE_SEQ_IS_SIMPLE(CvSeq seq) -> int"""
-  return _cv.CV_NODE_SEQ_IS_SIMPLE(*args)
+    """CV_NODE_SEQ_IS_SIMPLE(CvSeq seq) -> int"""
+    return _cv.CV_NODE_SEQ_IS_SIMPLE(*args)
 
 def cvReshapeND(*args):
-  """
+    """
     cvReshapeND(CvArr arr, CvMat header, int new_cn, int new_dims, 
         int new_sizes)
     """
-  return _cv.cvReshapeND(*args)
+    return _cv.cvReshapeND(*args)
 
 def cvConvert(*args):
-  """cvConvert(CvArr src, CvArr dst)"""
-  return _cv.cvConvert(*args)
+    """cvConvert(CvArr src, CvArr dst)"""
+    return _cv.cvConvert(*args)
 
 def cvAXPY(*args):
-  """cvAXPY(CvArr A, double real_scalar, CvArr B, CvArr C)"""
-  return _cv.cvAXPY(*args)
+    """cvAXPY(CvArr A, double real_scalar, CvArr B, CvArr C)"""
+    return _cv.cvAXPY(*args)
 
 def cvAbs(*args):
-  """cvAbs(CvArr src, CvArr dst)"""
-  return _cv.cvAbs(*args)
+    """cvAbs(CvArr src, CvArr dst)"""
+    return _cv.cvAbs(*args)
 
 def cvMatMulAdd(*args):
-  """cvMatMulAdd(CvArr src1, CvArr src2, CvArr src3, CvArr dst)"""
-  return _cv.cvMatMulAdd(*args)
+    """cvMatMulAdd(CvArr src1, CvArr src2, CvArr src3, CvArr dst)"""
+    return _cv.cvMatMulAdd(*args)
 
 def cvMatMul(*args):
-  """cvMatMul(CvArr src1, CvArr src2, CvArr dst)"""
-  return _cv.cvMatMul(*args)
+    """cvMatMul(CvArr src1, CvArr src2, CvArr dst)"""
+    return _cv.cvMatMul(*args)
 
 def cvGetGraphVtx(*args):
-  """cvGetGraphVtx(CvGraph graph, int idx)"""
-  return _cv.cvGetGraphVtx(*args)
+    """cvGetGraphVtx(CvGraph graph, int idx)"""
+    return _cv.cvGetGraphVtx(*args)
 
 def cvGraphVtxIdx(*args):
-  """cvGraphVtxIdx(CvGraph graph, CvGraphVtx vtx) -> int"""
-  return _cv.cvGraphVtxIdx(*args)
+    """cvGraphVtxIdx(CvGraph graph, CvGraphVtx vtx) -> int"""
+    return _cv.cvGraphVtxIdx(*args)
 
 def cvGraphEdgeIdx(*args):
-  """cvGraphEdgeIdx(CvGraph graph, CvGraphEdge edge) -> int"""
-  return _cv.cvGraphEdgeIdx(*args)
+    """cvGraphEdgeIdx(CvGraph graph, CvGraphEdge edge) -> int"""
+    return _cv.cvGraphEdgeIdx(*args)
 
 def cvGraphGetVtxCount(*args):
-  """cvGraphGetVtxCount(CvGraph graph) -> int"""
-  return _cv.cvGraphGetVtxCount(*args)
+    """cvGraphGetVtxCount(CvGraph graph) -> int"""
+    return _cv.cvGraphGetVtxCount(*args)
 
 def cvGraphGetEdgeCount(*args):
-  """cvGraphGetEdgeCount(CvGraph graph) -> int"""
-  return _cv.cvGraphGetEdgeCount(*args)
+    """cvGraphGetEdgeCount(CvGraph graph) -> int"""
+    return _cv.cvGraphGetEdgeCount(*args)
 
 def CV_IS_GRAPH_VERTEX_VISITED(*args):
-  """CV_IS_GRAPH_VERTEX_VISITED(CvGraphVtx vtx) -> int"""
-  return _cv.CV_IS_GRAPH_VERTEX_VISITED(*args)
+    """CV_IS_GRAPH_VERTEX_VISITED(CvGraphVtx vtx) -> int"""
+    return _cv.CV_IS_GRAPH_VERTEX_VISITED(*args)
 
 def CV_IS_GRAPH_EDGE_VISITED(*args):
-  """CV_IS_GRAPH_EDGE_VISITED(CvGraphEdge edge) -> int"""
-  return _cv.CV_IS_GRAPH_EDGE_VISITED(*args)
+    """CV_IS_GRAPH_EDGE_VISITED(CvGraphEdge edge) -> int"""
+    return _cv.CV_IS_GRAPH_EDGE_VISITED(*args)
 
 def CV_RGB(*args):
-  """CV_RGB(double r, double g, int b) -> CvScalar"""
-  return _cv.CV_RGB(*args)
+    """CV_RGB(double r, double g, int b) -> CvScalar"""
+    return _cv.CV_RGB(*args)
 
 def CV_NEXT_LINE_POINT(*args):
-  """CV_NEXT_LINE_POINT(CvLineIterator line_iterator)"""
-  return _cv.CV_NEXT_LINE_POINT(*args)
+    """CV_NEXT_LINE_POINT(CvLineIterator line_iterator)"""
+    return _cv.CV_NEXT_LINE_POINT(*args)
 
 def CV_INIT_3X3_DELTAS(*args):
-  """CV_INIT_3X3_DELTAS(double deltas, int step, int nch)"""
-  return _cv.CV_INIT_3X3_DELTAS(*args)
+    """CV_INIT_3X3_DELTAS(double deltas, int step, int nch)"""
+    return _cv.CV_INIT_3X3_DELTAS(*args)
 
 def CV_IS_HAAR_CLASSIFIER(*args):
-  """CV_IS_HAAR_CLASSIFIER(void haar) -> int"""
-  return _cv.CV_IS_HAAR_CLASSIFIER(*args)
+    """CV_IS_HAAR_CLASSIFIER(void haar) -> int"""
+    return _cv.CV_IS_HAAR_CLASSIFIER(*args)
 
 def cvCalcBackProject(*args):
-  """cvCalcBackProject( image, CvArr dst, CvHistogram hist)"""
-  return _cv.cvCalcBackProject(*args)
+    """cvCalcBackProject( image, CvArr dst, CvHistogram hist)"""
+    return _cv.cvCalcBackProject(*args)
 
 def cvCalcBackProjectPatch(*args):
-  """
+    """
     cvCalcBackProjectPatch( image, CvArr dst, CvSize range, CvHistogram hist, 
         int method, double factor)
     """
-  return _cv.cvCalcBackProjectPatch(*args)
+    return _cv.cvCalcBackProjectPatch(*args)
 sizeof_CvContour = _cv.sizeof_CvContour
 sizeof_CvPoint = _cv.sizeof_CvPoint
 sizeof_CvSeq = _cv.sizeof_CvSeq
@@ -1053,7 +1065,8 @@ class Cv32suf(_object):
     __setattr__ = lambda self, name, value: _swig_setattr(self, Cv32suf, name, value)
     __swig_getmethods__ = {}
     __getattr__ = lambda self, name: _swig_getattr(self, Cv32suf, name)
-    __repr__ = _swig_repr
+    def __repr__(self):
+        return "<%s.%s; proxy of C++ Cv32suf instance at %s>" % (self.__class__.__module__, self.__class__.__name__, self.this,)
     __swig_setmethods__["i"] = _cv.Cv32suf_i_set
     __swig_getmethods__["i"] = _cv.Cv32suf_i_get
     if _newclass:i = property(_cv.Cv32suf_i_get, _cv.Cv32suf_i_set)
@@ -1063,25 +1076,33 @@ class Cv32suf(_object):
     __swig_setmethods__["f"] = _cv.Cv32suf_f_set
     __swig_getmethods__["f"] = _cv.Cv32suf_f_get
     if _newclass:f = property(_cv.Cv32suf_f_get, _cv.Cv32suf_f_set)
-    def __init__(self, *args): 
+    def __init__(self, *args):
         """__init__(self) -> Cv32suf"""
-        this = _cv.new_Cv32suf(*args)
-        try: self.this.append(this)
-        except: self.this = this
-    __swig_destroy__ = _cv.delete_Cv32suf
-    __del__ = lambda self : None;
-Cv32suf_swigregister = _cv.Cv32suf_swigregister
-Cv32suf_swigregister(Cv32suf)
+        _swig_setattr(self, Cv32suf, 'this', _cv.new_Cv32suf(*args))
+        _swig_setattr(self, Cv32suf, 'thisown', 1)
+    def __del__(self, destroy=_cv.delete_Cv32suf):
+        """__del__(self)"""
+        try:
+            if self.thisown: destroy(self)
+        except: pass
+
+
+class Cv32sufPtr(Cv32suf):
+    def __init__(self, this):
+        _swig_setattr(self, Cv32suf, 'this', this)
+        if not hasattr(self,"thisown"): _swig_setattr(self, Cv32suf, 'thisown', 0)
+        self.__class__ = Cv32suf
+_cv.Cv32suf_swigregister(Cv32sufPtr)
 
 def cvCvtSeqToArray(*args):
-  """
+    """
     cvCvtSeqToArray(CvSeq seq, CvArr elements, CvSlice slice=CV_WHOLE_SEQ) -> CvArr
     cvCvtSeqToArray(CvSeq seq, CvArr elements) -> CvArr
     """
-  return _cv.cvCvtSeqToArray(*args)
+    return _cv.cvCvtSeqToArray(*args)
 
 def cvArcLength(*args):
-  """
+    """
     cvArcLength(CvSeq seq, CvSlice slice=CV_WHOLE_SEQ, int is_closed=-1) -> double
     cvArcLength(CvSeq seq, CvSlice slice=CV_WHOLE_SEQ) -> double
     cvArcLength(CvSeq seq) -> double
@@ -1089,17 +1110,17 @@ def cvArcLength(*args):
     cvArcLength(CvArr arr, CvSlice slice=CV_WHOLE_SEQ) -> double
     cvArcLength(CvArr arr) -> double
     """
-  return _cv.cvArcLength(*args)
+    return _cv.cvArcLength(*args)
 
 def cvContourPerimeter(*args):
-  """
+    """
     cvContourPerimeter(CvSeq seq) -> double
     cvContourPerimeter(CvArr arr) -> double
     """
-  return _cv.cvContourPerimeter(*args)
+    return _cv.cvContourPerimeter(*args)
 
 def cvHaarDetectObjects(*args):
-  """
+    """
     cvHaarDetectObjects(CvArr image, CvHaarClassifierCascade cascade, CvMemStorage storage, 
         double scale_factor=1.1, int min_neighbors=3, 
         int flags=0, CvSize min_size=cvSize(0,0)) -> CvSeq_Rect
@@ -1112,16 +1133,16 @@ def cvHaarDetectObjects(*args):
         double scale_factor=1.1) -> CvSeq_Rect
     cvHaarDetectObjects(CvArr image, CvHaarClassifierCascade cascade, CvMemStorage storage) -> CvSeq_Rect
     """
-  return _cv.cvHaarDetectObjects(*args)
+    return _cv.cvHaarDetectObjects(*args)
 
 def cvApproxPoly(*args):
-  """
+    """
     cvApproxPoly(void src_seq, int header_size, CvMemStorage storage, 
         int method, double parameter, int parameter2=0) -> CvSeq_Point
     cvApproxPoly(void src_seq, int header_size, CvMemStorage storage, 
         int method, double parameter) -> CvSeq_Point
     """
-  return _cv.cvApproxPoly(*args)
+    return _cv.cvApproxPoly(*args)
 
 class Cv64suf(_object):
     """Proxy of C++ Cv64suf class"""
@@ -1129,7 +1150,8 @@ class Cv64suf(_object):
     __setattr__ = lambda self, name, value: _swig_setattr(self, Cv64suf, name, value)
     __swig_getmethods__ = {}
     __getattr__ = lambda self, name: _swig_getattr(self, Cv64suf, name)
-    __repr__ = _swig_repr
+    def __repr__(self):
+        return "<%s.%s; proxy of C++ Cv64suf instance at %s>" % (self.__class__.__module__, self.__class__.__name__, self.this,)
     __swig_setmethods__["i"] = _cv.Cv64suf_i_set
     __swig_getmethods__["i"] = _cv.Cv64suf_i_get
     if _newclass:i = property(_cv.Cv64suf_i_get, _cv.Cv64suf_i_set)
@@ -1139,52 +1161,61 @@ class Cv64suf(_object):
     __swig_setmethods__["f"] = _cv.Cv64suf_f_set
     __swig_getmethods__["f"] = _cv.Cv64suf_f_get
     if _newclass:f = property(_cv.Cv64suf_f_get, _cv.Cv64suf_f_set)
-    def __init__(self, *args): 
+    def __init__(self, *args):
         """__init__(self) -> Cv64suf"""
-        this = _cv.new_Cv64suf(*args)
-        try: self.this.append(this)
-        except: self.this = this
-    __swig_destroy__ = _cv.delete_Cv64suf
-    __del__ = lambda self : None;
-Cv64suf_swigregister = _cv.Cv64suf_swigregister
-Cv64suf_swigregister(Cv64suf)
+        _swig_setattr(self, Cv64suf, 'this', _cv.new_Cv64suf(*args))
+        _swig_setattr(self, Cv64suf, 'thisown', 1)
+    def __del__(self, destroy=_cv.delete_Cv64suf):
+        """__del__(self)"""
+        try:
+            if self.thisown: destroy(self)
+        except: pass
+
+
+class Cv64sufPtr(Cv64suf):
+    def __init__(self, this):
+        _swig_setattr(self, Cv64suf, 'this', this)
+        if not hasattr(self,"thisown"): _swig_setattr(self, Cv64suf, 'thisown', 0)
+        self.__class__ = Cv64suf
+_cv.Cv64suf_swigregister(Cv64sufPtr)
 
 
 def cvRound(*args):
-  """cvRound(double value) -> int"""
-  return _cv.cvRound(*args)
+    """cvRound(double value) -> int"""
+    return _cv.cvRound(*args)
 
 def cvFloor(*args):
-  """cvFloor(double value) -> int"""
-  return _cv.cvFloor(*args)
+    """cvFloor(double value) -> int"""
+    return _cv.cvFloor(*args)
 
 def cvCeil(*args):
-  """cvCeil(double value) -> int"""
-  return _cv.cvCeil(*args)
+    """cvCeil(double value) -> int"""
+    return _cv.cvCeil(*args)
 
 def cvIsNaN(*args):
-  """cvIsNaN(double value) -> int"""
-  return _cv.cvIsNaN(*args)
+    """cvIsNaN(double value) -> int"""
+    return _cv.cvIsNaN(*args)
 
 def cvIsInf(*args):
-  """cvIsInf(double value) -> int"""
-  return _cv.cvIsInf(*args)
+    """cvIsInf(double value) -> int"""
+    return _cv.cvIsInf(*args)
 
 def cvRandInt(*args):
-  """cvRandInt(CvRNG rng) -> unsigned int"""
-  return _cv.cvRandInt(*args)
+    """cvRandInt(CvRNG rng) -> unsigned int"""
+    return _cv.cvRandInt(*args)
 
 def cvRandReal(*args):
-  """cvRandReal(CvRNG rng) -> double"""
-  return _cv.cvRandReal(*args)
+    """cvRandReal(CvRNG rng) -> double"""
+    return _cv.cvRandReal(*args)
 class IplImage(_object):
     """Proxy of C++ IplImage class"""
     __swig_setmethods__ = {}
     __setattr__ = lambda self, name, value: _swig_setattr(self, IplImage, name, value)
     __swig_getmethods__ = {}
     __getattr__ = lambda self, name: _swig_getattr(self, IplImage, name)
-    def __init__(self): raise AttributeError, "No constructor defined"
-    __repr__ = _swig_repr
+    def __init__(self): raise RuntimeError, "No constructor defined"
+    def __repr__(self):
+        return "<%s.%s; proxy of C++ IplImage instance at %s>" % (self.__class__.__module__, self.__class__.__name__, self.this,)
     __swig_setmethods__["ID"] = _cv.IplImage_ID_set
     __swig_getmethods__["ID"] = _cv.IplImage_ID_get
     if _newclass:ID = property(_cv.IplImage_ID_get, _cv.IplImage_ID_set)
@@ -1218,8 +1249,12 @@ class IplImage(_object):
     __swig_setmethods__["widthStep"] = _cv.IplImage_widthStep_set
     __swig_getmethods__["widthStep"] = _cv.IplImage_widthStep_get
     if _newclass:widthStep = property(_cv.IplImage_widthStep_get, _cv.IplImage_widthStep_set)
-    __swig_destroy__ = _cv.delete_IplImage
-    __del__ = lambda self : None;
+    def __del__(self, destroy=_cv.delete_IplImage):
+        """__del__(self)"""
+        try:
+            if self.thisown: destroy(self)
+        except: pass
+
     def __mul__(*args):
         """__mul__(self, CvArr src)"""
         return _cv.IplImage___mul__(*args)
@@ -1456,15 +1491,20 @@ class IplImage(_object):
         """imageData_get(self) -> PyObject"""
         return _cv.IplImage_imageData_get(*args)
 
-IplImage_swigregister = _cv.IplImage_swigregister
-IplImage_swigregister(IplImage)
+
+class IplImagePtr(IplImage):
+    def __init__(self, this):
+        _swig_setattr(self, IplImage, 'this', this)
+        if not hasattr(self,"thisown"): _swig_setattr(self, IplImage, 'thisown', 0)
+        self.__class__ = IplImage
+_cv.IplImage_swigregister(IplImagePtr)
 
 def cvRNG(*args):
-  """
+    """
     cvRNG(int64 seed=-1) -> CvRNG
     cvRNG() -> CvRNG
     """
-  return _cv.cvRNG(*args)
+    return _cv.cvRNG(*args)
 
 class IplROI(_object):
     """Proxy of C++ IplROI class"""
@@ -1472,7 +1512,8 @@ class IplROI(_object):
     __setattr__ = lambda self, name, value: _swig_setattr(self, IplROI, name, value)
     __swig_getmethods__ = {}
     __getattr__ = lambda self, name: _swig_getattr(self, IplROI, name)
-    __repr__ = _swig_repr
+    def __repr__(self):
+        return "<%s.%s; proxy of C++ IplROI instance at %s>" % (self.__class__.__module__, self.__class__.__name__, self.this,)
     __swig_setmethods__["coi"] = _cv.IplROI_coi_set
     __swig_getmethods__["coi"] = _cv.IplROI_coi_get
     if _newclass:coi = property(_cv.IplROI_coi_get, _cv.IplROI_coi_set)
@@ -1488,15 +1529,23 @@ class IplROI(_object):
     __swig_setmethods__["height"] = _cv.IplROI_height_set
     __swig_getmethods__["height"] = _cv.IplROI_height_get
     if _newclass:height = property(_cv.IplROI_height_get, _cv.IplROI_height_set)
-    def __init__(self, *args): 
+    def __init__(self, *args):
         """__init__(self) -> IplROI"""
-        this = _cv.new_IplROI(*args)
-        try: self.this.append(this)
-        except: self.this = this
-    __swig_destroy__ = _cv.delete_IplROI
-    __del__ = lambda self : None;
-IplROI_swigregister = _cv.IplROI_swigregister
-IplROI_swigregister(IplROI)
+        _swig_setattr(self, IplROI, 'this', _cv.new_IplROI(*args))
+        _swig_setattr(self, IplROI, 'thisown', 1)
+    def __del__(self, destroy=_cv.delete_IplROI):
+        """__del__(self)"""
+        try:
+            if self.thisown: destroy(self)
+        except: pass
+
+
+class IplROIPtr(IplROI):
+    def __init__(self, this):
+        _swig_setattr(self, IplROI, 'this', this)
+        if not hasattr(self,"thisown"): _swig_setattr(self, IplROI, 'thisown', 0)
+        self.__class__ = IplROI
+_cv.IplROI_swigregister(IplROIPtr)
 
 class IplConvKernel(_object):
     """Proxy of C++ IplConvKernel class"""
@@ -1504,8 +1553,9 @@ class IplConvKernel(_object):
     __setattr__ = lambda self, name, value: _swig_setattr(self, IplConvKernel, name, value)
     __swig_getmethods__ = {}
     __getattr__ = lambda self, name: _swig_getattr(self, IplConvKernel, name)
-    def __init__(self): raise AttributeError, "No constructor defined"
-    __repr__ = _swig_repr
+    def __init__(self): raise RuntimeError, "No constructor defined"
+    def __repr__(self):
+        return "<%s.%s; proxy of C++ IplConvKernel instance at %s>" % (self.__class__.__module__, self.__class__.__name__, self.this,)
     __swig_setmethods__["nCols"] = _cv.IplConvKernel_nCols_set
     __swig_getmethods__["nCols"] = _cv.IplConvKernel_nCols_get
     if _newclass:nCols = property(_cv.IplConvKernel_nCols_get, _cv.IplConvKernel_nCols_set)
@@ -1524,10 +1574,19 @@ class IplConvKernel(_object):
     __swig_setmethods__["nShiftR"] = _cv.IplConvKernel_nShiftR_set
     __swig_getmethods__["nShiftR"] = _cv.IplConvKernel_nShiftR_get
     if _newclass:nShiftR = property(_cv.IplConvKernel_nShiftR_get, _cv.IplConvKernel_nShiftR_set)
-    __swig_destroy__ = _cv.delete_IplConvKernel
-    __del__ = lambda self : None;
-IplConvKernel_swigregister = _cv.IplConvKernel_swigregister
-IplConvKernel_swigregister(IplConvKernel)
+    def __del__(self, destroy=_cv.delete_IplConvKernel):
+        """__del__(self)"""
+        try:
+            if self.thisown: destroy(self)
+        except: pass
+
+
+class IplConvKernelPtr(IplConvKernel):
+    def __init__(self, this):
+        _swig_setattr(self, IplConvKernel, 'this', this)
+        if not hasattr(self,"thisown"): _swig_setattr(self, IplConvKernel, 'thisown', 0)
+        self.__class__ = IplConvKernel
+_cv.IplConvKernel_swigregister(IplConvKernelPtr)
 
 class IplConvKernelFP(_object):
     """Proxy of C++ IplConvKernelFP class"""
@@ -1535,7 +1594,8 @@ class IplConvKernelFP(_object):
     __setattr__ = lambda self, name, value: _swig_setattr(self, IplConvKernelFP, name, value)
     __swig_getmethods__ = {}
     __getattr__ = lambda self, name: _swig_getattr(self, IplConvKernelFP, name)
-    __repr__ = _swig_repr
+    def __repr__(self):
+        return "<%s.%s; proxy of C++ IplConvKernelFP instance at %s>" % (self.__class__.__module__, self.__class__.__name__, self.this,)
     __swig_setmethods__["nCols"] = _cv.IplConvKernelFP_nCols_set
     __swig_getmethods__["nCols"] = _cv.IplConvKernelFP_nCols_get
     if _newclass:nCols = property(_cv.IplConvKernelFP_nCols_get, _cv.IplConvKernelFP_nCols_set)
@@ -1551,15 +1611,23 @@ class IplConvKernelFP(_object):
     __swig_setmethods__["values"] = _cv.IplConvKernelFP_values_set
     __swig_getmethods__["values"] = _cv.IplConvKernelFP_values_get
     if _newclass:values = property(_cv.IplConvKernelFP_values_get, _cv.IplConvKernelFP_values_set)
-    def __init__(self, *args): 
+    def __init__(self, *args):
         """__init__(self) -> IplConvKernelFP"""
-        this = _cv.new_IplConvKernelFP(*args)
-        try: self.this.append(this)
-        except: self.this = this
-    __swig_destroy__ = _cv.delete_IplConvKernelFP
-    __del__ = lambda self : None;
-IplConvKernelFP_swigregister = _cv.IplConvKernelFP_swigregister
-IplConvKernelFP_swigregister(IplConvKernelFP)
+        _swig_setattr(self, IplConvKernelFP, 'this', _cv.new_IplConvKernelFP(*args))
+        _swig_setattr(self, IplConvKernelFP, 'thisown', 1)
+    def __del__(self, destroy=_cv.delete_IplConvKernelFP):
+        """__del__(self)"""
+        try:
+            if self.thisown: destroy(self)
+        except: pass
+
+
+class IplConvKernelFPPtr(IplConvKernelFP):
+    def __init__(self, this):
+        _swig_setattr(self, IplConvKernelFP, 'this', this)
+        if not hasattr(self,"thisown"): _swig_setattr(self, IplConvKernelFP, 'thisown', 0)
+        self.__class__ = IplConvKernelFP
+_cv.IplConvKernelFP_swigregister(IplConvKernelFPPtr)
 
 class CvMat(_object):
     """Proxy of C++ CvMat class"""
@@ -1567,8 +1635,9 @@ class CvMat(_object):
     __setattr__ = lambda self, name, value: _swig_setattr(self, CvMat, name, value)
     __swig_getmethods__ = {}
     __getattr__ = lambda self, name: _swig_getattr(self, CvMat, name)
-    def __init__(self): raise AttributeError, "No constructor defined"
-    __repr__ = _swig_repr
+    def __init__(self): raise RuntimeError, "No constructor defined"
+    def __repr__(self):
+        return "<%s.%s; proxy of C++ CvMat instance at %s>" % (self.__class__.__module__, self.__class__.__name__, self.this,)
     __swig_setmethods__["type"] = _cv.CvMat_type_set
     __swig_getmethods__["type"] = _cv.CvMat_type_get
     if _newclass:type = property(_cv.CvMat_type_get, _cv.CvMat_type_set)
@@ -1583,8 +1652,12 @@ class CvMat(_object):
     if _newclass:hdr_refcount = property(_cv.CvMat_hdr_refcount_get, _cv.CvMat_hdr_refcount_set)
     __swig_getmethods__["data"] = _cv.CvMat_data_get
     if _newclass:data = property(_cv.CvMat_data_get)
-    __swig_destroy__ = _cv.delete_CvMat
-    __del__ = lambda self : None;
+    def __del__(self, destroy=_cv.delete_CvMat):
+        """__del__(self)"""
+        try:
+            if self.thisown: destroy(self)
+        except: pass
+
     def __mul__(*args):
         """__mul__(self, CvArr src) -> CvMat"""
         return _cv.CvMat___mul__(*args)
@@ -1813,8 +1886,13 @@ class CvMat(_object):
         """__getitem__(self, PyObject object) -> PyObject"""
         return _cv.CvMat___getitem__(*args)
 
-CvMat_swigregister = _cv.CvMat_swigregister
-CvMat_swigregister(CvMat)
+
+class CvMatPtr(CvMat):
+    def __init__(self, this):
+        _swig_setattr(self, CvMat, 'this', this)
+        if not hasattr(self,"thisown"): _swig_setattr(self, CvMat, 'thisown', 0)
+        self.__class__ = CvMat
+_cv.CvMat_swigregister(CvMatPtr)
 
 class CvMat_data(_object):
     """Proxy of C++ CvMat_data class"""
@@ -1822,7 +1900,8 @@ class CvMat_data(_object):
     __setattr__ = lambda self, name, value: _swig_setattr(self, CvMat_data, name, value)
     __swig_getmethods__ = {}
     __getattr__ = lambda self, name: _swig_getattr(self, CvMat_data, name)
-    __repr__ = _swig_repr
+    def __repr__(self):
+        return "<%s.%s; proxy of C++ CvMat_data instance at %s>" % (self.__class__.__module__, self.__class__.__name__, self.this,)
     __swig_setmethods__["ptr"] = _cv.CvMat_data_ptr_set
     __swig_getmethods__["ptr"] = _cv.CvMat_data_ptr_get
     if _newclass:ptr = property(_cv.CvMat_data_ptr_get, _cv.CvMat_data_ptr_set)
@@ -1838,36 +1917,45 @@ class CvMat_data(_object):
     __swig_setmethods__["db"] = _cv.CvMat_data_db_set
     __swig_getmethods__["db"] = _cv.CvMat_data_db_get
     if _newclass:db = property(_cv.CvMat_data_db_get, _cv.CvMat_data_db_set)
-    def __init__(self, *args): 
+    def __init__(self, *args):
         """__init__(self) -> CvMat_data"""
-        this = _cv.new_CvMat_data(*args)
-        try: self.this.append(this)
-        except: self.this = this
-    __swig_destroy__ = _cv.delete_CvMat_data
-    __del__ = lambda self : None;
-CvMat_data_swigregister = _cv.CvMat_data_swigregister
-CvMat_data_swigregister(CvMat_data)
+        _swig_setattr(self, CvMat_data, 'this', _cv.new_CvMat_data(*args))
+        _swig_setattr(self, CvMat_data, 'thisown', 1)
+    def __del__(self, destroy=_cv.delete_CvMat_data):
+        """__del__(self)"""
+        try:
+            if self.thisown: destroy(self)
+        except: pass
+
+
+class CvMat_dataPtr(CvMat_data):
+    def __init__(self, this):
+        _swig_setattr(self, CvMat_data, 'this', this)
+        if not hasattr(self,"thisown"): _swig_setattr(self, CvMat_data, 'thisown', 0)
+        self.__class__ = CvMat_data
+_cv.CvMat_data_swigregister(CvMat_dataPtr)
 
 
 def cvmGet(*args):
-  """cvmGet(CvMat mat, int row, int col) -> double"""
-  return _cv.cvmGet(*args)
+    """cvmGet(CvMat mat, int row, int col) -> double"""
+    return _cv.cvmGet(*args)
 
 def cvmSet(*args):
-  """cvmSet(CvMat mat, int row, int col, double value)"""
-  return _cv.cvmSet(*args)
+    """cvmSet(CvMat mat, int row, int col, double value)"""
+    return _cv.cvmSet(*args)
 
 def cvCvToIplDepth(*args):
-  """cvCvToIplDepth(int type) -> int"""
-  return _cv.cvCvToIplDepth(*args)
+    """cvCvToIplDepth(int type) -> int"""
+    return _cv.cvCvToIplDepth(*args)
 class CvMatND(_object):
     """Proxy of C++ CvMatND class"""
     __swig_setmethods__ = {}
     __setattr__ = lambda self, name, value: _swig_setattr(self, CvMatND, name, value)
     __swig_getmethods__ = {}
     __getattr__ = lambda self, name: _swig_getattr(self, CvMatND, name)
-    def __init__(self): raise AttributeError, "No constructor defined"
-    __repr__ = _swig_repr
+    def __init__(self): raise RuntimeError, "No constructor defined"
+    def __repr__(self):
+        return "<%s.%s; proxy of C++ CvMatND instance at %s>" % (self.__class__.__module__, self.__class__.__name__, self.this,)
     __swig_setmethods__["type"] = _cv.CvMatND_type_set
     __swig_getmethods__["type"] = _cv.CvMatND_type_get
     if _newclass:type = property(_cv.CvMatND_type_get, _cv.CvMatND_type_set)
@@ -1884,17 +1972,26 @@ class CvMatND(_object):
     if _newclass:dim = property(_cv.CvMatND_dim_get)
     __swig_getmethods__["data"] = _cv.CvMatND_data_get
     if _newclass:data = property(_cv.CvMatND_data_get)
-    __swig_destroy__ = _cv.delete_CvMatND
-    __del__ = lambda self : None;
-CvMatND_swigregister = _cv.CvMatND_swigregister
-CvMatND_swigregister(CvMatND)
+    def __del__(self, destroy=_cv.delete_CvMatND):
+        """__del__(self)"""
+        try:
+            if self.thisown: destroy(self)
+        except: pass
+
+
+class CvMatNDPtr(CvMatND):
+    def __init__(self, this):
+        _swig_setattr(self, CvMatND, 'this', this)
+        if not hasattr(self,"thisown"): _swig_setattr(self, CvMatND, 'thisown', 0)
+        self.__class__ = CvMatND
+_cv.CvMatND_swigregister(CvMatNDPtr)
 
 def cvMat(*args):
-  """
+    """
     cvMat(int rows, int cols, int type, void data=None) -> CvMat
     cvMat(int rows, int cols, int type) -> CvMat
     """
-  return _cv.cvMat(*args)
+    return _cv.cvMat(*args)
 
 class CvMatND_dim(_object):
     """Proxy of C++ CvMatND_dim class"""
@@ -1902,22 +1999,31 @@ class CvMatND_dim(_object):
     __setattr__ = lambda self, name, value: _swig_setattr(self, CvMatND_dim, name, value)
     __swig_getmethods__ = {}
     __getattr__ = lambda self, name: _swig_getattr(self, CvMatND_dim, name)
-    __repr__ = _swig_repr
+    def __repr__(self):
+        return "<%s.%s; proxy of C++ CvMatND_dim instance at %s>" % (self.__class__.__module__, self.__class__.__name__, self.this,)
     __swig_setmethods__["size"] = _cv.CvMatND_dim_size_set
     __swig_getmethods__["size"] = _cv.CvMatND_dim_size_get
     if _newclass:size = property(_cv.CvMatND_dim_size_get, _cv.CvMatND_dim_size_set)
     __swig_setmethods__["step"] = _cv.CvMatND_dim_step_set
     __swig_getmethods__["step"] = _cv.CvMatND_dim_step_get
     if _newclass:step = property(_cv.CvMatND_dim_step_get, _cv.CvMatND_dim_step_set)
-    def __init__(self, *args): 
+    def __init__(self, *args):
         """__init__(self) -> CvMatND_dim"""
-        this = _cv.new_CvMatND_dim(*args)
-        try: self.this.append(this)
-        except: self.this = this
-    __swig_destroy__ = _cv.delete_CvMatND_dim
-    __del__ = lambda self : None;
-CvMatND_dim_swigregister = _cv.CvMatND_dim_swigregister
-CvMatND_dim_swigregister(CvMatND_dim)
+        _swig_setattr(self, CvMatND_dim, 'this', _cv.new_CvMatND_dim(*args))
+        _swig_setattr(self, CvMatND_dim, 'thisown', 1)
+    def __del__(self, destroy=_cv.delete_CvMatND_dim):
+        """__del__(self)"""
+        try:
+            if self.thisown: destroy(self)
+        except: pass
+
+
+class CvMatND_dimPtr(CvMatND_dim):
+    def __init__(self, this):
+        _swig_setattr(self, CvMatND_dim, 'this', this)
+        if not hasattr(self,"thisown"): _swig_setattr(self, CvMatND_dim, 'thisown', 0)
+        self.__class__ = CvMatND_dim
+_cv.CvMatND_dim_swigregister(CvMatND_dimPtr)
 
 class CvMatND_data(_object):
     """Proxy of C++ CvMatND_data class"""
@@ -1925,7 +2031,8 @@ class CvMatND_data(_object):
     __setattr__ = lambda self, name, value: _swig_setattr(self, CvMatND_data, name, value)
     __swig_getmethods__ = {}
     __getattr__ = lambda self, name: _swig_getattr(self, CvMatND_data, name)
-    __repr__ = _swig_repr
+    def __repr__(self):
+        return "<%s.%s; proxy of C++ CvMatND_data instance at %s>" % (self.__class__.__module__, self.__class__.__name__, self.this,)
     __swig_setmethods__["ptr"] = _cv.CvMatND_data_ptr_set
     __swig_getmethods__["ptr"] = _cv.CvMatND_data_ptr_get
     if _newclass:ptr = property(_cv.CvMatND_data_ptr_get, _cv.CvMatND_data_ptr_set)
@@ -1941,15 +2048,23 @@ class CvMatND_data(_object):
     __swig_setmethods__["s"] = _cv.CvMatND_data_s_set
     __swig_getmethods__["s"] = _cv.CvMatND_data_s_get
     if _newclass:s = property(_cv.CvMatND_data_s_get, _cv.CvMatND_data_s_set)
-    def __init__(self, *args): 
+    def __init__(self, *args):
         """__init__(self) -> CvMatND_data"""
-        this = _cv.new_CvMatND_data(*args)
-        try: self.this.append(this)
-        except: self.this = this
-    __swig_destroy__ = _cv.delete_CvMatND_data
-    __del__ = lambda self : None;
-CvMatND_data_swigregister = _cv.CvMatND_data_swigregister
-CvMatND_data_swigregister(CvMatND_data)
+        _swig_setattr(self, CvMatND_data, 'this', _cv.new_CvMatND_data(*args))
+        _swig_setattr(self, CvMatND_data, 'thisown', 1)
+    def __del__(self, destroy=_cv.delete_CvMatND_data):
+        """__del__(self)"""
+        try:
+            if self.thisown: destroy(self)
+        except: pass
+
+
+class CvMatND_dataPtr(CvMatND_data):
+    def __init__(self, this):
+        _swig_setattr(self, CvMatND_data, 'this', this)
+        if not hasattr(self,"thisown"): _swig_setattr(self, CvMatND_data, 'thisown', 0)
+        self.__class__ = CvMatND_data
+_cv.CvMatND_data_swigregister(CvMatND_dataPtr)
 
 class CvSparseMat(_object):
     """Proxy of C++ CvSparseMat class"""
@@ -1957,8 +2072,9 @@ class CvSparseMat(_object):
     __setattr__ = lambda self, name, value: _swig_setattr(self, CvSparseMat, name, value)
     __swig_getmethods__ = {}
     __getattr__ = lambda self, name: _swig_getattr(self, CvSparseMat, name)
-    def __init__(self): raise AttributeError, "No constructor defined"
-    __repr__ = _swig_repr
+    def __init__(self): raise RuntimeError, "No constructor defined"
+    def __repr__(self):
+        return "<%s.%s; proxy of C++ CvSparseMat instance at %s>" % (self.__class__.__module__, self.__class__.__name__, self.this,)
     __swig_setmethods__["type"] = _cv.CvSparseMat_type_set
     __swig_getmethods__["type"] = _cv.CvSparseMat_type_get
     if _newclass:type = property(_cv.CvSparseMat_type_get, _cv.CvSparseMat_type_set)
@@ -1989,10 +2105,19 @@ class CvSparseMat(_object):
     __swig_setmethods__["size"] = _cv.CvSparseMat_size_set
     __swig_getmethods__["size"] = _cv.CvSparseMat_size_get
     if _newclass:size = property(_cv.CvSparseMat_size_get, _cv.CvSparseMat_size_set)
-    __swig_destroy__ = _cv.delete_CvSparseMat
-    __del__ = lambda self : None;
-CvSparseMat_swigregister = _cv.CvSparseMat_swigregister
-CvSparseMat_swigregister(CvSparseMat)
+    def __del__(self, destroy=_cv.delete_CvSparseMat):
+        """__del__(self)"""
+        try:
+            if self.thisown: destroy(self)
+        except: pass
+
+
+class CvSparseMatPtr(CvSparseMat):
+    def __init__(self, this):
+        _swig_setattr(self, CvSparseMat, 'this', this)
+        if not hasattr(self,"thisown"): _swig_setattr(self, CvSparseMat, 'thisown', 0)
+        self.__class__ = CvSparseMat
+_cv.CvSparseMat_swigregister(CvSparseMatPtr)
 
 class CvSparseNode(_object):
     """Proxy of C++ CvSparseNode class"""
@@ -2000,22 +2125,31 @@ class CvSparseNode(_object):
     __setattr__ = lambda self, name, value: _swig_setattr(self, CvSparseNode, name, value)
     __swig_getmethods__ = {}
     __getattr__ = lambda self, name: _swig_getattr(self, CvSparseNode, name)
-    __repr__ = _swig_repr
+    def __repr__(self):
+        return "<%s.%s; proxy of C++ CvSparseNode instance at %s>" % (self.__class__.__module__, self.__class__.__name__, self.this,)
     __swig_setmethods__["hashval"] = _cv.CvSparseNode_hashval_set
     __swig_getmethods__["hashval"] = _cv.CvSparseNode_hashval_get
     if _newclass:hashval = property(_cv.CvSparseNode_hashval_get, _cv.CvSparseNode_hashval_set)
     __swig_setmethods__["next"] = _cv.CvSparseNode_next_set
     __swig_getmethods__["next"] = _cv.CvSparseNode_next_get
     if _newclass:next = property(_cv.CvSparseNode_next_get, _cv.CvSparseNode_next_set)
-    def __init__(self, *args): 
+    def __init__(self, *args):
         """__init__(self) -> CvSparseNode"""
-        this = _cv.new_CvSparseNode(*args)
-        try: self.this.append(this)
-        except: self.this = this
-    __swig_destroy__ = _cv.delete_CvSparseNode
-    __del__ = lambda self : None;
-CvSparseNode_swigregister = _cv.CvSparseNode_swigregister
-CvSparseNode_swigregister(CvSparseNode)
+        _swig_setattr(self, CvSparseNode, 'this', _cv.new_CvSparseNode(*args))
+        _swig_setattr(self, CvSparseNode, 'thisown', 1)
+    def __del__(self, destroy=_cv.delete_CvSparseNode):
+        """__del__(self)"""
+        try:
+            if self.thisown: destroy(self)
+        except: pass
+
+
+class CvSparseNodePtr(CvSparseNode):
+    def __init__(self, this):
+        _swig_setattr(self, CvSparseNode, 'this', this)
+        if not hasattr(self,"thisown"): _swig_setattr(self, CvSparseNode, 'thisown', 0)
+        self.__class__ = CvSparseNode
+_cv.CvSparseNode_swigregister(CvSparseNodePtr)
 
 class CvSparseMatIterator(_object):
     """Proxy of C++ CvSparseMatIterator class"""
@@ -2023,7 +2157,8 @@ class CvSparseMatIterator(_object):
     __setattr__ = lambda self, name, value: _swig_setattr(self, CvSparseMatIterator, name, value)
     __swig_getmethods__ = {}
     __getattr__ = lambda self, name: _swig_getattr(self, CvSparseMatIterator, name)
-    __repr__ = _swig_repr
+    def __repr__(self):
+        return "<%s.%s; proxy of C++ CvSparseMatIterator instance at %s>" % (self.__class__.__module__, self.__class__.__name__, self.this,)
     __swig_setmethods__["mat"] = _cv.CvSparseMatIterator_mat_set
     __swig_getmethods__["mat"] = _cv.CvSparseMatIterator_mat_get
     if _newclass:mat = property(_cv.CvSparseMatIterator_mat_get, _cv.CvSparseMatIterator_mat_set)
@@ -2033,15 +2168,23 @@ class CvSparseMatIterator(_object):
     __swig_setmethods__["curidx"] = _cv.CvSparseMatIterator_curidx_set
     __swig_getmethods__["curidx"] = _cv.CvSparseMatIterator_curidx_get
     if _newclass:curidx = property(_cv.CvSparseMatIterator_curidx_get, _cv.CvSparseMatIterator_curidx_set)
-    def __init__(self, *args): 
+    def __init__(self, *args):
         """__init__(self) -> CvSparseMatIterator"""
-        this = _cv.new_CvSparseMatIterator(*args)
-        try: self.this.append(this)
-        except: self.this = this
-    __swig_destroy__ = _cv.delete_CvSparseMatIterator
-    __del__ = lambda self : None;
-CvSparseMatIterator_swigregister = _cv.CvSparseMatIterator_swigregister
-CvSparseMatIterator_swigregister(CvSparseMatIterator)
+        _swig_setattr(self, CvSparseMatIterator, 'this', _cv.new_CvSparseMatIterator(*args))
+        _swig_setattr(self, CvSparseMatIterator, 'thisown', 1)
+    def __del__(self, destroy=_cv.delete_CvSparseMatIterator):
+        """__del__(self)"""
+        try:
+            if self.thisown: destroy(self)
+        except: pass
+
+
+class CvSparseMatIteratorPtr(CvSparseMatIterator):
+    def __init__(self, this):
+        _swig_setattr(self, CvSparseMatIterator, 'this', this)
+        if not hasattr(self,"thisown"): _swig_setattr(self, CvSparseMatIterator, 'thisown', 0)
+        self.__class__ = CvSparseMatIterator
+_cv.CvSparseMatIterator_swigregister(CvSparseMatIteratorPtr)
 
 class CvHistogram(_object):
     """Proxy of C++ CvHistogram class"""
@@ -2049,8 +2192,9 @@ class CvHistogram(_object):
     __setattr__ = lambda self, name, value: _swig_setattr(self, CvHistogram, name, value)
     __swig_getmethods__ = {}
     __getattr__ = lambda self, name: _swig_getattr(self, CvHistogram, name)
-    def __init__(self): raise AttributeError, "No constructor defined"
-    __repr__ = _swig_repr
+    def __init__(self): raise RuntimeError, "No constructor defined"
+    def __repr__(self):
+        return "<%s.%s; proxy of C++ CvHistogram instance at %s>" % (self.__class__.__module__, self.__class__.__name__, self.this,)
     __swig_setmethods__["type"] = _cv.CvHistogram_type_set
     __swig_getmethods__["type"] = _cv.CvHistogram_type_get
     if _newclass:type = property(_cv.CvHistogram_type_get, _cv.CvHistogram_type_set)
@@ -2066,10 +2210,19 @@ class CvHistogram(_object):
     __swig_setmethods__["mat"] = _cv.CvHistogram_mat_set
     __swig_getmethods__["mat"] = _cv.CvHistogram_mat_get
     if _newclass:mat = property(_cv.CvHistogram_mat_get, _cv.CvHistogram_mat_set)
-    __swig_destroy__ = _cv.delete_CvHistogram
-    __del__ = lambda self : None;
-CvHistogram_swigregister = _cv.CvHistogram_swigregister
-CvHistogram_swigregister(CvHistogram)
+    def __del__(self, destroy=_cv.delete_CvHistogram):
+        """__del__(self)"""
+        try:
+            if self.thisown: destroy(self)
+        except: pass
+
+
+class CvHistogramPtr(CvHistogram):
+    def __init__(self, this):
+        _swig_setattr(self, CvHistogram, 'this', this)
+        if not hasattr(self,"thisown"): _swig_setattr(self, CvHistogram, 'thisown', 0)
+        self.__class__ = CvHistogram
+_cv.CvHistogram_swigregister(CvHistogramPtr)
 
 class CvRect(_object):
     """Proxy of C++ CvRect class"""
@@ -2077,7 +2230,8 @@ class CvRect(_object):
     __setattr__ = lambda self, name, value: _swig_setattr(self, CvRect, name, value)
     __swig_getmethods__ = {}
     __getattr__ = lambda self, name: _swig_getattr(self, CvRect, name)
-    __repr__ = _swig_repr
+    def __repr__(self):
+        return "<%s.%s; proxy of C++ CvRect instance at %s>" % (self.__class__.__module__, self.__class__.__name__, self.this,)
     __swig_setmethods__["x"] = _cv.CvRect_x_set
     __swig_getmethods__["x"] = _cv.CvRect_x_get
     if _newclass:x = property(_cv.CvRect_x_get, _cv.CvRect_x_set)
@@ -2090,35 +2244,44 @@ class CvRect(_object):
     __swig_setmethods__["height"] = _cv.CvRect_height_set
     __swig_getmethods__["height"] = _cv.CvRect_height_get
     if _newclass:height = property(_cv.CvRect_height_get, _cv.CvRect_height_set)
-    def __init__(self, *args): 
+    def __init__(self, *args):
         """__init__(self) -> CvRect"""
-        this = _cv.new_CvRect(*args)
-        try: self.this.append(this)
-        except: self.this = this
-    __swig_destroy__ = _cv.delete_CvRect
-    __del__ = lambda self : None;
-CvRect_swigregister = _cv.CvRect_swigregister
-CvRect_swigregister(CvRect)
+        _swig_setattr(self, CvRect, 'this', _cv.new_CvRect(*args))
+        _swig_setattr(self, CvRect, 'thisown', 1)
+    def __del__(self, destroy=_cv.delete_CvRect):
+        """__del__(self)"""
+        try:
+            if self.thisown: destroy(self)
+        except: pass
+
+
+class CvRectPtr(CvRect):
+    def __init__(self, this):
+        _swig_setattr(self, CvRect, 'this', this)
+        if not hasattr(self,"thisown"): _swig_setattr(self, CvRect, 'thisown', 0)
+        self.__class__ = CvRect
+_cv.CvRect_swigregister(CvRectPtr)
 
 
 def cvRect(*args):
-  """cvRect(int x, int y, int width, int height) -> CvRect"""
-  return _cv.cvRect(*args)
+    """cvRect(int x, int y, int width, int height) -> CvRect"""
+    return _cv.cvRect(*args)
 
 def cvRectToROI(*args):
-  """cvRectToROI(CvRect rect, int coi)"""
-  return _cv.cvRectToROI(*args)
+    """cvRectToROI(CvRect rect, int coi)"""
+    return _cv.cvRectToROI(*args)
 
 def cvROIToRect(*args):
-  """cvROIToRect( roi) -> CvRect"""
-  return _cv.cvROIToRect(*args)
+    """cvROIToRect( roi) -> CvRect"""
+    return _cv.cvROIToRect(*args)
 class CvTermCriteria(_object):
     """Proxy of C++ CvTermCriteria class"""
     __swig_setmethods__ = {}
     __setattr__ = lambda self, name, value: _swig_setattr(self, CvTermCriteria, name, value)
     __swig_getmethods__ = {}
     __getattr__ = lambda self, name: _swig_getattr(self, CvTermCriteria, name)
-    __repr__ = _swig_repr
+    def __repr__(self):
+        return "<%s.%s; proxy of C++ CvTermCriteria instance at %s>" % (self.__class__.__module__, self.__class__.__name__, self.this,)
     __swig_setmethods__["type"] = _cv.CvTermCriteria_type_set
     __swig_getmethods__["type"] = _cv.CvTermCriteria_type_get
     if _newclass:type = property(_cv.CvTermCriteria_type_get, _cv.CvTermCriteria_type_set)
@@ -2128,20 +2291,28 @@ class CvTermCriteria(_object):
     __swig_setmethods__["epsilon"] = _cv.CvTermCriteria_epsilon_set
     __swig_getmethods__["epsilon"] = _cv.CvTermCriteria_epsilon_get
     if _newclass:epsilon = property(_cv.CvTermCriteria_epsilon_get, _cv.CvTermCriteria_epsilon_set)
-    def __init__(self, *args): 
+    def __init__(self, *args):
         """__init__(self) -> CvTermCriteria"""
-        this = _cv.new_CvTermCriteria(*args)
-        try: self.this.append(this)
-        except: self.this = this
-    __swig_destroy__ = _cv.delete_CvTermCriteria
-    __del__ = lambda self : None;
-CvTermCriteria_swigregister = _cv.CvTermCriteria_swigregister
-CvTermCriteria_swigregister(CvTermCriteria)
+        _swig_setattr(self, CvTermCriteria, 'this', _cv.new_CvTermCriteria(*args))
+        _swig_setattr(self, CvTermCriteria, 'thisown', 1)
+    def __del__(self, destroy=_cv.delete_CvTermCriteria):
+        """__del__(self)"""
+        try:
+            if self.thisown: destroy(self)
+        except: pass
+
+
+class CvTermCriteriaPtr(CvTermCriteria):
+    def __init__(self, this):
+        _swig_setattr(self, CvTermCriteria, 'this', this)
+        if not hasattr(self,"thisown"): _swig_setattr(self, CvTermCriteria, 'thisown', 0)
+        self.__class__ = CvTermCriteria
+_cv.CvTermCriteria_swigregister(CvTermCriteriaPtr)
 
 
 def cvTermCriteria(*args):
-  """cvTermCriteria(int type, int max_iter, double epsilon) -> CvTermCriteria"""
-  return _cv.cvTermCriteria(*args)
+    """cvTermCriteria(int type, int max_iter, double epsilon) -> CvTermCriteria"""
+    return _cv.cvTermCriteria(*args)
 class CvPoint(_object):
     """Proxy of C++ CvPoint class"""
     __swig_setmethods__ = {}
@@ -2162,20 +2333,28 @@ class CvPoint(_object):
         """__repr__(self) -> char"""
         return _cv.CvPoint___repr__(*args)
 
-    def __init__(self, *args): 
+    def __init__(self, *args):
         """__init__(self) -> CvPoint"""
-        this = _cv.new_CvPoint(*args)
-        try: self.this.append(this)
-        except: self.this = this
-    __swig_destroy__ = _cv.delete_CvPoint
-    __del__ = lambda self : None;
-CvPoint_swigregister = _cv.CvPoint_swigregister
-CvPoint_swigregister(CvPoint)
+        _swig_setattr(self, CvPoint, 'this', _cv.new_CvPoint(*args))
+        _swig_setattr(self, CvPoint, 'thisown', 1)
+    def __del__(self, destroy=_cv.delete_CvPoint):
+        """__del__(self)"""
+        try:
+            if self.thisown: destroy(self)
+        except: pass
+
+
+class CvPointPtr(CvPoint):
+    def __init__(self, this):
+        _swig_setattr(self, CvPoint, 'this', this)
+        if not hasattr(self,"thisown"): _swig_setattr(self, CvPoint, 'thisown', 0)
+        self.__class__ = CvPoint
+_cv.CvPoint_swigregister(CvPointPtr)
 
 
 def cvPoint(*args):
-  """cvPoint(int x, int y) -> CvPoint"""
-  return _cv.cvPoint(*args)
+    """cvPoint(int x, int y) -> CvPoint"""
+    return _cv.cvPoint(*args)
 class CvPoint2D32f(_object):
     """Proxy of C++ CvPoint2D32f class"""
     __swig_setmethods__ = {}
@@ -2196,35 +2375,44 @@ class CvPoint2D32f(_object):
         """__repr__(self) -> char"""
         return _cv.CvPoint2D32f___repr__(*args)
 
-    def __init__(self, *args): 
+    def __init__(self, *args):
         """__init__(self) -> CvPoint2D32f"""
-        this = _cv.new_CvPoint2D32f(*args)
-        try: self.this.append(this)
-        except: self.this = this
-    __swig_destroy__ = _cv.delete_CvPoint2D32f
-    __del__ = lambda self : None;
-CvPoint2D32f_swigregister = _cv.CvPoint2D32f_swigregister
-CvPoint2D32f_swigregister(CvPoint2D32f)
+        _swig_setattr(self, CvPoint2D32f, 'this', _cv.new_CvPoint2D32f(*args))
+        _swig_setattr(self, CvPoint2D32f, 'thisown', 1)
+    def __del__(self, destroy=_cv.delete_CvPoint2D32f):
+        """__del__(self)"""
+        try:
+            if self.thisown: destroy(self)
+        except: pass
+
+
+class CvPoint2D32fPtr(CvPoint2D32f):
+    def __init__(self, this):
+        _swig_setattr(self, CvPoint2D32f, 'this', this)
+        if not hasattr(self,"thisown"): _swig_setattr(self, CvPoint2D32f, 'thisown', 0)
+        self.__class__ = CvPoint2D32f
+_cv.CvPoint2D32f_swigregister(CvPoint2D32fPtr)
 
 
 def cvPoint2D32f(*args):
-  """cvPoint2D32f(double x, double y) -> CvPoint2D32f"""
-  return _cv.cvPoint2D32f(*args)
+    """cvPoint2D32f(double x, double y) -> CvPoint2D32f"""
+    return _cv.cvPoint2D32f(*args)
 
 def cvPointTo32f(*args):
-  """cvPointTo32f(CvPoint point) -> CvPoint2D32f"""
-  return _cv.cvPointTo32f(*args)
+    """cvPointTo32f(CvPoint point) -> CvPoint2D32f"""
+    return _cv.cvPointTo32f(*args)
 
 def cvPointFrom32f(*args):
-  """cvPointFrom32f(CvPoint2D32f point) -> CvPoint"""
-  return _cv.cvPointFrom32f(*args)
+    """cvPointFrom32f(CvPoint2D32f point) -> CvPoint"""
+    return _cv.cvPointFrom32f(*args)
 class CvPoint3D32f(_object):
     """Proxy of C++ CvPoint3D32f class"""
     __swig_setmethods__ = {}
     __setattr__ = lambda self, name, value: _swig_setattr(self, CvPoint3D32f, name, value)
     __swig_getmethods__ = {}
     __getattr__ = lambda self, name: _swig_getattr(self, CvPoint3D32f, name)
-    __repr__ = _swig_repr
+    def __repr__(self):
+        return "<%s.%s; proxy of C++ CvPoint3D32f instance at %s>" % (self.__class__.__module__, self.__class__.__name__, self.this,)
     __swig_setmethods__["x"] = _cv.CvPoint3D32f_x_set
     __swig_getmethods__["x"] = _cv.CvPoint3D32f_x_get
     if _newclass:x = property(_cv.CvPoint3D32f_x_get, _cv.CvPoint3D32f_x_set)
@@ -2234,54 +2422,72 @@ class CvPoint3D32f(_object):
     __swig_setmethods__["z"] = _cv.CvPoint3D32f_z_set
     __swig_getmethods__["z"] = _cv.CvPoint3D32f_z_get
     if _newclass:z = property(_cv.CvPoint3D32f_z_get, _cv.CvPoint3D32f_z_set)
-    def __init__(self, *args): 
+    def __init__(self, *args):
         """__init__(self) -> CvPoint3D32f"""
-        this = _cv.new_CvPoint3D32f(*args)
-        try: self.this.append(this)
-        except: self.this = this
-    __swig_destroy__ = _cv.delete_CvPoint3D32f
-    __del__ = lambda self : None;
-CvPoint3D32f_swigregister = _cv.CvPoint3D32f_swigregister
-CvPoint3D32f_swigregister(CvPoint3D32f)
+        _swig_setattr(self, CvPoint3D32f, 'this', _cv.new_CvPoint3D32f(*args))
+        _swig_setattr(self, CvPoint3D32f, 'thisown', 1)
+    def __del__(self, destroy=_cv.delete_CvPoint3D32f):
+        """__del__(self)"""
+        try:
+            if self.thisown: destroy(self)
+        except: pass
+
+
+class CvPoint3D32fPtr(CvPoint3D32f):
+    def __init__(self, this):
+        _swig_setattr(self, CvPoint3D32f, 'this', this)
+        if not hasattr(self,"thisown"): _swig_setattr(self, CvPoint3D32f, 'thisown', 0)
+        self.__class__ = CvPoint3D32f
+_cv.CvPoint3D32f_swigregister(CvPoint3D32fPtr)
 
 
 def cvPoint3D32f(*args):
-  """cvPoint3D32f(double x, double y, double z) -> CvPoint3D32f"""
-  return _cv.cvPoint3D32f(*args)
+    """cvPoint3D32f(double x, double y, double z) -> CvPoint3D32f"""
+    return _cv.cvPoint3D32f(*args)
 class CvPoint2D64f(_object):
     """Proxy of C++ CvPoint2D64f class"""
     __swig_setmethods__ = {}
     __setattr__ = lambda self, name, value: _swig_setattr(self, CvPoint2D64f, name, value)
     __swig_getmethods__ = {}
     __getattr__ = lambda self, name: _swig_getattr(self, CvPoint2D64f, name)
-    __repr__ = _swig_repr
+    def __repr__(self):
+        return "<%s.%s; proxy of C++ CvPoint2D64f instance at %s>" % (self.__class__.__module__, self.__class__.__name__, self.this,)
     __swig_setmethods__["x"] = _cv.CvPoint2D64f_x_set
     __swig_getmethods__["x"] = _cv.CvPoint2D64f_x_get
     if _newclass:x = property(_cv.CvPoint2D64f_x_get, _cv.CvPoint2D64f_x_set)
     __swig_setmethods__["y"] = _cv.CvPoint2D64f_y_set
     __swig_getmethods__["y"] = _cv.CvPoint2D64f_y_get
     if _newclass:y = property(_cv.CvPoint2D64f_y_get, _cv.CvPoint2D64f_y_set)
-    def __init__(self, *args): 
+    def __init__(self, *args):
         """__init__(self) -> CvPoint2D64f"""
-        this = _cv.new_CvPoint2D64f(*args)
-        try: self.this.append(this)
-        except: self.this = this
-    __swig_destroy__ = _cv.delete_CvPoint2D64f
-    __del__ = lambda self : None;
-CvPoint2D64f_swigregister = _cv.CvPoint2D64f_swigregister
-CvPoint2D64f_swigregister(CvPoint2D64f)
+        _swig_setattr(self, CvPoint2D64f, 'this', _cv.new_CvPoint2D64f(*args))
+        _swig_setattr(self, CvPoint2D64f, 'thisown', 1)
+    def __del__(self, destroy=_cv.delete_CvPoint2D64f):
+        """__del__(self)"""
+        try:
+            if self.thisown: destroy(self)
+        except: pass
+
+
+class CvPoint2D64fPtr(CvPoint2D64f):
+    def __init__(self, this):
+        _swig_setattr(self, CvPoint2D64f, 'this', this)
+        if not hasattr(self,"thisown"): _swig_setattr(self, CvPoint2D64f, 'thisown', 0)
+        self.__class__ = CvPoint2D64f
+_cv.CvPoint2D64f_swigregister(CvPoint2D64fPtr)
 
 
 def cvPoint2D64f(*args):
-  """cvPoint2D64f(double x, double y) -> CvPoint2D64f"""
-  return _cv.cvPoint2D64f(*args)
+    """cvPoint2D64f(double x, double y) -> CvPoint2D64f"""
+    return _cv.cvPoint2D64f(*args)
 class CvPoint3D64f(_object):
     """Proxy of C++ CvPoint3D64f class"""
     __swig_setmethods__ = {}
     __setattr__ = lambda self, name, value: _swig_setattr(self, CvPoint3D64f, name, value)
     __swig_getmethods__ = {}
     __getattr__ = lambda self, name: _swig_getattr(self, CvPoint3D64f, name)
-    __repr__ = _swig_repr
+    def __repr__(self):
+        return "<%s.%s; proxy of C++ CvPoint3D64f instance at %s>" % (self.__class__.__module__, self.__class__.__name__, self.this,)
     __swig_setmethods__["x"] = _cv.CvPoint3D64f_x_set
     __swig_getmethods__["x"] = _cv.CvPoint3D64f_x_get
     if _newclass:x = property(_cv.CvPoint3D64f_x_get, _cv.CvPoint3D64f_x_set)
@@ -2291,81 +2497,108 @@ class CvPoint3D64f(_object):
     __swig_setmethods__["z"] = _cv.CvPoint3D64f_z_set
     __swig_getmethods__["z"] = _cv.CvPoint3D64f_z_get
     if _newclass:z = property(_cv.CvPoint3D64f_z_get, _cv.CvPoint3D64f_z_set)
-    def __init__(self, *args): 
+    def __init__(self, *args):
         """__init__(self) -> CvPoint3D64f"""
-        this = _cv.new_CvPoint3D64f(*args)
-        try: self.this.append(this)
-        except: self.this = this
-    __swig_destroy__ = _cv.delete_CvPoint3D64f
-    __del__ = lambda self : None;
-CvPoint3D64f_swigregister = _cv.CvPoint3D64f_swigregister
-CvPoint3D64f_swigregister(CvPoint3D64f)
+        _swig_setattr(self, CvPoint3D64f, 'this', _cv.new_CvPoint3D64f(*args))
+        _swig_setattr(self, CvPoint3D64f, 'thisown', 1)
+    def __del__(self, destroy=_cv.delete_CvPoint3D64f):
+        """__del__(self)"""
+        try:
+            if self.thisown: destroy(self)
+        except: pass
+
+
+class CvPoint3D64fPtr(CvPoint3D64f):
+    def __init__(self, this):
+        _swig_setattr(self, CvPoint3D64f, 'this', this)
+        if not hasattr(self,"thisown"): _swig_setattr(self, CvPoint3D64f, 'thisown', 0)
+        self.__class__ = CvPoint3D64f
+_cv.CvPoint3D64f_swigregister(CvPoint3D64fPtr)
 
 
 def cvPoint3D64f(*args):
-  """cvPoint3D64f(double x, double y, double z) -> CvPoint3D64f"""
-  return _cv.cvPoint3D64f(*args)
+    """cvPoint3D64f(double x, double y, double z) -> CvPoint3D64f"""
+    return _cv.cvPoint3D64f(*args)
 class CvSize(_object):
     """Proxy of C++ CvSize class"""
     __swig_setmethods__ = {}
     __setattr__ = lambda self, name, value: _swig_setattr(self, CvSize, name, value)
     __swig_getmethods__ = {}
     __getattr__ = lambda self, name: _swig_getattr(self, CvSize, name)
-    __repr__ = _swig_repr
+    def __repr__(self):
+        return "<%s.%s; proxy of C++ CvSize instance at %s>" % (self.__class__.__module__, self.__class__.__name__, self.this,)
     __swig_setmethods__["width"] = _cv.CvSize_width_set
     __swig_getmethods__["width"] = _cv.CvSize_width_get
     if _newclass:width = property(_cv.CvSize_width_get, _cv.CvSize_width_set)
     __swig_setmethods__["height"] = _cv.CvSize_height_set
     __swig_getmethods__["height"] = _cv.CvSize_height_get
     if _newclass:height = property(_cv.CvSize_height_get, _cv.CvSize_height_set)
-    def __init__(self, *args): 
+    def __init__(self, *args):
         """__init__(self) -> CvSize"""
-        this = _cv.new_CvSize(*args)
-        try: self.this.append(this)
-        except: self.this = this
-    __swig_destroy__ = _cv.delete_CvSize
-    __del__ = lambda self : None;
-CvSize_swigregister = _cv.CvSize_swigregister
-CvSize_swigregister(CvSize)
+        _swig_setattr(self, CvSize, 'this', _cv.new_CvSize(*args))
+        _swig_setattr(self, CvSize, 'thisown', 1)
+    def __del__(self, destroy=_cv.delete_CvSize):
+        """__del__(self)"""
+        try:
+            if self.thisown: destroy(self)
+        except: pass
+
+
+class CvSizePtr(CvSize):
+    def __init__(self, this):
+        _swig_setattr(self, CvSize, 'this', this)
+        if not hasattr(self,"thisown"): _swig_setattr(self, CvSize, 'thisown', 0)
+        self.__class__ = CvSize
+_cv.CvSize_swigregister(CvSizePtr)
 
 
 def cvSize(*args):
-  """cvSize(int width, int height) -> CvSize"""
-  return _cv.cvSize(*args)
+    """cvSize(int width, int height) -> CvSize"""
+    return _cv.cvSize(*args)
 class CvSize2D32f(_object):
     """Proxy of C++ CvSize2D32f class"""
     __swig_setmethods__ = {}
     __setattr__ = lambda self, name, value: _swig_setattr(self, CvSize2D32f, name, value)
     __swig_getmethods__ = {}
     __getattr__ = lambda self, name: _swig_getattr(self, CvSize2D32f, name)
-    __repr__ = _swig_repr
+    def __repr__(self):
+        return "<%s.%s; proxy of C++ CvSize2D32f instance at %s>" % (self.__class__.__module__, self.__class__.__name__, self.this,)
     __swig_setmethods__["width"] = _cv.CvSize2D32f_width_set
     __swig_getmethods__["width"] = _cv.CvSize2D32f_width_get
     if _newclass:width = property(_cv.CvSize2D32f_width_get, _cv.CvSize2D32f_width_set)
     __swig_setmethods__["height"] = _cv.CvSize2D32f_height_set
     __swig_getmethods__["height"] = _cv.CvSize2D32f_height_get
     if _newclass:height = property(_cv.CvSize2D32f_height_get, _cv.CvSize2D32f_height_set)
-    def __init__(self, *args): 
+    def __init__(self, *args):
         """__init__(self) -> CvSize2D32f"""
-        this = _cv.new_CvSize2D32f(*args)
-        try: self.this.append(this)
-        except: self.this = this
-    __swig_destroy__ = _cv.delete_CvSize2D32f
-    __del__ = lambda self : None;
-CvSize2D32f_swigregister = _cv.CvSize2D32f_swigregister
-CvSize2D32f_swigregister(CvSize2D32f)
+        _swig_setattr(self, CvSize2D32f, 'this', _cv.new_CvSize2D32f(*args))
+        _swig_setattr(self, CvSize2D32f, 'thisown', 1)
+    def __del__(self, destroy=_cv.delete_CvSize2D32f):
+        """__del__(self)"""
+        try:
+            if self.thisown: destroy(self)
+        except: pass
+
+
+class CvSize2D32fPtr(CvSize2D32f):
+    def __init__(self, this):
+        _swig_setattr(self, CvSize2D32f, 'this', this)
+        if not hasattr(self,"thisown"): _swig_setattr(self, CvSize2D32f, 'thisown', 0)
+        self.__class__ = CvSize2D32f
+_cv.CvSize2D32f_swigregister(CvSize2D32fPtr)
 
 
 def cvSize2D32f(*args):
-  """cvSize2D32f(double width, double height) -> CvSize2D32f"""
-  return _cv.cvSize2D32f(*args)
+    """cvSize2D32f(double width, double height) -> CvSize2D32f"""
+    return _cv.cvSize2D32f(*args)
 class CvBox2D(_object):
     """Proxy of C++ CvBox2D class"""
     __swig_setmethods__ = {}
     __setattr__ = lambda self, name, value: _swig_setattr(self, CvBox2D, name, value)
     __swig_getmethods__ = {}
     __getattr__ = lambda self, name: _swig_getattr(self, CvBox2D, name)
-    __repr__ = _swig_repr
+    def __repr__(self):
+        return "<%s.%s; proxy of C++ CvBox2D instance at %s>" % (self.__class__.__module__, self.__class__.__name__, self.this,)
     __swig_setmethods__["center"] = _cv.CvBox2D_center_set
     __swig_getmethods__["center"] = _cv.CvBox2D_center_get
     if _newclass:center = property(_cv.CvBox2D_center_get, _cv.CvBox2D_center_set)
@@ -2375,15 +2608,23 @@ class CvBox2D(_object):
     __swig_setmethods__["angle"] = _cv.CvBox2D_angle_set
     __swig_getmethods__["angle"] = _cv.CvBox2D_angle_get
     if _newclass:angle = property(_cv.CvBox2D_angle_get, _cv.CvBox2D_angle_set)
-    def __init__(self, *args): 
+    def __init__(self, *args):
         """__init__(self) -> CvBox2D"""
-        this = _cv.new_CvBox2D(*args)
-        try: self.this.append(this)
-        except: self.this = this
-    __swig_destroy__ = _cv.delete_CvBox2D
-    __del__ = lambda self : None;
-CvBox2D_swigregister = _cv.CvBox2D_swigregister
-CvBox2D_swigregister(CvBox2D)
+        _swig_setattr(self, CvBox2D, 'this', _cv.new_CvBox2D(*args))
+        _swig_setattr(self, CvBox2D, 'thisown', 1)
+    def __del__(self, destroy=_cv.delete_CvBox2D):
+        """__del__(self)"""
+        try:
+            if self.thisown: destroy(self)
+        except: pass
+
+
+class CvBox2DPtr(CvBox2D):
+    def __init__(self, this):
+        _swig_setattr(self, CvBox2D, 'this', this)
+        if not hasattr(self,"thisown"): _swig_setattr(self, CvBox2D, 'thisown', 0)
+        self.__class__ = CvBox2D
+_cv.CvBox2D_swigregister(CvBox2DPtr)
 
 class CvLineIterator(_object):
     """Proxy of C++ CvLineIterator class"""
@@ -2391,7 +2632,8 @@ class CvLineIterator(_object):
     __setattr__ = lambda self, name, value: _swig_setattr(self, CvLineIterator, name, value)
     __swig_getmethods__ = {}
     __getattr__ = lambda self, name: _swig_getattr(self, CvLineIterator, name)
-    __repr__ = _swig_repr
+    def __repr__(self):
+        return "<%s.%s; proxy of C++ CvLineIterator instance at %s>" % (self.__class__.__module__, self.__class__.__name__, self.this,)
     __swig_setmethods__["ptr"] = _cv.CvLineIterator_ptr_set
     __swig_getmethods__["ptr"] = _cv.CvLineIterator_ptr_get
     if _newclass:ptr = property(_cv.CvLineIterator_ptr_get, _cv.CvLineIterator_ptr_set)
@@ -2410,15 +2652,23 @@ class CvLineIterator(_object):
     __swig_setmethods__["minus_step"] = _cv.CvLineIterator_minus_step_set
     __swig_getmethods__["minus_step"] = _cv.CvLineIterator_minus_step_get
     if _newclass:minus_step = property(_cv.CvLineIterator_minus_step_get, _cv.CvLineIterator_minus_step_set)
-    def __init__(self, *args): 
+    def __init__(self, *args):
         """__init__(self) -> CvLineIterator"""
-        this = _cv.new_CvLineIterator(*args)
-        try: self.this.append(this)
-        except: self.this = this
-    __swig_destroy__ = _cv.delete_CvLineIterator
-    __del__ = lambda self : None;
-CvLineIterator_swigregister = _cv.CvLineIterator_swigregister
-CvLineIterator_swigregister(CvLineIterator)
+        _swig_setattr(self, CvLineIterator, 'this', _cv.new_CvLineIterator(*args))
+        _swig_setattr(self, CvLineIterator, 'thisown', 1)
+    def __del__(self, destroy=_cv.delete_CvLineIterator):
+        """__del__(self)"""
+        try:
+            if self.thisown: destroy(self)
+        except: pass
+
+
+class CvLineIteratorPtr(CvLineIterator):
+    def __init__(self, this):
+        _swig_setattr(self, CvLineIterator, 'this', this)
+        if not hasattr(self,"thisown"): _swig_setattr(self, CvLineIterator, 'thisown', 0)
+        self.__class__ = CvLineIterator
+_cv.CvLineIterator_swigregister(CvLineIteratorPtr)
 
 class CvSlice(_object):
     """Proxy of C++ CvSlice class"""
@@ -2426,27 +2676,36 @@ class CvSlice(_object):
     __setattr__ = lambda self, name, value: _swig_setattr(self, CvSlice, name, value)
     __swig_getmethods__ = {}
     __getattr__ = lambda self, name: _swig_getattr(self, CvSlice, name)
-    __repr__ = _swig_repr
+    def __repr__(self):
+        return "<%s.%s; proxy of C++ CvSlice instance at %s>" % (self.__class__.__module__, self.__class__.__name__, self.this,)
     __swig_setmethods__["start_index"] = _cv.CvSlice_start_index_set
     __swig_getmethods__["start_index"] = _cv.CvSlice_start_index_get
     if _newclass:start_index = property(_cv.CvSlice_start_index_get, _cv.CvSlice_start_index_set)
     __swig_setmethods__["end_index"] = _cv.CvSlice_end_index_set
     __swig_getmethods__["end_index"] = _cv.CvSlice_end_index_get
     if _newclass:end_index = property(_cv.CvSlice_end_index_get, _cv.CvSlice_end_index_set)
-    def __init__(self, *args): 
+    def __init__(self, *args):
         """__init__(self) -> CvSlice"""
-        this = _cv.new_CvSlice(*args)
-        try: self.this.append(this)
-        except: self.this = this
-    __swig_destroy__ = _cv.delete_CvSlice
-    __del__ = lambda self : None;
-CvSlice_swigregister = _cv.CvSlice_swigregister
-CvSlice_swigregister(CvSlice)
+        _swig_setattr(self, CvSlice, 'this', _cv.new_CvSlice(*args))
+        _swig_setattr(self, CvSlice, 'thisown', 1)
+    def __del__(self, destroy=_cv.delete_CvSlice):
+        """__del__(self)"""
+        try:
+            if self.thisown: destroy(self)
+        except: pass
+
+
+class CvSlicePtr(CvSlice):
+    def __init__(self, this):
+        _swig_setattr(self, CvSlice, 'this', this)
+        if not hasattr(self,"thisown"): _swig_setattr(self, CvSlice, 'thisown', 0)
+        self.__class__ = CvSlice
+_cv.CvSlice_swigregister(CvSlicePtr)
 
 
 def cvSlice(*args):
-  """cvSlice(int start, int end) -> CvSlice"""
-  return _cv.cvSlice(*args)
+    """cvSlice(int start, int end) -> CvSlice"""
+    return _cv.cvSlice(*args)
 class CvScalar(_object):
     """Proxy of C++ CvScalar class"""
     __swig_setmethods__ = {}
@@ -2464,55 +2723,72 @@ class CvScalar(_object):
         """__repr__(self) -> char"""
         return _cv.CvScalar___repr__(*args)
 
-    def __init__(self, *args): 
+    def __init__(self, *args):
         """__init__(self) -> CvScalar"""
-        this = _cv.new_CvScalar(*args)
-        try: self.this.append(this)
-        except: self.this = this
-    __swig_destroy__ = _cv.delete_CvScalar
-    __del__ = lambda self : None;
-CvScalar_swigregister = _cv.CvScalar_swigregister
-CvScalar_swigregister(CvScalar)
+        _swig_setattr(self, CvScalar, 'this', _cv.new_CvScalar(*args))
+        _swig_setattr(self, CvScalar, 'thisown', 1)
+    def __del__(self, destroy=_cv.delete_CvScalar):
+        """__del__(self)"""
+        try:
+            if self.thisown: destroy(self)
+        except: pass
+
+
+class CvScalarPtr(CvScalar):
+    def __init__(self, this):
+        _swig_setattr(self, CvScalar, 'this', this)
+        if not hasattr(self,"thisown"): _swig_setattr(self, CvScalar, 'thisown', 0)
+        self.__class__ = CvScalar
+_cv.CvScalar_swigregister(CvScalarPtr)
 
 
 def cvRealScalar(*args):
-  """cvRealScalar(double val0) -> CvScalar"""
-  return _cv.cvRealScalar(*args)
+    """cvRealScalar(double val0) -> CvScalar"""
+    return _cv.cvRealScalar(*args)
 
 def cvScalarAll(*args):
-  """cvScalarAll(double val0123) -> CvScalar"""
-  return _cv.cvScalarAll(*args)
+    """cvScalarAll(double val0123) -> CvScalar"""
+    return _cv.cvScalarAll(*args)
 class CvMemBlock(_object):
     """Proxy of C++ CvMemBlock class"""
     __swig_setmethods__ = {}
     __setattr__ = lambda self, name, value: _swig_setattr(self, CvMemBlock, name, value)
     __swig_getmethods__ = {}
     __getattr__ = lambda self, name: _swig_getattr(self, CvMemBlock, name)
-    __repr__ = _swig_repr
+    def __repr__(self):
+        return "<%s.%s; proxy of C++ CvMemBlock instance at %s>" % (self.__class__.__module__, self.__class__.__name__, self.this,)
     __swig_setmethods__["prev"] = _cv.CvMemBlock_prev_set
     __swig_getmethods__["prev"] = _cv.CvMemBlock_prev_get
     if _newclass:prev = property(_cv.CvMemBlock_prev_get, _cv.CvMemBlock_prev_set)
     __swig_setmethods__["next"] = _cv.CvMemBlock_next_set
     __swig_getmethods__["next"] = _cv.CvMemBlock_next_get
     if _newclass:next = property(_cv.CvMemBlock_next_get, _cv.CvMemBlock_next_set)
-    def __init__(self, *args): 
+    def __init__(self, *args):
         """__init__(self) -> CvMemBlock"""
-        this = _cv.new_CvMemBlock(*args)
-        try: self.this.append(this)
-        except: self.this = this
-    __swig_destroy__ = _cv.delete_CvMemBlock
-    __del__ = lambda self : None;
-CvMemBlock_swigregister = _cv.CvMemBlock_swigregister
-CvMemBlock_swigregister(CvMemBlock)
+        _swig_setattr(self, CvMemBlock, 'this', _cv.new_CvMemBlock(*args))
+        _swig_setattr(self, CvMemBlock, 'thisown', 1)
+    def __del__(self, destroy=_cv.delete_CvMemBlock):
+        """__del__(self)"""
+        try:
+            if self.thisown: destroy(self)
+        except: pass
+
+
+class CvMemBlockPtr(CvMemBlock):
+    def __init__(self, this):
+        _swig_setattr(self, CvMemBlock, 'this', this)
+        if not hasattr(self,"thisown"): _swig_setattr(self, CvMemBlock, 'thisown', 0)
+        self.__class__ = CvMemBlock
+_cv.CvMemBlock_swigregister(CvMemBlockPtr)
 
 def cvScalar(*args):
-  """
+    """
     cvScalar(double val0, double val1=0, double val2=0, double val3=0) -> CvScalar
     cvScalar(double val0, double val1=0, double val2=0) -> CvScalar
     cvScalar(double val0, double val1=0) -> CvScalar
     cvScalar(double val0) -> CvScalar
     """
-  return _cv.cvScalar(*args)
+    return _cv.cvScalar(*args)
 
 class CvMemStorage(_object):
     """Proxy of C++ CvMemStorage class"""
@@ -2520,8 +2796,9 @@ class CvMemStorage(_object):
     __setattr__ = lambda self, name, value: _swig_setattr(self, CvMemStorage, name, value)
     __swig_getmethods__ = {}
     __getattr__ = lambda self, name: _swig_getattr(self, CvMemStorage, name)
-    def __init__(self): raise AttributeError, "No constructor defined"
-    __repr__ = _swig_repr
+    def __init__(self): raise RuntimeError, "No constructor defined"
+    def __repr__(self):
+        return "<%s.%s; proxy of C++ CvMemStorage instance at %s>" % (self.__class__.__module__, self.__class__.__name__, self.this,)
     __swig_setmethods__["signature"] = _cv.CvMemStorage_signature_set
     __swig_getmethods__["signature"] = _cv.CvMemStorage_signature_get
     if _newclass:signature = property(_cv.CvMemStorage_signature_get, _cv.CvMemStorage_signature_set)
@@ -2540,10 +2817,19 @@ class CvMemStorage(_object):
     __swig_setmethods__["free_space"] = _cv.CvMemStorage_free_space_set
     __swig_getmethods__["free_space"] = _cv.CvMemStorage_free_space_get
     if _newclass:free_space = property(_cv.CvMemStorage_free_space_get, _cv.CvMemStorage_free_space_set)
-    __swig_destroy__ = _cv.delete_CvMemStorage
-    __del__ = lambda self : None;
-CvMemStorage_swigregister = _cv.CvMemStorage_swigregister
-CvMemStorage_swigregister(CvMemStorage)
+    def __del__(self, destroy=_cv.delete_CvMemStorage):
+        """__del__(self)"""
+        try:
+            if self.thisown: destroy(self)
+        except: pass
+
+
+class CvMemStoragePtr(CvMemStorage):
+    def __init__(self, this):
+        _swig_setattr(self, CvMemStorage, 'this', this)
+        if not hasattr(self,"thisown"): _swig_setattr(self, CvMemStorage, 'thisown', 0)
+        self.__class__ = CvMemStorage
+_cv.CvMemStorage_swigregister(CvMemStoragePtr)
 
 class CvMemStoragePos(_object):
     """Proxy of C++ CvMemStoragePos class"""
@@ -2551,22 +2837,31 @@ class CvMemStoragePos(_object):
     __setattr__ = lambda self, name, value: _swig_setattr(self, CvMemStoragePos, name, value)
     __swig_getmethods__ = {}
     __getattr__ = lambda self, name: _swig_getattr(self, CvMemStoragePos, name)
-    __repr__ = _swig_repr
+    def __repr__(self):
+        return "<%s.%s; proxy of C++ CvMemStoragePos instance at %s>" % (self.__class__.__module__, self.__class__.__name__, self.this,)
     __swig_setmethods__["top"] = _cv.CvMemStoragePos_top_set
     __swig_getmethods__["top"] = _cv.CvMemStoragePos_top_get
     if _newclass:top = property(_cv.CvMemStoragePos_top_get, _cv.CvMemStoragePos_top_set)
     __swig_setmethods__["free_space"] = _cv.CvMemStoragePos_free_space_set
     __swig_getmethods__["free_space"] = _cv.CvMemStoragePos_free_space_get
     if _newclass:free_space = property(_cv.CvMemStoragePos_free_space_get, _cv.CvMemStoragePos_free_space_set)
-    def __init__(self, *args): 
+    def __init__(self, *args):
         """__init__(self) -> CvMemStoragePos"""
-        this = _cv.new_CvMemStoragePos(*args)
-        try: self.this.append(this)
-        except: self.this = this
-    __swig_destroy__ = _cv.delete_CvMemStoragePos
-    __del__ = lambda self : None;
-CvMemStoragePos_swigregister = _cv.CvMemStoragePos_swigregister
-CvMemStoragePos_swigregister(CvMemStoragePos)
+        _swig_setattr(self, CvMemStoragePos, 'this', _cv.new_CvMemStoragePos(*args))
+        _swig_setattr(self, CvMemStoragePos, 'thisown', 1)
+    def __del__(self, destroy=_cv.delete_CvMemStoragePos):
+        """__del__(self)"""
+        try:
+            if self.thisown: destroy(self)
+        except: pass
+
+
+class CvMemStoragePosPtr(CvMemStoragePos):
+    def __init__(self, this):
+        _swig_setattr(self, CvMemStoragePos, 'this', this)
+        if not hasattr(self,"thisown"): _swig_setattr(self, CvMemStoragePos, 'thisown', 0)
+        self.__class__ = CvMemStoragePos
+_cv.CvMemStoragePos_swigregister(CvMemStoragePosPtr)
 
 class CvSeqBlock(_object):
     """Proxy of C++ CvSeqBlock class"""
@@ -2574,7 +2869,8 @@ class CvSeqBlock(_object):
     __setattr__ = lambda self, name, value: _swig_setattr(self, CvSeqBlock, name, value)
     __swig_getmethods__ = {}
     __getattr__ = lambda self, name: _swig_getattr(self, CvSeqBlock, name)
-    __repr__ = _swig_repr
+    def __repr__(self):
+        return "<%s.%s; proxy of C++ CvSeqBlock instance at %s>" % (self.__class__.__module__, self.__class__.__name__, self.this,)
     __swig_setmethods__["prev"] = _cv.CvSeqBlock_prev_set
     __swig_getmethods__["prev"] = _cv.CvSeqBlock_prev_get
     if _newclass:prev = property(_cv.CvSeqBlock_prev_get, _cv.CvSeqBlock_prev_set)
@@ -2590,15 +2886,23 @@ class CvSeqBlock(_object):
     __swig_setmethods__["data"] = _cv.CvSeqBlock_data_set
     __swig_getmethods__["data"] = _cv.CvSeqBlock_data_get
     if _newclass:data = property(_cv.CvSeqBlock_data_get, _cv.CvSeqBlock_data_set)
-    def __init__(self, *args): 
+    def __init__(self, *args):
         """__init__(self) -> CvSeqBlock"""
-        this = _cv.new_CvSeqBlock(*args)
-        try: self.this.append(this)
-        except: self.this = this
-    __swig_destroy__ = _cv.delete_CvSeqBlock
-    __del__ = lambda self : None;
-CvSeqBlock_swigregister = _cv.CvSeqBlock_swigregister
-CvSeqBlock_swigregister(CvSeqBlock)
+        _swig_setattr(self, CvSeqBlock, 'this', _cv.new_CvSeqBlock(*args))
+        _swig_setattr(self, CvSeqBlock, 'thisown', 1)
+    def __del__(self, destroy=_cv.delete_CvSeqBlock):
+        """__del__(self)"""
+        try:
+            if self.thisown: destroy(self)
+        except: pass
+
+
+class CvSeqBlockPtr(CvSeqBlock):
+    def __init__(self, this):
+        _swig_setattr(self, CvSeqBlock, 'this', this)
+        if not hasattr(self,"thisown"): _swig_setattr(self, CvSeqBlock, 'thisown', 0)
+        self.__class__ = CvSeqBlock
+_cv.CvSeqBlock_swigregister(CvSeqBlockPtr)
 
 class CvSeq(_object):
     """Proxy of C++ CvSeq class"""
@@ -2606,7 +2910,8 @@ class CvSeq(_object):
     __setattr__ = lambda self, name, value: _swig_setattr(self, CvSeq, name, value)
     __swig_getmethods__ = {}
     __getattr__ = lambda self, name: _swig_getattr(self, CvSeq, name)
-    __repr__ = _swig_repr
+    def __repr__(self):
+        return "<%s.%s; proxy of C++ CvSeq instance at %s>" % (self.__class__.__module__, self.__class__.__name__, self.this,)
     __swig_setmethods__["flags"] = _cv.CvSeq_flags_set
     __swig_getmethods__["flags"] = _cv.CvSeq_flags_get
     if _newclass:flags = property(_cv.CvSeq_flags_get, _cv.CvSeq_flags_set)
@@ -2674,15 +2979,23 @@ class CvSeq(_object):
     		yield s
     		s = s.h_next
 
-    def __init__(self, *args): 
+    def __init__(self, *args):
         """__init__(self) -> CvSeq"""
-        this = _cv.new_CvSeq(*args)
-        try: self.this.append(this)
-        except: self.this = this
-    __swig_destroy__ = _cv.delete_CvSeq
-    __del__ = lambda self : None;
-CvSeq_swigregister = _cv.CvSeq_swigregister
-CvSeq_swigregister(CvSeq)
+        _swig_setattr(self, CvSeq, 'this', _cv.new_CvSeq(*args))
+        _swig_setattr(self, CvSeq, 'thisown', 1)
+    def __del__(self, destroy=_cv.delete_CvSeq):
+        """__del__(self)"""
+        try:
+            if self.thisown: destroy(self)
+        except: pass
+
+
+class CvSeqPtr(CvSeq):
+    def __init__(self, this):
+        _swig_setattr(self, CvSeq, 'this', this)
+        if not hasattr(self,"thisown"): _swig_setattr(self, CvSeq, 'thisown', 0)
+        self.__class__ = CvSeq
+_cv.CvSeq_swigregister(CvSeqPtr)
 
 class CvSetElem(_object):
     """Proxy of C++ CvSetElem class"""
@@ -2690,22 +3003,31 @@ class CvSetElem(_object):
     __setattr__ = lambda self, name, value: _swig_setattr(self, CvSetElem, name, value)
     __swig_getmethods__ = {}
     __getattr__ = lambda self, name: _swig_getattr(self, CvSetElem, name)
-    __repr__ = _swig_repr
+    def __repr__(self):
+        return "<%s.%s; proxy of C++ CvSetElem instance at %s>" % (self.__class__.__module__, self.__class__.__name__, self.this,)
     __swig_setmethods__["flags"] = _cv.CvSetElem_flags_set
     __swig_getmethods__["flags"] = _cv.CvSetElem_flags_get
     if _newclass:flags = property(_cv.CvSetElem_flags_get, _cv.CvSetElem_flags_set)
     __swig_setmethods__["next_free"] = _cv.CvSetElem_next_free_set
     __swig_getmethods__["next_free"] = _cv.CvSetElem_next_free_get
     if _newclass:next_free = property(_cv.CvSetElem_next_free_get, _cv.CvSetElem_next_free_set)
-    def __init__(self, *args): 
+    def __init__(self, *args):
         """__init__(self) -> CvSetElem"""
-        this = _cv.new_CvSetElem(*args)
-        try: self.this.append(this)
-        except: self.this = this
-    __swig_destroy__ = _cv.delete_CvSetElem
-    __del__ = lambda self : None;
-CvSetElem_swigregister = _cv.CvSetElem_swigregister
-CvSetElem_swigregister(CvSetElem)
+        _swig_setattr(self, CvSetElem, 'this', _cv.new_CvSetElem(*args))
+        _swig_setattr(self, CvSetElem, 'thisown', 1)
+    def __del__(self, destroy=_cv.delete_CvSetElem):
+        """__del__(self)"""
+        try:
+            if self.thisown: destroy(self)
+        except: pass
+
+
+class CvSetElemPtr(CvSetElem):
+    def __init__(self, this):
+        _swig_setattr(self, CvSetElem, 'this', this)
+        if not hasattr(self,"thisown"): _swig_setattr(self, CvSetElem, 'thisown', 0)
+        self.__class__ = CvSetElem
+_cv.CvSetElem_swigregister(CvSetElemPtr)
 
 class CvSet(_object):
     """Proxy of C++ CvSet class"""
@@ -2713,7 +3035,8 @@ class CvSet(_object):
     __setattr__ = lambda self, name, value: _swig_setattr(self, CvSet, name, value)
     __swig_getmethods__ = {}
     __getattr__ = lambda self, name: _swig_getattr(self, CvSet, name)
-    __repr__ = _swig_repr
+    def __repr__(self):
+        return "<%s.%s; proxy of C++ CvSet instance at %s>" % (self.__class__.__module__, self.__class__.__name__, self.this,)
     __swig_setmethods__["flags"] = _cv.CvSet_flags_set
     __swig_getmethods__["flags"] = _cv.CvSet_flags_get
     if _newclass:flags = property(_cv.CvSet_flags_get, _cv.CvSet_flags_set)
@@ -2762,15 +3085,23 @@ class CvSet(_object):
     __swig_setmethods__["active_count"] = _cv.CvSet_active_count_set
     __swig_getmethods__["active_count"] = _cv.CvSet_active_count_get
     if _newclass:active_count = property(_cv.CvSet_active_count_get, _cv.CvSet_active_count_set)
-    def __init__(self, *args): 
+    def __init__(self, *args):
         """__init__(self) -> CvSet"""
-        this = _cv.new_CvSet(*args)
-        try: self.this.append(this)
-        except: self.this = this
-    __swig_destroy__ = _cv.delete_CvSet
-    __del__ = lambda self : None;
-CvSet_swigregister = _cv.CvSet_swigregister
-CvSet_swigregister(CvSet)
+        _swig_setattr(self, CvSet, 'this', _cv.new_CvSet(*args))
+        _swig_setattr(self, CvSet, 'thisown', 1)
+    def __del__(self, destroy=_cv.delete_CvSet):
+        """__del__(self)"""
+        try:
+            if self.thisown: destroy(self)
+        except: pass
+
+
+class CvSetPtr(CvSet):
+    def __init__(self, this):
+        _swig_setattr(self, CvSet, 'this', this)
+        if not hasattr(self,"thisown"): _swig_setattr(self, CvSet, 'thisown', 0)
+        self.__class__ = CvSet
+_cv.CvSet_swigregister(CvSetPtr)
 
 class CvGraphEdge(_object):
     """Proxy of C++ CvGraphEdge class"""
@@ -2778,7 +3109,8 @@ class CvGraphEdge(_object):
     __setattr__ = lambda self, name, value: _swig_setattr(self, CvGraphEdge, name, value)
     __swig_getmethods__ = {}
     __getattr__ = lambda self, name: _swig_getattr(self, CvGraphEdge, name)
-    __repr__ = _swig_repr
+    def __repr__(self):
+        return "<%s.%s; proxy of C++ CvGraphEdge instance at %s>" % (self.__class__.__module__, self.__class__.__name__, self.this,)
     __swig_setmethods__["flags"] = _cv.CvGraphEdge_flags_set
     __swig_getmethods__["flags"] = _cv.CvGraphEdge_flags_get
     if _newclass:flags = property(_cv.CvGraphEdge_flags_get, _cv.CvGraphEdge_flags_set)
@@ -2791,15 +3123,23 @@ class CvGraphEdge(_object):
     __swig_setmethods__["vtx"] = _cv.CvGraphEdge_vtx_set
     __swig_getmethods__["vtx"] = _cv.CvGraphEdge_vtx_get
     if _newclass:vtx = property(_cv.CvGraphEdge_vtx_get, _cv.CvGraphEdge_vtx_set)
-    def __init__(self, *args): 
+    def __init__(self, *args):
         """__init__(self) -> CvGraphEdge"""
-        this = _cv.new_CvGraphEdge(*args)
-        try: self.this.append(this)
-        except: self.this = this
-    __swig_destroy__ = _cv.delete_CvGraphEdge
-    __del__ = lambda self : None;
-CvGraphEdge_swigregister = _cv.CvGraphEdge_swigregister
-CvGraphEdge_swigregister(CvGraphEdge)
+        _swig_setattr(self, CvGraphEdge, 'this', _cv.new_CvGraphEdge(*args))
+        _swig_setattr(self, CvGraphEdge, 'thisown', 1)
+    def __del__(self, destroy=_cv.delete_CvGraphEdge):
+        """__del__(self)"""
+        try:
+            if self.thisown: destroy(self)
+        except: pass
+
+
+class CvGraphEdgePtr(CvGraphEdge):
+    def __init__(self, this):
+        _swig_setattr(self, CvGraphEdge, 'this', this)
+        if not hasattr(self,"thisown"): _swig_setattr(self, CvGraphEdge, 'thisown', 0)
+        self.__class__ = CvGraphEdge
+_cv.CvGraphEdge_swigregister(CvGraphEdgePtr)
 
 class CvGraphVtx(_object):
     """Proxy of C++ CvGraphVtx class"""
@@ -2807,22 +3147,31 @@ class CvGraphVtx(_object):
     __setattr__ = lambda self, name, value: _swig_setattr(self, CvGraphVtx, name, value)
     __swig_getmethods__ = {}
     __getattr__ = lambda self, name: _swig_getattr(self, CvGraphVtx, name)
-    __repr__ = _swig_repr
+    def __repr__(self):
+        return "<%s.%s; proxy of C++ CvGraphVtx instance at %s>" % (self.__class__.__module__, self.__class__.__name__, self.this,)
     __swig_setmethods__["flags"] = _cv.CvGraphVtx_flags_set
     __swig_getmethods__["flags"] = _cv.CvGraphVtx_flags_get
     if _newclass:flags = property(_cv.CvGraphVtx_flags_get, _cv.CvGraphVtx_flags_set)
     __swig_setmethods__["first"] = _cv.CvGraphVtx_first_set
     __swig_getmethods__["first"] = _cv.CvGraphVtx_first_get
     if _newclass:first = property(_cv.CvGraphVtx_first_get, _cv.CvGraphVtx_first_set)
-    def __init__(self, *args): 
+    def __init__(self, *args):
         """__init__(self) -> CvGraphVtx"""
-        this = _cv.new_CvGraphVtx(*args)
-        try: self.this.append(this)
-        except: self.this = this
-    __swig_destroy__ = _cv.delete_CvGraphVtx
-    __del__ = lambda self : None;
-CvGraphVtx_swigregister = _cv.CvGraphVtx_swigregister
-CvGraphVtx_swigregister(CvGraphVtx)
+        _swig_setattr(self, CvGraphVtx, 'this', _cv.new_CvGraphVtx(*args))
+        _swig_setattr(self, CvGraphVtx, 'thisown', 1)
+    def __del__(self, destroy=_cv.delete_CvGraphVtx):
+        """__del__(self)"""
+        try:
+            if self.thisown: destroy(self)
+        except: pass
+
+
+class CvGraphVtxPtr(CvGraphVtx):
+    def __init__(self, this):
+        _swig_setattr(self, CvGraphVtx, 'this', this)
+        if not hasattr(self,"thisown"): _swig_setattr(self, CvGraphVtx, 'thisown', 0)
+        self.__class__ = CvGraphVtx
+_cv.CvGraphVtx_swigregister(CvGraphVtxPtr)
 
 class CvGraphVtx2D(_object):
     """Proxy of C++ CvGraphVtx2D class"""
@@ -2830,7 +3179,8 @@ class CvGraphVtx2D(_object):
     __setattr__ = lambda self, name, value: _swig_setattr(self, CvGraphVtx2D, name, value)
     __swig_getmethods__ = {}
     __getattr__ = lambda self, name: _swig_getattr(self, CvGraphVtx2D, name)
-    __repr__ = _swig_repr
+    def __repr__(self):
+        return "<%s.%s; proxy of C++ CvGraphVtx2D instance at %s>" % (self.__class__.__module__, self.__class__.__name__, self.this,)
     __swig_setmethods__["flags"] = _cv.CvGraphVtx2D_flags_set
     __swig_getmethods__["flags"] = _cv.CvGraphVtx2D_flags_get
     if _newclass:flags = property(_cv.CvGraphVtx2D_flags_get, _cv.CvGraphVtx2D_flags_set)
@@ -2840,15 +3190,23 @@ class CvGraphVtx2D(_object):
     __swig_setmethods__["ptr"] = _cv.CvGraphVtx2D_ptr_set
     __swig_getmethods__["ptr"] = _cv.CvGraphVtx2D_ptr_get
     if _newclass:ptr = property(_cv.CvGraphVtx2D_ptr_get, _cv.CvGraphVtx2D_ptr_set)
-    def __init__(self, *args): 
+    def __init__(self, *args):
         """__init__(self) -> CvGraphVtx2D"""
-        this = _cv.new_CvGraphVtx2D(*args)
-        try: self.this.append(this)
-        except: self.this = this
-    __swig_destroy__ = _cv.delete_CvGraphVtx2D
-    __del__ = lambda self : None;
-CvGraphVtx2D_swigregister = _cv.CvGraphVtx2D_swigregister
-CvGraphVtx2D_swigregister(CvGraphVtx2D)
+        _swig_setattr(self, CvGraphVtx2D, 'this', _cv.new_CvGraphVtx2D(*args))
+        _swig_setattr(self, CvGraphVtx2D, 'thisown', 1)
+    def __del__(self, destroy=_cv.delete_CvGraphVtx2D):
+        """__del__(self)"""
+        try:
+            if self.thisown: destroy(self)
+        except: pass
+
+
+class CvGraphVtx2DPtr(CvGraphVtx2D):
+    def __init__(self, this):
+        _swig_setattr(self, CvGraphVtx2D, 'this', this)
+        if not hasattr(self,"thisown"): _swig_setattr(self, CvGraphVtx2D, 'thisown', 0)
+        self.__class__ = CvGraphVtx2D
+_cv.CvGraphVtx2D_swigregister(CvGraphVtx2DPtr)
 
 class CvGraph(_object):
     """Proxy of C++ CvGraph class"""
@@ -2856,7 +3214,8 @@ class CvGraph(_object):
     __setattr__ = lambda self, name, value: _swig_setattr(self, CvGraph, name, value)
     __swig_getmethods__ = {}
     __getattr__ = lambda self, name: _swig_getattr(self, CvGraph, name)
-    __repr__ = _swig_repr
+    def __repr__(self):
+        return "<%s.%s; proxy of C++ CvGraph instance at %s>" % (self.__class__.__module__, self.__class__.__name__, self.this,)
     __swig_setmethods__["flags"] = _cv.CvGraph_flags_set
     __swig_getmethods__["flags"] = _cv.CvGraph_flags_get
     if _newclass:flags = property(_cv.CvGraph_flags_get, _cv.CvGraph_flags_set)
@@ -2908,15 +3267,23 @@ class CvGraph(_object):
     __swig_setmethods__["edges"] = _cv.CvGraph_edges_set
     __swig_getmethods__["edges"] = _cv.CvGraph_edges_get
     if _newclass:edges = property(_cv.CvGraph_edges_get, _cv.CvGraph_edges_set)
-    def __init__(self, *args): 
+    def __init__(self, *args):
         """__init__(self) -> CvGraph"""
-        this = _cv.new_CvGraph(*args)
-        try: self.this.append(this)
-        except: self.this = this
-    __swig_destroy__ = _cv.delete_CvGraph
-    __del__ = lambda self : None;
-CvGraph_swigregister = _cv.CvGraph_swigregister
-CvGraph_swigregister(CvGraph)
+        _swig_setattr(self, CvGraph, 'this', _cv.new_CvGraph(*args))
+        _swig_setattr(self, CvGraph, 'thisown', 1)
+    def __del__(self, destroy=_cv.delete_CvGraph):
+        """__del__(self)"""
+        try:
+            if self.thisown: destroy(self)
+        except: pass
+
+
+class CvGraphPtr(CvGraph):
+    def __init__(self, this):
+        _swig_setattr(self, CvGraph, 'this', this)
+        if not hasattr(self,"thisown"): _swig_setattr(self, CvGraph, 'thisown', 0)
+        self.__class__ = CvGraph
+_cv.CvGraph_swigregister(CvGraphPtr)
 
 class CvChain(_object):
     """Proxy of C++ CvChain class"""
@@ -2924,7 +3291,8 @@ class CvChain(_object):
     __setattr__ = lambda self, name, value: _swig_setattr(self, CvChain, name, value)
     __swig_getmethods__ = {}
     __getattr__ = lambda self, name: _swig_getattr(self, CvChain, name)
-    __repr__ = _swig_repr
+    def __repr__(self):
+        return "<%s.%s; proxy of C++ CvChain instance at %s>" % (self.__class__.__module__, self.__class__.__name__, self.this,)
     __swig_setmethods__["flags"] = _cv.CvChain_flags_set
     __swig_getmethods__["flags"] = _cv.CvChain_flags_get
     if _newclass:flags = property(_cv.CvChain_flags_get, _cv.CvChain_flags_set)
@@ -2970,15 +3338,23 @@ class CvChain(_object):
     __swig_setmethods__["origin"] = _cv.CvChain_origin_set
     __swig_getmethods__["origin"] = _cv.CvChain_origin_get
     if _newclass:origin = property(_cv.CvChain_origin_get, _cv.CvChain_origin_set)
-    def __init__(self, *args): 
+    def __init__(self, *args):
         """__init__(self) -> CvChain"""
-        this = _cv.new_CvChain(*args)
-        try: self.this.append(this)
-        except: self.this = this
-    __swig_destroy__ = _cv.delete_CvChain
-    __del__ = lambda self : None;
-CvChain_swigregister = _cv.CvChain_swigregister
-CvChain_swigregister(CvChain)
+        _swig_setattr(self, CvChain, 'this', _cv.new_CvChain(*args))
+        _swig_setattr(self, CvChain, 'thisown', 1)
+    def __del__(self, destroy=_cv.delete_CvChain):
+        """__del__(self)"""
+        try:
+            if self.thisown: destroy(self)
+        except: pass
+
+
+class CvChainPtr(CvChain):
+    def __init__(self, this):
+        _swig_setattr(self, CvChain, 'this', this)
+        if not hasattr(self,"thisown"): _swig_setattr(self, CvChain, 'thisown', 0)
+        self.__class__ = CvChain
+_cv.CvChain_swigregister(CvChainPtr)
 
 class CvContour(_object):
     """Proxy of C++ CvContour class"""
@@ -2986,7 +3362,8 @@ class CvContour(_object):
     __setattr__ = lambda self, name, value: _swig_setattr(self, CvContour, name, value)
     __swig_getmethods__ = {}
     __getattr__ = lambda self, name: _swig_getattr(self, CvContour, name)
-    __repr__ = _swig_repr
+    def __repr__(self):
+        return "<%s.%s; proxy of C++ CvContour instance at %s>" % (self.__class__.__module__, self.__class__.__name__, self.this,)
     __swig_setmethods__["flags"] = _cv.CvContour_flags_set
     __swig_getmethods__["flags"] = _cv.CvContour_flags_get
     if _newclass:flags = property(_cv.CvContour_flags_get, _cv.CvContour_flags_set)
@@ -3038,15 +3415,23 @@ class CvContour(_object):
     __swig_setmethods__["reserved"] = _cv.CvContour_reserved_set
     __swig_getmethods__["reserved"] = _cv.CvContour_reserved_get
     if _newclass:reserved = property(_cv.CvContour_reserved_get, _cv.CvContour_reserved_set)
-    def __init__(self, *args): 
+    def __init__(self, *args):
         """__init__(self) -> CvContour"""
-        this = _cv.new_CvContour(*args)
-        try: self.this.append(this)
-        except: self.this = this
-    __swig_destroy__ = _cv.delete_CvContour
-    __del__ = lambda self : None;
-CvContour_swigregister = _cv.CvContour_swigregister
-CvContour_swigregister(CvContour)
+        _swig_setattr(self, CvContour, 'this', _cv.new_CvContour(*args))
+        _swig_setattr(self, CvContour, 'thisown', 1)
+    def __del__(self, destroy=_cv.delete_CvContour):
+        """__del__(self)"""
+        try:
+            if self.thisown: destroy(self)
+        except: pass
+
+
+class CvContourPtr(CvContour):
+    def __init__(self, this):
+        _swig_setattr(self, CvContour, 'this', this)
+        if not hasattr(self,"thisown"): _swig_setattr(self, CvContour, 'thisown', 0)
+        self.__class__ = CvContour
+_cv.CvContour_swigregister(CvContourPtr)
 
 class CvSeqWriter(_object):
     """Proxy of C++ CvSeqWriter class"""
@@ -3054,7 +3439,8 @@ class CvSeqWriter(_object):
     __setattr__ = lambda self, name, value: _swig_setattr(self, CvSeqWriter, name, value)
     __swig_getmethods__ = {}
     __getattr__ = lambda self, name: _swig_getattr(self, CvSeqWriter, name)
-    __repr__ = _swig_repr
+    def __repr__(self):
+        return "<%s.%s; proxy of C++ CvSeqWriter instance at %s>" % (self.__class__.__module__, self.__class__.__name__, self.this,)
     __swig_setmethods__["header_size"] = _cv.CvSeqWriter_header_size_set
     __swig_getmethods__["header_size"] = _cv.CvSeqWriter_header_size_get
     if _newclass:header_size = property(_cv.CvSeqWriter_header_size_get, _cv.CvSeqWriter_header_size_set)
@@ -3073,15 +3459,23 @@ class CvSeqWriter(_object):
     __swig_setmethods__["block_max"] = _cv.CvSeqWriter_block_max_set
     __swig_getmethods__["block_max"] = _cv.CvSeqWriter_block_max_get
     if _newclass:block_max = property(_cv.CvSeqWriter_block_max_get, _cv.CvSeqWriter_block_max_set)
-    def __init__(self, *args): 
+    def __init__(self, *args):
         """__init__(self) -> CvSeqWriter"""
-        this = _cv.new_CvSeqWriter(*args)
-        try: self.this.append(this)
-        except: self.this = this
-    __swig_destroy__ = _cv.delete_CvSeqWriter
-    __del__ = lambda self : None;
-CvSeqWriter_swigregister = _cv.CvSeqWriter_swigregister
-CvSeqWriter_swigregister(CvSeqWriter)
+        _swig_setattr(self, CvSeqWriter, 'this', _cv.new_CvSeqWriter(*args))
+        _swig_setattr(self, CvSeqWriter, 'thisown', 1)
+    def __del__(self, destroy=_cv.delete_CvSeqWriter):
+        """__del__(self)"""
+        try:
+            if self.thisown: destroy(self)
+        except: pass
+
+
+class CvSeqWriterPtr(CvSeqWriter):
+    def __init__(self, this):
+        _swig_setattr(self, CvSeqWriter, 'this', this)
+        if not hasattr(self,"thisown"): _swig_setattr(self, CvSeqWriter, 'thisown', 0)
+        self.__class__ = CvSeqWriter
+_cv.CvSeqWriter_swigregister(CvSeqWriterPtr)
 
 class CvSeqReader(_object):
     """Proxy of C++ CvSeqReader class"""
@@ -3089,7 +3483,8 @@ class CvSeqReader(_object):
     __setattr__ = lambda self, name, value: _swig_setattr(self, CvSeqReader, name, value)
     __swig_getmethods__ = {}
     __getattr__ = lambda self, name: _swig_getattr(self, CvSeqReader, name)
-    __repr__ = _swig_repr
+    def __repr__(self):
+        return "<%s.%s; proxy of C++ CvSeqReader instance at %s>" % (self.__class__.__module__, self.__class__.__name__, self.this,)
     __swig_setmethods__["header_size"] = _cv.CvSeqReader_header_size_set
     __swig_getmethods__["header_size"] = _cv.CvSeqReader_header_size_get
     if _newclass:header_size = property(_cv.CvSeqReader_header_size_get, _cv.CvSeqReader_header_size_set)
@@ -3114,15 +3509,23 @@ class CvSeqReader(_object):
     __swig_setmethods__["prev_elem"] = _cv.CvSeqReader_prev_elem_set
     __swig_getmethods__["prev_elem"] = _cv.CvSeqReader_prev_elem_get
     if _newclass:prev_elem = property(_cv.CvSeqReader_prev_elem_get, _cv.CvSeqReader_prev_elem_set)
-    def __init__(self, *args): 
+    def __init__(self, *args):
         """__init__(self) -> CvSeqReader"""
-        this = _cv.new_CvSeqReader(*args)
-        try: self.this.append(this)
-        except: self.this = this
-    __swig_destroy__ = _cv.delete_CvSeqReader
-    __del__ = lambda self : None;
-CvSeqReader_swigregister = _cv.CvSeqReader_swigregister
-CvSeqReader_swigregister(CvSeqReader)
+        _swig_setattr(self, CvSeqReader, 'this', _cv.new_CvSeqReader(*args))
+        _swig_setattr(self, CvSeqReader, 'thisown', 1)
+    def __del__(self, destroy=_cv.delete_CvSeqReader):
+        """__del__(self)"""
+        try:
+            if self.thisown: destroy(self)
+        except: pass
+
+
+class CvSeqReaderPtr(CvSeqReader):
+    def __init__(self, this):
+        _swig_setattr(self, CvSeqReader, 'this', this)
+        if not hasattr(self,"thisown"): _swig_setattr(self, CvSeqReader, 'thisown', 0)
+        self.__class__ = CvSeqReader
+_cv.CvSeqReader_swigregister(CvSeqReaderPtr)
 
 class CvAttrList(_object):
     """Proxy of C++ CvAttrList class"""
@@ -3130,22 +3533,31 @@ class CvAttrList(_object):
     __setattr__ = lambda self, name, value: _swig_setattr(self, CvAttrList, name, value)
     __swig_getmethods__ = {}
     __getattr__ = lambda self, name: _swig_getattr(self, CvAttrList, name)
-    __repr__ = _swig_repr
+    def __repr__(self):
+        return "<%s.%s; proxy of C++ CvAttrList instance at %s>" % (self.__class__.__module__, self.__class__.__name__, self.this,)
     __swig_setmethods__["attr"] = _cv.CvAttrList_attr_set
     __swig_getmethods__["attr"] = _cv.CvAttrList_attr_get
     if _newclass:attr = property(_cv.CvAttrList_attr_get, _cv.CvAttrList_attr_set)
     __swig_setmethods__["next"] = _cv.CvAttrList_next_set
     __swig_getmethods__["next"] = _cv.CvAttrList_next_get
     if _newclass:next = property(_cv.CvAttrList_next_get, _cv.CvAttrList_next_set)
-    def __init__(self, *args): 
+    def __init__(self, *args):
         """__init__(self) -> CvAttrList"""
-        this = _cv.new_CvAttrList(*args)
-        try: self.this.append(this)
-        except: self.this = this
-    __swig_destroy__ = _cv.delete_CvAttrList
-    __del__ = lambda self : None;
-CvAttrList_swigregister = _cv.CvAttrList_swigregister
-CvAttrList_swigregister(CvAttrList)
+        _swig_setattr(self, CvAttrList, 'this', _cv.new_CvAttrList(*args))
+        _swig_setattr(self, CvAttrList, 'thisown', 1)
+    def __del__(self, destroy=_cv.delete_CvAttrList):
+        """__del__(self)"""
+        try:
+            if self.thisown: destroy(self)
+        except: pass
+
+
+class CvAttrListPtr(CvAttrList):
+    def __init__(self, this):
+        _swig_setattr(self, CvAttrList, 'this', this)
+        if not hasattr(self,"thisown"): _swig_setattr(self, CvAttrList, 'thisown', 0)
+        self.__class__ = CvAttrList
+_cv.CvAttrList_swigregister(CvAttrListPtr)
 
 class CvString(_object):
     """Proxy of C++ CvString class"""
@@ -3153,30 +3565,39 @@ class CvString(_object):
     __setattr__ = lambda self, name, value: _swig_setattr(self, CvString, name, value)
     __swig_getmethods__ = {}
     __getattr__ = lambda self, name: _swig_getattr(self, CvString, name)
-    __repr__ = _swig_repr
+    def __repr__(self):
+        return "<%s.%s; proxy of C++ CvString instance at %s>" % (self.__class__.__module__, self.__class__.__name__, self.this,)
     __swig_setmethods__["len"] = _cv.CvString_len_set
     __swig_getmethods__["len"] = _cv.CvString_len_get
     if _newclass:len = property(_cv.CvString_len_get, _cv.CvString_len_set)
     __swig_setmethods__["ptr"] = _cv.CvString_ptr_set
     __swig_getmethods__["ptr"] = _cv.CvString_ptr_get
     if _newclass:ptr = property(_cv.CvString_ptr_get, _cv.CvString_ptr_set)
-    def __init__(self, *args): 
+    def __init__(self, *args):
         """__init__(self) -> CvString"""
-        this = _cv.new_CvString(*args)
-        try: self.this.append(this)
-        except: self.this = this
-    __swig_destroy__ = _cv.delete_CvString
-    __del__ = lambda self : None;
-CvString_swigregister = _cv.CvString_swigregister
-CvString_swigregister(CvString)
+        _swig_setattr(self, CvString, 'this', _cv.new_CvString(*args))
+        _swig_setattr(self, CvString, 'thisown', 1)
+    def __del__(self, destroy=_cv.delete_CvString):
+        """__del__(self)"""
+        try:
+            if self.thisown: destroy(self)
+        except: pass
+
+
+class CvStringPtr(CvString):
+    def __init__(self, this):
+        _swig_setattr(self, CvString, 'this', this)
+        if not hasattr(self,"thisown"): _swig_setattr(self, CvString, 'thisown', 0)
+        self.__class__ = CvString
+_cv.CvString_swigregister(CvStringPtr)
 
 def cvAttrList(*args):
-  """
+    """
     cvAttrList(char attr=None, CvAttrList next=None) -> CvAttrList
     cvAttrList(char attr=None) -> CvAttrList
     cvAttrList() -> CvAttrList
     """
-  return _cv.cvAttrList(*args)
+    return _cv.cvAttrList(*args)
 
 class CvStringHashNode(_object):
     """Proxy of C++ CvStringHashNode class"""
@@ -3184,7 +3605,8 @@ class CvStringHashNode(_object):
     __setattr__ = lambda self, name, value: _swig_setattr(self, CvStringHashNode, name, value)
     __swig_getmethods__ = {}
     __getattr__ = lambda self, name: _swig_getattr(self, CvStringHashNode, name)
-    __repr__ = _swig_repr
+    def __repr__(self):
+        return "<%s.%s; proxy of C++ CvStringHashNode instance at %s>" % (self.__class__.__module__, self.__class__.__name__, self.this,)
     __swig_setmethods__["hashval"] = _cv.CvStringHashNode_hashval_set
     __swig_getmethods__["hashval"] = _cv.CvStringHashNode_hashval_get
     if _newclass:hashval = property(_cv.CvStringHashNode_hashval_get, _cv.CvStringHashNode_hashval_set)
@@ -3194,15 +3616,23 @@ class CvStringHashNode(_object):
     __swig_setmethods__["next"] = _cv.CvStringHashNode_next_set
     __swig_getmethods__["next"] = _cv.CvStringHashNode_next_get
     if _newclass:next = property(_cv.CvStringHashNode_next_get, _cv.CvStringHashNode_next_set)
-    def __init__(self, *args): 
+    def __init__(self, *args):
         """__init__(self) -> CvStringHashNode"""
-        this = _cv.new_CvStringHashNode(*args)
-        try: self.this.append(this)
-        except: self.this = this
-    __swig_destroy__ = _cv.delete_CvStringHashNode
-    __del__ = lambda self : None;
-CvStringHashNode_swigregister = _cv.CvStringHashNode_swigregister
-CvStringHashNode_swigregister(CvStringHashNode)
+        _swig_setattr(self, CvStringHashNode, 'this', _cv.new_CvStringHashNode(*args))
+        _swig_setattr(self, CvStringHashNode, 'thisown', 1)
+    def __del__(self, destroy=_cv.delete_CvStringHashNode):
+        """__del__(self)"""
+        try:
+            if self.thisown: destroy(self)
+        except: pass
+
+
+class CvStringHashNodePtr(CvStringHashNode):
+    def __init__(self, this):
+        _swig_setattr(self, CvStringHashNode, 'this', this)
+        if not hasattr(self,"thisown"): _swig_setattr(self, CvStringHashNode, 'thisown', 0)
+        self.__class__ = CvStringHashNode
+_cv.CvStringHashNode_swigregister(CvStringHashNodePtr)
 
 class CvFileNode(_object):
     """Proxy of C++ CvFileNode class"""
@@ -3210,7 +3640,8 @@ class CvFileNode(_object):
     __setattr__ = lambda self, name, value: _swig_setattr(self, CvFileNode, name, value)
     __swig_getmethods__ = {}
     __getattr__ = lambda self, name: _swig_getattr(self, CvFileNode, name)
-    __repr__ = _swig_repr
+    def __repr__(self):
+        return "<%s.%s; proxy of C++ CvFileNode instance at %s>" % (self.__class__.__module__, self.__class__.__name__, self.this,)
     __swig_setmethods__["tag"] = _cv.CvFileNode_tag_set
     __swig_getmethods__["tag"] = _cv.CvFileNode_tag_get
     if _newclass:tag = property(_cv.CvFileNode_tag_get, _cv.CvFileNode_tag_set)
@@ -3219,15 +3650,23 @@ class CvFileNode(_object):
     if _newclass:info = property(_cv.CvFileNode_info_get, _cv.CvFileNode_info_set)
     __swig_getmethods__["data"] = _cv.CvFileNode_data_get
     if _newclass:data = property(_cv.CvFileNode_data_get)
-    def __init__(self, *args): 
+    def __init__(self, *args):
         """__init__(self) -> CvFileNode"""
-        this = _cv.new_CvFileNode(*args)
-        try: self.this.append(this)
-        except: self.this = this
-    __swig_destroy__ = _cv.delete_CvFileNode
-    __del__ = lambda self : None;
-CvFileNode_swigregister = _cv.CvFileNode_swigregister
-CvFileNode_swigregister(CvFileNode)
+        _swig_setattr(self, CvFileNode, 'this', _cv.new_CvFileNode(*args))
+        _swig_setattr(self, CvFileNode, 'thisown', 1)
+    def __del__(self, destroy=_cv.delete_CvFileNode):
+        """__del__(self)"""
+        try:
+            if self.thisown: destroy(self)
+        except: pass
+
+
+class CvFileNodePtr(CvFileNode):
+    def __init__(self, this):
+        _swig_setattr(self, CvFileNode, 'this', this)
+        if not hasattr(self,"thisown"): _swig_setattr(self, CvFileNode, 'thisown', 0)
+        self.__class__ = CvFileNode
+_cv.CvFileNode_swigregister(CvFileNodePtr)
 
 class CvFileNode_data(_object):
     """Proxy of C++ CvFileNode_data class"""
@@ -3235,7 +3674,8 @@ class CvFileNode_data(_object):
     __setattr__ = lambda self, name, value: _swig_setattr(self, CvFileNode_data, name, value)
     __swig_getmethods__ = {}
     __getattr__ = lambda self, name: _swig_getattr(self, CvFileNode_data, name)
-    __repr__ = _swig_repr
+    def __repr__(self):
+        return "<%s.%s; proxy of C++ CvFileNode_data instance at %s>" % (self.__class__.__module__, self.__class__.__name__, self.this,)
     __swig_setmethods__["f"] = _cv.CvFileNode_data_f_set
     __swig_getmethods__["f"] = _cv.CvFileNode_data_f_get
     if _newclass:f = property(_cv.CvFileNode_data_f_get, _cv.CvFileNode_data_f_set)
@@ -3251,15 +3691,23 @@ class CvFileNode_data(_object):
     __swig_setmethods__["map"] = _cv.CvFileNode_data_map_set
     __swig_getmethods__["map"] = _cv.CvFileNode_data_map_get
     if _newclass:map = property(_cv.CvFileNode_data_map_get, _cv.CvFileNode_data_map_set)
-    def __init__(self, *args): 
+    def __init__(self, *args):
         """__init__(self) -> CvFileNode_data"""
-        this = _cv.new_CvFileNode_data(*args)
-        try: self.this.append(this)
-        except: self.this = this
-    __swig_destroy__ = _cv.delete_CvFileNode_data
-    __del__ = lambda self : None;
-CvFileNode_data_swigregister = _cv.CvFileNode_data_swigregister
-CvFileNode_data_swigregister(CvFileNode_data)
+        _swig_setattr(self, CvFileNode_data, 'this', _cv.new_CvFileNode_data(*args))
+        _swig_setattr(self, CvFileNode_data, 'thisown', 1)
+    def __del__(self, destroy=_cv.delete_CvFileNode_data):
+        """__del__(self)"""
+        try:
+            if self.thisown: destroy(self)
+        except: pass
+
+
+class CvFileNode_dataPtr(CvFileNode_data):
+    def __init__(self, this):
+        _swig_setattr(self, CvFileNode_data, 'this', this)
+        if not hasattr(self,"thisown"): _swig_setattr(self, CvFileNode_data, 'thisown', 0)
+        self.__class__ = CvFileNode_data
+_cv.CvFileNode_data_swigregister(CvFileNode_dataPtr)
 
 class CvTypeInfo(_object):
     """Proxy of C++ CvTypeInfo class"""
@@ -3267,7 +3715,8 @@ class CvTypeInfo(_object):
     __setattr__ = lambda self, name, value: _swig_setattr(self, CvTypeInfo, name, value)
     __swig_getmethods__ = {}
     __getattr__ = lambda self, name: _swig_getattr(self, CvTypeInfo, name)
-    __repr__ = _swig_repr
+    def __repr__(self):
+        return "<%s.%s; proxy of C++ CvTypeInfo instance at %s>" % (self.__class__.__module__, self.__class__.__name__, self.this,)
     __swig_setmethods__["flags"] = _cv.CvTypeInfo_flags_set
     __swig_getmethods__["flags"] = _cv.CvTypeInfo_flags_get
     if _newclass:flags = property(_cv.CvTypeInfo_flags_get, _cv.CvTypeInfo_flags_set)
@@ -3298,15 +3747,23 @@ class CvTypeInfo(_object):
     __swig_setmethods__["clone"] = _cv.CvTypeInfo_clone_set
     __swig_getmethods__["clone"] = _cv.CvTypeInfo_clone_get
     if _newclass:clone = property(_cv.CvTypeInfo_clone_get, _cv.CvTypeInfo_clone_set)
-    def __init__(self, *args): 
+    def __init__(self, *args):
         """__init__(self) -> CvTypeInfo"""
-        this = _cv.new_CvTypeInfo(*args)
-        try: self.this.append(this)
-        except: self.this = this
-    __swig_destroy__ = _cv.delete_CvTypeInfo
-    __del__ = lambda self : None;
-CvTypeInfo_swigregister = _cv.CvTypeInfo_swigregister
-CvTypeInfo_swigregister(CvTypeInfo)
+        _swig_setattr(self, CvTypeInfo, 'this', _cv.new_CvTypeInfo(*args))
+        _swig_setattr(self, CvTypeInfo, 'thisown', 1)
+    def __del__(self, destroy=_cv.delete_CvTypeInfo):
+        """__del__(self)"""
+        try:
+            if self.thisown: destroy(self)
+        except: pass
+
+
+class CvTypeInfoPtr(CvTypeInfo):
+    def __init__(self, this):
+        _swig_setattr(self, CvTypeInfo, 'this', this)
+        if not hasattr(self,"thisown"): _swig_setattr(self, CvTypeInfo, 'thisown', 0)
+        self.__class__ = CvTypeInfo
+_cv.CvTypeInfo_swigregister(CvTypeInfoPtr)
 
 class CvPluginFuncInfo(_object):
     """Proxy of C++ CvPluginFuncInfo class"""
@@ -3314,7 +3771,8 @@ class CvPluginFuncInfo(_object):
     __setattr__ = lambda self, name, value: _swig_setattr(self, CvPluginFuncInfo, name, value)
     __swig_getmethods__ = {}
     __getattr__ = lambda self, name: _swig_getattr(self, CvPluginFuncInfo, name)
-    __repr__ = _swig_repr
+    def __repr__(self):
+        return "<%s.%s; proxy of C++ CvPluginFuncInfo instance at %s>" % (self.__class__.__module__, self.__class__.__name__, self.this,)
     __swig_setmethods__["func_addr"] = _cv.CvPluginFuncInfo_func_addr_set
     __swig_getmethods__["func_addr"] = _cv.CvPluginFuncInfo_func_addr_get
     if _newclass:func_addr = property(_cv.CvPluginFuncInfo_func_addr_get, _cv.CvPluginFuncInfo_func_addr_set)
@@ -3330,15 +3788,23 @@ class CvPluginFuncInfo(_object):
     __swig_setmethods__["loaded_from"] = _cv.CvPluginFuncInfo_loaded_from_set
     __swig_getmethods__["loaded_from"] = _cv.CvPluginFuncInfo_loaded_from_get
     if _newclass:loaded_from = property(_cv.CvPluginFuncInfo_loaded_from_get, _cv.CvPluginFuncInfo_loaded_from_set)
-    def __init__(self, *args): 
+    def __init__(self, *args):
         """__init__(self) -> CvPluginFuncInfo"""
-        this = _cv.new_CvPluginFuncInfo(*args)
-        try: self.this.append(this)
-        except: self.this = this
-    __swig_destroy__ = _cv.delete_CvPluginFuncInfo
-    __del__ = lambda self : None;
-CvPluginFuncInfo_swigregister = _cv.CvPluginFuncInfo_swigregister
-CvPluginFuncInfo_swigregister(CvPluginFuncInfo)
+        _swig_setattr(self, CvPluginFuncInfo, 'this', _cv.new_CvPluginFuncInfo(*args))
+        _swig_setattr(self, CvPluginFuncInfo, 'thisown', 1)
+    def __del__(self, destroy=_cv.delete_CvPluginFuncInfo):
+        """__del__(self)"""
+        try:
+            if self.thisown: destroy(self)
+        except: pass
+
+
+class CvPluginFuncInfoPtr(CvPluginFuncInfo):
+    def __init__(self, this):
+        _swig_setattr(self, CvPluginFuncInfo, 'this', this)
+        if not hasattr(self,"thisown"): _swig_setattr(self, CvPluginFuncInfo, 'thisown', 0)
+        self.__class__ = CvPluginFuncInfo
+_cv.CvPluginFuncInfo_swigregister(CvPluginFuncInfoPtr)
 
 class CvModuleInfo(_object):
     """Proxy of C++ CvModuleInfo class"""
@@ -3346,7 +3812,8 @@ class CvModuleInfo(_object):
     __setattr__ = lambda self, name, value: _swig_setattr(self, CvModuleInfo, name, value)
     __swig_getmethods__ = {}
     __getattr__ = lambda self, name: _swig_getattr(self, CvModuleInfo, name)
-    __repr__ = _swig_repr
+    def __repr__(self):
+        return "<%s.%s; proxy of C++ CvModuleInfo instance at %s>" % (self.__class__.__module__, self.__class__.__name__, self.this,)
     __swig_setmethods__["next"] = _cv.CvModuleInfo_next_set
     __swig_getmethods__["next"] = _cv.CvModuleInfo_next_get
     if _newclass:next = property(_cv.CvModuleInfo_next_get, _cv.CvModuleInfo_next_set)
@@ -3359,184 +3826,193 @@ class CvModuleInfo(_object):
     __swig_setmethods__["func_tab"] = _cv.CvModuleInfo_func_tab_set
     __swig_getmethods__["func_tab"] = _cv.CvModuleInfo_func_tab_get
     if _newclass:func_tab = property(_cv.CvModuleInfo_func_tab_get, _cv.CvModuleInfo_func_tab_set)
-    def __init__(self, *args): 
+    def __init__(self, *args):
         """__init__(self) -> CvModuleInfo"""
-        this = _cv.new_CvModuleInfo(*args)
-        try: self.this.append(this)
-        except: self.this = this
-    __swig_destroy__ = _cv.delete_CvModuleInfo
-    __del__ = lambda self : None;
-CvModuleInfo_swigregister = _cv.CvModuleInfo_swigregister
-CvModuleInfo_swigregister(CvModuleInfo)
+        _swig_setattr(self, CvModuleInfo, 'this', _cv.new_CvModuleInfo(*args))
+        _swig_setattr(self, CvModuleInfo, 'thisown', 1)
+    def __del__(self, destroy=_cv.delete_CvModuleInfo):
+        """__del__(self)"""
+        try:
+            if self.thisown: destroy(self)
+        except: pass
+
+
+class CvModuleInfoPtr(CvModuleInfo):
+    def __init__(self, this):
+        _swig_setattr(self, CvModuleInfo, 'this', this)
+        if not hasattr(self,"thisown"): _swig_setattr(self, CvModuleInfo, 'thisown', 0)
+        self.__class__ = CvModuleInfo
+_cv.CvModuleInfo_swigregister(CvModuleInfoPtr)
 
 
 def cvAlloc(*args):
-  """cvAlloc(size_t size) -> void"""
-  return _cv.cvAlloc(*args)
+    """cvAlloc(size_t size) -> void"""
+    return _cv.cvAlloc(*args)
 
 def cvFree_(*args):
-  """cvFree_(void ptr)"""
-  return _cv.cvFree_(*args)
+    """cvFree_(void ptr)"""
+    return _cv.cvFree_(*args)
 
 def cvCreateImageHeader(*args):
-  """cvCreateImageHeader(CvSize size, int depth, int channels)"""
-  return _cv.cvCreateImageHeader(*args)
+    """cvCreateImageHeader(CvSize size, int depth, int channels)"""
+    return _cv.cvCreateImageHeader(*args)
 
 def cvInitImageHeader(*args):
-  """
+    """
     cvInitImageHeader( image, CvSize size, int depth, int channels, int origin=0, 
         int align=4)
     """
-  return _cv.cvInitImageHeader(*args)
+    return _cv.cvInitImageHeader(*args)
 
 def cvCreateImage(*args):
-  """cvCreateImage(CvSize size, int depth, int channels)"""
-  return _cv.cvCreateImage(*args)
+    """cvCreateImage(CvSize size, int depth, int channels)"""
+    return _cv.cvCreateImage(*args)
 
 def cvReleaseImageHeader(*args):
-  """cvReleaseImageHeader( image)"""
-  return _cv.cvReleaseImageHeader(*args)
+    """cvReleaseImageHeader( image)"""
+    return _cv.cvReleaseImageHeader(*args)
 
 def cvReleaseImage(*args):
-  """cvReleaseImage( image)"""
-  return _cv.cvReleaseImage(*args)
+    """cvReleaseImage( image)"""
+    return _cv.cvReleaseImage(*args)
 
 def cvCloneImage(*args):
-  """cvCloneImage( image)"""
-  return _cv.cvCloneImage(*args)
+    """cvCloneImage( image)"""
+    return _cv.cvCloneImage(*args)
 
 def cvSetImageCOI(*args):
-  """cvSetImageCOI( image, int coi)"""
-  return _cv.cvSetImageCOI(*args)
+    """cvSetImageCOI( image, int coi)"""
+    return _cv.cvSetImageCOI(*args)
 
 def cvGetImageCOI(*args):
-  """cvGetImageCOI( image) -> int"""
-  return _cv.cvGetImageCOI(*args)
+    """cvGetImageCOI( image) -> int"""
+    return _cv.cvGetImageCOI(*args)
 
 def cvSetImageROI(*args):
-  """cvSetImageROI( image, CvRect rect)"""
-  return _cv.cvSetImageROI(*args)
+    """cvSetImageROI( image, CvRect rect)"""
+    return _cv.cvSetImageROI(*args)
 
 def cvResetImageROI(*args):
-  """cvResetImageROI( image)"""
-  return _cv.cvResetImageROI(*args)
+    """cvResetImageROI( image)"""
+    return _cv.cvResetImageROI(*args)
 
 def cvGetImageROI(*args):
-  """cvGetImageROI( image) -> CvRect"""
-  return _cv.cvGetImageROI(*args)
+    """cvGetImageROI( image) -> CvRect"""
+    return _cv.cvGetImageROI(*args)
 
 def cvCreateMatHeader(*args):
-  """cvCreateMatHeader(int rows, int cols, int type) -> CvMat"""
-  return _cv.cvCreateMatHeader(*args)
+    """cvCreateMatHeader(int rows, int cols, int type) -> CvMat"""
+    return _cv.cvCreateMatHeader(*args)
 
 def cvInitMatHeader(*args):
-  """
+    """
     cvInitMatHeader(CvMat mat, int rows, int cols, int type, void data=None, 
         int step=0x7fffffff) -> CvMat
     """
-  return _cv.cvInitMatHeader(*args)
+    return _cv.cvInitMatHeader(*args)
 
 def cvCreateMat(*args):
-  """cvCreateMat(int rows, int cols, int type) -> CvMat"""
-  return _cv.cvCreateMat(*args)
+    """cvCreateMat(int rows, int cols, int type) -> CvMat"""
+    return _cv.cvCreateMat(*args)
 
 def cvReleaseMat(*args):
-  """cvReleaseMat(CvMat mat)"""
-  return _cv.cvReleaseMat(*args)
+    """cvReleaseMat(CvMat mat)"""
+    return _cv.cvReleaseMat(*args)
 
 def cvDecRefData(*args):
-  """cvDecRefData(CvArr arr)"""
-  return _cv.cvDecRefData(*args)
+    """cvDecRefData(CvArr arr)"""
+    return _cv.cvDecRefData(*args)
 
 def cvIncRefData(*args):
-  """cvIncRefData(CvArr arr) -> int"""
-  return _cv.cvIncRefData(*args)
+    """cvIncRefData(CvArr arr) -> int"""
+    return _cv.cvIncRefData(*args)
 
 def cvCloneMat(*args):
-  """cvCloneMat(CvMat mat) -> CvMat"""
-  return _cv.cvCloneMat(*args)
+    """cvCloneMat(CvMat mat) -> CvMat"""
+    return _cv.cvCloneMat(*args)
 
 def cvGetSubRect(*args):
-  """cvGetSubRect(CvArr arr, CvMat submat, CvRect rect) -> CvMat"""
-  return _cv.cvGetSubRect(*args)
+    """cvGetSubRect(CvArr arr, CvMat submat, CvRect rect) -> CvMat"""
+    return _cv.cvGetSubRect(*args)
 
 def cvGetRows(*args):
-  """
+    """
     cvGetRows(CvArr arr, CvMat submat, int start_row, int end_row, 
         int delta_row=1) -> CvMat
     """
-  return _cv.cvGetRows(*args)
+    return _cv.cvGetRows(*args)
 
 def cvGetRow(*args):
-  """cvGetRow(CvArr arr, CvMat submat, int row) -> CvMat"""
-  return _cv.cvGetRow(*args)
+    """cvGetRow(CvArr arr, CvMat submat, int row) -> CvMat"""
+    return _cv.cvGetRow(*args)
 
 def cvGetCols(*args):
-  """cvGetCols(CvArr arr, CvMat submat, int start_col, int end_col) -> CvMat"""
-  return _cv.cvGetCols(*args)
+    """cvGetCols(CvArr arr, CvMat submat, int start_col, int end_col) -> CvMat"""
+    return _cv.cvGetCols(*args)
 
 def cvGetCol(*args):
-  """cvGetCol(CvArr arr, CvMat submat, int col) -> CvMat"""
-  return _cv.cvGetCol(*args)
+    """cvGetCol(CvArr arr, CvMat submat, int col) -> CvMat"""
+    return _cv.cvGetCol(*args)
 
 def cvGetDiag(*args):
-  """cvGetDiag(CvArr arr, CvMat submat, int diag=0) -> CvMat"""
-  return _cv.cvGetDiag(*args)
+    """cvGetDiag(CvArr arr, CvMat submat, int diag=0) -> CvMat"""
+    return _cv.cvGetDiag(*args)
 
 def cvScalarToRawData(*args):
-  """cvScalarToRawData(CvScalar scalar, void data, int type, int extend_to_12=0)"""
-  return _cv.cvScalarToRawData(*args)
+    """cvScalarToRawData(CvScalar scalar, void data, int type, int extend_to_12=0)"""
+    return _cv.cvScalarToRawData(*args)
 
 def cvRawDataToScalar(*args):
-  """cvRawDataToScalar(void data, int type, CvScalar scalar)"""
-  return _cv.cvRawDataToScalar(*args)
+    """cvRawDataToScalar(void data, int type, CvScalar scalar)"""
+    return _cv.cvRawDataToScalar(*args)
 
 def cvCreateMatNDHeader(*args):
-  """cvCreateMatNDHeader(int dims, int type) -> CvMatND"""
-  return _cv.cvCreateMatNDHeader(*args)
+    """cvCreateMatNDHeader(int dims, int type) -> CvMatND"""
+    return _cv.cvCreateMatNDHeader(*args)
 
 def cvCreateMatND(*args):
-  """cvCreateMatND(int dims, int type) -> CvMatND"""
-  return _cv.cvCreateMatND(*args)
+    """cvCreateMatND(int dims, int type) -> CvMatND"""
+    return _cv.cvCreateMatND(*args)
 
 def cvInitMatNDHeader(*args):
-  """cvInitMatNDHeader(CvMatND mat, int dims, int type, void data=None) -> CvMatND"""
-  return _cv.cvInitMatNDHeader(*args)
+    """cvInitMatNDHeader(CvMatND mat, int dims, int type, void data=None) -> CvMatND"""
+    return _cv.cvInitMatNDHeader(*args)
 
 def cvReleaseMatND(*args):
-  """cvReleaseMatND(CvMatND mat)"""
-  return _cv.cvReleaseMatND(*args)
+    """cvReleaseMatND(CvMatND mat)"""
+    return _cv.cvReleaseMatND(*args)
 
 def cvCloneMatND(*args):
-  """cvCloneMatND(CvMatND mat) -> CvMatND"""
-  return _cv.cvCloneMatND(*args)
+    """cvCloneMatND(CvMatND mat) -> CvMatND"""
+    return _cv.cvCloneMatND(*args)
 
 def cvCreateSparseMat(*args):
-  """cvCreateSparseMat(int dims, int type) -> CvSparseMat"""
-  return _cv.cvCreateSparseMat(*args)
+    """cvCreateSparseMat(int dims, int type) -> CvSparseMat"""
+    return _cv.cvCreateSparseMat(*args)
 
 def cvReleaseSparseMat(*args):
-  """cvReleaseSparseMat(CvSparseMat mat)"""
-  return _cv.cvReleaseSparseMat(*args)
+    """cvReleaseSparseMat(CvSparseMat mat)"""
+    return _cv.cvReleaseSparseMat(*args)
 
 def cvCloneSparseMat(*args):
-  """cvCloneSparseMat(CvSparseMat mat) -> CvSparseMat"""
-  return _cv.cvCloneSparseMat(*args)
+    """cvCloneSparseMat(CvSparseMat mat) -> CvSparseMat"""
+    return _cv.cvCloneSparseMat(*args)
 
 def cvInitSparseMatIterator(*args):
-  """cvInitSparseMatIterator(CvSparseMat mat, CvSparseMatIterator mat_iterator) -> CvSparseNode"""
-  return _cv.cvInitSparseMatIterator(*args)
+    """cvInitSparseMatIterator(CvSparseMat mat, CvSparseMatIterator mat_iterator) -> CvSparseNode"""
+    return _cv.cvInitSparseMatIterator(*args)
 
 def cvGetNextSparseNode(*args):
-  """cvGetNextSparseNode(CvSparseMatIterator mat_iterator) -> CvSparseNode"""
-  return _cv.cvGetNextSparseNode(*args)
+    """cvGetNextSparseNode(CvSparseMatIterator mat_iterator) -> CvSparseNode"""
+    return _cv.cvGetNextSparseNode(*args)
 class CvNArrayIterator(_object):
     """Proxy of C++ CvNArrayIterator class"""
     __swig_setmethods__ = {}
     __setattr__ = lambda self, name, value: _swig_setattr(self, CvNArrayIterator, name, value)
     __swig_getmethods__ = {}
     __getattr__ = lambda self, name: _swig_getattr(self, CvNArrayIterator, name)
-    __repr__ = _swig_repr
+    def __repr__(self):
+        return "<%s.%s; proxy of C++ CvNArrayIterator instance at %s>" % (self.__class__.__module__, self.__class__.__name__, self.this,)
     __swig_setmethods__["count"] = _cv.CvNArrayIterator_count_set
     __swig_getmethods__["count"] = _cv.CvNArrayIterator_count_get
     if _newclass:count = property(_cv.CvNArrayIterator_count_get, _cv.CvNArrayIterator_count_set)
@@ -3555,788 +4031,797 @@ class CvNArrayIterator(_object):
     __swig_setmethods__["hdr"] = _cv.CvNArrayIterator_hdr_set
     __swig_getmethods__["hdr"] = _cv.CvNArrayIterator_hdr_get
     if _newclass:hdr = property(_cv.CvNArrayIterator_hdr_get, _cv.CvNArrayIterator_hdr_set)
-    def __init__(self, *args): 
+    def __init__(self, *args):
         """__init__(self) -> CvNArrayIterator"""
-        this = _cv.new_CvNArrayIterator(*args)
-        try: self.this.append(this)
-        except: self.this = this
-    __swig_destroy__ = _cv.delete_CvNArrayIterator
-    __del__ = lambda self : None;
-CvNArrayIterator_swigregister = _cv.CvNArrayIterator_swigregister
-CvNArrayIterator_swigregister(CvNArrayIterator)
+        _swig_setattr(self, CvNArrayIterator, 'this', _cv.new_CvNArrayIterator(*args))
+        _swig_setattr(self, CvNArrayIterator, 'thisown', 1)
+    def __del__(self, destroy=_cv.delete_CvNArrayIterator):
+        """__del__(self)"""
+        try:
+            if self.thisown: destroy(self)
+        except: pass
+
+
+class CvNArrayIteratorPtr(CvNArrayIterator):
+    def __init__(self, this):
+        _swig_setattr(self, CvNArrayIterator, 'this', this)
+        if not hasattr(self,"thisown"): _swig_setattr(self, CvNArrayIterator, 'thisown', 0)
+        self.__class__ = CvNArrayIterator
+_cv.CvNArrayIterator_swigregister(CvNArrayIteratorPtr)
 
 
 def cvInitNArrayIterator(*args):
-  """
+    """
     cvInitNArrayIterator(int count, CvArr arrs, CvArr mask, CvMatND stubs, CvNArrayIterator array_iterator, 
         int flags=0) -> int
     """
-  return _cv.cvInitNArrayIterator(*args)
+    return _cv.cvInitNArrayIterator(*args)
 
 def cvNextNArraySlice(*args):
-  """cvNextNArraySlice(CvNArrayIterator array_iterator) -> int"""
-  return _cv.cvNextNArraySlice(*args)
+    """cvNextNArraySlice(CvNArrayIterator array_iterator) -> int"""
+    return _cv.cvNextNArraySlice(*args)
 
 def cvGetElemType(*args):
-  """cvGetElemType(CvArr arr) -> int"""
-  return _cv.cvGetElemType(*args)
+    """cvGetElemType(CvArr arr) -> int"""
+    return _cv.cvGetElemType(*args)
 
 def cvGetDims(*args):
-  """cvGetDims(CvArr arr) -> int"""
-  return _cv.cvGetDims(*args)
+    """cvGetDims(CvArr arr) -> int"""
+    return _cv.cvGetDims(*args)
 
 def cvGetDimSize(*args):
-  """cvGetDimSize(CvArr arr, int index) -> int"""
-  return _cv.cvGetDimSize(*args)
+    """cvGetDimSize(CvArr arr, int index) -> int"""
+    return _cv.cvGetDimSize(*args)
 
 def cvPtr1D(*args):
-  """cvPtr1D(CvArr arr, int idx0, int type=None) -> uchar"""
-  return _cv.cvPtr1D(*args)
+    """cvPtr1D(CvArr arr, int idx0, int type=None) -> uchar"""
+    return _cv.cvPtr1D(*args)
 
 def cvPtr2D(*args):
-  """cvPtr2D(CvArr arr, int idx0, int idx1, int type=None) -> uchar"""
-  return _cv.cvPtr2D(*args)
+    """cvPtr2D(CvArr arr, int idx0, int idx1, int type=None) -> uchar"""
+    return _cv.cvPtr2D(*args)
 
 def cvPtr3D(*args):
-  """cvPtr3D(CvArr arr, int idx0, int idx1, int idx2, int type=None) -> uchar"""
-  return _cv.cvPtr3D(*args)
+    """cvPtr3D(CvArr arr, int idx0, int idx1, int idx2, int type=None) -> uchar"""
+    return _cv.cvPtr3D(*args)
 
 def cvPtrND(*args):
-  """
+    """
     cvPtrND(CvArr arr, int idx, int type=None, int create_node=1, 
         unsigned int precalc_hashval=None) -> uchar
     """
-  return _cv.cvPtrND(*args)
+    return _cv.cvPtrND(*args)
 
 def cvGet1D(*args):
-  """cvGet1D(CvArr arr, int idx0) -> CvScalar"""
-  return _cv.cvGet1D(*args)
+    """cvGet1D(CvArr arr, int idx0) -> CvScalar"""
+    return _cv.cvGet1D(*args)
 
 def cvGet2D(*args):
-  """cvGet2D(CvArr arr, int idx0, int idx1) -> CvScalar"""
-  return _cv.cvGet2D(*args)
+    """cvGet2D(CvArr arr, int idx0, int idx1) -> CvScalar"""
+    return _cv.cvGet2D(*args)
 
 def cvGet3D(*args):
-  """cvGet3D(CvArr arr, int idx0, int idx1, int idx2) -> CvScalar"""
-  return _cv.cvGet3D(*args)
+    """cvGet3D(CvArr arr, int idx0, int idx1, int idx2) -> CvScalar"""
+    return _cv.cvGet3D(*args)
 
 def cvGetND(*args):
-  """cvGetND(CvArr arr, int idx) -> CvScalar"""
-  return _cv.cvGetND(*args)
+    """cvGetND(CvArr arr, int idx) -> CvScalar"""
+    return _cv.cvGetND(*args)
 
 def cvGetReal1D(*args):
-  """cvGetReal1D(CvArr arr, int idx0) -> double"""
-  return _cv.cvGetReal1D(*args)
+    """cvGetReal1D(CvArr arr, int idx0) -> double"""
+    return _cv.cvGetReal1D(*args)
 
 def cvGetReal2D(*args):
-  """cvGetReal2D(CvArr arr, int idx0, int idx1) -> double"""
-  return _cv.cvGetReal2D(*args)
+    """cvGetReal2D(CvArr arr, int idx0, int idx1) -> double"""
+    return _cv.cvGetReal2D(*args)
 
 def cvGetReal3D(*args):
-  """cvGetReal3D(CvArr arr, int idx0, int idx1, int idx2) -> double"""
-  return _cv.cvGetReal3D(*args)
+    """cvGetReal3D(CvArr arr, int idx0, int idx1, int idx2) -> double"""
+    return _cv.cvGetReal3D(*args)
 
 def cvGetRealND(*args):
-  """cvGetRealND(CvArr arr, int idx) -> double"""
-  return _cv.cvGetRealND(*args)
+    """cvGetRealND(CvArr arr, int idx) -> double"""
+    return _cv.cvGetRealND(*args)
 
 def cvSet1D(*args):
-  """cvSet1D(CvArr arr, int idx0, CvScalar value)"""
-  return _cv.cvSet1D(*args)
+    """cvSet1D(CvArr arr, int idx0, CvScalar value)"""
+    return _cv.cvSet1D(*args)
 
 def cvSet2D(*args):
-  """cvSet2D(CvArr arr, int idx0, int idx1, CvScalar value)"""
-  return _cv.cvSet2D(*args)
+    """cvSet2D(CvArr arr, int idx0, int idx1, CvScalar value)"""
+    return _cv.cvSet2D(*args)
 
 def cvSet3D(*args):
-  """cvSet3D(CvArr arr, int idx0, int idx1, int idx2, CvScalar value)"""
-  return _cv.cvSet3D(*args)
+    """cvSet3D(CvArr arr, int idx0, int idx1, int idx2, CvScalar value)"""
+    return _cv.cvSet3D(*args)
 
 def cvSetND(*args):
-  """cvSetND(CvArr arr, int idx, CvScalar value)"""
-  return _cv.cvSetND(*args)
+    """cvSetND(CvArr arr, int idx, CvScalar value)"""
+    return _cv.cvSetND(*args)
 
 def cvSetReal1D(*args):
-  """cvSetReal1D(CvArr arr, int idx0, double value)"""
-  return _cv.cvSetReal1D(*args)
+    """cvSetReal1D(CvArr arr, int idx0, double value)"""
+    return _cv.cvSetReal1D(*args)
 
 def cvSetReal2D(*args):
-  """cvSetReal2D(CvArr arr, int idx0, int idx1, double value)"""
-  return _cv.cvSetReal2D(*args)
+    """cvSetReal2D(CvArr arr, int idx0, int idx1, double value)"""
+    return _cv.cvSetReal2D(*args)
 
 def cvSetReal3D(*args):
-  """cvSetReal3D(CvArr arr, int idx0, int idx1, int idx2, double value)"""
-  return _cv.cvSetReal3D(*args)
+    """cvSetReal3D(CvArr arr, int idx0, int idx1, int idx2, double value)"""
+    return _cv.cvSetReal3D(*args)
 
 def cvSetRealND(*args):
-  """cvSetRealND(CvArr arr, int idx, double value)"""
-  return _cv.cvSetRealND(*args)
+    """cvSetRealND(CvArr arr, int idx, double value)"""
+    return _cv.cvSetRealND(*args)
 
 def cvClearND(*args):
-  """cvClearND(CvArr arr, int idx)"""
-  return _cv.cvClearND(*args)
+    """cvClearND(CvArr arr, int idx)"""
+    return _cv.cvClearND(*args)
 
 def cvGetMat(*args):
-  """cvGetMat(CvArr arr, CvMat header, int coi=None, int allowND=0) -> CvMat"""
-  return _cv.cvGetMat(*args)
+    """cvGetMat(CvArr arr, CvMat header, int coi=None, int allowND=0) -> CvMat"""
+    return _cv.cvGetMat(*args)
 
 def cvGetImage(*args):
-  """cvGetImage(CvArr arr,  image_header)"""
-  return _cv.cvGetImage(*args)
+    """cvGetImage(CvArr arr,  image_header)"""
+    return _cv.cvGetImage(*args)
 
 def cvReshapeMatND(*args):
-  """
+    """
     cvReshapeMatND(CvArr arr, int sizeof_header, CvArr header, int new_cn, 
         int new_dims, int new_sizes) -> CvArr
     """
-  return _cv.cvReshapeMatND(*args)
+    return _cv.cvReshapeMatND(*args)
 
 def cvReshape(*args):
-  """cvReshape(CvArr arr, CvMat header, int new_cn, int new_rows=0) -> CvMat"""
-  return _cv.cvReshape(*args)
+    """cvReshape(CvArr arr, CvMat header, int new_cn, int new_rows=0) -> CvMat"""
+    return _cv.cvReshape(*args)
 
 def cvRepeat(*args):
-  """cvRepeat(CvArr src, CvArr dst)"""
-  return _cv.cvRepeat(*args)
+    """cvRepeat(CvArr src, CvArr dst)"""
+    return _cv.cvRepeat(*args)
 
 def cvCreateData(*args):
-  """cvCreateData(CvArr arr)"""
-  return _cv.cvCreateData(*args)
+    """cvCreateData(CvArr arr)"""
+    return _cv.cvCreateData(*args)
 
 def cvReleaseData(*args):
-  """cvReleaseData(CvArr arr)"""
-  return _cv.cvReleaseData(*args)
+    """cvReleaseData(CvArr arr)"""
+    return _cv.cvReleaseData(*args)
 
 def cvSetData(*args):
-  """cvSetData(CvArr arr, void data, int step)"""
-  return _cv.cvSetData(*args)
+    """cvSetData(CvArr arr, void data, int step)"""
+    return _cv.cvSetData(*args)
 
 def cvGetRawData(*args):
-  """cvGetRawData(CvArr arr, uchar data, int step=None, CvSize roi_size=None)"""
-  return _cv.cvGetRawData(*args)
+    """cvGetRawData(CvArr arr, uchar data, int step=None, CvSize roi_size=None)"""
+    return _cv.cvGetRawData(*args)
 
 def cvGetSize(*args):
-  """cvGetSize(CvArr arr) -> CvSize"""
-  return _cv.cvGetSize(*args)
+    """cvGetSize(CvArr arr) -> CvSize"""
+    return _cv.cvGetSize(*args)
 
 def cvCopy(*args):
-  """cvCopy(CvArr src, CvArr dst, CvArr mask=None)"""
-  return _cv.cvCopy(*args)
+    """cvCopy(CvArr src, CvArr dst, CvArr mask=None)"""
+    return _cv.cvCopy(*args)
 
 def cvSet(*args):
-  """cvSet(CvArr arr, CvScalar value, CvArr mask=None)"""
-  return _cv.cvSet(*args)
+    """cvSet(CvArr arr, CvScalar value, CvArr mask=None)"""
+    return _cv.cvSet(*args)
 
 def cvSetZero(*args):
-  """cvSetZero(CvArr arr)"""
-  return _cv.cvSetZero(*args)
+    """cvSetZero(CvArr arr)"""
+    return _cv.cvSetZero(*args)
 
 def cvSplit(*args):
-  """cvSplit(CvArr src, CvArr dst0, CvArr dst1, CvArr dst2, CvArr dst3)"""
-  return _cv.cvSplit(*args)
+    """cvSplit(CvArr src, CvArr dst0, CvArr dst1, CvArr dst2, CvArr dst3)"""
+    return _cv.cvSplit(*args)
 
 def cvMerge(*args):
-  """cvMerge(CvArr src0, CvArr src1, CvArr src2, CvArr src3, CvArr dst)"""
-  return _cv.cvMerge(*args)
+    """cvMerge(CvArr src0, CvArr src1, CvArr src2, CvArr src3, CvArr dst)"""
+    return _cv.cvMerge(*args)
 
 def cvMixChannels(*args):
-  """
+    """
     cvMixChannels(CvArr src, int src_count, CvArr dst, int dst_count, 
         int from_to, int pair_count)
     """
-  return _cv.cvMixChannels(*args)
+    return _cv.cvMixChannels(*args)
 
 def cvConvertScale(*args):
-  """cvConvertScale(CvArr src, CvArr dst, double scale=1, double shift=0)"""
-  return _cv.cvConvertScale(*args)
+    """cvConvertScale(CvArr src, CvArr dst, double scale=1, double shift=0)"""
+    return _cv.cvConvertScale(*args)
 
 def cvConvertScaleAbs(*args):
-  """cvConvertScaleAbs(CvArr src, CvArr dst, double scale=1, double shift=0)"""
-  return _cv.cvConvertScaleAbs(*args)
+    """cvConvertScaleAbs(CvArr src, CvArr dst, double scale=1, double shift=0)"""
+    return _cv.cvConvertScaleAbs(*args)
 
 def cvCheckTermCriteria(*args):
-  """cvCheckTermCriteria(CvTermCriteria criteria, double default_eps, int default_max_iters) -> CvTermCriteria"""
-  return _cv.cvCheckTermCriteria(*args)
+    """cvCheckTermCriteria(CvTermCriteria criteria, double default_eps, int default_max_iters) -> CvTermCriteria"""
+    return _cv.cvCheckTermCriteria(*args)
 
 def cvAdd(*args):
-  """cvAdd(CvArr src1, CvArr src2, CvArr dst, CvArr mask=None)"""
-  return _cv.cvAdd(*args)
+    """cvAdd(CvArr src1, CvArr src2, CvArr dst, CvArr mask=None)"""
+    return _cv.cvAdd(*args)
 
 def cvAddS(*args):
-  """cvAddS(CvArr src, CvScalar value, CvArr dst, CvArr mask=None)"""
-  return _cv.cvAddS(*args)
+    """cvAddS(CvArr src, CvScalar value, CvArr dst, CvArr mask=None)"""
+    return _cv.cvAddS(*args)
 
 def cvSub(*args):
-  """cvSub(CvArr src1, CvArr src2, CvArr dst, CvArr mask=None)"""
-  return _cv.cvSub(*args)
+    """cvSub(CvArr src1, CvArr src2, CvArr dst, CvArr mask=None)"""
+    return _cv.cvSub(*args)
 
 def cvSubS(*args):
-  """cvSubS(CvArr src, CvScalar value, CvArr dst, CvArr mask=None)"""
-  return _cv.cvSubS(*args)
+    """cvSubS(CvArr src, CvScalar value, CvArr dst, CvArr mask=None)"""
+    return _cv.cvSubS(*args)
 
 def cvSubRS(*args):
-  """cvSubRS(CvArr src, CvScalar value, CvArr dst, CvArr mask=None)"""
-  return _cv.cvSubRS(*args)
+    """cvSubRS(CvArr src, CvScalar value, CvArr dst, CvArr mask=None)"""
+    return _cv.cvSubRS(*args)
 
 def cvMul(*args):
-  """cvMul(CvArr src1, CvArr src2, CvArr dst, double scale=1)"""
-  return _cv.cvMul(*args)
+    """cvMul(CvArr src1, CvArr src2, CvArr dst, double scale=1)"""
+    return _cv.cvMul(*args)
 
 def cvDiv(*args):
-  """cvDiv(CvArr src1, CvArr src2, CvArr dst, double scale=1)"""
-  return _cv.cvDiv(*args)
+    """cvDiv(CvArr src1, CvArr src2, CvArr dst, double scale=1)"""
+    return _cv.cvDiv(*args)
 
 def cvScaleAdd(*args):
-  """cvScaleAdd(CvArr src1, CvScalar scale, CvArr src2, CvArr dst)"""
-  return _cv.cvScaleAdd(*args)
+    """cvScaleAdd(CvArr src1, CvScalar scale, CvArr src2, CvArr dst)"""
+    return _cv.cvScaleAdd(*args)
 
 def cvAddWeighted(*args):
-  """
+    """
     cvAddWeighted(CvArr src1, double alpha, CvArr src2, double beta, 
         double gamma, CvArr dst)
     """
-  return _cv.cvAddWeighted(*args)
+    return _cv.cvAddWeighted(*args)
 
 def cvDotProduct(*args):
-  """cvDotProduct(CvArr src1, CvArr src2) -> double"""
-  return _cv.cvDotProduct(*args)
+    """cvDotProduct(CvArr src1, CvArr src2) -> double"""
+    return _cv.cvDotProduct(*args)
 
 def cvAnd(*args):
-  """cvAnd(CvArr src1, CvArr src2, CvArr dst, CvArr mask=None)"""
-  return _cv.cvAnd(*args)
+    """cvAnd(CvArr src1, CvArr src2, CvArr dst, CvArr mask=None)"""
+    return _cv.cvAnd(*args)
 
 def cvAndS(*args):
-  """cvAndS(CvArr src, CvScalar value, CvArr dst, CvArr mask=None)"""
-  return _cv.cvAndS(*args)
+    """cvAndS(CvArr src, CvScalar value, CvArr dst, CvArr mask=None)"""
+    return _cv.cvAndS(*args)
 
 def cvOr(*args):
-  """cvOr(CvArr src1, CvArr src2, CvArr dst, CvArr mask=None)"""
-  return _cv.cvOr(*args)
+    """cvOr(CvArr src1, CvArr src2, CvArr dst, CvArr mask=None)"""
+    return _cv.cvOr(*args)
 
 def cvOrS(*args):
-  """cvOrS(CvArr src, CvScalar value, CvArr dst, CvArr mask=None)"""
-  return _cv.cvOrS(*args)
+    """cvOrS(CvArr src, CvScalar value, CvArr dst, CvArr mask=None)"""
+    return _cv.cvOrS(*args)
 
 def cvXor(*args):
-  """cvXor(CvArr src1, CvArr src2, CvArr dst, CvArr mask=None)"""
-  return _cv.cvXor(*args)
+    """cvXor(CvArr src1, CvArr src2, CvArr dst, CvArr mask=None)"""
+    return _cv.cvXor(*args)
 
 def cvXorS(*args):
-  """cvXorS(CvArr src, CvScalar value, CvArr dst, CvArr mask=None)"""
-  return _cv.cvXorS(*args)
+    """cvXorS(CvArr src, CvScalar value, CvArr dst, CvArr mask=None)"""
+    return _cv.cvXorS(*args)
 
 def cvNot(*args):
-  """cvNot(CvArr src, CvArr dst)"""
-  return _cv.cvNot(*args)
+    """cvNot(CvArr src, CvArr dst)"""
+    return _cv.cvNot(*args)
 
 def cvInRange(*args):
-  """cvInRange(CvArr src, CvArr lower, CvArr upper, CvArr dst)"""
-  return _cv.cvInRange(*args)
+    """cvInRange(CvArr src, CvArr lower, CvArr upper, CvArr dst)"""
+    return _cv.cvInRange(*args)
 
 def cvInRangeS(*args):
-  """cvInRangeS(CvArr src, CvScalar lower, CvScalar upper, CvArr dst)"""
-  return _cv.cvInRangeS(*args)
+    """cvInRangeS(CvArr src, CvScalar lower, CvScalar upper, CvArr dst)"""
+    return _cv.cvInRangeS(*args)
 
 def cvCmp(*args):
-  """cvCmp(CvArr src1, CvArr src2, CvArr dst, int cmp_op)"""
-  return _cv.cvCmp(*args)
+    """cvCmp(CvArr src1, CvArr src2, CvArr dst, int cmp_op)"""
+    return _cv.cvCmp(*args)
 
 def cvCmpS(*args):
-  """cvCmpS(CvArr src, double value, CvArr dst, int cmp_op)"""
-  return _cv.cvCmpS(*args)
+    """cvCmpS(CvArr src, double value, CvArr dst, int cmp_op)"""
+    return _cv.cvCmpS(*args)
 
 def cvMin(*args):
-  """cvMin(CvArr src1, CvArr src2, CvArr dst)"""
-  return _cv.cvMin(*args)
+    """cvMin(CvArr src1, CvArr src2, CvArr dst)"""
+    return _cv.cvMin(*args)
 
 def cvMax(*args):
-  """cvMax(CvArr src1, CvArr src2, CvArr dst)"""
-  return _cv.cvMax(*args)
+    """cvMax(CvArr src1, CvArr src2, CvArr dst)"""
+    return _cv.cvMax(*args)
 
 def cvMinS(*args):
-  """cvMinS(CvArr src, double value, CvArr dst)"""
-  return _cv.cvMinS(*args)
+    """cvMinS(CvArr src, double value, CvArr dst)"""
+    return _cv.cvMinS(*args)
 
 def cvMaxS(*args):
-  """cvMaxS(CvArr src, double value, CvArr dst)"""
-  return _cv.cvMaxS(*args)
+    """cvMaxS(CvArr src, double value, CvArr dst)"""
+    return _cv.cvMaxS(*args)
 
 def cvAbsDiff(*args):
-  """cvAbsDiff(CvArr src1, CvArr src2, CvArr dst)"""
-  return _cv.cvAbsDiff(*args)
+    """cvAbsDiff(CvArr src1, CvArr src2, CvArr dst)"""
+    return _cv.cvAbsDiff(*args)
 
 def cvAbsDiffS(*args):
-  """cvAbsDiffS(CvArr src, CvArr dst, CvScalar value)"""
-  return _cv.cvAbsDiffS(*args)
+    """cvAbsDiffS(CvArr src, CvArr dst, CvScalar value)"""
+    return _cv.cvAbsDiffS(*args)
 
 def cvCartToPolar(*args):
-  """
+    """
     cvCartToPolar(CvArr x, CvArr y, CvArr magnitude, CvArr angle=None, 
         int angle_in_degrees=0)
     """
-  return _cv.cvCartToPolar(*args)
+    return _cv.cvCartToPolar(*args)
 
 def cvPolarToCart(*args):
-  """cvPolarToCart(CvArr magnitude, CvArr angle, CvArr x, CvArr y, int angle_in_degrees=0)"""
-  return _cv.cvPolarToCart(*args)
+    """cvPolarToCart(CvArr magnitude, CvArr angle, CvArr x, CvArr y, int angle_in_degrees=0)"""
+    return _cv.cvPolarToCart(*args)
 
 def cvPow(*args):
-  """cvPow(CvArr src, CvArr dst, double power)"""
-  return _cv.cvPow(*args)
+    """cvPow(CvArr src, CvArr dst, double power)"""
+    return _cv.cvPow(*args)
 
 def cvExp(*args):
-  """cvExp(CvArr src, CvArr dst)"""
-  return _cv.cvExp(*args)
+    """cvExp(CvArr src, CvArr dst)"""
+    return _cv.cvExp(*args)
 
 def cvLog(*args):
-  """cvLog(CvArr src, CvArr dst)"""
-  return _cv.cvLog(*args)
+    """cvLog(CvArr src, CvArr dst)"""
+    return _cv.cvLog(*args)
 
 def cvFastArctan(*args):
-  """cvFastArctan(float y, float x) -> float"""
-  return _cv.cvFastArctan(*args)
+    """cvFastArctan(float y, float x) -> float"""
+    return _cv.cvFastArctan(*args)
 
 def cvCbrt(*args):
-  """cvCbrt(float value) -> float"""
-  return _cv.cvCbrt(*args)
+    """cvCbrt(float value) -> float"""
+    return _cv.cvCbrt(*args)
 
 def cvCheckArr(*args):
-  """cvCheckArr(CvArr arr, int flags=0, double min_val=0, double max_val=0) -> int"""
-  return _cv.cvCheckArr(*args)
+    """cvCheckArr(CvArr arr, int flags=0, double min_val=0, double max_val=0) -> int"""
+    return _cv.cvCheckArr(*args)
 
 def cvRandArr(*args):
-  """
+    """
     cvRandArr(CvRNG rng, CvArr arr, int dist_type, CvScalar param1, 
         CvScalar param2)
     """
-  return _cv.cvRandArr(*args)
+    return _cv.cvRandArr(*args)
 
 def cvRandShuffle(*args):
-  """cvRandShuffle(CvArr mat, CvRNG rng, double iter_factor=1.)"""
-  return _cv.cvRandShuffle(*args)
+    """cvRandShuffle(CvArr mat, CvRNG rng, double iter_factor=1.)"""
+    return _cv.cvRandShuffle(*args)
 
 def cvSolveCubic(*args):
-  """cvSolveCubic(CvMat coeffs, CvMat roots) -> int"""
-  return _cv.cvSolveCubic(*args)
+    """cvSolveCubic(CvMat coeffs, CvMat roots) -> int"""
+    return _cv.cvSolveCubic(*args)
 
 def cvCrossProduct(*args):
-  """cvCrossProduct(CvArr src1, CvArr src2, CvArr dst)"""
-  return _cv.cvCrossProduct(*args)
+    """cvCrossProduct(CvArr src1, CvArr src2, CvArr dst)"""
+    return _cv.cvCrossProduct(*args)
 
 def cvGEMM(*args):
-  """
+    """
     cvGEMM(CvArr src1, CvArr src2, double alpha, CvArr src3, double beta, 
         CvArr dst, int tABC=0)
     """
-  return _cv.cvGEMM(*args)
+    return _cv.cvGEMM(*args)
 
 def cvTransform(*args):
-  """cvTransform(CvArr src, CvArr dst, CvMat transmat, CvMat shiftvec=None)"""
-  return _cv.cvTransform(*args)
+    """cvTransform(CvArr src, CvArr dst, CvMat transmat, CvMat shiftvec=None)"""
+    return _cv.cvTransform(*args)
 
 def cvPerspectiveTransform(*args):
-  """cvPerspectiveTransform(CvArr src, CvArr dst, CvMat mat)"""
-  return _cv.cvPerspectiveTransform(*args)
+    """cvPerspectiveTransform(CvArr src, CvArr dst, CvMat mat)"""
+    return _cv.cvPerspectiveTransform(*args)
 
 def cvMulTransposed(*args):
-  """
+    """
     cvMulTransposed(CvArr src, CvArr dst, int order, CvArr delta=None, 
         double scale=1.)
     """
-  return _cv.cvMulTransposed(*args)
+    return _cv.cvMulTransposed(*args)
 
 def cvTranspose(*args):
-  """cvTranspose(CvArr src, CvArr dst)"""
-  return _cv.cvTranspose(*args)
+    """cvTranspose(CvArr src, CvArr dst)"""
+    return _cv.cvTranspose(*args)
 
 def cvFlip(*args):
-  """cvFlip(CvArr src, CvArr dst=None, int flip_mode=0)"""
-  return _cv.cvFlip(*args)
+    """cvFlip(CvArr src, CvArr dst=None, int flip_mode=0)"""
+    return _cv.cvFlip(*args)
 
 def cvSVD(*args):
-  """cvSVD(CvArr A, CvArr W, CvArr U=None, CvArr V=None, int flags=0)"""
-  return _cv.cvSVD(*args)
+    """cvSVD(CvArr A, CvArr W, CvArr U=None, CvArr V=None, int flags=0)"""
+    return _cv.cvSVD(*args)
 
 def cvSVBkSb(*args):
-  """cvSVBkSb(CvArr W, CvArr U, CvArr V, CvArr B, CvArr X, int flags)"""
-  return _cv.cvSVBkSb(*args)
+    """cvSVBkSb(CvArr W, CvArr U, CvArr V, CvArr B, CvArr X, int flags)"""
+    return _cv.cvSVBkSb(*args)
 
 def cvInvert(*args):
-  """cvInvert(CvArr src, CvArr dst, int method=0) -> double"""
-  return _cv.cvInvert(*args)
+    """cvInvert(CvArr src, CvArr dst, int method=0) -> double"""
+    return _cv.cvInvert(*args)
 
 def cvSolve(*args):
-  """cvSolve(CvArr src1, CvArr src2, CvArr dst, int method=0) -> int"""
-  return _cv.cvSolve(*args)
+    """cvSolve(CvArr src1, CvArr src2, CvArr dst, int method=0) -> int"""
+    return _cv.cvSolve(*args)
 
 def cvDet(*args):
-  """cvDet(CvArr mat) -> double"""
-  return _cv.cvDet(*args)
+    """cvDet(CvArr mat) -> double"""
+    return _cv.cvDet(*args)
 
 def cvTrace(*args):
-  """cvTrace(CvArr mat) -> CvScalar"""
-  return _cv.cvTrace(*args)
+    """cvTrace(CvArr mat) -> CvScalar"""
+    return _cv.cvTrace(*args)
 
 def cvEigenVV(*args):
-  """cvEigenVV(CvArr mat, CvArr evects, CvArr evals, double eps=0)"""
-  return _cv.cvEigenVV(*args)
+    """cvEigenVV(CvArr mat, CvArr evects, CvArr evals, double eps=0)"""
+    return _cv.cvEigenVV(*args)
 
 def cvSetIdentity(*args):
-  """cvSetIdentity(CvArr mat, CvScalar value=cvRealScalar(1))"""
-  return _cv.cvSetIdentity(*args)
+    """cvSetIdentity(CvArr mat, CvScalar value=cvRealScalar(1))"""
+    return _cv.cvSetIdentity(*args)
 
 def cvRange(*args):
-  """cvRange(CvArr mat, double start, double end) -> CvArr"""
-  return _cv.cvRange(*args)
+    """cvRange(CvArr mat, double start, double end) -> CvArr"""
+    return _cv.cvRange(*args)
 
 def cvCalcCovarMatrix(*args):
-  """cvCalcCovarMatrix(CvArr vects, int count, CvArr cov_mat, CvArr avg, int flags)"""
-  return _cv.cvCalcCovarMatrix(*args)
+    """cvCalcCovarMatrix(CvArr vects, int count, CvArr cov_mat, CvArr avg, int flags)"""
+    return _cv.cvCalcCovarMatrix(*args)
 
 def cvCalcPCA(*args):
-  """
+    """
     cvCalcPCA(CvArr data, CvArr mean, CvArr eigenvals, CvArr eigenvects, 
         int flags)
     """
-  return _cv.cvCalcPCA(*args)
+    return _cv.cvCalcPCA(*args)
 
 def cvProjectPCA(*args):
-  """cvProjectPCA(CvArr data, CvArr mean, CvArr eigenvects, CvArr result)"""
-  return _cv.cvProjectPCA(*args)
+    """cvProjectPCA(CvArr data, CvArr mean, CvArr eigenvects, CvArr result)"""
+    return _cv.cvProjectPCA(*args)
 
 def cvBackProjectPCA(*args):
-  """cvBackProjectPCA(CvArr proj, CvArr mean, CvArr eigenvects, CvArr result)"""
-  return _cv.cvBackProjectPCA(*args)
+    """cvBackProjectPCA(CvArr proj, CvArr mean, CvArr eigenvects, CvArr result)"""
+    return _cv.cvBackProjectPCA(*args)
 
 def cvMahalanobis(*args):
-  """cvMahalanobis(CvArr vec1, CvArr vec2, CvArr mat) -> double"""
-  return _cv.cvMahalanobis(*args)
+    """cvMahalanobis(CvArr vec1, CvArr vec2, CvArr mat) -> double"""
+    return _cv.cvMahalanobis(*args)
 
 def cvSum(*args):
-  """cvSum(CvArr arr) -> CvScalar"""
-  return _cv.cvSum(*args)
+    """cvSum(CvArr arr) -> CvScalar"""
+    return _cv.cvSum(*args)
 
 def cvCountNonZero(*args):
-  """cvCountNonZero(CvArr arr) -> int"""
-  return _cv.cvCountNonZero(*args)
+    """cvCountNonZero(CvArr arr) -> int"""
+    return _cv.cvCountNonZero(*args)
 
 def cvAvg(*args):
-  """cvAvg(CvArr arr, CvArr mask=None) -> CvScalar"""
-  return _cv.cvAvg(*args)
+    """cvAvg(CvArr arr, CvArr mask=None) -> CvScalar"""
+    return _cv.cvAvg(*args)
 
 def cvAvgSdv(*args):
-  """cvAvgSdv(CvArr arr, CvScalar mean, CvScalar std_dev, CvArr mask=None)"""
-  return _cv.cvAvgSdv(*args)
+    """cvAvgSdv(CvArr arr, CvScalar mean, CvScalar std_dev, CvArr mask=None)"""
+    return _cv.cvAvgSdv(*args)
 
 def cvMinMaxLoc(*args):
-  """
+    """
     cvMinMaxLoc(CvArr arr, double min_val, double max_val, CvPoint min_loc=None, 
         CvPoint max_loc=None, CvArr mask=None)
     """
-  return _cv.cvMinMaxLoc(*args)
+    return _cv.cvMinMaxLoc(*args)
 
 def cvNorm(*args):
-  """cvNorm(CvArr arr1, CvArr arr2=None, int norm_type=4, CvArr mask=None) -> double"""
-  return _cv.cvNorm(*args)
+    """cvNorm(CvArr arr1, CvArr arr2=None, int norm_type=4, CvArr mask=None) -> double"""
+    return _cv.cvNorm(*args)
 
 def cvNormalize(*args):
-  """
+    """
     cvNormalize(CvArr src, CvArr dst, double a=1., double b=0., int norm_type=4, 
         CvArr mask=None)
     """
-  return _cv.cvNormalize(*args)
+    return _cv.cvNormalize(*args)
 
 def cvReduce(*args):
-  """cvReduce(CvArr src, CvArr dst, int dim=-1, int op=0)"""
-  return _cv.cvReduce(*args)
+    """cvReduce(CvArr src, CvArr dst, int dim=-1, int op=0)"""
+    return _cv.cvReduce(*args)
 
 def cvDFT(*args):
-  """cvDFT(CvArr src, CvArr dst, int flags, int nonzero_rows=0)"""
-  return _cv.cvDFT(*args)
+    """cvDFT(CvArr src, CvArr dst, int flags, int nonzero_rows=0)"""
+    return _cv.cvDFT(*args)
 
 def cvMulSpectrums(*args):
-  """cvMulSpectrums(CvArr src1, CvArr src2, CvArr dst, int flags)"""
-  return _cv.cvMulSpectrums(*args)
+    """cvMulSpectrums(CvArr src1, CvArr src2, CvArr dst, int flags)"""
+    return _cv.cvMulSpectrums(*args)
 
 def cvGetOptimalDFTSize(*args):
-  """cvGetOptimalDFTSize(int size0) -> int"""
-  return _cv.cvGetOptimalDFTSize(*args)
+    """cvGetOptimalDFTSize(int size0) -> int"""
+    return _cv.cvGetOptimalDFTSize(*args)
 
 def cvDCT(*args):
-  """cvDCT(CvArr src, CvArr dst, int flags)"""
-  return _cv.cvDCT(*args)
+    """cvDCT(CvArr src, CvArr dst, int flags)"""
+    return _cv.cvDCT(*args)
 
 def cvSliceLength(*args):
-  """cvSliceLength(CvSlice slice, CvSeq seq) -> int"""
-  return _cv.cvSliceLength(*args)
+    """cvSliceLength(CvSlice slice, CvSeq seq) -> int"""
+    return _cv.cvSliceLength(*args)
 
 def cvCreateMemStorage(*args):
-  """cvCreateMemStorage(int block_size=0) -> CvMemStorage"""
-  return _cv.cvCreateMemStorage(*args)
+    """cvCreateMemStorage(int block_size=0) -> CvMemStorage"""
+    return _cv.cvCreateMemStorage(*args)
 
 def cvCreateChildMemStorage(*args):
-  """cvCreateChildMemStorage(CvMemStorage parent) -> CvMemStorage"""
-  return _cv.cvCreateChildMemStorage(*args)
+    """cvCreateChildMemStorage(CvMemStorage parent) -> CvMemStorage"""
+    return _cv.cvCreateChildMemStorage(*args)
 
 def cvReleaseMemStorage(*args):
-  """cvReleaseMemStorage(CvMemStorage storage)"""
-  return _cv.cvReleaseMemStorage(*args)
+    """cvReleaseMemStorage(CvMemStorage storage)"""
+    return _cv.cvReleaseMemStorage(*args)
 
 def cvClearMemStorage(*args):
-  """cvClearMemStorage(CvMemStorage storage)"""
-  return _cv.cvClearMemStorage(*args)
+    """cvClearMemStorage(CvMemStorage storage)"""
+    return _cv.cvClearMemStorage(*args)
 
 def cvSaveMemStoragePos(*args):
-  """cvSaveMemStoragePos(CvMemStorage storage, CvMemStoragePos pos)"""
-  return _cv.cvSaveMemStoragePos(*args)
+    """cvSaveMemStoragePos(CvMemStorage storage, CvMemStoragePos pos)"""
+    return _cv.cvSaveMemStoragePos(*args)
 
 def cvRestoreMemStoragePos(*args):
-  """cvRestoreMemStoragePos(CvMemStorage storage, CvMemStoragePos pos)"""
-  return _cv.cvRestoreMemStoragePos(*args)
+    """cvRestoreMemStoragePos(CvMemStorage storage, CvMemStoragePos pos)"""
+    return _cv.cvRestoreMemStoragePos(*args)
 
 def cvMemStorageAlloc(*args):
-  """cvMemStorageAlloc(CvMemStorage storage, size_t size) -> void"""
-  return _cv.cvMemStorageAlloc(*args)
+    """cvMemStorageAlloc(CvMemStorage storage, size_t size) -> void"""
+    return _cv.cvMemStorageAlloc(*args)
 
 def cvMemStorageAllocString(*args):
-  """cvMemStorageAllocString(CvMemStorage storage, char ptr, int len=-1) -> CvString"""
-  return _cv.cvMemStorageAllocString(*args)
+    """cvMemStorageAllocString(CvMemStorage storage, char ptr, int len=-1) -> CvString"""
+    return _cv.cvMemStorageAllocString(*args)
 
 def cvCreateSeq(*args):
-  """cvCreateSeq(int seq_flags, int header_size, int elem_size, CvMemStorage storage) -> CvSeq"""
-  return _cv.cvCreateSeq(*args)
+    """cvCreateSeq(int seq_flags, int header_size, int elem_size, CvMemStorage storage) -> CvSeq"""
+    return _cv.cvCreateSeq(*args)
 
 def cvSetSeqBlockSize(*args):
-  """cvSetSeqBlockSize(CvSeq seq, int delta_elems)"""
-  return _cv.cvSetSeqBlockSize(*args)
+    """cvSetSeqBlockSize(CvSeq seq, int delta_elems)"""
+    return _cv.cvSetSeqBlockSize(*args)
 
 def cvSeqPush(*args):
-  """cvSeqPush(CvSeq seq, void element=None) -> char"""
-  return _cv.cvSeqPush(*args)
+    """cvSeqPush(CvSeq seq, void element=None) -> char"""
+    return _cv.cvSeqPush(*args)
 
 def cvSeqPushFront(*args):
-  """cvSeqPushFront(CvSeq seq, void element=None) -> char"""
-  return _cv.cvSeqPushFront(*args)
+    """cvSeqPushFront(CvSeq seq, void element=None) -> char"""
+    return _cv.cvSeqPushFront(*args)
 
 def cvSeqPop(*args):
-  """cvSeqPop(CvSeq seq, void element=None)"""
-  return _cv.cvSeqPop(*args)
+    """cvSeqPop(CvSeq seq, void element=None)"""
+    return _cv.cvSeqPop(*args)
 
 def cvSeqPopFront(*args):
-  """cvSeqPopFront(CvSeq seq, void element=None)"""
-  return _cv.cvSeqPopFront(*args)
+    """cvSeqPopFront(CvSeq seq, void element=None)"""
+    return _cv.cvSeqPopFront(*args)
 
 def cvSeqPushMulti(*args):
-  """cvSeqPushMulti(CvSeq seq, void elements, int count, int in_front=0)"""
-  return _cv.cvSeqPushMulti(*args)
+    """cvSeqPushMulti(CvSeq seq, void elements, int count, int in_front=0)"""
+    return _cv.cvSeqPushMulti(*args)
 
 def cvSeqPopMulti(*args):
-  """cvSeqPopMulti(CvSeq seq, void elements, int count, int in_front=0)"""
-  return _cv.cvSeqPopMulti(*args)
+    """cvSeqPopMulti(CvSeq seq, void elements, int count, int in_front=0)"""
+    return _cv.cvSeqPopMulti(*args)
 
 def cvSeqInsert(*args):
-  """cvSeqInsert(CvSeq seq, int before_index, void element=None) -> char"""
-  return _cv.cvSeqInsert(*args)
+    """cvSeqInsert(CvSeq seq, int before_index, void element=None) -> char"""
+    return _cv.cvSeqInsert(*args)
 
 def cvSeqRemove(*args):
-  """cvSeqRemove(CvSeq seq, int index)"""
-  return _cv.cvSeqRemove(*args)
+    """cvSeqRemove(CvSeq seq, int index)"""
+    return _cv.cvSeqRemove(*args)
 
 def cvClearSeq(*args):
-  """cvClearSeq(CvSeq seq)"""
-  return _cv.cvClearSeq(*args)
+    """cvClearSeq(CvSeq seq)"""
+    return _cv.cvClearSeq(*args)
 
 def cvGetSeqElem(*args):
-  """cvGetSeqElem(CvSeq seq, int index) -> char"""
-  return _cv.cvGetSeqElem(*args)
+    """cvGetSeqElem(CvSeq seq, int index) -> char"""
+    return _cv.cvGetSeqElem(*args)
 
 def cvSeqElemIdx(*args):
-  """cvSeqElemIdx(CvSeq seq, void element, CvSeqBlock block=None) -> int"""
-  return _cv.cvSeqElemIdx(*args)
+    """cvSeqElemIdx(CvSeq seq, void element, CvSeqBlock block=None) -> int"""
+    return _cv.cvSeqElemIdx(*args)
 
 def cvStartAppendToSeq(*args):
-  """cvStartAppendToSeq(CvSeq seq, CvSeqWriter writer)"""
-  return _cv.cvStartAppendToSeq(*args)
+    """cvStartAppendToSeq(CvSeq seq, CvSeqWriter writer)"""
+    return _cv.cvStartAppendToSeq(*args)
 
 def cvStartWriteSeq(*args):
-  """
+    """
     cvStartWriteSeq(int seq_flags, int header_size, int elem_size, CvMemStorage storage, 
         CvSeqWriter writer)
     """
-  return _cv.cvStartWriteSeq(*args)
+    return _cv.cvStartWriteSeq(*args)
 
 def cvEndWriteSeq(*args):
-  """cvEndWriteSeq(CvSeqWriter writer) -> CvSeq"""
-  return _cv.cvEndWriteSeq(*args)
+    """cvEndWriteSeq(CvSeqWriter writer) -> CvSeq"""
+    return _cv.cvEndWriteSeq(*args)
 
 def cvFlushSeqWriter(*args):
-  """cvFlushSeqWriter(CvSeqWriter writer)"""
-  return _cv.cvFlushSeqWriter(*args)
+    """cvFlushSeqWriter(CvSeqWriter writer)"""
+    return _cv.cvFlushSeqWriter(*args)
 
 def cvStartReadSeq(*args):
-  """cvStartReadSeq(CvSeq seq, CvSeqReader reader, int reverse=0)"""
-  return _cv.cvStartReadSeq(*args)
+    """cvStartReadSeq(CvSeq seq, CvSeqReader reader, int reverse=0)"""
+    return _cv.cvStartReadSeq(*args)
 
 def cvGetSeqReaderPos(*args):
-  """cvGetSeqReaderPos(CvSeqReader reader) -> int"""
-  return _cv.cvGetSeqReaderPos(*args)
+    """cvGetSeqReaderPos(CvSeqReader reader) -> int"""
+    return _cv.cvGetSeqReaderPos(*args)
 
 def cvSetSeqReaderPos(*args):
-  """cvSetSeqReaderPos(CvSeqReader reader, int index, int is_relative=0)"""
-  return _cv.cvSetSeqReaderPos(*args)
+    """cvSetSeqReaderPos(CvSeqReader reader, int index, int is_relative=0)"""
+    return _cv.cvSetSeqReaderPos(*args)
 
 def cvMakeSeqHeaderForArray(*args):
-  """
+    """
     cvMakeSeqHeaderForArray(int seq_type, int header_size, int elem_size, void elements, 
         int total, CvSeq seq, CvSeqBlock block) -> CvSeq
     """
-  return _cv.cvMakeSeqHeaderForArray(*args)
+    return _cv.cvMakeSeqHeaderForArray(*args)
 
 def cvSeqSlice(*args):
-  """
+    """
     cvSeqSlice(CvSeq seq, CvSlice slice, CvMemStorage storage=None, 
         int copy_data=0) -> CvSeq
     """
-  return _cv.cvSeqSlice(*args)
+    return _cv.cvSeqSlice(*args)
 
 def cvCloneSeq(*args):
-  """cvCloneSeq(CvSeq seq, CvMemStorage storage=None) -> CvSeq"""
-  return _cv.cvCloneSeq(*args)
+    """cvCloneSeq(CvSeq seq, CvMemStorage storage=None) -> CvSeq"""
+    return _cv.cvCloneSeq(*args)
 
 def cvSeqRemoveSlice(*args):
-  """cvSeqRemoveSlice(CvSeq seq, CvSlice slice)"""
-  return _cv.cvSeqRemoveSlice(*args)
+    """cvSeqRemoveSlice(CvSeq seq, CvSlice slice)"""
+    return _cv.cvSeqRemoveSlice(*args)
 
 def cvSeqInsertSlice(*args):
-  """cvSeqInsertSlice(CvSeq seq, int before_index, CvArr from_arr)"""
-  return _cv.cvSeqInsertSlice(*args)
+    """cvSeqInsertSlice(CvSeq seq, int before_index, CvArr from_arr)"""
+    return _cv.cvSeqInsertSlice(*args)
 
 def cvSeqSort(*args):
-  """cvSeqSort(CvSeq seq, CvCmpFunc func, void userdata=None)"""
-  return _cv.cvSeqSort(*args)
+    """cvSeqSort(CvSeq seq, CvCmpFunc func, void userdata=None)"""
+    return _cv.cvSeqSort(*args)
 
 def cvSeqSearch(*args):
-  """
+    """
     cvSeqSearch(CvSeq seq, void elem, CvCmpFunc func, int is_sorted, 
         int elem_idx, void userdata=None) -> char
     """
-  return _cv.cvSeqSearch(*args)
+    return _cv.cvSeqSearch(*args)
 
 def cvSeqInvert(*args):
-  """cvSeqInvert(CvSeq seq)"""
-  return _cv.cvSeqInvert(*args)
+    """cvSeqInvert(CvSeq seq)"""
+    return _cv.cvSeqInvert(*args)
 
 def cvSeqPartition(*args):
-  """
+    """
     cvSeqPartition(CvSeq seq, CvMemStorage storage, CvSeq labels, CvCmpFunc is_equal, 
         void userdata) -> int
     """
-  return _cv.cvSeqPartition(*args)
+    return _cv.cvSeqPartition(*args)
 
 def cvChangeSeqBlock(*args):
-  """cvChangeSeqBlock(void reader, int direction)"""
-  return _cv.cvChangeSeqBlock(*args)
+    """cvChangeSeqBlock(void reader, int direction)"""
+    return _cv.cvChangeSeqBlock(*args)
 
 def cvCreateSeqBlock(*args):
-  """cvCreateSeqBlock(CvSeqWriter writer)"""
-  return _cv.cvCreateSeqBlock(*args)
+    """cvCreateSeqBlock(CvSeqWriter writer)"""
+    return _cv.cvCreateSeqBlock(*args)
 
 def cvCreateSet(*args):
-  """cvCreateSet(int set_flags, int header_size, int elem_size, CvMemStorage storage) -> CvSet"""
-  return _cv.cvCreateSet(*args)
+    """cvCreateSet(int set_flags, int header_size, int elem_size, CvMemStorage storage) -> CvSet"""
+    return _cv.cvCreateSet(*args)
 
 def cvSetAdd(*args):
-  """cvSetAdd(CvSet set_header, CvSetElem elem=None, CvSetElem inserted_elem=None) -> int"""
-  return _cv.cvSetAdd(*args)
+    """cvSetAdd(CvSet set_header, CvSetElem elem=None, CvSetElem inserted_elem=None) -> int"""
+    return _cv.cvSetAdd(*args)
 
 def cvSetNew(*args):
-  """cvSetNew(CvSet set_header) -> CvSetElem"""
-  return _cv.cvSetNew(*args)
+    """cvSetNew(CvSet set_header) -> CvSetElem"""
+    return _cv.cvSetNew(*args)
 
 def cvSetRemoveByPtr(*args):
-  """cvSetRemoveByPtr(CvSet set_header, void elem)"""
-  return _cv.cvSetRemoveByPtr(*args)
+    """cvSetRemoveByPtr(CvSet set_header, void elem)"""
+    return _cv.cvSetRemoveByPtr(*args)
 
 def cvSetRemove(*args):
-  """cvSetRemove(CvSet set_header, int index)"""
-  return _cv.cvSetRemove(*args)
+    """cvSetRemove(CvSet set_header, int index)"""
+    return _cv.cvSetRemove(*args)
 
 def cvGetSetElem(*args):
-  """cvGetSetElem(CvSet set_header, int index) -> CvSetElem"""
-  return _cv.cvGetSetElem(*args)
+    """cvGetSetElem(CvSet set_header, int index) -> CvSetElem"""
+    return _cv.cvGetSetElem(*args)
 
 def cvClearSet(*args):
-  """cvClearSet(CvSet set_header)"""
-  return _cv.cvClearSet(*args)
+    """cvClearSet(CvSet set_header)"""
+    return _cv.cvClearSet(*args)
 
 def cvCreateGraph(*args):
-  """
+    """
     cvCreateGraph(int graph_flags, int header_size, int vtx_size, int edge_size, 
         CvMemStorage storage) -> CvGraph
     """
-  return _cv.cvCreateGraph(*args)
+    return _cv.cvCreateGraph(*args)
 
 def cvGraphAddVtx(*args):
-  """cvGraphAddVtx(CvGraph graph, CvGraphVtx vtx=None, CvGraphVtx inserted_vtx=None) -> int"""
-  return _cv.cvGraphAddVtx(*args)
+    """cvGraphAddVtx(CvGraph graph, CvGraphVtx vtx=None, CvGraphVtx inserted_vtx=None) -> int"""
+    return _cv.cvGraphAddVtx(*args)
 
 def cvGraphRemoveVtx(*args):
-  """cvGraphRemoveVtx(CvGraph graph, int index) -> int"""
-  return _cv.cvGraphRemoveVtx(*args)
+    """cvGraphRemoveVtx(CvGraph graph, int index) -> int"""
+    return _cv.cvGraphRemoveVtx(*args)
 
 def cvGraphRemoveVtxByPtr(*args):
-  """cvGraphRemoveVtxByPtr(CvGraph graph, CvGraphVtx vtx) -> int"""
-  return _cv.cvGraphRemoveVtxByPtr(*args)
+    """cvGraphRemoveVtxByPtr(CvGraph graph, CvGraphVtx vtx) -> int"""
+    return _cv.cvGraphRemoveVtxByPtr(*args)
 
 def cvGraphAddEdge(*args):
-  """
+    """
     cvGraphAddEdge(CvGraph graph, int start_idx, int end_idx, CvGraphEdge edge=None, 
         CvGraphEdge inserted_edge=None) -> int
     """
-  return _cv.cvGraphAddEdge(*args)
+    return _cv.cvGraphAddEdge(*args)
 
 def cvGraphAddEdgeByPtr(*args):
-  """
+    """
     cvGraphAddEdgeByPtr(CvGraph graph, CvGraphVtx start_vtx, CvGraphVtx end_vtx, 
         CvGraphEdge edge=None, CvGraphEdge inserted_edge=None) -> int
     """
-  return _cv.cvGraphAddEdgeByPtr(*args)
+    return _cv.cvGraphAddEdgeByPtr(*args)
 
 def cvGraphRemoveEdge(*args):
-  """cvGraphRemoveEdge(CvGraph graph, int start_idx, int end_idx)"""
-  return _cv.cvGraphRemoveEdge(*args)
+    """cvGraphRemoveEdge(CvGraph graph, int start_idx, int end_idx)"""
+    return _cv.cvGraphRemoveEdge(*args)
 
 def cvGraphRemoveEdgeByPtr(*args):
-  """cvGraphRemoveEdgeByPtr(CvGraph graph, CvGraphVtx start_vtx, CvGraphVtx end_vtx)"""
-  return _cv.cvGraphRemoveEdgeByPtr(*args)
+    """cvGraphRemoveEdgeByPtr(CvGraph graph, CvGraphVtx start_vtx, CvGraphVtx end_vtx)"""
+    return _cv.cvGraphRemoveEdgeByPtr(*args)
 
 def cvFindGraphEdge(*args):
-  """cvFindGraphEdge(CvGraph graph, int start_idx, int end_idx) -> CvGraphEdge"""
-  return _cv.cvFindGraphEdge(*args)
+    """cvFindGraphEdge(CvGraph graph, int start_idx, int end_idx) -> CvGraphEdge"""
+    return _cv.cvFindGraphEdge(*args)
 
 def cvFindGraphEdgeByPtr(*args):
-  """cvFindGraphEdgeByPtr(CvGraph graph, CvGraphVtx start_vtx, CvGraphVtx end_vtx) -> CvGraphEdge"""
-  return _cv.cvFindGraphEdgeByPtr(*args)
+    """cvFindGraphEdgeByPtr(CvGraph graph, CvGraphVtx start_vtx, CvGraphVtx end_vtx) -> CvGraphEdge"""
+    return _cv.cvFindGraphEdgeByPtr(*args)
 
 def cvClearGraph(*args):
-  """cvClearGraph(CvGraph graph)"""
-  return _cv.cvClearGraph(*args)
+    """cvClearGraph(CvGraph graph)"""
+    return _cv.cvClearGraph(*args)
 
 def cvGraphVtxDegree(*args):
-  """cvGraphVtxDegree(CvGraph graph, int vtx_idx) -> int"""
-  return _cv.cvGraphVtxDegree(*args)
+    """cvGraphVtxDegree(CvGraph graph, int vtx_idx) -> int"""
+    return _cv.cvGraphVtxDegree(*args)
 
 def cvGraphVtxDegreeByPtr(*args):
-  """cvGraphVtxDegreeByPtr(CvGraph graph, CvGraphVtx vtx) -> int"""
-  return _cv.cvGraphVtxDegreeByPtr(*args)
+    """cvGraphVtxDegreeByPtr(CvGraph graph, CvGraphVtx vtx) -> int"""
+    return _cv.cvGraphVtxDegreeByPtr(*args)
 class CvGraphScanner(_object):
     """Proxy of C++ CvGraphScanner class"""
     __swig_setmethods__ = {}
     __setattr__ = lambda self, name, value: _swig_setattr(self, CvGraphScanner, name, value)
     __swig_getmethods__ = {}
     __getattr__ = lambda self, name: _swig_getattr(self, CvGraphScanner, name)
-    def __init__(self): raise AttributeError, "No constructor defined"
-    __repr__ = _swig_repr
+    def __init__(self): raise RuntimeError, "No constructor defined"
+    def __repr__(self):
+        return "<%s.%s; proxy of C++ CvGraphScanner instance at %s>" % (self.__class__.__module__, self.__class__.__name__, self.this,)
     __swig_setmethods__["vtx"] = _cv.CvGraphScanner_vtx_set
     __swig_getmethods__["vtx"] = _cv.CvGraphScanner_vtx_get
     if _newclass:vtx = property(_cv.CvGraphScanner_vtx_get, _cv.CvGraphScanner_vtx_set)
@@ -4358,103 +4843,113 @@ class CvGraphScanner(_object):
     __swig_setmethods__["mask"] = _cv.CvGraphScanner_mask_set
     __swig_getmethods__["mask"] = _cv.CvGraphScanner_mask_get
     if _newclass:mask = property(_cv.CvGraphScanner_mask_get, _cv.CvGraphScanner_mask_set)
-    __swig_destroy__ = _cv.delete_CvGraphScanner
-    __del__ = lambda self : None;
-CvGraphScanner_swigregister = _cv.CvGraphScanner_swigregister
-CvGraphScanner_swigregister(CvGraphScanner)
+    def __del__(self, destroy=_cv.delete_CvGraphScanner):
+        """__del__(self)"""
+        try:
+            if self.thisown: destroy(self)
+        except: pass
+
+
+class CvGraphScannerPtr(CvGraphScanner):
+    def __init__(self, this):
+        _swig_setattr(self, CvGraphScanner, 'this', this)
+        if not hasattr(self,"thisown"): _swig_setattr(self, CvGraphScanner, 'thisown', 0)
+        self.__class__ = CvGraphScanner
+_cv.CvGraphScanner_swigregister(CvGraphScannerPtr)
 
 
 def cvCreateGraphScanner(*args):
-  """cvCreateGraphScanner(CvGraph graph, CvGraphVtx vtx=None, int mask=-1) -> CvGraphScanner"""
-  return _cv.cvCreateGraphScanner(*args)
+    """cvCreateGraphScanner(CvGraph graph, CvGraphVtx vtx=None, int mask=-1) -> CvGraphScanner"""
+    return _cv.cvCreateGraphScanner(*args)
 
 def cvReleaseGraphScanner(*args):
-  """cvReleaseGraphScanner(CvGraphScanner scanner)"""
-  return _cv.cvReleaseGraphScanner(*args)
+    """cvReleaseGraphScanner(CvGraphScanner scanner)"""
+    return _cv.cvReleaseGraphScanner(*args)
 
 def cvNextGraphItem(*args):
-  """cvNextGraphItem(CvGraphScanner scanner) -> int"""
-  return _cv.cvNextGraphItem(*args)
+    """cvNextGraphItem(CvGraphScanner scanner) -> int"""
+    return _cv.cvNextGraphItem(*args)
 
 def cvCloneGraph(*args):
-  """cvCloneGraph(CvGraph graph, CvMemStorage storage) -> CvGraph"""
-  return _cv.cvCloneGraph(*args)
+    """cvCloneGraph(CvGraph graph, CvMemStorage storage) -> CvGraph"""
+    return _cv.cvCloneGraph(*args)
 
 def cvLine(*args):
-  """
+    """
     cvLine(CvArr img, CvPoint pt1, CvPoint pt2, CvScalar color, 
         int thickness=1, int line_type=8, int shift=0)
     """
-  return _cv.cvLine(*args)
+    return _cv.cvLine(*args)
 
 def cvRectangle(*args):
-  """
+    """
     cvRectangle(CvArr img, CvPoint pt1, CvPoint pt2, CvScalar color, 
         int thickness=1, int line_type=8, int shift=0)
     """
-  return _cv.cvRectangle(*args)
+    return _cv.cvRectangle(*args)
 
 def cvCircle(*args):
-  """
+    """
     cvCircle(CvArr img, CvPoint center, int radius, CvScalar color, 
         int thickness=1, int line_type=8, int shift=0)
     """
-  return _cv.cvCircle(*args)
+    return _cv.cvCircle(*args)
 
 def cvEllipse(*args):
-  """
+    """
     cvEllipse(CvArr img, CvPoint center, CvSize axes, double angle, 
         double start_angle, double end_angle, CvScalar color, 
         int thickness=1, int line_type=8, 
         int shift=0)
     """
-  return _cv.cvEllipse(*args)
+    return _cv.cvEllipse(*args)
 
 def cvEllipseBox(*args):
-  """
+    """
     cvEllipseBox(CvArr img, CvBox2D box, CvScalar color, int thickness=1, 
         int line_type=8, int shift=0)
     """
-  return _cv.cvEllipseBox(*args)
+    return _cv.cvEllipseBox(*args)
 
 def cvFillConvexPoly(*args):
-  """
+    """
     cvFillConvexPoly(CvArr img, CvPoint pts, CvScalar color, int line_type=8, 
         int shift=0)
     """
-  return _cv.cvFillConvexPoly(*args)
+    return _cv.cvFillConvexPoly(*args)
 
 def cvFillPoly(*args):
-  """
+    """
     cvFillPoly(CvArr img, CvPoint pts, CvScalar color, int line_type=8, 
         int shift=0)
     """
-  return _cv.cvFillPoly(*args)
+    return _cv.cvFillPoly(*args)
 
 def cvPolyLine(*args):
-  """
+    """
     cvPolyLine(CvArr img, CvPoint pts, int is_closed, CvScalar color, 
         int thickness=1, int line_type=8, int shift=0)
     """
-  return _cv.cvPolyLine(*args)
+    return _cv.cvPolyLine(*args)
 
 def cvClipLine(*args):
-  """cvClipLine(CvSize img_size, CvPoint pt1, CvPoint pt2) -> int"""
-  return _cv.cvClipLine(*args)
+    """cvClipLine(CvSize img_size, CvPoint pt1, CvPoint pt2) -> int"""
+    return _cv.cvClipLine(*args)
 
 def cvInitLineIterator(*args):
-  """
+    """
     cvInitLineIterator(CvArr image, CvPoint pt1, CvPoint pt2, CvLineIterator line_iterator, 
         int connectivity=8, int left_to_right=0) -> int
     """
-  return _cv.cvInitLineIterator(*args)
+    return _cv.cvInitLineIterator(*args)
 class CvFont(_object):
     """Proxy of C++ CvFont class"""
     __swig_setmethods__ = {}
     __setattr__ = lambda self, name, value: _swig_setattr(self, CvFont, name, value)
     __swig_getmethods__ = {}
     __getattr__ = lambda self, name: _swig_getattr(self, CvFont, name)
-    __repr__ = _swig_repr
+    def __repr__(self):
+        return "<%s.%s; proxy of C++ CvFont instance at %s>" % (self.__class__.__module__, self.__class__.__name__, self.this,)
     __swig_setmethods__["font_face"] = _cv.CvFont_font_face_set
     __swig_getmethods__["font_face"] = _cv.CvFont_font_face_get
     if _newclass:font_face = property(_cv.CvFont_font_face_get, _cv.CvFont_font_face_set)
@@ -4485,65 +4980,74 @@ class CvFont(_object):
     __swig_setmethods__["line_type"] = _cv.CvFont_line_type_set
     __swig_getmethods__["line_type"] = _cv.CvFont_line_type_get
     if _newclass:line_type = property(_cv.CvFont_line_type_get, _cv.CvFont_line_type_set)
-    def __init__(self, *args): 
+    def __init__(self, *args):
         """__init__(self) -> CvFont"""
-        this = _cv.new_CvFont(*args)
-        try: self.this.append(this)
-        except: self.this = this
-    __swig_destroy__ = _cv.delete_CvFont
-    __del__ = lambda self : None;
-CvFont_swigregister = _cv.CvFont_swigregister
-CvFont_swigregister(CvFont)
+        _swig_setattr(self, CvFont, 'this', _cv.new_CvFont(*args))
+        _swig_setattr(self, CvFont, 'thisown', 1)
+    def __del__(self, destroy=_cv.delete_CvFont):
+        """__del__(self)"""
+        try:
+            if self.thisown: destroy(self)
+        except: pass
+
+
+class CvFontPtr(CvFont):
+    def __init__(self, this):
+        _swig_setattr(self, CvFont, 'this', this)
+        if not hasattr(self,"thisown"): _swig_setattr(self, CvFont, 'thisown', 0)
+        self.__class__ = CvFont
+_cv.CvFont_swigregister(CvFontPtr)
 
 
 def cvInitFont(*args):
-  """
+    """
     cvInitFont(CvFont font, double hscale, double vscale, double shear=0, 
         int thickness=1, int line_type=8)
     """
-  return _cv.cvInitFont(*args)
+    return _cv.cvInitFont(*args)
 
 def cvFont(*args):
-  """cvFont(double scale, int thickness=1) -> CvFont"""
-  return _cv.cvFont(*args)
+    """cvFont(double scale, int thickness=1) -> CvFont"""
+    return _cv.cvFont(*args)
 
 def cvPutText(*args):
-  """cvPutText(CvArr img, char text, CvPoint org, CvFont font, CvScalar color)"""
-  return _cv.cvPutText(*args)
+    """cvPutText(CvArr img, char text, CvPoint org, CvFont font, CvScalar color)"""
+    return _cv.cvPutText(*args)
 
 def cvGetTextSize(*args):
-  """cvGetTextSize(char text_string, CvFont font, CvSize text_size)"""
-  return _cv.cvGetTextSize(*args)
+    """cvGetTextSize(char text_string, CvFont font, CvSize text_size)"""
+    return _cv.cvGetTextSize(*args)
 
 def cvColorToScalar(*args):
-  """cvColorToScalar(double packed_color, int arrtype) -> CvScalar"""
-  return _cv.cvColorToScalar(*args)
+    """cvColorToScalar(double packed_color, int arrtype) -> CvScalar"""
+    return _cv.cvColorToScalar(*args)
 
 def cvEllipse2Poly(*args):
-  """
+    """
     cvEllipse2Poly(CvPoint center, CvSize axes, int angle, int arc_start, 
         int arc_end, CvPoint pts, int delta) -> int
     """
-  return _cv.cvEllipse2Poly(*args)
+    return _cv.cvEllipse2Poly(*args)
 
 def cvDrawContours(*args):
-  """
+    """
     cvDrawContours(CvArr img, CvSeq contour, CvScalar external_color, 
         CvScalar hole_color, int max_level, int thickness=1, 
         int line_type=8, CvPoint offset=cvPoint(0,0))
     """
-  return _cv.cvDrawContours(*args)
+    return _cv.cvDrawContours(*args)
 
 def cvLUT(*args):
-  """cvLUT(CvArr src, CvArr dst, CvArr lut)"""
-  return _cv.cvLUT(*args)
+    """cvLUT(CvArr src, CvArr dst, CvArr lut)"""
+    return _cv.cvLUT(*args)
 class CvTreeNodeIterator(_object):
     """Proxy of C++ CvTreeNodeIterator class"""
     __swig_setmethods__ = {}
     __setattr__ = lambda self, name, value: _swig_setattr(self, CvTreeNodeIterator, name, value)
     __swig_getmethods__ = {}
     __getattr__ = lambda self, name: _swig_getattr(self, CvTreeNodeIterator, name)
-    __repr__ = _swig_repr
+    def __repr__(self):
+        return "<%s.%s; proxy of C++ CvTreeNodeIterator instance at %s>" % (self.__class__.__module__, self.__class__.__name__, self.this,)
     __swig_setmethods__["node"] = _cv.CvTreeNodeIterator_node_set
     __swig_getmethods__["node"] = _cv.CvTreeNodeIterator_node_get
     if _newclass:node = property(_cv.CvTreeNodeIterator_node_get, _cv.CvTreeNodeIterator_node_set)
@@ -4553,335 +5057,344 @@ class CvTreeNodeIterator(_object):
     __swig_setmethods__["max_level"] = _cv.CvTreeNodeIterator_max_level_set
     __swig_getmethods__["max_level"] = _cv.CvTreeNodeIterator_max_level_get
     if _newclass:max_level = property(_cv.CvTreeNodeIterator_max_level_get, _cv.CvTreeNodeIterator_max_level_set)
-    def __init__(self, *args): 
+    def __init__(self, *args):
         """__init__(self) -> CvTreeNodeIterator"""
-        this = _cv.new_CvTreeNodeIterator(*args)
-        try: self.this.append(this)
-        except: self.this = this
-    __swig_destroy__ = _cv.delete_CvTreeNodeIterator
-    __del__ = lambda self : None;
-CvTreeNodeIterator_swigregister = _cv.CvTreeNodeIterator_swigregister
-CvTreeNodeIterator_swigregister(CvTreeNodeIterator)
+        _swig_setattr(self, CvTreeNodeIterator, 'this', _cv.new_CvTreeNodeIterator(*args))
+        _swig_setattr(self, CvTreeNodeIterator, 'thisown', 1)
+    def __del__(self, destroy=_cv.delete_CvTreeNodeIterator):
+        """__del__(self)"""
+        try:
+            if self.thisown: destroy(self)
+        except: pass
+
+
+class CvTreeNodeIteratorPtr(CvTreeNodeIterator):
+    def __init__(self, this):
+        _swig_setattr(self, CvTreeNodeIterator, 'this', this)
+        if not hasattr(self,"thisown"): _swig_setattr(self, CvTreeNodeIterator, 'thisown', 0)
+        self.__class__ = CvTreeNodeIterator
+_cv.CvTreeNodeIterator_swigregister(CvTreeNodeIteratorPtr)
 
 
 def cvInitTreeNodeIterator(*args):
-  """cvInitTreeNodeIterator(CvTreeNodeIterator tree_iterator, void first, int max_level)"""
-  return _cv.cvInitTreeNodeIterator(*args)
+    """cvInitTreeNodeIterator(CvTreeNodeIterator tree_iterator, void first, int max_level)"""
+    return _cv.cvInitTreeNodeIterator(*args)
 
 def cvNextTreeNode(*args):
-  """cvNextTreeNode(CvTreeNodeIterator tree_iterator) -> void"""
-  return _cv.cvNextTreeNode(*args)
+    """cvNextTreeNode(CvTreeNodeIterator tree_iterator) -> void"""
+    return _cv.cvNextTreeNode(*args)
 
 def cvPrevTreeNode(*args):
-  """cvPrevTreeNode(CvTreeNodeIterator tree_iterator) -> void"""
-  return _cv.cvPrevTreeNode(*args)
+    """cvPrevTreeNode(CvTreeNodeIterator tree_iterator) -> void"""
+    return _cv.cvPrevTreeNode(*args)
 
 def cvInsertNodeIntoTree(*args):
-  """cvInsertNodeIntoTree(void node, void parent, void frame)"""
-  return _cv.cvInsertNodeIntoTree(*args)
+    """cvInsertNodeIntoTree(void node, void parent, void frame)"""
+    return _cv.cvInsertNodeIntoTree(*args)
 
 def cvRemoveNodeFromTree(*args):
-  """cvRemoveNodeFromTree(void node, void frame)"""
-  return _cv.cvRemoveNodeFromTree(*args)
+    """cvRemoveNodeFromTree(void node, void frame)"""
+    return _cv.cvRemoveNodeFromTree(*args)
 
 def cvTreeToNodeSeq(*args):
-  """cvTreeToNodeSeq(void first, int header_size, CvMemStorage storage) -> CvSeq"""
-  return _cv.cvTreeToNodeSeq(*args)
+    """cvTreeToNodeSeq(void first, int header_size, CvMemStorage storage) -> CvSeq"""
+    return _cv.cvTreeToNodeSeq(*args)
 
 def cvKMeans2(*args):
-  """cvKMeans2(CvArr samples, int cluster_count, CvArr labels, CvTermCriteria termcrit)"""
-  return _cv.cvKMeans2(*args)
+    """cvKMeans2(CvArr samples, int cluster_count, CvArr labels, CvTermCriteria termcrit)"""
+    return _cv.cvKMeans2(*args)
 
 def cvRegisterModule(*args):
-  """cvRegisterModule(CvModuleInfo module_info) -> int"""
-  return _cv.cvRegisterModule(*args)
+    """cvRegisterModule(CvModuleInfo module_info) -> int"""
+    return _cv.cvRegisterModule(*args)
 
 def cvUseOptimized(*args):
-  """cvUseOptimized(int on_off) -> int"""
-  return _cv.cvUseOptimized(*args)
+    """cvUseOptimized(int on_off) -> int"""
+    return _cv.cvUseOptimized(*args)
 
 def cvGetModuleInfo(*args):
-  """cvGetModuleInfo(char module_name, char version, char loaded_addon_plugins)"""
-  return _cv.cvGetModuleInfo(*args)
+    """cvGetModuleInfo(char module_name, char version, char loaded_addon_plugins)"""
+    return _cv.cvGetModuleInfo(*args)
 
 def cvGetErrStatus(*args):
-  """cvGetErrStatus() -> int"""
-  return _cv.cvGetErrStatus(*args)
+    """cvGetErrStatus() -> int"""
+    return _cv.cvGetErrStatus(*args)
 
 def cvSetErrStatus(*args):
-  """cvSetErrStatus(int status)"""
-  return _cv.cvSetErrStatus(*args)
+    """cvSetErrStatus(int status)"""
+    return _cv.cvSetErrStatus(*args)
 
 def cvGetErrMode(*args):
-  """cvGetErrMode() -> int"""
-  return _cv.cvGetErrMode(*args)
+    """cvGetErrMode() -> int"""
+    return _cv.cvGetErrMode(*args)
 
 def cvSetErrMode(*args):
-  """cvSetErrMode(int mode) -> int"""
-  return _cv.cvSetErrMode(*args)
+    """cvSetErrMode(int mode) -> int"""
+    return _cv.cvSetErrMode(*args)
 
 def cvError(*args):
-  """
+    """
     cvError(int status, char func_name, char err_msg, char file_name, 
         int line)
     """
-  return _cv.cvError(*args)
+    return _cv.cvError(*args)
 
 def cvErrorStr(*args):
-  """cvErrorStr(int status) -> char"""
-  return _cv.cvErrorStr(*args)
+    """cvErrorStr(int status) -> char"""
+    return _cv.cvErrorStr(*args)
 
 def cvGetErrInfo(*args):
-  """
+    """
     cvGetErrInfo(char errcode_desc, char description, char filename, 
         int line) -> int
     """
-  return _cv.cvGetErrInfo(*args)
+    return _cv.cvGetErrInfo(*args)
 
 def cvErrorFromIppStatus(*args):
-  """cvErrorFromIppStatus(int ipp_status) -> int"""
-  return _cv.cvErrorFromIppStatus(*args)
+    """cvErrorFromIppStatus(int ipp_status) -> int"""
+    return _cv.cvErrorFromIppStatus(*args)
 
 def cvRedirectError(*args):
-  """
+    """
     cvRedirectError(CvErrorCallback error_handler, void userdata=None, 
         void prev_userdata=None) -> CvErrorCallback
     """
-  return _cv.cvRedirectError(*args)
+    return _cv.cvRedirectError(*args)
 
 def cvNulDevReport(*args):
-  """
+    """
     cvNulDevReport(int status, char func_name, char err_msg, char file_name, 
         int line, void userdata) -> int
     """
-  return _cv.cvNulDevReport(*args)
+    return _cv.cvNulDevReport(*args)
 
 def cvStdErrReport(*args):
-  """
+    """
     cvStdErrReport(int status, char func_name, char err_msg, char file_name, 
         int line, void userdata) -> int
     """
-  return _cv.cvStdErrReport(*args)
+    return _cv.cvStdErrReport(*args)
 
 def cvGuiBoxReport(*args):
-  """
+    """
     cvGuiBoxReport(int status, char func_name, char err_msg, char file_name, 
         int line, void userdata) -> int
     """
-  return _cv.cvGuiBoxReport(*args)
+    return _cv.cvGuiBoxReport(*args)
 
 def cvSetMemoryManager(*args):
-  """
+    """
     cvSetMemoryManager(CvAllocFunc alloc_func=None, CvFreeFunc free_func=None, 
         void userdata=None)
     """
-  return _cv.cvSetMemoryManager(*args)
+    return _cv.cvSetMemoryManager(*args)
 
 def cvSetIPLAllocators(*args):
-  """
+    """
     cvSetIPLAllocators(Cv_iplCreateImageHeader create_header, Cv_iplAllocateImageData allocate_data, 
         Cv_iplDeallocate deallocate, 
         Cv_iplCreateROI create_roi, Cv_iplCloneImage clone_image)
     """
-  return _cv.cvSetIPLAllocators(*args)
+    return _cv.cvSetIPLAllocators(*args)
 
 def cvOpenFileStorage(*args):
-  """cvOpenFileStorage(char filename, CvMemStorage memstorage, int flags) -> CvFileStorage"""
-  return _cv.cvOpenFileStorage(*args)
+    """cvOpenFileStorage(char filename, CvMemStorage memstorage, int flags) -> CvFileStorage"""
+    return _cv.cvOpenFileStorage(*args)
 
 def cvReleaseFileStorage(*args):
-  """cvReleaseFileStorage(CvFileStorage fs)"""
-  return _cv.cvReleaseFileStorage(*args)
+    """cvReleaseFileStorage(CvFileStorage fs)"""
+    return _cv.cvReleaseFileStorage(*args)
 
 def cvAttrValue(*args):
-  """cvAttrValue(CvAttrList attr, char attr_name) -> char"""
-  return _cv.cvAttrValue(*args)
+    """cvAttrValue(CvAttrList attr, char attr_name) -> char"""
+    return _cv.cvAttrValue(*args)
 
 def cvStartWriteStruct(*args):
-  """
+    """
     cvStartWriteStruct(CvFileStorage fs, char name, int struct_flags, char type_name=None, 
         CvAttrList attributes=cvAttrList())
     """
-  return _cv.cvStartWriteStruct(*args)
+    return _cv.cvStartWriteStruct(*args)
 
 def cvEndWriteStruct(*args):
-  """cvEndWriteStruct(CvFileStorage fs)"""
-  return _cv.cvEndWriteStruct(*args)
+    """cvEndWriteStruct(CvFileStorage fs)"""
+    return _cv.cvEndWriteStruct(*args)
 
 def cvWriteInt(*args):
-  """cvWriteInt(CvFileStorage fs, char name, int value)"""
-  return _cv.cvWriteInt(*args)
+    """cvWriteInt(CvFileStorage fs, char name, int value)"""
+    return _cv.cvWriteInt(*args)
 
 def cvWriteReal(*args):
-  """cvWriteReal(CvFileStorage fs, char name, double value)"""
-  return _cv.cvWriteReal(*args)
+    """cvWriteReal(CvFileStorage fs, char name, double value)"""
+    return _cv.cvWriteReal(*args)
 
 def cvWriteString(*args):
-  """cvWriteString(CvFileStorage fs, char name, char str, int quote=0)"""
-  return _cv.cvWriteString(*args)
+    """cvWriteString(CvFileStorage fs, char name, char str, int quote=0)"""
+    return _cv.cvWriteString(*args)
 
 def cvWriteComment(*args):
-  """cvWriteComment(CvFileStorage fs, char comment, int eol_comment)"""
-  return _cv.cvWriteComment(*args)
+    """cvWriteComment(CvFileStorage fs, char comment, int eol_comment)"""
+    return _cv.cvWriteComment(*args)
 
 def cvWrite(*args):
-  """cvWrite(CvFileStorage fs, char name, void ptr, CvAttrList attributes=cvAttrList())"""
-  return _cv.cvWrite(*args)
+    """cvWrite(CvFileStorage fs, char name, void ptr, CvAttrList attributes=cvAttrList())"""
+    return _cv.cvWrite(*args)
 
 def cvStartNextStream(*args):
-  """cvStartNextStream(CvFileStorage fs)"""
-  return _cv.cvStartNextStream(*args)
+    """cvStartNextStream(CvFileStorage fs)"""
+    return _cv.cvStartNextStream(*args)
 
 def cvWriteRawData(*args):
-  """cvWriteRawData(CvFileStorage fs, void src, int len, char dt)"""
-  return _cv.cvWriteRawData(*args)
+    """cvWriteRawData(CvFileStorage fs, void src, int len, char dt)"""
+    return _cv.cvWriteRawData(*args)
 
 def cvGetHashedKey(*args):
-  """cvGetHashedKey(CvFileStorage fs, char name, int len=-1, int create_missing=0) -> CvStringHashNode"""
-  return _cv.cvGetHashedKey(*args)
+    """cvGetHashedKey(CvFileStorage fs, char name, int len=-1, int create_missing=0) -> CvStringHashNode"""
+    return _cv.cvGetHashedKey(*args)
 
 def cvGetRootFileNode(*args):
-  """cvGetRootFileNode(CvFileStorage fs, int stream_index=0) -> CvFileNode"""
-  return _cv.cvGetRootFileNode(*args)
+    """cvGetRootFileNode(CvFileStorage fs, int stream_index=0) -> CvFileNode"""
+    return _cv.cvGetRootFileNode(*args)
 
 def cvGetFileNode(*args):
-  """
+    """
     cvGetFileNode(CvFileStorage fs, CvFileNode map, CvStringHashNode key, 
         int create_missing=0) -> CvFileNode
     """
-  return _cv.cvGetFileNode(*args)
+    return _cv.cvGetFileNode(*args)
 
 def cvGetFileNodeByName(*args):
-  """cvGetFileNodeByName(CvFileStorage fs, CvFileNode map, char name) -> CvFileNode"""
-  return _cv.cvGetFileNodeByName(*args)
+    """cvGetFileNodeByName(CvFileStorage fs, CvFileNode map, char name) -> CvFileNode"""
+    return _cv.cvGetFileNodeByName(*args)
 
 def cvReadInt(*args):
-  """cvReadInt(CvFileNode node, int default_value=0) -> int"""
-  return _cv.cvReadInt(*args)
+    """cvReadInt(CvFileNode node, int default_value=0) -> int"""
+    return _cv.cvReadInt(*args)
 
 def cvReadIntByName(*args):
-  """cvReadIntByName(CvFileStorage fs, CvFileNode map, char name, int default_value=0) -> int"""
-  return _cv.cvReadIntByName(*args)
+    """cvReadIntByName(CvFileStorage fs, CvFileNode map, char name, int default_value=0) -> int"""
+    return _cv.cvReadIntByName(*args)
 
 def cvReadReal(*args):
-  """cvReadReal(CvFileNode node, double default_value=0.) -> double"""
-  return _cv.cvReadReal(*args)
+    """cvReadReal(CvFileNode node, double default_value=0.) -> double"""
+    return _cv.cvReadReal(*args)
 
 def cvReadRealByName(*args):
-  """cvReadRealByName(CvFileStorage fs, CvFileNode map, char name, double default_value=0.) -> double"""
-  return _cv.cvReadRealByName(*args)
+    """cvReadRealByName(CvFileStorage fs, CvFileNode map, char name, double default_value=0.) -> double"""
+    return _cv.cvReadRealByName(*args)
 
 def cvReadString(*args):
-  """cvReadString(CvFileNode node, char default_value=None) -> char"""
-  return _cv.cvReadString(*args)
+    """cvReadString(CvFileNode node, char default_value=None) -> char"""
+    return _cv.cvReadString(*args)
 
 def cvReadStringByName(*args):
-  """cvReadStringByName(CvFileStorage fs, CvFileNode map, char name, char default_value=None) -> char"""
-  return _cv.cvReadStringByName(*args)
+    """cvReadStringByName(CvFileStorage fs, CvFileNode map, char name, char default_value=None) -> char"""
+    return _cv.cvReadStringByName(*args)
 
 def cvRead(*args):
-  """cvRead(CvFileStorage fs, CvFileNode node, CvAttrList attributes=None) -> void"""
-  return _cv.cvRead(*args)
+    """cvRead(CvFileStorage fs, CvFileNode node, CvAttrList attributes=None) -> void"""
+    return _cv.cvRead(*args)
 
 def cvReadByName(*args):
-  """cvReadByName(CvFileStorage fs, CvFileNode map, char name, CvAttrList attributes=None) -> void"""
-  return _cv.cvReadByName(*args)
+    """cvReadByName(CvFileStorage fs, CvFileNode map, char name, CvAttrList attributes=None) -> void"""
+    return _cv.cvReadByName(*args)
 
 def cvStartReadRawData(*args):
-  """cvStartReadRawData(CvFileStorage fs, CvFileNode src, CvSeqReader reader)"""
-  return _cv.cvStartReadRawData(*args)
+    """cvStartReadRawData(CvFileStorage fs, CvFileNode src, CvSeqReader reader)"""
+    return _cv.cvStartReadRawData(*args)
 
 def cvReadRawDataSlice(*args):
-  """
+    """
     cvReadRawDataSlice(CvFileStorage fs, CvSeqReader reader, int count, void dst, 
         char dt)
     """
-  return _cv.cvReadRawDataSlice(*args)
+    return _cv.cvReadRawDataSlice(*args)
 
 def cvReadRawData(*args):
-  """cvReadRawData(CvFileStorage fs, CvFileNode src, void dst, char dt)"""
-  return _cv.cvReadRawData(*args)
+    """cvReadRawData(CvFileStorage fs, CvFileNode src, void dst, char dt)"""
+    return _cv.cvReadRawData(*args)
 
 def cvWriteFileNode(*args):
-  """
+    """
     cvWriteFileNode(CvFileStorage fs, char new_node_name, CvFileNode node, 
         int embed)
     """
-  return _cv.cvWriteFileNode(*args)
+    return _cv.cvWriteFileNode(*args)
 
 def cvGetFileNodeName(*args):
-  """cvGetFileNodeName(CvFileNode node) -> char"""
-  return _cv.cvGetFileNodeName(*args)
+    """cvGetFileNodeName(CvFileNode node) -> char"""
+    return _cv.cvGetFileNodeName(*args)
 
 def cvRegisterType(*args):
-  """cvRegisterType(CvTypeInfo info)"""
-  return _cv.cvRegisterType(*args)
+    """cvRegisterType(CvTypeInfo info)"""
+    return _cv.cvRegisterType(*args)
 
 def cvUnregisterType(*args):
-  """cvUnregisterType(char type_name)"""
-  return _cv.cvUnregisterType(*args)
+    """cvUnregisterType(char type_name)"""
+    return _cv.cvUnregisterType(*args)
 
 def cvFirstType(*args):
-  """cvFirstType() -> CvTypeInfo"""
-  return _cv.cvFirstType(*args)
+    """cvFirstType() -> CvTypeInfo"""
+    return _cv.cvFirstType(*args)
 
 def cvFindType(*args):
-  """cvFindType(char type_name) -> CvTypeInfo"""
-  return _cv.cvFindType(*args)
+    """cvFindType(char type_name) -> CvTypeInfo"""
+    return _cv.cvFindType(*args)
 
 def cvTypeOf(*args):
-  """cvTypeOf(void struct_ptr) -> CvTypeInfo"""
-  return _cv.cvTypeOf(*args)
+    """cvTypeOf(void struct_ptr) -> CvTypeInfo"""
+    return _cv.cvTypeOf(*args)
 
 def cvRelease(*args):
-  """cvRelease(void struct_ptr)"""
-  return _cv.cvRelease(*args)
+    """cvRelease(void struct_ptr)"""
+    return _cv.cvRelease(*args)
 
 def cvClone(*args):
-  """cvClone(void struct_ptr) -> void"""
-  return _cv.cvClone(*args)
+    """cvClone(void struct_ptr) -> void"""
+    return _cv.cvClone(*args)
 
 def cvSave(*args):
-  """
+    """
     cvSave(char filename, void struct_ptr, char name=None, char comment=None, 
         CvAttrList attributes=cvAttrList())
     """
-  return _cv.cvSave(*args)
+    return _cv.cvSave(*args)
 
 def cvLoad(*args):
-  """
+    """
     cvLoad(char filename, CvMemStorage memstorage=None, char name=None, 
         char real_name=None) -> void
     """
-  return _cv.cvLoad(*args)
+    return _cv.cvLoad(*args)
 
 def cvGetTickCount(*args):
-  """cvGetTickCount() -> int64"""
-  return _cv.cvGetTickCount(*args)
+    """cvGetTickCount() -> int64"""
+    return _cv.cvGetTickCount(*args)
 
 def cvGetTickFrequency(*args):
-  """cvGetTickFrequency() -> double"""
-  return _cv.cvGetTickFrequency(*args)
+    """cvGetTickFrequency() -> double"""
+    return _cv.cvGetTickFrequency(*args)
 
 def cvGetNumThreads(*args):
-  """cvGetNumThreads() -> int"""
-  return _cv.cvGetNumThreads(*args)
+    """cvGetNumThreads() -> int"""
+    return _cv.cvGetNumThreads(*args)
 
 def cvSetNumThreads(*args):
-  """cvSetNumThreads(int threads=0)"""
-  return _cv.cvSetNumThreads(*args)
+    """cvSetNumThreads(int threads=0)"""
+    return _cv.cvSetNumThreads(*args)
 
 def cvGetThreadNum(*args):
-  """cvGetThreadNum() -> int"""
-  return _cv.cvGetThreadNum(*args)
+    """cvGetThreadNum() -> int"""
+    return _cv.cvGetThreadNum(*args)
 class CvImage(_object):
     """Proxy of C++ CvImage class"""
     __swig_setmethods__ = {}
     __setattr__ = lambda self, name, value: _swig_setattr(self, CvImage, name, value)
     __swig_getmethods__ = {}
     __getattr__ = lambda self, name: _swig_getattr(self, CvImage, name)
-    __repr__ = _swig_repr
-    def __init__(self, *args): 
+    def __repr__(self):
+        return "<%s.%s; proxy of C++ CvImage instance at %s>" % (self.__class__.__module__, self.__class__.__name__, self.this,)
+    def __init__(self, *args):
         """
         __init__(self) -> CvImage
         __init__(self, CvSize size, int depth, int channels) -> CvImage
@@ -4892,11 +5405,14 @@ class CvImage(_object):
         __init__(self, CvFileStorage fs, char mapname, char imgname) -> CvImage
         __init__(self, CvFileStorage fs, char seqname, int idx) -> CvImage
         """
-        this = _cv.new_CvImage(*args)
-        try: self.this.append(this)
-        except: self.this = this
-    __swig_destroy__ = _cv.delete_CvImage
-    __del__ = lambda self : None;
+        _swig_setattr(self, CvImage, 'this', _cv.new_CvImage(*args))
+        _swig_setattr(self, CvImage, 'thisown', 1)
+    def __del__(self, destroy=_cv.delete_CvImage):
+        """__del__(self)"""
+        try:
+            if self.thisown: destroy(self)
+        except: pass
+
     def clone(*args):
         """clone(self) -> CvImage"""
         return _cv.CvImage_clone(*args)
@@ -5002,8 +5518,13 @@ class CvImage(_object):
         """
         return _cv.CvImage_roi_row(*args)
 
-CvImage_swigregister = _cv.CvImage_swigregister
-CvImage_swigregister(CvImage)
+
+class CvImagePtr(CvImage):
+    def __init__(self, this):
+        _swig_setattr(self, CvImage, 'this', this)
+        if not hasattr(self,"thisown"): _swig_setattr(self, CvImage, 'thisown', 0)
+        self.__class__ = CvImage
+_cv.CvImage_swigregister(CvImagePtr)
 
 class CvMatrix(_object):
     """Proxy of C++ CvMatrix class"""
@@ -5011,8 +5532,9 @@ class CvMatrix(_object):
     __setattr__ = lambda self, name, value: _swig_setattr(self, CvMatrix, name, value)
     __swig_getmethods__ = {}
     __getattr__ = lambda self, name: _swig_getattr(self, CvMatrix, name)
-    __repr__ = _swig_repr
-    def __init__(self, *args): 
+    def __repr__(self):
+        return "<%s.%s; proxy of C++ CvMatrix instance at %s>" % (self.__class__.__module__, self.__class__.__name__, self.this,)
+    def __init__(self, *args):
         """
         __init__(self) -> CvMatrix
         __init__(self, int rows, int cols, int type) -> CvMatrix
@@ -5032,11 +5554,14 @@ class CvMatrix(_object):
         __init__(self, CvFileStorage fs, char mapname, char matname) -> CvMatrix
         __init__(self, CvFileStorage fs, char seqname, int idx) -> CvMatrix
         """
-        this = _cv.new_CvMatrix(*args)
-        try: self.this.append(this)
-        except: self.this = this
-    __swig_destroy__ = _cv.delete_CvMatrix
-    __del__ = lambda self : None;
+        _swig_setattr(self, CvMatrix, 'this', _cv.new_CvMatrix(*args))
+        _swig_setattr(self, CvMatrix, 'thisown', 1)
+    def __del__(self, destroy=_cv.delete_CvMatrix):
+        """__del__(self)"""
+        try:
+            if self.thisown: destroy(self)
+        except: pass
+
     def clone(*args):
         """clone(self) -> CvMatrix"""
         return _cv.CvMatrix_clone(*args)
@@ -5130,41 +5655,49 @@ class CvMatrix(_object):
         """
         return _cv.CvMatrix_row(*args)
 
-CvMatrix_swigregister = _cv.CvMatrix_swigregister
-CvMatrix_swigregister(CvMatrix)
+
+class CvMatrixPtr(CvMatrix):
+    def __init__(self, this):
+        _swig_setattr(self, CvMatrix, 'this', this)
+        if not hasattr(self,"thisown"): _swig_setattr(self, CvMatrix, 'thisown', 0)
+        self.__class__ = CvMatrix
+_cv.CvMatrix_swigregister(CvMatrixPtr)
 
 
 def cvSetImageIOFunctions(*args):
-  """
+    """
     cvSetImageIOFunctions(CvLoadImageFunc _load_image, CvLoadImageMFunc _load_image_m, 
         CvSaveImageFunc _save_image, CvShowImageFunc _show_image) -> int
     """
-  return _cv.cvSetImageIOFunctions(*args)
+    return _cv.cvSetImageIOFunctions(*args)
 class CvModule(_object):
     """Proxy of C++ CvModule class"""
     __swig_setmethods__ = {}
     __setattr__ = lambda self, name, value: _swig_setattr(self, CvModule, name, value)
     __swig_getmethods__ = {}
     __getattr__ = lambda self, name: _swig_getattr(self, CvModule, name)
-    __repr__ = _swig_repr
-    def __init__(self, *args): 
+    def __repr__(self):
+        return "<%s.%s; proxy of C++ CvModule instance at %s>" % (self.__class__.__module__, self.__class__.__name__, self.this,)
+    def __init__(self, *args):
         """__init__(self, CvModuleInfo _info) -> CvModule"""
-        this = _cv.new_CvModule(*args)
-        try: self.this.append(this)
-        except: self.this = this
-    __swig_destroy__ = _cv.delete_CvModule
-    __del__ = lambda self : None;
+        _swig_setattr(self, CvModule, 'this', _cv.new_CvModule(*args))
+        _swig_setattr(self, CvModule, 'thisown', 1)
+    def __del__(self, destroy=_cv.delete_CvModule):
+        """__del__(self)"""
+        try:
+            if self.thisown: destroy(self)
+        except: pass
+
     __swig_setmethods__["info"] = _cv.CvModule_info_set
     __swig_getmethods__["info"] = _cv.CvModule_info_get
     if _newclass:info = property(_cv.CvModule_info_get, _cv.CvModule_info_set)
-    __swig_setmethods__["first"] = _cv.CvModule_first_set
-    __swig_getmethods__["first"] = _cv.CvModule_first_get
-    if _newclass:first = property(_cv.CvModule_first_get, _cv.CvModule_first_set)
-    __swig_setmethods__["last"] = _cv.CvModule_last_set
-    __swig_getmethods__["last"] = _cv.CvModule_last_get
-    if _newclass:last = property(_cv.CvModule_last_get, _cv.CvModule_last_set)
-CvModule_swigregister = _cv.CvModule_swigregister
-CvModule_swigregister(CvModule)
+
+class CvModulePtr(CvModule):
+    def __init__(self, this):
+        _swig_setattr(self, CvModule, 'this', this)
+        if not hasattr(self,"thisown"): _swig_setattr(self, CvModule, 'thisown', 0)
+        self.__class__ = CvModule
+_cv.CvModule_swigregister(CvModulePtr)
 cvar = _cv.cvar
 
 class CvType(_object):
@@ -5173,8 +5706,9 @@ class CvType(_object):
     __setattr__ = lambda self, name, value: _swig_setattr(self, CvType, name, value)
     __swig_getmethods__ = {}
     __getattr__ = lambda self, name: _swig_getattr(self, CvType, name)
-    __repr__ = _swig_repr
-    def __init__(self, *args): 
+    def __repr__(self):
+        return "<%s.%s; proxy of C++ CvType instance at %s>" % (self.__class__.__module__, self.__class__.__name__, self.this,)
+    def __init__(self, *args):
         """
         __init__(self, char type_name, CvIsInstanceFunc is_instance, CvReleaseFunc release=0, 
             CvReadFunc read=0, CvWriteFunc write=0, 
@@ -5186,22 +5720,24 @@ class CvType(_object):
         __init__(self, char type_name, CvIsInstanceFunc is_instance, CvReleaseFunc release=0) -> CvType
         __init__(self, char type_name, CvIsInstanceFunc is_instance) -> CvType
         """
-        this = _cv.new_CvType(*args)
-        try: self.this.append(this)
-        except: self.this = this
-    __swig_destroy__ = _cv.delete_CvType
-    __del__ = lambda self : None;
+        _swig_setattr(self, CvType, 'this', _cv.new_CvType(*args))
+        _swig_setattr(self, CvType, 'thisown', 1)
+    def __del__(self, destroy=_cv.delete_CvType):
+        """__del__(self)"""
+        try:
+            if self.thisown: destroy(self)
+        except: pass
+
     __swig_setmethods__["info"] = _cv.CvType_info_set
     __swig_getmethods__["info"] = _cv.CvType_info_get
     if _newclass:info = property(_cv.CvType_info_get, _cv.CvType_info_set)
-    __swig_setmethods__["first"] = _cv.CvType_first_set
-    __swig_getmethods__["first"] = _cv.CvType_first_get
-    if _newclass:first = property(_cv.CvType_first_get, _cv.CvType_first_set)
-    __swig_setmethods__["last"] = _cv.CvType_last_set
-    __swig_getmethods__["last"] = _cv.CvType_last_get
-    if _newclass:last = property(_cv.CvType_last_get, _cv.CvType_last_set)
-CvType_swigregister = _cv.CvType_swigregister
-CvType_swigregister(CvType)
+
+class CvTypePtr(CvType):
+    def __init__(self, this):
+        _swig_setattr(self, CvType, 'this', this)
+        if not hasattr(self,"thisown"): _swig_setattr(self, CvType, 'thisown', 0)
+        self.__class__ = CvType
+_cv.CvType_swigregister(CvTypePtr)
 
 class CvMoments(_object):
     """Proxy of C++ CvMoments class"""
@@ -5209,7 +5745,8 @@ class CvMoments(_object):
     __setattr__ = lambda self, name, value: _swig_setattr(self, CvMoments, name, value)
     __swig_getmethods__ = {}
     __getattr__ = lambda self, name: _swig_getattr(self, CvMoments, name)
-    __repr__ = _swig_repr
+    def __repr__(self):
+        return "<%s.%s; proxy of C++ CvMoments instance at %s>" % (self.__class__.__module__, self.__class__.__name__, self.this,)
     __swig_setmethods__["m00"] = _cv.CvMoments_m00_set
     __swig_getmethods__["m00"] = _cv.CvMoments_m00_get
     if _newclass:m00 = property(_cv.CvMoments_m00_get, _cv.CvMoments_m00_set)
@@ -5264,15 +5801,23 @@ class CvMoments(_object):
     __swig_setmethods__["inv_sqrt_m00"] = _cv.CvMoments_inv_sqrt_m00_set
     __swig_getmethods__["inv_sqrt_m00"] = _cv.CvMoments_inv_sqrt_m00_get
     if _newclass:inv_sqrt_m00 = property(_cv.CvMoments_inv_sqrt_m00_get, _cv.CvMoments_inv_sqrt_m00_set)
-    def __init__(self, *args): 
+    def __init__(self, *args):
         """__init__(self) -> CvMoments"""
-        this = _cv.new_CvMoments(*args)
-        try: self.this.append(this)
-        except: self.this = this
-    __swig_destroy__ = _cv.delete_CvMoments
-    __del__ = lambda self : None;
-CvMoments_swigregister = _cv.CvMoments_swigregister
-CvMoments_swigregister(CvMoments)
+        _swig_setattr(self, CvMoments, 'this', _cv.new_CvMoments(*args))
+        _swig_setattr(self, CvMoments, 'thisown', 1)
+    def __del__(self, destroy=_cv.delete_CvMoments):
+        """__del__(self)"""
+        try:
+            if self.thisown: destroy(self)
+        except: pass
+
+
+class CvMomentsPtr(CvMoments):
+    def __init__(self, this):
+        _swig_setattr(self, CvMoments, 'this', this)
+        if not hasattr(self,"thisown"): _swig_setattr(self, CvMoments, 'thisown', 0)
+        self.__class__ = CvMoments
+_cv.CvMoments_swigregister(CvMomentsPtr)
 
 class CvHuMoments(_object):
     """Proxy of C++ CvHuMoments class"""
@@ -5280,7 +5825,8 @@ class CvHuMoments(_object):
     __setattr__ = lambda self, name, value: _swig_setattr(self, CvHuMoments, name, value)
     __swig_getmethods__ = {}
     __getattr__ = lambda self, name: _swig_getattr(self, CvHuMoments, name)
-    __repr__ = _swig_repr
+    def __repr__(self):
+        return "<%s.%s; proxy of C++ CvHuMoments instance at %s>" % (self.__class__.__module__, self.__class__.__name__, self.this,)
     __swig_setmethods__["hu1"] = _cv.CvHuMoments_hu1_set
     __swig_getmethods__["hu1"] = _cv.CvHuMoments_hu1_get
     if _newclass:hu1 = property(_cv.CvHuMoments_hu1_get, _cv.CvHuMoments_hu1_set)
@@ -5302,15 +5848,23 @@ class CvHuMoments(_object):
     __swig_setmethods__["hu7"] = _cv.CvHuMoments_hu7_set
     __swig_getmethods__["hu7"] = _cv.CvHuMoments_hu7_get
     if _newclass:hu7 = property(_cv.CvHuMoments_hu7_get, _cv.CvHuMoments_hu7_set)
-    def __init__(self, *args): 
+    def __init__(self, *args):
         """__init__(self) -> CvHuMoments"""
-        this = _cv.new_CvHuMoments(*args)
-        try: self.this.append(this)
-        except: self.this = this
-    __swig_destroy__ = _cv.delete_CvHuMoments
-    __del__ = lambda self : None;
-CvHuMoments_swigregister = _cv.CvHuMoments_swigregister
-CvHuMoments_swigregister(CvHuMoments)
+        _swig_setattr(self, CvHuMoments, 'this', _cv.new_CvHuMoments(*args))
+        _swig_setattr(self, CvHuMoments, 'thisown', 1)
+    def __del__(self, destroy=_cv.delete_CvHuMoments):
+        """__del__(self)"""
+        try:
+            if self.thisown: destroy(self)
+        except: pass
+
+
+class CvHuMomentsPtr(CvHuMoments):
+    def __init__(self, this):
+        _swig_setattr(self, CvHuMoments, 'this', this)
+        if not hasattr(self,"thisown"): _swig_setattr(self, CvHuMoments, 'thisown', 0)
+        self.__class__ = CvHuMoments
+_cv.CvHuMoments_swigregister(CvHuMomentsPtr)
 
 class CvConnectedComp(_object):
     """Proxy of C++ CvConnectedComp class"""
@@ -5318,7 +5872,8 @@ class CvConnectedComp(_object):
     __setattr__ = lambda self, name, value: _swig_setattr(self, CvConnectedComp, name, value)
     __swig_getmethods__ = {}
     __getattr__ = lambda self, name: _swig_getattr(self, CvConnectedComp, name)
-    __repr__ = _swig_repr
+    def __repr__(self):
+        return "<%s.%s; proxy of C++ CvConnectedComp instance at %s>" % (self.__class__.__module__, self.__class__.__name__, self.this,)
     __swig_setmethods__["area"] = _cv.CvConnectedComp_area_set
     __swig_getmethods__["area"] = _cv.CvConnectedComp_area_get
     if _newclass:area = property(_cv.CvConnectedComp_area_get, _cv.CvConnectedComp_area_set)
@@ -5331,15 +5886,23 @@ class CvConnectedComp(_object):
     __swig_setmethods__["contour"] = _cv.CvConnectedComp_contour_set
     __swig_getmethods__["contour"] = _cv.CvConnectedComp_contour_get
     if _newclass:contour = property(_cv.CvConnectedComp_contour_get, _cv.CvConnectedComp_contour_set)
-    def __init__(self, *args): 
+    def __init__(self, *args):
         """__init__(self) -> CvConnectedComp"""
-        this = _cv.new_CvConnectedComp(*args)
-        try: self.this.append(this)
-        except: self.this = this
-    __swig_destroy__ = _cv.delete_CvConnectedComp
-    __del__ = lambda self : None;
-CvConnectedComp_swigregister = _cv.CvConnectedComp_swigregister
-CvConnectedComp_swigregister(CvConnectedComp)
+        _swig_setattr(self, CvConnectedComp, 'this', _cv.new_CvConnectedComp(*args))
+        _swig_setattr(self, CvConnectedComp, 'thisown', 1)
+    def __del__(self, destroy=_cv.delete_CvConnectedComp):
+        """__del__(self)"""
+        try:
+            if self.thisown: destroy(self)
+        except: pass
+
+
+class CvConnectedCompPtr(CvConnectedComp):
+    def __init__(self, this):
+        _swig_setattr(self, CvConnectedComp, 'this', this)
+        if not hasattr(self,"thisown"): _swig_setattr(self, CvConnectedComp, 'thisown', 0)
+        self.__class__ = CvConnectedComp
+_cv.CvConnectedComp_swigregister(CvConnectedCompPtr)
 
 class CvChainPtReader(_object):
     """Proxy of C++ CvChainPtReader class"""
@@ -5347,7 +5910,8 @@ class CvChainPtReader(_object):
     __setattr__ = lambda self, name, value: _swig_setattr(self, CvChainPtReader, name, value)
     __swig_getmethods__ = {}
     __getattr__ = lambda self, name: _swig_getattr(self, CvChainPtReader, name)
-    __repr__ = _swig_repr
+    def __repr__(self):
+        return "<%s.%s; proxy of C++ CvChainPtReader instance at %s>" % (self.__class__.__module__, self.__class__.__name__, self.this,)
     __swig_setmethods__["header_size"] = _cv.CvChainPtReader_header_size_set
     __swig_getmethods__["header_size"] = _cv.CvChainPtReader_header_size_get
     if _newclass:header_size = property(_cv.CvChainPtReader_header_size_get, _cv.CvChainPtReader_header_size_set)
@@ -5381,15 +5945,23 @@ class CvChainPtReader(_object):
     __swig_setmethods__["deltas"] = _cv.CvChainPtReader_deltas_set
     __swig_getmethods__["deltas"] = _cv.CvChainPtReader_deltas_get
     if _newclass:deltas = property(_cv.CvChainPtReader_deltas_get, _cv.CvChainPtReader_deltas_set)
-    def __init__(self, *args): 
+    def __init__(self, *args):
         """__init__(self) -> CvChainPtReader"""
-        this = _cv.new_CvChainPtReader(*args)
-        try: self.this.append(this)
-        except: self.this = this
-    __swig_destroy__ = _cv.delete_CvChainPtReader
-    __del__ = lambda self : None;
-CvChainPtReader_swigregister = _cv.CvChainPtReader_swigregister
-CvChainPtReader_swigregister(CvChainPtReader)
+        _swig_setattr(self, CvChainPtReader, 'this', _cv.new_CvChainPtReader(*args))
+        _swig_setattr(self, CvChainPtReader, 'thisown', 1)
+    def __del__(self, destroy=_cv.delete_CvChainPtReader):
+        """__del__(self)"""
+        try:
+            if self.thisown: destroy(self)
+        except: pass
+
+
+class CvChainPtReaderPtr(CvChainPtReader):
+    def __init__(self, this):
+        _swig_setattr(self, CvChainPtReader, 'this', this)
+        if not hasattr(self,"thisown"): _swig_setattr(self, CvChainPtReader, 'thisown', 0)
+        self.__class__ = CvChainPtReader
+_cv.CvChainPtReader_swigregister(CvChainPtReaderPtr)
 
 class CvContourTree(_object):
     """Proxy of C++ CvContourTree class"""
@@ -5397,7 +5969,8 @@ class CvContourTree(_object):
     __setattr__ = lambda self, name, value: _swig_setattr(self, CvContourTree, name, value)
     __swig_getmethods__ = {}
     __getattr__ = lambda self, name: _swig_getattr(self, CvContourTree, name)
-    __repr__ = _swig_repr
+    def __repr__(self):
+        return "<%s.%s; proxy of C++ CvContourTree instance at %s>" % (self.__class__.__module__, self.__class__.__name__, self.this,)
     __swig_setmethods__["flags"] = _cv.CvContourTree_flags_set
     __swig_getmethods__["flags"] = _cv.CvContourTree_flags_get
     if _newclass:flags = property(_cv.CvContourTree_flags_get, _cv.CvContourTree_flags_set)
@@ -5446,15 +6019,23 @@ class CvContourTree(_object):
     __swig_setmethods__["p2"] = _cv.CvContourTree_p2_set
     __swig_getmethods__["p2"] = _cv.CvContourTree_p2_get
     if _newclass:p2 = property(_cv.CvContourTree_p2_get, _cv.CvContourTree_p2_set)
-    def __init__(self, *args): 
+    def __init__(self, *args):
         """__init__(self) -> CvContourTree"""
-        this = _cv.new_CvContourTree(*args)
-        try: self.this.append(this)
-        except: self.this = this
-    __swig_destroy__ = _cv.delete_CvContourTree
-    __del__ = lambda self : None;
-CvContourTree_swigregister = _cv.CvContourTree_swigregister
-CvContourTree_swigregister(CvContourTree)
+        _swig_setattr(self, CvContourTree, 'this', _cv.new_CvContourTree(*args))
+        _swig_setattr(self, CvContourTree, 'thisown', 1)
+    def __del__(self, destroy=_cv.delete_CvContourTree):
+        """__del__(self)"""
+        try:
+            if self.thisown: destroy(self)
+        except: pass
+
+
+class CvContourTreePtr(CvContourTree):
+    def __init__(self, this):
+        _swig_setattr(self, CvContourTree, 'this', this)
+        if not hasattr(self,"thisown"): _swig_setattr(self, CvContourTree, 'thisown', 0)
+        self.__class__ = CvContourTree
+_cv.CvContourTree_swigregister(CvContourTreePtr)
 
 class CvConvexityDefect(_object):
     """Proxy of C++ CvConvexityDefect class"""
@@ -5462,7 +6043,8 @@ class CvConvexityDefect(_object):
     __setattr__ = lambda self, name, value: _swig_setattr(self, CvConvexityDefect, name, value)
     __swig_getmethods__ = {}
     __getattr__ = lambda self, name: _swig_getattr(self, CvConvexityDefect, name)
-    __repr__ = _swig_repr
+    def __repr__(self):
+        return "<%s.%s; proxy of C++ CvConvexityDefect instance at %s>" % (self.__class__.__module__, self.__class__.__name__, self.this,)
     __swig_setmethods__["start"] = _cv.CvConvexityDefect_start_set
     __swig_getmethods__["start"] = _cv.CvConvexityDefect_start_get
     if _newclass:start = property(_cv.CvConvexityDefect_start_get, _cv.CvConvexityDefect_start_set)
@@ -5475,15 +6057,23 @@ class CvConvexityDefect(_object):
     __swig_setmethods__["depth"] = _cv.CvConvexityDefect_depth_set
     __swig_getmethods__["depth"] = _cv.CvConvexityDefect_depth_get
     if _newclass:depth = property(_cv.CvConvexityDefect_depth_get, _cv.CvConvexityDefect_depth_set)
-    def __init__(self, *args): 
+    def __init__(self, *args):
         """__init__(self) -> CvConvexityDefect"""
-        this = _cv.new_CvConvexityDefect(*args)
-        try: self.this.append(this)
-        except: self.this = this
-    __swig_destroy__ = _cv.delete_CvConvexityDefect
-    __del__ = lambda self : None;
-CvConvexityDefect_swigregister = _cv.CvConvexityDefect_swigregister
-CvConvexityDefect_swigregister(CvConvexityDefect)
+        _swig_setattr(self, CvConvexityDefect, 'this', _cv.new_CvConvexityDefect(*args))
+        _swig_setattr(self, CvConvexityDefect, 'thisown', 1)
+    def __del__(self, destroy=_cv.delete_CvConvexityDefect):
+        """__del__(self)"""
+        try:
+            if self.thisown: destroy(self)
+        except: pass
+
+
+class CvConvexityDefectPtr(CvConvexityDefect):
+    def __init__(self, this):
+        _swig_setattr(self, CvConvexityDefect, 'this', this)
+        if not hasattr(self,"thisown"): _swig_setattr(self, CvConvexityDefect, 'thisown', 0)
+        self.__class__ = CvConvexityDefect
+_cv.CvConvexityDefect_swigregister(CvConvexityDefectPtr)
 
 class CvQuadEdge2D(_object):
     """Proxy of C++ CvQuadEdge2D class"""
@@ -5491,7 +6081,8 @@ class CvQuadEdge2D(_object):
     __setattr__ = lambda self, name, value: _swig_setattr(self, CvQuadEdge2D, name, value)
     __swig_getmethods__ = {}
     __getattr__ = lambda self, name: _swig_getattr(self, CvQuadEdge2D, name)
-    __repr__ = _swig_repr
+    def __repr__(self):
+        return "<%s.%s; proxy of C++ CvQuadEdge2D instance at %s>" % (self.__class__.__module__, self.__class__.__name__, self.this,)
     __swig_setmethods__["flags"] = _cv.CvQuadEdge2D_flags_set
     __swig_getmethods__["flags"] = _cv.CvQuadEdge2D_flags_get
     if _newclass:flags = property(_cv.CvQuadEdge2D_flags_get, _cv.CvQuadEdge2D_flags_set)
@@ -5501,15 +6092,23 @@ class CvQuadEdge2D(_object):
     __swig_setmethods__["next"] = _cv.CvQuadEdge2D_next_set
     __swig_getmethods__["next"] = _cv.CvQuadEdge2D_next_get
     if _newclass:next = property(_cv.CvQuadEdge2D_next_get, _cv.CvQuadEdge2D_next_set)
-    def __init__(self, *args): 
+    def __init__(self, *args):
         """__init__(self) -> CvQuadEdge2D"""
-        this = _cv.new_CvQuadEdge2D(*args)
-        try: self.this.append(this)
-        except: self.this = this
-    __swig_destroy__ = _cv.delete_CvQuadEdge2D
-    __del__ = lambda self : None;
-CvQuadEdge2D_swigregister = _cv.CvQuadEdge2D_swigregister
-CvQuadEdge2D_swigregister(CvQuadEdge2D)
+        _swig_setattr(self, CvQuadEdge2D, 'this', _cv.new_CvQuadEdge2D(*args))
+        _swig_setattr(self, CvQuadEdge2D, 'thisown', 1)
+    def __del__(self, destroy=_cv.delete_CvQuadEdge2D):
+        """__del__(self)"""
+        try:
+            if self.thisown: destroy(self)
+        except: pass
+
+
+class CvQuadEdge2DPtr(CvQuadEdge2D):
+    def __init__(self, this):
+        _swig_setattr(self, CvQuadEdge2D, 'this', this)
+        if not hasattr(self,"thisown"): _swig_setattr(self, CvQuadEdge2D, 'thisown', 0)
+        self.__class__ = CvQuadEdge2D
+_cv.CvQuadEdge2D_swigregister(CvQuadEdge2DPtr)
 
 class CvSubdiv2DPoint(_object):
     """Proxy of C++ CvSubdiv2DPoint class"""
@@ -5517,7 +6116,8 @@ class CvSubdiv2DPoint(_object):
     __setattr__ = lambda self, name, value: _swig_setattr(self, CvSubdiv2DPoint, name, value)
     __swig_getmethods__ = {}
     __getattr__ = lambda self, name: _swig_getattr(self, CvSubdiv2DPoint, name)
-    __repr__ = _swig_repr
+    def __repr__(self):
+        return "<%s.%s; proxy of C++ CvSubdiv2DPoint instance at %s>" % (self.__class__.__module__, self.__class__.__name__, self.this,)
     __swig_setmethods__["flags"] = _cv.CvSubdiv2DPoint_flags_set
     __swig_getmethods__["flags"] = _cv.CvSubdiv2DPoint_flags_get
     if _newclass:flags = property(_cv.CvSubdiv2DPoint_flags_get, _cv.CvSubdiv2DPoint_flags_set)
@@ -5527,15 +6127,23 @@ class CvSubdiv2DPoint(_object):
     __swig_setmethods__["pt"] = _cv.CvSubdiv2DPoint_pt_set
     __swig_getmethods__["pt"] = _cv.CvSubdiv2DPoint_pt_get
     if _newclass:pt = property(_cv.CvSubdiv2DPoint_pt_get, _cv.CvSubdiv2DPoint_pt_set)
-    def __init__(self, *args): 
+    def __init__(self, *args):
         """__init__(self) -> CvSubdiv2DPoint"""
-        this = _cv.new_CvSubdiv2DPoint(*args)
-        try: self.this.append(this)
-        except: self.this = this
-    __swig_destroy__ = _cv.delete_CvSubdiv2DPoint
-    __del__ = lambda self : None;
-CvSubdiv2DPoint_swigregister = _cv.CvSubdiv2DPoint_swigregister
-CvSubdiv2DPoint_swigregister(CvSubdiv2DPoint)
+        _swig_setattr(self, CvSubdiv2DPoint, 'this', _cv.new_CvSubdiv2DPoint(*args))
+        _swig_setattr(self, CvSubdiv2DPoint, 'thisown', 1)
+    def __del__(self, destroy=_cv.delete_CvSubdiv2DPoint):
+        """__del__(self)"""
+        try:
+            if self.thisown: destroy(self)
+        except: pass
+
+
+class CvSubdiv2DPointPtr(CvSubdiv2DPoint):
+    def __init__(self, this):
+        _swig_setattr(self, CvSubdiv2DPoint, 'this', this)
+        if not hasattr(self,"thisown"): _swig_setattr(self, CvSubdiv2DPoint, 'thisown', 0)
+        self.__class__ = CvSubdiv2DPoint
+_cv.CvSubdiv2DPoint_swigregister(CvSubdiv2DPointPtr)
 
 class CvSubdiv2D(_object):
     """Proxy of C++ CvSubdiv2D class"""
@@ -5543,7 +6151,8 @@ class CvSubdiv2D(_object):
     __setattr__ = lambda self, name, value: _swig_setattr(self, CvSubdiv2D, name, value)
     __swig_getmethods__ = {}
     __getattr__ = lambda self, name: _swig_getattr(self, CvSubdiv2D, name)
-    __repr__ = _swig_repr
+    def __repr__(self):
+        return "<%s.%s; proxy of C++ CvSubdiv2D instance at %s>" % (self.__class__.__module__, self.__class__.__name__, self.this,)
     __swig_setmethods__["flags"] = _cv.CvSubdiv2D_flags_set
     __swig_getmethods__["flags"] = _cv.CvSubdiv2D_flags_get
     if _newclass:flags = property(_cv.CvSubdiv2D_flags_get, _cv.CvSubdiv2D_flags_set)
@@ -5615,7 +6224,7 @@ class CvSubdiv2D(_object):
         return _cv.CvSubdiv2D_typed_edges_get(*args)
 
     def typed_edges_set(*args):
-        """typed_edges_set(self, CvSeq_QuadEdge2D ?)"""
+        """typed_edges_set(self, CvSeq_QuadEdge2D ??)"""
         return _cv.CvSubdiv2D_typed_edges_set(*args)
 
     def __iter__(self):
@@ -5623,15 +6232,23 @@ class CvSubdiv2D(_object):
     	for i in range(s.total):
     		yield s[i]
 
-    def __init__(self, *args): 
+    def __init__(self, *args):
         """__init__(self) -> CvSubdiv2D"""
-        this = _cv.new_CvSubdiv2D(*args)
-        try: self.this.append(this)
-        except: self.this = this
-    __swig_destroy__ = _cv.delete_CvSubdiv2D
-    __del__ = lambda self : None;
-CvSubdiv2D_swigregister = _cv.CvSubdiv2D_swigregister
-CvSubdiv2D_swigregister(CvSubdiv2D)
+        _swig_setattr(self, CvSubdiv2D, 'this', _cv.new_CvSubdiv2D(*args))
+        _swig_setattr(self, CvSubdiv2D, 'thisown', 1)
+    def __del__(self, destroy=_cv.delete_CvSubdiv2D):
+        """__del__(self)"""
+        try:
+            if self.thisown: destroy(self)
+        except: pass
+
+
+class CvSubdiv2DPtr(CvSubdiv2D):
+    def __init__(self, this):
+        _swig_setattr(self, CvSubdiv2D, 'this', this)
+        if not hasattr(self,"thisown"): _swig_setattr(self, CvSubdiv2D, 'thisown', 0)
+        self.__class__ = CvSubdiv2D
+_cv.CvSubdiv2D_swigregister(CvSubdiv2DPtr)
 
 CV_PTLOC_ERROR = _cv.CV_PTLOC_ERROR
 CV_PTLOC_OUTSIDE_RECT = _cv.CV_PTLOC_OUTSIDE_RECT
@@ -5653,19 +6270,28 @@ class CvMatrix3(_object):
     __setattr__ = lambda self, name, value: _swig_setattr(self, CvMatrix3, name, value)
     __swig_getmethods__ = {}
     __getattr__ = lambda self, name: _swig_getattr(self, CvMatrix3, name)
-    __repr__ = _swig_repr
+    def __repr__(self):
+        return "<%s.%s; proxy of C++ CvMatrix3 instance at %s>" % (self.__class__.__module__, self.__class__.__name__, self.this,)
     __swig_setmethods__["m"] = _cv.CvMatrix3_m_set
     __swig_getmethods__["m"] = _cv.CvMatrix3_m_get
     if _newclass:m = property(_cv.CvMatrix3_m_get, _cv.CvMatrix3_m_set)
-    def __init__(self, *args): 
+    def __init__(self, *args):
         """__init__(self) -> CvMatrix3"""
-        this = _cv.new_CvMatrix3(*args)
-        try: self.this.append(this)
-        except: self.this = this
-    __swig_destroy__ = _cv.delete_CvMatrix3
-    __del__ = lambda self : None;
-CvMatrix3_swigregister = _cv.CvMatrix3_swigregister
-CvMatrix3_swigregister(CvMatrix3)
+        _swig_setattr(self, CvMatrix3, 'this', _cv.new_CvMatrix3(*args))
+        _swig_setattr(self, CvMatrix3, 'thisown', 1)
+    def __del__(self, destroy=_cv.delete_CvMatrix3):
+        """__del__(self)"""
+        try:
+            if self.thisown: destroy(self)
+        except: pass
+
+
+class CvMatrix3Ptr(CvMatrix3):
+    def __init__(self, this):
+        _swig_setattr(self, CvMatrix3, 'this', this)
+        if not hasattr(self,"thisown"): _swig_setattr(self, CvMatrix3, 'thisown', 0)
+        self.__class__ = CvMatrix3
+_cv.CvMatrix3_swigregister(CvMatrix3Ptr)
 
 class CvConDensation(_object):
     """Proxy of C++ CvConDensation class"""
@@ -5673,8 +6299,9 @@ class CvConDensation(_object):
     __setattr__ = lambda self, name, value: _swig_setattr(self, CvConDensation, name, value)
     __swig_getmethods__ = {}
     __getattr__ = lambda self, name: _swig_getattr(self, CvConDensation, name)
-    def __init__(self): raise AttributeError, "No constructor defined"
-    __repr__ = _swig_repr
+    def __init__(self): raise RuntimeError, "No constructor defined"
+    def __repr__(self):
+        return "<%s.%s; proxy of C++ CvConDensation instance at %s>" % (self.__class__.__module__, self.__class__.__name__, self.this,)
     __swig_setmethods__["MP"] = _cv.CvConDensation_MP_set
     __swig_getmethods__["MP"] = _cv.CvConDensation_MP_get
     if _newclass:MP = property(_cv.CvConDensation_MP_get, _cv.CvConDensation_MP_set)
@@ -5711,10 +6338,19 @@ class CvConDensation(_object):
     __swig_setmethods__["RandS"] = _cv.CvConDensation_RandS_set
     __swig_getmethods__["RandS"] = _cv.CvConDensation_RandS_get
     if _newclass:RandS = property(_cv.CvConDensation_RandS_get, _cv.CvConDensation_RandS_set)
-    __swig_destroy__ = _cv.delete_CvConDensation
-    __del__ = lambda self : None;
-CvConDensation_swigregister = _cv.CvConDensation_swigregister
-CvConDensation_swigregister(CvConDensation)
+    def __del__(self, destroy=_cv.delete_CvConDensation):
+        """__del__(self)"""
+        try:
+            if self.thisown: destroy(self)
+        except: pass
+
+
+class CvConDensationPtr(CvConDensation):
+    def __init__(self, this):
+        _swig_setattr(self, CvConDensation, 'this', this)
+        if not hasattr(self,"thisown"): _swig_setattr(self, CvConDensation, 'thisown', 0)
+        self.__class__ = CvConDensation
+_cv.CvConDensation_swigregister(CvConDensationPtr)
 
 class CvKalman(_object):
     """Proxy of C++ CvKalman class"""
@@ -5722,8 +6358,9 @@ class CvKalman(_object):
     __setattr__ = lambda self, name, value: _swig_setattr(self, CvKalman, name, value)
     __swig_getmethods__ = {}
     __getattr__ = lambda self, name: _swig_getattr(self, CvKalman, name)
-    def __init__(self): raise AttributeError, "No constructor defined"
-    __repr__ = _swig_repr
+    def __init__(self): raise RuntimeError, "No constructor defined"
+    def __repr__(self):
+        return "<%s.%s; proxy of C++ CvKalman instance at %s>" % (self.__class__.__module__, self.__class__.__name__, self.this,)
     __swig_setmethods__["MP"] = _cv.CvKalman_MP_set
     __swig_getmethods__["MP"] = _cv.CvKalman_MP_get
     if _newclass:MP = property(_cv.CvKalman_MP_get, _cv.CvKalman_MP_set)
@@ -5811,10 +6448,19 @@ class CvKalman(_object):
     __swig_setmethods__["temp5"] = _cv.CvKalman_temp5_set
     __swig_getmethods__["temp5"] = _cv.CvKalman_temp5_get
     if _newclass:temp5 = property(_cv.CvKalman_temp5_get, _cv.CvKalman_temp5_set)
-    __swig_destroy__ = _cv.delete_CvKalman
-    __del__ = lambda self : None;
-CvKalman_swigregister = _cv.CvKalman_swigregister
-CvKalman_swigregister(CvKalman)
+    def __del__(self, destroy=_cv.delete_CvKalman):
+        """__del__(self)"""
+        try:
+            if self.thisown: destroy(self)
+        except: pass
+
+
+class CvKalmanPtr(CvKalman):
+    def __init__(self, this):
+        _swig_setattr(self, CvKalman, 'this', this)
+        if not hasattr(self,"thisown"): _swig_setattr(self, CvKalman, 'thisown', 0)
+        self.__class__ = CvKalman
+_cv.CvKalman_swigregister(CvKalmanPtr)
 
 class CvHaarFeature(_object):
     """Proxy of C++ CvHaarFeature class"""
@@ -5822,21 +6468,30 @@ class CvHaarFeature(_object):
     __setattr__ = lambda self, name, value: _swig_setattr(self, CvHaarFeature, name, value)
     __swig_getmethods__ = {}
     __getattr__ = lambda self, name: _swig_getattr(self, CvHaarFeature, name)
-    __repr__ = _swig_repr
+    def __repr__(self):
+        return "<%s.%s; proxy of C++ CvHaarFeature instance at %s>" % (self.__class__.__module__, self.__class__.__name__, self.this,)
     __swig_setmethods__["tilted"] = _cv.CvHaarFeature_tilted_set
     __swig_getmethods__["tilted"] = _cv.CvHaarFeature_tilted_get
     if _newclass:tilted = property(_cv.CvHaarFeature_tilted_get, _cv.CvHaarFeature_tilted_set)
     __swig_getmethods__["rect"] = _cv.CvHaarFeature_rect_get
     if _newclass:rect = property(_cv.CvHaarFeature_rect_get)
-    def __init__(self, *args): 
+    def __init__(self, *args):
         """__init__(self) -> CvHaarFeature"""
-        this = _cv.new_CvHaarFeature(*args)
-        try: self.this.append(this)
-        except: self.this = this
-    __swig_destroy__ = _cv.delete_CvHaarFeature
-    __del__ = lambda self : None;
-CvHaarFeature_swigregister = _cv.CvHaarFeature_swigregister
-CvHaarFeature_swigregister(CvHaarFeature)
+        _swig_setattr(self, CvHaarFeature, 'this', _cv.new_CvHaarFeature(*args))
+        _swig_setattr(self, CvHaarFeature, 'thisown', 1)
+    def __del__(self, destroy=_cv.delete_CvHaarFeature):
+        """__del__(self)"""
+        try:
+            if self.thisown: destroy(self)
+        except: pass
+
+
+class CvHaarFeaturePtr(CvHaarFeature):
+    def __init__(self, this):
+        _swig_setattr(self, CvHaarFeature, 'this', this)
+        if not hasattr(self,"thisown"): _swig_setattr(self, CvHaarFeature, 'thisown', 0)
+        self.__class__ = CvHaarFeature
+_cv.CvHaarFeature_swigregister(CvHaarFeaturePtr)
 
 class CvHaarFeature_rect(_object):
     """Proxy of C++ CvHaarFeature_rect class"""
@@ -5844,22 +6499,31 @@ class CvHaarFeature_rect(_object):
     __setattr__ = lambda self, name, value: _swig_setattr(self, CvHaarFeature_rect, name, value)
     __swig_getmethods__ = {}
     __getattr__ = lambda self, name: _swig_getattr(self, CvHaarFeature_rect, name)
-    __repr__ = _swig_repr
+    def __repr__(self):
+        return "<%s.%s; proxy of C++ CvHaarFeature_rect instance at %s>" % (self.__class__.__module__, self.__class__.__name__, self.this,)
     __swig_setmethods__["r"] = _cv.CvHaarFeature_rect_r_set
     __swig_getmethods__["r"] = _cv.CvHaarFeature_rect_r_get
     if _newclass:r = property(_cv.CvHaarFeature_rect_r_get, _cv.CvHaarFeature_rect_r_set)
     __swig_setmethods__["weight"] = _cv.CvHaarFeature_rect_weight_set
     __swig_getmethods__["weight"] = _cv.CvHaarFeature_rect_weight_get
     if _newclass:weight = property(_cv.CvHaarFeature_rect_weight_get, _cv.CvHaarFeature_rect_weight_set)
-    def __init__(self, *args): 
+    def __init__(self, *args):
         """__init__(self) -> CvHaarFeature_rect"""
-        this = _cv.new_CvHaarFeature_rect(*args)
-        try: self.this.append(this)
-        except: self.this = this
-    __swig_destroy__ = _cv.delete_CvHaarFeature_rect
-    __del__ = lambda self : None;
-CvHaarFeature_rect_swigregister = _cv.CvHaarFeature_rect_swigregister
-CvHaarFeature_rect_swigregister(CvHaarFeature_rect)
+        _swig_setattr(self, CvHaarFeature_rect, 'this', _cv.new_CvHaarFeature_rect(*args))
+        _swig_setattr(self, CvHaarFeature_rect, 'thisown', 1)
+    def __del__(self, destroy=_cv.delete_CvHaarFeature_rect):
+        """__del__(self)"""
+        try:
+            if self.thisown: destroy(self)
+        except: pass
+
+
+class CvHaarFeature_rectPtr(CvHaarFeature_rect):
+    def __init__(self, this):
+        _swig_setattr(self, CvHaarFeature_rect, 'this', this)
+        if not hasattr(self,"thisown"): _swig_setattr(self, CvHaarFeature_rect, 'thisown', 0)
+        self.__class__ = CvHaarFeature_rect
+_cv.CvHaarFeature_rect_swigregister(CvHaarFeature_rectPtr)
 
 class CvHaarClassifier(_object):
     """Proxy of C++ CvHaarClassifier class"""
@@ -5867,7 +6531,8 @@ class CvHaarClassifier(_object):
     __setattr__ = lambda self, name, value: _swig_setattr(self, CvHaarClassifier, name, value)
     __swig_getmethods__ = {}
     __getattr__ = lambda self, name: _swig_getattr(self, CvHaarClassifier, name)
-    __repr__ = _swig_repr
+    def __repr__(self):
+        return "<%s.%s; proxy of C++ CvHaarClassifier instance at %s>" % (self.__class__.__module__, self.__class__.__name__, self.this,)
     __swig_setmethods__["count"] = _cv.CvHaarClassifier_count_set
     __swig_getmethods__["count"] = _cv.CvHaarClassifier_count_get
     if _newclass:count = property(_cv.CvHaarClassifier_count_get, _cv.CvHaarClassifier_count_set)
@@ -5886,15 +6551,23 @@ class CvHaarClassifier(_object):
     __swig_setmethods__["alpha"] = _cv.CvHaarClassifier_alpha_set
     __swig_getmethods__["alpha"] = _cv.CvHaarClassifier_alpha_get
     if _newclass:alpha = property(_cv.CvHaarClassifier_alpha_get, _cv.CvHaarClassifier_alpha_set)
-    def __init__(self, *args): 
+    def __init__(self, *args):
         """__init__(self) -> CvHaarClassifier"""
-        this = _cv.new_CvHaarClassifier(*args)
-        try: self.this.append(this)
-        except: self.this = this
-    __swig_destroy__ = _cv.delete_CvHaarClassifier
-    __del__ = lambda self : None;
-CvHaarClassifier_swigregister = _cv.CvHaarClassifier_swigregister
-CvHaarClassifier_swigregister(CvHaarClassifier)
+        _swig_setattr(self, CvHaarClassifier, 'this', _cv.new_CvHaarClassifier(*args))
+        _swig_setattr(self, CvHaarClassifier, 'thisown', 1)
+    def __del__(self, destroy=_cv.delete_CvHaarClassifier):
+        """__del__(self)"""
+        try:
+            if self.thisown: destroy(self)
+        except: pass
+
+
+class CvHaarClassifierPtr(CvHaarClassifier):
+    def __init__(self, this):
+        _swig_setattr(self, CvHaarClassifier, 'this', this)
+        if not hasattr(self,"thisown"): _swig_setattr(self, CvHaarClassifier, 'thisown', 0)
+        self.__class__ = CvHaarClassifier
+_cv.CvHaarClassifier_swigregister(CvHaarClassifierPtr)
 
 class CvHaarStageClassifier(_object):
     """Proxy of C++ CvHaarStageClassifier class"""
@@ -5902,7 +6575,8 @@ class CvHaarStageClassifier(_object):
     __setattr__ = lambda self, name, value: _swig_setattr(self, CvHaarStageClassifier, name, value)
     __swig_getmethods__ = {}
     __getattr__ = lambda self, name: _swig_getattr(self, CvHaarStageClassifier, name)
-    __repr__ = _swig_repr
+    def __repr__(self):
+        return "<%s.%s; proxy of C++ CvHaarStageClassifier instance at %s>" % (self.__class__.__module__, self.__class__.__name__, self.this,)
     __swig_setmethods__["count"] = _cv.CvHaarStageClassifier_count_set
     __swig_getmethods__["count"] = _cv.CvHaarStageClassifier_count_get
     if _newclass:count = property(_cv.CvHaarStageClassifier_count_get, _cv.CvHaarStageClassifier_count_set)
@@ -5921,15 +6595,23 @@ class CvHaarStageClassifier(_object):
     __swig_setmethods__["parent"] = _cv.CvHaarStageClassifier_parent_set
     __swig_getmethods__["parent"] = _cv.CvHaarStageClassifier_parent_get
     if _newclass:parent = property(_cv.CvHaarStageClassifier_parent_get, _cv.CvHaarStageClassifier_parent_set)
-    def __init__(self, *args): 
+    def __init__(self, *args):
         """__init__(self) -> CvHaarStageClassifier"""
-        this = _cv.new_CvHaarStageClassifier(*args)
-        try: self.this.append(this)
-        except: self.this = this
-    __swig_destroy__ = _cv.delete_CvHaarStageClassifier
-    __del__ = lambda self : None;
-CvHaarStageClassifier_swigregister = _cv.CvHaarStageClassifier_swigregister
-CvHaarStageClassifier_swigregister(CvHaarStageClassifier)
+        _swig_setattr(self, CvHaarStageClassifier, 'this', _cv.new_CvHaarStageClassifier(*args))
+        _swig_setattr(self, CvHaarStageClassifier, 'thisown', 1)
+    def __del__(self, destroy=_cv.delete_CvHaarStageClassifier):
+        """__del__(self)"""
+        try:
+            if self.thisown: destroy(self)
+        except: pass
+
+
+class CvHaarStageClassifierPtr(CvHaarStageClassifier):
+    def __init__(self, this):
+        _swig_setattr(self, CvHaarStageClassifier, 'this', this)
+        if not hasattr(self,"thisown"): _swig_setattr(self, CvHaarStageClassifier, 'thisown', 0)
+        self.__class__ = CvHaarStageClassifier
+_cv.CvHaarStageClassifier_swigregister(CvHaarStageClassifierPtr)
 
 class CvHaarClassifierCascade(_object):
     """Proxy of C++ CvHaarClassifierCascade class"""
@@ -5937,8 +6619,9 @@ class CvHaarClassifierCascade(_object):
     __setattr__ = lambda self, name, value: _swig_setattr(self, CvHaarClassifierCascade, name, value)
     __swig_getmethods__ = {}
     __getattr__ = lambda self, name: _swig_getattr(self, CvHaarClassifierCascade, name)
-    def __init__(self): raise AttributeError, "No constructor defined"
-    __repr__ = _swig_repr
+    def __init__(self): raise RuntimeError, "No constructor defined"
+    def __repr__(self):
+        return "<%s.%s; proxy of C++ CvHaarClassifierCascade instance at %s>" % (self.__class__.__module__, self.__class__.__name__, self.this,)
     __swig_setmethods__["flags"] = _cv.CvHaarClassifierCascade_flags_set
     __swig_getmethods__["flags"] = _cv.CvHaarClassifierCascade_flags_get
     if _newclass:flags = property(_cv.CvHaarClassifierCascade_flags_get, _cv.CvHaarClassifierCascade_flags_set)
@@ -5960,10 +6643,19 @@ class CvHaarClassifierCascade(_object):
     __swig_setmethods__["hid_cascade"] = _cv.CvHaarClassifierCascade_hid_cascade_set
     __swig_getmethods__["hid_cascade"] = _cv.CvHaarClassifierCascade_hid_cascade_get
     if _newclass:hid_cascade = property(_cv.CvHaarClassifierCascade_hid_cascade_get, _cv.CvHaarClassifierCascade_hid_cascade_set)
-    __swig_destroy__ = _cv.delete_CvHaarClassifierCascade
-    __del__ = lambda self : None;
-CvHaarClassifierCascade_swigregister = _cv.CvHaarClassifierCascade_swigregister
-CvHaarClassifierCascade_swigregister(CvHaarClassifierCascade)
+    def __del__(self, destroy=_cv.delete_CvHaarClassifierCascade):
+        """__del__(self)"""
+        try:
+            if self.thisown: destroy(self)
+        except: pass
+
+
+class CvHaarClassifierCascadePtr(CvHaarClassifierCascade):
+    def __init__(self, this):
+        _swig_setattr(self, CvHaarClassifierCascade, 'this', this)
+        if not hasattr(self,"thisown"): _swig_setattr(self, CvHaarClassifierCascade, 'thisown', 0)
+        self.__class__ = CvHaarClassifierCascade
+_cv.CvHaarClassifierCascade_swigregister(CvHaarClassifierCascadePtr)
 
 class CvAvgComp(_object):
     """Proxy of C++ CvAvgComp class"""
@@ -5971,814 +6663,824 @@ class CvAvgComp(_object):
     __setattr__ = lambda self, name, value: _swig_setattr(self, CvAvgComp, name, value)
     __swig_getmethods__ = {}
     __getattr__ = lambda self, name: _swig_getattr(self, CvAvgComp, name)
-    __repr__ = _swig_repr
+    def __repr__(self):
+        return "<%s.%s; proxy of C++ CvAvgComp instance at %s>" % (self.__class__.__module__, self.__class__.__name__, self.this,)
     __swig_setmethods__["rect"] = _cv.CvAvgComp_rect_set
     __swig_getmethods__["rect"] = _cv.CvAvgComp_rect_get
     if _newclass:rect = property(_cv.CvAvgComp_rect_get, _cv.CvAvgComp_rect_set)
     __swig_setmethods__["neighbors"] = _cv.CvAvgComp_neighbors_set
     __swig_getmethods__["neighbors"] = _cv.CvAvgComp_neighbors_get
     if _newclass:neighbors = property(_cv.CvAvgComp_neighbors_get, _cv.CvAvgComp_neighbors_set)
-    def __init__(self, *args): 
+    def __init__(self, *args):
         """__init__(self) -> CvAvgComp"""
-        this = _cv.new_CvAvgComp(*args)
-        try: self.this.append(this)
-        except: self.this = this
-    __swig_destroy__ = _cv.delete_CvAvgComp
-    __del__ = lambda self : None;
-CvAvgComp_swigregister = _cv.CvAvgComp_swigregister
-CvAvgComp_swigregister(CvAvgComp)
+        _swig_setattr(self, CvAvgComp, 'this', _cv.new_CvAvgComp(*args))
+        _swig_setattr(self, CvAvgComp, 'thisown', 1)
+    def __del__(self, destroy=_cv.delete_CvAvgComp):
+        """__del__(self)"""
+        try:
+            if self.thisown: destroy(self)
+        except: pass
+
+
+class CvAvgCompPtr(CvAvgComp):
+    def __init__(self, this):
+        _swig_setattr(self, CvAvgComp, 'this', this)
+        if not hasattr(self,"thisown"): _swig_setattr(self, CvAvgComp, 'thisown', 0)
+        self.__class__ = CvAvgComp
+_cv.CvAvgComp_swigregister(CvAvgCompPtr)
 
 
 def cvCopyMakeBorder(*args):
-  """
+    """
     cvCopyMakeBorder(CvArr src, CvArr dst, CvPoint offset, int bordertype, 
         CvScalar value=cvScalarAll(0))
     """
-  return _cv.cvCopyMakeBorder(*args)
+    return _cv.cvCopyMakeBorder(*args)
 
 def cvSmooth(*args):
-  """
+    """
     cvSmooth(CvArr src, CvArr dst, int smoothtype=2, int param1=3, 
         int param2=0, double param3=0, double param4=0)
     """
-  return _cv.cvSmooth(*args)
+    return _cv.cvSmooth(*args)
 
 def cvFilter2D(*args):
-  """cvFilter2D(CvArr src, CvArr dst, CvMat kernel, CvPoint anchor=cvPoint(-1,-1))"""
-  return _cv.cvFilter2D(*args)
+    """cvFilter2D(CvArr src, CvArr dst, CvMat kernel, CvPoint anchor=cvPoint(-1,-1))"""
+    return _cv.cvFilter2D(*args)
 
 def cvIntegral(*args):
-  """cvIntegral(CvArr image, CvArr sum, CvArr sqsum=None, CvArr tilted_sum=None)"""
-  return _cv.cvIntegral(*args)
+    """cvIntegral(CvArr image, CvArr sum, CvArr sqsum=None, CvArr tilted_sum=None)"""
+    return _cv.cvIntegral(*args)
 
 def cvPyrDown(*args):
-  """cvPyrDown(CvArr src, CvArr dst, int filter=CV_GAUSSIAN_5x5)"""
-  return _cv.cvPyrDown(*args)
+    """cvPyrDown(CvArr src, CvArr dst, int filter=CV_GAUSSIAN_5x5)"""
+    return _cv.cvPyrDown(*args)
 
 def cvPyrUp(*args):
-  """cvPyrUp(CvArr src, CvArr dst, int filter=CV_GAUSSIAN_5x5)"""
-  return _cv.cvPyrUp(*args)
+    """cvPyrUp(CvArr src, CvArr dst, int filter=CV_GAUSSIAN_5x5)"""
+    return _cv.cvPyrUp(*args)
 
 def cvPyrSegmentation(*args):
-  """
+    """
     cvPyrSegmentation( src,  dst, CvMemStorage storage, CvSeq comp, int level, 
         double threshold1, double threshold2)
     """
-  return _cv.cvPyrSegmentation(*args)
+    return _cv.cvPyrSegmentation(*args)
 
 def cvPyrMeanShiftFiltering(*args):
-  """
+    """
     cvPyrMeanShiftFiltering(CvArr src, CvArr dst, double sp, double sr, int max_level=1, 
         CvTermCriteria termcrit=cvTermCriteria(1 +2,5,1))
     """
-  return _cv.cvPyrMeanShiftFiltering(*args)
+    return _cv.cvPyrMeanShiftFiltering(*args)
 
 def cvWatershed(*args):
-  """cvWatershed(CvArr image, CvArr markers)"""
-  return _cv.cvWatershed(*args)
+    """cvWatershed(CvArr image, CvArr markers)"""
+    return _cv.cvWatershed(*args)
 
 def cvSobel(*args):
-  """cvSobel(CvArr src, CvArr dst, int xorder, int yorder, int aperture_size=3)"""
-  return _cv.cvSobel(*args)
+    """cvSobel(CvArr src, CvArr dst, int xorder, int yorder, int aperture_size=3)"""
+    return _cv.cvSobel(*args)
 
 def cvLaplace(*args):
-  """cvLaplace(CvArr src, CvArr dst, int aperture_size=3)"""
-  return _cv.cvLaplace(*args)
+    """cvLaplace(CvArr src, CvArr dst, int aperture_size=3)"""
+    return _cv.cvLaplace(*args)
 
 def cvCvtColor(*args):
-  """cvCvtColor(CvArr src, CvArr dst, int code)"""
-  return _cv.cvCvtColor(*args)
+    """cvCvtColor(CvArr src, CvArr dst, int code)"""
+    return _cv.cvCvtColor(*args)
 
 def cvResize(*args):
-  """cvResize(CvArr src, CvArr dst, int interpolation=1)"""
-  return _cv.cvResize(*args)
+    """cvResize(CvArr src, CvArr dst, int interpolation=1)"""
+    return _cv.cvResize(*args)
 
 def cvWarpAffine(*args):
-  """
+    """
     cvWarpAffine(CvArr src, CvArr dst, CvMat map_matrix, int flags=1+8, 
         CvScalar fillval=cvScalarAll(0))
     """
-  return _cv.cvWarpAffine(*args)
+    return _cv.cvWarpAffine(*args)
 
 def cvGetAffineTransform(*args):
-  """cvGetAffineTransform(CvPoint2D32f src, CvPoint2D32f dst, CvMat map_matrix) -> CvMat"""
-  return _cv.cvGetAffineTransform(*args)
+    """cvGetAffineTransform(CvPoint2D32f src, CvPoint2D32f dst, CvMat map_matrix) -> CvMat"""
+    return _cv.cvGetAffineTransform(*args)
 
 def cv2DRotationMatrix(*args):
-  """cv2DRotationMatrix(CvPoint2D32f center, double angle, double scale, CvMat map_matrix) -> CvMat"""
-  return _cv.cv2DRotationMatrix(*args)
+    """cv2DRotationMatrix(CvPoint2D32f center, double angle, double scale, CvMat map_matrix) -> CvMat"""
+    return _cv.cv2DRotationMatrix(*args)
 
 def cvWarpPerspective(*args):
-  """
+    """
     cvWarpPerspective(CvArr src, CvArr dst, CvMat map_matrix, int flags=1+8, 
         CvScalar fillval=cvScalarAll(0))
     """
-  return _cv.cvWarpPerspective(*args)
+    return _cv.cvWarpPerspective(*args)
 
 def cvGetPerspectiveTransform(*args):
-  """cvGetPerspectiveTransform(CvPoint2D32f src, CvPoint2D32f dst, CvMat map_matrix) -> CvMat"""
-  return _cv.cvGetPerspectiveTransform(*args)
+    """cvGetPerspectiveTransform(CvPoint2D32f src, CvPoint2D32f dst, CvMat map_matrix) -> CvMat"""
+    return _cv.cvGetPerspectiveTransform(*args)
 
 def cvRemap(*args):
-  """
+    """
     cvRemap(CvArr src, CvArr dst, CvArr mapx, CvArr mapy, int flags=1+8, 
         CvScalar fillval=cvScalarAll(0))
     """
-  return _cv.cvRemap(*args)
+    return _cv.cvRemap(*args)
 
 def cvLogPolar(*args):
-  """
+    """
     cvLogPolar(CvArr src, CvArr dst, CvPoint2D32f center, double M, 
         int flags=1+8)
     """
-  return _cv.cvLogPolar(*args)
+    return _cv.cvLogPolar(*args)
 
 def cvCreateStructuringElementEx(*args):
-  """
+    """
     cvCreateStructuringElementEx(int cols, int rows, int anchor_x, int anchor_y, int shape, 
         int values=None)
     """
-  return _cv.cvCreateStructuringElementEx(*args)
+    return _cv.cvCreateStructuringElementEx(*args)
 
 def cvReleaseStructuringElement(*args):
-  """cvReleaseStructuringElement( element)"""
-  return _cv.cvReleaseStructuringElement(*args)
+    """cvReleaseStructuringElement( element)"""
+    return _cv.cvReleaseStructuringElement(*args)
 
 def cvErode(*args):
-  """cvErode(CvArr src, CvArr dst,  element=None, int iterations=1)"""
-  return _cv.cvErode(*args)
+    """cvErode(CvArr src, CvArr dst,  element=None, int iterations=1)"""
+    return _cv.cvErode(*args)
 
 def cvDilate(*args):
-  """cvDilate(CvArr src, CvArr dst,  element=None, int iterations=1)"""
-  return _cv.cvDilate(*args)
+    """cvDilate(CvArr src, CvArr dst,  element=None, int iterations=1)"""
+    return _cv.cvDilate(*args)
 
 def cvMorphologyEx(*args):
-  """
+    """
     cvMorphologyEx(CvArr src, CvArr dst, CvArr temp,  element, int operation, 
         int iterations=1)
     """
-  return _cv.cvMorphologyEx(*args)
+    return _cv.cvMorphologyEx(*args)
 
 def cvMoments(*args):
-  """cvMoments(CvArr arr, CvMoments moments, int binary=0)"""
-  return _cv.cvMoments(*args)
+    """cvMoments(CvArr arr, CvMoments moments, int binary=0)"""
+    return _cv.cvMoments(*args)
 
 def cvGetSpatialMoment(*args):
-  """cvGetSpatialMoment(CvMoments moments, int x_order, int y_order) -> double"""
-  return _cv.cvGetSpatialMoment(*args)
+    """cvGetSpatialMoment(CvMoments moments, int x_order, int y_order) -> double"""
+    return _cv.cvGetSpatialMoment(*args)
 
 def cvGetCentralMoment(*args):
-  """cvGetCentralMoment(CvMoments moments, int x_order, int y_order) -> double"""
-  return _cv.cvGetCentralMoment(*args)
+    """cvGetCentralMoment(CvMoments moments, int x_order, int y_order) -> double"""
+    return _cv.cvGetCentralMoment(*args)
 
 def cvGetNormalizedCentralMoment(*args):
-  """cvGetNormalizedCentralMoment(CvMoments moments, int x_order, int y_order) -> double"""
-  return _cv.cvGetNormalizedCentralMoment(*args)
+    """cvGetNormalizedCentralMoment(CvMoments moments, int x_order, int y_order) -> double"""
+    return _cv.cvGetNormalizedCentralMoment(*args)
 
 def cvGetHuMoments(*args):
-  """cvGetHuMoments(CvMoments moments, CvHuMoments hu_moments)"""
-  return _cv.cvGetHuMoments(*args)
+    """cvGetHuMoments(CvMoments moments, CvHuMoments hu_moments)"""
+    return _cv.cvGetHuMoments(*args)
 
 def cvSampleLine(*args):
-  """
+    """
     cvSampleLine(CvArr image, CvPoint pt1, CvPoint pt2, void buffer, 
         int connectivity=8) -> int
     """
-  return _cv.cvSampleLine(*args)
+    return _cv.cvSampleLine(*args)
 
 def cvGetRectSubPix(*args):
-  """cvGetRectSubPix(CvArr src, CvArr dst, CvPoint2D32f center)"""
-  return _cv.cvGetRectSubPix(*args)
+    """cvGetRectSubPix(CvArr src, CvArr dst, CvPoint2D32f center)"""
+    return _cv.cvGetRectSubPix(*args)
 
 def cvGetQuadrangleSubPix(*args):
-  """cvGetQuadrangleSubPix(CvArr src, CvArr dst, CvMat map_matrix)"""
-  return _cv.cvGetQuadrangleSubPix(*args)
+    """cvGetQuadrangleSubPix(CvArr src, CvArr dst, CvMat map_matrix)"""
+    return _cv.cvGetQuadrangleSubPix(*args)
 
 def cvMatchTemplate(*args):
-  """cvMatchTemplate(CvArr image, CvArr templ, CvArr result, int method)"""
-  return _cv.cvMatchTemplate(*args)
+    """cvMatchTemplate(CvArr image, CvArr templ, CvArr result, int method)"""
+    return _cv.cvMatchTemplate(*args)
 
 def cvCalcEMD2(*args):
-  """
+    """
     cvCalcEMD2(CvArr signature1, CvArr signature2, int distance_type, 
         CvDistanceFunction distance_func=None, CvArr cost_matrix=None, 
         CvArr flow=None, float lower_bound=None, 
         void userdata=None) -> float
     """
-  return _cv.cvCalcEMD2(*args)
+    return _cv.cvCalcEMD2(*args)
 
 def cvFindContours(*args):
-  """
+    """
     cvFindContours(CvArr image, CvMemStorage storage, CvSeq first_contour, 
         int header_size=sizeof(CvContour), int mode=1, 
         int method=2, CvPoint offset=cvPoint(0,0)) -> int
     """
-  return _cv.cvFindContours(*args)
+    return _cv.cvFindContours(*args)
 
 def cvStartFindContours(*args):
-  """
+    """
     cvStartFindContours(CvArr image, CvMemStorage storage, int header_size=sizeof(CvContour), 
         int mode=1, int method=2, 
         CvPoint offset=cvPoint(0,0)) -> CvContourScanner
     """
-  return _cv.cvStartFindContours(*args)
+    return _cv.cvStartFindContours(*args)
 
 def cvFindNextContour(*args):
-  """cvFindNextContour(CvContourScanner scanner) -> CvSeq"""
-  return _cv.cvFindNextContour(*args)
+    """cvFindNextContour(CvContourScanner scanner) -> CvSeq"""
+    return _cv.cvFindNextContour(*args)
 
 def cvSubstituteContour(*args):
-  """cvSubstituteContour(CvContourScanner scanner, CvSeq new_contour)"""
-  return _cv.cvSubstituteContour(*args)
+    """cvSubstituteContour(CvContourScanner scanner, CvSeq new_contour)"""
+    return _cv.cvSubstituteContour(*args)
 
 def cvEndFindContours(*args):
-  """cvEndFindContours(CvContourScanner scanner) -> CvSeq"""
-  return _cv.cvEndFindContours(*args)
+    """cvEndFindContours(CvContourScanner scanner) -> CvSeq"""
+    return _cv.cvEndFindContours(*args)
 
 def cvApproxChains(*args):
-  """
+    """
     cvApproxChains(CvSeq src_seq, CvMemStorage storage, int method=2, 
         double parameter=0, int minimal_perimeter=0, 
         int recursive=0) -> CvSeq
     """
-  return _cv.cvApproxChains(*args)
+    return _cv.cvApproxChains(*args)
 
 def cvStartReadChainPoints(*args):
-  """cvStartReadChainPoints(CvChain chain, CvChainPtReader reader)"""
-  return _cv.cvStartReadChainPoints(*args)
+    """cvStartReadChainPoints(CvChain chain, CvChainPtReader reader)"""
+    return _cv.cvStartReadChainPoints(*args)
 
 def cvReadChainPoint(*args):
-  """cvReadChainPoint(CvChainPtReader reader) -> CvPoint"""
-  return _cv.cvReadChainPoint(*args)
+    """cvReadChainPoint(CvChainPtReader reader) -> CvPoint"""
+    return _cv.cvReadChainPoint(*args)
 
 def cvCalcOpticalFlowLK(*args):
-  """
+    """
     cvCalcOpticalFlowLK(CvArr prev, CvArr curr, CvSize win_size, CvArr velx, 
         CvArr vely)
     """
-  return _cv.cvCalcOpticalFlowLK(*args)
+    return _cv.cvCalcOpticalFlowLK(*args)
 
 def cvCalcOpticalFlowBM(*args):
-  """
+    """
     cvCalcOpticalFlowBM(CvArr prev, CvArr curr, CvSize block_size, CvSize shift_size, 
         CvSize max_range, int use_previous, 
         CvArr velx, CvArr vely)
     """
-  return _cv.cvCalcOpticalFlowBM(*args)
+    return _cv.cvCalcOpticalFlowBM(*args)
 
 def cvCalcOpticalFlowHS(*args):
-  """
+    """
     cvCalcOpticalFlowHS(CvArr prev, CvArr curr, int use_previous, CvArr velx, 
         CvArr vely, double lambda, CvTermCriteria criteria)
     """
-  return _cv.cvCalcOpticalFlowHS(*args)
+    return _cv.cvCalcOpticalFlowHS(*args)
 
 def cvCalcOpticalFlowPyrLK(*args):
-  """
+    """
     cvCalcOpticalFlowPyrLK(CvArr prev, CvArr curr, CvArr prev_pyr, CvArr curr_pyr, 
         CvPoint2D32f prev_features, CvPoint2D32f curr_features, 
         CvSize win_size, int level, char status, 
         float track_error, CvTermCriteria criteria, 
         int flags)
     """
-  return _cv.cvCalcOpticalFlowPyrLK(*args)
+    return _cv.cvCalcOpticalFlowPyrLK(*args)
 
 def cvUpdateMotionHistory(*args):
-  """cvUpdateMotionHistory(CvArr silhouette, CvArr mhi, double timestamp, double duration)"""
-  return _cv.cvUpdateMotionHistory(*args)
+    """cvUpdateMotionHistory(CvArr silhouette, CvArr mhi, double timestamp, double duration)"""
+    return _cv.cvUpdateMotionHistory(*args)
 
 def cvCalcMotionGradient(*args):
-  """
+    """
     cvCalcMotionGradient(CvArr mhi, CvArr mask, CvArr orientation, double delta1, 
         double delta2, int aperture_size=3)
     """
-  return _cv.cvCalcMotionGradient(*args)
+    return _cv.cvCalcMotionGradient(*args)
 
 def cvCalcGlobalOrientation(*args):
-  """
+    """
     cvCalcGlobalOrientation(CvArr orientation, CvArr mask, CvArr mhi, double timestamp, 
         double duration) -> double
     """
-  return _cv.cvCalcGlobalOrientation(*args)
+    return _cv.cvCalcGlobalOrientation(*args)
 
 def cvAcc(*args):
-  """cvAcc(CvArr image, CvArr sum, CvArr mask=None)"""
-  return _cv.cvAcc(*args)
+    """cvAcc(CvArr image, CvArr sum, CvArr mask=None)"""
+    return _cv.cvAcc(*args)
 
 def cvSquareAcc(*args):
-  """cvSquareAcc(CvArr image, CvArr sqsum, CvArr mask=None)"""
-  return _cv.cvSquareAcc(*args)
+    """cvSquareAcc(CvArr image, CvArr sqsum, CvArr mask=None)"""
+    return _cv.cvSquareAcc(*args)
 
 def cvMultiplyAcc(*args):
-  """cvMultiplyAcc(CvArr image1, CvArr image2, CvArr acc, CvArr mask=None)"""
-  return _cv.cvMultiplyAcc(*args)
+    """cvMultiplyAcc(CvArr image1, CvArr image2, CvArr acc, CvArr mask=None)"""
+    return _cv.cvMultiplyAcc(*args)
 
 def cvRunningAvg(*args):
-  """cvRunningAvg(CvArr image, CvArr acc, double alpha, CvArr mask=None)"""
-  return _cv.cvRunningAvg(*args)
+    """cvRunningAvg(CvArr image, CvArr acc, double alpha, CvArr mask=None)"""
+    return _cv.cvRunningAvg(*args)
 
 def cvCamShift(*args):
-  """
+    """
     cvCamShift(CvArr prob_image, CvRect window, CvTermCriteria criteria, 
         CvConnectedComp comp, CvBox2D box=None) -> int
     """
-  return _cv.cvCamShift(*args)
+    return _cv.cvCamShift(*args)
 
 def cvMeanShift(*args):
-  """
+    """
     cvMeanShift(CvArr prob_image, CvRect window, CvTermCriteria criteria, 
         CvConnectedComp comp) -> int
     """
-  return _cv.cvMeanShift(*args)
+    return _cv.cvMeanShift(*args)
 
 def cvCreateConDensation(*args):
-  """cvCreateConDensation(int dynam_params, int measure_params, int sample_count) -> CvConDensation"""
-  return _cv.cvCreateConDensation(*args)
+    """cvCreateConDensation(int dynam_params, int measure_params, int sample_count) -> CvConDensation"""
+    return _cv.cvCreateConDensation(*args)
 
 def cvReleaseConDensation(*args):
-  """cvReleaseConDensation(CvConDensation condens)"""
-  return _cv.cvReleaseConDensation(*args)
+    """cvReleaseConDensation(CvConDensation condens)"""
+    return _cv.cvReleaseConDensation(*args)
 
 def cvConDensUpdateByTime(*args):
-  """cvConDensUpdateByTime(CvConDensation condens)"""
-  return _cv.cvConDensUpdateByTime(*args)
+    """cvConDensUpdateByTime(CvConDensation condens)"""
+    return _cv.cvConDensUpdateByTime(*args)
 
 def cvConDensInitSampleSet(*args):
-  """cvConDensInitSampleSet(CvConDensation condens, CvMat lower_bound, CvMat upper_bound)"""
-  return _cv.cvConDensInitSampleSet(*args)
+    """cvConDensInitSampleSet(CvConDensation condens, CvMat lower_bound, CvMat upper_bound)"""
+    return _cv.cvConDensInitSampleSet(*args)
 
 def cvCreateKalman(*args):
-  """cvCreateKalman(int dynam_params, int measure_params, int control_params=0) -> CvKalman"""
-  return _cv.cvCreateKalman(*args)
+    """cvCreateKalman(int dynam_params, int measure_params, int control_params=0) -> CvKalman"""
+    return _cv.cvCreateKalman(*args)
 
 def cvReleaseKalman(*args):
-  """cvReleaseKalman(CvKalman kalman)"""
-  return _cv.cvReleaseKalman(*args)
+    """cvReleaseKalman(CvKalman kalman)"""
+    return _cv.cvReleaseKalman(*args)
 
 def cvKalmanPredict(*args):
-  """cvKalmanPredict(CvKalman kalman, CvMat control=None) -> CvMat"""
-  return _cv.cvKalmanPredict(*args)
+    """cvKalmanPredict(CvKalman kalman, CvMat control=None) -> CvMat"""
+    return _cv.cvKalmanPredict(*args)
 
 def cvKalmanCorrect(*args):
-  """cvKalmanCorrect(CvKalman kalman, CvMat measurement) -> CvMat"""
-  return _cv.cvKalmanCorrect(*args)
+    """cvKalmanCorrect(CvKalman kalman, CvMat measurement) -> CvMat"""
+    return _cv.cvKalmanCorrect(*args)
 
 def cvInitSubdivDelaunay2D(*args):
-  """cvInitSubdivDelaunay2D(CvSubdiv2D subdiv, CvRect rect)"""
-  return _cv.cvInitSubdivDelaunay2D(*args)
+    """cvInitSubdivDelaunay2D(CvSubdiv2D subdiv, CvRect rect)"""
+    return _cv.cvInitSubdivDelaunay2D(*args)
 
 def cvCreateSubdiv2D(*args):
-  """
+    """
     cvCreateSubdiv2D(int subdiv_type, int header_size, int vtx_size, int quadedge_size, 
         CvMemStorage storage) -> CvSubdiv2D
     """
-  return _cv.cvCreateSubdiv2D(*args)
+    return _cv.cvCreateSubdiv2D(*args)
 
 def cvCreateSubdivDelaunay2D(*args):
-  """cvCreateSubdivDelaunay2D(CvRect rect, CvMemStorage storage) -> CvSubdiv2D"""
-  return _cv.cvCreateSubdivDelaunay2D(*args)
+    """cvCreateSubdivDelaunay2D(CvRect rect, CvMemStorage storage) -> CvSubdiv2D"""
+    return _cv.cvCreateSubdivDelaunay2D(*args)
 
 def cvSubdivDelaunay2DInsert(*args):
-  """cvSubdivDelaunay2DInsert(CvSubdiv2D subdiv, CvPoint2D32f pt) -> CvSubdiv2DPoint"""
-  return _cv.cvSubdivDelaunay2DInsert(*args)
+    """cvSubdivDelaunay2DInsert(CvSubdiv2D subdiv, CvPoint2D32f pt) -> CvSubdiv2DPoint"""
+    return _cv.cvSubdivDelaunay2DInsert(*args)
 
 def cvSubdiv2DLocate(*args):
-  """cvSubdiv2DLocate(CvSubdiv2D subdiv, CvPoint2D32f pt, CvSubdiv2DEdge edge) -> int"""
-  return _cv.cvSubdiv2DLocate(*args)
+    """cvSubdiv2DLocate(CvSubdiv2D subdiv, CvPoint2D32f pt, CvSubdiv2DEdge edge) -> int"""
+    return _cv.cvSubdiv2DLocate(*args)
 
 def cvCalcSubdivVoronoi2D(*args):
-  """cvCalcSubdivVoronoi2D(CvSubdiv2D subdiv)"""
-  return _cv.cvCalcSubdivVoronoi2D(*args)
+    """cvCalcSubdivVoronoi2D(CvSubdiv2D subdiv)"""
+    return _cv.cvCalcSubdivVoronoi2D(*args)
 
 def cvClearSubdivVoronoi2D(*args):
-  """cvClearSubdivVoronoi2D(CvSubdiv2D subdiv)"""
-  return _cv.cvClearSubdivVoronoi2D(*args)
+    """cvClearSubdivVoronoi2D(CvSubdiv2D subdiv)"""
+    return _cv.cvClearSubdivVoronoi2D(*args)
 
 def cvFindNearestPoint2D(*args):
-  """cvFindNearestPoint2D(CvSubdiv2D subdiv, CvPoint2D32f pt) -> CvSubdiv2DPoint"""
-  return _cv.cvFindNearestPoint2D(*args)
+    """cvFindNearestPoint2D(CvSubdiv2D subdiv, CvPoint2D32f pt) -> CvSubdiv2DPoint"""
+    return _cv.cvFindNearestPoint2D(*args)
 
 def cvSubdiv2DNextEdge(*args):
-  """cvSubdiv2DNextEdge(CvSubdiv2DEdge edge) -> CvSubdiv2DEdge"""
-  return _cv.cvSubdiv2DNextEdge(*args)
+    """cvSubdiv2DNextEdge(CvSubdiv2DEdge edge) -> CvSubdiv2DEdge"""
+    return _cv.cvSubdiv2DNextEdge(*args)
 
 def cvSubdiv2DRotateEdge(*args):
-  """cvSubdiv2DRotateEdge(CvSubdiv2DEdge edge, int rotate) -> CvSubdiv2DEdge"""
-  return _cv.cvSubdiv2DRotateEdge(*args)
+    """cvSubdiv2DRotateEdge(CvSubdiv2DEdge edge, int rotate) -> CvSubdiv2DEdge"""
+    return _cv.cvSubdiv2DRotateEdge(*args)
 
 def cvSubdiv2DSymEdge(*args):
-  """cvSubdiv2DSymEdge(CvSubdiv2DEdge edge) -> CvSubdiv2DEdge"""
-  return _cv.cvSubdiv2DSymEdge(*args)
+    """cvSubdiv2DSymEdge(CvSubdiv2DEdge edge) -> CvSubdiv2DEdge"""
+    return _cv.cvSubdiv2DSymEdge(*args)
 
 def cvSubdiv2DGetEdge(*args):
-  """cvSubdiv2DGetEdge(CvSubdiv2DEdge edge, CvNextEdgeType type) -> CvSubdiv2DEdge"""
-  return _cv.cvSubdiv2DGetEdge(*args)
+    """cvSubdiv2DGetEdge(CvSubdiv2DEdge edge, CvNextEdgeType type) -> CvSubdiv2DEdge"""
+    return _cv.cvSubdiv2DGetEdge(*args)
 
 def cvSubdiv2DEdgeOrg(*args):
-  """cvSubdiv2DEdgeOrg(CvSubdiv2DEdge edge) -> CvSubdiv2DPoint"""
-  return _cv.cvSubdiv2DEdgeOrg(*args)
+    """cvSubdiv2DEdgeOrg(CvSubdiv2DEdge edge) -> CvSubdiv2DPoint"""
+    return _cv.cvSubdiv2DEdgeOrg(*args)
 
 def cvSubdiv2DEdgeDst(*args):
-  """cvSubdiv2DEdgeDst(CvSubdiv2DEdge edge) -> CvSubdiv2DPoint"""
-  return _cv.cvSubdiv2DEdgeDst(*args)
+    """cvSubdiv2DEdgeDst(CvSubdiv2DEdge edge) -> CvSubdiv2DPoint"""
+    return _cv.cvSubdiv2DEdgeDst(*args)
 
 def cvTriangleArea(*args):
-  """cvTriangleArea(CvPoint2D32f a, CvPoint2D32f b, CvPoint2D32f c) -> double"""
-  return _cv.cvTriangleArea(*args)
+    """cvTriangleArea(CvPoint2D32f a, CvPoint2D32f b, CvPoint2D32f c) -> double"""
+    return _cv.cvTriangleArea(*args)
 
 def cvFindDominantPoints(*args):
-  """
+    """
     cvFindDominantPoints(CvSeq contour, CvMemStorage storage, int method=1, 
         double parameter1=0, double parameter2=0, double parameter3=0, 
         double parameter4=0) -> CvSeq
     """
-  return _cv.cvFindDominantPoints(*args)
+    return _cv.cvFindDominantPoints(*args)
 
 def cvBoundingRect(*args):
-  """cvBoundingRect(CvArr points, int update=0) -> CvRect"""
-  return _cv.cvBoundingRect(*args)
+    """cvBoundingRect(CvArr points, int update=0) -> CvRect"""
+    return _cv.cvBoundingRect(*args)
 
 def cvContourArea(*args):
-  """cvContourArea(CvArr contour, CvSlice slice=cvSlice(0, 0x3fffffff)) -> double"""
-  return _cv.cvContourArea(*args)
+    """cvContourArea(CvArr contour, CvSlice slice=cvSlice(0, 0x3fffffff)) -> double"""
+    return _cv.cvContourArea(*args)
 
 def cvMinAreaRect2(*args):
-  """cvMinAreaRect2(CvArr points, CvMemStorage storage=None) -> CvBox2D"""
-  return _cv.cvMinAreaRect2(*args)
+    """cvMinAreaRect2(CvArr points, CvMemStorage storage=None) -> CvBox2D"""
+    return _cv.cvMinAreaRect2(*args)
 
 def cvMinEnclosingCircle(*args):
-  """cvMinEnclosingCircle(CvArr points, CvPoint2D32f center) -> int"""
-  return _cv.cvMinEnclosingCircle(*args)
+    """cvMinEnclosingCircle(CvArr points, CvPoint2D32f center) -> int"""
+    return _cv.cvMinEnclosingCircle(*args)
 
 def cvMatchShapes(*args):
-  """cvMatchShapes(void object1, void object2, int method, double parameter=0) -> double"""
-  return _cv.cvMatchShapes(*args)
+    """cvMatchShapes(void object1, void object2, int method, double parameter=0) -> double"""
+    return _cv.cvMatchShapes(*args)
 
 def cvCreateContourTree(*args):
-  """cvCreateContourTree(CvSeq contour, CvMemStorage storage, double threshold) -> CvContourTree"""
-  return _cv.cvCreateContourTree(*args)
+    """cvCreateContourTree(CvSeq contour, CvMemStorage storage, double threshold) -> CvContourTree"""
+    return _cv.cvCreateContourTree(*args)
 
 def cvContourFromContourTree(*args):
-  """cvContourFromContourTree(CvContourTree tree, CvMemStorage storage, CvTermCriteria criteria) -> CvSeq"""
-  return _cv.cvContourFromContourTree(*args)
+    """cvContourFromContourTree(CvContourTree tree, CvMemStorage storage, CvTermCriteria criteria) -> CvSeq"""
+    return _cv.cvContourFromContourTree(*args)
 
 def cvMatchContourTrees(*args):
-  """
+    """
     cvMatchContourTrees(CvContourTree tree1, CvContourTree tree2, int method, 
         double threshold) -> double
     """
-  return _cv.cvMatchContourTrees(*args)
+    return _cv.cvMatchContourTrees(*args)
 
 def cvCalcPGH(*args):
-  """cvCalcPGH(CvSeq contour, CvHistogram hist)"""
-  return _cv.cvCalcPGH(*args)
+    """cvCalcPGH(CvSeq contour, CvHistogram hist)"""
+    return _cv.cvCalcPGH(*args)
 
 def cvConvexHull2(*args):
-  """
+    """
     cvConvexHull2(CvArr input, void hull_storage=None, int orientation=1, 
         int return_points=0) -> CvSeq
     """
-  return _cv.cvConvexHull2(*args)
+    return _cv.cvConvexHull2(*args)
 
 def cvCheckContourConvexity(*args):
-  """cvCheckContourConvexity(CvArr contour) -> int"""
-  return _cv.cvCheckContourConvexity(*args)
+    """cvCheckContourConvexity(CvArr contour) -> int"""
+    return _cv.cvCheckContourConvexity(*args)
 
 def cvConvexityDefects(*args):
-  """cvConvexityDefects(CvArr contour, CvArr convexhull, CvMemStorage storage=None) -> CvSeq"""
-  return _cv.cvConvexityDefects(*args)
+    """cvConvexityDefects(CvArr contour, CvArr convexhull, CvMemStorage storage=None) -> CvSeq"""
+    return _cv.cvConvexityDefects(*args)
 
 def cvFitEllipse2(*args):
-  """cvFitEllipse2(CvArr points) -> CvBox2D"""
-  return _cv.cvFitEllipse2(*args)
+    """cvFitEllipse2(CvArr points) -> CvBox2D"""
+    return _cv.cvFitEllipse2(*args)
 
 def cvMaxRect(*args):
-  """cvMaxRect(CvRect rect1, CvRect rect2) -> CvRect"""
-  return _cv.cvMaxRect(*args)
+    """cvMaxRect(CvRect rect1, CvRect rect2) -> CvRect"""
+    return _cv.cvMaxRect(*args)
 
 def cvBoxPoints(*args):
-  """cvBoxPoints(CvBox2D box, CvPoint2D32f pt)"""
-  return _cv.cvBoxPoints(*args)
+    """cvBoxPoints(CvBox2D box, CvPoint2D32f pt)"""
+    return _cv.cvBoxPoints(*args)
 
 def cvPointSeqFromMat(*args):
-  """
+    """
     cvPointSeqFromMat(int seq_kind, CvArr mat, CvContour contour_header, 
         CvSeqBlock block) -> CvSeq
     """
-  return _cv.cvPointSeqFromMat(*args)
+    return _cv.cvPointSeqFromMat(*args)
 
 def cvPointPolygonTest(*args):
-  """cvPointPolygonTest(CvArr contour, CvPoint2D32f pt, int measure_dist) -> double"""
-  return _cv.cvPointPolygonTest(*args)
+    """cvPointPolygonTest(CvArr contour, CvPoint2D32f pt, int measure_dist) -> double"""
+    return _cv.cvPointPolygonTest(*args)
 
 def cvCreateHist(*args):
-  """cvCreateHist(int dims, int type, float ranges=None, int uniform=1) -> CvHistogram"""
-  return _cv.cvCreateHist(*args)
+    """cvCreateHist(int dims, int type, float ranges=None, int uniform=1) -> CvHistogram"""
+    return _cv.cvCreateHist(*args)
 
 def cvSetHistBinRanges(*args):
-  """cvSetHistBinRanges(CvHistogram hist, float ranges, int uniform=1)"""
-  return _cv.cvSetHistBinRanges(*args)
+    """cvSetHistBinRanges(CvHistogram hist, float ranges, int uniform=1)"""
+    return _cv.cvSetHistBinRanges(*args)
 
 def cvMakeHistHeaderForArray(*args):
-  """
+    """
     cvMakeHistHeaderForArray(int dims, CvHistogram hist, float data, float ranges=None, 
         int uniform=1) -> CvHistogram
     """
-  return _cv.cvMakeHistHeaderForArray(*args)
+    return _cv.cvMakeHistHeaderForArray(*args)
 
 def cvReleaseHist(*args):
-  """cvReleaseHist(CvHistogram hist)"""
-  return _cv.cvReleaseHist(*args)
+    """cvReleaseHist(CvHistogram hist)"""
+    return _cv.cvReleaseHist(*args)
 
 def cvClearHist(*args):
-  """cvClearHist(CvHistogram hist)"""
-  return _cv.cvClearHist(*args)
+    """cvClearHist(CvHistogram hist)"""
+    return _cv.cvClearHist(*args)
 
 def cvGetMinMaxHistValue(*args):
-  """
+    """
     cvGetMinMaxHistValue(CvHistogram hist, float min_value, float max_value, 
         int min_idx=None, int max_idx=None)
     """
-  return _cv.cvGetMinMaxHistValue(*args)
+    return _cv.cvGetMinMaxHistValue(*args)
 
 def cvNormalizeHist(*args):
-  """cvNormalizeHist(CvHistogram hist, double factor)"""
-  return _cv.cvNormalizeHist(*args)
+    """cvNormalizeHist(CvHistogram hist, double factor)"""
+    return _cv.cvNormalizeHist(*args)
 
 def cvThreshHist(*args):
-  """cvThreshHist(CvHistogram hist, double threshold)"""
-  return _cv.cvThreshHist(*args)
+    """cvThreshHist(CvHistogram hist, double threshold)"""
+    return _cv.cvThreshHist(*args)
 
 def cvCompareHist(*args):
-  """cvCompareHist(CvHistogram hist1, CvHistogram hist2, int method) -> double"""
-  return _cv.cvCompareHist(*args)
+    """cvCompareHist(CvHistogram hist1, CvHistogram hist2, int method) -> double"""
+    return _cv.cvCompareHist(*args)
 
 def cvCopyHist(*args):
-  """cvCopyHist(CvHistogram src, CvHistogram dst)"""
-  return _cv.cvCopyHist(*args)
+    """cvCopyHist(CvHistogram src, CvHistogram dst)"""
+    return _cv.cvCopyHist(*args)
 
 def cvCalcBayesianProb(*args):
-  """cvCalcBayesianProb(CvHistogram src, int number, CvHistogram dst)"""
-  return _cv.cvCalcBayesianProb(*args)
+    """cvCalcBayesianProb(CvHistogram src, int number, CvHistogram dst)"""
+    return _cv.cvCalcBayesianProb(*args)
 
 def cvCalcArrHist(*args):
-  """cvCalcArrHist(CvArr arr, CvHistogram hist, int accumulate=0, CvArr mask=None)"""
-  return _cv.cvCalcArrHist(*args)
+    """cvCalcArrHist(CvArr arr, CvHistogram hist, int accumulate=0, CvArr mask=None)"""
+    return _cv.cvCalcArrHist(*args)
 
 def cvCalcHist(*args):
-  """cvCalcHist( image, CvHistogram hist, int accumulate=0, CvArr mask=None)"""
-  return _cv.cvCalcHist(*args)
+    """cvCalcHist( image, CvHistogram hist, int accumulate=0, CvArr mask=None)"""
+    return _cv.cvCalcHist(*args)
 
 def cvCalcArrBackProject(*args):
-  """cvCalcArrBackProject(CvArr image, CvArr dst, CvHistogram hist)"""
-  return _cv.cvCalcArrBackProject(*args)
+    """cvCalcArrBackProject(CvArr image, CvArr dst, CvHistogram hist)"""
+    return _cv.cvCalcArrBackProject(*args)
 
 def cvCalcArrBackProjectPatch(*args):
-  """
+    """
     cvCalcArrBackProjectPatch(CvArr image, CvArr dst, CvSize range, CvHistogram hist, 
         int method, double factor)
     """
-  return _cv.cvCalcArrBackProjectPatch(*args)
+    return _cv.cvCalcArrBackProjectPatch(*args)
 
 def cvCalcProbDensity(*args):
-  """
+    """
     cvCalcProbDensity(CvHistogram hist1, CvHistogram hist2, CvHistogram dst_hist, 
         double scale=255)
     """
-  return _cv.cvCalcProbDensity(*args)
+    return _cv.cvCalcProbDensity(*args)
 
 def cvEqualizeHist(*args):
-  """cvEqualizeHist(CvArr src, CvArr dst)"""
-  return _cv.cvEqualizeHist(*args)
+    """cvEqualizeHist(CvArr src, CvArr dst)"""
+    return _cv.cvEqualizeHist(*args)
 
 def cvSnakeImage(*args):
-  """
+    """
     cvSnakeImage( image, CvPoint points, int length, float alpha, float beta, 
         float gamma, int coeff_usage, CvSize win, 
         CvTermCriteria criteria, int calc_gradient=1)
     """
-  return _cv.cvSnakeImage(*args)
+    return _cv.cvSnakeImage(*args)
 
 def cvCalcImageHomography(*args):
-  """cvCalcImageHomography(float line, CvPoint3D32f center, float intrinsic, float homography)"""
-  return _cv.cvCalcImageHomography(*args)
+    """cvCalcImageHomography(float line, CvPoint3D32f center, float intrinsic, float homography)"""
+    return _cv.cvCalcImageHomography(*args)
 
 def cvDistTransform(*args):
-  """
+    """
     cvDistTransform(CvArr src, CvArr dst, int distance_type=2, int mask_size=3, 
         float mask=None, CvArr labels=None)
     """
-  return _cv.cvDistTransform(*args)
+    return _cv.cvDistTransform(*args)
 
 def cvThreshold(*args):
-  """
+    """
     cvThreshold(CvArr src, CvArr dst, double threshold, double max_value, 
         int threshold_type)
     """
-  return _cv.cvThreshold(*args)
+    return _cv.cvThreshold(*args)
 
 def cvAdaptiveThreshold(*args):
-  """
+    """
     cvAdaptiveThreshold(CvArr src, CvArr dst, double max_value, int adaptive_method=0, 
         int threshold_type=0, int block_size=3, 
         double param1=5)
     """
-  return _cv.cvAdaptiveThreshold(*args)
+    return _cv.cvAdaptiveThreshold(*args)
 
 def cvFloodFill(*args):
-  """
+    """
     cvFloodFill(CvArr image, CvPoint seed_point, CvScalar new_val, 
         CvScalar lo_diff=cvScalarAll(0), CvScalar up_diff=cvScalarAll(0), 
         CvConnectedComp comp=None, 
         int flags=4, CvArr mask=None)
     """
-  return _cv.cvFloodFill(*args)
+    return _cv.cvFloodFill(*args)
 
 def cvCanny(*args):
-  """
+    """
     cvCanny(CvArr image, CvArr edges, double threshold1, double threshold2, 
         int aperture_size=3)
     """
-  return _cv.cvCanny(*args)
+    return _cv.cvCanny(*args)
 
 def cvPreCornerDetect(*args):
-  """cvPreCornerDetect(CvArr image, CvArr corners, int aperture_size=3)"""
-  return _cv.cvPreCornerDetect(*args)
+    """cvPreCornerDetect(CvArr image, CvArr corners, int aperture_size=3)"""
+    return _cv.cvPreCornerDetect(*args)
 
 def cvCornerEigenValsAndVecs(*args):
-  """cvCornerEigenValsAndVecs(CvArr image, CvArr eigenvv, int block_size, int aperture_size=3)"""
-  return _cv.cvCornerEigenValsAndVecs(*args)
+    """cvCornerEigenValsAndVecs(CvArr image, CvArr eigenvv, int block_size, int aperture_size=3)"""
+    return _cv.cvCornerEigenValsAndVecs(*args)
 
 def cvCornerMinEigenVal(*args):
-  """cvCornerMinEigenVal(CvArr image, CvArr eigenval, int block_size, int aperture_size=3)"""
-  return _cv.cvCornerMinEigenVal(*args)
+    """cvCornerMinEigenVal(CvArr image, CvArr eigenval, int block_size, int aperture_size=3)"""
+    return _cv.cvCornerMinEigenVal(*args)
 
 def cvCornerHarris(*args):
-  """
+    """
     cvCornerHarris(CvArr image, CvArr harris_responce, int block_size, 
         int aperture_size=3, double k=0.04)
     """
-  return _cv.cvCornerHarris(*args)
+    return _cv.cvCornerHarris(*args)
 
 def cvFindCornerSubPix(*args):
-  """
+    """
     cvFindCornerSubPix(CvArr image, CvPoint2D32f corners, CvSize win, CvSize zero_zone, 
         CvTermCriteria criteria)
     """
-  return _cv.cvFindCornerSubPix(*args)
+    return _cv.cvFindCornerSubPix(*args)
 
 def cvGoodFeaturesToTrack(*args):
-  """
+    """
     cvGoodFeaturesToTrack(CvArr image, CvArr eig_image, CvArr temp_image, CvPoint2D32f corners, 
         double quality_level, double min_distance, 
         CvArr mask=None, int block_size=3, 
         int use_harris=0, double k=0.04)
     """
-  return _cv.cvGoodFeaturesToTrack(*args)
+    return _cv.cvGoodFeaturesToTrack(*args)
 
 def cvHoughLines2(*args):
-  """
+    """
     cvHoughLines2(CvArr image, void line_storage, int method, double rho, 
         double theta, int threshold, double param1=0, 
         double param2=0) -> CvSeq
     """
-  return _cv.cvHoughLines2(*args)
+    return _cv.cvHoughLines2(*args)
 
 def cvHoughCircles(*args):
-  """
+    """
     cvHoughCircles(CvArr image, void circle_storage, int method, double dp, 
         double min_dist, double param1=100, double param2=100) -> CvSeq
     """
-  return _cv.cvHoughCircles(*args)
+    return _cv.cvHoughCircles(*args)
 
 def cvFitLine(*args):
-  """
+    """
     cvFitLine(CvArr points, int dist_type, double param, double reps, 
         double aeps, float line)
     """
-  return _cv.cvFitLine(*args)
+    return _cv.cvFitLine(*args)
 
 def cvLoadHaarClassifierCascade(*args):
-  """cvLoadHaarClassifierCascade(char directory, CvSize orig_window_size) -> CvHaarClassifierCascade"""
-  return _cv.cvLoadHaarClassifierCascade(*args)
+    """cvLoadHaarClassifierCascade(char directory, CvSize orig_window_size) -> CvHaarClassifierCascade"""
+    return _cv.cvLoadHaarClassifierCascade(*args)
 
 def cvReleaseHaarClassifierCascade(*args):
-  """cvReleaseHaarClassifierCascade(CvHaarClassifierCascade cascade)"""
-  return _cv.cvReleaseHaarClassifierCascade(*args)
+    """cvReleaseHaarClassifierCascade(CvHaarClassifierCascade cascade)"""
+    return _cv.cvReleaseHaarClassifierCascade(*args)
 
 def cvSetImagesForHaarClassifierCascade(*args):
-  """
+    """
     cvSetImagesForHaarClassifierCascade(CvHaarClassifierCascade cascade, CvArr sum, CvArr sqsum, 
         CvArr tilted_sum, double scale)
     """
-  return _cv.cvSetImagesForHaarClassifierCascade(*args)
+    return _cv.cvSetImagesForHaarClassifierCascade(*args)
 
 def cvRunHaarClassifierCascade(*args):
-  """cvRunHaarClassifierCascade(CvHaarClassifierCascade cascade, CvPoint pt, int start_stage=0) -> int"""
-  return _cv.cvRunHaarClassifierCascade(*args)
+    """cvRunHaarClassifierCascade(CvHaarClassifierCascade cascade, CvPoint pt, int start_stage=0) -> int"""
+    return _cv.cvRunHaarClassifierCascade(*args)
 
 def cvUndistort2(*args):
-  """cvUndistort2(CvArr src, CvArr dst, CvMat intrinsic_matrix, CvMat distortion_coeffs)"""
-  return _cv.cvUndistort2(*args)
+    """cvUndistort2(CvArr src, CvArr dst, CvMat intrinsic_matrix, CvMat distortion_coeffs)"""
+    return _cv.cvUndistort2(*args)
 
 def cvInitUndistortMap(*args):
-  """
+    """
     cvInitUndistortMap(CvMat intrinsic_matrix, CvMat distortion_coeffs, CvArr mapx, 
         CvArr mapy)
     """
-  return _cv.cvInitUndistortMap(*args)
+    return _cv.cvInitUndistortMap(*args)
 
 def cvRodrigues2(*args):
-  """cvRodrigues2(CvMat src, CvMat dst, CvMat jacobian=0) -> int"""
-  return _cv.cvRodrigues2(*args)
+    """cvRodrigues2(CvMat src, CvMat dst, CvMat jacobian=0) -> int"""
+    return _cv.cvRodrigues2(*args)
 
 def cvFindHomography(*args):
-  """cvFindHomography(CvMat src_points, CvMat dst_points, CvMat homography)"""
-  return _cv.cvFindHomography(*args)
+    """cvFindHomography(CvMat src_points, CvMat dst_points, CvMat homography)"""
+    return _cv.cvFindHomography(*args)
 
 def cvProjectPoints2(*args):
-  """
+    """
     cvProjectPoints2(CvMat object_points, CvMat rotation_vector, CvMat translation_vector, 
         CvMat intrinsic_matrix, CvMat distortion_coeffs, 
         CvMat image_points, CvMat dpdrot=None, 
         CvMat dpdt=None, CvMat dpdf=None, 
         CvMat dpdc=None, CvMat dpddist=None)
     """
-  return _cv.cvProjectPoints2(*args)
+    return _cv.cvProjectPoints2(*args)
 
 def cvFindExtrinsicCameraParams2(*args):
-  """
+    """
     cvFindExtrinsicCameraParams2(CvMat object_points, CvMat image_points, CvMat intrinsic_matrix, 
         CvMat distortion_coeffs, CvMat rotation_vector, 
         CvMat translation_vector)
     """
-  return _cv.cvFindExtrinsicCameraParams2(*args)
+    return _cv.cvFindExtrinsicCameraParams2(*args)
 
 def cvCalibrateCamera2(*args):
-  """
+    """
     cvCalibrateCamera2(CvMat object_points, CvMat image_points, CvMat point_counts, 
         CvSize image_size, CvMat intrinsic_matrix, 
         CvMat rotation_vectors=None, CvMat translation_vectors=None, 
         int flags=0)
     """
-  return _cv.cvCalibrateCamera2(*args)
+    return _cv.cvCalibrateCamera2(*args)
 
 def cvFindChessboardCorners(*args):
-  """
+    """
     cvFindChessboardCorners(void image, CvSize pattern_size, CvPoint2D32f corners, 
         int flags=1) -> int
     """
-  return _cv.cvFindChessboardCorners(*args)
+    return _cv.cvFindChessboardCorners(*args)
 
 def cvDrawChessboardCorners(*args):
-  """
+    """
     cvDrawChessboardCorners(CvArr image, CvSize pattern_size, CvPoint2D32f corners, 
         int pattern_was_found)
     """
-  return _cv.cvDrawChessboardCorners(*args)
+    return _cv.cvDrawChessboardCorners(*args)
 
 def cvCreatePOSITObject(*args):
-  """cvCreatePOSITObject(CvPoint3D32f points, int point_count) -> CvPOSITObject"""
-  return _cv.cvCreatePOSITObject(*args)
+    """cvCreatePOSITObject(CvPoint3D32f points, int point_count) -> CvPOSITObject"""
+    return _cv.cvCreatePOSITObject(*args)
 
 def cvPOSIT(*args):
-  """
+    """
     cvPOSIT(CvPOSITObject posit_object, CvPoint2D32f image_points, 
         double focal_length, CvTermCriteria criteria, 
         CvMatr32f rotation_matrix, CvVect32f translation_vector)
     """
-  return _cv.cvPOSIT(*args)
+    return _cv.cvPOSIT(*args)
 
 def cvReleasePOSITObject(*args):
-  """cvReleasePOSITObject(CvPOSITObject posit_object)"""
-  return _cv.cvReleasePOSITObject(*args)
+    """cvReleasePOSITObject(CvPOSITObject posit_object)"""
+    return _cv.cvReleasePOSITObject(*args)
 
 def cvConvertPointsHomogenious(*args):
-  """cvConvertPointsHomogenious(CvMat src, CvMat dst)"""
-  return _cv.cvConvertPointsHomogenious(*args)
+    """cvConvertPointsHomogenious(CvMat src, CvMat dst)"""
+    return _cv.cvConvertPointsHomogenious(*args)
 
 def cvFindFundamentalMat(*args):
-  """
+    """
     cvFindFundamentalMat(CvMat points1, CvMat points2, CvMat fundamental_matrix, 
         int method=(8+2), double param1=1., double param2=0.99, 
         CvMat status=None) -> int
     """
-  return _cv.cvFindFundamentalMat(*args)
+    return _cv.cvFindFundamentalMat(*args)
 
 def cvComputeCorrespondEpilines(*args):
-  """
+    """
     cvComputeCorrespondEpilines(CvMat points, int which_image, CvMat fundamental_matrix, 
         CvMat correspondent_lines)
     """
-  return _cv.cvComputeCorrespondEpilines(*args)
+    return _cv.cvComputeCorrespondEpilines(*args)
 class CvBaseImageFilter(_object):
     """Proxy of C++ CvBaseImageFilter class"""
     __swig_setmethods__ = {}
     __setattr__ = lambda self, name, value: _swig_setattr(self, CvBaseImageFilter, name, value)
     __swig_getmethods__ = {}
     __getattr__ = lambda self, name: _swig_getattr(self, CvBaseImageFilter, name)
-    __repr__ = _swig_repr
-    def __init__(self, *args): 
+    def __repr__(self):
+        return "<%s.%s; proxy of C++ CvBaseImageFilter instance at %s>" % (self.__class__.__module__, self.__class__.__name__, self.this,)
+    def __init__(self, *args):
         """
         __init__(self) -> CvBaseImageFilter
         __init__(self, int _max_width, int _src_type, int _dst_type, bool _is_separable, 
@@ -6792,11 +7494,14 @@ class CvBaseImageFilter(_object):
         __init__(self, int _max_width, int _src_type, int _dst_type, bool _is_separable, 
             CvSize _ksize) -> CvBaseImageFilter
         """
-        this = _cv.new_CvBaseImageFilter(*args)
-        try: self.this.append(this)
-        except: self.this = this
-    __swig_destroy__ = _cv.delete_CvBaseImageFilter
-    __del__ = lambda self : None;
+        _swig_setattr(self, CvBaseImageFilter, 'this', _cv.new_CvBaseImageFilter(*args))
+        _swig_setattr(self, CvBaseImageFilter, 'thisown', 1)
+    def __del__(self, destroy=_cv.delete_CvBaseImageFilter):
+        """__del__(self)"""
+        try:
+            if self.thisown: destroy(self)
+        except: pass
+
     def init(*args):
         """
         init(self, int _max_width, int _src_type, int _dst_type, bool _is_separable, 
@@ -6859,8 +7564,13 @@ class CvBaseImageFilter(_object):
         """get_y_filter_func(self) -> CvColumnFilterFunc"""
         return _cv.CvBaseImageFilter_get_y_filter_func(*args)
 
-CvBaseImageFilter_swigregister = _cv.CvBaseImageFilter_swigregister
-CvBaseImageFilter_swigregister(CvBaseImageFilter)
+
+class CvBaseImageFilterPtr(CvBaseImageFilter):
+    def __init__(self, this):
+        _swig_setattr(self, CvBaseImageFilter, 'this', this)
+        if not hasattr(self,"thisown"): _swig_setattr(self, CvBaseImageFilter, 'thisown', 0)
+        self.__class__ = CvBaseImageFilter
+_cv.CvBaseImageFilter_swigregister(CvBaseImageFilterPtr)
 
 class CvSepFilter(CvBaseImageFilter):
     """Proxy of C++ CvSepFilter class"""
@@ -6870,8 +7580,9 @@ class CvSepFilter(CvBaseImageFilter):
     __swig_getmethods__ = {}
     for _s in [CvBaseImageFilter]: __swig_getmethods__.update(_s.__swig_getmethods__)
     __getattr__ = lambda self, name: _swig_getattr(self, CvSepFilter, name)
-    __repr__ = _swig_repr
-    def __init__(self, *args): 
+    def __repr__(self):
+        return "<%s.%s; proxy of C++ CvSepFilter instance at %s>" % (self.__class__.__module__, self.__class__.__name__, self.this,)
+    def __init__(self, *args):
         """
         __init__(self) -> CvSepFilter
         __init__(self, int _max_width, int _src_type, int _dst_type, CvMat _kx, 
@@ -6885,11 +7596,14 @@ class CvSepFilter(CvBaseImageFilter):
         __init__(self, int _max_width, int _src_type, int _dst_type, CvMat _kx, 
             CvMat _ky) -> CvSepFilter
         """
-        this = _cv.new_CvSepFilter(*args)
-        try: self.this.append(this)
-        except: self.this = this
-    __swig_destroy__ = _cv.delete_CvSepFilter
-    __del__ = lambda self : None;
+        _swig_setattr(self, CvSepFilter, 'this', _cv.new_CvSepFilter(*args))
+        _swig_setattr(self, CvSepFilter, 'thisown', 1)
+    def __del__(self, destroy=_cv.delete_CvSepFilter):
+        """__del__(self)"""
+        try:
+            if self.thisown: destroy(self)
+        except: pass
+
     def init(*args):
         """
         init(self, int _max_width, int _src_type, int _dst_type, CvMat _kx, 
@@ -6976,29 +7690,34 @@ class CvSepFilter(CvBaseImageFilter):
 
     if _newclass:init_scharr_kernel = staticmethod(init_scharr_kernel)
     __swig_getmethods__["init_scharr_kernel"] = lambda x: init_scharr_kernel
-CvSepFilter_swigregister = _cv.CvSepFilter_swigregister
-CvSepFilter_swigregister(CvSepFilter)
+
+class CvSepFilterPtr(CvSepFilter):
+    def __init__(self, this):
+        _swig_setattr(self, CvSepFilter, 'this', this)
+        if not hasattr(self,"thisown"): _swig_setattr(self, CvSepFilter, 'thisown', 0)
+        self.__class__ = CvSepFilter
+_cv.CvSepFilter_swigregister(CvSepFilterPtr)
 
 def CvSepFilter_init_gaussian_kernel(*args):
-  """
+    """
     init_gaussian_kernel(CvMat kernel, double sigma=-1)
     CvSepFilter_init_gaussian_kernel(CvMat kernel)
     """
-  return _cv.CvSepFilter_init_gaussian_kernel(*args)
+    return _cv.CvSepFilter_init_gaussian_kernel(*args)
 
 def CvSepFilter_init_sobel_kernel(*args):
-  """
+    """
     init_sobel_kernel(CvMat _kx, CvMat _ky, int dx, int dy, int flags=0)
     CvSepFilter_init_sobel_kernel(CvMat _kx, CvMat _ky, int dx, int dy)
     """
-  return _cv.CvSepFilter_init_sobel_kernel(*args)
+    return _cv.CvSepFilter_init_sobel_kernel(*args)
 
 def CvSepFilter_init_scharr_kernel(*args):
-  """
+    """
     init_scharr_kernel(CvMat _kx, CvMat _ky, int dx, int dy, int flags=0)
     CvSepFilter_init_scharr_kernel(CvMat _kx, CvMat _ky, int dx, int dy)
     """
-  return _cv.CvSepFilter_init_scharr_kernel(*args)
+    return _cv.CvSepFilter_init_scharr_kernel(*args)
 
 class CvLinearFilter(CvBaseImageFilter):
     """Proxy of C++ CvLinearFilter class"""
@@ -7008,8 +7727,9 @@ class CvLinearFilter(CvBaseImageFilter):
     __swig_getmethods__ = {}
     for _s in [CvBaseImageFilter]: __swig_getmethods__.update(_s.__swig_getmethods__)
     __getattr__ = lambda self, name: _swig_getattr(self, CvLinearFilter, name)
-    __repr__ = _swig_repr
-    def __init__(self, *args): 
+    def __repr__(self):
+        return "<%s.%s; proxy of C++ CvLinearFilter instance at %s>" % (self.__class__.__module__, self.__class__.__name__, self.this,)
+    def __init__(self, *args):
         """
         __init__(self) -> CvLinearFilter
         __init__(self, int _max_width, int _src_type, int _dst_type, CvMat _kernel, 
@@ -7021,11 +7741,14 @@ class CvLinearFilter(CvBaseImageFilter):
             CvPoint _anchor=cvPoint(-1,-1)) -> CvLinearFilter
         __init__(self, int _max_width, int _src_type, int _dst_type, CvMat _kernel) -> CvLinearFilter
         """
-        this = _cv.new_CvLinearFilter(*args)
-        try: self.this.append(this)
-        except: self.this = this
-    __swig_destroy__ = _cv.delete_CvLinearFilter
-    __del__ = lambda self : None;
+        _swig_setattr(self, CvLinearFilter, 'this', _cv.new_CvLinearFilter(*args))
+        _swig_setattr(self, CvLinearFilter, 'thisown', 1)
+    def __del__(self, destroy=_cv.delete_CvLinearFilter):
+        """__del__(self)"""
+        try:
+            if self.thisown: destroy(self)
+        except: pass
+
     def init(*args):
         """
         init(self, int _max_width, int _src_type, int _dst_type, CvMat _kernel, 
@@ -7055,8 +7778,13 @@ class CvLinearFilter(CvBaseImageFilter):
         """get_kernel_sparse_count(self) -> int"""
         return _cv.CvLinearFilter_get_kernel_sparse_count(*args)
 
-CvLinearFilter_swigregister = _cv.CvLinearFilter_swigregister
-CvLinearFilter_swigregister(CvLinearFilter)
+
+class CvLinearFilterPtr(CvLinearFilter):
+    def __init__(self, this):
+        _swig_setattr(self, CvLinearFilter, 'this', this)
+        if not hasattr(self,"thisown"): _swig_setattr(self, CvLinearFilter, 'thisown', 0)
+        self.__class__ = CvLinearFilter
+_cv.CvLinearFilter_swigregister(CvLinearFilterPtr)
 
 class CvBoxFilter(CvBaseImageFilter):
     """Proxy of C++ CvBoxFilter class"""
@@ -7066,8 +7794,9 @@ class CvBoxFilter(CvBaseImageFilter):
     __swig_getmethods__ = {}
     for _s in [CvBaseImageFilter]: __swig_getmethods__.update(_s.__swig_getmethods__)
     __getattr__ = lambda self, name: _swig_getattr(self, CvBoxFilter, name)
-    __repr__ = _swig_repr
-    def __init__(self, *args): 
+    def __repr__(self):
+        return "<%s.%s; proxy of C++ CvBoxFilter instance at %s>" % (self.__class__.__module__, self.__class__.__name__, self.this,)
+    def __init__(self, *args):
         """
         __init__(self) -> CvBoxFilter
         __init__(self, int _max_width, int _src_type, int _dst_type, bool _normalized, 
@@ -7081,9 +7810,8 @@ class CvBoxFilter(CvBaseImageFilter):
         __init__(self, int _max_width, int _src_type, int _dst_type, bool _normalized, 
             CvSize _ksize) -> CvBoxFilter
         """
-        this = _cv.new_CvBoxFilter(*args)
-        try: self.this.append(this)
-        except: self.this = this
+        _swig_setattr(self, CvBoxFilter, 'this', _cv.new_CvBoxFilter(*args))
+        _swig_setattr(self, CvBoxFilter, 'thisown', 1)
     def init(*args):
         """
         init(self, int _max_width, int _src_type, int _dst_type, bool _normalized, 
@@ -7099,8 +7827,12 @@ class CvBoxFilter(CvBaseImageFilter):
         """
         return _cv.CvBoxFilter_init(*args)
 
-    __swig_destroy__ = _cv.delete_CvBoxFilter
-    __del__ = lambda self : None;
+    def __del__(self, destroy=_cv.delete_CvBoxFilter):
+        """__del__(self)"""
+        try:
+            if self.thisown: destroy(self)
+        except: pass
+
     def is_normalized(*args):
         """is_normalized(self) -> bool"""
         return _cv.CvBoxFilter_is_normalized(*args)
@@ -7117,8 +7849,13 @@ class CvBoxFilter(CvBaseImageFilter):
         """get_sum_count_ptr(self) -> int"""
         return _cv.CvBoxFilter_get_sum_count_ptr(*args)
 
-CvBoxFilter_swigregister = _cv.CvBoxFilter_swigregister
-CvBoxFilter_swigregister(CvBoxFilter)
+
+class CvBoxFilterPtr(CvBoxFilter):
+    def __init__(self, this):
+        _swig_setattr(self, CvBoxFilter, 'this', this)
+        if not hasattr(self,"thisown"): _swig_setattr(self, CvBoxFilter, 'thisown', 0)
+        self.__class__ = CvBoxFilter
+_cv.CvBoxFilter_swigregister(CvBoxFilterPtr)
 
 class CvLaplaceFilter(CvSepFilter):
     """Proxy of C++ CvLaplaceFilter class"""
@@ -7128,8 +7865,9 @@ class CvLaplaceFilter(CvSepFilter):
     __swig_getmethods__ = {}
     for _s in [CvSepFilter]: __swig_getmethods__.update(_s.__swig_getmethods__)
     __getattr__ = lambda self, name: _swig_getattr(self, CvLaplaceFilter, name)
-    __repr__ = _swig_repr
-    def __init__(self, *args): 
+    def __repr__(self):
+        return "<%s.%s; proxy of C++ CvLaplaceFilter instance at %s>" % (self.__class__.__module__, self.__class__.__name__, self.this,)
+    def __init__(self, *args):
         """
         __init__(self) -> CvLaplaceFilter
         __init__(self, int _max_width, int _src_type, int _dst_type, bool _normalized, 
@@ -7140,11 +7878,14 @@ class CvLaplaceFilter(CvSepFilter):
         __init__(self, int _max_width, int _src_type, int _dst_type, bool _normalized, 
             int _ksize) -> CvLaplaceFilter
         """
-        this = _cv.new_CvLaplaceFilter(*args)
-        try: self.this.append(this)
-        except: self.this = this
-    __swig_destroy__ = _cv.delete_CvLaplaceFilter
-    __del__ = lambda self : None;
+        _swig_setattr(self, CvLaplaceFilter, 'this', _cv.new_CvLaplaceFilter(*args))
+        _swig_setattr(self, CvLaplaceFilter, 'thisown', 1)
+    def __del__(self, destroy=_cv.delete_CvLaplaceFilter):
+        """__del__(self)"""
+        try:
+            if self.thisown: destroy(self)
+        except: pass
+
     def init(*args):
         """
         init(self, int _max_width, int _src_type, int _dst_type, bool _normalized, 
@@ -7165,8 +7906,13 @@ class CvLaplaceFilter(CvSepFilter):
         """is_basic_laplacian(self) -> bool"""
         return _cv.CvLaplaceFilter_is_basic_laplacian(*args)
 
-CvLaplaceFilter_swigregister = _cv.CvLaplaceFilter_swigregister
-CvLaplaceFilter_swigregister(CvLaplaceFilter)
+
+class CvLaplaceFilterPtr(CvLaplaceFilter):
+    def __init__(self, this):
+        _swig_setattr(self, CvLaplaceFilter, 'this', this)
+        if not hasattr(self,"thisown"): _swig_setattr(self, CvLaplaceFilter, 'thisown', 0)
+        self.__class__ = CvLaplaceFilter
+_cv.CvLaplaceFilter_swigregister(CvLaplaceFilterPtr)
 
 class CvMorphology(CvBaseImageFilter):
     """Proxy of C++ CvMorphology class"""
@@ -7176,8 +7922,9 @@ class CvMorphology(CvBaseImageFilter):
     __swig_getmethods__ = {}
     for _s in [CvBaseImageFilter]: __swig_getmethods__.update(_s.__swig_getmethods__)
     __getattr__ = lambda self, name: _swig_getattr(self, CvMorphology, name)
-    __repr__ = _swig_repr
-    def __init__(self, *args): 
+    def __repr__(self):
+        return "<%s.%s; proxy of C++ CvMorphology instance at %s>" % (self.__class__.__module__, self.__class__.__name__, self.this,)
+    def __init__(self, *args):
         """
         __init__(self) -> CvMorphology
         __init__(self, int _operation, int _max_width, int _src_dst_type, 
@@ -7196,11 +7943,14 @@ class CvMorphology(CvBaseImageFilter):
         __init__(self, int _operation, int _max_width, int _src_dst_type, 
             int _element_shape, CvMat _element) -> CvMorphology
         """
-        this = _cv.new_CvMorphology(*args)
-        try: self.this.append(this)
-        except: self.this = this
-    __swig_destroy__ = _cv.delete_CvMorphology
-    __del__ = lambda self : None;
+        _swig_setattr(self, CvMorphology, 'this', _cv.new_CvMorphology(*args))
+        _swig_setattr(self, CvMorphology, 'thisown', 1)
+    def __del__(self, destroy=_cv.delete_CvMorphology):
+        """__del__(self)"""
+        try:
+            if self.thisown: destroy(self)
+        except: pass
+
     def init(*args):
         """
         init(self, int _operation, int _max_width, int _src_dst_type, 
@@ -7262,15 +8012,20 @@ class CvMorphology(CvBaseImageFilter):
 
     if _newclass:init_binary_element = staticmethod(init_binary_element)
     __swig_getmethods__["init_binary_element"] = lambda x: init_binary_element
-CvMorphology_swigregister = _cv.CvMorphology_swigregister
-CvMorphology_swigregister(CvMorphology)
+
+class CvMorphologyPtr(CvMorphology):
+    def __init__(self, this):
+        _swig_setattr(self, CvMorphology, 'this', this)
+        if not hasattr(self,"thisown"): _swig_setattr(self, CvMorphology, 'thisown', 0)
+        self.__class__ = CvMorphology
+_cv.CvMorphology_swigregister(CvMorphologyPtr)
 
 def CvMorphology_init_binary_element(*args):
-  """
+    """
     init_binary_element(CvMat _element, int _element_shape, CvPoint _anchor=cvPoint(-1,-1))
     CvMorphology_init_binary_element(CvMat _element, int _element_shape)
     """
-  return _cv.CvMorphology_init_binary_element(*args)
+    return _cv.CvMorphology_init_binary_element(*args)
 
 class CvSeq_Point(CvSeq):
     """Proxy of C++ CvSeq_Point class"""
@@ -7280,7 +8035,8 @@ class CvSeq_Point(CvSeq):
     __swig_getmethods__ = {}
     for _s in [CvSeq]: __swig_getmethods__.update(_s.__swig_getmethods__)
     __getattr__ = lambda self, name: _swig_getattr(self, CvSeq_Point, name)
-    __repr__ = _swig_repr
+    def __repr__(self):
+        return "<%s.%s; proxy of C++ CvTypedSeq<CvPoint > instance at %s>" % (self.__class__.__module__, self.__class__.__name__, self.this,)
     def cast(*args):
         """cast(CvSeq seq) -> CvSeq_Point"""
         return _cv.CvSeq_Point_cast(*args)
@@ -7303,19 +8059,27 @@ class CvSeq_Point(CvSeq):
         """pop(self) -> CvPoint"""
         return _cv.CvSeq_Point_pop(*args)
 
-    def __init__(self, *args): 
+    def __init__(self, *args):
         """__init__(self) -> CvSeq_Point"""
-        this = _cv.new_CvSeq_Point(*args)
-        try: self.this.append(this)
-        except: self.this = this
-    __swig_destroy__ = _cv.delete_CvSeq_Point
-    __del__ = lambda self : None;
-CvSeq_Point_swigregister = _cv.CvSeq_Point_swigregister
-CvSeq_Point_swigregister(CvSeq_Point)
+        _swig_setattr(self, CvSeq_Point, 'this', _cv.new_CvSeq_Point(*args))
+        _swig_setattr(self, CvSeq_Point, 'thisown', 1)
+    def __del__(self, destroy=_cv.delete_CvSeq_Point):
+        """__del__(self)"""
+        try:
+            if self.thisown: destroy(self)
+        except: pass
+
+
+class CvSeq_PointPtr(CvSeq_Point):
+    def __init__(self, this):
+        _swig_setattr(self, CvSeq_Point, 'this', this)
+        if not hasattr(self,"thisown"): _swig_setattr(self, CvSeq_Point, 'thisown', 0)
+        self.__class__ = CvSeq_Point
+_cv.CvSeq_Point_swigregister(CvSeq_PointPtr)
 
 def CvSeq_Point_cast(*args):
-  """CvSeq_Point_cast(CvSeq seq) -> CvSeq_Point"""
-  return _cv.CvSeq_Point_cast(*args)
+    """CvSeq_Point_cast(CvSeq seq) -> CvSeq_Point"""
+    return _cv.CvSeq_Point_cast(*args)
 
 class CvSeq_Point2D32f(CvSeq):
     """Proxy of C++ CvSeq_Point2D32f class"""
@@ -7325,7 +8089,8 @@ class CvSeq_Point2D32f(CvSeq):
     __swig_getmethods__ = {}
     for _s in [CvSeq]: __swig_getmethods__.update(_s.__swig_getmethods__)
     __getattr__ = lambda self, name: _swig_getattr(self, CvSeq_Point2D32f, name)
-    __repr__ = _swig_repr
+    def __repr__(self):
+        return "<%s.%s; proxy of C++ CvTypedSeq<CvPoint2D32f > instance at %s>" % (self.__class__.__module__, self.__class__.__name__, self.this,)
     def cast(*args):
         """cast(CvSeq seq) -> CvSeq_Point2D32f"""
         return _cv.CvSeq_Point2D32f_cast(*args)
@@ -7348,19 +8113,27 @@ class CvSeq_Point2D32f(CvSeq):
         """pop(self) -> CvPoint2D32f"""
         return _cv.CvSeq_Point2D32f_pop(*args)
 
-    def __init__(self, *args): 
+    def __init__(self, *args):
         """__init__(self) -> CvSeq_Point2D32f"""
-        this = _cv.new_CvSeq_Point2D32f(*args)
-        try: self.this.append(this)
-        except: self.this = this
-    __swig_destroy__ = _cv.delete_CvSeq_Point2D32f
-    __del__ = lambda self : None;
-CvSeq_Point2D32f_swigregister = _cv.CvSeq_Point2D32f_swigregister
-CvSeq_Point2D32f_swigregister(CvSeq_Point2D32f)
+        _swig_setattr(self, CvSeq_Point2D32f, 'this', _cv.new_CvSeq_Point2D32f(*args))
+        _swig_setattr(self, CvSeq_Point2D32f, 'thisown', 1)
+    def __del__(self, destroy=_cv.delete_CvSeq_Point2D32f):
+        """__del__(self)"""
+        try:
+            if self.thisown: destroy(self)
+        except: pass
+
+
+class CvSeq_Point2D32fPtr(CvSeq_Point2D32f):
+    def __init__(self, this):
+        _swig_setattr(self, CvSeq_Point2D32f, 'this', this)
+        if not hasattr(self,"thisown"): _swig_setattr(self, CvSeq_Point2D32f, 'thisown', 0)
+        self.__class__ = CvSeq_Point2D32f
+_cv.CvSeq_Point2D32f_swigregister(CvSeq_Point2D32fPtr)
 
 def CvSeq_Point2D32f_cast(*args):
-  """CvSeq_Point2D32f_cast(CvSeq seq) -> CvSeq_Point2D32f"""
-  return _cv.CvSeq_Point2D32f_cast(*args)
+    """CvSeq_Point2D32f_cast(CvSeq seq) -> CvSeq_Point2D32f"""
+    return _cv.CvSeq_Point2D32f_cast(*args)
 
 class CvSeq_Rect(CvSeq):
     """Proxy of C++ CvSeq_Rect class"""
@@ -7370,7 +8143,8 @@ class CvSeq_Rect(CvSeq):
     __swig_getmethods__ = {}
     for _s in [CvSeq]: __swig_getmethods__.update(_s.__swig_getmethods__)
     __getattr__ = lambda self, name: _swig_getattr(self, CvSeq_Rect, name)
-    __repr__ = _swig_repr
+    def __repr__(self):
+        return "<%s.%s; proxy of C++ CvTypedSeq<CvRect > instance at %s>" % (self.__class__.__module__, self.__class__.__name__, self.this,)
     def cast(*args):
         """cast(CvSeq seq) -> CvSeq_Rect"""
         return _cv.CvSeq_Rect_cast(*args)
@@ -7393,19 +8167,27 @@ class CvSeq_Rect(CvSeq):
         """pop(self) -> CvRect"""
         return _cv.CvSeq_Rect_pop(*args)
 
-    def __init__(self, *args): 
+    def __init__(self, *args):
         """__init__(self) -> CvSeq_Rect"""
-        this = _cv.new_CvSeq_Rect(*args)
-        try: self.this.append(this)
-        except: self.this = this
-    __swig_destroy__ = _cv.delete_CvSeq_Rect
-    __del__ = lambda self : None;
-CvSeq_Rect_swigregister = _cv.CvSeq_Rect_swigregister
-CvSeq_Rect_swigregister(CvSeq_Rect)
+        _swig_setattr(self, CvSeq_Rect, 'this', _cv.new_CvSeq_Rect(*args))
+        _swig_setattr(self, CvSeq_Rect, 'thisown', 1)
+    def __del__(self, destroy=_cv.delete_CvSeq_Rect):
+        """__del__(self)"""
+        try:
+            if self.thisown: destroy(self)
+        except: pass
+
+
+class CvSeq_RectPtr(CvSeq_Rect):
+    def __init__(self, this):
+        _swig_setattr(self, CvSeq_Rect, 'this', this)
+        if not hasattr(self,"thisown"): _swig_setattr(self, CvSeq_Rect, 'thisown', 0)
+        self.__class__ = CvSeq_Rect
+_cv.CvSeq_Rect_swigregister(CvSeq_RectPtr)
 
 def CvSeq_Rect_cast(*args):
-  """CvSeq_Rect_cast(CvSeq seq) -> CvSeq_Rect"""
-  return _cv.CvSeq_Rect_cast(*args)
+    """CvSeq_Rect_cast(CvSeq seq) -> CvSeq_Rect"""
+    return _cv.CvSeq_Rect_cast(*args)
 
 class CvSeq_Seq(CvSeq):
     """Proxy of C++ CvSeq_Seq class"""
@@ -7415,7 +8197,8 @@ class CvSeq_Seq(CvSeq):
     __swig_getmethods__ = {}
     for _s in [CvSeq]: __swig_getmethods__.update(_s.__swig_getmethods__)
     __getattr__ = lambda self, name: _swig_getattr(self, CvSeq_Seq, name)
-    __repr__ = _swig_repr
+    def __repr__(self):
+        return "<%s.%s; proxy of C++ CvTypedSeq<CvSeq * > instance at %s>" % (self.__class__.__module__, self.__class__.__name__, self.this,)
     def cast(*args):
         """cast(CvSeq seq) -> CvSeq_Seq"""
         return _cv.CvSeq_Seq_cast(*args)
@@ -7438,19 +8221,27 @@ class CvSeq_Seq(CvSeq):
         """pop(self) -> CvSeq"""
         return _cv.CvSeq_Seq_pop(*args)
 
-    def __init__(self, *args): 
+    def __init__(self, *args):
         """__init__(self) -> CvSeq_Seq"""
-        this = _cv.new_CvSeq_Seq(*args)
-        try: self.this.append(this)
-        except: self.this = this
-    __swig_destroy__ = _cv.delete_CvSeq_Seq
-    __del__ = lambda self : None;
-CvSeq_Seq_swigregister = _cv.CvSeq_Seq_swigregister
-CvSeq_Seq_swigregister(CvSeq_Seq)
+        _swig_setattr(self, CvSeq_Seq, 'this', _cv.new_CvSeq_Seq(*args))
+        _swig_setattr(self, CvSeq_Seq, 'thisown', 1)
+    def __del__(self, destroy=_cv.delete_CvSeq_Seq):
+        """__del__(self)"""
+        try:
+            if self.thisown: destroy(self)
+        except: pass
+
+
+class CvSeq_SeqPtr(CvSeq_Seq):
+    def __init__(self, this):
+        _swig_setattr(self, CvSeq_Seq, 'this', this)
+        if not hasattr(self,"thisown"): _swig_setattr(self, CvSeq_Seq, 'thisown', 0)
+        self.__class__ = CvSeq_Seq
+_cv.CvSeq_Seq_swigregister(CvSeq_SeqPtr)
 
 def CvSeq_Seq_cast(*args):
-  """CvSeq_Seq_cast(CvSeq seq) -> CvSeq_Seq"""
-  return _cv.CvSeq_Seq_cast(*args)
+    """CvSeq_Seq_cast(CvSeq seq) -> CvSeq_Seq"""
+    return _cv.CvSeq_Seq_cast(*args)
 
 class CvSeq_QuadEdge2D(CvSeq):
     """Proxy of C++ CvSeq_QuadEdge2D class"""
@@ -7460,7 +8251,8 @@ class CvSeq_QuadEdge2D(CvSeq):
     __swig_getmethods__ = {}
     for _s in [CvSeq]: __swig_getmethods__.update(_s.__swig_getmethods__)
     __getattr__ = lambda self, name: _swig_getattr(self, CvSeq_QuadEdge2D, name)
-    __repr__ = _swig_repr
+    def __repr__(self):
+        return "<%s.%s; proxy of C++ CvTypedSeq<CvQuadEdge2D > instance at %s>" % (self.__class__.__module__, self.__class__.__name__, self.this,)
     def cast(*args):
         """cast(CvSeq seq) -> CvSeq_QuadEdge2D"""
         return _cv.CvSeq_QuadEdge2D_cast(*args)
@@ -7483,19 +8275,27 @@ class CvSeq_QuadEdge2D(CvSeq):
         """pop(self) -> CvQuadEdge2D"""
         return _cv.CvSeq_QuadEdge2D_pop(*args)
 
-    def __init__(self, *args): 
+    def __init__(self, *args):
         """__init__(self) -> CvSeq_QuadEdge2D"""
-        this = _cv.new_CvSeq_QuadEdge2D(*args)
-        try: self.this.append(this)
-        except: self.this = this
-    __swig_destroy__ = _cv.delete_CvSeq_QuadEdge2D
-    __del__ = lambda self : None;
-CvSeq_QuadEdge2D_swigregister = _cv.CvSeq_QuadEdge2D_swigregister
-CvSeq_QuadEdge2D_swigregister(CvSeq_QuadEdge2D)
+        _swig_setattr(self, CvSeq_QuadEdge2D, 'this', _cv.new_CvSeq_QuadEdge2D(*args))
+        _swig_setattr(self, CvSeq_QuadEdge2D, 'thisown', 1)
+    def __del__(self, destroy=_cv.delete_CvSeq_QuadEdge2D):
+        """__del__(self)"""
+        try:
+            if self.thisown: destroy(self)
+        except: pass
+
+
+class CvSeq_QuadEdge2DPtr(CvSeq_QuadEdge2D):
+    def __init__(self, this):
+        _swig_setattr(self, CvSeq_QuadEdge2D, 'this', this)
+        if not hasattr(self,"thisown"): _swig_setattr(self, CvSeq_QuadEdge2D, 'thisown', 0)
+        self.__class__ = CvSeq_QuadEdge2D
+_cv.CvSeq_QuadEdge2D_swigregister(CvSeq_QuadEdge2DPtr)
 
 def CvSeq_QuadEdge2D_cast(*args):
-  """CvSeq_QuadEdge2D_cast(CvSeq seq) -> CvSeq_QuadEdge2D"""
-  return _cv.CvSeq_QuadEdge2D_cast(*args)
+    """CvSeq_QuadEdge2D_cast(CvSeq seq) -> CvSeq_QuadEdge2D"""
+    return _cv.CvSeq_QuadEdge2D_cast(*args)
 
 class CvSeq_ConnectedComp(CvSeq):
     """Proxy of C++ CvSeq_ConnectedComp class"""
@@ -7505,7 +8305,8 @@ class CvSeq_ConnectedComp(CvSeq):
     __swig_getmethods__ = {}
     for _s in [CvSeq]: __swig_getmethods__.update(_s.__swig_getmethods__)
     __getattr__ = lambda self, name: _swig_getattr(self, CvSeq_ConnectedComp, name)
-    __repr__ = _swig_repr
+    def __repr__(self):
+        return "<%s.%s; proxy of C++ CvTypedSeq<CvConnectedComp > instance at %s>" % (self.__class__.__module__, self.__class__.__name__, self.this,)
     def cast(*args):
         """cast(CvSeq seq) -> CvSeq_ConnectedComp"""
         return _cv.CvSeq_ConnectedComp_cast(*args)
@@ -7528,39 +8329,47 @@ class CvSeq_ConnectedComp(CvSeq):
         """pop(self) -> CvConnectedComp"""
         return _cv.CvSeq_ConnectedComp_pop(*args)
 
-    def __init__(self, *args): 
+    def __init__(self, *args):
         """__init__(self) -> CvSeq_ConnectedComp"""
-        this = _cv.new_CvSeq_ConnectedComp(*args)
-        try: self.this.append(this)
-        except: self.this = this
-    __swig_destroy__ = _cv.delete_CvSeq_ConnectedComp
-    __del__ = lambda self : None;
-CvSeq_ConnectedComp_swigregister = _cv.CvSeq_ConnectedComp_swigregister
-CvSeq_ConnectedComp_swigregister(CvSeq_ConnectedComp)
+        _swig_setattr(self, CvSeq_ConnectedComp, 'this', _cv.new_CvSeq_ConnectedComp(*args))
+        _swig_setattr(self, CvSeq_ConnectedComp, 'thisown', 1)
+    def __del__(self, destroy=_cv.delete_CvSeq_ConnectedComp):
+        """__del__(self)"""
+        try:
+            if self.thisown: destroy(self)
+        except: pass
+
+
+class CvSeq_ConnectedCompPtr(CvSeq_ConnectedComp):
+    def __init__(self, this):
+        _swig_setattr(self, CvSeq_ConnectedComp, 'this', this)
+        if not hasattr(self,"thisown"): _swig_setattr(self, CvSeq_ConnectedComp, 'thisown', 0)
+        self.__class__ = CvSeq_ConnectedComp
+_cv.CvSeq_ConnectedComp_swigregister(CvSeq_ConnectedCompPtr)
 
 def CvSeq_ConnectedComp_cast(*args):
-  """CvSeq_ConnectedComp_cast(CvSeq seq) -> CvSeq_ConnectedComp"""
-  return _cv.CvSeq_ConnectedComp_cast(*args)
+    """CvSeq_ConnectedComp_cast(CvSeq seq) -> CvSeq_ConnectedComp"""
+    return _cv.CvSeq_ConnectedComp_cast(*args)
 
 
 def SendErrorToPython(*args):
-  """
-    SendErrorToPython(int status, char func_name, char err_msg, char file_name, 
-        int line, void ?) -> int
     """
-  return _cv.SendErrorToPython(*args)
+    SendErrorToPython(int status, char func_name, char err_msg, char file_name, 
+        int line, void ??) -> int
+    """
+    return _cv.SendErrorToPython(*args)
 
 def function_ptr_generator(*args):
-  """function_ptr_generator() -> CvErrorCallback"""
-  return _cv.function_ptr_generator(*args)
+    """function_ptr_generator() -> CvErrorCallback"""
+    return _cv.function_ptr_generator(*args)
 
 def void_ptr_generator(*args):
-  """void_ptr_generator() -> void"""
-  return _cv.void_ptr_generator(*args)
+    """void_ptr_generator() -> void"""
+    return _cv.void_ptr_generator(*args)
 
 def void_ptrptr_generator(*args):
-  """void_ptrptr_generator() -> void"""
-  return _cv.void_ptrptr_generator(*args)
+    """void_ptrptr_generator() -> void"""
+    return _cv.void_ptrptr_generator(*args)
 IPL_ALIGN_DWORD=IPL_ALIGN_4BYTES
 IPL_ALIGN_QWORD=IPL_ALIGN_8BYTES
 CV_MAKE_TYPE=CV_MAKETYPE
