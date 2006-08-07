@@ -1138,7 +1138,7 @@ void CV_RemapTest::prepare_to_validation( int /*test_case_idx*/ )
 {
     CvMat* dst = &test_mat[REF_INPUT_OUTPUT][0];
     CvMat* dst0 = &test_mat[INPUT_OUTPUT][0];
-    int nr = interpolation == CV_INTER_CUBIC ? 3 : 2, nc = nr;
+    int nr = interpolation == CV_INTER_CUBIC ? 3 : 3, nc = nr;
     CvMat part;
     cvTsRemap( &test_mat[INPUT][0], dst, dst0,
                &test_mat[INPUT][1], &test_mat[INPUT][2],
