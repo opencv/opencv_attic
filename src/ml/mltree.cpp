@@ -1532,8 +1532,8 @@ CvDTreeSplit* CvDTree::find_split_cat_class( CvDTreeNode* node, int vi )
 
     for( i = 0; i < n; i++ )
     {
-        int j = labels[i];
-        int k = responses[i];
+        j = labels[i];
+        k = responses[i];
         cjk[j*m + k]++;
     }
 
@@ -1692,10 +1692,10 @@ CvDTreeSplit* CvDTree::find_split_ord_reg( CvDTreeNode* node, int vi )
     // find the optimal split
     for( i = 0; i < n1 - 1; i++ )
     {
-        float val = responses[sorted[i].i];
+        float t = responses[sorted[i].i];
         L++; R--;
-        lsum += val;
-        rsum -= val;
+        lsum += t;
+        rsum -= t;
 
         if( sorted[i].val + epsilon < sorted[i+1].val )
         {
@@ -2660,7 +2660,7 @@ CvDTreeNode* CvDTree::predict( const CvMat* _sample,
         {
             int vi = split->var_idx;
             int ci = vtype[vi];
-            int i = vidx ? vidx[vi] : vi;
+            i = vidx ? vidx[vi] : vi;
             float val = sample[i*step];
             if( m && m[i*mstep] )
                 continue;

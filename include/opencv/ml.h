@@ -1070,7 +1070,6 @@ protected:
 
     virtual bool prepare_to_train( const CvMat* _inputs, const CvMat* _outputs,
             const CvMat* _sample_weights, const CvMat* _sample_idx,
-            CvANN_MLP_TrainParams _params,
             CvVectors* _ivecs, CvVectors* _ovecs, double** _sw, int _flags );
 
     // sequential random backpropagation

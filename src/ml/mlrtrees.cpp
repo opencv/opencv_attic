@@ -381,7 +381,7 @@ bool CvRTrees::grow_forest( CvDTreeTrainData* train_data, const CvTermCriteria t
     ntrees = 0;
     while( ntrees < max_ntrees )
     {
-        int i, oob_samples_count = 0;
+        int i, j, oob_samples_count = 0;
         float ncorrect_responses = 0; // used for estimation of variable importance
         float* true_resp = 0;
         CvMat sample, missing;
@@ -511,7 +511,6 @@ bool CvRTrees::grow_forest( CvDTreeTrainData* train_data, const CvTermCriteria t
         }
         if( proximities )
         {
-            int i, j;
             for( j = 1; j < nsamples; j++ )
                 for( i = 0; i < j; i++ )
                     if( predicted_nodes_ptr[i] == predicted_nodes_ptr[j] )

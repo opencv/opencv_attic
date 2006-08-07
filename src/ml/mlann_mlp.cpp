@@ -685,7 +685,6 @@ void CvANN_MLP::calc_output_scale( const CvVectors* vecs, int flags )
 
 bool CvANN_MLP::prepare_to_train( const CvMat* _inputs, const CvMat* _outputs,
             const CvMat* _sample_weights, const CvMat* _sample_idx,
-            CvANN_MLP_TrainParams _params,
             CvVectors* _ivecs, CvVectors* _ovecs, double** _sw, int _flags )
 {
     bool ok = false;
@@ -834,15 +833,16 @@ int CvANN_MLP::train( const CvMat* _inputs, const CvMat* _outputs,
     int max_iter;
     double epsilon;
 
+    params = _params;
+
     // initialize training data
     CV_CALL( prepare_to_train( _inputs, _outputs, _sample_weights,
-                               _sample_idx, _params, &x0, &u, &sw, flags ));
+                               _sample_idx, &x0, &u, &sw, flags ));
 
     // ... and link weights
     if( !(flags & UPDATE_WEIGHTS) )
         init_weights();
 
-    params = _params;
     max_iter = params.term_crit.type & CV_TERMCRIT_ITER ? params.term_crit.max_iter : MAX_ITER;
     max_iter = MIN( max_iter, MAX_ITER );
     max_iter = MAX( max_iter, 1 );
@@ -934,7 +934,7 @@ int CvANN_MLP::train_backprop( CvVectors x0, CvVectors u, const double* sw )
         double* w = weights[0];
         double sweight = sw ? count*sw[idx] : 1.;
         CvMat _w, _dw, hdr1, hdr2, ghdr1, ghdr2, _df;
-        CvMat *x1 = &hdr1, *x2 = &hdr2, *grad1 = &ghdr1, *grad2 = &ghdr2, *t;
+        CvMat *x1 = &hdr1, *x2 = &hdr2, *grad1 = &ghdr1, *grad2 = &ghdr2, *temp;
 
         if( idx == 0 )
         {
@@ -979,7 +979,7 @@ int CvANN_MLP::train_backprop( CvVectors x0, CvVectors u, const double* sw )
             _df = *x2;
             _df.data.db = df[i];
             calc_activ_func_deriv( x2, &_df, _w.data.db + _w.rows*_w.cols );
-            CV_SWAP( x1, x2, t );
+            CV_SWAP( x1, x2, temp );
         }
 
         cvInitMatHeader( grad1, 1, ovcount, CV_64F, buf_ptr );
@@ -1029,7 +1029,7 @@ int CvANN_MLP::train_backprop( CvVectors x0, CvVectors u, const double* sw )
                 _w.rows = n1;
                 cvGEMM( grad1, &_w, 1, 0, 0, grad2, CV_GEMM_B_T );
             }
-            CV_SWAP( grad1, grad2, t );
+            CV_SWAP( grad1, grad2, temp );
         }
     }
 
@@ -1129,7 +1129,7 @@ int CvANN_MLP::train_rprop( CvVectors x0, CvVectors u, const double* sw )
         int n1, n2, si, j, k;
         double* w;
         CvMat _w, _dEdw, hdr1, hdr2, ghdr1, ghdr2, _df;
-        CvMat *x1, *x2, *grad1, *grad2, *t;
+        CvMat *x1, *x2, *grad1, *grad2, *temp;
         double E = 0;
 
         // first, iterate through all the samples and compute dEdw
@@ -1169,7 +1169,7 @@ int CvANN_MLP::train_rprop( CvVectors x0, CvVectors u, const double* sw )
                 _df = *x2;
                 _df.data.db = df[i];
                 calc_activ_func_deriv( x2, &_df, _w.data.db + _w.rows*_w.cols );
-                CV_SWAP( x1, x2, t );
+                CV_SWAP( x1, x2, temp );
             }
 
             cvInitMatHeader( grad1, dcount, ovcount, CV_64F, buf_ptr );
@@ -1232,7 +1232,7 @@ int CvANN_MLP::train_rprop( CvVectors x0, CvVectors u, const double* sw )
 
                 if( i > 1 )
                     cvGEMM( grad1, &_w, 1, 0, 0, grad2, CV_GEMM_B_T );
-                CV_SWAP( grad1, grad2, t );
+                CV_SWAP( grad1, grad2, temp );
             }
         }
 
