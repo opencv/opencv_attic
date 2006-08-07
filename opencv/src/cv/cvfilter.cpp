@@ -342,8 +342,8 @@ int CvBaseImageFilter::fill_cyclic_buffer( const uchar* src, int src_step,
 {
     int i, y = y0, bsz1 = border_tab_sz1, bsz = border_tab_sz;
     int pix_size = CV_ELEM_SIZE(src_type);
-    int width_n = (prev_x_range.end_index - prev_x_range.start_index)*pix_size;
-    bool can_use_src_as_trow = is_separable && width_n >= ksize.width;
+    int width = prev_x_range.end_index - prev_x_range.start_index, width_n = width*pix_size;
+    bool can_use_src_as_trow = is_separable && width >= ksize.width;
 
     // fill the cyclic buffer
     for( ; buf_count < buf_max_count && y < y2; buf_count++, y++, src += src_step )
