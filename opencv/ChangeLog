@@ -83,7 +83,23 @@
      This is incomplete list of the bugs fixed.
 
      * cvFilter2D (CVS version crashed occasionally)
-     [TODO]
+     * cvInitUndistortMap mem leak
+     * cvRodrigues2 (several bugs and numerical instability)
+     * cvAdaptiveThresh incorrect handling of extreme cases
+     * Graph traversal (cvNextGraphItem) failed on some graphs
+     * Probabilistic Hough Transform mem leak and running beyond the buffers.
+     * Numerous records in SF bug tracker have been adressed (below are
+     the IDs of the records):
+     1344667, 1458680, 1358957, 1358962, 1489946, 1176530, 1405941,
+     1291046, 1307735, 1307660, 1297619, 1263481, 1295583, 1229649,
+     1242376, 1184122, 1145216, 1115824, 1144060, 1106466, 1055967,
+     1080061, 1034397, 1080669, 1068438, 1061664, 1067400, 952756,
+     709670, 972533, 709670, 706225, 667748, 661480
+
+>>> Known issues in RC1:
+  - Several tests crash when the code is built with GCC 4.1.1, -O3 optimization:
+    filter-gaussian, ...
+  -
 
 =============================================================================
                       OpenCV beta 5, Thursday, July 21, 2005

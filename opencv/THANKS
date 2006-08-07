@@ -10,32 +10,81 @@ Prof. Pietro Perona
 Prof. Stan Sclaroff
 Prof. Carlo Tomasi
 
-People who helped to improve OpenCV a lot
+OpenCV authors and major contributors
 ---------------------------------------------------------------------------------------
-Name                  Company (by the moment       Remarks
-                    of contribution/cooperation)
 
+Name                    Company (by the moment     Remarks
+                        of contribution)
+
+Abrosimov, Dmitry       Intel Corp.                Optimization, Eigen objects
 Alekseev, Aleksey       Intel Corp.                IppCV testing
+Asbach, Mark            RWTH Aachen University     New-style Linux makefiles, SWIG wrappers, Mac OS X porting
+
 Boldyrev, Sergey        Intel Corp.                rpm spec & linux makefiles
+Bornet, Olivier         IDIAP Research Institute   New-style Linux makefiles, SWIG & specialized Python wrappers 
+Bouguet, Jean-Yves      Intel Corp.                Algorithms for Camera calibration, calibration toolbox for MATLAB, LK in pyramids ...
+Bovyrin, Alexander      Intel Corp.                Contours, Stereo 
+Bradski, Gary           Intel Corp.                Idea and Vision, Leading, CAMSHIFT & MHI algorithms and more ...
 Bradley, David          Princeton Univ.            Haar classifier for profile faces
 Breen, Ed               ???                        EiC intepreter, used for Hawk
+Burenkov, Denis         Moscow State Uni           Contour morphing, several demo scripts
+
+Cherepanova, Tatiana    Novosibirsk University     Face tracking
+Cherepennikov, Valery   Intel Corp.                Optimization, matrices, estimators (Kalman, ConDensation) and more ...
+Chudinovich, Boris      Intel Corp.                Ideas and algorithms on contours and comp. geometry functions
+Cowperthwaite, David    Intel Corp.                3d Tracker
+
+Davies, Bob             Intel Corp.                First OpenCV installation program, communications with user group, tech. advisor
 Devernay, Frederic      INRIA (?)                  Multiple patches for OpenCV (cvcam, cxcore, cv, highgui).
 Don Murray              PointGrey                  PointGrey SDK and patches for stereo gesture recognition code
 Dubey, Premnath         ???                        Patch for cvcam (Windows version)
+
+Eaton, Daniel           ???                        Texture descriptors code
+Eruhimov, Victor        Intel Corp.                Hough & distance transforms, stereo, Hawk, HighGUI and more ...
+
+Gaspard Breton          France Telecom             Support for multiple cameras (2,3,4) in SyncFilter and cvcam
+Grachev, Ilya           Intel Corp.                TCL/TK demos (cvlkdemo, cvcsdemo, cvenv)
 Gruebele, Philip        ???                        Multiple patches for OpenCV
+
 Halsall, Chris          Open Source Solutions Inc  O-Reilly papers on OpenCV,
                                                    calibration app for Linux (is not supported now?)
                                                    patches for Linux version
+
 Khamenya, Valery        BioVisioN AG               OpenCV CVS repository at SourceForge
+Khudyakov, Vasily       Novosibirsk University     Face feature detection
 Kruppa, Hannes          ETH Zurich                 Haar classifier for fullbody, lowerbody, upperbody detection.
+Kuranov, Alexander      Intel Corp.                Matlab wrappers, Face detection code, haartraining and related applications 
+Kuriakin, Valery        Intel Corp.                Started OpenCV project in Nizhny Novrogod Lab
+
+Lienhart, Rainer        Intel Corp.                Haar feature-based face detection algorithm and the original code
+Lantz, Philip           Intel Corp.                3d Tracker
 Lundin, Magnus          ???                        Patches and new functionality for Linux version of highgui
+
+Molinov, Sergey         Intel Corp.                HMM face recognition code, POSIT, snakes, optical flow, stereo and more ...
+Mosyagin, Valery        Intel Corp.                View morphing, camera calibration code (C),
+                                                   fundamental matrix estimation
 Muehlmann, Karsten      Lehrstuhl fur Informatik V  Another stereo correspondence code (not included yet)
+Nefian, Ara             Intel Corp.                Algorithm for HMM face recognition
+
+Oblomov, Sergey         Intel Corp.                Camshift and histogram code, linux scripts and makefiles, optimization and more ...
+
 Philomin, Vasanth       PHILIPS (?)                Several bug reports/fixes on face detection etc.
+Pisarevsky, Vadim       Intel Corp.                OpenCV hacker :)
+Pleskov, Alexander      Intel Corp.                Pyramidal segmentation, gesture recognition code, comp. geometry functions
+
 Rodyushkin, Konstantin  Intel Corp.                applications OpenCV to 3dFace caused a few bug reports, functionality proposals
+
 Schaefer, Dirk          MD-Mathematische Dienste GmbH  original code for Bayer->RGB pattern conversion
 Schiele, Bernt          ETH Zurich                 Haar classifier for fullbody, lowerbody, upperbody detection.
-Veretennikov, Eugene    Intel Corp.                Testing, comp. geometry functions
+Shavit, Adi             ???                        OpenCV forum moderation
+Sobolev, Andrey         Moscow State Uni           Contour skeletons and linear-contour model
+Stanchak, Roman         ???                        Multiple improvements in Highgui (GTK+), Python wrappers and the core functionality
+
+Veretennikov, Eugene    Intel Corp.                Testing, some comp. geometry functions
 Vezhnevets, Vladimir    MSU Graphics and Media Lab New algorithm for chessboard detection
+
+Zaguskin, Victor        Intel Corp.                cvcam, vmdemo in tcl/tk
+
 Wayne W. Cheng          SoftIntegration            Ch C/C++ intepreter, OpenCV Ch toolbox (proposal + SDK)
 Wood, Travis            ???                        Patches for highgui (video capturing in Linux)
 
@@ -55,10 +104,8 @@ OpenCV includes modified versions of the following software:
 + Earth Mover Distance and RGB->Lab conversion by Yossi Rubner
   (see cv/src/cvemd.cpp and cv/src/cvcolor.cpp)
 
-Active OpenCV forum participants:
+Active OpenCV forum participants, bug reporters etc.:
 ---------------------------------
-(!TODO: more info needed)
-
 Barbaresi, Abramo
 Betti, Gabriele
 Cao, Ning
@@ -66,26 +113,17 @@ Cawkwell, Jack
 Chen, Gen-Nan
 Cheng, Michael
 Fritz, Frank
+Grossman, Dave
 Iannizotto, Giancarlo
 Lu, Le
 Kunz, Clay
 Mellor, J. P.
 Ming, Li
-Philomin, Vasanth
 Zayed, Mohamed
 Rocha, Jairo
-Stewart, James Andr.
-
-BUG reports:
-------------
-
-(see also ChangeLog)
-Rocha, Carlos Andres
-Small, Daniel;
-Shavit, Adi
+Stewart, James Andr
+Small, Daniel
 Zivkovic, Zoran
-and other people from OpenCV forum at www.yahoogroups.com
 
 ------------
 ...
-
