@@ -834,14 +834,15 @@ cvResize( const CvArr* srcarr, CvArr* dstarr, int method )
                     fx = fx <= 0 ? 0.f : fx - cvFloor(fx);
                 }
 
+                if( sx < 0 )
+                    fx = 0, sx = 0;
+
                 if( sx >= ssize.width-1 )
                 {
                     fx = 0, sx = ssize.width-1;
                     if( xmax >= dsize.width )
                         xmax = dx;
                 }
-                else if( sx < 0 )
-                    fx = 0, sx = 0;
 
                 if( depth != CV_8U )
                     for( k = 0, sx *= cn; k < cn; k++ )
