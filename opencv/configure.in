@@ -23,7 +23,7 @@ AC_CONFIG_AUX_DIR([autotools])
 AC_CONFIG_MACRO_DIR([autotools/aclocal])
 
 # put CVS revision of this configure.in into the resulting configure script
-AC_REVISION($Revision: 1.28 $)
+AC_REVISION($Revision: 1.29 $)
 
 # Detect the canonical host and target build environment
 AC_CANONICAL_HOST
@@ -194,16 +194,14 @@ else
     case $target in
     i686-*-*)
         if test x"$ac_cv_c_compiler_gnu" = "xyes"; then
-            case $target in
-            i686-apple-*)
-                # apples g++ fails with '-march=i686' and there are no apple machines older than prescott/core anyway
-                CXXFLAGS="-g -march=prescott -ffast-math -fomit-frame-pointer $CXXFLAGS"
-                ;;
-            *-*-*)
-                # default to i686/pentiumpro -- people can override this
-                CXXFLAGS="-g -march=i686 -ffast-math -fomit-frame-pointer $CXXFLAGS"
-                ;;
-            esac
+          # default to i686/pentiumpro -- people can override this
+          CXXFLAGS="-g -march=i686 -ffast-math -fomit-frame-pointer $CXXFLAGS"
+        fi
+        ;;
+    i*86-apple-*)
+        if test x"$ac_cv_c_compiler_gnu" = "xyes"; then
+            # apples g++ fails with '-march=i686' and there are no apple machines older than prescott/core anyway
+            CXXFLAGS="-g -march=prescott -ffast-math -fomit-frame-pointer $CXXFLAGS"
         fi
         ;;
     powerpc-*-*)
@@ -711,7 +709,6 @@ opencv.spec
 docs/Makefile
 data/Makefile
 cxcore/Makefile
-cxcore/include/cvver.h
 cxcore/include/Makefile
 cxcore/src/Makefile
 cv/Makefile
@@ -788,6 +785,6 @@ Now run make ...
 
 if test x"$have_xine" = "xyes"; then
     AC_MSG_NOTICE([
-    ATTENTION: highgui will be built with xine support,
+ATTENTION: highgui will be built with xine support,
            thus it will be a subject to GNU Public License])
 fi
