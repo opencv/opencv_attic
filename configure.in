@@ -23,7 +23,7 @@ AC_CONFIG_AUX_DIR([autotools])
 AC_CONFIG_MACRO_DIR([autotools/aclocal])
 
 # put CVS revision of this configure.in into the resulting configure script
-AC_REVISION($Revision: 1.29 $)
+AC_REVISION($Revision: 1.30 $)
 
 # Detect the canonical host and target build environment
 AC_CANONICAL_HOST
@@ -632,11 +632,6 @@ if test x"$with_python" = "xyes"; then
     # if not explicitly forbidden, check for swig also
     if test x"$with_swig" = "xauto"; then
         with_swig=yes
-    fi
-   
-    if test x"$with_swig" = "xyes"; then    
-        # check for swig python library
-        SWIG_PYTHON()
     fi
     
     # okay now
