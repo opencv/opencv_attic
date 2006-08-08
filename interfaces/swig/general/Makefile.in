@@ -217,11 +217,24 @@ target_cpu = @target_cpu@
 target_os = @target_os@
 target_vendor = @target_vendor@
 BUILT_SOURCES = cvmacros.i
+EXTRA_DIST = \
+  cv.i \
+  cvarr_operators.i \
+  cvmacros.i \
+  doublepointers.i \
+  extensions.i \
+  highgui.i \
+  memory.i \
+  sizeof.i \
+  typemaps.i
+
 
 # the following rules keep wrappers up to date, if SWIG is present
 @UPDATE_SWIG_WRAPPERS_TRUE@CV_HEADER_FILES = \
-@UPDATE_SWIG_WRAPPERS_TRUE@		   $(top_srcdir)/cxcore/include/cxtypes.h  $(top_srcdir)/cxcore/include/cxcore.h  \
-@UPDATE_SWIG_WRAPPERS_TRUE@		  $(top_srcdir)/cv/include/cvtypes.h $(top_srcdir)/cv/include/cv.h          
+@UPDATE_SWIG_WRAPPERS_TRUE@  $(top_srcdir)/cxcore/include/cxtypes.h \
+@UPDATE_SWIG_WRAPPERS_TRUE@  $(top_srcdir)/cxcore/include/cxcore.h  \
+@UPDATE_SWIG_WRAPPERS_TRUE@  $(top_srcdir)/cv/include/cvtypes.h \
+@UPDATE_SWIG_WRAPPERS_TRUE@  $(top_srcdir)/cv/include/cv.h          
 
 all: $(BUILT_SOURCES)
 	$(MAKE) $(AM_MAKEFLAGS) all-am
@@ -388,7 +401,7 @@ uninstall-am: uninstall-info-am
 	uninstall-info-am
 
 
-@UPDATE_SWIG_WRAPPERS_TRUE@cvmacros.i: $(CV_HEADER_FILES) Makefile
+@UPDATE_SWIG_WRAPPERS_TRUE@cvmacros.i: $(CV_HEADER_FILES) Makefile.in
 @UPDATE_SWIG_WRAPPERS_TRUE@	$(PYTHON) $(top_srcdir)/utils/extract_macros.py $(CV_HEADER_FILES) > $@
 # Tell versions [3.59,3.63) of GNU make to not export all variables.
 # Otherwise a system limit (for SysV at least) may be exceeded.
