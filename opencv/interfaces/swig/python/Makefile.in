@@ -67,15 +67,23 @@ am__installdirs = "$(DESTDIR)$(pkgpythondir)" \
 	"$(DESTDIR)$(pkgpythondir)"
 pkgpythonLTLIBRARIES_INSTALL = $(INSTALL)
 LTLIBRARIES = $(pkgpython_LTLIBRARIES)
-_cv_la_DEPENDENCIES = $(top_builddir)/cv/src/libcv.la
-am__cv_la_OBJECTS = _cv_la-_cv.lo _cv_la-error.lo _cv_la-pyhelpers.lo \
-	_cv_la-cvshadow.lo
+@BUILD_PYTHON_WRAPPERS_TRUE@_cv_la_DEPENDENCIES =  \
+@BUILD_PYTHON_WRAPPERS_TRUE@	$(top_builddir)/cv/src/libcv.la
+am___cv_la_SOURCES_DIST = _cv.cpp error.cpp error.h pyhelpers.cpp \
+	pyhelpers.h pycvseq.hpp cvshadow.cpp cvshadow.h cv.i \
+	imagedata.i cvarr.i nointpb.i pytypemaps.i cvseq.i cvshadow.i
+@BUILD_PYTHON_WRAPPERS_TRUE@am__cv_la_OBJECTS = _cv_la-_cv.lo \
+@BUILD_PYTHON_WRAPPERS_TRUE@	_cv_la-error.lo \
+@BUILD_PYTHON_WRAPPERS_TRUE@	_cv_la-pyhelpers.lo \
+@BUILD_PYTHON_WRAPPERS_TRUE@	_cv_la-cvshadow.lo
 _cv_la_OBJECTS = $(am__cv_la_OBJECTS)
 @BUILD_PYTHON_WRAPPERS_TRUE@am__cv_la_rpath = -rpath $(pkgpythondir)
-_highgui_la_DEPENDENCIES =  \
-	$(top_builddir)/otherlibs/highgui/libhighgui.la
-am__highgui_la_OBJECTS = _highgui_la-_highgui.lo \
-	_highgui_la-pyhelpers.lo
+@BUILD_PYTHON_WRAPPERS_TRUE@_highgui_la_DEPENDENCIES = $(top_builddir)/otherlibs/highgui/libhighgui.la
+am___highgui_la_SOURCES_DIST = _highgui.cpp pyhelpers.cpp pyhelpers.h \
+	highgui.i
+@BUILD_PYTHON_WRAPPERS_TRUE@am__highgui_la_OBJECTS =  \
+@BUILD_PYTHON_WRAPPERS_TRUE@	_highgui_la-_highgui.lo \
+@BUILD_PYTHON_WRAPPERS_TRUE@	_highgui_la-pyhelpers.lo
 _highgui_la_OBJECTS = $(am__highgui_la_OBJECTS)
 @BUILD_PYTHON_WRAPPERS_TRUE@am__highgui_la_rpath = -rpath \
 @BUILD_PYTHON_WRAPPERS_TRUE@	$(pkgpythondir)
@@ -99,7 +107,8 @@ CCLD = $(CC)
 LINK = $(LIBTOOL) --tag=CC --mode=link $(CCLD) $(AM_CFLAGS) $(CFLAGS) \
 	$(AM_LDFLAGS) $(LDFLAGS) -o $@
 SOURCES = $(_cv_la_SOURCES) $(_highgui_la_SOURCES)
-DIST_SOURCES = $(_cv_la_SOURCES) $(_highgui_la_SOURCES)
+DIST_SOURCES = $(am___cv_la_SOURCES_DIST) \
+	$(am___highgui_la_SOURCES_DIST)
 am__pkgpython_PYTHON_DIST = __init__.py cv.py adaptors.py highgui.py \
 	matlab_syntax.py
 pkgpythonPYTHON_INSTALL = $(INSTALL_DATA)
@@ -278,42 +287,67 @@ AM_CPPFLAGS = \
   -DCV_NO_BACKWARD_COMPATIBILITY
 
 noinst_PYTHON = setup-for-win.py
-distcleancheck_listfiles = \
-  find -type f -exec sh -c 'test -f $(scrdir)/{} || echo {}'
+EXTRA_DIST = \
+  __init__.py \
+  cv.py \
+  adaptors.py \
+  highgui.py \
+  matlab_syntax.py \
+  \
+  cv.i \
+  cvaliases.i \
+  cvarr.i \
+  cvseq.i \
+  cvshadow.i \
+  highgui.i \
+  imagedata.i \
+  nointpb.i \
+  pyhelpers.i \
+  pytypemaps.i \
+  \
+  cvshadow.h \
+  error.h \
+  pycvseq.hpp \
+  pyhelpers.h \
+  \
+  _cv.cpp \
+  _highgui.cpp \
+  cvshadow.cpp \
+  error.cpp \
+  pyhelpers.cpp
+
+@UPDATE_SWIG_WRAPPERS_TRUE@CV_HEADER_FILES = \
+@UPDATE_SWIG_WRAPPERS_TRUE@  $(top_srcdir)/cxcore/include/cxtypes.h \
+@UPDATE_SWIG_WRAPPERS_TRUE@  $(top_srcdir)/cxcore/include/cxcore.h  \
+@UPDATE_SWIG_WRAPPERS_TRUE@  $(top_srcdir)/cv/include/cvtypes.h \
+@UPDATE_SWIG_WRAPPERS_TRUE@  $(top_srcdir)/cv/include/cv.h
 
 
 # Conditional targets #######################################################
 @BUILD_PYTHON_WRAPPERS_TRUE@pkgpython_LTLIBRARIES = _cv.la _highgui.la
 @BUILD_PYTHON_WRAPPERS_TRUE@pkgpython_PYTHON = \
-@BUILD_PYTHON_WRAPPERS_TRUE@    __init__.py    \
-@BUILD_PYTHON_WRAPPERS_TRUE@    cv.py          \
-@BUILD_PYTHON_WRAPPERS_TRUE@    adaptors.py    \
-@BUILD_PYTHON_WRAPPERS_TRUE@    highgui.py 	   \
-@BUILD_PYTHON_WRAPPERS_TRUE@    matlab_syntax.py
+@BUILD_PYTHON_WRAPPERS_TRUE@  __init__.py    \
+@BUILD_PYTHON_WRAPPERS_TRUE@  cv.py          \
+@BUILD_PYTHON_WRAPPERS_TRUE@  adaptors.py    \
+@BUILD_PYTHON_WRAPPERS_TRUE@  highgui.py 	   \
+@BUILD_PYTHON_WRAPPERS_TRUE@  matlab_syntax.py
 
-@UPDATE_SWIG_WRAPPERS_TRUE@CV_HEADER_FILES = \
-@UPDATE_SWIG_WRAPPERS_TRUE@		   $(top_srcdir)/cxcore/include/cxtypes.h  $(top_srcdir)/cxcore/include/cxcore.h  \
-@UPDATE_SWIG_WRAPPERS_TRUE@		  $(top_srcdir)/cv/include/cvtypes.h $(top_srcdir)/cv/include/cv.h          
+@BUILD_PYTHON_WRAPPERS_TRUE@_cv_la_SOURCES = _cv.cpp error.cpp error.h pyhelpers.cpp pyhelpers.h \
+@BUILD_PYTHON_WRAPPERS_TRUE@                    pycvseq.hpp cvshadow.cpp cvshadow.h \
+@BUILD_PYTHON_WRAPPERS_TRUE@                    cv.i imagedata.i cvarr.i nointpb.i pytypemaps.i cvseq.i cvshadow.i
 
+@BUILD_PYTHON_WRAPPERS_TRUE@_cv_la_CXXFLAGS = $(PYTHON_CSPEC)
+@BUILD_PYTHON_WRAPPERS_TRUE@_cv_la_LIBADD = $(top_builddir)/cv/src/libcv.la
+@BUILD_PYTHON_WRAPPERS_TRUE@_cv_la_LDFLAGS = -module -avoid-version -no-undefined $(PYTHON_LSPEC) \
+@BUILD_PYTHON_WRAPPERS_TRUE@                    -L$(SWIG_PYTHON_LIBS)
 
-# Python #####################################################################
-_cv_la_SOURCES = _cv.cpp error.cpp error.h pyhelpers.cpp pyhelpers.h \
-                    pycvseq.hpp cvshadow.cpp cvshadow.h \
-                    cv.i imagedata.i cvarr.i nointpb.i pytypemaps.i cvseq.i cvshadow.i
+@BUILD_PYTHON_WRAPPERS_TRUE@_highgui_la_SOURCES = _highgui.cpp pyhelpers.cpp pyhelpers.h \
+@BUILD_PYTHON_WRAPPERS_TRUE@                         highgui.i
 
-_cv_la_CXXFLAGS = $(PYTHON_CSPEC)
-_cv_la_LIBADD = $(top_builddir)/cv/src/libcv.la
-_cv_la_LDFLAGS = -module -avoid-version -no-undefined $(PYTHON_LSPEC) \
-                    -L$(SWIG_PYTHON_LIBS)
-
-#_cv_la_DEPENDENCIES = ../filtered/cv.h ../filtered/constants.h
-_highgui_la_SOURCES = _highgui.cpp pyhelpers.cpp pyhelpers.h \
-                         highgui.i
-
-_highgui_la_CXXFLAGS = $(PYTHON_CSPEC)
-_highgui_la_LIBADD = $(top_builddir)/otherlibs/highgui/libhighgui.la
-_highgui_la_LDFLAGS = -module -avoid-version -no-undefined $(PYTHON_LSPEC) \
-                           -L$(SWIG_PYTHON_LIBS)
+@BUILD_PYTHON_WRAPPERS_TRUE@_highgui_la_CXXFLAGS = $(PYTHON_CSPEC)
+@BUILD_PYTHON_WRAPPERS_TRUE@_highgui_la_LIBADD = $(top_builddir)/otherlibs/highgui/libhighgui.la
+@BUILD_PYTHON_WRAPPERS_TRUE@_highgui_la_LDFLAGS = -module -avoid-version -no-undefined $(PYTHON_LSPEC) \
+@BUILD_PYTHON_WRAPPERS_TRUE@                           -L$(SWIG_PYTHON_LIBS)
 
 all: all-am
 
@@ -600,7 +634,7 @@ distclean-generic:
 maintainer-clean-generic:
 	@echo "This command is intended for maintainers to use"
 	@echo "it deletes files that may require special tools to rebuild."
-@UPDATE_SWIG_WRAPPERS_FALSE@clean: clean-am
+clean: clean-am
 
 clean-am: clean-generic clean-libtool clean-pkgpythonLTLIBRARIES \
 	mostlyclean-am
@@ -685,7 +719,7 @@ uninstall-am: uninstall-info-am uninstall-pkgpythonLTLIBRARIES \
 @UPDATE_SWIG_WRAPPERS_TRUE@         $(top_srcdir)/interfaces/swig/general/cvmacros.i       \
 @UPDATE_SWIG_WRAPPERS_TRUE@         ../filtered/cv.h            \
 @UPDATE_SWIG_WRAPPERS_TRUE@         ../filtered/constants.h     \
-@UPDATE_SWIG_WRAPPERS_TRUE@         Makefile
+@UPDATE_SWIG_WRAPPERS_TRUE@         Makefile.in
 @UPDATE_SWIG_WRAPPERS_TRUE@	$(SWIG) $(SWIG_PYTHON_OPT) $(CV_INCLUDES) -o $@ $<
 
 # this rule creates the Python wrapper sources for highgui
@@ -694,15 +728,11 @@ uninstall-am: uninstall-info-am uninstall-pkgpythonLTLIBRARIES \
 @UPDATE_SWIG_WRAPPERS_TRUE@	      $(top_srcdir)/interfaces/swig/general/typemaps.i      \
 @UPDATE_SWIG_WRAPPERS_TRUE@              $(top_srcdir)/interfaces/swig/general/memory.i    \
 @UPDATE_SWIG_WRAPPERS_TRUE@	      $(top_srcdir)/otherlibs/highgui/highgui.h             \
-@UPDATE_SWIG_WRAPPERS_TRUE@              Makefile
+@UPDATE_SWIG_WRAPPERS_TRUE@              Makefile.in
 @UPDATE_SWIG_WRAPPERS_TRUE@	$(SWIG) $(SWIG_PYTHON_OPT) $(CV_INCLUDES) -DSKIP_INCLUDES -o $@ $<
 
-@UPDATE_SWIG_WRAPPERS_TRUE@cvaliases.i: $(CV_HEADER_FILES) Makefile
+@UPDATE_SWIG_WRAPPERS_TRUE@cvaliases.i: $(CV_HEADER_FILES) Makefile.in
 @UPDATE_SWIG_WRAPPERS_TRUE@	$(PYTHON) $(top_srcdir)/utils/extract_aliases.py $(CV_HEADER_FILES) > $@
-
-@UPDATE_SWIG_WRAPPERS_TRUE@clean: clean-am
-@UPDATE_SWIG_WRAPPERS_TRUE@	rm -f _cv.cpp _highgui.cpp cv.py highgui.py
-#_highgui_la_DEPENDENCIES = $(top_srcdir)/otherlibs/highgui/highgui.h
 # Tell versions [3.59,3.63) of GNU make to not export all variables.
 # Otherwise a system limit (for SysV at least) may be exceeded.
 .NOEXPORT:

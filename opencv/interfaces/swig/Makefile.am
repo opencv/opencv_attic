@@ -14,7 +14,3 @@ AM_CPPFLAGS = \
   -DCV_NO_BACKWARD_COMPATIBILITY
 
 SUBDIRS = filtered general python
-
-# remove non-wanted files in the archive
-dist-hook:
-	rm -f `find $(distdir)/general/ ! -name '*.i' -type f`
