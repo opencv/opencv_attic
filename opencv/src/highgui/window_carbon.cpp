@@ -44,13 +44,15 @@
 #include <Carbon/Carbon.h>
 
 #include <unistd.h>
-#include <stdio.h>
+#include <cstdio>
+#include <cmath>
 
-#define MS_TO_TICKS(a) a*3/50
+//#define MS_TO_TICKS(a) a*3/50
 
 #define LABELWIDTH 64
 #define INTERWIDGETSPACE 16
 #define WIDGETHEIGHT 32
+#define NO_KEY -1
 
 struct CvWindow;
 
@@ -114,17 +116,17 @@ if( !(exp) )                                                    \
 }
 
 static int wasInitialized = 0;    
-static char lastKey = -1;
+static char lastKey = NO_KEY;
 OSStatus keyHandler(EventHandlerCallRef hcr, EventRef theEvent, void* inUserData);
 static pascal OSStatus windowEventHandler(EventHandlerCallRef nextHandler, EventRef theEvent, void *inUserData);
 
-static const EventTypeSpec applicationKeyboardEvents[] = {
+static const EventTypeSpec applicationKeyboardEvents[] = 
+{
     { kEventClassKeyboard, kEventRawKeyDown },
 };
 
 CV_IMPL int cvInitSystem( int argc, char** argv )
 {
-    
     OSErr err = noErr;
     if( !wasInitialized ) 
     {
@@ -146,7 +148,6 @@ CV_IMPL int cvStartWindowThread()
 {
     return 0;
 }
-
 
 static int icvCountTrackbarInWindow( const CvWindow* window)
 {
@@ -184,9 +185,12 @@ static CvWindow* icvWindowByHandle( void * handle )
     return window;
 }
 
-CV_IMPL CvWindow * icvFindWindowByName( const char* name){
+CV_IMPL CvWindow * icvFindWindowByName( const char* name)
+{
     CvWindow* window = hg_windows;
-    while( window != 0 && strcmp(name, window->name) != 0 ) window = window->next;
+    while( window != 0 && strcmp(name, window->name) != 0 ) 
+		window = window->next;
+	
     return window;
 }
 
@@ -214,14 +218,16 @@ static void icvDrawImage( CvWindow* window )
     int width = window->imageWidth;
     int height = window->imageHeight;
     
+        GetWindowPortBounds(window->window, &portrect);
     
-    GetWindowPortBounds(window->window, &portrect);
-    
-    if( window->flags & CV_WINDOW_AUTOSIZE ) { 
+    if( window->flags & CV_WINDOW_AUTOSIZE ) 
+	{ 
         CGPoint origin = {0,0}; 
         CGSize size = {portrect.right-portrect.left, portrect.bottom-portrect.top-window->trackbarheight};
         rect.origin = origin; rect.size = size;
-    } else {
+    } 
+	else 
+	{
         CGPoint origin = {0, portrect.bottom - height - window->trackbarheight};
         CGSize size = {width, height};
         rect.origin = origin; rect.size = size;
@@ -306,12 +312,14 @@ static void icvDeleteWindow( CvWindow* window )
     cvReleaseMat( &window->image );
     cvReleaseMat( &window->dst_image );
     
-    for( trackbar = window->toolbar.first; trackbar != 0; ) {
+    for( trackbar = window->toolbar.first; trackbar != 0; ) 
+	{
         CvTrackbar* next = trackbar->next;
         cvFree( (void**)&trackbar );
         trackbar = next;
     }
-    if (window->imageRef != NULL)
+    
+	if (window->imageRef != NULL)
         CGImageRelease(window->imageRef);
     
     cvFree( (void**)&window );
@@ -339,18 +347,17 @@ CV_IMPL void cvDestroyWindow( const char* name)
 }
 
 
-CV_IMPL void
-cvDestroyAllWindows( void )
+CV_IMPL void cvDestroyAllWindows( void )
 {
-    while( hg_windows ) {
+    while( hg_windows ) 
+	{
         CvWindow* window = hg_windows;
         icvDeleteWindow( window );
     }
 }
 
 
-CV_IMPL void
-cvShowImage( const char* name, const CvArr* arr)
+CV_IMPL void cvShowImage( const char* name, const CvArr* arr)
 {
     CV_FUNCNAME( "cvShowImage" );
     
@@ -440,12 +447,17 @@ CV_IMPL void cvMoveWindow( const char* name, int x, int y)
     __END__;
 }
 
-void TrackbarActionProcPtr (ControlRef theControl,ControlPartCode partCode){
-    CvTrackbar * trackbar = icvTrackbarByHandle(theControl);
-    if (trackbar == NULL) {
+void TrackbarActionProcPtr (ControlRef theControl, ControlPartCode partCode)
+{
+    CvTrackbar * trackbar = icvTrackbarByHandle (theControl);
+    
+	if (trackbar == NULL)
+	{
         fprintf(stderr,"Erreur recuperation trackbar\n");
         return;
-    } else {
+    }
+	else 
+	{
         if ( trackbar->data )
             *trackbar->data = GetControl32BitValue (theControl);
         if ( trackbar->notify )
@@ -453,9 +465,7 @@ void TrackbarActionProcPtr (ControlRef theControl,ControlPartCode partCode){
     }
 }
 
-
-CV_IMPL int 
-cvCreateTrackbar( const char* trackbar_name, const char* window_name,int* val, int count, CvTrackbarCallback on_notify  )
+CV_IMPL int cvCreateTrackbar (const char* trackbar_name, const char* window_name,int* val, int count, CvTrackbarCallback on_notify)
 {
     int result = 0;
     
@@ -481,7 +491,8 @@ cvCreateTrackbar( const char* trackbar_name, const char* window_name,int* val, i
         EXIT;
     
     trackbar = icvFindTrackbarByName(window,trackbar_name);
-    if( !trackbar ) {
+    if( !trackbar ) 
+	{
         int len = strlen(trackbar_name);
         trackbar = (CvTrackbar*)cvAlloc(sizeof(CvTrackbar) + len + 1);
         memset( trackbar, 0, sizeof(*trackbar));
@@ -492,7 +503,8 @@ cvCreateTrackbar( const char* trackbar_name, const char* window_name,int* val, i
         trackbar->next = window->toolbar.first;
         window->toolbar.first = trackbar;
         
-        if( val ) {
+        if( val ) 
+		{
             int value = *val;
             if( value < 0 )
                 value = 0;
@@ -544,11 +556,15 @@ CV_IMPL void
 cvSetMouseCallback( const char* name, CvMouseCallback function, void* info)
 {
     CvWindow* window = icvFindWindowByName( name );
-    if (window != NULL){
+    if (window != NULL)
+	{
         window->on_mouse = function;
         window->on_mouse_param = info;
-    } else
+    } 
+	else
+	{
         fprintf(stdout,"Une erreur lors de cvSetMouseCallback, window nom trouvee : %s",name);
+	}
 }
 
 CV_IMPL int cvGetTrackbarPos( const char*, const char* )
@@ -604,7 +620,6 @@ CV_IMPL const char* cvGetWindowName( void* window_handle )
     
     return window_name;
 }
-
 
 
 CV_IMPL int cvNamedWindow( const char* name, int flags )
@@ -694,24 +709,10 @@ CV_IMPL int cvNamedWindow( const char* name, int flags )
     ShowWindow( outWindow );
     result = 1;
 	
-/*	{
-		// thank you sef!
-		// sean writes:
-		// Courtesy of Deric Horn and myself.
-		// 2004.05.28
-		ProcessSerialNumber psn;
-
-		err = GetCurrentProcess(&psn);
-		if (err == noErr)
-		{
-			(void)SetFrontProcess(&psn);
-		}
-	}
-*/
-	
     __END__;
     return result;
 }
+
 static pascal OSStatus windowEventHandler(EventHandlerCallRef nextHandler, EventRef theEvent, void *inUserData)
 {
     CvWindow* window = NULL;
@@ -822,37 +823,40 @@ static pascal OSStatus windowEventHandler(EventHandlerCallRef nextHandler, Event
     return eventNotHandledErr;
 }
 
-OSStatus keyHandler(EventHandlerCallRef hcr, EventRef theEvent, void* inUserData) {
+OSStatus keyHandler(EventHandlerCallRef hcr, EventRef theEvent, void* inUserData) 
+{
     UInt32 eventKind;
     UInt32 eventClass;
-    OSErr err = noErr;
-    eventKind = GetEventKind(theEvent);
-    eventClass = GetEventClass(theEvent);
-    err = GetEventParameter(theEvent, kEventParamKeyMacCharCodes, typeChar, NULL, sizeof(lastKey), NULL, &lastKey);
-    if (err != noErr){
-        lastKey = -1;
-    }
+    OSErr  err        = noErr;
+
+    eventKind  = GetEventKind     (theEvent);
+    eventClass = GetEventClass    (theEvent);
+    err        = GetEventParameter(theEvent, kEventParamKeyMacCharCodes, typeChar, NULL, sizeof(lastKey), NULL, &lastKey);
+    if (err != noErr)
+        lastKey = NO_KEY;
+		
     return noErr;
 }
 
-CV_IMPL int cvWaitKey( int maxWait)
+CV_IMPL int cvWaitKey (int maxWait)
 {
     EventRecord theEvent;
-    if (maxWait == 0) {
-        do {
-            WaitNextEvent( everyEvent ,&theEvent, kDurationForever,NULL);
-        } while (theEvent.what != keyDown);
-    } else {
-        UInt32 now = TickCount();
-        UInt32 end = now + MS_TO_TICKS(maxWait); 
-        theEvent.what = nullEvent; 
-        theEvent.when = 0; 
-        while ((theEvent.what != keyDown) && ((now = TickCount()) <= end)) { 
-            WaitNextEvent( everyEvent ,&theEvent, end-now,NULL);
-        } 
-    } 
-    int key = lastKey; 
-    lastKey = -1;
+	
+	// wait at least for one event (to allow mouse, etc. processing), exit if maxWait milliseconds passed (nullEvent)
+	UInt32 start = TickCount();
+	do
+	{
+		// remaining time until maxWait is over
+		UInt32 wait = EventTimeToTicks (maxWait / 1000.0) - (TickCount() - start);
+		if (wait < 0)
+			wait = 0;
+		
+        WaitNextEvent (everyEvent, &theEvent, maxWait > 0 ? wait : kDurationForever, NULL);
+	}
+	while (lastKey == NO_KEY  &&  theEvent.what != nullEvent);
+	
+    int key = lastKey;
+    lastKey = NO_KEY;
     return key;
 }
 
