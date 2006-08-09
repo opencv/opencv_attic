@@ -87,14 +87,16 @@ void read_contour_params( void )
 
 static void mark_contours_etalon( IplImage* img, int val )
 {
-    uchar* data = 0;
+    void* _data = 0;
+    uchar* data;
     int    i, step = 0;
     CvSize size;
     
     assert( img->depth == IPL_DEPTH_8U && img->nChannels == 1 && (val&1) != 0);
 
-    atsGetImageInfo( img, (void**)&data, &step, &size, 0, 0, 0 );
+    atsGetImageInfo( img, &_data, &step, &size, 0, 0, 0 );
 
+    data = (uchar*)_data;
     data += step;
     for( i = 1; i < size.height - 1; i++, data += step )
     {

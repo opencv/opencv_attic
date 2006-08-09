@@ -61,13 +61,19 @@ static int aContourMoments(void *arg)
 {
 
     CvSeqBlock contour_blk;
-    CvContour contour_h;
+    union
+    {
+       CvContour contour;
+       CvSeq seq;
+    }
+    h;
+
     CvMoments r_moments,moments;
     CvMoments mState;
     CvPoint *cp;
 /*    CvPoint cp[] ={0,0, 5,5, 5,0, 0,5};*/
 /*    CvPoint cp[] ={5,0, 10,5, 5,10, 0,5};*/
-/*	CvPoint cp[] ={0,0, 5,5, 5,0, 10,5, 10,0, 15,5, 15,0};*/
+/*  CvPoint cp[] ={0,0, 5,5, 5,0, 10,5, 10,0, 15,5, 15,0};*/
     int algr = (int)(size_t)arg;
     int width = 128;
     int height = 128;
@@ -83,7 +89,7 @@ static int aContourMoments(void *arg)
     double eps = 1.e-5, eps_rez = 1.0;
     double error_test = 0., error_area = 0., error_sec_area = 0.;
     double area = 0, sec_area = 0;
-	double H;
+    double H;
     int l,i,i1;
     IplImage *Iplimage;
     CvSize size;
@@ -184,8 +190,8 @@ static int aContourMoments(void *arg)
     r_moments.mu03 = cvGetCentralMoment(&mState, 0, 3)*0.5;
     r_moments.inv_sqrt_m00 = r_moments.m00 ? 1./sqrt(r_moments.m00) : 0;
 
-//	H = sqrt((r_moments.mu20 - r_moments.mu02) * (r_moments.mu20 - r_moments.mu02) + 
-//		          4 * r_moments.mu11 * r_moments.mu11) / 4;
+//  H = sqrt((r_moments.mu20 - r_moments.mu02) * (r_moments.mu20 - r_moments.mu02) + 
+//                4 * r_moments.mu11 * r_moments.mu11) / 4;
 
     cvReleaseImage(&Iplimage);
 
@@ -193,16 +199,16 @@ static int aContourMoments(void *arg)
 
 
     cvMakeSeqHeaderForArray(seq_type, sizeof(CvContour), sizeof(CvPoint),
-                            (char*)cp, nPoints2, (CvSeq*)&contour_h, &contour_blk);
+                            (char*)cp, nPoints2, &h.seq, &contour_blk);
 //    cvMakeSeqHeaderForArray(seq_type, sizeof(CvSeq), sizeof(CvPoint),
 //                            (char*)cp, nPoints2, &contour_h, &contour_blk));
 
 /*  countour moments calculation  */
     if(algr == 0) 
     {
-        cvContourMoments (&contour_h, &moments);
-		H = sqrt((moments.mu20 - moments.mu02) * (moments.mu20 - moments.mu02)/4 + 
-		          moments.mu11 * moments.mu11);
+        cvContourMoments (&h.contour, &moments);
+        H = sqrt((moments.mu20 - moments.mu02) * (moments.mu20 - moments.mu02)/4 + 
+                  moments.mu11 * moments.mu11);
 
         error_test = 0.;
         for(i=0;i<=12;i++)
@@ -219,9 +225,9 @@ static int aContourMoments(void *arg)
     else 
     {
 /*  countour's area calculation  */
-        area = cvContourArea (&contour_h);
+        area = cvContourArea (&h.contour);
         if(algr == 2)
-            sec_area = cvContourArea (&contour_h, cvSlice(n1,n2));
+            sec_area = cvContourArea (&h.contour, cvSlice(n1,n2));
         if(algr == 1)
         {
             error_area = fabs(r_moments.m00 - area)/r_moments.m00;
