@@ -947,6 +947,7 @@ static int foaBackProject(void* _type)
     IplImage* src32f[CV_HIST_MAX_DIM];
     IplImage* dst8u = 0;
     IplImage* dst32f = 0;
+    void *_src[CV_HIST_MAX_DIM], *_dst;
     int    step8u, step32f;
     const char* msg = "no errors";
     int code = TRS_OK;
@@ -1016,8 +1017,12 @@ static int foaBackProject(void* _type)
             for( i = 0; d[i]++, d[i] >= dims && i < CV_HIST_MAX_DIM; i++ ) d[i] = 0;
         }
 
+        for( i = 0; i < c_dims; i++ )
+            _src[i] = src8u[i];
+        _dst = dst8u;
+
         /* Calculating back project 8u non uniform */
-        cvCalcBackProject( src8u, dst8u, hist2 );
+        cvCalcArrBackProject( _src, _dst, hist2 );
         /* Checking results */
         for( y = 0; y < height; y++ )
         {
@@ -1034,7 +1039,7 @@ static int foaBackProject(void* _type)
         }
 
         /* Calculating back project 8u uniform */
-        cvCalcBackProject( src8u, dst8u, hist3 );
+        cvCalcArrBackProject( _src, _dst, hist3 );
         /* Checking results */
         for( y = 0; y < height; y++ )
         {
@@ -1050,8 +1055,12 @@ static int foaBackProject(void* _type)
             }
         }
 
+        for( i = 0; i < c_dims; i++ )
+            _src[i] = src32f[i];
+        _dst = dst32f;
+
         /* Calculating back project 32f non uniform */
-        cvCalcBackProject( src32f, dst32f, hist2 );
+        cvCalcArrBackProject( _src, _dst, hist2 );
         /* Checking results */
         for( y = 0; y < height; y++ )
         {
@@ -1068,7 +1077,7 @@ static int foaBackProject(void* _type)
         }
 
         /* Calculating back project 32f uniform */
-        cvCalcBackProject( src32f, dst32f, hist3 );
+        cvCalcArrBackProject( _src, _dst, hist3 );
         /* Checking results */
         for( y = 0; y < height; y++ )
         {
@@ -1244,6 +1253,7 @@ static int foaBackProjectPatch(void* _type)
     int    i, j, x, y, fl;
     IplImage* src8u[CV_HIST_MAX_DIM];
     IplImage* src32f[CV_HIST_MAX_DIM];
+    void *_src[CV_HIST_MAX_DIM], *_dst;
     IplImage* dst8u;
     IplImage* dst32f;
     IplImage* _dst8u;
@@ -1313,8 +1323,12 @@ static int foaBackProjectPatch(void* _type)
                            1, CV_COMP_CHISQR,
                            cvSize(range_width,range_height));
 
-        cvCalcBackProjectPatch( src8u, dst8u, cvSize(range_width,range_height),
-                                hist, CV_COMP_CHISQR, 1 );
+        for( i = 0; i < c_dims; i++ )
+            _src[i] = src8u[i];
+        _dst = dst8u;
+
+        cvCalcArrBackProjectPatch( _src, _dst, cvSize(range_width,range_height),
+                                   hist, CV_COMP_CHISQR, 1 );
         /* Checking results */
         l_err = atsCompare2Dfl((float*)dst8u->imageData, (float*)_dst8u->imageData,
                                cvSize(width, height), dst8u->widthStep, 0);
@@ -1322,8 +1336,12 @@ static int foaBackProjectPatch(void* _type)
         if(l_err)
             trsWrite( ATS_CON | ATS_LST, "cvCalcBackProjectPatch(8u) - error" );
 
-        cvCalcBackProjectPatch( src32f, dst32f, cvSize(range_width,range_height),
-                                hist, CV_COMP_CHISQR, 1 );
+        for( i = 0; i < c_dims; i++ )
+            _src[i] = src32f[i];
+        _dst = dst32f;
+
+        cvCalcArrBackProjectPatch( _src, _dst, cvSize(range_width,range_height),
+                                   hist, CV_COMP_CHISQR, 1 );
         /* Checking results */
         l_err = atsCompare2Dfl((float*)dst32f->imageData, (float*)_dst32f->imageData,
                                cvSize(width, height), dst32f->widthStep, 0);
