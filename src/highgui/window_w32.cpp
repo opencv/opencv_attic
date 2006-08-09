@@ -1276,8 +1276,10 @@ cvCreateTrackbar( const char* trackbar_name, const char* window_name,
 #else
 #ifndef TBSTYLE_AUTOSIZE
 #define TBSTYLE_AUTOSIZE        0x0010
+#define TBSTYLE_GROUP           0x0004
 #endif
-        tbs.fsStyle = TBSTYLE_AUTOSIZE;
+        //tbs.fsStyle = TBSTYLE_AUTOSIZE;
+        tbs.fsStyle = TBSTYLE_GROUP;
         tbs.iString = (INT_PTR)trackbar_text;
 #endif
         SendMessage(window->toolbar.toolbar, TB_ADDBUTTONS, 1, (LPARAM)&tbs);
