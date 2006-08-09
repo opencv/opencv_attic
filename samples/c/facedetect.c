@@ -1,4 +1,3 @@
-#ifndef _EiC
 #include "cv.h"
 #include "highgui.h"
 
@@ -11,7 +10,6 @@
 #include <limits.h>
 #include <time.h>
 #include <ctype.h>
-#endif
 
 #ifdef _EiC
 #define WIN32
@@ -40,10 +38,8 @@ int main( int argc, char** argv )
     }
     else
     {
-        fprintf( stderr,
-        "Usage: facedetect --cascade=\"<cascade_path>\" [filename|camera_index]\n" );
-        return -1;
-        /*input_name = argc > 1 ? argv[1] : 0;*/
+        cascade_name = "../../data/haarcascades/haarcascade_frontalface_alt2.xml";
+        input_name = argc > 1 ? argv[1] : 0;
     }
 
     cascade = (CvHaarClassifierCascade*)cvLoad( cascade_name, 0, 0, 0 );
@@ -51,6 +47,8 @@ int main( int argc, char** argv )
     if( !cascade )
     {
         fprintf( stderr, "ERROR: Could not load classifier cascade\n" );
+        fprintf( stderr,
+        "Usage: facedetect --cascade=\"<cascade_path>\" [filename|camera_index]\n" );
         return -1;
     }
     storage = cvCreateMemStorage(0);
@@ -134,12 +132,23 @@ int main( int argc, char** argv )
 
 void detect_and_draw( IplImage* img )
 {
+    static CvScalar colors[] = 
+    {
+        {{0,0,255}},
+        {{0,128,255}},
+        {{0,255,255}},
+        {{0,255,0}},
+        {{255,128,0}},
+        {{255,255,0}},
+        {{255,0,0}},
+        {{255,0,255}}
+    };
+
     double scale = 1.3;
     IplImage* gray = cvCreateImage( cvSize(img->width,img->height), 8, 1 );
     IplImage* small_img = cvCreateImage( cvSize( cvRound (img->width/scale),
-						 cvRound (img->height/scale)),
-					 8, 1 );
-    CvPoint pt1, pt2;
+                         cvRound (img->height/scale)),
+                     8, 1 );
     int i;
 
     cvCvtColor( img, gray, CV_BGR2GRAY );
@@ -151,18 +160,19 @@ void detect_and_draw( IplImage* img )
     {
         double t = (double)cvGetTickCount();
         CvSeq* faces = cvHaarDetectObjects( small_img, cascade, storage,
-                                            1.2, 2, 0/*CV_HAAR_DO_CANNY_PRUNING*/,
+                                            1.1, 2, 0/*CV_HAAR_DO_CANNY_PRUNING*/,
                                             cvSize(30, 30) );
         t = (double)cvGetTickCount() - t;
         printf( "detection time = %gms\n", t/((double)cvGetTickFrequency()*1000.) );
         for( i = 0; i < (faces ? faces->total : 0); i++ )
         {
             CvRect* r = (CvRect*)cvGetSeqElem( faces, i );
-            pt1.x = cvRound (r->x*scale);
-            pt2.x = cvRound ((r->x+r->width)*scale);
-            pt1.y = cvRound (r->y*scale);
-            pt2.y = cvRound ((r->y+r->height)*scale);
-            cvRectangle( img, pt1, pt2, CV_RGB(255,0,0), 3, 8, 0 );
+            CvPoint center;
+            int radius;
+            center.x = cvRound((r->x + r->width*0.5)*scale);
+            center.y = cvRound((r->y + r->height*0.5)*scale);
+            radius = cvRound((r->width + r->height)*0.25*scale);
+            cvCircle( img, center, radius, colors[i%8], 3, 8, 0 );
         }
     }
 
@@ -170,7 +180,3 @@ void detect_and_draw( IplImage* img )
     cvReleaseImage( &gray );
     cvReleaseImage( &small_img );
 }
-
-#ifdef _EiC
-main(1,"facedetect.c");
-#endif

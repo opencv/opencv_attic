@@ -222,10 +222,11 @@ void interactive_classification( CvDTree* dtree, const char** var_desc )
     {
         const CvDTreeNode* node;
         
-        printf( "Start/Proceed with interactive classification (y/n): " );
+        printf( "Start/Proceed with interactive mushroom classification (y/n): " );
         scanf( "%1s", input );
         if( input[0] != 'y' && input[0] != 'Y' )
             break;
+        printf( "Enter 1-letter answers, '?' for missing/unknown value...\n" ); 
 
         // custom version of predict
         node = root;
@@ -288,16 +289,13 @@ int main( int argc, char** argv )
 {
     CvMat *data = 0, *missing = 0, *responses = 0;
     CvDTree* dtree;
-    
-    if( argc < 2 )
-    {
-        printf( "Usage: dtree <path to agaricus-lepiota.data>\n" );
-        return 0;
-    }
+    const char* base_path = argc >= 2 ? argv[1] : "agaricus-lepiota.data";
 
-    if( !mushroom_read_database( argv[1], &data, &missing, &responses ) )
+    if( !mushroom_read_database( base_path, &data, &missing, &responses ) )
     {
-        printf( "Unable to load the training database\n" );
+        printf( "Unable to load the training database\n"
+                "Pass it as a parameter: dtree <path to agaricus-lepiota.data>\n" );
+        return 0;
         return -1;
     }
 
