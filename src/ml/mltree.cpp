@@ -2971,7 +2971,7 @@ void CvDTree::read_train_data_params( CvFileStorage* fs, CvFileNode* node )
     data = new CvDTreeTrainData;
 
     is_classifier = (cvReadIntByName( fs, node, "is_classifier" ) != 0);
-    data->is_classifier = is_classifier;
+    data->is_classifier = (is_classifier != 0);
     data->var_all = cvReadIntByName( fs, node, "var_all" );
     data->var_count = cvReadIntByName( fs, node, "var_count", data->var_all );
     data->cat_var_count = cvReadIntByName( fs, node, "cat_var_count" );
