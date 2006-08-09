@@ -3876,7 +3876,7 @@ icvWriteImage( CvFileStorage* fs, const char* name,
     const IplImage* image = (const IplImage*)struct_ptr;
     char dt_buf[16], *dt;
     CvSize size;
-    int y;
+    int y, depth;
 
     assert( CV_IS_IMAGE(image) );
 
@@ -3902,13 +3902,13 @@ icvWriteImage( CvFileStorage* fs, const char* name,
         cvEndWriteStruct( fs );
     }
 
-    sprintf( dt_buf, "%d%c", image->nChannels,
-             icvTypeSymbol[icvIplToCvDepth(image->depth)] );
+    depth = icvIplToCvDepth(image->depth);
+    sprintf( dt_buf, "%d%c", image->nChannels, icvTypeSymbol[depth] );
     dt = dt_buf + (dt_buf[2] == '\0' && dt_buf[0] == '1');
     cvWriteString( fs, "dt", dt, 0 );
 
     size = cvSize(image->width, image->height);
-    if( size.width*image->nChannels*icvIplToCvDepth(image->depth) == image->widthStep )
+    if( size.width*image->nChannels*CV_ELEM_SIZE(depth) == image->widthStep )
     {
         size.width *= size.height;
         size.height = 1;
