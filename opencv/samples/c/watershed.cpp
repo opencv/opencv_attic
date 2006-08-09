@@ -47,7 +47,8 @@ int main( int argc, char** argv )
     printf( "Hot keys: \n"
             "\tESC - quit the program\n"
             "\tr - restore the original image\n"
-            "\tw - run watershed algorithm\n"
+            "\tw or ENTER - run watershed algorithm\n"
+            "\t\t(before running it, roughly mark the areas on the image)\n"
             "\t  (before that, roughly outline several markers on the image)\n" );
     
     cvNamedWindow( "image", 1 );
@@ -81,7 +82,7 @@ int main( int argc, char** argv )
             cvShowImage( "image", img );
         }
 
-        if( c == 'w' )
+        if( c == 'w' || c == '\r' )
         {
             CvMemStorage* storage = cvCreateMemStorage(0);
             CvSeq* contours = 0;

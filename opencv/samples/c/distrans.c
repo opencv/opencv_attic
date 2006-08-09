@@ -2,17 +2,17 @@
 #pragma package <opencv>
 #endif
 
-#ifndef _EiC
 #include "cv.h"
 #include "highgui.h"
 #include <stdio.h>
-#endif
 
 char wndname[] = "Distance transform";
 char tbarname[] = "Threshold";
+int mask_size = CV_DIST_MASK_5;
+int build_voronoi = 0;
 int edge_thresh = 100;
 
-// The output images
+// The output and temporary images
 IplImage* dist = 0;
 IplImage* dist8u1 = 0;
 IplImage* dist8u2 = 0;
@@ -21,26 +21,69 @@ IplImage* dist32s = 0;
 
 IplImage* gray = 0;
 IplImage* edge = 0;
+IplImage* labels = 0;
 
-// define a trackbar callback
+// threshold trackbar callback
 void on_trackbar( int dummy )
 {
-    dummy;
+    static const uchar colors[][3] = 
+    {
+        {0,0,0},
+        {255,0,0},
+        {255,128,0},
+        {255,255,0},
+        {0,255,0},
+        {0,128,255},
+        {0,255,255},
+        {0,0,255},
+        {255,0,255}
+    };
     
-    cvThreshold( gray, edge, (float)edge_thresh, (float)edge_thresh, CV_THRESH_BINARY );
-    //Distance transform                  
-    cvDistTransform( edge, dist, CV_DIST_L2, CV_DIST_MASK_5, NULL, NULL );
+    int msize = mask_size;
 
-    cvConvertScale( dist, dist, 5000.0, 0 );
-    cvPow( dist, dist, 0.5 );
+    cvThreshold( gray, edge, (float)edge_thresh, (float)edge_thresh, CV_THRESH_BINARY );
+
+    if( build_voronoi )
+        msize = CV_DIST_MASK_5;
+
+    cvDistTransform( edge, dist, CV_DIST_L2, msize, NULL, build_voronoi ? labels : NULL );
+
+    if( !build_voronoi )
+    {
+        // begin "painting" the distance transform result
+        cvConvertScale( dist, dist, 5000.0, 0 );
+        cvPow( dist, dist, 0.5 );
     
-    cvConvertScale( dist, dist32s, 1.0, 0.5 );
-    cvAndS( dist32s, cvScalarAll(255), dist32s, 0 );
-    cvConvertScale( dist32s, dist8u1, 1, 0 );
-    cvConvertScale( dist32s, dist32s, -1, 0 );
-    cvAddS( dist32s, cvScalarAll(255), dist32s, 0 );
-    cvConvertScale( dist32s, dist8u2, 1, 0 );
-    cvMerge( dist8u1, dist8u2, dist8u2, 0, dist8u );
+        cvConvertScale( dist, dist32s, 1.0, 0.5 );
+        cvAndS( dist32s, cvScalarAll(255), dist32s, 0 );
+        cvConvertScale( dist32s, dist8u1, 1, 0 );
+        cvConvertScale( dist32s, dist32s, -1, 0 );
+        cvAddS( dist32s, cvScalarAll(255), dist32s, 0 );
+        cvConvertScale( dist32s, dist8u2, 1, 0 );
+        cvMerge( dist8u1, dist8u2, dist8u2, 0, dist8u );
+        // end "painting" the distance transform result
+    }
+    else
+    {
+        int i, j;
+        for( i = 0; i < labels->height; i++ )
+        {
+            int* ll = (int*)(labels->imageData + i*labels->widthStep);
+            float* dd = (float*)(dist->imageData + i*dist->widthStep);
+            uchar* d = (uchar*)(dist8u->imageData + i*dist8u->widthStep);
+            for( j = 0; j < labels->width; j++ )
+            {
+                int idx = ll[j] == 0 || dd[j] == 0 ? 0 : (ll[j]-1)%8 + 1;
+                int b = cvRound(colors[idx][0]);
+                int g = cvRound(colors[idx][1]);
+                int r = cvRound(colors[idx][2]);
+                d[j*3] = (uchar)b;
+                d[j*3+1] = (uchar)g;
+                d[j*3+2] = (uchar)r;
+            }
+        }
+    }
+    
     cvShowImage( wndname, dist8u );
 }
 
@@ -51,27 +94,61 @@ int main( int argc, char** argv )
     if( (gray = cvLoadImage( filename, 0 )) == 0 )
         return -1;
 
-    // Create the output image
-    dist = cvCreateImage( cvSize(gray->width,gray->height), IPL_DEPTH_32F, 1 );
+    printf( "Hot keys: \n"
+        "\tESC - quit the program\n"
+        "\t3 - use 3x3 mask\n"
+        "\t5 - use 5x5 mask\n"
+        "\t0 - use precise distance transform\n"
+        "\tv - switch Voronoi diagram mode on/off\n"
+        "\tENTER - loop through all the modes\n" );
+
+    dist = cvCreateImage( cvGetSize(gray), IPL_DEPTH_32F, 1 );
     dist8u1 = cvCloneImage( gray );
     dist8u2 = cvCloneImage( gray );
-    dist8u = cvCreateImage( cvSize(gray->width,gray->height), IPL_DEPTH_8U, 3 );
-    dist32s = cvCreateImage( cvSize(gray->width,gray->height), IPL_DEPTH_32S, 1 );
-
-    // Convert to grayscale
+    dist8u = cvCreateImage( cvGetSize(gray), IPL_DEPTH_8U, 3 );
+    dist32s = cvCreateImage( cvGetSize(gray), IPL_DEPTH_32S, 1 );
     edge = cvCloneImage( gray );
+    labels = cvCreateImage( cvGetSize(gray), IPL_DEPTH_32S, 1 );
 
-    // Create a window
     cvNamedWindow( wndname, 1 );
 
-    // create a toolbar 
     cvCreateTrackbar( tbarname, wndname, &edge_thresh, 255, on_trackbar );
 
-    // Show the image
-    on_trackbar(0);
+    for(;;)
+    {
+        int c;
+        
+        // Call to update the view
+        on_trackbar(0);
 
-    // Wait for a key stroke; the same function arranges events processing
-    cvWaitKey(0);
+        c = cvWaitKey(0);
+
+        if( c == 27 )
+            break;
+
+        if( c == '3' )
+            mask_size = CV_DIST_MASK_3;
+        else if( c == '5' )
+            mask_size = CV_DIST_MASK_5;
+        else if( c == '0' )
+            mask_size = CV_DIST_MASK_PRECISE;
+        else if( c == 'v' )
+            build_voronoi ^= 1;
+        else if( c == '\r' )
+        {
+            if( build_voronoi )
+            {
+                build_voronoi = 0;
+                mask_size = CV_DIST_MASK_3;
+            }
+            else if( mask_size == CV_DIST_MASK_3 )
+                mask_size = CV_DIST_MASK_5;
+            else if( mask_size == CV_DIST_MASK_5 )
+                mask_size = CV_DIST_MASK_PRECISE;
+            else if( mask_size == CV_DIST_MASK_PRECISE )
+                build_voronoi = 1;
+        }
+    }
 
     cvReleaseImage( &gray );
     cvReleaseImage( &edge );
@@ -80,12 +157,9 @@ int main( int argc, char** argv )
     cvReleaseImage( &dist8u1 );
     cvReleaseImage( &dist8u2 );
     cvReleaseImage( &dist32s );
+    cvReleaseImage( &labels );
     
     cvDestroyWindow( wndname );
     
     return 0;
 }
-
-#ifdef _EiC
-main(1,"distrans.c");
-#endif

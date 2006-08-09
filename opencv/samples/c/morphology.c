@@ -1,61 +1,56 @@
-#ifdef _CH_
-#pragma package <opencv>
-#endif
-
-#ifndef _EiC
 #include <cv.h>
 #include <highgui.h>
 #include <stdlib.h>
 #include <stdio.h>
-#endif
 
 IplImage* src = 0;
-IplImage* image = 0;
-IplImage* dest = 0;
+IplImage* dst = 0;
 
 IplConvKernel* element = 0;
-const int element_shape = CV_SHAPE_RECT;
+int element_shape = CV_SHAPE_RECT;
 
 //the address of variable which receives trackbar position update 
-int global_pos = 0;
+int max_iters = 10;
+int open_close_pos = 0;
+int erode_dilate_pos = 0;
 
-//callback function for slider , implements opening 
-void Opening(int pos)   
+// callback function for open/close trackbar
+void OpenClose(int pos)   
 {
-    element = cvCreateStructuringElementEx( pos*2+1, pos*2+1, pos, pos, element_shape, 0 );
-    cvErode(src,image,element,1);
-    cvDilate(image,dest,element,1);
+    int n = open_close_pos - max_iters;
+    int an = n > 0 ? n : -n;
+    element = cvCreateStructuringElementEx( an*2+1, an*2+1, an, an, element_shape, 0 );
+    if( n < 0 )
+    {
+        cvErode(src,dst,element,1);
+        cvDilate(dst,dst,element,1);
+    }
+    else
+    {
+        cvDilate(src,dst,element,1);
+        cvErode(dst,dst,element,1);
+    }
     cvReleaseStructuringElement(&element);
-    cvShowImage("Opening&Closing window",dest);
+    cvShowImage("Open/Close",dst);
 }   
 
-//callback function for slider , implements closing 
-void Closing(int pos)   
+// callback function for erode/dilate trackbar
+void ErodeDilate(int pos)   
 {
-    element = cvCreateStructuringElementEx( pos*2+1, pos*2+1, pos, pos, element_shape, 0 );
-    cvDilate(src,image,element,1);
-    cvErode(image,dest,element,1);
+    int n = erode_dilate_pos - max_iters;
+    int an = n > 0 ? n : -n;
+    element = cvCreateStructuringElementEx( an*2+1, an*2+1, an, an, element_shape, 0 );
+    if( n < 0 )
+    {
+        cvErode(src,dst,element,1);
+    }
+    else
+    {
+        cvDilate(src,dst,element,1);
+    }
     cvReleaseStructuringElement(&element);
-    cvShowImage("Opening&Closing window",dest);
-}
-
-//callback function for slider , implements erosion 
-void Erosion(int pos)   
-{
-    element = cvCreateStructuringElementEx( pos*2+1, pos*2+1, pos, pos, element_shape, 0 );
-    cvErode(src,dest,element,1);
-    cvReleaseStructuringElement(&element);
-    cvShowImage("Erosion&Dilation window",dest);
-}
-
-//callback function for slider , implements dilation
-void Dilation(int pos)   
-{
-    element = cvCreateStructuringElementEx( pos*2+1, pos*2+1, pos, pos, element_shape, 0 );
-    cvDilate(src,dest,element,1);
-    cvReleaseStructuringElement(&element);
-    cvShowImage("Erosion&Dilation window",dest);
-}
+    cvShowImage("Erode/Dilate",dst);
+}   
 
 
 int main( int argc, char** argv )
@@ -64,35 +59,50 @@ int main( int argc, char** argv )
     if( (src = cvLoadImage(filename,1)) == 0 )
         return -1;
 
-    image = cvCloneImage(src);
-    dest = cvCloneImage(src);
+    printf( "Hot keys: \n"
+        "\tESC - quit the program\n"
+        "\tr - use rectangle structuring element\n"
+        "\te - use elliptic structuring element\n"
+        "\tc - use cross-shaped structuring element\n"
+        "\tENTER - loop through all the options\n" );
+
+    dst = cvCloneImage(src);
 
     //create windows for output images
-    cvNamedWindow("Opening&Closing window",1);
-    cvNamedWindow("Erosion&Dilation window",1);
+    cvNamedWindow("Open/Close",1);
+    cvNamedWindow("Erode/Dilate",1);
 
-    cvShowImage("Opening&Closing window",src);
-    cvShowImage("Erosion&Dilation window",src);
+    open_close_pos = erode_dilate_pos = max_iters;
+    cvCreateTrackbar("iterations", "Open/Close",&open_close_pos,max_iters*2+1,OpenClose);
+    cvCreateTrackbar("iterations", "Erode/Dilate",&erode_dilate_pos,max_iters*2+1,ErodeDilate);
 
-    cvCreateTrackbar("Open","Opening&Closing window",&global_pos,10,Opening);
-    cvCreateTrackbar("Close","Opening&Closing window",&global_pos,10,Closing);
-    cvCreateTrackbar("Dilate","Erosion&Dilation window",&global_pos,10,Dilation);
-    cvCreateTrackbar("Erode","Erosion&Dilation window",&global_pos,10,Erosion);
+    for(;;)
+    {
+        int c;
+        
+        OpenClose(open_close_pos);
+        ErodeDilate(erode_dilate_pos);
+        c = cvWaitKey(0);
 
-    cvWaitKey(0);
-    //releases header an dimage data  
+        if( c == 27 )
+            break;
+        if( c == 'e' )
+            element_shape = CV_SHAPE_ELLIPSE;
+        else if( c == 'r' )
+            element_shape = CV_SHAPE_RECT;
+        else if( c == 'c' )
+            element_shape = CV_SHAPE_CROSS;
+        else if( c == '\r' )
+            element_shape = (element_shape + 1) % 3;
+    }
+
+    //release images
     cvReleaseImage(&src);
-    cvReleaseImage(&image);
-    cvReleaseImage(&dest);
-    //destroys windows 
-    cvDestroyWindow("Opening&Closing window"); 
-    cvDestroyWindow("Erosion&Dilation window"); 
+    cvReleaseImage(&dst);
+
+    //destroy windows 
+    cvDestroyWindow("Open/Close"); 
+    cvDestroyWindow("Erode/Dilate"); 
 
     return 0;
 }
-
-#ifdef _EiC
-main(1,"morphology.c");
-#endif
-  
-

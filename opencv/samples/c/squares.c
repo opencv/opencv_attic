@@ -7,19 +7,16 @@
 #pragma package <opencv>
 #endif
 
-#ifndef _EiC
 #include "cv.h"
 #include "highgui.h"
 #include <stdio.h>
 #include <math.h>
 #include <string.h>
-#endif
 
 int thresh = 50;
 IplImage* img = 0;
 IplImage* img0 = 0;
 CvMemStorage* storage = 0;
-CvPoint pt[4];
 const char* wndname = "Square Detection Demo";
 
 // helper function:
@@ -163,18 +160,14 @@ void drawSquares( IplImage* img, CvSeq* squares )
     // read 4 sequence elements at a time (all vertices of a square)
     for( i = 0; i < squares->total; i += 4 )
     {
-        CvPoint* rect = pt;
+        CvPoint pt[4], *rect = pt;
         int count = 4;
         
         // read 4 vertices
-        memcpy( pt, reader.ptr, squares->elem_size );
-        CV_NEXT_SEQ_ELEM( squares->elem_size, reader );
-        memcpy( pt + 1, reader.ptr, squares->elem_size );
-        CV_NEXT_SEQ_ELEM( squares->elem_size, reader );
-        memcpy( pt + 2, reader.ptr, squares->elem_size );
-        CV_NEXT_SEQ_ELEM( squares->elem_size, reader );
-        memcpy( pt + 3, reader.ptr, squares->elem_size );
-        CV_NEXT_SEQ_ELEM( squares->elem_size, reader );
+        CV_READ_SEQ_ELEM( pt[0], reader );
+        CV_READ_SEQ_ELEM( pt[1], reader );
+        CV_READ_SEQ_ELEM( pt[2], reader );
+        CV_READ_SEQ_ELEM( pt[3], reader );
         
         // draw the square as a closed polyline 
         cvPolyLine( cpy, &rect, &count, 1, 1, CV_RGB(0,255,0), 3, CV_AA, 0 );
@@ -185,12 +178,6 @@ void drawSquares( IplImage* img, CvSeq* squares )
     cvReleaseImage( &cpy );
 }
 
-
-void on_trackbar( int a )
-{
-    if( img )
-        drawSquares( img, findSquares4( img, storage ) );
-}
 
 char* names[] = { "pic1.png", "pic2.png", "pic3.png",
                   "pic4.png", "pic5.png", "pic6.png", 0 };
@@ -215,10 +202,10 @@ int main(int argc, char** argv)
         // create window and a trackbar (slider) with parent "image" and set callback
         // (the slider regulates upper threshold, passed to Canny edge detector) 
         cvNamedWindow( wndname, 1 );
-        cvCreateTrackbar( "canny thresh", wndname, &thresh, 1000, on_trackbar );
         
-        // force the image processing
-        on_trackbar(0);
+        // find and draw the squares
+        drawSquares( img, findSquares4( img, storage ) );
+        
         // wait for key.
         // Also the function cvWaitKey takes care of event processing
         c = cvWaitKey(0);
@@ -235,7 +222,3 @@ int main(int argc, char** argv)
     
     return 0;
 }
-
-#ifdef _EiC
-main(1,"squares.c");
-#endif
