@@ -104,7 +104,7 @@ icvRetrieveImage( void* obj )
 }
 
 
-bool CvImage::read( const char* filename, const char* imgname )
+bool CvImage::load( const char* filename, const char* imgname, int color )
 {
     IplImage* img = 0;
 
@@ -113,11 +113,23 @@ bool CvImage::read( const char* filename, const char* imgname )
     __BEGIN__;
 
     if( icvIsXmlOrYaml(filename) )
+    {
         img = icvRetrieveImage(cvLoad(filename,0,imgname));
+        if( (img->nChannels > 1) != (color == 0) )
+            CV_ERROR( CV_StsNotImplemented,
+            "RGB<->Grayscale conversion is not implemented for images stored in XML/YAML" );
+        /*{
+            IplImage* temp_img = 0;
+            CV_CALL( temp_img = cvCreateImage( cvGetSize(img), img->depth, color > 0 ? 3 : 1 ));
+            cvCvtColor( img, temp_img, color > 0 ? CV_GRAY2BGR : CV_BGR2GRAY );
+            cvReleaseImage( &img );
+            img = temp_img;
+        }*/
+    }
     else
     {
         if( load_image )
-            img = load_image( filename, -1 );
+            img = load_image( filename, color );
         else
             CV_ERROR( CV_StsNotImplemented,
             "Loading an image stored in such a format requires HigGUI.\n"
@@ -167,7 +179,7 @@ bool CvImage::read( CvFileStorage* fs, const char* seqname, int idx )
 }
 
 
-void CvImage::write( const char* filename, const char* imgname )
+void CvImage::save( const char* filename, const char* imgname )
 {
     CV_FUNCNAME( "CvImage::write" );
     __BEGIN__;
@@ -261,7 +273,7 @@ icvRetrieveMatrix( void* obj )
 }
 
 
-bool CvMatrix::read( const char* filename, const char* matname )
+bool CvMatrix::load( const char* filename, const char* matname, int color )
 {
     CvMat* m = 0;
 
@@ -270,11 +282,25 @@ bool CvMatrix::read( const char* filename, const char* matname )
     __BEGIN__;
 
     if( icvIsXmlOrYaml(filename) )
+    {
         m = icvRetrieveMatrix(cvLoad(filename,0,matname));
+
+        if( (CV_MAT_CN(m->type) > 1) != (color == 0) )
+            CV_ERROR( CV_StsNotImplemented,
+            "RGB<->Grayscale conversion is not implemented for matrices stored in XML/YAML" );
+        /*{
+            CvMat* temp_mat;
+            CV_CALL( temp_mat = cvCreateMat( m->rows, m->cols,
+                CV_MAKETYPE(CV_MAT_DEPTH(m->type), color > 0 ? 3 : 1 )));
+            cvCvtColor( m, temp_mat, color > 0 ? CV_GRAY2BGR : CV_BGR2GRAY );
+            cvReleaseMat( &m );
+            m = temp_mat;
+        }*/
+    }
     else
     {
         if( load_image_m )
-            m = load_image_m( filename, -1 );
+            m = load_image_m( filename, color );
         else
             CV_ERROR( CV_StsNotImplemented,
             "Loading an image stored in such a format requires HigGUI.\n"
@@ -324,7 +350,7 @@ bool CvMatrix::read( CvFileStorage* fs, const char* seqname, int idx )
 }
 
 
-void CvMatrix::write( const char* filename, const char* matname )
+void CvMatrix::save( const char* filename, const char* matname )
 {
     CV_FUNCNAME( "CvMatrix::write" );
     __BEGIN__;
