@@ -138,6 +138,7 @@ public:
 protected:
     void get_test_array_types_and_sizes( int test_case_idx, CvSize** sizes, int** types );
     void get_minmax_bounds( int i, int j, int type, CvScalar* low, CvScalar* high );
+    double get_success_error_level( int /*test_case_idx*/, int i, int j );
     void run_func();
     void prepare_to_validation( int test_case_idx );
     int out_type;
@@ -148,6 +149,15 @@ CxCore_ExpTest::CxCore_ExpTest()
     : CxCore_MathTest( "math-exp", "cvExp" )
 {
     out_type = 0;
+}
+
+
+double CxCore_ExpTest::get_success_error_level( int /*test_case_idx*/, int i, int j )
+{
+    int in_depth = CV_MAT_DEPTH(test_mat[INPUT][0].type);
+    int out_depth = CV_MAT_DEPTH(test_mat[OUTPUT][0].type);
+    int min_depth = MIN(in_depth, out_depth);
+    return min_depth == CV_32F ? 1e-5 : 1e-8;
 }
 
 
@@ -2397,7 +2407,7 @@ void CxCore_InvertTest::print_timing_params( int test_case_idx, char* ptr, int p
 
 double CxCore_InvertTest::get_success_error_level( int /*test_case_idx*/, int, int )
 {
-    return CV_MAT_DEPTH(cvGetElemType(test_array[OUTPUT][0])) == CV_32F ? 1e-2 : 1e-8;
+    return CV_MAT_DEPTH(cvGetElemType(test_array[OUTPUT][0])) == CV_32F ? 1e-2 : 1e-7;
 }
 
 int CxCore_InvertTest::prepare_test_case( int test_case_idx )
