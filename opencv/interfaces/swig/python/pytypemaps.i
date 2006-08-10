@@ -618,7 +618,7 @@
     int i;
 
 	if(!PyList_Check($input)){
-		PyErr_SetString(PyExc_TypeError, "cvFindCornerSubPix: Expected a list");
+		PyErr_SetString(PyExc_TypeError, "Expected a list");
 		return NULL;
 	}
 
@@ -667,33 +667,43 @@
 	$result = SWIG_AppendResult( $result, &to_add, 1);
 }
 
-#if 0
 /**
  * return the corners for cvFindChessboardCorners
- * TODO: fix this to work simultaneously with cvFindCornerSubPix
  */
-%typemap(in, numinputs=1) (CvSize pattern_size, CvPoint2D32f * corners, int * corner_count) 
-     (int tmpCount) {
-	CvSize * pattern_size;
+%typemap(in, numinputs=1) (CvSize pattern_size, CvPoint2D32f * corners, int * corner_count ) 
+     (CvSize * pattern_size, CvPoint2D32f * tmp_corners, int tmp_ncorners) {
 	if( SWIG_ConvertPtr($input, (void **)&pattern_size, $descriptor( CvSize * ), SWIG_POINTER_EXCEPTION ) == -1){
 		return NULL;
 	}
+	tmp_ncorners = pattern_size->width*pattern_size->height;
 
-    tmpCount = pattern_size->width*pattern_size->height;
-	CvPoint2D32f * c = (CvPoint2D32f *) malloc(sizeof(CvPoint2D32f)*tmpCount);
+	tmp_corners = (CvPoint2D32f *) malloc(sizeof(CvPoint2D32f)*tmp_ncorners);
 	$1 = *pattern_size;
-	$2 = c;
-	$3 = NULL;
+	$2 = tmp_corners;
+	$3 = &tmp_ncorners;
 }
-%typemap(argout) (CvPoint2D32f * corners, int * corner_count) {
-    PyObject *to_add_1;
 
-    /* extract the pointers we want to add to the returned tuple */
-    to_add_1 = SWIG_NewPointerObj ($1, $descriptor(CvPoint2D32f *), 0);
+%typemap(argout) (CvSize pattern_size, CvPoint2D32f * corners, int * corner_count){
+    int i;
+    PyObject *to_add;
 
-	$result = SWIG_AppendResult($result, &to_add_1, 1);
+    /* create the list to return */
+    to_add = PyList_New ( tmp_ncorners$argnum );
+
+    /* extract all the corner values of the result, and add it to the
+       final resulting list */
+    for (i = 0; i < tmp_ncorners$argnum; i++) {
+		CvPoint2D32f * pt = new CvPoint2D32f;
+		pt->x = tmp_corners$argnum[i].x;
+		pt->y = tmp_corners$argnum[i].y;
+		
+    	PyList_SetItem (to_add, i,
+            SWIG_NewPointerObj( pt, $descriptor(CvPoint2D32f *), 0));
+    }
+
+	$result = SWIG_AppendResult( $result, &to_add, 1);
+    free(tmp_corners$argnum);
 }
-#endif
 
 /**
  * return the matrices for cvCameraCalibrate

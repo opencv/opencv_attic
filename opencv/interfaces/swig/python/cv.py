@@ -1,9 +1,9 @@
-# This file was created automatically by SWIG 1.3.27.
+# This file was created automatically by SWIG.
 # Don't modify this file, modify the SWIG interface instead.
+# This file is compatible with both classic and new-style classes.
 
 import _cv
 
-# This file is compatible with both classic and new-style classes.
 def _swig_setattr_nondynamic(self,class_type,name,value,static=1):
     if (name == "this"):
         if isinstance(value, class_type):
@@ -75,7 +75,7 @@ class CvRNG_WrapperPtr(CvRNG_Wrapper):
     def __init__(self, this):
         _swig_setattr(self, CvRNG_Wrapper, 'this', this)
         if not hasattr(self,"thisown"): _swig_setattr(self, CvRNG_Wrapper, 'thisown', 0)
-        self.__class__ = CvRNG_Wrapper
+        _swig_setattr(self, CvRNG_Wrapper,self.__class__,CvRNG_Wrapper)
 _cv.CvRNG_Wrapper_swigregister(CvRNG_WrapperPtr)
 
 class CvSubdiv2DEdge_Wrapper(_object):
@@ -117,7 +117,7 @@ class CvSubdiv2DEdge_WrapperPtr(CvSubdiv2DEdge_Wrapper):
     def __init__(self, this):
         _swig_setattr(self, CvSubdiv2DEdge_Wrapper, 'this', this)
         if not hasattr(self,"thisown"): _swig_setattr(self, CvSubdiv2DEdge_Wrapper, 'thisown', 0)
-        self.__class__ = CvSubdiv2DEdge_Wrapper
+        _swig_setattr(self, CvSubdiv2DEdge_Wrapper,self.__class__,CvSubdiv2DEdge_Wrapper)
 _cv.CvSubdiv2DEdge_Wrapper_swigregister(CvSubdiv2DEdge_WrapperPtr)
 
 
@@ -127,6 +127,13 @@ def cvSegmentMotion(*args):
         double seg_thresh) -> CvSeq_ConnectedComp
     """
     return _cv.cvSegmentMotion(*args)
+def cvHoughLines2( *args ):
+	seq = cvHoughLinesUntyped( *args )
+	type = CV_SEQ_ELTYPE(seq) 
+	if type == CV_32SC4:
+		return CvSeq_CvPoint_2.cast(seq)
+	return CvSeq_float_2.cast(seq)
+
 
 def cvFree(*args):
     """cvFree(void ptr)"""
@@ -1091,7 +1098,7 @@ class Cv32sufPtr(Cv32suf):
     def __init__(self, this):
         _swig_setattr(self, Cv32suf, 'this', this)
         if not hasattr(self,"thisown"): _swig_setattr(self, Cv32suf, 'thisown', 0)
-        self.__class__ = Cv32suf
+        _swig_setattr(self, Cv32suf,self.__class__,Cv32suf)
 _cv.Cv32suf_swigregister(Cv32sufPtr)
 
 def cvCvtSeqToArray(*args):
@@ -1176,7 +1183,7 @@ class Cv64sufPtr(Cv64suf):
     def __init__(self, this):
         _swig_setattr(self, Cv64suf, 'this', this)
         if not hasattr(self,"thisown"): _swig_setattr(self, Cv64suf, 'thisown', 0)
-        self.__class__ = Cv64suf
+        _swig_setattr(self, Cv64suf,self.__class__,Cv64suf)
 _cv.Cv64suf_swigregister(Cv64sufPtr)
 
 
@@ -1496,7 +1503,7 @@ class IplImagePtr(IplImage):
     def __init__(self, this):
         _swig_setattr(self, IplImage, 'this', this)
         if not hasattr(self,"thisown"): _swig_setattr(self, IplImage, 'thisown', 0)
-        self.__class__ = IplImage
+        _swig_setattr(self, IplImage,self.__class__,IplImage)
 _cv.IplImage_swigregister(IplImagePtr)
 
 def cvRNG(*args):
@@ -1544,7 +1551,7 @@ class IplROIPtr(IplROI):
     def __init__(self, this):
         _swig_setattr(self, IplROI, 'this', this)
         if not hasattr(self,"thisown"): _swig_setattr(self, IplROI, 'thisown', 0)
-        self.__class__ = IplROI
+        _swig_setattr(self, IplROI,self.__class__,IplROI)
 _cv.IplROI_swigregister(IplROIPtr)
 
 class IplConvKernel(_object):
@@ -1585,7 +1592,7 @@ class IplConvKernelPtr(IplConvKernel):
     def __init__(self, this):
         _swig_setattr(self, IplConvKernel, 'this', this)
         if not hasattr(self,"thisown"): _swig_setattr(self, IplConvKernel, 'thisown', 0)
-        self.__class__ = IplConvKernel
+        _swig_setattr(self, IplConvKernel,self.__class__,IplConvKernel)
 _cv.IplConvKernel_swigregister(IplConvKernelPtr)
 
 class IplConvKernelFP(_object):
@@ -1626,7 +1633,7 @@ class IplConvKernelFPPtr(IplConvKernelFP):
     def __init__(self, this):
         _swig_setattr(self, IplConvKernelFP, 'this', this)
         if not hasattr(self,"thisown"): _swig_setattr(self, IplConvKernelFP, 'thisown', 0)
-        self.__class__ = IplConvKernelFP
+        _swig_setattr(self, IplConvKernelFP,self.__class__,IplConvKernelFP)
 _cv.IplConvKernelFP_swigregister(IplConvKernelFPPtr)
 
 class CvMat(_object):
@@ -1891,7 +1898,7 @@ class CvMatPtr(CvMat):
     def __init__(self, this):
         _swig_setattr(self, CvMat, 'this', this)
         if not hasattr(self,"thisown"): _swig_setattr(self, CvMat, 'thisown', 0)
-        self.__class__ = CvMat
+        _swig_setattr(self, CvMat,self.__class__,CvMat)
 _cv.CvMat_swigregister(CvMatPtr)
 
 class CvMat_data(_object):
@@ -1932,7 +1939,7 @@ class CvMat_dataPtr(CvMat_data):
     def __init__(self, this):
         _swig_setattr(self, CvMat_data, 'this', this)
         if not hasattr(self,"thisown"): _swig_setattr(self, CvMat_data, 'thisown', 0)
-        self.__class__ = CvMat_data
+        _swig_setattr(self, CvMat_data,self.__class__,CvMat_data)
 _cv.CvMat_data_swigregister(CvMat_dataPtr)
 
 
@@ -1983,7 +1990,7 @@ class CvMatNDPtr(CvMatND):
     def __init__(self, this):
         _swig_setattr(self, CvMatND, 'this', this)
         if not hasattr(self,"thisown"): _swig_setattr(self, CvMatND, 'thisown', 0)
-        self.__class__ = CvMatND
+        _swig_setattr(self, CvMatND,self.__class__,CvMatND)
 _cv.CvMatND_swigregister(CvMatNDPtr)
 
 def cvMat(*args):
@@ -2022,7 +2029,7 @@ class CvMatND_dimPtr(CvMatND_dim):
     def __init__(self, this):
         _swig_setattr(self, CvMatND_dim, 'this', this)
         if not hasattr(self,"thisown"): _swig_setattr(self, CvMatND_dim, 'thisown', 0)
-        self.__class__ = CvMatND_dim
+        _swig_setattr(self, CvMatND_dim,self.__class__,CvMatND_dim)
 _cv.CvMatND_dim_swigregister(CvMatND_dimPtr)
 
 class CvMatND_data(_object):
@@ -2063,7 +2070,7 @@ class CvMatND_dataPtr(CvMatND_data):
     def __init__(self, this):
         _swig_setattr(self, CvMatND_data, 'this', this)
         if not hasattr(self,"thisown"): _swig_setattr(self, CvMatND_data, 'thisown', 0)
-        self.__class__ = CvMatND_data
+        _swig_setattr(self, CvMatND_data,self.__class__,CvMatND_data)
 _cv.CvMatND_data_swigregister(CvMatND_dataPtr)
 
 class CvSparseMat(_object):
@@ -2116,7 +2123,7 @@ class CvSparseMatPtr(CvSparseMat):
     def __init__(self, this):
         _swig_setattr(self, CvSparseMat, 'this', this)
         if not hasattr(self,"thisown"): _swig_setattr(self, CvSparseMat, 'thisown', 0)
-        self.__class__ = CvSparseMat
+        _swig_setattr(self, CvSparseMat,self.__class__,CvSparseMat)
 _cv.CvSparseMat_swigregister(CvSparseMatPtr)
 
 class CvSparseNode(_object):
@@ -2148,7 +2155,7 @@ class CvSparseNodePtr(CvSparseNode):
     def __init__(self, this):
         _swig_setattr(self, CvSparseNode, 'this', this)
         if not hasattr(self,"thisown"): _swig_setattr(self, CvSparseNode, 'thisown', 0)
-        self.__class__ = CvSparseNode
+        _swig_setattr(self, CvSparseNode,self.__class__,CvSparseNode)
 _cv.CvSparseNode_swigregister(CvSparseNodePtr)
 
 class CvSparseMatIterator(_object):
@@ -2183,7 +2190,7 @@ class CvSparseMatIteratorPtr(CvSparseMatIterator):
     def __init__(self, this):
         _swig_setattr(self, CvSparseMatIterator, 'this', this)
         if not hasattr(self,"thisown"): _swig_setattr(self, CvSparseMatIterator, 'thisown', 0)
-        self.__class__ = CvSparseMatIterator
+        _swig_setattr(self, CvSparseMatIterator,self.__class__,CvSparseMatIterator)
 _cv.CvSparseMatIterator_swigregister(CvSparseMatIteratorPtr)
 
 class CvHistogram(_object):
@@ -2221,7 +2228,7 @@ class CvHistogramPtr(CvHistogram):
     def __init__(self, this):
         _swig_setattr(self, CvHistogram, 'this', this)
         if not hasattr(self,"thisown"): _swig_setattr(self, CvHistogram, 'thisown', 0)
-        self.__class__ = CvHistogram
+        _swig_setattr(self, CvHistogram,self.__class__,CvHistogram)
 _cv.CvHistogram_swigregister(CvHistogramPtr)
 
 class CvRect(_object):
@@ -2259,7 +2266,7 @@ class CvRectPtr(CvRect):
     def __init__(self, this):
         _swig_setattr(self, CvRect, 'this', this)
         if not hasattr(self,"thisown"): _swig_setattr(self, CvRect, 'thisown', 0)
-        self.__class__ = CvRect
+        _swig_setattr(self, CvRect,self.__class__,CvRect)
 _cv.CvRect_swigregister(CvRectPtr)
 
 
@@ -2306,7 +2313,7 @@ class CvTermCriteriaPtr(CvTermCriteria):
     def __init__(self, this):
         _swig_setattr(self, CvTermCriteria, 'this', this)
         if not hasattr(self,"thisown"): _swig_setattr(self, CvTermCriteria, 'thisown', 0)
-        self.__class__ = CvTermCriteria
+        _swig_setattr(self, CvTermCriteria,self.__class__,CvTermCriteria)
 _cv.CvTermCriteria_swigregister(CvTermCriteriaPtr)
 
 
@@ -2348,7 +2355,7 @@ class CvPointPtr(CvPoint):
     def __init__(self, this):
         _swig_setattr(self, CvPoint, 'this', this)
         if not hasattr(self,"thisown"): _swig_setattr(self, CvPoint, 'thisown', 0)
-        self.__class__ = CvPoint
+        _swig_setattr(self, CvPoint,self.__class__,CvPoint)
 _cv.CvPoint_swigregister(CvPointPtr)
 
 
@@ -2390,7 +2397,7 @@ class CvPoint2D32fPtr(CvPoint2D32f):
     def __init__(self, this):
         _swig_setattr(self, CvPoint2D32f, 'this', this)
         if not hasattr(self,"thisown"): _swig_setattr(self, CvPoint2D32f, 'thisown', 0)
-        self.__class__ = CvPoint2D32f
+        _swig_setattr(self, CvPoint2D32f,self.__class__,CvPoint2D32f)
 _cv.CvPoint2D32f_swigregister(CvPoint2D32fPtr)
 
 
@@ -2437,7 +2444,7 @@ class CvPoint3D32fPtr(CvPoint3D32f):
     def __init__(self, this):
         _swig_setattr(self, CvPoint3D32f, 'this', this)
         if not hasattr(self,"thisown"): _swig_setattr(self, CvPoint3D32f, 'thisown', 0)
-        self.__class__ = CvPoint3D32f
+        _swig_setattr(self, CvPoint3D32f,self.__class__,CvPoint3D32f)
 _cv.CvPoint3D32f_swigregister(CvPoint3D32fPtr)
 
 
@@ -2473,7 +2480,7 @@ class CvPoint2D64fPtr(CvPoint2D64f):
     def __init__(self, this):
         _swig_setattr(self, CvPoint2D64f, 'this', this)
         if not hasattr(self,"thisown"): _swig_setattr(self, CvPoint2D64f, 'thisown', 0)
-        self.__class__ = CvPoint2D64f
+        _swig_setattr(self, CvPoint2D64f,self.__class__,CvPoint2D64f)
 _cv.CvPoint2D64f_swigregister(CvPoint2D64fPtr)
 
 
@@ -2512,7 +2519,7 @@ class CvPoint3D64fPtr(CvPoint3D64f):
     def __init__(self, this):
         _swig_setattr(self, CvPoint3D64f, 'this', this)
         if not hasattr(self,"thisown"): _swig_setattr(self, CvPoint3D64f, 'thisown', 0)
-        self.__class__ = CvPoint3D64f
+        _swig_setattr(self, CvPoint3D64f,self.__class__,CvPoint3D64f)
 _cv.CvPoint3D64f_swigregister(CvPoint3D64fPtr)
 
 
@@ -2548,7 +2555,7 @@ class CvSizePtr(CvSize):
     def __init__(self, this):
         _swig_setattr(self, CvSize, 'this', this)
         if not hasattr(self,"thisown"): _swig_setattr(self, CvSize, 'thisown', 0)
-        self.__class__ = CvSize
+        _swig_setattr(self, CvSize,self.__class__,CvSize)
 _cv.CvSize_swigregister(CvSizePtr)
 
 
@@ -2584,7 +2591,7 @@ class CvSize2D32fPtr(CvSize2D32f):
     def __init__(self, this):
         _swig_setattr(self, CvSize2D32f, 'this', this)
         if not hasattr(self,"thisown"): _swig_setattr(self, CvSize2D32f, 'thisown', 0)
-        self.__class__ = CvSize2D32f
+        _swig_setattr(self, CvSize2D32f,self.__class__,CvSize2D32f)
 _cv.CvSize2D32f_swigregister(CvSize2D32fPtr)
 
 
@@ -2623,7 +2630,7 @@ class CvBox2DPtr(CvBox2D):
     def __init__(self, this):
         _swig_setattr(self, CvBox2D, 'this', this)
         if not hasattr(self,"thisown"): _swig_setattr(self, CvBox2D, 'thisown', 0)
-        self.__class__ = CvBox2D
+        _swig_setattr(self, CvBox2D,self.__class__,CvBox2D)
 _cv.CvBox2D_swigregister(CvBox2DPtr)
 
 class CvLineIterator(_object):
@@ -2667,7 +2674,7 @@ class CvLineIteratorPtr(CvLineIterator):
     def __init__(self, this):
         _swig_setattr(self, CvLineIterator, 'this', this)
         if not hasattr(self,"thisown"): _swig_setattr(self, CvLineIterator, 'thisown', 0)
-        self.__class__ = CvLineIterator
+        _swig_setattr(self, CvLineIterator,self.__class__,CvLineIterator)
 _cv.CvLineIterator_swigregister(CvLineIteratorPtr)
 
 class CvSlice(_object):
@@ -2699,7 +2706,7 @@ class CvSlicePtr(CvSlice):
     def __init__(self, this):
         _swig_setattr(self, CvSlice, 'this', this)
         if not hasattr(self,"thisown"): _swig_setattr(self, CvSlice, 'thisown', 0)
-        self.__class__ = CvSlice
+        _swig_setattr(self, CvSlice,self.__class__,CvSlice)
 _cv.CvSlice_swigregister(CvSlicePtr)
 
 
@@ -2738,7 +2745,7 @@ class CvScalarPtr(CvScalar):
     def __init__(self, this):
         _swig_setattr(self, CvScalar, 'this', this)
         if not hasattr(self,"thisown"): _swig_setattr(self, CvScalar, 'thisown', 0)
-        self.__class__ = CvScalar
+        _swig_setattr(self, CvScalar,self.__class__,CvScalar)
 _cv.CvScalar_swigregister(CvScalarPtr)
 
 
@@ -2778,7 +2785,7 @@ class CvMemBlockPtr(CvMemBlock):
     def __init__(self, this):
         _swig_setattr(self, CvMemBlock, 'this', this)
         if not hasattr(self,"thisown"): _swig_setattr(self, CvMemBlock, 'thisown', 0)
-        self.__class__ = CvMemBlock
+        _swig_setattr(self, CvMemBlock,self.__class__,CvMemBlock)
 _cv.CvMemBlock_swigregister(CvMemBlockPtr)
 
 def cvScalar(*args):
@@ -2828,7 +2835,7 @@ class CvMemStoragePtr(CvMemStorage):
     def __init__(self, this):
         _swig_setattr(self, CvMemStorage, 'this', this)
         if not hasattr(self,"thisown"): _swig_setattr(self, CvMemStorage, 'thisown', 0)
-        self.__class__ = CvMemStorage
+        _swig_setattr(self, CvMemStorage,self.__class__,CvMemStorage)
 _cv.CvMemStorage_swigregister(CvMemStoragePtr)
 
 class CvMemStoragePos(_object):
@@ -2860,7 +2867,7 @@ class CvMemStoragePosPtr(CvMemStoragePos):
     def __init__(self, this):
         _swig_setattr(self, CvMemStoragePos, 'this', this)
         if not hasattr(self,"thisown"): _swig_setattr(self, CvMemStoragePos, 'thisown', 0)
-        self.__class__ = CvMemStoragePos
+        _swig_setattr(self, CvMemStoragePos,self.__class__,CvMemStoragePos)
 _cv.CvMemStoragePos_swigregister(CvMemStoragePosPtr)
 
 class CvSeqBlock(_object):
@@ -2901,7 +2908,7 @@ class CvSeqBlockPtr(CvSeqBlock):
     def __init__(self, this):
         _swig_setattr(self, CvSeqBlock, 'this', this)
         if not hasattr(self,"thisown"): _swig_setattr(self, CvSeqBlock, 'thisown', 0)
-        self.__class__ = CvSeqBlock
+        _swig_setattr(self, CvSeqBlock,self.__class__,CvSeqBlock)
 _cv.CvSeqBlock_swigregister(CvSeqBlockPtr)
 
 class CvSeq(_object):
@@ -2994,7 +3001,7 @@ class CvSeqPtr(CvSeq):
     def __init__(self, this):
         _swig_setattr(self, CvSeq, 'this', this)
         if not hasattr(self,"thisown"): _swig_setattr(self, CvSeq, 'thisown', 0)
-        self.__class__ = CvSeq
+        _swig_setattr(self, CvSeq,self.__class__,CvSeq)
 _cv.CvSeq_swigregister(CvSeqPtr)
 
 class CvSetElem(_object):
@@ -3026,7 +3033,7 @@ class CvSetElemPtr(CvSetElem):
     def __init__(self, this):
         _swig_setattr(self, CvSetElem, 'this', this)
         if not hasattr(self,"thisown"): _swig_setattr(self, CvSetElem, 'thisown', 0)
-        self.__class__ = CvSetElem
+        _swig_setattr(self, CvSetElem,self.__class__,CvSetElem)
 _cv.CvSetElem_swigregister(CvSetElemPtr)
 
 class CvSet(_object):
@@ -3100,7 +3107,7 @@ class CvSetPtr(CvSet):
     def __init__(self, this):
         _swig_setattr(self, CvSet, 'this', this)
         if not hasattr(self,"thisown"): _swig_setattr(self, CvSet, 'thisown', 0)
-        self.__class__ = CvSet
+        _swig_setattr(self, CvSet,self.__class__,CvSet)
 _cv.CvSet_swigregister(CvSetPtr)
 
 class CvGraphEdge(_object):
@@ -3138,7 +3145,7 @@ class CvGraphEdgePtr(CvGraphEdge):
     def __init__(self, this):
         _swig_setattr(self, CvGraphEdge, 'this', this)
         if not hasattr(self,"thisown"): _swig_setattr(self, CvGraphEdge, 'thisown', 0)
-        self.__class__ = CvGraphEdge
+        _swig_setattr(self, CvGraphEdge,self.__class__,CvGraphEdge)
 _cv.CvGraphEdge_swigregister(CvGraphEdgePtr)
 
 class CvGraphVtx(_object):
@@ -3170,7 +3177,7 @@ class CvGraphVtxPtr(CvGraphVtx):
     def __init__(self, this):
         _swig_setattr(self, CvGraphVtx, 'this', this)
         if not hasattr(self,"thisown"): _swig_setattr(self, CvGraphVtx, 'thisown', 0)
-        self.__class__ = CvGraphVtx
+        _swig_setattr(self, CvGraphVtx,self.__class__,CvGraphVtx)
 _cv.CvGraphVtx_swigregister(CvGraphVtxPtr)
 
 class CvGraphVtx2D(_object):
@@ -3205,7 +3212,7 @@ class CvGraphVtx2DPtr(CvGraphVtx2D):
     def __init__(self, this):
         _swig_setattr(self, CvGraphVtx2D, 'this', this)
         if not hasattr(self,"thisown"): _swig_setattr(self, CvGraphVtx2D, 'thisown', 0)
-        self.__class__ = CvGraphVtx2D
+        _swig_setattr(self, CvGraphVtx2D,self.__class__,CvGraphVtx2D)
 _cv.CvGraphVtx2D_swigregister(CvGraphVtx2DPtr)
 
 class CvGraph(_object):
@@ -3282,7 +3289,7 @@ class CvGraphPtr(CvGraph):
     def __init__(self, this):
         _swig_setattr(self, CvGraph, 'this', this)
         if not hasattr(self,"thisown"): _swig_setattr(self, CvGraph, 'thisown', 0)
-        self.__class__ = CvGraph
+        _swig_setattr(self, CvGraph,self.__class__,CvGraph)
 _cv.CvGraph_swigregister(CvGraphPtr)
 
 class CvChain(_object):
@@ -3353,7 +3360,7 @@ class CvChainPtr(CvChain):
     def __init__(self, this):
         _swig_setattr(self, CvChain, 'this', this)
         if not hasattr(self,"thisown"): _swig_setattr(self, CvChain, 'thisown', 0)
-        self.__class__ = CvChain
+        _swig_setattr(self, CvChain,self.__class__,CvChain)
 _cv.CvChain_swigregister(CvChainPtr)
 
 class CvContour(_object):
@@ -3430,7 +3437,7 @@ class CvContourPtr(CvContour):
     def __init__(self, this):
         _swig_setattr(self, CvContour, 'this', this)
         if not hasattr(self,"thisown"): _swig_setattr(self, CvContour, 'thisown', 0)
-        self.__class__ = CvContour
+        _swig_setattr(self, CvContour,self.__class__,CvContour)
 _cv.CvContour_swigregister(CvContourPtr)
 
 class CvSeqWriter(_object):
@@ -3474,7 +3481,7 @@ class CvSeqWriterPtr(CvSeqWriter):
     def __init__(self, this):
         _swig_setattr(self, CvSeqWriter, 'this', this)
         if not hasattr(self,"thisown"): _swig_setattr(self, CvSeqWriter, 'thisown', 0)
-        self.__class__ = CvSeqWriter
+        _swig_setattr(self, CvSeqWriter,self.__class__,CvSeqWriter)
 _cv.CvSeqWriter_swigregister(CvSeqWriterPtr)
 
 class CvSeqReader(_object):
@@ -3524,7 +3531,7 @@ class CvSeqReaderPtr(CvSeqReader):
     def __init__(self, this):
         _swig_setattr(self, CvSeqReader, 'this', this)
         if not hasattr(self,"thisown"): _swig_setattr(self, CvSeqReader, 'thisown', 0)
-        self.__class__ = CvSeqReader
+        _swig_setattr(self, CvSeqReader,self.__class__,CvSeqReader)
 _cv.CvSeqReader_swigregister(CvSeqReaderPtr)
 
 class CvAttrList(_object):
@@ -3556,7 +3563,7 @@ class CvAttrListPtr(CvAttrList):
     def __init__(self, this):
         _swig_setattr(self, CvAttrList, 'this', this)
         if not hasattr(self,"thisown"): _swig_setattr(self, CvAttrList, 'thisown', 0)
-        self.__class__ = CvAttrList
+        _swig_setattr(self, CvAttrList,self.__class__,CvAttrList)
 _cv.CvAttrList_swigregister(CvAttrListPtr)
 
 class CvString(_object):
@@ -3588,7 +3595,7 @@ class CvStringPtr(CvString):
     def __init__(self, this):
         _swig_setattr(self, CvString, 'this', this)
         if not hasattr(self,"thisown"): _swig_setattr(self, CvString, 'thisown', 0)
-        self.__class__ = CvString
+        _swig_setattr(self, CvString,self.__class__,CvString)
 _cv.CvString_swigregister(CvStringPtr)
 
 def cvAttrList(*args):
@@ -3631,7 +3638,7 @@ class CvStringHashNodePtr(CvStringHashNode):
     def __init__(self, this):
         _swig_setattr(self, CvStringHashNode, 'this', this)
         if not hasattr(self,"thisown"): _swig_setattr(self, CvStringHashNode, 'thisown', 0)
-        self.__class__ = CvStringHashNode
+        _swig_setattr(self, CvStringHashNode,self.__class__,CvStringHashNode)
 _cv.CvStringHashNode_swigregister(CvStringHashNodePtr)
 
 class CvFileNode(_object):
@@ -3665,7 +3672,7 @@ class CvFileNodePtr(CvFileNode):
     def __init__(self, this):
         _swig_setattr(self, CvFileNode, 'this', this)
         if not hasattr(self,"thisown"): _swig_setattr(self, CvFileNode, 'thisown', 0)
-        self.__class__ = CvFileNode
+        _swig_setattr(self, CvFileNode,self.__class__,CvFileNode)
 _cv.CvFileNode_swigregister(CvFileNodePtr)
 
 class CvFileNode_data(_object):
@@ -3706,7 +3713,7 @@ class CvFileNode_dataPtr(CvFileNode_data):
     def __init__(self, this):
         _swig_setattr(self, CvFileNode_data, 'this', this)
         if not hasattr(self,"thisown"): _swig_setattr(self, CvFileNode_data, 'thisown', 0)
-        self.__class__ = CvFileNode_data
+        _swig_setattr(self, CvFileNode_data,self.__class__,CvFileNode_data)
 _cv.CvFileNode_data_swigregister(CvFileNode_dataPtr)
 
 class CvTypeInfo(_object):
@@ -3762,7 +3769,7 @@ class CvTypeInfoPtr(CvTypeInfo):
     def __init__(self, this):
         _swig_setattr(self, CvTypeInfo, 'this', this)
         if not hasattr(self,"thisown"): _swig_setattr(self, CvTypeInfo, 'thisown', 0)
-        self.__class__ = CvTypeInfo
+        _swig_setattr(self, CvTypeInfo,self.__class__,CvTypeInfo)
 _cv.CvTypeInfo_swigregister(CvTypeInfoPtr)
 
 class CvPluginFuncInfo(_object):
@@ -3803,7 +3810,7 @@ class CvPluginFuncInfoPtr(CvPluginFuncInfo):
     def __init__(self, this):
         _swig_setattr(self, CvPluginFuncInfo, 'this', this)
         if not hasattr(self,"thisown"): _swig_setattr(self, CvPluginFuncInfo, 'thisown', 0)
-        self.__class__ = CvPluginFuncInfo
+        _swig_setattr(self, CvPluginFuncInfo,self.__class__,CvPluginFuncInfo)
 _cv.CvPluginFuncInfo_swigregister(CvPluginFuncInfoPtr)
 
 class CvModuleInfo(_object):
@@ -3841,7 +3848,7 @@ class CvModuleInfoPtr(CvModuleInfo):
     def __init__(self, this):
         _swig_setattr(self, CvModuleInfo, 'this', this)
         if not hasattr(self,"thisown"): _swig_setattr(self, CvModuleInfo, 'thisown', 0)
-        self.__class__ = CvModuleInfo
+        _swig_setattr(self, CvModuleInfo,self.__class__,CvModuleInfo)
 _cv.CvModuleInfo_swigregister(CvModuleInfoPtr)
 
 
@@ -4046,7 +4053,7 @@ class CvNArrayIteratorPtr(CvNArrayIterator):
     def __init__(self, this):
         _swig_setattr(self, CvNArrayIterator, 'this', this)
         if not hasattr(self,"thisown"): _swig_setattr(self, CvNArrayIterator, 'thisown', 0)
-        self.__class__ = CvNArrayIterator
+        _swig_setattr(self, CvNArrayIterator,self.__class__,CvNArrayIterator)
 _cv.CvNArrayIterator_swigregister(CvNArrayIteratorPtr)
 
 
@@ -4854,7 +4861,7 @@ class CvGraphScannerPtr(CvGraphScanner):
     def __init__(self, this):
         _swig_setattr(self, CvGraphScanner, 'this', this)
         if not hasattr(self,"thisown"): _swig_setattr(self, CvGraphScanner, 'thisown', 0)
-        self.__class__ = CvGraphScanner
+        _swig_setattr(self, CvGraphScanner,self.__class__,CvGraphScanner)
 _cv.CvGraphScanner_swigregister(CvGraphScannerPtr)
 
 
@@ -4995,7 +5002,7 @@ class CvFontPtr(CvFont):
     def __init__(self, this):
         _swig_setattr(self, CvFont, 'this', this)
         if not hasattr(self,"thisown"): _swig_setattr(self, CvFont, 'thisown', 0)
-        self.__class__ = CvFont
+        _swig_setattr(self, CvFont,self.__class__,CvFont)
 _cv.CvFont_swigregister(CvFontPtr)
 
 
@@ -5072,7 +5079,7 @@ class CvTreeNodeIteratorPtr(CvTreeNodeIterator):
     def __init__(self, this):
         _swig_setattr(self, CvTreeNodeIterator, 'this', this)
         if not hasattr(self,"thisown"): _swig_setattr(self, CvTreeNodeIterator, 'thisown', 0)
-        self.__class__ = CvTreeNodeIterator
+        _swig_setattr(self, CvTreeNodeIterator,self.__class__,CvTreeNodeIterator)
 _cv.CvTreeNodeIterator_swigregister(CvTreeNodeIteratorPtr)
 
 
@@ -5518,12 +5525,16 @@ class CvImage(_object):
         """
         return _cv.CvImage_roi_row(*args)
 
+    def asIplImage(*args):
+        """asIplImage(self)"""
+        return _cv.CvImage_asIplImage(*args)
+
 
 class CvImagePtr(CvImage):
     def __init__(self, this):
         _swig_setattr(self, CvImage, 'this', this)
         if not hasattr(self,"thisown"): _swig_setattr(self, CvImage, 'thisown', 0)
-        self.__class__ = CvImage
+        _swig_setattr(self, CvImage,self.__class__,CvImage)
 _cv.CvImage_swigregister(CvImagePtr)
 
 class CvMatrix(_object):
@@ -5655,12 +5666,16 @@ class CvMatrix(_object):
         """
         return _cv.CvMatrix_row(*args)
 
+    def asCvMat(*args):
+        """asCvMat(self) -> CvMat"""
+        return _cv.CvMatrix_asCvMat(*args)
+
 
 class CvMatrixPtr(CvMatrix):
     def __init__(self, this):
         _swig_setattr(self, CvMatrix, 'this', this)
         if not hasattr(self,"thisown"): _swig_setattr(self, CvMatrix, 'thisown', 0)
-        self.__class__ = CvMatrix
+        _swig_setattr(self, CvMatrix,self.__class__,CvMatrix)
 _cv.CvMatrix_swigregister(CvMatrixPtr)
 
 
@@ -5696,7 +5711,7 @@ class CvModulePtr(CvModule):
     def __init__(self, this):
         _swig_setattr(self, CvModule, 'this', this)
         if not hasattr(self,"thisown"): _swig_setattr(self, CvModule, 'thisown', 0)
-        self.__class__ = CvModule
+        _swig_setattr(self, CvModule,self.__class__,CvModule)
 _cv.CvModule_swigregister(CvModulePtr)
 cvar = _cv.cvar
 
@@ -5736,7 +5751,7 @@ class CvTypePtr(CvType):
     def __init__(self, this):
         _swig_setattr(self, CvType, 'this', this)
         if not hasattr(self,"thisown"): _swig_setattr(self, CvType, 'thisown', 0)
-        self.__class__ = CvType
+        _swig_setattr(self, CvType,self.__class__,CvType)
 _cv.CvType_swigregister(CvTypePtr)
 
 class CvMoments(_object):
@@ -5816,7 +5831,7 @@ class CvMomentsPtr(CvMoments):
     def __init__(self, this):
         _swig_setattr(self, CvMoments, 'this', this)
         if not hasattr(self,"thisown"): _swig_setattr(self, CvMoments, 'thisown', 0)
-        self.__class__ = CvMoments
+        _swig_setattr(self, CvMoments,self.__class__,CvMoments)
 _cv.CvMoments_swigregister(CvMomentsPtr)
 
 class CvHuMoments(_object):
@@ -5863,7 +5878,7 @@ class CvHuMomentsPtr(CvHuMoments):
     def __init__(self, this):
         _swig_setattr(self, CvHuMoments, 'this', this)
         if not hasattr(self,"thisown"): _swig_setattr(self, CvHuMoments, 'thisown', 0)
-        self.__class__ = CvHuMoments
+        _swig_setattr(self, CvHuMoments,self.__class__,CvHuMoments)
 _cv.CvHuMoments_swigregister(CvHuMomentsPtr)
 
 class CvConnectedComp(_object):
@@ -5901,7 +5916,7 @@ class CvConnectedCompPtr(CvConnectedComp):
     def __init__(self, this):
         _swig_setattr(self, CvConnectedComp, 'this', this)
         if not hasattr(self,"thisown"): _swig_setattr(self, CvConnectedComp, 'thisown', 0)
-        self.__class__ = CvConnectedComp
+        _swig_setattr(self, CvConnectedComp,self.__class__,CvConnectedComp)
 _cv.CvConnectedComp_swigregister(CvConnectedCompPtr)
 
 class CvChainPtReader(_object):
@@ -5960,7 +5975,7 @@ class CvChainPtReaderPtr(CvChainPtReader):
     def __init__(self, this):
         _swig_setattr(self, CvChainPtReader, 'this', this)
         if not hasattr(self,"thisown"): _swig_setattr(self, CvChainPtReader, 'thisown', 0)
-        self.__class__ = CvChainPtReader
+        _swig_setattr(self, CvChainPtReader,self.__class__,CvChainPtReader)
 _cv.CvChainPtReader_swigregister(CvChainPtReaderPtr)
 
 class CvContourTree(_object):
@@ -6034,7 +6049,7 @@ class CvContourTreePtr(CvContourTree):
     def __init__(self, this):
         _swig_setattr(self, CvContourTree, 'this', this)
         if not hasattr(self,"thisown"): _swig_setattr(self, CvContourTree, 'thisown', 0)
-        self.__class__ = CvContourTree
+        _swig_setattr(self, CvContourTree,self.__class__,CvContourTree)
 _cv.CvContourTree_swigregister(CvContourTreePtr)
 
 class CvConvexityDefect(_object):
@@ -6072,7 +6087,7 @@ class CvConvexityDefectPtr(CvConvexityDefect):
     def __init__(self, this):
         _swig_setattr(self, CvConvexityDefect, 'this', this)
         if not hasattr(self,"thisown"): _swig_setattr(self, CvConvexityDefect, 'thisown', 0)
-        self.__class__ = CvConvexityDefect
+        _swig_setattr(self, CvConvexityDefect,self.__class__,CvConvexityDefect)
 _cv.CvConvexityDefect_swigregister(CvConvexityDefectPtr)
 
 class CvQuadEdge2D(_object):
@@ -6107,7 +6122,7 @@ class CvQuadEdge2DPtr(CvQuadEdge2D):
     def __init__(self, this):
         _swig_setattr(self, CvQuadEdge2D, 'this', this)
         if not hasattr(self,"thisown"): _swig_setattr(self, CvQuadEdge2D, 'thisown', 0)
-        self.__class__ = CvQuadEdge2D
+        _swig_setattr(self, CvQuadEdge2D,self.__class__,CvQuadEdge2D)
 _cv.CvQuadEdge2D_swigregister(CvQuadEdge2DPtr)
 
 class CvSubdiv2DPoint(_object):
@@ -6142,7 +6157,7 @@ class CvSubdiv2DPointPtr(CvSubdiv2DPoint):
     def __init__(self, this):
         _swig_setattr(self, CvSubdiv2DPoint, 'this', this)
         if not hasattr(self,"thisown"): _swig_setattr(self, CvSubdiv2DPoint, 'thisown', 0)
-        self.__class__ = CvSubdiv2DPoint
+        _swig_setattr(self, CvSubdiv2DPoint,self.__class__,CvSubdiv2DPoint)
 _cv.CvSubdiv2DPoint_swigregister(CvSubdiv2DPointPtr)
 
 class CvSubdiv2D(_object):
@@ -6247,7 +6262,7 @@ class CvSubdiv2DPtr(CvSubdiv2D):
     def __init__(self, this):
         _swig_setattr(self, CvSubdiv2D, 'this', this)
         if not hasattr(self,"thisown"): _swig_setattr(self, CvSubdiv2D, 'thisown', 0)
-        self.__class__ = CvSubdiv2D
+        _swig_setattr(self, CvSubdiv2D,self.__class__,CvSubdiv2D)
 _cv.CvSubdiv2D_swigregister(CvSubdiv2DPtr)
 
 CV_PTLOC_ERROR = _cv.CV_PTLOC_ERROR
@@ -6290,7 +6305,7 @@ class CvMatrix3Ptr(CvMatrix3):
     def __init__(self, this):
         _swig_setattr(self, CvMatrix3, 'this', this)
         if not hasattr(self,"thisown"): _swig_setattr(self, CvMatrix3, 'thisown', 0)
-        self.__class__ = CvMatrix3
+        _swig_setattr(self, CvMatrix3,self.__class__,CvMatrix3)
 _cv.CvMatrix3_swigregister(CvMatrix3Ptr)
 
 class CvConDensation(_object):
@@ -6349,7 +6364,7 @@ class CvConDensationPtr(CvConDensation):
     def __init__(self, this):
         _swig_setattr(self, CvConDensation, 'this', this)
         if not hasattr(self,"thisown"): _swig_setattr(self, CvConDensation, 'thisown', 0)
-        self.__class__ = CvConDensation
+        _swig_setattr(self, CvConDensation,self.__class__,CvConDensation)
 _cv.CvConDensation_swigregister(CvConDensationPtr)
 
 class CvKalman(_object):
@@ -6459,7 +6474,7 @@ class CvKalmanPtr(CvKalman):
     def __init__(self, this):
         _swig_setattr(self, CvKalman, 'this', this)
         if not hasattr(self,"thisown"): _swig_setattr(self, CvKalman, 'thisown', 0)
-        self.__class__ = CvKalman
+        _swig_setattr(self, CvKalman,self.__class__,CvKalman)
 _cv.CvKalman_swigregister(CvKalmanPtr)
 
 class CvHaarFeature(_object):
@@ -6490,7 +6505,7 @@ class CvHaarFeaturePtr(CvHaarFeature):
     def __init__(self, this):
         _swig_setattr(self, CvHaarFeature, 'this', this)
         if not hasattr(self,"thisown"): _swig_setattr(self, CvHaarFeature, 'thisown', 0)
-        self.__class__ = CvHaarFeature
+        _swig_setattr(self, CvHaarFeature,self.__class__,CvHaarFeature)
 _cv.CvHaarFeature_swigregister(CvHaarFeaturePtr)
 
 class CvHaarFeature_rect(_object):
@@ -6522,7 +6537,7 @@ class CvHaarFeature_rectPtr(CvHaarFeature_rect):
     def __init__(self, this):
         _swig_setattr(self, CvHaarFeature_rect, 'this', this)
         if not hasattr(self,"thisown"): _swig_setattr(self, CvHaarFeature_rect, 'thisown', 0)
-        self.__class__ = CvHaarFeature_rect
+        _swig_setattr(self, CvHaarFeature_rect,self.__class__,CvHaarFeature_rect)
 _cv.CvHaarFeature_rect_swigregister(CvHaarFeature_rectPtr)
 
 class CvHaarClassifier(_object):
@@ -6566,7 +6581,7 @@ class CvHaarClassifierPtr(CvHaarClassifier):
     def __init__(self, this):
         _swig_setattr(self, CvHaarClassifier, 'this', this)
         if not hasattr(self,"thisown"): _swig_setattr(self, CvHaarClassifier, 'thisown', 0)
-        self.__class__ = CvHaarClassifier
+        _swig_setattr(self, CvHaarClassifier,self.__class__,CvHaarClassifier)
 _cv.CvHaarClassifier_swigregister(CvHaarClassifierPtr)
 
 class CvHaarStageClassifier(_object):
@@ -6610,7 +6625,7 @@ class CvHaarStageClassifierPtr(CvHaarStageClassifier):
     def __init__(self, this):
         _swig_setattr(self, CvHaarStageClassifier, 'this', this)
         if not hasattr(self,"thisown"): _swig_setattr(self, CvHaarStageClassifier, 'thisown', 0)
-        self.__class__ = CvHaarStageClassifier
+        _swig_setattr(self, CvHaarStageClassifier,self.__class__,CvHaarStageClassifier)
 _cv.CvHaarStageClassifier_swigregister(CvHaarStageClassifierPtr)
 
 class CvHaarClassifierCascade(_object):
@@ -6654,7 +6669,7 @@ class CvHaarClassifierCascadePtr(CvHaarClassifierCascade):
     def __init__(self, this):
         _swig_setattr(self, CvHaarClassifierCascade, 'this', this)
         if not hasattr(self,"thisown"): _swig_setattr(self, CvHaarClassifierCascade, 'thisown', 0)
-        self.__class__ = CvHaarClassifierCascade
+        _swig_setattr(self, CvHaarClassifierCascade,self.__class__,CvHaarClassifierCascade)
 _cv.CvHaarClassifierCascade_swigregister(CvHaarClassifierCascadePtr)
 
 class CvAvgComp(_object):
@@ -6686,7 +6701,7 @@ class CvAvgCompPtr(CvAvgComp):
     def __init__(self, this):
         _swig_setattr(self, CvAvgComp, 'this', this)
         if not hasattr(self,"thisown"): _swig_setattr(self, CvAvgComp, 'thisown', 0)
-        self.__class__ = CvAvgComp
+        _swig_setattr(self, CvAvgComp,self.__class__,CvAvgComp)
 _cv.CvAvgComp_swigregister(CvAvgCompPtr)
 
 
@@ -7337,13 +7352,13 @@ def cvGoodFeaturesToTrack(*args):
     """
     return _cv.cvGoodFeaturesToTrack(*args)
 
-def cvHoughLines2(*args):
+def cvHoughLinesUntyped(*args):
     """
-    cvHoughLines2(CvArr image, void line_storage, int method, double rho, 
+    cvHoughLinesUntyped(CvArr image, void line_storage, int method, double rho, 
         double theta, int threshold, double param1=0, 
         double param2=0) -> CvSeq
     """
-    return _cv.cvHoughLines2(*args)
+    return _cv.cvHoughLinesUntyped(*args)
 
 def cvHoughCircles(*args):
     """
@@ -7425,10 +7440,7 @@ def cvCalibrateCamera2(*args):
     return _cv.cvCalibrateCamera2(*args)
 
 def cvFindChessboardCorners(*args):
-    """
-    cvFindChessboardCorners(void image, CvSize pattern_size, CvPoint2D32f corners, 
-        int flags=1) -> int
-    """
+    """cvFindChessboardCorners(void image, CvSize pattern_size, int flags=1) -> int"""
     return _cv.cvFindChessboardCorners(*args)
 
 def cvDrawChessboardCorners(*args):
@@ -7569,7 +7581,7 @@ class CvBaseImageFilterPtr(CvBaseImageFilter):
     def __init__(self, this):
         _swig_setattr(self, CvBaseImageFilter, 'this', this)
         if not hasattr(self,"thisown"): _swig_setattr(self, CvBaseImageFilter, 'thisown', 0)
-        self.__class__ = CvBaseImageFilter
+        _swig_setattr(self, CvBaseImageFilter,self.__class__,CvBaseImageFilter)
 _cv.CvBaseImageFilter_swigregister(CvBaseImageFilterPtr)
 
 class CvSepFilter(CvBaseImageFilter):
@@ -7695,7 +7707,7 @@ class CvSepFilterPtr(CvSepFilter):
     def __init__(self, this):
         _swig_setattr(self, CvSepFilter, 'this', this)
         if not hasattr(self,"thisown"): _swig_setattr(self, CvSepFilter, 'thisown', 0)
-        self.__class__ = CvSepFilter
+        _swig_setattr(self, CvSepFilter,self.__class__,CvSepFilter)
 _cv.CvSepFilter_swigregister(CvSepFilterPtr)
 
 def CvSepFilter_init_gaussian_kernel(*args):
@@ -7783,7 +7795,7 @@ class CvLinearFilterPtr(CvLinearFilter):
     def __init__(self, this):
         _swig_setattr(self, CvLinearFilter, 'this', this)
         if not hasattr(self,"thisown"): _swig_setattr(self, CvLinearFilter, 'thisown', 0)
-        self.__class__ = CvLinearFilter
+        _swig_setattr(self, CvLinearFilter,self.__class__,CvLinearFilter)
 _cv.CvLinearFilter_swigregister(CvLinearFilterPtr)
 
 class CvBoxFilter(CvBaseImageFilter):
@@ -7854,7 +7866,7 @@ class CvBoxFilterPtr(CvBoxFilter):
     def __init__(self, this):
         _swig_setattr(self, CvBoxFilter, 'this', this)
         if not hasattr(self,"thisown"): _swig_setattr(self, CvBoxFilter, 'thisown', 0)
-        self.__class__ = CvBoxFilter
+        _swig_setattr(self, CvBoxFilter,self.__class__,CvBoxFilter)
 _cv.CvBoxFilter_swigregister(CvBoxFilterPtr)
 
 class CvLaplaceFilter(CvSepFilter):
@@ -7911,7 +7923,7 @@ class CvLaplaceFilterPtr(CvLaplaceFilter):
     def __init__(self, this):
         _swig_setattr(self, CvLaplaceFilter, 'this', this)
         if not hasattr(self,"thisown"): _swig_setattr(self, CvLaplaceFilter, 'thisown', 0)
-        self.__class__ = CvLaplaceFilter
+        _swig_setattr(self, CvLaplaceFilter,self.__class__,CvLaplaceFilter)
 _cv.CvLaplaceFilter_swigregister(CvLaplaceFilterPtr)
 
 class CvMorphology(CvBaseImageFilter):
@@ -8017,7 +8029,7 @@ class CvMorphologyPtr(CvMorphology):
     def __init__(self, this):
         _swig_setattr(self, CvMorphology, 'this', this)
         if not hasattr(self,"thisown"): _swig_setattr(self, CvMorphology, 'thisown', 0)
-        self.__class__ = CvMorphology
+        _swig_setattr(self, CvMorphology,self.__class__,CvMorphology)
 _cv.CvMorphology_swigregister(CvMorphologyPtr)
 
 def CvMorphology_init_binary_element(*args):
@@ -8074,7 +8086,7 @@ class CvSeq_PointPtr(CvSeq_Point):
     def __init__(self, this):
         _swig_setattr(self, CvSeq_Point, 'this', this)
         if not hasattr(self,"thisown"): _swig_setattr(self, CvSeq_Point, 'thisown', 0)
-        self.__class__ = CvSeq_Point
+        _swig_setattr(self, CvSeq_Point,self.__class__,CvSeq_Point)
 _cv.CvSeq_Point_swigregister(CvSeq_PointPtr)
 
 def CvSeq_Point_cast(*args):
@@ -8128,7 +8140,7 @@ class CvSeq_Point2D32fPtr(CvSeq_Point2D32f):
     def __init__(self, this):
         _swig_setattr(self, CvSeq_Point2D32f, 'this', this)
         if not hasattr(self,"thisown"): _swig_setattr(self, CvSeq_Point2D32f, 'thisown', 0)
-        self.__class__ = CvSeq_Point2D32f
+        _swig_setattr(self, CvSeq_Point2D32f,self.__class__,CvSeq_Point2D32f)
 _cv.CvSeq_Point2D32f_swigregister(CvSeq_Point2D32fPtr)
 
 def CvSeq_Point2D32f_cast(*args):
@@ -8182,7 +8194,7 @@ class CvSeq_RectPtr(CvSeq_Rect):
     def __init__(self, this):
         _swig_setattr(self, CvSeq_Rect, 'this', this)
         if not hasattr(self,"thisown"): _swig_setattr(self, CvSeq_Rect, 'thisown', 0)
-        self.__class__ = CvSeq_Rect
+        _swig_setattr(self, CvSeq_Rect,self.__class__,CvSeq_Rect)
 _cv.CvSeq_Rect_swigregister(CvSeq_RectPtr)
 
 def CvSeq_Rect_cast(*args):
@@ -8236,7 +8248,7 @@ class CvSeq_SeqPtr(CvSeq_Seq):
     def __init__(self, this):
         _swig_setattr(self, CvSeq_Seq, 'this', this)
         if not hasattr(self,"thisown"): _swig_setattr(self, CvSeq_Seq, 'thisown', 0)
-        self.__class__ = CvSeq_Seq
+        _swig_setattr(self, CvSeq_Seq,self.__class__,CvSeq_Seq)
 _cv.CvSeq_Seq_swigregister(CvSeq_SeqPtr)
 
 def CvSeq_Seq_cast(*args):
@@ -8290,7 +8302,7 @@ class CvSeq_QuadEdge2DPtr(CvSeq_QuadEdge2D):
     def __init__(self, this):
         _swig_setattr(self, CvSeq_QuadEdge2D, 'this', this)
         if not hasattr(self,"thisown"): _swig_setattr(self, CvSeq_QuadEdge2D, 'thisown', 0)
-        self.__class__ = CvSeq_QuadEdge2D
+        _swig_setattr(self, CvSeq_QuadEdge2D,self.__class__,CvSeq_QuadEdge2D)
 _cv.CvSeq_QuadEdge2D_swigregister(CvSeq_QuadEdge2DPtr)
 
 def CvSeq_QuadEdge2D_cast(*args):
@@ -8344,12 +8356,194 @@ class CvSeq_ConnectedCompPtr(CvSeq_ConnectedComp):
     def __init__(self, this):
         _swig_setattr(self, CvSeq_ConnectedComp, 'this', this)
         if not hasattr(self,"thisown"): _swig_setattr(self, CvSeq_ConnectedComp, 'thisown', 0)
-        self.__class__ = CvSeq_ConnectedComp
+        _swig_setattr(self, CvSeq_ConnectedComp,self.__class__,CvSeq_ConnectedComp)
 _cv.CvSeq_ConnectedComp_swigregister(CvSeq_ConnectedCompPtr)
 
 def CvSeq_ConnectedComp_cast(*args):
     """CvSeq_ConnectedComp_cast(CvSeq seq) -> CvSeq_ConnectedComp"""
     return _cv.CvSeq_ConnectedComp_cast(*args)
+
+class CvTuple_CvPoint_2(_object):
+    """Proxy of C++ CvTuple_CvPoint_2 class"""
+    __swig_setmethods__ = {}
+    __setattr__ = lambda self, name, value: _swig_setattr(self, CvTuple_CvPoint_2, name, value)
+    __swig_getmethods__ = {}
+    __getattr__ = lambda self, name: _swig_getattr(self, CvTuple_CvPoint_2, name)
+    def __repr__(self):
+        return "<%s.%s; proxy of C++ CvTuple<CvPoint,2 > instance at %s>" % (self.__class__.__module__, self.__class__.__name__, self.this,)
+    __swig_setmethods__["val"] = _cv.CvTuple_CvPoint_2_val_set
+    __swig_getmethods__["val"] = _cv.CvTuple_CvPoint_2_val_get
+    if _newclass:val = property(_cv.CvTuple_CvPoint_2_val_get, _cv.CvTuple_CvPoint_2_val_set)
+    def __setitem__(*args):
+        """__setitem__(self, int i, CvPoint obj)"""
+        return _cv.CvTuple_CvPoint_2___setitem__(*args)
+
+    def __getitem__(*args):
+        """__getitem__(self, int i) -> CvPoint"""
+        return _cv.CvTuple_CvPoint_2___getitem__(*args)
+
+    def __init__(self, *args):
+        """__init__(self) -> CvTuple_CvPoint_2"""
+        _swig_setattr(self, CvTuple_CvPoint_2, 'this', _cv.new_CvTuple_CvPoint_2(*args))
+        _swig_setattr(self, CvTuple_CvPoint_2, 'thisown', 1)
+    def __del__(self, destroy=_cv.delete_CvTuple_CvPoint_2):
+        """__del__(self)"""
+        try:
+            if self.thisown: destroy(self)
+        except: pass
+
+
+class CvTuple_CvPoint_2Ptr(CvTuple_CvPoint_2):
+    def __init__(self, this):
+        _swig_setattr(self, CvTuple_CvPoint_2, 'this', this)
+        if not hasattr(self,"thisown"): _swig_setattr(self, CvTuple_CvPoint_2, 'thisown', 0)
+        _swig_setattr(self, CvTuple_CvPoint_2,self.__class__,CvTuple_CvPoint_2)
+_cv.CvTuple_CvPoint_2_swigregister(CvTuple_CvPoint_2Ptr)
+
+class CvTuple_float_2(_object):
+    """Proxy of C++ CvTuple_float_2 class"""
+    __swig_setmethods__ = {}
+    __setattr__ = lambda self, name, value: _swig_setattr(self, CvTuple_float_2, name, value)
+    __swig_getmethods__ = {}
+    __getattr__ = lambda self, name: _swig_getattr(self, CvTuple_float_2, name)
+    def __repr__(self):
+        return "<%s.%s; proxy of C++ CvTuple<float,2 > instance at %s>" % (self.__class__.__module__, self.__class__.__name__, self.this,)
+    __swig_setmethods__["val"] = _cv.CvTuple_float_2_val_set
+    __swig_getmethods__["val"] = _cv.CvTuple_float_2_val_get
+    if _newclass:val = property(_cv.CvTuple_float_2_val_get, _cv.CvTuple_float_2_val_set)
+    def __setitem__(*args):
+        """__setitem__(self, int i, float obj)"""
+        return _cv.CvTuple_float_2___setitem__(*args)
+
+    def __getitem__(*args):
+        """__getitem__(self, int i) -> float"""
+        return _cv.CvTuple_float_2___getitem__(*args)
+
+    def __init__(self, *args):
+        """__init__(self) -> CvTuple_float_2"""
+        _swig_setattr(self, CvTuple_float_2, 'this', _cv.new_CvTuple_float_2(*args))
+        _swig_setattr(self, CvTuple_float_2, 'thisown', 1)
+    def __del__(self, destroy=_cv.delete_CvTuple_float_2):
+        """__del__(self)"""
+        try:
+            if self.thisown: destroy(self)
+        except: pass
+
+
+class CvTuple_float_2Ptr(CvTuple_float_2):
+    def __init__(self, this):
+        _swig_setattr(self, CvTuple_float_2, 'this', this)
+        if not hasattr(self,"thisown"): _swig_setattr(self, CvTuple_float_2, 'thisown', 0)
+        _swig_setattr(self, CvTuple_float_2,self.__class__,CvTuple_float_2)
+_cv.CvTuple_float_2_swigregister(CvTuple_float_2Ptr)
+
+class CvSeq_CvPoint_2(CvSeq):
+    """Proxy of C++ CvSeq_CvPoint_2 class"""
+    __swig_setmethods__ = {}
+    for _s in [CvSeq]: __swig_setmethods__.update(_s.__swig_setmethods__)
+    __setattr__ = lambda self, name, value: _swig_setattr(self, CvSeq_CvPoint_2, name, value)
+    __swig_getmethods__ = {}
+    for _s in [CvSeq]: __swig_getmethods__.update(_s.__swig_getmethods__)
+    __getattr__ = lambda self, name: _swig_getattr(self, CvSeq_CvPoint_2, name)
+    def __repr__(self):
+        return "<%s.%s; proxy of C++ CvTypedSeq<CvTuple<CvPoint,2 > > instance at %s>" % (self.__class__.__module__, self.__class__.__name__, self.this,)
+    def cast(*args):
+        """cast(CvSeq seq) -> CvSeq_CvPoint_2"""
+        return _cv.CvSeq_CvPoint_2_cast(*args)
+
+    if _newclass:cast = staticmethod(cast)
+    __swig_getmethods__["cast"] = lambda x: cast
+    def __getitem__(*args):
+        """__getitem__(self, int i) -> CvTuple_CvPoint_2"""
+        return _cv.CvSeq_CvPoint_2___getitem__(*args)
+
+    def __setitem__(*args):
+        """__setitem__(self, int i, CvTuple_CvPoint_2 obj)"""
+        return _cv.CvSeq_CvPoint_2___setitem__(*args)
+
+    def append(*args):
+        """append(self, CvTuple_CvPoint_2 obj)"""
+        return _cv.CvSeq_CvPoint_2_append(*args)
+
+    def pop(*args):
+        """pop(self) -> CvTuple_CvPoint_2"""
+        return _cv.CvSeq_CvPoint_2_pop(*args)
+
+    def __init__(self, *args):
+        """__init__(self) -> CvSeq_CvPoint_2"""
+        _swig_setattr(self, CvSeq_CvPoint_2, 'this', _cv.new_CvSeq_CvPoint_2(*args))
+        _swig_setattr(self, CvSeq_CvPoint_2, 'thisown', 1)
+    def __del__(self, destroy=_cv.delete_CvSeq_CvPoint_2):
+        """__del__(self)"""
+        try:
+            if self.thisown: destroy(self)
+        except: pass
+
+
+class CvSeq_CvPoint_2Ptr(CvSeq_CvPoint_2):
+    def __init__(self, this):
+        _swig_setattr(self, CvSeq_CvPoint_2, 'this', this)
+        if not hasattr(self,"thisown"): _swig_setattr(self, CvSeq_CvPoint_2, 'thisown', 0)
+        _swig_setattr(self, CvSeq_CvPoint_2,self.__class__,CvSeq_CvPoint_2)
+_cv.CvSeq_CvPoint_2_swigregister(CvSeq_CvPoint_2Ptr)
+
+def CvSeq_CvPoint_2_cast(*args):
+    """CvSeq_CvPoint_2_cast(CvSeq seq) -> CvSeq_CvPoint_2"""
+    return _cv.CvSeq_CvPoint_2_cast(*args)
+
+class CvSeq_float_2(CvSeq):
+    """Proxy of C++ CvSeq_float_2 class"""
+    __swig_setmethods__ = {}
+    for _s in [CvSeq]: __swig_setmethods__.update(_s.__swig_setmethods__)
+    __setattr__ = lambda self, name, value: _swig_setattr(self, CvSeq_float_2, name, value)
+    __swig_getmethods__ = {}
+    for _s in [CvSeq]: __swig_getmethods__.update(_s.__swig_getmethods__)
+    __getattr__ = lambda self, name: _swig_getattr(self, CvSeq_float_2, name)
+    def __repr__(self):
+        return "<%s.%s; proxy of C++ CvTypedSeq<CvTuple<float,2 > > instance at %s>" % (self.__class__.__module__, self.__class__.__name__, self.this,)
+    def cast(*args):
+        """cast(CvSeq seq) -> CvSeq_float_2"""
+        return _cv.CvSeq_float_2_cast(*args)
+
+    if _newclass:cast = staticmethod(cast)
+    __swig_getmethods__["cast"] = lambda x: cast
+    def __getitem__(*args):
+        """__getitem__(self, int i) -> CvTuple_float_2"""
+        return _cv.CvSeq_float_2___getitem__(*args)
+
+    def __setitem__(*args):
+        """__setitem__(self, int i, CvTuple_float_2 obj)"""
+        return _cv.CvSeq_float_2___setitem__(*args)
+
+    def append(*args):
+        """append(self, CvTuple_float_2 obj)"""
+        return _cv.CvSeq_float_2_append(*args)
+
+    def pop(*args):
+        """pop(self) -> CvTuple_float_2"""
+        return _cv.CvSeq_float_2_pop(*args)
+
+    def __init__(self, *args):
+        """__init__(self) -> CvSeq_float_2"""
+        _swig_setattr(self, CvSeq_float_2, 'this', _cv.new_CvSeq_float_2(*args))
+        _swig_setattr(self, CvSeq_float_2, 'thisown', 1)
+    def __del__(self, destroy=_cv.delete_CvSeq_float_2):
+        """__del__(self)"""
+        try:
+            if self.thisown: destroy(self)
+        except: pass
+
+
+class CvSeq_float_2Ptr(CvSeq_float_2):
+    def __init__(self, this):
+        _swig_setattr(self, CvSeq_float_2, 'this', this)
+        if not hasattr(self,"thisown"): _swig_setattr(self, CvSeq_float_2, 'thisown', 0)
+        _swig_setattr(self, CvSeq_float_2,self.__class__,CvSeq_float_2)
+_cv.CvSeq_float_2_swigregister(CvSeq_float_2Ptr)
+
+def CvSeq_float_2_cast(*args):
+    """CvSeq_float_2_cast(CvSeq seq) -> CvSeq_float_2"""
+    return _cv.CvSeq_float_2_cast(*args)
 
 
 def SendErrorToPython(*args):
@@ -8430,7 +8624,6 @@ C/C++ counterparts, you can consult the standard manuals that come with OpenCV.
 
 # this tells OpenCV not to call exit() on errors but throw a python exception instead
 cvRedirectError(function_ptr_generator(), void_ptr_generator(), void_ptrptr_generator())
-
 
 
 

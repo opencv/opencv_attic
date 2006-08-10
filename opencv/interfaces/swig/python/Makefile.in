@@ -706,7 +706,7 @@ uninstall-am: uninstall-info-am uninstall-pkgpythonLTLIBRARIES \
 # the following rules keep wrappers up to date, if SWIG is present
 
 # this rule creates the Python wrapper sources for cxcore and cv
-@UPDATE_SWIG_WRAPPERS_TRUE@_cv.cpp: cv.i imagedata.i cvarr.i cvaliases.i                   \
+@UPDATE_SWIG_WRAPPERS_TRUE@_cv.cpp: cv.i imagedata.i cvarr.i cvaliases.i pyhelpers.i       \
 @UPDATE_SWIG_WRAPPERS_TRUE@         nointpb.i pytypemaps.i cvshadow.i cvseq.i              \
 @UPDATE_SWIG_WRAPPERS_TRUE@         error.cpp error.h                                      \
 @UPDATE_SWIG_WRAPPERS_TRUE@         pyhelpers.h cvshadow.h pycvseq.hpp                     \

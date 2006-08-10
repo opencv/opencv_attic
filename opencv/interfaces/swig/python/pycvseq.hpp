@@ -90,4 +90,15 @@ public:
 	}
 };
 
+template<class T, int size=2>
+struct CvTuple {
+	T val[2];
+	void __setitem__(int i, T * obj){
+		val[i] = *obj;
+	}
+	const T & __getitem__(int i){
+		return val[i];
+	}
+};
+
 #endif  //PY_CV_SEQ_H

@@ -81,7 +81,7 @@ static CvPoint PyObject_to_CvPoint(PyObject * obj){
 		return cvPointFrom32f( *ptr2D32f );
 	}
 	if( SWIG_ConvertPtr(obj, (void**)&scalar, SWIGTYPE_p_CvScalar, 0) != -1) {
-		return cvPoint( scalar->val[0], scalar->val[1] );
+		return cvPointFrom32f(cvPoint2D32f( scalar->val[0], scalar->val[1] ));
 	}
 	if(PyObject_AsLongArray(obj, (int *) &val, 2) != -1){
 		return val;

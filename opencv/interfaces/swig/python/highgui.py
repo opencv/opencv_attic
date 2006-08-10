@@ -1,9 +1,9 @@
-# This file was created automatically by SWIG 1.3.27.
+# This file was created automatically by SWIG.
 # Don't modify this file, modify the SWIG interface instead.
+# This file is compatible with both classic and new-style classes.
 
 import _highgui
 
-# This file is compatible with both classic and new-style classes.
 def _swig_setattr_nondynamic(self,class_type,name,value,static=1):
     if (name == "this"):
         if isinstance(value, class_type):
@@ -61,7 +61,7 @@ class CvRNG_WrapperPtr(CvRNG_Wrapper):
     def __init__(self, this):
         _swig_setattr(self, CvRNG_Wrapper, 'this', this)
         if not hasattr(self,"thisown"): _swig_setattr(self, CvRNG_Wrapper, 'thisown', 0)
-        self.__class__ = CvRNG_Wrapper
+        _swig_setattr(self, CvRNG_Wrapper,self.__class__,CvRNG_Wrapper)
 _highgui.CvRNG_Wrapper_swigregister(CvRNG_WrapperPtr)
 
 class CvSubdiv2DEdge_Wrapper(_object):
@@ -89,7 +89,7 @@ class CvSubdiv2DEdge_WrapperPtr(CvSubdiv2DEdge_Wrapper):
     def __init__(self, this):
         _swig_setattr(self, CvSubdiv2DEdge_Wrapper, 'this', this)
         if not hasattr(self,"thisown"): _swig_setattr(self, CvSubdiv2DEdge_Wrapper, 'thisown', 0)
-        self.__class__ = CvSubdiv2DEdge_Wrapper
+        _swig_setattr(self, CvSubdiv2DEdge_Wrapper,self.__class__,CvSubdiv2DEdge_Wrapper)
 _highgui.CvSubdiv2DEdge_Wrapper_swigregister(CvSubdiv2DEdge_WrapperPtr)
 
 
@@ -355,7 +355,7 @@ class CvvImagePtr(CvvImage):
     def __init__(self, this):
         _swig_setattr(self, CvvImage, 'this', this)
         if not hasattr(self,"thisown"): _swig_setattr(self, CvvImage, 'thisown', 0)
-        self.__class__ = CvvImage
+        _swig_setattr(self, CvvImage,self.__class__,CvvImage)
 _highgui.CvvImage_swigregister(CvvImagePtr)
 
 cvSetMouseCallback = _highgui.cvSetMouseCallback
@@ -372,7 +372,6 @@ This wrapper was semi-automatically created from the C/C++ headers and therefore
 contains no Python documentation. Because all identifiers are identical to their
 C/C++ counterparts, you can consult the standard manuals that come with OpenCV.
 """
-
 
 
 
