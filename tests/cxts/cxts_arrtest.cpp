@@ -194,8 +194,7 @@ void CvArrTest::get_test_array_types_and_sizes( int /*test_case_idx*/, CvSize** 
         for( j = 0; j < count; j++ )
         {
             sizes[i][j] = size;
-            if( i == MASK )
-                types[i][j] = CV_8UC1;
+            types[i][j] = CV_8UC1;
         }
     }
 }
