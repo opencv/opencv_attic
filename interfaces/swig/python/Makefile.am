@@ -51,7 +51,7 @@ EXTRA_DIST = \
 if UPDATE_SWIG_WRAPPERS
 
 # this rule creates the Python wrapper sources for cxcore and cv
-_cv.cpp: cv.i imagedata.i cvarr.i cvaliases.i                   \
+_cv.cpp: cv.i imagedata.i cvarr.i cvaliases.i pyhelpers.i       \
          nointpb.i pytypemaps.i cvshadow.i cvseq.i              \
          error.cpp error.h                                      \
          pyhelpers.h cvshadow.h pycvseq.hpp                     \

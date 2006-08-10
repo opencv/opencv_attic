@@ -59,8 +59,24 @@
 
 %include "cvshadow.h"
 
-/* return a typed CvSeq instead of generic for CvSubdiv2D -- see cvseq.i */
+/* return a typed CvSeq instead of generic for CvSubdiv2D edges -- see cvseq.i */
 %rename (untyped_edges) CvSubdiv2D::edges;
 %ignore CvSubdiv2D::edges;
 %rename (edges) CvSubdiv2D::typed_edges;
 
+/* Python doesn't know what to do with these */
+%rename (asIplImage) operator IplImage*;
+%rename (asCvMat) operator CvMat*;
+%ignore operator const IplImage*;
+%ignore operator const CvMat*;
+
+/* cvHoughLines2 returns a different type of sequence depending on its args */
+%rename (cvHoughLinesUntyped) cvHoughLines2;
+%pythoncode %{
+def cvHoughLines2( *args ):
+	seq = cvHoughLinesUntyped( *args )
+	type = CV_SEQ_ELTYPE(seq) 
+	if type == CV_32SC4:
+		return CvSeq_CvPoint_2.cast(seq)
+	return CvSeq_float_2.cast(seq)
+%}

@@ -48,6 +48,10 @@
 %template (CvSeq_Seq) CvTypedSeq<CvSeq *>;
 %template (CvSeq_QuadEdge2D) CvTypedSeq<CvQuadEdge2D>;
 %template (CvSeq_ConnectedComp) CvTypedSeq<CvConnectedComp>;
+%template (CvTuple_CvPoint_2) CvTuple<CvPoint,2>;
+%template (CvTuple_float_2) CvTuple<float,2>;
+%template (CvSeq_CvPoint_2) CvTypedSeq< CvTuple<CvPoint,2> >;
+%template (CvSeq_float_2) CvTypedSeq< CvTuple<float,2> >;
 
 %extend CvSeq {
 	%pythoncode %{
