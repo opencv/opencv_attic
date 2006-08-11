@@ -50,6 +50,10 @@
 #pragma warning( disable: 4115 )        /* type definition in () */
 #endif
 
+#if defined _MSC_VER && defined WIN64 && !defined EM64T
+#pragma optimize( "", off )
+#endif
+
 #if defined WIN32 || defined WIN64
 #include <windows.h>
 #else
