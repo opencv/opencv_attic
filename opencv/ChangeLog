@@ -1,22 +1,24 @@
 =============================================================================
-                      OpenCV RC1, August ???, 2006
+                      OpenCV RC1, August 11, 2006
 =============================================================================
 
 >>> New functionality/features: <<<
   - New Compilers/Environments supported:
      * GCC 4.x 
      * Visual Studio .NET 2005.
-       Note that: a) Project files .vcproj's and _make\opencv*.sln
+       Note that: a) Project files .vcproj's and the corresponding solution files
                      have been converted to VS.NET 2005 format, thus they can not
-                     be opened with VS.NET 2003. Instead, one may convert
-                     project files and workspace for Visual Studio 6.0 to VS.NET 2003.
+                     be opened with VS.NET 2003. As a workaround, one may convert
+                     project files and workspaces for Visual Studio 6.0 to VS.NET 2003.
                   b) The projects can be built for Win32 and x64 (a.k.a. EM64T/AMD64) platforms.
                   c) OpenMP support is turned on by default.
      * On MacOSX universal OpenCV binaries are now built by default, so both
        PPC and Intel Mac's are fully supported.
      * Borland C++ support has been removed. There is still script
        utils\gen_make.py available that can generate makefile.bcc's out of
-       MSVC's project files. But it is not been tested.
+       MSVC's project files (not tested with rc1).
+     * New command-line makefiles _make\makefile.* are introduced that allow user
+       to build OpenCV for Win64 (EM64T/AMD64 and Itanium). For details, see INSTALL file.
 
   - cxcore:
      * added several new functions:
@@ -43,7 +45,7 @@
       see cv/include/cv.hpp.
       The older C API is still supported and is preferrable sometimes
       (e.g. when IPP is used).
-    * API changes:
+    ****** API changes:
       * cvCamShift, cvBoxPoints and all the other functions
         taking/returning an angle (as a field of the structure CvBox2D
         or as a standalone parameter) now measure the angles in degrees.
@@ -65,7 +67,7 @@
       call cvWaitKey() (Linux only).
 
   - Bindings/interfaces:
-    * IPP 5.1.* is not supported and this is a recommended version of IPP
+    * IPP 5.1.* is now supported and this is a recommended version of IPP
       to use with OpenCV. One may build custom IPP DLL for easier binary
       redistribution (see interfaces/ipp)
     * Python bindings have been greatly improved and extended
