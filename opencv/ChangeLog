@@ -74,7 +74,7 @@
       (see interfaces/swig[/python] and samples/python).
 
 >>> Optimizations: <<<
-  -  The following filtering functions have been greatly optimized
+  -  The following filtering functions have been significantly optimized
      using the new IPP 5.1 functionality:
      cvSobel, cvLaplace, cvErode, cvDilate.
   -  cvFilter2D now runs much faster with larger kernels (using DFT-based method)
@@ -85,7 +85,7 @@
 
 >>> Bug fixes: <<<
 
-  -  A lot of bugs have been fixed. We would like to thanks to all the people
+  -  A lot of bugs have been fixed. We would like to thank all the people
      who submitted bug reports and/or patches.
      This is incomplete list of the bugs fixed.
 
