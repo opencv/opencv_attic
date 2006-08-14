@@ -117,6 +117,7 @@ EXEEXT = @EXEEXT@
 F77 = @F77@
 FFLAGS = @FFLAGS@
 FFMPEGLIBS = @FFMPEGLIBS@
+GREP = @GREP@
 GTHREAD_CFLAGS = @GTHREAD_CFLAGS@
 GTHREAD_LIBS = @GTHREAD_LIBS@
 GTK_CFLAGS = @GTK_CFLAGS@
@@ -170,15 +171,9 @@ UPDATE_SWIG_WRAPPERS_FALSE = @UPDATE_SWIG_WRAPPERS_FALSE@
 UPDATE_SWIG_WRAPPERS_TRUE = @UPDATE_SWIG_WRAPPERS_TRUE@
 VERSION = @VERSION@
 XINE_LIBS = @XINE_LIBS@
-ac_ct_AR = @ac_ct_AR@
-ac_ct_AS = @ac_ct_AS@
 ac_ct_CC = @ac_ct_CC@
 ac_ct_CXX = @ac_ct_CXX@
-ac_ct_DLLTOOL = @ac_ct_DLLTOOL@
 ac_ct_F77 = @ac_ct_F77@
-ac_ct_OBJDUMP = @ac_ct_OBJDUMP@
-ac_ct_RANLIB = @ac_ct_RANLIB@
-ac_ct_STRIP = @ac_ct_STRIP@
 am__fastdepCC_FALSE = @am__fastdepCC_FALSE@
 am__fastdepCC_TRUE = @am__fastdepCC_TRUE@
 am__fastdepCXX_FALSE = @am__fastdepCXX_FALSE@
@@ -195,25 +190,32 @@ build_cpu = @build_cpu@
 build_os = @build_os@
 build_vendor = @build_vendor@
 datadir = @datadir@
+datarootdir = @datarootdir@
+docdir = @docdir@
+dvidir = @dvidir@
 exec_prefix = @exec_prefix@
 host = @host@
 host_alias = @host_alias@
 host_cpu = @host_cpu@
 host_os = @host_os@
 host_vendor = @host_vendor@
+htmldir = @htmldir@
 includedir = @includedir@
 infodir = @infodir@
 install_sh = @install_sh@
 libdir = @libdir@
 libexecdir = @libexecdir@
+localedir = @localedir@
 localstatedir = @localstatedir@
 mandir = @mandir@
 mkdir_p = @mkdir_p@
 oldincludedir = @oldincludedir@
+pdfdir = @pdfdir@
 pkgpyexecdir = @pkgpyexecdir@
 pkgpythondir = @pkgpythondir@
 prefix = @prefix@
 program_transform_name = @program_transform_name@
+psdir = @psdir@
 pyexecdir = @pyexecdir@
 pythondir = @pythondir@
 sbindir = @sbindir@
@@ -229,17 +231,19 @@ nobase_dist_opencvdoc_DATA = cvcam.rtf faq.htm index.htm \
     license.txt opencv.jpg opencvman_old.pdf \
     papers/algo_tracking.pdf papers/avbpa99.ps papers/camshift.pdf \
     ref/opencvref.css ref/opencvref_cv.htm ref/opencvref_cvaux.htm \
-    ref/opencvref_cxcore.htm ref/opencvref_highgui.htm \
-    ref/pics/backprojectpatch.png ref/pics/boundingrect.png \
-    ref/pics/building.jpg ref/pics/contoursecarea.png \
-    ref/pics/cornersubpix.png ref/pics/defects.png \
-    ref/pics/ellipse.png ref/pics/errmsg.png \
-    ref/pics/face.png ref/pics/haarfeatures.png \
-    ref/pics/houghp.png ref/pics/left.jpg \
-    ref/pics/maxrect.png ref/pics/memstorage1.png \
-    ref/pics/memstorage2.png ref/pics/minareabox.png \
-    ref/pics/quadedge.png ref/pics/right.jpg \
-    ref/pics/subdiv.png ref/pics/threshold.png \
+    ref/opencvref_cxcore.htm ref/opencvref_highgui.htm ref/opencvref_ml.htm \
+    ref/pics/backprojectpatch.png \
+    ref/pics/boundingrect.png  ref/pics/building.jpg  ref/pics/contoursecarea.png \
+    ref/pics/cornersubpix.png  ref/pics/defects.png  ref/pics/ellipse.png \
+    ref/pics/em1.png  ref/pics/em3.png  ref/pics/em4.png \
+    ref/pics/em5.png  ref/pics/em6.png  ref/pics/em7.png \
+    ref/pics/em8.png  ref/pics/em9.png  ref/pics/errmsg.png \
+    ref/pics/face.png   ref/pics/haarfeatures.png  ref/pics/houghp.png \
+    ref/pics/inv_logpolar.jpg  ref/pics/left.jpg   ref/pics/logpolar.jpg \
+    ref/pics/maxrect.png  ref/pics/memstorage1.png ref/pics/memstorage2.png \
+    ref/pics/minareabox.png  ref/pics/mlp_.png  ref/pics/neuron_model.png \
+    ref/pics/pointpolygon.png  ref/pics/quadedge.png  ref/pics/right.jpg \
+    ref/pics/sigmoid_bipolar.png  ref/pics/subdiv.png ref/pics/threshold.png \
     python.txt python-wrappers-on-windows.txt
 
 all: all-am
