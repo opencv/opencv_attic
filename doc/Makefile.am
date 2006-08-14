@@ -13,7 +13,7 @@ nobase_dist_opencvdoc_DATA = cvcam.rtf faq.htm index.htm \
     ref/pics/face.png   ref/pics/haarfeatures.png  ref/pics/houghp.png \
     ref/pics/inv_logpolar.jpg  ref/pics/left.jpg   ref/pics/logpolar.jpg \
     ref/pics/maxrect.png  ref/pics/memstorage1.png ref/pics/memstorage2.png \
-    ref/pics/minareabox.png  ref/pics/mlp.PNG  ref/pics/neuron_model.png \
+    ref/pics/minareabox.png  ref/pics/mlp_.png  ref/pics/neuron_model.png \
     ref/pics/pointpolygon.png  ref/pics/quadedge.png  ref/pics/right.jpg \
     ref/pics/sigmoid_bipolar.png  ref/pics/subdiv.png ref/pics/threshold.png \
     python.txt python-wrappers-on-windows.txt
