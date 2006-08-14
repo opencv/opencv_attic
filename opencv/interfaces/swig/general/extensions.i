@@ -72,6 +72,36 @@
 		snprintf(str, 256, "cvScalar(%f, %f, %f, %f)", self->val[0], self->val[1], self->val[2], self->val[3]);
 		return str;
 	}
+    const double __getitem__ (int index) {
+        if (index >= 4) {
+            PyErr_SetString (PyExc_IndexError, "indice must be lower than 4");
+            return 0;
+        }
+        if (index < -4) {
+            PyErr_SetString (PyExc_IndexError, "indice must be bigger or egal to -4");
+            return 0;
+        }
+        if (index < 0) {
+            /* negative index means from the end in python */
+            index = 4 - index;
+        }
+        return self->val [index];
+    }
+    void __setitem__ (int index, double value) {
+        if (index >= 4) {
+            PyErr_SetString (PyExc_IndexError, "indice must be lower than 4");
+            return;
+        }
+        if (index < -4) {
+            PyErr_SetString (PyExc_IndexError, "indice must be bigger or egal to -4");
+            return;
+        }
+        if (index < 0) {
+            /* negative index means from the end in python */
+            index = 4 - index;
+        }
+        self->val [index] = value;
+    }
 };
 
 %extend CvPoint2D32f
