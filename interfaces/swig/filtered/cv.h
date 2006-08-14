@@ -2399,8 +2399,8 @@ public:
         if( refcount ) ++(*refcount);
     }
 
-    CvImage( const char* filename, const char* imgname=0 ) : image(0), refcount(0)
-    { read( filename, imgname ); }
+    CvImage( const char* filename, const char* imgname=0, int color=-1 ) : image(0), refcount(0)
+    { load( filename, imgname, color ); }
 
     CvImage( CvFileStorage* fs, const char* mapname, const char* imgname ) : image(0), refcount(0)
     { read( fs, mapname, imgname ); }
@@ -2415,6 +2415,14 @@ public:
     }
 
     CvImage clone() { return CvImage(image ? cvCloneImage(image) : 0); }
+
+    void create( CvSize size, int depth, int channels )
+    {
+        attach( cvCreateImage( size, depth, channels ));
+    }
+
+    void release() { detach(); }
+    void clear() { detach(); }
 
     void attach( IplImage* img, bool use_refcount=true )
     {
@@ -2440,10 +2448,10 @@ public:
         image = 0;
     }
 
-    bool read( const char* filename, const char* imgname=0 );
+    bool load( const char* filename, const char* imgname=0, int color=-1 );
     bool read( CvFileStorage* fs, const char* mapname, const char* imgname );
     bool read( CvFileStorage* fs, const char* seqname, int idx );
-    void write( const char* filename, const char* imgname );
+    void save( const char* filename, const char* imgname );
     void write( CvFileStorage* fs, const char* imgname );
 
     void show( const char* window_name );
@@ -2451,6 +2459,8 @@ public:
 
     int width() const { return image ? image->width : 0; }
     int height() const { return image ? image->height : 0; }
+
+    CvSize size() const { return image ? cvSize(image->width, image->height) : cvSize(0,0); }
 
     CvSize roi_size() const
     {
@@ -2555,8 +2565,8 @@ public:
         addref();
     }
 
-    CvMatrix( const char* filename, const char* matname=0 ) : matrix(0)
-    { read( filename, matname ); }
+    CvMatrix( const char* filename, const char* matname=0, int color=-1 ) : matrix(0)
+    { load( filename, matname, color ); }
 
     CvMatrix( CvFileStorage* fs, const char* mapname, const char* matname ) : matrix(0)
     { read( fs, mapname, matname ); }
@@ -2577,6 +2587,11 @@ public:
         matrix = m;
         if( add_ref )
             addref();
+    }
+
+    void create( int rows, int cols, int type )
+    {
+        set( cvCreateMat( rows, cols, type ), false );
     }
 
     void addref() const
@@ -2608,10 +2623,15 @@ public:
         }
     }
 
-    bool read( const char* filename, const char* matname=0 );
+    void clear()
+    {
+        release();
+    }
+
+    bool load( const char* filename, const char* matname=0, int color=-1 );
     bool read( CvFileStorage* fs, const char* mapname, const char* matname );
     bool read( CvFileStorage* fs, const char* seqname, int idx );
-    void write( const char* filename, const char* matname );
+    void save( const char* filename, const char* matname );
     void write( CvFileStorage* fs, const char* matname );
 
     void show( const char* window_name );
