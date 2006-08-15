@@ -14,22 +14,13 @@ AM_CPPFLAGS = \
   $(CV_INCLUDES)                     \
   -DCV_NO_BACKWARD_COMPATIBILITY
 
-EXTRA_DIST = cv.h constants.h
+noinst_HEADERS = cv.h constants.h
 
-distcleancheck_listfiles = \
-	find -type f -exec sh -c 'test -f $(scrdir)/{} || echo {}'
 
 # SWIG ###############################################################################
 
 # the following rules keep wrappers up to date, if SWIG is present
 if UPDATE_SWIG_WRAPPERS
-
-# a work-around to force the build of cv.h and constants.h
-# maybe there is a better way...
-noinst_SCRIPTS = headers_generated
-headers_generated: cv.h constants.h
-	touch headers_generated
-MOSTLYCLEANFILES = headers_generated
 
 # this rule creates a single SWIG parseable header from cv.h and cxcore.h, etc.
 cv.h: \
