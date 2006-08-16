@@ -241,7 +241,11 @@ void CvDTreeTrainData::set_data( const CvMat* _train_data, int _tflag,
     CV_CALL( tree_storage = cvCreateMemStorage( tree_block_size ));
     CV_CALL( node_heap = cvCreateSet( 0, sizeof(*node_heap), sizeof(CvDTreeNode), tree_storage ));
 
-    temp_block_size = nv_size = var_count*sizeof(int);
+    nv_size = var_count*sizeof(int);
+    nv_size = MAX( nv_size, (int)sizeof(CvSetElem) );
+
+    temp_block_size = nv_size;
+    
     if( cv_n )
     {
         if( sample_count < cv_n*MAX(params.min_sample_count,10) )
@@ -1104,9 +1108,7 @@ void CvDTree::try_split_node( CvDTreeNode* node )
     }
     else if( can_split )
     {
-        const float* responses = data->get_ord_responses( node );
-        float diff = responses[n-1] - responses[0];
-        if( diff < data->params.regression_accuracy )
+        if( sqrt(node->node_risk)/n < data->params.regression_accuracy )
             can_split = false;
     }
 
@@ -2112,10 +2114,12 @@ void CvDTree::calc_node_value( CvDTreeNode* node )
         
         if( cv_n == 0 )
         {
-            // if cross-validation is not used, we even do not compute node_risk
-            // (so the tree sequence T1>...>{root} may not be built).
             for( i = 0; i < n; i++ )
-                sum += values[i];
+            {
+                double t = values[i];
+                sum += t;
+                sum2 += t*t;
+            }
         }
         else
         {
@@ -2146,10 +2150,9 @@ void CvDTree::calc_node_value( CvDTreeNode* node )
                 sum += cv_sum[j];
                 sum2 += cv_sum2[j];
             }
-
-            node->node_risk = sum2 - (sum/n)*sum;
         }
 
+        node->node_risk = sum2 - (sum/n)*sum;
         node->value = sum/n;
 
         for( j = 0; j < cv_n; j++ )
@@ -2400,45 +2403,49 @@ void CvDTree::prune_cv()
     }
 
     ab->data.db[0] = 0.;
-    for( ti = 1; ti < tree_count-1; ti++ )
-        ab->data.db[ti] = sqrt(ab->data.db[ti]*ab->data.db[ti+1]);
-    ab->data.db[tree_count-1] = DBL_MAX*0.5;
-
-    CV_CALL( err_jk = cvCreateMat( cv_n, tree_count, CV_64F ));
-    err = err_jk->data.db;
-
-    for( j = 0; j < cv_n; j++ )
+    
+    if( tree_count > 0 )
     {
-        int tj = 0, tk = 0;
-        for( ; tk < tree_count; tj++ )
-        {
-            double min_alpha = update_tree_rnc(tj, j);
-            if( cut_tree(tj, j, min_alpha) )
-                min_alpha = DBL_MAX;
+        for( ti = 1; ti < tree_count-1; ti++ )
+            ab->data.db[ti] = sqrt(ab->data.db[ti]*ab->data.db[ti+1]);
+        ab->data.db[tree_count-1] = DBL_MAX*0.5;
 
-            for( ; tk < tree_count; tk++ )
+        CV_CALL( err_jk = cvCreateMat( cv_n, tree_count, CV_64F ));
+        err = err_jk->data.db;
+
+        for( j = 0; j < cv_n; j++ )
+        {
+            int tj = 0, tk = 0;
+            for( ; tk < tree_count; tj++ )
             {
-                if( ab->data.db[tk] > min_alpha )
-                    break;
-                err[j*tree_count + tk] = root->tree_error;
+                double min_alpha = update_tree_rnc(tj, j);
+                if( cut_tree(tj, j, min_alpha) )
+                    min_alpha = DBL_MAX;
+
+                for( ; tk < tree_count; tk++ )
+                {
+                    if( ab->data.db[tk] > min_alpha )
+                        break;
+                    err[j*tree_count + tk] = root->tree_error;
+                }
             }
         }
-    }
 
-    for( ti = 0; ti < tree_count; ti++ )
-    {
-        double sum_err = 0;
-        for( j = 0; j < cv_n; j++ )
-            sum_err += err[j*tree_count + ti];
-        if( ti == 0 || sum_err < min_err )
+        for( ti = 0; ti < tree_count; ti++ )
         {
-            min_err = sum_err;
-            min_idx = ti;
-            if( use_1se )
-                min_err_se = sqrt( sum_err*(n - sum_err) );
+            double sum_err = 0;
+            for( j = 0; j < cv_n; j++ )
+                sum_err += err[j*tree_count + ti];
+            if( ti == 0 || sum_err < min_err )
+            {
+                min_err = sum_err;
+                min_idx = ti;
+                if( use_1se )
+                    min_err_se = sqrt( sum_err*(n - sum_err) );
+            }
+            else if( sum_err < min_err + min_err_se )
+                min_idx = ti;
         }
-        else if( sum_err < min_err + min_err_se )
-            min_idx = ti;
     }
 
     pruned_tree_idx = min_idx;
@@ -2649,8 +2656,8 @@ CvDTreeNode* CvDTree::predict( const CvMat* _sample,
 
     vtype = data->var_type->data.i;
     vidx = data->var_idx && !preprocessed_input ? data->var_idx->data.i : 0;
-    cmap = data->cat_map->data.i;
-    cofs = data->cat_ofs->data.i;
+    cmap = data->cat_map ? data->cat_map->data.i : 0;
+    cofs = data->cat_ofs ? data->cat_ofs->data.i : 0;
 
     while( node->Tn > pruned_tree_idx && node->left )
     {
@@ -3027,22 +3034,28 @@ void CvDTree::read_train_data_params( CvFileStorage* fs, CvFileNode* node )
     ////// read var type
     CV_CALL( data->var_type = cvCreateMat( 1, data->var_count + 2, CV_32SC1 ));
 
-    vartype_node = cvGetFileNodeByName( fs, node, "var_type" );
-    if( !vartype_node || CV_NODE_TYPE(vartype_node->tag) != CV_NODE_SEQ ||
-        vartype_node->data.seq->total != data->var_count )
-        CV_ERROR( CV_StsParseError, "var_type must exist and be a sequence of 0's and 1's" );
-
-    cvStartReadSeq( vartype_node->data.seq, &reader );
-
     cat_var_count = 0;
     ord_var_count = -1;
-    for( vi = 0; vi < data->var_count; vi++ )
+    vartype_node = cvGetFileNodeByName( fs, node, "var_type" );
+
+    if( vartype_node && CV_NODE_TYPE(vartype_node->tag) == CV_NODE_INT && data->var_count == 1 )
+        data->var_type->data.i[0] = vartype_node->data.i ? cat_var_count++ : ord_var_count--;
+    else
     {
-        CvFileNode* n = (CvFileNode*)reader.ptr;
-        if( CV_NODE_TYPE(n->tag) != CV_NODE_INT || (n->data.i & ~1) )
+        if( !vartype_node || CV_NODE_TYPE(vartype_node->tag) != CV_NODE_SEQ ||
+            vartype_node->data.seq->total != data->var_count )
             CV_ERROR( CV_StsParseError, "var_type must exist and be a sequence of 0's and 1's" );
-        data->var_type->data.i[vi] = n->data.i ? cat_var_count++ : ord_var_count--;
-        CV_NEXT_SEQ_ELEM( reader.seq->elem_size, reader );
+
+        cvStartReadSeq( vartype_node->data.seq, &reader );
+    
+        for( vi = 0; vi < data->var_count; vi++ )
+        {
+            CvFileNode* n = (CvFileNode*)reader.ptr;
+            if( CV_NODE_TYPE(n->tag) != CV_NODE_INT || (n->data.i & ~1) )
+                CV_ERROR( CV_StsParseError, "var_type must exist and be a sequence of 0's and 1's" );
+            data->var_type->data.i[vi] = n->data.i ? cat_var_count++ : ord_var_count--;
+            CV_NEXT_SEQ_ELEM( reader.seq->elem_size, reader );
+        }
     }
     
     ord_var_count = ~ord_var_count;
@@ -3121,7 +3134,7 @@ CvDTreeSplit* CvDTree::read_split( CvFileStorage* fs, CvFileNode* fnode )
     ci = data->get_var_type(vi);
     if( ci >= 0 ) // split on categorical var
     {
-        int i, n = data->cat_count->data.i[ci], inversed = 0;
+        int i, n = data->cat_count->data.i[ci], inversed = 0, val;
         CvSeqReader reader;
         CvFileNode* inseq;
         split = data->new_split_cat( vi, 0 );
@@ -3131,21 +3144,33 @@ CvDTreeSplit* CvDTree::read_split( CvFileStorage* fs, CvFileNode* fnode )
             inseq = cvGetFileNodeByName( fs, fnode, "not_in" );
             inversed = 1;
         }
-        if( !inseq || CV_NODE_TYPE(inseq->tag) != CV_NODE_SEQ )
+        if( !inseq ||
+            (CV_NODE_TYPE(inseq->tag) != CV_NODE_SEQ && CV_NODE_TYPE(inseq->tag) != CV_NODE_INT))
             CV_ERROR( CV_StsParseError,
             "Either 'in' or 'not_in' tags should be inside a categorical split data" );
 
-        cvStartReadSeq( inseq->data.seq, &reader );
-
-        for( i = 0; i < reader.seq->total; i++ )
+        if( CV_NODE_TYPE(inseq->tag) == CV_NODE_INT )
         {
-            CvFileNode* inode = (CvFileNode*)reader.ptr;
-            int val = inode->data.i;
-            if( CV_NODE_TYPE(inode->tag) != CV_NODE_INT || (unsigned)val >= (unsigned)n )
+            val = inseq->data.i;
+            if( (unsigned)val >= (unsigned)n )
                 CV_ERROR( CV_StsOutOfRange, "some of in/not_in elements are out of range" );
 
             split->subset[val >> 5] |= 1 << (val & 31);
-            CV_NEXT_SEQ_ELEM( reader.seq->elem_size, reader );
+        }
+        else
+        {
+            cvStartReadSeq( inseq->data.seq, &reader );
+
+            for( i = 0; i < reader.seq->total; i++ )
+            {
+                CvFileNode* inode = (CvFileNode*)reader.ptr;
+                val = inode->data.i;
+                if( CV_NODE_TYPE(inode->tag) != CV_NODE_INT || (unsigned)val >= (unsigned)n )
+                    CV_ERROR( CV_StsOutOfRange, "some of in/not_in elements are out of range" );
+
+                split->subset[val >> 5] |= 1 << (val & 31);
+                CV_NEXT_SEQ_ELEM( reader.seq->elem_size, reader );
+            }
         }
 
         // for categorical splits we do not use inversed splits,
