@@ -988,6 +988,9 @@ public:
     CvMat* get_active_var_mask();
     CvRNG* get_rng();
 
+    int get_tree_count() const;
+    CvForestTree* get_tree(int i) const;
+
 protected:
 
     bool grow_forest( CvDTreeTrainData* train_data, const CvTermCriteria term_crit );
