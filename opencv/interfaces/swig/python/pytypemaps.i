@@ -387,16 +387,16 @@
  */
 %typemap(in) (IplImage** image) {
 
-    IplImage * one_image;
+    IplImage ** one_image = (IplImage **) malloc (sizeof (IplImage *));
 
     /* first, check if this is just one IplImage */
     /* if this is just one IplImage, one_image will receive it */
-    if ((SWIG_ConvertPtr($input, (void **) &one_image,
+    if ((SWIG_ConvertPtr($input, (void **) one_image,
 			 $descriptor(IplImage *),
 			 0)) != -1) {
 
 	/* Yes, just one IplImage, so pass it to the called function */
-	$1 = &one_image;
+	$1 = one_image;
 
     } else if PyTuple_Check ($input) {
 
