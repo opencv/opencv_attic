@@ -37744,15 +37744,15 @@ SWIGINTERN PyObject *_wrap_cvReleaseImageHeader(PyObject *SWIGUNUSEDPARM(self), 
   
   if (!PyArg_ParseTuple(args,(char *)"O:cvReleaseImageHeader",&obj0)) SWIG_fail;
   {
-    IplImage * one_image;
+    IplImage ** one_image = (IplImage **) malloc (sizeof (IplImage *));
     
     /* first, check if this is just one IplImage */
     /* if this is just one IplImage, one_image will receive it */
-    if ((SWIG_ConvertPtr(obj0, (void **) &one_image,
+    if ((SWIG_ConvertPtr(obj0, (void **) one_image,
           SWIGTYPE_p__IplImage,
           0)) != -1) {
       /* Yes, just one IplImage, so pass it to the called function */
-      arg1 = &one_image;
+      arg1 = one_image;
       
     } else if PyTuple_Check (obj0) {
       /* This is a tuple, so we need to test each element and pass
@@ -37813,15 +37813,15 @@ SWIGINTERN PyObject *_wrap_cvReleaseImage(PyObject *SWIGUNUSEDPARM(self), PyObje
   
   if (!PyArg_ParseTuple(args,(char *)"O:cvReleaseImage",&obj0)) SWIG_fail;
   {
-    IplImage * one_image;
+    IplImage ** one_image = (IplImage **) malloc (sizeof (IplImage *));
     
     /* first, check if this is just one IplImage */
     /* if this is just one IplImage, one_image will receive it */
-    if ((SWIG_ConvertPtr(obj0, (void **) &one_image,
+    if ((SWIG_ConvertPtr(obj0, (void **) one_image,
           SWIGTYPE_p__IplImage,
           0)) != -1) {
       /* Yes, just one IplImage, so pass it to the called function */
-      arg1 = &one_image;
+      arg1 = one_image;
       
     } else if PyTuple_Check (obj0) {
       /* This is a tuple, so we need to test each element and pass
@@ -78697,15 +78697,15 @@ SWIGINTERN PyObject *_wrap_cvCalcHist(PyObject *SWIGUNUSEDPARM(self), PyObject *
   
   if (!PyArg_ParseTuple(args,(char *)"OO|OO:cvCalcHist",&obj0,&obj1,&obj2,&obj3)) SWIG_fail;
   {
-    IplImage * one_image;
+    IplImage ** one_image = (IplImage **) malloc (sizeof (IplImage *));
     
     /* first, check if this is just one IplImage */
     /* if this is just one IplImage, one_image will receive it */
-    if ((SWIG_ConvertPtr(obj0, (void **) &one_image,
+    if ((SWIG_ConvertPtr(obj0, (void **) one_image,
           SWIGTYPE_p__IplImage,
           0)) != -1) {
       /* Yes, just one IplImage, so pass it to the called function */
-      arg1 = &one_image;
+      arg1 = one_image;
       
     } else if PyTuple_Check (obj0) {
       /* This is a tuple, so we need to test each element and pass
