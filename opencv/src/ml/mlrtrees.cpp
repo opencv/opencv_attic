@@ -720,4 +720,15 @@ void CvRTrees::read( CvFileStorage* fs, CvFileNode* fnode )
     __END__;
 }
 
+
+int CvRTrees::get_tree_count() const
+{
+    return ntrees;
+}
+
+CvForestTree* CvRTrees::get_tree(int i) const
+{
+    return (unsigned)i < (unsigned)ntrees ? trees[i] : 0;
+}
+
 // End of file.
