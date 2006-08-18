@@ -59,6 +59,13 @@
 #pragma comment(lib,"gdk_pixbuf-2.0.lib")
 #endif*/
 
+
+// HOTFIX: (2006-08-18, asbach@ient.rwth-aachen.de)
+// we disable GTHREAD usage because otherwise we run into a segfault
+// when returning from trackbar callback routines
+#undef HAVE_GTHREAD
+
+
 // TODO Fix the initial window size when flags=0.  Right now the initial window is by default
 // 320x240 size.  A better default would be actual size of the image.  Problem
 // is determining desired window size with trackbars while still allowing resizing.
