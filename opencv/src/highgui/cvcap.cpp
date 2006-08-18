@@ -230,3 +230,28 @@ CV_IMPL CvCapture * cvCaptureFromFile (const char * filename)
 	
 	return result;
 }
+
+#ifndef HAVE_FFMPEG
+#ifndef HAVE_VFW
+#ifndef HAVE_QUICKTIME
+
+// quick fix for rc1
+
+CV_IMPL CvVideoWriter* cvCreateVideoWriter( const char* filename, int fourcc,
+                                            double fps, CvSize frameSize, int is_color )
+{
+    return 0;
+}
+
+CV_IMPL int cvWriteFrame( CvVideoWriter* _writer, const IplImage* image )
+{
+  return 0;
+}
+
+CV_IMPL void cvReleaseVideoWriter( CvVideoWriter** writer )
+{
+}
+
+#endif
+#endif
+#endif

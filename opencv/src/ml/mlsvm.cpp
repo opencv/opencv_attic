@@ -109,11 +109,11 @@ CvSVMParams::CvSVMParams() :
 
 CvSVMParams::CvSVMParams( int _svm_type, int _kernel_type,
     double _degree, double _gamma, double _coef0,
-    double _C, double _nu, double _p,
+    double _Con, double _nu, double _p,
     CvMat* _class_weights, CvTermCriteria _term_crit ) :
     svm_type(_svm_type), kernel_type(_kernel_type),
     degree(_degree), gamma(_gamma), coef0(_coef0),
-    C(_C), nu(_nu), p(_p), class_weights(_class_weights), term_crit(_term_crit)
+    C(_Con), nu(_nu), p(_p), class_weights(_class_weights), term_crit(_term_crit)
 {
 }
 
