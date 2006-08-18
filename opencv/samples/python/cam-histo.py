@@ -64,7 +64,7 @@ if __name__ == '__main__':
     highgui.cvNamedWindow ('Histogram', highgui.CV_WINDOW_AUTOSIZE)
 
     # move the new window to a better place
-    highgui.cvMoveWindow ('Camera', 10, 10)
+    highgui.cvMoveWindow ('Camera', 10, 40)
     highgui.cvMoveWindow ('Histogram', 10, 270)
 
     try:
