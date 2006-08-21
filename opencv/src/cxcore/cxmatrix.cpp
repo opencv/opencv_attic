@@ -1571,8 +1571,10 @@ cvCalcPCA( const CvArr* data_arr, CvArr* avg_arr, CvArr* eigenvals, CvArr* eigen
     if( len <= in_count )
         covar_flags |= CV_COVAR_NORMAL;
 
-    if( flags & CV_PCA_USE_AVG )
+    if( flags & CV_PCA_USE_AVG ){
         covar_flags |= CV_COVAR_USE_AVG;
+		CV_CALL( cvConvert( avg, tmp_avg ) );
+	}
 
     CV_CALL( tmp_cov = cvCreateMat( count, count, CV_64F ));
     CV_CALL( tmp_evals = cvCreateMat( 1, count, CV_64F ));
