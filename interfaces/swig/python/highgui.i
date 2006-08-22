@@ -241,7 +241,13 @@ static void icvPyTrackbarCB##idx(int pos){
 %rename (cvWaitKey) cvWaitKeyPy;
 %inline %{
 	PyObject * cvWaitKeyPy(int delay=0){
+		// In order for the event processing thread to run a python callback
+		// it must acquire the global interpreter lock, but  cvWaitKey blocks, so
+		// this thread can never release the lock. So release it here.
+		PyThreadState * thread_state = PyEval_SaveThread();
 		int res = cvWaitKey(delay);
+		PyEval_RestoreThread( thread_state );
+		
 		char str[2]={(char)res,0};
 		if(res==-1){
 			return PyLong_FromLong(-1);
