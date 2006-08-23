@@ -1279,6 +1279,7 @@ static int icvGrabFrameCAM_V4L(CvCaptureCAM_V4L* capture) {
 	 return 1;
      }
 
+     ++capture->bufferIndex;
      if (capture->bufferIndex == capture->memoryBuffer.frames) {
         capture->bufferIndex = 0;
      }
@@ -1965,7 +1966,6 @@ static IplImage* icvRetrieveFrameCAM_V4L( CvCaptureCAM_V4L* capture) {
     /* [FD] this really belongs here */
     if (ioctl(capture->deviceHandle, VIDIOCSYNC, &capture->mmaps[capture->bufferIndex]) == -1) {
       fprintf( stderr, "HIGHGUI ERROR: V4L: Could not SYNC to video stream. %s\n", strerror(errno));
-      return(0);
     }
 
   }
@@ -2054,19 +2054,6 @@ static IplImage* icvRetrieveFrameCAM_V4L( CvCaptureCAM_V4L* capture) {
                   capture->form.fmt.pix.height,
                   (unsigned char*)capture->buffers[capture->bufferIndex].start,
                   (unsigned char*)capture->frame.imageData);
-      
-      /* Change BGR to RGB */
-      unsigned char trash;
-      
-      for (int i = 0; i < capture->frame.imageSize; i++)
-        if (i % 3 == 1)
-        {
-          trash = capture->frame.imageData[i+1];
-         
-          capture->frame.imageData[i+1] = capture->frame.imageData[i-1];
-        
-          capture->frame.imageData[i-1] = trash;
-        }
     }
 
     if (PALETTE_SN9C10X == 1)
@@ -2082,19 +2069,6 @@ static IplImage* icvRetrieveFrameCAM_V4L( CvCaptureCAM_V4L* capture) {
                   capture->form.fmt.pix.height,
                   (unsigned char*)capture->buffers[(capture->bufferIndex+1) % capture->req.count].start,
                   (unsigned char*)capture->frame.imageData);
-
-      /* Change BGR to RGB */
-      unsigned char trash;
-      
-      for (int i = 0; i < capture->frame.imageSize; i++)
-        if (i % 3 == 1)
-        {
-          trash = capture->frame.imageData[i+1];
-         
-          capture->frame.imageData[i+1] = capture->frame.imageData[i-1];
-        
-          capture->frame.imageData[i-1] = trash;
-        }
     }
 
   } else
@@ -2395,6 +2369,7 @@ static int icvSetControl (CvCaptureCAM_V4L* capture,
 
     /* initialisations */
     CLEAR (capture->control);
+    capture->FirstCapture = 1;
 
     /* set which control we want to set */
     switch (property_id) {
