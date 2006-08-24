@@ -2341,6 +2341,8 @@ static int icvSetVideoSize( CvCaptureCAM_V4L* capture, int w, int h) {
        icvCloseCAM_V4L(capture);
        return 0;
      }
+
+     capture->FirstCapture = 1;
    
   }
    
@@ -2369,7 +2371,6 @@ static int icvSetControl (CvCaptureCAM_V4L* capture,
 
     /* initialisations */
     CLEAR (capture->control);
-    capture->FirstCapture = 1;
 
     /* set which control we want to set */
     switch (property_id) {
