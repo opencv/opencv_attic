@@ -332,6 +332,7 @@ bool CvRTrees::grow_forest( CvDTreeTrainData* train_data, const CvTermCriteria t
     const double max_oob_err = term_crit.epsilon;
     
     const int dims = train_data->var_count;
+    float maximal_response = 0;
 
     // oob_predictions_sum[i] = sum of predicted values for the i-th sample
     // oob_num_of_predictions[i] = number of summands
@@ -377,6 +378,13 @@ bool CvRTrees::grow_forest( CvDTreeTrainData* train_data, const CvTermCriteria t
     }
 
     CV_CALL(train_data->get_vectors( 0, samples_ptr, missing_ptr, true_resp_ptr ));
+
+    {
+        double minval, maxval;
+        CvMat responses = cvMat(1, nsamples, CV_32FC1, true_resp_ptr);
+        cvMinMaxLoc( &responses, &minval, &maxval );
+        maximal_response = (float)MAX( MAX( fabs(minval), fabs(maxval) ), 0 );
+    }
 
     ntrees = 0;
     while( ntrees < max_ntrees )
@@ -424,7 +432,7 @@ bool CvRTrees::grow_forest( CvDTreeTrainData* train_data, const CvTermCriteria t
             if( !predicted_node )
                 CV_CALL(predicted_node = tree->predict(&sample, &missing, true));
 
-            if( !train_data->is_classifier )
+            if( !train_data->is_classifier ) //regression
             {
                 float avg_resp, resp = (float)predicted_node->value;
                 oob_predictions_sum.data.fl[i] += resp;
@@ -432,11 +440,11 @@ bool CvRTrees::grow_forest( CvDTreeTrainData* train_data, const CvTermCriteria t
 
                 // compute oob error
                 avg_resp=oob_predictions_sum.data.fl[i]/oob_num_of_predictions.data.fl[i];
-                oob_error += pow(avg_resp - *true_resp, 2);
+                oob_error += powf(avg_resp - *true_resp, 2);
 
-                ncorrect_responses += pow(resp - *true_resp, 2);
+                ncorrect_responses += expf( -powf((resp - *true_resp)/maximal_response, 2) );
             }
-            else //regression
+            else //classification
             {
                 float prdct_resp;
                 CvPoint max_loc;
@@ -503,7 +511,7 @@ bool CvRTrees::grow_forest( CvDTreeTrainData* train_data, const CvTermCriteria t
                     true_resp   = true_resp_ptr[i];
                     ncorrect_responses_permuted += train_data->is_classifier ?
                         (int)true_resp == (int)predct_resp 
-                        : pow(true_resp - predct_resp, 2);
+                        : expf( -powf((true_resp - predct_resp)/maximal_response, 2));
                 }
                 var_importance->data.fl[m] += (ncorrect_responses
                     - ncorrect_responses_permuted);
