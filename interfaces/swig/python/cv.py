@@ -108,6 +108,9 @@ class CvSubdiv2DEdge_Wrapper(_object):
 CvSubdiv2DEdge_Wrapper_swigregister = _cv.CvSubdiv2DEdge_Wrapper_swigregister
 CvSubdiv2DEdge_Wrapper_swigregister(CvSubdiv2DEdge_Wrapper)
 
+def cvCalcHist(*args):
+	return cvCalcArrHist(*args)
+
 
 def cvSegmentMotion(*args):
   """
@@ -122,6 +125,74 @@ def cvHoughLines2( *args ):
 		return CvSeq_CvPoint_2.cast(seq)
 	return CvSeq_float_2.cast(seq)
 
+
+def cvReleaseImage(*args):
+  """cvReleaseImage(PyObject obj)"""
+  return _cv.cvReleaseImage(*args)
+
+def cvReleaseMat(*args):
+  """cvReleaseMat(PyObject obj)"""
+  return _cv.cvReleaseMat(*args)
+
+def cvReleaseStructuringElement(*args):
+  """cvReleaseStructuringElement(PyObject obj)"""
+  return _cv.cvReleaseStructuringElement(*args)
+
+def cvReleaseConDensation(*args):
+  """cvReleaseConDensation(PyObject obj)"""
+  return _cv.cvReleaseConDensation(*args)
+
+def cvReleaseKalman(*args):
+  """cvReleaseKalman(PyObject obj)"""
+  return _cv.cvReleaseKalman(*args)
+
+def cvReleaseHist(*args):
+  """cvReleaseHist(PyObject obj)"""
+  return _cv.cvReleaseHist(*args)
+
+def cvReleaseHaarClassifierCascade(*args):
+  """cvReleaseHaarClassifierCascade(PyObject obj)"""
+  return _cv.cvReleaseHaarClassifierCascade(*args)
+
+def cvReleasePOSITObject(*args):
+  """cvReleasePOSITObject(PyObject obj)"""
+  return _cv.cvReleasePOSITObject(*args)
+
+def cvReleaseImageHeader(*args):
+  """cvReleaseImageHeader(PyObject obj)"""
+  return _cv.cvReleaseImageHeader(*args)
+
+def cvReleaseMatND(*args):
+  """cvReleaseMatND(PyObject obj)"""
+  return _cv.cvReleaseMatND(*args)
+
+def cvReleaseSparseMat(*args):
+  """cvReleaseSparseMat(PyObject obj)"""
+  return _cv.cvReleaseSparseMat(*args)
+
+def cvReleaseMemStorage(*args):
+  """cvReleaseMemStorage(PyObject obj)"""
+  return _cv.cvReleaseMemStorage(*args)
+
+def cvReleaseGraphScanner(*args):
+  """cvReleaseGraphScanner(PyObject obj)"""
+  return _cv.cvReleaseGraphScanner(*args)
+
+def cvReleaseFileStorage(*args):
+  """cvReleaseFileStorage(PyObject obj)"""
+  return _cv.cvReleaseFileStorage(*args)
+
+def cvRelease(*args):
+  """cvRelease(PyObject obj)"""
+  return _cv.cvRelease(*args)
+
+def cvReleaseCapture(*args):
+  """cvReleaseCapture(PyObject obj)"""
+  return _cv.cvReleaseCapture(*args)
+
+def cvReleaseVideoWriter(*args):
+  """cvReleaseVideoWriter(PyObject obj)"""
+  return _cv.cvReleaseVideoWriter(*args)
 
 def cvFree(*args):
   """cvFree(void ptr)"""
@@ -1592,6 +1663,10 @@ class CvMat(_object):
     if _newclass:data = property(_cv.CvMat_data_get)
     __swig_destroy__ = _cv.delete_CvMat
     __del__ = lambda self : None;
+    __swig_getmethods__["width"] = _cv.CvMat_width_get
+    if _newclass:width = property(_cv.CvMat_width_get)
+    __swig_getmethods__["height"] = _cv.CvMat_height_get
+    if _newclass:height = property(_cv.CvMat_height_get)
     def __mul__(*args):
         """__mul__(self, CvArr src) -> CvMat"""
         return _cv.CvMat___mul__(*args)
@@ -3408,14 +3483,6 @@ def cvCreateImage(*args):
   """cvCreateImage(CvSize size, int depth, int channels)"""
   return _cv.cvCreateImage(*args)
 
-def cvReleaseImageHeader(*args):
-  """cvReleaseImageHeader( image)"""
-  return _cv.cvReleaseImageHeader(*args)
-
-def cvReleaseImage(*args):
-  """cvReleaseImage( image)"""
-  return _cv.cvReleaseImage(*args)
-
 def cvCloneImage(*args):
   """cvCloneImage( image)"""
   return _cv.cvCloneImage(*args)
@@ -3454,10 +3521,6 @@ def cvInitMatHeader(*args):
 def cvCreateMat(*args):
   """cvCreateMat(int rows, int cols, int type) -> CvMat"""
   return _cv.cvCreateMat(*args)
-
-def cvReleaseMat(*args):
-  """cvReleaseMat(CvMat mat)"""
-  return _cv.cvReleaseMat(*args)
 
 def cvDecRefData(*args):
   """cvDecRefData(CvArr arr)"""
@@ -3518,10 +3581,6 @@ def cvInitMatNDHeader(*args):
   """cvInitMatNDHeader(CvMatND mat, int dims, int type, void data=None) -> CvMatND"""
   return _cv.cvInitMatNDHeader(*args)
 
-def cvReleaseMatND(*args):
-  """cvReleaseMatND(CvMatND mat)"""
-  return _cv.cvReleaseMatND(*args)
-
 def cvCloneMatND(*args):
   """cvCloneMatND(CvMatND mat) -> CvMatND"""
   return _cv.cvCloneMatND(*args)
@@ -3529,10 +3588,6 @@ def cvCloneMatND(*args):
 def cvCreateSparseMat(*args):
   """cvCreateSparseMat(int dims, int type) -> CvSparseMat"""
   return _cv.cvCreateSparseMat(*args)
-
-def cvReleaseSparseMat(*args):
-  """cvReleaseSparseMat(CvSparseMat mat)"""
-  return _cv.cvReleaseSparseMat(*args)
 
 def cvCloneSparseMat(*args):
   """cvCloneSparseMat(CvSparseMat mat) -> CvSparseMat"""
@@ -4093,10 +4148,6 @@ def cvCreateChildMemStorage(*args):
   """cvCreateChildMemStorage(CvMemStorage parent) -> CvMemStorage"""
   return _cv.cvCreateChildMemStorage(*args)
 
-def cvReleaseMemStorage(*args):
-  """cvReleaseMemStorage(CvMemStorage storage)"""
-  return _cv.cvReleaseMemStorage(*args)
-
 def cvClearMemStorage(*args):
   """cvClearMemStorage(CvMemStorage storage)"""
   return _cv.cvClearMemStorage(*args)
@@ -4382,10 +4433,6 @@ CvGraphScanner_swigregister(CvGraphScanner)
 def cvCreateGraphScanner(*args):
   """cvCreateGraphScanner(CvGraph graph, CvGraphVtx vtx=None, int mask=-1) -> CvGraphScanner"""
   return _cv.cvCreateGraphScanner(*args)
-
-def cvReleaseGraphScanner(*args):
-  """cvReleaseGraphScanner(CvGraphScanner scanner)"""
-  return _cv.cvReleaseGraphScanner(*args)
 
 def cvNextGraphItem(*args):
   """cvNextGraphItem(CvGraphScanner scanner) -> int"""
@@ -4704,10 +4751,6 @@ def cvOpenFileStorage(*args):
   """cvOpenFileStorage(char filename, CvMemStorage memstorage, int flags) -> CvFileStorage"""
   return _cv.cvOpenFileStorage(*args)
 
-def cvReleaseFileStorage(*args):
-  """cvReleaseFileStorage(CvFileStorage fs)"""
-  return _cv.cvReleaseFileStorage(*args)
-
 def cvAttrValue(*args):
   """cvAttrValue(CvAttrList attr, char attr_name) -> char"""
   return _cv.cvAttrValue(*args)
@@ -4847,10 +4890,6 @@ def cvFindType(*args):
 def cvTypeOf(*args):
   """cvTypeOf(void struct_ptr) -> CvTypeInfo"""
   return _cv.cvTypeOf(*args)
-
-def cvRelease(*args):
-  """cvRelease(void struct_ptr)"""
-  return _cv.cvRelease(*args)
 
 def cvClone(*args):
   """cvClone(void struct_ptr) -> void"""
@@ -6163,10 +6202,6 @@ def cvCreateStructuringElementEx(*args):
     """
   return _cv.cvCreateStructuringElementEx(*args)
 
-def cvReleaseStructuringElement(*args):
-  """cvReleaseStructuringElement( element)"""
-  return _cv.cvReleaseStructuringElement(*args)
-
 def cvErode(*args):
   """cvErode(CvArr src, CvArr dst,  element=None, int iterations=1)"""
   return _cv.cvErode(*args)
@@ -6358,10 +6393,6 @@ def cvCreateConDensation(*args):
   """cvCreateConDensation(int dynam_params, int measure_params, int sample_count) -> CvConDensation"""
   return _cv.cvCreateConDensation(*args)
 
-def cvReleaseConDensation(*args):
-  """cvReleaseConDensation(CvConDensation condens)"""
-  return _cv.cvReleaseConDensation(*args)
-
 def cvConDensUpdateByTime(*args):
   """cvConDensUpdateByTime(CvConDensation condens)"""
   return _cv.cvConDensUpdateByTime(*args)
@@ -6373,10 +6404,6 @@ def cvConDensInitSampleSet(*args):
 def cvCreateKalman(*args):
   """cvCreateKalman(int dynam_params, int measure_params, int control_params=0) -> CvKalman"""
   return _cv.cvCreateKalman(*args)
-
-def cvReleaseKalman(*args):
-  """cvReleaseKalman(CvKalman kalman)"""
-  return _cv.cvReleaseKalman(*args)
 
 def cvKalmanPredict(*args):
   """cvKalmanPredict(CvKalman kalman, CvMat control=None) -> CvMat"""
@@ -6549,10 +6576,6 @@ def cvMakeHistHeaderForArray(*args):
     """
   return _cv.cvMakeHistHeaderForArray(*args)
 
-def cvReleaseHist(*args):
-  """cvReleaseHist(CvHistogram hist)"""
-  return _cv.cvReleaseHist(*args)
-
 def cvClearHist(*args):
   """cvClearHist(CvHistogram hist)"""
   return _cv.cvClearHist(*args)
@@ -6588,9 +6611,9 @@ def cvCalcArrHist(*args):
   """cvCalcArrHist(CvArr arr, CvHistogram hist, int accumulate=0, CvArr mask=None)"""
   return _cv.cvCalcArrHist(*args)
 
-def cvCalcHist(*args):
-  """cvCalcHist( image, CvHistogram hist, int accumulate=0, CvArr mask=None)"""
-  return _cv.cvCalcHist(*args)
+def cvCalcImageHist(*args):
+  """cvCalcImageHist( image, CvHistogram hist, int accumulate=0, CvArr mask=None)"""
+  return _cv.cvCalcImageHist(*args)
 
 def cvCalcArrBackProject(*args):
   """cvCalcArrBackProject(CvArr image, CvArr dst, CvHistogram hist)"""
@@ -6725,10 +6748,6 @@ def cvLoadHaarClassifierCascade(*args):
   """cvLoadHaarClassifierCascade(char directory, CvSize orig_window_size) -> CvHaarClassifierCascade"""
   return _cv.cvLoadHaarClassifierCascade(*args)
 
-def cvReleaseHaarClassifierCascade(*args):
-  """cvReleaseHaarClassifierCascade(CvHaarClassifierCascade cascade)"""
-  return _cv.cvReleaseHaarClassifierCascade(*args)
-
 def cvSetImagesForHaarClassifierCascade(*args):
   """
     cvSetImagesForHaarClassifierCascade(CvHaarClassifierCascade cascade, CvArr sum, CvArr sqsum, 
@@ -6808,10 +6827,6 @@ def cvPOSIT(*args):
         CvMatr32f rotation_matrix, CvVect32f translation_vector)
     """
   return _cv.cvPOSIT(*args)
-
-def cvReleasePOSITObject(*args):
-  """cvReleasePOSITObject(CvPOSITObject posit_object)"""
-  return _cv.cvReleasePOSITObject(*args)
 
 def cvConvertPointsHomogenious(*args):
   """cvConvertPointsHomogenious(CvMat src, CvMat dst)"""

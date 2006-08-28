@@ -217,10 +217,6 @@ def cvRetrieveFrame(*args):
 def cvQueryFrame(*args):
   """cvQueryFrame(CvCapture capture)"""
   return _highgui.cvQueryFrame(*args)
-
-def cvReleaseCapture(*args):
-  """cvReleaseCapture(CvCapture capture)"""
-  return _highgui.cvReleaseCapture(*args)
 CV_CAP_PROP_POS_MSEC = _highgui.CV_CAP_PROP_POS_MSEC
 CV_CAP_PROP_POS_FRAMES = _highgui.CV_CAP_PROP_POS_FRAMES
 CV_CAP_PROP_POS_AVI_RATIO = _highgui.CV_CAP_PROP_POS_AVI_RATIO
@@ -256,10 +252,6 @@ def cvCreateVideoWriter(*args):
 def cvWriteFrame(*args):
   """cvWriteFrame(CvVideoWriter writer,  image) -> int"""
   return _highgui.cvWriteFrame(*args)
-
-def cvReleaseVideoWriter(*args):
-  """cvReleaseVideoWriter(CvVideoWriter writer)"""
-  return _highgui.cvReleaseVideoWriter(*args)
 HG_AUTOSIZE = _highgui.HG_AUTOSIZE
 class CvvImage(_object):
     """Proxy of C++ CvvImage class"""

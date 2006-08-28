@@ -381,50 +381,44 @@
 %apply CvSeq **OUTPUT {CvSeq **comp};
 
 /**
- * IplImage ** image can be either one IplImage or one array of IplImage
+ * CvArr ** image can be either one CvArr or one array of CvArr
  * (for example like in cvCalcHist() )
- * From Python, the array of IplImage can be a tuple.
+ * From Python, the array of CvArr can be a tuple.
  */
-%typemap(in) (IplImage** image) {
+%typemap(in) (CvArr ** INPUT) (CvArr * one_image, bool free_one_arg, CvArr ** many_images, bool *free_many_args, int nimages ) {
+	one_image = NULL;
+	free_one_arg = false;
+	many_images = NULL;
+	free_many_args = NULL;
 
-    IplImage ** one_image = (IplImage **) malloc (sizeof (IplImage *));
+    /* first, check if this is just one CvArr */
+    /* if this is just one CvArr * one_image will receive it */
+	if(one_image = PyObject_to_CvArr( $input, &free_one_arg )){
+		$1 = &one_image;
+	}
+    else if PyTuple_Check ($input) {
+		/* This is a tuple, so we need to test each element and pass
+	   		them to the called function */
 
-    /* first, check if this is just one IplImage */
-    /* if this is just one IplImage, one_image will receive it */
-    if ((SWIG_ConvertPtr($input, (void **) one_image,
-			 $descriptor(IplImage *),
-			 0)) != -1) {
-
-	/* Yes, just one IplImage, so pass it to the called function */
-	$1 = one_image;
-
-    } else if PyTuple_Check ($input) {
-
-	/* This is a tuple, so we need to test each element and pass
-	   them to the called function */
-
-	IplImage ** many_images;
 	int i;
 
 	/* get the size of the tuple */
-	int nb = PyTuple_Size ($input);
+	int nimages = PyTuple_Size ($input);
 
 	/* allocate the necessary place */
-	many_images = (IplImage **)malloc (nb * sizeof (IplImage *));
+	many_images = (CvArr **)malloc (nimages * sizeof (CvArr *));
+	free_many_args = (bool *)malloc(nimages * sizeof(bool));
 
-	for (i = 0; i < nb; i++) {
+	for (i = 0; i < nimages; i++) {
 
-	    /* convert the current tuple element to a IplImage *, and
+	    /* convert the current tuple element to a CvArr *, and
 	       store to many_images [i] */
-	    SWIG_ConvertPtr(PyTuple_GetItem ($input, i),
-			    (void **) &(many_images [i]),
-			    $descriptor(IplImage *),
-			    0);
+		many_images[i] = PyObject_to_CvArr(PyTuple_GetItem ($input, i), free_many_args+i);
 
 	    /* check that the current item is a correct type */
-	    if (SWIG_arg_fail ($argnum)) {
-		/* incorrect ! */
-		SWIG_fail;
+	    if(!many_images[i]) {
+			/* incorrect ! */
+			SWIG_fail;
 	    }
 	}
 
@@ -432,10 +426,34 @@
 	$1 = many_images;
 
     } else {
-	/* not a IplImage, not a tuple, this is wrong */
-	return 0;
+		/* not a CvArr *, not a tuple, this is wrong */
+		SWIG_fail;
     }
 }
+%apply CvArr ** INPUT {CvArr ** image};
+%apply CvArr ** INPUT {CvArr ** arr};
+%apply CvArr ** INPUT {CvArr ** vects};
+
+%typemap(freearg) (CvArr ** FREEARG) {
+	if(free_one_arg$argnum){
+		cvFree(&(one_image$argnum));
+	}
+	else if(free_many_args$argnum){
+		int i;
+		for (i=0; i<nimages$argnum; i++){
+			if(free_many_args$argnum[i]){
+				cvReleaseData(many_images$argnum[i]);
+				cvFree(many_images$argnum+i);
+			}
+		}
+		free(many_images$argnum);
+		free(free_many_args$argnum);
+	}
+
+}
+%apply CvArr ** FREEARG {CvArr ** image};
+%apply CvArr ** FREEARG {CvArr ** arr};
+%apply CvArr ** FREEARG {CvArr ** vects};
 
 /**
  * Map the CvFont * parameter from the cvInitFont() as an output parameter
@@ -866,16 +884,16 @@ public:
  * return the vertex and edge for cvSubdiv2DLocate
  */
 %typemap(in, numinputs=0) (CvSubdiv2DEdge * edge, CvSubdiv2DPoint ** vertex) 
-	(CvSubdiv2DEdge * tmpEdge, CvSubdiv2DPoint * tmpVertex)
+	(CvSubdiv2DEdge tmpEdge, CvSubdiv2DPoint * tmpVertex)
 {
-	$1 = tmpEdge;
+	$1 = &tmpEdge;
 	$2 = &tmpVertex;
 }
 %typemap(argout) (CvSubdiv2DEdge * edge, CvSubdiv2DPoint ** vertex)
 {
 	PyObject * to_add[2] = {NULL, NULL};
 	if(result==CV_PTLOC_INSIDE || result==CV_PTLOC_ON_EDGE){
-		CvSubdiv2DEdge_Wrapper * wrapper = new CvSubdiv2DEdge_Wrapper( *(tmpEdge$argnum) );
+		CvSubdiv2DEdge_Wrapper * wrapper = new CvSubdiv2DEdge_Wrapper( tmpEdge$argnum );
 		to_add[0] = SWIG_NewPointerObj( wrapper, $descriptor(CvSubdiv2DEdge_Wrapper *), 0);
 		to_add[1] = Py_None;
 	}

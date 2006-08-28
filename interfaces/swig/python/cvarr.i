@@ -361,11 +361,11 @@
 			}
 		}
 		
-		// otherwise return image
+		// otherwise return array
 		im = (IplImage *) cvAlloc(sizeof(IplImage));
 		cvGetSubRect(self, &mat, subrect);
-		cvGetImage(&mat, im);
-		return SWIG_NewPointerObj( im, $descriptor(IplImage *), 1 );
+		im = cvGetImage(&mat, im);
+		return SWIG_NewPointerObj( im, $descriptor(_IplImage *), 1 );
 	}
 }
 
