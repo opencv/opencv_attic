@@ -74,3 +74,29 @@
 %typemap(typecheck) CvPoint = SWIGTYPE;
 %typemap(typecheck) CvScalar = SWIGTYPE;
 %typemap(typecheck) CvPoint2D32f = SWIGTYPE;
+
+/**
+ * IplImage has no reference counting of underlying data, which creates problems with double 
+ * frees after accessing subarrays in python -- instead, replace IplImage with CvMat, which
+ * should be functionally equivalent, but has reference counting.
+ * The potential shortcomings of this method are 
+ * 1. no ROI
+ * 2. IplImage fields missing or named something else.
+ */
+%typemap(in) IplImage * (IplImage header){
+	CvMat *ptr;
+	int res = SWIG_ConvertPtr($input, (void **)(&ptr), $descriptor( CvMat * ), 0);
+	if (!SWIG_IsOK(res)) {
+		SWIG_exception( SWIG_TypeError, "%%typemap(in) IplImage * : could not convert to CvMat");
+		SWIG_fail;
+	}
+	$1 = cvGetImage(ptr, &header);
+}
+
+%typemap(out) IplImage * {
+	CvMat * mat = (CvMat *)cvAlloc(sizeof(CvMat));
+	cvGetMat( $1, mat );
+	cvSetData($1, NULL, 0);
+	cvReleaseImage(&($1));
+	$result = SWIG_NewPointerObj( mat, $descriptor( CvMat * ), 1 );
+}

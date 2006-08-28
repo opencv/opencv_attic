@@ -131,3 +131,18 @@
 		return str;
 	}
 };
+
+// Set up CvMat to emulate IplImage fields
+%{
+int CvMat_width_get(CvMat * m){
+	return m->cols;
+}
+int CvMat_height_get(CvMat *m){
+	return m->rows;
+}
+%}
+%extend CvMat
+{
+	const int width;
+	const int height;
+};

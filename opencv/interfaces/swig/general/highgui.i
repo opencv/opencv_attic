@@ -63,6 +63,7 @@
 %apply int *INPUT {int *value};
 
 %newobject cvLoadImage;
+%newobject cvLoadImageM;
 
 %nodefault CvCapture;
 %newobject cvCaptureFromFile;
