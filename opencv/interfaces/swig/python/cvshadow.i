@@ -50,12 +50,20 @@
 %rename (function) function##_Shadow;
 %enddef
 
+// %ignore, %rename must come before %include
 %myshadow(cvCvtSeqToArray);
 %myshadow(cvArcLength);
 %myshadow(cvHaarDetectObjects);
 %myshadow(cvSegmentMotion);
 %myshadow(cvApproxPoly);
 %myshadow(cvContourPerimeter);
+
+// eliminates need for IplImage ** typemap
+%rename (cvCalcImageHist) cvCalcHist;
+%pythoncode %{
+def cvCalcHist(*args):
+	return cvCalcArrHist(*args)
+%}
 
 %include "cvshadow.h"
 
@@ -80,3 +88,34 @@ def cvHoughLines2( *args ):
 		return CvSeq_CvPoint_2.cast(seq)
 	return CvSeq_float_2.cast(seq)
 %}
+
+// cvRelease* functions don't consider python's reference count
+// so we get a double-free error when the reference count reaches zero.
+// Instead, just make these aliases to Py_XDECREF()
+%define %myrelease(function)
+%ignore function;
+%rename (function) function##_Shadow;
+%inline %{
+void function##_Shadow(PyObject * obj){
+	Py_XDECREF(obj);
+}
+%}
+%enddef
+
+%myrelease(cvReleaseImage);
+%myrelease(cvReleaseMat);
+%myrelease(cvReleaseStructuringElement);
+%myrelease(cvReleaseConDensation);
+%myrelease(cvReleaseKalman);
+%myrelease(cvReleaseHist);
+%myrelease(cvReleaseHaarClassifierCascade);
+%myrelease(cvReleasePOSITObject);
+%myrelease(cvReleaseImageHeader);
+%myrelease(cvReleaseMatND);
+%myrelease(cvReleaseSparseMat);
+%myrelease(cvReleaseMemStorage);
+%myrelease(cvReleaseGraphScanner);
+%myrelease(cvReleaseFileStorage);
+%myrelease(cvRelease);
+%myrelease(cvReleaseCapture);
+%myrelease(cvReleaseVideoWriter);

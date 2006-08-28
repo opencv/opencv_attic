@@ -55,7 +55,7 @@
 // include python-specific files
 %include "./nointpb.i"
 %include "./pytypemaps.i"
-%include "./cvshadow.i"
+%include "./cvshadow.i" 
 
 // parse OpenCV headers
 %include "../general/cv.i"
