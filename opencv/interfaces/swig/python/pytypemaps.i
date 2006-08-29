@@ -55,7 +55,7 @@
 	if(PyList_Check($input) || PyTuple_Check($input)) {
 		$1 = 1;
 	}
-	else if (SWIG_ConvertPtr($input, (void **) &ptr, 0, 0) == -1) {
+	else if (SWIG_ConvertPtr($input, &ptr, 0, 0) == -1) {
 		$1 = 0;
 		PyErr_Clear();
 	}
@@ -91,9 +91,9 @@
 
 
 /* typemap for cvGetDims */
-%typemap(in) (const CvArr * arr, int * sizes = NULL) (CvArr * myarr, int mysizes[CV_MAX_DIM]){
-	SWIG_Python_ConvertPtr($input, (void **) &myarr, 0, SWIG_POINTER_EXCEPTION);
-	$1=myarr;
+%typemap(in) (const CvArr * arr, int * sizes = NULL) (void * myarr, int mysizes[CV_MAX_DIM]){
+	SWIG_Python_ConvertPtr($input, &myarr, 0, SWIG_POINTER_EXCEPTION);
+	$1=(CvArr *)myarr;
 	$2=mysizes;
 }
 
@@ -218,8 +218,10 @@
 
 	/* convert from a Python CvPoint pointer to a C CvPoint pointer */
 	CvPoint *p = NULL;
-	SWIG_Python_ConvertPtr (item, (void **)&p, $descriptor(CvPoint *),
+	void *vptr;
+	SWIG_Python_ConvertPtr (item, &vptr, $descriptor(CvPoint *),
 				SWIG_POINTER_EXCEPTION);
+	p = (CvPoint *) vptr;
 
 	/* extract the x and y positions */
 	points [i].x = p->x;
@@ -278,9 +280,11 @@
 	    PyObject *item = PyList_GetItem (line, j);
 
 	    /* convert from a Python CvPoint pointer to a C CvPoint pointer */
-	    CvPoint *p = NULL;
-	    SWIG_Python_ConvertPtr (item, (void **)&p, $descriptor(CvPoint *),
+		void *vptr;
+	    SWIG_Python_ConvertPtr (item, &vptr, $descriptor(CvPoint *),
 				    SWIG_POINTER_EXCEPTION);
+		
+	    CvPoint *p = (CvPoint *) vptr;
 
 	    /* extract the x and y positions */
 	    points [i][j].x = p->x;
@@ -385,15 +389,16 @@
  * (for example like in cvCalcHist() )
  * From Python, the array of CvArr can be a tuple.
  */
-%typemap(in) (CvArr ** INPUT) (CvArr * one_image, bool free_one_arg, CvArr ** many_images, bool *free_many_args, int nimages ) {
-	one_image = NULL;
-	free_one_arg = false;
-	many_images = NULL;
-	free_many_args = NULL;
+%typemap(in) (CvArr ** INPUT) (
+	CvArr * one_image=NULL, 
+	bool free_one_arg=false, 
+	CvArr ** many_images=NULL, 
+	bool *free_many_args=NULL, 
+	int nimages=0 ) {
 
     /* first, check if this is just one CvArr */
     /* if this is just one CvArr * one_image will receive it */
-	if(one_image = PyObject_to_CvArr( $input, &free_one_arg )){
+	if( (one_image = PyObject_to_CvArr( $input, &free_one_arg )) ){
 		$1 = &one_image;
 	}
     else if PyTuple_Check ($input) {
@@ -403,7 +408,7 @@
 	int i;
 
 	/* get the size of the tuple */
-	int nimages = PyTuple_Size ($input);
+	nimages = PyTuple_Size ($input);
 
 	/* allocate the necessary place */
 	many_images = (CvArr **)malloc (nimages * sizeof (CvArr *));
@@ -582,10 +587,11 @@
     for (i = 0; i < size; i++) {
 	PyObject *item = PyList_GetItem ($input, i);
 
-	CvPoint2D32f *p = NULL;
-	SWIG_Python_ConvertPtr (item, (void **)&p,
+	void * vptr;
+	SWIG_Python_ConvertPtr (item, &vptr,
 				$descriptor(CvPoint2D32f*),
 				SWIG_POINTER_EXCEPTION);
+	CvPoint2D32f *p = (CvPoint2D32f *)vptr;
 	$1 [i].x = p->x;
 	$1 [i].y = p->y;
     }
@@ -654,10 +660,11 @@
     for (i = 0; i < $2; i++) {
 	PyObject *item = PyList_GetItem ($input, i);
 
-	CvPoint2D32f *p = NULL;
-	SWIG_Python_ConvertPtr (item, (void **)&p,
+	void *vptr;
+	SWIG_Python_ConvertPtr (item, &vptr,
 				$descriptor(CvPoint2D32f*),
 				SWIG_POINTER_EXCEPTION);
+	CvPoint2D32f *p = (CvPoint2D32f *) vptr;;
 	$1 [i].x = p->x;
 	$1 [i].y = p->y;
     }
@@ -690,9 +697,11 @@
  */
 %typemap(in, numinputs=1) (CvSize pattern_size, CvPoint2D32f * corners, int * corner_count ) 
      (CvSize * pattern_size, CvPoint2D32f * tmp_corners, int tmp_ncorners) {
-	if( SWIG_ConvertPtr($input, (void **)&pattern_size, $descriptor( CvSize * ), SWIG_POINTER_EXCEPTION ) == -1){
+	 void * vptr;
+	if( SWIG_ConvertPtr($input, &vptr, $descriptor( CvSize * ), SWIG_POINTER_EXCEPTION ) == -1){
 		return NULL;
 	}
+	pattern_size=(CvSize *)vptr;
 	tmp_ncorners = pattern_size->width*pattern_size->height;
 
 	tmp_corners = (CvPoint2D32f *) malloc(sizeof(CvPoint2D32f)*tmp_ncorners);
@@ -736,43 +745,44 @@
  * Fix OpenCV inheritance for CvSeq, CvSet, CvGraph
  * Otherwise, can't call CvSeq functions on CvSet or CvGraph
 */
-%typemap(in, numinputs=1) (CvSeq *) (CvSeq * ptr)
+%typemap(in, numinputs=1) (CvSeq *) (void * ptr)
 {
-	if( SWIG_ConvertPtr($input, (void**)&ptr, $descriptor(CvSeq *), 0) == -1 &&
-	    SWIG_ConvertPtr($input, (void**)&ptr, $descriptor(CvSet *), 0) == -1 &&
-	    SWIG_ConvertPtr($input, (void**)&ptr, $descriptor(CvGraph *), 0) == -1 &&
-	    SWIG_ConvertPtr($input, (void**)&ptr, $descriptor(CvSubdiv2D *), 0) == -1 &&
-	    SWIG_ConvertPtr($input, (void**)&ptr, $descriptor(CvChain *), 0) == -1 &&
-	    SWIG_ConvertPtr($input, (void**)&ptr, $descriptor(CvContour *), 0) == -1 &&
-	    SWIG_ConvertPtr($input, (void**)&ptr, $descriptor(CvContourTree *), 0) == -1 )
+	
+	if( SWIG_ConvertPtr($input, &ptr, $descriptor(CvSeq *), 0) == -1 &&
+	    SWIG_ConvertPtr($input, &ptr, $descriptor(CvSet *), 0) == -1 &&
+	    SWIG_ConvertPtr($input, &ptr, $descriptor(CvGraph *), 0) == -1 &&
+	    SWIG_ConvertPtr($input, &ptr, $descriptor(CvSubdiv2D *), 0) == -1 &&
+	    SWIG_ConvertPtr($input, &ptr, $descriptor(CvChain *), 0) == -1 &&
+	    SWIG_ConvertPtr($input, &ptr, $descriptor(CvContour *), 0) == -1 &&
+	    SWIG_ConvertPtr($input, &ptr, $descriptor(CvContourTree *), 0) == -1 )
 	{
 		SWIG_exception (SWIG_TypeError, "could not convert to CvSeq");
 		return NULL;
 	}
-	$1 = ptr;
+	$1 = (CvSeq *) ptr;
 }
 
-%typemap(in, numinputs=1) (CvSet *) (CvSet * ptr)
+%typemap(in, numinputs=1) (CvSet *) (void * ptr)
 {
-	if( SWIG_ConvertPtr($input, (void**)&ptr, $descriptor(CvSet *), 0) == -1 &&
-	    SWIG_ConvertPtr($input, (void**)&ptr, $descriptor(CvGraph *), 0) == -1 &&
-	    SWIG_ConvertPtr($input, (void**)&ptr, $descriptor(CvSubdiv2D *), 0) == -1) 
+	if( SWIG_ConvertPtr($input, &ptr, $descriptor(CvSet *), 0) == -1 &&
+	    SWIG_ConvertPtr($input, &ptr, $descriptor(CvGraph *), 0) == -1 &&
+	    SWIG_ConvertPtr($input, &ptr, $descriptor(CvSubdiv2D *), 0) == -1) 
 	{
 		SWIG_exception (SWIG_TypeError, "could not convert to CvSet");
 		return NULL;
 	}
-	$1 = ptr;
+	$1 = (CvSet *)ptr;
 }
 
-%typemap(in, numinputs=1) (CvGraph *) (CvGraph * ptr)
+%typemap(in, numinputs=1) (CvGraph *) (void * ptr)
 {
-	if( SWIG_ConvertPtr($input, (void**)&ptr, $descriptor(CvGraph *), 0) == -1 &&
-	    SWIG_ConvertPtr($input, (void**)&ptr, $descriptor(CvSubdiv2D *), 0) == -1) 
+	if( SWIG_ConvertPtr($input, &ptr, $descriptor(CvGraph *), 0) == -1 &&
+	    SWIG_ConvertPtr($input, &ptr, $descriptor(CvSubdiv2D *), 0) == -1) 
 	{
 		SWIG_exception (SWIG_TypeError, "could not convert to CvGraph");
 		return NULL;
 	}
-	$1 = ptr;
+	$1 = (CvGraph *)ptr;
 }
 
 /**
@@ -843,18 +853,20 @@ public:
 	$result = SWIG_NewPointerObj( wrapper, $descriptor( type##_Wrapper * ), 1 );
 }
 
-%typemap(in) (type *) (type##_Wrapper * wrapper){
-	if(SWIG_ConvertPtr($input, (void **) &wrapper, $descriptor(type##_Wrapper *), 0)==-1){
+%typemap(in) (type *) (void * vptr, type##_Wrapper * wrapper){
+	if(SWIG_ConvertPtr($input, &vptr, $descriptor(type##_Wrapper *), 0)==-1){
 		SWIG_exception( SWIG_TypeError, "could not convert Python object to C value");
 		return NULL;
 	}
+	wrapper = (type##_Wrapper *) vptr;
 	$1 = wrapper->ptr();
 }
-%typemap(in) (type) (type##_Wrapper * wrapper){
-	if(SWIG_ConvertPtr($input, (void **) &wrapper, $descriptor(type##_Wrapper *), 0)==-1){
+%typemap(in) (type) (void * vptr, type##_Wrapper * wrapper){
+	if(SWIG_ConvertPtr($input, &vptr, $descriptor(type##_Wrapper *), 0)==-1){
 		SWIG_exception( SWIG_TypeError, "could not convert Python object to C value");
 		return NULL;
 	}
+	wrapper = (type##_Wrapper *) vptr;
 	$1 = wrapper->ref();
 }
 %enddef 
@@ -866,12 +878,14 @@ public:
 /**
  * Allow CvQuadEdge2D to be interpreted as CvSubdiv2DEdge
  */
-%typemap(in, numinputs=1) (CvSubdiv2DEdge) (CvSubdiv2DEdge_Wrapper * wrapper, CvQuadEdge2D * qedge)
+%typemap(in, numinputs=1) (CvSubdiv2DEdge) (CvSubdiv2DEdge_Wrapper * wrapper, CvQuadEdge2D * qedge, void *vptr)
 {
-	if( SWIG_ConvertPtr($input, (void **)&wrapper, $descriptor(CvSubdiv2DEdge_Wrapper *), 0) != -1 ){
+	if( SWIG_ConvertPtr($input, &vptr, $descriptor(CvSubdiv2DEdge_Wrapper *), 0) != -1 ){
+		wrapper = (CvSubdiv2DEdge_Wrapper *) vptr;
 		$1 = wrapper->ref();
 	}
-	else if( SWIG_ConvertPtr($input, (void **)&qedge, $descriptor(CvQuadEdge2D *), 0) != -1 ){
+	else if( SWIG_ConvertPtr($input, &vptr, $descriptor(CvQuadEdge2D *), 0) != -1 ){
+		qedge = (CvQuadEdge2D *) vptr;
 		$1 = (CvSubdiv2DEdge)qedge;
 	}
 	else{

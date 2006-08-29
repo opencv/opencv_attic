@@ -2691,8 +2691,8 @@ namespace swig {
 // convert a python sequence/array/list object into a c-array
 #define PyObject_AsArrayImpl(func, ctype, ptype)                              \
 	int func(PyObject * obj, ctype * array, int len){                         \
-	CvMat * mat=NULL;                                                         \
-	IplImage * im=NULL;                                                       \
+	void * mat_vptr=NULL;                                                     \
+	void * im_vptr=NULL;                                                      \
 	if(PyNumber_Check(obj)){                                                  \
 		memset( array, 0, sizeof(ctype)*len );                                \
 		array[0] = PyObject_As##ptype( obj );                                 \
@@ -2708,11 +2708,12 @@ namespace swig {
 			}                                                                 \
 		}                                                                     \
 	}                                                                         \
-	else if( SWIG_ConvertPtr(obj, (void **)&mat, SWIGTYPE_p_CvMat, 0)!=-1 ||  \
-	         SWIG_ConvertPtr(obj, (void **)&im, SWIGTYPE_p__IplImage, 0)!=-1) \
+	else if( SWIG_ConvertPtr(obj, &mat_vptr, SWIGTYPE_p_CvMat, 0)!=-1 ||      \
+	         SWIG_ConvertPtr(obj, &im_vptr, SWIGTYPE_p__IplImage, 0)!=-1)     \
 	{                                                                         \
+		CvMat * mat = (CvMat *) mat_vptr;                                     \
 		CvMat stub;                                                           \
-		if(im) mat = cvGetMat(im, &stub);                                     \
+		if(im_vptr) mat = cvGetMat(im_vptr, &stub);                           \
 		if( mat->rows!=1 && mat->cols!=1 ){                                   \
 			PyErr_SetString( PyExc_TypeError,                                 \
 			     "PyObject_As*Array: CvArr must be row or column vector" );   \
@@ -2802,7 +2803,8 @@ static CvPoint2D32f PyObject_to_CvPoint2D32f(PyObject * obj){
 static CvScalar PyObject_to_CvScalar(PyObject * obj){
 	CvScalar val;
 	CvScalar * ptr;
-	if( SWIG_ConvertPtr(obj, (void **)&ptr, SWIGTYPE_p_CvScalar, 0 ) == -1)
+	void * vptr;
+	if( SWIG_ConvertPtr(obj, &vptr, SWIGTYPE_p_CvScalar, 0 ) == -1)
 	{
 		if(PyObject_AsDoubleArray(obj, val.val, 4)==-1){
 			PyErr_SetString(PyExc_TypeError, "could not convert to CvScalar");
@@ -2810,6 +2812,7 @@ static CvScalar PyObject_to_CvScalar(PyObject * obj){
 		}
 		return val;
 	}
+	ptr = (CvScalar *) vptr;
 	return *ptr; 
 }
 
@@ -2820,7 +2823,7 @@ static CvArr * PyObject_to_CvArr(PyObject * obj, bool * freearg){
 
 	// check if OpenCV type
 	if( PySwigObject_Check(obj) ){
-		SWIG_ConvertPtr(obj, (void**)&cvarr, 0, SWIG_POINTER_EXCEPTION);
+		SWIG_ConvertPtr(obj, &cvarr, 0, SWIG_POINTER_EXCEPTION);
 	}
 	else if(PyList_Check(obj) || PyTuple_Check(obj)){
 		cvarr = PySequence_to_CvArr( obj );
@@ -4165,6 +4168,8 @@ SWIGINTERN PyObject *_wrap_cvInitSystem(PyObject *SWIGUNUSEDPARM(self), PyObject
   int result;
   int val1 ;
   int ecode1 = 0 ;
+  void *vptr2 ;
+  char *buffer2 ;
   PyObject * obj0 = 0 ;
   PyObject * obj1 = 0 ;
   
@@ -4175,7 +4180,11 @@ SWIGINTERN PyObject *_wrap_cvInitSystem(PyObject *SWIGUNUSEDPARM(self), PyObject
   } 
   arg1 = static_cast< int >(val1);
   {
-    char * buffer; if ((SWIG_ConvertPtr(obj1, (void **) &buffer, SWIGTYPE_p_char, 1)) == -1) return 0; arg2=&buffer; 
+    if ((SWIG_ConvertPtr(obj1, &vptr2, SWIGTYPE_p_char, 1)) == -1){
+      SWIG_fail;
+    }
+    buffer2 = (char *) vptr2;
+    arg2=&buffer2;
   }
   {
     try {
@@ -5290,13 +5299,13 @@ SWIGINTERN PyObject *_wrap_cvWriteFrame(PyObject *SWIGUNUSEDPARM(self), PyObject
   }
   arg1 = reinterpret_cast< CvVideoWriter * >(argp1);
   {
-    CvMat *ptr;
-    int res = SWIG_ConvertPtr(obj1, (void **)(&ptr), SWIGTYPE_p_CvMat, 0);
+    void * vptr;
+    int res = SWIG_ConvertPtr(obj1, (&vptr), SWIGTYPE_p_CvMat, 0);
     if ( res == -1 ){
       SWIG_exception( SWIG_TypeError, "%%typemap(in) IplImage * : could not convert to CvMat");
       SWIG_fail;
     }
-    arg2 = cvGetImage(ptr, &header2);
+    arg2 = cvGetImage((CvMat *)vptr, &header2);
   }
   {
     try {
@@ -5928,13 +5937,13 @@ SWIGINTERN PyObject *_wrap_CvvImage_CopyOf__SWIG_2(PyObject *SWIGUNUSEDPARM(self
   }
   arg1 = reinterpret_cast< CvvImage * >(argp1);
   {
-    CvMat *ptr;
-    int res = SWIG_ConvertPtr(obj1, (void **)(&ptr), SWIGTYPE_p_CvMat, 0);
+    void * vptr;
+    int res = SWIG_ConvertPtr(obj1, (&vptr), SWIGTYPE_p_CvMat, 0);
     if ( res == -1 ){
       SWIG_exception( SWIG_TypeError, "%%typemap(in) IplImage * : could not convert to CvMat");
       SWIG_fail;
     }
-    arg2 = cvGetImage(ptr, &header2);
+    arg2 = cvGetImage((CvMat *)vptr, &header2);
   }
   ecode3 = SWIG_AsVal_int(obj2, &val3);
   if (!SWIG_IsOK(ecode3)) {
@@ -5974,13 +5983,13 @@ SWIGINTERN PyObject *_wrap_CvvImage_CopyOf__SWIG_3(PyObject *SWIGUNUSEDPARM(self
   }
   arg1 = reinterpret_cast< CvvImage * >(argp1);
   {
-    CvMat *ptr;
-    int res = SWIG_ConvertPtr(obj1, (void **)(&ptr), SWIGTYPE_p_CvMat, 0);
+    void * vptr;
+    int res = SWIG_ConvertPtr(obj1, (&vptr), SWIGTYPE_p_CvMat, 0);
     if ( res == -1 ){
       SWIG_exception( SWIG_TypeError, "%%typemap(in) IplImage * : could not convert to CvMat");
       SWIG_fail;
     }
-    arg2 = cvGetImage(ptr, &header2);
+    arg2 = cvGetImage((CvMat *)vptr, &header2);
   }
   {
     try {
