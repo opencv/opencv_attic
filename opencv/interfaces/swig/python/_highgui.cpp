@@ -3260,6 +3260,33 @@ SWIG_AsVal_int (PyObject * obj, int *val)
 #include "highgui.h"
 
 
+CvMat * cvLoadImageMat(const char* filename, int iscolor=CV_LOAD_IMAGE_COLOR ){
+	return cvLoadImageM(filename, iscolor);
+}
+
+
+CvMat * cvRetrieveFrame__CvMat( CvCapture* capture ){
+	IplImage * im = cvRetrieveFrame(capture);
+	if(im){
+		CvMat * mat = (CvMat *)cvAlloc(sizeof(CvMat));
+		mat = cvGetMat(im, mat);
+		return mat;
+	}
+	return false;
+}
+
+
+CvMat * cvQueryFrame__CvMat( CvCapture * capture ){
+	IplImage * im = cvQueryFrame(capture);
+	if(im){
+		CvMat * mat = (CvMat *)cvAlloc(sizeof(CvMat));
+		mat = cvGetMat(im, mat);
+		return mat;
+	}
+	return false;
+}
+
+
   #define SWIG_From_long   PyInt_FromLong 
 
 
@@ -3957,6 +3984,180 @@ fail:
 }
 
 
+SWIGINTERN PyObject *_wrap_cvLoadImage__SWIG_0(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
+  PyObject *resultobj = 0;
+  char *arg1 = (char *) 0 ;
+  int arg2 ;
+  CvMat *result = 0 ;
+  int res1 ;
+  char *buf1 = 0 ;
+  int alloc1 = 0 ;
+  int val2 ;
+  int ecode2 = 0 ;
+  PyObject * obj0 = 0 ;
+  PyObject * obj1 = 0 ;
+  
+  if (!PyArg_ParseTuple(args,(char *)"OO:cvLoadImage",&obj0,&obj1)) SWIG_fail;
+  res1 = SWIG_AsCharPtrAndSize(obj0, &buf1, NULL, &alloc1);
+  if (!SWIG_IsOK(res1)) {
+    SWIG_exception_fail(SWIG_ArgError(res1), "in method '" "cvLoadImage" "', argument " "1"" of type '" "char const *""'");
+  }
+  arg1 = buf1;
+  ecode2 = SWIG_AsVal_int(obj1, &val2);
+  if (!SWIG_IsOK(ecode2)) {
+    SWIG_exception_fail(SWIG_ArgError(ecode2), "in method '" "cvLoadImage" "', argument " "2"" of type '" "int""'");
+  } 
+  arg2 = static_cast< int >(val2);
+  {
+    try {
+      result = (CvMat *)cvLoadImageMat((char const *)arg1,arg2); 
+    } 
+    catch (...) 
+    {
+      return NULL;
+    } 
+  }
+  resultobj = SWIG_NewPointerObj(SWIG_as_voidptr(result), SWIGTYPE_p_CvMat, 0 |  0 );
+  if (alloc1 == SWIG_NEWOBJ) delete[] buf1;
+  return resultobj;
+fail:
+  if (alloc1 == SWIG_NEWOBJ) delete[] buf1;
+  return NULL;
+}
+
+
+SWIGINTERN PyObject *_wrap_cvLoadImage__SWIG_1(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
+  PyObject *resultobj = 0;
+  char *arg1 = (char *) 0 ;
+  CvMat *result = 0 ;
+  int res1 ;
+  char *buf1 = 0 ;
+  int alloc1 = 0 ;
+  PyObject * obj0 = 0 ;
+  
+  if (!PyArg_ParseTuple(args,(char *)"O:cvLoadImage",&obj0)) SWIG_fail;
+  res1 = SWIG_AsCharPtrAndSize(obj0, &buf1, NULL, &alloc1);
+  if (!SWIG_IsOK(res1)) {
+    SWIG_exception_fail(SWIG_ArgError(res1), "in method '" "cvLoadImage" "', argument " "1"" of type '" "char const *""'");
+  }
+  arg1 = buf1;
+  {
+    try {
+      result = (CvMat *)cvLoadImageMat((char const *)arg1); 
+    } 
+    catch (...) 
+    {
+      return NULL;
+    } 
+  }
+  resultobj = SWIG_NewPointerObj(SWIG_as_voidptr(result), SWIGTYPE_p_CvMat, 0 |  0 );
+  if (alloc1 == SWIG_NEWOBJ) delete[] buf1;
+  return resultobj;
+fail:
+  if (alloc1 == SWIG_NEWOBJ) delete[] buf1;
+  return NULL;
+}
+
+
+SWIGINTERN PyObject *_wrap_cvLoadImage(PyObject *self, PyObject *args) {
+  int argc;
+  PyObject *argv[3];
+  int ii;
+  
+  if (!PyTuple_Check(args)) SWIG_fail;
+  argc = PyObject_Length(args);
+  for (ii = 0; (ii < argc) && (ii < 2); ii++) {
+    argv[ii] = PyTuple_GET_ITEM(args,ii);
+  }
+  if (argc == 1) {
+    int _v;
+    int res = SWIG_AsCharPtrAndSize(argv[0], 0, NULL, 0);
+    _v = SWIG_CheckState(res);
+    if (_v) {
+      return _wrap_cvLoadImage__SWIG_1(self, args);
+    }
+  }
+  if (argc == 2) {
+    int _v;
+    int res = SWIG_AsCharPtrAndSize(argv[0], 0, NULL, 0);
+    _v = SWIG_CheckState(res);
+    if (_v) {
+      {
+        int res = SWIG_AsVal_int(argv[1], NULL);
+        _v = SWIG_CheckState(res);
+      }
+      if (_v) {
+        return _wrap_cvLoadImage__SWIG_0(self, args);
+      }
+    }
+  }
+  
+fail:
+  SWIG_SetErrorMsg(PyExc_NotImplementedError,"No matching function for overloaded 'cvLoadImage'");
+  return NULL;
+}
+
+
+SWIGINTERN PyObject *_wrap_cvRetrieveFrame(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
+  PyObject *resultobj = 0;
+  CvCapture *arg1 = (CvCapture *) 0 ;
+  CvMat *result = 0 ;
+  void *argp1 = 0 ;
+  int res1 = 0 ;
+  PyObject * obj0 = 0 ;
+  
+  if (!PyArg_ParseTuple(args,(char *)"O:cvRetrieveFrame",&obj0)) SWIG_fail;
+  res1 = SWIG_ConvertPtr(obj0, &argp1,SWIGTYPE_p_CvCapture, 0 |  0 );
+  if (!SWIG_IsOK(res1)) {
+    SWIG_exception_fail(SWIG_ArgError(res1), "in method '" "cvRetrieveFrame" "', argument " "1"" of type '" "CvCapture *""'"); 
+  }
+  arg1 = reinterpret_cast< CvCapture * >(argp1);
+  {
+    try {
+      result = (CvMat *)cvRetrieveFrame__CvMat(arg1); 
+    } 
+    catch (...) 
+    {
+      return NULL;
+    } 
+  }
+  resultobj = SWIG_NewPointerObj(SWIG_as_voidptr(result), SWIGTYPE_p_CvMat, 0 |  0 );
+  return resultobj;
+fail:
+  return NULL;
+}
+
+
+SWIGINTERN PyObject *_wrap_cvQueryFrame(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
+  PyObject *resultobj = 0;
+  CvCapture *arg1 = (CvCapture *) 0 ;
+  CvMat *result = 0 ;
+  void *argp1 = 0 ;
+  int res1 = 0 ;
+  PyObject * obj0 = 0 ;
+  
+  if (!PyArg_ParseTuple(args,(char *)"O:cvQueryFrame",&obj0)) SWIG_fail;
+  res1 = SWIG_ConvertPtr(obj0, &argp1,SWIGTYPE_p_CvCapture, 0 |  0 );
+  if (!SWIG_IsOK(res1)) {
+    SWIG_exception_fail(SWIG_ArgError(res1), "in method '" "cvQueryFrame" "', argument " "1"" of type '" "CvCapture *""'"); 
+  }
+  arg1 = reinterpret_cast< CvCapture * >(argp1);
+  {
+    try {
+      result = (CvMat *)cvQueryFrame__CvMat(arg1); 
+    } 
+    catch (...) 
+    {
+      return NULL;
+    } 
+  }
+  resultobj = SWIG_NewPointerObj(SWIG_as_voidptr(result), SWIGTYPE_p_CvMat, 0 |  0 );
+  return resultobj;
+fail:
+  return NULL;
+}
+
+
 SWIGINTERN PyObject *_wrap_cvInitSystem(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
   PyObject *resultobj = 0;
   int arg1 ;
@@ -4552,56 +4753,6 @@ fail:
 }
 
 
-SWIGINTERN PyObject *_wrap_cvLoadImage(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
-  PyObject *resultobj = 0;
-  char *arg1 = (char *) 0 ;
-  int arg2 = (int) 1 ;
-  IplImage *result = 0 ;
-  int res1 ;
-  char *buf1 = 0 ;
-  int alloc1 = 0 ;
-  int val2 ;
-  int ecode2 = 0 ;
-  PyObject * obj0 = 0 ;
-  PyObject * obj1 = 0 ;
-  
-  if (!PyArg_ParseTuple(args,(char *)"O|O:cvLoadImage",&obj0,&obj1)) SWIG_fail;
-  res1 = SWIG_AsCharPtrAndSize(obj0, &buf1, NULL, &alloc1);
-  if (!SWIG_IsOK(res1)) {
-    SWIG_exception_fail(SWIG_ArgError(res1), "in method '" "cvLoadImage" "', argument " "1"" of type '" "char const *""'");
-  }
-  arg1 = buf1;
-  if (obj1) {
-    ecode2 = SWIG_AsVal_int(obj1, &val2);
-    if (!SWIG_IsOK(ecode2)) {
-      SWIG_exception_fail(SWIG_ArgError(ecode2), "in method '" "cvLoadImage" "', argument " "2"" of type '" "int""'");
-    } 
-    arg2 = static_cast< int >(val2);
-  }
-  {
-    try {
-      result = (IplImage *)cvLoadImage((char const *)arg1,arg2); 
-    } 
-    catch (...) 
-    {
-      return NULL;
-    } 
-  }
-  {
-    CvMat * mat = (CvMat *)cvAlloc(sizeof(CvMat));
-    cvGetMat( result, mat );
-    cvSetData(result, NULL, 0);
-    cvReleaseImage(&(result));
-    resultobj = SWIG_NewPointerObj( mat, SWIGTYPE_p_CvMat, 1 );
-  }
-  if (alloc1 == SWIG_NEWOBJ) delete[] buf1;
-  return resultobj;
-fail:
-  if (alloc1 == SWIG_NEWOBJ) delete[] buf1;
-  return NULL;
-}
-
-
 SWIGINTERN PyObject *_wrap_cvLoadImageM(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
   PyObject *resultobj = 0;
   char *arg1 = (char *) 0 ;
@@ -4889,7 +5040,7 @@ fail:
 }
 
 
-SWIGINTERN PyObject *_wrap_cvRetrieveFrame(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
+SWIGINTERN PyObject *_wrap_cvRetrieveFrame__Deprecated(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
   PyObject *resultobj = 0;
   CvCapture *arg1 = (CvCapture *) 0 ;
   IplImage *result = 0 ;
@@ -4897,10 +5048,10 @@ SWIGINTERN PyObject *_wrap_cvRetrieveFrame(PyObject *SWIGUNUSEDPARM(self), PyObj
   int res1 = 0 ;
   PyObject * obj0 = 0 ;
   
-  if (!PyArg_ParseTuple(args,(char *)"O:cvRetrieveFrame",&obj0)) SWIG_fail;
+  if (!PyArg_ParseTuple(args,(char *)"O:cvRetrieveFrame__Deprecated",&obj0)) SWIG_fail;
   res1 = SWIG_ConvertPtr(obj0, &argp1,SWIGTYPE_p_CvCapture, 0 |  0 );
   if (!SWIG_IsOK(res1)) {
-    SWIG_exception_fail(SWIG_ArgError(res1), "in method '" "cvRetrieveFrame" "', argument " "1"" of type '" "CvCapture *""'"); 
+    SWIG_exception_fail(SWIG_ArgError(res1), "in method '" "cvRetrieveFrame__Deprecated" "', argument " "1"" of type '" "CvCapture *""'"); 
   }
   arg1 = reinterpret_cast< CvCapture * >(argp1);
   {
@@ -4913,11 +5064,8 @@ SWIGINTERN PyObject *_wrap_cvRetrieveFrame(PyObject *SWIGUNUSEDPARM(self), PyObj
     } 
   }
   {
-    CvMat * mat = (CvMat *)cvAlloc(sizeof(CvMat));
-    cvGetMat( result, mat );
-    cvSetData(result, NULL, 0);
-    cvReleaseImage(&(result));
-    resultobj = SWIG_NewPointerObj( mat, SWIGTYPE_p_CvMat, 1 );
+    SWIG_exception( SWIG_TypeError, "IplImage * return type is deprecated. Please file a bug report at www.sourceforge.net/opencvlibrary if you see this error message.");
+    SWIG_fail;
   }
   return resultobj;
 fail:
@@ -4925,7 +5073,7 @@ fail:
 }
 
 
-SWIGINTERN PyObject *_wrap_cvQueryFrame(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
+SWIGINTERN PyObject *_wrap_cvQueryFrame__Deprecated(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
   PyObject *resultobj = 0;
   CvCapture *arg1 = (CvCapture *) 0 ;
   IplImage *result = 0 ;
@@ -4933,10 +5081,10 @@ SWIGINTERN PyObject *_wrap_cvQueryFrame(PyObject *SWIGUNUSEDPARM(self), PyObject
   int res1 = 0 ;
   PyObject * obj0 = 0 ;
   
-  if (!PyArg_ParseTuple(args,(char *)"O:cvQueryFrame",&obj0)) SWIG_fail;
+  if (!PyArg_ParseTuple(args,(char *)"O:cvQueryFrame__Deprecated",&obj0)) SWIG_fail;
   res1 = SWIG_ConvertPtr(obj0, &argp1,SWIGTYPE_p_CvCapture, 0 |  0 );
   if (!SWIG_IsOK(res1)) {
-    SWIG_exception_fail(SWIG_ArgError(res1), "in method '" "cvQueryFrame" "', argument " "1"" of type '" "CvCapture *""'"); 
+    SWIG_exception_fail(SWIG_ArgError(res1), "in method '" "cvQueryFrame__Deprecated" "', argument " "1"" of type '" "CvCapture *""'"); 
   }
   arg1 = reinterpret_cast< CvCapture * >(argp1);
   {
@@ -4949,11 +5097,8 @@ SWIGINTERN PyObject *_wrap_cvQueryFrame(PyObject *SWIGUNUSEDPARM(self), PyObject
     } 
   }
   {
-    CvMat * mat = (CvMat *)cvAlloc(sizeof(CvMat));
-    cvGetMat( result, mat );
-    cvSetData(result, NULL, 0);
-    cvReleaseImage(&(result));
-    resultobj = SWIG_NewPointerObj( mat, SWIGTYPE_p_CvMat, 1 );
+    SWIG_exception( SWIG_TypeError, "IplImage * return type is deprecated. Please file a bug report at www.sourceforge.net/opencvlibrary if you see this error message.");
+    SWIG_fail;
   }
   return resultobj;
 fail:
@@ -5147,7 +5292,7 @@ SWIGINTERN PyObject *_wrap_cvWriteFrame(PyObject *SWIGUNUSEDPARM(self), PyObject
   {
     CvMat *ptr;
     int res = SWIG_ConvertPtr(obj1, (void **)(&ptr), SWIGTYPE_p_CvMat, 0);
-    if (!SWIG_IsOK(res)) {
+    if ( res == -1 ){
       SWIG_exception( SWIG_TypeError, "%%typemap(in) IplImage * : could not convert to CvMat");
       SWIG_fail;
     }
@@ -5785,7 +5930,7 @@ SWIGINTERN PyObject *_wrap_CvvImage_CopyOf__SWIG_2(PyObject *SWIGUNUSEDPARM(self
   {
     CvMat *ptr;
     int res = SWIG_ConvertPtr(obj1, (void **)(&ptr), SWIGTYPE_p_CvMat, 0);
-    if (!SWIG_IsOK(res)) {
+    if ( res == -1 ){
       SWIG_exception( SWIG_TypeError, "%%typemap(in) IplImage * : could not convert to CvMat");
       SWIG_fail;
     }
@@ -5831,7 +5976,7 @@ SWIGINTERN PyObject *_wrap_CvvImage_CopyOf__SWIG_3(PyObject *SWIGUNUSEDPARM(self
   {
     CvMat *ptr;
     int res = SWIG_ConvertPtr(obj1, (void **)(&ptr), SWIGTYPE_p_CvMat, 0);
-    if (!SWIG_IsOK(res)) {
+    if ( res == -1 ){
       SWIG_exception( SWIG_TypeError, "%%typemap(in) IplImage * : could not convert to CvMat");
       SWIG_fail;
     }
@@ -5962,11 +6107,8 @@ SWIGINTERN PyObject *_wrap_CvvImage_GetImage(PyObject *SWIGUNUSEDPARM(self), PyO
     } 
   }
   {
-    CvMat * mat = (CvMat *)cvAlloc(sizeof(CvMat));
-    cvGetMat( result, mat );
-    cvSetData(result, NULL, 0);
-    cvReleaseImage(&(result));
-    resultobj = SWIG_NewPointerObj( mat, SWIGTYPE_p_CvMat, 1 );
+    SWIG_exception( SWIG_TypeError, "IplImage * return type is deprecated. Please file a bug report at www.sourceforge.net/opencvlibrary if you see this error message.");
+    SWIG_fail;
   }
   return resultobj;
 fail:
@@ -6196,6 +6338,9 @@ static PyMethodDef SwigMethods[] = {
 	 { (char *)"CvSubdiv2DEdge_Wrapper_swigregister", CvSubdiv2DEdge_Wrapper_swigregister, METH_VARARGS, NULL},
 	 { (char *)"cvSetMouseCallback", _wrap_cvSetMouseCallback, METH_VARARGS, NULL},
 	 { (char *)"cvWaitKey", _wrap_cvWaitKey, METH_VARARGS, NULL},
+	 { (char *)"cvLoadImage", _wrap_cvLoadImage, METH_VARARGS, NULL},
+	 { (char *)"cvRetrieveFrame", _wrap_cvRetrieveFrame, METH_VARARGS, NULL},
+	 { (char *)"cvQueryFrame", _wrap_cvQueryFrame, METH_VARARGS, NULL},
 	 { (char *)"cvInitSystem", _wrap_cvInitSystem, METH_VARARGS, NULL},
 	 { (char *)"cvStartWindowThread", _wrap_cvStartWindowThread, METH_VARARGS, NULL},
 	 { (char *)"cvNamedWindow", _wrap_cvNamedWindow, METH_VARARGS, NULL},
@@ -6210,7 +6355,6 @@ static PyMethodDef SwigMethods[] = {
 	 { (char *)"cvGetTrackbarPos", _wrap_cvGetTrackbarPos, METH_VARARGS, NULL},
 	 { (char *)"cvSetTrackbarPos", _wrap_cvSetTrackbarPos, METH_VARARGS, NULL},
 	 { (char *)"cvSetMouseCallbackOld", _wrap_cvSetMouseCallbackOld, METH_VARARGS, NULL},
-	 { (char *)"cvLoadImage", _wrap_cvLoadImage, METH_VARARGS, NULL},
 	 { (char *)"cvLoadImageM", _wrap_cvLoadImageM, METH_VARARGS, NULL},
 	 { (char *)"cvSaveImage", _wrap_cvSaveImage, METH_VARARGS, NULL},
 	 { (char *)"cvConvertImage", _wrap_cvConvertImage, METH_VARARGS, NULL},
@@ -6218,8 +6362,8 @@ static PyMethodDef SwigMethods[] = {
 	 { (char *)"cvCreateFileCapture", _wrap_cvCreateFileCapture, METH_VARARGS, NULL},
 	 { (char *)"cvCreateCameraCapture", _wrap_cvCreateCameraCapture, METH_VARARGS, NULL},
 	 { (char *)"cvGrabFrame", _wrap_cvGrabFrame, METH_VARARGS, NULL},
-	 { (char *)"cvRetrieveFrame", _wrap_cvRetrieveFrame, METH_VARARGS, NULL},
-	 { (char *)"cvQueryFrame", _wrap_cvQueryFrame, METH_VARARGS, NULL},
+	 { (char *)"cvRetrieveFrame__Deprecated", _wrap_cvRetrieveFrame__Deprecated, METH_VARARGS, NULL},
+	 { (char *)"cvQueryFrame__Deprecated", _wrap_cvQueryFrame__Deprecated, METH_VARARGS, NULL},
 	 { (char *)"cvGetCaptureProperty", _wrap_cvGetCaptureProperty, METH_VARARGS, NULL},
 	 { (char *)"cvSetCaptureProperty", _wrap_cvSetCaptureProperty, METH_VARARGS, NULL},
 	 { (char *)"cvCreateVideoWriter", _wrap_cvCreateVideoWriter, METH_VARARGS, NULL},

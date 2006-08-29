@@ -81,6 +81,14 @@ CvSubdiv2DEdge_Wrapper_swigregister = _highgui.CvSubdiv2DEdge_Wrapper_swigregist
 CvSubdiv2DEdge_Wrapper_swigregister(CvSubdiv2DEdge_Wrapper)
 
 
+def cvRetrieveFrame(*args):
+  """cvRetrieveFrame(CvCapture capture) -> CvMat"""
+  return _highgui.cvRetrieveFrame(*args)
+
+def cvQueryFrame(*args):
+  """cvQueryFrame(CvCapture capture) -> CvMat"""
+  return _highgui.cvQueryFrame(*args)
+
 def cvInitSystem(*args):
   """cvInitSystem(int argc, char argv) -> int"""
   return _highgui.cvInitSystem(*args)
@@ -160,10 +168,6 @@ CV_LOAD_IMAGE_COLOR = _highgui.CV_LOAD_IMAGE_COLOR
 CV_LOAD_IMAGE_GRAYSCALE = _highgui.CV_LOAD_IMAGE_GRAYSCALE
 CV_LOAD_IMAGE_UNCHANGED = _highgui.CV_LOAD_IMAGE_UNCHANGED
 
-def cvLoadImage(*args):
-  """cvLoadImage(char filename, int iscolor=1)"""
-  return _highgui.cvLoadImage(*args)
-
 def cvLoadImageM(*args):
   """cvLoadImageM(char filename, int iscolor=1) -> CvMat"""
   return _highgui.cvLoadImageM(*args)
@@ -210,13 +214,13 @@ def cvGrabFrame(*args):
   """cvGrabFrame(CvCapture capture) -> int"""
   return _highgui.cvGrabFrame(*args)
 
-def cvRetrieveFrame(*args):
-  """cvRetrieveFrame(CvCapture capture)"""
-  return _highgui.cvRetrieveFrame(*args)
+def cvRetrieveFrame__Deprecated(*args):
+  """cvRetrieveFrame__Deprecated(CvCapture capture)"""
+  return _highgui.cvRetrieveFrame__Deprecated(*args)
 
-def cvQueryFrame(*args):
-  """cvQueryFrame(CvCapture capture)"""
-  return _highgui.cvQueryFrame(*args)
+def cvQueryFrame__Deprecated(*args):
+  """cvQueryFrame__Deprecated(CvCapture capture)"""
+  return _highgui.cvQueryFrame__Deprecated(*args)
 CV_CAP_PROP_POS_MSEC = _highgui.CV_CAP_PROP_POS_MSEC
 CV_CAP_PROP_POS_FRAMES = _highgui.CV_CAP_PROP_POS_FRAMES
 CV_CAP_PROP_POS_AVI_RATIO = _highgui.CV_CAP_PROP_POS_AVI_RATIO
@@ -330,6 +334,13 @@ CvvImage_swigregister = _highgui.CvvImage_swigregister
 CvvImage_swigregister(CvvImage)
 cvSetMouseCallback = _highgui.cvSetMouseCallback
 cvWaitKey = _highgui.cvWaitKey
+
+def cvLoadImage(*args):
+  """
+    cvLoadImage(char filename, int iscolor=1) -> CvMat
+    cvLoadImage(char filename) -> CvMat
+    """
+  return _highgui.cvLoadImage(*args)
 
 __doc__ = """HighGUI provides minimalistic user interface parts and video input/output.
 
