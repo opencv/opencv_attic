@@ -650,6 +650,14 @@ def cvCalcBackProjectPatch(*args):
 sizeof_CvContour = _cv.sizeof_CvContour
 sizeof_CvPoint = _cv.sizeof_CvPoint
 sizeof_CvSeq = _cv.sizeof_CvSeq
+
+def cvCreateImage(*args):
+  """cvCreateImage(CvSize size, int depth, int channels) -> CvMat"""
+  return _cv.cvCreateImage(*args)
+
+def cvCloneImage(*args):
+  """cvCloneImage(CvMat mat) -> CvMat"""
+  return _cv.cvCloneImage(*args)
 CV_AUTOSTEP = _cv.CV_AUTOSTEP
 CV_MAX_ARR = _cv.CV_MAX_ARR
 CV_NO_DEPTH_CHECK = _cv.CV_NO_DEPTH_CHECK
@@ -1200,6 +1208,8 @@ def cvApproxPoly(*args):
         int method, double parameter) -> CvSeq_Point
     """
   return _cv.cvApproxPoly(*args)
+cvar = _cv.cvar
+icvDepthToType = cvar.icvDepthToType
 
 class Cv64suf(_object):
     """Proxy of C++ Cv64suf class"""
@@ -3468,25 +3478,6 @@ def cvFree_(*args):
   """cvFree_(void ptr)"""
   return _cv.cvFree_(*args)
 
-def cvCreateImageHeader(*args):
-  """cvCreateImageHeader(CvSize size, int depth, int channels)"""
-  return _cv.cvCreateImageHeader(*args)
-
-def cvInitImageHeader(*args):
-  """
-    cvInitImageHeader( image, CvSize size, int depth, int channels, int origin=0, 
-        int align=4)
-    """
-  return _cv.cvInitImageHeader(*args)
-
-def cvCreateImage(*args):
-  """cvCreateImage(CvSize size, int depth, int channels)"""
-  return _cv.cvCreateImage(*args)
-
-def cvCloneImage(*args):
-  """cvCloneImage( image)"""
-  return _cv.cvCloneImage(*args)
-
 def cvSetImageCOI(*args):
   """cvSetImageCOI( image, int coi)"""
   return _cv.cvSetImageCOI(*args)
@@ -3749,10 +3740,6 @@ def cvClearND(*args):
 def cvGetMat(*args):
   """cvGetMat(CvArr arr, CvMat header, int coi=None, int allowND=0) -> CvMat"""
   return _cv.cvGetMat(*args)
-
-def cvGetImage(*args):
-  """cvGetImage(CvArr arr,  image_header)"""
-  return _cv.cvGetImage(*args)
 
 def cvReshapeMatND(*args):
   """
@@ -5267,7 +5254,6 @@ class CvModule(_object):
     if _newclass:last = property(_cv.CvModule_last_get, _cv.CvModule_last_set)
 CvModule_swigregister = _cv.CvModule_swigregister
 CvModule_swigregister(CvModule)
-cvar = _cv.cvar
 
 class CvType(_object):
     """Proxy of C++ CvType class"""
