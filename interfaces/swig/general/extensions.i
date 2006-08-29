@@ -140,9 +140,29 @@ int CvMat_width_get(CvMat * m){
 int CvMat_height_get(CvMat *m){
 	return m->rows;
 }
+int CvMat_depth_get(CvMat * m){
+	return cvCvToIplDepth(m->type);
+}
+int CvMat_nChannels_get(CvMat * m){
+	return CV_MAT_CN(m->type);
+}
+int CvMat_origin_get(CvMat * m){
+	return 0;
+}
+int CvMat_imageSize_get(CvMat * m){
+	return m->step*m->rows;
+}
+int CvMat_widthStep_get(CvMat * m){
+	return m->step;
+}
 %}
 %extend CvMat
 {
+	const int depth;
+	const int nChannels;
+	const int origin;
 	const int width;
 	const int height;
+	const int imageSize;
+	const int widthStep;
 };

@@ -69,6 +69,12 @@
 %include "./typemaps.i"
 %include "./doublepointers.i"
 
+// hide COI and ROI functions
+%ignore cvSetImageCOI;
+%ignore cvSetImageROI;
+%ignore cvGetImageROI;
+%ignore cvGetImageCOI;
+
 // mask some functions that return IplImage *
 %ignore cvInitImageHeader;
 %ignore cvGetImage;
