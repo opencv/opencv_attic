@@ -44,78 +44,79 @@
 //             Mark Asbach       <asbach@ient.rwth-aachen.de>
 //             Institute of Communications Engineering, RWTH Aachen University
 
+// 2006-08-29  Roman Stanchak -- converted to use CvMat rather than IplImage
 
+
+%{
 
 /// Accessor to convert a Python string into the imageData.
-%extend _IplImage
+void CvMat_imageData_set(CvMat * self, PyObject* object)
 {
-    void imageData_set(PyObject* object)
-        {
-        char* py_string = PyString_AsString(object);
-        
-        if ((self->nChannels == 3) && ((self->depth & 0xff) == IPL_DEPTH_8U))
-            {
-            // RGB case
-            // The data is reordered beause OpenCV uses BGR instead of RGB
-            
-            for (long line = 0; line < self->height; ++line)
-                for (long pixel = 0; pixel < self->width; ++pixel)
-                    {
-                    // In OpenCV the beginning of the lines are aligned
-                    // to 4 Bytes. So use widthStep instead of width.
-                    long position = line*self->widthStep + pixel*3;
-                    long sourcepos = line*self->width*3 + pixel*3;
-                    self->imageData[position  ] = py_string[sourcepos+2];
-                    self->imageData[position+1] = py_string[sourcepos+1];
-                    self->imageData[position+2] = py_string[sourcepos  ];
-                    }
-            }
-        else if ((self->nChannels == 1) && ((self->depth & 0xff) == IPL_DEPTH_8U))
-            {
-            // Grayscale 8bit case
-            
-            for (long line = 0; line < self->height; ++line)
-                {
-                // In OpenCV the beginning of the lines are aligned
-                // to 4 Bytes. So use widthStep instead of width.
-                memcpy
-                    (
-                    self->imageData + line*self->widthStep,
-                    py_string + line*self->width,
-                    self->widthStep
-                    );
-                }
-            }
-        else if ((self->nChannels == 1) && ((self->depth & 0xff) == IPL_DEPTH_32F))
-            {
-            // Float 32bit case
-            
-            for (long line = 0; line < self->height; ++line)
-                {
-                // here we don not have to care about alignment as the Floats are
-                // as long as the alignment
-                memcpy
-                    (
-                    self->imageData + line*self->widthStep,
-                    py_string + line*self->width*4,
-                    self->widthStep
-                    );
-                }
-            }
-        }
+	char* py_string = PyString_AsString(object);
+
+	if (self->type == CV_8UC3){
+		// RGB case
+		// The data is reordered beause OpenCV uses BGR instead of RGB
+
+		for (long line = 0; line < self->rows; ++line)
+			for (long pixel = 0; pixel < self->cols; ++pixel)
+			{
+				// In OpenCV the beginning of the lines are aligned
+				// to 4 Bytes. So use step instead of cols.
+				long position = line*self->step + pixel*3;
+				long sourcepos = line*self->cols*3 + pixel*3;
+				self->data.ptr[position  ] = py_string[sourcepos+2];
+				self->data.ptr[position+1] = py_string[sourcepos+1];
+				self->data.ptr[position+2] = py_string[sourcepos  ];
+			}
+	}
+	else if (self->type == CV_8UC1)
+	{
+		// Grayscale 8bit case
+
+		for (long line = 0; line < self->rows; ++line)
+		{
+			// In OpenCV the beginning of the lines are aligned
+			// to 4 Bytes. So use step instead of cols.
+			memcpy
+				(
+				 self->data.ptr + line*self->step,
+				 py_string + line*self->cols,
+				 self->step
+				);
+		}
+	}
+	else if (self->type == CV_32FC1 )
+	{
+		// Float 32bit case
+
+		for (long line = 0; line < self->rows; ++line)
+		{
+			// here we don not have to care about alignment as the Floats are
+			// as long as the alignment
+			memcpy
+				(
+				 self->data.ptr + line*self->step,
+				 py_string + line*self->cols*4,
+				 self->step
+				);
+		}
+	}
 }
 
-
 /// Accessor to convert the imageData into a Python string.
-%extend _IplImage
+PyObject* CvMat_imageData_get(CvMat * self) 
 {
-    PyObject* imageData_get() 
-    {
-        if (self->depth % 8 != 0)
-            return 0;
-        if (!self->imageData)
-            return 0;
-        return PyString_FromStringAndSize(self->imageData, self->imageSize);
-    }
-}   
+	if (CV_MAT_DEPTH(self->type)!=CV_8U)
+		return 0;
+	if (!self->data.ptr)
+		return 0;
+	return PyString_FromStringAndSize((const char *)self->data.ptr, self->rows*self->step);
+}
 
+%}
+
+// add virtual member variable to CvMat
+%extend CvMat {
+	PyObject * imageData;
+};

@@ -1536,14 +1536,6 @@ class IplImage(_object):
         """__getitem__(self, PyObject object) -> PyObject"""
         return _cv.IplImage___getitem__(*args)
 
-    def imageData_set(*args):
-        """imageData_set(self, PyObject object)"""
-        return _cv.IplImage_imageData_set(*args)
-
-    def imageData_get(*args):
-        """imageData_get(self) -> PyObject"""
-        return _cv.IplImage_imageData_get(*args)
-
 IplImage_swigregister = _cv.IplImage_swigregister
 IplImage_swigregister(IplImage)
 
@@ -1673,10 +1665,20 @@ class CvMat(_object):
     if _newclass:data = property(_cv.CvMat_data_get)
     __swig_destroy__ = _cv.delete_CvMat
     __del__ = lambda self : None;
+    __swig_getmethods__["depth"] = _cv.CvMat_depth_get
+    if _newclass:depth = property(_cv.CvMat_depth_get)
+    __swig_getmethods__["nChannels"] = _cv.CvMat_nChannels_get
+    if _newclass:nChannels = property(_cv.CvMat_nChannels_get)
+    __swig_getmethods__["origin"] = _cv.CvMat_origin_get
+    if _newclass:origin = property(_cv.CvMat_origin_get)
     __swig_getmethods__["width"] = _cv.CvMat_width_get
     if _newclass:width = property(_cv.CvMat_width_get)
     __swig_getmethods__["height"] = _cv.CvMat_height_get
     if _newclass:height = property(_cv.CvMat_height_get)
+    __swig_getmethods__["imageSize"] = _cv.CvMat_imageSize_get
+    if _newclass:imageSize = property(_cv.CvMat_imageSize_get)
+    __swig_getmethods__["widthStep"] = _cv.CvMat_widthStep_get
+    if _newclass:widthStep = property(_cv.CvMat_widthStep_get)
     def __mul__(*args):
         """__mul__(self, CvArr src) -> CvMat"""
         return _cv.CvMat___mul__(*args)
@@ -1905,6 +1907,9 @@ class CvMat(_object):
         """__getitem__(self, PyObject object) -> PyObject"""
         return _cv.CvMat___getitem__(*args)
 
+    __swig_setmethods__["imageData"] = _cv.CvMat_imageData_set
+    __swig_getmethods__["imageData"] = _cv.CvMat_imageData_get
+    if _newclass:imageData = property(_cv.CvMat_imageData_get, _cv.CvMat_imageData_set)
 CvMat_swigregister = _cv.CvMat_swigregister
 CvMat_swigregister(CvMat)
 
