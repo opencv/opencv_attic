@@ -84,13 +84,13 @@
  * 2. IplImage fields missing or named something else.
  */
 %typemap(in) IplImage * (IplImage header){
-	CvMat *ptr;
-	int res = SWIG_ConvertPtr($input, (void **)(&ptr), $descriptor( CvMat * ), 0);
+	void * vptr;
+	int res = SWIG_ConvertPtr($input, (&vptr), $descriptor( CvMat * ), 0);
 	if ( res == -1 ){
 		SWIG_exception( SWIG_TypeError, "%%typemap(in) IplImage * : could not convert to CvMat");
 		SWIG_fail;
 	}
-	$1 = cvGetImage(ptr, &header);
+	$1 = cvGetImage((CvMat *)vptr, &header);
 }
 
 /** For IplImage * return type, there are cases in which the memory should be freed and 
@@ -98,7 +98,7 @@
  * individually
  */
 %typemap(out) IplImage * {
-	SWIG_exception( SWIG_TypeError, "IplImage * return type is deprecated. Please file a bug report at www.sourceforge.net/opencvlibrary if you see this error message.");
+ 	SWIG_exception( SWIG_TypeError, "IplImage * return type is deprecated. Please file a bug report at www.sourceforge.net/opencvlibrary if you see this error message.");
 	SWIG_fail;
 }
 
