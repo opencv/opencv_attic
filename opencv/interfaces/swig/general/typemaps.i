@@ -86,17 +86,40 @@
 %typemap(in) IplImage * (IplImage header){
 	CvMat *ptr;
 	int res = SWIG_ConvertPtr($input, (void **)(&ptr), $descriptor( CvMat * ), 0);
-	if (!SWIG_IsOK(res)) {
+	if ( res == -1 ){
 		SWIG_exception( SWIG_TypeError, "%%typemap(in) IplImage * : could not convert to CvMat");
 		SWIG_fail;
 	}
 	$1 = cvGetImage(ptr, &header);
 }
 
+/** For IplImage * return type, there are cases in which the memory should be freed and 
+ * some not.  To avoid leaks and segfaults, deprecate this return type and handle cases 
+ * individually
+ */
 %typemap(out) IplImage * {
-	CvMat * mat = (CvMat *)cvAlloc(sizeof(CvMat));
-	cvGetMat( $1, mat );
-	cvSetData($1, NULL, 0);
-	cvReleaseImage(&($1));
-	$result = SWIG_NewPointerObj( mat, $descriptor( CvMat * ), 1 );
+	SWIG_exception( SWIG_TypeError, "IplImage * return type is deprecated. Please file a bug report at www.sourceforge.net/opencvlibrary if you see this error message.");
+	SWIG_fail;
 }
+
+/** macro to convert IplImage return type to CvMat.  Note that this is only covers the case
+ *  where the returned IplImage need not be freed.  If the IplImage header needs to be freed,
+ *  then CvMat must take ownership of underlying data.  Instead, just handle these limited cases
+ *  with CvMat equivalent.
+ */
+%define %typemap_out_CvMat(func, decl, call)
+%rename (func##__Deprecated) func;
+%rename (func) func##__CvMat;
+%inline %{
+CvMat * func##__CvMat##decl{
+	IplImage * im = func##call;
+	if(im){
+		CvMat * mat = (CvMat *)cvAlloc(sizeof(CvMat));
+		mat = cvGetMat(im, mat);
+		return mat;
+	}
+	return false;
+}
+%}
+%enddef
+
