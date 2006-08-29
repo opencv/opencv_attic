@@ -71,6 +71,18 @@
 
 %nodefault CvVideoWriter;
 %newobject cvCreateVideoWriter;
+
+/** modify the following to return CvMat instead of IplImage */
+%ignore cvLoadImage;
+%rename (cvLoadImage) cvLoadImageMat;
+%inline %{
+CvMat * cvLoadImageMat(const char* filename, int iscolor=CV_LOAD_IMAGE_COLOR ){
+	return cvLoadImageM(filename, iscolor);
+}
+%}
+%typemap_out_CvMat(cvRetrieveFrame, ( CvCapture* capture ), (capture));
+%typemap_out_CvMat(cvQueryFrame, ( CvCapture * capture ), (capture));
+
 %include "highgui.h"
 
 %extend CvCapture     { ~CvCapture ()     { CvCapture *     dummy = self; cvReleaseCapture     (& dummy); } }

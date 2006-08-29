@@ -69,6 +69,29 @@
 %include "./typemaps.i"
 %include "./doublepointers.i"
 
+// mask some functions that return IplImage *
+%ignore cvInitImageHeader;
+%ignore cvGetImage;
+%ignore cvCreateImageHeader;
+
+// adapt others to return CvMat * instead
+%ignore cvCreateImage;
+%rename (cvCreateImage) cvCreateImageMat;
+%ignore cvCloneImage;
+%rename (cvCloneImage) cvCloneImageMat;
+%inline %{
+extern const signed char icvDepthToType[];
+#define icvIplToCvDepth( depth ) \
+    icvDepthToType[(((depth) & 255) >> 2) + ((depth) < 0)]
+CvMat * cvCreateImageMat( CvSize size, int depth, int channels ){
+	depth = icvIplToCvDepth(depth);
+	return cvCreateMat( size.height, size.width, CV_MAKE_TYPE(depth, channels));
+}
+#define cvCloneImageMat( mat ) cvCloneMat( mat )
+%}
+CvMat * cvCloneImageMat( CvMat * mat );
+
+
 // Now include the filtered OpenCV constants and prototypes (includes cxcore as well)
 %include "../filtered/constants.h"
 %include "../filtered/cv.h"
