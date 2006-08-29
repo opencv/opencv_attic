@@ -35,16 +35,19 @@ def findSquares4( img, storage ):
 
     # select the maximum ROI in the image
     # with the width and height divisible by 2
-    cvSetImageROI( timg, cvRect( 0, 0, sz.width, sz.height ));
+    # cvSetImageROI( timg, cvRect( 0, 0, sz.width, sz.height ));
+    subimage = cvGetSubRect( timg, cvRect( 0, 0, sz.width, sz.height ))
+
     # down-scale and upscale the image to filter out the noise
-    cvPyrDown( timg, pyr, 7 );
-    cvPyrUp( pyr, timg, 7 );
+    cvPyrDown( subimage, pyr, 7 );
+    cvPyrUp( pyr, subimage, 7 );
     tgray = cvCreateImage( sz, 8, 1 );
     # find squares in every color plane of the image
     for c in range(3):
         # extract the c-th color plane
-        cvSetImageCOI( timg, c+1 );
-        cvCopy( timg, tgray );
+        channels = [None, None, None]
+        channels[c] = tgray
+        cvSplit( subimage, channels[0], channels[1], channels[2], None ) 
         for l in range(N):
             # hack: use Canny instead of zero threshold level.
             # Canny helps to catch squares with gradient shading
