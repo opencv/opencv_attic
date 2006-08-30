@@ -57,15 +57,15 @@ CvDTreeTrainData::CvDTreeTrainData()
 CvDTreeTrainData::CvDTreeTrainData( const CvMat* _train_data, int _tflag,
                       const CvMat* _responses, const CvMat* _var_idx,
                       const CvMat* _sample_idx, const CvMat* _var_type,
-                      const CvMat* _missing_mask,
-                      CvDTreeParams _params, bool _shared, bool _add_weights )
+                      const CvMat* _missing_mask, const CvDTreeParams& _params,
+                      bool _shared, bool _add_labels )
 {
     var_idx = var_type = cat_count = cat_ofs = cat_map =
         priors = counts = buf = direction = split_buf = 0;
     tree_storage = temp_storage = 0;
     
     set_data( _train_data, _tflag, _responses, _var_idx, _sample_idx,
-              _var_type, _missing_mask, _params, _shared, _add_weights );
+              _var_type, _missing_mask, _params, _shared, _add_labels );
 }
 
 
@@ -124,13 +124,14 @@ static CV_IMPLEMENT_QSORT_EX( icvSortPairs, CvPair32s32f, CV_CMP_PAIRS, int )
 
 void CvDTreeTrainData::set_data( const CvMat* _train_data, int _tflag,
     const CvMat* _responses, const CvMat* _var_idx, const CvMat* _sample_idx,
-    const CvMat* _var_type, const CvMat* _missing_mask, CvDTreeParams _params,
-    bool _shared, bool _add_weights )
+    const CvMat* _var_type, const CvMat* _missing_mask, const CvDTreeParams& _params,
+    bool _shared, bool _add_labels, bool _update_data )
 {
     CvMat* sample_idx = 0;
     CvMat* var_type0 = 0;
     CvMat* tmp_map = 0;
     int** int_ptr = 0;
+    CvDTreeTrainData* data = 0;
 
     CV_FUNCNAME( "CvDTreeTrainData::set_data" );
 
@@ -143,6 +144,40 @@ void CvDTreeTrainData::set_data( const CvMat* _train_data, int _tflag,
     int vi, i;
     char err[100];
     const int *sidx = 0, *vidx = 0;
+
+    if( _update_data && data_root )
+    {
+        data = new CvDTreeTrainData( _train_data, _tflag, _responses, _var_idx,
+            _sample_idx, _var_type, _missing_mask, _params, _shared, _add_labels );
+        
+        // compare new and old train data
+        if( !(data->var_count == var_count &&
+            cvNorm( data->var_type, var_type, CV_C ) < FLT_EPSILON &&
+            cvNorm( data->cat_count, cat_count, CV_C ) < FLT_EPSILON &&
+            cvNorm( data->cat_map, cat_map, CV_C ) < FLT_EPSILON) )
+            CV_ERROR( CV_StsBadArg,
+            "The new training data must have the same types and the input and output variables "
+            "and the same categories for categorical variables" );
+
+        cvReleaseMat( &priors );
+        cvReleaseMat( &buf );
+        cvReleaseMat( &direction );
+        cvReleaseMat( &split_buf );
+        cvReleaseMemStorage( &temp_storage );
+
+        priors = data->priors; data->priors = 0;
+        buf = data->buf; data->buf = 0;
+        buf_count = data->buf_count; buf_size = data->buf_size;
+        sample_count = data->sample_count;
+
+        direction = data->direction; data->direction = 0;
+        split_buf = data->split_buf; data->split_buf = 0;
+        temp_storage = data->temp_storage; data->temp_storage = 0;
+        nv_heap = data->nv_heap; cv_heap = data->cv_heap;
+
+        data_root = new_node( 0, sample_count, 0, 0 );
+        EXIT;
+    }
 
     clear();
 
@@ -219,11 +254,9 @@ void CvDTreeTrainData::set_data( const CvMat* _train_data, int _tflag,
 
     // in case of single ordered predictor we need dummy cv_labels
     // for safe split_node_data() operation
-    have_cv_labels = cv_n > 0 || ord_var_count == 1 && cat_var_count == 0;
-    have_weights = _add_weights;
+    have_labels = cv_n > 0 || ord_var_count == 1 && cat_var_count == 0 || _add_labels;
 
-    buf_size = (ord_var_count*2 + cat_var_count + 1 +
-        (have_cv_labels ? 1 : 0) + (have_weights ? 1 : 0))*sample_count + 2;
+    buf_size = (ord_var_count + get_work_var_count())*sample_count + 2;
     shared = _shared;
     buf_count = shared ? 3 : 2;
     CV_CALL( buf = cvCreateMat( buf_count, buf_size, CV_32SC1 ));
@@ -447,7 +480,7 @@ void CvDTreeTrainData::set_data( const CvMat* _train_data, int _tflag,
 
     if( cv_n )
     {
-        int* dst = get_cv_labels(data_root);
+        int* dst = get_labels(data_root);
         CvRNG* r = &rng;
 
         for( i = vi = 0; i < sample_count; i++ )
@@ -473,7 +506,7 @@ void CvDTreeTrainData::set_data( const CvMat* _train_data, int _tflag,
     have_priors = is_classifier && params.priors;
     if( is_classifier )
     {
-        int m = get_num_classes(), rows = 4;
+        int m = get_num_classes();
         double sum = 0;
         CV_CALL( priors = cvCreateMat( 1, m, CV_64F ));
         for( i = 0; i < m; i++ )
@@ -488,22 +521,16 @@ void CvDTreeTrainData::set_data( const CvMat* _train_data, int _tflag,
         if( have_priors )
             cvScale( priors, priors, 1./sum );
 
-        if( cat_var_count > 0 || params.cv_folds > 0 )
-        {
-            // need storage for cjk (see find_split_cat_gini) and risks/errors
-            rows += MAX( max_c_count, params.cv_folds ) + 1;
-            // add buffer for k-means clustering
-            if( m > 2 && max_c_count > params.max_categories )
-                rows += params.max_categories + (max_c_count+m-1)/m;
-        }
-
-        CV_CALL( counts = cvCreateMat( rows, m, CV_32SC2 ));
+        CV_CALL( counts = cvCreateMat( 1, m, CV_32SC1 ));
     }
 
     CV_CALL( direction = cvCreateMat( 1, sample_count, CV_8UC1 ));
     CV_CALL( split_buf = cvCreateMat( 1, sample_count, CV_32SC1 ));
 
     __END__;
+
+    if( data )
+        delete data;
 
     cvFree( &int_ptr );
     cvReleaseMat( &sample_idx );
@@ -553,6 +580,7 @@ CvDTreeNode* CvDTreeTrainData::subsample_data( const CvMat* _subsample_idx )
         int* co, cur_ofs = 0;
         int vi, i, total = data_root->sample_count;
         int count = isubsample_idx->rows + isubsample_idx->cols - 1;
+        int work_var_count = get_work_var_count();
         root = new_node( 0, count, 1, 0 );
 
         CV_CALL( subsample_co = cvCreateMat( 1, total*2, CV_32SC1 ));
@@ -571,7 +599,7 @@ CvDTreeNode* CvDTreeTrainData::subsample_data( const CvMat* _subsample_idx )
                 co[i*2+1] = -1;
         }
 
-        for( vi = 0; vi <= var_count + (have_cv_labels ? 1 : 0); vi++ )
+        for( vi = 0; vi < work_var_count; vi++ )
         {
             int ci = get_var_type(vi);
 
@@ -678,7 +706,8 @@ void CvDTreeTrainData::get_vectors( const CvMat* _subsample_idx,
         }
     }
 
-    memset( missing, 1, count*var_count );
+    if( missing )
+        memset( missing, 1, count*var_count );
 
     for( vi = 0; vi < var_count; vi++ )
     {
@@ -686,21 +715,25 @@ void CvDTreeTrainData::get_vectors( const CvMat* _subsample_idx,
         if( ci >= 0 ) // categorical
         {
             float* dst = values + vi;
-            uchar* m = missing + vi;
+            uchar* m = missing ? missing + vi : 0;
             const int* src = get_cat_var_data(data_root, vi);
 
-            for( i = 0; i < count; i++, dst += var_count, m += var_count )
+            for( i = 0; i < count; i++, dst += var_count )
             {
                 int idx = sidx ? sidx[i] : i;
                 int val = src[idx];
                 *dst = (float)val;
-                *m = val < 0;
+                if( m )
+                {
+                    *m = val < 0;
+                    m += var_count;
+                }
             }
         }
         else // ordered
         {
             float* dst = values + vi;
-            uchar* m = missing + vi;
+            uchar* m = missing ? missing + vi : 0;
             const CvPair32s32f* src = get_ord_var_data(data_root, vi);
             int count1 = data_root->get_num_valid(vi);
 
@@ -721,7 +754,8 @@ void CvDTreeTrainData::get_vectors( const CvMat* _subsample_idx,
                     for( ; count_i > 0; count_i--, cur_ofs += var_count )
                     {
                         dst[cur_ofs] = val;
-                        m[cur_ofs] = 0;
+                        if( m )
+                            m[cur_ofs] = 0;
                     }
                 }
             }
@@ -729,24 +763,27 @@ void CvDTreeTrainData::get_vectors( const CvMat* _subsample_idx,
     }
 
     // copy responses
-    if( is_classifier )
+    if( responses )
     {
-        const int* src = get_class_labels(data_root);
-        for( i = 0; i < count; i++ )
+        if( is_classifier )
         {
-            int idx = sidx ? sidx[i] : i;
-            int val = get_class_idx ? src[idx] :
-                cat_map->data.i[cat_ofs->data.i[cat_var_count]+src[idx]];
-            responses[i] = (float)val;
+            const int* src = get_class_labels(data_root);
+            for( i = 0; i < count; i++ )
+            {
+                int idx = sidx ? sidx[i] : i;
+                int val = get_class_idx ? src[idx] :
+                    cat_map->data.i[cat_ofs->data.i[cat_var_count]+src[idx]];
+                responses[i] = (float)val;
+            }
         }
-    }
-    else
-    {
-        const float* src = get_ord_responses(data_root);
-        for( i = 0; i < count; i++ )
+        else
         {
-            int idx = sidx ? sidx[i] : i;
-            responses[i] = src[idx];
+            const float* src = get_ord_responses(data_root);
+            for( i = 0; i < count; i++ )
+            {
+                int idx = sidx ? sidx[i] : i;
+                responses[i] = src[idx];
+            }
         }
     }
 
@@ -884,7 +921,7 @@ void CvDTreeTrainData::clear()
     node_heap = split_heap = 0;
 
     sample_count = var_all = var_count = max_c_count = ord_var_count = cat_var_count = 0;
-    have_cv_labels = have_priors = is_classifier = false;
+    have_labels = have_priors = is_classifier = false;
 
     buf_count = buf_size = 0;
     shared = false;
@@ -907,6 +944,11 @@ int CvDTreeTrainData::get_var_type(int vi) const
 }
 
 
+int CvDTreeTrainData::get_work_var_count() const
+{
+    return var_count + 1 + (have_labels ? 1 : 0);
+}
+
 CvPair32s32f* CvDTreeTrainData::get_ord_var_data( CvDTreeNode* n, int vi )
 {
     int oi = ~get_var_type(vi);
@@ -928,9 +970,9 @@ float* CvDTreeTrainData::get_ord_responses( CvDTreeNode* n )
 }
 
 
-int* CvDTreeTrainData::get_cv_labels( CvDTreeNode* n )
+int* CvDTreeTrainData::get_labels( CvDTreeNode* n )
 {
-    return params.cv_folds > 0 ? get_cat_var_data( n, var_count + 1 ) : 0;
+    return have_labels ? get_cat_var_data( n, var_count + 1 ) : 0;
 }
 
 
@@ -943,19 +985,220 @@ int* CvDTreeTrainData::get_cat_var_data( CvDTreeNode* n, int vi )
 }
 
 
-float* CvDTreeTrainData::get_weights( CvDTreeNode* n )
-{
-    return have_weights ?
-        (float*)get_cat_var_data( n, var_count + 1 + (params.cv_folds > 0) ) : 0;
-}
-
-
 int CvDTreeTrainData::get_child_buf_idx( CvDTreeNode* n )
 {
     int idx = n->buf_idx + 1;
     if( idx >= buf_count )
         idx = shared ? 1 : 0;
     return idx;
+}
+
+
+void CvDTreeTrainData::write_params( CvFileStorage* fs )
+{
+    CV_FUNCNAME( "CvDTreeTrainData::write_params" );
+
+    __BEGIN__;
+
+    int vi, vcount = var_count;
+
+    cvWriteInt( fs, "is_classifier", is_classifier ? 1 : 0 );
+    cvWriteInt( fs, "var_all", var_all );
+    cvWriteInt( fs, "var_count", var_count );
+    cvWriteInt( fs, "ord_var_count", ord_var_count );
+    cvWriteInt( fs, "cat_var_count", cat_var_count );
+
+    cvStartWriteStruct( fs, "training_params", CV_NODE_MAP );
+    cvWriteInt( fs, "use_surrogates", params.use_surrogates ? 1 : 0 );
+
+    if( is_classifier )
+    {
+        cvWriteInt( fs, "max_categories", params.max_categories );
+    }
+    else
+    {
+        cvWriteReal( fs, "regression_accuracy", params.regression_accuracy );
+    }
+
+    cvWriteInt( fs, "max_depth", params.max_depth );
+    cvWriteInt( fs, "min_sample_count", params.min_sample_count );
+    cvWriteInt( fs, "cross_validation_folds", params.cv_folds );
+    
+    if( params.cv_folds > 1 )
+    {
+        cvWriteInt( fs, "use_1se_rule", params.use_1se_rule ? 1 : 0 );
+        cvWriteInt( fs, "truncate_pruned_tree", params.truncate_pruned_tree ? 1 : 0 );
+    }
+
+    if( priors )
+        cvWrite( fs, "priors", priors );
+
+    cvEndWriteStruct( fs );
+
+    if( var_idx )
+        cvWrite( fs, "var_idx", var_idx );
+    
+    cvStartWriteStruct( fs, "var_type", CV_NODE_SEQ+CV_NODE_FLOW );
+
+    for( vi = 0; vi < vcount; vi++ )
+        cvWriteInt( fs, 0, var_type->data.i[vi] >= 0 );
+
+    cvEndWriteStruct( fs );
+
+    if( cat_count && (cat_var_count > 0 || is_classifier) )
+    {
+        CV_ASSERT( cat_count != 0 );
+        cvWrite( fs, "cat_count", cat_count );
+        cvWrite( fs, "cat_map", cat_map );
+    }
+
+    __END__;
+}
+
+
+void CvDTreeTrainData::read_params( CvFileStorage* fs, CvFileNode* node )
+{
+    CV_FUNCNAME( "CvDTreeTrainData::read_params" );
+
+    __BEGIN__;
+    
+    CvFileNode *tparams_node, *vartype_node;
+    CvSeqReader reader;
+    int vi, max_split_size, tree_block_size;
+
+    is_classifier = (cvReadIntByName( fs, node, "is_classifier" ) != 0);
+    var_all = cvReadIntByName( fs, node, "var_all" );
+    var_count = cvReadIntByName( fs, node, "var_count", var_all );
+    cat_var_count = cvReadIntByName( fs, node, "cat_var_count" );
+    ord_var_count = cvReadIntByName( fs, node, "ord_var_count" );
+
+    tparams_node = cvGetFileNodeByName( fs, node, "training_params" );
+
+    if( tparams_node ) // training parameters are not necessary
+    {
+        params.use_surrogates = cvReadIntByName( fs, tparams_node, "use_surrogates", 1 ) != 0;
+
+        if( is_classifier )
+        {
+            params.max_categories = cvReadIntByName( fs, tparams_node, "max_categories" );
+        }
+        else
+        {
+            params.regression_accuracy =
+                (float)cvReadRealByName( fs, tparams_node, "regression_accuracy" );
+        }
+
+        params.max_depth = cvReadIntByName( fs, tparams_node, "max_depth" );
+        params.min_sample_count = cvReadIntByName( fs, tparams_node, "min_sample_count" );
+        params.cv_folds = cvReadIntByName( fs, tparams_node, "cross_validation_folds" );
+    
+        if( params.cv_folds > 1 )
+        {
+            params.use_1se_rule = cvReadIntByName( fs, tparams_node, "use_1se_rule" ) != 0;
+            params.truncate_pruned_tree =
+                cvReadIntByName( fs, tparams_node, "truncate_pruned_tree" ) != 0;
+        }
+
+        priors = (CvMat*)cvReadByName( fs, tparams_node, "priors" );
+        if( priors && !CV_IS_MAT(priors) )
+            CV_ERROR( CV_StsParseError, "priors must stored as a matrix" );
+    }
+
+    CV_CALL( var_idx = (CvMat*)cvReadByName( fs, node, "var_idx" ));
+    if( var_idx )
+    {
+        if( !CV_IS_MAT(var_idx) ||
+            var_idx->cols != 1 && var_idx->rows != 1 ||
+            var_idx->cols + var_idx->rows - 1 != var_count ||
+            CV_MAT_TYPE(var_idx->type) != CV_32SC1 )
+            CV_ERROR( CV_StsParseError,
+                "var_idx (if exist) must be valid 1d integer vector containing <var_count> elements" );
+
+        for( vi = 0; vi < var_count; vi++ )
+            if( (unsigned)var_idx->data.i[vi] >= (unsigned)var_all )
+                CV_ERROR( CV_StsOutOfRange, "some of var_idx elements are out of range" );
+    }
+    
+    ////// read var type
+    CV_CALL( var_type = cvCreateMat( 1, var_count + 2, CV_32SC1 ));
+
+    cat_var_count = 0;
+    ord_var_count = -1;
+    vartype_node = cvGetFileNodeByName( fs, node, "var_type" );
+
+    if( vartype_node && CV_NODE_TYPE(vartype_node->tag) == CV_NODE_INT && var_count == 1 )
+        var_type->data.i[0] = vartype_node->data.i ? cat_var_count++ : ord_var_count--;
+    else
+    {
+        if( !vartype_node || CV_NODE_TYPE(vartype_node->tag) != CV_NODE_SEQ ||
+            vartype_node->data.seq->total != var_count )
+            CV_ERROR( CV_StsParseError, "var_type must exist and be a sequence of 0's and 1's" );
+
+        cvStartReadSeq( vartype_node->data.seq, &reader );
+    
+        for( vi = 0; vi < var_count; vi++ )
+        {
+            CvFileNode* n = (CvFileNode*)reader.ptr;
+            if( CV_NODE_TYPE(n->tag) != CV_NODE_INT || (n->data.i & ~1) )
+                CV_ERROR( CV_StsParseError, "var_type must exist and be a sequence of 0's and 1's" );
+            var_type->data.i[vi] = n->data.i ? cat_var_count++ : ord_var_count--;
+            CV_NEXT_SEQ_ELEM( reader.seq->elem_size, reader );
+        }
+    }
+    var_type->data.i[var_count] = cat_var_count;
+
+    ord_var_count = ~ord_var_count;
+    if( cat_var_count != cat_var_count || ord_var_count != ord_var_count )
+        CV_ERROR( CV_StsParseError, "var_type is inconsistent with cat_var_count and ord_var_count" );
+    //////
+
+    if( cat_var_count > 0 || is_classifier )
+    {
+        int ccount, total_c_count = 0;
+        CV_CALL( cat_count = (CvMat*)cvReadByName( fs, node, "cat_count" ));
+        CV_CALL( cat_map = (CvMat*)cvReadByName( fs, node, "cat_map" ));
+
+        if( !CV_IS_MAT(cat_count) || !CV_IS_MAT(cat_map) ||
+            cat_count->cols != 1 && cat_count->rows != 1 ||
+            CV_MAT_TYPE(cat_count->type) != CV_32SC1 ||
+            cat_count->cols + cat_count->rows - 1 != cat_var_count + is_classifier ||
+            cat_map->cols != 1 && cat_map->rows != 1 ||
+            CV_MAT_TYPE(cat_map->type) != CV_32SC1 )
+            CV_ERROR( CV_StsParseError,
+            "Both cat_count and cat_map must exist and be valid 1d integer vectors of an appropriate size" );
+
+        ccount = cat_var_count + is_classifier;
+
+        CV_CALL( cat_ofs = cvCreateMat( 1, ccount + 1, CV_32SC1 ));
+        cat_ofs->data.i[0] = 0;
+        max_c_count = 1;
+
+        for( vi = 0; vi < ccount; vi++ )
+        {
+            int val = cat_count->data.i[vi];
+            if( val <= 0 )
+                CV_ERROR( CV_StsOutOfRange, "some of cat_count elements are out of range" );
+            max_c_count = MAX( max_c_count, val );
+            cat_ofs->data.i[vi+1] = total_c_count += val;
+        }
+
+        if( cat_map->cols + cat_map->rows - 1 != total_c_count )
+            CV_ERROR( CV_StsBadSize,
+            "cat_map vector length is not equal to the total number of categories in all categorical vars" );
+    }
+
+    max_split_size = cvAlign(sizeof(CvDTreeSplit) +
+        (MAX(0,max_c_count - 33)/32)*sizeof(int),sizeof(void*));
+
+    tree_block_size = MAX((int)sizeof(CvDTreeNode)*8, max_split_size);
+    tree_block_size = MAX(tree_block_size + block_size_delta, min_block_size);
+    CV_CALL( tree_storage = cvCreateMemStorage( tree_block_size ));
+    CV_CALL( node_heap = cvCreateSet( 0, sizeof(node_heap[0]),
+            sizeof(CvDTreeNode), tree_storage ));
+    CV_CALL( split_heap = cvCreateSet( 0, sizeof(split_heap[0]),
+            max_split_size, tree_storage ));
+
+    __END__;
 }
 
 
@@ -1079,9 +1322,6 @@ bool CvDTree::do_train( const CvMat* _subsample_idx )
 }
 
 
-#define DTREE_CAT_DIR(idx,subset) \
-    (2*((subset[(idx)>>5]&(1 << ((idx) & 31)))==0)-1)
-
 void CvDTree::try_split_node( CvDTreeNode* node )
 {
     CvDTreeSplit* best_split = 0;
@@ -1196,7 +1436,7 @@ double CvDTree::calc_node_dir( CvDTreeNode* node )
             for( i = 0; i < n; i++ )
             {
                 int idx = labels[i];
-                int d = idx >= 0 ? DTREE_CAT_DIR(idx,subset) : 0;
+                int d = idx >= 0 ? CV_DTREE_CAT_DIR(idx,subset) : 0;
                 sum += d; sum_abs += d & 1;
                 dir[i] = (char)d;
             }
@@ -1214,7 +1454,7 @@ double CvDTree::calc_node_dir( CvDTreeNode* node )
             {
                 int idx = labels[i];
                 double w = priors[responses[i]];
-                int d = idx >= 0 ? DTREE_CAT_DIR(idx,subset) : 0;
+                int d = idx >= 0 ? CV_DTREE_CAT_DIR(idx,subset) : 0;
                 sum += d*w; sum_abs += (d & 1)*w;
                 dir[i] = (char)d;
             }
@@ -1323,8 +1563,8 @@ CvDTreeSplit* CvDTree::find_split_ord_class( CvDTreeNode* node, int vi )
     int n1 = node->get_num_valid(vi);
     int m = data->get_num_classes();
     const int* rc0 = data->counts->data.i;
-    int* lc = (int*)(rc0 + m);
-    int* rc = lc + m;
+    int* lc = (int*)cvStackAlloc(m*sizeof(lc[0]));
+    int* rc = (int*)cvStackAlloc(m*sizeof(rc[0]));
     int i, best_i = -1;
     double lsum2 = 0, rsum2 = 0, best_val = 0;
     const double* priors = data->have_priors ? data->priors->data.db : 0;
@@ -1359,7 +1599,7 @@ CvDTreeSplit* CvDTree::find_split_ord_class( CvDTreeNode* node, int vi )
 
             if( sorted[i].val + epsilon < sorted[i+1].val )
             {
-                double val = lsum2/L + rsum2/R;
+                double val = (lsum2*R + rsum2*L)/((double)L*R);
                 if( best_val < val )
                 {
                     best_val = val;
@@ -1391,7 +1631,7 @@ CvDTreeSplit* CvDTree::find_split_ord_class( CvDTreeNode* node, int vi )
 
             if( sorted[i].val + epsilon < sorted[i+1].val )
             {
-                double val = lsum2/L + rsum2/R;
+                double val = (lsum2*R + rsum2*L)/((double)L*R);
                 if( best_val < val )
                 {
                     best_val = val;
@@ -1513,10 +1753,9 @@ CvDTreeSplit* CvDTree::find_split_cat_class( CvDTreeNode* node, int vi )
     int n = node->sample_count;
     int m = data->get_num_classes();
     int _mi = data->cat_count->data.i[ci], mi = _mi;
-    const int* rc0 = data->counts->data.i;
-    int* lc = (int*)(rc0 + m);
-    int* rc = lc + m;
-    int* _cjk = rc + m*2, *cjk = _cjk;
+    int* lc = (int*)cvStackAlloc(m*sizeof(lc[0]));
+    int* rc = (int*)cvStackAlloc(m*sizeof(rc[0]));
+    int* _cjk = (int*)cvStackAlloc(m*(mi+1)*sizeof(_cjk[0]))+m, *cjk = _cjk;
     double* c_weights = (double*)cvStackAlloc( mi*sizeof(c_weights[0]) );
     int* cluster_labels = 0;
     int** int_ptr = 0;
@@ -1545,7 +1784,7 @@ CvDTreeSplit* CvDTree::find_split_cat_class( CvDTreeNode* node, int vi )
         {
             mi = MIN(data->params.max_categories, n);
             cjk += _mi*m;
-            cluster_labels = cjk + mi*m;
+            cluster_labels = (int*)cvStackAlloc(mi*sizeof(cluster_labels[0]));
             cluster_categories( _cjk, _mi, m, cjk, mi, cluster_labels );
         }
         subset_i = 1;
@@ -1640,7 +1879,7 @@ CvDTreeSplit* CvDTree::find_split_cat_class( CvDTreeNode* node, int vi )
 
         if( L > FLT_EPSILON && R > FLT_EPSILON )
         {
-            double val = lsum2/L + rsum2/R;
+            double val = (lsum2*R + rsum2*L)/((double)L*R);
             if( best_val < val )
             {
                 best_val = val;
@@ -1701,7 +1940,7 @@ CvDTreeSplit* CvDTree::find_split_ord_reg( CvDTreeNode* node, int vi )
 
         if( sorted[i].val + epsilon < sorted[i+1].val )
         {
-            double val = lsum*lsum/L + rsum*rsum/R;
+            double val = (lsum*lsum*R + rsum*rsum*L)/((double)L*R);
             if( best_val < val )
             {
                 best_val = val;
@@ -1755,7 +1994,7 @@ CvDTreeSplit* CvDTree::find_split_cat_reg( CvDTreeNode* node, int vi )
 
     icvSortDblPtr( sum_ptr, mi, 0 );
 
-    // revert back to unnormalized sum
+    // revert back to unnormalized sums
     // (there should be a very little loss of accuracy)
     for( i = 0; i < mi; i++ )
         sum[i] *= counts[i];
@@ -1773,7 +2012,7 @@ CvDTreeSplit* CvDTree::find_split_cat_reg( CvDTreeNode* node, int vi )
             
             if( L && R )
             {
-                double val = lsum*lsum/L + rsum*rsum/R;
+                double val = (lsum*lsum*R + rsum*rsum*L)/((double)L*R);
                 if( best_val < val )
                 {
                     best_val = val;
@@ -1905,7 +2144,7 @@ CvDTreeSplit* CvDTree::find_surrogate_split_ord( CvDTreeNode* node, int vi )
         }
     }
 
-    return best_i >= 0 ? data->new_split_ord( vi,
+    return best_i >= 0 && best_val > node->maxlr ? data->new_split_ord( vi,
         (sorted[best_i].val + sorted[best_i+1].val)*0.5f, best_i,
         best_inversed, (float)best_val ) : 0;
 }
@@ -1933,7 +2172,7 @@ CvDTreeSplit* CvDTree::find_surrogate_split_cat( CvDTreeNode* node, int vi )
     // sent to the left (lc) and to the right (rc) by the primary split
     if( !data->have_priors )
     {
-        int* _lc = data->counts->data.i + 1;
+        int* _lc = (int*)cvStackAlloc((mi+2)*2*sizeof(_lc[0])) + 1;
         int* _rc = _lc + mi + 1;
 
         for( i = -1; i < mi; i++ )
@@ -2005,7 +2244,7 @@ CvDTreeSplit* CvDTree::find_surrogate_split_cat( CvDTreeNode* node, int vi )
 void CvDTree::calc_node_value( CvDTreeNode* node )
 {
     int i, j, k, n = node->sample_count, cv_n = data->params.cv_folds;
-    const int* cv_labels = data->get_cv_labels(node);
+    const int* cv_labels = data->get_labels(node);
 
     if( data->is_classifier )
     {
@@ -2021,7 +2260,7 @@ void CvDTree::calc_node_value( CvDTreeNode* node )
         int* cls_count = data->counts->data.i;
         const int* responses = data->get_class_labels(node);
         int m = data->get_num_classes();
-        int* cv_cls_count = cls_count + m;
+        int* cv_cls_count = (int*)cvStackAlloc(m*cv_n*sizeof(cv_cls_count[0]));
         double max_val = -1, total_weight = 0;
         int max_k = -1;
         double* priors = data->priors->data.db;
@@ -2194,7 +2433,7 @@ void CvDTree::complete_node_dir( CvDTreeNode* node )
                     int idx;
                     if( !dir[i] && (idx = labels[i]) >= 0 )
                     {
-                        int d = DTREE_CAT_DIR(idx,subset);
+                        int d = CV_DTREE_CAT_DIR(idx,subset);
                         dir[i] = (char)((d ^ inversed_mask) - inversed_mask);
                         if( --nz )
                             break;
@@ -2256,6 +2495,13 @@ void CvDTree::split_node_data( CvDTreeNode* node )
     CvDTreeNode *left = 0, *right = 0;
     int* new_idx = data->split_buf->data.i;
     int new_buf_idx = data->get_child_buf_idx( node );
+    int work_var_count = data->get_work_var_count();
+
+    // speedup things a little, especially for tree ensembles with a lots of small trees:
+    //   do not physically split the input data between the left and right child nodes
+    //   when we are not going to split them further,
+    //   as calc_node_value() does not requires input features anyway.
+    bool split_input_data;
 
     complete_node_dir(node);
 
@@ -2270,7 +2516,11 @@ void CvDTree::split_node_data( CvDTreeNode* node )
 
     node->left = left = data->new_node( node, nl, new_buf_idx, node->offset );
     node->right = right = data->new_node( node, nr, new_buf_idx, node->offset +
-        (data->ord_var_count*2 + data->cat_var_count+1+data->have_cv_labels)*nl );
+        (data->ord_var_count + work_var_count)*nl );
+
+    split_input_data = node->depth + 1 < data->params.max_depth &&
+        (node->left->sample_count > data->params.min_sample_count ||
+        node->right->sample_count > data->params.min_sample_count);
 
     // split ordered variables, keep both halves sorted.
     for( vi = 0; vi < data->var_count; vi++ )
@@ -2280,7 +2530,7 @@ void CvDTree::split_node_data( CvDTreeNode* node )
         CvPair32s32f *src, *ldst0, *rdst0, *ldst, *rdst;
         CvPair32s32f tl, tr;
 
-        if( ci >= 0 )
+        if( ci >= 0 || !split_input_data )
             continue;
 
         src = data->get_ord_var_data(node, vi);
@@ -2320,14 +2570,14 @@ void CvDTree::split_node_data( CvDTreeNode* node )
     }
 
     // split categorical vars, responses and cv_labels using new_idx relocation table
-    for( vi = 0; vi <= data->var_count + data->have_cv_labels + data->have_weights; vi++ )
+    for( vi = 0; vi < work_var_count; vi++ )
     {
         int ci = data->get_var_type(vi);
         int n1 = node->get_num_valid(vi), nr1 = 0;
         int *src, *ldst0, *rdst0, *ldst, *rdst;
         int tl, tr;
 
-        if( ci < 0 )
+        if( ci < 0 || (vi < data->var_count && !split_input_data) )
             continue;
 
         src = data->get_cat_var_data(node, vi);
@@ -2634,7 +2884,7 @@ CvDTreeNode* CvDTree::predict( const CvMat* _sample,
         "number of elements as the total number of variables used for training" );
 
     sample = _sample->data.fl;
-    step = CV_IS_MAT_CONT(_sample->type) ? 1 : _sample->step/sizeof(data[0]);
+    step = CV_IS_MAT_CONT(_sample->type) ? 1 : _sample->step/sizeof(sample[0]);
 
     if( data->cat_count && !preprocessed_input ) // cache for categorical variables
     {
@@ -2707,7 +2957,7 @@ CvDTreeNode* CvDTree::predict( const CvMat* _sample,
                         catbuf[ci] = c -= cofs[ci];
                     }
                 }
-                dir = DTREE_CAT_DIR(c, split->subset);
+                dir = CV_DTREE_CAT_DIR(c, split->subset);
             }
 
             if( split->inversed )
@@ -2773,68 +3023,6 @@ const CvMat* CvDTree::get_var_importance()
 }
 
 
-void CvDTree::write_train_data_params( CvFileStorage* fs )
-{
-    CV_FUNCNAME( "CvDTree::write_train_data_params" );
-
-    __BEGIN__;
-
-    int vi, vcount = data->var_count;
-
-    cvWriteInt( fs, "is_classifier", data->is_classifier ? 1 : 0 );
-    cvWriteInt( fs, "var_all", data->var_all );
-    cvWriteInt( fs, "var_count", data->var_count );
-    cvWriteInt( fs, "ord_var_count", data->ord_var_count );
-    cvWriteInt( fs, "cat_var_count", data->cat_var_count );
-
-    cvStartWriteStruct( fs, "training_params", CV_NODE_MAP );
-    cvWriteInt( fs, "use_surrogates", data->params.use_surrogates ? 1 : 0 );
-
-    if( data->is_classifier )
-    {
-        cvWriteInt( fs, "max_categories", data->params.max_categories );
-    }
-    else
-    {
-        cvWriteReal( fs, "regression_accuracy", data->params.regression_accuracy );
-    }
-
-    cvWriteInt( fs, "max_depth", data->params.max_depth );
-    cvWriteInt( fs, "min_sample_count", data->params.min_sample_count );
-    cvWriteInt( fs, "cross_validation_folds", data->params.cv_folds );
-    
-    if( data->params.cv_folds > 1 )
-    {
-        cvWriteInt( fs, "use_1se_rule", data->params.use_1se_rule ? 1 : 0 );
-        cvWriteInt( fs, "truncate_pruned_tree", data->params.truncate_pruned_tree ? 1 : 0 );
-    }
-
-    if( data->priors )
-        cvWrite( fs, "priors", data->priors );
-
-    cvEndWriteStruct( fs );
-
-    if( data->var_idx )
-        cvWrite( fs, "var_idx", data->var_idx );
-    
-    cvStartWriteStruct( fs, "var_type", CV_NODE_SEQ+CV_NODE_FLOW );
-
-    for( vi = 0; vi < vcount; vi++ )
-        cvWriteInt( fs, 0, data->var_type->data.i[vi] >= 0 );
-
-    cvEndWriteStruct( fs );
-
-    if( data->cat_count && (data->cat_var_count > 0 || data->is_classifier) )
-    {
-        CV_ASSERT( data->cat_count != 0 );
-        cvWrite( fs, "cat_count", data->cat_count );
-        cvWrite( fs, "cat_map", data->cat_map );
-    }
-
-    __END__;
-}
-
-
 void CvDTree::write_split( CvFileStorage* fs, CvDTreeSplit* split )
 {
     int ci;
@@ -2848,7 +3036,7 @@ void CvDTree::write_split( CvFileStorage* fs, CvDTreeSplit* split )
     {
         int i, n = data->cat_count->data.i[ci], to_right = 0, default_dir;
         for( i = 0; i < n; i++ )
-            to_right += DTREE_CAT_DIR(i,split->subset) > 0;
+            to_right += CV_DTREE_CAT_DIR(i,split->subset) > 0;
 
         // ad-hoc rule when to use inverse categorical split notation
         // to achieve more compact and clear representation
@@ -2858,7 +3046,7 @@ void CvDTree::write_split( CvFileStorage* fs, CvDTreeSplit* split )
                             "in" : "not_in", CV_NODE_SEQ+CV_NODE_FLOW );
         for( i = 0; i < n; i++ )
         {
-            int dir = DTREE_CAT_DIR(i,split->subset);
+            int dir = CV_DTREE_CAT_DIR(i,split->subset);
             if( dir*default_dir < 0 )
                 cvWriteInt( fs, 0, i );
         }
@@ -2947,15 +3135,10 @@ void CvDTree::write( CvFileStorage* fs, const char* name )
 
     cvStartWriteStruct( fs, name, CV_NODE_MAP, CV_TYPE_NAME_ML_TREE );
 
-    write_train_data_params( fs );
-
-    cvWriteInt( fs, "best_tree_idx", pruned_tree_idx );
-    get_var_importance();
-    cvWrite( fs, "var_importance", var_importance );
-
-    cvStartWriteStruct( fs, "nodes", CV_NODE_SEQ );
-    write_tree_nodes( fs );
-    cvEndWriteStruct( fs );
+    data->write_params( fs );
+    if( var_importance )
+        cvWrite( fs, "var_importance", var_importance );
+    write( fs );
 
     cvEndWriteStruct( fs );
 
@@ -2963,152 +3146,18 @@ void CvDTree::write( CvFileStorage* fs, const char* name )
 }
 
 
-void CvDTree::read_train_data_params( CvFileStorage* fs, CvFileNode* node )
+void CvDTree::write( CvFileStorage* fs )
 {
-    CV_FUNCNAME( "CvDTree::read_train_data_params" );
+    //CV_FUNCNAME( "CvDTree::write" );
 
     __BEGIN__;
-    
-    CvDTreeParams params;
-    CvFileNode *tparams_node, *vartype_node;
-    CvSeqReader reader;
-    int is_classifier, vi, cat_var_count, ord_var_count;
-    int max_split_size, tree_block_size;
 
-    data = new CvDTreeTrainData;
+    cvWriteInt( fs, "best_tree_idx", pruned_tree_idx );
+    get_var_importance();
 
-    is_classifier = (cvReadIntByName( fs, node, "is_classifier" ) != 0);
-    data->is_classifier = (is_classifier != 0);
-    data->var_all = cvReadIntByName( fs, node, "var_all" );
-    data->var_count = cvReadIntByName( fs, node, "var_count", data->var_all );
-    data->cat_var_count = cvReadIntByName( fs, node, "cat_var_count" );
-    data->ord_var_count = cvReadIntByName( fs, node, "ord_var_count" );
-
-    tparams_node = cvGetFileNodeByName( fs, node, "training_params" );
-
-    if( tparams_node ) // training parameters are not necessary
-    {
-        data->params.use_surrogates = cvReadIntByName( fs, tparams_node, "use_surrogates", 1 ) != 0;
-
-        if( is_classifier )
-        {
-            data->params.max_categories = cvReadIntByName( fs, tparams_node, "max_categories" );
-        }
-        else
-        {
-            data->params.regression_accuracy =
-                (float)cvReadRealByName( fs, tparams_node, "regression_accuracy" );
-        }
-
-        data->params.max_depth = cvReadIntByName( fs, tparams_node, "max_depth" );
-        data->params.min_sample_count = cvReadIntByName( fs, tparams_node, "min_sample_count" );
-        data->params.cv_folds = cvReadIntByName( fs, tparams_node, "cross_validation_folds" );
-    
-        if( data->params.cv_folds > 1 )
-        {
-            data->params.use_1se_rule = cvReadIntByName( fs, tparams_node, "use_1se_rule" ) != 0;
-            data->params.truncate_pruned_tree =
-                cvReadIntByName( fs, tparams_node, "truncate_pruned_tree" ) != 0;
-        }
-
-        data->priors = (CvMat*)cvReadByName( fs, tparams_node, "priors" );
-        if( data->priors && !CV_IS_MAT(data->priors) )
-            CV_ERROR( CV_StsParseError, "priors must stored as a matrix" );
-    }
-
-    CV_CALL( data->var_idx = (CvMat*)cvReadByName( fs, node, "var_idx" ));
-    if( data->var_idx )
-    {
-        if( !CV_IS_MAT(data->var_idx) ||
-            data->var_idx->cols != 1 && data->var_idx->rows != 1 ||
-            data->var_idx->cols + data->var_idx->rows - 1 != data->var_count ||
-            CV_MAT_TYPE(data->var_idx->type) != CV_32SC1 )
-            CV_ERROR( CV_StsParseError,
-                "var_idx (if exist) must be valid 1d integer vector containing <var_count> elements" );
-
-        for( vi = 0; vi < data->var_count; vi++ )
-            if( (unsigned)data->var_idx->data.i[vi] >= (unsigned)data->var_all )
-                CV_ERROR( CV_StsOutOfRange, "some of var_idx elements are out of range" );
-    }
-    
-    ////// read var type
-    CV_CALL( data->var_type = cvCreateMat( 1, data->var_count + 2, CV_32SC1 ));
-
-    cat_var_count = 0;
-    ord_var_count = -1;
-    vartype_node = cvGetFileNodeByName( fs, node, "var_type" );
-
-    if( vartype_node && CV_NODE_TYPE(vartype_node->tag) == CV_NODE_INT && data->var_count == 1 )
-        data->var_type->data.i[0] = vartype_node->data.i ? cat_var_count++ : ord_var_count--;
-    else
-    {
-        if( !vartype_node || CV_NODE_TYPE(vartype_node->tag) != CV_NODE_SEQ ||
-            vartype_node->data.seq->total != data->var_count )
-            CV_ERROR( CV_StsParseError, "var_type must exist and be a sequence of 0's and 1's" );
-
-        cvStartReadSeq( vartype_node->data.seq, &reader );
-    
-        for( vi = 0; vi < data->var_count; vi++ )
-        {
-            CvFileNode* n = (CvFileNode*)reader.ptr;
-            if( CV_NODE_TYPE(n->tag) != CV_NODE_INT || (n->data.i & ~1) )
-                CV_ERROR( CV_StsParseError, "var_type must exist and be a sequence of 0's and 1's" );
-            data->var_type->data.i[vi] = n->data.i ? cat_var_count++ : ord_var_count--;
-            CV_NEXT_SEQ_ELEM( reader.seq->elem_size, reader );
-        }
-    }
-    
-    ord_var_count = ~ord_var_count;
-    if( cat_var_count != data->cat_var_count || ord_var_count != data->ord_var_count )
-        CV_ERROR( CV_StsParseError, "var_type is inconsistent with cat_var_count and ord_var_count" );
-    //////
-
-    if( data->cat_var_count > 0 || is_classifier )
-    {
-        int ccount, max_c_count = 0, total_c_count = 0;
-        CV_CALL( data->cat_count = (CvMat*)cvReadByName( fs, node, "cat_count" ));
-        CV_CALL( data->cat_map = (CvMat*)cvReadByName( fs, node, "cat_map" ));
-
-        if( !CV_IS_MAT(data->cat_count) || !CV_IS_MAT(data->cat_map) ||
-            data->cat_count->cols != 1 && data->cat_count->rows != 1 ||
-            CV_MAT_TYPE(data->cat_count->type) != CV_32SC1 ||
-            data->cat_count->cols + data->cat_count->rows - 1 != cat_var_count + is_classifier ||
-            data->cat_map->cols != 1 && data->cat_map->rows != 1 ||
-            CV_MAT_TYPE(data->cat_map->type) != CV_32SC1 )
-            CV_ERROR( CV_StsParseError,
-            "Both cat_count and cat_map must exist and be valid 1d integer vectors of an appropriate size" );
-
-        ccount = cat_var_count + is_classifier;
-
-        CV_CALL( data->cat_ofs = cvCreateMat( 1, ccount + 1, CV_32SC1 ));
-        data->cat_ofs->data.i[0] = 0;
-
-        for( vi = 0; vi < ccount; vi++ )
-        {
-            int val = data->cat_count->data.i[vi];
-            if( val <= 0 )
-                CV_ERROR( CV_StsOutOfRange, "some of cat_count elements are out of range" );
-            max_c_count = MAX( max_c_count, val );
-            data->cat_ofs->data.i[vi+1] = total_c_count += val;
-        }
-
-        if( data->cat_map->cols + data->cat_map->rows - 1 != total_c_count )
-            CV_ERROR( CV_StsBadSize,
-            "cat_map vector length is not equal to the total number of categories in all categorical vars" );
-        
-        data->max_c_count = max_c_count;
-    }
-
-    max_split_size = cvAlign(sizeof(CvDTreeSplit) +
-        (MAX(0,data->max_c_count - 33)/32)*sizeof(int),sizeof(void*));
-
-    tree_block_size = MAX((int)sizeof(CvDTreeNode)*8, max_split_size);
-    tree_block_size = MAX(tree_block_size + block_size_delta, min_block_size);
-    CV_CALL( data->tree_storage = cvCreateMemStorage( tree_block_size ));
-    CV_CALL( data->node_heap = cvCreateSet( 0, sizeof(data->node_heap[0]),
-            sizeof(CvDTreeNode), data->tree_storage ));
-    CV_CALL( data->split_heap = cvCreateSet( 0, sizeof(data->split_heap[0]),
-            max_split_size, data->tree_storage ));
+    cvStartWriteStruct( fs, "nodes", CV_NODE_SEQ );
+    write_tree_nodes( fs );
+    cvEndWriteStruct( fs );
 
     __END__;
 }
@@ -3304,6 +3353,16 @@ void CvDTree::read_tree_nodes( CvFileStorage* fs, CvFileNode* fnode )
 
 void CvDTree::read( CvFileStorage* fs, CvFileNode* fnode )
 {
+    CvDTreeTrainData* _data = new CvDTreeTrainData();
+    _data->read_params( fs, fnode );
+
+    read( fs, fnode, _data );
+}
+
+
+// a special entry point for reading weak decision trees from the tree ensembles
+void CvDTree::read( CvFileStorage* fs, CvFileNode* node, CvDTreeTrainData* _data )
+{
     CV_FUNCNAME( "CvDTree::read" );
 
     __BEGIN__;
@@ -3311,16 +3370,14 @@ void CvDTree::read( CvFileStorage* fs, CvFileNode* fnode )
     CvFileNode* tree_nodes;
 
     clear();
-    read_train_data_params( fs, fnode );
+    data = _data;
 
-    tree_nodes = cvGetFileNodeByName( fs, fnode, "nodes" );
+    tree_nodes = cvGetFileNodeByName( fs, node, "nodes" );
     if( !tree_nodes || CV_NODE_TYPE(tree_nodes->tag) != CV_NODE_SEQ )
         CV_ERROR( CV_StsParseError, "nodes tag is missing" );
 
-    pruned_tree_idx = cvReadIntByName( fs, fnode, "best_tree_idx", -1 );
-
+    pruned_tree_idx = cvReadIntByName( fs, node, "best_tree_idx", -1 );
     read_tree_nodes( fs, tree_nodes );
-    get_var_importance(); // recompute variable importance
 
     __END__;
 }
