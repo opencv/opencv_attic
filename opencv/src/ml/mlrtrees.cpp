@@ -141,54 +141,12 @@ CvDTreeSplit* CvForestTree::find_best_split( CvDTreeNode* node )
 }
 
 
-void CvForestTree::read( CvFileStorage* fs, CvFileNode* fnode, CvRTrees* _forest, CvDTreeTrainData** pdata )
+void CvForestTree::read( CvFileStorage* fs, CvFileNode* fnode, CvRTrees* _forest, CvDTreeTrainData* _data )
 {
-    CV_FUNCNAME( "CvForestTree::read" );
-
-    __BEGIN__;
-
+    CvDTree::read( fs, fnode, _data );
     forest = _forest;
-
-    if( pdata && *pdata )
-        data = *pdata;
-    else
-    {
-        CV_CALL(read_train_data_params( fs, fnode ));
-        data->shared = true;
-        *pdata = data;
-    }
-
-    CV_CALL(pruned_tree_idx = cvReadIntByName( fs, fnode, "best_tree_idx", -2 ));
-    if( pruned_tree_idx < -1 )
-        CV_ERROR( CV_StsParseError, "<best_tree_idx> is absent" );
-
-    CV_CALL(read_tree_nodes( fs, cvGetFileNodeByName( fs, fnode, "nodes" )));
-
-    __END__;
 }
 
-
-void CvForestTree::write( CvFileStorage* fs, const char* name, bool write_td_tp )
-{
-    CV_FUNCNAME( "CvForestTree::write" );
-
-    __BEGIN__;
-
-    cvStartWriteStruct( fs, name, CV_NODE_MAP );
-
-    if( write_td_tp )
-        CV_CALL(write_train_data_params( fs ));
-
-    cvWriteInt( fs, "best_tree_idx", pruned_tree_idx );
-
-    cvStartWriteStruct( fs, "nodes", CV_NODE_SEQ );
-    CV_CALL(write_tree_nodes( fs ));
-    cvEndWriteStruct( fs ); // nodes
-
-    cvEndWriteStruct( fs ); // name
-
-    __END__;
-}
 
 //////////////////////////////////////////////////////////////////////////////////////////
 //                                  Random trees                                        //
@@ -200,6 +158,7 @@ CvRTrees::CvRTrees()
     oob_error        = 0;
     ntrees           = 0;
     trees            = NULL;
+    data             = NULL;
     active_var_mask  = NULL;
     var_importance   = NULL;
     proximities      = NULL;
@@ -211,15 +170,12 @@ CvRTrees::CvRTrees()
 void CvRTrees::clear()
 {
     int k;
-    for( k = 1; k < ntrees; k++ )
+    for( k = 0; k < ntrees; k++ )
         delete trees[k];
+    cvFree( &trees );
 
-    if( trees && *trees )
-    {
-        trees[0]->share_data( false );
-        delete trees[0];
-        cvFree( &trees );
-    }
+    delete data;
+    data = 0;
 
     cvReleaseMat( &active_var_mask );
     cvReleaseMat( &var_importance );
@@ -250,7 +206,6 @@ bool CvRTrees::train( const CvMat* _train_data, int _tflag,
                         const CvMat* _missing_mask, CvRTParams params )
 {
     bool result = false;
-    CvDTreeTrainData* train_data = 0;
 
     CV_FUNCNAME("CvRTrees::train");
     __BEGIN__;
@@ -263,11 +218,11 @@ bool CvRTrees::train( const CvMat* _train_data, int _tflag,
         params.regression_accuracy, params.use_surrogates, params.max_categories,
         params.cv_folds, params.use_1se_rule, false, params.priors );
     
-    train_data = new CvDTreeTrainData();
-    CV_CALL(train_data->set_data( _train_data, _tflag, _responses, _var_idx,
+    data = new CvDTreeTrainData();
+    CV_CALL(data->set_data( _train_data, _tflag, _responses, _var_idx,
         _sample_idx, _var_type, _missing_mask, tree_params, true));
 
-    var_count = train_data->var_count;
+    var_count = data->var_count;
     if( params.nactive_vars > var_count )
         params.nactive_vars = var_count;
     else if( params.nactive_vars == 0 )
@@ -285,7 +240,7 @@ bool CvRTrees::train( const CvMat* _train_data, int _tflag,
     }
     if( params.calc_proximities )
     {
-        const int n = train_data->sample_count;
+        const int n = data->sample_count;
         CV_CALL(proximities = cvCreateMat( 1, n*(n-1)/2, CV_32FC1) );
         cvZero( proximities );
     }
@@ -297,7 +252,7 @@ bool CvRTrees::train( const CvMat* _train_data, int _tflag,
         cvZero( &submask2 );
     }
 
-    CV_CALL(result = grow_forest(train_data, params.term_crit ));
+    CV_CALL(result = grow_forest( params.term_crit ));
 
     result = true;
 
@@ -307,7 +262,7 @@ bool CvRTrees::train( const CvMat* _train_data, int _tflag,
 }
 
 
-bool CvRTrees::grow_forest( CvDTreeTrainData* train_data, const CvTermCriteria term_crit )
+bool CvRTrees::grow_forest( const CvTermCriteria term_crit )
 {
     bool result = false;
 
@@ -331,7 +286,7 @@ bool CvRTrees::grow_forest( CvDTreeTrainData* train_data, const CvTermCriteria t
     const int max_ntrees = term_crit.max_iter;
     const double max_oob_err = term_crit.epsilon;
     
-    const int dims = train_data->var_count;
+    const int dims = data->var_count;
     float maximal_response = 0;
 
     // oob_predictions_sum[i] = sum of predicted values for the i-th sample
@@ -341,13 +296,13 @@ bool CvRTrees::grow_forest( CvDTreeTrainData* train_data, const CvTermCriteria t
     CvMat oob_predictions_sum = cvMat( 1, 1, CV_32FC1 );
     CvMat oob_num_of_predictions = cvMat( 1, 1, CV_32FC1 );
 
-    nsamples = train_data->sample_count;
-    nclasses = train_data->get_num_classes();
+    nsamples = data->sample_count;
+    nclasses = data->get_num_classes();
 
     trees = (CvForestTree**)cvAlloc( sizeof(trees[0])*max_ntrees );
     memset( trees, 0, sizeof(trees[0])*max_ntrees );
 
-    if( train_data->is_classifier )
+    if( data->is_classifier )
     {
         CV_CALL(oob_sample_votes = cvCreateMat( nsamples, nclasses, CV_32SC1 ));
         cvZero(oob_sample_votes);
@@ -377,7 +332,7 @@ bool CvRTrees::grow_forest( CvDTreeTrainData* train_data, const CvTermCriteria t
         memset( predicted_nodes_ptr, 0, sizeof(CvDTreeNode*)*nsamples );
     }
 
-    CV_CALL(train_data->get_vectors( 0, samples_ptr, missing_ptr, true_resp_ptr ));
+    CV_CALL(data->get_vectors( 0, samples_ptr, missing_ptr, true_resp_ptr ));
 
     {
         double minval, maxval;
@@ -390,8 +345,7 @@ bool CvRTrees::grow_forest( CvDTreeTrainData* train_data, const CvTermCriteria t
     while( ntrees < max_ntrees )
     {
         int i, j, oob_samples_count = 0;
-        float ncorrect_responses = 0; // used for estimation of variable importance
-        float* true_resp = 0;
+        double ncorrect_responses = 0; // used for estimation of variable importance
         CvMat sample, missing;
         CvDTreeNode** predicted_nodes = 0;
         CvForestTree* tree = 0;
@@ -406,17 +360,16 @@ bool CvRTrees::grow_forest( CvDTreeTrainData* train_data, const CvTermCriteria t
 
         trees[ntrees] = new CvForestTree();
         tree = trees[ntrees];
-        CV_CALL(tree->train( train_data, sample_idx_for_tree, this ));
+        CV_CALL(tree->train( data, sample_idx_for_tree, this ));
 
         // form array of OOB samples indices and get these samples
         sample   = cvMat( 1, dims, CV_32FC1, samples_ptr );
         missing  = cvMat( 1, dims, CV_8UC1,  missing_ptr );
-        true_resp = true_resp_ptr;
         predicted_nodes = predicted_nodes_ptr;
 
         oob_error = 0;
         for( i = 0; i < nsamples; i++,
-            sample.data.fl += dims, missing.data.ptr += dims, true_resp++ )
+            sample.data.fl += dims, missing.data.ptr += dims )
         {
             CvDTreeNode* predicted_node = 0;
             if( proximities )
@@ -432,21 +385,22 @@ bool CvRTrees::grow_forest( CvDTreeTrainData* train_data, const CvTermCriteria t
             if( !predicted_node )
                 CV_CALL(predicted_node = tree->predict(&sample, &missing, true));
 
-            if( !train_data->is_classifier ) //regression
+            if( !data->is_classifier ) //regression
             {
-                float avg_resp, resp = (float)predicted_node->value;
-                oob_predictions_sum.data.fl[i] += resp;
+                double avg_resp, resp = predicted_node->value;
+                oob_predictions_sum.data.fl[i] += (float)resp;
                 oob_num_of_predictions.data.fl[i] += 1;
 
                 // compute oob error
-                avg_resp=oob_predictions_sum.data.fl[i]/oob_num_of_predictions.data.fl[i];
-                oob_error += powf(avg_resp - *true_resp, 2);
-
-                ncorrect_responses += expf( -powf((resp - *true_resp)/maximal_response, 2) );
+                avg_resp = oob_predictions_sum.data.fl[i]/oob_num_of_predictions.data.fl[i];
+                avg_resp -= true_resp_ptr[i];
+                oob_error += avg_resp*avg_resp;
+                resp = (resp - true_resp_ptr[i])/maximal_response;
+                ncorrect_responses += exp( -resp*resp );
             }
             else //classification
             {
-                float prdct_resp;
+                double prdct_resp;
                 CvPoint max_loc;
                 CvMat votes;
 
@@ -456,10 +410,10 @@ bool CvRTrees::grow_forest( CvDTreeTrainData* train_data, const CvTermCriteria t
                 // compute oob error
                 cvMinMaxLoc( &votes, 0, 0, 0, &max_loc );
 
-                prdct_resp = (float)train_data->cat_map->data.i[max_loc.x];
-                oob_error += (fabs(prdct_resp - *true_resp) < FLT_EPSILON) ? 0 : 1;
+                prdct_resp = data->cat_map->data.i[max_loc.x];
+                oob_error += (fabs(prdct_resp - true_resp_ptr[i]) < FLT_EPSILON) ? 0 : 1;
 
-                ncorrect_responses += ((int)predicted_node->value == (int)*true_resp);
+                ncorrect_responses += cvRound(predicted_node->value - true_resp_ptr[i]) == 0;
             }
             oob_samples_count++;
         }
@@ -474,7 +428,7 @@ bool CvRTrees::grow_forest( CvDTreeTrainData* train_data, const CvTermCriteria t
             memcpy( oob_samples_perm_ptr, samples_ptr, dims*nsamples*sizeof(float));
             for( m = 0; m < dims; m++ )
             {
-                float ncorrect_responses_permuted = 0;
+                double ncorrect_responses_permuted = 0;
                 // randomly permute values of the m-th variable in the oob samples
                 float* mth_var_ptr = oob_samples_perm_ptr + m;
 
@@ -502,18 +456,22 @@ bool CvRTrees::grow_forest( CvDTreeTrainData* train_data, const CvTermCriteria t
                 for( i = 0; i < nsamples; i++,
                     sample.data.fl += dims, missing.data.ptr += dims )
                 {
-                    float predct_resp, true_resp;
+                    double predct_resp, true_resp;
 
                     if( sample_idx_mask_for_tree->data.ptr[i] ) //the sample is not OOB
                         continue;
 
-                    predct_resp = (float)tree->predict(&sample, &missing, true)->value;
+                    predct_resp = tree->predict(&sample, &missing, true)->value;
                     true_resp   = true_resp_ptr[i];
-                    ncorrect_responses_permuted += train_data->is_classifier ?
-                        (int)true_resp == (int)predct_resp 
-                        : expf( -powf((true_resp - predct_resp)/maximal_response, 2));
+                    if( data->is_classifier )
+                        ncorrect_responses_permuted += cvRound(true_resp - predct_resp) == 0;
+                    else
+                    {
+                        true_resp = (true_resp - predct_resp)/maximal_response;
+                        ncorrect_responses_permuted += exp( -true_resp*true_resp );
+                    }
                 }
-                var_importance->data.fl[m] += (ncorrect_responses
+                var_importance->data.fl[m] += (float)(ncorrect_responses
                     - ncorrect_responses_permuted);
             }
         }
@@ -655,14 +613,18 @@ void CvRTrees::write( CvFileStorage* fs, const char* name )
 
     cvWriteInt( fs, "ntrees", ntrees );
 
+    CV_CALL(data->write_params( fs ));
+
     cvStartWriteStruct( fs, "trees", CV_NODE_SEQ );
 
-    CV_CALL(trees[0]->write( fs, 0, true ));
-    for( k = 1; k < ntrees; k++ )
-       CV_CALL(trees[k]->write( fs, 0, false ));
+    for( k = 0; k < ntrees; k++ )
+    {
+        cvStartWriteStruct( fs, 0, CV_NODE_MAP );
+        CV_CALL( trees[k]->write( fs ));
+        cvEndWriteStruct( fs );
+    }
 
     cvEndWriteStruct( fs ); //trees
-
     cvEndWriteStruct( fs ); //CV_TYPE_NAME_ML_RTREES
 
     __END__;
@@ -678,7 +640,6 @@ void CvRTrees::read( CvFileStorage* fs, CvFileNode* fnode )
     int nactive_vars, var_count, k;
     CvSeqReader reader;
     CvFileNode* trees_fnode = 0;
-    CvDTreeTrainData* train_data = 0;
 
     clear();
 
@@ -700,6 +661,10 @@ void CvRTrees::read( CvFileStorage* fs, CvFileNode* fnode )
     trees = (CvForestTree**)cvAlloc( sizeof(trees[0])*ntrees );
     memset( trees, 0, sizeof(trees[0])*ntrees );
 
+    data = new CvDTreeTrainData();
+    data->read_params( fs, fnode );
+    data->shared = true;
+
     trees_fnode = cvGetFileNodeByName( fs, fnode, "trees" );
     if( !trees_fnode || !CV_NODE_IS_SEQ(trees_fnode->tag) )
         CV_ERROR( CV_StsParseError, "<trees> tag is missing" );
@@ -708,16 +673,18 @@ void CvRTrees::read( CvFileStorage* fs, CvFileNode* fnode )
     if( reader.seq->total != ntrees )
         CV_ERROR( CV_StsParseError,
         "<ntrees> is not equal to the number of trees saved in file" );
+
     for( k = 0; k < ntrees; k++ )
     {
         trees[k] = new CvForestTree();
-        CV_CALL(trees[k]->read( fs, (CvFileNode*)reader.ptr, this, &train_data ));
+        CV_CALL(trees[k]->read( fs, (CvFileNode*)reader.ptr, this, data ));
         CV_NEXT_SEQ_ELEM( reader.seq->elem_size, reader );
     }
 
-    var_count = trees[0]->get_var_count();
+    var_count = data->var_count;
     CV_CALL(active_var_mask = cvCreateMat( 1, var_count, CV_8UC1 ));
-    { // initialize active variables mask
+    {
+        // initialize active variables mask
         CvMat submask1, submask2;
         cvGetCols( active_var_mask, &submask1, 0, nactive_vars );
         cvGetCols( active_var_mask, &submask2, nactive_vars, var_count );
