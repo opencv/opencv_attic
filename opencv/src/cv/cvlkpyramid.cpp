@@ -457,8 +457,9 @@ icvCalcOpticalFlowPyrLK_8uC1R( const uchar* imgA, const uchar* imgB,
             u.x += (minI.x - (patchSize.width - maxI.x + 1))*0.5f;
             u.y += (minI.y - (patchSize.height - maxI.y + 1))*0.5f;
 
-            if( icvGetRectSubPix_8u32f_C1R( imgI[l], levelStep, levelSize,
-                patchI, isz.width*sizeof(patchI[0]), isz, u ) < 0 )
+            if( isz.width < 3 || isz.height < 3 ||
+                icvGetRectSubPix_8u32f_C1R( imgI[l], levelStep, levelSize,
+                    patchI, isz.width*sizeof(patchI[0]), isz, u ) < 0 )
             {
                 /* point is outside the image. take the next */
                 status[i] = 0;
@@ -487,7 +488,8 @@ icvCalcOpticalFlowPyrLK_8uC1R( const uchar* imgA, const uchar* imgB,
                 _v.x = v.x + (minJ.x - (patchSize.width - maxJ.x + 1))*0.5f;
                 _v.y = v.y + (minJ.y - (patchSize.height - maxJ.y + 1))*0.5f;
 
-                if( icvGetRectSubPix_8u32f_C1R( imgJ[l], levelStep, levelSize, patchJ,
+                if( jsz.width < 1 || jsz.height < 1 ||
+                    icvGetRectSubPix_8u32f_C1R( imgJ[l], levelStep, levelSize, patchJ,
                                                 jsz.width*sizeof(patchJ[0]), jsz, _v ) < 0 )
                 {
                     /* point is outside image. take the next */
