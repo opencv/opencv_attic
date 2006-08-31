@@ -687,6 +687,7 @@ CvBoostTree::calc_node_value( CvDTreeNode* node )
     double* subtree_weights = ensemble->get_subtree_weights()->data.db;
     double rcw[2] = {0,0};
     int boost_type = ensemble->get_params().boost_type;
+    //const double* priors = data->priors->data.db;
 
     if( data->is_classifier )
     {
@@ -695,7 +696,7 @@ CvBoostTree::calc_node_value( CvDTreeNode* node )
         for( i = 0; i < count; i++ )
         {
             int idx = labels[i];
-            double w = weights[idx];
+            double w = weights[idx]/*priors[responses[i]]*/;
             rcw[responses[i]] += w;
             subtree_weights[i] = w;
         }
@@ -729,7 +730,7 @@ CvBoostTree::calc_node_value( CvDTreeNode* node )
         for( i = 0; i < count; i++ )
         {
             int idx = labels[i];
-            double w = weights[idx];
+            double w = weights[idx]/*priors[values[i] > 0]*/;
             double t = values[i];
             rcw[0] += w;
             subtree_weights[i] = w;
@@ -943,6 +944,7 @@ CvBoost::update_weights( CvBoostTree* tree )
     __BEGIN__;
 
     int i, count = data->sample_count;
+    double sumw = 0.;
 
     if( !tree ) // before training the first tree, initialize weights and other parameters
     {
@@ -952,6 +954,7 @@ CvBoost::update_weights( CvBoostTree* tree )
         float* responses = data->get_ord_responses(data->data_root);
         int* labels = data->get_labels(data->data_root);
         double w0 = 1./count;
+        const double* priors = data->priors->data.db;
         
         cvReleaseMat( &orig_response );
         cvReleaseMat( &sum_response );
@@ -973,7 +976,7 @@ CvBoost::update_weights( CvBoostTree* tree )
             // later, in trim_weights() deactivate/reactive again some, if need
             subsample_mask->data.ptr[i] = (uchar)1;
             // make all the initial weights the same.
-            weights->data.db[i] = w0;
+            weights->data.db[i] = w0*priors[class_labels[i]];
             // set the labels to find (from within weak tree learning proc)
             // the particular sample weight, and where to store the response.
             labels[i] = i;
@@ -1003,8 +1006,6 @@ CvBoost::update_weights( CvBoostTree* tree )
     }
     else
     {
-        double sumw = 0.;
-        
         // at this moment, for all the samples that participated in the training of the most
         // recent weak classifier we know the responses. For other samples we need to compute them
         if( have_subsample )
@@ -1092,15 +1093,18 @@ CvBoost::update_weights( CvBoostTree* tree )
             //   weak_eval[i] = f(x_i) in [-z_max,z_max]
             //   sum_response = F(x_i).
             //   F(x_i) += 0.5*f(x_i)
-            //   p(x_i) = exp(F(x_i))/(exp(F(x_i)) + exp(-F(x_i)))
+            //   p(x_i) = exp(F(x_i))/(exp(F(x_i)) + exp(-F(x_i))=1/(1+exp(-2*F(x_i)))
             //   reuse weak_eval: weak_eval[i] <- p(x_i)
             //   w_i = p(x_i)*1(1 - p(x_i))
             //   z_i = ((y_i+1)/2 - p(x_i))/(p(x_i)*(1 - p(x_i)))
             //   store z_i to the data->data_root as the new target responses
 
-            const double lb_weight_thresh = 1e-4;
-            const double lb_z_max = 3.;
+            const double lb_weight_thresh = FLT_EPSILON;
+            const double lb_z_max = 10.;
             float* responses = data->get_ord_responses(data->data_root);
+
+            /*if( weak->total == 7 )
+                putchar('*');*/
 
             for( i = 0; i < count; i++ )
             {
@@ -1116,17 +1120,17 @@ CvBoost::update_weights( CvBoostTree* tree )
                 double p = 1./(1. + weak_eval->data.db[i]);
                 double w = p*(1 - p), z;
                 w = MAX( w, lb_weight_thresh );
-                weights->data.db[i] = (float)w;
+                weights->data.db[i] = w;
                 sumw += w;
                 if( orig_response->data.i[i] > 0 )
                 {
                     z = 1./p;
-                    responses[i] = (float)MAX(z, lb_z_max);
+                    responses[i] = (float)MIN(z, lb_z_max);
                 }
                 else
                 {
                     z = 1./(1-p);
-                    responses[i] = (float)-MAX(z, lb_z_max);
+                    responses[i] = (float)-MIN(z, lb_z_max);
                 }
             }
         }
@@ -1149,14 +1153,14 @@ CvBoost::update_weights( CvBoostTree* tree )
                 sumw += w;
             }
         }
+    }
 
-        // renormalize weights
-        if( sumw > FLT_EPSILON )
-        {
-            sumw = 1./sumw;
-            for( i = 0; i < count; ++i )
-                weights->data.db[i] *= sumw;
-        }
+    // renormalize weights
+    if( sumw > FLT_EPSILON )
+    {
+        sumw = 1./sumw;
+        for( i = 0; i < count; ++i )
+            weights->data.db[i] *= sumw;
     }
 
     __END__;
