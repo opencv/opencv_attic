@@ -1679,6 +1679,10 @@ class CvMat(_object):
     if _newclass:imageSize = property(_cv.CvMat_imageSize_get)
     __swig_getmethods__["widthStep"] = _cv.CvMat_widthStep_get
     if _newclass:widthStep = property(_cv.CvMat_widthStep_get)
+    __swig_getmethods__["rows"] = _cv.CvMat_rows_get
+    if _newclass:rows = property(_cv.CvMat_rows_get)
+    __swig_getmethods__["cols"] = _cv.CvMat_cols_get
+    if _newclass:cols = property(_cv.CvMat_cols_get)
     def __mul__(*args):
         """__mul__(self, CvArr src) -> CvMat"""
         return _cv.CvMat___mul__(*args)
@@ -3483,25 +3487,9 @@ def cvFree_(*args):
   """cvFree_(void ptr)"""
   return _cv.cvFree_(*args)
 
-def cvSetImageCOI(*args):
-  """cvSetImageCOI( image, int coi)"""
-  return _cv.cvSetImageCOI(*args)
-
-def cvGetImageCOI(*args):
-  """cvGetImageCOI( image) -> int"""
-  return _cv.cvGetImageCOI(*args)
-
-def cvSetImageROI(*args):
-  """cvSetImageROI( image, CvRect rect)"""
-  return _cv.cvSetImageROI(*args)
-
 def cvResetImageROI(*args):
   """cvResetImageROI( image)"""
   return _cv.cvResetImageROI(*args)
-
-def cvGetImageROI(*args):
-  """cvGetImageROI( image) -> CvRect"""
-  return _cv.cvGetImageROI(*args)
 
 def cvCreateMatHeader(*args):
   """cvCreateMatHeader(int rows, int cols, int type) -> CvMat"""

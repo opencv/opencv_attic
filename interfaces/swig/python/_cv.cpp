@@ -4128,12 +4128,46 @@ SWIGINTERN char *CvMat___str__(CvMat *self){
 SWIGINTERN void CvMat___setitem____SWIG_0(CvMat *self,PyObject *object,double val){
 		CvMat tmp;
 		CvRect subrect = PySlice_to_CvRect( self, object );
+		/*@SWIG:CHECK_SLICE_BOUNDS@*/
+	//printf("__setitem__ slice(%d:%d, %d:%d) array(%d,%d)", subrect.x, subrect.y, subrect.x+subrect.width, subrect.y+subrect.height, self->cols, self->rows);
+	if(subrect.width<=0 || subrect.height<=0 ||
+	   	subrect.width>self->cols || subrect.height>self->rows ||
+	   	subrect.x<0 || subrect.y<0 ||
+	   	subrect.x>= self->cols || subrect.y >=self->rows){
+	   	char errstr[256];
+		// previous function already set error string
+		if(subrect.width==0 && subrect.height==0 && subrect.x==0 && subrect.y==0) return ;
+	   	sprintf(errstr, "Requested slice [ %d:%d %d:%d ] oversteps array sized [ %d %d ]", 
+	   		subrect.x, subrect.y, subrect.x+subrect.width, subrect.y+subrect.height, self->cols, self->rows);
+		PyErr_SetString(PyExc_IndexError, errstr);
+		//PyErr_SetString(PyExc_ValueError, errstr);
+		return ;
+	}
+else{}
+/*@SWIG@*/;
 		cvGetSubRect(self, &tmp, subrect);
 		cvSet(&tmp, cvScalarAll(val));
 	}
 SWIGINTERN void CvMat___setitem____SWIG_1(CvMat *self,PyObject *object,CvPoint val){
 		CvMat tmp;
 		CvRect subrect = PySlice_to_CvRect( self, object );
+		/*@SWIG:CHECK_SLICE_BOUNDS@*/
+	//printf("__setitem__ slice(%d:%d, %d:%d) array(%d,%d)", subrect.x, subrect.y, subrect.x+subrect.width, subrect.y+subrect.height, self->cols, self->rows);
+	if(subrect.width<=0 || subrect.height<=0 ||
+	   	subrect.width>self->cols || subrect.height>self->rows ||
+	   	subrect.x<0 || subrect.y<0 ||
+	   	subrect.x>= self->cols || subrect.y >=self->rows){
+	   	char errstr[256];
+		// previous function already set error string
+		if(subrect.width==0 && subrect.height==0 && subrect.x==0 && subrect.y==0) return ;
+	   	sprintf(errstr, "Requested slice [ %d:%d %d:%d ] oversteps array sized [ %d %d ]", 
+	   		subrect.x, subrect.y, subrect.x+subrect.width, subrect.y+subrect.height, self->cols, self->rows);
+		PyErr_SetString(PyExc_IndexError, errstr);
+		//PyErr_SetString(PyExc_ValueError, errstr);
+		return ;
+	}
+else{}
+/*@SWIG@*/;
 		cvGetSubRect(self, &tmp, subrect);
 		cvSet(&tmp, cvScalar(val.x, val.y));
 	}
@@ -4141,23 +4175,91 @@ SWIGINTERN void CvMat___setitem____SWIG_2(CvMat *self,PyObject *object,CvPoint2D
 		CvMat tmp;
 		CvRect subrect = PySlice_to_CvRect( self, object );
 		cvGetSubRect(self, &tmp, subrect);
+		/*@SWIG:CHECK_SLICE_BOUNDS@*/
+	//printf("__setitem__ slice(%d:%d, %d:%d) array(%d,%d)", subrect.x, subrect.y, subrect.x+subrect.width, subrect.y+subrect.height, self->cols, self->rows);
+	if(subrect.width<=0 || subrect.height<=0 ||
+	   	subrect.width>self->cols || subrect.height>self->rows ||
+	   	subrect.x<0 || subrect.y<0 ||
+	   	subrect.x>= self->cols || subrect.y >=self->rows){
+	   	char errstr[256];
+		// previous function already set error string
+		if(subrect.width==0 && subrect.height==0 && subrect.x==0 && subrect.y==0) return ;
+	   	sprintf(errstr, "Requested slice [ %d:%d %d:%d ] oversteps array sized [ %d %d ]", 
+	   		subrect.x, subrect.y, subrect.x+subrect.width, subrect.y+subrect.height, self->cols, self->rows);
+		PyErr_SetString(PyExc_IndexError, errstr);
+		//PyErr_SetString(PyExc_ValueError, errstr);
+		return ;
+	}
+else{}
+/*@SWIG@*/;
 		cvSet(&tmp, cvScalar(val.x, val.y));
 	}
 SWIGINTERN void CvMat___setitem____SWIG_3(CvMat *self,PyObject *object,CvScalar val){
 		CvMat tmp;
 		CvRect subrect = PySlice_to_CvRect( self, object );
 		cvGetSubRect(self, &tmp, subrect);
+		/*@SWIG:CHECK_SLICE_BOUNDS@*/
+	//printf("__setitem__ slice(%d:%d, %d:%d) array(%d,%d)", subrect.x, subrect.y, subrect.x+subrect.width, subrect.y+subrect.height, self->cols, self->rows);
+	if(subrect.width<=0 || subrect.height<=0 ||
+	   	subrect.width>self->cols || subrect.height>self->rows ||
+	   	subrect.x<0 || subrect.y<0 ||
+	   	subrect.x>= self->cols || subrect.y >=self->rows){
+	   	char errstr[256];
+		// previous function already set error string
+		if(subrect.width==0 && subrect.height==0 && subrect.x==0 && subrect.y==0) return ;
+	   	sprintf(errstr, "Requested slice [ %d:%d %d:%d ] oversteps array sized [ %d %d ]", 
+	   		subrect.x, subrect.y, subrect.x+subrect.width, subrect.y+subrect.height, self->cols, self->rows);
+		PyErr_SetString(PyExc_IndexError, errstr);
+		//PyErr_SetString(PyExc_ValueError, errstr);
+		return ;
+	}
+else{}
+/*@SWIG@*/;
 		cvSet(&tmp, val);
 	}
 SWIGINTERN void CvMat___setitem____SWIG_4(CvMat *self,PyObject *object,CvArr *arr){
 		CvMat tmp;
 		CvRect subrect = PySlice_to_CvRect( self, object );
+		/*@SWIG:CHECK_SLICE_BOUNDS@*/
+	//printf("__setitem__ slice(%d:%d, %d:%d) array(%d,%d)", subrect.x, subrect.y, subrect.x+subrect.width, subrect.y+subrect.height, self->cols, self->rows);
+	if(subrect.width<=0 || subrect.height<=0 ||
+	   	subrect.width>self->cols || subrect.height>self->rows ||
+	   	subrect.x<0 || subrect.y<0 ||
+	   	subrect.x>= self->cols || subrect.y >=self->rows){
+	   	char errstr[256];
+		// previous function already set error string
+		if(subrect.width==0 && subrect.height==0 && subrect.x==0 && subrect.y==0) return ;
+	   	sprintf(errstr, "Requested slice [ %d:%d %d:%d ] oversteps array sized [ %d %d ]", 
+	   		subrect.x, subrect.y, subrect.x+subrect.width, subrect.y+subrect.height, self->cols, self->rows);
+		PyErr_SetString(PyExc_IndexError, errstr);
+		//PyErr_SetString(PyExc_ValueError, errstr);
+		return ;
+	}
+else{}
+/*@SWIG@*/;
 		cvGetSubRect(self, &tmp, subrect);
 		cvConvert(arr, &tmp);
 	}
 SWIGINTERN PyObject *CvMat___getitem__(CvMat *self,PyObject *object){
 		CvMat * mat;
 		CvRect subrect = PySlice_to_CvRect( self, object );
+		/*@SWIG:CHECK_SLICE_BOUNDS@*/
+	//printf("__setitem__ slice(%d:%d, %d:%d) array(%d,%d)", subrect.x, subrect.y, subrect.x+subrect.width, subrect.y+subrect.height, self->cols, self->rows);
+	if(subrect.width<=0 || subrect.height<=0 ||
+	   	subrect.width>self->cols || subrect.height>self->rows ||
+	   	subrect.x<0 || subrect.y<0 ||
+	   	subrect.x>= self->cols || subrect.y >=self->rows){
+	   	char errstr[256];
+		// previous function already set error string
+		if(subrect.width==0 && subrect.height==0 && subrect.x==0 && subrect.y==0) return NULL;
+	   	sprintf(errstr, "Requested slice [ %d:%d %d:%d ] oversteps array sized [ %d %d ]", 
+	   		subrect.x, subrect.y, subrect.x+subrect.width, subrect.y+subrect.height, self->cols, self->rows);
+		PyErr_SetString(PyExc_IndexError, errstr);
+		//PyErr_SetString(PyExc_ValueError, errstr);
+		return NULL;
+	}
+else{}
+/*@SWIG@*/;
 		if(subrect.width==1 && subrect.height==1){
 			CvScalar * s; 
             int type = cvGetElemType( self );
@@ -4185,6 +4287,11 @@ SWIGINTERN PyObject *CvMat___getitem__(CvMat *self,PyObject *object){
 		}
 		mat = (CvMat *) cvAlloc(sizeof(CvMat));
 		cvGetSubRect(self, mat, subrect);
+		
+		// cvGetSubRect doesn't do this since it assumes mat lives on the stack
+		mat->hdr_refcount = self->hdr_refcount;
+		mat->refcount = self->refcount;
+		cvIncRefData(mat);
 
 		return SWIG_NewPointerObj( mat, SWIGTYPE_p_CvMat, 1 );
 	}
@@ -4419,6 +4526,12 @@ typedef struct {
 
 SWIGINTERN void delete_CvHaarClassifierCascade(CvHaarClassifierCascade *self){ CvHaarClassifierCascade * dummy = self; cvReleaseHaarClassifierCascade  (& dummy); }
 
+int CvMat_cols_get(CvMat * m){
+	return m->cols;
+}
+int CvMat_rows_get(CvMat *m){
+	return m->rows;
+}
 int CvMat_width_get(CvMat * m){
 	return m->cols;
 }
@@ -17557,6 +17670,66 @@ SWIGINTERN PyObject *_wrap_CvMat_widthStep_get(PyObject *SWIGUNUSEDPARM(self), P
   {
     try {
       result = (int)CvMat_widthStep_get(arg1); 
+    } 
+    catch (...) 
+    {
+      return NULL;
+    } 
+  }
+  resultobj = SWIG_From_int(static_cast< int >(result));
+  return resultobj;
+fail:
+  return NULL;
+}
+
+
+SWIGINTERN PyObject *_wrap_CvMat_rows_get(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
+  PyObject *resultobj = 0;
+  CvMat *arg1 = (CvMat *) 0 ;
+  int result;
+  void *argp1 = 0 ;
+  int res1 = 0 ;
+  PyObject * obj0 = 0 ;
+  
+  if (!PyArg_ParseTuple(args,(char *)"O:CvMat_rows_get",&obj0)) SWIG_fail;
+  res1 = SWIG_ConvertPtr(obj0, &argp1,SWIGTYPE_p_CvMat, 0 |  0 );
+  if (!SWIG_IsOK(res1)) {
+    SWIG_exception_fail(SWIG_ArgError(res1), "in method '" "CvMat_rows_get" "', argument " "1"" of type '" "CvMat *""'"); 
+  }
+  arg1 = reinterpret_cast< CvMat * >(argp1);
+  {
+    try {
+      result = (int)CvMat_rows_get(arg1); 
+    } 
+    catch (...) 
+    {
+      return NULL;
+    } 
+  }
+  resultobj = SWIG_From_int(static_cast< int >(result));
+  return resultobj;
+fail:
+  return NULL;
+}
+
+
+SWIGINTERN PyObject *_wrap_CvMat_cols_get(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
+  PyObject *resultobj = 0;
+  CvMat *arg1 = (CvMat *) 0 ;
+  int result;
+  void *argp1 = 0 ;
+  int res1 = 0 ;
+  PyObject * obj0 = 0 ;
+  
+  if (!PyArg_ParseTuple(args,(char *)"O:CvMat_cols_get",&obj0)) SWIG_fail;
+  res1 = SWIG_ConvertPtr(obj0, &argp1,SWIGTYPE_p_CvMat, 0 |  0 );
+  if (!SWIG_IsOK(res1)) {
+    SWIG_exception_fail(SWIG_ArgError(res1), "in method '" "CvMat_cols_get" "', argument " "1"" of type '" "CvMat *""'"); 
+  }
+  arg1 = reinterpret_cast< CvMat * >(argp1);
+  {
+    try {
+      result = (int)CvMat_cols_get(arg1); 
     } 
     catch (...) 
     {
@@ -38692,129 +38865,6 @@ fail:
 }
 
 
-SWIGINTERN PyObject *_wrap_cvSetImageCOI(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
-  PyObject *resultobj = 0;
-  IplImage *arg1 = (IplImage *) 0 ;
-  int arg2 ;
-  IplImage header1 ;
-  int val2 ;
-  int ecode2 = 0 ;
-  PyObject * obj0 = 0 ;
-  PyObject * obj1 = 0 ;
-  
-  if (!PyArg_ParseTuple(args,(char *)"OO:cvSetImageCOI",&obj0,&obj1)) SWIG_fail;
-  {
-    void * vptr;
-    int res = SWIG_ConvertPtr(obj0, (&vptr), SWIGTYPE_p_CvMat, 0);
-    if ( res == -1 ){
-      SWIG_exception( SWIG_TypeError, "%%typemap(in) IplImage * : could not convert to CvMat");
-      SWIG_fail;
-    }
-    arg1 = cvGetImage((CvMat *)vptr, &header1);
-  }
-  ecode2 = SWIG_AsVal_int(obj1, &val2);
-  if (!SWIG_IsOK(ecode2)) {
-    SWIG_exception_fail(SWIG_ArgError(ecode2), "in method '" "cvSetImageCOI" "', argument " "2"" of type '" "int""'");
-  } 
-  arg2 = static_cast< int >(val2);
-  {
-    try {
-      cvSetImageCOI(arg1,arg2); 
-    } 
-    catch (...) 
-    {
-      return NULL;
-    } 
-  }
-  resultobj = SWIG_Py_Void();
-  return resultobj;
-fail:
-  return NULL;
-}
-
-
-SWIGINTERN PyObject *_wrap_cvGetImageCOI(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
-  PyObject *resultobj = 0;
-  IplImage *arg1 = (IplImage *) 0 ;
-  int result;
-  IplImage header1 ;
-  PyObject * obj0 = 0 ;
-  
-  if (!PyArg_ParseTuple(args,(char *)"O:cvGetImageCOI",&obj0)) SWIG_fail;
-  {
-    void * vptr;
-    int res = SWIG_ConvertPtr(obj0, (&vptr), SWIGTYPE_p_CvMat, 0);
-    if ( res == -1 ){
-      SWIG_exception( SWIG_TypeError, "%%typemap(in) IplImage * : could not convert to CvMat");
-      SWIG_fail;
-    }
-    arg1 = cvGetImage((CvMat *)vptr, &header1);
-  }
-  {
-    try {
-      result = (int)cvGetImageCOI((_IplImage const *)arg1); 
-    } 
-    catch (...) 
-    {
-      return NULL;
-    } 
-  }
-  resultobj = SWIG_From_int(static_cast< int >(result));
-  return resultobj;
-fail:
-  return NULL;
-}
-
-
-SWIGINTERN PyObject *_wrap_cvSetImageROI(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
-  PyObject *resultobj = 0;
-  IplImage *arg1 = (IplImage *) 0 ;
-  CvRect arg2 ;
-  IplImage header1 ;
-  void *argp2 ;
-  int res2 = 0 ;
-  PyObject * obj0 = 0 ;
-  PyObject * obj1 = 0 ;
-  
-  if (!PyArg_ParseTuple(args,(char *)"OO:cvSetImageROI",&obj0,&obj1)) SWIG_fail;
-  {
-    void * vptr;
-    int res = SWIG_ConvertPtr(obj0, (&vptr), SWIGTYPE_p_CvMat, 0);
-    if ( res == -1 ){
-      SWIG_exception( SWIG_TypeError, "%%typemap(in) IplImage * : could not convert to CvMat");
-      SWIG_fail;
-    }
-    arg1 = cvGetImage((CvMat *)vptr, &header1);
-  }
-  {
-    res2 = SWIG_ConvertPtr(obj1, &argp2, SWIGTYPE_p_CvRect,  0  | 0);
-    if (!SWIG_IsOK(res2)) {
-      SWIG_exception_fail(SWIG_ArgError(res2), "in method '" "cvSetImageROI" "', argument " "2"" of type '" "CvRect""'"); 
-    }  
-    if (!argp2) {
-      SWIG_exception_fail(SWIG_ValueError, "invalid null reference " "in method '" "cvSetImageROI" "', argument " "2"" of type '" "CvRect""'");
-    } else {
-      CvRect * temp = reinterpret_cast< CvRect * >(argp2);
-      arg2 = *temp;
-      if (SWIG_IsNewObj(res2)) delete temp;
-    }
-  }
-  {
-    try {
-      cvSetImageROI(arg1,arg2); 
-    } 
-    catch (...) 
-    {
-      return NULL;
-    } 
-  }
-  resultobj = SWIG_Py_Void();
-  return resultobj;
-fail:
-  return NULL;
-}
-
-
 SWIGINTERN PyObject *_wrap_cvResetImageROI(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
   PyObject *resultobj = 0;
   IplImage *arg1 = (IplImage *) 0 ;
@@ -38841,39 +38891,6 @@ SWIGINTERN PyObject *_wrap_cvResetImageROI(PyObject *SWIGUNUSEDPARM(self), PyObj
     } 
   }
   resultobj = SWIG_Py_Void();
-  return resultobj;
-fail:
-  return NULL;
-}
-
-
-SWIGINTERN PyObject *_wrap_cvGetImageROI(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
-  PyObject *resultobj = 0;
-  IplImage *arg1 = (IplImage *) 0 ;
-  CvRect result;
-  IplImage header1 ;
-  PyObject * obj0 = 0 ;
-  
-  if (!PyArg_ParseTuple(args,(char *)"O:cvGetImageROI",&obj0)) SWIG_fail;
-  {
-    void * vptr;
-    int res = SWIG_ConvertPtr(obj0, (&vptr), SWIGTYPE_p_CvMat, 0);
-    if ( res == -1 ){
-      SWIG_exception( SWIG_TypeError, "%%typemap(in) IplImage * : could not convert to CvMat");
-      SWIG_fail;
-    }
-    arg1 = cvGetImage((CvMat *)vptr, &header1);
-  }
-  {
-    try {
-      result = cvGetImageROI((_IplImage const *)arg1); 
-    } 
-    catch (...) 
-    {
-      return NULL;
-    } 
-  }
-  resultobj = SWIG_NewPointerObj((new CvRect(static_cast< const CvRect& >(result))), SWIGTYPE_p_CvRect, SWIG_POINTER_OWN |  0 );
   return resultobj;
 fail:
   return NULL;
@@ -39205,6 +39222,11 @@ SWIGINTERN PyObject *_wrap_cvGetSubRect(PyObject *SWIGUNUSEDPARM(self), PyObject
   }
   resultobj = SWIG_NewPointerObj(SWIG_as_voidptr(result), SWIGTYPE_p_CvMat, SWIG_POINTER_OWN |  0 );
   {
+    arg2->hdr_refcount = ((CvMat *)arg1)->hdr_refcount;
+    arg2->refcount = ((CvMat *)arg1)->refcount;
+    cvIncRefData(arg2);
+  }
+  {
     if(arg1!=NULL && freearg1){
       cvReleaseData( arg1 );
       cvFree(&(arg1));
@@ -39279,6 +39301,11 @@ SWIGINTERN PyObject *_wrap_cvGetRows(PyObject *SWIGUNUSEDPARM(self), PyObject *a
   }
   resultobj = SWIG_NewPointerObj(SWIG_as_voidptr(result), SWIGTYPE_p_CvMat, SWIG_POINTER_OWN |  0 );
   {
+    arg2->hdr_refcount = ((CvMat *)arg1)->hdr_refcount;
+    arg2->refcount = ((CvMat *)arg1)->refcount;
+    cvIncRefData(arg2);
+  }
+  {
     if(arg1!=NULL && freearg1){
       cvReleaseData( arg1 );
       cvFree(&(arg1));
@@ -39332,6 +39359,11 @@ SWIGINTERN PyObject *_wrap_cvGetRow(PyObject *SWIGUNUSEDPARM(self), PyObject *ar
     } 
   }
   resultobj = SWIG_NewPointerObj(SWIG_as_voidptr(result), SWIGTYPE_p_CvMat, SWIG_POINTER_OWN |  0 );
+  {
+    arg2->hdr_refcount = ((CvMat *)arg1)->hdr_refcount;
+    arg2->refcount = ((CvMat *)arg1)->refcount;
+    cvIncRefData(arg2);
+  }
   {
     if(arg1!=NULL && freearg1){
       cvReleaseData( arg1 );
@@ -39396,6 +39428,11 @@ SWIGINTERN PyObject *_wrap_cvGetCols(PyObject *SWIGUNUSEDPARM(self), PyObject *a
   }
   resultobj = SWIG_NewPointerObj(SWIG_as_voidptr(result), SWIGTYPE_p_CvMat, SWIG_POINTER_OWN |  0 );
   {
+    arg2->hdr_refcount = ((CvMat *)arg1)->hdr_refcount;
+    arg2->refcount = ((CvMat *)arg1)->refcount;
+    cvIncRefData(arg2);
+  }
+  {
     if(arg1!=NULL && freearg1){
       cvReleaseData( arg1 );
       cvFree(&(arg1));
@@ -39449,6 +39486,11 @@ SWIGINTERN PyObject *_wrap_cvGetCol(PyObject *SWIGUNUSEDPARM(self), PyObject *ar
     } 
   }
   resultobj = SWIG_NewPointerObj(SWIG_as_voidptr(result), SWIGTYPE_p_CvMat, SWIG_POINTER_OWN |  0 );
+  {
+    arg2->hdr_refcount = ((CvMat *)arg1)->hdr_refcount;
+    arg2->refcount = ((CvMat *)arg1)->refcount;
+    cvIncRefData(arg2);
+  }
   {
     if(arg1!=NULL && freearg1){
       cvReleaseData( arg1 );
@@ -39505,6 +39547,11 @@ SWIGINTERN PyObject *_wrap_cvGetDiag(PyObject *SWIGUNUSEDPARM(self), PyObject *a
     } 
   }
   resultobj = SWIG_NewPointerObj(SWIG_as_voidptr(result), SWIGTYPE_p_CvMat, SWIG_POINTER_OWN |  0 );
+  {
+    arg2->hdr_refcount = ((CvMat *)arg1)->hdr_refcount;
+    arg2->refcount = ((CvMat *)arg1)->refcount;
+    cvIncRefData(arg2);
+  }
   {
     if(arg1!=NULL && freearg1){
       cvReleaseData( arg1 );
@@ -41958,6 +42005,11 @@ SWIGINTERN PyObject *_wrap_cvGetMat(PyObject *SWIGUNUSEDPARM(self), PyObject *ar
   }
   resultobj = SWIG_NewPointerObj(SWIG_as_voidptr(result), SWIGTYPE_p_CvMat, 0 |  0 );
   {
+    arg2->hdr_refcount = ((CvMat *)arg1)->hdr_refcount;
+    arg2->refcount = ((CvMat *)arg1)->refcount;
+    cvIncRefData(arg2);
+  }
+  {
     if(arg1!=NULL && freearg1){
       cvReleaseData( arg1 );
       cvFree(&(arg1));
@@ -42115,6 +42167,11 @@ SWIGINTERN PyObject *_wrap_cvReshape(PyObject *SWIGUNUSEDPARM(self), PyObject *a
     } 
   }
   resultobj = SWIG_NewPointerObj(SWIG_as_voidptr(result), SWIGTYPE_p_CvMat, SWIG_POINTER_OWN |  0 );
+  {
+    arg2->hdr_refcount = ((CvMat *)arg1)->hdr_refcount;
+    arg2->refcount = ((CvMat *)arg1)->refcount;
+    cvIncRefData(arg2);
+  }
   {
     if(arg1!=NULL && freearg1){
       cvReleaseData( arg1 );
@@ -82286,6 +82343,14 @@ SWIGINTERN PyObject *_wrap_cvCalibrateCamera2(PyObject *SWIGUNUSEDPARM(self), Py
     } 
   }
   resultobj = SWIG_Py_Void();
+  {
+    PyObject * to_add[2] = {
+      NULL, NULL
+    };
+    to_add[0] = SWIG_NewPointerObj(arg5, SWIGTYPE_p_CvMat, 1);
+    to_add[1] = SWIG_NewPointerObj(arg6, SWIGTYPE_p_CvMat, 1);
+    resultobj = SWIG_AppendResult( resultobj, to_add, 2 );
+  }
   return resultobj;
 fail:
   return NULL;
@@ -94444,6 +94509,8 @@ static PyMethodDef SwigMethods[] = {
 	 { (char *)"CvMat_height_get", _wrap_CvMat_height_get, METH_VARARGS, NULL},
 	 { (char *)"CvMat_imageSize_get", _wrap_CvMat_imageSize_get, METH_VARARGS, NULL},
 	 { (char *)"CvMat_widthStep_get", _wrap_CvMat_widthStep_get, METH_VARARGS, NULL},
+	 { (char *)"CvMat_rows_get", _wrap_CvMat_rows_get, METH_VARARGS, NULL},
+	 { (char *)"CvMat_cols_get", _wrap_CvMat_cols_get, METH_VARARGS, NULL},
 	 { (char *)"CvMat___mul__", _wrap_CvMat___mul__, METH_VARARGS, NULL},
 	 { (char *)"CvMat___imul__", _wrap_CvMat___imul__, METH_VARARGS, NULL},
 	 { (char *)"CvMat___idiv__", _wrap_CvMat___idiv__, METH_VARARGS, NULL},
@@ -95093,11 +95160,7 @@ static PyMethodDef SwigMethods[] = {
 	 { (char *)"CvModuleInfo_swigregister", CvModuleInfo_swigregister, METH_VARARGS, NULL},
 	 { (char *)"cvAlloc", _wrap_cvAlloc, METH_VARARGS, NULL},
 	 { (char *)"cvFree_", _wrap_cvFree_, METH_VARARGS, NULL},
-	 { (char *)"cvSetImageCOI", _wrap_cvSetImageCOI, METH_VARARGS, NULL},
-	 { (char *)"cvGetImageCOI", _wrap_cvGetImageCOI, METH_VARARGS, NULL},
-	 { (char *)"cvSetImageROI", _wrap_cvSetImageROI, METH_VARARGS, NULL},
 	 { (char *)"cvResetImageROI", _wrap_cvResetImageROI, METH_VARARGS, NULL},
-	 { (char *)"cvGetImageROI", _wrap_cvGetImageROI, METH_VARARGS, NULL},
 	 { (char *)"cvCreateMatHeader", _wrap_cvCreateMatHeader, METH_VARARGS, NULL},
 	 { (char *)"cvInitMatHeader", _wrap_cvInitMatHeader, METH_VARARGS, NULL},
 	 { (char *)"cvCreateMat", _wrap_cvCreateMat, METH_VARARGS, NULL},

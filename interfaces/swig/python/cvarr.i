@@ -203,6 +203,25 @@
 %newobject CvMat::__getitem__(PyObject * object);
 %newobject _IplImage::__getitem__(PyObject * object);
 
+// Macro to check bounds of slice and throw error if outside
+%define CHECK_SLICE_BOUNDS(rect,w,h,retval)
+	//printf("__setitem__ slice(%d:%d, %d:%d) array(%d,%d)", rect.x, rect.y, rect.x+rect.width, rect.y+rect.height, w, h);
+	if(rect.width<=0 || rect.height<=0 ||
+	   	rect.width>w || rect.height>h ||
+	   	rect.x<0 || rect.y<0 ||
+	   	rect.x>= w || rect.y >=h){
+	   	char errstr[256];
+		// previous function already set error string
+		if(rect.width==0 && rect.height==0 && rect.x==0 && rect.y==0) return retval;
+	   	sprintf(errstr, "Requested slice [ %d:%d %d:%d ] oversteps array sized [ %d %d ]", 
+	   		rect.x, rect.y, rect.x+rect.width, rect.y+rect.height, w, h);
+		PyErr_SetString(PyExc_IndexError, errstr);
+		//PyErr_SetString(PyExc_ValueError, errstr);
+		return retval;
+	}
+else{}
+%enddef
+
 // slice access and assignment for CvMat
 %extend CvMat
 {
@@ -217,12 +236,14 @@
 	void __setitem__(PyObject * object, double val){
 		CvMat tmp;
 		CvRect subrect = PySlice_to_CvRect( self, object );
+		CHECK_SLICE_BOUNDS( subrect, self->cols, self->rows, );
 		cvGetSubRect(self, &tmp, subrect);
 		cvSet(&tmp, cvScalarAll(val));
 	}
 	void __setitem__(PyObject * object, CvPoint val){
 		CvMat tmp;
 		CvRect subrect = PySlice_to_CvRect( self, object );
+		CHECK_SLICE_BOUNDS( subrect, self->cols, self->rows, );
 		cvGetSubRect(self, &tmp, subrect);
 		cvSet(&tmp, cvScalar(val.x, val.y));
 	}
@@ -230,12 +251,14 @@
 		CvMat tmp;
 		CvRect subrect = PySlice_to_CvRect( self, object );
 		cvGetSubRect(self, &tmp, subrect);
+		CHECK_SLICE_BOUNDS( subrect, self->cols, self->rows, );
 		cvSet(&tmp, cvScalar(val.x, val.y));
 	}
 	void __setitem__(PyObject * object, CvScalar val){
 		CvMat tmp;
 		CvRect subrect = PySlice_to_CvRect( self, object );
 		cvGetSubRect(self, &tmp, subrect);
+		CHECK_SLICE_BOUNDS( subrect, self->cols, self->rows, );
 		cvSet(&tmp, val);
 	}
 
@@ -243,6 +266,7 @@
 	void __setitem__(PyObject * object, CvArr * arr){
 		CvMat tmp;
 		CvRect subrect = PySlice_to_CvRect( self, object );
+		CHECK_SLICE_BOUNDS( subrect, self->cols, self->rows, );
 		cvGetSubRect(self, &tmp, subrect);
 		cvConvert(arr, &tmp);
 	}
@@ -251,6 +275,7 @@
 	PyObject * __getitem__(PyObject * object){
 		CvMat * mat;
 		CvRect subrect = PySlice_to_CvRect( self, object );
+		CHECK_SLICE_BOUNDS( subrect, self->cols, self->rows, NULL );
 		if(subrect.width==1 && subrect.height==1){
 			CvScalar * s; 
             int type = cvGetElemType( self );
@@ -278,6 +303,11 @@
 		}
 		mat = (CvMat *) cvAlloc(sizeof(CvMat));
 		cvGetSubRect(self, mat, subrect);
+		
+		// cvGetSubRect doesn't do this since it assumes mat lives on the stack
+		mat->hdr_refcount = self->hdr_refcount;
+		mat->refcount = self->refcount;
+		cvIncRefData(mat);
 
 		return SWIG_NewPointerObj( mat, $descriptor(CvMat *), 1 );
 	}

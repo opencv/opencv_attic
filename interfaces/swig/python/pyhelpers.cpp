@@ -1,4 +1,6 @@
 #include "pyhelpers.h"
+#include <iostream>
+#include <sstream>
 
 int PySwigObject_Check(PyObject *op);
 
@@ -75,6 +77,35 @@ PyObject * SWIG_AppendResult(PyObject * result, PyObject ** to_add, int num){
 	return result;
 }
 
+template <typename T>
+std::ostream & cv_arr_write(std::ostream & out, T * data, int rows, int nch, int step){
+	int i,j,k;
+	char * cdata = (char *) data;
+	std::string chdelim1="", chdelim2="";
+
+	// only output channel parens if > 1
+	if(nch>1){
+		chdelim1="(";
+		chdelim2=")";
+	}
+
+	out<<"[";
+	for(i=0; i<rows; i++){
+		out<<"[";
+		for(j=0; j<step; j+=(nch*sizeof(T))){
+			out<<chdelim1;
+			out<<((T*)(cdata+i*step+j))[0];
+			for(k=1; k<nch; k++){
+				out<<", "<<((T*)(cdata+i*step+j))[k];
+			}
+			out<<chdelim2;
+		}
+		out<<"]\n";
+	}
+	out<<"]";
+	return out;
+}
+
 #define CV_MAT_PRINT_1CH( fd, mat, type, format )  \
 {                                                  \
 	int rows = mat->rows;                          \
@@ -102,32 +133,40 @@ void cvArrPrint(CvArr * arr){
 	
 	int cn = CV_MAT_CN(mat->type);
 	int depth = CV_MAT_DEPTH(mat->type);
-	if(cn!=1){
-		 CV_ERROR( CV_StsNotImplemented, "print is only implemented for single channel arrays");
-	}
+	int step = MAX(mat->step, cn*mat->cols*CV_ELEM_SIZE(depth));
+	std::ostringstream str;
+
+	//if(cn!=1){
+	//	 CV_ERROR( CV_StsNotImplemented, "print is only implemented for single channel arrays");
+	//}
+	
 	switch(depth){
 		case CV_8U:
-			CV_MAT_PRINT_1CH(stdout, mat, uchar, "%o");
+			cv_arr_write(str, (uchar *)mat->data.ptr, mat->rows, cn, step);
 			break;
 		case CV_8S:
-			CV_MAT_PRINT_1CH(stdout, mat, char, "%d");
+			cv_arr_write(str, (char *)mat->data.ptr, mat->rows, cn, step);
 			break;
 		case CV_16U:
-			CV_MAT_PRINT_1CH(stdout, mat, ushort, "%o");
+			cv_arr_write(str, (ushort *)mat->data.ptr, mat->rows, cn, step);
 			break;
 		case CV_16S:
-			CV_MAT_PRINT_1CH(stdout, mat, short, "%d");
+			cv_arr_write(str, (short *)mat->data.ptr, mat->rows, cn, step);
 			break;
 		case CV_32S:
-			CV_MAT_PRINT_1CH(stdout, mat, int, "%d");
+			cv_arr_write(str, (int *)mat->data.ptr, mat->rows, cn, step);
 			break;
 		case CV_32F:
-			CV_MAT_PRINT_1CH(stdout, mat, float, "%f");
+			cv_arr_write(str, (float *)mat->data.ptr, mat->rows, cn, step);
 			break;
-case CV_64F:
-			CV_MAT_PRINT_1CH(stdout, mat, double, "%f");
+		case CV_64F:
+			cv_arr_write(str, (double *)mat->data.ptr, mat->rows, cn, step);
+			break;
+		default:
+			CV_ERROR( CV_StsError, "Unknown element type");
 			break;
 	}
+	std::cout<<str.str()<<std::endl;
 
 	__END__;
 }
@@ -139,10 +178,19 @@ CvRect PySlice_to_CvRect(CvArr * src, PyObject * idx_object){
 	int len, start, stop, step, slicelength;
 
 	if(PyInt_Check(idx_object) || PyLong_Check(idx_object)){
-		lower[0] = PyLong_AsLong( idx_object );
-		upper[0] = lower[0] + 1;
-		lower[1] = 0;
-		upper[1] = sz.width;
+		// if array is a row vector, assume index into columns
+		if(sz.height>1){
+			lower[0] = PyLong_AsLong( idx_object );
+			upper[0] = lower[0] + 1;
+			lower[1] = 0;
+			upper[1] = sz.width;
+		}
+		else{
+			lower[0] = 0;
+			upper[0] = sz.height;
+			lower[1] = PyLong_AsLong( idx_object );
+			upper[1] = lower[1]+1;
+		}
 	}
 
 	// 1. Slice
@@ -153,11 +201,19 @@ CvRect PySlice_to_CvRect(CvArr * src, PyObject * idx_object){
 			PyErr_SetString(PyExc_Exception, "Error");
 			return cvRect(0,0,0,0);
 		}
-		//printf("PySlice\n");
-		lower[0] = start; // use c convention of start index = 0
-		upper[0] = stop;    // use c convention
-		lower[1] = 0;
-		upper[1] = sz.width;
+		// if array is a row vector, assume index bounds are into columns
+		if(sz.height>1){
+			lower[0] = start; // use c convention of start index = 0
+			upper[0] = stop;    // use c convention
+			lower[1] = 0;
+			upper[1] = sz.width;
+		}
+		else{
+			lower[1] = start; // use c convention of start index = 0
+			upper[1] = stop;    // use c convention
+			lower[0] = 0;
+			upper[0] = sz.height;
+		}
 	}
 
 	// 2. Tuple
@@ -207,12 +263,10 @@ CvRect PySlice_to_CvRect(CvArr * src, PyObject * idx_object){
 		return cvRect(0,0,0,0);
 	}
 
-	lower[0] = MAX(0, lower[0]);
-	lower[1] = MAX(0, lower[1]);
-	upper[0] = MIN(sz.height, upper[0]);
-	upper[1] = MIN(sz.width, upper[1]);
-	assert(lower[0]<upper[0]);
-	assert(lower[1]<upper[1]);
+	//lower[0] = MAX(0, lower[0]);
+	//lower[1] = MAX(0, lower[1]);
+	//upper[0] = MIN(sz.height, upper[0]);
+	//upper[1] = MIN(sz.width, upper[1]);
 	//printf("Slice=%d %d %d %d\n", lower[0], upper[0], lower[1], upper[1]);
 	return cvRect(lower[1],lower[0], upper[1]-lower[1], upper[0]-lower[0]);
 }
