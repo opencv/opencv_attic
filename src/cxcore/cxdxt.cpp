@@ -41,6 +41,11 @@
 
 #include "_cxcore.h"
 
+// On Win64 (IA64) optimized versions of DFT and DCT fail the tests
+#if defined WIN64 && !defined EM64T
+#pragma optimize("", off)
+#endif
+
 icvDFTInitAlloc_C_32fc_t icvDFTInitAlloc_C_32fc_p = 0;
 icvDFTFree_C_32fc_t icvDFTFree_C_32fc_p = 0;
 icvDFTGetBufSize_C_32fc_t icvDFTGetBufSize_C_32fc_p = 0;
@@ -2216,7 +2221,7 @@ cvMulSpectrums( const CvArr* srcAarr, const CvArr* srcBarr,
     if( !CV_ARE_TYPES_EQ( srcA, srcB ) || !CV_ARE_TYPES_EQ( srcA, dst ))
         CV_ERROR( CV_StsUnmatchedFormats, "" );
 
-    if( !CV_ARE_SIZES_EQ( srcA, dst ) || !CV_ARE_SIZES_EQ( srcA, dst ))
+    if( !CV_ARE_SIZES_EQ( srcA, srcB ) || !CV_ARE_SIZES_EQ( srcA, dst ))
         CV_ERROR( CV_StsUnmatchedSizes, "" );
 
     type = CV_MAT_TYPE( dst->type );
