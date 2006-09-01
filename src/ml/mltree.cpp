@@ -47,7 +47,7 @@ static const int block_size_delta = 1 << 10;
 CvDTreeTrainData::CvDTreeTrainData()
 {
     var_idx = var_type = cat_count = cat_ofs = cat_map =
-        priors = counts = buf = direction = split_buf = 0;
+        priors = priors_mult = counts = buf = direction = split_buf = 0;
     tree_storage = temp_storage = 0;
 
     clear();
@@ -61,7 +61,7 @@ CvDTreeTrainData::CvDTreeTrainData( const CvMat* _train_data, int _tflag,
                       bool _shared, bool _add_labels )
 {
     var_idx = var_type = cat_count = cat_ofs = cat_map =
-        priors = counts = buf = direction = split_buf = 0;
+        priors = priors_mult = counts = buf = direction = split_buf = 0;
     tree_storage = temp_storage = 0;
     
     set_data( _train_data, _tflag, _responses, _var_idx, _sample_idx,
@@ -160,12 +160,14 @@ void CvDTreeTrainData::set_data( const CvMat* _train_data, int _tflag,
             "and the same categories for categorical variables" );
 
         cvReleaseMat( &priors );
+        cvReleaseMat( &priors_mult );
         cvReleaseMat( &buf );
         cvReleaseMat( &direction );
         cvReleaseMat( &split_buf );
         cvReleaseMemStorage( &temp_storage );
 
         priors = data->priors; data->priors = 0;
+        priors_mult = data->priors_mult; data->priors_mult = 0;
         buf = data->buf; data->buf = 0;
         buf_count = data->buf_count; buf_size = data->buf_size;
         sample_count = data->sample_count;
@@ -517,10 +519,12 @@ void CvDTreeTrainData::set_data( const CvMat* _train_data, int _tflag,
             priors->data.db[i] = val;
             sum += val;
         }
+        
         // normalize weights
         if( have_priors )
             cvScale( priors, priors, 1./sum );
-
+        
+        CV_CALL( priors_mult = cvCloneMat( priors ));
         CV_CALL( counts = cvCreateMat( 1, m, CV_32SC1 ));
     }
 
@@ -917,6 +921,7 @@ void CvDTreeTrainData::clear()
     cvReleaseMat( &cat_ofs );
     cvReleaseMat( &cat_map );
     cvReleaseMat( &priors );
+    cvReleaseMat( &priors_mult );
 
     node_heap = split_heap = 0;
 
@@ -1100,8 +1105,12 @@ void CvDTreeTrainData::read_params( CvFileStorage* fs, CvFileNode* node )
         }
 
         priors = (CvMat*)cvReadByName( fs, tparams_node, "priors" );
-        if( priors && !CV_IS_MAT(priors) )
-            CV_ERROR( CV_StsParseError, "priors must stored as a matrix" );
+        if( priors )
+        {
+            if( !CV_IS_MAT(priors) )
+                CV_ERROR( CV_StsParseError, "priors must stored as a matrix" );
+            priors_mult = cvCloneMat( priors );
+        }
     }
 
     CV_CALL( var_idx = (CvMat*)cvReadByName( fs, node, "var_idx" ));
@@ -1447,7 +1456,7 @@ double CvDTree::calc_node_dir( CvDTreeNode* node )
         else
         {
             const int* responses = data->get_class_labels(node);
-            const double* priors = data->priors->data.db;
+            const double* priors = data->priors_mult->data.db;
             double sum = 0, sum_abs = 0;
 
             for( i = 0; i < n; i++ )
@@ -1486,7 +1495,7 @@ double CvDTree::calc_node_dir( CvDTreeNode* node )
         else
         {
             const int* responses = data->get_class_labels(node);
-            const double* priors = data->priors->data.db;
+            const double* priors = data->priors_mult->data.db;
             L = R = 0;
 
             for( i = 0; i <= split_point; i++ )
@@ -1567,7 +1576,7 @@ CvDTreeSplit* CvDTree::find_split_ord_class( CvDTreeNode* node, int vi )
     int* rc = (int*)cvStackAlloc(m*sizeof(rc[0]));
     int i, best_i = -1;
     double lsum2 = 0, rsum2 = 0, best_val = 0;
-    const double* priors = data->have_priors ? data->priors->data.db : 0;
+    const double* priors = data->have_priors ? data->priors_mult->data.db : 0;
 
     // init arrays of class instance counters on both sides of the split
     for( i = 0; i < m; i++ )
@@ -1763,7 +1772,7 @@ CvDTreeSplit* CvDTree::find_split_cat_class( CvDTreeNode* node, int vi )
     double L = 0, R = 0;
     double best_val = 0;
     int prevcode = 0, best_subset = -1, subset_i, subset_n, subtract = 0;
-    const double* priors = data->priors->data.db;
+    const double* priors = data->priors_mult->data.db;
 
     // init array of counters:
     // c_{jk} - number of samples that have vi-th input variable = j and response = k.
@@ -2098,7 +2107,7 @@ CvDTreeSplit* CvDTree::find_surrogate_split_ord( CvDTreeNode* node, int vi )
         double LL = 0, RL = 0, LR, RR;
         double worst_val = node->maxlr;
         double sum = 0, sum_abs = 0;
-        const double* priors = data->priors->data.db;
+        const double* priors = data->priors_mult->data.db;
         const int* responses = data->get_class_labels(node);
         best_val = worst_val;
         
@@ -2160,7 +2169,7 @@ CvDTreeSplit* CvDTree::find_surrogate_split_cat( CvDTreeNode* node, int vi )
     // RL - ... primary split sends to the right and the surrogate split sends to the left
     // RR - ... both send to the right
     CvDTreeSplit* split = data->new_split_cat( vi, 0 );
-    int i, mi = data->cat_count->data.i[data->get_var_type(vi)];
+    int i, mi = data->cat_count->data.i[data->get_var_type(vi)], l_win = 0;
     double best_val = 0;
     double* lc = (double*)cvStackAlloc( (mi+1)*2*sizeof(lc[0]) ) + 1;
     double* rc = lc + mi + 1;
@@ -2197,7 +2206,7 @@ CvDTreeSplit* CvDTree::find_surrogate_split_cat( CvDTreeNode* node, int vi )
     }
     else
     {
-        const double* priors = data->priors->data.db;
+        const double* priors = data->priors_mult->data.db;
         const int* responses = data->get_class_labels(node);
 
         for( i = 0; i < n; i++ )
@@ -2228,13 +2237,14 @@ CvDTreeSplit* CvDTree::find_surrogate_split_cat( CvDTreeNode* node, int vi )
         {
             split->subset[i >> 5] |= 1 << (i & 31);
             best_val += lval;
+            l_win++;
         }
         else
             best_val += rval;
     }
 
     split->quality = (float)best_val;
-    if( split->quality <= node->maxlr )
+    if( split->quality <= node->maxlr || l_win == 0 || l_win == mi )
         cvSetRemoveByPtr( data->split_heap, split ), split = 0;
 
     return split;
@@ -2263,7 +2273,7 @@ void CvDTree::calc_node_value( CvDTreeNode* node )
         int* cv_cls_count = (int*)cvStackAlloc(m*cv_n*sizeof(cv_cls_count[0]));
         double max_val = -1, total_weight = 0;
         int max_k = -1;
-        double* priors = data->priors->data.db;
+        double* priors = data->priors_mult->data.db;
 
         for( k = 0; k < m; k++ )
             cls_count[k] = 0;
@@ -2288,6 +2298,21 @@ void CvDTree::calc_node_value( CvDTreeNode* node )
             for( j = 0; j < cv_n; j++ )
                 for( k = 0; k < m; k++ )
                     cls_count[k] += cv_cls_count[j*m + k];
+        }
+
+        if( data->have_priors && node->parent == 0 )
+        {
+            // compute priors_mult from priors, take the sample ratio into account.
+            double sum = 0;
+            for( k = 0; k < m; k++ )
+            {
+                int n_k = cls_count[k];
+                priors[k] = data->priors->data.db[k]*(n_k ? 1./n_k : 0.);
+                sum += priors[k];
+            }
+            sum = 1./sum;
+            for( k = 0; k < m; k++ )
+                priors[k] *= sum;
         }
 
         for( k = 0; k < m; k++ )
@@ -3044,6 +3069,7 @@ void CvDTree::write_split( CvFileStorage* fs, CvDTreeSplit* split )
         
         cvStartWriteStruct( fs, default_dir*(split->inversed ? -1 : 1) > 0 ?
                             "in" : "not_in", CV_NODE_SEQ+CV_NODE_FLOW );
+
         for( i = 0; i < n; i++ )
         {
             int dir = CV_DTREE_CAT_DIR(i,split->subset);
@@ -3135,6 +3161,7 @@ void CvDTree::write( CvFileStorage* fs, const char* name )
 
     cvStartWriteStruct( fs, name, CV_NODE_MAP, CV_TYPE_NAME_ML_TREE );
 
+    get_var_importance();
     data->write_params( fs );
     if( var_importance )
         cvWrite( fs, "var_importance", var_importance );
@@ -3153,7 +3180,6 @@ void CvDTree::write( CvFileStorage* fs )
     __BEGIN__;
 
     cvWriteInt( fs, "best_tree_idx", pruned_tree_idx );
-    get_var_importance();
 
     cvStartWriteStruct( fs, "nodes", CV_NODE_SEQ );
     write_tree_nodes( fs );
@@ -3357,6 +3383,7 @@ void CvDTree::read( CvFileStorage* fs, CvFileNode* fnode )
     _data->read_params( fs, fnode );
 
     read( fs, fnode, _data );
+    get_var_importance();
 }
 
 
