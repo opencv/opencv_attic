@@ -74,9 +74,39 @@
 %newobject cvGetRows;
 %newobject cvGetCol;
 %newobject cvGetCols;
+%newobject cvGetSubRect;
+%newobject cvGetDiag;
 
 %apply CvMat *OUTPUT {CvMat * header};
 %apply CvMat *OUTPUT {CvMat * submat};
+
+/**
+ * In C, these functions assume input will always be around at least as long as header,
+ * presumably because the most common usage is to pass in a reference to a stack object.  
+ * i.e
+ * CvMat row;
+ * cvGetRow(A, &row, 0);
+ *
+ * As a result, the header is not refcounted (see the C source for cvGetRow, Reshape, in cxarray.cpp)
+ * However, in python, the header parameter is implicitly created so it is easier to create
+ * situations where the sub-array outlives the original header.  A simple example is:
+ * A = cvReshape(A, -1, A.rows*A.cols)
+ *
+ * since python doesn't have an assignment operator, the new header simply replaces the original,
+ * the refcount of the original goes to zero, and cvReleaseMat is called on the original, freeing both
+ * the header and data.  The new header is left pointing to invalid data.  To avoid this, need to add
+ * refcount field to the returned header.
+*/
+%typemap(argout) (const CvArr* arr, CvMat* header) {
+	$2->hdr_refcount = ((CvMat *)$1)->hdr_refcount;
+	$2->refcount = ((CvMat *)$1)->refcount;
+	cvIncRefData($2);
+}
+%typemap(argout) (const CvArr* arr, CvMat* submat) {
+	$2->hdr_refcount = ((CvMat *)$1)->hdr_refcount;
+	$2->refcount = ((CvMat *)$1)->refcount;
+	cvIncRefData($2);
+}
 
 /* map scalar or sequence to CvScalar, CvPoint2D32f, CvPoint */
 %typemap(in) (CvScalar) {
@@ -739,6 +769,14 @@
 {
 	$1 = cvCreateMat(3,3,CV_32F);
 	$2 = cvCreateMat(4,1,CV_32F);
+}
+
+%typemap(argout) (CvMat * intrinsic_matrix, CvMat * distortion_coeffs)
+{
+	PyObject * to_add[2] = {NULL, NULL};
+	to_add[0] = SWIG_NewPointerObj($1, $descriptor(CvMat *), 1);
+	to_add[1] = SWIG_NewPointerObj($2, $descriptor(CvMat *), 1);
+	$result = SWIG_AppendResult( $result, to_add, 2 );
 }
 
 /**
