@@ -66,13 +66,38 @@
 
 #endif /* CV_VERBOSE */
 
+typedef struct CvBackgroundData
+{
+    int    count;
+    char** filename;
+    int    last;
+    int    round;
+    CvSize winsize;
+} CvBackgroundData;
+
+typedef struct CvBackgroundReader
+{
+    CvMat   src;
+    CvMat   img;
+    CvPoint offset;
+    float   scale;
+    float   scalefactor;
+    float   stepfactor;
+    CvPoint point;
+} CvBackgroundReader;
+
 /*
  * Background reader
  * Created in each thread
  */
 CvBackgroundReader* cvbgreader = NULL;
 
+#if defined _OPENMP
+#pragma omp threadprivate(cvbgreader)
+#endif
+
 CvBackgroundData* cvbgdata = NULL;
+
 
 /*
  * get sum image offsets for <rect> corner points 
@@ -104,7 +129,17 @@ CvBackgroundData* cvbgdata = NULL;
            + (step) * ((rect).y + (rect).width + (rect).height);
 
 
-CV_IMPL
+/*
+ * icvCreateIntHaarFeatures
+ *
+ * Create internal representation of haar features
+ *
+ * mode:
+ *  0 - BASIC = Viola
+ *  1 - CORE  = All upright
+ *  2 - ALL   = All features
+ */
+static
 CvIntHaarFeatures* icvCreateIntHaarFeatures( CvSize winsize,
                                              int mode,
                                              int symmetric )
@@ -359,7 +394,7 @@ CvIntHaarFeatures* icvCreateIntHaarFeatures( CvSize winsize,
     return features;
 }
 
-CV_IMPL
+static
 void icvReleaseIntHaarFeatures( CvIntHaarFeatures** intHaarFeatures )
 {
     if( intHaarFeatures != NULL && (*intHaarFeatures) != NULL )
@@ -369,7 +404,7 @@ void icvReleaseIntHaarFeatures( CvIntHaarFeatures** intHaarFeatures )
     }
 }
 
-CV_IMPL
+
 void icvConvertToFastHaarFeature( CvTHaarFeature* haarFeature,
                                   CvFastHaarFeature* fastHaarFeature,
                                   int size, int step )
@@ -416,7 +451,13 @@ void icvConvertToFastHaarFeature( CvTHaarFeature* haarFeature,
     }
 }
 
-CV_IMPL
+
+/*
+ * icvCreateHaarTrainingData
+ *
+ * Create haar training data used in stage training
+ */
+static
 CvHaarTrainigData* icvCreateHaarTrainingData( CvSize winsize, int maxnumsamples )
 {
     CvHaarTrainigData* data;
@@ -462,7 +503,7 @@ CvHaarTrainigData* icvCreateHaarTrainingData( CvSize winsize, int maxnumsamples 
     return data;
 }
 
-CV_IMPL
+static
 void icvReleaseHaarTrainingDataCache( CvHaarTrainigData** haarTrainingData )
 {
     if( haarTrainingData != NULL && (*haarTrainingData) != NULL )
@@ -480,7 +521,7 @@ void icvReleaseHaarTrainingDataCache( CvHaarTrainigData** haarTrainingData )
     }
 }
 
-CV_IMPL
+static
 void icvReleaseHaarTrainingData( CvHaarTrainigData** haarTrainingData )
 {
     if( haarTrainingData != NULL && (*haarTrainingData) != NULL )
@@ -491,7 +532,7 @@ void icvReleaseHaarTrainingData( CvHaarTrainigData** haarTrainingData )
     }
 }
 
-CV_IMPL
+static
 void icvGetTrainingDataCallback( CvMat* mat, CvMat* sampleIdx, CvMat*,
                                  int first, int num, void* userdata )
 {
@@ -597,7 +638,7 @@ void icvGetTrainingDataCallback( CvMat* mat, CvMat* sampleIdx, CvMat*,
 #endif /* CV_VERBOSE */
 }
 
-CV_IMPL
+static
 void icvPrecalculate( CvHaarTrainingData* data, CvIntHaarFeatures* haarFeatures,
                       int numprecalculated )
 {
@@ -693,7 +734,7 @@ void icvPrecalculate( CvHaarTrainingData* data, CvIntHaarFeatures* haarFeatures,
     __END__;
 }
 
-CV_IMPL
+static
 void icvSplitIndicesCallback( int compidx, float threshold,
                               CvMat* idx, CvMat** left, CvMat** right,
                               void* userdata )
@@ -757,7 +798,24 @@ void icvSplitIndicesCallback( int compidx, float threshold,
     }
 }
 
-CV_IMPL
+/*
+ * icvCreateCARTStageClassifier
+ *
+ * Create stage classifier with trees as weak classifiers
+ * data             - haar training data. It must be created and filled before call
+ * minhitrate       - desired min hit rate
+ * maxfalsealarm    - desired max false alarm rate
+ * symmetric        - if not 0 it is assumed that samples are vertically symmetric
+ * numprecalculated - number of features that will be precalculated. Each precalculated
+ *   feature need (number_of_samples*(sizeof( float ) + sizeof( short ))) bytes of memory
+ * weightfraction   - weight trimming parameter
+ * numsplits        - number of binary splits in each tree
+ * boosttype        - type of applied boosting algorithm
+ * stumperror       - type of used error if Discrete AdaBoost algorithm is applied
+ * maxsplits        - maximum total number of splits in all weak classifiers.
+ *   If it is not 0 then NULL returned if total number of splits exceeds <maxsplits>.
+ */
+static
 CvIntHaarClassifier* icvCreateCARTStageClassifier( CvHaarTrainingData* data,
                                                    CvMat* sampleIdx,
                                                    CvIntHaarFeatures* haarFeatures,
@@ -1123,7 +1181,7 @@ CvIntHaarClassifier* icvCreateCARTStageClassifier( CvHaarTrainingData* data,
 }
 
 
-CV_IMPL
+static
 CvBackgroundData* icvCreateBackgroundData( const char* filename, CvSize winsize )
 {
     CvBackgroundData* data = NULL;
@@ -1209,7 +1267,7 @@ CvBackgroundData* icvCreateBackgroundData( const char* filename, CvSize winsize 
     return data;
 }
 
-CV_IMPL
+static
 void icvReleaseBackgroundData( CvBackgroundData** data )
 {
     assert( data != NULL && (*data) != NULL );
@@ -1217,7 +1275,7 @@ void icvReleaseBackgroundData( CvBackgroundData** data )
     cvFree( data );
 }
 
-CV_IMPL
+static
 CvBackgroundReader* icvCreateBackgroundReader()
 {
     CvBackgroundReader* reader = NULL;
@@ -1235,7 +1293,7 @@ CvBackgroundReader* icvCreateBackgroundReader()
     return reader;
 }
 
-CV_IMPL
+static
 void icvReleaseBackgroundReader( CvBackgroundReader** reader )
 {
     assert( reader != NULL && (*reader) != NULL );
@@ -1252,7 +1310,7 @@ void icvReleaseBackgroundReader( CvBackgroundReader** reader )
     cvFree( reader );
 }
 
-CV_IMPL
+static
 void icvGetNextFromBackgroundData( CvBackgroundData* data,
                                    CvBackgroundReader* reader )
 {
@@ -1342,7 +1400,26 @@ void icvGetNextFromBackgroundData( CvBackgroundData* data,
     cvResize( &(reader->src), &(reader->img) );
 }
 
-CV_IMPL
+
+/*
+ * icvGetBackgroundImage
+ *
+ * Get an image from background
+ * <img> must be allocated and have size, previously passed to icvInitBackgroundReaders
+ *
+ * Usage example:
+ * icvInitBackgroundReaders( "bg.txt", cvSize( 24, 24 ) );
+ * ...
+ * #pragma omp parallel
+ * {
+ *     ...
+ *     icvGetBackgourndImage( cvbgdata, cvbgreader, img );
+ *     ...
+ * }
+ * ...
+ * icvDestroyBackgroundReaders();
+ */
+static
 void icvGetBackgroundImage( CvBackgroundData* data,
                             CvBackgroundReader* reader,
                             CvMat* img )
@@ -1397,7 +1474,19 @@ void icvGetBackgroundImage( CvBackgroundData* data,
 }
 
 
-CV_IMPL
+/*
+ * icvInitBackgroundReaders
+ *
+ * Initialize background reading process.
+ * <cvbgreader> and <cvbgdata> are initialized.
+ * Must be called before any usage of background
+ *
+ * filename - name of background description file
+ * winsize  - size of images will be obtained from background
+ *
+ * return 1 on success, 0 otherwise.
+ */
+static
 int icvInitBackgroundReaders( const char* filename, CvSize winsize )
 {
     if( cvbgdata == NULL && filename != NULL )
@@ -1428,7 +1517,13 @@ int icvInitBackgroundReaders( const char* filename, CvSize winsize )
     return (cvbgdata != NULL);
 }
 
-CV_IMPL
+
+/*
+ * icvDestroyBackgroundReaders
+ *
+ * Finish backgournd reading process
+ */
+static
 void icvDestroyBackgroundReaders()
 {
     /* release background reader in each thread */
@@ -1455,7 +1550,14 @@ void icvDestroyBackgroundReaders()
     }
 }
 
-CV_IMPL
+
+/*
+ * icvGetAuxImages
+ *
+ * Get sum, tilted, sqsum images and calculate normalization factor
+ * All images must be allocated.
+ */
+static
 void icvGetAuxImages( CvMat* img, CvMat* sum, CvMat* tilted,
                       CvMat* sqsum, float* normfactor )
 {
@@ -1481,7 +1583,13 @@ void icvGetAuxImages( CvMat* img, CvMat* sum, CvMat* tilted,
     (*normfactor) = (float) sqrt( (double) (area * valsqsum - (double)valsum * valsum) );
 }
 
-CV_IMPL
+
+/*
+ * icvGetHaarTrainingData
+ *
+ * Fill <data> with samples, passed <cascade>
+ */
+static
 int icvGetHaarTrainingData( CvHaarTrainingData* data, int first, int count,
                             CvIntHaarClassifier* cascade,
                             CvGetHaarTrainingDataCallback callback, void* userdata,
@@ -1556,7 +1664,14 @@ typedef uint64 ccounter_t;
 #define CCOUNTER_ADD(cc0, cc1) ( ((CCOUNTER_MAX-(cc1)) > (cc0) ) ? ((cc0) += (cc1)) : ((cc0) = CCOUNTER_MAX) )
 #define CCOUNTER_DIV(cc0, cc1) ( ((cc1) == 0) ? 0 : ( ((double)(cc0))/(double)(int64)(cc1) ) )
 
-CV_IMPL
+
+/*
+ * icvGetHaarTrainingDataFromBG
+ *
+ * Fill <data> with background samples, passed <cascade>
+ * Background reading process must be initialized before call.
+ */
+static
 int icvGetHaarTrainingDataFromBG( CvHaarTrainingData* data, int first, int count,
                                   CvIntHaarClassifier* cascade, double* acceptance_ratio )
 {
@@ -1661,7 +1776,7 @@ int icvGetHaarTrainingDataFromBG( CvHaarTrainingData* data, int first, int count
     return count;
 }
 
-CV_IMPL
+
 int icvGetHaarTraininDataFromVecCallback( CvMat* img, void* userdata )
 {
     uchar tmp = 0;
@@ -1696,7 +1811,7 @@ int icvGetHaarTraininDataFromVecCallback( CvMat* img, void* userdata )
  * icvGetHaarTrainingDataFromVec
  * Get training data from .vec file
  */
-CV_IMPL
+static
 int icvGetHaarTrainingDataFromVec( CvHaarTrainingData* data, int first, int count,                                   
                                    CvIntHaarClassifier* cascade,
                                    const char* filename,
@@ -1742,7 +1857,7 @@ int icvGetHaarTrainingDataFromVec( CvHaarTrainingData* data, int first, int coun
     return getcount;
 }
 
-CV_IMPL
+
 void cvCreateCascadeClassifier( const char* dirname,
                                 const char* vecfilename,
                                 const char* bgfilename, 
@@ -2085,7 +2200,7 @@ typedef struct CvSplit
     struct CvSplit* next;
 } CvSplit;
 
-CV_IMPL
+
 void cvCreateTreeCascadeClassifier( const char* dirname,
                                     const char* vecfilename,
                                     const char* bgfilename, 
@@ -2574,5 +2689,221 @@ void cvCreateTreeCascadeClassifier( const char* dirname,
     cvReleaseMat( &vals );
     cvReleaseMat( &features_idx );
 }
+
+
+
+void cvCreateTrainingSamples( const char* filename,
+                              const char* imgfilename, int bgcolor, int bgthreshold,
+                              const char* bgfilename, int count,
+                              int invert, int maxintensitydev,
+                              double maxxangle, double maxyangle, double maxzangle,
+                              int showsamples,
+                              int winwidth, int winheight )
+{
+    CvSampleDistortionData data;
+
+    assert( filename != NULL );
+    assert( imgfilename != NULL );
+
+    if( !icvMkDir( filename ) )
+    {
+        fprintf( stderr, "Unable to create output file: %s\n", filename );
+        return;
+    }
+    if( icvStartSampleDistortion( imgfilename, bgcolor, bgthreshold, &data ) )
+    {
+        FILE* output = NULL;
+
+        output = fopen( filename, "wb" );
+        if( output != NULL )
+        {
+            int hasbg;
+            int i;
+            CvMat sample;
+            int inverse;
+
+            hasbg = 0;
+            hasbg = (bgfilename != NULL && icvInitBackgroundReaders( bgfilename,
+                     cvSize( winwidth,winheight ) ) );
+
+            sample = cvMat( winheight, winwidth, CV_8UC1, cvAlloc( sizeof( uchar ) *
+                            winheight * winwidth ) );
+
+            icvWriteVecHeader( output, count, sample.cols, sample.rows );
+
+            if( showsamples )
+            {
+                cvNamedWindow( "Sample", CV_WINDOW_AUTOSIZE );
+            }
+
+            inverse = invert;
+            for( i = 0; i < count; i++ )
+            {
+                if( hasbg )
+                {
+                    icvGetBackgroundImage( cvbgdata, cvbgreader, &sample );
+                }
+                else
+                {
+                    cvSet( &sample, cvScalar( bgcolor ) );
+                }
+
+                if( invert == CV_RANDOM_INVERT )
+                {
+                    inverse = (rand() > (RAND_MAX/2));
+                }
+                icvPlaceDistortedSample( &sample, inverse, maxintensitydev,
+                    maxxangle, maxyangle, maxzangle, 
+                    0   /* nonzero means placing image without cut offs */,
+                    0.0 /* nozero adds random shifting                  */,
+                    0.0 /* nozero adds random scaling                   */,
+                    &data );
+
+                if( showsamples )
+                {
+                    cvShowImage( "Sample", &sample );
+                    if( cvWaitKey( 0 ) == 27 )
+                    {
+                        showsamples = 0;
+                    }
+                }
+
+                icvWriteVecSample( output, &sample );
+
+#ifdef CV_VERBOSE
+                if( i % 500 == 0 )
+                {
+                    printf( "\r%3d%%", 100 * i / count );
+                }
+#endif /* CV_VERBOSE */
+            }
+            icvDestroyBackgroundReaders();
+            cvFree( &(sample.data.ptr) );
+            fclose( output );
+        } /* if( output != NULL ) */
+        
+        icvEndSampleDistortion( &data );
+    }
+    
+#ifdef CV_VERBOSE
+    printf( "\r      \r" );
+#endif /* CV_VERBOSE */ 
+
+}
+
+#define CV_INFO_FILENAME "info.dat"
+
+
+void cvCreateTestSamples( const char* infoname,
+                          const char* imgfilename, int bgcolor, int bgthreshold,
+                          const char* bgfilename, int count,
+                          int invert, int maxintensitydev,
+                          double maxxangle, double maxyangle, double maxzangle,
+                          int showsamples,
+                          int winwidth, int winheight )
+{
+    CvSampleDistortionData data;
+
+    assert( infoname != NULL );
+    assert( imgfilename != NULL );
+    assert( bgfilename != NULL );
+
+    if( !icvMkDir( infoname ) )
+    {
+
+#if CV_VERBOSE
+        fprintf( stderr, "Unable to create directory hierarchy: %s\n", infoname );
+#endif /* CV_VERBOSE */
+
+        return;
+    }
+    if( icvStartSampleDistortion( imgfilename, bgcolor, bgthreshold, &data ) )
+    {
+        char fullname[PATH_MAX];
+        char* filename;
+        CvMat win;
+        FILE* info;
+
+        if( icvInitBackgroundReaders( bgfilename, cvSize( 10, 10 ) ) )
+        {
+            int i;
+            int x, y, width, height;
+            float scale;
+            float maxscale;
+            int inverse;
+
+            if( showsamples )
+            {
+                cvNamedWindow( "Image", CV_WINDOW_AUTOSIZE );
+            }
+            
+            info = fopen( infoname, "w" );
+            strcpy( fullname, infoname );
+            filename = strrchr( fullname, '\\' );
+            if( filename == NULL )
+            {
+                filename = strrchr( fullname, '/' );
+            }
+            if( filename == NULL )
+            {
+                filename = fullname;
+            }
+            else
+            {
+                filename++;
+            }
+
+            count = MIN( count, cvbgdata->count );
+            inverse = invert;
+            for( i = 0; i < count; i++ )
+            {
+                icvGetNextFromBackgroundData( cvbgdata, cvbgreader );
+                
+                maxscale = MIN( 0.7F * cvbgreader->src.cols / winwidth,
+                                   0.7F * cvbgreader->src.rows / winheight );
+                if( maxscale < 1.0F ) continue;
+
+                scale = (maxscale - 1.0F) * rand() / RAND_MAX + 1.0F;
+                width = (int) (scale * winwidth);
+                height = (int) (scale * winheight);
+                x = (int) ((0.1+0.8 * rand()/RAND_MAX) * (cvbgreader->src.cols - width));
+                y = (int) ((0.1+0.8 * rand()/RAND_MAX) * (cvbgreader->src.rows - height));
+
+                cvGetSubArr( &cvbgreader->src, &win, cvRect( x, y ,width, height ) );
+                if( invert == CV_RANDOM_INVERT )
+                {
+                    inverse = (rand() > (RAND_MAX/2));
+                }
+                icvPlaceDistortedSample( &win, inverse, maxintensitydev,
+                                         maxxangle, maxyangle, maxzangle, 
+                                         1, 0.0, 0.0, &data );
+                
+                
+                sprintf( filename, "%04d_%04d_%04d_%04d_%04d.jpg",
+                         (i + 1), x, y, width, height );
+                
+                if( info ) 
+                {
+                    fprintf( info, "%s %d %d %d %d %d\n",
+                        filename, 1, x, y, width, height );
+                }
+
+                cvSaveImage( fullname, &cvbgreader->src );
+                if( showsamples )
+                {
+                    cvShowImage( "Image", &cvbgreader->src );
+                    if( cvWaitKey( 0 ) == 27 )
+                    {
+                        showsamples = 0;
+                    }
+                }
+            }
+            if( info ) fclose( info );
+            icvDestroyBackgroundReaders();
+        }
+        icvEndSampleDistortion( &data );
+    }
+}
+
 
 /* End of file. */
