@@ -954,7 +954,7 @@ CvBoost::update_weights( CvBoostTree* tree )
         float* responses = data->get_ord_responses(data->data_root);
         int* labels = data->get_labels(data->data_root);
         double w0 = 1./count;
-        const double* priors = data->priors->data.db;
+        double p[2] = { 1, 1 };
         
         cvReleaseMat( &orig_response );
         cvReleaseMat( &sum_response );
@@ -968,6 +968,18 @@ CvBoost::update_weights( CvBoostTree* tree )
         CV_CALL( weights = cvCreateMat( 1, count, CV_64F ));
         CV_CALL( subtree_weights = cvCreateMat( 1, count + 2, CV_64F ));
 
+        if( data->have_priors )
+        {
+            // compute weight scale for each class from their prior probabilities
+            int c1 = 0;
+            for( i = 0; i < count; i++ )
+                c1 += class_labels[i];
+            p[0] = data->priors->data.db[0]*(c1 < count ? 1./(count - c1) : 0.);
+            p[1] = data->priors->data.db[1]*(c1 > 0 ? 1./c1 : 0.);
+            p[0] /= p[0] + p[1];
+            p[1] = 1. - p[0];
+        }
+
         for( i = 0; i < count; i++ )
         {
             // save original categorical responses {0,1}, convert them to {-1,1}
@@ -976,7 +988,7 @@ CvBoost::update_weights( CvBoostTree* tree )
             // later, in trim_weights() deactivate/reactive again some, if need
             subsample_mask->data.ptr[i] = (uchar)1;
             // make all the initial weights the same.
-            weights->data.db[i] = w0*priors[class_labels[i]];
+            weights->data.db[i] = w0*p[class_labels[i]];
             // set the labels to find (from within weak tree learning proc)
             // the particular sample weight, and where to store the response.
             labels[i] = i;

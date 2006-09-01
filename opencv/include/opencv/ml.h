@@ -720,6 +720,7 @@ struct CV_EXPORTS CvDTreeTrainData
                      //   k<0  - ordered
                      //   k>=0 - categorical, see k-th element of cat_* arrays
     CvMat* priors;
+    CvMat* priors_mult;
 
     CvDTreeParams params;
 
@@ -910,7 +911,7 @@ protected:
 
 
 /****************************************************************************************\
-*                                   Boosted trees models                                 *
+*                                   Boosted tree classifier                              *
 \****************************************************************************************/
 
 struct CV_EXPORTS CvBoostParams : public CvDTreeParams
