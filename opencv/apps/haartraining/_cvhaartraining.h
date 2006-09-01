@@ -53,9 +53,6 @@
 #include <string.h>
 #include <stdio.h>
 
-#define CV_IMPL CV_EXTERN_C
-
-
 /* parameters for tree cascade classifier training */
 
 /* max number of clusters */
@@ -274,9 +271,6 @@ typedef struct CvTreeCascadeClassifier
 
 
 CV_INLINE float cvEvalFastHaarFeature( CvFastHaarFeature* feature,
-                                       sum_type* sum, sum_type* tilted );
-
-CV_INLINE float cvEvalFastHaarFeature( CvFastHaarFeature* feature,
                                        sum_type* sum, sum_type* tilted )
 {
     sum_type* img = NULL;
@@ -299,47 +293,18 @@ CV_INLINE float cvEvalFastHaarFeature( CvFastHaarFeature* feature,
     return ret;
 }
 
-typedef struct CvBackgroundData
+typedef struct CvSampleDistortionData
 {
-    int    count;
-    char** filename;
-    int    last;
-    int    round;
-    CvSize winsize;
-} CvBackgroundData;
-
-typedef struct CvBackgroundReader
-{
-    CvMat   src;
-    CvMat   img;
-    CvPoint offset;
-    float   scale;
-    float   scalefactor;
-    float   stepfactor;
-    CvPoint point;
-} CvBackgroundReader;
-
-#ifdef __cplusplus
-extern "C" {
-#endif
-
-/*
- * icvCreateIntHaarFeatures
- *
- * Create internal representation of haar features
- *
- * mode:
- *  0 - BASIC = Viola
- *  1 - CORE  = All upright
- *  2 - ALL   = All features
- */
-CvIntHaarFeatures* icvCreateIntHaarFeatures( CvSize winsize,
-                                             int mode CV_DEFAULT( 0 ),
-                                             int symmetric CV_DEFAULT( 0 ) );
-
-void icvReleaseIntHaarFeaturesCache( CvIntHaarFeatures** intHaarFeatures );
-
-void icvReleaseIntHaarFeatures( CvIntHaarFeatures** intHaarFeatures );
+    IplImage* src;
+    IplImage* erode;
+    IplImage* dilate;
+    IplImage* mask;
+    IplImage* img;
+    IplImage* maskimg;
+    int dx;
+    int dy;
+    int bgcolor;
+} CvSampleDistortionData;
 
 /*
  * icvConvertToFastHaarFeature
@@ -356,138 +321,19 @@ void icvConvertToFastHaarFeature( CvTHaarFeature* haarFeature,
                                   int size, int step );
 
 
-/*
- * icvCreateHaarTrainingData
- *
- * Create haar training data used in stage training
- */
-CvHaarTrainigData* icvCreateHaarTrainingData( CvSize winsize, int maxnumsamples );
+void icvWriteVecHeader( FILE* file, int count, int width, int height );
+void icvWriteVecSample( FILE* file, CvArr* sample );
+void icvPlaceDistortedSample( CvArr* background,
+                              int inverse, int maxintensitydev,
+                              double maxxangle, double maxyangle, double maxzangle,
+                              int inscribe, double maxshiftf, double maxscalef,
+                              CvSampleDistortionData* data );
+void icvEndSampleDistortion( CvSampleDistortionData* data );
 
-void icvReleaseHaarTrainingData( CvHaarTrainigData** haarTrainingData );
-
-/*
- * icvCreateCARTStageClassifier
- *
- * Create stage classifier with trees as weak classifiers
- * data             - haar training data. It must be created and filled before call
- * minhitrate       - desired min hit rate
- * maxfalsealarm    - desired max false alarm rate
- * symmetric        - if not 0 it is assumed that samples are vertically symmetric
- * numprecalculated - number of features that will be precalculated. Each precalculated
- *   feature need (number_of_samples*(sizeof( float ) + sizeof( short ))) bytes of memory
- * weightfraction   - weight trimming parameter
- * numsplits        - number of binary splits in each tree
- * boosttype        - type of applied boosting algorithm
- * stumperror       - type of used error if Discrete AdaBoost algorithm is applied
- * maxsplits        - maximum total number of splits in all weak classifiers.
- *   If it is not 0 then NULL returned if total number of splits exceeds <maxsplits>.
- */
-CvIntHaarClassifier* icvCreateCARTStageClassifier( CvHaarTrainingData* data,
-                                                   CvMat* sampleIdx,
-                                                   CvIntHaarFeatures* haarFeatures,
-                                                   float minhitrate,
-                                                   float maxfalsealarm,
-                                                   int   symmetric,
-                                                   float weightfraction,
-                                                   int numsplits,
-                                                   CvBoostType boosttype,
-                                                   CvStumpError stumperror,
-                                                   int maxsplits );
-
-void icvGetTrainingDataCallback( CvMat* mat, CvMat* sampleIdx, CvMat*,
-                                 int first, int num, void* userdata );
-
-CvBackgroundData* icvCreateBackgroundData( const char* filename, CvSize winsize );
-
-void icvReleaseBackgroundData( CvBackgroundData** data );
-
-
-CvBackgroundReader* icvCreateBackgroundReader();
-
-void icvReleaseBackgroundReader( CvBackgroundReader** reader );
-
-void icvGetNextFromBackgroundData( CvBackgroundData* data,
-                                   CvBackgroundReader* reader );
-
-
-extern CvBackgroundReader* cvbgreader;
-#ifdef _OPENMP
-#pragma omp threadprivate(cvbgreader)
-#endif /* _OPENMP */
-
-extern CvBackgroundData* cvbgdata;
-
-/*
- * icvInitBackgroundReaders
- *
- * Initialize background reading process.
- * <cvbgreader> and <cvbgdata> are initialized.
- * Must be called before any usage of background
- *
- * filename - name of background description file
- * winsize  - size of images will be obtained from background
- *
- * return 1 on success, 0 otherwise.
- */
-int icvInitBackgroundReaders( const char* filename, CvSize winsize );
-
-/*
- * icvDestroyBackgroundReaders
- *
- * Finish backgournd reading process
- */
-void icvDestroyBackgroundReaders();
-
-/*
- * icvGetBackgroundImage
- *
- * Get an image from background
- * <img> must be allocated and have size, previously passed to icvInitBackgroundReaders
- *
- * Usage example:
- * icvInitBackgroundReaders( "bg.txt", cvSize( 24, 24 ) );
- * ...
- * #pragma omp parallel
- * {
- *     ...
- *     icvGetBackgourndImage( cvbgdata, cvbgreader, img );
- *     ...
- * }
- * ...
- * icvDestroyBackgroundReaders();
- */
-void icvGetBackgroundImage( CvBackgroundData* data,
-                            CvBackgroundReader* reader,
-                            CvMat* img );
-
-/*
- * icvGetAuxImages
- *
- * Get sum, tilted, sqsum images and calculate normalization factor
- * All images must be allocated.
- */
-void icvGetAuxImages( CvMat* img, CvMat* sum, CvMat* tilted,
-                      CvMat* sqsum, float* normfactor );
+int icvStartSampleDistortion( const char* imgfilename, int bgcolor, int bgthreshold,
+                              CvSampleDistortionData* data );
 
 typedef int (*CvGetHaarTrainingDataCallback)( CvMat* img, void* userdata );
-
-/*
- * icvGetHaarTrainingData
- *
- * Fill <data> with samples, passed <cascade>
- */
-int icvGetHaarTrainingData( CvHaarTrainingData* data, int first, int count,
-                            CvIntHaarClassifier* cascade,
-                            CvGetHaarTrainingDataCallback callback, void* userdata,
-                            int* consumed );
-/*
- * icvGetHaarTrainingDataFromBG
- *
- * Fill <data> with background samples, passed <cascade>
- * Background reading process must be initialized before call.
- */
-int icvGetHaarTrainingDataFromBG( CvHaarTrainingData* data, int first, int count,
-                                  CvIntHaarClassifier* cascade, double* acceptance_ratio );
 
 typedef struct CvVecFile
 {
@@ -572,9 +418,5 @@ CvIntHaarClassifier* icvLoadTreeCascadeClassifier( const char* filename, int ste
 
 /* Finds leaves belonging to maximal level and connects them via leaf->next_same_level */
 CvTreeCascadeNode* icvFindDeepestLeaves( CvTreeCascadeClassifier* tree );
-
-#ifdef __cplusplus
-} /* extern "C" */
-#endif
 
 #endif /* __CVHAARTRAINING_H_ */

@@ -392,7 +392,7 @@ void cvWarpPerspective( CvArr* src, CvArr* dst, double quad[4][2] )
     __END__;
 }
 
-CV_IMPL
+static
 void icvRandomQuad( int width, int height, double quad[4][2], 
                     double maxxangle,
                     double maxyangle,
@@ -462,18 +462,6 @@ void icvRandomQuad( int width, int height, double quad[4][2],
     }
 }
 
-typedef struct CvSampleDistortionData
-{
-    IplImage* src;
-    IplImage* erode;
-    IplImage* dilate;
-    IplImage* mask;
-    IplImage* img;
-    IplImage* maskimg;
-    int dx;
-    int dy;
-    int bgcolor;
-} CvSampleDistortionData;
 
 int icvStartSampleDistortion( const char* imgfilename, int bgcolor, int bgthreshold,
                               CvSampleDistortionData* data )
@@ -737,221 +725,7 @@ void icvWriteVecSample( FILE* file, CvArr* sample )
     }
 }
 
-CV_IMPL
-void cvCreateTrainingSamples( const char* filename,
-                              const char* imgfilename, int bgcolor, int bgthreshold,
-                              const char* bgfilename, int count,
-                              int invert, int maxintensitydev,
-                              double maxxangle, double maxyangle, double maxzangle,
-                              int showsamples,
-                              int winwidth, int winheight )
-{
-    CvSampleDistortionData data;
 
-    assert( filename != NULL );
-    assert( imgfilename != NULL );
-
-    if( !icvMkDir( filename ) )
-    {
-        fprintf( stderr, "Unable to create output file: %s\n", filename );
-        return;
-    }
-    if( icvStartSampleDistortion( imgfilename, bgcolor, bgthreshold, &data ) )
-    {
-        FILE* output = NULL;
-
-        output = fopen( filename, "wb" );
-        if( output != NULL )
-        {
-            int hasbg;
-            int i;
-            CvMat sample;
-            int inverse;
-
-            hasbg = 0;
-            hasbg = (bgfilename != NULL && icvInitBackgroundReaders( bgfilename,
-                     cvSize( winwidth,winheight ) ) );
-
-            sample = cvMat( winheight, winwidth, CV_8UC1, cvAlloc( sizeof( uchar ) *
-                            winheight * winwidth ) );
-
-            icvWriteVecHeader( output, count, sample.cols, sample.rows );
-
-            if( showsamples )
-            {
-                cvNamedWindow( "Sample", CV_WINDOW_AUTOSIZE );
-            }
-
-            inverse = invert;
-            for( i = 0; i < count; i++ )
-            {
-                if( hasbg )
-                {
-                    icvGetBackgroundImage( cvbgdata, cvbgreader, &sample );
-                }
-                else
-                {
-                    cvSet( &sample, cvScalar( bgcolor ) );
-                }
-
-                if( invert == CV_RANDOM_INVERT )
-                {
-                    inverse = (rand() > (RAND_MAX/2));
-                }
-                icvPlaceDistortedSample( &sample, inverse, maxintensitydev,
-                    maxxangle, maxyangle, maxzangle, 
-                    0   /* nonzero means placing image without cut offs */,
-                    0.0 /* nozero adds random shifting                  */,
-                    0.0 /* nozero adds random scaling                   */,
-                    &data );
-
-                if( showsamples )
-                {
-                    cvShowImage( "Sample", &sample );
-                    if( cvWaitKey( 0 ) == 27 )
-                    {
-                        showsamples = 0;
-                    }
-                }
-
-                icvWriteVecSample( output, &sample );
-
-#ifdef CV_VERBOSE
-                if( i % 500 == 0 )
-                {
-                    printf( "\r%3d%%", 100 * i / count );
-                }
-#endif /* CV_VERBOSE */
-            }
-            icvDestroyBackgroundReaders();
-            cvFree( &(sample.data.ptr) );
-            fclose( output );
-        } /* if( output != NULL ) */
-        
-        icvEndSampleDistortion( &data );
-    }
-    
-#ifdef CV_VERBOSE
-    printf( "\r      \r" );
-#endif /* CV_VERBOSE */ 
-
-}
-
-#define CV_INFO_FILENAME "info.dat"
-
-CV_IMPL
-void cvCreateTestSamples( const char* infoname,
-                          const char* imgfilename, int bgcolor, int bgthreshold,
-                          const char* bgfilename, int count,
-                          int invert, int maxintensitydev,
-                          double maxxangle, double maxyangle, double maxzangle,
-                          int showsamples,
-                          int winwidth, int winheight )
-{
-    CvSampleDistortionData data;
-
-    assert( infoname != NULL );
-    assert( imgfilename != NULL );
-    assert( bgfilename != NULL );
-
-    if( !icvMkDir( infoname ) )
-    {
-
-#if CV_VERBOSE
-        fprintf( stderr, "Unable to create directory hierarchy: %s\n", infoname );
-#endif /* CV_VERBOSE */
-
-        return;
-    }
-    if( icvStartSampleDistortion( imgfilename, bgcolor, bgthreshold, &data ) )
-    {
-        char fullname[PATH_MAX];
-        char* filename;
-        CvMat win;
-        FILE* info;
-
-        if( icvInitBackgroundReaders( bgfilename, cvSize( 10, 10 ) ) )
-        {
-            int i;
-            int x, y, width, height;
-            float scale;
-            float maxscale;
-            int inverse;
-
-            if( showsamples )
-            {
-                cvNamedWindow( "Image", CV_WINDOW_AUTOSIZE );
-            }
-            
-            info = fopen( infoname, "w" );
-            strcpy( fullname, infoname );
-            filename = strrchr( fullname, '\\' );
-            if( filename == NULL )
-            {
-                filename = strrchr( fullname, '/' );
-            }
-            if( filename == NULL )
-            {
-                filename = fullname;
-            }
-            else
-            {
-                filename++;
-            }
-
-            count = MIN( count, cvbgdata->count );
-            inverse = invert;
-            for( i = 0; i < count; i++ )
-            {
-                icvGetNextFromBackgroundData( cvbgdata, cvbgreader );
-                
-                maxscale = MIN( 0.7F * cvbgreader->src.cols / winwidth,
-                                   0.7F * cvbgreader->src.rows / winheight );
-                if( maxscale < 1.0F ) continue;
-
-                scale = (maxscale - 1.0F) * rand() / RAND_MAX + 1.0F;
-                width = (int) (scale * winwidth);
-                height = (int) (scale * winheight);
-                x = (int) ((0.1+0.8 * rand()/RAND_MAX) * (cvbgreader->src.cols - width));
-                y = (int) ((0.1+0.8 * rand()/RAND_MAX) * (cvbgreader->src.rows - height));
-
-                cvGetSubArr( &cvbgreader->src, &win, cvRect( x, y ,width, height ) );
-                if( invert == CV_RANDOM_INVERT )
-                {
-                    inverse = (rand() > (RAND_MAX/2));
-                }
-                icvPlaceDistortedSample( &win, inverse, maxintensitydev,
-                                         maxxangle, maxyangle, maxzangle, 
-                                         1, 0.0, 0.0, &data );
-                
-                
-                sprintf( filename, "%04d_%04d_%04d_%04d_%04d.jpg",
-                         (i + 1), x, y, width, height );
-                
-                if( info ) 
-                {
-                    fprintf( info, "%s %d %d %d %d %d\n",
-                        filename, 1, x, y, width, height );
-                }
-
-                cvSaveImage( fullname, &cvbgreader->src );
-                if( showsamples )
-                {
-                    cvShowImage( "Image", &cvbgreader->src );
-                    if( cvWaitKey( 0 ) == 27 )
-                    {
-                        showsamples = 0;
-                    }
-                }
-            }
-            if( info ) fclose( info );
-            icvDestroyBackgroundReaders();
-        }
-        icvEndSampleDistortion( &data );
-    }
-}
-
-CV_IMPL
 int cvCreateTrainingSamplesFromInfo( const char* infoname, const char* vecfilename,
                                      int num,
                                      int showsamples,
@@ -1096,7 +870,7 @@ int cvCreateTrainingSamplesFromInfo( const char* infoname, const char* vecfilena
     return total;
 }
 
-CV_IMPL
+
 void cvShowVecSamples( const char* filename, int winwidth, int winheight,
                        double scale )
 {

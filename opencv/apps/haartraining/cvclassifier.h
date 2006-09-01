@@ -51,11 +51,7 @@
 #include <cxcore.h>
 #include <math.h>
 
-#ifdef __cplusplus
-#define CV_BOOST_API extern "C"
-#else
 #define CV_BOOST_API
-#endif
 
 /* Convert matrix to vector */
 #define CV_MAT2VEC( mat, vdata, vstep, num )       \

@@ -62,11 +62,7 @@
 #include <omp.h>
 #endif /* _OPENMP */
 
-#ifdef __cplusplus
-#define CV_BOOST_IMPL extern "C"
-#else
 #define CV_BOOST_IMPL
-#endif
 
 typedef struct CvValArray
 {

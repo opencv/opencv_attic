@@ -48,11 +48,6 @@
 #ifndef _CVHAARTRAINING_H_
 #define _CVHAARTRAINING_H_
 
-#ifdef __cplusplus
-extern "C" {
-#endif
-
-
 /*
  * cvCreateTrainingSamples
  *
@@ -192,10 +187,5 @@ void cvCreateTreeCascadeClassifier( const char* dirname,
                                     int winwidth, int winheight,
                                     int boosttype, int stumperror,
                                     int maxtreesplits, int minpos );
-
-
-#ifdef __cplusplus
-}
-#endif /* extern "C" */
 
 #endif /* _CVHAARTRAINING_H_ */
