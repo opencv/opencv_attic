@@ -134,6 +134,12 @@
 
 // Set up CvMat to emulate IplImage fields
 %{
+int CvMat_cols_get(CvMat * m){
+	return m->cols;
+}
+int CvMat_rows_get(CvMat *m){
+	return m->rows;
+}
 int CvMat_width_get(CvMat * m){
 	return m->cols;
 }
@@ -165,4 +171,7 @@ int CvMat_widthStep_get(CvMat * m){
 	const int height;
 	const int imageSize;
 	const int widthStep;
+	// swig doesn't like the embedded union in CvMat, so re-add these
+	const int rows;
+	const int cols;
 };
