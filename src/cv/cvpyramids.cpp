@@ -216,6 +216,7 @@ icvPyrDownG5x5_##flavor##_CnR( const type* src, int srcstep, type* dst,         
 
 
 ICV_DEF_PYR_DOWN_FUNC( 8u, uchar, int, PD_SCALE_INT )
+ICV_DEF_PYR_DOWN_FUNC( 16s, short, int, PD_SCALE_INT )
 ICV_DEF_PYR_DOWN_FUNC( 16u, ushort, int, PD_SCALE_INT )
 ICV_DEF_PYR_DOWN_FUNC( 32f, float, float, PD_SCALE_FLT )
 ICV_DEF_PYR_DOWN_FUNC( 64f, double, double, PD_SCALE_FLT )
@@ -427,6 +428,7 @@ icvPyrUpG5x5_##flavor##_CnR( const type* src, int srcstep, type* dst,           
 
 
 ICV_DEF_PYR_UP_FUNC( 8u, uchar, int, PU_SCALE_INT )
+ICV_DEF_PYR_UP_FUNC( 16s, short, int, PU_SCALE_INT )
 ICV_DEF_PYR_UP_FUNC( 16u, ushort, int, PU_SCALE_INT )
 ICV_DEF_PYR_UP_FUNC( 32f, float, float, PU_SCALE_FLT )
 ICV_DEF_PYR_UP_FUNC( 64f, double, double, PU_SCALE_FLT )
@@ -878,6 +880,7 @@ static void icvInit##FUNCNAME##Table( CvFuncTable* tab )            \
 {                                                                   \
     tab->fn_2d[CV_8U] = (void*)icv##FUNCNAME##_8u_CnR;              \
     tab->fn_2d[CV_8S] = 0;                                          \
+    tab->fn_2d[CV_16S] = (void*)icv##FUNCNAME##_16s_CnR;            \
     tab->fn_2d[CV_16U] = (void*)icv##FUNCNAME##_16u_CnR;            \
     tab->fn_2d[CV_32F] = (void*)icv##FUNCNAME##_32f_CnR;            \
     tab->fn_2d[CV_64F] = (void*)icv##FUNCNAME##_64f_CnR;            \
@@ -1142,6 +1145,7 @@ cvPyrDown( const void* srcarr, void* dstarr, int _filter )
 
 ICV_DEF_PYR_BORDER_FUNC( 8u, uchar, int, PD_SCALE_INT )
 ICV_DEF_PYR_BORDER_FUNC( 16u, ushort, int, PD_SCALE_INT )
+ICV_DEF_PYR_BORDER_FUNC( 16s, short, int, PD_SCALE_INT )
 ICV_DEF_PYR_BORDER_FUNC( 32f, float, float, PD_SCALE_FLT )
 ICV_DEF_PYR_BORDER_FUNC( 64f, double, double, PD_SCALE_FLT )
 
@@ -1151,6 +1155,7 @@ static void icvInit##FUNCNAME##Table( CvFuncTable* tab )            \
     tab->fn_2d[CV_8U] = (void*)icv##FUNCNAME##_8u_CnR;              \
     tab->fn_2d[CV_8S] = 0;                                          \
     tab->fn_2d[CV_16U] = (void*)icv##FUNCNAME##_16u_CnR;            \
+    tab->fn_2d[CV_16S] = (void*)icv##FUNCNAME##_16s_CnR;            \
     tab->fn_2d[CV_32F] = (void*)icv##FUNCNAME##_32f_CnR;            \
     tab->fn_2d[CV_64F] = (void*)icv##FUNCNAME##_64f_CnR;            \
 }
