@@ -216,6 +216,7 @@ icvPyrDownG5x5_##flavor##_CnR( const type* src, int srcstep, type* dst,         
 
 
 ICV_DEF_PYR_DOWN_FUNC( 8u, uchar, int, PD_SCALE_INT )
+ICV_DEF_PYR_DOWN_FUNC( 16u, ushort, int, PD_SCALE_INT )
 ICV_DEF_PYR_DOWN_FUNC( 32f, float, float, PD_SCALE_FLT )
 ICV_DEF_PYR_DOWN_FUNC( 64f, double, double, PD_SCALE_FLT )
 
@@ -426,6 +427,7 @@ icvPyrUpG5x5_##flavor##_CnR( const type* src, int srcstep, type* dst,           
 
 
 ICV_DEF_PYR_UP_FUNC( 8u, uchar, int, PU_SCALE_INT )
+ICV_DEF_PYR_UP_FUNC( 16u, ushort, int, PU_SCALE_INT )
 ICV_DEF_PYR_UP_FUNC( 32f, float, float, PU_SCALE_FLT )
 ICV_DEF_PYR_UP_FUNC( 64f, double, double, PU_SCALE_FLT )
 
@@ -447,20 +449,10 @@ icvPyrUpG5x5_GetBufSize( int roiWidth, CvDataType dataType,
 
     bufStep = 2*roiWidth*channels;
 
-    switch( dataType )
-    {
-    case cv8u: case cv8s:
-        bufStep *= sizeof(int);
-        break;
-    case cv32f:
-        //bufStep *= sizeof(float);
-        //break;
-    case cv64f:
+    if( dataType == cv64f )
         bufStep *= sizeof(double);
-        break;
-    default:
-        return CV_BADARG_ERR;
-    }
+    else
+        bufStep *= sizeof(int);
 
     *bufSize = bufStep * PU_SZ;
     return CV_OK;
@@ -484,20 +476,10 @@ icvPyrDownG5x5_GetBufSize( int roiWidth, CvDataType dataType,
 
     bufStep = 2*roiWidth*channels;
 
-    switch( dataType )
-    {
-    case cv8u: case cv8s:
-        bufStep *= sizeof(int);
-        break;
-    case cv32f:
-        bufStep *= sizeof(float);
-        break;
-    case cv64f:
+    if( dataType == cv64f )
         bufStep *= sizeof(double);
-        break;
-    default:
-        return CV_BADARG_ERR;
-    }
+    else
+        bufStep *= sizeof(int);
 
     *bufSize = bufStep * (PD_SZ + 1);
     return CV_OK;
@@ -896,6 +878,7 @@ static void icvInit##FUNCNAME##Table( CvFuncTable* tab )            \
 {                                                                   \
     tab->fn_2d[CV_8U] = (void*)icv##FUNCNAME##_8u_CnR;              \
     tab->fn_2d[CV_8S] = 0;                                          \
+    tab->fn_2d[CV_16U] = (void*)icv##FUNCNAME##_16u_CnR;            \
     tab->fn_2d[CV_32F] = (void*)icv##FUNCNAME##_32f_CnR;            \
     tab->fn_2d[CV_64F] = (void*)icv##FUNCNAME##_64f_CnR;            \
 }
@@ -1158,6 +1141,7 @@ cvPyrDown( const void* srcarr, void* dstarr, int _filter )
 #endif
 
 ICV_DEF_PYR_BORDER_FUNC( 8u, uchar, int, PD_SCALE_INT )
+ICV_DEF_PYR_BORDER_FUNC( 16u, ushort, int, PD_SCALE_INT )
 ICV_DEF_PYR_BORDER_FUNC( 32f, float, float, PD_SCALE_FLT )
 ICV_DEF_PYR_BORDER_FUNC( 64f, double, double, PD_SCALE_FLT )
 
@@ -1166,6 +1150,7 @@ static void icvInit##FUNCNAME##Table( CvFuncTable* tab )            \
 {                                                                   \
     tab->fn_2d[CV_8U] = (void*)icv##FUNCNAME##_8u_CnR;              \
     tab->fn_2d[CV_8S] = 0;                                          \
+    tab->fn_2d[CV_16U] = (void*)icv##FUNCNAME##_16u_CnR;            \
     tab->fn_2d[CV_32F] = (void*)icv##FUNCNAME##_32f_CnR;            \
     tab->fn_2d[CV_64F] = (void*)icv##FUNCNAME##_64f_CnR;            \
 }
