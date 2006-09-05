@@ -2766,7 +2766,15 @@ The function <code>cvEigenVV</code> computes the eigenvalues and eigenvectors of
 <p>Currently the function is slower than <a href="#decl_cvSVD">cvSVD</a> yet less accurate,
 so if <code>A</code> is known to be positively-defined (for example, it is a covariation matrix),
 it is recommended to use <a href="#decl_cvSVD">cvSVD</a> to find eigenvalues and eigenvectors of <code>A</code>,
-especially if eigenvectors are not required.</p>
+especially if eigenvectors are not required. That is, instead of
+<pre>
+cvEigenVV(mat, eigenvals, eigenvects);
+</pre>
+call
+<pre>
+cvSVD(mat, eigenvals, eigenvects, 0, CV_SVD_U_T + CV_SVD_MODIFY_A);
+</pre>
+</p>
 
 
 <hr><h3><a name="decl_cvCalcCovarMatrix">CalcCovarMatrix</a></h3>
