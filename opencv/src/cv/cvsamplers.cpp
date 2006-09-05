@@ -618,7 +618,7 @@ icvGetQuadrangleSubPix_##flavor##_C1R                                       \
         double xs = A12*y + A13;                                            \
         double ys = A22*y + A23;                                            \
         double xe = A11*(win_size.width-1) + A12*y + A13;                   \
-        double ye = A21*(win_size.height-1) + A22*y + A23;                  \
+        double ye = A21*(win_size.width-1) + A22*y + A23;                   \
                                                                             \
         if( (unsigned)(cvFloor(xs)-1) < (unsigned)(src_size.width - 3) &&   \
             (unsigned)(cvFloor(ys)-1) < (unsigned)(src_size.height - 3) &&  \
@@ -694,7 +694,7 @@ icvGetQuadrangleSubPix_##flavor##_C3R                                       \
         double xs = A12*y + A13;                                            \
         double ys = A22*y + A23;                                            \
         double xe = A11*(win_size.width-1) + A12*y + A13;                   \
-        double ye = A21*(win_size.height-1) + A22*y + A23;                  \
+        double ye = A21*(win_size.width-1) + A22*y + A23;                   \
                                                                             \
         if( (unsigned)(cvFloor(xs)-1) < (unsigned)(src_size.width - 3) &&   \
             (unsigned)(cvFloor(ys)-1) < (unsigned)(src_size.height - 3) &&  \
