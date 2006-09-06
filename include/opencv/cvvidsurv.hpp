@@ -48,7 +48,7 @@
 
 #include <stdio.h>
 
-#if _MSC_VER >= 1200
+#if _MSC_VER >= 1200 || defined __BORLANDC__
 #define cv_stricmp stricmp
 #define cv_strnicmp strnicmp
 #elif defined __GNUC__
@@ -640,8 +640,8 @@ inline void cvReleaseBlobDetector(CvBlobDetector** ppBD)
 /* END BLOB DETECTOR INTERFACE */
 
 /* declaration of constructors of implemented modules */
-CvBlobDetector* cvCreateBlobDetectorSimple();
-CvBlobDetector* cvCreateBlobDetectorCC();
+CV_EXPORTS CvBlobDetector* cvCreateBlobDetectorSimple();
+CV_EXPORTS CvBlobDetector* cvCreateBlobDetectorCC();
 
 
 struct CV_EXPORTS CvDetectedBlob : public CvBlob
