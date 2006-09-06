@@ -112,6 +112,23 @@ CvBoostTree::train( CvDTreeTrainData* _train_data,
 }
 
 
+bool
+CvBoostTree::train( const CvMat*, int, const CvMat*, const CvMat*,
+                    const CvMat*, const CvMat*, const CvMat*, CvDTreeParams )
+{
+    assert(0);
+    return false;
+}
+
+
+bool
+CvBoostTree::train( CvDTreeTrainData*, const CvMat* )
+{
+    assert(0);
+    return false;
+}
+
+
 void
 CvBoostTree::scale( double scale )
 {
@@ -757,6 +774,18 @@ void CvBoostTree::read( CvFileStorage* fs, CvFileNode* fnode, CvBoost* _ensemble
 {
     CvDTree::read( fs, fnode, _data );
     ensemble = _ensemble;
+}
+
+
+void CvBoostTree::read( CvFileStorage*, CvFileNode* )
+{
+    assert(0);
+}
+
+void CvBoostTree::read( CvFileStorage* _fs, CvFileNode* _node,
+                        CvDTreeTrainData* _data )
+{
+    CvDTree::read( _fs, _node, _data );
 }
 
 

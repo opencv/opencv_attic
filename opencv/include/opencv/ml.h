@@ -824,8 +824,22 @@ public:
     virtual ~CvForestTree();
 
     virtual bool train( CvDTreeTrainData* _train_data, const CvMat* _subsample_idx, CvRTrees* forest );
+
     virtual int get_var_count() const {return data ? data->var_count : 0;}
     virtual void read( CvFileStorage* fs, CvFileNode* node, CvRTrees* forest, CvDTreeTrainData* _data );
+
+    /* dummy methods to avoid warnings: BEGIN */
+    virtual bool train( const CvMat* _train_data, int _tflag,
+                        const CvMat* _responses, const CvMat* _var_idx=0,
+                        const CvMat* _sample_idx=0, const CvMat* _var_type=0,
+                        const CvMat* _missing_mask=0,
+                        CvDTreeParams params=CvDTreeParams() );
+
+    virtual bool train( CvDTreeTrainData* _train_data, const CvMat* _subsample_idx );
+    virtual void read( CvFileStorage* fs, CvFileNode* node );
+    virtual void read( CvFileStorage* fs, CvFileNode* node,
+                       CvDTreeTrainData* data );
+    /* dummy methods to avoid warnings: END */
 
 protected:
     virtual CvDTreeSplit* find_best_split( CvDTreeNode* n );
@@ -937,10 +951,24 @@ public:
 
     virtual bool train( CvDTreeTrainData* _train_data,
                         const CvMat* subsample_idx, CvBoost* ensemble );
+
     virtual void scale( double s );
     virtual void read( CvFileStorage* fs, CvFileNode* node,
                        CvBoost* ensemble, CvDTreeTrainData* _data );
     virtual void clear();
+
+    /* dummy methods to avoid warnings: BEGIN */
+    virtual bool train( const CvMat* _train_data, int _tflag,
+                        const CvMat* _responses, const CvMat* _var_idx=0,
+                        const CvMat* _sample_idx=0, const CvMat* _var_type=0,
+                        const CvMat* _missing_mask=0,
+                        CvDTreeParams params=CvDTreeParams() );
+
+    virtual bool train( CvDTreeTrainData* _train_data, const CvMat* _subsample_idx );
+    virtual void read( CvFileStorage* fs, CvFileNode* node );
+    virtual void read( CvFileStorage* fs, CvFileNode* node,
+                       CvDTreeTrainData* data );
+    /* dummy methods to avoid warnings: END */
 
 protected:
     
