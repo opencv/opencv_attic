@@ -297,7 +297,7 @@ typedef uint64 CvRNG;
 
 CV_INLINE CvRNG cvRNG( int64 seed CV_DEFAULT(-1))
 {
-    CvRNG rng = (uint64)(seed ? seed : (int64)-1);
+    CvRNG rng = seed ? (uint64)seed : (uint64)(int64)-1;
     return rng;
 }
 
