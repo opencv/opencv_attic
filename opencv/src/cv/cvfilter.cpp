@@ -865,6 +865,16 @@ void CvSepFilter::init( int _max_width, int _src_type, int _dst_type,
 }
 
 
+void CvSepFilter::init( int _max_width, int _src_type, int _dst_type,
+                        bool _is_separable, CvSize _ksize,
+                        CvPoint _anchor, int _border_mode,
+                        CvScalar _border_value )
+{
+    CvBaseImageFilter::init( _max_width, _src_type, _dst_type, _is_separable,
+                             _ksize, _anchor, _border_mode, _border_value );
+}
+
+
 static void
 icvFilterRowSymm_8u32s( const uchar* src, int* dst, void* params )
 {
@@ -2158,6 +2168,16 @@ void CvLinearFilter::init( int _max_width, int _src_type, int _dst_type,
         CV_ERROR( CV_StsUnsupportedFormat, "Unsupported image type" );
 
     __END__;
+}
+
+
+void CvLinearFilter::init( int _max_width, int _src_type, int _dst_type,
+                           bool _is_separable, CvSize _ksize,
+                           CvPoint _anchor, int _border_mode,
+                           CvScalar _border_value )
+{
+    CvBaseImageFilter::init( _max_width, _src_type, _dst_type, _is_separable,
+                             _ksize, _anchor, _border_mode, _border_value );
 }
 
 

@@ -266,6 +266,16 @@ void CvMorphology::init( int _operation, int _max_width, int _src_dst_type,
 }
 
 
+void CvMorphology::init( int _max_width, int _src_type, int _dst_type,
+                         bool _is_separable, CvSize _ksize,
+                         CvPoint _anchor, int _border_mode,
+                         CvScalar _border_value )
+{
+    CvBaseImageFilter::init( _max_width, _src_type, _dst_type, _is_separable,
+                             _ksize, _anchor, _border_mode, _border_value );
+}
+
+
 void CvMorphology::start_process( CvSlice x_range, int width )
 {
     CvBaseImageFilter::start_process( x_range, width );

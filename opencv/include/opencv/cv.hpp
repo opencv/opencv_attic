@@ -181,6 +181,14 @@ public:
                              int dx, int dy, int aperture_size, int flags=0 );
     virtual void init_gaussian( int _max_width, int _src_type, int _dst_type,
                                 int gaussian_size, double sigma );
+
+    /* dummy method to avoid compiler warnings */
+    virtual void init( int _max_width, int _src_type, int _dst_type,
+                       bool _is_separable, CvSize _ksize,
+                       CvPoint _anchor=cvPoint(-1,-1),
+                       int _border_mode=IPL_BORDER_REPLICATE,
+                       CvScalar _border_value=cvScalarAll(0) );
+
     virtual void clear();
     const CvMat* get_x_kernel() const { return kx; }
     const CvMat* get_y_kernel() const { return ky; }
@@ -217,6 +225,14 @@ public:
                        CvPoint _anchor=cvPoint(-1,-1),
                        int _border_mode=IPL_BORDER_REPLICATE,
                        CvScalar _border_value=cvScalarAll(0) );
+
+    /* dummy method to avoid compiler warnings */
+    virtual void init( int _max_width, int _src_type, int _dst_type,
+                       bool _is_separable, CvSize _ksize,
+                       CvPoint _anchor=cvPoint(-1,-1),
+                       int _border_mode=IPL_BORDER_REPLICATE,
+                       CvScalar _border_value=cvScalarAll(0) );
+
     virtual void clear();
     const CvMat* get_kernel() const { return kernel; }
     uchar* get_kernel_sparse_buf() { return k_sparse; }
@@ -244,6 +260,7 @@ public:
                        CvPoint _anchor=cvPoint(-1,-1),
                        int _border_mode=IPL_BORDER_REPLICATE,
                        CvScalar _border_value=cvScalarAll(0) );
+
     virtual ~CvBoxFilter();
     bool is_normalized() const { return normalized; }
     double get_scale() const { return scale; }
@@ -274,6 +291,20 @@ public:
                        bool _normalized, int _ksize,
                        int _border_mode=IPL_BORDER_REPLICATE,
                        CvScalar _border_value=cvScalarAll(0) );
+
+    /* dummy methods to avoid compiler warnings */
+    virtual void init( int _max_width, int _src_type, int _dst_type,
+                       bool _is_separable, CvSize _ksize,
+                       CvPoint _anchor=cvPoint(-1,-1),
+                       int _border_mode=IPL_BORDER_REPLICATE,
+                       CvScalar _border_value=cvScalarAll(0) );
+
+    virtual void init( int _max_width, int _src_type, int _dst_type,
+                       const CvMat* _kx, const CvMat* _ky,
+                       CvPoint _anchor=cvPoint(-1,-1),
+                       int _border_mode=IPL_BORDER_REPLICATE,
+                       CvScalar _border_value=cvScalarAll(0) );
+
     bool is_normalized() const { return normalized; }
     bool is_basic_laplacian() const { return basic_laplacian; }
 protected:
@@ -300,6 +331,14 @@ public:
                        CvSize _ksize=cvSize(0,0), CvPoint _anchor=cvPoint(-1,-1),
                        int _border_mode=IPL_BORDER_REPLICATE,
                        CvScalar _border_value=cvScalarAll(0) );
+
+    /* dummy method to avoid compiler warnings */
+    virtual void init( int _max_width, int _src_type, int _dst_type,
+                       bool _is_separable, CvSize _ksize,
+                       CvPoint _anchor=cvPoint(-1,-1),
+                       int _border_mode=IPL_BORDER_REPLICATE,
+                       CvScalar _border_value=cvScalarAll(0) );
+
     virtual void clear();
     const CvMat* get_element() const { return element; }
     int get_element_shape() const { return el_shape; }

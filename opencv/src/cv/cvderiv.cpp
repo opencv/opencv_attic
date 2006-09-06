@@ -462,6 +462,26 @@ void CvLaplaceFilter::init( int _max_width, int _src_type, int _dst_type, bool _
 }
 
 
+void CvLaplaceFilter::init( int _max_width, int _src_type, int _dst_type,
+                            bool _is_separable, CvSize _ksize,
+                            CvPoint _anchor, int _border_mode,
+                            CvScalar _border_value )
+{
+    CvSepFilter::init( _max_width, _src_type, _dst_type, _is_separable,
+                       _ksize, _anchor, _border_mode, _border_value );
+}
+
+
+void CvLaplaceFilter::init( int _max_width, int _src_type, int _dst_type,
+                            const CvMat* _kx, const CvMat* _ky,
+                            CvPoint _anchor, int _border_mode,
+                            CvScalar _border_value )
+{
+    CvSepFilter::init( _max_width, _src_type, _dst_type, _kx, _ky,
+                       _anchor, _border_mode, _border_value );
+}
+
+
 #define ICV_LAPLACE_ROW( flavor, srctype, dsttype, load_macro )         \
 static void                                                             \
 icvLaplaceRow_##flavor( const srctype* src, dsttype* dst, void* params )\
