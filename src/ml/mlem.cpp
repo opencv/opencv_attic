@@ -416,7 +416,7 @@ void CvEM::init_em( const CvVectors& train_data )
     }
     else
     {
-        CV_ASSERT( params.start_step = START_E_STEP && params.means );
+        CV_ASSERT( params.start_step == START_E_STEP && params.means );
         if( params.weights && params.covs )
         {
             cvConvert( params.means, means );

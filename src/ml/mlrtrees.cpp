@@ -76,6 +76,23 @@ bool CvForestTree::train( CvDTreeTrainData* _data,
 }
 
 
+bool
+CvForestTree::train( const CvMat*, int, const CvMat*, const CvMat*,
+                    const CvMat*, const CvMat*, const CvMat*, CvDTreeParams )
+{
+    assert(0);
+    return false;
+}
+
+
+bool
+CvForestTree::train( CvDTreeTrainData*, const CvMat* )
+{
+    assert(0);
+    return false;
+}
+
+
 CvDTreeSplit* CvForestTree::find_best_split( CvDTreeNode* node )
 {
     int vi;
@@ -145,6 +162,18 @@ void CvForestTree::read( CvFileStorage* fs, CvFileNode* fnode, CvRTrees* _forest
 {
     CvDTree::read( fs, fnode, _data );
     forest = _forest;
+}
+
+
+void CvForestTree::read( CvFileStorage*, CvFileNode* )
+{
+    assert(0);
+}
+
+void CvForestTree::read( CvFileStorage* _fs, CvFileNode* _node,
+                         CvDTreeTrainData* _data )
+{
+    CvDTree::read( _fs, _node, _data );
 }
 
 
