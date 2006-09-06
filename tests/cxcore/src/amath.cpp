@@ -152,7 +152,7 @@ CxCore_ExpTest::CxCore_ExpTest()
 }
 
 
-double CxCore_ExpTest::get_success_error_level( int /*test_case_idx*/, int i, int j )
+double CxCore_ExpTest::get_success_error_level( int /*test_case_idx*/, int /*i*/, int /*j*/ )
 {
     int in_depth = CV_MAT_DEPTH(test_mat[INPUT][0].type);
     int out_depth = CV_MAT_DEPTH(test_mat[OUTPUT][0].type);
