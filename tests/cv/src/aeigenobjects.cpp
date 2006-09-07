@@ -363,7 +363,7 @@ repeat:
 
 /*  Covariance matrix comparision */
     for( i=0; i<obj_number*obj_number; i++ )
-        if( fabs( (covMatr[i] - covMatr0[i])/covMatrMax ) > RELDIFF ) err6++;
+        if( fabs(covMatr[i] - covMatr0[i]) > RELDIFF*fabs(covMatrMax) ) err6++;
 
 /*  Averaged object comparision */
     for( i=0; i<size.height; i++ )

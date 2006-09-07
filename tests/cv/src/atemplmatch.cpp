@@ -215,7 +215,8 @@ void CV_TemplMatchTest::print_timing_params( int test_case_idx, char* ptr, int p
 
 double CV_TemplMatchTest::get_success_error_level( int /*test_case_idx*/, int /*i*/, int /*j*/ )
 {
-    if( method >= CV_TM_CCOEFF && test_mat[INPUT][1].cols*test_mat[INPUT][1].rows <= 2 )
+    if( CV_MAT_DEPTH(test_mat[INPUT][1].type) == CV_8U ||
+        method >= CV_TM_CCOEFF && test_mat[INPUT][1].cols*test_mat[INPUT][1].rows <= 2 )
         return 1e-2;
     else
         return 1e-3;
@@ -243,6 +244,14 @@ static void cvTsMatchTemplate( const CvMat* img, const CvMat* templ, CvMat* resu
 
     for( i = 0; i < cn; i++ )
         b_sum2 += (b_sdv.val[i]*b_sdv.val[i] + b_mean.val[i]*b_mean.val[i])*area;
+
+    if( CV_SQR(b_sdv.val[0]) + CV_SQR(b_sdv.val[1]) +
+        CV_SQR(b_sdv.val[2]) + CV_SQR(b_sdv.val[3]) < DBL_EPSILON &&
+        method == CV_TM_CCOEFF_NORMED )
+    {
+        cvSet( result, cvScalarAll(1.) );
+        return;
+    }
     
     if( method & 1 )
     {
@@ -367,15 +376,15 @@ static void cvTsMatchTemplate( const CvMat* img, const CvMat* templ, CvMat* resu
                     denom += a_sum2.val[1] - (a_sum.val[1]*a_sum.val[1])/area;
                     denom += a_sum2.val[2] - (a_sum.val[2]*a_sum.val[2])/area;
                 }
-                denom = sqrt(fabs(denom))*b_denom;
-                if( fabs(denom) < 1e-2 )
-                    value = method > CV_TM_SQDIFF_NORMED ? -1 : 1;
-                else
+                denom = sqrt(MAX(denom,0))*b_denom;
+                if( denom > DBL_EPSILON )
                 {
                     value /= denom;
                     if( fabs(value) > 1 )
                         value = value < 0 ? -1. : 1.;
                 }
+                else
+                    value = method != CV_TM_SQDIFF_NORMED || value < DBL_EPSILON ? 0 : 1;
             }
             
             ((float*)(result->data.ptr + result->step*i))[j] = (float)value;
@@ -389,9 +398,20 @@ void CV_TemplMatchTest::prepare_to_validation( int /*test_case_idx*/ )
     cvTsMatchTemplate( &test_mat[INPUT][0], &test_mat[INPUT][1],
                        &test_mat[REF_OUTPUT][0], method );
 
+    //if( ts->get_current_test_info()->test_case_idx == 0 )
+    /*{
+        CvFileStorage* fs = cvOpenFileStorage( "_match_template.yml", 0, CV_STORAGE_WRITE );
+        cvWrite( fs, "image", &test_mat[INPUT][0] );
+        cvWrite( fs, "template", &test_mat[INPUT][1] );
+        cvWrite( fs, "ref", &test_mat[REF_OUTPUT][0] );
+        cvWrite( fs, "opencv", &test_mat[OUTPUT][0] );
+        cvWriteInt( fs, "method", method );
+        cvReleaseFileStorage( &fs );
+    }*/
+
     if( method >= CV_TM_CCOEFF )
     {
-        // avoid numerical stability problems in singular cases (when the results are near 0)
+        // avoid numerical stability problems in singular cases (when the results are near to 0)
         const double delta = 10.;
         cvTsAdd( &test_mat[REF_OUTPUT][0], cvScalar(1.), 0, cvScalar(0.),
                  cvScalar(delta), &test_mat[REF_OUTPUT][0], 0 );

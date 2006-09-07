@@ -385,11 +385,14 @@ void CvMorphology::init_binary_element( CvMat* element, int element_shape, CvPoi
     rows = element->rows;
     cols = element->cols;
 
+    if( rows == 1 || cols == 1 )
+        element_shape = RECT;
+
     if( element_shape == ELLIPSE )
     {
         r = rows/2;
         c = cols/2;
-        inv_r2 = 1./((double)r*r);
+        inv_r2 = r ? 1./((double)r*r) : 0;
     }
 
     for( i = 0; i < rows; i++ )
