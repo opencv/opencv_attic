@@ -165,9 +165,12 @@ icvCrossCorr( const CvArr* _img, const CvArr* _templ, CvArr* _corr, CvPoint anch
         if( dst != src )
             cvConvert( src, dst );
 
-        cvGetSubRect( dft_templ, dst, cvRect(templ->cols, yofs,
-                      dft_templ->cols - templ->cols, templ->rows) );
-        cvZero( dst );
+        if( dft_templ->cols > templ->cols )
+        {
+            cvGetSubRect( dft_templ, dst, cvRect(templ->cols, yofs,
+                          dft_templ->cols - templ->cols, templ->rows) );
+            cvZero( dst );
+        }
         cvGetSubRect( dft_templ, dst, cvRect(0,yofs,dftsize.width,dftsize.height) );
         cvDFT( dst, dst, CV_DXT_FORWARD + CV_DXT_SCALE, templ->rows );
     }
