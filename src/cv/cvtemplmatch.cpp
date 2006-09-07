@@ -216,9 +216,12 @@ icvCrossCorr( const CvArr* _img, const CvArr* _templ, CvArr* _corr, CvPoint anch
                 if( dst != dst1 )
                     cvCopyMakeBorder( dst1, dst, cvPoint(x1 - x0, y1 - y0), IPL_BORDER_REPLICATE );
 
-                cvGetSubRect( dft_img, dst, cvRect(isz.width, 0,
-                      dftsize.width - isz.width,dftsize.height) );
-                cvZero( dst );
+                if( dftsize.width > isz.width )
+                {
+                    cvGetSubRect( dft_img, dst, cvRect(isz.width, 0,
+                          dftsize.width - isz.width,dftsize.height) );
+                    cvZero( dst );
+                }
 
                 cvDFT( dft_img, dft_img, CV_DXT_FORWARD, isz.height );
                 cvGetSubRect( dft_templ, dst,
