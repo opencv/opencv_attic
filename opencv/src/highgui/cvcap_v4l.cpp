@@ -557,11 +557,6 @@ int autosetup_capture_mode_v4l2(CvCaptureCAM_V4L* capture)
     PALETTE_YUYV = 1;
   }
   else
-  if (try_palette_v4l2(capture, V4L2_PIX_FMT_SBGGR8) == 0)
-  {
-    PALETTE_SBGGR8 = 1;
-  }
-  else
   if (try_palette_v4l2(capture, V4L2_PIX_FMT_SN9C10X) == 0)
   {
     PALETTE_SN9C10X = 1;
@@ -576,6 +571,11 @@ int autosetup_capture_mode_v4l2(CvCaptureCAM_V4L* capture)
          errno_exit ("VIDIOC_S_JPEGCOMP");
 
   } else
+  if (try_palette_v4l2(capture, V4L2_PIX_FMT_SBGGR8) == 0)
+  {
+    PALETTE_SBGGR8 = 1;
+  }
+  else
   {
     icvCloseCAM_V4L(capture);
     return -1;
