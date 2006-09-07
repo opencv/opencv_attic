@@ -1132,7 +1132,7 @@ static int read_frame_v4l2(CvCaptureCAM_V4L* capture)
         buf.memory = V4L2_MEMORY_MMAP;
 
                 if (-1 == xioctl (capture->deviceHandle, VIDIOC_DQBUF, &buf)) {
-        errno_exit ("VIDIOC_DQBUF");
+//        errno_exit ("VIDIOC_DQBUF");
                         switch (errno) {
                         case EAGAIN:
                                 return 0;
@@ -2400,7 +2400,7 @@ static int icvSetControl (CvCaptureCAM_V4L* capture,
     /* get the min and max values */
     if (-1 == xioctl (capture->deviceHandle,
                       VIDIOC_G_CTRL, &capture->control)) {
-          perror ("VIDIOC_G_CTRL for getting min/max values");
+//          perror ("VIDIOC_G_CTRL for getting min/max values");
           return -1;
     }
 
