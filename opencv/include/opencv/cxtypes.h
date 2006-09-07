@@ -575,7 +575,9 @@ CvMat;
 
 
 #define CV_IS_MAT_HDR(mat) \
-    ((mat) != NULL && (((const CvMat*)(mat))->type & CV_MAGIC_MASK) == CV_MAT_MAGIC_VAL)
+    ((mat) != NULL && \
+    (((const CvMat*)(mat))->type & CV_MAGIC_MASK) == CV_MAT_MAGIC_VAL && \
+    ((const CvMat*)(mat))->cols > 0 && ((const CvMat*)(mat))->rows > 0)
 
 #define CV_IS_MAT(mat) \
     (CV_IS_MAT_HDR(mat) && ((const CvMat*)(mat))->data.ptr != NULL)

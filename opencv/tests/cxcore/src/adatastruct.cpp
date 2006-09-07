@@ -625,7 +625,7 @@ int CxCore_SeqBaseTest::test_multi_create()
         simple_struct[i] = sseq = cvTsCreateSimpleSeq( max_struct_size, elem_size );
         cxcore_struct[i] = 0;
         sseq->count = cvTsRandInt( rng ) % max_struct_size;
-        m = cvMat( 1, sseq->count*elem_size, CV_8UC1, sseq->array );
+        m = cvMat( 1, MAX(sseq->count,1)*elem_size, CV_8UC1, sseq->array );
         cvRandArr( rng, &m, CV_RAND_UNI, cvScalarAll(0), cvScalarAll(256) );
     }
 
@@ -952,7 +952,7 @@ int  CxCore_SeqBaseTest::test_seq_ops( int iters )
                 break;
 
             count = cvTsRandInt( rng ) % (sseq->max_count - sseq->count + 1);
-            elem_mat->cols = count * elem_size;
+            elem_mat->cols = MAX(count,1) * elem_size;
             cvRandArr( rng, elem_mat, CV_RAND_UNI, cvScalarAll(0), cvScalarAll(255) );
 
             whence = op - 7;
