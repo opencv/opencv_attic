@@ -404,6 +404,12 @@ cvMatchTemplate( const CvArr* _img, const CvArr* _templ, CvArr* _result, int met
 
         templ_norm = CV_SQR(_templ_sdv.val[0]) + CV_SQR(_templ_sdv.val[1]) +
                     CV_SQR(_templ_sdv.val[2]) + CV_SQR(_templ_sdv.val[3]);
+
+        if( templ_norm < DBL_EPSILON && method == CV_TM_CCOEFF_NORMED )
+        {
+            cvSet( result, cvScalarAll(1.) );
+            EXIT;
+        }
         
         templ_sum2 = templ_norm +
                      CV_SQR(templ_mean.val[0]) + CV_SQR(templ_mean.val[1]) +
@@ -470,15 +476,15 @@ cvMatchTemplate( const CvArr* _img, const CvArr* _templ, CvArr* _result, int met
 
             if( is_normed )
             {
-                t = sqrt(wnd_sum2 - wnd_mean2)*templ_norm;
-                if( fabs(t) < DBL_EPSILON )
-                    num = num_type == 2 ? 1 : -1;
-                else
+                t = sqrt(MAX(wnd_sum2 - wnd_mean2,0))*templ_norm;
+                if( t > DBL_EPSILON )
                 {
                     num /= t;
                     if( fabs(num) > 1. )
                         num = num > 0 ? 1 : -1;
                 }
+                else
+                    num = method != CV_TM_SQDIFF_NORMED || num < DBL_EPSILON ? 0 : 1;
             }
 
             rrow[j] = (float)num;
