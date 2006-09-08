@@ -249,7 +249,7 @@ CV_INLINE  int  cvCeil( double value )
 #if CV_SSE2
     __m128d t = _mm_load_sd( &value );
     int i = _mm_cvtsd_si32(t);
-    return i + _mm_movemask_pd(_mm_cmpgt_sd(t,_mm_cvtsi32_sd(t,i)));
+    return i + _mm_movemask_pd(_mm_cmplt_sd(_mm_cvtsi32_sd(t,i),t));
 #else
     int temp = cvRound(value);
     Cv32suf diff;
