@@ -709,7 +709,14 @@ icvDoubleToString( char* buf, double value )
         {
             static const char* fmt[] = {"%.16e", "%.16f"};
             double avalue = fabs(value);
+            char* ptr = buf;
             sprintf( buf, fmt[0.01 <= avalue && avalue < 1000], value );
+            if( *ptr == '+' || *ptr == '-' )
+                ptr++;
+            for( ; isdigit(*ptr); ptr++ )
+                ;
+            if( *ptr == ',' )
+                *ptr = '.';
         }
     }
     else
@@ -742,7 +749,14 @@ icvFloatToString( char* buf, float value )
         {
             static const char* fmt[] = {"%.8e", "%.8f"};
             double avalue = fabs((double)value);
+            char* ptr = buf;
             sprintf( buf, fmt[0.01 <= avalue && avalue < 1000], value );
+            if( *ptr == '+' || *ptr == '-' )
+                ptr++;
+            for( ; isdigit(*ptr); ptr++ )
+                ;
+            if( *ptr == ',' )
+                *ptr = '.';
         }
     }
     else
@@ -1930,15 +1944,15 @@ icvXMLParseValue( CvFileStorage* fs, char* ptr, CvFileNode* node,
                                 if( c != ';' )
                                     CV_PARSE_ERROR( "Invalid character in the symbol entity name" );
                                 len = (int)(endptr - ptr);
-                                if( len == 2 && memcmp( ptr, "lt", 4 ) == 0 )
+                                if( len == 2 && memcmp( ptr, "lt", len ) == 0 )
                                     c = '<';
-                                else if( len == 2 && memcmp( ptr, "gt", 4 ) == 0 )
+                                else if( len == 2 && memcmp( ptr, "gt", len ) == 0 )
                                     c = '>';
-                                else if( len == 3 && memcmp( ptr, "amp", 4 ) == 0 )
+                                else if( len == 3 && memcmp( ptr, "amp", len ) == 0 )
                                     c = '&';
-                                else if( len == 4 && memcmp( ptr, "apos", 4 ) == 0 )
+                                else if( len == 4 && memcmp( ptr, "apos", len ) == 0 )
                                     c = '\'';
-                                else if( len == 4 && memcmp( ptr, "quot", 4 ) == 0 )
+                                else if( len == 4 && memcmp( ptr, "quot", len ) == 0 )
                                     c = '\"';
                                 else
                                 {
