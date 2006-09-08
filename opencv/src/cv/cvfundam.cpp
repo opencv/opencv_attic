@@ -172,8 +172,8 @@ icvFMatrix_8Point( const CvPoint2D64f* m0, const CvPoint2D64f* m1,
     CvMat U, F0, TF;
 
     int i, good_count = 0;
-    CvPoint2D64f m0c = {0,0}, m1c = {0,0}, m0q = {0,0}, m1q = {0,0};
-    double t, scale0, scale1;
+    CvPoint2D64f m0c = {0,0}, m1c = {0,0};
+    double t, scale0 = 0, scale1 = 0;
     double* a;
     int a_step;
 
@@ -189,11 +189,9 @@ icvFMatrix_8Point( const CvPoint2D64f* m0, const CvPoint2D64f* m1,
         {
             double x = m0[i].x, y = m0[i].y;
             m0c.x += x; m0c.y += y;
-            m0q.x += x*x; m0q.y += y*y;
 
             x = m1[i].x, y = m1[i].y;
             m1c.x += x; m1c.y += y;
-            m1q.x += x*x; m1q.y += y*y;
             good_count++;
         }
 
@@ -205,9 +203,20 @@ icvFMatrix_8Point( const CvPoint2D64f* m0, const CvPoint2D64f* m1,
     // and the average distance from the origin will be ~sqrt(2).
     t = 1./good_count;
     m0c.x *= t; m0c.y *= t;
-    scale0 = t * sqrt( m0q.x + m0q.y - good_count*(m0c.x*m0c.x + m0c.y*m0c.y) );
     m1c.x *= t; m1c.y *= t;
-    scale1 = t * sqrt( m1q.x + m1q.y - good_count*(m1c.x*m1c.x + m1c.y*m1c.y) );
+
+    for( i = 0; i < count; i++ )
+        if( !mask || mask[i] )
+        {
+            double x = m0[i].x - m0c.x, y = m0[i].y - m0c.y;
+            scale0 += sqrt(x*x + y*y);
+
+            x = fabs(m1[i].x - m1c.x), y = fabs(m1[i].y - m1c.y);
+            scale1 += sqrt(x*x + y*y);
+        }
+
+    scale0 *= t;
+    scale1 *= t;
 
     if( scale0 < FLT_EPSILON || scale1 < FLT_EPSILON )
         EXIT;
