@@ -70,6 +70,7 @@ static char* icv_itoa( int _val, char* buffer, int /*radix*/ )
     return ptr;
 }
 
+
 typedef struct CvGenericHash
 {
     CV_SET_FIELDS()
@@ -803,6 +804,28 @@ icvProcessSpecialDouble( CvFileStorage* fs, char* buf, double* value, char** end
 }
 
 
+static double icv_strtod( CvFileStorage* fs, char* ptr, char** endptr )
+{
+    double fval = strtod( ptr, endptr );
+    if( **endptr == '.' )
+    {
+        char* dot_pos = *endptr;
+        *dot_pos = ',';
+        double fval2 = strtod( ptr, endptr );
+        *dot_pos = '.';
+        if( *endptr > dot_pos )
+            fval = fval2;
+        else
+            *endptr = dot_pos;
+    }
+
+    if( *endptr == ptr || isalpha(**endptr) )
+        icvProcessSpecialDouble( fs, ptr, &fval, endptr );
+
+    return fval;
+}
+
+
 /****************************************************************************************\
 *                                       YAML Parser                                      *
 \****************************************************************************************/
@@ -986,9 +1009,9 @@ icvYMLParseValue( CvFileStorage* fs, char* ptr, CvFileNode* node,
         if( *endptr == '.' || *endptr == 'e' )
         {
 force_real:
-            fval = strtod( ptr, &endptr );
-            if( endptr == ptr || isalpha(*endptr) )
-                CV_CALL( icvProcessSpecialDouble( fs, endptr, &fval, &endptr ));
+            fval = icv_strtod( fs, ptr, &endptr );
+            /*if( endptr == ptr || isalpha(*endptr) )
+                CV_CALL( icvProcessSpecialDouble( fs, endptr, &fval, &endptr ));*/
 
             node->tag = CV_NODE_REAL;
             node->data.f = fval;
@@ -1873,9 +1896,9 @@ icvXMLParseValue( CvFileStorage* fs, char* ptr, CvFileNode* node,
                     endptr++;
                 if( *endptr == '.' || *endptr == 'e' )
                 {
-                    fval = strtod( ptr, &endptr );
-                    if( endptr == ptr || isalpha(*endptr) )
-                        CV_CALL( icvProcessSpecialDouble( fs, ptr, &fval, &endptr ));
+                    fval = icv_strtod( fs, ptr, &endptr );
+                    /*if( endptr == ptr || isalpha(*endptr) )
+                        CV_CALL( icvProcessSpecialDouble( fs, ptr, &fval, &endptr ));*/
                     elem->tag = CV_NODE_REAL;
                     elem->data.f = fval;
                 }
