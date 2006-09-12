@@ -69,9 +69,9 @@
 #define CV_PROC_SHIFT               10
 #define CV_PROC_ARCH_MASK           ((1 << CV_PROC_SHIFT) - 1)
 #define CV_PROC_IA32_GENERIC        1
-#define CV_PROC_IA32_PII            (CV_PROC_IA32_GENERIC|(2 << CV_PROC_SHIFT))
-#define CV_PROC_IA32_PIII           (CV_PROC_IA32_GENERIC|(3 << CV_PROC_SHIFT))
-#define CV_PROC_IA32_P4             (CV_PROC_IA32_GENERIC|(4 << CV_PROC_SHIFT))
+#define CV_PROC_IA32_WITH_MMX       (CV_PROC_IA32_GENERIC|(2 << CV_PROC_SHIFT))
+#define CV_PROC_IA32_WITH_SSE       (CV_PROC_IA32_GENERIC|(3 << CV_PROC_SHIFT))
+#define CV_PROC_IA32_WITH_SSE2      (CV_PROC_IA32_GENERIC|(4 << CV_PROC_SHIFT))
 #define CV_PROC_IA64                2
 #define CV_PROC_EM64T               3
 #define CV_GET_PROC_ARCH(model)     ((model) & CV_PROC_ARCH_MASK)
@@ -196,9 +196,9 @@ icvInitProcessorInfo( CvProcessorInfo* cpu_info )
         if( family >= 6 && (features & ICV_CPUID_M6) != 0 ) /* Pentium II or higher */
             id = features & ICV_CPUID_W7;
 
-        cpu_info->model = id == ICV_CPUID_W7 ? CV_PROC_IA32_P4 :
-                          id == ICV_CPUID_A6 ? CV_PROC_IA32_PIII :
-                          id == ICV_CPUID_M6 ? CV_PROC_IA32_PII :
+        cpu_info->model = id == ICV_CPUID_W7 ? CV_PROC_IA32_WITH_SSE2 :
+                          id == ICV_CPUID_A6 ? CV_PROC_IA32_WITH_SSE :
+                          id == ICV_CPUID_M6 ? CV_PROC_IA32_WITH_MMX :
                           CV_PROC_IA32_GENERIC;
     }
     else
@@ -215,6 +215,14 @@ icvInitProcessorInfo( CvProcessorInfo* cpu_info )
     }
 #else
     cpu_info->frequency = 1;
+
+#ifdef __x86_64__
+    cpu_info->model = CV_PROC_EM64T;
+#elif defined __ia64__
+    cpu_info->model = CV_PROC_IA64;
+#elif !defined __i386__
+    cpu_info->model = CV_PROC_GENERIC;
+#else
     // reading /proc/cpuinfo file (proc file system must be supported)
     FILE *file = fopen( "/proc/cpuinfo", "r" );
 
@@ -232,12 +240,12 @@ icvInitProcessorInfo( CvProcessorInfo* cpu_info )
             {
                 if( strstr( buffer, "mmx" ) && strstr( buffer, "cmov" ))
                 {
-                    cpu_info->model = CV_PROC_IA32_PII;
+                    cpu_info->model = CV_PROC_IA32_WITH_MMX;
                     if( strstr( buffer, "xmm" ) || strstr( buffer, "sse" ))
                     {
-                        cpu_info->model = CV_PROC_IA32_PIII;
+                        cpu_info->model = CV_PROC_IA32_WITH_SSE;
                         if( strstr( buffer, "emm" ))
-                            cpu_info->model = CV_PROC_IA32_P4;
+                            cpu_info->model = CV_PROC_IA32_WITH_SSE2;
                     }
                 }
             }
@@ -255,6 +263,7 @@ icvInitProcessorInfo( CvProcessorInfo* cpu_info )
         else
             assert( cpu_info->frequency > 1 );
     }
+#endif
 #endif
 }
 
