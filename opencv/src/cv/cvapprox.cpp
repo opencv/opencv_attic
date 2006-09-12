@@ -628,7 +628,7 @@ icvApproxPolyDP_32s( CvSeq* src_contour, int header_size,
 
             cvSetSeqReaderPos( &reader, slice.start_index );
             CV_READ_SEQ_ELEM( start_pt, reader );
-            
+
             dx = end_pt.x - start_pt.x;
             dy = end_pt.y - start_pt.y;
 
@@ -691,7 +691,7 @@ icvApproxPolyDP_32s( CvSeq* src_contour, int header_size,
         dx = end_pt.x - start_pt.x;
         dy = end_pt.y - start_pt.y;
         dist = abs((pt.x - start_pt.x)*dy - (pt.y - start_pt.y)*dx);
-        if( (double)dist * dist <= 0.5*eps*((double)dx*dx + (double)dy*dy) )
+        if( (double)dist * dist <= 0.5*eps*((double)dx*dx + (double)dy*dy) && dx != 0 && dy != 0 )
         {
             new_count--;
             *((CvPoint*)reader2.ptr) = start_pt = end_pt;
