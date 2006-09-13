@@ -85,6 +85,9 @@ Name: "{app}\interfaces\swig"
 Name: "{app}\interfaces\swig\filtered"
 Name: "{app}\interfaces\swig\general"
 Name: "{app}\interfaces\swig\python"
+Name: "{app}\interfaces\swig\python\build"
+Name: "{app}\interfaces\swig\python\build\lib.win32-2.4"
+Name: "{app}\interfaces\swig\python\build\lib.win32-2.4\opencv"
 
 ; documentation
 Name: "{app}\docs"
@@ -306,6 +309,7 @@ Source: "interfaces\swig\python\*.py"; DestDir: "{app}\interfaces\swig\python"
 Source: "interfaces\swig\python\*.i"; DestDir: "{app}\interfaces\swig\python"
 Source: "interfaces\swig\python\*.c*"; DestDir: "{app}\interfaces\swig\python"
 Source: "interfaces\swig\python\*.h*"; DestDir: "{app}\interfaces\swig\python"
+Source: "interfaces\swig\python\build\lib.win32-2.4\opencv\*.py*"; DestDir: "{app}\interfaces\swig\python\build\lib.win32-2.4\opencv"
 
 ;Source: "interfaces\matlab\ReadMe.txt"; DestDir: "{app}\interfaces\matlab"
 ;Source: "interfaces\matlab\src\*.c*"; DestDir: "{app}\interfaces\matlab\src"
@@ -529,7 +533,8 @@ Root: HKCU; Subkey: "Software\Intel\OpenCV"; Flags: uninsdeletekey
 Root: HKCU; Subkey: "Software\Intel\OpenCV\Settings"; ValueType: string; ValueName: "Path"; ValueData: "{app}"
 
 [Run]
-Filename: "{app}\bin\RegisterAll.bat"; WorkingDir: "{app}\bin"
+Filename: "{reg:HKLM\Software\Python\PythonCore\2.4\InstallPath,|C:\Python24\}python.exe"; Parameters: "setup-for-win.py install"; WorkingDir: "{app}\interfaces\swig\python"; Flags: skipifdoesntexist; StatusMsg: "Installing OpenCV Module for Python..."
+Filename: "{app}\bin\RegisterAll.bat"; WorkingDir: "{app}\bin"; StatusMsg: "Registering DirectShow filters..."
 Filename: "{app}\docs\index.htm"; Description: "View Documentation"; Flags: postinstall shellexec
 
 [UninstallRun]
