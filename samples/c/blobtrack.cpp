@@ -165,7 +165,7 @@ static int RunBlobTrackingAuto( CvCapture* pCap, CvBlobTrackerAuto* pTracker,cha
                 {
                     CvBlob* pB = pTracker->GetBlob(i-1);
                     CvPoint p = cvPointFrom32f(CV_BLOB_CENTER(pB));
-                    CvSize  s = cvSize(max(1,cvRound(CV_BLOB_RX(pB))), max(1,cvRound(CV_BLOB_RY(pB))));
+                    CvSize  s = cvSize(MAX(1,cvRound(CV_BLOB_RX(pB))), MAX(1,cvRound(CV_BLOB_RY(pB))));
                     int c = cvRound(255*pTracker->GetState(CV_BLOB_ID(pB)));
                     cvEllipse( pI,
                         p,
@@ -196,7 +196,7 @@ static int RunBlobTrackingAuto( CvCapture* pCap, CvBlobTrackerAuto* pTracker,cha
                 CvSize  TextSize;
                 CvBlob* pB = pTracker->GetBlob(i-1);
                 CvPoint p = cvPoint(cvRound(pB->x*256),cvRound(pB->y*256));
-                CvSize  s = cvSize(max(1,cvRound(CV_BLOB_RX(pB)*256)), max(1,cvRound(CV_BLOB_RY(pB)*256)));
+                CvSize  s = cvSize(MAX(1,cvRound(CV_BLOB_RX(pB)*256)), MAX(1,cvRound(CV_BLOB_RY(pB)*256)));
                 int c = cvRound(255*pTracker->GetState(CV_BLOB_ID(pB)));
 
                 cvEllipse( pI,
@@ -699,7 +699,7 @@ int main(int argc, char* argv[])
     if(pCap)
         cvReleaseCapture(&pCap);
 
-	return 0;
+    return 0;
 }/* main */
 
 
