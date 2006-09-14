@@ -544,8 +544,8 @@ cvUseOptimized( int load_flag )
     int arch = CV_GET_PROC_ARCH(cpu_info->model);
     
     static const char* opencv_sfx[] = { "099", "097", 0 };
-    static const char* ipp_sfx_ia32[] = { "-5.1", "", "20", 0 };
-    static const char* ipp_sfx_ia64[] = { "64-5.1", "64", "6420", 0 };
+    static const char* ipp_sfx_ia32[] = { "-5.1", "", 0 };
+    static const char* ipp_sfx_ia64[] = { "64-5.1", "64", 0 };
     static const char* ipp_sfx_em64t[] = { "em64t-5.1", "em64t", 0 };
     static const char* mkl_sfx_ia32[] = { "p4", "p3", "def", 0 };
     static const char* mkl_sfx_ia64[] = { "i2p", "itp", 0 };
