@@ -105,7 +105,6 @@ int main(int argC,char *argV[])
     InitACalcOpticalFlowHS();
     InitACalibration();
     InitACamShift();
-    InitACanny();
     InitAChessCorners();
     InitAConDens();
     InitAContours();
@@ -140,7 +139,7 @@ int main(int argC,char *argV[])
     fflush( stdout );
     printf( "Now running the old-style tests...\n" );
 
-    trsRun( argc, argv );
+    //trsRun( argc, argv );
     printf("Done\n");
     free( argv );
     return 0;

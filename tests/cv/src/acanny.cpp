@@ -41,112 +41,228 @@
 
 #include "cvtest.h"
 
-#define DEPTH_8U 0
-
-/* Testing parameters */
-static char test_desc[] = "Canny Edge Detector";
-static int lImageWidth;
-static int lImageHeight;
-static int  Sobord;
-static float flLow, flHigh;
-static char* func_name[] = 
+class CV_CannyTest : public CvArrTest
 {
-    "cvCanny",
-    "cvCannyBegin, cvCannyEnd"
+public:
+    CV_CannyTest();
+
+protected:
+    void get_test_array_types_and_sizes( int test_case_idx, CvSize** sizes, int** types );
+    double get_success_error_level( int test_case_idx, int i, int j );
+    int prepare_test_case( int test_case_idx );
+    void run_func();
+    void prepare_to_validation( int );
+
+    int aperture_size, use_true_gradient;
+    double threshold1, threshold2;
 };
 
-static int data_type = 0;
 
-static int fmaCanny( void* arg )
+CV_CannyTest::CV_CannyTest()
+    : CvArrTest( "canny", "cvCanny, cvSobel", "" )
 {
-    int Components = 0;
+    test_array[INPUT].push(NULL);
+    test_array[OUTPUT].push(NULL);
+    test_array[REF_OUTPUT].push(NULL);
+    element_wise_relative_error = true;
+    aperture_size = use_true_gradient = 0;
+    threshold1 = threshold2 = 0;
 
-    /* source image */
-    IplImage* src8u;
-	IplImage* dst8u;
-	IplImage* test8u;
-	AtsRandState state;
-
-    CvSize roi;
-    long lErrors = 0;
-
-    static int  read_param = 0;
-
-    /* Initialization global parameters */
-    if( !read_param )
-    {
-        read_param = 1;
-
-        /* Read test-parameters */
-        trsiRead( &lImageWidth, "5", "width of the image" );
-        trsiRead( &lImageHeight, "5", "height of the image" );
-        trsiRead( &Sobord,"3","Size of Sobel operator");
-        trssRead( &flLow, "40", "low threshold" );
-        trssRead( &flHigh, "100", "high threshold" );
-
-    }
-
-    if( (int)(size_t)arg != data_type && (int)data_type != 2 ) return TRS_UNDEF;
-
-    roi.height = lImageHeight;
-    roi.width  = lImageWidth;
-
-    src8u= cvCreateImage(cvSize(lImageWidth, lImageHeight), IPL_DEPTH_8U, 1);
-	dst8u= cvCreateImage(cvSize(lImageWidth, lImageHeight), IPL_DEPTH_8U, 1);
-	test8u = cvCreateImage(cvSize(lImageWidth, lImageHeight), IPL_DEPTH_8U, 1);
-	
-	atsRandInit(&state,0,255,127);
-	atsFillRandomImageEx(src8u, &state );
-    
-    /* run alternative canny function */
-    atsCannyStatistics( (uchar*)src8u->imageData, roi,src8u->widthStep, (uchar*)dst8u->imageData,dst8u->widthStep, Sobord, flLow,
-                        flHigh, 0,0,0,0,&Components,0 );
-    trsWrite( ATS_CON, " %d connected components were found" , Components );
-    /* Run CVL function to check it */
-
-    switch ( (int)(size_t)arg )
-    {
-    case DEPTH_8U:
-        {
-            cvCanny(src8u,test8u,flLow,flHigh,Sobord);
-            break;
-        }
-    }
-    /*
-    // clear boundaries
-    for( i = 0; i < src8u->height; i++ )
-    {
-        dst8u->imageData[i*dst8u->widthStep] =
-        dst8u->imageData[i*dst8u->widthStep + dst8u->width-1] = 0;
-
-        test8u->imageData[i*test8u->widthStep] =
-        test8u->imageData[i*test8u->widthStep + test8u->width-1] = 0;
-    }
-
-    for( i = 0; i < src8u->width; i++ )
-    {
-        dst8u->imageData[i] =
-        dst8u->imageData[(src8u->height-1)*dst8u->widthStep + i] = 0;
-
-        test8u->imageData[i] =
-        test8u->imageData[(src8u->height-1)*test8u->widthStep + i] = 0;
-    }*/
-    lErrors = (long)cvNorm(dst8u,test8u,CV_C);
-
-    cvReleaseImage( &src8u );
-    cvReleaseImage( &dst8u );
-    cvReleaseImage( &test8u );
-
-   if( lErrors == 0 ) return trsResult( TRS_OK, "No errors fixed for this text" );
-    else return trsResult( TRS_FAIL, "Bad Accuracy %d", lErrors );
-
+    support_testing_modes = CvTS::CORRECTNESS_CHECK_MODE;
+    default_timing_param_names = 0;
 }
 
 
-
-void InitACanny()
+void CV_CannyTest::get_test_array_types_and_sizes( int test_case_idx,
+                                                CvSize** sizes, int** types )
 {
-    /* Register test function */
-    trsRegArg( func_name[0], test_desc, atsAlgoClass, fmaCanny, DEPTH_8U );
+    CvRNG* rng = ts->get_rng();
+    double thresh_range;
+
+    CvArrTest::get_test_array_types_and_sizes( test_case_idx, sizes, types );
+    types[INPUT][0] = types[OUTPUT][0] = types[REF_OUTPUT][0] = CV_8U;
+
+    aperture_size = cvTsRandInt(rng) % 2 ? 5 : 3;
+    thresh_range = aperture_size == 3 ? 300 : 1000;
     
-} /* InitACanny */
+    threshold1 = cvTsRandReal(rng)*thresh_range;
+    threshold2 = cvTsRandReal(rng)*thresh_range*0.3;
+
+    if( cvTsRandInt(rng) % 2 )
+        CV_SWAP( threshold1, threshold2, thresh_range );
+
+    use_true_gradient = cvTsRandInt(rng) % 2;
+}
+
+
+int CV_CannyTest::prepare_test_case( int test_case_idx )
+{
+    int code = CvArrTest::prepare_test_case( test_case_idx );
+    if( code > 0 )
+    {
+        CvMat* src = &test_mat[INPUT][0];
+        cvSmooth( src, src, CV_GAUSSIAN, 11, 11, 5, 5 );
+    }
+
+    return code;
+}
+
+
+double CV_CannyTest::get_success_error_level( int /*test_case_idx*/, int /*i*/, int /*j*/ )
+{
+    return 0;
+}
+
+
+void CV_CannyTest::run_func()
+{
+    cvCanny( test_array[INPUT][0], test_array[OUTPUT][0], threshold1, threshold2,
+            aperture_size + (use_true_gradient ? CV_CANNY_L2_GRADIENT : 0));
+}
+
+
+static void
+icvTsCannyFollow( int x, int y, float lowThreshold, const CvMat* mag, CvMat* dst )
+{
+    static const int ofs[][2] = {{1,0},{1,-1},{0,-1},{-1,-1},{-1,0},{-1,1},{0,1},{1,1}};
+    int i;
+
+    dst->data.ptr[dst->step*y + x] = (uchar)255;
+
+    for( i = 0; i < 8; i++ )
+    {
+        int x1 = x + ofs[i][0];
+        int y1 = y + ofs[i][1];
+        if( (unsigned)x1 < (unsigned)mag->cols &&
+            (unsigned)y1 < (unsigned)mag->rows &&
+            mag->data.fl[y1*mag->cols+x1] > lowThreshold &&
+            !dst->data.ptr[dst->step*y1+x1] )
+            icvTsCannyFollow( x1, y1, lowThreshold, mag, dst );
+    }
+}
+
+
+static void
+icvTsCanny( const CvMat* src, CvMat* dst,
+            double threshold1, double threshold2,
+            int aperture_size, int use_true_gradient )
+{
+    int m = aperture_size;
+    CvMat* _src = cvCreateMat( src->rows + m - 1, src->cols + m - 1, CV_16S );
+    CvMat* dx = cvCreateMat( src->rows, src->cols, CV_16S );
+    CvMat* dy = cvCreateMat( src->rows, src->cols, CV_16S );
+    CvMat* kernel = cvCreateMat( m, m, CV_32F );
+    CvPoint anchor = {m/2, m/2};
+    CvMat* mag = cvCreateMat( src->rows, src->cols, CV_32F );
+    const double tan_pi_8 = tan(CV_PI/8.);
+    const double tan_3pi_8 = tan(CV_PI*3/8);
+    float lowThreshold = (float)MIN(threshold1, threshold2);
+    float highThreshold = (float)MAX(threshold1, threshold2);
+
+    int x, y, width = src->cols, height = src->rows;
+
+    cvTsConvert( src, dx );
+    cvTsPrepareToFilter( dx, _src, anchor, CV_TS_BORDER_REPLICATE );
+    cvTsCalcSobelKernel2D( 1, 0, m, 0, kernel );
+    cvTsConvolve2D( _src, dx, kernel, anchor );
+    cvTsCalcSobelKernel2D( 0, 1, m, 0, kernel );
+    cvTsConvolve2D( _src, dy, kernel, anchor );
+
+    /* estimate magnitude and angle */
+    for( y = 0; y < height; y++ )
+    {
+        const short* _dx = (short*)(dx->data.ptr + dx->step*y);
+        const short* _dy = (short*)(dy->data.ptr + dy->step*y);
+        float* _mag = (float*)(mag->data.ptr + mag->step*y);
+        
+        for( x = 0; x < width; x++ )
+        {
+            float mval = use_true_gradient ?
+                (float)sqrt((double)(_dx[x]*_dx[x] + _dy[x]*_dy[x])) :
+                (float)(abs(_dx[x]) + abs(_dy[x]));
+            _mag[x] = mval;
+        }
+    }
+
+    /* nonmaxima suppression */
+    for( y = 0; y < height; y++ )
+    {
+        const short* _dx = (short*)(dx->data.ptr + dx->step*y);
+        const short* _dy = (short*)(dy->data.ptr + dy->step*y);
+        float* _mag = (float*)(mag->data.ptr + mag->step*y);
+        
+        for( x = 0; x < width; x++ )
+        {
+            int y1 = 0, y2 = 0, x1 = 0, x2 = 0;
+            double tg;
+            float a = _mag[x], b = 0, c = 0;
+
+            if( a <= lowThreshold )
+                continue;
+
+            if( _dx[x] )
+                tg = (double)_dy[x]/_dx[x];
+            else
+                tg = DBL_MAX*CV_SIGN(_dy[x]);
+
+            if( fabs(tg) < tan_pi_8 )
+            {
+                y1 = y2 = y; x1 = x + 1; x2 = x - 1;
+            }
+            else if( tan_pi_8 <= tg && tg <= tan_3pi_8 )
+            {
+                y1 = y + 1; y2 = y - 1; x1 = x + 1; x2 = x - 1;
+            }
+            else if( -tan_3pi_8 <= tg && tg <= -tan_pi_8 )
+            {
+                y1 = y - 1; y2 = y + 1; x1 = x + 1; x2 = x - 1;
+            }
+            else
+            {
+                assert( fabs(tg) > tan_3pi_8 );
+                x1 = x2 = x; y1 = y + 1; y2 = y - 1;
+            }
+
+            if( (unsigned)y1 < (unsigned)height && (unsigned)x1 < (unsigned)width )
+                b = (float)fabs((double)mag->data.fl[y1*width+x1]);
+
+            if( (unsigned)y2 < (unsigned)height && (unsigned)x2 < (unsigned)width )
+                c = (float)fabs((double)mag->data.fl[y2*width+x2]);
+
+            if( (a > b || a == b && (x1 == x+1 && y1 == y || x1 == x && y1 == y+1)) && a > c )
+                ;
+            else
+                _mag[x] = -a;
+        }
+    }
+
+    cvTsZero( dst );
+
+    /* hysteresis threshold */
+    for( y = 0; y < height; y++ )
+    {
+        const float* _mag = (float*)(mag->data.ptr + mag->step*y);
+        uchar* _dst = dst->data.ptr + dst->step*y;
+
+        for( x = 0; x < width; x++ )
+            if( _mag[x] > highThreshold && !_dst[x] )
+                icvTsCannyFollow( x, y, lowThreshold, mag, dst );
+    }
+
+    cvReleaseMat( &_src );
+    cvReleaseMat( &dx );
+    cvReleaseMat( &dy );
+    cvReleaseMat( &kernel );
+    cvReleaseMat( &mag );
+}
+
+
+void CV_CannyTest::prepare_to_validation( int )
+{
+    icvTsCanny( &test_mat[INPUT][0], &test_mat[REF_OUTPUT][0],
+                threshold1, threshold2, aperture_size, use_true_gradient );
+}
+
+CV_CannyTest canny_test;
+
+/* End of file. */
