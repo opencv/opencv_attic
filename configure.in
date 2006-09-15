@@ -23,7 +23,7 @@ AC_CONFIG_AUX_DIR([autotools])
 AC_CONFIG_MACRO_DIR([autotools/aclocal])
 
 # put CVS revision of this configure.in into the resulting configure script
-AC_REVISION($Revision: 1.31 $)
+AC_REVISION($Revision: 1.32 $)
 
 # Detect the canonical host and target build environment
 AC_CANONICAL_HOST
@@ -713,6 +713,8 @@ cvaux/Makefile
 cvaux/include/Makefile
 cvaux/src/Makefile
 ml/Makefile
+ml/include/Makefile
+ml/src/Makefile
 otherlibs/Makefile
 otherlibs/highgui/Makefile
 apps/Makefile
