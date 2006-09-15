@@ -52,8 +52,7 @@ icvCanny( const short *dx, int dxstep, const short *dy, int dystep,
 {
     static const int sec_tab[] = { 1, 3, 0, 0, 2, 2, 2, 2 };
     int stack_count = 0;
-    int low = cvRound( low_threshold );
-    int high = cvRound( high_threshold );
+    int low, high;
     uchar* sector = (uchar*)buffer;
     int sectorstep = roi.width;
     int* mag = (int*)(sector + roi.width * roi.height);
@@ -68,6 +67,21 @@ icvCanny( const short *dx, int dxstep, const short *dy, int dystep,
 
     if( (roi.width <= 0) || (roi.height <= 0) )
         return CV_BADSIZE_ERR;
+
+    if( l2_gradient )
+    {
+        Cv32suf ul, uh;
+        ul.f = (float)low_threshold;
+        uh.f = (float)high_threshold;
+
+        low = ul.i;
+        high = uh.i;
+    }
+    else
+    {
+        low = cvFloor( low_threshold );
+        high = cvFloor( high_threshold );
+    }
 
     memset( mag, 0, magstep * sizeof(mag[0]));
     memset( mag + magstep * (roi.height + 1), 0, magstep * sizeof(mag[0]));
@@ -92,6 +106,7 @@ icvCanny( const short *dx, int dxstep, const short *dy, int dystep,
     for( i = 0; i < roi.height; i++, dx += dxstep, dy += dystep,
                                      sector += sectorstep, mag += magstep )
     {
+        float* magf = (float*)mag;
         mag[-1] = mag[roi.width] = 0;
 
         if( !l2_gradient )
@@ -102,7 +117,7 @@ icvCanny( const short *dx, int dxstep, const short *dy, int dystep,
             {
                 int x = dx[j];
                 int y = dy[j];
-                mag[j] = cvRound(sqrt((double)x*x + (double)y*y));
+                magf[j] = (float)sqrt((double)x*x + (double)y*y);
             }
 
         for( j = 0; j < roi.width; j++ )
@@ -118,7 +133,7 @@ icvCanny( const short *dx, int dxstep, const short *dy, int dystep,
             /* estimating sector and magnitude */
             if( m > low )
             {
-                #define CANNY_SHIFT 12
+                #define CANNY_SHIFT 15
                 #define TG22  (int)(0.4142135623730950488016887242097*(1<<CANNY_SHIFT) + 0.5)
 
                 int tg22x = x * TG22;
@@ -172,7 +187,7 @@ icvCanny( const short *dx, int dxstep, const short *dy, int dystep,
         {
             int* center = mag + j;
             int val = *center;
-        
+
             if( val )
             {
                 int sec = sector[j];
