@@ -64,7 +64,7 @@ CvCalibFilter::CvCalibFilter()
     memset( undistMap, 0, sizeof(undistMap));
     undistImg = 0;
     memset( latestCounts, 0, sizeof(latestCounts));
-    memset( latestPoints, 0, sizeof(latestCounts));
+    memset( latestPoints, 0, sizeof(latestPoints));
     maxPoints = 0;
     framesTotal = 15;
     framesAccepted = 0;
