@@ -808,6 +808,8 @@ void cvTsCalcSobelKernel2D( int dx, int dy, int _aperture_size, int origin, CvMa
     int* kx = (int*)alloca( (kernel->cols+1)*sizeof(kx[0]) );
     int* ky = (int*)alloca( (kernel->rows+1)*sizeof(ky[0]) );
 
+    assert( CV_MAT_TYPE(kernel->type) == CV_32F );
+
     cvTsCalcSobelKernel1D( dx, _aperture_size, kernel->cols, kx );
     cvTsCalcSobelKernel1D( dy, _aperture_size, kernel->rows, ky );
 
