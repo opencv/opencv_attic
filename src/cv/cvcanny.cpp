@@ -44,207 +44,11 @@
 icvCannyGetSize_t icvCannyGetSize_p = 0;
 icvCanny_16s8u_C1R_t icvCanny_16s8u_C1R_p = 0;
 
-
-static CvStatus CV_STDCALL
-icvCanny( const short *dx, int dxstep, const short *dy, int dystep,
-          uchar *dst, int dststep, CvSize roi, float low_threshold,
-          float high_threshold, void *buffer, int flags )
-{
-    static const int sec_tab[] = { 1, 3, 0, 0, 2, 2, 2, 2 };
-    int stack_count = 0;
-    int low, high;
-    uchar* sector = (uchar*)buffer;
-    int sectorstep = roi.width;
-    int* mag = (int*)(sector + roi.width * roi.height);
-    int magstep = roi.width + 2;
-    void** stack = (void**)(mag + magstep*(roi.height + 2));
-    int i, j;
-    int l2_gradient = flags & CV_CANNY_L2_GRADIENT;
-    int mshift[4];
-
-    if( !dx || !dy || !dst || !stack  )
-        return CV_NULLPTR_ERR;
-
-    if( (roi.width <= 0) || (roi.height <= 0) )
-        return CV_BADSIZE_ERR;
-
-    if( l2_gradient )
-    {
-        Cv32suf ul, uh;
-        ul.f = (float)low_threshold;
-        uh.f = (float)high_threshold;
-
-        low = ul.i;
-        high = uh.i;
-    }
-    else
-    {
-        low = cvFloor( low_threshold );
-        high = cvFloor( high_threshold );
-    }
-
-    memset( mag, 0, magstep * sizeof(mag[0]));
-    memset( mag + magstep * (roi.height + 1), 0, magstep * sizeof(mag[0]));
-    mag += magstep + 1;
-
-    dxstep /= sizeof(dx[0]);
-    dystep /= sizeof(dy[0]);
-
-    /* sector numbers 
-       (Top-Left Origin)
-
-        1   2   3
-         *  *  * 
-          * * *  
-        0*******0
-          * * *  
-         *  *  * 
-        3   2   1
-    */
-
-    /* ///////////////////// calculate magnitude and angle of gradient ///////////////// */
-    for( i = 0; i < roi.height; i++, dx += dxstep, dy += dystep,
-                                     sector += sectorstep, mag += magstep )
-    {
-        float* magf = (float*)mag;
-        mag[-1] = mag[roi.width] = 0;
-
-        if( !l2_gradient )
-            for( j = 0; j < roi.width; j++ )
-                mag[j] = abs(dx[j]) + abs(dy[j]);
-        else
-            for( j = 0; j < roi.width; j++ )
-            {
-                int x = dx[j];
-                int y = dy[j];
-                magf[j] = (float)sqrt((double)x*x + (double)y*y);
-            }
-
-        for( j = 0; j < roi.width; j++ )
-        {
-            int x = dx[j];
-            int y = dy[j];
-            int s = x ^ y;
-            int m = mag[j];
-
-            x = abs(x);
-            y = abs(y);
-
-            /* estimating sector and magnitude */
-            if( m > low )
-            {
-                #define CANNY_SHIFT 15
-                #define TG22  (int)(0.4142135623730950488016887242097*(1<<CANNY_SHIFT) + 0.5)
-
-                int tg22x = x * TG22;
-                int tg67x = tg22x + ((x + x) << CANNY_SHIFT);
-
-                y <<= CANNY_SHIFT;
-
-                sector[j] = (uchar)sec_tab[(y > tg67x)*4 + (y < tg22x)*2 + (s < 0)];
-
-                #undef CANNY_SHIFT
-                #undef TG22
-            }
-            else
-            {
-                mag[j] = 0;
-                sector[j] = 0;
-            }
-        }
-    }
-
-    mag -= magstep * roi.height;
-    sector -= sectorstep * roi.height;
-
-    #define PUSH2(d,m)                      \
-    {                                       \
-        stack[stack_count] = (void*)(d);    \
-        stack[stack_count+1] = (void*)(m);  \
-        stack_count += 2;                   \
-        *(d)=255;                           \
-    }
-
-    #define POP2(d,m)                       \
-    {                                       \
-        stack_count -= 2;                   \
-        (d) = (uchar*)stack[stack_count];   \
-        (m) = (int*)stack[stack_count+1];   \
-    }
-
-    /////////////////////////// non-maxima suppresion /////////////////////////
-    mshift[0] = 1;
-    mshift[1] = magstep + 1;
-    mshift[2] = magstep;
-    mshift[3] = magstep - 1;
-
-    for( i = 0; i < roi.height; i++, sector += sectorstep,
-                           mag += magstep, dst += dststep )
-    {
-        memset( dst, 0, roi.width );
-   
-        for( j = 0; j < roi.width; j++ )
-        {
-            int* center = mag + j;
-            int val = *center;
-
-            if( val )
-            {
-                int sec = sector[j];
-                int delta = mshift[sec];
-                int b = center[delta];
-                int c = center[-delta] & INT_MAX;
-                
-                if( val > c && (val > b ||
-                    sec == 0 && val == b ||
-                    sec == 2 && val == b) )
-                {
-                    if( val > high )
-                        PUSH2( dst + j, mag + j );
-                }
-                else
-                {
-                    *center = val | INT_MIN;
-                }
-            }
-        }
-    }
-
-    ///////////////////////  Hysteresis thresholding /////////////////////
-    while( stack_count )
-    {
-        uchar* d;
-        int* m;
-
-        POP2( d, m );
-    
-        if( m[-1] > low && d[-1] == 0 )
-            PUSH2( d - 1, m - 1 );
-        if( m[1] > low && d[1] == 0 )
-            PUSH2( d + 1, m + 1 );
-        if( m[-magstep-1] > low && d[-dststep-1] == 0 )
-            PUSH2( d - dststep - 1, m - magstep - 1 );
-        if( m[-magstep] > low && d[-dststep] == 0 )
-            PUSH2( d - dststep, m - magstep );
-        if( m[-magstep+1] > low && d[-dststep+1] == 0 )
-            PUSH2( d - dststep + 1, m - magstep + 1 );
-        if( m[magstep-1] > low && d[dststep-1] == 0 )
-            PUSH2( d + dststep - 1, m + magstep - 1 );
-        if( m[magstep] > low && d[dststep] == 0 )
-            PUSH2( d + dststep, m + magstep );
-        if( m[magstep+1] > low && d[dststep+1] == 0 )
-            PUSH2( d + dststep + 1, m + magstep + 1 );
-    }
-    #undef PUSH2
-    #undef POP2
-
-    return CV_OK;
-}
-
 CV_IMPL void
 cvCanny( const void* srcarr, void* dstarr,
          double low_thresh, double high_thresh, int aperture_size )
 {
+    static const int sec_tab[] = { 1, 3, 0, 0, 2, 2, 2, 2 };
     CvMat *dx = 0, *dy = 0;
     void *buffer = 0;
 
@@ -256,6 +60,13 @@ cvCanny( const void* srcarr, void* dstarr,
     CvMat dststub, *dst = (CvMat*)dstarr;
     CvSize size;
     int flags = aperture_size;
+    int low, high;
+    uchar **stack_top, **stack_bottom;
+    int* mag_buf[3];
+    uchar* map;
+    int mapstep;
+    int i, j;
+    CvMat mag_row;
 
     CV_CALL( src = cvGetMat( src, &srcstub ));
     CV_CALL( dst = cvGetMat( dst, &dststub ));
@@ -297,12 +108,195 @@ cvCanny( const void* srcarr, void* dstarr,
         EXIT;
     }
 
-    CV_CALL( buffer = cvAlloc((size.height + 2)*(size.width + 2)*
-            (sizeof(int) + sizeof(uchar) + sizeof(void*)*2)));
+    if( flags & CV_CANNY_L2_GRADIENT )
+    {
+        Cv32suf ul, uh;
+        ul.f = (float)low_thresh;
+        uh.f = (float)high_thresh;
 
-    icvCanny( (short*)dx->data.ptr, dx->step, (short*)dy->data.ptr, dy->step,
-              dst->data.ptr, dst->step, size, (float)low_thresh,
-              (float)high_thresh, buffer, flags );
+        low = ul.i;
+        high = uh.i;
+    }
+    else
+    {
+        low = cvFloor( low_thresh );
+        high = cvFloor( high_thresh );
+    }
+
+    CV_CALL( buffer = cvAlloc( (size.width+2)*(size.height+2) +
+        size.width*size.height*sizeof(void*) + (size.width+2)*3*sizeof(int)) );
+
+    stack_top = stack_bottom = (uchar**)buffer;
+    mag_buf[0] = (int*)(stack_bottom + size.width*size.height);
+    mag_buf[1] = mag_buf[0] + size.width + 2;
+    mag_buf[2] = mag_buf[1] + size.width + 2;
+    map = (uchar*)(mag_buf[2] + size.width + 2);
+    mapstep = size.width + 2;
+
+    memset( mag_buf[0], 0, (size.width+2)*sizeof(int) );
+    memset( map, 1, mapstep );
+    memset( map + mapstep*(size.height + 1), 1, mapstep );
+
+    /* sector numbers 
+       (Top-Left Origin)
+
+        1   2   3
+         *  *  * 
+          * * *  
+        0*******0
+          * * *  
+         *  *  * 
+        3   2   1
+    */
+
+    #define CANNY_PUSH(d)    *(d) = (uchar)2, *stack_top++ = (d)
+    #define CANNY_POP(d)     (d) = *--stack_top
+
+    mag_row = cvMat( 1, size.width, CV_32F );
+
+    // calculate magnitude and angle of gradient, perform non-maxima supression
+    for( i = 0; i <= size.height; i++ )
+    {
+        int* _mag = mag_buf[(i > 0) + 1] + 1;
+        float* _magf = (float*)_mag;
+        const short* _dx = (short*)(dx->data.ptr + dx->step*i);
+        const short* _dy = (short*)(dy->data.ptr + dy->step*i);
+        uchar* _map;
+        int x, y;
+        int mshift[8];
+        int magstep1, magstep2;
+
+        if( i < size.height )
+        {
+            _mag[-1] = _mag[size.width] = 0;
+
+            if( !(flags & CV_CANNY_L2_GRADIENT) )
+                for( j = 0; j < size.width; j++ )
+                    _mag[j] = abs(_dx[j]) + abs(_dy[j]);
+            else if( icvFilterSobelVert_8u16s_C1R_p != 0 ) // check for IPP
+            {
+                // use vectorized sqrt
+                mag_row.data.fl = _magf;
+                for( j = 0; j < size.width; j++ )
+                {
+                    x = _dx[j]; y = _dy[j];
+                    _magf[j] = (float)((double)x*x + (double)y*y);
+                }
+                cvPow( &mag_row, &mag_row, 0.5 );
+            }
+            else
+            {
+                for( j = 0; j < size.width; j++ )
+                {
+                    x = _dx[j]; y = _dy[j];
+                    _magf[j] = (float)sqrt((double)x*x + (double)y*y);
+                }
+            }
+        }
+        else
+            memset( _mag-1, 0, (size.width + 2)*sizeof(int) );
+
+        // at the very beginning we do not have a complete ring
+        // buffer of 3 magnitude rows for non-maxima suppression
+        if( i == 0 )
+            continue;
+
+        _map = map + mapstep*i + 1;
+        _map[-1] = _map[size.width] = 1;
+        
+        _mag = mag_buf[1] + 1; // take the central row
+        _dx = (short*)(dx->data.ptr + dx->step*(i-1));
+        _dy = (short*)(dy->data.ptr + dy->step*(i-1));
+        
+        magstep1 = (int)(mag_buf[2] - mag_buf[1]);
+        magstep2 = (int)(mag_buf[0] - mag_buf[1]);
+        mshift[0] = 1;
+        mshift[4] = -1;
+        mshift[1] = magstep1 + 1;
+        mshift[5] = magstep2 - 1;
+        mshift[2] = magstep1;
+        mshift[6] = magstep2;
+        mshift[3] = magstep1 - 1;
+        mshift[7] = magstep2 + 1;
+
+        for( j = 0; j < size.width; j++ )
+        {
+            #define CANNY_SHIFT 15
+            #define TG22  (int)(0.4142135623730950488016887242097*(1<<CANNY_SHIFT) + 0.5)
+
+            x = _dx[j];
+            y = _dy[j];
+            int s = x ^ y;
+            int m = _mag[j];
+
+            x = abs(x);
+            y = abs(y);
+
+            if( m > low )
+            {
+                // estimate sector
+                int tg22x = x * TG22;
+                int tg67x = tg22x + ((x + x) << CANNY_SHIFT);
+
+                y <<= CANNY_SHIFT;
+                int sec = sec_tab[(y > tg67x)*4 + (y < tg22x)*2 + (s < 0)];
+                int m1 = _mag[j + mshift[sec]];
+                int m2 = _mag[j + mshift[sec + 4]];
+
+                // non-maxima suppression, consider special cases
+                // to ensure than the edges are 1 pixel-wide
+                if( m > m2 && (m > m1 || m == m1 && !(sec&1)) )
+                {
+                    if( m > high )
+                        CANNY_PUSH( _map + j ); // 2 - the pixel does belong to an edge
+                    else
+                        _map[j] = (uchar)0; // 0 - the pixel might belong to an edge
+                    continue;
+                }
+            }
+            _map[j] = (uchar)1; // 1 - the pixel could not belong to an edge
+        }
+
+        // scroll the ring buffer
+        _mag = mag_buf[0];
+        mag_buf[0] = mag_buf[1];
+        mag_buf[1] = mag_buf[2];
+        mag_buf[2] = _mag;
+    }
+
+    // now track the edges (hysteresis thresholding)
+    while( stack_top > stack_bottom )
+    {
+        uchar* m;
+        CANNY_POP(m);
+    
+        if( !m[-1] )
+            CANNY_PUSH( m - 1 );
+        if( !m[1] )
+            CANNY_PUSH( m + 1 );
+        if( !m[-mapstep-1] )
+            CANNY_PUSH( m - mapstep - 1 );
+        if( !m[-mapstep] )
+            CANNY_PUSH( m - mapstep );
+        if( !m[-mapstep+1] )
+            CANNY_PUSH( m - mapstep + 1 );
+        if( !m[mapstep-1] )
+            CANNY_PUSH( m + mapstep - 1 );
+        if( !m[mapstep] )
+            CANNY_PUSH( m + mapstep );
+        if( !m[mapstep+1] )
+            CANNY_PUSH( m + mapstep + 1 );
+    }
+
+    // the final pass, form the final image
+    for( i = 0; i < size.height; i++ )
+    {
+        const uchar* _map = map + mapstep*(i+1) + 1;
+        uchar* _dst = dst->data.ptr + dst->step*i;
+        
+        for( j = 0; j < size.width; j++ )
+            _dst[j] = (uchar)-(_map[j] >> 1);
+    }
 
     __END__;
 
@@ -310,6 +304,5 @@ cvCanny( const void* srcarr, void* dstarr,
     cvReleaseMat( &dy );
     cvFree( &buffer );
 }
-
 
 /* End of file. */
