@@ -51,6 +51,7 @@ cvCanny( const void* srcarr, void* dstarr,
     static const int sec_tab[] = { 1, 3, 0, 0, 2, 2, 2, 2 };
     CvMat *dx = 0, *dy = 0;
     void *buffer = 0;
+    uchar **stack_top, **stack_bottom = 0;
 
     CV_FUNCNAME( "cvCanny" );
 
@@ -61,10 +62,9 @@ cvCanny( const void* srcarr, void* dstarr,
     CvSize size;
     int flags = aperture_size;
     int low, high;
-    uchar **stack_top, **stack_bottom;
     int* mag_buf[3];
     uchar* map;
-    int mapstep;
+    int mapstep, maxsize;
     int i, j;
     CvMat mag_row;
 
@@ -124,14 +124,16 @@ cvCanny( const void* srcarr, void* dstarr,
     }
 
     CV_CALL( buffer = cvAlloc( (size.width+2)*(size.height+2) +
-        size.width*size.height*sizeof(void*) + (size.width+2)*3*sizeof(int)) );
+                                (size.width+2)*3*sizeof(int)) );
 
-    stack_top = stack_bottom = (uchar**)buffer;
-    mag_buf[0] = (int*)(stack_bottom + size.width*size.height);
+    mag_buf[0] = (int*)buffer;
     mag_buf[1] = mag_buf[0] + size.width + 2;
     mag_buf[2] = mag_buf[1] + size.width + 2;
     map = (uchar*)(mag_buf[2] + size.width + 2);
     mapstep = size.width + 2;
+
+    maxsize = MAX( 1 << 10, size.width*size.height/10 );
+    CV_CALL( stack_top = stack_bottom = (uchar**)cvAlloc( maxsize*sizeof(stack_top[0]) ));
 
     memset( mag_buf[0], 0, (size.width+2)*sizeof(int) );
     memset( map, 1, mapstep );
@@ -154,7 +156,11 @@ cvCanny( const void* srcarr, void* dstarr,
 
     mag_row = cvMat( 1, size.width, CV_32F );
 
-    // calculate magnitude and angle of gradient, perform non-maxima supression
+    // calculate magnitude and angle of gradient, perform non-maxima supression.
+    // fill the map with one of the following values:
+    //   0 - the pixel might belong to an edge
+    //   1 - the pixel can not belong to an edge
+    //   2 - the pixel does belong to an edge
     for( i = 0; i <= size.height; i++ )
     {
         int* _mag = mag_buf[(i > 0) + 1] + 1;
@@ -163,8 +169,8 @@ cvCanny( const void* srcarr, void* dstarr,
         const short* _dy = (short*)(dy->data.ptr + dy->step*i);
         uchar* _map;
         int x, y;
-        int mshift[8];
         int magstep1, magstep2;
+        int prev_flag = 0;
 
         if( i < size.height )
         {
@@ -210,14 +216,17 @@ cvCanny( const void* srcarr, void* dstarr,
         
         magstep1 = (int)(mag_buf[2] - mag_buf[1]);
         magstep2 = (int)(mag_buf[0] - mag_buf[1]);
-        mshift[0] = 1;
-        mshift[4] = -1;
-        mshift[1] = magstep1 + 1;
-        mshift[5] = magstep2 - 1;
-        mshift[2] = magstep1;
-        mshift[6] = magstep2;
-        mshift[3] = magstep1 - 1;
-        mshift[7] = magstep2 + 1;
+
+        if( (stack_top - stack_bottom) + size.width > maxsize )
+        {
+            uchar** new_stack_bottom;
+            maxsize = MAX( maxsize * 3/2, maxsize + size.width );
+            CV_CALL( new_stack_bottom = (uchar**)cvAlloc( maxsize * sizeof(stack_top[0])) );
+            memcpy( new_stack_bottom, stack_bottom, (stack_top - stack_bottom)*sizeof(stack_top[0]) );
+            stack_top = new_stack_bottom + (stack_top - stack_bottom);
+            cvFree( &stack_bottom );
+            stack_bottom = new_stack_bottom;
+        }
 
         for( j = 0; j < size.width; j++ )
         {
@@ -231,30 +240,59 @@ cvCanny( const void* srcarr, void* dstarr,
 
             x = abs(x);
             y = abs(y);
-
             if( m > low )
             {
-                // estimate sector
                 int tg22x = x * TG22;
                 int tg67x = tg22x + ((x + x) << CANNY_SHIFT);
 
                 y <<= CANNY_SHIFT;
-                int sec = sec_tab[(y > tg67x)*4 + (y < tg22x)*2 + (s < 0)];
-                int m1 = _mag[j + mshift[sec]];
-                int m2 = _mag[j + mshift[sec + 4]];
 
-                // non-maxima suppression, consider special cases
-                // to ensure than the edges are 1 pixel-wide
-                if( m > m2 && (m > m1 || m == m1 && !(sec&1)) )
+                if( y < tg22x )
                 {
-                    if( m > high )
-                        CANNY_PUSH( _map + j ); // 2 - the pixel does belong to an edge
-                    else
-                        _map[j] = (uchar)0; // 0 - the pixel might belong to an edge
-                    continue;
+                    if( m > _mag[j-1] && m >= _mag[j+1] )
+                    {
+                        if( m > high && !prev_flag && _map[j-mapstep] != 2 )
+                        {
+                            CANNY_PUSH( _map + j );
+                            prev_flag = 1;
+                        }
+                        else
+                            _map[j] = (uchar)0;
+                        continue;
+                    }
+                }
+                else if( y > tg67x )
+                {
+                    if( m > _mag[j+magstep2] && m >= _mag[j+magstep1] )
+                    {
+                        if( m > high && !prev_flag && _map[j-mapstep] != 2 )
+                        {
+                            CANNY_PUSH( _map + j );
+                            prev_flag = 1;
+                        }
+                        else
+                            _map[j] = (uchar)0;
+                        continue;
+                    }
+                }
+                else
+                {
+                    s = s < 0 ? -1 : 1;
+                    if( m > _mag[j+magstep2-s] && m > _mag[j+magstep1+s] )
+                    {
+                        if( m > high && !prev_flag && _map[j-mapstep] != 2 )
+                        {
+                            CANNY_PUSH( _map + j );
+                            prev_flag = 1;
+                        }
+                        else
+                            _map[j] = (uchar)0;
+                        continue;
+                    }
                 }
             }
-            _map[j] = (uchar)1; // 1 - the pixel could not belong to an edge
+            prev_flag = 0;
+            _map[j] = (uchar)1;
         }
 
         // scroll the ring buffer
@@ -268,6 +306,17 @@ cvCanny( const void* srcarr, void* dstarr,
     while( stack_top > stack_bottom )
     {
         uchar* m;
+        if( (stack_top - stack_bottom) + 8 > maxsize )
+        {
+            uchar** new_stack_bottom;
+            maxsize = MAX( maxsize * 3/2, maxsize + 8 );
+            CV_CALL( new_stack_bottom = (uchar**)cvAlloc( maxsize * sizeof(stack_top[0])) );
+            memcpy( new_stack_bottom, stack_bottom, (stack_top - stack_bottom)*sizeof(stack_top[0]) );
+            stack_top = new_stack_bottom + (stack_top - stack_bottom);
+            cvFree( &stack_bottom );
+            stack_bottom = new_stack_bottom;
+        }
+
         CANNY_POP(m);
     
         if( !m[-1] )
@@ -303,6 +352,7 @@ cvCanny( const void* srcarr, void* dstarr,
     cvReleaseMat( &dx );
     cvReleaseMat( &dy );
     cvFree( &buffer );
+    cvFree( &stack_bottom );
 }
 
 /* End of file. */
