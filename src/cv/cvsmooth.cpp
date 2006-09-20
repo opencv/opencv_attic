@@ -223,7 +223,7 @@ static void
 icvSumCol_32s8u( const int** src, uchar* dst,
                  int dst_step, int count, void* params )
 {
-#define BLUR_SHIFT 16    
+#define BLUR_SHIFT 24
     CvBoxFilter* state = (CvBoxFilter*)params;
     int ksize = state->get_kernel_size().height;
     int i, width = state->get_width();
