@@ -14,7 +14,7 @@
 <li><a href="#cv_imgproc_morphology">Morphological Operations</a>
 <li><a href="#cv_imgproc_filters">Filters and Color Conversion</a>
 <li><a href="#cv_imgproc_pyramids">Pyramids and the Applications</a>
-<li><a href="#cv_imgproc_ccomp">Connected Components and Contour Retrieval</a>
+<li><a href="#cv_imgproc_ccomp">Image Segmentation, Connected Components and Contour Retrieval</a>
 <li><a href="#cv_imgproc_moments">Image and Contour Moments</a>
 <li><a href="#cv_imgproc_special">Special Image Transforms</a>
 <li><a href="#cv_imgproc_histograms">Histograms</a>
@@ -2194,7 +2194,7 @@ sets the same bin values ranges as in <code>src</code>.</p>
 void cvCalcHist( IplImage** image, CvHistogram* hist,
                  int accumulate=0, const CvArr* mask=NULL );
 </pre><p><dl>
-<dt>image<dd>Source images (though, you may pass CvMat** as well).
+<dt>image<dd>Source images (though, you may pass CvMat** as well), all are of the same size and type
 <dt>hist<dd>Pointer to the histogram.
 <dt>accumulate<dd>Accumulation flag. If it is set, the histogram is not cleared in the beginning.
 This feature allows user to compute a single histogram from several images, or to update the histogram online.
@@ -2268,7 +2268,7 @@ int main( int argc, char** argv )
 <pre>
 void cvCalcBackProject( IplImage** image, CvArr* back_project, const CvHistogram* hist );
 </pre><p><dl>
-<dt>image<dd>Source images (though you may pass CvMat** as well).
+<dt>image<dd>Source images (though you may pass CvMat** as well), all are of the same size and type
 <dt>back_project<dd>Destination back projection image of the same type as the source images.
 <dt>hist<dd>Histogram.
 </dl><p>
@@ -2296,38 +2296,36 @@ the previous object position.
 <hr><h3><a name="decl_cvCalcBackProjectPatch">CalcBackProjectPatch</a></h3>
 <p class="Blurb">Locates a template within image by histogram comparison</p>
 <pre>
-void cvCalcBackProjectPatch( IplImage** image, CvArr* dst,
+void cvCalcBackProjectPatch( IplImage** images, CvArr* dst,
                              CvSize patch_size, CvHistogram* hist,
                              int method, float factor );
 </pre><p><dl>
-<dt>image<dd>Source images (though, you may pass CvMat** as well)
+<dt>images<dd>Source images (though, you may pass CvMat** as well), all of the same size
 <dt>dst<dd>Destination image.
-<dt>patch_size<dd>Size of patch slid though the source image.
+<dt>patch_size<dd>Size of patch slid though the source images.
 <dt>hist<dd>Histogram
 <dt>method<dd>Compasion method, passed to <a href="#decl_cvCompareHist">cvCompareHist</a> (see description of that function).
 <dt>factor<dd>Normalization factor for histograms,
-               will affect normalization scale of destination image, pass 1. if unsure.
+    will affect normalization scale of destination image, pass 1. if unsure.
 </dl><p>
-The function <code>cvCalcBackProjectPatch</code> calculates back projection by comparing
-histograms of the source image patches with the given histogram. Taking
-measurement results from some image at each location over ROI creates an array
-<code>image</code>. These results might be one or more of hue, <code>x</code> derivative, <code>y</code> derivative,
-Laplacian filter, oriented Gabor filter, etc. Each measurement output is
-collected into its own separate image. The <code>image</code> image array is a collection of
-these measurement images. A multi-dimensional histogram <code>hist</code> is constructed by
-sampling from the <code>image</code> image array. The final histogram is normalized. The <code>hist</code>
-histogram has as many dimensions as the number of elements in <code>image</code> array.
+The function <code>cvCalcBackProjectPatch</code> compares histogram, computed over
+each possible rectangular patch of the specfied size in the input <code>images</code>,
+and stores the results to the output map <code>dst</code>.</p>
 <p>
-Each new image is measured and then converted into an <code>image</code> image array over a
-chosen ROI. Histograms are taken from this <code>image</code> image in an area covered by a
-"patch" with anchor at center as shown in the picture below.
-The histogram is normalized using the parameter <code>norm_factor</code> so that it
-may be compared with <code>hist</code>. The calculated histogram is compared to the model
-histogram; <code>hist</code> uses The function <code>cvCompareHist</code> with the comparison method=<code>method</code>).
-The resulting output is placed at the location corresponding to the patch anchor in
-the probability image <code>dst</code>. This process is repeated as the patch is slid over
-the ROI. Iterative histogram update by subtracting trailing pixels covered by the patch and adding newly
-covered pixels to the histogram can save a lot of operations, though it is not implemented yet.
+In pseudo-code the operation may be written as:
+<pre>
+for (x,y) in images (until (x+patch_size.width-1,y+patch_size.height-1) is inside the images) do
+    compute histogram over the ROI (x,y,x+patch_size.width,y+patch_size.height) in images
+       (see cvCalcHist)
+    normalize the histogram using the factor
+       (see cvNormalizeHist)
+    compare the normalized histogram with input histogram hist using the specified method
+       (see cvCompareHist)
+    store the result to dst(x,y)
+end for
+</pre>
+
+See also a similar function <a href="#decl_cvMatchTemplate">cvMatchTemplate</a>.
 </p>
 <h4>Back Project Calculation by Patches</h4>
 <p>
@@ -2396,7 +2394,7 @@ be <code>W-w+1</code>&times;<code>H-h+1</code>.
 </dl><p>
 The function <code>cvMatchTemplate</code> is similiar to <a href="#decl_cvCalcBackProjectPatch">cvCalcBackProjectPatch</a>.
 It slids through <code>image</code>, compares overlapped patches of size <code>w</code>&times;<code>h</code>
-against <code>templ</code> using the specified method and stores the comparison results
+with <code>templ</code> using the specified method and stores the comparison results
 to <code>result</code>. Here are the formulae for the different comparison methods one may use
 (<code>I</code> denotes image, <code>T</code> - template, <code>R</code> - result.
 The summation is done over template and/or the image patch: <code>x'=0..w-1, y'=0..h-1</code>):</p>
@@ -4670,9 +4668,9 @@ The function <code>cvCalibrateCamera2</code> estimates intrinsic camera paramete
 for each of the views.
 The coordinates of 3D object points and their correspondent 2D projections in each view
 must be specified. That may be achieved by using an object with known geometry and easily detectable
-feature points. Such an object is called calibration rig or calibration pattern, and OpenCV has built-in
+feature points. Such an object is called a calibration rig or calibration pattern, and OpenCV has built-in
 support for a chessboard as a calibration rig
-(see <a href="#decl_cvFindChessboardCornerGuesses">cvFindChessboardCornerGuesses</a>).
+(see <a href="#decl_cvFindChessboardCorners">cvFindChessboardCorners</a>).
 Currently, initialization of inrtrinsic parameters (when <code>CV_CALIB_USE_INTRINSIC_GUESS</code>
 is not set) is only implemented for planar calibration rigs (z-coordinates of object points
 must be all 0's or all 1's). 3D rigs can still be used as long as initial <code>intrinsic_matrix</code>
