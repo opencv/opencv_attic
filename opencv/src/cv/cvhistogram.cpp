@@ -791,9 +791,9 @@ cvSetHistBinRanges( CvHistogram* hist, float** ranges, int uniform )
 #define  ICV_HIST_DUMMY_IDX  (INT_MIN/3)
 
 static CvStatus
-icvCalcHistLookupTables8x( const CvHistogram* hist, int lo, int hi,
-                           int dims, int* size, int* tab )
+icvCalcHistLookupTables8u( const CvHistogram* hist, int dims, int* size, int* tab )
 {
+    const int lo = 0, hi = 256;
     int is_sparse = CV_IS_SPARSE_HIST( hist );
     int have_range = CV_HIST_HAS_RANGES(hist);
     int i, j;
@@ -805,7 +805,7 @@ icvCalcHistLookupTables8x( const CvHistogram* hist, int lo, int hi,
             double a = have_range ? hist->thresh[i][0] : 0;
             double b = have_range ? hist->thresh[i][1] : 256;
             int sz = size[i];
-            double scale = sz/(b - a), cur = (lo - a)*scale;
+            double scale = sz/(b - a);
             int step = 1;
 
             if( !is_sparse )
@@ -813,14 +813,13 @@ icvCalcHistLookupTables8x( const CvHistogram* hist, int lo, int hi,
 
             for( j = lo; j < hi; j++ )
             {
-                int idx = cvFloor(cur);
+                int idx = cvFloor((j - a)*scale);
                 if( (unsigned)idx < (unsigned)sz )
                     idx *= step;
                 else
                     idx = ICV_HIST_DUMMY_IDX;
 
                 tab[i*(hi - lo) + j - lo] = idx;
-                cur += scale;
             }
         }
     }
@@ -881,8 +880,7 @@ static CvStatus CV_STDCALL
     dims = cvGetDims( hist->bins, histsize );
 
     tab = (int*)cvStackAlloc( dims*256*sizeof(int));
-    status = icvCalcHistLookupTables8x( hist, 0, 256, dims,
-                                        histsize, tab );
+    status = icvCalcHistLookupTables8u( hist, dims, histsize, tab );
 
     if( status < 0 )
         return status;
@@ -1129,7 +1127,7 @@ static CvStatus CV_STDCALL
     int is_sparse = CV_IS_SPARSE_HIST(hist);
     int uniform = CV_IS_UNIFORM_HIST(hist);
     int dims, histsize[CV_MAX_DIM];
-    float uni_range[CV_MAX_DIM][2];
+    double uni_range[CV_MAX_DIM][2];
     int i, x;
 
     dims = cvGetDims( hist->bins, histsize );
@@ -1139,9 +1137,9 @@ static CvStatus CV_STDCALL
     {
         for( i = 0; i < dims; i++ )
         {
-            float t = ((float)histsize[i])/(hist->thresh[i][1] - hist->thresh[i][0]);
+            double t = histsize[i]/((double)hist->thresh[i][1] - hist->thresh[i][0]);
             uni_range[i][0] = t;
-            uni_range[i][1] = (float)(-t*hist->thresh[i][0]);
+            uni_range[i][1] = -t*hist->thresh[i][0];
         }
     }
 
@@ -1156,7 +1154,7 @@ static CvStatus CV_STDCALL
             {
             case 1:
                 {
-                float a = uni_range[0][0], b = uni_range[0][1];
+                double a = uni_range[0][0], b = uni_range[0][1];
                 int sz = histsize[0];
 
                 for( ; size.height--; img[0] += step )
@@ -1207,8 +1205,8 @@ static CvStatus CV_STDCALL
                 break;
             case 2:
                 {
-                float  a0 = uni_range[0][0], b0 = uni_range[0][1];
-                float  a1 = uni_range[1][0], b1 = uni_range[1][1];
+                double  a0 = uni_range[0][0], b0 = uni_range[0][1];
+                double  a1 = uni_range[1][0], b1 = uni_range[1][1];
                 int sz0 = histsize[0], sz1 = histsize[1];
                 int step0 = ((CvMatND*)(hist->bins))->dim[0].step/sizeof(float);
 
@@ -1565,7 +1563,7 @@ static CvStatus CV_STDCALL
     dims = cvGetDims( hist->bins, histsize );
 
     tab = (int*)cvStackAlloc( dims*256*sizeof(int));
-    status = icvCalcHistLookupTables8x( hist, 0, 256, dims, histsize, tab );
+    status = icvCalcHistLookupTables8u( hist, dims, histsize, tab );
     if( status < 0 )
         return status;
 
@@ -2138,7 +2136,7 @@ cvCalcArrBackProject( CvArr** img, CvArr* dst, const CvHistogram* hist )
 ////////////////////// B A C K   P R O J E C T   P A T C H /////////////////////////
 
 CV_IMPL void
-cvCalcArrBackProjectPatch( CvArr** arr, CvArr* dst, CvSize range, CvHistogram* hist,
+cvCalcArrBackProjectPatch( CvArr** arr, CvArr* dst, CvSize patch_size, CvHistogram* hist,
                            int method, double norm_factor )
 {
     CvHistogram* model = 0;
@@ -2164,6 +2162,9 @@ cvCalcArrBackProjectPatch( CvArr** arr, CvArr* dst, CvSize range, CvHistogram* h
         CV_ERROR( CV_StsOutOfRange,
                   "Bad normalization factor (set it to 1.0 if unsure)" );
 
+    if( patch_size.width <= 0 || patch_size.height <= 0 )
+        CV_ERROR( CV_StsBadSize, "The patch width and height must be positive" );
+
     CV_CALL( dims = cvGetDims( hist->bins ));
     CV_CALL( cvCopyHist( hist, &model ));
     CV_CALL( cvNormalizeHist( hist, norm_factor ));
@@ -2180,36 +2181,28 @@ cvCalcArrBackProjectPatch( CvArr** arr, CvArr* dst, CvSize range, CvHistogram* h
     if( CV_MAT_TYPE( dstmat->type ) != CV_32FC1 )
         CV_ERROR( CV_StsUnsupportedFormat, "Resultant image must have 32fC1 type" );
 
+    if( dstmat->cols != img[0]->width - patch_size.width + 1 ||
+        dstmat->rows != img[0]->height - patch_size.height + 1 )
+        CV_ERROR( CV_StsUnmatchedSizes,
+            "The output map must be (W-w+1 x H-h+1), "
+            "where the input images are (W x H) each and the patch is (w x h)" );
+
     size = cvGetMatSize(dstmat);
     roi.coi = 0;
+    roi.width = patch_size.width;
+    roi.height = patch_size.height;
 
     for( y = 0; y < size.height; y++ )
     {
-        roi.yOffset = y - range.height;
-        roi.height = range.height*2 + 1;
-        if( roi.yOffset < 0 )
-        {
-            roi.height += roi.yOffset;
-            roi.yOffset = 0;
-        }
-        if( roi.yOffset + roi.height > size.height )
-            roi.height = size.height - roi.yOffset;
-        
         for( x = 0; x < size.width; x++ )
         {
             double result;
             
-            roi.xOffset = x - range.width;
-            roi.width = range.width*2 + 1;
-            if( roi.xOffset < 0 )
-            {
-                roi.width += roi.xOffset;
-                roi.xOffset = 0;
-            }
-            if( roi.xOffset + roi.width > size.width )
-                roi.width = size.width - roi.xOffset;
+            roi.xOffset = x;
+            roi.yOffset = y;
 
             CV_CALL( cvCalcHist( img, model ));
+
             CV_CALL( cvNormalizeHist( model, norm_factor ));
             CV_CALL( result = cvCompareHist( model, hist, method ));
             CV_MAT_ELEM( *dstmat, float, y, x ) = (float)result;
