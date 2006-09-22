@@ -48,7 +48,6 @@ void InitACanny();
 void InitAChessCorners();
 void InitAConDens();
 void InitAContours();
-void InitADistanceTransform();
 void InitAEMD();
 void InitAFitEllipse();
 void InitAFitLine();
@@ -56,7 +55,6 @@ void InitAHaar();
 void InitACalcContrastHist();
 void InitACalcOpticalFlowLK();
 void InitACalcOpticalFlowHS(); 
-void InitAHistograms();
 void InitAHoughLines();
 void InitAImage();
 void InitAImageToHMMObs();
@@ -68,14 +66,12 @@ void InitAOptFlowPyrLK();
 void InitAPixelAccess();
 void InitASnakes();
 void InitASubdiv();
-void InitAAdaptThreshold();
 void InitAEigenObjects();
 void InitAContourMoments();
 void InitAMatchContours();
 void InitACreateContourTree();
 void InitAMatchContourTrees();
 void InitAPyrSegmentation();
-void InitAGestureRecognition();
 void InitAPOSIT();
 
 CvTS test_system;
@@ -116,7 +112,7 @@ int main(int argC,char *argV[])
     InitAFitEllipse();
     InitAFitLine();
     //InitACalcContrastHist(); // the function is not available
-    InitAHistograms();
+    //InitAHistograms();
     InitAHoughLines();
     InitAImage();
     //InitAImageToHMMObs(); // test uses IPL DCT
