@@ -369,6 +369,7 @@ class CxCore_DynStructBaseTest : public CvTest
 {
 public:
     CxCore_DynStructBaseTest( const char* test_name, const char* test_funcs );
+    virtual ~CxCore_DynStructBaseTest();
     int write_default_params(CvFileStorage* fs);
     bool can_do_fast_forward();
     void clear();
@@ -415,6 +416,12 @@ CxCore_DynStructBaseTest::CxCore_DynStructBaseTest( const char* test_name, const
 }
 
 
+CxCore_DynStructBaseTest::~CxCore_DynStructBaseTest()
+{
+    clear();
+}
+
+
 void CxCore_DynStructBaseTest::run_func()
 {
 }
@@ -427,6 +434,7 @@ bool CxCore_DynStructBaseTest::can_do_fast_forward()
 
 void CxCore_DynStructBaseTest::clear()
 {
+    CvTest::clear();
     cvReleaseMemStorage( &storage );
     cvFree( &cxcore_struct );
     cvFree( &simple_struct );

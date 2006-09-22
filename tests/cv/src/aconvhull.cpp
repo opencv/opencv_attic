@@ -167,6 +167,7 @@ class CV_BaseShapeDescrTest : public CvTest
 {
 public:
     CV_BaseShapeDescrTest( const char* test_name, const char* test_funcs );
+    virtual ~CV_BaseShapeDescrTest();
     void clear();
     int write_default_params(CvFileStorage* fs);
 
@@ -206,8 +207,15 @@ CV_BaseShapeDescrTest::CV_BaseShapeDescrTest( const char* test_name, const char*
 }
 
 
+CV_BaseShapeDescrTest::~CV_BaseShapeDescrTest()
+{
+    clear();
+}
+
+
 void CV_BaseShapeDescrTest::clear()
 {
+    CvTest::clear();
     cvReleaseMemStorage( &storage );
     cvReleaseMat( &points2 );
     points1 = 0;
@@ -388,6 +396,7 @@ class CV_ConvHullTest : public CV_BaseShapeDescrTest
 {
 public:
     CV_ConvHullTest();
+    virtual ~CV_ConvHullTest();
     void clear();
 
 protected:
@@ -410,6 +419,12 @@ CV_ConvHullTest::CV_ConvHullTest():
     hull2 = 0;
     hull_storage = 0;
     orientation = return_points = 0;
+}
+
+
+CV_ConvHullTest::~CV_ConvHullTest()
+{
+    clear();
 }
 
 
