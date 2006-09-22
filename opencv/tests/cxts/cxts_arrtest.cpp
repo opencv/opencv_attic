@@ -151,6 +151,7 @@ void CvArrTest::clear()
     delete[] hdr;
     hdr = 0;
     max_hdr = 0;
+    CvTest::clear();
 }
 
 
