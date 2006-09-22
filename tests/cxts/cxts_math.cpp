@@ -2564,13 +2564,13 @@ double cvTsMaxVal( int type )
     switch( CV_MAT_DEPTH(type) )
     {
     case CV_8U:
-        return 255;
+        return 256;
     case CV_8S:
-        return 127;
+        return 128;
     case CV_16U:
-        return 65535;
+        return 65536;
     case CV_16S:
-        return 32767;
+        return 32768;
     case CV_32S:
         return 1000000;
     case CV_32F:
