@@ -41,183 +41,489 @@
 
 #include "cvtest.h"
 
-#define Pi 3.14159265358979f
 
-/* Testing parameters */
-static char* FuncName = "cvCamShift";
-
-static char TestName[]    = "Calculating CamShift";
-static char TestClass[]   = "Algorithm";
-
-static int height;
-static int width;
-static int Length;
-static int Width;
-static int iter;
-static float epsilon;
-static int steps;
-
-#define ATS_8U  0
-#define ATS_32F 1
-
-#define EPS_8U      (ATS_8U << 4) | CV_TERMCRIT_EPS
-#define ITER_8U     (ATS_8U << 4) | CV_TERMCRIT_ITER
-#define EPS_ITER_8U (ATS_8U << 4) | CV_TERMCRIT_ITER | CV_TERMCRIT_EPS
-
-#define EPS_32F      (ATS_32F << 4) | CV_TERMCRIT_EPS
-#define ITER_32F     (ATS_32F << 4) | CV_TERMCRIT_ITER
-#define EPS_ITER_32F (ATS_32F << 4) | CV_TERMCRIT_ITER | CV_TERMCRIT_EPS
-
-static int foaCamShiftC1R( void* prm )
+class CV_TrackBaseTest : public CvTest
 {
-    /* Some variables */
-    long       lParam  = (long)(size_t)prm;
-    int        Flvr = (lParam >> 4) & 0xf;
-    int        depth = (Flvr == ATS_8U ? IPL_DEPTH_8U : IPL_DEPTH_32F);
-    int        Type = lParam & 0xf;
-    int        Errors = 0;
+public:
+    CV_TrackBaseTest( const char* test_name, const char* test_funcs );
+    virtual ~CV_TrackBaseTest();
+    void clear();
+    int write_default_params(CvFileStorage* fs);
 
+protected:
+    int read_params( CvFileStorage* fs );
+    void run_func(void);
+    int prepare_test_case( int test_case_idx );
+    int validate_test_results( int test_case_idx );
+    void generate_object();
+
+    int min_log_size, max_log_size;
+    CvMat* img;
+    CvBox2D box0;
+    CvSize img_size;
     CvTermCriteria criteria;
-    CvRect     Window;
-    CvSize     roi;
-
-    IplImage*  src;
-
-    float      alpha = 0;
-    int        i;
-    int        x, y;
-
-    float      destOrientation = 0;
-    float      destLen = 0;
-    float      destWidth = 0;
-    float      destArea = 0;
-    int        destIters = 0;
-
-    static int  read_param = 0;
-
-    /* Initialization global parameters */
-    if( !read_param )
-    {
-        read_param = 1;
-        trsiRead( &height, "512", "source array length" );
-        trsiRead( &width, "512", "source array width" );
-        trsiRead( &Length, "68", "oval length" );
-        trsiRead( &Width, "15", "oval width" );
-        trsiRead( &iter, "10", "iterations" );
-        trsiRead( &steps, "10", "steps" );
-        trssRead( &epsilon, "1", "epsilon" );
-    }
-
-    /* Initilization */
-    Window.x = width / 4;
-    Window.y = height / 4;
-    Window.width = width / 2;
-    Window.height = height / 2;
-
-    roi.width = width;
-    roi.height = height;
-
-    criteria.type = Type;
-    criteria.epsilon = epsilon;
-    criteria.max_iter = iter;
-
-    /* Allocating source arrays; */
-    src = cvCreateImage(roi, depth, 1);
-    assert(src);
-
-    for( alpha = -Pi / 2; alpha < Pi / 2; alpha += Pi / steps )
-    {
-        x = (int)(width  / 2 + width / 8 * cos(alpha));
-        y = (int)(height / 2 + height / 8 * sin(alpha));
-
-        switch( Flvr )
-        {
-        case ATS_8U:
-            atsbInitEllipse( (uchar*)src->imageData,
-                             roi.width,
-                             roi.height,
-                             src->widthStep,
-                             x,
-                             y,
-                             Length,
-                             Width,
-                             alpha,
-                             10 );
-            break;
-        case ATS_32F:
-            atsfInitEllipse( (float*)src->imageData,
-                             roi.width,
-                             roi.height,
-                             src->widthStep,
-                             x,
-                             y,
-                             Length,
-                             Width,
-                             alpha,
-                             10 );
-            break;
-        } /* switch( Flvr ) */
-
-        for( i = 0; i < steps; i++ )
-        {
-            CvConnectedComp comp;
-            CvBox2D box;
-            destIters = cvCamShift( src, Window, criteria, &comp, &box );
-            Window = comp.rect;
-            destArea = (float) comp.area;
-            destOrientation = box.angle*Pi/180;
-            destLen = box.size.height;
-            destWidth = box.size.width;
-        }
-        
-        /* Checking results */
-        /* Checking orientation */
-        if( fabs( alpha - destOrientation ) > 0.01 &&
-            fabs( alpha + Pi - destOrientation ) > 0.01 )
-        {
-            Errors++;
-            trsWrite( ATS_LST,
-                      "orientation: act: %f,  exp: %f\n",
-                      destOrientation,
-                      alpha );
-        }
-        /* Checking length */
-        if( fabs( destLen - Length * 2 ) > epsilon )
-        {
-            Errors++;
-            trsWrite( ATS_LST,
-                      "length: act: %f,  exp: %d\n",
-                      destLen,
-                      Length );
-        }
-        /* Checking width */
-        if( fabs( destWidth - Width * 2 ) > epsilon )
-        {
-            Errors++;
-            trsWrite( ATS_LST,
-                      "width: act: %f,  exp: %d\n",
-                      destWidth,
-                      Width );
-        }
-    }
-
-    cvReleaseImage(&src);
-
-    return Errors == 0 ? TRS_OK : trsResult( TRS_FAIL, "Fixed %d errors", Errors );
-
-} /* foaCamShiftC1R */
+    int img_type;
+};
 
 
-void InitACamShift()
+CV_TrackBaseTest::CV_TrackBaseTest( const char* test_name, const char* test_funcs ):
+    CvTest( test_name, test_funcs )
 {
-    trsRegArg( FuncName, TestName, TestClass, foaCamShiftC1R, EPS_8U );
-    trsRegArg( FuncName, TestName, TestClass, foaCamShiftC1R, ITER_8U );
-    trsRegArg( FuncName, TestName, TestClass, foaCamShiftC1R, EPS_ITER_8U );
+    img = 0;
+    test_case_count = 100;
+    min_log_size = 5;
+    max_log_size = 8;
 
-    trsRegArg( FuncName, TestName, TestClass, foaCamShiftC1R, EPS_32F );
-    trsRegArg( FuncName, TestName, TestClass, foaCamShiftC1R, ITER_32F );
-    trsRegArg( FuncName, TestName, TestClass, foaCamShiftC1R, EPS_ITER_32F );
-} /* InitACamShiftC1R */
+    support_testing_modes = CvTS::CORRECTNESS_CHECK_MODE;
+}
 
+
+CV_TrackBaseTest::~CV_TrackBaseTest()
+{
+    clear();
+}
+
+
+void CV_TrackBaseTest::clear()
+{
+    cvReleaseMat( &img );
+    CvTest::clear();
+}
+
+
+int CV_TrackBaseTest::write_default_params( CvFileStorage* fs )
+{
+    write_param( fs, "test_case_count", test_case_count );
+    write_param( fs, "min_log_size", min_log_size );
+    write_param( fs, "max_log_size", max_log_size );
+    return 0;
+}
+
+
+int CV_TrackBaseTest::read_params( CvFileStorage* fs )
+{
+    int code = CvTest::read_params( fs );
+    if( code < 0 )
+        return code;
+
+    test_case_count = cvReadInt( find_param( fs, "struct_count" ), test_case_count );
+    min_log_size = cvReadInt( find_param( fs, "min_log_size" ), min_log_size );
+    max_log_size = cvReadInt( find_param( fs, "max_log_size" ), max_log_size );
+
+    min_log_size = cvTsClipInt( min_log_size, 1, 10 );
+    max_log_size = cvTsClipInt( max_log_size, 1, 10 );
+    if( min_log_size > max_log_size )
+    {
+        int t;
+        CV_SWAP( min_log_size, max_log_size, t );
+    }
+
+    return 0;
+}
+
+
+void CV_TrackBaseTest::generate_object()
+{
+    int x, y;
+    double cx = box0.center.x;
+    double cy = box0.center.y;
+    double width = box0.size.width*0.5;
+    double height = box0.size.height*0.5;
+    double angle = box0.angle*CV_PI/180.;
+    double a = cos(angle), b = sin(angle);
+    double inv_ww = 1./(width*width), inv_hh = 1./(height*height);
+
+    img = cvCreateMat( img_size.height, img_size.width, img_type );
+    cvZero( img );
+
+    // use the straightforward algorithm: for every pixel check if it is inside the ellipse
+    for( y = 0; y < img_size.height; y++ )
+    {
+        uchar* ptr = img->data.ptr + img->step*y;
+        float* fl = (float*)ptr;
+        double x_ = (y - cy)*b, y_ = (y - cy)*a;
+
+        for( x = 0; x < img_size.width; x++ )
+        {
+            double x1 = (x - cx)*a - x_;
+            double y1 = (x - cx)*b + y_;
+            
+            if( x1*x1*inv_hh + y1*y1*inv_ww <= 1. )
+            {
+                if( img_type == CV_8U )
+                    ptr[x] = (uchar)1;
+                else
+                    fl[x] = (float)1.f;
+            }
+        }
+    }
+}
+
+
+int CV_TrackBaseTest::prepare_test_case( int test_case_idx )
+{
+    CvRNG* rng = ts->get_rng();
+    CvTest::prepare_test_case( test_case_idx );
+    float m;
+
+    clear();
+
+    box0.size.width = (float)exp((cvTsRandReal(rng) * (max_log_size - min_log_size) + min_log_size)*CV_LOG2);
+    box0.size.height = (float)exp((cvTsRandReal(rng) * (max_log_size - min_log_size) + min_log_size)*CV_LOG2);
+    box0.angle = (float)(cvTsRandReal(rng)*180.);
+
+    if( box0.size.width > box0.size.height )
+    {
+        float t;
+        CV_SWAP( box0.size.width, box0.size.height, t );
+    }
+
+    m = MAX( box0.size.width, box0.size.height );
+    img_size.width = cvRound(cvTsRandReal(rng)*m*0.5 + m + 1);
+    img_size.height = cvRound(cvTsRandReal(rng)*m*0.5 + m + 1);
+    img_type = cvTsRandInt(rng) % 2 ? CV_32F : CV_8U;
+    img_type = CV_8U;
+
+    box0.center.x = (float)(img_size.width*0.5 + (cvTsRandReal(rng)-0.5)*(img_size.width - m));
+    box0.center.y = (float)(img_size.height*0.5 + (cvTsRandReal(rng)-0.5)*(img_size.height - m));
+
+    criteria = cvTermCriteria( CV_TERMCRIT_EPS + CV_TERMCRIT_ITER, 10, 0.1 );
+
+    generate_object();
+
+    return 1;
+}
+
+
+void CV_TrackBaseTest::run_func(void)
+{
+}
+
+
+int CV_TrackBaseTest::validate_test_results( int /*test_case_idx*/ )
+{
+    return 0;
+}
+
+
+CV_TrackBaseTest track_basetest( "track", "" );
+
+
+
+///////////////////////// CamShift //////////////////////////////
+
+class CV_CamShiftTest : public CV_TrackBaseTest
+{
+public:
+    CV_CamShiftTest();
+
+protected:
+    void run_func(void);
+    int prepare_test_case( int test_case_idx );
+    int validate_test_results( int test_case_idx );
+    void generate_object();
+
+    CvBox2D box;
+    CvRect init_rect;
+    CvConnectedComp comp;
+    int area0;
+};
+
+
+CV_CamShiftTest::CV_CamShiftTest() :
+    CV_TrackBaseTest( "track-camshift", "cvCamShift" )
+{
+}
+
+
+int CV_CamShiftTest::prepare_test_case( int test_case_idx )
+{
+    CvRNG* rng = ts->get_rng();
+    double m;
+    int code = CV_TrackBaseTest::prepare_test_case( test_case_idx );
+    int i, area;
+
+    if( code <= 0 )
+        return code;
+
+    area0 = cvCountNonZero(img);
+
+    for(i = 0; i < 100; i++)
+    {
+        CvMat temp;
+        
+        m = (box0.size.width + box0.size.height)*0.5;
+        init_rect.x = cvFloor(box0.center.x - m*(0.4 + cvTsRandReal(rng)*0.2));
+        init_rect.y = cvFloor(box0.center.y - m*(0.4 + cvTsRandReal(rng)*0.2));
+        init_rect.width = cvCeil(box0.center.x + m*(0.4 + cvTsRandReal(rng)*0.2) - init_rect.x);
+        init_rect.height = cvCeil(box0.center.y + m*(0.4 + cvTsRandReal(rng)*0.2) - init_rect.y);
+        
+        if( init_rect.x < 0 || init_rect.y < 0 ||
+            init_rect.x + init_rect.width >= img_size.width ||
+            init_rect.y + init_rect.height >= img_size.height )
+            continue;
+
+        cvGetSubRect( img, &temp, init_rect );
+        area = cvCountNonZero( &temp );
+        
+        if( area >= 0.1*area0 )
+            break;
+    }
+
+    return i < 100 ? code : 0;
+}
+
+
+void CV_CamShiftTest::run_func(void)
+{
+    cvCamShift( img, init_rect, criteria, &comp, &box );
+}
+
+
+int CV_CamShiftTest::validate_test_results( int /*test_case_idx*/ )
+{
+    int code = CvTS::OK;
+    
+    double m = MAX(box0.size.width, box0.size.height), delta;
+    double diff_angle;
+    
+    if( cvIsNaN(box.size.width) || cvIsInf(box.size.width) || box.size.width <= 0 ||
+        cvIsNaN(box.size.height) || cvIsInf(box.size.height) || box.size.height <= 0 ||
+        cvIsNaN(box.center.x) || cvIsInf(box.center.x) ||
+        cvIsNaN(box.center.y) || cvIsInf(box.center.y) ||
+        cvIsNaN(box.angle) || cvIsInf(box.angle) || box.angle < -180 || box.angle > 180 ||
+        cvIsNaN(comp.area) || cvIsInf(comp.area) || comp.area <= 0 )
+    {
+        ts->printf( CvTS::LOG, "Invalid CvBox2D or CvConnectedComp was returned by cvCamShift\n" );
+        code = CvTS::FAIL_INVALID_OUTPUT;
+        goto _exit_;
+    }
+
+    box.angle = (float)(180 - box.angle);
+
+    if( fabs(box.size.width - box0.size.width) > box0.size.width*0.2 ||
+        fabs(box.size.height - box0.size.height) > box0.size.height*0.3 )
+    {
+        ts->printf( CvTS::LOG, "Incorrect CvBox2D size (=%.1f x %.1f, should be %.1f x %.1f)\n",
+            box.size.width, box.size.height, box0.size.width, box0.size.height );
+        code = CvTS::FAIL_BAD_ACCURACY;
+        goto _exit_;
+    }
+
+    if( fabs(box.center.x - box0.center.x) > m*0.1 ||
+        fabs(box.center.y - box0.center.y) > m*0.1 )
+    {
+        ts->printf( CvTS::LOG, "Incorrect CvBox2D position (=(%.1f, %.1f), should be (%.1f, %.1f))\n",
+            box.center.x, box.center.y, box0.center.x, box0.center.y );
+        code = CvTS::FAIL_BAD_ACCURACY;
+        goto _exit_;
+    }
+
+    if( box.angle < 0 )
+        box.angle += 180;
+    
+    diff_angle = fabs(box0.angle - box.angle);
+    diff_angle = MIN( diff_angle, fabs(box0.angle - box.angle + 180));
+
+    if( fabs(diff_angle) > 30 && box0.size.height > box0.size.width*1.2 )
+    {
+        ts->printf( CvTS::LOG, "Incorrect CvBox2D angle (=%1.f, should be %1.f)\n",
+            box.angle, box0.angle );
+        code = CvTS::FAIL_BAD_ACCURACY;
+        goto _exit_;
+    }
+
+    delta = m*0.7;
+
+    if( comp.rect.x < box0.center.x - delta ||
+        comp.rect.y < box0.center.y - delta ||
+        comp.rect.x + comp.rect.width > box0.center.x + delta ||
+        comp.rect.y + comp.rect.height > box0.center.y + delta )
+    {
+        ts->printf( CvTS::LOG,
+            "Incorrect CvConnectedComp ((%d,%d,%d,%d) is not within (%.1f,%.1f,%.1f,%.1f))\n",
+            comp.rect.x, comp.rect.y, comp.rect.x + comp.rect.width, comp.rect.y + comp.rect.height,
+            box0.center.x - delta, box0.center.y - delta, box0.center.x + delta, box0.center.y + delta );
+        code = CvTS::FAIL_BAD_ACCURACY;
+        goto _exit_;
+    }
+
+    if( fabs(comp.area - area0) > area0*0.1 )
+    {
+        ts->printf( CvTS::LOG,
+            "Incorrect CvConnectedComp area (=%.1f, should be %d)\n", comp.area, area0 );
+        code = CvTS::FAIL_BAD_ACCURACY;
+        goto _exit_;
+    }
+
+_exit_:
+
+    if( code < 0 )
+    {
+#if defined _DEBUG && defined WIN32
+        IplImage* dst = cvCreateImage( img_size, 8, 3 );
+        cvNamedWindow( "test", 1 );
+        cvCmpS( img, 0, img, CV_CMP_GT );
+        cvCvtColor( img, dst, CV_GRAY2BGR );
+        cvRectangle( dst, cvPoint(init_rect.x, init_rect.y),
+            cvPoint(init_rect.x + init_rect.width, init_rect.y + init_rect.height),
+            CV_RGB(255,0,0), 3, 8, 0 );
+        cvEllipseBox( dst, box, CV_RGB(0,255,0), 3, 8, 0 );
+        cvShowImage( "test", dst );
+        cvReleaseImage( &dst );
+        cvWaitKey();
+#endif
+        ts->set_failed_test_info( code );
+    }
+    return code;
+}
+
+
+CV_CamShiftTest camshift_test;
+
+
+///////////////////////// MeanShift //////////////////////////////
+
+class CV_MeanShiftTest : public CV_TrackBaseTest
+{
+public:
+    CV_MeanShiftTest();
+
+protected:
+    void run_func(void);
+    int prepare_test_case( int test_case_idx );
+    int validate_test_results( int test_case_idx );
+    void generate_object();
+
+    CvRect init_rect;
+    CvConnectedComp comp;
+    int area0, area;
+};
+
+
+CV_MeanShiftTest::CV_MeanShiftTest() :
+    CV_TrackBaseTest( "track-meanshift", "cvMeanShift" )
+{
+}
+
+
+int CV_MeanShiftTest::prepare_test_case( int test_case_idx )
+{
+    CvRNG* rng = ts->get_rng();
+    double m;
+    int code = CV_TrackBaseTest::prepare_test_case( test_case_idx );
+    int i;
+
+    if( code <= 0 )
+        return code;
+
+    area0 = cvCountNonZero(img);
+
+    for(i = 0; i < 100; i++)
+    {
+        CvMat temp;
+        
+        m = (box0.size.width + box0.size.height)*0.5;
+        init_rect.x = cvFloor(box0.center.x - m*(0.4 + cvTsRandReal(rng)*0.2));
+        init_rect.y = cvFloor(box0.center.y - m*(0.4 + cvTsRandReal(rng)*0.2));
+        init_rect.width = cvCeil(box0.center.x + m*(0.4 + cvTsRandReal(rng)*0.2) - init_rect.x);
+        init_rect.height = cvCeil(box0.center.y + m*(0.4 + cvTsRandReal(rng)*0.2) - init_rect.y);
+        
+        if( init_rect.x < 0 || init_rect.y < 0 ||
+            init_rect.x + init_rect.width >= img_size.width ||
+            init_rect.y + init_rect.height >= img_size.height )
+            continue;
+
+        cvGetSubRect( img, &temp, init_rect );
+        area = cvCountNonZero( &temp );
+        
+        if( area >= 0.5*area0 )
+            break;
+    }
+
+    return i < 100 ? code : 0;
+}
+
+
+void CV_MeanShiftTest::run_func(void)
+{
+    cvMeanShift( img, init_rect, criteria, &comp );
+}
+
+
+int CV_MeanShiftTest::validate_test_results( int /*test_case_idx*/ )
+{
+    int code = CvTS::OK;
+    CvPoint2D32f c;
+    double m = MAX(box0.size.width, box0.size.height), delta;
+    
+    if( cvIsNaN(comp.area) || cvIsInf(comp.area) || comp.area <= 0 )
+    {
+        ts->printf( CvTS::LOG, "Invalid CvConnectedComp was returned by cvMeanShift\n" );
+        code = CvTS::FAIL_INVALID_OUTPUT;
+        goto _exit_;
+    }
+
+    c.x = (float)(comp.rect.x + comp.rect.width*0.5);
+    c.y = (float)(comp.rect.y + comp.rect.height*0.5);
+
+    if( fabs(c.x - box0.center.x) > m*0.1 ||
+        fabs(c.y - box0.center.y) > m*0.1 )
+    {
+        ts->printf( CvTS::LOG, "Incorrect CvBox2D position (=(%.1f, %.1f), should be (%.1f, %.1f))\n",
+            c.x, c.y, box0.center.x, box0.center.y );
+        code = CvTS::FAIL_BAD_ACCURACY;
+        goto _exit_;
+    }
+
+    delta = m*0.7;
+
+    if( comp.rect.x < box0.center.x - delta ||
+        comp.rect.y < box0.center.y - delta ||
+        comp.rect.x + comp.rect.width > box0.center.x + delta ||
+        comp.rect.y + comp.rect.height > box0.center.y + delta )
+    {
+        ts->printf( CvTS::LOG,
+            "Incorrect CvConnectedComp ((%d,%d,%d,%d) is not within (%.1f,%.1f,%.1f,%.1f))\n",
+            comp.rect.x, comp.rect.y, comp.rect.x + comp.rect.width, comp.rect.y + comp.rect.height,
+            box0.center.x - delta, box0.center.y - delta, box0.center.x + delta, box0.center.y + delta );
+        code = CvTS::FAIL_BAD_ACCURACY;
+        goto _exit_;
+    }
+
+    if( fabs(comp.area - area0) > fabs(area - area0) + area0*0.05 )
+    {
+        ts->printf( CvTS::LOG,
+            "Incorrect CvConnectedComp area (=%.1f, should be %d)\n", comp.area, area0 );
+        code = CvTS::FAIL_BAD_ACCURACY;
+        goto _exit_;
+    }
+
+_exit_:
+
+    if( code < 0 )
+    {
+#if defined _DEBUG && defined WIN32
+        IplImage* dst = cvCreateImage( img_size, 8, 3 );
+        cvNamedWindow( "test", 1 );
+        cvCmpS( img, 0, img, CV_CMP_GT );
+        cvCvtColor( img, dst, CV_GRAY2BGR );
+        cvRectangle( dst, cvPoint(init_rect.x, init_rect.y),
+            cvPoint(init_rect.x + init_rect.width, init_rect.y + init_rect.height),
+            CV_RGB(255,0,0), 3, 8, 0 );
+        cvRectangle( dst, cvPoint(comp.rect.x, comp.rect.y),
+            cvPoint(comp.rect.x + comp.rect.width, comp.rect.y + comp.rect.height),
+            CV_RGB(0,255,0), 3, 8, 0 );
+        cvShowImage( "test", dst );
+        cvReleaseImage( &dst );
+        cvWaitKey();
+#endif
+        ts->set_failed_test_info( code );
+    }
+    return code;
+}
+
+
+CV_MeanShiftTest meanshift_test;
 
 /* End of file. */
