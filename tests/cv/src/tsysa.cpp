@@ -100,7 +100,6 @@ int main(int argC,char *argV[])
     InitACalcOpticalFlowLK();
     InitACalcOpticalFlowHS();
     InitACalibration();
-    InitACamShift();
     InitAChessCorners();
     InitAConDens();
     InitAContours();
@@ -112,7 +111,6 @@ int main(int argC,char *argV[])
     InitAFitEllipse();
     InitAFitLine();
     //InitACalcContrastHist(); // the function is not available
-    //InitAHistograms();
     InitAHoughLines();
     InitAImage();
     //InitAImageToHMMObs(); // test uses IPL DCT
@@ -120,14 +118,12 @@ int main(int argC,char *argV[])
     //InitAKMeans(); // test is not up-to-date
     InitAMatchContours();
     InitAMatchContourTrees();
-    InitAMeanShift();
     // InitAMotSeg(); // test is not up-to-date
     InitAOptFlowPyrLK();
     InitAPixelAccess();
 
     InitAPOSIT();
     InitASnakes();
-    InitASubdiv();
     InitAPyrSegmentation();
     //InitAGestureRecognition(); // some functionality has been removed
 
