@@ -135,6 +135,12 @@ CVAPI(void) cvPyrMeanShiftFiltering( const CvArr* src, CvArr* dst,
 /* Segments image using seed "markers" */
 CVAPI(void) cvWatershed( const CvArr* image, CvArr* markers );
 
+#define CV_INPAINT_NS      0
+#define CV_INPAINT_TELEA   1
+
+/* Inpaints the selected region in the image */
+CVAPI(void) cvInpaint( const CvArr* src, const CvArr* inpaint_mask,
+                       CvArr* dst, double inpaintRange, int flags );
 
 #define CV_SCHARR -1
 #define CV_MAX_SOBEL_KSIZE 7

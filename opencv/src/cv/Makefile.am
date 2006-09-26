@@ -15,7 +15,7 @@ lib_cv_la_SOURCES = \
     cvcornersubpix.cpp cvderiv.cpp cvdistransform.cpp cvdominants.cpp \
     cvemd.cpp cvfeatureselect.cpp cvfilter.cpp cvfloodfill.cpp cvfundam.cpp \
     cvgeometry.cpp cvhaar.cpp cvhistogram.cpp cvhough.cpp cvimgwarp.cpp \
-    cvkalman.cpp cvlinefit.cpp cvlkpyramid.cpp cvmatchcontours.cpp \
+    cvinpaint.cpp cvkalman.cpp cvlinefit.cpp cvlkpyramid.cpp cvmatchcontours.cpp \
     cvmoments.cpp cvmorph.cpp cvmotempl.cpp cvoptflowbm.cpp cvoptflowhs.cpp \
     cvoptflowlk.cpp cvpgh.cpp cvposit.cpp cvprecomp.cpp cvpyramids.cpp \
     cvpyrsegmentation.cpp cvrotcalipers.cpp cvsamplers.cpp cvsegmentation.cpp cvshapedescr.cpp \
