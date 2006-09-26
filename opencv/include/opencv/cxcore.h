@@ -344,7 +344,7 @@ CVAPI(uchar*) cvPtr3D( const CvArr* arr, int idx0, int idx1, int idx2,
    (row index (y) goes first, column index (x) goes next).
    For CvMatND or CvSparseMat number of infices should match number of <dims> and
    indices order should match the array dimension order. */
-CVAPI(uchar*) cvPtrND( const CvArr* arr, int* idx, int* type CV_DEFAULT(NULL),
+CVAPI(uchar*) cvPtrND( const CvArr* arr, const int* idx, int* type CV_DEFAULT(NULL),
                       int create_node CV_DEFAULT(1),
                       unsigned* precalc_hashval CV_DEFAULT(NULL));
 
@@ -352,30 +352,30 @@ CVAPI(uchar*) cvPtrND( const CvArr* arr, int* idx, int* type CV_DEFAULT(NULL),
 CVAPI(CvScalar) cvGet1D( const CvArr* arr, int idx0 );
 CVAPI(CvScalar) cvGet2D( const CvArr* arr, int idx0, int idx1 );
 CVAPI(CvScalar) cvGet3D( const CvArr* arr, int idx0, int idx1, int idx2 );
-CVAPI(CvScalar) cvGetND( const CvArr* arr, int* idx );
+CVAPI(CvScalar) cvGetND( const CvArr* arr, const int* idx );
 
 /* for 1-channel arrays */
 CVAPI(double) cvGetReal1D( const CvArr* arr, int idx0 );
 CVAPI(double) cvGetReal2D( const CvArr* arr, int idx0, int idx1 );
 CVAPI(double) cvGetReal3D( const CvArr* arr, int idx0, int idx1, int idx2 );
-CVAPI(double) cvGetRealND( const CvArr* arr, int* idx );
+CVAPI(double) cvGetRealND( const CvArr* arr, const int* idx );
 
 /* arr(idx0,idx1,...) = value */
 CVAPI(void) cvSet1D( CvArr* arr, int idx0, CvScalar value );
 CVAPI(void) cvSet2D( CvArr* arr, int idx0, int idx1, CvScalar value );
 CVAPI(void) cvSet3D( CvArr* arr, int idx0, int idx1, int idx2, CvScalar value );
-CVAPI(void) cvSetND( CvArr* arr, int* idx, CvScalar value );
+CVAPI(void) cvSetND( CvArr* arr, const int* idx, CvScalar value );
 
 /* for 1-channel arrays */
 CVAPI(void) cvSetReal1D( CvArr* arr, int idx0, double value );
 CVAPI(void) cvSetReal2D( CvArr* arr, int idx0, int idx1, double value );
 CVAPI(void) cvSetReal3D( CvArr* arr, int idx0,
                         int idx1, int idx2, double value );
-CVAPI(void) cvSetRealND( CvArr* arr, int* idx, double value );
+CVAPI(void) cvSetRealND( CvArr* arr, const int* idx, double value );
 
 /* clears element of ND dense array,
    in case of sparse arrays it deletes the specified node */
-CVAPI(void) cvClearND( CvArr* arr, int* idx );
+CVAPI(void) cvClearND( CvArr* arr, const int* idx );
 
 /* Converts CvArr (IplImage or CvMat,...) to CvMat.
    If the last parameter is non-zero, function can
