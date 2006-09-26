@@ -935,7 +935,7 @@ The function <code>cvCvtColor</code> converts input image from one color space t
 The function ignores <code>colorModel</code> and <code>channelSeq</code> fields of <code>IplImage</code> header,
 so the source image color space should be specified correctly (including order of the channels in case
 of RGB space, e.g. BGR means 24-bit format with B<sub>0</sub> G<sub>0</sub> R<sub>0</sub> B<sub>1</sub> G<sub>1</sub> R<sub>1</sub> ... layout,
-whereas RGB means 24-format with R<sub>0</sub> G<sub>0</sub> B<sub>0</sub> R<sub>1</sub> G<sub>1</sub> B<sub>1</sub> ... layout).
+whereas RGB means 24-bit format with R<sub>0</sub> G<sub>0</sub> B<sub>0</sub> R<sub>1</sub> G<sub>1</sub> B<sub>1</sub> ... layout).
 </p><p>
 The conventional range for R,G,B channel values is:
 <ul>
@@ -1935,6 +1935,26 @@ themselves are found as contours in the beginning of the function.</p>
 <p>
 In this mode the processing time is still O(N), where N is the number of pixels.
 Thus, the function provides a very fast way to compute approximate Voronoi diagram for the binary image.</p>
+
+
+<hr><h3><a name="decl_cvInpaint">Inpaint</a></h3>
+<p class="Blurb">Inpaints the selected region in the image</p>
+<pre>
+void cvInpaint( const CvArr* src, const CvArr* mask, CvArr* dst,
+                int flags, double inpaintRadius );
+</pre><p><dl>
+<dt>src<dd>The input 8-bit 1-channel or 3-channel image.
+<dt>mask<dd>The inpainting mask, 8-bit 1-channel image.
+           Non-zero pixels indicate the area that needs to be inpainted.
+<dt>dst<dd>The output image of the same format and the same size as input.
+<dt>flags<dd>The inpainting method, one of the following:<br>
+                 <code>CV_INPAINT_NS</code> - Navier-Stokes based method.<br>
+                 <code>CV_INPAINT_TELEA</code> - The method by Alexandru Telea <a href="#paper_telea04">[Telea04]</a>
+<dt>inpaintRadius<dd>The radius of circlular neighborhood of each point inpainted that is considered by the algorithm.
+</dl><p>
+The function <code>cvInpaint</code> reconstructs the selected image area from the pixel near the
+area boundary. The function may be used to remove dust and scratches from a scanned photo, or
+to remove undesirable objects from still images or video.</p>
 
 
 <hr><h2><a name="cv_imgproc_histograms">Histograms</a></h2>
@@ -5558,6 +5578,10 @@ Images by Border Following. CVGIP, v.30, n.1. 1985, pp. 32-46.
 
 <li><b>[Teh89]</b> C.H. Teh, R.T. Chin. On the Detection of Dominant Points on Digital
 Curves. - IEEE Tr. PAMI, 1989, v.11, No.8, p. 859-872.
+
+<li><a name="paper_telea04"><b>[Telea04]</b>
+A. Telea, "An image inpainting technique based on the fast marching method,"
+J. Graphics Tools, vol.9, no.1, pp.25–36, 2004.<br>
 
 <li><b>[Trucco98]</b> Emanuele Trucco, Alessandro Verri. Introductory Techniques for 3-D
 Computer Vision. Prentice Hall, Inc., 1998.
