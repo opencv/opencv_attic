@@ -315,6 +315,7 @@ cvInitMatNDHeader( CvMatND* mat, int dims, const int* sizes,
     mat->dims = dims;
     mat->data.ptr = (uchar*)data;
     mat->refcount = 0;
+    mat->hdr_refcount = 0;
     result = mat;
 
     __END__;
@@ -785,7 +786,7 @@ cvInitSparseMatIterator( const CvSparseMat* mat, CvSparseMatIterator* iterator )
 #define ICV_SPARSE_MAT_HASH_MULTIPLIER  33
 
 static uchar*
-icvGetNodePtr( CvSparseMat* mat, int* idx, int* _type,
+icvGetNodePtr( CvSparseMat* mat, const int* idx, int* _type,
                int create_node, unsigned* precalc_hashval )
 {
     uchar* ptr = 0;
@@ -885,7 +886,7 @@ icvGetNodePtr( CvSparseMat* mat, int* idx, int* _type,
 
 
 static void
-icvDeleteNode( CvSparseMat* mat, int* idx, unsigned* precalc_hashval )
+icvDeleteNode( CvSparseMat* mat, const int* idx, unsigned* precalc_hashval )
 {
     CV_FUNCNAME( "icvDeleteNode" );
 
@@ -2148,7 +2149,7 @@ cvPtr3D( const CvArr* arr, int z, int y, int x, int* _type )
 
 // Returns pointer to specified element of n-d array
 CV_IMPL  uchar*
-cvPtrND( const CvArr* arr, int* idx, int* _type,
+cvPtrND( const CvArr* arr, const int* idx, int* _type,
          int create_node, unsigned* precalc_hashval )
 {
     uchar* ptr = 0;
@@ -2301,7 +2302,7 @@ cvGet3D( const CvArr* arr, int z, int y, int x )
 
 // Returns specifed element of nD array
 CV_IMPL  CvScalar
-cvGetND( const CvArr* arr, int* idx )
+cvGetND( const CvArr* arr, const int* idx )
 {
     CvScalar scalar = {{0,0,0,0}};
 
@@ -2455,7 +2456,7 @@ cvGetReal3D( const CvArr* arr, int z, int y, int x )
 
 // Returns specifed element of nD array
 CV_IMPL  double
-cvGetRealND( const CvArr* arr, int* idx )
+cvGetRealND( const CvArr* arr, const int* idx )
 {
     double value = 0;
 
@@ -2583,7 +2584,7 @@ cvSet3D( CvArr* arr, int z, int y, int x, CvScalar scalar )
 
 // Assigns new value to specifed element of nD array
 CV_IMPL  void
-cvSetND( CvArr* arr, int* idx, CvScalar scalar )
+cvSetND( CvArr* arr, const int* idx, CvScalar scalar )
 {
     /*CV_FUNCNAME( "cvSetND" );*/
 
@@ -2710,7 +2711,7 @@ cvSetReal3D( CvArr* arr, int z, int y, int x, double value )
 
 
 CV_IMPL  void
-cvSetRealND( CvArr* arr, int* idx, double value )
+cvSetRealND( CvArr* arr, const int* idx, double value )
 {
     CV_FUNCNAME( "cvSetRealND" );
 
@@ -2735,7 +2736,7 @@ cvSetRealND( CvArr* arr, int* idx, double value )
 
 
 CV_IMPL void
-cvClearND( CvArr* arr, int* idx )
+cvClearND( CvArr* arr, const int* idx )
 {
     /*CV_FUNCNAME( "cvClearND" );*/
 
