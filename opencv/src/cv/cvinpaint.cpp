@@ -90,7 +90,6 @@ public:
             for( j = 0; j < f->cols; j++ )
                 num += CV_MAT_ELEM(*f,uchar,i,j)!=0;
         }
-        num = num*8 + (f->rows + f->cols)*2;
         if (num<=0) return false;
         mem = (CvHeapElem*)cvAlloc((num+2)*sizeof(CvHeapElem));
         if (mem==NULL) return false;
