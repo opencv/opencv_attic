@@ -40,627 +40,343 @@
 //M*/
 
 #include "cvtest.h"
-#include <limits.h>
-#include <float.h>
 
-#define DRAW_CONTOURS   0
-#define DRAW_CONTOURS2   0
-
-static char* funcName[] = 
+class CV_FindContourTest : public CvTest
 {
-    "cvStartFindContours, cvFindNextContour, cvEndFindContours, cvDrawContours, cvApproxChains, "
-    "cvStartReadChainPoints, cvReadChainPoint",
-    "cvCopySeqToArray, cvContourPerimeter",
-    "cvApproxPoly, cvDrawContours, icvSeqTreeToSeq",
+public:
+    enum { NUM_IMG = 4 };
+    
+    CV_FindContourTest();
+    ~CV_FindContourTest();
+    int write_default_params(CvFileStorage* fs);
+    void clear();
+
+protected:
+    int read_params( CvFileStorage* fs );
+    int prepare_test_case( int test_case_idx );
+    int validate_test_results( int test_case_idx );
+    void run_func();
+
+    int min_blob_size, max_blob_size;
+    int blob_count, max_log_blob_count;
+    int retr_mode, approx_method;
+
+    int min_log_img_size, max_log_img_size;
+    CvSize img_size;
+    int count, count2;
+
+    IplImage *img[NUM_IMG];
+    CvMemStorage* storage;
+    CvSeq *contours, *contours2, *chain;
 };
 
-static char* testName[] = 
+
+CV_FindContourTest::CV_FindContourTest() :
+    CvTest( "contour-find", "cvFindContours, cvDrawContours, cvApproxChains" )
 {
-    "Retrieving contours",
-    "Comparing perimeter calculation with etalon algorithm",
-    "Visual test for approx contours"
-};
+    int i;
+    test_case_count = 300;
+    min_blob_size = 1;
+    max_blob_size = 50;
+    max_log_blob_count = 10;
 
-static int img_size;
-static int min_blob_size, max_blob_size;
-static int max_contour_size;
-static int base_iters;
-static int blob_count;
-static int init_contour_params = 0;
-static const int max_storage_size = 100000;
-
-void read_contour_params( void )
-{
-    if( !init_contour_params )
-    {
-        trsiRead( &img_size, "307", "linear image size" );
-        trsiRead( &min_blob_size, "1", "Minimal size of blob" );
-        trsiRead( &max_blob_size, "50", "Maximal size of blob" );
-        trsiRead( &max_contour_size, "10000", "Maximal contour size" );
-        trsiRead( &blob_count, "100", "Number of blobs" );
-        trsiRead( &base_iters, "300", "Number of iterations" );
-
-        init_contour_params = 1;
-    }
+    min_log_img_size = 3;
+    max_log_img_size = 10;
+    
+    for( i = 0; i < NUM_IMG; i++ )
+        img[i] = 0;
+    storage = 0;
 }
 
 
-static void mark_contours_etalon( IplImage* img, int val )
+CV_FindContourTest::~CV_FindContourTest()
 {
-    void* _data = 0;
-    uchar* data;
-    int    i, step = 0;
+    clear();
+}
+
+
+void CV_FindContourTest::clear()
+{
+    CvTest::clear();
+    int i;
+    for( i = 0; i < NUM_IMG; i++ )
+        cvReleaseImage( &img[i] );
+    cvReleaseMemStorage( &storage );
+}
+
+
+int CV_FindContourTest::write_default_params( CvFileStorage* fs )
+{
+    CvTest::write_default_params( fs );
+    if( ts->get_testing_mode() != CvTS::TIMING_MODE )
+    {
+        write_param( fs, "test_case_count", test_case_count );
+        write_param( fs, "min_blob_size", min_blob_size );
+        write_param( fs, "max_blob_size", max_blob_size );
+        write_param( fs, "max_log_blob_count", max_log_blob_count );
+        write_param( fs, "min_log_img_size", min_log_img_size );
+        write_param( fs, "max_log_img_size", max_log_img_size );
+    }
+    return 0;
+}
+
+
+int CV_FindContourTest::read_params( CvFileStorage* fs )
+{
+    int code = CvTest::read_params( fs );
+    int t;
+
+    if( code < 0 )
+        return code;
+
+    min_blob_size = cvReadInt( find_param( fs, "min_blob_size" ), min_blob_size );
+    max_blob_size = cvReadInt( find_param( fs, "max_blob_size" ), max_blob_size );
+    max_log_blob_count = cvReadInt( find_param( fs, "max_log_blob_count" ), max_log_blob_count );    
+    min_log_img_size = cvReadInt( find_param( fs, "min_log_img_size" ), min_log_img_size );
+    max_log_img_size = cvReadInt( find_param( fs, "max_log_img_size" ), max_log_img_size );
+    
+    min_blob_size = cvTsClipInt( min_blob_size, 1, 100 );
+    max_blob_size = cvTsClipInt( max_blob_size, 1, 100 );
+    if( min_blob_size > max_blob_size )
+        CV_SWAP( min_blob_size, max_blob_size, t );
+
+    max_log_blob_count = cvTsClipInt( max_log_blob_count, 1, 10 );
+
+    min_log_img_size = cvTsClipInt( min_log_img_size, 1, 10 );
+    max_log_img_size = cvTsClipInt( max_log_img_size, 1, 10 );
+    if( min_log_img_size > max_log_img_size )
+        CV_SWAP( min_log_img_size, max_log_img_size, t );
+
+    return 0;
+}
+
+
+static void
+cvTsGenerateBlobImage( IplImage* img, int min_blob_size, int max_blob_size,
+                       int blob_count, int min_brightness, int max_brightness,
+                       CvRNG* rng )
+{
+    int i;
     CvSize size;
+    assert( img->depth == IPL_DEPTH_8U && img->nChannels == 1 );
+    cvZero( img );
+    // keep the border clear
+    cvSetImageROI( img, cvRect(1,1,img->width-2,img->height-2) );
+    size = cvGetSize( img );
+
+    for( i = 0; i < blob_count; i++ )
+    {
+        CvPoint center;
+        CvSize  axes;
+        int angle = cvTsRandInt(rng) % 180;
+        int brightness = cvTsRandInt(rng) %
+                         (max_brightness - min_brightness) + min_brightness;
+        center.x = cvTsRandInt(rng) % size.width;
+        center.y = cvTsRandInt(rng) % size.height;
+        axes.width = (cvTsRandInt(rng) %
+                     (max_blob_size - min_blob_size) + min_blob_size + 1)/2;
+        axes.height = (cvTsRandInt(rng) %
+                      (max_blob_size - min_blob_size) + min_blob_size + 1)/2;
+        
+        cvEllipse( img, center, axes, angle, 0, 360, cvScalar(brightness), CV_FILLED ); 
+    }
+
+    cvResetImageROI( img );
+}
+
+
+static void
+cvTsMarkContours( IplImage* img, int val )
+{
+    int i, j;
+    int step = img->widthStep;
     
     assert( img->depth == IPL_DEPTH_8U && img->nChannels == 1 && (val&1) != 0);
-
-    atsGetImageInfo( img, &_data, &step, &size, 0, 0, 0 );
-
-    data = (uchar*)_data;
-    data += step;
-    for( i = 1; i < size.height - 1; i++, data += step )
-    {
-        int j;
-        for( j = 1; j < size.width - 1; j++ )
+    for( i = 1; i < img->height - 1; i++ )
+        for( j = 1; j < img->width - 1; j++ )
         {
-            uchar* t = data + j;
+            uchar* t = (uchar*)(img->imageData + img->widthStep*i + j);
             if( *t == 1 && (t[-step] == 0 || t[-1] == 0 || t[1] == 0 || t[step] == 0))
                 *t = (uchar)val;
         }
-    }
 
     cvThreshold( img, img, val - 2, val, CV_THRESH_BINARY );
 }
 
 
-static int contour_retrieving_test( void )
+int CV_FindContourTest::prepare_test_case( int test_case_idx )
 {
-    const double  success_error_level = 0;
-    const int  depth = IPL_DEPTH_8U;
+    CvRNG* rng = ts->get_rng();
     const int  min_brightness = 0, max_brightness = 2;
-    const int  mark_val = 255, mark_val2 = mark_val >> DRAW_CONTOURS;
+    int i, code = CvTest::prepare_test_case( test_case_idx );
+    if( code < 0 )
+        return code;
+    
+    clear();
 
-    int  seed  = atsGetSeed();
+    blob_count = cvRound(exp(cvTsRandReal(rng)*max_log_blob_count*CV_LOG2));
+    img_size.width = cvRound(exp((cvTsRandReal(rng)*
+        (max_log_img_size - min_log_img_size) + min_log_img_size)*CV_LOG2));
+    img_size.height = cvRound(exp((cvTsRandReal(rng)*
+        (max_log_img_size - min_log_img_size) + min_log_img_size)*CV_LOG2));
 
-    /* position where the maximum error occured */
-    int     merr_iter = 0;
+    approx_method = cvTsRandInt( rng ) % 4 + 1;
+    retr_mode = cvTsRandInt( rng ) % 4;
 
-    /* test parameters */
-    int     i = 0;
-    double  max_err = 0.;
-    int     code = TRS_OK;
+    storage = cvCreateMemStorage( 1 << 10 );
 
-    IplImage    *src_img, *dst1_img, *dst2_img, *dst3_img;
-    /*IplImage    *srcfl_img;*/
-    AtsRandState rng_state;
-    CvMemStorage* storage;
-    CvSize size;
+    for( i = 0; i < NUM_IMG; i++ )
+        img[i] = cvCreateImage( img_size, 8, 1 );
+    
+    cvTsGenerateBlobImage( img[0], min_blob_size, max_blob_size,
+        blob_count, min_brightness, max_brightness, rng );
+    cvCopy( img[0], img[1] );
+    cvCopy( img[0], img[2] );
+    cvTsMarkContours( img[1], 255 );
 
-    atsRandInit( &rng_state, 0, 1, seed );
+    return 1;
+}
 
-    read_contour_params();
 
-    size = cvSize( img_size, img_size*3/4 );
+void CV_FindContourTest::run_func()
+{
+    contours = contours2 = chain = 0;
+    count = cvFindContours( img[2], storage, &contours, sizeof(CvContour), retr_mode, approx_method );
+    cvZero( img[3] );
+    if( contours && retr_mode != CV_RETR_EXTERNAL && approx_method < CV_CHAIN_APPROX_TC89_L1 )
+        cvDrawContours( img[3], contours, cvScalar(255), cvScalar(255), INT_MAX, -1 );
+    cvCopy( img[0], img[2] );
+    count2 = cvFindContours( img[2], storage, &chain, sizeof(CvChain), retr_mode, CV_CHAIN_CODE );
+    if( chain )
+        contours2 = cvApproxChains( chain, storage, approx_method, 0, 0, 1 );
+    cvZero( img[2] );
+    if( contours && retr_mode != CV_RETR_EXTERNAL && approx_method < CV_CHAIN_APPROX_TC89_L1 )
+        cvDrawContours( img[2], contours2, cvScalar(255), cvScalar(255), INT_MAX );
+}
 
-    src_img  = cvCreateImage( size, depth, 1 );
-    dst1_img = cvCreateImage( size, depth, 1 );
-    dst2_img = cvCreateImage( size, depth, 1 );
-    dst3_img = cvCreateImage( size, depth, 1 );
 
-    storage = cvCreateMemStorage(atsRandPlain32s(&rng_state) % max_storage_size );
+// the whole testing is done here, run_func() is not utilized in this test
+int CV_FindContourTest::validate_test_results( int /*test_case_idx*/ )
+{
+    int i, code = CvTS::OK;
 
-    for( i = 0; i < base_iters; i++ )
+    cvCmpS( img[0], 0, img[0], CV_CMP_GT );
+
+    if( count != count2 )
     {
-        double err = 0, err1 = 0;
-        int count = 0, count2 = 0, count3 = 0;
-        CvChainApproxMethod approxMethod;
-        CvContourRetrievalMode retrMode;
+        ts->printf( CvTS::LOG, "The number of contours retrieved with different "
+            "approximation methods is not the same\n"
+            "(%d contour(s) for method %d vs %d contour(s) for method %d)\n",
+            count, approx_method, count2, CV_CHAIN_CODE );
+        code = CvTS::FAIL_INVALID_OUTPUT;
+    }
 
-        (int&)approxMethod = atsRandPlain32s( &rng_state ) % 4 + 1;
-        (int&)retrMode = atsRandPlain32s( &rng_state ) % 4;
+    if( retr_mode != CV_RETR_EXTERNAL && approx_method < CV_CHAIN_APPROX_TC89_L1 )
+    {
+        code = cvTsCmpEps2( ts, img[0], img[3], 0, true,
+            "Comparing original image with the map of filled contours" );
+
+        if( code < 0 )
+            goto _exit_;
+
+        code = cvTsCmpEps2( ts, img[1], img[2], 0, true,
+            "Comparing contour outline vs manually produced edge map" );
+
+        if( code < 0 )
+            goto _exit_;
+    }
+
+    if( contours )
+    {
+        CvTreeNodeIterator iterator1;
+        CvTreeNodeIterator iterator2;
+        int count3;
         
-        CvSeq* contours = 0;
-        CvSeq* contours2 = 0;
-        CvSeq* contours3 = 0;
-        atsGenerateBlobImage( src_img, min_blob_size, max_blob_size, blob_count,
-                              min_brightness, max_brightness, &rng_state );
-        cvCopy( src_img, dst2_img );
-        cvCopy( src_img, dst3_img );
-        atsClearBorder( src_img );
-        cvCopy( src_img, dst1_img );
-
-        mark_contours_etalon( dst1_img, mark_val );
-
-        count = cvFindContours( dst2_img, storage, &contours, sizeof(CvContour),
-                                retrMode, approxMethod );
-
-        cvZero( dst2_img );
-        if( contours )
-        {
-            cvDrawContours( dst2_img, contours, cvScalar(mark_val2), cvScalar(mark_val2), INT_MAX );
-        }
-
-#if DRAW_CONTOURS
-        {
-            named_window( "Test", 0 );
-            cvMulS( src_img, src_img, 64 );
-            show_iplimage( "Test", src_img );
-            wait_key(0);
-            iplXor( src_img, dst1_img, dst1_img );
-            show_iplimage( "Test", dst1_img );
-            wait_key(0);
-            destroy_window( "Test" );
-        }
-#endif
-
-        if( retrMode != CV_RETR_EXTERNAL && approxMethod < CV_CHAIN_APPROX_TC89_L1 ) 
-            err = cvNorm( dst1_img, dst2_img, CV_L1 );
-        
-        count2 = cvFindContours( dst3_img, storage, &contours2, sizeof(CvChain),
-                                 retrMode, CV_CHAIN_CODE );
-
+        for( i = 0; i < 2; i++ )
         {
             CvTreeNodeIterator iterator;
-            cvInitTreeNodeIterator( &iterator, contours2, INT_MAX );
-            CvSeq* seq = contours2;
-            
-            while( cvNextTreeNode( &iterator ) )
-            {
-                count3++;
-                assert( iterator.node != seq );
-                seq = (CvSeq*)iterator.node;
-                assert( count3 <= count );
-            }
-
-            assert( count3 == count );
-
-            count3 = 0;
-        }
-
-        if( count2 != count )
-        {
-            code = TRS_FAIL;
-            goto test_exit;
-        }
-
-        if( approxMethod < CV_CHAIN_APPROX_TC89_L1 )
-        {
-            cvZero( dst3_img );
-
-            if( contours2 )
-            {
-                cvDrawContours( dst3_img, contours2, cvScalar(mark_val2), cvScalar(mark_val2), INT_MAX );
-            }
-
-            err1 = cvNorm( dst2_img, dst3_img, CV_L1 );
-            err = MAX( err, err1 );
-
-            if( approxMethod == CV_CHAIN_APPROX_NONE )
-            {
-                CvTreeNodeIterator iterator1;
-                CvTreeNodeIterator iterator2;
-
-                cvInitTreeNodeIterator( &iterator1, contours, INT_MAX );
-                cvInitTreeNodeIterator( &iterator2, contours2, INT_MAX );
-
-                for(;;)
-                {
-                    CvSeq* seq1 = (CvSeq*)cvNextTreeNode( &iterator1 );
-                    CvChain* seq2 = (CvChain*)cvNextTreeNode( &iterator2 );
-                    CvSeqReader reader;
-                    CvChainPtReader reader2;
-                    CvChainPtReader reader3;
-
-                    if( !seq1 )
-                        break;
-
-                    assert( seq2 );
-
-                    cvStartReadSeq( seq1, &reader );
-                    cvStartReadChainPoints( seq2, &reader2 );
-                    cvStartReadChainPoints( seq2, &reader3 );
-
-                    for( int j = 0; j < seq1->total; j++ )
-                    {
-                        CvPoint pt;
-                        CvPoint pt2;
-                        CvPoint pt3;
-
-                        CV_READ_SEQ_ELEM( pt, reader );
-                        CV_READ_CHAIN_POINT( pt2, reader2 );
-                        pt3 = cvReadChainPoint( &reader3 );
-
-                        if( pt.x != pt2.x || pt.x != pt3.x ||
-                            pt.y != pt2.y || pt.y != pt3.y )
-                        {
-                            code = TRS_FAIL;
-                            goto test_exit;
-                        }
-                    }
-                }
-            }
-        }
-
-        contours3 = cvApproxChains( contours2, storage, approxMethod, 0, 0, 1 );
-
-        {
-            CvTreeNodeIterator iterator1;
-            CvTreeNodeIterator iterator2;
-
-            cvInitTreeNodeIterator( &iterator1, contours, INT_MAX );
-            cvInitTreeNodeIterator( &iterator2, contours3, INT_MAX );
-
-            for( ;; count3++ )
-            {
-                CvSeq* seq1 = (CvSeq*)cvNextTreeNode( &iterator1 );
-                CvSeq* seq2 = (CvSeq*)cvNextTreeNode( &iterator2 );
-                CvSeqReader reader;
-                CvSeqReader reader2;
-
-                if( !seq2 )
-                    break;
-
-                assert( seq1 );
-
-                cvStartReadSeq( seq1, &reader );
-                cvStartReadSeq( seq2, &reader2 );
-
-                for( int j = 0; j < seq1->total; j++ )
-                {
-                    CvPoint pt;
-                    CvPoint pt2;
-
-                    CV_READ_SEQ_ELEM( pt, reader );
-                    CV_READ_SEQ_ELEM( pt2, reader2 );
-
-                    if( pt.x != pt2.x || pt.y != pt2.y )
-                    {
-                        code = TRS_FAIL;
-                        goto test_exit;
-                    }
-                }
-            }
+            cvInitTreeNodeIterator( &iterator, i == 0 ? contours : contours2, INT_MAX );
+        
+            for( count3 = 0; cvNextTreeNode( &iterator ) != 0; count3++ )
+                ;
 
             if( count3 != count )
             {
-                code = TRS_FAIL;
-                goto test_exit;
+                ts->printf( CvTS::LOG,
+                    "The returned number of retrieved contours (using the approx_method = %d) does not match\n"
+                    "to the actual number of contours in the tree/list (returned %d, actual %d)\n",
+                    i == 0 ? approx_method : 0, count, count3 );
+                code = CvTS::FAIL_INVALID_OUTPUT;
+                goto _exit_;
             }
         }
 
-        if( err > max_err )
+        cvInitTreeNodeIterator( &iterator1, contours, INT_MAX );
+        cvInitTreeNodeIterator( &iterator2, contours2, INT_MAX );
+
+        for( count3 = 0; count3 < count; count3++ )
         {
-            merr_iter = i;
-            max_err   = err;
-            if( max_err > success_error_level )
-                goto test_exit;
-        }
+            CvSeq* seq1 = (CvSeq*)cvNextTreeNode( &iterator1 );
+            CvSeq* seq2 = (CvSeq*)cvNextTreeNode( &iterator2 );
+            CvSeqReader reader1;
+            CvSeqReader reader2;
 
-        cvClearMemStorage( storage );
-    }
-
-test_exit:
-
-    cvReleaseMemStorage( &storage );
-
-    cvReleaseImage( &src_img );
-    cvReleaseImage( &dst1_img );
-    cvReleaseImage( &dst2_img );
-    cvReleaseImage( &dst3_img );
-
-    if( code == TRS_OK )
-    {
-        trsWrite( ATS_LST, "Max err is %g at iter = %d, seed = %08x",
-                           max_err, merr_iter, seed );
-
-        return max_err <= success_error_level ?
-            trsResult( TRS_OK, "No errors" ) :
-            trsResult( TRS_FAIL, "Bad accuracy" );
-    }
-    else
-    {
-        trsWrite( ATS_LST, "Fatal error at iter = %d, seed = %08x", i, seed );
-        return trsResult( TRS_FAIL, "Test failed" );
-    }
-}
-
-
-int get_slice_length( CvSeq* seq, CvSlice slice )
-{
-    int total = seq->total;
-    int length;
-
-    /*if( slice.start_index == slice.end_index )
-        return 0;*/
-    if( slice.start_index < 0 )
-        slice.start_index += total;
-    if( slice.end_index <= 0 )
-        slice.end_index += total;
-    length = slice.end_index - slice.start_index;
-    if( length < 0 )
-        length += total;
-    else if( length > total )
-        length = total;
-
-    return length;
-}
-
-
-double calc_contour_perimeter( CvPoint* array, int count )
-{
-    int i;
-    double s = 0;
-
-    for( i = 0; i < count - 1; i++ )
-    {
-        int dx = array[i].x - array[i+1].x;
-        int dy = array[i].y - array[i+1].y;
-        
-        s += sqrt((double)dx*dx + dy*dy);
-    }
-
-    return s;
-}
-
-
-static int contour_perimeter_test( void )
-{
-    const double  success_error_level = 1e-4;
-    const int max_delta = 100;
-
-    int  seed = atsGetSeed();
-
-    /* position where the maximum error occured */
-    int     merr_iter = 0;
-
-    /* test parameters */
-    int     i = 0, j = 0;
-    int     curr_size = 0;
-    CvPoint*  array = 0;
-    double  max_err = 0.;
-    int     code = TRS_OK;
-
-    AtsRandState rng_state;
-    CvMemStorage* storage;
-    CvSize size;
-
-    atsRandInit( &rng_state, 0, 1, seed );
-
-    read_contour_params();
-
-    size = cvSize( img_size, img_size*3/4 );
-
-    storage = cvCreateMemStorage(atsRandPlain32s(&rng_state) % max_storage_size );
-
-    for( i = 0; i < base_iters; i++ )
-    {
-        double perimeter, etalon_perimeter;
-        double err = 0;
-        int count = atsRandPlain32s( &rng_state ) % (max_contour_size) + 1;
-        int len, len0;
-        CvSlice slice; 
-        CvSeqReader reader;
-        CvPoint pt0 = { 0, 0 };
-
-        CvSeq* contour = cvCreateSeq( CV_SEQ_CONTOUR, sizeof(CvContour),
-                                      sizeof(CvPoint), storage );
-
-        for( j = 0; j < count; j++ )
-        {
-            CvPoint pt;
-
-            if( j % 10 == 0 )
+            if( !seq1 || !seq2 )
             {
-                pt0 = atsRandPoint(&rng_state, size);
+                ts->printf( CvTS::LOG,
+                    "There are NULL pointers in the original contour tree or the "
+                    "tree produced by cvApproxChains\n" );
+                code = CvTS::FAIL_INVALID_OUTPUT;
+                goto _exit_;
             }
 
-            pt.x = atsRandPlain32s(&rng_state) % max_delta - max_delta/2;
-            pt.y = atsRandPlain32s(&rng_state) % max_delta - max_delta/2;
+            cvStartReadSeq( seq1, &reader1 );
+            cvStartReadSeq( seq2, &reader2 );
 
-            cvSeqPush( contour, &pt0 );
-
-            pt0.x += pt.x;
-            pt0.y += pt.y;
-        }
-
-        if( i % 10 == 0 )
-        {
-            slice = CV_WHOLE_SEQ;
-        }
-        else
-        {
-            slice.start_index = atsRandPlain32s( &rng_state ) % (count*3) - count;
-            slice.end_index = atsRandPlain32s( &rng_state ) % (count*3) - count;
-        }
-
-        perimeter = cvArcLength( contour, slice );
- 
-        if( perimeter < 0 )
-        {
-            code = TRS_FAIL;
-            goto test_exit;
-        }
-
-        len0 = cvSliceLength( slice, contour );
-        slice.end_index++;
-
-        len = cvSliceLength( slice, contour );
-        if( len <= 0 )
-        {
-            assert( len0 != 0 );
-            len = MIN( len0 + 1, count );
-            if( slice.start_index < 0 )
-                slice.start_index += count;
-            else if( slice.start_index >= count )
-                slice.start_index -= count;
-            slice.end_index = slice.start_index + len;
-        }
-
-        if( len <= 0 )
-            continue;
-
-        if( len + 1 > curr_size )
-        {
-            curr_size = len + 1;
-            array = (CvPoint*)realloc( array, curr_size*sizeof(array[0]) );
-        }
-        
-        cvCvtSeqToArray( contour, array, slice );
-
-        cvStartReadSeq( contour, &reader, 0 );
-        cvSetSeqReaderPos( &reader, slice.start_index, 0 );
-
-        for( j = 0; j < len; j++ )
-        {
-            CvPoint pt;
-            CV_READ_SEQ_ELEM( pt, reader );
-            if( array[j].x != pt.x || array[j].y != pt.y )
+            if( seq1->total != seq2->total )
             {
-                code = TRS_FAIL;
-                goto test_exit;
+                ts->printf( CvTS::LOG,
+                    "The original contour #%d has %d points, while the corresponding contour has %d point\n",
+                    count3, seq1->total, seq2->total );
+                code = CvTS::FAIL_INVALID_OUTPUT;
+                goto _exit_;
             }
-        }
 
-        if( len0 == contour->total )
-        {
-            array[len++] = array[0];
-        }
-
-        etalon_perimeter = calc_contour_perimeter( array, len );
-
-        assert( etalon_perimeter >= 0 );
-
-        err = fabs(perimeter - etalon_perimeter)/(etalon_perimeter + DBL_EPSILON);
-
-        if( err > max_err )
-        {
-            merr_iter = i;
-            max_err   = err;
-            if( max_err > success_error_level )
-                goto test_exit;
-        }
-
-        cvClearMemStorage( storage );
-    }
-
-test_exit:
-
-    cvReleaseMemStorage( &storage );
-    if(array)
-        free(array);
-
-    if( code == TRS_OK )
-    {
-        trsWrite( ATS_LST, "Max err is %g at iter = %d, seed = %08x",
-                           max_err, merr_iter, seed );
-
-        return max_err <= success_error_level ?
-            trsResult( TRS_OK, "No errors" ) :
-            trsResult( TRS_FAIL, "Bad accuracy" );
-    }
-    else
-    {
-        trsWrite( ATS_LST, "Fatal error at iter = %d, seed = %08x", i, seed );
-        return trsResult( TRS_FAIL, "Test failed" );
-    }
-}
-
-#if 0
-static int contour_approx_drawing_test( void )
-{
-    const int  depth = IPL_DEPTH_8U;
-    const int  min_brightness = 0, max_brightness = 2;
-
-    const char* err_desc = "No errors";
-    int     seed  = atsGetSeed();
-
-    /* test parameters */
-    int     i = 0;
-    int     code = TRS_OK;
-
-    IplImage    *src_img, *dst2_img;
-    AtsRandState rng_state;
-    CvMemStorage* storage;
-    CvSize size;
-
-    atsRandInit( &rng_state, 0, 1, seed );
-
-    read_contour_params();
-
-    size = cvSize( img_size, img_size*3/4 );
-
-    src_img  = cvCreateImage( size, depth, 1 );
-    dst2_img = cvCreateImage( size, depth, 3 );
-
-    storage = cvCreateMemStorage(atsRandPlain32s(&rng_state) % max_storage_size );
-
-    for( i = 0; i < base_iters; i++ )
-    {
-        int count;
-        CvChainApproxMethod approxMethod;
-        CvContourRetrievalMode retrMode;
-
-        (int&)approxMethod = atsRandPlain32s( &rng_state ) % 4 + 1;
-        (int&)retrMode = atsRandPlain32s( &rng_state ) % 4;
-        
-        CvSeq* contours = 0;
-        atsGenerateBlobImage( src_img, min_blob_size, max_blob_size, blob_count,
-                              min_brightness, max_brightness, &rng_state );
-
-        count = cvFindContours( src_img, storage, &contours, sizeof(CvContour),
-                                retrMode, approxMethod );
-
-        cvZero( dst2_img );
-        CvSeq* seq = icvSeqTreeToSeq( contours );
-        int j;
-
-        if( count != seq->total )
-        {
-            code = TRS_FAIL;
-            err_desc = "icvSeqTreeToSeq doesn't gather right quantity of contours";
-        }
-
-        for( j = 0; j < seq->total; j++ )
-        {
-            CvSeq* cur = *(CvSeq**)cvGetSeqElem( seq, j );
-            CvSeq* new_seq = 0;
-            
-            if( (atsRandPlain32s( &rng_state ) & 0x8000) == 0 )
+            for( i = 0; i < seq1->total; i++ )
             {
-                cur->total = MAX( cur->total/2, 1 );
-                cur->flags &= ~CV_SEQ_FLAG_CLOSED;
+                CvPoint pt1;
+                CvPoint pt2;
+
+                CV_READ_SEQ_ELEM( pt1, reader1 );
+                CV_READ_SEQ_ELEM( pt2, reader2 );
+
+                if( pt1.x != pt2.x || pt1.y != pt2.y )
+                {
+                    ts->printf( CvTS::LOG,
+                    "The point #%d in the contour #%d is different from the corresponding point "
+                    "in the approximated chain ((%d,%d) vs (%d,%d)", count3, i, pt1.x, pt1.y, pt2.x, pt2.y );
+                    code = CvTS::FAIL_INVALID_OUTPUT;
+                    goto _exit_;
+                }
             }
-
-            OPENCV_CALL( new_seq = cvApproxPoly( cur, cur->header_size, storage, CV_POLY_APPROX_DP,
-                                   atsRandPlain32s(&rng_state)%10, 0 ));
-            OPENCV_CALL( cvDrawContours( dst2_img, new_seq, CV_RGB(255,0,0), CV_RGB(0,255,0), 0, 1 ));
         }
+    }
 
-#if DRAW_CONTOURS2
-        named_window( "test", 0 );
-        cvDrawContours( dst2_img, contours, CV_RGB(255,255,255), CV_RGB(255,255,255), 255, 1 );
-        show_iplimage( "test", dst2_img );
-        wait_key(0);
+_exit_:
+    if( code < 0 )
+    {
+#if 0    
+        cvNamedWindow( "test", 0 );
+        cvShowImage( "test", img[0] );
+        cvWaitKey();
 #endif
-
-        cvClearMemStorage( storage );
+        ts->set_failed_test_info( code );
     }
 
-    cvReleaseMemStorage( &storage );
-
-    cvReleaseImage( &src_img );
-    cvReleaseImage( &dst2_img );
-
-    trsWrite( ATS_LST, "Fatal error at iter = %d, seed = %08x", i, seed );
-    return trsResult( code, err_desc );
+    return code;
 }
-#endif
 
-void InitAContours()
-{
-    trsReg( funcName[0], testName[0], atsAlgoClass, contour_retrieving_test );
-    trsReg( funcName[1], testName[1], atsAlgoClass, contour_perimeter_test );
-    //trsReg( funcName[2], testName[2], atsAlgoClass, contour_approx_drawing_test );
-}
+
+CV_FindContourTest find_contour_test;
 
 /* End of file. */

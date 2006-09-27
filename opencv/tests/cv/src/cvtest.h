@@ -394,14 +394,6 @@ int   atsCalcQuadricCoeffs( double xc, double yc, double mag, double e,
                             double* A, double* B, double* C, double* D, double* E,
                             CvPoint* pt1, CvPoint* pt2 );
 
-/* make zero border in the image */
-void  atsClearBorder( IplImage* img );
-
-/* fills an 8uC1 image with blobs - rotated ellipses */
-void  atsGenerateBlobImage( IplImage* img, int min_blob_size, int max_blob_size,
-                            int blob_count, int min_brightness, int max_brightness,
-                            AtsRandState* rng_state );
-
 /******************************************************************************/
 /*                     Reading images from file                               */
 /******************************************************************************/

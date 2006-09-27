@@ -225,9 +225,13 @@ void CV_BaseShapeDescrTest::clear()
 
 int CV_BaseShapeDescrTest::write_default_params( CvFileStorage* fs )
 {
-    write_param( fs, "test_case_count", test_case_count );
-    write_param( fs, "min_log_size", min_log_size );
-    write_param( fs, "max_log_size", max_log_size );
+    CvTest::write_default_params( fs );
+    if( ts->get_testing_mode() != CvTS::TIMING_MODE )
+    {
+        write_param( fs, "test_case_count", test_case_count );
+        write_param( fs, "min_log_size", min_log_size );
+        write_param( fs, "max_log_size", max_log_size );
+    }
     return 0;
 }
 
@@ -814,6 +818,115 @@ _exit_:
 
 
 CV_MinCircleTest shape_mincircle_test;
+
+
+
+/****************************************************************************************\
+*                                   Perimeter Test                                     *
+\****************************************************************************************/
+
+class CV_PerimeterTest : public CV_BaseShapeDescrTest
+{
+public:
+    CV_PerimeterTest();
+
+protected:
+    int prepare_test_case( int test_case_idx );
+    void run_func(void);
+    int validate_test_results( int test_case_idx );
+    CvSlice slice;
+    int is_closed;
+    double result;
+};
+
+
+CV_PerimeterTest::CV_PerimeterTest():
+    CV_BaseShapeDescrTest( "shape-perimeter", "cvArcLength" )
+{
+}
+
+
+int CV_PerimeterTest::prepare_test_case( int test_case_idx )
+{
+    int code = CV_BaseShapeDescrTest::prepare_test_case( test_case_idx );
+    CvRNG* rng = ts->get_rng();
+    int total;
+
+    if( code < 0 )
+        return code;
+
+    is_closed = cvTsRandInt(rng) % 2;
+
+    if( points1 )
+    {
+        points1->flags |= CV_SEQ_KIND_CURVE;
+        if( is_closed )
+            points1->flags |= CV_SEQ_FLAG_CLOSED;
+        total = points1->total;
+    }
+    else
+        total = points2->cols + points2->rows - 1;
+
+    if( cvTsRandInt(rng) % 3 )
+    {
+        slice.start_index = cvTsRandInt(rng) % total;
+        slice.end_index = cvTsRandInt(rng) % total;
+    }
+    else
+        slice = CV_WHOLE_SEQ;
+
+    return 1;
+}
+
+
+void CV_PerimeterTest::run_func()
+{
+    result = cvArcLength( points, slice, points1 ? -1 : is_closed );
+}
+
+
+int CV_PerimeterTest::validate_test_results( int test_case_idx )
+{
+    int code = CV_BaseShapeDescrTest::validate_test_results( test_case_idx );
+    int i, len = slice.end_index - slice.start_index, total = points2->cols + points2->rows - 1;
+    double result0 = 0;
+    CvPoint2D32f prev_pt, pt, *ptr;
+
+    if( len < 0 )
+        len += total;
+
+    len = MIN( len, total );
+    len -= !is_closed && len == total;
+    
+    ptr = (CvPoint2D32f*)points2->data.fl;
+    prev_pt = ptr[slice.start_index % total];
+
+    for( i = 1; i <= len; i++ )
+    {
+        pt = ptr[(i + slice.start_index) % total];
+        double dx = pt.x - prev_pt.x, dy = pt.y - prev_pt.y;
+        result0 += sqrt(dx*dx + dy*dy);
+        prev_pt = pt;
+    }
+
+    if( cvIsNaN(result) || cvIsInf(result) )
+    {
+        ts->printf( CvTS::LOG, "cvArcLength() returned invalid value (%g)\n", result );
+        code = CvTS::FAIL_INVALID_OUTPUT;
+    }
+    else if( fabs(result - result0) > FLT_EPSILON*100*result0 )
+    {
+        ts->printf( CvTS::LOG, "The function returned %g, while the correct result is %g\n", result, result0 );
+        code = CvTS::FAIL_BAD_ACCURACY;
+    }
+
+    if( code < 0 )
+        ts->set_failed_test_info( code );
+    return code;
+}
+
+
+CV_PerimeterTest shape_perimeter_test;
 
 
 /* End of file. */

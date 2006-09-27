@@ -43,11 +43,8 @@
 
 void InitAApproxPoly();
 void InitACalibration();
-void InitACamShift();
-void InitACanny();
 void InitAChessCorners();
 void InitAConDens();
-void InitAContours();
 void InitAEMD();
 void InitAFitEllipse();
 void InitAFitLine();
@@ -60,12 +57,10 @@ void InitAImage();
 void InitAImageToHMMObs();
 void InitAKalman();
 void InitAKMeans();
-void InitAMeanShift();
 void InitAMotSeg();
 void InitAOptFlowPyrLK();
 void InitAPixelAccess();
 void InitASnakes();
-void InitASubdiv();
 void InitAEigenObjects();
 void InitAContourMoments();
 void InitAMatchContours();
@@ -102,7 +97,6 @@ int main(int argC,char *argV[])
     InitACalibration();
     InitAChessCorners();
     InitAConDens();
-    InitAContours();
     InitAContourMoments();
     InitACreateContourTree();
     InitAEigenObjects();

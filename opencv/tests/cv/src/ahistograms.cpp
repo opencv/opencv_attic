@@ -126,10 +126,14 @@ void CV_BaseHistTest::clear()
 
 int CV_BaseHistTest::write_default_params( CvFileStorage* fs )
 {
-    write_param( fs, "test_case_count", test_case_count );
-    write_param( fs, "max_log_size", max_log_size );
-    write_param( fs, "max_log_array_size", img_max_log_size );
-    write_param( fs, "max_dims", max_cdims );
+    CvTest::write_default_params( fs );
+    if( ts->get_testing_mode() != CvTS::TIMING_MODE )
+    {
+        write_param( fs, "test_case_count", test_case_count );
+        write_param( fs, "max_log_size", max_log_size );
+        write_param( fs, "max_log_array_size", img_max_log_size );
+        write_param( fs, "max_dims", max_cdims );
+    }
     return 0;
 }
 
@@ -1517,40 +1521,13 @@ cvTsCalcBackProject( IplImage** images, IplImage* dst, CvHistogram* hist, int* c
 int CV_CalcBackProjectTest::validate_test_results( int /*test_case_idx*/ )
 {
     int code = CvTS::OK;
-    double diff = 0;
-    CvMat a, b;
-    CvPoint idx = {0,0};
-    char msg[100];
 
     cvTsCalcBackProject( images, images[CV_MAX_DIM+2], hist[0], channels );
-    
-    cvGetMat( images[CV_MAX_DIM+1], &a );
-    cvGetMat( images[CV_MAX_DIM+2], &b );
-    code = cvTsCmpEps( &a, &b, &diff, 0, &idx, 1 );
-
-    switch( code )
-    {
-    case -1:
-        sprintf( msg, "Too big difference (=%g)", diff );
-        code = CvTS::FAIL_BAD_ACCURACY;
-        break;
-    case -2:
-        strcpy( msg, "Invalid output" );
-        code = CvTS::FAIL_INVALID_OUTPUT;
-        break;
-    case -3:
-        strcpy( msg, "Invalid output in the reference array" );
-        code = CvTS::FAIL_INVALID_OUTPUT;
-        break;
-    default:
-        ;
-    }
+    code = cvTsCmpEps2( ts, images[CV_MAX_DIM+1], images[CV_MAX_DIM+2], 0, true,
+        "Back project image" );
 
     if( code < 0 )
-    {
-        ts->printf( CvTS::LOG, "%s at (%d,%d)\n", msg, idx.x, idx.y );
         ts->set_failed_test_info( code );
-    }
 
     return code;
 }
@@ -1739,42 +1716,16 @@ cvTsCalcBackProjectPatch( IplImage** images, IplImage* dst, CvSize patch_size,
 int CV_CalcBackProjectPatchTest::validate_test_results( int /*test_case_idx*/ )
 {
     int code = CvTS::OK;
-    double diff = 0;
-    CvMat a, b;
-    CvPoint idx = {0,0};
-    char msg[100];
     double err_level = 1e-3;
 
     cvTsCalcBackProjectPatch( images, images[CV_MAX_DIM+1],
         patch_size, hist[0], method, factor, channels );
     
-    cvGetMat( images[CV_MAX_DIM], &a );
-    cvGetMat( images[CV_MAX_DIM+1], &b );
-    code = cvTsCmpEps( &a, &b, &diff, err_level, &idx, 1 );
-
-    switch( code )
-    {
-    case -1:
-        sprintf( msg, "Too big difference (=%g)", diff );
-        code = CvTS::FAIL_BAD_ACCURACY;
-        break;
-    case -2:
-        strcpy( msg, "Invalid output" );
-        code = CvTS::FAIL_INVALID_OUTPUT;
-        break;
-    case -3:
-        strcpy( msg, "Invalid output in the reference array" );
-        code = CvTS::FAIL_INVALID_OUTPUT;
-        break;
-    default:
-        ;
-    }
+    code = cvTsCmpEps2( ts, images[CV_MAX_DIM], images[CV_MAX_DIM+1], err_level, true,
+        "BackProjectPatch result" );
 
     if( code < 0 )
-    {
-        ts->printf( CvTS::LOG, "%s at (%d,%d)\n", msg, idx.x, idx.y );
         ts->set_failed_test_info( code );
-    }
 
     return code;
 }
