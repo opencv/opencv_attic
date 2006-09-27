@@ -2429,6 +2429,34 @@ static int icvSetControl (CvCaptureCAM_V4L* capture,
         break;
     }
 
+    /* initialisations */
+    CLEAR (capture->control);
+
+    /* set which control we want to set */
+    switch (property_id) {
+
+    case CV_CAP_PROP_BRIGHTNESS:
+        capture->control.id = V4L2_CID_BRIGHTNESS;
+        break;
+    case CV_CAP_PROP_CONTRAST:
+        capture->control.id = V4L2_CID_CONTRAST;
+        break;
+    case CV_CAP_PROP_SATURATION:
+        capture->control.id = V4L2_CID_SATURATION;
+        break;
+    case CV_CAP_PROP_HUE:
+        capture->control.id = V4L2_CID_HUE;
+        break;
+    case CV_CAP_PROP_GAIN:
+        capture->control.id = V4L2_CID_GAIN;
+        break;
+    default:
+        fprintf(stderr,
+                "HIGHGUI ERROR: V4L2: setting property #%d is not supported\n",
+                property_id);
+        return -1;
+    }
+
     /* set the value we want to set to the scaled the value */
     capture->control.value = (int)(value * (v4l2_max - v4l2_min) + v4l2_min);
 
