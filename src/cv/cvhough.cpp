@@ -849,6 +849,7 @@ cvHoughLines2( CvArr* src_image, void* lineStorage, int method,
 
 static void
 icvHoughCirclesGradient( CvMat* img, float dp, float min_dist,
+                         int min_radius, int max_radius,
                          int canny_threshold, int acc_threshold,
                          CvSeq* circles, int circles_max )
 {
@@ -906,7 +907,7 @@ icvHoughCirclesGradient( CvMat* img, float dp, float min_dist,
         for( x = 0; x < cols; x++ )
         {
             float vx, vy;
-            int sx, sy, x0, y0, x1, y1;
+            int sx, sy, x0, y0, x1, y1, r, k;
             CvPoint pt;
             
             vx = dx_row[x];
@@ -930,23 +931,23 @@ icvHoughCirclesGradient( CvMat* img, float dp, float min_dist,
             x0 = cvRound((x*idp)*ONE) + ONE + (ONE/2);
             y0 = cvRound((y*idp)*ONE) + ONE + (ONE/2);
 
-            for( x1 = x0, y1 = y0;; x1 += sx, y1 += sy )
+            for( k = 0; k < 2; k++ )
             {
-                int x2 = x1 >> SHIFT, y2 = y1 >> SHIFT;
-                if( (unsigned)x2 >= (unsigned)acols ||
-                    (unsigned)y2 >= (unsigned)arows )
-                    break;
-                adata[y2*astep + x2]++;
-            }
+                x0 += min_radius * sx;
+                y0 += min_radius * sy;
 
-            sx = -sx; sy = -sy;
-            for( x1 = x0 + sx, y1 = y0 + sy;; x1 += sx, y1 += sy )
-            {
-                int x2 = x1 >> SHIFT, y2 = y1 >> SHIFT;
-                if( (unsigned)x2 >= (unsigned)acols ||
-                    (unsigned)y2 >= (unsigned)arows )
-                    break;
-                adata[y2*astep + x2]++;
+                for( x1 = x0, y1 = y0, r = min_radius; r <= max_radius; x1 += sx, y1 += sy, r++ )
+                {
+                    int x2 = x1 >> SHIFT, y2 = y1 >> SHIFT;
+                    if( (unsigned)x2 >= (unsigned)acols ||
+                        (unsigned)y2 >= (unsigned)arows )
+                        break;
+                    adata[y2*astep + x2]++;
+                }
+
+                x0 -= min_radius * sx;
+                y0 -= min_radius * sy;
+                sx = -sx; sy = -sy;
             }
 
             pt.x = x; pt.y = y;
@@ -1008,7 +1009,7 @@ icvHoughCirclesGradient( CvMat* img, float dp, float min_dist,
 
         if( j < circles->total )
             continue;
-        
+
         cvStartReadSeq( nz, &reader );
         for( j = 0; j < nz_count; j++ )
         {
@@ -1027,11 +1028,17 @@ icvHoughCirclesGradient( CvMat* img, float dp, float min_dist,
         for( j = nz_count - 2; j >= 0; j-- )
         {
             float d = ddata[sort_buf[j]];
+
+            if( d > max_radius )
+                break;
+
             if( d - start_dist > dr )
             {
-                if( start_idx - j >= max_count )
+                float r_cur = ddata[sort_buf[(j + start_idx)/2]];
+                if( (start_idx - j)*r_best >= max_count*r_cur ||
+                    r_best < FLT_EPSILON && start_idx - j >= max_count )
                 {
-                    r_best = ddata[sort_buf[(j + start_idx)/2]];
+                    r_best = r_cur;
                     max_count = start_idx - j;
                 }
                 start_dist = d;
@@ -1066,7 +1073,8 @@ icvHoughCirclesGradient( CvMat* img, float dp, float min_dist,
 CV_IMPL CvSeq*
 cvHoughCircles( CvArr* src_image, void* circle_storage,
                 int method, double dp, double min_dist,
-                double param1, double param2 )
+                double param1, double param2,
+                int min_radius, int max_radius )
 {
     CvSeq* result = 0;
 
@@ -1093,6 +1101,12 @@ cvHoughCircles( CvArr* src_image, void* circle_storage,
 
     if( dp <= 0 || min_dist <= 0 || canny_threshold <= 0 || acc_threshold <= 0 )
         CV_ERROR( CV_StsOutOfRange, "dp, min_dist, canny_threshold and acc_threshold must be all positive numbers" );
+
+    min_radius = MAX( min_radius, 0 );
+    if( max_radius <= 0 )
+        max_radius = MAX( img->rows, img->cols );
+    else if( max_radius <= min_radius )
+        max_radius = min_radius + 2;
 
     if( CV_IS_STORAGE( circle_storage ))
     {
@@ -1122,7 +1136,8 @@ cvHoughCircles( CvArr* src_image, void* circle_storage,
     {
     case CV_HOUGH_GRADIENT:
           CV_CALL( icvHoughCirclesGradient( img, (float)dp, (float)min_dist,
-              canny_threshold, acc_threshold, circles, circles_max ));
+                                    min_radius, max_radius, canny_threshold,
+                                    acc_threshold, circles, circles_max ));
           break;
     default:
         CV_ERROR( CV_StsBadArg, "Unrecognized method id" );

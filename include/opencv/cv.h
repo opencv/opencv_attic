@@ -1035,7 +1035,9 @@ CVAPI(CvSeq*)  cvHoughLines2( CvArr* image, void* line_storage, int method,
 CVAPI(CvSeq*) cvHoughCircles( CvArr* image, void* circle_storage,
                               int method, double dp, double min_dist,
                               double param1 CV_DEFAULT(100),
-                              double param2 CV_DEFAULT(100));
+                              double param2 CV_DEFAULT(100),
+                              int min_radius CV_DEFAULT(0),
+                              int max_radius CV_DEFAULT(0));
 
 /* Fits a line into set of 2d or 3d points in a robust way (M-estimator technique) */
 CVAPI(void)  cvFitLine( const CvArr* points, int dist_type, double param,
