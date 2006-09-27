@@ -96,10 +96,15 @@ void CV_SubdivTest::clear()
 
 int CV_SubdivTest::write_default_params( CvFileStorage* fs )
 {
-    write_param( fs, "min_log_point_count", min_log_point_count );
-    write_param( fs, "max_log_point_count", max_log_point_count );
-    write_param( fs, "min_log_img_size", min_log_img_size );
-    write_param( fs, "max_log_img_size", max_log_img_size );
+    CvTest::write_default_params( fs );
+    if( ts->get_testing_mode() != CvTS::TIMING_MODE )
+    {
+        write_param( fs, "test_case_count", test_case_count );
+        write_param( fs, "min_log_point_count", min_log_point_count );
+        write_param( fs, "max_log_point_count", max_log_point_count );
+        write_param( fs, "min_log_img_size", min_log_img_size );
+        write_param( fs, "max_log_img_size", max_log_img_size );
+    }
     return 0;
 }
 
@@ -112,6 +117,7 @@ int CV_SubdivTest::read_params( CvFileStorage* fs )
     if( code < 0 )
         return code;
 
+    test_case_count = cvReadInt( find_param( fs, "test_case_count" ), test_case_count );
     min_log_point_count = cvReadInt( find_param( fs, "min_log_point_count" ), min_log_point_count );
     max_log_point_count = cvReadInt( find_param( fs, "max_log_point_count" ), max_log_point_count );
     min_log_img_size = cvReadInt( find_param( fs, "min_log_img_size" ), min_log_img_size );
@@ -163,8 +169,8 @@ int CV_SubdivTest::validate_test_results( int /*test_case_idx*/ )
     int code = CvTS::OK;
     CvRNG* rng = ts->get_rng();
     int j, k, real_count = point_count;
-    double xrange = img_size.width - FLT_EPSILON;
-    double yrange = img_size.height - FLT_EPSILON;
+    double xrange = img_size.width*(1 - FLT_EPSILON);
+    double yrange = img_size.height*(1 - FLT_EPSILON);
     
     subdiv = subdiv = cvCreateSubdivDelaunay2D(
         cvRect( 0, 0, img_size.width, img_size.height ), storage );

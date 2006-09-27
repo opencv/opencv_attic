@@ -1332,6 +1332,46 @@ _exit_:
     return result;
 }
 
+
+int cvTsCmpEps2( CvTS* ts, const CvArr* _a, const CvArr* _b, double success_err_level,
+                 bool element_wise_relative_error, const char* desc )
+{
+    char msg[100];
+    double diff = 0;
+    CvMat astub, bstub, *a, *b;
+    CvPoint idx = {0,0};
+    int code;
+
+    a = cvGetMat( _a, &astub );
+    b = cvGetMat( _b, &bstub );
+    code = cvTsCmpEps( a, b, &diff, success_err_level, &idx,
+        element_wise_relative_error );
+
+    switch( code )
+    {
+    case -1:
+        sprintf( msg, "%s: Too big difference (=%g)", desc, diff );
+        code = CvTS::FAIL_BAD_ACCURACY;
+        break;
+    case -2:
+        sprintf( msg, "%s: Invalid output", desc );
+        code = CvTS::FAIL_INVALID_OUTPUT;
+        break;
+    case -3:
+        sprintf( msg, "%s: Invalid output in the reference array", desc );
+        code = CvTS::FAIL_INVALID_OUTPUT;
+        break;
+    default:
+        ;
+    }
+
+    if( code < 0 )
+        ts->printf( CvTS::LOG, "%s at (%d,%d)\n", msg, idx.x, idx.y );
+
+    return code;
+}
+
+
 // compares two arrays. the result is 8s image that takes values -1, 0, 1
 void cvTsCmp( const CvMat* a, const CvMat* b, CvMat* result, int cmp_op )
 {

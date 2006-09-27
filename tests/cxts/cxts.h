@@ -672,6 +672,10 @@ CV_EXPORTS int cvTsCmpEps( const CvMat* data, const CvMat* etalon, double* max_d
                       double success_err_level, CvPoint* idx,
                       bool element_wise_relative_error );
 
+// a wrapper for the previous function. in case of error prints the message to log file.
+CV_EXPORTS int cvTsCmpEps2( CvTS* ts, const CvArr* _a, const CvArr* _b, double success_err_level,
+                            bool element_wise_relative_error, const char* desc );
+
 // compares two arrays. the result is 8s image that takes values -1, 0, 1
 CV_EXPORTS void cvTsCmp( const CvMat* a, const CvMat* b, CvMat* result, int cmp_op );
 

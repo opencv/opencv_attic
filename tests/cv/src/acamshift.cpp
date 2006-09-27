@@ -93,9 +93,13 @@ void CV_TrackBaseTest::clear()
 
 int CV_TrackBaseTest::write_default_params( CvFileStorage* fs )
 {
-    write_param( fs, "test_case_count", test_case_count );
-    write_param( fs, "min_log_size", min_log_size );
-    write_param( fs, "max_log_size", max_log_size );
+    CvTest::write_default_params( fs );
+    if( ts->get_testing_mode() != CvTS::TIMING_MODE )
+    {
+        write_param( fs, "test_case_count", test_case_count );
+        write_param( fs, "min_log_size", min_log_size );
+        write_param( fs, "max_log_size", max_log_size );
+    }
     return 0;
 }
 
@@ -106,7 +110,7 @@ int CV_TrackBaseTest::read_params( CvFileStorage* fs )
     if( code < 0 )
         return code;
 
-    test_case_count = cvReadInt( find_param( fs, "struct_count" ), test_case_count );
+    test_case_count = cvReadInt( find_param( fs, "test_case_count" ), test_case_count );
     min_log_size = cvReadInt( find_param( fs, "min_log_size" ), min_log_size );
     max_log_size = cvReadInt( find_param( fs, "max_log_size" ), max_log_size );
 
