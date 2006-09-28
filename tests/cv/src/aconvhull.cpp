@@ -187,6 +187,7 @@ protected:
     CvMat* points2;
     void* points;
     void* result;
+    double low_high_range;
     CvScalar low, high;
 };
 
@@ -200,8 +201,9 @@ CV_BaseShapeDescrTest::CV_BaseShapeDescrTest( const char* test_name, const char*
     storage = 0;
     test_case_count = 500;
     min_log_size = 0;
-    max_log_size = 9;
+    max_log_size = 10;
     low = high = cvScalarAll(0);
+    low_high_range = 50;
 
     support_testing_modes = CvTS::CORRECTNESS_CHECK_MODE;
 }
@@ -346,8 +348,8 @@ int CV_BaseShapeDescrTest::prepare_test_case( int test_case_idx )
 
     for( i = 0; i < 2; i++ )
     {
-        low.val[i] = cvTsRandReal(rng)*100 - 50;
-        high.val[i] = cvTsRandReal(rng)*100 - 50;
+        low.val[i] = (cvTsRandReal(rng)-0.5)*low_high_range*2;
+        high.val[i] = (cvTsRandReal(rng)-0.5)*low_high_range*2;
         if( low.val[i] > high.val[i] )
         {
             double t;
@@ -820,7 +822,6 @@ _exit_:
 CV_MinCircleTest shape_mincircle_test;
 
 
-
 /****************************************************************************************\
 *                                   Perimeter Test                                     *
 \****************************************************************************************/
@@ -928,6 +929,193 @@ int CV_PerimeterTest::validate_test_results( int test_case_idx )
 
 CV_PerimeterTest shape_perimeter_test;
 
+
+
+/****************************************************************************************\
+*                                   FitEllipse Test                                      *
+\****************************************************************************************/
+
+class CV_FitEllipseTest : public CV_BaseShapeDescrTest
+{
+public:
+    CV_FitEllipseTest();
+
+protected:
+    void generate_point_set( void* points );
+    void run_func(void);
+    int validate_test_results( int test_case_idx );
+    CvBox2D box0, box;
+    double min_ellipse_size, max_noise;
+};
+
+
+CV_FitEllipseTest::CV_FitEllipseTest():
+    CV_BaseShapeDescrTest( "shape-fitellipse", "cvFitEllipse" )
+{
+    min_log_size = 4; // for robust ellipse fitting a dozen of points is needed at least
+    max_log_size = 10;
+    min_ellipse_size = 10;
+    max_noise = 0.05;
+}
+
+
+void CV_FitEllipseTest::generate_point_set( void* points )
+{
+    CvRNG* rng = ts->get_rng();
+    int i, total, point_type;
+    CvSeqReader reader;
+    uchar* data = 0;
+    double a, b;
+
+    box0.center.x = (float)((low.val[0] + high.val[0])*0.5);
+    box0.center.y = (float)((low.val[1] + high.val[1])*0.5);
+    box0.size.width = (float)(MAX(high.val[0] - low.val[0], min_ellipse_size)*2);
+    box0.size.height = (float)(MAX(high.val[1] - low.val[1], min_ellipse_size)*2);
+    box0.angle = (float)(cvTsRandReal(rng)*180);
+    a = cos(box0.angle*CV_PI/180.);
+    b = sin(box0.angle*CV_PI/180.);
+
+    if( box0.size.width > box0.size.height )
+    {
+        float t;
+        CV_SWAP( box0.size.width, box0.size.height, t );
+    }
+    memset( &reader, 0, sizeof(reader) );
+
+    if( CV_IS_SEQ(points) )
+    {
+        CvSeq* ptseq = (CvSeq*)points;
+        total = ptseq->total;
+        point_type = CV_SEQ_ELTYPE(ptseq);
+        cvStartReadSeq( ptseq, &reader );
+    }
+    else
+    {
+        CvMat* ptm = (CvMat*)points;
+        assert( CV_IS_MAT(ptm) && CV_IS_MAT_CONT(ptm->type) );
+        total = ptm->rows + ptm->cols - 1;
+        point_type = CV_MAT_TYPE(ptm->type);
+        data = ptm->data.ptr;
+    }
+
+    assert( point_type == CV_32SC2 || point_type == CV_32FC2 );
+
+    for( i = 0; i < total; i++ )
+    {
+        CvPoint* pp;
+        CvPoint2D32f p;
+        double angle = cvTsRandReal(rng)*CV_PI*2;
+        double x = box0.size.height*0.5*(cos(angle) + (cvTsRandReal(rng)-0.5)*2*max_noise);
+        double y = box0.size.width*0.5*(sin(angle) + (cvTsRandReal(rng)-0.5)*2*max_noise);
+        p.x = (float)(box0.center.x + a*x + b*y);
+        p.y = (float)(box0.center.y - b*x + a*y);
+
+        if( reader.ptr )
+        {
+            pp = (CvPoint*)reader.ptr;
+            CV_NEXT_SEQ_ELEM( sizeof(*pp), reader );
+        }
+        else
+            pp = ((CvPoint*)data) + i;
+        if( point_type == CV_32SC2 )
+        {
+            pp->x = cvRound(p.x);
+            pp->y = cvRound(p.y);
+        }
+        else
+            *(CvPoint2D32f*)pp = p;
+    }
+}
+
+
+void CV_FitEllipseTest::run_func()
+{
+    box = cvFitEllipse2( points );
+}
+
+
+int CV_FitEllipseTest::validate_test_results( int test_case_idx )
+{
+    int code = CV_BaseShapeDescrTest::validate_test_results( test_case_idx );
+    double diff_angle;
+
+    if( cvIsNaN(box.center.x) || cvIsInf(box.center.x) ||
+        cvIsNaN(box.center.y) || cvIsInf(box.center.y) ||
+        cvIsNaN(box.size.width) || cvIsInf(box.size.width) ||
+        cvIsNaN(box.size.height) || cvIsInf(box.size.height) ||
+        cvIsNaN(box.angle) || cvIsInf(box.angle) )
+    {
+        ts->printf( CvTS::LOG, "Some of the computed ellipse parameters are invalid (x=%g,y=%g,w=%g,h=%g,angle=%g)\n",
+            box.center.x, box.center.y, box.size.width, box.size.height, box.angle );
+        code = CvTS::FAIL_INVALID_OUTPUT;
+        goto _exit_;
+    }
+
+    box.angle = (float)(90-box.angle);
+    if( box.angle < 0 )
+        box.angle += 360;
+    if( box.angle > 360 )
+        box.angle -= 360;
+
+    if( fabs(box.center.x - box0.center.x) > 3 ||
+        fabs(box.center.y - box0.center.y) > 3 ||
+        fabs(box.size.width - box0.size.width) > 0.1*fabs(box0.size.width) ||
+        fabs(box.size.height - box0.size.height) > 0.1*fabs(box0.size.height) )
+    {
+        ts->printf( CvTS::LOG, "The computed ellipse center and/or size are incorrect:\n\t"
+            "(x=%.1f,y=%.1f,w=%.1f,h=%.1f), while it should be (x=%.1f,y=%.1f,w=%.1f,h=%.1f)\n",
+            box.center.x, box.center.y, box.size.width, box.size.height,
+            box0.center.x, box0.center.y, box0.size.width, box0.size.height );
+        code = CvTS::FAIL_BAD_ACCURACY;
+        goto _exit_;
+    }
+
+    diff_angle = fabs(box0.angle - box.angle);
+    diff_angle = MIN( diff_angle, fabs(diff_angle - 360));
+    diff_angle = MIN( diff_angle, fabs(diff_angle - 180));
+
+    if( box0.size.height >= 1.3*box0.size.width && diff_angle > 30 )
+    {
+        ts->printf( CvTS::LOG, "Incorrect ellipse angle (=%1.f, should be %1.f)\n",
+            box.angle, box0.angle );
+        code = CvTS::FAIL_BAD_ACCURACY;
+        goto _exit_;
+    }
+
+_exit_:
+
+#if 0
+    cvNamedWindow( "test", 0 );
+    IplImage* img = cvCreateImage( cvSize(cvRound(low_high_range*4),
+        cvRound(low_high_range*4)), 8, 3 );
+    cvZero( img );
+
+    box.center.x += (float)low_high_range*2;
+    box.center.y += (float)low_high_range*2;
+    cvEllipseBox( img, box, CV_RGB(255,0,0), 3, 8 );
+
+    for( int i = 0; i < points2->rows + points2->cols - 1; i++ )
+    {
+        CvPoint pt;
+        pt.x = cvRound(points2->data.fl[i*2] + low_high_range*2);
+        pt.y = cvRound(points2->data.fl[i*2+1] + low_high_range*2);
+        cvCircle( img, pt, 1, CV_RGB(255,255,255), -1, 8 );
+    }
+
+    cvShowImage( "test", img );
+    cvReleaseImage( &img );
+    cvWaitKey(0);
+#endif
+
+    if( code < 0 )
+    {
+        ts->set_failed_test_info( code );
+    }
+    return code;
+}
+
+
+CV_FitEllipseTest fit_ellipse_test;
 
 /* End of file. */
 
