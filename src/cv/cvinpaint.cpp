@@ -207,36 +207,34 @@ inline float VectorLength(CvPoint2D32f v1) {
 //HEAP::iterator Heap_Iterator;
 //HEAP Heap;
 
-float FastMarching_solve(int i1,int j1,int i2,int j2, const CvMat* f, const CvMat* t) {
-   double sol, a11, a22, m12;
-   a11=CV_MAT_ELEM(*t,float,i1,j1);
-   a22=CV_MAT_ELEM(*t,float,i2,j2);
-   m12=(a11<a22)?a11:a22;
-
-   if (CV_MAT_ELEM(*f,uchar,i1,j1)!=INSIDE) {
-      if (CV_MAT_ELEM(*f,uchar,i2,j2)!=INSIDE) {
-         double r = 2.-(a11-a22)*(a11-a22), s;
-         r = sqrt(MAX(r,0.));
-         s = (a11+a22+r)*0.5;
-         if (s<1+m12) {
-            sol = s;
-         } else {
-            sol = 1+m12;
-         }
-      } else {
-         sol = 1+a11;
-      }
-   } else if (CV_MAT_ELEM(*f,uchar,i2,j2)!=INSIDE) {
-      sol = 1+a22;
-   } else {
-      sol = 1+m12;
-   }
-   return (float)sol;
+float FastMarching_solve(int i1,int j1,int i2,int j2, const CvMat* f, const CvMat* t)
+{
+    double sol, a11, a22, m12;
+    a11=CV_MAT_ELEM(*t,float,i1,j1);
+    a22=CV_MAT_ELEM(*t,float,i2,j2);
+    m12=MIN(a11,a22);
+    
+    if( CV_MAT_ELEM(*f,uchar,i1,j1) != INSIDE )
+        if( CV_MAT_ELEM(*f,uchar,i2,j2) != INSIDE )
+            if( fabs(a11-a22) >= 1.0 )
+                sol = 1+m12;
+            else
+                sol = (a11+a22+sqrt((double)(2-(a11-a22)*(a11-a22))))*0.5;
+        else
+            sol = 1+a11;
+    else if( CV_MAT_ELEM(*f,uchar,i2,j2) != INSIDE )
+        sol = 1+a22;
+    else
+        sol = 1+m12;
+            
+    return (float)sol;
 }
+
 /////////////////////////////////////////////////////////////////////////////////////
 
 
-void icvCalcFMM(const CvMat *f, CvMat *t, CvPriorityQueueFloat *Heap, bool negate) {
+static void
+icvCalcFMM(const CvMat *f, CvMat *t, CvPriorityQueueFloat *Heap, bool negate) {
    int i, j, ii = 0, jj = 0, q;
    float dist;
 
@@ -277,7 +275,9 @@ void icvCalcFMM(const CvMat *f, CvMat *t, CvPriorityQueueFloat *Heap, bool negat
    }
 }
 
-void icvTeleaInpaintFMM(const CvMat *f, CvMat *t, CvMat *out, int range, CvPriorityQueueFloat *Heap ) {
+
+static void
+icvTeleaInpaintFMM(const CvMat *f, CvMat *t, CvMat *out, int range, CvPriorityQueueFloat *Heap ) {
    int i = 0, j = 0, ii = 0, jj = 0, k, l, q, color = 0;
    float dist;
 
@@ -506,11 +506,12 @@ void icvTeleaInpaintFMM(const CvMat *f, CvMat *t, CvMat *out, int range, CvPrior
             }
          }
       }
-
    }
 }
 
-void icvNSInpaintFMM(const CvMat *f, CvMat *t, CvMat *out, int range, CvPriorityQueueFloat *Heap) {
+
+static void
+icvNSInpaintFMM(const CvMat *f, CvMat *t, CvMat *out, int range, CvPriorityQueueFloat *Heap) {
    int i = 0, j = 0, ii = 0, jj = 0, k, l, q, color = 0;
    float dist;
 
@@ -730,13 +731,13 @@ cvInpaint( const CvArr* _input_img, const CvArr* _inpaint_mask, CvArr* _output_i
     CvMat *mask = 0, *band = 0, *f = 0, *t = 0, *out = 0;
     CvPriorityQueueFloat *Heap = 0, *Out = 0;
     IplConvKernel *el_cross = 0, *el_range = 0;
-    CvMat input_hdr, mask_hdr, output_hdr;
-    CvMat* input_img, *inpaint_mask, *output_img;
     
     CV_FUNCNAME( "cvInpaint" );
     
     __BEGIN__;
 
+    CvMat input_hdr, mask_hdr, output_hdr;
+    CvMat* input_img, *inpaint_mask, *output_img;
     int range=cvRound(inpaintRange);    
     int erows, ecols;
 
