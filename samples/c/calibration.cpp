@@ -7,14 +7,69 @@
 // example command line (for copy-n-paste):
 // calibration -w 6 -h 8 -s 2 -n 10 -o camera.yml -op -oe [<list_of_views.txt>]
 
+/* The list of views may look as following (discard the starting and ending ------ separators):
+-------------------
+view000.png
+view001.png
+#view002.png
+view003.png
+view010.png
+one_extra_view.jpg
+-------------------
+that is, the file will contain 6 lines, view002.png will not be used for calibration,
+other ones will be (those, in which the chessboard pattern will be found)
+*/
+
 enum { DETECTION = 0, CAPTURING = 1, CALIBRATED = 2 };
+
+double compute_reprojection_error( const CvMat* object_points,
+        const CvMat* rot_vects, const CvMat* trans_vects,
+        const CvMat* camera_matrix, const CvMat* dist_coeffs,
+        const CvMat* image_points, const CvMat* point_counts,
+        CvMat* per_view_errors )
+{
+    CvMat* image_points2 = cvCreateMat( image_points->rows,
+        image_points->cols, image_points->type );
+    int i, image_count = rot_vects->rows, points_so_far = 0;
+    double total_err = 0, err;
+    
+    for( i = 0; i < image_count; i++ )
+    {
+        CvMat object_points_i, image_points_i, image_points2_i;
+        int point_count = point_counts->data.i[i];
+        CvMat rot_vect, trans_vect;
+
+        cvGetCols( object_points, &object_points_i,
+            points_so_far, points_so_far + point_count );
+        cvGetCols( image_points, &image_points_i,
+            points_so_far, points_so_far + point_count );
+        cvGetCols( image_points2, &image_points2_i,
+            points_so_far, points_so_far + point_count );
+        points_so_far += point_count;
+
+        cvGetRow( rot_vects, &rot_vect, i );
+        cvGetRow( trans_vects, &trans_vect, i );
+
+        cvProjectPoints2( &object_points_i, &rot_vect, &trans_vect,
+                          camera_matrix, dist_coeffs, &image_points2_i,
+                          0, 0, 0, 0, 0 );
+        err = cvNorm( &image_points_i, &image_points2_i, CV_L1 );
+        if( per_view_errors )
+            per_view_errors->data.db[i] = err/point_count;
+        total_err += err;
+    }
+    
+    cvReleaseMat( &image_points2 );
+    return total_err/points_so_far;
+}
 
 
 int run_calibration( CvSeq* image_points_seq, CvSize img_size, CvSize board_size,
                      float square_size, float aspect_ratio, int flags,
-                     CvMat* camera_matrix, CvMat* dist_coeffs, CvMat** extr_params )
+                     CvMat* camera_matrix, CvMat* dist_coeffs, CvMat** extr_params,
+                     CvMat** reproj_errs, double* avg_reproj_err )
 {
-    int code = 0;
+    int code;
     int image_count = image_points_seq->total;
     int point_count = board_size.width*board_size.height;
     CvMat* image_points = cvCreateMat( 1, image_count*point_count, CV_32FC2 );
@@ -60,6 +115,15 @@ int run_calibration( CvSeq* image_points_seq, CvSize img_size, CvSize board_size
                         img_size, camera_matrix, dist_coeffs,
                         &rot_vects, &trans_vects, flags );
 
+    code = cvCheckArr( camera_matrix, CV_CHECK_QUIET ) &&
+        cvCheckArr( dist_coeffs, CV_CHECK_QUIET ) &&
+        cvCheckArr( *extr_params, CV_CHECK_QUIET );
+
+    *reproj_errs = cvCreateMat( 1, image_count, CV_64FC1 );
+    *avg_reproj_err =
+        compute_reprojection_error( object_points, &rot_vects, &trans_vects,
+            camera_matrix, dist_coeffs, image_points, point_counts, *reproj_errs );
+
     cvReleaseMat( &object_points );
     cvReleaseMat( &image_points );
     cvReleaseMat( &point_counts );
@@ -71,8 +135,9 @@ int run_calibration( CvSeq* image_points_seq, CvSize img_size, CvSize board_size
 void save_camera_params( const char* out_filename, int image_count, CvSize img_size,
                          CvSize board_size, float square_size,
                          float aspect_ratio, int flags,
-                         CvMat* camera_matrix, CvMat* dist_coeffs,
-                         CvMat* extr_params, CvSeq* image_points_seq )
+                         const CvMat* camera_matrix, CvMat* dist_coeffs,
+                         const CvMat* extr_params, const CvSeq* image_points_seq,
+                         const CvMat* reproj_errs, double avg_reproj_err )
 {
     CvFileStorage* fs = cvOpenFileStorage( out_filename, 0, CV_STORAGE_WRITE );
     
@@ -109,9 +174,13 @@ void save_camera_params( const char* out_filename, int image_count, CvSize img_s
     cvWrite( fs, "camera_matrix", camera_matrix );
     cvWrite( fs, "distortion_coefficients", dist_coeffs );
 
+    cvWriteReal( fs, "avg_reprojection_error", avg_reproj_err );
+    if( reproj_errs )
+        cvWrite( fs, "per_view_reprojection_errors", reproj_errs );
+
     if( extr_params )
     {
-        cvWriteComment( fs, "a set of 6-tuples (rotatoin vector + translation vector) for each view", 0 );
+        cvWriteComment( fs, "a set of 6-tuples (rotation vector + translation vector) for each view", 0 );
         cvWrite( fs, "extrinsic_parameters", extr_params );
     }
 
@@ -136,7 +205,7 @@ int main( int argc, char** argv )
     float square_size = 1.f, aspect_ratio = 1.f;
     const char* out_filename = "out_camera_data.yml";
     const char* input_filename = 0;
-    int i, image_count = 0;
+    int i, image_count = 10;
     int write_extrinsics = 0, write_points = 0;
     int flags = 0;
     CvCapture* capture = 0;
@@ -144,7 +213,7 @@ int main( int argc, char** argv )
     char imagename[1024];
     CvMemStorage* storage;
     CvSeq* image_points_seq = 0;
-    int elem_size;
+    int elem_size, flip_vertical = 0;
     int delay = 1000;
     clock_t prev_timestamp = 0;
     CvPoint2D32f* image_points_buf = 0;
@@ -152,9 +221,11 @@ int main( int argc, char** argv )
     double _camera[9], _dist_coeffs[4];
     CvMat camera = cvMat( 3, 3, CV_64F, _camera );
     CvMat dist_coeffs = cvMat( 1, 4, CV_64F, _dist_coeffs );
-    CvMat* extr_params = 0;
+    CvMat *extr_params = 0, *reproj_errs = 0;
+    double avg_reproj_err = 0;
     int mode = DETECTION;
     int undistort_image = 0;
+    CvSize img_size = {0,0};
     const char* live_capture_help = 
         "When the live video from camera is used as input, the following hot-keys may be used:\n"
             "  <ESC>, 'q' - quit the program\n"
@@ -174,15 +245,16 @@ int main( int argc, char** argv )
             "                              # (used only for video capturing)\n"
             "     [-s <square_size>]       # square size in some user-defined units (1 by default)\n"
             "     [-o <out_camera_params>] # the output filename for intrinsic [and extrinsic] parameters\n"
-            "     [-op]                    # write points\n"
+            "     [-op]                    # write detected feature points\n"
             "     [-oe]                    # write extrinsic parameters\n"
             "     [-zt]                    # assume zero tangential distortion\n"
             "     [-a <aspect_ratio>]      # fix aspect ratio (fx/fy)\n"
             "     [-p]                     # fix the principal point at the center\n"
+            "     [-v]                     # flip the captured images around the horizontal axis\n"
             "     [input_data]             # input data, one of the following:\n"
             "                              #  - text file with a list of the images of the board\n"
             "                              #  - name of video file with a video of the board\n"
-            "                              # if it is not specified, a live view from the camera is used\n"
+            "                              # if input_data not specified, a live view from the camera is used\n"
             "\n" );
         printf( "%s", live_capture_help );
         return 0;
@@ -237,6 +309,10 @@ int main( int argc, char** argv )
         {
             flags |= CV_CALIB_FIX_PRINCIPAL_POINT;
         }
+        else if( strcmp( s, "-v" ) == 0 )
+        {
+            flip_vertical = 1;
+        }
         else if( strcmp( s, "-o" ) == 0 )
         {
             out_filename = argv[++i];
@@ -255,7 +331,7 @@ int main( int argc, char** argv )
             f = fopen( input_filename, "rt" );
             if( !f )
                 return fprintf( stderr, "The input file could not be opened\n" ), -1;
-            image_count = 0;
+            image_count = -1;
         }
         mode = CAPTURING;
     }
@@ -271,6 +347,7 @@ int main( int argc, char** argv )
     elem_size = board_size.width*board_size.height*sizeof(image_points_buf[0]);
     storage = cvCreateMemStorage( MAX( elem_size*4, 1 << 16 ));
     image_points_buf = (CvPoint2D32f*)cvAlloc( elem_size );
+    image_points_seq = cvCreateSeq( 0, sizeof(CvSeq), elem_size, storage );
 
     cvNamedWindow( "Image View", 1 );
 
@@ -284,21 +361,45 @@ int main( int argc, char** argv )
         char s[100];
         int key;
         
-        if( f )
+        if( f && fgets( imagename, sizeof(imagename)-2, f ))
         {
-            fgets( imagename, sizeof(imagename)-2, f );
-            view = cvLoadImage( imagename, 1 );
+            int l = strlen(imagename);
+            if( l > 0 && imagename[l-1] == '\n' )
+                imagename[--l] = '\0';
+            if( l > 0 )
+            {
+                if( imagename[0] == '#' )
+                    continue;
+                view = cvLoadImage( imagename, 1 );
+            }
         }
-        else
+        else if( capture )
         {
             IplImage* view0 = cvQueryFrame( capture );
             if( view0 )
-                view = cvCloneImage( view0 );
+            {
+                view = cvCreateImage( cvGetSize(view0), IPL_DEPTH_8U, view0->nChannels );
+                if( view0->origin == IPL_ORIGIN_BL )
+                    cvFlip( view0, view, 0 );
+                else
+                    cvCopy( view0, view );
+            }
         }
 
         if( !view )
+        {
+            if( image_points_seq->total > 0 )
+            {
+                image_count = image_points_seq->total;
+                goto calibrate;
+            }
             break;
+        }
 
+        if( flip_vertical )
+            cvFlip( view, view, 0 );
+
+        img_size = cvGetSize(view);
         found = cvFindChessboardCorners( view, board_size,
             image_points_buf, &count, CV_CALIB_CB_ADAPTIVE_THRESH );
 
@@ -316,6 +417,13 @@ int main( int argc, char** argv )
             cvSeqPush( image_points_seq, image_points_buf );
             prev_timestamp = clock();
             blink = !f;
+#if 1
+            if( capture )
+            {
+                sprintf( imagename, "view%03d.png", image_points_seq->total - 1 );
+                cvSaveImage( imagename, view );
+            }
+#endif
         }
 
         cvDrawChessboardCorners( view, board_size, image_points_buf, count, found );
@@ -342,37 +450,42 @@ int main( int argc, char** argv )
         }
 
         cvShowImage( "Image View", view );
-        key = cvWaitKey(50);
+        key = cvWaitKey(capture ? 50 : 500);
+
         if( key == 27 )
             break;
         
         if( key == 'u' && mode == CALIBRATED )
             undistort_image = !undistort_image;
 
-        if( key == 'g' )
+        if( capture && key == 'g' )
         {
             mode = CAPTURING;
             cvClearMemStorage( storage );
             image_points_seq = cvCreateSeq( 0, sizeof(CvSeq), elem_size, storage );
         }
 
-        if( mode == CAPTURING && image_points_seq->total >= image_count )
+        if( mode == CAPTURING && (unsigned)image_points_seq->total >= (unsigned)image_count )
         {
+calibrate:
             cvReleaseMat( &extr_params );
-            int code = run_calibration( image_points_seq, cvGetSize(view), board_size,
-                square_size, aspect_ratio, flags, &camera, &dist_coeffs, &extr_params );
-            if( code >= 0 )
-            {
-                save_camera_params( out_filename, image_count, cvGetSize(view),
-                    board_size, square_size, aspect_ratio, flags,
-                    &camera, &dist_coeffs, write_extrinsics ? extr_params : 0,
-                    write_points ? image_points_seq : 0 );
+            cvReleaseMat( &reproj_errs );
+            int code = run_calibration( image_points_seq, img_size, board_size,
+                square_size, aspect_ratio, flags, &camera, &dist_coeffs, &extr_params,
+                &reproj_errs, &avg_reproj_err );
+            // save camera parameters in any case, to catch Inf's/NaN's
+            save_camera_params( out_filename, image_count, img_size,
+                board_size, square_size, aspect_ratio, flags,
+                &camera, &dist_coeffs, write_extrinsics ? extr_params : 0,
+                write_points ? image_points_seq : 0, reproj_errs, avg_reproj_err );
+            if( code )
                 mode = CALIBRATED;
-            }
             else
                 mode = DETECTION;
         }
 
+        if( !view )
+            break;
         cvReleaseImage( &view );
     }
 
