@@ -46,7 +46,6 @@ void InitACalibration();
 void InitAChessCorners();
 void InitAConDens();
 void InitAEMD();
-void InitAFitLine();
 void InitAHaar();
 void InitACalcContrastHist();
 void InitACalcOpticalFlowLK();
@@ -101,7 +100,6 @@ int main(int argC,char *argV[])
     InitAEigenObjects();
     InitAEMD();
 
-    InitAFitLine();
     //InitACalcContrastHist(); // the function is not available
     InitAHoughLines();
     InitAImage();
