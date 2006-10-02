@@ -79,6 +79,8 @@ int main( int argc, char** argv )
     
     on_trackbar(0);
     cvWaitKey(0);
+    cvReleaseMemStorage( &storage );
+    cvReleaseImage( &img );
 
     return 0;
 }
