@@ -155,6 +155,9 @@ int CvMat_nChannels_get(CvMat * m){
 int CvMat_origin_get(CvMat * m){
 	return 0;
 }
+int CvMat_dataOrder_get(CvMat * m){
+	return 0;
+}
 int CvMat_imageSize_get(CvMat * m){
 	return m->step*m->rows;
 }
@@ -166,6 +169,7 @@ int CvMat_widthStep_get(CvMat * m){
 {
 	const int depth;
 	const int nChannels;
+	const int dataOrder;
 	const int origin;
 	const int width;
 	const int height;

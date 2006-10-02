@@ -64,6 +64,7 @@
 
 %newobject cvLoadImage;
 %newobject cvLoadImageM;
+%newobject cvLoadImageMat;
 
 %nodefault CvCapture;
 %newobject cvCaptureFromFile;
@@ -80,6 +81,7 @@ CvMat * cvLoadImageMat(const char* filename, int iscolor=CV_LOAD_IMAGE_COLOR ){
 	return cvLoadImageM(filename, iscolor);
 }
 %}
+
 %typemap_out_CvMat(cvRetrieveFrame, ( CvCapture* capture ), (capture));
 %typemap_out_CvMat(cvQueryFrame, ( CvCapture * capture ), (capture));
 

@@ -107,10 +107,11 @@ void CvMat_imageData_set(CvMat * self, PyObject* object)
 /// Accessor to convert the imageData into a Python string.
 PyObject* CvMat_imageData_get(CvMat * self) 
 {
-	if (CV_MAT_DEPTH(self->type)!=CV_8U)
-		return 0;
 	if (!self->data.ptr)
-		return 0;
+	{
+		PyErr_SetString(PyExc_TypeError, "Data pointer of CvMat is NULL");
+		return NULL;
+	}		 
 	return PyString_FromStringAndSize((const char *)self->data.ptr, self->rows*self->step);
 }
 

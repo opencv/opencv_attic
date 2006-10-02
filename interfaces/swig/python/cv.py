@@ -1695,6 +1695,8 @@ class CvMat(_object):
     if _newclass:depth = property(_cv.CvMat_depth_get)
     __swig_getmethods__["nChannels"] = _cv.CvMat_nChannels_get
     if _newclass:nChannels = property(_cv.CvMat_nChannels_get)
+    __swig_getmethods__["dataOrder"] = _cv.CvMat_dataOrder_get
+    if _newclass:dataOrder = property(_cv.CvMat_dataOrder_get)
     __swig_getmethods__["origin"] = _cv.CvMat_origin_get
     if _newclass:origin = property(_cv.CvMat_origin_get)
     __swig_getmethods__["width"] = _cv.CvMat_width_get
