@@ -78,6 +78,30 @@ def cvCalcHist(*args):
 %ignore operator const IplImage*;
 %ignore operator const CvMat*;
 
+/* Define sequence type for functions returning sequences */
+%define %cast_seq( cvfunc, type )
+%rename (cvfunc##Untyped) cvfunc;
+%pythoncode %{
+def cvfunc(*args):
+	seq = cvfunc##Untyped( *args )
+	return type.cast(seq)
+%}
+%enddef
+
+%cast_seq( cvHoughCircles, CvSeq_float_3 );
+%cast_seq( cvPyrSegmentation, CvSeq_ConnectedComp );
+%cast_seq( cvApproxChains, CvSeq_Point);
+%cast_seq( cvContourFromContourTree, CvSeq_Point );
+%cast_seq( cvConvexityDefects, CvSeq_ConvexityDefect );
+
+/* Special cases ... */
+%rename(cvFindContoursUntyped) cvFindContours;
+%pythoncode %{
+def cvFindContours( *args ):
+	count, seq = cvFindContoursUntyped( *args )
+	return count, CvSeq_Point.cast(seq)
+%}
+
 /* cvHoughLines2 returns a different type of sequence depending on its args */
 %rename (cvHoughLinesUntyped) cvHoughLines2;
 %pythoncode %{
@@ -88,6 +112,11 @@ def cvHoughLines2( *args ):
 		return CvSeq_CvPoint_2.cast(seq)
 	return CvSeq_float_2.cast(seq)
 %}
+
+// TODO
+// cvPointSeqFromMat
+// cvConvexHull2
+// cvSeqPartition
 
 // cvRelease* functions don't consider python's reference count
 // so we get a double-free error when the reference count reaches zero.
