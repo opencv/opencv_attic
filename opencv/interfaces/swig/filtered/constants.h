@@ -664,6 +664,10 @@
 
 #define CV_BILATERAL 4
 
+#define CV_INPAINT_NS      0
+
+#define CV_INPAINT_TELEA   1
+
 #define CV_SCHARR -1
 
 #define CV_MAX_SOBEL_KSIZE 7
