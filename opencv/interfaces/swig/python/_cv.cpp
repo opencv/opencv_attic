@@ -4550,6 +4550,9 @@ int CvMat_nChannels_get(CvMat * m){
 int CvMat_origin_get(CvMat * m){
 	return 0;
 }
+int CvMat_dataOrder_get(CvMat * m){
+	return 0;
+}
 int CvMat_imageSize_get(CvMat * m){
 	return m->step*m->rows;
 }
@@ -4617,10 +4620,11 @@ void CvMat_imageData_set(CvMat * self, PyObject* object)
 /// Accessor to convert the imageData into a Python string.
 PyObject* CvMat_imageData_get(CvMat * self) 
 {
-	if (CV_MAT_DEPTH(self->type)!=CV_8U)
-		return 0;
 	if (!self->data.ptr)
-		return 0;
+	{
+		PyErr_SetString(PyExc_TypeError, "Data pointer of CvMat is NULL");
+		return NULL;
+	}		 
 	return PyString_FromStringAndSize((const char *)self->data.ptr, self->rows*self->step);
 }
 
@@ -17523,6 +17527,36 @@ SWIGINTERN PyObject *_wrap_CvMat_nChannels_get(PyObject *SWIGUNUSEDPARM(self), P
   {
     try {
       result = (int)CvMat_nChannels_get(arg1); 
+    } 
+    catch (...) 
+    {
+      return NULL;
+    } 
+  }
+  resultobj = SWIG_From_int(static_cast< int >(result));
+  return resultobj;
+fail:
+  return NULL;
+}
+
+
+SWIGINTERN PyObject *_wrap_CvMat_dataOrder_get(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
+  PyObject *resultobj = 0;
+  CvMat *arg1 = (CvMat *) 0 ;
+  int result;
+  void *argp1 = 0 ;
+  int res1 = 0 ;
+  PyObject * obj0 = 0 ;
+  
+  if (!PyArg_ParseTuple(args,(char *)"O:CvMat_dataOrder_get",&obj0)) SWIG_fail;
+  res1 = SWIG_ConvertPtr(obj0, &argp1,SWIGTYPE_p_CvMat, 0 |  0 );
+  if (!SWIG_IsOK(res1)) {
+    SWIG_exception_fail(SWIG_ArgError(res1), "in method '" "CvMat_dataOrder_get" "', argument " "1"" of type '" "CvMat *""'"); 
+  }
+  arg1 = reinterpret_cast< CvMat * >(argp1);
+  {
+    try {
+      result = (int)CvMat_dataOrder_get(arg1); 
     } 
     catch (...) 
     {
@@ -97548,6 +97582,7 @@ static PyMethodDef SwigMethods[] = {
 	 { (char *)"delete_CvMat", _wrap_delete_CvMat, METH_VARARGS, NULL},
 	 { (char *)"CvMat_depth_get", _wrap_CvMat_depth_get, METH_VARARGS, NULL},
 	 { (char *)"CvMat_nChannels_get", _wrap_CvMat_nChannels_get, METH_VARARGS, NULL},
+	 { (char *)"CvMat_dataOrder_get", _wrap_CvMat_dataOrder_get, METH_VARARGS, NULL},
 	 { (char *)"CvMat_origin_get", _wrap_CvMat_origin_get, METH_VARARGS, NULL},
 	 { (char *)"CvMat_width_get", _wrap_CvMat_width_get, METH_VARARGS, NULL},
 	 { (char *)"CvMat_height_get", _wrap_CvMat_height_get, METH_VARARGS, NULL},

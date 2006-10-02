@@ -71,7 +71,7 @@ def array(*args):
 def size(X,dim=-1):
     # CvMat
     if hasattr(X, "type"):
-        sz = (X.rows, X.cols, CV_MAT_NCH(X.type))
+        sz = (X.rows, X.cols, CV_MAT_CN(X.type))
     # IplImage
     elif hasattr(X, "nChannels"):
         sz = (X.height, X.width, X.nChannels)
