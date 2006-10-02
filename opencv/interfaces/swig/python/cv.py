@@ -118,6 +118,30 @@ def cvSegmentMotion(*args):
         double seg_thresh) -> CvSeq_ConnectedComp
     """
   return _cv.cvSegmentMotion(*args)
+def cvHoughCircles(*args):
+	seq = cvHoughCirclesUntyped( *args )
+	return CvSeq_float_3.cast(seq)
+
+def cvPyrSegmentation(*args):
+	seq = cvPyrSegmentationUntyped( *args )
+	return CvSeq_ConnectedComp.cast(seq)
+
+def cvApproxChains(*args):
+	seq = cvApproxChainsUntyped( *args )
+	return CvSeq_Point.cast(seq)
+
+def cvContourFromContourTree(*args):
+	seq = cvContourFromContourTreeUntyped( *args )
+	return CvSeq_Point.cast(seq)
+
+def cvConvexityDefects(*args):
+	seq = cvConvexityDefectsUntyped( *args )
+	return CvSeq_ConvexityDefect.cast(seq)
+
+def cvFindContours( *args ):
+	count, seq = cvFindContoursUntyped( *args )
+	return count, CvSeq_Point.cast(seq)
+
 def cvHoughLines2( *args ):
 	seq = cvHoughLinesUntyped( *args )
 	type = CV_SEQ_ELTYPE(seq) 
@@ -964,6 +988,8 @@ CV_BLUR = _cv.CV_BLUR
 CV_GAUSSIAN = _cv.CV_GAUSSIAN
 CV_MEDIAN = _cv.CV_MEDIAN
 CV_BILATERAL = _cv.CV_BILATERAL
+CV_INPAINT_NS = _cv.CV_INPAINT_NS
+CV_INPAINT_TELEA = _cv.CV_INPAINT_TELEA
 CV_SCHARR = _cv.CV_SCHARR
 CV_MAX_SOBEL_KSIZE = _cv.CV_MAX_SOBEL_KSIZE
 CV_BGR2BGRA = _cv.CV_BGR2BGRA
@@ -2770,18 +2796,20 @@ class CvSeq(_object):
     	generator function iterating along v_next
     	"""
     	s = self
+    	t = type(self)
     	while s:
     		yield s
-    		s = s.v_next
+    		s = t.cast(s.v_next)
 
     def hrange(self):
     	"""
     	generator function iterating along h_next
     	"""
     	s = self
+    	t = type(self)
     	while s:
     		yield s
-    		s = s.h_next
+    		s = t.cast(s.h_next)
 
     def __init__(self, *args): 
         """__init__(self) -> CvSeq"""
@@ -6100,12 +6128,12 @@ def cvPyrUp(*args):
   """cvPyrUp(CvArr src, CvArr dst, int filter=CV_GAUSSIAN_5x5)"""
   return _cv.cvPyrUp(*args)
 
-def cvPyrSegmentation(*args):
+def cvPyrSegmentationUntyped(*args):
   """
-    cvPyrSegmentation( src,  dst, CvMemStorage storage, CvSeq comp, int level, 
+    cvPyrSegmentationUntyped( src,  dst, CvMemStorage storage, CvSeq comp, int level, 
         double threshold1, double threshold2)
     """
-  return _cv.cvPyrSegmentation(*args)
+  return _cv.cvPyrSegmentationUntyped(*args)
 
 def cvPyrMeanShiftFiltering(*args):
   """
@@ -6117,6 +6145,13 @@ def cvPyrMeanShiftFiltering(*args):
 def cvWatershed(*args):
   """cvWatershed(CvArr image, CvArr markers)"""
   return _cv.cvWatershed(*args)
+
+def cvInpaint(*args):
+  """
+    cvInpaint(CvArr src, CvArr inpaint_mask, CvArr dst, double inpaintRange, 
+        int flags)
+    """
+  return _cv.cvInpaint(*args)
 
 def cvSobel(*args):
   """cvSobel(CvArr src, CvArr dst, int xorder, int yorder, int aperture_size=3)"""
@@ -6244,13 +6279,13 @@ def cvCalcEMD2(*args):
     """
   return _cv.cvCalcEMD2(*args)
 
-def cvFindContours(*args):
+def cvFindContoursUntyped(*args):
   """
-    cvFindContours(CvArr image, CvMemStorage storage, CvSeq first_contour, 
+    cvFindContoursUntyped(CvArr image, CvMemStorage storage, CvSeq first_contour, 
         int header_size=sizeof(CvContour), int mode=1, 
         int method=2, CvPoint offset=cvPoint(0,0)) -> int
     """
-  return _cv.cvFindContours(*args)
+  return _cv.cvFindContoursUntyped(*args)
 
 def cvStartFindContours(*args):
   """
@@ -6272,13 +6307,13 @@ def cvEndFindContours(*args):
   """cvEndFindContours(CvContourScanner scanner) -> CvSeq"""
   return _cv.cvEndFindContours(*args)
 
-def cvApproxChains(*args):
+def cvApproxChainsUntyped(*args):
   """
-    cvApproxChains(CvSeq src_seq, CvMemStorage storage, int method=2, 
+    cvApproxChainsUntyped(CvSeq src_seq, CvMemStorage storage, int method=2, 
         double parameter=0, int minimal_perimeter=0, 
         int recursive=0) -> CvSeq
     """
-  return _cv.cvApproxChains(*args)
+  return _cv.cvApproxChainsUntyped(*args)
 
 def cvStartReadChainPoints(*args):
   """cvStartReadChainPoints(CvChain chain, CvChainPtReader reader)"""
@@ -6487,9 +6522,9 @@ def cvCreateContourTree(*args):
   """cvCreateContourTree(CvSeq contour, CvMemStorage storage, double threshold) -> CvContourTree"""
   return _cv.cvCreateContourTree(*args)
 
-def cvContourFromContourTree(*args):
-  """cvContourFromContourTree(CvContourTree tree, CvMemStorage storage, CvTermCriteria criteria) -> CvSeq"""
-  return _cv.cvContourFromContourTree(*args)
+def cvContourFromContourTreeUntyped(*args):
+  """cvContourFromContourTreeUntyped(CvContourTree tree, CvMemStorage storage, CvTermCriteria criteria) -> CvSeq"""
+  return _cv.cvContourFromContourTreeUntyped(*args)
 
 def cvMatchContourTrees(*args):
   """
@@ -6513,9 +6548,9 @@ def cvCheckContourConvexity(*args):
   """cvCheckContourConvexity(CvArr contour) -> int"""
   return _cv.cvCheckContourConvexity(*args)
 
-def cvConvexityDefects(*args):
-  """cvConvexityDefects(CvArr contour, CvArr convexhull, CvMemStorage storage=None) -> CvSeq"""
-  return _cv.cvConvexityDefects(*args)
+def cvConvexityDefectsUntyped(*args):
+  """cvConvexityDefectsUntyped(CvArr contour, CvArr convexhull, CvMemStorage storage=None) -> CvSeq"""
+  return _cv.cvConvexityDefectsUntyped(*args)
 
 def cvFitEllipse2(*args):
   """cvFitEllipse2(CvArr points) -> CvBox2D"""
@@ -6709,12 +6744,13 @@ def cvHoughLinesUntyped(*args):
     """
   return _cv.cvHoughLinesUntyped(*args)
 
-def cvHoughCircles(*args):
+def cvHoughCirclesUntyped(*args):
   """
-    cvHoughCircles(CvArr image, void circle_storage, int method, double dp, 
-        double min_dist, double param1=100, double param2=100) -> CvSeq
+    cvHoughCirclesUntyped(CvArr image, void circle_storage, int method, double dp, 
+        double min_dist, double param1=100, double param2=100, 
+        int min_radius=0, int max_radius=0) -> CvSeq
     """
-  return _cv.cvHoughCircles(*args)
+  return _cv.cvHoughCirclesUntyped(*args)
 
 def cvFitLine(*args):
   """
@@ -6944,21 +6980,6 @@ class CvSepFilter(CvBaseImageFilter):
         except: self.this = this
     __swig_destroy__ = _cv.delete_CvSepFilter
     __del__ = lambda self : None;
-    def init(*args):
-        """
-        init(self, int _max_width, int _src_type, int _dst_type, CvMat _kx, 
-            CvMat _ky, CvPoint _anchor=cvPoint(-1,-1), 
-            int _border_mode=1, CvScalar _border_value=cvScalarAll(0))
-        init(self, int _max_width, int _src_type, int _dst_type, CvMat _kx, 
-            CvMat _ky, CvPoint _anchor=cvPoint(-1,-1), 
-            int _border_mode=1)
-        init(self, int _max_width, int _src_type, int _dst_type, CvMat _kx, 
-            CvMat _ky, CvPoint _anchor=cvPoint(-1,-1))
-        init(self, int _max_width, int _src_type, int _dst_type, CvMat _kx, 
-            CvMat _ky)
-        """
-        return _cv.CvSepFilter_init(*args)
-
     def init_deriv(*args):
         """
         init_deriv(self, int _max_width, int _src_type, int _dst_type, int dx, 
@@ -6974,6 +6995,31 @@ class CvSepFilter(CvBaseImageFilter):
             double sigma)
         """
         return _cv.CvSepFilter_init_gaussian(*args)
+
+    def init(*args):
+        """
+        init(self, int _max_width, int _src_type, int _dst_type, CvMat _kx, 
+            CvMat _ky, CvPoint _anchor=cvPoint(-1,-1), 
+            int _border_mode=1, CvScalar _border_value=cvScalarAll(0))
+        init(self, int _max_width, int _src_type, int _dst_type, CvMat _kx, 
+            CvMat _ky, CvPoint _anchor=cvPoint(-1,-1), 
+            int _border_mode=1)
+        init(self, int _max_width, int _src_type, int _dst_type, CvMat _kx, 
+            CvMat _ky, CvPoint _anchor=cvPoint(-1,-1))
+        init(self, int _max_width, int _src_type, int _dst_type, CvMat _kx, 
+            CvMat _ky)
+        init(self, int _max_width, int _src_type, int _dst_type, bool _is_separable, 
+            CvSize _ksize, CvPoint _anchor=cvPoint(-1,-1), 
+            int _border_mode=1, CvScalar _border_value=cvScalarAll(0))
+        init(self, int _max_width, int _src_type, int _dst_type, bool _is_separable, 
+            CvSize _ksize, CvPoint _anchor=cvPoint(-1,-1), 
+            int _border_mode=1)
+        init(self, int _max_width, int _src_type, int _dst_type, bool _is_separable, 
+            CvSize _ksize, CvPoint _anchor=cvPoint(-1,-1))
+        init(self, int _max_width, int _src_type, int _dst_type, bool _is_separable, 
+            CvSize _ksize)
+        """
+        return _cv.CvSepFilter_init(*args)
 
     def clear(*args):
         """clear(self)"""
@@ -7090,6 +7136,16 @@ class CvLinearFilter(CvBaseImageFilter):
         init(self, int _max_width, int _src_type, int _dst_type, CvMat _kernel, 
             CvPoint _anchor=cvPoint(-1,-1))
         init(self, int _max_width, int _src_type, int _dst_type, CvMat _kernel)
+        init(self, int _max_width, int _src_type, int _dst_type, bool _is_separable, 
+            CvSize _ksize, CvPoint _anchor=cvPoint(-1,-1), 
+            int _border_mode=1, CvScalar _border_value=cvScalarAll(0))
+        init(self, int _max_width, int _src_type, int _dst_type, bool _is_separable, 
+            CvSize _ksize, CvPoint _anchor=cvPoint(-1,-1), 
+            int _border_mode=1)
+        init(self, int _max_width, int _src_type, int _dst_type, bool _is_separable, 
+            CvSize _ksize, CvPoint _anchor=cvPoint(-1,-1))
+        init(self, int _max_width, int _src_type, int _dst_type, bool _is_separable, 
+            CvSize _ksize)
         """
         return _cv.CvLinearFilter_init(*args)
 
@@ -7208,6 +7264,26 @@ class CvLaplaceFilter(CvSepFilter):
             int _ksize, int _border_mode=1)
         init(self, int _max_width, int _src_type, int _dst_type, bool _normalized, 
             int _ksize)
+        init(self, int _max_width, int _src_type, int _dst_type, bool _is_separable, 
+            CvSize _ksize, CvPoint _anchor=cvPoint(-1,-1), 
+            int _border_mode=1, CvScalar _border_value=cvScalarAll(0))
+        init(self, int _max_width, int _src_type, int _dst_type, bool _is_separable, 
+            CvSize _ksize, CvPoint _anchor=cvPoint(-1,-1), 
+            int _border_mode=1)
+        init(self, int _max_width, int _src_type, int _dst_type, bool _is_separable, 
+            CvSize _ksize, CvPoint _anchor=cvPoint(-1,-1))
+        init(self, int _max_width, int _src_type, int _dst_type, bool _is_separable, 
+            CvSize _ksize)
+        init(self, int _max_width, int _src_type, int _dst_type, CvMat _kx, 
+            CvMat _ky, CvPoint _anchor=cvPoint(-1,-1), 
+            int _border_mode=1, CvScalar _border_value=cvScalarAll(0))
+        init(self, int _max_width, int _src_type, int _dst_type, CvMat _kx, 
+            CvMat _ky, CvPoint _anchor=cvPoint(-1,-1), 
+            int _border_mode=1)
+        init(self, int _max_width, int _src_type, int _dst_type, CvMat _kx, 
+            CvMat _ky, CvPoint _anchor=cvPoint(-1,-1))
+        init(self, int _max_width, int _src_type, int _dst_type, CvMat _kx, 
+            CvMat _ky)
         """
         return _cv.CvLaplaceFilter_init(*args)
 
@@ -7272,6 +7348,16 @@ class CvMorphology(CvBaseImageFilter):
             int _element_shape, CvMat _element, CvSize _ksize=cvSize(0,0))
         init(self, int _operation, int _max_width, int _src_dst_type, 
             int _element_shape, CvMat _element)
+        init(self, int _max_width, int _src_type, int _dst_type, bool _is_separable, 
+            CvSize _ksize, CvPoint _anchor=cvPoint(-1,-1), 
+            int _border_mode=1, CvScalar _border_value=cvScalarAll(0))
+        init(self, int _max_width, int _src_type, int _dst_type, bool _is_separable, 
+            CvSize _ksize, CvPoint _anchor=cvPoint(-1,-1), 
+            int _border_mode=1)
+        init(self, int _max_width, int _src_type, int _dst_type, bool _is_separable, 
+            CvSize _ksize, CvPoint _anchor=cvPoint(-1,-1))
+        init(self, int _max_width, int _src_type, int _dst_type, bool _is_separable, 
+            CvSize _ksize)
         """
         return _cv.CvMorphology_init(*args)
 
@@ -7652,50 +7738,50 @@ class CvTuple_float_2(_object):
 CvTuple_float_2_swigregister = _cv.CvTuple_float_2_swigregister
 CvTuple_float_2_swigregister(CvTuple_float_2)
 
-class CvSeq_CvPoint_2(CvSeq):
-    """Proxy of C++ CvSeq_CvPoint_2 class"""
+class CvSeq_Point_2(CvSeq):
+    """Proxy of C++ CvSeq_Point_2 class"""
     __swig_setmethods__ = {}
     for _s in [CvSeq]: __swig_setmethods__.update(_s.__swig_setmethods__)
-    __setattr__ = lambda self, name, value: _swig_setattr(self, CvSeq_CvPoint_2, name, value)
+    __setattr__ = lambda self, name, value: _swig_setattr(self, CvSeq_Point_2, name, value)
     __swig_getmethods__ = {}
     for _s in [CvSeq]: __swig_getmethods__.update(_s.__swig_getmethods__)
-    __getattr__ = lambda self, name: _swig_getattr(self, CvSeq_CvPoint_2, name)
+    __getattr__ = lambda self, name: _swig_getattr(self, CvSeq_Point_2, name)
     __repr__ = _swig_repr
     def cast(*args):
-        """cast(CvSeq seq) -> CvSeq_CvPoint_2"""
-        return _cv.CvSeq_CvPoint_2_cast(*args)
+        """cast(CvSeq seq) -> CvSeq_Point_2"""
+        return _cv.CvSeq_Point_2_cast(*args)
 
     if _newclass:cast = staticmethod(cast)
     __swig_getmethods__["cast"] = lambda x: cast
     def __getitem__(*args):
         """__getitem__(self, int i) -> CvTuple_CvPoint_2"""
-        return _cv.CvSeq_CvPoint_2___getitem__(*args)
+        return _cv.CvSeq_Point_2___getitem__(*args)
 
     def __setitem__(*args):
         """__setitem__(self, int i, CvTuple_CvPoint_2 obj)"""
-        return _cv.CvSeq_CvPoint_2___setitem__(*args)
+        return _cv.CvSeq_Point_2___setitem__(*args)
 
     def append(*args):
         """append(self, CvTuple_CvPoint_2 obj)"""
-        return _cv.CvSeq_CvPoint_2_append(*args)
+        return _cv.CvSeq_Point_2_append(*args)
 
     def pop(*args):
         """pop(self) -> CvTuple_CvPoint_2"""
-        return _cv.CvSeq_CvPoint_2_pop(*args)
+        return _cv.CvSeq_Point_2_pop(*args)
 
     def __init__(self, *args): 
-        """__init__(self) -> CvSeq_CvPoint_2"""
-        this = _cv.new_CvSeq_CvPoint_2(*args)
+        """__init__(self) -> CvSeq_Point_2"""
+        this = _cv.new_CvSeq_Point_2(*args)
         try: self.this.append(this)
         except: self.this = this
-    __swig_destroy__ = _cv.delete_CvSeq_CvPoint_2
+    __swig_destroy__ = _cv.delete_CvSeq_Point_2
     __del__ = lambda self : None;
-CvSeq_CvPoint_2_swigregister = _cv.CvSeq_CvPoint_2_swigregister
-CvSeq_CvPoint_2_swigregister(CvSeq_CvPoint_2)
+CvSeq_Point_2_swigregister = _cv.CvSeq_Point_2_swigregister
+CvSeq_Point_2_swigregister(CvSeq_Point_2)
 
-def CvSeq_CvPoint_2_cast(*args):
-  """CvSeq_CvPoint_2_cast(CvSeq seq) -> CvSeq_CvPoint_2"""
-  return _cv.CvSeq_CvPoint_2_cast(*args)
+def CvSeq_Point_2_cast(*args):
+  """CvSeq_Point_2_cast(CvSeq seq) -> CvSeq_Point_2"""
+  return _cv.CvSeq_Point_2_cast(*args)
 
 class CvSeq_float_2(CvSeq):
     """Proxy of C++ CvSeq_float_2 class"""
@@ -7741,6 +7827,51 @@ CvSeq_float_2_swigregister(CvSeq_float_2)
 def CvSeq_float_2_cast(*args):
   """CvSeq_float_2_cast(CvSeq seq) -> CvSeq_float_2"""
   return _cv.CvSeq_float_2_cast(*args)
+
+class CvSeq_float_3(CvSeq):
+    """Proxy of C++ CvSeq_float_3 class"""
+    __swig_setmethods__ = {}
+    for _s in [CvSeq]: __swig_setmethods__.update(_s.__swig_setmethods__)
+    __setattr__ = lambda self, name, value: _swig_setattr(self, CvSeq_float_3, name, value)
+    __swig_getmethods__ = {}
+    for _s in [CvSeq]: __swig_getmethods__.update(_s.__swig_getmethods__)
+    __getattr__ = lambda self, name: _swig_getattr(self, CvSeq_float_3, name)
+    __repr__ = _swig_repr
+    def cast(*args):
+        """cast(CvSeq seq) -> CvSeq_float_3"""
+        return _cv.CvSeq_float_3_cast(*args)
+
+    if _newclass:cast = staticmethod(cast)
+    __swig_getmethods__["cast"] = lambda x: cast
+    def __getitem__(*args):
+        """__getitem__(self, int i) -> CvTuple<(float,3)>"""
+        return _cv.CvSeq_float_3___getitem__(*args)
+
+    def __setitem__(*args):
+        """__setitem__(self, int i, CvTuple<(float,3)> obj)"""
+        return _cv.CvSeq_float_3___setitem__(*args)
+
+    def append(*args):
+        """append(self, CvTuple<(float,3)> obj)"""
+        return _cv.CvSeq_float_3_append(*args)
+
+    def pop(*args):
+        """pop(self) -> CvTuple<(float,3)>"""
+        return _cv.CvSeq_float_3_pop(*args)
+
+    def __init__(self, *args): 
+        """__init__(self) -> CvSeq_float_3"""
+        this = _cv.new_CvSeq_float_3(*args)
+        try: self.this.append(this)
+        except: self.this = this
+    __swig_destroy__ = _cv.delete_CvSeq_float_3
+    __del__ = lambda self : None;
+CvSeq_float_3_swigregister = _cv.CvSeq_float_3_swigregister
+CvSeq_float_3_swigregister(CvSeq_float_3)
+
+def CvSeq_float_3_cast(*args):
+  """CvSeq_float_3_cast(CvSeq seq) -> CvSeq_float_3"""
+  return _cv.CvSeq_float_3_cast(*args)
 
 
 def SendErrorToPython(*args):

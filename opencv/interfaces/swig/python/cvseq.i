@@ -50,8 +50,9 @@
 %template (CvSeq_ConnectedComp) CvTypedSeq<CvConnectedComp>;
 %template (CvTuple_CvPoint_2) CvTuple<CvPoint,2>;
 %template (CvTuple_float_2) CvTuple<float,2>;
-%template (CvSeq_CvPoint_2) CvTypedSeq< CvTuple<CvPoint,2> >;
+%template (CvSeq_Point_2) CvTypedSeq< CvTuple<CvPoint,2> >;
 %template (CvSeq_float_2) CvTypedSeq< CvTuple<float,2> >;
+%template (CvSeq_float_3) CvTypedSeq< CvTuple<float,3> >;
 
 %extend CvSeq {
 	%pythoncode %{
@@ -67,18 +68,20 @@
 		generator function iterating along v_next
 		"""
 		s = self
+		t = type(self)
 		while s:
 			yield s
-			s = s.v_next
+			s = t.cast(s.v_next)
 
 	def hrange(self):
 		"""
 		generator function iterating along h_next
 		"""
 		s = self
+		t = type(self)
 		while s:
 			yield s
-			s = s.h_next
+			s = t.cast(s.h_next)
 	%}
 }
 
