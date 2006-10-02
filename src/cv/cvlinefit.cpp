@@ -215,12 +215,13 @@ icvFitLine3D_wods( CvPoint3D32f * points, int count, float *weights, float *line
     return CV_NO_ERR;
 }
 
-static void
+static double
 icvCalcDist2D( CvPoint2D32f * points, int count, float *_line, float *dist )
 {
     int j;
     float px = _line[2], py = _line[3];
     float nx = _line[1], ny = -_line[0];
+    double sum_dist = 0.;
 
     for( j = 0; j < count; j++ )
     {
@@ -230,15 +231,19 @@ icvCalcDist2D( CvPoint2D32f * points, int count, float *_line, float *dist )
         y = points[j].y - py;
 
         dist[j] = (float) fabs( nx * x + ny * y );
+        sum_dist += dist[j];
     }
+
+    return sum_dist;
 }
 
-static void
+static double
 icvCalcDist3D( CvPoint3D32f * points, int count, float *_line, float *dist )
 {
     int j;
     float px = _line[3], py = _line[4], pz = _line[5];
     float vx = _line[0], vy = _line[1], vz = _line[2];
+    double sum_dist = 0.;
 
     for( j = 0; j < count; j++ )
     {
@@ -254,7 +259,10 @@ icvCalcDist3D( CvPoint3D32f * points, int count, float *_line, float *dist )
         p3 = vx * y - vy * x;
 
         dist[j] = (float) sqrt( p1*p1 + p2*p2 + p3*p3 );
+        sum_dist += dist[j];
     }
+
+    return sum_dist;
 }
 
 static void
@@ -333,12 +341,14 @@ static CvStatus  icvFitLine2D( CvPoint2D32f * points, int count, int dist,
     void (*calc_weights_param) (float *, int, float *, float) = 0;
     float *w;                   /* weights */
     float *r;                   /* square distances */
-    int i;
+    int i, j;
     float _line[6], _lineprev[6];
     int first = 1;
     float rdelta = reps != 0 ? reps : 1.0f;
     float adelta = aeps != 0 ? aeps : 0.01f;
     CvStatus ret;
+
+    memset( line, 0, 4*sizeof(line[0]) );
 
     switch (dist)
     {
@@ -382,12 +392,7 @@ static CvStatus  icvFitLine2D( CvPoint2D32f * points, int count, int dist,
     ret = icvFitLine2D_wods( points, count, 0, _line );
     for( i = 0; i < 100; i++ )
     {
-        if( ret != CV_NO_ERR )
-        {
-            cvFree( &w );
-            cvFree( &r );
-            return ret;
-        }
+        double sum_w = 0;
 
         if( first )
         {
@@ -405,19 +410,12 @@ static CvStatus  icvFitLine2D( CvPoint2D32f * points, int count, int dist,
 
                 d = x > y ? x : y;
                 if( d < rdelta )
-                {
-                    // Return...
-                    memcpy( line, _line, 4 * sizeof( float ));
-
-                    cvFree( &w );
-                    cvFree( &r );
-                    return CV_NO_ERR;
-                }
-
+                    goto _exit_;
             }
         }
         /* calculate distances */
-        icvCalcDist2D( points, count, _line, r );
+        if( icvCalcDist2D( points, count, _line, r ) < FLT_EPSILON*count )
+            break;
 
         /* calculate weights */
         if( calc_weights )
@@ -429,11 +427,22 @@ static CvStatus  icvFitLine2D( CvPoint2D32f * points, int count, int dist,
             calc_weights_param( r, count, w, _param );
         }
         else
-        {
-            assert( 0 );
-            return CV_BADFACTOR_ERR;
-        }
+            goto _exit_;
 
+        for( j = 0; j < count; j++ )
+            sum_w += w[j];
+
+        if( fabs(sum_w) > FLT_EPSILON )
+        {
+            sum_w = 1./sum_w;
+            for( j = 0; j < count; j++ )
+                w[j] = (float)(w[j]*sum_w);
+        }
+        else
+        {
+            for( j = 0; j < count; j++ )
+                w[j] = 1.f;
+        }
 
         /* save the line parameters */
         memcpy( _lineprev, _line, 4 * sizeof( float ));
@@ -442,9 +451,11 @@ static CvStatus  icvFitLine2D( CvPoint2D32f * points, int count, int dist,
         ret = icvFitLine2D_wods( points, count, w, _line );
     }
 
+_exit_:
+    memcpy( line, _line, 4 * sizeof(line[0]));
     cvFree( &w );
     cvFree( &r );
-    return CV_BADCONVERGENCE_ERR;
+    return CV_OK;
 }
 
 
@@ -453,19 +464,22 @@ distance specified by callbacks, fills the array of four floats with line
 parameters A, B, C, D, E, F, where (A, B, C) is the normalized direction vector, 
 (D, E, F) is the point that belongs to the line. */
 
-static CvStatus  icvFitLine3D( CvPoint3D32f * points, int count, int dist,
-                               float _param, float reps, float aeps, float *line )
+static CvStatus
+icvFitLine3D( CvPoint3D32f * points, int count, int dist,
+              float _param, float reps, float aeps, float *line )
 {
     void (*calc_weights) (float *, int, float *) = 0;
     void (*calc_weights_param) (float *, int, float *, float) = 0;
     float *w;                   /* weights */
     float *r;                   /* square distances */
-    int i;
+    int i, j;
     float _line[6], _lineprev[6];
     int first = 1;
     float rdelta = reps != 0 ? reps : 1.0f;
     float adelta = aeps != 0 ? aeps : 0.01f;
     CvStatus ret;
+
+    memset( line, 0, 6*sizeof(line[0]) );
 
     switch (dist)
     {
@@ -510,13 +524,8 @@ static CvStatus  icvFitLine3D( CvPoint3D32f * points, int count, int dist,
     ret = icvFitLine3D_wods( points, count, 0, _line );
     for( i = 0; i < 100; i++ )
     {
-        if( ret != CV_NO_ERR )
-        {
-            cvFree( &w );
-            cvFree( &r );
-            return ret;
-        }
-
+        double sum_w = 0;
+        
         if( first )
         {
             first = 0;
@@ -543,19 +552,12 @@ static CvStatus  icvFitLine3D( CvPoint3D32f * points, int count, int dist,
 
                 d = dx > dy ? (dx > dz ? dx : dz) : (dy > dz ? dy : dz);
                 if( d < rdelta )
-                {
-                    // Return...
-                    memcpy( line, _line, 6 * sizeof( float ));
-
-                    cvFree( &w );
-                    cvFree( &r );
-                    return CV_NO_ERR;
-                }
-
+                    goto _exit_;
             }
         }
         /* calculate distances */
-        icvCalcDist3D( points, count, _line, r );
+        if( icvCalcDist3D( points, count, _line, r ) < FLT_EPSILON*count )
+            break;
 
         /* calculate weights */
         if( calc_weights )
@@ -567,9 +569,21 @@ static CvStatus  icvFitLine3D( CvPoint3D32f * points, int count, int dist,
             calc_weights_param( r, count, w, _param );
         }
         else
+            goto _exit_;
+
+        for( j = 0; j < count; j++ )
+            sum_w += w[j];
+
+        if( fabs(sum_w) > FLT_EPSILON )
         {
-            assert( 0 );
-            return CV_BADFACTOR_ERR;
+            sum_w = 1./sum_w;
+            for( j = 0; j < count; j++ )
+                w[j] = (float)(w[j]*sum_w);
+        }
+        else
+        {
+            for( j = 0; j < count; j++ )
+                w[j] = 1.f;
         }
 
         /* save the line parameters */
@@ -578,10 +592,12 @@ static CvStatus  icvFitLine3D( CvPoint3D32f * points, int count, int dist,
         /* Run again... */
         ret = icvFitLine3D_wods( points, count, w, _line );
     }
-
+_exit_:
+    // Return...
+    memcpy( line, _line, 6 * sizeof(line[0]));
     cvFree( &w );
     cvFree( &r );
-    return CV_BADCONVERGENCE_ERR;
+    return CV_OK;
 }
 
 
