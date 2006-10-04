@@ -141,11 +141,11 @@ if __name__ == '__main__':
         cv.cvSplit (hsv, hue, None, None, None)
 
         # select the rectangle of interest in the hue/mask arrays
-        cv.cvSetImageROI (hue, selection)
-        cv.cvSetImageROI (mask, selection)
+        hue_roi = cv.cvGetSubRect (hue, selection)
+        mask_roi = cv.cvGetSubRect (mask, selection)
 
         # it's time to compute the histogram
-        cv.cvCalcHist (hue, hist, 0, mask)
+        cv.cvCalcHist (hue_roi, hist, 0, mask_roi)
 
         # extract the min and max value of the histogram
         min_val, max_val = cv.cvGetMinMaxHistValue (hist, None, None)
@@ -158,10 +158,6 @@ if __name__ == '__main__':
 
         # scale the histograms
         cv.cvConvertScale (hist.bins, hist.bins, scale, 0)
-
-        # remove the rectangle of interest
-        cv.cvResetImageROI (hue)
-        cv.cvResetImageROI (mask)
 
         # clear the histogram image
         cv.cvSetZero (histimg)
