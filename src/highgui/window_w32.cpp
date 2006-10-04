@@ -259,32 +259,40 @@ static const char* icvWindowPosRootKey = "Software\\OpenCV\\HighGUI\\Windows\\";
 // Window positions saving/loading added by Philip Gruebele.
 //<a href="mailto:pgruebele@cox.net">pgruebele@cox.net</a>
 // Restores the window position from the registry saved position.
-static CvPoint
-icvLoadWindowPos( const char* name )
+static void
+icvLoadWindowPos( const char* name, CvRect& rect )
 {
-    CvPoint pos = { CW_USEDEFAULT, CW_USEDEFAULT };
     HKEY hkey;
     char szKey[1024];
     strcpy( szKey, icvWindowPosRootKey );
     strcat( szKey, name );
+
+    rect.x = rect.y = CW_USEDEFAULT;
+    rect.width = rect.height = 320;
+
     if( RegOpenKeyEx(HKEY_CURRENT_USER,szKey,0,KEY_QUERY_VALUE,&hkey) == ERROR_SUCCESS )
     {
         // Yes we are installed.
         DWORD dwType = 0;
         DWORD dwSize = sizeof(int);
 
-        RegQueryValueEx(hkey, "Left", NULL, &dwType, (BYTE*)&pos.x, &dwSize);
-        RegQueryValueEx(hkey, "Top", NULL, &dwType, (BYTE*)&pos.y, &dwSize);
+        RegQueryValueEx(hkey, "Left", NULL, &dwType, (BYTE*)&rect.x, &dwSize);
+        RegQueryValueEx(hkey, "Top", NULL, &dwType, (BYTE*)&rect.y, &dwSize);
+        RegQueryValueEx(hkey, "Width", NULL, &dwType, (BYTE*)&rect.width, &dwSize);
+        RegQueryValueEx(hkey, "Height", NULL, &dwType, (BYTE*)&rect.height, &dwSize);
 
-        if( pos.x != (int)CW_USEDEFAULT && (pos.x < -200 || pos.x > 3000) )
-            pos.x = 100;
-        if( pos.y != (int)CW_USEDEFAULT && (pos.y < -200 || pos.y > 3000) )
-            pos.y = 100;
+        if( rect.x != (int)CW_USEDEFAULT && (rect.x < -200 || rect.x > 3000) )
+            rect.x = 100;
+        if( rect.y != (int)CW_USEDEFAULT && (rect.y < -200 || rect.y > 3000) )
+            rect.y = 100;
+
+        if( rect.width != (int)CW_USEDEFAULT && (rect.width < 0 || rect.width > 3000) )
+            rect.width = 100;
+        if( rect.height != (int)CW_USEDEFAULT && (rect.height < 0 || rect.height > 3000) )
+            rect.height = 100;
 
         RegCloseKey(hkey);
     }
-
-    return pos;
 }
 
 
@@ -292,7 +300,7 @@ icvLoadWindowPos( const char* name )
 //<a href="mailto:pgruebele@cox.net">pgruebele@cox.net</a>
 // philipg.  Saves the window position in the registry
 static void
-icvSaveWindowPos( const char* name, CvPoint pos )
+icvSaveWindowPos( const char* name, CvRect rect )
 {
     static const DWORD MAX_RECORD_COUNT = 100;
     HKEY hkey;
@@ -346,8 +354,10 @@ icvSaveWindowPos( const char* name, CvPoint pos )
             return;
     }
     
-    RegSetValueEx(hkey, "Left", 0, REG_DWORD, (BYTE*)&pos.x, sizeof(pos.x));
-    RegSetValueEx(hkey, "Top", 0, REG_DWORD, (BYTE*)&pos.y, sizeof(pos.y));
+    RegSetValueEx(hkey, "Left", 0, REG_DWORD, (BYTE*)&rect.x, sizeof(rect.x));
+    RegSetValueEx(hkey, "Top", 0, REG_DWORD, (BYTE*)&rect.y, sizeof(rect.y));
+    RegSetValueEx(hkey, "Width", 0, REG_DWORD, (BYTE*)&rect.width, sizeof(rect.width));
+    RegSetValueEx(hkey, "Height", 0, REG_DWORD, (BYTE*)&rect.height, sizeof(rect.height));
     RegCloseKey(hkey);
 }
 
@@ -363,7 +373,7 @@ CV_IMPL int cvNamedWindow( const char* name, int flags )
     CvWindow* window;
     DWORD defStyle = WS_VISIBLE | WS_MINIMIZEBOX | WS_MAXIMIZEBOX | WS_SYSMENU;
     int len;
-    CvPoint pos;
+    CvRect rect;
 
     cvInitSystem(0,0);
 
@@ -380,17 +390,17 @@ CV_IMPL int cvNamedWindow( const char* name, int flags )
     if( (flags & CV_WINDOW_AUTOSIZE) == 0 )
         defStyle |= WS_SIZEBOX;
 
-    pos = icvLoadWindowPos( name );
+    icvLoadWindowPos( name, rect );
 
     mainhWnd = CreateWindow( "Main HighGUI class", name, defStyle | WS_OVERLAPPED,
-                             pos.x, pos.y, 320, 320, 0, 0, hg_hinstance, 0 );
+                             rect.x, rect.y, rect.width, rect.height, 0, 0, hg_hinstance, 0 );
     if( !mainhWnd )
         CV_ERROR( CV_StsError, "Frame window can not be created" );
 
     ShowWindow(mainhWnd, SW_SHOW);
 
     hWnd = CreateWindow("HighGUI class", "", defStyle | WS_CHILD | WS_SIZEBOX,
-                        CW_USEDEFAULT, 0, 320, 320, mainhWnd, 0, hg_hinstance, 0);
+                        CW_USEDEFAULT, 0, rect.width, rect.height, mainhWnd, 0, hg_hinstance, 0);
     if( !hWnd )
         CV_ERROR( CV_StsError, "Frame window can not be created" );
 
@@ -438,7 +448,8 @@ static void icvRemoveWindow( CvWindow* window )
     RECT wrect;
 
     GetWindowRect( window->frame, &wrect );
-    icvSaveWindowPos( window->name, cvPoint(wrect.left, wrect.top) );
+    icvSaveWindowPos( window->name, cvRect(wrect.left, wrect.top,
+        wrect.right-wrect.left, wrect.bottom-wrect.top) );
 
     icvSetWindowLongPtr( window->hwnd, CV_USERDATA, 0 );
     icvSetWindowLongPtr( window->frame, CV_USERDATA, 0 );
