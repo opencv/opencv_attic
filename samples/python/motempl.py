@@ -66,17 +66,13 @@ def update_mhi( img, dst, diff_threshold ):
                 continue;
             color = CV_RGB(255,0,0);
             magnitude = 30.;
-        cvSetImageROI( silh, comp_rect );
-        cvSetImageROI( mhi, comp_rect );
-        cvSetImageROI( orient, comp_rect );
-        cvSetImageROI( mask, comp_rect );
-        angle = cvCalcGlobalOrientation( orient, mask, mhi, timestamp, MHI_DURATION);
+        silh_roi = cvGetSubRect(silh, comp_rect);
+        mhi_roi = cvGetSubRect( mhi, comp_rect );
+        orient_roi = cvGetSubRect( orient, comp_rect );
+        mask_roi = cvGetSubRect( mask, comp_rect );
+        angle = cvCalcGlobalOrientation( orient_roi, mask_roi, mhi_roi, timestamp, MHI_DURATION);
         angle = 360.0 - angle;  # adjust for images with top-left origin
-        count = cvNorm( silh, None, CV_L1, None ); # calculate number of points within silhouette ROI
-        cvResetImageROI( mhi );
-        cvResetImageROI( orient );
-        cvResetImageROI( mask );
-        cvResetImageROI( silh );
+        count = cvNorm( silh_roi, None, CV_L1, None ); # calculate number of points within silhouette ROI
         if( count < comp_rect.width * comp_rect.height * 0.05 ):
             continue;
         center = cvPoint( (comp_rect.x + comp_rect.width/2),

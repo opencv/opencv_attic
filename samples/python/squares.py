@@ -35,7 +35,6 @@ def findSquares4( img, storage ):
 
     # select the maximum ROI in the image
     # with the width and height divisible by 2
-    # cvSetImageROI( timg, cvRect( 0, 0, sz.width, sz.height ));
     subimage = cvGetSubRect( timg, cvRect( 0, 0, sz.width, sz.height ))
 
     # down-scale and upscale the image to filter out the noise
