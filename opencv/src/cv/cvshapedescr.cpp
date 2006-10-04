@@ -1137,6 +1137,8 @@ cvBoundingRect( CvArr* array, int update )
 
     __BEGIN__;
 
+    CvMat stub, *mat = 0;
+    int  xmin = 0, ymin = 0, xmax = -1, ymax = -1, i, j, k;
     int calculate = update;
 
     if( CV_IS_SEQ( array ))
@@ -1156,95 +1158,194 @@ cvBoundingRect( CvArr* array, int update )
     }
     else
     {
-        CV_CALL( ptseq = cvPointSeqFromMat(
-            CV_SEQ_KIND_GENERIC, array, &contour_header, &block ));
+        CV_CALL( mat = cvGetMat( array, &stub ));
+        if( CV_MAT_TYPE(mat->type) == CV_32SC1 ||
+            CV_MAT_TYPE(mat->type) == CV_32FC1 )
+        {
+            CV_CALL( ptseq = cvPointSeqFromMat(
+                CV_SEQ_KIND_GENERIC, mat, &contour_header, &block ));
+            mat = 0;
+        }
+        else if( CV_MAT_TYPE(mat->type) != CV_8UC1 &&
+                CV_MAT_TYPE(mat->type) != CV_8SC1 )
+            CV_ERROR( CV_StsUnsupportedFormat,
+                "The image/matrix format is not supported by the function" );
+        update = 0;
         calculate = 1;
     }
 
-    if( calculate )
-    {
-        if( ptseq->total )
-        {   
-            int  is_float = CV_SEQ_ELTYPE(ptseq) == CV_32FC2;
-            int  xmin, ymin, xmax, ymax, i;
-            cvStartReadSeq( ptseq, &reader, 0 );
-
-            if( !is_float )
-            {
-                CvPoint pt;
-                /* init values */
-                CV_READ_SEQ_ELEM( pt, reader );
-                xmin = xmax = pt.x;
-                ymin = ymax = pt.y;
-    
-                for( i = 1; i < ptseq->total; i++ )
-                {            
-                    CV_READ_SEQ_ELEM( pt, reader );
-            
-                    if( xmin > pt.x )
-                        xmin = pt.x;
-            
-                    if( xmax < pt.x )
-                        xmax = pt.x;
-
-                    if( ymin > pt.y )
-                        ymin = pt.y;
-
-                    if( ymax < pt.y )
-                        ymax = pt.y;
-                }
-            }
-            else
-            {
-                CvPoint pt;
-                Cv32suf v;
-                /* init values */
-                CV_READ_SEQ_ELEM( pt, reader );
-                xmin = xmax = CV_TOGGLE_FLT(pt.x);
-                ymin = ymax = CV_TOGGLE_FLT(pt.y);
-    
-                for( i = 1; i < ptseq->total; i++ )
-                {            
-                    CV_READ_SEQ_ELEM( pt, reader );
-                    pt.x = CV_TOGGLE_FLT(pt.x);
-                    pt.y = CV_TOGGLE_FLT(pt.y);
-            
-                    if( xmin > pt.x )
-                        xmin = pt.x;
-            
-                    if( xmax < pt.x )
-                        xmax = pt.x;
-
-                    if( ymin > pt.y )
-                        ymin = pt.y;
-
-                    if( ymax < pt.y )
-                        ymax = pt.y;
-                }
-
-                v.i = CV_TOGGLE_FLT(xmin); xmin = cvFloor(v.f);
-                v.i = CV_TOGGLE_FLT(ymin); ymin = cvFloor(v.f);
-                /* because right and bottom sides of
-                   the bounding rectangle are not inclusive
-                   (note +1 in width and height calculation below),
-                   cvFloor is used here instead of cvCeil */
-                v.i = CV_TOGGLE_FLT(xmax); xmax = cvFloor(v.f);
-                v.i = CV_TOGGLE_FLT(ymax); ymax = cvFloor(v.f);
-            }
-
-            rect.x = xmin;
-            rect.y = ymin;
-            rect.width = xmax - xmin + 1;
-            rect.height = ymax - ymin + 1;
-        }
-
-        if( update )
-            ((CvContour*)ptseq)->rect = rect;
-    }
-    else
+    if( !calculate )
     {
         rect = ((CvContour*)ptseq)->rect;
+        EXIT;
     }
+
+    if( mat )
+    {
+        CvSize size = cvGetMatSize(mat);
+        xmin = size.width;
+        ymin = -1;
+
+        for( i = 0; i < size.height; i++ )
+        {
+            uchar* _ptr = mat->data.ptr + i*mat->step;
+            uchar* ptr = (uchar*)cvAlignPtr(_ptr, 4);
+            int have_nz = 0, k_min, offset = ptr - _ptr;
+            j = 0;
+            offset = MIN(offset, size.width);
+            for( ; j < offset; j++ )
+                if( _ptr[j] )
+                {
+                    have_nz = 1;
+                    break;
+                }
+            if( j < offset )
+            {
+                if( j < xmin )
+                    xmin = j;
+                if( j > xmax )
+                    xmax = j;
+            }
+            if( offset < size.width )
+            {
+                xmin -= offset;
+                xmax -= offset;
+                size.width -= offset;
+                j = 0;
+                for( ; j <= xmin - 4; j += 4 )
+                    if( *((int*)(ptr+j)) )
+                        break;
+                for( ; j < xmin; j++ )
+                    if( ptr[j] )
+                    {
+                        xmin = j;
+                        if( j > xmax )
+                            xmax = j;
+                        have_nz = 1;
+                        break;
+                    }
+                k_min = MAX(j-1, xmax);
+                k = size.width - 1;
+                for( ; k > k_min && (k&3) != 3; k-- )
+                    if( ptr[k] )
+                        break;
+                if( k > k_min && (k&3) == 3 )
+                {
+                    for( ; k > k_min+3; k -= 4 )
+                        if( *((int*)(ptr+k-3)) )
+                            break;
+                }
+                for( ; k > k_min; k-- )
+                    if( ptr[k] )
+                    {
+                        xmax = k;
+                        have_nz = 1;
+                        break;
+                    }
+                if( !have_nz )
+                {
+                    j &= ~3;
+                    for( ; j <= k - 3; j += 4 )
+                        if( *((int*)(ptr+j)) )
+                            break;
+                    for( ; j <= k; j++ )
+                        if( ptr[j] )
+                        {
+                            have_nz = 1;
+                            break;
+                        }
+                }
+                xmin += offset;
+                xmax += offset;
+                size.width += offset;
+            }
+            if( have_nz )
+            {
+                if( ymin < 0 )
+                    ymin = i;
+                ymax = i;
+            }
+        }
+
+        if( xmin >= size.width )
+            xmin = ymin = 0;
+    }
+    else if( ptseq->total )
+    {   
+        int  is_float = CV_SEQ_ELTYPE(ptseq) == CV_32FC2;
+        cvStartReadSeq( ptseq, &reader, 0 );
+
+        if( !is_float )
+        {
+            CvPoint pt;
+            /* init values */
+            CV_READ_SEQ_ELEM( pt, reader );
+            xmin = xmax = pt.x;
+            ymin = ymax = pt.y;
+
+            for( i = 1; i < ptseq->total; i++ )
+            {            
+                CV_READ_SEQ_ELEM( pt, reader );
+        
+                if( xmin > pt.x )
+                    xmin = pt.x;
+        
+                if( xmax < pt.x )
+                    xmax = pt.x;
+
+                if( ymin > pt.y )
+                    ymin = pt.y;
+
+                if( ymax < pt.y )
+                    ymax = pt.y;
+            }
+        }
+        else
+        {
+            CvPoint pt;
+            Cv32suf v;
+            /* init values */
+            CV_READ_SEQ_ELEM( pt, reader );
+            xmin = xmax = CV_TOGGLE_FLT(pt.x);
+            ymin = ymax = CV_TOGGLE_FLT(pt.y);
+
+            for( i = 1; i < ptseq->total; i++ )
+            {            
+                CV_READ_SEQ_ELEM( pt, reader );
+                pt.x = CV_TOGGLE_FLT(pt.x);
+                pt.y = CV_TOGGLE_FLT(pt.y);
+        
+                if( xmin > pt.x )
+                    xmin = pt.x;
+        
+                if( xmax < pt.x )
+                    xmax = pt.x;
+
+                if( ymin > pt.y )
+                    ymin = pt.y;
+
+                if( ymax < pt.y )
+                    ymax = pt.y;
+            }
+
+            v.i = CV_TOGGLE_FLT(xmin); xmin = cvFloor(v.f);
+            v.i = CV_TOGGLE_FLT(ymin); ymin = cvFloor(v.f);
+            /* because right and bottom sides of
+               the bounding rectangle are not inclusive
+               (note +1 in width and height calculation below),
+               cvFloor is used here instead of cvCeil */
+            v.i = CV_TOGGLE_FLT(xmax); xmax = cvFloor(v.f);
+            v.i = CV_TOGGLE_FLT(ymax); ymax = cvFloor(v.f);
+        }
+    }
+
+    rect.x = xmin;
+    rect.y = ymin;
+    rect.width = xmax - xmin + 1;
+    rect.height = ymax - ymin + 1;
+
+    if( update )
+        ((CvContour*)ptseq)->rect = rect;
 
     __END__;
 
