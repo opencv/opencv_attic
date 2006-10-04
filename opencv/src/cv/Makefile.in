@@ -69,14 +69,15 @@ am_lib_cv_la_OBJECTS = cvaccum.lo cvadapthresh.lo cvapprox.lo \
 	cvconvhull.lo cvcorner.lo cvcornersubpix.lo cvderiv.lo \
 	cvdistransform.lo cvdominants.lo cvemd.lo cvfeatureselect.lo \
 	cvfilter.lo cvfloodfill.lo cvfundam.lo cvgeometry.lo cvhaar.lo \
-	cvhistogram.lo cvhough.lo cvimgwarp.lo cvkalman.lo \
-	cvlinefit.lo cvlkpyramid.lo cvmatchcontours.lo cvmoments.lo \
-	cvmorph.lo cvmotempl.lo cvoptflowbm.lo cvoptflowhs.lo \
-	cvoptflowlk.lo cvpgh.lo cvposit.lo cvprecomp.lo cvpyramids.lo \
-	cvpyrsegmentation.lo cvrotcalipers.lo cvsamplers.lo \
-	cvsegmentation.lo cvshapedescr.lo cvsmooth.lo cvsnakes.lo \
-	cvsubdivision2d.lo cvsumpixels.lo cvswitcher.lo cvtables.lo \
-	cvtemplmatch.lo cvthresh.lo cvundistort.lo cvutils.lo
+	cvhistogram.lo cvhough.lo cvimgwarp.lo cvinpaint.lo \
+	cvkalman.lo cvlinefit.lo cvlkpyramid.lo cvmatchcontours.lo \
+	cvmoments.lo cvmorph.lo cvmotempl.lo cvoptflowbm.lo \
+	cvoptflowhs.lo cvoptflowlk.lo cvpgh.lo cvposit.lo cvprecomp.lo \
+	cvpyramids.lo cvpyrsegmentation.lo cvrotcalipers.lo \
+	cvsamplers.lo cvsegmentation.lo cvshapedescr.lo cvsmooth.lo \
+	cvsnakes.lo cvsubdivision2d.lo cvsumpixels.lo cvswitcher.lo \
+	cvtables.lo cvtemplmatch.lo cvthresh.lo cvundistort.lo \
+	cvutils.lo
 lib_cv_la_OBJECTS = $(am_lib_cv_la_OBJECTS)
 libcv_la_DEPENDENCIES = lib_cv.la \
 	$(top_builddir)/cxcore/src/libcxcore.la @LTLIBOBJS@
@@ -161,6 +162,7 @@ EXEEXT = @EXEEXT@
 F77 = @F77@
 FFLAGS = @FFLAGS@
 FFMPEGLIBS = @FFMPEGLIBS@
+GREP = @GREP@
 GTHREAD_CFLAGS = @GTHREAD_CFLAGS@
 GTHREAD_LIBS = @GTHREAD_LIBS@
 GTK_CFLAGS = @GTK_CFLAGS@
@@ -214,15 +216,9 @@ UPDATE_SWIG_WRAPPERS_FALSE = @UPDATE_SWIG_WRAPPERS_FALSE@
 UPDATE_SWIG_WRAPPERS_TRUE = @UPDATE_SWIG_WRAPPERS_TRUE@
 VERSION = @VERSION@
 XINE_LIBS = @XINE_LIBS@
-ac_ct_AR = @ac_ct_AR@
-ac_ct_AS = @ac_ct_AS@
 ac_ct_CC = @ac_ct_CC@
 ac_ct_CXX = @ac_ct_CXX@
-ac_ct_DLLTOOL = @ac_ct_DLLTOOL@
 ac_ct_F77 = @ac_ct_F77@
-ac_ct_OBJDUMP = @ac_ct_OBJDUMP@
-ac_ct_RANLIB = @ac_ct_RANLIB@
-ac_ct_STRIP = @ac_ct_STRIP@
 am__fastdepCC_FALSE = @am__fastdepCC_FALSE@
 am__fastdepCC_TRUE = @am__fastdepCC_TRUE@
 am__fastdepCXX_FALSE = @am__fastdepCXX_FALSE@
@@ -239,25 +235,32 @@ build_cpu = @build_cpu@
 build_os = @build_os@
 build_vendor = @build_vendor@
 datadir = @datadir@
+datarootdir = @datarootdir@
+docdir = @docdir@
+dvidir = @dvidir@
 exec_prefix = @exec_prefix@
 host = @host@
 host_alias = @host_alias@
 host_cpu = @host_cpu@
 host_os = @host_os@
 host_vendor = @host_vendor@
+htmldir = @htmldir@
 includedir = @includedir@
 infodir = @infodir@
 install_sh = @install_sh@
 libdir = @libdir@
 libexecdir = @libexecdir@
+localedir = @localedir@
 localstatedir = @localstatedir@
 mandir = @mandir@
 mkdir_p = @mkdir_p@
 oldincludedir = @oldincludedir@
+pdfdir = @pdfdir@
 pkgpyexecdir = @pkgpyexecdir@
 pkgpythondir = @pkgpythondir@
 prefix = @prefix@
 program_transform_name = @program_transform_name@
+psdir = @psdir@
 pyexecdir = @pyexecdir@
 pythondir = @pythondir@
 sbindir = @sbindir@
@@ -283,7 +286,7 @@ lib_cv_la_SOURCES = \
     cvcornersubpix.cpp cvderiv.cpp cvdistransform.cpp cvdominants.cpp \
     cvemd.cpp cvfeatureselect.cpp cvfilter.cpp cvfloodfill.cpp cvfundam.cpp \
     cvgeometry.cpp cvhaar.cpp cvhistogram.cpp cvhough.cpp cvimgwarp.cpp \
-    cvkalman.cpp cvlinefit.cpp cvlkpyramid.cpp cvmatchcontours.cpp \
+    cvinpaint.cpp cvkalman.cpp cvlinefit.cpp cvlkpyramid.cpp cvmatchcontours.cpp \
     cvmoments.cpp cvmorph.cpp cvmotempl.cpp cvoptflowbm.cpp cvoptflowhs.cpp \
     cvoptflowlk.cpp cvpgh.cpp cvposit.cpp cvprecomp.cpp cvpyramids.cpp \
     cvpyrsegmentation.cpp cvrotcalipers.cpp cvsamplers.cpp cvsegmentation.cpp cvshapedescr.cpp \
@@ -409,6 +412,7 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/cvhistogram.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/cvhough.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/cvimgwarp.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/cvinpaint.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/cvkalman.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/cvlinefit.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/cvlkpyramid.Plo@am__quote@
