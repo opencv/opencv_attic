@@ -436,8 +436,8 @@ CV_IMPL int
 cvSaveImage( const char* filename, const CvArr* arr )
 {
     int origin = 0;
-    int did_flip = 0;
     GrFmtWriter* writer = 0;
+    CvMat* temp = 0;
 
     CV_FUNCNAME( "cvSaveImage" );
 
@@ -464,8 +464,9 @@ cvSaveImage( const char* filename, const CvArr* arr )
 
     if( origin )
     {
-        CV_CALL( cvFlip( image, image, 0 ));
-        did_flip = 1;
+        CV_CALL( temp = cvCreateMat(image->rows, image->cols, image->type) );
+        CV_CALL( cvFlip( image, temp, 0 ));
+        image = temp;
     }
 
     if( !writer->WriteImage( image->data.ptr, image->step, image->width,
@@ -475,9 +476,7 @@ cvSaveImage( const char* filename, const CvArr* arr )
     __END__;
 
     delete writer;
-
-    if( origin && did_flip )
-        cvFlip( arr, (void*)arr, 0 );
+    cvReleaseMat( &temp );
 
     return cvGetErrStatus() >= 0;
 }
