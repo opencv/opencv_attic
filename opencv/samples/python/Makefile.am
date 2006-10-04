@@ -16,6 +16,7 @@ dist_csamples_SCRIPTS =     \
     ffilldemo.py            \
     fitellipse.py           \
 	houghlines.py           \
+	inpaint.py              \
     kalman.py               \
     kmeans.py               \
     laplace.py              \
