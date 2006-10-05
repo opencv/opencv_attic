@@ -7740,6 +7740,34 @@ class CvTuple_float_2(_object):
 CvTuple_float_2_swigregister = _cv.CvTuple_float_2_swigregister
 CvTuple_float_2_swigregister(CvTuple_float_2)
 
+class CvTuple_float_3(_object):
+    """Proxy of C++ CvTuple_float_3 class"""
+    __swig_setmethods__ = {}
+    __setattr__ = lambda self, name, value: _swig_setattr(self, CvTuple_float_3, name, value)
+    __swig_getmethods__ = {}
+    __getattr__ = lambda self, name: _swig_getattr(self, CvTuple_float_3, name)
+    __repr__ = _swig_repr
+    __swig_setmethods__["val"] = _cv.CvTuple_float_3_val_set
+    __swig_getmethods__["val"] = _cv.CvTuple_float_3_val_get
+    if _newclass:val = property(_cv.CvTuple_float_3_val_get, _cv.CvTuple_float_3_val_set)
+    def __setitem__(*args):
+        """__setitem__(self, int i, float obj)"""
+        return _cv.CvTuple_float_3___setitem__(*args)
+
+    def __getitem__(*args):
+        """__getitem__(self, int i) -> float"""
+        return _cv.CvTuple_float_3___getitem__(*args)
+
+    def __init__(self, *args): 
+        """__init__(self) -> CvTuple_float_3"""
+        this = _cv.new_CvTuple_float_3(*args)
+        try: self.this.append(this)
+        except: self.this = this
+    __swig_destroy__ = _cv.delete_CvTuple_float_3
+    __del__ = lambda self : None;
+CvTuple_float_3_swigregister = _cv.CvTuple_float_3_swigregister
+CvTuple_float_3_swigregister(CvTuple_float_3)
+
 class CvSeq_Point_2(CvSeq):
     """Proxy of C++ CvSeq_Point_2 class"""
     __swig_setmethods__ = {}
@@ -7846,19 +7874,19 @@ class CvSeq_float_3(CvSeq):
     if _newclass:cast = staticmethod(cast)
     __swig_getmethods__["cast"] = lambda x: cast
     def __getitem__(*args):
-        """__getitem__(self, int i) -> CvTuple<(float,3)>"""
+        """__getitem__(self, int i) -> CvTuple_float_3"""
         return _cv.CvSeq_float_3___getitem__(*args)
 
     def __setitem__(*args):
-        """__setitem__(self, int i, CvTuple<(float,3)> obj)"""
+        """__setitem__(self, int i, CvTuple_float_3 obj)"""
         return _cv.CvSeq_float_3___setitem__(*args)
 
     def append(*args):
-        """append(self, CvTuple<(float,3)> obj)"""
+        """append(self, CvTuple_float_3 obj)"""
         return _cv.CvSeq_float_3_append(*args)
 
     def pop(*args):
-        """pop(self) -> CvTuple<(float,3)>"""
+        """pop(self) -> CvTuple_float_3"""
         return _cv.CvSeq_float_3_pop(*args)
 
     def __init__(self, *args): 
