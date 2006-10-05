@@ -96394,6 +96394,211 @@ SWIGINTERN PyObject *CvTuple_float_2_swigregister(PyObject *SWIGUNUSEDPARM(self)
   return SWIG_Py_Void();
 }
 
+SWIGINTERN PyObject *_wrap_CvTuple_float_3_val_set(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
+  PyObject *resultobj = 0;
+  CvTuple<float,3 > *arg1 = (CvTuple<float,3 > *) 0 ;
+  float *arg2 ;
+  void *argp1 = 0 ;
+  int res1 = 0 ;
+  void *argp2 = 0 ;
+  int res2 = 0 ;
+  PyObject * obj0 = 0 ;
+  PyObject * obj1 = 0 ;
+  
+  if (!PyArg_ParseTuple(args,(char *)"OO:CvTuple_float_3_val_set",&obj0,&obj1)) SWIG_fail;
+  res1 = SWIG_ConvertPtr(obj0, &argp1,SWIGTYPE_p_CvTupleTfloat_3_t, 0 |  0 );
+  if (!SWIG_IsOK(res1)) {
+    SWIG_exception_fail(SWIG_ArgError(res1), "in method '" "CvTuple_float_3_val_set" "', argument " "1"" of type '" "CvTuple<float,3 > *""'"); 
+  }
+  arg1 = reinterpret_cast< CvTuple<float,3 > * >(argp1);
+  res2 = SWIG_ConvertPtr(obj1, &argp2,SWIGTYPE_p_float, 0 |  0 );
+  if (!SWIG_IsOK(res2)) {
+    SWIG_exception_fail(SWIG_ArgError(res2), "in method '" "CvTuple_float_3_val_set" "', argument " "2"" of type '" "float [2]""'"); 
+  } 
+  arg2 = reinterpret_cast< float * >(argp2);
+  {
+    if (arg2) {
+      size_t ii = 0;
+      for (; ii < (size_t)2; ++ii) arg1->val[ii] = arg2[ii];
+    } else {
+      SWIG_exception_fail(SWIG_ValueError, "invalid null reference " "in variable '""val""' of type '""float [2]""'");
+    }
+  }
+  resultobj = SWIG_Py_Void();
+  return resultobj;
+fail:
+  return NULL;
+}
+
+
+SWIGINTERN PyObject *_wrap_CvTuple_float_3_val_get(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
+  PyObject *resultobj = 0;
+  CvTuple<float,3 > *arg1 = (CvTuple<float,3 > *) 0 ;
+  float *result = 0 ;
+  void *argp1 = 0 ;
+  int res1 = 0 ;
+  PyObject * obj0 = 0 ;
+  
+  if (!PyArg_ParseTuple(args,(char *)"O:CvTuple_float_3_val_get",&obj0)) SWIG_fail;
+  res1 = SWIG_ConvertPtr(obj0, &argp1,SWIGTYPE_p_CvTupleTfloat_3_t, 0 |  0 );
+  if (!SWIG_IsOK(res1)) {
+    SWIG_exception_fail(SWIG_ArgError(res1), "in method '" "CvTuple_float_3_val_get" "', argument " "1"" of type '" "CvTuple<float,3 > *""'"); 
+  }
+  arg1 = reinterpret_cast< CvTuple<float,3 > * >(argp1);
+  result = (float *)(float *) ((arg1)->val);
+  resultobj = SWIG_NewPointerObj(SWIG_as_voidptr(result), SWIGTYPE_p_float, 0 |  0 );
+  return resultobj;
+fail:
+  return NULL;
+}
+
+
+SWIGINTERN PyObject *_wrap_CvTuple_float_3___setitem__(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
+  PyObject *resultobj = 0;
+  CvTuple<float,3 > *arg1 = (CvTuple<float,3 > *) 0 ;
+  int arg2 ;
+  float *arg3 = (float *) 0 ;
+  void *argp1 = 0 ;
+  int res1 = 0 ;
+  int val2 ;
+  int ecode2 = 0 ;
+  void *argp3 = 0 ;
+  int res3 = 0 ;
+  PyObject * obj0 = 0 ;
+  PyObject * obj1 = 0 ;
+  PyObject * obj2 = 0 ;
+  
+  if (!PyArg_ParseTuple(args,(char *)"OOO:CvTuple_float_3___setitem__",&obj0,&obj1,&obj2)) SWIG_fail;
+  res1 = SWIG_ConvertPtr(obj0, &argp1,SWIGTYPE_p_CvTupleTfloat_3_t, 0 |  0 );
+  if (!SWIG_IsOK(res1)) {
+    SWIG_exception_fail(SWIG_ArgError(res1), "in method '" "CvTuple_float_3___setitem__" "', argument " "1"" of type '" "CvTuple<float,3 > *""'"); 
+  }
+  arg1 = reinterpret_cast< CvTuple<float,3 > * >(argp1);
+  ecode2 = SWIG_AsVal_int(obj1, &val2);
+  if (!SWIG_IsOK(ecode2)) {
+    SWIG_exception_fail(SWIG_ArgError(ecode2), "in method '" "CvTuple_float_3___setitem__" "', argument " "2"" of type '" "int""'");
+  } 
+  arg2 = static_cast< int >(val2);
+  res3 = SWIG_ConvertPtr(obj2, &argp3,SWIGTYPE_p_float, 0 |  0 );
+  if (!SWIG_IsOK(res3)) {
+    SWIG_exception_fail(SWIG_ArgError(res3), "in method '" "CvTuple_float_3___setitem__" "', argument " "3"" of type '" "float *""'"); 
+  }
+  arg3 = reinterpret_cast< float * >(argp3);
+  {
+    try {
+      (arg1)->__setitem__(arg2,arg3); 
+    } 
+    catch (...) 
+    {
+      return NULL;
+    } 
+  }
+  resultobj = SWIG_Py_Void();
+  return resultobj;
+fail:
+  return NULL;
+}
+
+
+SWIGINTERN PyObject *_wrap_CvTuple_float_3___getitem__(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
+  PyObject *resultobj = 0;
+  CvTuple<float,3 > *arg1 = (CvTuple<float,3 > *) 0 ;
+  int arg2 ;
+  float *result = 0 ;
+  void *argp1 = 0 ;
+  int res1 = 0 ;
+  int val2 ;
+  int ecode2 = 0 ;
+  PyObject * obj0 = 0 ;
+  PyObject * obj1 = 0 ;
+  
+  if (!PyArg_ParseTuple(args,(char *)"OO:CvTuple_float_3___getitem__",&obj0,&obj1)) SWIG_fail;
+  res1 = SWIG_ConvertPtr(obj0, &argp1,SWIGTYPE_p_CvTupleTfloat_3_t, 0 |  0 );
+  if (!SWIG_IsOK(res1)) {
+    SWIG_exception_fail(SWIG_ArgError(res1), "in method '" "CvTuple_float_3___getitem__" "', argument " "1"" of type '" "CvTuple<float,3 > *""'"); 
+  }
+  arg1 = reinterpret_cast< CvTuple<float,3 > * >(argp1);
+  ecode2 = SWIG_AsVal_int(obj1, &val2);
+  if (!SWIG_IsOK(ecode2)) {
+    SWIG_exception_fail(SWIG_ArgError(ecode2), "in method '" "CvTuple_float_3___getitem__" "', argument " "2"" of type '" "int""'");
+  } 
+  arg2 = static_cast< int >(val2);
+  {
+    try {
+      {
+        float const &_result_ref = (arg1)->__getitem__(arg2);
+        result = (float *) &_result_ref;
+      } 
+    } 
+    catch (...) 
+    {
+      return NULL;
+    } 
+  }
+  resultobj = SWIG_From_float(static_cast< float >(*result));
+  return resultobj;
+fail:
+  return NULL;
+}
+
+
+SWIGINTERN PyObject *_wrap_new_CvTuple_float_3(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
+  PyObject *resultobj = 0;
+  CvTuple<float,3 > *result = 0 ;
+  
+  if (!PyArg_ParseTuple(args,(char *)":new_CvTuple_float_3")) SWIG_fail;
+  {
+    try {
+      result = (CvTuple<float,3 > *)new CvTuple<float,3 >(); 
+    } 
+    catch (...) 
+    {
+      return NULL;
+    } 
+  }
+  resultobj = SWIG_NewPointerObj(SWIG_as_voidptr(result), SWIGTYPE_p_CvTupleTfloat_3_t, SWIG_POINTER_NEW |  0 );
+  return resultobj;
+fail:
+  return NULL;
+}
+
+
+SWIGINTERN PyObject *_wrap_delete_CvTuple_float_3(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
+  PyObject *resultobj = 0;
+  CvTuple<float,3 > *arg1 = (CvTuple<float,3 > *) 0 ;
+  void *argp1 = 0 ;
+  int res1 = 0 ;
+  PyObject * obj0 = 0 ;
+  
+  if (!PyArg_ParseTuple(args,(char *)"O:delete_CvTuple_float_3",&obj0)) SWIG_fail;
+  res1 = SWIG_ConvertPtr(obj0, &argp1,SWIGTYPE_p_CvTupleTfloat_3_t, SWIG_POINTER_DISOWN |  0 );
+  if (!SWIG_IsOK(res1)) {
+    SWIG_exception_fail(SWIG_ArgError(res1), "in method '" "delete_CvTuple_float_3" "', argument " "1"" of type '" "CvTuple<float,3 > *""'"); 
+  }
+  arg1 = reinterpret_cast< CvTuple<float,3 > * >(argp1);
+  {
+    try {
+      delete arg1;
+    } 
+    catch (...) 
+    {
+      return NULL;
+    } 
+  }
+  resultobj = SWIG_Py_Void();
+  return resultobj;
+fail:
+  return NULL;
+}
+
+
+SWIGINTERN PyObject *CvTuple_float_3_swigregister(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
+  PyObject *obj;
+  if (!PyArg_ParseTuple(args,(char*)"O|swigregister", &obj)) return NULL;
+  SWIG_TypeNewClientData(SWIGTYPE_p_CvTupleTfloat_3_t, SWIG_NewClientData(obj));
+  return SWIG_Py_Void();
+}
+
 SWIGINTERN PyObject *_wrap_CvSeq_Point_2_cast(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
   PyObject *resultobj = 0;
   CvSeq *arg1 = (CvSeq *) 0 ;
@@ -99292,6 +99497,13 @@ static PyMethodDef SwigMethods[] = {
 	 { (char *)"new_CvTuple_float_2", _wrap_new_CvTuple_float_2, METH_VARARGS, NULL},
 	 { (char *)"delete_CvTuple_float_2", _wrap_delete_CvTuple_float_2, METH_VARARGS, NULL},
 	 { (char *)"CvTuple_float_2_swigregister", CvTuple_float_2_swigregister, METH_VARARGS, NULL},
+	 { (char *)"CvTuple_float_3_val_set", _wrap_CvTuple_float_3_val_set, METH_VARARGS, NULL},
+	 { (char *)"CvTuple_float_3_val_get", _wrap_CvTuple_float_3_val_get, METH_VARARGS, NULL},
+	 { (char *)"CvTuple_float_3___setitem__", _wrap_CvTuple_float_3___setitem__, METH_VARARGS, NULL},
+	 { (char *)"CvTuple_float_3___getitem__", _wrap_CvTuple_float_3___getitem__, METH_VARARGS, NULL},
+	 { (char *)"new_CvTuple_float_3", _wrap_new_CvTuple_float_3, METH_VARARGS, NULL},
+	 { (char *)"delete_CvTuple_float_3", _wrap_delete_CvTuple_float_3, METH_VARARGS, NULL},
+	 { (char *)"CvTuple_float_3_swigregister", CvTuple_float_3_swigregister, METH_VARARGS, NULL},
 	 { (char *)"CvSeq_Point_2_cast", _wrap_CvSeq_Point_2_cast, METH_VARARGS, NULL},
 	 { (char *)"CvSeq_Point_2___getitem__", _wrap_CvSeq_Point_2___getitem__, METH_VARARGS, NULL},
 	 { (char *)"CvSeq_Point_2___setitem__", _wrap_CvSeq_Point_2___setitem__, METH_VARARGS, NULL},
