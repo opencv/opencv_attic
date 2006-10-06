@@ -851,27 +851,24 @@ struct CV_EXPORTS CvRTParams : public CvDTreeParams
 {
     //Parameters for the forest
     bool calc_var_importance; // true <=> RF processes variable importance
-    bool calc_proximities;    // true <=> RF processes proximities
     int nactive_vars;
     CvTermCriteria term_crit;
 
     CvRTParams() : CvDTreeParams( 5, 10, 0, false, 10, 0, false, false, 0 ),
-        calc_var_importance(false), calc_proximities(false), nactive_vars(0)
+        calc_var_importance(false), nactive_vars(0)
     {
         term_crit = cvTermCriteria( CV_TERMCRIT_ITER+CV_TERMCRIT_EPS, 50, 0.1 );
     }
 
     CvRTParams( int _max_depth, int _min_sample_count,
                 float _regression_accuracy, bool _use_surrogates,
-                int _max_categories, const float* _priors,
-                bool _calc_var_importance, bool _calc_proximities,
+                int _max_categories, const float* _priors, bool _calc_var_importance,
                 int _nactive_vars, int max_num_of_trees_in_the_forest,
                 float forest_accuracy, int termcrit_type ) :
         CvDTreeParams( _max_depth, _min_sample_count, _regression_accuracy,
                        _use_surrogates, _max_categories, 0,
                        false, false, _priors ),
         calc_var_importance(_calc_var_importance),
-        calc_proximities(_calc_proximities),
         nactive_vars(_nactive_vars)
     {
         term_crit = cvTermCriteria(termcrit_type,
@@ -894,7 +891,8 @@ public:
     virtual void clear();
 
     virtual const CvMat* get_var_importance();
-    virtual float get_proximity( int i, int j ) const;
+    virtual float get_proximity( const CvMat* sample1, const CvMat* sample2,
+        const CvMat* missing1 = 0, const CvMat* missing2 = 0 ) const;
 
     virtual void read( CvFileStorage* fs, CvFileNode* node );
     virtual void write( CvFileStorage* fs, const char* name );
@@ -916,7 +914,6 @@ protected:
     int nclasses;
     double oob_error;
     CvMat* var_importance;
-    CvMat* proximities;
     int nsamples;
 
     CvRNG rng;
