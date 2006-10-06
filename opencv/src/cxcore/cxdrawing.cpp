@@ -1169,7 +1169,7 @@ icvCollectPolyEdges( CvMat* img, CvSeq* v, CvContour* edges,
         {
             pt0.x = (pt0.x + offset.x) << (XY_SHIFT - shift);
             pt0.y = (pt0.y + delta) >> shift;
-            pt1.x = (pt1.x + offset.y) << (XY_SHIFT - shift);
+            pt1.x = (pt1.x + offset.x) << (XY_SHIFT - shift);
             pt1.y = (pt1.y + delta) >> shift;
         }
         else
