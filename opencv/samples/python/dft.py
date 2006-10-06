@@ -69,8 +69,9 @@ if __name__ == "__main__":
     # copy A to dft_A and pad dft_A with zeros
     tmp = cvGetSubRect( dft_A, cvRect(0,0, im.width, im.height));
     cvCopy( complexInput, tmp, None );
-    tmp = cvGetSubRect( dft_A, cvRect(im.width,0, dft_N - im.width, im.height));
-    cvZero( tmp );
+    if(dft_A.width > im.width):
+        tmp = cvGetSubRect( dft_A, cvRect(im.width,0, dft_N - im.width, im.height));
+        cvZero( tmp );
 
     # no need to pad bottom part of dft_A with zeros because of
     # use nonzero_rows parameter in cvDFT() call below
