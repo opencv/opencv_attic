@@ -1,5 +1,6 @@
 #include <cxcore.h>
 #include <cv.h>
+#include <stdio.h>
 #include "cvshadow.h"
 
 CvArr * cvCvtSeqToArray_Shadow( const CvSeq* seq, CvArr * elements, CvSlice slice){
@@ -37,3 +38,31 @@ CvTypedSeq<CvPoint> * cvApproxPoly_Shadow( const void* src_seq, int header_size,
     return (CvTypedSeq<CvPoint> *) cvApproxPoly( src_seq, header_size, storage, method, parameter, parameter2 );
 }
 
+// Always return a new Mat of indices
+CvMat * cvConvexHull2_Shadow( const CvArr * points, int orientation, int return_points){
+	CvMat * hull;
+	CvMat * points_mat=(CvMat *) points;
+	CvSeq * points_seq=(CvSeq *) points;
+	int npoints, type;
+	
+	CV_FUNCNAME("cvConvexHull2");
+	
+	__BEGIN__;
+	
+	if(CV_IS_MAT(points_mat)){
+		npoints = MAX(points_mat->rows, points_mat->cols);
+		type = return_points ? points_mat->type : CV_32S;
+	}
+	else if(CV_IS_SEQ(points_seq)){
+		npoints = points_seq->total;
+		type = return_points ? CV_SEQ_ELTYPE(points_seq) : 1;
+	}
+	else{
+		CV_ERROR(CV_StsBadArg, "points must be a CvSeq or CvMat");
+	}
+	CV_CALL( hull=cvCreateMat(1,npoints,type) );
+	CV_CALL( cvConvexHull2(points, hull, orientation, return_points) );
+	
+	__END__;
+	return hull;
+}

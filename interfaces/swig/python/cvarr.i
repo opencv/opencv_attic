@@ -311,6 +311,29 @@ else{}
 
 		return SWIG_NewPointerObj( mat, $descriptor(CvMat *), 1 );
 	}
+%pythoncode %{
+def __iter__(self):
+   	"""
+   	generator function iterating through rows in matrix or elements in vector
+   	"""
+	if self.rows==1:
+		return self.colrange()
+	return self.rowrange()
+
+def rowrange(self):
+    """
+    generator function iterating along rows in matrix
+    """
+	for i in range(self.rows):
+		yield self[i]
+
+def colrange(self):
+    """
+    generator function iterating along columns in matrix
+    """
+	for i in range(self.cols):
+		yield self[:,i]
+%}
 
 }
 
