@@ -75,7 +75,10 @@ public:
     ~CvImage()
     {
         if( refcount && !(--*refcount) )
+        {
             cvReleaseImage( &image );
+            delete refcount;
+        }
     }
 
     CvImage clone() { return CvImage(image ? cvCloneImage(image) : 0); }
