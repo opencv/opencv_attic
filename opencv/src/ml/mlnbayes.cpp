@@ -190,7 +190,7 @@ bool CvNormalBayesClassifier::train( const CvMat* _train_data, const CvMat* _res
     }
 
     responses_data = responses->data.i;
-    CV_CALL( cov = cvCreateMat( _var_count, _var_count, CV_32FC1 ));
+    CV_CALL( cov = cvCreateMat( _var_count, _var_count, CV_64FC1 ));
 
     /* process train data (count, sum , productsum) */
     for( s = 0; s < nsamples; s++ )
