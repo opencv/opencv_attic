@@ -42,16 +42,17 @@
 // 2006-08-02  Roman Stanchak <rstancha@cse.wustl.edu>
 
 %include "pycvseq.hpp"
-%template (CvSeq_Point) CvTypedSeq<CvPoint>;
-%template (CvSeq_Point2D32f) CvTypedSeq<CvPoint2D32f>;
-%template (CvSeq_Rect) CvTypedSeq<CvRect>;
-%template (CvSeq_Seq) CvTypedSeq<CvSeq *>;
-%template (CvSeq_QuadEdge2D) CvTypedSeq<CvQuadEdge2D>;
-%template (CvSeq_ConnectedComp) CvTypedSeq<CvConnectedComp>;
 %template (CvTuple_CvPoint_2) CvTuple<CvPoint,2>;
 %template (CvTuple_float_2) CvTuple<float,2>;
 %template (CvTuple_float_3) CvTuple<float,3>;
-%template (CvSeq_Point_2) CvTypedSeq< CvTuple<CvPoint,2> >;
+
+%template (CvSeq_CvPoint) CvTypedSeq<CvPoint>;
+%template (CvSeq_CvPoint2D32f) CvTypedSeq<CvPoint2D32f>;
+%template (CvSeq_CvRect) CvTypedSeq<CvRect>;
+%template (CvSeq_CvSeq) CvTypedSeq<CvSeq *>;
+%template (CvSeq_CvQuadEdge2D) CvTypedSeq<CvQuadEdge2D>;
+%template (CvSeq_CvConnectedComp) CvTypedSeq<CvConnectedComp>;
+%template (CvSeq_CvPoint_2) CvTypedSeq< CvTuple<CvPoint,2> >;
 %template (CvSeq_float_2) CvTypedSeq< CvTuple<float,2> >;
 %template (CvSeq_float_3) CvTypedSeq< CvTuple<float,3> >;
 

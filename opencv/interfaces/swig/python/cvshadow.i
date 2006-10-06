@@ -57,6 +57,8 @@
 %myshadow(cvSegmentMotion);
 %myshadow(cvApproxPoly);
 %myshadow(cvContourPerimeter);
+%myshadow(cvConvexHull2);
+%newobject cvConvexHull2; // shadowed functioned always returns new object
 
 // eliminates need for IplImage ** typemap
 %rename (cvCalcImageHist) cvCalcHist;
@@ -65,6 +67,7 @@ def cvCalcHist(*args):
 	return cvCalcArrHist(*args)
 %}
 
+// must come after %ignore, %rename
 %include "cvshadow.h"
 
 /* return a typed CvSeq instead of generic for CvSubdiv2D edges -- see cvseq.i */
@@ -89,17 +92,17 @@ def cvfunc(*args):
 %enddef
 
 %cast_seq( cvHoughCircles, CvSeq_float_3 );
-%cast_seq( cvPyrSegmentation, CvSeq_ConnectedComp );
-%cast_seq( cvApproxChains, CvSeq_Point);
-%cast_seq( cvContourFromContourTree, CvSeq_Point );
-%cast_seq( cvConvexityDefects, CvSeq_ConvexityDefect );
+%cast_seq( cvPyrSegmentation, CvSeq_CvConnectedComp );
+%cast_seq( cvApproxChains, CvSeq_CvPoint);
+%cast_seq( cvContourFromContourTree, CvSeq_CvPoint );
+%cast_seq( cvConvexityDefects, CvSeq_CvConvexityDefect );
 
 /* Special cases ... */
 %rename(cvFindContoursUntyped) cvFindContours;
 %pythoncode %{
 def cvFindContours( *args ):
 	count, seq = cvFindContoursUntyped( *args )
-	return count, CvSeq_Point.cast(seq)
+	return count, CvSeq_CvPoint.cast(seq)
 %}
 
 /* cvHoughLines2 returns a different type of sequence depending on its args */
@@ -113,9 +116,7 @@ def cvHoughLines2( *args ):
 	return CvSeq_float_2.cast(seq)
 %}
 
-// TODO
 // cvPointSeqFromMat
-// cvConvexHull2
 // cvSeqPartition
 
 // cvRelease* functions don't consider python's reference count

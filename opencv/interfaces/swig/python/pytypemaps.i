@@ -221,47 +221,6 @@
 %apply double *OUTPUT {double* min_val, double* max_val};
 
 /**
- * the input argument of cvConvexHull2 "const CvArr *input" is converted from 
- * a list of CvPoint().
- */
-%typemap(in) (const CvArr *input){
-    int i;
-
-    /* get the size of the input array */
-    int size = PyList_Size ($input);
-
-    /* allocate the points matrix necessary for calling cvConvexHull2 */
-    CvPoint* points = (CvPoint *)malloc (size * sizeof (points[0]));
-    CvMat pointMat = cvMat (1, size, CV_32SC2, points);
-    $1 = &pointMat;
-
-    /* allocat the output matrix to get the result of the call */
-    int *hull = (int*)malloc (size * sizeof (hull[0]));
-    hullMat2 = cvMat (1, size, CV_32SC1, hull);
-
-    /* extract all the objects from the input list, and fill the
-       points matrix */
-    for (i = 0; i < size; i++) {
-
-	/* get the current item */
-	PyObject *item = PyList_GetItem ($input, i);
-
-	/* convert from a Python CvPoint pointer to a C CvPoint pointer */
-	CvPoint *p = NULL;
-	void *vptr;
-	SWIG_Python_ConvertPtr (item, &vptr, $descriptor(CvPoint *),
-				SWIG_POINTER_EXCEPTION);
-	p = (CvPoint *) vptr;
-
-	/* extract the x and y positions */
-	points [i].x = p->x;
-	points [i].y = p->y;
-    }
-}
-
-
-
-/**
  * the input argument of cvPolyLine "CvPoint** pts" is converted from 
  * a "list of list" (aka. an array) of CvPoint().
  * The next parameters "int* npts" and "int contours" are computed from
@@ -349,46 +308,6 @@
 /** Free arguments allocated before the function call */
 %typemap(freearg) (CvPoint *pts, int npts){
 	free((char *)$1);
-}
-
-/**
- * what we need to cleanup for the input argument of cvConvexHull2
- * "const CvArr *input"
- */
-%typemap(freearg) (const CvArr *input){
-    free (((CvMat *)$1)->data.i);
-}
-
-/**
- * say we want to ignore the output parameter of cvConvexHull2
- */
-%typemap(in, numinputs=0) (void *hull_storage) (CvMat hullMat) {
-    $1 = &hullMat;
-}
-
-/**
- * convert the function output parameter hull_storage to a Python
- * list
- */
-%typemap(argout) (void *hull_storage) {
-    int i;
-    PyObject *to_return;
-    
-    /* create the list to return */
-    to_return = PyList_New (hullMat$argnum.cols);
-
-    /* extract all the integer values of the result, and add it to the
-       final resulting list */
-    for (i = 0; i < hullMat$argnum.cols; i++) {
-	PyList_SetItem (to_return, i,
-			PyInt_FromLong (hullMat$argnum.data.i [i]));
-    }
-
-    /* some cleanup */
-    free (hullMat$argnum.data.i);
-
-    /* we can now return the value */
-    $result = to_return;
 }
 
 /**

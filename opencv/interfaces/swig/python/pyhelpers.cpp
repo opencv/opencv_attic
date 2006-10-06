@@ -92,8 +92,18 @@ std::ostream & cv_arr_write(std::ostream & out, T * data, int rows, int nch, int
 	out<<"[";
 	for(i=0; i<rows; i++){
 		out<<"[";
-		for(j=0; j<step; j+=(nch*sizeof(T))){
-			out<<chdelim1;
+
+		// first element
+		out<<chdelim1;
+		out<<((T*)(cdata+i*step))[0];
+		for(k=1; k<nch; k++){
+			out<<", "<<((T*)(cdata+i*step))[k];
+		}
+		out<<chdelim2;
+		
+		// remaining elements
+		for(j=nch*sizeof(T); j<step; j+=(nch*sizeof(T))){
+			out<<", "<<chdelim1;
 			out<<((T*)(cdata+i*step+j))[0];
 			for(k=1; k<nch; k++){
 				out<<", "<<((T*)(cdata+i*step+j))[k];
@@ -105,22 +115,6 @@ std::ostream & cv_arr_write(std::ostream & out, T * data, int rows, int nch, int
 	out<<"]";
 	return out;
 }
-
-#define CV_MAT_PRINT_1CH( fd, mat, type, format )  \
-{                                                  \
-	int rows = mat->rows;                          \
-	int cols = mat->cols;                          \
-	type * ptr;                                    \
-	for(int i=0; i<rows; i++){                     \
-		ptr = (type *) (mat->data.ptr+mat->step*i);\
-		fprintf(fd, "[");                          \
-		for(int j=0; j<cols; j++){                 \
-			fprintf(fd, " ");                      \
-			fprintf(fd, format, ptr[j]);           \
-		}                                          \
-		fprintf(fd, " ]\n");                       \
-	}                                              \
-}                                               
 
 void cvArrPrint(CvArr * arr){
     CV_FUNCNAME( "cvArrPrint" );
@@ -136,10 +130,6 @@ void cvArrPrint(CvArr * arr){
 	int step = MAX(mat->step, cn*mat->cols*CV_ELEM_SIZE(depth));
 	std::ostringstream str;
 
-	//if(cn!=1){
-	//	 CV_ERROR( CV_StsNotImplemented, "print is only implemented for single channel arrays");
-	//}
-	
 	switch(depth){
 		case CV_8U:
 			cv_arr_write(str, (uchar *)mat->data.ptr, mat->rows, cn, step);
@@ -171,6 +161,13 @@ void cvArrPrint(CvArr * arr){
 	__END__;
 }
 
+// deal with negative array indices
+int PyLong_AsIndex( PyObject * idx_object, int len ){
+	int idx = PyLong_AsLong( idx_object );
+	if(idx<0) return len+idx;
+	return idx;
+}
+
 CvRect PySlice_to_CvRect(CvArr * src, PyObject * idx_object){
 	CvSize sz = cvGetSize(src);
 	//printf("Size %dx%d\n", sz.height, sz.width);
@@ -180,7 +177,7 @@ CvRect PySlice_to_CvRect(CvArr * src, PyObject * idx_object){
 	if(PyInt_Check(idx_object) || PyLong_Check(idx_object)){
 		// if array is a row vector, assume index into columns
 		if(sz.height>1){
-			lower[0] = PyLong_AsLong( idx_object );
+			lower[0] = PyLong_AsIndex( idx_object, sz.height );
 			upper[0] = lower[0] + 1;
 			lower[1] = 0;
 			upper[1] = sz.width;
@@ -188,7 +185,7 @@ CvRect PySlice_to_CvRect(CvArr * src, PyObject * idx_object){
 		else{
 			lower[0] = 0;
 			upper[0] = sz.height;
-			lower[1] = PyLong_AsLong( idx_object );
+			lower[1] = PyLong_AsIndex( idx_object, sz.width );
 			upper[1] = lower[1]+1;
 		}
 	}
@@ -245,7 +242,7 @@ CvRect PySlice_to_CvRect(CvArr * src, PyObject * idx_object){
 			// 2b. Integer
 			else if(PyInt_Check(o) || PyLong_Check(o)){
 				//printf("PyInt\n");
-				lower[i] = PyLong_AsLong(o);
+				lower[i] = PyLong_AsIndex(o, i==0 ? sz.height : sz.width);
 				upper[i] = lower[i]+1;
 			}
 
@@ -297,60 +294,3 @@ long PyObject_AsLong(PyObject * obj){
 	return -1;
 }
 
-CvArr * PySequence_to_CvArr( PyObject * obj ){
-	int dims[CV_MAX_DIM] = {1,1,1};
-	int ndim=0;
-	int type;
-	PyObject * item;
-	
-	// figure out dimensions
-	for(item = obj; 
-		(PyTuple_Check(item) || PyList_Check(item));
-		item = PySequence_GetItem(item, 0))
-	{
-		dims[ndim] = PySequence_Size( item ); 
-		ndim++;
-	}
-
-	if(ndim==0) return NULL;
-	
-	// CvMat
-	if(ndim<=2 || (ndim==3 && dims[2]<4)){
-		type=CV_MAKETYPE(CV_32F, dims[2]);
-		CvMat *m = cvCreateMat(dims[0], dims[1], type);
-		for(int i=0; i<dims[0]; i++){
-			PyObject * rowobj = PySequence_GetItem(obj, i);
-			if( dims[1] > 1 ){
-				// double check size
-				assert((PyTuple_Check(rowobj) || PyList_Check(rowobj)) && 
-						PySequence_Size(rowobj) == dims[1]);
-
-				for(int j=0; j<dims[1]; j++){
-					PyObject * colobj = PySequence_GetItem(rowobj, j);
-					CvScalar val;
-					if(dims[2]>1){
-						// double check size
-						assert((PyTuple_Check(colobj) || PyList_Check(colobj)) && 
-								PySequence_Size(colobj) == dims[1]);
-						for(int k=0; k<dims[2]; k++){
-							PyObject * chobj = PySequence_GetItem( colobj, k );
-							val.val[0] = PyFloat_AsDouble( chobj );
-						}
-					}
-					else{
-						val.val[0] = PyFloat_AsDouble( colobj );
-					}
-					cvSet2D( m, i, j, val );
-				}
-			}
-			else{
-				cvSet1D(m, i, cvScalar( PyFloat_AsDouble(rowobj) ));
-			}
-		}
-		return (CvArr *) m;
-	}
-
-	// CvMatND
-	return NULL;
-	
-}

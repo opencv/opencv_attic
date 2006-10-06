@@ -25,4 +25,8 @@ CvTypedSeq<CvConnectedComp> *  cvSegmentMotion_Shadow( const CvArr* mhi, CvArr* 
 CvTypedSeq<CvPoint> * cvApproxPoly_Shadow( const void* src_seq, int header_size, CvMemStorage* storage,
                                     int method, double parameter, int parameter2=0);
 
+// Always return a new Mat of indices
+CvMat * cvConvexHull2_Shadow( const CvArr * points, int orientation=CV_CLOCKWISE, 
+		                  int return_points=0);
+
 #endif

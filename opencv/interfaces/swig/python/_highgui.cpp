@@ -2689,6 +2689,9 @@ namespace swig {
 
 
 
+static CvArr * PyObject_to_CvArr(PyObject * obj, bool * freearg);
+static CvArr * PySequence_to_CvArr( PyObject * obj );
+
 // convert a python sequence/array/list object into a c-array
 #define PyObject_AsArrayImpl(func, ctype, ptype)                              \
 	int func(PyObject * obj, ctype * array, int len){                         \
@@ -2804,17 +2807,24 @@ static CvPoint2D32f PyObject_to_CvPoint2D32f(PyObject * obj){
 static CvScalar PyObject_to_CvScalar(PyObject * obj){
 	CvScalar val;
 	CvScalar * ptr;
+    CvPoint2D32f *ptr2D32f;
+	CvPoint *pt_ptr;
 	void * vptr;
-	if( SWIG_ConvertPtr(obj, &vptr, SWIGTYPE_p_CvScalar, 0 ) == -1)
+	if( SWIG_ConvertPtr(obj, &vptr, SWIGTYPE_p_CvScalar, 0 ) != -1)
 	{
-		if(PyObject_AsDoubleArray(obj, val.val, 4)==-1){
-			PyErr_SetString(PyExc_TypeError, "could not convert to CvScalar");
-			return cvScalar(0);
-		}
+		ptr = (CvScalar *) vptr;
+		return *ptr;
+	}
+	if( SWIG_ConvertPtr(obj, (void**)&ptr2D32f, SWIGTYPE_p_CvPoint2D32f, 0) != -1) {
+        return cvScalar(ptr2D32f->x, ptr2D32f->y);
+    }
+    if( SWIG_ConvertPtr(obj, (void**)&pt_ptr, SWIGTYPE_p_CvPoint, 0) != -1) {
+        return cvScalar(pt_ptr->x, pt_ptr->y);
+    }
+	if(PyObject_AsDoubleArray(obj, val.val, 4)==-1){
 		return val;
 	}
-	ptr = (CvScalar *) vptr;
-	return *ptr; 
+	return cvScalar(-1,-1,-1,-1); 
 }
 
 /* if python sequence type, convert to CvMat or CvMatND */
@@ -2837,6 +2847,86 @@ static CvArr * PyObject_to_CvArr(PyObject * obj, bool * freearg){
 		SWIG_ConvertPtr(obj, (void**)&cvarr, 0, SWIG_POINTER_EXCEPTION);
 	}
 	return cvarr;
+}
+
+static int PyObject_GetElemType(PyObject * obj){
+	void *vptr;
+	if(SWIG_ConvertPtr(obj, &vptr, SWIGTYPE_p_CvPoint, 0)) return CV_32SC2;	
+	if(SWIG_ConvertPtr(obj, &vptr, SWIGTYPE_p_CvSize, 0)) return CV_32SC2;	
+	if(SWIG_ConvertPtr(obj, &vptr, SWIGTYPE_p_CvRect, 0)) return CV_32SC4;	
+	if(SWIG_ConvertPtr(obj, &vptr, SWIGTYPE_p_CvSize2D32f, 0)) return CV_32FC2;	
+	if(SWIG_ConvertPtr(obj, &vptr, SWIGTYPE_p_CvPoint2D32f, 0)) return CV_32FC2;	
+	if(SWIG_ConvertPtr(obj, &vptr, SWIGTYPE_p_CvPoint3D32f, 0)) return CV_32FC3;	
+	if(SWIG_ConvertPtr(obj, &vptr, SWIGTYPE_p_CvPoint2D64f, 0)) return CV_64FC2;	
+	if(SWIG_ConvertPtr(obj, &vptr, SWIGTYPE_p_CvPoint3D64f, 0)) return CV_64FC3;	
+	if(SWIG_ConvertPtr(obj, &vptr, SWIGTYPE_p_CvScalar, 0)) return CV_64FC4;	
+	if(PyTuple_Check(obj) || PyList_Check(obj)) return CV_MAKE_TYPE(CV_32F, PySequence_Size( obj ));
+	if(PyLong_Check(obj)) return CV_32S;
+	return CV_32F;
+}
+
+// Would like this to convert Python lists to CvMat
+// Also lists of CvPoints, CvScalars, CvMats? etc
+static CvArr * PySequence_to_CvArr( PyObject * obj ){
+	int dims[CV_MAX_DIM] = {1,1,1};
+	int ndim=0;
+	int cvtype;
+	PyObject * item;
+	
+	// figure out dimensions
+	for(item = obj; 
+		(PyTuple_Check(item) || PyList_Check(item));
+		item = PySequence_GetItem(item, 0))
+	{
+		dims[ndim] = PySequence_Size( item ); 
+		ndim++;
+	}
+
+	
+	if(ndim==0){
+		PyErr_SetString(PyExc_TypeError, "Cannot convert an empty python object to a CvArr");
+		return NULL;
+	}
+	
+	cvtype = PyObject_GetElemType(item);
+	// collapse last dim into NCH if we found a single channel, but the last dim is <=3
+	if(CV_MAT_CN(cvtype)==1 && dims[ndim-1]>1 && dims[ndim-1]<4){
+		cvtype=CV_MAKE_TYPE(cvtype, dims[ndim-1]);
+		dims[ndim-1]=1;	
+		ndim--;
+	}
+	
+	if(cvtype==-1){
+		PyErr_SetString(PyExc_TypeError, "Could not determine OpenCV element type of Python sequence");
+		return NULL;
+	}
+	
+	// CvMat
+	if(ndim<=2){
+		CvMat *m = cvCreateMat(dims[0], dims[1], cvtype);
+		for(int i=0; i<dims[0]; i++){
+			PyObject * rowobj = PySequence_GetItem(obj, i);
+			if( dims[1] > 1 ){
+				// double check size
+				assert((PyTuple_Check(rowobj) || PyList_Check(rowobj)) && 
+						PySequence_Size(rowobj) == dims[1]);
+
+				for(int j=0; j<dims[1]; j++){
+					PyObject * colobj = PySequence_GetItem(rowobj, j);
+					cvSet2D( m, i, j, PyObject_to_CvScalar( colobj ) );
+				}
+			}
+			else{
+				cvSet1D(m, i, PyObject_to_CvScalar( rowobj ) );
+			}
+		}
+		return (CvArr *) m;
+	}
+
+	// CvMatND
+	PyErr_SetString(PyExc_TypeError, "Cannot convert Python Object to CvArr -- ndim > 3");
+	return NULL;
+	
 }
 
 

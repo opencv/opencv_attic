@@ -2754,6 +2754,9 @@ namespace swig {
 
 
 
+static CvArr * PyObject_to_CvArr(PyObject * obj, bool * freearg);
+static CvArr * PySequence_to_CvArr( PyObject * obj );
+
 // convert a python sequence/array/list object into a c-array
 #define PyObject_AsArrayImpl(func, ctype, ptype)                              \
 	int func(PyObject * obj, ctype * array, int len){                         \
@@ -2869,17 +2872,24 @@ static CvPoint2D32f PyObject_to_CvPoint2D32f(PyObject * obj){
 static CvScalar PyObject_to_CvScalar(PyObject * obj){
 	CvScalar val;
 	CvScalar * ptr;
+    CvPoint2D32f *ptr2D32f;
+	CvPoint *pt_ptr;
 	void * vptr;
-	if( SWIG_ConvertPtr(obj, &vptr, SWIGTYPE_p_CvScalar, 0 ) == -1)
+	if( SWIG_ConvertPtr(obj, &vptr, SWIGTYPE_p_CvScalar, 0 ) != -1)
 	{
-		if(PyObject_AsDoubleArray(obj, val.val, 4)==-1){
-			PyErr_SetString(PyExc_TypeError, "could not convert to CvScalar");
-			return cvScalar(0);
-		}
+		ptr = (CvScalar *) vptr;
+		return *ptr;
+	}
+	if( SWIG_ConvertPtr(obj, (void**)&ptr2D32f, SWIGTYPE_p_CvPoint2D32f, 0) != -1) {
+        return cvScalar(ptr2D32f->x, ptr2D32f->y);
+    }
+    if( SWIG_ConvertPtr(obj, (void**)&pt_ptr, SWIGTYPE_p_CvPoint, 0) != -1) {
+        return cvScalar(pt_ptr->x, pt_ptr->y);
+    }
+	if(PyObject_AsDoubleArray(obj, val.val, 4)==-1){
 		return val;
 	}
-	ptr = (CvScalar *) vptr;
-	return *ptr; 
+	return cvScalar(-1,-1,-1,-1); 
 }
 
 /* if python sequence type, convert to CvMat or CvMatND */
@@ -2902,6 +2912,86 @@ static CvArr * PyObject_to_CvArr(PyObject * obj, bool * freearg){
 		SWIG_ConvertPtr(obj, (void**)&cvarr, 0, SWIG_POINTER_EXCEPTION);
 	}
 	return cvarr;
+}
+
+static int PyObject_GetElemType(PyObject * obj){
+	void *vptr;
+	if(SWIG_ConvertPtr(obj, &vptr, SWIGTYPE_p_CvPoint, 0)) return CV_32SC2;	
+	if(SWIG_ConvertPtr(obj, &vptr, SWIGTYPE_p_CvSize, 0)) return CV_32SC2;	
+	if(SWIG_ConvertPtr(obj, &vptr, SWIGTYPE_p_CvRect, 0)) return CV_32SC4;	
+	if(SWIG_ConvertPtr(obj, &vptr, SWIGTYPE_p_CvSize2D32f, 0)) return CV_32FC2;	
+	if(SWIG_ConvertPtr(obj, &vptr, SWIGTYPE_p_CvPoint2D32f, 0)) return CV_32FC2;	
+	if(SWIG_ConvertPtr(obj, &vptr, SWIGTYPE_p_CvPoint3D32f, 0)) return CV_32FC3;	
+	if(SWIG_ConvertPtr(obj, &vptr, SWIGTYPE_p_CvPoint2D64f, 0)) return CV_64FC2;	
+	if(SWIG_ConvertPtr(obj, &vptr, SWIGTYPE_p_CvPoint3D64f, 0)) return CV_64FC3;	
+	if(SWIG_ConvertPtr(obj, &vptr, SWIGTYPE_p_CvScalar, 0)) return CV_64FC4;	
+	if(PyTuple_Check(obj) || PyList_Check(obj)) return CV_MAKE_TYPE(CV_32F, PySequence_Size( obj ));
+	if(PyLong_Check(obj)) return CV_32S;
+	return CV_32F;
+}
+
+// Would like this to convert Python lists to CvMat
+// Also lists of CvPoints, CvScalars, CvMats? etc
+static CvArr * PySequence_to_CvArr( PyObject * obj ){
+	int dims[CV_MAX_DIM] = {1,1,1};
+	int ndim=0;
+	int cvtype;
+	PyObject * item;
+	
+	// figure out dimensions
+	for(item = obj; 
+		(PyTuple_Check(item) || PyList_Check(item));
+		item = PySequence_GetItem(item, 0))
+	{
+		dims[ndim] = PySequence_Size( item ); 
+		ndim++;
+	}
+
+	
+	if(ndim==0){
+		PyErr_SetString(PyExc_TypeError, "Cannot convert an empty python object to a CvArr");
+		return NULL;
+	}
+	
+	cvtype = PyObject_GetElemType(item);
+	// collapse last dim into NCH if we found a single channel, but the last dim is <=3
+	if(CV_MAT_CN(cvtype)==1 && dims[ndim-1]>1 && dims[ndim-1]<4){
+		cvtype=CV_MAKE_TYPE(cvtype, dims[ndim-1]);
+		dims[ndim-1]=1;	
+		ndim--;
+	}
+	
+	if(cvtype==-1){
+		PyErr_SetString(PyExc_TypeError, "Could not determine OpenCV element type of Python sequence");
+		return NULL;
+	}
+	
+	// CvMat
+	if(ndim<=2){
+		CvMat *m = cvCreateMat(dims[0], dims[1], cvtype);
+		for(int i=0; i<dims[0]; i++){
+			PyObject * rowobj = PySequence_GetItem(obj, i);
+			if( dims[1] > 1 ){
+				// double check size
+				assert((PyTuple_Check(rowobj) || PyList_Check(rowobj)) && 
+						PySequence_Size(rowobj) == dims[1]);
+
+				for(int j=0; j<dims[1]; j++){
+					PyObject * colobj = PySequence_GetItem(rowobj, j);
+					cvSet2D( m, i, j, PyObject_to_CvScalar( colobj ) );
+				}
+			}
+			else{
+				cvSet1D(m, i, PyObject_to_CvScalar( rowobj ) );
+			}
+		}
+		return (CvArr *) m;
+	}
+
+	// CvMatND
+	PyErr_SetString(PyExc_TypeError, "Cannot convert Python Object to CvArr -- ndim > 3");
+	return NULL;
+	
 }
 
 
@@ -6511,6 +6601,218 @@ SWIGINTERN PyObject *_wrap_cvApproxPoly(PyObject *self, PyObject *args) {
   
 fail:
   SWIG_SetErrorMsg(PyExc_NotImplementedError,"No matching function for overloaded 'cvApproxPoly'");
+  return NULL;
+}
+
+
+SWIGINTERN PyObject *_wrap_cvConvexHull2__SWIG_0(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
+  PyObject *resultobj = 0;
+  CvArr *arg1 = (CvArr *) 0 ;
+  int arg2 ;
+  int arg3 ;
+  CvMat *result = 0 ;
+  bool freearg1 = false ;
+  int val2 ;
+  int ecode2 = 0 ;
+  int val3 ;
+  int ecode3 = 0 ;
+  PyObject * obj0 = 0 ;
+  PyObject * obj1 = 0 ;
+  PyObject * obj2 = 0 ;
+  
+  if (!PyArg_ParseTuple(args,(char *)"OOO:cvConvexHull2",&obj0,&obj1,&obj2)) SWIG_fail;
+  {
+    arg1 = PyObject_to_CvArr(obj0, &freearg1);
+  }
+  ecode2 = SWIG_AsVal_int(obj1, &val2);
+  if (!SWIG_IsOK(ecode2)) {
+    SWIG_exception_fail(SWIG_ArgError(ecode2), "in method '" "cvConvexHull2" "', argument " "2"" of type '" "int""'");
+  } 
+  arg2 = static_cast< int >(val2);
+  ecode3 = SWIG_AsVal_int(obj2, &val3);
+  if (!SWIG_IsOK(ecode3)) {
+    SWIG_exception_fail(SWIG_ArgError(ecode3), "in method '" "cvConvexHull2" "', argument " "3"" of type '" "int""'");
+  } 
+  arg3 = static_cast< int >(val3);
+  result = (CvMat *)cvConvexHull2_Shadow((void const *)arg1,arg2,arg3);
+  resultobj = SWIG_NewPointerObj(SWIG_as_voidptr(result), SWIGTYPE_p_CvMat, 0 |  0 );
+  {
+    if(arg1!=NULL && freearg1){
+      cvReleaseData( arg1 );
+      cvFree(&(arg1));
+    }
+  }
+  return resultobj;
+fail:
+  {
+    if(arg1!=NULL && freearg1){
+      cvReleaseData( arg1 );
+      cvFree(&(arg1));
+    }
+  }
+  return NULL;
+}
+
+
+SWIGINTERN PyObject *_wrap_cvConvexHull2__SWIG_1(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
+  PyObject *resultobj = 0;
+  CvArr *arg1 = (CvArr *) 0 ;
+  int arg2 ;
+  CvMat *result = 0 ;
+  bool freearg1 = false ;
+  int val2 ;
+  int ecode2 = 0 ;
+  PyObject * obj0 = 0 ;
+  PyObject * obj1 = 0 ;
+  
+  if (!PyArg_ParseTuple(args,(char *)"OO:cvConvexHull2",&obj0,&obj1)) SWIG_fail;
+  {
+    arg1 = PyObject_to_CvArr(obj0, &freearg1);
+  }
+  ecode2 = SWIG_AsVal_int(obj1, &val2);
+  if (!SWIG_IsOK(ecode2)) {
+    SWIG_exception_fail(SWIG_ArgError(ecode2), "in method '" "cvConvexHull2" "', argument " "2"" of type '" "int""'");
+  } 
+  arg2 = static_cast< int >(val2);
+  result = (CvMat *)cvConvexHull2_Shadow((void const *)arg1,arg2);
+  resultobj = SWIG_NewPointerObj(SWIG_as_voidptr(result), SWIGTYPE_p_CvMat, 0 |  0 );
+  {
+    if(arg1!=NULL && freearg1){
+      cvReleaseData( arg1 );
+      cvFree(&(arg1));
+    }
+  }
+  return resultobj;
+fail:
+  {
+    if(arg1!=NULL && freearg1){
+      cvReleaseData( arg1 );
+      cvFree(&(arg1));
+    }
+  }
+  return NULL;
+}
+
+
+SWIGINTERN PyObject *_wrap_cvConvexHull2__SWIG_2(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
+  PyObject *resultobj = 0;
+  CvArr *arg1 = (CvArr *) 0 ;
+  CvMat *result = 0 ;
+  bool freearg1 = false ;
+  PyObject * obj0 = 0 ;
+  
+  if (!PyArg_ParseTuple(args,(char *)"O:cvConvexHull2",&obj0)) SWIG_fail;
+  {
+    arg1 = PyObject_to_CvArr(obj0, &freearg1);
+  }
+  result = (CvMat *)cvConvexHull2_Shadow((void const *)arg1);
+  resultobj = SWIG_NewPointerObj(SWIG_as_voidptr(result), SWIGTYPE_p_CvMat, 0 |  0 );
+  {
+    if(arg1!=NULL && freearg1){
+      cvReleaseData( arg1 );
+      cvFree(&(arg1));
+    }
+  }
+  return resultobj;
+fail:
+  {
+    if(arg1!=NULL && freearg1){
+      cvReleaseData( arg1 );
+      cvFree(&(arg1));
+    }
+  }
+  return NULL;
+}
+
+
+SWIGINTERN PyObject *_wrap_cvConvexHull2(PyObject *self, PyObject *args) {
+  int argc;
+  PyObject *argv[4];
+  int ii;
+  
+  if (!PyTuple_Check(args)) SWIG_fail;
+  argc = PyObject_Length(args);
+  for (ii = 0; (ii < argc) && (ii < 3); ii++) {
+    argv[ii] = PyTuple_GET_ITEM(args,ii);
+  }
+  if (argc == 1) {
+    int _v;
+    {
+      void *ptr;
+      if(PyList_Check(argv[0]) || PyTuple_Check(argv[0])) {
+        _v = 1;
+      }
+      else if (SWIG_ConvertPtr(argv[0], &ptr, 0, 0) == -1) {
+        _v = 0;
+        PyErr_Clear();
+      }
+      else{
+        _v = 1;
+      }
+    }
+    if (_v) {
+      return _wrap_cvConvexHull2__SWIG_2(self, args);
+    }
+  }
+  if (argc == 2) {
+    int _v;
+    {
+      void *ptr;
+      if(PyList_Check(argv[0]) || PyTuple_Check(argv[0])) {
+        _v = 1;
+      }
+      else if (SWIG_ConvertPtr(argv[0], &ptr, 0, 0) == -1) {
+        _v = 0;
+        PyErr_Clear();
+      }
+      else{
+        _v = 1;
+      }
+    }
+    if (_v) {
+      {
+        int res = SWIG_AsVal_int(argv[1], NULL);
+        _v = SWIG_CheckState(res);
+      }
+      if (_v) {
+        return _wrap_cvConvexHull2__SWIG_1(self, args);
+      }
+    }
+  }
+  if (argc == 3) {
+    int _v;
+    {
+      void *ptr;
+      if(PyList_Check(argv[0]) || PyTuple_Check(argv[0])) {
+        _v = 1;
+      }
+      else if (SWIG_ConvertPtr(argv[0], &ptr, 0, 0) == -1) {
+        _v = 0;
+        PyErr_Clear();
+      }
+      else{
+        _v = 1;
+      }
+    }
+    if (_v) {
+      {
+        int res = SWIG_AsVal_int(argv[1], NULL);
+        _v = SWIG_CheckState(res);
+      }
+      if (_v) {
+        {
+          int res = SWIG_AsVal_int(argv[2], NULL);
+          _v = SWIG_CheckState(res);
+        }
+        if (_v) {
+          return _wrap_cvConvexHull2__SWIG_0(self, args);
+        }
+      }
+    }
+  }
+  
+fail:
+  SWIG_SetErrorMsg(PyExc_NotImplementedError,"No matching function for overloaded 'cvConvexHull2'");
   return NULL;
 }
 
@@ -78477,115 +78779,6 @@ fail:
 }
 
 
-SWIGINTERN PyObject *_wrap_cvConvexHull2(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
-  PyObject *resultobj = 0;
-  CvArr *arg1 = (CvArr *) 0 ;
-  void *arg2 = (void *) NULL ;
-  int arg3 = (int) 1 ;
-  int arg4 = (int) 0 ;
-  CvSeq *result = 0 ;
-  CvMat hullMat2 ;
-  int val3 ;
-  int ecode3 = 0 ;
-  int val4 ;
-  int ecode4 = 0 ;
-  PyObject * obj0 = 0 ;
-  PyObject * obj1 = 0 ;
-  PyObject * obj2 = 0 ;
-  
-  {
-    arg2 = &hullMat2;
-  }
-  if (!PyArg_ParseTuple(args,(char *)"O|OO:cvConvexHull2",&obj0,&obj1,&obj2)) SWIG_fail;
-  {
-    int i;
-    
-    /* get the size of the input array */
-    int size = PyList_Size (obj0);
-    
-    /* allocate the points matrix necessary for calling cvConvexHull2 */
-    CvPoint* points = (CvPoint *)malloc (size * sizeof (points[0]));
-    CvMat pointMat = cvMat (1, size, CV_32SC2, points);
-    arg1 = &pointMat;
-    
-    /* allocat the output matrix to get the result of the call */
-    int *hull = (int*)malloc (size * sizeof (hull[0]));
-    hullMat2 = cvMat (1, size, CV_32SC1, hull);
-    
-    /* extract all the objects from the input list, and fill the
-           points matrix */
-    for (i = 0; i < size; i++) {
-      /* get the current item */
-      PyObject *item = PyList_GetItem (obj0, i);
-      
-      /* convert from a Python CvPoint pointer to a C CvPoint pointer */
-      CvPoint *p = NULL;
-      void *vptr;
-      SWIG_Python_ConvertPtr (item, &vptr, SWIGTYPE_p_CvPoint,
-        SWIG_POINTER_EXCEPTION);
-      p = (CvPoint *) vptr;
-      
-      /* extract the x and y positions */
-      points [i].x = p->x;
-      points [i].y = p->y;
-    }
-  }
-  if (obj1) {
-    ecode3 = SWIG_AsVal_int(obj1, &val3);
-    if (!SWIG_IsOK(ecode3)) {
-      SWIG_exception_fail(SWIG_ArgError(ecode3), "in method '" "cvConvexHull2" "', argument " "3"" of type '" "int""'");
-    } 
-    arg3 = static_cast< int >(val3);
-  }
-  if (obj2) {
-    ecode4 = SWIG_AsVal_int(obj2, &val4);
-    if (!SWIG_IsOK(ecode4)) {
-      SWIG_exception_fail(SWIG_ArgError(ecode4), "in method '" "cvConvexHull2" "', argument " "4"" of type '" "int""'");
-    } 
-    arg4 = static_cast< int >(val4);
-  }
-  {
-    try {
-      result = (CvSeq *)cvConvexHull2((void const *)arg1,arg2,arg3,arg4); 
-    } 
-    catch (...) 
-    {
-      return NULL;
-    } 
-  }
-  resultobj = SWIG_NewPointerObj(SWIG_as_voidptr(result), SWIGTYPE_p_CvSeq, 0 |  0 );
-  {
-    int i;
-    PyObject *to_return;
-    
-    /* create the list to return */
-    to_return = PyList_New (hullMat2.cols);
-    
-    /* extract all the integer values of the result, and add it to the
-           final resulting list */
-    for (i = 0; i < hullMat2.cols; i++) {
-      PyList_SetItem (to_return, i,
-        PyInt_FromLong (hullMat2.data.i [i]));
-    }
-    
-    /* some cleanup */
-    free (hullMat2.data.i);
-    
-    /* we can now return the value */
-    resultobj = to_return;
-  }
-  {
-    free (((CvMat *)arg1)->data.i);
-  }
-  return resultobj;
-fail:
-  {
-    free (((CvMat *)arg1)->data.i);
-  }
-  return NULL;
-}
-
-
 SWIGINTERN PyObject *_wrap_cvCheckContourConvexity(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
   PyObject *resultobj = 0;
   CvArr *arg1 = (CvArr *) 0 ;
@@ -94486,1504 +94679,6 @@ SWIGINTERN PyObject *CvMorphology_swigregister(PyObject *SWIGUNUSEDPARM(self), P
   return SWIG_Py_Void();
 }
 
-SWIGINTERN PyObject *_wrap_CvSeq_Point_cast(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
-  PyObject *resultobj = 0;
-  CvSeq *arg1 = (CvSeq *) 0 ;
-  CvTypedSeq<CvPoint > *result = 0 ;
-  void *ptr1 ;
-  PyObject * obj0 = 0 ;
-  
-  if (!PyArg_ParseTuple(args,(char *)"O:CvSeq_Point_cast",&obj0)) SWIG_fail;
-  {
-    if( SWIG_ConvertPtr(obj0, &ptr1, SWIGTYPE_p_CvSeq, 0) == -1 &&
-      SWIG_ConvertPtr(obj0, &ptr1, SWIGTYPE_p_CvSet, 0) == -1 &&
-      SWIG_ConvertPtr(obj0, &ptr1, SWIGTYPE_p_CvGraph, 0) == -1 &&
-      SWIG_ConvertPtr(obj0, &ptr1, SWIGTYPE_p_CvSubdiv2D, 0) == -1 &&
-      SWIG_ConvertPtr(obj0, &ptr1, SWIGTYPE_p_CvChain, 0) == -1 &&
-      SWIG_ConvertPtr(obj0, &ptr1, SWIGTYPE_p_CvContour, 0) == -1 &&
-      SWIG_ConvertPtr(obj0, &ptr1, SWIGTYPE_p_CvContourTree, 0) == -1 )
-    {
-      SWIG_exception (SWIG_TypeError, "could not convert to CvSeq");
-      return NULL;
-    }
-    arg1 = (CvSeq *) ptr1;
-  }
-  {
-    try {
-      result = (CvTypedSeq<CvPoint > *)CvTypedSeq<CvPoint >::SWIGTEMPLATEDISAMBIGUATOR cast(arg1); 
-    } 
-    catch (...) 
-    {
-      return NULL;
-    } 
-  }
-  resultobj = SWIG_NewPointerObj(SWIG_as_voidptr(result), SWIGTYPE_p_CvTypedSeqTCvPoint_t, 0 |  0 );
-  return resultobj;
-fail:
-  return NULL;
-}
-
-
-SWIGINTERN PyObject *_wrap_CvSeq_Point___getitem__(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
-  PyObject *resultobj = 0;
-  CvTypedSeq<CvPoint > *arg1 = (CvTypedSeq<CvPoint > *) 0 ;
-  int arg2 ;
-  CvPoint *result = 0 ;
-  void *argp1 = 0 ;
-  int res1 = 0 ;
-  int val2 ;
-  int ecode2 = 0 ;
-  PyObject * obj0 = 0 ;
-  PyObject * obj1 = 0 ;
-  
-  if (!PyArg_ParseTuple(args,(char *)"OO:CvSeq_Point___getitem__",&obj0,&obj1)) SWIG_fail;
-  res1 = SWIG_ConvertPtr(obj0, &argp1,SWIGTYPE_p_CvTypedSeqTCvPoint_t, 0 |  0 );
-  if (!SWIG_IsOK(res1)) {
-    SWIG_exception_fail(SWIG_ArgError(res1), "in method '" "CvSeq_Point___getitem__" "', argument " "1"" of type '" "CvTypedSeq<CvPoint > *""'"); 
-  }
-  arg1 = reinterpret_cast< CvTypedSeq<CvPoint > * >(argp1);
-  ecode2 = SWIG_AsVal_int(obj1, &val2);
-  if (!SWIG_IsOK(ecode2)) {
-    SWIG_exception_fail(SWIG_ArgError(ecode2), "in method '" "CvSeq_Point___getitem__" "', argument " "2"" of type '" "int""'");
-  } 
-  arg2 = static_cast< int >(val2);
-  {
-    try {
-      result = (CvPoint *)(arg1)->__getitem__(arg2); 
-    } 
-    catch (...) 
-    {
-      return NULL;
-    } 
-  }
-  resultobj = SWIG_NewPointerObj(SWIG_as_voidptr(result), SWIGTYPE_p_CvPoint, 0 |  0 );
-  return resultobj;
-fail:
-  return NULL;
-}
-
-
-SWIGINTERN PyObject *_wrap_CvSeq_Point___setitem__(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
-  PyObject *resultobj = 0;
-  CvTypedSeq<CvPoint > *arg1 = (CvTypedSeq<CvPoint > *) 0 ;
-  int arg2 ;
-  CvPoint *arg3 = (CvPoint *) 0 ;
-  void *argp1 = 0 ;
-  int res1 = 0 ;
-  int val2 ;
-  int ecode2 = 0 ;
-  void *argp3 = 0 ;
-  int res3 = 0 ;
-  PyObject * obj0 = 0 ;
-  PyObject * obj1 = 0 ;
-  PyObject * obj2 = 0 ;
-  
-  if (!PyArg_ParseTuple(args,(char *)"OOO:CvSeq_Point___setitem__",&obj0,&obj1,&obj2)) SWIG_fail;
-  res1 = SWIG_ConvertPtr(obj0, &argp1,SWIGTYPE_p_CvTypedSeqTCvPoint_t, 0 |  0 );
-  if (!SWIG_IsOK(res1)) {
-    SWIG_exception_fail(SWIG_ArgError(res1), "in method '" "CvSeq_Point___setitem__" "', argument " "1"" of type '" "CvTypedSeq<CvPoint > *""'"); 
-  }
-  arg1 = reinterpret_cast< CvTypedSeq<CvPoint > * >(argp1);
-  ecode2 = SWIG_AsVal_int(obj1, &val2);
-  if (!SWIG_IsOK(ecode2)) {
-    SWIG_exception_fail(SWIG_ArgError(ecode2), "in method '" "CvSeq_Point___setitem__" "', argument " "2"" of type '" "int""'");
-  } 
-  arg2 = static_cast< int >(val2);
-  res3 = SWIG_ConvertPtr(obj2, &argp3,SWIGTYPE_p_CvPoint, 0 |  0 );
-  if (!SWIG_IsOK(res3)) {
-    SWIG_exception_fail(SWIG_ArgError(res3), "in method '" "CvSeq_Point___setitem__" "', argument " "3"" of type '" "CvPoint *""'"); 
-  }
-  arg3 = reinterpret_cast< CvPoint * >(argp3);
-  {
-    try {
-      (arg1)->__setitem__(arg2,arg3); 
-    } 
-    catch (...) 
-    {
-      return NULL;
-    } 
-  }
-  resultobj = SWIG_Py_Void();
-  return resultobj;
-fail:
-  return NULL;
-}
-
-
-SWIGINTERN PyObject *_wrap_CvSeq_Point_append(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
-  PyObject *resultobj = 0;
-  CvTypedSeq<CvPoint > *arg1 = (CvTypedSeq<CvPoint > *) 0 ;
-  CvPoint *arg2 = (CvPoint *) 0 ;
-  void *argp1 = 0 ;
-  int res1 = 0 ;
-  void *argp2 = 0 ;
-  int res2 = 0 ;
-  PyObject * obj0 = 0 ;
-  PyObject * obj1 = 0 ;
-  
-  if (!PyArg_ParseTuple(args,(char *)"OO:CvSeq_Point_append",&obj0,&obj1)) SWIG_fail;
-  res1 = SWIG_ConvertPtr(obj0, &argp1,SWIGTYPE_p_CvTypedSeqTCvPoint_t, 0 |  0 );
-  if (!SWIG_IsOK(res1)) {
-    SWIG_exception_fail(SWIG_ArgError(res1), "in method '" "CvSeq_Point_append" "', argument " "1"" of type '" "CvTypedSeq<CvPoint > *""'"); 
-  }
-  arg1 = reinterpret_cast< CvTypedSeq<CvPoint > * >(argp1);
-  res2 = SWIG_ConvertPtr(obj1, &argp2,SWIGTYPE_p_CvPoint, 0 |  0 );
-  if (!SWIG_IsOK(res2)) {
-    SWIG_exception_fail(SWIG_ArgError(res2), "in method '" "CvSeq_Point_append" "', argument " "2"" of type '" "CvPoint *""'"); 
-  }
-  arg2 = reinterpret_cast< CvPoint * >(argp2);
-  {
-    try {
-      (arg1)->append(arg2); 
-    } 
-    catch (...) 
-    {
-      return NULL;
-    } 
-  }
-  resultobj = SWIG_Py_Void();
-  return resultobj;
-fail:
-  return NULL;
-}
-
-
-SWIGINTERN PyObject *_wrap_CvSeq_Point_pop(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
-  PyObject *resultobj = 0;
-  CvTypedSeq<CvPoint > *arg1 = (CvTypedSeq<CvPoint > *) 0 ;
-  CvPoint *result = 0 ;
-  void *argp1 = 0 ;
-  int res1 = 0 ;
-  PyObject * obj0 = 0 ;
-  
-  if (!PyArg_ParseTuple(args,(char *)"O:CvSeq_Point_pop",&obj0)) SWIG_fail;
-  res1 = SWIG_ConvertPtr(obj0, &argp1,SWIGTYPE_p_CvTypedSeqTCvPoint_t, 0 |  0 );
-  if (!SWIG_IsOK(res1)) {
-    SWIG_exception_fail(SWIG_ArgError(res1), "in method '" "CvSeq_Point_pop" "', argument " "1"" of type '" "CvTypedSeq<CvPoint > *""'"); 
-  }
-  arg1 = reinterpret_cast< CvTypedSeq<CvPoint > * >(argp1);
-  {
-    try {
-      result = (CvPoint *)(arg1)->pop(); 
-    } 
-    catch (...) 
-    {
-      return NULL;
-    } 
-  }
-  resultobj = SWIG_NewPointerObj(SWIG_as_voidptr(result), SWIGTYPE_p_CvPoint, 0 |  0 );
-  return resultobj;
-fail:
-  return NULL;
-}
-
-
-SWIGINTERN PyObject *_wrap_new_CvSeq_Point(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
-  PyObject *resultobj = 0;
-  CvTypedSeq<CvPoint > *result = 0 ;
-  
-  if (!PyArg_ParseTuple(args,(char *)":new_CvSeq_Point")) SWIG_fail;
-  {
-    try {
-      result = (CvTypedSeq<CvPoint > *)new CvTypedSeq<CvPoint >(); 
-    } 
-    catch (...) 
-    {
-      return NULL;
-    } 
-  }
-  resultobj = SWIG_NewPointerObj(SWIG_as_voidptr(result), SWIGTYPE_p_CvTypedSeqTCvPoint_t, SWIG_POINTER_NEW |  0 );
-  return resultobj;
-fail:
-  return NULL;
-}
-
-
-SWIGINTERN PyObject *_wrap_delete_CvSeq_Point(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
-  PyObject *resultobj = 0;
-  CvTypedSeq<CvPoint > *arg1 = (CvTypedSeq<CvPoint > *) 0 ;
-  void *argp1 = 0 ;
-  int res1 = 0 ;
-  PyObject * obj0 = 0 ;
-  
-  if (!PyArg_ParseTuple(args,(char *)"O:delete_CvSeq_Point",&obj0)) SWIG_fail;
-  res1 = SWIG_ConvertPtr(obj0, &argp1,SWIGTYPE_p_CvTypedSeqTCvPoint_t, SWIG_POINTER_DISOWN |  0 );
-  if (!SWIG_IsOK(res1)) {
-    SWIG_exception_fail(SWIG_ArgError(res1), "in method '" "delete_CvSeq_Point" "', argument " "1"" of type '" "CvTypedSeq<CvPoint > *""'"); 
-  }
-  arg1 = reinterpret_cast< CvTypedSeq<CvPoint > * >(argp1);
-  {
-    try {
-      delete arg1;
-    } 
-    catch (...) 
-    {
-      return NULL;
-    } 
-  }
-  resultobj = SWIG_Py_Void();
-  return resultobj;
-fail:
-  return NULL;
-}
-
-
-SWIGINTERN PyObject *CvSeq_Point_swigregister(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
-  PyObject *obj;
-  if (!PyArg_ParseTuple(args,(char*)"O|swigregister", &obj)) return NULL;
-  SWIG_TypeNewClientData(SWIGTYPE_p_CvTypedSeqTCvPoint_t, SWIG_NewClientData(obj));
-  return SWIG_Py_Void();
-}
-
-SWIGINTERN PyObject *_wrap_CvSeq_Point2D32f_cast(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
-  PyObject *resultobj = 0;
-  CvSeq *arg1 = (CvSeq *) 0 ;
-  CvTypedSeq<CvPoint2D32f > *result = 0 ;
-  void *ptr1 ;
-  PyObject * obj0 = 0 ;
-  
-  if (!PyArg_ParseTuple(args,(char *)"O:CvSeq_Point2D32f_cast",&obj0)) SWIG_fail;
-  {
-    if( SWIG_ConvertPtr(obj0, &ptr1, SWIGTYPE_p_CvSeq, 0) == -1 &&
-      SWIG_ConvertPtr(obj0, &ptr1, SWIGTYPE_p_CvSet, 0) == -1 &&
-      SWIG_ConvertPtr(obj0, &ptr1, SWIGTYPE_p_CvGraph, 0) == -1 &&
-      SWIG_ConvertPtr(obj0, &ptr1, SWIGTYPE_p_CvSubdiv2D, 0) == -1 &&
-      SWIG_ConvertPtr(obj0, &ptr1, SWIGTYPE_p_CvChain, 0) == -1 &&
-      SWIG_ConvertPtr(obj0, &ptr1, SWIGTYPE_p_CvContour, 0) == -1 &&
-      SWIG_ConvertPtr(obj0, &ptr1, SWIGTYPE_p_CvContourTree, 0) == -1 )
-    {
-      SWIG_exception (SWIG_TypeError, "could not convert to CvSeq");
-      return NULL;
-    }
-    arg1 = (CvSeq *) ptr1;
-  }
-  {
-    try {
-      result = (CvTypedSeq<CvPoint2D32f > *)CvTypedSeq<CvPoint2D32f >::SWIGTEMPLATEDISAMBIGUATOR cast(arg1); 
-    } 
-    catch (...) 
-    {
-      return NULL;
-    } 
-  }
-  resultobj = SWIG_NewPointerObj(SWIG_as_voidptr(result), SWIGTYPE_p_CvTypedSeqTCvPoint2D32f_t, 0 |  0 );
-  return resultobj;
-fail:
-  return NULL;
-}
-
-
-SWIGINTERN PyObject *_wrap_CvSeq_Point2D32f___getitem__(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
-  PyObject *resultobj = 0;
-  CvTypedSeq<CvPoint2D32f > *arg1 = (CvTypedSeq<CvPoint2D32f > *) 0 ;
-  int arg2 ;
-  CvPoint2D32f *result = 0 ;
-  void *argp1 = 0 ;
-  int res1 = 0 ;
-  int val2 ;
-  int ecode2 = 0 ;
-  PyObject * obj0 = 0 ;
-  PyObject * obj1 = 0 ;
-  
-  if (!PyArg_ParseTuple(args,(char *)"OO:CvSeq_Point2D32f___getitem__",&obj0,&obj1)) SWIG_fail;
-  res1 = SWIG_ConvertPtr(obj0, &argp1,SWIGTYPE_p_CvTypedSeqTCvPoint2D32f_t, 0 |  0 );
-  if (!SWIG_IsOK(res1)) {
-    SWIG_exception_fail(SWIG_ArgError(res1), "in method '" "CvSeq_Point2D32f___getitem__" "', argument " "1"" of type '" "CvTypedSeq<CvPoint2D32f > *""'"); 
-  }
-  arg1 = reinterpret_cast< CvTypedSeq<CvPoint2D32f > * >(argp1);
-  ecode2 = SWIG_AsVal_int(obj1, &val2);
-  if (!SWIG_IsOK(ecode2)) {
-    SWIG_exception_fail(SWIG_ArgError(ecode2), "in method '" "CvSeq_Point2D32f___getitem__" "', argument " "2"" of type '" "int""'");
-  } 
-  arg2 = static_cast< int >(val2);
-  {
-    try {
-      result = (CvPoint2D32f *)(arg1)->__getitem__(arg2); 
-    } 
-    catch (...) 
-    {
-      return NULL;
-    } 
-  }
-  resultobj = SWIG_NewPointerObj(SWIG_as_voidptr(result), SWIGTYPE_p_CvPoint2D32f, 0 |  0 );
-  return resultobj;
-fail:
-  return NULL;
-}
-
-
-SWIGINTERN PyObject *_wrap_CvSeq_Point2D32f___setitem__(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
-  PyObject *resultobj = 0;
-  CvTypedSeq<CvPoint2D32f > *arg1 = (CvTypedSeq<CvPoint2D32f > *) 0 ;
-  int arg2 ;
-  CvPoint2D32f *arg3 = (CvPoint2D32f *) 0 ;
-  void *argp1 = 0 ;
-  int res1 = 0 ;
-  int val2 ;
-  int ecode2 = 0 ;
-  void *argp3 = 0 ;
-  int res3 = 0 ;
-  PyObject * obj0 = 0 ;
-  PyObject * obj1 = 0 ;
-  PyObject * obj2 = 0 ;
-  
-  if (!PyArg_ParseTuple(args,(char *)"OOO:CvSeq_Point2D32f___setitem__",&obj0,&obj1,&obj2)) SWIG_fail;
-  res1 = SWIG_ConvertPtr(obj0, &argp1,SWIGTYPE_p_CvTypedSeqTCvPoint2D32f_t, 0 |  0 );
-  if (!SWIG_IsOK(res1)) {
-    SWIG_exception_fail(SWIG_ArgError(res1), "in method '" "CvSeq_Point2D32f___setitem__" "', argument " "1"" of type '" "CvTypedSeq<CvPoint2D32f > *""'"); 
-  }
-  arg1 = reinterpret_cast< CvTypedSeq<CvPoint2D32f > * >(argp1);
-  ecode2 = SWIG_AsVal_int(obj1, &val2);
-  if (!SWIG_IsOK(ecode2)) {
-    SWIG_exception_fail(SWIG_ArgError(ecode2), "in method '" "CvSeq_Point2D32f___setitem__" "', argument " "2"" of type '" "int""'");
-  } 
-  arg2 = static_cast< int >(val2);
-  res3 = SWIG_ConvertPtr(obj2, &argp3,SWIGTYPE_p_CvPoint2D32f, 0 |  0 );
-  if (!SWIG_IsOK(res3)) {
-    SWIG_exception_fail(SWIG_ArgError(res3), "in method '" "CvSeq_Point2D32f___setitem__" "', argument " "3"" of type '" "CvPoint2D32f *""'"); 
-  }
-  arg3 = reinterpret_cast< CvPoint2D32f * >(argp3);
-  {
-    try {
-      (arg1)->__setitem__(arg2,arg3); 
-    } 
-    catch (...) 
-    {
-      return NULL;
-    } 
-  }
-  resultobj = SWIG_Py_Void();
-  return resultobj;
-fail:
-  return NULL;
-}
-
-
-SWIGINTERN PyObject *_wrap_CvSeq_Point2D32f_append(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
-  PyObject *resultobj = 0;
-  CvTypedSeq<CvPoint2D32f > *arg1 = (CvTypedSeq<CvPoint2D32f > *) 0 ;
-  CvPoint2D32f *arg2 = (CvPoint2D32f *) 0 ;
-  void *argp1 = 0 ;
-  int res1 = 0 ;
-  void *argp2 = 0 ;
-  int res2 = 0 ;
-  PyObject * obj0 = 0 ;
-  PyObject * obj1 = 0 ;
-  
-  if (!PyArg_ParseTuple(args,(char *)"OO:CvSeq_Point2D32f_append",&obj0,&obj1)) SWIG_fail;
-  res1 = SWIG_ConvertPtr(obj0, &argp1,SWIGTYPE_p_CvTypedSeqTCvPoint2D32f_t, 0 |  0 );
-  if (!SWIG_IsOK(res1)) {
-    SWIG_exception_fail(SWIG_ArgError(res1), "in method '" "CvSeq_Point2D32f_append" "', argument " "1"" of type '" "CvTypedSeq<CvPoint2D32f > *""'"); 
-  }
-  arg1 = reinterpret_cast< CvTypedSeq<CvPoint2D32f > * >(argp1);
-  res2 = SWIG_ConvertPtr(obj1, &argp2,SWIGTYPE_p_CvPoint2D32f, 0 |  0 );
-  if (!SWIG_IsOK(res2)) {
-    SWIG_exception_fail(SWIG_ArgError(res2), "in method '" "CvSeq_Point2D32f_append" "', argument " "2"" of type '" "CvPoint2D32f *""'"); 
-  }
-  arg2 = reinterpret_cast< CvPoint2D32f * >(argp2);
-  {
-    try {
-      (arg1)->append(arg2); 
-    } 
-    catch (...) 
-    {
-      return NULL;
-    } 
-  }
-  resultobj = SWIG_Py_Void();
-  return resultobj;
-fail:
-  return NULL;
-}
-
-
-SWIGINTERN PyObject *_wrap_CvSeq_Point2D32f_pop(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
-  PyObject *resultobj = 0;
-  CvTypedSeq<CvPoint2D32f > *arg1 = (CvTypedSeq<CvPoint2D32f > *) 0 ;
-  CvPoint2D32f *result = 0 ;
-  void *argp1 = 0 ;
-  int res1 = 0 ;
-  PyObject * obj0 = 0 ;
-  
-  if (!PyArg_ParseTuple(args,(char *)"O:CvSeq_Point2D32f_pop",&obj0)) SWIG_fail;
-  res1 = SWIG_ConvertPtr(obj0, &argp1,SWIGTYPE_p_CvTypedSeqTCvPoint2D32f_t, 0 |  0 );
-  if (!SWIG_IsOK(res1)) {
-    SWIG_exception_fail(SWIG_ArgError(res1), "in method '" "CvSeq_Point2D32f_pop" "', argument " "1"" of type '" "CvTypedSeq<CvPoint2D32f > *""'"); 
-  }
-  arg1 = reinterpret_cast< CvTypedSeq<CvPoint2D32f > * >(argp1);
-  {
-    try {
-      result = (CvPoint2D32f *)(arg1)->pop(); 
-    } 
-    catch (...) 
-    {
-      return NULL;
-    } 
-  }
-  resultobj = SWIG_NewPointerObj(SWIG_as_voidptr(result), SWIGTYPE_p_CvPoint2D32f, 0 |  0 );
-  return resultobj;
-fail:
-  return NULL;
-}
-
-
-SWIGINTERN PyObject *_wrap_new_CvSeq_Point2D32f(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
-  PyObject *resultobj = 0;
-  CvTypedSeq<CvPoint2D32f > *result = 0 ;
-  
-  if (!PyArg_ParseTuple(args,(char *)":new_CvSeq_Point2D32f")) SWIG_fail;
-  {
-    try {
-      result = (CvTypedSeq<CvPoint2D32f > *)new CvTypedSeq<CvPoint2D32f >(); 
-    } 
-    catch (...) 
-    {
-      return NULL;
-    } 
-  }
-  resultobj = SWIG_NewPointerObj(SWIG_as_voidptr(result), SWIGTYPE_p_CvTypedSeqTCvPoint2D32f_t, SWIG_POINTER_NEW |  0 );
-  return resultobj;
-fail:
-  return NULL;
-}
-
-
-SWIGINTERN PyObject *_wrap_delete_CvSeq_Point2D32f(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
-  PyObject *resultobj = 0;
-  CvTypedSeq<CvPoint2D32f > *arg1 = (CvTypedSeq<CvPoint2D32f > *) 0 ;
-  void *argp1 = 0 ;
-  int res1 = 0 ;
-  PyObject * obj0 = 0 ;
-  
-  if (!PyArg_ParseTuple(args,(char *)"O:delete_CvSeq_Point2D32f",&obj0)) SWIG_fail;
-  res1 = SWIG_ConvertPtr(obj0, &argp1,SWIGTYPE_p_CvTypedSeqTCvPoint2D32f_t, SWIG_POINTER_DISOWN |  0 );
-  if (!SWIG_IsOK(res1)) {
-    SWIG_exception_fail(SWIG_ArgError(res1), "in method '" "delete_CvSeq_Point2D32f" "', argument " "1"" of type '" "CvTypedSeq<CvPoint2D32f > *""'"); 
-  }
-  arg1 = reinterpret_cast< CvTypedSeq<CvPoint2D32f > * >(argp1);
-  {
-    try {
-      delete arg1;
-    } 
-    catch (...) 
-    {
-      return NULL;
-    } 
-  }
-  resultobj = SWIG_Py_Void();
-  return resultobj;
-fail:
-  return NULL;
-}
-
-
-SWIGINTERN PyObject *CvSeq_Point2D32f_swigregister(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
-  PyObject *obj;
-  if (!PyArg_ParseTuple(args,(char*)"O|swigregister", &obj)) return NULL;
-  SWIG_TypeNewClientData(SWIGTYPE_p_CvTypedSeqTCvPoint2D32f_t, SWIG_NewClientData(obj));
-  return SWIG_Py_Void();
-}
-
-SWIGINTERN PyObject *_wrap_CvSeq_Rect_cast(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
-  PyObject *resultobj = 0;
-  CvSeq *arg1 = (CvSeq *) 0 ;
-  CvTypedSeq<CvRect > *result = 0 ;
-  void *ptr1 ;
-  PyObject * obj0 = 0 ;
-  
-  if (!PyArg_ParseTuple(args,(char *)"O:CvSeq_Rect_cast",&obj0)) SWIG_fail;
-  {
-    if( SWIG_ConvertPtr(obj0, &ptr1, SWIGTYPE_p_CvSeq, 0) == -1 &&
-      SWIG_ConvertPtr(obj0, &ptr1, SWIGTYPE_p_CvSet, 0) == -1 &&
-      SWIG_ConvertPtr(obj0, &ptr1, SWIGTYPE_p_CvGraph, 0) == -1 &&
-      SWIG_ConvertPtr(obj0, &ptr1, SWIGTYPE_p_CvSubdiv2D, 0) == -1 &&
-      SWIG_ConvertPtr(obj0, &ptr1, SWIGTYPE_p_CvChain, 0) == -1 &&
-      SWIG_ConvertPtr(obj0, &ptr1, SWIGTYPE_p_CvContour, 0) == -1 &&
-      SWIG_ConvertPtr(obj0, &ptr1, SWIGTYPE_p_CvContourTree, 0) == -1 )
-    {
-      SWIG_exception (SWIG_TypeError, "could not convert to CvSeq");
-      return NULL;
-    }
-    arg1 = (CvSeq *) ptr1;
-  }
-  {
-    try {
-      result = (CvTypedSeq<CvRect > *)CvTypedSeq<CvRect >::SWIGTEMPLATEDISAMBIGUATOR cast(arg1); 
-    } 
-    catch (...) 
-    {
-      return NULL;
-    } 
-  }
-  resultobj = SWIG_NewPointerObj(SWIG_as_voidptr(result), SWIGTYPE_p_CvTypedSeqTCvRect_t, 0 |  0 );
-  return resultobj;
-fail:
-  return NULL;
-}
-
-
-SWIGINTERN PyObject *_wrap_CvSeq_Rect___getitem__(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
-  PyObject *resultobj = 0;
-  CvTypedSeq<CvRect > *arg1 = (CvTypedSeq<CvRect > *) 0 ;
-  int arg2 ;
-  CvRect *result = 0 ;
-  void *argp1 = 0 ;
-  int res1 = 0 ;
-  int val2 ;
-  int ecode2 = 0 ;
-  PyObject * obj0 = 0 ;
-  PyObject * obj1 = 0 ;
-  
-  if (!PyArg_ParseTuple(args,(char *)"OO:CvSeq_Rect___getitem__",&obj0,&obj1)) SWIG_fail;
-  res1 = SWIG_ConvertPtr(obj0, &argp1,SWIGTYPE_p_CvTypedSeqTCvRect_t, 0 |  0 );
-  if (!SWIG_IsOK(res1)) {
-    SWIG_exception_fail(SWIG_ArgError(res1), "in method '" "CvSeq_Rect___getitem__" "', argument " "1"" of type '" "CvTypedSeq<CvRect > *""'"); 
-  }
-  arg1 = reinterpret_cast< CvTypedSeq<CvRect > * >(argp1);
-  ecode2 = SWIG_AsVal_int(obj1, &val2);
-  if (!SWIG_IsOK(ecode2)) {
-    SWIG_exception_fail(SWIG_ArgError(ecode2), "in method '" "CvSeq_Rect___getitem__" "', argument " "2"" of type '" "int""'");
-  } 
-  arg2 = static_cast< int >(val2);
-  {
-    try {
-      result = (CvRect *)(arg1)->__getitem__(arg2); 
-    } 
-    catch (...) 
-    {
-      return NULL;
-    } 
-  }
-  resultobj = SWIG_NewPointerObj(SWIG_as_voidptr(result), SWIGTYPE_p_CvRect, 0 |  0 );
-  return resultobj;
-fail:
-  return NULL;
-}
-
-
-SWIGINTERN PyObject *_wrap_CvSeq_Rect___setitem__(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
-  PyObject *resultobj = 0;
-  CvTypedSeq<CvRect > *arg1 = (CvTypedSeq<CvRect > *) 0 ;
-  int arg2 ;
-  CvRect *arg3 = (CvRect *) 0 ;
-  void *argp1 = 0 ;
-  int res1 = 0 ;
-  int val2 ;
-  int ecode2 = 0 ;
-  void *argp3 = 0 ;
-  int res3 = 0 ;
-  PyObject * obj0 = 0 ;
-  PyObject * obj1 = 0 ;
-  PyObject * obj2 = 0 ;
-  
-  if (!PyArg_ParseTuple(args,(char *)"OOO:CvSeq_Rect___setitem__",&obj0,&obj1,&obj2)) SWIG_fail;
-  res1 = SWIG_ConvertPtr(obj0, &argp1,SWIGTYPE_p_CvTypedSeqTCvRect_t, 0 |  0 );
-  if (!SWIG_IsOK(res1)) {
-    SWIG_exception_fail(SWIG_ArgError(res1), "in method '" "CvSeq_Rect___setitem__" "', argument " "1"" of type '" "CvTypedSeq<CvRect > *""'"); 
-  }
-  arg1 = reinterpret_cast< CvTypedSeq<CvRect > * >(argp1);
-  ecode2 = SWIG_AsVal_int(obj1, &val2);
-  if (!SWIG_IsOK(ecode2)) {
-    SWIG_exception_fail(SWIG_ArgError(ecode2), "in method '" "CvSeq_Rect___setitem__" "', argument " "2"" of type '" "int""'");
-  } 
-  arg2 = static_cast< int >(val2);
-  res3 = SWIG_ConvertPtr(obj2, &argp3,SWIGTYPE_p_CvRect, 0 |  0 );
-  if (!SWIG_IsOK(res3)) {
-    SWIG_exception_fail(SWIG_ArgError(res3), "in method '" "CvSeq_Rect___setitem__" "', argument " "3"" of type '" "CvRect *""'"); 
-  }
-  arg3 = reinterpret_cast< CvRect * >(argp3);
-  {
-    try {
-      (arg1)->__setitem__(arg2,arg3); 
-    } 
-    catch (...) 
-    {
-      return NULL;
-    } 
-  }
-  resultobj = SWIG_Py_Void();
-  return resultobj;
-fail:
-  return NULL;
-}
-
-
-SWIGINTERN PyObject *_wrap_CvSeq_Rect_append(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
-  PyObject *resultobj = 0;
-  CvTypedSeq<CvRect > *arg1 = (CvTypedSeq<CvRect > *) 0 ;
-  CvRect *arg2 = (CvRect *) 0 ;
-  void *argp1 = 0 ;
-  int res1 = 0 ;
-  void *argp2 = 0 ;
-  int res2 = 0 ;
-  PyObject * obj0 = 0 ;
-  PyObject * obj1 = 0 ;
-  
-  if (!PyArg_ParseTuple(args,(char *)"OO:CvSeq_Rect_append",&obj0,&obj1)) SWIG_fail;
-  res1 = SWIG_ConvertPtr(obj0, &argp1,SWIGTYPE_p_CvTypedSeqTCvRect_t, 0 |  0 );
-  if (!SWIG_IsOK(res1)) {
-    SWIG_exception_fail(SWIG_ArgError(res1), "in method '" "CvSeq_Rect_append" "', argument " "1"" of type '" "CvTypedSeq<CvRect > *""'"); 
-  }
-  arg1 = reinterpret_cast< CvTypedSeq<CvRect > * >(argp1);
-  res2 = SWIG_ConvertPtr(obj1, &argp2,SWIGTYPE_p_CvRect, 0 |  0 );
-  if (!SWIG_IsOK(res2)) {
-    SWIG_exception_fail(SWIG_ArgError(res2), "in method '" "CvSeq_Rect_append" "', argument " "2"" of type '" "CvRect *""'"); 
-  }
-  arg2 = reinterpret_cast< CvRect * >(argp2);
-  {
-    try {
-      (arg1)->append(arg2); 
-    } 
-    catch (...) 
-    {
-      return NULL;
-    } 
-  }
-  resultobj = SWIG_Py_Void();
-  return resultobj;
-fail:
-  return NULL;
-}
-
-
-SWIGINTERN PyObject *_wrap_CvSeq_Rect_pop(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
-  PyObject *resultobj = 0;
-  CvTypedSeq<CvRect > *arg1 = (CvTypedSeq<CvRect > *) 0 ;
-  CvRect *result = 0 ;
-  void *argp1 = 0 ;
-  int res1 = 0 ;
-  PyObject * obj0 = 0 ;
-  
-  if (!PyArg_ParseTuple(args,(char *)"O:CvSeq_Rect_pop",&obj0)) SWIG_fail;
-  res1 = SWIG_ConvertPtr(obj0, &argp1,SWIGTYPE_p_CvTypedSeqTCvRect_t, 0 |  0 );
-  if (!SWIG_IsOK(res1)) {
-    SWIG_exception_fail(SWIG_ArgError(res1), "in method '" "CvSeq_Rect_pop" "', argument " "1"" of type '" "CvTypedSeq<CvRect > *""'"); 
-  }
-  arg1 = reinterpret_cast< CvTypedSeq<CvRect > * >(argp1);
-  {
-    try {
-      result = (CvRect *)(arg1)->pop(); 
-    } 
-    catch (...) 
-    {
-      return NULL;
-    } 
-  }
-  resultobj = SWIG_NewPointerObj(SWIG_as_voidptr(result), SWIGTYPE_p_CvRect, 0 |  0 );
-  return resultobj;
-fail:
-  return NULL;
-}
-
-
-SWIGINTERN PyObject *_wrap_new_CvSeq_Rect(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
-  PyObject *resultobj = 0;
-  CvTypedSeq<CvRect > *result = 0 ;
-  
-  if (!PyArg_ParseTuple(args,(char *)":new_CvSeq_Rect")) SWIG_fail;
-  {
-    try {
-      result = (CvTypedSeq<CvRect > *)new CvTypedSeq<CvRect >(); 
-    } 
-    catch (...) 
-    {
-      return NULL;
-    } 
-  }
-  resultobj = SWIG_NewPointerObj(SWIG_as_voidptr(result), SWIGTYPE_p_CvTypedSeqTCvRect_t, SWIG_POINTER_NEW |  0 );
-  return resultobj;
-fail:
-  return NULL;
-}
-
-
-SWIGINTERN PyObject *_wrap_delete_CvSeq_Rect(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
-  PyObject *resultobj = 0;
-  CvTypedSeq<CvRect > *arg1 = (CvTypedSeq<CvRect > *) 0 ;
-  void *argp1 = 0 ;
-  int res1 = 0 ;
-  PyObject * obj0 = 0 ;
-  
-  if (!PyArg_ParseTuple(args,(char *)"O:delete_CvSeq_Rect",&obj0)) SWIG_fail;
-  res1 = SWIG_ConvertPtr(obj0, &argp1,SWIGTYPE_p_CvTypedSeqTCvRect_t, SWIG_POINTER_DISOWN |  0 );
-  if (!SWIG_IsOK(res1)) {
-    SWIG_exception_fail(SWIG_ArgError(res1), "in method '" "delete_CvSeq_Rect" "', argument " "1"" of type '" "CvTypedSeq<CvRect > *""'"); 
-  }
-  arg1 = reinterpret_cast< CvTypedSeq<CvRect > * >(argp1);
-  {
-    try {
-      delete arg1;
-    } 
-    catch (...) 
-    {
-      return NULL;
-    } 
-  }
-  resultobj = SWIG_Py_Void();
-  return resultobj;
-fail:
-  return NULL;
-}
-
-
-SWIGINTERN PyObject *CvSeq_Rect_swigregister(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
-  PyObject *obj;
-  if (!PyArg_ParseTuple(args,(char*)"O|swigregister", &obj)) return NULL;
-  SWIG_TypeNewClientData(SWIGTYPE_p_CvTypedSeqTCvRect_t, SWIG_NewClientData(obj));
-  return SWIG_Py_Void();
-}
-
-SWIGINTERN PyObject *_wrap_CvSeq_Seq_cast(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
-  PyObject *resultobj = 0;
-  CvSeq *arg1 = (CvSeq *) 0 ;
-  CvTypedSeq<CvSeq * > *result = 0 ;
-  void *ptr1 ;
-  PyObject * obj0 = 0 ;
-  
-  if (!PyArg_ParseTuple(args,(char *)"O:CvSeq_Seq_cast",&obj0)) SWIG_fail;
-  {
-    if( SWIG_ConvertPtr(obj0, &ptr1, SWIGTYPE_p_CvSeq, 0) == -1 &&
-      SWIG_ConvertPtr(obj0, &ptr1, SWIGTYPE_p_CvSet, 0) == -1 &&
-      SWIG_ConvertPtr(obj0, &ptr1, SWIGTYPE_p_CvGraph, 0) == -1 &&
-      SWIG_ConvertPtr(obj0, &ptr1, SWIGTYPE_p_CvSubdiv2D, 0) == -1 &&
-      SWIG_ConvertPtr(obj0, &ptr1, SWIGTYPE_p_CvChain, 0) == -1 &&
-      SWIG_ConvertPtr(obj0, &ptr1, SWIGTYPE_p_CvContour, 0) == -1 &&
-      SWIG_ConvertPtr(obj0, &ptr1, SWIGTYPE_p_CvContourTree, 0) == -1 )
-    {
-      SWIG_exception (SWIG_TypeError, "could not convert to CvSeq");
-      return NULL;
-    }
-    arg1 = (CvSeq *) ptr1;
-  }
-  {
-    try {
-      result = (CvTypedSeq<CvSeq * > *)CvTypedSeq<CvSeq * >::SWIGTEMPLATEDISAMBIGUATOR cast(arg1); 
-    } 
-    catch (...) 
-    {
-      return NULL;
-    } 
-  }
-  resultobj = SWIG_NewPointerObj(SWIG_as_voidptr(result), SWIGTYPE_p_CvTypedSeqTCvSeq_p_t, 0 |  0 );
-  return resultobj;
-fail:
-  return NULL;
-}
-
-
-SWIGINTERN PyObject *_wrap_CvSeq_Seq___getitem__(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
-  PyObject *resultobj = 0;
-  CvTypedSeq<CvSeq * > *arg1 = (CvTypedSeq<CvSeq * > *) 0 ;
-  int arg2 ;
-  CvSeq **result = 0 ;
-  void *argp1 = 0 ;
-  int res1 = 0 ;
-  int val2 ;
-  int ecode2 = 0 ;
-  PyObject * obj0 = 0 ;
-  PyObject * obj1 = 0 ;
-  
-  if (!PyArg_ParseTuple(args,(char *)"OO:CvSeq_Seq___getitem__",&obj0,&obj1)) SWIG_fail;
-  res1 = SWIG_ConvertPtr(obj0, &argp1,SWIGTYPE_p_CvTypedSeqTCvSeq_p_t, 0 |  0 );
-  if (!SWIG_IsOK(res1)) {
-    SWIG_exception_fail(SWIG_ArgError(res1), "in method '" "CvSeq_Seq___getitem__" "', argument " "1"" of type '" "CvTypedSeq<CvSeq * > *""'"); 
-  }
-  arg1 = reinterpret_cast< CvTypedSeq<CvSeq * > * >(argp1);
-  ecode2 = SWIG_AsVal_int(obj1, &val2);
-  if (!SWIG_IsOK(ecode2)) {
-    SWIG_exception_fail(SWIG_ArgError(ecode2), "in method '" "CvSeq_Seq___getitem__" "', argument " "2"" of type '" "int""'");
-  } 
-  arg2 = static_cast< int >(val2);
-  {
-    try {
-      result = (CvSeq **)(arg1)->__getitem__(arg2); 
-    } 
-    catch (...) 
-    {
-      return NULL;
-    } 
-  }
-  resultobj = SWIG_NewPointerObj(SWIG_as_voidptr(result), SWIGTYPE_p_p_CvSeq, 0 |  0 );
-  return resultobj;
-fail:
-  return NULL;
-}
-
-
-SWIGINTERN PyObject *_wrap_CvSeq_Seq___setitem__(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
-  PyObject *resultobj = 0;
-  CvTypedSeq<CvSeq * > *arg1 = (CvTypedSeq<CvSeq * > *) 0 ;
-  int arg2 ;
-  CvSeq **arg3 = (CvSeq **) 0 ;
-  void *argp1 = 0 ;
-  int res1 = 0 ;
-  int val2 ;
-  int ecode2 = 0 ;
-  void *vptr3 ;
-  CvSeq *buffer3 ;
-  PyObject * obj0 = 0 ;
-  PyObject * obj1 = 0 ;
-  PyObject * obj2 = 0 ;
-  
-  if (!PyArg_ParseTuple(args,(char *)"OOO:CvSeq_Seq___setitem__",&obj0,&obj1,&obj2)) SWIG_fail;
-  res1 = SWIG_ConvertPtr(obj0, &argp1,SWIGTYPE_p_CvTypedSeqTCvSeq_p_t, 0 |  0 );
-  if (!SWIG_IsOK(res1)) {
-    SWIG_exception_fail(SWIG_ArgError(res1), "in method '" "CvSeq_Seq___setitem__" "', argument " "1"" of type '" "CvTypedSeq<CvSeq * > *""'"); 
-  }
-  arg1 = reinterpret_cast< CvTypedSeq<CvSeq * > * >(argp1);
-  ecode2 = SWIG_AsVal_int(obj1, &val2);
-  if (!SWIG_IsOK(ecode2)) {
-    SWIG_exception_fail(SWIG_ArgError(ecode2), "in method '" "CvSeq_Seq___setitem__" "', argument " "2"" of type '" "int""'");
-  } 
-  arg2 = static_cast< int >(val2);
-  {
-    if ((SWIG_ConvertPtr(obj2, &vptr3, SWIGTYPE_p_CvSeq, 1)) == -1){
-      SWIG_fail;
-    }
-    buffer3 = (CvSeq *) vptr3;
-    arg3=&buffer3;
-  }
-  {
-    try {
-      (arg1)->__setitem__(arg2,arg3); 
-    } 
-    catch (...) 
-    {
-      return NULL;
-    } 
-  }
-  resultobj = SWIG_Py_Void();
-  return resultobj;
-fail:
-  return NULL;
-}
-
-
-SWIGINTERN PyObject *_wrap_CvSeq_Seq_append(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
-  PyObject *resultobj = 0;
-  CvTypedSeq<CvSeq * > *arg1 = (CvTypedSeq<CvSeq * > *) 0 ;
-  CvSeq **arg2 = (CvSeq **) 0 ;
-  void *argp1 = 0 ;
-  int res1 = 0 ;
-  void *vptr2 ;
-  CvSeq *buffer2 ;
-  PyObject * obj0 = 0 ;
-  PyObject * obj1 = 0 ;
-  
-  if (!PyArg_ParseTuple(args,(char *)"OO:CvSeq_Seq_append",&obj0,&obj1)) SWIG_fail;
-  res1 = SWIG_ConvertPtr(obj0, &argp1,SWIGTYPE_p_CvTypedSeqTCvSeq_p_t, 0 |  0 );
-  if (!SWIG_IsOK(res1)) {
-    SWIG_exception_fail(SWIG_ArgError(res1), "in method '" "CvSeq_Seq_append" "', argument " "1"" of type '" "CvTypedSeq<CvSeq * > *""'"); 
-  }
-  arg1 = reinterpret_cast< CvTypedSeq<CvSeq * > * >(argp1);
-  {
-    if ((SWIG_ConvertPtr(obj1, &vptr2, SWIGTYPE_p_CvSeq, 1)) == -1){
-      SWIG_fail;
-    }
-    buffer2 = (CvSeq *) vptr2;
-    arg2=&buffer2;
-  }
-  {
-    try {
-      (arg1)->append(arg2); 
-    } 
-    catch (...) 
-    {
-      return NULL;
-    } 
-  }
-  resultobj = SWIG_Py_Void();
-  return resultobj;
-fail:
-  return NULL;
-}
-
-
-SWIGINTERN PyObject *_wrap_CvSeq_Seq_pop(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
-  PyObject *resultobj = 0;
-  CvTypedSeq<CvSeq * > *arg1 = (CvTypedSeq<CvSeq * > *) 0 ;
-  CvSeq **result = 0 ;
-  void *argp1 = 0 ;
-  int res1 = 0 ;
-  PyObject * obj0 = 0 ;
-  
-  if (!PyArg_ParseTuple(args,(char *)"O:CvSeq_Seq_pop",&obj0)) SWIG_fail;
-  res1 = SWIG_ConvertPtr(obj0, &argp1,SWIGTYPE_p_CvTypedSeqTCvSeq_p_t, 0 |  0 );
-  if (!SWIG_IsOK(res1)) {
-    SWIG_exception_fail(SWIG_ArgError(res1), "in method '" "CvSeq_Seq_pop" "', argument " "1"" of type '" "CvTypedSeq<CvSeq * > *""'"); 
-  }
-  arg1 = reinterpret_cast< CvTypedSeq<CvSeq * > * >(argp1);
-  {
-    try {
-      result = (CvSeq **)(arg1)->pop(); 
-    } 
-    catch (...) 
-    {
-      return NULL;
-    } 
-  }
-  resultobj = SWIG_NewPointerObj(SWIG_as_voidptr(result), SWIGTYPE_p_p_CvSeq, 0 |  0 );
-  return resultobj;
-fail:
-  return NULL;
-}
-
-
-SWIGINTERN PyObject *_wrap_new_CvSeq_Seq(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
-  PyObject *resultobj = 0;
-  CvTypedSeq<CvSeq * > *result = 0 ;
-  
-  if (!PyArg_ParseTuple(args,(char *)":new_CvSeq_Seq")) SWIG_fail;
-  {
-    try {
-      result = (CvTypedSeq<CvSeq * > *)new CvTypedSeq<CvSeq * >(); 
-    } 
-    catch (...) 
-    {
-      return NULL;
-    } 
-  }
-  resultobj = SWIG_NewPointerObj(SWIG_as_voidptr(result), SWIGTYPE_p_CvTypedSeqTCvSeq_p_t, SWIG_POINTER_NEW |  0 );
-  return resultobj;
-fail:
-  return NULL;
-}
-
-
-SWIGINTERN PyObject *_wrap_delete_CvSeq_Seq(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
-  PyObject *resultobj = 0;
-  CvTypedSeq<CvSeq * > *arg1 = (CvTypedSeq<CvSeq * > *) 0 ;
-  void *argp1 = 0 ;
-  int res1 = 0 ;
-  PyObject * obj0 = 0 ;
-  
-  if (!PyArg_ParseTuple(args,(char *)"O:delete_CvSeq_Seq",&obj0)) SWIG_fail;
-  res1 = SWIG_ConvertPtr(obj0, &argp1,SWIGTYPE_p_CvTypedSeqTCvSeq_p_t, SWIG_POINTER_DISOWN |  0 );
-  if (!SWIG_IsOK(res1)) {
-    SWIG_exception_fail(SWIG_ArgError(res1), "in method '" "delete_CvSeq_Seq" "', argument " "1"" of type '" "CvTypedSeq<CvSeq * > *""'"); 
-  }
-  arg1 = reinterpret_cast< CvTypedSeq<CvSeq * > * >(argp1);
-  {
-    try {
-      delete arg1;
-    } 
-    catch (...) 
-    {
-      return NULL;
-    } 
-  }
-  resultobj = SWIG_Py_Void();
-  return resultobj;
-fail:
-  return NULL;
-}
-
-
-SWIGINTERN PyObject *CvSeq_Seq_swigregister(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
-  PyObject *obj;
-  if (!PyArg_ParseTuple(args,(char*)"O|swigregister", &obj)) return NULL;
-  SWIG_TypeNewClientData(SWIGTYPE_p_CvTypedSeqTCvSeq_p_t, SWIG_NewClientData(obj));
-  return SWIG_Py_Void();
-}
-
-SWIGINTERN PyObject *_wrap_CvSeq_QuadEdge2D_cast(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
-  PyObject *resultobj = 0;
-  CvSeq *arg1 = (CvSeq *) 0 ;
-  CvTypedSeq<CvQuadEdge2D > *result = 0 ;
-  void *ptr1 ;
-  PyObject * obj0 = 0 ;
-  
-  if (!PyArg_ParseTuple(args,(char *)"O:CvSeq_QuadEdge2D_cast",&obj0)) SWIG_fail;
-  {
-    if( SWIG_ConvertPtr(obj0, &ptr1, SWIGTYPE_p_CvSeq, 0) == -1 &&
-      SWIG_ConvertPtr(obj0, &ptr1, SWIGTYPE_p_CvSet, 0) == -1 &&
-      SWIG_ConvertPtr(obj0, &ptr1, SWIGTYPE_p_CvGraph, 0) == -1 &&
-      SWIG_ConvertPtr(obj0, &ptr1, SWIGTYPE_p_CvSubdiv2D, 0) == -1 &&
-      SWIG_ConvertPtr(obj0, &ptr1, SWIGTYPE_p_CvChain, 0) == -1 &&
-      SWIG_ConvertPtr(obj0, &ptr1, SWIGTYPE_p_CvContour, 0) == -1 &&
-      SWIG_ConvertPtr(obj0, &ptr1, SWIGTYPE_p_CvContourTree, 0) == -1 )
-    {
-      SWIG_exception (SWIG_TypeError, "could not convert to CvSeq");
-      return NULL;
-    }
-    arg1 = (CvSeq *) ptr1;
-  }
-  {
-    try {
-      result = (CvTypedSeq<CvQuadEdge2D > *)CvTypedSeq<CvQuadEdge2D >::SWIGTEMPLATEDISAMBIGUATOR cast(arg1); 
-    } 
-    catch (...) 
-    {
-      return NULL;
-    } 
-  }
-  resultobj = SWIG_NewPointerObj(SWIG_as_voidptr(result), SWIGTYPE_p_CvTypedSeqTCvQuadEdge2D_t, 0 |  0 );
-  return resultobj;
-fail:
-  return NULL;
-}
-
-
-SWIGINTERN PyObject *_wrap_CvSeq_QuadEdge2D___getitem__(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
-  PyObject *resultobj = 0;
-  CvTypedSeq<CvQuadEdge2D > *arg1 = (CvTypedSeq<CvQuadEdge2D > *) 0 ;
-  int arg2 ;
-  CvQuadEdge2D *result = 0 ;
-  void *argp1 = 0 ;
-  int res1 = 0 ;
-  int val2 ;
-  int ecode2 = 0 ;
-  PyObject * obj0 = 0 ;
-  PyObject * obj1 = 0 ;
-  
-  if (!PyArg_ParseTuple(args,(char *)"OO:CvSeq_QuadEdge2D___getitem__",&obj0,&obj1)) SWIG_fail;
-  res1 = SWIG_ConvertPtr(obj0, &argp1,SWIGTYPE_p_CvTypedSeqTCvQuadEdge2D_t, 0 |  0 );
-  if (!SWIG_IsOK(res1)) {
-    SWIG_exception_fail(SWIG_ArgError(res1), "in method '" "CvSeq_QuadEdge2D___getitem__" "', argument " "1"" of type '" "CvTypedSeq<CvQuadEdge2D > *""'"); 
-  }
-  arg1 = reinterpret_cast< CvTypedSeq<CvQuadEdge2D > * >(argp1);
-  ecode2 = SWIG_AsVal_int(obj1, &val2);
-  if (!SWIG_IsOK(ecode2)) {
-    SWIG_exception_fail(SWIG_ArgError(ecode2), "in method '" "CvSeq_QuadEdge2D___getitem__" "', argument " "2"" of type '" "int""'");
-  } 
-  arg2 = static_cast< int >(val2);
-  {
-    try {
-      result = (CvQuadEdge2D *)(arg1)->__getitem__(arg2); 
-    } 
-    catch (...) 
-    {
-      return NULL;
-    } 
-  }
-  resultobj = SWIG_NewPointerObj(SWIG_as_voidptr(result), SWIGTYPE_p_CvQuadEdge2D, 0 |  0 );
-  return resultobj;
-fail:
-  return NULL;
-}
-
-
-SWIGINTERN PyObject *_wrap_CvSeq_QuadEdge2D___setitem__(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
-  PyObject *resultobj = 0;
-  CvTypedSeq<CvQuadEdge2D > *arg1 = (CvTypedSeq<CvQuadEdge2D > *) 0 ;
-  int arg2 ;
-  CvQuadEdge2D *arg3 = (CvQuadEdge2D *) 0 ;
-  void *argp1 = 0 ;
-  int res1 = 0 ;
-  int val2 ;
-  int ecode2 = 0 ;
-  void *argp3 = 0 ;
-  int res3 = 0 ;
-  PyObject * obj0 = 0 ;
-  PyObject * obj1 = 0 ;
-  PyObject * obj2 = 0 ;
-  
-  if (!PyArg_ParseTuple(args,(char *)"OOO:CvSeq_QuadEdge2D___setitem__",&obj0,&obj1,&obj2)) SWIG_fail;
-  res1 = SWIG_ConvertPtr(obj0, &argp1,SWIGTYPE_p_CvTypedSeqTCvQuadEdge2D_t, 0 |  0 );
-  if (!SWIG_IsOK(res1)) {
-    SWIG_exception_fail(SWIG_ArgError(res1), "in method '" "CvSeq_QuadEdge2D___setitem__" "', argument " "1"" of type '" "CvTypedSeq<CvQuadEdge2D > *""'"); 
-  }
-  arg1 = reinterpret_cast< CvTypedSeq<CvQuadEdge2D > * >(argp1);
-  ecode2 = SWIG_AsVal_int(obj1, &val2);
-  if (!SWIG_IsOK(ecode2)) {
-    SWIG_exception_fail(SWIG_ArgError(ecode2), "in method '" "CvSeq_QuadEdge2D___setitem__" "', argument " "2"" of type '" "int""'");
-  } 
-  arg2 = static_cast< int >(val2);
-  res3 = SWIG_ConvertPtr(obj2, &argp3,SWIGTYPE_p_CvQuadEdge2D, 0 |  0 );
-  if (!SWIG_IsOK(res3)) {
-    SWIG_exception_fail(SWIG_ArgError(res3), "in method '" "CvSeq_QuadEdge2D___setitem__" "', argument " "3"" of type '" "CvQuadEdge2D *""'"); 
-  }
-  arg3 = reinterpret_cast< CvQuadEdge2D * >(argp3);
-  {
-    try {
-      (arg1)->__setitem__(arg2,arg3); 
-    } 
-    catch (...) 
-    {
-      return NULL;
-    } 
-  }
-  resultobj = SWIG_Py_Void();
-  return resultobj;
-fail:
-  return NULL;
-}
-
-
-SWIGINTERN PyObject *_wrap_CvSeq_QuadEdge2D_append(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
-  PyObject *resultobj = 0;
-  CvTypedSeq<CvQuadEdge2D > *arg1 = (CvTypedSeq<CvQuadEdge2D > *) 0 ;
-  CvQuadEdge2D *arg2 = (CvQuadEdge2D *) 0 ;
-  void *argp1 = 0 ;
-  int res1 = 0 ;
-  void *argp2 = 0 ;
-  int res2 = 0 ;
-  PyObject * obj0 = 0 ;
-  PyObject * obj1 = 0 ;
-  
-  if (!PyArg_ParseTuple(args,(char *)"OO:CvSeq_QuadEdge2D_append",&obj0,&obj1)) SWIG_fail;
-  res1 = SWIG_ConvertPtr(obj0, &argp1,SWIGTYPE_p_CvTypedSeqTCvQuadEdge2D_t, 0 |  0 );
-  if (!SWIG_IsOK(res1)) {
-    SWIG_exception_fail(SWIG_ArgError(res1), "in method '" "CvSeq_QuadEdge2D_append" "', argument " "1"" of type '" "CvTypedSeq<CvQuadEdge2D > *""'"); 
-  }
-  arg1 = reinterpret_cast< CvTypedSeq<CvQuadEdge2D > * >(argp1);
-  res2 = SWIG_ConvertPtr(obj1, &argp2,SWIGTYPE_p_CvQuadEdge2D, 0 |  0 );
-  if (!SWIG_IsOK(res2)) {
-    SWIG_exception_fail(SWIG_ArgError(res2), "in method '" "CvSeq_QuadEdge2D_append" "', argument " "2"" of type '" "CvQuadEdge2D *""'"); 
-  }
-  arg2 = reinterpret_cast< CvQuadEdge2D * >(argp2);
-  {
-    try {
-      (arg1)->append(arg2); 
-    } 
-    catch (...) 
-    {
-      return NULL;
-    } 
-  }
-  resultobj = SWIG_Py_Void();
-  return resultobj;
-fail:
-  return NULL;
-}
-
-
-SWIGINTERN PyObject *_wrap_CvSeq_QuadEdge2D_pop(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
-  PyObject *resultobj = 0;
-  CvTypedSeq<CvQuadEdge2D > *arg1 = (CvTypedSeq<CvQuadEdge2D > *) 0 ;
-  CvQuadEdge2D *result = 0 ;
-  void *argp1 = 0 ;
-  int res1 = 0 ;
-  PyObject * obj0 = 0 ;
-  
-  if (!PyArg_ParseTuple(args,(char *)"O:CvSeq_QuadEdge2D_pop",&obj0)) SWIG_fail;
-  res1 = SWIG_ConvertPtr(obj0, &argp1,SWIGTYPE_p_CvTypedSeqTCvQuadEdge2D_t, 0 |  0 );
-  if (!SWIG_IsOK(res1)) {
-    SWIG_exception_fail(SWIG_ArgError(res1), "in method '" "CvSeq_QuadEdge2D_pop" "', argument " "1"" of type '" "CvTypedSeq<CvQuadEdge2D > *""'"); 
-  }
-  arg1 = reinterpret_cast< CvTypedSeq<CvQuadEdge2D > * >(argp1);
-  {
-    try {
-      result = (CvQuadEdge2D *)(arg1)->pop(); 
-    } 
-    catch (...) 
-    {
-      return NULL;
-    } 
-  }
-  resultobj = SWIG_NewPointerObj(SWIG_as_voidptr(result), SWIGTYPE_p_CvQuadEdge2D, 0 |  0 );
-  return resultobj;
-fail:
-  return NULL;
-}
-
-
-SWIGINTERN PyObject *_wrap_new_CvSeq_QuadEdge2D(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
-  PyObject *resultobj = 0;
-  CvTypedSeq<CvQuadEdge2D > *result = 0 ;
-  
-  if (!PyArg_ParseTuple(args,(char *)":new_CvSeq_QuadEdge2D")) SWIG_fail;
-  {
-    try {
-      result = (CvTypedSeq<CvQuadEdge2D > *)new CvTypedSeq<CvQuadEdge2D >(); 
-    } 
-    catch (...) 
-    {
-      return NULL;
-    } 
-  }
-  resultobj = SWIG_NewPointerObj(SWIG_as_voidptr(result), SWIGTYPE_p_CvTypedSeqTCvQuadEdge2D_t, SWIG_POINTER_NEW |  0 );
-  return resultobj;
-fail:
-  return NULL;
-}
-
-
-SWIGINTERN PyObject *_wrap_delete_CvSeq_QuadEdge2D(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
-  PyObject *resultobj = 0;
-  CvTypedSeq<CvQuadEdge2D > *arg1 = (CvTypedSeq<CvQuadEdge2D > *) 0 ;
-  void *argp1 = 0 ;
-  int res1 = 0 ;
-  PyObject * obj0 = 0 ;
-  
-  if (!PyArg_ParseTuple(args,(char *)"O:delete_CvSeq_QuadEdge2D",&obj0)) SWIG_fail;
-  res1 = SWIG_ConvertPtr(obj0, &argp1,SWIGTYPE_p_CvTypedSeqTCvQuadEdge2D_t, SWIG_POINTER_DISOWN |  0 );
-  if (!SWIG_IsOK(res1)) {
-    SWIG_exception_fail(SWIG_ArgError(res1), "in method '" "delete_CvSeq_QuadEdge2D" "', argument " "1"" of type '" "CvTypedSeq<CvQuadEdge2D > *""'"); 
-  }
-  arg1 = reinterpret_cast< CvTypedSeq<CvQuadEdge2D > * >(argp1);
-  {
-    try {
-      delete arg1;
-    } 
-    catch (...) 
-    {
-      return NULL;
-    } 
-  }
-  resultobj = SWIG_Py_Void();
-  return resultobj;
-fail:
-  return NULL;
-}
-
-
-SWIGINTERN PyObject *CvSeq_QuadEdge2D_swigregister(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
-  PyObject *obj;
-  if (!PyArg_ParseTuple(args,(char*)"O|swigregister", &obj)) return NULL;
-  SWIG_TypeNewClientData(SWIGTYPE_p_CvTypedSeqTCvQuadEdge2D_t, SWIG_NewClientData(obj));
-  return SWIG_Py_Void();
-}
-
-SWIGINTERN PyObject *_wrap_CvSeq_ConnectedComp_cast(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
-  PyObject *resultobj = 0;
-  CvSeq *arg1 = (CvSeq *) 0 ;
-  CvTypedSeq<CvConnectedComp > *result = 0 ;
-  void *ptr1 ;
-  PyObject * obj0 = 0 ;
-  
-  if (!PyArg_ParseTuple(args,(char *)"O:CvSeq_ConnectedComp_cast",&obj0)) SWIG_fail;
-  {
-    if( SWIG_ConvertPtr(obj0, &ptr1, SWIGTYPE_p_CvSeq, 0) == -1 &&
-      SWIG_ConvertPtr(obj0, &ptr1, SWIGTYPE_p_CvSet, 0) == -1 &&
-      SWIG_ConvertPtr(obj0, &ptr1, SWIGTYPE_p_CvGraph, 0) == -1 &&
-      SWIG_ConvertPtr(obj0, &ptr1, SWIGTYPE_p_CvSubdiv2D, 0) == -1 &&
-      SWIG_ConvertPtr(obj0, &ptr1, SWIGTYPE_p_CvChain, 0) == -1 &&
-      SWIG_ConvertPtr(obj0, &ptr1, SWIGTYPE_p_CvContour, 0) == -1 &&
-      SWIG_ConvertPtr(obj0, &ptr1, SWIGTYPE_p_CvContourTree, 0) == -1 )
-    {
-      SWIG_exception (SWIG_TypeError, "could not convert to CvSeq");
-      return NULL;
-    }
-    arg1 = (CvSeq *) ptr1;
-  }
-  {
-    try {
-      result = (CvTypedSeq<CvConnectedComp > *)CvTypedSeq<CvConnectedComp >::SWIGTEMPLATEDISAMBIGUATOR cast(arg1); 
-    } 
-    catch (...) 
-    {
-      return NULL;
-    } 
-  }
-  resultobj = SWIG_NewPointerObj(SWIG_as_voidptr(result), SWIGTYPE_p_CvTypedSeqTCvConnectedComp_t, 0 |  0 );
-  return resultobj;
-fail:
-  return NULL;
-}
-
-
-SWIGINTERN PyObject *_wrap_CvSeq_ConnectedComp___getitem__(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
-  PyObject *resultobj = 0;
-  CvTypedSeq<CvConnectedComp > *arg1 = (CvTypedSeq<CvConnectedComp > *) 0 ;
-  int arg2 ;
-  CvConnectedComp *result = 0 ;
-  void *argp1 = 0 ;
-  int res1 = 0 ;
-  int val2 ;
-  int ecode2 = 0 ;
-  PyObject * obj0 = 0 ;
-  PyObject * obj1 = 0 ;
-  
-  if (!PyArg_ParseTuple(args,(char *)"OO:CvSeq_ConnectedComp___getitem__",&obj0,&obj1)) SWIG_fail;
-  res1 = SWIG_ConvertPtr(obj0, &argp1,SWIGTYPE_p_CvTypedSeqTCvConnectedComp_t, 0 |  0 );
-  if (!SWIG_IsOK(res1)) {
-    SWIG_exception_fail(SWIG_ArgError(res1), "in method '" "CvSeq_ConnectedComp___getitem__" "', argument " "1"" of type '" "CvTypedSeq<CvConnectedComp > *""'"); 
-  }
-  arg1 = reinterpret_cast< CvTypedSeq<CvConnectedComp > * >(argp1);
-  ecode2 = SWIG_AsVal_int(obj1, &val2);
-  if (!SWIG_IsOK(ecode2)) {
-    SWIG_exception_fail(SWIG_ArgError(ecode2), "in method '" "CvSeq_ConnectedComp___getitem__" "', argument " "2"" of type '" "int""'");
-  } 
-  arg2 = static_cast< int >(val2);
-  {
-    try {
-      result = (CvConnectedComp *)(arg1)->__getitem__(arg2); 
-    } 
-    catch (...) 
-    {
-      return NULL;
-    } 
-  }
-  resultobj = SWIG_NewPointerObj(SWIG_as_voidptr(result), SWIGTYPE_p_CvConnectedComp, 0 |  0 );
-  return resultobj;
-fail:
-  return NULL;
-}
-
-
-SWIGINTERN PyObject *_wrap_CvSeq_ConnectedComp___setitem__(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
-  PyObject *resultobj = 0;
-  CvTypedSeq<CvConnectedComp > *arg1 = (CvTypedSeq<CvConnectedComp > *) 0 ;
-  int arg2 ;
-  CvConnectedComp *arg3 = (CvConnectedComp *) 0 ;
-  void *argp1 = 0 ;
-  int res1 = 0 ;
-  int val2 ;
-  int ecode2 = 0 ;
-  void *argp3 = 0 ;
-  int res3 = 0 ;
-  PyObject * obj0 = 0 ;
-  PyObject * obj1 = 0 ;
-  PyObject * obj2 = 0 ;
-  
-  if (!PyArg_ParseTuple(args,(char *)"OOO:CvSeq_ConnectedComp___setitem__",&obj0,&obj1,&obj2)) SWIG_fail;
-  res1 = SWIG_ConvertPtr(obj0, &argp1,SWIGTYPE_p_CvTypedSeqTCvConnectedComp_t, 0 |  0 );
-  if (!SWIG_IsOK(res1)) {
-    SWIG_exception_fail(SWIG_ArgError(res1), "in method '" "CvSeq_ConnectedComp___setitem__" "', argument " "1"" of type '" "CvTypedSeq<CvConnectedComp > *""'"); 
-  }
-  arg1 = reinterpret_cast< CvTypedSeq<CvConnectedComp > * >(argp1);
-  ecode2 = SWIG_AsVal_int(obj1, &val2);
-  if (!SWIG_IsOK(ecode2)) {
-    SWIG_exception_fail(SWIG_ArgError(ecode2), "in method '" "CvSeq_ConnectedComp___setitem__" "', argument " "2"" of type '" "int""'");
-  } 
-  arg2 = static_cast< int >(val2);
-  res3 = SWIG_ConvertPtr(obj2, &argp3,SWIGTYPE_p_CvConnectedComp, 0 |  0 );
-  if (!SWIG_IsOK(res3)) {
-    SWIG_exception_fail(SWIG_ArgError(res3), "in method '" "CvSeq_ConnectedComp___setitem__" "', argument " "3"" of type '" "CvConnectedComp *""'"); 
-  }
-  arg3 = reinterpret_cast< CvConnectedComp * >(argp3);
-  {
-    try {
-      (arg1)->__setitem__(arg2,arg3); 
-    } 
-    catch (...) 
-    {
-      return NULL;
-    } 
-  }
-  resultobj = SWIG_Py_Void();
-  return resultobj;
-fail:
-  return NULL;
-}
-
-
-SWIGINTERN PyObject *_wrap_CvSeq_ConnectedComp_append(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
-  PyObject *resultobj = 0;
-  CvTypedSeq<CvConnectedComp > *arg1 = (CvTypedSeq<CvConnectedComp > *) 0 ;
-  CvConnectedComp *arg2 = (CvConnectedComp *) 0 ;
-  void *argp1 = 0 ;
-  int res1 = 0 ;
-  void *argp2 = 0 ;
-  int res2 = 0 ;
-  PyObject * obj0 = 0 ;
-  PyObject * obj1 = 0 ;
-  
-  if (!PyArg_ParseTuple(args,(char *)"OO:CvSeq_ConnectedComp_append",&obj0,&obj1)) SWIG_fail;
-  res1 = SWIG_ConvertPtr(obj0, &argp1,SWIGTYPE_p_CvTypedSeqTCvConnectedComp_t, 0 |  0 );
-  if (!SWIG_IsOK(res1)) {
-    SWIG_exception_fail(SWIG_ArgError(res1), "in method '" "CvSeq_ConnectedComp_append" "', argument " "1"" of type '" "CvTypedSeq<CvConnectedComp > *""'"); 
-  }
-  arg1 = reinterpret_cast< CvTypedSeq<CvConnectedComp > * >(argp1);
-  res2 = SWIG_ConvertPtr(obj1, &argp2,SWIGTYPE_p_CvConnectedComp, 0 |  0 );
-  if (!SWIG_IsOK(res2)) {
-    SWIG_exception_fail(SWIG_ArgError(res2), "in method '" "CvSeq_ConnectedComp_append" "', argument " "2"" of type '" "CvConnectedComp *""'"); 
-  }
-  arg2 = reinterpret_cast< CvConnectedComp * >(argp2);
-  {
-    try {
-      (arg1)->append(arg2); 
-    } 
-    catch (...) 
-    {
-      return NULL;
-    } 
-  }
-  resultobj = SWIG_Py_Void();
-  return resultobj;
-fail:
-  return NULL;
-}
-
-
-SWIGINTERN PyObject *_wrap_CvSeq_ConnectedComp_pop(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
-  PyObject *resultobj = 0;
-  CvTypedSeq<CvConnectedComp > *arg1 = (CvTypedSeq<CvConnectedComp > *) 0 ;
-  CvConnectedComp *result = 0 ;
-  void *argp1 = 0 ;
-  int res1 = 0 ;
-  PyObject * obj0 = 0 ;
-  
-  if (!PyArg_ParseTuple(args,(char *)"O:CvSeq_ConnectedComp_pop",&obj0)) SWIG_fail;
-  res1 = SWIG_ConvertPtr(obj0, &argp1,SWIGTYPE_p_CvTypedSeqTCvConnectedComp_t, 0 |  0 );
-  if (!SWIG_IsOK(res1)) {
-    SWIG_exception_fail(SWIG_ArgError(res1), "in method '" "CvSeq_ConnectedComp_pop" "', argument " "1"" of type '" "CvTypedSeq<CvConnectedComp > *""'"); 
-  }
-  arg1 = reinterpret_cast< CvTypedSeq<CvConnectedComp > * >(argp1);
-  {
-    try {
-      result = (CvConnectedComp *)(arg1)->pop(); 
-    } 
-    catch (...) 
-    {
-      return NULL;
-    } 
-  }
-  resultobj = SWIG_NewPointerObj(SWIG_as_voidptr(result), SWIGTYPE_p_CvConnectedComp, 0 |  0 );
-  return resultobj;
-fail:
-  return NULL;
-}
-
-
-SWIGINTERN PyObject *_wrap_new_CvSeq_ConnectedComp(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
-  PyObject *resultobj = 0;
-  CvTypedSeq<CvConnectedComp > *result = 0 ;
-  
-  if (!PyArg_ParseTuple(args,(char *)":new_CvSeq_ConnectedComp")) SWIG_fail;
-  {
-    try {
-      result = (CvTypedSeq<CvConnectedComp > *)new CvTypedSeq<CvConnectedComp >(); 
-    } 
-    catch (...) 
-    {
-      return NULL;
-    } 
-  }
-  resultobj = SWIG_NewPointerObj(SWIG_as_voidptr(result), SWIGTYPE_p_CvTypedSeqTCvConnectedComp_t, SWIG_POINTER_NEW |  0 );
-  return resultobj;
-fail:
-  return NULL;
-}
-
-
-SWIGINTERN PyObject *_wrap_delete_CvSeq_ConnectedComp(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
-  PyObject *resultobj = 0;
-  CvTypedSeq<CvConnectedComp > *arg1 = (CvTypedSeq<CvConnectedComp > *) 0 ;
-  void *argp1 = 0 ;
-  int res1 = 0 ;
-  PyObject * obj0 = 0 ;
-  
-  if (!PyArg_ParseTuple(args,(char *)"O:delete_CvSeq_ConnectedComp",&obj0)) SWIG_fail;
-  res1 = SWIG_ConvertPtr(obj0, &argp1,SWIGTYPE_p_CvTypedSeqTCvConnectedComp_t, SWIG_POINTER_DISOWN |  0 );
-  if (!SWIG_IsOK(res1)) {
-    SWIG_exception_fail(SWIG_ArgError(res1), "in method '" "delete_CvSeq_ConnectedComp" "', argument " "1"" of type '" "CvTypedSeq<CvConnectedComp > *""'"); 
-  }
-  arg1 = reinterpret_cast< CvTypedSeq<CvConnectedComp > * >(argp1);
-  {
-    try {
-      delete arg1;
-    } 
-    catch (...) 
-    {
-      return NULL;
-    } 
-  }
-  resultobj = SWIG_Py_Void();
-  return resultobj;
-fail:
-  return NULL;
-}
-
-
-SWIGINTERN PyObject *CvSeq_ConnectedComp_swigregister(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
-  PyObject *obj;
-  if (!PyArg_ParseTuple(args,(char*)"O|swigregister", &obj)) return NULL;
-  SWIG_TypeNewClientData(SWIGTYPE_p_CvTypedSeqTCvConnectedComp_t, SWIG_NewClientData(obj));
-  return SWIG_Py_Void();
-}
-
 SWIGINTERN PyObject *_wrap_CvTuple_CvPoint_2_val_set(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
   PyObject *resultobj = 0;
   CvTuple<CvPoint,2 > *arg1 = (CvTuple<CvPoint,2 > *) 0 ;
@@ -96599,14 +95294,1512 @@ SWIGINTERN PyObject *CvTuple_float_3_swigregister(PyObject *SWIGUNUSEDPARM(self)
   return SWIG_Py_Void();
 }
 
-SWIGINTERN PyObject *_wrap_CvSeq_Point_2_cast(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
+SWIGINTERN PyObject *_wrap_CvSeq_CvPoint_cast(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
+  PyObject *resultobj = 0;
+  CvSeq *arg1 = (CvSeq *) 0 ;
+  CvTypedSeq<CvPoint > *result = 0 ;
+  void *ptr1 ;
+  PyObject * obj0 = 0 ;
+  
+  if (!PyArg_ParseTuple(args,(char *)"O:CvSeq_CvPoint_cast",&obj0)) SWIG_fail;
+  {
+    if( SWIG_ConvertPtr(obj0, &ptr1, SWIGTYPE_p_CvSeq, 0) == -1 &&
+      SWIG_ConvertPtr(obj0, &ptr1, SWIGTYPE_p_CvSet, 0) == -1 &&
+      SWIG_ConvertPtr(obj0, &ptr1, SWIGTYPE_p_CvGraph, 0) == -1 &&
+      SWIG_ConvertPtr(obj0, &ptr1, SWIGTYPE_p_CvSubdiv2D, 0) == -1 &&
+      SWIG_ConvertPtr(obj0, &ptr1, SWIGTYPE_p_CvChain, 0) == -1 &&
+      SWIG_ConvertPtr(obj0, &ptr1, SWIGTYPE_p_CvContour, 0) == -1 &&
+      SWIG_ConvertPtr(obj0, &ptr1, SWIGTYPE_p_CvContourTree, 0) == -1 )
+    {
+      SWIG_exception (SWIG_TypeError, "could not convert to CvSeq");
+      return NULL;
+    }
+    arg1 = (CvSeq *) ptr1;
+  }
+  {
+    try {
+      result = (CvTypedSeq<CvPoint > *)CvTypedSeq<CvPoint >::SWIGTEMPLATEDISAMBIGUATOR cast(arg1); 
+    } 
+    catch (...) 
+    {
+      return NULL;
+    } 
+  }
+  resultobj = SWIG_NewPointerObj(SWIG_as_voidptr(result), SWIGTYPE_p_CvTypedSeqTCvPoint_t, 0 |  0 );
+  return resultobj;
+fail:
+  return NULL;
+}
+
+
+SWIGINTERN PyObject *_wrap_CvSeq_CvPoint___getitem__(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
+  PyObject *resultobj = 0;
+  CvTypedSeq<CvPoint > *arg1 = (CvTypedSeq<CvPoint > *) 0 ;
+  int arg2 ;
+  CvPoint *result = 0 ;
+  void *argp1 = 0 ;
+  int res1 = 0 ;
+  int val2 ;
+  int ecode2 = 0 ;
+  PyObject * obj0 = 0 ;
+  PyObject * obj1 = 0 ;
+  
+  if (!PyArg_ParseTuple(args,(char *)"OO:CvSeq_CvPoint___getitem__",&obj0,&obj1)) SWIG_fail;
+  res1 = SWIG_ConvertPtr(obj0, &argp1,SWIGTYPE_p_CvTypedSeqTCvPoint_t, 0 |  0 );
+  if (!SWIG_IsOK(res1)) {
+    SWIG_exception_fail(SWIG_ArgError(res1), "in method '" "CvSeq_CvPoint___getitem__" "', argument " "1"" of type '" "CvTypedSeq<CvPoint > *""'"); 
+  }
+  arg1 = reinterpret_cast< CvTypedSeq<CvPoint > * >(argp1);
+  ecode2 = SWIG_AsVal_int(obj1, &val2);
+  if (!SWIG_IsOK(ecode2)) {
+    SWIG_exception_fail(SWIG_ArgError(ecode2), "in method '" "CvSeq_CvPoint___getitem__" "', argument " "2"" of type '" "int""'");
+  } 
+  arg2 = static_cast< int >(val2);
+  {
+    try {
+      result = (CvPoint *)(arg1)->__getitem__(arg2); 
+    } 
+    catch (...) 
+    {
+      return NULL;
+    } 
+  }
+  resultobj = SWIG_NewPointerObj(SWIG_as_voidptr(result), SWIGTYPE_p_CvPoint, 0 |  0 );
+  return resultobj;
+fail:
+  return NULL;
+}
+
+
+SWIGINTERN PyObject *_wrap_CvSeq_CvPoint___setitem__(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
+  PyObject *resultobj = 0;
+  CvTypedSeq<CvPoint > *arg1 = (CvTypedSeq<CvPoint > *) 0 ;
+  int arg2 ;
+  CvPoint *arg3 = (CvPoint *) 0 ;
+  void *argp1 = 0 ;
+  int res1 = 0 ;
+  int val2 ;
+  int ecode2 = 0 ;
+  void *argp3 = 0 ;
+  int res3 = 0 ;
+  PyObject * obj0 = 0 ;
+  PyObject * obj1 = 0 ;
+  PyObject * obj2 = 0 ;
+  
+  if (!PyArg_ParseTuple(args,(char *)"OOO:CvSeq_CvPoint___setitem__",&obj0,&obj1,&obj2)) SWIG_fail;
+  res1 = SWIG_ConvertPtr(obj0, &argp1,SWIGTYPE_p_CvTypedSeqTCvPoint_t, 0 |  0 );
+  if (!SWIG_IsOK(res1)) {
+    SWIG_exception_fail(SWIG_ArgError(res1), "in method '" "CvSeq_CvPoint___setitem__" "', argument " "1"" of type '" "CvTypedSeq<CvPoint > *""'"); 
+  }
+  arg1 = reinterpret_cast< CvTypedSeq<CvPoint > * >(argp1);
+  ecode2 = SWIG_AsVal_int(obj1, &val2);
+  if (!SWIG_IsOK(ecode2)) {
+    SWIG_exception_fail(SWIG_ArgError(ecode2), "in method '" "CvSeq_CvPoint___setitem__" "', argument " "2"" of type '" "int""'");
+  } 
+  arg2 = static_cast< int >(val2);
+  res3 = SWIG_ConvertPtr(obj2, &argp3,SWIGTYPE_p_CvPoint, 0 |  0 );
+  if (!SWIG_IsOK(res3)) {
+    SWIG_exception_fail(SWIG_ArgError(res3), "in method '" "CvSeq_CvPoint___setitem__" "', argument " "3"" of type '" "CvPoint *""'"); 
+  }
+  arg3 = reinterpret_cast< CvPoint * >(argp3);
+  {
+    try {
+      (arg1)->__setitem__(arg2,arg3); 
+    } 
+    catch (...) 
+    {
+      return NULL;
+    } 
+  }
+  resultobj = SWIG_Py_Void();
+  return resultobj;
+fail:
+  return NULL;
+}
+
+
+SWIGINTERN PyObject *_wrap_CvSeq_CvPoint_append(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
+  PyObject *resultobj = 0;
+  CvTypedSeq<CvPoint > *arg1 = (CvTypedSeq<CvPoint > *) 0 ;
+  CvPoint *arg2 = (CvPoint *) 0 ;
+  void *argp1 = 0 ;
+  int res1 = 0 ;
+  void *argp2 = 0 ;
+  int res2 = 0 ;
+  PyObject * obj0 = 0 ;
+  PyObject * obj1 = 0 ;
+  
+  if (!PyArg_ParseTuple(args,(char *)"OO:CvSeq_CvPoint_append",&obj0,&obj1)) SWIG_fail;
+  res1 = SWIG_ConvertPtr(obj0, &argp1,SWIGTYPE_p_CvTypedSeqTCvPoint_t, 0 |  0 );
+  if (!SWIG_IsOK(res1)) {
+    SWIG_exception_fail(SWIG_ArgError(res1), "in method '" "CvSeq_CvPoint_append" "', argument " "1"" of type '" "CvTypedSeq<CvPoint > *""'"); 
+  }
+  arg1 = reinterpret_cast< CvTypedSeq<CvPoint > * >(argp1);
+  res2 = SWIG_ConvertPtr(obj1, &argp2,SWIGTYPE_p_CvPoint, 0 |  0 );
+  if (!SWIG_IsOK(res2)) {
+    SWIG_exception_fail(SWIG_ArgError(res2), "in method '" "CvSeq_CvPoint_append" "', argument " "2"" of type '" "CvPoint *""'"); 
+  }
+  arg2 = reinterpret_cast< CvPoint * >(argp2);
+  {
+    try {
+      (arg1)->append(arg2); 
+    } 
+    catch (...) 
+    {
+      return NULL;
+    } 
+  }
+  resultobj = SWIG_Py_Void();
+  return resultobj;
+fail:
+  return NULL;
+}
+
+
+SWIGINTERN PyObject *_wrap_CvSeq_CvPoint_pop(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
+  PyObject *resultobj = 0;
+  CvTypedSeq<CvPoint > *arg1 = (CvTypedSeq<CvPoint > *) 0 ;
+  CvPoint *result = 0 ;
+  void *argp1 = 0 ;
+  int res1 = 0 ;
+  PyObject * obj0 = 0 ;
+  
+  if (!PyArg_ParseTuple(args,(char *)"O:CvSeq_CvPoint_pop",&obj0)) SWIG_fail;
+  res1 = SWIG_ConvertPtr(obj0, &argp1,SWIGTYPE_p_CvTypedSeqTCvPoint_t, 0 |  0 );
+  if (!SWIG_IsOK(res1)) {
+    SWIG_exception_fail(SWIG_ArgError(res1), "in method '" "CvSeq_CvPoint_pop" "', argument " "1"" of type '" "CvTypedSeq<CvPoint > *""'"); 
+  }
+  arg1 = reinterpret_cast< CvTypedSeq<CvPoint > * >(argp1);
+  {
+    try {
+      result = (CvPoint *)(arg1)->pop(); 
+    } 
+    catch (...) 
+    {
+      return NULL;
+    } 
+  }
+  resultobj = SWIG_NewPointerObj(SWIG_as_voidptr(result), SWIGTYPE_p_CvPoint, 0 |  0 );
+  return resultobj;
+fail:
+  return NULL;
+}
+
+
+SWIGINTERN PyObject *_wrap_new_CvSeq_CvPoint(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
+  PyObject *resultobj = 0;
+  CvTypedSeq<CvPoint > *result = 0 ;
+  
+  if (!PyArg_ParseTuple(args,(char *)":new_CvSeq_CvPoint")) SWIG_fail;
+  {
+    try {
+      result = (CvTypedSeq<CvPoint > *)new CvTypedSeq<CvPoint >(); 
+    } 
+    catch (...) 
+    {
+      return NULL;
+    } 
+  }
+  resultobj = SWIG_NewPointerObj(SWIG_as_voidptr(result), SWIGTYPE_p_CvTypedSeqTCvPoint_t, SWIG_POINTER_NEW |  0 );
+  return resultobj;
+fail:
+  return NULL;
+}
+
+
+SWIGINTERN PyObject *_wrap_delete_CvSeq_CvPoint(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
+  PyObject *resultobj = 0;
+  CvTypedSeq<CvPoint > *arg1 = (CvTypedSeq<CvPoint > *) 0 ;
+  void *argp1 = 0 ;
+  int res1 = 0 ;
+  PyObject * obj0 = 0 ;
+  
+  if (!PyArg_ParseTuple(args,(char *)"O:delete_CvSeq_CvPoint",&obj0)) SWIG_fail;
+  res1 = SWIG_ConvertPtr(obj0, &argp1,SWIGTYPE_p_CvTypedSeqTCvPoint_t, SWIG_POINTER_DISOWN |  0 );
+  if (!SWIG_IsOK(res1)) {
+    SWIG_exception_fail(SWIG_ArgError(res1), "in method '" "delete_CvSeq_CvPoint" "', argument " "1"" of type '" "CvTypedSeq<CvPoint > *""'"); 
+  }
+  arg1 = reinterpret_cast< CvTypedSeq<CvPoint > * >(argp1);
+  {
+    try {
+      delete arg1;
+    } 
+    catch (...) 
+    {
+      return NULL;
+    } 
+  }
+  resultobj = SWIG_Py_Void();
+  return resultobj;
+fail:
+  return NULL;
+}
+
+
+SWIGINTERN PyObject *CvSeq_CvPoint_swigregister(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
+  PyObject *obj;
+  if (!PyArg_ParseTuple(args,(char*)"O|swigregister", &obj)) return NULL;
+  SWIG_TypeNewClientData(SWIGTYPE_p_CvTypedSeqTCvPoint_t, SWIG_NewClientData(obj));
+  return SWIG_Py_Void();
+}
+
+SWIGINTERN PyObject *_wrap_CvSeq_CvPoint2D32f_cast(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
+  PyObject *resultobj = 0;
+  CvSeq *arg1 = (CvSeq *) 0 ;
+  CvTypedSeq<CvPoint2D32f > *result = 0 ;
+  void *ptr1 ;
+  PyObject * obj0 = 0 ;
+  
+  if (!PyArg_ParseTuple(args,(char *)"O:CvSeq_CvPoint2D32f_cast",&obj0)) SWIG_fail;
+  {
+    if( SWIG_ConvertPtr(obj0, &ptr1, SWIGTYPE_p_CvSeq, 0) == -1 &&
+      SWIG_ConvertPtr(obj0, &ptr1, SWIGTYPE_p_CvSet, 0) == -1 &&
+      SWIG_ConvertPtr(obj0, &ptr1, SWIGTYPE_p_CvGraph, 0) == -1 &&
+      SWIG_ConvertPtr(obj0, &ptr1, SWIGTYPE_p_CvSubdiv2D, 0) == -1 &&
+      SWIG_ConvertPtr(obj0, &ptr1, SWIGTYPE_p_CvChain, 0) == -1 &&
+      SWIG_ConvertPtr(obj0, &ptr1, SWIGTYPE_p_CvContour, 0) == -1 &&
+      SWIG_ConvertPtr(obj0, &ptr1, SWIGTYPE_p_CvContourTree, 0) == -1 )
+    {
+      SWIG_exception (SWIG_TypeError, "could not convert to CvSeq");
+      return NULL;
+    }
+    arg1 = (CvSeq *) ptr1;
+  }
+  {
+    try {
+      result = (CvTypedSeq<CvPoint2D32f > *)CvTypedSeq<CvPoint2D32f >::SWIGTEMPLATEDISAMBIGUATOR cast(arg1); 
+    } 
+    catch (...) 
+    {
+      return NULL;
+    } 
+  }
+  resultobj = SWIG_NewPointerObj(SWIG_as_voidptr(result), SWIGTYPE_p_CvTypedSeqTCvPoint2D32f_t, 0 |  0 );
+  return resultobj;
+fail:
+  return NULL;
+}
+
+
+SWIGINTERN PyObject *_wrap_CvSeq_CvPoint2D32f___getitem__(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
+  PyObject *resultobj = 0;
+  CvTypedSeq<CvPoint2D32f > *arg1 = (CvTypedSeq<CvPoint2D32f > *) 0 ;
+  int arg2 ;
+  CvPoint2D32f *result = 0 ;
+  void *argp1 = 0 ;
+  int res1 = 0 ;
+  int val2 ;
+  int ecode2 = 0 ;
+  PyObject * obj0 = 0 ;
+  PyObject * obj1 = 0 ;
+  
+  if (!PyArg_ParseTuple(args,(char *)"OO:CvSeq_CvPoint2D32f___getitem__",&obj0,&obj1)) SWIG_fail;
+  res1 = SWIG_ConvertPtr(obj0, &argp1,SWIGTYPE_p_CvTypedSeqTCvPoint2D32f_t, 0 |  0 );
+  if (!SWIG_IsOK(res1)) {
+    SWIG_exception_fail(SWIG_ArgError(res1), "in method '" "CvSeq_CvPoint2D32f___getitem__" "', argument " "1"" of type '" "CvTypedSeq<CvPoint2D32f > *""'"); 
+  }
+  arg1 = reinterpret_cast< CvTypedSeq<CvPoint2D32f > * >(argp1);
+  ecode2 = SWIG_AsVal_int(obj1, &val2);
+  if (!SWIG_IsOK(ecode2)) {
+    SWIG_exception_fail(SWIG_ArgError(ecode2), "in method '" "CvSeq_CvPoint2D32f___getitem__" "', argument " "2"" of type '" "int""'");
+  } 
+  arg2 = static_cast< int >(val2);
+  {
+    try {
+      result = (CvPoint2D32f *)(arg1)->__getitem__(arg2); 
+    } 
+    catch (...) 
+    {
+      return NULL;
+    } 
+  }
+  resultobj = SWIG_NewPointerObj(SWIG_as_voidptr(result), SWIGTYPE_p_CvPoint2D32f, 0 |  0 );
+  return resultobj;
+fail:
+  return NULL;
+}
+
+
+SWIGINTERN PyObject *_wrap_CvSeq_CvPoint2D32f___setitem__(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
+  PyObject *resultobj = 0;
+  CvTypedSeq<CvPoint2D32f > *arg1 = (CvTypedSeq<CvPoint2D32f > *) 0 ;
+  int arg2 ;
+  CvPoint2D32f *arg3 = (CvPoint2D32f *) 0 ;
+  void *argp1 = 0 ;
+  int res1 = 0 ;
+  int val2 ;
+  int ecode2 = 0 ;
+  void *argp3 = 0 ;
+  int res3 = 0 ;
+  PyObject * obj0 = 0 ;
+  PyObject * obj1 = 0 ;
+  PyObject * obj2 = 0 ;
+  
+  if (!PyArg_ParseTuple(args,(char *)"OOO:CvSeq_CvPoint2D32f___setitem__",&obj0,&obj1,&obj2)) SWIG_fail;
+  res1 = SWIG_ConvertPtr(obj0, &argp1,SWIGTYPE_p_CvTypedSeqTCvPoint2D32f_t, 0 |  0 );
+  if (!SWIG_IsOK(res1)) {
+    SWIG_exception_fail(SWIG_ArgError(res1), "in method '" "CvSeq_CvPoint2D32f___setitem__" "', argument " "1"" of type '" "CvTypedSeq<CvPoint2D32f > *""'"); 
+  }
+  arg1 = reinterpret_cast< CvTypedSeq<CvPoint2D32f > * >(argp1);
+  ecode2 = SWIG_AsVal_int(obj1, &val2);
+  if (!SWIG_IsOK(ecode2)) {
+    SWIG_exception_fail(SWIG_ArgError(ecode2), "in method '" "CvSeq_CvPoint2D32f___setitem__" "', argument " "2"" of type '" "int""'");
+  } 
+  arg2 = static_cast< int >(val2);
+  res3 = SWIG_ConvertPtr(obj2, &argp3,SWIGTYPE_p_CvPoint2D32f, 0 |  0 );
+  if (!SWIG_IsOK(res3)) {
+    SWIG_exception_fail(SWIG_ArgError(res3), "in method '" "CvSeq_CvPoint2D32f___setitem__" "', argument " "3"" of type '" "CvPoint2D32f *""'"); 
+  }
+  arg3 = reinterpret_cast< CvPoint2D32f * >(argp3);
+  {
+    try {
+      (arg1)->__setitem__(arg2,arg3); 
+    } 
+    catch (...) 
+    {
+      return NULL;
+    } 
+  }
+  resultobj = SWIG_Py_Void();
+  return resultobj;
+fail:
+  return NULL;
+}
+
+
+SWIGINTERN PyObject *_wrap_CvSeq_CvPoint2D32f_append(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
+  PyObject *resultobj = 0;
+  CvTypedSeq<CvPoint2D32f > *arg1 = (CvTypedSeq<CvPoint2D32f > *) 0 ;
+  CvPoint2D32f *arg2 = (CvPoint2D32f *) 0 ;
+  void *argp1 = 0 ;
+  int res1 = 0 ;
+  void *argp2 = 0 ;
+  int res2 = 0 ;
+  PyObject * obj0 = 0 ;
+  PyObject * obj1 = 0 ;
+  
+  if (!PyArg_ParseTuple(args,(char *)"OO:CvSeq_CvPoint2D32f_append",&obj0,&obj1)) SWIG_fail;
+  res1 = SWIG_ConvertPtr(obj0, &argp1,SWIGTYPE_p_CvTypedSeqTCvPoint2D32f_t, 0 |  0 );
+  if (!SWIG_IsOK(res1)) {
+    SWIG_exception_fail(SWIG_ArgError(res1), "in method '" "CvSeq_CvPoint2D32f_append" "', argument " "1"" of type '" "CvTypedSeq<CvPoint2D32f > *""'"); 
+  }
+  arg1 = reinterpret_cast< CvTypedSeq<CvPoint2D32f > * >(argp1);
+  res2 = SWIG_ConvertPtr(obj1, &argp2,SWIGTYPE_p_CvPoint2D32f, 0 |  0 );
+  if (!SWIG_IsOK(res2)) {
+    SWIG_exception_fail(SWIG_ArgError(res2), "in method '" "CvSeq_CvPoint2D32f_append" "', argument " "2"" of type '" "CvPoint2D32f *""'"); 
+  }
+  arg2 = reinterpret_cast< CvPoint2D32f * >(argp2);
+  {
+    try {
+      (arg1)->append(arg2); 
+    } 
+    catch (...) 
+    {
+      return NULL;
+    } 
+  }
+  resultobj = SWIG_Py_Void();
+  return resultobj;
+fail:
+  return NULL;
+}
+
+
+SWIGINTERN PyObject *_wrap_CvSeq_CvPoint2D32f_pop(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
+  PyObject *resultobj = 0;
+  CvTypedSeq<CvPoint2D32f > *arg1 = (CvTypedSeq<CvPoint2D32f > *) 0 ;
+  CvPoint2D32f *result = 0 ;
+  void *argp1 = 0 ;
+  int res1 = 0 ;
+  PyObject * obj0 = 0 ;
+  
+  if (!PyArg_ParseTuple(args,(char *)"O:CvSeq_CvPoint2D32f_pop",&obj0)) SWIG_fail;
+  res1 = SWIG_ConvertPtr(obj0, &argp1,SWIGTYPE_p_CvTypedSeqTCvPoint2D32f_t, 0 |  0 );
+  if (!SWIG_IsOK(res1)) {
+    SWIG_exception_fail(SWIG_ArgError(res1), "in method '" "CvSeq_CvPoint2D32f_pop" "', argument " "1"" of type '" "CvTypedSeq<CvPoint2D32f > *""'"); 
+  }
+  arg1 = reinterpret_cast< CvTypedSeq<CvPoint2D32f > * >(argp1);
+  {
+    try {
+      result = (CvPoint2D32f *)(arg1)->pop(); 
+    } 
+    catch (...) 
+    {
+      return NULL;
+    } 
+  }
+  resultobj = SWIG_NewPointerObj(SWIG_as_voidptr(result), SWIGTYPE_p_CvPoint2D32f, 0 |  0 );
+  return resultobj;
+fail:
+  return NULL;
+}
+
+
+SWIGINTERN PyObject *_wrap_new_CvSeq_CvPoint2D32f(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
+  PyObject *resultobj = 0;
+  CvTypedSeq<CvPoint2D32f > *result = 0 ;
+  
+  if (!PyArg_ParseTuple(args,(char *)":new_CvSeq_CvPoint2D32f")) SWIG_fail;
+  {
+    try {
+      result = (CvTypedSeq<CvPoint2D32f > *)new CvTypedSeq<CvPoint2D32f >(); 
+    } 
+    catch (...) 
+    {
+      return NULL;
+    } 
+  }
+  resultobj = SWIG_NewPointerObj(SWIG_as_voidptr(result), SWIGTYPE_p_CvTypedSeqTCvPoint2D32f_t, SWIG_POINTER_NEW |  0 );
+  return resultobj;
+fail:
+  return NULL;
+}
+
+
+SWIGINTERN PyObject *_wrap_delete_CvSeq_CvPoint2D32f(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
+  PyObject *resultobj = 0;
+  CvTypedSeq<CvPoint2D32f > *arg1 = (CvTypedSeq<CvPoint2D32f > *) 0 ;
+  void *argp1 = 0 ;
+  int res1 = 0 ;
+  PyObject * obj0 = 0 ;
+  
+  if (!PyArg_ParseTuple(args,(char *)"O:delete_CvSeq_CvPoint2D32f",&obj0)) SWIG_fail;
+  res1 = SWIG_ConvertPtr(obj0, &argp1,SWIGTYPE_p_CvTypedSeqTCvPoint2D32f_t, SWIG_POINTER_DISOWN |  0 );
+  if (!SWIG_IsOK(res1)) {
+    SWIG_exception_fail(SWIG_ArgError(res1), "in method '" "delete_CvSeq_CvPoint2D32f" "', argument " "1"" of type '" "CvTypedSeq<CvPoint2D32f > *""'"); 
+  }
+  arg1 = reinterpret_cast< CvTypedSeq<CvPoint2D32f > * >(argp1);
+  {
+    try {
+      delete arg1;
+    } 
+    catch (...) 
+    {
+      return NULL;
+    } 
+  }
+  resultobj = SWIG_Py_Void();
+  return resultobj;
+fail:
+  return NULL;
+}
+
+
+SWIGINTERN PyObject *CvSeq_CvPoint2D32f_swigregister(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
+  PyObject *obj;
+  if (!PyArg_ParseTuple(args,(char*)"O|swigregister", &obj)) return NULL;
+  SWIG_TypeNewClientData(SWIGTYPE_p_CvTypedSeqTCvPoint2D32f_t, SWIG_NewClientData(obj));
+  return SWIG_Py_Void();
+}
+
+SWIGINTERN PyObject *_wrap_CvSeq_CvRect_cast(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
+  PyObject *resultobj = 0;
+  CvSeq *arg1 = (CvSeq *) 0 ;
+  CvTypedSeq<CvRect > *result = 0 ;
+  void *ptr1 ;
+  PyObject * obj0 = 0 ;
+  
+  if (!PyArg_ParseTuple(args,(char *)"O:CvSeq_CvRect_cast",&obj0)) SWIG_fail;
+  {
+    if( SWIG_ConvertPtr(obj0, &ptr1, SWIGTYPE_p_CvSeq, 0) == -1 &&
+      SWIG_ConvertPtr(obj0, &ptr1, SWIGTYPE_p_CvSet, 0) == -1 &&
+      SWIG_ConvertPtr(obj0, &ptr1, SWIGTYPE_p_CvGraph, 0) == -1 &&
+      SWIG_ConvertPtr(obj0, &ptr1, SWIGTYPE_p_CvSubdiv2D, 0) == -1 &&
+      SWIG_ConvertPtr(obj0, &ptr1, SWIGTYPE_p_CvChain, 0) == -1 &&
+      SWIG_ConvertPtr(obj0, &ptr1, SWIGTYPE_p_CvContour, 0) == -1 &&
+      SWIG_ConvertPtr(obj0, &ptr1, SWIGTYPE_p_CvContourTree, 0) == -1 )
+    {
+      SWIG_exception (SWIG_TypeError, "could not convert to CvSeq");
+      return NULL;
+    }
+    arg1 = (CvSeq *) ptr1;
+  }
+  {
+    try {
+      result = (CvTypedSeq<CvRect > *)CvTypedSeq<CvRect >::SWIGTEMPLATEDISAMBIGUATOR cast(arg1); 
+    } 
+    catch (...) 
+    {
+      return NULL;
+    } 
+  }
+  resultobj = SWIG_NewPointerObj(SWIG_as_voidptr(result), SWIGTYPE_p_CvTypedSeqTCvRect_t, 0 |  0 );
+  return resultobj;
+fail:
+  return NULL;
+}
+
+
+SWIGINTERN PyObject *_wrap_CvSeq_CvRect___getitem__(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
+  PyObject *resultobj = 0;
+  CvTypedSeq<CvRect > *arg1 = (CvTypedSeq<CvRect > *) 0 ;
+  int arg2 ;
+  CvRect *result = 0 ;
+  void *argp1 = 0 ;
+  int res1 = 0 ;
+  int val2 ;
+  int ecode2 = 0 ;
+  PyObject * obj0 = 0 ;
+  PyObject * obj1 = 0 ;
+  
+  if (!PyArg_ParseTuple(args,(char *)"OO:CvSeq_CvRect___getitem__",&obj0,&obj1)) SWIG_fail;
+  res1 = SWIG_ConvertPtr(obj0, &argp1,SWIGTYPE_p_CvTypedSeqTCvRect_t, 0 |  0 );
+  if (!SWIG_IsOK(res1)) {
+    SWIG_exception_fail(SWIG_ArgError(res1), "in method '" "CvSeq_CvRect___getitem__" "', argument " "1"" of type '" "CvTypedSeq<CvRect > *""'"); 
+  }
+  arg1 = reinterpret_cast< CvTypedSeq<CvRect > * >(argp1);
+  ecode2 = SWIG_AsVal_int(obj1, &val2);
+  if (!SWIG_IsOK(ecode2)) {
+    SWIG_exception_fail(SWIG_ArgError(ecode2), "in method '" "CvSeq_CvRect___getitem__" "', argument " "2"" of type '" "int""'");
+  } 
+  arg2 = static_cast< int >(val2);
+  {
+    try {
+      result = (CvRect *)(arg1)->__getitem__(arg2); 
+    } 
+    catch (...) 
+    {
+      return NULL;
+    } 
+  }
+  resultobj = SWIG_NewPointerObj(SWIG_as_voidptr(result), SWIGTYPE_p_CvRect, 0 |  0 );
+  return resultobj;
+fail:
+  return NULL;
+}
+
+
+SWIGINTERN PyObject *_wrap_CvSeq_CvRect___setitem__(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
+  PyObject *resultobj = 0;
+  CvTypedSeq<CvRect > *arg1 = (CvTypedSeq<CvRect > *) 0 ;
+  int arg2 ;
+  CvRect *arg3 = (CvRect *) 0 ;
+  void *argp1 = 0 ;
+  int res1 = 0 ;
+  int val2 ;
+  int ecode2 = 0 ;
+  void *argp3 = 0 ;
+  int res3 = 0 ;
+  PyObject * obj0 = 0 ;
+  PyObject * obj1 = 0 ;
+  PyObject * obj2 = 0 ;
+  
+  if (!PyArg_ParseTuple(args,(char *)"OOO:CvSeq_CvRect___setitem__",&obj0,&obj1,&obj2)) SWIG_fail;
+  res1 = SWIG_ConvertPtr(obj0, &argp1,SWIGTYPE_p_CvTypedSeqTCvRect_t, 0 |  0 );
+  if (!SWIG_IsOK(res1)) {
+    SWIG_exception_fail(SWIG_ArgError(res1), "in method '" "CvSeq_CvRect___setitem__" "', argument " "1"" of type '" "CvTypedSeq<CvRect > *""'"); 
+  }
+  arg1 = reinterpret_cast< CvTypedSeq<CvRect > * >(argp1);
+  ecode2 = SWIG_AsVal_int(obj1, &val2);
+  if (!SWIG_IsOK(ecode2)) {
+    SWIG_exception_fail(SWIG_ArgError(ecode2), "in method '" "CvSeq_CvRect___setitem__" "', argument " "2"" of type '" "int""'");
+  } 
+  arg2 = static_cast< int >(val2);
+  res3 = SWIG_ConvertPtr(obj2, &argp3,SWIGTYPE_p_CvRect, 0 |  0 );
+  if (!SWIG_IsOK(res3)) {
+    SWIG_exception_fail(SWIG_ArgError(res3), "in method '" "CvSeq_CvRect___setitem__" "', argument " "3"" of type '" "CvRect *""'"); 
+  }
+  arg3 = reinterpret_cast< CvRect * >(argp3);
+  {
+    try {
+      (arg1)->__setitem__(arg2,arg3); 
+    } 
+    catch (...) 
+    {
+      return NULL;
+    } 
+  }
+  resultobj = SWIG_Py_Void();
+  return resultobj;
+fail:
+  return NULL;
+}
+
+
+SWIGINTERN PyObject *_wrap_CvSeq_CvRect_append(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
+  PyObject *resultobj = 0;
+  CvTypedSeq<CvRect > *arg1 = (CvTypedSeq<CvRect > *) 0 ;
+  CvRect *arg2 = (CvRect *) 0 ;
+  void *argp1 = 0 ;
+  int res1 = 0 ;
+  void *argp2 = 0 ;
+  int res2 = 0 ;
+  PyObject * obj0 = 0 ;
+  PyObject * obj1 = 0 ;
+  
+  if (!PyArg_ParseTuple(args,(char *)"OO:CvSeq_CvRect_append",&obj0,&obj1)) SWIG_fail;
+  res1 = SWIG_ConvertPtr(obj0, &argp1,SWIGTYPE_p_CvTypedSeqTCvRect_t, 0 |  0 );
+  if (!SWIG_IsOK(res1)) {
+    SWIG_exception_fail(SWIG_ArgError(res1), "in method '" "CvSeq_CvRect_append" "', argument " "1"" of type '" "CvTypedSeq<CvRect > *""'"); 
+  }
+  arg1 = reinterpret_cast< CvTypedSeq<CvRect > * >(argp1);
+  res2 = SWIG_ConvertPtr(obj1, &argp2,SWIGTYPE_p_CvRect, 0 |  0 );
+  if (!SWIG_IsOK(res2)) {
+    SWIG_exception_fail(SWIG_ArgError(res2), "in method '" "CvSeq_CvRect_append" "', argument " "2"" of type '" "CvRect *""'"); 
+  }
+  arg2 = reinterpret_cast< CvRect * >(argp2);
+  {
+    try {
+      (arg1)->append(arg2); 
+    } 
+    catch (...) 
+    {
+      return NULL;
+    } 
+  }
+  resultobj = SWIG_Py_Void();
+  return resultobj;
+fail:
+  return NULL;
+}
+
+
+SWIGINTERN PyObject *_wrap_CvSeq_CvRect_pop(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
+  PyObject *resultobj = 0;
+  CvTypedSeq<CvRect > *arg1 = (CvTypedSeq<CvRect > *) 0 ;
+  CvRect *result = 0 ;
+  void *argp1 = 0 ;
+  int res1 = 0 ;
+  PyObject * obj0 = 0 ;
+  
+  if (!PyArg_ParseTuple(args,(char *)"O:CvSeq_CvRect_pop",&obj0)) SWIG_fail;
+  res1 = SWIG_ConvertPtr(obj0, &argp1,SWIGTYPE_p_CvTypedSeqTCvRect_t, 0 |  0 );
+  if (!SWIG_IsOK(res1)) {
+    SWIG_exception_fail(SWIG_ArgError(res1), "in method '" "CvSeq_CvRect_pop" "', argument " "1"" of type '" "CvTypedSeq<CvRect > *""'"); 
+  }
+  arg1 = reinterpret_cast< CvTypedSeq<CvRect > * >(argp1);
+  {
+    try {
+      result = (CvRect *)(arg1)->pop(); 
+    } 
+    catch (...) 
+    {
+      return NULL;
+    } 
+  }
+  resultobj = SWIG_NewPointerObj(SWIG_as_voidptr(result), SWIGTYPE_p_CvRect, 0 |  0 );
+  return resultobj;
+fail:
+  return NULL;
+}
+
+
+SWIGINTERN PyObject *_wrap_new_CvSeq_CvRect(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
+  PyObject *resultobj = 0;
+  CvTypedSeq<CvRect > *result = 0 ;
+  
+  if (!PyArg_ParseTuple(args,(char *)":new_CvSeq_CvRect")) SWIG_fail;
+  {
+    try {
+      result = (CvTypedSeq<CvRect > *)new CvTypedSeq<CvRect >(); 
+    } 
+    catch (...) 
+    {
+      return NULL;
+    } 
+  }
+  resultobj = SWIG_NewPointerObj(SWIG_as_voidptr(result), SWIGTYPE_p_CvTypedSeqTCvRect_t, SWIG_POINTER_NEW |  0 );
+  return resultobj;
+fail:
+  return NULL;
+}
+
+
+SWIGINTERN PyObject *_wrap_delete_CvSeq_CvRect(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
+  PyObject *resultobj = 0;
+  CvTypedSeq<CvRect > *arg1 = (CvTypedSeq<CvRect > *) 0 ;
+  void *argp1 = 0 ;
+  int res1 = 0 ;
+  PyObject * obj0 = 0 ;
+  
+  if (!PyArg_ParseTuple(args,(char *)"O:delete_CvSeq_CvRect",&obj0)) SWIG_fail;
+  res1 = SWIG_ConvertPtr(obj0, &argp1,SWIGTYPE_p_CvTypedSeqTCvRect_t, SWIG_POINTER_DISOWN |  0 );
+  if (!SWIG_IsOK(res1)) {
+    SWIG_exception_fail(SWIG_ArgError(res1), "in method '" "delete_CvSeq_CvRect" "', argument " "1"" of type '" "CvTypedSeq<CvRect > *""'"); 
+  }
+  arg1 = reinterpret_cast< CvTypedSeq<CvRect > * >(argp1);
+  {
+    try {
+      delete arg1;
+    } 
+    catch (...) 
+    {
+      return NULL;
+    } 
+  }
+  resultobj = SWIG_Py_Void();
+  return resultobj;
+fail:
+  return NULL;
+}
+
+
+SWIGINTERN PyObject *CvSeq_CvRect_swigregister(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
+  PyObject *obj;
+  if (!PyArg_ParseTuple(args,(char*)"O|swigregister", &obj)) return NULL;
+  SWIG_TypeNewClientData(SWIGTYPE_p_CvTypedSeqTCvRect_t, SWIG_NewClientData(obj));
+  return SWIG_Py_Void();
+}
+
+SWIGINTERN PyObject *_wrap_CvSeq_CvSeq_cast(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
+  PyObject *resultobj = 0;
+  CvSeq *arg1 = (CvSeq *) 0 ;
+  CvTypedSeq<CvSeq * > *result = 0 ;
+  void *ptr1 ;
+  PyObject * obj0 = 0 ;
+  
+  if (!PyArg_ParseTuple(args,(char *)"O:CvSeq_CvSeq_cast",&obj0)) SWIG_fail;
+  {
+    if( SWIG_ConvertPtr(obj0, &ptr1, SWIGTYPE_p_CvSeq, 0) == -1 &&
+      SWIG_ConvertPtr(obj0, &ptr1, SWIGTYPE_p_CvSet, 0) == -1 &&
+      SWIG_ConvertPtr(obj0, &ptr1, SWIGTYPE_p_CvGraph, 0) == -1 &&
+      SWIG_ConvertPtr(obj0, &ptr1, SWIGTYPE_p_CvSubdiv2D, 0) == -1 &&
+      SWIG_ConvertPtr(obj0, &ptr1, SWIGTYPE_p_CvChain, 0) == -1 &&
+      SWIG_ConvertPtr(obj0, &ptr1, SWIGTYPE_p_CvContour, 0) == -1 &&
+      SWIG_ConvertPtr(obj0, &ptr1, SWIGTYPE_p_CvContourTree, 0) == -1 )
+    {
+      SWIG_exception (SWIG_TypeError, "could not convert to CvSeq");
+      return NULL;
+    }
+    arg1 = (CvSeq *) ptr1;
+  }
+  {
+    try {
+      result = (CvTypedSeq<CvSeq * > *)CvTypedSeq<CvSeq * >::SWIGTEMPLATEDISAMBIGUATOR cast(arg1); 
+    } 
+    catch (...) 
+    {
+      return NULL;
+    } 
+  }
+  resultobj = SWIG_NewPointerObj(SWIG_as_voidptr(result), SWIGTYPE_p_CvTypedSeqTCvSeq_p_t, 0 |  0 );
+  return resultobj;
+fail:
+  return NULL;
+}
+
+
+SWIGINTERN PyObject *_wrap_CvSeq_CvSeq___getitem__(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
+  PyObject *resultobj = 0;
+  CvTypedSeq<CvSeq * > *arg1 = (CvTypedSeq<CvSeq * > *) 0 ;
+  int arg2 ;
+  CvSeq **result = 0 ;
+  void *argp1 = 0 ;
+  int res1 = 0 ;
+  int val2 ;
+  int ecode2 = 0 ;
+  PyObject * obj0 = 0 ;
+  PyObject * obj1 = 0 ;
+  
+  if (!PyArg_ParseTuple(args,(char *)"OO:CvSeq_CvSeq___getitem__",&obj0,&obj1)) SWIG_fail;
+  res1 = SWIG_ConvertPtr(obj0, &argp1,SWIGTYPE_p_CvTypedSeqTCvSeq_p_t, 0 |  0 );
+  if (!SWIG_IsOK(res1)) {
+    SWIG_exception_fail(SWIG_ArgError(res1), "in method '" "CvSeq_CvSeq___getitem__" "', argument " "1"" of type '" "CvTypedSeq<CvSeq * > *""'"); 
+  }
+  arg1 = reinterpret_cast< CvTypedSeq<CvSeq * > * >(argp1);
+  ecode2 = SWIG_AsVal_int(obj1, &val2);
+  if (!SWIG_IsOK(ecode2)) {
+    SWIG_exception_fail(SWIG_ArgError(ecode2), "in method '" "CvSeq_CvSeq___getitem__" "', argument " "2"" of type '" "int""'");
+  } 
+  arg2 = static_cast< int >(val2);
+  {
+    try {
+      result = (CvSeq **)(arg1)->__getitem__(arg2); 
+    } 
+    catch (...) 
+    {
+      return NULL;
+    } 
+  }
+  resultobj = SWIG_NewPointerObj(SWIG_as_voidptr(result), SWIGTYPE_p_p_CvSeq, 0 |  0 );
+  return resultobj;
+fail:
+  return NULL;
+}
+
+
+SWIGINTERN PyObject *_wrap_CvSeq_CvSeq___setitem__(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
+  PyObject *resultobj = 0;
+  CvTypedSeq<CvSeq * > *arg1 = (CvTypedSeq<CvSeq * > *) 0 ;
+  int arg2 ;
+  CvSeq **arg3 = (CvSeq **) 0 ;
+  void *argp1 = 0 ;
+  int res1 = 0 ;
+  int val2 ;
+  int ecode2 = 0 ;
+  void *vptr3 ;
+  CvSeq *buffer3 ;
+  PyObject * obj0 = 0 ;
+  PyObject * obj1 = 0 ;
+  PyObject * obj2 = 0 ;
+  
+  if (!PyArg_ParseTuple(args,(char *)"OOO:CvSeq_CvSeq___setitem__",&obj0,&obj1,&obj2)) SWIG_fail;
+  res1 = SWIG_ConvertPtr(obj0, &argp1,SWIGTYPE_p_CvTypedSeqTCvSeq_p_t, 0 |  0 );
+  if (!SWIG_IsOK(res1)) {
+    SWIG_exception_fail(SWIG_ArgError(res1), "in method '" "CvSeq_CvSeq___setitem__" "', argument " "1"" of type '" "CvTypedSeq<CvSeq * > *""'"); 
+  }
+  arg1 = reinterpret_cast< CvTypedSeq<CvSeq * > * >(argp1);
+  ecode2 = SWIG_AsVal_int(obj1, &val2);
+  if (!SWIG_IsOK(ecode2)) {
+    SWIG_exception_fail(SWIG_ArgError(ecode2), "in method '" "CvSeq_CvSeq___setitem__" "', argument " "2"" of type '" "int""'");
+  } 
+  arg2 = static_cast< int >(val2);
+  {
+    if ((SWIG_ConvertPtr(obj2, &vptr3, SWIGTYPE_p_CvSeq, 1)) == -1){
+      SWIG_fail;
+    }
+    buffer3 = (CvSeq *) vptr3;
+    arg3=&buffer3;
+  }
+  {
+    try {
+      (arg1)->__setitem__(arg2,arg3); 
+    } 
+    catch (...) 
+    {
+      return NULL;
+    } 
+  }
+  resultobj = SWIG_Py_Void();
+  return resultobj;
+fail:
+  return NULL;
+}
+
+
+SWIGINTERN PyObject *_wrap_CvSeq_CvSeq_append(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
+  PyObject *resultobj = 0;
+  CvTypedSeq<CvSeq * > *arg1 = (CvTypedSeq<CvSeq * > *) 0 ;
+  CvSeq **arg2 = (CvSeq **) 0 ;
+  void *argp1 = 0 ;
+  int res1 = 0 ;
+  void *vptr2 ;
+  CvSeq *buffer2 ;
+  PyObject * obj0 = 0 ;
+  PyObject * obj1 = 0 ;
+  
+  if (!PyArg_ParseTuple(args,(char *)"OO:CvSeq_CvSeq_append",&obj0,&obj1)) SWIG_fail;
+  res1 = SWIG_ConvertPtr(obj0, &argp1,SWIGTYPE_p_CvTypedSeqTCvSeq_p_t, 0 |  0 );
+  if (!SWIG_IsOK(res1)) {
+    SWIG_exception_fail(SWIG_ArgError(res1), "in method '" "CvSeq_CvSeq_append" "', argument " "1"" of type '" "CvTypedSeq<CvSeq * > *""'"); 
+  }
+  arg1 = reinterpret_cast< CvTypedSeq<CvSeq * > * >(argp1);
+  {
+    if ((SWIG_ConvertPtr(obj1, &vptr2, SWIGTYPE_p_CvSeq, 1)) == -1){
+      SWIG_fail;
+    }
+    buffer2 = (CvSeq *) vptr2;
+    arg2=&buffer2;
+  }
+  {
+    try {
+      (arg1)->append(arg2); 
+    } 
+    catch (...) 
+    {
+      return NULL;
+    } 
+  }
+  resultobj = SWIG_Py_Void();
+  return resultobj;
+fail:
+  return NULL;
+}
+
+
+SWIGINTERN PyObject *_wrap_CvSeq_CvSeq_pop(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
+  PyObject *resultobj = 0;
+  CvTypedSeq<CvSeq * > *arg1 = (CvTypedSeq<CvSeq * > *) 0 ;
+  CvSeq **result = 0 ;
+  void *argp1 = 0 ;
+  int res1 = 0 ;
+  PyObject * obj0 = 0 ;
+  
+  if (!PyArg_ParseTuple(args,(char *)"O:CvSeq_CvSeq_pop",&obj0)) SWIG_fail;
+  res1 = SWIG_ConvertPtr(obj0, &argp1,SWIGTYPE_p_CvTypedSeqTCvSeq_p_t, 0 |  0 );
+  if (!SWIG_IsOK(res1)) {
+    SWIG_exception_fail(SWIG_ArgError(res1), "in method '" "CvSeq_CvSeq_pop" "', argument " "1"" of type '" "CvTypedSeq<CvSeq * > *""'"); 
+  }
+  arg1 = reinterpret_cast< CvTypedSeq<CvSeq * > * >(argp1);
+  {
+    try {
+      result = (CvSeq **)(arg1)->pop(); 
+    } 
+    catch (...) 
+    {
+      return NULL;
+    } 
+  }
+  resultobj = SWIG_NewPointerObj(SWIG_as_voidptr(result), SWIGTYPE_p_p_CvSeq, 0 |  0 );
+  return resultobj;
+fail:
+  return NULL;
+}
+
+
+SWIGINTERN PyObject *_wrap_new_CvSeq_CvSeq(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
+  PyObject *resultobj = 0;
+  CvTypedSeq<CvSeq * > *result = 0 ;
+  
+  if (!PyArg_ParseTuple(args,(char *)":new_CvSeq_CvSeq")) SWIG_fail;
+  {
+    try {
+      result = (CvTypedSeq<CvSeq * > *)new CvTypedSeq<CvSeq * >(); 
+    } 
+    catch (...) 
+    {
+      return NULL;
+    } 
+  }
+  resultobj = SWIG_NewPointerObj(SWIG_as_voidptr(result), SWIGTYPE_p_CvTypedSeqTCvSeq_p_t, SWIG_POINTER_NEW |  0 );
+  return resultobj;
+fail:
+  return NULL;
+}
+
+
+SWIGINTERN PyObject *_wrap_delete_CvSeq_CvSeq(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
+  PyObject *resultobj = 0;
+  CvTypedSeq<CvSeq * > *arg1 = (CvTypedSeq<CvSeq * > *) 0 ;
+  void *argp1 = 0 ;
+  int res1 = 0 ;
+  PyObject * obj0 = 0 ;
+  
+  if (!PyArg_ParseTuple(args,(char *)"O:delete_CvSeq_CvSeq",&obj0)) SWIG_fail;
+  res1 = SWIG_ConvertPtr(obj0, &argp1,SWIGTYPE_p_CvTypedSeqTCvSeq_p_t, SWIG_POINTER_DISOWN |  0 );
+  if (!SWIG_IsOK(res1)) {
+    SWIG_exception_fail(SWIG_ArgError(res1), "in method '" "delete_CvSeq_CvSeq" "', argument " "1"" of type '" "CvTypedSeq<CvSeq * > *""'"); 
+  }
+  arg1 = reinterpret_cast< CvTypedSeq<CvSeq * > * >(argp1);
+  {
+    try {
+      delete arg1;
+    } 
+    catch (...) 
+    {
+      return NULL;
+    } 
+  }
+  resultobj = SWIG_Py_Void();
+  return resultobj;
+fail:
+  return NULL;
+}
+
+
+SWIGINTERN PyObject *CvSeq_CvSeq_swigregister(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
+  PyObject *obj;
+  if (!PyArg_ParseTuple(args,(char*)"O|swigregister", &obj)) return NULL;
+  SWIG_TypeNewClientData(SWIGTYPE_p_CvTypedSeqTCvSeq_p_t, SWIG_NewClientData(obj));
+  return SWIG_Py_Void();
+}
+
+SWIGINTERN PyObject *_wrap_CvSeq_CvQuadEdge2D_cast(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
+  PyObject *resultobj = 0;
+  CvSeq *arg1 = (CvSeq *) 0 ;
+  CvTypedSeq<CvQuadEdge2D > *result = 0 ;
+  void *ptr1 ;
+  PyObject * obj0 = 0 ;
+  
+  if (!PyArg_ParseTuple(args,(char *)"O:CvSeq_CvQuadEdge2D_cast",&obj0)) SWIG_fail;
+  {
+    if( SWIG_ConvertPtr(obj0, &ptr1, SWIGTYPE_p_CvSeq, 0) == -1 &&
+      SWIG_ConvertPtr(obj0, &ptr1, SWIGTYPE_p_CvSet, 0) == -1 &&
+      SWIG_ConvertPtr(obj0, &ptr1, SWIGTYPE_p_CvGraph, 0) == -1 &&
+      SWIG_ConvertPtr(obj0, &ptr1, SWIGTYPE_p_CvSubdiv2D, 0) == -1 &&
+      SWIG_ConvertPtr(obj0, &ptr1, SWIGTYPE_p_CvChain, 0) == -1 &&
+      SWIG_ConvertPtr(obj0, &ptr1, SWIGTYPE_p_CvContour, 0) == -1 &&
+      SWIG_ConvertPtr(obj0, &ptr1, SWIGTYPE_p_CvContourTree, 0) == -1 )
+    {
+      SWIG_exception (SWIG_TypeError, "could not convert to CvSeq");
+      return NULL;
+    }
+    arg1 = (CvSeq *) ptr1;
+  }
+  {
+    try {
+      result = (CvTypedSeq<CvQuadEdge2D > *)CvTypedSeq<CvQuadEdge2D >::SWIGTEMPLATEDISAMBIGUATOR cast(arg1); 
+    } 
+    catch (...) 
+    {
+      return NULL;
+    } 
+  }
+  resultobj = SWIG_NewPointerObj(SWIG_as_voidptr(result), SWIGTYPE_p_CvTypedSeqTCvQuadEdge2D_t, 0 |  0 );
+  return resultobj;
+fail:
+  return NULL;
+}
+
+
+SWIGINTERN PyObject *_wrap_CvSeq_CvQuadEdge2D___getitem__(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
+  PyObject *resultobj = 0;
+  CvTypedSeq<CvQuadEdge2D > *arg1 = (CvTypedSeq<CvQuadEdge2D > *) 0 ;
+  int arg2 ;
+  CvQuadEdge2D *result = 0 ;
+  void *argp1 = 0 ;
+  int res1 = 0 ;
+  int val2 ;
+  int ecode2 = 0 ;
+  PyObject * obj0 = 0 ;
+  PyObject * obj1 = 0 ;
+  
+  if (!PyArg_ParseTuple(args,(char *)"OO:CvSeq_CvQuadEdge2D___getitem__",&obj0,&obj1)) SWIG_fail;
+  res1 = SWIG_ConvertPtr(obj0, &argp1,SWIGTYPE_p_CvTypedSeqTCvQuadEdge2D_t, 0 |  0 );
+  if (!SWIG_IsOK(res1)) {
+    SWIG_exception_fail(SWIG_ArgError(res1), "in method '" "CvSeq_CvQuadEdge2D___getitem__" "', argument " "1"" of type '" "CvTypedSeq<CvQuadEdge2D > *""'"); 
+  }
+  arg1 = reinterpret_cast< CvTypedSeq<CvQuadEdge2D > * >(argp1);
+  ecode2 = SWIG_AsVal_int(obj1, &val2);
+  if (!SWIG_IsOK(ecode2)) {
+    SWIG_exception_fail(SWIG_ArgError(ecode2), "in method '" "CvSeq_CvQuadEdge2D___getitem__" "', argument " "2"" of type '" "int""'");
+  } 
+  arg2 = static_cast< int >(val2);
+  {
+    try {
+      result = (CvQuadEdge2D *)(arg1)->__getitem__(arg2); 
+    } 
+    catch (...) 
+    {
+      return NULL;
+    } 
+  }
+  resultobj = SWIG_NewPointerObj(SWIG_as_voidptr(result), SWIGTYPE_p_CvQuadEdge2D, 0 |  0 );
+  return resultobj;
+fail:
+  return NULL;
+}
+
+
+SWIGINTERN PyObject *_wrap_CvSeq_CvQuadEdge2D___setitem__(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
+  PyObject *resultobj = 0;
+  CvTypedSeq<CvQuadEdge2D > *arg1 = (CvTypedSeq<CvQuadEdge2D > *) 0 ;
+  int arg2 ;
+  CvQuadEdge2D *arg3 = (CvQuadEdge2D *) 0 ;
+  void *argp1 = 0 ;
+  int res1 = 0 ;
+  int val2 ;
+  int ecode2 = 0 ;
+  void *argp3 = 0 ;
+  int res3 = 0 ;
+  PyObject * obj0 = 0 ;
+  PyObject * obj1 = 0 ;
+  PyObject * obj2 = 0 ;
+  
+  if (!PyArg_ParseTuple(args,(char *)"OOO:CvSeq_CvQuadEdge2D___setitem__",&obj0,&obj1,&obj2)) SWIG_fail;
+  res1 = SWIG_ConvertPtr(obj0, &argp1,SWIGTYPE_p_CvTypedSeqTCvQuadEdge2D_t, 0 |  0 );
+  if (!SWIG_IsOK(res1)) {
+    SWIG_exception_fail(SWIG_ArgError(res1), "in method '" "CvSeq_CvQuadEdge2D___setitem__" "', argument " "1"" of type '" "CvTypedSeq<CvQuadEdge2D > *""'"); 
+  }
+  arg1 = reinterpret_cast< CvTypedSeq<CvQuadEdge2D > * >(argp1);
+  ecode2 = SWIG_AsVal_int(obj1, &val2);
+  if (!SWIG_IsOK(ecode2)) {
+    SWIG_exception_fail(SWIG_ArgError(ecode2), "in method '" "CvSeq_CvQuadEdge2D___setitem__" "', argument " "2"" of type '" "int""'");
+  } 
+  arg2 = static_cast< int >(val2);
+  res3 = SWIG_ConvertPtr(obj2, &argp3,SWIGTYPE_p_CvQuadEdge2D, 0 |  0 );
+  if (!SWIG_IsOK(res3)) {
+    SWIG_exception_fail(SWIG_ArgError(res3), "in method '" "CvSeq_CvQuadEdge2D___setitem__" "', argument " "3"" of type '" "CvQuadEdge2D *""'"); 
+  }
+  arg3 = reinterpret_cast< CvQuadEdge2D * >(argp3);
+  {
+    try {
+      (arg1)->__setitem__(arg2,arg3); 
+    } 
+    catch (...) 
+    {
+      return NULL;
+    } 
+  }
+  resultobj = SWIG_Py_Void();
+  return resultobj;
+fail:
+  return NULL;
+}
+
+
+SWIGINTERN PyObject *_wrap_CvSeq_CvQuadEdge2D_append(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
+  PyObject *resultobj = 0;
+  CvTypedSeq<CvQuadEdge2D > *arg1 = (CvTypedSeq<CvQuadEdge2D > *) 0 ;
+  CvQuadEdge2D *arg2 = (CvQuadEdge2D *) 0 ;
+  void *argp1 = 0 ;
+  int res1 = 0 ;
+  void *argp2 = 0 ;
+  int res2 = 0 ;
+  PyObject * obj0 = 0 ;
+  PyObject * obj1 = 0 ;
+  
+  if (!PyArg_ParseTuple(args,(char *)"OO:CvSeq_CvQuadEdge2D_append",&obj0,&obj1)) SWIG_fail;
+  res1 = SWIG_ConvertPtr(obj0, &argp1,SWIGTYPE_p_CvTypedSeqTCvQuadEdge2D_t, 0 |  0 );
+  if (!SWIG_IsOK(res1)) {
+    SWIG_exception_fail(SWIG_ArgError(res1), "in method '" "CvSeq_CvQuadEdge2D_append" "', argument " "1"" of type '" "CvTypedSeq<CvQuadEdge2D > *""'"); 
+  }
+  arg1 = reinterpret_cast< CvTypedSeq<CvQuadEdge2D > * >(argp1);
+  res2 = SWIG_ConvertPtr(obj1, &argp2,SWIGTYPE_p_CvQuadEdge2D, 0 |  0 );
+  if (!SWIG_IsOK(res2)) {
+    SWIG_exception_fail(SWIG_ArgError(res2), "in method '" "CvSeq_CvQuadEdge2D_append" "', argument " "2"" of type '" "CvQuadEdge2D *""'"); 
+  }
+  arg2 = reinterpret_cast< CvQuadEdge2D * >(argp2);
+  {
+    try {
+      (arg1)->append(arg2); 
+    } 
+    catch (...) 
+    {
+      return NULL;
+    } 
+  }
+  resultobj = SWIG_Py_Void();
+  return resultobj;
+fail:
+  return NULL;
+}
+
+
+SWIGINTERN PyObject *_wrap_CvSeq_CvQuadEdge2D_pop(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
+  PyObject *resultobj = 0;
+  CvTypedSeq<CvQuadEdge2D > *arg1 = (CvTypedSeq<CvQuadEdge2D > *) 0 ;
+  CvQuadEdge2D *result = 0 ;
+  void *argp1 = 0 ;
+  int res1 = 0 ;
+  PyObject * obj0 = 0 ;
+  
+  if (!PyArg_ParseTuple(args,(char *)"O:CvSeq_CvQuadEdge2D_pop",&obj0)) SWIG_fail;
+  res1 = SWIG_ConvertPtr(obj0, &argp1,SWIGTYPE_p_CvTypedSeqTCvQuadEdge2D_t, 0 |  0 );
+  if (!SWIG_IsOK(res1)) {
+    SWIG_exception_fail(SWIG_ArgError(res1), "in method '" "CvSeq_CvQuadEdge2D_pop" "', argument " "1"" of type '" "CvTypedSeq<CvQuadEdge2D > *""'"); 
+  }
+  arg1 = reinterpret_cast< CvTypedSeq<CvQuadEdge2D > * >(argp1);
+  {
+    try {
+      result = (CvQuadEdge2D *)(arg1)->pop(); 
+    } 
+    catch (...) 
+    {
+      return NULL;
+    } 
+  }
+  resultobj = SWIG_NewPointerObj(SWIG_as_voidptr(result), SWIGTYPE_p_CvQuadEdge2D, 0 |  0 );
+  return resultobj;
+fail:
+  return NULL;
+}
+
+
+SWIGINTERN PyObject *_wrap_new_CvSeq_CvQuadEdge2D(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
+  PyObject *resultobj = 0;
+  CvTypedSeq<CvQuadEdge2D > *result = 0 ;
+  
+  if (!PyArg_ParseTuple(args,(char *)":new_CvSeq_CvQuadEdge2D")) SWIG_fail;
+  {
+    try {
+      result = (CvTypedSeq<CvQuadEdge2D > *)new CvTypedSeq<CvQuadEdge2D >(); 
+    } 
+    catch (...) 
+    {
+      return NULL;
+    } 
+  }
+  resultobj = SWIG_NewPointerObj(SWIG_as_voidptr(result), SWIGTYPE_p_CvTypedSeqTCvQuadEdge2D_t, SWIG_POINTER_NEW |  0 );
+  return resultobj;
+fail:
+  return NULL;
+}
+
+
+SWIGINTERN PyObject *_wrap_delete_CvSeq_CvQuadEdge2D(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
+  PyObject *resultobj = 0;
+  CvTypedSeq<CvQuadEdge2D > *arg1 = (CvTypedSeq<CvQuadEdge2D > *) 0 ;
+  void *argp1 = 0 ;
+  int res1 = 0 ;
+  PyObject * obj0 = 0 ;
+  
+  if (!PyArg_ParseTuple(args,(char *)"O:delete_CvSeq_CvQuadEdge2D",&obj0)) SWIG_fail;
+  res1 = SWIG_ConvertPtr(obj0, &argp1,SWIGTYPE_p_CvTypedSeqTCvQuadEdge2D_t, SWIG_POINTER_DISOWN |  0 );
+  if (!SWIG_IsOK(res1)) {
+    SWIG_exception_fail(SWIG_ArgError(res1), "in method '" "delete_CvSeq_CvQuadEdge2D" "', argument " "1"" of type '" "CvTypedSeq<CvQuadEdge2D > *""'"); 
+  }
+  arg1 = reinterpret_cast< CvTypedSeq<CvQuadEdge2D > * >(argp1);
+  {
+    try {
+      delete arg1;
+    } 
+    catch (...) 
+    {
+      return NULL;
+    } 
+  }
+  resultobj = SWIG_Py_Void();
+  return resultobj;
+fail:
+  return NULL;
+}
+
+
+SWIGINTERN PyObject *CvSeq_CvQuadEdge2D_swigregister(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
+  PyObject *obj;
+  if (!PyArg_ParseTuple(args,(char*)"O|swigregister", &obj)) return NULL;
+  SWIG_TypeNewClientData(SWIGTYPE_p_CvTypedSeqTCvQuadEdge2D_t, SWIG_NewClientData(obj));
+  return SWIG_Py_Void();
+}
+
+SWIGINTERN PyObject *_wrap_CvSeq_CvConnectedComp_cast(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
+  PyObject *resultobj = 0;
+  CvSeq *arg1 = (CvSeq *) 0 ;
+  CvTypedSeq<CvConnectedComp > *result = 0 ;
+  void *ptr1 ;
+  PyObject * obj0 = 0 ;
+  
+  if (!PyArg_ParseTuple(args,(char *)"O:CvSeq_CvConnectedComp_cast",&obj0)) SWIG_fail;
+  {
+    if( SWIG_ConvertPtr(obj0, &ptr1, SWIGTYPE_p_CvSeq, 0) == -1 &&
+      SWIG_ConvertPtr(obj0, &ptr1, SWIGTYPE_p_CvSet, 0) == -1 &&
+      SWIG_ConvertPtr(obj0, &ptr1, SWIGTYPE_p_CvGraph, 0) == -1 &&
+      SWIG_ConvertPtr(obj0, &ptr1, SWIGTYPE_p_CvSubdiv2D, 0) == -1 &&
+      SWIG_ConvertPtr(obj0, &ptr1, SWIGTYPE_p_CvChain, 0) == -1 &&
+      SWIG_ConvertPtr(obj0, &ptr1, SWIGTYPE_p_CvContour, 0) == -1 &&
+      SWIG_ConvertPtr(obj0, &ptr1, SWIGTYPE_p_CvContourTree, 0) == -1 )
+    {
+      SWIG_exception (SWIG_TypeError, "could not convert to CvSeq");
+      return NULL;
+    }
+    arg1 = (CvSeq *) ptr1;
+  }
+  {
+    try {
+      result = (CvTypedSeq<CvConnectedComp > *)CvTypedSeq<CvConnectedComp >::SWIGTEMPLATEDISAMBIGUATOR cast(arg1); 
+    } 
+    catch (...) 
+    {
+      return NULL;
+    } 
+  }
+  resultobj = SWIG_NewPointerObj(SWIG_as_voidptr(result), SWIGTYPE_p_CvTypedSeqTCvConnectedComp_t, 0 |  0 );
+  return resultobj;
+fail:
+  return NULL;
+}
+
+
+SWIGINTERN PyObject *_wrap_CvSeq_CvConnectedComp___getitem__(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
+  PyObject *resultobj = 0;
+  CvTypedSeq<CvConnectedComp > *arg1 = (CvTypedSeq<CvConnectedComp > *) 0 ;
+  int arg2 ;
+  CvConnectedComp *result = 0 ;
+  void *argp1 = 0 ;
+  int res1 = 0 ;
+  int val2 ;
+  int ecode2 = 0 ;
+  PyObject * obj0 = 0 ;
+  PyObject * obj1 = 0 ;
+  
+  if (!PyArg_ParseTuple(args,(char *)"OO:CvSeq_CvConnectedComp___getitem__",&obj0,&obj1)) SWIG_fail;
+  res1 = SWIG_ConvertPtr(obj0, &argp1,SWIGTYPE_p_CvTypedSeqTCvConnectedComp_t, 0 |  0 );
+  if (!SWIG_IsOK(res1)) {
+    SWIG_exception_fail(SWIG_ArgError(res1), "in method '" "CvSeq_CvConnectedComp___getitem__" "', argument " "1"" of type '" "CvTypedSeq<CvConnectedComp > *""'"); 
+  }
+  arg1 = reinterpret_cast< CvTypedSeq<CvConnectedComp > * >(argp1);
+  ecode2 = SWIG_AsVal_int(obj1, &val2);
+  if (!SWIG_IsOK(ecode2)) {
+    SWIG_exception_fail(SWIG_ArgError(ecode2), "in method '" "CvSeq_CvConnectedComp___getitem__" "', argument " "2"" of type '" "int""'");
+  } 
+  arg2 = static_cast< int >(val2);
+  {
+    try {
+      result = (CvConnectedComp *)(arg1)->__getitem__(arg2); 
+    } 
+    catch (...) 
+    {
+      return NULL;
+    } 
+  }
+  resultobj = SWIG_NewPointerObj(SWIG_as_voidptr(result), SWIGTYPE_p_CvConnectedComp, 0 |  0 );
+  return resultobj;
+fail:
+  return NULL;
+}
+
+
+SWIGINTERN PyObject *_wrap_CvSeq_CvConnectedComp___setitem__(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
+  PyObject *resultobj = 0;
+  CvTypedSeq<CvConnectedComp > *arg1 = (CvTypedSeq<CvConnectedComp > *) 0 ;
+  int arg2 ;
+  CvConnectedComp *arg3 = (CvConnectedComp *) 0 ;
+  void *argp1 = 0 ;
+  int res1 = 0 ;
+  int val2 ;
+  int ecode2 = 0 ;
+  void *argp3 = 0 ;
+  int res3 = 0 ;
+  PyObject * obj0 = 0 ;
+  PyObject * obj1 = 0 ;
+  PyObject * obj2 = 0 ;
+  
+  if (!PyArg_ParseTuple(args,(char *)"OOO:CvSeq_CvConnectedComp___setitem__",&obj0,&obj1,&obj2)) SWIG_fail;
+  res1 = SWIG_ConvertPtr(obj0, &argp1,SWIGTYPE_p_CvTypedSeqTCvConnectedComp_t, 0 |  0 );
+  if (!SWIG_IsOK(res1)) {
+    SWIG_exception_fail(SWIG_ArgError(res1), "in method '" "CvSeq_CvConnectedComp___setitem__" "', argument " "1"" of type '" "CvTypedSeq<CvConnectedComp > *""'"); 
+  }
+  arg1 = reinterpret_cast< CvTypedSeq<CvConnectedComp > * >(argp1);
+  ecode2 = SWIG_AsVal_int(obj1, &val2);
+  if (!SWIG_IsOK(ecode2)) {
+    SWIG_exception_fail(SWIG_ArgError(ecode2), "in method '" "CvSeq_CvConnectedComp___setitem__" "', argument " "2"" of type '" "int""'");
+  } 
+  arg2 = static_cast< int >(val2);
+  res3 = SWIG_ConvertPtr(obj2, &argp3,SWIGTYPE_p_CvConnectedComp, 0 |  0 );
+  if (!SWIG_IsOK(res3)) {
+    SWIG_exception_fail(SWIG_ArgError(res3), "in method '" "CvSeq_CvConnectedComp___setitem__" "', argument " "3"" of type '" "CvConnectedComp *""'"); 
+  }
+  arg3 = reinterpret_cast< CvConnectedComp * >(argp3);
+  {
+    try {
+      (arg1)->__setitem__(arg2,arg3); 
+    } 
+    catch (...) 
+    {
+      return NULL;
+    } 
+  }
+  resultobj = SWIG_Py_Void();
+  return resultobj;
+fail:
+  return NULL;
+}
+
+
+SWIGINTERN PyObject *_wrap_CvSeq_CvConnectedComp_append(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
+  PyObject *resultobj = 0;
+  CvTypedSeq<CvConnectedComp > *arg1 = (CvTypedSeq<CvConnectedComp > *) 0 ;
+  CvConnectedComp *arg2 = (CvConnectedComp *) 0 ;
+  void *argp1 = 0 ;
+  int res1 = 0 ;
+  void *argp2 = 0 ;
+  int res2 = 0 ;
+  PyObject * obj0 = 0 ;
+  PyObject * obj1 = 0 ;
+  
+  if (!PyArg_ParseTuple(args,(char *)"OO:CvSeq_CvConnectedComp_append",&obj0,&obj1)) SWIG_fail;
+  res1 = SWIG_ConvertPtr(obj0, &argp1,SWIGTYPE_p_CvTypedSeqTCvConnectedComp_t, 0 |  0 );
+  if (!SWIG_IsOK(res1)) {
+    SWIG_exception_fail(SWIG_ArgError(res1), "in method '" "CvSeq_CvConnectedComp_append" "', argument " "1"" of type '" "CvTypedSeq<CvConnectedComp > *""'"); 
+  }
+  arg1 = reinterpret_cast< CvTypedSeq<CvConnectedComp > * >(argp1);
+  res2 = SWIG_ConvertPtr(obj1, &argp2,SWIGTYPE_p_CvConnectedComp, 0 |  0 );
+  if (!SWIG_IsOK(res2)) {
+    SWIG_exception_fail(SWIG_ArgError(res2), "in method '" "CvSeq_CvConnectedComp_append" "', argument " "2"" of type '" "CvConnectedComp *""'"); 
+  }
+  arg2 = reinterpret_cast< CvConnectedComp * >(argp2);
+  {
+    try {
+      (arg1)->append(arg2); 
+    } 
+    catch (...) 
+    {
+      return NULL;
+    } 
+  }
+  resultobj = SWIG_Py_Void();
+  return resultobj;
+fail:
+  return NULL;
+}
+
+
+SWIGINTERN PyObject *_wrap_CvSeq_CvConnectedComp_pop(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
+  PyObject *resultobj = 0;
+  CvTypedSeq<CvConnectedComp > *arg1 = (CvTypedSeq<CvConnectedComp > *) 0 ;
+  CvConnectedComp *result = 0 ;
+  void *argp1 = 0 ;
+  int res1 = 0 ;
+  PyObject * obj0 = 0 ;
+  
+  if (!PyArg_ParseTuple(args,(char *)"O:CvSeq_CvConnectedComp_pop",&obj0)) SWIG_fail;
+  res1 = SWIG_ConvertPtr(obj0, &argp1,SWIGTYPE_p_CvTypedSeqTCvConnectedComp_t, 0 |  0 );
+  if (!SWIG_IsOK(res1)) {
+    SWIG_exception_fail(SWIG_ArgError(res1), "in method '" "CvSeq_CvConnectedComp_pop" "', argument " "1"" of type '" "CvTypedSeq<CvConnectedComp > *""'"); 
+  }
+  arg1 = reinterpret_cast< CvTypedSeq<CvConnectedComp > * >(argp1);
+  {
+    try {
+      result = (CvConnectedComp *)(arg1)->pop(); 
+    } 
+    catch (...) 
+    {
+      return NULL;
+    } 
+  }
+  resultobj = SWIG_NewPointerObj(SWIG_as_voidptr(result), SWIGTYPE_p_CvConnectedComp, 0 |  0 );
+  return resultobj;
+fail:
+  return NULL;
+}
+
+
+SWIGINTERN PyObject *_wrap_new_CvSeq_CvConnectedComp(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
+  PyObject *resultobj = 0;
+  CvTypedSeq<CvConnectedComp > *result = 0 ;
+  
+  if (!PyArg_ParseTuple(args,(char *)":new_CvSeq_CvConnectedComp")) SWIG_fail;
+  {
+    try {
+      result = (CvTypedSeq<CvConnectedComp > *)new CvTypedSeq<CvConnectedComp >(); 
+    } 
+    catch (...) 
+    {
+      return NULL;
+    } 
+  }
+  resultobj = SWIG_NewPointerObj(SWIG_as_voidptr(result), SWIGTYPE_p_CvTypedSeqTCvConnectedComp_t, SWIG_POINTER_NEW |  0 );
+  return resultobj;
+fail:
+  return NULL;
+}
+
+
+SWIGINTERN PyObject *_wrap_delete_CvSeq_CvConnectedComp(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
+  PyObject *resultobj = 0;
+  CvTypedSeq<CvConnectedComp > *arg1 = (CvTypedSeq<CvConnectedComp > *) 0 ;
+  void *argp1 = 0 ;
+  int res1 = 0 ;
+  PyObject * obj0 = 0 ;
+  
+  if (!PyArg_ParseTuple(args,(char *)"O:delete_CvSeq_CvConnectedComp",&obj0)) SWIG_fail;
+  res1 = SWIG_ConvertPtr(obj0, &argp1,SWIGTYPE_p_CvTypedSeqTCvConnectedComp_t, SWIG_POINTER_DISOWN |  0 );
+  if (!SWIG_IsOK(res1)) {
+    SWIG_exception_fail(SWIG_ArgError(res1), "in method '" "delete_CvSeq_CvConnectedComp" "', argument " "1"" of type '" "CvTypedSeq<CvConnectedComp > *""'"); 
+  }
+  arg1 = reinterpret_cast< CvTypedSeq<CvConnectedComp > * >(argp1);
+  {
+    try {
+      delete arg1;
+    } 
+    catch (...) 
+    {
+      return NULL;
+    } 
+  }
+  resultobj = SWIG_Py_Void();
+  return resultobj;
+fail:
+  return NULL;
+}
+
+
+SWIGINTERN PyObject *CvSeq_CvConnectedComp_swigregister(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
+  PyObject *obj;
+  if (!PyArg_ParseTuple(args,(char*)"O|swigregister", &obj)) return NULL;
+  SWIG_TypeNewClientData(SWIGTYPE_p_CvTypedSeqTCvConnectedComp_t, SWIG_NewClientData(obj));
+  return SWIG_Py_Void();
+}
+
+SWIGINTERN PyObject *_wrap_CvSeq_CvPoint_2_cast(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
   PyObject *resultobj = 0;
   CvSeq *arg1 = (CvSeq *) 0 ;
   CvTypedSeq<CvTuple<CvPoint,2 > > *result = 0 ;
   void *ptr1 ;
   PyObject * obj0 = 0 ;
   
-  if (!PyArg_ParseTuple(args,(char *)"O:CvSeq_Point_2_cast",&obj0)) SWIG_fail;
+  if (!PyArg_ParseTuple(args,(char *)"O:CvSeq_CvPoint_2_cast",&obj0)) SWIG_fail;
   {
     if( SWIG_ConvertPtr(obj0, &ptr1, SWIGTYPE_p_CvSeq, 0) == -1 &&
       SWIG_ConvertPtr(obj0, &ptr1, SWIGTYPE_p_CvSet, 0) == -1 &&
@@ -96637,7 +96830,7 @@ fail:
 }
 
 
-SWIGINTERN PyObject *_wrap_CvSeq_Point_2___getitem__(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
+SWIGINTERN PyObject *_wrap_CvSeq_CvPoint_2___getitem__(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
   PyObject *resultobj = 0;
   CvTypedSeq<CvTuple<CvPoint,2 > > *arg1 = (CvTypedSeq<CvTuple<CvPoint,2 > > *) 0 ;
   int arg2 ;
@@ -96649,15 +96842,15 @@ SWIGINTERN PyObject *_wrap_CvSeq_Point_2___getitem__(PyObject *SWIGUNUSEDPARM(se
   PyObject * obj0 = 0 ;
   PyObject * obj1 = 0 ;
   
-  if (!PyArg_ParseTuple(args,(char *)"OO:CvSeq_Point_2___getitem__",&obj0,&obj1)) SWIG_fail;
+  if (!PyArg_ParseTuple(args,(char *)"OO:CvSeq_CvPoint_2___getitem__",&obj0,&obj1)) SWIG_fail;
   res1 = SWIG_ConvertPtr(obj0, &argp1,SWIGTYPE_p_CvTypedSeqTCvTupleTCvPoint_2_t_t, 0 |  0 );
   if (!SWIG_IsOK(res1)) {
-    SWIG_exception_fail(SWIG_ArgError(res1), "in method '" "CvSeq_Point_2___getitem__" "', argument " "1"" of type '" "CvTypedSeq<CvTuple<CvPoint,2 > > *""'"); 
+    SWIG_exception_fail(SWIG_ArgError(res1), "in method '" "CvSeq_CvPoint_2___getitem__" "', argument " "1"" of type '" "CvTypedSeq<CvTuple<CvPoint,2 > > *""'"); 
   }
   arg1 = reinterpret_cast< CvTypedSeq<CvTuple<CvPoint,2 > > * >(argp1);
   ecode2 = SWIG_AsVal_int(obj1, &val2);
   if (!SWIG_IsOK(ecode2)) {
-    SWIG_exception_fail(SWIG_ArgError(ecode2), "in method '" "CvSeq_Point_2___getitem__" "', argument " "2"" of type '" "int""'");
+    SWIG_exception_fail(SWIG_ArgError(ecode2), "in method '" "CvSeq_CvPoint_2___getitem__" "', argument " "2"" of type '" "int""'");
   } 
   arg2 = static_cast< int >(val2);
   {
@@ -96676,7 +96869,7 @@ fail:
 }
 
 
-SWIGINTERN PyObject *_wrap_CvSeq_Point_2___setitem__(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
+SWIGINTERN PyObject *_wrap_CvSeq_CvPoint_2___setitem__(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
   PyObject *resultobj = 0;
   CvTypedSeq<CvTuple<CvPoint,2 > > *arg1 = (CvTypedSeq<CvTuple<CvPoint,2 > > *) 0 ;
   int arg2 ;
@@ -96691,20 +96884,20 @@ SWIGINTERN PyObject *_wrap_CvSeq_Point_2___setitem__(PyObject *SWIGUNUSEDPARM(se
   PyObject * obj1 = 0 ;
   PyObject * obj2 = 0 ;
   
-  if (!PyArg_ParseTuple(args,(char *)"OOO:CvSeq_Point_2___setitem__",&obj0,&obj1,&obj2)) SWIG_fail;
+  if (!PyArg_ParseTuple(args,(char *)"OOO:CvSeq_CvPoint_2___setitem__",&obj0,&obj1,&obj2)) SWIG_fail;
   res1 = SWIG_ConvertPtr(obj0, &argp1,SWIGTYPE_p_CvTypedSeqTCvTupleTCvPoint_2_t_t, 0 |  0 );
   if (!SWIG_IsOK(res1)) {
-    SWIG_exception_fail(SWIG_ArgError(res1), "in method '" "CvSeq_Point_2___setitem__" "', argument " "1"" of type '" "CvTypedSeq<CvTuple<CvPoint,2 > > *""'"); 
+    SWIG_exception_fail(SWIG_ArgError(res1), "in method '" "CvSeq_CvPoint_2___setitem__" "', argument " "1"" of type '" "CvTypedSeq<CvTuple<CvPoint,2 > > *""'"); 
   }
   arg1 = reinterpret_cast< CvTypedSeq<CvTuple<CvPoint,2 > > * >(argp1);
   ecode2 = SWIG_AsVal_int(obj1, &val2);
   if (!SWIG_IsOK(ecode2)) {
-    SWIG_exception_fail(SWIG_ArgError(ecode2), "in method '" "CvSeq_Point_2___setitem__" "', argument " "2"" of type '" "int""'");
+    SWIG_exception_fail(SWIG_ArgError(ecode2), "in method '" "CvSeq_CvPoint_2___setitem__" "', argument " "2"" of type '" "int""'");
   } 
   arg2 = static_cast< int >(val2);
   res3 = SWIG_ConvertPtr(obj2, &argp3,SWIGTYPE_p_CvTupleTCvPoint_2_t, 0 |  0 );
   if (!SWIG_IsOK(res3)) {
-    SWIG_exception_fail(SWIG_ArgError(res3), "in method '" "CvSeq_Point_2___setitem__" "', argument " "3"" of type '" "CvTuple<CvPoint,2 > *""'"); 
+    SWIG_exception_fail(SWIG_ArgError(res3), "in method '" "CvSeq_CvPoint_2___setitem__" "', argument " "3"" of type '" "CvTuple<CvPoint,2 > *""'"); 
   }
   arg3 = reinterpret_cast< CvTuple<CvPoint,2 > * >(argp3);
   {
@@ -96723,7 +96916,7 @@ fail:
 }
 
 
-SWIGINTERN PyObject *_wrap_CvSeq_Point_2_append(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
+SWIGINTERN PyObject *_wrap_CvSeq_CvPoint_2_append(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
   PyObject *resultobj = 0;
   CvTypedSeq<CvTuple<CvPoint,2 > > *arg1 = (CvTypedSeq<CvTuple<CvPoint,2 > > *) 0 ;
   CvTuple<CvPoint,2 > *arg2 = (CvTuple<CvPoint,2 > *) 0 ;
@@ -96734,15 +96927,15 @@ SWIGINTERN PyObject *_wrap_CvSeq_Point_2_append(PyObject *SWIGUNUSEDPARM(self), 
   PyObject * obj0 = 0 ;
   PyObject * obj1 = 0 ;
   
-  if (!PyArg_ParseTuple(args,(char *)"OO:CvSeq_Point_2_append",&obj0,&obj1)) SWIG_fail;
+  if (!PyArg_ParseTuple(args,(char *)"OO:CvSeq_CvPoint_2_append",&obj0,&obj1)) SWIG_fail;
   res1 = SWIG_ConvertPtr(obj0, &argp1,SWIGTYPE_p_CvTypedSeqTCvTupleTCvPoint_2_t_t, 0 |  0 );
   if (!SWIG_IsOK(res1)) {
-    SWIG_exception_fail(SWIG_ArgError(res1), "in method '" "CvSeq_Point_2_append" "', argument " "1"" of type '" "CvTypedSeq<CvTuple<CvPoint,2 > > *""'"); 
+    SWIG_exception_fail(SWIG_ArgError(res1), "in method '" "CvSeq_CvPoint_2_append" "', argument " "1"" of type '" "CvTypedSeq<CvTuple<CvPoint,2 > > *""'"); 
   }
   arg1 = reinterpret_cast< CvTypedSeq<CvTuple<CvPoint,2 > > * >(argp1);
   res2 = SWIG_ConvertPtr(obj1, &argp2,SWIGTYPE_p_CvTupleTCvPoint_2_t, 0 |  0 );
   if (!SWIG_IsOK(res2)) {
-    SWIG_exception_fail(SWIG_ArgError(res2), "in method '" "CvSeq_Point_2_append" "', argument " "2"" of type '" "CvTuple<CvPoint,2 > *""'"); 
+    SWIG_exception_fail(SWIG_ArgError(res2), "in method '" "CvSeq_CvPoint_2_append" "', argument " "2"" of type '" "CvTuple<CvPoint,2 > *""'"); 
   }
   arg2 = reinterpret_cast< CvTuple<CvPoint,2 > * >(argp2);
   {
@@ -96761,7 +96954,7 @@ fail:
 }
 
 
-SWIGINTERN PyObject *_wrap_CvSeq_Point_2_pop(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
+SWIGINTERN PyObject *_wrap_CvSeq_CvPoint_2_pop(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
   PyObject *resultobj = 0;
   CvTypedSeq<CvTuple<CvPoint,2 > > *arg1 = (CvTypedSeq<CvTuple<CvPoint,2 > > *) 0 ;
   CvTuple<CvPoint,2 > *result = 0 ;
@@ -96769,10 +96962,10 @@ SWIGINTERN PyObject *_wrap_CvSeq_Point_2_pop(PyObject *SWIGUNUSEDPARM(self), PyO
   int res1 = 0 ;
   PyObject * obj0 = 0 ;
   
-  if (!PyArg_ParseTuple(args,(char *)"O:CvSeq_Point_2_pop",&obj0)) SWIG_fail;
+  if (!PyArg_ParseTuple(args,(char *)"O:CvSeq_CvPoint_2_pop",&obj0)) SWIG_fail;
   res1 = SWIG_ConvertPtr(obj0, &argp1,SWIGTYPE_p_CvTypedSeqTCvTupleTCvPoint_2_t_t, 0 |  0 );
   if (!SWIG_IsOK(res1)) {
-    SWIG_exception_fail(SWIG_ArgError(res1), "in method '" "CvSeq_Point_2_pop" "', argument " "1"" of type '" "CvTypedSeq<CvTuple<CvPoint,2 > > *""'"); 
+    SWIG_exception_fail(SWIG_ArgError(res1), "in method '" "CvSeq_CvPoint_2_pop" "', argument " "1"" of type '" "CvTypedSeq<CvTuple<CvPoint,2 > > *""'"); 
   }
   arg1 = reinterpret_cast< CvTypedSeq<CvTuple<CvPoint,2 > > * >(argp1);
   {
@@ -96791,11 +96984,11 @@ fail:
 }
 
 
-SWIGINTERN PyObject *_wrap_new_CvSeq_Point_2(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
+SWIGINTERN PyObject *_wrap_new_CvSeq_CvPoint_2(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
   PyObject *resultobj = 0;
   CvTypedSeq<CvTuple<CvPoint,2 > > *result = 0 ;
   
-  if (!PyArg_ParseTuple(args,(char *)":new_CvSeq_Point_2")) SWIG_fail;
+  if (!PyArg_ParseTuple(args,(char *)":new_CvSeq_CvPoint_2")) SWIG_fail;
   {
     try {
       result = (CvTypedSeq<CvTuple<CvPoint,2 > > *)new CvTypedSeq<CvTuple<CvPoint,2 > >(); 
@@ -96812,17 +97005,17 @@ fail:
 }
 
 
-SWIGINTERN PyObject *_wrap_delete_CvSeq_Point_2(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
+SWIGINTERN PyObject *_wrap_delete_CvSeq_CvPoint_2(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
   PyObject *resultobj = 0;
   CvTypedSeq<CvTuple<CvPoint,2 > > *arg1 = (CvTypedSeq<CvTuple<CvPoint,2 > > *) 0 ;
   void *argp1 = 0 ;
   int res1 = 0 ;
   PyObject * obj0 = 0 ;
   
-  if (!PyArg_ParseTuple(args,(char *)"O:delete_CvSeq_Point_2",&obj0)) SWIG_fail;
+  if (!PyArg_ParseTuple(args,(char *)"O:delete_CvSeq_CvPoint_2",&obj0)) SWIG_fail;
   res1 = SWIG_ConvertPtr(obj0, &argp1,SWIGTYPE_p_CvTypedSeqTCvTupleTCvPoint_2_t_t, SWIG_POINTER_DISOWN |  0 );
   if (!SWIG_IsOK(res1)) {
-    SWIG_exception_fail(SWIG_ArgError(res1), "in method '" "delete_CvSeq_Point_2" "', argument " "1"" of type '" "CvTypedSeq<CvTuple<CvPoint,2 > > *""'"); 
+    SWIG_exception_fail(SWIG_ArgError(res1), "in method '" "delete_CvSeq_CvPoint_2" "', argument " "1"" of type '" "CvTypedSeq<CvTuple<CvPoint,2 > > *""'"); 
   }
   arg1 = reinterpret_cast< CvTypedSeq<CvTuple<CvPoint,2 > > * >(argp1);
   {
@@ -96841,7 +97034,7 @@ fail:
 }
 
 
-SWIGINTERN PyObject *CvSeq_Point_2_swigregister(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
+SWIGINTERN PyObject *CvSeq_CvPoint_2_swigregister(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
   PyObject *obj;
   if (!PyArg_ParseTuple(args,(char*)"O|swigregister", &obj)) return NULL;
   SWIG_TypeNewClientData(SWIGTYPE_p_CvTypedSeqTCvTupleTCvPoint_2_t_t, SWIG_NewClientData(obj));
@@ -97517,6 +97710,7 @@ static PyMethodDef SwigMethods[] = {
 	 { (char *)"cvHaarDetectObjects", _wrap_cvHaarDetectObjects, METH_VARARGS, NULL},
 	 { (char *)"cvSegmentMotion", _wrap_cvSegmentMotion, METH_VARARGS, NULL},
 	 { (char *)"cvApproxPoly", _wrap_cvApproxPoly, METH_VARARGS, NULL},
+	 { (char *)"cvConvexHull2", _wrap_cvConvexHull2, METH_VARARGS, NULL},
 	 { (char *)"cvReleaseImage", _wrap_cvReleaseImage, METH_VARARGS, NULL},
 	 { (char *)"cvReleaseMat", _wrap_cvReleaseMat, METH_VARARGS, NULL},
 	 { (char *)"cvReleaseStructuringElement", _wrap_cvReleaseStructuringElement, METH_VARARGS, NULL},
@@ -99317,7 +99511,6 @@ static PyMethodDef SwigMethods[] = {
 	 { (char *)"cvContourFromContourTreeUntyped", _wrap_cvContourFromContourTreeUntyped, METH_VARARGS, NULL},
 	 { (char *)"cvMatchContourTrees", _wrap_cvMatchContourTrees, METH_VARARGS, NULL},
 	 { (char *)"cvCalcPGH", _wrap_cvCalcPGH, METH_VARARGS, NULL},
-	 { (char *)"cvConvexHull2", _wrap_cvConvexHull2, METH_VARARGS, NULL},
 	 { (char *)"cvCheckContourConvexity", _wrap_cvCheckContourConvexity, METH_VARARGS, NULL},
 	 { (char *)"cvConvexityDefectsUntyped", _wrap_cvConvexityDefectsUntyped, METH_VARARGS, NULL},
 	 { (char *)"cvFitEllipse2", _wrap_cvFitEllipse2, METH_VARARGS, NULL},
@@ -99435,54 +99628,6 @@ static PyMethodDef SwigMethods[] = {
 	 { (char *)"CvMorphology_get_element_sparse_count", _wrap_CvMorphology_get_element_sparse_count, METH_VARARGS, NULL},
 	 { (char *)"CvMorphology_init_binary_element", _wrap_CvMorphology_init_binary_element, METH_VARARGS, NULL},
 	 { (char *)"CvMorphology_swigregister", CvMorphology_swigregister, METH_VARARGS, NULL},
-	 { (char *)"CvSeq_Point_cast", _wrap_CvSeq_Point_cast, METH_VARARGS, NULL},
-	 { (char *)"CvSeq_Point___getitem__", _wrap_CvSeq_Point___getitem__, METH_VARARGS, NULL},
-	 { (char *)"CvSeq_Point___setitem__", _wrap_CvSeq_Point___setitem__, METH_VARARGS, NULL},
-	 { (char *)"CvSeq_Point_append", _wrap_CvSeq_Point_append, METH_VARARGS, NULL},
-	 { (char *)"CvSeq_Point_pop", _wrap_CvSeq_Point_pop, METH_VARARGS, NULL},
-	 { (char *)"new_CvSeq_Point", _wrap_new_CvSeq_Point, METH_VARARGS, NULL},
-	 { (char *)"delete_CvSeq_Point", _wrap_delete_CvSeq_Point, METH_VARARGS, NULL},
-	 { (char *)"CvSeq_Point_swigregister", CvSeq_Point_swigregister, METH_VARARGS, NULL},
-	 { (char *)"CvSeq_Point2D32f_cast", _wrap_CvSeq_Point2D32f_cast, METH_VARARGS, NULL},
-	 { (char *)"CvSeq_Point2D32f___getitem__", _wrap_CvSeq_Point2D32f___getitem__, METH_VARARGS, NULL},
-	 { (char *)"CvSeq_Point2D32f___setitem__", _wrap_CvSeq_Point2D32f___setitem__, METH_VARARGS, NULL},
-	 { (char *)"CvSeq_Point2D32f_append", _wrap_CvSeq_Point2D32f_append, METH_VARARGS, NULL},
-	 { (char *)"CvSeq_Point2D32f_pop", _wrap_CvSeq_Point2D32f_pop, METH_VARARGS, NULL},
-	 { (char *)"new_CvSeq_Point2D32f", _wrap_new_CvSeq_Point2D32f, METH_VARARGS, NULL},
-	 { (char *)"delete_CvSeq_Point2D32f", _wrap_delete_CvSeq_Point2D32f, METH_VARARGS, NULL},
-	 { (char *)"CvSeq_Point2D32f_swigregister", CvSeq_Point2D32f_swigregister, METH_VARARGS, NULL},
-	 { (char *)"CvSeq_Rect_cast", _wrap_CvSeq_Rect_cast, METH_VARARGS, NULL},
-	 { (char *)"CvSeq_Rect___getitem__", _wrap_CvSeq_Rect___getitem__, METH_VARARGS, NULL},
-	 { (char *)"CvSeq_Rect___setitem__", _wrap_CvSeq_Rect___setitem__, METH_VARARGS, NULL},
-	 { (char *)"CvSeq_Rect_append", _wrap_CvSeq_Rect_append, METH_VARARGS, NULL},
-	 { (char *)"CvSeq_Rect_pop", _wrap_CvSeq_Rect_pop, METH_VARARGS, NULL},
-	 { (char *)"new_CvSeq_Rect", _wrap_new_CvSeq_Rect, METH_VARARGS, NULL},
-	 { (char *)"delete_CvSeq_Rect", _wrap_delete_CvSeq_Rect, METH_VARARGS, NULL},
-	 { (char *)"CvSeq_Rect_swigregister", CvSeq_Rect_swigregister, METH_VARARGS, NULL},
-	 { (char *)"CvSeq_Seq_cast", _wrap_CvSeq_Seq_cast, METH_VARARGS, NULL},
-	 { (char *)"CvSeq_Seq___getitem__", _wrap_CvSeq_Seq___getitem__, METH_VARARGS, NULL},
-	 { (char *)"CvSeq_Seq___setitem__", _wrap_CvSeq_Seq___setitem__, METH_VARARGS, NULL},
-	 { (char *)"CvSeq_Seq_append", _wrap_CvSeq_Seq_append, METH_VARARGS, NULL},
-	 { (char *)"CvSeq_Seq_pop", _wrap_CvSeq_Seq_pop, METH_VARARGS, NULL},
-	 { (char *)"new_CvSeq_Seq", _wrap_new_CvSeq_Seq, METH_VARARGS, NULL},
-	 { (char *)"delete_CvSeq_Seq", _wrap_delete_CvSeq_Seq, METH_VARARGS, NULL},
-	 { (char *)"CvSeq_Seq_swigregister", CvSeq_Seq_swigregister, METH_VARARGS, NULL},
-	 { (char *)"CvSeq_QuadEdge2D_cast", _wrap_CvSeq_QuadEdge2D_cast, METH_VARARGS, NULL},
-	 { (char *)"CvSeq_QuadEdge2D___getitem__", _wrap_CvSeq_QuadEdge2D___getitem__, METH_VARARGS, NULL},
-	 { (char *)"CvSeq_QuadEdge2D___setitem__", _wrap_CvSeq_QuadEdge2D___setitem__, METH_VARARGS, NULL},
-	 { (char *)"CvSeq_QuadEdge2D_append", _wrap_CvSeq_QuadEdge2D_append, METH_VARARGS, NULL},
-	 { (char *)"CvSeq_QuadEdge2D_pop", _wrap_CvSeq_QuadEdge2D_pop, METH_VARARGS, NULL},
-	 { (char *)"new_CvSeq_QuadEdge2D", _wrap_new_CvSeq_QuadEdge2D, METH_VARARGS, NULL},
-	 { (char *)"delete_CvSeq_QuadEdge2D", _wrap_delete_CvSeq_QuadEdge2D, METH_VARARGS, NULL},
-	 { (char *)"CvSeq_QuadEdge2D_swigregister", CvSeq_QuadEdge2D_swigregister, METH_VARARGS, NULL},
-	 { (char *)"CvSeq_ConnectedComp_cast", _wrap_CvSeq_ConnectedComp_cast, METH_VARARGS, NULL},
-	 { (char *)"CvSeq_ConnectedComp___getitem__", _wrap_CvSeq_ConnectedComp___getitem__, METH_VARARGS, NULL},
-	 { (char *)"CvSeq_ConnectedComp___setitem__", _wrap_CvSeq_ConnectedComp___setitem__, METH_VARARGS, NULL},
-	 { (char *)"CvSeq_ConnectedComp_append", _wrap_CvSeq_ConnectedComp_append, METH_VARARGS, NULL},
-	 { (char *)"CvSeq_ConnectedComp_pop", _wrap_CvSeq_ConnectedComp_pop, METH_VARARGS, NULL},
-	 { (char *)"new_CvSeq_ConnectedComp", _wrap_new_CvSeq_ConnectedComp, METH_VARARGS, NULL},
-	 { (char *)"delete_CvSeq_ConnectedComp", _wrap_delete_CvSeq_ConnectedComp, METH_VARARGS, NULL},
-	 { (char *)"CvSeq_ConnectedComp_swigregister", CvSeq_ConnectedComp_swigregister, METH_VARARGS, NULL},
 	 { (char *)"CvTuple_CvPoint_2_val_set", _wrap_CvTuple_CvPoint_2_val_set, METH_VARARGS, NULL},
 	 { (char *)"CvTuple_CvPoint_2_val_get", _wrap_CvTuple_CvPoint_2_val_get, METH_VARARGS, NULL},
 	 { (char *)"CvTuple_CvPoint_2___setitem__", _wrap_CvTuple_CvPoint_2___setitem__, METH_VARARGS, NULL},
@@ -99504,14 +99649,62 @@ static PyMethodDef SwigMethods[] = {
 	 { (char *)"new_CvTuple_float_3", _wrap_new_CvTuple_float_3, METH_VARARGS, NULL},
 	 { (char *)"delete_CvTuple_float_3", _wrap_delete_CvTuple_float_3, METH_VARARGS, NULL},
 	 { (char *)"CvTuple_float_3_swigregister", CvTuple_float_3_swigregister, METH_VARARGS, NULL},
-	 { (char *)"CvSeq_Point_2_cast", _wrap_CvSeq_Point_2_cast, METH_VARARGS, NULL},
-	 { (char *)"CvSeq_Point_2___getitem__", _wrap_CvSeq_Point_2___getitem__, METH_VARARGS, NULL},
-	 { (char *)"CvSeq_Point_2___setitem__", _wrap_CvSeq_Point_2___setitem__, METH_VARARGS, NULL},
-	 { (char *)"CvSeq_Point_2_append", _wrap_CvSeq_Point_2_append, METH_VARARGS, NULL},
-	 { (char *)"CvSeq_Point_2_pop", _wrap_CvSeq_Point_2_pop, METH_VARARGS, NULL},
-	 { (char *)"new_CvSeq_Point_2", _wrap_new_CvSeq_Point_2, METH_VARARGS, NULL},
-	 { (char *)"delete_CvSeq_Point_2", _wrap_delete_CvSeq_Point_2, METH_VARARGS, NULL},
-	 { (char *)"CvSeq_Point_2_swigregister", CvSeq_Point_2_swigregister, METH_VARARGS, NULL},
+	 { (char *)"CvSeq_CvPoint_cast", _wrap_CvSeq_CvPoint_cast, METH_VARARGS, NULL},
+	 { (char *)"CvSeq_CvPoint___getitem__", _wrap_CvSeq_CvPoint___getitem__, METH_VARARGS, NULL},
+	 { (char *)"CvSeq_CvPoint___setitem__", _wrap_CvSeq_CvPoint___setitem__, METH_VARARGS, NULL},
+	 { (char *)"CvSeq_CvPoint_append", _wrap_CvSeq_CvPoint_append, METH_VARARGS, NULL},
+	 { (char *)"CvSeq_CvPoint_pop", _wrap_CvSeq_CvPoint_pop, METH_VARARGS, NULL},
+	 { (char *)"new_CvSeq_CvPoint", _wrap_new_CvSeq_CvPoint, METH_VARARGS, NULL},
+	 { (char *)"delete_CvSeq_CvPoint", _wrap_delete_CvSeq_CvPoint, METH_VARARGS, NULL},
+	 { (char *)"CvSeq_CvPoint_swigregister", CvSeq_CvPoint_swigregister, METH_VARARGS, NULL},
+	 { (char *)"CvSeq_CvPoint2D32f_cast", _wrap_CvSeq_CvPoint2D32f_cast, METH_VARARGS, NULL},
+	 { (char *)"CvSeq_CvPoint2D32f___getitem__", _wrap_CvSeq_CvPoint2D32f___getitem__, METH_VARARGS, NULL},
+	 { (char *)"CvSeq_CvPoint2D32f___setitem__", _wrap_CvSeq_CvPoint2D32f___setitem__, METH_VARARGS, NULL},
+	 { (char *)"CvSeq_CvPoint2D32f_append", _wrap_CvSeq_CvPoint2D32f_append, METH_VARARGS, NULL},
+	 { (char *)"CvSeq_CvPoint2D32f_pop", _wrap_CvSeq_CvPoint2D32f_pop, METH_VARARGS, NULL},
+	 { (char *)"new_CvSeq_CvPoint2D32f", _wrap_new_CvSeq_CvPoint2D32f, METH_VARARGS, NULL},
+	 { (char *)"delete_CvSeq_CvPoint2D32f", _wrap_delete_CvSeq_CvPoint2D32f, METH_VARARGS, NULL},
+	 { (char *)"CvSeq_CvPoint2D32f_swigregister", CvSeq_CvPoint2D32f_swigregister, METH_VARARGS, NULL},
+	 { (char *)"CvSeq_CvRect_cast", _wrap_CvSeq_CvRect_cast, METH_VARARGS, NULL},
+	 { (char *)"CvSeq_CvRect___getitem__", _wrap_CvSeq_CvRect___getitem__, METH_VARARGS, NULL},
+	 { (char *)"CvSeq_CvRect___setitem__", _wrap_CvSeq_CvRect___setitem__, METH_VARARGS, NULL},
+	 { (char *)"CvSeq_CvRect_append", _wrap_CvSeq_CvRect_append, METH_VARARGS, NULL},
+	 { (char *)"CvSeq_CvRect_pop", _wrap_CvSeq_CvRect_pop, METH_VARARGS, NULL},
+	 { (char *)"new_CvSeq_CvRect", _wrap_new_CvSeq_CvRect, METH_VARARGS, NULL},
+	 { (char *)"delete_CvSeq_CvRect", _wrap_delete_CvSeq_CvRect, METH_VARARGS, NULL},
+	 { (char *)"CvSeq_CvRect_swigregister", CvSeq_CvRect_swigregister, METH_VARARGS, NULL},
+	 { (char *)"CvSeq_CvSeq_cast", _wrap_CvSeq_CvSeq_cast, METH_VARARGS, NULL},
+	 { (char *)"CvSeq_CvSeq___getitem__", _wrap_CvSeq_CvSeq___getitem__, METH_VARARGS, NULL},
+	 { (char *)"CvSeq_CvSeq___setitem__", _wrap_CvSeq_CvSeq___setitem__, METH_VARARGS, NULL},
+	 { (char *)"CvSeq_CvSeq_append", _wrap_CvSeq_CvSeq_append, METH_VARARGS, NULL},
+	 { (char *)"CvSeq_CvSeq_pop", _wrap_CvSeq_CvSeq_pop, METH_VARARGS, NULL},
+	 { (char *)"new_CvSeq_CvSeq", _wrap_new_CvSeq_CvSeq, METH_VARARGS, NULL},
+	 { (char *)"delete_CvSeq_CvSeq", _wrap_delete_CvSeq_CvSeq, METH_VARARGS, NULL},
+	 { (char *)"CvSeq_CvSeq_swigregister", CvSeq_CvSeq_swigregister, METH_VARARGS, NULL},
+	 { (char *)"CvSeq_CvQuadEdge2D_cast", _wrap_CvSeq_CvQuadEdge2D_cast, METH_VARARGS, NULL},
+	 { (char *)"CvSeq_CvQuadEdge2D___getitem__", _wrap_CvSeq_CvQuadEdge2D___getitem__, METH_VARARGS, NULL},
+	 { (char *)"CvSeq_CvQuadEdge2D___setitem__", _wrap_CvSeq_CvQuadEdge2D___setitem__, METH_VARARGS, NULL},
+	 { (char *)"CvSeq_CvQuadEdge2D_append", _wrap_CvSeq_CvQuadEdge2D_append, METH_VARARGS, NULL},
+	 { (char *)"CvSeq_CvQuadEdge2D_pop", _wrap_CvSeq_CvQuadEdge2D_pop, METH_VARARGS, NULL},
+	 { (char *)"new_CvSeq_CvQuadEdge2D", _wrap_new_CvSeq_CvQuadEdge2D, METH_VARARGS, NULL},
+	 { (char *)"delete_CvSeq_CvQuadEdge2D", _wrap_delete_CvSeq_CvQuadEdge2D, METH_VARARGS, NULL},
+	 { (char *)"CvSeq_CvQuadEdge2D_swigregister", CvSeq_CvQuadEdge2D_swigregister, METH_VARARGS, NULL},
+	 { (char *)"CvSeq_CvConnectedComp_cast", _wrap_CvSeq_CvConnectedComp_cast, METH_VARARGS, NULL},
+	 { (char *)"CvSeq_CvConnectedComp___getitem__", _wrap_CvSeq_CvConnectedComp___getitem__, METH_VARARGS, NULL},
+	 { (char *)"CvSeq_CvConnectedComp___setitem__", _wrap_CvSeq_CvConnectedComp___setitem__, METH_VARARGS, NULL},
+	 { (char *)"CvSeq_CvConnectedComp_append", _wrap_CvSeq_CvConnectedComp_append, METH_VARARGS, NULL},
+	 { (char *)"CvSeq_CvConnectedComp_pop", _wrap_CvSeq_CvConnectedComp_pop, METH_VARARGS, NULL},
+	 { (char *)"new_CvSeq_CvConnectedComp", _wrap_new_CvSeq_CvConnectedComp, METH_VARARGS, NULL},
+	 { (char *)"delete_CvSeq_CvConnectedComp", _wrap_delete_CvSeq_CvConnectedComp, METH_VARARGS, NULL},
+	 { (char *)"CvSeq_CvConnectedComp_swigregister", CvSeq_CvConnectedComp_swigregister, METH_VARARGS, NULL},
+	 { (char *)"CvSeq_CvPoint_2_cast", _wrap_CvSeq_CvPoint_2_cast, METH_VARARGS, NULL},
+	 { (char *)"CvSeq_CvPoint_2___getitem__", _wrap_CvSeq_CvPoint_2___getitem__, METH_VARARGS, NULL},
+	 { (char *)"CvSeq_CvPoint_2___setitem__", _wrap_CvSeq_CvPoint_2___setitem__, METH_VARARGS, NULL},
+	 { (char *)"CvSeq_CvPoint_2_append", _wrap_CvSeq_CvPoint_2_append, METH_VARARGS, NULL},
+	 { (char *)"CvSeq_CvPoint_2_pop", _wrap_CvSeq_CvPoint_2_pop, METH_VARARGS, NULL},
+	 { (char *)"new_CvSeq_CvPoint_2", _wrap_new_CvSeq_CvPoint_2, METH_VARARGS, NULL},
+	 { (char *)"delete_CvSeq_CvPoint_2", _wrap_delete_CvSeq_CvPoint_2, METH_VARARGS, NULL},
+	 { (char *)"CvSeq_CvPoint_2_swigregister", CvSeq_CvPoint_2_swigregister, METH_VARARGS, NULL},
 	 { (char *)"CvSeq_float_2_cast", _wrap_CvSeq_float_2_cast, METH_VARARGS, NULL},
 	 { (char *)"CvSeq_float_2___getitem__", _wrap_CvSeq_float_2___getitem__, METH_VARARGS, NULL},
 	 { (char *)"CvSeq_float_2___setitem__", _wrap_CvSeq_float_2___setitem__, METH_VARARGS, NULL},
