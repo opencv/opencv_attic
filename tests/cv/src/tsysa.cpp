@@ -46,7 +46,6 @@ void InitACalibration();
 void InitAChessCorners();
 void InitAConDens();
 void InitAEMD();
-void InitAHaar();
 void InitACalcContrastHist();
 void InitACalcOpticalFlowLK();
 void InitACalcOpticalFlowHS(); 
@@ -60,10 +59,11 @@ void InitAOptFlowPyrLK();
 void InitAPixelAccess();
 void InitASnakes();
 void InitAEigenObjects();
-void InitAContourMoments();
+
 void InitAMatchContours();
 void InitACreateContourTree();
 void InitAMatchContourTrees();
+
 void InitAPyrSegmentation();
 void InitAPOSIT();
 
@@ -95,7 +95,6 @@ int main(int argC,char *argV[])
     InitACalibration();
     InitAChessCorners();
     InitAConDens();
-    InitAContourMoments();
     InitACreateContourTree();
     InitAEigenObjects();
     InitAEMD();
