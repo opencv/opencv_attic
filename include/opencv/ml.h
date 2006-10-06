@@ -1108,6 +1108,11 @@ public:
 
     int get_layer_count() { return layer_sizes ? layer_sizes->cols : 0; }
     const CvMat* get_layer_sizes() { return layer_sizes; }
+    double* get_weights(int layer)
+    {
+        return layer_sizes && weights &&
+            (unsigned)layer <= (unsigned)layer_sizes->cols ? weights[layer] : 0;
+    }
 
 protected:
 
