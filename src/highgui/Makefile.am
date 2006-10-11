@@ -60,8 +60,9 @@ endif
 # convenience library
 lib_highgui_la_SOURCES = \
     bitstrm.cpp grfmt_base.cpp grfmt_bmp.cpp grfmt_jpeg.cpp      \
-    grfmt_png.cpp grfmt_pxm.cpp grfmt_sunras.cpp grfmt_tiff.cpp  \
-    image.cpp loadsave.cpp precomp.cpp utils.cpp cvcap.cpp       \
+    grfmt_png.cpp grfmt_pxm.cpp grfmt_jpeg2000.cpp grfmt_exr.cpp \
+    grfmt_sunras.cpp grfmt_tiff.cpp image.cpp loadsave.cpp       \
+    precomp.cpp utils.cpp cvcap.cpp                              \
     $(TMP_DC1394) $(TMP_V4L) $(TMP_FFMPEG) $(TMP_QT)             \
     $(TMP_XINE) $(TMP_GTK) $(TMP_CARBON)
 lib_highgui_la_LDFLAGS = -no-undefined @LDFLAGS@

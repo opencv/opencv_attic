@@ -412,7 +412,7 @@ GrFmtSunRasterWriter::~GrFmtSunRasterWriter()
 
 
 bool  GrFmtSunRasterWriter::WriteImage( const uchar* data, int step,
-                                        int width, int height, int channels )
+                                        int width, int height, int /*depth*/, int channels )
 {
     bool result = false;
     int  fileStep = (width*channels + 1) & -2;

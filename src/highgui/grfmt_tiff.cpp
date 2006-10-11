@@ -679,7 +679,7 @@ void  GrFmtTiffWriter::WriteTag( TiffTag tag, TiffFieldType fieldType,
 
 
 bool  GrFmtTiffWriter::WriteImage( const uchar* data, int step,
-                                   int width, int height, int channels )
+                                   int width, int height, int /*depth*/, int channels )
 {
     bool result = false;
     int fileStep = width*channels;
@@ -707,7 +707,7 @@ bool  GrFmtTiffWriter::WriteImage( const uchar* data, int step,
         uchar* buffer = new uchar[fileStep + 32];
         int  stripOffsetsOffset = 0;
         int  stripCountsOffset = 0;
-        int  bitsPerSample = 8;
+        int  bitsPerSample = 8; // TODO support 16 bit
         int  y = 0;
 
         m_strm.PutBytes( fmtSignTiffII, 4 );
@@ -750,15 +750,15 @@ bool  GrFmtTiffWriter::WriteImage( const uchar* data, int step,
             for( i = 0; i < stripCount; i++ )
                 m_strm.PutWord( stripCounts[i] );
         }
-	else if(stripCount == 2)
-	{
-	    stripOffsetsOffset = m_strm.GetPos();
+        else if(stripCount == 2)
+        {
+            stripOffsetsOffset = m_strm.GetPos();
             for (i = 0; i < stripCount; i++)
             {
                 m_strm.PutDWord (stripOffsets [i]);
-	    }
-	    stripCountsOffset = stripCounts [0] + (stripCounts [1] << 16);
-	}
+            }
+            stripCountsOffset = stripCounts [0] + (stripCounts [1] << 16);
+        }
         else
         {
             stripOffsetsOffset = stripOffsets[0];
@@ -780,9 +780,9 @@ bool  GrFmtTiffWriter::WriteImage( const uchar* data, int step,
         // write header
         m_strm.PutWord( 9 );
 
-	/* warning: specification 5.0 of Tiff want to have tags in
-	   ascending order. This is a non-fatal error, but this cause
-	   warning with some tools. So, keep this in ascending order */
+        /* warning: specification 5.0 of Tiff want to have tags in
+           ascending order. This is a non-fatal error, but this cause
+           warning with some tools. So, keep this in ascending order */
 
         WriteTag( TIFF_TAG_WIDTH, TIFF_TYPE_LONG, 1, width );
         WriteTag( TIFF_TAG_HEIGHT, TIFF_TYPE_LONG, 1, height );

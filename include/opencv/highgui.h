@@ -176,15 +176,23 @@ typedef void (CV_CDECL *CvMouseCallback )(int event, int x, int y, int flags, vo
 CVAPI(void) cvSetMouseCallback( const char* window_name, CvMouseCallback on_mouse,
                                 void* param CV_DEFAULT(NULL));
 
-
-#define CV_LOAD_IMAGE_COLOR       1
-#define CV_LOAD_IMAGE_GRAYSCALE   0
+/* 8bit, color or not */
 #define CV_LOAD_IMAGE_UNCHANGED  -1
+/* 8bit, gray */
+#define CV_LOAD_IMAGE_GRAYSCALE   0
+/* ?, color */
+#define CV_LOAD_IMAGE_COLOR       1
+/* any depth, ? */ 
+#define CV_LOAD_IMAGE_ANYDEPTH    2
+/* ?, any color */
+#define CV_LOAD_IMAGE_ANYCOLOR    4
 
 /* load image from file 
-  iscolor: >0 - output image is always color,
-            0 - output image is always grayscale,
-           <0 - output image is color or grayscale dependending on the file */
+  iscolor can be a combination of above flags where CV_LOAD_IMAGE_UNCHANGED
+  overrides the other flags
+  using CV_LOAD_IMAGE_ANYCOLOR alone is equivalent to CV_LOAD_IMAGE_UNCHANGED
+  unless CV_LOAD_IMAGE_ANYDEPTH is specified images are converted to 8bit
+*/
 CVAPI(IplImage*) cvLoadImage( const char* filename, int iscolor CV_DEFAULT(CV_LOAD_IMAGE_COLOR));
 CVAPI(CvMat*) cvLoadImageM( const char* filename, int iscolor CV_DEFAULT(CV_LOAD_IMAGE_COLOR));
 

@@ -76,7 +76,7 @@ public:
     ~GrFmtJpegWriter();
 
     bool  WriteImage( const uchar* data, int step,
-                      int width, int height, int channels );
+                      int width, int height, int depth, int channels );
 };
 
 #else
@@ -188,7 +188,7 @@ public:
     ~GrFmtJpegWriter();
 
     bool  WriteImage( const uchar* data, int step,
-                      int width, int height, int channels );
+                      int width, int height, int depth, int channels );
 
 protected:
 

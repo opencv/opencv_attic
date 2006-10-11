@@ -196,10 +196,12 @@ bool  GrFmtPngReader::ReadData( uchar* data, int step, int color )
         {
             int y;
 
-            if( m_bit_depth > 8 )
+            if( m_bit_depth > 8 && !m_native_depth )
                 png_set_strip_16( png_ptr );
-	    
-	    /* observation: png_read_image() writes 400 bytes beyond
+            else if( !isBigEndian() )
+                png_set_swap( png_ptr );
+
+            /* observation: png_read_image() writes 400 bytes beyond
              * end of data when reading a 400x118 color png
              * "mpplus_sand.png".  OpenCV crashes even with demo
              * programs.  Looking at the loaded image I'd say we get 4
@@ -207,7 +209,7 @@ bool  GrFmtPngReader::ReadData( uchar* data, int step, int color )
              * indicate that it is a good idea to always ask for
              * stripping alpha..  18.11.2004 Axel Walthelm
              */
-	    png_set_strip_alpha( png_ptr );
+            png_set_strip_alpha( png_ptr );
 
             if( m_color_type == PNG_COLOR_TYPE_PALETTE )
                 png_set_palette_to_rgb( png_ptr );
@@ -256,8 +258,13 @@ GrFmtPngWriter::~GrFmtPngWriter()
 }
 
 
+bool  GrFmtPngWriter::IsFormatSupported( int depth )
+{
+    return depth == IPL_DEPTH_8U || depth == IPL_DEPTH_16U;
+}
+
 bool  GrFmtPngWriter::WriteImage( const uchar* data, int step,
-                                  int width, int height, int channels )
+                                  int width, int height, int depth, int channels )
 {
     png_structp png_ptr = png_create_write_struct( PNG_LIBPNG_VER_STRING, 0, 0, 0 );
     png_infop info_ptr = 0;
@@ -265,6 +272,9 @@ bool  GrFmtPngWriter::WriteImage( const uchar* data, int step,
     uchar** buffer = 0;
     int y;
     bool result = false;
+
+    if( depth != IPL_DEPTH_8U && depth != IPL_DEPTH_16U )
+        return false;
 
     if( png_ptr )
     {
@@ -282,7 +292,7 @@ bool  GrFmtPngWriter::WriteImage( const uchar* data, int step,
 
                     png_set_compression_mem_level( png_ptr, MAX_MEM_LEVEL );
 
-                    png_set_IHDR( png_ptr, info_ptr, width, height, 8,
+                    png_set_IHDR( png_ptr, info_ptr, width, height, depth,
                         channels == 1 ? PNG_COLOR_TYPE_GRAY :
                         channels == 3 ? PNG_COLOR_TYPE_RGB : PNG_COLOR_TYPE_RGBA,
                         PNG_INTERLACE_NONE, PNG_COMPRESSION_TYPE_DEFAULT,
@@ -290,7 +300,9 @@ bool  GrFmtPngWriter::WriteImage( const uchar* data, int step,
 
                     png_write_info( png_ptr, info_ptr );
 
-                    png_set_bgr(png_ptr);
+                    png_set_bgr( png_ptr );
+                    if( !isBigEndian() )
+                        png_set_swap( png_ptr );
 
                     buffer = new uchar*[height];
                     for( y = 0; y < height; y++ )
@@ -298,6 +310,8 @@ bool  GrFmtPngWriter::WriteImage( const uchar* data, int step,
 
                     png_write_image( png_ptr, buffer );
                     png_write_end( png_ptr, info_ptr );
+
+                    delete[] buffer;
                 
                     result = true;
                 }
@@ -308,7 +322,6 @@ bool  GrFmtPngWriter::WriteImage( const uchar* data, int step,
     png_destroy_write_struct( &png_ptr, &info_ptr );
 
     if(f) fclose( f );
-    delete[] buffer;
 
     return result;
 }

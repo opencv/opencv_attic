@@ -491,14 +491,14 @@ GrFmtBmpWriter::~GrFmtBmpWriter()
 
 
 bool  GrFmtBmpWriter::WriteImage( const uchar* data, int step,
-                                  int width, int height, int channels )
+                                  int width, int height, int /*depth*/, int channels )
 {
     bool result = false;
     int fileStep = (width*channels + 3) & -4;
     uchar zeropad[] = "\0\0\0\0";
 
-    assert( data && width > 0 && height > 0 && step >= fileStep);
-    
+    assert( data && width > 0 && height > 0 && step >= fileStep );
+
     if( m_strm.Open( m_filename ) )
     {
         int  bitmapHeaderSize = 40;

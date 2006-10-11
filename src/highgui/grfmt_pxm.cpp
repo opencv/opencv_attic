@@ -330,7 +330,7 @@ static char PxMLUT[256][5];
 static bool isPxMLUTInitialized = false;
 
 bool  GrFmtPxMWriter::WriteImage( const uchar* data, int step,
-                                  int width, int height, int _channels )
+                                  int width, int height, int /*depth*/, int _channels )
 {
     bool isBinary = false;
     bool result = false;

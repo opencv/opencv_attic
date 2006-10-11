@@ -39,69 +39,77 @@
 //
 //M*/
 
-#ifndef _GRFMT_BMP_H_
-#define _GRFMT_BMP_H_
+#ifndef _GRFMT_JASPER_H_
+#define _GRFMT_JASPER_H_
 
+#ifdef HAVE_JASPER
+
+#ifdef WIN32
+#define JAS_WIN_MSVC_BUILD 1
+#endif
+
+#include <jasper/jasper.h>
+// FIXME bad hack
+#undef uchar
+#undef ulong
 #include "grfmt_base.h"
 
-enum BmpCompression
-{
-    BMP_RGB = 0,
-    BMP_RLE8 = 1,
-    BMP_RLE4 = 2,
-    BMP_BITFIELDS = 3
-};
 
+/* libpng version only */
 
-// Windows Bitmap reader
-class GrFmtBmpReader : public GrFmtReader
+class GrFmtJpeg2000Reader : public GrFmtReader
 {
 public:
-    
-    GrFmtBmpReader( const char* filename );
-    ~GrFmtBmpReader();
-    
+
+    GrFmtJpeg2000Reader( const char* filename );
+    ~GrFmtJpeg2000Reader();
+
+    bool  CheckFormat( const char* signature );
     bool  ReadData( uchar* data, int step, int color );
     bool  ReadHeader();
     void  Close();
 
 protected:
-    
-    RLByteStream    m_strm;
-    PaletteEntry    m_palette[256];
-    int             m_bpp;
-    int             m_offset;
-    BmpCompression  m_rle_code;
+    bool  ReadComponent8u( uchar *data, jas_matrix_t *buffer, int step, int cmpt,
+                           int maxval, int offset, int ncmpts );
+    bool  ReadComponent16u( unsigned short *data, jas_matrix_t *buffer, int step, int cmpt,
+                            int maxval, int offset, int ncmpts );
+
+    jas_stream_t *m_stream;
+    jas_image_t  *m_image;
 };
 
 
-// ... writer
-class GrFmtBmpWriter : public GrFmtWriter
+class GrFmtJpeg2000Writer : public GrFmtWriter
 {
 public:
-    
-    GrFmtBmpWriter( const char* filename );
-    ~GrFmtBmpWriter();
-    
+
+    GrFmtJpeg2000Writer( const char* filename );
+    ~GrFmtJpeg2000Writer();
+
+    bool  IsFormatSupported( int depth );
     bool  WriteImage( const uchar* data, int step,
                       int width, int height, int depth, int channels );
 protected:
-
-    WLByteStream  m_strm;
+    bool  WriteComponent8u( jas_image_t *img, const uchar *data,
+                            int step, int ncmpts, int w, int h );
+    bool  WriteComponent16u( jas_image_t *img, const unsigned short *data,
+                             int step, int ncmpts, int w, int h );
 };
 
 
-// ... and filter factory
-class GrFmtBmp : public GrFmtFilterFactory
+// PNG filter factory
+class GrFmtJpeg2000 : public GrFmtFilterFactory
 {
 public:
-    
-    GrFmtBmp();
-    ~GrFmtBmp();
+
+    GrFmtJpeg2000();
+    ~GrFmtJpeg2000();
 
     GrFmtReader* NewReader( const char* filename );
     GrFmtWriter* NewWriter( const char* filename );
-
 };
 
-#endif/*_GRFMT_BMP_H_*/
+#endif
+
+#endif/*_GRFMT_JASPER_H_*/
