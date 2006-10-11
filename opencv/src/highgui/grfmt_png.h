@@ -68,7 +68,6 @@ protected:
     void* m_end_info; // pointer to one more image information structure
     FILE* m_f;
     int   m_color_type;
-    int   m_bit_depth;
 };
 
 
@@ -79,9 +78,9 @@ public:
     GrFmtPngWriter( const char* filename );
     ~GrFmtPngWriter();
 
+    bool  IsFormatSupported( int depth );
     bool  WriteImage( const uchar* data, int step,
-                      int width, int height, int channels );
-
+                      int width, int height, int depth, int channels );
 protected:
 };
 

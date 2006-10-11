@@ -39,69 +39,78 @@
 //
 //M*/
 
-#ifndef _GRFMT_BMP_H_
-#define _GRFMT_BMP_H_
+#ifndef _GRFMT_EXR_H_
+#define _GRFMT_EXR_H_
 
+#ifdef HAVE_ILMIMF
+
+#include <ImfChromaticities.h>
+#include <ImfInputFile.h>
+#include <ImfChannelList.h>
+#include <ImathBox.h>
 #include "grfmt_base.h"
 
-enum BmpCompression
-{
-    BMP_RGB = 0,
-    BMP_RLE8 = 1,
-    BMP_RLE4 = 2,
-    BMP_BITFIELDS = 3
-};
+using namespace Imf;
+using namespace Imath;
 
+/* libpng version only */
 
-// Windows Bitmap reader
-class GrFmtBmpReader : public GrFmtReader
+class GrFmtExrReader : public GrFmtReader
 {
 public:
-    
-    GrFmtBmpReader( const char* filename );
-    ~GrFmtBmpReader();
-    
+
+    GrFmtExrReader( const char* filename );
+    ~GrFmtExrReader();
+
     bool  ReadData( uchar* data, int step, int color );
     bool  ReadHeader();
     void  Close();
 
 protected:
-    
-    RLByteStream    m_strm;
-    PaletteEntry    m_palette[256];
-    int             m_bpp;
-    int             m_offset;
-    BmpCompression  m_rle_code;
+    void  UpSample( uchar *data, int xstep, int ystep, int xsample, int ysample );
+    void  UpSampleX( float *data, int xstep, int xsample );
+    void  UpSampleY( uchar *data, int xstep, int ystep, int ysample );
+    void  ChromaToBGR( float *data, int numlines, int step );
+    void  RGBToGray( float *in, float *out );
+
+    InputFile      *m_file;
+    PixelType       m_type;
+    Box2i           m_datawindow;
+    bool            m_ischroma;
+    const Channel  *m_red;
+    const Channel  *m_green;
+    const Channel  *m_blue;
+    Chromaticities  m_chroma;
 };
 
 
-// ... writer
-class GrFmtBmpWriter : public GrFmtWriter
+class GrFmtExrWriter : public GrFmtWriter
 {
 public:
-    
-    GrFmtBmpWriter( const char* filename );
-    ~GrFmtBmpWriter();
-    
+
+    GrFmtExrWriter( const char* filename );
+    ~GrFmtExrWriter();
+
+    bool  IsFormatSupported( int depth );
     bool  WriteImage( const uchar* data, int step,
                       int width, int height, int depth, int channels );
 protected:
-
-    WLByteStream  m_strm;
 };
 
 
-// ... and filter factory
-class GrFmtBmp : public GrFmtFilterFactory
+// Exr filter factory
+class GrFmtExr : public GrFmtFilterFactory
 {
 public:
-    
-    GrFmtBmp();
-    ~GrFmtBmp();
+
+    GrFmtExr();
+    ~GrFmtExr();
 
     GrFmtReader* NewReader( const char* filename );
     GrFmtWriter* NewWriter( const char* filename );
-
+//    bool CheckSignature( const char* signature );
 };
 
-#endif/*_GRFMT_BMP_H_*/
+#endif
+
+#endif/*_GRFMT_EXR_H_*/

@@ -428,7 +428,7 @@ GrFmtJpegWriter::~GrFmtJpegWriter()
 
 
 bool  GrFmtJpegWriter::WriteImage( const uchar* data, int step,
-                                   int width, int height, int _channels )
+                                   int width, int height, int /*depth*/, int _channels )
 {
     const int default_quality = 90;
     struct jpeg_compress_struct cinfo;
@@ -1579,7 +1579,7 @@ static void aan_fdct8x8( int *src, int *dst,
 
 
 bool  GrFmtJpegWriter::WriteImage( const uchar* data, int step,
-                                   int width, int height, int _channels )
+                                   int width, int height, int /*depth*/, int _channels )
 {
     assert( data && width > 0 && height > 0 );
     

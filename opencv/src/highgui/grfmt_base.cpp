@@ -51,6 +51,9 @@ GrFmtReader::GrFmtReader( const char* filename )
     m_filename[sizeof(m_filename)-1] = '\0';
     m_width = m_height = 0;
     m_iscolor = false;
+    m_bit_depth = 8;
+    m_native_depth = false;
+    m_isfloat = false;
 }
 
 
@@ -73,6 +76,11 @@ GrFmtWriter::GrFmtWriter( const char* filename )
     m_filename[sizeof(m_filename)-1] = '\0';
 }
 
+
+bool  GrFmtWriter::IsFormatSupported( int depth )
+{
+    return depth == IPL_DEPTH_8U;
+}
 
 
 GrFmtFilterFactory::GrFmtFilterFactory()
