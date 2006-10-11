@@ -23,7 +23,7 @@ AC_CONFIG_AUX_DIR([autotools])
 AC_CONFIG_MACRO_DIR([autotools/aclocal])
 
 # put CVS revision of this configure.in into the resulting configure script
-AC_REVISION($Revision: 1.32 $)
+AC_REVISION($Revision: 1.33 $)
 
 # Detect the canonical host and target build environment
 AC_CANONICAL_HOST
@@ -607,6 +607,27 @@ AC_CHECK_HEADER(tiff.h,
                                LIBS="$LIBS -ltiff"
                              ]))
 
+have_jasper=no
+AC_CHECK_HEADER(jasper/jasper.h,
+                AC_CHECK_LIB(jasper, jas_image_readcmpt,
+                             [
+                               have_jasper=yes
+                               AC_DEFINE(HAVE_JASPER,,[JPEG-2000 codec])
+                               IMAGELIBS="$IMAGELIBS -ljasper"
+                               LIBS="$LIBS -ljasper"
+                             ]))
+
+have_ilmimf=no
+AC_CHECK_HEADER(ImfCRgbaFile.h,
+                AC_CHECK_LIB(IlmImf, ImfInputReadPixels,
+                             [
+                               have_ilmimf=yes
+                               AC_DEFINE(HAVE_ILMIMF,,[OpenEXR codec])
+                               IMAGELIBS="$IMAGELIBS -lIlmImf -lIex -lHalf"
+                               LIBS="$LIBS -lIlmImf -lIex -lHalf"
+                             ],,
+                             [ -lIex -lHalf ]))
+
 # Restore original LIBS settings...
 LIBS="$SAVELIBS"
 AC_SUBST(IMAGELIBS)
@@ -761,6 +782,8 @@ HighGUI configuration ================================================
     Use zlib:                 ${have_zlib}
     Use libpng:               ${have_png}
     Use libtiff:              ${have_tiff}
+    Use libjasper:            ${have_jasper}
+    Use libIlmImf:            ${have_ilmimf}
     
     Video I/O ---------------------
     Use QuickTime / Mac OS X: ${have_quicktime}
