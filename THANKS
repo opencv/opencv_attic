@@ -49,7 +49,7 @@ Gruebele, Philip        ???                        Multiple patches for OpenCV
 Halsall, Chris          Open Source Solutions Inc  O-Reilly papers on OpenCV,
                                                    calibration app for Linux (is not supported now?)
                                                    patches for Linux version
-
+Hasler, Nils            ???                        16-bit images support, Jasper and OpenEXR bindings in HighGUI
 Khamenya, Valery        BioVisioN AG               OpenCV CVS repository at SourceForge
 Khudyakov, Vasily       Novosibirsk University     Face feature detection
 Kruppa, Hannes          ETH Zurich                 Haar classifier for fullbody, lowerbody, upperbody detection.
