@@ -1019,6 +1019,7 @@ void CvTS::clear()
 CvTS::~CvTS()
 {
     clear();
+    set_data_path(0);
 
     if( written_params )
     {
@@ -1040,6 +1041,7 @@ const char* CvTS::str_from_code( int code )
     case OK: return "Ok";
     case FAIL_GENERIC: return "Generic/Unknown";
     case FAIL_MISSING_TEST_DATA: return "No test data";
+    case FAIL_INVALID_TEST_DATA: return "Invalid test data";
     case FAIL_ERROR_IN_CALLED_FUNC: return "cvError invoked";
     case FAIL_EXCEPTION: return "Hardware/OS exception";
     case FAIL_MEMORY_EXCEPTION: return "Invalid memory access";
@@ -1108,6 +1110,25 @@ void CvTS::set_handlers( bool on )
         for( int i = 0; cv_ts_sig_id[i] >= 0; i++ )
             signal( cv_ts_sig_id[i], SIG_DFL );
     #endif
+    }
+}
+
+
+void CvTS::set_data_path( const char* data_path )
+{
+    if( data_path == params.data_path )
+        return;
+    
+    if( params.data_path )
+        delete[] params.data_path;
+    if( data_path )
+    {
+        int size = strlen(data_path)+1;
+        bool append_slash = data_path[size-1] != '/' && data_path[size-1] != '\\';
+        params.data_path = new char[size+1];
+        memcpy( params.data_path, data_path, size );
+        if( append_slash )
+            strcat( params.data_path, "/" );
     }
 }
 
@@ -1222,6 +1243,8 @@ int CvTS::run( int argc, char** argv )
                 params.test_mode = TIMING_MODE;
             else if( strcmp( argv[i], "-l" ) == 0 )
                 list_tests = 1;
+            else if( strcmp( argv[i], "-d" ) == 0 )
+                set_data_path(argv[++i]);
         }
     }
 
@@ -1418,9 +1441,17 @@ _exit_:
 }
 
 
+#ifdef WIN32
+const char* default_data_path = "../tests/cv/testdata/";
+#else
+const char* default_data_path = "../../../../tests/cv/testdata/";
+#endif
+
+
 int CvTS::read_params( CvFileStorage* fs )
 {
     CvFileNode* node = fs ? cvGetFileNodeByName( fs, 0, "common" ) : 0;
+    const char* data_path;
     params.debug_mode = cvReadIntByName( fs, node, "debug_mode", 1 ) != 0;
     params.skip_header = cvReadIntByName( fs, node, "skip_header", 0 ) != 0;
     params.print_only_failed = cvReadIntByName( fs, node, "print_only_failed", 0 ) != 0;
@@ -1437,6 +1468,9 @@ int CvTS::read_params( CvFileStorage* fs )
                                                      "functions" : "tests", "" );
     params.resource_path = cvReadStringByName( fs, node, "." );
     params.use_optimized = cvReadIntByName( fs, node, "use_optimized", -1 );
+    data_path = cvReadStringByName( fs, node, "data_path", default_data_path );
+    if( !params.data_path || !params.data_path[0] )
+        set_data_path(data_path);
     params.test_case_count_scale = cvReadRealByName( fs, node, "test_case_count_scale", 1. );
     if( params.test_case_count_scale <= 0 )
         params.test_case_count_scale = 1.;
@@ -1480,6 +1514,7 @@ void CvTS::write_default_params( CvFileStorage* fs )
     cvWriteInt( fs, "rerun_immediately", params.rerun_immediately );
     cvWriteString( fs, "filter_mode", params.test_filter_mode == CHOOSE_FUNCTIONS ? "functions" : "tests" );
     cvWriteString( fs, "test_mode", params.test_mode == TIMING_MODE ? "timing" : "correctness" );
+    cvWriteString( fs, "data_path", params.data_path ? params.data_path : default_data_path, 1 );
     if( params.test_mode == TIMING_MODE )
         cvWriteString( fs, "timing_mode", params.timing_mode == AVG_TIME ? "avg" : "min" );
     // test_filter, seed & output_file_base_name are not written
