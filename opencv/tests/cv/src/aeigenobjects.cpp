@@ -41,6 +41,8 @@
 
 #include "cvtest.h"
 
+#if 0
+
 #include "aeigenobjects.inc"
 
 #define __8U   8
@@ -763,5 +765,7 @@ void InitAEigenObjects( void )
    /* Registering test function */
     trsReg( FuncName, TestName, TestClass, fmaEigenObjects );
 } /* InitAEigenObjects */
+
+#endif
 
 /*  End of file  */

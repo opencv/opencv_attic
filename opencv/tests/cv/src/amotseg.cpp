@@ -41,7 +41,7 @@
 
 #include "cvtest.h"
 
-#if 1
+#if 0
 
 #define PUSHC(Y,X) { CurStack[CStIn].y=Y; \
                      CurStack[CStIn].x=X; \
@@ -50,7 +50,7 @@
                      NextStack[NStIn].x=X; \
                      NStIn++;}
 
-#define POP(Y,X)  {	 CStIn--; \
+#define POP(Y,X)  {  CStIn--; \
     Y=CurStack[CStIn].y; \
     X=CurStack[CStIn].x;}
 
@@ -61,8 +61,8 @@ void testFill( float*    img,
                float     nv,
                float*    RP,
                int       itsstep,
-			   float     SegThresh,
-			   CvConnectedComp* region)
+               float     SegThresh,
+               CvConnectedComp* region)
 {
     CvPoint* CurStack = (CvPoint*)cvAlloc(imgSize.height*imgSize.width*sizeof(CvPoint));
     CvPoint* NextStack = (CvPoint*)cvAlloc(imgSize.height*imgSize.width*sizeof(CvPoint));
@@ -75,21 +75,21 @@ void testFill( float*    img,
     int NStIn=0;
     int TempIn;
     int x,y;
-	int XMax=0;
-	int YMax=0;
-	int XMin = imgSize.width;
-	int YMin = imgSize.height;
-	int Sum=0;
+    int XMax=0;
+    int YMax=0;
+    int XMin = imgSize.width;
+    int YMin = imgSize.height;
+    int Sum=0;
     
     PUSHC(seed_point.y,seed_point.x);
 again:
     while(CStIn)
     {
         POP(y,x);
-		XMax = MAX(XMax,x);
-		YMax = MAX(YMax,y);
-		XMin = MIN(XMin,x);
-		YMin = MIN(YMin,y);
+        XMax = MAX(XMax,x);
+        YMax = MAX(YMax,y);
+        XMin = MIN(XMin,x);
+        YMin = MIN(YMin,y);
         if((y>0)&&(!RP[(y-1)*RPstep+x])&&
         (((img[(y-1)*ownstep+x]-img[y*ownstep+x])<0)&&
          ((img[(y-1)*ownstep+x]-img[y*ownstep+x])>=thr)))PUSHC(y-1,x);           
@@ -114,21 +114,21 @@ again:
         if((x<imgSize.width-1)&&(!RP[y*RPstep+x+1])&&
         (((img[y*ownstep+x+1]-img[y*ownstep+x])<=thr)&&
          ((img[y*ownstep+x+1]-img[y*ownstep+x])>=nthr)))PUSHN(y,x+1);
-		Sum++;
+        Sum++;
         RP[y*RPstep+x]=nv;
-		img[y*ownstep+x] = -255;
+        img[y*ownstep+x] = -255;
     }
     if(NStIn)
     {
-		Temp=CurStack;
-		CurStack=NextStack;
-		NextStack=Temp;
-		TempIn=CStIn;
-		CStIn=NStIn;
-		NStIn=TempIn;
-		goto again;
+        Temp=CurStack;
+        CurStack=NextStack;
+        NextStack=Temp;
+        TempIn=CStIn;
+        CStIn=NStIn;
+        NStIn=TempIn;
+        goto again;
     }
-	region->area = Sum;
+    region->area = Sum;
     region->rect.x = XMin;
     region->rect.y = YMin;
     region->rect.width = XMax - XMin + 1;
@@ -155,21 +155,21 @@ static int fcaMotSeg( void )
 {
     int step;
     float* src;
-	AtsRandState state; 
+    AtsRandState state; 
     double Error = 0;
-	int color = 1;
-	CvSize roi;
+    int color = 1;
+    CvSize roi;
 
     IplImage* mhi;
     IplImage* mask32f;
-	IplImage* test32f;
-	CvSeq* seq1 = NULL;
-	CvSeq* seq2 = NULL;
+    IplImage* test32f;
+    CvSeq* seq1 = NULL;
+    CvSeq* seq2 = NULL;
     CvMemStorage* storage;
-	CvSeqWriter writer;
-	
-	CvConnectedComp ConComp;
-	
+    CvSeqWriter writer;
+    
+    CvConnectedComp ConComp;
+    
     storage = cvCreateMemStorage( 0 );
     cvClearMemStorage( storage );
 
@@ -189,115 +189,115 @@ static int fcaMotSeg( void )
     
     /* Creating images for testing */
     mhi = cvCreateImage(cvSize(lImageWidth, lImageHeight), IPL_DEPTH_32F, 1);
-	mask32f = cvCreateImage(cvSize(lImageWidth, lImageHeight), IPL_DEPTH_32F, 1);
-	test32f = cvCreateImage(cvSize(lImageWidth, lImageHeight), IPL_DEPTH_32F, 1);
+    mask32f = cvCreateImage(cvSize(lImageWidth, lImageHeight), IPL_DEPTH_32F, 1);
+    test32f = cvCreateImage(cvSize(lImageWidth, lImageHeight), IPL_DEPTH_32F, 1);
 
-	atsRandInit(&state,40,100,60);
-	atsFillRandomImageEx(mhi, &state );
-	src = (float*)mhi->imageData;
-	step = mhi->widthStep/4;
+    atsRandInit(&state,40,100,60);
+    atsFillRandomImageEx(mhi, &state );
+    src = (float*)mhi->imageData;
+    step = mhi->widthStep/4;
     int i;
-	for(i=0; i<lImageHeight;i++)
-	{
-		for(int j=0; j<lImageWidth;j++)
-		{
-			if(src[i*step+j]>80)src[i*step+j]=80;
-		}
-	}
-	cvZero(test32f);
-	seq1 = cvSegmentMotion(mhi,mask32f,storage,80,thresh);
-	cvStartWriteSeq( 0, sizeof( CvSeq ), sizeof( CvConnectedComp ), storage, &writer );
-	roi.width = lImageWidth;
-	roi.height = lImageHeight;
+    for(i=0; i<lImageHeight;i++)
+    {
+        for(int j=0; j<lImageWidth;j++)
+        {
+            if(src[i*step+j]>80)src[i*step+j]=80;
+        }
+    }
+    cvZero(test32f);
+    seq1 = cvSegmentMotion(mhi,mask32f,storage,80,thresh);
+    cvStartWriteSeq( 0, sizeof( CvSeq ), sizeof( CvConnectedComp ), storage, &writer );
+    roi.width = lImageWidth;
+    roi.height = lImageHeight;
     for(i=1;i<lImageHeight-1;i++)
     {
         for(int j=1;j<lImageWidth-1;j++)
         {
             if(src[i*step+j]==80)
             {
-				if((src[(i-1)*step+j]>=(80-thresh))&&(src[(i-1)*step+j]<80))
-				{
-					CvPoint MinPoint;
-				    MinPoint.x=j;
-					MinPoint.y=i-1;
-					testFill(src,
-							 step*4,
-							 roi,
-							 MinPoint,
-							 (float)color,
-							 (float*)test32f->imageData,
-							 test32f->widthStep,
-							 thresh,
-							 &ConComp);
-					ConComp.value = cvScalar(color);
-					CV_WRITE_SEQ_ELEM( ConComp, writer );
-					color+=1;
-				}
-				
-				if((src[i*step+j-1]>=(80-thresh))&&(src[i*step+j-1]<80))
-				{
-					CvPoint MinPoint;
-				    MinPoint.x=j-1;
-					MinPoint.y=i;
-					testFill(src,
-							 step*4,
-							 roi,
-							 MinPoint,
-							 (float)color,
-							 (float*)test32f->imageData,
-							 test32f->widthStep,
-							 thresh,
-							 &ConComp);
-					ConComp.value = cvScalar(color);
-					CV_WRITE_SEQ_ELEM( ConComp, writer );
-					color+=1;
-				}
-				if((src[i*step+j+1]>=(80-thresh))&&(src[i*step+j+1]<80))
-				{
-					CvPoint MinPoint;
-				    MinPoint.x=j+1;
-					MinPoint.y=i;
-					testFill(src,
-							 step*4,
-							 roi,
-							 MinPoint,
-							 (float)color,
-							 (float*)test32f->imageData,
-							 test32f->widthStep,
-							 thresh,
-							 &ConComp);
-					ConComp.value = cvScalar(color);
-					CV_WRITE_SEQ_ELEM( ConComp, writer );
-					color+=1;
-				}
-				if((src[(i+1)*step+j]>=(80-thresh))&&(src[(i+1)*step+j]<80))
-				{
-					CvPoint MinPoint;
-				    MinPoint.x=j;
-					MinPoint.y=i+1;
-					testFill(src,
-							 step*4,
-							 roi,
-							 MinPoint,
-							 (float)color,
-							 (float*)test32f->imageData,
-							 test32f->widthStep,
-							 thresh,
-							 &ConComp);
-					ConComp.value = cvScalar(color);
-					CV_WRITE_SEQ_ELEM( ConComp, writer );
-					color+=1;
-				}
-				
+                if((src[(i-1)*step+j]>=(80-thresh))&&(src[(i-1)*step+j]<80))
+                {
+                    CvPoint MinPoint;
+                    MinPoint.x=j;
+                    MinPoint.y=i-1;
+                    testFill(src,
+                             step*4,
+                             roi,
+                             MinPoint,
+                             (float)color,
+                             (float*)test32f->imageData,
+                             test32f->widthStep,
+                             thresh,
+                             &ConComp);
+                    ConComp.value = cvScalar(color);
+                    CV_WRITE_SEQ_ELEM( ConComp, writer );
+                    color+=1;
+                }
+                
+                if((src[i*step+j-1]>=(80-thresh))&&(src[i*step+j-1]<80))
+                {
+                    CvPoint MinPoint;
+                    MinPoint.x=j-1;
+                    MinPoint.y=i;
+                    testFill(src,
+                             step*4,
+                             roi,
+                             MinPoint,
+                             (float)color,
+                             (float*)test32f->imageData,
+                             test32f->widthStep,
+                             thresh,
+                             &ConComp);
+                    ConComp.value = cvScalar(color);
+                    CV_WRITE_SEQ_ELEM( ConComp, writer );
+                    color+=1;
+                }
+                if((src[i*step+j+1]>=(80-thresh))&&(src[i*step+j+1]<80))
+                {
+                    CvPoint MinPoint;
+                    MinPoint.x=j+1;
+                    MinPoint.y=i;
+                    testFill(src,
+                             step*4,
+                             roi,
+                             MinPoint,
+                             (float)color,
+                             (float*)test32f->imageData,
+                             test32f->widthStep,
+                             thresh,
+                             &ConComp);
+                    ConComp.value = cvScalar(color);
+                    CV_WRITE_SEQ_ELEM( ConComp, writer );
+                    color+=1;
+                }
+                if((src[(i+1)*step+j]>=(80-thresh))&&(src[(i+1)*step+j]<80))
+                {
+                    CvPoint MinPoint;
+                    MinPoint.x=j;
+                    MinPoint.y=i+1;
+                    testFill(src,
+                             step*4,
+                             roi,
+                             MinPoint,
+                             (float)color,
+                             (float*)test32f->imageData,
+                             test32f->widthStep,
+                             thresh,
+                             &ConComp);
+                    ConComp.value = cvScalar(color);
+                    CV_WRITE_SEQ_ELEM( ConComp, writer );
+                    color+=1;
+                }
+                
             }   
          }
     }
     seq2 = cvEndWriteSeq( &writer );
-	Error += cvNorm(test32f,mask32f,CV_C);
-	cvReleaseMemStorage(&storage);
-	cvReleaseImage(&mhi);
-	cvReleaseImage(&test32f);
-	cvReleaseImage(&mask32f);
+    Error += cvNorm(test32f,mask32f,CV_C);
+    cvReleaseMemStorage(&storage);
+    cvReleaseImage(&mhi);
+    cvReleaseImage(&test32f);
+    cvReleaseImage(&mask32f);
     /* Free Memory */
     
     if(Error>=EPSILON)return TRS_FAIL;

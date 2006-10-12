@@ -41,6 +41,8 @@
 
 #include "cvtest.h"
 
+#if 0
+
 static char cTestName[] = "Binary tree create";
 static char cTestClass[] = "Algorithm";
 static char cFuncName[] = "cvCreateContourTree";
@@ -186,3 +188,5 @@ void InitACreateContourTree( void )
 } /* InitACreateContourTree */
 
 /* End of file. */
+
+#endif

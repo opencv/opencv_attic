@@ -41,89 +41,83 @@
 
 #include "cvtest.h"
 
-/* Testing parameters */
-static char TestName[] = "State estimation of linear system by means of Kalman Filtering";
-static char TestClass[] = "Algorithm";
-static int  Dim;
-static int  Steps;
-
-static int  read_param = 0;
-static double EPSILON = 1.000;
-
-static int fcaKalman( void )
+class CV_KalmanTest : public CvTest
 {
-    AtsRandState noisegen; 
-	AtsRandState dynam;
-    double Error = 0;
-	CvKalman* Kalm;
-			
-    /* Initialization global parameters */
-    if( !read_param )
+public:
+    CV_KalmanTest();
+protected:
+    void run(int);
+};
+
+
+CV_KalmanTest::CV_KalmanTest():
+    CvTest( "kalman", "cvKalmanPredict, cvKalmanCorrect" )
+{
+    support_testing_modes = CvTS::CORRECTNESS_CHECK_MODE;
+}
+
+void CV_KalmanTest::run( int )
+{
+    int code = CvTS::OK;
+    const int Dim = 7;
+    const int Steps = 100;
+    const double max_init = 1;
+    const double max_noise = 0.1;
+    
+    const double EPSILON = 1.000;
+    CvRNG* rng = ts->get_rng();
+    CvKalman* Kalm;
+    int i, j;
+    
+    CvMat* Sample = cvCreateMat(Dim,1,CV_32F);
+    CvMat* Temp = cvCreateMat(Dim,1,CV_32F);
+    
+    Kalm = cvCreateKalman(Dim, Dim);
+    CvMat Dyn = cvMat(Dim,Dim,CV_32F,Kalm->DynamMatr);
+    CvMat Mes = cvMat(Dim,Dim,CV_32F,Kalm->MeasurementMatr);
+    CvMat PNC = cvMat(Dim,Dim,CV_32F,Kalm->PNCovariance);
+    CvMat MNC = cvMat(Dim,Dim,CV_32F,Kalm->MNCovariance);
+    CvMat PriErr = cvMat(Dim,Dim,CV_32F,Kalm->PriorErrorCovariance);
+    CvMat PostErr = cvMat(Dim,Dim,CV_32F,Kalm->PosterErrorCovariance);
+    CvMat PriState = cvMat(Dim,1,CV_32F,Kalm->PriorState);
+    CvMat PostState = cvMat(Dim,1,CV_32F,Kalm->PosterState);
+    cvSetIdentity(&PNC);
+    cvSetIdentity(&PriErr);
+    cvSetIdentity(&PostErr);
+    cvSetZero(&MNC);
+    cvSetZero(&PriState);
+    cvSetZero(&PostState);
+    cvSetIdentity(&Mes);
+    cvSetIdentity(&Dyn);
+    cvRandArr(rng, Sample, CV_RAND_UNI, cvScalarAll(-max_init), cvScalarAll(max_init));
+    cvKalmanCorrect(Kalm, Sample);
+    for(i = 0; i<Steps; i++)
     {
-        read_param = 1;
-        /* Reading test-parameters */
-        trsiRead( &Dim,"7","Dimension of dynamical system");
-		trsiRead( &Steps,"100","Length of trajectory to track");
+        cvKalmanPredict(Kalm);
+        for(j = 0; j<Dim; j++)
+        {
+            float t = 0;
+            for(int k=0; k<Dim; k++)
+            {
+                t += Dyn.data.fl[j*Dim+k]*Sample->data.fl[k];
+            }
+            Temp->data.fl[j]= (float)(t+(cvTsRandReal(rng)*2-1)*max_noise);
+        }
+        cvCopy( Temp, Sample );
+        cvKalmanCorrect(Kalm,Temp);
     }
-	CvMat Sample = cvMat(Dim,1,CV_MAT32F,NULL);
-	CvMat Temp = cvMat(Dim,1,CV_MAT32F,NULL);
-	
-	cvmAlloc(&Sample);
-	cvmAlloc(&Temp);
-	Kalm = cvCreateKalman(Dim, Dim);
-	CvMat Dyn = cvMat(Dim,Dim,CV_MAT32F,Kalm->DynamMatr);
-	CvMat Mes = cvMat(Dim,Dim,CV_MAT32F,Kalm->MeasurementMatr);
-	CvMat PNC = cvMat(Dim,Dim,CV_MAT32F,Kalm->PNCovariance);
-	CvMat MNC = cvMat(Dim,Dim,CV_MAT32F,Kalm->MNCovariance);
-	CvMat PriErr = cvMat(Dim,Dim,CV_MAT32F,Kalm->PriorErrorCovariance);
-	CvMat PostErr = cvMat(Dim,Dim,CV_MAT32F,Kalm->PosterErrorCovariance);
-	CvMat PriState = cvMat(Dim,1,CV_MAT32F,Kalm->PriorState);
-	CvMat PostState = cvMat(Dim,1,CV_MAT32F,Kalm->PosterState);
-	cvmSetIdentity(&PNC);
-	cvmSetIdentity(&PriErr);
-	cvmSetIdentity(&PostErr);
-	cvmSetZero(&MNC);
-	cvmSetZero(&PriState);
-	cvmSetZero(&PostState);
-    cvmSetIdentity(&Mes);
-	cvmSetIdentity(&Dyn);
-	atsRandInit(&dynam,-1.0, 1.0, 1);
-	atsRandInit(&noisegen,-0.1, 0.1, 2);
-	//atsbRand32f(&dynam,Dyn.data.fl,Dim*Dim);
-	atsbRand32f(&dynam,Sample.data.fl,Dim);
-	cvKalmanUpdateByMeasurement(Kalm, &Sample);
-	for(int i = 0; i<Steps; i++)
-	{
-		cvKalmanUpdateByTime(Kalm);
-        int j;
-		for(j = 0; j<Dim; j++)
-		{
-			float t = 0;
-			for(int k=0; k<Dim; k++)
-			{
-				t += Dyn.data.fl[j*Dim+k]*Sample.data.fl[k];
-			}
-			Temp.data.fl[j]= t+atsRand32f(&noisegen);
-		}
-		for(j = 0; j<Dim; j++)
-		{
-			Sample.data.fl[j] = Temp.data.fl[j];
-		}
-		cvKalmanUpdateByMeasurement(Kalm,&Temp);
-	}
-	Error = atsCompSinglePrec(Sample.data.fl,Kalm->PriorState,Dim,EPSILON);
-	cvmFree(&Sample);
-	cvmFree(&Temp);
-	cvReleaseKalman(&Kalm);
-	if(Error>=EPSILON)return TRS_FAIL;
-    return TRS_OK;
-} /* fcaSobel8uC1R */
 
+    code = cvTsCmpEps2( ts, Sample, Kalm->state_post, EPSILON, false, "The final estimated state" );
 
-void InitAKalman(void)
-{
-    trsReg( "Kalman Filtering", TestName, TestClass, fcaKalman);
- 
-} /* InitASobel */
+    cvReleaseMat(&Sample);
+    cvReleaseMat(&Temp);
+    cvReleaseKalman(&Kalm);
+    
+    if( code < 0 )
+        ts->set_failed_test_info( code );
+}
+
+CV_KalmanTest kalman_test;
+
 
 /* End of file. */

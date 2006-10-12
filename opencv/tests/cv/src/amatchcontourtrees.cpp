@@ -40,6 +40,8 @@
 //M*/
 
 #include "cvtest.h"
+
+#if 0
 /*#include "conio.h"     */
 
 static char cTestName[] = "Matching Contour trees";
@@ -186,3 +188,5 @@ void InitAMatchContourTrees( void )
 } /* InitAMatchContourTrees */
 
 /* End of file. */
+
+#endif

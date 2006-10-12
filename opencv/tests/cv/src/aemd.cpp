@@ -41,19 +41,6 @@
 
 #include "cvtest.h"
 
-#include <stdlib.h>
-#include <assert.h>
-#include <limits.h>
-#include <float.h>
-
-static char* funcs[] =
-{
-    "cvCalcEMD",
-};
-
-static char *test_desc = "Test for EMD on concrete example";
-
-
 /*////////////////////// emd_test /////////////////////////*/
 
 typedef struct matr_info
@@ -76,8 +63,24 @@ static float matr_dist( const float* x, const float* y, void* param )
     return  mi->matr[i*mi->cols + j];
 }
 
-static int emd_test( void* )
+class CV_EMDTest : public CvTest
 {
+public:
+    CV_EMDTest();
+protected:
+    void run(int);
+};
+
+
+CV_EMDTest::CV_EMDTest():
+    CvTest( "emd", "cvCalcEMD" )
+{
+    support_testing_modes = CvTS::CORRECTNESS_CHECK_MODE;
+}
+
+void CV_EMDTest::run( int )
+{
+    int code = CvTS::OK;
     const double success_error_level = 1e-6;
     #define M 10000
     double emd0 = 2460./210;
@@ -103,18 +106,17 @@ static int emd_test( void* )
     emd = cvCalcEMD( w1, mi.rows, w2, mi.cols, 0, (CvDisType)-1,
                      matr_dist, 0, &mi );
 
-    return fabs( emd - emd0 )/(emd0 + 1e-5) < success_error_level ?
-        trsResult( TRS_OK, "No errors" ) :
-        trsResult( TRS_FAIL, "Bad accuracy" );
+    if( fabs( emd - emd0 ) > success_error_level*emd0 )
+    {
+        ts->printf( CvTS::LOG,
+            "The computed distance is %.2f, while it should be %.2f\n", emd, emd0 );
+        code = CvTS::FAIL_BAD_ACCURACY;
+    }
+
+    if( code < 0 )
+        ts->set_failed_test_info( code );
 }
 
-#define EMD_SAMPLE  0
-
-void InitAEMD( void )
-{
-    /* Registering test functions */
-    trsRegArg( funcs[0], test_desc, atsAlgoClass, emd_test, EMD_SAMPLE );
-
-} /* InitAEMD */
+CV_EMDTest emd_test;
 
 /* End of file. */

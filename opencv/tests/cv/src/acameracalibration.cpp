@@ -243,26 +243,54 @@ CV_ProjectPointsTest ProjectPoints_test;
 #endif
 
 
-#if 1
 
-static char *cTestName[] = 
+class CV_CameraCalibrationTest : public CvTest
 {
-    "Camera Calibration Tests",
+public:
+    CV_CameraCalibrationTest();
+    ~CV_CameraCalibrationTest();
+    void clear();
+    //int write_default_params(CvFileStorage* fs);
+
+protected:
+    //int read_params( CvFileStorage* fs );
+    int compare(double* val, double* ref_val, int len,
+                double eps, const char* param_name);
+
+    void run(int);
 };
 
-static char cTestClass[] = "Algorithm";
 
-static char *cFuncName[] = 
+CV_CameraCalibrationTest::CV_CameraCalibrationTest():
+    CvTest( "calibratecamera", "cvCalibrateCamera2" )
 {
-    "cvCameraCalibration",
-};
+    support_testing_modes = CvTS::CORRECTNESS_CHECK_MODE;
+}
 
 
-static int calibrationTest(void *)
+CV_CameraCalibrationTest::~CV_CameraCalibrationTest()
 {
+    clear();
+}
+
+
+void CV_CameraCalibrationTest::clear()
+{
+    CvTest::clear();
+}
+
+
+int CV_CameraCalibrationTest::compare(double* val, double* ref_val, int len,
+                                      double eps, const char* param_name )
+{
+    return cvTsCmpEps2_64f( ts, val, ref_val, len, eps, param_name );
+}
+
+void CV_CameraCalibrationTest::run( int start_from )
+{
+    int code = CvTS::OK;
     char            filepath[100];
     char            filename[100];
-    char            datafilesname[100];
     
     CvSize          imageSize;
     CvSize          etalonSize;
@@ -284,20 +312,17 @@ static int calibrationTest(void *)
     double          goodDistortion[4];
 
     int*            numbers;
-    FILE*           file;
-    FILE*           datafile;
+    FILE*           file = 0;
+    FILE*           datafile = 0; 
     int             i,j;
     int             currImage;
     int             currPoint;
 
     int             calibFlags;
     char            i_dat_file[100];
-
-    const char*     i_datafiles = "datafiles.txt";
-
-    int             Errors = 0;
-    
     int             numPoints;
+    int numTests;
+    int currTest;
 
     imagePoints     = 0;
     objectPoints    = 0;
@@ -308,56 +333,55 @@ static int calibrationTest(void *)
     rotMatrs        = 0;
     goodTransVects  = 0;
     goodRotMatrs    = 0;
+    int progress = 0;
     
-    atsGetTestDataPath( filepath, "cameracalibration", 0, 0 );
-
-    strcpy( datafilesname, filepath );
-    strcat( datafilesname, i_datafiles );
-
-    datafile = fopen(datafilesname,"r");
+    sprintf( filepath, "%scameracalibration/", ts->get_data_path() );
+    sprintf( filename, "%sdatafiles.txt", filepath );
+    datafile = fopen( filename, "r" );
     if( datafile == 0 ) 
     {
-        trsWrite( ATS_CON | ATS_SUM,
-                  "Can't open file with list of test files: %s\n",datafilesname);
-        Errors++;
-        goto test_exit;
+        ts->printf( CvTS::LOG, "Could not open file with list of test files: %s\n", filename );
+        code = CvTS::FAIL_MISSING_TEST_DATA;
+        goto _exit_;
     }
 
-    int numTests;
-    int currTest;
     fscanf(datafile,"%d",&numTests);
 
-    for( currTest = 0; currTest < numTests; currTest++ )
+    for( currTest = start_from; currTest < numTests; currTest++ )
     {
         fscanf(datafile,"%s",i_dat_file);
-        strcpy(filename,filepath);
-        strcat(filename,i_dat_file);
+        sprintf(filename, "%s%s", filepath, i_dat_file);
         file = fopen(filename,"r");
+
+        ts->update_context( this, currTest, true );
 
         if( file == 0 )
         {
-            trsWrite( ATS_CON | ATS_SUM,
-                      "Can't open current test file: %s\n",i_dat_file);
-            Errors++;
-            continue;
+            ts->printf( CvTS::LOG,
+                "Can't open current test file: %s\n",filename);
+            if( numTests == 1 )
+            {
+                code = CvTS::FAIL_MISSING_TEST_DATA;
+                goto _exit_;
+            }
+            continue; // if there is more than one test, just skip the test
         }
-
-        trsWrite( ATS_CON | ATS_SUM, "Calibration test # %d\n",currTest+1);
-        //trsWrite( ATS_CON | ATS_SUM, "Begin read testing data...\n");
 
         fscanf(file,"%d %d\n",&(imageSize.width),&(imageSize.height));
         if( imageSize.width <= 0 || imageSize.height <= 0 )
         {
-            trsWrite( ATS_CON | ATS_SUM, "Image size in test file is incorrect\n");
-            Errors++;
+            ts->printf( CvTS::LOG, "Image size in test file is incorrect\n" );
+            code = CvTS::FAIL_INVALID_TEST_DATA;
+            goto _exit_;
         }
 
         /* Read etalon size */
         fscanf(file,"%d %d\n",&(etalonSize.width),&(etalonSize.height));
         if( etalonSize.width <= 0 || etalonSize.height <= 0 )
         {
-            trsWrite( ATS_CON | ATS_SUM,"Etalon size in test file is incorrect\n");
-            Errors++;
+            ts->printf( CvTS::LOG, "Pattern size in test file is incorrect\n" );
+            code = CvTS::FAIL_INVALID_TEST_DATA;
+            goto _exit_;
         }
 
         numPoints = etalonSize.width * etalonSize.height;
@@ -366,23 +390,23 @@ static int calibrationTest(void *)
         fscanf(file,"%d\n",&numImages);
         if( numImages <=0 )
         {
-            trsWrite( ATS_CON | ATS_SUM, "Number of images in test file is incorrect\n");
-            Errors++;
+            ts->printf( CvTS::LOG, "Number of images in test file is incorrect\n");
+            code = CvTS::FAIL_INVALID_TEST_DATA;
+            goto _exit_;
         }
 
-
         /* Need to allocate memory */
-        imagePoints     = (CvPoint2D64d*)trsmAlloc( numPoints *
+        imagePoints     = (CvPoint2D64d*)cvAlloc( numPoints *
                                                     numImages * sizeof(CvPoint2D64d));
         
-        objectPoints    = (CvPoint3D64d*)trsmAlloc( numPoints *
+        objectPoints    = (CvPoint3D64d*)cvAlloc( numPoints *
                                                     numImages * sizeof(CvPoint3D64d));
 
-        reprojectPoints = (CvPoint2D64d*)trsmAlloc( numPoints *
+        reprojectPoints = (CvPoint2D64d*)cvAlloc( numPoints *
                                                     numImages * sizeof(CvPoint2D64d));
 
         /* Alloc memory for numbers */
-        numbers = (int*)trsmAlloc( numImages * sizeof(int));
+        numbers = (int*)cvAlloc( numImages * sizeof(int));
 
         /* Fill it by numbers of points of each image*/
         for( currImage = 0; currImage < numImages; currImage++ )
@@ -391,11 +415,11 @@ static int calibrationTest(void *)
         }
 
         /* Allocate memory for translate vectors and rotmatrixs*/
-        transVects     = (CvVect64d)trsmAlloc(3 * 1 * numImages * sizeof(double));
-        rotMatrs       = (CvMatr64d)trsmAlloc(3 * 3 * numImages * sizeof(double));
+        transVects     = (CvVect64d)cvAlloc(3 * 1 * numImages * sizeof(double));
+        rotMatrs       = (CvMatr64d)cvAlloc(3 * 3 * numImages * sizeof(double));
 
-        goodTransVects = (CvVect64d)trsmAlloc(3 * 1 * numImages * sizeof(double));
-        goodRotMatrs   = (CvMatr64d)trsmAlloc(3 * 3 * numImages * sizeof(double));
+        goodTransVects = (CvVect64d)cvAlloc(3 * 1 * numImages * sizeof(double));
+        goodRotMatrs   = (CvMatr64d)cvAlloc(3 * 3 * numImages * sizeof(double));
 
         /* Read object points */
         i = 0;/* shift for current point */
@@ -449,21 +473,15 @@ static int calibrationTest(void *)
         for( currImage = 0; currImage < numImages; currImage++ )
         {
             for( i = 0; i < 3; i++ )
-            {
                 for( j = 0; j < 3; j++ )
-                {
                     fscanf(file, "%lf", goodRotMatrs + currImage * 9 + j * 3 + i);
-                }
-            }
         }
 
         /* Read good Trans vectors */
         for( currImage = 0; currImage < numImages; currImage++ )
         {
             for( i = 0; i < 3; i++ )
-            {
                 fscanf(file, "%lf", goodTransVects + currImage * 3 + i);
-            }
         }
         
         calibFlags = 
@@ -541,110 +559,92 @@ static int calibrationTest(void *)
         meanDx /= numImages * etalonSize.width * etalonSize.height;
         meanDy /= numImages * etalonSize.width * etalonSize.height;
 
+        /* ========= Compare parameters ========= */
+
+        /* ----- Compare focal lengths ----- */
+        code = compare(cameraMatrix+0,&goodFcx,1,0.01,"fx");
+        if( code < 0 )
+            goto _exit_;
+
+        code = compare(cameraMatrix+4,&goodFcy,1,0.01,"fy");
+        if( code < 0 )
+            goto _exit_;
+
+        /* ----- Compare principal points ----- */
+        code = compare(cameraMatrix+2,&goodCx,1,0.01,"cx");
+        if( code < 0 )
+            goto _exit_;
+
+        code = compare(cameraMatrix+5,&goodCy,1,0.01,"cy");
+        if( code < 0 )
+            goto _exit_;
+
+        /* ----- Compare distortion ----- */
+        code = compare(distortion,goodDistortion,4,0.01,"[k1,k2,p1,p2]");
+        if( code < 0 )
+            goto _exit_;
+
+        /* ----- Compare rot matrixs ----- */
+        code = compare(rotMatrs,goodRotMatrs, 9*numImages,0.05,"rotation matrices");
+        if( code < 0 )
+            goto _exit_;
+
+        /* ----- Compare rot matrixs ----- */
+        code = compare(transVects,goodTransVects, 3*numImages,0.05,"translation vectors");
+        if( code < 0 )
+            goto _exit_;
+
         if( maxDx > 1.0 )
         {
-            trsWrite( ATS_CON | ATS_SUM,
+            ts->printf( CvTS::LOG,
                       "Error in reprojection maxDx=%f > 1.0\n",maxDx);
-            Errors++;
+            code = CvTS::FAIL_BAD_ACCURACY; goto _exit_;
         }
 
         if( maxDy > 1.0 )
         {
-            trsWrite( ATS_CON | ATS_SUM,
+            ts->printf( CvTS::LOG,
                       "Error in reprojection maxDy=%f > 1.0\n",maxDy);
-            Errors++;
+            code = CvTS::FAIL_BAD_ACCURACY; goto _exit_;
         }
 
+        progress = update_progress( progress, currTest, numTests, 0 );
 
-        /* Compare max error */
+        cvFree(&imagePoints);
+        cvFree(&objectPoints);
+        cvFree(&reprojectPoints);
+        cvFree(&numbers);
 
-        /* Compute error */
-        
-        
-        /* ========= Compare parameters ========= */
-
-        /* ----- Compare focal lengths ----- */
-        if( atsCompDoublePrec(cameraMatrix+0,&goodFcx,1,0.01) != 0 )
-        {
-            printf("Error in focal length x\n");
-            Errors++;
-        }
-
-        if( atsCompDoublePrec(cameraMatrix+4,&goodFcy,1,0.01) != 0 )
-        {
-            printf("Error in focal length y\n");
-            Errors++;
-        }            
-
-        /* ----- Compare principal points ----- */
-        if( atsCompDoublePrec(cameraMatrix+2,&goodCx,1,0.01) != 0 )
-        {
-            printf("Error in principal point x\n");
-            Errors++;
-        }
-
-        if( atsCompDoublePrec(cameraMatrix+5,&goodCy,1,0.01) != 0 )
-        {
-            printf("Error in principal point y\n");
-            Errors++;
-        }            
-
-        /* ----- Compare distortion ----- */
-        if( atsCompDoublePrec(distortion,goodDistortion,4,0.001) != 0 )
-        {
-            printf("Error in distortion\n");
-            Errors++;
-        }
-
-        /* ----- Compare rot matrixs ----- */
-        if( atsCompDoublePrec(rotMatrs,goodRotMatrs, 9*numImages,0.001) != 0 )
-        {
-            printf("Error in Rot Matrixes\n");
-            Errors++;
-        }
-
-        /* ----- Compare rot matrixs ----- */
-        if( atsCompDoublePrec(rotMatrs,goodRotMatrs, 3*numImages,0.001) != 0 )
-        {
-            printf("Error in Trans Vectors\n");
-            Errors++;
-        }
+        cvFree(&transVects);
+        cvFree(&rotMatrs);
+        cvFree(&goodTransVects);
+        cvFree(&goodRotMatrs);
 
         fclose(file);
+        file = 0;
     }
-    fclose(datafile);
 
-test_exit:
+_exit_:
+
+    if( file )
+        fclose(file);
+
+    if( datafile )
+        fclose(datafile);
 
     /* Free all allocated memory */
+    cvFree(&imagePoints);
+    cvFree(&objectPoints);
+    cvFree(&reprojectPoints);
+    cvFree(&numbers);
 
-    trsFree(imagePoints);
-    trsFree(objectPoints);
-    trsFree(reprojectPoints);
-    trsFree(numbers);
+    cvFree(&transVects);
+    cvFree(&rotMatrs);
+    cvFree(&goodTransVects);
+    cvFree(&goodRotMatrs);
 
-    trsFree(transVects);
-    trsFree(rotMatrs);
-    trsFree(goodTransVects);
-    trsFree(goodRotMatrs);
-
-    if( Errors == 0 )
-    {
-        return trsResult( TRS_OK, "No errors fixed for this text" );
-    }
-    else
-    {
-        return trsResult( TRS_FAIL, "Total fixed %d errors", Errors );
-    }
-
+    if( code < 0 )
+        ts->set_failed_test_info( code );
 }
 
-
-void InitACalibration( void )
-{
-/* Test Registartion */
-    trsRegArg(cFuncName[0],cTestName[0],cTestClass,calibrationTest, 0); 
-} /* InitACalibration */
-
-#endif
-
+CV_CameraCalibrationTest calibrate_test;
