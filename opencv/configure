@@ -21598,13 +21598,6 @@ CARBON_CFLAGS=""
 CARBON_LIBS=""
 if test x"$with_carbon" = "xyes"; then
 
-    # check if other ./configure arguments are valid
-    if test x"$with_gtk" = "xyes"; then
-        { { echo "$as_me:$LINENO: error: You cannot specify --with-carbon and --with-gtk at the same time" >&5
-echo "$as_me: error: You cannot specify --with-carbon and --with-gtk at the same time" >&2;}
-   { (exit 1); exit 1; }; }
-    fi
-
     # header presence and usability seem to be enough
     if test "${ac_cv_header_Carbon_Carbon_h+set}" = set; then
   { echo "$as_me:$LINENO: checking for Carbon/Carbon.h" >&5
@@ -21779,8 +21772,17 @@ fi
 
 
 
-    # don't check alternatives if carbon was found
+    # sanity checks
     if test x"$have_carbon" = "xyes"; then
+
+        # if we asked for gtk, this is not ok
+        if test x"$with_gtk" = "xyes"; then
+            { { echo "$as_me:$LINENO: error: You cannot specify --with-carbon and --with-gtk at the same time" >&5
+echo "$as_me: error: You cannot specify --with-carbon and --with-gtk at the same time" >&2;}
+   { (exit 1); exit 1; }; }
+        fi
+
+        # don't check alternatives if carbon was found
         if test x"$with_gtk" = "xauto"; then
             with_gtk=no
         fi
