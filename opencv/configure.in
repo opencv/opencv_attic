@@ -23,7 +23,7 @@ AC_CONFIG_AUX_DIR([autotools])
 AC_CONFIG_MACRO_DIR([autotools/aclocal])
 
 # put CVS revision of this configure.in into the resulting configure script
-AC_REVISION($Revision: 1.34 $)
+AC_REVISION($Revision: 1.35 $)
 
 # Detect the canonical host and target build environment
 AC_CANONICAL_HOST
@@ -249,11 +249,6 @@ CARBON_CFLAGS=""
 CARBON_LIBS=""
 if test x"$with_carbon" = "xyes"; then
 
-    # check if other ./configure arguments are valid
-    if test x"$with_gtk" = "xyes"; then
-        AC_MSG_ERROR([You cannot specify --with-carbon and --with-gtk at the same time])
-    fi
-
     # header presence and usability seem to be enough
     AC_CHECK_HEADER([Carbon/Carbon.h],
                     [
@@ -266,8 +261,15 @@ if test x"$with_carbon" = "xyes"; then
                       with_carbon=no
                     ])
 
-    # don't check alternatives if carbon was found
+    # sanity checks
     if test x"$have_carbon" = "xyes"; then
+    
+        # if we asked for gtk, this is not ok
+        if test x"$with_gtk" = "xyes"; then
+            AC_MSG_ERROR([You cannot specify --with-carbon and --with-gtk at the same time])
+        fi
+
+        # don't check alternatives if carbon was found
         if test x"$with_gtk" = "xauto"; then
             with_gtk=no
         fi
