@@ -358,6 +358,9 @@ public:
         // error code that is different from what is expected)
         FAIL_BAD_ARG_CHECK=-14,
 
+        // the test data (in whole or for the particular test case) is invalid
+        FAIL_INVALID_TEST_DATA=-15,
+
         // the test has been skipped because it is not in the selected subset of the tests to run,
         // because it has been run already within the same run with the same parameters, or because
         // of some other reason and this is not considered as an error.
@@ -392,6 +395,8 @@ public:
 
     int find_written_param( CvTest* test, const char* paramname,
                             int valtype, const void* val );
+
+    const char* get_data_path() { return params.data_path ? params.data_path : ""; }
 
 protected:
     // deallocates memory buffers and closes all the streams;
@@ -434,6 +439,9 @@ protected:
 
     // sets memory and exception handlers
     virtual void set_handlers( bool on );
+
+    // changes the path to test data files
+    virtual void set_data_path( const char* data_path );
 
     // a sequence of tests to run
     CvTestPtrVec* selected_tests;
@@ -495,6 +503,9 @@ protected:
 
         // extensivity of the tests, scale factor for test_case_count
         double test_case_count_scale;
+
+        // the path to data files used by tests
+        char* data_path;
     }
     params;
 
@@ -675,6 +686,9 @@ CV_EXPORTS int cvTsCmpEps( const CvMat* data, const CvMat* etalon, double* max_d
 // a wrapper for the previous function. in case of error prints the message to log file.
 CV_EXPORTS int cvTsCmpEps2( CvTS* ts, const CvArr* _a, const CvArr* _b, double success_err_level,
                             bool element_wise_relative_error, const char* desc );
+
+CV_EXPORTS int cvTsCmpEps2_64f( CvTS* ts, const double* val, const double* ref_val, int len,
+                                double eps, const char* param_name );
 
 // compares two arrays. the result is 8s image that takes values -1, 0, 1
 CV_EXPORTS void cvTsCmp( const CvMat* a, const CvMat* b, CvMat* result, int cmp_op );

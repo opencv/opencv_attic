@@ -1358,7 +1358,7 @@ int cvTsCmpEps2( CvTS* ts, const CvArr* _a, const CvArr* _b, double success_err_
         code = CvTS::FAIL_INVALID_OUTPUT;
         break;
     case -3:
-        sprintf( msg, "%s: Invalid output in the reference array", desc );
+        sprintf( msg, "%s: Invalid reference output", desc );
         code = CvTS::FAIL_INVALID_OUTPUT;
         break;
     default:
@@ -1366,11 +1366,33 @@ int cvTsCmpEps2( CvTS* ts, const CvArr* _a, const CvArr* _b, double success_err_
     }
 
     if( code < 0 )
-        ts->printf( CvTS::LOG, "%s at (%d,%d)\n", msg, idx.x, idx.y );
+    {
+        if( a->rows == 1 && a->cols == 1 )
+        {
+            assert( idx.x == 0 && idx.y == 0 );
+            ts->printf( CvTS::LOG, "%s\n", msg );
+        }
+        else if( a->rows == 1 || a->cols == 1 )
+        {
+            assert( idx.x == 0 || idx.y == 0 );
+            ts->printf( CvTS::LOG, "%s at element %d\n", msg, idx.x + idx.y );
+        }
+        else
+            ts->printf( CvTS::LOG, "%s at (%d,%d)\n", msg, idx.x, idx.y );
+    }
 
     return code;
 }
 
+
+int cvTsCmpEps2_64f( CvTS* ts, const double* val, const double* ref_val, int len,
+                     double eps, const char* param_name )
+{
+    CvMat _val = cvMat( 1, len, CV_64F, (void*)val );
+    CvMat _ref_val = cvMat( 1, len, CV_64F, (void*)ref_val );
+
+    return cvTsCmpEps2( ts, &_val, &_ref_val, eps, true, param_name );
+}
 
 // compares two arrays. the result is 8s image that takes values -1, 0, 1
 void cvTsCmp( const CvMat* a, const CvMat* b, CvMat* result, int cmp_op )

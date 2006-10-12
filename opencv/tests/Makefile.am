@@ -1,1 +1,1 @@
-SUBDIRS = cxts cxcore trs cv python
+SUBDIRS = cxts cxcore cv python

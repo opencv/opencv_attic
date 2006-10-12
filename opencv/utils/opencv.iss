@@ -10,7 +10,7 @@ DefaultGroupName=OpenCV
 SourceDir=..
 Compression=bzip/9
 LicenseFile="docs\license.txt"
-OutputBaseFilename=OpenCV_1.0rc1
+OutputBaseFilename=OpenCV_1.0
 ; uncomment the following line if you want your installation to run on NT 3.51 too.
 ; MinVersion=4,3.51
 
@@ -103,7 +103,6 @@ Name: "{app}\samples\python"
 
 ; batch tests
 Name: "{app}\tests"
-Name: "{app}\tests\trs"
 Name: "{app}\tests\cxts"
 Name: "{app}\tests\cxcore"
 Name: "{app}\tests\cxcore\src"
@@ -355,11 +354,6 @@ Source: "samples\python\Makefile.*"; DestDir: "{app}\samples\python"
 
 ; batch tests
 Source: "tests\Makefile.*"; DestDir: "{app}\tests"
-Source: "tests\trs\Makefile.*"; DestDir: "{app}\tests\trs"
-Source: "tests\trs\*.h*"; DestDir: "{app}\tests\trs"
-Source: "tests\trs\*.c*"; DestDir: "{app}\tests\trs"
-Source: "tests\trs\*.dsp"; DestDir: "{app}\tests\trs"
-Source: "tests\trs\*.vcproj"; DestDir: "{app}\tests\trs"
 Source: "tests\cv\Makefile.*"; DestDir: "{app}\tests\cv"
 Source: "tests\cv\src\*.c*"; DestDir: "{app}\tests\cv\src"
 Source: "tests\cv\src\*.h*"; DestDir: "{app}\tests\cv\src"
