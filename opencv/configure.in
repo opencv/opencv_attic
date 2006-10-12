@@ -23,7 +23,7 @@ AC_CONFIG_AUX_DIR([autotools])
 AC_CONFIG_MACRO_DIR([autotools/aclocal])
 
 # put CVS revision of this configure.in into the resulting configure script
-AC_REVISION($Revision: 1.33 $)
+AC_REVISION($Revision: 1.34 $)
 
 # Detect the canonical host and target build environment
 AC_CANONICAL_HOST
@@ -655,8 +655,25 @@ if test x"$with_python" = "xyes"; then
         with_swig=yes
     fi
     
-    # okay now
-    have_python=yes
+    ### almost ok... just need to check if we have the Python headers ###
+
+    # first, save the CPPFLAGS
+    OLD_CPPFLAGS=$CPPFLAGS
+
+    # then add the PYTHON path founded previously
+    CPPFLAGS="$CPPFLAGS $PYTHON_CSPEC"
+
+    # now, we can check
+    AC_CHECK_HEADER(Python.h,
+        [have_python=yes],
+        [
+          AC_MSG_WARN([Python headers not found, disabling python wrappers])
+          have_python=no
+        ])
+
+    # restore the old CPPFLAGS
+    CPPFLAGS=$OLD_CPPFLAGS
+
 else
     # check if ./configure arguments are valid
     if test x"$with_python" = "xno"; then
@@ -795,7 +812,7 @@ HighGUI configuration ================================================
     
 Wrappers for other languages =========================================
     SWIG                      ${SWIG}
-    Python                    ${with_python}
+    Python                    ${have_python}
 
 Additional build settings ============================================
     Build demo apps           ${enable_apps}
