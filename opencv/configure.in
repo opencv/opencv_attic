@@ -1,9 +1,9 @@
 # Process this file with autoconf to produce a configure script.
 
 # Set various version strings
-m4_define([opencv_major_version],    [0])
-m4_define([opencv_minor_version],    [9])
-m4_define([opencv_subminor_version], [9])
+m4_define([opencv_major_version],    [1])
+m4_define([opencv_minor_version],    [0])
+m4_define([opencv_subminor_version], [0])
 m4_define([opencv_version],          [opencv_major_version.opencv_minor_version.opencv_subminor_version])
 
 # Before making a release, the LT_VERSION string should be modified.
@@ -13,7 +13,7 @@ m4_define([opencv_version],          [opencv_major_version.opencv_minor_version.
 # - If binary compatibility has been broken (eg removed or changed interfaces)
 #   change to C+1:0:0
 # - If the interface is the same as the previous version, change to C:R+1:A
-m4_define([opencv_lt_version],       [9:9:9])
+m4_define([opencv_lt_version],       [1:0:0])
 
 # init autotools
 AC_PREREQ(2.59)
@@ -23,7 +23,7 @@ AC_CONFIG_AUX_DIR([autotools])
 AC_CONFIG_MACRO_DIR([autotools/aclocal])
 
 # put CVS revision of this configure.in into the resulting configure script
-AC_REVISION($Revision: 1.35 $)
+AC_REVISION($Revision: 1.36 $)
 
 # Detect the canonical host and target build environment
 AC_CANONICAL_HOST
@@ -768,7 +768,6 @@ interfaces/swig/general/Makefile
 interfaces/swig/python/Makefile
 tests/Makefile
 tests/python/Makefile
-tests/trs/Makefile
 tests/cv/Makefile
 tests/cv/src/Makefile
 tests/cxts/Makefile
