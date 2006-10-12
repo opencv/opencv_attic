@@ -65,10 +65,10 @@ LTLIBRARIES = $(lib_LTLIBRARIES) $(noinst_LTLIBRARIES)
 lib_highgui_la_LIBADD =
 am__lib_highgui_la_SOURCES_DIST = bitstrm.cpp grfmt_base.cpp \
 	grfmt_bmp.cpp grfmt_jpeg.cpp grfmt_png.cpp grfmt_pxm.cpp \
-	grfmt_sunras.cpp grfmt_tiff.cpp image.cpp loadsave.cpp \
-	precomp.cpp utils.cpp cvcap.cpp cvcap_dc1394.cpp cvcap_v4l.cpp \
-	cvcap_ffmpeg.cpp cvcap_qt.cpp cvcap_xine.cpp window_gtk.cpp \
-	window_carbon.cpp
+	grfmt_jpeg2000.cpp grfmt_exr.cpp grfmt_sunras.cpp \
+	grfmt_tiff.cpp image.cpp loadsave.cpp precomp.cpp utils.cpp \
+	cvcap.cpp cvcap_dc1394.cpp cvcap_v4l.cpp cvcap_ffmpeg.cpp \
+	cvcap_qt.cpp cvcap_xine.cpp window_gtk.cpp window_carbon.cpp
 @BUILD_DC1394_TRUE@am__objects_1 = cvcap_dc1394.lo
 @BUILD_V4L_TRUE@am__objects_2 = cvcap_v4l.lo
 @BUILD_FFMPEG_TRUE@am__objects_3 = cvcap_ffmpeg.lo
@@ -77,11 +77,11 @@ am__lib_highgui_la_SOURCES_DIST = bitstrm.cpp grfmt_base.cpp \
 @BUILD_GTK_TRUE@am__objects_6 = window_gtk.lo
 @BUILD_CARBON_TRUE@am__objects_7 = window_carbon.lo
 am_lib_highgui_la_OBJECTS = bitstrm.lo grfmt_base.lo grfmt_bmp.lo \
-	grfmt_jpeg.lo grfmt_png.lo grfmt_pxm.lo grfmt_sunras.lo \
-	grfmt_tiff.lo image.lo loadsave.lo precomp.lo utils.lo \
-	cvcap.lo $(am__objects_1) $(am__objects_2) $(am__objects_3) \
-	$(am__objects_4) $(am__objects_5) $(am__objects_6) \
-	$(am__objects_7)
+	grfmt_jpeg.lo grfmt_png.lo grfmt_pxm.lo grfmt_jpeg2000.lo \
+	grfmt_exr.lo grfmt_sunras.lo grfmt_tiff.lo image.lo \
+	loadsave.lo precomp.lo utils.lo cvcap.lo $(am__objects_1) \
+	$(am__objects_2) $(am__objects_3) $(am__objects_4) \
+	$(am__objects_5) $(am__objects_6) $(am__objects_7)
 lib_highgui_la_OBJECTS = $(am_lib_highgui_la_OBJECTS)
 libhighgui_la_DEPENDENCIES = lib_highgui.la \
 	$(top_builddir)/cxcore/src/libcxcore.la \
@@ -312,8 +312,9 @@ lib_LTLIBRARIES = libhighgui.la
 # convenience library
 lib_highgui_la_SOURCES = \
     bitstrm.cpp grfmt_base.cpp grfmt_bmp.cpp grfmt_jpeg.cpp      \
-    grfmt_png.cpp grfmt_pxm.cpp grfmt_sunras.cpp grfmt_tiff.cpp  \
-    image.cpp loadsave.cpp precomp.cpp utils.cpp cvcap.cpp       \
+    grfmt_png.cpp grfmt_pxm.cpp grfmt_jpeg2000.cpp grfmt_exr.cpp \
+    grfmt_sunras.cpp grfmt_tiff.cpp image.cpp loadsave.cpp       \
+    precomp.cpp utils.cpp cvcap.cpp                              \
     $(TMP_DC1394) $(TMP_V4L) $(TMP_FFMPEG) $(TMP_QT)             \
     $(TMP_XINE) $(TMP_GTK) $(TMP_CARBON)
 
@@ -421,7 +422,9 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/dummy.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/grfmt_base.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/grfmt_bmp.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/grfmt_exr.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/grfmt_jpeg.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/grfmt_jpeg2000.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/grfmt_png.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/grfmt_pxm.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/grfmt_sunras.Plo@am__quote@
