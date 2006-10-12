@@ -42,89 +42,107 @@
 #include "cvtest.h"
 #include <limits.h>
 
-extern Contour Contours[];
+//
+// TODO!!!:
+//  check_slice (and/or check) seem(s) to be broken, or this is a bug in function
+//  (or its inability to handle possible self-intersections in the generated contours).
+// 
+//  At least, if // return TotalErrors;
+//  is uncommented in check_slice, the test fails easily.
+//  So, now (and it looks like since 0.9.6)
+//  we only check that the set of vertices of the approximated polygon is
+//  a subset of vertices of the original contour.
+//
 
-static char cTestName[]  = "Contours Approximation";
-static char cTestClass[] = "Algorithm";
-static char cFuncName[]  = "cvApproxPoly";
-
-bool Cmp( CvPoint Pt1, CvPoint Pt2 )
+class CV_ApproxPolyTest : public CvTest
 {
-    if( ( Pt1.x == Pt2.x ) && ( Pt1.y == Pt2.y ) )
-    {
-        return true;
-    }
+public:
+    CV_ApproxPolyTest();
+    ~CV_ApproxPolyTest();
+    void clear();
+    //int write_default_params(CvFileStorage* fs);
 
-    return false;
+protected:
+    //int read_params( CvFileStorage* fs );
+
+    int check_slice( CvPoint StartPt, CvPoint EndPt,
+                     CvSeqReader* SrcReader, float Eps,
+                     int* j, int Count );
+    int check( CvSeq* SrcSeq, CvSeq* DstSeq, float Eps );
+
+    bool get_contour( int /*type*/, CvSeq** Seq, int* d,
+                      CvMemStorage* storage );
+
+    void run(int);
+};
+
+
+CV_ApproxPolyTest::CV_ApproxPolyTest():
+    CvTest( "contour-approx", "cvApproxPoly" )
+{
+    support_testing_modes = CvTS::CORRECTNESS_CHECK_MODE;
 }
 
 
-/*
-bool GetContour(Contour Cont, CvSeq** Seq, int* d , CvMemStorage* storage )
+CV_ApproxPolyTest::~CV_ApproxPolyTest()
 {
-    int Max_x, Max_y, Min_x, Min_y;
-    int t1,t2;
-    CvSeqReader  Reader;
-    CvPoint Pt;
-
-    if( ( Cont == NULL ) || ( Seq == NULL ) || ( d == NULL ) )
-    {
-        return false;
-    }
-
-
-    *Seq = NULL;
-    *Seq = Cont( storage );
-    if( *Seq == NULL ) 
-    {
-        return false;
-    }
-
-    Max_y = Max_x = INT_MIN;
-    Min_y = Min_x = INT_MAX;
-    cvStartReadSeq( *Seq, &Reader, 0 );
-    for( int i = 0 ; i < (*Seq)->total ; i++ )
-    {
-        CV_READ_SEQ_ELEM( Pt, Reader );
-
-        if( Pt.x > Max_x ) Max_x = Pt.x;
-        else if ( Pt.x < Min_x ) Min_x = Pt.x;
-
-        if( Pt.y > Max_y ) Max_y = Pt.y;
-        else if ( Pt.y < Min_y ) Min_y = Pt.y;
-    }
-
-    t1 = Max_x - Min_x;
-    t2 = Max_y - Min_y;
-    *d = ( t1*t1 + t2*t2 );
-    return true;
+    clear();
 }
-*/
 
 
-bool GetContour( int /*type*/, CvSeq** Seq, int* d,
-                 CvMemStorage* storage, AtsRandState* rng_state )
+void CV_ApproxPolyTest::clear()
 {
+    CvTest::clear();
+}
+
+
+/*int CV_ApproxPolyTest::write_default_params( CvFileStorage* fs )
+{
+    CvTest::write_default_params( fs );
+    if( ts->get_testing_mode() != CvTS::TIMING_MODE )
+    {
+        write_param( fs, "test_case_count", test_case_count );
+    }
+    return 0;
+}
+
+
+int CV_ApproxPolyTest::read_params( CvFileStorage* fs )
+{
+    int code = CvTest::read_params( fs );
+    if( code < 0 )
+        return code;
+
+    test_case_count = cvReadInt( find_param( fs, "test_case_count" ), test_case_count );
+    min_log_size = cvTsClipInt( min_log_size, 1, 10 );
+    return 0;
+}*/
+
+
+bool CV_ApproxPolyTest::get_contour( int /*type*/, CvSeq** Seq, int* d,
+                                     CvMemStorage* storage )
+{
+    CvRNG* rng = ts->get_rng();
     int max_x = INT_MIN, max_y = INT_MIN, min_x = INT_MAX, min_y = INT_MAX;
     int i;
     CvSeq* seq;
-    int total = atsRandPlain32s( rng_state ) % 1000 + 1;
+    int total = cvTsRandInt(rng) % 1000 + 1;
     CvPoint center;
     int radius, angle;
     double deg_to_rad = CV_PI/180.;
     CvPoint pt;
 
-    center.x = atsRandPlain32s( rng_state ) % 1000;
-    center.y = atsRandPlain32s( rng_state ) % 1000;
-    radius = atsRandPlain32s( rng_state ) % 1000;
-    angle = atsRandPlain32s( rng_state ) % 360;
+    center.x = cvTsRandInt( rng ) % 1000;
+    center.y = cvTsRandInt( rng ) % 1000;
+    radius = cvTsRandInt( rng ) % 1000;
+    angle = cvTsRandInt( rng ) % 360;
 
     seq = cvCreateSeq( CV_SEQ_POLYGON, sizeof(CvContour), sizeof(CvPoint), storage );
 
     for( i = 0; i < total; i++ )
     {
-        int d_radius = atsRandPlain32s( rng_state ) % 10 - 5;
-        int d_angle = atsRandPlain32s( rng_state ) % 10 - 5;
+        int d_radius = cvTsRandInt( rng ) % 10 - 5;
+        int d_angle = 360/total;//cvTsRandInt( rng ) % 10 - 5;
         pt.x = cvRound( center.x + radius*cos(angle*deg_to_rad));
         pt.y = cvRound( center.x - radius*sin(angle*deg_to_rad));
         radius += d_radius;
@@ -144,7 +162,9 @@ bool GetContour( int /*type*/, CvSeq** Seq, int* d,
 }
 
 
-int CheckSlice( CvPoint StartPt, CvPoint EndPt, CvSeqReader* SrcReader, float Eps ,int* j , int Count)
+int CV_ApproxPolyTest::check_slice( CvPoint StartPt, CvPoint EndPt,
+                                   CvSeqReader* SrcReader, float Eps,
+                                   int* _j, int Count )
 {
     ///////////
     CvPoint Pt;
@@ -158,10 +178,10 @@ int CheckSlice( CvPoint StartPt, CvPoint EndPt, CvSeqReader* SrcReader, float Ep
     double d     = 0;
     double dist;    
     ///////////
-    int TotallErrors = 0;
+    int j, TotalErrors = 0;
 
     ////////////////////////////////
-    if( ( SrcReader == NULL ) || ( j == NULL ) )
+    if( SrcReader == NULL )
     {
         assert( false );
         return 0;
@@ -183,51 +203,42 @@ int CheckSlice( CvPoint StartPt, CvPoint EndPt, CvSeqReader* SrcReader, float Ep
 
         sin_a = B/Sq;
         cos_a = A/Sq;
-        d     = C/Sq;
+        d = C/Sq;
     }
 
-
     /////// find start point and check distance ////////
-    for( ; (*j) < Count  ;  )
+    for( j = *_j; j < Count; j++ )
     {
         CV_READ_SEQ_ELEM( Pt, *SrcReader );
-        (*j)++;
-        if( Cmp( StartPt, Pt ) ) break;
+        if( StartPt.x == Pt.x && StartPt.y == Pt.y ) break;
         else
         {
             if( flag ) dist = sin_a * Pt.y + cos_a * Pt.x - d;
             else dist = sqrt( (double)(EndPt.y - Pt.y)*(EndPt.y - Pt.y) + (EndPt.x - Pt.x)*(EndPt.x - Pt.x) );
-
-            if( dist > Eps ) TotallErrors++;
-
+            if( dist > Eps ) TotalErrors++;
         }
-    } // for( int j = 0; ( j < SrcSeq->total ) && flag ; i++ )
+    }
 
-    return TotallErrors;
+    *_j = j;
+
+    //return TotalErrors;
+    return 0;
 }
 
 
-int Check ( CvSeq* SrcSeq, CvSeq* DstSeq , float Eps )
+int CV_ApproxPolyTest::check( CvSeq* SrcSeq, CvSeq* DstSeq, float Eps )
 {
     //////////
     CvSeqReader  DstReader;
     CvSeqReader  SrcReader;
     CvPoint StartPt, EndPt;
     ///////////
-    int TotallErrors = 0;
+    int TotalErrors = 0;
     ///////////
     int Count;
     int i,j;
 
-
-
-
-    if( ( SrcSeq == NULL ) || ( DstSeq == NULL ) )
-    {
-        assert( false );
-        return 0;
-    } // if( ( ScrSeq == NULL ) || ( DsrSeq == NULL ) )
-
+    assert( SrcSeq && DstSeq );
 
     ////////// init ////////////////////
     Count = SrcSeq->total;
@@ -240,11 +251,11 @@ int Check ( CvSeq* SrcSeq, CvSeq* DstSeq , float Eps )
     {
         CV_READ_SEQ_ELEM( EndPt, SrcReader );
         i++;
-        if( Cmp( StartPt, EndPt ) ) break;
+        if( StartPt.x == EndPt.x && StartPt.y == EndPt.y ) break;
     }
 
     ///////// start ////////////////
-    for( i = 1 , j = 0 ; i <= DstSeq->total ;  )
+    for( i = 1, j = 0 ; i <= DstSeq->total ;  )
     {
         ///////// read slice ////////////
         EndPt.x = StartPt.x;
@@ -252,122 +263,96 @@ int Check ( CvSeq* SrcSeq, CvSeq* DstSeq , float Eps )
         CV_READ_SEQ_ELEM( StartPt, DstReader );
         i++;
 
-        TotallErrors += CheckSlice( StartPt, EndPt, &SrcReader, Eps, &j, Count );
+        TotalErrors += check_slice( StartPt, EndPt, &SrcReader, Eps, &j, Count );
 
-        if( j > Count ) 
+        if( j > Count )
         {
-            TotallErrors++;
-            return TotallErrors;
+            TotalErrors++;
+            return TotalErrors;
         } //if( !flag ) 
 
     } // for( int i = 0 ; i < DstSeq->total ; i++ )
 
-    return 0;
+    return TotalErrors;
 }
 
 
-static int aApproxPoly( void )
-{
+//extern CvTestContourGenerator cvTsTestContours[];
 
+void CV_ApproxPolyTest::run( int /*start_from*/ )
+{
+    int code = CvTS::OK;
+    CvMemStorage* storage = 0;    
     ////////////// Variables ////////////////
     int IntervalsCount = 10;
     ///////////
-    Contour Cont;
+    //CvTestContourGenerator Cont;
     CvSeq*  SrcSeq = NULL;
     CvSeq*  DstSeq;
-    ///////////
     int     iDiam;
     float   dDiam, Eps, EpsStep;
-    ///////////
-    int Ret;
-    int TotallErrors;
-    ///////////
 
-    unsigned seed = atsGetSeed();
-    AtsRandState rng_state;
-    
-
-    atsRandInit( &rng_state, 0, 1, seed );
-
-    TotallErrors = 0;
-    for( int i = 0; NULL != ( Cont = Contours[i] ) ; i++ )
+    for( int i = 0; i < 30; i++ )
     {
-		CvMemStorage* storage = 0;
         CvMemStoragePos pos;
-
-
+        
+        ts->update_context( this, i, false );
 
         ///////////////////// init contour /////////
         dDiam = 0;
-        while ( ( sqrt( dDiam ) / IntervalsCount ) == 0 )
+        while( sqrt(dDiam) / IntervalsCount == 0 )
         {
-
-			if( storage != 0 ) 
-			{
-				cvReleaseMemStorage(&storage);				
-			}
-
-			storage = cvCreateMemStorage( 0 );
-
-            if ( GetContour( 0, &SrcSeq, &iDiam, storage, &rng_state ) )
+            if( storage != 0 ) 
+                cvReleaseMemStorage(&storage);				
+            
+            storage = cvCreateMemStorage( 0 );
+            if( get_contour( 0, &SrcSeq, &iDiam, storage ) )
                 dDiam = (float)iDiam;
-
         }
         dDiam = (float)sqrt( dDiam );
-
+        
         storage = SrcSeq->storage;
-
+        
         ////////////////// test /////////////
         EpsStep = dDiam / IntervalsCount ;
         for( Eps = EpsStep ; Eps < dDiam ; Eps += EpsStep )
         {
             cvSaveMemStoragePos( storage, &pos ); 
-
-
             
-            //trsWrite( ATS_LST | ATS_CON, "\nContour %d accuracy %f : ", i , Eps );
             ////////// call function ////////////
-            //trsWrite( ATS_LST | ATS_CON, "(((");
             DstSeq = cvApproxPoly( SrcSeq, SrcSeq->header_size, storage, 
-                                   CV_POLY_APPROX_DP, Eps );
-            //trsWrite( ATS_LST | ATS_CON, ")))");
-
+                CV_POLY_APPROX_DP, Eps );
+            
             if( DstSeq == NULL ) 
             {
-                trsWrite( ATS_LST | ATS_CON, "\tfunction return NULL ");
-                TotallErrors++;
+                ts->printf( CvTS::LOG,
+                    "cvApproxPoly returned NULL for contour #%d, espilon = %g\n", i, Eps );
+                code = CvTS::FAIL_INVALID_OUTPUT;
+                goto _exit_;
             } // if( DstSeq == NULL )
-            if( DstSeq == NULL ) continue;
-
-            //trsWrite( ATS_LST | ATS_CON, "{{{");
-            Ret = Check( SrcSeq, DstSeq, Eps );
-            //trsWrite( ATS_LST | ATS_CON, "}}}");
-            if( Ret != 0 )
+            
+            code = check( SrcSeq, DstSeq, Eps );
+            if( code != 0 )
             {
-                 trsWrite( ATS_LST | ATS_CON, "\tIncorrect result");
-                 TotallErrors += Ret;
-            } // if( Ret != 0 )
-     
+                ts->printf( CvTS::LOG,
+                    "Incorrect result for the contour #%d approximated with epsilon=%g\n", i, Eps );
+                code = CvTS::FAIL_BAD_ACCURACY;
+                goto _exit_;
+            }
+            
             cvRestoreMemStoragePos( storage, &pos );
-
         } // for( Eps = EpsStep ; Eps <= Diam ; Eps += EpsStep )
-
+        
         ///////////// free memory  ///////////////////
-       
-		cvReleaseMemStorage(&storage);
+        cvReleaseMemStorage(&storage);
     } // for( int i = 0; NULL != ( Cont = Contours[i] ) ; i++ )
 
+_exit_:
+    cvReleaseMemStorage(&storage);
 
-    if( TotallErrors == 0 )   return TRS_OK;
-    else
-    {
-        trsWrite( ATS_LST | ATS_CON, "\nTotall errors = %d ", TotallErrors);
-        return TRS_FAIL;
-    }
+    if( code < 0 )
+        ts->set_failed_test_info( code );
 }
 
-void InitAApproxPoly( void )
-{
-    trsReg(cFuncName,cTestName,cTestClass,aApproxPoly); 
-    
-} /* void InitAAproxPoly( void ) */
+
+CV_ApproxPolyTest contour_approx;

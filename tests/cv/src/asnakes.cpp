@@ -41,6 +41,8 @@
 
 #include "cvtest.h"
 
+#if 0
+
 #define SCAN  0
 #define CHECK 1
 
@@ -129,7 +131,7 @@ static int fmaSnakes( void* arg )
         strcat( abs_file_name, ".bmp" );
 
         /* read bitmap with 8u image */
-        iplSrc = atsCreateImageFromFile( abs_file_name );
+        iplSrc = cvLoadImage( abs_file_name, -1 );
         
         if (!iplSrc) 
             return trsResult( TRS_FAIL, "can't open BMP" );
@@ -209,7 +211,7 @@ static int fmaSnakes( void* arg )
         fclose(file);
         free((void*)Pts);
         free((void*)resPts); 
-        atsReleaseImage(iplSrc);
+        cvReleaseImage(&iplSrc);
     }    
 
    if( lErrors == 0 ) return trsResult( TRS_OK, "No errors fixed for this text" );
@@ -223,3 +225,5 @@ void InitASnakes(void)
     /*trsRegArg( func_name[0], test_desc, atsAlgoClass, fmaSnakes, SCAN );*/
     trsRegArg( func_name[0], test_desc, atsAlgoClass, fmaSnakes, CHECK );
 } /* InitASnakes */
+
+#endif

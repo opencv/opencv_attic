@@ -1,4 +1,10 @@
-454    2
+<?xml version="1.0"?>
+<opencv_storage>
+<points type_id="opencv-matrix">
+  <rows>454</rows>
+  <cols>2</cols>
+  <dt>f</dt>
+<data>
         51       159
          3       119
          1       166
@@ -453,3 +459,4 @@
        286       197
        217        34
        192        81
+</data></points></opencv_storage>

@@ -41,115 +41,107 @@
 
 #include "cvtest.h"
 
-#include <stdlib.h>
-#include <assert.h>
-#include <limits.h>
-#include <float.h>
-
-static char* funcs[] =
-{
-    "cvCalcOpticalFlowPyrLK",
-};
-
-static char *test_desc = "Regression Test for Lucas Kanade pyramid-based optical flow";
-
-
 /* ///////////////////// pyrlk_test ///////////////////////// */
 
-static int pyrlk_test( void )
+class CV_OptFlowPyrLKTest : public CvTest
 {
-    const double success_error_level = 0.2;
+public:
+    CV_OptFlowPyrLKTest();
+protected:
+    void run(int);
+};
 
-    const char* all_is_ok = "No errors";
-    const char* error_string = all_is_ok;
+
+CV_OptFlowPyrLKTest::CV_OptFlowPyrLKTest():
+    CvTest( "optflow-pyrlk", "cvCalcOpticalFlowPyrLK" )
+{
+    support_testing_modes = CvTS::CORRECTNESS_CHECK_MODE;
+}
+
+void CV_OptFlowPyrLKTest::run( int )
+{
+    int code = CvTS::OK;
+
+    const double success_error_level = 0.2;
+    const int bad_points_max = 2;
 
     /* test parameters */
     double  max_err = 0., sum_err = 0;
     int     pt_cmpd = 0;
     int     pt_exceed = 0;
     int     merr_i = 0, merr_j = 0, merr_k = 0;
-    char    filepath[1000];
     char    filename[1000];
-    const   char* i_pts_file = "lk_prev.dat";
-    const   char* j_pts_file = "lk_next.dat";
-    const   char* i_img_file = "rock_1.bmp";
-    const   char* j_img_file = "rock_2.bmp";
 
-    CvPoint2D32f*  u = 0;
-    CvPoint2D32f*  v = 0;
-    CvPoint2D32f*  v2 = 0;
+    CvPoint2D32f *u = 0, *v = 0, *v2 = 0;
+    CvMat *_u = 0, *_v = 0, *_v2 = 0;
     char* status = 0;
 
     IplImage* imgI = 0;
     IplImage* imgJ = 0;
 
-    int     n = 0, i = 0, j = 0;
+    int  n = 0, i = 0;
 
-    atsGetTestDataPath( filepath, "optflow", 0, 0 );
+    sprintf( filename, "%soptflow/%s", ts->get_data_path(), "lk_prev.dat" );
+    _u = (CvMat*)cvLoad( filename );
 
-    /* read feature points from the first image */
-    strcpy( filename, filepath );
-    strcat( filename, i_pts_file );
-
-    u = (CvPoint2D32f*)atsReadMatrix( filename, &n, &i );
-    
-    if( !u )
+    if( !_u )
     {
-        error_string = "couldn't read lk_prev.dat file"; 
-        goto test_exit;
+        ts->printf( CvTS::LOG, "could not read %s\n", filename );
+        code = CvTS::FAIL_MISSING_TEST_DATA;
+        goto _exit_;
     }
 
-    if( i != 2 || n <= 0 )
+    sprintf( filename, "%soptflow/%s", ts->get_data_path(), "lk_next.dat" );
+    _v = (CvMat*)cvLoad( filename );
+
+    if( !_v )
     {
-        error_string = "lk_prev.dat file has been corrupted"; 
-        goto test_exit;
+        ts->printf( CvTS::LOG, "could not read %s\n", filename );
+        code = CvTS::FAIL_MISSING_TEST_DATA;
+        goto _exit_;
     }
 
-    /* read feature points from the second image (calculated by MATLAB script) */
-    strcpy( filename, filepath );
-    strcat( filename, j_pts_file );
-
-    v = (CvPoint2D32f*)atsReadMatrix( filename, &j, &i );
-    if( !v )
+    if( _u->cols != 2 || CV_MAT_TYPE(_u->type) != CV_32F ||
+        _v->cols != 2 || CV_MAT_TYPE(_v->type) != CV_32F || _v->rows != _u->rows )
     {
-        error_string = "couldn't read lk_next.dat file"; 
-        goto test_exit;
+        ts->printf( CvTS::LOG, "the loaded matrices of points are not valid\n" );
+        code = CvTS::FAIL_MISSING_TEST_DATA;
+        goto _exit_;
+
     }
 
-    if( i != 2 || j != n )
-    {
-        error_string = "lk_next.dat file has been corrupted"; 
-        goto test_exit;
-    }
+    u = (CvPoint2D32f*)_u->data.fl;
+    v = (CvPoint2D32f*)_v->data.fl;
 
     /* allocate adidtional buffers */
-    v2 = (CvPoint2D32f*)cvAlloc( n*sizeof(v2[0]));
-    status = (char*)cvAlloc(n*sizeof(status[0]));
+    _v2 = cvCloneMat( _u );
+    v2 = (CvPoint2D32f*)_v2->data.fl;
 
     /* read first image */
-    strcpy( filename, filepath );
-    strcat( filename, i_img_file );
-    
-    imgI = atsCreateImageFromFile( filename );
+    sprintf( filename, "%soptflow/%s", ts->get_data_path(), "rock_1.bmp" );
+    imgI = cvLoadImage( filename, -1 );
 
     if( !imgI )
     {
-        error_string = "first image can't be readed"; 
-        goto test_exit;
+        ts->printf( CvTS::LOG, "could not read %s\n", filename );
+        code = CvTS::FAIL_MISSING_TEST_DATA;
+        goto _exit_;
     }
 
     /* read second image */
-    strcpy( filename, filepath );
-    strcat( filename, j_img_file );
-
-    imgJ = atsCreateImageFromFile( filename );
+    sprintf( filename, "%soptflow/%s", ts->get_data_path(), "rock_2.bmp" );
+    imgJ = cvLoadImage( filename, -1 );
 
     if( !imgJ )
     {
-        error_string = "second image can't be readed"; 
-        goto test_exit;
+        ts->printf( CvTS::LOG, "could not read %s\n", filename );
+        code = CvTS::FAIL_MISSING_TEST_DATA;
+        goto _exit_;
     }
     
+    n = _u->rows;
+    status = (char*)cvAlloc(n*sizeof(status[0]));
+
     /* calculate flow */
     cvCalcOpticalFlowPyrLK( imgI, imgJ, 0, 0, u, v2, n, cvSize( 20, 20 ),
                             4, status, 0, cvTermCriteria( CV_TERMCRIT_ITER|
@@ -161,7 +153,7 @@ static int pyrlk_test( void )
         if( status[i] != 0 )
         {
             double err;
-            if( atsIsNaN( v[i].x ))
+            if( cvIsNaN(v[i].x) )
             {
                 merr_j++;
                 continue;
@@ -175,54 +167,51 @@ static int pyrlk_test( void )
             }
 
             pt_exceed += err > success_error_level;
+            if( pt_exceed > bad_points_max )
+            {
+                ts->printf( CvTS::LOG,
+                    "The number of poorly tracked points is too big (>=%d)\n", pt_exceed );
+                code = CvTS::FAIL_BAD_ACCURACY;
+                goto _exit_;
+            }
 
             sum_err += err;
             pt_cmpd++;
         }
         else
         {
-            if( !atsIsNaN( v[i].x ))
+            if( !cvIsNaN( v[i].x ))
             {
                 merr_i = i;
                 merr_k++;
+                ts->printf( CvTS::LOG, "The algorithm lost the point #%d\n", i );
+                code = CvTS::FAIL_BAD_ACCURACY;
+                goto _exit_;
             }
         }
     }
 
-test_exit:
+    if( max_err > 1 )
+    {
+        ts->printf( CvTS::LOG, "Maximum tracking error is too big (=%g)\n", max_err );
+        code = CvTS::FAIL_BAD_ACCURACY;
+        goto _exit_;
+    }
 
-    /* release occupied memory */
+_exit_:
+
     cvFree( &status );
-    cvFree( &v2 );
-    free( u );
-    free( v );
-    if( imgI ) atsReleaseImage( imgI );
-    if( imgJ ) atsReleaseImage( imgJ );
+    cvReleaseMat( &_u );
+    cvReleaseMat( &_v );
+    cvReleaseMat( &_v2 );
+    
+    cvReleaseImage( &imgI );
+    cvReleaseImage( &imgJ );
 
-    if( error_string == all_is_ok )
-    {
-        trsWrite( ATS_LST, "Avg.err is %g, max. err is %g at i = %d, poor pts = %d,"
-                           "superflous = %d, deficient = %d",
-                           sum_err/MAX(pt_cmpd,1),  max_err, merr_i, pt_exceed,
-                           merr_j, merr_k );
-
-        return max_err < 1 && pt_exceed < 3 && merr_k == 0 ?
-            trsResult( TRS_OK, "No errors" ) :
-            trsResult( TRS_FAIL, "Bad accuracy" );
-    }
-    else
-    {
-        trsWrite( ATS_LST, "Fatal error" );
-        return trsResult( TRS_FAIL, error_string );
-    }
+    if( code < 0 )
+        ts->set_failed_test_info( code );
 }
 
-
-void  InitAOptFlowPyrLK(void)
-{
-    /* Registering test functions */
-    trsReg( funcs[0], test_desc, atsAlgoClass, pyrlk_test );
-
-} /* InitAOptFlowPyrLK */
+CV_OptFlowPyrLKTest optflow_pyr_lk_test;
 
 /* End of file. */

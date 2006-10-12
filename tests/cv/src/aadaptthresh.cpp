@@ -40,17 +40,18 @@
 //M*/
 
 #include "cvtest.h"
-#define __AUTOMATIC__
+
+#if 0
  
 //extern "C"{
-//	#include "HighGUI.h"
+//  #include "HighGUI.h"
 //}
 
 
 static char cTestName[] = "Image Adaptive Thresholding";
 static char cTestClass[] = "Algorithm";
 static char cFuncName[] = "cvAdaptThreshold";
-static int	aAdaptThreshold()
+static int  aAdaptThreshold()
 {
 
     CvPoint *cp;
@@ -67,12 +68,12 @@ static int	aAdaptThreshold()
 
     double pi = 3.1415926;
 
-	double lower, upper;
-   	unsigned seed;
+    double lower, upper;
+    unsigned seed;
     char rand;
-	AtsRandState state;
+    AtsRandState state;
 
-	long diff_binary, diff_binary_inv;
+    long diff_binary, diff_binary_inv;
     
     int l,i,j;
 
@@ -104,8 +105,8 @@ static int	aAdaptThreshold()
     int ymin = height;
     int xmax = 0;
     int ymax = 0;
-	
-	
+    
+    
     for(i=0;i<nPoints2;i++)
     {
         cp[i].x = (int)(a2*cos(2*pi*i/nPoints2)*cos(2*pi*fi/360.))-
@@ -122,17 +123,16 @@ static int	aAdaptThreshold()
     
 //  IPL image moment calculation  
 //  create image  
-	imBinary = atsCreateImage( size.width,  size.height,   IPL_DEPTH_8U, 1, 0 );
-	imBinary_inv = atsCreateImage( size.width,  size.height,   IPL_DEPTH_8U, 1, 0 );
-	imTo_zero = atsCreateImage( size.width,  size.height,   IPL_DEPTH_8U, 1, 0 );
-	imTo_zero_inv = atsCreateImage( size.width,  size.height,   IPL_DEPTH_8U, 1, 0 );
-	imOutput = atsCreateImage( size.width,  size.height,   IPL_DEPTH_8U, 1, 0 );
+    imBinary = cvCreateImage( size, 8, 1 );
+    imBinary_inv = cvCreateImage( size, 8, 1 );
+    imTo_zero = cvCreateImage( size, 8, 1 );
+    imTo_zero_inv = cvCreateImage( size, 8, 1 );
+    imOutput = cvCreateImage( size, 8, 1 );
+    imInput = cvCreateImage( size, 8, 1 );
 
-    imInput = atsCreateImage( size.width,  size.height,   IPL_DEPTH_8U, 1, 0 );
-
-	int bgrn = 50;
-	int signal = 150;
-	
+    int bgrn = 50;
+    int signal = 150;
+    
     memset(imInput->imageData,bgrn,l);
 
     cvFillPoly(imInput, &cp, &kp, 1, cvScalarAll(signal));
@@ -142,57 +142,57 @@ static int	aAdaptThreshold()
     lower = -upper;
     seed = 345753;
     atsRandInit( &state, lower, upper, seed );
-	
-	uchar *input = (uchar*)imInput->imageData;
-	uchar *binary = (uchar*)imBinary->imageData;
-	uchar *binary_inv = (uchar*)imBinary_inv->imageData;
-	uchar *to_zero = (uchar*)imTo_zero->imageData;
-	uchar *to_zero_inv = (uchar*)imTo_zero_inv->imageData;
-	double *parameter = (double*)trsmAlloc(2*sizeof(double));
+    
+    uchar *input = (uchar*)imInput->imageData;
+    uchar *binary = (uchar*)imBinary->imageData;
+    uchar *binary_inv = (uchar*)imBinary_inv->imageData;
+    uchar *to_zero = (uchar*)imTo_zero->imageData;
+    uchar *to_zero_inv = (uchar*)imTo_zero_inv->imageData;
+    double *parameter = (double*)trsmAlloc(2*sizeof(double));
 
-	int step = imInput->widthStep;
+    int step = imInput->widthStep;
 
     for(i = 0; i<size.height; i++, input+=step, binary+=step, binary_inv+=step, to_zero+=step,to_zero_inv+=step)
     {
-		 for(j = 0; j<size.width; j++)
+         for(j = 0; j<size.width; j++)
          {
-			    atsbRand8s( &state, &rand, 1);   
-				if(input[j] == bgrn) 
-				{
-					binary[j] = to_zero[j] = (uchar)0;
-					binary_inv[j] = (uchar)255;
-					to_zero_inv[j] = input [j] = (uchar)(bgrn + rand);
-				}
-				else 
-				{
-					binary[j] = (uchar)255;
-					binary_inv[j] = to_zero_inv[j] = (uchar)0;
-					to_zero[j] = input[j] = (uchar)(signal + rand);
-				}
-		
+                atsbRand8s( &state, &rand, 1);   
+                if(input[j] == bgrn) 
+                {
+                    binary[j] = to_zero[j] = (uchar)0;
+                    binary_inv[j] = (uchar)255;
+                    to_zero_inv[j] = input [j] = (uchar)(bgrn + rand);
+                }
+                else 
+                {
+                    binary[j] = (uchar)255;
+                    binary_inv[j] = to_zero_inv[j] = (uchar)0;
+                    to_zero[j] = input[j] = (uchar)(signal + rand);
+                }
+        
          }
     }
 
 
 
-	cvAdaptiveThreshold( imInput, imOutput, (double)255, CV_ADAPTIVE_THRESH_MEAN_C, CV_THRESH_BINARY, parameter1, parameter2 ); 
-	diff_binary = atsCompare1Db( (uchar*)imOutput->imageData, (uchar*)imBinary->imageData, l, 5);
+    cvAdaptiveThreshold( imInput, imOutput, (double)255, CV_ADAPTIVE_THRESH_MEAN_C, CV_THRESH_BINARY, parameter1, parameter2 ); 
+    diff_binary = atsCompare1Db( (uchar*)imOutput->imageData, (uchar*)imBinary->imageData, l, 5);
 
-	cvAdaptiveThreshold( imInput, imOutput, (double)255, CV_ADAPTIVE_THRESH_MEAN_C, CV_THRESH_BINARY_INV, parameter1, parameter2 ); 
-	diff_binary_inv = atsCompare1Db( (uchar*)imOutput->imageData, (uchar*)imBinary_inv->imageData, l, 5);
+    cvAdaptiveThreshold( imInput, imOutput, (double)255, CV_ADAPTIVE_THRESH_MEAN_C, CV_THRESH_BINARY_INV, parameter1, parameter2 ); 
+    diff_binary_inv = atsCompare1Db( (uchar*)imOutput->imageData, (uchar*)imBinary_inv->imageData, l, 5);
 
     if( diff_binary > 5 || diff_binary_inv > 5 )
         code = TRS_FAIL;  
-	
-	atsReleaseImage(imInput);
-	atsReleaseImage(imOutput);
-	atsReleaseImage(imBinary);
-	atsReleaseImage(imBinary_inv);
-	atsReleaseImage(imTo_zero);
-	atsReleaseImage(imTo_zero_inv);
+    
+    cvReleaseImage(&imInput);
+    cvReleaseImage(&imOutput);
+    cvReleaseImage(&imBinary);
+    cvReleaseImage(&imBinary_inv);
+    cvReleaseImage(&imTo_zero);
+    cvReleaseImage(&imTo_zero_inv);
 
     trsWrite( ATS_CON | ATS_LST | ATS_SUM, "diff_binary =%ld \n", diff_binary); 
-	trsWrite( ATS_CON | ATS_LST | ATS_SUM, "diff_binary_inv =%ld \n", diff_binary_inv); 
+    trsWrite( ATS_CON | ATS_LST | ATS_SUM, "diff_binary_inv =%ld \n", diff_binary_inv); 
 
     trsFree(parameter);
     trsFree(cp);
@@ -205,5 +205,7 @@ void InitAAdaptThreshold( void )
 /* Test Registartion */
     trsReg(cFuncName,cTestName,cTestClass,aAdaptThreshold); 
 } /* InitAAdaptThreshold */
+
+#endif
 
 /* End of file. */

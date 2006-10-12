@@ -41,6 +41,8 @@
 
 #include "cvtest.h"
 
+#if 0
+
 #define DEPTH_8U 0
 
 /* Testing parameters */
@@ -329,3 +331,5 @@ void InitAImage()
     /* Register test function */
     trsReg( func_name, test_desc, atsAlgoClass, foaImage );
 } /* InitACanny */
+
+#endif

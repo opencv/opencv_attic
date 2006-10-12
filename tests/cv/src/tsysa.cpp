@@ -41,88 +41,11 @@
 
 #include "cvtest.h"
 
-void InitAApproxPoly();
-void InitACalibration();
-void InitAChessCorners();
-void InitAConDens();
-void InitAEMD();
-void InitACalcContrastHist();
-void InitACalcOpticalFlowLK();
-void InitACalcOpticalFlowHS(); 
-void InitAHoughLines();
-void InitAImage();
-void InitAImageToHMMObs();
-void InitAKalman();
-void InitAKMeans();
-void InitAMotSeg();
-void InitAOptFlowPyrLK();
-void InitAPixelAccess();
-void InitASnakes();
-void InitAEigenObjects();
-
-void InitAMatchContours();
-void InitACreateContourTree();
-void InitAMatchContourTrees();
-
-void InitAPyrSegmentation();
-void InitAPOSIT();
-
 CvTS test_system;
 
-/*============================== Algorithm Tests =============================*/
 int main(int argC,char *argV[])
 {
-    char** argv = (char**)malloc( 10*sizeof(argv[0]));
-    int argc = 0;
-    argv[argc++] = argV[0];
-    argv[argc++] = "-A";
-    argv[argc++] = "-l";
-    argv[argc++] = "-s";
-    argv[argc++] = "-m";
-    argv[argc++] = "-B";
-
-#ifdef WIN32
-    atsInitModuleTestData( argV[0], "../tests/cv/testdata" );
-#else
-    atsInitModuleTestData( argV[0], "../../testdata" );
-#endif
-    //atsLoadPrimitives( 1 );
-
-    // InitAAdaptThreshold(); // test is not up-to-date
-    InitAApproxPoly();
-    InitACalcOpticalFlowLK();
-    InitACalcOpticalFlowHS();
-    InitACalibration();
-    InitAChessCorners();
-    InitAConDens();
-    InitACreateContourTree();
-    InitAEigenObjects();
-    InitAEMD();
-
-    //InitACalcContrastHist(); // the function is not available
-    InitAHoughLines();
-    InitAImage();
-    //InitAImageToHMMObs(); // test uses IPL DCT
-    InitAKalman();
-    //InitAKMeans(); // test is not up-to-date
-    InitAMatchContours();
-    InitAMatchContourTrees();
-    // InitAMotSeg(); // test is not up-to-date
-    InitAOptFlowPyrLK();
-    InitAPixelAccess();
-
-    InitAPOSIT();
-    InitASnakes();
-    InitAPyrSegmentation();
-    //InitAGestureRecognition(); // some functionality has been removed
-
     test_system.run( argC, argV );
-    fflush( stdout );
-    printf( "Now running the old-style tests...\n" );
-
-    //trsRun( argc, argv );
-    printf("Done\n");
-    free( argv );
     return 0;
 }
 

@@ -41,26 +41,6 @@
 
 #include "cvtest.h"
 
-#include <stdlib.h>
-#include <assert.h>
-#include <limits.h>
-#include <float.h>
-
-//#include <windows.h>
-#include "highgui.h"
-
-//#define WRITE_POINTS
-
-static char* funcs[] =
-{
-    "cvFindChessBoardCornerGuesses, cvFindCornerSubPix"
-};
-
-static char *test_desc[] =
-{
-    "Regression test"
-};
-
 void show_points( IplImage* gray, CvPoint2D32f* u, int u_cnt, CvPoint2D32f* v, int v_cnt,
                   CvSize etalon_size, int was_found )
 {
@@ -97,128 +77,138 @@ void show_points( IplImage* gray, CvPoint2D32f* u, int u_cnt, CvPoint2D32f* v, i
 }
 
 
-/* ///////////////////// chess_corner_test ///////////////////////// */
-static int chess_corner_test( void )
+class CV_ChessboardDetectorTest : public CvTest
 {
+public:
+    CV_ChessboardDetectorTest();
+protected:
+    void run(int);
+};
+
+
+CV_ChessboardDetectorTest::CV_ChessboardDetectorTest():
+    CvTest( "chessboard-detector", "cvFindChessboardCorners" )
+{
+    support_testing_modes = CvTS::CORRECTNESS_CHECK_MODE;
+}
+
+/* ///////////////////// chess_corner_test ///////////////////////// */
+void CV_ChessboardDetectorTest::run( int start_from )
+{
+    int code = CvTS::OK;
+
 #ifndef WRITE_POINTS    
     const double rough_success_error_level = 2.5;
     const double precise_success_error_level = 0.2;
-    int i = 0, n = 0, j = 0;
     double err = 0, max_rough_error = 0, max_precise_error = 0;
 #endif
-
-    const char* all_is_ok = "No errors";
-    const char* error_string = all_is_ok;
 
     /* test parameters */
     char   filepath[1000];
     char   filename[1000];
 
-    CvPoint2D32f*  u = 0;
-    CvPoint2D32f*  v = 0;
+    CvMat*  _u = 0;
+    CvMat*  _v = 0;
+    CvPoint2D32f* u;
+    CvPoint2D32f* v;
 
     IplImage* img = 0;
     IplImage* gray = 0;
     IplImage* thresh = 0;
 
     int  idx, max_idx;
+    int  progress = 0;
 
-    atsGetTestDataPath( filepath, "cameracalibration", 0, 0 );
-    sprintf( filename, "%schess_size.dat", filepath );
-    
-    CvSize2D32f* sz = (CvSize2D32f*)atsReadMatrix( filename, &max_idx, &idx );
+    sprintf( filepath, "%scameracalibration/", ts->get_data_path() );
+    sprintf( filename, "%schessboard_list.dat", filepath );
+    CvFileStorage* fs = cvOpenFileStorage( filename, 0, CV_STORAGE_READ );
+    CvFileNode* board_list = fs ? cvGetFileNodeByName( fs, 0, "boards" ) : 0;
 
-    if( idx != 2 )
+    if( !fs || !board_list || !CV_NODE_IS_SEQ(board_list->tag) ||
+        board_list->data.seq->total % 2 != 0 )
     {
-        error_string = "chess_size.dat can't be readed"; 
-        goto test_exit;
+        ts->printf( CvTS::LOG, "chessboard_list.dat can not be readed or is not valid" );
+        CvTS::FAIL_MISSING_TEST_DATA;
+        goto _exit_;
     }
 
-    for( idx = 1; idx <= max_idx; idx++ )
+    max_idx = board_list->data.seq->total/2;
+
+    for( idx = start_from; idx < max_idx; idx++ )
     {
         int etalon_count = -1;
         int count = 0;
         CvSize etalon_size = { -1, -1 };
-        int result;
+        int j, result;
         
+        ts->update_context( this, idx-1, true );
+
         /* read the image */
-        sprintf( filename, "%schess%d.jpg", filepath, idx );
+        sprintf( filename, "%s%s", filepath,
+            cvReadString((CvFileNode*)cvGetSeqElem(board_list->data.seq,idx*2),"dummy.txt"));
 	
-        img = cvvLoadImage( filename );
+        img = cvLoadImage( filename );
         
         if( !img )
         {
-            error_string = "one of chess*.jpg images can't be readed"; 
-            goto test_exit;
+            ts->printf( CvTS::LOG, "one of chessboard images can't be read: %s", filename );
+            if( max_idx == 1 )
+            {
+                code = CvTS::FAIL_MISSING_TEST_DATA;
+                goto _exit_;
+            }
+            continue;
         }
 
         gray = cvCreateImage( cvSize( img->width, img->height ), IPL_DEPTH_8U, 1 );
         thresh = cvCreateImage( cvSize( img->width, img->height ), IPL_DEPTH_8U, 1 );
         cvCvtColor( img, gray, CV_BGR2GRAY );
  
-        sprintf( filename, "%schess_corners%d.dat", filepath, idx );
+        sprintf( filename, "%s%s", filepath,
+            cvReadString((CvFileNode*)cvGetSeqElem(board_list->data.seq,idx*2+1),"dummy.txt"));
 
-#ifndef WRITE_POINTS
-        u = (CvPoint2D32f*)atsReadMatrix( filename, &n, &i );
+        _u = (CvMat*)cvLoad( filename );
 
-        if( u == 0 )
+        if( _u == 0 )
         {
             if( idx == 0 )
-                error_string = "chess_corners*.dat files can't be read"; 
-            goto test_exit;
-        }
-
-        if( n > 0 )
-        {
-            etalon_size.width = cvRound( u[0].x );
-            etalon_size.height = cvRound( u[0].y );
-
-            if( etalon_size.width != cvRound(sz[idx-1].width) ||
-                etalon_size.height != cvRound(sz[idx-1].height))
+                ts->printf( CvTS::LOG, "one of chessboard corner files can't be read: %s", filename ); 
+            if( max_idx == 1 )
             {
-                error_string = "mismatched board sizes";
-                goto test_exit;
+                code = CvTS::FAIL_MISSING_TEST_DATA;
+                goto _exit_;
             }
-
-            etalon_count = etalon_size.width*etalon_size.height;
+            continue;
         }
 
-        if( i != 2 || n != etalon_count + 1 ||
-            etalon_size.width <= 0 || etalon_size.height <= 0 )
-        {
-            error_string = "one of chess_corners*.dat files is corrupted"; 
-            goto test_exit;
-        }
-#else
-        etalon_size.width = cvRound( sz[idx-1].width );
-        etalon_size.height = cvRound( sz[idx-1].height );
+        etalon_size.width = _u->cols;
+        etalon_size.height = _u->rows;
         etalon_count = etalon_size.width*etalon_size.height;
 
-        u = (CvPoint2D32f*)malloc( (etalon_count + 1)*sizeof(u[0]));
-#endif
-
         /* allocate additional buffers */
-        v = (CvPoint2D32f*)malloc( (etalon_count + 1)*sizeof(v[0]));
+        _v = cvCloneMat( _u );
+        count = etalon_count;
 
-        count = etalon_size.width*etalon_size.height;
+        u = (CvPoint2D32f*)_u->data.fl;
+        v = (CvPoint2D32f*)_v->data.fl;
 
         OPENCV_CALL( result = cvFindChessBoardCornerGuesses(
-                     gray, thresh, 0, etalon_size, v + 1, &count ));
+                     gray, thresh, 0, etalon_size, v, &count ));
 
-        //show_points( gray, 0, etalon_count, v + 1, count, etalon_size, result );
-
+        //show_points( gray, 0, etalon_count, v, count, etalon_size, result );
         if( !result || count != etalon_count )
         {
-            error_string = "chess board is not found"; 
-            goto test_exit;
+            ts->printf( CvTS::LOG, "chess board is not found" );
+            code = CvTS::FAIL_INVALID_OUTPUT;
+            goto _exit_;
         }
 
 #ifndef WRITE_POINTS
         err = 0;
         for( j = 0; j < etalon_count; j++ )
         {
-            double dx = fabs( v[j+1].x - u[j+1].x );
-            double dy = fabs( v[j+1].y - u[j+1].y );
+            double dx = fabs( v[j].x - u[j].x );
+            double dy = fabs( v[j].y - u[j].y );
 
             dx = MAX( dx, dy );
             if( dx > err )
@@ -226,25 +216,24 @@ static int chess_corner_test( void )
                 err = dx;
                 if( err > rough_success_error_level )
                 {
-                    error_string = "bad accuracy of corner guesses"; 
-                    goto test_exit;
+                    ts->printf( CvTS::LOG, "bad accuracy of corner guesses" );
+                    code = CvTS::FAIL_BAD_ACCURACY;
+                    goto _exit_;
                 }
             }
         }
         max_rough_error = MAX( max_rough_error, err );
 #endif
-
-        OPENCV_CALL( cvFindCornerSubPix( gray, v + 1, count, cvSize( 5, 5 ), cvSize(-1,-1),
+        OPENCV_CALL( cvFindCornerSubPix( gray, v, count, cvSize( 5, 5 ), cvSize(-1,-1),
                             cvTermCriteria(CV_TERMCRIT_EPS|CV_TERMCRIT_ITER,30,0.1)));
-
-        //show_points( gray, u + 1, etalon_count, v + 1, count );
+        //show_points( gray, u + 1, etalon_count, v, count );
 
 #ifndef WRITE_POINTS
         err = 0;
         for( j = 0; j < etalon_count; j++ )
         {
-            double dx = fabs( v[j + 1].x - u[j + 1].x );
-            double dy = fabs( v[j + 1].y - u[j + 1].y );
+            double dx = fabs( v[j].x - u[j].x );
+            double dy = fabs( v[j].y - u[j].y );
 
             dx = MAX( dx, dy );
             if( dx > err )
@@ -252,68 +241,38 @@ static int chess_corner_test( void )
                 err = dx;
                 if( err > precise_success_error_level )
                 {
-                    error_string = "bad accuracy of adjusted corners"; 
-
-                    goto test_exit;
+                    ts->printf( CvTS::LOG, "bad accuracy of adjusted corners" ); 
+                    code = CvTS::FAIL_BAD_ACCURACY;
+                    goto _exit_;
                 }
             }
         }
         max_precise_error = MAX( max_precise_error, err );
 #else
-        v[0].x = (float)etalon_size.width;
-        v[0].y = (float)etalon_size.height;
-        atsWriteMatrix( filename, etalon_count + 1, 2, (float*)v );
+        cvSave( filename, _v );
 #endif
-
-        free( u );
-        free( v );
-        u = v = 0;
+        cvReleaseMat( &_u );
+        cvReleaseMat( &_v );
         cvReleaseImage( &img );
         cvReleaseImage( &gray );
         cvReleaseImage( &thresh );
+        progress = update_progress( progress, idx-1, max_idx, 0 );
     }
 
-test_exit:
+_exit_:
 
     /* release occupied memory */
-    if( u )
-        free( u );
-    if( v )
-        free( v );
-
-    if( sz )
-        free( sz );
-
-    if( img )
-    {
-        cvReleaseImage( &img );
-    }
+    cvReleaseMat( &_u );
+    cvReleaseMat( &_v );
+    cvReleaseFileStorage( &fs );
+    cvReleaseImage( &img );
     cvReleaseImage( &gray );
     cvReleaseImage( &thresh );
 
-#ifndef WRITE_POINTS    
-    if( error_string == all_is_ok )
-    {
-        trsWrite( ATS_LST, "Max rough error is %g, max precise error is %g",
-                  max_rough_error, max_precise_error );
-        return trsResult( TRS_OK, "No errors" );
-    }
-    else
-    {
-        trsWrite( ATS_LST, "Fatal error" );
-        return trsResult( TRS_FAIL, error_string );
-    }
-#else
-    return TRS_OK;
-#endif
+    if( code < 0 )
+        ts->set_failed_test_info( code );
 }
 
-
-void  InitAChessCorners(void)
-{
-    /* Registering test functions */
-    trsReg( funcs[0], test_desc[0], atsAlgoClass, chess_corner_test );
-
-} /* InitAChessCorners */
+CV_ChessboardDetectorTest chessboard_detector_test;
 
 /* End of file. */

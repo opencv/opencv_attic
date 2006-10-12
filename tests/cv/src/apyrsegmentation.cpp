@@ -40,6 +40,8 @@
 //M*/
 
 #include "cvtest.h"
+
+#if 0
 /*#include "conio.h"   */
 
 static char cTestName[] = "Image segmentation by pyramids";
@@ -249,5 +251,7 @@ void InitAPyrSegmentation( void )
     trsRegArg(cFuncName[0],cTestName,cTestClass,aPyrSegmentation, _8U_C3); 
 
 } /* InitAContourMoments */
+
+#endif
 
 /* End of file. */

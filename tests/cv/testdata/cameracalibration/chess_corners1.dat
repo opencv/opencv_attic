@@ -1,5 +1,10 @@
-   36    2
-           5.0000000           7.0000000
+<?xml version="1.0"?>
+<opencv_storage>
+<chess_corners type_id="opencv-matrix">
+  <rows>7</rows>
+  <cols>5</cols>
+  <dt>ff</dt>
+<data>
          111.8335876          53.4766121
          132.9276886          59.2681923
          153.6759338          65.1266708
@@ -35,3 +40,4 @@
          122.5353012         192.5851135
          145.0427399         197.9186096
          167.3283234         203.0406342
+</data></chess_corners></opencv_storage>

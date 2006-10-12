@@ -41,6 +41,8 @@
 
 #include "cvtest.h"
 
+#if 0
+
 #include <stdlib.h>
 #include <math.h>
 #include <float.h>
@@ -121,4 +123,6 @@ void InitAHoughLines(void)
     trsRegArg(func_names[2], test_desc[0], atsAlgoClass, test_ht, HT_MD);
 
 } /* InitADistanceTransform*/
+
+#endif
 

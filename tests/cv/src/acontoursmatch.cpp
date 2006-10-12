@@ -40,6 +40,8 @@
 //M*/
 
 #include "cvtest.h"
+
+#if 0
 /*#include "conio.h"*/
 
 static char cTestName[] = "Matching Contours";
@@ -163,4 +165,6 @@ void InitAMatchContours( void )
 } /* InitAMatchContours */
 
 /* End of file. */
+
+#endif
 

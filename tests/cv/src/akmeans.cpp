@@ -40,7 +40,8 @@
 //M*/
 
 #include "cvtest.h"
-#include "float.h"
+
+#if 0
                        
 /* Testing parameters */
 static char test_desc[] = "KMeans clustering";
@@ -58,7 +59,7 @@ float distance(float* vector_1, float *vector_2, int VecSize)
   dist = 0.0;
   for (i = 0; i < VecSize; i++)
   {
-	  //printf ("%f, %f\n", vector_1[i], vector_2[i]);
+      //printf ("%f, %f\n", vector_1[i], vector_2[i]);
       dist = dist + (vector_1[i] - vector_2[i])*(vector_1[i] - vector_2[i]);
   }
   return dist;  
@@ -121,11 +122,11 @@ int _real_kmeans( int numClusters, float **sample, int numSamples,
       a_class[i] = 0;
       for (k = 1; k < numClusters; k++)
       {
-	    if (dist[k] < minDist)
+        if (dist[k] < minDist)
         {
            minDist = dist[k];
            a_class[i] = k;
-		}
+        }
       }
     }
     
@@ -286,3 +287,5 @@ void InitAKMeans()
     trsReg( func_name[0], test_desc, atsAlgoClass, fmaKMeans );
     
 } /* InitAKMeans */
+
+#endif

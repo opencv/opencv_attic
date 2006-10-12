@@ -41,6 +41,8 @@
 
 #include "cvtest.h"
 
+#if 0
+
 /* Testing parameters */
 static char FuncName[] = "cvCalcOpticalFlowHS";
 static char TestName[] = "Optical flow (Horn & Schunck)";
@@ -423,5 +425,7 @@ void InitACalcOpticalFlowHS( void )
     /* Registering test function */
     trsReg( FuncName, TestName, TestClass, fmaCalcOpticalFlowHS );
 } /* InitACalcOpticalFlowHS */
+
+#endif
 
 /* End of file. */
