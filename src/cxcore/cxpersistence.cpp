@@ -2700,12 +2700,6 @@ cvOpenFileStorage( const char* filename, CvMemStorage* dststorage, int flags )
     if( !fs->file )
         EXIT;
 
-    {
-        char* dot_pos = strrchr( fs->filename, '.' );
-        fs->is_xml = dot_pos && (strcmp( dot_pos, ".xml" ) == 0 ||
-                      strcmp( dot_pos, ".XML" ) == 0 || strcmp( dot_pos, ".Xml" ) == 0);
-    }
-
     fs->roots = 0;
     fs->struct_indent = 0;
     fs->struct_flags = 0;
@@ -2716,6 +2710,10 @@ cvOpenFileStorage( const char* filename, CvMemStorage* dststorage, int flags )
         // we use factor=6 for XML (the longest characters (' and ") are encoded with 6 bytes (&apos; and &quot;)
         // and factor=4 for YAML ( as we use 4 bytes for non ASCII characters (e.g. \xAB))
         int buf_size = CV_FS_MAX_LEN*(fs->is_xml ? 6 : 4) + 1024;
+
+        char* dot_pos = strrchr( fs->filename, '.' );
+        fs->is_xml = dot_pos && (strcmp( dot_pos, ".xml" ) == 0 ||
+                      strcmp( dot_pos, ".XML" ) == 0 || strcmp( dot_pos, ".Xml" ) == 0);
 
         if( append )
             fseek( fs->file, 0, SEEK_END );
@@ -2797,6 +2795,10 @@ cvOpenFileStorage( const char* filename, CvMemStorage* dststorage, int flags )
     else
     {
         int buf_size;
+        const char* yaml_signature = "%YAML:";
+        char buf[16];
+        fgets( buf, sizeof(buf)-2, fs->file );
+        fs->is_xml = strncmp( buf, yaml_signature, strlen(yaml_signature) ) != 0;
         
         fseek( fs->file, 0, SEEK_END );
         buf_size = ftell( fs->file );
