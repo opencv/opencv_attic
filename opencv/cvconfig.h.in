@@ -42,8 +42,14 @@
 /* GTK+ 2.x toolkit */
 #undef HAVE_GTK
 
+/* OpenEXR codec */
+#undef HAVE_ILMIMF
+
 /* Define to 1 if you have the <inttypes.h> header file. */
 #undef HAVE_INTTYPES_H
+
+/* JPEG-2000 codec */
+#undef HAVE_JASPER
 
 /* IJG JPEG codec */
 #undef HAVE_JPEG

@@ -2564,35 +2564,28 @@ static PyAPI_FUNC(double) PyFloat_AS_DOUBLE (PyObject *obj) {
 #define SWIGTYPE_p_CvTermCriteria swig_types[71]
 #define SWIGTYPE_p_CvTreeNodeIterator swig_types[72]
 #define SWIGTYPE_p_CvTypeInfo swig_types[73]
-#define SWIGTYPE_p_CvTypedSeqTCvConnectedComp_t swig_types[74]
-#define SWIGTYPE_p_CvTypedSeqTCvPoint2D32f_t swig_types[75]
-#define SWIGTYPE_p_CvTypedSeqTCvPoint_t swig_types[76]
-#define SWIGTYPE_p_CvTypedSeqTCvQuadEdge2D_t swig_types[77]
-#define SWIGTYPE_p_CvTypedSeqTCvRect_t swig_types[78]
-#define SWIGTYPE_p_CvTypedSeqTCvSeq_p_t swig_types[79]
-#define SWIGTYPE_p_CvTypedSeqTCvTupleTCvPoint_2_t_t swig_types[80]
-#define SWIGTYPE_p_CvTypedSeqTCvTupleTfloat_2_t_t swig_types[81]
-#define SWIGTYPE_p_CvTypedSeqTCvTupleTfloat_3_t_t swig_types[82]
-#define SWIGTYPE_p_CvVideoWriter swig_types[83]
-#define SWIGTYPE_p_CvvImage swig_types[84]
-#define SWIGTYPE_p__IplConvKernel swig_types[85]
-#define SWIGTYPE_p__IplConvKernelFP swig_types[86]
-#define SWIGTYPE_p__IplImage swig_types[87]
-#define SWIGTYPE_p__IplROI swig_types[88]
-#define SWIGTYPE_p__IplTileInfo swig_types[89]
-#define SWIGTYPE_p_char swig_types[90]
-#define SWIGTYPE_p_f_int__void swig_types[91]
-#define SWIGTYPE_p_f_int_int_int_int_p_void__void swig_types[92]
-#define SWIGTYPE_p_int swig_types[93]
-#define SWIGTYPE_p_long_long swig_types[94]
-#define SWIGTYPE_p_p_char swig_types[95]
-#define SWIGTYPE_p_size_t swig_types[96]
-#define SWIGTYPE_p_unsigned_char swig_types[97]
-#define SWIGTYPE_p_unsigned_long_long swig_types[98]
-#define SWIGTYPE_p_unsigned_short swig_types[99]
-#define SWIGTYPE_p_void swig_types[100]
-static swig_type_info *swig_types[102];
-static swig_module_info swig_module = {swig_types, 101, 0, 0, 0, 0};
+#define SWIGTYPE_p_CvVideoWriter swig_types[74]
+#define SWIGTYPE_p_CvvImage swig_types[75]
+#define SWIGTYPE_p__IplConvKernel swig_types[76]
+#define SWIGTYPE_p__IplConvKernelFP swig_types[77]
+#define SWIGTYPE_p__IplImage swig_types[78]
+#define SWIGTYPE_p__IplROI swig_types[79]
+#define SWIGTYPE_p__IplTileInfo swig_types[80]
+#define SWIGTYPE_p_char swig_types[81]
+#define SWIGTYPE_p_f_int__void swig_types[82]
+#define SWIGTYPE_p_f_int_int_int_int_p_void__void swig_types[83]
+#define SWIGTYPE_p_int swig_types[84]
+#define SWIGTYPE_p_long_long swig_types[85]
+#define SWIGTYPE_p_p_CvCapture swig_types[86]
+#define SWIGTYPE_p_p_CvVideoWriter swig_types[87]
+#define SWIGTYPE_p_p_char swig_types[88]
+#define SWIGTYPE_p_size_t swig_types[89]
+#define SWIGTYPE_p_unsigned_char swig_types[90]
+#define SWIGTYPE_p_unsigned_long_long swig_types[91]
+#define SWIGTYPE_p_unsigned_short swig_types[92]
+#define SWIGTYPE_p_void swig_types[93]
+static swig_type_info *swig_types[95];
+static swig_module_info swig_module = {swig_types, 94, 0, 0, 0, 0};
 #define SWIG_TypeQuery(name) SWIG_TypeQueryModule(&swig_module, &swig_module, name)
 #define SWIG_MangledTypeQuery(name) SWIG_MangledTypeQueryModule(&swig_module, &swig_module, name)
 
@@ -2851,15 +2844,15 @@ static CvArr * PyObject_to_CvArr(PyObject * obj, bool * freearg){
 
 static int PyObject_GetElemType(PyObject * obj){
 	void *vptr;
-	if(SWIG_ConvertPtr(obj, &vptr, SWIGTYPE_p_CvPoint, 0)) return CV_32SC2;	
-	if(SWIG_ConvertPtr(obj, &vptr, SWIGTYPE_p_CvSize, 0)) return CV_32SC2;	
-	if(SWIG_ConvertPtr(obj, &vptr, SWIGTYPE_p_CvRect, 0)) return CV_32SC4;	
-	if(SWIG_ConvertPtr(obj, &vptr, SWIGTYPE_p_CvSize2D32f, 0)) return CV_32FC2;	
-	if(SWIG_ConvertPtr(obj, &vptr, SWIGTYPE_p_CvPoint2D32f, 0)) return CV_32FC2;	
-	if(SWIG_ConvertPtr(obj, &vptr, SWIGTYPE_p_CvPoint3D32f, 0)) return CV_32FC3;	
-	if(SWIG_ConvertPtr(obj, &vptr, SWIGTYPE_p_CvPoint2D64f, 0)) return CV_64FC2;	
-	if(SWIG_ConvertPtr(obj, &vptr, SWIGTYPE_p_CvPoint3D64f, 0)) return CV_64FC3;	
-	if(SWIG_ConvertPtr(obj, &vptr, SWIGTYPE_p_CvScalar, 0)) return CV_64FC4;	
+	if(SWIG_ConvertPtr(obj, &vptr, SWIGTYPE_p_CvPoint, 0) != -1) return CV_32SC2;	
+	if(SWIG_ConvertPtr(obj, &vptr, SWIGTYPE_p_CvSize, 0) != -1) return CV_32SC2;	
+	if(SWIG_ConvertPtr(obj, &vptr, SWIGTYPE_p_CvRect, 0) != -1) return CV_32SC4;	
+	if(SWIG_ConvertPtr(obj, &vptr, SWIGTYPE_p_CvSize2D32f, 0) != -1) return CV_32FC2;	
+	if(SWIG_ConvertPtr(obj, &vptr, SWIGTYPE_p_CvPoint2D32f, 0) != -1) return CV_32FC2;	
+	if(SWIG_ConvertPtr(obj, &vptr, SWIGTYPE_p_CvPoint3D32f, 0) != -1) return CV_32FC3;	
+	if(SWIG_ConvertPtr(obj, &vptr, SWIGTYPE_p_CvPoint2D64f, 0) != -1) return CV_64FC2;	
+	if(SWIG_ConvertPtr(obj, &vptr, SWIGTYPE_p_CvPoint3D64f, 0) != -1) return CV_64FC3;	
+	if(SWIG_ConvertPtr(obj, &vptr, SWIGTYPE_p_CvScalar, 0) != -1) return CV_64FC4;	
 	if(PyTuple_Check(obj) || PyList_Check(obj)) return CV_MAKE_TYPE(CV_32F, PySequence_Size( obj ));
 	if(PyLong_Check(obj)) return CV_32S;
 	return CV_32F;
@@ -5206,6 +5199,35 @@ fail:
 }
 
 
+SWIGINTERN PyObject *_wrap_cvReleaseCapture(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
+  PyObject *resultobj = 0;
+  CvCapture **arg1 = (CvCapture **) 0 ;
+  void *argp1 = 0 ;
+  int res1 = 0 ;
+  PyObject * obj0 = 0 ;
+  
+  if (!PyArg_ParseTuple(args,(char *)"O:cvReleaseCapture",&obj0)) SWIG_fail;
+  res1 = SWIG_ConvertPtr(obj0, &argp1,SWIGTYPE_p_p_CvCapture, 0 |  0 );
+  if (!SWIG_IsOK(res1)) {
+    SWIG_exception_fail(SWIG_ArgError(res1), "in method '" "cvReleaseCapture" "', argument " "1"" of type '" "CvCapture **""'"); 
+  }
+  arg1 = reinterpret_cast< CvCapture ** >(argp1);
+  {
+    try {
+      cvReleaseCapture(arg1); 
+    } 
+    catch (...) 
+    {
+      return NULL;
+    } 
+  }
+  resultobj = SWIG_Py_Void();
+  return resultobj;
+fail:
+  return NULL;
+}
+
+
 SWIGINTERN PyObject *_wrap_cvGetCaptureProperty(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
   PyObject *resultobj = 0;
   CvCapture *arg1 = (CvCapture *) 0 ;
@@ -5408,6 +5430,35 @@ SWIGINTERN PyObject *_wrap_cvWriteFrame(PyObject *SWIGUNUSEDPARM(self), PyObject
     } 
   }
   resultobj = SWIG_From_int(static_cast< int >(result));
+  return resultobj;
+fail:
+  return NULL;
+}
+
+
+SWIGINTERN PyObject *_wrap_cvReleaseVideoWriter(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
+  PyObject *resultobj = 0;
+  CvVideoWriter **arg1 = (CvVideoWriter **) 0 ;
+  void *argp1 = 0 ;
+  int res1 = 0 ;
+  PyObject * obj0 = 0 ;
+  
+  if (!PyArg_ParseTuple(args,(char *)"O:cvReleaseVideoWriter",&obj0)) SWIG_fail;
+  res1 = SWIG_ConvertPtr(obj0, &argp1,SWIGTYPE_p_p_CvVideoWriter, 0 |  0 );
+  if (!SWIG_IsOK(res1)) {
+    SWIG_exception_fail(SWIG_ArgError(res1), "in method '" "cvReleaseVideoWriter" "', argument " "1"" of type '" "CvVideoWriter **""'"); 
+  }
+  arg1 = reinterpret_cast< CvVideoWriter ** >(argp1);
+  {
+    try {
+      cvReleaseVideoWriter(arg1); 
+    } 
+    catch (...) 
+    {
+      return NULL;
+    } 
+  }
+  resultobj = SWIG_Py_Void();
   return resultobj;
 fail:
   return NULL;
@@ -6464,10 +6515,12 @@ static PyMethodDef SwigMethods[] = {
 	 { (char *)"cvGrabFrame", _wrap_cvGrabFrame, METH_VARARGS, NULL},
 	 { (char *)"cvRetrieveFrame__Deprecated", _wrap_cvRetrieveFrame__Deprecated, METH_VARARGS, NULL},
 	 { (char *)"cvQueryFrame__Deprecated", _wrap_cvQueryFrame__Deprecated, METH_VARARGS, NULL},
+	 { (char *)"cvReleaseCapture", _wrap_cvReleaseCapture, METH_VARARGS, NULL},
 	 { (char *)"cvGetCaptureProperty", _wrap_cvGetCaptureProperty, METH_VARARGS, NULL},
 	 { (char *)"cvSetCaptureProperty", _wrap_cvSetCaptureProperty, METH_VARARGS, NULL},
 	 { (char *)"cvCreateVideoWriter", _wrap_cvCreateVideoWriter, METH_VARARGS, NULL},
 	 { (char *)"cvWriteFrame", _wrap_cvWriteFrame, METH_VARARGS, NULL},
+	 { (char *)"cvReleaseVideoWriter", _wrap_cvReleaseVideoWriter, METH_VARARGS, NULL},
 	 { (char *)"new_CvvImage", _wrap_new_CvvImage, METH_VARARGS, NULL},
 	 { (char *)"delete_CvvImage", _wrap_delete_CvvImage, METH_VARARGS, NULL},
 	 { (char *)"CvvImage_Create", _wrap_CvvImage_Create, METH_VARARGS, NULL},
@@ -6489,33 +6542,6 @@ static PyMethodDef SwigMethods[] = {
 
 /* -------- TYPE CONVERSION AND EQUIVALENCE RULES (BEGIN) -------- */
 
-static void *_p_CvTypedSeqTCvTupleTCvPoint_2_t_tTo_p_CvSeq(void *x) {
-    return (void *)((CvSeq *)  ((CvTypedSeq<CvTuple<CvPoint,2 > > *) x));
-}
-static void *_p_CvTypedSeqTCvTupleTfloat_2_t_tTo_p_CvSeq(void *x) {
-    return (void *)((CvSeq *)  ((CvTypedSeq<CvTuple<float,2 > > *) x));
-}
-static void *_p_CvTypedSeqTCvConnectedComp_tTo_p_CvSeq(void *x) {
-    return (void *)((CvSeq *)  ((CvTypedSeq<CvConnectedComp > *) x));
-}
-static void *_p_CvTypedSeqTCvRect_tTo_p_CvSeq(void *x) {
-    return (void *)((CvSeq *)  ((CvTypedSeq<CvRect > *) x));
-}
-static void *_p_CvTypedSeqTCvPoint_tTo_p_CvSeq(void *x) {
-    return (void *)((CvSeq *)  ((CvTypedSeq<CvPoint > *) x));
-}
-static void *_p_CvTypedSeqTCvTupleTfloat_3_t_tTo_p_CvSeq(void *x) {
-    return (void *)((CvSeq *)  ((CvTypedSeq<CvTuple<float,3 > > *) x));
-}
-static void *_p_CvTypedSeqTCvSeq_p_tTo_p_CvSeq(void *x) {
-    return (void *)((CvSeq *)  ((CvTypedSeq<CvSeq * > *) x));
-}
-static void *_p_CvTypedSeqTCvQuadEdge2D_tTo_p_CvSeq(void *x) {
-    return (void *)((CvSeq *)  ((CvTypedSeq<CvQuadEdge2D > *) x));
-}
-static void *_p_CvTypedSeqTCvPoint2D32f_tTo_p_CvSeq(void *x) {
-    return (void *)((CvSeq *)  ((CvTypedSeq<CvPoint2D32f > *) x));
-}
 static swig_type_info _swigt__p_Cv32suf = {"_p_Cv32suf", "Cv32suf *", 0, 0, (void*)0, 0};
 static swig_type_info _swigt__p_Cv64suf = {"_p_Cv64suf", "Cv64suf *", 0, 0, (void*)0, 0};
 static swig_type_info _swigt__p_CvAttrList = {"_p_CvAttrList", "CvAttrList *", 0, 0, (void*)0, 0};
@@ -6570,15 +6596,6 @@ static swig_type_info _swigt__p_CvRNG_Wrapper = {"_p_CvRNG_Wrapper", "CvRNG_Wrap
 static swig_type_info _swigt__p_CvRect = {"_p_CvRect", "CvRect *", 0, 0, (void*)0, 0};
 static swig_type_info _swigt__p_CvScalar = {"_p_CvScalar", "CvScalar *", 0, 0, (void*)0, 0};
 static swig_type_info _swigt__p_CvSeq = {"_p_CvSeq", "CvSeq *", 0, 0, (void*)0, 0};
-static swig_type_info _swigt__p_CvTypedSeqTCvTupleTCvPoint_2_t_t = {"_p_CvTypedSeqTCvTupleTCvPoint_2_t_t", 0, 0, 0, 0, 0};
-static swig_type_info _swigt__p_CvTypedSeqTCvTupleTfloat_2_t_t = {"_p_CvTypedSeqTCvTupleTfloat_2_t_t", 0, 0, 0, 0, 0};
-static swig_type_info _swigt__p_CvTypedSeqTCvRect_t = {"_p_CvTypedSeqTCvRect_t", 0, 0, 0, 0, 0};
-static swig_type_info _swigt__p_CvTypedSeqTCvPoint_t = {"_p_CvTypedSeqTCvPoint_t", 0, 0, 0, 0, 0};
-static swig_type_info _swigt__p_CvTypedSeqTCvQuadEdge2D_t = {"_p_CvTypedSeqTCvQuadEdge2D_t", 0, 0, 0, 0, 0};
-static swig_type_info _swigt__p_CvTypedSeqTCvSeq_p_t = {"_p_CvTypedSeqTCvSeq_p_t", 0, 0, 0, 0, 0};
-static swig_type_info _swigt__p_CvTypedSeqTCvPoint2D32f_t = {"_p_CvTypedSeqTCvPoint2D32f_t", 0, 0, 0, 0, 0};
-static swig_type_info _swigt__p_CvTypedSeqTCvTupleTfloat_3_t_t = {"_p_CvTypedSeqTCvTupleTfloat_3_t_t", 0, 0, 0, 0, 0};
-static swig_type_info _swigt__p_CvTypedSeqTCvConnectedComp_t = {"_p_CvTypedSeqTCvConnectedComp_t", 0, 0, 0, 0, 0};
 static swig_type_info _swigt__p_CvSeqBlock = {"_p_CvSeqBlock", "CvSeqBlock *", 0, 0, (void*)0, 0};
 static swig_type_info _swigt__p_CvSeqReader = {"_p_CvSeqReader", "CvSeqReader *", 0, 0, (void*)0, 0};
 static swig_type_info _swigt__p_CvSeqWriter = {"_p_CvSeqWriter", "CvSeqWriter *", 0, 0, (void*)0, 0};
@@ -6611,6 +6628,8 @@ static swig_type_info _swigt__p_f_int__void = {"_p_f_int__void", "void (*)(int)|
 static swig_type_info _swigt__p_f_int_int_int_int_p_void__void = {"_p_f_int_int_int_int_p_void__void", "void (*)(int,int,int,int,void *)|CvMouseCallback", 0, 0, (void*)0, 0};
 static swig_type_info _swigt__p_int = {"_p_int", "int *", 0, 0, (void*)0, 0};
 static swig_type_info _swigt__p_long_long = {"_p_long_long", "long long *|int64 *", 0, 0, (void*)0, 0};
+static swig_type_info _swigt__p_p_CvCapture = {"_p_p_CvCapture", "CvCapture **", 0, 0, (void*)0, 0};
+static swig_type_info _swigt__p_p_CvVideoWriter = {"_p_p_CvVideoWriter", "CvVideoWriter **", 0, 0, (void*)0, 0};
 static swig_type_info _swigt__p_p_char = {"_p_p_char", "char **", 0, 0, (void*)0, 0};
 static swig_type_info _swigt__p_size_t = {"_p_size_t", "size_t *|CvSubdiv2DEdge *", 0, 0, (void*)0, 0};
 static swig_type_info _swigt__p_unsigned_char = {"_p_unsigned_char", "unsigned char *|uchar *", 0, 0, (void*)0, 0};
@@ -6693,15 +6712,6 @@ static swig_type_info *swig_type_initial[] = {
   &_swigt__p_CvTermCriteria,
   &_swigt__p_CvTreeNodeIterator,
   &_swigt__p_CvTypeInfo,
-  &_swigt__p_CvTypedSeqTCvConnectedComp_t,
-  &_swigt__p_CvTypedSeqTCvPoint2D32f_t,
-  &_swigt__p_CvTypedSeqTCvPoint_t,
-  &_swigt__p_CvTypedSeqTCvQuadEdge2D_t,
-  &_swigt__p_CvTypedSeqTCvRect_t,
-  &_swigt__p_CvTypedSeqTCvSeq_p_t,
-  &_swigt__p_CvTypedSeqTCvTupleTCvPoint_2_t_t,
-  &_swigt__p_CvTypedSeqTCvTupleTfloat_2_t_t,
-  &_swigt__p_CvTypedSeqTCvTupleTfloat_3_t_t,
   &_swigt__p_CvVideoWriter,
   &_swigt__p_CvvImage,
   &_swigt__p__IplConvKernel,
@@ -6714,6 +6724,8 @@ static swig_type_info *swig_type_initial[] = {
   &_swigt__p_f_int_int_int_int_p_void__void,
   &_swigt__p_int,
   &_swigt__p_long_long,
+  &_swigt__p_p_CvCapture,
+  &_swigt__p_p_CvVideoWriter,
   &_swigt__p_p_char,
   &_swigt__p_size_t,
   &_swigt__p_unsigned_char,
@@ -6775,16 +6787,7 @@ static swig_cast_info _swigc__p_CvQuadEdge2D[] = {  {&_swigt__p_CvQuadEdge2D, 0,
 static swig_cast_info _swigc__p_CvRNG_Wrapper[] = {  {&_swigt__p_CvRNG_Wrapper, 0, 0, 0},{0, 0, 0, 0}};
 static swig_cast_info _swigc__p_CvRect[] = {  {&_swigt__p_CvRect, 0, 0, 0},{0, 0, 0, 0}};
 static swig_cast_info _swigc__p_CvScalar[] = {  {&_swigt__p_CvScalar, 0, 0, 0},{0, 0, 0, 0}};
-static swig_cast_info _swigc__p_CvTypedSeqTCvTupleTCvPoint_2_t_t[] = {{&_swigt__p_CvTypedSeqTCvTupleTCvPoint_2_t_t, 0, 0, 0},{0, 0, 0, 0}};
-static swig_cast_info _swigc__p_CvTypedSeqTCvTupleTfloat_2_t_t[] = {{&_swigt__p_CvTypedSeqTCvTupleTfloat_2_t_t, 0, 0, 0},{0, 0, 0, 0}};
-static swig_cast_info _swigc__p_CvTypedSeqTCvRect_t[] = {{&_swigt__p_CvTypedSeqTCvRect_t, 0, 0, 0},{0, 0, 0, 0}};
-static swig_cast_info _swigc__p_CvTypedSeqTCvPoint_t[] = {{&_swigt__p_CvTypedSeqTCvPoint_t, 0, 0, 0},{0, 0, 0, 0}};
-static swig_cast_info _swigc__p_CvTypedSeqTCvQuadEdge2D_t[] = {{&_swigt__p_CvTypedSeqTCvQuadEdge2D_t, 0, 0, 0},{0, 0, 0, 0}};
-static swig_cast_info _swigc__p_CvTypedSeqTCvSeq_p_t[] = {{&_swigt__p_CvTypedSeqTCvSeq_p_t, 0, 0, 0},{0, 0, 0, 0}};
-static swig_cast_info _swigc__p_CvTypedSeqTCvPoint2D32f_t[] = {{&_swigt__p_CvTypedSeqTCvPoint2D32f_t, 0, 0, 0},{0, 0, 0, 0}};
-static swig_cast_info _swigc__p_CvTypedSeqTCvTupleTfloat_3_t_t[] = {{&_swigt__p_CvTypedSeqTCvTupleTfloat_3_t_t, 0, 0, 0},{0, 0, 0, 0}};
-static swig_cast_info _swigc__p_CvTypedSeqTCvConnectedComp_t[] = {{&_swigt__p_CvTypedSeqTCvConnectedComp_t, 0, 0, 0},{0, 0, 0, 0}};
-static swig_cast_info _swigc__p_CvSeq[] = {  {&_swigt__p_CvTypedSeqTCvTupleTCvPoint_2_t_t, _p_CvTypedSeqTCvTupleTCvPoint_2_t_tTo_p_CvSeq, 0, 0},  {&_swigt__p_CvTypedSeqTCvTupleTfloat_2_t_t, _p_CvTypedSeqTCvTupleTfloat_2_t_tTo_p_CvSeq, 0, 0},  {&_swigt__p_CvTypedSeqTCvRect_t, _p_CvTypedSeqTCvRect_tTo_p_CvSeq, 0, 0},  {&_swigt__p_CvTypedSeqTCvPoint_t, _p_CvTypedSeqTCvPoint_tTo_p_CvSeq, 0, 0},  {&_swigt__p_CvTypedSeqTCvQuadEdge2D_t, _p_CvTypedSeqTCvQuadEdge2D_tTo_p_CvSeq, 0, 0},  {&_swigt__p_CvTypedSeqTCvSeq_p_t, _p_CvTypedSeqTCvSeq_p_tTo_p_CvSeq, 0, 0},  {&_swigt__p_CvTypedSeqTCvPoint2D32f_t, _p_CvTypedSeqTCvPoint2D32f_tTo_p_CvSeq, 0, 0},  {&_swigt__p_CvSeq, 0, 0, 0},  {&_swigt__p_CvTypedSeqTCvTupleTfloat_3_t_t, _p_CvTypedSeqTCvTupleTfloat_3_t_tTo_p_CvSeq, 0, 0},  {&_swigt__p_CvTypedSeqTCvConnectedComp_t, _p_CvTypedSeqTCvConnectedComp_tTo_p_CvSeq, 0, 0},{0, 0, 0, 0}};
+static swig_cast_info _swigc__p_CvSeq[] = {  {&_swigt__p_CvSeq, 0, 0, 0},{0, 0, 0, 0}};
 static swig_cast_info _swigc__p_CvSeqBlock[] = {  {&_swigt__p_CvSeqBlock, 0, 0, 0},{0, 0, 0, 0}};
 static swig_cast_info _swigc__p_CvSeqReader[] = {  {&_swigt__p_CvSeqReader, 0, 0, 0},{0, 0, 0, 0}};
 static swig_cast_info _swigc__p_CvSeqWriter[] = {  {&_swigt__p_CvSeqWriter, 0, 0, 0},{0, 0, 0, 0}};
@@ -6817,6 +6820,8 @@ static swig_cast_info _swigc__p_f_int__void[] = {  {&_swigt__p_f_int__void, 0, 0
 static swig_cast_info _swigc__p_f_int_int_int_int_p_void__void[] = {  {&_swigt__p_f_int_int_int_int_p_void__void, 0, 0, 0},{0, 0, 0, 0}};
 static swig_cast_info _swigc__p_int[] = {  {&_swigt__p_int, 0, 0, 0},{0, 0, 0, 0}};
 static swig_cast_info _swigc__p_long_long[] = {  {&_swigt__p_long_long, 0, 0, 0},{0, 0, 0, 0}};
+static swig_cast_info _swigc__p_p_CvCapture[] = {  {&_swigt__p_p_CvCapture, 0, 0, 0},{0, 0, 0, 0}};
+static swig_cast_info _swigc__p_p_CvVideoWriter[] = {  {&_swigt__p_p_CvVideoWriter, 0, 0, 0},{0, 0, 0, 0}};
 static swig_cast_info _swigc__p_p_char[] = {  {&_swigt__p_p_char, 0, 0, 0},{0, 0, 0, 0}};
 static swig_cast_info _swigc__p_size_t[] = {  {&_swigt__p_size_t, 0, 0, 0},{0, 0, 0, 0}};
 static swig_cast_info _swigc__p_unsigned_char[] = {  {&_swigt__p_unsigned_char, 0, 0, 0},{0, 0, 0, 0}};
@@ -6899,15 +6904,6 @@ static swig_cast_info *swig_cast_initial[] = {
   _swigc__p_CvTermCriteria,
   _swigc__p_CvTreeNodeIterator,
   _swigc__p_CvTypeInfo,
-  _swigc__p_CvTypedSeqTCvConnectedComp_t,
-  _swigc__p_CvTypedSeqTCvPoint2D32f_t,
-  _swigc__p_CvTypedSeqTCvPoint_t,
-  _swigc__p_CvTypedSeqTCvQuadEdge2D_t,
-  _swigc__p_CvTypedSeqTCvRect_t,
-  _swigc__p_CvTypedSeqTCvSeq_p_t,
-  _swigc__p_CvTypedSeqTCvTupleTCvPoint_2_t_t,
-  _swigc__p_CvTypedSeqTCvTupleTfloat_2_t_t,
-  _swigc__p_CvTypedSeqTCvTupleTfloat_3_t_t,
   _swigc__p_CvVideoWriter,
   _swigc__p_CvvImage,
   _swigc__p__IplConvKernel,
@@ -6920,6 +6916,8 @@ static swig_cast_info *swig_cast_initial[] = {
   _swigc__p_f_int_int_int_int_p_void__void,
   _swigc__p_int,
   _swigc__p_long_long,
+  _swigc__p_p_CvCapture,
+  _swigc__p_p_CvVideoWriter,
   _swigc__p_p_char,
   _swigc__p_size_t,
   _swigc__p_unsigned_char,
@@ -7449,9 +7447,11 @@ SWIGEXPORT void SWIG_init(void) {
   SWIG_Python_SetConstant(d, "CV_EVENT_FLAG_CTRLKEY",SWIG_From_int(static_cast< int >(8)));
   SWIG_Python_SetConstant(d, "CV_EVENT_FLAG_SHIFTKEY",SWIG_From_int(static_cast< int >(16)));
   SWIG_Python_SetConstant(d, "CV_EVENT_FLAG_ALTKEY",SWIG_From_int(static_cast< int >(32)));
-  SWIG_Python_SetConstant(d, "CV_LOAD_IMAGE_COLOR",SWIG_From_int(static_cast< int >(1)));
-  SWIG_Python_SetConstant(d, "CV_LOAD_IMAGE_GRAYSCALE",SWIG_From_int(static_cast< int >(0)));
   SWIG_Python_SetConstant(d, "CV_LOAD_IMAGE_UNCHANGED",SWIG_From_int(static_cast< int >(-1)));
+  SWIG_Python_SetConstant(d, "CV_LOAD_IMAGE_GRAYSCALE",SWIG_From_int(static_cast< int >(0)));
+  SWIG_Python_SetConstant(d, "CV_LOAD_IMAGE_COLOR",SWIG_From_int(static_cast< int >(1)));
+  SWIG_Python_SetConstant(d, "CV_LOAD_IMAGE_ANYDEPTH",SWIG_From_int(static_cast< int >(2)));
+  SWIG_Python_SetConstant(d, "CV_LOAD_IMAGE_ANYCOLOR",SWIG_From_int(static_cast< int >(4)));
   SWIG_Python_SetConstant(d, "CV_CVTIMG_FLIP",SWIG_From_int(static_cast< int >(1)));
   SWIG_Python_SetConstant(d, "CV_CVTIMG_SWAP_RB",SWIG_From_int(static_cast< int >(2)));
   SWIG_Python_SetConstant(d, "CV_CAP_ANY",SWIG_From_int(static_cast< int >(0)));
