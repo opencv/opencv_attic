@@ -135,8 +135,8 @@ CvDTree* mushroom_create_dtree( const CvMat* data, const CvMat* missing,
 
     printf( "Results on the training database:\n"
             "\tPoisonous mushrooms mis-predicted: %d (%g%%)\n"
-            "\tFalse-alarms: %d (%g%%)\n", hr1, (double)hr1/p_total,
-            hr2, (double)hr2/(data->rows - p_total) );
+            "\tFalse-alarms: %d (%g%%)\n", hr1, (double)hr1*100/p_total,
+            hr2, (double)hr2*100/(data->rows - p_total) );
 
     cvReleaseMat( &var_type );
 
