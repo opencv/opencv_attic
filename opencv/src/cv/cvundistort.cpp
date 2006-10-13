@@ -153,6 +153,9 @@ cvUndistort2( const CvArr* _src, CvArr* _dst, const CvMat* A, const CvMat* dist_
     if( CV_MAT_DEPTH(src->type) != CV_8U )
         CV_ERROR( CV_StsUnsupportedFormat, "Only 8-bit images are supported" );
 
+    if( src->data.ptr == dst->data.ptr )
+        CV_ERROR( CV_StsNotImplemented, "In-place undistortion is not implemented" );
+
     if( !CV_ARE_TYPES_EQ( src, dst ))
         CV_ERROR( CV_StsUnmatchedFormats, "" );
 
