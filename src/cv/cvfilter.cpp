@@ -607,6 +607,8 @@ static void icvFilterRowSymm_8u32f( const uchar* src, float* dst, void* params )
 static void icvFilterRow_8u32f( const uchar* src, float* dst, void* params );
 static void icvFilterRowSymm_16s32f( const short* src, float* dst, void* params );
 static void icvFilterRow_16s32f( const short* src, float* dst, void* params );
+static void icvFilterRowSymm_16u32f( const ushort* src, float* dst, void* params );
+static void icvFilterRow_16u32f( const ushort* src, float* dst, void* params );
 static void icvFilterRowSymm_32f( const float* src, float* dst, void* params );
 static void icvFilterRow_32f( const float* src, float* dst, void* params );
 
@@ -617,6 +619,10 @@ static void icvFilterCol_32f8u( const float** src, uchar* dst, int dst_step,
 static void icvFilterColSymm_32f16s( const float** src, short* dst, int dst_step,
                                      int count, void* params );
 static void icvFilterCol_32f16s( const float** src, short* dst, int dst_step,
+                                 int count, void* params );
+static void icvFilterColSymm_32f16u( const float** src, ushort* dst, int dst_step,
+                                     int count, void* params );
+static void icvFilterCol_32f16u( const float** src, ushort* dst, int dst_step,
                                  int count, void* params );
 static void icvFilterColSymm_32f( const float** src, float* dst, int dst_step,
                                   int count, void* params );
@@ -785,6 +791,16 @@ void CvSepFilter::init( int _max_width, int _src_type, int _dst_type,
                 x_func = (CvRowFilterFunc)icvFilterRow_8u32f;
         }
     }
+    else if( CV_MAT_DEPTH(src_type) == CV_16U )
+    {
+        if( CV_MAT_DEPTH(dst_type) > CV_32F )
+            CV_ERROR( CV_StsUnsupportedFormat, "16u->64f separable filtering is not supported" );
+
+        if( kx_flags & (SYMMETRICAL + ASYMMETRICAL) )
+            x_func = (CvRowFilterFunc)icvFilterRowSymm_16u32f;
+        else
+            x_func = (CvRowFilterFunc)icvFilterRow_16u32f;
+    }
     else if( CV_MAT_DEPTH(src_type) == CV_16S )
     {
         if( CV_MAT_DEPTH(dst_type) > CV_32F )
@@ -816,6 +832,13 @@ void CvSepFilter::init( int _max_width, int _src_type, int _dst_type,
                 y_func = (CvColumnFilterFunc)icvFilterColSymm_32f8u;
             else
                 y_func = (CvColumnFilterFunc)icvFilterCol_32f8u;
+        }
+        else if( CV_MAT_DEPTH(dst_type) == CV_16U )
+        {
+            if( ky_flags & (SYMMETRICAL + ASYMMETRICAL) )
+                y_func = (CvColumnFilterFunc)icvFilterColSymm_32f16u;
+            else
+                y_func = (CvColumnFilterFunc)icvFilterCol_32f16u;
         }
         else if( CV_MAT_DEPTH(dst_type) == CV_16S )
         {
@@ -1052,6 +1075,7 @@ icvFilterRow_##flavor(const srctype* src, dsttype* dst, void*params)\
 
 ICV_FILTER_ROW( 8u32f, uchar, float, CV_8TO32F )
 ICV_FILTER_ROW( 16s32f, short, float, CV_NOP )
+ICV_FILTER_ROW( 16u32f, ushort, float, CV_NOP )
 ICV_FILTER_ROW( 32f, float, float, CV_NOP )
 
 
@@ -1132,7 +1156,7 @@ icvFilterRowSymm_##flavor( const srctype* src,                      \
 
 ICV_FILTER_ROW_SYMM( 8u32f, uchar, float, CV_8TO32F )
 ICV_FILTER_ROW_SYMM( 16s32f, short, float, CV_NOP )
-
+ICV_FILTER_ROW_SYMM( 16u32f, ushort, float, CV_NOP )
 
 static void
 icvFilterRowSymm_32f( const float* src, float* dst, void* params )
@@ -1475,7 +1499,7 @@ icvFilterCol_##flavor( const srctype** src, dsttype* dst,       \
 
 ICV_FILTER_COL( 32f8u, float, uchar, int, cvRound, CV_CAST_8U )
 ICV_FILTER_COL( 32f16s, float, short, int, cvRound, CV_CAST_16S )
-
+ICV_FILTER_COL( 32f16u, float, ushort, int, cvRound, CV_CAST_16U )
 
 #define ICV_FILTER_COL_SYMM( flavor, srctype, dsttype, worktype,    \
                              cast_macro1, cast_macro2 )             \
@@ -1578,6 +1602,7 @@ icvFilterColSymm_##flavor( const srctype** src, dsttype* dst,       \
 
 ICV_FILTER_COL_SYMM( 32f8u, float, uchar, int, cvRound, CV_CAST_8U )
 ICV_FILTER_COL_SYMM( 32f16s, float, short, int, cvRound, CV_CAST_16S )
+ICV_FILTER_COL_SYMM( 32f16u, float, ushort, int, cvRound, CV_CAST_16U )
 
 
 static void
