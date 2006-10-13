@@ -207,6 +207,7 @@ void CvRTrees::clear()
 
     cvReleaseMat( &active_var_mask );
     cvReleaseMat( &var_importance );
+    ntrees = 0;
 }
 
 
@@ -523,7 +524,7 @@ float CvRTrees::get_proximity( const CvMat* sample1, const CvMat* sample2,
     for( i = 0; i < ntrees; i++ )
         result += trees[i]->predict( sample1, missing1 ) ==
         trees[i]->predict( sample2, missing2 ) ?  1 : 0;
-    result = result/(float)ntrees*100.f;
+    result = result/(float)ntrees;
 
     __END__;
 
