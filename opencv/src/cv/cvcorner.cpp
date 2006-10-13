@@ -98,6 +98,8 @@ static void
 icvCalcEigenValsVecs( const float* cov, int cov_step, float* dst,
                       int dst_step, CvSize size, CvMat* buffer )
 {
+    static int y0 = 0;
+    
     int j;
     float* buf = buffer->data.fl;
     cov_step /= sizeof(cov[0]);
@@ -110,7 +112,7 @@ icvCalcEigenValsVecs( const float* cov, int cov_step, float* dst,
             double a = cov[j*3]*0.5;
             double b = cov[j*3+1];
             double c = cov[j*3+2]*0.5;
-            
+
             buf[j + size.width] = (float)(a + c);
             buf[j] = (float)((a - c)*(a - c) + b*b);
         }
@@ -135,6 +137,12 @@ icvCalcEigenValsVecs( const float* cov, int cov_step, float* dst,
             {
                 y = b;
                 x = l1 - c;
+                e = fabs(x);
+                if( e + fabs(y) < 1e-4 )
+                {
+                    e = 1./(e + fabs(y) + FLT_EPSILON);
+                    x *= e, y *= e;
+                }
             }
 
             buf[j] = (float)(x*x + y*y + DBL_EPSILON);
@@ -150,6 +158,12 @@ icvCalcEigenValsVecs( const float* cov, int cov_step, float* dst,
             {
                 y = b;
                 x = l2 - c;
+                e = fabs(x);
+                if( e + fabs(y) < 1e-4 )
+                {
+                    e = 1./(e + fabs(y) + FLT_EPSILON);
+                    x *= e, y *= e;
+                }
             }
 
             buf[j + size.width] = (float)(x*x + y*y + DBL_EPSILON);
@@ -175,6 +189,8 @@ icvCalcEigenValsVecs( const float* cov, int cov_step, float* dst,
             dst[6*j + 4] = (float)t0;
             dst[6*j + 5] = (float)t1;
         }
+
+        y0++;
     }
 }
 
