@@ -951,6 +951,7 @@ CvBoost::train( const CvMat* _train_data, int _tflag,
             delete tree;
             continue;
         }
+        //cvCheckArr( get_weak_response());
         cvSeqPush( weak, &tree );
         update_weights( tree );
         trim_weights();
@@ -1644,6 +1645,11 @@ const CvBoostParams&
 CvBoost::get_params() const
 {
     return params;
+}
+
+CvSeq* CvBoost::get_weak_predictors()
+{
+    return weak;
 }
 
 /* End of file. */
