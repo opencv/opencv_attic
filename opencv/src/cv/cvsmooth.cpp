@@ -981,7 +981,7 @@ cvSmooth( const void* srcarr, void* dstarr, int smooth_type,
     CvSize size;
     int src_type, dst_type, depth, cn;
     double sigma1 = 0, sigma2 = 0;
-    bool have_ipp = icvFilterBox_8u_C1R_p != 0;
+    bool have_ipp = icvFilterMedian_8u_C1R_p != 0;
 
     CV_CALL( src = cvGetMat( src, &srcstub, &coi1 ));
     CV_CALL( dst = cvGetMat( dst, &dststub, &coi2 ));
