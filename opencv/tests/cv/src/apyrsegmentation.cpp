@@ -41,23 +41,31 @@
 
 #include "cvtest.h"
 
-#if 0
-/*#include "conio.h"   */
-
-static char cTestName[] = "Image segmentation by pyramids";
-
-static char cTestClass[] = "Algorithm";
-
-static char *cFuncName[] = 
+class CV_PyrSegmentationTest : public CvTest
 {
-    "cvPyrSegmentation"
-   
+public:
+    CV_PyrSegmentationTest();
+protected:
+    void run(int);
 };
 
-static int aPyrSegmentation(void* agr)
+#define SCAN  0
+
+CV_PyrSegmentationTest::CV_PyrSegmentationTest():
+    CvTest( "segmentation-pyramid", "cvPyrSegmentation" )
 {
-    CvPoint _cp[] ={{33,33}, {43,33}, {43,43}, {33,43}}; 
-    CvPoint _cp2[] ={{50,50}, {70,50}, {70,70}, {50,70}};  
+    support_testing_modes = CvTS::CORRECTNESS_CHECK_MODE;
+}
+
+void CV_PyrSegmentationTest::run( int /*start_from*/ )
+{
+    const int level = 5;
+    const double range = 20;
+
+    int code = CvTS::OK;
+
+    CvPoint _cp[] ={{33,33}, {43,33}, {43,43}, {33,43}};
+    CvPoint _cp2[] ={{50,50}, {70,50}, {70,70}, {50,70}};
     CvPoint* cp = _cp;
     CvPoint* cp2 = _cp2;
     CvConnectedComp *dst_comp[3];
@@ -66,192 +74,126 @@ static int aPyrSegmentation(void* agr)
 
 /*    ippiPoint cp3[] ={130,130, 150,130, 150,150, 130,150};  */
 /*	CvPoint cp[] ={0,0, 5,5, 5,0, 10,5, 10,0, 15,5, 15,0};  */
-    int chanels = (int)(size_t)agr;    /* number of the color chanels  */
-    int width = 128;
-    int height = 128;
     int nPoints = 4;
     int block_size = 1000;
-    int color1 = 30, color2 = 110, color3 = 180;
-    int level = 5;
-    long diff, l;
-    int code;
 
     CvMemStorage *storage;   /*   storage for connected component writing  */
     CvSeq *comp;
 
-    double lower, upper;
-    unsigned seed;
-    char rand;
-    AtsRandState state;
-    int i,j;
+    CvRNG* rng = ts->get_rng();
+    int i, j, iter;
 
     IplImage *image, *image_f, *image_s;
-    CvSize size;
-    uchar *f_cur, *f_row;
-    uchar *row;
-    uchar *cur;
-    int threshold1, threshold2;
+    CvSize size = {128, 128};
+    const int threshold1 = 50, threshold2 = 50;
 
-    code = TRS_OK;
-
-    if(chanels != 1 && chanels != 3)
-        return TRS_UNDEF;
-/* read tests params */
-
-    if(!trsiRead( &width, "128", "image width" ))
-        return TRS_UNDEF;
-    if(!trsiRead( &height, "128", "image height" ))
-        return TRS_UNDEF;
-    if(!trsiRead( &level, "5", "pyramid level" ))
-        return TRS_UNDEF;
-
-
-/*  create Image   */
-    l = width*height;
-    size.width = width;
-    size.height = height;
-
-    rect[1].height = height;
-    rect[1].width = width;
-    a[1] = l - a[0] - a[2];
-
-    image = cvCreateImage(cvSize(size.width, size.height), IPL_DEPTH_8U, chanels); 
-    image_s = cvCreateImage(cvSize(size.width, size.height), IPL_DEPTH_8U, chanels); 
-
-    memset(image->imageData, color1, chanels*l);
-
-    image_f = cvCreateImage(cvSize(size.width, size.height), IPL_DEPTH_8U, chanels); 
+    rect[1].width = size.width;
+    rect[1].height = size.height;
+    a[1] = size.width*size.height - a[0] - a[2];
 
     OPENCV_CALL( storage = cvCreateMemStorage( block_size ) );
 
-/*  do noise   */
-    upper = 20;
-    lower = -upper;
-    seed = 345753;
-    atsRandInit( &state, lower, upper, seed );
-
-/*   segmentation by pyramid     */    
-    threshold1 = 50;
-    threshold2 = 50;
-
-    switch(chanels)
+    for( iter = 0; iter < 2; iter++ )
     {
-        case 1:
+        int channels = iter == 0 ? 1 : 3;
+        int mask[] = {0,0,0};
+
+        image = cvCreateImage(size, 8, channels );
+        image_s = cvCloneImage( image );
+        image_f = cvCloneImage( image );
+
+        if( channels == 1 )
         {
+            int color1 = 30, color2 = 110, color3 = 180;
+
+            cvSet( image, cvScalarAll(color1));
             cvFillPoly( image, &cp, &nPoints, 1, cvScalar(color2));
-            cvFillPoly( image, &cp2, &nPoints, 1, cvScalar(color3)); 
-
-            row = (uchar*)image->imageData;
-            f_row = (uchar*)image_f->imageData;
-            for(i = 0; i<size.height; i++)
-            {
-                cur = row;
-                f_cur = f_row;
-                for(j = 0; j<size.width; j++)
-                {
-                    atsbRand8s( &state, &rand, 1);
-                    *(f_cur)=(uchar)((*cur) + rand);
-                    cur++;
-                    f_cur++;
-                }
-                row+=image->widthStep;
-                f_row+=image_f->widthStep;
-            }
-
-            cvPyrSegmentation( image_f, image_s,
-                               storage, &comp, 
-                               level, threshold1, threshold2 );
-
-            //if(comp->total != 3) { code = TRS_FAIL; goto exit; }
-/*  read the connected components     */
-            /*dst_comp[0] = (CvConnectedComp*)CV_GET_SEQ_ELEM( CvConnectedComp, comp, 0 );
-            dst_comp[1] = (CvConnectedComp*)CV_GET_SEQ_ELEM( CvConnectedComp, comp, 1 );
-            dst_comp[2] = (CvConnectedComp*)CV_GET_SEQ_ELEM( CvConnectedComp, comp, 2 );*/
-            break;
+            cvFillPoly( image, &cp2, &nPoints, 1, cvScalar(color3));
         }
-        case 3:
+        else
         {
-            cvFillPoly( image, &cp, &nPoints, 1, CV_RGB(color2,color2,color2));
-            cvFillPoly( image, &cp2, &nPoints, 1, CV_RGB(color3,color3,color3)); 
+            CvScalar color1 = CV_RGB(30,30,30), color2 = CV_RGB(255,0,0), color3 = CV_RGB(0,255,0);
 
-            row = (uchar*)image->imageData;
-            f_row = (uchar*)image_f->imageData;
-            for(i = 0; i<size.height; i++)
+            assert( channels == 3 );
+            cvSet( image, color1 );
+            cvFillPoly( image, &cp, &nPoints, 1, color2);
+            cvFillPoly( image, &cp2, &nPoints, 1, color3);
+        }
+
+        cvRandArr( rng, image_f, CV_RAND_UNI, cvScalarAll(0), cvScalarAll(range*2) );
+        cvAddWeighted( image, 1, image_f, 1, -range, image_f );
+
+        cvPyrSegmentation( image_f, image_s,
+                           storage, &comp,
+                           level, threshold1, threshold2 );
+
+        if(comp->total != 3)
+        {
+            ts->printf( CvTS::LOG,
+                "The segmentation function returned %d (not 3) components\n", comp->total );
+            code = CvTS::FAIL_INVALID_OUTPUT;
+            goto _exit_;
+        }
+        /*  read the connected components     */
+        dst_comp[0] = (CvConnectedComp*)CV_GET_SEQ_ELEM( CvConnectedComp, comp, 0 );
+        dst_comp[1] = (CvConnectedComp*)CV_GET_SEQ_ELEM( CvConnectedComp, comp, 1 );
+        dst_comp[2] = (CvConnectedComp*)CV_GET_SEQ_ELEM( CvConnectedComp, comp, 2 );
+
+        /*{
+            for( i = 0; i < 3; i++ )
             {
-                cur = row;
-                f_cur = f_row;
-                for(j = 0; j<size.width; j++)
-                {
-                    atsbRand8s( &state, &rand, 1);
-                    *(f_cur)=(uchar)((*cur) + rand);
-                    atsbRand8s( &state, &rand, 1);
-                    *(f_cur+1)=(uchar)(*(cur+1) + rand);
-                    atsbRand8s( &state, &rand, 1);
-                    *(f_cur+2)=(uchar)(*(cur+2) + rand);
-                    cur+=3;
-                    f_cur+=3;
-                }
-                row+=image->widthStep;
-                f_row+=image_f->widthStep;
+                CvRect r = dst_comp[i]->rect;
+                cvRectangle( image_s, cvPoint(r.x,r.y), cvPoint(r.x+r.width,r.y+r.height),
+                    CV_RGB(255,255,255), 3, 8, 0 );
             }
 
-            cvPyrSegmentation(image_f, image_s, storage, &comp, level,
-                              threshold1, threshold2);   
-/*  read the connected components     */
-            if(comp->total != 3) { code = TRS_FAIL; goto exit; }
-            dst_comp[0] = (CvConnectedComp*)CV_GET_SEQ_ELEM( CvConnectedComp, comp, 0 );
-            dst_comp[1] = (CvConnectedComp*)CV_GET_SEQ_ELEM( CvConnectedComp, comp, 1 );
-            dst_comp[2] = (CvConnectedComp*)CV_GET_SEQ_ELEM( CvConnectedComp, comp, 2 );
-            break;
+            cvNamedWindow( "test", 1 );
+            cvShowImage( "test", image_s );
+            cvWaitKey(0);
+        }*/
+
+        code = cvTsCmpEps2( ts, image, image_s, 10, false, "the output image" );
+        if( code < 0 )
+            goto _exit_;
+
+        for( i = 0; i < 3; i++)
+        {
+            for( j = 0; j < 3; j++ )
+            {
+                if( !mask[j] && dst_comp[i]->area == a[j] &&
+                    dst_comp[i]->rect.x == rect[j].x &&
+                    dst_comp[i]->rect.y == rect[j].y &&
+                    dst_comp[i]->rect.width == rect[j].width &&
+                    dst_comp[i]->rect.height == rect[j].height )
+                {
+                    mask[j] = 1;
+                    break;
+                }
+            }
+            if( j == 3 )
+            {
+                ts->printf( CvTS::LOG, "The component #%d is incorrect\n", i );
+                code = CvTS::FAIL_BAD_ACCURACY;
+                goto _exit_;
+            }
         }
+
+        cvReleaseImage(&image_f);
+        cvReleaseImage(&image);
+        cvReleaseImage(&image_s);
     }
- 
-    diff = 0;
-    /*diff = atsCompare1Db( (uchar*)image->imageData, (uchar*)image_s->imageData, chanels*l, 4);
- 
-    for(i = 0; i < 3; i++)
-    {
-        if(dst_comp[i]->area != a[i]) diff++;
-        if(dst_comp[i]->rect.x != rect[i].x) diff++;
-        if(dst_comp[i]->rect.y != rect[i].y) diff++;
-        if(dst_comp[i]->rect.width != rect[i].width) diff++;
-        if(dst_comp[i]->rect.height != rect[i].height) diff++;
-    }*/
 
-    trsWrite( ATS_CON | ATS_LST | ATS_SUM, "upper =%f diff =%ld \n",upper, diff);
-
-    if(diff > 0 )
-        code = TRS_FAIL;
-    else
-        code = TRS_OK;
-
-exit:
+_exit_:
 
     cvReleaseMemStorage( &storage );
     cvReleaseImage(&image_f);
     cvReleaseImage(&image);
     cvReleaseImage(&image_s);
 
-   
-
-/*    trsFree(cp);  */
-/*    _getch();     */
-    return code;
- 
-    
+    if( code < 0 )
+        ts->set_failed_test_info( code );
 }
 
-#define _8U_C1    1
-#define _8U_C3    3
-
-void InitAPyrSegmentation( void )
-{
-/* Test Registartion */
-    trsRegArg(cFuncName[0],cTestName,cTestClass,aPyrSegmentation, _8U_C1); 
-    trsRegArg(cFuncName[0],cTestName,cTestClass,aPyrSegmentation, _8U_C3); 
-
-} /* InitAContourMoments */
-
-#endif
+CV_PyrSegmentationTest pyr_segmentation_test;
 
 /* End of file. */
