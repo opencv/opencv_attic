@@ -495,7 +495,7 @@ int CV_MeanShiftTest::validate_test_results( int /*test_case_idx*/ )
         goto _exit_;
     }
 
-    if( fabs(comp.area - area0) > fabs(area - area0) + area0*0.05 )
+    if( fabs((double)(comp.area - area0)) > fabs((double)(area - area0)) + area0*0.05 )
     {
         ts->printf( CvTS::LOG,
             "Incorrect CvConnectedComp area (=%.1f, should be %d)\n", comp.area, area0 );
