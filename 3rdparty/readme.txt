@@ -58,6 +58,24 @@ jasper-1.701.0 - JasPer is a collection of software
 
 ------------------------------------------------------------------------------------
 
+openexr-1.4.0 - OpenEXR is a high dynamic-range (HDR) image file format developed
+                by Industrial Light & Magic for use in computer imaging applications.
+
+             Copyright (c) 2004, Industrial Light & Magic, a division of Lucasfilm
+             Entertainment Company Ltd.  Portions contributed and copyright held by
+             others as indicated.  All rights reserved.
+
+             The project homepage: http://www.openexr.com/
+
+             OpenCV on Windows uses pre-built libraries from openexr package:
+             half.lib, iex.lib, ilmimf.lib ilmthread.lib imath.lib
+
+             In the distributed highgui*.dll the format is not supported, because
+             of limitations of the used compiler (MSVC6).
+             To add the support to highgui, rebuilt it with VS2005.
+
+------------------------------------------------------------------------------------
+
 The folder lib also contains libvfw_*.a import libraries that enable to
 build vfw camera/avi capture code of highgui with Mingw compiler.
 
