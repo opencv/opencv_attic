@@ -3,7 +3,7 @@
 
 /*
 The sample demonstrates how to train Random Trees classifier
-(or Boosting classifier, see main()) using the provided dataset.
+(or Boosting classifier, or MLP - see main()) using the provided dataset.
 
 We use the sample database letter-recognition.data
 from UCI Repository, here is the link:
@@ -93,7 +93,7 @@ int build_rtrees_classifier( char* data_filename,
     int ok = read_num_class_data( data_filename, 16, &data, &responses );
     int nsamples_all = 0, ntrain_samples = 0;
     int i = 0;
-    double train_err = 0, test_err = 0;
+    double train_hr = 0, test_hr = 0;
     CvRTrees forest;
     CvMat* var_importance = 0;
 
@@ -155,23 +155,19 @@ int build_rtrees_classifier( char* data_filename,
         cvGetRow( data, &sample, i );
 
         r = forest.predict( &sample );
-        r = fabs(r - responses->data.fl[i]) > FLT_EPSILON ? 1 : 0;
+        r = fabs((double)r - responses->data.fl[i]) <= FLT_EPSILON ? 1 : 0;
 
         if( i < ntrain_samples )
-            train_err += r;
+            train_hr += r;
         else
-            test_err += r;
+            test_hr += r;
     }
-    test_err /= (double)(nsamples_all-ntrain_samples);
-    if( ntrain_samples == 0 )
-        printf( "Prediction error: %f\n", test_err );
-    else
-    {
-        train_err /= (double)ntrain_samples;
-        printf( "Training set error: %f\n"
-                "Test set error: %f\n",
-            train_err, test_err );
-    }
+
+    test_hr /= (double)(nsamples_all-ntrain_samples);
+    train_hr /= (double)ntrain_samples;
+    printf( "Recognition rate: train = %.1f%%, test = %.1f%%\n",
+            train_hr*100., test_hr*100. );
+
     printf( "Number of trees: %d\n", forest.get_tree_count() );
 
     // Print variable importance
@@ -228,7 +224,7 @@ int build_boost_classifier( char* data_filename,
     int nsamples_all = 0, ntrain_samples = 0;
     int var_count;
     int i, j, k;
-    double train_err = 0, test_err = 0;
+    double train_hr = 0, test_hr = 0;
     CvBoost boost;
 
     if( !ok )
@@ -328,23 +324,19 @@ int build_boost_classifier( char* data_filename,
             }
         }
 
-        r = fabs(best_class - responses->data.fl[i]) > FLT_EPSILON ? 1 : 0;
+        r = fabs(best_class - responses->data.fl[i]) < FLT_EPSILON ? 1 : 0;
 
         if( i < ntrain_samples )
-            train_err += r;
+            train_hr += r;
         else
-            test_err += r;
+            test_hr += r;
     }
-    test_err /= (double)(nsamples_all-ntrain_samples);
-    if( ntrain_samples == 0 )
-        printf( "Prediction error: %f\n", test_err );
-    else
-    {
-        train_err /= (double)ntrain_samples;
-        printf( "Training set error: %f\n"
-                "Test set error: %f\n",
-            train_err, test_err );
-    }
+
+    test_hr /= (double)(nsamples_all-ntrain_samples);
+    train_hr /= (double)ntrain_samples;
+    printf( "Recognition rate: train = %.1f%%, test = %.1f%%\n",
+            train_hr*100., test_hr*100. );
+
     printf( "Number of trees: %d\n", boost.get_weak_predictors()->total );
 
     // Save classifier to file if needed
@@ -361,13 +353,129 @@ int build_boost_classifier( char* data_filename,
 }
 
 
+static
+int build_mlp_classifier( char* data_filename,
+    char* filename_to_save, char* filename_to_load )
+{
+    const int class_count = 26;
+    CvMat* data = 0;
+    CvMat train_data;
+    CvMat* responses = 0;
+    CvMat* mlp_response = 0;
+
+    int ok = read_num_class_data( data_filename, 16, &data, &responses );
+    int nsamples_all = 0, ntrain_samples = 0;
+    int i, j;
+    double train_hr = 0, test_hr = 0;
+    CvANN_MLP mlp;
+
+    if( !ok )
+    {
+        printf( "Could not read the database %s\n", data_filename );
+        return -1;
+    }
+
+    printf( "The database %s is loaded.\n", data_filename );
+    nsamples_all = data->rows;
+    ntrain_samples = (int)(nsamples_all*0.8);
+
+    // Create or load MLP classifier
+    if( filename_to_load )
+    {
+        // load classifier from the specified file
+        mlp.load( filename_to_load );
+        ntrain_samples = 0;
+        if( !mlp.get_layer_count() )
+        {
+            printf( "Could not read the classifier %s\n", filename_to_load );
+            return -1;
+        }
+        printf( "The classifier %s is loaded.\n", data_filename );
+    }
+    else
+    {
+        // !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+        //
+        // MLP does not support categorical variables by explicitly.
+        // So, instead of the output class label, we will use
+        // a binary vector of <class_count> components for training and,
+        // therefore, MLP will give us a vector of "probabilities" at the
+        // prediction stage
+        //
+        // !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+
+        CvMat* new_responses = cvCreateMat( ntrain_samples, class_count, CV_32F );
+
+        // 1. unroll the responses
+        printf( "Unrolling the responses...\n");
+        for( i = 0; i < ntrain_samples; i++ )
+        {
+            int cls_label = cvRound(responses->data.fl[i]) - 'A';
+            float* bit_vec = (float*)(new_responses->data.ptr + i*new_responses->step);
+            for( j = 0; j < class_count; j++ )
+                bit_vec[j] = 0.f;
+            bit_vec[cls_label] = 1.f;
+        }
+        cvGetRows( data, &train_data, 0, ntrain_samples );
+
+        // 2. train classifier
+        int layer_sz[] = { data->cols, 100, 100, class_count };
+        CvMat layer_sizes =
+            cvMat( 1, (int)(sizeof(layer_sz)/sizeof(layer_sz[0])), CV_32S, layer_sz );
+        mlp.create( &layer_sizes );
+        printf( "Training the classifier (may take a few minutes)...");
+        mlp.train( &train_data, new_responses, 0, 0,
+            CvANN_MLP_TrainParams(cvTermCriteria(CV_TERMCRIT_ITER,300,0.01),
+            CvANN_MLP_TrainParams::RPROP,0.01));
+        cvReleaseMat( &new_responses );
+        printf("\n");
+    }
+
+    mlp_response = cvCreateMat( 1, class_count, CV_32F );
+
+    // compute prediction error on train and test data
+    for( i = 0; i < nsamples_all; i++ )
+    {
+        int best_class;
+        CvMat sample;
+        cvGetRow( data, &sample, i );
+        CvPoint max_loc = {0,0};
+        mlp.predict( &sample, mlp_response );
+        cvMinMaxLoc( mlp_response, 0, 0, 0, &max_loc, 0 );
+        best_class = max_loc.x + 'A';
+
+        int r = fabs((double)best_class - responses->data.fl[i]) < FLT_EPSILON ? 1 : 0;
+
+        if( i < ntrain_samples )
+            train_hr += r;
+        else
+            test_hr += r;
+    }
+
+    test_hr /= (double)(nsamples_all-ntrain_samples);
+    train_hr /= (double)ntrain_samples;
+    printf( "Recognition rate: train = %.1f%%, test = %.1f%%\n",
+            train_hr*100., test_hr*100. );
+
+    // Save classifier to file if needed
+    if( filename_to_save )
+        mlp.save( filename_to_save );
+
+    cvReleaseMat( &mlp_response );
+    cvReleaseMat( &data );
+    cvReleaseMat( &responses );
+
+    return 0;
+}
+
+
 int main( int argc, char *argv[] )
 {
     char* filename_to_save = 0;
     char* filename_to_load = 0;
     char default_data_filename[] = "./letter-recognition.data";
     char* data_filename = default_data_filename;
-    int boost = 0;
+    int method = 0;
 
     int i;
     for( i = 1; i < argc; i++ )
@@ -389,22 +497,30 @@ int main( int argc, char *argv[] )
         }
         else if( strcmp(argv[i],"-boost") == 0)
         {
-            boost = 1;
+            method = 1;
+        }
+        else if( strcmp(argv[i],"-mlp") == 0 )
+        {
+            method = 2;
         }
         else
             break;
     }
 
     if( i < argc ||
-        (boost ?
+        (method == 0 ?
+        build_rtrees_classifier( data_filename, filename_to_save, filename_to_load ) :
+        method == 1 ?
         build_boost_classifier( data_filename, filename_to_save, filename_to_load ) :
-        build_rtrees_classifier( data_filename, filename_to_save, filename_to_load )) < 0)
+        method == 2 ?
+        build_mlp_classifier( data_filename, filename_to_save, filename_to_load ) :
+        -1) < 0)
     {
         printf("This is letter recognition sample.\n"
                 "The usage: letter_recog [-data <path to letter-recognition.data>] \\\n"
                 "  [-save <output XML file for the classifier>] \\\n"
                 "  [-load <XML file with the pre-trained classifier>] \\\n"
-                "  [-boost] # to use boosted tree classifier instead of default Random Trees\n" );
+                "  [-boost|-mlp] # to use boost/mlp classifier instead of default Random Trees\n" );
     }
     return 0;
 }
