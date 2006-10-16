@@ -430,7 +430,7 @@ GrFmtJpegWriter::~GrFmtJpegWriter()
 bool  GrFmtJpegWriter::WriteImage( const uchar* data, int step,
                                    int width, int height, int /*depth*/, int _channels )
 {
-    const int default_quality = 90;
+    const int default_quality = 95;
     struct jpeg_compress_struct cinfo;
     GrFmtJpegErrorMgr jerr;
 
@@ -633,7 +633,7 @@ static const int idct_prescale[] =
 #define C1_847     fix( 1.847759065f, fixb )
 #define C2_613     fix( 2.613125930f, fixb )
 
-#define fixc       10
+#define fixc       12
 #define b_cb       fix( 1.772, fixc )
 #define g_cb      -fix( 0.34414, fixc )
 #define g_cr      -fix( 0.71414, fixc )
@@ -1141,7 +1141,7 @@ void  GrFmtJpegReader::ProcessScan( int* idx, int ns, uchar* data, int step, int
 
     for( mcu = 0;; mcu++ )
     {
-        int  x2, y2, x, y;
+        int  x2, y2, x, y, xc;
         int* cmp;
         uchar* data1;
         
@@ -1206,7 +1206,45 @@ void  GrFmtJpegReader::ProcessScan( int* idx, int ns, uchar* data, int step, int
                     int  shift = h[1]*(y >> y_shift);
                     int* cmpCb = blocks[pos[1]] + shift; 
                     int* cmpCr = blocks[pos[2]] + shift;
-                    for( x = 0; x < x2; x++ )
+                    x = 0;
+                    if( x_shift == 0 )
+                    {
+                        for( ; x < x2; x++ )
+                        {
+                            int Y  = (cmp[x] + 128*4) << fixc;
+                            int Cb = cmpCb[x];
+                            int Cr = cmpCr[x];
+                            int t = (Y + Cb*b_cb) >> (fixc + 2);
+                            data1[x*3] = saturate(t);
+                            t = (Y + Cb*g_cb + Cr*g_cr) >> (fixc + 2);
+                            data1[x*3 + 1] = saturate(t);
+                            t = (Y + Cr*r_cr) >> (fixc + 2);
+                            data1[x*3 + 2] = saturate(t);
+                        }
+                    }
+                    else if( x_shift == 1 )
+                    {
+                        for( xc = 0; x <= x2 - 2; x += 2, xc++ )
+                        {
+                            int Y  = (cmp[x] + 128*4) << fixc;
+                            int Cb = cmpCb[xc];
+                            int Cr = cmpCr[xc];
+                            int t = (Y + Cb*b_cb) >> (fixc + 2);
+                            data1[x*3] = saturate(t);
+                            t = (Y + Cb*g_cb + Cr*g_cr) >> (fixc + 2);
+                            data1[x*3 + 1] = saturate(t);
+                            t = (Y + Cr*r_cr) >> (fixc + 2);
+                            data1[x*3 + 2] = saturate(t);
+                            Y = (cmp[x+1] + 128*4) << fixc;
+                            t = (Y + Cb*b_cb) >> (fixc + 2);
+                            data1[x*3 + 3] = saturate(t);
+                            t = (Y + Cb*g_cb + Cr*g_cr) >> (fixc + 2);
+                            data1[x*3 + 4] = saturate(t);
+                            t = (Y + Cr*r_cr) >> (fixc + 2);
+                            data1[x*3 + 5] = saturate(t);
+                        }
+                    }
+                    for( ; x < x2; x++ )
                     {
                         int Y  = (cmp[x] + 128*4) << fixc;
                         int Cb = cmpCb[x >> x_shift];
@@ -1593,7 +1631,7 @@ bool  GrFmtJpegWriter::WriteImage( const uchar* data, int step,
     //     encode block.
     int x, y;
     int i, j;
-    const int max_quality = 10;
+    const int max_quality = 12;
     int   quality = max_quality;
     WMByteStream& lowstrm = m_strm.m_low_strm;
     int   fdct_qtab[2][64];
