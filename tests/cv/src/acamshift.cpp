@@ -256,11 +256,11 @@ int CV_CamShiftTest::prepare_test_case( int test_case_idx )
     {
         CvMat temp;
         
-        m = (box0.size.width + box0.size.height)*0.5;
-        init_rect.x = cvFloor(box0.center.x - m*(0.4 + cvTsRandReal(rng)*0.2));
-        init_rect.y = cvFloor(box0.center.y - m*(0.4 + cvTsRandReal(rng)*0.2));
-        init_rect.width = cvCeil(box0.center.x + m*(0.4 + cvTsRandReal(rng)*0.2) - init_rect.x);
-        init_rect.height = cvCeil(box0.center.y + m*(0.4 + cvTsRandReal(rng)*0.2) - init_rect.y);
+        m = MAX(box0.size.width,box0.size.height)*0.8;
+        init_rect.x = cvFloor(box0.center.x - m*(0.45 + cvTsRandReal(rng)*0.2));
+        init_rect.y = cvFloor(box0.center.y - m*(0.45 + cvTsRandReal(rng)*0.2));
+        init_rect.width = cvCeil(box0.center.x + m*(0.45 + cvTsRandReal(rng)*0.2) - init_rect.x);
+        init_rect.height = cvCeil(box0.center.y + m*(0.45 + cvTsRandReal(rng)*0.2) - init_rect.y);
         
         if( init_rect.x < 0 || init_rect.y < 0 ||
             init_rect.x + init_rect.width >= img_size.width ||
