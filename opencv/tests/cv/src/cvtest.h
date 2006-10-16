@@ -42,6 +42,10 @@
 #ifndef _CVTEST_H_
 #define _CVTEST_H_
 
+#if defined _MSC_VER && _MSC_VER >= 1200
+#pragma warning( disable: 4710 4711 4514 4996 )
+#endif
+
 #include "cv.h"
 #include "cxmisc.h"
 #include "cvaux.h"
