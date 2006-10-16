@@ -41,49 +41,44 @@
 
 #include "cvtest.h"
 
-#if 0
-
-#define SCAN  0
-#define CHECK 1
-
-#include <stdio.h>
-#include <string.h>
-
-/* Testing parameters */
-static char test_desc[] = "Snakes regression test";
-
 /*  This is regression test for Snakes functions of OpenCV.
-//  This test will generate fixed figure, read initial position 
-//  of snake from file, run OpenCV function and compare result 
+//  This test will generate fixed figure, read initial position
+//  of snake from file, run OpenCV function and compare result
 //  position of snake with position(from file) which must be resulting.
-//  
-//  Test is considered to be succesfull if resultant positions 
+//
+//  Test is considered to be succesfull if resultant positions
 //  are identical.
-*/    
-static char* func_name[] = 
+*/
+
+class CV_SnakeTest : public CvTest
 {
-    "cvSnakeImage"
+public:
+    CV_SnakeTest();
+protected:
+    void run(int);
 };
 
-static const int numfig_image = 1;
-static const int numfig_grad  = 1;
+#define SCAN  0
 
-static char* file_name[] = 
+CV_SnakeTest::CV_SnakeTest():
+    CvTest( "snakes", "cvSnakeImage" )
 {
-    "ring",
-    "square"
-}; 
-              
+    support_testing_modes = CvTS::CORRECTNESS_CHECK_MODE;
+}
 
-#ifndef _MAX_PATH
-#define _MAX_PATH 1000
-#endif
-
-static int data_type = 0;
-static int fmaSnakes( void* arg )
+void CV_SnakeTest::run( int /*start_from*/ )
 {
-    int lParam = (int)(size_t)arg;
-    FILE* file;
+    int code = CvTS::OK;
+    static const char* file_name[] =
+    {
+        "ring",
+        "square"
+    };
+
+    const int numfig_image = 1;
+    const int numfig_grad  = 1;
+
+    FILE* file = 0;
     char abs_file_name[_MAX_PATH];
     char rel_path[_MAX_PATH];
 
@@ -93,137 +88,139 @@ static int fmaSnakes( void* arg )
     IplImage* iplSrc = NULL;
     CvSize win;
     int length;
-    
+
     float alpha,beta,gamma;
     CvTermCriteria criteria;
-
     long lErrors = 0;
+    int progress = 0, test_case_count = numfig_image + numfig_grad;
+    CvPoint* Pts = 0;
+    CvPoint* resPts = 0;
 
-    static int  read_param = 0;
-
-    atsGetTestDataPath( rel_path, "snakes", 0, 0 );
-
-    /* Initialization global parameters */
-    if( !read_param )
-    {
-        read_param = 1;
-        /* Determine which test are needed to run */
-        trsCaseRead( &data_type,"/u/s/a", "u",
-                     "a - all, 8u - unsigned char, 8s - char" );
-    }
+    sprintf( rel_path, "%ssnakes/", ts->get_data_path() );
 
     criteria.type = CV_TERMCRIT_ITER;
     win.height = win.width = 3;
-        
-    for ( i = 0; i < numfig_image + numfig_grad; i++ )
-    {           
-        CvPoint* Pts;
-        CvPoint* resPts;
-    
+
+    for( i = 0; i < test_case_count; i++ )
+    {
         int num_pos;
         int k;
 
         char tmp[_MAX_PATH];
+
+        ts->update_context( this, i, false );
+
         /* create full name of bitmap file */
         strcpy(tmp, rel_path);
         strcat(tmp, file_name[i]);
-        strcpy( abs_file_name, tmp ); 
+        strcpy( abs_file_name, tmp );
         strcat( abs_file_name, ".bmp" );
 
         /* read bitmap with 8u image */
         iplSrc = cvLoadImage( abs_file_name, -1 );
-        
-        if (!iplSrc) 
-            return trsResult( TRS_FAIL, "can't open BMP" );
-        if (iplSrc->nChannels != 1 ) 
-            return trsResult( TRS_FAIL, "BMP has no 8u format" );
-        
+
+        if (!iplSrc)
+        {
+            ts->printf( CvTS::LOG, "can not load %s\n", abs_file_name );
+            code = CvTS::FAIL_MISSING_TEST_DATA;
+            goto _exit_;
+        }
+
         /* init snake reading file with snake */
         strcpy(tmp, rel_path);
         strcat(tmp, file_name[i]);
-        strcpy( abs_file_name, tmp ); 
+        strcpy( abs_file_name, tmp );
         strcat( abs_file_name, ".txt" );
-        
+
         file = fopen( abs_file_name, "r+" );
 
         if (!file)
         {
-            return trsResult( TRS_FAIL, "Can't open file %s",
-                                        abs_file_name );
+            ts->printf( CvTS::LOG, "can not load %s\n", abs_file_name );
+            code = CvTS::FAIL_MISSING_TEST_DATA;
+            goto _exit_;
         }
-    
+
         /* read snake parameters */
         fscanf(file, "%d", &length );
         fscanf(file, "%f", &alpha );
         fscanf(file, "%f", &beta );
         fscanf(file, "%f", &gamma );
-        
+
         /* allocate memory for snakes */
-        Pts = (CvPoint*)malloc( length * sizeof(CvPoint) ); 
-        resPts = (CvPoint*)malloc( length * sizeof(CvPoint) ); 
+        Pts = (CvPoint*)cvAlloc( length * sizeof(Pts[0]) );
+        resPts = (CvPoint*)cvAlloc( length * sizeof(resPts[0]) );
 
         /* get number of snake positions */
         fscanf(file, "%d", &num_pos );
 
         /* get number iterations between two positions */
-        fscanf(file, "%d", &criteria.max_iter ); 
+        fscanf(file, "%d", &criteria.max_iter );
 
         /* read initial snake position */
         for ( j = 0; j < length; j++ )
         {
             fscanf(file, "%d%d", &Pts[j].x, &Pts[j].y );
         }
-        
+
         for ( k = 0; k < num_pos; k++ )
         {
             /* Run CVL function to check it */
             if(i<numfig_image)
             {
-                 cvSnakeImage( iplSrc, Pts, length, 
+                 cvSnakeImage( iplSrc, Pts, length,
                            &alpha, &beta, &gamma, CV_VALUE, win, criteria, 0 );
             }
             else
             {
-                cvSnakeImage( iplSrc, Pts, length, 
+                cvSnakeImage( iplSrc, Pts, length,
                            &alpha, &beta, &gamma, CV_VALUE, win, criteria, 1 /*usegrad*/ );
             }
 
-            if ( lParam & CHECK )
+#ifndef SCAN
+            for ( j = 0; j < length; j++ )
             {
-                for ( j = 0; j < length; j++ )
-                {
-                    fscanf(file, "%d%d", &resPts[j].x, &resPts[j].y );
-                     
-                    lErrors += (Pts[j].x != resPts[j].x);
-                    lErrors += (Pts[j].y != resPts[j].y);
-                }
+                fscanf(file, "%d%d", &resPts[j].x, &resPts[j].y );
+
+                lErrors += (Pts[j].x != resPts[j].x);
+                lErrors += (Pts[j].y != resPts[j].y);
             }
-            else
+#else
+            fseek( file, 0, SEEK_CUR );
+            fprintf(file, "\n");
+            for ( j = 0; j < length; j++ )
             {
-                fseek( file, 0, SEEK_CUR ); 
-                fprintf(file, "\n");
-                for ( j = 0; j < length; j++ )
-                {
-                    fprintf(file, "\n%d %d", Pts[j].x, Pts[j].y );                          
-                }                              
-            }            
+                fprintf(file, "\n%d %d", Pts[j].x, Pts[j].y );
+            }
+#endif
         }
         fclose(file);
-        free((void*)Pts);
-        free((void*)resPts); 
+        cvFree(&Pts);
+        cvFree(&resPts);
         cvReleaseImage(&iplSrc);
-    }    
 
-   if( lErrors == 0 ) return trsResult( TRS_OK, "No errors fixed for this text" );
-   else return trsResult( TRS_FAIL, "Total fixed %d errors", lErrors );
+        progress = update_progress( progress, i, test_case_count, 0 );
+    }
 
-}        
+    if( lErrors > 0 )
+    {
+        ts->printf( CvTS::LOG, "Total fixed %d errors", lErrors );
+        code = CvTS::FAIL_BAD_ACCURACY;
+        goto _exit_;
+    }
 
-void InitASnakes(void)
-{
-    /* Register test function */
-    /*trsRegArg( func_name[0], test_desc, atsAlgoClass, fmaSnakes, SCAN );*/
-    trsRegArg( func_name[0], test_desc, atsAlgoClass, fmaSnakes, CHECK );
-} /* InitASnakes */
+_exit_:
 
-#endif
+    if( file )
+        fclose(file);
+    cvFree(&Pts);
+    cvFree(&resPts);
+    cvReleaseImage(&iplSrc);
+
+    if( code < 0 )
+        ts->set_failed_test_info( code );
+}
+
+CV_SnakeTest snake_test;
+
+/* End of file. */
