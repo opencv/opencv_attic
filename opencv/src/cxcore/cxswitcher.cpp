@@ -543,10 +543,12 @@ cvUseOptimized( int load_flag )
     const CvProcessorInfo* cpu_info = icvGetProcessorInfo();
     int arch = CV_GET_PROC_ARCH(cpu_info->model);
     
-    static const char* opencv_sfx[] = { "099", "097", 0 };
-    static const char* ipp_sfx_ia32[] = { "-5.1", "", 0 };
-    static const char* ipp_sfx_ia64[] = { "64-5.1", "64", 0 };
-    static const char* ipp_sfx_em64t[] = { "em64t-5.1", "em64t", 0 };
+    // TODO: implement some more elegant way
+    // to find the latest and the greatest IPP/MKL libraries
+    static const char* opencv_sfx[] = { "100", "099", "097", 0 };
+    static const char* ipp_sfx_ia32[] = { "-6.1", "-6.0", "-5.2", "-5.1", "", 0 };
+    static const char* ipp_sfx_ia64[] = { "64-6.1", "64-6.0", "64-5.2", "64-5.1", "64", 0 };
+    static const char* ipp_sfx_em64t[] = { "em64t-6.1", "em64t-6.0", "em64t-5.2", "em64t-5.1", "em64t", 0 };
     static const char* mkl_sfx_ia32[] = { "p4", "p3", "def", 0 };
     static const char* mkl_sfx_ia64[] = { "i2p", "itp", 0 };
     static const char* mkl_sfx_em64t[] = { "def", 0 };
@@ -597,9 +599,22 @@ cvUseOptimized( int load_flag )
                 {
                     ICV_PRINTF(("%s loaded\n", plugins[i].name ));
                     loaded_modules++;
-                }
-                if( plugins[i].handle != 0 )
                     break;
+                }
+                #ifndef WIN32
+                // temporary workaround for MacOSX 
+                sprintf( plugins[i].name, DLL_PREFIX "%s%s" DLL_DEBUG_FLAG ".dylib",
+                    plugins[i].basename, *suffix );
+
+                ICV_PRINTF(("loading %s...\n", plugins[i].name ));
+                plugins[i].handle = LoadLibrary( plugins[i].name );
+                if( plugins[i].handle != 0 )
+                {
+                    ICV_PRINTF(("%s loaded\n", plugins[i].name ));
+                    loaded_modules++;
+                    break;
+                }
+                #endif
             }
         }
     }
