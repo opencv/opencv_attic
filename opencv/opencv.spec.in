@@ -9,7 +9,7 @@ Version: %{version}
 Release: %{release}
 Source0: %{sourcepkg}
 URL: http://prdownloads.sourceforge.net/opencvlibrary/%{sourcepkg}
-Copyright: BSD
+License: BSD
 Packager: Serguei Boldyrev, Vadim Pisarevsky
 Group: Development/Libraries
 # Group: System Environment/Libraries
