@@ -1190,7 +1190,7 @@ cvBoundingRect( CvArr* array, int update )
         {
             uchar* _ptr = mat->data.ptr + i*mat->step;
             uchar* ptr = (uchar*)cvAlignPtr(_ptr, 4);
-            int have_nz = 0, k_min, offset = ptr - _ptr;
+            int have_nz = 0, k_min, offset = (int)(ptr - _ptr);
             j = 0;
             offset = MIN(offset, size.width);
             for( ; j < offset; j++ )
