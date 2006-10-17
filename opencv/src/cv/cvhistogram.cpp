@@ -1256,7 +1256,7 @@ static CvStatus CV_STDCALL
                             int* binptr = bins;
                             for( i = 0; i < dims; i++ )
                             {
-                                int idx = cvFloor(img[i][x]*uni_range[i][0]
+                                int idx = cvFloor((double)img[i][x]*uni_range[i][0]
                                                  + uni_range[i][1]);
                                 if( (unsigned)idx >= (unsigned)histsize[i] )
                                     break;
@@ -1275,7 +1275,7 @@ static CvStatus CV_STDCALL
                                 int* binptr = bins;
                                 for( i = 0; i < dims; i++ )
                                 {
-                                    int idx = cvFloor(img[i][x]*uni_range[i][0]
+                                    int idx = cvFloor((double)img[i][x]*uni_range[i][0]
                                                      + uni_range[i][1]);
                                     if( (unsigned)idx >= (unsigned)histsize[i] )
                                         break;
@@ -1818,7 +1818,7 @@ static CvStatus CV_STDCALL
     int is_sparse = CV_IS_SPARSE_HIST(hist);
     int uniform = CV_IS_UNIFORM_HIST(hist);
     int dims, histsize[CV_MAX_DIM];
-    float uni_range[CV_MAX_DIM][2];
+    double uni_range[CV_MAX_DIM][2];
     int i, x;
 
     dims = cvGetDims( hist->bins, histsize );
@@ -1829,9 +1829,10 @@ static CvStatus CV_STDCALL
     {
         for( i = 0; i < dims; i++ )
         {
-            float t = ((float)histsize[i])/(hist->thresh[i][1] - hist->thresh[i][0]);
+            double t = ((double)histsize[i])/
+                ((double)hist->thresh[i][1] - hist->thresh[i][0]);
             uni_range[i][0] = t;
-            uni_range[i][1] = (float)(-t*hist->thresh[i][0]);
+            uni_range[i][1] = -t*hist->thresh[i][0];
         }
     }
 
@@ -1846,7 +1847,7 @@ static CvStatus CV_STDCALL
             {
             case 1:
                 {
-                float a = uni_range[0][0], b = uni_range[0][1];
+                double a = uni_range[0][0], b = uni_range[0][1];
                 int sz = histsize[0];
 
                 for( ; size.height--; img[0] += step, dst += dstStep )
@@ -1885,6 +1886,7 @@ static CvStatus CV_STDCALL
                     for( ; x < size.width; x++ )
                     {
                         int v0 = cvFloor(ptr[x]*a + b);
+
                         if( (unsigned)v0 < (unsigned)sz )
                             dst[x] = bins[v0];
                         else
@@ -1895,8 +1897,8 @@ static CvStatus CV_STDCALL
                 break;
             case 2:
                 {
-                float  a0 = uni_range[0][0], b0 = uni_range[0][1];
-                float  a1 = uni_range[1][0], b1 = uni_range[1][1];
+                double a0 = uni_range[0][0], b0 = uni_range[0][1];
+                double a1 = uni_range[1][0], b1 = uni_range[1][1];
                 int sz0 = histsize[0], sz1 = histsize[1];
                 int step0 = ((CvMatND*)(hist->bins))->dim[0].step/sizeof(float);
 
