@@ -51,6 +51,24 @@
 #include <OpenEXR/half.h>
 #include "grfmt_exr.h"
 
+#if defined _MSC_VER && _MSC_VER >= 1200
+#pragma comment(lib, "Half.lib")
+#pragma comment(lib, "Iex.lib")
+#pragma comment(lib, "IlmImf.lib")
+#pragma comment(lib, "IlmThread.lib")
+#pragma comment(lib, "Imath.lib")
+
+#undef UINT
+#define UINT ((Imf::PixelType)0)
+#undef HALF
+#define HALF ((Imf::PixelType)1)
+#undef FLOAT
+#define FLOAT ((Imf::PixelType)2)
+#undef uint
+#define uint unsigned
+
+#endif
+
 // Exr Filter Factory
 GrFmtExr::GrFmtExr()
 {
@@ -305,7 +323,8 @@ bool  GrFmtExrReader::ReadData( uchar* data, int step, int color )
     else
     {
         uchar *out = data;
-        for( int y = m_datawindow.min.y; y <= m_datawindow.max.y; y++ )
+        int x, y;
+        for( y = m_datawindow.min.y; y <= m_datawindow.max.y; y++ )
         {
             m_file->readPixels( y, y );
 
@@ -335,14 +354,20 @@ bool  GrFmtExrReader::ReadData( uchar* data, int step, int color )
                 if( m_type == FLOAT )
                 {
                     float *fi = (float *)buffer;
-                    for( int x = 0; x < m_width * 3; x++)
-                        out[x] = uchar(fi[x] * 5);
+                    for( x = 0; x < m_width * 3; x++)
+                    {
+                        int t = cvRound(fi[x]*5);
+                        out[x] = CV_CAST_8U(t);
+                    }
                 }
                 else
                 {
                     uint *ui = (uint *)buffer;
-                    for( int x = 0; x < m_width * 3; x++)
-                        out[x] = ui[x];
+                    for( x = 0; x < m_width * 3; x++)
+                    {
+                        uint t = ui[x];
+                        out[x] = CV_CAST_8U(t);
+                    }
                 }
             }
 
@@ -441,9 +466,11 @@ void  GrFmtExrReader::UpSampleY( uchar *data, int xstep, int ystep, int ysample 
  */
 void  GrFmtExrReader::ChromaToBGR( float *data, int numlines, int step )
 {
-    for( int y = 0; y < numlines; y++ )
+    int x, y, t;
+    
+    for( y = 0; y < numlines; y++ )
     {
-        for( int x = 0; x < m_width; x++ )
+        for( x = 0; x < m_width; x++ )
         {
             double b, Y, r;
             if( !m_native_depth )
@@ -470,21 +497,27 @@ void  GrFmtExrReader::ChromaToBGR( float *data, int numlines, int step )
 
             if( !m_native_depth )
             {
-                ((uchar *)data)[y * step + x * 3] = (uchar) b;
-                ((uchar *)data)[y * step + x * 3 + 1] = (uchar) Y;
-                ((uchar *)data)[y * step + x * 3 + 2] = (uchar) r;
+                int t = cvRound(b);
+                ((uchar *)data)[y * step + x * 3] = CV_CAST_8U(t);
+                t = cvRound(Y);
+                ((uchar *)data)[y * step + x * 3 + 1] = CV_CAST_8U(t);
+                t = cvRound(r);
+                ((uchar *)data)[y * step + x * 3 + 2] = CV_CAST_8U(t);
             }
             else if( m_type == FLOAT )
             {
-                data[y * step + x * 3] = b;
-                data[y * step + x * 3 + 1] = Y;
-                data[y * step + x * 3 + 2] = r;
+                data[y * step + x * 3] = (float)b;
+                data[y * step + x * 3 + 1] = (float)Y;
+                data[y * step + x * 3 + 2] = (float)r;
             }
             else
             {
-                ((uint *)data)[y * step + x * 3] = (uint) b;
-                ((uint *)data)[y * step + x * 3 + 1] = (uint) Y;
-                ((uint *)data)[y * step + x * 3 + 2] = (uint) r;
+                int t = cvRound(b);
+                ((uint *)data)[y * step + x * 3] = (uint)MAX(t,0);
+                t = cvRound(Y);
+                ((uint *)data)[y * step + x * 3 + 1] = (uint)MAX(t,0);
+                t = cvRound(r);
+                ((uint *)data)[y * step + x * 3 + 2] = (uint)MAX(t,0);
             }
         }
     }
