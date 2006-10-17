@@ -88,7 +88,6 @@ static CvCaptureVTable captureCAM_CMU_vtable =
 // and modified by Roman Stanchak (rstanchak@yahoo.com).
 // For this to work you need to install the CMU firewire DCAM drivers,
 // located at http://www-2.cs.cmu.edu/~iwan/1394/.
-#include "1394camera.h"
 #define CMU_MAX_CAMERAS     20
 int             CMU_numCameras = 0;
 int             CMU_numActiveCameras = 0;
@@ -154,14 +153,14 @@ char CV_CAP_IEEE1394_COLOR[2][8] = { { CV_CAP_IEEE1394_COLOR_YUV444,
 									   CV_CAP_IEEE1394_COLOR_MONO16 } };
 
 // convert frame rate to suitable enum
-static int icvFrameRateToIndex_CMU(double framerate){
+/*static int icvFrameRateToIndex_CMU(double framerate){
 	if(framerate > 30)       return CV_CAP_IEEE1394_FPS_60;
 	else if(framerate > 15)  return CV_CAP_IEEE1394_FPS_30;
 	else if(framerate > 7.5) return CV_CAP_IEEE1394_FPS_15;
 	else if(framerate > 3.75) return CV_CAP_IEEE1394_FPS_7_5;
 	else if(framerate > 1.875) return CV_CAP_IEEE1394_FPS_3_75;
 	return CV_CAP_IEEE1394_FPS_1_875;
-}
+}*/
 
 #if _MSC_VER >= 1200
 #pragma comment(lib,"1394camera.lib")
@@ -182,7 +181,9 @@ CvSize icvGetSize_CMU( C1394Camera * cmucam ){
 	//default:
 	//	return cvSize(cmucam->m_width, cmucam->m_height);	
 	//}
-	return cvSize(cmucam->m_width, cmucam->m_height);	
+	unsigned long width = 0, height = 0;
+	cmucam->GetVideoFrameDimensions( &width, &height );
+	return cvSize((int)width, (int)height);
 }
 
 // return the opencv depth flag corresponding to the camera format
@@ -223,15 +224,11 @@ int icvGetNChannels_CMU( C1394Camera * cmucam ){
 	case CV_CAP_IEEE1394_COLOR_MONO16:
 		return 1;
 	case CV_CAP_IEEE1394_COLOR_YUV422:
-		return 2;
 	case CV_CAP_IEEE1394_COLOR_YUV444:
 	case CV_CAP_IEEE1394_COLOR_YUV411:
-		// ummm...not sure what to do here.
-		// suppose we coult just convert these
-		// yuv images to rgb ???
-		assert(0);
+		return 3;
 	default:
-		return -1;
+		;
 	}
 	return -1;
 }
@@ -302,7 +299,8 @@ int icvOpenCAM_CMU(CvCaptureCAM_CMU * capture, int index )
 				for (int size=CV_CAP_IEEE1394_SIZE_1600X1200; size>=0 && !found_format; size--){
 					int format = CV_CAP_IEEE1394_FORMAT[size][color];
 					int mode = CV_CAP_IEEE1394_MODE[size][color];
-					if (format!=-1 && mode!=-1 && CMU_theCamera[index].m_videoFlags[format][mode][rate]){
+					if (format!=-1 && mode!=-1 &&
+						CMU_theCamera[index].HasVideoFrameRate(format,mode,rate)){
 						CMU_theCamera[index].SetVideoFormat(format);
 						CMU_theCamera[index].SetVideoMode(mode);
 						CMU_theCamera[index].SetVideoFrameRate(rate);
@@ -323,9 +321,9 @@ int icvOpenCAM_CMU(CvCaptureCAM_CMU * capture, int index )
 		}
 
 		// allocate image frame
-		capture->image = cvCreateImageHeader(icvGetSize_CMU(&(CMU_theCamera[index])), 
-		                                     icvGetDepth_CMU(&(CMU_theCamera[index])),
-									         icvGetNChannels_CMU(&(CMU_theCamera[index])));
+		capture->image = cvCreateImage(icvGetSize_CMU(&(CMU_theCamera[index])), 
+		                               icvGetDepth_CMU(&(CMU_theCamera[index])),
+									   icvGetNChannels_CMU(&(CMU_theCamera[index])));
 		if (capture->image)
 		{
 			// successfully activated camera
@@ -334,7 +332,7 @@ int icvOpenCAM_CMU(CvCaptureCAM_CMU * capture, int index )
 			CMU_useCameraFlags[index] = true;
 		}
 	}
-	catch ( int line)
+	catch ( int )
 	{
 		return 0;
 	}
@@ -346,8 +344,7 @@ void icvCloseCAM_CMU( CvCaptureCAM_CMU* capture )
 {
 	if( capture && capture->image )
 	{
-		cvReleaseImageHeader( &capture->image );
-		capture->image = 0;
+		cvReleaseImage( &capture->image );
 		CMU_theCamera[capture->index].StopImageAcquisition();
 		CMU_useCameraFlags[capture->index] = false;
 		CMU_numActiveCameras--;
@@ -381,13 +378,15 @@ static void swapRedBlue(IplImage * im){
 		}
 	}
 }
+
 IplImage* icvRetrieveFrameCAM_CMU( CvCaptureCAM_CMU* capture )
 {
 	if( capture->image && CMU_theCamera )
 	{
-		capture->image->imageData = (char *) CMU_theCamera[capture->index].m_pData;
-		//CMU_theCamera[capture->index].getRGB((unsigned char*)capture->image->imageData);
-		//swapRedBlue( capture->image );
+		//capture->image->imageData = (char *) CMU_theCamera[capture->index].GetRawData(0);
+		CMU_theCamera[capture->index].getRGB((unsigned char*)capture->image->imageData,
+			capture->image->imageSize);
+		swapRedBlue( capture->image );
 		return capture->image;
 	}
 	return 0;
@@ -412,19 +411,18 @@ double icvGetPropertyCAM_CMU( CvCaptureCAM_CMU* capture, int property_id )
 	return 0;
 }
 
-static int icvSetVideoSize( CvCaptureCAM_CMU* capture, int w, int h) {
+static int icvSetVideoSize( CvCaptureCAM_CMU* capture, int, int) {
 	if (capture==0) return 0;
 	// change to closest size
 	return -1;
 }
 
 static int icvSetMode(CvCaptureCAM_CMU * capture, int mode){
-	int rate = CMU_theCamera[capture->index].GetVideoFrameRate();
 	int format = CMU_theCamera[capture->index].GetVideoFormat();
 	if(mode < 0 || mode > 7){
 		return -1;
 	}
-	if(CMU_theCamera[capture->index].m_videoFlags[format][mode][rate]){
+	if(CMU_theCamera[capture->index].HasVideoMode(format, mode)){
 		CMU_theCamera[capture->index].StopImageAcquisition();
 		CMU_theCamera[capture->index].SetVideoMode(mode);
 		CMU_theCamera[capture->index].StartImageAcquisition();
@@ -439,7 +437,7 @@ static int icvSetFrameRate(CvCaptureCAM_CMU * capture, int rate){
 	if(rate < 0 || rate > 5){ 
 		return -1;
 	}
-	if(CMU_theCamera[capture->index].m_videoFlags[format][mode][rate]){
+	if(CMU_theCamera[capture->index].HasVideoFrameRate(format, mode, rate)){
 		CMU_theCamera[capture->index].StopImageAcquisition();
 		CMU_theCamera[capture->index].SetVideoFrameRate(rate);
 		CMU_theCamera[capture->index].StartImageAcquisition();
@@ -449,12 +447,10 @@ static int icvSetFrameRate(CvCaptureCAM_CMU * capture, int rate){
 }
 
 static int icvSetFormat(CvCaptureCAM_CMU * capture, int format){
-	int mode = CMU_theCamera[capture->index].GetVideoMode();
-	int rate = CMU_theCamera[capture->index].GetVideoFrameRate();
 	if(format < 0 || format > 2){ 
 		return -1;
 	}
-	if(CMU_theCamera[capture->index].m_videoFlags[format][mode][rate]){
+	if(CMU_theCamera[capture->index].HasVideoFormat(format)){
 		CMU_theCamera[capture->index].StopImageAcquisition();
 		CMU_theCamera[capture->index].SetVideoFormat(format);
 		CMU_theCamera[capture->index].StartImageAcquisition();
@@ -465,21 +461,31 @@ static int icvSetFormat(CvCaptureCAM_CMU * capture, int format){
 
 int icvSetPropertyCAM_CMU( CvCaptureCAM_CMU* capture, int property_id, double value ){
 	int retval = -1;
+	int ival= cvRound(value);
 	switch (property_id) {
 		case CV_CAP_PROP_FRAME_WIDTH:
-			retval = icvSetVideoSize(capture, (int)value, CMU_theCamera[capture->index].m_height);
-			break;
 		case CV_CAP_PROP_FRAME_HEIGHT:
-			retval =icvSetVideoSize(capture, CMU_theCamera[capture->index].m_width, (int)value);
+			{
+			int width, height;
+			if (property_id == CV_CAP_PROP_FRAME_WIDTH) {
+				width = ival;
+				height = width*3/4;
+			}
+			else {
+				height = ival;
+				width = height*4/3;
+			}
+			retval = icvSetVideoSize(capture, width, height);
+			}
 			break;
 		case CV_CAP_PROP_FPS:
-			retval =icvSetFrameRate(capture, (int) value);
+			retval =icvSetFrameRate(capture, ival);
 			break;
 		case CV_CAP_PROP_MODE:
-			retval =icvSetMode(capture, (int) value);
+			retval =icvSetMode(capture, ival);
 			break;
 		case CV_CAP_PROP_FORMAT:
-			retval =icvSetFormat(capture, (int) value);
+			retval =icvSetFormat(capture, ival);
 			break;
 	}
 
@@ -492,7 +498,8 @@ int icvSetPropertyCAM_CMU( CvCaptureCAM_CMU* capture, int property_id, double va
 	   depth != capture->image->depth ||
 	   nch   != capture->image->nChannels )
 	{
-		cvInitImageHeader(capture->image, size, depth, nch);
+		cvReleaseImage(&capture->image);
+		capture->image = cvCreateImage(size, depth, nch);
 	}
 	return retval;
 }
