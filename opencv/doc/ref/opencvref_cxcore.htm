@@ -1150,7 +1150,7 @@ floating-point sparse array.</font>
 
     for( ; node != 0; node = cvGetNextSparseNode( &amp;mat_iterator ))
     {
-        int* idx = CV_NODE_IDX( array, node ); /* get pointer to the element indices */
+        const int* idx = CV_NODE_IDX( array, node ); /* get pointer to the element indices */
         float val = *(float*)CV_NODE_VAL( array, node ); /* get value of the element
                                                           (assume that the type is CV_32FC1) */
         printf( "(" );
@@ -1214,7 +1214,7 @@ for( i = 0; i &lt; dims; i++ )
 uchar* cvPtr1D( const CvArr* arr, int idx0, int* type=NULL );
 uchar* cvPtr2D( const CvArr* arr, int idx0, int idx1, int* type=NULL );
 uchar* cvPtr3D( const CvArr* arr, int idx0, int idx1, int idx2, int* type=NULL );
-uchar* cvPtrND( const CvArr* arr, int* idx, int* type=NULL, int create_node=1, unsigned* precalc_hashval=NULL );
+uchar* cvPtrND( const CvArr* arr, const int* idx, int* type=NULL, int create_node=1, unsigned* precalc_hashval=NULL );
 </pre><p><dl>
 <dt>arr<dd>Input array.
 <dt>idx0<dd>The first zero-based component of the element index
@@ -1247,7 +1247,7 @@ raise an error in case if the element index is out of range.
 CvScalar cvGet1D( const CvArr* arr, int idx0 );
 CvScalar cvGet2D( const CvArr* arr, int idx0, int idx1 );
 CvScalar cvGet3D( const CvArr* arr, int idx0, int idx1, int idx2 );
-CvScalar cvGetND( const CvArr* arr, int* idx );
+CvScalar cvGetND( const CvArr* arr, const int* idx );
 </pre><p><dl>
 <dt>arr<dd>Input array.
 <dt>idx0<dd>The first zero-based component of the element index
@@ -1266,7 +1266,7 @@ by the functions)</p>
 double cvGetReal1D( const CvArr* arr, int idx0 );
 double cvGetReal2D( const CvArr* arr, int idx0, int idx1 );
 double cvGetReal3D( const CvArr* arr, int idx0, int idx1, int idx2 );
-double cvGetRealND( const CvArr* arr, int* idx );
+double cvGetRealND( const CvArr* arr, const int* idx );
 </pre><p><dl>
 <dt>arr<dd>Input array. Must have a single channel.
 <dt>idx0<dd>The first zero-based component of the element index
@@ -1303,7 +1303,7 @@ checks for the row and column ranges only in debug mode.</p>
 void cvSet1D( CvArr* arr, int idx0, CvScalar value );
 void cvSet2D( CvArr* arr, int idx0, int idx1, CvScalar value );
 void cvSet3D( CvArr* arr, int idx0, int idx1, int idx2, CvScalar value );
-void cvSetND( CvArr* arr, int* idx, CvScalar value );
+void cvSetND( CvArr* arr, const int* idx, CvScalar value );
 </pre><p><dl>
 <dt>arr<dd>Input array.
 <dt>idx0<dd>The first zero-based component of the element index
@@ -1322,7 +1322,7 @@ In case of sparse array the functions create the node if it does not exist yet</
 void cvSetReal1D( CvArr* arr, int idx0, double value );
 void cvSetReal2D( CvArr* arr, int idx0, int idx1, double value );
 void cvSetReal3D( CvArr* arr, int idx0, int idx1, int idx2, double value );
-void cvSetRealND( CvArr* arr, int* idx, double value );
+void cvSetRealND( CvArr* arr, const int* idx, double value );
 </pre><p><dl>
 <dt>arr<dd>Input array.
 <dt>idx0<dd>The first zero-based component of the element index
@@ -1357,7 +1357,7 @@ checks for the row and column ranges only in debug mode.</p>
 <hr><h3><a name="decl_cvClearND">ClearND</a></h3>
 <p class="Blurb">Clears the particular array element</p>
 <pre>
-void cvClearND( CvArr* arr, int* idx );
+void cvClearND( CvArr* arr, const int* idx );
 </pre><p><dl>
 <dt>arr<dd>Input array.
 <dt>idx<dd>Array of the element indices
@@ -7321,10 +7321,23 @@ The retrieved index may be used to access local-thread data inside the paralleli
 <td width="25%%"></td>
 </tr>
 </table>
+<hr><h3>B</h3>
+<table width="100%">
+<tr>
+<td width="25%"><a href="#decl_cvBackProjectPCA">BackProjectPCA</a></td>
+<td width="25%%"></td>
+<td width="25%%"></td>
+</tr>
+</table>
 <hr><h3>C</h3>
 <table width="100%">
 <tr>
 <td width="25%"><a href="#decl_cvCalcCovarMatrix">CalcCovarMatrix</a></td>
+<td width="25%"><a href="#decl_cvCloneGraph">CloneGraph</a></td>
+<td width="25%"><a href="#decl_cvCreateGraph">CreateGraph</a></td>
+</tr>
+<tr>
+<td width="25%"><a href="#decl_cvCalcPCA">CalcPCA</a></td>
 <td width="25%"><a href="#decl_cvCloneImage">CloneImage</a></td>
 <td width="25%"><a href="#decl_cvCreateGraphScanner">CreateGraphScanner</a></td>
 </tr>
@@ -7388,11 +7401,6 @@ The retrieved index may be used to access local-thread data inside the paralleli
 <td width="25%"><a href="#decl_cvCreateData">CreateData</a></td>
 <td width="25%"><a href="#decl_cvCvtSeqToArray">CvtSeqToArray</a></td>
 </tr>
-<tr>
-<td width="25%"><a href="#decl_cvCloneGraph">CloneGraph</a></td>
-<td width="25%"><a href="#decl_cvCreateGraph">CreateGraph</a></td>
-<td width="25%%"></td>
-</tr>
 </table>
 <hr><h3>D</h3>
 <table width="100%">
@@ -7416,18 +7424,18 @@ The retrieved index may be used to access local-thread data inside the paralleli
 <table width="100%">
 <tr>
 <td width="25%"><a href="#decl_cvEigenVV">EigenVV</a></td>
+<td width="25%"><a href="#decl_cvEllipseBox">EllipseBox</a></td>
+<td width="25%"><a href="#decl_cvError">Error</a></td>
+</tr>
+<tr>
+<td width="25%"><a href="#decl_cvEllipse">Ellipse</a></td>
 <td width="25%"><a href="#decl_cvEndWriteSeq">EndWriteSeq</a></td>
 <td width="25%"><a href="#decl_cvErrorStr">ErrorStr</a></td>
 </tr>
 <tr>
-<td width="25%"><a href="#decl_cvEllipse">Ellipse</a></td>
+<td width="25%"><a href="#decl_cvEllipse2Poly">Ellipse2Poly</a></td>
 <td width="25%"><a href="#decl_cvEndWriteStruct">EndWriteStruct</a></td>
 <td width="25%"><a href="#decl_cvExp">Exp</a></td>
-</tr>
-<tr>
-<td width="25%"><a href="#decl_cvEllipse2Poly">Ellipse2Poly</a></td>
-<td width="25%"><a href="#decl_cvError">Error</a></td>
-<td width="25%%"></td>
 </tr>
 </table>
 <hr><h3>F</h3>
@@ -7457,22 +7465,22 @@ The retrieved index may be used to access local-thread data inside the paralleli
 <table width="100%">
 <tr>
 <td width="25%"><a href="#decl_cvGEMM">GEMM</a></td>
-<td width="25%"><a href="#decl_cvGetImageROI">GetImageROI</a></td>
+<td width="25%"><a href="#decl_cvGetMat">GetMat</a></td>
 <td width="25%"><a href="#decl_cvGetTickCount">GetTickCount</a></td>
 </tr>
 <tr>
 <td width="25%"><a href="#decl_cvGet*D">Get*D</a></td>
-<td width="25%"><a href="#decl_cvGetMat">GetMat</a></td>
+<td width="25%"><a href="#decl_cvGetModuleInfo">GetModuleInfo</a></td>
 <td width="25%"><a href="#decl_cvGetTickFrequency">GetTickFrequency</a></td>
 </tr>
 <tr>
 <td width="25%"><a href="#decl_cvGetCol">GetCol</a></td>
-<td width="25%"><a href="#decl_cvGetModuleInfo">GetModuleInfo</a></td>
+<td width="25%"><a href="#decl_cvGetNextSparseNode">GetNextSparseNode</a></td>
 <td width="25%"><a href="#decl_cvGraphAddEdge">GraphAddEdge</a></td>
 </tr>
 <tr>
 <td width="25%"><a href="#decl_cvGetDiag">GetDiag</a></td>
-<td width="25%"><a href="#decl_cvGetNextSparseNode">GetNextSparseNode</a></td>
+<td width="25%"><a href="#decl_cvGetNumThreads">GetNumThreads</a></td>
 <td width="25%"><a href="#decl_cvGraphAddEdgeByPtr">GraphAddEdgeByPtr</a></td>
 </tr>
 <tr>
@@ -7529,6 +7537,11 @@ The retrieved index may be used to access local-thread data inside the paralleli
 <td width="25%"><a href="#decl_cvGetImageCOI">GetImageCOI</a></td>
 <td width="25%"><a href="#decl_cvGetTextSize">GetTextSize</a></td>
 <td width="25%"><a href="#decl_cvmGet">Get</a></td>
+</tr>
+<tr>
+<td width="25%"><a href="#decl_cvGetImageROI">GetImageROI</a></td>
+<td width="25%"><a href="#decl_cvGetThreadNum">GetThreadNum</a></td>
+<td width="25%%"></td>
 </tr>
 </table>
 <hr><h3>I</h3>
@@ -7590,22 +7603,22 @@ The retrieved index may be used to access local-thread data inside the paralleli
 <tr>
 <td width="25%"><a href="#decl_cvMakeSeqHeaderForArray">MakeSeqHeaderForArray</a></td>
 <td width="25%"><a href="#decl_cvMemStorageAllocString">MemStorageAllocString</a></td>
-<td width="25%"><a href="#decl_cvMul">Mul</a></td>
+<td width="25%"><a href="#decl_cvMixChannels">MixChannels</a></td>
 </tr>
 <tr>
 <td width="25%"><a href="#decl_cvMat">Mat</a></td>
 <td width="25%"><a href="#decl_cvMerge">Merge</a></td>
-<td width="25%"><a href="#decl_cvMulSpectrums">MulSpectrums</a></td>
+<td width="25%"><a href="#decl_cvMul">Mul</a></td>
 </tr>
 <tr>
 <td width="25%"><a href="#decl_cvMax">Max</a></td>
 <td width="25%"><a href="#decl_cvMin">Min</a></td>
-<td width="25%"><a href="#decl_cvMulTransposed">MulTransposed</a></td>
+<td width="25%"><a href="#decl_cvMulSpectrums">MulSpectrums</a></td>
 </tr>
 <tr>
 <td width="25%"><a href="#decl_cvMaxS">MaxS</a></td>
 <td width="25%"><a href="#decl_cvMinMaxLoc">MinMaxLoc</a></td>
-<td width="25%%"></td>
+<td width="25%"><a href="#decl_cvMulTransposed">MulTransposed</a></td>
 </tr>
 </table>
 <hr><h3>N</h3>
@@ -7613,12 +7626,12 @@ The retrieved index may be used to access local-thread data inside the paralleli
 <tr>
 <td width="25%"><a href="#decl_cvNextGraphItem">NextGraphItem</a></td>
 <td width="25%"><a href="#decl_cvNorm">Norm</a></td>
-<td width="25%"><a href="#decl_cvNulDevReport">NulDevReport</a></td>
+<td width="25%"><a href="#decl_cvNot">Not</a></td>
 </tr>
 <tr>
 <td width="25%"><a href="#decl_cvNextTreeNode">NextTreeNode</a></td>
-<td width="25%"><a href="#decl_cvNot">Not</a></td>
-<td width="25%%"></td>
+<td width="25%"><a href="#decl_cvNormalize">Normalize</a></td>
+<td width="25%"><a href="#decl_cvNulDevReport">NulDevReport</a></td>
 </tr>
 </table>
 <hr><h3>O</h3>
@@ -7634,16 +7647,16 @@ The retrieved index may be used to access local-thread data inside the paralleli
 <tr>
 <td width="25%"><a href="#decl_cvPerspectiveTransform">PerspectiveTransform</a></td>
 <td width="25%"><a href="#decl_cvPow">Pow</a></td>
-<td width="25%"><a href="#decl_cvPutText">PutText</a></td>
+<td width="25%"><a href="#decl_cvPtr*D">Ptr*D</a></td>
 </tr>
 <tr>
 <td width="25%"><a href="#decl_cvPolarToCart">PolarToCart</a></td>
 <td width="25%"><a href="#decl_cvPrevTreeNode">PrevTreeNode</a></td>
-<td width="25%%"></td>
+<td width="25%"><a href="#decl_cvPutText">PutText</a></td>
 </tr>
 <tr>
 <td width="25%"><a href="#decl_cvPolyLine">PolyLine</a></td>
-<td width="25%"><a href="#decl_cvPtr*D">Ptr*D</a></td>
+<td width="25%"><a href="#decl_cvProjectPCA">ProjectPCA</a></td>
 <td width="25%%"></td>
 </tr>
 </table>
@@ -7651,62 +7664,67 @@ The retrieved index may be used to access local-thread data inside the paralleli
 <table width="100%">
 <tr>
 <td width="25%"><a href="#decl_cvRNG">RNG</a></td>
+<td width="25%"><a href="#decl_cvReadRealByName">ReadRealByName</a></td>
+<td width="25%"><a href="#decl_cvReleaseImageHeader">ReleaseImageHeader</a></td>
+</tr>
+<tr>
+<td width="25%"><a href="#decl_cvRandArr">RandArr</a></td>
 <td width="25%"><a href="#decl_cvReadString">ReadString</a></td>
 <td width="25%"><a href="#decl_cvReleaseMat">ReleaseMat</a></td>
 </tr>
 <tr>
-<td width="25%"><a href="#decl_cvRandArr">RandArr</a></td>
+<td width="25%"><a href="#decl_cvRandInt">RandInt</a></td>
 <td width="25%"><a href="#decl_cvReadStringByName">ReadStringByName</a></td>
 <td width="25%"><a href="#decl_cvReleaseMatND">ReleaseMatND</a></td>
 </tr>
 <tr>
-<td width="25%"><a href="#decl_cvRandInt">RandInt</a></td>
+<td width="25%"><a href="#decl_cvRandReal">RandReal</a></td>
 <td width="25%"><a href="#decl_cvRectangle">Rectangle</a></td>
 <td width="25%"><a href="#decl_cvReleaseMemStorage">ReleaseMemStorage</a></td>
 </tr>
 <tr>
-<td width="25%"><a href="#decl_cvRandReal">RandReal</a></td>
+<td width="25%"><a href="#decl_cvRandShuffle">RandShuffle</a></td>
 <td width="25%"><a href="#decl_cvRedirectError">RedirectError</a></td>
 <td width="25%"><a href="#decl_cvReleaseSparseMat">ReleaseSparseMat</a></td>
 </tr>
 <tr>
+<td width="25%"><a href="#decl_cvRange">Range</a></td>
+<td width="25%"><a href="#decl_cvReduce">Reduce</a></td>
+<td width="25%"><a href="#decl_cvRemoveNodeFromTree">RemoveNodeFromTree</a></td>
+</tr>
+<tr>
 <td width="25%"><a href="#decl_cvRead">Read</a></td>
 <td width="25%"><a href="#decl_cvRegisterModule">RegisterModule</a></td>
-<td width="25%"><a href="#decl_cvRemoveNodeFromTree">RemoveNodeFromTree</a></td>
+<td width="25%"><a href="#decl_cvRepeat">Repeat</a></td>
 </tr>
 <tr>
 <td width="25%"><a href="#decl_cvReadByName">ReadByName</a></td>
 <td width="25%"><a href="#decl_cvRegisterType">RegisterType</a></td>
-<td width="25%"><a href="#decl_cvRepeat">Repeat</a></td>
+<td width="25%"><a href="#decl_cvResetImageROI">ResetImageROI</a></td>
 </tr>
 <tr>
 <td width="25%"><a href="#decl_cvReadInt">ReadInt</a></td>
 <td width="25%"><a href="#decl_cvRelease">Release</a></td>
-<td width="25%"><a href="#decl_cvResetImageROI">ResetImageROI</a></td>
+<td width="25%"><a href="#decl_cvReshape">Reshape</a></td>
 </tr>
 <tr>
 <td width="25%"><a href="#decl_cvReadIntByName">ReadIntByName</a></td>
 <td width="25%"><a href="#decl_cvReleaseData">ReleaseData</a></td>
-<td width="25%"><a href="#decl_cvReshape">Reshape</a></td>
+<td width="25%"><a href="#decl_cvReshapeMatND">ReshapeMatND</a></td>
 </tr>
 <tr>
 <td width="25%"><a href="#decl_cvReadRawData">ReadRawData</a></td>
 <td width="25%"><a href="#decl_cvReleaseFileStorage">ReleaseFileStorage</a></td>
-<td width="25%"><a href="#decl_cvReshapeMatND">ReshapeMatND</a></td>
+<td width="25%"><a href="#decl_cvRestoreMemStoragePos">RestoreMemStoragePos</a></td>
 </tr>
 <tr>
 <td width="25%"><a href="#decl_cvReadRawDataSlice">ReadRawDataSlice</a></td>
 <td width="25%"><a href="#decl_cvReleaseGraphScanner">ReleaseGraphScanner</a></td>
-<td width="25%"><a href="#decl_cvRestoreMemStoragePos">RestoreMemStoragePos</a></td>
+<td width="25%"><a href="#decl_cvRound">Round</a></td>
 </tr>
 <tr>
 <td width="25%"><a href="#decl_cvReadReal">ReadReal</a></td>
 <td width="25%"><a href="#decl_cvReleaseImage">ReleaseImage</a></td>
-<td width="25%"><a href="#decl_cvRound">Round</a></td>
-</tr>
-<tr>
-<td width="25%"><a href="#decl_cvReadRealByName">ReadRealByName</a></td>
-<td width="25%"><a href="#decl_cvReleaseImageHeader">ReleaseImageHeader</a></td>
 <td width="25%%"></td>
 </tr>
 </table>
@@ -7715,96 +7733,96 @@ The retrieved index may be used to access local-thread data inside the paralleli
 <tr>
 <td width="25%"><a href="#decl_cvSVBkSb">SVBkSb</a></td>
 <td width="25%"><a href="#decl_cvSeqSlice">SeqSlice</a></td>
-<td width="25%"><a href="#decl_cvSetZero">SetZero</a></td>
+<td width="25%"><a href="#decl_cvSetSeqReaderPos">SetSeqReaderPos</a></td>
 </tr>
 <tr>
 <td width="25%"><a href="#decl_cvSVD">SVD</a></td>
 <td width="25%"><a href="#decl_cvSeqSort">SeqSort</a></td>
-<td width="25%"><a href="#decl_cvSolve">Solve</a></td>
+<td width="25%"><a href="#decl_cvSetZero">SetZero</a></td>
 </tr>
 <tr>
 <td width="25%"><a href="#decl_cvSave">Save</a></td>
 <td width="25%"><a href="#decl_cvSet">Set</a></td>
-<td width="25%"><a href="#decl_cvSolveCubic">SolveCubic</a></td>
+<td width="25%"><a href="#decl_cvSolve">Solve</a></td>
 </tr>
 <tr>
 <td width="25%"><a href="#decl_cvSaveMemStoragePos">SaveMemStoragePos</a></td>
 <td width="25%"><a href="#decl_cvSet*D">Set*D</a></td>
-<td width="25%"><a href="#decl_cvSplit">Split</a></td>
+<td width="25%"><a href="#decl_cvSolveCubic">SolveCubic</a></td>
 </tr>
 <tr>
 <td width="25%"><a href="#decl_cvScaleAdd">ScaleAdd</a></td>
 <td width="25%"><a href="#decl_cvSetAdd">SetAdd</a></td>
-<td width="25%"><a href="#decl_cvSqrt">Sqrt</a></td>
+<td width="25%"><a href="#decl_cvSplit">Split</a></td>
 </tr>
 <tr>
 <td width="25%"><a href="#decl_cvSeqElemIdx">SeqElemIdx</a></td>
 <td width="25%"><a href="#decl_cvSetData">SetData</a></td>
-<td width="25%"><a href="#decl_cvStartAppendToSeq">StartAppendToSeq</a></td>
+<td width="25%"><a href="#decl_cvSqrt">Sqrt</a></td>
 </tr>
 <tr>
 <td width="25%"><a href="#decl_cvSeqInsert">SeqInsert</a></td>
 <td width="25%"><a href="#decl_cvSetErrMode">SetErrMode</a></td>
-<td width="25%"><a href="#decl_cvStartNextStream">StartNextStream</a></td>
+<td width="25%"><a href="#decl_cvStartAppendToSeq">StartAppendToSeq</a></td>
 </tr>
 <tr>
 <td width="25%"><a href="#decl_cvSeqInsertSlice">SeqInsertSlice</a></td>
 <td width="25%"><a href="#decl_cvSetErrStatus">SetErrStatus</a></td>
-<td width="25%"><a href="#decl_cvStartReadRawData">StartReadRawData</a></td>
+<td width="25%"><a href="#decl_cvStartNextStream">StartNextStream</a></td>
 </tr>
 <tr>
 <td width="25%"><a href="#decl_cvSeqInvert">SeqInvert</a></td>
 <td width="25%"><a href="#decl_cvSetIPLAllocators">SetIPLAllocators</a></td>
-<td width="25%"><a href="#decl_cvStartReadSeq">StartReadSeq</a></td>
+<td width="25%"><a href="#decl_cvStartReadRawData">StartReadRawData</a></td>
 </tr>
 <tr>
 <td width="25%"><a href="#decl_cvSeqPartition">SeqPartition</a></td>
 <td width="25%"><a href="#decl_cvSetIdentity">SetIdentity</a></td>
-<td width="25%"><a href="#decl_cvStartWriteSeq">StartWriteSeq</a></td>
+<td width="25%"><a href="#decl_cvStartReadSeq">StartReadSeq</a></td>
 </tr>
 <tr>
 <td width="25%"><a href="#decl_cvSeqPop">SeqPop</a></td>
 <td width="25%"><a href="#decl_cvSetImageCOI">SetImageCOI</a></td>
-<td width="25%"><a href="#decl_cvStartWriteStruct">StartWriteStruct</a></td>
+<td width="25%"><a href="#decl_cvStartWriteSeq">StartWriteSeq</a></td>
 </tr>
 <tr>
 <td width="25%"><a href="#decl_cvSeqPopFront">SeqPopFront</a></td>
 <td width="25%"><a href="#decl_cvSetImageROI">SetImageROI</a></td>
-<td width="25%"><a href="#decl_cvStdErrReport">StdErrReport</a></td>
+<td width="25%"><a href="#decl_cvStartWriteStruct">StartWriteStruct</a></td>
 </tr>
 <tr>
 <td width="25%"><a href="#decl_cvSeqPopMulti">SeqPopMulti</a></td>
 <td width="25%"><a href="#decl_cvSetMemoryManager">SetMemoryManager</a></td>
-<td width="25%"><a href="#decl_cvSub">Sub</a></td>
+<td width="25%"><a href="#decl_cvStdErrReport">StdErrReport</a></td>
 </tr>
 <tr>
 <td width="25%"><a href="#decl_cvSeqPush">SeqPush</a></td>
 <td width="25%"><a href="#decl_cvSetNew">SetNew</a></td>
-<td width="25%"><a href="#decl_cvSubRS">SubRS</a></td>
+<td width="25%"><a href="#decl_cvSub">Sub</a></td>
 </tr>
 <tr>
 <td width="25%"><a href="#decl_cvSeqPushFront">SeqPushFront</a></td>
+<td width="25%"><a href="#decl_cvSetNumThreads">SetNumThreads</a></td>
+<td width="25%"><a href="#decl_cvSubRS">SubRS</a></td>
+</tr>
+<tr>
+<td width="25%"><a href="#decl_cvSeqPushMulti">SeqPushMulti</a></td>
 <td width="25%"><a href="#decl_cvSetReal*D">SetReal*D</a></td>
 <td width="25%"><a href="#decl_cvSubS">SubS</a></td>
 </tr>
 <tr>
-<td width="25%"><a href="#decl_cvSeqPushMulti">SeqPushMulti</a></td>
+<td width="25%"><a href="#decl_cvSeqRemove">SeqRemove</a></td>
 <td width="25%"><a href="#decl_cvSetRemove">SetRemove</a></td>
 <td width="25%"><a href="#decl_cvSum">Sum</a></td>
 </tr>
 <tr>
-<td width="25%"><a href="#decl_cvSeqRemove">SeqRemove</a></td>
+<td width="25%"><a href="#decl_cvSeqRemoveSlice">SeqRemoveSlice</a></td>
 <td width="25%"><a href="#decl_cvSetRemoveByPtr">SetRemoveByPtr</a></td>
 <td width="25%"><a href="#decl_cvmSet">Set</a></td>
 </tr>
 <tr>
-<td width="25%"><a href="#decl_cvSeqRemoveSlice">SeqRemoveSlice</a></td>
-<td width="25%"><a href="#decl_cvSetSeqBlockSize">SetSeqBlockSize</a></td>
-<td width="25%%"></td>
-</tr>
-<tr>
 <td width="25%"><a href="#decl_cvSeqSearch">SeqSearch</a></td>
-<td width="25%"><a href="#decl_cvSetSeqReaderPos">SetSeqReaderPos</a></td>
+<td width="25%"><a href="#decl_cvSetSeqBlockSize">SetSeqBlockSize</a></td>
 <td width="25%%"></td>
 </tr>
 </table>

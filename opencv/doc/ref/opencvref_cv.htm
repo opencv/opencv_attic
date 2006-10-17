@@ -1665,7 +1665,9 @@ The function <code>cvGetHuMoments</code> calculates seven Hu invariants that are
  h<sub>7</sub>=(3&eta;<sub>21</sub>-&eta;<sub>03</sub>)(&eta;<sub>21</sub>+&eta;<sub>03</sub>)[3(&eta;<sub>30</sub>+&eta;<sub>12</sub>)&sup2;-(&eta;<sub>21</sub>+&eta;<sub>03</sub>)&sup2;]-(&eta;<sub>30</sub>-3&eta;<sub>12</sub>)(&eta;<sub>21</sub>+&eta;<sub>03</sub>)[3(&eta;<sub>30</sub>+&eta;<sub>12</sub>)&sup2;-(&eta;<sub>21</sub>+&eta;<sub>03</sub>)&sup2;]
 </pre>
 <p>
-These values are proved to be invariants to the image scale, rotation, and
+where <code>&eta;<sub>i,j</sub></code> are normalized central moments of
+2-nd and 3-rd orders.
+The computed values are proved to be invariant to the image scaling, rotation, and
 reflection except the seventh one, whose sign is changed by reflection.
 </p>
 
@@ -1791,7 +1793,8 @@ And this is the output of the above program in case of probabilistic Hough trans
 <pre>
 CvSeq* cvHoughCircles( CvArr* image, void* circle_storage,
                        int method, double dp, double min_dist,
-                       double param1=100, double param2=100 );
+                       double param1=100, double param2=100,
+                       int min_radius=0, int max_radius=0 );
 </pre><p><dl>
 <dt>image<dd>The input 8-bit single-channel grayscale image.
 <dt>circle_storage<dd>The storage for the circles detected. It can be a memory storage (in this case
@@ -1815,6 +1818,9 @@ neighbor circles may be falsely detected in addition to a true one. If it is too
  In case of <code>CV_HOUGH_GRADIENT</code> it is accumulator threshold at the center detection stage.
  The smaller it is, the more false circles may be detected. Circles, corresponding to the larger accumulator
  values, will be returned first.
+<dt>min_radius<dd>Minimal radius of the circles to search for.
+<dt>max_radius<dd>Maximal radius of the circles to search for.
+ By default the maximal radius is set to <code>max(image_width, image_height)</code>.
 </dl><p>
 The function <code>cvHoughCircles</code> finds circles in grayscale image using some modification of Hough transform.</p>
 <h4>Example. Detecting circles with Hough transform.</h4>
@@ -2182,7 +2188,7 @@ Chi-Square (method=CV_COMP_CHISQR):
 d(H<sub>1</sub>,H<sub>2</sub>)=sum<sub>I</sub>[(H<sub>1</sub>(I)-H<sub>2</sub>(I))/(H<sub>1</sub>(I)+H<sub>2</sub>(I))]
 
 Intersection (method=CV_COMP_INTERSECT):
-d(H<sub>1</sub>,H<sub>2</sub>)=sum<sub>I</sub>max(H<sub>1</sub>(I),H<sub>2</sub>(I))
+d(H<sub>1</sub>,H<sub>2</sub>)=sum<sub>I</sub>min(H<sub>1</sub>(I),H<sub>2</sub>(I))
 
 Bhattacharyya distance (method=CV_COMP_BHATTACHARYYA):
 d(H<sub>1</sub>,H<sub>2</sub>)=sqrt(1-sum<sub>I</sub>(sqrt(H<sub>1</sub>(I)&bull;H<sub>2</sub>(I))))
@@ -2611,13 +2617,17 @@ the input one (1:1 correspondence).
 <pre>
 CvRect cvBoundingRect( CvArr* points, int update=0 );
 </pre><p><dl>
-<dt>points<dd>2D point set, either a sequence or vector (<code>CvMat</code>) of points.
+<dt>points<dd>Either a 2D point set, represented as a sequence (<code>CvSeq*</code>, <code>CvContour*</code>)
+  or vector (<code>CvMat*</code>) of points,
+  or 8-bit single-channel mask image (<code>CvMat*</code>, <code>IplImage*</code>),
+  in which non-zero pixels are considered.
 <dt>update<dd>The update flag. Here is list of possible combination of the flag values and type of <code>contour</code>:
 <ul>
-<li>update=0, contour ~ CvContour*: the bounding rectangle is not calculated, but it is taken from <code>rect</code> field of the contour header.
-<li>update=1, contour ~ CvContour*: the bounding rectangle is calculated and written to <code>rect</code> field of the contour header.
-<li>update=0, contour ~ CvSeq* or CvMat*: the bounding rectangle is calculated and returned.
-<li>update=1, contour ~ CvSeq* or CvMat*: runtime error is raised.
+<li><code>points</code> is CvContour*, <code>update</code>=0: the bounding rectangle is not calculated, but it is read from <code>rect</code> field of the contour header.
+<li><code>points</code> is CvContour*, <code>update</code>=1: the bounding rectangle is calculated and written to <code>rect</code> field of the contour header.
+For example, this mode is used by <a href="#decl_cvFindContours">cvFindContours</a>.
+<li><code>points</code> is CvSeq* or CvMat*: <code>update</code> is ignored,
+the bounding rectangle is calculated and returned.
 </ul></dl><p>
 The function <code>cvBoundingRect</code> returns the up-right bounding rectangle for 2d point set.
 </p>
@@ -2842,7 +2852,6 @@ void  cvFitLine( const CvArr* points, int dist_type, double param,
 <dt>param<dd>Numerical parameter (<code>C</code>) for some types of distances, if 0 then some optimal value is chosen.
 <dt>reps, aeps<dd>Sufficient accuracy for radius (distance between the coordinate origin and the line)
 and angle, respectively, 0.01 would be a good defaults for both.
-is used.
 <dt>line<dd>The output line parameters. In case of 2d fitting it is array of 4 floats <code>(vx, vy, x0, y0)</code>
 where <code>(vx, vy)</code> is a normalized vector collinear to the line and <code>(x0, y0)</code> is some point on the line.
 In case of 3D fitting it is array of 6 floats <code>(vx, vy, vz, x0, y0, z0)</code>
@@ -4247,8 +4256,9 @@ classifiers. The cascade has the following hierarchical structure:</p>
             ...
         ...
 </pre><p>
-The whole hierarchy can be constructed manually or loaded from a file or an
-embedded base using function <a href="#decl_cvLoadHaarClassifierCascade">cvLoadHaarClassifierCascade</a>.
+The whole hierarchy can be constructed manually or loaded from a file
+using functions <a href="#decl_cvLoadHaarClassifierCascade">cvLoadHaarClassifierCascade</a>
+or <a href="opencvref_cv.htm#decl_cvLoad">cvLoad</a>.
 </p>
 
 
@@ -5269,19 +5279,24 @@ to use multi-channel <code>Nx1</code> or <code>1xN</code> arrays.
 <hr><h3>G</h3>
 <table width="100%">
 <tr>
-<td width="25%"><a href="#decl_cvGetCentralMoment">GetCentralMoment</a></td>
+<td width="25%"><a href="#decl_cvGetAffineTransform">GetAffineTransform</a></td>
 <td width="25%"><a href="#decl_cvGetMinMaxHistValue">GetMinMaxHistValue</a></td>
 <td width="25%"><a href="#decl_cvGetRectSubPix">GetRectSubPix</a></td>
 </tr>
 <tr>
-<td width="25%"><a href="#decl_cvGetHistValue_*D">GetHistValue_*D</a></td>
+<td width="25%"><a href="#decl_cvGetCentralMoment">GetCentralMoment</a></td>
 <td width="25%"><a href="#decl_cvGetNormalizedCentralMoment">GetNormalizedCentralMoment</a></td>
 <td width="25%"><a href="#decl_cvGetSpatialMoment">GetSpatialMoment</a></td>
 </tr>
 <tr>
+<td width="25%"><a href="#decl_cvGetHistValue_*D">GetHistValue_*D</a></td>
+<td width="25%"><a href="#decl_cvGetPerspectiveTransform">GetPerspectiveTransform</a></td>
+<td width="25%"><a href="#decl_cvGoodFeaturesToTrack">GoodFeaturesToTrack</a></td>
+</tr>
+<tr>
 <td width="25%"><a href="#decl_cvGetHuMoments">GetHuMoments</a></td>
 <td width="25%"><a href="#decl_cvGetQuadrangleSubPix">GetQuadrangleSubPix</a></td>
-<td width="25%"><a href="#decl_cvGoodFeaturesToTrack">GoodFeaturesToTrack</a></td>
+<td width="25%%"></td>
 </tr>
 </table>
 <hr><h3>H</h3>
@@ -5296,8 +5311,8 @@ to use multi-channel <code>Nx1</code> or <code>1xN</code> arrays.
 <table width="100%">
 <tr>
 <td width="25%"><a href="#decl_cvInitUndistortMap">InitUndistortMap</a></td>
+<td width="25%"><a href="#decl_cvInpaint">Inpaint</a></td>
 <td width="25%"><a href="#decl_cvIntegral">Integral</a></td>
-<td width="25%%"></td>
 </tr>
 </table>
 <hr><h3>K</h3>
@@ -5352,17 +5367,17 @@ to use multi-channel <code>Nx1</code> or <code>1xN</code> arrays.
 <tr>
 <td width="25%"><a href="#decl_cvPOSIT">POSIT</a></td>
 <td width="25%"><a href="#decl_cvPreCornerDetect">PreCornerDetect</a></td>
-<td width="25%"><a href="#decl_cvPyrSegmentation">PyrSegmentation</a></td>
+<td width="25%"><a href="#decl_cvPyrMeanShiftFiltering">PyrMeanShiftFiltering</a></td>
 </tr>
 <tr>
 <td width="25%"><a href="#decl_cvPointPolygonTest">PointPolygonTest</a></td>
 <td width="25%"><a href="#decl_cvProjectPoints2">ProjectPoints2</a></td>
-<td width="25%"><a href="#decl_cvPyrUp">PyrUp</a></td>
+<td width="25%"><a href="#decl_cvPyrSegmentation">PyrSegmentation</a></td>
 </tr>
 <tr>
 <td width="25%"><a href="#decl_cvPointSeqFromMat">PointSeqFromMat</a></td>
 <td width="25%"><a href="#decl_cvPyrDown">PyrDown</a></td>
-<td width="25%%"></td>
+<td width="25%"><a href="#decl_cvPyrUp">PyrUp</a></td>
 </tr>
 </table>
 <hr><h3>Q</h3>
@@ -5450,7 +5465,7 @@ to use multi-channel <code>Nx1</code> or <code>1xN</code> arrays.
 <tr>
 <td width="25%"><a href="#decl_cvWarpAffine">WarpAffine</a></td>
 <td width="25%"><a href="#decl_cvWarpPerspective">WarpPerspective</a></td>
-<td width="25%"><a href="#decl_cvWarpPerspectiveQMatrix">WarpPerspectiveQMatrix</a></td>
+<td width="25%"><a href="#decl_cvWatershed">Watershed</a></td>
 </tr>
 </table>
 
