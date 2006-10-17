@@ -102,6 +102,12 @@ CvCapture;
 
 #ifdef WIN32
 #define HAVE_VFW 1
+
+/* uncomment to enable OpenEXR codec (will not compile under MSVC6) */ 
+//#define HAVE_ILMIMF 1
+
+/* uncomment to enable CMUCamera1394 fireware camera module */
+//#define HAVE_CMU1394 1
 #endif
 
 
