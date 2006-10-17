@@ -14,7 +14,7 @@ How to build and use it:
 
 3. Choose the appropriate configuration
    ("Release" for IPP 4.x, "Release IPP5" for IPP 5.0.x,
-    "Release IPP5_1" for IPP 5.1.x)
+    "Release IPP5_1" for IPP 5.1.x or later versions)
    and build it.
 
 4. You will get ippopencv<nnn>.dll in <OpenCV_install_path>\bin that you may
