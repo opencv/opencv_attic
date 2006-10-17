@@ -47,7 +47,7 @@ RSC=rc.exe
 # PROP Target_Dir ""
 F90=df.exe
 # ADD BASE CPP /nologo /W3 /GX /O2 /D "WIN32" /D "NDEBUG" /D "_CONSOLE" /D "_MBCS" /YX /FD /c
-# ADD CPP /nologo /W4 /Gm /GX /Zi /O2 /I "../../cxcore/include" /I "../../cv/include" /I "../../otherlibs/highgui" /D "WIN32" /D "NDEBUG" /D "_CONSOLE" /D "_MBCS" /YX /FD /c
+# ADD CPP /nologo /MD /W4 /Gm /GX /Zi /O2 /I "../../cxcore/include" /I "../../cv/include" /I "../../otherlibs/highgui" /D "WIN32" /D "NDEBUG" /D "_CONSOLE" /D "_MBCS" /YX /FD /c
 # ADD BASE RSC /l 0x409 /d "NDEBUG"
 # ADD RSC /l 0x409 /d "NDEBUG"
 BSC32=bscmake.exe
@@ -72,7 +72,7 @@ LINK32=xilink6.exe
 # PROP Target_Dir ""
 F90=df.exe
 # ADD BASE CPP /nologo /W3 /Gm /GX /ZI /Od /D "WIN32" /D "_DEBUG" /D "_CONSOLE" /D "_MBCS" /YX /FD /GZ /c
-# ADD CPP /nologo /W4 /Gm /GX /Zi /Od /I "../../cxcore/include" /I "../../cv/include" /I "../../otherlibs/highgui" /D "WIN32" /D "_DEBUG" /D "_CONSOLE" /D "_MBCS" /YX /FD /GZ /c
+# ADD CPP /nologo /MDd /W4 /Gm /GX /Zi /Od /I "../../cxcore/include" /I "../../cv/include" /I "../../otherlibs/highgui" /D "WIN32" /D "_DEBUG" /D "_CONSOLE" /D "_MBCS" /YX /FD /GZ /c
 # ADD BASE RSC /l 0x409 /d "_DEBUG"
 # ADD RSC /l 0x409 /d "_DEBUG"
 BSC32=bscmake.exe
@@ -98,7 +98,7 @@ LINK32=xilink6.exe
 # PROP Target_Dir ""
 F90=df.exe
 # ADD BASE CPP /nologo /W4 /Gm /GX /Zi /O2 /I "../../cxcore/include" /I "../../cv/include" /I "../../otherlibs/highgui" /D "WIN32" /D "NDEBUG" /D "_CONSOLE" /D "_MBCS" /YX /FD /c
-# ADD CPP /nologo /W4 /Gm /GX /Zi /O2 /I "../../cxcore/include" /I "../../cv/include" /I "../../otherlibs/highgui" /D "_CONSOLE" /D "_MBCS" /D "NDEBUG" /D "WIN32" /D "WIN64" /D "EM64T" /YX /FD /c
+# ADD CPP /nologo /MD /W4 /Gm /GX /Zi /O2 /I "../../cxcore/include" /I "../../cv/include" /I "../../otherlibs/highgui" /D "_CONSOLE" /D "_MBCS" /D "NDEBUG" /D "WIN32" /D "WIN64" /D "EM64T" /YX /FD /c
 # ADD BASE RSC /l 0x409 /d "NDEBUG"
 # ADD RSC /l 0x409 /d "NDEBUG"
 BSC32=bscmake.exe
@@ -125,7 +125,7 @@ LINK32=xilink6.exe
 # PROP Target_Dir ""
 F90=df.exe
 # ADD BASE CPP /nologo /W4 /Gm /GX /Zi /Od /I "../../cxcore/include" /I "../../cv/include" /I "../../otherlibs/highgui" /D "WIN32" /D "_DEBUG" /D "_CONSOLE" /D "_MBCS" /YX /FD /GZ /c
-# ADD CPP /nologo /W4 /Gm /GX /Zi /Od /I "../../cxcore/include" /I "../../cv/include" /I "../../otherlibs/highgui" /D "_CONSOLE" /D "_MBCS" /D "_DEBUG" /D "WIN32" /D "WIN64" /D "EM64T" /YX /FD /Wp64 /c
+# ADD CPP /nologo /MDd /W4 /Gm /GX /Zi /Od /I "../../cxcore/include" /I "../../cv/include" /I "../../otherlibs/highgui" /D "_CONSOLE" /D "_MBCS" /D "_DEBUG" /D "WIN32" /D "WIN64" /D "EM64T" /YX /FD /Wp64 /c
 # ADD BASE RSC /l 0x409 /d "_DEBUG"
 # ADD RSC /l 0x409 /d "_DEBUG"
 BSC32=bscmake.exe
@@ -152,7 +152,7 @@ LINK32=xilink6.exe
 # PROP Target_Dir ""
 F90=df.exe
 # ADD BASE CPP /nologo /W4 /Gm /GX /Zi /O2 /I "../../cxcore/include" /I "../../cv/include" /I "../../otherlibs/highgui" /D "_CONSOLE" /D "_MBCS" /D "NDEBUG" /D "WIN32" /D "EM64T" /YX /FD /c
-# ADD CPP /nologo /w /W0 /Gm /GX /Zi /O2 /I "../../cxcore/include" /I "../../cv/include" /I "../../otherlibs/highgui" /D "_CONSOLE" /D "_MBCS" /D "NDEBUG" /D "WIN32" /D "WIN64" /YX /FD /c
+# ADD CPP /nologo /MD /w /W0 /Gm /GX /Zi /O2 /I "../../cxcore/include" /I "../../cv/include" /I "../../otherlibs/highgui" /D "_CONSOLE" /D "_MBCS" /D "NDEBUG" /D "WIN32" /D "WIN64" /YX /FD /c
 # ADD BASE RSC /l 0x409 /d "NDEBUG"
 # ADD RSC /l 0x409 /d "NDEBUG"
 BSC32=bscmake.exe
@@ -180,7 +180,7 @@ LINK32=xilink6.exe
 # PROP Target_Dir ""
 F90=df.exe
 # ADD BASE CPP /nologo /W4 /Gm /GX /Zi /Od /I "../../cxcore/include" /I "../../cv/include" /I "../../otherlibs/highgui" /D "_CONSOLE" /D "_MBCS" /D "_DEBUG" /D "WIN32" /D "EM64T" /YX /FD /Wp64 /c
-# ADD CPP /nologo /W3 /Gm /GX /Zi /Od /I "../../cxcore/include" /I "../../cv/include" /I "../../otherlibs/highgui" /D "_CONSOLE" /D "_MBCS" /D "_DEBUG" /D "WIN32" /D "WIN64" /YX /FD /Qwd167 /c
+# ADD CPP /nologo /MDd /W3 /Gm /GX /Zi /Od /I "../../cxcore/include" /I "../../cv/include" /I "../../otherlibs/highgui" /D "_CONSOLE" /D "_MBCS" /D "_DEBUG" /D "WIN32" /D "WIN64" /YX /FD /Qwd167 /c
 # ADD BASE RSC /l 0x409 /d "_DEBUG"
 # ADD RSC /l 0x409 /d "_DEBUG"
 BSC32=bscmake.exe
