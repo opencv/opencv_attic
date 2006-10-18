@@ -265,6 +265,24 @@ IPCVAPI_EX( CvStatus, icvSum_##flavor##_C4R,                                \
                                          ( const srctype* img, int imgstep, \
                                            CvSize size, double* sum ))
 
+#define IPCV_DEF_SUM_NOHINT_NO_IPP( flavor, srctype )                       \
+IPCVAPI_EX( CvStatus, icvSum_##flavor##_C1R,                                \
+            "ippiSum_" #flavor "_C1R", 0,                                   \
+                                         ( const srctype* img, int imgstep, \
+                                           CvSize size, double* sum ))      \
+IPCVAPI_EX( CvStatus, icvSum_##flavor##_C2R,                                \
+           "ippiSum_" #flavor "_C2R", 0,                                    \
+                                         ( const srctype* img, int imgstep, \
+                                           CvSize size, double* sum ))      \
+IPCVAPI_EX( CvStatus, icvSum_##flavor##_C3R,                                \
+           "ippiSum_" #flavor "_C3R", 0,                                    \
+                                         ( const srctype* img, int imgstep, \
+                                           CvSize size, double* sum ))      \
+IPCVAPI_EX( CvStatus, icvSum_##flavor##_C4R,                                \
+           "ippiSum_" #flavor "_C4R", 0,                                    \
+                                         ( const srctype* img, int imgstep, \
+                                           CvSize size, double* sum ))
+
 #define IPCV_DEF_SUM_HINT( flavor, srctype )                                \
 IPCVAPI_EX( CvStatus, icvSum_##flavor##_C1R,                                \
             "ippiSum_" #flavor "_C1R", CV_PLUGINS1(CV_PLUGIN_IPPI),         \
@@ -284,8 +302,8 @@ IPCVAPI_EX( CvStatus, icvSum_##flavor##_C4R,                                \
                           CvSize size, double* sum, CvHintAlgorithm ))
 
 IPCV_DEF_SUM_NOHINT( 8u, uchar )
-IPCV_DEF_SUM_NOHINT( 16u, ushort )
 IPCV_DEF_SUM_NOHINT( 16s, short )
+IPCV_DEF_SUM_NOHINT_NO_IPP( 16u, ushort )
 IPCV_DEF_SUM_NOHINT( 32s, int )
 IPCV_DEF_SUM_HINT( 32f, float )
 IPCV_DEF_SUM_NOHINT( 64f, double )
