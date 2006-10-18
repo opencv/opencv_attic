@@ -949,7 +949,7 @@ double CxCore_MatrixTestImpl::get_success_error_level( int test_case_idx, int i,
 {
     int input_depth = CV_MAT_DEPTH(cvGetElemType( test_array[INPUT][0] ));
     double input_precision = input_depth < CV_32F ? 0 : input_depth == CV_32F ?
-                            FLT_EPSILON*128 : DBL_EPSILON*1024;
+                            1e-5 : 5e-12;
     double output_precision = CvArrTest::get_success_error_level( test_case_idx, i, j );
     return MAX(input_precision, output_precision);
 }

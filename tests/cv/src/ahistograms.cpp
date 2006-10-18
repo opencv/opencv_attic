@@ -1719,7 +1719,7 @@ cvTsCalcBackProjectPatch( IplImage** images, IplImage* dst, CvSize patch_size,
 int CV_CalcBackProjectPatchTest::validate_test_results( int /*test_case_idx*/ )
 {
     int code = CvTS::OK;
-    double err_level = 1e-3;
+    double err_level = 5e-3;
 
     cvTsCalcBackProjectPatch( images, images[CV_MAX_DIM+1],
         patch_size, hist[0], method, factor, channels );
