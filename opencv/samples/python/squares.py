@@ -31,7 +31,7 @@ def findSquares4( img, storage ):
     # create empty sequence that will contain points -
     # 4 points per square (the square's vertices)
     squares = cvCreateSeq( 0, sizeof_CvSeq, sizeof_CvPoint, storage );
-    squares = CvSeq_Point.cast( squares )
+    squares = CvSeq_CvPoint.cast( squares )
 
     # select the maximum ROI in the image
     # with the width and height divisible by 2
