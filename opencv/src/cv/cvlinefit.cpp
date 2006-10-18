@@ -40,13 +40,13 @@
 //M*/
 #include "_cv.h"
 
-#define _FP double
+static const double eps = 1e-6;
 
 static CvStatus
 icvFitLine2D_wods( CvPoint2D32f * points, int _count, float *weights, float *line )
 {
-    _FP x = 0, y = 0, x2 = 0, y2 = 0, xy = 0, w = 0;
-    _FP dx2, dy2, dxy;
+    double x = 0, y = 0, x2 = 0, y2 = 0, xy = 0, w = 0;
+    double dx2, dy2, dxy;
     int i;
     int count = _count;
     float t;
@@ -205,6 +205,7 @@ icvFitLine3D_wods( CvPoint3D32f * points, int count, float *weights, float *line
 #endif
     v = &evc[i * 3];
     n = (float) sqrt( (double)v[0] * v[0] + (double)v[1] * v[1] + (double)v[2] * v[2] );
+    n = (float)MAX(n, eps);
     line[0] = v[0] / n;
     line[1] = v[1] / n;
     line[2] = v[2] / n;
@@ -272,7 +273,8 @@ icvWeightL1( float *d, int count, float *w )
 
     for( i = 0; i < count; i++ )
     {
-        w[i] = 1 / (float) fabs( (double) d[i] );
+        double t = fabs( (double) d[i] );
+        w[i] = (float)(1. / MAX(t, eps));
     }
 }
 
@@ -346,7 +348,6 @@ static CvStatus  icvFitLine2D( CvPoint2D32f * points, int count, int dist,
     int first = 1;
     float rdelta = reps != 0 ? reps : 1.0f;
     float adelta = aeps != 0 ? aeps : 0.01f;
-    CvStatus ret;
 
     memset( line, 0, 4*sizeof(line[0]) );
 
@@ -389,7 +390,7 @@ static CvStatus  icvFitLine2D( CvPoint2D32f * points, int count, int dist,
     for( i = 0; i < count; i++ )
         w[i] = 1.0f;
 
-    ret = icvFitLine2D_wods( points, count, 0, _line );
+    icvFitLine2D_wods( points, count, 0, _line );
     for( i = 0; i < 100; i++ )
     {
         double sum_w = 0;
@@ -400,8 +401,10 @@ static CvStatus  icvFitLine2D( CvPoint2D32f * points, int count, int dist,
         }
         else
         {
-            if( fabs( acos( (float) (_line[0] * _lineprev[0] + _line[1] * _lineprev[1]) ))
-                < adelta )
+            double t = _line[0] * _lineprev[0] + _line[1] * _lineprev[1];
+            t = MAX(t,-1.);
+            t = MIN(t,1.);
+            if( fabs(acos(t)) < adelta )
             {
                 float x, y, d;
 
@@ -448,7 +451,7 @@ static CvStatus  icvFitLine2D( CvPoint2D32f * points, int count, int dist,
         memcpy( _lineprev, _line, 4 * sizeof( float ));
 
         /* Run again... */
-        ret = icvFitLine2D_wods( points, count, w, _line );
+        icvFitLine2D_wods( points, count, w, _line );
     }
 
 _exit_:
@@ -477,7 +480,6 @@ icvFitLine3D( CvPoint3D32f * points, int count, int dist,
     int first = 1;
     float rdelta = reps != 0 ? reps : 1.0f;
     float adelta = aeps != 0 ? aeps : 0.01f;
-    CvStatus ret;
 
     memset( line, 0, 6*sizeof(line[0]) );
 
@@ -521,7 +523,7 @@ icvFitLine3D( CvPoint3D32f * points, int count, int dist,
     for( i = 0; i < count; i++ )
         w[i] = 1.0f;
 
-    ret = icvFitLine3D_wods( points, count, 0, _line );
+    icvFitLine3D_wods( points, count, 0, _line );
     for( i = 0; i < 100; i++ )
     {
         double sum_w = 0;
@@ -532,11 +534,10 @@ icvFitLine3D( CvPoint3D32f * points, int count, int dist,
         }
         else
         {
-            if( fabs
-                ( acos
-                  ( (float)
-                    (_line[0] * _lineprev[0] + _line[1] * _lineprev[1] +
-                     _line[2] * _lineprev[2]) )) < adelta )
+            double t = _line[0] * _lineprev[0] + _line[1] * _lineprev[1] + _line[2] * _lineprev[2];
+            t = MAX(t,-1.);
+            t = MIN(t,1.);
+            if( fabs(acos(t)) < adelta )
             {
                 float x, y, z, ax, ay, az, dx, dy, dz, d;
 
@@ -590,7 +591,7 @@ icvFitLine3D( CvPoint3D32f * points, int count, int dist,
         memcpy( _lineprev, _line, 6 * sizeof( float ));
 
         /* Run again... */
-        ret = icvFitLine3D_wods( points, count, w, _line );
+        icvFitLine3D_wods( points, count, w, _line );
     }
 _exit_:
     // Return...
