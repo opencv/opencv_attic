@@ -134,7 +134,6 @@ int main( int argc, char** argv )
 
             cvAddWeighted( wshed, 0.5, img_gray, 0.5, 0, wshed );
             cvShowImage( "watershed transform", wshed );
-            cvWaitKey();
             cvReleaseMemStorage( &storage );
             cvReleaseMat( &color_tab );
         }

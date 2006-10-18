@@ -432,12 +432,20 @@ int main( int argc, char** argv )
         text_origin.x = view->width - text_size.width - 10;
         text_origin.y = view->height - base_line - 10;
 
-        if( image_count > 0 )
-            sprintf( s, "%d/%d", image_points_seq ? image_points_seq->total : 0, image_count );
+        if( mode == CAPTURING )
+        {
+            if( image_count > 0 )
+                sprintf( s, "%d/%d", image_points_seq ? image_points_seq->total : 0, image_count );
+            else
+                sprintf( s, "%d/?", image_points_seq ? image_points_seq->total : 0 );
+        }
+        else if( mode == CALIBRATED )
+            sprintf( s, "Calibrated" );
         else
-            sprintf( s, "%d/?", image_points_seq ? image_points_seq->total : 0 );
+            sprintf( s, "Press 'g' to start" );
 
-        cvPutText( view, s, text_origin, &font, CV_RGB(255,0,0) );
+        cvPutText( view, s, text_origin, &font, mode != CALIBRATED ?
+                                   CV_RGB(255,0,0) : CV_RGB(0,255,0));
 
         if( blink )
             cvNot( view, view );
