@@ -28,7 +28,7 @@ def minarea_array(img, count):
     
 def minarea_seq(img, count, storage):
     ptseq = cvCreateSeq( CV_SEQ_KIND_GENERIC | CV_32SC2, sizeof_CvContour, sizeof_CvPoint, storage )
-    ptseq = CvSeq_Point.cast( ptseq )
+    ptseq = CvSeq_CvPoint.cast( ptseq )
     for i in range(count):
         pt0 = cvPoint( randint(img.width/4, img.width*3/4),
                        randint(img.height/4, img.height*3/4) )
