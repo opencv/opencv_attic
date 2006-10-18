@@ -218,7 +218,7 @@
 
 #define CV_SUBMINOR_VERSION 9
 
-#define CV_VERSION          "0.9.9"
+#define CV_VERSION          "1.0.0"
 
 #define CV_PI   3.1415926535897932384626433832795
 
