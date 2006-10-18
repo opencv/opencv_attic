@@ -342,7 +342,7 @@ typedef struct CvPluginInfo
 CvPluginInfo;
 
 static CvPluginInfo plugins[CV_PLUGIN_MAX];
-static CvModuleInfo cxcore_info = { 0, "cxcore", "rc (" CV_VERSION ")", cxcore_ipp_tab };
+static CvModuleInfo cxcore_info = { 0, "cxcore", CV_VERSION, cxcore_ipp_tab };
 
 CvModuleInfo *CvModule::first = 0, *CvModule::last = 0;
 
