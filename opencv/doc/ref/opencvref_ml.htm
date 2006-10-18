@@ -1589,12 +1589,11 @@ http://www.stat.berkeley.edu/users/breiman/RandomForests/cc_home.htm</a>.</li>
 struct CvRTParams : public CvDTreeParams
 {
     bool calc_var_importance;
-    bool calc_proximities;
     int nactive_vars;
     CvTermCriteria term_crit;
 
     CvRTParams() : CvDTreeParams( 5, 10, 0, false, 10, 0, false, false, 0 ),
-        calc_var_importance(false), calc_proximities(false), nactive_vars(0)
+        calc_var_importance(false), nactive_vars(0)
     {
         term_crit = cvTermCriteria( CV_TERMCRIT_ITER+CV_TERMCRIT_EPS, 50, 0.1 );
     }
@@ -1602,7 +1601,7 @@ struct CvRTParams : public CvDTreeParams
     CvRTParams( int _max_depth, int _min_sample_count,
                 float _regression_accuracy, bool _use_surrogates,
                 int _max_categories, const float* _priors,
-                bool _calc_var_importance, bool _calc_proximities,
+                bool _calc_var_importance,
                 int _nactive_vars, int max_tree_count,
                 float forest_accuracy, int termcrit_type );
 };
@@ -1611,13 +1610,6 @@ struct CvRTParams : public CvDTreeParams
 <dt>calc_var_importance<dd>If it is set, then variable importance
     is computed by the training procedure. To retrieve the computed variable importance array,
     call the method <code>CvRTrees::get_var_importance()</code>.
-<dt>calc_proximities<dd>If it is set, then proximity measure between the training
-    samples is computed by the training procedure.
-    To retrieve the proximity between the i-th and the j-st samples, call
-    <code>CvRTrees::get_proximity(i, j)</code>.
-    Note, that proximity matrix for the training set of <code>n</code> samples
-    takes <code>O(n<sup>2</sup>)</code> storage, that may be a huge number volume
-    in case of large training sets.
 <dt>nactive_vars<dd>The number of variables that are randomly selected at each tree
     node and that are used to find the best split(s).
 <dt>term_crit<dd>Termination criteria for growing the forest:
@@ -1650,7 +1642,7 @@ public:
     virtual void clear();
 
     virtual const CvMat* get_var_importance();
-    virtual float get_proximity( int i, int j ) const;
+    virtual float get_proximity( const CvMat* sample_1, const CvMat* sample_2 ) const;
 
     virtual void read( CvFileStorage* fs, CvFileNode* node );
     virtual void write( CvFileStorage* fs, const char* name );
@@ -1722,12 +1714,11 @@ after the training.
 <hr><h3><a name="decl_CvRTrees_get_proximity">CvRTrees::get_proximity</a></h3>
 <p class="Blurb">Retrieves proximitity measure between two training samples</p>
 <pre>
-float CvRTrees::get_proximity( int i, int j ) const;
+float CvRTrees::get_proximity( const CvMat* sample_1, const CvMat* sample_2 ) const;
 </pre>
-<p>The method returns proximity measure between any two samples used for training.
-The indices are 0-based and are measured relatively to the specified <code>sample_idx</code>, if any.
-For example, if <code>sample_idx=[1, 5, 10, 100, 130]</code>, then <code>get_proximity(1,3)</code>
-will return proximity measure for the samples #5 and #100.</p>
+<p>The method returns proximity measure between any two samples
+(the ratio of the those trees in the ensemble, in which the samples fall into
+the same leaf node, to the total number of the trees).</p>
 
 <hr><h4>Example. Prediction of mushroom edibility using random trees classifier</h4>
 <pre>
