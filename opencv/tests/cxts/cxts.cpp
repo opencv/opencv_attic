@@ -1123,7 +1123,7 @@ void CvTS::set_data_path( const char* data_path )
         delete[] params.data_path;
     if( data_path )
     {
-        int size = strlen(data_path)+1;
+        int size = (int)strlen(data_path)+1;
         bool append_slash = data_path[size-1] != '/' && data_path[size-1] != '\\';
         params.data_path = new char[size+1];
         memcpy( params.data_path, data_path, size );
