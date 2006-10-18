@@ -217,13 +217,16 @@ float** CV_BaseHistTest::get_hist_ranges( int /*test_case_idx*/ )
             {
                 int j, n = dims[i], ofs = dims_sum[i];
                 // generate logarithmic scale
-                double delta, q, val;
+                double delta, q = 2., val;
                 for( j = 0; j < 10; j++ )
                 {
                     if( (pow(1+(j+1)*0.1,(double)n)-1)*10/(j+1) >= _high-_low )
+                    {
+                        q = 1. + j*0.1;
                         break;
+                    }
                 }
-                q = 1 + j*0.1;
+                
                 delta = q < 1.1 ? (_high-_low)/n : (_high - _low)*(q - 1)/(pow(q,(double)n) - 1);
                 val = _low;
                 
