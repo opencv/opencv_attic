@@ -1,5 +1,59 @@
 =============================================================================
-                      OpenCV RC1, August 11, 2006
+                      OpenCV 1.0, October 18, 2006
+=============================================================================
+
+>>> New functionality/features: <<<
+
+  - General:
+    * Windows installation package now includes precompiled Python module
+    * Borland C++ (v5.6+) makefiles added (see _make\make_all_bc.mak)
+
+  - CV:
+    * Inpainting was added, see samples/c/inpaint.cpp
+      (thanks to Alexander Kibkalo and Alexey Kalinichenko)
+
+  - MLL:
+    * Boosted tree classifiers added, see MLL reference manual
+
+  - HighGUI:
+    * Jpeg2000 and EXR support in highgui using JasPer and OpenEXR (thanks to Nils Hasler)
+      OpenEXR is not built-in to highgui on Windows by default. See
+      otherlibs/_graphics/readme.txt.
+    * >8-bit image input/output for PNG, Jpeg2000 and OpenEXR (thanks to Nils Hasler)
+    * Updated CMUcamera wrapper.
+    * Several V4L2 improvements and fixes
+  
+  - New samples (opencv/samples):
+    * Camera calibration sample: calibrate.cpp
+    * Inpainting sample: inpaint.cpp
+    * Letter recognition using the existing database with
+      random trees/boosted trees/neural nets: leter_recog.cpp
+    * A few new Python samples.
+
+  - Tests:
+    * Most old cv tests have been rewritten/converted to use cxts instead of trs.
+      TRS is not used by the tests anymore.
+    
+>>> Bug fixes: <<<
+     Many thanks to everybody who submitted bug reports and/or provided the patches!
+
+     * Incorrect normalization in cvFindFundamentalMat (SF #1550855)
+     * Occasional cvGetQuadrangleSubPix crashes (SF #1549168)
+     * Occasional cvCalcOpticalFlowPyrLK crashes
+     * Internal GCC 3.x error in cvFloor/cvCeil (SF #1546657)
+     * Several Python-related bugs (SF #1570109, SF #1572800, SF #1543593)
+     * Bugs in contour processing/rendering (SF #1550889, 
+     * x86-64 related bugs (SF #1526133, SF #1527997)
+     * OpenCV dispatcher tried to load old versions of IPP (pre 4.x)
+       that caused many failures (see SF #1555093, for example)
+     * Inaccurate results in some cases in cvFitEllipse, cvFitLine, cvHoughCircles.
+     * Severe bug in Bayesian classifier, broken regression tree in MLL
+     * Numeric values in XML/YAML were emitted/parsed incorrectly
+       on some non-US locales in Linux
+     * ...
+
+=============================================================================
+                      OpenCV 1.0 RC1, August 11, 2006
 =============================================================================
 
 >>> New functionality/features: <<<

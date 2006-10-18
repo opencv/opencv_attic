@@ -52,7 +52,7 @@ jasper-1.701.0 - JasPer is a collection of software
              The JasPer license can be found in src/libjasper.
              
              OpenCV on Windows uses pre-built libjasper library
-             (libs/libjasper*). To get the latest source code,
+             (lib/libjasper*). To get the latest source code,
              please, visit the project homepage:
              http://www.ece.uvic.ca/~mdadams/jasper/
 
@@ -67,12 +67,19 @@ openexr-1.4.0 - OpenEXR is a high dynamic-range (HDR) image file format develope
 
              The project homepage: http://www.openexr.com/
 
-             OpenCV on Windows uses pre-built libraries from openexr package:
-             half.lib, iex.lib, ilmimf.lib ilmthread.lib imath.lib
-
-             In the distributed highgui*.dll the format is not supported, because
-             of limitations of the used compiler (MSVC6).
-             To add the support to highgui, rebuilt it with VS2005.
+             OpenCV on Windows does not include openexr codec by default.
+             To add it, you will need to recompile highgui with OpenEXR support
+             using VS.NET2003 or VS.NET2005 (MSVC6 can not compile it):
+             1) download binaries (e.g. openexr-1.4.0-vs2005.zip)
+                from the official site.
+             2) copy
+                half.lib, iex.lib, ilmimf.lib ilmthread.lib imath.lib to
+                _graphics/lib
+             3) copy include/openexr/*.h to _graphics/include/openexr
+             4) open _make/opencv.sln
+             5) in highgui/_highgui.h uncomment
+                #define HAVE_ILMIMF 1
+             6) build debug/release configurations of highgui.
 
 ------------------------------------------------------------------------------------
 
