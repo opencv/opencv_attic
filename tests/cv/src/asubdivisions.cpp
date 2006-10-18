@@ -274,11 +274,11 @@ int CV_SubdivTest::validate_test_results( int /*test_case_idx*/ )
             CvPoint2D32f ptt;
             CV_READ_SEQ_ELEM( ptt, reader );
 
-            double distance = icvSqDist2D32f( ptt, pt );
-            if( minDistance > distance )
+            double distance = icvSqDist2D32f( pt, ptt );
+            if( minDistance > distance && icvSqDist2D32f(ptt, point->pt) > FLT_EPSILON*1000 )
             {
-                ts->printf( CvTS::LOG, "The triangulation vertex (%.1f,%.1f) was said to be nearest to (%.1f,%.1f),\n"
-                    "whereas another vertex (%.1f,%.1f) is closer\n",
+                ts->printf( CvTS::LOG, "The triangulation vertex (%.3f,%.3f) was said to be nearest to (%.3f,%.3f),\n"
+                    "whereas another vertex (%.3f,%.3f) is closer\n",
                     point->pt.x, point->pt.y, pt.x, pt.y, ptt.x, ptt.y );
                 code = CvTS::FAIL_BAD_ACCURACY;
                 goto _exit_;

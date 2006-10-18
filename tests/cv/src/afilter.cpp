@@ -1875,7 +1875,7 @@ int CV_FeatureSelBaseTestImpl::write_default_params( CvFileStorage* fs )
 double CV_FeatureSelBaseTestImpl::get_success_error_level( int /*test_case_idx*/, int /*i*/, int /*j*/ )
 {
     int depth = CV_MAT_DEPTH(test_mat[INPUT][0].type);
-    return depth <= CV_8S ? 1e-2 : depth == CV_32F ? 1e-3 : 1e-10;
+    return depth <= CV_8S ? 3e-2 : depth == CV_32F ? 1e-3 : 1e-10;
 }
 
 
