@@ -2,7 +2,7 @@
 
 [Setup]
 AppName=Intel(R) Open Source Computer Vision Library
-AppVerName=Intel(R) Open Source Computer Vision Library 1.0rc1
+AppVerName=Intel(R) Open Source Computer Vision Library 1.0
 AppCopyright=Copyright (C) 2000-2006 Intel Corporation
 DefaultDirName={pf}\OpenCV
 DefaultGroupName=OpenCV
@@ -50,8 +50,10 @@ Name: "{app}\data\haarcascades"
 Name: "{app}\otherlibs"
 Name: "{app}\otherlibs\_graphics"
 Name: "{app}\otherlibs\_graphics\include"
+Name: "{app}\otherlibs\_graphics\include\jasper"
 Name: "{app}\otherlibs\_graphics\lib"
 Name: "{app}\otherlibs\_graphics\src"
+Name: "{app}\otherlibs\_graphics\src\libjasper"
 Name: "{app}\otherlibs\_graphics\src\libjpeg"
 Name: "{app}\otherlibs\_graphics\src\libpng"
 Name: "{app}\otherlibs\_graphics\src\libtiff"
@@ -219,12 +221,17 @@ Source: "otherlibs\Makefile.*"; DestDir: "{app}\otherlibs"
 
 ; graphic libraries
 Source: "otherlibs\_graphics\include\*.h"; DestDir: "{app}\otherlibs\_graphics\include"
+Source: "otherlibs\_graphics\include\jasper\*.h"; DestDir: "{app}\otherlibs\_graphics\include\jasper"
 Source: "otherlibs\_graphics\lib\*.a"; DestDir: "{app}\otherlibs\_graphics\lib"
-Source: "otherlibs\_graphics\lib\*.lib"; DestDir: "{app}\otherlibs\_graphics\lib"
+Source: "otherlibs\_graphics\lib\lib*.lib"; DestDir: "{app}\otherlibs\_graphics\lib"
+Source: "otherlibs\_graphics\lib\zlib*.lib"; DestDir: "{app}\otherlibs\_graphics\lib"
 Source: "otherlibs\_graphics\readme.txt"; DestDir: "{app}\otherlibs\_graphics"
 
 Source: "otherlibs\_graphics\src\*.dsw"; DestDir: "{app}\otherlibs\_graphics\src"
 Source: "otherlibs\_graphics\src\*.sln"; DestDir: "{app}\otherlibs\_graphics\src"
+
+Source: "otherlibs\_graphics\src\libjasper\readme"; DestDir: "{app}\otherlibs\_graphics\src\libjasper"
+Source: "otherlibs\_graphics\src\libjasper\license"; DestDir: "{app}\otherlibs\_graphics\src\libjasper"
 
 Source: "otherlibs\_graphics\src\libjpeg\*.c"; DestDir: "{app}\otherlibs\_graphics\src\libjpeg"
 Source: "otherlibs\_graphics\src\libjpeg\*.h"; DestDir: "{app}\otherlibs\_graphics\src\libjpeg"
@@ -464,14 +471,13 @@ Source: "apps\HaarTraining\doc\*.htm*"; DestDir: "{app}\apps\HaarTraining\doc"
 Source: "bin\cvinfo.exe"; DestDir: "{app}\bin"
 Source: "bin\cvtest.exe"; DestDir: "{app}\bin"
 Source: "bin\cxcoretest.exe"; DestDir: "{app}\bin"
-Source: "bin\cxcore099.dll"; DestDir: "{app}\bin"
-Source: "bin\cv099.dll"; DestDir: "{app}\bin"
-Source: "bin\highgui099.dll"; DestDir: "{app}\bin"
-Source: "bin\cvaux099.dll"; DestDir: "{app}\bin"
-Source: "bin\ml099.dll"; DestDir: "{app}\bin"
+Source: "bin\cxcore100.dll"; DestDir: "{app}\bin"
+Source: "bin\cv100.dll"; DestDir: "{app}\bin"
+Source: "bin\highgui100.dll"; DestDir: "{app}\bin"
+Source: "bin\cvaux100.dll"; DestDir: "{app}\bin"
+Source: "bin\ml100.dll"; DestDir: "{app}\bin"
 Source: "bin\cxts001.dll"; DestDir: "{app}\bin"
-Source: "bin\trs.dll"; DestDir: "{app}\bin"
-Source: "bin\cvcam099.dll"; DestDir: "{app}\bin"
+Source: "bin\cvcam100.dll"; DestDir: "{app}\bin"
 Source: "bin\haartraining.exe"; DestDir: "{app}\bin"
 Source: "bin\createsamples.exe"; DestDir: "{app}\bin"
 Source: "bin\performance.exe"; DestDir: "{app}\bin"
@@ -504,7 +510,6 @@ Source: "lib\ml.lib"; DestDir: "{app}\lib"
 Source: "lib\cvhaartraining.lib"; DestDir: "{app}\lib"
 Source: "lib\cxts.lib"; DestDir: "{app}\lib"
 Source: "lib\cvcam.lib"; DestDir: "{app}\lib"
-Source: "lib\trs.lib"; DestDir: "{app}\lib"
 
 [Icons]
 Name: "{group}\OpenCV Workspace MSVC6"; Filename: "{app}\_make\opencv.dsw"
