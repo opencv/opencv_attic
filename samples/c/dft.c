@@ -95,8 +95,11 @@ int main(int argc, char ** argv)
     // copy A to dft_A and pad dft_A with zeros
     cvGetSubRect( dft_A, &tmp, cvRect(0,0, im->width, im->height));
     cvCopy( complexInput, &tmp, NULL );
-    cvGetSubRect( dft_A, &tmp, cvRect(im->width,0, dft_A->cols - im->width, im->height));
-    cvZero( &tmp );
+    if( dft_A->cols > im->width )
+    {
+        cvGetSubRect( dft_A, &tmp, cvRect(im->width,0, dft_A->cols - im->width, im->height));
+        cvZero( &tmp );
+    }
 
     // no need to pad bottom part of dft_A with zeros because of
     // use nonzero_rows parameter in cvDFT() call below
