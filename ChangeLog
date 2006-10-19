@@ -6,7 +6,7 @@
 
   - General:
     * Windows installation package now includes precompiled Python module
-    * Borland C++ (v5.6+) makefiles added (see _make\make_all_bc.mak)
+    * Borland C++ (v5.6+) makefiles re-added (see _make\make_all_bc.mak)
 
   - CV:
     * Inpainting was added, see samples/c/inpaint.cpp
@@ -48,9 +48,17 @@
        that caused many failures (see SF #1555093, for example)
      * Inaccurate results in some cases in cvFitEllipse, cvFitLine, cvHoughCircles.
      * Severe bug in Bayesian classifier, broken regression tree in MLL
+     * Overflow in blurring filter
+     * cvSaveImage() modified saved images leading to potential problems in threaded apps.
      * Numeric values in XML/YAML were emitted/parsed incorrectly
        on some non-US locales in Linux
+     * VS2005 Express/Standard Editions could not build OpenCV
+       (due to missing OpenMP support)
      * ...
+
+>>> Known issues:
+    * Certain tests may fail on IA64 (Itanium), e.g.
+      gaussian filter, fundamental matrix estimation, chessboard detector.
 
 =============================================================================
                       OpenCV 1.0 RC1, August 11, 2006
