@@ -48,7 +48,6 @@ CV_IMPL void
 cvCanny( const void* srcarr, void* dstarr,
          double low_thresh, double high_thresh, int aperture_size )
 {
-    static const int sec_tab[] = { 1, 3, 0, 0, 2, 2, 2, 2 };
     CvMat *dx = 0, *dy = 0;
     void *buffer = 0;
     uchar **stack_top, **stack_bottom = 0;
