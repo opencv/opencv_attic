@@ -132,7 +132,11 @@ void CV_SnakeTest::run( int /*start_from*/ )
         strcpy( abs_file_name, tmp );
         strcat( abs_file_name, ".txt" );
 
+#if !SCAN
+        file = fopen( abs_file_name, "r" );
+#else
         file = fopen( abs_file_name, "r+" );
+#endif
 
         if (!file)
         {
@@ -177,7 +181,7 @@ void CV_SnakeTest::run( int /*start_from*/ )
                            &alpha, &beta, &gamma, CV_VALUE, win, criteria, 1 /*usegrad*/ );
             }
 
-#ifndef SCAN
+#if !SCAN
             for ( j = 0; j < length; j++ )
             {
                 fscanf(file, "%d%d", &resPts[j].x, &resPts[j].y );
