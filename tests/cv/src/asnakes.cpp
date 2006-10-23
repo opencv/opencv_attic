@@ -79,6 +79,9 @@ void CV_SnakeTest::run( int /*start_from*/ )
     const int numfig_grad  = 1;
 
     FILE* file = 0;
+#ifndef _MAX_PATH
+#define _MAX_PATH 1024
+#endif
     char abs_file_name[_MAX_PATH];
     char rel_path[_MAX_PATH];
 
