@@ -978,6 +978,7 @@ static int icvOpenCamera_QT (CvCapture_QT_Cam * capture, const int index)
 	OPENCV_ASSERT( result == noErr, "icvOpenCamera_QT", "couldn't get image size");
 	capture->bounds.right = (**imageDesc).width;
 	capture->bounds.bottom = (**imageDesc).height;
+	DisposeHandle ((Handle) imageDesc);
 
 	// stop grabber so that we can reset the parameters to the right size
 	result = SGStop (capture->grabber);
