@@ -23,7 +23,11 @@ def is_older(a,b):
 
 if not os.path.exists('_cv_win32.cpp') or is_older('_cv_win32.cpp','_cv.cpp'):
     patch_for_win32('_cv.cpp', '_cv_win32.cpp',
-        [('unsigned long long','uint64',),('long long','int64')],
+        [('unsigned long long','uint64',),('long long','int64'),
+        ("char *doc = (((PyCFunctionObject *)obj) -> m_ml -> ml_doc);",
+        "char *doc = (char*)(((PyCFunctionObject *)obj) -> m_ml -> ml_doc);"),
+        ("char *c = methods[i].ml_doc;",
+        "char *c = (char*)methods[i].ml_doc;")],
         [('PyAPI_FUNC','#undef PyAPI_FUNC\n'), ('cv.h',
 """
 #include "cv.h"
@@ -43,7 +47,11 @@ CvTypeInfo* CvType::last = 0;
 
 if not os.path.exists('_highgui_win32.cpp') or is_older('_highgui_win32.cpp','_highgui.cpp'):
     patch_for_win32('_highgui.cpp', '_highgui_win32.cpp',
-        [('unsigned long long','uint64',),('long long','int64')],
+        [('unsigned long long','uint64',),('long long','int64'),
+        ("char *doc = (((PyCFunctionObject *)obj) -> m_ml -> ml_doc);",
+        "char *doc = (char*)(((PyCFunctionObject *)obj) -> m_ml -> ml_doc);"),
+        ("char *c = methods[i].ml_doc;",
+        "char *c = (char*)methods[i].ml_doc;")],
         [('PyAPI_FUNC','#undef PyAPI_FUNC\n')])
 
 setup(name='OpenCV Python Wrapper',
