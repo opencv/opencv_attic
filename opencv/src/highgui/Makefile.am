@@ -10,7 +10,8 @@ INCLUDES = -I. -I$(top_srcdir)/cxcore/include \
 
 noinst_HEADERS     = \
     _highgui.h bitstrm.h grfmt_base.h grfmt_bmp.h \
-    grfmt_jpeg.h grfmt_pxm.h grfmt_png.h grfmt_sunras.h grfmt_tiff.h grfmts.h utils.h
+    grfmt_jpeg.h grfmt_jpeg2000.h grfmt_exr.h \
+    grfmt_pxm.h grfmt_png.h grfmt_sunras.h grfmt_tiff.h grfmts.h utils.h
 noinst_LTLIBRARIES = lib_highgui.la
 lib_LTLIBRARIES    = libhighgui.la
 
