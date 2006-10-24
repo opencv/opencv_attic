@@ -350,11 +350,11 @@ int icvGetHaarTraininDataFromVecCallback( CvMat* img, void* userdata );
  * icvGetHaarTrainingDataFromVec
  *
  * Fill <data> with samples from .vec file, passed <cascade>
- */
 int icvGetHaarTrainingDataFromVec( CvHaarTrainingData* data, int first, int count,                                   
                                    CvIntHaarClassifier* cascade,
                                    const char* filename,
                                    int* consumed );
+ */
 
 CvIntHaarClassifier* icvCreateCARTHaarClassifier( int count );
 
