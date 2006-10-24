@@ -13,6 +13,7 @@
 # PARTICULAR PURPOSE.
 
 @SET_MAKE@
+
 srcdir = @srcdir@
 top_srcdir = @top_srcdir@
 VPATH = @srcdir@
@@ -38,7 +39,8 @@ host_triplet = @host@
 target_triplet = @target@
 check_PROGRAMS = cvtest$(EXEEXT)
 subdir = tests/cv/src
-DIST_COMMON = $(srcdir)/Makefile.am $(srcdir)/Makefile.in
+DIST_COMMON = $(noinst_HEADERS) $(srcdir)/Makefile.am \
+	$(srcdir)/Makefile.in
 ACLOCAL_M4 = $(top_srcdir)/aclocal.m4
 am__aclocal_m4_deps = $(top_srcdir)/autotools/aclocal/az_python.m4 \
 	$(top_srcdir)/autotools/aclocal/pkg.m4 \
@@ -51,34 +53,25 @@ mkinstalldirs = $(SHELL) $(top_srcdir)/autotools/mkinstalldirs
 CONFIG_HEADER = $(top_builddir)/cvconfig.h
 CONFIG_CLEAN_FILES =
 am_cvtest_OBJECTS = aaccum.$(OBJEXT) aadaptthresh.$(OBJEXT) \
-	aapproxpoly.$(OBJEXT) acalccontrasthist.$(OBJEXT) \
-	acameracalibration.$(OBJEXT) acamshift.$(OBJEXT) \
-	acanny.$(OBJEXT) achesscorners.$(OBJEXT) acolor.$(OBJEXT) \
-	acondens.$(OBJEXT) acontourcollection.$(OBJEXT) \
-	acontourmoments.$(OBJEXT) acontours.$(OBJEXT) \
-	acontoursmatch.$(OBJEXT) aconvhull.$(OBJEXT) \
-	acreatecontourtree.$(OBJEXT) adistancetransform.$(OBJEXT) \
-	adrawing.$(OBJEXT) adrawing_regress.$(OBJEXT) \
-	aeigenobjects.$(OBJEXT) aemd.$(OBJEXT) aerrhandle.$(OBJEXT) \
-	afilter.$(OBJEXT) afitellipse.$(OBJEXT) afitlines.$(OBJEXT) \
-	afloodfill.$(OBJEXT) afundam.$(OBJEXT) \
-	agesturerecognition.$(OBJEXT) ahistograms.$(OBJEXT) \
+	aapproxpoly.$(OBJEXT) acameracalibration.$(OBJEXT) \
+	acamshift.$(OBJEXT) acanny.$(OBJEXT) achesscorners.$(OBJEXT) \
+	acolor.$(OBJEXT) acondens.$(OBJEXT) acontourmoments.$(OBJEXT) \
+	acontours.$(OBJEXT) acontoursmatch.$(OBJEXT) \
+	aconvhull.$(OBJEXT) acreatecontourtree.$(OBJEXT) \
+	adistancetransform.$(OBJEXT) adrawing_regress.$(OBJEXT) \
+	aeigenobjects.$(OBJEXT) aemd.$(OBJEXT) afilter.$(OBJEXT) \
+	afloodfill.$(OBJEXT) afundam.$(OBJEXT) ahistograms.$(OBJEXT) \
 	ahmmobs.$(OBJEXT) ahoughtransform.$(OBJEXT) aimage.$(OBJEXT) \
 	aimgwarp.$(OBJEXT) akalman.$(OBJEXT) akmeans.$(OBJEXT) \
-	amatchcontourtrees.$(OBJEXT) ameanshift.$(OBJEXT) \
-	amemorytest.$(OBJEXT) aminarearect.$(OBJEXT) \
-	amoments.$(OBJEXT) amotiontemplates.$(OBJEXT) \
-	amotseg.$(OBJEXT) aoptflowhs.$(OBJEXT) aoptflowlk.$(OBJEXT) \
-	aoptflowpyrlk.$(OBJEXT) apixelaccess.$(OBJEXT) \
-	aposit.$(OBJEXT) apyrsegmentation.$(OBJEXT) \
-	asamplers.$(OBJEXT) asnakes.$(OBJEXT) asubdivisions.$(OBJEXT) \
-	atemplmatch.$(OBJEXT) athresh.$(OBJEXT) ats.$(OBJEXT) \
-	canny.$(OBJEXT) cvtest.$(OBJEXT) tsysa.$(OBJEXT) \
-	ucontours.$(OBJEXT) ugraphics.$(OBJEXT) uiplutils.$(OBJEXT) \
-	ureadfile.$(OBJEXT)
+	amatchcontourtrees.$(OBJEXT) amoments.$(OBJEXT) \
+	amotiontemplates.$(OBJEXT) amotseg.$(OBJEXT) \
+	aoptflowhs.$(OBJEXT) aoptflowlk.$(OBJEXT) \
+	aoptflowpyrlk.$(OBJEXT) aposit.$(OBJEXT) \
+	apyrsegmentation.$(OBJEXT) asnakes.$(OBJEXT) \
+	asubdivisions.$(OBJEXT) atemplmatch.$(OBJEXT) \
+	athresh.$(OBJEXT) cvtest.$(OBJEXT) tsysa.$(OBJEXT)
 cvtest_OBJECTS = $(am_cvtest_OBJECTS)
-cvtest_DEPENDENCIES = $(top_builddir)/tests/trs/libtrs.la \
-	$(top_builddir)/tests/cxts/libcxts.la \
+cvtest_DEPENDENCIES = $(top_builddir)/tests/cxts/libcxts.la \
 	$(top_builddir)/cxcore/src/libcxcore.la \
 	$(top_builddir)/cv/src/libcv.la \
 	$(top_builddir)/cvaux/src/libcvaux.la \
@@ -94,16 +87,9 @@ LTCXXCOMPILE = $(LIBTOOL) --tag=CXX --mode=compile $(CXX) $(DEFS) \
 CXXLD = $(CXX)
 CXXLINK = $(LIBTOOL) --tag=CXX --mode=link $(CXXLD) $(AM_CXXFLAGS) \
 	$(CXXFLAGS) $(AM_LDFLAGS) $(LDFLAGS) -o $@
-COMPILE = $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) \
-	$(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS)
-LTCOMPILE = $(LIBTOOL) --tag=CC --mode=compile $(CC) $(DEFS) \
-	$(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) \
-	$(AM_CFLAGS) $(CFLAGS)
-CCLD = $(CC)
-LINK = $(LIBTOOL) --tag=CC --mode=link $(CCLD) $(AM_CFLAGS) $(CFLAGS) \
-	$(AM_LDFLAGS) $(LDFLAGS) -o $@
 SOURCES = $(cvtest_SOURCES)
 DIST_SOURCES = $(cvtest_SOURCES)
+HEADERS = $(noinst_HEADERS)
 ETAGS = etags
 CTAGS = ctags
 DISTFILES = $(DIST_COMMON) $(DIST_SOURCES) $(TEXINFOS) $(EXTRA_DIST)
@@ -161,7 +147,6 @@ EXEEXT = @EXEEXT@
 F77 = @F77@
 FFLAGS = @FFLAGS@
 FFMPEGLIBS = @FFMPEGLIBS@
-GREP = @GREP@
 GTHREAD_CFLAGS = @GTHREAD_CFLAGS@
 GTHREAD_LIBS = @GTHREAD_LIBS@
 GTK_CFLAGS = @GTK_CFLAGS@
@@ -215,9 +200,15 @@ UPDATE_SWIG_WRAPPERS_FALSE = @UPDATE_SWIG_WRAPPERS_FALSE@
 UPDATE_SWIG_WRAPPERS_TRUE = @UPDATE_SWIG_WRAPPERS_TRUE@
 VERSION = @VERSION@
 XINE_LIBS = @XINE_LIBS@
+ac_ct_AR = @ac_ct_AR@
+ac_ct_AS = @ac_ct_AS@
 ac_ct_CC = @ac_ct_CC@
 ac_ct_CXX = @ac_ct_CXX@
+ac_ct_DLLTOOL = @ac_ct_DLLTOOL@
 ac_ct_F77 = @ac_ct_F77@
+ac_ct_OBJDUMP = @ac_ct_OBJDUMP@
+ac_ct_RANLIB = @ac_ct_RANLIB@
+ac_ct_STRIP = @ac_ct_STRIP@
 am__fastdepCC_FALSE = @am__fastdepCC_FALSE@
 am__fastdepCC_TRUE = @am__fastdepCC_TRUE@
 am__fastdepCXX_FALSE = @am__fastdepCXX_FALSE@
@@ -234,32 +225,25 @@ build_cpu = @build_cpu@
 build_os = @build_os@
 build_vendor = @build_vendor@
 datadir = @datadir@
-datarootdir = @datarootdir@
-docdir = @docdir@
-dvidir = @dvidir@
 exec_prefix = @exec_prefix@
 host = @host@
 host_alias = @host_alias@
 host_cpu = @host_cpu@
 host_os = @host_os@
 host_vendor = @host_vendor@
-htmldir = @htmldir@
 includedir = @includedir@
 infodir = @infodir@
 install_sh = @install_sh@
 libdir = @libdir@
 libexecdir = @libexecdir@
-localedir = @localedir@
 localstatedir = @localstatedir@
 mandir = @mandir@
 mkdir_p = @mkdir_p@
 oldincludedir = @oldincludedir@
-pdfdir = @pdfdir@
 pkgpyexecdir = @pkgpyexecdir@
 pkgpythondir = @pkgpythondir@
 prefix = @prefix@
 program_transform_name = @program_transform_name@
-psdir = @psdir@
 pyexecdir = @pyexecdir@
 pythondir = @pythondir@
 sbindir = @sbindir@
@@ -271,42 +255,41 @@ target_cpu = @target_cpu@
 target_os = @target_os@
 target_vendor = @target_vendor@
 INCLUDES = \
-	-I.                               \
-	-I$(top_srcdir)/tests/trs         \
-	-I$(top_srcdir)/tests/cxts        \
-	-I$(top_srcdir)/otherlibs/highgui \
-	-I$(top_srcdir)/cxcore/include    \
-	-I$(top_srcdir)/cv/include        \
-	-I$(top_srcdir)/cvaux/include
+    -I.                               \
+    -I$(top_srcdir)/tests/cxts        \
+    -I$(top_srcdir)/otherlibs/highgui \
+    -I$(top_srcdir)/cxcore/include    \
+    -I$(top_srcdir)/cv/include        \
+    -I$(top_srcdir)/cvaux/include
 
 TESTS = $(check_PROGRAMS)
 EXTRA_DIST = cvtest.dsp cvtest.vcproj
 MOSTLYCLEANFILES = .lst .sum
+noinst_HEADERS = \
+    cvtest.h
+
 cvtest_SOURCES = \
-    aeigenobjects.inc apixelaccess.inc cvtest.h \
-    aaccum.cpp aadaptthresh.cpp aapproxpoly.cpp acalccontrasthist.cpp \
-    acameracalibration.cpp acamshift.cpp acanny.cpp achesscorners.cpp \
-    acolor.cpp acondens.cpp acontourcollection.cpp acontourmoments.cpp \
-    acontours.cpp acontoursmatch.cpp aconvhull.cpp acreatecontourtree.cpp \
-    adistancetransform.cpp adrawing.cpp adrawing_regress.cpp \
-    aeigenobjects.cpp aemd.cpp aerrhandle.cpp afilter.cpp afitellipse.cpp \
-    afitlines.cpp afloodfill.cpp afundam.cpp agesturerecognition.cpp \
-    ahistograms.cpp ahmmobs.cpp ahoughtransform.cpp aimage.cpp \
-    aimgwarp.cpp akalman.cpp akmeans.cpp amatchcontourtrees.cpp \
-    ameanshift.cpp amemorytest.cpp aminarearect.cpp amoments.cpp \
-    amotiontemplates.cpp amotseg.cpp aoptflowhs.cpp aoptflowlk.cpp \
-    aoptflowpyrlk.cpp apixelaccess.cpp aposit.cpp apyrsegmentation.cpp \
-    asamplers.cpp asnakes.cpp asubdivisions.cpp atemplmatch.cpp \
-    athresh.cpp ats.cpp canny.cpp cvtest.cpp \
-    tsysa.cpp ucontours.cpp ugraphics.cpp uiplutils.cpp ureadfile.cpp
+    aaccum.cpp               aadaptthresh.cpp         aapproxpoly.cpp \
+    acameracalibration.cpp   acamshift.cpp            acanny.cpp \
+    achesscorners.cpp        acolor.cpp               acondens.cpp \
+    acontourmoments.cpp      acontours.cpp            acontoursmatch.cpp \
+    aconvhull.cpp            acreatecontourtree.cpp   adistancetransform.cpp \
+    adrawing_regress.cpp     aeigenobjects.cpp        aemd.cpp \
+    afilter.cpp              afloodfill.cpp           afundam.cpp \
+    ahistograms.cpp          ahmmobs.cpp              ahoughtransform.cpp \
+    aimage.cpp               aimgwarp.cpp             akalman.cpp \
+    akmeans.cpp              amatchcontourtrees.cpp   amoments.cpp \
+    amotiontemplates.cpp     amotseg.cpp              aoptflowhs.cpp \
+    aoptflowlk.cpp           aoptflowpyrlk.cpp        aposit.cpp \
+    apyrsegmentation.cpp     asnakes.cpp              asubdivisions.cpp \
+    atemplmatch.cpp          athresh.cpp      cvtest.cpp    tsysa.cpp                
 
 cvtest_LDADD = \
-	$(top_builddir)/tests/trs/libtrs.la              \
-	$(top_builddir)/tests/cxts/libcxts.la            \
-	$(top_builddir)/cxcore/src/libcxcore.la          \
-	$(top_builddir)/cv/src/libcv.la                  \
-	$(top_builddir)/cvaux/src/libcvaux.la            \
-	$(top_builddir)/otherlibs/highgui/libhighgui.la
+    $(top_builddir)/tests/cxts/libcxts.la            \
+    $(top_builddir)/cxcore/src/libcxcore.la          \
+    $(top_builddir)/cv/src/libcv.la                  \
+    $(top_builddir)/cvaux/src/libcvaux.la            \
+    $(top_builddir)/otherlibs/highgui/libhighgui.la
 
 all: all-am
 
@@ -361,31 +344,24 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/aaccum.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/aadaptthresh.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/aapproxpoly.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/acalccontrasthist.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/acameracalibration.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/acamshift.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/acanny.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/achesscorners.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/acolor.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/acondens.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/acontourcollection.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/acontourmoments.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/acontours.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/acontoursmatch.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/aconvhull.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/acreatecontourtree.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/adistancetransform.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/adrawing.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/adrawing_regress.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/aeigenobjects.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/aemd.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/aerrhandle.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/afilter.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/afitellipse.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/afitlines.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/afloodfill.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/afundam.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/agesturerecognition.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/ahistograms.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/ahmmobs.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/ahoughtransform.Po@am__quote@
@@ -394,31 +370,20 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/akalman.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/akmeans.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/amatchcontourtrees.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/ameanshift.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/amemorytest.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/aminarearect.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/amoments.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/amotiontemplates.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/amotseg.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/aoptflowhs.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/aoptflowlk.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/aoptflowpyrlk.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/apixelaccess.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/aposit.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/apyrsegmentation.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/asamplers.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/asnakes.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/asubdivisions.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/atemplmatch.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/athresh.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/ats.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/canny.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/cvtest.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/tsysa.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/ucontours.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/ugraphics.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/uiplutils.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/ureadfile.Po@am__quote@
 
 .cpp.o:
 @am__fastdepCXX_TRUE@	if $(CXXCOMPILE) -MT $@ -MD -MP -MF "$(DEPDIR)/$*.Tpo" -c -o $@ $<; \
@@ -603,7 +568,7 @@ check-am: all-am
 	$(MAKE) $(AM_MAKEFLAGS) $(check_PROGRAMS)
 	$(MAKE) $(AM_MAKEFLAGS) check-TESTS
 check: check-am
-all-am: Makefile
+all-am: Makefile $(HEADERS)
 installdirs:
 install: install-am
 install-exec: install-exec-am

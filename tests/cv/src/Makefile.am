@@ -11,6 +11,8 @@ TESTS            = $(check_PROGRAMS)
 EXTRA_DIST       = cvtest.dsp cvtest.vcproj
 MOSTLYCLEANFILES = .lst .sum
 
+noinst_HEADERS = \
+    cvtest.h
 cvtest_SOURCES = \
     aaccum.cpp               aadaptthresh.cpp         aapproxpoly.cpp \
     acameracalibration.cpp   acamshift.cpp            acanny.cpp \

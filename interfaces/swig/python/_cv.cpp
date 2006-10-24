@@ -212,7 +212,7 @@ private:
       // success code
       if (SWIG_IsNewObj(res) {
         ...
-    delete *ptr;
+	delete *ptr;
       } else {
         ...
       }
@@ -225,17 +225,17 @@ private:
    requires also to SWIG_ConvertPtr to return new result values, as
 
       int SWIG_ConvertPtr(obj, ptr,...) {         
-        if (<obj is ok>) {                 
-          if (<need new object>) {             
+        if (<obj is ok>) {			       
+          if (<need new object>) {		       
             *ptr = <ptr to new allocated object>; 
-            return SWIG_NEWOBJ;            
-          } else {                     
-            *ptr = <ptr to old object>;        
-            return SWIG_OLDOBJ;            
-          }                        
-        } else {                       
-          return SWIG_BADOBJ;              
-        }                          
+            return SWIG_NEWOBJ;		       
+          } else {				       
+            *ptr = <ptr to old object>;	       
+            return SWIG_OLDOBJ;		       
+          } 				       
+        } else {				       
+          return SWIG_BADOBJ;		       
+        }					       
       }
 
    Of course, returning the plain '0(success)/-1(fail)' still works, but you can be
@@ -317,32 +317,32 @@ typedef struct swig_type_info *(*swig_dycast_func)(void **);
 
 /* Structure to store inforomation on one type */
 typedef struct swig_type_info {
-  const char             *name;         /* mangled name of this type */
-  const char             *str;          /* human readable name of this type */
-  swig_dycast_func        dcast;        /* dynamic cast function down a hierarchy */
-  struct swig_cast_info  *cast;         /* linked list of types that can cast into this type */
-  void                   *clientdata;       /* language specific type data */
-  int                    owndata;       /* flag if the structure owns the clientdata */
+  const char             *name;			/* mangled name of this type */
+  const char             *str;			/* human readable name of this type */
+  swig_dycast_func        dcast;		/* dynamic cast function down a hierarchy */
+  struct swig_cast_info  *cast;			/* linked list of types that can cast into this type */
+  void                   *clientdata;		/* language specific type data */
+  int                    owndata;		/* flag if the structure owns the clientdata */
 } swig_type_info;
 
 /* Structure to store a type and conversion function used for casting */
 typedef struct swig_cast_info {
-  swig_type_info         *type;         /* pointer to type that is equivalent to this type */
-  swig_converter_func     converter;        /* function to cast the void pointers */
-  struct swig_cast_info  *next;         /* pointer to next cast in linked list */
-  struct swig_cast_info  *prev;         /* pointer to the previous cast */
+  swig_type_info         *type;			/* pointer to type that is equivalent to this type */
+  swig_converter_func     converter;		/* function to cast the void pointers */
+  struct swig_cast_info  *next;			/* pointer to next cast in linked list */
+  struct swig_cast_info  *prev;			/* pointer to the previous cast */
 } swig_cast_info;
 
 /* Structure used to store module information
  * Each module generates one structure like this, and the runtime collects
  * all of these structures and stores them in a circularly linked list.*/
 typedef struct swig_module_info {
-  swig_type_info         **types;       /* Array of pointers to swig_type_info structures that are in this module */
-  size_t                 size;              /* Number of types in this module */
-  struct swig_module_info *next;        /* Pointer to next element in circularly linked list */
-  swig_type_info         **type_initial;    /* Array of initially generated type structures */
-  swig_cast_info         **cast_initial;    /* Array of initially generated casting structures */
-  void                    *clientdata;      /* Language specific module data */
+  swig_type_info         **types;		/* Array of pointers to swig_type_info structures that are in this module */
+  size_t                 size;		        /* Number of types in this module */
+  struct swig_module_info *next;		/* Pointer to next element in circularly linked list */
+  swig_type_info         **type_initial;	/* Array of initially generated type structures */
+  swig_cast_info         **cast_initial;	/* Array of initially generated casting structures */
+  void                    *clientdata;		/* Language specific module data */
 } swig_module_info;
 
 /* 
@@ -354,7 +354,7 @@ typedef struct swig_module_info {
 */
 SWIGRUNTIME int
 SWIG_TypeNameComp(const char *f1, const char *l1,
-          const char *f2, const char *l2) {
+		  const char *f2, const char *l2) {
   for (;(f1 != l1) && (f2 != l2); ++f1, ++f2) {
     while ((*f1 == ' ') && (f1 != l1)) ++f1;
     while ((*f2 == ' ') && (f2 != l2)) ++f2;
@@ -503,7 +503,7 @@ SWIG_TypeClientData(swig_type_info *ti, void *clientdata) {
     if (!cast->converter) {
       swig_type_info *tc = cast->type;
       if (!tc->clientdata) {
-    SWIG_TypeClientData(tc, clientdata);
+	SWIG_TypeClientData(tc, clientdata);
       }
     }    
     cast = cast->next;
@@ -526,32 +526,32 @@ SWIG_TypeNewClientData(swig_type_info *ti, void *clientdata) {
 SWIGRUNTIME swig_type_info *
 SWIG_MangledTypeQueryModule(swig_module_info *start, 
                             swig_module_info *end, 
-                    const char *name) {
+		            const char *name) {
   swig_module_info *iter = start;
   do {
     if (iter->size) {
       register size_t l = 0;
       register size_t r = iter->size - 1;
       do {
-    /* since l+r >= 0, we can (>> 1) instead (/ 2) */
-    register size_t i = (l + r) >> 1; 
-    const char *iname = iter->types[i]->name;
-    if (iname) {
-      register int compare = strcmp(name, iname);
-      if (compare == 0) {       
-        return iter->types[i];
-      } else if (compare < 0) {
-        if (i) {
-          r = i - 1;
-        } else {
-          break;
-        }
-      } else if (compare > 0) {
-        l = i + 1;
-      }
-    } else {
-      break; /* should never happen */
-    }
+	/* since l+r >= 0, we can (>> 1) instead (/ 2) */
+	register size_t i = (l + r) >> 1; 
+	const char *iname = iter->types[i]->name;
+	if (iname) {
+	  register int compare = strcmp(name, iname);
+	  if (compare == 0) {	    
+	    return iter->types[i];
+	  } else if (compare < 0) {
+	    if (i) {
+	      r = i - 1;
+	    } else {
+	      break;
+	    }
+	  } else if (compare > 0) {
+	    l = i + 1;
+	  }
+	} else {
+	  break; /* should never happen */
+	}
       } while (l <= r);
     }
     iter = iter->next;
@@ -571,7 +571,7 @@ SWIG_MangledTypeQueryModule(swig_module_info *start,
 SWIGRUNTIME swig_type_info *
 SWIG_TypeQueryModule(swig_module_info *start, 
                      swig_module_info *end, 
-             const char *name) {
+		     const char *name) {
   /* STEP 1: Search the name field using binary search */
   swig_type_info *ret = SWIG_MangledTypeQueryModule(start, end, name);
   if (ret) {
@@ -583,8 +583,8 @@ SWIG_TypeQueryModule(swig_module_info *start,
     do {
       register size_t i = 0;
       for (; i < iter->size; ++i) {
-    if (iter->types[i]->str && (SWIG_TypeEquiv(iter->types[i]->str, name)))
-      return iter->types[i];
+	if (iter->types[i]->str && (SWIG_TypeEquiv(iter->types[i]->str, name)))
+	  return iter->types[i];
       }
       iter = iter->next;
     } while (iter != end);
@@ -698,18 +698,18 @@ SWIG_UnpackDataName(const char *c, void *ptr, size_t sz, const char *name) {
 #endif
 
 /*  Errors in SWIG */
-#define  SWIG_UnknownError         -1 
-#define  SWIG_IOError              -2 
-#define  SWIG_RuntimeError         -3 
-#define  SWIG_IndexError           -4 
-#define  SWIG_TypeError            -5 
-#define  SWIG_DivisionByZero       -6 
-#define  SWIG_OverflowError        -7 
-#define  SWIG_SyntaxError          -8 
-#define  SWIG_ValueError           -9 
-#define  SWIG_SystemError          -10
-#define  SWIG_AttributeError       -11
-#define  SWIG_MemoryError          -12 
+#define  SWIG_UnknownError    	   -1 
+#define  SWIG_IOError        	   -2 
+#define  SWIG_RuntimeError   	   -3 
+#define  SWIG_IndexError     	   -4 
+#define  SWIG_TypeError      	   -5 
+#define  SWIG_DivisionByZero 	   -6 
+#define  SWIG_OverflowError  	   -7 
+#define  SWIG_SyntaxError    	   -8 
+#define  SWIG_ValueError     	   -9 
+#define  SWIG_SystemError    	   -10
+#define  SWIG_AttributeError 	   -11
+#define  SWIG_MemoryError    	   -12 
 #define  SWIG_NullReferenceError   -13
 
 
@@ -1018,10 +1018,10 @@ typedef struct swig_const_info {
 #define SWIG_NewClientData(obj)                         PySwigClientData_New(obj)
 
 #define SWIG_SetErrorObj                                SWIG_Python_SetErrorObj                            
-#define SWIG_SetErrorMsg                            SWIG_Python_SetErrorMsg                
-#define SWIG_ErrorType(code)                        SWIG_Python_ErrorType(code)                        
-#define SWIG_Error(code, msg)                   SWIG_Python_SetErrorMsg(SWIG_ErrorType(code), msg) 
-#define SWIG_fail                               goto fail                      
+#define SWIG_SetErrorMsg                        	SWIG_Python_SetErrorMsg				   
+#define SWIG_ErrorType(code)                    	SWIG_Python_ErrorType(code)                        
+#define SWIG_Error(code, msg)            		SWIG_Python_SetErrorMsg(SWIG_ErrorType(code), msg) 
+#define SWIG_fail                        		goto fail					   
 
 
 /* Runtime API implementation */
@@ -1108,7 +1108,7 @@ SWIG_Python_UnpackTuple(PyObject *args, const char *name, int min, int max, PyOb
       return 1;
     } else {
       PyErr_Format(PyExc_TypeError, "%s expected %s%d arguments, got none", 
-           name, (min == max ? "" : "at least "), min);
+		   name, (min == max ? "" : "at least "), min);
       return 0;
     }
   }  
@@ -1119,19 +1119,19 @@ SWIG_Python_UnpackTuple(PyObject *args, const char *name, int min, int max, PyOb
     register int l = PyTuple_GET_SIZE(args);
     if (l < min) {
       PyErr_Format(PyExc_TypeError, "%s expected %s%d arguments, got %d", 
-           name, (min == max ? "" : "at least "), min, l);
+		   name, (min == max ? "" : "at least "), min, l);
       return 0;
     } else if (l > max) {
       PyErr_Format(PyExc_TypeError, "%s expected %s%d arguments, got %d", 
-           name, (min == max ? "" : "at most "), max, l);
+		   name, (min == max ? "" : "at most "), max, l);
       return 0;
     } else {
       register int i;
       for (i = 0; i < l; ++i) {
-    objs[i] = PyTuple_GET_ITEM(args, i);
+	objs[i] = PyTuple_GET_ITEM(args, i);
       }
       for (; l < max; ++l) {
-    objs[l] = 0;
+	objs[l] = 0;
       }
       return i + 1;
     }    
@@ -1140,9 +1140,9 @@ SWIG_Python_UnpackTuple(PyObject *args, const char *name, int min, int max, PyOb
 
 /* A functor is a function object with one single object argument */
 #if PY_VERSION_HEX >= 0x02020000
-#define SWIG_Python_CallFunctor(functor, obj)           PyObject_CallFunctionObjArgs(functor, obj, NULL);
+#define SWIG_Python_CallFunctor(functor, obj)	        PyObject_CallFunctionObjArgs(functor, obj, NULL);
 #else
-#define SWIG_Python_CallFunctor(functor, obj)           PyObject_CallFunction(functor, "O", obj);
+#define SWIG_Python_CallFunctor(functor, obj)	        PyObject_CallFunction(functor, "O", obj);
 #endif
 
 /*
@@ -1259,11 +1259,11 @@ PySwigClientData_New(PyObject* obj)
       data->newraw = PyObject_GetAttrString(data->klass, (char *)"__new__");
 #endif
       if (data->newraw) {
-    Py_INCREF(data->newraw);
-    data->newargs = PyTuple_New(1);
-    PyTuple_SetItem(data->newargs, 0, obj);
+	Py_INCREF(data->newraw);
+	data->newargs = PyTuple_New(1);
+	PyTuple_SetItem(data->newargs, 0, obj);
       } else {
-    data->newargs = obj;
+	data->newargs = obj;
       }
       Py_INCREF(data->newargs);
     }
@@ -1323,8 +1323,8 @@ PySwigObject_format(const char* fmt, PySwigObject *v)
     if (PyTuple_SetItem(args, 0, PySwigObject_long(v)) == 0) {
       PyObject *ofmt = PyString_FromString(fmt);
       if (ofmt) {
-    res = PyString_Format(ofmt,args);
-    Py_DECREF(ofmt);
+	res = PyString_Format(ofmt,args);
+	Py_DECREF(ofmt);
       }
       Py_DECREF(args);
     }
@@ -1429,14 +1429,14 @@ PySwigObject_dealloc(PyObject *v)
       /* destroy is always a VARARGS method */
       PyObject *res;
       if (data->delargs) {
-    /* we need to create a temporal object to carry the destroy operation */
-    PyObject *tmp = PySwigObject_New(sobj->ptr, ty, 0);
-    res = SWIG_Python_CallFunctor(destroy, tmp);
-    Py_DECREF(tmp);
+	/* we need to create a temporal object to carry the destroy operation */
+	PyObject *tmp = PySwigObject_New(sobj->ptr, ty, 0);
+	res = SWIG_Python_CallFunctor(destroy, tmp);
+	Py_DECREF(tmp);
       } else {
-    PyCFunction meth = PyCFunction_GET_FUNCTION(destroy);
-    PyObject *mself = PyCFunction_GET_SELF(destroy);
-    res = ((*meth)(mself, v));
+	PyCFunction meth = PyCFunction_GET_FUNCTION(destroy);
+	PyObject *mself = PyCFunction_GET_SELF(destroy);
+	res = ((*meth)(mself, v));
       }
       Py_XDECREF(res);
     } else {
@@ -1525,17 +1525,17 @@ PySwigObject_own(PyObject *v, PyObject *args)
       PyObject *obj = PyBool_FromLong(sobj->own);
       if (val) {
 #ifdef METH_NOARGS
-    if (PyObject_IsTrue(val)) {
-      PySwigObject_acquire(v);
-    } else {
-      PySwigObject_disown(v);
-    }
+	if (PyObject_IsTrue(val)) {
+	  PySwigObject_acquire(v);
+	} else {
+	  PySwigObject_disown(v);
+	}
 #else
-    if (PyObject_IsTrue(val)) {
-      PySwigObject_acquire(v,args);
-    } else {
-      PySwigObject_disown(v,args);
-    }
+	if (PyObject_IsTrue(val)) {
+	  PySwigObject_acquire(v,args);
+	} else {
+	  PySwigObject_disown(v,args);
+	}
 #endif
       } 
       return obj;
@@ -1590,12 +1590,12 @@ _PySwigObject_type(void) {
     (unaryfunc)0,  /*nb_positive*/
     (unaryfunc)0,  /*nb_absolute*/
     (inquiry)0,    /*nb_nonzero*/
-    0,         /*nb_invert*/
-    0,         /*nb_lshift*/
-    0,         /*nb_rshift*/
-    0,         /*nb_and*/
-    0,         /*nb_xor*/
-    0,         /*nb_or*/
+    0,		   /*nb_invert*/
+    0,		   /*nb_lshift*/
+    0,		   /*nb_rshift*/
+    0,		   /*nb_and*/
+    0,		   /*nb_xor*/
+    0,		   /*nb_or*/
     (coercion)0,   /*nb_coerce*/
     (unaryfunc)PySwigObject_long, /*nb_int*/
     (unaryfunc)PySwigObject_long, /*nb_long*/
@@ -1614,63 +1614,63 @@ _PySwigObject_type(void) {
   if (!type_init) {
     const PyTypeObject tmp
       = {
-    PyObject_HEAD_INIT(NULL)
-    0,                  /* ob_size */
-    (char *)"PySwigObject",         /* tp_name */
-    sizeof(PySwigObject),           /* tp_basicsize */
-    0,                      /* tp_itemsize */
-    (destructor)PySwigObject_dealloc,   /* tp_dealloc */
-    (printfunc)PySwigObject_print,      /* tp_print */
+	PyObject_HEAD_INIT(NULL)
+	0,				    /* ob_size */
+	(char *)"PySwigObject",		    /* tp_name */
+	sizeof(PySwigObject),		    /* tp_basicsize */
+	0,			            /* tp_itemsize */
+	(destructor)PySwigObject_dealloc,   /* tp_dealloc */
+	(printfunc)PySwigObject_print,	    /* tp_print */
 #if PY_VERSION_HEX < 0x02020000
-    (getattrfunc)PySwigObject_getattr,  /* tp_getattr */ 
+	(getattrfunc)PySwigObject_getattr,  /* tp_getattr */ 
 #else
-    (getattrfunc)0,             /* tp_getattr */ 
+	(getattrfunc)0,			    /* tp_getattr */ 
 #endif
-    (setattrfunc)0,             /* tp_setattr */ 
-    (cmpfunc)PySwigObject_compare,      /* tp_compare */ 
-    (reprfunc)PySwigObject_repr,        /* tp_repr */    
-    &PySwigObject_as_number,        /* tp_as_number */
-    0,                  /* tp_as_sequence */
-    0,                  /* tp_as_mapping */
-    (hashfunc)0,                /* tp_hash */
-    (ternaryfunc)0,             /* tp_call */
-    (reprfunc)PySwigObject_str,     /* tp_str */
-    PyObject_GenericGetAttr,            /* tp_getattro */
-    0,                  /* tp_setattro */
-    0,                          /* tp_as_buffer */
-    Py_TPFLAGS_DEFAULT,             /* tp_flags */
-    swigobject_doc,                 /* tp_doc */        
-    0,                                  /* tp_traverse */
-    0,                                  /* tp_clear */
-    0,                                  /* tp_richcompare */
-    0,                                  /* tp_weaklistoffset */
+	(setattrfunc)0,			    /* tp_setattr */ 
+	(cmpfunc)PySwigObject_compare,	    /* tp_compare */ 
+	(reprfunc)PySwigObject_repr,	    /* tp_repr */    
+	&PySwigObject_as_number,	    /* tp_as_number */
+	0,				    /* tp_as_sequence */
+	0,				    /* tp_as_mapping */
+	(hashfunc)0,			    /* tp_hash */
+	(ternaryfunc)0,			    /* tp_call */
+	(reprfunc)PySwigObject_str,	    /* tp_str */
+	PyObject_GenericGetAttr,            /* tp_getattro */
+	0,				    /* tp_setattro */
+	0,		                    /* tp_as_buffer */
+	Py_TPFLAGS_DEFAULT,	            /* tp_flags */
+	swigobject_doc, 	            /* tp_doc */        
+	0,                                  /* tp_traverse */
+	0,                                  /* tp_clear */
+	0,                                  /* tp_richcompare */
+	0,                                  /* tp_weaklistoffset */
 #if PY_VERSION_HEX >= 0x02020000
-    0,                                  /* tp_iter */
-    0,                                  /* tp_iternext */
-    swigobject_methods,         /* tp_methods */ 
-    0,                      /* tp_members */
-    0,                  /* tp_getset */         
-    0,                      /* tp_base */           
-    0,                  /* tp_dict */           
-    0,                  /* tp_descr_get */      
-    0,                  /* tp_descr_set */      
-    0,                  /* tp_dictoffset */     
-    0,                  /* tp_init */           
-    0,                  /* tp_alloc */          
-    0,                      /* tp_new */            
-    0,                              /* tp_free */      
+	0,                                  /* tp_iter */
+	0,                                  /* tp_iternext */
+	swigobject_methods,		    /* tp_methods */ 
+	0,			            /* tp_members */
+	0,				    /* tp_getset */	    	
+	0,			            /* tp_base */	        
+	0,				    /* tp_dict */	    	
+	0,				    /* tp_descr_get */  	
+	0,				    /* tp_descr_set */  	
+	0,				    /* tp_dictoffset */ 	
+	0,				    /* tp_init */	    	
+	0,				    /* tp_alloc */	    	
+	0,			            /* tp_new */	    	
+	0,	                            /* tp_free */	   
         0,                                  /* tp_is_gc */  
-    0,                  /* tp_bases */   
-    0,                  /* tp_mro */
-    0,                  /* tp_cache */   
-    0,                  /* tp_subclasses */
-    0,                  /* tp_weaklist */
+	0,				    /* tp_bases */   
+	0,				    /* tp_mro */
+	0,				    /* tp_cache */   
+ 	0,				    /* tp_subclasses */
+	0,				    /* tp_weaklist */
 #endif
 #if PY_VERSION_HEX >= 0x02030000
-    0,                                  /* tp_del */
+	0,                                  /* tp_del */
 #endif
 #ifdef COUNT_ALLOCS
-    0,0,0,0                             /* tp_alloc -> tp_next */
+	0,0,0,0                             /* tp_alloc -> tp_next */
 #endif
       };
     pyswigobject_type = tmp;
@@ -1781,59 +1781,59 @@ _PySwigPacked_type(void) {
   if (!type_init) {
     const PyTypeObject tmp
       = {
-    PyObject_HEAD_INIT(NULL)
-    0,                  /* ob_size */   
-    (char *)"PySwigPacked",         /* tp_name */   
-    sizeof(PySwigPacked),           /* tp_basicsize */  
-    0,                  /* tp_itemsize */   
-    (destructor)PySwigPacked_dealloc,   /* tp_dealloc */    
-    (printfunc)PySwigPacked_print,      /* tp_print */      
-    (getattrfunc)0,             /* tp_getattr */    
-    (setattrfunc)0,             /* tp_setattr */    
-    (cmpfunc)PySwigPacked_compare,      /* tp_compare */    
-    (reprfunc)PySwigPacked_repr,        /* tp_repr */       
-    0,                              /* tp_as_number */  
-    0,                  /* tp_as_sequence */
-    0,                  /* tp_as_mapping */ 
-    (hashfunc)0,                /* tp_hash */   
-    (ternaryfunc)0,             /* tp_call */   
-    (reprfunc)PySwigPacked_str,     /* tp_str */    
-    PyObject_GenericGetAttr,            /* tp_getattro */
-    0,                  /* tp_setattro */
-    0,                          /* tp_as_buffer */
-    Py_TPFLAGS_DEFAULT,             /* tp_flags */
-    swigpacked_doc,                 /* tp_doc */
-    0,                                  /* tp_traverse */
-    0,                                  /* tp_clear */
-    0,                                  /* tp_richcompare */
-    0,                                  /* tp_weaklistoffset */
+	PyObject_HEAD_INIT(NULL)
+	0,				    /* ob_size */	
+	(char *)"PySwigPacked",		    /* tp_name */	
+	sizeof(PySwigPacked),		    /* tp_basicsize */	
+	0,				    /* tp_itemsize */	
+	(destructor)PySwigPacked_dealloc,   /* tp_dealloc */	
+	(printfunc)PySwigPacked_print,	    /* tp_print */   	
+	(getattrfunc)0,			    /* tp_getattr */ 	
+	(setattrfunc)0,			    /* tp_setattr */ 	
+	(cmpfunc)PySwigPacked_compare,	    /* tp_compare */ 	
+	(reprfunc)PySwigPacked_repr,	    /* tp_repr */    	
+	0,	                            /* tp_as_number */	
+	0,				    /* tp_as_sequence */
+	0,				    /* tp_as_mapping */	
+	(hashfunc)0,			    /* tp_hash */	
+	(ternaryfunc)0,			    /* tp_call */	
+	(reprfunc)PySwigPacked_str,	    /* tp_str */	
+	PyObject_GenericGetAttr,            /* tp_getattro */
+	0,				    /* tp_setattro */
+	0,		                    /* tp_as_buffer */
+	Py_TPFLAGS_DEFAULT,	            /* tp_flags */
+	swigpacked_doc, 	            /* tp_doc */
+	0,                                  /* tp_traverse */
+	0,                                  /* tp_clear */
+	0,                                  /* tp_richcompare */
+	0,                                  /* tp_weaklistoffset */
 #if PY_VERSION_HEX >= 0x02020000
-    0,                                  /* tp_iter */
-    0,                                  /* tp_iternext */
-    0,                          /* tp_methods */ 
-    0,                      /* tp_members */
-    0,                  /* tp_getset */         
-    0,                      /* tp_base */           
-    0,                  /* tp_dict */           
-    0,                  /* tp_descr_get */      
-    0,                  /* tp_descr_set */      
-    0,                  /* tp_dictoffset */     
-    0,                  /* tp_init */           
-    0,                  /* tp_alloc */          
-    0,                      /* tp_new */            
-    0,                              /* tp_free */      
+	0,                                  /* tp_iter */
+	0,                                  /* tp_iternext */
+	0,		                    /* tp_methods */ 
+	0,			            /* tp_members */
+	0,				    /* tp_getset */	    	
+	0,			            /* tp_base */	        
+	0,				    /* tp_dict */	    	
+	0,				    /* tp_descr_get */  	
+	0,				    /* tp_descr_set */  	
+	0,				    /* tp_dictoffset */ 	
+	0,				    /* tp_init */	    	
+	0,				    /* tp_alloc */	    	
+	0,			            /* tp_new */	    	
+	0, 	                            /* tp_free */	   
         0,                                  /* tp_is_gc */  
-    0,                  /* tp_bases */   
-    0,                  /* tp_mro */
-    0,                  /* tp_cache */   
-    0,                  /* tp_subclasses */
-    0,                  /* tp_weaklist */
+	0,				    /* tp_bases */   
+	0,				    /* tp_mro */
+	0,				    /* tp_cache */   
+ 	0,				    /* tp_subclasses */
+	0,				    /* tp_weaklist */
 #endif
 #if PY_VERSION_HEX >= 0x02030000
-    0,                                  /* tp_del */
+	0,                                  /* tp_del */
 #endif
 #ifdef COUNT_ALLOCS
-    0,0,0,0                             /* tp_alloc -> tp_next */
+	0,0,0,0                             /* tp_alloc -> tp_next */
 #endif
       };
     pyswigpacked_type = tmp;
@@ -1907,22 +1907,22 @@ SWIG_Python_GetSwigThis(PyObject *pyobj)
     } else {
       PyObject **dictptr = _PyObject_GetDictPtr(pyobj);
       if (dictptr != NULL) {
-    PyObject *dict = *dictptr;
-    obj = dict ? PyDict_GetItem(dict, SWIG_This()) : 0;
+	PyObject *dict = *dictptr;
+	obj = dict ? PyDict_GetItem(dict, SWIG_This()) : 0;
       } else {
 #ifdef PyWeakref_CheckProxy
-    if (PyWeakref_CheckProxy(pyobj)) {
-      PyObject *wobj = PyWeakref_GET_OBJECT(pyobj);
-      return wobj ? SWIG_Python_GetSwigThis(wobj) : 0;
-    }
+	if (PyWeakref_CheckProxy(pyobj)) {
+	  PyObject *wobj = PyWeakref_GET_OBJECT(pyobj);
+	  return wobj ? SWIG_Python_GetSwigThis(wobj) : 0;
+	}
 #endif
-    obj = PyObject_GetAttr(pyobj,SWIG_This());
-    if (obj) {
-      Py_DECREF(obj);
-    } else {
-      if (PyErr_Occurred()) PyErr_Clear();
-      return 0;
-    }
+	obj = PyObject_GetAttr(pyobj,SWIG_This());
+	if (obj) {
+	  Py_DECREF(obj);
+	} else {
+	  if (PyErr_Occurred()) PyErr_Clear();
+	  return 0;
+	}
       }
     }
 #else
@@ -1936,7 +1936,7 @@ SWIG_Python_GetSwigThis(PyObject *pyobj)
 #endif
     if (obj && !PySwigObject_Check(obj)) {
       /* a PyObject is called 'this', try to get the 'real this'
-     PySwigObject from it */ 
+	 PySwigObject from it */ 
       return SWIG_Python_GetSwigThis(obj);
     }
     return (PySwigObject *)obj;
@@ -1971,67 +1971,67 @@ SWIG_Python_ConvertPtrAndOwn(PyObject *obj, void **ptr, swig_type_info *ty, int 
     while (sobj) {
       void *vptr = sobj->ptr;
       if (ty) {
-    swig_type_info *to = sobj->ty;
-    if (to == ty) {
-      /* no type cast needed */
-      if (ptr) *ptr = vptr;
-      break;
-    } else {
-      swig_cast_info *tc = SWIG_TypeCheck(to->name,ty);
-      if (!tc) {
-        sobj = (PySwigObject *)sobj->next;
+	swig_type_info *to = sobj->ty;
+	if (to == ty) {
+	  /* no type cast needed */
+	  if (ptr) *ptr = vptr;
+	  break;
+	} else {
+	  swig_cast_info *tc = SWIG_TypeCheck(to->name,ty);
+	  if (!tc) {
+	    sobj = (PySwigObject *)sobj->next;
+	  } else {
+	    if (ptr) *ptr = SWIG_TypeCast(tc,vptr);
+	    break;
+	  }
+	}
       } else {
-        if (ptr) *ptr = SWIG_TypeCast(tc,vptr);
-        break;
-      }
-    }
-      } else {
-    if (ptr) *ptr = vptr;
-    break;
+	if (ptr) *ptr = vptr;
+	break;
       }
     }
     if (sobj) {
       if (own) *own = sobj->own;
       if (flags & SWIG_POINTER_DISOWN) {
-    sobj->own = 0;
+	sobj->own = 0;
       }
       return SWIG_OK;
     } else {
       int res = SWIG_ERROR;
       if (flags & SWIG_POINTER_IMPLICIT_CONV) {
-    PySwigClientData *data = ty ? (PySwigClientData *) ty->clientdata : 0;
-    if (data && !data->implicitconv) {
-      PyObject *klass = data->klass;
-      if (klass) {
-        PyObject *impconv;
-        data->implicitconv = 1; /* avoid recursion and call 'explicit' constructors*/
-        impconv = SWIG_Python_CallFunctor(klass, obj);
-        data->implicitconv = 0;
-        if (PyErr_Occurred()) {
-          PyErr_Clear();
-          impconv = 0;
-        }
-        if (impconv) {
-          PySwigObject *iobj = SWIG_Python_GetSwigThis(impconv);
-          if (iobj) {
-        void *vptr;
-        res = SWIG_Python_ConvertPtrAndOwn((PyObject*)iobj, &vptr, ty, 0, 0);
-        if (SWIG_IsOK(res)) {
-          if (ptr) {
-            *ptr = vptr;
-            /* transfer the ownership to 'ptr' */
-            iobj->own = 0;
-            res = SWIG_AddCast(res);
-            res = SWIG_AddNewMask(res);
-          } else {
-            res = SWIG_AddCast(res);            
-          }
-        }
-          }
-          Py_DECREF(impconv);
-        }
-      }
-    }
+	PySwigClientData *data = ty ? (PySwigClientData *) ty->clientdata : 0;
+	if (data && !data->implicitconv) {
+	  PyObject *klass = data->klass;
+	  if (klass) {
+	    PyObject *impconv;
+	    data->implicitconv = 1; /* avoid recursion and call 'explicit' constructors*/
+	    impconv = SWIG_Python_CallFunctor(klass, obj);
+	    data->implicitconv = 0;
+	    if (PyErr_Occurred()) {
+	      PyErr_Clear();
+	      impconv = 0;
+	    }
+	    if (impconv) {
+	      PySwigObject *iobj = SWIG_Python_GetSwigThis(impconv);
+	      if (iobj) {
+		void *vptr;
+		res = SWIG_Python_ConvertPtrAndOwn((PyObject*)iobj, &vptr, ty, 0, 0);
+		if (SWIG_IsOK(res)) {
+		  if (ptr) {
+		    *ptr = vptr;
+		    /* transfer the ownership to 'ptr' */
+		    iobj->own = 0;
+		    res = SWIG_AddCast(res);
+		    res = SWIG_AddNewMask(res);
+		  } else {
+		    res = SWIG_AddCast(res);		    
+		  }
+		}
+	      }
+	      Py_DECREF(impconv);
+	    }
+	  }
+	}
       }
       return res;
     }
@@ -2048,7 +2048,7 @@ SWIG_Python_ConvertFunctionPtr(PyObject *obj, void **ptr, swig_type_info *ty) {
     void *vptr = 0;
     
     /* here we get the method pointer for callbacks */
-    char *doc = (char*)(((PyCFunctionObject *)obj) -> m_ml -> ml_doc);
+    char *doc = (((PyCFunctionObject *)obj) -> m_ml -> ml_doc);
     const char *desc = doc ? strstr(doc, "swig_ptr: ") : 0;
     if (desc) {
       desc = ty ? SWIG_UnpackVoidPtr(desc + 10, &vptr, ty->name) : 0;
@@ -2102,12 +2102,12 @@ SWIG_Python_NewShadowInstance(PySwigClientData *data, PyObject *swig_this)
 #if !defined(SWIG_PYTHON_SLOW_GETSET_THIS)
       PyObject **dictptr = _PyObject_GetDictPtr(inst);
       if (dictptr != NULL) {
-    PyObject *dict = *dictptr;
-    if (dict == NULL) {
-      dict = PyDict_New();
-      *dictptr = dict;
-      PyDict_SetItem(dict, SWIG_This(), swig_this);
-    }
+	PyObject *dict = *dictptr;
+	if (dict == NULL) {
+	  dict = PyDict_New();
+	  *dictptr = dict;
+	  PyDict_SetItem(dict, SWIG_This(), swig_this);
+	}
       }
 #else
       PyObject *key = SWIG_This();
@@ -2204,8 +2204,8 @@ SWIG_Python_NewPointerObj(void *ptr, swig_type_info *type, int flags) {
     if (clientdata && !(flags & SWIG_POINTER_NOSHADOW)) {
       PyObject *inst = SWIG_Python_NewShadowInstance(clientdata, robj);
       if (inst) {
-    Py_DECREF(robj);
-    robj = inst;
+	Py_DECREF(robj);
+	robj = inst;
       }
     }
     return robj;
@@ -2236,7 +2236,7 @@ SWIG_Python_GetModule(void) {
     type_pointer = SWIG_ReturnGlobalTypeList((void *)0);
 #else
     type_pointer = PyCObject_Import((char*)"swig_runtime_data" SWIG_RUNTIME_VERSION,
-                    (char*)"type_pointer" SWIG_TYPE_TABLE_NAME);
+				    (char*)"type_pointer" SWIG_TYPE_TABLE_NAME);
     if (PyErr_Occurred()) {
       PyErr_Clear();
       type_pointer = (void *)0;
@@ -2255,12 +2255,12 @@ PyModule_AddObject(PyObject *m, char *name, PyObject *o)
   PyObject *dict;
   if (!PyModule_Check(m)) {
     PyErr_SetString(PyExc_TypeError,
-            "PyModule_AddObject() needs module as first arg");
+		    "PyModule_AddObject() needs module as first arg");
     return SWIG_ERROR;
   }
   if (!o) {
     PyErr_SetString(PyExc_TypeError,
-            "PyModule_AddObject() needs non-NULL value");
+		    "PyModule_AddObject() needs non-NULL value");
     return SWIG_ERROR;
   }
   
@@ -2268,7 +2268,7 @@ PyModule_AddObject(PyObject *m, char *name, PyObject *o)
   if (dict == NULL) {
     /* Internal error -- modules must have a dict! */
     PyErr_Format(PyExc_SystemError, "module '%s' has no __dict__",
-         PyModule_GetName(m));
+		 PyModule_GetName(m));
     return SWIG_ERROR;
   }
   if (PyDict_SetItemString(dict, name, o))
@@ -2299,7 +2299,7 @@ SWIG_Python_SetModule(swig_module_info *swig_module) {
   static PyMethodDef swig_empty_runtime_method_table[] = { {NULL, NULL, 0, NULL} };/* Sentinel */
 
   PyObject *module = Py_InitModule((char*)"swig_runtime_data" SWIG_RUNTIME_VERSION,
-                   swig_empty_runtime_method_table);
+				   swig_empty_runtime_method_table);
   PyObject *pointer = PyCObject_FromVoidPtr((void *) swig_module, SWIG_Python_DestroyModule);
   if (pointer && module) {
     PyModule_AddObject(module, (char*)"type_pointer" SWIG_TYPE_TABLE_NAME, pointer);
@@ -2357,9 +2357,9 @@ SWIG_Python_AddErrMesg(const char* mesg, int infront)
       Py_XINCREF(type);
       PyErr_Clear();
       if (infront) {
-    PyErr_Format(type, "%s %s", mesg, PyString_AsString(old_str));
+	PyErr_Format(type, "%s %s", mesg, PyString_AsString(old_str));
       } else {
-    PyErr_Format(type, "%s %s", PyString_AsString(old_str), mesg);
+	PyErr_Format(type, "%s %s", PyString_AsString(old_str), mesg);
       }
       Py_DECREF(old_str);
     }
@@ -2398,26 +2398,26 @@ SWIG_Python_TypeError(const char *type, PyObject *obj)
     if (obj && PySwigObject_Check(obj)) {
       const char *otype = (const char *) PySwigObject_GetDesc(obj);
       if (otype) {
-    PyErr_Format(PyExc_TypeError, "a '%s' is expected, 'PySwigObject(%s)' is received",
-             type, otype);
-    return;
+	PyErr_Format(PyExc_TypeError, "a '%s' is expected, 'PySwigObject(%s)' is received",
+		     type, otype);
+	return;
       }
     } else 
 #endif      
     {
       const char *otype = (obj ? obj->ob_type->tp_name : 0); 
       if (otype) {
-    PyObject *str = PyObject_Str(obj);
-    const char *cstr = str ? PyString_AsString(str) : 0;
-    if (cstr) {
-      PyErr_Format(PyExc_TypeError, "a '%s' is expected, '%s(%s)' is received",
-               type, otype, cstr);
-    } else {
-      PyErr_Format(PyExc_TypeError, "a '%s' is expected, '%s' is received",
-               type, otype);
-    }
-    Py_XDECREF(str);
-    return;
+	PyObject *str = PyObject_Str(obj);
+	const char *cstr = str ? PyString_AsString(str) : 0;
+	if (cstr) {
+	  PyErr_Format(PyExc_TypeError, "a '%s' is expected, '%s(%s)' is received",
+		       type, otype, cstr);
+	} else {
+	  PyErr_Format(PyExc_TypeError, "a '%s' is expected, '%s' is received",
+		       type, otype);
+	}
+	Py_XDECREF(str);
+	return;
       }
     }   
     PyErr_Format(PyExc_TypeError, "a '%s' is expected", type);
@@ -2748,9 +2748,9 @@ namespace swig {
 }
 
 
-    #include "pyhelpers.h"
-    #include "pycvseq.hpp"
-    #include "error.h"
+	#include "pyhelpers.h"
+	#include "pycvseq.hpp"
+	#include "error.h"
 
 
 
@@ -2759,66 +2759,66 @@ static CvArr * PySequence_to_CvArr( PyObject * obj );
 
 // convert a python sequence/array/list object into a c-array
 #define PyObject_AsArrayImpl(func, ctype, ptype)                              \
-    int func(PyObject * obj, ctype * array, int len){                         \
-    void * mat_vptr=NULL;                                                     \
-    void * im_vptr=NULL;                                                      \
-    if(PyNumber_Check(obj)){                                                  \
-        memset( array, 0, sizeof(ctype)*len );                                \
-        array[0] = PyObject_As##ptype( obj );                                 \
-    }                                                                         \
-    else if(PySequence_Check(obj)){                                           \
-        int seqsize = PySequence_Size(obj);                                   \
-        for(int i=0; i<len && i<seqsize; i++){                                \
-            if(i<seqsize){                                                    \
-                array[i] =  PyObject_As##ptype( PySequence_GetItem(obj, i) ); \
-            }                                                                 \
-            else{                                                             \
-                array[i] = 0;                                                 \
-            }                                                                 \
-        }                                                                     \
-    }                                                                         \
-    else if( SWIG_ConvertPtr(obj, &mat_vptr, SWIGTYPE_p_CvMat, 0)!=-1 ||      \
-             SWIG_ConvertPtr(obj, &im_vptr, SWIGTYPE_p__IplImage, 0)!=-1)     \
-    {                                                                         \
-        CvMat * mat = (CvMat *) mat_vptr;                                     \
-        CvMat stub;                                                           \
-        if(im_vptr) mat = cvGetMat(im_vptr, &stub);                           \
-        if( mat->rows!=1 && mat->cols!=1 ){                                   \
-            PyErr_SetString( PyExc_TypeError,                                 \
-                 "PyObject_As*Array: CvArr must be row or column vector" );   \
-            return -1;                                                        \
-        }                                                                     \
-        if( mat->rows==1 && mat->cols==1 ){                                   \
-            CvScalar val;                                                     \
-            if( len!=CV_MAT_CN(mat->type) ){                                  \
-                PyErr_SetString( PyExc_TypeError,                             \
-                "PyObject_As*Array: CvArr channels != length" );              \
-                return -1;                                                    \
-            }                                                                 \
-            val = cvGet1D(mat, 0);                                            \
-            for(int i=0; i<len; i++){                                         \
-                array[i] = (ctype) val.val[i];                                \
-            }                                                                 \
-        }                                                                     \
-        else{                                                                 \
-            mat = cvReshape(mat, &stub, -1, mat->rows*mat->cols);             \
-            if( mat->rows != len ){                                           \
-                PyErr_SetString( PyExc_TypeError,                             \
-                 "PyObject_As*Array: CvArr rows or cols must equal length" ); \
-                 return -1;                                                   \
-            }                                                                 \
-            for(int i=0; i<len; i++){                                         \
-                CvScalar val = cvGet1D(mat, i);                               \
-                array[i] = (ctype) val.val[0];                                \
-            }                                                                 \
-        }                                                                     \
-    }                                                                         \
-    else{                                                                     \
-        PyErr_SetString( PyExc_TypeError,                                     \
-                "PyObject_As*Array: Expected a number, sequence or CvArr" );  \
-        return -1;                                                            \
-    }                                                                         \
-    return 0;                                                                 \
+	int func(PyObject * obj, ctype * array, int len){                         \
+	void * mat_vptr=NULL;                                                     \
+	void * im_vptr=NULL;                                                      \
+	if(PyNumber_Check(obj)){                                                  \
+		memset( array, 0, sizeof(ctype)*len );                                \
+		array[0] = PyObject_As##ptype( obj );                                 \
+	}                                                                         \
+	else if(PySequence_Check(obj)){                                           \
+		int seqsize = PySequence_Size(obj);                                   \
+		for(int i=0; i<len && i<seqsize; i++){                                \
+			if(i<seqsize){                                                    \
+	            array[i] =  PyObject_As##ptype( PySequence_GetItem(obj, i) ); \
+			}                                                                 \
+			else{                                                             \
+				array[i] = 0;                                                 \
+			}                                                                 \
+		}                                                                     \
+	}                                                                         \
+	else if( SWIG_ConvertPtr(obj, &mat_vptr, SWIGTYPE_p_CvMat, 0)!=-1 ||      \
+	         SWIG_ConvertPtr(obj, &im_vptr, SWIGTYPE_p__IplImage, 0)!=-1)     \
+	{                                                                         \
+		CvMat * mat = (CvMat *) mat_vptr;                                     \
+		CvMat stub;                                                           \
+		if(im_vptr) mat = cvGetMat(im_vptr, &stub);                           \
+		if( mat->rows!=1 && mat->cols!=1 ){                                   \
+			PyErr_SetString( PyExc_TypeError,                                 \
+			     "PyObject_As*Array: CvArr must be row or column vector" );   \
+			return -1;                                                        \
+		}                                                                     \
+		if( mat->rows==1 && mat->cols==1 ){                                   \
+			CvScalar val;                                                     \
+			if( len!=CV_MAT_CN(mat->type) ){                                  \
+				PyErr_SetString( PyExc_TypeError,                             \
+				"PyObject_As*Array: CvArr channels != length" );              \
+				return -1;                                                    \
+			}                                                                 \
+			val = cvGet1D(mat, 0);                                            \
+			for(int i=0; i<len; i++){                                         \
+				array[i] = (ctype) val.val[i];                                \
+			}                                                                 \
+		}                                                                     \
+		else{                                                                 \
+			mat = cvReshape(mat, &stub, -1, mat->rows*mat->cols);             \
+			if( mat->rows != len ){                                           \
+				PyErr_SetString( PyExc_TypeError,                             \
+				 "PyObject_As*Array: CvArr rows or cols must equal length" ); \
+				 return -1;                                                   \
+			}                                                                 \
+			for(int i=0; i<len; i++){                                         \
+				CvScalar val = cvGet1D(mat, i);                               \
+				array[i] = (ctype) val.val[0];                                \
+			}                                                                 \
+		}                                                                     \
+	}                                                                         \
+	else{                                                                     \
+		PyErr_SetString( PyExc_TypeError,                                     \
+				"PyObject_As*Array: Expected a number, sequence or CvArr" );  \
+		return -1;                                                            \
+	}                                                                         \
+	return 0;                                                                 \
 }
 
 PyObject_AsArrayImpl( PyObject_AsFloatArray, float, Double );
@@ -2826,192 +2826,192 @@ PyObject_AsArrayImpl( PyObject_AsDoubleArray, double, Double );
 PyObject_AsArrayImpl( PyObject_AsLongArray, int, Long );
 
 static CvPoint PyObject_to_CvPoint(PyObject * obj){
-    CvPoint val;
-    CvPoint *ptr;
-    CvPoint2D32f * ptr2D32f;
-    CvScalar * scalar;
+	CvPoint val;
+	CvPoint *ptr;
+	CvPoint2D32f * ptr2D32f;
+	CvScalar * scalar;
 
-    if( SWIG_ConvertPtr(obj, (void**)&ptr, SWIGTYPE_p_CvPoint, 0) != -1) {
-        return *ptr;
-    }
-    if( SWIG_ConvertPtr(obj, (void**)&ptr2D32f, SWIGTYPE_p_CvPoint2D32f, 0) != -1) {
-        return cvPointFrom32f( *ptr2D32f );
-    }
-    if( SWIG_ConvertPtr(obj, (void**)&scalar, SWIGTYPE_p_CvScalar, 0) != -1) {
-        return cvPointFrom32f(cvPoint2D32f( scalar->val[0], scalar->val[1] ));
-    }
-    if(PyObject_AsLongArray(obj, (int *) &val, 2) != -1){
-        return val;
-    }
+	if( SWIG_ConvertPtr(obj, (void**)&ptr, SWIGTYPE_p_CvPoint, 0) != -1) {
+		return *ptr;
+	}
+	if( SWIG_ConvertPtr(obj, (void**)&ptr2D32f, SWIGTYPE_p_CvPoint2D32f, 0) != -1) {
+		return cvPointFrom32f( *ptr2D32f );
+	}
+	if( SWIG_ConvertPtr(obj, (void**)&scalar, SWIGTYPE_p_CvScalar, 0) != -1) {
+		return cvPointFrom32f(cvPoint2D32f( scalar->val[0], scalar->val[1] ));
+	}
+	if(PyObject_AsLongArray(obj, (int *) &val, 2) != -1){
+		return val;
+	}
 
-    PyErr_SetString( PyExc_TypeError, "could not convert to CvPoint");
-    return cvPoint(0,0);
+	PyErr_SetString( PyExc_TypeError, "could not convert to CvPoint");
+	return cvPoint(0,0);
 }
 
 static CvPoint2D32f PyObject_to_CvPoint2D32f(PyObject * obj){
     CvPoint2D32f val;
     CvPoint2D32f *ptr2D32f;
-    CvPoint *ptr;
-    CvScalar * scalar;
+	CvPoint *ptr;
+	CvScalar * scalar;
     if( SWIG_ConvertPtr(obj, (void**)&ptr2D32f, SWIGTYPE_p_CvPoint2D32f, 0) != -1) {
-        return *ptr2D32f;
-    }
-    if( SWIG_ConvertPtr(obj, (void**)&ptr, SWIGTYPE_p_CvPoint, 0) != -1) {
-        return cvPointTo32f(*ptr);
-    }
-    if( SWIG_ConvertPtr(obj, (void**)&scalar, SWIGTYPE_p_CvScalar, 0) != -1) {
-        return cvPoint2D32f( scalar->val[0], scalar->val[1] );
-    }
-    if(PyObject_AsFloatArray(obj, (float *) &val, 2) != -1){
-        return val;
-    }
-    PyErr_SetString(PyExc_TypeError, "could not convert to CvPoint2D32f");
-    return cvPoint2D32f(0,0);
+		return *ptr2D32f;
+	}
+	if( SWIG_ConvertPtr(obj, (void**)&ptr, SWIGTYPE_p_CvPoint, 0) != -1) {
+		return cvPointTo32f(*ptr);
+	}
+	if( SWIG_ConvertPtr(obj, (void**)&scalar, SWIGTYPE_p_CvScalar, 0) != -1) {
+		return cvPoint2D32f( scalar->val[0], scalar->val[1] );
+	}
+	if(PyObject_AsFloatArray(obj, (float *) &val, 2) != -1){
+		return val;
+	}
+	PyErr_SetString(PyExc_TypeError, "could not convert to CvPoint2D32f");
+	return cvPoint2D32f(0,0);
 }
 
 static CvScalar PyObject_to_CvScalar(PyObject * obj){
-    CvScalar val;
-    CvScalar * ptr;
+	CvScalar val;
+	CvScalar * ptr;
     CvPoint2D32f *ptr2D32f;
-    CvPoint *pt_ptr;
-    void * vptr;
-    if( SWIG_ConvertPtr(obj, &vptr, SWIGTYPE_p_CvScalar, 0 ) != -1)
-    {
-        ptr = (CvScalar *) vptr;
-        return *ptr;
-    }
-    if( SWIG_ConvertPtr(obj, (void**)&ptr2D32f, SWIGTYPE_p_CvPoint2D32f, 0) != -1) {
+	CvPoint *pt_ptr;
+	void * vptr;
+	if( SWIG_ConvertPtr(obj, &vptr, SWIGTYPE_p_CvScalar, 0 ) != -1)
+	{
+		ptr = (CvScalar *) vptr;
+		return *ptr;
+	}
+	if( SWIG_ConvertPtr(obj, (void**)&ptr2D32f, SWIGTYPE_p_CvPoint2D32f, 0) != -1) {
         return cvScalar(ptr2D32f->x, ptr2D32f->y);
     }
     if( SWIG_ConvertPtr(obj, (void**)&pt_ptr, SWIGTYPE_p_CvPoint, 0) != -1) {
         return cvScalar(pt_ptr->x, pt_ptr->y);
     }
-    if(PyObject_AsDoubleArray(obj, val.val, 4)==-1){
-        return val;
-    }
-    return cvScalar(-1,-1,-1,-1); 
+	if(PyObject_AsDoubleArray(obj, val.val, 4)==-1){
+		return val;
+	}
+	return cvScalar(-1,-1,-1,-1); 
 }
 
 /* if python sequence type, convert to CvMat or CvMatND */
 static CvArr * PyObject_to_CvArr(PyObject * obj, bool * freearg){
-    CvArr * cvarr;
-    *freearg = false;
+	CvArr * cvarr;
+	*freearg = false;
 
-    // check if OpenCV type
-    if( PySwigObject_Check(obj) ){
-        SWIG_ConvertPtr(obj, &cvarr, 0, SWIG_POINTER_EXCEPTION);
-    }
-    else if(PyList_Check(obj) || PyTuple_Check(obj)){
-        cvarr = PySequence_to_CvArr( obj );
-        *freearg = (cvarr != NULL);
-    }
-    else if(PyLong_Check(obj) && PyLong_AsLong(obj)==0){
-        return NULL;
-    }
-    else {
-        SWIG_ConvertPtr(obj, (void**)&cvarr, 0, SWIG_POINTER_EXCEPTION);
-    }
-    return cvarr;
+	// check if OpenCV type
+	if( PySwigObject_Check(obj) ){
+		SWIG_ConvertPtr(obj, &cvarr, 0, SWIG_POINTER_EXCEPTION);
+	}
+	else if(PyList_Check(obj) || PyTuple_Check(obj)){
+		cvarr = PySequence_to_CvArr( obj );
+		*freearg = (cvarr != NULL);
+	}
+	else if(PyLong_Check(obj) && PyLong_AsLong(obj)==0){
+		return NULL;
+	}
+	else {
+		SWIG_ConvertPtr(obj, (void**)&cvarr, 0, SWIG_POINTER_EXCEPTION);
+	}
+	return cvarr;
 }
 
 static int PyObject_GetElemType(PyObject * obj){
-    void *vptr;
-    if(SWIG_ConvertPtr(obj, &vptr, SWIGTYPE_p_CvPoint, 0) != -1) return CV_32SC2;   
-    if(SWIG_ConvertPtr(obj, &vptr, SWIGTYPE_p_CvSize, 0) != -1) return CV_32SC2;    
-    if(SWIG_ConvertPtr(obj, &vptr, SWIGTYPE_p_CvRect, 0) != -1) return CV_32SC4;    
-    if(SWIG_ConvertPtr(obj, &vptr, SWIGTYPE_p_CvSize2D32f, 0) != -1) return CV_32FC2;   
-    if(SWIG_ConvertPtr(obj, &vptr, SWIGTYPE_p_CvPoint2D32f, 0) != -1) return CV_32FC2;  
-    if(SWIG_ConvertPtr(obj, &vptr, SWIGTYPE_p_CvPoint3D32f, 0) != -1) return CV_32FC3;  
-    if(SWIG_ConvertPtr(obj, &vptr, SWIGTYPE_p_CvPoint2D64f, 0) != -1) return CV_64FC2;  
-    if(SWIG_ConvertPtr(obj, &vptr, SWIGTYPE_p_CvPoint3D64f, 0) != -1) return CV_64FC3;  
-    if(SWIG_ConvertPtr(obj, &vptr, SWIGTYPE_p_CvScalar, 0) != -1) return CV_64FC4;  
-    if(PyTuple_Check(obj) || PyList_Check(obj)) return CV_MAKE_TYPE(CV_32F, PySequence_Size( obj ));
-    if(PyLong_Check(obj)) return CV_32S;
-    return CV_32F;
+	void *vptr;
+	if(SWIG_ConvertPtr(obj, &vptr, SWIGTYPE_p_CvPoint, 0) != -1) return CV_32SC2;	
+	if(SWIG_ConvertPtr(obj, &vptr, SWIGTYPE_p_CvSize, 0) != -1) return CV_32SC2;	
+	if(SWIG_ConvertPtr(obj, &vptr, SWIGTYPE_p_CvRect, 0) != -1) return CV_32SC4;	
+	if(SWIG_ConvertPtr(obj, &vptr, SWIGTYPE_p_CvSize2D32f, 0) != -1) return CV_32FC2;	
+	if(SWIG_ConvertPtr(obj, &vptr, SWIGTYPE_p_CvPoint2D32f, 0) != -1) return CV_32FC2;	
+	if(SWIG_ConvertPtr(obj, &vptr, SWIGTYPE_p_CvPoint3D32f, 0) != -1) return CV_32FC3;	
+	if(SWIG_ConvertPtr(obj, &vptr, SWIGTYPE_p_CvPoint2D64f, 0) != -1) return CV_64FC2;	
+	if(SWIG_ConvertPtr(obj, &vptr, SWIGTYPE_p_CvPoint3D64f, 0) != -1) return CV_64FC3;	
+	if(SWIG_ConvertPtr(obj, &vptr, SWIGTYPE_p_CvScalar, 0) != -1) return CV_64FC4;	
+	if(PyTuple_Check(obj) || PyList_Check(obj)) return CV_MAKE_TYPE(CV_32F, PySequence_Size( obj ));
+	if(PyLong_Check(obj)) return CV_32S;
+	return CV_32F;
 }
 
 // Would like this to convert Python lists to CvMat
 // Also lists of CvPoints, CvScalars, CvMats? etc
 static CvArr * PySequence_to_CvArr( PyObject * obj ){
-    int dims[CV_MAX_DIM] = {1,1,1};
-    int ndim=0;
-    int cvtype;
-    PyObject * item;
-    
-    // figure out dimensions
-    for(item = obj; 
-        (PyTuple_Check(item) || PyList_Check(item));
-        item = PySequence_GetItem(item, 0))
-    {
-        dims[ndim] = PySequence_Size( item ); 
-        ndim++;
-    }
+	int dims[CV_MAX_DIM] = {1,1,1};
+	int ndim=0;
+	int cvtype;
+	PyObject * item;
+	
+	// figure out dimensions
+	for(item = obj; 
+		(PyTuple_Check(item) || PyList_Check(item));
+		item = PySequence_GetItem(item, 0))
+	{
+		dims[ndim] = PySequence_Size( item ); 
+		ndim++;
+	}
 
-    
-    if(ndim==0){
-        PyErr_SetString(PyExc_TypeError, "Cannot convert an empty python object to a CvArr");
-        return NULL;
-    }
-    
-    cvtype = PyObject_GetElemType(item);
-    // collapse last dim into NCH if we found a single channel, but the last dim is <=3
-    if(CV_MAT_CN(cvtype)==1 && dims[ndim-1]>1 && dims[ndim-1]<4){
-        cvtype=CV_MAKE_TYPE(cvtype, dims[ndim-1]);
-        dims[ndim-1]=1; 
-        ndim--;
-    }
-    
-    if(cvtype==-1){
-        PyErr_SetString(PyExc_TypeError, "Could not determine OpenCV element type of Python sequence");
-        return NULL;
-    }
-    
-    // CvMat
-    if(ndim<=2){
-        CvMat *m = cvCreateMat(dims[0], dims[1], cvtype);
-        for(int i=0; i<dims[0]; i++){
-            PyObject * rowobj = PySequence_GetItem(obj, i);
-            if( dims[1] > 1 ){
-                // double check size
-                assert((PyTuple_Check(rowobj) || PyList_Check(rowobj)) && 
-                        PySequence_Size(rowobj) == dims[1]);
+	
+	if(ndim==0){
+		PyErr_SetString(PyExc_TypeError, "Cannot convert an empty python object to a CvArr");
+		return NULL;
+	}
+	
+	cvtype = PyObject_GetElemType(item);
+	// collapse last dim into NCH if we found a single channel, but the last dim is <=3
+	if(CV_MAT_CN(cvtype)==1 && dims[ndim-1]>1 && dims[ndim-1]<4){
+		cvtype=CV_MAKE_TYPE(cvtype, dims[ndim-1]);
+		dims[ndim-1]=1;	
+		ndim--;
+	}
+	
+	if(cvtype==-1){
+		PyErr_SetString(PyExc_TypeError, "Could not determine OpenCV element type of Python sequence");
+		return NULL;
+	}
+	
+	// CvMat
+	if(ndim<=2){
+		CvMat *m = cvCreateMat(dims[0], dims[1], cvtype);
+		for(int i=0; i<dims[0]; i++){
+			PyObject * rowobj = PySequence_GetItem(obj, i);
+			if( dims[1] > 1 ){
+				// double check size
+				assert((PyTuple_Check(rowobj) || PyList_Check(rowobj)) && 
+						PySequence_Size(rowobj) == dims[1]);
 
-                for(int j=0; j<dims[1]; j++){
-                    PyObject * colobj = PySequence_GetItem(rowobj, j);
-                    cvSet2D( m, i, j, PyObject_to_CvScalar( colobj ) );
-                }
-            }
-            else{
-                cvSet1D(m, i, PyObject_to_CvScalar( rowobj ) );
-            }
-        }
-        return (CvArr *) m;
-    }
+				for(int j=0; j<dims[1]; j++){
+					PyObject * colobj = PySequence_GetItem(rowobj, j);
+					cvSet2D( m, i, j, PyObject_to_CvScalar( colobj ) );
+				}
+			}
+			else{
+				cvSet1D(m, i, PyObject_to_CvScalar( rowobj ) );
+			}
+		}
+		return (CvArr *) m;
+	}
 
-    // CvMatND
-    PyErr_SetString(PyExc_TypeError, "Cannot convert Python Object to CvArr -- ndim > 3");
-    return NULL;
-    
+	// CvMatND
+	PyErr_SetString(PyExc_TypeError, "Cannot convert Python Object to CvArr -- ndim > 3");
+	return NULL;
+	
 }
 
 
 // Wrapper class
 class CvRNG_Wrapper {
 private:
-    CvRNG m_val;
+	CvRNG m_val;
 public:
-    CvRNG_Wrapper( const CvRNG & val ) :
-        m_val(val)
-    {
-    }
-    CvRNG * ptr() { return &m_val; }
-    CvRNG & ref() { return m_val; }
-    bool operator==(const CvRNG_Wrapper & x){
-        return m_val==x.m_val;
-    }
-    bool operator!=(const CvRNG_Wrapper & x){
-        return m_val!=x.m_val;
-    }
+	CvRNG_Wrapper( const CvRNG & val ) :
+		m_val(val)
+	{
+	}
+	CvRNG * ptr() { return &m_val; }
+	CvRNG & ref() { return m_val; }
+	bool operator==(const CvRNG_Wrapper & x){
+		return m_val==x.m_val;
+	}
+	bool operator!=(const CvRNG_Wrapper & x){
+		return m_val!=x.m_val;
+	}
 };
 
 
@@ -3047,10 +3047,10 @@ SWIG_AsVal_double (PyObject *obj, double *val)
     if (!dispatch) {
       long v = PyLong_AsLong(obj);
       if (!PyErr_Occurred()) {
-    if (val) *val = v;
-    return SWIG_AddCast(SWIG_AddCast(SWIG_OK));
+	if (val) *val = v;
+	return SWIG_AddCast(SWIG_AddCast(SWIG_OK));
       } else {
-    PyErr_Clear();
+	PyErr_Clear();
       }
     }
   }
@@ -3129,8 +3129,8 @@ SWIG_AsVal_unsigned_SS_long (PyObject *obj, unsigned long *val)
       double d;
       int res = SWIG_AddCast(SWIG_AsVal_double (obj,&d));
       if (SWIG_IsOK(res) && SWIG_CanCastAsInteger(&d, 0, ULONG_MAX)) {
-    if (val) *val = (unsigned long)(d);
-    return res;
+	if (val) *val = (unsigned long)(d);
+	return res;
       }
     }
   }
@@ -3141,13 +3141,13 @@ SWIG_AsVal_unsigned_SS_long (PyObject *obj, unsigned long *val)
 
 #include <limits.h>
 #ifndef LLONG_MIN
-# define LLONG_MIN  LONG_LONG_MIN
+# define LLONG_MIN	LONG_LONG_MIN
 #endif
 #ifndef LLONG_MAX
-# define LLONG_MAX  LONG_LONG_MAX
+# define LLONG_MAX	LONG_LONG_MAX
 #endif
 #ifndef ULLONG_MAX
-# define ULLONG_MAX ULONG_LONG_MAX
+# define ULLONG_MAX	ULONG_LONG_MAX
 #endif
 
 
@@ -3197,20 +3197,20 @@ SWIGINTERNINLINE PyObject*
 // Wrapper class
 class CvSubdiv2DEdge_Wrapper {
 private:
-    CvSubdiv2DEdge m_val;
+	CvSubdiv2DEdge m_val;
 public:
-    CvSubdiv2DEdge_Wrapper( const CvSubdiv2DEdge & val ) :
-        m_val(val)
-    {
-    }
-    CvSubdiv2DEdge * ptr() { return &m_val; }
-    CvSubdiv2DEdge & ref() { return m_val; }
-    bool operator==(const CvSubdiv2DEdge_Wrapper & x){
-        return m_val==x.m_val;
-    }
-    bool operator!=(const CvSubdiv2DEdge_Wrapper & x){
-        return m_val!=x.m_val;
-    }
+	CvSubdiv2DEdge_Wrapper( const CvSubdiv2DEdge & val ) :
+		m_val(val)
+	{
+	}
+	CvSubdiv2DEdge * ptr() { return &m_val; }
+	CvSubdiv2DEdge & ref() { return m_val; }
+	bool operator==(const CvSubdiv2DEdge_Wrapper & x){
+		return m_val==x.m_val;
+	}
+	bool operator!=(const CvSubdiv2DEdge_Wrapper & x){
+		return m_val!=x.m_val;
+	}
 };
 
 
@@ -3256,8 +3256,8 @@ SWIG_AsVal_long (PyObject *obj, long* val)
       double d;
       int res = SWIG_AddCast(SWIG_AsVal_double (obj,&d));
       if (SWIG_IsOK(res) && SWIG_CanCastAsInteger(&d, LONG_MIN, LONG_MAX)) {
-    if (val) *val = (long)(d);
-    return res;
+	if (val) *val = (long)(d);
+	return res;
       }
     }
   }
@@ -3286,87 +3286,87 @@ SWIG_AsVal_int (PyObject * obj, int *val)
 
 
 void cvReleaseImage_Shadow(PyObject * obj){
-    Py_XDECREF(obj);
+	Py_XDECREF(obj);
 }
 
 
 void cvReleaseMat_Shadow(PyObject * obj){
-    Py_XDECREF(obj);
+	Py_XDECREF(obj);
 }
 
 
 void cvReleaseStructuringElement_Shadow(PyObject * obj){
-    Py_XDECREF(obj);
+	Py_XDECREF(obj);
 }
 
 
 void cvReleaseConDensation_Shadow(PyObject * obj){
-    Py_XDECREF(obj);
+	Py_XDECREF(obj);
 }
 
 
 void cvReleaseKalman_Shadow(PyObject * obj){
-    Py_XDECREF(obj);
+	Py_XDECREF(obj);
 }
 
 
 void cvReleaseHist_Shadow(PyObject * obj){
-    Py_XDECREF(obj);
+	Py_XDECREF(obj);
 }
 
 
 void cvReleaseHaarClassifierCascade_Shadow(PyObject * obj){
-    Py_XDECREF(obj);
+	Py_XDECREF(obj);
 }
 
 
 void cvReleasePOSITObject_Shadow(PyObject * obj){
-    Py_XDECREF(obj);
+	Py_XDECREF(obj);
 }
 
 
 void cvReleaseImageHeader_Shadow(PyObject * obj){
-    Py_XDECREF(obj);
+	Py_XDECREF(obj);
 }
 
 
 void cvReleaseMatND_Shadow(PyObject * obj){
-    Py_XDECREF(obj);
+	Py_XDECREF(obj);
 }
 
 
 void cvReleaseSparseMat_Shadow(PyObject * obj){
-    Py_XDECREF(obj);
+	Py_XDECREF(obj);
 }
 
 
 void cvReleaseMemStorage_Shadow(PyObject * obj){
-    Py_XDECREF(obj);
+	Py_XDECREF(obj);
 }
 
 
 void cvReleaseGraphScanner_Shadow(PyObject * obj){
-    Py_XDECREF(obj);
+	Py_XDECREF(obj);
 }
 
 
 void cvReleaseFileStorage_Shadow(PyObject * obj){
-    Py_XDECREF(obj);
+	Py_XDECREF(obj);
 }
 
 
 void cvRelease_Shadow(PyObject * obj){
-    Py_XDECREF(obj);
+	Py_XDECREF(obj);
 }
 
 
 void cvReleaseCapture_Shadow(PyObject * obj){
-    Py_XDECREF(obj);
+	Py_XDECREF(obj);
 }
 
 
 void cvReleaseVideoWriter_Shadow(PyObject * obj){
-    Py_XDECREF(obj);
+	Py_XDECREF(obj);
 }
 
 
@@ -3408,8 +3408,8 @@ extern const signed char icvDepthToType[];
 #define icvIplToCvDepth( depth ) \
     icvDepthToType[(((depth) & 255) >> 2) + ((depth) < 0)]
 CvMat * cvCreateImageMat( CvSize size, int depth, int channels ){
-    depth = icvIplToCvDepth(depth);
-    return cvCreateMat( size.height, size.width, CV_MAKE_TYPE(depth, channels));
+	depth = icvIplToCvDepth(depth);
+	return cvCreateMat( size.height, size.width, CV_MAKE_TYPE(depth, channels));
 }
 #define cvCloneImageMat( mat ) cvCloneMat( mat )
 
@@ -3434,7 +3434,7 @@ SWIG_FromCharPtrAndSize(const char* carray, size_t size)
     if (size > INT_MAX) {
       swig_type_info* pchar_descriptor = SWIG_pchar_descriptor();
       return pchar_descriptor ? 
-    SWIG_NewPointerObj(const_cast< char * >(carray), pchar_descriptor, 0) : SWIG_Py_Void();
+	SWIG_NewPointerObj(const_cast< char * >(carray), pchar_descriptor, 0) : SWIG_Py_Void();
     } else {
       return PyString_FromStringAndSize(carray, static_cast< int >(size));
     }
@@ -3551,367 +3551,367 @@ SWIG_From_unsigned_SS_long_SS_long  (unsigned long long value)
 
 SWIGINTERN void delete_IplImage(IplImage *self){ IplImage       * dummy = self; cvReleaseImage              (& dummy); }
 SWIGINTERN IplImage *IplImage_operator_SA___SWIG_0(IplImage *self,CvArr *src){
-        IplImage * res = cvCreateImage(cvGetSize(self), self->depth, self->nChannels);
-        cvAnd(self, src, res);
-        return res;
-    }
+		IplImage * res = cvCreateImage(cvGetSize(self), self->depth, self->nChannels);
+		cvAnd(self, src, res);
+		return res;
+	}
 SWIGINTERN IplImage *IplImage_operator_SA__Se___SWIG_0(IplImage *self,CvArr *src){
-        cvAnd(self, src, self);
-        return self;
-    }
+		cvAnd(self, src, self);
+		return self;
+	}
 SWIGINTERN IplImage *IplImage_operator_Sa___SWIG_0(IplImage *self,CvArr *src){
-        IplImage * res = cvCreateImage(cvGetSize(self), self->depth, self->nChannels);
-        cvAdd(self, src, res);
-        return res;
-    }
+		IplImage * res = cvCreateImage(cvGetSize(self), self->depth, self->nChannels);
+		cvAdd(self, src, res);
+		return res;
+	}
 SWIGINTERN IplImage *IplImage_operator_Sa__Se___SWIG_0(IplImage *self,CvArr *src){
-        cvAdd(self, src, self);
-        return self;
-    }
+		cvAdd(self, src, self);
+		return self;
+	}
 SWIGINTERN IplImage *IplImage_operator_Sm_(IplImage *self,CvArr *src){
-        IplImage * res = cvCreateImage(cvGetSize(self), self->depth, self->nChannels);
-        cvMul(self, src, res);
-        return res;
-    }
+		IplImage * res = cvCreateImage(cvGetSize(self), self->depth, self->nChannels);
+		cvMul(self, src, res);
+		return res;
+	}
 SWIGINTERN IplImage *IplImage_operator_Sm__Se_(IplImage *self,CvArr *src){
-        cvMul(self, src, self);
-        return self;
-    }
+		cvMul(self, src, self);
+		return self;
+	}
 SWIGINTERN IplImage *IplImage_operator_Ss___SWIG_0(IplImage *self,CvArr *src){
-        IplImage * res = cvCreateImage(cvGetSize(self), self->depth, self->nChannels);
-        cvSub(self, src, res);
-        return res;
-    }
+		IplImage * res = cvCreateImage(cvGetSize(self), self->depth, self->nChannels);
+		cvSub(self, src, res);
+		return res;
+	}
 SWIGINTERN IplImage *IplImage_operator_Ss__Se___SWIG_0(IplImage *self,CvArr *src){
-        cvSub(self, src, self);
-        return self;
-    }
+		cvSub(self, src, self);
+		return self;
+	}
 SWIGINTERN IplImage *IplImage_operator_Sd___SWIG_0(IplImage *self,CvArr *src){
-        IplImage * res = cvCreateImage(cvGetSize(self), self->depth, self->nChannels);
-        cvDiv(self, src, res);
-        return res;
-    }
+		IplImage * res = cvCreateImage(cvGetSize(self), self->depth, self->nChannels);
+		cvDiv(self, src, res);
+		return res;
+	}
 SWIGINTERN IplImage *IplImage_operator_Sd__Se_(IplImage *self,CvArr *src){
-        cvDiv(self, src, self);
-        return self;
-    }
+		cvDiv(self, src, self);
+		return self;
+	}
 SWIGINTERN IplImage *IplImage_operator_So___SWIG_0(IplImage *self,CvArr *src){
-        IplImage * res = cvCreateImage(cvGetSize(self), self->depth, self->nChannels);
-        cvOr(self, src, res);
-        return res;
-    }
+		IplImage * res = cvCreateImage(cvGetSize(self), self->depth, self->nChannels);
+		cvOr(self, src, res);
+		return res;
+	}
 SWIGINTERN IplImage *IplImage_operator_So__Se___SWIG_0(IplImage *self,CvArr *src){
-        cvOr(self, src, self);
-        return self;
-    }
+		cvOr(self, src, self);
+		return self;
+	}
 SWIGINTERN IplImage *IplImage_operator_Sx___SWIG_0(IplImage *self,CvArr *src){
-        IplImage * res = cvCreateImage(cvGetSize(self), self->depth, self->nChannels);
-        cvXor(self, src, res);
-        return res;
-    }
+		IplImage * res = cvCreateImage(cvGetSize(self), self->depth, self->nChannels);
+		cvXor(self, src, res);
+		return res;
+	}
 SWIGINTERN IplImage *IplImage_operator_Sx__Se___SWIG_0(IplImage *self,CvArr *src){
-        cvXor(self, src, self);
-        return self;
-    }
+		cvXor(self, src, self);
+		return self;
+	}
 SWIGINTERN IplImage *IplImage_operator_Sa___SWIG_1(IplImage *self,CvScalar val){
-        IplImage * res = cvCreateImage(cvGetSize(self), self->depth, self->nChannels);
-        cvAddS(self, val, res);
-        return res;
-    }
+		IplImage * res = cvCreateImage(cvGetSize(self), self->depth, self->nChannels);
+		cvAddS(self, val, res);
+		return res;
+	}
 SWIGINTERN IplImage *IplImage_operator_Sa__Se___SWIG_1(IplImage *self,CvScalar val){
-        cvAddS(self, val, self);
-        return self;
-    }
+		cvAddS(self, val, self);
+		return self;
+	}
 SWIGINTERN IplImage *IplImage_operator_Sx___SWIG_1(IplImage *self,CvScalar val){
-        IplImage * res = cvCreateImage(cvGetSize(self), self->depth, self->nChannels);
-        cvXorS(self, val, res);
-        return res;
-    }
+		IplImage * res = cvCreateImage(cvGetSize(self), self->depth, self->nChannels);
+		cvXorS(self, val, res);
+		return res;
+	}
 SWIGINTERN IplImage *IplImage_operator_Sx__Se___SWIG_1(IplImage *self,CvScalar val){
-        cvXorS(self, val, self);
-        return self;
-    }
+		cvXorS(self, val, self);
+		return self;
+	}
 SWIGINTERN IplImage *IplImage_operator_Ss___SWIG_1(IplImage *self,CvScalar val){
-        IplImage * res = cvCreateImage(cvGetSize(self), self->depth, self->nChannels);
-        cvSubS(self, val, res);
-        return res;
-    }
+		IplImage * res = cvCreateImage(cvGetSize(self), self->depth, self->nChannels);
+		cvSubS(self, val, res);
+		return res;
+	}
 SWIGINTERN IplImage *IplImage_operator_Ss__Se___SWIG_1(IplImage *self,CvScalar val){
-        cvSubS(self, val, self);
-        return self;
-    }
+		cvSubS(self, val, self);
+		return self;
+	}
 SWIGINTERN IplImage *IplImage_operator_So___SWIG_1(IplImage *self,CvScalar val){
-        IplImage * res = cvCreateImage(cvGetSize(self), self->depth, self->nChannels);
-        cvOrS(self, val, res);
-        return res;
-    }
+		IplImage * res = cvCreateImage(cvGetSize(self), self->depth, self->nChannels);
+		cvOrS(self, val, res);
+		return res;
+	}
 SWIGINTERN IplImage *IplImage_operator_So__Se___SWIG_1(IplImage *self,CvScalar val){
-        cvOrS(self, val, self);
-        return self;
-    }
+		cvOrS(self, val, self);
+		return self;
+	}
 SWIGINTERN IplImage *IplImage_operator_SA___SWIG_1(IplImage *self,CvScalar val){
-        IplImage * res = cvCreateImage(cvGetSize(self), self->depth, self->nChannels);
-        cvAndS(self, val, res);
-        return res;
-    }
+		IplImage * res = cvCreateImage(cvGetSize(self), self->depth, self->nChannels);
+		cvAndS(self, val, res);
+		return res;
+	}
 SWIGINTERN IplImage *IplImage_operator_SA__Se___SWIG_1(IplImage *self,CvScalar val){
-        cvAndS(self, val, self);
-        return self;
-    }
+		cvAndS(self, val, self);
+		return self;
+	}
 SWIGINTERN IplImage *IplImage_operator_Sg__Se___SWIG_0(IplImage *self,CvArr *src){
-        IplImage * res = cvCreateImage(cvGetSize(self), self->depth, self->nChannels);
-        cvCmp(self, src, res, 2);
-        return res;
-    }
+		IplImage * res = cvCreateImage(cvGetSize(self), self->depth, self->nChannels);
+		cvCmp(self, src, res, 2);
+		return res;
+	}
 SWIGINTERN IplImage *IplImage_operator_Sg__Se___SWIG_1(IplImage *self,double val){
-        IplImage * res = cvCreateImage(cvGetSize(self), self->depth, self->nChannels);
-        cvCmpS(self, val, res, 2);
-        return res;
-    }
+		IplImage * res = cvCreateImage(cvGetSize(self), self->depth, self->nChannels);
+		cvCmpS(self, val, res, 2);
+		return res;
+	}
 SWIGINTERN IplImage *IplImage_operator_Se__Se___SWIG_0(IplImage *self,CvArr *src){
-        IplImage * res = cvCreateImage(cvGetSize(self), self->depth, self->nChannels);
-        cvCmp(self, src, res, 0);
-        return res;
-    }
+		IplImage * res = cvCreateImage(cvGetSize(self), self->depth, self->nChannels);
+		cvCmp(self, src, res, 0);
+		return res;
+	}
 SWIGINTERN IplImage *IplImage_operator_Se__Se___SWIG_1(IplImage *self,double val){
-        IplImage * res = cvCreateImage(cvGetSize(self), self->depth, self->nChannels);
-        cvCmpS(self, val, res, 0);
-        return res;
-    }
+		IplImage * res = cvCreateImage(cvGetSize(self), self->depth, self->nChannels);
+		cvCmpS(self, val, res, 0);
+		return res;
+	}
 SWIGINTERN IplImage *IplImage_operator_Sl__Se___SWIG_0(IplImage *self,CvArr *src){
-        IplImage * res = cvCreateImage(cvGetSize(self), self->depth, self->nChannels);
-        cvCmp(self, src, res, 4);
-        return res;
-    }
+		IplImage * res = cvCreateImage(cvGetSize(self), self->depth, self->nChannels);
+		cvCmp(self, src, res, 4);
+		return res;
+	}
 SWIGINTERN IplImage *IplImage_operator_Sl__Se___SWIG_1(IplImage *self,double val){
-        IplImage * res = cvCreateImage(cvGetSize(self), self->depth, self->nChannels);
-        cvCmpS(self, val, res, 4);
-        return res;
-    }
+		IplImage * res = cvCreateImage(cvGetSize(self), self->depth, self->nChannels);
+		cvCmpS(self, val, res, 4);
+		return res;
+	}
 SWIGINTERN IplImage *IplImage_operator_SN__Se___SWIG_0(IplImage *self,CvArr *src){
-        IplImage * res = cvCreateImage(cvGetSize(self), self->depth, self->nChannels);
-        cvCmp(self, src, res, 5);
-        return res;
-    }
+		IplImage * res = cvCreateImage(cvGetSize(self), self->depth, self->nChannels);
+		cvCmp(self, src, res, 5);
+		return res;
+	}
 SWIGINTERN IplImage *IplImage_operator_SN__Se___SWIG_1(IplImage *self,double val){
-        IplImage * res = cvCreateImage(cvGetSize(self), self->depth, self->nChannels);
-        cvCmpS(self, val, res, 5);
-        return res;
-    }
+		IplImage * res = cvCreateImage(cvGetSize(self), self->depth, self->nChannels);
+		cvCmpS(self, val, res, 5);
+		return res;
+	}
 SWIGINTERN IplImage *IplImage_operator_Sl___SWIG_0(IplImage *self,CvArr *src){
-        IplImage * res = cvCreateImage(cvGetSize(self), self->depth, self->nChannels);
-        cvCmp(self, src, res, 3);
-        return res;
-    }
+		IplImage * res = cvCreateImage(cvGetSize(self), self->depth, self->nChannels);
+		cvCmp(self, src, res, 3);
+		return res;
+	}
 SWIGINTERN IplImage *IplImage_operator_Sl___SWIG_1(IplImage *self,double val){
-        IplImage * res = cvCreateImage(cvGetSize(self), self->depth, self->nChannels);
-        cvCmpS(self, val, res, 3);
-        return res;
-    }
+		IplImage * res = cvCreateImage(cvGetSize(self), self->depth, self->nChannels);
+		cvCmpS(self, val, res, 3);
+		return res;
+	}
 SWIGINTERN IplImage *IplImage_operator_Sg___SWIG_0(IplImage *self,CvArr *src){
-        IplImage * res = cvCreateImage(cvGetSize(self), self->depth, self->nChannels);
-        cvCmp(self, src, res, 1);
-        return res;
-    }
+		IplImage * res = cvCreateImage(cvGetSize(self), self->depth, self->nChannels);
+		cvCmp(self, src, res, 1);
+		return res;
+	}
 SWIGINTERN IplImage *IplImage_operator_Sg___SWIG_1(IplImage *self,double val){
-        IplImage * res = cvCreateImage(cvGetSize(self), self->depth, self->nChannels);
-        cvCmpS(self, val, res, 1);
-        return res;
-    }
+		IplImage * res = cvCreateImage(cvGetSize(self), self->depth, self->nChannels);
+		cvCmpS(self, val, res, 1);
+		return res;
+	}
 SWIGINTERN IplImage *IplImage_operator_Sd___SWIG_1(IplImage *self,double val){
-        IplImage * res = cvCreateImage(cvGetSize(self), self->depth, self->nChannels);
-        cvConvertScale(self, res, val);
-        return res;
-    }
+		IplImage * res = cvCreateImage(cvGetSize(self), self->depth, self->nChannels);
+		cvConvertScale(self, res, val);
+		return res;
+	}
 SWIGINTERN IplImage *IplImage___radd____SWIG_0(IplImage *self,CvArr *arg){
-        IplImage * retarg = cvCreateImage(cvGetSize(self), self->depth, self->nChannels);
-        cvAdd(self, arg, retarg);
-        return retarg;
-    }
+		IplImage * retarg = cvCreateImage(cvGetSize(self), self->depth, self->nChannels);
+		cvAdd(self, arg, retarg);
+		return retarg;
+	}
 SWIGINTERN IplImage *IplImage___rsub____SWIG_0(IplImage *self,CvArr *arg){
-        IplImage * retarg = cvCreateImage(cvGetSize(self), self->depth, self->nChannels);
-        cvSub(arg, self, retarg);
-        return retarg;
-    }
+		IplImage * retarg = cvCreateImage(cvGetSize(self), self->depth, self->nChannels);
+		cvSub(arg, self, retarg);
+		return retarg;
+	}
 SWIGINTERN IplImage *IplImage___rdiv____SWIG_0(IplImage *self,CvArr *arg){
-        IplImage * retarg = cvCreateImage(cvGetSize(self), self->depth, self->nChannels);
-        cvDiv(arg, self, retarg);
-        return retarg;
-    }
+		IplImage * retarg = cvCreateImage(cvGetSize(self), self->depth, self->nChannels);
+		cvDiv(arg, self, retarg);
+		return retarg;
+	}
 SWIGINTERN IplImage *IplImage___rmul____SWIG_0(IplImage *self,CvArr *arg){
-        IplImage * retarg = cvCreateImage(cvGetSize(self), self->depth, self->nChannels);
-        cvMatMul(arg, self, retarg);
-        return retarg;
-    }
+		IplImage * retarg = cvCreateImage(cvGetSize(self), self->depth, self->nChannels);
+		cvMatMul(arg, self, retarg);
+		return retarg;
+	}
 SWIGINTERN IplImage *IplImage___radd____SWIG_1(IplImage *self,CvScalar arg){
-        IplImage * retarg = cvCreateImage(cvGetSize(self), self->depth, self->nChannels);
-        cvAddS(self, arg, retarg);
-        return retarg;
-    }
+		IplImage * retarg = cvCreateImage(cvGetSize(self), self->depth, self->nChannels);
+		cvAddS(self, arg, retarg);
+		return retarg;
+	}
 SWIGINTERN IplImage *IplImage___radd____SWIG_2(IplImage *self,double arg){
-        IplImage * retarg = cvCreateImage(cvGetSize(self), self->depth, self->nChannels);
-        cvAddS(self, cvScalar(arg), retarg);
-        return retarg;
-    }
+		IplImage * retarg = cvCreateImage(cvGetSize(self), self->depth, self->nChannels);
+		cvAddS(self, cvScalar(arg), retarg);
+		return retarg;
+	}
 SWIGINTERN IplImage *IplImage___rsub____SWIG_1(IplImage *self,CvScalar arg){
-        IplImage * retarg = cvCreateImage(cvGetSize(self), self->depth, self->nChannels);
-        cvSubRS(self, arg, retarg);
-        return retarg;
-    }
+		IplImage * retarg = cvCreateImage(cvGetSize(self), self->depth, self->nChannels);
+		cvSubRS(self, arg, retarg);
+		return retarg;
+	}
 SWIGINTERN IplImage *IplImage___rsub____SWIG_2(IplImage *self,double arg){
-        IplImage * retarg = cvCreateImage(cvGetSize(self), self->depth, self->nChannels);
-        cvSubRS(self, cvScalar(arg), retarg);
-        return retarg;
-    }
+		IplImage * retarg = cvCreateImage(cvGetSize(self), self->depth, self->nChannels);
+		cvSubRS(self, cvScalar(arg), retarg);
+		return retarg;
+	}
 SWIGINTERN CvArr *IplImage___rmul____SWIG_1(IplImage *self,double arg){
-        CvArr * retarg = cvCreateImage(cvGetSize(self), self->depth, self->nChannels);
-        cvConvertScale(self, retarg, arg);
-        return retarg;
-    }
+		CvArr * retarg = cvCreateImage(cvGetSize(self), self->depth, self->nChannels);
+		cvConvertScale(self, retarg, arg);
+		return retarg;
+	}
 SWIGINTERN CvArr *IplImage___rdiv____SWIG_1(IplImage *self,double arg){
-        CvArr * retarg = cvCreateImage(cvGetSize(self), self->depth, self->nChannels);
-        cvConvertScale(self, retarg, 1.0/arg);
-        return retarg;
-    }
+		CvArr * retarg = cvCreateImage(cvGetSize(self), self->depth, self->nChannels);
+		cvConvertScale(self, retarg, 1.0/arg);
+		return retarg;
+	}
 SWIGINTERN IplImage *IplImage___ror____SWIG_0(IplImage *self,CvScalar arg){
-        IplImage * retarg = cvCreateImage(cvGetSize(self), self->depth, self->nChannels);
-        cvOrS(self, arg, retarg);
-        return retarg;
-    }
+		IplImage * retarg = cvCreateImage(cvGetSize(self), self->depth, self->nChannels);
+		cvOrS(self, arg, retarg);
+		return retarg;
+	}
 SWIGINTERN IplImage *IplImage___ror____SWIG_1(IplImage *self,double arg){
-        IplImage * retarg = cvCreateImage(cvGetSize(self), self->depth, self->nChannels);
-        cvOrS(self, cvScalar(arg), retarg);
-        return retarg;
-    }
+		IplImage * retarg = cvCreateImage(cvGetSize(self), self->depth, self->nChannels);
+		cvOrS(self, cvScalar(arg), retarg);
+		return retarg;
+	}
 SWIGINTERN IplImage *IplImage___rand____SWIG_0(IplImage *self,CvScalar arg){
-        IplImage * retarg = cvCreateImage(cvGetSize(self), self->depth, self->nChannels);
-        cvAndS(self, arg, retarg);
-        return retarg;
-    }
+		IplImage * retarg = cvCreateImage(cvGetSize(self), self->depth, self->nChannels);
+		cvAndS(self, arg, retarg);
+		return retarg;
+	}
 SWIGINTERN IplImage *IplImage___rand____SWIG_1(IplImage *self,double arg){
-        IplImage * retarg = cvCreateImage(cvGetSize(self), self->depth, self->nChannels);
-        cvAndS(self, cvScalar(arg), retarg);
-        return retarg;
-    }
+		IplImage * retarg = cvCreateImage(cvGetSize(self), self->depth, self->nChannels);
+		cvAndS(self, cvScalar(arg), retarg);
+		return retarg;
+	}
 SWIGINTERN IplImage *IplImage___rxor____SWIG_0(IplImage *self,CvScalar arg){
-        IplImage * retarg = cvCreateImage(cvGetSize(self), self->depth, self->nChannels);
-        cvXorS(self, arg, retarg);
-        return retarg;
-    }
+		IplImage * retarg = cvCreateImage(cvGetSize(self), self->depth, self->nChannels);
+		cvXorS(self, arg, retarg);
+		return retarg;
+	}
 SWIGINTERN IplImage *IplImage___rxor____SWIG_1(IplImage *self,double arg){
-        IplImage * retarg = cvCreateImage(cvGetSize(self), self->depth, self->nChannels);
-        cvXorS(self, cvScalar(arg), retarg);
-        return retarg;
-    }
+		IplImage * retarg = cvCreateImage(cvGetSize(self), self->depth, self->nChannels);
+		cvXorS(self, cvScalar(arg), retarg);
+		return retarg;
+	}
 SWIGINTERN CvArr *IplImage___req__(IplImage *self,double arg){
-        CvArr * retarg = cvCreateImage(cvGetSize(self), 8, 1);
-        cvCmpS(self, arg, retarg, 0);
-        return retarg;
-    }
+		CvArr * retarg = cvCreateImage(cvGetSize(self), 8, 1);
+		cvCmpS(self, arg, retarg, 0);
+		return retarg;
+	}
 SWIGINTERN CvArr *IplImage___rgt__(IplImage *self,double arg){
-        CvArr * retarg = cvCreateImage(cvGetSize(self), 8, 1);
-        cvCmpS(self, arg, retarg, 1);
-        return retarg;
-    }
+		CvArr * retarg = cvCreateImage(cvGetSize(self), 8, 1);
+		cvCmpS(self, arg, retarg, 1);
+		return retarg;
+	}
 SWIGINTERN CvArr *IplImage___rge__(IplImage *self,double arg){
-        CvArr * retarg = cvCreateImage(cvGetSize(self), 8, 1);
-        cvCmpS(self, arg, retarg, 2);
-        return retarg;
-    }
+		CvArr * retarg = cvCreateImage(cvGetSize(self), 8, 1);
+		cvCmpS(self, arg, retarg, 2);
+		return retarg;
+	}
 SWIGINTERN CvArr *IplImage___rlt__(IplImage *self,double arg){
-        CvArr * retarg = cvCreateImage(cvGetSize(self), 8, 1);
-        cvCmpS(self, arg, retarg, 3);
-        return retarg;
-    }
+		CvArr * retarg = cvCreateImage(cvGetSize(self), 8, 1);
+		cvCmpS(self, arg, retarg, 3);
+		return retarg;
+	}
 SWIGINTERN CvArr *IplImage___rle__(IplImage *self,double arg){
-        CvArr * retarg = cvCreateImage(cvGetSize(self), 8, 1);
-        cvCmpS(self, arg, retarg, 4);
-        return retarg;
-    }
+		CvArr * retarg = cvCreateImage(cvGetSize(self), 8, 1);
+		cvCmpS(self, arg, retarg, 4);
+		return retarg;
+	}
 SWIGINTERN CvArr *IplImage___rne__(IplImage *self,double arg){
-        CvArr * retarg = cvCreateImage(cvGetSize(self), 8, 1);
-        cvCmpS(self, arg, retarg, 5);
-        return retarg;
-    }
+		CvArr * retarg = cvCreateImage(cvGetSize(self), 8, 1);
+		cvCmpS(self, arg, retarg, 5);
+		return retarg;
+	}
 SWIGINTERN IplImage *IplImage___pow__(IplImage *self,double arg){
-        IplImage * retarg = cvCreateImage(cvGetSize(self), self->depth, self->nChannels);
-        cvPow(self, retarg, arg);
-        return retarg;
-    }
+		IplImage * retarg = cvCreateImage(cvGetSize(self), self->depth, self->nChannels);
+		cvPow(self, retarg, arg);
+		return retarg;
+	}
 SWIGINTERN char *IplImage___str__(IplImage *self){
-        static char str[8];
-        cvArrPrint( self );
-        str[0]=0;
-        return str;
-    }
+		static char str[8];
+		cvArrPrint( self );
+		str[0]=0;
+		return str;
+	}
 SWIGINTERN void IplImage___setitem____SWIG_0(IplImage *self,PyObject *object,double val){
-        CvMat tmp;
-        CvRect subrect = PySlice_to_CvRect( self, object );
-        cvGetSubRect(self, &tmp, subrect);
-        cvSet(&tmp, cvScalarAll(val));
-    }
+		CvMat tmp;
+		CvRect subrect = PySlice_to_CvRect( self, object );
+		cvGetSubRect(self, &tmp, subrect);
+		cvSet(&tmp, cvScalarAll(val));
+	}
 SWIGINTERN void IplImage___setitem____SWIG_1(IplImage *self,PyObject *object,CvPoint val){
-        CvMat tmp;
-        CvRect subrect = PySlice_to_CvRect( self, object );
-        cvGetSubRect(self, &tmp, subrect);
-        cvSet(&tmp, cvScalar(val.x, val.y));
-    }
+		CvMat tmp;
+		CvRect subrect = PySlice_to_CvRect( self, object );
+		cvGetSubRect(self, &tmp, subrect);
+		cvSet(&tmp, cvScalar(val.x, val.y));
+	}
 SWIGINTERN void IplImage___setitem____SWIG_2(IplImage *self,PyObject *object,CvPoint2D32f val){
-        CvMat tmp;
-        CvRect subrect = PySlice_to_CvRect( self, object );
-        cvGetSubRect(self, &tmp, subrect);
-        cvSet(&tmp, cvScalar(val.x, val.y));
-    }
+		CvMat tmp;
+		CvRect subrect = PySlice_to_CvRect( self, object );
+		cvGetSubRect(self, &tmp, subrect);
+		cvSet(&tmp, cvScalar(val.x, val.y));
+	}
 SWIGINTERN void IplImage___setitem____SWIG_3(IplImage *self,PyObject *object,CvScalar val){
-        CvMat tmp;
-        CvRect subrect = PySlice_to_CvRect( self, object );
-        cvGetSubRect(self, &tmp, subrect);
-        cvSet(&tmp, val);
-    }
+		CvMat tmp;
+		CvRect subrect = PySlice_to_CvRect( self, object );
+		cvGetSubRect(self, &tmp, subrect);
+		cvSet(&tmp, val);
+	}
 SWIGINTERN void IplImage___setitem____SWIG_4(IplImage *self,PyObject *object,CvArr *arr){
-        CvMat tmp;
-        CvRect subrect = PySlice_to_CvRect( self, object );
-        cvGetSubRect(self, &tmp, subrect);
-        cvConvert(arr, &tmp);
-    }
+		CvMat tmp;
+		CvRect subrect = PySlice_to_CvRect( self, object );
+		cvGetSubRect(self, &tmp, subrect);
+		cvConvert(arr, &tmp);
+	}
 SWIGINTERN PyObject *IplImage___getitem__(IplImage *self,PyObject *object){
-        CvMat mat;
-        IplImage * im;
-        CvRect subrect = PySlice_to_CvRect( self, object );
-        
-        // return scalar if single element
-        if(subrect.width==1 && subrect.height==1){
-            CvScalar * s;
-            int type = cvGetElemType( self );
-            if(CV_MAT_CN(type) > 1){
-                s = new CvScalar;
-                *s = cvGet2D( self, subrect.y, subrect.x );
-                return SWIG_NewPointerObj( s, SWIGTYPE_p_CvScalar, 1 );
-            }
-            switch(CV_MAT_DEPTH(type)){
-            case 0:
-                return PyLong_FromUnsignedLong( CV_IMAGE_ELEM(self, uchar, subrect.y, subrect.x ) );
-            case 1:
-                return PyLong_FromLong( CV_IMAGE_ELEM(self, char, subrect.y, subrect.x ) );
-            case 2:
-                return PyLong_FromUnsignedLong( CV_IMAGE_ELEM(self, ushort, subrect.y, subrect.x ) );
-            case 3:
-                return PyLong_FromLong( CV_IMAGE_ELEM(self, short, subrect.y, subrect.x ) );
-            case 4:
-                return PyLong_FromLong( CV_IMAGE_ELEM(self, int, subrect.y, subrect.x ) );
-            case 5:
-                return PyFloat_FromDouble( CV_IMAGE_ELEM(self, float, subrect.y, subrect.x) );
-            case 6:
-                return PyFloat_FromDouble( CV_IMAGE_ELEM(self, double, subrect.y, subrect.x) );
-            }
-        }
-        
-        // otherwise return array
-        im = (IplImage *) cvAlloc(sizeof(IplImage));
-        cvGetSubRect(self, &mat, subrect);
-        im = cvGetImage(&mat, im);
-        return SWIG_NewPointerObj( im, SWIGTYPE_p__IplImage, 1 );
-    }
+		CvMat mat;
+		IplImage * im;
+		CvRect subrect = PySlice_to_CvRect( self, object );
+		
+		// return scalar if single element
+		if(subrect.width==1 && subrect.height==1){
+			CvScalar * s;
+			int type = cvGetElemType( self );
+			if(CV_MAT_CN(type) > 1){
+				s = new CvScalar;
+			    *s = cvGet2D( self, subrect.y, subrect.x );
+				return SWIG_NewPointerObj( s, SWIGTYPE_p_CvScalar, 1 );
+			}
+			switch(CV_MAT_DEPTH(type)){
+			case 0:
+				return PyLong_FromUnsignedLong( CV_IMAGE_ELEM(self, uchar, subrect.y, subrect.x ) );
+			case 1:
+				return PyLong_FromLong( CV_IMAGE_ELEM(self, char, subrect.y, subrect.x ) );
+			case 2:
+				return PyLong_FromUnsignedLong( CV_IMAGE_ELEM(self, ushort, subrect.y, subrect.x ) );
+			case 3:
+				return PyLong_FromLong( CV_IMAGE_ELEM(self, short, subrect.y, subrect.x ) );
+			case 4:
+				return PyLong_FromLong( CV_IMAGE_ELEM(self, int, subrect.y, subrect.x ) );
+			case 5:
+				return PyFloat_FromDouble( CV_IMAGE_ELEM(self, float, subrect.y, subrect.x) );
+			case 6:
+				return PyFloat_FromDouble( CV_IMAGE_ELEM(self, double, subrect.y, subrect.x) );
+			}
+		}
+		
+		// otherwise return array
+		im = (IplImage *) cvAlloc(sizeof(IplImage));
+		cvGetSubRect(self, &mat, subrect);
+		im = cvGetImage(&mat, im);
+		return SWIG_NewPointerObj( im, SWIGTYPE_p__IplImage, 1 );
+	}
 SWIGINTERN void delete_IplConvKernel(IplConvKernel *self){ IplConvKernel  * dummy = self; cvReleaseStructuringElement (& dummy); }
 
 typedef union {
@@ -3925,436 +3925,436 @@ typedef union {
 
 SWIGINTERN void delete_CvMat(CvMat *self){ CvMat          * dummy = self; cvReleaseMat                (& dummy); }
 SWIGINTERN CvMat *CvMat_operator_SA___SWIG_0(CvMat *self,CvArr *src){
-        CvMat * res = cvCreateMat(self->rows, self->cols, self->type);
-        cvAnd(self, src, res);
-        return res;
-    }
+		CvMat * res = cvCreateMat(self->rows, self->cols, self->type);
+		cvAnd(self, src, res);
+		return res;
+	}
 SWIGINTERN CvMat *CvMat_operator_SA__Se___SWIG_0(CvMat *self,CvArr *src){
-        cvAnd(self, src, self);
-        return self;
-    }
+		cvAnd(self, src, self);
+		return self;
+	}
 SWIGINTERN CvMat *CvMat_operator_Sa___SWIG_0(CvMat *self,CvArr *src){
-        CvMat * res = cvCreateMat(self->rows, self->cols, self->type);
-        cvAdd(self, src, res);
-        return res;
-    }
+		CvMat * res = cvCreateMat(self->rows, self->cols, self->type);
+		cvAdd(self, src, res);
+		return res;
+	}
 SWIGINTERN CvMat *CvMat_operator_Sa__Se___SWIG_0(CvMat *self,CvArr *src){
-        cvAdd(self, src, self);
-        return self;
-    }
+		cvAdd(self, src, self);
+		return self;
+	}
 SWIGINTERN CvMat *CvMat_operator_Sm_(CvMat *self,CvArr *src){
-        CvMat * res = cvCreateMat(self->rows, self->cols, self->type);
-        cvMul(self, src, res);
-        return res;
-    }
+		CvMat * res = cvCreateMat(self->rows, self->cols, self->type);
+		cvMul(self, src, res);
+		return res;
+	}
 SWIGINTERN CvMat *CvMat_operator_Sm__Se_(CvMat *self,CvArr *src){
-        cvMul(self, src, self);
-        return self;
-    }
+		cvMul(self, src, self);
+		return self;
+	}
 SWIGINTERN CvMat *CvMat_operator_Ss___SWIG_0(CvMat *self,CvArr *src){
-        CvMat * res = cvCreateMat(self->rows, self->cols, self->type);
-        cvSub(self, src, res);
-        return res;
-    }
+		CvMat * res = cvCreateMat(self->rows, self->cols, self->type);
+		cvSub(self, src, res);
+		return res;
+	}
 SWIGINTERN CvMat *CvMat_operator_Ss__Se___SWIG_0(CvMat *self,CvArr *src){
-        cvSub(self, src, self);
-        return self;
-    }
+		cvSub(self, src, self);
+		return self;
+	}
 SWIGINTERN CvMat *CvMat_operator_Sd___SWIG_0(CvMat *self,CvArr *src){
-        CvMat * res = cvCreateMat(self->rows, self->cols, self->type);
-        cvDiv(self, src, res);
-        return res;
-    }
+		CvMat * res = cvCreateMat(self->rows, self->cols, self->type);
+		cvDiv(self, src, res);
+		return res;
+	}
 SWIGINTERN CvMat *CvMat_operator_Sd__Se_(CvMat *self,CvArr *src){
-        cvDiv(self, src, self);
-        return self;
-    }
+		cvDiv(self, src, self);
+		return self;
+	}
 SWIGINTERN CvMat *CvMat_operator_So___SWIG_0(CvMat *self,CvArr *src){
-        CvMat * res = cvCreateMat(self->rows, self->cols, self->type);
-        cvOr(self, src, res);
-        return res;
-    }
+		CvMat * res = cvCreateMat(self->rows, self->cols, self->type);
+		cvOr(self, src, res);
+		return res;
+	}
 SWIGINTERN CvMat *CvMat_operator_So__Se___SWIG_0(CvMat *self,CvArr *src){
-        cvOr(self, src, self);
-        return self;
-    }
+		cvOr(self, src, self);
+		return self;
+	}
 SWIGINTERN CvMat *CvMat_operator_Sx___SWIG_0(CvMat *self,CvArr *src){
-        CvMat * res = cvCreateMat(self->rows, self->cols, self->type);
-        cvXor(self, src, res);
-        return res;
-    }
+		CvMat * res = cvCreateMat(self->rows, self->cols, self->type);
+		cvXor(self, src, res);
+		return res;
+	}
 SWIGINTERN CvMat *CvMat_operator_Sx__Se___SWIG_0(CvMat *self,CvArr *src){
-        cvXor(self, src, self);
-        return self;
-    }
+		cvXor(self, src, self);
+		return self;
+	}
 SWIGINTERN CvMat *CvMat_operator_Sa___SWIG_1(CvMat *self,CvScalar val){
-        CvMat * res = cvCreateMat(self->rows, self->cols, self->type);
-        cvAddS(self, val, res);
-        return res;
-    }
+		CvMat * res = cvCreateMat(self->rows, self->cols, self->type);
+		cvAddS(self, val, res);
+		return res;
+	}
 SWIGINTERN CvMat *CvMat_operator_Sa__Se___SWIG_1(CvMat *self,CvScalar val){
-        cvAddS(self, val, self);
-        return self;
-    }
+		cvAddS(self, val, self);
+		return self;
+	}
 SWIGINTERN CvMat *CvMat_operator_Sx___SWIG_1(CvMat *self,CvScalar val){
-        CvMat * res = cvCreateMat(self->rows, self->cols, self->type);
-        cvXorS(self, val, res);
-        return res;
-    }
+		CvMat * res = cvCreateMat(self->rows, self->cols, self->type);
+		cvXorS(self, val, res);
+		return res;
+	}
 SWIGINTERN CvMat *CvMat_operator_Sx__Se___SWIG_1(CvMat *self,CvScalar val){
-        cvXorS(self, val, self);
-        return self;
-    }
+		cvXorS(self, val, self);
+		return self;
+	}
 SWIGINTERN CvMat *CvMat_operator_Ss___SWIG_1(CvMat *self,CvScalar val){
-        CvMat * res = cvCreateMat(self->rows, self->cols, self->type);
-        cvSubS(self, val, res);
-        return res;
-    }
+		CvMat * res = cvCreateMat(self->rows, self->cols, self->type);
+		cvSubS(self, val, res);
+		return res;
+	}
 SWIGINTERN CvMat *CvMat_operator_Ss__Se___SWIG_1(CvMat *self,CvScalar val){
-        cvSubS(self, val, self);
-        return self;
-    }
+		cvSubS(self, val, self);
+		return self;
+	}
 SWIGINTERN CvMat *CvMat_operator_So___SWIG_1(CvMat *self,CvScalar val){
-        CvMat * res = cvCreateMat(self->rows, self->cols, self->type);
-        cvOrS(self, val, res);
-        return res;
-    }
+		CvMat * res = cvCreateMat(self->rows, self->cols, self->type);
+		cvOrS(self, val, res);
+		return res;
+	}
 SWIGINTERN CvMat *CvMat_operator_So__Se___SWIG_1(CvMat *self,CvScalar val){
-        cvOrS(self, val, self);
-        return self;
-    }
+		cvOrS(self, val, self);
+		return self;
+	}
 SWIGINTERN CvMat *CvMat_operator_SA___SWIG_1(CvMat *self,CvScalar val){
-        CvMat * res = cvCreateMat(self->rows, self->cols, self->type);
-        cvAndS(self, val, res);
-        return res;
-    }
+		CvMat * res = cvCreateMat(self->rows, self->cols, self->type);
+		cvAndS(self, val, res);
+		return res;
+	}
 SWIGINTERN CvMat *CvMat_operator_SA__Se___SWIG_1(CvMat *self,CvScalar val){
-        cvAndS(self, val, self);
-        return self;
-    }
+		cvAndS(self, val, self);
+		return self;
+	}
 SWIGINTERN CvMat *CvMat_operator_Sg__Se___SWIG_0(CvMat *self,CvArr *src){
-        CvMat * res = cvCreateMat(self->rows, self->cols, self->type);
-        cvCmp(self, src, res, 2);
-        return res;
-    }
+		CvMat * res = cvCreateMat(self->rows, self->cols, self->type);
+		cvCmp(self, src, res, 2);
+		return res;
+	}
 SWIGINTERN CvMat *CvMat_operator_Sg__Se___SWIG_1(CvMat *self,double val){
-        CvMat * res = cvCreateMat(self->rows, self->cols, self->type);
-        cvCmpS(self, val, res, 2);
-        return res;
-    }
+		CvMat * res = cvCreateMat(self->rows, self->cols, self->type);
+		cvCmpS(self, val, res, 2);
+		return res;
+	}
 SWIGINTERN CvMat *CvMat_operator_Se__Se___SWIG_0(CvMat *self,CvArr *src){
-        CvMat * res = cvCreateMat(self->rows, self->cols, self->type);
-        cvCmp(self, src, res, 0);
-        return res;
-    }
+		CvMat * res = cvCreateMat(self->rows, self->cols, self->type);
+		cvCmp(self, src, res, 0);
+		return res;
+	}
 SWIGINTERN CvMat *CvMat_operator_Se__Se___SWIG_1(CvMat *self,double val){
-        CvMat * res = cvCreateMat(self->rows, self->cols, self->type);
-        cvCmpS(self, val, res, 0);
-        return res;
-    }
+		CvMat * res = cvCreateMat(self->rows, self->cols, self->type);
+		cvCmpS(self, val, res, 0);
+		return res;
+	}
 SWIGINTERN CvMat *CvMat_operator_Sl__Se___SWIG_0(CvMat *self,CvArr *src){
-        CvMat * res = cvCreateMat(self->rows, self->cols, self->type);
-        cvCmp(self, src, res, 4);
-        return res;
-    }
+		CvMat * res = cvCreateMat(self->rows, self->cols, self->type);
+		cvCmp(self, src, res, 4);
+		return res;
+	}
 SWIGINTERN CvMat *CvMat_operator_Sl__Se___SWIG_1(CvMat *self,double val){
-        CvMat * res = cvCreateMat(self->rows, self->cols, self->type);
-        cvCmpS(self, val, res, 4);
-        return res;
-    }
+		CvMat * res = cvCreateMat(self->rows, self->cols, self->type);
+		cvCmpS(self, val, res, 4);
+		return res;
+	}
 SWIGINTERN CvMat *CvMat_operator_SN__Se___SWIG_0(CvMat *self,CvArr *src){
-        CvMat * res = cvCreateMat(self->rows, self->cols, self->type);
-        cvCmp(self, src, res, 5);
-        return res;
-    }
+		CvMat * res = cvCreateMat(self->rows, self->cols, self->type);
+		cvCmp(self, src, res, 5);
+		return res;
+	}
 SWIGINTERN CvMat *CvMat_operator_SN__Se___SWIG_1(CvMat *self,double val){
-        CvMat * res = cvCreateMat(self->rows, self->cols, self->type);
-        cvCmpS(self, val, res, 5);
-        return res;
-    }
+		CvMat * res = cvCreateMat(self->rows, self->cols, self->type);
+		cvCmpS(self, val, res, 5);
+		return res;
+	}
 SWIGINTERN CvMat *CvMat_operator_Sl___SWIG_0(CvMat *self,CvArr *src){
-        CvMat * res = cvCreateMat(self->rows, self->cols, self->type);
-        cvCmp(self, src, res, 3);
-        return res;
-    }
+		CvMat * res = cvCreateMat(self->rows, self->cols, self->type);
+		cvCmp(self, src, res, 3);
+		return res;
+	}
 SWIGINTERN CvMat *CvMat_operator_Sl___SWIG_1(CvMat *self,double val){
-        CvMat * res = cvCreateMat(self->rows, self->cols, self->type);
-        cvCmpS(self, val, res, 3);
-        return res;
-    }
+		CvMat * res = cvCreateMat(self->rows, self->cols, self->type);
+		cvCmpS(self, val, res, 3);
+		return res;
+	}
 SWIGINTERN CvMat *CvMat_operator_Sg___SWIG_0(CvMat *self,CvArr *src){
-        CvMat * res = cvCreateMat(self->rows, self->cols, self->type);
-        cvCmp(self, src, res, 1);
-        return res;
-    }
+		CvMat * res = cvCreateMat(self->rows, self->cols, self->type);
+		cvCmp(self, src, res, 1);
+		return res;
+	}
 SWIGINTERN CvMat *CvMat_operator_Sg___SWIG_1(CvMat *self,double val){
-        CvMat * res = cvCreateMat(self->rows, self->cols, self->type);
-        cvCmpS(self, val, res, 1);
-        return res;
-    }
+		CvMat * res = cvCreateMat(self->rows, self->cols, self->type);
+		cvCmpS(self, val, res, 1);
+		return res;
+	}
 SWIGINTERN CvMat *CvMat_operator_Sd___SWIG_1(CvMat *self,double val){
-        CvMat * res = cvCreateMat(self->rows, self->cols, self->type);
-        cvConvertScale(self, res, val);
-        return res;
-    }
+		CvMat * res = cvCreateMat(self->rows, self->cols, self->type);
+		cvConvertScale(self, res, val);
+		return res;
+	}
 SWIGINTERN CvMat *CvMat___radd____SWIG_0(CvMat *self,CvArr *arg){
-        CvMat * retarg = cvCreateMat(self->rows, self->cols, self->type);
-        cvAdd(self, arg, retarg);
-        return retarg;
-    }
+		CvMat * retarg = cvCreateMat(self->rows, self->cols, self->type);
+		cvAdd(self, arg, retarg);
+		return retarg;
+	}
 SWIGINTERN CvMat *CvMat___rsub____SWIG_0(CvMat *self,CvArr *arg){
-        CvMat * retarg = cvCreateMat(self->rows, self->cols, self->type);
-        cvSub(arg, self, retarg);
-        return retarg;
-    }
+		CvMat * retarg = cvCreateMat(self->rows, self->cols, self->type);
+		cvSub(arg, self, retarg);
+		return retarg;
+	}
 SWIGINTERN CvMat *CvMat___rdiv____SWIG_0(CvMat *self,CvArr *arg){
-        CvMat * retarg = cvCreateMat(self->rows, self->cols, self->type);
-        cvDiv(arg, self, retarg);
-        return retarg;
-    }
+		CvMat * retarg = cvCreateMat(self->rows, self->cols, self->type);
+		cvDiv(arg, self, retarg);
+		return retarg;
+	}
 SWIGINTERN CvMat *CvMat___rmul____SWIG_0(CvMat *self,CvArr *arg){
-        CvMat * retarg = cvCreateMat(self->rows, self->cols, self->type);
-        cvMatMul(arg, self, retarg);
-        return retarg;
-    }
+		CvMat * retarg = cvCreateMat(self->rows, self->cols, self->type);
+		cvMatMul(arg, self, retarg);
+		return retarg;
+	}
 SWIGINTERN CvMat *CvMat___radd____SWIG_1(CvMat *self,CvScalar arg){
-        CvMat * retarg = cvCreateMat(self->rows, self->cols, self->type);
-        cvAddS(self, arg, retarg);
-        return retarg;
-    }
+		CvMat * retarg = cvCreateMat(self->rows, self->cols, self->type);
+		cvAddS(self, arg, retarg);
+		return retarg;
+	}
 SWIGINTERN CvMat *CvMat___radd____SWIG_2(CvMat *self,double arg){
-        CvMat * retarg = cvCreateMat(self->rows, self->cols, self->type);
-        cvAddS(self, cvScalar(arg), retarg);
-        return retarg;
-    }
+		CvMat * retarg = cvCreateMat(self->rows, self->cols, self->type);
+		cvAddS(self, cvScalar(arg), retarg);
+		return retarg;
+	}
 SWIGINTERN CvMat *CvMat___rsub____SWIG_1(CvMat *self,CvScalar arg){
-        CvMat * retarg = cvCreateMat(self->rows, self->cols, self->type);
-        cvSubRS(self, arg, retarg);
-        return retarg;
-    }
+		CvMat * retarg = cvCreateMat(self->rows, self->cols, self->type);
+		cvSubRS(self, arg, retarg);
+		return retarg;
+	}
 SWIGINTERN CvMat *CvMat___rsub____SWIG_2(CvMat *self,double arg){
-        CvMat * retarg = cvCreateMat(self->rows, self->cols, self->type);
-        cvSubRS(self, cvScalar(arg), retarg);
-        return retarg;
-    }
+		CvMat * retarg = cvCreateMat(self->rows, self->cols, self->type);
+		cvSubRS(self, cvScalar(arg), retarg);
+		return retarg;
+	}
 SWIGINTERN CvArr *CvMat___rmul____SWIG_1(CvMat *self,double arg){
-        CvArr * retarg = cvCreateMat(self->rows, self->cols, self->type);
-        cvConvertScale(self, retarg, arg);
-        return retarg;
-    }
+		CvArr * retarg = cvCreateMat(self->rows, self->cols, self->type);
+		cvConvertScale(self, retarg, arg);
+		return retarg;
+	}
 SWIGINTERN CvArr *CvMat___rdiv____SWIG_1(CvMat *self,double arg){
-        CvArr * retarg = cvCreateMat(self->rows, self->cols, self->type);
-        cvConvertScale(self, retarg, 1.0/arg);
-        return retarg;
-    }
+		CvArr * retarg = cvCreateMat(self->rows, self->cols, self->type);
+		cvConvertScale(self, retarg, 1.0/arg);
+		return retarg;
+	}
 SWIGINTERN CvMat *CvMat___ror____SWIG_0(CvMat *self,CvScalar arg){
-        CvMat * retarg = cvCreateMat(self->rows, self->cols, self->type);
-        cvOrS(self, arg, retarg);
-        return retarg;
-    }
+		CvMat * retarg = cvCreateMat(self->rows, self->cols, self->type);
+		cvOrS(self, arg, retarg);
+		return retarg;
+	}
 SWIGINTERN CvMat *CvMat___ror____SWIG_1(CvMat *self,double arg){
-        CvMat * retarg = cvCreateMat(self->rows, self->cols, self->type);
-        cvOrS(self, cvScalar(arg), retarg);
-        return retarg;
-    }
+		CvMat * retarg = cvCreateMat(self->rows, self->cols, self->type);
+		cvOrS(self, cvScalar(arg), retarg);
+		return retarg;
+	}
 SWIGINTERN CvMat *CvMat___rand____SWIG_0(CvMat *self,CvScalar arg){
-        CvMat * retarg = cvCreateMat(self->rows, self->cols, self->type);
-        cvAndS(self, arg, retarg);
-        return retarg;
-    }
+		CvMat * retarg = cvCreateMat(self->rows, self->cols, self->type);
+		cvAndS(self, arg, retarg);
+		return retarg;
+	}
 SWIGINTERN CvMat *CvMat___rand____SWIG_1(CvMat *self,double arg){
-        CvMat * retarg = cvCreateMat(self->rows, self->cols, self->type);
-        cvAndS(self, cvScalar(arg), retarg);
-        return retarg;
-    }
+		CvMat * retarg = cvCreateMat(self->rows, self->cols, self->type);
+		cvAndS(self, cvScalar(arg), retarg);
+		return retarg;
+	}
 SWIGINTERN CvMat *CvMat___rxor____SWIG_0(CvMat *self,CvScalar arg){
-        CvMat * retarg = cvCreateMat(self->rows, self->cols, self->type);
-        cvXorS(self, arg, retarg);
-        return retarg;
-    }
+		CvMat * retarg = cvCreateMat(self->rows, self->cols, self->type);
+		cvXorS(self, arg, retarg);
+		return retarg;
+	}
 SWIGINTERN CvMat *CvMat___rxor____SWIG_1(CvMat *self,double arg){
-        CvMat * retarg = cvCreateMat(self->rows, self->cols, self->type);
-        cvXorS(self, cvScalar(arg), retarg);
-        return retarg;
-    }
+		CvMat * retarg = cvCreateMat(self->rows, self->cols, self->type);
+		cvXorS(self, cvScalar(arg), retarg);
+		return retarg;
+	}
 SWIGINTERN CvArr *CvMat___req__(CvMat *self,double arg){
-        CvArr * retarg = cvCreateMat(self->rows, self->cols, 0);
-        cvCmpS(self, arg, retarg, 0);
-        return retarg;
-    }
+		CvArr * retarg = cvCreateMat(self->rows, self->cols, 0);
+		cvCmpS(self, arg, retarg, 0);
+		return retarg;
+	}
 SWIGINTERN CvArr *CvMat___rgt__(CvMat *self,double arg){
-        CvArr * retarg = cvCreateMat(self->rows, self->cols, 0);
-        cvCmpS(self, arg, retarg, 1);
-        return retarg;
-    }
+		CvArr * retarg = cvCreateMat(self->rows, self->cols, 0);
+		cvCmpS(self, arg, retarg, 1);
+		return retarg;
+	}
 SWIGINTERN CvArr *CvMat___rge__(CvMat *self,double arg){
-        CvArr * retarg = cvCreateMat(self->rows, self->cols, 0);
-        cvCmpS(self, arg, retarg, 2);
-        return retarg;
-    }
+		CvArr * retarg = cvCreateMat(self->rows, self->cols, 0);
+		cvCmpS(self, arg, retarg, 2);
+		return retarg;
+	}
 SWIGINTERN CvArr *CvMat___rlt__(CvMat *self,double arg){
-        CvArr * retarg = cvCreateMat(self->rows, self->cols, 0);
-        cvCmpS(self, arg, retarg, 3);
-        return retarg;
-    }
+		CvArr * retarg = cvCreateMat(self->rows, self->cols, 0);
+		cvCmpS(self, arg, retarg, 3);
+		return retarg;
+	}
 SWIGINTERN CvArr *CvMat___rle__(CvMat *self,double arg){
-        CvArr * retarg = cvCreateMat(self->rows, self->cols, 0);
-        cvCmpS(self, arg, retarg, 4);
-        return retarg;
-    }
+		CvArr * retarg = cvCreateMat(self->rows, self->cols, 0);
+		cvCmpS(self, arg, retarg, 4);
+		return retarg;
+	}
 SWIGINTERN CvArr *CvMat___rne__(CvMat *self,double arg){
-        CvArr * retarg = cvCreateMat(self->rows, self->cols, 0);
-        cvCmpS(self, arg, retarg, 5);
-        return retarg;
-    }
+		CvArr * retarg = cvCreateMat(self->rows, self->cols, 0);
+		cvCmpS(self, arg, retarg, 5);
+		return retarg;
+	}
 SWIGINTERN CvMat *CvMat___pow__(CvMat *self,double arg){
-        CvMat * retarg = cvCreateMat(self->rows, self->cols, self->type);
-        cvPow(self, retarg, arg);
-        return retarg;
-    }
+		CvMat * retarg = cvCreateMat(self->rows, self->cols, self->type);
+		cvPow(self, retarg, arg);
+		return retarg;
+	}
 SWIGINTERN char *CvMat___str__(CvMat *self){
-        static char str[8];
-        cvArrPrint( self );
-        str[0]=0;
-        return str;
-    }
+		static char str[8];
+		cvArrPrint( self );
+		str[0]=0;
+		return str;
+	}
 SWIGINTERN void CvMat___setitem____SWIG_0(CvMat *self,PyObject *object,double val){
-        CvMat tmp;
-        CvRect subrect = PySlice_to_CvRect( self, object );
-        /*@SWIG:CHECK_SLICE_BOUNDS@*/
-    //printf("__setitem__ slice(%d:%d, %d:%d) array(%d,%d)", subrect.x, subrect.y, subrect.x+subrect.width, subrect.y+subrect.height, self->cols, self->rows);
-    if(subrect.width<=0 || subrect.height<=0 ||
-        subrect.width>self->cols || subrect.height>self->rows ||
-        subrect.x<0 || subrect.y<0 ||
-        subrect.x>= self->cols || subrect.y >=self->rows){
-        char errstr[256];
-        // previous function already set error string
-        if(subrect.width==0 && subrect.height==0 && subrect.x==0 && subrect.y==0) return ;
-        sprintf(errstr, "Requested slice [ %d:%d %d:%d ] oversteps array sized [ %d %d ]", 
-            subrect.x, subrect.y, subrect.x+subrect.width, subrect.y+subrect.height, self->cols, self->rows);
-        PyErr_SetString(PyExc_IndexError, errstr);
-        //PyErr_SetString(PyExc_ValueError, errstr);
-        return ;
-    }
+		CvMat tmp;
+		CvRect subrect = PySlice_to_CvRect( self, object );
+		/*@SWIG:CHECK_SLICE_BOUNDS@*/
+	//printf("__setitem__ slice(%d:%d, %d:%d) array(%d,%d)", subrect.x, subrect.y, subrect.x+subrect.width, subrect.y+subrect.height, self->cols, self->rows);
+	if(subrect.width<=0 || subrect.height<=0 ||
+	   	subrect.width>self->cols || subrect.height>self->rows ||
+	   	subrect.x<0 || subrect.y<0 ||
+	   	subrect.x>= self->cols || subrect.y >=self->rows){
+	   	char errstr[256];
+		// previous function already set error string
+		if(subrect.width==0 && subrect.height==0 && subrect.x==0 && subrect.y==0) return ;
+	   	sprintf(errstr, "Requested slice [ %d:%d %d:%d ] oversteps array sized [ %d %d ]", 
+	   		subrect.x, subrect.y, subrect.x+subrect.width, subrect.y+subrect.height, self->cols, self->rows);
+		PyErr_SetString(PyExc_IndexError, errstr);
+		//PyErr_SetString(PyExc_ValueError, errstr);
+		return ;
+	}
 else{}
 /*@SWIG@*/;
-        cvGetSubRect(self, &tmp, subrect);
-        cvSet(&tmp, cvScalarAll(val));
-    }
+		cvGetSubRect(self, &tmp, subrect);
+		cvSet(&tmp, cvScalarAll(val));
+	}
 SWIGINTERN void CvMat___setitem____SWIG_1(CvMat *self,PyObject *object,CvPoint val){
-        CvMat tmp;
-        CvRect subrect = PySlice_to_CvRect( self, object );
-        /*@SWIG:CHECK_SLICE_BOUNDS@*/
-    //printf("__setitem__ slice(%d:%d, %d:%d) array(%d,%d)", subrect.x, subrect.y, subrect.x+subrect.width, subrect.y+subrect.height, self->cols, self->rows);
-    if(subrect.width<=0 || subrect.height<=0 ||
-        subrect.width>self->cols || subrect.height>self->rows ||
-        subrect.x<0 || subrect.y<0 ||
-        subrect.x>= self->cols || subrect.y >=self->rows){
-        char errstr[256];
-        // previous function already set error string
-        if(subrect.width==0 && subrect.height==0 && subrect.x==0 && subrect.y==0) return ;
-        sprintf(errstr, "Requested slice [ %d:%d %d:%d ] oversteps array sized [ %d %d ]", 
-            subrect.x, subrect.y, subrect.x+subrect.width, subrect.y+subrect.height, self->cols, self->rows);
-        PyErr_SetString(PyExc_IndexError, errstr);
-        //PyErr_SetString(PyExc_ValueError, errstr);
-        return ;
-    }
+		CvMat tmp;
+		CvRect subrect = PySlice_to_CvRect( self, object );
+		/*@SWIG:CHECK_SLICE_BOUNDS@*/
+	//printf("__setitem__ slice(%d:%d, %d:%d) array(%d,%d)", subrect.x, subrect.y, subrect.x+subrect.width, subrect.y+subrect.height, self->cols, self->rows);
+	if(subrect.width<=0 || subrect.height<=0 ||
+	   	subrect.width>self->cols || subrect.height>self->rows ||
+	   	subrect.x<0 || subrect.y<0 ||
+	   	subrect.x>= self->cols || subrect.y >=self->rows){
+	   	char errstr[256];
+		// previous function already set error string
+		if(subrect.width==0 && subrect.height==0 && subrect.x==0 && subrect.y==0) return ;
+	   	sprintf(errstr, "Requested slice [ %d:%d %d:%d ] oversteps array sized [ %d %d ]", 
+	   		subrect.x, subrect.y, subrect.x+subrect.width, subrect.y+subrect.height, self->cols, self->rows);
+		PyErr_SetString(PyExc_IndexError, errstr);
+		//PyErr_SetString(PyExc_ValueError, errstr);
+		return ;
+	}
 else{}
 /*@SWIG@*/;
-        cvGetSubRect(self, &tmp, subrect);
-        cvSet(&tmp, cvScalar(val.x, val.y));
-    }
+		cvGetSubRect(self, &tmp, subrect);
+		cvSet(&tmp, cvScalar(val.x, val.y));
+	}
 SWIGINTERN void CvMat___setitem____SWIG_2(CvMat *self,PyObject *object,CvPoint2D32f val){
-        CvMat tmp;
-        CvRect subrect = PySlice_to_CvRect( self, object );
-        cvGetSubRect(self, &tmp, subrect);
-        /*@SWIG:CHECK_SLICE_BOUNDS@*/
-    //printf("__setitem__ slice(%d:%d, %d:%d) array(%d,%d)", subrect.x, subrect.y, subrect.x+subrect.width, subrect.y+subrect.height, self->cols, self->rows);
-    if(subrect.width<=0 || subrect.height<=0 ||
-        subrect.width>self->cols || subrect.height>self->rows ||
-        subrect.x<0 || subrect.y<0 ||
-        subrect.x>= self->cols || subrect.y >=self->rows){
-        char errstr[256];
-        // previous function already set error string
-        if(subrect.width==0 && subrect.height==0 && subrect.x==0 && subrect.y==0) return ;
-        sprintf(errstr, "Requested slice [ %d:%d %d:%d ] oversteps array sized [ %d %d ]", 
-            subrect.x, subrect.y, subrect.x+subrect.width, subrect.y+subrect.height, self->cols, self->rows);
-        PyErr_SetString(PyExc_IndexError, errstr);
-        //PyErr_SetString(PyExc_ValueError, errstr);
-        return ;
-    }
+		CvMat tmp;
+		CvRect subrect = PySlice_to_CvRect( self, object );
+		cvGetSubRect(self, &tmp, subrect);
+		/*@SWIG:CHECK_SLICE_BOUNDS@*/
+	//printf("__setitem__ slice(%d:%d, %d:%d) array(%d,%d)", subrect.x, subrect.y, subrect.x+subrect.width, subrect.y+subrect.height, self->cols, self->rows);
+	if(subrect.width<=0 || subrect.height<=0 ||
+	   	subrect.width>self->cols || subrect.height>self->rows ||
+	   	subrect.x<0 || subrect.y<0 ||
+	   	subrect.x>= self->cols || subrect.y >=self->rows){
+	   	char errstr[256];
+		// previous function already set error string
+		if(subrect.width==0 && subrect.height==0 && subrect.x==0 && subrect.y==0) return ;
+	   	sprintf(errstr, "Requested slice [ %d:%d %d:%d ] oversteps array sized [ %d %d ]", 
+	   		subrect.x, subrect.y, subrect.x+subrect.width, subrect.y+subrect.height, self->cols, self->rows);
+		PyErr_SetString(PyExc_IndexError, errstr);
+		//PyErr_SetString(PyExc_ValueError, errstr);
+		return ;
+	}
 else{}
 /*@SWIG@*/;
-        cvSet(&tmp, cvScalar(val.x, val.y));
-    }
+		cvSet(&tmp, cvScalar(val.x, val.y));
+	}
 SWIGINTERN void CvMat___setitem____SWIG_3(CvMat *self,PyObject *object,CvScalar val){
-        CvMat tmp;
-        CvRect subrect = PySlice_to_CvRect( self, object );
-        cvGetSubRect(self, &tmp, subrect);
-        /*@SWIG:CHECK_SLICE_BOUNDS@*/
-    //printf("__setitem__ slice(%d:%d, %d:%d) array(%d,%d)", subrect.x, subrect.y, subrect.x+subrect.width, subrect.y+subrect.height, self->cols, self->rows);
-    if(subrect.width<=0 || subrect.height<=0 ||
-        subrect.width>self->cols || subrect.height>self->rows ||
-        subrect.x<0 || subrect.y<0 ||
-        subrect.x>= self->cols || subrect.y >=self->rows){
-        char errstr[256];
-        // previous function already set error string
-        if(subrect.width==0 && subrect.height==0 && subrect.x==0 && subrect.y==0) return ;
-        sprintf(errstr, "Requested slice [ %d:%d %d:%d ] oversteps array sized [ %d %d ]", 
-            subrect.x, subrect.y, subrect.x+subrect.width, subrect.y+subrect.height, self->cols, self->rows);
-        PyErr_SetString(PyExc_IndexError, errstr);
-        //PyErr_SetString(PyExc_ValueError, errstr);
-        return ;
-    }
+		CvMat tmp;
+		CvRect subrect = PySlice_to_CvRect( self, object );
+		cvGetSubRect(self, &tmp, subrect);
+		/*@SWIG:CHECK_SLICE_BOUNDS@*/
+	//printf("__setitem__ slice(%d:%d, %d:%d) array(%d,%d)", subrect.x, subrect.y, subrect.x+subrect.width, subrect.y+subrect.height, self->cols, self->rows);
+	if(subrect.width<=0 || subrect.height<=0 ||
+	   	subrect.width>self->cols || subrect.height>self->rows ||
+	   	subrect.x<0 || subrect.y<0 ||
+	   	subrect.x>= self->cols || subrect.y >=self->rows){
+	   	char errstr[256];
+		// previous function already set error string
+		if(subrect.width==0 && subrect.height==0 && subrect.x==0 && subrect.y==0) return ;
+	   	sprintf(errstr, "Requested slice [ %d:%d %d:%d ] oversteps array sized [ %d %d ]", 
+	   		subrect.x, subrect.y, subrect.x+subrect.width, subrect.y+subrect.height, self->cols, self->rows);
+		PyErr_SetString(PyExc_IndexError, errstr);
+		//PyErr_SetString(PyExc_ValueError, errstr);
+		return ;
+	}
 else{}
 /*@SWIG@*/;
-        cvSet(&tmp, val);
-    }
+		cvSet(&tmp, val);
+	}
 SWIGINTERN void CvMat___setitem____SWIG_4(CvMat *self,PyObject *object,CvArr *arr){
-        CvMat tmp;
-        CvRect subrect = PySlice_to_CvRect( self, object );
-        /*@SWIG:CHECK_SLICE_BOUNDS@*/
-    //printf("__setitem__ slice(%d:%d, %d:%d) array(%d,%d)", subrect.x, subrect.y, subrect.x+subrect.width, subrect.y+subrect.height, self->cols, self->rows);
-    if(subrect.width<=0 || subrect.height<=0 ||
-        subrect.width>self->cols || subrect.height>self->rows ||
-        subrect.x<0 || subrect.y<0 ||
-        subrect.x>= self->cols || subrect.y >=self->rows){
-        char errstr[256];
-        // previous function already set error string
-        if(subrect.width==0 && subrect.height==0 && subrect.x==0 && subrect.y==0) return ;
-        sprintf(errstr, "Requested slice [ %d:%d %d:%d ] oversteps array sized [ %d %d ]", 
-            subrect.x, subrect.y, subrect.x+subrect.width, subrect.y+subrect.height, self->cols, self->rows);
-        PyErr_SetString(PyExc_IndexError, errstr);
-        //PyErr_SetString(PyExc_ValueError, errstr);
-        return ;
-    }
+		CvMat tmp;
+		CvRect subrect = PySlice_to_CvRect( self, object );
+		/*@SWIG:CHECK_SLICE_BOUNDS@*/
+	//printf("__setitem__ slice(%d:%d, %d:%d) array(%d,%d)", subrect.x, subrect.y, subrect.x+subrect.width, subrect.y+subrect.height, self->cols, self->rows);
+	if(subrect.width<=0 || subrect.height<=0 ||
+	   	subrect.width>self->cols || subrect.height>self->rows ||
+	   	subrect.x<0 || subrect.y<0 ||
+	   	subrect.x>= self->cols || subrect.y >=self->rows){
+	   	char errstr[256];
+		// previous function already set error string
+		if(subrect.width==0 && subrect.height==0 && subrect.x==0 && subrect.y==0) return ;
+	   	sprintf(errstr, "Requested slice [ %d:%d %d:%d ] oversteps array sized [ %d %d ]", 
+	   		subrect.x, subrect.y, subrect.x+subrect.width, subrect.y+subrect.height, self->cols, self->rows);
+		PyErr_SetString(PyExc_IndexError, errstr);
+		//PyErr_SetString(PyExc_ValueError, errstr);
+		return ;
+	}
 else{}
 /*@SWIG@*/;
-        cvGetSubRect(self, &tmp, subrect);
-        cvConvert(arr, &tmp);
-    }
+		cvGetSubRect(self, &tmp, subrect);
+		cvConvert(arr, &tmp);
+	}
 SWIGINTERN PyObject *CvMat___getitem__(CvMat *self,PyObject *object){
-        CvMat * mat;
-        CvRect subrect = PySlice_to_CvRect( self, object );
-        /*@SWIG:CHECK_SLICE_BOUNDS@*/
-    //printf("__setitem__ slice(%d:%d, %d:%d) array(%d,%d)", subrect.x, subrect.y, subrect.x+subrect.width, subrect.y+subrect.height, self->cols, self->rows);
-    if(subrect.width<=0 || subrect.height<=0 ||
-        subrect.width>self->cols || subrect.height>self->rows ||
-        subrect.x<0 || subrect.y<0 ||
-        subrect.x>= self->cols || subrect.y >=self->rows){
-        char errstr[256];
-        // previous function already set error string
-        if(subrect.width==0 && subrect.height==0 && subrect.x==0 && subrect.y==0) return NULL;
-        sprintf(errstr, "Requested slice [ %d:%d %d:%d ] oversteps array sized [ %d %d ]", 
-            subrect.x, subrect.y, subrect.x+subrect.width, subrect.y+subrect.height, self->cols, self->rows);
-        PyErr_SetString(PyExc_IndexError, errstr);
-        //PyErr_SetString(PyExc_ValueError, errstr);
-        return NULL;
-    }
+		CvMat * mat;
+		CvRect subrect = PySlice_to_CvRect( self, object );
+		/*@SWIG:CHECK_SLICE_BOUNDS@*/
+	//printf("__setitem__ slice(%d:%d, %d:%d) array(%d,%d)", subrect.x, subrect.y, subrect.x+subrect.width, subrect.y+subrect.height, self->cols, self->rows);
+	if(subrect.width<=0 || subrect.height<=0 ||
+	   	subrect.width>self->cols || subrect.height>self->rows ||
+	   	subrect.x<0 || subrect.y<0 ||
+	   	subrect.x>= self->cols || subrect.y >=self->rows){
+	   	char errstr[256];
+		// previous function already set error string
+		if(subrect.width==0 && subrect.height==0 && subrect.x==0 && subrect.y==0) return NULL;
+	   	sprintf(errstr, "Requested slice [ %d:%d %d:%d ] oversteps array sized [ %d %d ]", 
+	   		subrect.x, subrect.y, subrect.x+subrect.width, subrect.y+subrect.height, self->cols, self->rows);
+		PyErr_SetString(PyExc_IndexError, errstr);
+		//PyErr_SetString(PyExc_ValueError, errstr);
+		return NULL;
+	}
 else{}
 /*@SWIG@*/;
-        if(subrect.width==1 && subrect.height==1){
-            CvScalar * s; 
+		if(subrect.width==1 && subrect.height==1){
+			CvScalar * s; 
             int type = cvGetElemType( self );
             if(CV_MAT_CN(type) > 1){
                 s = new CvScalar; 
@@ -4377,17 +4377,17 @@ else{}
             case 6:
                 return PyFloat_FromDouble( CV_MAT_ELEM(*self, double, subrect.y, subrect.x) );
             }
-        }
-        mat = (CvMat *) cvAlloc(sizeof(CvMat));
-        cvGetSubRect(self, mat, subrect);
-        
-        // cvGetSubRect doesn't do this since it assumes mat lives on the stack
-        mat->hdr_refcount = self->hdr_refcount;
-        mat->refcount = self->refcount;
-        cvIncRefData(mat);
+		}
+		mat = (CvMat *) cvAlloc(sizeof(CvMat));
+		cvGetSubRect(self, mat, subrect);
+		
+		// cvGetSubRect doesn't do this since it assumes mat lives on the stack
+		mat->hdr_refcount = self->hdr_refcount;
+		mat->refcount = self->refcount;
+		cvIncRefData(mat);
 
-        return SWIG_NewPointerObj( mat, SWIGTYPE_p_CvMat, 1 );
-    }
+		return SWIG_NewPointerObj( mat, SWIGTYPE_p_CvMat, 1 );
+	}
 
 typedef struct {
         int size;
@@ -4409,35 +4409,35 @@ SWIGINTERN void delete_CvMatND(CvMatND *self){ CvMatND        * dummy = self; cv
 SWIGINTERN void delete_CvSparseMat(CvSparseMat *self){ CvSparseMat    * dummy = self; cvReleaseSparseMat          (& dummy); }
 SWIGINTERN void delete_CvHistogram(CvHistogram *self){ CvHistogram    * dummy = self; cvReleaseHist               (& dummy); }
 SWIGINTERN char const *CvPoint___str__(CvPoint *self){
-        static char str[64];
-        snprintf(str, 64, "[%d %d]", self->x, self->y);
-        return str;
-    }
+		static char str[64];
+		snprintf(str, 64, "[%d %d]", self->x, self->y);
+		return str;
+	}
 SWIGINTERN char const *CvPoint___repr__(CvPoint *self){
-        static char str[64];
-        snprintf(str, 64, "cvPoint(%d,%d)", self->x, self->y);
-        return str;
-    }
+		static char str[64];
+		snprintf(str, 64, "cvPoint(%d,%d)", self->x, self->y);
+		return str;
+	}
 SWIGINTERN char const *CvPoint2D32f___str__(CvPoint2D32f *self){
-        static char str[64];
-        snprintf(str, 64, "[%f %f]", self->x, self->y);
-        return str;
-    }
+		static char str[64];
+		snprintf(str, 64, "[%f %f]", self->x, self->y);
+		return str;
+	}
 SWIGINTERN char const *CvPoint2D32f___repr__(CvPoint2D32f *self){
-        static char str[64];
-        snprintf(str, 64, "cvPoint2D32f(%f,%f)", self->x, self->y);
-        return str;
-    }
+		static char str[64];
+		snprintf(str, 64, "cvPoint2D32f(%f,%f)", self->x, self->y);
+		return str;
+	}
 SWIGINTERN char const *CvScalar___str__(CvScalar *self){
-        static char str[256];
-        snprintf(str, 256, "[%f, %f, %f, %f]", self->val[0], self->val[1], self->val[2], self->val[3]);
-        return str;
-    }
+		static char str[256];
+		snprintf(str, 256, "[%f, %f, %f, %f]", self->val[0], self->val[1], self->val[2], self->val[3]);
+		return str;
+	}
 SWIGINTERN char const *CvScalar___repr__(CvScalar *self){
-        static char str[256];
-        snprintf(str, 256, "cvScalar(%f, %f, %f, %f)", self->val[0], self->val[1], self->val[2], self->val[3]);
-        return str;
-    }
+		static char str[256];
+		snprintf(str, 256, "cvScalar(%f, %f, %f, %f)", self->val[0], self->val[1], self->val[2], self->val[3]);
+		return str;
+	}
 SWIGINTERN double const CvScalar___getitem__(CvScalar *self,int index){
         if (index >= 4) {
             PyErr_SetString (PyExc_IndexError, "indice must be lower than 4");
@@ -4478,30 +4478,30 @@ SWIG_AsCharPtrAndSize(PyObject *obj, char** cptr, size_t* psize, int *alloc)
     PyString_AsStringAndSize(obj, &cstr, &len);
     if (cptr)  {
       if (alloc) {
-    /* 
-       In python the user should not be able to modify the inner
-       string representation. To warranty that, if you define
-       SWIG_PYTHON_SAFE_CSTRINGS, a new/copy of the python string
-       buffer is always returned.
+	/* 
+	   In python the user should not be able to modify the inner
+	   string representation. To warranty that, if you define
+	   SWIG_PYTHON_SAFE_CSTRINGS, a new/copy of the python string
+	   buffer is always returned.
 
-       The default behavior is just to return the pointer value,
-       so, be careful.
-    */ 
+	   The default behavior is just to return the pointer value,
+	   so, be careful.
+	*/ 
 #if defined(SWIG_PYTHON_SAFE_CSTRINGS)
-    if (*alloc != SWIG_OLDOBJ) 
+	if (*alloc != SWIG_OLDOBJ) 
 #else
-    if (*alloc == SWIG_NEWOBJ) 
+	if (*alloc == SWIG_NEWOBJ) 
 #endif
-      {
-        *cptr = reinterpret_cast< char* >(memcpy((new char[len + 1]), cstr, sizeof(char)*(len + 1)));
-        *alloc = SWIG_NEWOBJ;
-      }
-    else {
-      *cptr = cstr;
-      *alloc = SWIG_OLDOBJ;
-    }
+	  {
+	    *cptr = reinterpret_cast< char* >(memcpy((new char[len + 1]), cstr, sizeof(char)*(len + 1)));
+	    *alloc = SWIG_NEWOBJ;
+	  }
+	else {
+	  *cptr = cstr;
+	  *alloc = SWIG_OLDOBJ;
+	}
       } else {
-    *cptr = PyString_AsString(obj);
+	*cptr = PyString_AsString(obj);
       }
     }
     if (psize) *psize = len + 1;
@@ -4511,10 +4511,10 @@ SWIG_AsCharPtrAndSize(PyObject *obj, char** cptr, size_t* psize, int *alloc)
     if (pchar_descriptor) {
       void* vptr = 0;
       if (SWIG_ConvertPtr(obj, &vptr, pchar_descriptor, 0) == SWIG_OK) {
-    if (cptr) *cptr = (char *) vptr;
-    if (psize) *psize = vptr ? (strlen((char *)vptr) + 1) : 0;
-    if (alloc) *alloc = SWIG_OLDOBJ;
-    return SWIG_OK;
+	if (cptr) *cptr = (char *) vptr;
+	if (psize) *psize = vptr ? (strlen((char *)vptr) + 1) : 0;
+	if (alloc) *alloc = SWIG_OLDOBJ;
+	return SWIG_OK;
       }
     }
   }
@@ -4563,12 +4563,12 @@ SWIG_AsCharArray(PyObject * obj, char *val, size_t size)
     if ((csize == size + 1) && cptr && !(cptr[csize-1])) --csize;
     if (csize <= size) {
       if (val) {
-    if (csize) memcpy(val, cptr, csize*sizeof(char));
-    if (csize < size) memset(val + csize, 0, (size - csize)*sizeof(char));
+	if (csize) memcpy(val, cptr, csize*sizeof(char));
+	if (csize < size) memset(val + csize, 0, (size - csize)*sizeof(char));
       }
       if (alloc == SWIG_NEWOBJ) {
-    delete[] cptr;
-    res = SWIG_DelNewMask(res);
+	delete[] cptr;
+	res = SWIG_DelNewMask(res);
       }      
       return res;
     }
@@ -4587,9 +4587,9 @@ SWIG_AsVal_char (PyObject * obj, char *val)
     res = SWIG_AddCast(SWIG_AsVal_long (obj, &v));
     if (SWIG_IsOK(res)) {
       if ((CHAR_MIN <= v) && (v <= CHAR_MAX)) {
-    if (val) *val = static_cast< char >(v);
+	if (val) *val = static_cast< char >(v);
       } else {
-    res = SWIG_OverflowError;
+	res = SWIG_OverflowError;
       }
     }
   }
@@ -4604,10 +4604,10 @@ SWIG_From_char  (char c)
 }
 
 SWIGINTERN CvTypedSeq<CvQuadEdge2D > *CvSubdiv2D_typed_edges_get(CvSubdiv2D *self){
-        return (CvTypedSeq<CvQuadEdge2D> *) self->edges;
-    }
+		return (CvTypedSeq<CvQuadEdge2D> *) self->edges;
+	}
 SWIGINTERN void CvSubdiv2D_typed_edges_set(CvSubdiv2D *self,CvTypedSeq<CvQuadEdge2D > *){
-    }
+	}
 SWIGINTERN void delete_CvConDensation(CvConDensation *self){ CvConDensation * dummy = self; cvReleaseConDensation       (& dummy); }
 SWIGINTERN void delete_CvKalman(CvKalman *self){ CvKalman       * dummy = self; cvReleaseKalman             (& dummy); }
 
@@ -4620,34 +4620,34 @@ typedef struct {
 SWIGINTERN void delete_CvHaarClassifierCascade(CvHaarClassifierCascade *self){ CvHaarClassifierCascade * dummy = self; cvReleaseHaarClassifierCascade  (& dummy); }
 
 int CvMat_cols_get(CvMat * m){
-    return m->cols;
+	return m->cols;
 }
 int CvMat_rows_get(CvMat *m){
-    return m->rows;
+	return m->rows;
 }
 int CvMat_width_get(CvMat * m){
-    return m->cols;
+	return m->cols;
 }
 int CvMat_height_get(CvMat *m){
-    return m->rows;
+	return m->rows;
 }
 int CvMat_depth_get(CvMat * m){
-    return cvCvToIplDepth(m->type);
+	return cvCvToIplDepth(m->type);
 }
 int CvMat_nChannels_get(CvMat * m){
-    return CV_MAT_CN(m->type);
+	return CV_MAT_CN(m->type);
 }
 int CvMat_origin_get(CvMat * m){
-    return 0;
+	return 0;
 }
 int CvMat_dataOrder_get(CvMat * m){
-    return 0;
+	return 0;
 }
 int CvMat_imageSize_get(CvMat * m){
-    return m->step*m->rows;
+	return m->step*m->rows;
 }
 int CvMat_widthStep_get(CvMat * m){
-    return m->step;
+	return m->step;
 }
 
 
@@ -4655,67 +4655,67 @@ int CvMat_widthStep_get(CvMat * m){
 /// Accessor to convert a Python string into the imageData.
 void CvMat_imageData_set(CvMat * self, PyObject* object)
 {
-    char* py_string = PyString_AsString(object);
+	char* py_string = PyString_AsString(object);
 
-    if (self->type == CV_8UC3){
-        // RGB case
-        // The data is reordered beause OpenCV uses BGR instead of RGB
+	if (self->type == CV_8UC3){
+		// RGB case
+		// The data is reordered beause OpenCV uses BGR instead of RGB
 
-        for (long line = 0; line < self->rows; ++line)
-            for (long pixel = 0; pixel < self->cols; ++pixel)
-            {
-                // In OpenCV the beginning of the lines are aligned
-                // to 4 Bytes. So use step instead of cols.
-                long position = line*self->step + pixel*3;
-                long sourcepos = line*self->cols*3 + pixel*3;
-                self->data.ptr[position  ] = py_string[sourcepos+2];
-                self->data.ptr[position+1] = py_string[sourcepos+1];
-                self->data.ptr[position+2] = py_string[sourcepos  ];
-            }
-    }
-    else if (self->type == CV_8UC1)
-    {
-        // Grayscale 8bit case
+		for (long line = 0; line < self->rows; ++line)
+			for (long pixel = 0; pixel < self->cols; ++pixel)
+			{
+				// In OpenCV the beginning of the lines are aligned
+				// to 4 Bytes. So use step instead of cols.
+				long position = line*self->step + pixel*3;
+				long sourcepos = line*self->cols*3 + pixel*3;
+				self->data.ptr[position  ] = py_string[sourcepos+2];
+				self->data.ptr[position+1] = py_string[sourcepos+1];
+				self->data.ptr[position+2] = py_string[sourcepos  ];
+			}
+	}
+	else if (self->type == CV_8UC1)
+	{
+		// Grayscale 8bit case
 
-        for (long line = 0; line < self->rows; ++line)
-        {
-            // In OpenCV the beginning of the lines are aligned
-            // to 4 Bytes. So use step instead of cols.
-            memcpy
-                (
-                 self->data.ptr + line*self->step,
-                 py_string + line*self->cols,
-                 self->step
-                );
-        }
-    }
-    else if (self->type == CV_32FC1 )
-    {
-        // Float 32bit case
+		for (long line = 0; line < self->rows; ++line)
+		{
+			// In OpenCV the beginning of the lines are aligned
+			// to 4 Bytes. So use step instead of cols.
+			memcpy
+				(
+				 self->data.ptr + line*self->step,
+				 py_string + line*self->cols,
+				 self->step
+				);
+		}
+	}
+	else if (self->type == CV_32FC1 )
+	{
+		// Float 32bit case
 
-        for (long line = 0; line < self->rows; ++line)
-        {
-            // here we don not have to care about alignment as the Floats are
-            // as long as the alignment
-            memcpy
-                (
-                 self->data.ptr + line*self->step,
-                 py_string + line*self->cols*4,
-                 self->step
-                );
-        }
-    }
+		for (long line = 0; line < self->rows; ++line)
+		{
+			// here we don not have to care about alignment as the Floats are
+			// as long as the alignment
+			memcpy
+				(
+				 self->data.ptr + line*self->step,
+				 py_string + line*self->cols*4,
+				 self->step
+				);
+		}
+	}
 }
 
 /// Accessor to convert the imageData into a Python string.
 PyObject* CvMat_imageData_get(CvMat * self) 
 {
-    if (!self->data.ptr)
-    {
-        PyErr_SetString(PyExc_TypeError, "Data pointer of CvMat is NULL");
-        return NULL;
-    }        
-    return PyString_FromStringAndSize((const char *)self->data.ptr, self->rows*self->step);
+	if (!self->data.ptr)
+	{
+		PyErr_SetString(PyExc_TypeError, "Data pointer of CvMat is NULL");
+		return NULL;
+	}		 
+	return PyString_FromStringAndSize((const char *)self->data.ptr, self->rows*self->step);
 }
 
 
@@ -47587,7 +47587,7 @@ SWIGINTERN PyObject *_wrap_cvCalcCovarMatrix(PyObject *SWIGUNUSEDPARM(self), PyO
     }
     else if PyTuple_Check (obj0) {
       /* This is a tuple, so we need to test each element and pass
-                them to the called function */
+      	   		them to the called function */
       
       int i;
       
@@ -47600,7 +47600,7 @@ SWIGINTERN PyObject *_wrap_cvCalcCovarMatrix(PyObject *SWIGUNUSEDPARM(self), PyO
       
       for (i = 0; i < nimages1; i++) {
         /* convert the current tuple element to a CvArr *, and
-                   store to many_images1 [i] */
+        	       store to many_images1 [i] */
         many_images1[i] = PyObject_to_CvArr(PyTuple_GetItem (obj0, i), free_many_args1+i);
         
         /* check that the current item is a correct type */
@@ -79762,7 +79762,7 @@ SWIGINTERN PyObject *_wrap_cvCalcArrHist(PyObject *SWIGUNUSEDPARM(self), PyObjec
     }
     else if PyTuple_Check (obj0) {
       /* This is a tuple, so we need to test each element and pass
-                them to the called function */
+      	   		them to the called function */
       
       int i;
       
@@ -79775,7 +79775,7 @@ SWIGINTERN PyObject *_wrap_cvCalcArrHist(PyObject *SWIGUNUSEDPARM(self), PyObjec
       
       for (i = 0; i < nimages1; i++) {
         /* convert the current tuple element to a CvArr *, and
-                   store to many_images1 [i] */
+        	       store to many_images1 [i] */
         many_images1[i] = PyObject_to_CvArr(PyTuple_GetItem (obj0, i), free_many_args1+i);
         
         /* check that the current item is a correct type */
@@ -79969,7 +79969,7 @@ SWIGINTERN PyObject *_wrap_cvCalcArrBackProject(PyObject *SWIGUNUSEDPARM(self), 
     }
     else if PyTuple_Check (obj0) {
       /* This is a tuple, so we need to test each element and pass
-                them to the called function */
+      	   		them to the called function */
       
       int i;
       
@@ -79982,7 +79982,7 @@ SWIGINTERN PyObject *_wrap_cvCalcArrBackProject(PyObject *SWIGUNUSEDPARM(self), 
       
       for (i = 0; i < nimages1; i++) {
         /* convert the current tuple element to a CvArr *, and
-                   store to many_images1 [i] */
+        	       store to many_images1 [i] */
         many_images1[i] = PyObject_to_CvArr(PyTuple_GetItem (obj0, i), free_many_args1+i);
         
         /* check that the current item is a correct type */
@@ -80108,7 +80108,7 @@ SWIGINTERN PyObject *_wrap_cvCalcArrBackProjectPatch(PyObject *SWIGUNUSEDPARM(se
     }
     else if PyTuple_Check (obj0) {
       /* This is a tuple, so we need to test each element and pass
-                them to the called function */
+      	   		them to the called function */
       
       int i;
       
@@ -80121,7 +80121,7 @@ SWIGINTERN PyObject *_wrap_cvCalcArrBackProjectPatch(PyObject *SWIGUNUSEDPARM(se
       
       for (i = 0; i < nimages1; i++) {
         /* convert the current tuple element to a CvArr *, and
-                   store to many_images1 [i] */
+        	       store to many_images1 [i] */
         many_images1[i] = PyObject_to_CvArr(PyTuple_GetItem (obj0, i), free_many_args1+i);
         
         /* check that the current item is a correct type */
@@ -97690,2042 +97690,2042 @@ fail:
 
 
 static PyMethodDef SwigMethods[] = {
-     { (char *)"new_CvRNG_Wrapper", _wrap_new_CvRNG_Wrapper, METH_VARARGS, NULL},
-     { (char *)"CvRNG_Wrapper_ptr", _wrap_CvRNG_Wrapper_ptr, METH_VARARGS, NULL},
-     { (char *)"CvRNG_Wrapper_ref", _wrap_CvRNG_Wrapper_ref, METH_VARARGS, NULL},
-     { (char *)"CvRNG_Wrapper___eq__", _wrap_CvRNG_Wrapper___eq__, METH_VARARGS, NULL},
-     { (char *)"CvRNG_Wrapper___ne__", _wrap_CvRNG_Wrapper___ne__, METH_VARARGS, NULL},
-     { (char *)"delete_CvRNG_Wrapper", _wrap_delete_CvRNG_Wrapper, METH_VARARGS, NULL},
-     { (char *)"CvRNG_Wrapper_swigregister", CvRNG_Wrapper_swigregister, METH_VARARGS, NULL},
-     { (char *)"new_CvSubdiv2DEdge_Wrapper", _wrap_new_CvSubdiv2DEdge_Wrapper, METH_VARARGS, NULL},
-     { (char *)"CvSubdiv2DEdge_Wrapper_ptr", _wrap_CvSubdiv2DEdge_Wrapper_ptr, METH_VARARGS, NULL},
-     { (char *)"CvSubdiv2DEdge_Wrapper_ref", _wrap_CvSubdiv2DEdge_Wrapper_ref, METH_VARARGS, NULL},
-     { (char *)"CvSubdiv2DEdge_Wrapper___eq__", _wrap_CvSubdiv2DEdge_Wrapper___eq__, METH_VARARGS, NULL},
-     { (char *)"CvSubdiv2DEdge_Wrapper___ne__", _wrap_CvSubdiv2DEdge_Wrapper___ne__, METH_VARARGS, NULL},
-     { (char *)"delete_CvSubdiv2DEdge_Wrapper", _wrap_delete_CvSubdiv2DEdge_Wrapper, METH_VARARGS, NULL},
-     { (char *)"CvSubdiv2DEdge_Wrapper_swigregister", CvSubdiv2DEdge_Wrapper_swigregister, METH_VARARGS, NULL},
-     { (char *)"cvCvtSeqToArray", _wrap_cvCvtSeqToArray, METH_VARARGS, NULL},
-     { (char *)"cvArcLength", _wrap_cvArcLength, METH_VARARGS, NULL},
-     { (char *)"cvContourPerimeter", _wrap_cvContourPerimeter, METH_VARARGS, NULL},
-     { (char *)"cvHaarDetectObjects", _wrap_cvHaarDetectObjects, METH_VARARGS, NULL},
-     { (char *)"cvSegmentMotion", _wrap_cvSegmentMotion, METH_VARARGS, NULL},
-     { (char *)"cvApproxPoly", _wrap_cvApproxPoly, METH_VARARGS, NULL},
-     { (char *)"cvConvexHull2", _wrap_cvConvexHull2, METH_VARARGS, NULL},
-     { (char *)"cvReleaseImage", _wrap_cvReleaseImage, METH_VARARGS, NULL},
-     { (char *)"cvReleaseMat", _wrap_cvReleaseMat, METH_VARARGS, NULL},
-     { (char *)"cvReleaseStructuringElement", _wrap_cvReleaseStructuringElement, METH_VARARGS, NULL},
-     { (char *)"cvReleaseConDensation", _wrap_cvReleaseConDensation, METH_VARARGS, NULL},
-     { (char *)"cvReleaseKalman", _wrap_cvReleaseKalman, METH_VARARGS, NULL},
-     { (char *)"cvReleaseHist", _wrap_cvReleaseHist, METH_VARARGS, NULL},
-     { (char *)"cvReleaseHaarClassifierCascade", _wrap_cvReleaseHaarClassifierCascade, METH_VARARGS, NULL},
-     { (char *)"cvReleasePOSITObject", _wrap_cvReleasePOSITObject, METH_VARARGS, NULL},
-     { (char *)"cvReleaseImageHeader", _wrap_cvReleaseImageHeader, METH_VARARGS, NULL},
-     { (char *)"cvReleaseMatND", _wrap_cvReleaseMatND, METH_VARARGS, NULL},
-     { (char *)"cvReleaseSparseMat", _wrap_cvReleaseSparseMat, METH_VARARGS, NULL},
-     { (char *)"cvReleaseMemStorage", _wrap_cvReleaseMemStorage, METH_VARARGS, NULL},
-     { (char *)"cvReleaseGraphScanner", _wrap_cvReleaseGraphScanner, METH_VARARGS, NULL},
-     { (char *)"cvReleaseFileStorage", _wrap_cvReleaseFileStorage, METH_VARARGS, NULL},
-     { (char *)"cvRelease", _wrap_cvRelease, METH_VARARGS, NULL},
-     { (char *)"cvReleaseCapture", _wrap_cvReleaseCapture, METH_VARARGS, NULL},
-     { (char *)"cvReleaseVideoWriter", _wrap_cvReleaseVideoWriter, METH_VARARGS, NULL},
-     { (char *)"cvFree", _wrap_cvFree, METH_VARARGS, NULL},
-     { (char *)"CV_READ_CHAIN_POINT", _wrap_CV_READ_CHAIN_POINT, METH_VARARGS, NULL},
-     { (char *)"CV_MAT_ELEM_PTR", _wrap_CV_MAT_ELEM_PTR, METH_VARARGS, NULL},
-     { (char *)"CV_MAT_ELEM_PTR_FAST", _wrap_CV_MAT_ELEM_PTR_FAST, METH_VARARGS, NULL},
-     { (char *)"CV_NODE_VAL", _wrap_CV_NODE_VAL, METH_VARARGS, NULL},
-     { (char *)"CV_NODE_IDX", _wrap_CV_NODE_IDX, METH_VARARGS, NULL},
-     { (char *)"CV_SUBDIV2D_NEXT_EDGE", _wrap_CV_SUBDIV2D_NEXT_EDGE, METH_VARARGS, NULL},
-     { (char *)"CV_SWAP", _wrap_CV_SWAP, METH_VARARGS, NULL},
-     { (char *)"CV_IMIN", _wrap_CV_IMIN, METH_VARARGS, NULL},
-     { (char *)"CV_IMAX", _wrap_CV_IMAX, METH_VARARGS, NULL},
-     { (char *)"CV_IABS", _wrap_CV_IABS, METH_VARARGS, NULL},
-     { (char *)"CV_CMP", _wrap_CV_CMP, METH_VARARGS, NULL},
-     { (char *)"CV_SIGN", _wrap_CV_SIGN, METH_VARARGS, NULL},
-     { (char *)"cvInvSqrt", _wrap_cvInvSqrt, METH_VARARGS, NULL},
-     { (char *)"cvSqrt", _wrap_cvSqrt, METH_VARARGS, NULL},
-     { (char *)"CV_IS_IMAGE_HDR", _wrap_CV_IS_IMAGE_HDR, METH_VARARGS, NULL},
-     { (char *)"CV_IS_IMAGE", _wrap_CV_IS_IMAGE, METH_VARARGS, NULL},
-     { (char *)"CV_MAKETYPE", _wrap_CV_MAKETYPE, METH_VARARGS, NULL},
-     { (char *)"CV_8UC", _wrap_CV_8UC, METH_VARARGS, NULL},
-     { (char *)"CV_8SC", _wrap_CV_8SC, METH_VARARGS, NULL},
-     { (char *)"CV_16UC", _wrap_CV_16UC, METH_VARARGS, NULL},
-     { (char *)"CV_16SC", _wrap_CV_16SC, METH_VARARGS, NULL},
-     { (char *)"CV_32SC", _wrap_CV_32SC, METH_VARARGS, NULL},
-     { (char *)"CV_32FC", _wrap_CV_32FC, METH_VARARGS, NULL},
-     { (char *)"CV_64FC", _wrap_CV_64FC, METH_VARARGS, NULL},
-     { (char *)"CV_MAT_CN", _wrap_CV_MAT_CN, METH_VARARGS, NULL},
-     { (char *)"CV_MAT_DEPTH", _wrap_CV_MAT_DEPTH, METH_VARARGS, NULL},
-     { (char *)"CV_MAT_TYPE", _wrap_CV_MAT_TYPE, METH_VARARGS, NULL},
-     { (char *)"CV_IS_MAT_CONT", _wrap_CV_IS_MAT_CONT, METH_VARARGS, NULL},
-     { (char *)"CV_IS_TEMP_MAT", _wrap_CV_IS_TEMP_MAT, METH_VARARGS, NULL},
-     { (char *)"CV_IS_MAT_HDR", _wrap_CV_IS_MAT_HDR, METH_VARARGS, NULL},
-     { (char *)"CV_IS_MAT", _wrap_CV_IS_MAT, METH_VARARGS, NULL},
-     { (char *)"CV_IS_MASK_ARR", _wrap_CV_IS_MASK_ARR, METH_VARARGS, NULL},
-     { (char *)"CV_ARE_TYPES_EQ", _wrap_CV_ARE_TYPES_EQ, METH_VARARGS, NULL},
-     { (char *)"CV_ARE_CNS_EQ", _wrap_CV_ARE_CNS_EQ, METH_VARARGS, NULL},
-     { (char *)"CV_ARE_DEPTHS_EQ", _wrap_CV_ARE_DEPTHS_EQ, METH_VARARGS, NULL},
-     { (char *)"CV_ARE_SIZES_EQ", _wrap_CV_ARE_SIZES_EQ, METH_VARARGS, NULL},
-     { (char *)"CV_IS_MAT_CONST", _wrap_CV_IS_MAT_CONST, METH_VARARGS, NULL},
-     { (char *)"CV_ELEM_SIZE1", _wrap_CV_ELEM_SIZE1, METH_VARARGS, NULL},
-     { (char *)"CV_ELEM_SIZE", _wrap_CV_ELEM_SIZE, METH_VARARGS, NULL},
-     { (char *)"CV_IS_MATND_HDR", _wrap_CV_IS_MATND_HDR, METH_VARARGS, NULL},
-     { (char *)"CV_IS_MATND", _wrap_CV_IS_MATND, METH_VARARGS, NULL},
-     { (char *)"CV_IS_SPARSE_MAT_HDR", _wrap_CV_IS_SPARSE_MAT_HDR, METH_VARARGS, NULL},
-     { (char *)"CV_IS_SPARSE_MAT", _wrap_CV_IS_SPARSE_MAT, METH_VARARGS, NULL},
-     { (char *)"CV_IS_HIST", _wrap_CV_IS_HIST, METH_VARARGS, NULL},
-     { (char *)"CV_IS_UNIFORM_HIST", _wrap_CV_IS_UNIFORM_HIST, METH_VARARGS, NULL},
-     { (char *)"CV_IS_SPARSE_HIST", _wrap_CV_IS_SPARSE_HIST, METH_VARARGS, NULL},
-     { (char *)"CV_HIST_HAS_RANGES", _wrap_CV_HIST_HAS_RANGES, METH_VARARGS, NULL},
-     { (char *)"CV_IS_STORAGE", _wrap_CV_IS_STORAGE, METH_VARARGS, NULL},
-     { (char *)"CV_IS_SET_ELEM", _wrap_CV_IS_SET_ELEM, METH_VARARGS, NULL},
-     { (char *)"CV_IS_SEQ", _wrap_CV_IS_SEQ, METH_VARARGS, NULL},
-     { (char *)"CV_IS_SET", _wrap_CV_IS_SET, METH_VARARGS, NULL},
-     { (char *)"CV_SEQ_ELTYPE", _wrap_CV_SEQ_ELTYPE, METH_VARARGS, NULL},
-     { (char *)"CV_SEQ_KIND", _wrap_CV_SEQ_KIND, METH_VARARGS, NULL},
-     { (char *)"CV_IS_SEQ_INDEX", _wrap_CV_IS_SEQ_INDEX, METH_VARARGS, NULL},
-     { (char *)"CV_IS_SEQ_CURVE", _wrap_CV_IS_SEQ_CURVE, METH_VARARGS, NULL},
-     { (char *)"CV_IS_SEQ_CLOSED", _wrap_CV_IS_SEQ_CLOSED, METH_VARARGS, NULL},
-     { (char *)"CV_IS_SEQ_CONVEX", _wrap_CV_IS_SEQ_CONVEX, METH_VARARGS, NULL},
-     { (char *)"CV_IS_SEQ_HOLE", _wrap_CV_IS_SEQ_HOLE, METH_VARARGS, NULL},
-     { (char *)"CV_IS_SEQ_SIMPLE", _wrap_CV_IS_SEQ_SIMPLE, METH_VARARGS, NULL},
-     { (char *)"CV_IS_SEQ_POINT_SET", _wrap_CV_IS_SEQ_POINT_SET, METH_VARARGS, NULL},
-     { (char *)"CV_IS_SEQ_POINT_SUBSET", _wrap_CV_IS_SEQ_POINT_SUBSET, METH_VARARGS, NULL},
-     { (char *)"CV_IS_SEQ_POLYLINE", _wrap_CV_IS_SEQ_POLYLINE, METH_VARARGS, NULL},
-     { (char *)"CV_IS_SEQ_POLYGON", _wrap_CV_IS_SEQ_POLYGON, METH_VARARGS, NULL},
-     { (char *)"CV_IS_SEQ_CHAIN", _wrap_CV_IS_SEQ_CHAIN, METH_VARARGS, NULL},
-     { (char *)"CV_IS_SEQ_CONTOUR", _wrap_CV_IS_SEQ_CONTOUR, METH_VARARGS, NULL},
-     { (char *)"CV_IS_SEQ_CHAIN_CONTOUR", _wrap_CV_IS_SEQ_CHAIN_CONTOUR, METH_VARARGS, NULL},
-     { (char *)"CV_IS_SEQ_POLYGON_TREE", _wrap_CV_IS_SEQ_POLYGON_TREE, METH_VARARGS, NULL},
-     { (char *)"CV_IS_GRAPH", _wrap_CV_IS_GRAPH, METH_VARARGS, NULL},
-     { (char *)"CV_IS_GRAPH_ORIENTED", _wrap_CV_IS_GRAPH_ORIENTED, METH_VARARGS, NULL},
-     { (char *)"CV_IS_SUBDIV2D", _wrap_CV_IS_SUBDIV2D, METH_VARARGS, NULL},
-     { (char *)"CV_WRITE_SEQ_ELEM_VAR", _wrap_CV_WRITE_SEQ_ELEM_VAR, METH_VARARGS, NULL},
-     { (char *)"CV_WRITE_SEQ_ELEM", _wrap_CV_WRITE_SEQ_ELEM, METH_VARARGS, NULL},
-     { (char *)"CV_NEXT_SEQ_ELEM", _wrap_CV_NEXT_SEQ_ELEM, METH_VARARGS, NULL},
-     { (char *)"CV_PREV_SEQ_ELEM", _wrap_CV_PREV_SEQ_ELEM, METH_VARARGS, NULL},
-     { (char *)"CV_READ_SEQ_ELEM", _wrap_CV_READ_SEQ_ELEM, METH_VARARGS, NULL},
-     { (char *)"CV_REV_READ_SEQ_ELEM", _wrap_CV_REV_READ_SEQ_ELEM, METH_VARARGS, NULL},
-     { (char *)"CV_CURRENT_POINT", _wrap_CV_CURRENT_POINT, METH_VARARGS, NULL},
-     { (char *)"CV_PREV_POINT", _wrap_CV_PREV_POINT, METH_VARARGS, NULL},
-     { (char *)"CV_READ_EDGE", _wrap_CV_READ_EDGE, METH_VARARGS, NULL},
-     { (char *)"CV_NEXT_GRAPH_EDGE", _wrap_CV_NEXT_GRAPH_EDGE, METH_VARARGS, NULL},
-     { (char *)"CV_NODE_TYPE", _wrap_CV_NODE_TYPE, METH_VARARGS, NULL},
-     { (char *)"CV_NODE_IS_INT", _wrap_CV_NODE_IS_INT, METH_VARARGS, NULL},
-     { (char *)"CV_NODE_IS_REAL", _wrap_CV_NODE_IS_REAL, METH_VARARGS, NULL},
-     { (char *)"CV_NODE_IS_STRING", _wrap_CV_NODE_IS_STRING, METH_VARARGS, NULL},
-     { (char *)"CV_NODE_IS_SEQ", _wrap_CV_NODE_IS_SEQ, METH_VARARGS, NULL},
-     { (char *)"CV_NODE_IS_MAP", _wrap_CV_NODE_IS_MAP, METH_VARARGS, NULL},
-     { (char *)"CV_NODE_IS_COLLECTION", _wrap_CV_NODE_IS_COLLECTION, METH_VARARGS, NULL},
-     { (char *)"CV_NODE_IS_FLOW", _wrap_CV_NODE_IS_FLOW, METH_VARARGS, NULL},
-     { (char *)"CV_NODE_IS_EMPTY", _wrap_CV_NODE_IS_EMPTY, METH_VARARGS, NULL},
-     { (char *)"CV_NODE_IS_USER", _wrap_CV_NODE_IS_USER, METH_VARARGS, NULL},
-     { (char *)"CV_NODE_HAS_NAME", _wrap_CV_NODE_HAS_NAME, METH_VARARGS, NULL},
-     { (char *)"CV_NODE_SEQ_IS_SIMPLE", _wrap_CV_NODE_SEQ_IS_SIMPLE, METH_VARARGS, NULL},
-     { (char *)"cvReshapeND", _wrap_cvReshapeND, METH_VARARGS, NULL},
-     { (char *)"cvConvert", _wrap_cvConvert, METH_VARARGS, NULL},
-     { (char *)"cvAXPY", _wrap_cvAXPY, METH_VARARGS, NULL},
-     { (char *)"cvAbs", _wrap_cvAbs, METH_VARARGS, NULL},
-     { (char *)"cvMatMulAdd", _wrap_cvMatMulAdd, METH_VARARGS, NULL},
-     { (char *)"cvMatMul", _wrap_cvMatMul, METH_VARARGS, NULL},
-     { (char *)"cvGetGraphVtx", _wrap_cvGetGraphVtx, METH_VARARGS, NULL},
-     { (char *)"cvGraphVtxIdx", _wrap_cvGraphVtxIdx, METH_VARARGS, NULL},
-     { (char *)"cvGraphEdgeIdx", _wrap_cvGraphEdgeIdx, METH_VARARGS, NULL},
-     { (char *)"cvGraphGetVtxCount", _wrap_cvGraphGetVtxCount, METH_VARARGS, NULL},
-     { (char *)"cvGraphGetEdgeCount", _wrap_cvGraphGetEdgeCount, METH_VARARGS, NULL},
-     { (char *)"CV_IS_GRAPH_VERTEX_VISITED", _wrap_CV_IS_GRAPH_VERTEX_VISITED, METH_VARARGS, NULL},
-     { (char *)"CV_IS_GRAPH_EDGE_VISITED", _wrap_CV_IS_GRAPH_EDGE_VISITED, METH_VARARGS, NULL},
-     { (char *)"CV_RGB", _wrap_CV_RGB, METH_VARARGS, NULL},
-     { (char *)"CV_NEXT_LINE_POINT", _wrap_CV_NEXT_LINE_POINT, METH_VARARGS, NULL},
-     { (char *)"CV_INIT_3X3_DELTAS", _wrap_CV_INIT_3X3_DELTAS, METH_VARARGS, NULL},
-     { (char *)"CV_IS_HAAR_CLASSIFIER", _wrap_CV_IS_HAAR_CLASSIFIER, METH_VARARGS, NULL},
-     { (char *)"cvCalcBackProject", _wrap_cvCalcBackProject, METH_VARARGS, NULL},
-     { (char *)"cvCalcBackProjectPatch", _wrap_cvCalcBackProjectPatch, METH_VARARGS, NULL},
-     { (char *)"cvCreateImage", _wrap_cvCreateImage, METH_VARARGS, NULL},
-     { (char *)"cvCloneImage", _wrap_cvCloneImage, METH_VARARGS, NULL},
-     { (char *)"Cv32suf_i_set", _wrap_Cv32suf_i_set, METH_VARARGS, NULL},
-     { (char *)"Cv32suf_i_get", _wrap_Cv32suf_i_get, METH_VARARGS, NULL},
-     { (char *)"Cv32suf_u_set", _wrap_Cv32suf_u_set, METH_VARARGS, NULL},
-     { (char *)"Cv32suf_u_get", _wrap_Cv32suf_u_get, METH_VARARGS, NULL},
-     { (char *)"Cv32suf_f_set", _wrap_Cv32suf_f_set, METH_VARARGS, NULL},
-     { (char *)"Cv32suf_f_get", _wrap_Cv32suf_f_get, METH_VARARGS, NULL},
-     { (char *)"new_Cv32suf", _wrap_new_Cv32suf, METH_VARARGS, NULL},
-     { (char *)"delete_Cv32suf", _wrap_delete_Cv32suf, METH_VARARGS, NULL},
-     { (char *)"Cv32suf_swigregister", Cv32suf_swigregister, METH_VARARGS, NULL},
-     { (char *)"Cv64suf_i_set", _wrap_Cv64suf_i_set, METH_VARARGS, NULL},
-     { (char *)"Cv64suf_i_get", _wrap_Cv64suf_i_get, METH_VARARGS, NULL},
-     { (char *)"Cv64suf_u_set", _wrap_Cv64suf_u_set, METH_VARARGS, NULL},
-     { (char *)"Cv64suf_u_get", _wrap_Cv64suf_u_get, METH_VARARGS, NULL},
-     { (char *)"Cv64suf_f_set", _wrap_Cv64suf_f_set, METH_VARARGS, NULL},
-     { (char *)"Cv64suf_f_get", _wrap_Cv64suf_f_get, METH_VARARGS, NULL},
-     { (char *)"new_Cv64suf", _wrap_new_Cv64suf, METH_VARARGS, NULL},
-     { (char *)"delete_Cv64suf", _wrap_delete_Cv64suf, METH_VARARGS, NULL},
-     { (char *)"Cv64suf_swigregister", Cv64suf_swigregister, METH_VARARGS, NULL},
-     { (char *)"cvRound", _wrap_cvRound, METH_VARARGS, NULL},
-     { (char *)"cvFloor", _wrap_cvFloor, METH_VARARGS, NULL},
-     { (char *)"cvCeil", _wrap_cvCeil, METH_VARARGS, NULL},
-     { (char *)"cvIsNaN", _wrap_cvIsNaN, METH_VARARGS, NULL},
-     { (char *)"cvIsInf", _wrap_cvIsInf, METH_VARARGS, NULL},
-     { (char *)"cvRNG", _wrap_cvRNG, METH_VARARGS, NULL},
-     { (char *)"cvRandInt", _wrap_cvRandInt, METH_VARARGS, NULL},
-     { (char *)"cvRandReal", _wrap_cvRandReal, METH_VARARGS, NULL},
-     { (char *)"IplImage_ID_set", _wrap_IplImage_ID_set, METH_VARARGS, NULL},
-     { (char *)"IplImage_ID_get", _wrap_IplImage_ID_get, METH_VARARGS, NULL},
-     { (char *)"IplImage_nChannels_set", _wrap_IplImage_nChannels_set, METH_VARARGS, NULL},
-     { (char *)"IplImage_nChannels_get", _wrap_IplImage_nChannels_get, METH_VARARGS, NULL},
-     { (char *)"IplImage_depth_set", _wrap_IplImage_depth_set, METH_VARARGS, NULL},
-     { (char *)"IplImage_depth_get", _wrap_IplImage_depth_get, METH_VARARGS, NULL},
-     { (char *)"IplImage_dataOrder_set", _wrap_IplImage_dataOrder_set, METH_VARARGS, NULL},
-     { (char *)"IplImage_dataOrder_get", _wrap_IplImage_dataOrder_get, METH_VARARGS, NULL},
-     { (char *)"IplImage_origin_set", _wrap_IplImage_origin_set, METH_VARARGS, NULL},
-     { (char *)"IplImage_origin_get", _wrap_IplImage_origin_get, METH_VARARGS, NULL},
-     { (char *)"IplImage_align_set", _wrap_IplImage_align_set, METH_VARARGS, NULL},
-     { (char *)"IplImage_align_get", _wrap_IplImage_align_get, METH_VARARGS, NULL},
-     { (char *)"IplImage_width_set", _wrap_IplImage_width_set, METH_VARARGS, NULL},
-     { (char *)"IplImage_width_get", _wrap_IplImage_width_get, METH_VARARGS, NULL},
-     { (char *)"IplImage_height_set", _wrap_IplImage_height_set, METH_VARARGS, NULL},
-     { (char *)"IplImage_height_get", _wrap_IplImage_height_get, METH_VARARGS, NULL},
-     { (char *)"IplImage_roi_set", _wrap_IplImage_roi_set, METH_VARARGS, NULL},
-     { (char *)"IplImage_roi_get", _wrap_IplImage_roi_get, METH_VARARGS, NULL},
-     { (char *)"IplImage_imageSize_set", _wrap_IplImage_imageSize_set, METH_VARARGS, NULL},
-     { (char *)"IplImage_imageSize_get", _wrap_IplImage_imageSize_get, METH_VARARGS, NULL},
-     { (char *)"IplImage_widthStep_set", _wrap_IplImage_widthStep_set, METH_VARARGS, NULL},
-     { (char *)"IplImage_widthStep_get", _wrap_IplImage_widthStep_get, METH_VARARGS, NULL},
-     { (char *)"delete_IplImage", _wrap_delete_IplImage, METH_VARARGS, NULL},
-     { (char *)"IplImage___mul__", _wrap_IplImage___mul__, METH_VARARGS, NULL},
-     { (char *)"IplImage___imul__", _wrap_IplImage___imul__, METH_VARARGS, NULL},
-     { (char *)"IplImage___idiv__", _wrap_IplImage___idiv__, METH_VARARGS, NULL},
-     { (char *)"IplImage___add__", _wrap_IplImage___add__, METH_VARARGS, NULL},
-     { (char *)"IplImage___iadd__", _wrap_IplImage___iadd__, METH_VARARGS, NULL},
-     { (char *)"IplImage___xor__", _wrap_IplImage___xor__, METH_VARARGS, NULL},
-     { (char *)"IplImage___ixor__", _wrap_IplImage___ixor__, METH_VARARGS, NULL},
-     { (char *)"IplImage___sub__", _wrap_IplImage___sub__, METH_VARARGS, NULL},
-     { (char *)"IplImage___isub__", _wrap_IplImage___isub__, METH_VARARGS, NULL},
-     { (char *)"IplImage___or__", _wrap_IplImage___or__, METH_VARARGS, NULL},
-     { (char *)"IplImage___ior__", _wrap_IplImage___ior__, METH_VARARGS, NULL},
-     { (char *)"IplImage___and__", _wrap_IplImage___and__, METH_VARARGS, NULL},
-     { (char *)"IplImage___iand__", _wrap_IplImage___iand__, METH_VARARGS, NULL},
-     { (char *)"IplImage___ge__", _wrap_IplImage___ge__, METH_VARARGS, NULL},
-     { (char *)"IplImage___eq__", _wrap_IplImage___eq__, METH_VARARGS, NULL},
-     { (char *)"IplImage___le__", _wrap_IplImage___le__, METH_VARARGS, NULL},
-     { (char *)"IplImage___ne__", _wrap_IplImage___ne__, METH_VARARGS, NULL},
-     { (char *)"IplImage___lt__", _wrap_IplImage___lt__, METH_VARARGS, NULL},
-     { (char *)"IplImage___gt__", _wrap_IplImage___gt__, METH_VARARGS, NULL},
-     { (char *)"IplImage___div__", _wrap_IplImage___div__, METH_VARARGS, NULL},
-     { (char *)"IplImage___radd__", _wrap_IplImage___radd__, METH_VARARGS, NULL},
-     { (char *)"IplImage___rsub__", _wrap_IplImage___rsub__, METH_VARARGS, NULL},
-     { (char *)"IplImage___rmul__", _wrap_IplImage___rmul__, METH_VARARGS, NULL},
-     { (char *)"IplImage___rdiv__", _wrap_IplImage___rdiv__, METH_VARARGS, NULL},
-     { (char *)"IplImage___ror__", _wrap_IplImage___ror__, METH_VARARGS, NULL},
-     { (char *)"IplImage___rand__", _wrap_IplImage___rand__, METH_VARARGS, NULL},
-     { (char *)"IplImage___rxor__", _wrap_IplImage___rxor__, METH_VARARGS, NULL},
-     { (char *)"IplImage___req__", _wrap_IplImage___req__, METH_VARARGS, NULL},
-     { (char *)"IplImage___rgt__", _wrap_IplImage___rgt__, METH_VARARGS, NULL},
-     { (char *)"IplImage___rge__", _wrap_IplImage___rge__, METH_VARARGS, NULL},
-     { (char *)"IplImage___rlt__", _wrap_IplImage___rlt__, METH_VARARGS, NULL},
-     { (char *)"IplImage___rle__", _wrap_IplImage___rle__, METH_VARARGS, NULL},
-     { (char *)"IplImage___rne__", _wrap_IplImage___rne__, METH_VARARGS, NULL},
-     { (char *)"IplImage___pow__", _wrap_IplImage___pow__, METH_VARARGS, NULL},
-     { (char *)"IplImage___str__", _wrap_IplImage___str__, METH_VARARGS, NULL},
-     { (char *)"IplImage___setitem__", _wrap_IplImage___setitem__, METH_VARARGS, NULL},
-     { (char *)"IplImage___getitem__", _wrap_IplImage___getitem__, METH_VARARGS, NULL},
-     { (char *)"IplImage_swigregister", IplImage_swigregister, METH_VARARGS, NULL},
-     { (char *)"IplROI_coi_set", _wrap_IplROI_coi_set, METH_VARARGS, NULL},
-     { (char *)"IplROI_coi_get", _wrap_IplROI_coi_get, METH_VARARGS, NULL},
-     { (char *)"IplROI_xOffset_set", _wrap_IplROI_xOffset_set, METH_VARARGS, NULL},
-     { (char *)"IplROI_xOffset_get", _wrap_IplROI_xOffset_get, METH_VARARGS, NULL},
-     { (char *)"IplROI_yOffset_set", _wrap_IplROI_yOffset_set, METH_VARARGS, NULL},
-     { (char *)"IplROI_yOffset_get", _wrap_IplROI_yOffset_get, METH_VARARGS, NULL},
-     { (char *)"IplROI_width_set", _wrap_IplROI_width_set, METH_VARARGS, NULL},
-     { (char *)"IplROI_width_get", _wrap_IplROI_width_get, METH_VARARGS, NULL},
-     { (char *)"IplROI_height_set", _wrap_IplROI_height_set, METH_VARARGS, NULL},
-     { (char *)"IplROI_height_get", _wrap_IplROI_height_get, METH_VARARGS, NULL},
-     { (char *)"new_IplROI", _wrap_new_IplROI, METH_VARARGS, NULL},
-     { (char *)"delete_IplROI", _wrap_delete_IplROI, METH_VARARGS, NULL},
-     { (char *)"IplROI_swigregister", IplROI_swigregister, METH_VARARGS, NULL},
-     { (char *)"IplConvKernel_nCols_set", _wrap_IplConvKernel_nCols_set, METH_VARARGS, NULL},
-     { (char *)"IplConvKernel_nCols_get", _wrap_IplConvKernel_nCols_get, METH_VARARGS, NULL},
-     { (char *)"IplConvKernel_nRows_set", _wrap_IplConvKernel_nRows_set, METH_VARARGS, NULL},
-     { (char *)"IplConvKernel_nRows_get", _wrap_IplConvKernel_nRows_get, METH_VARARGS, NULL},
-     { (char *)"IplConvKernel_anchorX_set", _wrap_IplConvKernel_anchorX_set, METH_VARARGS, NULL},
-     { (char *)"IplConvKernel_anchorX_get", _wrap_IplConvKernel_anchorX_get, METH_VARARGS, NULL},
-     { (char *)"IplConvKernel_anchorY_set", _wrap_IplConvKernel_anchorY_set, METH_VARARGS, NULL},
-     { (char *)"IplConvKernel_anchorY_get", _wrap_IplConvKernel_anchorY_get, METH_VARARGS, NULL},
-     { (char *)"IplConvKernel_values_set", _wrap_IplConvKernel_values_set, METH_VARARGS, NULL},
-     { (char *)"IplConvKernel_values_get", _wrap_IplConvKernel_values_get, METH_VARARGS, NULL},
-     { (char *)"IplConvKernel_nShiftR_set", _wrap_IplConvKernel_nShiftR_set, METH_VARARGS, NULL},
-     { (char *)"IplConvKernel_nShiftR_get", _wrap_IplConvKernel_nShiftR_get, METH_VARARGS, NULL},
-     { (char *)"delete_IplConvKernel", _wrap_delete_IplConvKernel, METH_VARARGS, NULL},
-     { (char *)"IplConvKernel_swigregister", IplConvKernel_swigregister, METH_VARARGS, NULL},
-     { (char *)"IplConvKernelFP_nCols_set", _wrap_IplConvKernelFP_nCols_set, METH_VARARGS, NULL},
-     { (char *)"IplConvKernelFP_nCols_get", _wrap_IplConvKernelFP_nCols_get, METH_VARARGS, NULL},
-     { (char *)"IplConvKernelFP_nRows_set", _wrap_IplConvKernelFP_nRows_set, METH_VARARGS, NULL},
-     { (char *)"IplConvKernelFP_nRows_get", _wrap_IplConvKernelFP_nRows_get, METH_VARARGS, NULL},
-     { (char *)"IplConvKernelFP_anchorX_set", _wrap_IplConvKernelFP_anchorX_set, METH_VARARGS, NULL},
-     { (char *)"IplConvKernelFP_anchorX_get", _wrap_IplConvKernelFP_anchorX_get, METH_VARARGS, NULL},
-     { (char *)"IplConvKernelFP_anchorY_set", _wrap_IplConvKernelFP_anchorY_set, METH_VARARGS, NULL},
-     { (char *)"IplConvKernelFP_anchorY_get", _wrap_IplConvKernelFP_anchorY_get, METH_VARARGS, NULL},
-     { (char *)"IplConvKernelFP_values_set", _wrap_IplConvKernelFP_values_set, METH_VARARGS, NULL},
-     { (char *)"IplConvKernelFP_values_get", _wrap_IplConvKernelFP_values_get, METH_VARARGS, NULL},
-     { (char *)"new_IplConvKernelFP", _wrap_new_IplConvKernelFP, METH_VARARGS, NULL},
-     { (char *)"delete_IplConvKernelFP", _wrap_delete_IplConvKernelFP, METH_VARARGS, NULL},
-     { (char *)"IplConvKernelFP_swigregister", IplConvKernelFP_swigregister, METH_VARARGS, NULL},
-     { (char *)"CvMat_type_set", _wrap_CvMat_type_set, METH_VARARGS, NULL},
-     { (char *)"CvMat_type_get", _wrap_CvMat_type_get, METH_VARARGS, NULL},
-     { (char *)"CvMat_step_set", _wrap_CvMat_step_set, METH_VARARGS, NULL},
-     { (char *)"CvMat_step_get", _wrap_CvMat_step_get, METH_VARARGS, NULL},
-     { (char *)"CvMat_refcount_set", _wrap_CvMat_refcount_set, METH_VARARGS, NULL},
-     { (char *)"CvMat_refcount_get", _wrap_CvMat_refcount_get, METH_VARARGS, NULL},
-     { (char *)"CvMat_hdr_refcount_set", _wrap_CvMat_hdr_refcount_set, METH_VARARGS, NULL},
-     { (char *)"CvMat_hdr_refcount_get", _wrap_CvMat_hdr_refcount_get, METH_VARARGS, NULL},
-     { (char *)"CvMat_data_get", _wrap_CvMat_data_get, METH_VARARGS, NULL},
-     { (char *)"delete_CvMat", _wrap_delete_CvMat, METH_VARARGS, NULL},
-     { (char *)"CvMat_depth_get", _wrap_CvMat_depth_get, METH_VARARGS, NULL},
-     { (char *)"CvMat_nChannels_get", _wrap_CvMat_nChannels_get, METH_VARARGS, NULL},
-     { (char *)"CvMat_dataOrder_get", _wrap_CvMat_dataOrder_get, METH_VARARGS, NULL},
-     { (char *)"CvMat_origin_get", _wrap_CvMat_origin_get, METH_VARARGS, NULL},
-     { (char *)"CvMat_width_get", _wrap_CvMat_width_get, METH_VARARGS, NULL},
-     { (char *)"CvMat_height_get", _wrap_CvMat_height_get, METH_VARARGS, NULL},
-     { (char *)"CvMat_imageSize_get", _wrap_CvMat_imageSize_get, METH_VARARGS, NULL},
-     { (char *)"CvMat_widthStep_get", _wrap_CvMat_widthStep_get, METH_VARARGS, NULL},
-     { (char *)"CvMat_rows_get", _wrap_CvMat_rows_get, METH_VARARGS, NULL},
-     { (char *)"CvMat_cols_get", _wrap_CvMat_cols_get, METH_VARARGS, NULL},
-     { (char *)"CvMat___mul__", _wrap_CvMat___mul__, METH_VARARGS, NULL},
-     { (char *)"CvMat___imul__", _wrap_CvMat___imul__, METH_VARARGS, NULL},
-     { (char *)"CvMat___idiv__", _wrap_CvMat___idiv__, METH_VARARGS, NULL},
-     { (char *)"CvMat___add__", _wrap_CvMat___add__, METH_VARARGS, NULL},
-     { (char *)"CvMat___iadd__", _wrap_CvMat___iadd__, METH_VARARGS, NULL},
-     { (char *)"CvMat___xor__", _wrap_CvMat___xor__, METH_VARARGS, NULL},
-     { (char *)"CvMat___ixor__", _wrap_CvMat___ixor__, METH_VARARGS, NULL},
-     { (char *)"CvMat___sub__", _wrap_CvMat___sub__, METH_VARARGS, NULL},
-     { (char *)"CvMat___isub__", _wrap_CvMat___isub__, METH_VARARGS, NULL},
-     { (char *)"CvMat___or__", _wrap_CvMat___or__, METH_VARARGS, NULL},
-     { (char *)"CvMat___ior__", _wrap_CvMat___ior__, METH_VARARGS, NULL},
-     { (char *)"CvMat___and__", _wrap_CvMat___and__, METH_VARARGS, NULL},
-     { (char *)"CvMat___iand__", _wrap_CvMat___iand__, METH_VARARGS, NULL},
-     { (char *)"CvMat___ge__", _wrap_CvMat___ge__, METH_VARARGS, NULL},
-     { (char *)"CvMat___eq__", _wrap_CvMat___eq__, METH_VARARGS, NULL},
-     { (char *)"CvMat___le__", _wrap_CvMat___le__, METH_VARARGS, NULL},
-     { (char *)"CvMat___ne__", _wrap_CvMat___ne__, METH_VARARGS, NULL},
-     { (char *)"CvMat___lt__", _wrap_CvMat___lt__, METH_VARARGS, NULL},
-     { (char *)"CvMat___gt__", _wrap_CvMat___gt__, METH_VARARGS, NULL},
-     { (char *)"CvMat___div__", _wrap_CvMat___div__, METH_VARARGS, NULL},
-     { (char *)"CvMat___radd__", _wrap_CvMat___radd__, METH_VARARGS, NULL},
-     { (char *)"CvMat___rsub__", _wrap_CvMat___rsub__, METH_VARARGS, NULL},
-     { (char *)"CvMat___rmul__", _wrap_CvMat___rmul__, METH_VARARGS, NULL},
-     { (char *)"CvMat___rdiv__", _wrap_CvMat___rdiv__, METH_VARARGS, NULL},
-     { (char *)"CvMat___ror__", _wrap_CvMat___ror__, METH_VARARGS, NULL},
-     { (char *)"CvMat___rand__", _wrap_CvMat___rand__, METH_VARARGS, NULL},
-     { (char *)"CvMat___rxor__", _wrap_CvMat___rxor__, METH_VARARGS, NULL},
-     { (char *)"CvMat___req__", _wrap_CvMat___req__, METH_VARARGS, NULL},
-     { (char *)"CvMat___rgt__", _wrap_CvMat___rgt__, METH_VARARGS, NULL},
-     { (char *)"CvMat___rge__", _wrap_CvMat___rge__, METH_VARARGS, NULL},
-     { (char *)"CvMat___rlt__", _wrap_CvMat___rlt__, METH_VARARGS, NULL},
-     { (char *)"CvMat___rle__", _wrap_CvMat___rle__, METH_VARARGS, NULL},
-     { (char *)"CvMat___rne__", _wrap_CvMat___rne__, METH_VARARGS, NULL},
-     { (char *)"CvMat___pow__", _wrap_CvMat___pow__, METH_VARARGS, NULL},
-     { (char *)"CvMat___str__", _wrap_CvMat___str__, METH_VARARGS, NULL},
-     { (char *)"CvMat___setitem__", _wrap_CvMat___setitem__, METH_VARARGS, NULL},
-     { (char *)"CvMat___getitem__", _wrap_CvMat___getitem__, METH_VARARGS, NULL},
-     { (char *)"CvMat_imageData_set", _wrap_CvMat_imageData_set, METH_VARARGS, NULL},
-     { (char *)"CvMat_imageData_get", _wrap_CvMat_imageData_get, METH_VARARGS, NULL},
-     { (char *)"CvMat_swigregister", CvMat_swigregister, METH_VARARGS, NULL},
-     { (char *)"CvMat_data_ptr_set", _wrap_CvMat_data_ptr_set, METH_VARARGS, NULL},
-     { (char *)"CvMat_data_ptr_get", _wrap_CvMat_data_ptr_get, METH_VARARGS, NULL},
-     { (char *)"CvMat_data_s_set", _wrap_CvMat_data_s_set, METH_VARARGS, NULL},
-     { (char *)"CvMat_data_s_get", _wrap_CvMat_data_s_get, METH_VARARGS, NULL},
-     { (char *)"CvMat_data_i_set", _wrap_CvMat_data_i_set, METH_VARARGS, NULL},
-     { (char *)"CvMat_data_i_get", _wrap_CvMat_data_i_get, METH_VARARGS, NULL},
-     { (char *)"CvMat_data_fl_set", _wrap_CvMat_data_fl_set, METH_VARARGS, NULL},
-     { (char *)"CvMat_data_fl_get", _wrap_CvMat_data_fl_get, METH_VARARGS, NULL},
-     { (char *)"CvMat_data_db_set", _wrap_CvMat_data_db_set, METH_VARARGS, NULL},
-     { (char *)"CvMat_data_db_get", _wrap_CvMat_data_db_get, METH_VARARGS, NULL},
-     { (char *)"new_CvMat_data", _wrap_new_CvMat_data, METH_VARARGS, NULL},
-     { (char *)"delete_CvMat_data", _wrap_delete_CvMat_data, METH_VARARGS, NULL},
-     { (char *)"CvMat_data_swigregister", CvMat_data_swigregister, METH_VARARGS, NULL},
-     { (char *)"cvMat", _wrap_cvMat, METH_VARARGS, NULL},
-     { (char *)"cvmGet", _wrap_cvmGet, METH_VARARGS, NULL},
-     { (char *)"cvmSet", _wrap_cvmSet, METH_VARARGS, NULL},
-     { (char *)"cvCvToIplDepth", _wrap_cvCvToIplDepth, METH_VARARGS, NULL},
-     { (char *)"CvMatND_type_set", _wrap_CvMatND_type_set, METH_VARARGS, NULL},
-     { (char *)"CvMatND_type_get", _wrap_CvMatND_type_get, METH_VARARGS, NULL},
-     { (char *)"CvMatND_dims_set", _wrap_CvMatND_dims_set, METH_VARARGS, NULL},
-     { (char *)"CvMatND_dims_get", _wrap_CvMatND_dims_get, METH_VARARGS, NULL},
-     { (char *)"CvMatND_refcount_set", _wrap_CvMatND_refcount_set, METH_VARARGS, NULL},
-     { (char *)"CvMatND_refcount_get", _wrap_CvMatND_refcount_get, METH_VARARGS, NULL},
-     { (char *)"CvMatND_hdr_refcount_set", _wrap_CvMatND_hdr_refcount_set, METH_VARARGS, NULL},
-     { (char *)"CvMatND_hdr_refcount_get", _wrap_CvMatND_hdr_refcount_get, METH_VARARGS, NULL},
-     { (char *)"CvMatND_dim_get", _wrap_CvMatND_dim_get, METH_VARARGS, NULL},
-     { (char *)"CvMatND_data_get", _wrap_CvMatND_data_get, METH_VARARGS, NULL},
-     { (char *)"delete_CvMatND", _wrap_delete_CvMatND, METH_VARARGS, NULL},
-     { (char *)"CvMatND_swigregister", CvMatND_swigregister, METH_VARARGS, NULL},
-     { (char *)"CvMatND_dim_size_set", _wrap_CvMatND_dim_size_set, METH_VARARGS, NULL},
-     { (char *)"CvMatND_dim_size_get", _wrap_CvMatND_dim_size_get, METH_VARARGS, NULL},
-     { (char *)"CvMatND_dim_step_set", _wrap_CvMatND_dim_step_set, METH_VARARGS, NULL},
-     { (char *)"CvMatND_dim_step_get", _wrap_CvMatND_dim_step_get, METH_VARARGS, NULL},
-     { (char *)"new_CvMatND_dim", _wrap_new_CvMatND_dim, METH_VARARGS, NULL},
-     { (char *)"delete_CvMatND_dim", _wrap_delete_CvMatND_dim, METH_VARARGS, NULL},
-     { (char *)"CvMatND_dim_swigregister", CvMatND_dim_swigregister, METH_VARARGS, NULL},
-     { (char *)"CvMatND_data_ptr_set", _wrap_CvMatND_data_ptr_set, METH_VARARGS, NULL},
-     { (char *)"CvMatND_data_ptr_get", _wrap_CvMatND_data_ptr_get, METH_VARARGS, NULL},
-     { (char *)"CvMatND_data_fl_set", _wrap_CvMatND_data_fl_set, METH_VARARGS, NULL},
-     { (char *)"CvMatND_data_fl_get", _wrap_CvMatND_data_fl_get, METH_VARARGS, NULL},
-     { (char *)"CvMatND_data_db_set", _wrap_CvMatND_data_db_set, METH_VARARGS, NULL},
-     { (char *)"CvMatND_data_db_get", _wrap_CvMatND_data_db_get, METH_VARARGS, NULL},
-     { (char *)"CvMatND_data_i_set", _wrap_CvMatND_data_i_set, METH_VARARGS, NULL},
-     { (char *)"CvMatND_data_i_get", _wrap_CvMatND_data_i_get, METH_VARARGS, NULL},
-     { (char *)"CvMatND_data_s_set", _wrap_CvMatND_data_s_set, METH_VARARGS, NULL},
-     { (char *)"CvMatND_data_s_get", _wrap_CvMatND_data_s_get, METH_VARARGS, NULL},
-     { (char *)"new_CvMatND_data", _wrap_new_CvMatND_data, METH_VARARGS, NULL},
-     { (char *)"delete_CvMatND_data", _wrap_delete_CvMatND_data, METH_VARARGS, NULL},
-     { (char *)"CvMatND_data_swigregister", CvMatND_data_swigregister, METH_VARARGS, NULL},
-     { (char *)"CvSparseMat_type_set", _wrap_CvSparseMat_type_set, METH_VARARGS, NULL},
-     { (char *)"CvSparseMat_type_get", _wrap_CvSparseMat_type_get, METH_VARARGS, NULL},
-     { (char *)"CvSparseMat_dims_set", _wrap_CvSparseMat_dims_set, METH_VARARGS, NULL},
-     { (char *)"CvSparseMat_dims_get", _wrap_CvSparseMat_dims_get, METH_VARARGS, NULL},
-     { (char *)"CvSparseMat_refcount_set", _wrap_CvSparseMat_refcount_set, METH_VARARGS, NULL},
-     { (char *)"CvSparseMat_refcount_get", _wrap_CvSparseMat_refcount_get, METH_VARARGS, NULL},
-     { (char *)"CvSparseMat_hdr_refcount_set", _wrap_CvSparseMat_hdr_refcount_set, METH_VARARGS, NULL},
-     { (char *)"CvSparseMat_hdr_refcount_get", _wrap_CvSparseMat_hdr_refcount_get, METH_VARARGS, NULL},
-     { (char *)"CvSparseMat_heap_set", _wrap_CvSparseMat_heap_set, METH_VARARGS, NULL},
-     { (char *)"CvSparseMat_heap_get", _wrap_CvSparseMat_heap_get, METH_VARARGS, NULL},
-     { (char *)"CvSparseMat_hashtable_set", _wrap_CvSparseMat_hashtable_set, METH_VARARGS, NULL},
-     { (char *)"CvSparseMat_hashtable_get", _wrap_CvSparseMat_hashtable_get, METH_VARARGS, NULL},
-     { (char *)"CvSparseMat_hashsize_set", _wrap_CvSparseMat_hashsize_set, METH_VARARGS, NULL},
-     { (char *)"CvSparseMat_hashsize_get", _wrap_CvSparseMat_hashsize_get, METH_VARARGS, NULL},
-     { (char *)"CvSparseMat_valoffset_set", _wrap_CvSparseMat_valoffset_set, METH_VARARGS, NULL},
-     { (char *)"CvSparseMat_valoffset_get", _wrap_CvSparseMat_valoffset_get, METH_VARARGS, NULL},
-     { (char *)"CvSparseMat_idxoffset_set", _wrap_CvSparseMat_idxoffset_set, METH_VARARGS, NULL},
-     { (char *)"CvSparseMat_idxoffset_get", _wrap_CvSparseMat_idxoffset_get, METH_VARARGS, NULL},
-     { (char *)"CvSparseMat_size_set", _wrap_CvSparseMat_size_set, METH_VARARGS, NULL},
-     { (char *)"CvSparseMat_size_get", _wrap_CvSparseMat_size_get, METH_VARARGS, NULL},
-     { (char *)"delete_CvSparseMat", _wrap_delete_CvSparseMat, METH_VARARGS, NULL},
-     { (char *)"CvSparseMat_swigregister", CvSparseMat_swigregister, METH_VARARGS, NULL},
-     { (char *)"CvSparseNode_hashval_set", _wrap_CvSparseNode_hashval_set, METH_VARARGS, NULL},
-     { (char *)"CvSparseNode_hashval_get", _wrap_CvSparseNode_hashval_get, METH_VARARGS, NULL},
-     { (char *)"CvSparseNode_next_set", _wrap_CvSparseNode_next_set, METH_VARARGS, NULL},
-     { (char *)"CvSparseNode_next_get", _wrap_CvSparseNode_next_get, METH_VARARGS, NULL},
-     { (char *)"new_CvSparseNode", _wrap_new_CvSparseNode, METH_VARARGS, NULL},
-     { (char *)"delete_CvSparseNode", _wrap_delete_CvSparseNode, METH_VARARGS, NULL},
-     { (char *)"CvSparseNode_swigregister", CvSparseNode_swigregister, METH_VARARGS, NULL},
-     { (char *)"CvSparseMatIterator_mat_set", _wrap_CvSparseMatIterator_mat_set, METH_VARARGS, NULL},
-     { (char *)"CvSparseMatIterator_mat_get", _wrap_CvSparseMatIterator_mat_get, METH_VARARGS, NULL},
-     { (char *)"CvSparseMatIterator_node_set", _wrap_CvSparseMatIterator_node_set, METH_VARARGS, NULL},
-     { (char *)"CvSparseMatIterator_node_get", _wrap_CvSparseMatIterator_node_get, METH_VARARGS, NULL},
-     { (char *)"CvSparseMatIterator_curidx_set", _wrap_CvSparseMatIterator_curidx_set, METH_VARARGS, NULL},
-     { (char *)"CvSparseMatIterator_curidx_get", _wrap_CvSparseMatIterator_curidx_get, METH_VARARGS, NULL},
-     { (char *)"new_CvSparseMatIterator", _wrap_new_CvSparseMatIterator, METH_VARARGS, NULL},
-     { (char *)"delete_CvSparseMatIterator", _wrap_delete_CvSparseMatIterator, METH_VARARGS, NULL},
-     { (char *)"CvSparseMatIterator_swigregister", CvSparseMatIterator_swigregister, METH_VARARGS, NULL},
-     { (char *)"CvHistogram_type_set", _wrap_CvHistogram_type_set, METH_VARARGS, NULL},
-     { (char *)"CvHistogram_type_get", _wrap_CvHistogram_type_get, METH_VARARGS, NULL},
-     { (char *)"CvHistogram_bins_set", _wrap_CvHistogram_bins_set, METH_VARARGS, NULL},
-     { (char *)"CvHistogram_bins_get", _wrap_CvHistogram_bins_get, METH_VARARGS, NULL},
-     { (char *)"CvHistogram_thresh_set", _wrap_CvHistogram_thresh_set, METH_VARARGS, NULL},
-     { (char *)"CvHistogram_thresh_get", _wrap_CvHistogram_thresh_get, METH_VARARGS, NULL},
-     { (char *)"CvHistogram_thresh2_set", _wrap_CvHistogram_thresh2_set, METH_VARARGS, NULL},
-     { (char *)"CvHistogram_thresh2_get", _wrap_CvHistogram_thresh2_get, METH_VARARGS, NULL},
-     { (char *)"CvHistogram_mat_set", _wrap_CvHistogram_mat_set, METH_VARARGS, NULL},
-     { (char *)"CvHistogram_mat_get", _wrap_CvHistogram_mat_get, METH_VARARGS, NULL},
-     { (char *)"delete_CvHistogram", _wrap_delete_CvHistogram, METH_VARARGS, NULL},
-     { (char *)"CvHistogram_swigregister", CvHistogram_swigregister, METH_VARARGS, NULL},
-     { (char *)"CvRect_x_set", _wrap_CvRect_x_set, METH_VARARGS, NULL},
-     { (char *)"CvRect_x_get", _wrap_CvRect_x_get, METH_VARARGS, NULL},
-     { (char *)"CvRect_y_set", _wrap_CvRect_y_set, METH_VARARGS, NULL},
-     { (char *)"CvRect_y_get", _wrap_CvRect_y_get, METH_VARARGS, NULL},
-     { (char *)"CvRect_width_set", _wrap_CvRect_width_set, METH_VARARGS, NULL},
-     { (char *)"CvRect_width_get", _wrap_CvRect_width_get, METH_VARARGS, NULL},
-     { (char *)"CvRect_height_set", _wrap_CvRect_height_set, METH_VARARGS, NULL},
-     { (char *)"CvRect_height_get", _wrap_CvRect_height_get, METH_VARARGS, NULL},
-     { (char *)"new_CvRect", _wrap_new_CvRect, METH_VARARGS, NULL},
-     { (char *)"delete_CvRect", _wrap_delete_CvRect, METH_VARARGS, NULL},
-     { (char *)"CvRect_swigregister", CvRect_swigregister, METH_VARARGS, NULL},
-     { (char *)"cvRect", _wrap_cvRect, METH_VARARGS, NULL},
-     { (char *)"cvRectToROI", _wrap_cvRectToROI, METH_VARARGS, NULL},
-     { (char *)"cvROIToRect", _wrap_cvROIToRect, METH_VARARGS, NULL},
-     { (char *)"CvTermCriteria_type_set", _wrap_CvTermCriteria_type_set, METH_VARARGS, NULL},
-     { (char *)"CvTermCriteria_type_get", _wrap_CvTermCriteria_type_get, METH_VARARGS, NULL},
-     { (char *)"CvTermCriteria_max_iter_set", _wrap_CvTermCriteria_max_iter_set, METH_VARARGS, NULL},
-     { (char *)"CvTermCriteria_max_iter_get", _wrap_CvTermCriteria_max_iter_get, METH_VARARGS, NULL},
-     { (char *)"CvTermCriteria_epsilon_set", _wrap_CvTermCriteria_epsilon_set, METH_VARARGS, NULL},
-     { (char *)"CvTermCriteria_epsilon_get", _wrap_CvTermCriteria_epsilon_get, METH_VARARGS, NULL},
-     { (char *)"new_CvTermCriteria", _wrap_new_CvTermCriteria, METH_VARARGS, NULL},
-     { (char *)"delete_CvTermCriteria", _wrap_delete_CvTermCriteria, METH_VARARGS, NULL},
-     { (char *)"CvTermCriteria_swigregister", CvTermCriteria_swigregister, METH_VARARGS, NULL},
-     { (char *)"cvTermCriteria", _wrap_cvTermCriteria, METH_VARARGS, NULL},
-     { (char *)"CvPoint_x_set", _wrap_CvPoint_x_set, METH_VARARGS, NULL},
-     { (char *)"CvPoint_x_get", _wrap_CvPoint_x_get, METH_VARARGS, NULL},
-     { (char *)"CvPoint_y_set", _wrap_CvPoint_y_set, METH_VARARGS, NULL},
-     { (char *)"CvPoint_y_get", _wrap_CvPoint_y_get, METH_VARARGS, NULL},
-     { (char *)"CvPoint___str__", _wrap_CvPoint___str__, METH_VARARGS, NULL},
-     { (char *)"CvPoint___repr__", _wrap_CvPoint___repr__, METH_VARARGS, NULL},
-     { (char *)"new_CvPoint", _wrap_new_CvPoint, METH_VARARGS, NULL},
-     { (char *)"delete_CvPoint", _wrap_delete_CvPoint, METH_VARARGS, NULL},
-     { (char *)"CvPoint_swigregister", CvPoint_swigregister, METH_VARARGS, NULL},
-     { (char *)"cvPoint", _wrap_cvPoint, METH_VARARGS, NULL},
-     { (char *)"CvPoint2D32f_x_set", _wrap_CvPoint2D32f_x_set, METH_VARARGS, NULL},
-     { (char *)"CvPoint2D32f_x_get", _wrap_CvPoint2D32f_x_get, METH_VARARGS, NULL},
-     { (char *)"CvPoint2D32f_y_set", _wrap_CvPoint2D32f_y_set, METH_VARARGS, NULL},
-     { (char *)"CvPoint2D32f_y_get", _wrap_CvPoint2D32f_y_get, METH_VARARGS, NULL},
-     { (char *)"CvPoint2D32f___str__", _wrap_CvPoint2D32f___str__, METH_VARARGS, NULL},
-     { (char *)"CvPoint2D32f___repr__", _wrap_CvPoint2D32f___repr__, METH_VARARGS, NULL},
-     { (char *)"new_CvPoint2D32f", _wrap_new_CvPoint2D32f, METH_VARARGS, NULL},
-     { (char *)"delete_CvPoint2D32f", _wrap_delete_CvPoint2D32f, METH_VARARGS, NULL},
-     { (char *)"CvPoint2D32f_swigregister", CvPoint2D32f_swigregister, METH_VARARGS, NULL},
-     { (char *)"cvPoint2D32f", _wrap_cvPoint2D32f, METH_VARARGS, NULL},
-     { (char *)"cvPointTo32f", _wrap_cvPointTo32f, METH_VARARGS, NULL},
-     { (char *)"cvPointFrom32f", _wrap_cvPointFrom32f, METH_VARARGS, NULL},
-     { (char *)"CvPoint3D32f_x_set", _wrap_CvPoint3D32f_x_set, METH_VARARGS, NULL},
-     { (char *)"CvPoint3D32f_x_get", _wrap_CvPoint3D32f_x_get, METH_VARARGS, NULL},
-     { (char *)"CvPoint3D32f_y_set", _wrap_CvPoint3D32f_y_set, METH_VARARGS, NULL},
-     { (char *)"CvPoint3D32f_y_get", _wrap_CvPoint3D32f_y_get, METH_VARARGS, NULL},
-     { (char *)"CvPoint3D32f_z_set", _wrap_CvPoint3D32f_z_set, METH_VARARGS, NULL},
-     { (char *)"CvPoint3D32f_z_get", _wrap_CvPoint3D32f_z_get, METH_VARARGS, NULL},
-     { (char *)"new_CvPoint3D32f", _wrap_new_CvPoint3D32f, METH_VARARGS, NULL},
-     { (char *)"delete_CvPoint3D32f", _wrap_delete_CvPoint3D32f, METH_VARARGS, NULL},
-     { (char *)"CvPoint3D32f_swigregister", CvPoint3D32f_swigregister, METH_VARARGS, NULL},
-     { (char *)"cvPoint3D32f", _wrap_cvPoint3D32f, METH_VARARGS, NULL},
-     { (char *)"CvPoint2D64f_x_set", _wrap_CvPoint2D64f_x_set, METH_VARARGS, NULL},
-     { (char *)"CvPoint2D64f_x_get", _wrap_CvPoint2D64f_x_get, METH_VARARGS, NULL},
-     { (char *)"CvPoint2D64f_y_set", _wrap_CvPoint2D64f_y_set, METH_VARARGS, NULL},
-     { (char *)"CvPoint2D64f_y_get", _wrap_CvPoint2D64f_y_get, METH_VARARGS, NULL},
-     { (char *)"new_CvPoint2D64f", _wrap_new_CvPoint2D64f, METH_VARARGS, NULL},
-     { (char *)"delete_CvPoint2D64f", _wrap_delete_CvPoint2D64f, METH_VARARGS, NULL},
-     { (char *)"CvPoint2D64f_swigregister", CvPoint2D64f_swigregister, METH_VARARGS, NULL},
-     { (char *)"cvPoint2D64f", _wrap_cvPoint2D64f, METH_VARARGS, NULL},
-     { (char *)"CvPoint3D64f_x_set", _wrap_CvPoint3D64f_x_set, METH_VARARGS, NULL},
-     { (char *)"CvPoint3D64f_x_get", _wrap_CvPoint3D64f_x_get, METH_VARARGS, NULL},
-     { (char *)"CvPoint3D64f_y_set", _wrap_CvPoint3D64f_y_set, METH_VARARGS, NULL},
-     { (char *)"CvPoint3D64f_y_get", _wrap_CvPoint3D64f_y_get, METH_VARARGS, NULL},
-     { (char *)"CvPoint3D64f_z_set", _wrap_CvPoint3D64f_z_set, METH_VARARGS, NULL},
-     { (char *)"CvPoint3D64f_z_get", _wrap_CvPoint3D64f_z_get, METH_VARARGS, NULL},
-     { (char *)"new_CvPoint3D64f", _wrap_new_CvPoint3D64f, METH_VARARGS, NULL},
-     { (char *)"delete_CvPoint3D64f", _wrap_delete_CvPoint3D64f, METH_VARARGS, NULL},
-     { (char *)"CvPoint3D64f_swigregister", CvPoint3D64f_swigregister, METH_VARARGS, NULL},
-     { (char *)"cvPoint3D64f", _wrap_cvPoint3D64f, METH_VARARGS, NULL},
-     { (char *)"CvSize_width_set", _wrap_CvSize_width_set, METH_VARARGS, NULL},
-     { (char *)"CvSize_width_get", _wrap_CvSize_width_get, METH_VARARGS, NULL},
-     { (char *)"CvSize_height_set", _wrap_CvSize_height_set, METH_VARARGS, NULL},
-     { (char *)"CvSize_height_get", _wrap_CvSize_height_get, METH_VARARGS, NULL},
-     { (char *)"new_CvSize", _wrap_new_CvSize, METH_VARARGS, NULL},
-     { (char *)"delete_CvSize", _wrap_delete_CvSize, METH_VARARGS, NULL},
-     { (char *)"CvSize_swigregister", CvSize_swigregister, METH_VARARGS, NULL},
-     { (char *)"cvSize", _wrap_cvSize, METH_VARARGS, NULL},
-     { (char *)"CvSize2D32f_width_set", _wrap_CvSize2D32f_width_set, METH_VARARGS, NULL},
-     { (char *)"CvSize2D32f_width_get", _wrap_CvSize2D32f_width_get, METH_VARARGS, NULL},
-     { (char *)"CvSize2D32f_height_set", _wrap_CvSize2D32f_height_set, METH_VARARGS, NULL},
-     { (char *)"CvSize2D32f_height_get", _wrap_CvSize2D32f_height_get, METH_VARARGS, NULL},
-     { (char *)"new_CvSize2D32f", _wrap_new_CvSize2D32f, METH_VARARGS, NULL},
-     { (char *)"delete_CvSize2D32f", _wrap_delete_CvSize2D32f, METH_VARARGS, NULL},
-     { (char *)"CvSize2D32f_swigregister", CvSize2D32f_swigregister, METH_VARARGS, NULL},
-     { (char *)"cvSize2D32f", _wrap_cvSize2D32f, METH_VARARGS, NULL},
-     { (char *)"CvBox2D_center_set", _wrap_CvBox2D_center_set, METH_VARARGS, NULL},
-     { (char *)"CvBox2D_center_get", _wrap_CvBox2D_center_get, METH_VARARGS, NULL},
-     { (char *)"CvBox2D_size_set", _wrap_CvBox2D_size_set, METH_VARARGS, NULL},
-     { (char *)"CvBox2D_size_get", _wrap_CvBox2D_size_get, METH_VARARGS, NULL},
-     { (char *)"CvBox2D_angle_set", _wrap_CvBox2D_angle_set, METH_VARARGS, NULL},
-     { (char *)"CvBox2D_angle_get", _wrap_CvBox2D_angle_get, METH_VARARGS, NULL},
-     { (char *)"new_CvBox2D", _wrap_new_CvBox2D, METH_VARARGS, NULL},
-     { (char *)"delete_CvBox2D", _wrap_delete_CvBox2D, METH_VARARGS, NULL},
-     { (char *)"CvBox2D_swigregister", CvBox2D_swigregister, METH_VARARGS, NULL},
-     { (char *)"CvLineIterator_ptr_set", _wrap_CvLineIterator_ptr_set, METH_VARARGS, NULL},
-     { (char *)"CvLineIterator_ptr_get", _wrap_CvLineIterator_ptr_get, METH_VARARGS, NULL},
-     { (char *)"CvLineIterator_err_set", _wrap_CvLineIterator_err_set, METH_VARARGS, NULL},
-     { (char *)"CvLineIterator_err_get", _wrap_CvLineIterator_err_get, METH_VARARGS, NULL},
-     { (char *)"CvLineIterator_plus_delta_set", _wrap_CvLineIterator_plus_delta_set, METH_VARARGS, NULL},
-     { (char *)"CvLineIterator_plus_delta_get", _wrap_CvLineIterator_plus_delta_get, METH_VARARGS, NULL},
-     { (char *)"CvLineIterator_minus_delta_set", _wrap_CvLineIterator_minus_delta_set, METH_VARARGS, NULL},
-     { (char *)"CvLineIterator_minus_delta_get", _wrap_CvLineIterator_minus_delta_get, METH_VARARGS, NULL},
-     { (char *)"CvLineIterator_plus_step_set", _wrap_CvLineIterator_plus_step_set, METH_VARARGS, NULL},
-     { (char *)"CvLineIterator_plus_step_get", _wrap_CvLineIterator_plus_step_get, METH_VARARGS, NULL},
-     { (char *)"CvLineIterator_minus_step_set", _wrap_CvLineIterator_minus_step_set, METH_VARARGS, NULL},
-     { (char *)"CvLineIterator_minus_step_get", _wrap_CvLineIterator_minus_step_get, METH_VARARGS, NULL},
-     { (char *)"new_CvLineIterator", _wrap_new_CvLineIterator, METH_VARARGS, NULL},
-     { (char *)"delete_CvLineIterator", _wrap_delete_CvLineIterator, METH_VARARGS, NULL},
-     { (char *)"CvLineIterator_swigregister", CvLineIterator_swigregister, METH_VARARGS, NULL},
-     { (char *)"CvSlice_start_index_set", _wrap_CvSlice_start_index_set, METH_VARARGS, NULL},
-     { (char *)"CvSlice_start_index_get", _wrap_CvSlice_start_index_get, METH_VARARGS, NULL},
-     { (char *)"CvSlice_end_index_set", _wrap_CvSlice_end_index_set, METH_VARARGS, NULL},
-     { (char *)"CvSlice_end_index_get", _wrap_CvSlice_end_index_get, METH_VARARGS, NULL},
-     { (char *)"new_CvSlice", _wrap_new_CvSlice, METH_VARARGS, NULL},
-     { (char *)"delete_CvSlice", _wrap_delete_CvSlice, METH_VARARGS, NULL},
-     { (char *)"CvSlice_swigregister", CvSlice_swigregister, METH_VARARGS, NULL},
-     { (char *)"cvSlice", _wrap_cvSlice, METH_VARARGS, NULL},
-     { (char *)"CvScalar_val_set", _wrap_CvScalar_val_set, METH_VARARGS, NULL},
-     { (char *)"CvScalar_val_get", _wrap_CvScalar_val_get, METH_VARARGS, NULL},
-     { (char *)"CvScalar___str__", _wrap_CvScalar___str__, METH_VARARGS, NULL},
-     { (char *)"CvScalar___repr__", _wrap_CvScalar___repr__, METH_VARARGS, NULL},
-     { (char *)"CvScalar___getitem__", _wrap_CvScalar___getitem__, METH_VARARGS, NULL},
-     { (char *)"CvScalar___setitem__", _wrap_CvScalar___setitem__, METH_VARARGS, NULL},
-     { (char *)"new_CvScalar", _wrap_new_CvScalar, METH_VARARGS, NULL},
-     { (char *)"delete_CvScalar", _wrap_delete_CvScalar, METH_VARARGS, NULL},
-     { (char *)"CvScalar_swigregister", CvScalar_swigregister, METH_VARARGS, NULL},
-     { (char *)"cvScalar", _wrap_cvScalar, METH_VARARGS, NULL},
-     { (char *)"cvRealScalar", _wrap_cvRealScalar, METH_VARARGS, NULL},
-     { (char *)"cvScalarAll", _wrap_cvScalarAll, METH_VARARGS, NULL},
-     { (char *)"CvMemBlock_prev_set", _wrap_CvMemBlock_prev_set, METH_VARARGS, NULL},
-     { (char *)"CvMemBlock_prev_get", _wrap_CvMemBlock_prev_get, METH_VARARGS, NULL},
-     { (char *)"CvMemBlock_next_set", _wrap_CvMemBlock_next_set, METH_VARARGS, NULL},
-     { (char *)"CvMemBlock_next_get", _wrap_CvMemBlock_next_get, METH_VARARGS, NULL},
-     { (char *)"new_CvMemBlock", _wrap_new_CvMemBlock, METH_VARARGS, NULL},
-     { (char *)"delete_CvMemBlock", _wrap_delete_CvMemBlock, METH_VARARGS, NULL},
-     { (char *)"CvMemBlock_swigregister", CvMemBlock_swigregister, METH_VARARGS, NULL},
-     { (char *)"CvMemStorage_signature_set", _wrap_CvMemStorage_signature_set, METH_VARARGS, NULL},
-     { (char *)"CvMemStorage_signature_get", _wrap_CvMemStorage_signature_get, METH_VARARGS, NULL},
-     { (char *)"CvMemStorage_bottom_set", _wrap_CvMemStorage_bottom_set, METH_VARARGS, NULL},
-     { (char *)"CvMemStorage_bottom_get", _wrap_CvMemStorage_bottom_get, METH_VARARGS, NULL},
-     { (char *)"CvMemStorage_top_set", _wrap_CvMemStorage_top_set, METH_VARARGS, NULL},
-     { (char *)"CvMemStorage_top_get", _wrap_CvMemStorage_top_get, METH_VARARGS, NULL},
-     { (char *)"CvMemStorage_parent_set", _wrap_CvMemStorage_parent_set, METH_VARARGS, NULL},
-     { (char *)"CvMemStorage_parent_get", _wrap_CvMemStorage_parent_get, METH_VARARGS, NULL},
-     { (char *)"CvMemStorage_block_size_set", _wrap_CvMemStorage_block_size_set, METH_VARARGS, NULL},
-     { (char *)"CvMemStorage_block_size_get", _wrap_CvMemStorage_block_size_get, METH_VARARGS, NULL},
-     { (char *)"CvMemStorage_free_space_set", _wrap_CvMemStorage_free_space_set, METH_VARARGS, NULL},
-     { (char *)"CvMemStorage_free_space_get", _wrap_CvMemStorage_free_space_get, METH_VARARGS, NULL},
-     { (char *)"delete_CvMemStorage", _wrap_delete_CvMemStorage, METH_VARARGS, NULL},
-     { (char *)"CvMemStorage_swigregister", CvMemStorage_swigregister, METH_VARARGS, NULL},
-     { (char *)"CvMemStoragePos_top_set", _wrap_CvMemStoragePos_top_set, METH_VARARGS, NULL},
-     { (char *)"CvMemStoragePos_top_get", _wrap_CvMemStoragePos_top_get, METH_VARARGS, NULL},
-     { (char *)"CvMemStoragePos_free_space_set", _wrap_CvMemStoragePos_free_space_set, METH_VARARGS, NULL},
-     { (char *)"CvMemStoragePos_free_space_get", _wrap_CvMemStoragePos_free_space_get, METH_VARARGS, NULL},
-     { (char *)"new_CvMemStoragePos", _wrap_new_CvMemStoragePos, METH_VARARGS, NULL},
-     { (char *)"delete_CvMemStoragePos", _wrap_delete_CvMemStoragePos, METH_VARARGS, NULL},
-     { (char *)"CvMemStoragePos_swigregister", CvMemStoragePos_swigregister, METH_VARARGS, NULL},
-     { (char *)"CvSeqBlock_prev_set", _wrap_CvSeqBlock_prev_set, METH_VARARGS, NULL},
-     { (char *)"CvSeqBlock_prev_get", _wrap_CvSeqBlock_prev_get, METH_VARARGS, NULL},
-     { (char *)"CvSeqBlock_next_set", _wrap_CvSeqBlock_next_set, METH_VARARGS, NULL},
-     { (char *)"CvSeqBlock_next_get", _wrap_CvSeqBlock_next_get, METH_VARARGS, NULL},
-     { (char *)"CvSeqBlock_start_index_set", _wrap_CvSeqBlock_start_index_set, METH_VARARGS, NULL},
-     { (char *)"CvSeqBlock_start_index_get", _wrap_CvSeqBlock_start_index_get, METH_VARARGS, NULL},
-     { (char *)"CvSeqBlock_count_set", _wrap_CvSeqBlock_count_set, METH_VARARGS, NULL},
-     { (char *)"CvSeqBlock_count_get", _wrap_CvSeqBlock_count_get, METH_VARARGS, NULL},
-     { (char *)"CvSeqBlock_data_set", _wrap_CvSeqBlock_data_set, METH_VARARGS, NULL},
-     { (char *)"CvSeqBlock_data_get", _wrap_CvSeqBlock_data_get, METH_VARARGS, NULL},
-     { (char *)"new_CvSeqBlock", _wrap_new_CvSeqBlock, METH_VARARGS, NULL},
-     { (char *)"delete_CvSeqBlock", _wrap_delete_CvSeqBlock, METH_VARARGS, NULL},
-     { (char *)"CvSeqBlock_swigregister", CvSeqBlock_swigregister, METH_VARARGS, NULL},
-     { (char *)"CvSeq_flags_set", _wrap_CvSeq_flags_set, METH_VARARGS, NULL},
-     { (char *)"CvSeq_flags_get", _wrap_CvSeq_flags_get, METH_VARARGS, NULL},
-     { (char *)"CvSeq_header_size_set", _wrap_CvSeq_header_size_set, METH_VARARGS, NULL},
-     { (char *)"CvSeq_header_size_get", _wrap_CvSeq_header_size_get, METH_VARARGS, NULL},
-     { (char *)"CvSeq_h_prev_set", _wrap_CvSeq_h_prev_set, METH_VARARGS, NULL},
-     { (char *)"CvSeq_h_prev_get", _wrap_CvSeq_h_prev_get, METH_VARARGS, NULL},
-     { (char *)"CvSeq_h_next_set", _wrap_CvSeq_h_next_set, METH_VARARGS, NULL},
-     { (char *)"CvSeq_h_next_get", _wrap_CvSeq_h_next_get, METH_VARARGS, NULL},
-     { (char *)"CvSeq_v_prev_set", _wrap_CvSeq_v_prev_set, METH_VARARGS, NULL},
-     { (char *)"CvSeq_v_prev_get", _wrap_CvSeq_v_prev_get, METH_VARARGS, NULL},
-     { (char *)"CvSeq_v_next_set", _wrap_CvSeq_v_next_set, METH_VARARGS, NULL},
-     { (char *)"CvSeq_v_next_get", _wrap_CvSeq_v_next_get, METH_VARARGS, NULL},
-     { (char *)"CvSeq_total_set", _wrap_CvSeq_total_set, METH_VARARGS, NULL},
-     { (char *)"CvSeq_total_get", _wrap_CvSeq_total_get, METH_VARARGS, NULL},
-     { (char *)"CvSeq_elem_size_set", _wrap_CvSeq_elem_size_set, METH_VARARGS, NULL},
-     { (char *)"CvSeq_elem_size_get", _wrap_CvSeq_elem_size_get, METH_VARARGS, NULL},
-     { (char *)"CvSeq_block_max_set", _wrap_CvSeq_block_max_set, METH_VARARGS, NULL},
-     { (char *)"CvSeq_block_max_get", _wrap_CvSeq_block_max_get, METH_VARARGS, NULL},
-     { (char *)"CvSeq_ptr_set", _wrap_CvSeq_ptr_set, METH_VARARGS, NULL},
-     { (char *)"CvSeq_ptr_get", _wrap_CvSeq_ptr_get, METH_VARARGS, NULL},
-     { (char *)"CvSeq_delta_elems_set", _wrap_CvSeq_delta_elems_set, METH_VARARGS, NULL},
-     { (char *)"CvSeq_delta_elems_get", _wrap_CvSeq_delta_elems_get, METH_VARARGS, NULL},
-     { (char *)"CvSeq_storage_set", _wrap_CvSeq_storage_set, METH_VARARGS, NULL},
-     { (char *)"CvSeq_storage_get", _wrap_CvSeq_storage_get, METH_VARARGS, NULL},
-     { (char *)"CvSeq_free_blocks_set", _wrap_CvSeq_free_blocks_set, METH_VARARGS, NULL},
-     { (char *)"CvSeq_free_blocks_get", _wrap_CvSeq_free_blocks_get, METH_VARARGS, NULL},
-     { (char *)"CvSeq_first_set", _wrap_CvSeq_first_set, METH_VARARGS, NULL},
-     { (char *)"CvSeq_first_get", _wrap_CvSeq_first_get, METH_VARARGS, NULL},
-     { (char *)"new_CvSeq", _wrap_new_CvSeq, METH_VARARGS, NULL},
-     { (char *)"delete_CvSeq", _wrap_delete_CvSeq, METH_VARARGS, NULL},
-     { (char *)"CvSeq_swigregister", CvSeq_swigregister, METH_VARARGS, NULL},
-     { (char *)"CvSetElem_flags_set", _wrap_CvSetElem_flags_set, METH_VARARGS, NULL},
-     { (char *)"CvSetElem_flags_get", _wrap_CvSetElem_flags_get, METH_VARARGS, NULL},
-     { (char *)"CvSetElem_next_free_set", _wrap_CvSetElem_next_free_set, METH_VARARGS, NULL},
-     { (char *)"CvSetElem_next_free_get", _wrap_CvSetElem_next_free_get, METH_VARARGS, NULL},
-     { (char *)"new_CvSetElem", _wrap_new_CvSetElem, METH_VARARGS, NULL},
-     { (char *)"delete_CvSetElem", _wrap_delete_CvSetElem, METH_VARARGS, NULL},
-     { (char *)"CvSetElem_swigregister", CvSetElem_swigregister, METH_VARARGS, NULL},
-     { (char *)"CvSet_flags_set", _wrap_CvSet_flags_set, METH_VARARGS, NULL},
-     { (char *)"CvSet_flags_get", _wrap_CvSet_flags_get, METH_VARARGS, NULL},
-     { (char *)"CvSet_header_size_set", _wrap_CvSet_header_size_set, METH_VARARGS, NULL},
-     { (char *)"CvSet_header_size_get", _wrap_CvSet_header_size_get, METH_VARARGS, NULL},
-     { (char *)"CvSet_h_prev_set", _wrap_CvSet_h_prev_set, METH_VARARGS, NULL},
-     { (char *)"CvSet_h_prev_get", _wrap_CvSet_h_prev_get, METH_VARARGS, NULL},
-     { (char *)"CvSet_h_next_set", _wrap_CvSet_h_next_set, METH_VARARGS, NULL},
-     { (char *)"CvSet_h_next_get", _wrap_CvSet_h_next_get, METH_VARARGS, NULL},
-     { (char *)"CvSet_v_prev_set", _wrap_CvSet_v_prev_set, METH_VARARGS, NULL},
-     { (char *)"CvSet_v_prev_get", _wrap_CvSet_v_prev_get, METH_VARARGS, NULL},
-     { (char *)"CvSet_v_next_set", _wrap_CvSet_v_next_set, METH_VARARGS, NULL},
-     { (char *)"CvSet_v_next_get", _wrap_CvSet_v_next_get, METH_VARARGS, NULL},
-     { (char *)"CvSet_total_set", _wrap_CvSet_total_set, METH_VARARGS, NULL},
-     { (char *)"CvSet_total_get", _wrap_CvSet_total_get, METH_VARARGS, NULL},
-     { (char *)"CvSet_elem_size_set", _wrap_CvSet_elem_size_set, METH_VARARGS, NULL},
-     { (char *)"CvSet_elem_size_get", _wrap_CvSet_elem_size_get, METH_VARARGS, NULL},
-     { (char *)"CvSet_block_max_set", _wrap_CvSet_block_max_set, METH_VARARGS, NULL},
-     { (char *)"CvSet_block_max_get", _wrap_CvSet_block_max_get, METH_VARARGS, NULL},
-     { (char *)"CvSet_ptr_set", _wrap_CvSet_ptr_set, METH_VARARGS, NULL},
-     { (char *)"CvSet_ptr_get", _wrap_CvSet_ptr_get, METH_VARARGS, NULL},
-     { (char *)"CvSet_delta_elems_set", _wrap_CvSet_delta_elems_set, METH_VARARGS, NULL},
-     { (char *)"CvSet_delta_elems_get", _wrap_CvSet_delta_elems_get, METH_VARARGS, NULL},
-     { (char *)"CvSet_storage_set", _wrap_CvSet_storage_set, METH_VARARGS, NULL},
-     { (char *)"CvSet_storage_get", _wrap_CvSet_storage_get, METH_VARARGS, NULL},
-     { (char *)"CvSet_free_blocks_set", _wrap_CvSet_free_blocks_set, METH_VARARGS, NULL},
-     { (char *)"CvSet_free_blocks_get", _wrap_CvSet_free_blocks_get, METH_VARARGS, NULL},
-     { (char *)"CvSet_first_set", _wrap_CvSet_first_set, METH_VARARGS, NULL},
-     { (char *)"CvSet_first_get", _wrap_CvSet_first_get, METH_VARARGS, NULL},
-     { (char *)"CvSet_free_elems_set", _wrap_CvSet_free_elems_set, METH_VARARGS, NULL},
-     { (char *)"CvSet_free_elems_get", _wrap_CvSet_free_elems_get, METH_VARARGS, NULL},
-     { (char *)"CvSet_active_count_set", _wrap_CvSet_active_count_set, METH_VARARGS, NULL},
-     { (char *)"CvSet_active_count_get", _wrap_CvSet_active_count_get, METH_VARARGS, NULL},
-     { (char *)"new_CvSet", _wrap_new_CvSet, METH_VARARGS, NULL},
-     { (char *)"delete_CvSet", _wrap_delete_CvSet, METH_VARARGS, NULL},
-     { (char *)"CvSet_swigregister", CvSet_swigregister, METH_VARARGS, NULL},
-     { (char *)"CvGraphEdge_flags_set", _wrap_CvGraphEdge_flags_set, METH_VARARGS, NULL},
-     { (char *)"CvGraphEdge_flags_get", _wrap_CvGraphEdge_flags_get, METH_VARARGS, NULL},
-     { (char *)"CvGraphEdge_weight_set", _wrap_CvGraphEdge_weight_set, METH_VARARGS, NULL},
-     { (char *)"CvGraphEdge_weight_get", _wrap_CvGraphEdge_weight_get, METH_VARARGS, NULL},
-     { (char *)"CvGraphEdge_next_set", _wrap_CvGraphEdge_next_set, METH_VARARGS, NULL},
-     { (char *)"CvGraphEdge_next_get", _wrap_CvGraphEdge_next_get, METH_VARARGS, NULL},
-     { (char *)"CvGraphEdge_vtx_set", _wrap_CvGraphEdge_vtx_set, METH_VARARGS, NULL},
-     { (char *)"CvGraphEdge_vtx_get", _wrap_CvGraphEdge_vtx_get, METH_VARARGS, NULL},
-     { (char *)"new_CvGraphEdge", _wrap_new_CvGraphEdge, METH_VARARGS, NULL},
-     { (char *)"delete_CvGraphEdge", _wrap_delete_CvGraphEdge, METH_VARARGS, NULL},
-     { (char *)"CvGraphEdge_swigregister", CvGraphEdge_swigregister, METH_VARARGS, NULL},
-     { (char *)"CvGraphVtx_flags_set", _wrap_CvGraphVtx_flags_set, METH_VARARGS, NULL},
-     { (char *)"CvGraphVtx_flags_get", _wrap_CvGraphVtx_flags_get, METH_VARARGS, NULL},
-     { (char *)"CvGraphVtx_first_set", _wrap_CvGraphVtx_first_set, METH_VARARGS, NULL},
-     { (char *)"CvGraphVtx_first_get", _wrap_CvGraphVtx_first_get, METH_VARARGS, NULL},
-     { (char *)"new_CvGraphVtx", _wrap_new_CvGraphVtx, METH_VARARGS, NULL},
-     { (char *)"delete_CvGraphVtx", _wrap_delete_CvGraphVtx, METH_VARARGS, NULL},
-     { (char *)"CvGraphVtx_swigregister", CvGraphVtx_swigregister, METH_VARARGS, NULL},
-     { (char *)"CvGraphVtx2D_flags_set", _wrap_CvGraphVtx2D_flags_set, METH_VARARGS, NULL},
-     { (char *)"CvGraphVtx2D_flags_get", _wrap_CvGraphVtx2D_flags_get, METH_VARARGS, NULL},
-     { (char *)"CvGraphVtx2D_first_set", _wrap_CvGraphVtx2D_first_set, METH_VARARGS, NULL},
-     { (char *)"CvGraphVtx2D_first_get", _wrap_CvGraphVtx2D_first_get, METH_VARARGS, NULL},
-     { (char *)"CvGraphVtx2D_ptr_set", _wrap_CvGraphVtx2D_ptr_set, METH_VARARGS, NULL},
-     { (char *)"CvGraphVtx2D_ptr_get", _wrap_CvGraphVtx2D_ptr_get, METH_VARARGS, NULL},
-     { (char *)"new_CvGraphVtx2D", _wrap_new_CvGraphVtx2D, METH_VARARGS, NULL},
-     { (char *)"delete_CvGraphVtx2D", _wrap_delete_CvGraphVtx2D, METH_VARARGS, NULL},
-     { (char *)"CvGraphVtx2D_swigregister", CvGraphVtx2D_swigregister, METH_VARARGS, NULL},
-     { (char *)"CvGraph_flags_set", _wrap_CvGraph_flags_set, METH_VARARGS, NULL},
-     { (char *)"CvGraph_flags_get", _wrap_CvGraph_flags_get, METH_VARARGS, NULL},
-     { (char *)"CvGraph_header_size_set", _wrap_CvGraph_header_size_set, METH_VARARGS, NULL},
-     { (char *)"CvGraph_header_size_get", _wrap_CvGraph_header_size_get, METH_VARARGS, NULL},
-     { (char *)"CvGraph_h_prev_set", _wrap_CvGraph_h_prev_set, METH_VARARGS, NULL},
-     { (char *)"CvGraph_h_prev_get", _wrap_CvGraph_h_prev_get, METH_VARARGS, NULL},
-     { (char *)"CvGraph_h_next_set", _wrap_CvGraph_h_next_set, METH_VARARGS, NULL},
-     { (char *)"CvGraph_h_next_get", _wrap_CvGraph_h_next_get, METH_VARARGS, NULL},
-     { (char *)"CvGraph_v_prev_set", _wrap_CvGraph_v_prev_set, METH_VARARGS, NULL},
-     { (char *)"CvGraph_v_prev_get", _wrap_CvGraph_v_prev_get, METH_VARARGS, NULL},
-     { (char *)"CvGraph_v_next_set", _wrap_CvGraph_v_next_set, METH_VARARGS, NULL},
-     { (char *)"CvGraph_v_next_get", _wrap_CvGraph_v_next_get, METH_VARARGS, NULL},
-     { (char *)"CvGraph_total_set", _wrap_CvGraph_total_set, METH_VARARGS, NULL},
-     { (char *)"CvGraph_total_get", _wrap_CvGraph_total_get, METH_VARARGS, NULL},
-     { (char *)"CvGraph_elem_size_set", _wrap_CvGraph_elem_size_set, METH_VARARGS, NULL},
-     { (char *)"CvGraph_elem_size_get", _wrap_CvGraph_elem_size_get, METH_VARARGS, NULL},
-     { (char *)"CvGraph_block_max_set", _wrap_CvGraph_block_max_set, METH_VARARGS, NULL},
-     { (char *)"CvGraph_block_max_get", _wrap_CvGraph_block_max_get, METH_VARARGS, NULL},
-     { (char *)"CvGraph_ptr_set", _wrap_CvGraph_ptr_set, METH_VARARGS, NULL},
-     { (char *)"CvGraph_ptr_get", _wrap_CvGraph_ptr_get, METH_VARARGS, NULL},
-     { (char *)"CvGraph_delta_elems_set", _wrap_CvGraph_delta_elems_set, METH_VARARGS, NULL},
-     { (char *)"CvGraph_delta_elems_get", _wrap_CvGraph_delta_elems_get, METH_VARARGS, NULL},
-     { (char *)"CvGraph_storage_set", _wrap_CvGraph_storage_set, METH_VARARGS, NULL},
-     { (char *)"CvGraph_storage_get", _wrap_CvGraph_storage_get, METH_VARARGS, NULL},
-     { (char *)"CvGraph_free_blocks_set", _wrap_CvGraph_free_blocks_set, METH_VARARGS, NULL},
-     { (char *)"CvGraph_free_blocks_get", _wrap_CvGraph_free_blocks_get, METH_VARARGS, NULL},
-     { (char *)"CvGraph_first_set", _wrap_CvGraph_first_set, METH_VARARGS, NULL},
-     { (char *)"CvGraph_first_get", _wrap_CvGraph_first_get, METH_VARARGS, NULL},
-     { (char *)"CvGraph_free_elems_set", _wrap_CvGraph_free_elems_set, METH_VARARGS, NULL},
-     { (char *)"CvGraph_free_elems_get", _wrap_CvGraph_free_elems_get, METH_VARARGS, NULL},
-     { (char *)"CvGraph_active_count_set", _wrap_CvGraph_active_count_set, METH_VARARGS, NULL},
-     { (char *)"CvGraph_active_count_get", _wrap_CvGraph_active_count_get, METH_VARARGS, NULL},
-     { (char *)"CvGraph_edges_set", _wrap_CvGraph_edges_set, METH_VARARGS, NULL},
-     { (char *)"CvGraph_edges_get", _wrap_CvGraph_edges_get, METH_VARARGS, NULL},
-     { (char *)"new_CvGraph", _wrap_new_CvGraph, METH_VARARGS, NULL},
-     { (char *)"delete_CvGraph", _wrap_delete_CvGraph, METH_VARARGS, NULL},
-     { (char *)"CvGraph_swigregister", CvGraph_swigregister, METH_VARARGS, NULL},
-     { (char *)"CvChain_flags_set", _wrap_CvChain_flags_set, METH_VARARGS, NULL},
-     { (char *)"CvChain_flags_get", _wrap_CvChain_flags_get, METH_VARARGS, NULL},
-     { (char *)"CvChain_header_size_set", _wrap_CvChain_header_size_set, METH_VARARGS, NULL},
-     { (char *)"CvChain_header_size_get", _wrap_CvChain_header_size_get, METH_VARARGS, NULL},
-     { (char *)"CvChain_h_prev_set", _wrap_CvChain_h_prev_set, METH_VARARGS, NULL},
-     { (char *)"CvChain_h_prev_get", _wrap_CvChain_h_prev_get, METH_VARARGS, NULL},
-     { (char *)"CvChain_h_next_set", _wrap_CvChain_h_next_set, METH_VARARGS, NULL},
-     { (char *)"CvChain_h_next_get", _wrap_CvChain_h_next_get, METH_VARARGS, NULL},
-     { (char *)"CvChain_v_prev_set", _wrap_CvChain_v_prev_set, METH_VARARGS, NULL},
-     { (char *)"CvChain_v_prev_get", _wrap_CvChain_v_prev_get, METH_VARARGS, NULL},
-     { (char *)"CvChain_v_next_set", _wrap_CvChain_v_next_set, METH_VARARGS, NULL},
-     { (char *)"CvChain_v_next_get", _wrap_CvChain_v_next_get, METH_VARARGS, NULL},
-     { (char *)"CvChain_total_set", _wrap_CvChain_total_set, METH_VARARGS, NULL},
-     { (char *)"CvChain_total_get", _wrap_CvChain_total_get, METH_VARARGS, NULL},
-     { (char *)"CvChain_elem_size_set", _wrap_CvChain_elem_size_set, METH_VARARGS, NULL},
-     { (char *)"CvChain_elem_size_get", _wrap_CvChain_elem_size_get, METH_VARARGS, NULL},
-     { (char *)"CvChain_block_max_set", _wrap_CvChain_block_max_set, METH_VARARGS, NULL},
-     { (char *)"CvChain_block_max_get", _wrap_CvChain_block_max_get, METH_VARARGS, NULL},
-     { (char *)"CvChain_ptr_set", _wrap_CvChain_ptr_set, METH_VARARGS, NULL},
-     { (char *)"CvChain_ptr_get", _wrap_CvChain_ptr_get, METH_VARARGS, NULL},
-     { (char *)"CvChain_delta_elems_set", _wrap_CvChain_delta_elems_set, METH_VARARGS, NULL},
-     { (char *)"CvChain_delta_elems_get", _wrap_CvChain_delta_elems_get, METH_VARARGS, NULL},
-     { (char *)"CvChain_storage_set", _wrap_CvChain_storage_set, METH_VARARGS, NULL},
-     { (char *)"CvChain_storage_get", _wrap_CvChain_storage_get, METH_VARARGS, NULL},
-     { (char *)"CvChain_free_blocks_set", _wrap_CvChain_free_blocks_set, METH_VARARGS, NULL},
-     { (char *)"CvChain_free_blocks_get", _wrap_CvChain_free_blocks_get, METH_VARARGS, NULL},
-     { (char *)"CvChain_first_set", _wrap_CvChain_first_set, METH_VARARGS, NULL},
-     { (char *)"CvChain_first_get", _wrap_CvChain_first_get, METH_VARARGS, NULL},
-     { (char *)"CvChain_origin_set", _wrap_CvChain_origin_set, METH_VARARGS, NULL},
-     { (char *)"CvChain_origin_get", _wrap_CvChain_origin_get, METH_VARARGS, NULL},
-     { (char *)"new_CvChain", _wrap_new_CvChain, METH_VARARGS, NULL},
-     { (char *)"delete_CvChain", _wrap_delete_CvChain, METH_VARARGS, NULL},
-     { (char *)"CvChain_swigregister", CvChain_swigregister, METH_VARARGS, NULL},
-     { (char *)"CvContour_flags_set", _wrap_CvContour_flags_set, METH_VARARGS, NULL},
-     { (char *)"CvContour_flags_get", _wrap_CvContour_flags_get, METH_VARARGS, NULL},
-     { (char *)"CvContour_header_size_set", _wrap_CvContour_header_size_set, METH_VARARGS, NULL},
-     { (char *)"CvContour_header_size_get", _wrap_CvContour_header_size_get, METH_VARARGS, NULL},
-     { (char *)"CvContour_h_prev_set", _wrap_CvContour_h_prev_set, METH_VARARGS, NULL},
-     { (char *)"CvContour_h_prev_get", _wrap_CvContour_h_prev_get, METH_VARARGS, NULL},
-     { (char *)"CvContour_h_next_set", _wrap_CvContour_h_next_set, METH_VARARGS, NULL},
-     { (char *)"CvContour_h_next_get", _wrap_CvContour_h_next_get, METH_VARARGS, NULL},
-     { (char *)"CvContour_v_prev_set", _wrap_CvContour_v_prev_set, METH_VARARGS, NULL},
-     { (char *)"CvContour_v_prev_get", _wrap_CvContour_v_prev_get, METH_VARARGS, NULL},
-     { (char *)"CvContour_v_next_set", _wrap_CvContour_v_next_set, METH_VARARGS, NULL},
-     { (char *)"CvContour_v_next_get", _wrap_CvContour_v_next_get, METH_VARARGS, NULL},
-     { (char *)"CvContour_total_set", _wrap_CvContour_total_set, METH_VARARGS, NULL},
-     { (char *)"CvContour_total_get", _wrap_CvContour_total_get, METH_VARARGS, NULL},
-     { (char *)"CvContour_elem_size_set", _wrap_CvContour_elem_size_set, METH_VARARGS, NULL},
-     { (char *)"CvContour_elem_size_get", _wrap_CvContour_elem_size_get, METH_VARARGS, NULL},
-     { (char *)"CvContour_block_max_set", _wrap_CvContour_block_max_set, METH_VARARGS, NULL},
-     { (char *)"CvContour_block_max_get", _wrap_CvContour_block_max_get, METH_VARARGS, NULL},
-     { (char *)"CvContour_ptr_set", _wrap_CvContour_ptr_set, METH_VARARGS, NULL},
-     { (char *)"CvContour_ptr_get", _wrap_CvContour_ptr_get, METH_VARARGS, NULL},
-     { (char *)"CvContour_delta_elems_set", _wrap_CvContour_delta_elems_set, METH_VARARGS, NULL},
-     { (char *)"CvContour_delta_elems_get", _wrap_CvContour_delta_elems_get, METH_VARARGS, NULL},
-     { (char *)"CvContour_storage_set", _wrap_CvContour_storage_set, METH_VARARGS, NULL},
-     { (char *)"CvContour_storage_get", _wrap_CvContour_storage_get, METH_VARARGS, NULL},
-     { (char *)"CvContour_free_blocks_set", _wrap_CvContour_free_blocks_set, METH_VARARGS, NULL},
-     { (char *)"CvContour_free_blocks_get", _wrap_CvContour_free_blocks_get, METH_VARARGS, NULL},
-     { (char *)"CvContour_first_set", _wrap_CvContour_first_set, METH_VARARGS, NULL},
-     { (char *)"CvContour_first_get", _wrap_CvContour_first_get, METH_VARARGS, NULL},
-     { (char *)"CvContour_rect_set", _wrap_CvContour_rect_set, METH_VARARGS, NULL},
-     { (char *)"CvContour_rect_get", _wrap_CvContour_rect_get, METH_VARARGS, NULL},
-     { (char *)"CvContour_color_set", _wrap_CvContour_color_set, METH_VARARGS, NULL},
-     { (char *)"CvContour_color_get", _wrap_CvContour_color_get, METH_VARARGS, NULL},
-     { (char *)"CvContour_reserved_set", _wrap_CvContour_reserved_set, METH_VARARGS, NULL},
-     { (char *)"CvContour_reserved_get", _wrap_CvContour_reserved_get, METH_VARARGS, NULL},
-     { (char *)"new_CvContour", _wrap_new_CvContour, METH_VARARGS, NULL},
-     { (char *)"delete_CvContour", _wrap_delete_CvContour, METH_VARARGS, NULL},
-     { (char *)"CvContour_swigregister", CvContour_swigregister, METH_VARARGS, NULL},
-     { (char *)"CvSeqWriter_header_size_set", _wrap_CvSeqWriter_header_size_set, METH_VARARGS, NULL},
-     { (char *)"CvSeqWriter_header_size_get", _wrap_CvSeqWriter_header_size_get, METH_VARARGS, NULL},
-     { (char *)"CvSeqWriter_seq_set", _wrap_CvSeqWriter_seq_set, METH_VARARGS, NULL},
-     { (char *)"CvSeqWriter_seq_get", _wrap_CvSeqWriter_seq_get, METH_VARARGS, NULL},
-     { (char *)"CvSeqWriter_block_set", _wrap_CvSeqWriter_block_set, METH_VARARGS, NULL},
-     { (char *)"CvSeqWriter_block_get", _wrap_CvSeqWriter_block_get, METH_VARARGS, NULL},
-     { (char *)"CvSeqWriter_ptr_set", _wrap_CvSeqWriter_ptr_set, METH_VARARGS, NULL},
-     { (char *)"CvSeqWriter_ptr_get", _wrap_CvSeqWriter_ptr_get, METH_VARARGS, NULL},
-     { (char *)"CvSeqWriter_block_min_set", _wrap_CvSeqWriter_block_min_set, METH_VARARGS, NULL},
-     { (char *)"CvSeqWriter_block_min_get", _wrap_CvSeqWriter_block_min_get, METH_VARARGS, NULL},
-     { (char *)"CvSeqWriter_block_max_set", _wrap_CvSeqWriter_block_max_set, METH_VARARGS, NULL},
-     { (char *)"CvSeqWriter_block_max_get", _wrap_CvSeqWriter_block_max_get, METH_VARARGS, NULL},
-     { (char *)"new_CvSeqWriter", _wrap_new_CvSeqWriter, METH_VARARGS, NULL},
-     { (char *)"delete_CvSeqWriter", _wrap_delete_CvSeqWriter, METH_VARARGS, NULL},
-     { (char *)"CvSeqWriter_swigregister", CvSeqWriter_swigregister, METH_VARARGS, NULL},
-     { (char *)"CvSeqReader_header_size_set", _wrap_CvSeqReader_header_size_set, METH_VARARGS, NULL},
-     { (char *)"CvSeqReader_header_size_get", _wrap_CvSeqReader_header_size_get, METH_VARARGS, NULL},
-     { (char *)"CvSeqReader_seq_set", _wrap_CvSeqReader_seq_set, METH_VARARGS, NULL},
-     { (char *)"CvSeqReader_seq_get", _wrap_CvSeqReader_seq_get, METH_VARARGS, NULL},
-     { (char *)"CvSeqReader_block_set", _wrap_CvSeqReader_block_set, METH_VARARGS, NULL},
-     { (char *)"CvSeqReader_block_get", _wrap_CvSeqReader_block_get, METH_VARARGS, NULL},
-     { (char *)"CvSeqReader_ptr_set", _wrap_CvSeqReader_ptr_set, METH_VARARGS, NULL},
-     { (char *)"CvSeqReader_ptr_get", _wrap_CvSeqReader_ptr_get, METH_VARARGS, NULL},
-     { (char *)"CvSeqReader_block_min_set", _wrap_CvSeqReader_block_min_set, METH_VARARGS, NULL},
-     { (char *)"CvSeqReader_block_min_get", _wrap_CvSeqReader_block_min_get, METH_VARARGS, NULL},
-     { (char *)"CvSeqReader_block_max_set", _wrap_CvSeqReader_block_max_set, METH_VARARGS, NULL},
-     { (char *)"CvSeqReader_block_max_get", _wrap_CvSeqReader_block_max_get, METH_VARARGS, NULL},
-     { (char *)"CvSeqReader_delta_index_set", _wrap_CvSeqReader_delta_index_set, METH_VARARGS, NULL},
-     { (char *)"CvSeqReader_delta_index_get", _wrap_CvSeqReader_delta_index_get, METH_VARARGS, NULL},
-     { (char *)"CvSeqReader_prev_elem_set", _wrap_CvSeqReader_prev_elem_set, METH_VARARGS, NULL},
-     { (char *)"CvSeqReader_prev_elem_get", _wrap_CvSeqReader_prev_elem_get, METH_VARARGS, NULL},
-     { (char *)"new_CvSeqReader", _wrap_new_CvSeqReader, METH_VARARGS, NULL},
-     { (char *)"delete_CvSeqReader", _wrap_delete_CvSeqReader, METH_VARARGS, NULL},
-     { (char *)"CvSeqReader_swigregister", CvSeqReader_swigregister, METH_VARARGS, NULL},
-     { (char *)"CvAttrList_attr_set", _wrap_CvAttrList_attr_set, METH_VARARGS, NULL},
-     { (char *)"CvAttrList_attr_get", _wrap_CvAttrList_attr_get, METH_VARARGS, NULL},
-     { (char *)"CvAttrList_next_set", _wrap_CvAttrList_next_set, METH_VARARGS, NULL},
-     { (char *)"CvAttrList_next_get", _wrap_CvAttrList_next_get, METH_VARARGS, NULL},
-     { (char *)"new_CvAttrList", _wrap_new_CvAttrList, METH_VARARGS, NULL},
-     { (char *)"delete_CvAttrList", _wrap_delete_CvAttrList, METH_VARARGS, NULL},
-     { (char *)"CvAttrList_swigregister", CvAttrList_swigregister, METH_VARARGS, NULL},
-     { (char *)"cvAttrList", _wrap_cvAttrList, METH_VARARGS, NULL},
-     { (char *)"CvString_len_set", _wrap_CvString_len_set, METH_VARARGS, NULL},
-     { (char *)"CvString_len_get", _wrap_CvString_len_get, METH_VARARGS, NULL},
-     { (char *)"CvString_ptr_set", _wrap_CvString_ptr_set, METH_VARARGS, NULL},
-     { (char *)"CvString_ptr_get", _wrap_CvString_ptr_get, METH_VARARGS, NULL},
-     { (char *)"new_CvString", _wrap_new_CvString, METH_VARARGS, NULL},
-     { (char *)"delete_CvString", _wrap_delete_CvString, METH_VARARGS, NULL},
-     { (char *)"CvString_swigregister", CvString_swigregister, METH_VARARGS, NULL},
-     { (char *)"CvStringHashNode_hashval_set", _wrap_CvStringHashNode_hashval_set, METH_VARARGS, NULL},
-     { (char *)"CvStringHashNode_hashval_get", _wrap_CvStringHashNode_hashval_get, METH_VARARGS, NULL},
-     { (char *)"CvStringHashNode_str_set", _wrap_CvStringHashNode_str_set, METH_VARARGS, NULL},
-     { (char *)"CvStringHashNode_str_get", _wrap_CvStringHashNode_str_get, METH_VARARGS, NULL},
-     { (char *)"CvStringHashNode_next_set", _wrap_CvStringHashNode_next_set, METH_VARARGS, NULL},
-     { (char *)"CvStringHashNode_next_get", _wrap_CvStringHashNode_next_get, METH_VARARGS, NULL},
-     { (char *)"new_CvStringHashNode", _wrap_new_CvStringHashNode, METH_VARARGS, NULL},
-     { (char *)"delete_CvStringHashNode", _wrap_delete_CvStringHashNode, METH_VARARGS, NULL},
-     { (char *)"CvStringHashNode_swigregister", CvStringHashNode_swigregister, METH_VARARGS, NULL},
-     { (char *)"CvFileNode_tag_set", _wrap_CvFileNode_tag_set, METH_VARARGS, NULL},
-     { (char *)"CvFileNode_tag_get", _wrap_CvFileNode_tag_get, METH_VARARGS, NULL},
-     { (char *)"CvFileNode_info_set", _wrap_CvFileNode_info_set, METH_VARARGS, NULL},
-     { (char *)"CvFileNode_info_get", _wrap_CvFileNode_info_get, METH_VARARGS, NULL},
-     { (char *)"CvFileNode_data_get", _wrap_CvFileNode_data_get, METH_VARARGS, NULL},
-     { (char *)"new_CvFileNode", _wrap_new_CvFileNode, METH_VARARGS, NULL},
-     { (char *)"delete_CvFileNode", _wrap_delete_CvFileNode, METH_VARARGS, NULL},
-     { (char *)"CvFileNode_swigregister", CvFileNode_swigregister, METH_VARARGS, NULL},
-     { (char *)"CvFileNode_data_f_set", _wrap_CvFileNode_data_f_set, METH_VARARGS, NULL},
-     { (char *)"CvFileNode_data_f_get", _wrap_CvFileNode_data_f_get, METH_VARARGS, NULL},
-     { (char *)"CvFileNode_data_i_set", _wrap_CvFileNode_data_i_set, METH_VARARGS, NULL},
-     { (char *)"CvFileNode_data_i_get", _wrap_CvFileNode_data_i_get, METH_VARARGS, NULL},
-     { (char *)"CvFileNode_data_str_set", _wrap_CvFileNode_data_str_set, METH_VARARGS, NULL},
-     { (char *)"CvFileNode_data_str_get", _wrap_CvFileNode_data_str_get, METH_VARARGS, NULL},
-     { (char *)"CvFileNode_data_seq_set", _wrap_CvFileNode_data_seq_set, METH_VARARGS, NULL},
-     { (char *)"CvFileNode_data_seq_get", _wrap_CvFileNode_data_seq_get, METH_VARARGS, NULL},
-     { (char *)"CvFileNode_data_map_set", _wrap_CvFileNode_data_map_set, METH_VARARGS, NULL},
-     { (char *)"CvFileNode_data_map_get", _wrap_CvFileNode_data_map_get, METH_VARARGS, NULL},
-     { (char *)"new_CvFileNode_data", _wrap_new_CvFileNode_data, METH_VARARGS, NULL},
-     { (char *)"delete_CvFileNode_data", _wrap_delete_CvFileNode_data, METH_VARARGS, NULL},
-     { (char *)"CvFileNode_data_swigregister", CvFileNode_data_swigregister, METH_VARARGS, NULL},
-     { (char *)"CvTypeInfo_flags_set", _wrap_CvTypeInfo_flags_set, METH_VARARGS, NULL},
-     { (char *)"CvTypeInfo_flags_get", _wrap_CvTypeInfo_flags_get, METH_VARARGS, NULL},
-     { (char *)"CvTypeInfo_header_size_set", _wrap_CvTypeInfo_header_size_set, METH_VARARGS, NULL},
-     { (char *)"CvTypeInfo_header_size_get", _wrap_CvTypeInfo_header_size_get, METH_VARARGS, NULL},
-     { (char *)"CvTypeInfo_prev_set", _wrap_CvTypeInfo_prev_set, METH_VARARGS, NULL},
-     { (char *)"CvTypeInfo_prev_get", _wrap_CvTypeInfo_prev_get, METH_VARARGS, NULL},
-     { (char *)"CvTypeInfo_next_set", _wrap_CvTypeInfo_next_set, METH_VARARGS, NULL},
-     { (char *)"CvTypeInfo_next_get", _wrap_CvTypeInfo_next_get, METH_VARARGS, NULL},
-     { (char *)"CvTypeInfo_type_name_set", _wrap_CvTypeInfo_type_name_set, METH_VARARGS, NULL},
-     { (char *)"CvTypeInfo_type_name_get", _wrap_CvTypeInfo_type_name_get, METH_VARARGS, NULL},
-     { (char *)"CvTypeInfo_is_instance_set", _wrap_CvTypeInfo_is_instance_set, METH_VARARGS, NULL},
-     { (char *)"CvTypeInfo_is_instance_get", _wrap_CvTypeInfo_is_instance_get, METH_VARARGS, NULL},
-     { (char *)"CvTypeInfo_release_set", _wrap_CvTypeInfo_release_set, METH_VARARGS, NULL},
-     { (char *)"CvTypeInfo_release_get", _wrap_CvTypeInfo_release_get, METH_VARARGS, NULL},
-     { (char *)"CvTypeInfo_read_set", _wrap_CvTypeInfo_read_set, METH_VARARGS, NULL},
-     { (char *)"CvTypeInfo_read_get", _wrap_CvTypeInfo_read_get, METH_VARARGS, NULL},
-     { (char *)"CvTypeInfo_write_set", _wrap_CvTypeInfo_write_set, METH_VARARGS, NULL},
-     { (char *)"CvTypeInfo_write_get", _wrap_CvTypeInfo_write_get, METH_VARARGS, NULL},
-     { (char *)"CvTypeInfo_clone_set", _wrap_CvTypeInfo_clone_set, METH_VARARGS, NULL},
-     { (char *)"CvTypeInfo_clone_get", _wrap_CvTypeInfo_clone_get, METH_VARARGS, NULL},
-     { (char *)"new_CvTypeInfo", _wrap_new_CvTypeInfo, METH_VARARGS, NULL},
-     { (char *)"delete_CvTypeInfo", _wrap_delete_CvTypeInfo, METH_VARARGS, NULL},
-     { (char *)"CvTypeInfo_swigregister", CvTypeInfo_swigregister, METH_VARARGS, NULL},
-     { (char *)"CvPluginFuncInfo_func_addr_set", _wrap_CvPluginFuncInfo_func_addr_set, METH_VARARGS, NULL},
-     { (char *)"CvPluginFuncInfo_func_addr_get", _wrap_CvPluginFuncInfo_func_addr_get, METH_VARARGS, NULL},
-     { (char *)"CvPluginFuncInfo_default_func_addr_set", _wrap_CvPluginFuncInfo_default_func_addr_set, METH_VARARGS, NULL},
-     { (char *)"CvPluginFuncInfo_default_func_addr_get", _wrap_CvPluginFuncInfo_default_func_addr_get, METH_VARARGS, NULL},
-     { (char *)"CvPluginFuncInfo_func_names_set", _wrap_CvPluginFuncInfo_func_names_set, METH_VARARGS, NULL},
-     { (char *)"CvPluginFuncInfo_func_names_get", _wrap_CvPluginFuncInfo_func_names_get, METH_VARARGS, NULL},
-     { (char *)"CvPluginFuncInfo_search_modules_set", _wrap_CvPluginFuncInfo_search_modules_set, METH_VARARGS, NULL},
-     { (char *)"CvPluginFuncInfo_search_modules_get", _wrap_CvPluginFuncInfo_search_modules_get, METH_VARARGS, NULL},
-     { (char *)"CvPluginFuncInfo_loaded_from_set", _wrap_CvPluginFuncInfo_loaded_from_set, METH_VARARGS, NULL},
-     { (char *)"CvPluginFuncInfo_loaded_from_get", _wrap_CvPluginFuncInfo_loaded_from_get, METH_VARARGS, NULL},
-     { (char *)"new_CvPluginFuncInfo", _wrap_new_CvPluginFuncInfo, METH_VARARGS, NULL},
-     { (char *)"delete_CvPluginFuncInfo", _wrap_delete_CvPluginFuncInfo, METH_VARARGS, NULL},
-     { (char *)"CvPluginFuncInfo_swigregister", CvPluginFuncInfo_swigregister, METH_VARARGS, NULL},
-     { (char *)"CvModuleInfo_next_set", _wrap_CvModuleInfo_next_set, METH_VARARGS, NULL},
-     { (char *)"CvModuleInfo_next_get", _wrap_CvModuleInfo_next_get, METH_VARARGS, NULL},
-     { (char *)"CvModuleInfo_name_set", _wrap_CvModuleInfo_name_set, METH_VARARGS, NULL},
-     { (char *)"CvModuleInfo_name_get", _wrap_CvModuleInfo_name_get, METH_VARARGS, NULL},
-     { (char *)"CvModuleInfo_version_set", _wrap_CvModuleInfo_version_set, METH_VARARGS, NULL},
-     { (char *)"CvModuleInfo_version_get", _wrap_CvModuleInfo_version_get, METH_VARARGS, NULL},
-     { (char *)"CvModuleInfo_func_tab_set", _wrap_CvModuleInfo_func_tab_set, METH_VARARGS, NULL},
-     { (char *)"CvModuleInfo_func_tab_get", _wrap_CvModuleInfo_func_tab_get, METH_VARARGS, NULL},
-     { (char *)"new_CvModuleInfo", _wrap_new_CvModuleInfo, METH_VARARGS, NULL},
-     { (char *)"delete_CvModuleInfo", _wrap_delete_CvModuleInfo, METH_VARARGS, NULL},
-     { (char *)"CvModuleInfo_swigregister", CvModuleInfo_swigregister, METH_VARARGS, NULL},
-     { (char *)"cvAlloc", _wrap_cvAlloc, METH_VARARGS, NULL},
-     { (char *)"cvFree_", _wrap_cvFree_, METH_VARARGS, NULL},
-     { (char *)"cvResetImageROI", _wrap_cvResetImageROI, METH_VARARGS, NULL},
-     { (char *)"cvCreateMatHeader", _wrap_cvCreateMatHeader, METH_VARARGS, NULL},
-     { (char *)"cvInitMatHeader", _wrap_cvInitMatHeader, METH_VARARGS, NULL},
-     { (char *)"cvCreateMat", _wrap_cvCreateMat, METH_VARARGS, NULL},
-     { (char *)"cvDecRefData", _wrap_cvDecRefData, METH_VARARGS, NULL},
-     { (char *)"cvIncRefData", _wrap_cvIncRefData, METH_VARARGS, NULL},
-     { (char *)"cvCloneMat", _wrap_cvCloneMat, METH_VARARGS, NULL},
-     { (char *)"cvGetSubRect", _wrap_cvGetSubRect, METH_VARARGS, NULL},
-     { (char *)"cvGetRows", _wrap_cvGetRows, METH_VARARGS, NULL},
-     { (char *)"cvGetRow", _wrap_cvGetRow, METH_VARARGS, NULL},
-     { (char *)"cvGetCols", _wrap_cvGetCols, METH_VARARGS, NULL},
-     { (char *)"cvGetCol", _wrap_cvGetCol, METH_VARARGS, NULL},
-     { (char *)"cvGetDiag", _wrap_cvGetDiag, METH_VARARGS, NULL},
-     { (char *)"cvScalarToRawData", _wrap_cvScalarToRawData, METH_VARARGS, NULL},
-     { (char *)"cvRawDataToScalar", _wrap_cvRawDataToScalar, METH_VARARGS, NULL},
-     { (char *)"cvCreateMatNDHeader", _wrap_cvCreateMatNDHeader, METH_VARARGS, NULL},
-     { (char *)"cvCreateMatND", _wrap_cvCreateMatND, METH_VARARGS, NULL},
-     { (char *)"cvInitMatNDHeader", _wrap_cvInitMatNDHeader, METH_VARARGS, NULL},
-     { (char *)"cvCloneMatND", _wrap_cvCloneMatND, METH_VARARGS, NULL},
-     { (char *)"cvCreateSparseMat", _wrap_cvCreateSparseMat, METH_VARARGS, NULL},
-     { (char *)"cvCloneSparseMat", _wrap_cvCloneSparseMat, METH_VARARGS, NULL},
-     { (char *)"cvInitSparseMatIterator", _wrap_cvInitSparseMatIterator, METH_VARARGS, NULL},
-     { (char *)"cvGetNextSparseNode", _wrap_cvGetNextSparseNode, METH_VARARGS, NULL},
-     { (char *)"CvNArrayIterator_count_set", _wrap_CvNArrayIterator_count_set, METH_VARARGS, NULL},
-     { (char *)"CvNArrayIterator_count_get", _wrap_CvNArrayIterator_count_get, METH_VARARGS, NULL},
-     { (char *)"CvNArrayIterator_dims_set", _wrap_CvNArrayIterator_dims_set, METH_VARARGS, NULL},
-     { (char *)"CvNArrayIterator_dims_get", _wrap_CvNArrayIterator_dims_get, METH_VARARGS, NULL},
-     { (char *)"CvNArrayIterator_size_set", _wrap_CvNArrayIterator_size_set, METH_VARARGS, NULL},
-     { (char *)"CvNArrayIterator_size_get", _wrap_CvNArrayIterator_size_get, METH_VARARGS, NULL},
-     { (char *)"CvNArrayIterator_ptr_set", _wrap_CvNArrayIterator_ptr_set, METH_VARARGS, NULL},
-     { (char *)"CvNArrayIterator_ptr_get", _wrap_CvNArrayIterator_ptr_get, METH_VARARGS, NULL},
-     { (char *)"CvNArrayIterator_stack_set", _wrap_CvNArrayIterator_stack_set, METH_VARARGS, NULL},
-     { (char *)"CvNArrayIterator_stack_get", _wrap_CvNArrayIterator_stack_get, METH_VARARGS, NULL},
-     { (char *)"CvNArrayIterator_hdr_set", _wrap_CvNArrayIterator_hdr_set, METH_VARARGS, NULL},
-     { (char *)"CvNArrayIterator_hdr_get", _wrap_CvNArrayIterator_hdr_get, METH_VARARGS, NULL},
-     { (char *)"new_CvNArrayIterator", _wrap_new_CvNArrayIterator, METH_VARARGS, NULL},
-     { (char *)"delete_CvNArrayIterator", _wrap_delete_CvNArrayIterator, METH_VARARGS, NULL},
-     { (char *)"CvNArrayIterator_swigregister", CvNArrayIterator_swigregister, METH_VARARGS, NULL},
-     { (char *)"cvInitNArrayIterator", _wrap_cvInitNArrayIterator, METH_VARARGS, NULL},
-     { (char *)"cvNextNArraySlice", _wrap_cvNextNArraySlice, METH_VARARGS, NULL},
-     { (char *)"cvGetElemType", _wrap_cvGetElemType, METH_VARARGS, NULL},
-     { (char *)"cvGetDims", _wrap_cvGetDims, METH_VARARGS, NULL},
-     { (char *)"cvGetDimSize", _wrap_cvGetDimSize, METH_VARARGS, NULL},
-     { (char *)"cvPtr1D", _wrap_cvPtr1D, METH_VARARGS, NULL},
-     { (char *)"cvPtr2D", _wrap_cvPtr2D, METH_VARARGS, NULL},
-     { (char *)"cvPtr3D", _wrap_cvPtr3D, METH_VARARGS, NULL},
-     { (char *)"cvPtrND", _wrap_cvPtrND, METH_VARARGS, NULL},
-     { (char *)"cvGet1D", _wrap_cvGet1D, METH_VARARGS, NULL},
-     { (char *)"cvGet2D", _wrap_cvGet2D, METH_VARARGS, NULL},
-     { (char *)"cvGet3D", _wrap_cvGet3D, METH_VARARGS, NULL},
-     { (char *)"cvGetND", _wrap_cvGetND, METH_VARARGS, NULL},
-     { (char *)"cvGetReal1D", _wrap_cvGetReal1D, METH_VARARGS, NULL},
-     { (char *)"cvGetReal2D", _wrap_cvGetReal2D, METH_VARARGS, NULL},
-     { (char *)"cvGetReal3D", _wrap_cvGetReal3D, METH_VARARGS, NULL},
-     { (char *)"cvGetRealND", _wrap_cvGetRealND, METH_VARARGS, NULL},
-     { (char *)"cvSet1D", _wrap_cvSet1D, METH_VARARGS, NULL},
-     { (char *)"cvSet2D", _wrap_cvSet2D, METH_VARARGS, NULL},
-     { (char *)"cvSet3D", _wrap_cvSet3D, METH_VARARGS, NULL},
-     { (char *)"cvSetND", _wrap_cvSetND, METH_VARARGS, NULL},
-     { (char *)"cvSetReal1D", _wrap_cvSetReal1D, METH_VARARGS, NULL},
-     { (char *)"cvSetReal2D", _wrap_cvSetReal2D, METH_VARARGS, NULL},
-     { (char *)"cvSetReal3D", _wrap_cvSetReal3D, METH_VARARGS, NULL},
-     { (char *)"cvSetRealND", _wrap_cvSetRealND, METH_VARARGS, NULL},
-     { (char *)"cvClearND", _wrap_cvClearND, METH_VARARGS, NULL},
-     { (char *)"cvGetMat", _wrap_cvGetMat, METH_VARARGS, NULL},
-     { (char *)"cvReshapeMatND", _wrap_cvReshapeMatND, METH_VARARGS, NULL},
-     { (char *)"cvReshape", _wrap_cvReshape, METH_VARARGS, NULL},
-     { (char *)"cvRepeat", _wrap_cvRepeat, METH_VARARGS, NULL},
-     { (char *)"cvCreateData", _wrap_cvCreateData, METH_VARARGS, NULL},
-     { (char *)"cvReleaseData", _wrap_cvReleaseData, METH_VARARGS, NULL},
-     { (char *)"cvSetData", _wrap_cvSetData, METH_VARARGS, NULL},
-     { (char *)"cvGetRawData", _wrap_cvGetRawData, METH_VARARGS, NULL},
-     { (char *)"cvGetSize", _wrap_cvGetSize, METH_VARARGS, NULL},
-     { (char *)"cvCopy", _wrap_cvCopy, METH_VARARGS, NULL},
-     { (char *)"cvSet", _wrap_cvSet, METH_VARARGS, NULL},
-     { (char *)"cvSetZero", _wrap_cvSetZero, METH_VARARGS, NULL},
-     { (char *)"cvSplit", _wrap_cvSplit, METH_VARARGS, NULL},
-     { (char *)"cvMerge", _wrap_cvMerge, METH_VARARGS, NULL},
-     { (char *)"cvMixChannels", _wrap_cvMixChannels, METH_VARARGS, NULL},
-     { (char *)"cvConvertScale", _wrap_cvConvertScale, METH_VARARGS, NULL},
-     { (char *)"cvConvertScaleAbs", _wrap_cvConvertScaleAbs, METH_VARARGS, NULL},
-     { (char *)"cvCheckTermCriteria", _wrap_cvCheckTermCriteria, METH_VARARGS, NULL},
-     { (char *)"cvAdd", _wrap_cvAdd, METH_VARARGS, NULL},
-     { (char *)"cvAddS", _wrap_cvAddS, METH_VARARGS, NULL},
-     { (char *)"cvSub", _wrap_cvSub, METH_VARARGS, NULL},
-     { (char *)"cvSubS", _wrap_cvSubS, METH_VARARGS, NULL},
-     { (char *)"cvSubRS", _wrap_cvSubRS, METH_VARARGS, NULL},
-     { (char *)"cvMul", _wrap_cvMul, METH_VARARGS, NULL},
-     { (char *)"cvDiv", _wrap_cvDiv, METH_VARARGS, NULL},
-     { (char *)"cvScaleAdd", _wrap_cvScaleAdd, METH_VARARGS, NULL},
-     { (char *)"cvAddWeighted", _wrap_cvAddWeighted, METH_VARARGS, NULL},
-     { (char *)"cvDotProduct", _wrap_cvDotProduct, METH_VARARGS, NULL},
-     { (char *)"cvAnd", _wrap_cvAnd, METH_VARARGS, NULL},
-     { (char *)"cvAndS", _wrap_cvAndS, METH_VARARGS, NULL},
-     { (char *)"cvOr", _wrap_cvOr, METH_VARARGS, NULL},
-     { (char *)"cvOrS", _wrap_cvOrS, METH_VARARGS, NULL},
-     { (char *)"cvXor", _wrap_cvXor, METH_VARARGS, NULL},
-     { (char *)"cvXorS", _wrap_cvXorS, METH_VARARGS, NULL},
-     { (char *)"cvNot", _wrap_cvNot, METH_VARARGS, NULL},
-     { (char *)"cvInRange", _wrap_cvInRange, METH_VARARGS, NULL},
-     { (char *)"cvInRangeS", _wrap_cvInRangeS, METH_VARARGS, NULL},
-     { (char *)"cvCmp", _wrap_cvCmp, METH_VARARGS, NULL},
-     { (char *)"cvCmpS", _wrap_cvCmpS, METH_VARARGS, NULL},
-     { (char *)"cvMin", _wrap_cvMin, METH_VARARGS, NULL},
-     { (char *)"cvMax", _wrap_cvMax, METH_VARARGS, NULL},
-     { (char *)"cvMinS", _wrap_cvMinS, METH_VARARGS, NULL},
-     { (char *)"cvMaxS", _wrap_cvMaxS, METH_VARARGS, NULL},
-     { (char *)"cvAbsDiff", _wrap_cvAbsDiff, METH_VARARGS, NULL},
-     { (char *)"cvAbsDiffS", _wrap_cvAbsDiffS, METH_VARARGS, NULL},
-     { (char *)"cvCartToPolar", _wrap_cvCartToPolar, METH_VARARGS, NULL},
-     { (char *)"cvPolarToCart", _wrap_cvPolarToCart, METH_VARARGS, NULL},
-     { (char *)"cvPow", _wrap_cvPow, METH_VARARGS, NULL},
-     { (char *)"cvExp", _wrap_cvExp, METH_VARARGS, NULL},
-     { (char *)"cvLog", _wrap_cvLog, METH_VARARGS, NULL},
-     { (char *)"cvFastArctan", _wrap_cvFastArctan, METH_VARARGS, NULL},
-     { (char *)"cvCbrt", _wrap_cvCbrt, METH_VARARGS, NULL},
-     { (char *)"cvCheckArr", _wrap_cvCheckArr, METH_VARARGS, NULL},
-     { (char *)"cvRandArr", _wrap_cvRandArr, METH_VARARGS, NULL},
-     { (char *)"cvRandShuffle", _wrap_cvRandShuffle, METH_VARARGS, NULL},
-     { (char *)"cvSolveCubic", _wrap_cvSolveCubic, METH_VARARGS, NULL},
-     { (char *)"cvCrossProduct", _wrap_cvCrossProduct, METH_VARARGS, NULL},
-     { (char *)"cvGEMM", _wrap_cvGEMM, METH_VARARGS, NULL},
-     { (char *)"cvTransform", _wrap_cvTransform, METH_VARARGS, NULL},
-     { (char *)"cvPerspectiveTransform", _wrap_cvPerspectiveTransform, METH_VARARGS, NULL},
-     { (char *)"cvMulTransposed", _wrap_cvMulTransposed, METH_VARARGS, NULL},
-     { (char *)"cvTranspose", _wrap_cvTranspose, METH_VARARGS, NULL},
-     { (char *)"cvFlip", _wrap_cvFlip, METH_VARARGS, NULL},
-     { (char *)"cvSVD", _wrap_cvSVD, METH_VARARGS, NULL},
-     { (char *)"cvSVBkSb", _wrap_cvSVBkSb, METH_VARARGS, NULL},
-     { (char *)"cvInvert", _wrap_cvInvert, METH_VARARGS, NULL},
-     { (char *)"cvSolve", _wrap_cvSolve, METH_VARARGS, NULL},
-     { (char *)"cvDet", _wrap_cvDet, METH_VARARGS, NULL},
-     { (char *)"cvTrace", _wrap_cvTrace, METH_VARARGS, NULL},
-     { (char *)"cvEigenVV", _wrap_cvEigenVV, METH_VARARGS, NULL},
-     { (char *)"cvSetIdentity", _wrap_cvSetIdentity, METH_VARARGS, NULL},
-     { (char *)"cvRange", _wrap_cvRange, METH_VARARGS, NULL},
-     { (char *)"cvCalcCovarMatrix", _wrap_cvCalcCovarMatrix, METH_VARARGS, NULL},
-     { (char *)"cvCalcPCA", _wrap_cvCalcPCA, METH_VARARGS, NULL},
-     { (char *)"cvProjectPCA", _wrap_cvProjectPCA, METH_VARARGS, NULL},
-     { (char *)"cvBackProjectPCA", _wrap_cvBackProjectPCA, METH_VARARGS, NULL},
-     { (char *)"cvMahalanobis", _wrap_cvMahalanobis, METH_VARARGS, NULL},
-     { (char *)"cvSum", _wrap_cvSum, METH_VARARGS, NULL},
-     { (char *)"cvCountNonZero", _wrap_cvCountNonZero, METH_VARARGS, NULL},
-     { (char *)"cvAvg", _wrap_cvAvg, METH_VARARGS, NULL},
-     { (char *)"cvAvgSdv", _wrap_cvAvgSdv, METH_VARARGS, NULL},
-     { (char *)"cvMinMaxLoc", _wrap_cvMinMaxLoc, METH_VARARGS, NULL},
-     { (char *)"cvNorm", _wrap_cvNorm, METH_VARARGS, NULL},
-     { (char *)"cvNormalize", _wrap_cvNormalize, METH_VARARGS, NULL},
-     { (char *)"cvReduce", _wrap_cvReduce, METH_VARARGS, NULL},
-     { (char *)"cvDFT", _wrap_cvDFT, METH_VARARGS, NULL},
-     { (char *)"cvMulSpectrums", _wrap_cvMulSpectrums, METH_VARARGS, NULL},
-     { (char *)"cvGetOptimalDFTSize", _wrap_cvGetOptimalDFTSize, METH_VARARGS, NULL},
-     { (char *)"cvDCT", _wrap_cvDCT, METH_VARARGS, NULL},
-     { (char *)"cvSliceLength", _wrap_cvSliceLength, METH_VARARGS, NULL},
-     { (char *)"cvCreateMemStorage", _wrap_cvCreateMemStorage, METH_VARARGS, NULL},
-     { (char *)"cvCreateChildMemStorage", _wrap_cvCreateChildMemStorage, METH_VARARGS, NULL},
-     { (char *)"cvClearMemStorage", _wrap_cvClearMemStorage, METH_VARARGS, NULL},
-     { (char *)"cvSaveMemStoragePos", _wrap_cvSaveMemStoragePos, METH_VARARGS, NULL},
-     { (char *)"cvRestoreMemStoragePos", _wrap_cvRestoreMemStoragePos, METH_VARARGS, NULL},
-     { (char *)"cvMemStorageAlloc", _wrap_cvMemStorageAlloc, METH_VARARGS, NULL},
-     { (char *)"cvMemStorageAllocString", _wrap_cvMemStorageAllocString, METH_VARARGS, NULL},
-     { (char *)"cvCreateSeq", _wrap_cvCreateSeq, METH_VARARGS, NULL},
-     { (char *)"cvSetSeqBlockSize", _wrap_cvSetSeqBlockSize, METH_VARARGS, NULL},
-     { (char *)"cvSeqPush", _wrap_cvSeqPush, METH_VARARGS, NULL},
-     { (char *)"cvSeqPushFront", _wrap_cvSeqPushFront, METH_VARARGS, NULL},
-     { (char *)"cvSeqPop", _wrap_cvSeqPop, METH_VARARGS, NULL},
-     { (char *)"cvSeqPopFront", _wrap_cvSeqPopFront, METH_VARARGS, NULL},
-     { (char *)"cvSeqPushMulti", _wrap_cvSeqPushMulti, METH_VARARGS, NULL},
-     { (char *)"cvSeqPopMulti", _wrap_cvSeqPopMulti, METH_VARARGS, NULL},
-     { (char *)"cvSeqInsert", _wrap_cvSeqInsert, METH_VARARGS, NULL},
-     { (char *)"cvSeqRemove", _wrap_cvSeqRemove, METH_VARARGS, NULL},
-     { (char *)"cvClearSeq", _wrap_cvClearSeq, METH_VARARGS, NULL},
-     { (char *)"cvGetSeqElem", _wrap_cvGetSeqElem, METH_VARARGS, NULL},
-     { (char *)"cvSeqElemIdx", _wrap_cvSeqElemIdx, METH_VARARGS, NULL},
-     { (char *)"cvStartAppendToSeq", _wrap_cvStartAppendToSeq, METH_VARARGS, NULL},
-     { (char *)"cvStartWriteSeq", _wrap_cvStartWriteSeq, METH_VARARGS, NULL},
-     { (char *)"cvEndWriteSeq", _wrap_cvEndWriteSeq, METH_VARARGS, NULL},
-     { (char *)"cvFlushSeqWriter", _wrap_cvFlushSeqWriter, METH_VARARGS, NULL},
-     { (char *)"cvStartReadSeq", _wrap_cvStartReadSeq, METH_VARARGS, NULL},
-     { (char *)"cvGetSeqReaderPos", _wrap_cvGetSeqReaderPos, METH_VARARGS, NULL},
-     { (char *)"cvSetSeqReaderPos", _wrap_cvSetSeqReaderPos, METH_VARARGS, NULL},
-     { (char *)"cvMakeSeqHeaderForArray", _wrap_cvMakeSeqHeaderForArray, METH_VARARGS, NULL},
-     { (char *)"cvSeqSlice", _wrap_cvSeqSlice, METH_VARARGS, NULL},
-     { (char *)"cvCloneSeq", _wrap_cvCloneSeq, METH_VARARGS, NULL},
-     { (char *)"cvSeqRemoveSlice", _wrap_cvSeqRemoveSlice, METH_VARARGS, NULL},
-     { (char *)"cvSeqInsertSlice", _wrap_cvSeqInsertSlice, METH_VARARGS, NULL},
-     { (char *)"cvSeqSort", _wrap_cvSeqSort, METH_VARARGS, NULL},
-     { (char *)"cvSeqSearch", _wrap_cvSeqSearch, METH_VARARGS, NULL},
-     { (char *)"cvSeqInvert", _wrap_cvSeqInvert, METH_VARARGS, NULL},
-     { (char *)"cvSeqPartition", _wrap_cvSeqPartition, METH_VARARGS, NULL},
-     { (char *)"cvChangeSeqBlock", _wrap_cvChangeSeqBlock, METH_VARARGS, NULL},
-     { (char *)"cvCreateSeqBlock", _wrap_cvCreateSeqBlock, METH_VARARGS, NULL},
-     { (char *)"cvCreateSet", _wrap_cvCreateSet, METH_VARARGS, NULL},
-     { (char *)"cvSetAdd", _wrap_cvSetAdd, METH_VARARGS, NULL},
-     { (char *)"cvSetNew", _wrap_cvSetNew, METH_VARARGS, NULL},
-     { (char *)"cvSetRemoveByPtr", _wrap_cvSetRemoveByPtr, METH_VARARGS, NULL},
-     { (char *)"cvSetRemove", _wrap_cvSetRemove, METH_VARARGS, NULL},
-     { (char *)"cvGetSetElem", _wrap_cvGetSetElem, METH_VARARGS, NULL},
-     { (char *)"cvClearSet", _wrap_cvClearSet, METH_VARARGS, NULL},
-     { (char *)"cvCreateGraph", _wrap_cvCreateGraph, METH_VARARGS, NULL},
-     { (char *)"cvGraphAddVtx", _wrap_cvGraphAddVtx, METH_VARARGS, NULL},
-     { (char *)"cvGraphRemoveVtx", _wrap_cvGraphRemoveVtx, METH_VARARGS, NULL},
-     { (char *)"cvGraphRemoveVtxByPtr", _wrap_cvGraphRemoveVtxByPtr, METH_VARARGS, NULL},
-     { (char *)"cvGraphAddEdge", _wrap_cvGraphAddEdge, METH_VARARGS, NULL},
-     { (char *)"cvGraphAddEdgeByPtr", _wrap_cvGraphAddEdgeByPtr, METH_VARARGS, NULL},
-     { (char *)"cvGraphRemoveEdge", _wrap_cvGraphRemoveEdge, METH_VARARGS, NULL},
-     { (char *)"cvGraphRemoveEdgeByPtr", _wrap_cvGraphRemoveEdgeByPtr, METH_VARARGS, NULL},
-     { (char *)"cvFindGraphEdge", _wrap_cvFindGraphEdge, METH_VARARGS, NULL},
-     { (char *)"cvFindGraphEdgeByPtr", _wrap_cvFindGraphEdgeByPtr, METH_VARARGS, NULL},
-     { (char *)"cvClearGraph", _wrap_cvClearGraph, METH_VARARGS, NULL},
-     { (char *)"cvGraphVtxDegree", _wrap_cvGraphVtxDegree, METH_VARARGS, NULL},
-     { (char *)"cvGraphVtxDegreeByPtr", _wrap_cvGraphVtxDegreeByPtr, METH_VARARGS, NULL},
-     { (char *)"CvGraphScanner_vtx_set", _wrap_CvGraphScanner_vtx_set, METH_VARARGS, NULL},
-     { (char *)"CvGraphScanner_vtx_get", _wrap_CvGraphScanner_vtx_get, METH_VARARGS, NULL},
-     { (char *)"CvGraphScanner_dst_set", _wrap_CvGraphScanner_dst_set, METH_VARARGS, NULL},
-     { (char *)"CvGraphScanner_dst_get", _wrap_CvGraphScanner_dst_get, METH_VARARGS, NULL},
-     { (char *)"CvGraphScanner_edge_set", _wrap_CvGraphScanner_edge_set, METH_VARARGS, NULL},
-     { (char *)"CvGraphScanner_edge_get", _wrap_CvGraphScanner_edge_get, METH_VARARGS, NULL},
-     { (char *)"CvGraphScanner_graph_set", _wrap_CvGraphScanner_graph_set, METH_VARARGS, NULL},
-     { (char *)"CvGraphScanner_graph_get", _wrap_CvGraphScanner_graph_get, METH_VARARGS, NULL},
-     { (char *)"CvGraphScanner_stack_set", _wrap_CvGraphScanner_stack_set, METH_VARARGS, NULL},
-     { (char *)"CvGraphScanner_stack_get", _wrap_CvGraphScanner_stack_get, METH_VARARGS, NULL},
-     { (char *)"CvGraphScanner_index_set", _wrap_CvGraphScanner_index_set, METH_VARARGS, NULL},
-     { (char *)"CvGraphScanner_index_get", _wrap_CvGraphScanner_index_get, METH_VARARGS, NULL},
-     { (char *)"CvGraphScanner_mask_set", _wrap_CvGraphScanner_mask_set, METH_VARARGS, NULL},
-     { (char *)"CvGraphScanner_mask_get", _wrap_CvGraphScanner_mask_get, METH_VARARGS, NULL},
-     { (char *)"delete_CvGraphScanner", _wrap_delete_CvGraphScanner, METH_VARARGS, NULL},
-     { (char *)"CvGraphScanner_swigregister", CvGraphScanner_swigregister, METH_VARARGS, NULL},
-     { (char *)"cvCreateGraphScanner", _wrap_cvCreateGraphScanner, METH_VARARGS, NULL},
-     { (char *)"cvNextGraphItem", _wrap_cvNextGraphItem, METH_VARARGS, NULL},
-     { (char *)"cvCloneGraph", _wrap_cvCloneGraph, METH_VARARGS, NULL},
-     { (char *)"cvLine", _wrap_cvLine, METH_VARARGS, NULL},
-     { (char *)"cvRectangle", _wrap_cvRectangle, METH_VARARGS, NULL},
-     { (char *)"cvCircle", _wrap_cvCircle, METH_VARARGS, NULL},
-     { (char *)"cvEllipse", _wrap_cvEllipse, METH_VARARGS, NULL},
-     { (char *)"cvEllipseBox", _wrap_cvEllipseBox, METH_VARARGS, NULL},
-     { (char *)"cvFillConvexPoly", _wrap_cvFillConvexPoly, METH_VARARGS, NULL},
-     { (char *)"cvFillPoly", _wrap_cvFillPoly, METH_VARARGS, NULL},
-     { (char *)"cvPolyLine", _wrap_cvPolyLine, METH_VARARGS, NULL},
-     { (char *)"cvClipLine", _wrap_cvClipLine, METH_VARARGS, NULL},
-     { (char *)"cvInitLineIterator", _wrap_cvInitLineIterator, METH_VARARGS, NULL},
-     { (char *)"CvFont_font_face_set", _wrap_CvFont_font_face_set, METH_VARARGS, NULL},
-     { (char *)"CvFont_font_face_get", _wrap_CvFont_font_face_get, METH_VARARGS, NULL},
-     { (char *)"CvFont_ascii_set", _wrap_CvFont_ascii_set, METH_VARARGS, NULL},
-     { (char *)"CvFont_ascii_get", _wrap_CvFont_ascii_get, METH_VARARGS, NULL},
-     { (char *)"CvFont_greek_set", _wrap_CvFont_greek_set, METH_VARARGS, NULL},
-     { (char *)"CvFont_greek_get", _wrap_CvFont_greek_get, METH_VARARGS, NULL},
-     { (char *)"CvFont_cyrillic_set", _wrap_CvFont_cyrillic_set, METH_VARARGS, NULL},
-     { (char *)"CvFont_cyrillic_get", _wrap_CvFont_cyrillic_get, METH_VARARGS, NULL},
-     { (char *)"CvFont_hscale_set", _wrap_CvFont_hscale_set, METH_VARARGS, NULL},
-     { (char *)"CvFont_hscale_get", _wrap_CvFont_hscale_get, METH_VARARGS, NULL},
-     { (char *)"CvFont_vscale_set", _wrap_CvFont_vscale_set, METH_VARARGS, NULL},
-     { (char *)"CvFont_vscale_get", _wrap_CvFont_vscale_get, METH_VARARGS, NULL},
-     { (char *)"CvFont_shear_set", _wrap_CvFont_shear_set, METH_VARARGS, NULL},
-     { (char *)"CvFont_shear_get", _wrap_CvFont_shear_get, METH_VARARGS, NULL},
-     { (char *)"CvFont_thickness_set", _wrap_CvFont_thickness_set, METH_VARARGS, NULL},
-     { (char *)"CvFont_thickness_get", _wrap_CvFont_thickness_get, METH_VARARGS, NULL},
-     { (char *)"CvFont_dx_set", _wrap_CvFont_dx_set, METH_VARARGS, NULL},
-     { (char *)"CvFont_dx_get", _wrap_CvFont_dx_get, METH_VARARGS, NULL},
-     { (char *)"CvFont_line_type_set", _wrap_CvFont_line_type_set, METH_VARARGS, NULL},
-     { (char *)"CvFont_line_type_get", _wrap_CvFont_line_type_get, METH_VARARGS, NULL},
-     { (char *)"new_CvFont", _wrap_new_CvFont, METH_VARARGS, NULL},
-     { (char *)"delete_CvFont", _wrap_delete_CvFont, METH_VARARGS, NULL},
-     { (char *)"CvFont_swigregister", CvFont_swigregister, METH_VARARGS, NULL},
-     { (char *)"cvInitFont", _wrap_cvInitFont, METH_VARARGS, NULL},
-     { (char *)"cvFont", _wrap_cvFont, METH_VARARGS, NULL},
-     { (char *)"cvPutText", _wrap_cvPutText, METH_VARARGS, NULL},
-     { (char *)"cvGetTextSize", _wrap_cvGetTextSize, METH_VARARGS, NULL},
-     { (char *)"cvColorToScalar", _wrap_cvColorToScalar, METH_VARARGS, NULL},
-     { (char *)"cvEllipse2Poly", _wrap_cvEllipse2Poly, METH_VARARGS, NULL},
-     { (char *)"cvDrawContours", _wrap_cvDrawContours, METH_VARARGS, NULL},
-     { (char *)"cvLUT", _wrap_cvLUT, METH_VARARGS, NULL},
-     { (char *)"CvTreeNodeIterator_node_set", _wrap_CvTreeNodeIterator_node_set, METH_VARARGS, NULL},
-     { (char *)"CvTreeNodeIterator_node_get", _wrap_CvTreeNodeIterator_node_get, METH_VARARGS, NULL},
-     { (char *)"CvTreeNodeIterator_level_set", _wrap_CvTreeNodeIterator_level_set, METH_VARARGS, NULL},
-     { (char *)"CvTreeNodeIterator_level_get", _wrap_CvTreeNodeIterator_level_get, METH_VARARGS, NULL},
-     { (char *)"CvTreeNodeIterator_max_level_set", _wrap_CvTreeNodeIterator_max_level_set, METH_VARARGS, NULL},
-     { (char *)"CvTreeNodeIterator_max_level_get", _wrap_CvTreeNodeIterator_max_level_get, METH_VARARGS, NULL},
-     { (char *)"new_CvTreeNodeIterator", _wrap_new_CvTreeNodeIterator, METH_VARARGS, NULL},
-     { (char *)"delete_CvTreeNodeIterator", _wrap_delete_CvTreeNodeIterator, METH_VARARGS, NULL},
-     { (char *)"CvTreeNodeIterator_swigregister", CvTreeNodeIterator_swigregister, METH_VARARGS, NULL},
-     { (char *)"cvInitTreeNodeIterator", _wrap_cvInitTreeNodeIterator, METH_VARARGS, NULL},
-     { (char *)"cvNextTreeNode", _wrap_cvNextTreeNode, METH_VARARGS, NULL},
-     { (char *)"cvPrevTreeNode", _wrap_cvPrevTreeNode, METH_VARARGS, NULL},
-     { (char *)"cvInsertNodeIntoTree", _wrap_cvInsertNodeIntoTree, METH_VARARGS, NULL},
-     { (char *)"cvRemoveNodeFromTree", _wrap_cvRemoveNodeFromTree, METH_VARARGS, NULL},
-     { (char *)"cvTreeToNodeSeq", _wrap_cvTreeToNodeSeq, METH_VARARGS, NULL},
-     { (char *)"cvKMeans2", _wrap_cvKMeans2, METH_VARARGS, NULL},
-     { (char *)"cvRegisterModule", _wrap_cvRegisterModule, METH_VARARGS, NULL},
-     { (char *)"cvUseOptimized", _wrap_cvUseOptimized, METH_VARARGS, NULL},
-     { (char *)"cvGetModuleInfo", _wrap_cvGetModuleInfo, METH_VARARGS, NULL},
-     { (char *)"cvGetErrStatus", _wrap_cvGetErrStatus, METH_VARARGS, NULL},
-     { (char *)"cvSetErrStatus", _wrap_cvSetErrStatus, METH_VARARGS, NULL},
-     { (char *)"cvGetErrMode", _wrap_cvGetErrMode, METH_VARARGS, NULL},
-     { (char *)"cvSetErrMode", _wrap_cvSetErrMode, METH_VARARGS, NULL},
-     { (char *)"cvError", _wrap_cvError, METH_VARARGS, NULL},
-     { (char *)"cvErrorStr", _wrap_cvErrorStr, METH_VARARGS, NULL},
-     { (char *)"cvGetErrInfo", _wrap_cvGetErrInfo, METH_VARARGS, NULL},
-     { (char *)"cvErrorFromIppStatus", _wrap_cvErrorFromIppStatus, METH_VARARGS, NULL},
-     { (char *)"cvRedirectError", _wrap_cvRedirectError, METH_VARARGS, NULL},
-     { (char *)"cvNulDevReport", _wrap_cvNulDevReport, METH_VARARGS, NULL},
-     { (char *)"cvStdErrReport", _wrap_cvStdErrReport, METH_VARARGS, NULL},
-     { (char *)"cvGuiBoxReport", _wrap_cvGuiBoxReport, METH_VARARGS, NULL},
-     { (char *)"cvSetMemoryManager", _wrap_cvSetMemoryManager, METH_VARARGS, NULL},
-     { (char *)"cvSetIPLAllocators", _wrap_cvSetIPLAllocators, METH_VARARGS, NULL},
-     { (char *)"cvOpenFileStorage", _wrap_cvOpenFileStorage, METH_VARARGS, NULL},
-     { (char *)"cvAttrValue", _wrap_cvAttrValue, METH_VARARGS, NULL},
-     { (char *)"cvStartWriteStruct", _wrap_cvStartWriteStruct, METH_VARARGS, NULL},
-     { (char *)"cvEndWriteStruct", _wrap_cvEndWriteStruct, METH_VARARGS, NULL},
-     { (char *)"cvWriteInt", _wrap_cvWriteInt, METH_VARARGS, NULL},
-     { (char *)"cvWriteReal", _wrap_cvWriteReal, METH_VARARGS, NULL},
-     { (char *)"cvWriteString", _wrap_cvWriteString, METH_VARARGS, NULL},
-     { (char *)"cvWriteComment", _wrap_cvWriteComment, METH_VARARGS, NULL},
-     { (char *)"cvWrite", _wrap_cvWrite, METH_VARARGS, NULL},
-     { (char *)"cvStartNextStream", _wrap_cvStartNextStream, METH_VARARGS, NULL},
-     { (char *)"cvWriteRawData", _wrap_cvWriteRawData, METH_VARARGS, NULL},
-     { (char *)"cvGetHashedKey", _wrap_cvGetHashedKey, METH_VARARGS, NULL},
-     { (char *)"cvGetRootFileNode", _wrap_cvGetRootFileNode, METH_VARARGS, NULL},
-     { (char *)"cvGetFileNode", _wrap_cvGetFileNode, METH_VARARGS, NULL},
-     { (char *)"cvGetFileNodeByName", _wrap_cvGetFileNodeByName, METH_VARARGS, NULL},
-     { (char *)"cvReadInt", _wrap_cvReadInt, METH_VARARGS, NULL},
-     { (char *)"cvReadIntByName", _wrap_cvReadIntByName, METH_VARARGS, NULL},
-     { (char *)"cvReadReal", _wrap_cvReadReal, METH_VARARGS, NULL},
-     { (char *)"cvReadRealByName", _wrap_cvReadRealByName, METH_VARARGS, NULL},
-     { (char *)"cvReadString", _wrap_cvReadString, METH_VARARGS, NULL},
-     { (char *)"cvReadStringByName", _wrap_cvReadStringByName, METH_VARARGS, NULL},
-     { (char *)"cvRead", _wrap_cvRead, METH_VARARGS, NULL},
-     { (char *)"cvReadByName", _wrap_cvReadByName, METH_VARARGS, NULL},
-     { (char *)"cvStartReadRawData", _wrap_cvStartReadRawData, METH_VARARGS, NULL},
-     { (char *)"cvReadRawDataSlice", _wrap_cvReadRawDataSlice, METH_VARARGS, NULL},
-     { (char *)"cvReadRawData", _wrap_cvReadRawData, METH_VARARGS, NULL},
-     { (char *)"cvWriteFileNode", _wrap_cvWriteFileNode, METH_VARARGS, NULL},
-     { (char *)"cvGetFileNodeName", _wrap_cvGetFileNodeName, METH_VARARGS, NULL},
-     { (char *)"cvRegisterType", _wrap_cvRegisterType, METH_VARARGS, NULL},
-     { (char *)"cvUnregisterType", _wrap_cvUnregisterType, METH_VARARGS, NULL},
-     { (char *)"cvFirstType", _wrap_cvFirstType, METH_VARARGS, NULL},
-     { (char *)"cvFindType", _wrap_cvFindType, METH_VARARGS, NULL},
-     { (char *)"cvTypeOf", _wrap_cvTypeOf, METH_VARARGS, NULL},
-     { (char *)"cvClone", _wrap_cvClone, METH_VARARGS, NULL},
-     { (char *)"cvSave", _wrap_cvSave, METH_VARARGS, NULL},
-     { (char *)"cvLoad", _wrap_cvLoad, METH_VARARGS, NULL},
-     { (char *)"cvGetTickCount", _wrap_cvGetTickCount, METH_VARARGS, NULL},
-     { (char *)"cvGetTickFrequency", _wrap_cvGetTickFrequency, METH_VARARGS, NULL},
-     { (char *)"cvGetNumThreads", _wrap_cvGetNumThreads, METH_VARARGS, NULL},
-     { (char *)"cvSetNumThreads", _wrap_cvSetNumThreads, METH_VARARGS, NULL},
-     { (char *)"cvGetThreadNum", _wrap_cvGetThreadNum, METH_VARARGS, NULL},
-     { (char *)"new_CvImage", _wrap_new_CvImage, METH_VARARGS, NULL},
-     { (char *)"delete_CvImage", _wrap_delete_CvImage, METH_VARARGS, NULL},
-     { (char *)"CvImage_clone", _wrap_CvImage_clone, METH_VARARGS, NULL},
-     { (char *)"CvImage_create", _wrap_CvImage_create, METH_VARARGS, NULL},
-     { (char *)"CvImage_release", _wrap_CvImage_release, METH_VARARGS, NULL},
-     { (char *)"CvImage_clear", _wrap_CvImage_clear, METH_VARARGS, NULL},
-     { (char *)"CvImage_attach", _wrap_CvImage_attach, METH_VARARGS, NULL},
-     { (char *)"CvImage_detach", _wrap_CvImage_detach, METH_VARARGS, NULL},
-     { (char *)"CvImage_load", _wrap_CvImage_load, METH_VARARGS, NULL},
-     { (char *)"CvImage_read", _wrap_CvImage_read, METH_VARARGS, NULL},
-     { (char *)"CvImage_save", _wrap_CvImage_save, METH_VARARGS, NULL},
-     { (char *)"CvImage_write", _wrap_CvImage_write, METH_VARARGS, NULL},
-     { (char *)"CvImage_show", _wrap_CvImage_show, METH_VARARGS, NULL},
-     { (char *)"CvImage_is_valid", _wrap_CvImage_is_valid, METH_VARARGS, NULL},
-     { (char *)"CvImage_width", _wrap_CvImage_width, METH_VARARGS, NULL},
-     { (char *)"CvImage_height", _wrap_CvImage_height, METH_VARARGS, NULL},
-     { (char *)"CvImage_size", _wrap_CvImage_size, METH_VARARGS, NULL},
-     { (char *)"CvImage_roi_size", _wrap_CvImage_roi_size, METH_VARARGS, NULL},
-     { (char *)"CvImage_roi", _wrap_CvImage_roi, METH_VARARGS, NULL},
-     { (char *)"CvImage_coi", _wrap_CvImage_coi, METH_VARARGS, NULL},
-     { (char *)"CvImage_set_roi", _wrap_CvImage_set_roi, METH_VARARGS, NULL},
-     { (char *)"CvImage_reset_roi", _wrap_CvImage_reset_roi, METH_VARARGS, NULL},
-     { (char *)"CvImage_set_coi", _wrap_CvImage_set_coi, METH_VARARGS, NULL},
-     { (char *)"CvImage_depth", _wrap_CvImage_depth, METH_VARARGS, NULL},
-     { (char *)"CvImage_channels", _wrap_CvImage_channels, METH_VARARGS, NULL},
-     { (char *)"CvImage_pix_size", _wrap_CvImage_pix_size, METH_VARARGS, NULL},
-     { (char *)"CvImage_data", _wrap_CvImage_data, METH_VARARGS, NULL},
-     { (char *)"CvImage_step", _wrap_CvImage_step, METH_VARARGS, NULL},
-     { (char *)"CvImage_origin", _wrap_CvImage_origin, METH_VARARGS, NULL},
-     { (char *)"CvImage_roi_row", _wrap_CvImage_roi_row, METH_VARARGS, NULL},
-     { (char *)"CvImage_asIplImage", _wrap_CvImage_asIplImage, METH_VARARGS, NULL},
-     { (char *)"CvImage_swigregister", CvImage_swigregister, METH_VARARGS, NULL},
-     { (char *)"new_CvMatrix", _wrap_new_CvMatrix, METH_VARARGS, NULL},
-     { (char *)"delete_CvMatrix", _wrap_delete_CvMatrix, METH_VARARGS, NULL},
-     { (char *)"CvMatrix_clone", _wrap_CvMatrix_clone, METH_VARARGS, NULL},
-     { (char *)"CvMatrix_set", _wrap_CvMatrix_set, METH_VARARGS, NULL},
-     { (char *)"CvMatrix_create", _wrap_CvMatrix_create, METH_VARARGS, NULL},
-     { (char *)"CvMatrix_addref", _wrap_CvMatrix_addref, METH_VARARGS, NULL},
-     { (char *)"CvMatrix_release", _wrap_CvMatrix_release, METH_VARARGS, NULL},
-     { (char *)"CvMatrix_clear", _wrap_CvMatrix_clear, METH_VARARGS, NULL},
-     { (char *)"CvMatrix_load", _wrap_CvMatrix_load, METH_VARARGS, NULL},
-     { (char *)"CvMatrix_read", _wrap_CvMatrix_read, METH_VARARGS, NULL},
-     { (char *)"CvMatrix_save", _wrap_CvMatrix_save, METH_VARARGS, NULL},
-     { (char *)"CvMatrix_write", _wrap_CvMatrix_write, METH_VARARGS, NULL},
-     { (char *)"CvMatrix_show", _wrap_CvMatrix_show, METH_VARARGS, NULL},
-     { (char *)"CvMatrix_is_valid", _wrap_CvMatrix_is_valid, METH_VARARGS, NULL},
-     { (char *)"CvMatrix_rows", _wrap_CvMatrix_rows, METH_VARARGS, NULL},
-     { (char *)"CvMatrix_cols", _wrap_CvMatrix_cols, METH_VARARGS, NULL},
-     { (char *)"CvMatrix_size", _wrap_CvMatrix_size, METH_VARARGS, NULL},
-     { (char *)"CvMatrix_type", _wrap_CvMatrix_type, METH_VARARGS, NULL},
-     { (char *)"CvMatrix_depth", _wrap_CvMatrix_depth, METH_VARARGS, NULL},
-     { (char *)"CvMatrix_channels", _wrap_CvMatrix_channels, METH_VARARGS, NULL},
-     { (char *)"CvMatrix_pix_size", _wrap_CvMatrix_pix_size, METH_VARARGS, NULL},
-     { (char *)"CvMatrix_data", _wrap_CvMatrix_data, METH_VARARGS, NULL},
-     { (char *)"CvMatrix_step", _wrap_CvMatrix_step, METH_VARARGS, NULL},
-     { (char *)"CvMatrix_set_data", _wrap_CvMatrix_set_data, METH_VARARGS, NULL},
-     { (char *)"CvMatrix_row", _wrap_CvMatrix_row, METH_VARARGS, NULL},
-     { (char *)"CvMatrix_asCvMat", _wrap_CvMatrix_asCvMat, METH_VARARGS, NULL},
-     { (char *)"CvMatrix_swigregister", CvMatrix_swigregister, METH_VARARGS, NULL},
-     { (char *)"cvSetImageIOFunctions", _wrap_cvSetImageIOFunctions, METH_VARARGS, NULL},
-     { (char *)"new_CvModule", _wrap_new_CvModule, METH_VARARGS, NULL},
-     { (char *)"delete_CvModule", _wrap_delete_CvModule, METH_VARARGS, NULL},
-     { (char *)"CvModule_info_set", _wrap_CvModule_info_set, METH_VARARGS, NULL},
-     { (char *)"CvModule_info_get", _wrap_CvModule_info_get, METH_VARARGS, NULL},
-     { (char *)"CvModule_first_get", _wrap_CvModule_first_get, METH_VARARGS, NULL},
-     { (char *)"CvModule_first_set", _wrap_CvModule_first_set, METH_VARARGS, NULL},
-     { (char *)"CvModule_last_get", _wrap_CvModule_last_get, METH_VARARGS, NULL},
-     { (char *)"CvModule_last_set", _wrap_CvModule_last_set, METH_VARARGS, NULL},
-     { (char *)"CvModule_swigregister", CvModule_swigregister, METH_VARARGS, NULL},
-     { (char *)"new_CvType", _wrap_new_CvType, METH_VARARGS, NULL},
-     { (char *)"delete_CvType", _wrap_delete_CvType, METH_VARARGS, NULL},
-     { (char *)"CvType_info_set", _wrap_CvType_info_set, METH_VARARGS, NULL},
-     { (char *)"CvType_info_get", _wrap_CvType_info_get, METH_VARARGS, NULL},
-     { (char *)"CvType_first_get", _wrap_CvType_first_get, METH_VARARGS, NULL},
-     { (char *)"CvType_first_set", _wrap_CvType_first_set, METH_VARARGS, NULL},
-     { (char *)"CvType_last_get", _wrap_CvType_last_get, METH_VARARGS, NULL},
-     { (char *)"CvType_last_set", _wrap_CvType_last_set, METH_VARARGS, NULL},
-     { (char *)"CvType_swigregister", CvType_swigregister, METH_VARARGS, NULL},
-     { (char *)"CvMoments_m00_set", _wrap_CvMoments_m00_set, METH_VARARGS, NULL},
-     { (char *)"CvMoments_m00_get", _wrap_CvMoments_m00_get, METH_VARARGS, NULL},
-     { (char *)"CvMoments_m10_set", _wrap_CvMoments_m10_set, METH_VARARGS, NULL},
-     { (char *)"CvMoments_m10_get", _wrap_CvMoments_m10_get, METH_VARARGS, NULL},
-     { (char *)"CvMoments_m01_set", _wrap_CvMoments_m01_set, METH_VARARGS, NULL},
-     { (char *)"CvMoments_m01_get", _wrap_CvMoments_m01_get, METH_VARARGS, NULL},
-     { (char *)"CvMoments_m20_set", _wrap_CvMoments_m20_set, METH_VARARGS, NULL},
-     { (char *)"CvMoments_m20_get", _wrap_CvMoments_m20_get, METH_VARARGS, NULL},
-     { (char *)"CvMoments_m11_set", _wrap_CvMoments_m11_set, METH_VARARGS, NULL},
-     { (char *)"CvMoments_m11_get", _wrap_CvMoments_m11_get, METH_VARARGS, NULL},
-     { (char *)"CvMoments_m02_set", _wrap_CvMoments_m02_set, METH_VARARGS, NULL},
-     { (char *)"CvMoments_m02_get", _wrap_CvMoments_m02_get, METH_VARARGS, NULL},
-     { (char *)"CvMoments_m30_set", _wrap_CvMoments_m30_set, METH_VARARGS, NULL},
-     { (char *)"CvMoments_m30_get", _wrap_CvMoments_m30_get, METH_VARARGS, NULL},
-     { (char *)"CvMoments_m21_set", _wrap_CvMoments_m21_set, METH_VARARGS, NULL},
-     { (char *)"CvMoments_m21_get", _wrap_CvMoments_m21_get, METH_VARARGS, NULL},
-     { (char *)"CvMoments_m12_set", _wrap_CvMoments_m12_set, METH_VARARGS, NULL},
-     { (char *)"CvMoments_m12_get", _wrap_CvMoments_m12_get, METH_VARARGS, NULL},
-     { (char *)"CvMoments_m03_set", _wrap_CvMoments_m03_set, METH_VARARGS, NULL},
-     { (char *)"CvMoments_m03_get", _wrap_CvMoments_m03_get, METH_VARARGS, NULL},
-     { (char *)"CvMoments_mu20_set", _wrap_CvMoments_mu20_set, METH_VARARGS, NULL},
-     { (char *)"CvMoments_mu20_get", _wrap_CvMoments_mu20_get, METH_VARARGS, NULL},
-     { (char *)"CvMoments_mu11_set", _wrap_CvMoments_mu11_set, METH_VARARGS, NULL},
-     { (char *)"CvMoments_mu11_get", _wrap_CvMoments_mu11_get, METH_VARARGS, NULL},
-     { (char *)"CvMoments_mu02_set", _wrap_CvMoments_mu02_set, METH_VARARGS, NULL},
-     { (char *)"CvMoments_mu02_get", _wrap_CvMoments_mu02_get, METH_VARARGS, NULL},
-     { (char *)"CvMoments_mu30_set", _wrap_CvMoments_mu30_set, METH_VARARGS, NULL},
-     { (char *)"CvMoments_mu30_get", _wrap_CvMoments_mu30_get, METH_VARARGS, NULL},
-     { (char *)"CvMoments_mu21_set", _wrap_CvMoments_mu21_set, METH_VARARGS, NULL},
-     { (char *)"CvMoments_mu21_get", _wrap_CvMoments_mu21_get, METH_VARARGS, NULL},
-     { (char *)"CvMoments_mu12_set", _wrap_CvMoments_mu12_set, METH_VARARGS, NULL},
-     { (char *)"CvMoments_mu12_get", _wrap_CvMoments_mu12_get, METH_VARARGS, NULL},
-     { (char *)"CvMoments_mu03_set", _wrap_CvMoments_mu03_set, METH_VARARGS, NULL},
-     { (char *)"CvMoments_mu03_get", _wrap_CvMoments_mu03_get, METH_VARARGS, NULL},
-     { (char *)"CvMoments_inv_sqrt_m00_set", _wrap_CvMoments_inv_sqrt_m00_set, METH_VARARGS, NULL},
-     { (char *)"CvMoments_inv_sqrt_m00_get", _wrap_CvMoments_inv_sqrt_m00_get, METH_VARARGS, NULL},
-     { (char *)"new_CvMoments", _wrap_new_CvMoments, METH_VARARGS, NULL},
-     { (char *)"delete_CvMoments", _wrap_delete_CvMoments, METH_VARARGS, NULL},
-     { (char *)"CvMoments_swigregister", CvMoments_swigregister, METH_VARARGS, NULL},
-     { (char *)"CvHuMoments_hu1_set", _wrap_CvHuMoments_hu1_set, METH_VARARGS, NULL},
-     { (char *)"CvHuMoments_hu1_get", _wrap_CvHuMoments_hu1_get, METH_VARARGS, NULL},
-     { (char *)"CvHuMoments_hu2_set", _wrap_CvHuMoments_hu2_set, METH_VARARGS, NULL},
-     { (char *)"CvHuMoments_hu2_get", _wrap_CvHuMoments_hu2_get, METH_VARARGS, NULL},
-     { (char *)"CvHuMoments_hu3_set", _wrap_CvHuMoments_hu3_set, METH_VARARGS, NULL},
-     { (char *)"CvHuMoments_hu3_get", _wrap_CvHuMoments_hu3_get, METH_VARARGS, NULL},
-     { (char *)"CvHuMoments_hu4_set", _wrap_CvHuMoments_hu4_set, METH_VARARGS, NULL},
-     { (char *)"CvHuMoments_hu4_get", _wrap_CvHuMoments_hu4_get, METH_VARARGS, NULL},
-     { (char *)"CvHuMoments_hu5_set", _wrap_CvHuMoments_hu5_set, METH_VARARGS, NULL},
-     { (char *)"CvHuMoments_hu5_get", _wrap_CvHuMoments_hu5_get, METH_VARARGS, NULL},
-     { (char *)"CvHuMoments_hu6_set", _wrap_CvHuMoments_hu6_set, METH_VARARGS, NULL},
-     { (char *)"CvHuMoments_hu6_get", _wrap_CvHuMoments_hu6_get, METH_VARARGS, NULL},
-     { (char *)"CvHuMoments_hu7_set", _wrap_CvHuMoments_hu7_set, METH_VARARGS, NULL},
-     { (char *)"CvHuMoments_hu7_get", _wrap_CvHuMoments_hu7_get, METH_VARARGS, NULL},
-     { (char *)"new_CvHuMoments", _wrap_new_CvHuMoments, METH_VARARGS, NULL},
-     { (char *)"delete_CvHuMoments", _wrap_delete_CvHuMoments, METH_VARARGS, NULL},
-     { (char *)"CvHuMoments_swigregister", CvHuMoments_swigregister, METH_VARARGS, NULL},
-     { (char *)"CvConnectedComp_area_set", _wrap_CvConnectedComp_area_set, METH_VARARGS, NULL},
-     { (char *)"CvConnectedComp_area_get", _wrap_CvConnectedComp_area_get, METH_VARARGS, NULL},
-     { (char *)"CvConnectedComp_value_set", _wrap_CvConnectedComp_value_set, METH_VARARGS, NULL},
-     { (char *)"CvConnectedComp_value_get", _wrap_CvConnectedComp_value_get, METH_VARARGS, NULL},
-     { (char *)"CvConnectedComp_rect_set", _wrap_CvConnectedComp_rect_set, METH_VARARGS, NULL},
-     { (char *)"CvConnectedComp_rect_get", _wrap_CvConnectedComp_rect_get, METH_VARARGS, NULL},
-     { (char *)"CvConnectedComp_contour_set", _wrap_CvConnectedComp_contour_set, METH_VARARGS, NULL},
-     { (char *)"CvConnectedComp_contour_get", _wrap_CvConnectedComp_contour_get, METH_VARARGS, NULL},
-     { (char *)"new_CvConnectedComp", _wrap_new_CvConnectedComp, METH_VARARGS, NULL},
-     { (char *)"delete_CvConnectedComp", _wrap_delete_CvConnectedComp, METH_VARARGS, NULL},
-     { (char *)"CvConnectedComp_swigregister", CvConnectedComp_swigregister, METH_VARARGS, NULL},
-     { (char *)"CvChainPtReader_header_size_set", _wrap_CvChainPtReader_header_size_set, METH_VARARGS, NULL},
-     { (char *)"CvChainPtReader_header_size_get", _wrap_CvChainPtReader_header_size_get, METH_VARARGS, NULL},
-     { (char *)"CvChainPtReader_seq_set", _wrap_CvChainPtReader_seq_set, METH_VARARGS, NULL},
-     { (char *)"CvChainPtReader_seq_get", _wrap_CvChainPtReader_seq_get, METH_VARARGS, NULL},
-     { (char *)"CvChainPtReader_block_set", _wrap_CvChainPtReader_block_set, METH_VARARGS, NULL},
-     { (char *)"CvChainPtReader_block_get", _wrap_CvChainPtReader_block_get, METH_VARARGS, NULL},
-     { (char *)"CvChainPtReader_ptr_set", _wrap_CvChainPtReader_ptr_set, METH_VARARGS, NULL},
-     { (char *)"CvChainPtReader_ptr_get", _wrap_CvChainPtReader_ptr_get, METH_VARARGS, NULL},
-     { (char *)"CvChainPtReader_block_min_set", _wrap_CvChainPtReader_block_min_set, METH_VARARGS, NULL},
-     { (char *)"CvChainPtReader_block_min_get", _wrap_CvChainPtReader_block_min_get, METH_VARARGS, NULL},
-     { (char *)"CvChainPtReader_block_max_set", _wrap_CvChainPtReader_block_max_set, METH_VARARGS, NULL},
-     { (char *)"CvChainPtReader_block_max_get", _wrap_CvChainPtReader_block_max_get, METH_VARARGS, NULL},
-     { (char *)"CvChainPtReader_delta_index_set", _wrap_CvChainPtReader_delta_index_set, METH_VARARGS, NULL},
-     { (char *)"CvChainPtReader_delta_index_get", _wrap_CvChainPtReader_delta_index_get, METH_VARARGS, NULL},
-     { (char *)"CvChainPtReader_prev_elem_set", _wrap_CvChainPtReader_prev_elem_set, METH_VARARGS, NULL},
-     { (char *)"CvChainPtReader_prev_elem_get", _wrap_CvChainPtReader_prev_elem_get, METH_VARARGS, NULL},
-     { (char *)"CvChainPtReader_code_set", _wrap_CvChainPtReader_code_set, METH_VARARGS, NULL},
-     { (char *)"CvChainPtReader_code_get", _wrap_CvChainPtReader_code_get, METH_VARARGS, NULL},
-     { (char *)"CvChainPtReader_pt_set", _wrap_CvChainPtReader_pt_set, METH_VARARGS, NULL},
-     { (char *)"CvChainPtReader_pt_get", _wrap_CvChainPtReader_pt_get, METH_VARARGS, NULL},
-     { (char *)"CvChainPtReader_deltas_set", _wrap_CvChainPtReader_deltas_set, METH_VARARGS, NULL},
-     { (char *)"CvChainPtReader_deltas_get", _wrap_CvChainPtReader_deltas_get, METH_VARARGS, NULL},
-     { (char *)"new_CvChainPtReader", _wrap_new_CvChainPtReader, METH_VARARGS, NULL},
-     { (char *)"delete_CvChainPtReader", _wrap_delete_CvChainPtReader, METH_VARARGS, NULL},
-     { (char *)"CvChainPtReader_swigregister", CvChainPtReader_swigregister, METH_VARARGS, NULL},
-     { (char *)"CvContourTree_flags_set", _wrap_CvContourTree_flags_set, METH_VARARGS, NULL},
-     { (char *)"CvContourTree_flags_get", _wrap_CvContourTree_flags_get, METH_VARARGS, NULL},
-     { (char *)"CvContourTree_header_size_set", _wrap_CvContourTree_header_size_set, METH_VARARGS, NULL},
-     { (char *)"CvContourTree_header_size_get", _wrap_CvContourTree_header_size_get, METH_VARARGS, NULL},
-     { (char *)"CvContourTree_h_prev_set", _wrap_CvContourTree_h_prev_set, METH_VARARGS, NULL},
-     { (char *)"CvContourTree_h_prev_get", _wrap_CvContourTree_h_prev_get, METH_VARARGS, NULL},
-     { (char *)"CvContourTree_h_next_set", _wrap_CvContourTree_h_next_set, METH_VARARGS, NULL},
-     { (char *)"CvContourTree_h_next_get", _wrap_CvContourTree_h_next_get, METH_VARARGS, NULL},
-     { (char *)"CvContourTree_v_prev_set", _wrap_CvContourTree_v_prev_set, METH_VARARGS, NULL},
-     { (char *)"CvContourTree_v_prev_get", _wrap_CvContourTree_v_prev_get, METH_VARARGS, NULL},
-     { (char *)"CvContourTree_v_next_set", _wrap_CvContourTree_v_next_set, METH_VARARGS, NULL},
-     { (char *)"CvContourTree_v_next_get", _wrap_CvContourTree_v_next_get, METH_VARARGS, NULL},
-     { (char *)"CvContourTree_total_set", _wrap_CvContourTree_total_set, METH_VARARGS, NULL},
-     { (char *)"CvContourTree_total_get", _wrap_CvContourTree_total_get, METH_VARARGS, NULL},
-     { (char *)"CvContourTree_elem_size_set", _wrap_CvContourTree_elem_size_set, METH_VARARGS, NULL},
-     { (char *)"CvContourTree_elem_size_get", _wrap_CvContourTree_elem_size_get, METH_VARARGS, NULL},
-     { (char *)"CvContourTree_block_max_set", _wrap_CvContourTree_block_max_set, METH_VARARGS, NULL},
-     { (char *)"CvContourTree_block_max_get", _wrap_CvContourTree_block_max_get, METH_VARARGS, NULL},
-     { (char *)"CvContourTree_ptr_set", _wrap_CvContourTree_ptr_set, METH_VARARGS, NULL},
-     { (char *)"CvContourTree_ptr_get", _wrap_CvContourTree_ptr_get, METH_VARARGS, NULL},
-     { (char *)"CvContourTree_delta_elems_set", _wrap_CvContourTree_delta_elems_set, METH_VARARGS, NULL},
-     { (char *)"CvContourTree_delta_elems_get", _wrap_CvContourTree_delta_elems_get, METH_VARARGS, NULL},
-     { (char *)"CvContourTree_storage_set", _wrap_CvContourTree_storage_set, METH_VARARGS, NULL},
-     { (char *)"CvContourTree_storage_get", _wrap_CvContourTree_storage_get, METH_VARARGS, NULL},
-     { (char *)"CvContourTree_free_blocks_set", _wrap_CvContourTree_free_blocks_set, METH_VARARGS, NULL},
-     { (char *)"CvContourTree_free_blocks_get", _wrap_CvContourTree_free_blocks_get, METH_VARARGS, NULL},
-     { (char *)"CvContourTree_first_set", _wrap_CvContourTree_first_set, METH_VARARGS, NULL},
-     { (char *)"CvContourTree_first_get", _wrap_CvContourTree_first_get, METH_VARARGS, NULL},
-     { (char *)"CvContourTree_p1_set", _wrap_CvContourTree_p1_set, METH_VARARGS, NULL},
-     { (char *)"CvContourTree_p1_get", _wrap_CvContourTree_p1_get, METH_VARARGS, NULL},
-     { (char *)"CvContourTree_p2_set", _wrap_CvContourTree_p2_set, METH_VARARGS, NULL},
-     { (char *)"CvContourTree_p2_get", _wrap_CvContourTree_p2_get, METH_VARARGS, NULL},
-     { (char *)"new_CvContourTree", _wrap_new_CvContourTree, METH_VARARGS, NULL},
-     { (char *)"delete_CvContourTree", _wrap_delete_CvContourTree, METH_VARARGS, NULL},
-     { (char *)"CvContourTree_swigregister", CvContourTree_swigregister, METH_VARARGS, NULL},
-     { (char *)"CvConvexityDefect_start_set", _wrap_CvConvexityDefect_start_set, METH_VARARGS, NULL},
-     { (char *)"CvConvexityDefect_start_get", _wrap_CvConvexityDefect_start_get, METH_VARARGS, NULL},
-     { (char *)"CvConvexityDefect_end_set", _wrap_CvConvexityDefect_end_set, METH_VARARGS, NULL},
-     { (char *)"CvConvexityDefect_end_get", _wrap_CvConvexityDefect_end_get, METH_VARARGS, NULL},
-     { (char *)"CvConvexityDefect_depth_point_set", _wrap_CvConvexityDefect_depth_point_set, METH_VARARGS, NULL},
-     { (char *)"CvConvexityDefect_depth_point_get", _wrap_CvConvexityDefect_depth_point_get, METH_VARARGS, NULL},
-     { (char *)"CvConvexityDefect_depth_set", _wrap_CvConvexityDefect_depth_set, METH_VARARGS, NULL},
-     { (char *)"CvConvexityDefect_depth_get", _wrap_CvConvexityDefect_depth_get, METH_VARARGS, NULL},
-     { (char *)"new_CvConvexityDefect", _wrap_new_CvConvexityDefect, METH_VARARGS, NULL},
-     { (char *)"delete_CvConvexityDefect", _wrap_delete_CvConvexityDefect, METH_VARARGS, NULL},
-     { (char *)"CvConvexityDefect_swigregister", CvConvexityDefect_swigregister, METH_VARARGS, NULL},
-     { (char *)"CvQuadEdge2D_flags_set", _wrap_CvQuadEdge2D_flags_set, METH_VARARGS, NULL},
-     { (char *)"CvQuadEdge2D_flags_get", _wrap_CvQuadEdge2D_flags_get, METH_VARARGS, NULL},
-     { (char *)"CvQuadEdge2D_pt_set", _wrap_CvQuadEdge2D_pt_set, METH_VARARGS, NULL},
-     { (char *)"CvQuadEdge2D_pt_get", _wrap_CvQuadEdge2D_pt_get, METH_VARARGS, NULL},
-     { (char *)"CvQuadEdge2D_next_set", _wrap_CvQuadEdge2D_next_set, METH_VARARGS, NULL},
-     { (char *)"CvQuadEdge2D_next_get", _wrap_CvQuadEdge2D_next_get, METH_VARARGS, NULL},
-     { (char *)"new_CvQuadEdge2D", _wrap_new_CvQuadEdge2D, METH_VARARGS, NULL},
-     { (char *)"delete_CvQuadEdge2D", _wrap_delete_CvQuadEdge2D, METH_VARARGS, NULL},
-     { (char *)"CvQuadEdge2D_swigregister", CvQuadEdge2D_swigregister, METH_VARARGS, NULL},
-     { (char *)"CvSubdiv2DPoint_flags_set", _wrap_CvSubdiv2DPoint_flags_set, METH_VARARGS, NULL},
-     { (char *)"CvSubdiv2DPoint_flags_get", _wrap_CvSubdiv2DPoint_flags_get, METH_VARARGS, NULL},
-     { (char *)"CvSubdiv2DPoint_first_set", _wrap_CvSubdiv2DPoint_first_set, METH_VARARGS, NULL},
-     { (char *)"CvSubdiv2DPoint_first_get", _wrap_CvSubdiv2DPoint_first_get, METH_VARARGS, NULL},
-     { (char *)"CvSubdiv2DPoint_pt_set", _wrap_CvSubdiv2DPoint_pt_set, METH_VARARGS, NULL},
-     { (char *)"CvSubdiv2DPoint_pt_get", _wrap_CvSubdiv2DPoint_pt_get, METH_VARARGS, NULL},
-     { (char *)"new_CvSubdiv2DPoint", _wrap_new_CvSubdiv2DPoint, METH_VARARGS, NULL},
-     { (char *)"delete_CvSubdiv2DPoint", _wrap_delete_CvSubdiv2DPoint, METH_VARARGS, NULL},
-     { (char *)"CvSubdiv2DPoint_swigregister", CvSubdiv2DPoint_swigregister, METH_VARARGS, NULL},
-     { (char *)"CvSubdiv2D_flags_set", _wrap_CvSubdiv2D_flags_set, METH_VARARGS, NULL},
-     { (char *)"CvSubdiv2D_flags_get", _wrap_CvSubdiv2D_flags_get, METH_VARARGS, NULL},
-     { (char *)"CvSubdiv2D_header_size_set", _wrap_CvSubdiv2D_header_size_set, METH_VARARGS, NULL},
-     { (char *)"CvSubdiv2D_header_size_get", _wrap_CvSubdiv2D_header_size_get, METH_VARARGS, NULL},
-     { (char *)"CvSubdiv2D_h_prev_set", _wrap_CvSubdiv2D_h_prev_set, METH_VARARGS, NULL},
-     { (char *)"CvSubdiv2D_h_prev_get", _wrap_CvSubdiv2D_h_prev_get, METH_VARARGS, NULL},
-     { (char *)"CvSubdiv2D_h_next_set", _wrap_CvSubdiv2D_h_next_set, METH_VARARGS, NULL},
-     { (char *)"CvSubdiv2D_h_next_get", _wrap_CvSubdiv2D_h_next_get, METH_VARARGS, NULL},
-     { (char *)"CvSubdiv2D_v_prev_set", _wrap_CvSubdiv2D_v_prev_set, METH_VARARGS, NULL},
-     { (char *)"CvSubdiv2D_v_prev_get", _wrap_CvSubdiv2D_v_prev_get, METH_VARARGS, NULL},
-     { (char *)"CvSubdiv2D_v_next_set", _wrap_CvSubdiv2D_v_next_set, METH_VARARGS, NULL},
-     { (char *)"CvSubdiv2D_v_next_get", _wrap_CvSubdiv2D_v_next_get, METH_VARARGS, NULL},
-     { (char *)"CvSubdiv2D_total_set", _wrap_CvSubdiv2D_total_set, METH_VARARGS, NULL},
-     { (char *)"CvSubdiv2D_total_get", _wrap_CvSubdiv2D_total_get, METH_VARARGS, NULL},
-     { (char *)"CvSubdiv2D_elem_size_set", _wrap_CvSubdiv2D_elem_size_set, METH_VARARGS, NULL},
-     { (char *)"CvSubdiv2D_elem_size_get", _wrap_CvSubdiv2D_elem_size_get, METH_VARARGS, NULL},
-     { (char *)"CvSubdiv2D_block_max_set", _wrap_CvSubdiv2D_block_max_set, METH_VARARGS, NULL},
-     { (char *)"CvSubdiv2D_block_max_get", _wrap_CvSubdiv2D_block_max_get, METH_VARARGS, NULL},
-     { (char *)"CvSubdiv2D_ptr_set", _wrap_CvSubdiv2D_ptr_set, METH_VARARGS, NULL},
-     { (char *)"CvSubdiv2D_ptr_get", _wrap_CvSubdiv2D_ptr_get, METH_VARARGS, NULL},
-     { (char *)"CvSubdiv2D_delta_elems_set", _wrap_CvSubdiv2D_delta_elems_set, METH_VARARGS, NULL},
-     { (char *)"CvSubdiv2D_delta_elems_get", _wrap_CvSubdiv2D_delta_elems_get, METH_VARARGS, NULL},
-     { (char *)"CvSubdiv2D_storage_set", _wrap_CvSubdiv2D_storage_set, METH_VARARGS, NULL},
-     { (char *)"CvSubdiv2D_storage_get", _wrap_CvSubdiv2D_storage_get, METH_VARARGS, NULL},
-     { (char *)"CvSubdiv2D_free_blocks_set", _wrap_CvSubdiv2D_free_blocks_set, METH_VARARGS, NULL},
-     { (char *)"CvSubdiv2D_free_blocks_get", _wrap_CvSubdiv2D_free_blocks_get, METH_VARARGS, NULL},
-     { (char *)"CvSubdiv2D_first_set", _wrap_CvSubdiv2D_first_set, METH_VARARGS, NULL},
-     { (char *)"CvSubdiv2D_first_get", _wrap_CvSubdiv2D_first_get, METH_VARARGS, NULL},
-     { (char *)"CvSubdiv2D_free_elems_set", _wrap_CvSubdiv2D_free_elems_set, METH_VARARGS, NULL},
-     { (char *)"CvSubdiv2D_free_elems_get", _wrap_CvSubdiv2D_free_elems_get, METH_VARARGS, NULL},
-     { (char *)"CvSubdiv2D_active_count_set", _wrap_CvSubdiv2D_active_count_set, METH_VARARGS, NULL},
-     { (char *)"CvSubdiv2D_active_count_get", _wrap_CvSubdiv2D_active_count_get, METH_VARARGS, NULL},
-     { (char *)"CvSubdiv2D_quad_edges_set", _wrap_CvSubdiv2D_quad_edges_set, METH_VARARGS, NULL},
-     { (char *)"CvSubdiv2D_quad_edges_get", _wrap_CvSubdiv2D_quad_edges_get, METH_VARARGS, NULL},
-     { (char *)"CvSubdiv2D_is_geometry_valid_set", _wrap_CvSubdiv2D_is_geometry_valid_set, METH_VARARGS, NULL},
-     { (char *)"CvSubdiv2D_is_geometry_valid_get", _wrap_CvSubdiv2D_is_geometry_valid_get, METH_VARARGS, NULL},
-     { (char *)"CvSubdiv2D_recent_edge_set", _wrap_CvSubdiv2D_recent_edge_set, METH_VARARGS, NULL},
-     { (char *)"CvSubdiv2D_recent_edge_get", _wrap_CvSubdiv2D_recent_edge_get, METH_VARARGS, NULL},
-     { (char *)"CvSubdiv2D_topleft_set", _wrap_CvSubdiv2D_topleft_set, METH_VARARGS, NULL},
-     { (char *)"CvSubdiv2D_topleft_get", _wrap_CvSubdiv2D_topleft_get, METH_VARARGS, NULL},
-     { (char *)"CvSubdiv2D_bottomright_set", _wrap_CvSubdiv2D_bottomright_set, METH_VARARGS, NULL},
-     { (char *)"CvSubdiv2D_bottomright_get", _wrap_CvSubdiv2D_bottomright_get, METH_VARARGS, NULL},
-     { (char *)"CvSubdiv2D_edges_set", _wrap_CvSubdiv2D_edges_set, METH_VARARGS, NULL},
-     { (char *)"CvSubdiv2D_edges_get", _wrap_CvSubdiv2D_edges_get, METH_VARARGS, NULL},
-     { (char *)"CvSubdiv2D_typed_edges_get", _wrap_CvSubdiv2D_typed_edges_get, METH_VARARGS, NULL},
-     { (char *)"CvSubdiv2D_typed_edges_set", _wrap_CvSubdiv2D_typed_edges_set, METH_VARARGS, NULL},
-     { (char *)"new_CvSubdiv2D", _wrap_new_CvSubdiv2D, METH_VARARGS, NULL},
-     { (char *)"delete_CvSubdiv2D", _wrap_delete_CvSubdiv2D, METH_VARARGS, NULL},
-     { (char *)"CvSubdiv2D_swigregister", CvSubdiv2D_swigregister, METH_VARARGS, NULL},
-     { (char *)"CvMatrix3_m_set", _wrap_CvMatrix3_m_set, METH_VARARGS, NULL},
-     { (char *)"CvMatrix3_m_get", _wrap_CvMatrix3_m_get, METH_VARARGS, NULL},
-     { (char *)"new_CvMatrix3", _wrap_new_CvMatrix3, METH_VARARGS, NULL},
-     { (char *)"delete_CvMatrix3", _wrap_delete_CvMatrix3, METH_VARARGS, NULL},
-     { (char *)"CvMatrix3_swigregister", CvMatrix3_swigregister, METH_VARARGS, NULL},
-     { (char *)"CvConDensation_MP_set", _wrap_CvConDensation_MP_set, METH_VARARGS, NULL},
-     { (char *)"CvConDensation_MP_get", _wrap_CvConDensation_MP_get, METH_VARARGS, NULL},
-     { (char *)"CvConDensation_DP_set", _wrap_CvConDensation_DP_set, METH_VARARGS, NULL},
-     { (char *)"CvConDensation_DP_get", _wrap_CvConDensation_DP_get, METH_VARARGS, NULL},
-     { (char *)"CvConDensation_DynamMatr_set", _wrap_CvConDensation_DynamMatr_set, METH_VARARGS, NULL},
-     { (char *)"CvConDensation_DynamMatr_get", _wrap_CvConDensation_DynamMatr_get, METH_VARARGS, NULL},
-     { (char *)"CvConDensation_State_set", _wrap_CvConDensation_State_set, METH_VARARGS, NULL},
-     { (char *)"CvConDensation_State_get", _wrap_CvConDensation_State_get, METH_VARARGS, NULL},
-     { (char *)"CvConDensation_SamplesNum_set", _wrap_CvConDensation_SamplesNum_set, METH_VARARGS, NULL},
-     { (char *)"CvConDensation_SamplesNum_get", _wrap_CvConDensation_SamplesNum_get, METH_VARARGS, NULL},
-     { (char *)"CvConDensation_flSamples_set", _wrap_CvConDensation_flSamples_set, METH_VARARGS, NULL},
-     { (char *)"CvConDensation_flSamples_get", _wrap_CvConDensation_flSamples_get, METH_VARARGS, NULL},
-     { (char *)"CvConDensation_flNewSamples_set", _wrap_CvConDensation_flNewSamples_set, METH_VARARGS, NULL},
-     { (char *)"CvConDensation_flNewSamples_get", _wrap_CvConDensation_flNewSamples_get, METH_VARARGS, NULL},
-     { (char *)"CvConDensation_flConfidence_set", _wrap_CvConDensation_flConfidence_set, METH_VARARGS, NULL},
-     { (char *)"CvConDensation_flConfidence_get", _wrap_CvConDensation_flConfidence_get, METH_VARARGS, NULL},
-     { (char *)"CvConDensation_flCumulative_set", _wrap_CvConDensation_flCumulative_set, METH_VARARGS, NULL},
-     { (char *)"CvConDensation_flCumulative_get", _wrap_CvConDensation_flCumulative_get, METH_VARARGS, NULL},
-     { (char *)"CvConDensation_Temp_set", _wrap_CvConDensation_Temp_set, METH_VARARGS, NULL},
-     { (char *)"CvConDensation_Temp_get", _wrap_CvConDensation_Temp_get, METH_VARARGS, NULL},
-     { (char *)"CvConDensation_RandomSample_set", _wrap_CvConDensation_RandomSample_set, METH_VARARGS, NULL},
-     { (char *)"CvConDensation_RandomSample_get", _wrap_CvConDensation_RandomSample_get, METH_VARARGS, NULL},
-     { (char *)"CvConDensation_RandS_set", _wrap_CvConDensation_RandS_set, METH_VARARGS, NULL},
-     { (char *)"CvConDensation_RandS_get", _wrap_CvConDensation_RandS_get, METH_VARARGS, NULL},
-     { (char *)"delete_CvConDensation", _wrap_delete_CvConDensation, METH_VARARGS, NULL},
-     { (char *)"CvConDensation_swigregister", CvConDensation_swigregister, METH_VARARGS, NULL},
-     { (char *)"CvKalman_MP_set", _wrap_CvKalman_MP_set, METH_VARARGS, NULL},
-     { (char *)"CvKalman_MP_get", _wrap_CvKalman_MP_get, METH_VARARGS, NULL},
-     { (char *)"CvKalman_DP_set", _wrap_CvKalman_DP_set, METH_VARARGS, NULL},
-     { (char *)"CvKalman_DP_get", _wrap_CvKalman_DP_get, METH_VARARGS, NULL},
-     { (char *)"CvKalman_CP_set", _wrap_CvKalman_CP_set, METH_VARARGS, NULL},
-     { (char *)"CvKalman_CP_get", _wrap_CvKalman_CP_get, METH_VARARGS, NULL},
-     { (char *)"CvKalman_PosterState_set", _wrap_CvKalman_PosterState_set, METH_VARARGS, NULL},
-     { (char *)"CvKalman_PosterState_get", _wrap_CvKalman_PosterState_get, METH_VARARGS, NULL},
-     { (char *)"CvKalman_PriorState_set", _wrap_CvKalman_PriorState_set, METH_VARARGS, NULL},
-     { (char *)"CvKalman_PriorState_get", _wrap_CvKalman_PriorState_get, METH_VARARGS, NULL},
-     { (char *)"CvKalman_DynamMatr_set", _wrap_CvKalman_DynamMatr_set, METH_VARARGS, NULL},
-     { (char *)"CvKalman_DynamMatr_get", _wrap_CvKalman_DynamMatr_get, METH_VARARGS, NULL},
-     { (char *)"CvKalman_MeasurementMatr_set", _wrap_CvKalman_MeasurementMatr_set, METH_VARARGS, NULL},
-     { (char *)"CvKalman_MeasurementMatr_get", _wrap_CvKalman_MeasurementMatr_get, METH_VARARGS, NULL},
-     { (char *)"CvKalman_MNCovariance_set", _wrap_CvKalman_MNCovariance_set, METH_VARARGS, NULL},
-     { (char *)"CvKalman_MNCovariance_get", _wrap_CvKalman_MNCovariance_get, METH_VARARGS, NULL},
-     { (char *)"CvKalman_PNCovariance_set", _wrap_CvKalman_PNCovariance_set, METH_VARARGS, NULL},
-     { (char *)"CvKalman_PNCovariance_get", _wrap_CvKalman_PNCovariance_get, METH_VARARGS, NULL},
-     { (char *)"CvKalman_KalmGainMatr_set", _wrap_CvKalman_KalmGainMatr_set, METH_VARARGS, NULL},
-     { (char *)"CvKalman_KalmGainMatr_get", _wrap_CvKalman_KalmGainMatr_get, METH_VARARGS, NULL},
-     { (char *)"CvKalman_PriorErrorCovariance_set", _wrap_CvKalman_PriorErrorCovariance_set, METH_VARARGS, NULL},
-     { (char *)"CvKalman_PriorErrorCovariance_get", _wrap_CvKalman_PriorErrorCovariance_get, METH_VARARGS, NULL},
-     { (char *)"CvKalman_PosterErrorCovariance_set", _wrap_CvKalman_PosterErrorCovariance_set, METH_VARARGS, NULL},
-     { (char *)"CvKalman_PosterErrorCovariance_get", _wrap_CvKalman_PosterErrorCovariance_get, METH_VARARGS, NULL},
-     { (char *)"CvKalman_Temp1_set", _wrap_CvKalman_Temp1_set, METH_VARARGS, NULL},
-     { (char *)"CvKalman_Temp1_get", _wrap_CvKalman_Temp1_get, METH_VARARGS, NULL},
-     { (char *)"CvKalman_Temp2_set", _wrap_CvKalman_Temp2_set, METH_VARARGS, NULL},
-     { (char *)"CvKalman_Temp2_get", _wrap_CvKalman_Temp2_get, METH_VARARGS, NULL},
-     { (char *)"CvKalman_state_pre_set", _wrap_CvKalman_state_pre_set, METH_VARARGS, NULL},
-     { (char *)"CvKalman_state_pre_get", _wrap_CvKalman_state_pre_get, METH_VARARGS, NULL},
-     { (char *)"CvKalman_state_post_set", _wrap_CvKalman_state_post_set, METH_VARARGS, NULL},
-     { (char *)"CvKalman_state_post_get", _wrap_CvKalman_state_post_get, METH_VARARGS, NULL},
-     { (char *)"CvKalman_transition_matrix_set", _wrap_CvKalman_transition_matrix_set, METH_VARARGS, NULL},
-     { (char *)"CvKalman_transition_matrix_get", _wrap_CvKalman_transition_matrix_get, METH_VARARGS, NULL},
-     { (char *)"CvKalman_control_matrix_set", _wrap_CvKalman_control_matrix_set, METH_VARARGS, NULL},
-     { (char *)"CvKalman_control_matrix_get", _wrap_CvKalman_control_matrix_get, METH_VARARGS, NULL},
-     { (char *)"CvKalman_measurement_matrix_set", _wrap_CvKalman_measurement_matrix_set, METH_VARARGS, NULL},
-     { (char *)"CvKalman_measurement_matrix_get", _wrap_CvKalman_measurement_matrix_get, METH_VARARGS, NULL},
-     { (char *)"CvKalman_process_noise_cov_set", _wrap_CvKalman_process_noise_cov_set, METH_VARARGS, NULL},
-     { (char *)"CvKalman_process_noise_cov_get", _wrap_CvKalman_process_noise_cov_get, METH_VARARGS, NULL},
-     { (char *)"CvKalman_measurement_noise_cov_set", _wrap_CvKalman_measurement_noise_cov_set, METH_VARARGS, NULL},
-     { (char *)"CvKalman_measurement_noise_cov_get", _wrap_CvKalman_measurement_noise_cov_get, METH_VARARGS, NULL},
-     { (char *)"CvKalman_error_cov_pre_set", _wrap_CvKalman_error_cov_pre_set, METH_VARARGS, NULL},
-     { (char *)"CvKalman_error_cov_pre_get", _wrap_CvKalman_error_cov_pre_get, METH_VARARGS, NULL},
-     { (char *)"CvKalman_gain_set", _wrap_CvKalman_gain_set, METH_VARARGS, NULL},
-     { (char *)"CvKalman_gain_get", _wrap_CvKalman_gain_get, METH_VARARGS, NULL},
-     { (char *)"CvKalman_error_cov_post_set", _wrap_CvKalman_error_cov_post_set, METH_VARARGS, NULL},
-     { (char *)"CvKalman_error_cov_post_get", _wrap_CvKalman_error_cov_post_get, METH_VARARGS, NULL},
-     { (char *)"CvKalman_temp1_set", _wrap_CvKalman_temp1_set, METH_VARARGS, NULL},
-     { (char *)"CvKalman_temp1_get", _wrap_CvKalman_temp1_get, METH_VARARGS, NULL},
-     { (char *)"CvKalman_temp2_set", _wrap_CvKalman_temp2_set, METH_VARARGS, NULL},
-     { (char *)"CvKalman_temp2_get", _wrap_CvKalman_temp2_get, METH_VARARGS, NULL},
-     { (char *)"CvKalman_temp3_set", _wrap_CvKalman_temp3_set, METH_VARARGS, NULL},
-     { (char *)"CvKalman_temp3_get", _wrap_CvKalman_temp3_get, METH_VARARGS, NULL},
-     { (char *)"CvKalman_temp4_set", _wrap_CvKalman_temp4_set, METH_VARARGS, NULL},
-     { (char *)"CvKalman_temp4_get", _wrap_CvKalman_temp4_get, METH_VARARGS, NULL},
-     { (char *)"CvKalman_temp5_set", _wrap_CvKalman_temp5_set, METH_VARARGS, NULL},
-     { (char *)"CvKalman_temp5_get", _wrap_CvKalman_temp5_get, METH_VARARGS, NULL},
-     { (char *)"delete_CvKalman", _wrap_delete_CvKalman, METH_VARARGS, NULL},
-     { (char *)"CvKalman_swigregister", CvKalman_swigregister, METH_VARARGS, NULL},
-     { (char *)"CvHaarFeature_tilted_set", _wrap_CvHaarFeature_tilted_set, METH_VARARGS, NULL},
-     { (char *)"CvHaarFeature_tilted_get", _wrap_CvHaarFeature_tilted_get, METH_VARARGS, NULL},
-     { (char *)"CvHaarFeature_rect_get", _wrap_CvHaarFeature_rect_get, METH_VARARGS, NULL},
-     { (char *)"new_CvHaarFeature", _wrap_new_CvHaarFeature, METH_VARARGS, NULL},
-     { (char *)"delete_CvHaarFeature", _wrap_delete_CvHaarFeature, METH_VARARGS, NULL},
-     { (char *)"CvHaarFeature_swigregister", CvHaarFeature_swigregister, METH_VARARGS, NULL},
-     { (char *)"CvHaarFeature_rect_r_set", _wrap_CvHaarFeature_rect_r_set, METH_VARARGS, NULL},
-     { (char *)"CvHaarFeature_rect_r_get", _wrap_CvHaarFeature_rect_r_get, METH_VARARGS, NULL},
-     { (char *)"CvHaarFeature_rect_weight_set", _wrap_CvHaarFeature_rect_weight_set, METH_VARARGS, NULL},
-     { (char *)"CvHaarFeature_rect_weight_get", _wrap_CvHaarFeature_rect_weight_get, METH_VARARGS, NULL},
-     { (char *)"new_CvHaarFeature_rect", _wrap_new_CvHaarFeature_rect, METH_VARARGS, NULL},
-     { (char *)"delete_CvHaarFeature_rect", _wrap_delete_CvHaarFeature_rect, METH_VARARGS, NULL},
-     { (char *)"CvHaarFeature_rect_swigregister", CvHaarFeature_rect_swigregister, METH_VARARGS, NULL},
-     { (char *)"CvHaarClassifier_count_set", _wrap_CvHaarClassifier_count_set, METH_VARARGS, NULL},
-     { (char *)"CvHaarClassifier_count_get", _wrap_CvHaarClassifier_count_get, METH_VARARGS, NULL},
-     { (char *)"CvHaarClassifier_haar_feature_set", _wrap_CvHaarClassifier_haar_feature_set, METH_VARARGS, NULL},
-     { (char *)"CvHaarClassifier_haar_feature_get", _wrap_CvHaarClassifier_haar_feature_get, METH_VARARGS, NULL},
-     { (char *)"CvHaarClassifier_threshold_set", _wrap_CvHaarClassifier_threshold_set, METH_VARARGS, NULL},
-     { (char *)"CvHaarClassifier_threshold_get", _wrap_CvHaarClassifier_threshold_get, METH_VARARGS, NULL},
-     { (char *)"CvHaarClassifier_left_set", _wrap_CvHaarClassifier_left_set, METH_VARARGS, NULL},
-     { (char *)"CvHaarClassifier_left_get", _wrap_CvHaarClassifier_left_get, METH_VARARGS, NULL},
-     { (char *)"CvHaarClassifier_right_set", _wrap_CvHaarClassifier_right_set, METH_VARARGS, NULL},
-     { (char *)"CvHaarClassifier_right_get", _wrap_CvHaarClassifier_right_get, METH_VARARGS, NULL},
-     { (char *)"CvHaarClassifier_alpha_set", _wrap_CvHaarClassifier_alpha_set, METH_VARARGS, NULL},
-     { (char *)"CvHaarClassifier_alpha_get", _wrap_CvHaarClassifier_alpha_get, METH_VARARGS, NULL},
-     { (char *)"new_CvHaarClassifier", _wrap_new_CvHaarClassifier, METH_VARARGS, NULL},
-     { (char *)"delete_CvHaarClassifier", _wrap_delete_CvHaarClassifier, METH_VARARGS, NULL},
-     { (char *)"CvHaarClassifier_swigregister", CvHaarClassifier_swigregister, METH_VARARGS, NULL},
-     { (char *)"CvHaarStageClassifier_count_set", _wrap_CvHaarStageClassifier_count_set, METH_VARARGS, NULL},
-     { (char *)"CvHaarStageClassifier_count_get", _wrap_CvHaarStageClassifier_count_get, METH_VARARGS, NULL},
-     { (char *)"CvHaarStageClassifier_threshold_set", _wrap_CvHaarStageClassifier_threshold_set, METH_VARARGS, NULL},
-     { (char *)"CvHaarStageClassifier_threshold_get", _wrap_CvHaarStageClassifier_threshold_get, METH_VARARGS, NULL},
-     { (char *)"CvHaarStageClassifier_classifier_set", _wrap_CvHaarStageClassifier_classifier_set, METH_VARARGS, NULL},
-     { (char *)"CvHaarStageClassifier_classifier_get", _wrap_CvHaarStageClassifier_classifier_get, METH_VARARGS, NULL},
-     { (char *)"CvHaarStageClassifier_next_set", _wrap_CvHaarStageClassifier_next_set, METH_VARARGS, NULL},
-     { (char *)"CvHaarStageClassifier_next_get", _wrap_CvHaarStageClassifier_next_get, METH_VARARGS, NULL},
-     { (char *)"CvHaarStageClassifier_child_set", _wrap_CvHaarStageClassifier_child_set, METH_VARARGS, NULL},
-     { (char *)"CvHaarStageClassifier_child_get", _wrap_CvHaarStageClassifier_child_get, METH_VARARGS, NULL},
-     { (char *)"CvHaarStageClassifier_parent_set", _wrap_CvHaarStageClassifier_parent_set, METH_VARARGS, NULL},
-     { (char *)"CvHaarStageClassifier_parent_get", _wrap_CvHaarStageClassifier_parent_get, METH_VARARGS, NULL},
-     { (char *)"new_CvHaarStageClassifier", _wrap_new_CvHaarStageClassifier, METH_VARARGS, NULL},
-     { (char *)"delete_CvHaarStageClassifier", _wrap_delete_CvHaarStageClassifier, METH_VARARGS, NULL},
-     { (char *)"CvHaarStageClassifier_swigregister", CvHaarStageClassifier_swigregister, METH_VARARGS, NULL},
-     { (char *)"CvHaarClassifierCascade_flags_set", _wrap_CvHaarClassifierCascade_flags_set, METH_VARARGS, NULL},
-     { (char *)"CvHaarClassifierCascade_flags_get", _wrap_CvHaarClassifierCascade_flags_get, METH_VARARGS, NULL},
-     { (char *)"CvHaarClassifierCascade_count_set", _wrap_CvHaarClassifierCascade_count_set, METH_VARARGS, NULL},
-     { (char *)"CvHaarClassifierCascade_count_get", _wrap_CvHaarClassifierCascade_count_get, METH_VARARGS, NULL},
-     { (char *)"CvHaarClassifierCascade_orig_window_size_set", _wrap_CvHaarClassifierCascade_orig_window_size_set, METH_VARARGS, NULL},
-     { (char *)"CvHaarClassifierCascade_orig_window_size_get", _wrap_CvHaarClassifierCascade_orig_window_size_get, METH_VARARGS, NULL},
-     { (char *)"CvHaarClassifierCascade_real_window_size_set", _wrap_CvHaarClassifierCascade_real_window_size_set, METH_VARARGS, NULL},
-     { (char *)"CvHaarClassifierCascade_real_window_size_get", _wrap_CvHaarClassifierCascade_real_window_size_get, METH_VARARGS, NULL},
-     { (char *)"CvHaarClassifierCascade_scale_set", _wrap_CvHaarClassifierCascade_scale_set, METH_VARARGS, NULL},
-     { (char *)"CvHaarClassifierCascade_scale_get", _wrap_CvHaarClassifierCascade_scale_get, METH_VARARGS, NULL},
-     { (char *)"CvHaarClassifierCascade_stage_classifier_set", _wrap_CvHaarClassifierCascade_stage_classifier_set, METH_VARARGS, NULL},
-     { (char *)"CvHaarClassifierCascade_stage_classifier_get", _wrap_CvHaarClassifierCascade_stage_classifier_get, METH_VARARGS, NULL},
-     { (char *)"CvHaarClassifierCascade_hid_cascade_set", _wrap_CvHaarClassifierCascade_hid_cascade_set, METH_VARARGS, NULL},
-     { (char *)"CvHaarClassifierCascade_hid_cascade_get", _wrap_CvHaarClassifierCascade_hid_cascade_get, METH_VARARGS, NULL},
-     { (char *)"delete_CvHaarClassifierCascade", _wrap_delete_CvHaarClassifierCascade, METH_VARARGS, NULL},
-     { (char *)"CvHaarClassifierCascade_swigregister", CvHaarClassifierCascade_swigregister, METH_VARARGS, NULL},
-     { (char *)"CvAvgComp_rect_set", _wrap_CvAvgComp_rect_set, METH_VARARGS, NULL},
-     { (char *)"CvAvgComp_rect_get", _wrap_CvAvgComp_rect_get, METH_VARARGS, NULL},
-     { (char *)"CvAvgComp_neighbors_set", _wrap_CvAvgComp_neighbors_set, METH_VARARGS, NULL},
-     { (char *)"CvAvgComp_neighbors_get", _wrap_CvAvgComp_neighbors_get, METH_VARARGS, NULL},
-     { (char *)"new_CvAvgComp", _wrap_new_CvAvgComp, METH_VARARGS, NULL},
-     { (char *)"delete_CvAvgComp", _wrap_delete_CvAvgComp, METH_VARARGS, NULL},
-     { (char *)"CvAvgComp_swigregister", CvAvgComp_swigregister, METH_VARARGS, NULL},
-     { (char *)"cvCopyMakeBorder", _wrap_cvCopyMakeBorder, METH_VARARGS, NULL},
-     { (char *)"cvSmooth", _wrap_cvSmooth, METH_VARARGS, NULL},
-     { (char *)"cvFilter2D", _wrap_cvFilter2D, METH_VARARGS, NULL},
-     { (char *)"cvIntegral", _wrap_cvIntegral, METH_VARARGS, NULL},
-     { (char *)"cvPyrDown", _wrap_cvPyrDown, METH_VARARGS, NULL},
-     { (char *)"cvPyrUp", _wrap_cvPyrUp, METH_VARARGS, NULL},
-     { (char *)"cvPyrSegmentationUntyped", _wrap_cvPyrSegmentationUntyped, METH_VARARGS, NULL},
-     { (char *)"cvPyrMeanShiftFiltering", _wrap_cvPyrMeanShiftFiltering, METH_VARARGS, NULL},
-     { (char *)"cvWatershed", _wrap_cvWatershed, METH_VARARGS, NULL},
-     { (char *)"cvInpaint", _wrap_cvInpaint, METH_VARARGS, NULL},
-     { (char *)"cvSobel", _wrap_cvSobel, METH_VARARGS, NULL},
-     { (char *)"cvLaplace", _wrap_cvLaplace, METH_VARARGS, NULL},
-     { (char *)"cvCvtColor", _wrap_cvCvtColor, METH_VARARGS, NULL},
-     { (char *)"cvResize", _wrap_cvResize, METH_VARARGS, NULL},
-     { (char *)"cvWarpAffine", _wrap_cvWarpAffine, METH_VARARGS, NULL},
-     { (char *)"cvGetAffineTransform", _wrap_cvGetAffineTransform, METH_VARARGS, NULL},
-     { (char *)"cv2DRotationMatrix", _wrap_cv2DRotationMatrix, METH_VARARGS, NULL},
-     { (char *)"cvWarpPerspective", _wrap_cvWarpPerspective, METH_VARARGS, NULL},
-     { (char *)"cvGetPerspectiveTransform", _wrap_cvGetPerspectiveTransform, METH_VARARGS, NULL},
-     { (char *)"cvRemap", _wrap_cvRemap, METH_VARARGS, NULL},
-     { (char *)"cvLogPolar", _wrap_cvLogPolar, METH_VARARGS, NULL},
-     { (char *)"cvCreateStructuringElementEx", _wrap_cvCreateStructuringElementEx, METH_VARARGS, NULL},
-     { (char *)"cvErode", _wrap_cvErode, METH_VARARGS, NULL},
-     { (char *)"cvDilate", _wrap_cvDilate, METH_VARARGS, NULL},
-     { (char *)"cvMorphologyEx", _wrap_cvMorphologyEx, METH_VARARGS, NULL},
-     { (char *)"cvMoments", _wrap_cvMoments, METH_VARARGS, NULL},
-     { (char *)"cvGetSpatialMoment", _wrap_cvGetSpatialMoment, METH_VARARGS, NULL},
-     { (char *)"cvGetCentralMoment", _wrap_cvGetCentralMoment, METH_VARARGS, NULL},
-     { (char *)"cvGetNormalizedCentralMoment", _wrap_cvGetNormalizedCentralMoment, METH_VARARGS, NULL},
-     { (char *)"cvGetHuMoments", _wrap_cvGetHuMoments, METH_VARARGS, NULL},
-     { (char *)"cvSampleLine", _wrap_cvSampleLine, METH_VARARGS, NULL},
-     { (char *)"cvGetRectSubPix", _wrap_cvGetRectSubPix, METH_VARARGS, NULL},
-     { (char *)"cvGetQuadrangleSubPix", _wrap_cvGetQuadrangleSubPix, METH_VARARGS, NULL},
-     { (char *)"cvMatchTemplate", _wrap_cvMatchTemplate, METH_VARARGS, NULL},
-     { (char *)"cvCalcEMD2", _wrap_cvCalcEMD2, METH_VARARGS, NULL},
-     { (char *)"cvFindContoursUntyped", _wrap_cvFindContoursUntyped, METH_VARARGS, NULL},
-     { (char *)"cvStartFindContours", _wrap_cvStartFindContours, METH_VARARGS, NULL},
-     { (char *)"cvFindNextContour", _wrap_cvFindNextContour, METH_VARARGS, NULL},
-     { (char *)"cvSubstituteContour", _wrap_cvSubstituteContour, METH_VARARGS, NULL},
-     { (char *)"cvEndFindContours", _wrap_cvEndFindContours, METH_VARARGS, NULL},
-     { (char *)"cvApproxChainsUntyped", _wrap_cvApproxChainsUntyped, METH_VARARGS, NULL},
-     { (char *)"cvStartReadChainPoints", _wrap_cvStartReadChainPoints, METH_VARARGS, NULL},
-     { (char *)"cvReadChainPoint", _wrap_cvReadChainPoint, METH_VARARGS, NULL},
-     { (char *)"cvCalcOpticalFlowLK", _wrap_cvCalcOpticalFlowLK, METH_VARARGS, NULL},
-     { (char *)"cvCalcOpticalFlowBM", _wrap_cvCalcOpticalFlowBM, METH_VARARGS, NULL},
-     { (char *)"cvCalcOpticalFlowHS", _wrap_cvCalcOpticalFlowHS, METH_VARARGS, NULL},
-     { (char *)"cvCalcOpticalFlowPyrLK", _wrap_cvCalcOpticalFlowPyrLK, METH_VARARGS, NULL},
-     { (char *)"cvUpdateMotionHistory", _wrap_cvUpdateMotionHistory, METH_VARARGS, NULL},
-     { (char *)"cvCalcMotionGradient", _wrap_cvCalcMotionGradient, METH_VARARGS, NULL},
-     { (char *)"cvCalcGlobalOrientation", _wrap_cvCalcGlobalOrientation, METH_VARARGS, NULL},
-     { (char *)"cvAcc", _wrap_cvAcc, METH_VARARGS, NULL},
-     { (char *)"cvSquareAcc", _wrap_cvSquareAcc, METH_VARARGS, NULL},
-     { (char *)"cvMultiplyAcc", _wrap_cvMultiplyAcc, METH_VARARGS, NULL},
-     { (char *)"cvRunningAvg", _wrap_cvRunningAvg, METH_VARARGS, NULL},
-     { (char *)"cvCamShift", _wrap_cvCamShift, METH_VARARGS, NULL},
-     { (char *)"cvMeanShift", _wrap_cvMeanShift, METH_VARARGS, NULL},
-     { (char *)"cvCreateConDensation", _wrap_cvCreateConDensation, METH_VARARGS, NULL},
-     { (char *)"cvConDensUpdateByTime", _wrap_cvConDensUpdateByTime, METH_VARARGS, NULL},
-     { (char *)"cvConDensInitSampleSet", _wrap_cvConDensInitSampleSet, METH_VARARGS, NULL},
-     { (char *)"cvCreateKalman", _wrap_cvCreateKalman, METH_VARARGS, NULL},
-     { (char *)"cvKalmanPredict", _wrap_cvKalmanPredict, METH_VARARGS, NULL},
-     { (char *)"cvKalmanCorrect", _wrap_cvKalmanCorrect, METH_VARARGS, NULL},
-     { (char *)"cvInitSubdivDelaunay2D", _wrap_cvInitSubdivDelaunay2D, METH_VARARGS, NULL},
-     { (char *)"cvCreateSubdiv2D", _wrap_cvCreateSubdiv2D, METH_VARARGS, NULL},
-     { (char *)"cvCreateSubdivDelaunay2D", _wrap_cvCreateSubdivDelaunay2D, METH_VARARGS, NULL},
-     { (char *)"cvSubdivDelaunay2DInsert", _wrap_cvSubdivDelaunay2DInsert, METH_VARARGS, NULL},
-     { (char *)"cvSubdiv2DLocate", _wrap_cvSubdiv2DLocate, METH_VARARGS, NULL},
-     { (char *)"cvCalcSubdivVoronoi2D", _wrap_cvCalcSubdivVoronoi2D, METH_VARARGS, NULL},
-     { (char *)"cvClearSubdivVoronoi2D", _wrap_cvClearSubdivVoronoi2D, METH_VARARGS, NULL},
-     { (char *)"cvFindNearestPoint2D", _wrap_cvFindNearestPoint2D, METH_VARARGS, NULL},
-     { (char *)"cvSubdiv2DNextEdge", _wrap_cvSubdiv2DNextEdge, METH_VARARGS, NULL},
-     { (char *)"cvSubdiv2DRotateEdge", _wrap_cvSubdiv2DRotateEdge, METH_VARARGS, NULL},
-     { (char *)"cvSubdiv2DSymEdge", _wrap_cvSubdiv2DSymEdge, METH_VARARGS, NULL},
-     { (char *)"cvSubdiv2DGetEdge", _wrap_cvSubdiv2DGetEdge, METH_VARARGS, NULL},
-     { (char *)"cvSubdiv2DEdgeOrg", _wrap_cvSubdiv2DEdgeOrg, METH_VARARGS, NULL},
-     { (char *)"cvSubdiv2DEdgeDst", _wrap_cvSubdiv2DEdgeDst, METH_VARARGS, NULL},
-     { (char *)"cvTriangleArea", _wrap_cvTriangleArea, METH_VARARGS, NULL},
-     { (char *)"cvFindDominantPoints", _wrap_cvFindDominantPoints, METH_VARARGS, NULL},
-     { (char *)"cvBoundingRect", _wrap_cvBoundingRect, METH_VARARGS, NULL},
-     { (char *)"cvContourArea", _wrap_cvContourArea, METH_VARARGS, NULL},
-     { (char *)"cvMinAreaRect2", _wrap_cvMinAreaRect2, METH_VARARGS, NULL},
-     { (char *)"cvMinEnclosingCircle", _wrap_cvMinEnclosingCircle, METH_VARARGS, NULL},
-     { (char *)"cvMatchShapes", _wrap_cvMatchShapes, METH_VARARGS, NULL},
-     { (char *)"cvCreateContourTree", _wrap_cvCreateContourTree, METH_VARARGS, NULL},
-     { (char *)"cvContourFromContourTreeUntyped", _wrap_cvContourFromContourTreeUntyped, METH_VARARGS, NULL},
-     { (char *)"cvMatchContourTrees", _wrap_cvMatchContourTrees, METH_VARARGS, NULL},
-     { (char *)"cvCalcPGH", _wrap_cvCalcPGH, METH_VARARGS, NULL},
-     { (char *)"cvCheckContourConvexity", _wrap_cvCheckContourConvexity, METH_VARARGS, NULL},
-     { (char *)"cvConvexityDefectsUntyped", _wrap_cvConvexityDefectsUntyped, METH_VARARGS, NULL},
-     { (char *)"cvFitEllipse2", _wrap_cvFitEllipse2, METH_VARARGS, NULL},
-     { (char *)"cvMaxRect", _wrap_cvMaxRect, METH_VARARGS, NULL},
-     { (char *)"cvBoxPoints", _wrap_cvBoxPoints, METH_VARARGS, NULL},
-     { (char *)"cvPointSeqFromMat", _wrap_cvPointSeqFromMat, METH_VARARGS, NULL},
-     { (char *)"cvPointPolygonTest", _wrap_cvPointPolygonTest, METH_VARARGS, NULL},
-     { (char *)"cvCreateHist", _wrap_cvCreateHist, METH_VARARGS, NULL},
-     { (char *)"cvSetHistBinRanges", _wrap_cvSetHistBinRanges, METH_VARARGS, NULL},
-     { (char *)"cvMakeHistHeaderForArray", _wrap_cvMakeHistHeaderForArray, METH_VARARGS, NULL},
-     { (char *)"cvClearHist", _wrap_cvClearHist, METH_VARARGS, NULL},
-     { (char *)"cvGetMinMaxHistValue", _wrap_cvGetMinMaxHistValue, METH_VARARGS, NULL},
-     { (char *)"cvNormalizeHist", _wrap_cvNormalizeHist, METH_VARARGS, NULL},
-     { (char *)"cvThreshHist", _wrap_cvThreshHist, METH_VARARGS, NULL},
-     { (char *)"cvCompareHist", _wrap_cvCompareHist, METH_VARARGS, NULL},
-     { (char *)"cvCopyHist", _wrap_cvCopyHist, METH_VARARGS, NULL},
-     { (char *)"cvCalcBayesianProb", _wrap_cvCalcBayesianProb, METH_VARARGS, NULL},
-     { (char *)"cvCalcArrHist", _wrap_cvCalcArrHist, METH_VARARGS, NULL},
-     { (char *)"cvCalcImageHist", _wrap_cvCalcImageHist, METH_VARARGS, NULL},
-     { (char *)"cvCalcArrBackProject", _wrap_cvCalcArrBackProject, METH_VARARGS, NULL},
-     { (char *)"cvCalcArrBackProjectPatch", _wrap_cvCalcArrBackProjectPatch, METH_VARARGS, NULL},
-     { (char *)"cvCalcProbDensity", _wrap_cvCalcProbDensity, METH_VARARGS, NULL},
-     { (char *)"cvEqualizeHist", _wrap_cvEqualizeHist, METH_VARARGS, NULL},
-     { (char *)"cvSnakeImage", _wrap_cvSnakeImage, METH_VARARGS, NULL},
-     { (char *)"cvCalcImageHomography", _wrap_cvCalcImageHomography, METH_VARARGS, NULL},
-     { (char *)"cvDistTransform", _wrap_cvDistTransform, METH_VARARGS, NULL},
-     { (char *)"cvThreshold", _wrap_cvThreshold, METH_VARARGS, NULL},
-     { (char *)"cvAdaptiveThreshold", _wrap_cvAdaptiveThreshold, METH_VARARGS, NULL},
-     { (char *)"cvFloodFill", _wrap_cvFloodFill, METH_VARARGS, NULL},
-     { (char *)"cvCanny", _wrap_cvCanny, METH_VARARGS, NULL},
-     { (char *)"cvPreCornerDetect", _wrap_cvPreCornerDetect, METH_VARARGS, NULL},
-     { (char *)"cvCornerEigenValsAndVecs", _wrap_cvCornerEigenValsAndVecs, METH_VARARGS, NULL},
-     { (char *)"cvCornerMinEigenVal", _wrap_cvCornerMinEigenVal, METH_VARARGS, NULL},
-     { (char *)"cvCornerHarris", _wrap_cvCornerHarris, METH_VARARGS, NULL},
-     { (char *)"cvFindCornerSubPix", _wrap_cvFindCornerSubPix, METH_VARARGS, NULL},
-     { (char *)"cvGoodFeaturesToTrack", _wrap_cvGoodFeaturesToTrack, METH_VARARGS, NULL},
-     { (char *)"cvHoughLinesUntyped", _wrap_cvHoughLinesUntyped, METH_VARARGS, NULL},
-     { (char *)"cvHoughCirclesUntyped", _wrap_cvHoughCirclesUntyped, METH_VARARGS, NULL},
-     { (char *)"cvFitLine", _wrap_cvFitLine, METH_VARARGS, NULL},
-     { (char *)"cvLoadHaarClassifierCascade", _wrap_cvLoadHaarClassifierCascade, METH_VARARGS, NULL},
-     { (char *)"cvSetImagesForHaarClassifierCascade", _wrap_cvSetImagesForHaarClassifierCascade, METH_VARARGS, NULL},
-     { (char *)"cvRunHaarClassifierCascade", _wrap_cvRunHaarClassifierCascade, METH_VARARGS, NULL},
-     { (char *)"cvUndistort2", _wrap_cvUndistort2, METH_VARARGS, NULL},
-     { (char *)"cvInitUndistortMap", _wrap_cvInitUndistortMap, METH_VARARGS, NULL},
-     { (char *)"cvRodrigues2", _wrap_cvRodrigues2, METH_VARARGS, NULL},
-     { (char *)"cvFindHomography", _wrap_cvFindHomography, METH_VARARGS, NULL},
-     { (char *)"cvProjectPoints2", _wrap_cvProjectPoints2, METH_VARARGS, NULL},
-     { (char *)"cvFindExtrinsicCameraParams2", _wrap_cvFindExtrinsicCameraParams2, METH_VARARGS, NULL},
-     { (char *)"cvCalibrateCamera2", _wrap_cvCalibrateCamera2, METH_VARARGS, NULL},
-     { (char *)"cvFindChessboardCorners", _wrap_cvFindChessboardCorners, METH_VARARGS, NULL},
-     { (char *)"cvDrawChessboardCorners", _wrap_cvDrawChessboardCorners, METH_VARARGS, NULL},
-     { (char *)"cvCreatePOSITObject", _wrap_cvCreatePOSITObject, METH_VARARGS, NULL},
-     { (char *)"cvPOSIT", _wrap_cvPOSIT, METH_VARARGS, NULL},
-     { (char *)"cvConvertPointsHomogenious", _wrap_cvConvertPointsHomogenious, METH_VARARGS, NULL},
-     { (char *)"cvFindFundamentalMat", _wrap_cvFindFundamentalMat, METH_VARARGS, NULL},
-     { (char *)"cvComputeCorrespondEpilines", _wrap_cvComputeCorrespondEpilines, METH_VARARGS, NULL},
-     { (char *)"new_CvBaseImageFilter", _wrap_new_CvBaseImageFilter, METH_VARARGS, NULL},
-     { (char *)"delete_CvBaseImageFilter", _wrap_delete_CvBaseImageFilter, METH_VARARGS, NULL},
-     { (char *)"CvBaseImageFilter_init", _wrap_CvBaseImageFilter_init, METH_VARARGS, NULL},
-     { (char *)"CvBaseImageFilter_clear", _wrap_CvBaseImageFilter_clear, METH_VARARGS, NULL},
-     { (char *)"CvBaseImageFilter_process", _wrap_CvBaseImageFilter_process, METH_VARARGS, NULL},
-     { (char *)"CvBaseImageFilter_get_src_type", _wrap_CvBaseImageFilter_get_src_type, METH_VARARGS, NULL},
-     { (char *)"CvBaseImageFilter_get_dst_type", _wrap_CvBaseImageFilter_get_dst_type, METH_VARARGS, NULL},
-     { (char *)"CvBaseImageFilter_get_work_type", _wrap_CvBaseImageFilter_get_work_type, METH_VARARGS, NULL},
-     { (char *)"CvBaseImageFilter_get_kernel_size", _wrap_CvBaseImageFilter_get_kernel_size, METH_VARARGS, NULL},
-     { (char *)"CvBaseImageFilter_get_anchor", _wrap_CvBaseImageFilter_get_anchor, METH_VARARGS, NULL},
-     { (char *)"CvBaseImageFilter_get_width", _wrap_CvBaseImageFilter_get_width, METH_VARARGS, NULL},
-     { (char *)"CvBaseImageFilter_get_x_filter_func", _wrap_CvBaseImageFilter_get_x_filter_func, METH_VARARGS, NULL},
-     { (char *)"CvBaseImageFilter_get_y_filter_func", _wrap_CvBaseImageFilter_get_y_filter_func, METH_VARARGS, NULL},
-     { (char *)"CvBaseImageFilter_swigregister", CvBaseImageFilter_swigregister, METH_VARARGS, NULL},
-     { (char *)"new_CvSepFilter", _wrap_new_CvSepFilter, METH_VARARGS, NULL},
-     { (char *)"delete_CvSepFilter", _wrap_delete_CvSepFilter, METH_VARARGS, NULL},
-     { (char *)"CvSepFilter_init_deriv", _wrap_CvSepFilter_init_deriv, METH_VARARGS, NULL},
-     { (char *)"CvSepFilter_init_gaussian", _wrap_CvSepFilter_init_gaussian, METH_VARARGS, NULL},
-     { (char *)"CvSepFilter_init", _wrap_CvSepFilter_init, METH_VARARGS, NULL},
-     { (char *)"CvSepFilter_clear", _wrap_CvSepFilter_clear, METH_VARARGS, NULL},
-     { (char *)"CvSepFilter_get_x_kernel", _wrap_CvSepFilter_get_x_kernel, METH_VARARGS, NULL},
-     { (char *)"CvSepFilter_get_y_kernel", _wrap_CvSepFilter_get_y_kernel, METH_VARARGS, NULL},
-     { (char *)"CvSepFilter_get_x_kernel_flags", _wrap_CvSepFilter_get_x_kernel_flags, METH_VARARGS, NULL},
-     { (char *)"CvSepFilter_get_y_kernel_flags", _wrap_CvSepFilter_get_y_kernel_flags, METH_VARARGS, NULL},
-     { (char *)"CvSepFilter_init_gaussian_kernel", _wrap_CvSepFilter_init_gaussian_kernel, METH_VARARGS, NULL},
-     { (char *)"CvSepFilter_init_sobel_kernel", _wrap_CvSepFilter_init_sobel_kernel, METH_VARARGS, NULL},
-     { (char *)"CvSepFilter_init_scharr_kernel", _wrap_CvSepFilter_init_scharr_kernel, METH_VARARGS, NULL},
-     { (char *)"CvSepFilter_swigregister", CvSepFilter_swigregister, METH_VARARGS, NULL},
-     { (char *)"new_CvLinearFilter", _wrap_new_CvLinearFilter, METH_VARARGS, NULL},
-     { (char *)"delete_CvLinearFilter", _wrap_delete_CvLinearFilter, METH_VARARGS, NULL},
-     { (char *)"CvLinearFilter_init", _wrap_CvLinearFilter_init, METH_VARARGS, NULL},
-     { (char *)"CvLinearFilter_clear", _wrap_CvLinearFilter_clear, METH_VARARGS, NULL},
-     { (char *)"CvLinearFilter_get_kernel", _wrap_CvLinearFilter_get_kernel, METH_VARARGS, NULL},
-     { (char *)"CvLinearFilter_get_kernel_sparse_buf", _wrap_CvLinearFilter_get_kernel_sparse_buf, METH_VARARGS, NULL},
-     { (char *)"CvLinearFilter_get_kernel_sparse_count", _wrap_CvLinearFilter_get_kernel_sparse_count, METH_VARARGS, NULL},
-     { (char *)"CvLinearFilter_swigregister", CvLinearFilter_swigregister, METH_VARARGS, NULL},
-     { (char *)"new_CvBoxFilter", _wrap_new_CvBoxFilter, METH_VARARGS, NULL},
-     { (char *)"CvBoxFilter_init", _wrap_CvBoxFilter_init, METH_VARARGS, NULL},
-     { (char *)"delete_CvBoxFilter", _wrap_delete_CvBoxFilter, METH_VARARGS, NULL},
-     { (char *)"CvBoxFilter_is_normalized", _wrap_CvBoxFilter_is_normalized, METH_VARARGS, NULL},
-     { (char *)"CvBoxFilter_get_scale", _wrap_CvBoxFilter_get_scale, METH_VARARGS, NULL},
-     { (char *)"CvBoxFilter_get_sum_buf", _wrap_CvBoxFilter_get_sum_buf, METH_VARARGS, NULL},
-     { (char *)"CvBoxFilter_get_sum_count_ptr", _wrap_CvBoxFilter_get_sum_count_ptr, METH_VARARGS, NULL},
-     { (char *)"CvBoxFilter_swigregister", CvBoxFilter_swigregister, METH_VARARGS, NULL},
-     { (char *)"new_CvLaplaceFilter", _wrap_new_CvLaplaceFilter, METH_VARARGS, NULL},
-     { (char *)"delete_CvLaplaceFilter", _wrap_delete_CvLaplaceFilter, METH_VARARGS, NULL},
-     { (char *)"CvLaplaceFilter_init", _wrap_CvLaplaceFilter_init, METH_VARARGS, NULL},
-     { (char *)"CvLaplaceFilter_is_normalized", _wrap_CvLaplaceFilter_is_normalized, METH_VARARGS, NULL},
-     { (char *)"CvLaplaceFilter_is_basic_laplacian", _wrap_CvLaplaceFilter_is_basic_laplacian, METH_VARARGS, NULL},
-     { (char *)"CvLaplaceFilter_swigregister", CvLaplaceFilter_swigregister, METH_VARARGS, NULL},
-     { (char *)"new_CvMorphology", _wrap_new_CvMorphology, METH_VARARGS, NULL},
-     { (char *)"delete_CvMorphology", _wrap_delete_CvMorphology, METH_VARARGS, NULL},
-     { (char *)"CvMorphology_init", _wrap_CvMorphology_init, METH_VARARGS, NULL},
-     { (char *)"CvMorphology_clear", _wrap_CvMorphology_clear, METH_VARARGS, NULL},
-     { (char *)"CvMorphology_get_element", _wrap_CvMorphology_get_element, METH_VARARGS, NULL},
-     { (char *)"CvMorphology_get_element_shape", _wrap_CvMorphology_get_element_shape, METH_VARARGS, NULL},
-     { (char *)"CvMorphology_get_operation", _wrap_CvMorphology_get_operation, METH_VARARGS, NULL},
-     { (char *)"CvMorphology_get_element_sparse_buf", _wrap_CvMorphology_get_element_sparse_buf, METH_VARARGS, NULL},
-     { (char *)"CvMorphology_get_element_sparse_count", _wrap_CvMorphology_get_element_sparse_count, METH_VARARGS, NULL},
-     { (char *)"CvMorphology_init_binary_element", _wrap_CvMorphology_init_binary_element, METH_VARARGS, NULL},
-     { (char *)"CvMorphology_swigregister", CvMorphology_swigregister, METH_VARARGS, NULL},
-     { (char *)"CvTuple_CvPoint_2_val_set", _wrap_CvTuple_CvPoint_2_val_set, METH_VARARGS, NULL},
-     { (char *)"CvTuple_CvPoint_2_val_get", _wrap_CvTuple_CvPoint_2_val_get, METH_VARARGS, NULL},
-     { (char *)"CvTuple_CvPoint_2___setitem__", _wrap_CvTuple_CvPoint_2___setitem__, METH_VARARGS, NULL},
-     { (char *)"CvTuple_CvPoint_2___getitem__", _wrap_CvTuple_CvPoint_2___getitem__, METH_VARARGS, NULL},
-     { (char *)"new_CvTuple_CvPoint_2", _wrap_new_CvTuple_CvPoint_2, METH_VARARGS, NULL},
-     { (char *)"delete_CvTuple_CvPoint_2", _wrap_delete_CvTuple_CvPoint_2, METH_VARARGS, NULL},
-     { (char *)"CvTuple_CvPoint_2_swigregister", CvTuple_CvPoint_2_swigregister, METH_VARARGS, NULL},
-     { (char *)"CvTuple_float_2_val_set", _wrap_CvTuple_float_2_val_set, METH_VARARGS, NULL},
-     { (char *)"CvTuple_float_2_val_get", _wrap_CvTuple_float_2_val_get, METH_VARARGS, NULL},
-     { (char *)"CvTuple_float_2___setitem__", _wrap_CvTuple_float_2___setitem__, METH_VARARGS, NULL},
-     { (char *)"CvTuple_float_2___getitem__", _wrap_CvTuple_float_2___getitem__, METH_VARARGS, NULL},
-     { (char *)"new_CvTuple_float_2", _wrap_new_CvTuple_float_2, METH_VARARGS, NULL},
-     { (char *)"delete_CvTuple_float_2", _wrap_delete_CvTuple_float_2, METH_VARARGS, NULL},
-     { (char *)"CvTuple_float_2_swigregister", CvTuple_float_2_swigregister, METH_VARARGS, NULL},
-     { (char *)"CvTuple_float_3_val_set", _wrap_CvTuple_float_3_val_set, METH_VARARGS, NULL},
-     { (char *)"CvTuple_float_3_val_get", _wrap_CvTuple_float_3_val_get, METH_VARARGS, NULL},
-     { (char *)"CvTuple_float_3___setitem__", _wrap_CvTuple_float_3___setitem__, METH_VARARGS, NULL},
-     { (char *)"CvTuple_float_3___getitem__", _wrap_CvTuple_float_3___getitem__, METH_VARARGS, NULL},
-     { (char *)"new_CvTuple_float_3", _wrap_new_CvTuple_float_3, METH_VARARGS, NULL},
-     { (char *)"delete_CvTuple_float_3", _wrap_delete_CvTuple_float_3, METH_VARARGS, NULL},
-     { (char *)"CvTuple_float_3_swigregister", CvTuple_float_3_swigregister, METH_VARARGS, NULL},
-     { (char *)"CvSeq_CvPoint_cast", _wrap_CvSeq_CvPoint_cast, METH_VARARGS, NULL},
-     { (char *)"CvSeq_CvPoint___getitem__", _wrap_CvSeq_CvPoint___getitem__, METH_VARARGS, NULL},
-     { (char *)"CvSeq_CvPoint___setitem__", _wrap_CvSeq_CvPoint___setitem__, METH_VARARGS, NULL},
-     { (char *)"CvSeq_CvPoint_append", _wrap_CvSeq_CvPoint_append, METH_VARARGS, NULL},
-     { (char *)"CvSeq_CvPoint_pop", _wrap_CvSeq_CvPoint_pop, METH_VARARGS, NULL},
-     { (char *)"new_CvSeq_CvPoint", _wrap_new_CvSeq_CvPoint, METH_VARARGS, NULL},
-     { (char *)"delete_CvSeq_CvPoint", _wrap_delete_CvSeq_CvPoint, METH_VARARGS, NULL},
-     { (char *)"CvSeq_CvPoint_swigregister", CvSeq_CvPoint_swigregister, METH_VARARGS, NULL},
-     { (char *)"CvSeq_CvPoint2D32f_cast", _wrap_CvSeq_CvPoint2D32f_cast, METH_VARARGS, NULL},
-     { (char *)"CvSeq_CvPoint2D32f___getitem__", _wrap_CvSeq_CvPoint2D32f___getitem__, METH_VARARGS, NULL},
-     { (char *)"CvSeq_CvPoint2D32f___setitem__", _wrap_CvSeq_CvPoint2D32f___setitem__, METH_VARARGS, NULL},
-     { (char *)"CvSeq_CvPoint2D32f_append", _wrap_CvSeq_CvPoint2D32f_append, METH_VARARGS, NULL},
-     { (char *)"CvSeq_CvPoint2D32f_pop", _wrap_CvSeq_CvPoint2D32f_pop, METH_VARARGS, NULL},
-     { (char *)"new_CvSeq_CvPoint2D32f", _wrap_new_CvSeq_CvPoint2D32f, METH_VARARGS, NULL},
-     { (char *)"delete_CvSeq_CvPoint2D32f", _wrap_delete_CvSeq_CvPoint2D32f, METH_VARARGS, NULL},
-     { (char *)"CvSeq_CvPoint2D32f_swigregister", CvSeq_CvPoint2D32f_swigregister, METH_VARARGS, NULL},
-     { (char *)"CvSeq_CvRect_cast", _wrap_CvSeq_CvRect_cast, METH_VARARGS, NULL},
-     { (char *)"CvSeq_CvRect___getitem__", _wrap_CvSeq_CvRect___getitem__, METH_VARARGS, NULL},
-     { (char *)"CvSeq_CvRect___setitem__", _wrap_CvSeq_CvRect___setitem__, METH_VARARGS, NULL},
-     { (char *)"CvSeq_CvRect_append", _wrap_CvSeq_CvRect_append, METH_VARARGS, NULL},
-     { (char *)"CvSeq_CvRect_pop", _wrap_CvSeq_CvRect_pop, METH_VARARGS, NULL},
-     { (char *)"new_CvSeq_CvRect", _wrap_new_CvSeq_CvRect, METH_VARARGS, NULL},
-     { (char *)"delete_CvSeq_CvRect", _wrap_delete_CvSeq_CvRect, METH_VARARGS, NULL},
-     { (char *)"CvSeq_CvRect_swigregister", CvSeq_CvRect_swigregister, METH_VARARGS, NULL},
-     { (char *)"CvSeq_CvSeq_cast", _wrap_CvSeq_CvSeq_cast, METH_VARARGS, NULL},
-     { (char *)"CvSeq_CvSeq___getitem__", _wrap_CvSeq_CvSeq___getitem__, METH_VARARGS, NULL},
-     { (char *)"CvSeq_CvSeq___setitem__", _wrap_CvSeq_CvSeq___setitem__, METH_VARARGS, NULL},
-     { (char *)"CvSeq_CvSeq_append", _wrap_CvSeq_CvSeq_append, METH_VARARGS, NULL},
-     { (char *)"CvSeq_CvSeq_pop", _wrap_CvSeq_CvSeq_pop, METH_VARARGS, NULL},
-     { (char *)"new_CvSeq_CvSeq", _wrap_new_CvSeq_CvSeq, METH_VARARGS, NULL},
-     { (char *)"delete_CvSeq_CvSeq", _wrap_delete_CvSeq_CvSeq, METH_VARARGS, NULL},
-     { (char *)"CvSeq_CvSeq_swigregister", CvSeq_CvSeq_swigregister, METH_VARARGS, NULL},
-     { (char *)"CvSeq_CvQuadEdge2D_cast", _wrap_CvSeq_CvQuadEdge2D_cast, METH_VARARGS, NULL},
-     { (char *)"CvSeq_CvQuadEdge2D___getitem__", _wrap_CvSeq_CvQuadEdge2D___getitem__, METH_VARARGS, NULL},
-     { (char *)"CvSeq_CvQuadEdge2D___setitem__", _wrap_CvSeq_CvQuadEdge2D___setitem__, METH_VARARGS, NULL},
-     { (char *)"CvSeq_CvQuadEdge2D_append", _wrap_CvSeq_CvQuadEdge2D_append, METH_VARARGS, NULL},
-     { (char *)"CvSeq_CvQuadEdge2D_pop", _wrap_CvSeq_CvQuadEdge2D_pop, METH_VARARGS, NULL},
-     { (char *)"new_CvSeq_CvQuadEdge2D", _wrap_new_CvSeq_CvQuadEdge2D, METH_VARARGS, NULL},
-     { (char *)"delete_CvSeq_CvQuadEdge2D", _wrap_delete_CvSeq_CvQuadEdge2D, METH_VARARGS, NULL},
-     { (char *)"CvSeq_CvQuadEdge2D_swigregister", CvSeq_CvQuadEdge2D_swigregister, METH_VARARGS, NULL},
-     { (char *)"CvSeq_CvConnectedComp_cast", _wrap_CvSeq_CvConnectedComp_cast, METH_VARARGS, NULL},
-     { (char *)"CvSeq_CvConnectedComp___getitem__", _wrap_CvSeq_CvConnectedComp___getitem__, METH_VARARGS, NULL},
-     { (char *)"CvSeq_CvConnectedComp___setitem__", _wrap_CvSeq_CvConnectedComp___setitem__, METH_VARARGS, NULL},
-     { (char *)"CvSeq_CvConnectedComp_append", _wrap_CvSeq_CvConnectedComp_append, METH_VARARGS, NULL},
-     { (char *)"CvSeq_CvConnectedComp_pop", _wrap_CvSeq_CvConnectedComp_pop, METH_VARARGS, NULL},
-     { (char *)"new_CvSeq_CvConnectedComp", _wrap_new_CvSeq_CvConnectedComp, METH_VARARGS, NULL},
-     { (char *)"delete_CvSeq_CvConnectedComp", _wrap_delete_CvSeq_CvConnectedComp, METH_VARARGS, NULL},
-     { (char *)"CvSeq_CvConnectedComp_swigregister", CvSeq_CvConnectedComp_swigregister, METH_VARARGS, NULL},
-     { (char *)"CvSeq_CvPoint_2_cast", _wrap_CvSeq_CvPoint_2_cast, METH_VARARGS, NULL},
-     { (char *)"CvSeq_CvPoint_2___getitem__", _wrap_CvSeq_CvPoint_2___getitem__, METH_VARARGS, NULL},
-     { (char *)"CvSeq_CvPoint_2___setitem__", _wrap_CvSeq_CvPoint_2___setitem__, METH_VARARGS, NULL},
-     { (char *)"CvSeq_CvPoint_2_append", _wrap_CvSeq_CvPoint_2_append, METH_VARARGS, NULL},
-     { (char *)"CvSeq_CvPoint_2_pop", _wrap_CvSeq_CvPoint_2_pop, METH_VARARGS, NULL},
-     { (char *)"new_CvSeq_CvPoint_2", _wrap_new_CvSeq_CvPoint_2, METH_VARARGS, NULL},
-     { (char *)"delete_CvSeq_CvPoint_2", _wrap_delete_CvSeq_CvPoint_2, METH_VARARGS, NULL},
-     { (char *)"CvSeq_CvPoint_2_swigregister", CvSeq_CvPoint_2_swigregister, METH_VARARGS, NULL},
-     { (char *)"CvSeq_float_2_cast", _wrap_CvSeq_float_2_cast, METH_VARARGS, NULL},
-     { (char *)"CvSeq_float_2___getitem__", _wrap_CvSeq_float_2___getitem__, METH_VARARGS, NULL},
-     { (char *)"CvSeq_float_2___setitem__", _wrap_CvSeq_float_2___setitem__, METH_VARARGS, NULL},
-     { (char *)"CvSeq_float_2_append", _wrap_CvSeq_float_2_append, METH_VARARGS, NULL},
-     { (char *)"CvSeq_float_2_pop", _wrap_CvSeq_float_2_pop, METH_VARARGS, NULL},
-     { (char *)"new_CvSeq_float_2", _wrap_new_CvSeq_float_2, METH_VARARGS, NULL},
-     { (char *)"delete_CvSeq_float_2", _wrap_delete_CvSeq_float_2, METH_VARARGS, NULL},
-     { (char *)"CvSeq_float_2_swigregister", CvSeq_float_2_swigregister, METH_VARARGS, NULL},
-     { (char *)"CvSeq_float_3_cast", _wrap_CvSeq_float_3_cast, METH_VARARGS, NULL},
-     { (char *)"CvSeq_float_3___getitem__", _wrap_CvSeq_float_3___getitem__, METH_VARARGS, NULL},
-     { (char *)"CvSeq_float_3___setitem__", _wrap_CvSeq_float_3___setitem__, METH_VARARGS, NULL},
-     { (char *)"CvSeq_float_3_append", _wrap_CvSeq_float_3_append, METH_VARARGS, NULL},
-     { (char *)"CvSeq_float_3_pop", _wrap_CvSeq_float_3_pop, METH_VARARGS, NULL},
-     { (char *)"new_CvSeq_float_3", _wrap_new_CvSeq_float_3, METH_VARARGS, NULL},
-     { (char *)"delete_CvSeq_float_3", _wrap_delete_CvSeq_float_3, METH_VARARGS, NULL},
-     { (char *)"CvSeq_float_3_swigregister", CvSeq_float_3_swigregister, METH_VARARGS, NULL},
-     { (char *)"SendErrorToPython", _wrap_SendErrorToPython, METH_VARARGS, NULL},
-     { (char *)"function_ptr_generator", _wrap_function_ptr_generator, METH_VARARGS, NULL},
-     { (char *)"void_ptr_generator", _wrap_void_ptr_generator, METH_VARARGS, NULL},
-     { (char *)"void_ptrptr_generator", _wrap_void_ptrptr_generator, METH_VARARGS, NULL},
-     { NULL, NULL, 0, NULL }
+	 { (char *)"new_CvRNG_Wrapper", _wrap_new_CvRNG_Wrapper, METH_VARARGS, NULL},
+	 { (char *)"CvRNG_Wrapper_ptr", _wrap_CvRNG_Wrapper_ptr, METH_VARARGS, NULL},
+	 { (char *)"CvRNG_Wrapper_ref", _wrap_CvRNG_Wrapper_ref, METH_VARARGS, NULL},
+	 { (char *)"CvRNG_Wrapper___eq__", _wrap_CvRNG_Wrapper___eq__, METH_VARARGS, NULL},
+	 { (char *)"CvRNG_Wrapper___ne__", _wrap_CvRNG_Wrapper___ne__, METH_VARARGS, NULL},
+	 { (char *)"delete_CvRNG_Wrapper", _wrap_delete_CvRNG_Wrapper, METH_VARARGS, NULL},
+	 { (char *)"CvRNG_Wrapper_swigregister", CvRNG_Wrapper_swigregister, METH_VARARGS, NULL},
+	 { (char *)"new_CvSubdiv2DEdge_Wrapper", _wrap_new_CvSubdiv2DEdge_Wrapper, METH_VARARGS, NULL},
+	 { (char *)"CvSubdiv2DEdge_Wrapper_ptr", _wrap_CvSubdiv2DEdge_Wrapper_ptr, METH_VARARGS, NULL},
+	 { (char *)"CvSubdiv2DEdge_Wrapper_ref", _wrap_CvSubdiv2DEdge_Wrapper_ref, METH_VARARGS, NULL},
+	 { (char *)"CvSubdiv2DEdge_Wrapper___eq__", _wrap_CvSubdiv2DEdge_Wrapper___eq__, METH_VARARGS, NULL},
+	 { (char *)"CvSubdiv2DEdge_Wrapper___ne__", _wrap_CvSubdiv2DEdge_Wrapper___ne__, METH_VARARGS, NULL},
+	 { (char *)"delete_CvSubdiv2DEdge_Wrapper", _wrap_delete_CvSubdiv2DEdge_Wrapper, METH_VARARGS, NULL},
+	 { (char *)"CvSubdiv2DEdge_Wrapper_swigregister", CvSubdiv2DEdge_Wrapper_swigregister, METH_VARARGS, NULL},
+	 { (char *)"cvCvtSeqToArray", _wrap_cvCvtSeqToArray, METH_VARARGS, NULL},
+	 { (char *)"cvArcLength", _wrap_cvArcLength, METH_VARARGS, NULL},
+	 { (char *)"cvContourPerimeter", _wrap_cvContourPerimeter, METH_VARARGS, NULL},
+	 { (char *)"cvHaarDetectObjects", _wrap_cvHaarDetectObjects, METH_VARARGS, NULL},
+	 { (char *)"cvSegmentMotion", _wrap_cvSegmentMotion, METH_VARARGS, NULL},
+	 { (char *)"cvApproxPoly", _wrap_cvApproxPoly, METH_VARARGS, NULL},
+	 { (char *)"cvConvexHull2", _wrap_cvConvexHull2, METH_VARARGS, NULL},
+	 { (char *)"cvReleaseImage", _wrap_cvReleaseImage, METH_VARARGS, NULL},
+	 { (char *)"cvReleaseMat", _wrap_cvReleaseMat, METH_VARARGS, NULL},
+	 { (char *)"cvReleaseStructuringElement", _wrap_cvReleaseStructuringElement, METH_VARARGS, NULL},
+	 { (char *)"cvReleaseConDensation", _wrap_cvReleaseConDensation, METH_VARARGS, NULL},
+	 { (char *)"cvReleaseKalman", _wrap_cvReleaseKalman, METH_VARARGS, NULL},
+	 { (char *)"cvReleaseHist", _wrap_cvReleaseHist, METH_VARARGS, NULL},
+	 { (char *)"cvReleaseHaarClassifierCascade", _wrap_cvReleaseHaarClassifierCascade, METH_VARARGS, NULL},
+	 { (char *)"cvReleasePOSITObject", _wrap_cvReleasePOSITObject, METH_VARARGS, NULL},
+	 { (char *)"cvReleaseImageHeader", _wrap_cvReleaseImageHeader, METH_VARARGS, NULL},
+	 { (char *)"cvReleaseMatND", _wrap_cvReleaseMatND, METH_VARARGS, NULL},
+	 { (char *)"cvReleaseSparseMat", _wrap_cvReleaseSparseMat, METH_VARARGS, NULL},
+	 { (char *)"cvReleaseMemStorage", _wrap_cvReleaseMemStorage, METH_VARARGS, NULL},
+	 { (char *)"cvReleaseGraphScanner", _wrap_cvReleaseGraphScanner, METH_VARARGS, NULL},
+	 { (char *)"cvReleaseFileStorage", _wrap_cvReleaseFileStorage, METH_VARARGS, NULL},
+	 { (char *)"cvRelease", _wrap_cvRelease, METH_VARARGS, NULL},
+	 { (char *)"cvReleaseCapture", _wrap_cvReleaseCapture, METH_VARARGS, NULL},
+	 { (char *)"cvReleaseVideoWriter", _wrap_cvReleaseVideoWriter, METH_VARARGS, NULL},
+	 { (char *)"cvFree", _wrap_cvFree, METH_VARARGS, NULL},
+	 { (char *)"CV_READ_CHAIN_POINT", _wrap_CV_READ_CHAIN_POINT, METH_VARARGS, NULL},
+	 { (char *)"CV_MAT_ELEM_PTR", _wrap_CV_MAT_ELEM_PTR, METH_VARARGS, NULL},
+	 { (char *)"CV_MAT_ELEM_PTR_FAST", _wrap_CV_MAT_ELEM_PTR_FAST, METH_VARARGS, NULL},
+	 { (char *)"CV_NODE_VAL", _wrap_CV_NODE_VAL, METH_VARARGS, NULL},
+	 { (char *)"CV_NODE_IDX", _wrap_CV_NODE_IDX, METH_VARARGS, NULL},
+	 { (char *)"CV_SUBDIV2D_NEXT_EDGE", _wrap_CV_SUBDIV2D_NEXT_EDGE, METH_VARARGS, NULL},
+	 { (char *)"CV_SWAP", _wrap_CV_SWAP, METH_VARARGS, NULL},
+	 { (char *)"CV_IMIN", _wrap_CV_IMIN, METH_VARARGS, NULL},
+	 { (char *)"CV_IMAX", _wrap_CV_IMAX, METH_VARARGS, NULL},
+	 { (char *)"CV_IABS", _wrap_CV_IABS, METH_VARARGS, NULL},
+	 { (char *)"CV_CMP", _wrap_CV_CMP, METH_VARARGS, NULL},
+	 { (char *)"CV_SIGN", _wrap_CV_SIGN, METH_VARARGS, NULL},
+	 { (char *)"cvInvSqrt", _wrap_cvInvSqrt, METH_VARARGS, NULL},
+	 { (char *)"cvSqrt", _wrap_cvSqrt, METH_VARARGS, NULL},
+	 { (char *)"CV_IS_IMAGE_HDR", _wrap_CV_IS_IMAGE_HDR, METH_VARARGS, NULL},
+	 { (char *)"CV_IS_IMAGE", _wrap_CV_IS_IMAGE, METH_VARARGS, NULL},
+	 { (char *)"CV_MAKETYPE", _wrap_CV_MAKETYPE, METH_VARARGS, NULL},
+	 { (char *)"CV_8UC", _wrap_CV_8UC, METH_VARARGS, NULL},
+	 { (char *)"CV_8SC", _wrap_CV_8SC, METH_VARARGS, NULL},
+	 { (char *)"CV_16UC", _wrap_CV_16UC, METH_VARARGS, NULL},
+	 { (char *)"CV_16SC", _wrap_CV_16SC, METH_VARARGS, NULL},
+	 { (char *)"CV_32SC", _wrap_CV_32SC, METH_VARARGS, NULL},
+	 { (char *)"CV_32FC", _wrap_CV_32FC, METH_VARARGS, NULL},
+	 { (char *)"CV_64FC", _wrap_CV_64FC, METH_VARARGS, NULL},
+	 { (char *)"CV_MAT_CN", _wrap_CV_MAT_CN, METH_VARARGS, NULL},
+	 { (char *)"CV_MAT_DEPTH", _wrap_CV_MAT_DEPTH, METH_VARARGS, NULL},
+	 { (char *)"CV_MAT_TYPE", _wrap_CV_MAT_TYPE, METH_VARARGS, NULL},
+	 { (char *)"CV_IS_MAT_CONT", _wrap_CV_IS_MAT_CONT, METH_VARARGS, NULL},
+	 { (char *)"CV_IS_TEMP_MAT", _wrap_CV_IS_TEMP_MAT, METH_VARARGS, NULL},
+	 { (char *)"CV_IS_MAT_HDR", _wrap_CV_IS_MAT_HDR, METH_VARARGS, NULL},
+	 { (char *)"CV_IS_MAT", _wrap_CV_IS_MAT, METH_VARARGS, NULL},
+	 { (char *)"CV_IS_MASK_ARR", _wrap_CV_IS_MASK_ARR, METH_VARARGS, NULL},
+	 { (char *)"CV_ARE_TYPES_EQ", _wrap_CV_ARE_TYPES_EQ, METH_VARARGS, NULL},
+	 { (char *)"CV_ARE_CNS_EQ", _wrap_CV_ARE_CNS_EQ, METH_VARARGS, NULL},
+	 { (char *)"CV_ARE_DEPTHS_EQ", _wrap_CV_ARE_DEPTHS_EQ, METH_VARARGS, NULL},
+	 { (char *)"CV_ARE_SIZES_EQ", _wrap_CV_ARE_SIZES_EQ, METH_VARARGS, NULL},
+	 { (char *)"CV_IS_MAT_CONST", _wrap_CV_IS_MAT_CONST, METH_VARARGS, NULL},
+	 { (char *)"CV_ELEM_SIZE1", _wrap_CV_ELEM_SIZE1, METH_VARARGS, NULL},
+	 { (char *)"CV_ELEM_SIZE", _wrap_CV_ELEM_SIZE, METH_VARARGS, NULL},
+	 { (char *)"CV_IS_MATND_HDR", _wrap_CV_IS_MATND_HDR, METH_VARARGS, NULL},
+	 { (char *)"CV_IS_MATND", _wrap_CV_IS_MATND, METH_VARARGS, NULL},
+	 { (char *)"CV_IS_SPARSE_MAT_HDR", _wrap_CV_IS_SPARSE_MAT_HDR, METH_VARARGS, NULL},
+	 { (char *)"CV_IS_SPARSE_MAT", _wrap_CV_IS_SPARSE_MAT, METH_VARARGS, NULL},
+	 { (char *)"CV_IS_HIST", _wrap_CV_IS_HIST, METH_VARARGS, NULL},
+	 { (char *)"CV_IS_UNIFORM_HIST", _wrap_CV_IS_UNIFORM_HIST, METH_VARARGS, NULL},
+	 { (char *)"CV_IS_SPARSE_HIST", _wrap_CV_IS_SPARSE_HIST, METH_VARARGS, NULL},
+	 { (char *)"CV_HIST_HAS_RANGES", _wrap_CV_HIST_HAS_RANGES, METH_VARARGS, NULL},
+	 { (char *)"CV_IS_STORAGE", _wrap_CV_IS_STORAGE, METH_VARARGS, NULL},
+	 { (char *)"CV_IS_SET_ELEM", _wrap_CV_IS_SET_ELEM, METH_VARARGS, NULL},
+	 { (char *)"CV_IS_SEQ", _wrap_CV_IS_SEQ, METH_VARARGS, NULL},
+	 { (char *)"CV_IS_SET", _wrap_CV_IS_SET, METH_VARARGS, NULL},
+	 { (char *)"CV_SEQ_ELTYPE", _wrap_CV_SEQ_ELTYPE, METH_VARARGS, NULL},
+	 { (char *)"CV_SEQ_KIND", _wrap_CV_SEQ_KIND, METH_VARARGS, NULL},
+	 { (char *)"CV_IS_SEQ_INDEX", _wrap_CV_IS_SEQ_INDEX, METH_VARARGS, NULL},
+	 { (char *)"CV_IS_SEQ_CURVE", _wrap_CV_IS_SEQ_CURVE, METH_VARARGS, NULL},
+	 { (char *)"CV_IS_SEQ_CLOSED", _wrap_CV_IS_SEQ_CLOSED, METH_VARARGS, NULL},
+	 { (char *)"CV_IS_SEQ_CONVEX", _wrap_CV_IS_SEQ_CONVEX, METH_VARARGS, NULL},
+	 { (char *)"CV_IS_SEQ_HOLE", _wrap_CV_IS_SEQ_HOLE, METH_VARARGS, NULL},
+	 { (char *)"CV_IS_SEQ_SIMPLE", _wrap_CV_IS_SEQ_SIMPLE, METH_VARARGS, NULL},
+	 { (char *)"CV_IS_SEQ_POINT_SET", _wrap_CV_IS_SEQ_POINT_SET, METH_VARARGS, NULL},
+	 { (char *)"CV_IS_SEQ_POINT_SUBSET", _wrap_CV_IS_SEQ_POINT_SUBSET, METH_VARARGS, NULL},
+	 { (char *)"CV_IS_SEQ_POLYLINE", _wrap_CV_IS_SEQ_POLYLINE, METH_VARARGS, NULL},
+	 { (char *)"CV_IS_SEQ_POLYGON", _wrap_CV_IS_SEQ_POLYGON, METH_VARARGS, NULL},
+	 { (char *)"CV_IS_SEQ_CHAIN", _wrap_CV_IS_SEQ_CHAIN, METH_VARARGS, NULL},
+	 { (char *)"CV_IS_SEQ_CONTOUR", _wrap_CV_IS_SEQ_CONTOUR, METH_VARARGS, NULL},
+	 { (char *)"CV_IS_SEQ_CHAIN_CONTOUR", _wrap_CV_IS_SEQ_CHAIN_CONTOUR, METH_VARARGS, NULL},
+	 { (char *)"CV_IS_SEQ_POLYGON_TREE", _wrap_CV_IS_SEQ_POLYGON_TREE, METH_VARARGS, NULL},
+	 { (char *)"CV_IS_GRAPH", _wrap_CV_IS_GRAPH, METH_VARARGS, NULL},
+	 { (char *)"CV_IS_GRAPH_ORIENTED", _wrap_CV_IS_GRAPH_ORIENTED, METH_VARARGS, NULL},
+	 { (char *)"CV_IS_SUBDIV2D", _wrap_CV_IS_SUBDIV2D, METH_VARARGS, NULL},
+	 { (char *)"CV_WRITE_SEQ_ELEM_VAR", _wrap_CV_WRITE_SEQ_ELEM_VAR, METH_VARARGS, NULL},
+	 { (char *)"CV_WRITE_SEQ_ELEM", _wrap_CV_WRITE_SEQ_ELEM, METH_VARARGS, NULL},
+	 { (char *)"CV_NEXT_SEQ_ELEM", _wrap_CV_NEXT_SEQ_ELEM, METH_VARARGS, NULL},
+	 { (char *)"CV_PREV_SEQ_ELEM", _wrap_CV_PREV_SEQ_ELEM, METH_VARARGS, NULL},
+	 { (char *)"CV_READ_SEQ_ELEM", _wrap_CV_READ_SEQ_ELEM, METH_VARARGS, NULL},
+	 { (char *)"CV_REV_READ_SEQ_ELEM", _wrap_CV_REV_READ_SEQ_ELEM, METH_VARARGS, NULL},
+	 { (char *)"CV_CURRENT_POINT", _wrap_CV_CURRENT_POINT, METH_VARARGS, NULL},
+	 { (char *)"CV_PREV_POINT", _wrap_CV_PREV_POINT, METH_VARARGS, NULL},
+	 { (char *)"CV_READ_EDGE", _wrap_CV_READ_EDGE, METH_VARARGS, NULL},
+	 { (char *)"CV_NEXT_GRAPH_EDGE", _wrap_CV_NEXT_GRAPH_EDGE, METH_VARARGS, NULL},
+	 { (char *)"CV_NODE_TYPE", _wrap_CV_NODE_TYPE, METH_VARARGS, NULL},
+	 { (char *)"CV_NODE_IS_INT", _wrap_CV_NODE_IS_INT, METH_VARARGS, NULL},
+	 { (char *)"CV_NODE_IS_REAL", _wrap_CV_NODE_IS_REAL, METH_VARARGS, NULL},
+	 { (char *)"CV_NODE_IS_STRING", _wrap_CV_NODE_IS_STRING, METH_VARARGS, NULL},
+	 { (char *)"CV_NODE_IS_SEQ", _wrap_CV_NODE_IS_SEQ, METH_VARARGS, NULL},
+	 { (char *)"CV_NODE_IS_MAP", _wrap_CV_NODE_IS_MAP, METH_VARARGS, NULL},
+	 { (char *)"CV_NODE_IS_COLLECTION", _wrap_CV_NODE_IS_COLLECTION, METH_VARARGS, NULL},
+	 { (char *)"CV_NODE_IS_FLOW", _wrap_CV_NODE_IS_FLOW, METH_VARARGS, NULL},
+	 { (char *)"CV_NODE_IS_EMPTY", _wrap_CV_NODE_IS_EMPTY, METH_VARARGS, NULL},
+	 { (char *)"CV_NODE_IS_USER", _wrap_CV_NODE_IS_USER, METH_VARARGS, NULL},
+	 { (char *)"CV_NODE_HAS_NAME", _wrap_CV_NODE_HAS_NAME, METH_VARARGS, NULL},
+	 { (char *)"CV_NODE_SEQ_IS_SIMPLE", _wrap_CV_NODE_SEQ_IS_SIMPLE, METH_VARARGS, NULL},
+	 { (char *)"cvReshapeND", _wrap_cvReshapeND, METH_VARARGS, NULL},
+	 { (char *)"cvConvert", _wrap_cvConvert, METH_VARARGS, NULL},
+	 { (char *)"cvAXPY", _wrap_cvAXPY, METH_VARARGS, NULL},
+	 { (char *)"cvAbs", _wrap_cvAbs, METH_VARARGS, NULL},
+	 { (char *)"cvMatMulAdd", _wrap_cvMatMulAdd, METH_VARARGS, NULL},
+	 { (char *)"cvMatMul", _wrap_cvMatMul, METH_VARARGS, NULL},
+	 { (char *)"cvGetGraphVtx", _wrap_cvGetGraphVtx, METH_VARARGS, NULL},
+	 { (char *)"cvGraphVtxIdx", _wrap_cvGraphVtxIdx, METH_VARARGS, NULL},
+	 { (char *)"cvGraphEdgeIdx", _wrap_cvGraphEdgeIdx, METH_VARARGS, NULL},
+	 { (char *)"cvGraphGetVtxCount", _wrap_cvGraphGetVtxCount, METH_VARARGS, NULL},
+	 { (char *)"cvGraphGetEdgeCount", _wrap_cvGraphGetEdgeCount, METH_VARARGS, NULL},
+	 { (char *)"CV_IS_GRAPH_VERTEX_VISITED", _wrap_CV_IS_GRAPH_VERTEX_VISITED, METH_VARARGS, NULL},
+	 { (char *)"CV_IS_GRAPH_EDGE_VISITED", _wrap_CV_IS_GRAPH_EDGE_VISITED, METH_VARARGS, NULL},
+	 { (char *)"CV_RGB", _wrap_CV_RGB, METH_VARARGS, NULL},
+	 { (char *)"CV_NEXT_LINE_POINT", _wrap_CV_NEXT_LINE_POINT, METH_VARARGS, NULL},
+	 { (char *)"CV_INIT_3X3_DELTAS", _wrap_CV_INIT_3X3_DELTAS, METH_VARARGS, NULL},
+	 { (char *)"CV_IS_HAAR_CLASSIFIER", _wrap_CV_IS_HAAR_CLASSIFIER, METH_VARARGS, NULL},
+	 { (char *)"cvCalcBackProject", _wrap_cvCalcBackProject, METH_VARARGS, NULL},
+	 { (char *)"cvCalcBackProjectPatch", _wrap_cvCalcBackProjectPatch, METH_VARARGS, NULL},
+	 { (char *)"cvCreateImage", _wrap_cvCreateImage, METH_VARARGS, NULL},
+	 { (char *)"cvCloneImage", _wrap_cvCloneImage, METH_VARARGS, NULL},
+	 { (char *)"Cv32suf_i_set", _wrap_Cv32suf_i_set, METH_VARARGS, NULL},
+	 { (char *)"Cv32suf_i_get", _wrap_Cv32suf_i_get, METH_VARARGS, NULL},
+	 { (char *)"Cv32suf_u_set", _wrap_Cv32suf_u_set, METH_VARARGS, NULL},
+	 { (char *)"Cv32suf_u_get", _wrap_Cv32suf_u_get, METH_VARARGS, NULL},
+	 { (char *)"Cv32suf_f_set", _wrap_Cv32suf_f_set, METH_VARARGS, NULL},
+	 { (char *)"Cv32suf_f_get", _wrap_Cv32suf_f_get, METH_VARARGS, NULL},
+	 { (char *)"new_Cv32suf", _wrap_new_Cv32suf, METH_VARARGS, NULL},
+	 { (char *)"delete_Cv32suf", _wrap_delete_Cv32suf, METH_VARARGS, NULL},
+	 { (char *)"Cv32suf_swigregister", Cv32suf_swigregister, METH_VARARGS, NULL},
+	 { (char *)"Cv64suf_i_set", _wrap_Cv64suf_i_set, METH_VARARGS, NULL},
+	 { (char *)"Cv64suf_i_get", _wrap_Cv64suf_i_get, METH_VARARGS, NULL},
+	 { (char *)"Cv64suf_u_set", _wrap_Cv64suf_u_set, METH_VARARGS, NULL},
+	 { (char *)"Cv64suf_u_get", _wrap_Cv64suf_u_get, METH_VARARGS, NULL},
+	 { (char *)"Cv64suf_f_set", _wrap_Cv64suf_f_set, METH_VARARGS, NULL},
+	 { (char *)"Cv64suf_f_get", _wrap_Cv64suf_f_get, METH_VARARGS, NULL},
+	 { (char *)"new_Cv64suf", _wrap_new_Cv64suf, METH_VARARGS, NULL},
+	 { (char *)"delete_Cv64suf", _wrap_delete_Cv64suf, METH_VARARGS, NULL},
+	 { (char *)"Cv64suf_swigregister", Cv64suf_swigregister, METH_VARARGS, NULL},
+	 { (char *)"cvRound", _wrap_cvRound, METH_VARARGS, NULL},
+	 { (char *)"cvFloor", _wrap_cvFloor, METH_VARARGS, NULL},
+	 { (char *)"cvCeil", _wrap_cvCeil, METH_VARARGS, NULL},
+	 { (char *)"cvIsNaN", _wrap_cvIsNaN, METH_VARARGS, NULL},
+	 { (char *)"cvIsInf", _wrap_cvIsInf, METH_VARARGS, NULL},
+	 { (char *)"cvRNG", _wrap_cvRNG, METH_VARARGS, NULL},
+	 { (char *)"cvRandInt", _wrap_cvRandInt, METH_VARARGS, NULL},
+	 { (char *)"cvRandReal", _wrap_cvRandReal, METH_VARARGS, NULL},
+	 { (char *)"IplImage_ID_set", _wrap_IplImage_ID_set, METH_VARARGS, NULL},
+	 { (char *)"IplImage_ID_get", _wrap_IplImage_ID_get, METH_VARARGS, NULL},
+	 { (char *)"IplImage_nChannels_set", _wrap_IplImage_nChannels_set, METH_VARARGS, NULL},
+	 { (char *)"IplImage_nChannels_get", _wrap_IplImage_nChannels_get, METH_VARARGS, NULL},
+	 { (char *)"IplImage_depth_set", _wrap_IplImage_depth_set, METH_VARARGS, NULL},
+	 { (char *)"IplImage_depth_get", _wrap_IplImage_depth_get, METH_VARARGS, NULL},
+	 { (char *)"IplImage_dataOrder_set", _wrap_IplImage_dataOrder_set, METH_VARARGS, NULL},
+	 { (char *)"IplImage_dataOrder_get", _wrap_IplImage_dataOrder_get, METH_VARARGS, NULL},
+	 { (char *)"IplImage_origin_set", _wrap_IplImage_origin_set, METH_VARARGS, NULL},
+	 { (char *)"IplImage_origin_get", _wrap_IplImage_origin_get, METH_VARARGS, NULL},
+	 { (char *)"IplImage_align_set", _wrap_IplImage_align_set, METH_VARARGS, NULL},
+	 { (char *)"IplImage_align_get", _wrap_IplImage_align_get, METH_VARARGS, NULL},
+	 { (char *)"IplImage_width_set", _wrap_IplImage_width_set, METH_VARARGS, NULL},
+	 { (char *)"IplImage_width_get", _wrap_IplImage_width_get, METH_VARARGS, NULL},
+	 { (char *)"IplImage_height_set", _wrap_IplImage_height_set, METH_VARARGS, NULL},
+	 { (char *)"IplImage_height_get", _wrap_IplImage_height_get, METH_VARARGS, NULL},
+	 { (char *)"IplImage_roi_set", _wrap_IplImage_roi_set, METH_VARARGS, NULL},
+	 { (char *)"IplImage_roi_get", _wrap_IplImage_roi_get, METH_VARARGS, NULL},
+	 { (char *)"IplImage_imageSize_set", _wrap_IplImage_imageSize_set, METH_VARARGS, NULL},
+	 { (char *)"IplImage_imageSize_get", _wrap_IplImage_imageSize_get, METH_VARARGS, NULL},
+	 { (char *)"IplImage_widthStep_set", _wrap_IplImage_widthStep_set, METH_VARARGS, NULL},
+	 { (char *)"IplImage_widthStep_get", _wrap_IplImage_widthStep_get, METH_VARARGS, NULL},
+	 { (char *)"delete_IplImage", _wrap_delete_IplImage, METH_VARARGS, NULL},
+	 { (char *)"IplImage___mul__", _wrap_IplImage___mul__, METH_VARARGS, NULL},
+	 { (char *)"IplImage___imul__", _wrap_IplImage___imul__, METH_VARARGS, NULL},
+	 { (char *)"IplImage___idiv__", _wrap_IplImage___idiv__, METH_VARARGS, NULL},
+	 { (char *)"IplImage___add__", _wrap_IplImage___add__, METH_VARARGS, NULL},
+	 { (char *)"IplImage___iadd__", _wrap_IplImage___iadd__, METH_VARARGS, NULL},
+	 { (char *)"IplImage___xor__", _wrap_IplImage___xor__, METH_VARARGS, NULL},
+	 { (char *)"IplImage___ixor__", _wrap_IplImage___ixor__, METH_VARARGS, NULL},
+	 { (char *)"IplImage___sub__", _wrap_IplImage___sub__, METH_VARARGS, NULL},
+	 { (char *)"IplImage___isub__", _wrap_IplImage___isub__, METH_VARARGS, NULL},
+	 { (char *)"IplImage___or__", _wrap_IplImage___or__, METH_VARARGS, NULL},
+	 { (char *)"IplImage___ior__", _wrap_IplImage___ior__, METH_VARARGS, NULL},
+	 { (char *)"IplImage___and__", _wrap_IplImage___and__, METH_VARARGS, NULL},
+	 { (char *)"IplImage___iand__", _wrap_IplImage___iand__, METH_VARARGS, NULL},
+	 { (char *)"IplImage___ge__", _wrap_IplImage___ge__, METH_VARARGS, NULL},
+	 { (char *)"IplImage___eq__", _wrap_IplImage___eq__, METH_VARARGS, NULL},
+	 { (char *)"IplImage___le__", _wrap_IplImage___le__, METH_VARARGS, NULL},
+	 { (char *)"IplImage___ne__", _wrap_IplImage___ne__, METH_VARARGS, NULL},
+	 { (char *)"IplImage___lt__", _wrap_IplImage___lt__, METH_VARARGS, NULL},
+	 { (char *)"IplImage___gt__", _wrap_IplImage___gt__, METH_VARARGS, NULL},
+	 { (char *)"IplImage___div__", _wrap_IplImage___div__, METH_VARARGS, NULL},
+	 { (char *)"IplImage___radd__", _wrap_IplImage___radd__, METH_VARARGS, NULL},
+	 { (char *)"IplImage___rsub__", _wrap_IplImage___rsub__, METH_VARARGS, NULL},
+	 { (char *)"IplImage___rmul__", _wrap_IplImage___rmul__, METH_VARARGS, NULL},
+	 { (char *)"IplImage___rdiv__", _wrap_IplImage___rdiv__, METH_VARARGS, NULL},
+	 { (char *)"IplImage___ror__", _wrap_IplImage___ror__, METH_VARARGS, NULL},
+	 { (char *)"IplImage___rand__", _wrap_IplImage___rand__, METH_VARARGS, NULL},
+	 { (char *)"IplImage___rxor__", _wrap_IplImage___rxor__, METH_VARARGS, NULL},
+	 { (char *)"IplImage___req__", _wrap_IplImage___req__, METH_VARARGS, NULL},
+	 { (char *)"IplImage___rgt__", _wrap_IplImage___rgt__, METH_VARARGS, NULL},
+	 { (char *)"IplImage___rge__", _wrap_IplImage___rge__, METH_VARARGS, NULL},
+	 { (char *)"IplImage___rlt__", _wrap_IplImage___rlt__, METH_VARARGS, NULL},
+	 { (char *)"IplImage___rle__", _wrap_IplImage___rle__, METH_VARARGS, NULL},
+	 { (char *)"IplImage___rne__", _wrap_IplImage___rne__, METH_VARARGS, NULL},
+	 { (char *)"IplImage___pow__", _wrap_IplImage___pow__, METH_VARARGS, NULL},
+	 { (char *)"IplImage___str__", _wrap_IplImage___str__, METH_VARARGS, NULL},
+	 { (char *)"IplImage___setitem__", _wrap_IplImage___setitem__, METH_VARARGS, NULL},
+	 { (char *)"IplImage___getitem__", _wrap_IplImage___getitem__, METH_VARARGS, NULL},
+	 { (char *)"IplImage_swigregister", IplImage_swigregister, METH_VARARGS, NULL},
+	 { (char *)"IplROI_coi_set", _wrap_IplROI_coi_set, METH_VARARGS, NULL},
+	 { (char *)"IplROI_coi_get", _wrap_IplROI_coi_get, METH_VARARGS, NULL},
+	 { (char *)"IplROI_xOffset_set", _wrap_IplROI_xOffset_set, METH_VARARGS, NULL},
+	 { (char *)"IplROI_xOffset_get", _wrap_IplROI_xOffset_get, METH_VARARGS, NULL},
+	 { (char *)"IplROI_yOffset_set", _wrap_IplROI_yOffset_set, METH_VARARGS, NULL},
+	 { (char *)"IplROI_yOffset_get", _wrap_IplROI_yOffset_get, METH_VARARGS, NULL},
+	 { (char *)"IplROI_width_set", _wrap_IplROI_width_set, METH_VARARGS, NULL},
+	 { (char *)"IplROI_width_get", _wrap_IplROI_width_get, METH_VARARGS, NULL},
+	 { (char *)"IplROI_height_set", _wrap_IplROI_height_set, METH_VARARGS, NULL},
+	 { (char *)"IplROI_height_get", _wrap_IplROI_height_get, METH_VARARGS, NULL},
+	 { (char *)"new_IplROI", _wrap_new_IplROI, METH_VARARGS, NULL},
+	 { (char *)"delete_IplROI", _wrap_delete_IplROI, METH_VARARGS, NULL},
+	 { (char *)"IplROI_swigregister", IplROI_swigregister, METH_VARARGS, NULL},
+	 { (char *)"IplConvKernel_nCols_set", _wrap_IplConvKernel_nCols_set, METH_VARARGS, NULL},
+	 { (char *)"IplConvKernel_nCols_get", _wrap_IplConvKernel_nCols_get, METH_VARARGS, NULL},
+	 { (char *)"IplConvKernel_nRows_set", _wrap_IplConvKernel_nRows_set, METH_VARARGS, NULL},
+	 { (char *)"IplConvKernel_nRows_get", _wrap_IplConvKernel_nRows_get, METH_VARARGS, NULL},
+	 { (char *)"IplConvKernel_anchorX_set", _wrap_IplConvKernel_anchorX_set, METH_VARARGS, NULL},
+	 { (char *)"IplConvKernel_anchorX_get", _wrap_IplConvKernel_anchorX_get, METH_VARARGS, NULL},
+	 { (char *)"IplConvKernel_anchorY_set", _wrap_IplConvKernel_anchorY_set, METH_VARARGS, NULL},
+	 { (char *)"IplConvKernel_anchorY_get", _wrap_IplConvKernel_anchorY_get, METH_VARARGS, NULL},
+	 { (char *)"IplConvKernel_values_set", _wrap_IplConvKernel_values_set, METH_VARARGS, NULL},
+	 { (char *)"IplConvKernel_values_get", _wrap_IplConvKernel_values_get, METH_VARARGS, NULL},
+	 { (char *)"IplConvKernel_nShiftR_set", _wrap_IplConvKernel_nShiftR_set, METH_VARARGS, NULL},
+	 { (char *)"IplConvKernel_nShiftR_get", _wrap_IplConvKernel_nShiftR_get, METH_VARARGS, NULL},
+	 { (char *)"delete_IplConvKernel", _wrap_delete_IplConvKernel, METH_VARARGS, NULL},
+	 { (char *)"IplConvKernel_swigregister", IplConvKernel_swigregister, METH_VARARGS, NULL},
+	 { (char *)"IplConvKernelFP_nCols_set", _wrap_IplConvKernelFP_nCols_set, METH_VARARGS, NULL},
+	 { (char *)"IplConvKernelFP_nCols_get", _wrap_IplConvKernelFP_nCols_get, METH_VARARGS, NULL},
+	 { (char *)"IplConvKernelFP_nRows_set", _wrap_IplConvKernelFP_nRows_set, METH_VARARGS, NULL},
+	 { (char *)"IplConvKernelFP_nRows_get", _wrap_IplConvKernelFP_nRows_get, METH_VARARGS, NULL},
+	 { (char *)"IplConvKernelFP_anchorX_set", _wrap_IplConvKernelFP_anchorX_set, METH_VARARGS, NULL},
+	 { (char *)"IplConvKernelFP_anchorX_get", _wrap_IplConvKernelFP_anchorX_get, METH_VARARGS, NULL},
+	 { (char *)"IplConvKernelFP_anchorY_set", _wrap_IplConvKernelFP_anchorY_set, METH_VARARGS, NULL},
+	 { (char *)"IplConvKernelFP_anchorY_get", _wrap_IplConvKernelFP_anchorY_get, METH_VARARGS, NULL},
+	 { (char *)"IplConvKernelFP_values_set", _wrap_IplConvKernelFP_values_set, METH_VARARGS, NULL},
+	 { (char *)"IplConvKernelFP_values_get", _wrap_IplConvKernelFP_values_get, METH_VARARGS, NULL},
+	 { (char *)"new_IplConvKernelFP", _wrap_new_IplConvKernelFP, METH_VARARGS, NULL},
+	 { (char *)"delete_IplConvKernelFP", _wrap_delete_IplConvKernelFP, METH_VARARGS, NULL},
+	 { (char *)"IplConvKernelFP_swigregister", IplConvKernelFP_swigregister, METH_VARARGS, NULL},
+	 { (char *)"CvMat_type_set", _wrap_CvMat_type_set, METH_VARARGS, NULL},
+	 { (char *)"CvMat_type_get", _wrap_CvMat_type_get, METH_VARARGS, NULL},
+	 { (char *)"CvMat_step_set", _wrap_CvMat_step_set, METH_VARARGS, NULL},
+	 { (char *)"CvMat_step_get", _wrap_CvMat_step_get, METH_VARARGS, NULL},
+	 { (char *)"CvMat_refcount_set", _wrap_CvMat_refcount_set, METH_VARARGS, NULL},
+	 { (char *)"CvMat_refcount_get", _wrap_CvMat_refcount_get, METH_VARARGS, NULL},
+	 { (char *)"CvMat_hdr_refcount_set", _wrap_CvMat_hdr_refcount_set, METH_VARARGS, NULL},
+	 { (char *)"CvMat_hdr_refcount_get", _wrap_CvMat_hdr_refcount_get, METH_VARARGS, NULL},
+	 { (char *)"CvMat_data_get", _wrap_CvMat_data_get, METH_VARARGS, NULL},
+	 { (char *)"delete_CvMat", _wrap_delete_CvMat, METH_VARARGS, NULL},
+	 { (char *)"CvMat_depth_get", _wrap_CvMat_depth_get, METH_VARARGS, NULL},
+	 { (char *)"CvMat_nChannels_get", _wrap_CvMat_nChannels_get, METH_VARARGS, NULL},
+	 { (char *)"CvMat_dataOrder_get", _wrap_CvMat_dataOrder_get, METH_VARARGS, NULL},
+	 { (char *)"CvMat_origin_get", _wrap_CvMat_origin_get, METH_VARARGS, NULL},
+	 { (char *)"CvMat_width_get", _wrap_CvMat_width_get, METH_VARARGS, NULL},
+	 { (char *)"CvMat_height_get", _wrap_CvMat_height_get, METH_VARARGS, NULL},
+	 { (char *)"CvMat_imageSize_get", _wrap_CvMat_imageSize_get, METH_VARARGS, NULL},
+	 { (char *)"CvMat_widthStep_get", _wrap_CvMat_widthStep_get, METH_VARARGS, NULL},
+	 { (char *)"CvMat_rows_get", _wrap_CvMat_rows_get, METH_VARARGS, NULL},
+	 { (char *)"CvMat_cols_get", _wrap_CvMat_cols_get, METH_VARARGS, NULL},
+	 { (char *)"CvMat___mul__", _wrap_CvMat___mul__, METH_VARARGS, NULL},
+	 { (char *)"CvMat___imul__", _wrap_CvMat___imul__, METH_VARARGS, NULL},
+	 { (char *)"CvMat___idiv__", _wrap_CvMat___idiv__, METH_VARARGS, NULL},
+	 { (char *)"CvMat___add__", _wrap_CvMat___add__, METH_VARARGS, NULL},
+	 { (char *)"CvMat___iadd__", _wrap_CvMat___iadd__, METH_VARARGS, NULL},
+	 { (char *)"CvMat___xor__", _wrap_CvMat___xor__, METH_VARARGS, NULL},
+	 { (char *)"CvMat___ixor__", _wrap_CvMat___ixor__, METH_VARARGS, NULL},
+	 { (char *)"CvMat___sub__", _wrap_CvMat___sub__, METH_VARARGS, NULL},
+	 { (char *)"CvMat___isub__", _wrap_CvMat___isub__, METH_VARARGS, NULL},
+	 { (char *)"CvMat___or__", _wrap_CvMat___or__, METH_VARARGS, NULL},
+	 { (char *)"CvMat___ior__", _wrap_CvMat___ior__, METH_VARARGS, NULL},
+	 { (char *)"CvMat___and__", _wrap_CvMat___and__, METH_VARARGS, NULL},
+	 { (char *)"CvMat___iand__", _wrap_CvMat___iand__, METH_VARARGS, NULL},
+	 { (char *)"CvMat___ge__", _wrap_CvMat___ge__, METH_VARARGS, NULL},
+	 { (char *)"CvMat___eq__", _wrap_CvMat___eq__, METH_VARARGS, NULL},
+	 { (char *)"CvMat___le__", _wrap_CvMat___le__, METH_VARARGS, NULL},
+	 { (char *)"CvMat___ne__", _wrap_CvMat___ne__, METH_VARARGS, NULL},
+	 { (char *)"CvMat___lt__", _wrap_CvMat___lt__, METH_VARARGS, NULL},
+	 { (char *)"CvMat___gt__", _wrap_CvMat___gt__, METH_VARARGS, NULL},
+	 { (char *)"CvMat___div__", _wrap_CvMat___div__, METH_VARARGS, NULL},
+	 { (char *)"CvMat___radd__", _wrap_CvMat___radd__, METH_VARARGS, NULL},
+	 { (char *)"CvMat___rsub__", _wrap_CvMat___rsub__, METH_VARARGS, NULL},
+	 { (char *)"CvMat___rmul__", _wrap_CvMat___rmul__, METH_VARARGS, NULL},
+	 { (char *)"CvMat___rdiv__", _wrap_CvMat___rdiv__, METH_VARARGS, NULL},
+	 { (char *)"CvMat___ror__", _wrap_CvMat___ror__, METH_VARARGS, NULL},
+	 { (char *)"CvMat___rand__", _wrap_CvMat___rand__, METH_VARARGS, NULL},
+	 { (char *)"CvMat___rxor__", _wrap_CvMat___rxor__, METH_VARARGS, NULL},
+	 { (char *)"CvMat___req__", _wrap_CvMat___req__, METH_VARARGS, NULL},
+	 { (char *)"CvMat___rgt__", _wrap_CvMat___rgt__, METH_VARARGS, NULL},
+	 { (char *)"CvMat___rge__", _wrap_CvMat___rge__, METH_VARARGS, NULL},
+	 { (char *)"CvMat___rlt__", _wrap_CvMat___rlt__, METH_VARARGS, NULL},
+	 { (char *)"CvMat___rle__", _wrap_CvMat___rle__, METH_VARARGS, NULL},
+	 { (char *)"CvMat___rne__", _wrap_CvMat___rne__, METH_VARARGS, NULL},
+	 { (char *)"CvMat___pow__", _wrap_CvMat___pow__, METH_VARARGS, NULL},
+	 { (char *)"CvMat___str__", _wrap_CvMat___str__, METH_VARARGS, NULL},
+	 { (char *)"CvMat___setitem__", _wrap_CvMat___setitem__, METH_VARARGS, NULL},
+	 { (char *)"CvMat___getitem__", _wrap_CvMat___getitem__, METH_VARARGS, NULL},
+	 { (char *)"CvMat_imageData_set", _wrap_CvMat_imageData_set, METH_VARARGS, NULL},
+	 { (char *)"CvMat_imageData_get", _wrap_CvMat_imageData_get, METH_VARARGS, NULL},
+	 { (char *)"CvMat_swigregister", CvMat_swigregister, METH_VARARGS, NULL},
+	 { (char *)"CvMat_data_ptr_set", _wrap_CvMat_data_ptr_set, METH_VARARGS, NULL},
+	 { (char *)"CvMat_data_ptr_get", _wrap_CvMat_data_ptr_get, METH_VARARGS, NULL},
+	 { (char *)"CvMat_data_s_set", _wrap_CvMat_data_s_set, METH_VARARGS, NULL},
+	 { (char *)"CvMat_data_s_get", _wrap_CvMat_data_s_get, METH_VARARGS, NULL},
+	 { (char *)"CvMat_data_i_set", _wrap_CvMat_data_i_set, METH_VARARGS, NULL},
+	 { (char *)"CvMat_data_i_get", _wrap_CvMat_data_i_get, METH_VARARGS, NULL},
+	 { (char *)"CvMat_data_fl_set", _wrap_CvMat_data_fl_set, METH_VARARGS, NULL},
+	 { (char *)"CvMat_data_fl_get", _wrap_CvMat_data_fl_get, METH_VARARGS, NULL},
+	 { (char *)"CvMat_data_db_set", _wrap_CvMat_data_db_set, METH_VARARGS, NULL},
+	 { (char *)"CvMat_data_db_get", _wrap_CvMat_data_db_get, METH_VARARGS, NULL},
+	 { (char *)"new_CvMat_data", _wrap_new_CvMat_data, METH_VARARGS, NULL},
+	 { (char *)"delete_CvMat_data", _wrap_delete_CvMat_data, METH_VARARGS, NULL},
+	 { (char *)"CvMat_data_swigregister", CvMat_data_swigregister, METH_VARARGS, NULL},
+	 { (char *)"cvMat", _wrap_cvMat, METH_VARARGS, NULL},
+	 { (char *)"cvmGet", _wrap_cvmGet, METH_VARARGS, NULL},
+	 { (char *)"cvmSet", _wrap_cvmSet, METH_VARARGS, NULL},
+	 { (char *)"cvCvToIplDepth", _wrap_cvCvToIplDepth, METH_VARARGS, NULL},
+	 { (char *)"CvMatND_type_set", _wrap_CvMatND_type_set, METH_VARARGS, NULL},
+	 { (char *)"CvMatND_type_get", _wrap_CvMatND_type_get, METH_VARARGS, NULL},
+	 { (char *)"CvMatND_dims_set", _wrap_CvMatND_dims_set, METH_VARARGS, NULL},
+	 { (char *)"CvMatND_dims_get", _wrap_CvMatND_dims_get, METH_VARARGS, NULL},
+	 { (char *)"CvMatND_refcount_set", _wrap_CvMatND_refcount_set, METH_VARARGS, NULL},
+	 { (char *)"CvMatND_refcount_get", _wrap_CvMatND_refcount_get, METH_VARARGS, NULL},
+	 { (char *)"CvMatND_hdr_refcount_set", _wrap_CvMatND_hdr_refcount_set, METH_VARARGS, NULL},
+	 { (char *)"CvMatND_hdr_refcount_get", _wrap_CvMatND_hdr_refcount_get, METH_VARARGS, NULL},
+	 { (char *)"CvMatND_dim_get", _wrap_CvMatND_dim_get, METH_VARARGS, NULL},
+	 { (char *)"CvMatND_data_get", _wrap_CvMatND_data_get, METH_VARARGS, NULL},
+	 { (char *)"delete_CvMatND", _wrap_delete_CvMatND, METH_VARARGS, NULL},
+	 { (char *)"CvMatND_swigregister", CvMatND_swigregister, METH_VARARGS, NULL},
+	 { (char *)"CvMatND_dim_size_set", _wrap_CvMatND_dim_size_set, METH_VARARGS, NULL},
+	 { (char *)"CvMatND_dim_size_get", _wrap_CvMatND_dim_size_get, METH_VARARGS, NULL},
+	 { (char *)"CvMatND_dim_step_set", _wrap_CvMatND_dim_step_set, METH_VARARGS, NULL},
+	 { (char *)"CvMatND_dim_step_get", _wrap_CvMatND_dim_step_get, METH_VARARGS, NULL},
+	 { (char *)"new_CvMatND_dim", _wrap_new_CvMatND_dim, METH_VARARGS, NULL},
+	 { (char *)"delete_CvMatND_dim", _wrap_delete_CvMatND_dim, METH_VARARGS, NULL},
+	 { (char *)"CvMatND_dim_swigregister", CvMatND_dim_swigregister, METH_VARARGS, NULL},
+	 { (char *)"CvMatND_data_ptr_set", _wrap_CvMatND_data_ptr_set, METH_VARARGS, NULL},
+	 { (char *)"CvMatND_data_ptr_get", _wrap_CvMatND_data_ptr_get, METH_VARARGS, NULL},
+	 { (char *)"CvMatND_data_fl_set", _wrap_CvMatND_data_fl_set, METH_VARARGS, NULL},
+	 { (char *)"CvMatND_data_fl_get", _wrap_CvMatND_data_fl_get, METH_VARARGS, NULL},
+	 { (char *)"CvMatND_data_db_set", _wrap_CvMatND_data_db_set, METH_VARARGS, NULL},
+	 { (char *)"CvMatND_data_db_get", _wrap_CvMatND_data_db_get, METH_VARARGS, NULL},
+	 { (char *)"CvMatND_data_i_set", _wrap_CvMatND_data_i_set, METH_VARARGS, NULL},
+	 { (char *)"CvMatND_data_i_get", _wrap_CvMatND_data_i_get, METH_VARARGS, NULL},
+	 { (char *)"CvMatND_data_s_set", _wrap_CvMatND_data_s_set, METH_VARARGS, NULL},
+	 { (char *)"CvMatND_data_s_get", _wrap_CvMatND_data_s_get, METH_VARARGS, NULL},
+	 { (char *)"new_CvMatND_data", _wrap_new_CvMatND_data, METH_VARARGS, NULL},
+	 { (char *)"delete_CvMatND_data", _wrap_delete_CvMatND_data, METH_VARARGS, NULL},
+	 { (char *)"CvMatND_data_swigregister", CvMatND_data_swigregister, METH_VARARGS, NULL},
+	 { (char *)"CvSparseMat_type_set", _wrap_CvSparseMat_type_set, METH_VARARGS, NULL},
+	 { (char *)"CvSparseMat_type_get", _wrap_CvSparseMat_type_get, METH_VARARGS, NULL},
+	 { (char *)"CvSparseMat_dims_set", _wrap_CvSparseMat_dims_set, METH_VARARGS, NULL},
+	 { (char *)"CvSparseMat_dims_get", _wrap_CvSparseMat_dims_get, METH_VARARGS, NULL},
+	 { (char *)"CvSparseMat_refcount_set", _wrap_CvSparseMat_refcount_set, METH_VARARGS, NULL},
+	 { (char *)"CvSparseMat_refcount_get", _wrap_CvSparseMat_refcount_get, METH_VARARGS, NULL},
+	 { (char *)"CvSparseMat_hdr_refcount_set", _wrap_CvSparseMat_hdr_refcount_set, METH_VARARGS, NULL},
+	 { (char *)"CvSparseMat_hdr_refcount_get", _wrap_CvSparseMat_hdr_refcount_get, METH_VARARGS, NULL},
+	 { (char *)"CvSparseMat_heap_set", _wrap_CvSparseMat_heap_set, METH_VARARGS, NULL},
+	 { (char *)"CvSparseMat_heap_get", _wrap_CvSparseMat_heap_get, METH_VARARGS, NULL},
+	 { (char *)"CvSparseMat_hashtable_set", _wrap_CvSparseMat_hashtable_set, METH_VARARGS, NULL},
+	 { (char *)"CvSparseMat_hashtable_get", _wrap_CvSparseMat_hashtable_get, METH_VARARGS, NULL},
+	 { (char *)"CvSparseMat_hashsize_set", _wrap_CvSparseMat_hashsize_set, METH_VARARGS, NULL},
+	 { (char *)"CvSparseMat_hashsize_get", _wrap_CvSparseMat_hashsize_get, METH_VARARGS, NULL},
+	 { (char *)"CvSparseMat_valoffset_set", _wrap_CvSparseMat_valoffset_set, METH_VARARGS, NULL},
+	 { (char *)"CvSparseMat_valoffset_get", _wrap_CvSparseMat_valoffset_get, METH_VARARGS, NULL},
+	 { (char *)"CvSparseMat_idxoffset_set", _wrap_CvSparseMat_idxoffset_set, METH_VARARGS, NULL},
+	 { (char *)"CvSparseMat_idxoffset_get", _wrap_CvSparseMat_idxoffset_get, METH_VARARGS, NULL},
+	 { (char *)"CvSparseMat_size_set", _wrap_CvSparseMat_size_set, METH_VARARGS, NULL},
+	 { (char *)"CvSparseMat_size_get", _wrap_CvSparseMat_size_get, METH_VARARGS, NULL},
+	 { (char *)"delete_CvSparseMat", _wrap_delete_CvSparseMat, METH_VARARGS, NULL},
+	 { (char *)"CvSparseMat_swigregister", CvSparseMat_swigregister, METH_VARARGS, NULL},
+	 { (char *)"CvSparseNode_hashval_set", _wrap_CvSparseNode_hashval_set, METH_VARARGS, NULL},
+	 { (char *)"CvSparseNode_hashval_get", _wrap_CvSparseNode_hashval_get, METH_VARARGS, NULL},
+	 { (char *)"CvSparseNode_next_set", _wrap_CvSparseNode_next_set, METH_VARARGS, NULL},
+	 { (char *)"CvSparseNode_next_get", _wrap_CvSparseNode_next_get, METH_VARARGS, NULL},
+	 { (char *)"new_CvSparseNode", _wrap_new_CvSparseNode, METH_VARARGS, NULL},
+	 { (char *)"delete_CvSparseNode", _wrap_delete_CvSparseNode, METH_VARARGS, NULL},
+	 { (char *)"CvSparseNode_swigregister", CvSparseNode_swigregister, METH_VARARGS, NULL},
+	 { (char *)"CvSparseMatIterator_mat_set", _wrap_CvSparseMatIterator_mat_set, METH_VARARGS, NULL},
+	 { (char *)"CvSparseMatIterator_mat_get", _wrap_CvSparseMatIterator_mat_get, METH_VARARGS, NULL},
+	 { (char *)"CvSparseMatIterator_node_set", _wrap_CvSparseMatIterator_node_set, METH_VARARGS, NULL},
+	 { (char *)"CvSparseMatIterator_node_get", _wrap_CvSparseMatIterator_node_get, METH_VARARGS, NULL},
+	 { (char *)"CvSparseMatIterator_curidx_set", _wrap_CvSparseMatIterator_curidx_set, METH_VARARGS, NULL},
+	 { (char *)"CvSparseMatIterator_curidx_get", _wrap_CvSparseMatIterator_curidx_get, METH_VARARGS, NULL},
+	 { (char *)"new_CvSparseMatIterator", _wrap_new_CvSparseMatIterator, METH_VARARGS, NULL},
+	 { (char *)"delete_CvSparseMatIterator", _wrap_delete_CvSparseMatIterator, METH_VARARGS, NULL},
+	 { (char *)"CvSparseMatIterator_swigregister", CvSparseMatIterator_swigregister, METH_VARARGS, NULL},
+	 { (char *)"CvHistogram_type_set", _wrap_CvHistogram_type_set, METH_VARARGS, NULL},
+	 { (char *)"CvHistogram_type_get", _wrap_CvHistogram_type_get, METH_VARARGS, NULL},
+	 { (char *)"CvHistogram_bins_set", _wrap_CvHistogram_bins_set, METH_VARARGS, NULL},
+	 { (char *)"CvHistogram_bins_get", _wrap_CvHistogram_bins_get, METH_VARARGS, NULL},
+	 { (char *)"CvHistogram_thresh_set", _wrap_CvHistogram_thresh_set, METH_VARARGS, NULL},
+	 { (char *)"CvHistogram_thresh_get", _wrap_CvHistogram_thresh_get, METH_VARARGS, NULL},
+	 { (char *)"CvHistogram_thresh2_set", _wrap_CvHistogram_thresh2_set, METH_VARARGS, NULL},
+	 { (char *)"CvHistogram_thresh2_get", _wrap_CvHistogram_thresh2_get, METH_VARARGS, NULL},
+	 { (char *)"CvHistogram_mat_set", _wrap_CvHistogram_mat_set, METH_VARARGS, NULL},
+	 { (char *)"CvHistogram_mat_get", _wrap_CvHistogram_mat_get, METH_VARARGS, NULL},
+	 { (char *)"delete_CvHistogram", _wrap_delete_CvHistogram, METH_VARARGS, NULL},
+	 { (char *)"CvHistogram_swigregister", CvHistogram_swigregister, METH_VARARGS, NULL},
+	 { (char *)"CvRect_x_set", _wrap_CvRect_x_set, METH_VARARGS, NULL},
+	 { (char *)"CvRect_x_get", _wrap_CvRect_x_get, METH_VARARGS, NULL},
+	 { (char *)"CvRect_y_set", _wrap_CvRect_y_set, METH_VARARGS, NULL},
+	 { (char *)"CvRect_y_get", _wrap_CvRect_y_get, METH_VARARGS, NULL},
+	 { (char *)"CvRect_width_set", _wrap_CvRect_width_set, METH_VARARGS, NULL},
+	 { (char *)"CvRect_width_get", _wrap_CvRect_width_get, METH_VARARGS, NULL},
+	 { (char *)"CvRect_height_set", _wrap_CvRect_height_set, METH_VARARGS, NULL},
+	 { (char *)"CvRect_height_get", _wrap_CvRect_height_get, METH_VARARGS, NULL},
+	 { (char *)"new_CvRect", _wrap_new_CvRect, METH_VARARGS, NULL},
+	 { (char *)"delete_CvRect", _wrap_delete_CvRect, METH_VARARGS, NULL},
+	 { (char *)"CvRect_swigregister", CvRect_swigregister, METH_VARARGS, NULL},
+	 { (char *)"cvRect", _wrap_cvRect, METH_VARARGS, NULL},
+	 { (char *)"cvRectToROI", _wrap_cvRectToROI, METH_VARARGS, NULL},
+	 { (char *)"cvROIToRect", _wrap_cvROIToRect, METH_VARARGS, NULL},
+	 { (char *)"CvTermCriteria_type_set", _wrap_CvTermCriteria_type_set, METH_VARARGS, NULL},
+	 { (char *)"CvTermCriteria_type_get", _wrap_CvTermCriteria_type_get, METH_VARARGS, NULL},
+	 { (char *)"CvTermCriteria_max_iter_set", _wrap_CvTermCriteria_max_iter_set, METH_VARARGS, NULL},
+	 { (char *)"CvTermCriteria_max_iter_get", _wrap_CvTermCriteria_max_iter_get, METH_VARARGS, NULL},
+	 { (char *)"CvTermCriteria_epsilon_set", _wrap_CvTermCriteria_epsilon_set, METH_VARARGS, NULL},
+	 { (char *)"CvTermCriteria_epsilon_get", _wrap_CvTermCriteria_epsilon_get, METH_VARARGS, NULL},
+	 { (char *)"new_CvTermCriteria", _wrap_new_CvTermCriteria, METH_VARARGS, NULL},
+	 { (char *)"delete_CvTermCriteria", _wrap_delete_CvTermCriteria, METH_VARARGS, NULL},
+	 { (char *)"CvTermCriteria_swigregister", CvTermCriteria_swigregister, METH_VARARGS, NULL},
+	 { (char *)"cvTermCriteria", _wrap_cvTermCriteria, METH_VARARGS, NULL},
+	 { (char *)"CvPoint_x_set", _wrap_CvPoint_x_set, METH_VARARGS, NULL},
+	 { (char *)"CvPoint_x_get", _wrap_CvPoint_x_get, METH_VARARGS, NULL},
+	 { (char *)"CvPoint_y_set", _wrap_CvPoint_y_set, METH_VARARGS, NULL},
+	 { (char *)"CvPoint_y_get", _wrap_CvPoint_y_get, METH_VARARGS, NULL},
+	 { (char *)"CvPoint___str__", _wrap_CvPoint___str__, METH_VARARGS, NULL},
+	 { (char *)"CvPoint___repr__", _wrap_CvPoint___repr__, METH_VARARGS, NULL},
+	 { (char *)"new_CvPoint", _wrap_new_CvPoint, METH_VARARGS, NULL},
+	 { (char *)"delete_CvPoint", _wrap_delete_CvPoint, METH_VARARGS, NULL},
+	 { (char *)"CvPoint_swigregister", CvPoint_swigregister, METH_VARARGS, NULL},
+	 { (char *)"cvPoint", _wrap_cvPoint, METH_VARARGS, NULL},
+	 { (char *)"CvPoint2D32f_x_set", _wrap_CvPoint2D32f_x_set, METH_VARARGS, NULL},
+	 { (char *)"CvPoint2D32f_x_get", _wrap_CvPoint2D32f_x_get, METH_VARARGS, NULL},
+	 { (char *)"CvPoint2D32f_y_set", _wrap_CvPoint2D32f_y_set, METH_VARARGS, NULL},
+	 { (char *)"CvPoint2D32f_y_get", _wrap_CvPoint2D32f_y_get, METH_VARARGS, NULL},
+	 { (char *)"CvPoint2D32f___str__", _wrap_CvPoint2D32f___str__, METH_VARARGS, NULL},
+	 { (char *)"CvPoint2D32f___repr__", _wrap_CvPoint2D32f___repr__, METH_VARARGS, NULL},
+	 { (char *)"new_CvPoint2D32f", _wrap_new_CvPoint2D32f, METH_VARARGS, NULL},
+	 { (char *)"delete_CvPoint2D32f", _wrap_delete_CvPoint2D32f, METH_VARARGS, NULL},
+	 { (char *)"CvPoint2D32f_swigregister", CvPoint2D32f_swigregister, METH_VARARGS, NULL},
+	 { (char *)"cvPoint2D32f", _wrap_cvPoint2D32f, METH_VARARGS, NULL},
+	 { (char *)"cvPointTo32f", _wrap_cvPointTo32f, METH_VARARGS, NULL},
+	 { (char *)"cvPointFrom32f", _wrap_cvPointFrom32f, METH_VARARGS, NULL},
+	 { (char *)"CvPoint3D32f_x_set", _wrap_CvPoint3D32f_x_set, METH_VARARGS, NULL},
+	 { (char *)"CvPoint3D32f_x_get", _wrap_CvPoint3D32f_x_get, METH_VARARGS, NULL},
+	 { (char *)"CvPoint3D32f_y_set", _wrap_CvPoint3D32f_y_set, METH_VARARGS, NULL},
+	 { (char *)"CvPoint3D32f_y_get", _wrap_CvPoint3D32f_y_get, METH_VARARGS, NULL},
+	 { (char *)"CvPoint3D32f_z_set", _wrap_CvPoint3D32f_z_set, METH_VARARGS, NULL},
+	 { (char *)"CvPoint3D32f_z_get", _wrap_CvPoint3D32f_z_get, METH_VARARGS, NULL},
+	 { (char *)"new_CvPoint3D32f", _wrap_new_CvPoint3D32f, METH_VARARGS, NULL},
+	 { (char *)"delete_CvPoint3D32f", _wrap_delete_CvPoint3D32f, METH_VARARGS, NULL},
+	 { (char *)"CvPoint3D32f_swigregister", CvPoint3D32f_swigregister, METH_VARARGS, NULL},
+	 { (char *)"cvPoint3D32f", _wrap_cvPoint3D32f, METH_VARARGS, NULL},
+	 { (char *)"CvPoint2D64f_x_set", _wrap_CvPoint2D64f_x_set, METH_VARARGS, NULL},
+	 { (char *)"CvPoint2D64f_x_get", _wrap_CvPoint2D64f_x_get, METH_VARARGS, NULL},
+	 { (char *)"CvPoint2D64f_y_set", _wrap_CvPoint2D64f_y_set, METH_VARARGS, NULL},
+	 { (char *)"CvPoint2D64f_y_get", _wrap_CvPoint2D64f_y_get, METH_VARARGS, NULL},
+	 { (char *)"new_CvPoint2D64f", _wrap_new_CvPoint2D64f, METH_VARARGS, NULL},
+	 { (char *)"delete_CvPoint2D64f", _wrap_delete_CvPoint2D64f, METH_VARARGS, NULL},
+	 { (char *)"CvPoint2D64f_swigregister", CvPoint2D64f_swigregister, METH_VARARGS, NULL},
+	 { (char *)"cvPoint2D64f", _wrap_cvPoint2D64f, METH_VARARGS, NULL},
+	 { (char *)"CvPoint3D64f_x_set", _wrap_CvPoint3D64f_x_set, METH_VARARGS, NULL},
+	 { (char *)"CvPoint3D64f_x_get", _wrap_CvPoint3D64f_x_get, METH_VARARGS, NULL},
+	 { (char *)"CvPoint3D64f_y_set", _wrap_CvPoint3D64f_y_set, METH_VARARGS, NULL},
+	 { (char *)"CvPoint3D64f_y_get", _wrap_CvPoint3D64f_y_get, METH_VARARGS, NULL},
+	 { (char *)"CvPoint3D64f_z_set", _wrap_CvPoint3D64f_z_set, METH_VARARGS, NULL},
+	 { (char *)"CvPoint3D64f_z_get", _wrap_CvPoint3D64f_z_get, METH_VARARGS, NULL},
+	 { (char *)"new_CvPoint3D64f", _wrap_new_CvPoint3D64f, METH_VARARGS, NULL},
+	 { (char *)"delete_CvPoint3D64f", _wrap_delete_CvPoint3D64f, METH_VARARGS, NULL},
+	 { (char *)"CvPoint3D64f_swigregister", CvPoint3D64f_swigregister, METH_VARARGS, NULL},
+	 { (char *)"cvPoint3D64f", _wrap_cvPoint3D64f, METH_VARARGS, NULL},
+	 { (char *)"CvSize_width_set", _wrap_CvSize_width_set, METH_VARARGS, NULL},
+	 { (char *)"CvSize_width_get", _wrap_CvSize_width_get, METH_VARARGS, NULL},
+	 { (char *)"CvSize_height_set", _wrap_CvSize_height_set, METH_VARARGS, NULL},
+	 { (char *)"CvSize_height_get", _wrap_CvSize_height_get, METH_VARARGS, NULL},
+	 { (char *)"new_CvSize", _wrap_new_CvSize, METH_VARARGS, NULL},
+	 { (char *)"delete_CvSize", _wrap_delete_CvSize, METH_VARARGS, NULL},
+	 { (char *)"CvSize_swigregister", CvSize_swigregister, METH_VARARGS, NULL},
+	 { (char *)"cvSize", _wrap_cvSize, METH_VARARGS, NULL},
+	 { (char *)"CvSize2D32f_width_set", _wrap_CvSize2D32f_width_set, METH_VARARGS, NULL},
+	 { (char *)"CvSize2D32f_width_get", _wrap_CvSize2D32f_width_get, METH_VARARGS, NULL},
+	 { (char *)"CvSize2D32f_height_set", _wrap_CvSize2D32f_height_set, METH_VARARGS, NULL},
+	 { (char *)"CvSize2D32f_height_get", _wrap_CvSize2D32f_height_get, METH_VARARGS, NULL},
+	 { (char *)"new_CvSize2D32f", _wrap_new_CvSize2D32f, METH_VARARGS, NULL},
+	 { (char *)"delete_CvSize2D32f", _wrap_delete_CvSize2D32f, METH_VARARGS, NULL},
+	 { (char *)"CvSize2D32f_swigregister", CvSize2D32f_swigregister, METH_VARARGS, NULL},
+	 { (char *)"cvSize2D32f", _wrap_cvSize2D32f, METH_VARARGS, NULL},
+	 { (char *)"CvBox2D_center_set", _wrap_CvBox2D_center_set, METH_VARARGS, NULL},
+	 { (char *)"CvBox2D_center_get", _wrap_CvBox2D_center_get, METH_VARARGS, NULL},
+	 { (char *)"CvBox2D_size_set", _wrap_CvBox2D_size_set, METH_VARARGS, NULL},
+	 { (char *)"CvBox2D_size_get", _wrap_CvBox2D_size_get, METH_VARARGS, NULL},
+	 { (char *)"CvBox2D_angle_set", _wrap_CvBox2D_angle_set, METH_VARARGS, NULL},
+	 { (char *)"CvBox2D_angle_get", _wrap_CvBox2D_angle_get, METH_VARARGS, NULL},
+	 { (char *)"new_CvBox2D", _wrap_new_CvBox2D, METH_VARARGS, NULL},
+	 { (char *)"delete_CvBox2D", _wrap_delete_CvBox2D, METH_VARARGS, NULL},
+	 { (char *)"CvBox2D_swigregister", CvBox2D_swigregister, METH_VARARGS, NULL},
+	 { (char *)"CvLineIterator_ptr_set", _wrap_CvLineIterator_ptr_set, METH_VARARGS, NULL},
+	 { (char *)"CvLineIterator_ptr_get", _wrap_CvLineIterator_ptr_get, METH_VARARGS, NULL},
+	 { (char *)"CvLineIterator_err_set", _wrap_CvLineIterator_err_set, METH_VARARGS, NULL},
+	 { (char *)"CvLineIterator_err_get", _wrap_CvLineIterator_err_get, METH_VARARGS, NULL},
+	 { (char *)"CvLineIterator_plus_delta_set", _wrap_CvLineIterator_plus_delta_set, METH_VARARGS, NULL},
+	 { (char *)"CvLineIterator_plus_delta_get", _wrap_CvLineIterator_plus_delta_get, METH_VARARGS, NULL},
+	 { (char *)"CvLineIterator_minus_delta_set", _wrap_CvLineIterator_minus_delta_set, METH_VARARGS, NULL},
+	 { (char *)"CvLineIterator_minus_delta_get", _wrap_CvLineIterator_minus_delta_get, METH_VARARGS, NULL},
+	 { (char *)"CvLineIterator_plus_step_set", _wrap_CvLineIterator_plus_step_set, METH_VARARGS, NULL},
+	 { (char *)"CvLineIterator_plus_step_get", _wrap_CvLineIterator_plus_step_get, METH_VARARGS, NULL},
+	 { (char *)"CvLineIterator_minus_step_set", _wrap_CvLineIterator_minus_step_set, METH_VARARGS, NULL},
+	 { (char *)"CvLineIterator_minus_step_get", _wrap_CvLineIterator_minus_step_get, METH_VARARGS, NULL},
+	 { (char *)"new_CvLineIterator", _wrap_new_CvLineIterator, METH_VARARGS, NULL},
+	 { (char *)"delete_CvLineIterator", _wrap_delete_CvLineIterator, METH_VARARGS, NULL},
+	 { (char *)"CvLineIterator_swigregister", CvLineIterator_swigregister, METH_VARARGS, NULL},
+	 { (char *)"CvSlice_start_index_set", _wrap_CvSlice_start_index_set, METH_VARARGS, NULL},
+	 { (char *)"CvSlice_start_index_get", _wrap_CvSlice_start_index_get, METH_VARARGS, NULL},
+	 { (char *)"CvSlice_end_index_set", _wrap_CvSlice_end_index_set, METH_VARARGS, NULL},
+	 { (char *)"CvSlice_end_index_get", _wrap_CvSlice_end_index_get, METH_VARARGS, NULL},
+	 { (char *)"new_CvSlice", _wrap_new_CvSlice, METH_VARARGS, NULL},
+	 { (char *)"delete_CvSlice", _wrap_delete_CvSlice, METH_VARARGS, NULL},
+	 { (char *)"CvSlice_swigregister", CvSlice_swigregister, METH_VARARGS, NULL},
+	 { (char *)"cvSlice", _wrap_cvSlice, METH_VARARGS, NULL},
+	 { (char *)"CvScalar_val_set", _wrap_CvScalar_val_set, METH_VARARGS, NULL},
+	 { (char *)"CvScalar_val_get", _wrap_CvScalar_val_get, METH_VARARGS, NULL},
+	 { (char *)"CvScalar___str__", _wrap_CvScalar___str__, METH_VARARGS, NULL},
+	 { (char *)"CvScalar___repr__", _wrap_CvScalar___repr__, METH_VARARGS, NULL},
+	 { (char *)"CvScalar___getitem__", _wrap_CvScalar___getitem__, METH_VARARGS, NULL},
+	 { (char *)"CvScalar___setitem__", _wrap_CvScalar___setitem__, METH_VARARGS, NULL},
+	 { (char *)"new_CvScalar", _wrap_new_CvScalar, METH_VARARGS, NULL},
+	 { (char *)"delete_CvScalar", _wrap_delete_CvScalar, METH_VARARGS, NULL},
+	 { (char *)"CvScalar_swigregister", CvScalar_swigregister, METH_VARARGS, NULL},
+	 { (char *)"cvScalar", _wrap_cvScalar, METH_VARARGS, NULL},
+	 { (char *)"cvRealScalar", _wrap_cvRealScalar, METH_VARARGS, NULL},
+	 { (char *)"cvScalarAll", _wrap_cvScalarAll, METH_VARARGS, NULL},
+	 { (char *)"CvMemBlock_prev_set", _wrap_CvMemBlock_prev_set, METH_VARARGS, NULL},
+	 { (char *)"CvMemBlock_prev_get", _wrap_CvMemBlock_prev_get, METH_VARARGS, NULL},
+	 { (char *)"CvMemBlock_next_set", _wrap_CvMemBlock_next_set, METH_VARARGS, NULL},
+	 { (char *)"CvMemBlock_next_get", _wrap_CvMemBlock_next_get, METH_VARARGS, NULL},
+	 { (char *)"new_CvMemBlock", _wrap_new_CvMemBlock, METH_VARARGS, NULL},
+	 { (char *)"delete_CvMemBlock", _wrap_delete_CvMemBlock, METH_VARARGS, NULL},
+	 { (char *)"CvMemBlock_swigregister", CvMemBlock_swigregister, METH_VARARGS, NULL},
+	 { (char *)"CvMemStorage_signature_set", _wrap_CvMemStorage_signature_set, METH_VARARGS, NULL},
+	 { (char *)"CvMemStorage_signature_get", _wrap_CvMemStorage_signature_get, METH_VARARGS, NULL},
+	 { (char *)"CvMemStorage_bottom_set", _wrap_CvMemStorage_bottom_set, METH_VARARGS, NULL},
+	 { (char *)"CvMemStorage_bottom_get", _wrap_CvMemStorage_bottom_get, METH_VARARGS, NULL},
+	 { (char *)"CvMemStorage_top_set", _wrap_CvMemStorage_top_set, METH_VARARGS, NULL},
+	 { (char *)"CvMemStorage_top_get", _wrap_CvMemStorage_top_get, METH_VARARGS, NULL},
+	 { (char *)"CvMemStorage_parent_set", _wrap_CvMemStorage_parent_set, METH_VARARGS, NULL},
+	 { (char *)"CvMemStorage_parent_get", _wrap_CvMemStorage_parent_get, METH_VARARGS, NULL},
+	 { (char *)"CvMemStorage_block_size_set", _wrap_CvMemStorage_block_size_set, METH_VARARGS, NULL},
+	 { (char *)"CvMemStorage_block_size_get", _wrap_CvMemStorage_block_size_get, METH_VARARGS, NULL},
+	 { (char *)"CvMemStorage_free_space_set", _wrap_CvMemStorage_free_space_set, METH_VARARGS, NULL},
+	 { (char *)"CvMemStorage_free_space_get", _wrap_CvMemStorage_free_space_get, METH_VARARGS, NULL},
+	 { (char *)"delete_CvMemStorage", _wrap_delete_CvMemStorage, METH_VARARGS, NULL},
+	 { (char *)"CvMemStorage_swigregister", CvMemStorage_swigregister, METH_VARARGS, NULL},
+	 { (char *)"CvMemStoragePos_top_set", _wrap_CvMemStoragePos_top_set, METH_VARARGS, NULL},
+	 { (char *)"CvMemStoragePos_top_get", _wrap_CvMemStoragePos_top_get, METH_VARARGS, NULL},
+	 { (char *)"CvMemStoragePos_free_space_set", _wrap_CvMemStoragePos_free_space_set, METH_VARARGS, NULL},
+	 { (char *)"CvMemStoragePos_free_space_get", _wrap_CvMemStoragePos_free_space_get, METH_VARARGS, NULL},
+	 { (char *)"new_CvMemStoragePos", _wrap_new_CvMemStoragePos, METH_VARARGS, NULL},
+	 { (char *)"delete_CvMemStoragePos", _wrap_delete_CvMemStoragePos, METH_VARARGS, NULL},
+	 { (char *)"CvMemStoragePos_swigregister", CvMemStoragePos_swigregister, METH_VARARGS, NULL},
+	 { (char *)"CvSeqBlock_prev_set", _wrap_CvSeqBlock_prev_set, METH_VARARGS, NULL},
+	 { (char *)"CvSeqBlock_prev_get", _wrap_CvSeqBlock_prev_get, METH_VARARGS, NULL},
+	 { (char *)"CvSeqBlock_next_set", _wrap_CvSeqBlock_next_set, METH_VARARGS, NULL},
+	 { (char *)"CvSeqBlock_next_get", _wrap_CvSeqBlock_next_get, METH_VARARGS, NULL},
+	 { (char *)"CvSeqBlock_start_index_set", _wrap_CvSeqBlock_start_index_set, METH_VARARGS, NULL},
+	 { (char *)"CvSeqBlock_start_index_get", _wrap_CvSeqBlock_start_index_get, METH_VARARGS, NULL},
+	 { (char *)"CvSeqBlock_count_set", _wrap_CvSeqBlock_count_set, METH_VARARGS, NULL},
+	 { (char *)"CvSeqBlock_count_get", _wrap_CvSeqBlock_count_get, METH_VARARGS, NULL},
+	 { (char *)"CvSeqBlock_data_set", _wrap_CvSeqBlock_data_set, METH_VARARGS, NULL},
+	 { (char *)"CvSeqBlock_data_get", _wrap_CvSeqBlock_data_get, METH_VARARGS, NULL},
+	 { (char *)"new_CvSeqBlock", _wrap_new_CvSeqBlock, METH_VARARGS, NULL},
+	 { (char *)"delete_CvSeqBlock", _wrap_delete_CvSeqBlock, METH_VARARGS, NULL},
+	 { (char *)"CvSeqBlock_swigregister", CvSeqBlock_swigregister, METH_VARARGS, NULL},
+	 { (char *)"CvSeq_flags_set", _wrap_CvSeq_flags_set, METH_VARARGS, NULL},
+	 { (char *)"CvSeq_flags_get", _wrap_CvSeq_flags_get, METH_VARARGS, NULL},
+	 { (char *)"CvSeq_header_size_set", _wrap_CvSeq_header_size_set, METH_VARARGS, NULL},
+	 { (char *)"CvSeq_header_size_get", _wrap_CvSeq_header_size_get, METH_VARARGS, NULL},
+	 { (char *)"CvSeq_h_prev_set", _wrap_CvSeq_h_prev_set, METH_VARARGS, NULL},
+	 { (char *)"CvSeq_h_prev_get", _wrap_CvSeq_h_prev_get, METH_VARARGS, NULL},
+	 { (char *)"CvSeq_h_next_set", _wrap_CvSeq_h_next_set, METH_VARARGS, NULL},
+	 { (char *)"CvSeq_h_next_get", _wrap_CvSeq_h_next_get, METH_VARARGS, NULL},
+	 { (char *)"CvSeq_v_prev_set", _wrap_CvSeq_v_prev_set, METH_VARARGS, NULL},
+	 { (char *)"CvSeq_v_prev_get", _wrap_CvSeq_v_prev_get, METH_VARARGS, NULL},
+	 { (char *)"CvSeq_v_next_set", _wrap_CvSeq_v_next_set, METH_VARARGS, NULL},
+	 { (char *)"CvSeq_v_next_get", _wrap_CvSeq_v_next_get, METH_VARARGS, NULL},
+	 { (char *)"CvSeq_total_set", _wrap_CvSeq_total_set, METH_VARARGS, NULL},
+	 { (char *)"CvSeq_total_get", _wrap_CvSeq_total_get, METH_VARARGS, NULL},
+	 { (char *)"CvSeq_elem_size_set", _wrap_CvSeq_elem_size_set, METH_VARARGS, NULL},
+	 { (char *)"CvSeq_elem_size_get", _wrap_CvSeq_elem_size_get, METH_VARARGS, NULL},
+	 { (char *)"CvSeq_block_max_set", _wrap_CvSeq_block_max_set, METH_VARARGS, NULL},
+	 { (char *)"CvSeq_block_max_get", _wrap_CvSeq_block_max_get, METH_VARARGS, NULL},
+	 { (char *)"CvSeq_ptr_set", _wrap_CvSeq_ptr_set, METH_VARARGS, NULL},
+	 { (char *)"CvSeq_ptr_get", _wrap_CvSeq_ptr_get, METH_VARARGS, NULL},
+	 { (char *)"CvSeq_delta_elems_set", _wrap_CvSeq_delta_elems_set, METH_VARARGS, NULL},
+	 { (char *)"CvSeq_delta_elems_get", _wrap_CvSeq_delta_elems_get, METH_VARARGS, NULL},
+	 { (char *)"CvSeq_storage_set", _wrap_CvSeq_storage_set, METH_VARARGS, NULL},
+	 { (char *)"CvSeq_storage_get", _wrap_CvSeq_storage_get, METH_VARARGS, NULL},
+	 { (char *)"CvSeq_free_blocks_set", _wrap_CvSeq_free_blocks_set, METH_VARARGS, NULL},
+	 { (char *)"CvSeq_free_blocks_get", _wrap_CvSeq_free_blocks_get, METH_VARARGS, NULL},
+	 { (char *)"CvSeq_first_set", _wrap_CvSeq_first_set, METH_VARARGS, NULL},
+	 { (char *)"CvSeq_first_get", _wrap_CvSeq_first_get, METH_VARARGS, NULL},
+	 { (char *)"new_CvSeq", _wrap_new_CvSeq, METH_VARARGS, NULL},
+	 { (char *)"delete_CvSeq", _wrap_delete_CvSeq, METH_VARARGS, NULL},
+	 { (char *)"CvSeq_swigregister", CvSeq_swigregister, METH_VARARGS, NULL},
+	 { (char *)"CvSetElem_flags_set", _wrap_CvSetElem_flags_set, METH_VARARGS, NULL},
+	 { (char *)"CvSetElem_flags_get", _wrap_CvSetElem_flags_get, METH_VARARGS, NULL},
+	 { (char *)"CvSetElem_next_free_set", _wrap_CvSetElem_next_free_set, METH_VARARGS, NULL},
+	 { (char *)"CvSetElem_next_free_get", _wrap_CvSetElem_next_free_get, METH_VARARGS, NULL},
+	 { (char *)"new_CvSetElem", _wrap_new_CvSetElem, METH_VARARGS, NULL},
+	 { (char *)"delete_CvSetElem", _wrap_delete_CvSetElem, METH_VARARGS, NULL},
+	 { (char *)"CvSetElem_swigregister", CvSetElem_swigregister, METH_VARARGS, NULL},
+	 { (char *)"CvSet_flags_set", _wrap_CvSet_flags_set, METH_VARARGS, NULL},
+	 { (char *)"CvSet_flags_get", _wrap_CvSet_flags_get, METH_VARARGS, NULL},
+	 { (char *)"CvSet_header_size_set", _wrap_CvSet_header_size_set, METH_VARARGS, NULL},
+	 { (char *)"CvSet_header_size_get", _wrap_CvSet_header_size_get, METH_VARARGS, NULL},
+	 { (char *)"CvSet_h_prev_set", _wrap_CvSet_h_prev_set, METH_VARARGS, NULL},
+	 { (char *)"CvSet_h_prev_get", _wrap_CvSet_h_prev_get, METH_VARARGS, NULL},
+	 { (char *)"CvSet_h_next_set", _wrap_CvSet_h_next_set, METH_VARARGS, NULL},
+	 { (char *)"CvSet_h_next_get", _wrap_CvSet_h_next_get, METH_VARARGS, NULL},
+	 { (char *)"CvSet_v_prev_set", _wrap_CvSet_v_prev_set, METH_VARARGS, NULL},
+	 { (char *)"CvSet_v_prev_get", _wrap_CvSet_v_prev_get, METH_VARARGS, NULL},
+	 { (char *)"CvSet_v_next_set", _wrap_CvSet_v_next_set, METH_VARARGS, NULL},
+	 { (char *)"CvSet_v_next_get", _wrap_CvSet_v_next_get, METH_VARARGS, NULL},
+	 { (char *)"CvSet_total_set", _wrap_CvSet_total_set, METH_VARARGS, NULL},
+	 { (char *)"CvSet_total_get", _wrap_CvSet_total_get, METH_VARARGS, NULL},
+	 { (char *)"CvSet_elem_size_set", _wrap_CvSet_elem_size_set, METH_VARARGS, NULL},
+	 { (char *)"CvSet_elem_size_get", _wrap_CvSet_elem_size_get, METH_VARARGS, NULL},
+	 { (char *)"CvSet_block_max_set", _wrap_CvSet_block_max_set, METH_VARARGS, NULL},
+	 { (char *)"CvSet_block_max_get", _wrap_CvSet_block_max_get, METH_VARARGS, NULL},
+	 { (char *)"CvSet_ptr_set", _wrap_CvSet_ptr_set, METH_VARARGS, NULL},
+	 { (char *)"CvSet_ptr_get", _wrap_CvSet_ptr_get, METH_VARARGS, NULL},
+	 { (char *)"CvSet_delta_elems_set", _wrap_CvSet_delta_elems_set, METH_VARARGS, NULL},
+	 { (char *)"CvSet_delta_elems_get", _wrap_CvSet_delta_elems_get, METH_VARARGS, NULL},
+	 { (char *)"CvSet_storage_set", _wrap_CvSet_storage_set, METH_VARARGS, NULL},
+	 { (char *)"CvSet_storage_get", _wrap_CvSet_storage_get, METH_VARARGS, NULL},
+	 { (char *)"CvSet_free_blocks_set", _wrap_CvSet_free_blocks_set, METH_VARARGS, NULL},
+	 { (char *)"CvSet_free_blocks_get", _wrap_CvSet_free_blocks_get, METH_VARARGS, NULL},
+	 { (char *)"CvSet_first_set", _wrap_CvSet_first_set, METH_VARARGS, NULL},
+	 { (char *)"CvSet_first_get", _wrap_CvSet_first_get, METH_VARARGS, NULL},
+	 { (char *)"CvSet_free_elems_set", _wrap_CvSet_free_elems_set, METH_VARARGS, NULL},
+	 { (char *)"CvSet_free_elems_get", _wrap_CvSet_free_elems_get, METH_VARARGS, NULL},
+	 { (char *)"CvSet_active_count_set", _wrap_CvSet_active_count_set, METH_VARARGS, NULL},
+	 { (char *)"CvSet_active_count_get", _wrap_CvSet_active_count_get, METH_VARARGS, NULL},
+	 { (char *)"new_CvSet", _wrap_new_CvSet, METH_VARARGS, NULL},
+	 { (char *)"delete_CvSet", _wrap_delete_CvSet, METH_VARARGS, NULL},
+	 { (char *)"CvSet_swigregister", CvSet_swigregister, METH_VARARGS, NULL},
+	 { (char *)"CvGraphEdge_flags_set", _wrap_CvGraphEdge_flags_set, METH_VARARGS, NULL},
+	 { (char *)"CvGraphEdge_flags_get", _wrap_CvGraphEdge_flags_get, METH_VARARGS, NULL},
+	 { (char *)"CvGraphEdge_weight_set", _wrap_CvGraphEdge_weight_set, METH_VARARGS, NULL},
+	 { (char *)"CvGraphEdge_weight_get", _wrap_CvGraphEdge_weight_get, METH_VARARGS, NULL},
+	 { (char *)"CvGraphEdge_next_set", _wrap_CvGraphEdge_next_set, METH_VARARGS, NULL},
+	 { (char *)"CvGraphEdge_next_get", _wrap_CvGraphEdge_next_get, METH_VARARGS, NULL},
+	 { (char *)"CvGraphEdge_vtx_set", _wrap_CvGraphEdge_vtx_set, METH_VARARGS, NULL},
+	 { (char *)"CvGraphEdge_vtx_get", _wrap_CvGraphEdge_vtx_get, METH_VARARGS, NULL},
+	 { (char *)"new_CvGraphEdge", _wrap_new_CvGraphEdge, METH_VARARGS, NULL},
+	 { (char *)"delete_CvGraphEdge", _wrap_delete_CvGraphEdge, METH_VARARGS, NULL},
+	 { (char *)"CvGraphEdge_swigregister", CvGraphEdge_swigregister, METH_VARARGS, NULL},
+	 { (char *)"CvGraphVtx_flags_set", _wrap_CvGraphVtx_flags_set, METH_VARARGS, NULL},
+	 { (char *)"CvGraphVtx_flags_get", _wrap_CvGraphVtx_flags_get, METH_VARARGS, NULL},
+	 { (char *)"CvGraphVtx_first_set", _wrap_CvGraphVtx_first_set, METH_VARARGS, NULL},
+	 { (char *)"CvGraphVtx_first_get", _wrap_CvGraphVtx_first_get, METH_VARARGS, NULL},
+	 { (char *)"new_CvGraphVtx", _wrap_new_CvGraphVtx, METH_VARARGS, NULL},
+	 { (char *)"delete_CvGraphVtx", _wrap_delete_CvGraphVtx, METH_VARARGS, NULL},
+	 { (char *)"CvGraphVtx_swigregister", CvGraphVtx_swigregister, METH_VARARGS, NULL},
+	 { (char *)"CvGraphVtx2D_flags_set", _wrap_CvGraphVtx2D_flags_set, METH_VARARGS, NULL},
+	 { (char *)"CvGraphVtx2D_flags_get", _wrap_CvGraphVtx2D_flags_get, METH_VARARGS, NULL},
+	 { (char *)"CvGraphVtx2D_first_set", _wrap_CvGraphVtx2D_first_set, METH_VARARGS, NULL},
+	 { (char *)"CvGraphVtx2D_first_get", _wrap_CvGraphVtx2D_first_get, METH_VARARGS, NULL},
+	 { (char *)"CvGraphVtx2D_ptr_set", _wrap_CvGraphVtx2D_ptr_set, METH_VARARGS, NULL},
+	 { (char *)"CvGraphVtx2D_ptr_get", _wrap_CvGraphVtx2D_ptr_get, METH_VARARGS, NULL},
+	 { (char *)"new_CvGraphVtx2D", _wrap_new_CvGraphVtx2D, METH_VARARGS, NULL},
+	 { (char *)"delete_CvGraphVtx2D", _wrap_delete_CvGraphVtx2D, METH_VARARGS, NULL},
+	 { (char *)"CvGraphVtx2D_swigregister", CvGraphVtx2D_swigregister, METH_VARARGS, NULL},
+	 { (char *)"CvGraph_flags_set", _wrap_CvGraph_flags_set, METH_VARARGS, NULL},
+	 { (char *)"CvGraph_flags_get", _wrap_CvGraph_flags_get, METH_VARARGS, NULL},
+	 { (char *)"CvGraph_header_size_set", _wrap_CvGraph_header_size_set, METH_VARARGS, NULL},
+	 { (char *)"CvGraph_header_size_get", _wrap_CvGraph_header_size_get, METH_VARARGS, NULL},
+	 { (char *)"CvGraph_h_prev_set", _wrap_CvGraph_h_prev_set, METH_VARARGS, NULL},
+	 { (char *)"CvGraph_h_prev_get", _wrap_CvGraph_h_prev_get, METH_VARARGS, NULL},
+	 { (char *)"CvGraph_h_next_set", _wrap_CvGraph_h_next_set, METH_VARARGS, NULL},
+	 { (char *)"CvGraph_h_next_get", _wrap_CvGraph_h_next_get, METH_VARARGS, NULL},
+	 { (char *)"CvGraph_v_prev_set", _wrap_CvGraph_v_prev_set, METH_VARARGS, NULL},
+	 { (char *)"CvGraph_v_prev_get", _wrap_CvGraph_v_prev_get, METH_VARARGS, NULL},
+	 { (char *)"CvGraph_v_next_set", _wrap_CvGraph_v_next_set, METH_VARARGS, NULL},
+	 { (char *)"CvGraph_v_next_get", _wrap_CvGraph_v_next_get, METH_VARARGS, NULL},
+	 { (char *)"CvGraph_total_set", _wrap_CvGraph_total_set, METH_VARARGS, NULL},
+	 { (char *)"CvGraph_total_get", _wrap_CvGraph_total_get, METH_VARARGS, NULL},
+	 { (char *)"CvGraph_elem_size_set", _wrap_CvGraph_elem_size_set, METH_VARARGS, NULL},
+	 { (char *)"CvGraph_elem_size_get", _wrap_CvGraph_elem_size_get, METH_VARARGS, NULL},
+	 { (char *)"CvGraph_block_max_set", _wrap_CvGraph_block_max_set, METH_VARARGS, NULL},
+	 { (char *)"CvGraph_block_max_get", _wrap_CvGraph_block_max_get, METH_VARARGS, NULL},
+	 { (char *)"CvGraph_ptr_set", _wrap_CvGraph_ptr_set, METH_VARARGS, NULL},
+	 { (char *)"CvGraph_ptr_get", _wrap_CvGraph_ptr_get, METH_VARARGS, NULL},
+	 { (char *)"CvGraph_delta_elems_set", _wrap_CvGraph_delta_elems_set, METH_VARARGS, NULL},
+	 { (char *)"CvGraph_delta_elems_get", _wrap_CvGraph_delta_elems_get, METH_VARARGS, NULL},
+	 { (char *)"CvGraph_storage_set", _wrap_CvGraph_storage_set, METH_VARARGS, NULL},
+	 { (char *)"CvGraph_storage_get", _wrap_CvGraph_storage_get, METH_VARARGS, NULL},
+	 { (char *)"CvGraph_free_blocks_set", _wrap_CvGraph_free_blocks_set, METH_VARARGS, NULL},
+	 { (char *)"CvGraph_free_blocks_get", _wrap_CvGraph_free_blocks_get, METH_VARARGS, NULL},
+	 { (char *)"CvGraph_first_set", _wrap_CvGraph_first_set, METH_VARARGS, NULL},
+	 { (char *)"CvGraph_first_get", _wrap_CvGraph_first_get, METH_VARARGS, NULL},
+	 { (char *)"CvGraph_free_elems_set", _wrap_CvGraph_free_elems_set, METH_VARARGS, NULL},
+	 { (char *)"CvGraph_free_elems_get", _wrap_CvGraph_free_elems_get, METH_VARARGS, NULL},
+	 { (char *)"CvGraph_active_count_set", _wrap_CvGraph_active_count_set, METH_VARARGS, NULL},
+	 { (char *)"CvGraph_active_count_get", _wrap_CvGraph_active_count_get, METH_VARARGS, NULL},
+	 { (char *)"CvGraph_edges_set", _wrap_CvGraph_edges_set, METH_VARARGS, NULL},
+	 { (char *)"CvGraph_edges_get", _wrap_CvGraph_edges_get, METH_VARARGS, NULL},
+	 { (char *)"new_CvGraph", _wrap_new_CvGraph, METH_VARARGS, NULL},
+	 { (char *)"delete_CvGraph", _wrap_delete_CvGraph, METH_VARARGS, NULL},
+	 { (char *)"CvGraph_swigregister", CvGraph_swigregister, METH_VARARGS, NULL},
+	 { (char *)"CvChain_flags_set", _wrap_CvChain_flags_set, METH_VARARGS, NULL},
+	 { (char *)"CvChain_flags_get", _wrap_CvChain_flags_get, METH_VARARGS, NULL},
+	 { (char *)"CvChain_header_size_set", _wrap_CvChain_header_size_set, METH_VARARGS, NULL},
+	 { (char *)"CvChain_header_size_get", _wrap_CvChain_header_size_get, METH_VARARGS, NULL},
+	 { (char *)"CvChain_h_prev_set", _wrap_CvChain_h_prev_set, METH_VARARGS, NULL},
+	 { (char *)"CvChain_h_prev_get", _wrap_CvChain_h_prev_get, METH_VARARGS, NULL},
+	 { (char *)"CvChain_h_next_set", _wrap_CvChain_h_next_set, METH_VARARGS, NULL},
+	 { (char *)"CvChain_h_next_get", _wrap_CvChain_h_next_get, METH_VARARGS, NULL},
+	 { (char *)"CvChain_v_prev_set", _wrap_CvChain_v_prev_set, METH_VARARGS, NULL},
+	 { (char *)"CvChain_v_prev_get", _wrap_CvChain_v_prev_get, METH_VARARGS, NULL},
+	 { (char *)"CvChain_v_next_set", _wrap_CvChain_v_next_set, METH_VARARGS, NULL},
+	 { (char *)"CvChain_v_next_get", _wrap_CvChain_v_next_get, METH_VARARGS, NULL},
+	 { (char *)"CvChain_total_set", _wrap_CvChain_total_set, METH_VARARGS, NULL},
+	 { (char *)"CvChain_total_get", _wrap_CvChain_total_get, METH_VARARGS, NULL},
+	 { (char *)"CvChain_elem_size_set", _wrap_CvChain_elem_size_set, METH_VARARGS, NULL},
+	 { (char *)"CvChain_elem_size_get", _wrap_CvChain_elem_size_get, METH_VARARGS, NULL},
+	 { (char *)"CvChain_block_max_set", _wrap_CvChain_block_max_set, METH_VARARGS, NULL},
+	 { (char *)"CvChain_block_max_get", _wrap_CvChain_block_max_get, METH_VARARGS, NULL},
+	 { (char *)"CvChain_ptr_set", _wrap_CvChain_ptr_set, METH_VARARGS, NULL},
+	 { (char *)"CvChain_ptr_get", _wrap_CvChain_ptr_get, METH_VARARGS, NULL},
+	 { (char *)"CvChain_delta_elems_set", _wrap_CvChain_delta_elems_set, METH_VARARGS, NULL},
+	 { (char *)"CvChain_delta_elems_get", _wrap_CvChain_delta_elems_get, METH_VARARGS, NULL},
+	 { (char *)"CvChain_storage_set", _wrap_CvChain_storage_set, METH_VARARGS, NULL},
+	 { (char *)"CvChain_storage_get", _wrap_CvChain_storage_get, METH_VARARGS, NULL},
+	 { (char *)"CvChain_free_blocks_set", _wrap_CvChain_free_blocks_set, METH_VARARGS, NULL},
+	 { (char *)"CvChain_free_blocks_get", _wrap_CvChain_free_blocks_get, METH_VARARGS, NULL},
+	 { (char *)"CvChain_first_set", _wrap_CvChain_first_set, METH_VARARGS, NULL},
+	 { (char *)"CvChain_first_get", _wrap_CvChain_first_get, METH_VARARGS, NULL},
+	 { (char *)"CvChain_origin_set", _wrap_CvChain_origin_set, METH_VARARGS, NULL},
+	 { (char *)"CvChain_origin_get", _wrap_CvChain_origin_get, METH_VARARGS, NULL},
+	 { (char *)"new_CvChain", _wrap_new_CvChain, METH_VARARGS, NULL},
+	 { (char *)"delete_CvChain", _wrap_delete_CvChain, METH_VARARGS, NULL},
+	 { (char *)"CvChain_swigregister", CvChain_swigregister, METH_VARARGS, NULL},
+	 { (char *)"CvContour_flags_set", _wrap_CvContour_flags_set, METH_VARARGS, NULL},
+	 { (char *)"CvContour_flags_get", _wrap_CvContour_flags_get, METH_VARARGS, NULL},
+	 { (char *)"CvContour_header_size_set", _wrap_CvContour_header_size_set, METH_VARARGS, NULL},
+	 { (char *)"CvContour_header_size_get", _wrap_CvContour_header_size_get, METH_VARARGS, NULL},
+	 { (char *)"CvContour_h_prev_set", _wrap_CvContour_h_prev_set, METH_VARARGS, NULL},
+	 { (char *)"CvContour_h_prev_get", _wrap_CvContour_h_prev_get, METH_VARARGS, NULL},
+	 { (char *)"CvContour_h_next_set", _wrap_CvContour_h_next_set, METH_VARARGS, NULL},
+	 { (char *)"CvContour_h_next_get", _wrap_CvContour_h_next_get, METH_VARARGS, NULL},
+	 { (char *)"CvContour_v_prev_set", _wrap_CvContour_v_prev_set, METH_VARARGS, NULL},
+	 { (char *)"CvContour_v_prev_get", _wrap_CvContour_v_prev_get, METH_VARARGS, NULL},
+	 { (char *)"CvContour_v_next_set", _wrap_CvContour_v_next_set, METH_VARARGS, NULL},
+	 { (char *)"CvContour_v_next_get", _wrap_CvContour_v_next_get, METH_VARARGS, NULL},
+	 { (char *)"CvContour_total_set", _wrap_CvContour_total_set, METH_VARARGS, NULL},
+	 { (char *)"CvContour_total_get", _wrap_CvContour_total_get, METH_VARARGS, NULL},
+	 { (char *)"CvContour_elem_size_set", _wrap_CvContour_elem_size_set, METH_VARARGS, NULL},
+	 { (char *)"CvContour_elem_size_get", _wrap_CvContour_elem_size_get, METH_VARARGS, NULL},
+	 { (char *)"CvContour_block_max_set", _wrap_CvContour_block_max_set, METH_VARARGS, NULL},
+	 { (char *)"CvContour_block_max_get", _wrap_CvContour_block_max_get, METH_VARARGS, NULL},
+	 { (char *)"CvContour_ptr_set", _wrap_CvContour_ptr_set, METH_VARARGS, NULL},
+	 { (char *)"CvContour_ptr_get", _wrap_CvContour_ptr_get, METH_VARARGS, NULL},
+	 { (char *)"CvContour_delta_elems_set", _wrap_CvContour_delta_elems_set, METH_VARARGS, NULL},
+	 { (char *)"CvContour_delta_elems_get", _wrap_CvContour_delta_elems_get, METH_VARARGS, NULL},
+	 { (char *)"CvContour_storage_set", _wrap_CvContour_storage_set, METH_VARARGS, NULL},
+	 { (char *)"CvContour_storage_get", _wrap_CvContour_storage_get, METH_VARARGS, NULL},
+	 { (char *)"CvContour_free_blocks_set", _wrap_CvContour_free_blocks_set, METH_VARARGS, NULL},
+	 { (char *)"CvContour_free_blocks_get", _wrap_CvContour_free_blocks_get, METH_VARARGS, NULL},
+	 { (char *)"CvContour_first_set", _wrap_CvContour_first_set, METH_VARARGS, NULL},
+	 { (char *)"CvContour_first_get", _wrap_CvContour_first_get, METH_VARARGS, NULL},
+	 { (char *)"CvContour_rect_set", _wrap_CvContour_rect_set, METH_VARARGS, NULL},
+	 { (char *)"CvContour_rect_get", _wrap_CvContour_rect_get, METH_VARARGS, NULL},
+	 { (char *)"CvContour_color_set", _wrap_CvContour_color_set, METH_VARARGS, NULL},
+	 { (char *)"CvContour_color_get", _wrap_CvContour_color_get, METH_VARARGS, NULL},
+	 { (char *)"CvContour_reserved_set", _wrap_CvContour_reserved_set, METH_VARARGS, NULL},
+	 { (char *)"CvContour_reserved_get", _wrap_CvContour_reserved_get, METH_VARARGS, NULL},
+	 { (char *)"new_CvContour", _wrap_new_CvContour, METH_VARARGS, NULL},
+	 { (char *)"delete_CvContour", _wrap_delete_CvContour, METH_VARARGS, NULL},
+	 { (char *)"CvContour_swigregister", CvContour_swigregister, METH_VARARGS, NULL},
+	 { (char *)"CvSeqWriter_header_size_set", _wrap_CvSeqWriter_header_size_set, METH_VARARGS, NULL},
+	 { (char *)"CvSeqWriter_header_size_get", _wrap_CvSeqWriter_header_size_get, METH_VARARGS, NULL},
+	 { (char *)"CvSeqWriter_seq_set", _wrap_CvSeqWriter_seq_set, METH_VARARGS, NULL},
+	 { (char *)"CvSeqWriter_seq_get", _wrap_CvSeqWriter_seq_get, METH_VARARGS, NULL},
+	 { (char *)"CvSeqWriter_block_set", _wrap_CvSeqWriter_block_set, METH_VARARGS, NULL},
+	 { (char *)"CvSeqWriter_block_get", _wrap_CvSeqWriter_block_get, METH_VARARGS, NULL},
+	 { (char *)"CvSeqWriter_ptr_set", _wrap_CvSeqWriter_ptr_set, METH_VARARGS, NULL},
+	 { (char *)"CvSeqWriter_ptr_get", _wrap_CvSeqWriter_ptr_get, METH_VARARGS, NULL},
+	 { (char *)"CvSeqWriter_block_min_set", _wrap_CvSeqWriter_block_min_set, METH_VARARGS, NULL},
+	 { (char *)"CvSeqWriter_block_min_get", _wrap_CvSeqWriter_block_min_get, METH_VARARGS, NULL},
+	 { (char *)"CvSeqWriter_block_max_set", _wrap_CvSeqWriter_block_max_set, METH_VARARGS, NULL},
+	 { (char *)"CvSeqWriter_block_max_get", _wrap_CvSeqWriter_block_max_get, METH_VARARGS, NULL},
+	 { (char *)"new_CvSeqWriter", _wrap_new_CvSeqWriter, METH_VARARGS, NULL},
+	 { (char *)"delete_CvSeqWriter", _wrap_delete_CvSeqWriter, METH_VARARGS, NULL},
+	 { (char *)"CvSeqWriter_swigregister", CvSeqWriter_swigregister, METH_VARARGS, NULL},
+	 { (char *)"CvSeqReader_header_size_set", _wrap_CvSeqReader_header_size_set, METH_VARARGS, NULL},
+	 { (char *)"CvSeqReader_header_size_get", _wrap_CvSeqReader_header_size_get, METH_VARARGS, NULL},
+	 { (char *)"CvSeqReader_seq_set", _wrap_CvSeqReader_seq_set, METH_VARARGS, NULL},
+	 { (char *)"CvSeqReader_seq_get", _wrap_CvSeqReader_seq_get, METH_VARARGS, NULL},
+	 { (char *)"CvSeqReader_block_set", _wrap_CvSeqReader_block_set, METH_VARARGS, NULL},
+	 { (char *)"CvSeqReader_block_get", _wrap_CvSeqReader_block_get, METH_VARARGS, NULL},
+	 { (char *)"CvSeqReader_ptr_set", _wrap_CvSeqReader_ptr_set, METH_VARARGS, NULL},
+	 { (char *)"CvSeqReader_ptr_get", _wrap_CvSeqReader_ptr_get, METH_VARARGS, NULL},
+	 { (char *)"CvSeqReader_block_min_set", _wrap_CvSeqReader_block_min_set, METH_VARARGS, NULL},
+	 { (char *)"CvSeqReader_block_min_get", _wrap_CvSeqReader_block_min_get, METH_VARARGS, NULL},
+	 { (char *)"CvSeqReader_block_max_set", _wrap_CvSeqReader_block_max_set, METH_VARARGS, NULL},
+	 { (char *)"CvSeqReader_block_max_get", _wrap_CvSeqReader_block_max_get, METH_VARARGS, NULL},
+	 { (char *)"CvSeqReader_delta_index_set", _wrap_CvSeqReader_delta_index_set, METH_VARARGS, NULL},
+	 { (char *)"CvSeqReader_delta_index_get", _wrap_CvSeqReader_delta_index_get, METH_VARARGS, NULL},
+	 { (char *)"CvSeqReader_prev_elem_set", _wrap_CvSeqReader_prev_elem_set, METH_VARARGS, NULL},
+	 { (char *)"CvSeqReader_prev_elem_get", _wrap_CvSeqReader_prev_elem_get, METH_VARARGS, NULL},
+	 { (char *)"new_CvSeqReader", _wrap_new_CvSeqReader, METH_VARARGS, NULL},
+	 { (char *)"delete_CvSeqReader", _wrap_delete_CvSeqReader, METH_VARARGS, NULL},
+	 { (char *)"CvSeqReader_swigregister", CvSeqReader_swigregister, METH_VARARGS, NULL},
+	 { (char *)"CvAttrList_attr_set", _wrap_CvAttrList_attr_set, METH_VARARGS, NULL},
+	 { (char *)"CvAttrList_attr_get", _wrap_CvAttrList_attr_get, METH_VARARGS, NULL},
+	 { (char *)"CvAttrList_next_set", _wrap_CvAttrList_next_set, METH_VARARGS, NULL},
+	 { (char *)"CvAttrList_next_get", _wrap_CvAttrList_next_get, METH_VARARGS, NULL},
+	 { (char *)"new_CvAttrList", _wrap_new_CvAttrList, METH_VARARGS, NULL},
+	 { (char *)"delete_CvAttrList", _wrap_delete_CvAttrList, METH_VARARGS, NULL},
+	 { (char *)"CvAttrList_swigregister", CvAttrList_swigregister, METH_VARARGS, NULL},
+	 { (char *)"cvAttrList", _wrap_cvAttrList, METH_VARARGS, NULL},
+	 { (char *)"CvString_len_set", _wrap_CvString_len_set, METH_VARARGS, NULL},
+	 { (char *)"CvString_len_get", _wrap_CvString_len_get, METH_VARARGS, NULL},
+	 { (char *)"CvString_ptr_set", _wrap_CvString_ptr_set, METH_VARARGS, NULL},
+	 { (char *)"CvString_ptr_get", _wrap_CvString_ptr_get, METH_VARARGS, NULL},
+	 { (char *)"new_CvString", _wrap_new_CvString, METH_VARARGS, NULL},
+	 { (char *)"delete_CvString", _wrap_delete_CvString, METH_VARARGS, NULL},
+	 { (char *)"CvString_swigregister", CvString_swigregister, METH_VARARGS, NULL},
+	 { (char *)"CvStringHashNode_hashval_set", _wrap_CvStringHashNode_hashval_set, METH_VARARGS, NULL},
+	 { (char *)"CvStringHashNode_hashval_get", _wrap_CvStringHashNode_hashval_get, METH_VARARGS, NULL},
+	 { (char *)"CvStringHashNode_str_set", _wrap_CvStringHashNode_str_set, METH_VARARGS, NULL},
+	 { (char *)"CvStringHashNode_str_get", _wrap_CvStringHashNode_str_get, METH_VARARGS, NULL},
+	 { (char *)"CvStringHashNode_next_set", _wrap_CvStringHashNode_next_set, METH_VARARGS, NULL},
+	 { (char *)"CvStringHashNode_next_get", _wrap_CvStringHashNode_next_get, METH_VARARGS, NULL},
+	 { (char *)"new_CvStringHashNode", _wrap_new_CvStringHashNode, METH_VARARGS, NULL},
+	 { (char *)"delete_CvStringHashNode", _wrap_delete_CvStringHashNode, METH_VARARGS, NULL},
+	 { (char *)"CvStringHashNode_swigregister", CvStringHashNode_swigregister, METH_VARARGS, NULL},
+	 { (char *)"CvFileNode_tag_set", _wrap_CvFileNode_tag_set, METH_VARARGS, NULL},
+	 { (char *)"CvFileNode_tag_get", _wrap_CvFileNode_tag_get, METH_VARARGS, NULL},
+	 { (char *)"CvFileNode_info_set", _wrap_CvFileNode_info_set, METH_VARARGS, NULL},
+	 { (char *)"CvFileNode_info_get", _wrap_CvFileNode_info_get, METH_VARARGS, NULL},
+	 { (char *)"CvFileNode_data_get", _wrap_CvFileNode_data_get, METH_VARARGS, NULL},
+	 { (char *)"new_CvFileNode", _wrap_new_CvFileNode, METH_VARARGS, NULL},
+	 { (char *)"delete_CvFileNode", _wrap_delete_CvFileNode, METH_VARARGS, NULL},
+	 { (char *)"CvFileNode_swigregister", CvFileNode_swigregister, METH_VARARGS, NULL},
+	 { (char *)"CvFileNode_data_f_set", _wrap_CvFileNode_data_f_set, METH_VARARGS, NULL},
+	 { (char *)"CvFileNode_data_f_get", _wrap_CvFileNode_data_f_get, METH_VARARGS, NULL},
+	 { (char *)"CvFileNode_data_i_set", _wrap_CvFileNode_data_i_set, METH_VARARGS, NULL},
+	 { (char *)"CvFileNode_data_i_get", _wrap_CvFileNode_data_i_get, METH_VARARGS, NULL},
+	 { (char *)"CvFileNode_data_str_set", _wrap_CvFileNode_data_str_set, METH_VARARGS, NULL},
+	 { (char *)"CvFileNode_data_str_get", _wrap_CvFileNode_data_str_get, METH_VARARGS, NULL},
+	 { (char *)"CvFileNode_data_seq_set", _wrap_CvFileNode_data_seq_set, METH_VARARGS, NULL},
+	 { (char *)"CvFileNode_data_seq_get", _wrap_CvFileNode_data_seq_get, METH_VARARGS, NULL},
+	 { (char *)"CvFileNode_data_map_set", _wrap_CvFileNode_data_map_set, METH_VARARGS, NULL},
+	 { (char *)"CvFileNode_data_map_get", _wrap_CvFileNode_data_map_get, METH_VARARGS, NULL},
+	 { (char *)"new_CvFileNode_data", _wrap_new_CvFileNode_data, METH_VARARGS, NULL},
+	 { (char *)"delete_CvFileNode_data", _wrap_delete_CvFileNode_data, METH_VARARGS, NULL},
+	 { (char *)"CvFileNode_data_swigregister", CvFileNode_data_swigregister, METH_VARARGS, NULL},
+	 { (char *)"CvTypeInfo_flags_set", _wrap_CvTypeInfo_flags_set, METH_VARARGS, NULL},
+	 { (char *)"CvTypeInfo_flags_get", _wrap_CvTypeInfo_flags_get, METH_VARARGS, NULL},
+	 { (char *)"CvTypeInfo_header_size_set", _wrap_CvTypeInfo_header_size_set, METH_VARARGS, NULL},
+	 { (char *)"CvTypeInfo_header_size_get", _wrap_CvTypeInfo_header_size_get, METH_VARARGS, NULL},
+	 { (char *)"CvTypeInfo_prev_set", _wrap_CvTypeInfo_prev_set, METH_VARARGS, NULL},
+	 { (char *)"CvTypeInfo_prev_get", _wrap_CvTypeInfo_prev_get, METH_VARARGS, NULL},
+	 { (char *)"CvTypeInfo_next_set", _wrap_CvTypeInfo_next_set, METH_VARARGS, NULL},
+	 { (char *)"CvTypeInfo_next_get", _wrap_CvTypeInfo_next_get, METH_VARARGS, NULL},
+	 { (char *)"CvTypeInfo_type_name_set", _wrap_CvTypeInfo_type_name_set, METH_VARARGS, NULL},
+	 { (char *)"CvTypeInfo_type_name_get", _wrap_CvTypeInfo_type_name_get, METH_VARARGS, NULL},
+	 { (char *)"CvTypeInfo_is_instance_set", _wrap_CvTypeInfo_is_instance_set, METH_VARARGS, NULL},
+	 { (char *)"CvTypeInfo_is_instance_get", _wrap_CvTypeInfo_is_instance_get, METH_VARARGS, NULL},
+	 { (char *)"CvTypeInfo_release_set", _wrap_CvTypeInfo_release_set, METH_VARARGS, NULL},
+	 { (char *)"CvTypeInfo_release_get", _wrap_CvTypeInfo_release_get, METH_VARARGS, NULL},
+	 { (char *)"CvTypeInfo_read_set", _wrap_CvTypeInfo_read_set, METH_VARARGS, NULL},
+	 { (char *)"CvTypeInfo_read_get", _wrap_CvTypeInfo_read_get, METH_VARARGS, NULL},
+	 { (char *)"CvTypeInfo_write_set", _wrap_CvTypeInfo_write_set, METH_VARARGS, NULL},
+	 { (char *)"CvTypeInfo_write_get", _wrap_CvTypeInfo_write_get, METH_VARARGS, NULL},
+	 { (char *)"CvTypeInfo_clone_set", _wrap_CvTypeInfo_clone_set, METH_VARARGS, NULL},
+	 { (char *)"CvTypeInfo_clone_get", _wrap_CvTypeInfo_clone_get, METH_VARARGS, NULL},
+	 { (char *)"new_CvTypeInfo", _wrap_new_CvTypeInfo, METH_VARARGS, NULL},
+	 { (char *)"delete_CvTypeInfo", _wrap_delete_CvTypeInfo, METH_VARARGS, NULL},
+	 { (char *)"CvTypeInfo_swigregister", CvTypeInfo_swigregister, METH_VARARGS, NULL},
+	 { (char *)"CvPluginFuncInfo_func_addr_set", _wrap_CvPluginFuncInfo_func_addr_set, METH_VARARGS, NULL},
+	 { (char *)"CvPluginFuncInfo_func_addr_get", _wrap_CvPluginFuncInfo_func_addr_get, METH_VARARGS, NULL},
+	 { (char *)"CvPluginFuncInfo_default_func_addr_set", _wrap_CvPluginFuncInfo_default_func_addr_set, METH_VARARGS, NULL},
+	 { (char *)"CvPluginFuncInfo_default_func_addr_get", _wrap_CvPluginFuncInfo_default_func_addr_get, METH_VARARGS, NULL},
+	 { (char *)"CvPluginFuncInfo_func_names_set", _wrap_CvPluginFuncInfo_func_names_set, METH_VARARGS, NULL},
+	 { (char *)"CvPluginFuncInfo_func_names_get", _wrap_CvPluginFuncInfo_func_names_get, METH_VARARGS, NULL},
+	 { (char *)"CvPluginFuncInfo_search_modules_set", _wrap_CvPluginFuncInfo_search_modules_set, METH_VARARGS, NULL},
+	 { (char *)"CvPluginFuncInfo_search_modules_get", _wrap_CvPluginFuncInfo_search_modules_get, METH_VARARGS, NULL},
+	 { (char *)"CvPluginFuncInfo_loaded_from_set", _wrap_CvPluginFuncInfo_loaded_from_set, METH_VARARGS, NULL},
+	 { (char *)"CvPluginFuncInfo_loaded_from_get", _wrap_CvPluginFuncInfo_loaded_from_get, METH_VARARGS, NULL},
+	 { (char *)"new_CvPluginFuncInfo", _wrap_new_CvPluginFuncInfo, METH_VARARGS, NULL},
+	 { (char *)"delete_CvPluginFuncInfo", _wrap_delete_CvPluginFuncInfo, METH_VARARGS, NULL},
+	 { (char *)"CvPluginFuncInfo_swigregister", CvPluginFuncInfo_swigregister, METH_VARARGS, NULL},
+	 { (char *)"CvModuleInfo_next_set", _wrap_CvModuleInfo_next_set, METH_VARARGS, NULL},
+	 { (char *)"CvModuleInfo_next_get", _wrap_CvModuleInfo_next_get, METH_VARARGS, NULL},
+	 { (char *)"CvModuleInfo_name_set", _wrap_CvModuleInfo_name_set, METH_VARARGS, NULL},
+	 { (char *)"CvModuleInfo_name_get", _wrap_CvModuleInfo_name_get, METH_VARARGS, NULL},
+	 { (char *)"CvModuleInfo_version_set", _wrap_CvModuleInfo_version_set, METH_VARARGS, NULL},
+	 { (char *)"CvModuleInfo_version_get", _wrap_CvModuleInfo_version_get, METH_VARARGS, NULL},
+	 { (char *)"CvModuleInfo_func_tab_set", _wrap_CvModuleInfo_func_tab_set, METH_VARARGS, NULL},
+	 { (char *)"CvModuleInfo_func_tab_get", _wrap_CvModuleInfo_func_tab_get, METH_VARARGS, NULL},
+	 { (char *)"new_CvModuleInfo", _wrap_new_CvModuleInfo, METH_VARARGS, NULL},
+	 { (char *)"delete_CvModuleInfo", _wrap_delete_CvModuleInfo, METH_VARARGS, NULL},
+	 { (char *)"CvModuleInfo_swigregister", CvModuleInfo_swigregister, METH_VARARGS, NULL},
+	 { (char *)"cvAlloc", _wrap_cvAlloc, METH_VARARGS, NULL},
+	 { (char *)"cvFree_", _wrap_cvFree_, METH_VARARGS, NULL},
+	 { (char *)"cvResetImageROI", _wrap_cvResetImageROI, METH_VARARGS, NULL},
+	 { (char *)"cvCreateMatHeader", _wrap_cvCreateMatHeader, METH_VARARGS, NULL},
+	 { (char *)"cvInitMatHeader", _wrap_cvInitMatHeader, METH_VARARGS, NULL},
+	 { (char *)"cvCreateMat", _wrap_cvCreateMat, METH_VARARGS, NULL},
+	 { (char *)"cvDecRefData", _wrap_cvDecRefData, METH_VARARGS, NULL},
+	 { (char *)"cvIncRefData", _wrap_cvIncRefData, METH_VARARGS, NULL},
+	 { (char *)"cvCloneMat", _wrap_cvCloneMat, METH_VARARGS, NULL},
+	 { (char *)"cvGetSubRect", _wrap_cvGetSubRect, METH_VARARGS, NULL},
+	 { (char *)"cvGetRows", _wrap_cvGetRows, METH_VARARGS, NULL},
+	 { (char *)"cvGetRow", _wrap_cvGetRow, METH_VARARGS, NULL},
+	 { (char *)"cvGetCols", _wrap_cvGetCols, METH_VARARGS, NULL},
+	 { (char *)"cvGetCol", _wrap_cvGetCol, METH_VARARGS, NULL},
+	 { (char *)"cvGetDiag", _wrap_cvGetDiag, METH_VARARGS, NULL},
+	 { (char *)"cvScalarToRawData", _wrap_cvScalarToRawData, METH_VARARGS, NULL},
+	 { (char *)"cvRawDataToScalar", _wrap_cvRawDataToScalar, METH_VARARGS, NULL},
+	 { (char *)"cvCreateMatNDHeader", _wrap_cvCreateMatNDHeader, METH_VARARGS, NULL},
+	 { (char *)"cvCreateMatND", _wrap_cvCreateMatND, METH_VARARGS, NULL},
+	 { (char *)"cvInitMatNDHeader", _wrap_cvInitMatNDHeader, METH_VARARGS, NULL},
+	 { (char *)"cvCloneMatND", _wrap_cvCloneMatND, METH_VARARGS, NULL},
+	 { (char *)"cvCreateSparseMat", _wrap_cvCreateSparseMat, METH_VARARGS, NULL},
+	 { (char *)"cvCloneSparseMat", _wrap_cvCloneSparseMat, METH_VARARGS, NULL},
+	 { (char *)"cvInitSparseMatIterator", _wrap_cvInitSparseMatIterator, METH_VARARGS, NULL},
+	 { (char *)"cvGetNextSparseNode", _wrap_cvGetNextSparseNode, METH_VARARGS, NULL},
+	 { (char *)"CvNArrayIterator_count_set", _wrap_CvNArrayIterator_count_set, METH_VARARGS, NULL},
+	 { (char *)"CvNArrayIterator_count_get", _wrap_CvNArrayIterator_count_get, METH_VARARGS, NULL},
+	 { (char *)"CvNArrayIterator_dims_set", _wrap_CvNArrayIterator_dims_set, METH_VARARGS, NULL},
+	 { (char *)"CvNArrayIterator_dims_get", _wrap_CvNArrayIterator_dims_get, METH_VARARGS, NULL},
+	 { (char *)"CvNArrayIterator_size_set", _wrap_CvNArrayIterator_size_set, METH_VARARGS, NULL},
+	 { (char *)"CvNArrayIterator_size_get", _wrap_CvNArrayIterator_size_get, METH_VARARGS, NULL},
+	 { (char *)"CvNArrayIterator_ptr_set", _wrap_CvNArrayIterator_ptr_set, METH_VARARGS, NULL},
+	 { (char *)"CvNArrayIterator_ptr_get", _wrap_CvNArrayIterator_ptr_get, METH_VARARGS, NULL},
+	 { (char *)"CvNArrayIterator_stack_set", _wrap_CvNArrayIterator_stack_set, METH_VARARGS, NULL},
+	 { (char *)"CvNArrayIterator_stack_get", _wrap_CvNArrayIterator_stack_get, METH_VARARGS, NULL},
+	 { (char *)"CvNArrayIterator_hdr_set", _wrap_CvNArrayIterator_hdr_set, METH_VARARGS, NULL},
+	 { (char *)"CvNArrayIterator_hdr_get", _wrap_CvNArrayIterator_hdr_get, METH_VARARGS, NULL},
+	 { (char *)"new_CvNArrayIterator", _wrap_new_CvNArrayIterator, METH_VARARGS, NULL},
+	 { (char *)"delete_CvNArrayIterator", _wrap_delete_CvNArrayIterator, METH_VARARGS, NULL},
+	 { (char *)"CvNArrayIterator_swigregister", CvNArrayIterator_swigregister, METH_VARARGS, NULL},
+	 { (char *)"cvInitNArrayIterator", _wrap_cvInitNArrayIterator, METH_VARARGS, NULL},
+	 { (char *)"cvNextNArraySlice", _wrap_cvNextNArraySlice, METH_VARARGS, NULL},
+	 { (char *)"cvGetElemType", _wrap_cvGetElemType, METH_VARARGS, NULL},
+	 { (char *)"cvGetDims", _wrap_cvGetDims, METH_VARARGS, NULL},
+	 { (char *)"cvGetDimSize", _wrap_cvGetDimSize, METH_VARARGS, NULL},
+	 { (char *)"cvPtr1D", _wrap_cvPtr1D, METH_VARARGS, NULL},
+	 { (char *)"cvPtr2D", _wrap_cvPtr2D, METH_VARARGS, NULL},
+	 { (char *)"cvPtr3D", _wrap_cvPtr3D, METH_VARARGS, NULL},
+	 { (char *)"cvPtrND", _wrap_cvPtrND, METH_VARARGS, NULL},
+	 { (char *)"cvGet1D", _wrap_cvGet1D, METH_VARARGS, NULL},
+	 { (char *)"cvGet2D", _wrap_cvGet2D, METH_VARARGS, NULL},
+	 { (char *)"cvGet3D", _wrap_cvGet3D, METH_VARARGS, NULL},
+	 { (char *)"cvGetND", _wrap_cvGetND, METH_VARARGS, NULL},
+	 { (char *)"cvGetReal1D", _wrap_cvGetReal1D, METH_VARARGS, NULL},
+	 { (char *)"cvGetReal2D", _wrap_cvGetReal2D, METH_VARARGS, NULL},
+	 { (char *)"cvGetReal3D", _wrap_cvGetReal3D, METH_VARARGS, NULL},
+	 { (char *)"cvGetRealND", _wrap_cvGetRealND, METH_VARARGS, NULL},
+	 { (char *)"cvSet1D", _wrap_cvSet1D, METH_VARARGS, NULL},
+	 { (char *)"cvSet2D", _wrap_cvSet2D, METH_VARARGS, NULL},
+	 { (char *)"cvSet3D", _wrap_cvSet3D, METH_VARARGS, NULL},
+	 { (char *)"cvSetND", _wrap_cvSetND, METH_VARARGS, NULL},
+	 { (char *)"cvSetReal1D", _wrap_cvSetReal1D, METH_VARARGS, NULL},
+	 { (char *)"cvSetReal2D", _wrap_cvSetReal2D, METH_VARARGS, NULL},
+	 { (char *)"cvSetReal3D", _wrap_cvSetReal3D, METH_VARARGS, NULL},
+	 { (char *)"cvSetRealND", _wrap_cvSetRealND, METH_VARARGS, NULL},
+	 { (char *)"cvClearND", _wrap_cvClearND, METH_VARARGS, NULL},
+	 { (char *)"cvGetMat", _wrap_cvGetMat, METH_VARARGS, NULL},
+	 { (char *)"cvReshapeMatND", _wrap_cvReshapeMatND, METH_VARARGS, NULL},
+	 { (char *)"cvReshape", _wrap_cvReshape, METH_VARARGS, NULL},
+	 { (char *)"cvRepeat", _wrap_cvRepeat, METH_VARARGS, NULL},
+	 { (char *)"cvCreateData", _wrap_cvCreateData, METH_VARARGS, NULL},
+	 { (char *)"cvReleaseData", _wrap_cvReleaseData, METH_VARARGS, NULL},
+	 { (char *)"cvSetData", _wrap_cvSetData, METH_VARARGS, NULL},
+	 { (char *)"cvGetRawData", _wrap_cvGetRawData, METH_VARARGS, NULL},
+	 { (char *)"cvGetSize", _wrap_cvGetSize, METH_VARARGS, NULL},
+	 { (char *)"cvCopy", _wrap_cvCopy, METH_VARARGS, NULL},
+	 { (char *)"cvSet", _wrap_cvSet, METH_VARARGS, NULL},
+	 { (char *)"cvSetZero", _wrap_cvSetZero, METH_VARARGS, NULL},
+	 { (char *)"cvSplit", _wrap_cvSplit, METH_VARARGS, NULL},
+	 { (char *)"cvMerge", _wrap_cvMerge, METH_VARARGS, NULL},
+	 { (char *)"cvMixChannels", _wrap_cvMixChannels, METH_VARARGS, NULL},
+	 { (char *)"cvConvertScale", _wrap_cvConvertScale, METH_VARARGS, NULL},
+	 { (char *)"cvConvertScaleAbs", _wrap_cvConvertScaleAbs, METH_VARARGS, NULL},
+	 { (char *)"cvCheckTermCriteria", _wrap_cvCheckTermCriteria, METH_VARARGS, NULL},
+	 { (char *)"cvAdd", _wrap_cvAdd, METH_VARARGS, NULL},
+	 { (char *)"cvAddS", _wrap_cvAddS, METH_VARARGS, NULL},
+	 { (char *)"cvSub", _wrap_cvSub, METH_VARARGS, NULL},
+	 { (char *)"cvSubS", _wrap_cvSubS, METH_VARARGS, NULL},
+	 { (char *)"cvSubRS", _wrap_cvSubRS, METH_VARARGS, NULL},
+	 { (char *)"cvMul", _wrap_cvMul, METH_VARARGS, NULL},
+	 { (char *)"cvDiv", _wrap_cvDiv, METH_VARARGS, NULL},
+	 { (char *)"cvScaleAdd", _wrap_cvScaleAdd, METH_VARARGS, NULL},
+	 { (char *)"cvAddWeighted", _wrap_cvAddWeighted, METH_VARARGS, NULL},
+	 { (char *)"cvDotProduct", _wrap_cvDotProduct, METH_VARARGS, NULL},
+	 { (char *)"cvAnd", _wrap_cvAnd, METH_VARARGS, NULL},
+	 { (char *)"cvAndS", _wrap_cvAndS, METH_VARARGS, NULL},
+	 { (char *)"cvOr", _wrap_cvOr, METH_VARARGS, NULL},
+	 { (char *)"cvOrS", _wrap_cvOrS, METH_VARARGS, NULL},
+	 { (char *)"cvXor", _wrap_cvXor, METH_VARARGS, NULL},
+	 { (char *)"cvXorS", _wrap_cvXorS, METH_VARARGS, NULL},
+	 { (char *)"cvNot", _wrap_cvNot, METH_VARARGS, NULL},
+	 { (char *)"cvInRange", _wrap_cvInRange, METH_VARARGS, NULL},
+	 { (char *)"cvInRangeS", _wrap_cvInRangeS, METH_VARARGS, NULL},
+	 { (char *)"cvCmp", _wrap_cvCmp, METH_VARARGS, NULL},
+	 { (char *)"cvCmpS", _wrap_cvCmpS, METH_VARARGS, NULL},
+	 { (char *)"cvMin", _wrap_cvMin, METH_VARARGS, NULL},
+	 { (char *)"cvMax", _wrap_cvMax, METH_VARARGS, NULL},
+	 { (char *)"cvMinS", _wrap_cvMinS, METH_VARARGS, NULL},
+	 { (char *)"cvMaxS", _wrap_cvMaxS, METH_VARARGS, NULL},
+	 { (char *)"cvAbsDiff", _wrap_cvAbsDiff, METH_VARARGS, NULL},
+	 { (char *)"cvAbsDiffS", _wrap_cvAbsDiffS, METH_VARARGS, NULL},
+	 { (char *)"cvCartToPolar", _wrap_cvCartToPolar, METH_VARARGS, NULL},
+	 { (char *)"cvPolarToCart", _wrap_cvPolarToCart, METH_VARARGS, NULL},
+	 { (char *)"cvPow", _wrap_cvPow, METH_VARARGS, NULL},
+	 { (char *)"cvExp", _wrap_cvExp, METH_VARARGS, NULL},
+	 { (char *)"cvLog", _wrap_cvLog, METH_VARARGS, NULL},
+	 { (char *)"cvFastArctan", _wrap_cvFastArctan, METH_VARARGS, NULL},
+	 { (char *)"cvCbrt", _wrap_cvCbrt, METH_VARARGS, NULL},
+	 { (char *)"cvCheckArr", _wrap_cvCheckArr, METH_VARARGS, NULL},
+	 { (char *)"cvRandArr", _wrap_cvRandArr, METH_VARARGS, NULL},
+	 { (char *)"cvRandShuffle", _wrap_cvRandShuffle, METH_VARARGS, NULL},
+	 { (char *)"cvSolveCubic", _wrap_cvSolveCubic, METH_VARARGS, NULL},
+	 { (char *)"cvCrossProduct", _wrap_cvCrossProduct, METH_VARARGS, NULL},
+	 { (char *)"cvGEMM", _wrap_cvGEMM, METH_VARARGS, NULL},
+	 { (char *)"cvTransform", _wrap_cvTransform, METH_VARARGS, NULL},
+	 { (char *)"cvPerspectiveTransform", _wrap_cvPerspectiveTransform, METH_VARARGS, NULL},
+	 { (char *)"cvMulTransposed", _wrap_cvMulTransposed, METH_VARARGS, NULL},
+	 { (char *)"cvTranspose", _wrap_cvTranspose, METH_VARARGS, NULL},
+	 { (char *)"cvFlip", _wrap_cvFlip, METH_VARARGS, NULL},
+	 { (char *)"cvSVD", _wrap_cvSVD, METH_VARARGS, NULL},
+	 { (char *)"cvSVBkSb", _wrap_cvSVBkSb, METH_VARARGS, NULL},
+	 { (char *)"cvInvert", _wrap_cvInvert, METH_VARARGS, NULL},
+	 { (char *)"cvSolve", _wrap_cvSolve, METH_VARARGS, NULL},
+	 { (char *)"cvDet", _wrap_cvDet, METH_VARARGS, NULL},
+	 { (char *)"cvTrace", _wrap_cvTrace, METH_VARARGS, NULL},
+	 { (char *)"cvEigenVV", _wrap_cvEigenVV, METH_VARARGS, NULL},
+	 { (char *)"cvSetIdentity", _wrap_cvSetIdentity, METH_VARARGS, NULL},
+	 { (char *)"cvRange", _wrap_cvRange, METH_VARARGS, NULL},
+	 { (char *)"cvCalcCovarMatrix", _wrap_cvCalcCovarMatrix, METH_VARARGS, NULL},
+	 { (char *)"cvCalcPCA", _wrap_cvCalcPCA, METH_VARARGS, NULL},
+	 { (char *)"cvProjectPCA", _wrap_cvProjectPCA, METH_VARARGS, NULL},
+	 { (char *)"cvBackProjectPCA", _wrap_cvBackProjectPCA, METH_VARARGS, NULL},
+	 { (char *)"cvMahalanobis", _wrap_cvMahalanobis, METH_VARARGS, NULL},
+	 { (char *)"cvSum", _wrap_cvSum, METH_VARARGS, NULL},
+	 { (char *)"cvCountNonZero", _wrap_cvCountNonZero, METH_VARARGS, NULL},
+	 { (char *)"cvAvg", _wrap_cvAvg, METH_VARARGS, NULL},
+	 { (char *)"cvAvgSdv", _wrap_cvAvgSdv, METH_VARARGS, NULL},
+	 { (char *)"cvMinMaxLoc", _wrap_cvMinMaxLoc, METH_VARARGS, NULL},
+	 { (char *)"cvNorm", _wrap_cvNorm, METH_VARARGS, NULL},
+	 { (char *)"cvNormalize", _wrap_cvNormalize, METH_VARARGS, NULL},
+	 { (char *)"cvReduce", _wrap_cvReduce, METH_VARARGS, NULL},
+	 { (char *)"cvDFT", _wrap_cvDFT, METH_VARARGS, NULL},
+	 { (char *)"cvMulSpectrums", _wrap_cvMulSpectrums, METH_VARARGS, NULL},
+	 { (char *)"cvGetOptimalDFTSize", _wrap_cvGetOptimalDFTSize, METH_VARARGS, NULL},
+	 { (char *)"cvDCT", _wrap_cvDCT, METH_VARARGS, NULL},
+	 { (char *)"cvSliceLength", _wrap_cvSliceLength, METH_VARARGS, NULL},
+	 { (char *)"cvCreateMemStorage", _wrap_cvCreateMemStorage, METH_VARARGS, NULL},
+	 { (char *)"cvCreateChildMemStorage", _wrap_cvCreateChildMemStorage, METH_VARARGS, NULL},
+	 { (char *)"cvClearMemStorage", _wrap_cvClearMemStorage, METH_VARARGS, NULL},
+	 { (char *)"cvSaveMemStoragePos", _wrap_cvSaveMemStoragePos, METH_VARARGS, NULL},
+	 { (char *)"cvRestoreMemStoragePos", _wrap_cvRestoreMemStoragePos, METH_VARARGS, NULL},
+	 { (char *)"cvMemStorageAlloc", _wrap_cvMemStorageAlloc, METH_VARARGS, NULL},
+	 { (char *)"cvMemStorageAllocString", _wrap_cvMemStorageAllocString, METH_VARARGS, NULL},
+	 { (char *)"cvCreateSeq", _wrap_cvCreateSeq, METH_VARARGS, NULL},
+	 { (char *)"cvSetSeqBlockSize", _wrap_cvSetSeqBlockSize, METH_VARARGS, NULL},
+	 { (char *)"cvSeqPush", _wrap_cvSeqPush, METH_VARARGS, NULL},
+	 { (char *)"cvSeqPushFront", _wrap_cvSeqPushFront, METH_VARARGS, NULL},
+	 { (char *)"cvSeqPop", _wrap_cvSeqPop, METH_VARARGS, NULL},
+	 { (char *)"cvSeqPopFront", _wrap_cvSeqPopFront, METH_VARARGS, NULL},
+	 { (char *)"cvSeqPushMulti", _wrap_cvSeqPushMulti, METH_VARARGS, NULL},
+	 { (char *)"cvSeqPopMulti", _wrap_cvSeqPopMulti, METH_VARARGS, NULL},
+	 { (char *)"cvSeqInsert", _wrap_cvSeqInsert, METH_VARARGS, NULL},
+	 { (char *)"cvSeqRemove", _wrap_cvSeqRemove, METH_VARARGS, NULL},
+	 { (char *)"cvClearSeq", _wrap_cvClearSeq, METH_VARARGS, NULL},
+	 { (char *)"cvGetSeqElem", _wrap_cvGetSeqElem, METH_VARARGS, NULL},
+	 { (char *)"cvSeqElemIdx", _wrap_cvSeqElemIdx, METH_VARARGS, NULL},
+	 { (char *)"cvStartAppendToSeq", _wrap_cvStartAppendToSeq, METH_VARARGS, NULL},
+	 { (char *)"cvStartWriteSeq", _wrap_cvStartWriteSeq, METH_VARARGS, NULL},
+	 { (char *)"cvEndWriteSeq", _wrap_cvEndWriteSeq, METH_VARARGS, NULL},
+	 { (char *)"cvFlushSeqWriter", _wrap_cvFlushSeqWriter, METH_VARARGS, NULL},
+	 { (char *)"cvStartReadSeq", _wrap_cvStartReadSeq, METH_VARARGS, NULL},
+	 { (char *)"cvGetSeqReaderPos", _wrap_cvGetSeqReaderPos, METH_VARARGS, NULL},
+	 { (char *)"cvSetSeqReaderPos", _wrap_cvSetSeqReaderPos, METH_VARARGS, NULL},
+	 { (char *)"cvMakeSeqHeaderForArray", _wrap_cvMakeSeqHeaderForArray, METH_VARARGS, NULL},
+	 { (char *)"cvSeqSlice", _wrap_cvSeqSlice, METH_VARARGS, NULL},
+	 { (char *)"cvCloneSeq", _wrap_cvCloneSeq, METH_VARARGS, NULL},
+	 { (char *)"cvSeqRemoveSlice", _wrap_cvSeqRemoveSlice, METH_VARARGS, NULL},
+	 { (char *)"cvSeqInsertSlice", _wrap_cvSeqInsertSlice, METH_VARARGS, NULL},
+	 { (char *)"cvSeqSort", _wrap_cvSeqSort, METH_VARARGS, NULL},
+	 { (char *)"cvSeqSearch", _wrap_cvSeqSearch, METH_VARARGS, NULL},
+	 { (char *)"cvSeqInvert", _wrap_cvSeqInvert, METH_VARARGS, NULL},
+	 { (char *)"cvSeqPartition", _wrap_cvSeqPartition, METH_VARARGS, NULL},
+	 { (char *)"cvChangeSeqBlock", _wrap_cvChangeSeqBlock, METH_VARARGS, NULL},
+	 { (char *)"cvCreateSeqBlock", _wrap_cvCreateSeqBlock, METH_VARARGS, NULL},
+	 { (char *)"cvCreateSet", _wrap_cvCreateSet, METH_VARARGS, NULL},
+	 { (char *)"cvSetAdd", _wrap_cvSetAdd, METH_VARARGS, NULL},
+	 { (char *)"cvSetNew", _wrap_cvSetNew, METH_VARARGS, NULL},
+	 { (char *)"cvSetRemoveByPtr", _wrap_cvSetRemoveByPtr, METH_VARARGS, NULL},
+	 { (char *)"cvSetRemove", _wrap_cvSetRemove, METH_VARARGS, NULL},
+	 { (char *)"cvGetSetElem", _wrap_cvGetSetElem, METH_VARARGS, NULL},
+	 { (char *)"cvClearSet", _wrap_cvClearSet, METH_VARARGS, NULL},
+	 { (char *)"cvCreateGraph", _wrap_cvCreateGraph, METH_VARARGS, NULL},
+	 { (char *)"cvGraphAddVtx", _wrap_cvGraphAddVtx, METH_VARARGS, NULL},
+	 { (char *)"cvGraphRemoveVtx", _wrap_cvGraphRemoveVtx, METH_VARARGS, NULL},
+	 { (char *)"cvGraphRemoveVtxByPtr", _wrap_cvGraphRemoveVtxByPtr, METH_VARARGS, NULL},
+	 { (char *)"cvGraphAddEdge", _wrap_cvGraphAddEdge, METH_VARARGS, NULL},
+	 { (char *)"cvGraphAddEdgeByPtr", _wrap_cvGraphAddEdgeByPtr, METH_VARARGS, NULL},
+	 { (char *)"cvGraphRemoveEdge", _wrap_cvGraphRemoveEdge, METH_VARARGS, NULL},
+	 { (char *)"cvGraphRemoveEdgeByPtr", _wrap_cvGraphRemoveEdgeByPtr, METH_VARARGS, NULL},
+	 { (char *)"cvFindGraphEdge", _wrap_cvFindGraphEdge, METH_VARARGS, NULL},
+	 { (char *)"cvFindGraphEdgeByPtr", _wrap_cvFindGraphEdgeByPtr, METH_VARARGS, NULL},
+	 { (char *)"cvClearGraph", _wrap_cvClearGraph, METH_VARARGS, NULL},
+	 { (char *)"cvGraphVtxDegree", _wrap_cvGraphVtxDegree, METH_VARARGS, NULL},
+	 { (char *)"cvGraphVtxDegreeByPtr", _wrap_cvGraphVtxDegreeByPtr, METH_VARARGS, NULL},
+	 { (char *)"CvGraphScanner_vtx_set", _wrap_CvGraphScanner_vtx_set, METH_VARARGS, NULL},
+	 { (char *)"CvGraphScanner_vtx_get", _wrap_CvGraphScanner_vtx_get, METH_VARARGS, NULL},
+	 { (char *)"CvGraphScanner_dst_set", _wrap_CvGraphScanner_dst_set, METH_VARARGS, NULL},
+	 { (char *)"CvGraphScanner_dst_get", _wrap_CvGraphScanner_dst_get, METH_VARARGS, NULL},
+	 { (char *)"CvGraphScanner_edge_set", _wrap_CvGraphScanner_edge_set, METH_VARARGS, NULL},
+	 { (char *)"CvGraphScanner_edge_get", _wrap_CvGraphScanner_edge_get, METH_VARARGS, NULL},
+	 { (char *)"CvGraphScanner_graph_set", _wrap_CvGraphScanner_graph_set, METH_VARARGS, NULL},
+	 { (char *)"CvGraphScanner_graph_get", _wrap_CvGraphScanner_graph_get, METH_VARARGS, NULL},
+	 { (char *)"CvGraphScanner_stack_set", _wrap_CvGraphScanner_stack_set, METH_VARARGS, NULL},
+	 { (char *)"CvGraphScanner_stack_get", _wrap_CvGraphScanner_stack_get, METH_VARARGS, NULL},
+	 { (char *)"CvGraphScanner_index_set", _wrap_CvGraphScanner_index_set, METH_VARARGS, NULL},
+	 { (char *)"CvGraphScanner_index_get", _wrap_CvGraphScanner_index_get, METH_VARARGS, NULL},
+	 { (char *)"CvGraphScanner_mask_set", _wrap_CvGraphScanner_mask_set, METH_VARARGS, NULL},
+	 { (char *)"CvGraphScanner_mask_get", _wrap_CvGraphScanner_mask_get, METH_VARARGS, NULL},
+	 { (char *)"delete_CvGraphScanner", _wrap_delete_CvGraphScanner, METH_VARARGS, NULL},
+	 { (char *)"CvGraphScanner_swigregister", CvGraphScanner_swigregister, METH_VARARGS, NULL},
+	 { (char *)"cvCreateGraphScanner", _wrap_cvCreateGraphScanner, METH_VARARGS, NULL},
+	 { (char *)"cvNextGraphItem", _wrap_cvNextGraphItem, METH_VARARGS, NULL},
+	 { (char *)"cvCloneGraph", _wrap_cvCloneGraph, METH_VARARGS, NULL},
+	 { (char *)"cvLine", _wrap_cvLine, METH_VARARGS, NULL},
+	 { (char *)"cvRectangle", _wrap_cvRectangle, METH_VARARGS, NULL},
+	 { (char *)"cvCircle", _wrap_cvCircle, METH_VARARGS, NULL},
+	 { (char *)"cvEllipse", _wrap_cvEllipse, METH_VARARGS, NULL},
+	 { (char *)"cvEllipseBox", _wrap_cvEllipseBox, METH_VARARGS, NULL},
+	 { (char *)"cvFillConvexPoly", _wrap_cvFillConvexPoly, METH_VARARGS, NULL},
+	 { (char *)"cvFillPoly", _wrap_cvFillPoly, METH_VARARGS, NULL},
+	 { (char *)"cvPolyLine", _wrap_cvPolyLine, METH_VARARGS, NULL},
+	 { (char *)"cvClipLine", _wrap_cvClipLine, METH_VARARGS, NULL},
+	 { (char *)"cvInitLineIterator", _wrap_cvInitLineIterator, METH_VARARGS, NULL},
+	 { (char *)"CvFont_font_face_set", _wrap_CvFont_font_face_set, METH_VARARGS, NULL},
+	 { (char *)"CvFont_font_face_get", _wrap_CvFont_font_face_get, METH_VARARGS, NULL},
+	 { (char *)"CvFont_ascii_set", _wrap_CvFont_ascii_set, METH_VARARGS, NULL},
+	 { (char *)"CvFont_ascii_get", _wrap_CvFont_ascii_get, METH_VARARGS, NULL},
+	 { (char *)"CvFont_greek_set", _wrap_CvFont_greek_set, METH_VARARGS, NULL},
+	 { (char *)"CvFont_greek_get", _wrap_CvFont_greek_get, METH_VARARGS, NULL},
+	 { (char *)"CvFont_cyrillic_set", _wrap_CvFont_cyrillic_set, METH_VARARGS, NULL},
+	 { (char *)"CvFont_cyrillic_get", _wrap_CvFont_cyrillic_get, METH_VARARGS, NULL},
+	 { (char *)"CvFont_hscale_set", _wrap_CvFont_hscale_set, METH_VARARGS, NULL},
+	 { (char *)"CvFont_hscale_get", _wrap_CvFont_hscale_get, METH_VARARGS, NULL},
+	 { (char *)"CvFont_vscale_set", _wrap_CvFont_vscale_set, METH_VARARGS, NULL},
+	 { (char *)"CvFont_vscale_get", _wrap_CvFont_vscale_get, METH_VARARGS, NULL},
+	 { (char *)"CvFont_shear_set", _wrap_CvFont_shear_set, METH_VARARGS, NULL},
+	 { (char *)"CvFont_shear_get", _wrap_CvFont_shear_get, METH_VARARGS, NULL},
+	 { (char *)"CvFont_thickness_set", _wrap_CvFont_thickness_set, METH_VARARGS, NULL},
+	 { (char *)"CvFont_thickness_get", _wrap_CvFont_thickness_get, METH_VARARGS, NULL},
+	 { (char *)"CvFont_dx_set", _wrap_CvFont_dx_set, METH_VARARGS, NULL},
+	 { (char *)"CvFont_dx_get", _wrap_CvFont_dx_get, METH_VARARGS, NULL},
+	 { (char *)"CvFont_line_type_set", _wrap_CvFont_line_type_set, METH_VARARGS, NULL},
+	 { (char *)"CvFont_line_type_get", _wrap_CvFont_line_type_get, METH_VARARGS, NULL},
+	 { (char *)"new_CvFont", _wrap_new_CvFont, METH_VARARGS, NULL},
+	 { (char *)"delete_CvFont", _wrap_delete_CvFont, METH_VARARGS, NULL},
+	 { (char *)"CvFont_swigregister", CvFont_swigregister, METH_VARARGS, NULL},
+	 { (char *)"cvInitFont", _wrap_cvInitFont, METH_VARARGS, NULL},
+	 { (char *)"cvFont", _wrap_cvFont, METH_VARARGS, NULL},
+	 { (char *)"cvPutText", _wrap_cvPutText, METH_VARARGS, NULL},
+	 { (char *)"cvGetTextSize", _wrap_cvGetTextSize, METH_VARARGS, NULL},
+	 { (char *)"cvColorToScalar", _wrap_cvColorToScalar, METH_VARARGS, NULL},
+	 { (char *)"cvEllipse2Poly", _wrap_cvEllipse2Poly, METH_VARARGS, NULL},
+	 { (char *)"cvDrawContours", _wrap_cvDrawContours, METH_VARARGS, NULL},
+	 { (char *)"cvLUT", _wrap_cvLUT, METH_VARARGS, NULL},
+	 { (char *)"CvTreeNodeIterator_node_set", _wrap_CvTreeNodeIterator_node_set, METH_VARARGS, NULL},
+	 { (char *)"CvTreeNodeIterator_node_get", _wrap_CvTreeNodeIterator_node_get, METH_VARARGS, NULL},
+	 { (char *)"CvTreeNodeIterator_level_set", _wrap_CvTreeNodeIterator_level_set, METH_VARARGS, NULL},
+	 { (char *)"CvTreeNodeIterator_level_get", _wrap_CvTreeNodeIterator_level_get, METH_VARARGS, NULL},
+	 { (char *)"CvTreeNodeIterator_max_level_set", _wrap_CvTreeNodeIterator_max_level_set, METH_VARARGS, NULL},
+	 { (char *)"CvTreeNodeIterator_max_level_get", _wrap_CvTreeNodeIterator_max_level_get, METH_VARARGS, NULL},
+	 { (char *)"new_CvTreeNodeIterator", _wrap_new_CvTreeNodeIterator, METH_VARARGS, NULL},
+	 { (char *)"delete_CvTreeNodeIterator", _wrap_delete_CvTreeNodeIterator, METH_VARARGS, NULL},
+	 { (char *)"CvTreeNodeIterator_swigregister", CvTreeNodeIterator_swigregister, METH_VARARGS, NULL},
+	 { (char *)"cvInitTreeNodeIterator", _wrap_cvInitTreeNodeIterator, METH_VARARGS, NULL},
+	 { (char *)"cvNextTreeNode", _wrap_cvNextTreeNode, METH_VARARGS, NULL},
+	 { (char *)"cvPrevTreeNode", _wrap_cvPrevTreeNode, METH_VARARGS, NULL},
+	 { (char *)"cvInsertNodeIntoTree", _wrap_cvInsertNodeIntoTree, METH_VARARGS, NULL},
+	 { (char *)"cvRemoveNodeFromTree", _wrap_cvRemoveNodeFromTree, METH_VARARGS, NULL},
+	 { (char *)"cvTreeToNodeSeq", _wrap_cvTreeToNodeSeq, METH_VARARGS, NULL},
+	 { (char *)"cvKMeans2", _wrap_cvKMeans2, METH_VARARGS, NULL},
+	 { (char *)"cvRegisterModule", _wrap_cvRegisterModule, METH_VARARGS, NULL},
+	 { (char *)"cvUseOptimized", _wrap_cvUseOptimized, METH_VARARGS, NULL},
+	 { (char *)"cvGetModuleInfo", _wrap_cvGetModuleInfo, METH_VARARGS, NULL},
+	 { (char *)"cvGetErrStatus", _wrap_cvGetErrStatus, METH_VARARGS, NULL},
+	 { (char *)"cvSetErrStatus", _wrap_cvSetErrStatus, METH_VARARGS, NULL},
+	 { (char *)"cvGetErrMode", _wrap_cvGetErrMode, METH_VARARGS, NULL},
+	 { (char *)"cvSetErrMode", _wrap_cvSetErrMode, METH_VARARGS, NULL},
+	 { (char *)"cvError", _wrap_cvError, METH_VARARGS, NULL},
+	 { (char *)"cvErrorStr", _wrap_cvErrorStr, METH_VARARGS, NULL},
+	 { (char *)"cvGetErrInfo", _wrap_cvGetErrInfo, METH_VARARGS, NULL},
+	 { (char *)"cvErrorFromIppStatus", _wrap_cvErrorFromIppStatus, METH_VARARGS, NULL},
+	 { (char *)"cvRedirectError", _wrap_cvRedirectError, METH_VARARGS, NULL},
+	 { (char *)"cvNulDevReport", _wrap_cvNulDevReport, METH_VARARGS, NULL},
+	 { (char *)"cvStdErrReport", _wrap_cvStdErrReport, METH_VARARGS, NULL},
+	 { (char *)"cvGuiBoxReport", _wrap_cvGuiBoxReport, METH_VARARGS, NULL},
+	 { (char *)"cvSetMemoryManager", _wrap_cvSetMemoryManager, METH_VARARGS, NULL},
+	 { (char *)"cvSetIPLAllocators", _wrap_cvSetIPLAllocators, METH_VARARGS, NULL},
+	 { (char *)"cvOpenFileStorage", _wrap_cvOpenFileStorage, METH_VARARGS, NULL},
+	 { (char *)"cvAttrValue", _wrap_cvAttrValue, METH_VARARGS, NULL},
+	 { (char *)"cvStartWriteStruct", _wrap_cvStartWriteStruct, METH_VARARGS, NULL},
+	 { (char *)"cvEndWriteStruct", _wrap_cvEndWriteStruct, METH_VARARGS, NULL},
+	 { (char *)"cvWriteInt", _wrap_cvWriteInt, METH_VARARGS, NULL},
+	 { (char *)"cvWriteReal", _wrap_cvWriteReal, METH_VARARGS, NULL},
+	 { (char *)"cvWriteString", _wrap_cvWriteString, METH_VARARGS, NULL},
+	 { (char *)"cvWriteComment", _wrap_cvWriteComment, METH_VARARGS, NULL},
+	 { (char *)"cvWrite", _wrap_cvWrite, METH_VARARGS, NULL},
+	 { (char *)"cvStartNextStream", _wrap_cvStartNextStream, METH_VARARGS, NULL},
+	 { (char *)"cvWriteRawData", _wrap_cvWriteRawData, METH_VARARGS, NULL},
+	 { (char *)"cvGetHashedKey", _wrap_cvGetHashedKey, METH_VARARGS, NULL},
+	 { (char *)"cvGetRootFileNode", _wrap_cvGetRootFileNode, METH_VARARGS, NULL},
+	 { (char *)"cvGetFileNode", _wrap_cvGetFileNode, METH_VARARGS, NULL},
+	 { (char *)"cvGetFileNodeByName", _wrap_cvGetFileNodeByName, METH_VARARGS, NULL},
+	 { (char *)"cvReadInt", _wrap_cvReadInt, METH_VARARGS, NULL},
+	 { (char *)"cvReadIntByName", _wrap_cvReadIntByName, METH_VARARGS, NULL},
+	 { (char *)"cvReadReal", _wrap_cvReadReal, METH_VARARGS, NULL},
+	 { (char *)"cvReadRealByName", _wrap_cvReadRealByName, METH_VARARGS, NULL},
+	 { (char *)"cvReadString", _wrap_cvReadString, METH_VARARGS, NULL},
+	 { (char *)"cvReadStringByName", _wrap_cvReadStringByName, METH_VARARGS, NULL},
+	 { (char *)"cvRead", _wrap_cvRead, METH_VARARGS, NULL},
+	 { (char *)"cvReadByName", _wrap_cvReadByName, METH_VARARGS, NULL},
+	 { (char *)"cvStartReadRawData", _wrap_cvStartReadRawData, METH_VARARGS, NULL},
+	 { (char *)"cvReadRawDataSlice", _wrap_cvReadRawDataSlice, METH_VARARGS, NULL},
+	 { (char *)"cvReadRawData", _wrap_cvReadRawData, METH_VARARGS, NULL},
+	 { (char *)"cvWriteFileNode", _wrap_cvWriteFileNode, METH_VARARGS, NULL},
+	 { (char *)"cvGetFileNodeName", _wrap_cvGetFileNodeName, METH_VARARGS, NULL},
+	 { (char *)"cvRegisterType", _wrap_cvRegisterType, METH_VARARGS, NULL},
+	 { (char *)"cvUnregisterType", _wrap_cvUnregisterType, METH_VARARGS, NULL},
+	 { (char *)"cvFirstType", _wrap_cvFirstType, METH_VARARGS, NULL},
+	 { (char *)"cvFindType", _wrap_cvFindType, METH_VARARGS, NULL},
+	 { (char *)"cvTypeOf", _wrap_cvTypeOf, METH_VARARGS, NULL},
+	 { (char *)"cvClone", _wrap_cvClone, METH_VARARGS, NULL},
+	 { (char *)"cvSave", _wrap_cvSave, METH_VARARGS, NULL},
+	 { (char *)"cvLoad", _wrap_cvLoad, METH_VARARGS, NULL},
+	 { (char *)"cvGetTickCount", _wrap_cvGetTickCount, METH_VARARGS, NULL},
+	 { (char *)"cvGetTickFrequency", _wrap_cvGetTickFrequency, METH_VARARGS, NULL},
+	 { (char *)"cvGetNumThreads", _wrap_cvGetNumThreads, METH_VARARGS, NULL},
+	 { (char *)"cvSetNumThreads", _wrap_cvSetNumThreads, METH_VARARGS, NULL},
+	 { (char *)"cvGetThreadNum", _wrap_cvGetThreadNum, METH_VARARGS, NULL},
+	 { (char *)"new_CvImage", _wrap_new_CvImage, METH_VARARGS, NULL},
+	 { (char *)"delete_CvImage", _wrap_delete_CvImage, METH_VARARGS, NULL},
+	 { (char *)"CvImage_clone", _wrap_CvImage_clone, METH_VARARGS, NULL},
+	 { (char *)"CvImage_create", _wrap_CvImage_create, METH_VARARGS, NULL},
+	 { (char *)"CvImage_release", _wrap_CvImage_release, METH_VARARGS, NULL},
+	 { (char *)"CvImage_clear", _wrap_CvImage_clear, METH_VARARGS, NULL},
+	 { (char *)"CvImage_attach", _wrap_CvImage_attach, METH_VARARGS, NULL},
+	 { (char *)"CvImage_detach", _wrap_CvImage_detach, METH_VARARGS, NULL},
+	 { (char *)"CvImage_load", _wrap_CvImage_load, METH_VARARGS, NULL},
+	 { (char *)"CvImage_read", _wrap_CvImage_read, METH_VARARGS, NULL},
+	 { (char *)"CvImage_save", _wrap_CvImage_save, METH_VARARGS, NULL},
+	 { (char *)"CvImage_write", _wrap_CvImage_write, METH_VARARGS, NULL},
+	 { (char *)"CvImage_show", _wrap_CvImage_show, METH_VARARGS, NULL},
+	 { (char *)"CvImage_is_valid", _wrap_CvImage_is_valid, METH_VARARGS, NULL},
+	 { (char *)"CvImage_width", _wrap_CvImage_width, METH_VARARGS, NULL},
+	 { (char *)"CvImage_height", _wrap_CvImage_height, METH_VARARGS, NULL},
+	 { (char *)"CvImage_size", _wrap_CvImage_size, METH_VARARGS, NULL},
+	 { (char *)"CvImage_roi_size", _wrap_CvImage_roi_size, METH_VARARGS, NULL},
+	 { (char *)"CvImage_roi", _wrap_CvImage_roi, METH_VARARGS, NULL},
+	 { (char *)"CvImage_coi", _wrap_CvImage_coi, METH_VARARGS, NULL},
+	 { (char *)"CvImage_set_roi", _wrap_CvImage_set_roi, METH_VARARGS, NULL},
+	 { (char *)"CvImage_reset_roi", _wrap_CvImage_reset_roi, METH_VARARGS, NULL},
+	 { (char *)"CvImage_set_coi", _wrap_CvImage_set_coi, METH_VARARGS, NULL},
+	 { (char *)"CvImage_depth", _wrap_CvImage_depth, METH_VARARGS, NULL},
+	 { (char *)"CvImage_channels", _wrap_CvImage_channels, METH_VARARGS, NULL},
+	 { (char *)"CvImage_pix_size", _wrap_CvImage_pix_size, METH_VARARGS, NULL},
+	 { (char *)"CvImage_data", _wrap_CvImage_data, METH_VARARGS, NULL},
+	 { (char *)"CvImage_step", _wrap_CvImage_step, METH_VARARGS, NULL},
+	 { (char *)"CvImage_origin", _wrap_CvImage_origin, METH_VARARGS, NULL},
+	 { (char *)"CvImage_roi_row", _wrap_CvImage_roi_row, METH_VARARGS, NULL},
+	 { (char *)"CvImage_asIplImage", _wrap_CvImage_asIplImage, METH_VARARGS, NULL},
+	 { (char *)"CvImage_swigregister", CvImage_swigregister, METH_VARARGS, NULL},
+	 { (char *)"new_CvMatrix", _wrap_new_CvMatrix, METH_VARARGS, NULL},
+	 { (char *)"delete_CvMatrix", _wrap_delete_CvMatrix, METH_VARARGS, NULL},
+	 { (char *)"CvMatrix_clone", _wrap_CvMatrix_clone, METH_VARARGS, NULL},
+	 { (char *)"CvMatrix_set", _wrap_CvMatrix_set, METH_VARARGS, NULL},
+	 { (char *)"CvMatrix_create", _wrap_CvMatrix_create, METH_VARARGS, NULL},
+	 { (char *)"CvMatrix_addref", _wrap_CvMatrix_addref, METH_VARARGS, NULL},
+	 { (char *)"CvMatrix_release", _wrap_CvMatrix_release, METH_VARARGS, NULL},
+	 { (char *)"CvMatrix_clear", _wrap_CvMatrix_clear, METH_VARARGS, NULL},
+	 { (char *)"CvMatrix_load", _wrap_CvMatrix_load, METH_VARARGS, NULL},
+	 { (char *)"CvMatrix_read", _wrap_CvMatrix_read, METH_VARARGS, NULL},
+	 { (char *)"CvMatrix_save", _wrap_CvMatrix_save, METH_VARARGS, NULL},
+	 { (char *)"CvMatrix_write", _wrap_CvMatrix_write, METH_VARARGS, NULL},
+	 { (char *)"CvMatrix_show", _wrap_CvMatrix_show, METH_VARARGS, NULL},
+	 { (char *)"CvMatrix_is_valid", _wrap_CvMatrix_is_valid, METH_VARARGS, NULL},
+	 { (char *)"CvMatrix_rows", _wrap_CvMatrix_rows, METH_VARARGS, NULL},
+	 { (char *)"CvMatrix_cols", _wrap_CvMatrix_cols, METH_VARARGS, NULL},
+	 { (char *)"CvMatrix_size", _wrap_CvMatrix_size, METH_VARARGS, NULL},
+	 { (char *)"CvMatrix_type", _wrap_CvMatrix_type, METH_VARARGS, NULL},
+	 { (char *)"CvMatrix_depth", _wrap_CvMatrix_depth, METH_VARARGS, NULL},
+	 { (char *)"CvMatrix_channels", _wrap_CvMatrix_channels, METH_VARARGS, NULL},
+	 { (char *)"CvMatrix_pix_size", _wrap_CvMatrix_pix_size, METH_VARARGS, NULL},
+	 { (char *)"CvMatrix_data", _wrap_CvMatrix_data, METH_VARARGS, NULL},
+	 { (char *)"CvMatrix_step", _wrap_CvMatrix_step, METH_VARARGS, NULL},
+	 { (char *)"CvMatrix_set_data", _wrap_CvMatrix_set_data, METH_VARARGS, NULL},
+	 { (char *)"CvMatrix_row", _wrap_CvMatrix_row, METH_VARARGS, NULL},
+	 { (char *)"CvMatrix_asCvMat", _wrap_CvMatrix_asCvMat, METH_VARARGS, NULL},
+	 { (char *)"CvMatrix_swigregister", CvMatrix_swigregister, METH_VARARGS, NULL},
+	 { (char *)"cvSetImageIOFunctions", _wrap_cvSetImageIOFunctions, METH_VARARGS, NULL},
+	 { (char *)"new_CvModule", _wrap_new_CvModule, METH_VARARGS, NULL},
+	 { (char *)"delete_CvModule", _wrap_delete_CvModule, METH_VARARGS, NULL},
+	 { (char *)"CvModule_info_set", _wrap_CvModule_info_set, METH_VARARGS, NULL},
+	 { (char *)"CvModule_info_get", _wrap_CvModule_info_get, METH_VARARGS, NULL},
+	 { (char *)"CvModule_first_get", _wrap_CvModule_first_get, METH_VARARGS, NULL},
+	 { (char *)"CvModule_first_set", _wrap_CvModule_first_set, METH_VARARGS, NULL},
+	 { (char *)"CvModule_last_get", _wrap_CvModule_last_get, METH_VARARGS, NULL},
+	 { (char *)"CvModule_last_set", _wrap_CvModule_last_set, METH_VARARGS, NULL},
+	 { (char *)"CvModule_swigregister", CvModule_swigregister, METH_VARARGS, NULL},
+	 { (char *)"new_CvType", _wrap_new_CvType, METH_VARARGS, NULL},
+	 { (char *)"delete_CvType", _wrap_delete_CvType, METH_VARARGS, NULL},
+	 { (char *)"CvType_info_set", _wrap_CvType_info_set, METH_VARARGS, NULL},
+	 { (char *)"CvType_info_get", _wrap_CvType_info_get, METH_VARARGS, NULL},
+	 { (char *)"CvType_first_get", _wrap_CvType_first_get, METH_VARARGS, NULL},
+	 { (char *)"CvType_first_set", _wrap_CvType_first_set, METH_VARARGS, NULL},
+	 { (char *)"CvType_last_get", _wrap_CvType_last_get, METH_VARARGS, NULL},
+	 { (char *)"CvType_last_set", _wrap_CvType_last_set, METH_VARARGS, NULL},
+	 { (char *)"CvType_swigregister", CvType_swigregister, METH_VARARGS, NULL},
+	 { (char *)"CvMoments_m00_set", _wrap_CvMoments_m00_set, METH_VARARGS, NULL},
+	 { (char *)"CvMoments_m00_get", _wrap_CvMoments_m00_get, METH_VARARGS, NULL},
+	 { (char *)"CvMoments_m10_set", _wrap_CvMoments_m10_set, METH_VARARGS, NULL},
+	 { (char *)"CvMoments_m10_get", _wrap_CvMoments_m10_get, METH_VARARGS, NULL},
+	 { (char *)"CvMoments_m01_set", _wrap_CvMoments_m01_set, METH_VARARGS, NULL},
+	 { (char *)"CvMoments_m01_get", _wrap_CvMoments_m01_get, METH_VARARGS, NULL},
+	 { (char *)"CvMoments_m20_set", _wrap_CvMoments_m20_set, METH_VARARGS, NULL},
+	 { (char *)"CvMoments_m20_get", _wrap_CvMoments_m20_get, METH_VARARGS, NULL},
+	 { (char *)"CvMoments_m11_set", _wrap_CvMoments_m11_set, METH_VARARGS, NULL},
+	 { (char *)"CvMoments_m11_get", _wrap_CvMoments_m11_get, METH_VARARGS, NULL},
+	 { (char *)"CvMoments_m02_set", _wrap_CvMoments_m02_set, METH_VARARGS, NULL},
+	 { (char *)"CvMoments_m02_get", _wrap_CvMoments_m02_get, METH_VARARGS, NULL},
+	 { (char *)"CvMoments_m30_set", _wrap_CvMoments_m30_set, METH_VARARGS, NULL},
+	 { (char *)"CvMoments_m30_get", _wrap_CvMoments_m30_get, METH_VARARGS, NULL},
+	 { (char *)"CvMoments_m21_set", _wrap_CvMoments_m21_set, METH_VARARGS, NULL},
+	 { (char *)"CvMoments_m21_get", _wrap_CvMoments_m21_get, METH_VARARGS, NULL},
+	 { (char *)"CvMoments_m12_set", _wrap_CvMoments_m12_set, METH_VARARGS, NULL},
+	 { (char *)"CvMoments_m12_get", _wrap_CvMoments_m12_get, METH_VARARGS, NULL},
+	 { (char *)"CvMoments_m03_set", _wrap_CvMoments_m03_set, METH_VARARGS, NULL},
+	 { (char *)"CvMoments_m03_get", _wrap_CvMoments_m03_get, METH_VARARGS, NULL},
+	 { (char *)"CvMoments_mu20_set", _wrap_CvMoments_mu20_set, METH_VARARGS, NULL},
+	 { (char *)"CvMoments_mu20_get", _wrap_CvMoments_mu20_get, METH_VARARGS, NULL},
+	 { (char *)"CvMoments_mu11_set", _wrap_CvMoments_mu11_set, METH_VARARGS, NULL},
+	 { (char *)"CvMoments_mu11_get", _wrap_CvMoments_mu11_get, METH_VARARGS, NULL},
+	 { (char *)"CvMoments_mu02_set", _wrap_CvMoments_mu02_set, METH_VARARGS, NULL},
+	 { (char *)"CvMoments_mu02_get", _wrap_CvMoments_mu02_get, METH_VARARGS, NULL},
+	 { (char *)"CvMoments_mu30_set", _wrap_CvMoments_mu30_set, METH_VARARGS, NULL},
+	 { (char *)"CvMoments_mu30_get", _wrap_CvMoments_mu30_get, METH_VARARGS, NULL},
+	 { (char *)"CvMoments_mu21_set", _wrap_CvMoments_mu21_set, METH_VARARGS, NULL},
+	 { (char *)"CvMoments_mu21_get", _wrap_CvMoments_mu21_get, METH_VARARGS, NULL},
+	 { (char *)"CvMoments_mu12_set", _wrap_CvMoments_mu12_set, METH_VARARGS, NULL},
+	 { (char *)"CvMoments_mu12_get", _wrap_CvMoments_mu12_get, METH_VARARGS, NULL},
+	 { (char *)"CvMoments_mu03_set", _wrap_CvMoments_mu03_set, METH_VARARGS, NULL},
+	 { (char *)"CvMoments_mu03_get", _wrap_CvMoments_mu03_get, METH_VARARGS, NULL},
+	 { (char *)"CvMoments_inv_sqrt_m00_set", _wrap_CvMoments_inv_sqrt_m00_set, METH_VARARGS, NULL},
+	 { (char *)"CvMoments_inv_sqrt_m00_get", _wrap_CvMoments_inv_sqrt_m00_get, METH_VARARGS, NULL},
+	 { (char *)"new_CvMoments", _wrap_new_CvMoments, METH_VARARGS, NULL},
+	 { (char *)"delete_CvMoments", _wrap_delete_CvMoments, METH_VARARGS, NULL},
+	 { (char *)"CvMoments_swigregister", CvMoments_swigregister, METH_VARARGS, NULL},
+	 { (char *)"CvHuMoments_hu1_set", _wrap_CvHuMoments_hu1_set, METH_VARARGS, NULL},
+	 { (char *)"CvHuMoments_hu1_get", _wrap_CvHuMoments_hu1_get, METH_VARARGS, NULL},
+	 { (char *)"CvHuMoments_hu2_set", _wrap_CvHuMoments_hu2_set, METH_VARARGS, NULL},
+	 { (char *)"CvHuMoments_hu2_get", _wrap_CvHuMoments_hu2_get, METH_VARARGS, NULL},
+	 { (char *)"CvHuMoments_hu3_set", _wrap_CvHuMoments_hu3_set, METH_VARARGS, NULL},
+	 { (char *)"CvHuMoments_hu3_get", _wrap_CvHuMoments_hu3_get, METH_VARARGS, NULL},
+	 { (char *)"CvHuMoments_hu4_set", _wrap_CvHuMoments_hu4_set, METH_VARARGS, NULL},
+	 { (char *)"CvHuMoments_hu4_get", _wrap_CvHuMoments_hu4_get, METH_VARARGS, NULL},
+	 { (char *)"CvHuMoments_hu5_set", _wrap_CvHuMoments_hu5_set, METH_VARARGS, NULL},
+	 { (char *)"CvHuMoments_hu5_get", _wrap_CvHuMoments_hu5_get, METH_VARARGS, NULL},
+	 { (char *)"CvHuMoments_hu6_set", _wrap_CvHuMoments_hu6_set, METH_VARARGS, NULL},
+	 { (char *)"CvHuMoments_hu6_get", _wrap_CvHuMoments_hu6_get, METH_VARARGS, NULL},
+	 { (char *)"CvHuMoments_hu7_set", _wrap_CvHuMoments_hu7_set, METH_VARARGS, NULL},
+	 { (char *)"CvHuMoments_hu7_get", _wrap_CvHuMoments_hu7_get, METH_VARARGS, NULL},
+	 { (char *)"new_CvHuMoments", _wrap_new_CvHuMoments, METH_VARARGS, NULL},
+	 { (char *)"delete_CvHuMoments", _wrap_delete_CvHuMoments, METH_VARARGS, NULL},
+	 { (char *)"CvHuMoments_swigregister", CvHuMoments_swigregister, METH_VARARGS, NULL},
+	 { (char *)"CvConnectedComp_area_set", _wrap_CvConnectedComp_area_set, METH_VARARGS, NULL},
+	 { (char *)"CvConnectedComp_area_get", _wrap_CvConnectedComp_area_get, METH_VARARGS, NULL},
+	 { (char *)"CvConnectedComp_value_set", _wrap_CvConnectedComp_value_set, METH_VARARGS, NULL},
+	 { (char *)"CvConnectedComp_value_get", _wrap_CvConnectedComp_value_get, METH_VARARGS, NULL},
+	 { (char *)"CvConnectedComp_rect_set", _wrap_CvConnectedComp_rect_set, METH_VARARGS, NULL},
+	 { (char *)"CvConnectedComp_rect_get", _wrap_CvConnectedComp_rect_get, METH_VARARGS, NULL},
+	 { (char *)"CvConnectedComp_contour_set", _wrap_CvConnectedComp_contour_set, METH_VARARGS, NULL},
+	 { (char *)"CvConnectedComp_contour_get", _wrap_CvConnectedComp_contour_get, METH_VARARGS, NULL},
+	 { (char *)"new_CvConnectedComp", _wrap_new_CvConnectedComp, METH_VARARGS, NULL},
+	 { (char *)"delete_CvConnectedComp", _wrap_delete_CvConnectedComp, METH_VARARGS, NULL},
+	 { (char *)"CvConnectedComp_swigregister", CvConnectedComp_swigregister, METH_VARARGS, NULL},
+	 { (char *)"CvChainPtReader_header_size_set", _wrap_CvChainPtReader_header_size_set, METH_VARARGS, NULL},
+	 { (char *)"CvChainPtReader_header_size_get", _wrap_CvChainPtReader_header_size_get, METH_VARARGS, NULL},
+	 { (char *)"CvChainPtReader_seq_set", _wrap_CvChainPtReader_seq_set, METH_VARARGS, NULL},
+	 { (char *)"CvChainPtReader_seq_get", _wrap_CvChainPtReader_seq_get, METH_VARARGS, NULL},
+	 { (char *)"CvChainPtReader_block_set", _wrap_CvChainPtReader_block_set, METH_VARARGS, NULL},
+	 { (char *)"CvChainPtReader_block_get", _wrap_CvChainPtReader_block_get, METH_VARARGS, NULL},
+	 { (char *)"CvChainPtReader_ptr_set", _wrap_CvChainPtReader_ptr_set, METH_VARARGS, NULL},
+	 { (char *)"CvChainPtReader_ptr_get", _wrap_CvChainPtReader_ptr_get, METH_VARARGS, NULL},
+	 { (char *)"CvChainPtReader_block_min_set", _wrap_CvChainPtReader_block_min_set, METH_VARARGS, NULL},
+	 { (char *)"CvChainPtReader_block_min_get", _wrap_CvChainPtReader_block_min_get, METH_VARARGS, NULL},
+	 { (char *)"CvChainPtReader_block_max_set", _wrap_CvChainPtReader_block_max_set, METH_VARARGS, NULL},
+	 { (char *)"CvChainPtReader_block_max_get", _wrap_CvChainPtReader_block_max_get, METH_VARARGS, NULL},
+	 { (char *)"CvChainPtReader_delta_index_set", _wrap_CvChainPtReader_delta_index_set, METH_VARARGS, NULL},
+	 { (char *)"CvChainPtReader_delta_index_get", _wrap_CvChainPtReader_delta_index_get, METH_VARARGS, NULL},
+	 { (char *)"CvChainPtReader_prev_elem_set", _wrap_CvChainPtReader_prev_elem_set, METH_VARARGS, NULL},
+	 { (char *)"CvChainPtReader_prev_elem_get", _wrap_CvChainPtReader_prev_elem_get, METH_VARARGS, NULL},
+	 { (char *)"CvChainPtReader_code_set", _wrap_CvChainPtReader_code_set, METH_VARARGS, NULL},
+	 { (char *)"CvChainPtReader_code_get", _wrap_CvChainPtReader_code_get, METH_VARARGS, NULL},
+	 { (char *)"CvChainPtReader_pt_set", _wrap_CvChainPtReader_pt_set, METH_VARARGS, NULL},
+	 { (char *)"CvChainPtReader_pt_get", _wrap_CvChainPtReader_pt_get, METH_VARARGS, NULL},
+	 { (char *)"CvChainPtReader_deltas_set", _wrap_CvChainPtReader_deltas_set, METH_VARARGS, NULL},
+	 { (char *)"CvChainPtReader_deltas_get", _wrap_CvChainPtReader_deltas_get, METH_VARARGS, NULL},
+	 { (char *)"new_CvChainPtReader", _wrap_new_CvChainPtReader, METH_VARARGS, NULL},
+	 { (char *)"delete_CvChainPtReader", _wrap_delete_CvChainPtReader, METH_VARARGS, NULL},
+	 { (char *)"CvChainPtReader_swigregister", CvChainPtReader_swigregister, METH_VARARGS, NULL},
+	 { (char *)"CvContourTree_flags_set", _wrap_CvContourTree_flags_set, METH_VARARGS, NULL},
+	 { (char *)"CvContourTree_flags_get", _wrap_CvContourTree_flags_get, METH_VARARGS, NULL},
+	 { (char *)"CvContourTree_header_size_set", _wrap_CvContourTree_header_size_set, METH_VARARGS, NULL},
+	 { (char *)"CvContourTree_header_size_get", _wrap_CvContourTree_header_size_get, METH_VARARGS, NULL},
+	 { (char *)"CvContourTree_h_prev_set", _wrap_CvContourTree_h_prev_set, METH_VARARGS, NULL},
+	 { (char *)"CvContourTree_h_prev_get", _wrap_CvContourTree_h_prev_get, METH_VARARGS, NULL},
+	 { (char *)"CvContourTree_h_next_set", _wrap_CvContourTree_h_next_set, METH_VARARGS, NULL},
+	 { (char *)"CvContourTree_h_next_get", _wrap_CvContourTree_h_next_get, METH_VARARGS, NULL},
+	 { (char *)"CvContourTree_v_prev_set", _wrap_CvContourTree_v_prev_set, METH_VARARGS, NULL},
+	 { (char *)"CvContourTree_v_prev_get", _wrap_CvContourTree_v_prev_get, METH_VARARGS, NULL},
+	 { (char *)"CvContourTree_v_next_set", _wrap_CvContourTree_v_next_set, METH_VARARGS, NULL},
+	 { (char *)"CvContourTree_v_next_get", _wrap_CvContourTree_v_next_get, METH_VARARGS, NULL},
+	 { (char *)"CvContourTree_total_set", _wrap_CvContourTree_total_set, METH_VARARGS, NULL},
+	 { (char *)"CvContourTree_total_get", _wrap_CvContourTree_total_get, METH_VARARGS, NULL},
+	 { (char *)"CvContourTree_elem_size_set", _wrap_CvContourTree_elem_size_set, METH_VARARGS, NULL},
+	 { (char *)"CvContourTree_elem_size_get", _wrap_CvContourTree_elem_size_get, METH_VARARGS, NULL},
+	 { (char *)"CvContourTree_block_max_set", _wrap_CvContourTree_block_max_set, METH_VARARGS, NULL},
+	 { (char *)"CvContourTree_block_max_get", _wrap_CvContourTree_block_max_get, METH_VARARGS, NULL},
+	 { (char *)"CvContourTree_ptr_set", _wrap_CvContourTree_ptr_set, METH_VARARGS, NULL},
+	 { (char *)"CvContourTree_ptr_get", _wrap_CvContourTree_ptr_get, METH_VARARGS, NULL},
+	 { (char *)"CvContourTree_delta_elems_set", _wrap_CvContourTree_delta_elems_set, METH_VARARGS, NULL},
+	 { (char *)"CvContourTree_delta_elems_get", _wrap_CvContourTree_delta_elems_get, METH_VARARGS, NULL},
+	 { (char *)"CvContourTree_storage_set", _wrap_CvContourTree_storage_set, METH_VARARGS, NULL},
+	 { (char *)"CvContourTree_storage_get", _wrap_CvContourTree_storage_get, METH_VARARGS, NULL},
+	 { (char *)"CvContourTree_free_blocks_set", _wrap_CvContourTree_free_blocks_set, METH_VARARGS, NULL},
+	 { (char *)"CvContourTree_free_blocks_get", _wrap_CvContourTree_free_blocks_get, METH_VARARGS, NULL},
+	 { (char *)"CvContourTree_first_set", _wrap_CvContourTree_first_set, METH_VARARGS, NULL},
+	 { (char *)"CvContourTree_first_get", _wrap_CvContourTree_first_get, METH_VARARGS, NULL},
+	 { (char *)"CvContourTree_p1_set", _wrap_CvContourTree_p1_set, METH_VARARGS, NULL},
+	 { (char *)"CvContourTree_p1_get", _wrap_CvContourTree_p1_get, METH_VARARGS, NULL},
+	 { (char *)"CvContourTree_p2_set", _wrap_CvContourTree_p2_set, METH_VARARGS, NULL},
+	 { (char *)"CvContourTree_p2_get", _wrap_CvContourTree_p2_get, METH_VARARGS, NULL},
+	 { (char *)"new_CvContourTree", _wrap_new_CvContourTree, METH_VARARGS, NULL},
+	 { (char *)"delete_CvContourTree", _wrap_delete_CvContourTree, METH_VARARGS, NULL},
+	 { (char *)"CvContourTree_swigregister", CvContourTree_swigregister, METH_VARARGS, NULL},
+	 { (char *)"CvConvexityDefect_start_set", _wrap_CvConvexityDefect_start_set, METH_VARARGS, NULL},
+	 { (char *)"CvConvexityDefect_start_get", _wrap_CvConvexityDefect_start_get, METH_VARARGS, NULL},
+	 { (char *)"CvConvexityDefect_end_set", _wrap_CvConvexityDefect_end_set, METH_VARARGS, NULL},
+	 { (char *)"CvConvexityDefect_end_get", _wrap_CvConvexityDefect_end_get, METH_VARARGS, NULL},
+	 { (char *)"CvConvexityDefect_depth_point_set", _wrap_CvConvexityDefect_depth_point_set, METH_VARARGS, NULL},
+	 { (char *)"CvConvexityDefect_depth_point_get", _wrap_CvConvexityDefect_depth_point_get, METH_VARARGS, NULL},
+	 { (char *)"CvConvexityDefect_depth_set", _wrap_CvConvexityDefect_depth_set, METH_VARARGS, NULL},
+	 { (char *)"CvConvexityDefect_depth_get", _wrap_CvConvexityDefect_depth_get, METH_VARARGS, NULL},
+	 { (char *)"new_CvConvexityDefect", _wrap_new_CvConvexityDefect, METH_VARARGS, NULL},
+	 { (char *)"delete_CvConvexityDefect", _wrap_delete_CvConvexityDefect, METH_VARARGS, NULL},
+	 { (char *)"CvConvexityDefect_swigregister", CvConvexityDefect_swigregister, METH_VARARGS, NULL},
+	 { (char *)"CvQuadEdge2D_flags_set", _wrap_CvQuadEdge2D_flags_set, METH_VARARGS, NULL},
+	 { (char *)"CvQuadEdge2D_flags_get", _wrap_CvQuadEdge2D_flags_get, METH_VARARGS, NULL},
+	 { (char *)"CvQuadEdge2D_pt_set", _wrap_CvQuadEdge2D_pt_set, METH_VARARGS, NULL},
+	 { (char *)"CvQuadEdge2D_pt_get", _wrap_CvQuadEdge2D_pt_get, METH_VARARGS, NULL},
+	 { (char *)"CvQuadEdge2D_next_set", _wrap_CvQuadEdge2D_next_set, METH_VARARGS, NULL},
+	 { (char *)"CvQuadEdge2D_next_get", _wrap_CvQuadEdge2D_next_get, METH_VARARGS, NULL},
+	 { (char *)"new_CvQuadEdge2D", _wrap_new_CvQuadEdge2D, METH_VARARGS, NULL},
+	 { (char *)"delete_CvQuadEdge2D", _wrap_delete_CvQuadEdge2D, METH_VARARGS, NULL},
+	 { (char *)"CvQuadEdge2D_swigregister", CvQuadEdge2D_swigregister, METH_VARARGS, NULL},
+	 { (char *)"CvSubdiv2DPoint_flags_set", _wrap_CvSubdiv2DPoint_flags_set, METH_VARARGS, NULL},
+	 { (char *)"CvSubdiv2DPoint_flags_get", _wrap_CvSubdiv2DPoint_flags_get, METH_VARARGS, NULL},
+	 { (char *)"CvSubdiv2DPoint_first_set", _wrap_CvSubdiv2DPoint_first_set, METH_VARARGS, NULL},
+	 { (char *)"CvSubdiv2DPoint_first_get", _wrap_CvSubdiv2DPoint_first_get, METH_VARARGS, NULL},
+	 { (char *)"CvSubdiv2DPoint_pt_set", _wrap_CvSubdiv2DPoint_pt_set, METH_VARARGS, NULL},
+	 { (char *)"CvSubdiv2DPoint_pt_get", _wrap_CvSubdiv2DPoint_pt_get, METH_VARARGS, NULL},
+	 { (char *)"new_CvSubdiv2DPoint", _wrap_new_CvSubdiv2DPoint, METH_VARARGS, NULL},
+	 { (char *)"delete_CvSubdiv2DPoint", _wrap_delete_CvSubdiv2DPoint, METH_VARARGS, NULL},
+	 { (char *)"CvSubdiv2DPoint_swigregister", CvSubdiv2DPoint_swigregister, METH_VARARGS, NULL},
+	 { (char *)"CvSubdiv2D_flags_set", _wrap_CvSubdiv2D_flags_set, METH_VARARGS, NULL},
+	 { (char *)"CvSubdiv2D_flags_get", _wrap_CvSubdiv2D_flags_get, METH_VARARGS, NULL},
+	 { (char *)"CvSubdiv2D_header_size_set", _wrap_CvSubdiv2D_header_size_set, METH_VARARGS, NULL},
+	 { (char *)"CvSubdiv2D_header_size_get", _wrap_CvSubdiv2D_header_size_get, METH_VARARGS, NULL},
+	 { (char *)"CvSubdiv2D_h_prev_set", _wrap_CvSubdiv2D_h_prev_set, METH_VARARGS, NULL},
+	 { (char *)"CvSubdiv2D_h_prev_get", _wrap_CvSubdiv2D_h_prev_get, METH_VARARGS, NULL},
+	 { (char *)"CvSubdiv2D_h_next_set", _wrap_CvSubdiv2D_h_next_set, METH_VARARGS, NULL},
+	 { (char *)"CvSubdiv2D_h_next_get", _wrap_CvSubdiv2D_h_next_get, METH_VARARGS, NULL},
+	 { (char *)"CvSubdiv2D_v_prev_set", _wrap_CvSubdiv2D_v_prev_set, METH_VARARGS, NULL},
+	 { (char *)"CvSubdiv2D_v_prev_get", _wrap_CvSubdiv2D_v_prev_get, METH_VARARGS, NULL},
+	 { (char *)"CvSubdiv2D_v_next_set", _wrap_CvSubdiv2D_v_next_set, METH_VARARGS, NULL},
+	 { (char *)"CvSubdiv2D_v_next_get", _wrap_CvSubdiv2D_v_next_get, METH_VARARGS, NULL},
+	 { (char *)"CvSubdiv2D_total_set", _wrap_CvSubdiv2D_total_set, METH_VARARGS, NULL},
+	 { (char *)"CvSubdiv2D_total_get", _wrap_CvSubdiv2D_total_get, METH_VARARGS, NULL},
+	 { (char *)"CvSubdiv2D_elem_size_set", _wrap_CvSubdiv2D_elem_size_set, METH_VARARGS, NULL},
+	 { (char *)"CvSubdiv2D_elem_size_get", _wrap_CvSubdiv2D_elem_size_get, METH_VARARGS, NULL},
+	 { (char *)"CvSubdiv2D_block_max_set", _wrap_CvSubdiv2D_block_max_set, METH_VARARGS, NULL},
+	 { (char *)"CvSubdiv2D_block_max_get", _wrap_CvSubdiv2D_block_max_get, METH_VARARGS, NULL},
+	 { (char *)"CvSubdiv2D_ptr_set", _wrap_CvSubdiv2D_ptr_set, METH_VARARGS, NULL},
+	 { (char *)"CvSubdiv2D_ptr_get", _wrap_CvSubdiv2D_ptr_get, METH_VARARGS, NULL},
+	 { (char *)"CvSubdiv2D_delta_elems_set", _wrap_CvSubdiv2D_delta_elems_set, METH_VARARGS, NULL},
+	 { (char *)"CvSubdiv2D_delta_elems_get", _wrap_CvSubdiv2D_delta_elems_get, METH_VARARGS, NULL},
+	 { (char *)"CvSubdiv2D_storage_set", _wrap_CvSubdiv2D_storage_set, METH_VARARGS, NULL},
+	 { (char *)"CvSubdiv2D_storage_get", _wrap_CvSubdiv2D_storage_get, METH_VARARGS, NULL},
+	 { (char *)"CvSubdiv2D_free_blocks_set", _wrap_CvSubdiv2D_free_blocks_set, METH_VARARGS, NULL},
+	 { (char *)"CvSubdiv2D_free_blocks_get", _wrap_CvSubdiv2D_free_blocks_get, METH_VARARGS, NULL},
+	 { (char *)"CvSubdiv2D_first_set", _wrap_CvSubdiv2D_first_set, METH_VARARGS, NULL},
+	 { (char *)"CvSubdiv2D_first_get", _wrap_CvSubdiv2D_first_get, METH_VARARGS, NULL},
+	 { (char *)"CvSubdiv2D_free_elems_set", _wrap_CvSubdiv2D_free_elems_set, METH_VARARGS, NULL},
+	 { (char *)"CvSubdiv2D_free_elems_get", _wrap_CvSubdiv2D_free_elems_get, METH_VARARGS, NULL},
+	 { (char *)"CvSubdiv2D_active_count_set", _wrap_CvSubdiv2D_active_count_set, METH_VARARGS, NULL},
+	 { (char *)"CvSubdiv2D_active_count_get", _wrap_CvSubdiv2D_active_count_get, METH_VARARGS, NULL},
+	 { (char *)"CvSubdiv2D_quad_edges_set", _wrap_CvSubdiv2D_quad_edges_set, METH_VARARGS, NULL},
+	 { (char *)"CvSubdiv2D_quad_edges_get", _wrap_CvSubdiv2D_quad_edges_get, METH_VARARGS, NULL},
+	 { (char *)"CvSubdiv2D_is_geometry_valid_set", _wrap_CvSubdiv2D_is_geometry_valid_set, METH_VARARGS, NULL},
+	 { (char *)"CvSubdiv2D_is_geometry_valid_get", _wrap_CvSubdiv2D_is_geometry_valid_get, METH_VARARGS, NULL},
+	 { (char *)"CvSubdiv2D_recent_edge_set", _wrap_CvSubdiv2D_recent_edge_set, METH_VARARGS, NULL},
+	 { (char *)"CvSubdiv2D_recent_edge_get", _wrap_CvSubdiv2D_recent_edge_get, METH_VARARGS, NULL},
+	 { (char *)"CvSubdiv2D_topleft_set", _wrap_CvSubdiv2D_topleft_set, METH_VARARGS, NULL},
+	 { (char *)"CvSubdiv2D_topleft_get", _wrap_CvSubdiv2D_topleft_get, METH_VARARGS, NULL},
+	 { (char *)"CvSubdiv2D_bottomright_set", _wrap_CvSubdiv2D_bottomright_set, METH_VARARGS, NULL},
+	 { (char *)"CvSubdiv2D_bottomright_get", _wrap_CvSubdiv2D_bottomright_get, METH_VARARGS, NULL},
+	 { (char *)"CvSubdiv2D_edges_set", _wrap_CvSubdiv2D_edges_set, METH_VARARGS, NULL},
+	 { (char *)"CvSubdiv2D_edges_get", _wrap_CvSubdiv2D_edges_get, METH_VARARGS, NULL},
+	 { (char *)"CvSubdiv2D_typed_edges_get", _wrap_CvSubdiv2D_typed_edges_get, METH_VARARGS, NULL},
+	 { (char *)"CvSubdiv2D_typed_edges_set", _wrap_CvSubdiv2D_typed_edges_set, METH_VARARGS, NULL},
+	 { (char *)"new_CvSubdiv2D", _wrap_new_CvSubdiv2D, METH_VARARGS, NULL},
+	 { (char *)"delete_CvSubdiv2D", _wrap_delete_CvSubdiv2D, METH_VARARGS, NULL},
+	 { (char *)"CvSubdiv2D_swigregister", CvSubdiv2D_swigregister, METH_VARARGS, NULL},
+	 { (char *)"CvMatrix3_m_set", _wrap_CvMatrix3_m_set, METH_VARARGS, NULL},
+	 { (char *)"CvMatrix3_m_get", _wrap_CvMatrix3_m_get, METH_VARARGS, NULL},
+	 { (char *)"new_CvMatrix3", _wrap_new_CvMatrix3, METH_VARARGS, NULL},
+	 { (char *)"delete_CvMatrix3", _wrap_delete_CvMatrix3, METH_VARARGS, NULL},
+	 { (char *)"CvMatrix3_swigregister", CvMatrix3_swigregister, METH_VARARGS, NULL},
+	 { (char *)"CvConDensation_MP_set", _wrap_CvConDensation_MP_set, METH_VARARGS, NULL},
+	 { (char *)"CvConDensation_MP_get", _wrap_CvConDensation_MP_get, METH_VARARGS, NULL},
+	 { (char *)"CvConDensation_DP_set", _wrap_CvConDensation_DP_set, METH_VARARGS, NULL},
+	 { (char *)"CvConDensation_DP_get", _wrap_CvConDensation_DP_get, METH_VARARGS, NULL},
+	 { (char *)"CvConDensation_DynamMatr_set", _wrap_CvConDensation_DynamMatr_set, METH_VARARGS, NULL},
+	 { (char *)"CvConDensation_DynamMatr_get", _wrap_CvConDensation_DynamMatr_get, METH_VARARGS, NULL},
+	 { (char *)"CvConDensation_State_set", _wrap_CvConDensation_State_set, METH_VARARGS, NULL},
+	 { (char *)"CvConDensation_State_get", _wrap_CvConDensation_State_get, METH_VARARGS, NULL},
+	 { (char *)"CvConDensation_SamplesNum_set", _wrap_CvConDensation_SamplesNum_set, METH_VARARGS, NULL},
+	 { (char *)"CvConDensation_SamplesNum_get", _wrap_CvConDensation_SamplesNum_get, METH_VARARGS, NULL},
+	 { (char *)"CvConDensation_flSamples_set", _wrap_CvConDensation_flSamples_set, METH_VARARGS, NULL},
+	 { (char *)"CvConDensation_flSamples_get", _wrap_CvConDensation_flSamples_get, METH_VARARGS, NULL},
+	 { (char *)"CvConDensation_flNewSamples_set", _wrap_CvConDensation_flNewSamples_set, METH_VARARGS, NULL},
+	 { (char *)"CvConDensation_flNewSamples_get", _wrap_CvConDensation_flNewSamples_get, METH_VARARGS, NULL},
+	 { (char *)"CvConDensation_flConfidence_set", _wrap_CvConDensation_flConfidence_set, METH_VARARGS, NULL},
+	 { (char *)"CvConDensation_flConfidence_get", _wrap_CvConDensation_flConfidence_get, METH_VARARGS, NULL},
+	 { (char *)"CvConDensation_flCumulative_set", _wrap_CvConDensation_flCumulative_set, METH_VARARGS, NULL},
+	 { (char *)"CvConDensation_flCumulative_get", _wrap_CvConDensation_flCumulative_get, METH_VARARGS, NULL},
+	 { (char *)"CvConDensation_Temp_set", _wrap_CvConDensation_Temp_set, METH_VARARGS, NULL},
+	 { (char *)"CvConDensation_Temp_get", _wrap_CvConDensation_Temp_get, METH_VARARGS, NULL},
+	 { (char *)"CvConDensation_RandomSample_set", _wrap_CvConDensation_RandomSample_set, METH_VARARGS, NULL},
+	 { (char *)"CvConDensation_RandomSample_get", _wrap_CvConDensation_RandomSample_get, METH_VARARGS, NULL},
+	 { (char *)"CvConDensation_RandS_set", _wrap_CvConDensation_RandS_set, METH_VARARGS, NULL},
+	 { (char *)"CvConDensation_RandS_get", _wrap_CvConDensation_RandS_get, METH_VARARGS, NULL},
+	 { (char *)"delete_CvConDensation", _wrap_delete_CvConDensation, METH_VARARGS, NULL},
+	 { (char *)"CvConDensation_swigregister", CvConDensation_swigregister, METH_VARARGS, NULL},
+	 { (char *)"CvKalman_MP_set", _wrap_CvKalman_MP_set, METH_VARARGS, NULL},
+	 { (char *)"CvKalman_MP_get", _wrap_CvKalman_MP_get, METH_VARARGS, NULL},
+	 { (char *)"CvKalman_DP_set", _wrap_CvKalman_DP_set, METH_VARARGS, NULL},
+	 { (char *)"CvKalman_DP_get", _wrap_CvKalman_DP_get, METH_VARARGS, NULL},
+	 { (char *)"CvKalman_CP_set", _wrap_CvKalman_CP_set, METH_VARARGS, NULL},
+	 { (char *)"CvKalman_CP_get", _wrap_CvKalman_CP_get, METH_VARARGS, NULL},
+	 { (char *)"CvKalman_PosterState_set", _wrap_CvKalman_PosterState_set, METH_VARARGS, NULL},
+	 { (char *)"CvKalman_PosterState_get", _wrap_CvKalman_PosterState_get, METH_VARARGS, NULL},
+	 { (char *)"CvKalman_PriorState_set", _wrap_CvKalman_PriorState_set, METH_VARARGS, NULL},
+	 { (char *)"CvKalman_PriorState_get", _wrap_CvKalman_PriorState_get, METH_VARARGS, NULL},
+	 { (char *)"CvKalman_DynamMatr_set", _wrap_CvKalman_DynamMatr_set, METH_VARARGS, NULL},
+	 { (char *)"CvKalman_DynamMatr_get", _wrap_CvKalman_DynamMatr_get, METH_VARARGS, NULL},
+	 { (char *)"CvKalman_MeasurementMatr_set", _wrap_CvKalman_MeasurementMatr_set, METH_VARARGS, NULL},
+	 { (char *)"CvKalman_MeasurementMatr_get", _wrap_CvKalman_MeasurementMatr_get, METH_VARARGS, NULL},
+	 { (char *)"CvKalman_MNCovariance_set", _wrap_CvKalman_MNCovariance_set, METH_VARARGS, NULL},
+	 { (char *)"CvKalman_MNCovariance_get", _wrap_CvKalman_MNCovariance_get, METH_VARARGS, NULL},
+	 { (char *)"CvKalman_PNCovariance_set", _wrap_CvKalman_PNCovariance_set, METH_VARARGS, NULL},
+	 { (char *)"CvKalman_PNCovariance_get", _wrap_CvKalman_PNCovariance_get, METH_VARARGS, NULL},
+	 { (char *)"CvKalman_KalmGainMatr_set", _wrap_CvKalman_KalmGainMatr_set, METH_VARARGS, NULL},
+	 { (char *)"CvKalman_KalmGainMatr_get", _wrap_CvKalman_KalmGainMatr_get, METH_VARARGS, NULL},
+	 { (char *)"CvKalman_PriorErrorCovariance_set", _wrap_CvKalman_PriorErrorCovariance_set, METH_VARARGS, NULL},
+	 { (char *)"CvKalman_PriorErrorCovariance_get", _wrap_CvKalman_PriorErrorCovariance_get, METH_VARARGS, NULL},
+	 { (char *)"CvKalman_PosterErrorCovariance_set", _wrap_CvKalman_PosterErrorCovariance_set, METH_VARARGS, NULL},
+	 { (char *)"CvKalman_PosterErrorCovariance_get", _wrap_CvKalman_PosterErrorCovariance_get, METH_VARARGS, NULL},
+	 { (char *)"CvKalman_Temp1_set", _wrap_CvKalman_Temp1_set, METH_VARARGS, NULL},
+	 { (char *)"CvKalman_Temp1_get", _wrap_CvKalman_Temp1_get, METH_VARARGS, NULL},
+	 { (char *)"CvKalman_Temp2_set", _wrap_CvKalman_Temp2_set, METH_VARARGS, NULL},
+	 { (char *)"CvKalman_Temp2_get", _wrap_CvKalman_Temp2_get, METH_VARARGS, NULL},
+	 { (char *)"CvKalman_state_pre_set", _wrap_CvKalman_state_pre_set, METH_VARARGS, NULL},
+	 { (char *)"CvKalman_state_pre_get", _wrap_CvKalman_state_pre_get, METH_VARARGS, NULL},
+	 { (char *)"CvKalman_state_post_set", _wrap_CvKalman_state_post_set, METH_VARARGS, NULL},
+	 { (char *)"CvKalman_state_post_get", _wrap_CvKalman_state_post_get, METH_VARARGS, NULL},
+	 { (char *)"CvKalman_transition_matrix_set", _wrap_CvKalman_transition_matrix_set, METH_VARARGS, NULL},
+	 { (char *)"CvKalman_transition_matrix_get", _wrap_CvKalman_transition_matrix_get, METH_VARARGS, NULL},
+	 { (char *)"CvKalman_control_matrix_set", _wrap_CvKalman_control_matrix_set, METH_VARARGS, NULL},
+	 { (char *)"CvKalman_control_matrix_get", _wrap_CvKalman_control_matrix_get, METH_VARARGS, NULL},
+	 { (char *)"CvKalman_measurement_matrix_set", _wrap_CvKalman_measurement_matrix_set, METH_VARARGS, NULL},
+	 { (char *)"CvKalman_measurement_matrix_get", _wrap_CvKalman_measurement_matrix_get, METH_VARARGS, NULL},
+	 { (char *)"CvKalman_process_noise_cov_set", _wrap_CvKalman_process_noise_cov_set, METH_VARARGS, NULL},
+	 { (char *)"CvKalman_process_noise_cov_get", _wrap_CvKalman_process_noise_cov_get, METH_VARARGS, NULL},
+	 { (char *)"CvKalman_measurement_noise_cov_set", _wrap_CvKalman_measurement_noise_cov_set, METH_VARARGS, NULL},
+	 { (char *)"CvKalman_measurement_noise_cov_get", _wrap_CvKalman_measurement_noise_cov_get, METH_VARARGS, NULL},
+	 { (char *)"CvKalman_error_cov_pre_set", _wrap_CvKalman_error_cov_pre_set, METH_VARARGS, NULL},
+	 { (char *)"CvKalman_error_cov_pre_get", _wrap_CvKalman_error_cov_pre_get, METH_VARARGS, NULL},
+	 { (char *)"CvKalman_gain_set", _wrap_CvKalman_gain_set, METH_VARARGS, NULL},
+	 { (char *)"CvKalman_gain_get", _wrap_CvKalman_gain_get, METH_VARARGS, NULL},
+	 { (char *)"CvKalman_error_cov_post_set", _wrap_CvKalman_error_cov_post_set, METH_VARARGS, NULL},
+	 { (char *)"CvKalman_error_cov_post_get", _wrap_CvKalman_error_cov_post_get, METH_VARARGS, NULL},
+	 { (char *)"CvKalman_temp1_set", _wrap_CvKalman_temp1_set, METH_VARARGS, NULL},
+	 { (char *)"CvKalman_temp1_get", _wrap_CvKalman_temp1_get, METH_VARARGS, NULL},
+	 { (char *)"CvKalman_temp2_set", _wrap_CvKalman_temp2_set, METH_VARARGS, NULL},
+	 { (char *)"CvKalman_temp2_get", _wrap_CvKalman_temp2_get, METH_VARARGS, NULL},
+	 { (char *)"CvKalman_temp3_set", _wrap_CvKalman_temp3_set, METH_VARARGS, NULL},
+	 { (char *)"CvKalman_temp3_get", _wrap_CvKalman_temp3_get, METH_VARARGS, NULL},
+	 { (char *)"CvKalman_temp4_set", _wrap_CvKalman_temp4_set, METH_VARARGS, NULL},
+	 { (char *)"CvKalman_temp4_get", _wrap_CvKalman_temp4_get, METH_VARARGS, NULL},
+	 { (char *)"CvKalman_temp5_set", _wrap_CvKalman_temp5_set, METH_VARARGS, NULL},
+	 { (char *)"CvKalman_temp5_get", _wrap_CvKalman_temp5_get, METH_VARARGS, NULL},
+	 { (char *)"delete_CvKalman", _wrap_delete_CvKalman, METH_VARARGS, NULL},
+	 { (char *)"CvKalman_swigregister", CvKalman_swigregister, METH_VARARGS, NULL},
+	 { (char *)"CvHaarFeature_tilted_set", _wrap_CvHaarFeature_tilted_set, METH_VARARGS, NULL},
+	 { (char *)"CvHaarFeature_tilted_get", _wrap_CvHaarFeature_tilted_get, METH_VARARGS, NULL},
+	 { (char *)"CvHaarFeature_rect_get", _wrap_CvHaarFeature_rect_get, METH_VARARGS, NULL},
+	 { (char *)"new_CvHaarFeature", _wrap_new_CvHaarFeature, METH_VARARGS, NULL},
+	 { (char *)"delete_CvHaarFeature", _wrap_delete_CvHaarFeature, METH_VARARGS, NULL},
+	 { (char *)"CvHaarFeature_swigregister", CvHaarFeature_swigregister, METH_VARARGS, NULL},
+	 { (char *)"CvHaarFeature_rect_r_set", _wrap_CvHaarFeature_rect_r_set, METH_VARARGS, NULL},
+	 { (char *)"CvHaarFeature_rect_r_get", _wrap_CvHaarFeature_rect_r_get, METH_VARARGS, NULL},
+	 { (char *)"CvHaarFeature_rect_weight_set", _wrap_CvHaarFeature_rect_weight_set, METH_VARARGS, NULL},
+	 { (char *)"CvHaarFeature_rect_weight_get", _wrap_CvHaarFeature_rect_weight_get, METH_VARARGS, NULL},
+	 { (char *)"new_CvHaarFeature_rect", _wrap_new_CvHaarFeature_rect, METH_VARARGS, NULL},
+	 { (char *)"delete_CvHaarFeature_rect", _wrap_delete_CvHaarFeature_rect, METH_VARARGS, NULL},
+	 { (char *)"CvHaarFeature_rect_swigregister", CvHaarFeature_rect_swigregister, METH_VARARGS, NULL},
+	 { (char *)"CvHaarClassifier_count_set", _wrap_CvHaarClassifier_count_set, METH_VARARGS, NULL},
+	 { (char *)"CvHaarClassifier_count_get", _wrap_CvHaarClassifier_count_get, METH_VARARGS, NULL},
+	 { (char *)"CvHaarClassifier_haar_feature_set", _wrap_CvHaarClassifier_haar_feature_set, METH_VARARGS, NULL},
+	 { (char *)"CvHaarClassifier_haar_feature_get", _wrap_CvHaarClassifier_haar_feature_get, METH_VARARGS, NULL},
+	 { (char *)"CvHaarClassifier_threshold_set", _wrap_CvHaarClassifier_threshold_set, METH_VARARGS, NULL},
+	 { (char *)"CvHaarClassifier_threshold_get", _wrap_CvHaarClassifier_threshold_get, METH_VARARGS, NULL},
+	 { (char *)"CvHaarClassifier_left_set", _wrap_CvHaarClassifier_left_set, METH_VARARGS, NULL},
+	 { (char *)"CvHaarClassifier_left_get", _wrap_CvHaarClassifier_left_get, METH_VARARGS, NULL},
+	 { (char *)"CvHaarClassifier_right_set", _wrap_CvHaarClassifier_right_set, METH_VARARGS, NULL},
+	 { (char *)"CvHaarClassifier_right_get", _wrap_CvHaarClassifier_right_get, METH_VARARGS, NULL},
+	 { (char *)"CvHaarClassifier_alpha_set", _wrap_CvHaarClassifier_alpha_set, METH_VARARGS, NULL},
+	 { (char *)"CvHaarClassifier_alpha_get", _wrap_CvHaarClassifier_alpha_get, METH_VARARGS, NULL},
+	 { (char *)"new_CvHaarClassifier", _wrap_new_CvHaarClassifier, METH_VARARGS, NULL},
+	 { (char *)"delete_CvHaarClassifier", _wrap_delete_CvHaarClassifier, METH_VARARGS, NULL},
+	 { (char *)"CvHaarClassifier_swigregister", CvHaarClassifier_swigregister, METH_VARARGS, NULL},
+	 { (char *)"CvHaarStageClassifier_count_set", _wrap_CvHaarStageClassifier_count_set, METH_VARARGS, NULL},
+	 { (char *)"CvHaarStageClassifier_count_get", _wrap_CvHaarStageClassifier_count_get, METH_VARARGS, NULL},
+	 { (char *)"CvHaarStageClassifier_threshold_set", _wrap_CvHaarStageClassifier_threshold_set, METH_VARARGS, NULL},
+	 { (char *)"CvHaarStageClassifier_threshold_get", _wrap_CvHaarStageClassifier_threshold_get, METH_VARARGS, NULL},
+	 { (char *)"CvHaarStageClassifier_classifier_set", _wrap_CvHaarStageClassifier_classifier_set, METH_VARARGS, NULL},
+	 { (char *)"CvHaarStageClassifier_classifier_get", _wrap_CvHaarStageClassifier_classifier_get, METH_VARARGS, NULL},
+	 { (char *)"CvHaarStageClassifier_next_set", _wrap_CvHaarStageClassifier_next_set, METH_VARARGS, NULL},
+	 { (char *)"CvHaarStageClassifier_next_get", _wrap_CvHaarStageClassifier_next_get, METH_VARARGS, NULL},
+	 { (char *)"CvHaarStageClassifier_child_set", _wrap_CvHaarStageClassifier_child_set, METH_VARARGS, NULL},
+	 { (char *)"CvHaarStageClassifier_child_get", _wrap_CvHaarStageClassifier_child_get, METH_VARARGS, NULL},
+	 { (char *)"CvHaarStageClassifier_parent_set", _wrap_CvHaarStageClassifier_parent_set, METH_VARARGS, NULL},
+	 { (char *)"CvHaarStageClassifier_parent_get", _wrap_CvHaarStageClassifier_parent_get, METH_VARARGS, NULL},
+	 { (char *)"new_CvHaarStageClassifier", _wrap_new_CvHaarStageClassifier, METH_VARARGS, NULL},
+	 { (char *)"delete_CvHaarStageClassifier", _wrap_delete_CvHaarStageClassifier, METH_VARARGS, NULL},
+	 { (char *)"CvHaarStageClassifier_swigregister", CvHaarStageClassifier_swigregister, METH_VARARGS, NULL},
+	 { (char *)"CvHaarClassifierCascade_flags_set", _wrap_CvHaarClassifierCascade_flags_set, METH_VARARGS, NULL},
+	 { (char *)"CvHaarClassifierCascade_flags_get", _wrap_CvHaarClassifierCascade_flags_get, METH_VARARGS, NULL},
+	 { (char *)"CvHaarClassifierCascade_count_set", _wrap_CvHaarClassifierCascade_count_set, METH_VARARGS, NULL},
+	 { (char *)"CvHaarClassifierCascade_count_get", _wrap_CvHaarClassifierCascade_count_get, METH_VARARGS, NULL},
+	 { (char *)"CvHaarClassifierCascade_orig_window_size_set", _wrap_CvHaarClassifierCascade_orig_window_size_set, METH_VARARGS, NULL},
+	 { (char *)"CvHaarClassifierCascade_orig_window_size_get", _wrap_CvHaarClassifierCascade_orig_window_size_get, METH_VARARGS, NULL},
+	 { (char *)"CvHaarClassifierCascade_real_window_size_set", _wrap_CvHaarClassifierCascade_real_window_size_set, METH_VARARGS, NULL},
+	 { (char *)"CvHaarClassifierCascade_real_window_size_get", _wrap_CvHaarClassifierCascade_real_window_size_get, METH_VARARGS, NULL},
+	 { (char *)"CvHaarClassifierCascade_scale_set", _wrap_CvHaarClassifierCascade_scale_set, METH_VARARGS, NULL},
+	 { (char *)"CvHaarClassifierCascade_scale_get", _wrap_CvHaarClassifierCascade_scale_get, METH_VARARGS, NULL},
+	 { (char *)"CvHaarClassifierCascade_stage_classifier_set", _wrap_CvHaarClassifierCascade_stage_classifier_set, METH_VARARGS, NULL},
+	 { (char *)"CvHaarClassifierCascade_stage_classifier_get", _wrap_CvHaarClassifierCascade_stage_classifier_get, METH_VARARGS, NULL},
+	 { (char *)"CvHaarClassifierCascade_hid_cascade_set", _wrap_CvHaarClassifierCascade_hid_cascade_set, METH_VARARGS, NULL},
+	 { (char *)"CvHaarClassifierCascade_hid_cascade_get", _wrap_CvHaarClassifierCascade_hid_cascade_get, METH_VARARGS, NULL},
+	 { (char *)"delete_CvHaarClassifierCascade", _wrap_delete_CvHaarClassifierCascade, METH_VARARGS, NULL},
+	 { (char *)"CvHaarClassifierCascade_swigregister", CvHaarClassifierCascade_swigregister, METH_VARARGS, NULL},
+	 { (char *)"CvAvgComp_rect_set", _wrap_CvAvgComp_rect_set, METH_VARARGS, NULL},
+	 { (char *)"CvAvgComp_rect_get", _wrap_CvAvgComp_rect_get, METH_VARARGS, NULL},
+	 { (char *)"CvAvgComp_neighbors_set", _wrap_CvAvgComp_neighbors_set, METH_VARARGS, NULL},
+	 { (char *)"CvAvgComp_neighbors_get", _wrap_CvAvgComp_neighbors_get, METH_VARARGS, NULL},
+	 { (char *)"new_CvAvgComp", _wrap_new_CvAvgComp, METH_VARARGS, NULL},
+	 { (char *)"delete_CvAvgComp", _wrap_delete_CvAvgComp, METH_VARARGS, NULL},
+	 { (char *)"CvAvgComp_swigregister", CvAvgComp_swigregister, METH_VARARGS, NULL},
+	 { (char *)"cvCopyMakeBorder", _wrap_cvCopyMakeBorder, METH_VARARGS, NULL},
+	 { (char *)"cvSmooth", _wrap_cvSmooth, METH_VARARGS, NULL},
+	 { (char *)"cvFilter2D", _wrap_cvFilter2D, METH_VARARGS, NULL},
+	 { (char *)"cvIntegral", _wrap_cvIntegral, METH_VARARGS, NULL},
+	 { (char *)"cvPyrDown", _wrap_cvPyrDown, METH_VARARGS, NULL},
+	 { (char *)"cvPyrUp", _wrap_cvPyrUp, METH_VARARGS, NULL},
+	 { (char *)"cvPyrSegmentationUntyped", _wrap_cvPyrSegmentationUntyped, METH_VARARGS, NULL},
+	 { (char *)"cvPyrMeanShiftFiltering", _wrap_cvPyrMeanShiftFiltering, METH_VARARGS, NULL},
+	 { (char *)"cvWatershed", _wrap_cvWatershed, METH_VARARGS, NULL},
+	 { (char *)"cvInpaint", _wrap_cvInpaint, METH_VARARGS, NULL},
+	 { (char *)"cvSobel", _wrap_cvSobel, METH_VARARGS, NULL},
+	 { (char *)"cvLaplace", _wrap_cvLaplace, METH_VARARGS, NULL},
+	 { (char *)"cvCvtColor", _wrap_cvCvtColor, METH_VARARGS, NULL},
+	 { (char *)"cvResize", _wrap_cvResize, METH_VARARGS, NULL},
+	 { (char *)"cvWarpAffine", _wrap_cvWarpAffine, METH_VARARGS, NULL},
+	 { (char *)"cvGetAffineTransform", _wrap_cvGetAffineTransform, METH_VARARGS, NULL},
+	 { (char *)"cv2DRotationMatrix", _wrap_cv2DRotationMatrix, METH_VARARGS, NULL},
+	 { (char *)"cvWarpPerspective", _wrap_cvWarpPerspective, METH_VARARGS, NULL},
+	 { (char *)"cvGetPerspectiveTransform", _wrap_cvGetPerspectiveTransform, METH_VARARGS, NULL},
+	 { (char *)"cvRemap", _wrap_cvRemap, METH_VARARGS, NULL},
+	 { (char *)"cvLogPolar", _wrap_cvLogPolar, METH_VARARGS, NULL},
+	 { (char *)"cvCreateStructuringElementEx", _wrap_cvCreateStructuringElementEx, METH_VARARGS, NULL},
+	 { (char *)"cvErode", _wrap_cvErode, METH_VARARGS, NULL},
+	 { (char *)"cvDilate", _wrap_cvDilate, METH_VARARGS, NULL},
+	 { (char *)"cvMorphologyEx", _wrap_cvMorphologyEx, METH_VARARGS, NULL},
+	 { (char *)"cvMoments", _wrap_cvMoments, METH_VARARGS, NULL},
+	 { (char *)"cvGetSpatialMoment", _wrap_cvGetSpatialMoment, METH_VARARGS, NULL},
+	 { (char *)"cvGetCentralMoment", _wrap_cvGetCentralMoment, METH_VARARGS, NULL},
+	 { (char *)"cvGetNormalizedCentralMoment", _wrap_cvGetNormalizedCentralMoment, METH_VARARGS, NULL},
+	 { (char *)"cvGetHuMoments", _wrap_cvGetHuMoments, METH_VARARGS, NULL},
+	 { (char *)"cvSampleLine", _wrap_cvSampleLine, METH_VARARGS, NULL},
+	 { (char *)"cvGetRectSubPix", _wrap_cvGetRectSubPix, METH_VARARGS, NULL},
+	 { (char *)"cvGetQuadrangleSubPix", _wrap_cvGetQuadrangleSubPix, METH_VARARGS, NULL},
+	 { (char *)"cvMatchTemplate", _wrap_cvMatchTemplate, METH_VARARGS, NULL},
+	 { (char *)"cvCalcEMD2", _wrap_cvCalcEMD2, METH_VARARGS, NULL},
+	 { (char *)"cvFindContoursUntyped", _wrap_cvFindContoursUntyped, METH_VARARGS, NULL},
+	 { (char *)"cvStartFindContours", _wrap_cvStartFindContours, METH_VARARGS, NULL},
+	 { (char *)"cvFindNextContour", _wrap_cvFindNextContour, METH_VARARGS, NULL},
+	 { (char *)"cvSubstituteContour", _wrap_cvSubstituteContour, METH_VARARGS, NULL},
+	 { (char *)"cvEndFindContours", _wrap_cvEndFindContours, METH_VARARGS, NULL},
+	 { (char *)"cvApproxChainsUntyped", _wrap_cvApproxChainsUntyped, METH_VARARGS, NULL},
+	 { (char *)"cvStartReadChainPoints", _wrap_cvStartReadChainPoints, METH_VARARGS, NULL},
+	 { (char *)"cvReadChainPoint", _wrap_cvReadChainPoint, METH_VARARGS, NULL},
+	 { (char *)"cvCalcOpticalFlowLK", _wrap_cvCalcOpticalFlowLK, METH_VARARGS, NULL},
+	 { (char *)"cvCalcOpticalFlowBM", _wrap_cvCalcOpticalFlowBM, METH_VARARGS, NULL},
+	 { (char *)"cvCalcOpticalFlowHS", _wrap_cvCalcOpticalFlowHS, METH_VARARGS, NULL},
+	 { (char *)"cvCalcOpticalFlowPyrLK", _wrap_cvCalcOpticalFlowPyrLK, METH_VARARGS, NULL},
+	 { (char *)"cvUpdateMotionHistory", _wrap_cvUpdateMotionHistory, METH_VARARGS, NULL},
+	 { (char *)"cvCalcMotionGradient", _wrap_cvCalcMotionGradient, METH_VARARGS, NULL},
+	 { (char *)"cvCalcGlobalOrientation", _wrap_cvCalcGlobalOrientation, METH_VARARGS, NULL},
+	 { (char *)"cvAcc", _wrap_cvAcc, METH_VARARGS, NULL},
+	 { (char *)"cvSquareAcc", _wrap_cvSquareAcc, METH_VARARGS, NULL},
+	 { (char *)"cvMultiplyAcc", _wrap_cvMultiplyAcc, METH_VARARGS, NULL},
+	 { (char *)"cvRunningAvg", _wrap_cvRunningAvg, METH_VARARGS, NULL},
+	 { (char *)"cvCamShift", _wrap_cvCamShift, METH_VARARGS, NULL},
+	 { (char *)"cvMeanShift", _wrap_cvMeanShift, METH_VARARGS, NULL},
+	 { (char *)"cvCreateConDensation", _wrap_cvCreateConDensation, METH_VARARGS, NULL},
+	 { (char *)"cvConDensUpdateByTime", _wrap_cvConDensUpdateByTime, METH_VARARGS, NULL},
+	 { (char *)"cvConDensInitSampleSet", _wrap_cvConDensInitSampleSet, METH_VARARGS, NULL},
+	 { (char *)"cvCreateKalman", _wrap_cvCreateKalman, METH_VARARGS, NULL},
+	 { (char *)"cvKalmanPredict", _wrap_cvKalmanPredict, METH_VARARGS, NULL},
+	 { (char *)"cvKalmanCorrect", _wrap_cvKalmanCorrect, METH_VARARGS, NULL},
+	 { (char *)"cvInitSubdivDelaunay2D", _wrap_cvInitSubdivDelaunay2D, METH_VARARGS, NULL},
+	 { (char *)"cvCreateSubdiv2D", _wrap_cvCreateSubdiv2D, METH_VARARGS, NULL},
+	 { (char *)"cvCreateSubdivDelaunay2D", _wrap_cvCreateSubdivDelaunay2D, METH_VARARGS, NULL},
+	 { (char *)"cvSubdivDelaunay2DInsert", _wrap_cvSubdivDelaunay2DInsert, METH_VARARGS, NULL},
+	 { (char *)"cvSubdiv2DLocate", _wrap_cvSubdiv2DLocate, METH_VARARGS, NULL},
+	 { (char *)"cvCalcSubdivVoronoi2D", _wrap_cvCalcSubdivVoronoi2D, METH_VARARGS, NULL},
+	 { (char *)"cvClearSubdivVoronoi2D", _wrap_cvClearSubdivVoronoi2D, METH_VARARGS, NULL},
+	 { (char *)"cvFindNearestPoint2D", _wrap_cvFindNearestPoint2D, METH_VARARGS, NULL},
+	 { (char *)"cvSubdiv2DNextEdge", _wrap_cvSubdiv2DNextEdge, METH_VARARGS, NULL},
+	 { (char *)"cvSubdiv2DRotateEdge", _wrap_cvSubdiv2DRotateEdge, METH_VARARGS, NULL},
+	 { (char *)"cvSubdiv2DSymEdge", _wrap_cvSubdiv2DSymEdge, METH_VARARGS, NULL},
+	 { (char *)"cvSubdiv2DGetEdge", _wrap_cvSubdiv2DGetEdge, METH_VARARGS, NULL},
+	 { (char *)"cvSubdiv2DEdgeOrg", _wrap_cvSubdiv2DEdgeOrg, METH_VARARGS, NULL},
+	 { (char *)"cvSubdiv2DEdgeDst", _wrap_cvSubdiv2DEdgeDst, METH_VARARGS, NULL},
+	 { (char *)"cvTriangleArea", _wrap_cvTriangleArea, METH_VARARGS, NULL},
+	 { (char *)"cvFindDominantPoints", _wrap_cvFindDominantPoints, METH_VARARGS, NULL},
+	 { (char *)"cvBoundingRect", _wrap_cvBoundingRect, METH_VARARGS, NULL},
+	 { (char *)"cvContourArea", _wrap_cvContourArea, METH_VARARGS, NULL},
+	 { (char *)"cvMinAreaRect2", _wrap_cvMinAreaRect2, METH_VARARGS, NULL},
+	 { (char *)"cvMinEnclosingCircle", _wrap_cvMinEnclosingCircle, METH_VARARGS, NULL},
+	 { (char *)"cvMatchShapes", _wrap_cvMatchShapes, METH_VARARGS, NULL},
+	 { (char *)"cvCreateContourTree", _wrap_cvCreateContourTree, METH_VARARGS, NULL},
+	 { (char *)"cvContourFromContourTreeUntyped", _wrap_cvContourFromContourTreeUntyped, METH_VARARGS, NULL},
+	 { (char *)"cvMatchContourTrees", _wrap_cvMatchContourTrees, METH_VARARGS, NULL},
+	 { (char *)"cvCalcPGH", _wrap_cvCalcPGH, METH_VARARGS, NULL},
+	 { (char *)"cvCheckContourConvexity", _wrap_cvCheckContourConvexity, METH_VARARGS, NULL},
+	 { (char *)"cvConvexityDefectsUntyped", _wrap_cvConvexityDefectsUntyped, METH_VARARGS, NULL},
+	 { (char *)"cvFitEllipse2", _wrap_cvFitEllipse2, METH_VARARGS, NULL},
+	 { (char *)"cvMaxRect", _wrap_cvMaxRect, METH_VARARGS, NULL},
+	 { (char *)"cvBoxPoints", _wrap_cvBoxPoints, METH_VARARGS, NULL},
+	 { (char *)"cvPointSeqFromMat", _wrap_cvPointSeqFromMat, METH_VARARGS, NULL},
+	 { (char *)"cvPointPolygonTest", _wrap_cvPointPolygonTest, METH_VARARGS, NULL},
+	 { (char *)"cvCreateHist", _wrap_cvCreateHist, METH_VARARGS, NULL},
+	 { (char *)"cvSetHistBinRanges", _wrap_cvSetHistBinRanges, METH_VARARGS, NULL},
+	 { (char *)"cvMakeHistHeaderForArray", _wrap_cvMakeHistHeaderForArray, METH_VARARGS, NULL},
+	 { (char *)"cvClearHist", _wrap_cvClearHist, METH_VARARGS, NULL},
+	 { (char *)"cvGetMinMaxHistValue", _wrap_cvGetMinMaxHistValue, METH_VARARGS, NULL},
+	 { (char *)"cvNormalizeHist", _wrap_cvNormalizeHist, METH_VARARGS, NULL},
+	 { (char *)"cvThreshHist", _wrap_cvThreshHist, METH_VARARGS, NULL},
+	 { (char *)"cvCompareHist", _wrap_cvCompareHist, METH_VARARGS, NULL},
+	 { (char *)"cvCopyHist", _wrap_cvCopyHist, METH_VARARGS, NULL},
+	 { (char *)"cvCalcBayesianProb", _wrap_cvCalcBayesianProb, METH_VARARGS, NULL},
+	 { (char *)"cvCalcArrHist", _wrap_cvCalcArrHist, METH_VARARGS, NULL},
+	 { (char *)"cvCalcImageHist", _wrap_cvCalcImageHist, METH_VARARGS, NULL},
+	 { (char *)"cvCalcArrBackProject", _wrap_cvCalcArrBackProject, METH_VARARGS, NULL},
+	 { (char *)"cvCalcArrBackProjectPatch", _wrap_cvCalcArrBackProjectPatch, METH_VARARGS, NULL},
+	 { (char *)"cvCalcProbDensity", _wrap_cvCalcProbDensity, METH_VARARGS, NULL},
+	 { (char *)"cvEqualizeHist", _wrap_cvEqualizeHist, METH_VARARGS, NULL},
+	 { (char *)"cvSnakeImage", _wrap_cvSnakeImage, METH_VARARGS, NULL},
+	 { (char *)"cvCalcImageHomography", _wrap_cvCalcImageHomography, METH_VARARGS, NULL},
+	 { (char *)"cvDistTransform", _wrap_cvDistTransform, METH_VARARGS, NULL},
+	 { (char *)"cvThreshold", _wrap_cvThreshold, METH_VARARGS, NULL},
+	 { (char *)"cvAdaptiveThreshold", _wrap_cvAdaptiveThreshold, METH_VARARGS, NULL},
+	 { (char *)"cvFloodFill", _wrap_cvFloodFill, METH_VARARGS, NULL},
+	 { (char *)"cvCanny", _wrap_cvCanny, METH_VARARGS, NULL},
+	 { (char *)"cvPreCornerDetect", _wrap_cvPreCornerDetect, METH_VARARGS, NULL},
+	 { (char *)"cvCornerEigenValsAndVecs", _wrap_cvCornerEigenValsAndVecs, METH_VARARGS, NULL},
+	 { (char *)"cvCornerMinEigenVal", _wrap_cvCornerMinEigenVal, METH_VARARGS, NULL},
+	 { (char *)"cvCornerHarris", _wrap_cvCornerHarris, METH_VARARGS, NULL},
+	 { (char *)"cvFindCornerSubPix", _wrap_cvFindCornerSubPix, METH_VARARGS, NULL},
+	 { (char *)"cvGoodFeaturesToTrack", _wrap_cvGoodFeaturesToTrack, METH_VARARGS, NULL},
+	 { (char *)"cvHoughLinesUntyped", _wrap_cvHoughLinesUntyped, METH_VARARGS, NULL},
+	 { (char *)"cvHoughCirclesUntyped", _wrap_cvHoughCirclesUntyped, METH_VARARGS, NULL},
+	 { (char *)"cvFitLine", _wrap_cvFitLine, METH_VARARGS, NULL},
+	 { (char *)"cvLoadHaarClassifierCascade", _wrap_cvLoadHaarClassifierCascade, METH_VARARGS, NULL},
+	 { (char *)"cvSetImagesForHaarClassifierCascade", _wrap_cvSetImagesForHaarClassifierCascade, METH_VARARGS, NULL},
+	 { (char *)"cvRunHaarClassifierCascade", _wrap_cvRunHaarClassifierCascade, METH_VARARGS, NULL},
+	 { (char *)"cvUndistort2", _wrap_cvUndistort2, METH_VARARGS, NULL},
+	 { (char *)"cvInitUndistortMap", _wrap_cvInitUndistortMap, METH_VARARGS, NULL},
+	 { (char *)"cvRodrigues2", _wrap_cvRodrigues2, METH_VARARGS, NULL},
+	 { (char *)"cvFindHomography", _wrap_cvFindHomography, METH_VARARGS, NULL},
+	 { (char *)"cvProjectPoints2", _wrap_cvProjectPoints2, METH_VARARGS, NULL},
+	 { (char *)"cvFindExtrinsicCameraParams2", _wrap_cvFindExtrinsicCameraParams2, METH_VARARGS, NULL},
+	 { (char *)"cvCalibrateCamera2", _wrap_cvCalibrateCamera2, METH_VARARGS, NULL},
+	 { (char *)"cvFindChessboardCorners", _wrap_cvFindChessboardCorners, METH_VARARGS, NULL},
+	 { (char *)"cvDrawChessboardCorners", _wrap_cvDrawChessboardCorners, METH_VARARGS, NULL},
+	 { (char *)"cvCreatePOSITObject", _wrap_cvCreatePOSITObject, METH_VARARGS, NULL},
+	 { (char *)"cvPOSIT", _wrap_cvPOSIT, METH_VARARGS, NULL},
+	 { (char *)"cvConvertPointsHomogenious", _wrap_cvConvertPointsHomogenious, METH_VARARGS, NULL},
+	 { (char *)"cvFindFundamentalMat", _wrap_cvFindFundamentalMat, METH_VARARGS, NULL},
+	 { (char *)"cvComputeCorrespondEpilines", _wrap_cvComputeCorrespondEpilines, METH_VARARGS, NULL},
+	 { (char *)"new_CvBaseImageFilter", _wrap_new_CvBaseImageFilter, METH_VARARGS, NULL},
+	 { (char *)"delete_CvBaseImageFilter", _wrap_delete_CvBaseImageFilter, METH_VARARGS, NULL},
+	 { (char *)"CvBaseImageFilter_init", _wrap_CvBaseImageFilter_init, METH_VARARGS, NULL},
+	 { (char *)"CvBaseImageFilter_clear", _wrap_CvBaseImageFilter_clear, METH_VARARGS, NULL},
+	 { (char *)"CvBaseImageFilter_process", _wrap_CvBaseImageFilter_process, METH_VARARGS, NULL},
+	 { (char *)"CvBaseImageFilter_get_src_type", _wrap_CvBaseImageFilter_get_src_type, METH_VARARGS, NULL},
+	 { (char *)"CvBaseImageFilter_get_dst_type", _wrap_CvBaseImageFilter_get_dst_type, METH_VARARGS, NULL},
+	 { (char *)"CvBaseImageFilter_get_work_type", _wrap_CvBaseImageFilter_get_work_type, METH_VARARGS, NULL},
+	 { (char *)"CvBaseImageFilter_get_kernel_size", _wrap_CvBaseImageFilter_get_kernel_size, METH_VARARGS, NULL},
+	 { (char *)"CvBaseImageFilter_get_anchor", _wrap_CvBaseImageFilter_get_anchor, METH_VARARGS, NULL},
+	 { (char *)"CvBaseImageFilter_get_width", _wrap_CvBaseImageFilter_get_width, METH_VARARGS, NULL},
+	 { (char *)"CvBaseImageFilter_get_x_filter_func", _wrap_CvBaseImageFilter_get_x_filter_func, METH_VARARGS, NULL},
+	 { (char *)"CvBaseImageFilter_get_y_filter_func", _wrap_CvBaseImageFilter_get_y_filter_func, METH_VARARGS, NULL},
+	 { (char *)"CvBaseImageFilter_swigregister", CvBaseImageFilter_swigregister, METH_VARARGS, NULL},
+	 { (char *)"new_CvSepFilter", _wrap_new_CvSepFilter, METH_VARARGS, NULL},
+	 { (char *)"delete_CvSepFilter", _wrap_delete_CvSepFilter, METH_VARARGS, NULL},
+	 { (char *)"CvSepFilter_init_deriv", _wrap_CvSepFilter_init_deriv, METH_VARARGS, NULL},
+	 { (char *)"CvSepFilter_init_gaussian", _wrap_CvSepFilter_init_gaussian, METH_VARARGS, NULL},
+	 { (char *)"CvSepFilter_init", _wrap_CvSepFilter_init, METH_VARARGS, NULL},
+	 { (char *)"CvSepFilter_clear", _wrap_CvSepFilter_clear, METH_VARARGS, NULL},
+	 { (char *)"CvSepFilter_get_x_kernel", _wrap_CvSepFilter_get_x_kernel, METH_VARARGS, NULL},
+	 { (char *)"CvSepFilter_get_y_kernel", _wrap_CvSepFilter_get_y_kernel, METH_VARARGS, NULL},
+	 { (char *)"CvSepFilter_get_x_kernel_flags", _wrap_CvSepFilter_get_x_kernel_flags, METH_VARARGS, NULL},
+	 { (char *)"CvSepFilter_get_y_kernel_flags", _wrap_CvSepFilter_get_y_kernel_flags, METH_VARARGS, NULL},
+	 { (char *)"CvSepFilter_init_gaussian_kernel", _wrap_CvSepFilter_init_gaussian_kernel, METH_VARARGS, NULL},
+	 { (char *)"CvSepFilter_init_sobel_kernel", _wrap_CvSepFilter_init_sobel_kernel, METH_VARARGS, NULL},
+	 { (char *)"CvSepFilter_init_scharr_kernel", _wrap_CvSepFilter_init_scharr_kernel, METH_VARARGS, NULL},
+	 { (char *)"CvSepFilter_swigregister", CvSepFilter_swigregister, METH_VARARGS, NULL},
+	 { (char *)"new_CvLinearFilter", _wrap_new_CvLinearFilter, METH_VARARGS, NULL},
+	 { (char *)"delete_CvLinearFilter", _wrap_delete_CvLinearFilter, METH_VARARGS, NULL},
+	 { (char *)"CvLinearFilter_init", _wrap_CvLinearFilter_init, METH_VARARGS, NULL},
+	 { (char *)"CvLinearFilter_clear", _wrap_CvLinearFilter_clear, METH_VARARGS, NULL},
+	 { (char *)"CvLinearFilter_get_kernel", _wrap_CvLinearFilter_get_kernel, METH_VARARGS, NULL},
+	 { (char *)"CvLinearFilter_get_kernel_sparse_buf", _wrap_CvLinearFilter_get_kernel_sparse_buf, METH_VARARGS, NULL},
+	 { (char *)"CvLinearFilter_get_kernel_sparse_count", _wrap_CvLinearFilter_get_kernel_sparse_count, METH_VARARGS, NULL},
+	 { (char *)"CvLinearFilter_swigregister", CvLinearFilter_swigregister, METH_VARARGS, NULL},
+	 { (char *)"new_CvBoxFilter", _wrap_new_CvBoxFilter, METH_VARARGS, NULL},
+	 { (char *)"CvBoxFilter_init", _wrap_CvBoxFilter_init, METH_VARARGS, NULL},
+	 { (char *)"delete_CvBoxFilter", _wrap_delete_CvBoxFilter, METH_VARARGS, NULL},
+	 { (char *)"CvBoxFilter_is_normalized", _wrap_CvBoxFilter_is_normalized, METH_VARARGS, NULL},
+	 { (char *)"CvBoxFilter_get_scale", _wrap_CvBoxFilter_get_scale, METH_VARARGS, NULL},
+	 { (char *)"CvBoxFilter_get_sum_buf", _wrap_CvBoxFilter_get_sum_buf, METH_VARARGS, NULL},
+	 { (char *)"CvBoxFilter_get_sum_count_ptr", _wrap_CvBoxFilter_get_sum_count_ptr, METH_VARARGS, NULL},
+	 { (char *)"CvBoxFilter_swigregister", CvBoxFilter_swigregister, METH_VARARGS, NULL},
+	 { (char *)"new_CvLaplaceFilter", _wrap_new_CvLaplaceFilter, METH_VARARGS, NULL},
+	 { (char *)"delete_CvLaplaceFilter", _wrap_delete_CvLaplaceFilter, METH_VARARGS, NULL},
+	 { (char *)"CvLaplaceFilter_init", _wrap_CvLaplaceFilter_init, METH_VARARGS, NULL},
+	 { (char *)"CvLaplaceFilter_is_normalized", _wrap_CvLaplaceFilter_is_normalized, METH_VARARGS, NULL},
+	 { (char *)"CvLaplaceFilter_is_basic_laplacian", _wrap_CvLaplaceFilter_is_basic_laplacian, METH_VARARGS, NULL},
+	 { (char *)"CvLaplaceFilter_swigregister", CvLaplaceFilter_swigregister, METH_VARARGS, NULL},
+	 { (char *)"new_CvMorphology", _wrap_new_CvMorphology, METH_VARARGS, NULL},
+	 { (char *)"delete_CvMorphology", _wrap_delete_CvMorphology, METH_VARARGS, NULL},
+	 { (char *)"CvMorphology_init", _wrap_CvMorphology_init, METH_VARARGS, NULL},
+	 { (char *)"CvMorphology_clear", _wrap_CvMorphology_clear, METH_VARARGS, NULL},
+	 { (char *)"CvMorphology_get_element", _wrap_CvMorphology_get_element, METH_VARARGS, NULL},
+	 { (char *)"CvMorphology_get_element_shape", _wrap_CvMorphology_get_element_shape, METH_VARARGS, NULL},
+	 { (char *)"CvMorphology_get_operation", _wrap_CvMorphology_get_operation, METH_VARARGS, NULL},
+	 { (char *)"CvMorphology_get_element_sparse_buf", _wrap_CvMorphology_get_element_sparse_buf, METH_VARARGS, NULL},
+	 { (char *)"CvMorphology_get_element_sparse_count", _wrap_CvMorphology_get_element_sparse_count, METH_VARARGS, NULL},
+	 { (char *)"CvMorphology_init_binary_element", _wrap_CvMorphology_init_binary_element, METH_VARARGS, NULL},
+	 { (char *)"CvMorphology_swigregister", CvMorphology_swigregister, METH_VARARGS, NULL},
+	 { (char *)"CvTuple_CvPoint_2_val_set", _wrap_CvTuple_CvPoint_2_val_set, METH_VARARGS, NULL},
+	 { (char *)"CvTuple_CvPoint_2_val_get", _wrap_CvTuple_CvPoint_2_val_get, METH_VARARGS, NULL},
+	 { (char *)"CvTuple_CvPoint_2___setitem__", _wrap_CvTuple_CvPoint_2___setitem__, METH_VARARGS, NULL},
+	 { (char *)"CvTuple_CvPoint_2___getitem__", _wrap_CvTuple_CvPoint_2___getitem__, METH_VARARGS, NULL},
+	 { (char *)"new_CvTuple_CvPoint_2", _wrap_new_CvTuple_CvPoint_2, METH_VARARGS, NULL},
+	 { (char *)"delete_CvTuple_CvPoint_2", _wrap_delete_CvTuple_CvPoint_2, METH_VARARGS, NULL},
+	 { (char *)"CvTuple_CvPoint_2_swigregister", CvTuple_CvPoint_2_swigregister, METH_VARARGS, NULL},
+	 { (char *)"CvTuple_float_2_val_set", _wrap_CvTuple_float_2_val_set, METH_VARARGS, NULL},
+	 { (char *)"CvTuple_float_2_val_get", _wrap_CvTuple_float_2_val_get, METH_VARARGS, NULL},
+	 { (char *)"CvTuple_float_2___setitem__", _wrap_CvTuple_float_2___setitem__, METH_VARARGS, NULL},
+	 { (char *)"CvTuple_float_2___getitem__", _wrap_CvTuple_float_2___getitem__, METH_VARARGS, NULL},
+	 { (char *)"new_CvTuple_float_2", _wrap_new_CvTuple_float_2, METH_VARARGS, NULL},
+	 { (char *)"delete_CvTuple_float_2", _wrap_delete_CvTuple_float_2, METH_VARARGS, NULL},
+	 { (char *)"CvTuple_float_2_swigregister", CvTuple_float_2_swigregister, METH_VARARGS, NULL},
+	 { (char *)"CvTuple_float_3_val_set", _wrap_CvTuple_float_3_val_set, METH_VARARGS, NULL},
+	 { (char *)"CvTuple_float_3_val_get", _wrap_CvTuple_float_3_val_get, METH_VARARGS, NULL},
+	 { (char *)"CvTuple_float_3___setitem__", _wrap_CvTuple_float_3___setitem__, METH_VARARGS, NULL},
+	 { (char *)"CvTuple_float_3___getitem__", _wrap_CvTuple_float_3___getitem__, METH_VARARGS, NULL},
+	 { (char *)"new_CvTuple_float_3", _wrap_new_CvTuple_float_3, METH_VARARGS, NULL},
+	 { (char *)"delete_CvTuple_float_3", _wrap_delete_CvTuple_float_3, METH_VARARGS, NULL},
+	 { (char *)"CvTuple_float_3_swigregister", CvTuple_float_3_swigregister, METH_VARARGS, NULL},
+	 { (char *)"CvSeq_CvPoint_cast", _wrap_CvSeq_CvPoint_cast, METH_VARARGS, NULL},
+	 { (char *)"CvSeq_CvPoint___getitem__", _wrap_CvSeq_CvPoint___getitem__, METH_VARARGS, NULL},
+	 { (char *)"CvSeq_CvPoint___setitem__", _wrap_CvSeq_CvPoint___setitem__, METH_VARARGS, NULL},
+	 { (char *)"CvSeq_CvPoint_append", _wrap_CvSeq_CvPoint_append, METH_VARARGS, NULL},
+	 { (char *)"CvSeq_CvPoint_pop", _wrap_CvSeq_CvPoint_pop, METH_VARARGS, NULL},
+	 { (char *)"new_CvSeq_CvPoint", _wrap_new_CvSeq_CvPoint, METH_VARARGS, NULL},
+	 { (char *)"delete_CvSeq_CvPoint", _wrap_delete_CvSeq_CvPoint, METH_VARARGS, NULL},
+	 { (char *)"CvSeq_CvPoint_swigregister", CvSeq_CvPoint_swigregister, METH_VARARGS, NULL},
+	 { (char *)"CvSeq_CvPoint2D32f_cast", _wrap_CvSeq_CvPoint2D32f_cast, METH_VARARGS, NULL},
+	 { (char *)"CvSeq_CvPoint2D32f___getitem__", _wrap_CvSeq_CvPoint2D32f___getitem__, METH_VARARGS, NULL},
+	 { (char *)"CvSeq_CvPoint2D32f___setitem__", _wrap_CvSeq_CvPoint2D32f___setitem__, METH_VARARGS, NULL},
+	 { (char *)"CvSeq_CvPoint2D32f_append", _wrap_CvSeq_CvPoint2D32f_append, METH_VARARGS, NULL},
+	 { (char *)"CvSeq_CvPoint2D32f_pop", _wrap_CvSeq_CvPoint2D32f_pop, METH_VARARGS, NULL},
+	 { (char *)"new_CvSeq_CvPoint2D32f", _wrap_new_CvSeq_CvPoint2D32f, METH_VARARGS, NULL},
+	 { (char *)"delete_CvSeq_CvPoint2D32f", _wrap_delete_CvSeq_CvPoint2D32f, METH_VARARGS, NULL},
+	 { (char *)"CvSeq_CvPoint2D32f_swigregister", CvSeq_CvPoint2D32f_swigregister, METH_VARARGS, NULL},
+	 { (char *)"CvSeq_CvRect_cast", _wrap_CvSeq_CvRect_cast, METH_VARARGS, NULL},
+	 { (char *)"CvSeq_CvRect___getitem__", _wrap_CvSeq_CvRect___getitem__, METH_VARARGS, NULL},
+	 { (char *)"CvSeq_CvRect___setitem__", _wrap_CvSeq_CvRect___setitem__, METH_VARARGS, NULL},
+	 { (char *)"CvSeq_CvRect_append", _wrap_CvSeq_CvRect_append, METH_VARARGS, NULL},
+	 { (char *)"CvSeq_CvRect_pop", _wrap_CvSeq_CvRect_pop, METH_VARARGS, NULL},
+	 { (char *)"new_CvSeq_CvRect", _wrap_new_CvSeq_CvRect, METH_VARARGS, NULL},
+	 { (char *)"delete_CvSeq_CvRect", _wrap_delete_CvSeq_CvRect, METH_VARARGS, NULL},
+	 { (char *)"CvSeq_CvRect_swigregister", CvSeq_CvRect_swigregister, METH_VARARGS, NULL},
+	 { (char *)"CvSeq_CvSeq_cast", _wrap_CvSeq_CvSeq_cast, METH_VARARGS, NULL},
+	 { (char *)"CvSeq_CvSeq___getitem__", _wrap_CvSeq_CvSeq___getitem__, METH_VARARGS, NULL},
+	 { (char *)"CvSeq_CvSeq___setitem__", _wrap_CvSeq_CvSeq___setitem__, METH_VARARGS, NULL},
+	 { (char *)"CvSeq_CvSeq_append", _wrap_CvSeq_CvSeq_append, METH_VARARGS, NULL},
+	 { (char *)"CvSeq_CvSeq_pop", _wrap_CvSeq_CvSeq_pop, METH_VARARGS, NULL},
+	 { (char *)"new_CvSeq_CvSeq", _wrap_new_CvSeq_CvSeq, METH_VARARGS, NULL},
+	 { (char *)"delete_CvSeq_CvSeq", _wrap_delete_CvSeq_CvSeq, METH_VARARGS, NULL},
+	 { (char *)"CvSeq_CvSeq_swigregister", CvSeq_CvSeq_swigregister, METH_VARARGS, NULL},
+	 { (char *)"CvSeq_CvQuadEdge2D_cast", _wrap_CvSeq_CvQuadEdge2D_cast, METH_VARARGS, NULL},
+	 { (char *)"CvSeq_CvQuadEdge2D___getitem__", _wrap_CvSeq_CvQuadEdge2D___getitem__, METH_VARARGS, NULL},
+	 { (char *)"CvSeq_CvQuadEdge2D___setitem__", _wrap_CvSeq_CvQuadEdge2D___setitem__, METH_VARARGS, NULL},
+	 { (char *)"CvSeq_CvQuadEdge2D_append", _wrap_CvSeq_CvQuadEdge2D_append, METH_VARARGS, NULL},
+	 { (char *)"CvSeq_CvQuadEdge2D_pop", _wrap_CvSeq_CvQuadEdge2D_pop, METH_VARARGS, NULL},
+	 { (char *)"new_CvSeq_CvQuadEdge2D", _wrap_new_CvSeq_CvQuadEdge2D, METH_VARARGS, NULL},
+	 { (char *)"delete_CvSeq_CvQuadEdge2D", _wrap_delete_CvSeq_CvQuadEdge2D, METH_VARARGS, NULL},
+	 { (char *)"CvSeq_CvQuadEdge2D_swigregister", CvSeq_CvQuadEdge2D_swigregister, METH_VARARGS, NULL},
+	 { (char *)"CvSeq_CvConnectedComp_cast", _wrap_CvSeq_CvConnectedComp_cast, METH_VARARGS, NULL},
+	 { (char *)"CvSeq_CvConnectedComp___getitem__", _wrap_CvSeq_CvConnectedComp___getitem__, METH_VARARGS, NULL},
+	 { (char *)"CvSeq_CvConnectedComp___setitem__", _wrap_CvSeq_CvConnectedComp___setitem__, METH_VARARGS, NULL},
+	 { (char *)"CvSeq_CvConnectedComp_append", _wrap_CvSeq_CvConnectedComp_append, METH_VARARGS, NULL},
+	 { (char *)"CvSeq_CvConnectedComp_pop", _wrap_CvSeq_CvConnectedComp_pop, METH_VARARGS, NULL},
+	 { (char *)"new_CvSeq_CvConnectedComp", _wrap_new_CvSeq_CvConnectedComp, METH_VARARGS, NULL},
+	 { (char *)"delete_CvSeq_CvConnectedComp", _wrap_delete_CvSeq_CvConnectedComp, METH_VARARGS, NULL},
+	 { (char *)"CvSeq_CvConnectedComp_swigregister", CvSeq_CvConnectedComp_swigregister, METH_VARARGS, NULL},
+	 { (char *)"CvSeq_CvPoint_2_cast", _wrap_CvSeq_CvPoint_2_cast, METH_VARARGS, NULL},
+	 { (char *)"CvSeq_CvPoint_2___getitem__", _wrap_CvSeq_CvPoint_2___getitem__, METH_VARARGS, NULL},
+	 { (char *)"CvSeq_CvPoint_2___setitem__", _wrap_CvSeq_CvPoint_2___setitem__, METH_VARARGS, NULL},
+	 { (char *)"CvSeq_CvPoint_2_append", _wrap_CvSeq_CvPoint_2_append, METH_VARARGS, NULL},
+	 { (char *)"CvSeq_CvPoint_2_pop", _wrap_CvSeq_CvPoint_2_pop, METH_VARARGS, NULL},
+	 { (char *)"new_CvSeq_CvPoint_2", _wrap_new_CvSeq_CvPoint_2, METH_VARARGS, NULL},
+	 { (char *)"delete_CvSeq_CvPoint_2", _wrap_delete_CvSeq_CvPoint_2, METH_VARARGS, NULL},
+	 { (char *)"CvSeq_CvPoint_2_swigregister", CvSeq_CvPoint_2_swigregister, METH_VARARGS, NULL},
+	 { (char *)"CvSeq_float_2_cast", _wrap_CvSeq_float_2_cast, METH_VARARGS, NULL},
+	 { (char *)"CvSeq_float_2___getitem__", _wrap_CvSeq_float_2___getitem__, METH_VARARGS, NULL},
+	 { (char *)"CvSeq_float_2___setitem__", _wrap_CvSeq_float_2___setitem__, METH_VARARGS, NULL},
+	 { (char *)"CvSeq_float_2_append", _wrap_CvSeq_float_2_append, METH_VARARGS, NULL},
+	 { (char *)"CvSeq_float_2_pop", _wrap_CvSeq_float_2_pop, METH_VARARGS, NULL},
+	 { (char *)"new_CvSeq_float_2", _wrap_new_CvSeq_float_2, METH_VARARGS, NULL},
+	 { (char *)"delete_CvSeq_float_2", _wrap_delete_CvSeq_float_2, METH_VARARGS, NULL},
+	 { (char *)"CvSeq_float_2_swigregister", CvSeq_float_2_swigregister, METH_VARARGS, NULL},
+	 { (char *)"CvSeq_float_3_cast", _wrap_CvSeq_float_3_cast, METH_VARARGS, NULL},
+	 { (char *)"CvSeq_float_3___getitem__", _wrap_CvSeq_float_3___getitem__, METH_VARARGS, NULL},
+	 { (char *)"CvSeq_float_3___setitem__", _wrap_CvSeq_float_3___setitem__, METH_VARARGS, NULL},
+	 { (char *)"CvSeq_float_3_append", _wrap_CvSeq_float_3_append, METH_VARARGS, NULL},
+	 { (char *)"CvSeq_float_3_pop", _wrap_CvSeq_float_3_pop, METH_VARARGS, NULL},
+	 { (char *)"new_CvSeq_float_3", _wrap_new_CvSeq_float_3, METH_VARARGS, NULL},
+	 { (char *)"delete_CvSeq_float_3", _wrap_delete_CvSeq_float_3, METH_VARARGS, NULL},
+	 { (char *)"CvSeq_float_3_swigregister", CvSeq_float_3_swigregister, METH_VARARGS, NULL},
+	 { (char *)"SendErrorToPython", _wrap_SendErrorToPython, METH_VARARGS, NULL},
+	 { (char *)"function_ptr_generator", _wrap_function_ptr_generator, METH_VARARGS, NULL},
+	 { (char *)"void_ptr_generator", _wrap_void_ptr_generator, METH_VARARGS, NULL},
+	 { (char *)"void_ptrptr_generator", _wrap_void_ptrptr_generator, METH_VARARGS, NULL},
+	 { NULL, NULL, 0, NULL }
 };
 
 
@@ -100925,7 +100925,7 @@ extern "C" {
     swig_type_info **types_initial) {
     size_t i;
     for (i = 0; methods[i].ml_name; ++i) {
-      char *c = (char*)methods[i].ml_doc;
+      char *c = methods[i].ml_doc;
       if (c && (c = strstr(c, "swig_ptr: "))) {
         int j;
         swig_const_info *ci = 0;
@@ -101076,10 +101076,10 @@ SWIGEXPORT void SWIG_init(void) {
   SWIG_Python_SetConstant(d, "CV_ErrModeLeaf",SWIG_From_int(static_cast< int >(0)));
   SWIG_Python_SetConstant(d, "CV_ErrModeParent",SWIG_From_int(static_cast< int >(1)));
   SWIG_Python_SetConstant(d, "CV_ErrModeSilent",SWIG_From_int(static_cast< int >(2)));
-  SWIG_Python_SetConstant(d, "CV_MAJOR_VERSION",SWIG_From_int(static_cast< int >(0)));
-  SWIG_Python_SetConstant(d, "CV_MINOR_VERSION",SWIG_From_int(static_cast< int >(9)));
-  SWIG_Python_SetConstant(d, "CV_SUBMINOR_VERSION",SWIG_From_int(static_cast< int >(9)));
-  SWIG_Python_SetConstant(d, "CV_VERSION",SWIG_FromCharPtr("0.9.9"));
+  SWIG_Python_SetConstant(d, "CV_MAJOR_VERSION",SWIG_From_int(static_cast< int >(1)));
+  SWIG_Python_SetConstant(d, "CV_MINOR_VERSION",SWIG_From_int(static_cast< int >(0)));
+  SWIG_Python_SetConstant(d, "CV_SUBMINOR_VERSION",SWIG_From_int(static_cast< int >(0)));
+  SWIG_Python_SetConstant(d, "CV_VERSION",SWIG_FromCharPtr("1.0.0"));
   SWIG_Python_SetConstant(d, "CV_PI",SWIG_From_double(static_cast< double >(3.1415926535897932384626433832795)));
   SWIG_Python_SetConstant(d, "CV_LOG2",SWIG_From_double(static_cast< double >(0.69314718055994530941723212145818)));
   SWIG_Python_SetConstant(d, "IPL_DEPTH_SIGN",SWIG_From_int(static_cast< int >(0x80000000)));

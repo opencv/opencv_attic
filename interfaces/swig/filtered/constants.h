@@ -212,11 +212,11 @@
 
 #define CV_ErrModeSilent   2   
 
-#define CV_MAJOR_VERSION    0
+#define CV_MAJOR_VERSION    1
 
-#define CV_MINOR_VERSION    9
+#define CV_MINOR_VERSION    0
 
-#define CV_SUBMINOR_VERSION 9
+#define CV_SUBMINOR_VERSION 0
 
 #define CV_VERSION          "1.0.0"
 
