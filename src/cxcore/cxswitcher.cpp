@@ -223,6 +223,8 @@ icvInitProcessorInfo( CvProcessorInfo* cpu_info )
 #elif !defined __i386__
     cpu_info->model = CV_PROC_GENERIC;
 #else
+    cpu_info->model = CV_PROC_IA32_GENERIC;
+    
     // reading /proc/cpuinfo file (proc file system must be supported)
     FILE *file = fopen( "/proc/cpuinfo", "r" );
 
@@ -716,7 +718,8 @@ CV_IMPL  int64  cvGetTickCount( void )
 {
     const CvProcessorInfo* cpu_info = icvGetProcessorInfo();
 
-    if( CV_GET_PROC_ARCH(cpu_info->model) == CV_PROC_IA32_GENERIC )
+    if( cpu_info->frequency > 1 &&
+        CV_GET_PROC_ARCH(cpu_info->model) == CV_PROC_IA32_GENERIC )
     {
 #ifdef MASM_INLINE_ASSEMBLY
     #ifdef __BORLANDC__
