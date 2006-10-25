@@ -128,7 +128,7 @@ void CV_ChessboardDetectorTest::run( int start_from )
         board_list->data.seq->total % 2 != 0 )
     {
         ts->printf( CvTS::LOG, "chessboard_list.dat can not be readed or is not valid" );
-        CvTS::FAIL_MISSING_TEST_DATA;
+        code = CvTS::FAIL_MISSING_TEST_DATA;
         goto _exit_;
     }
 
@@ -146,7 +146,7 @@ void CV_ChessboardDetectorTest::run( int start_from )
         /* read the image */
         sprintf( filename, "%s%s", filepath,
             cvReadString((CvFileNode*)cvGetSeqElem(board_list->data.seq,idx*2),"dummy.txt"));
-	
+    
         img = cvLoadImage( filename );
         
         if( !img )
