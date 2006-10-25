@@ -222,66 +222,48 @@ IPCV_DEF_MEAN_SDV( 64f, double )
 
 //////////////////////////////////// MinMaxIndx /////////////////////////////////////////
 
-#define IPCV_DEF_MIN_MAX_LOC( flavor, srctype, extrtype )       \
+#define IPCV_DEF_MIN_MAX_LOC( flavor, srctype, extrtype, plugin ) \
 IPCVAPI_EX( CvStatus, icvMinMaxIndx_##flavor##_C1R,             \
-"ippiMinMaxIndx_" #flavor "_C1R", CV_PLUGINS1(CV_PLUGIN_IPPCV), \
+"ippiMinMaxIndx_" #flavor "_C1R", plugin,                       \
 ( const srctype* img, int imgstep,                              \
   CvSize size, extrtype* minVal, extrtype* maxVal,              \
   CvPoint* minLoc, CvPoint* maxLoc ))                           \
                                                                 \
 IPCVAPI_EX( CvStatus, icvMinMaxIndx_##flavor##_C1MR,            \
-"ippiMinMaxIndx_" #flavor "_C1MR", CV_PLUGINS1(CV_PLUGIN_IPPCV),\
+"ippiMinMaxIndx_" #flavor "_C1MR", plugin,                      \
 ( const srctype* img, int imgstep,                              \
   const uchar* mask, int maskStep,                              \
   CvSize size, extrtype* minVal, extrtype* maxVal,              \
   CvPoint* minLoc, CvPoint* maxLoc ))
 
-IPCV_DEF_MIN_MAX_LOC( 8u, uchar, float )
-IPCV_DEF_MIN_MAX_LOC( 16u, ushort, float )
-IPCV_DEF_MIN_MAX_LOC( 16s, short, float )
-IPCV_DEF_MIN_MAX_LOC( 32s, int, double )
-IPCV_DEF_MIN_MAX_LOC( 32f, int, float )
-IPCV_DEF_MIN_MAX_LOC( 64f, int64, double )
+IPCV_DEF_MIN_MAX_LOC( 8u, uchar, float, CV_PLUGINS1(CV_PLUGIN_IPPCV) )
+IPCV_DEF_MIN_MAX_LOC( 16u, ushort, float, 0 )
+IPCV_DEF_MIN_MAX_LOC( 16s, short, float, CV_PLUGINS1(CV_PLUGIN_IPPCV) )
+IPCV_DEF_MIN_MAX_LOC( 32s, int, double, 0 )
+#if !defined WIN64 && (defined WIN32 || defined __i386__)
+IPCV_DEF_MIN_MAX_LOC( 32f, int, float, CV_PLUGINS1(CV_PLUGIN_IPPCV) )
+#else
+IPCV_DEF_MIN_MAX_LOC( 32f, int, float, 0 )
+#endif
+IPCV_DEF_MIN_MAX_LOC( 64f, int64, double, 0 )
 
 #undef IPCV_DEF_MIN_MAX_LOC
 
 ////////////////////////////////////////// Sum //////////////////////////////////////////
 
-#define IPCV_DEF_SUM_NOHINT( flavor, srctype )                              \
+#define IPCV_DEF_SUM_NOHINT( flavor, srctype, plugin )                      \
 IPCVAPI_EX( CvStatus, icvSum_##flavor##_C1R,                                \
-            "ippiSum_" #flavor "_C1R", CV_PLUGINS1(CV_PLUGIN_IPPI),         \
-                                         ( const srctype* img, int imgstep, \
-                                           CvSize size, double* sum ))      \
+            "ippiSum_" #flavor "_C1R", plugin,                              \
+            ( const srctype* img, int imgstep, CvSize size, double* sum ))  \
 IPCVAPI_EX( CvStatus, icvSum_##flavor##_C2R,                                \
-           "ippiSum_" #flavor "_C2R", CV_PLUGINS1(CV_PLUGIN_IPPI),          \
-                                         ( const srctype* img, int imgstep, \
-                                           CvSize size, double* sum ))      \
+           "ippiSum_" #flavor "_C2R", plugin,                               \
+            ( const srctype* img, int imgstep, CvSize size, double* sum ))  \
 IPCVAPI_EX( CvStatus, icvSum_##flavor##_C3R,                                \
-           "ippiSum_" #flavor "_C3R", CV_PLUGINS1(CV_PLUGIN_IPPI),          \
-                                         ( const srctype* img, int imgstep, \
-                                           CvSize size, double* sum ))      \
+           "ippiSum_" #flavor "_C3R", plugin,                               \
+            ( const srctype* img, int imgstep, CvSize size, double* sum ))  \
 IPCVAPI_EX( CvStatus, icvSum_##flavor##_C4R,                                \
-           "ippiSum_" #flavor "_C4R", CV_PLUGINS1(CV_PLUGIN_IPPI),          \
-                                         ( const srctype* img, int imgstep, \
-                                           CvSize size, double* sum ))
-
-#define IPCV_DEF_SUM_NOHINT_NO_IPP( flavor, srctype )                       \
-IPCVAPI_EX( CvStatus, icvSum_##flavor##_C1R,                                \
-            "ippiSum_" #flavor "_C1R", 0,                                   \
-                                         ( const srctype* img, int imgstep, \
-                                           CvSize size, double* sum ))      \
-IPCVAPI_EX( CvStatus, icvSum_##flavor##_C2R,                                \
-           "ippiSum_" #flavor "_C2R", 0,                                    \
-                                         ( const srctype* img, int imgstep, \
-                                           CvSize size, double* sum ))      \
-IPCVAPI_EX( CvStatus, icvSum_##flavor##_C3R,                                \
-           "ippiSum_" #flavor "_C3R", 0,                                    \
-                                         ( const srctype* img, int imgstep, \
-                                           CvSize size, double* sum ))      \
-IPCVAPI_EX( CvStatus, icvSum_##flavor##_C4R,                                \
-           "ippiSum_" #flavor "_C4R", 0,                                    \
-                                         ( const srctype* img, int imgstep, \
-                                           CvSize size, double* sum ))
+           "ippiSum_" #flavor "_C4R", plugin,                               \
+            ( const srctype* img, int imgstep, CvSize size, double* sum ))
 
 #define IPCV_DEF_SUM_HINT( flavor, srctype )                                \
 IPCVAPI_EX( CvStatus, icvSum_##flavor##_C1R,                                \
@@ -301,12 +283,12 @@ IPCVAPI_EX( CvStatus, icvSum_##flavor##_C4R,                                \
                         ( const srctype* img, int imgstep,                  \
                           CvSize size, double* sum, CvHintAlgorithm ))
 
-IPCV_DEF_SUM_NOHINT( 8u, uchar )
-IPCV_DEF_SUM_NOHINT( 16s, short )
-IPCV_DEF_SUM_NOHINT_NO_IPP( 16u, ushort )
-IPCV_DEF_SUM_NOHINT( 32s, int )
+IPCV_DEF_SUM_NOHINT( 8u, uchar, CV_PLUGINS1(CV_PLUGIN_IPPI) )
+IPCV_DEF_SUM_NOHINT( 16s, short, CV_PLUGINS1(CV_PLUGIN_IPPI) )
+IPCV_DEF_SUM_NOHINT( 16u, ushort, 0 )
+IPCV_DEF_SUM_NOHINT( 32s, int, 0 )
 IPCV_DEF_SUM_HINT( 32f, float )
-IPCV_DEF_SUM_NOHINT( 64f, double )
+IPCV_DEF_SUM_NOHINT( 64f, double, 0 )
 
 #undef IPCV_DEF_SUM_NOHINT
 #undef IPCV_DEF_SUM_HINT
@@ -328,31 +310,28 @@ IPCV_DEF_NON_ZERO( 64f, int64 )
 
 ////////////////////////////////////////// Norms /////////////////////////////////
 
-#define IPCV_DEF_NORM_NOHINT_C1( flavor, srctype )                                      \
+#define IPCV_DEF_NORM_NOHINT_C1( flavor, srctype, plugin )                              \
 IPCVAPI_EX( CvStatus, icvNorm_Inf_##flavor##_C1R,                                       \
-            "ippiNorm_Inf_" #flavor "_C1R", CV_PLUGINS1(CV_PLUGIN_IPPI),                \
-                                             ( const srctype* img, int imgstep,         \
-                                               CvSize size, double* norm ))             \
+            "ippiNorm_Inf_" #flavor "_C1R", plugin,                                     \
+            ( const srctype* img, int imgstep, CvSize size, double* norm ))             \
 IPCVAPI_EX( CvStatus, icvNorm_L1_##flavor##_C1R,                                        \
-           "ippiNorm_L1_" #flavor "_C1R", CV_PLUGINS1(CV_PLUGIN_IPPI),                  \
-                                             ( const srctype* img, int imgstep,         \
-                                               CvSize size, double* norm ))             \
+           "ippiNorm_L1_" #flavor "_C1R", plugin,                                       \
+            ( const srctype* img, int imgstep, CvSize size, double* norm ))             \
 IPCVAPI_EX( CvStatus, icvNorm_L2_##flavor##_C1R,                                        \
-           "ippiNorm_L2_" #flavor "_C1R", 0/*CV_PLUGINS1(CV_PLUGIN_IPPI)*/,             \
-                                             ( const srctype* img, int imgstep,         \
-                                               CvSize size, double* norm ))             \
+           "ippiNorm_L2_" #flavor "_C1R", plugin,                                       \
+            ( const srctype* img, int imgstep, CvSize size, double* norm ))             \
 IPCVAPI_EX( CvStatus, icvNormDiff_Inf_##flavor##_C1R,                                   \
-           "ippiNormDiff_Inf_" #flavor "_C1R", 0/*CV_PLUGINS1(CV_PLUGIN_IPPI)*/,        \
+           "ippiNormDiff_Inf_" #flavor "_C1R", plugin,                                  \
                                              ( const srctype* img1, int imgstep1,       \
                                                const srctype* img2, int imgstep2,       \
                                                CvSize size, double* norm ))             \
 IPCVAPI_EX( CvStatus, icvNormDiff_L1_##flavor##_C1R,                                    \
-           "ippiNormDiff_L1_" #flavor "_C1R", CV_PLUGINS1(CV_PLUGIN_IPPI),              \
+           "ippiNormDiff_L1_" #flavor "_C1R", plugin,                                   \
                                              ( const srctype* img1, int imgstep1,       \
                                                const srctype* img2, int imgstep2,       \
                                                CvSize size, double* norm ))             \
 IPCVAPI_EX( CvStatus, icvNormDiff_L2_##flavor##_C1R,                                    \
-           "ippiNormDiff_L2_" #flavor "_C1R", 0/*CV_PLUGINS1(CV_PLUGIN_IPPI)*/,         \
+           "ippiNormDiff_L2_" #flavor "_C1R", plugin,                                   \
                                              ( const srctype* img1, int imgstep1,       \
                                                const srctype* img2, int imgstep2,       \
                                                CvSize size, double* norm ))
@@ -386,58 +365,58 @@ IPCVAPI_EX( CvStatus, icvNormDiff_L2_##flavor##_C1R,                            
                                           const srctype* img2, int imgstep2,            \
                                           CvSize size, double* norm, CvHintAlgorithm ))
 
-#define IPCV_DEF_NORM_MASK_C1( flavor, srctype )                                        \
+#define IPCV_DEF_NORM_MASK_C1( flavor, srctype, plugin )                                \
 IPCVAPI_EX( CvStatus, icvNorm_Inf_##flavor##_C1MR,                                      \
-           "ippiNorm_Inf_" #flavor "_C1MR", CV_PLUGINS1(CV_PLUGIN_IPPCV),               \
+           "ippiNorm_Inf_" #flavor "_C1MR", plugin,                                     \
                                              ( const srctype* img, int imgstep,         \
                                                const uchar* mask, int maskstep,         \
                                                CvSize size, double* norm ))             \
 IPCVAPI_EX( CvStatus, icvNorm_L1_##flavor##_C1MR,                                       \
-            "ippiNorm_L1_" #flavor "_C1MR", CV_PLUGINS1(CV_PLUGIN_IPPCV),               \
+            "ippiNorm_L1_" #flavor "_C1MR", plugin,                                     \
                                              ( const srctype* img, int imgstep,         \
                                                 const uchar* mask, int maskstep,        \
                                                 CvSize size, double* norm ))            \
 IPCVAPI_EX( CvStatus, icvNorm_L2_##flavor##_C1MR,                                       \
-           "ippiNorm_L2_" #flavor "_C1MR", CV_PLUGINS1(CV_PLUGIN_IPPCV),                \
+           "ippiNorm_L2_" #flavor "_C1MR", plugin,                                      \
                                              ( const srctype* img, int imgstep,         \
                                                const uchar* mask, int maskstep,         \
                                                CvSize size, double* norm ))             \
 IPCVAPI_EX( CvStatus, icvNormDiff_Inf_##flavor##_C1MR,                                  \
-           "ippiNormDiff_Inf_" #flavor "_C1MR", CV_PLUGINS1(CV_PLUGIN_IPPCV),           \
+           "ippiNormDiff_Inf_" #flavor "_C1MR", plugin,                                 \
                                              ( const srctype* img1, int imgstep1,       \
                                                const srctype* img2, int imgstep2,       \
                                                const uchar* mask, int maskstep,         \
                                                CvSize size, double* norm ))             \
 IPCVAPI_EX( CvStatus, icvNormDiff_L1_##flavor##_C1MR,                                   \
-           "ippiNormDiff_L1_" #flavor "_C1MR", CV_PLUGINS1(CV_PLUGIN_IPPCV),            \
+           "ippiNormDiff_L1_" #flavor "_C1MR", plugin,                                  \
                                              ( const srctype* img1, int imgstep1,       \
                                                const srctype* img2, int imgstep2,       \
                                                const uchar* mask, int maskstep,         \
                                                CvSize size, double* norm ))             \
 IPCVAPI_EX( CvStatus, icvNormDiff_L2_##flavor##_C1MR,                                   \
-           "ippiNormDiff_L2_" #flavor "_C1MR", CV_PLUGINS1(CV_PLUGIN_IPPCV),            \
+           "ippiNormDiff_L2_" #flavor "_C1MR", plugin,                                  \
                                              ( const srctype* img1, int imgstep1,       \
                                                const srctype* img2, int imgstep2,       \
                                                const uchar* mask, int maskstep,         \
                                                CvSize size, double* norm ))
 
-IPCV_DEF_NORM_NOHINT_C1( 8u, uchar )
-IPCV_DEF_NORM_MASK_C1( 8u, uchar )
+IPCV_DEF_NORM_NOHINT_C1( 8u, uchar, CV_PLUGINS1(CV_PLUGIN_IPPI) )
+IPCV_DEF_NORM_MASK_C1( 8u, uchar, CV_PLUGINS1(CV_PLUGIN_IPPCV) )
 
-IPCV_DEF_NORM_NOHINT_C1( 16u, ushort )
-IPCV_DEF_NORM_MASK_C1( 16u, ushort )
+IPCV_DEF_NORM_NOHINT_C1( 16u, ushort, 0 )
+IPCV_DEF_NORM_MASK_C1( 16u, ushort, 0 )
 
-IPCV_DEF_NORM_NOHINT_C1( 16s, short )
-IPCV_DEF_NORM_MASK_C1( 16s, short )
+IPCV_DEF_NORM_NOHINT_C1( 16s, short, CV_PLUGINS1(CV_PLUGIN_IPPI) )
+IPCV_DEF_NORM_MASK_C1( 16s, short, CV_PLUGINS1(CV_PLUGIN_IPPCV) )
 
-IPCV_DEF_NORM_NOHINT_C1( 32s, int )
-IPCV_DEF_NORM_MASK_C1( 32s, int )
+IPCV_DEF_NORM_NOHINT_C1( 32s, int, 0 )
+IPCV_DEF_NORM_MASK_C1( 32s, int, 0 )
 
 IPCV_DEF_NORM_HINT_C1( 32f, float )
-IPCV_DEF_NORM_MASK_C1( 32f, float )
+IPCV_DEF_NORM_MASK_C1( 32f, float, CV_PLUGINS1(CV_PLUGIN_IPPCV) )
 
-IPCV_DEF_NORM_NOHINT_C1( 64f, double )
-IPCV_DEF_NORM_MASK_C1( 64f, double )
+IPCV_DEF_NORM_NOHINT_C1( 64f, double, 0 )
+IPCV_DEF_NORM_MASK_C1( 64f, double, 0 )
 
 #undef IPCV_DEF_NORM_HONINT_C1
 #undef IPCV_DEF_NORM_HINT_C1
