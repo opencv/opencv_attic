@@ -757,21 +757,34 @@ static pascal OSStatus windowEventHandler(EventHandlerCallRef nextHandler, Event
             if (eventKind == kEventMouseDown)
                 event +=1;
             
+            unsigned int flags = 0;
+
             err = GetEventParameter(theEvent, kEventParamWindowMouseLocation, typeHIPoint, NULL, sizeof(point), NULL, &point);
             if (eventKind != kEventMouseMoved){
                 switch(eventMouseButton){
                     case kEventMouseButtonPrimary:
-                        if (modifiers & controlKey) /* ctrl-click for right button */
+                        if (modifiers & controlKey){
+                            flags += CV_EVENT_FLAG_RBUTTON;
                             event += 1;
+                        } else {
+                            flags += CV_EVENT_FLAG_LBUTTON;
+                        }
                         break;
                     case kEventMouseButtonSecondary:
+                        flags += CV_EVENT_FLAG_RBUTTON;
                         event += 1;
                         break;
                     case kEventMouseButtonTertiary:
+                        flags += CV_EVENT_FLAG_MBUTTON;
                         event += 2;
                         break;
                 }
             }
+
+            if (modifiers&controlKey) flags += CV_EVENT_FLAG_CTRLKEY;
+            if (modifiers&shiftKey)   flags += CV_EVENT_FLAG_SHIFTKEY;
+            if (modifiers& cmdKey )   flags += CV_EVENT_FLAG_ALTKEY;
+
             int c = icvCountTrackbarInWindow(window);
             
             if (window->on_mouse != NULL){
@@ -786,10 +799,8 @@ static pascal OSStatus windowEventHandler(EventHandlerCallRef nextHandler, Event
                     /* scale the mouse coordinates */
                     lx = lx * window->imageWidth / (content.right - content.left);
                     ly = ly * window->imageHeight / (content.bottom - content.top - window->trackbarheight);
-                    //printf("now %d,%d\n", lx, ly);
                 }
-                //fprintf(stdout,"final OpenCV event is %d\n",event);
-                //fprintf(stdout,"event @ %d %d which is localy %d %d offset of %d\n",point.h, point.v ,lx,ly,yOffset);
+
                 if (lx>0 && ly >0){ /* a remettre dans les coordonnŽes locale */
                     window->on_mouse(event,lx,ly,0,NULL);
                 }
