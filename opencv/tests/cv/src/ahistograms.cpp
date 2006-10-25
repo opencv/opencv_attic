@@ -1254,15 +1254,16 @@ cvTsCalcHist( IplImage** _images, CvHistogram* hist, IplImage* _mask, int* chann
                 for( k = 0; k < cdims; k++ )
                     val[k] = plane[k].fl[x*nch[k]];
 
+            idx[cdims-1] = -1;
+
             if( uniform )
             {
                 for( k = 0; k < cdims; k++ )
                 {
                     double v = val[k], lo = hist->thresh[k][0], hi = hist->thresh[k][1];
                     idx[k] = cvFloor((v - lo)*dims[k]/(hi - lo));
-                    if( (unsigned)idx[k] >= (unsigned)dims[k] )
+                    if( idx[k] < 0 || idx[k] >= dims[k] )
                         break;
-                    assert( idx[k] >= 0 && idx[k] < dims[k] );
                 }
             }
             else
@@ -1276,10 +1277,9 @@ cvTsCalcHist( IplImage** _images, CvHistogram* hist, IplImage* _mask, int* chann
                     for( j = 0; j <= n; j++ )
                         if( v < t[j] )
                             break;
-                    if( (unsigned)--j >= (unsigned)n )
+                    if( j <= 0 || j > n )
                         break;
-                    idx[k] = j;
-                    assert( idx[k] >= 0 && idx[k] < dims[k] );
+                    idx[k] = j-1;
                 }
             }
 
@@ -1296,7 +1296,6 @@ int CV_CalcHistTest::validate_test_results( int /*test_case_idx*/ )
 {
     int code = CvTS::OK;
     double diff;
-
     cvTsCalcHist( images, hist[1], images[CV_MAX_DIM], channels );
     diff = cvCompareHist( hist[0], hist[1], CV_COMP_CHISQR );
     if( diff > DBL_EPSILON )
@@ -1476,6 +1475,7 @@ cvTsCalcBackProject( IplImage** images, IplImage* dst, CvHistogram* hist, int* c
             else
                 for( k = 0; k < cdims; k++ )
                     val[k] = plane[k].fl[x*nch[k]];
+            idx[cdims-1] = -1;
 
             if( uniform )
             {
@@ -1483,9 +1483,8 @@ cvTsCalcBackProject( IplImage** images, IplImage* dst, CvHistogram* hist, int* c
                 {
                     double v = val[k], lo = hist->thresh[k][0], hi = hist->thresh[k][1];
                     idx[k] = cvFloor((v - lo)*dims[k]/(hi - lo));
-                    if( (unsigned)idx[k] >= (unsigned)dims[k] )
+                    if( idx[k] < 0 || idx[k] >= dims[k] )
                         break;
-                    assert( idx[k] >= 0 && idx[k] < dims[k] );
                 }
             }
             else
@@ -1499,10 +1498,9 @@ cvTsCalcBackProject( IplImage** images, IplImage* dst, CvHistogram* hist, int* c
                     for( j = 0; j <= n; j++ )
                         if( v < t[j] )
                             break;
-                    if( (unsigned)--j >= (unsigned)n )
+                    if( j <= 0 || j > n )
                         break;
-                    idx[k] = j;
-                    assert( idx[k] >= 0 && idx[k] < dims[k] );
+                    idx[k] = j-1;
                 }
             }
 
