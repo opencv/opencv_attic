@@ -160,22 +160,23 @@ int CV_BaseHistTest::read_params( CvFileStorage* fs )
 void CV_BaseHistTest::get_hist_params( int /*test_case_idx*/ )
 {
     CvRNG* rng = ts->get_rng();
-    int i, max_dim_size;
+    int i, max_dim_size, max_ni_dim_size = 31;
     double hist_size;
 
     cdims = cvTsRandInt(rng) % max_cdims + 1;
     hist_size = exp(cvTsRandReal(rng)*max_log_size*CV_LOG2);
     max_dim_size = cvRound(pow(hist_size,1./cdims));
     total_size = 1;
+    uniform = cvTsRandInt(rng) % 2;
+    hist_type = cvTsRandInt(rng) % 2 ? CV_HIST_SPARSE : CV_HIST_ARRAY; 
     
     for( i = 0; i < cdims; i++ )
     {
         dims[i] = cvTsRandInt(rng) % (max_dim_size + 1) + 1;
+        if( !uniform )
+            dims[i] = MIN(dims[i], max_ni_dim_size);    
         total_size *= dims[i];
     }
-
-    hist_type = cvTsRandInt(rng) % 2 ? CV_HIST_SPARSE : CV_HIST_ARRAY;
-    uniform = cvTsRandInt(rng) % 2;
 
     img_type = cvTsRandInt(rng) % 2 ? CV_32F : CV_8U;
     img_size.width = cvRound( exp(cvRandReal(rng) * img_max_log_size*CV_LOG2) );
@@ -217,17 +218,25 @@ float** CV_BaseHistTest::get_hist_ranges( int /*test_case_idx*/ )
             {
                 int j, n = dims[i], ofs = dims_sum[i];
                 // generate logarithmic scale
-                double delta, q = 2., val;
+                double delta, q, val;
                 for( j = 0; j < 10; j++ )
                 {
-                    if( (pow(1+(j+1)*0.1,(double)n)-1)*10/(j+1) >= _high-_low )
-                    {
-                        q = 1. + j*0.1;
+                    q = 1. + (j+1)*0.1;
+                    if( (pow(q,(double)n)-1)/(q-1.) >= _high-_low )
                         break;
-                    }
                 }
                 
-                delta = q < 1.1 ? (_high-_low)/n : (_high - _low)*(q - 1)/(pow(q,(double)n) - 1);
+                if( j == 0 )
+                {
+                    delta = (_high-_low)/n;
+                    q = 1.;
+                }
+                else
+                {
+                    q = 1 + j*0.1;
+                    delta = cvFloor((_high-_low)*(q-1)/(pow(q,(double)n) - 1));
+                    delta = MAX(delta, 1.);
+                } 
                 val = _low;
                 
                 for( j = 0; j <= n; j++ )
@@ -295,8 +304,6 @@ int CV_BaseHistTest::prepare_test_case( int test_case_idx )
     {
         hist[i] = cvCreateHist( cdims, dims, hist_type, r, uniform );
         init_hist( test_case_idx, i );
-        if( r )
-            cvSetHistBinRanges( hist[i], r, uniform );
     }
 
     return 1;
