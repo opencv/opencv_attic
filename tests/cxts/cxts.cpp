@@ -1451,7 +1451,6 @@ const char* default_data_path = "../../../../tests/cv/testdata/";
 int CvTS::read_params( CvFileStorage* fs )
 {
     CvFileNode* node = fs ? cvGetFileNodeByName( fs, 0, "common" ) : 0;
-    const char* data_path;
     params.debug_mode = cvReadIntByName( fs, node, "debug_mode", 1 ) != 0;
     params.skip_header = cvReadIntByName( fs, node, "skip_header", 0 ) != 0;
     params.print_only_failed = cvReadIntByName( fs, node, "print_only_failed", 0 ) != 0;
@@ -1468,9 +1467,24 @@ int CvTS::read_params( CvFileStorage* fs )
                                                      "functions" : "tests", "" );
     params.resource_path = cvReadStringByName( fs, node, "." );
     params.use_optimized = cvReadIntByName( fs, node, "use_optimized", -1 );
-    data_path = cvReadStringByName( fs, node, "data_path", default_data_path );
+#ifndef WIN32
+    if( !params.data_path || !params.data_path[0] ) 
+    {
+        char* srcdir = getenv("srcdir");
+        char buf[1024];
+        if( srcdir )
+        {
+            sprintf( buf, "%s/../testdata/", srcdir );
+            set_data_path(buf);
+        }
+    }
+#endif
     if( !params.data_path || !params.data_path[0] )
+    {
+        const char* data_path =
+            cvReadStringByName( fs, node, "data_path", default_data_path );
         set_data_path(data_path);
+    }
     params.test_case_count_scale = cvReadRealByName( fs, node, "test_case_count_scale", 1. );
     if( params.test_case_count_scale <= 0 )
         params.test_case_count_scale = 1.;
