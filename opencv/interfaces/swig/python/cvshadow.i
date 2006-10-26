@@ -118,6 +118,8 @@ def cvHoughLines2( *args ):
 
 // cvPointSeqFromMat
 // cvSeqPartition
+// cvSeqSlice
+// cvTreeToNodeSeq
 
 // cvRelease* functions don't consider python's reference count
 // so we get a double-free error when the reference count reaches zero.
