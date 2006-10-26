@@ -202,6 +202,7 @@ void CV_SnakeTest::run( int /*start_from*/ )
 #endif
         }
         fclose(file);
+        file = 0;
         cvFree(&Pts);
         cvFree(&resPts);
         cvReleaseImage(&iplSrc);
