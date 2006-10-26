@@ -1,10 +1,14 @@
-# This file was created automatically by SWIG 1.3.29.
+# This file was created automatically by SWIG 1.3.30.
 # Don't modify this file, modify the SWIG interface instead.
 # This file is compatible with both classic and new-style classes.
 
 import _cv
 import new
 new_instancemethod = new.instancemethod
+try:
+    _swig_property = property
+except NameError:
+    pass # Python < 2.2 doesn't have 'property'.
 def _swig_setattr_nondynamic(self,class_type,name,value,static=1):
     if (name == "thisown"): return self.this.own(value)
     if (name == "this"):
@@ -1168,13 +1172,13 @@ class Cv32suf(_object):
     __repr__ = _swig_repr
     __swig_setmethods__["i"] = _cv.Cv32suf_i_set
     __swig_getmethods__["i"] = _cv.Cv32suf_i_get
-    if _newclass:i = property(_cv.Cv32suf_i_get, _cv.Cv32suf_i_set)
+    if _newclass:i = _swig_property(_cv.Cv32suf_i_get, _cv.Cv32suf_i_set)
     __swig_setmethods__["u"] = _cv.Cv32suf_u_set
     __swig_getmethods__["u"] = _cv.Cv32suf_u_get
-    if _newclass:u = property(_cv.Cv32suf_u_get, _cv.Cv32suf_u_set)
+    if _newclass:u = _swig_property(_cv.Cv32suf_u_get, _cv.Cv32suf_u_set)
     __swig_setmethods__["f"] = _cv.Cv32suf_f_set
     __swig_getmethods__["f"] = _cv.Cv32suf_f_get
-    if _newclass:f = property(_cv.Cv32suf_f_get, _cv.Cv32suf_f_set)
+    if _newclass:f = _swig_property(_cv.Cv32suf_f_get, _cv.Cv32suf_f_set)
     def __init__(self, *args): 
         """__init__(self) -> Cv32suf"""
         this = _cv.new_Cv32suf(*args)
@@ -1254,13 +1258,13 @@ class Cv64suf(_object):
     __repr__ = _swig_repr
     __swig_setmethods__["i"] = _cv.Cv64suf_i_set
     __swig_getmethods__["i"] = _cv.Cv64suf_i_get
-    if _newclass:i = property(_cv.Cv64suf_i_get, _cv.Cv64suf_i_set)
+    if _newclass:i = _swig_property(_cv.Cv64suf_i_get, _cv.Cv64suf_i_set)
     __swig_setmethods__["u"] = _cv.Cv64suf_u_set
     __swig_getmethods__["u"] = _cv.Cv64suf_u_get
-    if _newclass:u = property(_cv.Cv64suf_u_get, _cv.Cv64suf_u_set)
+    if _newclass:u = _swig_property(_cv.Cv64suf_u_get, _cv.Cv64suf_u_set)
     __swig_setmethods__["f"] = _cv.Cv64suf_f_set
     __swig_getmethods__["f"] = _cv.Cv64suf_f_get
-    if _newclass:f = property(_cv.Cv64suf_f_get, _cv.Cv64suf_f_set)
+    if _newclass:f = _swig_property(_cv.Cv64suf_f_get, _cv.Cv64suf_f_set)
     def __init__(self, *args): 
         """__init__(self) -> Cv64suf"""
         this = _cv.new_Cv64suf(*args)
@@ -1309,37 +1313,37 @@ class IplImage(_object):
     __repr__ = _swig_repr
     __swig_setmethods__["ID"] = _cv.IplImage_ID_set
     __swig_getmethods__["ID"] = _cv.IplImage_ID_get
-    if _newclass:ID = property(_cv.IplImage_ID_get, _cv.IplImage_ID_set)
+    if _newclass:ID = _swig_property(_cv.IplImage_ID_get, _cv.IplImage_ID_set)
     __swig_setmethods__["nChannels"] = _cv.IplImage_nChannels_set
     __swig_getmethods__["nChannels"] = _cv.IplImage_nChannels_get
-    if _newclass:nChannels = property(_cv.IplImage_nChannels_get, _cv.IplImage_nChannels_set)
+    if _newclass:nChannels = _swig_property(_cv.IplImage_nChannels_get, _cv.IplImage_nChannels_set)
     __swig_setmethods__["depth"] = _cv.IplImage_depth_set
     __swig_getmethods__["depth"] = _cv.IplImage_depth_get
-    if _newclass:depth = property(_cv.IplImage_depth_get, _cv.IplImage_depth_set)
+    if _newclass:depth = _swig_property(_cv.IplImage_depth_get, _cv.IplImage_depth_set)
     __swig_setmethods__["dataOrder"] = _cv.IplImage_dataOrder_set
     __swig_getmethods__["dataOrder"] = _cv.IplImage_dataOrder_get
-    if _newclass:dataOrder = property(_cv.IplImage_dataOrder_get, _cv.IplImage_dataOrder_set)
+    if _newclass:dataOrder = _swig_property(_cv.IplImage_dataOrder_get, _cv.IplImage_dataOrder_set)
     __swig_setmethods__["origin"] = _cv.IplImage_origin_set
     __swig_getmethods__["origin"] = _cv.IplImage_origin_get
-    if _newclass:origin = property(_cv.IplImage_origin_get, _cv.IplImage_origin_set)
+    if _newclass:origin = _swig_property(_cv.IplImage_origin_get, _cv.IplImage_origin_set)
     __swig_setmethods__["align"] = _cv.IplImage_align_set
     __swig_getmethods__["align"] = _cv.IplImage_align_get
-    if _newclass:align = property(_cv.IplImage_align_get, _cv.IplImage_align_set)
+    if _newclass:align = _swig_property(_cv.IplImage_align_get, _cv.IplImage_align_set)
     __swig_setmethods__["width"] = _cv.IplImage_width_set
     __swig_getmethods__["width"] = _cv.IplImage_width_get
-    if _newclass:width = property(_cv.IplImage_width_get, _cv.IplImage_width_set)
+    if _newclass:width = _swig_property(_cv.IplImage_width_get, _cv.IplImage_width_set)
     __swig_setmethods__["height"] = _cv.IplImage_height_set
     __swig_getmethods__["height"] = _cv.IplImage_height_get
-    if _newclass:height = property(_cv.IplImage_height_get, _cv.IplImage_height_set)
+    if _newclass:height = _swig_property(_cv.IplImage_height_get, _cv.IplImage_height_set)
     __swig_setmethods__["roi"] = _cv.IplImage_roi_set
     __swig_getmethods__["roi"] = _cv.IplImage_roi_get
-    if _newclass:roi = property(_cv.IplImage_roi_get, _cv.IplImage_roi_set)
+    if _newclass:roi = _swig_property(_cv.IplImage_roi_get, _cv.IplImage_roi_set)
     __swig_setmethods__["imageSize"] = _cv.IplImage_imageSize_set
     __swig_getmethods__["imageSize"] = _cv.IplImage_imageSize_get
-    if _newclass:imageSize = property(_cv.IplImage_imageSize_get, _cv.IplImage_imageSize_set)
+    if _newclass:imageSize = _swig_property(_cv.IplImage_imageSize_get, _cv.IplImage_imageSize_set)
     __swig_setmethods__["widthStep"] = _cv.IplImage_widthStep_set
     __swig_getmethods__["widthStep"] = _cv.IplImage_widthStep_get
-    if _newclass:widthStep = property(_cv.IplImage_widthStep_get, _cv.IplImage_widthStep_set)
+    if _newclass:widthStep = _swig_property(_cv.IplImage_widthStep_get, _cv.IplImage_widthStep_set)
     __swig_destroy__ = _cv.delete_IplImage
     __del__ = lambda self : None;
     def __mul__(*args):
@@ -1589,19 +1593,19 @@ class IplROI(_object):
     __repr__ = _swig_repr
     __swig_setmethods__["coi"] = _cv.IplROI_coi_set
     __swig_getmethods__["coi"] = _cv.IplROI_coi_get
-    if _newclass:coi = property(_cv.IplROI_coi_get, _cv.IplROI_coi_set)
+    if _newclass:coi = _swig_property(_cv.IplROI_coi_get, _cv.IplROI_coi_set)
     __swig_setmethods__["xOffset"] = _cv.IplROI_xOffset_set
     __swig_getmethods__["xOffset"] = _cv.IplROI_xOffset_get
-    if _newclass:xOffset = property(_cv.IplROI_xOffset_get, _cv.IplROI_xOffset_set)
+    if _newclass:xOffset = _swig_property(_cv.IplROI_xOffset_get, _cv.IplROI_xOffset_set)
     __swig_setmethods__["yOffset"] = _cv.IplROI_yOffset_set
     __swig_getmethods__["yOffset"] = _cv.IplROI_yOffset_get
-    if _newclass:yOffset = property(_cv.IplROI_yOffset_get, _cv.IplROI_yOffset_set)
+    if _newclass:yOffset = _swig_property(_cv.IplROI_yOffset_get, _cv.IplROI_yOffset_set)
     __swig_setmethods__["width"] = _cv.IplROI_width_set
     __swig_getmethods__["width"] = _cv.IplROI_width_get
-    if _newclass:width = property(_cv.IplROI_width_get, _cv.IplROI_width_set)
+    if _newclass:width = _swig_property(_cv.IplROI_width_get, _cv.IplROI_width_set)
     __swig_setmethods__["height"] = _cv.IplROI_height_set
     __swig_getmethods__["height"] = _cv.IplROI_height_get
-    if _newclass:height = property(_cv.IplROI_height_get, _cv.IplROI_height_set)
+    if _newclass:height = _swig_property(_cv.IplROI_height_get, _cv.IplROI_height_set)
     def __init__(self, *args): 
         """__init__(self) -> IplROI"""
         this = _cv.new_IplROI(*args)
@@ -1622,22 +1626,22 @@ class IplConvKernel(_object):
     __repr__ = _swig_repr
     __swig_setmethods__["nCols"] = _cv.IplConvKernel_nCols_set
     __swig_getmethods__["nCols"] = _cv.IplConvKernel_nCols_get
-    if _newclass:nCols = property(_cv.IplConvKernel_nCols_get, _cv.IplConvKernel_nCols_set)
+    if _newclass:nCols = _swig_property(_cv.IplConvKernel_nCols_get, _cv.IplConvKernel_nCols_set)
     __swig_setmethods__["nRows"] = _cv.IplConvKernel_nRows_set
     __swig_getmethods__["nRows"] = _cv.IplConvKernel_nRows_get
-    if _newclass:nRows = property(_cv.IplConvKernel_nRows_get, _cv.IplConvKernel_nRows_set)
+    if _newclass:nRows = _swig_property(_cv.IplConvKernel_nRows_get, _cv.IplConvKernel_nRows_set)
     __swig_setmethods__["anchorX"] = _cv.IplConvKernel_anchorX_set
     __swig_getmethods__["anchorX"] = _cv.IplConvKernel_anchorX_get
-    if _newclass:anchorX = property(_cv.IplConvKernel_anchorX_get, _cv.IplConvKernel_anchorX_set)
+    if _newclass:anchorX = _swig_property(_cv.IplConvKernel_anchorX_get, _cv.IplConvKernel_anchorX_set)
     __swig_setmethods__["anchorY"] = _cv.IplConvKernel_anchorY_set
     __swig_getmethods__["anchorY"] = _cv.IplConvKernel_anchorY_get
-    if _newclass:anchorY = property(_cv.IplConvKernel_anchorY_get, _cv.IplConvKernel_anchorY_set)
+    if _newclass:anchorY = _swig_property(_cv.IplConvKernel_anchorY_get, _cv.IplConvKernel_anchorY_set)
     __swig_setmethods__["values"] = _cv.IplConvKernel_values_set
     __swig_getmethods__["values"] = _cv.IplConvKernel_values_get
-    if _newclass:values = property(_cv.IplConvKernel_values_get, _cv.IplConvKernel_values_set)
+    if _newclass:values = _swig_property(_cv.IplConvKernel_values_get, _cv.IplConvKernel_values_set)
     __swig_setmethods__["nShiftR"] = _cv.IplConvKernel_nShiftR_set
     __swig_getmethods__["nShiftR"] = _cv.IplConvKernel_nShiftR_get
-    if _newclass:nShiftR = property(_cv.IplConvKernel_nShiftR_get, _cv.IplConvKernel_nShiftR_set)
+    if _newclass:nShiftR = _swig_property(_cv.IplConvKernel_nShiftR_get, _cv.IplConvKernel_nShiftR_set)
     __swig_destroy__ = _cv.delete_IplConvKernel
     __del__ = lambda self : None;
 IplConvKernel_swigregister = _cv.IplConvKernel_swigregister
@@ -1652,19 +1656,19 @@ class IplConvKernelFP(_object):
     __repr__ = _swig_repr
     __swig_setmethods__["nCols"] = _cv.IplConvKernelFP_nCols_set
     __swig_getmethods__["nCols"] = _cv.IplConvKernelFP_nCols_get
-    if _newclass:nCols = property(_cv.IplConvKernelFP_nCols_get, _cv.IplConvKernelFP_nCols_set)
+    if _newclass:nCols = _swig_property(_cv.IplConvKernelFP_nCols_get, _cv.IplConvKernelFP_nCols_set)
     __swig_setmethods__["nRows"] = _cv.IplConvKernelFP_nRows_set
     __swig_getmethods__["nRows"] = _cv.IplConvKernelFP_nRows_get
-    if _newclass:nRows = property(_cv.IplConvKernelFP_nRows_get, _cv.IplConvKernelFP_nRows_set)
+    if _newclass:nRows = _swig_property(_cv.IplConvKernelFP_nRows_get, _cv.IplConvKernelFP_nRows_set)
     __swig_setmethods__["anchorX"] = _cv.IplConvKernelFP_anchorX_set
     __swig_getmethods__["anchorX"] = _cv.IplConvKernelFP_anchorX_get
-    if _newclass:anchorX = property(_cv.IplConvKernelFP_anchorX_get, _cv.IplConvKernelFP_anchorX_set)
+    if _newclass:anchorX = _swig_property(_cv.IplConvKernelFP_anchorX_get, _cv.IplConvKernelFP_anchorX_set)
     __swig_setmethods__["anchorY"] = _cv.IplConvKernelFP_anchorY_set
     __swig_getmethods__["anchorY"] = _cv.IplConvKernelFP_anchorY_get
-    if _newclass:anchorY = property(_cv.IplConvKernelFP_anchorY_get, _cv.IplConvKernelFP_anchorY_set)
+    if _newclass:anchorY = _swig_property(_cv.IplConvKernelFP_anchorY_get, _cv.IplConvKernelFP_anchorY_set)
     __swig_setmethods__["values"] = _cv.IplConvKernelFP_values_set
     __swig_getmethods__["values"] = _cv.IplConvKernelFP_values_get
-    if _newclass:values = property(_cv.IplConvKernelFP_values_get, _cv.IplConvKernelFP_values_set)
+    if _newclass:values = _swig_property(_cv.IplConvKernelFP_values_get, _cv.IplConvKernelFP_values_set)
     def __init__(self, *args): 
         """__init__(self) -> IplConvKernelFP"""
         this = _cv.new_IplConvKernelFP(*args)
@@ -1685,40 +1689,40 @@ class CvMat(_object):
     __repr__ = _swig_repr
     __swig_setmethods__["type"] = _cv.CvMat_type_set
     __swig_getmethods__["type"] = _cv.CvMat_type_get
-    if _newclass:type = property(_cv.CvMat_type_get, _cv.CvMat_type_set)
+    if _newclass:type = _swig_property(_cv.CvMat_type_get, _cv.CvMat_type_set)
     __swig_setmethods__["step"] = _cv.CvMat_step_set
     __swig_getmethods__["step"] = _cv.CvMat_step_get
-    if _newclass:step = property(_cv.CvMat_step_get, _cv.CvMat_step_set)
+    if _newclass:step = _swig_property(_cv.CvMat_step_get, _cv.CvMat_step_set)
     __swig_setmethods__["refcount"] = _cv.CvMat_refcount_set
     __swig_getmethods__["refcount"] = _cv.CvMat_refcount_get
-    if _newclass:refcount = property(_cv.CvMat_refcount_get, _cv.CvMat_refcount_set)
+    if _newclass:refcount = _swig_property(_cv.CvMat_refcount_get, _cv.CvMat_refcount_set)
     __swig_setmethods__["hdr_refcount"] = _cv.CvMat_hdr_refcount_set
     __swig_getmethods__["hdr_refcount"] = _cv.CvMat_hdr_refcount_get
-    if _newclass:hdr_refcount = property(_cv.CvMat_hdr_refcount_get, _cv.CvMat_hdr_refcount_set)
+    if _newclass:hdr_refcount = _swig_property(_cv.CvMat_hdr_refcount_get, _cv.CvMat_hdr_refcount_set)
     __swig_getmethods__["data"] = _cv.CvMat_data_get
-    if _newclass:data = property(_cv.CvMat_data_get)
+    if _newclass:data = _swig_property(_cv.CvMat_data_get)
     __swig_destroy__ = _cv.delete_CvMat
     __del__ = lambda self : None;
     __swig_getmethods__["depth"] = _cv.CvMat_depth_get
-    if _newclass:depth = property(_cv.CvMat_depth_get)
+    if _newclass:depth = _swig_property(_cv.CvMat_depth_get)
     __swig_getmethods__["nChannels"] = _cv.CvMat_nChannels_get
-    if _newclass:nChannels = property(_cv.CvMat_nChannels_get)
+    if _newclass:nChannels = _swig_property(_cv.CvMat_nChannels_get)
     __swig_getmethods__["dataOrder"] = _cv.CvMat_dataOrder_get
-    if _newclass:dataOrder = property(_cv.CvMat_dataOrder_get)
+    if _newclass:dataOrder = _swig_property(_cv.CvMat_dataOrder_get)
     __swig_getmethods__["origin"] = _cv.CvMat_origin_get
-    if _newclass:origin = property(_cv.CvMat_origin_get)
+    if _newclass:origin = _swig_property(_cv.CvMat_origin_get)
     __swig_getmethods__["width"] = _cv.CvMat_width_get
-    if _newclass:width = property(_cv.CvMat_width_get)
+    if _newclass:width = _swig_property(_cv.CvMat_width_get)
     __swig_getmethods__["height"] = _cv.CvMat_height_get
-    if _newclass:height = property(_cv.CvMat_height_get)
+    if _newclass:height = _swig_property(_cv.CvMat_height_get)
     __swig_getmethods__["imageSize"] = _cv.CvMat_imageSize_get
-    if _newclass:imageSize = property(_cv.CvMat_imageSize_get)
+    if _newclass:imageSize = _swig_property(_cv.CvMat_imageSize_get)
     __swig_getmethods__["widthStep"] = _cv.CvMat_widthStep_get
-    if _newclass:widthStep = property(_cv.CvMat_widthStep_get)
+    if _newclass:widthStep = _swig_property(_cv.CvMat_widthStep_get)
     __swig_getmethods__["rows"] = _cv.CvMat_rows_get
-    if _newclass:rows = property(_cv.CvMat_rows_get)
+    if _newclass:rows = _swig_property(_cv.CvMat_rows_get)
     __swig_getmethods__["cols"] = _cv.CvMat_cols_get
-    if _newclass:cols = property(_cv.CvMat_cols_get)
+    if _newclass:cols = _swig_property(_cv.CvMat_cols_get)
     def __mul__(*args):
         """__mul__(self, CvArr src) -> CvMat"""
         return _cv.CvMat___mul__(*args)
@@ -1971,7 +1975,7 @@ class CvMat(_object):
 
     __swig_setmethods__["imageData"] = _cv.CvMat_imageData_set
     __swig_getmethods__["imageData"] = _cv.CvMat_imageData_get
-    if _newclass:imageData = property(_cv.CvMat_imageData_get, _cv.CvMat_imageData_set)
+    if _newclass:imageData = _swig_property(_cv.CvMat_imageData_get, _cv.CvMat_imageData_set)
 CvMat_swigregister = _cv.CvMat_swigregister
 CvMat_swigregister(CvMat)
 
@@ -1984,19 +1988,19 @@ class CvMat_data(_object):
     __repr__ = _swig_repr
     __swig_setmethods__["ptr"] = _cv.CvMat_data_ptr_set
     __swig_getmethods__["ptr"] = _cv.CvMat_data_ptr_get
-    if _newclass:ptr = property(_cv.CvMat_data_ptr_get, _cv.CvMat_data_ptr_set)
+    if _newclass:ptr = _swig_property(_cv.CvMat_data_ptr_get, _cv.CvMat_data_ptr_set)
     __swig_setmethods__["s"] = _cv.CvMat_data_s_set
     __swig_getmethods__["s"] = _cv.CvMat_data_s_get
-    if _newclass:s = property(_cv.CvMat_data_s_get, _cv.CvMat_data_s_set)
+    if _newclass:s = _swig_property(_cv.CvMat_data_s_get, _cv.CvMat_data_s_set)
     __swig_setmethods__["i"] = _cv.CvMat_data_i_set
     __swig_getmethods__["i"] = _cv.CvMat_data_i_get
-    if _newclass:i = property(_cv.CvMat_data_i_get, _cv.CvMat_data_i_set)
+    if _newclass:i = _swig_property(_cv.CvMat_data_i_get, _cv.CvMat_data_i_set)
     __swig_setmethods__["fl"] = _cv.CvMat_data_fl_set
     __swig_getmethods__["fl"] = _cv.CvMat_data_fl_get
-    if _newclass:fl = property(_cv.CvMat_data_fl_get, _cv.CvMat_data_fl_set)
+    if _newclass:fl = _swig_property(_cv.CvMat_data_fl_get, _cv.CvMat_data_fl_set)
     __swig_setmethods__["db"] = _cv.CvMat_data_db_set
     __swig_getmethods__["db"] = _cv.CvMat_data_db_get
-    if _newclass:db = property(_cv.CvMat_data_db_get, _cv.CvMat_data_db_set)
+    if _newclass:db = _swig_property(_cv.CvMat_data_db_get, _cv.CvMat_data_db_set)
     def __init__(self, *args): 
         """__init__(self) -> CvMat_data"""
         this = _cv.new_CvMat_data(*args)
@@ -2029,20 +2033,20 @@ class CvMatND(_object):
     __repr__ = _swig_repr
     __swig_setmethods__["type"] = _cv.CvMatND_type_set
     __swig_getmethods__["type"] = _cv.CvMatND_type_get
-    if _newclass:type = property(_cv.CvMatND_type_get, _cv.CvMatND_type_set)
+    if _newclass:type = _swig_property(_cv.CvMatND_type_get, _cv.CvMatND_type_set)
     __swig_setmethods__["dims"] = _cv.CvMatND_dims_set
     __swig_getmethods__["dims"] = _cv.CvMatND_dims_get
-    if _newclass:dims = property(_cv.CvMatND_dims_get, _cv.CvMatND_dims_set)
+    if _newclass:dims = _swig_property(_cv.CvMatND_dims_get, _cv.CvMatND_dims_set)
     __swig_setmethods__["refcount"] = _cv.CvMatND_refcount_set
     __swig_getmethods__["refcount"] = _cv.CvMatND_refcount_get
-    if _newclass:refcount = property(_cv.CvMatND_refcount_get, _cv.CvMatND_refcount_set)
+    if _newclass:refcount = _swig_property(_cv.CvMatND_refcount_get, _cv.CvMatND_refcount_set)
     __swig_setmethods__["hdr_refcount"] = _cv.CvMatND_hdr_refcount_set
     __swig_getmethods__["hdr_refcount"] = _cv.CvMatND_hdr_refcount_get
-    if _newclass:hdr_refcount = property(_cv.CvMatND_hdr_refcount_get, _cv.CvMatND_hdr_refcount_set)
+    if _newclass:hdr_refcount = _swig_property(_cv.CvMatND_hdr_refcount_get, _cv.CvMatND_hdr_refcount_set)
     __swig_getmethods__["dim"] = _cv.CvMatND_dim_get
-    if _newclass:dim = property(_cv.CvMatND_dim_get)
+    if _newclass:dim = _swig_property(_cv.CvMatND_dim_get)
     __swig_getmethods__["data"] = _cv.CvMatND_data_get
-    if _newclass:data = property(_cv.CvMatND_data_get)
+    if _newclass:data = _swig_property(_cv.CvMatND_data_get)
     __swig_destroy__ = _cv.delete_CvMatND
     __del__ = lambda self : None;
 CvMatND_swigregister = _cv.CvMatND_swigregister
@@ -2064,10 +2068,10 @@ class CvMatND_dim(_object):
     __repr__ = _swig_repr
     __swig_setmethods__["size"] = _cv.CvMatND_dim_size_set
     __swig_getmethods__["size"] = _cv.CvMatND_dim_size_get
-    if _newclass:size = property(_cv.CvMatND_dim_size_get, _cv.CvMatND_dim_size_set)
+    if _newclass:size = _swig_property(_cv.CvMatND_dim_size_get, _cv.CvMatND_dim_size_set)
     __swig_setmethods__["step"] = _cv.CvMatND_dim_step_set
     __swig_getmethods__["step"] = _cv.CvMatND_dim_step_get
-    if _newclass:step = property(_cv.CvMatND_dim_step_get, _cv.CvMatND_dim_step_set)
+    if _newclass:step = _swig_property(_cv.CvMatND_dim_step_get, _cv.CvMatND_dim_step_set)
     def __init__(self, *args): 
         """__init__(self) -> CvMatND_dim"""
         this = _cv.new_CvMatND_dim(*args)
@@ -2087,19 +2091,19 @@ class CvMatND_data(_object):
     __repr__ = _swig_repr
     __swig_setmethods__["ptr"] = _cv.CvMatND_data_ptr_set
     __swig_getmethods__["ptr"] = _cv.CvMatND_data_ptr_get
-    if _newclass:ptr = property(_cv.CvMatND_data_ptr_get, _cv.CvMatND_data_ptr_set)
+    if _newclass:ptr = _swig_property(_cv.CvMatND_data_ptr_get, _cv.CvMatND_data_ptr_set)
     __swig_setmethods__["fl"] = _cv.CvMatND_data_fl_set
     __swig_getmethods__["fl"] = _cv.CvMatND_data_fl_get
-    if _newclass:fl = property(_cv.CvMatND_data_fl_get, _cv.CvMatND_data_fl_set)
+    if _newclass:fl = _swig_property(_cv.CvMatND_data_fl_get, _cv.CvMatND_data_fl_set)
     __swig_setmethods__["db"] = _cv.CvMatND_data_db_set
     __swig_getmethods__["db"] = _cv.CvMatND_data_db_get
-    if _newclass:db = property(_cv.CvMatND_data_db_get, _cv.CvMatND_data_db_set)
+    if _newclass:db = _swig_property(_cv.CvMatND_data_db_get, _cv.CvMatND_data_db_set)
     __swig_setmethods__["i"] = _cv.CvMatND_data_i_set
     __swig_getmethods__["i"] = _cv.CvMatND_data_i_get
-    if _newclass:i = property(_cv.CvMatND_data_i_get, _cv.CvMatND_data_i_set)
+    if _newclass:i = _swig_property(_cv.CvMatND_data_i_get, _cv.CvMatND_data_i_set)
     __swig_setmethods__["s"] = _cv.CvMatND_data_s_set
     __swig_getmethods__["s"] = _cv.CvMatND_data_s_get
-    if _newclass:s = property(_cv.CvMatND_data_s_get, _cv.CvMatND_data_s_set)
+    if _newclass:s = _swig_property(_cv.CvMatND_data_s_get, _cv.CvMatND_data_s_set)
     def __init__(self, *args): 
         """__init__(self) -> CvMatND_data"""
         this = _cv.new_CvMatND_data(*args)
@@ -2120,34 +2124,34 @@ class CvSparseMat(_object):
     __repr__ = _swig_repr
     __swig_setmethods__["type"] = _cv.CvSparseMat_type_set
     __swig_getmethods__["type"] = _cv.CvSparseMat_type_get
-    if _newclass:type = property(_cv.CvSparseMat_type_get, _cv.CvSparseMat_type_set)
+    if _newclass:type = _swig_property(_cv.CvSparseMat_type_get, _cv.CvSparseMat_type_set)
     __swig_setmethods__["dims"] = _cv.CvSparseMat_dims_set
     __swig_getmethods__["dims"] = _cv.CvSparseMat_dims_get
-    if _newclass:dims = property(_cv.CvSparseMat_dims_get, _cv.CvSparseMat_dims_set)
+    if _newclass:dims = _swig_property(_cv.CvSparseMat_dims_get, _cv.CvSparseMat_dims_set)
     __swig_setmethods__["refcount"] = _cv.CvSparseMat_refcount_set
     __swig_getmethods__["refcount"] = _cv.CvSparseMat_refcount_get
-    if _newclass:refcount = property(_cv.CvSparseMat_refcount_get, _cv.CvSparseMat_refcount_set)
+    if _newclass:refcount = _swig_property(_cv.CvSparseMat_refcount_get, _cv.CvSparseMat_refcount_set)
     __swig_setmethods__["hdr_refcount"] = _cv.CvSparseMat_hdr_refcount_set
     __swig_getmethods__["hdr_refcount"] = _cv.CvSparseMat_hdr_refcount_get
-    if _newclass:hdr_refcount = property(_cv.CvSparseMat_hdr_refcount_get, _cv.CvSparseMat_hdr_refcount_set)
+    if _newclass:hdr_refcount = _swig_property(_cv.CvSparseMat_hdr_refcount_get, _cv.CvSparseMat_hdr_refcount_set)
     __swig_setmethods__["heap"] = _cv.CvSparseMat_heap_set
     __swig_getmethods__["heap"] = _cv.CvSparseMat_heap_get
-    if _newclass:heap = property(_cv.CvSparseMat_heap_get, _cv.CvSparseMat_heap_set)
+    if _newclass:heap = _swig_property(_cv.CvSparseMat_heap_get, _cv.CvSparseMat_heap_set)
     __swig_setmethods__["hashtable"] = _cv.CvSparseMat_hashtable_set
     __swig_getmethods__["hashtable"] = _cv.CvSparseMat_hashtable_get
-    if _newclass:hashtable = property(_cv.CvSparseMat_hashtable_get, _cv.CvSparseMat_hashtable_set)
+    if _newclass:hashtable = _swig_property(_cv.CvSparseMat_hashtable_get, _cv.CvSparseMat_hashtable_set)
     __swig_setmethods__["hashsize"] = _cv.CvSparseMat_hashsize_set
     __swig_getmethods__["hashsize"] = _cv.CvSparseMat_hashsize_get
-    if _newclass:hashsize = property(_cv.CvSparseMat_hashsize_get, _cv.CvSparseMat_hashsize_set)
+    if _newclass:hashsize = _swig_property(_cv.CvSparseMat_hashsize_get, _cv.CvSparseMat_hashsize_set)
     __swig_setmethods__["valoffset"] = _cv.CvSparseMat_valoffset_set
     __swig_getmethods__["valoffset"] = _cv.CvSparseMat_valoffset_get
-    if _newclass:valoffset = property(_cv.CvSparseMat_valoffset_get, _cv.CvSparseMat_valoffset_set)
+    if _newclass:valoffset = _swig_property(_cv.CvSparseMat_valoffset_get, _cv.CvSparseMat_valoffset_set)
     __swig_setmethods__["idxoffset"] = _cv.CvSparseMat_idxoffset_set
     __swig_getmethods__["idxoffset"] = _cv.CvSparseMat_idxoffset_get
-    if _newclass:idxoffset = property(_cv.CvSparseMat_idxoffset_get, _cv.CvSparseMat_idxoffset_set)
+    if _newclass:idxoffset = _swig_property(_cv.CvSparseMat_idxoffset_get, _cv.CvSparseMat_idxoffset_set)
     __swig_setmethods__["size"] = _cv.CvSparseMat_size_set
     __swig_getmethods__["size"] = _cv.CvSparseMat_size_get
-    if _newclass:size = property(_cv.CvSparseMat_size_get, _cv.CvSparseMat_size_set)
+    if _newclass:size = _swig_property(_cv.CvSparseMat_size_get, _cv.CvSparseMat_size_set)
     __swig_destroy__ = _cv.delete_CvSparseMat
     __del__ = lambda self : None;
 CvSparseMat_swigregister = _cv.CvSparseMat_swigregister
@@ -2162,10 +2166,10 @@ class CvSparseNode(_object):
     __repr__ = _swig_repr
     __swig_setmethods__["hashval"] = _cv.CvSparseNode_hashval_set
     __swig_getmethods__["hashval"] = _cv.CvSparseNode_hashval_get
-    if _newclass:hashval = property(_cv.CvSparseNode_hashval_get, _cv.CvSparseNode_hashval_set)
+    if _newclass:hashval = _swig_property(_cv.CvSparseNode_hashval_get, _cv.CvSparseNode_hashval_set)
     __swig_setmethods__["next"] = _cv.CvSparseNode_next_set
     __swig_getmethods__["next"] = _cv.CvSparseNode_next_get
-    if _newclass:next = property(_cv.CvSparseNode_next_get, _cv.CvSparseNode_next_set)
+    if _newclass:next = _swig_property(_cv.CvSparseNode_next_get, _cv.CvSparseNode_next_set)
     def __init__(self, *args): 
         """__init__(self) -> CvSparseNode"""
         this = _cv.new_CvSparseNode(*args)
@@ -2185,13 +2189,13 @@ class CvSparseMatIterator(_object):
     __repr__ = _swig_repr
     __swig_setmethods__["mat"] = _cv.CvSparseMatIterator_mat_set
     __swig_getmethods__["mat"] = _cv.CvSparseMatIterator_mat_get
-    if _newclass:mat = property(_cv.CvSparseMatIterator_mat_get, _cv.CvSparseMatIterator_mat_set)
+    if _newclass:mat = _swig_property(_cv.CvSparseMatIterator_mat_get, _cv.CvSparseMatIterator_mat_set)
     __swig_setmethods__["node"] = _cv.CvSparseMatIterator_node_set
     __swig_getmethods__["node"] = _cv.CvSparseMatIterator_node_get
-    if _newclass:node = property(_cv.CvSparseMatIterator_node_get, _cv.CvSparseMatIterator_node_set)
+    if _newclass:node = _swig_property(_cv.CvSparseMatIterator_node_get, _cv.CvSparseMatIterator_node_set)
     __swig_setmethods__["curidx"] = _cv.CvSparseMatIterator_curidx_set
     __swig_getmethods__["curidx"] = _cv.CvSparseMatIterator_curidx_get
-    if _newclass:curidx = property(_cv.CvSparseMatIterator_curidx_get, _cv.CvSparseMatIterator_curidx_set)
+    if _newclass:curidx = _swig_property(_cv.CvSparseMatIterator_curidx_get, _cv.CvSparseMatIterator_curidx_set)
     def __init__(self, *args): 
         """__init__(self) -> CvSparseMatIterator"""
         this = _cv.new_CvSparseMatIterator(*args)
@@ -2212,19 +2216,19 @@ class CvHistogram(_object):
     __repr__ = _swig_repr
     __swig_setmethods__["type"] = _cv.CvHistogram_type_set
     __swig_getmethods__["type"] = _cv.CvHistogram_type_get
-    if _newclass:type = property(_cv.CvHistogram_type_get, _cv.CvHistogram_type_set)
+    if _newclass:type = _swig_property(_cv.CvHistogram_type_get, _cv.CvHistogram_type_set)
     __swig_setmethods__["bins"] = _cv.CvHistogram_bins_set
     __swig_getmethods__["bins"] = _cv.CvHistogram_bins_get
-    if _newclass:bins = property(_cv.CvHistogram_bins_get, _cv.CvHistogram_bins_set)
+    if _newclass:bins = _swig_property(_cv.CvHistogram_bins_get, _cv.CvHistogram_bins_set)
     __swig_setmethods__["thresh"] = _cv.CvHistogram_thresh_set
     __swig_getmethods__["thresh"] = _cv.CvHistogram_thresh_get
-    if _newclass:thresh = property(_cv.CvHistogram_thresh_get, _cv.CvHistogram_thresh_set)
+    if _newclass:thresh = _swig_property(_cv.CvHistogram_thresh_get, _cv.CvHistogram_thresh_set)
     __swig_setmethods__["thresh2"] = _cv.CvHistogram_thresh2_set
     __swig_getmethods__["thresh2"] = _cv.CvHistogram_thresh2_get
-    if _newclass:thresh2 = property(_cv.CvHistogram_thresh2_get, _cv.CvHistogram_thresh2_set)
+    if _newclass:thresh2 = _swig_property(_cv.CvHistogram_thresh2_get, _cv.CvHistogram_thresh2_set)
     __swig_setmethods__["mat"] = _cv.CvHistogram_mat_set
     __swig_getmethods__["mat"] = _cv.CvHistogram_mat_get
-    if _newclass:mat = property(_cv.CvHistogram_mat_get, _cv.CvHistogram_mat_set)
+    if _newclass:mat = _swig_property(_cv.CvHistogram_mat_get, _cv.CvHistogram_mat_set)
     __swig_destroy__ = _cv.delete_CvHistogram
     __del__ = lambda self : None;
 CvHistogram_swigregister = _cv.CvHistogram_swigregister
@@ -2239,16 +2243,16 @@ class CvRect(_object):
     __repr__ = _swig_repr
     __swig_setmethods__["x"] = _cv.CvRect_x_set
     __swig_getmethods__["x"] = _cv.CvRect_x_get
-    if _newclass:x = property(_cv.CvRect_x_get, _cv.CvRect_x_set)
+    if _newclass:x = _swig_property(_cv.CvRect_x_get, _cv.CvRect_x_set)
     __swig_setmethods__["y"] = _cv.CvRect_y_set
     __swig_getmethods__["y"] = _cv.CvRect_y_get
-    if _newclass:y = property(_cv.CvRect_y_get, _cv.CvRect_y_set)
+    if _newclass:y = _swig_property(_cv.CvRect_y_get, _cv.CvRect_y_set)
     __swig_setmethods__["width"] = _cv.CvRect_width_set
     __swig_getmethods__["width"] = _cv.CvRect_width_get
-    if _newclass:width = property(_cv.CvRect_width_get, _cv.CvRect_width_set)
+    if _newclass:width = _swig_property(_cv.CvRect_width_get, _cv.CvRect_width_set)
     __swig_setmethods__["height"] = _cv.CvRect_height_set
     __swig_getmethods__["height"] = _cv.CvRect_height_get
-    if _newclass:height = property(_cv.CvRect_height_get, _cv.CvRect_height_set)
+    if _newclass:height = _swig_property(_cv.CvRect_height_get, _cv.CvRect_height_set)
     def __init__(self, *args): 
         """__init__(self) -> CvRect"""
         this = _cv.new_CvRect(*args)
@@ -2280,13 +2284,13 @@ class CvTermCriteria(_object):
     __repr__ = _swig_repr
     __swig_setmethods__["type"] = _cv.CvTermCriteria_type_set
     __swig_getmethods__["type"] = _cv.CvTermCriteria_type_get
-    if _newclass:type = property(_cv.CvTermCriteria_type_get, _cv.CvTermCriteria_type_set)
+    if _newclass:type = _swig_property(_cv.CvTermCriteria_type_get, _cv.CvTermCriteria_type_set)
     __swig_setmethods__["max_iter"] = _cv.CvTermCriteria_max_iter_set
     __swig_getmethods__["max_iter"] = _cv.CvTermCriteria_max_iter_get
-    if _newclass:max_iter = property(_cv.CvTermCriteria_max_iter_get, _cv.CvTermCriteria_max_iter_set)
+    if _newclass:max_iter = _swig_property(_cv.CvTermCriteria_max_iter_get, _cv.CvTermCriteria_max_iter_set)
     __swig_setmethods__["epsilon"] = _cv.CvTermCriteria_epsilon_set
     __swig_getmethods__["epsilon"] = _cv.CvTermCriteria_epsilon_get
-    if _newclass:epsilon = property(_cv.CvTermCriteria_epsilon_get, _cv.CvTermCriteria_epsilon_set)
+    if _newclass:epsilon = _swig_property(_cv.CvTermCriteria_epsilon_get, _cv.CvTermCriteria_epsilon_set)
     def __init__(self, *args): 
         """__init__(self) -> CvTermCriteria"""
         this = _cv.new_CvTermCriteria(*args)
@@ -2309,10 +2313,10 @@ class CvPoint(_object):
     __getattr__ = lambda self, name: _swig_getattr(self, CvPoint, name)
     __swig_setmethods__["x"] = _cv.CvPoint_x_set
     __swig_getmethods__["x"] = _cv.CvPoint_x_get
-    if _newclass:x = property(_cv.CvPoint_x_get, _cv.CvPoint_x_set)
+    if _newclass:x = _swig_property(_cv.CvPoint_x_get, _cv.CvPoint_x_set)
     __swig_setmethods__["y"] = _cv.CvPoint_y_set
     __swig_getmethods__["y"] = _cv.CvPoint_y_get
-    if _newclass:y = property(_cv.CvPoint_y_get, _cv.CvPoint_y_set)
+    if _newclass:y = _swig_property(_cv.CvPoint_y_get, _cv.CvPoint_y_set)
     def __str__(*args):
         """__str__(self) -> char"""
         return _cv.CvPoint___str__(*args)
@@ -2343,10 +2347,10 @@ class CvPoint2D32f(_object):
     __getattr__ = lambda self, name: _swig_getattr(self, CvPoint2D32f, name)
     __swig_setmethods__["x"] = _cv.CvPoint2D32f_x_set
     __swig_getmethods__["x"] = _cv.CvPoint2D32f_x_get
-    if _newclass:x = property(_cv.CvPoint2D32f_x_get, _cv.CvPoint2D32f_x_set)
+    if _newclass:x = _swig_property(_cv.CvPoint2D32f_x_get, _cv.CvPoint2D32f_x_set)
     __swig_setmethods__["y"] = _cv.CvPoint2D32f_y_set
     __swig_getmethods__["y"] = _cv.CvPoint2D32f_y_get
-    if _newclass:y = property(_cv.CvPoint2D32f_y_get, _cv.CvPoint2D32f_y_set)
+    if _newclass:y = _swig_property(_cv.CvPoint2D32f_y_get, _cv.CvPoint2D32f_y_set)
     def __str__(*args):
         """__str__(self) -> char"""
         return _cv.CvPoint2D32f___str__(*args)
@@ -2386,13 +2390,13 @@ class CvPoint3D32f(_object):
     __repr__ = _swig_repr
     __swig_setmethods__["x"] = _cv.CvPoint3D32f_x_set
     __swig_getmethods__["x"] = _cv.CvPoint3D32f_x_get
-    if _newclass:x = property(_cv.CvPoint3D32f_x_get, _cv.CvPoint3D32f_x_set)
+    if _newclass:x = _swig_property(_cv.CvPoint3D32f_x_get, _cv.CvPoint3D32f_x_set)
     __swig_setmethods__["y"] = _cv.CvPoint3D32f_y_set
     __swig_getmethods__["y"] = _cv.CvPoint3D32f_y_get
-    if _newclass:y = property(_cv.CvPoint3D32f_y_get, _cv.CvPoint3D32f_y_set)
+    if _newclass:y = _swig_property(_cv.CvPoint3D32f_y_get, _cv.CvPoint3D32f_y_set)
     __swig_setmethods__["z"] = _cv.CvPoint3D32f_z_set
     __swig_getmethods__["z"] = _cv.CvPoint3D32f_z_get
-    if _newclass:z = property(_cv.CvPoint3D32f_z_get, _cv.CvPoint3D32f_z_set)
+    if _newclass:z = _swig_property(_cv.CvPoint3D32f_z_get, _cv.CvPoint3D32f_z_set)
     def __init__(self, *args): 
         """__init__(self) -> CvPoint3D32f"""
         this = _cv.new_CvPoint3D32f(*args)
@@ -2416,10 +2420,10 @@ class CvPoint2D64f(_object):
     __repr__ = _swig_repr
     __swig_setmethods__["x"] = _cv.CvPoint2D64f_x_set
     __swig_getmethods__["x"] = _cv.CvPoint2D64f_x_get
-    if _newclass:x = property(_cv.CvPoint2D64f_x_get, _cv.CvPoint2D64f_x_set)
+    if _newclass:x = _swig_property(_cv.CvPoint2D64f_x_get, _cv.CvPoint2D64f_x_set)
     __swig_setmethods__["y"] = _cv.CvPoint2D64f_y_set
     __swig_getmethods__["y"] = _cv.CvPoint2D64f_y_get
-    if _newclass:y = property(_cv.CvPoint2D64f_y_get, _cv.CvPoint2D64f_y_set)
+    if _newclass:y = _swig_property(_cv.CvPoint2D64f_y_get, _cv.CvPoint2D64f_y_set)
     def __init__(self, *args): 
         """__init__(self) -> CvPoint2D64f"""
         this = _cv.new_CvPoint2D64f(*args)
@@ -2443,13 +2447,13 @@ class CvPoint3D64f(_object):
     __repr__ = _swig_repr
     __swig_setmethods__["x"] = _cv.CvPoint3D64f_x_set
     __swig_getmethods__["x"] = _cv.CvPoint3D64f_x_get
-    if _newclass:x = property(_cv.CvPoint3D64f_x_get, _cv.CvPoint3D64f_x_set)
+    if _newclass:x = _swig_property(_cv.CvPoint3D64f_x_get, _cv.CvPoint3D64f_x_set)
     __swig_setmethods__["y"] = _cv.CvPoint3D64f_y_set
     __swig_getmethods__["y"] = _cv.CvPoint3D64f_y_get
-    if _newclass:y = property(_cv.CvPoint3D64f_y_get, _cv.CvPoint3D64f_y_set)
+    if _newclass:y = _swig_property(_cv.CvPoint3D64f_y_get, _cv.CvPoint3D64f_y_set)
     __swig_setmethods__["z"] = _cv.CvPoint3D64f_z_set
     __swig_getmethods__["z"] = _cv.CvPoint3D64f_z_get
-    if _newclass:z = property(_cv.CvPoint3D64f_z_get, _cv.CvPoint3D64f_z_set)
+    if _newclass:z = _swig_property(_cv.CvPoint3D64f_z_get, _cv.CvPoint3D64f_z_set)
     def __init__(self, *args): 
         """__init__(self) -> CvPoint3D64f"""
         this = _cv.new_CvPoint3D64f(*args)
@@ -2473,10 +2477,10 @@ class CvSize(_object):
     __repr__ = _swig_repr
     __swig_setmethods__["width"] = _cv.CvSize_width_set
     __swig_getmethods__["width"] = _cv.CvSize_width_get
-    if _newclass:width = property(_cv.CvSize_width_get, _cv.CvSize_width_set)
+    if _newclass:width = _swig_property(_cv.CvSize_width_get, _cv.CvSize_width_set)
     __swig_setmethods__["height"] = _cv.CvSize_height_set
     __swig_getmethods__["height"] = _cv.CvSize_height_get
-    if _newclass:height = property(_cv.CvSize_height_get, _cv.CvSize_height_set)
+    if _newclass:height = _swig_property(_cv.CvSize_height_get, _cv.CvSize_height_set)
     def __init__(self, *args): 
         """__init__(self) -> CvSize"""
         this = _cv.new_CvSize(*args)
@@ -2500,10 +2504,10 @@ class CvSize2D32f(_object):
     __repr__ = _swig_repr
     __swig_setmethods__["width"] = _cv.CvSize2D32f_width_set
     __swig_getmethods__["width"] = _cv.CvSize2D32f_width_get
-    if _newclass:width = property(_cv.CvSize2D32f_width_get, _cv.CvSize2D32f_width_set)
+    if _newclass:width = _swig_property(_cv.CvSize2D32f_width_get, _cv.CvSize2D32f_width_set)
     __swig_setmethods__["height"] = _cv.CvSize2D32f_height_set
     __swig_getmethods__["height"] = _cv.CvSize2D32f_height_get
-    if _newclass:height = property(_cv.CvSize2D32f_height_get, _cv.CvSize2D32f_height_set)
+    if _newclass:height = _swig_property(_cv.CvSize2D32f_height_get, _cv.CvSize2D32f_height_set)
     def __init__(self, *args): 
         """__init__(self) -> CvSize2D32f"""
         this = _cv.new_CvSize2D32f(*args)
@@ -2527,13 +2531,13 @@ class CvBox2D(_object):
     __repr__ = _swig_repr
     __swig_setmethods__["center"] = _cv.CvBox2D_center_set
     __swig_getmethods__["center"] = _cv.CvBox2D_center_get
-    if _newclass:center = property(_cv.CvBox2D_center_get, _cv.CvBox2D_center_set)
+    if _newclass:center = _swig_property(_cv.CvBox2D_center_get, _cv.CvBox2D_center_set)
     __swig_setmethods__["size"] = _cv.CvBox2D_size_set
     __swig_getmethods__["size"] = _cv.CvBox2D_size_get
-    if _newclass:size = property(_cv.CvBox2D_size_get, _cv.CvBox2D_size_set)
+    if _newclass:size = _swig_property(_cv.CvBox2D_size_get, _cv.CvBox2D_size_set)
     __swig_setmethods__["angle"] = _cv.CvBox2D_angle_set
     __swig_getmethods__["angle"] = _cv.CvBox2D_angle_get
-    if _newclass:angle = property(_cv.CvBox2D_angle_get, _cv.CvBox2D_angle_set)
+    if _newclass:angle = _swig_property(_cv.CvBox2D_angle_get, _cv.CvBox2D_angle_set)
     def __init__(self, *args): 
         """__init__(self) -> CvBox2D"""
         this = _cv.new_CvBox2D(*args)
@@ -2553,22 +2557,22 @@ class CvLineIterator(_object):
     __repr__ = _swig_repr
     __swig_setmethods__["ptr"] = _cv.CvLineIterator_ptr_set
     __swig_getmethods__["ptr"] = _cv.CvLineIterator_ptr_get
-    if _newclass:ptr = property(_cv.CvLineIterator_ptr_get, _cv.CvLineIterator_ptr_set)
+    if _newclass:ptr = _swig_property(_cv.CvLineIterator_ptr_get, _cv.CvLineIterator_ptr_set)
     __swig_setmethods__["err"] = _cv.CvLineIterator_err_set
     __swig_getmethods__["err"] = _cv.CvLineIterator_err_get
-    if _newclass:err = property(_cv.CvLineIterator_err_get, _cv.CvLineIterator_err_set)
+    if _newclass:err = _swig_property(_cv.CvLineIterator_err_get, _cv.CvLineIterator_err_set)
     __swig_setmethods__["plus_delta"] = _cv.CvLineIterator_plus_delta_set
     __swig_getmethods__["plus_delta"] = _cv.CvLineIterator_plus_delta_get
-    if _newclass:plus_delta = property(_cv.CvLineIterator_plus_delta_get, _cv.CvLineIterator_plus_delta_set)
+    if _newclass:plus_delta = _swig_property(_cv.CvLineIterator_plus_delta_get, _cv.CvLineIterator_plus_delta_set)
     __swig_setmethods__["minus_delta"] = _cv.CvLineIterator_minus_delta_set
     __swig_getmethods__["minus_delta"] = _cv.CvLineIterator_minus_delta_get
-    if _newclass:minus_delta = property(_cv.CvLineIterator_minus_delta_get, _cv.CvLineIterator_minus_delta_set)
+    if _newclass:minus_delta = _swig_property(_cv.CvLineIterator_minus_delta_get, _cv.CvLineIterator_minus_delta_set)
     __swig_setmethods__["plus_step"] = _cv.CvLineIterator_plus_step_set
     __swig_getmethods__["plus_step"] = _cv.CvLineIterator_plus_step_get
-    if _newclass:plus_step = property(_cv.CvLineIterator_plus_step_get, _cv.CvLineIterator_plus_step_set)
+    if _newclass:plus_step = _swig_property(_cv.CvLineIterator_plus_step_get, _cv.CvLineIterator_plus_step_set)
     __swig_setmethods__["minus_step"] = _cv.CvLineIterator_minus_step_set
     __swig_getmethods__["minus_step"] = _cv.CvLineIterator_minus_step_get
-    if _newclass:minus_step = property(_cv.CvLineIterator_minus_step_get, _cv.CvLineIterator_minus_step_set)
+    if _newclass:minus_step = _swig_property(_cv.CvLineIterator_minus_step_get, _cv.CvLineIterator_minus_step_set)
     def __init__(self, *args): 
         """__init__(self) -> CvLineIterator"""
         this = _cv.new_CvLineIterator(*args)
@@ -2588,10 +2592,10 @@ class CvSlice(_object):
     __repr__ = _swig_repr
     __swig_setmethods__["start_index"] = _cv.CvSlice_start_index_set
     __swig_getmethods__["start_index"] = _cv.CvSlice_start_index_get
-    if _newclass:start_index = property(_cv.CvSlice_start_index_get, _cv.CvSlice_start_index_set)
+    if _newclass:start_index = _swig_property(_cv.CvSlice_start_index_get, _cv.CvSlice_start_index_set)
     __swig_setmethods__["end_index"] = _cv.CvSlice_end_index_set
     __swig_getmethods__["end_index"] = _cv.CvSlice_end_index_get
-    if _newclass:end_index = property(_cv.CvSlice_end_index_get, _cv.CvSlice_end_index_set)
+    if _newclass:end_index = _swig_property(_cv.CvSlice_end_index_get, _cv.CvSlice_end_index_set)
     def __init__(self, *args): 
         """__init__(self) -> CvSlice"""
         this = _cv.new_CvSlice(*args)
@@ -2614,7 +2618,7 @@ class CvScalar(_object):
     __getattr__ = lambda self, name: _swig_getattr(self, CvScalar, name)
     __swig_setmethods__["val"] = _cv.CvScalar_val_set
     __swig_getmethods__["val"] = _cv.CvScalar_val_get
-    if _newclass:val = property(_cv.CvScalar_val_get, _cv.CvScalar_val_set)
+    if _newclass:val = _swig_property(_cv.CvScalar_val_get, _cv.CvScalar_val_set)
     def __str__(*args):
         """__str__(self) -> char"""
         return _cv.CvScalar___str__(*args)
@@ -2658,10 +2662,10 @@ class CvMemBlock(_object):
     __repr__ = _swig_repr
     __swig_setmethods__["prev"] = _cv.CvMemBlock_prev_set
     __swig_getmethods__["prev"] = _cv.CvMemBlock_prev_get
-    if _newclass:prev = property(_cv.CvMemBlock_prev_get, _cv.CvMemBlock_prev_set)
+    if _newclass:prev = _swig_property(_cv.CvMemBlock_prev_get, _cv.CvMemBlock_prev_set)
     __swig_setmethods__["next"] = _cv.CvMemBlock_next_set
     __swig_getmethods__["next"] = _cv.CvMemBlock_next_get
-    if _newclass:next = property(_cv.CvMemBlock_next_get, _cv.CvMemBlock_next_set)
+    if _newclass:next = _swig_property(_cv.CvMemBlock_next_get, _cv.CvMemBlock_next_set)
     def __init__(self, *args): 
         """__init__(self) -> CvMemBlock"""
         this = _cv.new_CvMemBlock(*args)
@@ -2691,22 +2695,22 @@ class CvMemStorage(_object):
     __repr__ = _swig_repr
     __swig_setmethods__["signature"] = _cv.CvMemStorage_signature_set
     __swig_getmethods__["signature"] = _cv.CvMemStorage_signature_get
-    if _newclass:signature = property(_cv.CvMemStorage_signature_get, _cv.CvMemStorage_signature_set)
+    if _newclass:signature = _swig_property(_cv.CvMemStorage_signature_get, _cv.CvMemStorage_signature_set)
     __swig_setmethods__["bottom"] = _cv.CvMemStorage_bottom_set
     __swig_getmethods__["bottom"] = _cv.CvMemStorage_bottom_get
-    if _newclass:bottom = property(_cv.CvMemStorage_bottom_get, _cv.CvMemStorage_bottom_set)
+    if _newclass:bottom = _swig_property(_cv.CvMemStorage_bottom_get, _cv.CvMemStorage_bottom_set)
     __swig_setmethods__["top"] = _cv.CvMemStorage_top_set
     __swig_getmethods__["top"] = _cv.CvMemStorage_top_get
-    if _newclass:top = property(_cv.CvMemStorage_top_get, _cv.CvMemStorage_top_set)
+    if _newclass:top = _swig_property(_cv.CvMemStorage_top_get, _cv.CvMemStorage_top_set)
     __swig_setmethods__["parent"] = _cv.CvMemStorage_parent_set
     __swig_getmethods__["parent"] = _cv.CvMemStorage_parent_get
-    if _newclass:parent = property(_cv.CvMemStorage_parent_get, _cv.CvMemStorage_parent_set)
+    if _newclass:parent = _swig_property(_cv.CvMemStorage_parent_get, _cv.CvMemStorage_parent_set)
     __swig_setmethods__["block_size"] = _cv.CvMemStorage_block_size_set
     __swig_getmethods__["block_size"] = _cv.CvMemStorage_block_size_get
-    if _newclass:block_size = property(_cv.CvMemStorage_block_size_get, _cv.CvMemStorage_block_size_set)
+    if _newclass:block_size = _swig_property(_cv.CvMemStorage_block_size_get, _cv.CvMemStorage_block_size_set)
     __swig_setmethods__["free_space"] = _cv.CvMemStorage_free_space_set
     __swig_getmethods__["free_space"] = _cv.CvMemStorage_free_space_get
-    if _newclass:free_space = property(_cv.CvMemStorage_free_space_get, _cv.CvMemStorage_free_space_set)
+    if _newclass:free_space = _swig_property(_cv.CvMemStorage_free_space_get, _cv.CvMemStorage_free_space_set)
     __swig_destroy__ = _cv.delete_CvMemStorage
     __del__ = lambda self : None;
 CvMemStorage_swigregister = _cv.CvMemStorage_swigregister
@@ -2721,10 +2725,10 @@ class CvMemStoragePos(_object):
     __repr__ = _swig_repr
     __swig_setmethods__["top"] = _cv.CvMemStoragePos_top_set
     __swig_getmethods__["top"] = _cv.CvMemStoragePos_top_get
-    if _newclass:top = property(_cv.CvMemStoragePos_top_get, _cv.CvMemStoragePos_top_set)
+    if _newclass:top = _swig_property(_cv.CvMemStoragePos_top_get, _cv.CvMemStoragePos_top_set)
     __swig_setmethods__["free_space"] = _cv.CvMemStoragePos_free_space_set
     __swig_getmethods__["free_space"] = _cv.CvMemStoragePos_free_space_get
-    if _newclass:free_space = property(_cv.CvMemStoragePos_free_space_get, _cv.CvMemStoragePos_free_space_set)
+    if _newclass:free_space = _swig_property(_cv.CvMemStoragePos_free_space_get, _cv.CvMemStoragePos_free_space_set)
     def __init__(self, *args): 
         """__init__(self) -> CvMemStoragePos"""
         this = _cv.new_CvMemStoragePos(*args)
@@ -2744,19 +2748,19 @@ class CvSeqBlock(_object):
     __repr__ = _swig_repr
     __swig_setmethods__["prev"] = _cv.CvSeqBlock_prev_set
     __swig_getmethods__["prev"] = _cv.CvSeqBlock_prev_get
-    if _newclass:prev = property(_cv.CvSeqBlock_prev_get, _cv.CvSeqBlock_prev_set)
+    if _newclass:prev = _swig_property(_cv.CvSeqBlock_prev_get, _cv.CvSeqBlock_prev_set)
     __swig_setmethods__["next"] = _cv.CvSeqBlock_next_set
     __swig_getmethods__["next"] = _cv.CvSeqBlock_next_get
-    if _newclass:next = property(_cv.CvSeqBlock_next_get, _cv.CvSeqBlock_next_set)
+    if _newclass:next = _swig_property(_cv.CvSeqBlock_next_get, _cv.CvSeqBlock_next_set)
     __swig_setmethods__["start_index"] = _cv.CvSeqBlock_start_index_set
     __swig_getmethods__["start_index"] = _cv.CvSeqBlock_start_index_get
-    if _newclass:start_index = property(_cv.CvSeqBlock_start_index_get, _cv.CvSeqBlock_start_index_set)
+    if _newclass:start_index = _swig_property(_cv.CvSeqBlock_start_index_get, _cv.CvSeqBlock_start_index_set)
     __swig_setmethods__["count"] = _cv.CvSeqBlock_count_set
     __swig_getmethods__["count"] = _cv.CvSeqBlock_count_get
-    if _newclass:count = property(_cv.CvSeqBlock_count_get, _cv.CvSeqBlock_count_set)
+    if _newclass:count = _swig_property(_cv.CvSeqBlock_count_get, _cv.CvSeqBlock_count_set)
     __swig_setmethods__["data"] = _cv.CvSeqBlock_data_set
     __swig_getmethods__["data"] = _cv.CvSeqBlock_data_get
-    if _newclass:data = property(_cv.CvSeqBlock_data_get, _cv.CvSeqBlock_data_set)
+    if _newclass:data = _swig_property(_cv.CvSeqBlock_data_get, _cv.CvSeqBlock_data_set)
     def __init__(self, *args): 
         """__init__(self) -> CvSeqBlock"""
         this = _cv.new_CvSeqBlock(*args)
@@ -2776,46 +2780,46 @@ class CvSeq(_object):
     __repr__ = _swig_repr
     __swig_setmethods__["flags"] = _cv.CvSeq_flags_set
     __swig_getmethods__["flags"] = _cv.CvSeq_flags_get
-    if _newclass:flags = property(_cv.CvSeq_flags_get, _cv.CvSeq_flags_set)
+    if _newclass:flags = _swig_property(_cv.CvSeq_flags_get, _cv.CvSeq_flags_set)
     __swig_setmethods__["header_size"] = _cv.CvSeq_header_size_set
     __swig_getmethods__["header_size"] = _cv.CvSeq_header_size_get
-    if _newclass:header_size = property(_cv.CvSeq_header_size_get, _cv.CvSeq_header_size_set)
+    if _newclass:header_size = _swig_property(_cv.CvSeq_header_size_get, _cv.CvSeq_header_size_set)
     __swig_setmethods__["h_prev"] = _cv.CvSeq_h_prev_set
     __swig_getmethods__["h_prev"] = _cv.CvSeq_h_prev_get
-    if _newclass:h_prev = property(_cv.CvSeq_h_prev_get, _cv.CvSeq_h_prev_set)
+    if _newclass:h_prev = _swig_property(_cv.CvSeq_h_prev_get, _cv.CvSeq_h_prev_set)
     __swig_setmethods__["h_next"] = _cv.CvSeq_h_next_set
     __swig_getmethods__["h_next"] = _cv.CvSeq_h_next_get
-    if _newclass:h_next = property(_cv.CvSeq_h_next_get, _cv.CvSeq_h_next_set)
+    if _newclass:h_next = _swig_property(_cv.CvSeq_h_next_get, _cv.CvSeq_h_next_set)
     __swig_setmethods__["v_prev"] = _cv.CvSeq_v_prev_set
     __swig_getmethods__["v_prev"] = _cv.CvSeq_v_prev_get
-    if _newclass:v_prev = property(_cv.CvSeq_v_prev_get, _cv.CvSeq_v_prev_set)
+    if _newclass:v_prev = _swig_property(_cv.CvSeq_v_prev_get, _cv.CvSeq_v_prev_set)
     __swig_setmethods__["v_next"] = _cv.CvSeq_v_next_set
     __swig_getmethods__["v_next"] = _cv.CvSeq_v_next_get
-    if _newclass:v_next = property(_cv.CvSeq_v_next_get, _cv.CvSeq_v_next_set)
+    if _newclass:v_next = _swig_property(_cv.CvSeq_v_next_get, _cv.CvSeq_v_next_set)
     __swig_setmethods__["total"] = _cv.CvSeq_total_set
     __swig_getmethods__["total"] = _cv.CvSeq_total_get
-    if _newclass:total = property(_cv.CvSeq_total_get, _cv.CvSeq_total_set)
+    if _newclass:total = _swig_property(_cv.CvSeq_total_get, _cv.CvSeq_total_set)
     __swig_setmethods__["elem_size"] = _cv.CvSeq_elem_size_set
     __swig_getmethods__["elem_size"] = _cv.CvSeq_elem_size_get
-    if _newclass:elem_size = property(_cv.CvSeq_elem_size_get, _cv.CvSeq_elem_size_set)
+    if _newclass:elem_size = _swig_property(_cv.CvSeq_elem_size_get, _cv.CvSeq_elem_size_set)
     __swig_setmethods__["block_max"] = _cv.CvSeq_block_max_set
     __swig_getmethods__["block_max"] = _cv.CvSeq_block_max_get
-    if _newclass:block_max = property(_cv.CvSeq_block_max_get, _cv.CvSeq_block_max_set)
+    if _newclass:block_max = _swig_property(_cv.CvSeq_block_max_get, _cv.CvSeq_block_max_set)
     __swig_setmethods__["ptr"] = _cv.CvSeq_ptr_set
     __swig_getmethods__["ptr"] = _cv.CvSeq_ptr_get
-    if _newclass:ptr = property(_cv.CvSeq_ptr_get, _cv.CvSeq_ptr_set)
+    if _newclass:ptr = _swig_property(_cv.CvSeq_ptr_get, _cv.CvSeq_ptr_set)
     __swig_setmethods__["delta_elems"] = _cv.CvSeq_delta_elems_set
     __swig_getmethods__["delta_elems"] = _cv.CvSeq_delta_elems_get
-    if _newclass:delta_elems = property(_cv.CvSeq_delta_elems_get, _cv.CvSeq_delta_elems_set)
+    if _newclass:delta_elems = _swig_property(_cv.CvSeq_delta_elems_get, _cv.CvSeq_delta_elems_set)
     __swig_setmethods__["storage"] = _cv.CvSeq_storage_set
     __swig_getmethods__["storage"] = _cv.CvSeq_storage_get
-    if _newclass:storage = property(_cv.CvSeq_storage_get, _cv.CvSeq_storage_set)
+    if _newclass:storage = _swig_property(_cv.CvSeq_storage_get, _cv.CvSeq_storage_set)
     __swig_setmethods__["free_blocks"] = _cv.CvSeq_free_blocks_set
     __swig_getmethods__["free_blocks"] = _cv.CvSeq_free_blocks_get
-    if _newclass:free_blocks = property(_cv.CvSeq_free_blocks_get, _cv.CvSeq_free_blocks_set)
+    if _newclass:free_blocks = _swig_property(_cv.CvSeq_free_blocks_get, _cv.CvSeq_free_blocks_set)
     __swig_setmethods__["first"] = _cv.CvSeq_first_set
     __swig_getmethods__["first"] = _cv.CvSeq_first_get
-    if _newclass:first = property(_cv.CvSeq_first_get, _cv.CvSeq_first_set)
+    if _newclass:first = _swig_property(_cv.CvSeq_first_get, _cv.CvSeq_first_set)
     def __iter__(self):
     	"""
     	generator function iterating elements in the sequence
@@ -2862,10 +2866,10 @@ class CvSetElem(_object):
     __repr__ = _swig_repr
     __swig_setmethods__["flags"] = _cv.CvSetElem_flags_set
     __swig_getmethods__["flags"] = _cv.CvSetElem_flags_get
-    if _newclass:flags = property(_cv.CvSetElem_flags_get, _cv.CvSetElem_flags_set)
+    if _newclass:flags = _swig_property(_cv.CvSetElem_flags_get, _cv.CvSetElem_flags_set)
     __swig_setmethods__["next_free"] = _cv.CvSetElem_next_free_set
     __swig_getmethods__["next_free"] = _cv.CvSetElem_next_free_get
-    if _newclass:next_free = property(_cv.CvSetElem_next_free_get, _cv.CvSetElem_next_free_set)
+    if _newclass:next_free = _swig_property(_cv.CvSetElem_next_free_get, _cv.CvSetElem_next_free_set)
     def __init__(self, *args): 
         """__init__(self) -> CvSetElem"""
         this = _cv.new_CvSetElem(*args)
@@ -2885,52 +2889,52 @@ class CvSet(_object):
     __repr__ = _swig_repr
     __swig_setmethods__["flags"] = _cv.CvSet_flags_set
     __swig_getmethods__["flags"] = _cv.CvSet_flags_get
-    if _newclass:flags = property(_cv.CvSet_flags_get, _cv.CvSet_flags_set)
+    if _newclass:flags = _swig_property(_cv.CvSet_flags_get, _cv.CvSet_flags_set)
     __swig_setmethods__["header_size"] = _cv.CvSet_header_size_set
     __swig_getmethods__["header_size"] = _cv.CvSet_header_size_get
-    if _newclass:header_size = property(_cv.CvSet_header_size_get, _cv.CvSet_header_size_set)
+    if _newclass:header_size = _swig_property(_cv.CvSet_header_size_get, _cv.CvSet_header_size_set)
     __swig_setmethods__["h_prev"] = _cv.CvSet_h_prev_set
     __swig_getmethods__["h_prev"] = _cv.CvSet_h_prev_get
-    if _newclass:h_prev = property(_cv.CvSet_h_prev_get, _cv.CvSet_h_prev_set)
+    if _newclass:h_prev = _swig_property(_cv.CvSet_h_prev_get, _cv.CvSet_h_prev_set)
     __swig_setmethods__["h_next"] = _cv.CvSet_h_next_set
     __swig_getmethods__["h_next"] = _cv.CvSet_h_next_get
-    if _newclass:h_next = property(_cv.CvSet_h_next_get, _cv.CvSet_h_next_set)
+    if _newclass:h_next = _swig_property(_cv.CvSet_h_next_get, _cv.CvSet_h_next_set)
     __swig_setmethods__["v_prev"] = _cv.CvSet_v_prev_set
     __swig_getmethods__["v_prev"] = _cv.CvSet_v_prev_get
-    if _newclass:v_prev = property(_cv.CvSet_v_prev_get, _cv.CvSet_v_prev_set)
+    if _newclass:v_prev = _swig_property(_cv.CvSet_v_prev_get, _cv.CvSet_v_prev_set)
     __swig_setmethods__["v_next"] = _cv.CvSet_v_next_set
     __swig_getmethods__["v_next"] = _cv.CvSet_v_next_get
-    if _newclass:v_next = property(_cv.CvSet_v_next_get, _cv.CvSet_v_next_set)
+    if _newclass:v_next = _swig_property(_cv.CvSet_v_next_get, _cv.CvSet_v_next_set)
     __swig_setmethods__["total"] = _cv.CvSet_total_set
     __swig_getmethods__["total"] = _cv.CvSet_total_get
-    if _newclass:total = property(_cv.CvSet_total_get, _cv.CvSet_total_set)
+    if _newclass:total = _swig_property(_cv.CvSet_total_get, _cv.CvSet_total_set)
     __swig_setmethods__["elem_size"] = _cv.CvSet_elem_size_set
     __swig_getmethods__["elem_size"] = _cv.CvSet_elem_size_get
-    if _newclass:elem_size = property(_cv.CvSet_elem_size_get, _cv.CvSet_elem_size_set)
+    if _newclass:elem_size = _swig_property(_cv.CvSet_elem_size_get, _cv.CvSet_elem_size_set)
     __swig_setmethods__["block_max"] = _cv.CvSet_block_max_set
     __swig_getmethods__["block_max"] = _cv.CvSet_block_max_get
-    if _newclass:block_max = property(_cv.CvSet_block_max_get, _cv.CvSet_block_max_set)
+    if _newclass:block_max = _swig_property(_cv.CvSet_block_max_get, _cv.CvSet_block_max_set)
     __swig_setmethods__["ptr"] = _cv.CvSet_ptr_set
     __swig_getmethods__["ptr"] = _cv.CvSet_ptr_get
-    if _newclass:ptr = property(_cv.CvSet_ptr_get, _cv.CvSet_ptr_set)
+    if _newclass:ptr = _swig_property(_cv.CvSet_ptr_get, _cv.CvSet_ptr_set)
     __swig_setmethods__["delta_elems"] = _cv.CvSet_delta_elems_set
     __swig_getmethods__["delta_elems"] = _cv.CvSet_delta_elems_get
-    if _newclass:delta_elems = property(_cv.CvSet_delta_elems_get, _cv.CvSet_delta_elems_set)
+    if _newclass:delta_elems = _swig_property(_cv.CvSet_delta_elems_get, _cv.CvSet_delta_elems_set)
     __swig_setmethods__["storage"] = _cv.CvSet_storage_set
     __swig_getmethods__["storage"] = _cv.CvSet_storage_get
-    if _newclass:storage = property(_cv.CvSet_storage_get, _cv.CvSet_storage_set)
+    if _newclass:storage = _swig_property(_cv.CvSet_storage_get, _cv.CvSet_storage_set)
     __swig_setmethods__["free_blocks"] = _cv.CvSet_free_blocks_set
     __swig_getmethods__["free_blocks"] = _cv.CvSet_free_blocks_get
-    if _newclass:free_blocks = property(_cv.CvSet_free_blocks_get, _cv.CvSet_free_blocks_set)
+    if _newclass:free_blocks = _swig_property(_cv.CvSet_free_blocks_get, _cv.CvSet_free_blocks_set)
     __swig_setmethods__["first"] = _cv.CvSet_first_set
     __swig_getmethods__["first"] = _cv.CvSet_first_get
-    if _newclass:first = property(_cv.CvSet_first_get, _cv.CvSet_first_set)
+    if _newclass:first = _swig_property(_cv.CvSet_first_get, _cv.CvSet_first_set)
     __swig_setmethods__["free_elems"] = _cv.CvSet_free_elems_set
     __swig_getmethods__["free_elems"] = _cv.CvSet_free_elems_get
-    if _newclass:free_elems = property(_cv.CvSet_free_elems_get, _cv.CvSet_free_elems_set)
+    if _newclass:free_elems = _swig_property(_cv.CvSet_free_elems_get, _cv.CvSet_free_elems_set)
     __swig_setmethods__["active_count"] = _cv.CvSet_active_count_set
     __swig_getmethods__["active_count"] = _cv.CvSet_active_count_get
-    if _newclass:active_count = property(_cv.CvSet_active_count_get, _cv.CvSet_active_count_set)
+    if _newclass:active_count = _swig_property(_cv.CvSet_active_count_get, _cv.CvSet_active_count_set)
     def __init__(self, *args): 
         """__init__(self) -> CvSet"""
         this = _cv.new_CvSet(*args)
@@ -2950,16 +2954,16 @@ class CvGraphEdge(_object):
     __repr__ = _swig_repr
     __swig_setmethods__["flags"] = _cv.CvGraphEdge_flags_set
     __swig_getmethods__["flags"] = _cv.CvGraphEdge_flags_get
-    if _newclass:flags = property(_cv.CvGraphEdge_flags_get, _cv.CvGraphEdge_flags_set)
+    if _newclass:flags = _swig_property(_cv.CvGraphEdge_flags_get, _cv.CvGraphEdge_flags_set)
     __swig_setmethods__["weight"] = _cv.CvGraphEdge_weight_set
     __swig_getmethods__["weight"] = _cv.CvGraphEdge_weight_get
-    if _newclass:weight = property(_cv.CvGraphEdge_weight_get, _cv.CvGraphEdge_weight_set)
+    if _newclass:weight = _swig_property(_cv.CvGraphEdge_weight_get, _cv.CvGraphEdge_weight_set)
     __swig_setmethods__["next"] = _cv.CvGraphEdge_next_set
     __swig_getmethods__["next"] = _cv.CvGraphEdge_next_get
-    if _newclass:next = property(_cv.CvGraphEdge_next_get, _cv.CvGraphEdge_next_set)
+    if _newclass:next = _swig_property(_cv.CvGraphEdge_next_get, _cv.CvGraphEdge_next_set)
     __swig_setmethods__["vtx"] = _cv.CvGraphEdge_vtx_set
     __swig_getmethods__["vtx"] = _cv.CvGraphEdge_vtx_get
-    if _newclass:vtx = property(_cv.CvGraphEdge_vtx_get, _cv.CvGraphEdge_vtx_set)
+    if _newclass:vtx = _swig_property(_cv.CvGraphEdge_vtx_get, _cv.CvGraphEdge_vtx_set)
     def __init__(self, *args): 
         """__init__(self) -> CvGraphEdge"""
         this = _cv.new_CvGraphEdge(*args)
@@ -2979,10 +2983,10 @@ class CvGraphVtx(_object):
     __repr__ = _swig_repr
     __swig_setmethods__["flags"] = _cv.CvGraphVtx_flags_set
     __swig_getmethods__["flags"] = _cv.CvGraphVtx_flags_get
-    if _newclass:flags = property(_cv.CvGraphVtx_flags_get, _cv.CvGraphVtx_flags_set)
+    if _newclass:flags = _swig_property(_cv.CvGraphVtx_flags_get, _cv.CvGraphVtx_flags_set)
     __swig_setmethods__["first"] = _cv.CvGraphVtx_first_set
     __swig_getmethods__["first"] = _cv.CvGraphVtx_first_get
-    if _newclass:first = property(_cv.CvGraphVtx_first_get, _cv.CvGraphVtx_first_set)
+    if _newclass:first = _swig_property(_cv.CvGraphVtx_first_get, _cv.CvGraphVtx_first_set)
     def __init__(self, *args): 
         """__init__(self) -> CvGraphVtx"""
         this = _cv.new_CvGraphVtx(*args)
@@ -3002,13 +3006,13 @@ class CvGraphVtx2D(_object):
     __repr__ = _swig_repr
     __swig_setmethods__["flags"] = _cv.CvGraphVtx2D_flags_set
     __swig_getmethods__["flags"] = _cv.CvGraphVtx2D_flags_get
-    if _newclass:flags = property(_cv.CvGraphVtx2D_flags_get, _cv.CvGraphVtx2D_flags_set)
+    if _newclass:flags = _swig_property(_cv.CvGraphVtx2D_flags_get, _cv.CvGraphVtx2D_flags_set)
     __swig_setmethods__["first"] = _cv.CvGraphVtx2D_first_set
     __swig_getmethods__["first"] = _cv.CvGraphVtx2D_first_get
-    if _newclass:first = property(_cv.CvGraphVtx2D_first_get, _cv.CvGraphVtx2D_first_set)
+    if _newclass:first = _swig_property(_cv.CvGraphVtx2D_first_get, _cv.CvGraphVtx2D_first_set)
     __swig_setmethods__["ptr"] = _cv.CvGraphVtx2D_ptr_set
     __swig_getmethods__["ptr"] = _cv.CvGraphVtx2D_ptr_get
-    if _newclass:ptr = property(_cv.CvGraphVtx2D_ptr_get, _cv.CvGraphVtx2D_ptr_set)
+    if _newclass:ptr = _swig_property(_cv.CvGraphVtx2D_ptr_get, _cv.CvGraphVtx2D_ptr_set)
     def __init__(self, *args): 
         """__init__(self) -> CvGraphVtx2D"""
         this = _cv.new_CvGraphVtx2D(*args)
@@ -3028,55 +3032,55 @@ class CvGraph(_object):
     __repr__ = _swig_repr
     __swig_setmethods__["flags"] = _cv.CvGraph_flags_set
     __swig_getmethods__["flags"] = _cv.CvGraph_flags_get
-    if _newclass:flags = property(_cv.CvGraph_flags_get, _cv.CvGraph_flags_set)
+    if _newclass:flags = _swig_property(_cv.CvGraph_flags_get, _cv.CvGraph_flags_set)
     __swig_setmethods__["header_size"] = _cv.CvGraph_header_size_set
     __swig_getmethods__["header_size"] = _cv.CvGraph_header_size_get
-    if _newclass:header_size = property(_cv.CvGraph_header_size_get, _cv.CvGraph_header_size_set)
+    if _newclass:header_size = _swig_property(_cv.CvGraph_header_size_get, _cv.CvGraph_header_size_set)
     __swig_setmethods__["h_prev"] = _cv.CvGraph_h_prev_set
     __swig_getmethods__["h_prev"] = _cv.CvGraph_h_prev_get
-    if _newclass:h_prev = property(_cv.CvGraph_h_prev_get, _cv.CvGraph_h_prev_set)
+    if _newclass:h_prev = _swig_property(_cv.CvGraph_h_prev_get, _cv.CvGraph_h_prev_set)
     __swig_setmethods__["h_next"] = _cv.CvGraph_h_next_set
     __swig_getmethods__["h_next"] = _cv.CvGraph_h_next_get
-    if _newclass:h_next = property(_cv.CvGraph_h_next_get, _cv.CvGraph_h_next_set)
+    if _newclass:h_next = _swig_property(_cv.CvGraph_h_next_get, _cv.CvGraph_h_next_set)
     __swig_setmethods__["v_prev"] = _cv.CvGraph_v_prev_set
     __swig_getmethods__["v_prev"] = _cv.CvGraph_v_prev_get
-    if _newclass:v_prev = property(_cv.CvGraph_v_prev_get, _cv.CvGraph_v_prev_set)
+    if _newclass:v_prev = _swig_property(_cv.CvGraph_v_prev_get, _cv.CvGraph_v_prev_set)
     __swig_setmethods__["v_next"] = _cv.CvGraph_v_next_set
     __swig_getmethods__["v_next"] = _cv.CvGraph_v_next_get
-    if _newclass:v_next = property(_cv.CvGraph_v_next_get, _cv.CvGraph_v_next_set)
+    if _newclass:v_next = _swig_property(_cv.CvGraph_v_next_get, _cv.CvGraph_v_next_set)
     __swig_setmethods__["total"] = _cv.CvGraph_total_set
     __swig_getmethods__["total"] = _cv.CvGraph_total_get
-    if _newclass:total = property(_cv.CvGraph_total_get, _cv.CvGraph_total_set)
+    if _newclass:total = _swig_property(_cv.CvGraph_total_get, _cv.CvGraph_total_set)
     __swig_setmethods__["elem_size"] = _cv.CvGraph_elem_size_set
     __swig_getmethods__["elem_size"] = _cv.CvGraph_elem_size_get
-    if _newclass:elem_size = property(_cv.CvGraph_elem_size_get, _cv.CvGraph_elem_size_set)
+    if _newclass:elem_size = _swig_property(_cv.CvGraph_elem_size_get, _cv.CvGraph_elem_size_set)
     __swig_setmethods__["block_max"] = _cv.CvGraph_block_max_set
     __swig_getmethods__["block_max"] = _cv.CvGraph_block_max_get
-    if _newclass:block_max = property(_cv.CvGraph_block_max_get, _cv.CvGraph_block_max_set)
+    if _newclass:block_max = _swig_property(_cv.CvGraph_block_max_get, _cv.CvGraph_block_max_set)
     __swig_setmethods__["ptr"] = _cv.CvGraph_ptr_set
     __swig_getmethods__["ptr"] = _cv.CvGraph_ptr_get
-    if _newclass:ptr = property(_cv.CvGraph_ptr_get, _cv.CvGraph_ptr_set)
+    if _newclass:ptr = _swig_property(_cv.CvGraph_ptr_get, _cv.CvGraph_ptr_set)
     __swig_setmethods__["delta_elems"] = _cv.CvGraph_delta_elems_set
     __swig_getmethods__["delta_elems"] = _cv.CvGraph_delta_elems_get
-    if _newclass:delta_elems = property(_cv.CvGraph_delta_elems_get, _cv.CvGraph_delta_elems_set)
+    if _newclass:delta_elems = _swig_property(_cv.CvGraph_delta_elems_get, _cv.CvGraph_delta_elems_set)
     __swig_setmethods__["storage"] = _cv.CvGraph_storage_set
     __swig_getmethods__["storage"] = _cv.CvGraph_storage_get
-    if _newclass:storage = property(_cv.CvGraph_storage_get, _cv.CvGraph_storage_set)
+    if _newclass:storage = _swig_property(_cv.CvGraph_storage_get, _cv.CvGraph_storage_set)
     __swig_setmethods__["free_blocks"] = _cv.CvGraph_free_blocks_set
     __swig_getmethods__["free_blocks"] = _cv.CvGraph_free_blocks_get
-    if _newclass:free_blocks = property(_cv.CvGraph_free_blocks_get, _cv.CvGraph_free_blocks_set)
+    if _newclass:free_blocks = _swig_property(_cv.CvGraph_free_blocks_get, _cv.CvGraph_free_blocks_set)
     __swig_setmethods__["first"] = _cv.CvGraph_first_set
     __swig_getmethods__["first"] = _cv.CvGraph_first_get
-    if _newclass:first = property(_cv.CvGraph_first_get, _cv.CvGraph_first_set)
+    if _newclass:first = _swig_property(_cv.CvGraph_first_get, _cv.CvGraph_first_set)
     __swig_setmethods__["free_elems"] = _cv.CvGraph_free_elems_set
     __swig_getmethods__["free_elems"] = _cv.CvGraph_free_elems_get
-    if _newclass:free_elems = property(_cv.CvGraph_free_elems_get, _cv.CvGraph_free_elems_set)
+    if _newclass:free_elems = _swig_property(_cv.CvGraph_free_elems_get, _cv.CvGraph_free_elems_set)
     __swig_setmethods__["active_count"] = _cv.CvGraph_active_count_set
     __swig_getmethods__["active_count"] = _cv.CvGraph_active_count_get
-    if _newclass:active_count = property(_cv.CvGraph_active_count_get, _cv.CvGraph_active_count_set)
+    if _newclass:active_count = _swig_property(_cv.CvGraph_active_count_get, _cv.CvGraph_active_count_set)
     __swig_setmethods__["edges"] = _cv.CvGraph_edges_set
     __swig_getmethods__["edges"] = _cv.CvGraph_edges_get
-    if _newclass:edges = property(_cv.CvGraph_edges_get, _cv.CvGraph_edges_set)
+    if _newclass:edges = _swig_property(_cv.CvGraph_edges_get, _cv.CvGraph_edges_set)
     def __init__(self, *args): 
         """__init__(self) -> CvGraph"""
         this = _cv.new_CvGraph(*args)
@@ -3096,49 +3100,49 @@ class CvChain(_object):
     __repr__ = _swig_repr
     __swig_setmethods__["flags"] = _cv.CvChain_flags_set
     __swig_getmethods__["flags"] = _cv.CvChain_flags_get
-    if _newclass:flags = property(_cv.CvChain_flags_get, _cv.CvChain_flags_set)
+    if _newclass:flags = _swig_property(_cv.CvChain_flags_get, _cv.CvChain_flags_set)
     __swig_setmethods__["header_size"] = _cv.CvChain_header_size_set
     __swig_getmethods__["header_size"] = _cv.CvChain_header_size_get
-    if _newclass:header_size = property(_cv.CvChain_header_size_get, _cv.CvChain_header_size_set)
+    if _newclass:header_size = _swig_property(_cv.CvChain_header_size_get, _cv.CvChain_header_size_set)
     __swig_setmethods__["h_prev"] = _cv.CvChain_h_prev_set
     __swig_getmethods__["h_prev"] = _cv.CvChain_h_prev_get
-    if _newclass:h_prev = property(_cv.CvChain_h_prev_get, _cv.CvChain_h_prev_set)
+    if _newclass:h_prev = _swig_property(_cv.CvChain_h_prev_get, _cv.CvChain_h_prev_set)
     __swig_setmethods__["h_next"] = _cv.CvChain_h_next_set
     __swig_getmethods__["h_next"] = _cv.CvChain_h_next_get
-    if _newclass:h_next = property(_cv.CvChain_h_next_get, _cv.CvChain_h_next_set)
+    if _newclass:h_next = _swig_property(_cv.CvChain_h_next_get, _cv.CvChain_h_next_set)
     __swig_setmethods__["v_prev"] = _cv.CvChain_v_prev_set
     __swig_getmethods__["v_prev"] = _cv.CvChain_v_prev_get
-    if _newclass:v_prev = property(_cv.CvChain_v_prev_get, _cv.CvChain_v_prev_set)
+    if _newclass:v_prev = _swig_property(_cv.CvChain_v_prev_get, _cv.CvChain_v_prev_set)
     __swig_setmethods__["v_next"] = _cv.CvChain_v_next_set
     __swig_getmethods__["v_next"] = _cv.CvChain_v_next_get
-    if _newclass:v_next = property(_cv.CvChain_v_next_get, _cv.CvChain_v_next_set)
+    if _newclass:v_next = _swig_property(_cv.CvChain_v_next_get, _cv.CvChain_v_next_set)
     __swig_setmethods__["total"] = _cv.CvChain_total_set
     __swig_getmethods__["total"] = _cv.CvChain_total_get
-    if _newclass:total = property(_cv.CvChain_total_get, _cv.CvChain_total_set)
+    if _newclass:total = _swig_property(_cv.CvChain_total_get, _cv.CvChain_total_set)
     __swig_setmethods__["elem_size"] = _cv.CvChain_elem_size_set
     __swig_getmethods__["elem_size"] = _cv.CvChain_elem_size_get
-    if _newclass:elem_size = property(_cv.CvChain_elem_size_get, _cv.CvChain_elem_size_set)
+    if _newclass:elem_size = _swig_property(_cv.CvChain_elem_size_get, _cv.CvChain_elem_size_set)
     __swig_setmethods__["block_max"] = _cv.CvChain_block_max_set
     __swig_getmethods__["block_max"] = _cv.CvChain_block_max_get
-    if _newclass:block_max = property(_cv.CvChain_block_max_get, _cv.CvChain_block_max_set)
+    if _newclass:block_max = _swig_property(_cv.CvChain_block_max_get, _cv.CvChain_block_max_set)
     __swig_setmethods__["ptr"] = _cv.CvChain_ptr_set
     __swig_getmethods__["ptr"] = _cv.CvChain_ptr_get
-    if _newclass:ptr = property(_cv.CvChain_ptr_get, _cv.CvChain_ptr_set)
+    if _newclass:ptr = _swig_property(_cv.CvChain_ptr_get, _cv.CvChain_ptr_set)
     __swig_setmethods__["delta_elems"] = _cv.CvChain_delta_elems_set
     __swig_getmethods__["delta_elems"] = _cv.CvChain_delta_elems_get
-    if _newclass:delta_elems = property(_cv.CvChain_delta_elems_get, _cv.CvChain_delta_elems_set)
+    if _newclass:delta_elems = _swig_property(_cv.CvChain_delta_elems_get, _cv.CvChain_delta_elems_set)
     __swig_setmethods__["storage"] = _cv.CvChain_storage_set
     __swig_getmethods__["storage"] = _cv.CvChain_storage_get
-    if _newclass:storage = property(_cv.CvChain_storage_get, _cv.CvChain_storage_set)
+    if _newclass:storage = _swig_property(_cv.CvChain_storage_get, _cv.CvChain_storage_set)
     __swig_setmethods__["free_blocks"] = _cv.CvChain_free_blocks_set
     __swig_getmethods__["free_blocks"] = _cv.CvChain_free_blocks_get
-    if _newclass:free_blocks = property(_cv.CvChain_free_blocks_get, _cv.CvChain_free_blocks_set)
+    if _newclass:free_blocks = _swig_property(_cv.CvChain_free_blocks_get, _cv.CvChain_free_blocks_set)
     __swig_setmethods__["first"] = _cv.CvChain_first_set
     __swig_getmethods__["first"] = _cv.CvChain_first_get
-    if _newclass:first = property(_cv.CvChain_first_get, _cv.CvChain_first_set)
+    if _newclass:first = _swig_property(_cv.CvChain_first_get, _cv.CvChain_first_set)
     __swig_setmethods__["origin"] = _cv.CvChain_origin_set
     __swig_getmethods__["origin"] = _cv.CvChain_origin_get
-    if _newclass:origin = property(_cv.CvChain_origin_get, _cv.CvChain_origin_set)
+    if _newclass:origin = _swig_property(_cv.CvChain_origin_get, _cv.CvChain_origin_set)
     def __init__(self, *args): 
         """__init__(self) -> CvChain"""
         this = _cv.new_CvChain(*args)
@@ -3158,55 +3162,55 @@ class CvContour(_object):
     __repr__ = _swig_repr
     __swig_setmethods__["flags"] = _cv.CvContour_flags_set
     __swig_getmethods__["flags"] = _cv.CvContour_flags_get
-    if _newclass:flags = property(_cv.CvContour_flags_get, _cv.CvContour_flags_set)
+    if _newclass:flags = _swig_property(_cv.CvContour_flags_get, _cv.CvContour_flags_set)
     __swig_setmethods__["header_size"] = _cv.CvContour_header_size_set
     __swig_getmethods__["header_size"] = _cv.CvContour_header_size_get
-    if _newclass:header_size = property(_cv.CvContour_header_size_get, _cv.CvContour_header_size_set)
+    if _newclass:header_size = _swig_property(_cv.CvContour_header_size_get, _cv.CvContour_header_size_set)
     __swig_setmethods__["h_prev"] = _cv.CvContour_h_prev_set
     __swig_getmethods__["h_prev"] = _cv.CvContour_h_prev_get
-    if _newclass:h_prev = property(_cv.CvContour_h_prev_get, _cv.CvContour_h_prev_set)
+    if _newclass:h_prev = _swig_property(_cv.CvContour_h_prev_get, _cv.CvContour_h_prev_set)
     __swig_setmethods__["h_next"] = _cv.CvContour_h_next_set
     __swig_getmethods__["h_next"] = _cv.CvContour_h_next_get
-    if _newclass:h_next = property(_cv.CvContour_h_next_get, _cv.CvContour_h_next_set)
+    if _newclass:h_next = _swig_property(_cv.CvContour_h_next_get, _cv.CvContour_h_next_set)
     __swig_setmethods__["v_prev"] = _cv.CvContour_v_prev_set
     __swig_getmethods__["v_prev"] = _cv.CvContour_v_prev_get
-    if _newclass:v_prev = property(_cv.CvContour_v_prev_get, _cv.CvContour_v_prev_set)
+    if _newclass:v_prev = _swig_property(_cv.CvContour_v_prev_get, _cv.CvContour_v_prev_set)
     __swig_setmethods__["v_next"] = _cv.CvContour_v_next_set
     __swig_getmethods__["v_next"] = _cv.CvContour_v_next_get
-    if _newclass:v_next = property(_cv.CvContour_v_next_get, _cv.CvContour_v_next_set)
+    if _newclass:v_next = _swig_property(_cv.CvContour_v_next_get, _cv.CvContour_v_next_set)
     __swig_setmethods__["total"] = _cv.CvContour_total_set
     __swig_getmethods__["total"] = _cv.CvContour_total_get
-    if _newclass:total = property(_cv.CvContour_total_get, _cv.CvContour_total_set)
+    if _newclass:total = _swig_property(_cv.CvContour_total_get, _cv.CvContour_total_set)
     __swig_setmethods__["elem_size"] = _cv.CvContour_elem_size_set
     __swig_getmethods__["elem_size"] = _cv.CvContour_elem_size_get
-    if _newclass:elem_size = property(_cv.CvContour_elem_size_get, _cv.CvContour_elem_size_set)
+    if _newclass:elem_size = _swig_property(_cv.CvContour_elem_size_get, _cv.CvContour_elem_size_set)
     __swig_setmethods__["block_max"] = _cv.CvContour_block_max_set
     __swig_getmethods__["block_max"] = _cv.CvContour_block_max_get
-    if _newclass:block_max = property(_cv.CvContour_block_max_get, _cv.CvContour_block_max_set)
+    if _newclass:block_max = _swig_property(_cv.CvContour_block_max_get, _cv.CvContour_block_max_set)
     __swig_setmethods__["ptr"] = _cv.CvContour_ptr_set
     __swig_getmethods__["ptr"] = _cv.CvContour_ptr_get
-    if _newclass:ptr = property(_cv.CvContour_ptr_get, _cv.CvContour_ptr_set)
+    if _newclass:ptr = _swig_property(_cv.CvContour_ptr_get, _cv.CvContour_ptr_set)
     __swig_setmethods__["delta_elems"] = _cv.CvContour_delta_elems_set
     __swig_getmethods__["delta_elems"] = _cv.CvContour_delta_elems_get
-    if _newclass:delta_elems = property(_cv.CvContour_delta_elems_get, _cv.CvContour_delta_elems_set)
+    if _newclass:delta_elems = _swig_property(_cv.CvContour_delta_elems_get, _cv.CvContour_delta_elems_set)
     __swig_setmethods__["storage"] = _cv.CvContour_storage_set
     __swig_getmethods__["storage"] = _cv.CvContour_storage_get
-    if _newclass:storage = property(_cv.CvContour_storage_get, _cv.CvContour_storage_set)
+    if _newclass:storage = _swig_property(_cv.CvContour_storage_get, _cv.CvContour_storage_set)
     __swig_setmethods__["free_blocks"] = _cv.CvContour_free_blocks_set
     __swig_getmethods__["free_blocks"] = _cv.CvContour_free_blocks_get
-    if _newclass:free_blocks = property(_cv.CvContour_free_blocks_get, _cv.CvContour_free_blocks_set)
+    if _newclass:free_blocks = _swig_property(_cv.CvContour_free_blocks_get, _cv.CvContour_free_blocks_set)
     __swig_setmethods__["first"] = _cv.CvContour_first_set
     __swig_getmethods__["first"] = _cv.CvContour_first_get
-    if _newclass:first = property(_cv.CvContour_first_get, _cv.CvContour_first_set)
+    if _newclass:first = _swig_property(_cv.CvContour_first_get, _cv.CvContour_first_set)
     __swig_setmethods__["rect"] = _cv.CvContour_rect_set
     __swig_getmethods__["rect"] = _cv.CvContour_rect_get
-    if _newclass:rect = property(_cv.CvContour_rect_get, _cv.CvContour_rect_set)
+    if _newclass:rect = _swig_property(_cv.CvContour_rect_get, _cv.CvContour_rect_set)
     __swig_setmethods__["color"] = _cv.CvContour_color_set
     __swig_getmethods__["color"] = _cv.CvContour_color_get
-    if _newclass:color = property(_cv.CvContour_color_get, _cv.CvContour_color_set)
+    if _newclass:color = _swig_property(_cv.CvContour_color_get, _cv.CvContour_color_set)
     __swig_setmethods__["reserved"] = _cv.CvContour_reserved_set
     __swig_getmethods__["reserved"] = _cv.CvContour_reserved_get
-    if _newclass:reserved = property(_cv.CvContour_reserved_get, _cv.CvContour_reserved_set)
+    if _newclass:reserved = _swig_property(_cv.CvContour_reserved_get, _cv.CvContour_reserved_set)
     def __init__(self, *args): 
         """__init__(self) -> CvContour"""
         this = _cv.new_CvContour(*args)
@@ -3226,22 +3230,22 @@ class CvSeqWriter(_object):
     __repr__ = _swig_repr
     __swig_setmethods__["header_size"] = _cv.CvSeqWriter_header_size_set
     __swig_getmethods__["header_size"] = _cv.CvSeqWriter_header_size_get
-    if _newclass:header_size = property(_cv.CvSeqWriter_header_size_get, _cv.CvSeqWriter_header_size_set)
+    if _newclass:header_size = _swig_property(_cv.CvSeqWriter_header_size_get, _cv.CvSeqWriter_header_size_set)
     __swig_setmethods__["seq"] = _cv.CvSeqWriter_seq_set
     __swig_getmethods__["seq"] = _cv.CvSeqWriter_seq_get
-    if _newclass:seq = property(_cv.CvSeqWriter_seq_get, _cv.CvSeqWriter_seq_set)
+    if _newclass:seq = _swig_property(_cv.CvSeqWriter_seq_get, _cv.CvSeqWriter_seq_set)
     __swig_setmethods__["block"] = _cv.CvSeqWriter_block_set
     __swig_getmethods__["block"] = _cv.CvSeqWriter_block_get
-    if _newclass:block = property(_cv.CvSeqWriter_block_get, _cv.CvSeqWriter_block_set)
+    if _newclass:block = _swig_property(_cv.CvSeqWriter_block_get, _cv.CvSeqWriter_block_set)
     __swig_setmethods__["ptr"] = _cv.CvSeqWriter_ptr_set
     __swig_getmethods__["ptr"] = _cv.CvSeqWriter_ptr_get
-    if _newclass:ptr = property(_cv.CvSeqWriter_ptr_get, _cv.CvSeqWriter_ptr_set)
+    if _newclass:ptr = _swig_property(_cv.CvSeqWriter_ptr_get, _cv.CvSeqWriter_ptr_set)
     __swig_setmethods__["block_min"] = _cv.CvSeqWriter_block_min_set
     __swig_getmethods__["block_min"] = _cv.CvSeqWriter_block_min_get
-    if _newclass:block_min = property(_cv.CvSeqWriter_block_min_get, _cv.CvSeqWriter_block_min_set)
+    if _newclass:block_min = _swig_property(_cv.CvSeqWriter_block_min_get, _cv.CvSeqWriter_block_min_set)
     __swig_setmethods__["block_max"] = _cv.CvSeqWriter_block_max_set
     __swig_getmethods__["block_max"] = _cv.CvSeqWriter_block_max_get
-    if _newclass:block_max = property(_cv.CvSeqWriter_block_max_get, _cv.CvSeqWriter_block_max_set)
+    if _newclass:block_max = _swig_property(_cv.CvSeqWriter_block_max_get, _cv.CvSeqWriter_block_max_set)
     def __init__(self, *args): 
         """__init__(self) -> CvSeqWriter"""
         this = _cv.new_CvSeqWriter(*args)
@@ -3261,28 +3265,28 @@ class CvSeqReader(_object):
     __repr__ = _swig_repr
     __swig_setmethods__["header_size"] = _cv.CvSeqReader_header_size_set
     __swig_getmethods__["header_size"] = _cv.CvSeqReader_header_size_get
-    if _newclass:header_size = property(_cv.CvSeqReader_header_size_get, _cv.CvSeqReader_header_size_set)
+    if _newclass:header_size = _swig_property(_cv.CvSeqReader_header_size_get, _cv.CvSeqReader_header_size_set)
     __swig_setmethods__["seq"] = _cv.CvSeqReader_seq_set
     __swig_getmethods__["seq"] = _cv.CvSeqReader_seq_get
-    if _newclass:seq = property(_cv.CvSeqReader_seq_get, _cv.CvSeqReader_seq_set)
+    if _newclass:seq = _swig_property(_cv.CvSeqReader_seq_get, _cv.CvSeqReader_seq_set)
     __swig_setmethods__["block"] = _cv.CvSeqReader_block_set
     __swig_getmethods__["block"] = _cv.CvSeqReader_block_get
-    if _newclass:block = property(_cv.CvSeqReader_block_get, _cv.CvSeqReader_block_set)
+    if _newclass:block = _swig_property(_cv.CvSeqReader_block_get, _cv.CvSeqReader_block_set)
     __swig_setmethods__["ptr"] = _cv.CvSeqReader_ptr_set
     __swig_getmethods__["ptr"] = _cv.CvSeqReader_ptr_get
-    if _newclass:ptr = property(_cv.CvSeqReader_ptr_get, _cv.CvSeqReader_ptr_set)
+    if _newclass:ptr = _swig_property(_cv.CvSeqReader_ptr_get, _cv.CvSeqReader_ptr_set)
     __swig_setmethods__["block_min"] = _cv.CvSeqReader_block_min_set
     __swig_getmethods__["block_min"] = _cv.CvSeqReader_block_min_get
-    if _newclass:block_min = property(_cv.CvSeqReader_block_min_get, _cv.CvSeqReader_block_min_set)
+    if _newclass:block_min = _swig_property(_cv.CvSeqReader_block_min_get, _cv.CvSeqReader_block_min_set)
     __swig_setmethods__["block_max"] = _cv.CvSeqReader_block_max_set
     __swig_getmethods__["block_max"] = _cv.CvSeqReader_block_max_get
-    if _newclass:block_max = property(_cv.CvSeqReader_block_max_get, _cv.CvSeqReader_block_max_set)
+    if _newclass:block_max = _swig_property(_cv.CvSeqReader_block_max_get, _cv.CvSeqReader_block_max_set)
     __swig_setmethods__["delta_index"] = _cv.CvSeqReader_delta_index_set
     __swig_getmethods__["delta_index"] = _cv.CvSeqReader_delta_index_get
-    if _newclass:delta_index = property(_cv.CvSeqReader_delta_index_get, _cv.CvSeqReader_delta_index_set)
+    if _newclass:delta_index = _swig_property(_cv.CvSeqReader_delta_index_get, _cv.CvSeqReader_delta_index_set)
     __swig_setmethods__["prev_elem"] = _cv.CvSeqReader_prev_elem_set
     __swig_getmethods__["prev_elem"] = _cv.CvSeqReader_prev_elem_get
-    if _newclass:prev_elem = property(_cv.CvSeqReader_prev_elem_get, _cv.CvSeqReader_prev_elem_set)
+    if _newclass:prev_elem = _swig_property(_cv.CvSeqReader_prev_elem_get, _cv.CvSeqReader_prev_elem_set)
     def __init__(self, *args): 
         """__init__(self) -> CvSeqReader"""
         this = _cv.new_CvSeqReader(*args)
@@ -3302,10 +3306,10 @@ class CvAttrList(_object):
     __repr__ = _swig_repr
     __swig_setmethods__["attr"] = _cv.CvAttrList_attr_set
     __swig_getmethods__["attr"] = _cv.CvAttrList_attr_get
-    if _newclass:attr = property(_cv.CvAttrList_attr_get, _cv.CvAttrList_attr_set)
+    if _newclass:attr = _swig_property(_cv.CvAttrList_attr_get, _cv.CvAttrList_attr_set)
     __swig_setmethods__["next"] = _cv.CvAttrList_next_set
     __swig_getmethods__["next"] = _cv.CvAttrList_next_get
-    if _newclass:next = property(_cv.CvAttrList_next_get, _cv.CvAttrList_next_set)
+    if _newclass:next = _swig_property(_cv.CvAttrList_next_get, _cv.CvAttrList_next_set)
     def __init__(self, *args): 
         """__init__(self) -> CvAttrList"""
         this = _cv.new_CvAttrList(*args)
@@ -3325,10 +3329,10 @@ class CvString(_object):
     __repr__ = _swig_repr
     __swig_setmethods__["len"] = _cv.CvString_len_set
     __swig_getmethods__["len"] = _cv.CvString_len_get
-    if _newclass:len = property(_cv.CvString_len_get, _cv.CvString_len_set)
+    if _newclass:len = _swig_property(_cv.CvString_len_get, _cv.CvString_len_set)
     __swig_setmethods__["ptr"] = _cv.CvString_ptr_set
     __swig_getmethods__["ptr"] = _cv.CvString_ptr_get
-    if _newclass:ptr = property(_cv.CvString_ptr_get, _cv.CvString_ptr_set)
+    if _newclass:ptr = _swig_property(_cv.CvString_ptr_get, _cv.CvString_ptr_set)
     def __init__(self, *args): 
         """__init__(self) -> CvString"""
         this = _cv.new_CvString(*args)
@@ -3356,13 +3360,13 @@ class CvStringHashNode(_object):
     __repr__ = _swig_repr
     __swig_setmethods__["hashval"] = _cv.CvStringHashNode_hashval_set
     __swig_getmethods__["hashval"] = _cv.CvStringHashNode_hashval_get
-    if _newclass:hashval = property(_cv.CvStringHashNode_hashval_get, _cv.CvStringHashNode_hashval_set)
+    if _newclass:hashval = _swig_property(_cv.CvStringHashNode_hashval_get, _cv.CvStringHashNode_hashval_set)
     __swig_setmethods__["str"] = _cv.CvStringHashNode_str_set
     __swig_getmethods__["str"] = _cv.CvStringHashNode_str_get
-    if _newclass:str = property(_cv.CvStringHashNode_str_get, _cv.CvStringHashNode_str_set)
+    if _newclass:str = _swig_property(_cv.CvStringHashNode_str_get, _cv.CvStringHashNode_str_set)
     __swig_setmethods__["next"] = _cv.CvStringHashNode_next_set
     __swig_getmethods__["next"] = _cv.CvStringHashNode_next_get
-    if _newclass:next = property(_cv.CvStringHashNode_next_get, _cv.CvStringHashNode_next_set)
+    if _newclass:next = _swig_property(_cv.CvStringHashNode_next_get, _cv.CvStringHashNode_next_set)
     def __init__(self, *args): 
         """__init__(self) -> CvStringHashNode"""
         this = _cv.new_CvStringHashNode(*args)
@@ -3382,12 +3386,12 @@ class CvFileNode(_object):
     __repr__ = _swig_repr
     __swig_setmethods__["tag"] = _cv.CvFileNode_tag_set
     __swig_getmethods__["tag"] = _cv.CvFileNode_tag_get
-    if _newclass:tag = property(_cv.CvFileNode_tag_get, _cv.CvFileNode_tag_set)
+    if _newclass:tag = _swig_property(_cv.CvFileNode_tag_get, _cv.CvFileNode_tag_set)
     __swig_setmethods__["info"] = _cv.CvFileNode_info_set
     __swig_getmethods__["info"] = _cv.CvFileNode_info_get
-    if _newclass:info = property(_cv.CvFileNode_info_get, _cv.CvFileNode_info_set)
+    if _newclass:info = _swig_property(_cv.CvFileNode_info_get, _cv.CvFileNode_info_set)
     __swig_getmethods__["data"] = _cv.CvFileNode_data_get
-    if _newclass:data = property(_cv.CvFileNode_data_get)
+    if _newclass:data = _swig_property(_cv.CvFileNode_data_get)
     def __init__(self, *args): 
         """__init__(self) -> CvFileNode"""
         this = _cv.new_CvFileNode(*args)
@@ -3407,19 +3411,19 @@ class CvFileNode_data(_object):
     __repr__ = _swig_repr
     __swig_setmethods__["f"] = _cv.CvFileNode_data_f_set
     __swig_getmethods__["f"] = _cv.CvFileNode_data_f_get
-    if _newclass:f = property(_cv.CvFileNode_data_f_get, _cv.CvFileNode_data_f_set)
+    if _newclass:f = _swig_property(_cv.CvFileNode_data_f_get, _cv.CvFileNode_data_f_set)
     __swig_setmethods__["i"] = _cv.CvFileNode_data_i_set
     __swig_getmethods__["i"] = _cv.CvFileNode_data_i_get
-    if _newclass:i = property(_cv.CvFileNode_data_i_get, _cv.CvFileNode_data_i_set)
+    if _newclass:i = _swig_property(_cv.CvFileNode_data_i_get, _cv.CvFileNode_data_i_set)
     __swig_setmethods__["str"] = _cv.CvFileNode_data_str_set
     __swig_getmethods__["str"] = _cv.CvFileNode_data_str_get
-    if _newclass:str = property(_cv.CvFileNode_data_str_get, _cv.CvFileNode_data_str_set)
+    if _newclass:str = _swig_property(_cv.CvFileNode_data_str_get, _cv.CvFileNode_data_str_set)
     __swig_setmethods__["seq"] = _cv.CvFileNode_data_seq_set
     __swig_getmethods__["seq"] = _cv.CvFileNode_data_seq_get
-    if _newclass:seq = property(_cv.CvFileNode_data_seq_get, _cv.CvFileNode_data_seq_set)
+    if _newclass:seq = _swig_property(_cv.CvFileNode_data_seq_get, _cv.CvFileNode_data_seq_set)
     __swig_setmethods__["map"] = _cv.CvFileNode_data_map_set
     __swig_getmethods__["map"] = _cv.CvFileNode_data_map_get
-    if _newclass:map = property(_cv.CvFileNode_data_map_get, _cv.CvFileNode_data_map_set)
+    if _newclass:map = _swig_property(_cv.CvFileNode_data_map_get, _cv.CvFileNode_data_map_set)
     def __init__(self, *args): 
         """__init__(self) -> CvFileNode_data"""
         this = _cv.new_CvFileNode_data(*args)
@@ -3439,34 +3443,34 @@ class CvTypeInfo(_object):
     __repr__ = _swig_repr
     __swig_setmethods__["flags"] = _cv.CvTypeInfo_flags_set
     __swig_getmethods__["flags"] = _cv.CvTypeInfo_flags_get
-    if _newclass:flags = property(_cv.CvTypeInfo_flags_get, _cv.CvTypeInfo_flags_set)
+    if _newclass:flags = _swig_property(_cv.CvTypeInfo_flags_get, _cv.CvTypeInfo_flags_set)
     __swig_setmethods__["header_size"] = _cv.CvTypeInfo_header_size_set
     __swig_getmethods__["header_size"] = _cv.CvTypeInfo_header_size_get
-    if _newclass:header_size = property(_cv.CvTypeInfo_header_size_get, _cv.CvTypeInfo_header_size_set)
+    if _newclass:header_size = _swig_property(_cv.CvTypeInfo_header_size_get, _cv.CvTypeInfo_header_size_set)
     __swig_setmethods__["prev"] = _cv.CvTypeInfo_prev_set
     __swig_getmethods__["prev"] = _cv.CvTypeInfo_prev_get
-    if _newclass:prev = property(_cv.CvTypeInfo_prev_get, _cv.CvTypeInfo_prev_set)
+    if _newclass:prev = _swig_property(_cv.CvTypeInfo_prev_get, _cv.CvTypeInfo_prev_set)
     __swig_setmethods__["next"] = _cv.CvTypeInfo_next_set
     __swig_getmethods__["next"] = _cv.CvTypeInfo_next_get
-    if _newclass:next = property(_cv.CvTypeInfo_next_get, _cv.CvTypeInfo_next_set)
+    if _newclass:next = _swig_property(_cv.CvTypeInfo_next_get, _cv.CvTypeInfo_next_set)
     __swig_setmethods__["type_name"] = _cv.CvTypeInfo_type_name_set
     __swig_getmethods__["type_name"] = _cv.CvTypeInfo_type_name_get
-    if _newclass:type_name = property(_cv.CvTypeInfo_type_name_get, _cv.CvTypeInfo_type_name_set)
+    if _newclass:type_name = _swig_property(_cv.CvTypeInfo_type_name_get, _cv.CvTypeInfo_type_name_set)
     __swig_setmethods__["is_instance"] = _cv.CvTypeInfo_is_instance_set
     __swig_getmethods__["is_instance"] = _cv.CvTypeInfo_is_instance_get
-    if _newclass:is_instance = property(_cv.CvTypeInfo_is_instance_get, _cv.CvTypeInfo_is_instance_set)
+    if _newclass:is_instance = _swig_property(_cv.CvTypeInfo_is_instance_get, _cv.CvTypeInfo_is_instance_set)
     __swig_setmethods__["release"] = _cv.CvTypeInfo_release_set
     __swig_getmethods__["release"] = _cv.CvTypeInfo_release_get
-    if _newclass:release = property(_cv.CvTypeInfo_release_get, _cv.CvTypeInfo_release_set)
+    if _newclass:release = _swig_property(_cv.CvTypeInfo_release_get, _cv.CvTypeInfo_release_set)
     __swig_setmethods__["read"] = _cv.CvTypeInfo_read_set
     __swig_getmethods__["read"] = _cv.CvTypeInfo_read_get
-    if _newclass:read = property(_cv.CvTypeInfo_read_get, _cv.CvTypeInfo_read_set)
+    if _newclass:read = _swig_property(_cv.CvTypeInfo_read_get, _cv.CvTypeInfo_read_set)
     __swig_setmethods__["write"] = _cv.CvTypeInfo_write_set
     __swig_getmethods__["write"] = _cv.CvTypeInfo_write_get
-    if _newclass:write = property(_cv.CvTypeInfo_write_get, _cv.CvTypeInfo_write_set)
+    if _newclass:write = _swig_property(_cv.CvTypeInfo_write_get, _cv.CvTypeInfo_write_set)
     __swig_setmethods__["clone"] = _cv.CvTypeInfo_clone_set
     __swig_getmethods__["clone"] = _cv.CvTypeInfo_clone_get
-    if _newclass:clone = property(_cv.CvTypeInfo_clone_get, _cv.CvTypeInfo_clone_set)
+    if _newclass:clone = _swig_property(_cv.CvTypeInfo_clone_get, _cv.CvTypeInfo_clone_set)
     def __init__(self, *args): 
         """__init__(self) -> CvTypeInfo"""
         this = _cv.new_CvTypeInfo(*args)
@@ -3486,19 +3490,19 @@ class CvPluginFuncInfo(_object):
     __repr__ = _swig_repr
     __swig_setmethods__["func_addr"] = _cv.CvPluginFuncInfo_func_addr_set
     __swig_getmethods__["func_addr"] = _cv.CvPluginFuncInfo_func_addr_get
-    if _newclass:func_addr = property(_cv.CvPluginFuncInfo_func_addr_get, _cv.CvPluginFuncInfo_func_addr_set)
+    if _newclass:func_addr = _swig_property(_cv.CvPluginFuncInfo_func_addr_get, _cv.CvPluginFuncInfo_func_addr_set)
     __swig_setmethods__["default_func_addr"] = _cv.CvPluginFuncInfo_default_func_addr_set
     __swig_getmethods__["default_func_addr"] = _cv.CvPluginFuncInfo_default_func_addr_get
-    if _newclass:default_func_addr = property(_cv.CvPluginFuncInfo_default_func_addr_get, _cv.CvPluginFuncInfo_default_func_addr_set)
+    if _newclass:default_func_addr = _swig_property(_cv.CvPluginFuncInfo_default_func_addr_get, _cv.CvPluginFuncInfo_default_func_addr_set)
     __swig_setmethods__["func_names"] = _cv.CvPluginFuncInfo_func_names_set
     __swig_getmethods__["func_names"] = _cv.CvPluginFuncInfo_func_names_get
-    if _newclass:func_names = property(_cv.CvPluginFuncInfo_func_names_get, _cv.CvPluginFuncInfo_func_names_set)
+    if _newclass:func_names = _swig_property(_cv.CvPluginFuncInfo_func_names_get, _cv.CvPluginFuncInfo_func_names_set)
     __swig_setmethods__["search_modules"] = _cv.CvPluginFuncInfo_search_modules_set
     __swig_getmethods__["search_modules"] = _cv.CvPluginFuncInfo_search_modules_get
-    if _newclass:search_modules = property(_cv.CvPluginFuncInfo_search_modules_get, _cv.CvPluginFuncInfo_search_modules_set)
+    if _newclass:search_modules = _swig_property(_cv.CvPluginFuncInfo_search_modules_get, _cv.CvPluginFuncInfo_search_modules_set)
     __swig_setmethods__["loaded_from"] = _cv.CvPluginFuncInfo_loaded_from_set
     __swig_getmethods__["loaded_from"] = _cv.CvPluginFuncInfo_loaded_from_get
-    if _newclass:loaded_from = property(_cv.CvPluginFuncInfo_loaded_from_get, _cv.CvPluginFuncInfo_loaded_from_set)
+    if _newclass:loaded_from = _swig_property(_cv.CvPluginFuncInfo_loaded_from_get, _cv.CvPluginFuncInfo_loaded_from_set)
     def __init__(self, *args): 
         """__init__(self) -> CvPluginFuncInfo"""
         this = _cv.new_CvPluginFuncInfo(*args)
@@ -3518,16 +3522,16 @@ class CvModuleInfo(_object):
     __repr__ = _swig_repr
     __swig_setmethods__["next"] = _cv.CvModuleInfo_next_set
     __swig_getmethods__["next"] = _cv.CvModuleInfo_next_get
-    if _newclass:next = property(_cv.CvModuleInfo_next_get, _cv.CvModuleInfo_next_set)
+    if _newclass:next = _swig_property(_cv.CvModuleInfo_next_get, _cv.CvModuleInfo_next_set)
     __swig_setmethods__["name"] = _cv.CvModuleInfo_name_set
     __swig_getmethods__["name"] = _cv.CvModuleInfo_name_get
-    if _newclass:name = property(_cv.CvModuleInfo_name_get, _cv.CvModuleInfo_name_set)
+    if _newclass:name = _swig_property(_cv.CvModuleInfo_name_get, _cv.CvModuleInfo_name_set)
     __swig_setmethods__["version"] = _cv.CvModuleInfo_version_set
     __swig_getmethods__["version"] = _cv.CvModuleInfo_version_get
-    if _newclass:version = property(_cv.CvModuleInfo_version_get, _cv.CvModuleInfo_version_set)
+    if _newclass:version = _swig_property(_cv.CvModuleInfo_version_get, _cv.CvModuleInfo_version_set)
     __swig_setmethods__["func_tab"] = _cv.CvModuleInfo_func_tab_set
     __swig_getmethods__["func_tab"] = _cv.CvModuleInfo_func_tab_get
-    if _newclass:func_tab = property(_cv.CvModuleInfo_func_tab_get, _cv.CvModuleInfo_func_tab_set)
+    if _newclass:func_tab = _swig_property(_cv.CvModuleInfo_func_tab_get, _cv.CvModuleInfo_func_tab_set)
     def __init__(self, *args): 
         """__init__(self) -> CvModuleInfo"""
         this = _cv.new_CvModuleInfo(*args)
@@ -3653,22 +3657,22 @@ class CvNArrayIterator(_object):
     __repr__ = _swig_repr
     __swig_setmethods__["count"] = _cv.CvNArrayIterator_count_set
     __swig_getmethods__["count"] = _cv.CvNArrayIterator_count_get
-    if _newclass:count = property(_cv.CvNArrayIterator_count_get, _cv.CvNArrayIterator_count_set)
+    if _newclass:count = _swig_property(_cv.CvNArrayIterator_count_get, _cv.CvNArrayIterator_count_set)
     __swig_setmethods__["dims"] = _cv.CvNArrayIterator_dims_set
     __swig_getmethods__["dims"] = _cv.CvNArrayIterator_dims_get
-    if _newclass:dims = property(_cv.CvNArrayIterator_dims_get, _cv.CvNArrayIterator_dims_set)
+    if _newclass:dims = _swig_property(_cv.CvNArrayIterator_dims_get, _cv.CvNArrayIterator_dims_set)
     __swig_setmethods__["size"] = _cv.CvNArrayIterator_size_set
     __swig_getmethods__["size"] = _cv.CvNArrayIterator_size_get
-    if _newclass:size = property(_cv.CvNArrayIterator_size_get, _cv.CvNArrayIterator_size_set)
+    if _newclass:size = _swig_property(_cv.CvNArrayIterator_size_get, _cv.CvNArrayIterator_size_set)
     __swig_setmethods__["ptr"] = _cv.CvNArrayIterator_ptr_set
     __swig_getmethods__["ptr"] = _cv.CvNArrayIterator_ptr_get
-    if _newclass:ptr = property(_cv.CvNArrayIterator_ptr_get, _cv.CvNArrayIterator_ptr_set)
+    if _newclass:ptr = _swig_property(_cv.CvNArrayIterator_ptr_get, _cv.CvNArrayIterator_ptr_set)
     __swig_setmethods__["stack"] = _cv.CvNArrayIterator_stack_set
     __swig_getmethods__["stack"] = _cv.CvNArrayIterator_stack_get
-    if _newclass:stack = property(_cv.CvNArrayIterator_stack_get, _cv.CvNArrayIterator_stack_set)
+    if _newclass:stack = _swig_property(_cv.CvNArrayIterator_stack_get, _cv.CvNArrayIterator_stack_set)
     __swig_setmethods__["hdr"] = _cv.CvNArrayIterator_hdr_set
     __swig_getmethods__["hdr"] = _cv.CvNArrayIterator_hdr_get
-    if _newclass:hdr = property(_cv.CvNArrayIterator_hdr_get, _cv.CvNArrayIterator_hdr_set)
+    if _newclass:hdr = _swig_property(_cv.CvNArrayIterator_hdr_get, _cv.CvNArrayIterator_hdr_set)
     def __init__(self, *args): 
         """__init__(self) -> CvNArrayIterator"""
         this = _cv.new_CvNArrayIterator(*args)
@@ -4445,25 +4449,25 @@ class CvGraphScanner(_object):
     __repr__ = _swig_repr
     __swig_setmethods__["vtx"] = _cv.CvGraphScanner_vtx_set
     __swig_getmethods__["vtx"] = _cv.CvGraphScanner_vtx_get
-    if _newclass:vtx = property(_cv.CvGraphScanner_vtx_get, _cv.CvGraphScanner_vtx_set)
+    if _newclass:vtx = _swig_property(_cv.CvGraphScanner_vtx_get, _cv.CvGraphScanner_vtx_set)
     __swig_setmethods__["dst"] = _cv.CvGraphScanner_dst_set
     __swig_getmethods__["dst"] = _cv.CvGraphScanner_dst_get
-    if _newclass:dst = property(_cv.CvGraphScanner_dst_get, _cv.CvGraphScanner_dst_set)
+    if _newclass:dst = _swig_property(_cv.CvGraphScanner_dst_get, _cv.CvGraphScanner_dst_set)
     __swig_setmethods__["edge"] = _cv.CvGraphScanner_edge_set
     __swig_getmethods__["edge"] = _cv.CvGraphScanner_edge_get
-    if _newclass:edge = property(_cv.CvGraphScanner_edge_get, _cv.CvGraphScanner_edge_set)
+    if _newclass:edge = _swig_property(_cv.CvGraphScanner_edge_get, _cv.CvGraphScanner_edge_set)
     __swig_setmethods__["graph"] = _cv.CvGraphScanner_graph_set
     __swig_getmethods__["graph"] = _cv.CvGraphScanner_graph_get
-    if _newclass:graph = property(_cv.CvGraphScanner_graph_get, _cv.CvGraphScanner_graph_set)
+    if _newclass:graph = _swig_property(_cv.CvGraphScanner_graph_get, _cv.CvGraphScanner_graph_set)
     __swig_setmethods__["stack"] = _cv.CvGraphScanner_stack_set
     __swig_getmethods__["stack"] = _cv.CvGraphScanner_stack_get
-    if _newclass:stack = property(_cv.CvGraphScanner_stack_get, _cv.CvGraphScanner_stack_set)
+    if _newclass:stack = _swig_property(_cv.CvGraphScanner_stack_get, _cv.CvGraphScanner_stack_set)
     __swig_setmethods__["index"] = _cv.CvGraphScanner_index_set
     __swig_getmethods__["index"] = _cv.CvGraphScanner_index_get
-    if _newclass:index = property(_cv.CvGraphScanner_index_get, _cv.CvGraphScanner_index_set)
+    if _newclass:index = _swig_property(_cv.CvGraphScanner_index_get, _cv.CvGraphScanner_index_set)
     __swig_setmethods__["mask"] = _cv.CvGraphScanner_mask_set
     __swig_getmethods__["mask"] = _cv.CvGraphScanner_mask_get
-    if _newclass:mask = property(_cv.CvGraphScanner_mask_get, _cv.CvGraphScanner_mask_set)
+    if _newclass:mask = _swig_property(_cv.CvGraphScanner_mask_get, _cv.CvGraphScanner_mask_set)
     __swig_destroy__ = _cv.delete_CvGraphScanner
     __del__ = lambda self : None;
 CvGraphScanner_swigregister = _cv.CvGraphScanner_swigregister
@@ -4559,34 +4563,34 @@ class CvFont(_object):
     __repr__ = _swig_repr
     __swig_setmethods__["font_face"] = _cv.CvFont_font_face_set
     __swig_getmethods__["font_face"] = _cv.CvFont_font_face_get
-    if _newclass:font_face = property(_cv.CvFont_font_face_get, _cv.CvFont_font_face_set)
+    if _newclass:font_face = _swig_property(_cv.CvFont_font_face_get, _cv.CvFont_font_face_set)
     __swig_setmethods__["ascii"] = _cv.CvFont_ascii_set
     __swig_getmethods__["ascii"] = _cv.CvFont_ascii_get
-    if _newclass:ascii = property(_cv.CvFont_ascii_get, _cv.CvFont_ascii_set)
+    if _newclass:ascii = _swig_property(_cv.CvFont_ascii_get, _cv.CvFont_ascii_set)
     __swig_setmethods__["greek"] = _cv.CvFont_greek_set
     __swig_getmethods__["greek"] = _cv.CvFont_greek_get
-    if _newclass:greek = property(_cv.CvFont_greek_get, _cv.CvFont_greek_set)
+    if _newclass:greek = _swig_property(_cv.CvFont_greek_get, _cv.CvFont_greek_set)
     __swig_setmethods__["cyrillic"] = _cv.CvFont_cyrillic_set
     __swig_getmethods__["cyrillic"] = _cv.CvFont_cyrillic_get
-    if _newclass:cyrillic = property(_cv.CvFont_cyrillic_get, _cv.CvFont_cyrillic_set)
+    if _newclass:cyrillic = _swig_property(_cv.CvFont_cyrillic_get, _cv.CvFont_cyrillic_set)
     __swig_setmethods__["hscale"] = _cv.CvFont_hscale_set
     __swig_getmethods__["hscale"] = _cv.CvFont_hscale_get
-    if _newclass:hscale = property(_cv.CvFont_hscale_get, _cv.CvFont_hscale_set)
+    if _newclass:hscale = _swig_property(_cv.CvFont_hscale_get, _cv.CvFont_hscale_set)
     __swig_setmethods__["vscale"] = _cv.CvFont_vscale_set
     __swig_getmethods__["vscale"] = _cv.CvFont_vscale_get
-    if _newclass:vscale = property(_cv.CvFont_vscale_get, _cv.CvFont_vscale_set)
+    if _newclass:vscale = _swig_property(_cv.CvFont_vscale_get, _cv.CvFont_vscale_set)
     __swig_setmethods__["shear"] = _cv.CvFont_shear_set
     __swig_getmethods__["shear"] = _cv.CvFont_shear_get
-    if _newclass:shear = property(_cv.CvFont_shear_get, _cv.CvFont_shear_set)
+    if _newclass:shear = _swig_property(_cv.CvFont_shear_get, _cv.CvFont_shear_set)
     __swig_setmethods__["thickness"] = _cv.CvFont_thickness_set
     __swig_getmethods__["thickness"] = _cv.CvFont_thickness_get
-    if _newclass:thickness = property(_cv.CvFont_thickness_get, _cv.CvFont_thickness_set)
+    if _newclass:thickness = _swig_property(_cv.CvFont_thickness_get, _cv.CvFont_thickness_set)
     __swig_setmethods__["dx"] = _cv.CvFont_dx_set
     __swig_getmethods__["dx"] = _cv.CvFont_dx_get
-    if _newclass:dx = property(_cv.CvFont_dx_get, _cv.CvFont_dx_set)
+    if _newclass:dx = _swig_property(_cv.CvFont_dx_get, _cv.CvFont_dx_set)
     __swig_setmethods__["line_type"] = _cv.CvFont_line_type_set
     __swig_getmethods__["line_type"] = _cv.CvFont_line_type_get
-    if _newclass:line_type = property(_cv.CvFont_line_type_get, _cv.CvFont_line_type_set)
+    if _newclass:line_type = _swig_property(_cv.CvFont_line_type_get, _cv.CvFont_line_type_set)
     def __init__(self, *args): 
         """__init__(self) -> CvFont"""
         this = _cv.new_CvFont(*args)
@@ -4648,13 +4652,13 @@ class CvTreeNodeIterator(_object):
     __repr__ = _swig_repr
     __swig_setmethods__["node"] = _cv.CvTreeNodeIterator_node_set
     __swig_getmethods__["node"] = _cv.CvTreeNodeIterator_node_get
-    if _newclass:node = property(_cv.CvTreeNodeIterator_node_get, _cv.CvTreeNodeIterator_node_set)
+    if _newclass:node = _swig_property(_cv.CvTreeNodeIterator_node_get, _cv.CvTreeNodeIterator_node_set)
     __swig_setmethods__["level"] = _cv.CvTreeNodeIterator_level_set
     __swig_getmethods__["level"] = _cv.CvTreeNodeIterator_level_get
-    if _newclass:level = property(_cv.CvTreeNodeIterator_level_get, _cv.CvTreeNodeIterator_level_set)
+    if _newclass:level = _swig_property(_cv.CvTreeNodeIterator_level_get, _cv.CvTreeNodeIterator_level_set)
     __swig_setmethods__["max_level"] = _cv.CvTreeNodeIterator_max_level_set
     __swig_getmethods__["max_level"] = _cv.CvTreeNodeIterator_max_level_get
-    if _newclass:max_level = property(_cv.CvTreeNodeIterator_max_level_get, _cv.CvTreeNodeIterator_max_level_set)
+    if _newclass:max_level = _swig_property(_cv.CvTreeNodeIterator_max_level_get, _cv.CvTreeNodeIterator_max_level_set)
     def __init__(self, *args): 
         """__init__(self) -> CvTreeNodeIterator"""
         this = _cv.new_CvTreeNodeIterator(*args)
@@ -5298,13 +5302,13 @@ class CvModule(_object):
     __del__ = lambda self : None;
     __swig_setmethods__["info"] = _cv.CvModule_info_set
     __swig_getmethods__["info"] = _cv.CvModule_info_get
-    if _newclass:info = property(_cv.CvModule_info_get, _cv.CvModule_info_set)
+    if _newclass:info = _swig_property(_cv.CvModule_info_get, _cv.CvModule_info_set)
     __swig_setmethods__["first"] = _cv.CvModule_first_set
     __swig_getmethods__["first"] = _cv.CvModule_first_get
-    if _newclass:first = property(_cv.CvModule_first_get, _cv.CvModule_first_set)
+    if _newclass:first = _swig_property(_cv.CvModule_first_get, _cv.CvModule_first_set)
     __swig_setmethods__["last"] = _cv.CvModule_last_set
     __swig_getmethods__["last"] = _cv.CvModule_last_get
-    if _newclass:last = property(_cv.CvModule_last_get, _cv.CvModule_last_set)
+    if _newclass:last = _swig_property(_cv.CvModule_last_get, _cv.CvModule_last_set)
 CvModule_swigregister = _cv.CvModule_swigregister
 CvModule_swigregister(CvModule)
 
@@ -5334,13 +5338,13 @@ class CvType(_object):
     __del__ = lambda self : None;
     __swig_setmethods__["info"] = _cv.CvType_info_set
     __swig_getmethods__["info"] = _cv.CvType_info_get
-    if _newclass:info = property(_cv.CvType_info_get, _cv.CvType_info_set)
+    if _newclass:info = _swig_property(_cv.CvType_info_get, _cv.CvType_info_set)
     __swig_setmethods__["first"] = _cv.CvType_first_set
     __swig_getmethods__["first"] = _cv.CvType_first_get
-    if _newclass:first = property(_cv.CvType_first_get, _cv.CvType_first_set)
+    if _newclass:first = _swig_property(_cv.CvType_first_get, _cv.CvType_first_set)
     __swig_setmethods__["last"] = _cv.CvType_last_set
     __swig_getmethods__["last"] = _cv.CvType_last_get
-    if _newclass:last = property(_cv.CvType_last_get, _cv.CvType_last_set)
+    if _newclass:last = _swig_property(_cv.CvType_last_get, _cv.CvType_last_set)
 CvType_swigregister = _cv.CvType_swigregister
 CvType_swigregister(CvType)
 
@@ -5353,58 +5357,58 @@ class CvMoments(_object):
     __repr__ = _swig_repr
     __swig_setmethods__["m00"] = _cv.CvMoments_m00_set
     __swig_getmethods__["m00"] = _cv.CvMoments_m00_get
-    if _newclass:m00 = property(_cv.CvMoments_m00_get, _cv.CvMoments_m00_set)
+    if _newclass:m00 = _swig_property(_cv.CvMoments_m00_get, _cv.CvMoments_m00_set)
     __swig_setmethods__["m10"] = _cv.CvMoments_m10_set
     __swig_getmethods__["m10"] = _cv.CvMoments_m10_get
-    if _newclass:m10 = property(_cv.CvMoments_m10_get, _cv.CvMoments_m10_set)
+    if _newclass:m10 = _swig_property(_cv.CvMoments_m10_get, _cv.CvMoments_m10_set)
     __swig_setmethods__["m01"] = _cv.CvMoments_m01_set
     __swig_getmethods__["m01"] = _cv.CvMoments_m01_get
-    if _newclass:m01 = property(_cv.CvMoments_m01_get, _cv.CvMoments_m01_set)
+    if _newclass:m01 = _swig_property(_cv.CvMoments_m01_get, _cv.CvMoments_m01_set)
     __swig_setmethods__["m20"] = _cv.CvMoments_m20_set
     __swig_getmethods__["m20"] = _cv.CvMoments_m20_get
-    if _newclass:m20 = property(_cv.CvMoments_m20_get, _cv.CvMoments_m20_set)
+    if _newclass:m20 = _swig_property(_cv.CvMoments_m20_get, _cv.CvMoments_m20_set)
     __swig_setmethods__["m11"] = _cv.CvMoments_m11_set
     __swig_getmethods__["m11"] = _cv.CvMoments_m11_get
-    if _newclass:m11 = property(_cv.CvMoments_m11_get, _cv.CvMoments_m11_set)
+    if _newclass:m11 = _swig_property(_cv.CvMoments_m11_get, _cv.CvMoments_m11_set)
     __swig_setmethods__["m02"] = _cv.CvMoments_m02_set
     __swig_getmethods__["m02"] = _cv.CvMoments_m02_get
-    if _newclass:m02 = property(_cv.CvMoments_m02_get, _cv.CvMoments_m02_set)
+    if _newclass:m02 = _swig_property(_cv.CvMoments_m02_get, _cv.CvMoments_m02_set)
     __swig_setmethods__["m30"] = _cv.CvMoments_m30_set
     __swig_getmethods__["m30"] = _cv.CvMoments_m30_get
-    if _newclass:m30 = property(_cv.CvMoments_m30_get, _cv.CvMoments_m30_set)
+    if _newclass:m30 = _swig_property(_cv.CvMoments_m30_get, _cv.CvMoments_m30_set)
     __swig_setmethods__["m21"] = _cv.CvMoments_m21_set
     __swig_getmethods__["m21"] = _cv.CvMoments_m21_get
-    if _newclass:m21 = property(_cv.CvMoments_m21_get, _cv.CvMoments_m21_set)
+    if _newclass:m21 = _swig_property(_cv.CvMoments_m21_get, _cv.CvMoments_m21_set)
     __swig_setmethods__["m12"] = _cv.CvMoments_m12_set
     __swig_getmethods__["m12"] = _cv.CvMoments_m12_get
-    if _newclass:m12 = property(_cv.CvMoments_m12_get, _cv.CvMoments_m12_set)
+    if _newclass:m12 = _swig_property(_cv.CvMoments_m12_get, _cv.CvMoments_m12_set)
     __swig_setmethods__["m03"] = _cv.CvMoments_m03_set
     __swig_getmethods__["m03"] = _cv.CvMoments_m03_get
-    if _newclass:m03 = property(_cv.CvMoments_m03_get, _cv.CvMoments_m03_set)
+    if _newclass:m03 = _swig_property(_cv.CvMoments_m03_get, _cv.CvMoments_m03_set)
     __swig_setmethods__["mu20"] = _cv.CvMoments_mu20_set
     __swig_getmethods__["mu20"] = _cv.CvMoments_mu20_get
-    if _newclass:mu20 = property(_cv.CvMoments_mu20_get, _cv.CvMoments_mu20_set)
+    if _newclass:mu20 = _swig_property(_cv.CvMoments_mu20_get, _cv.CvMoments_mu20_set)
     __swig_setmethods__["mu11"] = _cv.CvMoments_mu11_set
     __swig_getmethods__["mu11"] = _cv.CvMoments_mu11_get
-    if _newclass:mu11 = property(_cv.CvMoments_mu11_get, _cv.CvMoments_mu11_set)
+    if _newclass:mu11 = _swig_property(_cv.CvMoments_mu11_get, _cv.CvMoments_mu11_set)
     __swig_setmethods__["mu02"] = _cv.CvMoments_mu02_set
     __swig_getmethods__["mu02"] = _cv.CvMoments_mu02_get
-    if _newclass:mu02 = property(_cv.CvMoments_mu02_get, _cv.CvMoments_mu02_set)
+    if _newclass:mu02 = _swig_property(_cv.CvMoments_mu02_get, _cv.CvMoments_mu02_set)
     __swig_setmethods__["mu30"] = _cv.CvMoments_mu30_set
     __swig_getmethods__["mu30"] = _cv.CvMoments_mu30_get
-    if _newclass:mu30 = property(_cv.CvMoments_mu30_get, _cv.CvMoments_mu30_set)
+    if _newclass:mu30 = _swig_property(_cv.CvMoments_mu30_get, _cv.CvMoments_mu30_set)
     __swig_setmethods__["mu21"] = _cv.CvMoments_mu21_set
     __swig_getmethods__["mu21"] = _cv.CvMoments_mu21_get
-    if _newclass:mu21 = property(_cv.CvMoments_mu21_get, _cv.CvMoments_mu21_set)
+    if _newclass:mu21 = _swig_property(_cv.CvMoments_mu21_get, _cv.CvMoments_mu21_set)
     __swig_setmethods__["mu12"] = _cv.CvMoments_mu12_set
     __swig_getmethods__["mu12"] = _cv.CvMoments_mu12_get
-    if _newclass:mu12 = property(_cv.CvMoments_mu12_get, _cv.CvMoments_mu12_set)
+    if _newclass:mu12 = _swig_property(_cv.CvMoments_mu12_get, _cv.CvMoments_mu12_set)
     __swig_setmethods__["mu03"] = _cv.CvMoments_mu03_set
     __swig_getmethods__["mu03"] = _cv.CvMoments_mu03_get
-    if _newclass:mu03 = property(_cv.CvMoments_mu03_get, _cv.CvMoments_mu03_set)
+    if _newclass:mu03 = _swig_property(_cv.CvMoments_mu03_get, _cv.CvMoments_mu03_set)
     __swig_setmethods__["inv_sqrt_m00"] = _cv.CvMoments_inv_sqrt_m00_set
     __swig_getmethods__["inv_sqrt_m00"] = _cv.CvMoments_inv_sqrt_m00_get
-    if _newclass:inv_sqrt_m00 = property(_cv.CvMoments_inv_sqrt_m00_get, _cv.CvMoments_inv_sqrt_m00_set)
+    if _newclass:inv_sqrt_m00 = _swig_property(_cv.CvMoments_inv_sqrt_m00_get, _cv.CvMoments_inv_sqrt_m00_set)
     def __init__(self, *args): 
         """__init__(self) -> CvMoments"""
         this = _cv.new_CvMoments(*args)
@@ -5424,25 +5428,25 @@ class CvHuMoments(_object):
     __repr__ = _swig_repr
     __swig_setmethods__["hu1"] = _cv.CvHuMoments_hu1_set
     __swig_getmethods__["hu1"] = _cv.CvHuMoments_hu1_get
-    if _newclass:hu1 = property(_cv.CvHuMoments_hu1_get, _cv.CvHuMoments_hu1_set)
+    if _newclass:hu1 = _swig_property(_cv.CvHuMoments_hu1_get, _cv.CvHuMoments_hu1_set)
     __swig_setmethods__["hu2"] = _cv.CvHuMoments_hu2_set
     __swig_getmethods__["hu2"] = _cv.CvHuMoments_hu2_get
-    if _newclass:hu2 = property(_cv.CvHuMoments_hu2_get, _cv.CvHuMoments_hu2_set)
+    if _newclass:hu2 = _swig_property(_cv.CvHuMoments_hu2_get, _cv.CvHuMoments_hu2_set)
     __swig_setmethods__["hu3"] = _cv.CvHuMoments_hu3_set
     __swig_getmethods__["hu3"] = _cv.CvHuMoments_hu3_get
-    if _newclass:hu3 = property(_cv.CvHuMoments_hu3_get, _cv.CvHuMoments_hu3_set)
+    if _newclass:hu3 = _swig_property(_cv.CvHuMoments_hu3_get, _cv.CvHuMoments_hu3_set)
     __swig_setmethods__["hu4"] = _cv.CvHuMoments_hu4_set
     __swig_getmethods__["hu4"] = _cv.CvHuMoments_hu4_get
-    if _newclass:hu4 = property(_cv.CvHuMoments_hu4_get, _cv.CvHuMoments_hu4_set)
+    if _newclass:hu4 = _swig_property(_cv.CvHuMoments_hu4_get, _cv.CvHuMoments_hu4_set)
     __swig_setmethods__["hu5"] = _cv.CvHuMoments_hu5_set
     __swig_getmethods__["hu5"] = _cv.CvHuMoments_hu5_get
-    if _newclass:hu5 = property(_cv.CvHuMoments_hu5_get, _cv.CvHuMoments_hu5_set)
+    if _newclass:hu5 = _swig_property(_cv.CvHuMoments_hu5_get, _cv.CvHuMoments_hu5_set)
     __swig_setmethods__["hu6"] = _cv.CvHuMoments_hu6_set
     __swig_getmethods__["hu6"] = _cv.CvHuMoments_hu6_get
-    if _newclass:hu6 = property(_cv.CvHuMoments_hu6_get, _cv.CvHuMoments_hu6_set)
+    if _newclass:hu6 = _swig_property(_cv.CvHuMoments_hu6_get, _cv.CvHuMoments_hu6_set)
     __swig_setmethods__["hu7"] = _cv.CvHuMoments_hu7_set
     __swig_getmethods__["hu7"] = _cv.CvHuMoments_hu7_get
-    if _newclass:hu7 = property(_cv.CvHuMoments_hu7_get, _cv.CvHuMoments_hu7_set)
+    if _newclass:hu7 = _swig_property(_cv.CvHuMoments_hu7_get, _cv.CvHuMoments_hu7_set)
     def __init__(self, *args): 
         """__init__(self) -> CvHuMoments"""
         this = _cv.new_CvHuMoments(*args)
@@ -5462,16 +5466,16 @@ class CvConnectedComp(_object):
     __repr__ = _swig_repr
     __swig_setmethods__["area"] = _cv.CvConnectedComp_area_set
     __swig_getmethods__["area"] = _cv.CvConnectedComp_area_get
-    if _newclass:area = property(_cv.CvConnectedComp_area_get, _cv.CvConnectedComp_area_set)
+    if _newclass:area = _swig_property(_cv.CvConnectedComp_area_get, _cv.CvConnectedComp_area_set)
     __swig_setmethods__["value"] = _cv.CvConnectedComp_value_set
     __swig_getmethods__["value"] = _cv.CvConnectedComp_value_get
-    if _newclass:value = property(_cv.CvConnectedComp_value_get, _cv.CvConnectedComp_value_set)
+    if _newclass:value = _swig_property(_cv.CvConnectedComp_value_get, _cv.CvConnectedComp_value_set)
     __swig_setmethods__["rect"] = _cv.CvConnectedComp_rect_set
     __swig_getmethods__["rect"] = _cv.CvConnectedComp_rect_get
-    if _newclass:rect = property(_cv.CvConnectedComp_rect_get, _cv.CvConnectedComp_rect_set)
+    if _newclass:rect = _swig_property(_cv.CvConnectedComp_rect_get, _cv.CvConnectedComp_rect_set)
     __swig_setmethods__["contour"] = _cv.CvConnectedComp_contour_set
     __swig_getmethods__["contour"] = _cv.CvConnectedComp_contour_get
-    if _newclass:contour = property(_cv.CvConnectedComp_contour_get, _cv.CvConnectedComp_contour_set)
+    if _newclass:contour = _swig_property(_cv.CvConnectedComp_contour_get, _cv.CvConnectedComp_contour_set)
     def __init__(self, *args): 
         """__init__(self) -> CvConnectedComp"""
         this = _cv.new_CvConnectedComp(*args)
@@ -5491,37 +5495,37 @@ class CvChainPtReader(_object):
     __repr__ = _swig_repr
     __swig_setmethods__["header_size"] = _cv.CvChainPtReader_header_size_set
     __swig_getmethods__["header_size"] = _cv.CvChainPtReader_header_size_get
-    if _newclass:header_size = property(_cv.CvChainPtReader_header_size_get, _cv.CvChainPtReader_header_size_set)
+    if _newclass:header_size = _swig_property(_cv.CvChainPtReader_header_size_get, _cv.CvChainPtReader_header_size_set)
     __swig_setmethods__["seq"] = _cv.CvChainPtReader_seq_set
     __swig_getmethods__["seq"] = _cv.CvChainPtReader_seq_get
-    if _newclass:seq = property(_cv.CvChainPtReader_seq_get, _cv.CvChainPtReader_seq_set)
+    if _newclass:seq = _swig_property(_cv.CvChainPtReader_seq_get, _cv.CvChainPtReader_seq_set)
     __swig_setmethods__["block"] = _cv.CvChainPtReader_block_set
     __swig_getmethods__["block"] = _cv.CvChainPtReader_block_get
-    if _newclass:block = property(_cv.CvChainPtReader_block_get, _cv.CvChainPtReader_block_set)
+    if _newclass:block = _swig_property(_cv.CvChainPtReader_block_get, _cv.CvChainPtReader_block_set)
     __swig_setmethods__["ptr"] = _cv.CvChainPtReader_ptr_set
     __swig_getmethods__["ptr"] = _cv.CvChainPtReader_ptr_get
-    if _newclass:ptr = property(_cv.CvChainPtReader_ptr_get, _cv.CvChainPtReader_ptr_set)
+    if _newclass:ptr = _swig_property(_cv.CvChainPtReader_ptr_get, _cv.CvChainPtReader_ptr_set)
     __swig_setmethods__["block_min"] = _cv.CvChainPtReader_block_min_set
     __swig_getmethods__["block_min"] = _cv.CvChainPtReader_block_min_get
-    if _newclass:block_min = property(_cv.CvChainPtReader_block_min_get, _cv.CvChainPtReader_block_min_set)
+    if _newclass:block_min = _swig_property(_cv.CvChainPtReader_block_min_get, _cv.CvChainPtReader_block_min_set)
     __swig_setmethods__["block_max"] = _cv.CvChainPtReader_block_max_set
     __swig_getmethods__["block_max"] = _cv.CvChainPtReader_block_max_get
-    if _newclass:block_max = property(_cv.CvChainPtReader_block_max_get, _cv.CvChainPtReader_block_max_set)
+    if _newclass:block_max = _swig_property(_cv.CvChainPtReader_block_max_get, _cv.CvChainPtReader_block_max_set)
     __swig_setmethods__["delta_index"] = _cv.CvChainPtReader_delta_index_set
     __swig_getmethods__["delta_index"] = _cv.CvChainPtReader_delta_index_get
-    if _newclass:delta_index = property(_cv.CvChainPtReader_delta_index_get, _cv.CvChainPtReader_delta_index_set)
+    if _newclass:delta_index = _swig_property(_cv.CvChainPtReader_delta_index_get, _cv.CvChainPtReader_delta_index_set)
     __swig_setmethods__["prev_elem"] = _cv.CvChainPtReader_prev_elem_set
     __swig_getmethods__["prev_elem"] = _cv.CvChainPtReader_prev_elem_get
-    if _newclass:prev_elem = property(_cv.CvChainPtReader_prev_elem_get, _cv.CvChainPtReader_prev_elem_set)
+    if _newclass:prev_elem = _swig_property(_cv.CvChainPtReader_prev_elem_get, _cv.CvChainPtReader_prev_elem_set)
     __swig_setmethods__["code"] = _cv.CvChainPtReader_code_set
     __swig_getmethods__["code"] = _cv.CvChainPtReader_code_get
-    if _newclass:code = property(_cv.CvChainPtReader_code_get, _cv.CvChainPtReader_code_set)
+    if _newclass:code = _swig_property(_cv.CvChainPtReader_code_get, _cv.CvChainPtReader_code_set)
     __swig_setmethods__["pt"] = _cv.CvChainPtReader_pt_set
     __swig_getmethods__["pt"] = _cv.CvChainPtReader_pt_get
-    if _newclass:pt = property(_cv.CvChainPtReader_pt_get, _cv.CvChainPtReader_pt_set)
+    if _newclass:pt = _swig_property(_cv.CvChainPtReader_pt_get, _cv.CvChainPtReader_pt_set)
     __swig_setmethods__["deltas"] = _cv.CvChainPtReader_deltas_set
     __swig_getmethods__["deltas"] = _cv.CvChainPtReader_deltas_get
-    if _newclass:deltas = property(_cv.CvChainPtReader_deltas_get, _cv.CvChainPtReader_deltas_set)
+    if _newclass:deltas = _swig_property(_cv.CvChainPtReader_deltas_get, _cv.CvChainPtReader_deltas_set)
     def __init__(self, *args): 
         """__init__(self) -> CvChainPtReader"""
         this = _cv.new_CvChainPtReader(*args)
@@ -5541,52 +5545,52 @@ class CvContourTree(_object):
     __repr__ = _swig_repr
     __swig_setmethods__["flags"] = _cv.CvContourTree_flags_set
     __swig_getmethods__["flags"] = _cv.CvContourTree_flags_get
-    if _newclass:flags = property(_cv.CvContourTree_flags_get, _cv.CvContourTree_flags_set)
+    if _newclass:flags = _swig_property(_cv.CvContourTree_flags_get, _cv.CvContourTree_flags_set)
     __swig_setmethods__["header_size"] = _cv.CvContourTree_header_size_set
     __swig_getmethods__["header_size"] = _cv.CvContourTree_header_size_get
-    if _newclass:header_size = property(_cv.CvContourTree_header_size_get, _cv.CvContourTree_header_size_set)
+    if _newclass:header_size = _swig_property(_cv.CvContourTree_header_size_get, _cv.CvContourTree_header_size_set)
     __swig_setmethods__["h_prev"] = _cv.CvContourTree_h_prev_set
     __swig_getmethods__["h_prev"] = _cv.CvContourTree_h_prev_get
-    if _newclass:h_prev = property(_cv.CvContourTree_h_prev_get, _cv.CvContourTree_h_prev_set)
+    if _newclass:h_prev = _swig_property(_cv.CvContourTree_h_prev_get, _cv.CvContourTree_h_prev_set)
     __swig_setmethods__["h_next"] = _cv.CvContourTree_h_next_set
     __swig_getmethods__["h_next"] = _cv.CvContourTree_h_next_get
-    if _newclass:h_next = property(_cv.CvContourTree_h_next_get, _cv.CvContourTree_h_next_set)
+    if _newclass:h_next = _swig_property(_cv.CvContourTree_h_next_get, _cv.CvContourTree_h_next_set)
     __swig_setmethods__["v_prev"] = _cv.CvContourTree_v_prev_set
     __swig_getmethods__["v_prev"] = _cv.CvContourTree_v_prev_get
-    if _newclass:v_prev = property(_cv.CvContourTree_v_prev_get, _cv.CvContourTree_v_prev_set)
+    if _newclass:v_prev = _swig_property(_cv.CvContourTree_v_prev_get, _cv.CvContourTree_v_prev_set)
     __swig_setmethods__["v_next"] = _cv.CvContourTree_v_next_set
     __swig_getmethods__["v_next"] = _cv.CvContourTree_v_next_get
-    if _newclass:v_next = property(_cv.CvContourTree_v_next_get, _cv.CvContourTree_v_next_set)
+    if _newclass:v_next = _swig_property(_cv.CvContourTree_v_next_get, _cv.CvContourTree_v_next_set)
     __swig_setmethods__["total"] = _cv.CvContourTree_total_set
     __swig_getmethods__["total"] = _cv.CvContourTree_total_get
-    if _newclass:total = property(_cv.CvContourTree_total_get, _cv.CvContourTree_total_set)
+    if _newclass:total = _swig_property(_cv.CvContourTree_total_get, _cv.CvContourTree_total_set)
     __swig_setmethods__["elem_size"] = _cv.CvContourTree_elem_size_set
     __swig_getmethods__["elem_size"] = _cv.CvContourTree_elem_size_get
-    if _newclass:elem_size = property(_cv.CvContourTree_elem_size_get, _cv.CvContourTree_elem_size_set)
+    if _newclass:elem_size = _swig_property(_cv.CvContourTree_elem_size_get, _cv.CvContourTree_elem_size_set)
     __swig_setmethods__["block_max"] = _cv.CvContourTree_block_max_set
     __swig_getmethods__["block_max"] = _cv.CvContourTree_block_max_get
-    if _newclass:block_max = property(_cv.CvContourTree_block_max_get, _cv.CvContourTree_block_max_set)
+    if _newclass:block_max = _swig_property(_cv.CvContourTree_block_max_get, _cv.CvContourTree_block_max_set)
     __swig_setmethods__["ptr"] = _cv.CvContourTree_ptr_set
     __swig_getmethods__["ptr"] = _cv.CvContourTree_ptr_get
-    if _newclass:ptr = property(_cv.CvContourTree_ptr_get, _cv.CvContourTree_ptr_set)
+    if _newclass:ptr = _swig_property(_cv.CvContourTree_ptr_get, _cv.CvContourTree_ptr_set)
     __swig_setmethods__["delta_elems"] = _cv.CvContourTree_delta_elems_set
     __swig_getmethods__["delta_elems"] = _cv.CvContourTree_delta_elems_get
-    if _newclass:delta_elems = property(_cv.CvContourTree_delta_elems_get, _cv.CvContourTree_delta_elems_set)
+    if _newclass:delta_elems = _swig_property(_cv.CvContourTree_delta_elems_get, _cv.CvContourTree_delta_elems_set)
     __swig_setmethods__["storage"] = _cv.CvContourTree_storage_set
     __swig_getmethods__["storage"] = _cv.CvContourTree_storage_get
-    if _newclass:storage = property(_cv.CvContourTree_storage_get, _cv.CvContourTree_storage_set)
+    if _newclass:storage = _swig_property(_cv.CvContourTree_storage_get, _cv.CvContourTree_storage_set)
     __swig_setmethods__["free_blocks"] = _cv.CvContourTree_free_blocks_set
     __swig_getmethods__["free_blocks"] = _cv.CvContourTree_free_blocks_get
-    if _newclass:free_blocks = property(_cv.CvContourTree_free_blocks_get, _cv.CvContourTree_free_blocks_set)
+    if _newclass:free_blocks = _swig_property(_cv.CvContourTree_free_blocks_get, _cv.CvContourTree_free_blocks_set)
     __swig_setmethods__["first"] = _cv.CvContourTree_first_set
     __swig_getmethods__["first"] = _cv.CvContourTree_first_get
-    if _newclass:first = property(_cv.CvContourTree_first_get, _cv.CvContourTree_first_set)
+    if _newclass:first = _swig_property(_cv.CvContourTree_first_get, _cv.CvContourTree_first_set)
     __swig_setmethods__["p1"] = _cv.CvContourTree_p1_set
     __swig_getmethods__["p1"] = _cv.CvContourTree_p1_get
-    if _newclass:p1 = property(_cv.CvContourTree_p1_get, _cv.CvContourTree_p1_set)
+    if _newclass:p1 = _swig_property(_cv.CvContourTree_p1_get, _cv.CvContourTree_p1_set)
     __swig_setmethods__["p2"] = _cv.CvContourTree_p2_set
     __swig_getmethods__["p2"] = _cv.CvContourTree_p2_get
-    if _newclass:p2 = property(_cv.CvContourTree_p2_get, _cv.CvContourTree_p2_set)
+    if _newclass:p2 = _swig_property(_cv.CvContourTree_p2_get, _cv.CvContourTree_p2_set)
     def __init__(self, *args): 
         """__init__(self) -> CvContourTree"""
         this = _cv.new_CvContourTree(*args)
@@ -5606,16 +5610,16 @@ class CvConvexityDefect(_object):
     __repr__ = _swig_repr
     __swig_setmethods__["start"] = _cv.CvConvexityDefect_start_set
     __swig_getmethods__["start"] = _cv.CvConvexityDefect_start_get
-    if _newclass:start = property(_cv.CvConvexityDefect_start_get, _cv.CvConvexityDefect_start_set)
+    if _newclass:start = _swig_property(_cv.CvConvexityDefect_start_get, _cv.CvConvexityDefect_start_set)
     __swig_setmethods__["end"] = _cv.CvConvexityDefect_end_set
     __swig_getmethods__["end"] = _cv.CvConvexityDefect_end_get
-    if _newclass:end = property(_cv.CvConvexityDefect_end_get, _cv.CvConvexityDefect_end_set)
+    if _newclass:end = _swig_property(_cv.CvConvexityDefect_end_get, _cv.CvConvexityDefect_end_set)
     __swig_setmethods__["depth_point"] = _cv.CvConvexityDefect_depth_point_set
     __swig_getmethods__["depth_point"] = _cv.CvConvexityDefect_depth_point_get
-    if _newclass:depth_point = property(_cv.CvConvexityDefect_depth_point_get, _cv.CvConvexityDefect_depth_point_set)
+    if _newclass:depth_point = _swig_property(_cv.CvConvexityDefect_depth_point_get, _cv.CvConvexityDefect_depth_point_set)
     __swig_setmethods__["depth"] = _cv.CvConvexityDefect_depth_set
     __swig_getmethods__["depth"] = _cv.CvConvexityDefect_depth_get
-    if _newclass:depth = property(_cv.CvConvexityDefect_depth_get, _cv.CvConvexityDefect_depth_set)
+    if _newclass:depth = _swig_property(_cv.CvConvexityDefect_depth_get, _cv.CvConvexityDefect_depth_set)
     def __init__(self, *args): 
         """__init__(self) -> CvConvexityDefect"""
         this = _cv.new_CvConvexityDefect(*args)
@@ -5635,13 +5639,13 @@ class CvQuadEdge2D(_object):
     __repr__ = _swig_repr
     __swig_setmethods__["flags"] = _cv.CvQuadEdge2D_flags_set
     __swig_getmethods__["flags"] = _cv.CvQuadEdge2D_flags_get
-    if _newclass:flags = property(_cv.CvQuadEdge2D_flags_get, _cv.CvQuadEdge2D_flags_set)
+    if _newclass:flags = _swig_property(_cv.CvQuadEdge2D_flags_get, _cv.CvQuadEdge2D_flags_set)
     __swig_setmethods__["pt"] = _cv.CvQuadEdge2D_pt_set
     __swig_getmethods__["pt"] = _cv.CvQuadEdge2D_pt_get
-    if _newclass:pt = property(_cv.CvQuadEdge2D_pt_get, _cv.CvQuadEdge2D_pt_set)
+    if _newclass:pt = _swig_property(_cv.CvQuadEdge2D_pt_get, _cv.CvQuadEdge2D_pt_set)
     __swig_setmethods__["next"] = _cv.CvQuadEdge2D_next_set
     __swig_getmethods__["next"] = _cv.CvQuadEdge2D_next_get
-    if _newclass:next = property(_cv.CvQuadEdge2D_next_get, _cv.CvQuadEdge2D_next_set)
+    if _newclass:next = _swig_property(_cv.CvQuadEdge2D_next_get, _cv.CvQuadEdge2D_next_set)
     def __init__(self, *args): 
         """__init__(self) -> CvQuadEdge2D"""
         this = _cv.new_CvQuadEdge2D(*args)
@@ -5661,13 +5665,13 @@ class CvSubdiv2DPoint(_object):
     __repr__ = _swig_repr
     __swig_setmethods__["flags"] = _cv.CvSubdiv2DPoint_flags_set
     __swig_getmethods__["flags"] = _cv.CvSubdiv2DPoint_flags_get
-    if _newclass:flags = property(_cv.CvSubdiv2DPoint_flags_get, _cv.CvSubdiv2DPoint_flags_set)
+    if _newclass:flags = _swig_property(_cv.CvSubdiv2DPoint_flags_get, _cv.CvSubdiv2DPoint_flags_set)
     __swig_setmethods__["first"] = _cv.CvSubdiv2DPoint_first_set
     __swig_getmethods__["first"] = _cv.CvSubdiv2DPoint_first_get
-    if _newclass:first = property(_cv.CvSubdiv2DPoint_first_get, _cv.CvSubdiv2DPoint_first_set)
+    if _newclass:first = _swig_property(_cv.CvSubdiv2DPoint_first_get, _cv.CvSubdiv2DPoint_first_set)
     __swig_setmethods__["pt"] = _cv.CvSubdiv2DPoint_pt_set
     __swig_getmethods__["pt"] = _cv.CvSubdiv2DPoint_pt_get
-    if _newclass:pt = property(_cv.CvSubdiv2DPoint_pt_get, _cv.CvSubdiv2DPoint_pt_set)
+    if _newclass:pt = _swig_property(_cv.CvSubdiv2DPoint_pt_get, _cv.CvSubdiv2DPoint_pt_set)
     def __init__(self, *args): 
         """__init__(self) -> CvSubdiv2DPoint"""
         this = _cv.new_CvSubdiv2DPoint(*args)
@@ -5687,70 +5691,70 @@ class CvSubdiv2D(_object):
     __repr__ = _swig_repr
     __swig_setmethods__["flags"] = _cv.CvSubdiv2D_flags_set
     __swig_getmethods__["flags"] = _cv.CvSubdiv2D_flags_get
-    if _newclass:flags = property(_cv.CvSubdiv2D_flags_get, _cv.CvSubdiv2D_flags_set)
+    if _newclass:flags = _swig_property(_cv.CvSubdiv2D_flags_get, _cv.CvSubdiv2D_flags_set)
     __swig_setmethods__["header_size"] = _cv.CvSubdiv2D_header_size_set
     __swig_getmethods__["header_size"] = _cv.CvSubdiv2D_header_size_get
-    if _newclass:header_size = property(_cv.CvSubdiv2D_header_size_get, _cv.CvSubdiv2D_header_size_set)
+    if _newclass:header_size = _swig_property(_cv.CvSubdiv2D_header_size_get, _cv.CvSubdiv2D_header_size_set)
     __swig_setmethods__["h_prev"] = _cv.CvSubdiv2D_h_prev_set
     __swig_getmethods__["h_prev"] = _cv.CvSubdiv2D_h_prev_get
-    if _newclass:h_prev = property(_cv.CvSubdiv2D_h_prev_get, _cv.CvSubdiv2D_h_prev_set)
+    if _newclass:h_prev = _swig_property(_cv.CvSubdiv2D_h_prev_get, _cv.CvSubdiv2D_h_prev_set)
     __swig_setmethods__["h_next"] = _cv.CvSubdiv2D_h_next_set
     __swig_getmethods__["h_next"] = _cv.CvSubdiv2D_h_next_get
-    if _newclass:h_next = property(_cv.CvSubdiv2D_h_next_get, _cv.CvSubdiv2D_h_next_set)
+    if _newclass:h_next = _swig_property(_cv.CvSubdiv2D_h_next_get, _cv.CvSubdiv2D_h_next_set)
     __swig_setmethods__["v_prev"] = _cv.CvSubdiv2D_v_prev_set
     __swig_getmethods__["v_prev"] = _cv.CvSubdiv2D_v_prev_get
-    if _newclass:v_prev = property(_cv.CvSubdiv2D_v_prev_get, _cv.CvSubdiv2D_v_prev_set)
+    if _newclass:v_prev = _swig_property(_cv.CvSubdiv2D_v_prev_get, _cv.CvSubdiv2D_v_prev_set)
     __swig_setmethods__["v_next"] = _cv.CvSubdiv2D_v_next_set
     __swig_getmethods__["v_next"] = _cv.CvSubdiv2D_v_next_get
-    if _newclass:v_next = property(_cv.CvSubdiv2D_v_next_get, _cv.CvSubdiv2D_v_next_set)
+    if _newclass:v_next = _swig_property(_cv.CvSubdiv2D_v_next_get, _cv.CvSubdiv2D_v_next_set)
     __swig_setmethods__["total"] = _cv.CvSubdiv2D_total_set
     __swig_getmethods__["total"] = _cv.CvSubdiv2D_total_get
-    if _newclass:total = property(_cv.CvSubdiv2D_total_get, _cv.CvSubdiv2D_total_set)
+    if _newclass:total = _swig_property(_cv.CvSubdiv2D_total_get, _cv.CvSubdiv2D_total_set)
     __swig_setmethods__["elem_size"] = _cv.CvSubdiv2D_elem_size_set
     __swig_getmethods__["elem_size"] = _cv.CvSubdiv2D_elem_size_get
-    if _newclass:elem_size = property(_cv.CvSubdiv2D_elem_size_get, _cv.CvSubdiv2D_elem_size_set)
+    if _newclass:elem_size = _swig_property(_cv.CvSubdiv2D_elem_size_get, _cv.CvSubdiv2D_elem_size_set)
     __swig_setmethods__["block_max"] = _cv.CvSubdiv2D_block_max_set
     __swig_getmethods__["block_max"] = _cv.CvSubdiv2D_block_max_get
-    if _newclass:block_max = property(_cv.CvSubdiv2D_block_max_get, _cv.CvSubdiv2D_block_max_set)
+    if _newclass:block_max = _swig_property(_cv.CvSubdiv2D_block_max_get, _cv.CvSubdiv2D_block_max_set)
     __swig_setmethods__["ptr"] = _cv.CvSubdiv2D_ptr_set
     __swig_getmethods__["ptr"] = _cv.CvSubdiv2D_ptr_get
-    if _newclass:ptr = property(_cv.CvSubdiv2D_ptr_get, _cv.CvSubdiv2D_ptr_set)
+    if _newclass:ptr = _swig_property(_cv.CvSubdiv2D_ptr_get, _cv.CvSubdiv2D_ptr_set)
     __swig_setmethods__["delta_elems"] = _cv.CvSubdiv2D_delta_elems_set
     __swig_getmethods__["delta_elems"] = _cv.CvSubdiv2D_delta_elems_get
-    if _newclass:delta_elems = property(_cv.CvSubdiv2D_delta_elems_get, _cv.CvSubdiv2D_delta_elems_set)
+    if _newclass:delta_elems = _swig_property(_cv.CvSubdiv2D_delta_elems_get, _cv.CvSubdiv2D_delta_elems_set)
     __swig_setmethods__["storage"] = _cv.CvSubdiv2D_storage_set
     __swig_getmethods__["storage"] = _cv.CvSubdiv2D_storage_get
-    if _newclass:storage = property(_cv.CvSubdiv2D_storage_get, _cv.CvSubdiv2D_storage_set)
+    if _newclass:storage = _swig_property(_cv.CvSubdiv2D_storage_get, _cv.CvSubdiv2D_storage_set)
     __swig_setmethods__["free_blocks"] = _cv.CvSubdiv2D_free_blocks_set
     __swig_getmethods__["free_blocks"] = _cv.CvSubdiv2D_free_blocks_get
-    if _newclass:free_blocks = property(_cv.CvSubdiv2D_free_blocks_get, _cv.CvSubdiv2D_free_blocks_set)
+    if _newclass:free_blocks = _swig_property(_cv.CvSubdiv2D_free_blocks_get, _cv.CvSubdiv2D_free_blocks_set)
     __swig_setmethods__["first"] = _cv.CvSubdiv2D_first_set
     __swig_getmethods__["first"] = _cv.CvSubdiv2D_first_get
-    if _newclass:first = property(_cv.CvSubdiv2D_first_get, _cv.CvSubdiv2D_first_set)
+    if _newclass:first = _swig_property(_cv.CvSubdiv2D_first_get, _cv.CvSubdiv2D_first_set)
     __swig_setmethods__["free_elems"] = _cv.CvSubdiv2D_free_elems_set
     __swig_getmethods__["free_elems"] = _cv.CvSubdiv2D_free_elems_get
-    if _newclass:free_elems = property(_cv.CvSubdiv2D_free_elems_get, _cv.CvSubdiv2D_free_elems_set)
+    if _newclass:free_elems = _swig_property(_cv.CvSubdiv2D_free_elems_get, _cv.CvSubdiv2D_free_elems_set)
     __swig_setmethods__["active_count"] = _cv.CvSubdiv2D_active_count_set
     __swig_getmethods__["active_count"] = _cv.CvSubdiv2D_active_count_get
-    if _newclass:active_count = property(_cv.CvSubdiv2D_active_count_get, _cv.CvSubdiv2D_active_count_set)
+    if _newclass:active_count = _swig_property(_cv.CvSubdiv2D_active_count_get, _cv.CvSubdiv2D_active_count_set)
     __swig_setmethods__["quad_edges"] = _cv.CvSubdiv2D_quad_edges_set
     __swig_getmethods__["quad_edges"] = _cv.CvSubdiv2D_quad_edges_get
-    if _newclass:quad_edges = property(_cv.CvSubdiv2D_quad_edges_get, _cv.CvSubdiv2D_quad_edges_set)
+    if _newclass:quad_edges = _swig_property(_cv.CvSubdiv2D_quad_edges_get, _cv.CvSubdiv2D_quad_edges_set)
     __swig_setmethods__["is_geometry_valid"] = _cv.CvSubdiv2D_is_geometry_valid_set
     __swig_getmethods__["is_geometry_valid"] = _cv.CvSubdiv2D_is_geometry_valid_get
-    if _newclass:is_geometry_valid = property(_cv.CvSubdiv2D_is_geometry_valid_get, _cv.CvSubdiv2D_is_geometry_valid_set)
+    if _newclass:is_geometry_valid = _swig_property(_cv.CvSubdiv2D_is_geometry_valid_get, _cv.CvSubdiv2D_is_geometry_valid_set)
     __swig_setmethods__["recent_edge"] = _cv.CvSubdiv2D_recent_edge_set
     __swig_getmethods__["recent_edge"] = _cv.CvSubdiv2D_recent_edge_get
-    if _newclass:recent_edge = property(_cv.CvSubdiv2D_recent_edge_get, _cv.CvSubdiv2D_recent_edge_set)
+    if _newclass:recent_edge = _swig_property(_cv.CvSubdiv2D_recent_edge_get, _cv.CvSubdiv2D_recent_edge_set)
     __swig_setmethods__["topleft"] = _cv.CvSubdiv2D_topleft_set
     __swig_getmethods__["topleft"] = _cv.CvSubdiv2D_topleft_get
-    if _newclass:topleft = property(_cv.CvSubdiv2D_topleft_get, _cv.CvSubdiv2D_topleft_set)
+    if _newclass:topleft = _swig_property(_cv.CvSubdiv2D_topleft_get, _cv.CvSubdiv2D_topleft_set)
     __swig_setmethods__["bottomright"] = _cv.CvSubdiv2D_bottomright_set
     __swig_getmethods__["bottomright"] = _cv.CvSubdiv2D_bottomright_get
-    if _newclass:bottomright = property(_cv.CvSubdiv2D_bottomright_get, _cv.CvSubdiv2D_bottomright_set)
+    if _newclass:bottomright = _swig_property(_cv.CvSubdiv2D_bottomright_get, _cv.CvSubdiv2D_bottomright_set)
     __swig_setmethods__["edges"] = _cv.CvSubdiv2D_edges_set
     __swig_getmethods__["edges"] = _cv.CvSubdiv2D_edges_get
-    if _newclass:edges = property(_cv.CvSubdiv2D_edges_get, _cv.CvSubdiv2D_edges_set)
+    if _newclass:edges = _swig_property(_cv.CvSubdiv2D_edges_get, _cv.CvSubdiv2D_edges_set)
     def typed_edges_get(*args):
         """typed_edges_get(self) -> CvSeq_CvQuadEdge2D"""
         return _cv.CvSubdiv2D_typed_edges_get(*args)
@@ -5797,7 +5801,7 @@ class CvMatrix3(_object):
     __repr__ = _swig_repr
     __swig_setmethods__["m"] = _cv.CvMatrix3_m_set
     __swig_getmethods__["m"] = _cv.CvMatrix3_m_get
-    if _newclass:m = property(_cv.CvMatrix3_m_get, _cv.CvMatrix3_m_set)
+    if _newclass:m = _swig_property(_cv.CvMatrix3_m_get, _cv.CvMatrix3_m_set)
     def __init__(self, *args): 
         """__init__(self) -> CvMatrix3"""
         this = _cv.new_CvMatrix3(*args)
@@ -5818,40 +5822,40 @@ class CvConDensation(_object):
     __repr__ = _swig_repr
     __swig_setmethods__["MP"] = _cv.CvConDensation_MP_set
     __swig_getmethods__["MP"] = _cv.CvConDensation_MP_get
-    if _newclass:MP = property(_cv.CvConDensation_MP_get, _cv.CvConDensation_MP_set)
+    if _newclass:MP = _swig_property(_cv.CvConDensation_MP_get, _cv.CvConDensation_MP_set)
     __swig_setmethods__["DP"] = _cv.CvConDensation_DP_set
     __swig_getmethods__["DP"] = _cv.CvConDensation_DP_get
-    if _newclass:DP = property(_cv.CvConDensation_DP_get, _cv.CvConDensation_DP_set)
+    if _newclass:DP = _swig_property(_cv.CvConDensation_DP_get, _cv.CvConDensation_DP_set)
     __swig_setmethods__["DynamMatr"] = _cv.CvConDensation_DynamMatr_set
     __swig_getmethods__["DynamMatr"] = _cv.CvConDensation_DynamMatr_get
-    if _newclass:DynamMatr = property(_cv.CvConDensation_DynamMatr_get, _cv.CvConDensation_DynamMatr_set)
+    if _newclass:DynamMatr = _swig_property(_cv.CvConDensation_DynamMatr_get, _cv.CvConDensation_DynamMatr_set)
     __swig_setmethods__["State"] = _cv.CvConDensation_State_set
     __swig_getmethods__["State"] = _cv.CvConDensation_State_get
-    if _newclass:State = property(_cv.CvConDensation_State_get, _cv.CvConDensation_State_set)
+    if _newclass:State = _swig_property(_cv.CvConDensation_State_get, _cv.CvConDensation_State_set)
     __swig_setmethods__["SamplesNum"] = _cv.CvConDensation_SamplesNum_set
     __swig_getmethods__["SamplesNum"] = _cv.CvConDensation_SamplesNum_get
-    if _newclass:SamplesNum = property(_cv.CvConDensation_SamplesNum_get, _cv.CvConDensation_SamplesNum_set)
+    if _newclass:SamplesNum = _swig_property(_cv.CvConDensation_SamplesNum_get, _cv.CvConDensation_SamplesNum_set)
     __swig_setmethods__["flSamples"] = _cv.CvConDensation_flSamples_set
     __swig_getmethods__["flSamples"] = _cv.CvConDensation_flSamples_get
-    if _newclass:flSamples = property(_cv.CvConDensation_flSamples_get, _cv.CvConDensation_flSamples_set)
+    if _newclass:flSamples = _swig_property(_cv.CvConDensation_flSamples_get, _cv.CvConDensation_flSamples_set)
     __swig_setmethods__["flNewSamples"] = _cv.CvConDensation_flNewSamples_set
     __swig_getmethods__["flNewSamples"] = _cv.CvConDensation_flNewSamples_get
-    if _newclass:flNewSamples = property(_cv.CvConDensation_flNewSamples_get, _cv.CvConDensation_flNewSamples_set)
+    if _newclass:flNewSamples = _swig_property(_cv.CvConDensation_flNewSamples_get, _cv.CvConDensation_flNewSamples_set)
     __swig_setmethods__["flConfidence"] = _cv.CvConDensation_flConfidence_set
     __swig_getmethods__["flConfidence"] = _cv.CvConDensation_flConfidence_get
-    if _newclass:flConfidence = property(_cv.CvConDensation_flConfidence_get, _cv.CvConDensation_flConfidence_set)
+    if _newclass:flConfidence = _swig_property(_cv.CvConDensation_flConfidence_get, _cv.CvConDensation_flConfidence_set)
     __swig_setmethods__["flCumulative"] = _cv.CvConDensation_flCumulative_set
     __swig_getmethods__["flCumulative"] = _cv.CvConDensation_flCumulative_get
-    if _newclass:flCumulative = property(_cv.CvConDensation_flCumulative_get, _cv.CvConDensation_flCumulative_set)
+    if _newclass:flCumulative = _swig_property(_cv.CvConDensation_flCumulative_get, _cv.CvConDensation_flCumulative_set)
     __swig_setmethods__["Temp"] = _cv.CvConDensation_Temp_set
     __swig_getmethods__["Temp"] = _cv.CvConDensation_Temp_get
-    if _newclass:Temp = property(_cv.CvConDensation_Temp_get, _cv.CvConDensation_Temp_set)
+    if _newclass:Temp = _swig_property(_cv.CvConDensation_Temp_get, _cv.CvConDensation_Temp_set)
     __swig_setmethods__["RandomSample"] = _cv.CvConDensation_RandomSample_set
     __swig_getmethods__["RandomSample"] = _cv.CvConDensation_RandomSample_get
-    if _newclass:RandomSample = property(_cv.CvConDensation_RandomSample_get, _cv.CvConDensation_RandomSample_set)
+    if _newclass:RandomSample = _swig_property(_cv.CvConDensation_RandomSample_get, _cv.CvConDensation_RandomSample_set)
     __swig_setmethods__["RandS"] = _cv.CvConDensation_RandS_set
     __swig_getmethods__["RandS"] = _cv.CvConDensation_RandS_get
-    if _newclass:RandS = property(_cv.CvConDensation_RandS_get, _cv.CvConDensation_RandS_set)
+    if _newclass:RandS = _swig_property(_cv.CvConDensation_RandS_get, _cv.CvConDensation_RandS_set)
     __swig_destroy__ = _cv.delete_CvConDensation
     __del__ = lambda self : None;
 CvConDensation_swigregister = _cv.CvConDensation_swigregister
@@ -5867,91 +5871,91 @@ class CvKalman(_object):
     __repr__ = _swig_repr
     __swig_setmethods__["MP"] = _cv.CvKalman_MP_set
     __swig_getmethods__["MP"] = _cv.CvKalman_MP_get
-    if _newclass:MP = property(_cv.CvKalman_MP_get, _cv.CvKalman_MP_set)
+    if _newclass:MP = _swig_property(_cv.CvKalman_MP_get, _cv.CvKalman_MP_set)
     __swig_setmethods__["DP"] = _cv.CvKalman_DP_set
     __swig_getmethods__["DP"] = _cv.CvKalman_DP_get
-    if _newclass:DP = property(_cv.CvKalman_DP_get, _cv.CvKalman_DP_set)
+    if _newclass:DP = _swig_property(_cv.CvKalman_DP_get, _cv.CvKalman_DP_set)
     __swig_setmethods__["CP"] = _cv.CvKalman_CP_set
     __swig_getmethods__["CP"] = _cv.CvKalman_CP_get
-    if _newclass:CP = property(_cv.CvKalman_CP_get, _cv.CvKalman_CP_set)
+    if _newclass:CP = _swig_property(_cv.CvKalman_CP_get, _cv.CvKalman_CP_set)
     __swig_setmethods__["PosterState"] = _cv.CvKalman_PosterState_set
     __swig_getmethods__["PosterState"] = _cv.CvKalman_PosterState_get
-    if _newclass:PosterState = property(_cv.CvKalman_PosterState_get, _cv.CvKalman_PosterState_set)
+    if _newclass:PosterState = _swig_property(_cv.CvKalman_PosterState_get, _cv.CvKalman_PosterState_set)
     __swig_setmethods__["PriorState"] = _cv.CvKalman_PriorState_set
     __swig_getmethods__["PriorState"] = _cv.CvKalman_PriorState_get
-    if _newclass:PriorState = property(_cv.CvKalman_PriorState_get, _cv.CvKalman_PriorState_set)
+    if _newclass:PriorState = _swig_property(_cv.CvKalman_PriorState_get, _cv.CvKalman_PriorState_set)
     __swig_setmethods__["DynamMatr"] = _cv.CvKalman_DynamMatr_set
     __swig_getmethods__["DynamMatr"] = _cv.CvKalman_DynamMatr_get
-    if _newclass:DynamMatr = property(_cv.CvKalman_DynamMatr_get, _cv.CvKalman_DynamMatr_set)
+    if _newclass:DynamMatr = _swig_property(_cv.CvKalman_DynamMatr_get, _cv.CvKalman_DynamMatr_set)
     __swig_setmethods__["MeasurementMatr"] = _cv.CvKalman_MeasurementMatr_set
     __swig_getmethods__["MeasurementMatr"] = _cv.CvKalman_MeasurementMatr_get
-    if _newclass:MeasurementMatr = property(_cv.CvKalman_MeasurementMatr_get, _cv.CvKalman_MeasurementMatr_set)
+    if _newclass:MeasurementMatr = _swig_property(_cv.CvKalman_MeasurementMatr_get, _cv.CvKalman_MeasurementMatr_set)
     __swig_setmethods__["MNCovariance"] = _cv.CvKalman_MNCovariance_set
     __swig_getmethods__["MNCovariance"] = _cv.CvKalman_MNCovariance_get
-    if _newclass:MNCovariance = property(_cv.CvKalman_MNCovariance_get, _cv.CvKalman_MNCovariance_set)
+    if _newclass:MNCovariance = _swig_property(_cv.CvKalman_MNCovariance_get, _cv.CvKalman_MNCovariance_set)
     __swig_setmethods__["PNCovariance"] = _cv.CvKalman_PNCovariance_set
     __swig_getmethods__["PNCovariance"] = _cv.CvKalman_PNCovariance_get
-    if _newclass:PNCovariance = property(_cv.CvKalman_PNCovariance_get, _cv.CvKalman_PNCovariance_set)
+    if _newclass:PNCovariance = _swig_property(_cv.CvKalman_PNCovariance_get, _cv.CvKalman_PNCovariance_set)
     __swig_setmethods__["KalmGainMatr"] = _cv.CvKalman_KalmGainMatr_set
     __swig_getmethods__["KalmGainMatr"] = _cv.CvKalman_KalmGainMatr_get
-    if _newclass:KalmGainMatr = property(_cv.CvKalman_KalmGainMatr_get, _cv.CvKalman_KalmGainMatr_set)
+    if _newclass:KalmGainMatr = _swig_property(_cv.CvKalman_KalmGainMatr_get, _cv.CvKalman_KalmGainMatr_set)
     __swig_setmethods__["PriorErrorCovariance"] = _cv.CvKalman_PriorErrorCovariance_set
     __swig_getmethods__["PriorErrorCovariance"] = _cv.CvKalman_PriorErrorCovariance_get
-    if _newclass:PriorErrorCovariance = property(_cv.CvKalman_PriorErrorCovariance_get, _cv.CvKalman_PriorErrorCovariance_set)
+    if _newclass:PriorErrorCovariance = _swig_property(_cv.CvKalman_PriorErrorCovariance_get, _cv.CvKalman_PriorErrorCovariance_set)
     __swig_setmethods__["PosterErrorCovariance"] = _cv.CvKalman_PosterErrorCovariance_set
     __swig_getmethods__["PosterErrorCovariance"] = _cv.CvKalman_PosterErrorCovariance_get
-    if _newclass:PosterErrorCovariance = property(_cv.CvKalman_PosterErrorCovariance_get, _cv.CvKalman_PosterErrorCovariance_set)
+    if _newclass:PosterErrorCovariance = _swig_property(_cv.CvKalman_PosterErrorCovariance_get, _cv.CvKalman_PosterErrorCovariance_set)
     __swig_setmethods__["Temp1"] = _cv.CvKalman_Temp1_set
     __swig_getmethods__["Temp1"] = _cv.CvKalman_Temp1_get
-    if _newclass:Temp1 = property(_cv.CvKalman_Temp1_get, _cv.CvKalman_Temp1_set)
+    if _newclass:Temp1 = _swig_property(_cv.CvKalman_Temp1_get, _cv.CvKalman_Temp1_set)
     __swig_setmethods__["Temp2"] = _cv.CvKalman_Temp2_set
     __swig_getmethods__["Temp2"] = _cv.CvKalman_Temp2_get
-    if _newclass:Temp2 = property(_cv.CvKalman_Temp2_get, _cv.CvKalman_Temp2_set)
+    if _newclass:Temp2 = _swig_property(_cv.CvKalman_Temp2_get, _cv.CvKalman_Temp2_set)
     __swig_setmethods__["state_pre"] = _cv.CvKalman_state_pre_set
     __swig_getmethods__["state_pre"] = _cv.CvKalman_state_pre_get
-    if _newclass:state_pre = property(_cv.CvKalman_state_pre_get, _cv.CvKalman_state_pre_set)
+    if _newclass:state_pre = _swig_property(_cv.CvKalman_state_pre_get, _cv.CvKalman_state_pre_set)
     __swig_setmethods__["state_post"] = _cv.CvKalman_state_post_set
     __swig_getmethods__["state_post"] = _cv.CvKalman_state_post_get
-    if _newclass:state_post = property(_cv.CvKalman_state_post_get, _cv.CvKalman_state_post_set)
+    if _newclass:state_post = _swig_property(_cv.CvKalman_state_post_get, _cv.CvKalman_state_post_set)
     __swig_setmethods__["transition_matrix"] = _cv.CvKalman_transition_matrix_set
     __swig_getmethods__["transition_matrix"] = _cv.CvKalman_transition_matrix_get
-    if _newclass:transition_matrix = property(_cv.CvKalman_transition_matrix_get, _cv.CvKalman_transition_matrix_set)
+    if _newclass:transition_matrix = _swig_property(_cv.CvKalman_transition_matrix_get, _cv.CvKalman_transition_matrix_set)
     __swig_setmethods__["control_matrix"] = _cv.CvKalman_control_matrix_set
     __swig_getmethods__["control_matrix"] = _cv.CvKalman_control_matrix_get
-    if _newclass:control_matrix = property(_cv.CvKalman_control_matrix_get, _cv.CvKalman_control_matrix_set)
+    if _newclass:control_matrix = _swig_property(_cv.CvKalman_control_matrix_get, _cv.CvKalman_control_matrix_set)
     __swig_setmethods__["measurement_matrix"] = _cv.CvKalman_measurement_matrix_set
     __swig_getmethods__["measurement_matrix"] = _cv.CvKalman_measurement_matrix_get
-    if _newclass:measurement_matrix = property(_cv.CvKalman_measurement_matrix_get, _cv.CvKalman_measurement_matrix_set)
+    if _newclass:measurement_matrix = _swig_property(_cv.CvKalman_measurement_matrix_get, _cv.CvKalman_measurement_matrix_set)
     __swig_setmethods__["process_noise_cov"] = _cv.CvKalman_process_noise_cov_set
     __swig_getmethods__["process_noise_cov"] = _cv.CvKalman_process_noise_cov_get
-    if _newclass:process_noise_cov = property(_cv.CvKalman_process_noise_cov_get, _cv.CvKalman_process_noise_cov_set)
+    if _newclass:process_noise_cov = _swig_property(_cv.CvKalman_process_noise_cov_get, _cv.CvKalman_process_noise_cov_set)
     __swig_setmethods__["measurement_noise_cov"] = _cv.CvKalman_measurement_noise_cov_set
     __swig_getmethods__["measurement_noise_cov"] = _cv.CvKalman_measurement_noise_cov_get
-    if _newclass:measurement_noise_cov = property(_cv.CvKalman_measurement_noise_cov_get, _cv.CvKalman_measurement_noise_cov_set)
+    if _newclass:measurement_noise_cov = _swig_property(_cv.CvKalman_measurement_noise_cov_get, _cv.CvKalman_measurement_noise_cov_set)
     __swig_setmethods__["error_cov_pre"] = _cv.CvKalman_error_cov_pre_set
     __swig_getmethods__["error_cov_pre"] = _cv.CvKalman_error_cov_pre_get
-    if _newclass:error_cov_pre = property(_cv.CvKalman_error_cov_pre_get, _cv.CvKalman_error_cov_pre_set)
+    if _newclass:error_cov_pre = _swig_property(_cv.CvKalman_error_cov_pre_get, _cv.CvKalman_error_cov_pre_set)
     __swig_setmethods__["gain"] = _cv.CvKalman_gain_set
     __swig_getmethods__["gain"] = _cv.CvKalman_gain_get
-    if _newclass:gain = property(_cv.CvKalman_gain_get, _cv.CvKalman_gain_set)
+    if _newclass:gain = _swig_property(_cv.CvKalman_gain_get, _cv.CvKalman_gain_set)
     __swig_setmethods__["error_cov_post"] = _cv.CvKalman_error_cov_post_set
     __swig_getmethods__["error_cov_post"] = _cv.CvKalman_error_cov_post_get
-    if _newclass:error_cov_post = property(_cv.CvKalman_error_cov_post_get, _cv.CvKalman_error_cov_post_set)
+    if _newclass:error_cov_post = _swig_property(_cv.CvKalman_error_cov_post_get, _cv.CvKalman_error_cov_post_set)
     __swig_setmethods__["temp1"] = _cv.CvKalman_temp1_set
     __swig_getmethods__["temp1"] = _cv.CvKalman_temp1_get
-    if _newclass:temp1 = property(_cv.CvKalman_temp1_get, _cv.CvKalman_temp1_set)
+    if _newclass:temp1 = _swig_property(_cv.CvKalman_temp1_get, _cv.CvKalman_temp1_set)
     __swig_setmethods__["temp2"] = _cv.CvKalman_temp2_set
     __swig_getmethods__["temp2"] = _cv.CvKalman_temp2_get
-    if _newclass:temp2 = property(_cv.CvKalman_temp2_get, _cv.CvKalman_temp2_set)
+    if _newclass:temp2 = _swig_property(_cv.CvKalman_temp2_get, _cv.CvKalman_temp2_set)
     __swig_setmethods__["temp3"] = _cv.CvKalman_temp3_set
     __swig_getmethods__["temp3"] = _cv.CvKalman_temp3_get
-    if _newclass:temp3 = property(_cv.CvKalman_temp3_get, _cv.CvKalman_temp3_set)
+    if _newclass:temp3 = _swig_property(_cv.CvKalman_temp3_get, _cv.CvKalman_temp3_set)
     __swig_setmethods__["temp4"] = _cv.CvKalman_temp4_set
     __swig_getmethods__["temp4"] = _cv.CvKalman_temp4_get
-    if _newclass:temp4 = property(_cv.CvKalman_temp4_get, _cv.CvKalman_temp4_set)
+    if _newclass:temp4 = _swig_property(_cv.CvKalman_temp4_get, _cv.CvKalman_temp4_set)
     __swig_setmethods__["temp5"] = _cv.CvKalman_temp5_set
     __swig_getmethods__["temp5"] = _cv.CvKalman_temp5_get
-    if _newclass:temp5 = property(_cv.CvKalman_temp5_get, _cv.CvKalman_temp5_set)
+    if _newclass:temp5 = _swig_property(_cv.CvKalman_temp5_get, _cv.CvKalman_temp5_set)
     __swig_destroy__ = _cv.delete_CvKalman
     __del__ = lambda self : None;
 CvKalman_swigregister = _cv.CvKalman_swigregister
@@ -5966,9 +5970,9 @@ class CvHaarFeature(_object):
     __repr__ = _swig_repr
     __swig_setmethods__["tilted"] = _cv.CvHaarFeature_tilted_set
     __swig_getmethods__["tilted"] = _cv.CvHaarFeature_tilted_get
-    if _newclass:tilted = property(_cv.CvHaarFeature_tilted_get, _cv.CvHaarFeature_tilted_set)
+    if _newclass:tilted = _swig_property(_cv.CvHaarFeature_tilted_get, _cv.CvHaarFeature_tilted_set)
     __swig_getmethods__["rect"] = _cv.CvHaarFeature_rect_get
-    if _newclass:rect = property(_cv.CvHaarFeature_rect_get)
+    if _newclass:rect = _swig_property(_cv.CvHaarFeature_rect_get)
     def __init__(self, *args): 
         """__init__(self) -> CvHaarFeature"""
         this = _cv.new_CvHaarFeature(*args)
@@ -5988,10 +5992,10 @@ class CvHaarFeature_rect(_object):
     __repr__ = _swig_repr
     __swig_setmethods__["r"] = _cv.CvHaarFeature_rect_r_set
     __swig_getmethods__["r"] = _cv.CvHaarFeature_rect_r_get
-    if _newclass:r = property(_cv.CvHaarFeature_rect_r_get, _cv.CvHaarFeature_rect_r_set)
+    if _newclass:r = _swig_property(_cv.CvHaarFeature_rect_r_get, _cv.CvHaarFeature_rect_r_set)
     __swig_setmethods__["weight"] = _cv.CvHaarFeature_rect_weight_set
     __swig_getmethods__["weight"] = _cv.CvHaarFeature_rect_weight_get
-    if _newclass:weight = property(_cv.CvHaarFeature_rect_weight_get, _cv.CvHaarFeature_rect_weight_set)
+    if _newclass:weight = _swig_property(_cv.CvHaarFeature_rect_weight_get, _cv.CvHaarFeature_rect_weight_set)
     def __init__(self, *args): 
         """__init__(self) -> CvHaarFeature_rect"""
         this = _cv.new_CvHaarFeature_rect(*args)
@@ -6011,22 +6015,22 @@ class CvHaarClassifier(_object):
     __repr__ = _swig_repr
     __swig_setmethods__["count"] = _cv.CvHaarClassifier_count_set
     __swig_getmethods__["count"] = _cv.CvHaarClassifier_count_get
-    if _newclass:count = property(_cv.CvHaarClassifier_count_get, _cv.CvHaarClassifier_count_set)
+    if _newclass:count = _swig_property(_cv.CvHaarClassifier_count_get, _cv.CvHaarClassifier_count_set)
     __swig_setmethods__["haar_feature"] = _cv.CvHaarClassifier_haar_feature_set
     __swig_getmethods__["haar_feature"] = _cv.CvHaarClassifier_haar_feature_get
-    if _newclass:haar_feature = property(_cv.CvHaarClassifier_haar_feature_get, _cv.CvHaarClassifier_haar_feature_set)
+    if _newclass:haar_feature = _swig_property(_cv.CvHaarClassifier_haar_feature_get, _cv.CvHaarClassifier_haar_feature_set)
     __swig_setmethods__["threshold"] = _cv.CvHaarClassifier_threshold_set
     __swig_getmethods__["threshold"] = _cv.CvHaarClassifier_threshold_get
-    if _newclass:threshold = property(_cv.CvHaarClassifier_threshold_get, _cv.CvHaarClassifier_threshold_set)
+    if _newclass:threshold = _swig_property(_cv.CvHaarClassifier_threshold_get, _cv.CvHaarClassifier_threshold_set)
     __swig_setmethods__["left"] = _cv.CvHaarClassifier_left_set
     __swig_getmethods__["left"] = _cv.CvHaarClassifier_left_get
-    if _newclass:left = property(_cv.CvHaarClassifier_left_get, _cv.CvHaarClassifier_left_set)
+    if _newclass:left = _swig_property(_cv.CvHaarClassifier_left_get, _cv.CvHaarClassifier_left_set)
     __swig_setmethods__["right"] = _cv.CvHaarClassifier_right_set
     __swig_getmethods__["right"] = _cv.CvHaarClassifier_right_get
-    if _newclass:right = property(_cv.CvHaarClassifier_right_get, _cv.CvHaarClassifier_right_set)
+    if _newclass:right = _swig_property(_cv.CvHaarClassifier_right_get, _cv.CvHaarClassifier_right_set)
     __swig_setmethods__["alpha"] = _cv.CvHaarClassifier_alpha_set
     __swig_getmethods__["alpha"] = _cv.CvHaarClassifier_alpha_get
-    if _newclass:alpha = property(_cv.CvHaarClassifier_alpha_get, _cv.CvHaarClassifier_alpha_set)
+    if _newclass:alpha = _swig_property(_cv.CvHaarClassifier_alpha_get, _cv.CvHaarClassifier_alpha_set)
     def __init__(self, *args): 
         """__init__(self) -> CvHaarClassifier"""
         this = _cv.new_CvHaarClassifier(*args)
@@ -6046,22 +6050,22 @@ class CvHaarStageClassifier(_object):
     __repr__ = _swig_repr
     __swig_setmethods__["count"] = _cv.CvHaarStageClassifier_count_set
     __swig_getmethods__["count"] = _cv.CvHaarStageClassifier_count_get
-    if _newclass:count = property(_cv.CvHaarStageClassifier_count_get, _cv.CvHaarStageClassifier_count_set)
+    if _newclass:count = _swig_property(_cv.CvHaarStageClassifier_count_get, _cv.CvHaarStageClassifier_count_set)
     __swig_setmethods__["threshold"] = _cv.CvHaarStageClassifier_threshold_set
     __swig_getmethods__["threshold"] = _cv.CvHaarStageClassifier_threshold_get
-    if _newclass:threshold = property(_cv.CvHaarStageClassifier_threshold_get, _cv.CvHaarStageClassifier_threshold_set)
+    if _newclass:threshold = _swig_property(_cv.CvHaarStageClassifier_threshold_get, _cv.CvHaarStageClassifier_threshold_set)
     __swig_setmethods__["classifier"] = _cv.CvHaarStageClassifier_classifier_set
     __swig_getmethods__["classifier"] = _cv.CvHaarStageClassifier_classifier_get
-    if _newclass:classifier = property(_cv.CvHaarStageClassifier_classifier_get, _cv.CvHaarStageClassifier_classifier_set)
+    if _newclass:classifier = _swig_property(_cv.CvHaarStageClassifier_classifier_get, _cv.CvHaarStageClassifier_classifier_set)
     __swig_setmethods__["next"] = _cv.CvHaarStageClassifier_next_set
     __swig_getmethods__["next"] = _cv.CvHaarStageClassifier_next_get
-    if _newclass:next = property(_cv.CvHaarStageClassifier_next_get, _cv.CvHaarStageClassifier_next_set)
+    if _newclass:next = _swig_property(_cv.CvHaarStageClassifier_next_get, _cv.CvHaarStageClassifier_next_set)
     __swig_setmethods__["child"] = _cv.CvHaarStageClassifier_child_set
     __swig_getmethods__["child"] = _cv.CvHaarStageClassifier_child_get
-    if _newclass:child = property(_cv.CvHaarStageClassifier_child_get, _cv.CvHaarStageClassifier_child_set)
+    if _newclass:child = _swig_property(_cv.CvHaarStageClassifier_child_get, _cv.CvHaarStageClassifier_child_set)
     __swig_setmethods__["parent"] = _cv.CvHaarStageClassifier_parent_set
     __swig_getmethods__["parent"] = _cv.CvHaarStageClassifier_parent_get
-    if _newclass:parent = property(_cv.CvHaarStageClassifier_parent_get, _cv.CvHaarStageClassifier_parent_set)
+    if _newclass:parent = _swig_property(_cv.CvHaarStageClassifier_parent_get, _cv.CvHaarStageClassifier_parent_set)
     def __init__(self, *args): 
         """__init__(self) -> CvHaarStageClassifier"""
         this = _cv.new_CvHaarStageClassifier(*args)
@@ -6082,25 +6086,25 @@ class CvHaarClassifierCascade(_object):
     __repr__ = _swig_repr
     __swig_setmethods__["flags"] = _cv.CvHaarClassifierCascade_flags_set
     __swig_getmethods__["flags"] = _cv.CvHaarClassifierCascade_flags_get
-    if _newclass:flags = property(_cv.CvHaarClassifierCascade_flags_get, _cv.CvHaarClassifierCascade_flags_set)
+    if _newclass:flags = _swig_property(_cv.CvHaarClassifierCascade_flags_get, _cv.CvHaarClassifierCascade_flags_set)
     __swig_setmethods__["count"] = _cv.CvHaarClassifierCascade_count_set
     __swig_getmethods__["count"] = _cv.CvHaarClassifierCascade_count_get
-    if _newclass:count = property(_cv.CvHaarClassifierCascade_count_get, _cv.CvHaarClassifierCascade_count_set)
+    if _newclass:count = _swig_property(_cv.CvHaarClassifierCascade_count_get, _cv.CvHaarClassifierCascade_count_set)
     __swig_setmethods__["orig_window_size"] = _cv.CvHaarClassifierCascade_orig_window_size_set
     __swig_getmethods__["orig_window_size"] = _cv.CvHaarClassifierCascade_orig_window_size_get
-    if _newclass:orig_window_size = property(_cv.CvHaarClassifierCascade_orig_window_size_get, _cv.CvHaarClassifierCascade_orig_window_size_set)
+    if _newclass:orig_window_size = _swig_property(_cv.CvHaarClassifierCascade_orig_window_size_get, _cv.CvHaarClassifierCascade_orig_window_size_set)
     __swig_setmethods__["real_window_size"] = _cv.CvHaarClassifierCascade_real_window_size_set
     __swig_getmethods__["real_window_size"] = _cv.CvHaarClassifierCascade_real_window_size_get
-    if _newclass:real_window_size = property(_cv.CvHaarClassifierCascade_real_window_size_get, _cv.CvHaarClassifierCascade_real_window_size_set)
+    if _newclass:real_window_size = _swig_property(_cv.CvHaarClassifierCascade_real_window_size_get, _cv.CvHaarClassifierCascade_real_window_size_set)
     __swig_setmethods__["scale"] = _cv.CvHaarClassifierCascade_scale_set
     __swig_getmethods__["scale"] = _cv.CvHaarClassifierCascade_scale_get
-    if _newclass:scale = property(_cv.CvHaarClassifierCascade_scale_get, _cv.CvHaarClassifierCascade_scale_set)
+    if _newclass:scale = _swig_property(_cv.CvHaarClassifierCascade_scale_get, _cv.CvHaarClassifierCascade_scale_set)
     __swig_setmethods__["stage_classifier"] = _cv.CvHaarClassifierCascade_stage_classifier_set
     __swig_getmethods__["stage_classifier"] = _cv.CvHaarClassifierCascade_stage_classifier_get
-    if _newclass:stage_classifier = property(_cv.CvHaarClassifierCascade_stage_classifier_get, _cv.CvHaarClassifierCascade_stage_classifier_set)
+    if _newclass:stage_classifier = _swig_property(_cv.CvHaarClassifierCascade_stage_classifier_get, _cv.CvHaarClassifierCascade_stage_classifier_set)
     __swig_setmethods__["hid_cascade"] = _cv.CvHaarClassifierCascade_hid_cascade_set
     __swig_getmethods__["hid_cascade"] = _cv.CvHaarClassifierCascade_hid_cascade_get
-    if _newclass:hid_cascade = property(_cv.CvHaarClassifierCascade_hid_cascade_get, _cv.CvHaarClassifierCascade_hid_cascade_set)
+    if _newclass:hid_cascade = _swig_property(_cv.CvHaarClassifierCascade_hid_cascade_get, _cv.CvHaarClassifierCascade_hid_cascade_set)
     __swig_destroy__ = _cv.delete_CvHaarClassifierCascade
     __del__ = lambda self : None;
 CvHaarClassifierCascade_swigregister = _cv.CvHaarClassifierCascade_swigregister
@@ -6115,10 +6119,10 @@ class CvAvgComp(_object):
     __repr__ = _swig_repr
     __swig_setmethods__["rect"] = _cv.CvAvgComp_rect_set
     __swig_getmethods__["rect"] = _cv.CvAvgComp_rect_get
-    if _newclass:rect = property(_cv.CvAvgComp_rect_get, _cv.CvAvgComp_rect_set)
+    if _newclass:rect = _swig_property(_cv.CvAvgComp_rect_get, _cv.CvAvgComp_rect_set)
     __swig_setmethods__["neighbors"] = _cv.CvAvgComp_neighbors_set
     __swig_getmethods__["neighbors"] = _cv.CvAvgComp_neighbors_get
-    if _newclass:neighbors = property(_cv.CvAvgComp_neighbors_get, _cv.CvAvgComp_neighbors_set)
+    if _newclass:neighbors = _swig_property(_cv.CvAvgComp_neighbors_get, _cv.CvAvgComp_neighbors_set)
     def __init__(self, *args): 
         """__init__(self) -> CvAvgComp"""
         this = _cv.new_CvAvgComp(*args)
@@ -7446,7 +7450,7 @@ class CvTuple_CvPoint_2(_object):
     __repr__ = _swig_repr
     __swig_setmethods__["val"] = _cv.CvTuple_CvPoint_2_val_set
     __swig_getmethods__["val"] = _cv.CvTuple_CvPoint_2_val_get
-    if _newclass:val = property(_cv.CvTuple_CvPoint_2_val_get, _cv.CvTuple_CvPoint_2_val_set)
+    if _newclass:val = _swig_property(_cv.CvTuple_CvPoint_2_val_get, _cv.CvTuple_CvPoint_2_val_set)
     def __setitem__(*args):
         """__setitem__(self, int i, CvPoint obj)"""
         return _cv.CvTuple_CvPoint_2___setitem__(*args)
@@ -7474,7 +7478,7 @@ class CvTuple_float_2(_object):
     __repr__ = _swig_repr
     __swig_setmethods__["val"] = _cv.CvTuple_float_2_val_set
     __swig_getmethods__["val"] = _cv.CvTuple_float_2_val_get
-    if _newclass:val = property(_cv.CvTuple_float_2_val_get, _cv.CvTuple_float_2_val_set)
+    if _newclass:val = _swig_property(_cv.CvTuple_float_2_val_get, _cv.CvTuple_float_2_val_set)
     def __setitem__(*args):
         """__setitem__(self, int i, float obj)"""
         return _cv.CvTuple_float_2___setitem__(*args)
@@ -7502,7 +7506,7 @@ class CvTuple_float_3(_object):
     __repr__ = _swig_repr
     __swig_setmethods__["val"] = _cv.CvTuple_float_3_val_set
     __swig_getmethods__["val"] = _cv.CvTuple_float_3_val_get
-    if _newclass:val = property(_cv.CvTuple_float_3_val_get, _cv.CvTuple_float_3_val_set)
+    if _newclass:val = _swig_property(_cv.CvTuple_float_3_val_get, _cv.CvTuple_float_3_val_set)
     def __setitem__(*args):
         """__setitem__(self, int i, float obj)"""
         return _cv.CvTuple_float_3___setitem__(*args)

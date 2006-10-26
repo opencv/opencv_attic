@@ -1,10 +1,14 @@
-# This file was created automatically by SWIG 1.3.29.
+# This file was created automatically by SWIG 1.3.30.
 # Don't modify this file, modify the SWIG interface instead.
 # This file is compatible with both classic and new-style classes.
 
 import _highgui
 import new
 new_instancemethod = new.instancemethod
+try:
+    _swig_property = property
+except NameError:
+    pass # Python < 2.2 doesn't have 'property'.
 def _swig_setattr_nondynamic(self,class_type,name,value,static=1):
     if (name == "thisown"): return self.this.own(value)
     if (name == "this"):
@@ -164,11 +168,9 @@ CV_EVENT_FLAG_ALTKEY = _highgui.CV_EVENT_FLAG_ALTKEY
 def cvSetMouseCallbackOld(*args):
   """cvSetMouseCallbackOld(char window_name, CvMouseCallback on_mouse, void param=None)"""
   return _highgui.cvSetMouseCallbackOld(*args)
-CV_LOAD_IMAGE_UNCHANGED = _highgui.CV_LOAD_IMAGE_UNCHANGED
-CV_LOAD_IMAGE_GRAYSCALE = _highgui.CV_LOAD_IMAGE_GRAYSCALE
 CV_LOAD_IMAGE_COLOR = _highgui.CV_LOAD_IMAGE_COLOR
-CV_LOAD_IMAGE_ANYDEPTH = _highgui.CV_LOAD_IMAGE_ANYDEPTH
-CV_LOAD_IMAGE_ANYCOLOR = _highgui.CV_LOAD_IMAGE_ANYCOLOR
+CV_LOAD_IMAGE_GRAYSCALE = _highgui.CV_LOAD_IMAGE_GRAYSCALE
+CV_LOAD_IMAGE_UNCHANGED = _highgui.CV_LOAD_IMAGE_UNCHANGED
 
 def cvLoadImageM(*args):
   """cvLoadImageM(char filename, int iscolor=1) -> CvMat"""
