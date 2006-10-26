@@ -51,8 +51,10 @@
 
 %nodefault _IplImage;
 %newobject cvCreateImage;
+%newobject cvCreateImageMat;
 %newobject cvCreateImageHeader;
 %newobject cvCloneImage;
+%newobject cvCloneImageMat;
 
 %nodefault CvMat;
 %newobject cvCreateMat;
