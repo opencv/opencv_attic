@@ -101097,10 +101097,10 @@ SWIGEXPORT void SWIG_init(void) {
   SWIG_Python_SetConstant(d, "CV_ErrModeLeaf",SWIG_From_int(static_cast< int >(0)));
   SWIG_Python_SetConstant(d, "CV_ErrModeParent",SWIG_From_int(static_cast< int >(1)));
   SWIG_Python_SetConstant(d, "CV_ErrModeSilent",SWIG_From_int(static_cast< int >(2)));
-  SWIG_Python_SetConstant(d, "CV_MAJOR_VERSION",SWIG_From_int(static_cast< int >(0)));
-  SWIG_Python_SetConstant(d, "CV_MINOR_VERSION",SWIG_From_int(static_cast< int >(9)));
-  SWIG_Python_SetConstant(d, "CV_SUBMINOR_VERSION",SWIG_From_int(static_cast< int >(9)));
-  SWIG_Python_SetConstant(d, "CV_VERSION",SWIG_FromCharPtr("0.9.9"));
+  SWIG_Python_SetConstant(d, "CV_MAJOR_VERSION",SWIG_From_int(static_cast< int >(1)));
+  SWIG_Python_SetConstant(d, "CV_MINOR_VERSION",SWIG_From_int(static_cast< int >(0)));
+  SWIG_Python_SetConstant(d, "CV_SUBMINOR_VERSION",SWIG_From_int(static_cast< int >(0)));
+  SWIG_Python_SetConstant(d, "CV_VERSION",SWIG_FromCharPtr("1.0.0"));
   SWIG_Python_SetConstant(d, "CV_PI",SWIG_From_double(static_cast< double >(3.1415926535897932384626433832795)));
   SWIG_Python_SetConstant(d, "CV_LOG2",SWIG_From_double(static_cast< double >(0.69314718055994530941723212145818)));
   SWIG_Python_SetConstant(d, "IPL_DEPTH_SIGN",SWIG_From_int(static_cast< int >(0x80000000)));
