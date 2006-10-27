@@ -1973,6 +1973,33 @@ class CvMat(_object):
     	for i in range(self.cols):
     		yield self[:,i]
 
+    # if arg is None, python still calls our operator overloads
+    # but we want
+    # if mat != None
+    # if mat == None
+    # to do the right thing -- so redefine __ne__ and __eq__
+
+    def __eq__(self, arg):
+        """
+    	__eq__(self, None)
+    	__eq__(self, CvArr src)
+    	__eq__(self, double val)
+        """
+
+    	if not arg:
+    		return False 
+    	return _cv.CvMat___eq__(self, arg)
+    def __ne__(self, arg):
+        """
+    	__ne__(self, None)
+    	__ne__(self, CvArr src)
+    	__ne__(self, double val)
+        """
+
+    	if not arg:
+    		return True
+    	return _cv.CvMat___ne__(self, arg)
+
     __swig_setmethods__["imageData"] = _cv.CvMat_imageData_set
     __swig_getmethods__["imageData"] = _cv.CvMat_imageData_get
     if _newclass:imageData = _swig_property(_cv.CvMat_imageData_get, _cv.CvMat_imageData_set)
