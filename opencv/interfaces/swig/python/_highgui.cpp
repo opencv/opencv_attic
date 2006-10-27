@@ -7470,9 +7470,11 @@ SWIGEXPORT void SWIG_init(void) {
   SWIG_Python_SetConstant(d, "CV_EVENT_FLAG_CTRLKEY",SWIG_From_int(static_cast< int >(8)));
   SWIG_Python_SetConstant(d, "CV_EVENT_FLAG_SHIFTKEY",SWIG_From_int(static_cast< int >(16)));
   SWIG_Python_SetConstant(d, "CV_EVENT_FLAG_ALTKEY",SWIG_From_int(static_cast< int >(32)));
-  SWIG_Python_SetConstant(d, "CV_LOAD_IMAGE_COLOR",SWIG_From_int(static_cast< int >(1)));
-  SWIG_Python_SetConstant(d, "CV_LOAD_IMAGE_GRAYSCALE",SWIG_From_int(static_cast< int >(0)));
   SWIG_Python_SetConstant(d, "CV_LOAD_IMAGE_UNCHANGED",SWIG_From_int(static_cast< int >(-1)));
+  SWIG_Python_SetConstant(d, "CV_LOAD_IMAGE_GRAYSCALE",SWIG_From_int(static_cast< int >(0)));
+  SWIG_Python_SetConstant(d, "CV_LOAD_IMAGE_COLOR",SWIG_From_int(static_cast< int >(1)));
+  SWIG_Python_SetConstant(d, "CV_LOAD_IMAGE_ANYDEPTH",SWIG_From_int(static_cast< int >(2)));
+  SWIG_Python_SetConstant(d, "CV_LOAD_IMAGE_ANYCOLOR",SWIG_From_int(static_cast< int >(4)));
   SWIG_Python_SetConstant(d, "CV_CVTIMG_FLIP",SWIG_From_int(static_cast< int >(1)));
   SWIG_Python_SetConstant(d, "CV_CVTIMG_SWAP_RB",SWIG_From_int(static_cast< int >(2)));
   SWIG_Python_SetConstant(d, "CV_CAP_ANY",SWIG_From_int(static_cast< int >(0)));

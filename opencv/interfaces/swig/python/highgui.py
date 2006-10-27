@@ -168,9 +168,11 @@ CV_EVENT_FLAG_ALTKEY = _highgui.CV_EVENT_FLAG_ALTKEY
 def cvSetMouseCallbackOld(*args):
   """cvSetMouseCallbackOld(char window_name, CvMouseCallback on_mouse, void param=None)"""
   return _highgui.cvSetMouseCallbackOld(*args)
-CV_LOAD_IMAGE_COLOR = _highgui.CV_LOAD_IMAGE_COLOR
-CV_LOAD_IMAGE_GRAYSCALE = _highgui.CV_LOAD_IMAGE_GRAYSCALE
 CV_LOAD_IMAGE_UNCHANGED = _highgui.CV_LOAD_IMAGE_UNCHANGED
+CV_LOAD_IMAGE_GRAYSCALE = _highgui.CV_LOAD_IMAGE_GRAYSCALE
+CV_LOAD_IMAGE_COLOR = _highgui.CV_LOAD_IMAGE_COLOR
+CV_LOAD_IMAGE_ANYDEPTH = _highgui.CV_LOAD_IMAGE_ANYDEPTH
+CV_LOAD_IMAGE_ANYCOLOR = _highgui.CV_LOAD_IMAGE_ANYCOLOR
 
 def cvLoadImageM(*args):
   """cvLoadImageM(char filename, int iscolor=1) -> CvMat"""
