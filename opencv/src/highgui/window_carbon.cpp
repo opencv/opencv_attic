@@ -789,8 +789,8 @@ static pascal OSStatus windowEventHandler(EventHandlerCallRef nextHandler, Event
                 Rect structure, content;
                 GetWindowBounds(theWindow, kWindowStructureRgn, &structure);
                 GetWindowBounds(theWindow, kWindowContentRgn, &content);
-                lx = point.x - content.left + structure.left;
-                ly = point.y - window->trackbarheight  - content.top + structure.top; /* minus la taille des trackbars */
+                lx = (int)point.x - content.left + structure.left;
+                ly = (int)point.y - window->trackbarheight  - content.top + structure.top; /* minus la taille des trackbars */
                 if (window->flags & CV_WINDOW_AUTOSIZE) {//FD
                                                          //printf("was %d,%d\n", lx, ly);
                     /* scale the mouse coordinates */
