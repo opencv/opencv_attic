@@ -203,7 +203,7 @@ float** CV_BaseHistTest::get_hist_ranges( int /*test_case_idx*/ )
         if( uniform )
         {
             _ranges = new float[cdims*2];
-            for( i = 0; i < cdims; i++ )
+            for( i = cdims-1; i >= 0; i-- )
             {
                 _ranges[i*2] = (float)_low;
                 _ranges[i*2+1] = (float)_high;

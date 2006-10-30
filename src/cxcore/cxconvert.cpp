@@ -1592,7 +1592,8 @@ cvConvertScale( const void* srcarr, void* dstarr,
 
     if( no_scale && CV_ARE_TYPES_EQ( src, dst ) )
     {
-        cvCopy( src, dst );
+        if( src != dst )
+          cvCopy( src, dst );
         EXIT;
     }
 
