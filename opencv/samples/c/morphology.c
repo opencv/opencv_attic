@@ -84,15 +84,15 @@ int main( int argc, char** argv )
         ErodeDilate(erode_dilate_pos);
         c = cvWaitKey(0);
 
-        if( c == 27 )
+        if( (char)c == 27 )
             break;
-        if( c == 'e' )
+        if( (char)c == 'e' )
             element_shape = CV_SHAPE_ELLIPSE;
-        else if( c == 'r' )
+        else if( (char)c == 'r' )
             element_shape = CV_SHAPE_RECT;
-        else if( c == 'c' )
+        else if( (char)c == 'c' )
             element_shape = CV_SHAPE_CROSS;
-        else if( c == '\r' )
+        else if( (char)c == '\n' )
             element_shape = (element_shape + 1) % 3;
     }
 

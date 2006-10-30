@@ -72,17 +72,17 @@ int main( int argc, char** argv )
     {
         int c = cvWaitKey(0);
 
-        if( c == 27 )
+        if( (char)c == 27 )
             break;
 
-        if( c == 'r' )
+        if( (char)c == 'r' )
         {
             cvZero( marker_mask );
             cvCopy( img0, img );
             cvShowImage( "image", img );
         }
 
-        if( c == 'w' || c == '\r' )
+        if( (char)c == 'w' || (char)c == '\n' )
         {
             CvMemStorage* storage = cvCreateMemStorage(0);
             CvSeq* contours = 0;
