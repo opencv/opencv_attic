@@ -62,17 +62,17 @@ int main( int argc, char** argv )
     {
         int c = cvWaitKey(0);
 
-        if( c == 27 )
+        if( (char)c == 27 )
             break;
 
-        if( c == 'r' )
+        if( (char)c == 'r' )
         {
             cvZero( inpaint_mask );
             cvCopy( img0, img );
             cvShowImage( "image", img );
         }
 
-        if( c == 'i' || c == '\r' )
+        if( (char)c == 'i' || (char)c == '\n' )
         {
             cvNamedWindow( "inpainted image", 1 );
             cvInpaint( img, inpaint_mask, inpainted, 3, CV_INPAINT_TELEA );

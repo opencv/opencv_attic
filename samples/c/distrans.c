@@ -123,18 +123,18 @@ int main( int argc, char** argv )
 
         c = cvWaitKey(0);
 
-        if( c == 27 )
+        if( (char)c == 27 )
             break;
 
-        if( c == '3' )
+        if( (char)c == '3' )
             mask_size = CV_DIST_MASK_3;
-        else if( c == '5' )
+        else if( (char)c == '5' )
             mask_size = CV_DIST_MASK_5;
-        else if( c == '0' )
+        else if( (char)c == '0' )
             mask_size = CV_DIST_MASK_PRECISE;
-        else if( c == 'v' )
+        else if( (char)c == 'v' )
             build_voronoi ^= 1;
-        else if( c == '\r' )
+        else if( (char)c == '\n' )
         {
             if( build_voronoi )
             {
