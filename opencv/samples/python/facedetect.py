@@ -66,7 +66,7 @@ if __name__ == '__main__':
             if len(sys.argv) > 2:
                 input_name = sys.argv[2]
 
-        elif sys.argv[1] is "--help" or sys.argv[1] is "-h":
+        elif sys.argv[1] == "--help" or sys.argv[1] == "-h":
             print "Usage: facedetect --cascade=\"<cascade_path>\" [filename|camera_index]\n" ;
             sys.exit(-1)
 
