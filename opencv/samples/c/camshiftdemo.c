@@ -179,7 +179,7 @@ int main( int argc, char** argv )
             
             if( backproject_mode )
                 cvCvtColor( backproject, image, CV_GRAY2BGR );
-            if( image->origin )
+            if( !image->origin )
                 track_box.angle = -track_box.angle;
             cvEllipseBox( image, track_box, CV_RGB(255,0,0), 3, CV_AA, 0 );
         }
