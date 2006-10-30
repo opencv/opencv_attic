@@ -268,6 +268,9 @@ static void icvPutImage( CvWindow* window )
     
     window->imageRef = CGImageCreate( width, height, size , size*nbChannels , window->image->step, colorspace,  kCGImageAlphaNone , provider, NULL, true, kCGRenderingIntentDefault );
     icvDrawImage( window );
+
+    /* release the provider's memory */
+    CGDataProviderRelease( provider );
 }
 
 static void icvUpdateWindowSize( const CvWindow* window )
