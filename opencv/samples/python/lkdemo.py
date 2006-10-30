@@ -223,14 +223,12 @@ if __name__ == '__main__':
         highgui.cvShowImage ('LkDemo', image)
 
         # handle events
-        c = highgui.cvWaitKey (10) % 0x100
+        c = highgui.cvWaitKey (10)
+        print type (c)
 
         if c == '\x1b':
             # user has press the ESC key, so exit
             break
-
-        # transform the code to one character
-        c = chr (c)
 
         # processing depending on the character
         if c in ['r', 'R']:
