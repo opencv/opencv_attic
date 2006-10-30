@@ -2,6 +2,15 @@
 #include "highgui.h"
 #include <stdio.h>
 
+/* select the correct function for doing case insensitive string comparaison */
+#ifdef WIN32
+  #define MY_STRNICMP strnicmp
+  #define MY_STRICMP stricmp
+#else
+  #define MY_STRNICMP strncasecmp
+  #define MY_STRICMP strcasecmp
+#endif
+
 /* list of FG DETECTION modules */
 static CvFGDetector* cvCreateFGDetector0(){return cvCreateFGDetectorBase(CV_BG_MODEL_FGD, NULL);}
 static CvFGDetector* cvCreateFGDetector0Simple(){return cvCreateFGDetectorBase(CV_BG_MODEL_FGD_SIMPLE, NULL);}
@@ -273,7 +282,7 @@ static void set_params(int argc, char* argv[], CvVSModule* pM, char* prefix, cha
         char* ptr_eq = NULL;
         int   cmd_param_len=0;
         char* cmd = argv[i];
-        if(strnicmp(prefix,cmd,prefix_len)!=0) continue;
+        if(MY_STRNICMP(prefix,cmd,prefix_len)!=0) continue;
         cmd += prefix_len;
         if(cmd[0]!=':')continue;
         cmd++;
@@ -287,7 +296,7 @@ static void set_params(int argc, char* argv[], CvVSModule* pM, char* prefix, cha
             if(param==NULL) break;
             param_len = strlen(param);
             if(cmd_param_len!=param_len) continue;
-            if(strnicmp(param,cmd,param_len)!=0) continue;
+            if(MY_STRNICMP(param,cmd,param_len)!=0) continue;
             cmd+=param_len;
             if(cmd[0]!='=')continue;
             cmd++;
@@ -436,7 +445,7 @@ int main(int argc, char* argv[])
                 char* ext = argv[i] + len-4;
                 if( strrchr(argv[i],'=') == NULL &&
                     !bParsed &&
-                    (len>3 && (stricmp(ext,".avi") == 0 )))
+                    (len>3 && (MY_STRICMP(ext,".avi") == 0 )))
                 {
                     avi_name = argv[i];
                     break;
@@ -451,16 +460,16 @@ int main(int argc, char* argv[])
         if(!btgen_name)btgen_name=BlobTrackGen_Modules[0].nickname;
         for(i=0;BlobTrackGen_Modules[i].nickname;++i)
         {
-            if(stricmp(BlobTrackGen_Modules[i].nickname,btgen_name)==0)
+            if(MY_STRICMP(BlobTrackGen_Modules[i].nickname,btgen_name)==0)
                 pBTGenModule = BlobTrackGen_Modules + i;
         }
     }/* set Trajectory Generato modulke */
 
     /* init postprocessing module if tracker correction by postporcessing is reqierd */
-    if(bt_corr && stricmp(bt_corr,"PostProcRes")!=0 && !btpp_name)
+    if(bt_corr && MY_STRICMP(bt_corr,"PostProcRes")!=0 && !btpp_name)
     {
         btpp_name = bt_corr;
-        if(stricmp(btpp_name,"none")!=0)bt_corr = "PostProcRes";
+        if(MY_STRICMP(btpp_name,"none")!=0)bt_corr = "PostProcRes";
     }
 
     {/* set default parameters for one processing */
@@ -476,15 +485,15 @@ int main(int argc, char* argv[])
     if(scale_name) 
         scale = (float)atof(scale_name);
     for(pFGModule=FGDetector_Modules;pFGModule->nickname;++pFGModule)
-        if( fg_name && stricmp(fg_name,pFGModule->nickname)==0 ) break;
+        if( fg_name && MY_STRICMP(fg_name,pFGModule->nickname)==0 ) break;
     for(pBDModule=BlobDetector_Modules;pBDModule->nickname;++pBDModule)
-        if( bd_name && stricmp(bd_name,pBDModule->nickname)==0 ) break;
+        if( bd_name && MY_STRICMP(bd_name,pBDModule->nickname)==0 ) break;
     for(pBTModule=BlobTracker_Modules;pBTModule->nickname;++pBTModule)
-        if( bt_name && stricmp(bt_name,pBTModule->nickname)==0 ) break;
+        if( bt_name && MY_STRICMP(bt_name,pBTModule->nickname)==0 ) break;
     for(pBTPostProcModule=BlobTrackPostProc_Modules;pBTPostProcModule->nickname;++pBTPostProcModule)
-        if( btpp_name && stricmp(btpp_name,pBTPostProcModule->nickname)==0 ) break;
+        if( btpp_name && MY_STRICMP(btpp_name,pBTPostProcModule->nickname)==0 ) break;
     for(pBTAnalysisModule=BlobTrackAnalysis_Modules;pBTAnalysisModule->nickname;++pBTAnalysisModule)
-        if( bta_name && stricmp(bta_name,pBTAnalysisModule->nickname)==0 ) break;
+        if( bta_name && MY_STRICMP(bta_name,pBTAnalysisModule->nickname)==0 ) break;
 
     /* create source video */
     if(avi_name) 
@@ -593,7 +602,7 @@ int main(int argc, char* argv[])
             set_params(argc, argv, param.pBTPP, "btpp", pBTPostProcModule->nickname);
         }
 
-        param.UsePPData = (bt_corr && stricmp(bt_corr,"PostProcRes")==0);
+        param.UsePPData = (bt_corr && MY_STRICMP(bt_corr,"PostProcRes")==0);
 
         /* create blob trajectory analysis module */
         param.pBTA = NULL;
