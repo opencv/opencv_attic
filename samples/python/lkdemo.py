@@ -224,7 +224,6 @@ if __name__ == '__main__':
 
         # handle events
         c = highgui.cvWaitKey (10)
-        print type (c)
 
         if c == '\x1b':
             # user has press the ESC key, so exit
