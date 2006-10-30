@@ -212,7 +212,6 @@ static void icvDrawImage( CvWindow* window )
     if( window->imageRef == 0 ) return;
     
     CGContextRef myContext;
-    CvTrackbar* t; 
     CGRect rect;
     Rect portrect;
     int width = window->imageWidth;
@@ -276,7 +275,6 @@ static void icvPutImage( CvWindow* window )
 static void icvUpdateWindowSize( const CvWindow* window )
 {
     int width = 0, height = 240; /* init ˆ al taille de base de l'image*/
-    CvTrackbar* t;
     Rect globalBounds;
     
     GetWindowBounds(window->window, kWindowContentRgn, &globalBounds);
@@ -586,8 +584,6 @@ CV_IMPL void* cvGetWindowHandle( const char* name )
 {
     WindowRef result = 0;
     
-    CV_FUNCNAME( "cvGetWindowHandle" );
-    
     __BEGIN__;
     
     CvWindow* window;
@@ -788,8 +784,6 @@ static pascal OSStatus windowEventHandler(EventHandlerCallRef nextHandler, Event
             if (modifiers&shiftKey)   flags += CV_EVENT_FLAG_SHIFTKEY;
             if (modifiers& cmdKey )   flags += CV_EVENT_FLAG_ALTKEY;
 
-            int c = icvCountTrackbarInWindow(window);
-            
             if (window->on_mouse != NULL){
                 int lx,ly;
                 Rect structure, content;
