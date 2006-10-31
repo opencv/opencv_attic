@@ -67,8 +67,9 @@ am__lib_highgui_la_SOURCES_DIST = bitstrm.cpp grfmt_base.cpp \
 	grfmt_bmp.cpp grfmt_jpeg.cpp grfmt_png.cpp grfmt_pxm.cpp \
 	grfmt_jpeg2000.cpp grfmt_exr.cpp grfmt_sunras.cpp \
 	grfmt_tiff.cpp image.cpp loadsave.cpp precomp.cpp utils.cpp \
-	cvcap.cpp cvcap_dc1394.cpp cvcap_v4l.cpp cvcap_ffmpeg.cpp \
-	cvcap_qt.cpp cvcap_xine.cpp window_gtk.cpp window_carbon.cpp
+	cvcap.cpp window.cpp cvcap_dc1394.cpp cvcap_v4l.cpp \
+	cvcap_ffmpeg.cpp cvcap_qt.cpp cvcap_xine.cpp window_gtk.cpp \
+	window_carbon.cpp
 @BUILD_DC1394_TRUE@am__objects_1 = cvcap_dc1394.lo
 @BUILD_V4L_TRUE@am__objects_2 = cvcap_v4l.lo
 @BUILD_FFMPEG_TRUE@am__objects_3 = cvcap_ffmpeg.lo
@@ -79,9 +80,10 @@ am__lib_highgui_la_SOURCES_DIST = bitstrm.cpp grfmt_base.cpp \
 am_lib_highgui_la_OBJECTS = bitstrm.lo grfmt_base.lo grfmt_bmp.lo \
 	grfmt_jpeg.lo grfmt_png.lo grfmt_pxm.lo grfmt_jpeg2000.lo \
 	grfmt_exr.lo grfmt_sunras.lo grfmt_tiff.lo image.lo \
-	loadsave.lo precomp.lo utils.lo cvcap.lo $(am__objects_1) \
-	$(am__objects_2) $(am__objects_3) $(am__objects_4) \
-	$(am__objects_5) $(am__objects_6) $(am__objects_7)
+	loadsave.lo precomp.lo utils.lo cvcap.lo window.lo \
+	$(am__objects_1) $(am__objects_2) $(am__objects_3) \
+	$(am__objects_4) $(am__objects_5) $(am__objects_6) \
+	$(am__objects_7)
 lib_highgui_la_OBJECTS = $(am_lib_highgui_la_OBJECTS)
 libhighgui_la_DEPENDENCIES = lib_highgui.la \
 	$(top_builddir)/cxcore/src/libcxcore.la \
@@ -104,7 +106,6 @@ CXXCOMPILE = $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) \
 LTCXXCOMPILE = $(LIBTOOL) --tag=CXX --mode=compile $(CXX) $(DEFS) \
 	$(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) \
 	$(AM_CXXFLAGS) $(CXXFLAGS)
-CXXLD = $(CXX)
 CXXLINK = $(LIBTOOL) --tag=CXX --mode=link $(CXXLD) $(AM_CXXFLAGS) \
 	$(CXXFLAGS) $(AM_LDFLAGS) $(LDFLAGS) -o $@
 SOURCES = $(lib_highgui_la_SOURCES) $(libhighgui_la_SOURCES)
@@ -155,6 +156,7 @@ CXX = @CXX@
 CXXCPP = @CXXCPP@
 CXXDEPMODE = @CXXDEPMODE@
 CXXFLAGS = @CXXFLAGS@
+CXXLD = @CXXLD@
 CYGPATH_W = @CYGPATH_W@
 DEBUG = @DEBUG@
 DEFS = @DEFS@
@@ -179,6 +181,7 @@ INSTALL_DATA = @INSTALL_DATA@
 INSTALL_PROGRAM = @INSTALL_PROGRAM@
 INSTALL_SCRIPT = @INSTALL_SCRIPT@
 INSTALL_STRIP_PROGRAM = @INSTALL_STRIP_PROGRAM@
+LD = @LD@
 LDFLAGS = @LDFLAGS@
 LIBOBJS = @LIBOBJS@
 LIBS = @LIBS@
@@ -280,7 +283,7 @@ EXTRA_DIST = highgui.dsp highgui.vcproj highgui.rc resource.h    \
     cvcap_cmu.cpp cvcap_tyzx.cpp cvcap_vfw.cpp cvcap_mil.cpp     \
     cvcap_qt.cpp cvcap_dc1394.cpp cvcap_ffmpeg.cpp               \
     cvcap_v4l.cpp cvcap_xine.cpp                                 \
-    window.cpp window_carbon.cpp window_gtk.cpp window_w32.cpp
+    window_carbon.cpp window_gtk.cpp window_w32.cpp
 
 INCLUDES = -I. -I$(top_srcdir)/cxcore/include \
     -I$(top_srcdir)/cv/include @GTHREAD_CFLAGS@ @GTK_CFLAGS@ \
@@ -313,7 +316,7 @@ lib_highgui_la_SOURCES = \
     bitstrm.cpp grfmt_base.cpp grfmt_bmp.cpp grfmt_jpeg.cpp      \
     grfmt_png.cpp grfmt_pxm.cpp grfmt_jpeg2000.cpp grfmt_exr.cpp \
     grfmt_sunras.cpp grfmt_tiff.cpp image.cpp loadsave.cpp       \
-    precomp.cpp utils.cpp cvcap.cpp                              \
+    precomp.cpp utils.cpp cvcap.cpp window.cpp                   \
     $(TMP_DC1394) $(TMP_V4L) $(TMP_FFMPEG) $(TMP_QT)             \
     $(TMP_XINE) $(TMP_GTK) $(TMP_CARBON)
 
@@ -432,6 +435,7 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/loadsave.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/precomp.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/utils.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/window.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/window_carbon.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/window_gtk.Plo@am__quote@
 
