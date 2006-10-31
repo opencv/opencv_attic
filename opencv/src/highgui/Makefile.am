@@ -2,7 +2,7 @@ EXTRA_DIST = highgui.dsp highgui.vcproj highgui.rc resource.h    \
     cvcap_cmu.cpp cvcap_tyzx.cpp cvcap_vfw.cpp cvcap_mil.cpp     \
     cvcap_qt.cpp cvcap_dc1394.cpp cvcap_ffmpeg.cpp               \
     cvcap_v4l.cpp cvcap_xine.cpp                                 \
-    window.cpp window_carbon.cpp window_gtk.cpp window_w32.cpp
+    window_carbon.cpp window_gtk.cpp window_w32.cpp
 
 INCLUDES = -I. -I$(top_srcdir)/cxcore/include \
     -I$(top_srcdir)/cv/include @GTHREAD_CFLAGS@ @GTK_CFLAGS@ \
@@ -63,7 +63,7 @@ lib_highgui_la_SOURCES = \
     bitstrm.cpp grfmt_base.cpp grfmt_bmp.cpp grfmt_jpeg.cpp      \
     grfmt_png.cpp grfmt_pxm.cpp grfmt_jpeg2000.cpp grfmt_exr.cpp \
     grfmt_sunras.cpp grfmt_tiff.cpp image.cpp loadsave.cpp       \
-    precomp.cpp utils.cpp cvcap.cpp                              \
+    precomp.cpp utils.cpp cvcap.cpp window.cpp                   \
     $(TMP_DC1394) $(TMP_V4L) $(TMP_FFMPEG) $(TMP_QT)             \
     $(TMP_XINE) $(TMP_GTK) $(TMP_CARBON)
 lib_highgui_la_LDFLAGS = -no-undefined @LDFLAGS@
