@@ -454,7 +454,7 @@ void TrackbarActionProcPtr (ControlRef theControl, ControlPartCode partCode)
     
 	if (trackbar == NULL)
 	{
-        fprintf(stderr,"Erreur recuperation trackbar\n");
+        fprintf(stderr,"Error getting trackbar\n");
         return;
     }
 	else 
@@ -564,7 +564,7 @@ cvSetMouseCallback( const char* name, CvMouseCallback function, void* info)
     } 
 	else
 	{
-        fprintf(stdout,"Une erreur lors de cvSetMouseCallback, window nom trouvee : %s",name);
+        fprintf(stdout,"Error with cvSetMouseCallback. Window not found : %s\n",name);
 	}
 }
 
@@ -695,11 +695,11 @@ CV_IMPL int cvNamedWindow( const char* name, int flags )
     
     err = CreateNewWindow ( kDocumentWindowClass,wAttributes,&contentBounds,&outWindow);
     if (err != noErr)
-        fprintf(stderr,"Erreur while creating the window\n");
+        fprintf(stderr,"Error while creating the window\n");
     
     SetWindowTitleWithCFString(outWindow,CFStringCreateWithCString(NULL,name,kCFStringEncodingASCII));
     if (err != noErr)
-        fprintf(stdout,"Erreur SetWindowTitleWithCFString\n");
+        fprintf(stdout,"Error SetWindowTitleWithCFString\n");
     
     window->window = outWindow;
     
@@ -800,6 +800,7 @@ static pascal OSStatus windowEventHandler(EventHandlerCallRef nextHandler, Event
 
                 if (lx>0 && ly >0){ /* a remettre dans les coordonnŽes locale */
                     window->on_mouse (event, lx, ly, flags, window->on_mouse_param);
+                    return noErr;
                 }
             }
         }
