@@ -799,7 +799,7 @@ static pascal OSStatus windowEventHandler(EventHandlerCallRef nextHandler, Event
                 }
 
                 if (lx>0 && ly >0){ /* a remettre dans les coordonnes locale */
-                    window->on_mouse(event,lx,ly,0,NULL);
+                    window->on_mouse (event, lx, ly, flags, window->on_mouse_param);
                 }
             }
         }
