@@ -876,3 +876,14 @@ public:
 	$result = SWIG_AppendResult($result, to_add, 2);
 }
 
+/**
+ * int *value  in cvCreateTrackbar() is only used for input in the Python wrapper.
+ * for output, use the pos in the callback
+ * TODO: remove the memory leak introducted by the malloc () (if needed).
+ */
+%typemap(in, numinputs=1) (int *value)
+{
+    $1 = (int *)malloc (sizeof (int));
+    *$1 = PyInt_AsLong ($input);
+}
+
