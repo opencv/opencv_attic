@@ -4,6 +4,10 @@
 
 int PySwigObject_Check(PyObject *op);
 
+/* Py_ssize_t for old Pythons */
+#if PY_VERSION_HEX < 0x02050000
+typedef int Py_ssize_t;
+#endif
 
 PyObject * PyTuple_FromIntArray(int * arr, int len){
 	PyObject * obj = PyTuple_New(len);
@@ -172,7 +176,7 @@ CvRect PySlice_to_CvRect(CvArr * src, PyObject * idx_object){
 	CvSize sz = cvGetSize(src);
 	//printf("Size %dx%d\n", sz.height, sz.width);
 	int lower[2], upper[2];
-	int len, start, stop, step, slicelength;
+	Py_ssize_t len, start, stop, step, slicelength;
 
 	if(PyInt_Check(idx_object) || PyLong_Check(idx_object)){
 		// if array is a row vector, assume index into columns
@@ -200,14 +204,14 @@ CvRect PySlice_to_CvRect(CvArr * src, PyObject * idx_object){
 		}
 		// if array is a row vector, assume index bounds are into columns
 		if(sz.height>1){
-			lower[0] = start; // use c convention of start index = 0
-			upper[0] = stop;    // use c convention
+			lower[0] = (int) start; // use c convention of start index = 0
+			upper[0] = (int) stop;    // use c convention
 			lower[1] = 0;
 			upper[1] = sz.width;
 		}
 		else{
-			lower[1] = start; // use c convention of start index = 0
-			upper[1] = stop;    // use c convention
+			lower[1] = (int) start; // use c convention of start index = 0
+			upper[1] = (int) stop;    // use c convention
 			lower[0] = 0;
 			upper[0] = sz.height;
 		}
