@@ -265,10 +265,15 @@ else{}
 	// array slice assignment
 	void __setitem__(PyObject * object, CvArr * arr){
 		CvMat tmp;
+		CvMat src_stub, *src;
 		CvRect subrect = PySlice_to_CvRect( self, object );
 		CHECK_SLICE_BOUNDS( subrect, self->cols, self->rows, );
 		cvGetSubRect(self, &tmp, subrect);
-		cvConvert(arr, &tmp);
+		
+		// Reshape source array to fit destination
+		src=cvReshape(arr, &src_stub, CV_MAT_CN(tmp.type), tmp.rows);
+
+		cvConvert(src, &tmp);
 	}
 	
 	// slice access
