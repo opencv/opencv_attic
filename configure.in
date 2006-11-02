@@ -23,7 +23,7 @@ AC_CONFIG_AUX_DIR([autotools])
 AC_CONFIG_MACRO_DIR([autotools/aclocal])
 
 # put CVS revision of this configure.in into the resulting configure script
-AC_REVISION($Revision: 1.38 $)
+AC_REVISION($Revision: 1.39 $)
 
 # Detect the canonical host and target build environment
 AC_CANONICAL_HOST
@@ -101,7 +101,7 @@ AM_CONDITIONAL([BUILD_APPS], [test x"$enable_apps" = x"yes"])
 AC_ARG_WITH([swig], 
             [AS_HELP_STRING([--with-swig],[use swig wrapper generator])],
             [with_swig=$withval],
-            [with_swig=auto])
+            [with_swig=no])
 
 # does the user want to compile python modules as well?
 AC_ARG_WITH([python], 
@@ -693,8 +693,15 @@ AM_CONDITIONAL([BUILD_PYTHON_WRAPPERS], [test x"$have_python" = "xyes"])
 SWIG=""
 if test x"$with_swig" = "xyes"; then
     AC_MSG_NOTICE([Checking for SWIG])
-    AC_PATH_SWIG([1.3.24])
-    #
+
+	# Python 2.5 requires SWIG >= 1.3.30
+	AM_PYTHON_CHECK_VERSION( [2.5], have_python25=yes, have_python25=no )
+	if test x"$have_python25" = "xyes" ; then
+		AC_PATH_SWIG([1.3.30])
+	else
+		AC_PATH_SWIG([1.2.24])
+	fi
+
     if test -n "$SWIG"; then
         SWIG_ENABLE_CXX()
         SWIG_MULTI_MODULE_SUPPORT()
@@ -703,7 +710,10 @@ if test x"$with_swig" = "xyes"; then
         SWIG_PYTHON()
         have_swig=yes
     else
-        have_swig=no
+		if test x"$have_python25" = "xyes"; then
+			AC_MSG_WARN([Python Version >= 2.5 requires SWIG >= 1.3.30])
+		fi
+		have_swig=no
     fi
 else
     if test x"$with_swig" = "xno"; then
