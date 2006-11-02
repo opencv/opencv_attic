@@ -13,7 +13,7 @@ static CvArr * PySequence_to_CvArr( PyObject * obj );
 		memset( array, 0, sizeof(ctype)*len );                                \
 		array[0] = PyObject_As##ptype( obj );                                 \
 	}                                                                         \
-	else if(PySequence_Check(obj)){                                           \
+	else if(PyList_Check(obj) || PyTuple_Check(obj)){                         \
 		int seqsize = PySequence_Size(obj);                                   \
 		for(int i=0; i<len && i<seqsize; i++){                                \
 			if(i<seqsize){                                                    \
@@ -133,7 +133,7 @@ static CvScalar PyObject_to_CvScalar(PyObject * obj){
     if( SWIG_ConvertPtr(obj, (void**)&pt_ptr, SWIGTYPE_p_CvPoint, 0) != -1) {
         return cvScalar(pt_ptr->x, pt_ptr->y);
     }
-	if(PyObject_AsDoubleArray(obj, val.val, 4)==-1){
+	if(PyObject_AsDoubleArray(obj, val.val, 4)!=-1){
 		return val;
 	}
 	return cvScalar(-1,-1,-1,-1); 

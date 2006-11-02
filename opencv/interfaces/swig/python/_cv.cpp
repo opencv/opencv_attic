@@ -2770,7 +2770,7 @@ static CvArr * PySequence_to_CvArr( PyObject * obj );
 		memset( array, 0, sizeof(ctype)*len );                                \
 		array[0] = PyObject_As##ptype( obj );                                 \
 	}                                                                         \
-	else if(PySequence_Check(obj)){                                           \
+	else if(PyList_Check(obj) || PyTuple_Check(obj)){                         \
 		int seqsize = PySequence_Size(obj);                                   \
 		for(int i=0; i<len && i<seqsize; i++){                                \
 			if(i<seqsize){                                                    \
@@ -2890,7 +2890,7 @@ static CvScalar PyObject_to_CvScalar(PyObject * obj){
     if( SWIG_ConvertPtr(obj, (void**)&pt_ptr, SWIGTYPE_p_CvPoint, 0) != -1) {
         return cvScalar(pt_ptr->x, pt_ptr->y);
     }
-	if(PyObject_AsDoubleArray(obj, val.val, 4)==-1){
+	if(PyObject_AsDoubleArray(obj, val.val, 4)!=-1){
 		return val;
 	}
 	return cvScalar(-1,-1,-1,-1); 
@@ -4315,8 +4315,7 @@ else{}
 		cvSet(&tmp, val);
 	}
 SWIGINTERN void CvMat___setitem____SWIG_4(CvMat *self,PyObject *object,CvArr *arr){
-		CvMat tmp;
-		CvMat src_stub, *src;
+		CvMat tmp, src_stub, *src;
 		CvRect subrect = PySlice_to_CvRect( self, object );
 		/*@SWIG:CHECK_SLICE_BOUNDS@*/
 	//printf("__setitem__ slice(%d:%d, %d:%d) array(%d,%d)", subrect.x, subrect.y, subrect.x+subrect.width, subrect.y+subrect.height, self->cols, self->rows);
@@ -4338,6 +4337,9 @@ else{}
 		cvGetSubRect(self, &tmp, subrect);
 		
 		// Reshape source array to fit destination
+		// This will be used a lot for small arrays b/c
+		// PyObject_to_CvArr tries to compress a 2-D python
+		// array with 1-4 columns into a multichannel vector
 		src=cvReshape(arr, &src_stub, CV_MAT_CN(tmp.type), tmp.rows);
 
 		cvConvert(src, &tmp);

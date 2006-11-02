@@ -264,13 +264,15 @@ else{}
 
 	// array slice assignment
 	void __setitem__(PyObject * object, CvArr * arr){
-		CvMat tmp;
-		CvMat src_stub, *src;
+		CvMat tmp, src_stub, *src;
 		CvRect subrect = PySlice_to_CvRect( self, object );
 		CHECK_SLICE_BOUNDS( subrect, self->cols, self->rows, );
 		cvGetSubRect(self, &tmp, subrect);
 		
 		// Reshape source array to fit destination
+		// This will be used a lot for small arrays b/c
+		// PyObject_to_CvArr tries to compress a 2-D python
+		// array with 1-4 columns into a multichannel vector
 		src=cvReshape(arr, &src_stub, CV_MAT_CN(tmp.type), tmp.rows);
 
 		cvConvert(src, &tmp);
