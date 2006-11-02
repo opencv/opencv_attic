@@ -565,7 +565,9 @@ icvLine2( CvMat* img, CvPoint pt1, CvPoint pt2, const void* color )
     int ax, ay;
     int i, j;
     int x_step, y_step;
-    int cb = ((uchar*)color)[0], cg = ((uchar*)color)[1], cr = ((uchar*)color)[2];
+    int cb = ((uchar*)color)[0];
+    int cg = ((uchar*)color)[1];
+    int cr = ((uchar*)color)[2];
     int pix_size = CV_ELEM_SIZE( img->type );
     uchar *ptr = (uchar*)(img->data.ptr), *tptr;
     int step = img->step;

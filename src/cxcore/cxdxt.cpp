@@ -255,6 +255,8 @@ icvDFTInit( int n0, int nf, int* factors, int* itab, int elem_size, void* _wave,
     }
     else
     {
+	// radix[] is initialized from index 'nf' down to zero
+        assert (nf < 34);
         radix[nf] = 1;
         digits[nf] = 0;
         for( i = 0; i < nf; i++ )
@@ -303,6 +305,8 @@ icvDFTInit( int n0, int nf, int* factors, int* itab, int elem_size, void* _wave,
             }
 
             digits[1]++;
+
+            assert (nf >= 2); // because we read radix[2] which is uninitialized otherwise
             for( i = n, j = radix[2]; i < n0; )
             {
                 for( k = 0; k < n; k++ )
@@ -933,12 +937,15 @@ icvDFT_32fc( const CvComplex32f* src, CvComplex32f* dst, int n,
             }
             else
             {
-                for( i = 0; i < n; i++, itab += tab_step )
+                for( i = 0; 
+                i < n; 
+                i++)
                 {
                     j = itab[0];
                     assert( (unsigned)j < (unsigned)n );
                     if( j > i )
                         CV_SWAP(dst[i], dst[j], t);
+                    itab += tab_step;
                 }
             }
         }
