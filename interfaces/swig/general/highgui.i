@@ -56,12 +56,6 @@
 %include "./memory.i"
 %include "./typemaps.i"
 
-/**
- * int *value  in cvCreateTrackbar() is only used for input.
- * for output, use the pos in the callback
- */
-%apply int *INPUT {int *value};
-
 %newobject cvLoadImage;
 %newobject cvLoadImageM;
 %newobject cvLoadImageMat;
