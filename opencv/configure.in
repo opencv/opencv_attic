@@ -23,7 +23,7 @@ AC_CONFIG_AUX_DIR([autotools])
 AC_CONFIG_MACRO_DIR([autotools/aclocal])
 
 # put CVS revision of this configure.in into the resulting configure script
-AC_REVISION($Revision: 1.37 $)
+AC_REVISION($Revision: 1.38 $)
 
 # Detect the canonical host and target build environment
 AC_CANONICAL_HOST
@@ -69,8 +69,8 @@ AC_PROG_CXX
 AC_PROG_CC
 AC_PROG_CPP
 AC_PROG_LIBTOOL
-AC_SUBST(LD)
-AC_SUBST(CXXLD)
+# AC_SUBST(LD)
+# AC_SUBST(CXXLD)
 
 ######################################################################
 # the following interpret 'with' and 'enable' switches.
