@@ -4316,6 +4316,7 @@ else{}
 	}
 SWIGINTERN void CvMat___setitem____SWIG_4(CvMat *self,PyObject *object,CvArr *arr){
 		CvMat tmp;
+		CvMat src_stub, *src;
 		CvRect subrect = PySlice_to_CvRect( self, object );
 		/*@SWIG:CHECK_SLICE_BOUNDS@*/
 	//printf("__setitem__ slice(%d:%d, %d:%d) array(%d,%d)", subrect.x, subrect.y, subrect.x+subrect.width, subrect.y+subrect.height, self->cols, self->rows);
@@ -4335,7 +4336,11 @@ SWIGINTERN void CvMat___setitem____SWIG_4(CvMat *self,PyObject *object,CvArr *ar
 else{}
 /*@SWIG@*/;
 		cvGetSubRect(self, &tmp, subrect);
-		cvConvert(arr, &tmp);
+		
+		// Reshape source array to fit destination
+		src=cvReshape(arr, &src_stub, CV_MAT_CN(tmp.type), tmp.rows);
+
+		cvConvert(src, &tmp);
 	}
 SWIGINTERN PyObject *CvMat___getitem__(CvMat *self,PyObject *object){
 		CvMat * mat;

@@ -84,23 +84,70 @@ class CvSubdiv2DEdge_Wrapper(_object):
 CvSubdiv2DEdge_Wrapper_swigregister = _highgui.CvSubdiv2DEdge_Wrapper_swigregister
 CvSubdiv2DEdge_Wrapper_swigregister(CvSubdiv2DEdge_Wrapper)
 
-import cv
-cvRetrieveFrame = _highgui.cvRetrieveFrame
-cvQueryFrame = _highgui.cvQueryFrame
-cvInitSystem = _highgui.cvInitSystem
-cvStartWindowThread = _highgui.cvStartWindowThread
+
+def cvRetrieveFrame(*args):
+  """cvRetrieveFrame(CvCapture capture) -> CvMat"""
+  return _highgui.cvRetrieveFrame(*args)
+
+def cvQueryFrame(*args):
+  """cvQueryFrame(CvCapture capture) -> CvMat"""
+  return _highgui.cvQueryFrame(*args)
+
+def cvInitSystem(*args):
+  """cvInitSystem(int argc, char argv) -> int"""
+  return _highgui.cvInitSystem(*args)
+
+def cvStartWindowThread(*args):
+  """cvStartWindowThread() -> int"""
+  return _highgui.cvStartWindowThread(*args)
 CV_WINDOW_AUTOSIZE = _highgui.CV_WINDOW_AUTOSIZE
-cvNamedWindow = _highgui.cvNamedWindow
-cvShowImage = _highgui.cvShowImage
-cvResizeWindow = _highgui.cvResizeWindow
-cvMoveWindow = _highgui.cvMoveWindow
-cvDestroyWindow = _highgui.cvDestroyWindow
-cvDestroyAllWindows = _highgui.cvDestroyAllWindows
-cvGetWindowHandle = _highgui.cvGetWindowHandle
-cvGetWindowName = _highgui.cvGetWindowName
-cvCreateTrackbar = _highgui.cvCreateTrackbar
-cvGetTrackbarPos = _highgui.cvGetTrackbarPos
-cvSetTrackbarPos = _highgui.cvSetTrackbarPos
+
+def cvNamedWindow(*args):
+  """cvNamedWindow(char name, int flags=1) -> int"""
+  return _highgui.cvNamedWindow(*args)
+
+def cvShowImage(*args):
+  """cvShowImage(char name, CvArr image)"""
+  return _highgui.cvShowImage(*args)
+
+def cvResizeWindow(*args):
+  """cvResizeWindow(char name, int width, int height)"""
+  return _highgui.cvResizeWindow(*args)
+
+def cvMoveWindow(*args):
+  """cvMoveWindow(char name, int x, int y)"""
+  return _highgui.cvMoveWindow(*args)
+
+def cvDestroyWindow(*args):
+  """cvDestroyWindow(char name)"""
+  return _highgui.cvDestroyWindow(*args)
+
+def cvDestroyAllWindows(*args):
+  """cvDestroyAllWindows()"""
+  return _highgui.cvDestroyAllWindows(*args)
+
+def cvGetWindowHandle(*args):
+  """cvGetWindowHandle(char name) -> void"""
+  return _highgui.cvGetWindowHandle(*args)
+
+def cvGetWindowName(*args):
+  """cvGetWindowName(void window_handle) -> char"""
+  return _highgui.cvGetWindowName(*args)
+
+def cvCreateTrackbar(*args):
+  """
+    cvCreateTrackbar(char trackbar_name, char window_name, int value, int count, 
+        CvTrackbarCallback on_change) -> int
+    """
+  return _highgui.cvCreateTrackbar(*args)
+
+def cvGetTrackbarPos(*args):
+  """cvGetTrackbarPos(char trackbar_name, char window_name) -> int"""
+  return _highgui.cvGetTrackbarPos(*args)
+
+def cvSetTrackbarPos(*args):
+  """cvSetTrackbarPos(char trackbar_name, char window_name, int pos)"""
+  return _highgui.cvSetTrackbarPos(*args)
 CV_EVENT_MOUSEMOVE = _highgui.CV_EVENT_MOUSEMOVE
 CV_EVENT_LBUTTONDOWN = _highgui.CV_EVENT_LBUTTONDOWN
 CV_EVENT_RBUTTONDOWN = _highgui.CV_EVENT_RBUTTONDOWN
@@ -117,19 +164,37 @@ CV_EVENT_FLAG_MBUTTON = _highgui.CV_EVENT_FLAG_MBUTTON
 CV_EVENT_FLAG_CTRLKEY = _highgui.CV_EVENT_FLAG_CTRLKEY
 CV_EVENT_FLAG_SHIFTKEY = _highgui.CV_EVENT_FLAG_SHIFTKEY
 CV_EVENT_FLAG_ALTKEY = _highgui.CV_EVENT_FLAG_ALTKEY
-cvSetMouseCallbackOld = _highgui.cvSetMouseCallbackOld
+
+def cvSetMouseCallbackOld(*args):
+  """cvSetMouseCallbackOld(char window_name, CvMouseCallback on_mouse, void param=None)"""
+  return _highgui.cvSetMouseCallbackOld(*args)
 CV_LOAD_IMAGE_UNCHANGED = _highgui.CV_LOAD_IMAGE_UNCHANGED
 CV_LOAD_IMAGE_GRAYSCALE = _highgui.CV_LOAD_IMAGE_GRAYSCALE
 CV_LOAD_IMAGE_COLOR = _highgui.CV_LOAD_IMAGE_COLOR
 CV_LOAD_IMAGE_ANYDEPTH = _highgui.CV_LOAD_IMAGE_ANYDEPTH
 CV_LOAD_IMAGE_ANYCOLOR = _highgui.CV_LOAD_IMAGE_ANYCOLOR
-cvLoadImageM = _highgui.cvLoadImageM
-cvSaveImage = _highgui.cvSaveImage
+
+def cvLoadImageM(*args):
+  """cvLoadImageM(char filename, int iscolor=1) -> CvMat"""
+  return _highgui.cvLoadImageM(*args)
+
+def cvSaveImage(*args):
+  """cvSaveImage(char filename, CvArr image) -> int"""
+  return _highgui.cvSaveImage(*args)
 CV_CVTIMG_FLIP = _highgui.CV_CVTIMG_FLIP
 CV_CVTIMG_SWAP_RB = _highgui.CV_CVTIMG_SWAP_RB
-cvConvertImage = _highgui.cvConvertImage
-cvWaitKeyC = _highgui.cvWaitKeyC
-cvCreateFileCapture = _highgui.cvCreateFileCapture
+
+def cvConvertImage(*args):
+  """cvConvertImage(CvArr src, CvArr dst, int flags=0)"""
+  return _highgui.cvConvertImage(*args)
+
+def cvWaitKeyC(*args):
+  """cvWaitKeyC(int delay=0) -> int"""
+  return _highgui.cvWaitKeyC(*args)
+
+def cvCreateFileCapture(*args):
+  """cvCreateFileCapture(char filename) -> CvCapture"""
+  return _highgui.cvCreateFileCapture(*args)
 CV_CAP_ANY = _highgui.CV_CAP_ANY
 CV_CAP_MIL = _highgui.CV_CAP_MIL
 CV_CAP_VFW = _highgui.CV_CAP_VFW
@@ -146,11 +211,22 @@ CV_TYZX_RIGHT = _highgui.CV_TYZX_RIGHT
 CV_TYZX_COLOR = _highgui.CV_TYZX_COLOR
 CV_TYZX_Z = _highgui.CV_TYZX_Z
 CV_CAP_QT = _highgui.CV_CAP_QT
-cvCreateCameraCapture = _highgui.cvCreateCameraCapture
-cvGrabFrame = _highgui.cvGrabFrame
-cvRetrieveFrame__Deprecated = _highgui.cvRetrieveFrame__Deprecated
-cvQueryFrame__Deprecated = _highgui.cvQueryFrame__Deprecated
-cvReleaseCapture = _highgui.cvReleaseCapture
+
+def cvCreateCameraCapture(*args):
+  """cvCreateCameraCapture(int index) -> CvCapture"""
+  return _highgui.cvCreateCameraCapture(*args)
+
+def cvGrabFrame(*args):
+  """cvGrabFrame(CvCapture capture) -> int"""
+  return _highgui.cvGrabFrame(*args)
+
+def cvRetrieveFrame__Deprecated(*args):
+  """cvRetrieveFrame__Deprecated(CvCapture capture)"""
+  return _highgui.cvRetrieveFrame__Deprecated(*args)
+
+def cvQueryFrame__Deprecated(*args):
+  """cvQueryFrame__Deprecated(CvCapture capture)"""
+  return _highgui.cvQueryFrame__Deprecated(*args)
 CV_CAP_PROP_POS_MSEC = _highgui.CV_CAP_PROP_POS_MSEC
 CV_CAP_PROP_POS_FRAMES = _highgui.CV_CAP_PROP_POS_FRAMES
 CV_CAP_PROP_POS_AVI_RATIO = _highgui.CV_CAP_PROP_POS_AVI_RATIO
@@ -167,41 +243,110 @@ CV_CAP_PROP_SATURATION = _highgui.CV_CAP_PROP_SATURATION
 CV_CAP_PROP_HUE = _highgui.CV_CAP_PROP_HUE
 CV_CAP_PROP_GAIN = _highgui.CV_CAP_PROP_GAIN
 CV_CAP_PROP_CONVERT_RGB = _highgui.CV_CAP_PROP_CONVERT_RGB
-cvGetCaptureProperty = _highgui.cvGetCaptureProperty
-cvSetCaptureProperty = _highgui.cvSetCaptureProperty
-cvCreateVideoWriter = _highgui.cvCreateVideoWriter
-cvWriteFrame = _highgui.cvWriteFrame
-cvReleaseVideoWriter = _highgui.cvReleaseVideoWriter
+
+def cvGetCaptureProperty(*args):
+  """cvGetCaptureProperty(CvCapture capture, int property_id) -> double"""
+  return _highgui.cvGetCaptureProperty(*args)
+
+def cvSetCaptureProperty(*args):
+  """cvSetCaptureProperty(CvCapture capture, int property_id, double value) -> int"""
+  return _highgui.cvSetCaptureProperty(*args)
+
+def cvCreateVideoWriter(*args):
+  """
+    cvCreateVideoWriter(char filename, int fourcc, double fps, CvSize frame_size, 
+        int is_color=1) -> CvVideoWriter
+    """
+  return _highgui.cvCreateVideoWriter(*args)
+
+def cvWriteFrame(*args):
+  """cvWriteFrame(CvVideoWriter writer,  image) -> int"""
+  return _highgui.cvWriteFrame(*args)
 HG_AUTOSIZE = _highgui.HG_AUTOSIZE
 class CvvImage(_object):
+    """Proxy of C++ CvvImage class"""
     __swig_setmethods__ = {}
     __setattr__ = lambda self, name, value: _swig_setattr(self, CvvImage, name, value)
     __swig_getmethods__ = {}
     __getattr__ = lambda self, name: _swig_getattr(self, CvvImage, name)
     __repr__ = _swig_repr
     def __init__(self, *args): 
+        """__init__(self) -> CvvImage"""
         this = _highgui.new_CvvImage(*args)
         try: self.this.append(this)
         except: self.this = this
     __swig_destroy__ = _highgui.delete_CvvImage
     __del__ = lambda self : None;
-    def Create(*args): return _highgui.CvvImage_Create(*args)
-    def Load(*args): return _highgui.CvvImage_Load(*args)
-    def LoadRect(*args): return _highgui.CvvImage_LoadRect(*args)
-    def Save(*args): return _highgui.CvvImage_Save(*args)
-    def CopyOf(*args): return _highgui.CvvImage_CopyOf(*args)
-    def GetImage(*args): return _highgui.CvvImage_GetImage(*args)
-    def Destroy(*args): return _highgui.CvvImage_Destroy(*args)
-    def Width(*args): return _highgui.CvvImage_Width(*args)
-    def Height(*args): return _highgui.CvvImage_Height(*args)
-    def Bpp(*args): return _highgui.CvvImage_Bpp(*args)
-    def Fill(*args): return _highgui.CvvImage_Fill(*args)
-    def Show(*args): return _highgui.CvvImage_Show(*args)
+    def Create(*args):
+        """
+        Create(self, int width, int height, int bits_per_pixel, int image_origin=0) -> bool
+        Create(self, int width, int height, int bits_per_pixel) -> bool
+        """
+        return _highgui.CvvImage_Create(*args)
+
+    def Load(*args):
+        """
+        Load(self, char filename, int desired_color=1) -> bool
+        Load(self, char filename) -> bool
+        """
+        return _highgui.CvvImage_Load(*args)
+
+    def LoadRect(*args):
+        """LoadRect(self, char filename, int desired_color, CvRect r) -> bool"""
+        return _highgui.CvvImage_LoadRect(*args)
+
+    def Save(*args):
+        """Save(self, char filename) -> bool"""
+        return _highgui.CvvImage_Save(*args)
+
+    def CopyOf(*args):
+        """
+        CopyOf(self, CvvImage image, int desired_color=-1)
+        CopyOf(self, CvvImage image)
+        CopyOf(self,  img, int desired_color=-1)
+        CopyOf(self,  img)
+        """
+        return _highgui.CvvImage_CopyOf(*args)
+
+    def GetImage(*args):
+        """GetImage(self)"""
+        return _highgui.CvvImage_GetImage(*args)
+
+    def Destroy(*args):
+        """Destroy(self)"""
+        return _highgui.CvvImage_Destroy(*args)
+
+    def Width(*args):
+        """Width(self) -> int"""
+        return _highgui.CvvImage_Width(*args)
+
+    def Height(*args):
+        """Height(self) -> int"""
+        return _highgui.CvvImage_Height(*args)
+
+    def Bpp(*args):
+        """Bpp(self) -> int"""
+        return _highgui.CvvImage_Bpp(*args)
+
+    def Fill(*args):
+        """Fill(self, int color)"""
+        return _highgui.CvvImage_Fill(*args)
+
+    def Show(*args):
+        """Show(self, char window)"""
+        return _highgui.CvvImage_Show(*args)
+
 CvvImage_swigregister = _highgui.CvvImage_swigregister
 CvvImage_swigregister(CvvImage)
 cvSetMouseCallback = _highgui.cvSetMouseCallback
 cvWaitKey = _highgui.cvWaitKey
-cvLoadImage = _highgui.cvLoadImage
+
+def cvLoadImage(*args):
+  """
+    cvLoadImage(char filename, int iscolor=1) -> CvMat
+    cvLoadImage(char filename) -> CvMat
+    """
+  return _highgui.cvLoadImage(*args)
 
 __doc__ = """HighGUI provides minimalistic user interface parts and video input/output.
 
