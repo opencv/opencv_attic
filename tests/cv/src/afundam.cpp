@@ -459,6 +459,9 @@ cvTsConvertHomogenious( const CvMat* src, CvMat* dst )
 
     if( dst != dst0 )
         cvTsConvert( dst, dst0 );
+
+    cvReleaseMat( &src_buf );
+    cvReleaseMat( &dst_buf );
 }
 
 
@@ -510,6 +513,8 @@ cvTsProjectPoints( const CvMat* _3d, const CvMat* Rt, const CvMat* A,
     }
 
     cvTsConvertHomogenious( temp, _2d );
+    cvReleaseMat( &noise );
+    cvReleaseMat( &temp );
 }
 
 
