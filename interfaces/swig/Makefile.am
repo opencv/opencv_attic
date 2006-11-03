@@ -15,4 +15,4 @@ AM_CPPFLAGS = \
 
 SUBDIRS = filtered general python
 
-EXTRA_DIST = REAME
+EXTRA_DIST = README
