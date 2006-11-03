@@ -14,3 +14,5 @@ AM_CPPFLAGS = \
   -DCV_NO_BACKWARD_COMPATIBILITY
 
 SUBDIRS = filtered general python
+
+EXTRA_DIST = REAME
