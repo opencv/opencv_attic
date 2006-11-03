@@ -43,7 +43,7 @@ build_triplet = @build@
 host_triplet = @host@
 target_triplet = @target@
 subdir = interfaces/swig
-DIST_COMMON = $(srcdir)/Makefile.am $(srcdir)/Makefile.in
+DIST_COMMON = README $(srcdir)/Makefile.am $(srcdir)/Makefile.in
 ACLOCAL_M4 = $(top_srcdir)/aclocal.m4
 am__aclocal_m4_deps = $(top_srcdir)/autotools/aclocal/az_python.m4 \
 	$(top_srcdir)/autotools/aclocal/pkg.m4 \
@@ -238,6 +238,7 @@ AM_CPPFLAGS = \
   -DCV_NO_BACKWARD_COMPATIBILITY
 
 SUBDIRS = filtered general python
+EXTRA_DIST = REAME
 all: all-recursive
 
 .SUFFIXES:
