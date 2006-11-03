@@ -153,7 +153,7 @@ int CV_ImgWarpBaseTestImpl::prepare_test_case( int test_case_idx )
         test_mat[INPUT_OUTPUT][0].rows >= img->rows )
         space_scale = spatial_scale_zoom;
 
-    buffer = (float*)malloc( img->cols*cn*sizeof(buffer[0]) );
+    buffer = (float*)cvAlloc( img->cols*cn*sizeof(buffer[0]) );
     
     for( i = 0; i < img->rows; i++ )
     {
@@ -211,7 +211,7 @@ int CV_ImgWarpBaseTestImpl::prepare_test_case( int test_case_idx )
         }
     }
 
-    free( buffer );
+    cvFree( &buffer );
 
     return code;
 }
