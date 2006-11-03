@@ -77,22 +77,28 @@ Windows
      it is possible to build custom IPP dll for OpenCV, ippopencv*.dll, see interfaces\ipp.
    + It is possible to load/unload IPP at runtime, see cvUseOptimized() function.
 
+
 Linux
 =====
 
-   There are no prebuilt binaries for Linux version (because of a large variety of
-   different versions of GCC and GLIBC in different distributions), so you'd have
+   There are no prebuilt binaries for Linux versions (because of a large variety of
+   different versions of GCC and GLIBC in different distributions) from our side. So, if
+   your distributor (SuSE, Debian, Ubuntu) doesn't offer OpenCV, you'll have
    to build it from sources.
 
    That's what you need to build fully-functionaly libraries and demos:
    ======
 
-   + GTK+ 2.x or higher.
+   + GTK+ 2.x or higher including headers
 
-   + libpng, zlib, libjpeg and libtiff with development files.
+   + pkgconfig
 
-   + libavcodec from ffmpeg 0.4.9-pre1 or later + headers.
-     Earlier version do not work with OpenCV because of different API.
+   + libpng, zlib, libjpeg, libtiff, libjasper with development files.
+
+   + Python 2.3, 2.4 or 2.5 with headers installed (developer package)
+
+   + libavcodec, etc. from ffmpeg 0.4.9-pre1 or later + headers.
+     Earlier versions do not work with OpenCV because of different API.
      libavcodec is LGPL software, so to use it with non-GPL software (such as OpenCV)
      you need to build and use a _shared_ library libavcodec.so.*:
         get ffmpeg from ffmpeg.sourceforge.net
@@ -101,6 +107,7 @@ Linux
         make install
         you will have got: /usr/local/lib/libavcodec.so.*
                            /usr/local/lib/libavformat.so.*
+                          (/usr/local/lib/libavutil.so.* for newer versions)
                            /usr/local/include/ffmpeg/*.h
 
    Now build OpenCV:  
@@ -117,14 +124,20 @@ Linux
       
       then install it by:
         rpm -i OpenCV-x.y.z.*.rpm
-        
+      
    b) if your distribution does not support RPM, build and install it
       in Unix/Linux traditional way:
 
-      ./configure
-      make
-      sudo make install
-      sudo ldconfig
+        ./configure
+        make
+        sudo make install
+        sudo ldconfig
+
+      You can influence which libraries are used and which features are
+      enabled by specifying the appropriate flags to ./configure. 
+
+      See './configure --help' for more information.
+
 
    both a&b (post-install))
       
@@ -137,7 +150,7 @@ Linux
       autoconf-2.59 (including autoheader-2.59)
       automake-1.9* (including aclocal-1.9*)
       libtool-1.5 (including libtoolize-1.5)
-      swig (version 1.3.24 is best)
+      swig (version 1.3.30 or current CVS version respectively)
 
       If the default versions of these tools installed on your machine differs, you
       should specify the paths to the required versions via environment variables. For
@@ -162,7 +175,7 @@ Linux
 
         make check
 
-     Then, you can run the folowing test programs:
+     This implicitly runs the folowing test programs:
 
         tests/cv/src/cvtest
         tests/cxcore/src/cxcoretest
@@ -173,6 +186,7 @@ Linux
 
      g++ `pkg-config --cflags opencv` -o morphology morphology.c `pkg-config --libs opencv`
      Plain gcc won't work because of unresolved c++-specific symbols (located in highgui?)
+   
    
    How to make OpenCV use IPP:
    =======
@@ -202,11 +216,23 @@ MacOSX
    + Basically, the requirements and building instructions are very similar to Linux case,
      with the following exceptions:
 
-     * Carbon is used instead of GTK+.
+     * Carbon is used instead of GTK+ by default
+     * Quicktime is used instead of FFMPEG by default
      * pkg-config is optional (it is only used explicitly in samples\c\build_all.sh script)
-     * Quicktime is used instead of FFMPEG.
      * RPM and ldconfig are not supported by default,
        use configure+make+sudo make install to build and install OpenCV,
        update LD_LIBRARY_PATH (unless ./configure --prefix=/usr is used).
-     * Those who want to modify Makefile's, will need to install
-       the latest libtool from darwinports/fink.
+
+     * for full functionality, you should install libpng, libtiff, libjpeg and libjasper
+       from darwinports and/or fink and make them available to ./configure (see ./configure --help)
+
+   + Known problems:
+
+     * Currently there is no way to write AVI files with QuickTime
+     * A plain OS X system doesn't have libpng, libtiff, libjasper installed, so
+       you won't be able to read or write these image formats
+     * The build system doesn't allow to build functional universal libraries at this time
+     * The build system doesn't allow to build with the intel compiler on OS X at this time
+
+   + If you'd like to step in as a developer, you will need to get the appropriate
+     versions of automake, etc. (see Linux section) from darwinports.
