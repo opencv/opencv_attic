@@ -268,6 +268,7 @@ static void cvTsMHIGradient( const CvMat* mhi, CvMat* mask, CvMat* orientation,
 
     cvTsMinMaxFilter( src, min_mhi, element, CV_TS_MIN );
     cvTsMinMaxFilter( src, max_mhi, element, CV_TS_MAX );
+    cvReleaseMat( &src );
     cvReleaseStructuringElement( &element );
 
     if( delta1 > delta2 )

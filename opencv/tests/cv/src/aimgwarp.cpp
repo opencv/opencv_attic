@@ -1349,6 +1349,9 @@ void CV_UndistortTest::prepare_to_validation( int /*test_case_idx*/ )
     cvTsZero( &part );
     cvGetCols( dst0, &part, dst->cols - nc, dst->cols ); 
     cvTsZero( &part );
+
+    cvReleaseMat( &mapx );
+    cvReleaseMat( &mapy );
 }
 
 
