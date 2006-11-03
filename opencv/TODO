@@ -28,7 +28,7 @@ Apps:
 Interfaces:
     C++ interface (STL-like interface to CvMat
        (see cvaux/include/cvmat.hpp as a starting point), CvSeq,CvGraph)
-    Python, Java etc. interfaces using SWIG
+    Java etc. interfaces using SWIG
 
 Cameras:
     Make a single camera module instead of 3. That is what we have now:
@@ -48,11 +48,10 @@ Cameras:
        Linux: FFMPEG + V4L2
 
 Others:
-    Split cv for better modularization (core, image, geometry, 3d, motion)
     Throw out or improve old stuff (dense opt. flow, 2d hmm,
                                    eigen objects (simplify interface))
 
     Better test system with regression tests (improve trs(?))
     Performance (speed) tests
-
+    Complete Mac OS X port
 

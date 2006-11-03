@@ -49,7 +49,7 @@ Gruebele, Philip        ???                        Multiple patches for OpenCV
 Halsall, Chris          Open Source Solutions Inc  O-Reilly papers on OpenCV,
                                                    calibration app for Linux (is not supported now?)
                                                    patches for Linux version
-Hasler, Nils            ???                        16-bit images support, Jasper and OpenEXR bindings in HighGUI
+Hasler, Nils            Max Planck Institut        16-bit images support, Jasper and OpenEXR bindings in HighGUI
 Khamenya, Valery        BioVisioN AG               OpenCV CVS repository at SourceForge
 Khudyakov, Vasily       Novosibirsk University     Face feature detection
 Kruppa, Hannes          ETH Zurich                 Haar classifier for fullbody, lowerbody, upperbody detection.
@@ -79,7 +79,7 @@ Schiele, Bernt          ETH Zurich                 Haar classifier for fullbody,
 Shavit, Adi             ???                        OpenCV forum moderation
 Shevtsova, Irina        Moscow State Uni           EM, Bayesian classifier, Random Trees and CNN in Machine Learning module
 Sobolev, Andrey         Moscow State Uni           Contour skeletons and linear-contour model
-Stanchak, Roman         ???                        Multiple improvements in Highgui (GTK+), Python wrappers and the core functionality
+Stanchak, Roman         Naval Research Lab {?}     Multiple improvements in Highgui (GTK+), Python wrappers and the core functionality
 
 Veretennikov, Eugene    Intel Corp.                Testing, some comp. geometry functions
 Vezhnevets, Vladimir    MSU Graphics and Media Lab New algorithm for chessboard detection
