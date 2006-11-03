@@ -1367,9 +1367,9 @@ struct median_pair
 static void cvTsMedianFilter( const CvMat* src, CvMat* dst, int m )
 {
     int i, j, k, l, m2 = m*m, n;
-    int* col_buf = (int*)malloc( (m+1)*sizeof(col_buf[0]));
-    median_pair* buf0 = (median_pair*)malloc( (m*m+1)*sizeof(buf0[0]));
-    median_pair* buf1 = (median_pair*)malloc( (m*m+1)*sizeof(buf1[0]));
+    int* col_buf = (int*)cvAlloc( (m+1)*sizeof(col_buf[0]));
+    median_pair* buf0 = (median_pair*)cvAlloc( (m*m+1)*sizeof(buf0[0]));
+    median_pair* buf1 = (median_pair*)cvAlloc( (m*m+1)*sizeof(buf1[0]));
     median_pair* tbuf;
     int step = src->step/CV_ELEM_SIZE(src->type);
 
@@ -1448,9 +1448,9 @@ static void cvTsMedianFilter( const CvMat* src, CvMat* dst, int m )
         }
     }
 
-    free(col_buf);
-    free(buf0);
-    free(buf1);
+    cvFree(&col_buf);
+    cvFree(&buf0);
+    cvFree(&buf1);
 }
 
 
