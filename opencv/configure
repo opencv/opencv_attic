@@ -18914,7 +18914,7 @@ if test "${enable_apps+set}" = set; then
   enableval="$enable_apps"
   enable_apps=$enableval
 else
-  enable_apps="no"
+  enable_apps="yes"
 fi;
 
 
