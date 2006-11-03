@@ -238,7 +238,7 @@ AM_CPPFLAGS = \
   -DCV_NO_BACKWARD_COMPATIBILITY
 
 SUBDIRS = filtered general python
-EXTRA_DIST = REAME
+EXTRA_DIST = README
 all: all-recursive
 
 .SUFFIXES:
