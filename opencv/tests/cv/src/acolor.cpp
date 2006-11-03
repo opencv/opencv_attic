@@ -256,8 +256,8 @@ void CV_ColorCvtBaseTestImpl::convert_forward( const CvMat* src, CvMat* dst )
     int depth = CV_MAT_DEPTH(src->type);
     int cn = CV_MAT_CN(src->type), dst_cn = CV_MAT_CN(dst->type);
     int cols = src->cols, dst_cols_n = dst->cols*dst_cn;
-    float* src_buf = (float*)malloc( src->cols*3*sizeof(src_buf[0]) );
-    float* dst_buf = (float*)malloc( dst->cols*3*sizeof(dst_buf[0]) );
+    float* src_buf = (float*)cvAlloc( src->cols*3*sizeof(src_buf[0]) );
+    float* dst_buf = (float*)cvAlloc( dst->cols*3*sizeof(dst_buf[0]) );
     int i, j;
 
     assert( (cn == 3 || cn == 4) && (dst_cn == 3 || dst_cn == 1) );
@@ -327,6 +327,9 @@ void CV_ColorCvtBaseTestImpl::convert_forward( const CvMat* src, CvMat* dst )
             assert(0);
         }
     }
+
+    cvFree( &src_buf );
+    cvFree( &dst_buf );
 }
 
 
@@ -349,8 +352,8 @@ void CV_ColorCvtBaseTestImpl::convert_backward( const CvMat* src, const CvMat* d
         int depth = CV_MAT_DEPTH(src->type);
         int src_cn = CV_MAT_CN(dst->type), cn = CV_MAT_CN(dst2->type);
         int cols_n = src->cols*src_cn, dst_cols = dst->cols;
-        float* src_buf = (float*)malloc( src->cols*3*sizeof(src_buf[0]) );
-        float* dst_buf = (float*)malloc( dst->cols*3*sizeof(dst_buf[0]) );
+        float* src_buf = (float*)cvAlloc( src->cols*3*sizeof(src_buf[0]) );
+        float* dst_buf = (float*)cvAlloc( dst->cols*3*sizeof(dst_buf[0]) );
         int i, j;
 
         assert( cn == 3 || cn == 4 );
@@ -429,6 +432,9 @@ void CV_ColorCvtBaseTestImpl::convert_backward( const CvMat* src, const CvMat* d
                 assert(0);
             }
         }
+
+        cvFree( &src_buf );
+        cvFree( &dst_buf );
     }
     else
     {
