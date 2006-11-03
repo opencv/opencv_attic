@@ -23,7 +23,7 @@ AC_CONFIG_AUX_DIR([autotools])
 AC_CONFIG_MACRO_DIR([autotools/aclocal])
 
 # put CVS revision of this configure.in into the resulting configure script
-AC_REVISION($Revision: 1.39 $)
+AC_REVISION($Revision: 1.40 $)
 
 # Detect the canonical host and target build environment
 AC_CANONICAL_HOST
@@ -87,7 +87,7 @@ AC_ARG_ENABLE([debug],
 AC_ARG_ENABLE([apps],
               [AS_HELP_STRING([--enable-apps],[build demo applications])],
               [enable_apps=$enableval],
-              [enable_apps="no"])
+              [enable_apps="yes"])
 AM_CONDITIONAL([BUILD_APPS], [test x"$enable_apps" = x"yes"])
 
 
