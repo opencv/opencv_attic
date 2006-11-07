@@ -247,6 +247,7 @@ cvFindHomography( const CvMat* object_points, const CvMat* image_points, CvMat* 
         for( k = 0; k < 10; k++ )
         {
             double* J = _J.data.db, *err = _err.data.db;
+
             for( i = 0; i < count; i++, J += 16, err += 2 )
             {
                 double di = 1./(H[6]*M[i].x + H[7]*M[i].y + 1.);
@@ -257,8 +258,8 @@ cvFindHomography( const CvMat* object_points, const CvMat* image_points, CvMat* 
                 J[0] = M[i].x*di;
                 J[1] = M[i].y*di;
                 J[2] = di;
-                J[8+3] = M[i].x;
-                J[8+4] = M[i].y;
+                J[8+3] = M[i].x*di;
+                J[8+4] = M[i].y*di;
                 J[8+5] = di;
                 J[6] = -J[0]*_xi;
                 J[7] = -J[1]*_xi;
