@@ -148,10 +148,12 @@ cvFindHomography( const CvMat* object_points, const CvMat* image_points, CvMat* 
     int h_type;
     int i, k, count, count2;
     CvPoint2D64f *m, *M;
-    CvPoint2D64f cm = {0,0}, sm = {0,0};
+    CvPoint2D64f cm = {0,0}, sm = {0,0}, cM = {0,0}, sM = {0,0};
     double inv_Hnorm[9] = { 0, 0, 0, 0, 0, 0, 0, 0, 1 };
+    double Hnorm2[9] = { 0, 0, 0, 0, 0, 0, 0, 0, 1 };
     double H[9];
     CvMat _inv_Hnorm = cvMat( 3, 3, CV_64FC1, inv_Hnorm );
+    CvMat _Hnorm2 = cvMat( 3, 3, CV_64FC1, Hnorm2 );
     CvMat _H = cvMat( 3, 3, CV_64FC1, H );
     double LtL[9*9], LW[9], LV[9*9];
     CvMat* _Lp;
@@ -160,6 +162,7 @@ cvFindHomography( const CvMat* object_points, const CvMat* image_points, CvMat* 
     CvMat _LW = cvMat( 9, 1, CV_64FC1, LW );
     CvMat _LV = cvMat( 9, 9, CV_64FC1, LV );
     CvMat _Hrem = cvMat( 3, 3, CV_64FC1, LV + 8*9 );
+    CvMat _Htemp = cvMat( 3, 3, CV_64FC1, LV + 7*9 );
 
     if( !CV_IS_MAT(image_points) || !CV_IS_MAT(object_points) || !CV_IS_MAT(__H) )
         CV_ERROR( CV_StsBadArg, "one of arguments is not a valid matrix" );
@@ -183,26 +186,47 @@ cvFindHomography( const CvMat* object_points, const CvMat* image_points, CvMat* 
     CV_CALL( cvConvertPointsHomogenious( object_points, _M ));
     M = (CvPoint2D64f*)_M->data.ptr;
 
-    // calculate the normalization transformation Hnorm.
+    // calculate the normalization transformations Hnorm, Hnorm2.
     for( i = 0; i < count; i++ )
-        cm.x += m[i].x, cm.y += m[i].y;
+    {
+        cm.x += m[i].x; cm.y += m[i].y;
+        cM.x += M[i].x; cM.y += M[i].y;
+    }
    
     cm.x /= count; cm.y /= count;
+    cM.x /= count; cM.y /= count;
 
     for( i = 0; i < count; i++ )
     {
-        double x = m[i].x - cm.x;
-        double y = m[i].y - cm.y;
-        sm.x += fabs(x); sm.y += fabs(y);
+        sm.x += fabs(m[i].x - cm.x);
+        sm.y += fabs(m[i].y - cm.y);
+        sM.x += fabs(M[i].x - cM.x);
+        sM.y += fabs(M[i].y - cM.y);
     }
 
     sm.x /= count; sm.y /= count;
+    sM.x /= count; sM.y /= count;
+    
+#if 0
+    cm.x = cm.y = 0;
+    sm.x = sm.y = 1;
+    cM.x = cM.y = 0;
+    sM.x = sM.y = 1;
+#endif
+
     inv_Hnorm[0] = sm.x;
     inv_Hnorm[4] = sm.y;
     inv_Hnorm[2] = cm.x;
     inv_Hnorm[5] = cm.y;
     sm.x = 1./sm.x;
     sm.y = 1./sm.y;
+
+    sM.x = 1./sM.x;
+    sM.y = 1./sM.y;
+    Hnorm2[0] = sM.x;
+    Hnorm2[4] = sM.y;
+    Hnorm2[2] = -cM.x*sM.x;
+    Hnorm2[5] = -cM.y*sM.y;
     
     CV_CALL( _Lp = _L = cvCreateMat( 2*count, 9, CV_64FC1 ) );
     L = _L->data.db;
@@ -210,15 +234,16 @@ cvFindHomography( const CvMat* object_points, const CvMat* image_points, CvMat* 
     for( i = 0; i < count; i++, L += 18 )
     {
         double x = -(m[i].x - cm.x)*sm.x, y = -(m[i].y - cm.y)*sm.y;
-        L[0] = L[9 + 3] = M[i].x;
-        L[1] = L[9 + 4] = M[i].y;
+        double X = (M[i].x - cM.x)*sM.x, Y = (M[i].y - cM.y)*sM.y;
+        L[0] = L[9 + 3] = X;
+        L[1] = L[9 + 4] = Y;
         L[2] = L[9 + 5] = 1;
         L[9 + 0] = L[9 + 1] = L[9 + 2] = L[3] = L[4] = L[5] = 0;
-        L[6] = x*M[i].x;
-        L[7] = x*M[i].y;
+        L[6] = x*X;
+        L[7] = x*Y;
         L[8] = x;
-        L[9 + 6] = y*M[i].x;
-        L[9 + 7] = y*M[i].y;
+        L[9 + 6] = y*X;
+        L[9 + 7] = y*Y;
         L[9 + 8] = y;
     }
 
@@ -230,8 +255,10 @@ cvFindHomography( const CvMat* object_points, const CvMat* image_points, CvMat* 
 
     _LW.rows = MIN(count*2, 9);
     cvSVD( _Lp, &_LW, 0, &_LV, CV_SVD_MODIFY_A + CV_SVD_V_T );
-    cvScale( &_Hrem, &_Hrem, 1./_Hrem.data.db[8] );
-    cvMatMul( &_inv_Hnorm, &_Hrem, &_H );
+    
+    cvMatMul( &_inv_Hnorm, &_Hrem, &_Htemp );
+    cvMatMul( &_Htemp, &_Hnorm2, &_H );
+    cvScale( &_H, &_H, 1./_H.data.db[8] );
 
     if( count > 4 )
     {
