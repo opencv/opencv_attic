@@ -46,9 +46,10 @@ icvCrossCorr( const CvArr* _img, const CvArr* _templ, CvArr* _corr, CvPoint anch
 {
     const double block_scale = 4.5;
     const int min_block_size = 256;
-    CvMat* dft_img = 0;
+    CvMat* dft_img[CV_MAX_THREADS] = {0};
     CvMat* dft_templ = 0;
-    void* buf = 0;
+    void* buf[CV_MAX_THREADS] = {0};
+    int k, num_threads = 0;
     
     CV_FUNCNAME( "icvCrossCorr" );
     
@@ -57,11 +58,10 @@ icvCrossCorr( const CvArr* _img, const CvArr* _templ, CvArr* _corr, CvPoint anch
     CvMat istub, *img = (CvMat*)_img;
     CvMat tstub, *templ = (CvMat*)_templ;
     CvMat cstub, *corr = (CvMat*)_corr;
-    CvMat sstub, dstub, *src, *dst, temp;
     CvSize dftsize, blocksize;
-    CvMat* planes[] = { 0, 0, 0, 0 };
-    int x, y, i, yofs, buf_size = 0;
-    int depth, templ_depth, corr_depth, max_depth = CV_32F, cn, templ_cn, corr_cn;
+    int depth, templ_depth, corr_depth, max_depth = CV_32F,
+        cn, templ_cn, corr_cn, buf_size = 0,
+        tile_count_x, tile_count_y, tile_count;
 
     CV_CALL( img = cvGetMat( img, &istub ));
     CV_CALL( templ = cvGetMat( templ, &tstub ));
@@ -129,8 +129,12 @@ icvCrossCorr( const CvArr* _img, const CvArr* _templ, CvArr* _corr, CvPoint anch
     blocksize.height = dftsize.height - templ->rows + 1;
     blocksize.height = MIN( blocksize.height, corr->rows );
 
-    CV_CALL( dft_img = cvCreateMat( dftsize.height, dftsize.width, max_depth ));
     CV_CALL( dft_templ = cvCreateMat( dftsize.height*templ_cn, dftsize.width, max_depth ));
+
+    num_threads = cvGetNumThreads();
+
+    for( k = 0; k < num_threads; k++ )
+        CV_CALL( dft_img[k] = cvCreateMat( dftsize.height, dftsize.width, max_depth ));
 
     if( templ_cn > 1 && templ_depth != max_depth )
         buf_size = templ->cols*templ->rows*CV_ELEM_SIZE(templ_depth);
@@ -143,23 +147,28 @@ icvCrossCorr( const CvArr* _img, const CvArr* _templ, CvArr* _corr, CvPoint anch
         buf_size = MAX( buf_size, blocksize.width*blocksize.height*CV_ELEM_SIZE(corr_depth));
 
     if( buf_size > 0 )
-        CV_CALL( buf = cvAlloc(buf_size) );
+    {
+        for( k = 0; k < num_threads; k++ )
+            CV_CALL( buf[k] = cvAlloc(buf_size) );
+    }
 
     // compute DFT of each template plane
-    for( i = 0; i < templ_cn; i++ )
+    for( k = 0; k < templ_cn; k++ )
     {
-        yofs = i*dftsize.height;
+        CvMat dstub, *src, *dst, temp;
+        CvMat* planes[] = { 0, 0, 0, 0 };
+        int yofs = k*dftsize.height;
 
         src = templ;
         dst = cvGetSubRect( dft_templ, &dstub, cvRect(0,yofs,templ->cols,templ->rows));
     
         if( templ_cn > 1 )
         {
-            planes[i] = templ_depth == max_depth ? dst :
-                cvInitMatHeader( &temp, templ->rows, templ->cols, templ_depth, buf );
+            planes[k] = templ_depth == max_depth ? dst :
+                cvInitMatHeader( &temp, templ->rows, templ->cols, templ_depth, buf[0] );
             cvSplit( templ, planes[0], planes[1], planes[2], planes[3] );
-            src = planes[i];
-            planes[i] = 0;
+            src = planes[k];
+            planes[k] = 0;
         }
 
         if( dst != src )
@@ -175,102 +184,123 @@ icvCrossCorr( const CvArr* _img, const CvArr* _templ, CvArr* _corr, CvPoint anch
         cvDFT( dst, dst, CV_DXT_FORWARD + CV_DXT_SCALE, templ->rows );
     }
 
-    // calculate correlation by blocks
-    for( y = 0; y < corr->rows; y += blocksize.height )
+    tile_count_x = (corr->cols + blocksize.width - 1)/blocksize.width;
+    tile_count_y = (corr->rows + blocksize.height - 1)/blocksize.height;
+    tile_count = tile_count_x*tile_count_y;
+
     {
-        for( x = 0; x < corr->cols; x += blocksize.width )
+#ifdef _OPENMP
+    #pragma omp parallel for num_threads(num_threads), schedule(dynamic)
+#endif
+    // calculate correlation by blocks
+    for( k = 0; k < tile_count; k++ )
+    {
+        int thread_idx = cvGetThreadNum();
+        int x = (k%tile_count_x)*blocksize.width;
+        int y = (k/tile_count_x)*blocksize.height;
+        int i, yofs;
+        CvMat sstub, dstub, *src, *dst, temp;
+        CvMat* planes[] = { 0, 0, 0, 0 };
+        CvMat* _dft_img = dft_img[thread_idx];
+        void* _buf = buf[thread_idx];
+        CvSize csz = { blocksize.width, blocksize.height }, isz;
+        int x0 = x - anchor.x, y0 = y - anchor.y;
+        int x1 = MAX( 0, x0 ), y1 = MAX( 0, y0 ), x2, y2;
+        csz.width = MIN( csz.width, corr->cols - x );
+        csz.height = MIN( csz.height, corr->rows - y );
+        isz.width = csz.width + templ->cols - 1;
+        isz.height = csz.height + templ->rows - 1;
+        x2 = MIN( img->cols, x0 + isz.width );
+        y2 = MIN( img->rows, y0 + isz.height );
+        
+        for( i = 0; i < cn; i++ )
         {
-            CvSize csz = { blocksize.width, blocksize.height }, isz;
-            int x0 = x - anchor.x, y0 = y - anchor.y;
-            int x1 = MAX( 0, x0 ), y1 = MAX( 0, y0 ), x2, y2;
-            csz.width = MIN( csz.width, corr->cols - x );
-            csz.height = MIN( csz.height, corr->rows - y );
-            isz.width = csz.width + templ->cols - 1;
-            isz.height = csz.height + templ->rows - 1;
-            x2 = MIN( img->cols, x0 + isz.width );
-            y2 = MIN( img->rows, y0 + isz.height );
+            CvMat dstub1, *dst1;
+            yofs = i*dftsize.height;
+
+            src = cvGetSubRect( img, &sstub, cvRect(x1,y1,x2-x1,y2-y1) );
+            dst = cvGetSubRect( _dft_img, &dstub,
+                cvRect(0,0,isz.width,isz.height) );
+            dst1 = dst;
             
-            for( i = 0; i < cn; i++ )
+            if( x2 - x1 < isz.width || y2 - y1 < isz.height )
+                dst1 = cvGetSubRect( _dft_img, &dstub1,
+                    cvRect( x1 - x0, y1 - y0, x2 - x1, y2 - y1 ));
+
+            if( cn > 1 )
             {
-                CvMat dstub1, *dst1;
-                yofs = i*dftsize.height;
+                planes[i] = dst1;
+                if( depth != max_depth )
+                    planes[i] = cvInitMatHeader( &temp, y2 - y1, x2 - x1, depth, _buf );
+                cvSplit( src, planes[0], planes[1], planes[2], planes[3] );
+                src = planes[i];
+                planes[i] = 0;
+            }
 
-                src = cvGetSubRect( img, &sstub, cvRect(x1,y1,x2-x1,y2-y1) );
-                dst = cvGetSubRect( dft_img, &dstub, cvRect(0,0,isz.width,isz.height) );
-                dst1 = dst;
-                
-                if( x2 - x1 < isz.width || y2 - y1 < isz.height )
-                    dst1 = cvGetSubRect( dft_img, &dstub1,
-                        cvRect( x1 - x0, y1 - y0, x2 - x1, y2 - y1 ));
+            if( dst1 != src )
+                cvConvert( src, dst1 );
 
-                if( cn > 1 )
+            if( dst != dst1 )
+                cvCopyMakeBorder( dst1, dst, cvPoint(x1 - x0, y1 - y0), IPL_BORDER_REPLICATE );
+
+            if( dftsize.width > isz.width )
+            {
+                cvGetSubRect( _dft_img, dst, cvRect(isz.width, 0,
+                      dftsize.width - isz.width,dftsize.height) );
+                cvZero( dst );
+            }
+
+            cvDFT( _dft_img, _dft_img, CV_DXT_FORWARD, isz.height );
+            cvGetSubRect( dft_templ, dst,
+                cvRect(0,(templ_cn>1?yofs:0),dftsize.width,dftsize.height) );
+
+            cvMulSpectrums( _dft_img, dst, _dft_img, CV_DXT_MUL_CONJ );
+            cvDFT( _dft_img, _dft_img, CV_DXT_INVERSE, csz.height );
+
+            src = cvGetSubRect( _dft_img, &sstub, cvRect(0,0,csz.width,csz.height) );
+            dst = cvGetSubRect( corr, &dstub, cvRect(x,y,csz.width,csz.height) );
+
+            if( corr_cn > 1 )
+            {
+                planes[i] = src;
+                if( corr_depth != max_depth )
                 {
-                    planes[i] = dst1;
-                    if( depth != max_depth )
-                        planes[i] = cvInitMatHeader( &temp, y2 - y1, x2 - x1, depth, buf );
-                    cvSplit( src, planes[0], planes[1], planes[2], planes[3] );
-                    src = planes[i];
-                    planes[i] = 0;
+                    planes[i] = cvInitMatHeader( &temp, csz.height, csz.width,
+                                                 corr_depth, _buf );
+                    cvConvert( src, planes[i] );
                 }
-
-                if( dst1 != src )
-                    cvConvert( src, dst1 );
-
-                if( dst != dst1 )
-                    cvCopyMakeBorder( dst1, dst, cvPoint(x1 - x0, y1 - y0), IPL_BORDER_REPLICATE );
-
-                if( dftsize.width > isz.width )
-                {
-                    cvGetSubRect( dft_img, dst, cvRect(isz.width, 0,
-                          dftsize.width - isz.width,dftsize.height) );
-                    cvZero( dst );
-                }
-
-                cvDFT( dft_img, dft_img, CV_DXT_FORWARD, isz.height );
-                cvGetSubRect( dft_templ, dst,
-                    cvRect(0,(templ_cn>1?yofs:0),dftsize.width,dftsize.height) );
-
-                cvMulSpectrums( dft_img, dst, dft_img, CV_DXT_MUL_CONJ );
-                cvDFT( dft_img, dft_img, CV_DXT_INVERSE, csz.height );
-
-                src = cvGetSubRect( dft_img, &sstub, cvRect(0,0,csz.width,csz.height) );
-                dst = cvGetSubRect( corr, &dstub, cvRect(x,y,csz.width,csz.height) );
-
-                if( corr_cn > 1 )
-                {
-                    planes[i] = src;
-                    if( corr_depth != max_depth )
-                    {
-                        planes[i] = cvInitMatHeader( &temp, csz.height, csz.width, corr_depth, buf );
-                        cvConvert( src, planes[i] );
-                    }
-                    cvMerge( planes[0], planes[1], planes[2], planes[3], dst );
-                    planes[i] = 0;                    
-                }
+                cvMerge( planes[0], planes[1], planes[2], planes[3], dst );
+                planes[i] = 0;                    
+            }
+            else
+            {
+                if( i == 0 )
+                    cvConvert( src, dst );
                 else
                 {
-                    if( i == 0 )
-                        cvConvert( src, dst );
-                    else
+                    if( max_depth > corr_depth )
                     {
-                        if( max_depth > corr_depth )
-                        {
-                            cvInitMatHeader( &temp, csz.height, csz.width, corr_depth, buf );
-                            cvConvert( src, &temp );
-                            src = &temp;
-                        }
-                        cvAcc( src, dst );
+                        cvInitMatHeader( &temp, csz.height, csz.width,
+                                         corr_depth, _buf );
+                        cvConvert( src, &temp );
+                        src = &temp;
                     }
+                    cvAcc( src, dst );
                 }
             }
         }
     }
+    }
 
     __END__;
 
-    cvReleaseMat( &dft_img );
     cvReleaseMat( &dft_templ );
-    cvFree( &buf );
+
+    for( k = 0; k < num_threads; k++ )
+    {
+        cvReleaseMat( &dft_img[k] );
+        cvFree( &buf[k] );
+    }
 }
 
 
