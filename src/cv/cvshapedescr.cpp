@@ -1159,8 +1159,8 @@ cvBoundingRect( CvArr* array, int update )
     else
     {
         CV_CALL( mat = cvGetMat( array, &stub ));
-        if( CV_MAT_TYPE(mat->type) == CV_32SC1 ||
-            CV_MAT_TYPE(mat->type) == CV_32FC1 )
+        if( CV_MAT_TYPE(mat->type) == CV_32SC2 ||
+            CV_MAT_TYPE(mat->type) == CV_32FC2 )
         {
             CV_CALL( ptseq = cvPointSeqFromMat(
                 CV_SEQ_KIND_GENERIC, mat, &contour_header, &block ));
