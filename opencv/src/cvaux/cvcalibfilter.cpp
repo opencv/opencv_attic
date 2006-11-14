@@ -65,6 +65,7 @@ CvCalibFilter::CvCalibFilter()
     undistImg = 0;
     memset( latestCounts, 0, sizeof(latestCounts));
     memset( latestPoints, 0, sizeof(latestPoints));
+    memset( &stereo, 0, sizeof(stereo) );
     maxPoints = 0;
     framesTotal = 15;
     framesAccepted = 0;
