@@ -1781,7 +1781,7 @@ cvRectangle( void* img, CvPoint pt1, CvPoint pt2,
     CvMat stub, *mat = (CvMat*)img;
     double buf[4];
 
-    if( thickness < -1 || thickness > 255 )
+    if( thickness > 255 )
         CV_ERROR( CV_StsOutOfRange, "" );
 
     CV_CALL( mat = cvGetMat( img, &stub, &coi ));
@@ -1836,7 +1836,7 @@ cvCircle( void *img, CvPoint center, int radius,
     if( radius < 0 )
         CV_ERROR( CV_StsOutOfRange, "" );
 
-    if( thickness < -1 || thickness > 255 )
+    if( thickness > 255 )
         CV_ERROR( CV_StsOutOfRange, "" );
 
     if( shift < 0 || XY_SHIFT < shift )
@@ -1885,7 +1885,7 @@ cvEllipse( void *img, CvPoint center, CvSize axes,
     if( axes.width < 0 || axes.height < 0 )
         CV_ERROR( CV_StsOutOfRange, "" );
 
-    if( thickness < -1 || thickness > 255 )
+    if( thickness > 255 )
         CV_ERROR( CV_StsOutOfRange, "" );
 
     if( shift < 0 || XY_SHIFT < shift )
