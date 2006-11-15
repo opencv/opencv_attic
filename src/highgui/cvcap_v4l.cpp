@@ -2291,6 +2291,11 @@ static int icvSetVideoSize( CvCaptureCAM_V4L* capture, int w, int h) {
 
     CLEAR (capture->form);
     capture->form.type = V4L2_BUF_TYPE_VIDEO_CAPTURE;
+
+    /* read the current setting, mainly to retreive the pixelformat information */
+    xioctl (capture->deviceHandle, VIDIOC_G_FMT, &capture->form);
+
+    /* set the values we want to change */
     capture->form.fmt.pix.width = w; 
     capture->form.fmt.pix.height = h;
     capture->form.fmt.win.chromakey = 0;
@@ -2298,14 +2303,14 @@ static int icvSetVideoSize( CvCaptureCAM_V4L* capture, int w, int h) {
     capture->form.fmt.win.clips = 0;
     capture->form.fmt.win.clipcount = 0;
     capture->form.fmt.pix.field = V4L2_FIELD_NONE;
-  
-    /* don't test if the set of the size is ok, because some device
-       don't allow changing the size, and we will get the real size
-       later */
+
+    /* ask the device to change the size
+     * don't test if the set of the size is ok, because some device
+     * don't allow changing the size, and we will get the real size
+     * later */
     xioctl (capture->deviceHandle, VIDIOC_S_FMT, &capture->form);
 
     /* Get window info again, to get the real value */
-      
     if (-1 == xioctl (capture->deviceHandle, VIDIOC_G_FMT, &capture->form))
     {
       fprintf(stderr, "HIGHGUI ERROR: V4L/V4L2: Could not obtain specifics of capture window.\n\n");
