@@ -1090,7 +1090,8 @@ cvGEMM( const CvArr* Aarr, const CvArr* Barr, double alpha,
                        &_beta, D->data.ptr, &ldd );
             }
         }
-        else if( d_size.height <= block_lin_size/2 || d_size.width <= block_lin_size/2 || len <= 10 ||
+        else if( (d_size.height <= block_lin_size/2 || d_size.width <= block_lin_size/2) &&
+            len <= 10000 || len <= 10 ||
             d_size.width <= block_lin_size && d_size.height <= block_lin_size && len <= block_lin_size )
         {
             single_mul_func( A->data.ptr, A->step, B->data.ptr, b_step,
