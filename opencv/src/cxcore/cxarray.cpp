@@ -3124,9 +3124,10 @@ cvReshape( const CvArr* array, CvMat* header,
 
     if( mat != header )
     {
+        int hdr_refcount = header->hdr_refcount;
         *header = *mat;
         header->refcount = 0;
-        header->hdr_refcount = 0;
+        header->hdr_refcount = hdr_refcount;
     }
 
     total_width = mat->cols * CV_MAT_CN( mat->type );
