@@ -1599,7 +1599,7 @@ cvCalcPCA( const CvArr* data_arr, CvArr* avg_arr, CvArr* eigenvals, CvArr* eigen
 
         CV_CALL( tmp_data = cvCreateMat( count, count, CV_64F ));
         CV_CALL( tmp_avg_r = cvCreateMat( count, count, CV_64F ));
-        CV_CALL( tmp_evects2 = cvCreateMat( count, count, CV_64F ));
+        CV_CALL( tmp_evects2 = cvCreateMat( out_count, count, CV_64F ));
 
         for( i = 0; i < len; i += block_count )
         {
@@ -1636,7 +1636,7 @@ cvCalcPCA( const CvArr* data_arr, CvArr* avg_arr, CvArr* eigenvals, CvArr* eigen
         }
 
         // normalize eigenvectors
-        for( i = 0; i < count; i++ )
+        for( i = 0; i < out_count; i++ )
         {
             CvMat ei;
             cvGetRow( evects, &ei, i );
