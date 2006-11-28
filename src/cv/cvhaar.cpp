@@ -1018,7 +1018,7 @@ cvHaarDetectObjects( const CvArr* _img,
                     for( x = 0; x < sz1.width; x++ )
                         if( mask1.data.ptr[mask1.step*y + x] != 0 )
                         {
-                            CvRect obj_rect = { cvRound(y*factor), cvRound(x*factor),
+                            CvRect obj_rect = { cvRound(x*factor), cvRound(y*factor),
                                                 win_size.width, win_size.height };
                             cvSeqPush( seq, &obj_rect );
                         }
