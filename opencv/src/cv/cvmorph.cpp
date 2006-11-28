@@ -860,8 +860,8 @@ icvMorphOp( const void* srcarr, void* dstarr, IplConvKernel* element,
 
     if( el_shape == CV_SHAPE_RECT && iterations > 1 )
     {
-        el_size.width += (el_size.width-1)*iterations;
-        el_size.height += (el_size.height-1)*iterations;
+        el_size.width = 1 + (el_size.width-1)*iterations;
+        el_size.height = 1 + (el_size.height-1)*iterations;
         el_anchor.x *= iterations;
         el_anchor.y *= iterations;
         iterations = 1;
