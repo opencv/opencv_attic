@@ -41,6 +41,26 @@
 
 #include "_cv.h"
 
+/*
+ * This file includes the code, contributed by Simon Perreault
+ * (the function icvMedianBlur_8u_CnR_O1)
+ *
+ * Constant-time median filtering -- http://nomis80.org/ctmf.html
+ * Copyright (C) 2006 Simon Perreault
+ *
+ * Contact:
+ *  Laboratoire de vision et systemes numeriques
+ *  Pavillon Adrien-Pouliot
+ *  Universite Laval
+ *  Sainte-Foy, Quebec, Canada
+ *  G1K 7P4
+ *
+ *  perreaul@gel.ulaval.ca
+ */
+
+// uncomment the line below to force SSE2 mode
+//#define CV_SSE2 1
+
 /****************************************************************************************\
                                          Box Filter
 \****************************************************************************************/
@@ -491,9 +511,286 @@ icvSumCol_64f32f( const double** src, float* dst,
 #define CV_MINMAX_8U(a,b) \
     (t = CV_FAST_CAST_8U((a) - (b)), (b) += t, a -= t)
 
+#if CV_SSE2 && !defined __SSE2__
+#define __SSE2__ 1
+#include "emmintrin.h"
+#endif
+
+#if defined(__GNUC__)
+#define align(x) __attribute__ ((aligned (x)))
+#elif CV_SSE2 && (defined(__ICL) || (_MSC_VER >= 1300))
+#define align(x) __declspec(align(x))
+#else
+#define align(x)
+#endif
+
+#if _MSC_VER >= 1200
+#pragma warning( disable: 4244 )
+#endif
+
+/**
+ * This structure represents a two-tier histogram. The first tier (known as the
+ * "coarse" level) is 4 bit wide and the second tier (known as the "fine" level)
+ * is 8 bit wide. Pixels inserted in the fine level also get inserted into the
+ * coarse bucket designated by the 4 MSBs of the fine bucket value.
+ *
+ * The structure is aligned on 16 bits, which is a prerequisite for SIMD
+ * instructions. Each bucket is 16 bit wide, which means that extra care must be
+ * taken to prevent overflow.
+ */
+typedef struct align(16)
+{
+    ushort coarse[16];
+    ushort fine[16][16];
+} Histogram;
+
+/**
+ * HOP is short for Histogram OPeration. This macro makes an operation \a op on
+ * histogram \a h for pixel value \a x. It takes care of handling both levels.
+ */
+#define HOP(h,x,op) \
+    h.coarse[x>>4] op; \
+    *((ushort*) h.fine + x) op;
+
+#define COP(c,j,x,op) \
+    h_coarse[ 16*(n*c+j) + (x>>4) ] op; \
+    h_fine[ 16 * (n*(16*c+(x>>4)) + j) + (x & 0xF) ] op;
+
+#if defined __SSE2__ || defined __MMX__ || defined __ALTIVEC__
+#define MEDIAN_HAVE_SIMD 1
+#else
+#define MEDIAN_HAVE_SIMD 0
+#endif
+
+/**
+ * Adds histograms \a x and \a y and stores the result in \a y. Makes use of
+ * SSE2, MMX or Altivec, if available.
+ */
+#if defined(__SSE2__)
+static inline void histogram_add( const ushort x[16], ushort y[16] )
+{
+    _mm_store_si128( (__m128i*) &y[0], _mm_add_epi16(
+        _mm_load_si128((__m128i*) &y[0]), _mm_load_si128((__m128i*) &x[0] )));
+    _mm_store_si128( (__m128i*) &y[8], _mm_add_epi16(
+        _mm_load_si128((__m128i*) &y[8]), _mm_load_si128((__m128i*) &x[8] )));
+}
+#elif defined(__MMX__)
+static inline void histogram_add( const ushort x[16], ushort y[16] )
+{
+    *(__m64*) &y[0]  = _mm_add_pi16( *(__m64*) &y[0],  *(__m64*) &x[0]  );
+    *(__m64*) &y[4]  = _mm_add_pi16( *(__m64*) &y[4],  *(__m64*) &x[4]  );
+    *(__m64*) &y[8]  = _mm_add_pi16( *(__m64*) &y[8],  *(__m64*) &x[8]  );
+    *(__m64*) &y[12] = _mm_add_pi16( *(__m64*) &y[12], *(__m64*) &x[12] );
+}
+#elif defined(__ALTIVEC__)
+static inline void histogram_add( const ushort x[16], ushort y[16] )
+{
+    *(vector ushort*) &y[0] = vec_add( *(vector ushort*) &y[0], *(vector ushort*) &x[0] );
+    *(vector ushort*) &y[8] = vec_add( *(vector ushort*) &y[8], *(vector ushort*) &x[8] );
+}
+#else
+static inline void histogram_add( const ushort x[16], ushort y[16] )
+{
+    int i;
+    for( i = 0; i < 16; ++i )
+        y[i] = (ushort)(y[i] + x[i]);
+}
+#endif
+
+/**
+ * Subtracts histogram \a x from \a y and stores the result in \a y. Makes use
+ * of SSE2, MMX or Altivec, if available.
+ */
+#if defined(__SSE2__)
+static inline void histogram_sub( const ushort x[16], ushort y[16] )
+{
+    _mm_store_si128( (__m128i*) &y[0], _mm_sub_epi16(
+        _mm_load_si128((__m128i*) &y[0]), _mm_load_si128((__m128i*) &x[0] )));
+    _mm_store_si128( (__m128i*) &y[8], _mm_sub_epi16(
+        _mm_load_si128((__m128i*) &y[8]), _mm_load_si128((__m128i*) &x[8] )));
+}
+#elif defined(__MMX__)
+static inline void histogram_sub( const ushort x[16], ushort y[16] )
+{
+    *(__m64*) &y[0]  = _mm_sub_pi16( *(__m64*) &y[0],  *(__m64*) &x[0]  );
+    *(__m64*) &y[4]  = _mm_sub_pi16( *(__m64*) &y[4],  *(__m64*) &x[4]  );
+    *(__m64*) &y[8]  = _mm_sub_pi16( *(__m64*) &y[8],  *(__m64*) &x[8]  );
+    *(__m64*) &y[12] = _mm_sub_pi16( *(__m64*) &y[12], *(__m64*) &x[12] );
+}
+#elif defined(__ALTIVEC__)
+static inline void histogram_sub( const ushort x[16], ushort y[16] )
+{
+    *(vector ushort*) &y[0] = vec_sub( *(vector ushort*) &y[0], *(vector ushort*) &x[0] );
+    *(vector ushort*) &y[8] = vec_sub( *(vector ushort*) &y[8], *(vector ushort*) &x[8] );
+}
+#else
+static inline void histogram_sub( const ushort x[16], ushort y[16] )
+{
+    int i;
+    for( i = 0; i < 16; ++i )
+        y[i] = (ushort)(y[i] - x[i]);
+}
+#endif
+
+static inline void histogram_muladd( int a, const ushort x[16],
+        ushort y[16] )
+{
+    int i;
+    for ( i = 0; i < 16; ++i )
+        y[i] = (ushort)(y[i] + a * x[i]);
+}
+
 static CvStatus CV_STDCALL
-icvMedianBlur_8u_CnR( uchar* src, int src_step, uchar* dst, int dst_step,
-                      CvSize size, int m, int cn )
+icvMedianBlur_8u_CnR_O1( uchar* src, int src_step, uchar* dst, int dst_step,
+                         CvSize size, int kernel_size, int cn, int pad_left, int pad_right )
+{
+    int r = (kernel_size-1)/2;
+    const int m = size.height, n = size.width;
+    int i, j, k, c;
+    const unsigned char *p, *q;
+    Histogram H[4];
+    ushort *h_coarse, *h_fine, luc[4][16];
+
+    if( size.height < r || size.width < r )
+        return CV_BADSIZE_ERR;
+
+    assert( src );
+    assert( dst );
+    assert( r >= 0 );
+    assert( size.width >= 2*r+1 );
+    assert( size.height >= 2*r+1 );
+    assert( src_step != 0 );
+    assert( dst_step != 0 );
+
+    h_coarse = (ushort*) cvAlloc(  1 * 16 * n * cn * sizeof(ushort) );
+    h_fine   = (ushort*) cvAlloc( 16 * 16 * n * cn * sizeof(ushort) );
+    memset( h_coarse, 0,  1 * 16 * n * cn * sizeof(ushort) );
+    memset( h_fine,   0, 16 * 16 * n * cn * sizeof(ushort) );
+
+    /* First row initialization */
+    for ( j = 0; j < n; ++j ) {
+        for ( c = 0; c < cn; ++c ) {
+            COP( c, j, src[cn*j+c], += r+1 );
+        }
+    }
+    for ( i = 0; i < r; ++i ) {
+        for ( j = 0; j < n; ++j ) {
+            for ( c = 0; c < cn; ++c ) {
+                COP( c, j, src[src_step*i+cn*j+c], ++ );
+            }
+        }
+    }
+
+    for ( i = 0; i < m; ++i ) {
+
+        /* Update column histograms for entire row. */
+        p = src + src_step * MAX( 0, i-r-1 );
+        q = p + cn * n;
+        for ( j = 0; p != q; ++j ) {
+            for ( c = 0; c < cn; ++c, ++p ) {
+                COP( c, j, *p, -- );
+            }
+        }
+
+        p = src + src_step * MIN( m-1, i+r );
+        q = p + cn * n;
+        for ( j = 0; p != q; ++j ) {
+            for ( c = 0; c < cn; ++c, ++p ) {
+                COP( c, j, *p, ++ );
+            }
+        }
+
+        /* First column initialization */
+        memset( H, 0, cn*sizeof(H[0]) );
+        memset( luc, 0, cn*sizeof(luc[0]) );
+        if ( pad_left ) {
+            for ( c = 0; c < cn; ++c ) {
+                histogram_muladd( r, &h_coarse[16*n*c], H[c].coarse );
+            }
+        }
+        for ( j = 0; j < (pad_left ? r : 2*r); ++j ) {
+            for ( c = 0; c < cn; ++c ) {
+                histogram_add( &h_coarse[16*(n*c+j)], H[c].coarse );
+            }
+        }
+        for ( c = 0; c < cn; ++c ) {
+            for ( k = 0; k < 16; ++k ) {
+                histogram_muladd( 2*r+1, &h_fine[16*n*(16*c+k)], &H[c].fine[k][0] );
+            }
+        }
+
+        for ( j = pad_left ? 0 : r; j < (pad_right ? n : n-r); ++j ) {
+            for ( c = 0; c < cn; ++c ) {
+                int t = 2*r*r + 2*r, b, sum = 0;
+                ushort* segment;
+
+                histogram_add( &h_coarse[16*(n*c + MIN(j+r,n-1))], H[c].coarse );
+
+                /* Find median at coarse level */
+                for ( k = 0; k < 16 ; ++k ) {
+                    sum += H[c].coarse[k];
+                    if ( sum > t ) {
+                        sum -= H[c].coarse[k];
+                        break;
+                    }
+                }
+                assert( k < 16 );
+
+                /* Update corresponding histogram segment */
+                if ( luc[c][k] <= j-r ) {
+                    memset( &H[c].fine[k], 0, 16 * sizeof(ushort) );
+                    for ( luc[c][k] = j-r; luc[c][k] < MIN(j+r+1,n); ++luc[c][k] ) {
+                        histogram_add( &h_fine[16*(n*(16*c+k)+luc[c][k])], H[c].fine[k] );
+                    }
+                    if ( luc[c][k] < j+r+1 ) {
+                        histogram_muladd( j+r+1 - n, &h_fine[16*(n*(16*c+k)+(n-1))], &H[c].fine[k][0] );
+                        luc[c][k] = (ushort)(j+r+1);
+                    }
+                }
+                else {
+                    for ( ; luc[c][k] < j+r+1; ++luc[c][k] ) {
+                        histogram_sub( &h_fine[16*(n*(16*c+k)+MAX(luc[c][k]-2*r-1,0))], H[c].fine[k] );
+                        histogram_add( &h_fine[16*(n*(16*c+k)+MIN(luc[c][k],n-1))], H[c].fine[k] );
+                    }
+                }
+
+                histogram_sub( &h_coarse[16*(n*c+MAX(j-r,0))], H[c].coarse );
+
+                /* Find median in segment */
+                segment = H[c].fine[k];
+                for ( b = 0; b < 16 ; ++b ) {
+                    sum += segment[b];
+                    if ( sum > t ) {
+                        dst[dst_step*i+cn*j+c] = (uchar)(16*k + b);
+                        break;
+                    }
+                }
+                assert( b < 16 );
+            }
+        }
+    }
+
+#if defined(__MMX__)
+    _mm_empty();
+#endif
+
+    cvFree(&h_coarse);
+    cvFree(&h_fine);
+
+#undef HOP
+#undef COP
+    return CV_OK;
+}
+
+
+#if _MSC_VER >= 1200
+#pragma warning( default: 4244 )
+#endif
+
+
+static CvStatus CV_STDCALL
+icvMedianBlur_8u_CnR_Om( uchar* src, int src_step, uchar* dst, int dst_step,
+                         CvSize size, int m, int cn )
 {
     #define N  16
     int     zone0[4][N];
@@ -583,6 +880,15 @@ icvMedianBlur_8u_CnR( uchar* src, int src_step, uchar* dst, int dst_step,
         uchar* src_bottom = src;
         int    k, c;
         int    x0 = -1;
+        int    src_step1 = src_step, dst_step1 = dst_step;
+
+        if( x % 2 != 0 )
+        {
+            src_bottom = src_top += src_step*(size.height-1);
+            dst_cur += dst_step*(size.height-1);
+            src_step1 = -src_step1;
+            dst_step1 = -dst_step1;
+        }
 
         if( x <= m/2 )
             nx++;
@@ -594,57 +900,33 @@ icvMedianBlur_8u_CnR( uchar* src, int src_step, uchar* dst, int dst_step,
         memset( zone0, 0, sizeof(zone0[0])*cn );
         memset( zone1, 0, sizeof(zone1[0])*cn );
 
-        for( y = -m/2; y < m/2; y++ )
+        for( y = 0; y <= m/2; y++ )
         {
             for( c = 0; c < cn; c++ )
             {
-                if( x0 >= 0 )
-                    UPDATE_ACC01( src_bottom[x0+c], c, += (m - nx) );
-                for( k = 0; k < nx*cn; k += cn )
-                    UPDATE_ACC01( src_bottom[k+c], c, ++ );
+                if( y > 0 )
+                {
+                    if( x0 >= 0 )
+                        UPDATE_ACC01( src_bottom[x0+c], c, += (m - nx) );
+                    for( k = 0; k < nx*cn; k += cn )
+                        UPDATE_ACC01( src_bottom[k+c], c, ++ );
+                }
+                else
+                {
+                    if( x0 >= 0 )
+                        UPDATE_ACC01( src_bottom[x0+c], c, += (m - nx)*(m/2+1) );
+                    for( k = 0; k < nx*cn; k += cn )
+                        UPDATE_ACC01( src_bottom[k+c], c, += m/2+1 );
+                }
             }
 
-            if( (unsigned)y < (unsigned)(size.height-1) )
-                src_bottom += src_step;
+            if( src_step1 > 0 && y < size.height-1 ||
+                src_step1 < 0 && size.height-y-1 > 0 )
+                src_bottom += src_step1;
         }
 
-        for( y = 0; y < size.height; y++, dst_cur += dst_step )
+        for( y = 0; y < size.height; y++, dst_cur += dst_step1 )
         {
-            if( cn == 1 )
-            {
-                for( k = 0; k < nx; k++ )
-                    UPDATE_ACC01( src_bottom[k], 0, ++ );
-            }
-            else if( cn == 3 )
-            {
-                for( k = 0; k < nx*3; k += 3 )
-                {
-                    UPDATE_ACC01( src_bottom[k], 0, ++ );
-                    UPDATE_ACC01( src_bottom[k+1], 1, ++ );
-                    UPDATE_ACC01( src_bottom[k+2], 2, ++ );
-                }
-            }
-            else
-            {
-                assert( cn == 4 );
-                for( k = 0; k < nx*4; k += 4 )
-                {
-                    UPDATE_ACC01( src_bottom[k], 0, ++ );
-                    UPDATE_ACC01( src_bottom[k+1], 1, ++ );
-                    UPDATE_ACC01( src_bottom[k+2], 2, ++ );
-                    UPDATE_ACC01( src_bottom[k+3], 3, ++ );
-                }
-            }
-
-            if( x0 >= 0 )
-            {
-                for( c = 0; c < cn; c++ )
-                    UPDATE_ACC01( src_bottom[x0+c], c, += (m - nx) );
-            }
-
-            if( src_bottom + src_step < src_max )
-                src_bottom += src_step;
-
             // find median
             for( c = 0; c < cn; c++ )
             {
@@ -665,10 +947,20 @@ icvMedianBlur_8u_CnR( uchar* src, int src_step, uchar* dst, int dst_step,
                 dst_cur[c] = (uchar)k;
             }
 
+            if( y+1 == size.height )
+                break;
+
             if( cn == 1 )
             {
                 for( k = 0; k < nx; k++ )
-                    UPDATE_ACC01( src_top[k], 0, -- );
+                {
+                    int p = src_top[k];
+                    int q = src_bottom[k];
+                    zone1[0][p]--;
+                    zone0[0][p>>4]--;
+                    zone1[0][q]++;
+                    zone0[0][q>>4]++;
+                }
             }
             else if( cn == 3 )
             {
@@ -677,6 +969,10 @@ icvMedianBlur_8u_CnR( uchar* src, int src_step, uchar* dst, int dst_step,
                     UPDATE_ACC01( src_top[k], 0, -- );
                     UPDATE_ACC01( src_top[k+1], 1, -- );
                     UPDATE_ACC01( src_top[k+2], 2, -- );
+
+                    UPDATE_ACC01( src_bottom[k], 0, ++ );
+                    UPDATE_ACC01( src_bottom[k+1], 1, ++ );
+                    UPDATE_ACC01( src_bottom[k+2], 2, ++ );
                 }
             }
             else
@@ -688,17 +984,29 @@ icvMedianBlur_8u_CnR( uchar* src, int src_step, uchar* dst, int dst_step,
                     UPDATE_ACC01( src_top[k+1], 1, -- );
                     UPDATE_ACC01( src_top[k+2], 2, -- );
                     UPDATE_ACC01( src_top[k+3], 3, -- );
+
+                    UPDATE_ACC01( src_bottom[k], 0, ++ );
+                    UPDATE_ACC01( src_bottom[k+1], 1, ++ );
+                    UPDATE_ACC01( src_bottom[k+2], 2, ++ );
+                    UPDATE_ACC01( src_bottom[k+3], 3, ++ );
                 }
             }
 
             if( x0 >= 0 )
             {
                 for( c = 0; c < cn; c++ )
+                {
                     UPDATE_ACC01( src_top[x0+c], c, -= (m - nx) );
+                    UPDATE_ACC01( src_bottom[x0+c], c, += (m - nx) );
+                }
             }
 
+            if( src_step1 > 0 && src_bottom + src_step1 < src_max ||
+                src_step1 < 0 && src_bottom + src_step1 >= src )
+                src_bottom += src_step1;
+
             if( y >= m/2 )
-                src_top += src_step;
+                src_top += src_step1;
         }
 
         if( x >= m/2 )
@@ -1030,7 +1338,7 @@ cvSmooth( const void* srcarr, void* dstarr, int smooth_type,
         }
     }
 
-    if( have_ipp && (smooth_type == CV_BLUR || smooth_type == CV_MEDIAN) &&
+    if( have_ipp && (smooth_type == CV_BLUR || (smooth_type == CV_MEDIAN && param1 <= 15)) &&
         size.width >= param1 && size.height >= param2 && param1 > 1 && param2 > 1 )
     {
         CvSmoothFixedIPPFunc ipp_median_box_func = 0;
@@ -1088,12 +1396,45 @@ cvSmooth( const void* srcarr, void* dstarr, int smooth_type,
     }
     else if( smooth_type == CV_MEDIAN )
     {
+        int img_size_mp = size.width*size.height;
+        img_size_mp = (img_size_mp + (1<<19)) >> 20;
+        
         if( depth != CV_8U || cn != 1 && cn != 3 && cn != 4 )
             CV_ERROR( CV_StsUnsupportedFormat,
             "Median filter only supports 8uC1, 8uC3 and 8uC4 images" );
 
-        IPPI_CALL( icvMedianBlur_8u_CnR( src->data.ptr, src->step,
-            dst->data.ptr, dst->step, size, param1, cn ));
+        if( size.width < param1*2 || size.height < param1*2 ||
+            param1 <= 3 + (img_size_mp < 1 ? 12 : img_size_mp < 4 ? 6 : 2)*(MEDIAN_HAVE_SIMD ? 1 : 3))
+        {
+            // Special case optimized for 3x3
+            IPPI_CALL( icvMedianBlur_8u_CnR_Om( src->data.ptr, src->step,
+                dst->data.ptr, dst->step, size, param1, cn ));
+        }
+        else
+        {
+            const int r = (param1 - 1) / 2;
+            const int CACHE_SIZE = (int) ( 0.95 * 256 * 1024 / cn );  // assume a 256 kB cache size
+            const int STRIPES = (int) cvCeil( (double) (size.width - 2*r) /
+                    (CACHE_SIZE / sizeof(Histogram) - 2*r) );
+            const int STRIPE_SIZE = (int) cvCeil(
+                    (double) ( size.width + STRIPES*2*r - 2*r ) / STRIPES );
+
+            for( int i = 0; i < size.width; i += STRIPE_SIZE - 2*r )
+            {
+                int stripe = STRIPE_SIZE;
+                // Make sure that the filter kernel fits into one stripe.
+                if( i + STRIPE_SIZE - 2*r >= size.width ||
+                    size.width - (i + STRIPE_SIZE - 2*r) < 2*r+1 )
+                    stripe = size.width - i;
+
+                IPPI_CALL( icvMedianBlur_8u_CnR_O1( src->data.ptr + cn*i, src->step,
+                    dst->data.ptr + cn*i, dst->step, cvSize(stripe, size.height),
+                    param1, cn, i == 0, stripe == size.width - i ));
+
+                if( stripe == size.width - i )
+                    break;
+            }
+        }
     }
     else if( smooth_type == CV_GAUSSIAN )
     {
