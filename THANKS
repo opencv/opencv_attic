@@ -68,6 +68,7 @@ Nefian, Ara             Intel Corp.                Algorithm for HMM face recogn
 
 Oblomov, Sergey         Intel Corp.                Camshift and histogram code, linux scripts and makefiles, optimization and more ...
 
+Perreault, Simon        Universite Laval           O(1) Median filtering algorithm
 Philomin, Vasanth       PHILIPS (?)                Several bug reports/fixes on face detection etc.
 Pisarevsky, Vadim       Intel Corp.                OpenCV hacker :)
 Pleskov, Alexander      Intel Corp.                Pyramidal segmentation, gesture recognition code, comp. geometry functions
@@ -79,7 +80,7 @@ Schiele, Bernt          ETH Zurich                 Haar classifier for fullbody,
 Shavit, Adi             ???                        OpenCV forum moderation
 Shevtsova, Irina        Moscow State Uni           EM, Bayesian classifier, Random Trees and CNN in Machine Learning module
 Sobolev, Andrey         Moscow State Uni           Contour skeletons and linear-contour model
-Stanchak, Roman         Naval Research Lab {?}     Multiple improvements in Highgui (GTK+), Python wrappers and the core functionality
+Stanchak, Roman         Naval Research Lab         Multiple improvements in Highgui (GTK+), Python wrappers and the core functionality
 
 Veretennikov, Eugene    Intel Corp.                Testing, some comp. geometry functions
 Vezhnevets, Vladimir    MSU Graphics and Media Lab New algorithm for chessboard detection
