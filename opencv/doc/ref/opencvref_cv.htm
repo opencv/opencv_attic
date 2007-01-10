@@ -54,7 +54,7 @@
 Note:<br>
 The chapter describes functions for image processing and analysis.
 Most of the functions work with 2d arrays of pixels. We refer the arrays
-as "images" however they do not neccesserily have to be IplImage&#146;s, they may
+as "images" however they do not necessarily have to be IplImage&#146;s, they may
 be CvMat&#146;s or CvMatND&#146;s as well.
 </p>
 
@@ -84,7 +84,7 @@ for x-derivative or transposed for y-derivative.
 The function <code>cvSobel</code> calculates the image derivative by convolving the image
 with the appropriate kernel:</p>
 <pre>
-dst(x,y) = d<sup>xorder+yoder</sup>src/dx<sup>xorder</sup>&bull;dy<sup>yorder</sup> |<sub>(x,y)</sub>
+dst(x,y) = d<sup>xorder+yorder</sup>src/dx<sup>xorder</sup>&bull;dy<sup>yorder</sup> |<sub>(x,y)</sub>
 </pre>
 The Sobel operators combine Gaussian smoothing and differentiation so the result is more or less
 robust to the noise. Most often, the function is called with (xorder=1, yorder=0, aperture_size=3) or
@@ -197,8 +197,8 @@ void cvCornerEigenValsAndVecs( const CvArr* image, CvArr* eigenvv,
 <dt>aperture_size<dd>Aperture parameter for Sobel operator (see <a href="#decl_cvSobel">cvSobel</a>).
 </dl><p>
 For every pixel The function <code>cvCornerEigenValsAndVecs</code> considers
-<code>block_size</code> &times; <code>block_size</code> neigborhood S(p). It calcualtes
-covariation matrix of derivatives over the neigborhood as:</p>
+<code>block_size</code> &times; <code>block_size</code> neighborhood S(p). It calculates
+covariation matrix of derivatives over the neighborhood as:</p>
 <pre>
     | sum<sub>S(p)</sub>(dI/dx)<sup>2</sup>   sum<sub>S(p)</sub>(dI/dx&bull;dI/dy)|
 M = |                                 |
@@ -220,14 +220,14 @@ where<br>
 void cvCornerMinEigenVal( const CvArr* image, CvArr* eigenval, int block_size, int aperture_size=3 );
 </pre><p><dl>
 <dt>image<dd>Input image.
-<dt>eigenval<dd>Image to store the minimal eigen values. Should have the same size as <code>image</code>
+<dt>eigenval<dd>Image to store the minimal eigenvalues. Should have the same size as <code>image</code>
 <dt>block_size<dd>Neighborhood size (see discussion of <a href="#decl_cvCornerEigenValsAndVecs">cvCornerEigenValsAndVecs</a>).
 <dt>aperture_size<dd>Aperture parameter for Sobel operator (see <a href="#decl_cvSobel">cvSobel</a>).
 format. In the case of floating-point input format this parameter is the number
 of the fixed float filter used for differencing.
 </dl><p>
 The function <code>cvCornerMinEigenVal</code> is similar to <a href="#decl_cvCornerEigenValsAndVecs">cvCornerEigenValsAndVecs</a> but
-it calculates and stores only the minimal eigen value of derivative covariation matrix for every pixel,
+it calculates and stores only the minimal eigenvalue of derivative covariation matrix for every pixel,
 i.e. min(&lambda;<sub>1</sub>, &lambda;<sub>2</sub>) in terms of the previous function.
 </p>
 
@@ -235,25 +235,27 @@ i.e. min(&lambda;<sub>1</sub>, &lambda;<sub>2</sub>) in terms of the previous fu
 <hr><h3><a name="decl_cvCornerHarris">CornerHarris</a></h3>
 <p class="Blurb">Harris edge detector</p>
 <pre>
-void cvCornerHarris( const CvArr* image, CvArr* harris_responce,
+void cvCornerHarris( const CvArr* image, CvArr* harris_dst,
                      int block_size, int aperture_size=3, double k=0.04 );
 </pre><p><dl>
 <dt>image<dd>Input image.
-<dt>harris_responce<dd>Image to store the Harris detector responces. Should have the same size as <code>image</code>
+<dt>harris_dst<dd>Image to store the Harris detector responces. Should have the same size as <code>image</code>
 <dt>block_size<dd>Neighborhood size (see discussion of <a href="#decl_cvCornerEigenValsAndVecs">cvCornerEigenValsAndVecs</a>).
 <dt>aperture_size<dd>Aperture parameter for Sobel operator (see <a href="#decl_cvSobel">cvSobel</a>).
 format. In the case of floating-point input format this parameter is the number
 of the fixed float filter used for differencing.
 <dt>k<dd>Harris detector free parameter. See the formula below.
 </dl><p>
-The function <code>cvCornerHarris</code> runs the Harris edge detector on image. Similarly to
+The function <code>cvCornerHarris</code> finds feature points (corners) in the image
+using Harris' method. Similarly to
 <a href="#decl_cvCornerMinEigenVal">cvCornerMinEigenVal</a> and
-<a href="#decl_cvCornerEigenValsAndVecs">cvCornerEigenValsAndVecs</a>, for each pixel it calculates 2x2 gradient
-covariation matrix <code>M</code> over <code>block_size&times;block_size</code> neighborhood.
+<a href="#decl_cvCornerEigenValsAndVecs">cvCornerEigenValsAndVecs</a>,
+for each pixel it calculates 2x2 gradient covariation matrix
+<code>M</code> over <code>block_size&times;block_size</code> neighborhood.
 Then, it stores</p>
-<pre>det(M) - k*trace(M)<sup>2</sup>
-</pre>
-to the destination image. Corners in the image can be found as local maxima of the destination image.
+<pre>det(M) - k*trace(M)<sup>2</sup></pre>
+to the corresponding pixel of the destination image.
+The corners can be found as local maxima in the destination image.
 </p>
 
 
@@ -438,8 +440,8 @@ void cvResize( const CvArr* src, CvArr* dst, int interpolation=CV_INTER_LINEAR )
     <li>CV_INTER_CUBIC - bicubic interpolation.
     </ul>
 </dl><p>
-The function <code>cvResize</code> resizes image <code>src</code> so that it fits exactly to <code>dst</code>.
-If ROI is set, the function consideres the ROI as supported as usual.</p>
+The function <code>cvResize</code> resizes image <code>src</code> (or its ROI)
+so that it fits exactly to <code>dst</code> (or its ROI).</p>
 
 <hr><h3><a name="decl_cvWarpAffine">WarpAffine</a></h3>
 <p class="Blurb">Applies affine transformation to the image</p>
@@ -800,23 +802,36 @@ void cvSmooth( const CvArr* src, CvArr* dst,
 </pre><p><dl>
 <dt>src<dd>The source image.
 <dt>dst<dd>The destination image.
-<dt>smoothtype<dd>Type of the smoothing:<ul>
+<dt>smoothtype<dd>Type of the smoothing operation:<ul>
 <li>CV_BLUR_NO_SCALE (simple blur with no scaling) -
-              summation over a pixel <code>param1</code>&times;<code>param2</code> neighborhood.
-              If the neighborhood size may vary, one may precompute integral image with <a href="#decl_cvIntegral">cvIntegral</a> function.
-<li>CV_BLUR (simple blur) - summation over a pixel <code>param1</code>&times;<code>param2</code> neighborhood with
-             subsequent scaling by 1/(<code>param1</code>&bull;<code>param2</code>).
-<li>CV_GAUSSIAN (gaussian blur) - convolving image with <code>param1</code>&times;<code>param2</code> Gaussian kernel.
-<li>CV_MEDIAN (median blur) - finding median of <code>param1</code>&times;<code>param1</code> neighborhood (i.e.
-                              the neighborhood is square).
-<li>CV_BILATERAL (bilateral filter) - applying bilateral 3x3 filtering with color sigma=<code>param1</code> and
-                                      space sigma=<code>param2</code>. Information about bilateral filtering
-                                      can be found at <a href="http://www.dai.ed.ac.uk/CVonline/LOCAL_COPIES/MANDUCHI1/Bilateral_Filtering.html">
-                                                      http://www.dai.ed.ac.uk/CVonline/LOCAL_COPIES/MANDUCHI1/Bilateral_Filtering.html</a>
+              for each pixel the result is a sum of pixels values in
+              <code>param1</code>&times;<code>param2</code> neighborhood of the pixel.
+              If the neighborhood size varies from pixel to pixel, compute the sums
+              using integral image (<a href="#decl_cvIntegral">cvIntegral</a>).
+<li>CV_BLUR (simple blur) - for each pixel the result is a mean of pixel values
+              <code>param1</code>&times;<code>param2</code> neighborhood of the pixel.
+<li>CV_GAUSSIAN (gaussian blur) - the image is smoothed using the Gaussian kernel
+              of size <code>param1</code>&times;<code>param2</code>.
+              <code>param3</code> and <code>param4</code> may optionally be
+              used to specify shape of the kernel.
+<li>CV_MEDIAN (median blur) - the image is smoothed using medial filter
+              of size <code>param1</code>&times;<code>param1</code>.
+              That is, for each pixel the result is the median computed
+              over <code>param1</code>&times;<code>param1</code> neighborhood.
+<li>CV_BILATERAL (bilateral filter) -
+              the image is smoothed using a bilateral 3x3 filter
+              with color sigma=<code>param1</code> and
+              space sigma=<code>param2</code>.
+              Information about bilateral filtering
+              can be found at <a href="http://www.dai.ed.ac.uk/CVonline/LOCAL_COPIES/MANDUCHI1/Bilateral_Filtering.html">
+              http://www.dai.ed.ac.uk/CVonline/LOCAL_COPIES/MANDUCHI1/Bilateral_Filtering.html</a>
 </ul>
-<dt>param1<dd>The first parameter of smoothing operation.
+<dt>param1<dd>The first parameter of smoothing operation. It should be odd (1, 3, 5, ...),
+              so that a pixel neighborhood used for smoothing operation is symmetrical
+              relative to the pixel.
 <dt>param2<dd>The second parameter of smoothing operation. In case of simple scaled/non-scaled and
               Gaussian blur if <code>param2</code> is zero, it is set to <code>param1</code>.
+              When not 0, it should be odd too.
 <dt>param3<dd>In case of Gaussian kernel this parameter may specify Gaussian sigma (standard deviation).
               If it is zero, it is calculated from the kernel size:<br>
               <pre>
@@ -832,16 +847,16 @@ void cvSmooth( const CvArr* src, CvArr* dst,
 The function <code>cvSmooth</code> smooths image using one of several methods. Every of the methods
 has some features and restrictions listed below</p>
 <p>Blur with no scaling works with single-channel images only and supports accumulation of
-8-bit to 16-bit format (similar to <a href="#decl_cvSobel">cvSobel</a> and <a href="#decl_cvLaplace">cvLaplace</a>) and 32-bit floating point
-to 32-bit floating-point format.</p><p>
-Simple blur and Gaussian blur support 1- or 3-channel, 8-bit and 32-bit floating point images.
+8u to 16s format (similar to <a href="#decl_cvSobel">cvSobel</a> and <a href="#decl_cvLaplace">cvLaplace</a>)
+and accumulation of 32f to 32f format.</p><p>
+Simple blur and Gaussian blur support 1- or 3-channel, 8-bit, 16-bit and 32-bit floating point images.
 These two methods can process images in-place.</p>
 <p>Median and bilateral filters work with 1- or 3-channel 8-bit images and can not process images
 in-place.</p>
 
 
 <hr><h3><a name="decl_cvFilter2D">Filter2D</a></h3>
-<p class="Blurb">Convolves image with the kernel</p>
+<p class="Blurb">Applies linear filter to image</p>
 <pre>
 void cvFilter2D( const CvArr* src, CvArr* dst,
                  const CvMat* kernel,
@@ -849,18 +864,25 @@ void cvFilter2D( const CvArr* src, CvArr* dst,
 </pre><p><dl>
 <dt>src<dd>The source image.
 <dt>dst<dd>The destination image.
-<dt>kernel<dd>Convolution kernel, single-channel floating point matrix. If you want to apply
-              different kernels to different channels, split the image using
+<dt>kernel<dd>The filter mask, single-channel 2d floating point matrix of coefficients.
+              In case of multi-channel images every channel is processed independently
+              using the same kernel. To process different channels differently,
+              split the image using
               <a href="opencvref_cxcore.htm#decl_cvSplit">cvSplit</a>
-              into separate color planes and process them individually.
-<dt>anchor<dd>The anchor of the kernel that indicates the relative position of a filtered point
-within the kernel. The anchor shoud lie within the kernel. The special default value (-1,-1) means
-that it is at the kernel center.
+              and filter the channels one by one.
+<dt>anchor<dd>The anchor of the kernel. It is relative position of the filtered pixel
+inside its neighborhood covered by the kernel mask. The anchor should be inside the kernel.
+The special default value (-1,-1) means that the anchor is at the kernel center.
 </ul>
 </dl></p><p>
-The function <code>cvFilter2D</code> applies arbitrary linear filter to the image.
-In-place operation is supported. When the aperture is partially outside the image, the function
-interpolates outlier pixel values from the nearest pixels that is inside the image.
+The function <code>cvFilter2D</code> applies the specified linear filter to the image.
+In-place operation is supported. When the aperture is partially outside the image,
+the function interpolates outlier pixel values from the nearest pixels at the
+image boundary. If ROI is set in the input
+image, cvFilter2D treats it, similarly to many other OpenCV functions, as if
+it were an isolated image, i.e. pixels inside the image but outside of the ROI
+are ignored. If it is undesirable, consider new C++ filtering classes declared
+in cv.hpp.
 </p>
 
 
@@ -900,8 +922,8 @@ void cvIntegral( const CvArr* image, CvArr* sum, CvArr* sqsum=NULL, CvArr* tilte
 </pre><p><dl>
 <dt>image<dd>The source image, <code>W</code>&times;<code>H</code>, 8-bit or floating-point (32f or 64f) image.
 <dt>sum<dd>The integral image, <code>W+1</code>&times;<code>H+1</code>, 32-bit integer or double precision floating-point (64f).
-<dt>sqsum<dd>The integral image for squared pixel values, <code>W+1</code>&times;<code>H+1</code>, double precision floating-point (64f).
-<dt>tilted_sum<dd>The integral for the image rotated by 45 degrees, <code>W+1</code>&times;<code>H+1</code>, the same data type as <code>sum</code>.
+<dt>sqsum<dd>The optional integral image for squared pixel values, <code>W+1</code>&times;<code>H+1</code>, double precision floating-point (64f).
+<dt>tilted_sum<dd>The optional integral for the image rotated by 45 degrees, <code>W+1</code>&times;<code>H+1</code>, of the same data type as <code>sum</code>.
 </dl><p>
 The function <code>cvIntegral</code> calculates one or more integral images for the source image as following:</p>
 <pre>
@@ -916,8 +938,10 @@ arbitrary up-right or rotated rectangular region of the image in a constant time
 <pre>
 sum<sub>x1&lt;=x&lt;x2,y1&lt;=y&lt;y2</sub>image(x,y)=sum(x2,y2)-sum(x1,y2)-sum(x2,y1)+sum(x1,x1)
 </pre>
-<p>It makes possible to do a fast blurring or fast block correlation with variable window size etc.
-In case of multi-channel images sums for each channel are accumulated independently.
+<p>Using integral images it is possible to do variable-size image blurring,
+block correlation etc.
+In case of multi-channel input images the integral images must have
+the same number of channels, and every channel is processed independently.
 </p>
 
 <hr><h3><a name="decl_cvCvtColor">CvtColor</a></h3>
@@ -2890,7 +2914,7 @@ CvSeq* cvConvexHull2( const CvArr* input, void* hull_storage=NULL,
 <dt>points<dd>Sequence or array of 2D points with 32-bit integer or floating-point coordinates.
 <dt>hull_storage<dd>The destination array (CvMat*) or memory storage (CvMemStorage*) that will store the convex hull.
                    If it is array, it should be 1d and have the same number of elements as the input array/sequence.
-                   On output the header is modified so to truncate the array downto the hull size.
+                   On output the header is modified: the number of columns/rows is truncated downto the hull size.
 <dt>orientation<dd>Desired orientation of convex hull: <code>CV_CLOCKWISE</code> or <code>CV_COUNTER_CLOCKWISE</code>.
 <dt>return_points<dd>If non-zero, the points themselves will be stored
                     in the hull instead of indices if <code>hull_storage</code> is array, or pointers if <code>hull_storage</code> is memory storage.
@@ -4332,11 +4356,30 @@ CvSeq* cvHaarDetectObjects( const CvArr* image, CvHaarClassifierCascade* cascade
                      If <code>min_neighbors</code> is 0, the function does not any
                      grouping at all and returns all the detected candidate rectangles,
                      which may be useful if the user wants to apply a customized grouping procedure.
-<dt>flags<dd>Mode of operation. Currently the only flag that may be specified is <code>CV_HAAR_DO_CANNY_PRUNING</code>.
-             If it is set, the function uses Canny edge detector to reject some image
-             regions that contain too few or too much edges and thus can not contain the
-             searched object. The particular threshold values are tuned for face detection
-             and in this case the pruning speeds up the processing.
+<dt>flags<dd>Mode of operation. It can be a combination of zero or more of the following values:<br>
+             <code>CV_HAAR_SCALE_IMAGE</code> - for each scale factor used the function will
+             downscale the image rather than "zoom" the feature coordinates in the classifier cascade.
+             Currently, the option can only be used alone, i.e. the flag can not be set together with the others.<br>
+             <code>CV_HAAR_DO_CANNY_PRUNING</code> - If it is set, the function uses Canny
+             edge detector to reject some image regions that contain too few or too much edges
+             and thus can not contain the searched object. The particular threshold values
+             are tuned for face detection and in this case the pruning speeds up the processing.<br>
+             <code>CV_HAAR_FIND_BIGGEST_OBJECT</code> - If it is set, the function finds
+             the largest object (if any) in the image. That is, the output sequence will
+             contain one (or zero) element(s).<br>
+             <code>CV_HAAR_DO_ROUGH_SEARCH</code> - It should be used only when
+             <code>CV_HAAR_FIND_BIGGEST_OBJECT</code> is set and <code>min_neighbors</code> > 0.
+             If the flag is set, the function does not look for candidates of a smaller size
+             as soon as it has found the object (with enough neighbor candinates) at the current
+             scale. Typically, when <code>min_neighbors</code> is fixed, the
+             mode yields less accurate (a bit larger) object rectangle than
+             the regular single-object mode (<code>flags</code>=<code>CV_HAAR_FIND_BIGGEST_OBJECT</code>),
+             but it is much faster, up to an order of magnitude. A greater value of
+             <code>min_neighbors</code> may be specified to improve the accuracy.<p>
+             
+             Note, that in single-object mode <code>CV_HAAR_DO_CANNY_PRUNING</code>
+             does not improve performance much and can even slow down the processing.
+
 <dt>min_size<dd>Minimum window size. By default, it is set to the size of samples the classifier
 has been trained on (~20&times;20 for face detection).
 </dl>
@@ -4355,7 +4398,7 @@ Canny prunning. After it has proceeded and collected the candidate rectangles
 sequence of average rectangles for each large enough group. The default
 parameters (<code>scale_factor</code>=1.1, <code>min_neighbors</code>=3, <code>flags</code>=0)
 are tuned for accurate yet slow object detection. For a faster operation on
-real video images the settings are: <code>scale_factor</code>=1.2, <code>min_neighbors</code>=2,
+real video images the more preferrable settings are: <code>scale_factor</code>=1.2, <code>min_neighbors</code>=2,
 <code>flags</code>=CV_HAAR_DO_CANNY_PRUNING, <code>min_size</code>=&lt;minimum possible face size&gt;
 (for example, ~1/4 to 1/16 of the image area in case of video conferencing).
 </p>
