@@ -1885,7 +1885,11 @@ void cvDistTransform( const CvArr* src, CvArr* dst, int distance_type=CV_DIST_L2
                       int mask_size=3, const float* mask=NULL, CvArr* labels=NULL );
 </pre><p><dl>
 <dt>src<dd>Source 8-bit single-channel (binary) image.
-<dt>dst<dd>Output image with calculated distances (32-bit floating-point, single-channel).
+<dt>dst<dd>Output image with calculated distances.
+           In most cases it should be 32-bit floating-point, single-channel array of
+           the same size as the input image.
+           When <code>distance_type</code>==<code>CV_DIST_L1</code>, 8-bit, single-channel
+           destination array may be also used (in-place operation is also supported in this case).
 <dt>distance_type<dd>Type of distance; can be <code>CV_DIST_L1, CV_DIST_L2, CV_DIST_C</code> or
 <code>CV_DIST_USER</code>.
 <dt>mask_size<dd>Size of distance transform mask; can be 3, 5 or 0. In case of <code>CV_DIST_L1</code> or
