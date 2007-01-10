@@ -23,7 +23,7 @@ Asbach, Mark            RWTH Aachen University     New-style Linux makefiles, SW
 Boldyrev, Sergey        Intel Corp.                rpm spec & linux makefiles
 Bornet, Olivier         IDIAP Research Institute   New-style Linux makefiles, SWIG & specialized Python wrappers 
 Bouguet, Jean-Yves      Intel Corp.                Algorithms for Camera calibration, calibration toolbox for MATLAB, LK in pyramids ...
-Bovyrin, Alexander      Intel Corp.                Contours, Stereo 
+Bovyrin, Alexander      Intel Corp.                Contours, Stereo, Improvements in object detection
 Bradski, Gary           Intel Corp.                Idea and Vision, Leading, CAMSHIFT & MHI algorithms and more ...
 Bradley, David          Princeton Univ.            Haar classifier for profile faces
 Breen, Ed               ???                        EiC intepreter, used for Hawk
@@ -45,6 +45,7 @@ Eruhimov, Victor        Intel Corp.                Hough & distance transforms, 
 Gaspard Breton          France Telecom             Support for multiple cameras (2,3,4) in SyncFilter and cvcam
 Grachev, Ilya           Intel Corp.                TCL/TK demos (cvlkdemo, cvcsdemo, cvenv)
 Gruebele, Philip        ???                        Multiple patches for OpenCV
+Guhring, Philipp        ???                        Single-object mode in cvHaarDetectObjects
 
 Halsall, Chris          Open Source Solutions Inc  O-Reilly papers on OpenCV,
                                                    calibration app for Linux (is not supported now?)
@@ -60,7 +61,7 @@ Lienhart, Rainer        Intel Corp.                Haar feature-based face detec
 Lantz, Philip           Intel Corp.                3d Tracker
 Lundin, Magnus          ???                        Patches and new functionality for Linux version of highgui
 
-Molinov, Sergey         Intel Corp.                HMM face recognition code, POSIT, snakes, optical flow, stereo and more ...
+Molinov, Sergey         Intel Corp.                HMM face recognition code, POSIT, snakes, optical flow, improved face detection, stereo and more ...
 Mosyagin, Valery        Intel Corp.                View morphing, camera calibration code (C),
                                                    fundamental matrix estimation
 Muehlmann, Karsten      Lehrstuhl fur Informatik V  Another stereo correspondence code (not included yet)
