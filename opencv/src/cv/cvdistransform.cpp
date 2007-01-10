@@ -589,10 +589,15 @@ icvTrueDistTrans( const CvMat* src, CvMat* dst )
 
 icvDistanceTransform_3x3_8u32f_C1R_t icvDistanceTransform_3x3_8u32f_C1R_p = 0;
 icvDistanceTransform_5x5_8u32f_C1R_t icvDistanceTransform_5x5_8u32f_C1R_p = 0;
+icvDistanceTransform_3x3_8u_C1IR_t icvDistanceTransform_3x3_8u_C1IR_p = 0;
+icvDistanceTransform_3x3_8u_C1R_t icvDistanceTransform_3x3_8u_C1R_p = 0;
 
 typedef CvStatus (CV_STDCALL * CvIPPDistTransFunc)( const uchar* src, int srcstep,
-                                                    float* dst, int dststep,
-                                                    CvSize size, const float* metrics );
+                                                    void* dst, int dststep,
+                                                    CvSize size, const void* metrics );
+
+typedef CvStatus (CV_STDCALL * CvIPPDistTransFunc2)( uchar* src, int srcstep,
+                                                     CvSize size, const int* metrics );
 
 /***********************************************************************************/
 
@@ -600,6 +605,97 @@ typedef CvStatus (CV_STDCALL * CvDistTransFunc)( const uchar* src, int srcstep,
                                                  int* temp, int tempstep,
                                                  float* dst, int dststep,
                                                  CvSize size, const float* metrics );
+
+
+/****************************************************************************************\
+ User-contributed code:
+
+ Non-inplace and Inplace 8u->8u Distance Transform for CityBlock (a.k.a. L1) metric
+ (C) 2006 by Jay Stavinzky.
+\****************************************************************************************/
+
+//BEGIN ATS ADDITION
+/* 8-bit grayscale distance transform function */
+static void
+icvDistanceATS_L1_8u( const CvMat* src, CvMat* dst )
+{
+    CV_FUNCNAME( "cvDistanceATS" );
+
+    __BEGIN__;
+
+    int width = src->cols, height = src->rows;
+
+    int a;
+    uchar lut[256];
+    int x, y;
+    
+    const uchar *sbase = src->data.ptr;
+    uchar *dbase = dst->data.ptr;
+    int srcstep = src->step;
+    int dststep = dst->step;
+
+    CV_ASSERT( CV_IS_MASK_ARR( src ) && CV_MAT_TYPE( dst->type ) == CV_8UC1 );
+    CV_ASSERT( CV_ARE_SIZES_EQ( src, dst ));
+
+    ////////////////////// forward scan ////////////////////////
+    for( x = 0; x < 256; x++ )
+        lut[x] = CV_CAST_8U(x+1);
+
+    //init first pixel to max (we're going to be skipping it)
+    dbase[0] = (uchar)(sbase[0] == 0 ? 0 : 255);
+    
+    //first row (scan west only, skip first pixel)
+    for( x = 1; x < width; x++ )
+        dbase[x] = (uchar)(sbase[x] == 0 ? 0 : lut[dbase[x-1]]);
+
+    for( y = 1; y < height; y++ )
+    {
+        sbase += srcstep;
+        dbase += dststep;
+        
+        //for left edge, scan north only
+        a = sbase[0] == 0 ? 0 : lut[dbase[-dststep]];
+        dbase[0] = (uchar)a;
+
+        for( x = 1; x < width; x++ )
+        {
+            a = sbase[x] == 0 ? 0 : lut[CV_CALC_MIN_8U(a, dbase[x - dststep])];
+            dbase[x] = (uchar)a;
+        }
+    }
+
+    ////////////////////// backward scan ///////////////////////
+
+    a = dbase[width-1];
+
+    // do last row east pixel scan here (skip bottom right pixel)
+    for( x = width - 2; x >= 0; x-- )
+    {
+        a = lut[a];
+        dbase[x] = (uchar)(CV_CALC_MIN_8U(a, dbase[x]));
+    }
+
+    // right edge is the only error case
+    for( y = height - 2; y >= 0; y-- )
+    {
+        dbase -= dststep;
+        
+        // do right edge
+        a = lut[dbase[width-1+dststep]];
+        dbase[width-1] = (uchar)(CV_CALC_MIN_8U(a, dbase[width-1]));
+
+        for( x = width - 2; x >= 0; x-- )
+        {
+            int b = dbase[x+dststep];
+            a = lut[CV_CALC_MIN_8U(a, b)];
+            dbase[x] = (uchar)(CV_CALC_MIN_8U(a, dbase[x]));
+        }
+    }
+
+    __END__;
+}
+//END ATS ADDITION
+
 
 /* Wrapper function for distance transform group */
 CV_IMPL void
@@ -616,18 +712,23 @@ cvDistTransform( const void* srcarr, void* dstarr,
 
     __BEGIN__;
 
-    float _mask[5];
+    float _mask[5] = {0};
+    int _imask[3];
     CvMat srcstub, *src = (CvMat*)srcarr;
     CvMat dststub, *dst = (CvMat*)dstarr;
     CvMat lstub, *labels = (CvMat*)labelsarr;
     CvSize size;
     CvIPPDistTransFunc ipp_func = 0;
+    CvIPPDistTransFunc2 ipp_inp_func = 0;
 
     CV_CALL( src = cvGetMat( src, &srcstub ));
     CV_CALL( dst = cvGetMat( dst, &dststub ));
 
-    if( !CV_IS_MASK_ARR( src ) || CV_MAT_TYPE( dst->type ) != CV_32FC1 )
-        CV_ERROR( CV_StsUnsupportedFormat, "source image must be 8uC1 and the distance map must be 32fC1" );
+    if( !CV_IS_MASK_ARR( src ) || CV_MAT_TYPE( dst->type ) != CV_32FC1 &&
+        (CV_MAT_TYPE(dst->type) != CV_8UC1 || distType != CV_DIST_L1 || labels) )
+        CV_ERROR( CV_StsUnsupportedFormat,
+        "source image must be 8uC1 and the distance map must be 32fC1 "
+        "(or 8uC1 in case of simple L1 distance transform)" );
 
     if( !CV_ARE_SIZES_EQ( src, dst ))
         CV_ERROR( CV_StsUnmatchedSizes, "the source and the destination images must be of the same size" );
@@ -674,15 +775,39 @@ cvDistTransform( const void* srcarr, void* dstarr,
     }
 
     if( !labels )
-        ipp_func = maskSize == CV_DIST_MASK_3 ? icvDistanceTransform_3x3_8u32f_C1R_p :
-                                                icvDistanceTransform_5x5_8u32f_C1R_p;
+    {
+        if( CV_MAT_TYPE(dst->type) == CV_32FC1 )
+            ipp_func = (CvIPPDistTransFunc)(maskSize == CV_DIST_MASK_3 ?
+                icvDistanceTransform_3x3_8u32f_C1R_p : icvDistanceTransform_5x5_8u32f_C1R_p);
+        else if( src->data.ptr != dst->data.ptr )
+            ipp_func = (CvIPPDistTransFunc)icvDistanceTransform_3x3_8u_C1R_p;
+        else
+            ipp_inp_func = icvDistanceTransform_3x3_8u_C1IR_p;
+    }
 
     size = cvGetMatSize(src);
 
-    if( ipp_func && src->cols >= 4 && src->rows >= 2 )
+    if( (ipp_func || ipp_inp_func) && src->cols >= 4 && src->rows >= 2 )
     {
-        IPPI_CALL( ipp_func( src->data.ptr, src->step,
-                dst->data.fl, dst->step, size, _mask ));
+        _imask[0] = cvRound(_mask[0]);
+        _imask[1] = cvRound(_mask[1]);
+        _imask[2] = cvRound(_mask[2]);
+
+        if( ipp_func )
+        {
+            IPPI_CALL( ipp_func( src->data.ptr, src->step,
+                    dst->data.fl, dst->step, size,
+                    CV_MAT_TYPE(dst->type) == CV_8UC1 ?
+                    (void*)_imask : (void*)_mask ));
+        }
+        else
+        {
+            IPPI_CALL( ipp_inp_func( src->data.ptr, src->step, size, _imask ));
+        }
+    }
+    else if( CV_MAT_TYPE(dst->type) == CV_8UC1 )
+    {
+        CV_CALL( icvDistanceATS_L1_8u( src, dst ));
     }
     else
     {

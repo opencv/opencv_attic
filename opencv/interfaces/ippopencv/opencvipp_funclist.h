@@ -979,6 +979,18 @@ IPPAPI(IppStatus, ippiDistanceTransform_5x5_8u32f_C1R,
 IPPAPI( IppStatus, ippiGetDistanceTransformMask, ( int maskType, float* pMetrics ))
 
 
+#if IPP >= 510
+
+IPPAPI(IppStatus, ippiDistanceTransform_3x3_8u_C1IR,
+    ( uchar* pSrc, int srcStep, IppiSize roiSize, int* pMetrics ))
+
+IPPAPI(IppStatus, ippiDistanceTransform_3x3_8u_C1R,
+    ( const uchar* pSrc, int srcStep, uchar* pDst,
+      int dstStep, IppiSize roiSize, int* pMetrics ))
+
+#endif
+
+
 #if IPP >= 500
 
 /****************************************************************************************\
