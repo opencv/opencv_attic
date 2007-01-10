@@ -89,7 +89,7 @@ typedef struct CvHidHaarStageClassifier
     float threshold;
     CvHidHaarClassifier* classifier;
     int two_rects;
-    
+
     struct CvHidHaarStageClassifier* next;
     struct CvHidHaarStageClassifier* child;
     struct CvHidHaarStageClassifier* parent;
@@ -126,7 +126,7 @@ static CvHaarClassifierCascade*
 icvCreateHaarClassifierCascade( int stage_count )
 {
     CvHaarClassifierCascade* cascade = 0;
-    
+
     CV_FUNCNAME( "icvCreateHaarClassifierCascade" );
 
     __BEGIN__;
@@ -206,7 +206,7 @@ icvCreateHidHaarClassifierCascade( CvHaarClassifierCascade* cascade )
         CV_ERROR( CV_StsOutOfRange, "Negative number of cascade stages" );
 
     orig_window_size = cascade->orig_window_size;
-    
+
     /* check input structure correctness and calculate total memory size needed for
        internal representation of the classifier cascade */
     for( i = 0; i < cascade->count; i++ )
@@ -296,7 +296,7 @@ icvCreateHidHaarClassifierCascade( CvHaarClassifierCascade* cascade )
             ? NULL : out->stage_classifier + stage_classifier->next;
         hid_stage_classifier->child = (stage_classifier->child == -1)
             ? NULL : out->stage_classifier + stage_classifier->child;
-        
+
         out->is_tree |= hid_stage_classifier->next != NULL;
 
         for( j = 0; j < stage_classifier->count; j++ )
@@ -309,7 +309,7 @@ icvCreateHidHaarClassifierCascade( CvHaarClassifierCascade* cascade )
             hid_classifier->count = node_count;
             hid_classifier->node = haar_node_ptr;
             hid_classifier->alpha = alpha_ptr;
-            
+
             for( l = 0; l < node_count; l++ )
             {
                 CvHidHaarTreeNode* node = hid_classifier->node + l;
@@ -337,7 +337,7 @@ icvCreateHidHaarClassifierCascade( CvHaarClassifierCascade* cascade )
 
     //
     // NOTE: Currently, OpenMP is implemented and IPP modes are incompatible.
-    // 
+    //
 #ifndef _OPENMP
     {
     int can_use_ipp = icvHaarClassifierInitAlloc_32f_p != 0 &&
@@ -374,7 +374,7 @@ icvCreateHidHaarClassifierCascade( CvHaarClassifierCascade* cascade )
                 ipp_val1[j] = classifier->alpha[0];
                 ipp_val2[j] = classifier->alpha[1];
                 ipp_counts[j] = rect_count;
-                
+
                 for( l = 0; l < rect_count; l++, k++ )
                 {
                     ipp_features[k] = classifier->haar_feature->rect[l].r;
@@ -382,7 +382,7 @@ icvCreateHidHaarClassifierCascade( CvHaarClassifierCascade* cascade )
                     ipp_weights[k] = classifier->haar_feature->rect[l].weight*ipp_weight_scale;
                 }
             }
-            
+
             if( icvHaarClassifierInitAlloc_32f_p( &out->ipp_stages[i],
                 ipp_features, ipp_weights, ipp_thresholds,
                 ipp_val1, ipp_val2, ipp_counts, stage_classifier->count ) < 0 )
@@ -490,14 +490,14 @@ cvSetImagesForHaarClassifierCascade( CvHaarClassifierCascade* _cascade,
             CV_ERROR( CV_StsUnmatchedSizes, "All integral images must have the same size" );
         cascade->tilted = *tilted;
     }
-    
+
     _cascade->scale = scale;
     _cascade->real_window_size.width = cvRound( _cascade->orig_window_size.width * scale );
     _cascade->real_window_size.height = cvRound( _cascade->orig_window_size.height * scale );
 
     cascade->sum = *sum;
     cascade->sqsum = *sqsum;
-    
+
     equ_rect.x = equ_rect.y = cvRound(scale);
     equ_rect.width = cvRound((_cascade->orig_window_size.width-2)*scale);
     equ_rect.height = cvRound((_cascade->orig_window_size.height-2)*scale);
@@ -521,7 +521,7 @@ cvSetImagesForHaarClassifierCascade( CvHaarClassifierCascade* _cascade,
     {
 #ifdef _OPENMP
     int max_threads = cvGetNumThreads();
-    #pragma omp parallel for num_threads(max_threads), schedule(dynamic) 
+    #pragma omp parallel for num_threads(max_threads), schedule(dynamic)
 #endif // _OPENMP
     for( i = 0; i < _cascade->count; i++ )
     {
@@ -530,11 +530,11 @@ cvSetImagesForHaarClassifierCascade( CvHaarClassifierCascade* _cascade,
         {
             for( l = 0; l < cascade->stage_classifier[i].classifier[j].count; l++ )
             {
-                CvHaarFeature* feature = 
+                CvHaarFeature* feature =
                     &_cascade->stage_classifier[i].classifier[j].haar_feature[l];
                 /* CvHidHaarClassifier* classifier =
                     cascade->stage_classifier[i].classifier + j; */
-                CvHidHaarFeature* hidfeature = 
+                CvHidHaarFeature* hidfeature =
                     &cascade->stage_classifier[i].classifier[j].node[l].feature;
                 double sum0 = 0, area0 = 0;
                 CvRect r[3];
@@ -583,12 +583,12 @@ cvSetImagesForHaarClassifierCascade( CvHaarClassifierCascade* _cascade,
                     y0 = cvRound( r[0].y * scale );
                 }
 #endif
-        
+
                 for( k = 0; k < nr; k++ )
                 {
                     CvRect tr;
                     double correction_ratio;
-            
+
 #if CV_ADJUST_FEATURES
                     if( flagx )
                     {
@@ -618,7 +618,7 @@ cvSetImagesForHaarClassifierCascade( CvHaarClassifierCascade* _cascade,
 #if CV_ADJUST_WEIGHTS
                     {
                     // RAINER START
-                    const float orig_feature_size =  (float)(feature->rect[k].r.width)*feature->rect[k].r.height; 
+                    const float orig_feature_size =  (float)(feature->rect[k].r.width)*feature->rect[k].r.height;
                     const float orig_norm_size = (float)(_cascade->orig_window_size.width)*(_cascade->orig_window_size.height);
                     const float feature_size = float(tr.width*tr.height);
                     //const float normSize    = float(equ_rect.width*equ_rect.height);
@@ -672,7 +672,7 @@ double icvEvalHidHaarClassifier( CvHidHaarClassifier* classifier,
                                  size_t p_offset )
 {
     int idx = 0;
-    do 
+    do
     {
         CvHidHaarTreeNode* node = classifier->node + idx;
         double t = node->threshold * variance_norm_factor;
@@ -865,26 +865,27 @@ cvHaarDetectObjects( const CvArr* _img,
 
     CvMat stub, *img = (CvMat*)_img;
     CvMat *temp = 0, *sum = 0, *tilted = 0, *sqsum = 0, *norm_img = 0, *sumcanny = 0, *img_small = 0;
-    CvSeq* seq = 0;
-    CvSeq* seq2 = 0;
-    CvSeq* idx_seq = 0;
     CvSeq* result_seq = 0;
     CvMemStorage* temp_storage = 0;
     CvAvgComp* comps = 0;
     int i;
-    
+
 #ifdef _OPENMP
     CvSeq* seq_thread[CV_MAX_THREADS] = {0};
     int max_threads = 0;
 #endif
-    
+
     CV_FUNCNAME( "cvHaarDetectObjects" );
 
     __BEGIN__;
 
+    CvSeq *seq = 0, *seq2 = 0, *idx_seq = 0, *big_seq = 0;
+    CvAvgComp result_comp = {{0,0,0,0},0};
     double factor;
     int npass = 2, coi;
-    int do_canny_pruning = flags & CV_HAAR_DO_CANNY_PRUNING;
+    bool do_canny_pruning = (flags & CV_HAAR_DO_CANNY_PRUNING) != 0;
+    bool find_biggest_object = (flags & CV_HAAR_FIND_BIGGEST_OBJECT) != 0;
+    bool rough_search = (flags & CV_HAAR_DO_ROUGH_SEARCH) != 0;
 
     if( !CV_IS_HAAR_CLASSIFIER(cascade) )
         CV_ERROR( !cascade ? CV_StsNullPtr : CV_StsBadArg, "Invalid classifier cascade" );
@@ -898,6 +899,9 @@ cvHaarDetectObjects( const CvArr* _img,
 
     if( CV_MAT_DEPTH(img->type) != CV_8U )
         CV_ERROR( CV_StsUnsupportedFormat, "Only 8-bit images are supported" );
+
+    if( find_biggest_object )
+        flags &= ~CV_HAAR_SCALE_IMAGE;
 
     CV_CALL( temp = cvCreateMat( img->rows, img->cols, CV_8UC1 ));
     CV_CALL( sum = cvCreateMat( img->rows + 1, img->cols + 1, CV_32SC1 ));
@@ -925,15 +929,12 @@ cvHaarDetectObjects( const CvArr* _img,
     seq2 = cvCreateSeq( 0, sizeof(CvSeq), sizeof(CvAvgComp), temp_storage );
     result_seq = cvCreateSeq( 0, sizeof(CvSeq), sizeof(CvAvgComp), storage );
 
-    if( min_neighbors == 0 )
-        seq = result_seq;
-
     if( CV_MAT_CN(img->type) > 1 )
     {
         cvCvtColor( img, temp, CV_BGR2GRAY );
         img = temp;
     }
-    
+
     if( flags & CV_HAAR_SCALE_IMAGE )
     {
         CvSize win_size0 = cascade->orig_window_size;
@@ -999,7 +1000,7 @@ cvHaarDetectObjects( const CvArr* _img,
                         break;
                 }
             }
-            
+
             if( !use_ipp )
             {
                 cvSetImagesForHaarClassifierCascade( cascade, &sum1, &sqsum1, 0, 1. );
@@ -1027,15 +1028,19 @@ cvHaarDetectObjects( const CvArr* _img,
     }
     else
     {
+        int n_factors = 0;
+        CvRect scan_roi_rect = {0,0,0,0};
+        bool is_found = false, scan_roi = false;
+
         cvIntegral( img, sum, sqsum, tilted );
-    
+
         if( do_canny_pruning )
         {
             sumcanny = cvCreateMat( img->rows + 1, img->cols + 1, CV_32SC1 );
             cvCanny( img, temp, 0, 50, 3 );
             cvIntegral( temp, sumcanny );
         }
-    
+
         if( (unsigned)split_stage >= (unsigned)cascade->count ||
             cascade->hid_cascade->is_tree )
         {
@@ -1043,9 +1048,22 @@ cvHaarDetectObjects( const CvArr* _img,
             npass = 1;
         }
 
-        for( factor = 1; factor*cascade->orig_window_size.width < img->cols - 10 &&
-                         factor*cascade->orig_window_size.height < img->rows - 10;
-             factor *= scale_factor )
+        for( n_factors = 0, factor = 1;
+             factor*cascade->orig_window_size.width < img->cols - 10 &&
+             factor*cascade->orig_window_size.height < img->rows - 10;
+             n_factors++, factor *= scale_factor )
+            ;
+
+        if( find_biggest_object )
+        {
+            scale_factor = 1./scale_factor;
+            factor *= scale_factor;
+            big_seq = cvCreateSeq( 0, sizeof(CvSeq), sizeof(CvRect), temp_storage );
+        }
+        else
+            factor = 1;
+
+        for( ; n_factors-- > 0 && !is_found; factor *= scale_factor )
         {
             const double ystep = MAX( 2, factor );
             CvSize win_size = { cvRound( cascade->orig_window_size.width * factor ),
@@ -1054,10 +1072,16 @@ cvHaarDetectObjects( const CvArr* _img,
             int *p0 = 0, *p1 = 0, *p2 = 0, *p3 = 0;
             int *pq0 = 0, *pq1 = 0, *pq2 = 0, *pq3 = 0;
             int pass, stage_offset = 0;
-            int stop_height = cvRound((img->rows - win_size.height) / ystep);
+            int start_x = 0, start_y = 0;
+            int end_x = cvRound((img->cols - win_size.width) / ystep);
+            int end_y = cvRound((img->rows - win_size.height) / ystep);
 
             if( win_size.width < min_size.width || win_size.height < min_size.height )
+            {
+                if( find_biggest_object )
+                    break;
                 continue;
+            }
 
             cvSetImagesForHaarClassifierCascade( cascade, sum, sqsum, tilted, factor );
             cvZero( temp );
@@ -1084,6 +1108,16 @@ cvHaarDetectObjects( const CvArr* _img,
                             + equ_rect.x + equ_rect.width;
             }
 
+            if( scan_roi )
+            {
+                //adjust start_height and stop_height
+                start_y = cvRound(scan_roi_rect.y / ystep);
+                end_y = cvRound((scan_roi_rect.y + scan_roi_rect.height - win_size.height) / ystep);
+
+                start_x = cvRound(scan_roi_rect.x / ystep);
+                end_x = cvRound((scan_roi_rect.x + scan_roi_rect.width - win_size.width) / ystep);
+            }
+
             cascade->hid_cascade->count = split_stage;
 
             for( pass = 0; pass < npass; pass++ )
@@ -1091,17 +1125,16 @@ cvHaarDetectObjects( const CvArr* _img,
 #ifdef _OPENMP
     #pragma omp parallel for num_threads(max_threads), schedule(dynamic)
 #endif
-                for( int _iy = 0; _iy < stop_height; _iy++ )
+                for( int _iy = start_y; _iy < end_y; _iy++ )
                 {
                     int iy = cvRound(_iy*ystep);
                     int _ix, _xstep = 1;
-                    int stop_width = cvRound((img->cols - win_size.width) / ystep);
                     uchar* mask_row = temp->data.ptr + temp->step * iy;
 
-                    for( _ix = 0; _ix < stop_width; _ix += _xstep )
+                    for( _ix = start_x; _ix < end_x; _ix += _xstep )
                     {
                         int ix = cvRound(_ix*ystep); // it really should be ystep
-                    
+
                         if( pass == 0 )
                         {
                             int result;
@@ -1111,7 +1144,7 @@ cvHaarDetectObjects( const CvArr* _img,
                             {
                                 int offset;
                                 int s, sq;
-                        
+
                                 offset = iy*(sum->step/sizeof(p0[0])) + ix;
                                 s = p0[offset] - p1[offset] - p2[offset] + p3[offset];
                                 sq = pq0[offset] - pq1[offset] - pq2[offset] + pq3[offset];
@@ -1161,24 +1194,161 @@ cvHaarDetectObjects( const CvArr* _img,
                 stage_offset = cascade->hid_cascade->count;
                 cascade->hid_cascade->count = cascade->count;
             }
+
+#ifdef _OPENMP
+	        // gather the results
+	        for( i = 0; i < max_threads; i++ )
+	        {
+		        CvSeq* s = seq_thread[i];
+                int j, total = s->total;
+                CvSeqBlock* b = s->first;
+                for( j = 0; j < total; j += b->count, b = b->next )
+                    cvSeqPushMulti( seq, b->data, b->count );
+	        }
+#endif
+
+            if( find_biggest_object )
+            {
+                CvSeq* bseq = min_neighbors > 0 ? big_seq : seq;
+                
+                if( min_neighbors > 0 && !scan_roi )
+                {
+                    // group retrieved rectangles in order to filter out noise
+                    int ncomp = cvSeqPartition( seq, 0, &idx_seq, is_equal, 0 );
+                    CV_CALL( comps = (CvAvgComp*)cvAlloc( (ncomp+1)*sizeof(comps[0])));
+                    memset( comps, 0, (ncomp+1)*sizeof(comps[0]));
+
+                    if( rough_search )
+                    {
+                        for( i = 0; i < seq->total; i++ )
+                        {
+                            CvRect r1 = *(CvRect*)cvGetSeqElem( seq, i );
+                            int idx = *(int*)cvGetSeqElem( idx_seq, i );
+                            assert( (unsigned)idx < (unsigned)ncomp );
+
+                            comps[idx].neighbors++;
+                            comps[idx].rect.x += r1.x;
+                            comps[idx].rect.y += r1.y;
+                            comps[idx].rect.width += r1.width;
+                            comps[idx].rect.height += r1.height;
+                        }
+
+                        // calculate average bounding box
+                        for( i = 0; i < ncomp; i++ )
+                        {
+                            int n = comps[i].neighbors;
+                            if( n >= min_neighbors )
+                            {
+                                CvAvgComp comp;
+                                comp.rect.x = (comps[i].rect.x*2 + n)/(2*n);
+                                comp.rect.y = (comps[i].rect.y*2 + n)/(2*n);
+                                comp.rect.width = (comps[i].rect.width*2 + n)/(2*n);
+                                comp.rect.height = (comps[i].rect.height*2 + n)/(2*n);
+                                comp.neighbors = n;
+                                cvSeqPush( bseq, &comp );
+                            }
+                        }
+                    }
+                    else
+                    {
+                        for( i = 0 ; i <= ncomp; i++ )
+                            comps[i].rect.x = comps[i].rect.y = INT_MAX;
+
+                        // count number of neighbors
+                        for( i = 0; i < seq->total; i++ )
+                        {
+                            CvRect r1 = *(CvRect*)cvGetSeqElem( seq, i );
+                            int idx = *(int*)cvGetSeqElem( idx_seq, i );
+                            assert( (unsigned)idx < (unsigned)ncomp );
+
+                            comps[idx].neighbors++;
+
+                            // rect.width and rect.height will store coordinate of right-bottom corner
+                            comps[idx].rect.x = MIN(comps[idx].rect.x, r1.x);
+                            comps[idx].rect.y = MIN(comps[idx].rect.y, r1.y);
+                            comps[idx].rect.width = MAX(comps[idx].rect.width, r1.x+r1.width-1);
+                            comps[idx].rect.height = MAX(comps[idx].rect.height, r1.y+r1.height-1);
+                        }
+
+                        // calculate enclosing box
+                        for( i = 0; i < ncomp; i++ )
+                        {
+                            int n = comps[i].neighbors;
+                            if( n >= min_neighbors )
+                            {
+                                CvAvgComp comp;
+                                comp.rect.x = comps[i].rect.x;
+                                comp.rect.y = comps[i].rect.y;
+                                comp.rect.width = comps[i].rect.width - comps[i].rect.x + 1;
+                                comp.rect.height = comps[i].rect.height - comps[i].rect.y + 1;
+
+                                //expand the box by 20% because we could miss some neighbours
+                                //see 'is_equal' function
+                            #if 1
+                                int offset = cvRound(comp.rect.width * 0.2);
+                                int right = MIN( img->cols-1, comp.rect.x+comp.rect.width-1 + offset );
+                                int bottom = MIN( img->rows-1, comp.rect.y+comp.rect.height-1 + offset);
+                                comp.rect.x = MAX( comp.rect.x - offset, 0 );
+                                comp.rect.y = MAX( comp.rect.y - offset, 0 );
+                                comp.rect.width = right - comp.rect.x + 1;
+                                comp.rect.height = bottom - comp.rect.y + 1;
+                            #endif
+                                comp.neighbors = n;
+                                cvSeqPush( bseq, &comp );
+                            }
+                        }
+                    }
+
+                    cvFree( &comps );
+                }
+
+                // extract the biggest rect
+                if( bseq->total > 0 )
+                {
+                    int max_area = 0;
+                    for( i = 0; i < bseq->total; i++ )
+                    {
+                        CvAvgComp* comp = (CvAvgComp*)cvGetSeqElem( bseq, i );
+                        int area = comp->rect.width * comp->rect.height;
+                        if( max_area < area )
+                        {
+                            max_area = area;
+                            result_comp.rect = comp->rect;
+                            result_comp.neighbors = bseq == seq ? 1 : comp->neighbors;
+                        }
+                    }
+
+                    //Prepare information for further scanning inside the biggest rectangle
+
+                    // change scan ranges to roi in case of required
+                    if( !rough_search && !scan_roi )
+                    {
+                        scan_roi = true;
+                        scan_roi_rect = result_comp.rect;
+                        cvClearSeq(bseq);
+                    }
+                    else if( rough_search )
+                        is_found = true;
+                }
+            }
         }
     }
 
-#ifdef _OPENMP
-	// gather the results
-	for( i = 0; i < max_threads; i++ )
-	{
-		CvSeq* s = seq_thread[i];
-        int j, total = s->total;
-        CvSeqBlock* b = s->first;
-        for( j = 0; j < total; j += b->count, b = b->next )
-            cvSeqPushMulti( seq, b->data, b->count );
-	}
-#endif
-
-    if( min_neighbors != 0 )
+    if( min_neighbors == 0 && !find_biggest_object )
     {
-        // group retrieved rectangles in order to filter out noise 
+        for( i = 0; i < seq->total; i++ )
+        {
+            CvRect* rect = (CvRect*)cvGetSeqElem( seq, i );
+            CvAvgComp comp;
+            comp.rect = *rect;
+            comp.neighbors = 1;
+            cvSeqPush( result_seq, &comp );
+        }
+    }
+
+    if( min_neighbors != 0 && (!find_biggest_object || !rough_search))
+    {
+        // group retrieved rectangles in order to filter out noise
         int ncomp = cvSeqPartition( seq, 0, &idx_seq, is_equal, 0 );
         CV_CALL( comps = (CvAvgComp*)cvAlloc( (ncomp+1)*sizeof(comps[0])));
         memset( comps, 0, (ncomp+1)*sizeof(comps[0]));
@@ -1191,7 +1361,7 @@ cvHaarDetectObjects( const CvArr* _img,
             assert( (unsigned)idx < (unsigned)ncomp );
 
             comps[idx].neighbors++;
-             
+
             comps[idx].rect.x += r1.x;
             comps[idx].rect.y += r1.y;
             comps[idx].rect.width += r1.width;
@@ -1215,36 +1385,53 @@ cvHaarDetectObjects( const CvArr* _img,
             }
         }
 
-        // filter out small face rectangles inside large face rectangles
-        for( i = 0; i < seq2->total; i++ )
+        if( !find_biggest_object )
         {
-            CvAvgComp r1 = *(CvAvgComp*)cvGetSeqElem( seq2, i );
-            int j, flag = 1;
-
-            for( j = 0; j < seq2->total; j++ )
+            // filter out small face rectangles inside large face rectangles
+            for( i = 0; i < seq2->total; i++ )
             {
-                CvAvgComp r2 = *(CvAvgComp*)cvGetSeqElem( seq2, j );
-                int distance = cvRound( r2.rect.width * 0.2 );
-            
-                if( i != j &&
-                    r1.rect.x >= r2.rect.x - distance &&
-                    r1.rect.y >= r2.rect.y - distance &&
-                    r1.rect.x + r1.rect.width <= r2.rect.x + r2.rect.width + distance &&
-                    r1.rect.y + r1.rect.height <= r2.rect.y + r2.rect.height + distance &&
-                    (r2.neighbors > MAX( 3, r1.neighbors ) || r1.neighbors < 3) )
+                CvAvgComp r1 = *(CvAvgComp*)cvGetSeqElem( seq2, i );
+                int j, flag = 1;
+
+                for( j = 0; j < seq2->total; j++ )
                 {
-                    flag = 0;
-                    break;
-                }
-            }
+                    CvAvgComp r2 = *(CvAvgComp*)cvGetSeqElem( seq2, j );
+                    int distance = cvRound( r2.rect.width * 0.2 );
 
-            if( flag )
+                    if( i != j &&
+                        r1.rect.x >= r2.rect.x - distance &&
+                        r1.rect.y >= r2.rect.y - distance &&
+                        r1.rect.x + r1.rect.width <= r2.rect.x + r2.rect.width + distance &&
+                        r1.rect.y + r1.rect.height <= r2.rect.y + r2.rect.height + distance &&
+                        (r2.neighbors > MAX( 3, r1.neighbors ) || r1.neighbors < 3) )
+                    {
+                        flag = 0;
+                        break;
+                    }
+                }
+
+                if( flag )
+                    cvSeqPush( result_seq, &r1 );
+            }
+        }
+        else
+        {
+            int max_area = 0;
+            for( i = 0; i < seq2->total; i++ )
             {
-                cvSeqPush( result_seq, &r1 );
-                /* cvSeqPush( result_seq, &r1.rect ); */
+                CvAvgComp* comp = (CvAvgComp*)cvGetSeqElem( seq2, i );
+                int area = comp->rect.width * comp->rect.height;
+                if( max_area < area )
+                {
+                    max_area = area;
+                    result_comp = *comp;
+                }                
             }
         }
     }
+
+    if( find_biggest_object && result_comp.rect.width > 0 )
+        cvSeqPush( result_seq, &result_comp );
 
     __END__;
 
@@ -1290,7 +1477,7 @@ icvLoadCascadeCART( const char** input_cascade, int n, CvSize orig_window_size )
 
         sscanf( stage, "%d%n", &count, &dl );
         stage += dl;
-        
+
         assert( count > 0 );
         cascade->stage_classifier[i].count = count;
         cascade->stage_classifier[i].classifier =
@@ -1301,11 +1488,11 @@ icvLoadCascadeCART( const char** input_cascade, int n, CvSize orig_window_size )
             CvHaarClassifier* classifier = cascade->stage_classifier[i].classifier + j;
             int k, rects = 0;
             char str[100];
-            
+
             sscanf( stage, "%d%n", &classifier->count, &dl );
             stage += dl;
 
-            classifier->haar_feature = (CvHaarFeature*) cvAlloc( 
+            classifier->haar_feature = (CvHaarFeature*) cvAlloc(
                 classifier->count * ( sizeof( *classifier->haar_feature ) +
                                       sizeof( *classifier->threshold ) +
                                       sizeof( *classifier->left ) +
@@ -1315,7 +1502,7 @@ icvLoadCascadeCART( const char** input_cascade, int n, CvSize orig_window_size )
             classifier->left = (int*) (classifier->threshold + classifier->count);
             classifier->right = (int*) (classifier->left + classifier->count);
             classifier->alpha = (float*) (classifier->right + classifier->count);
-            
+
             for( l = 0; l < classifier->count; l++ )
             {
                 sscanf( stage, "%d%n", &rects, &dl );
@@ -1335,16 +1522,16 @@ icvLoadCascadeCART( const char** input_cascade, int n, CvSize orig_window_size )
                 }
                 sscanf( stage, "%s%n", str, &dl );
                 stage += dl;
-            
+
                 classifier->haar_feature[l].tilted = strncmp( str, "tilted", 6 ) == 0;
-            
+
                 for( k = rects; k < CV_HAAR_FEATURE_MAX; k++ )
                 {
                     memset( classifier->haar_feature[l].rect + k, 0,
                             sizeof(classifier->haar_feature[l].rect[k]) );
                 }
-                
-                sscanf( stage, "%f%d%d%n", &(classifier->threshold[l]), 
+
+                sscanf( stage, "%f%d%d%n", &(classifier->threshold[l]),
                                        &(classifier->left[l]),
                                        &(classifier->right[l]), &dl );
                 stage += dl;
@@ -1355,7 +1542,7 @@ icvLoadCascadeCART( const char** input_cascade, int n, CvSize orig_window_size )
                 stage += dl;
             }
         }
-       
+
         sscanf( stage, "%f%n", &threshold, &dl );
         stage += dl;
 
@@ -1389,7 +1576,7 @@ icvLoadCascadeCART( const char** input_cascade, int n, CvSize orig_window_size )
 CV_IMPL CvHaarClassifierCascade*
 cvLoadHaarClassifierCascade( const char* directory, CvSize orig_window_size )
 {
-    const char** input_cascade = 0; 
+    const char** input_cascade = 0;
     CvHaarClassifierCascade *cascade = 0;
 
     CV_FUNCNAME( "cvLoadHaarClassifierCascade" );
@@ -1427,7 +1614,7 @@ cvLoadHaarClassifierCascade( const char* directory, CvSize orig_window_size )
     }
     else if( n == 0 )
         CV_ERROR( CV_StsBadArg, "Invalid path" );
-    
+
     size += (n+1)*sizeof(char*);
     CV_CALL( input_cascade = (const char**)cvAlloc( size ));
     ptr = (char*)(input_cascade + n + 1);
@@ -1597,7 +1784,7 @@ icvReadHaarClassifier( CvFileStorage* fs, CvFileNode* node )
             }
 
             classifier->count = tree_fn->data.seq->total;
-            CV_CALL( classifier->haar_feature = (CvHaarFeature*) cvAlloc( 
+            CV_CALL( classifier->haar_feature = (CvHaarFeature*) cvAlloc(
                 classifier->count * ( sizeof( *classifier->haar_feature ) +
                                       sizeof( *classifier->threshold ) +
                                       sizeof( *classifier->left ) +
@@ -1654,7 +1841,7 @@ icvReadHaarClassifier( CvFileStorage* fs, CvFileNode* node )
                                  "(stage %d, tree %d, node %d)", l, i, j, k );
                         CV_ERROR( CV_StsError, buf );
                     }
-                    
+
                     fn = CV_SEQ_ELEM( rect_fn->data.seq, CvFileNode, 0 );
                     if( !CV_NODE_IS_INT( fn->tag ) || fn->data.i < 0 )
                     {
@@ -1853,7 +2040,7 @@ icvReadHaarClassifier( CvFileStorage* fs, CvFileNode* node )
         {
             cascade->stage_classifier[parent].child = i;
         }
-        
+
         CV_NEXT_SEQ_ELEM( sizeof( *stage_fn ), stages_reader );
     } /* for each stage */
 
@@ -1883,19 +2070,19 @@ icvWriteHaarClassifier( CvFileStorage* fs, const char* name, const void* struct_
     /* TODO: parameters check */
 
     CV_CALL( cvStartWriteStruct( fs, name, CV_NODE_MAP, CV_TYPE_NAME_HAAR, attributes ) );
-    
+
     CV_CALL( cvStartWriteStruct( fs, ICV_HAAR_SIZE_NAME, CV_NODE_SEQ | CV_NODE_FLOW ) );
     CV_CALL( cvWriteInt( fs, NULL, cascade->orig_window_size.width ) );
     CV_CALL( cvWriteInt( fs, NULL, cascade->orig_window_size.height ) );
     CV_CALL( cvEndWriteStruct( fs ) ); /* size */
-    
-    CV_CALL( cvStartWriteStruct( fs, ICV_HAAR_STAGES_NAME, CV_NODE_SEQ ) );    
+
+    CV_CALL( cvStartWriteStruct( fs, ICV_HAAR_STAGES_NAME, CV_NODE_SEQ ) );
     for( i = 0; i < cascade->count; ++i )
     {
         CV_CALL( cvStartWriteStruct( fs, NULL, CV_NODE_MAP ) );
         sprintf( buf, "stage %d", i );
         CV_CALL( cvWriteComment( fs, buf, 1 ) );
-        
+
         CV_CALL( cvStartWriteStruct( fs, ICV_HAAR_TREES_NAME, CV_NODE_SEQ ) );
 
         for( j = 0; j < cascade->stage_classifier[i].count; ++j )
@@ -1922,7 +2109,7 @@ icvWriteHaarClassifier( CvFileStorage* fs, const char* name, const void* struct_
                 CV_CALL( cvWriteComment( fs, buf, 1 ) );
 
                 CV_CALL( cvStartWriteStruct( fs, ICV_HAAR_FEATURE_NAME, CV_NODE_MAP ) );
-                
+
                 CV_CALL( cvStartWriteStruct( fs, ICV_HAAR_RECTS_NAME, CV_NODE_SEQ ) );
                 for( l = 0; l < CV_HAAR_FEATURE_MAX && feature->rect[l].r.width != 0; ++l )
                 {
@@ -1937,7 +2124,7 @@ icvWriteHaarClassifier( CvFileStorage* fs, const char* name, const void* struct_
                 CV_CALL( cvEndWriteStruct( fs ) ); /* rects */
                 CV_CALL( cvWriteInt( fs, ICV_HAAR_TILTED_NAME, feature->tilted ) );
                 CV_CALL( cvEndWriteStruct( fs ) ); /* feature */
-                
+
                 CV_CALL( cvWriteReal( fs, ICV_HAAR_THRESHOLD_NAME, tree->threshold[k]) );
 
                 if( tree->left[k] > 0 )
@@ -1978,7 +2165,7 @@ icvWriteHaarClassifier( CvFileStorage* fs, const char* name, const void* struct_
 
         CV_CALL( cvEndWriteStruct( fs ) ); /* stage */
     } /* for each stage */
-    
+
     CV_CALL( cvEndWriteStruct( fs ) ); /* stages */
     CV_CALL( cvEndWriteStruct( fs ) ); /* root */
 
@@ -2013,7 +2200,7 @@ icvCloneHaarClassifier( const void* struct_ptr )
         CV_CALL( cascade->stage_classifier[i].classifier =
             (CvHaarClassifier*) cvAlloc( cascade_src->stage_classifier[i].count
                 * sizeof( cascade->stage_classifier[i].classifier[0] ) ) );
-        
+
         cascade->stage_classifier[i].count = cascade_src->stage_classifier[i].count;
 
         for( j = 0; j < cascade->stage_classifier[i].count; ++j )
@@ -2023,13 +2210,13 @@ icvCloneHaarClassifier( const void* struct_ptr )
 
         for( j = 0; j < cascade->stage_classifier[i].count; ++j )
         {
-            const CvHaarClassifier* classifier_src = 
+            const CvHaarClassifier* classifier_src =
                 &cascade_src->stage_classifier[i].classifier[j];
-            CvHaarClassifier* classifier = 
+            CvHaarClassifier* classifier =
                 &cascade->stage_classifier[i].classifier[j];
 
             classifier->count = classifier_src->count;
-            CV_CALL( classifier->haar_feature = (CvHaarFeature*) cvAlloc( 
+            CV_CALL( classifier->haar_feature = (CvHaarFeature*) cvAlloc(
                 classifier->count * ( sizeof( *classifier->haar_feature ) +
                                       sizeof( *classifier->threshold ) +
                                       sizeof( *classifier->left ) +
@@ -2047,7 +2234,7 @@ icvCloneHaarClassifier( const void* struct_ptr )
                 classifier->right[k] = classifier_src->right[k];
                 classifier->alpha[k] = classifier_src->alpha[k];
             }
-            classifier->alpha[classifier->count] = 
+            classifier->alpha[classifier->count] =
                 classifier_src->alpha[classifier->count];
         }
     }
