@@ -385,6 +385,8 @@ EXPORTS
     ippiSqrDistanceValid_Norm_32f_C1R
     ippiDistanceTransform_3x3_8u32f_C1R
     ippiDistanceTransform_5x5_8u32f_C1R
+    ippiDistanceTransform_3x3_8u_C1R
+    ippiDistanceTransform_3x3_8u_C1IR
     ippiGetDistanceTransformMask
     ippiUndistortGetSize
     ippiCreateMapCameraUndistort_32f_C1R

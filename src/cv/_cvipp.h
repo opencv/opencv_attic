@@ -592,6 +592,15 @@ IPCVAPI_EX(CvStatus, icvDistanceTransform_5x5_8u32f_C1R,
     ( const uchar* pSrc, int srcStep, float* pDst,
       int dstStep, CvSize roiSize, const float* pMetrics ))
 
+IPCVAPI_EX(CvStatus, icvDistanceTransform_3x3_8u_C1IR,
+    "ippiDistanceTransform_3x3_8u_C1IR", CV_PLUGINS1(CV_PLUGIN_IPPCV),
+    ( uchar* pSrc, int srcStep, CvSize roiSize, const int* pMetrics ))
+
+IPCVAPI_EX(CvStatus, icvDistanceTransform_3x3_8u_C1R,
+    "ippiDistanceTransform_3x3_8u_C1R", CV_PLUGINS1(CV_PLUGIN_IPPCV),
+    ( const uchar* pSrc, int srcStep, uchar* pDst,
+      int dstStep, CvSize roiSize, const int* pMetrics ))
+
 /****************************************************************************************\
 *                               Thresholding functions                                   *
 \****************************************************************************************/
