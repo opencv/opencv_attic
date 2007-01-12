@@ -40,6 +40,7 @@
 //M*/
 
 #include "_highgui.h"
+#include "utils.h"
 #include "grfmt_pxm.h"
 
 // P?M filter factory
@@ -48,7 +49,7 @@ GrFmtPxM::GrFmtPxM()
 {
     m_sign_len = 3;
     m_signature = "";
-    m_description = "Portable image format (*.pbm;*.pgm;*.ppm)";
+    m_description = "Portable image format (*.pbm;*.pgm;*.ppm;*.pxm;*.pnm)";
 }
 
 
@@ -166,8 +167,12 @@ bool  GrFmtPxMReader::ReadHeader()
         m_height = ReadNumber( m_strm, INT_MAX );
         
         m_maxval = m_bpp == 1 ? 1 : ReadNumber( m_strm, INT_MAX );
+        if( m_maxval > 65535 )
+            BAD_HEADER_ERR();
 
-        if( m_maxval > 255 ) m_binary = false;
+        //if( m_maxval > 255 ) m_binary = false; nonsense
+        if( m_maxval > 255 )
+            m_bit_depth = 16;
 
         if( m_width > 0 && m_height > 0 && m_maxval > 0 && m_maxval < (1 << 16)) 
         {
@@ -193,13 +198,11 @@ bool  GrFmtPxMReader::ReadData( uchar* data, int step, int color )
     const  int buffer_size = 1 << 12;
     uchar  buffer[buffer_size];
     uchar  pal_buffer[buffer_size];
-    uchar  bgr_buffer[buffer_size];
     PaletteEntry palette[256];
     bool   result = false;
     uchar* src = buffer;
     uchar* gray_palette = pal_buffer;
-    uchar* bgr = bgr_buffer;
-    int  src_pitch = (m_width*m_bpp + 7)/8;
+    int  src_pitch = (m_width*m_bpp*m_bit_depth/8 + 7)/8;
     int  nch = m_iscolor ? 3 : 1;
     int  width3 = m_width*nch;
     int  i, x, y;
@@ -208,22 +211,22 @@ bool  GrFmtPxMReader::ReadData( uchar* data, int step, int color )
         return false;
     
     if( src_pitch+32 > buffer_size )
-        src = new uchar[width3 + 32];
-
-    if( m_maxval + 1 > buffer_size )
-        gray_palette = new uchar[m_maxval + 1];
-
-    if( m_width*3 + 32 > buffer_size )
-        bgr = new uchar[m_width*3 + 32];
+        src = new uchar[width3*m_bit_depth/8 + 32];
 
     // create LUT for converting colors
-    for( i = 0; i <= m_maxval; i++ )
+    if( m_bit_depth == 8 )
     {
-        gray_palette[i] = (uchar)((i*255/m_maxval)^(m_bpp == 1 ? 255 : 0));
+        if( m_maxval + 1 > buffer_size )
+            gray_palette = new uchar[m_maxval + 1];
+
+        for( i = 0; i <= m_maxval; i++ )
+        {
+            gray_palette[i] = (uchar)((i*255/m_maxval)^(m_bpp == 1 ? 255 : 0));
+        }
+
+        FillGrayPalette( palette, m_bpp==1 ? 1 : 8 , m_bpp == 1 );
     }
 
-    FillGrayPalette( palette, m_bpp==1 ? 1 : 8 , m_bpp == 1 );
-    
     if( setjmp( m_strm.JmpBuf()) == 0 )
     {
         m_strm.SetPos( m_offset );
@@ -271,27 +274,67 @@ bool  GrFmtPxMReader::ReadData( uchar* data, int step, int color )
                     {
                         int code = ReadNumber( m_strm, INT_MAX );
                         if( (unsigned)code > (unsigned)m_maxval ) code = m_maxval;
-                        src[x] = gray_palette[code];
+                        if( m_bit_depth == 8 )
+                            src[x] = gray_palette[code];
+                        else
+                            ((ushort *)src)[x] = (ushort)code;
                     }
                 }
                 else
                 {
                     m_strm.GetBytes( src, src_pitch );
+                    if( m_bit_depth == 16 && !isBigEndian() )
+                    {
+                        for( x = 0; x < width3; x++ )
+                        {
+                            uchar v = src[x * 2];
+                            src[x * 2] = src[x * 2 + 1];
+                            src[x * 2 + 1] = v;
+                        }
+                    }
                 }
 
-                if( m_bpp == 8 )
+                if( !m_native_depth && m_bit_depth == 16 )
+                {
+                    for( x = 0; x < width3; x++ )
+                    {
+                        int v = ((ushort *)src)[x];
+                        src[x] = (uchar)(v >> 8);
+                    }
+                }
+
+                if( m_bpp == 8 ) // image has one channel
                 {
                     if( color )
-                        FillColorRow8( data, src, m_width, palette );
+                    {
+                        if( m_bit_depth == 8 || !m_native_depth ) {
+                            uchar *d = data, *s = src, *end = src + m_width;
+                            for( ; s < end; d += 3, s++)
+                                d[0] = d[1] = d[2] = *s;
+                        } else {
+                            ushort *d = (ushort *)data, *s = (ushort *)src, *end = ((ushort *)src) + m_width;
+                            for( ; s < end; s++, d += 3)
+                                d[0] = d[1] = d[2] = *s;
+                        }
+                    }
+                    else if( m_native_depth )
+                        memcpy( data, src, m_width*m_bit_depth/8 );
                     else
                         memcpy( data, src, m_width );
                 }
                 else
                 {
                     if( color )
-                        icvCvt_RGB2BGR_8u_C3R( src, 0, data, 0, cvSize(m_width,1) );
-                    else
+                    {
+                        if( m_bit_depth == 8 || !m_native_depth )
+                            icvCvt_RGB2BGR_8u_C3R( src, 0, data, 0, cvSize(m_width,1) );
+                        else
+                            icvCvt_RGB2BGR_16u_C3R( (ushort *)src, 0, (ushort *)data, 0, cvSize(m_width,1) );
+                    }
+                    else if( m_bit_depth == 8 || !m_native_depth )
                         icvCvt_BGR2Gray_8u_C3C1R( src, 0, data, 0, cvSize(m_width,1), 2 );
+                    else
+                        icvCvt_BGR2Gray_16u_C3C1R( (ushort *)src, 0, (ushort *)data, 0, cvSize(m_width,1), 2 );
                 }
             }
             result = true;
@@ -303,9 +346,6 @@ bool  GrFmtPxMReader::ReadData( uchar* data, int step, int color )
 
     if( src != buffer )
         delete[] src; 
-
-    if( bgr != bgr_buffer )
-        delete[] bgr;
 
     if( gray_palette != pal_buffer )
         delete[] gray_palette;
@@ -326,28 +366,35 @@ GrFmtPxMWriter::~GrFmtPxMWriter()
 }
 
 
-static char PxMLUT[256][5];
-static bool isPxMLUTInitialized = false;
+bool  GrFmtPxMWriter::IsFormatSupported( int depth )
+{
+    return depth == IPL_DEPTH_8U || depth == IPL_DEPTH_16U;
+}
+
 
 bool  GrFmtPxMWriter::WriteImage( const uchar* data, int step,
-                                  int width, int height, int /*depth*/, int _channels )
+                                  int width, int height, int depth, int _channels )
 {
-    bool isBinary = false;
+    bool isBinary = true;
     bool result = false;
 
     int  channels = _channels > 1 ? 3 : 1;
-    int  fileStep = width*channels;
+    int  fileStep = width*channels*(depth/8);
     int  x, y;
 
     assert( data && width > 0 && height > 0 && step >= fileStep );
     
     if( m_strm.Open( m_filename ) )
     {
-        int  lineLength = ((isBinary ? 1 : 4)*channels +
-                           (channels > 1 ? 2 : 0))*width + 32;
+        int  lineLength;
         int  bufferSize = 128; // buffer that should fit a header
         char* buffer = 0;
-                
+
+        if( isBinary )
+            lineLength = channels * width * depth / 8;
+        else
+            lineLength = (6 * channels + (channels > 1 ? 2 : 0)) * width + 32;
+
         if( bufferSize < lineLength )
             bufferSize = lineLength;
 
@@ -358,18 +405,10 @@ bool  GrFmtPxMWriter::WriteImage( const uchar* data, int step,
             return false;
         }
 
-        if( !isPxMLUTInitialized )
-        {
-            for( int i = 0; i < 256; i++ )
-                sprintf( PxMLUT[i], "%4d", i );
-
-            isPxMLUTInitialized = 1;
-        }
-
         // write header;
-        sprintf( buffer, "P%c\n%d %d\n255\n",
+        sprintf( buffer, "P%c\n%d %d\n%d\n",
                  '2' + (channels > 1 ? 1 : 0) + (isBinary ? 3 : 0),
-                 width, height );
+                 width, height, (1 << depth) - 1 );
 
         m_strm.PutBytes( buffer, (int)strlen(buffer) );
 
@@ -378,35 +417,83 @@ bool  GrFmtPxMWriter::WriteImage( const uchar* data, int step,
             if( isBinary )
             {
                 if( _channels == 3 )
-                    icvCvt_BGR2RGB_8u_C3R( (uchar*)data, 0,
-                        (uchar*)buffer, 0, cvSize(width,1) );
-                else if( _channels == 4 )
-                    icvCvt_BGRA2BGR_8u_C4C3R( (uchar*)data, 0,
-                        (uchar*)buffer, 0, cvSize(width,1), 1 );
-                m_strm.PutBytes( channels > 1 ? buffer : (char*)data, fileStep );
+                {
+                    if( depth == 8 )
+                        icvCvt_BGR2RGB_8u_C3R( (uchar*)data, 0,
+                            (uchar*)buffer, 0, cvSize(width,1) );
+                    else
+                        icvCvt_BGR2RGB_16u_C3R( (ushort*)data, 0,
+                            (ushort*)buffer, 0, cvSize(width,1) );
+                }
+
+                // swap endianness if necessary
+                if( depth == 16 && !isBigEndian() )
+                {
+                    if( _channels == 1 )
+                        memcpy( buffer, data, fileStep );
+                    for( x = 0; x < width*channels*2; x += 2 )
+                    {
+                        uchar v = buffer[x];
+                        buffer[x] = buffer[x + 1];
+                        buffer[x + 1] = v;
+                    }
+                }
+                m_strm.PutBytes( (channels > 1 || depth > 8) ? buffer : (char*)data, fileStep );
             }
             else
             {
                 char* ptr = buffer;
-                
+
                 if( channels > 1 )
-                    for( x = 0; x < width*channels; x += channels )
+                {
+                    if( depth == 8 )
                     {
-                        strcpy( ptr, PxMLUT[data[x+2]] );
-                        ptr += 4;
-                        strcpy( ptr, PxMLUT[data[x+1]] );
-                        ptr += 4;
-                        strcpy( ptr, PxMLUT[data[x]] );
-                        ptr += 4;
-                        *ptr++ = ' ';
-                        *ptr++ = ' ';
+                        for( x = 0; x < width*channels; x += channels )
+                        {
+                            sprintf( ptr, "% 4d", data[x + 2] );
+                            ptr += 4;
+                            sprintf( ptr, "% 4d", data[x + 1] );
+                            ptr += 4;
+                            sprintf( ptr, "% 4d", data[x] );
+                            ptr += 4;
+                            *ptr++ = ' ';
+                            *ptr++ = ' ';
+                        }
                     }
+                    else
+                    {
+                        for( x = 0; x < width*channels; x += channels )
+                        {
+                            sprintf( ptr, "% 6d", ((ushort *)data)[x + 2] );
+                            ptr += 6;
+                            sprintf( ptr, "% 6d", ((ushort *)data)[x + 1] );
+                            ptr += 6;
+                            sprintf( ptr, "% 6d", ((ushort *)data)[x] );
+                            ptr += 6;
+                            *ptr++ = ' ';
+                            *ptr++ = ' ';
+                        }
+                    }
+                }
                 else
-                    for( x = 0; x < width; x++ )
+                {
+                    if( depth == 8 )
                     {
-                        strcpy( ptr, PxMLUT[data[x]] );
-                        ptr += 4;
+                        for( x = 0; x < width; x++ )
+                        {
+                            sprintf( ptr, "% 4d", data[x] );
+                            ptr += 4;
+                        }
                     }
+                    else
+                    {
+                        for( x = 0; x < width; x++ )
+                        {
+                            sprintf( ptr, "% 6d", ((ushort *)data)[x] );
+                            ptr += 6;
+                        }
+                    }
+                }
 
                 *ptr++ = '\n';
 
