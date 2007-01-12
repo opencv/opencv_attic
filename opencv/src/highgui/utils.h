@@ -55,6 +55,9 @@ struct PaletteEntry
 #define  descale(x,n)  (((x) + (1 << ((n)-1))) >> (n))
 #define  saturate(x)   (uchar)(((x) & ~255) == 0 ? (x) : ~((x)>>31))
 
+void icvCvt_BGR2Gray_16u_C3C1R( const ushort* bgr, int bgr_step,
+                                ushort* gray, int gray_step,
+                                CvSize size, int swap_rb=0 );
 void icvCvt_BGR2Gray_8u_C3C1R( const uchar* bgr, int bgr_step,
                                uchar* gray, int gray_step,
                                CvSize size, int swap_rb=0 );
@@ -69,6 +72,9 @@ void icvCvt_BGRA2BGR_8u_C4C3R( const uchar* bgra, int bgra_step,
 void icvCvt_BGR2RGB_8u_C3R( const uchar* bgr, int bgr_step,
                             uchar* rgb, int rgb_step, CvSize size );
 #define icvCvt_RGB2BGR_8u_C3R icvCvt_BGR2RGB_8u_C3R
+void icvCvt_BGR2RGB_16u_C3R( const ushort* bgr, int bgr_step,
+                             ushort* rgb, int rgb_step, CvSize size );
+#define icvCvt_RGB2BGR_16u_C3R icvCvt_BGR2RGB_16u_C3R
 
 void icvCvt_BGRA2RGBA_8u_C4R( const uchar* bgra, int bgra_step,
                               uchar* rgba, int rgba_step, CvSize size );

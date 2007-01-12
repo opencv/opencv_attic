@@ -76,6 +76,8 @@ public:
     GrFmtPxMWriter( const char* filename );
     ~GrFmtPxMWriter();
 
+    bool  IsFormatSupported( int depth );
+
     bool  WriteImage( const uchar* data, int step,
                       int width, int height, int depth, int channels );
 protected:

@@ -67,6 +67,25 @@ void icvCvt_BGR2Gray_8u_C3C1R( const uchar* rgb, int rgb_step,
 }
 
 
+void icvCvt_BGR2Gray_16u_C3C1R( const ushort* rgb, int rgb_step,
+                                ushort* gray, int gray_step,
+                                CvSize size, int _swap_rb )
+{
+    int i;
+    int swap_rb = _swap_rb ? 2 : 0;
+    for( ; size.height--; gray += gray_step )
+    {
+        for( i = 0; i < size.width; i++, rgb += 3 )
+        {
+            int t = descale( rgb[swap_rb]*cB + rgb[1]*cG + rgb[swap_rb^2]*cR, SCALE );
+            gray[i] = (ushort)t;
+        }
+
+        rgb += rgb_step - size.width*3;
+    }
+}
+
+
 void icvCvt_BGRA2Gray_8u_C4C1R( const uchar* rgba, int rgba_step,
                                 uchar* gray, int gray_step,
                                 CvSize size, int _swap_rb )
@@ -149,6 +168,23 @@ void icvCvt_BGR2RGB_8u_C3R( const uchar* bgr, int bgr_step,
         for( i = 0; i < size.width; i++, bgr += 3, rgb += 3 )
         {
             uchar t0 = bgr[0], t1 = bgr[1], t2 = bgr[2];
+            rgb[2] = t0; rgb[1] = t1; rgb[0] = t2;
+        }
+        bgr += bgr_step - size.width*3;
+        rgb += rgb_step - size.width*3;
+    }
+}
+
+
+void icvCvt_BGR2RGB_16u_C3R( const ushort* bgr, int bgr_step,
+                             ushort* rgb, int rgb_step, CvSize size )
+{
+    int i;
+    for( ; size.height--; )
+    {
+        for( i = 0; i < size.width; i++, bgr += 3, rgb += 3 )
+        {
+            ushort t0 = bgr[0], t1 = bgr[1], t2 = bgr[2];
             rgb[2] = t0; rgb[1] = t1; rgb[0] = t2;
         }
         bgr += bgr_step - size.width*3;
