@@ -855,6 +855,8 @@ static int is_equal( const void* _r1, const void* _r2, void* )
 }
 
 
+#define VERY_ROUGH_SEARCH 0
+
 CV_IMPL CvSeq*
 cvHaarDetectObjects( const CvArr* _img,
                      CvHaarClassifierCascade* cascade,
@@ -1218,6 +1220,7 @@ cvHaarDetectObjects( const CvArr* _img,
                     CV_CALL( comps = (CvAvgComp*)cvAlloc( (ncomp+1)*sizeof(comps[0])));
                     memset( comps, 0, (ncomp+1)*sizeof(comps[0]));
 
+                #if VERY_ROUGH_SEARCH
                     if( rough_search )
                     {
                         for( i = 0; i < seq->total; i++ )
@@ -1250,6 +1253,7 @@ cvHaarDetectObjects( const CvArr* _img,
                         }
                     }
                     else
+                #endif
                     {
                         for( i = 0 ; i <= ncomp; i++ )
                             comps[i].rect.x = comps[i].rect.y = INT_MAX;
@@ -1277,10 +1281,19 @@ cvHaarDetectObjects( const CvArr* _img,
                             if( n >= min_neighbors )
                             {
                                 CvAvgComp comp;
+                                int t;
+                                double min_scale = rough_search ? 0.6 : 0.4;
                                 comp.rect.x = comps[i].rect.x;
                                 comp.rect.y = comps[i].rect.y;
                                 comp.rect.width = comps[i].rect.width - comps[i].rect.x + 1;
                                 comp.rect.height = comps[i].rect.height - comps[i].rect.y + 1;
+
+                                // update min_size
+                                t = cvRound( comp.rect.width*min_scale );
+                                min_size.width = MAX( min_size.width, t );
+
+                                t = cvRound( comp.rect.height*min_scale );
+                                min_size.height = MAX( min_size.height, t );
 
                                 //expand the box by 20% because we could miss some neighbours
                                 //see 'is_equal' function
@@ -1293,6 +1306,7 @@ cvHaarDetectObjects( const CvArr* _img,
                                 comp.rect.width = right - comp.rect.x + 1;
                                 comp.rect.height = bottom - comp.rect.y + 1;
                             #endif
+
                                 comp.neighbors = n;
                                 cvSeqPush( bseq, &comp );
                             }
@@ -1320,6 +1334,7 @@ cvHaarDetectObjects( const CvArr* _img,
 
                     //Prepare information for further scanning inside the biggest rectangle
 
+                #if VERY_ROUGH_SEARCH
                     // change scan ranges to roi in case of required
                     if( !rough_search && !scan_roi )
                     {
@@ -1329,6 +1344,14 @@ cvHaarDetectObjects( const CvArr* _img,
                     }
                     else if( rough_search )
                         is_found = true;
+                #else
+                    if( !scan_roi )
+                    {
+                        scan_roi = true;
+                        scan_roi_rect = result_comp.rect;
+                        cvClearSeq(bseq);
+                    }
+                #endif
                 }
             }
         }
@@ -1346,7 +1369,11 @@ cvHaarDetectObjects( const CvArr* _img,
         }
     }
 
-    if( min_neighbors != 0 && (!find_biggest_object || !rough_search))
+    if( min_neighbors != 0
+#if VERY_ROUGH_SEARCH        
+        && (!find_biggest_object || !rough_search)
+#endif        
+        )
     {
         // group retrieved rectangles in order to filter out noise
         int ncomp = cvSeqPartition( seq, 0, &idx_seq, is_equal, 0 );
