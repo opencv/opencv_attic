@@ -92,6 +92,7 @@ typedef struct CvCaptureAVI_VFW
     CvSlice             film_range;
     double              fps;
     int                 pos;
+    int                 data_offset;
     IplImage            frame;
     CvSize              size;
 }
@@ -140,6 +141,10 @@ static int icvOpenAVI_VFW( CvCaptureAVI_VFW* capture, const char* filename )
                                     sizeof(capture->aviinfo));
             if( SUCCEEDED(hr))
             {
+                int fcc = capture->aviinfo.fccHandler;
+                capture->data_offset = fcc == CV_FOURCC('d','i','v','3') ||
+                    fcc == CV_FOURCC('x','v','i','d') ? 3 :
+                    fcc == CV_FOURCC('D', 'I', 'B', ' ') ? 1024 : 0;
                 capture->size.width = capture->aviinfo.rcFrame.right -
                                       capture->aviinfo.rcFrame.left;
                 capture->size.height = capture->aviinfo.rcFrame.bottom -
@@ -183,7 +188,7 @@ static const IplImage* icvRetrieveFrameAVI_VFW( CvCaptureAVI_VFW* capture )
                                    capture->bmih->biHeight ),
                            IPL_DEPTH_8U, 3, IPL_ORIGIN_BL, 4 );
         capture->frame.imageData = capture->frame.imageDataOrigin =
-            (char*)(capture->bmih + 1);
+            (char*)(capture->bmih + 1) + capture->data_offset;
         return &capture->frame;
     }
 
