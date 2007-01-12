@@ -11,6 +11,7 @@ char tbarname[] = "Threshold";
 int mask_size = CV_DIST_MASK_5;
 int build_voronoi = 0;
 int edge_thresh = 100;
+int dist_type = CV_DIST_L1;
 
 // The output and temporary images
 IplImage* dist = 0;
@@ -40,13 +41,20 @@ void on_trackbar( int dummy )
     };
     
     int msize = mask_size;
+    int _dist_type = build_voronoi ? CV_DIST_L2 : dist_type;
 
     cvThreshold( gray, edge, (float)edge_thresh, (float)edge_thresh, CV_THRESH_BINARY );
 
     if( build_voronoi )
         msize = CV_DIST_MASK_5;
 
-    cvDistTransform( edge, dist, CV_DIST_L2, msize, NULL, build_voronoi ? labels : NULL );
+    if( _dist_type == CV_DIST_L1 )
+    {
+        cvDistTransform( edge, edge, _dist_type, msize, NULL, NULL );
+        cvConvert( edge, dist );
+    }
+    else
+        cvDistTransform( edge, dist, _dist_type, msize, NULL, build_voronoi ? labels : NULL );
 
     if( !build_voronoi )
     {
@@ -96,6 +104,9 @@ int main( int argc, char** argv )
 
     printf( "Hot keys: \n"
         "\tESC - quit the program\n"
+        "\tC - use C/Inf metric\n"
+        "\tL1 - use L1 metric\n"
+        "\tL2 - use L2 metric\n"
         "\t3 - use 3x3 mask\n"
         "\t5 - use 5x5 mask\n"
         "\t0 - use precise distance transform\n"
@@ -126,7 +137,13 @@ int main( int argc, char** argv )
         if( (char)c == 27 )
             break;
 
-        if( (char)c == '3' )
+        if( (char)c == 'c' || (char)c == 'C' )
+            dist_type = CV_DIST_C;
+        else if( (char)c == '1' )
+            dist_type = CV_DIST_L1;
+        else if( (char)c == '2' )
+            dist_type = CV_DIST_L2;
+        else if( (char)c == '3' )
             mask_size = CV_DIST_MASK_3;
         else if( (char)c == '5' )
             mask_size = CV_DIST_MASK_5;
@@ -134,13 +151,18 @@ int main( int argc, char** argv )
             mask_size = CV_DIST_MASK_PRECISE;
         else if( (char)c == 'v' )
             build_voronoi ^= 1;
-        else if( (char)c == '\n' )
+        else if( (char)c == '\n' || (char)c == '\r' )
         {
             if( build_voronoi )
             {
                 build_voronoi = 0;
                 mask_size = CV_DIST_MASK_3;
+                dist_type = CV_DIST_C;
             }
+            else if( dist_type == CV_DIST_C )
+                dist_type = CV_DIST_L1;
+            else if( dist_type == CV_DIST_L1 )
+                dist_type = CV_DIST_L2;
             else if( mask_size == CV_DIST_MASK_3 )
                 mask_size = CV_DIST_MASK_5;
             else if( mask_size == CV_DIST_MASK_5 )
