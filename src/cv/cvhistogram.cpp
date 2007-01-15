@@ -2364,12 +2364,14 @@ static CvHistogram * icvCloneHist( const CvHistogram * src ){
 }
 
 static void *icvReadHist( CvFileStorage * fs, CvFileNode * node ){
-	CvHistogram * h = (CvHistogram *) cvAlloc( sizeof(CvHistogram) );
+	CvHistogram * h = 0;
 	int is_uniform = 0;
 	int have_ranges = 0;
 
 	CV_FUNCNAME("icvReadHist");
 	__BEGIN__;
+
+    CV_CALL( h = (CvHistogram *) cvAlloc( sizeof(CvHistogram) ));
 
 	is_uniform = cvReadIntByName( fs, node, "is_uniform", 0 );
 	have_ranges = cvReadIntByName( fs, node, "have_ranges", 0);
@@ -2432,6 +2434,7 @@ static void *icvReadHist( CvFileStorage * fs, CvFileNode * node ){
 			for(i=0; i<dims; i++){
 				cvReadRawDataSlice( fs, &reader, 2, h->thresh[i], "f" );
 			}
+            h->thresh2 = NULL;
 		}
 		else{
 			float* dim_ranges;
