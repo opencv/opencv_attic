@@ -619,15 +619,15 @@ icvApproxPolyDP_32s( CvSeq* src_contour, int header_size,
     {
         cvSeqPop( stack, &slice );
 
+        cvSetSeqReaderPos( &reader, slice.end_index );
+        CV_READ_SEQ_ELEM( end_pt, reader );
+
+        cvSetSeqReaderPos( &reader, slice.start_index );
+        CV_READ_SEQ_ELEM( start_pt, reader );
+
         if( slice.end_index > slice.start_index + 1 )
         {
             int dx, dy, dist, max_dist = 0;
-            
-            cvSetSeqReaderPos( &reader, slice.end_index );
-            CV_READ_SEQ_ELEM( end_pt, reader );
-
-            cvSetSeqReaderPos( &reader, slice.start_index );
-            CV_READ_SEQ_ELEM( start_pt, reader );
 
             dx = end_pt.x - start_pt.x;
             dy = end_pt.y - start_pt.y;
@@ -824,15 +824,15 @@ icvApproxPolyDP_32f( CvSeq* src_contour, int header_size,
     {
         cvSeqPop( stack, &slice );
 
+        cvSetSeqReaderPos( &reader, slice.end_index );
+        CV_READ_SEQ_ELEM( end_pt, reader );
+
+        cvSetSeqReaderPos( &reader, slice.start_index );
+        CV_READ_SEQ_ELEM( start_pt, reader );
+
         if( slice.end_index > slice.start_index + 1 )
         {
             double dx, dy, dist, max_dist = 0;
-            
-            cvSetSeqReaderPos( &reader, slice.end_index );
-            CV_READ_SEQ_ELEM( end_pt, reader );
-
-            cvSetSeqReaderPos( &reader, slice.start_index );
-            CV_READ_SEQ_ELEM( start_pt, reader );
             
             dx = end_pt.x - start_pt.x;
             dy = end_pt.y - start_pt.y;
