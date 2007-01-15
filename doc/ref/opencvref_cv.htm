@@ -1186,8 +1186,8 @@ For example, the above pattern has very popular "BG" type.</p>
 <hr><h3><a name="decl_cvThreshold">Threshold</a></h3>
 <p class="Blurb">Applies fixed-level threshold to array elements</p>
 <pre>
-void cvThreshold( const CvArr* src, CvArr* dst, double threshold,
-                  double max_value, int threshold_type );
+double cvThreshold( const CvArr* src, CvArr* dst, double threshold,
+                    double max_value, int threshold_type );
 </pre><p><dl>
 <dt>src<dd>Source array (single-channel, 8-bit of 32-bit floating point).
 <dt>dst<dd>Destination array; must be either the same type as <code>src</code> or 8-bit.
@@ -1226,6 +1226,11 @@ dst(x,y) = 0, if src(x,y)&gt;threshold
 <p>
 <image align="center" src="pics/threshold.png">
 </p>
+Also, the special value <code>CV_THRESH_OTSU</code> may be combined with
+one of the above values. In this case the function determines the optimal threshold
+value using Otsu algorithm and uses it instead of the specified <code>thresh</code>.
+The function returns the computed threshold value.
+Currently, Otsu method is implemented only for 8-bit images.
 </p>
 
 <hr><h3><a name="decl_cvAdaptiveThreshold">AdaptiveThreshold</a></h3>
