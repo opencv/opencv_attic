@@ -590,6 +590,14 @@ cvUseOptimized( int load_flag )
         {
             const char** suffix = i == CV_PLUGIN_OPTCV ? opencv_sfx :
                             i < CV_PLUGIN_MKL ? ipp_suffix : mkl_suffix;
+            if( suffix == mkl_sfx_ia32 )
+            {
+                if( !(cpu_info->model & CV_PROC_IA32_WITH_SSE2) )
+                    suffix++;
+                if( !(cpu_info->model & CV_PROC_IA32_WITH_SSE) )
+                    suffix++;
+            }
+
             for( ; *suffix != 0; suffix++ )
             {
                 sprintf( plugins[i].name, DLL_PREFIX "%s%s" DLL_DEBUG_FLAG DLL_SUFFIX,
