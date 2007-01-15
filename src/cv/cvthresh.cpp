@@ -293,7 +293,7 @@ icvThreshold_GTVal_32f_C1R_t icvThreshold_GTVal_32f_C1R_p = 0;
 icvThreshold_LTVal_8u_C1R_t icvThreshold_LTVal_8u_C1R_p = 0;
 icvThreshold_LTVal_32f_C1R_t icvThreshold_LTVal_32f_C1R_p = 0;
 
-CV_IMPL void
+CV_IMPL double
 cvThreshold( const void* srcarr, void* dstarr, double thresh, double maxval, int type )
 {
     CvHistogram* hist = 0;
@@ -488,6 +488,8 @@ cvThreshold( const void* srcarr, void* dstarr, double thresh, double maxval, int
 
     if( hist )
         cvReleaseHist( &hist );
+
+    return thresh;
 }
 
 /* End of file. */
