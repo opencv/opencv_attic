@@ -938,9 +938,9 @@ CVAPI(void)  cvDistTransform( const CvArr* src, CvArr* dst,
 
 /* Applies fixed-level threshold to grayscale image.
    This is a basic operation applied before retrieving contours */
-CVAPI(void)  cvThreshold( const CvArr*  src, CvArr*  dst,
-                          double  threshold, double  max_value,
-                          int threshold_type );
+CVAPI(double)  cvThreshold( const CvArr*  src, CvArr*  dst,
+                            double  threshold, double  max_value,
+                            int threshold_type );
 
 #define CV_ADAPTIVE_THRESH_MEAN_C  0
 #define CV_ADAPTIVE_THRESH_GAUSSIAN_C  1
