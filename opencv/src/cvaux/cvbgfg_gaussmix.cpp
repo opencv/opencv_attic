@@ -277,7 +277,7 @@ icvUpdateGaussianBGModel( IplImage* curr_frame, CvGaussBGModel*  bg_model )
             int match[CV_BGFG_MOG_MAX_NGAUSSIANS];
             double sort_key[CV_BGFG_MOG_MAX_NGAUSSIANS];
             const int nChannels = curr_frame->nChannels;
-            const int n = i*curr_frame->width+j;
+            const int n = i*curr_frame->widthStep+j;
             const int p = n*curr_frame->nChannels;
             
             // A few short cuts
@@ -290,7 +290,7 @@ icvUpdateGaussianBGModel( IplImage* curr_frame, CvGaussBGModel*  bg_model )
                 pixel[k] = (uchar)curr_frame->imageData[p+k];
             
             no_match = icvMatchTest( pixel, nChannels, match, g_point, &bg_model_params );
-            if( bg_model->countFrames == bg_model->params.win_size )
+            if( bg_model->countFrames >= bg_model->params.win_size )
             {
                 icvUpdateFullWindow( pixel, nChannels, match, g_point, &bg_model->params );
                 if( no_match == -1)
