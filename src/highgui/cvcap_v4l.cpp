@@ -412,7 +412,7 @@ int try_palette_v4l2(CvCaptureCAM_V4L* capture, unsigned long colorspace)
 
   capture->form.type                = V4L2_BUF_TYPE_VIDEO_CAPTURE;
   capture->form.fmt.pix.pixelformat = colorspace;
-  capture->form.fmt.pix.field       = V4L2_FIELD_INTERLACED;
+  capture->form.fmt.pix.field       = V4L2_FIELD_ANY;
   capture->form.fmt.pix.width = DEFAULT_V4L_WIDTH;
   capture->form.fmt.pix.height = DEFAULT_V4L_HEIGHT;
   
@@ -2302,7 +2302,7 @@ static int icvSetVideoSize( CvCaptureCAM_V4L* capture, int w, int h) {
     capture->form.fmt.win.field = V4L2_FIELD_ANY;
     capture->form.fmt.win.clips = 0;
     capture->form.fmt.win.clipcount = 0;
-    capture->form.fmt.pix.field = V4L2_FIELD_NONE;
+    capture->form.fmt.pix.field = V4L2_FIELD_ANY;
 
     /* ask the device to change the size
      * don't test if the set of the size is ok, because some device
