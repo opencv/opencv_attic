@@ -878,7 +878,7 @@ static int _capture_V4L2 (CvCaptureCAM_V4L *capture, char *deviceName)
 
    CLEAR (capture->req);
 
-   capture->req.count               = 2;
+   capture->req.count               = 4;
    capture->req.type                = V4L2_BUF_TYPE_VIDEO_CAPTURE;
    capture->req.memory              = V4L2_MEMORY_MMAP;
 
@@ -1214,7 +1214,7 @@ static int icvGrabFrameCAM_V4L(CvCaptureCAM_V4L* capture) {
       {
 
         for (capture->bufferIndex = 0;
-             capture->bufferIndex < ((int)capture->req.count-1);
+             capture->bufferIndex < ((int)capture->req.count);
              ++capture->bufferIndex)
         {
 
@@ -1228,11 +1228,19 @@ static int icvGrabFrameCAM_V4L(CvCaptureCAM_V4L* capture) {
 
           if (-1 == xioctl (capture->deviceHandle, VIDIOC_QBUF, &buf))
             errno_exit ("VIDIOC_QBUF");
+        }
 
-          capture->type = V4L2_BUF_TYPE_VIDEO_CAPTURE;
-
-          if (-1 == xioctl (capture->deviceHandle, VIDIOC_STREAMON, &capture->type))
-            errno_exit ("VIDIOC_STREAMON");
+        /* enable the stream only one time */
+        static int is_stream_on = 0;
+        if (is_stream_on == 0) {
+            /* not enabled, so enable it */
+            capture->type = V4L2_BUF_TYPE_VIDEO_CAPTURE;
+            if (-1 == xioctl (capture->deviceHandle, VIDIOC_STREAMON,
+                              &capture->type)) {
+                /* error enabling the stream */
+                errno_exit ("VIDIOC_STREAMON");
+            }
+            is_stream_on = 1;
         }
 
       } else
