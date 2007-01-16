@@ -2318,6 +2318,10 @@ static int icvSetVideoSize( CvCaptureCAM_V4L* capture, int w, int h) {
      * later */
     xioctl (capture->deviceHandle, VIDIOC_S_FMT, &capture->form);
 
+    /* we need to re-initialize some things, like buffers, because the size has
+     * changed */
+    capture->FirstCapture = 1;
+
     /* Get window info again, to get the real value */
     if (-1 == xioctl (capture->deviceHandle, VIDIOC_G_FMT, &capture->form))
     {
