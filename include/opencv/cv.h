@@ -492,14 +492,18 @@ CVAPI(void)  cvCalcOpticalFlowPyrLK( const CvArr*  prev, const CvArr*  curr,
 
 /* Modification of a previous sparse optical flow algorithm to calculate
    affine flow */
-/*CVAPI  void  cvCalcAffineFlowPyrLK( const CvArr*  prev, const CvArr*  curr,
-                                     CvArr*  prev_pyr, CvArr*  curr_pyr,
-                                     CvPoint2D32f* prev_features,
-                                     CvPoint2D32f* curr_features,
-                                     float*  matrices, int  count,
-                                     CvSize  win_size, int  level,
-                                     char*  status, float* track_error,
-                                     CvTermCriteria criteria, int flags );*/
+CVAPI(void)  cvCalcAffineFlowPyrLK( const CvArr*  prev, const CvArr*  curr,
+                                    CvArr*  prev_pyr, CvArr*  curr_pyr,
+                                    const CvPoint2D32f* prev_features,
+                                    CvPoint2D32f* curr_features,
+                                    float* matrices, int  count,
+                                    CvSize win_size, int  level,
+                                    char* status, float* track_error,
+                                    CvTermCriteria criteria, int flags );
+
+/* Estimate rigid transformation between 2 images or 2 point sets */
+CVAPI(int)  cvEstimateRigidTransform( const CvArr* A, const CvArr* B,
+                                      CvMat* M, int full_affine );
 
 /********************************* motion templates *************************************/
 

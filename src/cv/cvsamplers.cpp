@@ -599,7 +599,7 @@ cvGetRectSubPix( const void* srcarr, void* dstarr, CvPoint2D32f center )
 
 #define ICV_DEF_GET_QUADRANGLE_SUB_PIX_FUNC( flavor, srctype, dsttype,      \
                                              worktype, cast_macro, cvt )    \
-static CvStatus CV_STDCALL                                                  \
+CvStatus CV_STDCALL                                                         \
 icvGetQuadrangleSubPix_##flavor##_C1R                                       \
 ( const srctype * src, int src_step, CvSize src_size,                       \
   dsttype *dst, int dst_step, CvSize win_size, const float *matrix )        \

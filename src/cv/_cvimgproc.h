@@ -110,4 +110,14 @@ CvStatus CV_STDCALL icvGetRectSubPix_32f_C1R
 ( const float* src, int src_step, CvSize src_size,
   float* dst, int dst_step, CvSize win_size, CvPoint2D32f center );
 
+CvStatus CV_STDCALL icvGetQuadrangleSubPix_8u_C1R
+( const uchar* src, int src_step, CvSize src_size,
+  uchar* dst, int dst_step, CvSize win_size, const float *matrix );
+CvStatus CV_STDCALL icvGetQuadrangleSubPix_8u32f_C1R
+( const uchar* src, int src_step, CvSize src_size,
+  float* dst, int dst_step, CvSize win_size, const float *matrix );
+CvStatus CV_STDCALL icvGetQuadrangleSubPix_32f_C1R
+( const float* src, int src_step, CvSize src_size,
+  float* dst, int dst_step, CvSize win_size, const float *matrix );
+
 #endif /*_CV_INTERNAL_H_*/
