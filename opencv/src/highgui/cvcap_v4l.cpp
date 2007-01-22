@@ -254,6 +254,7 @@ int  PALETTE_BGR24 = 0,
      PALETTE_YVU420 = 0,
      PALETTE_YUV411P = 0,
      PALETTE_YUYV = 0,
+     PALETTE_UYVY= 0,
      PALETTE_SBGGR8 = 0,
      PALETTE_SN9C10X = 0,
      PALETTE_MJPEG = 0;
@@ -556,6 +557,10 @@ int autosetup_capture_mode_v4l2(CvCaptureCAM_V4L* capture)
   {
     PALETTE_YUYV = 1;
   }
+  else if (try_palette_v4l2(capture, V4L2_PIX_FMT_UYVY) == 0)
+  {
+    PALETTE_UYVY = 1;
+  }
   else
   if (try_palette_v4l2(capture, V4L2_PIX_FMT_SN9C10X) == 0)
   {
@@ -574,9 +579,10 @@ int autosetup_capture_mode_v4l2(CvCaptureCAM_V4L* capture)
   if (try_palette_v4l2(capture, V4L2_PIX_FMT_SBGGR8) == 0)
   {
     PALETTE_SBGGR8 = 1;
-  }
+  } 
   else
   {
+	fprintf(stderr, "HIGHGUI ERROR: V4L2: Pixel format of incoming image is unsupported by OpenCV\n");
     icvCloseCAM_V4L(capture);
     return -1;
   }
@@ -611,6 +617,7 @@ int autosetup_capture_mode_v4l(CvCaptureCAM_V4L* capture)
       //printf("negotiated palette YUV420P\n");
   }
   else {
+	fprintf(stderr, "HIGHGUI ERROR: V4L2: Pixel format of incoming image is unsupported by OpenCV\n");
     icvCloseCAM_V4L(capture);
     return -1;
   }
@@ -1600,6 +1607,52 @@ yuyv_to_rgb24 (int width, int height, unsigned char *src, unsigned char *dst)
    }
 }
 
+static void 
+uyvy_to_rgb24 (int width, int height, unsigned char *src, unsigned char *dst)
+{
+   unsigned char *s;
+   unsigned char *d;
+   int l, c;
+   int r, g, b, cr, cg, cb, y1, y2;
+   
+   l = height;
+   s = src;
+   d = dst;
+   while (l--) {
+      c = width >> 1;
+      while (c--) {
+         cb = ((*s - 128) * 454) >> 8;
+         cg = (*s++ - 128) * 88;
+         y1 = *s++;
+         cr = ((*s - 128) * 359) >> 8;
+         cg = (cg + (*s++ - 128) * 183) >> 8;
+         y2 = *s++;
+
+         r = y1 + cr;
+         b = y1 + cb;
+         g = y1 - cg;
+         SAT(r);
+         SAT(g);
+         SAT(b);
+
+	 *d++ = b;
+	 *d++ = g;
+	 *d++ = r;
+
+         r = y2 + cr;
+         b = y2 + cb;
+         g = y2 - cg;
+         SAT(r);
+         SAT(g);
+         SAT(b);
+
+	 *d++ = b;
+	 *d++ = g;
+	 *d++ = r;
+      }
+   }
+}
+
 #ifdef HAVE_JPEG
 #ifdef __USE_GNU
 /* support for MJPEG is only available with libjpeg and gcc,
@@ -2052,6 +2105,12 @@ static IplImage* icvRetrieveFrameCAM_V4L( CvCaptureCAM_V4L* capture) {
 
     if (PALETTE_YUYV == 1)
 	yuyv_to_rgb24(capture->form.fmt.pix.width,
+		      capture->form.fmt.pix.height,
+		      (unsigned char*)(capture->buffers[capture->bufferIndex].start),
+		      (unsigned char*)capture->frame.imageData);
+
+    if (PALETTE_UYVY == 1)
+	uyvy_to_rgb24(capture->form.fmt.pix.width,
 		      capture->form.fmt.pix.height,
 		      (unsigned char*)(capture->buffers[capture->bufferIndex].start),
 		      (unsigned char*)capture->frame.imageData);
