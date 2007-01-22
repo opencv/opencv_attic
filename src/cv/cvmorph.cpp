@@ -992,7 +992,7 @@ icvMorphOp( const void* srcarr, void* dstarr, IplConvKernel* element,
 
             if( status >= 0 && (inplace || iterations > 1) )
             {
-                CV_CALL( temp = cvCloneMat( dst ));
+                CV_CALL( temp = cvCloneMat( src ));
                 src = temp;
             }
 
