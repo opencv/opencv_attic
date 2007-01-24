@@ -2616,6 +2616,9 @@ cvFilter2D( const CvArr* _src, CvArr* _dst, const CvMat* kernel, CvPoint anchor 
     if( !CV_ARE_TYPES_EQ( src, dst ))
         CV_ERROR( CV_StsUnmatchedFormats, "" );
 
+    if( anchor.x == -1 && anchor.y == -1 )
+        anchor = cvPoint(kernel->cols/2,kernel->rows/2);
+
     if( kernel->cols*kernel->rows >= dft_filter_size &&
         kernel->cols <= src->cols && kernel->rows <= src->rows )
     {
@@ -2650,9 +2653,6 @@ cvFilter2D( const CvArr* _src, CvArr* _dst, const CvMat* kernel, CvPoint anchor 
             const uchar* shifted_ptr;
             int i, j, y, dy = 0;
             int temp_step, dst_step = dst->step ? dst->step : CV_STUB_STEP;
-
-            if( anchor.x == -1 && anchor.y == -1 )
-                anchor = cvPoint(kernel->cols/2,kernel->rows/2);
 
             if( (unsigned)anchor.x >= (unsigned)kernel->cols ||
                 (unsigned)anchor.y >= (unsigned)kernel->rows )
