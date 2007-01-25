@@ -5953,8 +5953,10 @@ int CvMat_widthStep_get(CvMat * m){
 void CvMat_imageData_set(CvMat * self, PyObject* object)
 {
 	char* py_string = PyString_AsString(object);
+	int depth = CV_MAT_DEPTH(self->type);
+	int cn = CV_MAT_CN(self->type);
 
-	if (self->type == CV_8UC3){
+	if (depth == CV_8U && cn==3){
 		// RGB case
 		// The data is reordered beause OpenCV uses BGR instead of RGB
 
@@ -5970,7 +5972,7 @@ void CvMat_imageData_set(CvMat * self, PyObject* object)
 				self->data.ptr[position+2] = py_string[sourcepos  ];
 			}
 	}
-	else if (self->type == CV_8UC1)
+	else if (depth == CV_8U && cn==1)
 	{
 		// Grayscale 8bit case
 
@@ -5986,10 +5988,9 @@ void CvMat_imageData_set(CvMat * self, PyObject* object)
 				);
 		}
 	}
-	else if (self->type == CV_32FC1 )
+	else if ( depth == CV_32F )
 	{
 		// Float 32bit case
-
 		for (long line = 0; line < self->rows; ++line)
 		{
 			// here we don not have to care about alignment as the Floats are
