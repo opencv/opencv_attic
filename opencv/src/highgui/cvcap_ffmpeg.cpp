@@ -41,7 +41,6 @@
 
 #include "_highgui.h"
 
-
 extern "C" {
 #include <ffmpeg/avformat.h>
 }
@@ -376,6 +375,123 @@ typedef struct CvAVI_FFMPEG_Writer
 	AVStream        * video_st;
 } CvAVI_FFMPEG_Writer;
 
+/** This is in libavformat, but not part of the public api 
+ *  this is unfortunately required to use fourcc code to lookup
+ *  the actual format desired */
+/*
+extern "C"{
+	typedef struct CodecTag CodecTag;
+	enum CodecID codec_get_id(const CodecTag *tags, unsigned int tag);
+
+	extern const CodecTag codec_bmp_tags[];
+	extern const CodecTag mov_video_tags[];
+	extern const CodecTag codec_movvideo_tags[];
+	extern const CodecTag nsv_codec_video_tags[];
+
+
+
+
+}
+*/
+
+/* This code is pulled from mplayer -- its purpose is to map the FOURCC code to 
+ * the ffmpeg codec, since ffmpeg doesn't really handle FOURCC well. */
+#define CODECS_MAX_FOURCC   32
+#define CODECS_MAX_OUTFMT   16
+#define CODECS_MAX_INFMT    16
+
+#if !defined(GUID_TYPE) && !defined(GUID_DEFINED)
+#define GUID_TYPE 1
+#define GUID_DEFINED 1
+typedef struct {
+    unsigned long f1;
+    unsigned short f2;
+    unsigned short f3;
+    unsigned char f4[8];
+} GUID;
+#endif
+
+
+typedef struct codecs_st {
+    unsigned int fourcc[CODECS_MAX_FOURCC];
+    unsigned int fourccmap[CODECS_MAX_FOURCC];
+    unsigned int outfmt[CODECS_MAX_OUTFMT];
+    unsigned char outflags[CODECS_MAX_OUTFMT];
+    unsigned int infmt[CODECS_MAX_INFMT];
+    unsigned char inflags[CODECS_MAX_INFMT];
+    char *name;
+    char *info;
+    char *comment;
+    char *dll;
+    char* drv;
+    GUID guid;
+//  short driver;
+    short flags;
+    short status;
+    short cpuflags;
+} codecs_t;
+#include <codecs.conf.h>
+
+codecs_t* icv_find_next_codec(unsigned int fourcc, codecs_t *start){
+    int j;
+    codecs_t *c;
+	for(c=start; c->name!=NULL; c++){
+		for (j = 0; j < CODECS_MAX_FOURCC; j++) {
+			// FIXME: do NOT hardwire 'null' name here:
+			if (c->fourcc[j]==fourcc) {
+				return c;
+			}
+		}
+	}
+    return NULL;
+}
+
+CodecID icv_find_codec_FFMPEG(int fourcc){
+	AVCodec * best_codec=NULL;
+	int best_score=0, score;
+	char fourcc_str[5];
+	*(int *)fourcc_str=fourcc;
+	fourcc_str[4]=0;
+	//printf("icv_find_codec_FFMPEG fourcc='%s'\n", fourcc_str);
+	
+	/* loop through codec table and find the best match to the requested fourcc */
+	for(codecs_t * matching_codec=icv_find_next_codec(fourcc, builtin_video_codecs);
+		matching_codec!=NULL;
+		matching_codec=icv_find_next_codec(fourcc, matching_codec+1))
+	{
+		/* matching_codec refers to the table entry in MPlayers codec scheme --
+		 * need to match it to ffmpeg codec.  Some FFMPEG codecs are used directly
+		 * by mplayer. These have matching_codec->drv=="ffmpeg".  However, for others, 
+		 * mplayer does not use the FFMPEG provided codec (XVID, for example), so we
+		 * must do some guessing based on the name, dll and drv fields
+		 */
+		const char * candidates[] = { 
+			matching_codec->dll, 
+			matching_codec->name, 
+			matching_codec->drv, NULL };
+		//printf("FOURCC match = '%s'\n", matching_codec->name);
+		for(int i=0; candidates[i]; i++){
+			AVCodec * ffmpeg_codec=NULL;
+			if( !candidates[i] ) continue;
+			ffmpeg_codec = avcodec_find_encoder_by_name( candidates[i] );
+			if(!ffmpeg_codec) continue;
+
+			//printf("FFMPEG match = '%s'\n", ffmpeg_codec->name);
+
+			/* how well does this match the FOURCC? */
+			score=1;
+			if(strcasecmp(fourcc_str,matching_codec->name)==0) score=100;
+			if(strcasestr(matching_codec->name,fourcc_str)) score=10;
+			if(score>best_score){
+				best_score=score;
+				best_codec=ffmpeg_codec;
+			}
+		}
+	}
+
+	return best_codec ? best_codec->id : CODEC_ID_NONE;
+}
+
 /**
  * the following function is a modified version of code
  * found in ffmpeg-0.4.9-pre1/output_example.c
@@ -405,12 +521,14 @@ static AVFrame * icv_alloc_picture_FFMPEG(int pix_fmt, int width, int height, bo
 	return picture;
 }
 
-/* add a video output stream */
-static AVStream *icv_add_video_stream_FFMPEG(AVFormatContext *oc, int codec_tag, int w, int h, int bitrate, double fps, int pixel_format)
+/* add a video output stream to the container */
+static AVStream *icv_add_video_stream_FFMPEG(AVFormatContext *oc, 
+		                                     CodecID codec_id, 
+											 int w, int h, int bitrate, 
+											 double fps, int pixel_format)
 {
 	AVCodecContext *c;
 	AVStream *st;
-    int codec_id;
 	int frame_rate, frame_rate_base;
 	AVCodec *codec;
 	
@@ -426,15 +544,18 @@ static AVStream *icv_add_video_stream_FFMPEG(AVFormatContext *oc, int codec_tag,
 #else
 	c = &(st->codec);
 #endif
+
 #if LIBAVFORMAT_BUILD > 4621 
-	codec_id = av_guess_codec(oc->oformat, NULL, oc->filename, NULL, CODEC_TYPE_VIDEO);
+	c->codec_id = av_guess_codec(oc->oformat, NULL, oc->filename, NULL, CODEC_TYPE_VIDEO);
 #else
-	codec_id = oc->oformat->video_codec;
+	c->codec_id = oc->oformat->video_codec;
 #endif
 
-    if(codec_tag) c->codec_tag=codec_tag;
+	if(codec_id != CODEC_ID_NONE){
+		c->codec_id = codec_id;
+	}
 
-	c->codec_id = (CodecID) codec_id;
+    //if(codec_tag) c->codec_tag=codec_tag;
 	codec = avcodec_find_encoder(c->codec_id);
 
 	c->codec_type = CODEC_TYPE_VIDEO;
@@ -483,19 +604,21 @@ static AVStream *icv_add_video_stream_FFMPEG(AVFormatContext *oc, int codec_tag,
 
 	c->gop_size = 12; /* emit one intra frame every twelve frames at most */
 	c->pix_fmt = (PixelFormat) pixel_format;
+
 	if (c->codec_id == CODEC_ID_MPEG2VIDEO) {
-        /* just for testing, we also add B frames */
         c->max_b_frames = 2;
     }
-    if (c->codec_id == CODEC_ID_MPEG1VIDEO){
+    if (c->codec_id == CODEC_ID_MPEG1VIDEO || c->codec_id == CODEC_ID_MSMPEG4V3){
         /* needed to avoid using macroblocks in which some coeffs overflow
            this doesnt happen with normal video, it just happens here as the
            motion of the chroma plane doesnt match the luma plane */
+		/* avoid FFMPEG warning 'clipping 1 dct coefficients...' */
         c->mb_decision=2;
     }
     // some formats want stream headers to be seperate
-    if(!strcmp(oc->oformat->name, "mp4") || !strcmp(oc->oformat->name, "mov") || !strcmp(oc->oformat->name,  "3gp"))
+	if(oc->oformat->flags & AVFMT_GLOBALHEADER){
         c->flags |= CODEC_FLAG_GLOBAL_HEADER;
+    }
 
     return st;
 }
@@ -507,6 +630,7 @@ CV_IMPL CvVideoWriter* cvCreateVideoWriter( const char * filename, int fourcc,
 	CV_FUNCNAME("cvCreateVideoWriter");
 
 	CvAVI_FFMPEG_Writer * writer = NULL;
+	CodecID codec_id = CODEC_ID_NONE;
 	
 	__BEGIN__;
 
@@ -522,11 +646,10 @@ CV_IMPL CvVideoWriter* cvCreateVideoWriter( const char * filename, int fourcc,
 	// tell FFMPEG to register codecs
 	av_register_all ();
 
-	/* auto detect the output format from the name. default is mpeg. */
+	/* auto detect the output format from the name and fourcc code. */
 	writer->fmt = guess_format(NULL, filename, NULL);
 	if (!writer->fmt) {
-		CV_ERROR( CV_StsUnsupportedFormat, "Could not deduce output format from file extension");
-		//writer->fmt = guess_format("mpeg", NULL, NULL);
+		CV_ERROR( CV_StsUnsupportedFormat, "FFMPEG does not recognize the given file extension");
 	}
 
 	// alloc memory for context 
@@ -537,8 +660,15 @@ CV_IMPL CvVideoWriter* cvCreateVideoWriter( const char * filename, int fourcc,
 	writer->oc->oformat = writer->fmt;
 	snprintf(writer->oc->filename, sizeof(writer->oc->filename), "%s", filename);
 
+	/* set some options */
+	writer->oc->max_delay = (int)(0.7*AV_TIME_BASE);  /* This reduces buffer underrun warnings with MPEG */
+
+	/* Lookup codec_id for given fourcc */
+	if(fourcc!=-1) codec_id = icv_find_codec_FFMPEG( fourcc ); 
+
 	// TODO -- safe to ignore output audio stream?
-	writer->video_st = icv_add_video_stream_FFMPEG(writer->oc, fourcc, frameSize.width, frameSize.height, 800000, fps, PIX_FMT_YUV420P);
+	writer->video_st = icv_add_video_stream_FFMPEG(writer->oc, codec_id, 
+			frameSize.width, frameSize.height, 800000, fps, PIX_FMT_YUV420P);
 
 
 	/* set the output parameters (must be done even if no
@@ -569,6 +699,7 @@ CV_IMPL CvVideoWriter* cvCreateVideoWriter( const char * filename, int fourcc,
     if (!codec) {
 		CV_ERROR(CV_StsBadArg, "codec not found");
     }
+	//printf("cvcap_ffmpeg: using codec %s\n", codec->name);
 
     /* open the codec */
     if (avcodec_open(c, codec) < 0) {
@@ -584,7 +715,7 @@ CV_IMPL CvVideoWriter* cvCreateVideoWriter( const char * filename, int fourcc,
         /* allocate output buffer */
         /* XXX: API change will be done */
         writer->outbuf_size = 200000;
-        writer->outbuf = (uint8_t *) malloc(writer->outbuf_size);
+        writer->outbuf = (uint8_t *) av_malloc(writer->outbuf_size);
     }
 
 	bool need_color_convert;
@@ -656,6 +787,7 @@ int icv_av_write_frame_FFMPEG( AVFormatContext * oc, AVStream * video_st, uint8_
         if (out_size > 0) {
             AVPacket pkt;
             av_init_packet(&pkt);
+
 #if LIBAVFORMAT_BUILD > 4752 
             pkt.pts = av_rescale_q(c->coded_frame->pts, c->time_base, video_st->time_base);
 #else 
