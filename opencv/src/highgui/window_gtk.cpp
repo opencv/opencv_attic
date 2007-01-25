@@ -334,7 +334,9 @@ cvImageWidget_expose( GtkWidget      *widget,
   }
   else if( image_widget->original_image ){
 	  gdk_draw_rgb_image( widget->window, widget->style->fg_gc[GTK_STATE_NORMAL],
-		  0, 0, widget->allocation.width, widget->allocation.height,
+		  0, 0, 
+		  MIN(image_widget->original_image->cols, widget->allocation.width), 
+		   MIN(image_widget->original_image->rows, widget->allocation.height), 
 		  GDK_RGB_DITHER_MAX, image_widget->original_image->data.ptr, image_widget->original_image->step );
   }
   return TRUE;
