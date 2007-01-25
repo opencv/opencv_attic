@@ -66,3 +66,20 @@ CvMat * cvConvexHull2_Shadow( const CvArr * points, int orientation, int return_
 	__END__;
 	return hull;
 }
+std::vector<CvPoint> cvSnakeImage_Shadow( const CvMat * image, std::vector<CvPoint>  points,
+		std::vector<float> alpha, std::vector<float> beta, 
+		std::vector<float> gamma, 
+		CvSize win, CvTermCriteria criteria, int calc_gradient ){
+	IplImage ipl_stub;
+	CV_FUNCNAME("cvSnakeImage_Shadow");
+	
+	__BEGIN__;
+
+	cvSnakeImage( cvGetImage(image, &ipl_stub), &(points[0]), points.size(), 
+			      &((alpha)[0]), &((beta)[0]), &((gamma)[0]), 
+				  (alpha.size()>1 && beta.size()>1 && gamma.size()>1 ? CV_ARRAY : CV_VALUE), 
+				  win, criteria, calc_gradient );
+
+	__END__;
+	return points;
+}
