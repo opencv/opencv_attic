@@ -50,6 +50,8 @@
 %rename (function) function##_Shadow;
 %enddef
 
+%include "stl.i"
+
 // %ignore, %rename must come before %include
 %myshadow(cvCvtSeqToArray);
 %myshadow(cvArcLength);
@@ -59,6 +61,11 @@
 %myshadow(cvContourPerimeter);
 %myshadow(cvConvexHull2);
 %newobject cvConvexHull2; // shadowed functioned always returns new object
+
+/* cvSnakeImage shadow uses a vector<CvPoint> and vector<float> */ 
+%template(FloatVector)   std::vector<float>;
+%template(CvPointVector) std::vector<CvPoint>;
+%myshadow(cvSnakeImage);
 
 // eliminates need for IplImage ** typemap
 %rename (cvCalcImageHist) cvCalcHist;

@@ -1,6 +1,7 @@
 #ifndef CV_SHADOW_H
 #define CV_SHADOW_H
 
+#include <vector>
 #include "cxtypes.h"
 #include "cvtypes.h"
 #include "pycvseq.hpp"
@@ -28,5 +29,9 @@ CvTypedSeq<CvPoint> * cvApproxPoly_Shadow( const void* src_seq, int header_size,
 // Always return a new Mat of indices
 CvMat * cvConvexHull2_Shadow( const CvArr * points, int orientation=CV_CLOCKWISE, 
 		                  int return_points=0);
+
+std::vector<CvPoint> cvSnakeImage_Shadow( const CvMat * image, std::vector<CvPoint>  points,
+		std::vector<float> alpha, std::vector<float> beta, std::vector<float> gamma, 
+		CvSize win, CvTermCriteria criteria, int calc_gradient=1 );
 
 #endif

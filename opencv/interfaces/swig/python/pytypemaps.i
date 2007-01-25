@@ -233,19 +233,16 @@
     CvPoint **points = NULL;
     int *nb_vertex = NULL;
 
+	if(!PySequence_Check($input)){
+		SWIG_exception(SWIG_TypeError, "Expected a list for argument $argnum\n");
+		return NULL;
+	}
+
     /* get the number of polylines input array */
-    int size1 = PyList_Size ($input);
+    int size1 = PySequence_Size ($input);
     $3 = size1;
 
-    for (i = 0; i < size1; i++) {
-
-	/* get the current item */
-	PyObject *line = PyList_GetItem ($input, i);
-
-	/* get the size of the current polyline */
-	size2 = PyList_Size (line);
-
-	if (points == NULL) {
+	if(size1>0){
 	    /* create the points array */
 	    points = (CvPoint **)malloc (size1 * sizeof (CvPoint *));
 
@@ -255,31 +252,35 @@
 	    /* create the array for memorizing the vertex */
 	    nb_vertex = (int *)malloc (size1 * sizeof (int));
 	    $2 = nb_vertex;
-
 	}
+    for (i = 0; i < size1; i++) {
 
-	/* allocate the necessary memory to store the points */
-	points [i] = (CvPoint *)malloc (size2 * sizeof (CvPoint));
-	    
-	/* memorize the size of the polyline in the vertex list */
-	nb_vertex [i] = size2;
+		/* get the current item */
+		PyObject *line = PySequence_GetItem ($input, i);
 
-	for (j = 0; j < size2; j++) {
-	    /* get the current item */
-	    PyObject *item = PyList_GetItem (line, j);
+		if(!PySequence_Check(line)){
+			SWIG_exception(SWIG_TypeError, "Expected a sequence of sequences of integers for argument $argnum\n");
+			// TODO: cleanup here
+		}
 
-	    /* convert from a Python CvPoint pointer to a C CvPoint pointer */
-		void *vptr;
-	    SWIG_Python_ConvertPtr (item, &vptr, $descriptor(CvPoint *),
-				    SWIG_POINTER_EXCEPTION);
-		
-	    CvPoint *p = (CvPoint *) vptr;
+		/* get the size of the current polyline */
+		size2 = PySequence_Size (line);
 
-	    /* extract the x and y positions */
-	    points [i][j].x = p->x;
-	    points [i][j].y = p->y;
+
+		if(size2>0){
+			/* allocate the necessary memory to store the points */
+			points [i] = (CvPoint *)malloc (size2 * sizeof (CvPoint));
+	 	}
+
+		/* memorize the size of the polyline in the vertex list */
+		nb_vertex [i] = size2;
+
+		for (j = 0; j < size2; j++) {
+		    /* get the current item */
+		    PyObject *item = PySequence_GetItem (line, j);
+			points[i][j] = PyObject_to_CvPoint( item );
+    	}
 	}
-    }
 }
 /** Free arguments allocated before the function call */
 %typemap(freearg) (CvPoint **pts, int* npts, int contours){
@@ -291,24 +292,31 @@
 	free($2);
 }
 
-/** 
- * The input argument of cvFillConvexPoly is convert from a list of CvPoints to a CvPoint array
- */
-%typemap(in, numinputs=1) (CvPoint *pts, int npts){
+/** Macro to define typemaps to convert a python list of CvPoints to a C array of CvPoints */
+%define %typemap_CvPoint_CArr(points_arg, numpoints_arg)
+
+%typemap(in, numinputs=1) (CvPoint * points_arg, int numpoints_arg){
 	int i;
-	int size = PyList_Size($input);
+	if(!PySequence_Check($input)){
+		SWIG_exception(SWIG_TypeError, "Expected a list for argument $argnum\n");
+		return NULL;
+	}
+	int size = PySequence_Size($input);
 	CvPoint * points = (CvPoint *)malloc(size*sizeof(CvPoint));
 	for(i=0; i<size; i++){
-		PyObject *item = PyList_GetItem($input, i);
+		PyObject *item = PySequence_GetItem($input, i);
 		points[i] = PyObject_to_CvPoint( item );
 	}
 	$1 = points;
 	$2 = size;
 }
-/** Free arguments allocated before the function call */
-%typemap(freearg) (CvPoint *pts, int npts){
+%typemap(freearg) (CvPoint *points_arg, int numpoints_arg){
 	free((char *)$1);
 }
+%enddef
+
+/* apply to cvFillConvexPoly */
+%typemap_CvPoint_CArr(pts, npts)
 
 /**
  * this is mainly an "output parameter"
