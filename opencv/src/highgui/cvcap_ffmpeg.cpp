@@ -370,126 +370,34 @@ typedef struct CvAVI_FFMPEG_Writer
     uint32_t          outbuf_size;
     FILE            * outfile;
     AVFrame         * picture;
-    AVFrame         * rgb_picture;
+    AVFrame         * input_picture;
     uint8_t         * picbuf;
 	AVStream        * video_st;
+	int 			  input_pix_fmt;
 } CvAVI_FFMPEG_Writer;
 
-/** This is in libavformat, but not part of the public api 
- *  this is unfortunately required to use fourcc code to lookup
- *  the actual format desired */
-/*
-extern "C"{
-	typedef struct CodecTag CodecTag;
-	enum CodecID codec_get_id(const CodecTag *tags, unsigned int tag);
-
-	extern const CodecTag codec_bmp_tags[];
-	extern const CodecTag mov_video_tags[];
-	extern const CodecTag codec_movvideo_tags[];
-	extern const CodecTag nsv_codec_video_tags[];
-
-
-
-
-}
-*/
-
-/* This code is pulled from mplayer -- its purpose is to map the FOURCC code to 
- * the ffmpeg codec, since ffmpeg doesn't really handle FOURCC well. */
-#define CODECS_MAX_FOURCC   32
-#define CODECS_MAX_OUTFMT   16
-#define CODECS_MAX_INFMT    16
-
-#if !defined(GUID_TYPE) && !defined(GUID_DEFINED)
-#define GUID_TYPE 1
-#define GUID_DEFINED 1
-typedef struct {
-    unsigned long f1;
-    unsigned short f2;
-    unsigned short f3;
-    unsigned char f4[8];
-} GUID;
-#endif
-
-
-typedef struct codecs_st {
-    unsigned int fourcc[CODECS_MAX_FOURCC];
-    unsigned int fourccmap[CODECS_MAX_FOURCC];
-    unsigned int outfmt[CODECS_MAX_OUTFMT];
-    unsigned char outflags[CODECS_MAX_OUTFMT];
-    unsigned int infmt[CODECS_MAX_INFMT];
-    unsigned char inflags[CODECS_MAX_INFMT];
-    char *name;
-    char *info;
-    char *comment;
-    char *dll;
-    char* drv;
-    GUID guid;
-//  short driver;
-    short flags;
-    short status;
-    short cpuflags;
-} codecs_t;
-#include <codecs.conf.h>
-
-codecs_t* icv_find_next_codec(unsigned int fourcc, codecs_t *start){
-    int j;
-    codecs_t *c;
-	for(c=start; c->name!=NULL; c++){
-		for (j = 0; j < CODECS_MAX_FOURCC; j++) {
-			// FIXME: do NOT hardwire 'null' name here:
-			if (c->fourcc[j]==fourcc) {
-				return c;
-			}
-		}
-	}
-    return NULL;
+const char * icv_FFMPEG_ErrStr(int err)
+{
+    switch(err) {
+    case AVERROR_NUMEXPECTED:
+		return "Incorrect filename syntax";
+    case AVERROR_INVALIDDATA:
+		return "Invalid data in header";
+    case AVERROR_NOFMT:
+		return "Unknown format";
+    case AVERROR_IO:
+		return "I/O error occurred";
+    case AVERROR_NOMEM:
+		return "Memory allocation error";
+    default:
+		break;
+    }
+  	return "Unspecified error";
 }
 
-CodecID icv_find_codec_FFMPEG(int fourcc){
-	AVCodec * best_codec=NULL;
-	int best_score=0, score;
-	char fourcc_str[5];
-	*(int *)fourcc_str=fourcc;
-	fourcc_str[4]=0;
-	//printf("icv_find_codec_FFMPEG fourcc='%s'\n", fourcc_str);
-	
-	/* loop through codec table and find the best match to the requested fourcc */
-	for(codecs_t * matching_codec=icv_find_next_codec(fourcc, builtin_video_codecs);
-		matching_codec!=NULL;
-		matching_codec=icv_find_next_codec(fourcc, matching_codec+1))
-	{
-		/* matching_codec refers to the table entry in MPlayers codec scheme --
-		 * need to match it to ffmpeg codec.  Some FFMPEG codecs are used directly
-		 * by mplayer. These have matching_codec->drv=="ffmpeg".  However, for others, 
-		 * mplayer does not use the FFMPEG provided codec (XVID, for example), so we
-		 * must do some guessing based on the name, dll and drv fields
-		 */
-		const char * candidates[] = { 
-			matching_codec->dll, 
-			matching_codec->name, 
-			matching_codec->drv, NULL };
-		//printf("FOURCC match = '%s'\n", matching_codec->name);
-		for(int i=0; candidates[i]; i++){
-			AVCodec * ffmpeg_codec=NULL;
-			if( !candidates[i] ) continue;
-			ffmpeg_codec = avcodec_find_encoder_by_name( candidates[i] );
-			if(!ffmpeg_codec) continue;
-
-			//printf("FFMPEG match = '%s'\n", ffmpeg_codec->name);
-
-			/* how well does this match the FOURCC? */
-			score=1;
-			if(strcasecmp(fourcc_str,matching_codec->name)==0) score=100;
-			if(strcasestr(matching_codec->name,fourcc_str)) score=10;
-			if(score>best_score){
-				best_score=score;
-				best_codec=ffmpeg_codec;
-			}
-		}
-	}
-
-	return best_codec ? best_codec->id : CODEC_ID_NONE;
+/* function internal to FFMPEG (libavformat/riff.c) to lookup codec id by fourcc tag*/
+extern "C" {
+	enum CodecID codec_get_bmp_id(unsigned int tag);
 }
 
 /**
@@ -625,12 +533,13 @@ static AVStream *icv_add_video_stream_FFMPEG(AVFormatContext *oc,
 
 /// Create a video writer object that uses FFMPEG
 CV_IMPL CvVideoWriter* cvCreateVideoWriter( const char * filename, int fourcc,
-		double fps, CvSize frameSize, int /*is_color*/ )
+		double fps, CvSize frameSize, int is_color )
 {
 	CV_FUNCNAME("cvCreateVideoWriter");
 
 	CvAVI_FFMPEG_Writer * writer = NULL;
 	CodecID codec_id = CODEC_ID_NONE;
+	int err;
 	
 	__BEGIN__;
 
@@ -652,6 +561,14 @@ CV_IMPL CvVideoWriter* cvCreateVideoWriter( const char * filename, int fourcc,
 		CV_ERROR( CV_StsUnsupportedFormat, "FFMPEG does not recognize the given file extension");
 	}
 
+	/* determine optimal pixel format */
+    if (is_color) {
+        writer->input_pix_fmt = PIX_FMT_BGR24;
+    } 
+	else {
+        writer->input_pix_fmt = PIX_FMT_GRAY8;
+    }
+
 	// alloc memory for context 
 	writer->oc = av_alloc_format_context();
 	assert (writer->oc);
@@ -664,11 +581,38 @@ CV_IMPL CvVideoWriter* cvCreateVideoWriter( const char * filename, int fourcc,
 	writer->oc->max_delay = (int)(0.7*AV_TIME_BASE);  /* This reduces buffer underrun warnings with MPEG */
 
 	/* Lookup codec_id for given fourcc */
-	if(fourcc!=-1) codec_id = icv_find_codec_FFMPEG( fourcc ); 
+	if(fourcc!=CV_FOURCC_DEFAULT){
+		if( (codec_id = codec_get_bmp_id( fourcc )) == CODEC_ID_NONE ){
+			CV_ERROR( CV_StsUnsupportedFormat, 
+				"FFMPEG could not find a codec matching the given FOURCC code. Use fourcc=CV_FOURCC_DEFAULT for auto selection." );
+		}
+	}
+
+    // set a few optimal pixel formats for lossless codecs of interest..
+    int codec_pix_fmt;
+    switch (codec_id) {
+    case CODEC_ID_RAWVIDEO:
+    case CODEC_ID_JPEGLS:
+        // BGR24 or GRAY8 depending on is_color...
+        codec_pix_fmt = writer->input_pix_fmt;
+        break;
+    case CODEC_ID_FFV1:
+        // no choice... other supported formats are YUV only
+        codec_pix_fmt = PIX_FMT_RGBA32;
+        break;
+	case CODEC_ID_MJPEG:
+	case CODEC_ID_LJPEG:
+		codec_pix_fmt = PIX_FMT_YUVJ420P;
+		break;
+    default:
+        // good for lossy formats, MPEG, etc.
+        codec_pix_fmt = PIX_FMT_YUV420P;
+        break;
+    }
 
 	// TODO -- safe to ignore output audio stream?
 	writer->video_st = icv_add_video_stream_FFMPEG(writer->oc, codec_id, 
-			frameSize.width, frameSize.height, 800000, fps, PIX_FMT_YUV420P);
+			frameSize.width, frameSize.height, 800000, fps, codec_pix_fmt);
 
 
 	/* set the output parameters (must be done even if no
@@ -702,24 +646,24 @@ CV_IMPL CvVideoWriter* cvCreateVideoWriter( const char * filename, int fourcc,
 	//printf("cvcap_ffmpeg: using codec %s\n", codec->name);
 
     /* open the codec */
-    if (avcodec_open(c, codec) < 0) {
+    if ( (err=avcodec_open(c, codec)) < 0) {
 		char errtext[256];
-		sprintf(errtext, "Could not open codec '%s'", codec->name);
+		sprintf(errtext, "Could not open codec '%s': %s", codec->name, icv_FFMPEG_ErrStr(err));
 		CV_ERROR(CV_StsBadArg, errtext);
     }
 
 	//	printf("Using codec %s\n", codec->name);
     writer->outbuf = NULL;
 
+	// TODO: intelligently determine the size of the conversion buffer
     if (!(writer->oc->oformat->flags & AVFMT_RAWPICTURE)) {
         /* allocate output buffer */
-        /* XXX: API change will be done */
-        writer->outbuf_size = 200000;
+        writer->outbuf_size = 2000000;
         writer->outbuf = (uint8_t *) av_malloc(writer->outbuf_size);
     }
 
 	bool need_color_convert;
-        need_color_convert = c->pix_fmt != PIX_FMT_BGR24;
+	need_color_convert = (c->pix_fmt != writer->input_pix_fmt);
 
     /* allocate the encoded raw picture */
     writer->picture = icv_alloc_picture_FFMPEG(c->pix_fmt, c->width, c->height, need_color_convert);
@@ -727,13 +671,13 @@ CV_IMPL CvVideoWriter* cvCreateVideoWriter( const char * filename, int fourcc,
 		CV_ERROR(CV_StsNoMem, "Could not allocate picture");
     }
 
-    /* if the output format is not YUV420P, then a temporary YUV420P
-       picture is needed too. It is then converted to the required
-       output format */
-    writer->rgb_picture = NULL;
+    /* if the output format is not our input format, then a temporary
+       picture of the input format is needed too. It is then converted 
+	   to the required output format */
+	writer->input_picture = NULL;
     if ( need_color_convert ) {
-        writer->rgb_picture = icv_alloc_picture_FFMPEG(PIX_FMT_BGR24, c->width, c->height, false);
-        if (!writer->rgb_picture) {
+        writer->input_picture = icv_alloc_picture_FFMPEG(writer->input_pix_fmt, c->width, c->height, false);
+        if (!writer->input_picture) {
 			CV_ERROR(CV_StsNoMem, "Could not allocate picture");
         }
     }
@@ -829,24 +773,33 @@ CV_IMPL int cvWriteFrame( CvVideoWriter * writer, const IplImage * image )
 #else
 	AVCodecContext *c = &(mywriter->video_st->codec);
 #endif
-	// check parameters
-	assert ( image );
-	assert ( image->nChannels == 3 );
-	assert ( image->depth == IPL_DEPTH_8U );
-
+    // check parameters
+    if (mywriter->input_pix_fmt == PIX_FMT_BGR24) {
+        if (image->nChannels != 3 || image->depth != IPL_DEPTH_8U) {
+            CV_ERROR(CV_StsUnsupportedFormat, "cvWriteFrame() needs images with depth = IPL_DEPTH_8U and nChannels = 3.");
+        }
+    } 
+	else if (mywriter->input_pix_fmt == PIX_FMT_GRAY8) {
+        if (image->nChannels != 1 || image->depth != IPL_DEPTH_8U) {
+            CV_ERROR(CV_StsUnsupportedFormat, "cvWriteFrame() needs images with depth = IPL_DEPTH_8U and nChannels = 1.");
+        }
+    } 
+	else {
+        assert(false);
+    }
 
 	// check if buffer sizes match, i.e. image has expected format (size, channels, bitdepth, alignment)
-	assert (image->imageSize == avpicture_get_size (PIX_FMT_BGR24, image->width, image->height));
+	assert (image->imageSize == avpicture_get_size( mywriter->input_pix_fmt, image->width, image->height ));
 
 	if (c->pix_fmt != PIX_FMT_BGR24 ) {
-		assert( mywriter->rgb_picture );
-		// let rgb_picture point to the raw data buffer of 'image'
-		avpicture_fill((AVPicture *)mywriter->rgb_picture, (uint8_t *) image->imageData, 
+		assert( mywriter->input_picture );
+		// let input_picture point to the raw data buffer of 'image'
+		avpicture_fill((AVPicture *)mywriter->input_picture, (uint8_t *) image->imageData, 
 				PIX_FMT_BGR24, image->width, image->height);
 
 		// convert to the color format needed by the codec
 		if( img_convert((AVPicture *)mywriter->picture, c->pix_fmt,
-					(AVPicture *)mywriter->rgb_picture, PIX_FMT_BGR24, 
+					(AVPicture *)mywriter->input_picture, PIX_FMT_BGR24, 
 					image->width, image->height) < 0){
 			CV_ERROR(CV_StsUnsupportedFormat, "FFMPEG::img_convert pixel format conversion from BGR24 not handled");
 		}
@@ -884,16 +837,16 @@ CV_IMPL void cvReleaseVideoWriter( CvVideoWriter ** writer )
 
 	// free pictures
 #if LIBAVFORMAT_BUILD > 4628
-	if( mywriter->video_st->codec->pix_fmt != PIX_FMT_BGR24){
+	if( mywriter->video_st->codec->pix_fmt != mywriter->input_pix_fmt){
 #else
-	if( mywriter->video_st->codec.pix_fmt != PIX_FMT_BGR24){
+	if( mywriter->video_st->codec.pix_fmt != mywriter->input_pix_fmt){
 #endif
 		cvFree(&(mywriter->picture->data[0]));
 	}
 	av_free(mywriter->picture);
 
-    if (mywriter->rgb_picture) {
-        av_free(mywriter->rgb_picture);
+    if (mywriter->input_picture) {
+        av_free(mywriter->input_picture);
     }
 
 	/* close codec */
