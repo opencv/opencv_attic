@@ -95,6 +95,10 @@ def cvQueryFrame(*args):
   """cvQueryFrame(CvCapture capture) -> CvMat"""
   return _highgui.cvQueryFrame(*args)
 
+def CV_FOURCC(*args):
+  """CV_FOURCC(char c1, char c2, char c3, char c4) -> int"""
+  return _highgui.CV_FOURCC(*args)
+
 def cvInitSystem(*args):
   """cvInitSystem(int argc, char argv) -> int"""
   return _highgui.cvInitSystem(*args)
@@ -253,6 +257,8 @@ def cvGetCaptureProperty(*args):
 def cvSetCaptureProperty(*args):
   """cvSetCaptureProperty(CvCapture capture, int property_id, double value) -> int"""
   return _highgui.cvSetCaptureProperty(*args)
+CV_FOURCC_PROMPT = _highgui.CV_FOURCC_PROMPT
+CV_FOURCC_DEFAULT = _highgui.CV_FOURCC_DEFAULT
 
 def cvCreateVideoWriter(*args):
   """

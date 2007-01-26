@@ -4377,6 +4377,49 @@ CvMat * cvQueryFrame__CvMat( CvCapture * capture ){
 }
 
 
+SWIGINTERN int
+SWIG_AsCharArray(PyObject * obj, char *val, size_t size)
+{ 
+  char* cptr = 0; size_t csize = 0; int alloc = SWIG_OLDOBJ;
+  int res = SWIG_AsCharPtrAndSize(obj, &cptr, &csize, &alloc);
+  if (SWIG_IsOK(res)) {
+    if ((csize == size + 1) && cptr && !(cptr[csize-1])) --csize;
+    if (csize <= size) {
+      if (val) {
+	if (csize) memcpy(val, cptr, csize*sizeof(char));
+	if (csize < size) memset(val + csize, 0, (size - csize)*sizeof(char));
+      }
+      if (alloc == SWIG_NEWOBJ) {
+	delete[] cptr;
+	res = SWIG_DelNewMask(res);
+      }      
+      return res;
+    }
+    if (alloc == SWIG_NEWOBJ) delete[] cptr;
+  }
+  return SWIG_TypeError;
+}
+
+
+SWIGINTERN int
+SWIG_AsVal_char (PyObject * obj, char *val)
+{    
+  int res = SWIG_AsCharArray(obj, val, 1);
+  if (!SWIG_IsOK(res)) {
+    long v;
+    res = SWIG_AddCast(SWIG_AsVal_long (obj, &v));
+    if (SWIG_IsOK(res)) {
+      if ((CHAR_MIN <= v) && (v <= CHAR_MAX)) {
+	if (val) *val = static_cast< char >(v);
+      } else {
+	res = SWIG_OverflowError;
+      }
+    }
+  }
+  return res;
+}
+
+
   #define SWIG_From_long   PyInt_FromLong 
 
 
@@ -5242,6 +5285,63 @@ SWIGINTERN PyObject *_wrap_cvQueryFrame(PyObject *SWIGUNUSEDPARM(self), PyObject
     } 
   }
   resultobj = SWIG_NewPointerObj(SWIG_as_voidptr(result), SWIGTYPE_p_CvMat, 0 |  0 );
+  return resultobj;
+fail:
+  return NULL;
+}
+
+
+SWIGINTERN PyObject *_wrap_CV_FOURCC(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
+  PyObject *resultobj = 0;
+  char arg1 ;
+  char arg2 ;
+  char arg3 ;
+  char arg4 ;
+  int result;
+  char val1 ;
+  int ecode1 = 0 ;
+  char val2 ;
+  int ecode2 = 0 ;
+  char val3 ;
+  int ecode3 = 0 ;
+  char val4 ;
+  int ecode4 = 0 ;
+  PyObject * obj0 = 0 ;
+  PyObject * obj1 = 0 ;
+  PyObject * obj2 = 0 ;
+  PyObject * obj3 = 0 ;
+  
+  if (!PyArg_ParseTuple(args,(char *)"OOOO:CV_FOURCC",&obj0,&obj1,&obj2,&obj3)) SWIG_fail;
+  ecode1 = SWIG_AsVal_char(obj0, &val1);
+  if (!SWIG_IsOK(ecode1)) {
+    SWIG_exception_fail(SWIG_ArgError(ecode1), "in method '" "CV_FOURCC" "', argument " "1"" of type '" "char""'");
+  } 
+  arg1 = static_cast< char >(val1);
+  ecode2 = SWIG_AsVal_char(obj1, &val2);
+  if (!SWIG_IsOK(ecode2)) {
+    SWIG_exception_fail(SWIG_ArgError(ecode2), "in method '" "CV_FOURCC" "', argument " "2"" of type '" "char""'");
+  } 
+  arg2 = static_cast< char >(val2);
+  ecode3 = SWIG_AsVal_char(obj2, &val3);
+  if (!SWIG_IsOK(ecode3)) {
+    SWIG_exception_fail(SWIG_ArgError(ecode3), "in method '" "CV_FOURCC" "', argument " "3"" of type '" "char""'");
+  } 
+  arg3 = static_cast< char >(val3);
+  ecode4 = SWIG_AsVal_char(obj3, &val4);
+  if (!SWIG_IsOK(ecode4)) {
+    SWIG_exception_fail(SWIG_ArgError(ecode4), "in method '" "CV_FOURCC" "', argument " "4"" of type '" "char""'");
+  } 
+  arg4 = static_cast< char >(val4);
+  {
+    try {
+      result = (int)CV_FOURCC(arg1,arg2,arg3,arg4); 
+    } 
+    catch (...) 
+    {
+      return NULL;
+    } 
+  }
+  resultobj = SWIG_From_int(static_cast< int >(result));
   return resultobj;
 fail:
   return NULL;
@@ -7427,6 +7527,7 @@ static PyMethodDef SwigMethods[] = {
 	 { (char *)"cvLoadImage", _wrap_cvLoadImage, METH_VARARGS, NULL},
 	 { (char *)"cvRetrieveFrame", _wrap_cvRetrieveFrame, METH_VARARGS, NULL},
 	 { (char *)"cvQueryFrame", _wrap_cvQueryFrame, METH_VARARGS, NULL},
+	 { (char *)"CV_FOURCC", _wrap_CV_FOURCC, METH_VARARGS, NULL},
 	 { (char *)"cvInitSystem", _wrap_cvInitSystem, METH_VARARGS, NULL},
 	 { (char *)"cvStartWindowThread", _wrap_cvStartWindowThread, METH_VARARGS, NULL},
 	 { (char *)"cvNamedWindow", _wrap_cvNamedWindow, METH_VARARGS, NULL},
@@ -8507,6 +8608,8 @@ SWIGEXPORT void SWIG_init(void) {
   SWIG_Python_SetConstant(d, "CV_CAP_PROP_HUE",SWIG_From_int(static_cast< int >(13)));
   SWIG_Python_SetConstant(d, "CV_CAP_PROP_GAIN",SWIG_From_int(static_cast< int >(14)));
   SWIG_Python_SetConstant(d, "CV_CAP_PROP_CONVERT_RGB",SWIG_From_int(static_cast< int >(15)));
+  SWIG_Python_SetConstant(d, "CV_FOURCC_PROMPT",SWIG_From_int(static_cast< int >(-1)));
+  SWIG_Python_SetConstant(d, "CV_FOURCC_DEFAULT",SWIG_From_int(static_cast< int >(-2)));
   SWIG_Python_SetConstant(d, "HG_AUTOSIZE",SWIG_From_int(static_cast< int >(1)));
 }
 

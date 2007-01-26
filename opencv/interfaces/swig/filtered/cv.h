@@ -3245,7 +3245,23 @@ extern "C" void cvCalcOpticalFlowPyrLK( const CvArr* prev, const CvArr* curr,
                                      float* track_error,
                                      CvTermCriteria criteria,
                                      int flags );
-# 517 "../../../cv/include/cv.h"
+
+
+
+
+extern "C" void cvCalcAffineFlowPyrLK( const CvArr* prev, const CvArr* curr,
+                                    CvArr* prev_pyr, CvArr* curr_pyr,
+                                    const CvPoint2D32f* prev_features,
+                                    CvPoint2D32f* curr_features,
+                                    float* matrices, int count,
+                                    CvSize win_size, int level,
+                                    char* status, float* track_error,
+                                    CvTermCriteria criteria, int flags );
+
+
+extern "C" int cvEstimateRigidTransform( const CvArr* A, const CvArr* B,
+                                      CvMat* M, int full_affine );
+# 521 "../../../cv/include/cv.h"
 extern "C" void cvUpdateMotionHistory( const CvArr* silhouette, CvArr* mhi,
                                       double timestamp, double duration );
 
@@ -3285,7 +3301,7 @@ extern "C" void cvMultiplyAcc( const CvArr* image1, const CvArr* image2, CvArr* 
 
 extern "C" void cvRunningAvg( const CvArr* image, CvArr* acc, double alpha,
                            const CvArr* mask = NULL );
-# 564 "../../../cv/include/cv.h"
+# 568 "../../../cv/include/cv.h"
 extern "C" int cvCamShift( const CvArr* prob_image, CvRect window,
                        CvTermCriteria criteria, CvConnectedComp* comp,
                        CvBox2D* box = NULL );
@@ -3416,7 +3432,7 @@ inline double cvTriangleArea( CvPoint2D32f a, CvPoint2D32f b, CvPoint2D32f c )
 {
     return (b.x - a.x) * (c.y - a.y) - (b.y - a.y) * (c.x - a.x);
 }
-# 704 "../../../cv/include/cv.h"
+# 708 "../../../cv/include/cv.h"
 extern "C" CvSeq* cvApproxPoly( const void* src_seq,
                              int header_size, CvMemStorage* storage,
                              int method, double parameter,
@@ -3639,11 +3655,11 @@ extern "C" void cvDistTransform( const CvArr* src, CvArr* dst,
                               int mask_size = 3,
                               const float* mask = NULL,
                               CvArr* labels = NULL);
-# 941 "../../../cv/include/cv.h"
-extern "C" void cvThreshold( const CvArr* src, CvArr* dst,
-                          double threshold, double max_value,
-                          int threshold_type );
-# 953 "../../../cv/include/cv.h"
+# 945 "../../../cv/include/cv.h"
+extern "C" double cvThreshold( const CvArr* src, CvArr* dst,
+                            double threshold, double max_value,
+                            int threshold_type );
+# 957 "../../../cv/include/cv.h"
 extern "C" void cvAdaptiveThreshold( const CvArr* src, CvArr* dst, double max_value,
                                   int adaptive_method = 0,
                                   int threshold_type = 0,
@@ -3660,7 +3676,7 @@ extern "C" void cvFloodFill( CvArr* image, CvPoint seed_point,
                           CvConnectedComp* comp = NULL,
                           int flags = 4,
                           CvArr* mask = NULL);
-# 977 "../../../cv/include/cv.h"
+# 981 "../../../cv/include/cv.h"
 extern "C" void cvCanny( const CvArr* image, CvArr* edges, double threshold1,
                       double threshold2, int aperture_size = 3 );
 
@@ -3701,7 +3717,7 @@ extern "C" void cvGoodFeaturesToTrack( const CvArr* image, CvArr* eig_image,
                                    int block_size = 3,
                                    int use_harris = 0,
                                    double k = 0.04 );
-# 1030 "../../../cv/include/cv.h"
+# 1034 "../../../cv/include/cv.h"
 extern "C" CvSeq* cvHoughLines2( CvArr* image, void* line_storage, int method,
                               double rho, double theta, int threshold,
                               double param1 = 0, double param2 = 0);
@@ -3728,6 +3744,8 @@ extern "C" CvHaarClassifierCascade* cvLoadHaarClassifierCascade(
                     const char* directory, CvSize orig_window_size);
 
 extern "C" void cvReleaseHaarClassifierCascade( CvHaarClassifierCascade** cascade );
+
+
 
 
 
@@ -3788,7 +3806,7 @@ extern "C" void cvFindExtrinsicCameraParams2( const CvMat* object_points,
                                           const CvMat* distortion_coeffs,
                                           CvMat* rotation_vector,
                                           CvMat* translation_vector );
-# 1124 "../../../cv/include/cv.h"
+# 1130 "../../../cv/include/cv.h"
 extern "C" void cvCalibrateCamera2( const CvMat* object_points,
                                 const CvMat* image_points,
                                 const CvMat* point_counts,
@@ -3835,7 +3853,7 @@ extern "C" void cvReleasePOSITObject( CvPOSITObject** posit_object );
 
 
 extern "C" void cvConvertPointsHomogenious( const CvMat* src, CvMat* dst );
-# 1178 "../../../cv/include/cv.h"
+# 1184 "../../../cv/include/cv.h"
 extern "C" int cvFindFundamentalMat( const CvMat* points1, const CvMat* points2,
                                  CvMat* fundamental_matrix,
                                  int method = (8 + 2),
@@ -4142,4 +4160,4 @@ protected:
     int el_shape;
     int operation;
 };
-# 1198 "../../../cv/include/cv.h" 2
+# 1204 "../../../cv/include/cv.h" 2
