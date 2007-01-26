@@ -476,9 +476,10 @@ CvVideoWriter* cvCreateVideoWriter( const char* filename, int fourcc, double fps
 <dt>fourcc<dd>4-character code of codec used to compress the frames.
               For example, <code>CV_FOURCC('P','I','M','1')</code> is MPEG-1 codec,
               <code>CV_FOURCC('M','J','P','G')</code> is motion-jpeg codec etc.
-              Under Win32 it is possible to pass -1 in order
-              to choose compression method and additional compression parameters
-              from dialog.
+			  There are two special values that can be passed, that behave as follows:<br>
+			  <code>CV_FOURCC_PROMPT</code> - Opens a dialog box where the user can 
+			  choose the compression method and parameters (WIN32 only).<br>
+			  <code>CV_FOURCC_DEFAULT</code> - Use the default compression method for the given file extension (Linux only).
 <dt>fps<dd>Framerate of the created video stream.
 <dt>frame_size<dd>Size of video frames.
 <dt>is_color<dd>If it is not zero, the encoder will expect and encode color frames, otherwise it will work
