@@ -1541,6 +1541,8 @@ CV_HOUGH_MULTI_SCALE = _cv.CV_HOUGH_MULTI_SCALE
 CV_HOUGH_GRADIENT = _cv.CV_HOUGH_GRADIENT
 CV_HAAR_DO_CANNY_PRUNING = _cv.CV_HAAR_DO_CANNY_PRUNING
 CV_HAAR_SCALE_IMAGE = _cv.CV_HAAR_SCALE_IMAGE
+CV_HAAR_FIND_BIGGEST_OBJECT = _cv.CV_HAAR_FIND_BIGGEST_OBJECT
+CV_HAAR_DO_ROUGH_SEARCH = _cv.CV_HAAR_DO_ROUGH_SEARCH
 CV_CALIB_USE_INTRINSIC_GUESS = _cv.CV_CALIB_USE_INTRINSIC_GUESS
 CV_CALIB_FIX_ASPECT_RATIO = _cv.CV_CALIB_FIX_ASPECT_RATIO
 CV_CALIB_FIX_PRINCIPAL_POINT = _cv.CV_CALIB_FIX_PRINCIPAL_POINT
@@ -6842,6 +6844,20 @@ def cvCalcOpticalFlowPyrLK(*args):
     """
   return _cv.cvCalcOpticalFlowPyrLK(*args)
 
+def cvCalcAffineFlowPyrLK(*args):
+  """
+    cvCalcAffineFlowPyrLK(CvArr prev, CvArr curr, CvArr prev_pyr, CvArr curr_pyr, 
+        CvPoint2D32f prev_features, CvPoint2D32f curr_features, 
+        float matrices, int count, CvSize win_size, 
+        int level, char status, float track_error, 
+        CvTermCriteria criteria, int flags)
+    """
+  return _cv.cvCalcAffineFlowPyrLK(*args)
+
+def cvEstimateRigidTransform(*args):
+  """cvEstimateRigidTransform(CvArr A, CvArr B, CvMat M, int full_affine) -> int"""
+  return _cv.cvEstimateRigidTransform(*args)
+
 def cvUpdateMotionHistory(*args):
   """cvUpdateMotionHistory(CvArr silhouette, CvArr mhi, double timestamp, double duration)"""
   return _cv.cvUpdateMotionHistory(*args)
@@ -7145,7 +7161,7 @@ def cvDistTransform(*args):
 def cvThreshold(*args):
   """
     cvThreshold(CvArr src, CvArr dst, double threshold, double max_value, 
-        int threshold_type)
+        int threshold_type) -> double
     """
   return _cv.cvThreshold(*args)
 

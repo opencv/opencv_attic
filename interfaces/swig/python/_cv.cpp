@@ -82229,6 +82229,313 @@ fail:
 }
 
 
+SWIGINTERN PyObject *_wrap_cvCalcAffineFlowPyrLK(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
+  PyObject *resultobj = 0;
+  CvArr *arg1 = (CvArr *) 0 ;
+  CvArr *arg2 = (CvArr *) 0 ;
+  CvArr *arg3 = (CvArr *) 0 ;
+  CvArr *arg4 = (CvArr *) 0 ;
+  CvPoint2D32f *arg5 = (CvPoint2D32f *) 0 ;
+  CvPoint2D32f *arg6 = (CvPoint2D32f *) 0 ;
+  float *arg7 = (float *) 0 ;
+  int arg8 ;
+  CvSize arg9 ;
+  int arg10 ;
+  char *arg11 = (char *) 0 ;
+  float *arg12 = (float *) 0 ;
+  CvTermCriteria arg13 ;
+  int arg14 ;
+  bool freearg1 = false ;
+  bool freearg2 = false ;
+  bool freearg3 = false ;
+  bool freearg4 = false ;
+  void *argp6 = 0 ;
+  int res6 = 0 ;
+  void *argp7 = 0 ;
+  int res7 = 0 ;
+  int val8 ;
+  int ecode8 = 0 ;
+  void *argp9 ;
+  int res9 = 0 ;
+  int val10 ;
+  int ecode10 = 0 ;
+  int tmpCountStatus11 ;
+  void *argp12 = 0 ;
+  int res12 = 0 ;
+  void *argp13 ;
+  int res13 = 0 ;
+  int val14 ;
+  int ecode14 = 0 ;
+  PyObject * obj0 = 0 ;
+  PyObject * obj1 = 0 ;
+  PyObject * obj2 = 0 ;
+  PyObject * obj3 = 0 ;
+  PyObject * obj4 = 0 ;
+  PyObject * obj5 = 0 ;
+  PyObject * obj6 = 0 ;
+  PyObject * obj7 = 0 ;
+  PyObject * obj8 = 0 ;
+  PyObject * obj9 = 0 ;
+  PyObject * obj10 = 0 ;
+  PyObject * obj11 = 0 ;
+  PyObject * obj12 = 0 ;
+  PyObject * obj13 = 0 ;
+  
+  if (!PyArg_ParseTuple(args,(char *)"OOOOOOOOOOOOOO:cvCalcAffineFlowPyrLK",&obj0,&obj1,&obj2,&obj3,&obj4,&obj5,&obj6,&obj7,&obj8,&obj9,&obj10,&obj11,&obj12,&obj13)) SWIG_fail;
+  {
+    arg1 = PyObject_to_CvArr(obj0, &freearg1);
+  }
+  {
+    arg2 = PyObject_to_CvArr(obj1, &freearg2);
+  }
+  {
+    arg3 = PyObject_to_CvArr(obj2, &freearg3);
+  }
+  {
+    arg4 = PyObject_to_CvArr(obj3, &freearg4);
+  }
+  {
+    int i;
+    int size;
+    
+    /* get the size of the input array */
+    size = PyList_Size (obj4);
+    
+    /* allocate the needed memory */
+    arg5 = (CvPoint2D32f *)malloc (size * sizeof (CvPoint2D32f));
+    
+    /* extract all the points values from the list */
+    for (i = 0; i < size; i++) {
+      PyObject *item = PyList_GetItem (obj4, i);
+      
+      void * vptr;
+      SWIG_Python_ConvertPtr (item, &vptr,
+        SWIGTYPE_p_CvPoint2D32f,
+        SWIG_POINTER_EXCEPTION);
+      CvPoint2D32f *p = (CvPoint2D32f *)vptr;
+      arg5 [i].x = p->x;
+      arg5 [i].y = p->y;
+    }
+  }
+  res6 = SWIG_ConvertPtr(obj5, &argp6,SWIGTYPE_p_CvPoint2D32f, 0 |  0 );
+  if (!SWIG_IsOK(res6)) {
+    SWIG_exception_fail(SWIG_ArgError(res6), "in method '" "cvCalcAffineFlowPyrLK" "', argument " "6"" of type '" "CvPoint2D32f *""'"); 
+  }
+  arg6 = reinterpret_cast< CvPoint2D32f * >(argp6);
+  res7 = SWIG_ConvertPtr(obj6, &argp7,SWIGTYPE_p_float, 0 |  0 );
+  if (!SWIG_IsOK(res7)) {
+    SWIG_exception_fail(SWIG_ArgError(res7), "in method '" "cvCalcAffineFlowPyrLK" "', argument " "7"" of type '" "float *""'"); 
+  }
+  arg7 = reinterpret_cast< float * >(argp7);
+  ecode8 = SWIG_AsVal_int(obj7, &val8);
+  if (!SWIG_IsOK(ecode8)) {
+    SWIG_exception_fail(SWIG_ArgError(ecode8), "in method '" "cvCalcAffineFlowPyrLK" "', argument " "8"" of type '" "int""'");
+  } 
+  arg8 = static_cast< int >(val8);
+  {
+    res9 = SWIG_ConvertPtr(obj8, &argp9, SWIGTYPE_p_CvSize,  0  | 0);
+    if (!SWIG_IsOK(res9)) {
+      SWIG_exception_fail(SWIG_ArgError(res9), "in method '" "cvCalcAffineFlowPyrLK" "', argument " "9"" of type '" "CvSize""'"); 
+    }  
+    if (!argp9) {
+      SWIG_exception_fail(SWIG_ValueError, "invalid null reference " "in method '" "cvCalcAffineFlowPyrLK" "', argument " "9"" of type '" "CvSize""'");
+    } else {
+      CvSize * temp = reinterpret_cast< CvSize * >(argp9);
+      arg9 = *temp;
+      if (SWIG_IsNewObj(res9)) delete temp;
+    }
+  }
+  ecode10 = SWIG_AsVal_int(obj9, &val10);
+  if (!SWIG_IsOK(ecode10)) {
+    SWIG_exception_fail(SWIG_ArgError(ecode10), "in method '" "cvCalcAffineFlowPyrLK" "', argument " "10"" of type '" "int""'");
+  } 
+  arg10 = static_cast< int >(val10);
+  {
+    /* as input, we still need the size of the status array */
+    
+    /* memorize the size of the status array */
+    tmpCountStatus11 = (int)PyInt_AsLong (obj10);
+    
+    /* create the status array for the C call */
+    arg11 = (char *)malloc (tmpCountStatus11 * sizeof (char));
+  }
+  res12 = SWIG_ConvertPtr(obj11, &argp12,SWIGTYPE_p_float, 0 |  0 );
+  if (!SWIG_IsOK(res12)) {
+    SWIG_exception_fail(SWIG_ArgError(res12), "in method '" "cvCalcAffineFlowPyrLK" "', argument " "12"" of type '" "float *""'"); 
+  }
+  arg12 = reinterpret_cast< float * >(argp12);
+  {
+    res13 = SWIG_ConvertPtr(obj12, &argp13, SWIGTYPE_p_CvTermCriteria,  0  | 0);
+    if (!SWIG_IsOK(res13)) {
+      SWIG_exception_fail(SWIG_ArgError(res13), "in method '" "cvCalcAffineFlowPyrLK" "', argument " "13"" of type '" "CvTermCriteria""'"); 
+    }  
+    if (!argp13) {
+      SWIG_exception_fail(SWIG_ValueError, "invalid null reference " "in method '" "cvCalcAffineFlowPyrLK" "', argument " "13"" of type '" "CvTermCriteria""'");
+    } else {
+      CvTermCriteria * temp = reinterpret_cast< CvTermCriteria * >(argp13);
+      arg13 = *temp;
+      if (SWIG_IsNewObj(res13)) delete temp;
+    }
+  }
+  ecode14 = SWIG_AsVal_int(obj13, &val14);
+  if (!SWIG_IsOK(ecode14)) {
+    SWIG_exception_fail(SWIG_ArgError(ecode14), "in method '" "cvCalcAffineFlowPyrLK" "', argument " "14"" of type '" "int""'");
+  } 
+  arg14 = static_cast< int >(val14);
+  {
+    try {
+      cvCalcAffineFlowPyrLK((void const *)arg1,(void const *)arg2,arg3,arg4,(CvPoint2D32f const *)arg5,arg6,arg7,arg8,arg9,arg10,arg11,arg12,arg13,arg14); 
+    } 
+    catch (...) 
+    {
+      return NULL;
+    } 
+  }
+  resultobj = SWIG_Py_Void();
+  {
+    int i;
+    PyObject *to_add;
+    
+    /* create the list to return */
+    to_add = PyList_New (tmpCountStatus11);
+    
+    /* extract all the integer values of the result, and add it to the
+           final resulting list */
+    for (i = 0; i < tmpCountStatus11; i++) {
+      PyList_SetItem (to_add, i, PyBool_FromLong (arg11 [i]));
+    }
+    
+    resultobj = SWIG_AppendResult(resultobj, &to_add, 1); 
+  }
+  {
+    if(arg1!=NULL && freearg1){
+      cvReleaseData( arg1 );
+      cvFree(&(arg1));
+    }
+  }
+  {
+    if(arg2!=NULL && freearg2){
+      cvReleaseData( arg2 );
+      cvFree(&(arg2));
+    }
+  }
+  {
+    if(arg3!=NULL && freearg3){
+      cvReleaseData( arg3 );
+      cvFree(&(arg3));
+    }
+  }
+  {
+    if(arg4!=NULL && freearg4){
+      cvReleaseData( arg4 );
+      cvFree(&(arg4));
+    }
+  }
+  return resultobj;
+fail:
+  {
+    if(arg1!=NULL && freearg1){
+      cvReleaseData( arg1 );
+      cvFree(&(arg1));
+    }
+  }
+  {
+    if(arg2!=NULL && freearg2){
+      cvReleaseData( arg2 );
+      cvFree(&(arg2));
+    }
+  }
+  {
+    if(arg3!=NULL && freearg3){
+      cvReleaseData( arg3 );
+      cvFree(&(arg3));
+    }
+  }
+  {
+    if(arg4!=NULL && freearg4){
+      cvReleaseData( arg4 );
+      cvFree(&(arg4));
+    }
+  }
+  return NULL;
+}
+
+
+SWIGINTERN PyObject *_wrap_cvEstimateRigidTransform(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
+  PyObject *resultobj = 0;
+  CvArr *arg1 = (CvArr *) 0 ;
+  CvArr *arg2 = (CvArr *) 0 ;
+  CvMat *arg3 = (CvMat *) 0 ;
+  int arg4 ;
+  int result;
+  bool freearg1 = false ;
+  bool freearg2 = false ;
+  void *argp3 = 0 ;
+  int res3 = 0 ;
+  int val4 ;
+  int ecode4 = 0 ;
+  PyObject * obj0 = 0 ;
+  PyObject * obj1 = 0 ;
+  PyObject * obj2 = 0 ;
+  PyObject * obj3 = 0 ;
+  
+  if (!PyArg_ParseTuple(args,(char *)"OOOO:cvEstimateRigidTransform",&obj0,&obj1,&obj2,&obj3)) SWIG_fail;
+  {
+    arg1 = PyObject_to_CvArr(obj0, &freearg1);
+  }
+  {
+    arg2 = PyObject_to_CvArr(obj1, &freearg2);
+  }
+  res3 = SWIG_ConvertPtr(obj2, &argp3,SWIGTYPE_p_CvMat, 0 |  0 );
+  if (!SWIG_IsOK(res3)) {
+    SWIG_exception_fail(SWIG_ArgError(res3), "in method '" "cvEstimateRigidTransform" "', argument " "3"" of type '" "CvMat *""'"); 
+  }
+  arg3 = reinterpret_cast< CvMat * >(argp3);
+  ecode4 = SWIG_AsVal_int(obj3, &val4);
+  if (!SWIG_IsOK(ecode4)) {
+    SWIG_exception_fail(SWIG_ArgError(ecode4), "in method '" "cvEstimateRigidTransform" "', argument " "4"" of type '" "int""'");
+  } 
+  arg4 = static_cast< int >(val4);
+  {
+    try {
+      result = (int)cvEstimateRigidTransform((void const *)arg1,(void const *)arg2,arg3,arg4); 
+    } 
+    catch (...) 
+    {
+      return NULL;
+    } 
+  }
+  resultobj = SWIG_From_int(static_cast< int >(result));
+  {
+    if(arg1!=NULL && freearg1){
+      cvReleaseData( arg1 );
+      cvFree(&(arg1));
+    }
+  }
+  {
+    if(arg2!=NULL && freearg2){
+      cvReleaseData( arg2 );
+      cvFree(&(arg2));
+    }
+  }
+  return resultobj;
+fail:
+  {
+    if(arg1!=NULL && freearg1){
+      cvReleaseData( arg1 );
+      cvFree(&(arg1));
+    }
+  }
+  {
+    if(arg2!=NULL && freearg2){
+      cvReleaseData( arg2 );
+      cvFree(&(arg2));
+    }
+  }
+  return NULL;
+}
+
+
 SWIGINTERN PyObject *_wrap_cvUpdateMotionHistory(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
   PyObject *resultobj = 0;
   CvArr *arg1 = (CvArr *) 0 ;
@@ -86237,6 +86544,7 @@ SWIGINTERN PyObject *_wrap_cvThreshold(PyObject *SWIGUNUSEDPARM(self), PyObject 
   double arg3 ;
   double arg4 ;
   int arg5 ;
+  double result;
   bool freearg1 = false ;
   bool freearg2 = false ;
   double val3 ;
@@ -86275,14 +86583,14 @@ SWIGINTERN PyObject *_wrap_cvThreshold(PyObject *SWIGUNUSEDPARM(self), PyObject 
   arg5 = static_cast< int >(val5);
   {
     try {
-      cvThreshold((void const *)arg1,arg2,arg3,arg4,arg5); 
+      result = (double)cvThreshold((void const *)arg1,arg2,arg3,arg4,arg5); 
     } 
     catch (...) 
     {
       return NULL;
     } 
   }
-  resultobj = SWIG_Py_Void();
+  resultobj = SWIG_From_double(static_cast< double >(result));
   {
     if(arg1!=NULL && freearg1){
       cvReleaseData( arg1 );
@@ -105143,6 +105451,8 @@ static PyMethodDef SwigMethods[] = {
 	 { (char *)"cvCalcOpticalFlowBM", _wrap_cvCalcOpticalFlowBM, METH_VARARGS, NULL},
 	 { (char *)"cvCalcOpticalFlowHS", _wrap_cvCalcOpticalFlowHS, METH_VARARGS, NULL},
 	 { (char *)"cvCalcOpticalFlowPyrLK", _wrap_cvCalcOpticalFlowPyrLK, METH_VARARGS, NULL},
+	 { (char *)"cvCalcAffineFlowPyrLK", _wrap_cvCalcAffineFlowPyrLK, METH_VARARGS, NULL},
+	 { (char *)"cvEstimateRigidTransform", _wrap_cvEstimateRigidTransform, METH_VARARGS, NULL},
 	 { (char *)"cvUpdateMotionHistory", _wrap_cvUpdateMotionHistory, METH_VARARGS, NULL},
 	 { (char *)"cvCalcMotionGradient", _wrap_cvCalcMotionGradient, METH_VARARGS, NULL},
 	 { (char *)"cvCalcGlobalOrientation", _wrap_cvCalcGlobalOrientation, METH_VARARGS, NULL},
@@ -107167,6 +107477,8 @@ SWIGEXPORT void SWIG_init(void) {
   SWIG_Python_SetConstant(d, "CV_HOUGH_GRADIENT",SWIG_From_int(static_cast< int >(3)));
   SWIG_Python_SetConstant(d, "CV_HAAR_DO_CANNY_PRUNING",SWIG_From_int(static_cast< int >(1)));
   SWIG_Python_SetConstant(d, "CV_HAAR_SCALE_IMAGE",SWIG_From_int(static_cast< int >(2)));
+  SWIG_Python_SetConstant(d, "CV_HAAR_FIND_BIGGEST_OBJECT",SWIG_From_int(static_cast< int >(4)));
+  SWIG_Python_SetConstant(d, "CV_HAAR_DO_ROUGH_SEARCH",SWIG_From_int(static_cast< int >(8)));
   SWIG_Python_SetConstant(d, "CV_CALIB_USE_INTRINSIC_GUESS",SWIG_From_int(static_cast< int >(1)));
   SWIG_Python_SetConstant(d, "CV_CALIB_FIX_ASPECT_RATIO",SWIG_From_int(static_cast< int >(2)));
   SWIG_Python_SetConstant(d, "CV_CALIB_FIX_PRINCIPAL_POINT",SWIG_From_int(static_cast< int >(4)));
