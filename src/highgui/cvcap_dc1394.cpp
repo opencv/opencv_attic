@@ -357,6 +357,7 @@ ERROR:
 
 static void icvCloseCAM_DC1394( CvCaptureCAM_DC1394* capture ){
 	dc1394_stop_iso_transmission(capture->handle, capture->camera->node);
+	dc1394_dma_unlisten (capture->handle, capture->camera);
 	/* Deallocate space for RGBA data */ 
 	if(capture->convert){
 		cvFree(&capture->frame.imageData);
