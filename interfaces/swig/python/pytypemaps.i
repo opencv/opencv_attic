@@ -213,6 +213,8 @@
  * so, we can call cvGetMinMaxHistValue() in Python like:
  * min_value, max_value = cvGetMinMaxHistValue (hist, None, None)
  */
+%apply int *OUTPUT {int *min_idx};                                                                   
+%apply int *OUTPUT {int *max_idx}; 
 %apply float *OUTPUT {float *min_value};
 %apply float *OUTPUT {float *max_value};
 /**
