@@ -8609,7 +8609,7 @@ SWIGEXPORT void SWIG_init(void) {
   SWIG_Python_SetConstant(d, "CV_CAP_PROP_GAIN",SWIG_From_int(static_cast< int >(14)));
   SWIG_Python_SetConstant(d, "CV_CAP_PROP_CONVERT_RGB",SWIG_From_int(static_cast< int >(15)));
   SWIG_Python_SetConstant(d, "CV_FOURCC_PROMPT",SWIG_From_int(static_cast< int >(-1)));
-  SWIG_Python_SetConstant(d, "CV_FOURCC_DEFAULT",SWIG_From_int(static_cast< int >(-2)));
+  SWIG_Python_SetConstant(d, "CV_FOURCC_DEFAULT",SWIG_From_int(static_cast< int >(-1)));
   SWIG_Python_SetConstant(d, "HG_AUTOSIZE",SWIG_From_int(static_cast< int >(1)));
 }
 

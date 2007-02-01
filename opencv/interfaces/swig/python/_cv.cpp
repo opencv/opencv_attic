@@ -85485,36 +85485,22 @@ SWIGINTERN PyObject *_wrap_cvGetMinMaxHistValue(PyObject *SWIGUNUSEDPARM(self), 
   int res2 = SWIG_TMPOBJ ;
   float temp3 ;
   int res3 = SWIG_TMPOBJ ;
-  void *argp4 = 0 ;
-  int res4 = 0 ;
-  void *argp5 = 0 ;
-  int res5 = 0 ;
+  int temp4 ;
+  int res4 = SWIG_TMPOBJ ;
+  int temp5 ;
+  int res5 = SWIG_TMPOBJ ;
   PyObject * obj0 = 0 ;
-  PyObject * obj1 = 0 ;
-  PyObject * obj2 = 0 ;
   
   arg2 = &temp2;
   arg3 = &temp3;
-  if (!PyArg_ParseTuple(args,(char *)"O|OO:cvGetMinMaxHistValue",&obj0,&obj1,&obj2)) SWIG_fail;
+  arg4 = &temp4;
+  arg5 = &temp5;
+  if (!PyArg_ParseTuple(args,(char *)"O:cvGetMinMaxHistValue",&obj0)) SWIG_fail;
   res1 = SWIG_ConvertPtr(obj0, &argp1,SWIGTYPE_p_CvHistogram, 0 |  0 );
   if (!SWIG_IsOK(res1)) {
     SWIG_exception_fail(SWIG_ArgError(res1), "in method '" "cvGetMinMaxHistValue" "', argument " "1"" of type '" "CvHistogram const *""'"); 
   }
   arg1 = reinterpret_cast< CvHistogram * >(argp1);
-  if (obj1) {
-    res4 = SWIG_ConvertPtr(obj1, &argp4,SWIGTYPE_p_int, 0 |  0 );
-    if (!SWIG_IsOK(res4)) {
-      SWIG_exception_fail(SWIG_ArgError(res4), "in method '" "cvGetMinMaxHistValue" "', argument " "4"" of type '" "int *""'"); 
-    }
-    arg4 = reinterpret_cast< int * >(argp4);
-  }
-  if (obj2) {
-    res5 = SWIG_ConvertPtr(obj2, &argp5,SWIGTYPE_p_int, 0 |  0 );
-    if (!SWIG_IsOK(res5)) {
-      SWIG_exception_fail(SWIG_ArgError(res5), "in method '" "cvGetMinMaxHistValue" "', argument " "5"" of type '" "int *""'"); 
-    }
-    arg5 = reinterpret_cast< int * >(argp5);
-  }
   {
     try {
       cvGetMinMaxHistValue((CvHistogram const *)arg1,arg2,arg3,arg4,arg5); 
@@ -85536,6 +85522,18 @@ SWIGINTERN PyObject *_wrap_cvGetMinMaxHistValue(PyObject *SWIGUNUSEDPARM(self), 
   } else {
     int new_flags = SWIG_IsNewObj(res3) ? (SWIG_POINTER_OWN |  0 ) :  0 ;
     resultobj = SWIG_Python_AppendOutput(resultobj, SWIG_NewPointerObj((void*)(arg3), SWIGTYPE_p_float, new_flags));
+  }
+  if (SWIG_IsTmpObj(res4)) {
+    resultobj = SWIG_Python_AppendOutput(resultobj, SWIG_From_int((*arg4)));
+  } else {
+    int new_flags = SWIG_IsNewObj(res4) ? (SWIG_POINTER_OWN |  0 ) :  0 ;
+    resultobj = SWIG_Python_AppendOutput(resultobj, SWIG_NewPointerObj((void*)(arg4), SWIGTYPE_p_int, new_flags));
+  }
+  if (SWIG_IsTmpObj(res5)) {
+    resultobj = SWIG_Python_AppendOutput(resultobj, SWIG_From_int((*arg5)));
+  } else {
+    int new_flags = SWIG_IsNewObj(res5) ? (SWIG_POINTER_OWN |  0 ) :  0 ;
+    resultobj = SWIG_Python_AppendOutput(resultobj, SWIG_NewPointerObj((void*)(arg5), SWIGTYPE_p_int, new_flags));
   }
   return resultobj;
 fail:
