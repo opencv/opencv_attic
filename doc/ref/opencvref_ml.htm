@@ -13,7 +13,7 @@
 <li><a href=#ch_commonfunctions>Introduction. Common classes and functions</a>
 <li><a href=#ch_nbayes>Normal Bayes Classifier</a>
 <li><a href=#ch_knn>K Nearest Neighbors</a>
-<li><a href=#ch_svm>SVM</a>
+<li><a href=#ch_svm>Support Vector Machine</a>
 <li><a href=#ch_dtree>Decision Trees</a>
 <li><a href=#ch_boosting>Boosting</a>
 <li><a href=#ch_randomforest>Random Trees</a>
@@ -560,6 +560,9 @@ public:
     // SVM kernel type
     enum { LINEAR=0, POLY=1, RBF=2, SIGMOID=3 };
 
+    // SVM params type
+    enum { C=0, GAMMA=1, P=2, NU=3, COEF=4, DEGREE=5 };
+
     CvSVM();
     virtual ~CvSVM();
 
@@ -571,10 +574,23 @@ public:
                         const CvMat* _var_idx=0, const CvMat* _sample_idx=0,
                         CvSVMParams _params=CvSVMParams() );
 
+    virtual bool train_auto( const CvMat* _train_data, const CvMat* _responses,
+        const CvMat* _var_idx, const CvMat* _sample_idx, CvSVMParams _params,
+        int k_fold = 10,
+        CvParamGrid C_grid      = get_default_grid(CvSVM::C),
+        CvParamGrid gamma_grid  = get_default_grid(CvSVM::GAMMA),
+        CvParamGrid p_grid      = get_default_grid(CvSVM::P),
+        CvParamGrid nu_grid     = get_default_grid(CvSVM::NU),
+        CvParamGrid coef_grid   = get_default_grid(CvSVM::COEF),
+        CvParamGrid degree_grid = get_default_grid(CvSVM::DEGREE) );
+
     virtual float predict( const CvMat* _sample ) const;
     virtual int get_support_vector_count() const;
     virtual const float* get_support_vector(int i) const;
+    virtual CvSVMParams get_params() const { return params; };
     virtual void clear();
+
+    static CvParamGrid get_default_grid( int param_id );
 
     virtual void save( const char* filename, const char* name=0 );
     virtual void load( const char* filename, const char* name=0 );
@@ -662,6 +678,75 @@ missing measurements are not supported.</p>
 <p>All the other parameters are gathered in <a href="#decl_CvSVMParams">CvSVMParams</a>
 structure.</p>
 
+
+<hr><h3><a name="decl_CvSVM_train_auto">CvSVM::train_auto</a></h3>
+<p class="Blurb">Trains SVM with optimal parameters</p>
+<pre>
+train_auto( const CvMat* _train_data, const CvMat* _responses,
+        const CvMat* _var_idx, const CvMat* _sample_idx,
+        CvSVMParams _params, int k_fold = 10,
+        CvParamGrid C_grid      = get_default_grid(CvSVM::C),
+        CvParamGrid gamma_grid  = get_default_grid(CvSVM::GAMMA),
+        CvParamGrid p_grid      = get_default_grid(CvSVM::P),
+        CvParamGrid nu_grid     = get_default_grid(CvSVM::NU),
+        CvParamGrid coef_grid   = get_default_grid(CvSVM::COEF),
+        CvParamGrid degree_grid = get_default_grid(CvSVM::DEGREE) );
+</pre>
+<p><dl>
+<dt>k_fold<dd>Cross-validation parameter. The training set is divided into
+<em>k_fold</em> subsets, one subset being used to train the model,
+the others forming the test set. So, the SVM algorithm is executed <em>k_fold</em>
+times.
+</dl>
+The method trains the SVM model automatically by choosing
+the optimal parameters <em>C</em>, <em>gamma</em>,
+<em>p</em>, <em>nu</em>, <em>coef0</em>, <em>degree</em> from
+<a href="#decl_CvSVMParams">CvSVMParams</a>. By the optimality one mean that
+the cross-validation estimate of the test set error is minimal.
+The parameters are iterated by logarithmic grid, for example, the parameter
+<em>gamma</em> takes the values in the set
+{<em>gamma_grid</em>.min_val,  <em>gamma_grid</em>.min_val*<em>gamma_grid</em>.step,
+<em>gamma_grid</em>.min_val*<em>gamma_grid</em>.step<sup>2</sup>,...,
+<em>gamma_grid</em>.min_val*<em>gamma_grid</em>.step<sup><em>n</em></sup>},
+where <em>n</em> is the maximal index such, that
+<em>gamma_grid</em>.min_val*<em>gamma_grid</em>.step<sup><em>n</em></sup> <
+<em>gamma_grid</em>.max_val. So, <em>step</em> must always be greater than 1.
+</p>
+<p>If there is no need in optimization in some parameter, the according grid step should be
+set to any value less or equal to 1. For example, to avoid optimization in
+<em>gamma</em> one should set <em>gamma_grid</em>.step = 0,
+<em>gamma_grid</em>.min_val, <em>gamma_grid</em>.max_val being arbitrary numbers.
+In this case, the value <em>params</em>.gamma will be taken for <em>gamma</em>.
+</p>
+<p>
+And, finally, if the optimization in some parameter is required,
+but there is no idea of the corresponding grid, one may call the function 
+<a href="#decl_CvSVM_get_default_grid">CvSVM::get_default_grid</a>.
+In order to generate a grid, say,
+for <em>gamma</em>, call <code>CvSVM::get_default_grid(CvSVM::GAMMA)</code>.
+</p>
+
+<hr><h3><a name="decl_CvSVM_get_default_grid">CvSVM::get_default_grid</a></h3>
+<p class="Blurb">Generates a grid for SVM parameters</p>
+<pre>
+CvParamGrid CvSVM::get_default_grid( int param_id );
+</pre>
+<p><dl>
+<dt>param_id<dd>Must be one of the following:
+<code>CvSVM::C, CvSVM::GAMMA, CvSVM::P, CvSVM::NU, CvSVM::COEF, CvSVM::DEGREE</code>.
+The grid will be generated for the parameter with this ID.
+</dl>
+<p>The function genarates a grid for the specified parameter of the SVM algorithm.
+The grid may be passed to the function
+<a href="#decl_CvSVM_train_auto">CvSVM::train_auto</a></p>
+
+<hr><h3><a name="decl_CvSVM_get_params">CvSVM::get_params</a></h3>
+<p class="Blurb">Returns current SVM parameters</p>
+<pre>
+CvSVMParams CvSVM::get_params() const;
+</pre>
+<p>This function may be used to get the optimal parameters that were obtained
+while automatical training <a href="#decl_CvSVM_train_auto">CvSVM::train_auto</a>.</p>
 
 <hr><h3><a name="decl_CvSVM_get_support_vector">CvSVM::get_support_vector*</a></h3>
 <p class="Blurb">Retrieves the number of support vectors and the particular vector</p>
