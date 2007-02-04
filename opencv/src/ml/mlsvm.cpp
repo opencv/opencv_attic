@@ -98,6 +98,73 @@ typedef double Qfloat;
 #define QFLOAT_TYPE CV_64F
 #endif
 
+// Param Grid 
+bool CvParamGrid::check() const
+{
+    bool ok = false;
+
+    CV_FUNCNAME( "CvParamGrid::check" );
+    __BEGIN__;
+
+    if( min_val > max_val )
+        CV_ERROR( CV_StsBadArg, "Lower bound of the grid must be less then the upper one" );
+    if( min_val < DBL_EPSILON )
+        CV_ERROR( CV_StsBadArg, "Lower bound of the grid must be positive" );
+    if( step < 1. + FLT_EPSILON )
+        CV_ERROR( CV_StsBadArg, "Grid step must greater then 1" );
+
+    ok = true;
+
+    __END__;
+
+    return ok;
+}
+
+CvParamGrid CvSVM::get_default_grid( int param_id )
+{
+    CvParamGrid grid;
+    if( param_id == CvSVM::C )
+    {
+        grid.min_val = 0.1;
+        grid.max_val = 500;
+        grid.step = 5; // total iterations = 5
+    }
+    else if( param_id == CvSVM::GAMMA )
+    {
+        grid.min_val = 1e-5;
+        grid.max_val = 0.6;
+        grid.step = 15; // total iterations = 4
+    }
+    else if( param_id == CvSVM::P )
+    {
+        grid.min_val = 0.01;
+        grid.max_val = 100;
+        grid.step = 7; // total iterations = 4
+    }
+    else if( param_id == CvSVM::NU )
+    {
+        grid.min_val = 0.01;
+        grid.max_val = 0.2;
+        grid.step = 3; // total iterations = 3
+    }
+    else if( param_id == CvSVM::COEF )
+    {
+        grid.min_val = 0.1;
+        grid.max_val = 300;
+        grid.step = 14; // total iterations = 3
+    }
+    else if( param_id == CvSVM::DEGREE )
+    {
+        grid.min_val = 0.01;
+        grid.max_val = 4;
+        grid.step = 7; // total iterations = 3
+    }
+    else
+        cvError( CV_StsBadArg, "CvSVM::get_default_grid", "Invalid type of parameter "
+            "(use one of CvSVM::C, CvSVM::GAMMA et al.)", __FILE__, __LINE__ );
+    return grid;
+}
+
 // SVM training parameters
 CvSVMParams::CvSVMParams() :
     svm_type(CvSVM::C_SVC), kernel_type(CvSVM::RBF), degree(0),
@@ -1246,53 +1313,18 @@ bool CvSVM::train1( int sample_count, int var_count, const float** samples,
 }
 
 
-bool CvSVM::train( const CvMat* _train_data, const CvMat* _responses,
-    const CvMat* _var_idx, const CvMat* _sample_idx, CvSVMParams _params )
+bool CvSVM::do_train( int svm_type, int sample_count, int var_count, const float** samples,
+                    const CvMat* responses, CvMemStorage* temp_storage, double* alpha )
 {
     bool ok = false;
-    CvMat* responses = 0;
-    CvMemStorage* temp_storage = 0;
-    const float** samples = 0;
-    
-    CV_FUNCNAME( "CvSVM::train" );
+
+    CV_FUNCNAME( "CvSVM::do_train" );
 
     __BEGIN__;
 
-    int svm_type, sample_count, var_count, sample_size;
-    int block_size = 1 << 16;
+    CvSVMDecisionFunc* df = 0;
+    const int sample_size = var_count*sizeof(samples[0][0]);
     int i, j, k;
-    CvSVMDecisionFunc* df;
-    double* alpha;
-
-    clear();
-    CV_CALL( set_params( _params ));
-
-    svm_type = _params.svm_type;
-
-    /* Prepare training data and related parameters */
-    CV_CALL( cvPrepareTrainData( "CvSVM::train", _train_data, CV_ROW_SAMPLE,
-                                 svm_type != CvSVM::ONE_CLASS ? _responses : 0,
-                                 svm_type == CvSVM::C_SVC ||
-                                 svm_type == CvSVM::NU_SVC ? CV_VAR_CATEGORICAL :
-                                 CV_VAR_ORDERED, _var_idx, _sample_idx,
-                                 false, &samples, &sample_count, &var_count, &var_all,
-                                 &responses, &class_labels, &var_idx ));
-
-
-    sample_size = var_count*sizeof(samples[0][0]);
-
-    // make the storage block size large enough to fit all
-    // the temporary vectors and output support vectors.
-    block_size = MAX( block_size, sample_count*(int)sizeof(CvSVMKernelRow));
-    block_size = MAX( block_size, sample_count*2*(int)sizeof(double) + 1024 );
-    block_size = MAX( block_size, sample_size*2 + 1024 );
-
-    CV_CALL( storage = cvCreateMemStorage(block_size));
-    CV_CALL( temp_storage = cvCreateChildMemStorage(storage));
-    CV_CALL( alpha = (double*)cvMemStorageAlloc(temp_storage, sample_count*sizeof(double)));
-
-    create_kernel();
-    create_solver();
 
     if( svm_type == ONE_CLASS || svm_type == EPS_SVR || svm_type == NU_SVR )
     {
@@ -1302,9 +1334,9 @@ bool CvSVM::train( const CvMat* _train_data, const CvMat* _responses,
             (CvSVMDecisionFunc*)cvAlloc( sizeof(df[0]) ));
 
         df->rho = 0;
-        if( !train1( sample_count, var_count, samples, responses, 0, 0, temp_storage, alpha, df->rho ))
+        if( !train1( sample_count, var_count, samples, svm_type == ONE_CLASS ? 0 :
+            responses->data.i, 0, 0, temp_storage, alpha, df->rho ))
             EXIT;
-        cvReleaseMemStorage( &temp_storage );
 
         for( i = 0; i < sample_count; i++ )
             sv_count += fabs(alpha[i]) > 0;
@@ -1358,7 +1390,12 @@ bool CvSVM::train( const CvMat* _train_data, const CvMat* _responses,
                             sample_count*sizeof(temp_samples[0])));
         CV_CALL( temp_y = (char*)cvMemStorageAlloc( temp_storage, sample_count));
 
+        class_ranges[class_count] = 0;
         cvSortSamplesByClasses( samples, responses, class_ranges, 0 );
+        //check that while cross-validation there were the samples from all the classes
+        if( class_ranges[class_count] <= 0 )
+            CV_ERROR( CV_StsBadArg, "While cross-validation one or more of the classes have "
+            "been fell out of the sample. Try to enlarge <CvSVMParams::k_fold>" ); 
 
         if( svm_type == NU_SVC )
         {
@@ -1478,6 +1515,62 @@ bool CvSVM::train( const CvMat* _train_data, const CvMat* _responses,
         }
     }
 
+    ok = true;
+
+    __END__;
+
+    return ok;
+}
+
+bool CvSVM::train( const CvMat* _train_data, const CvMat* _responses,
+    const CvMat* _var_idx, const CvMat* _sample_idx, CvSVMParams _params )
+{
+    bool ok = false;
+    CvMat* responses = 0;
+    CvMemStorage* temp_storage = 0;
+    const float** samples = 0;
+    
+    CV_FUNCNAME( "CvSVM::train" );
+
+    __BEGIN__;
+
+    int svm_type, sample_count, var_count, sample_size;
+    int block_size = 1 << 16;
+    double* alpha;
+
+    clear();
+    CV_CALL( set_params( _params ));
+
+    svm_type = _params.svm_type;
+
+    /* Prepare training data and related parameters */
+    CV_CALL( cvPrepareTrainData( "CvSVM::train", _train_data, CV_ROW_SAMPLE,
+                                 svm_type != CvSVM::ONE_CLASS ? _responses : 0,
+                                 svm_type == CvSVM::C_SVC ||
+                                 svm_type == CvSVM::NU_SVC ? CV_VAR_CATEGORICAL :
+                                 CV_VAR_ORDERED, _var_idx, _sample_idx,
+                                 false, &samples, &sample_count, &var_count, &var_all,
+                                 &responses, &class_labels, &var_idx ));
+
+
+    sample_size = var_count*sizeof(samples[0][0]);
+
+    // make the storage block size large enough to fit all
+    // the temporary vectors and output support vectors.
+    block_size = MAX( block_size, sample_count*(int)sizeof(CvSVMKernelRow));
+    block_size = MAX( block_size, sample_count*2*(int)sizeof(double) + 1024 );
+    block_size = MAX( block_size, sample_size*2 + 1024 );
+
+    CV_CALL( storage = cvCreateMemStorage(block_size));
+    CV_CALL( temp_storage = cvCreateChildMemStorage(storage));
+    CV_CALL( alpha = (double*)cvMemStorageAlloc(temp_storage, sample_count*sizeof(double)));
+
+    create_kernel();
+    create_solver();
+
+    if( !do_train( svm_type, sample_count, var_count, samples, responses, temp_storage, alpha ))
+        EXIT;
+
     ok = true; // model has been trained succesfully
 
     __END__;
@@ -1494,6 +1587,292 @@ bool CvSVM::train( const CvMat* _train_data, const CvMat* _responses,
     return ok;
 }
 
+bool CvSVM::train_auto( const CvMat* _train_data, const CvMat* _responses,
+    const CvMat* _var_idx, const CvMat* _sample_idx, CvSVMParams _params, int k_fold,
+    CvParamGrid C_grid, CvParamGrid gamma_grid, CvParamGrid p_grid,
+    CvParamGrid nu_grid, CvParamGrid coef_grid, CvParamGrid degree_grid )
+{
+    bool ok = false;
+    CvMat* responses = 0;
+    CvMat* responses_local = 0;
+    CvMemStorage* temp_storage = 0;
+    const float** samples = 0;
+    const float** samples_local = 0;
+    
+    CV_FUNCNAME( "CvSVM::train_auto" );
+    __BEGIN__;
+
+    int svm_type, sample_count, var_count, sample_size;
+    int block_size = 1 << 16;
+    double* alpha;
+    int i, k;
+    CvRNG rng;
+
+    // all steps are logarithmic and must be > 1
+    double degree_step = 10, g_step = 10, coef_step = 10, C_step = 10, nu_step = 10, p_step = 10;
+    double gamma = 0, C = 0, degree = 0, coef = 0, p = 0, nu = 0;
+    double best_degree = 0, best_gamma = 0, best_coef = 0, best_C = 0, best_nu = 0, best_p = 0;
+    float min_error = FLT_MAX, error;
+
+    if( _params.svm_type == CvSVM::ONE_CLASS )
+    {
+        if(!train( _train_data, _responses, _var_idx, _sample_idx, _params ))
+            EXIT;
+        return true;
+    }
+
+    clear();
+
+    if( k_fold < 2 )
+        CV_ERROR( CV_StsBadArg, "Parameter <k_fold> must be > 1" );
+
+    CV_CALL(set_params( _params ));
+    svm_type = _params.svm_type;
+
+    // All the parameters except, possibly, <coef0> are positive.
+    // <coef0> is nonnegative
+    if( C_grid.step <= 1 )
+    {
+        C_grid.min_val = C_grid.max_val = params.C;
+        C_grid.step = 10;
+    }
+    else
+        CV_CALL(C_grid.check());
+
+    if( gamma_grid.step <= 1 )
+    {
+        gamma_grid.min_val = gamma_grid.max_val = params.gamma;
+        gamma_grid.step = 10;
+    }
+    else
+        CV_CALL(gamma_grid.check());
+
+    if( p_grid.step <= 1 )
+    {
+        p_grid.min_val = p_grid.max_val = params.p;
+        p_grid.step = 10;
+    }
+    else
+        CV_CALL(p_grid.check());
+
+    if( nu_grid.step <= 1 )
+    {
+        nu_grid.min_val = nu_grid.max_val = params.nu;
+        nu_grid.step = 10;
+    }
+    else
+        CV_CALL(nu_grid.check());
+
+    if( coef_grid.step <= 1 )
+    {
+        coef_grid.min_val = coef_grid.max_val = params.coef0;
+        coef_grid.step = 10;
+    }
+    else
+        CV_CALL(coef_grid.check());
+
+    if( degree_grid.step <= 1 )
+    {
+        degree_grid.min_val = degree_grid.max_val = params.degree;
+        degree_grid.step = 10;
+    }
+    else
+        CV_CALL(degree_grid.check());
+
+    // these parameters are not used:
+    if( params.kernel_type != CvSVM::POLY )
+        degree_grid.min_val = degree_grid.max_val = params.degree;
+    if( params.kernel_type == CvSVM::LINEAR )
+        gamma_grid.min_val = gamma_grid.max_val = params.gamma;
+    if( params.kernel_type != CvSVM::POLY && params.kernel_type != CvSVM::SIGMOID )
+        coef_grid.min_val = coef_grid.max_val = params.coef0;
+    if( svm_type == CvSVM::NU_SVC || svm_type == CvSVM::ONE_CLASS )
+        C_grid.min_val = C_grid.max_val = params.C;
+    if( svm_type == CvSVM::C_SVC || svm_type == CvSVM::EPS_SVR )
+        nu_grid.min_val = nu_grid.max_val = params.nu;
+    if( svm_type != CvSVM::EPS_SVR )
+        p_grid.min_val = p_grid.max_val = params.p;
+
+    CV_ASSERT( g_step > 1 && degree_step > 1 && coef_step > 1);
+    CV_ASSERT( p_step > 1 && C_step > 1 && nu_step > 1 );
+
+    /* Prepare training data and related parameters */
+    CV_CALL(cvPrepareTrainData( "CvSVM::train_auto", _train_data, CV_ROW_SAMPLE,
+                                 svm_type != CvSVM::ONE_CLASS ? _responses : 0,
+                                 svm_type == CvSVM::C_SVC ||
+                                 svm_type == CvSVM::NU_SVC ? CV_VAR_CATEGORICAL :
+                                 CV_VAR_ORDERED, _var_idx, _sample_idx,
+                                 false, &samples, &sample_count, &var_count, &var_all,
+                                 &responses, &class_labels, &var_idx ));
+
+    sample_size = var_count*sizeof(samples[0][0]);
+
+    // make the storage block size large enough to fit all
+    // the temporary vectors and output support vectors.
+    block_size = MAX( block_size, sample_count*(int)sizeof(CvSVMKernelRow));
+    block_size = MAX( block_size, sample_count*2*(int)sizeof(double) + 1024 );
+    block_size = MAX( block_size, sample_size*2 + 1024 );
+
+    CV_CALL(storage = cvCreateMemStorage(block_size));
+    CV_CALL(temp_storage = cvCreateChildMemStorage(storage));
+    CV_CALL(alpha = (double*)cvMemStorageAlloc(temp_storage, sample_count*sizeof(double)));
+
+    create_kernel();
+    create_solver();
+
+    {
+    const int testset_size = sample_count/k_fold;
+    const int trainset_size = sample_count - testset_size;
+    const int last_testset_size = sample_count - testset_size*(k_fold-1);
+    const int last_trainset_size = sample_count - last_testset_size;
+    const bool is_regression = (svm_type == EPS_SVR) || (svm_type == NU_SVR);
+
+    size_t resp_elem_size = CV_ELEM_SIZE(responses->type);
+    size_t size = 2*last_trainset_size*sizeof(samples[0]);
+
+    samples_local = (const float**) cvAlloc( size );
+    memset( samples_local, 0, size );
+
+    responses_local = cvCreateMat( 1, last_trainset_size, CV_MAT_TYPE(responses->type) );
+    cvZero( responses_local );
+
+    // randomly permute samples and responses
+    for( i = 0; i < sample_count; i++ )
+    {
+        int i1 = cvRandInt( &rng ) % sample_count;
+        int i2 = cvRandInt( &rng ) % sample_count;
+        const float* temp;
+        float t;
+        int y;
+
+        CV_SWAP( samples[i1], samples[i2], temp );
+        if( is_regression )
+            CV_SWAP( responses->data.fl[i1], responses->data.fl[i2], t );
+        else
+            CV_SWAP( responses->data.i[i1], responses->data.i[i2], y );
+    }
+
+    C = C_grid.min_val;
+    do
+    {
+      params.C = C;
+      gamma = gamma_grid.min_val;
+      do
+      {
+        params.gamma = gamma;
+        p = p_grid.min_val;
+        do
+        {
+          params.p = p;
+          nu = nu_grid.min_val;
+          do
+          {
+            params.nu = nu;
+            coef = coef_grid.min_val;
+            do
+            {
+              params.coef0 = coef;
+              degree = degree_grid.min_val;
+              do
+              {
+                params.degree = degree;
+
+                float** test_samples_ptr = (float**)samples;
+                uchar* true_resp = responses->data.ptr;
+                int test_size = testset_size;
+                int train_size = trainset_size;
+
+                error = 0;
+                for( k = 0; k < k_fold; k++ )
+                {
+                    memcpy( samples_local, samples, sizeof(samples[0])*test_size*k );
+                    memcpy( samples_local + test_size*k, test_samples_ptr + test_size,
+                        sizeof(samples[0])*(sample_count - testset_size*(k+1)) );
+
+                    memcpy( responses_local->data.ptr, responses->data.ptr, resp_elem_size*test_size*k );
+                    memcpy( responses_local->data.ptr + resp_elem_size*test_size*k,
+                        true_resp + resp_elem_size*test_size,
+                        sizeof(samples[0])*(sample_count - testset_size*(k+1)) );
+
+                    if( k == k_fold - 1 )
+                    {
+                        test_size = last_testset_size;
+                        train_size = last_trainset_size;
+                        responses_local->cols = last_trainset_size;
+                    }
+
+                    // Train SVM on <train_size> samples
+                    if( !do_train( svm_type, train_size, var_count,
+                        (const float**)samples_local, responses_local, temp_storage, alpha ) )
+                        EXIT;
+
+                    // Compute test set error on <test_size> samples
+                    CvMat s = cvMat( 1, var_count, CV_32FC1 );
+                    for( i = 0; i < test_size; i++, true_resp += resp_elem_size, test_samples_ptr++ )
+                    {
+                        float resp;
+                        s.data.fl = *test_samples_ptr;
+                        resp = predict( &s );
+                        error += is_regression ? powf( resp - *(float*)true_resp, 2 )
+                            : ((int)resp != *(int*)true_resp);
+                    }
+                }
+                if( min_error > error )
+                {
+                    min_error   = error;
+                    best_degree = degree;
+                    best_gamma  = gamma;
+                    best_coef   = coef;
+                    best_C      = C;
+                    best_nu     = nu;
+                    best_p      = p;
+                }
+                degree *= degree_grid.step;
+              }
+              while( degree < degree_grid.max_val );
+              coef *= coef_grid.step;
+            }
+            while( coef < coef_grid.max_val );
+            nu *= nu_grid.step;
+          }
+          while( nu < nu_grid.max_val );
+          p *= p_grid.step;
+        }
+        while( p < p_grid.max_val );
+        gamma *= gamma_grid.step;
+      }
+      while( gamma < gamma_grid.max_val );
+      C *= C_grid.step;
+    }
+    while( C < C_grid.max_val );
+    }
+
+    min_error /= (float) sample_count;
+
+    params.C      = best_C;
+    params.nu     = best_nu;
+    params.p      = best_p;
+    params.gamma  = best_gamma;
+    params.degree = best_degree;
+    params.coef0  = best_coef;
+
+    CV_CALL(ok = do_train( svm_type, sample_count, var_count, samples, responses, temp_storage, alpha ));
+ 
+    __END__;
+
+    delete solver;
+    solver = 0;
+    cvReleaseMemStorage( &temp_storage );
+    cvReleaseMat( &responses );
+    cvReleaseMat( &responses_local );
+    cvFree( &samples );
+    cvFree( &samples_local );
+
+    if( cvGetErrStatus() < 0 || !ok )
+        clear();
+
+    return ok;
+}
 
 float CvSVM::predict( const CvMat* sample ) const
 {
@@ -2050,12 +2429,12 @@ cvTrainSVM_CrossValidation( const CvMat* train_data, int tflag,
             const CvStatModelParams* cross_valid_params,
             const CvMat* comp_idx,
             const CvMat* sample_idx,
-            const CvParamLattice* degree_lattice,
-            const CvParamLattice* gamma_lattice,
-            const CvParamLattice* coef_lattice,
-            const CvParamLattice* C_lattice,
-            const CvParamLattice* nu_lattice,
-            const CvParamLattice* p_lattice )
+            const CvParamGrid* degree_grid,
+            const CvParamGrid* gamma_grid,
+            const CvParamGrid* coef_grid,
+            const CvParamGrid* C_grid,
+            const CvParamGrid* nu_grid,
+            const CvParamGrid* p_grid )
 {
     CvStatModel* svm = 0;
 
@@ -2107,106 +2486,106 @@ cvTrainSVM_CrossValidation( const CvMat* train_data, int tflag,
     svm_params.nu = svm_params.nu > 0 ? svm_params.nu : 1;
     svm_params.p = svm_params.p > 0 ? svm_params.p : 1;
 
-    if( degree_lattice )
+    if( degree_grid )
     {
-        if( !(degree_lattice->max_val == 0 && degree_lattice->min_val == 0 &&
-              degree_lattice->step == 0) )
+        if( !(degree_grid->max_val == 0 && degree_grid->min_val == 0 &&
+              degree_grid->step == 0) )
         {
-            if( degree_lattice->min_val > degree_lattice->max_val )
+            if( degree_grid->min_val > degree_grid->max_val )
                 CV_ERROR( CV_StsBadArg,
-                "low bound of lattice should be less then the upper one");
-            if( degree_lattice->step <= 1 )
-                CV_ERROR( CV_StsBadArg, "lattice step should be greater 1" );
-            degree_begin = degree_lattice->min_val;
-            degree_end   = degree_lattice->max_val;
-            degree_step  = degree_lattice->step;
+                "low bound of grid should be less then the upper one");
+            if( degree_grid->step <= 1 )
+                CV_ERROR( CV_StsBadArg, "grid step should be greater 1" );
+            degree_begin = degree_grid->min_val;
+            degree_end   = degree_grid->max_val;
+            degree_step  = degree_grid->step;
         }
     }
     else
         degree_begin = degree_end = svm_params.degree;
 
-    if( gamma_lattice )
+    if( gamma_grid )
     {
-        if( !(gamma_lattice->max_val == 0 && gamma_lattice->min_val == 0 &&
-              gamma_lattice->step == 0) )
+        if( !(gamma_grid->max_val == 0 && gamma_grid->min_val == 0 &&
+              gamma_grid->step == 0) )
         {
-            if( gamma_lattice->min_val > gamma_lattice->max_val )
+            if( gamma_grid->min_val > gamma_grid->max_val )
                 CV_ERROR( CV_StsBadArg,
-                "low bound of lattice should be less then the upper one");
-            if( gamma_lattice->step <= 1 )
-                CV_ERROR( CV_StsBadArg, "lattice step should be greater 1" );
-            g_begin = gamma_lattice->min_val;
-            g_end   = gamma_lattice->max_val;
-            g_step  = gamma_lattice->step;
+                "low bound of grid should be less then the upper one");
+            if( gamma_grid->step <= 1 )
+                CV_ERROR( CV_StsBadArg, "grid step should be greater 1" );
+            g_begin = gamma_grid->min_val;
+            g_end   = gamma_grid->max_val;
+            g_step  = gamma_grid->step;
         }
     }
     else
         g_begin = g_end = svm_params.gamma;
 
-    if( coef_lattice )
+    if( coef_grid )
     {
-        if( !(coef_lattice->max_val == 0 && coef_lattice->min_val == 0 &&
-              coef_lattice->step == 0) )
+        if( !(coef_grid->max_val == 0 && coef_grid->min_val == 0 &&
+              coef_grid->step == 0) )
         {
-            if( coef_lattice->min_val > coef_lattice->max_val )
+            if( coef_grid->min_val > coef_grid->max_val )
                 CV_ERROR( CV_StsBadArg,
-                "low bound of lattice should be less then the upper one");
-            if( coef_lattice->step <= 1 )
-                CV_ERROR( CV_StsBadArg, "lattice step should be greater 1" );
-            coef_begin = coef_lattice->min_val;
-            coef_end   = coef_lattice->max_val;
-            coef_step  = coef_lattice->step;
+                "low bound of grid should be less then the upper one");
+            if( coef_grid->step <= 1 )
+                CV_ERROR( CV_StsBadArg, "grid step should be greater 1" );
+            coef_begin = coef_grid->min_val;
+            coef_end   = coef_grid->max_val;
+            coef_step  = coef_grid->step;
         }
     }
     else
         coef_begin = coef_end = svm_params.coef0;
 
-    if( C_lattice )
+    if( C_grid )
     {
-        if( !(C_lattice->max_val == 0 && C_lattice->min_val == 0 && C_lattice->step == 0))
+        if( !(C_grid->max_val == 0 && C_grid->min_val == 0 && C_grid->step == 0))
         {
-            if( C_lattice->min_val > C_lattice->max_val )
+            if( C_grid->min_val > C_grid->max_val )
                 CV_ERROR( CV_StsBadArg,
-                "low bound of lattice should be less then the upper one");
-            if( C_lattice->step <= 1 )
-                CV_ERROR( CV_StsBadArg, "lattice step should be greater 1" );
-            C_begin = C_lattice->min_val;
-            C_end   = C_lattice->max_val;
-            C_step  = C_lattice->step;
+                "low bound of grid should be less then the upper one");
+            if( C_grid->step <= 1 )
+                CV_ERROR( CV_StsBadArg, "grid step should be greater 1" );
+            C_begin = C_grid->min_val;
+            C_end   = C_grid->max_val;
+            C_step  = C_grid->step;
         }
     }
     else
         C_begin = C_end = svm_params.C;
 
-    if( nu_lattice )
+    if( nu_grid )
     {
-        if(!(nu_lattice->max_val == 0 && nu_lattice->min_val == 0 && nu_lattice->step==0))
+        if(!(nu_grid->max_val == 0 && nu_grid->min_val == 0 && nu_grid->step==0))
         {
-            if( nu_lattice->min_val > nu_lattice->max_val )
+            if( nu_grid->min_val > nu_grid->max_val )
                 CV_ERROR( CV_StsBadArg,
-                "low bound of lattice should be less then the upper one");
-            if( nu_lattice->step <= 1 )
-                CV_ERROR( CV_StsBadArg, "lattice step should be greater 1" );
-            nu_begin = nu_lattice->min_val;
-            nu_end   = nu_lattice->max_val;
-            nu_step  = nu_lattice->step;
+                "low bound of grid should be less then the upper one");
+            if( nu_grid->step <= 1 )
+                CV_ERROR( CV_StsBadArg, "grid step should be greater 1" );
+            nu_begin = nu_grid->min_val;
+            nu_end   = nu_grid->max_val;
+            nu_step  = nu_grid->step;
         }
     }
     else
         nu_begin = nu_end = svm_params.nu;
 
-    if( p_lattice )
+    if( p_grid )
     {
-        if( !(p_lattice->max_val == 0 && p_lattice->min_val == 0 && p_lattice->step == 0))
+        if( !(p_grid->max_val == 0 && p_grid->min_val == 0 && p_grid->step == 0))
         {
-            if( p_lattice->min_val > p_lattice->max_val )
+            if( p_grid->min_val > p_grid->max_val )
                 CV_ERROR( CV_StsBadArg,
-                "low bound of lattice should be less then the upper one");
-            if( p_lattice->step <= 1 )
-                CV_ERROR( CV_StsBadArg, "lattice step should be greater 1" );
-            p_begin = p_lattice->min_val;
-            p_end   = p_lattice->max_val;
-            p_step  = p_lattice->step;
+                "low bound of grid should be less then the upper one");
+            if( p_grid->step <= 1 )
+                CV_ERROR( CV_StsBadArg, "grid step should be greater 1" );
+            p_begin = p_grid->min_val;
+            p_end   = p_grid->max_val;
+            p_step  = p_grid->step;
         }
     }
     else
