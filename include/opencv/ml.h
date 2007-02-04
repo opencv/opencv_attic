@@ -50,8 +50,6 @@
 #include <limits.h>
 
 #ifdef __cplusplus
-extern "C" {
-#endif
 
 /****************************************************************************************\
 *                               Main struct definitions                                  *
@@ -147,6 +145,33 @@ protected:
 /****************************************************************************************\
 *                                 Normal Bayes Classifier                                *
 \****************************************************************************************/
+
+/* The structure, representing the grid range of statmodel parameters.
+   It is used for optimizing statmodel accuracy by varying model parameters,
+   the accuracy estimate being computed by cross-validation.
+   The grid is logarithmic, so <step> must be greater then 1. */
+struct CV_EXPORTS CvParamGrid
+{
+    // SVM params type
+    enum { SVM_C=0, SVM_GAMMA=1, SVM_P=2, SVM_NU=3, SVM_COEF=4, SVM_DEGREE=5 };
+
+    CvParamGrid()
+    {
+        min_val = max_val = step = 0;
+    }
+    CvParamGrid( double _min_val, double _max_val, double log_step )
+    {
+        min_val = _min_val;
+        max_val = _max_val;
+        step = log_step;
+    }
+    //CvParamGrid( int param_id );
+    bool check() const;
+
+    double min_val;
+    double max_val;
+    double step;
+};
 
 class CV_EXPORTS CvNormalBayesClassifier : public CvStatModel
 {
@@ -401,6 +426,9 @@ public:
     // SVM kernel type
     enum { LINEAR=0, POLY=1, RBF=2, SIGMOID=3 };
 
+    // SVM params type
+    enum { C=0, GAMMA=1, P=2, NU=3, COEF=4, DEGREE=5 };
+
     CvSVM();
     virtual ~CvSVM();
 
@@ -411,11 +439,24 @@ public:
     virtual bool train( const CvMat* _train_data, const CvMat* _responses,
                         const CvMat* _var_idx=0, const CvMat* _sample_idx=0,
                         CvSVMParams _params=CvSVMParams() );
+    virtual bool train_auto( const CvMat* _train_data, const CvMat* _responses,
+        const CvMat* _var_idx, const CvMat* _sample_idx, CvSVMParams _params,
+        int k_fold = 10,
+        CvParamGrid C_grid      = get_default_grid(CvSVM::C),
+        CvParamGrid gamma_grid  = get_default_grid(CvSVM::GAMMA),
+        CvParamGrid p_grid      = get_default_grid(CvSVM::P),
+        CvParamGrid nu_grid     = get_default_grid(CvSVM::NU),
+        CvParamGrid coef_grid   = get_default_grid(CvSVM::COEF),
+        CvParamGrid degree_grid = get_default_grid(CvSVM::DEGREE) );
 
     virtual float predict( const CvMat* _sample ) const;
+
     virtual int get_support_vector_count() const;
     virtual const float* get_support_vector(int i) const;
+    virtual CvSVMParams get_params() const { return params; };
     virtual void clear();
+
+    static CvParamGrid get_default_grid( int param_id );
 
     virtual void write( CvFileStorage* storage, const char* name );
     virtual void read( CvFileStorage* storage, CvFileNode* node );
@@ -427,6 +468,8 @@ protected:
     virtual bool train1( int sample_count, int var_count, const float** samples,
                     const void* _responses, double Cp, double Cn,
                     CvMemStorage* _storage, double* alpha, double& rho );
+    virtual bool do_train( int svm_type, int sample_count, int var_count, const float** samples,
+                    const CvMat* _responses, CvMemStorage* _storage, double* alpha );
     virtual void create_kernel();
     virtual void create_solver();
 
@@ -446,24 +489,6 @@ protected:
     CvSVMSolver* solver;
     CvSVMKernel* kernel;
 };
-
-
-/* The function trains SVM model with optimal parameters, obtained by using cross-validation.
-The parameters to be estimated should be indicated by setting theirs values to FLT_MAX.
-The optimal parameters are saved in <model_params> */
-/*CVAPI(CvStatModel*)
-cvTrainSVM_CrossValidation( const CvMat* train_data, int tflag,
-            const CvMat* responses,
-            CvStatModelParams* model_params,
-            const CvStatModelParams* cross_valid_params,
-            const CvMat* comp_idx   CV_DEFAULT(0),
-            const CvMat* sample_idx CV_DEFAULT(0),
-            const CvParamLattice* degree_lattice CV_DEFAULT(0),
-            const CvParamLattice* gamma_lattice  CV_DEFAULT(0),
-            const CvParamLattice* coef0_lattice  CV_DEFAULT(0),
-            const CvParamLattice* C_lattice      CV_DEFAULT(0),
-            const CvParamLattice* nu_lattice     CV_DEFAULT(0),
-            const CvParamLattice* p_lattice      CV_DEFAULT(0) );*/
 
 /****************************************************************************************\
 *                              Expectation - Maximization                                *
@@ -1468,8 +1493,6 @@ CVAPI(void) cvCreateTestSet( int type, CvMat** samples,
               for i < j if lower_to_upper = 0 */
 CVAPI(void) cvCompleteSymm( CvMat* matrix, int lower_to_upper );
 
-#ifdef __cplusplus
-}
 #endif
 
 #endif /*__ML_H__*/
