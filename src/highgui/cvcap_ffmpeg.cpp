@@ -655,10 +655,10 @@ CV_IMPL CvVideoWriter* cvCreateVideoWriter( const char * filename, int fourcc,
 	//	printf("Using codec %s\n", codec->name);
     writer->outbuf = NULL;
 
-	// TODO: intelligently determine the size of the conversion buffer
     if (!(writer->oc->oformat->flags & AVFMT_RAWPICTURE)) {
         /* allocate output buffer */
-        writer->outbuf_size = 2000000;
+		/* assume we will never get codec output with more than 4 bytes per pixel... */
+		writer->outbuf_size = frameSize.width*frameSize.height*4; 
         writer->outbuf = (uint8_t *) av_malloc(writer->outbuf_size);
     }
 
@@ -791,22 +791,22 @@ CV_IMPL int cvWriteFrame( CvVideoWriter * writer, const IplImage * image )
 	// check if buffer sizes match, i.e. image has expected format (size, channels, bitdepth, alignment)
 	assert (image->imageSize == avpicture_get_size( mywriter->input_pix_fmt, image->width, image->height ));
 
-	if (c->pix_fmt != PIX_FMT_BGR24 ) {
+	if ( c->pix_fmt != mywriter->input_pix_fmt ) {
 		assert( mywriter->input_picture );
 		// let input_picture point to the raw data buffer of 'image'
 		avpicture_fill((AVPicture *)mywriter->input_picture, (uint8_t *) image->imageData, 
-				PIX_FMT_BGR24, image->width, image->height);
+				mywriter->input_pix_fmt, image->width, image->height);
 
 		// convert to the color format needed by the codec
 		if( img_convert((AVPicture *)mywriter->picture, c->pix_fmt,
-					(AVPicture *)mywriter->input_picture, PIX_FMT_BGR24, 
+					(AVPicture *)mywriter->input_picture, mywriter->input_pix_fmt, 
 					image->width, image->height) < 0){
 			CV_ERROR(CV_StsUnsupportedFormat, "FFMPEG::img_convert pixel format conversion from BGR24 not handled");
 		}
 	}
 	else{
 		avpicture_fill((AVPicture *)mywriter->picture, (uint8_t *) image->imageData,
-				PIX_FMT_BGR24, image->width, image->height);
+				mywriter->input_pix_fmt, image->width, image->height);
 	}
 
 	ret = icv_av_write_frame_FFMPEG( mywriter->oc, mywriter->video_st, mywriter->outbuf, mywriter->outbuf_size, mywriter->picture);
