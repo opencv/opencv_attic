@@ -1146,7 +1146,9 @@ static int read_frame_v4l2(CvCaptureCAM_V4L* capture)
         /* fall through */
 
       default:
-        errno_exit ("VIDIOC_DQBUF");
+        /* display the error and stop processing */
+        perror ("VIDIOC_DQBUF");
+        return 1;
       }
     }
 
@@ -1155,7 +1157,7 @@ static int read_frame_v4l2(CvCaptureCAM_V4L* capture)
    capture->bufferIndex = buf.index;
 
    if (-1 == xioctl (capture->deviceHandle, VIDIOC_QBUF, &buf))
-     errno_exit ("VIDIOC_QBUF");
+     perror ("VIDIOC_QBUF");
 
    return 1;
 }
@@ -1190,7 +1192,9 @@ static void mainloop_v4l2(CvCaptureCAM_V4L* capture)
 
                         if (0 == r) {
                                 fprintf (stderr, "select timeout\n");
-//                                exit (EXIT_FAILURE);
+
+                                /* end the infinite loop */
+                                break;
                         }
 
       if (read_frame_v4l2 (capture))
