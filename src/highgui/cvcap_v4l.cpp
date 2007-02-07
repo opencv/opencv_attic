@@ -1237,19 +1237,13 @@ static int icvGrabFrameCAM_V4L(CvCaptureCAM_V4L* capture) {
             errno_exit ("VIDIOC_QBUF");
         }
 
-        /* enable the stream only one time */
-        static int is_stream_on = 0;
-        if (is_stream_on == 0) {
-            /* not enabled, so enable it */
-            capture->type = V4L2_BUF_TYPE_VIDEO_CAPTURE;
-            if (-1 == xioctl (capture->deviceHandle, VIDIOC_STREAMON,
-                              &capture->type)) {
-                /* error enabling the stream */
-                errno_exit ("VIDIOC_STREAMON");
-            }
-            is_stream_on = 1;
+        /* enable the streaming */
+        capture->type = V4L2_BUF_TYPE_VIDEO_CAPTURE;
+        if (-1 == xioctl (capture->deviceHandle, VIDIOC_STREAMON,
+                          &capture->type)) {
+            /* error enabling the stream */
+            errno_exit ("VIDIOC_STREAMON");
         }
-
       } else
 #endif /* HAVE_CAMV4L2 */
       {
