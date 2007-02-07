@@ -715,8 +715,6 @@ void v4l2_scan_controls(CvCaptureCAM_V4L* capture)
         
       perror ("VIDIOC_QUERYCTRL");
 
-      exit (EXIT_FAILURE);
-
     }
 
   }
@@ -779,8 +777,6 @@ void v4l2_scan_controls(CvCaptureCAM_V4L* capture)
         break;
 
       perror ("VIDIOC_QUERYCTRL");
-
-      exit (EXIT_FAILURE);
 
     }
 
