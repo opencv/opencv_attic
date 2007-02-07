@@ -1124,85 +1124,79 @@ CvCapture * cvCaptureFromCAM_V4L (int index)
 
 #ifdef HAVE_CAMV4L2
 
-static int read_frame_v4l2(CvCaptureCAM_V4L* capture)
-{
-        struct v4l2_buffer buf;
+static int read_frame_v4l2(CvCaptureCAM_V4L* capture) {
+    struct v4l2_buffer buf;
 
+    CLEAR (buf);
 
-        CLEAR (buf);
+    buf.type = V4L2_BUF_TYPE_VIDEO_CAPTURE;
+    buf.memory = V4L2_MEMORY_MMAP;
 
-        buf.type = V4L2_BUF_TYPE_VIDEO_CAPTURE;
-        buf.memory = V4L2_MEMORY_MMAP;
+    if (-1 == xioctl (capture->deviceHandle, VIDIOC_DQBUF, &buf)) {
+        switch (errno) {
+        case EAGAIN:
+            return 0;
 
-                if (-1 == xioctl (capture->deviceHandle, VIDIOC_DQBUF, &buf)) {
-//        errno_exit ("VIDIOC_DQBUF");
-                        switch (errno) {
-                        case EAGAIN:
-                                return 0;
+        case EIO:
+            /* Could ignore EIO, see spec. */
 
-      case EIO:
-        /* Could ignore EIO, see spec. */
+            /* fall through */
 
-        /* fall through */
-
-      default:
-        /* display the error and stop processing */
-        perror ("VIDIOC_DQBUF");
-        return 1;
-      }
-    }
+        default:
+            /* display the error and stop processing */
+            perror ("VIDIOC_DQBUF");
+            return 1;
+        }
+   }
 
    assert(buf.index < capture->req.count);
    
    capture->bufferIndex = buf.index;
 
    if (-1 == xioctl (capture->deviceHandle, VIDIOC_QBUF, &buf))
-     perror ("VIDIOC_QBUF");
+       perror ("VIDIOC_QBUF");
 
    return 1;
 }
 
-static void mainloop_v4l2(CvCaptureCAM_V4L* capture)
-{
-  unsigned int count;
+static void mainloop_v4l2(CvCaptureCAM_V4L* capture) {
+    unsigned int count;
 
-        count = 1;
+    count = 1;
 
-        while (count-- > 0) {
-                for (;;) {
-                        fd_set fds;
-                        struct timeval tv;
-                        int r;
+    while (count-- > 0) {
+        for (;;) {
+            fd_set fds;
+            struct timeval tv;
+            int r;
 
-                        FD_ZERO (&fds);
-                        FD_SET (capture->deviceHandle, &fds);
+            FD_ZERO (&fds);
+            FD_SET (capture->deviceHandle, &fds);
 
-                        /* Timeout. */
-                        tv.tv_sec = 2;
-                        tv.tv_usec = 0;
+            /* Timeout. */
+            tv.tv_sec = 2;
+            tv.tv_usec = 0;
 
-                        r = select (capture->deviceHandle+1, &fds, NULL, NULL, &tv);
+            r = select (capture->deviceHandle+1, &fds, NULL, NULL, &tv);
 
-                        if (-1 == r) {
-                                if (EINTR == errno)
-                                        continue;
+            if (-1 == r) {
+                if (EINTR == errno)
+                    continue;
 
-                                errno_exit ("select");
-                        }
+                errno_exit ("select");
+            }
 
-                        if (0 == r) {
-                                fprintf (stderr, "select timeout\n");
+            if (0 == r) {
+                fprintf (stderr, "select timeout\n");
 
-                                /* end the infinite loop */
-                                break;
-                        }
+                /* end the infinite loop */
+                break;
+            }
 
-      if (read_frame_v4l2 (capture))
-                                break;
-  
-      /* EAGAIN - continue select loop. */
-                }
+            if (read_frame_v4l2 (capture))
+                break;
         }
+    }
 }
 
 #endif /* HAVE_CAMV4L2 */
