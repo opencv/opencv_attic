@@ -1183,7 +1183,7 @@ static void mainloop_v4l2(CvCaptureCAM_V4L* capture) {
                 if (EINTR == errno)
                     continue;
 
-                errno_exit ("select");
+                perror ("select");
             }
 
             if (0 == r) {
