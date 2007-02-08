@@ -1216,7 +1216,7 @@ static int icvGrabFrameCAM_V4L(CvCaptureCAM_V4L* capture) {
 
    if (capture->FirstCapture) { 
       /* Some general initialization must take place the first time through */
-      capture->FirstCapture = 0;
+
       /* This is just a technicality, but all buffers must be filled up before any
          staggered SYNC is applied.  SO, filler up. (see V4L HowTo) */
 
@@ -1238,8 +1238,10 @@ static int icvGrabFrameCAM_V4L(CvCaptureCAM_V4L* capture) {
           buf.memory      = V4L2_MEMORY_MMAP;
           buf.index       = (unsigned long)capture->bufferIndex;
 
-          if (-1 == xioctl (capture->deviceHandle, VIDIOC_QBUF, &buf))
-            errno_exit ("VIDIOC_QBUF");
+          if (-1 == xioctl (capture->deviceHandle, VIDIOC_QBUF, &buf)) {
+              perror ("VIDIOC_QBUF");
+              return 0;
+          }
         }
 
         /* enable the streaming */
@@ -1247,7 +1249,8 @@ static int icvGrabFrameCAM_V4L(CvCaptureCAM_V4L* capture) {
         if (-1 == xioctl (capture->deviceHandle, VIDIOC_STREAMON,
                           &capture->type)) {
             /* error enabling the stream */
-            errno_exit ("VIDIOC_STREAMON");
+            perror ("VIDIOC_STREAMON");
+            return 0;
         }
       } else
 #endif /* HAVE_CAMV4L2 */
@@ -1269,6 +1272,9 @@ static int icvGrabFrameCAM_V4L(CvCaptureCAM_V4L* capture) {
         }
       
       }
+
+      /* preparation is ok */
+      capture->FirstCapture = 0;
    }
 
 #ifdef HAVE_CAMV4L2
