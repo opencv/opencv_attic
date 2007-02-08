@@ -332,15 +332,6 @@ CvCaptureVTable captureCAM_V4L_vtable =
     (CvCaptureGetDescriptionFunc)0
 };
 
-static void
-errno_exit                      (const char *           s)
-{
-        fprintf (stderr, "%s error %d, %s\n",
-                 s, errno, strerror (errno));
-
-        exit (EXIT_FAILURE);
-}
-
 #ifdef HAVE_CAMV4L2
 
 // IOCTL handling for V4L2
