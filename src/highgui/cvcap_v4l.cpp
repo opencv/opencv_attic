@@ -564,17 +564,20 @@ int autosetup_capture_mode_v4l2(CvCaptureCAM_V4L* capture)
   else
   if (try_palette_v4l2(capture, V4L2_PIX_FMT_SN9C10X) == 0)
   {
-    PALETTE_SN9C10X = 1;
-
     CLEAR (capture->compr);
-    if (-1 == xioctl (capture->deviceHandle, VIDIOC_G_JPEGCOMP, &capture->compr))
-      errno_exit ("VIDIOC_G_JPEGCOMP");
+    if (-1 == xioctl (capture->deviceHandle, VIDIOC_G_JPEGCOMP, &capture->compr)) {
+        perror ("VIDIOC_G_JPEGCOMP");
+        return -1;
+    }
          
     capture->compr.quality = 0;
 
-    if (-1 == xioctl (capture->deviceHandle, VIDIOC_S_JPEGCOMP, &capture->compr))
-         errno_exit ("VIDIOC_S_JPEGCOMP");
+    if (-1 == xioctl (capture->deviceHandle, VIDIOC_S_JPEGCOMP, &capture->compr)) {
+        perror ("VIDIOC_S_JPEGCOMP");
+        return -1;
+    }
 
+    PALETTE_SN9C10X = 1;
   } else
   if (try_palette_v4l2(capture, V4L2_PIX_FMT_SBGGR8) == 0)
   {
