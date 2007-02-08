@@ -890,11 +890,12 @@ static int _capture_V4L2 (CvCaptureCAM_V4L *capture, char *deviceName)
        if (EINVAL == errno)
        {
          fprintf (stderr, "%s does not support memory mapping\n", deviceName);
-
-         exit (EXIT_FAILURE);
        } else {
-         errno_exit ("VIDIOC_REQBUFS");
+         perror ("VIDIOC_REQBUFS");
        }
+       /* free capture, and returns an error code */
+       icvCloseCAM_V4L (capture);
+       return -1;
    }
 
    if (capture->req.count < 2)
