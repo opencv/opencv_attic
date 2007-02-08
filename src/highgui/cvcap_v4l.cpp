@@ -2663,8 +2663,9 @@ static void icvCloseCAM_V4L( CvCaptureCAM_V4L* capture ){
 
        for (unsigned int n_buffers = 0; n_buffers < capture->req.count; ++n_buffers)
        {
-         if (-1 == munmap (capture->buffers[n_buffers].start, capture->buffers[n_buffers].length))
-           errno_exit ("munmap");
+           if (-1 == munmap (capture->buffers[n_buffers].start, capture->buffers[n_buffers].length)) {
+               perror ("munmap");
+           }
        }
 
      }
