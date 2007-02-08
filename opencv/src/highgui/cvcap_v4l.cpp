@@ -890,11 +890,13 @@ static int _capture_V4L2 (CvCaptureCAM_V4L *capture, char *deviceName)
        return -1;
    }
 
-   if (capture->req.count < 2)
+   if (capture->req.count < 4)
    {
        fprintf (stderr, "Insufficient buffer memory on %s\n", deviceName);
 
-       exit (EXIT_FAILURE);
+       /* free capture, and returns an error code */
+       icvCloseCAM_V4L (capture);
+       return -1;
    }
 
    for (n_buffers = 0; n_buffers < capture->req.count; ++n_buffers)
