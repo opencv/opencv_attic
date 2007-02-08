@@ -842,8 +842,8 @@ static int _capture_V4L2 (CvCaptureCAM_V4L *capture, char *deviceName)
        if (-1 == xioctl (capture->deviceHandle, VIDIOC_ENUMINPUT, &capture->inp))
        {
          fprintf (stderr, "HIGHGUI ERROR: V4L2: Aren't able to set channel number\n");
-     
-         exit (EXIT_FAILURE);
+         icvCloseCAM_V4L (capture);
+         return -1;
        }
    } /* End if */
 
