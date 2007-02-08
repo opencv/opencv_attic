@@ -617,7 +617,7 @@ int autosetup_capture_mode_v4l(CvCaptureCAM_V4L* capture)
       //printf("negotiated palette YUV420P\n");
   }
   else {
-	fprintf(stderr, "HIGHGUI ERROR: V4L2: Pixel format of incoming image is unsupported by OpenCV\n");
+	fprintf(stderr, "HIGHGUI ERROR: V4L: Pixel format of incoming image is unsupported by OpenCV\n");
     icvCloseCAM_V4L(capture);
     return -1;
   }
