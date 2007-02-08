@@ -2192,8 +2192,11 @@ static double icvGetPropertyCAM_V4L (CvCaptureCAM_V4L* capture,
 
       CLEAR (capture->form);
       capture->form.type = V4L2_BUF_TYPE_VIDEO_CAPTURE;
-      if (-1 == xioctl (capture->deviceHandle, VIDIOC_G_FMT, &capture->form))
-          errno_exit ("VIDIOC_G_FMT");
+      if (-1 == xioctl (capture->deviceHandle, VIDIOC_G_FMT, &capture->form)) {
+          /* display an error message, and return an error code */
+          perror ("VIDIOC_G_FMT");
+          return -1;
+      }
 
       switch (property_id) {
       case CV_CAP_PROP_FRAME_WIDTH:
