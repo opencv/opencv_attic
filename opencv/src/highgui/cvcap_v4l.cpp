@@ -915,8 +915,13 @@ static int _capture_V4L2 (CvCaptureCAM_V4L *capture, char *deviceName)
        buf.memory = V4L2_MEMORY_MMAP;
        buf.index = n_buffers;
 
-       if (-1 == xioctl (capture->deviceHandle, VIDIOC_QUERYBUF, &buf))
-         errno_exit ("VIDIOC_QUERYBUF");
+       if (-1 == xioctl (capture->deviceHandle, VIDIOC_QUERYBUF, &buf)) {
+           perror ("VIDIOC_QUERYBUF");
+       
+           /* free capture, and returns an error code */
+           icvCloseCAM_V4L (capture);
+           return -1;
+       }
 
        capture->buffers[n_buffers].length = buf.length;
        capture->buffers[n_buffers].start =
@@ -926,8 +931,13 @@ static int _capture_V4L2 (CvCaptureCAM_V4L *capture, char *deviceName)
                MAP_SHARED /* recommended */,
                capture->deviceHandle, buf.m.offset);
 
-       if (MAP_FAILED == capture->buffers[n_buffers].start)
-         errno_exit ("mmap");
+       if (MAP_FAILED == capture->buffers[n_buffers].start) {
+           perror ("mmap");
+       
+           /* free capture, and returns an error code */
+           icvCloseCAM_V4L (capture);
+           return -1;
+       }
    }
 
    /* Set up Image data */
