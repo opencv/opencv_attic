@@ -85,7 +85,7 @@ if __name__ == '__main__':
         highgui.cvSetCaptureProperty (capture,
                                       highgui.CV_CAP_PROP_FRAME_WIDTH, 320)
         highgui.cvSetCaptureProperty (capture,
-                                      highgui.CV_CAP_PROP_FRAME_HEIGHT,240)
+                                      highgui.CV_CAP_PROP_FRAME_HEIGHT, 240)
     else:
         # we have an argument on the command line,
         # we can assume this is a file name, so open it
@@ -148,7 +148,7 @@ if __name__ == '__main__':
         cv.cvCalcHist (hue_roi, hist, 0, mask_roi)
 
         # extract the min and max value of the histogram
-        min_val, max_val = cv.cvGetMinMaxHistValue (hist, None, None)
+        min_val, max_val, min_idx, max_idx = cv.cvGetMinMaxHistValue (hist)
 
         # compute the scale factor
         if max_val > 0:
