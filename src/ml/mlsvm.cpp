@@ -1733,7 +1733,7 @@ bool CvSVM::train_auto( const CvMat* _train_data, const CvMat* _responses,
     samples_local = (const float**) cvAlloc( size );
     memset( samples_local, 0, size );
 
-    responses_local = cvCreateMat( 1, last_trainset_size, CV_MAT_TYPE(responses->type) );
+    responses_local = cvCreateMat( 1, trainset_size, CV_MAT_TYPE(responses->type) );
     cvZero( responses_local );
 
     // randomly permute samples and responses
