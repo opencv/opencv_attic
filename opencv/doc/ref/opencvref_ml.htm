@@ -684,7 +684,7 @@ structure.</p>
 <pre>
 train_auto( const CvMat* _train_data, const CvMat* _responses,
         const CvMat* _var_idx, const CvMat* _sample_idx,
-        CvSVMParams _params, int k_fold = 10,
+        CvSVMParams params, int k_fold = 10,
         CvParamGrid C_grid      = get_default_grid(CvSVM::C),
         CvParamGrid gamma_grid  = get_default_grid(CvSVM::GAMMA),
         CvParamGrid p_grid      = get_default_grid(CvSVM::P),
@@ -724,6 +724,16 @@ but there is no idea of the corresponding grid, one may call the function
 <a href="#decl_CvSVM_get_default_grid">CvSVM::get_default_grid</a>.
 In order to generate a grid, say,
 for <em>gamma</em>, call <code>CvSVM::get_default_grid(CvSVM::GAMMA)</code>.
+</p>
+<p>
+This function works for the case of classification 
+(<code>params.svm_type=CvSVM::C_SVC</code> or
+<code>params.svm_type=CvSVM::NU_SVC</code>) as well as for the regression
+(<code>params.svm_type=CvSVM::EPS_SVR </code> or
+<code>params.svm_type=CvSVM::NU_SVR</code>). If
+<code>params.svm_type=CvSVM::ONE_CLASS</code>, no
+optimization is made and usual SVM with
+specified in <code>params</code> parameters is executed.
 </p>
 
 <hr><h3><a name="decl_CvSVM_get_default_grid">CvSVM::get_default_grid</a></h3>
