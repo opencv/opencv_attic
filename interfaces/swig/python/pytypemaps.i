@@ -349,49 +349,50 @@
  * From Python, the array of CvArr can be a tuple.
  */
 %typemap(in) (CvArr ** INPUT) (
-	CvArr * one_image=NULL, 
-	bool free_one_arg=false, 
-	CvArr ** many_images=NULL, 
-	bool *free_many_args=NULL, 
-	int nimages=0 ) {
+    CvArr * one_image=NULL, 
+    bool free_one_arg=false, 
+    CvArr ** many_images=NULL, 
+    bool *free_many_args=NULL, 
+    int nimages=0 ) {
 
     /* first, check if this is just one CvArr */
     /* if this is just one CvArr * one_image will receive it */
-	if( (one_image = PyObject_to_CvArr( $input, &free_one_arg )) ){
-		$1 = &one_image;
-	}
+    if( (one_image = PyObject_to_CvArr( $input, &free_one_arg )) ){
+        $1 = &one_image;
+    }
     else if PyTuple_Check ($input) {
-		/* This is a tuple, so we need to test each element and pass
-	   		them to the called function */
+        /* This is a tuple, so we need to test each element and pass
+            them to the called function */
 
-	int i;
+        int i;
 
-	/* get the size of the tuple */
-	nimages = PyTuple_Size ($input);
+        /* get the size of the tuple */
+        nimages = PyTuple_Size ($input);
 
-	/* allocate the necessary place */
-	many_images = (CvArr **)malloc (nimages * sizeof (CvArr *));
-	free_many_args = (bool *)malloc(nimages * sizeof(bool));
+        /* allocate the necessary place */
+        many_images = (CvArr **)malloc (nimages * sizeof (CvArr *));
+        free_many_args = (bool *)malloc(nimages * sizeof(bool));
 
-	for (i = 0; i < nimages; i++) {
+        for (i = 0; i < nimages; i++) {
 
-	    /* convert the current tuple element to a CvArr *, and
-	       store to many_images [i] */
-		many_images[i] = PyObject_to_CvArr(PyTuple_GetItem ($input, i), free_many_args+i);
+            /* convert the current tuple element to a CvArr *, and
+               store to many_images [i] */
+            many_images[i] = PyObject_to_CvArr (PyTuple_GetItem ($input, i),
+                                                free_many_args+i);
 
-	    /* check that the current item is a correct type */
-	    if(!many_images[i]) {
-			/* incorrect ! */
-			SWIG_fail;
-	    }
-	}
+            /* check that the current item is a correct type */
+            if(!many_images[i]) {
+                /* incorrect ! */
+                SWIG_fail;
+            }
+        }
 
-	/* what to give to the called function */
-	$1 = many_images;
+        /* what to give to the called function */
+        $1 = many_images;
 
     } else {
-		/* not a CvArr *, not a tuple, this is wrong */
-		SWIG_fail;
+        /* not a CvArr *, not a tuple, this is wrong */
+        SWIG_fail;
     }
 }
 %apply CvArr ** INPUT {CvArr ** image};
