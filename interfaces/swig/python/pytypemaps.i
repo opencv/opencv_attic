@@ -355,12 +355,8 @@
     bool *free_many_args=NULL, 
     int nimages=0 ) {
 
-    /* first, check if this is just one CvArr */
-    /* if this is just one CvArr * one_image will receive it */
-    if( (one_image = PyObject_to_CvArr( $input, &free_one_arg )) ){
-        $1 = &one_image;
-    }
-    else if PyTuple_Check ($input) {
+    /* first, check if this is a tuple */
+    if PyTuple_Check ($input) {
         /* This is a tuple, so we need to test each element and pass
             them to the called function */
 
@@ -390,11 +386,17 @@
         /* what to give to the called function */
         $1 = many_images;
 
+    } else if((one_image = PyObject_to_CvArr( $input, &free_one_arg ))){
+
+        /* this is just one CvArr *, so one_image will receive it */
+        $1 = &one_image;
+
     } else {
         /* not a CvArr *, not a tuple, this is wrong */
         SWIG_fail;
     }
 }
+%apply CvArr ** INPUT {CvArr ** img};
 %apply CvArr ** INPUT {CvArr ** image};
 %apply CvArr ** INPUT {CvArr ** arr};
 %apply CvArr ** INPUT {CvArr ** vects};
@@ -416,6 +418,7 @@
 	}
 
 }
+%apply CvArr ** FREEARG {CvArr ** img};
 %apply CvArr ** FREEARG {CvArr ** image};
 %apply CvArr ** FREEARG {CvArr ** arr};
 %apply CvArr ** FREEARG {CvArr ** vects};
