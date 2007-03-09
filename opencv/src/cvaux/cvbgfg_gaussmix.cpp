@@ -140,7 +140,7 @@ cvCreateGaussianBGModel( IplImage* first_frame, CvGaussBGStatModelParams* parame
     
     double var_init;
     CvGaussBGStatModelParams params;
-    int i, j, k, n, m, p;
+    int i, j, k, m, n;
     
     //init parameters
     if( parameters == NULL )
@@ -186,10 +186,12 @@ cvCreateGaussianBGModel( IplImage* first_frame, CvGaussBGStatModelParams* parame
         (CvGaussBGValues*)cvAlloc( sizeof(CvGaussBGValues)*params.n_gauss*
         (first_frame->width*first_frame->height + 128)));
     
-    for( i = 0, p = 0, n = 0; i < first_frame->height; i++ )
+    for( i = 0, n = 0; i < first_frame->height; i++ )
     {
         for( j = 0; j < first_frame->width; j++, n++ )
         {
+            const int p = i*first_frame->widthStep+j*first_frame->nChannels;
+
             bg_model->g_point[n].g_values =
                 bg_model->g_point[0].g_values + n*params.n_gauss;
             bg_model->g_point[n].g_values[0].weight = 1;    //the first value seen has weight one
@@ -208,7 +210,6 @@ cvCreateGaussianBGModel( IplImage* first_frame, CvGaussBGStatModelParams* parame
                     bg_model->g_point[n].g_values[k].mean[m] = 0;
                 }
             }
-            p += first_frame->nChannels;
         }
     }
     
@@ -264,21 +265,20 @@ icvReleaseGaussianBGModel( CvGaussBGModel** _bg_model )
 static int CV_CDECL
 icvUpdateGaussianBGModel( IplImage* curr_frame, CvGaussBGModel*  bg_model )
 {
-    int i, j, k;
+    int i, j, k, n;
     int region_count = 0;
     CvSeq *first_seq = NULL, *prev_seq = NULL, *seq = NULL;
     
     bg_model->countFrames++;
     
-    for( i = 0; i < curr_frame->height; i++ )
+    for( i = 0, n = 0; i < curr_frame->height; i++ )
     {
-        for( j = 0; j < curr_frame->width; j++ )
+        for( j = 0; j < curr_frame->width; j++, n++ )
         {
             int match[CV_BGFG_MOG_MAX_NGAUSSIANS];
             double sort_key[CV_BGFG_MOG_MAX_NGAUSSIANS];
             const int nChannels = curr_frame->nChannels;
-            const int n = i*curr_frame->widthStep+j;
-            const int p = n*curr_frame->nChannels;
+            const int p = curr_frame->widthStep*i+j*nChannels;
             
             // A few short cuts
             CvGaussBGPoint* g_point = &bg_model->g_point[n];
