@@ -17,9 +17,9 @@ if not works.check_files(REQUIRED,TESTNAME):
 	sys.exit(77)
 
 # import the necessary things for OpenCV
-import opencv
-from opencv.highgui import *
-from opencv.cv      import *
+import python	
+from python.highgui import *
+from python.cv      import *
 
 # some definitions
 win_name = "testing..."
@@ -31,7 +31,7 @@ cvNamedWindow(win_name,CV_WINDOW_AUTOSIZE)
 # create our trackbar
 cvCreateTrackbar( bar_name, win_name, 127, 255, 0 )
 
-# trackbar pos must be 127, we set it here __^__
+# trackbar pos must be 127
 if cvGetTrackbarPos( bar_name, win_name ) != 127:
 	print "(ERROR) cvGetTrackbarPos() returned wrong value (!=127)."
 	sys.exit(1)

@@ -256,13 +256,15 @@ static int icvOpenFile_QT_Movie (CvCapture_QT_Movie * capture, const char * file
 static int icvClose_QT_Movie (CvCapture_QT_Movie * capture)
 {
 	OPENCV_ASSERT (capture,          "icvClose_QT_Movie", "'capture' is a NULL-pointer");
-	OPENCV_ASSERT (capture->myMovie, "icvClose_QT_Movie", "invalid Movie handle");
 	
 	// deallocate and free resources
-	cvReleaseImage       (& capture->image_bgr);
-	cvReleaseImageHeader (& capture->image_rgb);
-	DisposeGWorld        (capture->myGWorld);
-	DisposeMovie         (capture->myMovie);
+	if (capture->myMovie)
+	{
+		cvReleaseImage       (& capture->image_bgr);
+		cvReleaseImageHeader (& capture->image_rgb);
+		DisposeGWorld        (capture->myGWorld);
+		DisposeMovie         (capture->myMovie);
+	}
 	
 	// okay, that's it
 	return 1;

@@ -1,4 +1,5 @@
 #! /usr/bin/env python
+
 """
 This script will test highgui's InitSystem function
 ATTENTION: This test doesn't do much, yet, but cvInitSystem
@@ -17,13 +18,13 @@ import works
 if not works.check_files(REQUIRED, TESTNAME):
 	sys.exit(77)
 
+print sys.path
 
 # import the necessary things for OpenCV
-import opencv
-from opencv import highgui
+import python
+from python import highgui
 
 # try to initialize the highgui system
-# TODO: checken wie ich ein "char *" ueübergebe...
 # res = highgui.cvInitSystem(globals["0,characs)
 # if res != 0:
 #	sys.exit(1)
@@ -33,4 +34,3 @@ works.set_file(TESTNAME)
 
 # return 0 ('PASS')
 sys.exit(0)
-

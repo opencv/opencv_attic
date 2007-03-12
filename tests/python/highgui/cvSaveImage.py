@@ -8,28 +8,30 @@ TESTNAME = "cvSaveImage"
 REQUIRED = ["cvLoadImagejpg"]
 
 #needed for sys.exit(int), filehandling and .works file checks
-import sys
 import os
+import sys
 import works
+
+# path to imagefiles we need
+PREFIX=os.environ["top_srcdir"]+"/tests/python/testdata/images/"
 
 # delete old .works file and check requirements
 if not works.check_files(REQUIRED,TESTNAME):
 	sys.exit(77)
 
 # import the necessary things for OpenCV
-import opencv
-from opencv.highgui import *
-from opencv.cv import *
+import python
+from python.highgui import *
+from python.cv import *
 
 # our temporary test file
 file_name = "./highgui_testfile.bmp"
 
 # try to load an image from a file
-image = cvLoadImage("../../samples/c/baboon.jpg")
+image = cvLoadImage(PREFIX+"baboon.jpg")
 
-# if the returned object is a valid IplImage (pointer)
-# loading was successful.
-if not isinstance(image,opencv.cv.IplImagePtr):
+# if the returned object is not Null, loading was successful.
+if image==0:
 	print "(INFO) Couldn't load test image. Skipping rest of this test."
 	sys.exit(77)
 

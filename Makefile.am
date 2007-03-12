@@ -48,7 +48,7 @@ install-lib:
 	cd src && $(MAKE) install-libLTLIBRARIES
 
 # Run ldconfig after installing the library:
-install-hook:
+install-exec-hook:
 	-ldconfig
 
 

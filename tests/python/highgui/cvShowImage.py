@@ -9,8 +9,12 @@ REQUIRED = ["cvLoadImagejpg", "cvNamedWindow"]
 
  
 # needed for sys.exit(int) and .works file handling
+import os
 import sys
 import works
+
+# path to imagefiles we need
+PREFIX=os.environ["top_srcdir"]+"/tests/python/testdata/images/"
 
 # check requirements and delete old flag file, if it exists
 if not works.check_files(REQUIRED,TESTNAME):
@@ -18,9 +22,9 @@ if not works.check_files(REQUIRED,TESTNAME):
 
 
 # import the necessary things for OpenCV
-import opencv
-from opencv.highgui import *
-from opencv.cv import *
+import python
+from python.highgui import *
+from python.cv import *
 
 # defined window name
 win_name = "testing..."
@@ -29,10 +33,16 @@ win_name = "testing..."
 cvNamedWindow(win_name, CV_WINDOW_AUTOSIZE)
 
 # we expect the image to be loadable, thanks to 'cvLoadImage.works'
-image = cvLoadImage("../../cvShowImage.jpg")
+image = cvLoadImage(PREFIX+"cvShowImage.jpg")
+
+if image is None:
+	print "(ERROR) Couldn't load image "+PREFIX+"cvShowImage.jpg"
+	sys.exit(1)
 
 # try to show image in window
 res = cvShowImage( win_name, image )
+cvWaitKey(0)
+
 
 if res == 0:
 	cvReleaseImage(image)

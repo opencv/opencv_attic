@@ -17,9 +17,9 @@ if not works.check_files( REQUIRED, TESTNAME ):
 
 
 # import the necessary things for OpenCV
-import opencv
-from opencv.highgui import *
-from opencv.cv import *
+import python
+from python.highgui import *
+from python.cv import *
 
 # some definitions
 win_name = "testing..."

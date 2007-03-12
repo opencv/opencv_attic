@@ -16,14 +16,14 @@ m4_define([opencv_version],          [opencv_major_version.opencv_minor_version.
 m4_define([opencv_lt_version],       [1:0:0])
 
 # init autotools
-AC_PREREQ(2.59)
+AC_PREREQ(2.60)
 AC_INIT([opencv],[opencv_version],[opencvlibrary-devel@lists.sourceforge.net])
 AC_CONFIG_SRCDIR([opencv.pc.in])
 AC_CONFIG_AUX_DIR([autotools])
 AC_CONFIG_MACRO_DIR([autotools/aclocal])
 
 # put CVS revision of this configure.in into the resulting configure script
-AC_REVISION($Revision: 1.40 $)
+AC_REVISION($Revision: 1.41 $)
 
 # Detect the canonical host and target build environment
 AC_CANONICAL_HOST
@@ -31,8 +31,8 @@ AC_CANONICAL_TARGET
 
 # setup automake - we need >= 1.6 because of python and aclocal support
 #                  we updated to 1.9 because of cross-platform issues
-AM_CONFIG_HEADER([cvconfig.h])
-AM_INIT_AUTOMAKE([1.9])
+AC_CONFIG_HEADERS([cvconfig.h])
+AM_INIT_AUTOMAKE([1.10])
 AC_PROG_MAKE_SET
 
 # use 'gly maintainer-mode flag to help CVS users that do not want to
@@ -79,13 +79,13 @@ AC_PROG_LIBTOOL
 
 # does the user want aggressive optimization?
 AC_ARG_ENABLE([debug],
-              [AS_HELP_STRING([--enable-debug],[build debug version without optimization])],
+              [AS_HELP_STRING([--enable-debug],[build debug version without optimization [no]])],
               [debug=$enableval], 
               [debug=no])
 
 # does the user want to build demo applications?
 AC_ARG_ENABLE([apps],
-              [AS_HELP_STRING([--enable-apps],[build demo applications])],
+              [AS_HELP_STRING([--enable-apps],[build demo applications [yes]])],
               [enable_apps=$enableval],
               [enable_apps="yes"])
 AM_CONDITIONAL([BUILD_APPS], [test x"$enable_apps" = x"yes"])
@@ -99,57 +99,63 @@ AM_CONDITIONAL([BUILD_APPS], [test x"$enable_apps" = x"yes"])
 
 # does the user want to compile python modules as well?
 AC_ARG_WITH([swig], 
-            [AS_HELP_STRING([--with-swig],[use swig wrapper generator])],
+            [AS_HELP_STRING([--with-swig],[use swig wrapper generator [no]])],
             [with_swig=$withval],
             [with_swig=no])
 
 # does the user want to compile python modules as well?
 AC_ARG_WITH([python], 
-            [AS_HELP_STRING([--with-python],[use python for wrapping])],
+            [AS_HELP_STRING([--with-python],[use python for wrapping [yes]])],
             [with_python=$withval],
             [with_python=yes])
 
 # does the user want OpenCV to use xine video libraries?
 AC_ARG_WITH([xine],
-            [AS_HELP_STRING([--with-xine],[use xine libraries (see LICENSE)])],
+            [AS_HELP_STRING([--with-xine],[use xine libraries (see LICENSE) [no]])],
             [with_xine=$withval],
             [with_xine=no])
 
 # does the user want OpenCV to use ffmpeg video libraries?
 AC_ARG_WITH([ffmpeg],
-            [AS_HELP_STRING([--with-ffmpeg],[use ffmpeg libraries (see LICENSE)])],
+            [AS_HELP_STRING([--with-ffmpeg],[use ffmpeg libraries (see LICENSE) [automatic]])],
             [with_ffmpeg=$withval],
             [with_ffmpeg=auto])
 
 # does the user want OpenCV to use libraw1394/libdc1394 for video input?
 AC_ARG_WITH([1394libs],
-            [AS_HELP_STRING([--with-1394libs],[use libraw1394/libdc1394])],
+            [AS_HELP_STRING([--with-1394libs],[use libraw1394/libdc1394 [automatic]])],
             [with_1394libs=$withval],
             [with_1394libs=auto])
 
 # does the user want OpenCV to use the video4linux kernel module?
 AC_ARG_WITH([v4l],
-            [AS_HELP_STRING([--with-v4l],[use video4linux])],
+            [AS_HELP_STRING([--with-v4l],[use video4linux [automatic]])],
             [with_v4l=$withval],
             [with_v4l=auto])
 
 # does the user want OpenCV to use QuickTime video libraries?
 AC_ARG_WITH([quicktime],
-            [AS_HELP_STRING([--with-quicktime],[use QuickTime libraries])],
+            [AS_HELP_STRING([--with-quicktime],[use QuickTime libraries [automatic]])],
             [with_quicktime=$withval],
             [with_quicktime=yes])
 
 # does the user want OpenCV to use the Carbon GUI of Mac OS X?
 AC_ARG_WITH([carbon],
-            [AS_HELP_STRING([--with-carbon],[use Carbon windows])],
+            [AS_HELP_STRING([--with-carbon],[use Carbon windows [automatic]])],
             [with_carbon=$withval],
             [with_carbon=yes])
 
 # does the user want OpenCV to use GTK+ 2.0 for the GUI?
 AC_ARG_WITH([gtk],
-            [AS_HELP_STRING([--with-gtk],[use gtk+ 2.0 windows])],
+            [AS_HELP_STRING([--with-gtk],[use gtk+ 2.0 windows [automatic]])],
             [with_gtk=$withval],
             [with_gtk=auto])
+
+# does the user want OpenCV to use gthread for GTK+ threaded HighGUI?
+AC_ARG_WITH([gthread],
+            [AS_HELP_STRING([--with-gthread],[use gthread in addition to gtk+ [automatic]])],
+            [with_gthread=$withval],
+            [with_gthread=auto])
 
 
 ######################################################################
@@ -238,6 +244,7 @@ AC_C_BIGENDIAN
 # certain standard library implementations
 AC_FUNC_ALLOCA
 AC_CHECK_HEADERS([malloc.h])
+AC_CHECK_HEADERS([assert.h])
 AC_CHECK_FUNCS(lrint)
 
 
@@ -293,7 +300,6 @@ GTHREAD_CFLAGS=""
 GTHREAD_LIBS=""
 if test x"$with_gtk" = "xno"; then
     have_gtk=no
-    have_gthread=no
 else
 
     # check if ./configure arguments are valid
@@ -314,17 +320,35 @@ else
                             AC_DEFINE(HAVE_GTK,,[GTK+ 2.x toolkit])
                           ],
                           [ have_gtk=no ])
-    
-        PKG_CHECK_MODULES(GTHREAD, "gthread-2.0",
-                          [
-                            have_gthread=yes
-                            AC_DEFINE(HAVE_GTHREAD,,[GTK+ 2.0 Thread support])
-                          ],
-                          [ have_gthread=no ])
+
     else
         # if we get here then --with-gtk was not called with 'yes','no' or 'auto'
         AC_MSG_WARN([unexpected arguments for option --with-gtk, continuing assuming 'no'])
         have_gtk=no
+    fi
+fi
+if test x"$with_gthread" = "xno"; then
+    have_gthread=no
+else
+    if test x"$have_gtk" = "xyes"; then
+        if test x"$with_gthread" = "xauto"; then
+            with_gthread=yes
+        fi
+
+        if test x"$with_gthread" = "xyes"; then
+            PKG_CHECK_MODULES(GTHREAD, "gthread-2.0",
+                              [
+                                have_gthread=yes
+                                AC_DEFINE(HAVE_GTHREAD,,[GTK+ 2.0 Thread support])
+                              ],
+                              [ have_gthread=no ])
+        else
+            # if we get here then --with-gthread was not called with 'yes','no' or 'auto'
+            AC_MSG_WARN([unexpected arguments for option --with-gthread, continuing assuming 'no'])
+            have_gthread=no
+        fi
+    else
+        # if no gtk+ was detected, looking for gthread does not make any sense
         have_gthread=no
     fi
 fi
