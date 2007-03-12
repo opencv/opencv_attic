@@ -17,9 +17,9 @@ if not works.check_files(REQUIRED,TESTNAME):
 	sys.exit(77)
 
 # import the necessary things for OpenCV
-import opencv
-from opencv.highgui import *
-from opencv.cv import *
+import python
+from python.highgui import *
+from python.cv import *
 
 
 # some definitions
@@ -30,8 +30,8 @@ cvNamedWindow(win_name,CV_WINDOW_AUTOSIZE)
 
 # check if the window handle and the according name are correct
 win_name_2 = cvGetWindowName( cvGetWindowHandle(win_name) )
-if win_name_2 != win_name:
-	print "(ERROR) Incorrect window handle/name."
+if win_name_2!=win_name:
+#	print "(ERROR) Incorrect window handle/name."
 	sys.exit(1)
 
 # destroy the window

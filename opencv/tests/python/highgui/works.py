@@ -1,5 +1,3 @@
-
-
 # needed for access() and remove()
 import os
 

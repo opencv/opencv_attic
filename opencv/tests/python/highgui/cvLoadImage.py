@@ -1,4 +1,3 @@
-#! /usr/bin/env python
 """
 This script will test highgui's image loading functionality
 for a given parameter of a file extension.
@@ -6,20 +5,24 @@ for a given parameter of a file extension.
 
 
 # needed for sys.exit(int) and .works file handling
+import os
 import sys
 import works
 from works import *
 
 #import the necessary things for OpenCV
-import opencv
-from opencv.highgui import *
-from opencv.cv import *
+import python
+from python.highgui import *
+from python.cv import *
 
 
 # some defines
 TESTNAME = "cvLoadImage"
 REQUIRED = []
-PREFIX   = "/home/dols/Source/opencv/data/baboon_256x256"
+
+# path to imagefiles we need
+PREFIX=os.environ["top_srcdir"]+"/tests/python/testdata/images/baboon_256x256"
+
 
 # this functions tries to open an imagefile
 # using the filename PREFIX.EXTENSION  and returns True/False 

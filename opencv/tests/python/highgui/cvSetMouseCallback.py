@@ -9,6 +9,7 @@ REQUIRED = ["cvShowImage"]
 
  
 # needed for sys.exit(int) and .works file handling
+import os
 import sys
 import works
 
@@ -17,9 +18,9 @@ if not works.check_files(REQUIRED,TESTNAME):
 	sys.exit(77)
 
 # import the necessary things for OpenCV
-import opencv
-from opencv.highgui import *
-from opencv.cv import *
+import python
+from python.highgui import *
+from python.cv import *
 
 # global variable which stores information about the pressed mousebuttons
 mouse_events = [False,False,False,False,False,False,False,False,False,False]
@@ -43,9 +44,9 @@ def callback_function(event,x,y,flag,param):
 
 # create a window ('cvNamedWindow.works' exists, so it must work)
 cvNamedWindow(win_name,CV_WINDOW_AUTOSIZE)
-# show the baboon in the window ('
-cvShowImage(win_name, 
-cvLoadImage("../../data/cvSetMouseCallback.jpg"))
+# show the baboon in the window
+PREFIX = os.environ["top_srcdir"]+"/tests/python/testdata/images/"
+cvShowImage(win_name, cvLoadImage(PREFIX+"cvSetMouseCallback.jpg"))
 # assign callback function 'callback_function' to window, no parameters used here
 cvSetMouseCallback( win_name, callback_function )
 

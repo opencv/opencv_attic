@@ -17,9 +17,9 @@ if not works.check_files(REQUIRED,TESTNAME):
 	sys.exit(77)
 
 # import the necessary things for OpenCV
-import opencv
-from opencv.highgui import *
-from opencv.cv import *
+import python
+from python.highgui import *
+from python.cv import *
 
 # create a window
 cvNamedWindow(TESTNAME, CV_WINDOW_AUTOSIZE)

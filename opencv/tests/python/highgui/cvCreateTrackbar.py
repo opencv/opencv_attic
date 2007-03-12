@@ -8,6 +8,7 @@ TESTNAME = "cvCreateTrackbar"
 REQUIRED = ["cvShowImage"]
 
 # needed for sys.exit(int) and .works file handling
+import os
 import sys
 import works
 
@@ -15,16 +16,19 @@ import works
 if not works.check_files(REQUIRED,TESTNAME):
 	sys.exit(77)
 
-
 # import the necessary things for OpenCV
-import opencv
-from opencv.highgui import *
-from opencv.cv      import *
+import python
+from python.highgui import *
+from python.cv      import *
 
 # some definitions
 win_name = "testing..."
 bar_name = "brightness"
 bar_count= 100
+
+
+# position of imagefiles we need
+PREFIX=os.environ["top_srcdir"]+"/tests/python/testdata/images/"
 
 # 'moved' indicates if trackbar has been moved
 moved = False
@@ -46,8 +50,8 @@ def trackcall( p ):
 
 # create output window
 cvNamedWindow(win_name,CV_WINDOW_AUTOSIZE)
-image  = cvLoadImage("../../data/cvCreateTrackbar.jpg")
-image2 = cvLoadImage("../../data/cvCreateTrackbar.jpg")
+image  = cvLoadImage(PREFIX+"cvCreateTrackbar.jpg")
+image2 = cvLoadImage(PREFIX+"cvCreateTrackbar.jpg")
 cvShowImage(win_name,image)
 
 # create the trackbar and save return value

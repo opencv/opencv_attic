@@ -44,37 +44,41 @@
 #             Institute of Communications Engineering, RWTH Aachen University
 
 
+# February 2007, adapted to numpy by Vicent Mas    <vmas@carabos.com>
+#             Carabos Coop. V.
+
 """
 This module provides explicit conversion methods for
     - CvMat:  OpenCV / IPL image data
-    - PIL:       Python Imaging Library
-    - Numeric:   Python's Numeric Library
+    - PIL:    Python Imaging Library
+    - numpy:  Python's Numeric Library
 
 Currently supported image formats are:
     - 3 x  8 bit  RGB (GBR)
     - 1 x  8 bit  Grayscale
     - 1 x 32 bit  Float
 
-In Numeric, images are represented as multidimensional arrays with
+In numpy, images are represented as multidimensional arrays with
 a third dimension representing the image channels if more than one
 channel is present.
 """
 
-import cv
-import PIL
+import Image
 import PIL.Image
-import Numeric
+import numpy
+
+from opencv import cv
 
 ###########################################################################
 def Ipl2PIL(input):
     """Converts an OpenCV/IPL image to PIL the Python Imaging Library.
-    
+
     Supported input image formats are
        IPL_DEPTH_8U  x 1 channel
        IPL_DEPTH_8U  x 3 channels
        IPL_DEPTH_32F x 1 channel
     """
-    
+
     if not isinstance(input, cv.CvMat):
         raise TypeError, 'must be called with a cv.CvMat!'
 
@@ -101,10 +105,10 @@ def Ipl2PIL(input):
     key = (input.nChannels, input.depth)
     if not mode_list.has_key(key):
         raise ValueError, 'unknown or unsupported input mode'
-        
+
     modes = mode_list[key]
 
-    return PIL.Image.fromstring(
+    return Image.fromstring(
         modes[1], # mode
         (input.width, input.height), # size tuple
         input.imageData, # data
@@ -118,148 +122,122 @@ def Ipl2PIL(input):
 ###########################################################################
 def PIL2Ipl(input):
     """Converts a PIL image to the OpenCV/IPL CvMat data format.
-    
+
     Supported input image formats are:
         RGB
         L
         F
     """
-    
-    if not isinstance(input, PIL.Image.Image):
-       raise TypeError, 'must be called with PIL.Image.Image!'
 
-    size = cv.cvSize(input.size[0], input.size[1])
-    
+    if not (isinstance(input, PIL.Image.Image) or isinstance(input, Image.Image)):
+        raise TypeError, 'Must be called with PIL.Image.Image or Image.Image!'
+
     # mode dictionary:
-    # (pil_mode : (ipl_depth, ipl_channels, color model, channel Seq)
+    # (pil_mode : (ipl_depth, ipl_channels)
     mode_list = {
         "RGB" : (cv.IPL_DEPTH_8U, 3),
         "L"   : (cv.IPL_DEPTH_8U, 1),
         "F"   : (cv.IPL_DEPTH_32F, 1)
         }
-    
+
     if not mode_list.has_key(input.mode):
         raise ValueError, 'unknown or unsupported input mode'
-        
-    modes = mode_list[input.mode]    
-    
+
     result = cv.cvCreateImage(
-        size,
-        modes[0], # depth
-        modes[1]  # channels
+        cv.cvSize(input.size[0], input.size[1]),  # size
+        mode_list[input.mode][0],  # depth
+        mode_list[input.mode][1]  # channels
         )
-    
+
     # set imageData
-    result.imageData=input.tostring()
-    
-    return result    
- 
-    
+    result.imageData = input.tostring()
+    return result
+
+
 ###########################################################################
 def PIL2NumPy(input):
-    """Converts a PIL image to a Numeric array.
-    
+    """Converts a PIL image to a numpy array.
+
     Supported input image formats are:
         RGB
         L
         F
     """
-    
-    if not isinstance(input, PIL.Image.Image):
-        raise TypeError, 'must be called with PIL.Image.Image!'
-        
-    # mode dictionary:
-    # (pil_mode : (Numeric typecode, channels)
-    mode_list = {
-        "RGB" : (Numeric.UnsignedInt8, 3),
-        "L"   : (Numeric.UnsignedInt8, 1),
-        "F"   : (Numeric.Float32, 1)
-        }
-    
-    if not mode_list.has_key(input.mode):
-        raise ValueError, 'unknown or unsupported input mode'
-    
-    modes = mode_list[input.mode]    
-    
-    if modes[1]>1:
-        shape = (input.size[1], input.size[0], modes[1])
-    else:
-        shape = (input.size[1], input.size[0])
-    
-    result = Numeric.array_constructor(
-        shape,
-        modes[0],
-        input.tostring()
-        )
 
-    return result
+    if not (isinstance(input, PIL.Image.Image) or isinstance(input, Image.Image)):
+        raise TypeError, 'Must be called with PIL.Image.Image or Image.Image!'
+
+    # modes dictionary:
+    # pil_mode : numpy dtype
+    modes_map = {
+        "RGB" : numpy.uint8,
+        "L"   : numpy.uint8,
+        "F"   : numpy.float32
+        }
+
+    if not modes_map.has_key(input.mode):
+        raise ValueError, 'Unknown or unsupported input mode!. Supported modes are RGB, L and F.'
+
+    result_ro = numpy.asarray(input, dtype=modes_map[input.mode])  # Read-only array
+    return result_ro.copy()  # Return a writeable array
 
 
 ###########################################################################
 def NumPy2PIL(input):
-    """Converts a Numeric array to a PIL image.
-    
+    """Converts a numpy array to a PIL image.
+
     Supported input array layouts:
-       2 dimensions of Numeric.UnsignedInt8
-       3 dimensions of Numeric.UnsignedInt8
-       2 dimensions of Numeric.Float32
+       2 dimensions of numpy.uint8
+       3 dimensions of numpy.uint8
+       2 dimensions of numpy.float32
     """
-    
-    if not isinstance(input, Numeric.arraytype):
-        raise TypeError, 'must be called with Numeric.array!'
-        
-    # mode dictionary:
-    # (channels, typecode) : (source mode, dest mode, depth in byte)
-    mode_list = {
-        (1, Numeric.UnsignedInt8)  : ("L",   "L"),
-        (3, Numeric.UnsignedInt8)  : ("RGB", "RGB"),
-        (1, Numeric.Float32)       : ("F",   "F")
-        }
 
-    channels = 1
-    if Numeric.rank(input) == 3:
-        channels = Numeric.shape(input)[2]
-        
-    key = (channels, input.typecode())
-    if not mode_list.has_key(key):
-        raise ValueError, 'unknown or unsupported input mode'
-        
-    modes = mode_list[key]
+    if not isinstance(input, numpy.ndarray):
+        raise TypeError, 'Must be called with numpy.ndarray!'
 
-    return PIL.Image.fromstring(
-        modes[1], # mode
-        (Numeric.shape(input)[1], Numeric.shape(input)[0]), # size tuple
-        input.tostring(), # data
-        "raw",
-        modes[0], # raw mode
-        0, # stride
-        1 # orientation
-        )
+    # Check the number of dimensions of the input array
+    ndim = input.ndim
+    if not ndim in (2, 3):
+        raise ValueError, 'Only 2D-arrays and 3D-arrays are supported!'
 
- 
+    if ndim == 2:
+        channels = 1
+    else:
+        channels = input.shape[2]
+
+    # supported modes list: [(channels, dtype), ...]
+    modes_list = [(1, numpy.uint8), (3, numpy.uint8), (1, numpy.float32)]
+
+    mode = (channels, input.dtype)
+    if not mode in modes_list:
+        raise ValueError, 'Unknown or unsupported input mode'
+
+    return Image.fromarray(input)
+
+
 ###########################################################################
 def NumPy2Ipl(input):
-    """Converts a Numeric array to the OpenCV/IPL CvMat data format.
-    
+    """Converts a numpy array to the OpenCV/IPL CvMat data format.
+
     Supported input array layouts:
-       2 dimensions of Numeric.UnsignedInt8
-       3 dimensions of Numeric.UnsignedInt8
-       2 dimensions of Numeric.Float32
+       2 dimensions of numpy.uint8
+       3 dimensions of numpy.uint8
+       2 dimensions of numpy.float32
     """
-    
+
     return PIL2Ipl(NumPy2PIL(input))
 
 
 ###########################################################################
 def Ipl2NumPy(input):
-    """Converts an OpenCV/IPL image to a Numeric array.
-    
+    """Converts an OpenCV/IPL image to a numpy array.
+
     Supported input image formats are
        IPL_DEPTH_8U  x 1 channel
        IPL_DEPTH_8U  x 3 channels
        IPL_DEPTH_32F x 1 channel
     """
-    
+
     return PIL2NumPy(Ipl2PIL(input))
 
 

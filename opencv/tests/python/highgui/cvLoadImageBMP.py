@@ -18,6 +18,5 @@ import sys
 if cvLoadImage.image_ok(EXTENSION):
 	sys.exit(0)
 else:
-	print "BMP FAILED !"
 	sys.exit(1)	
 
