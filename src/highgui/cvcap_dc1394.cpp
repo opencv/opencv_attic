@@ -104,6 +104,17 @@ Tested with 2.6.12 with libdc1394-1.0.0, libraw1394-0.10.1 using a Point Grey Fl
 #include <libraw1394/raw1394.h>
 #include <libdc1394/dc1394_control.h>
 
+#ifdef NDEBUG
+#define CV_WARN(message) 
+#else
+#define CV_WARN(message) fprintf(stderr, "warning: %s (%s:%d)\n", message, __FILE__, __LINE__)
+#endif
+
+#define CV_DC1394_CALL(expr)                                                  \
+if((expr)<0){                                                                 \
+	OPENCV_ERROR(CV_StsInternal, "", "libdc1394 function call returned < 0"); \
+}
+
 #define  DELAY              50000
 
 // bpp for 16-bits cameras... this value works for PtGrey DragonFly...
@@ -463,6 +474,7 @@ static IplImage* icvRetrieveFrameCAM_DC1394( CvCaptureCAM_DC1394* capture ){
 };
 
 static double icvGetPropertyCAM_DC1394( CvCaptureCAM_DC1394* capture, int property_id ){
+	int index=-1;	
 	switch ( property_id ) {
 		case CV_CAP_PROP_CONVERT_RGB:
 			return capture->convert;
@@ -471,8 +483,8 @@ static double icvGetPropertyCAM_DC1394( CvCaptureCAM_DC1394* capture, int proper
 		case CV_CAP_PROP_FORMAT:
 			return capture->format;
 		case CV_CAP_PROP_FPS:
-			dc1394_get_video_framerate(capture->handle, capture->camera->node,
-					(unsigned int *) &capture->camera->frame_rate);
+			CV_DC1394_CALL(dc1394_get_video_framerate(capture->handle, capture->camera->node,
+					(unsigned int *) &capture->camera->frame_rate));
 			switch(capture->camera->frame_rate) {
 				case FRAMERATE_1_875:
 					return 1.875;
@@ -495,7 +507,24 @@ static double icvGetPropertyCAM_DC1394( CvCaptureCAM_DC1394* capture, int proper
 					return 240;
 #endif
 			}
+        default:    
+			index = property_id;  // did they pass in a LIBDC1394 feature flag?
+			break;
 	}
+	if(index>=FEATURE_MIN && index<=FEATURE_MAX){
+		dc1394bool_t has_feature;
+		CV_DC1394_CALL( dc1394_is_feature_present(capture->handle, capture->camera->node, 
+					                              index, &has_feature));
+		if(!has_feature){
+			CV_WARN("Feature is not supported by this camera");
+		}
+		else{
+			unsigned int value;
+			dc1394_get_feature_value(capture->handle, capture->camera->node, index, &value);
+			return (double) value;
+		}
+	}
+
 	return 0;
 };
 
@@ -681,6 +710,7 @@ static unsigned int icvGetBestFrameRate( CvCaptureCAM_DC1394 * capture, int form
 			return f;
 		}
 	}
+	return 0;
 }
 
 static int
@@ -774,6 +804,7 @@ icvSetFeatureCAM_DC1394( CvCaptureCAM_DC1394* capture, int feature_id, int val){
 		dc1394bool_t hasAutoCapability = DC1394_FALSE;
 		dc1394bool_t isAutoOn = DC1394_FALSE;
 		unsigned int nval;
+		unsigned int minval,maxval;
 
 		// Turn the feature on if it is OFF
 		if( dc1394_is_feature_on(capture->handle, capture->camera->node, feature_id, &isOn) 
@@ -823,7 +854,11 @@ icvSetFeatureCAM_DC1394( CvCaptureCAM_DC1394* capture, int feature_id, int val){
 			}
 		}
 
-		// TODO: should probably clamp val to within feature range
+		// Clamp val to within feature range
+		CV_DC1394_CALL(	dc1394_get_min_value(capture->handle, capture->camera->node, feature_id, &minval));
+		CV_DC1394_CALL(	dc1394_get_max_value(capture->handle, capture->camera->node, feature_id, &maxval));
+		val = MIN(maxval, MAX(val, minval));
+
 
 		if (dc1394_set_feature_value(capture->handle, capture->camera->node, feature_id, val) ==
 				DC1394_FAILURE){
