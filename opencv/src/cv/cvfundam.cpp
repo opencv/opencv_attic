@@ -311,6 +311,44 @@ icvFMatrix_8Point( const CvPoint2D64f* m0, const CvPoint2D64f* m1,
 }
 
 
+CV_IMPL int
+cvRANSACUpdateNumIters( double p, double ep,
+                        int model_points, int max_iters )
+{
+    int result = 0;
+    
+    CV_FUNCNAME( "cvRANSACUpdateNumIters" );
+
+    __BEGIN__;
+    
+    double num, denom;
+    
+    if( model_points <= 0 )
+        CV_ERROR( CV_StsOutOfRange, "the number of model points should be positive" );
+
+    p = MAX(p, 0.);
+    p = MIN(p, 1.);
+    ep = MAX(ep, 0.);
+    ep = MIN(ep, 1.);
+
+    // avoid inf's & nan's
+    num = MAX(1. - p, DBL_MIN);
+    denom = 1. - pow(1. - ep,model_points);
+    if( denom < DBL_MIN )
+        EXIT;
+
+    num = log(num);
+    denom = log(denom);
+    
+    result = denom >= 0 || -num >= max_iters*(-denom) ?
+        max_iters : cvRound(num/denom);
+
+    __END__;
+
+    return result;
+}
+
+
 /************************************ RANSAC algorithm **********************************/
 static int
 icvFMatrix_RANSAC( const CvPoint2D64f* m0, const CvPoint2D64f* m1,
@@ -414,26 +452,16 @@ icvFMatrix_RANSAC( const CvPoint2D64f* m0, const CvPoint2D64f* m1,
 
             if( good_count > MAX( best_good_count, 6 ) )
             {
-                double ep, lp, lep;
-                int new_max_samples;
-
                 // update the current best fundamental matrix and "goodness" flags
                 if( mask )
                     memcpy( mask, curr_mask, count );
                 memcpy( fmatrix, f, 9*sizeof(f[0]));
                 best_good_count = good_count;
-
-                // try to update (decrease) <max_samples>
-                ep = (double)(count - good_count)/count;
-                lp = log(1. - p);
-                lep = log(1. - pow(ep,7.));
-                if( lp < lep || lep >= 0 )
+                
+                max_samples = cvRANSACUpdateNumIters( p,
+                    (double)(count - good_count)/count, 7, max_samples );
+                if( max_samples == 0 )
                     break;
-                else
-                {
-                    new_max_samples = cvRound(lp/lep);
-                    max_samples = MIN( new_max_samples, max_samples );
-                }
             }
         }
     }
