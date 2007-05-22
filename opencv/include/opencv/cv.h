@@ -110,12 +110,15 @@ CVAPI(void)  cvPyrDown( const CvArr* src, CvArr* dst,
 CVAPI(void)  cvPyrUp( const CvArr* src, CvArr* dst,
                       int filter CV_DEFAULT(CV_GAUSSIAN_5x5) );
 
+/* Builds pyramid for an image */
+CVAPI(CvMat**) cvCreatePyramid( const CvArr* img, int extra_layers, double rate,
+                                const CvSize* layer_sizes CV_DEFAULT(0),
+                                CvArr* bufarr CV_DEFAULT(0),
+                                int calc CV_DEFAULT(1),
+                                int filter CV_DEFAULT(CV_GAUSSIAN_5x5) );
 
-/* Builds the whole pyramid at once. Output array of CvMat headers (levels[*])
-   is initialized with the headers of subsequent pyramid levels */
-/*CVAPI  void  cvCalcPyramid( const CvArr* src, CvArr* container,
-                              CvMat* levels, int level_count,
-                              int filter CV_DEFAULT(CV_GAUSSIAN_5x5) );*/
+/* Releases pyramid */
+CVAPI(void)  cvReleasePyramid( CvMat*** pyramid, int extra_layers );
 
 
 /* Splits color or grayscale image into multiple connected components
@@ -1171,6 +1174,10 @@ CVAPI(void)  cvReleasePOSITObject( CvPOSITObject**  posit_object );
 /****************************************************************************************\
 *                                 Epipolar Geometry                                      *
 \****************************************************************************************/
+
+/* updates the number of RANSAC iterations */
+CVAPI(int) cvRANSACUpdateNumIters( double p, double err_prob,
+                                   int model_points, int max_iters );
 
 CVAPI(void) cvConvertPointsHomogenious( const CvMat* src, CvMat* dst );
 
