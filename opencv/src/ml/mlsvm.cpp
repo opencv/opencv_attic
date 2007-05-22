@@ -1606,7 +1606,7 @@ bool CvSVM::train_auto( const CvMat* _train_data, const CvMat* _responses,
     int block_size = 1 << 16;
     double* alpha;
     int i, k;
-    CvRNG rng;
+    CvRNG rng = cvRNG(-1);
 
     // all steps are logarithmic and must be > 1
     double degree_step = 10, g_step = 10, coef_step = 10, C_step = 10, nu_step = 10, p_step = 10;
@@ -2103,6 +2103,7 @@ void CvSVM::write( CvFileStorage* fs, const char* name )
         }
         else
             CV_ASSERT( sv_count == sv_total );
+        cvEndWriteStruct( fs );
     }
     cvEndWriteStruct( fs );
     cvEndWriteStruct( fs );
@@ -2307,6 +2308,8 @@ void CvSVM::read( CvFileStorage* fs, CvFileNode* svm_node )
         }
         else
             df[i].sv_index = 0;
+
+        CV_NEXT_SEQ_ELEM( df_node->data.seq->elem_size, reader );
     }
 
     create_kernel();
