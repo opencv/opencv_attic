@@ -1137,6 +1137,125 @@ cvPyrDown( const void* srcarr, void* dstarr, int _filter )
 }
 
 
+CV_IMPL void
+cvReleasePyramid( CvMat*** _pyramid, int extra_layers )
+{
+    CV_FUNCNAME( "cvReleasePyramid" );
+
+    __BEGIN__;
+
+    CvMat** pyramid;
+    int i;
+
+    if( !_pyramid )
+        CV_ERROR( CV_StsNullPtr, "" );
+
+    pyramid = *_pyramid;
+    
+    if( pyramid )
+    {
+        for( i = 0; i <= extra_layers; i++ )
+            cvReleaseMat( &pyramid[i] );
+    }
+    
+    cvFree( _pyramid );
+
+    __END__;
+}
+
+
+CV_IMPL CvMat**
+cvCreatePyramid( const CvArr* srcarr, int extra_layers, double rate,
+                 const CvSize* layer_sizes, CvArr* bufarr,
+                 int calc, int filter )
+{
+    CvMat** pyramid = 0;
+    const float eps = 0.1f;
+
+    CV_FUNCNAME( "cvCreatePyramid" );
+
+    __BEGIN__;
+    
+    int i, elem_size, layer_step;
+    CvMat stub, *src;
+    CvSize size, layer_size;
+    uchar* ptr = 0;
+
+    CV_CALL( src = cvGetMat( srcarr, &stub ));
+
+    if( extra_layers < 0 )
+        CV_ERROR( CV_StsOutOfRange, "The number of extra layers must be non negative" );
+
+    elem_size = CV_ELEM_SIZE(src->type);
+    size = cvGetMatSize(src);
+
+    if( bufarr )
+    {
+        CvMat bstub, *buf;
+        int bufsize = 0;
+
+        CV_CALL( buf = cvGetMat( bufarr, &bstub ));
+        bufsize = buf->rows*buf->cols*CV_ELEM_SIZE(buf->type);
+        layer_size = size;
+        for( i = 1; i <= extra_layers; i++ )
+        {
+            if( !layer_sizes )
+            {
+                layer_size.width = cvRound(layer_size.width*rate+eps);
+                layer_size.height = cvRound(layer_size.height*rate+eps);
+            }
+            else
+                layer_size = layer_sizes[i-1];
+            layer_step = layer_size.width*elem_size;
+            bufsize -= layer_step*layer_size.height;
+        }
+
+        if( bufsize < 0 )
+            CV_ERROR( CV_StsOutOfRange, "The buffer is too small to fit the pyramid" );
+        ptr = buf->data.ptr;
+    }
+
+    CV_CALL( pyramid = (CvMat**)cvAlloc( (extra_layers+1)*sizeof(pyramid[0]) ));
+    memset( pyramid, 0, (extra_layers+1)*sizeof(pyramid[0]) );
+
+    pyramid[0] = cvCreateMatHeader( size.height, size.width, src->type );
+    cvSetData( pyramid[0], src->data.ptr, src->step );
+    layer_size = size;
+
+    for( i = 1; i <= extra_layers; i++ )
+    {
+        if( !layer_sizes )
+        {
+            layer_size.width = cvRound(layer_size.width*rate + eps);
+            layer_size.height = cvRound(layer_size.height*rate + eps);
+        }
+        else
+            layer_size = layer_sizes[i];
+        
+        if( bufarr )
+        {
+            pyramid[i] = cvCreateMatHeader( layer_size.height, layer_size.width, src->type );
+            layer_step = layer_size.width*elem_size;
+            cvSetData( pyramid[i], ptr, layer_step );
+            ptr += layer_step*layer_size.height;
+        }
+        else
+            pyramid[i] = cvCreateMat( layer_size.height, layer_size.width, src->type );
+
+        if( calc )
+            cvPyrDown( pyramid[i-1], pyramid[i], filter );
+            //cvResize( pyramid[i-1], pyramid[i], CV_INTER_LINEAR );
+    }
+    
+    __END__;
+
+    if( cvGetErrStatus() < 0 )
+        cvReleasePyramid( &pyramid, extra_layers );
+
+    return pyramid;
+}
+
+
 /* MSVC .NET 2003 spends a long time building this, thus, as the code
    is not performance-critical, we turn off the optimization here */
 #if defined _MSC_VER && _MSC_VER > 1300 && !defined CV_ICC
