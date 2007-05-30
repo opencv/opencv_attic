@@ -42,7 +42,7 @@
 #ifndef __CVAUX__H__
 #define __CVAUX__H__
 
-#include <cv.h>
+#include "cv.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -555,16 +555,16 @@ CVAPI(int) icvConvertWarpCoordinates(double coeffs[3][3],
                                 CvPoint2D32f* warpPoint,
                                 int direction);
 
-CVAPI(int) icvGetSymPoint3D(  CvPoint3D64d pointCorner,
-                            CvPoint3D64d point1,
-                            CvPoint3D64d point2,
-                            CvPoint3D64d *pointSym2);
+CVAPI(int) icvGetSymPoint3D(  CvPoint3D64f pointCorner,
+                            CvPoint3D64f point1,
+                            CvPoint3D64f point2,
+                            CvPoint3D64f *pointSym2);
 
-CVAPI(void) icvGetPieceLength3D(CvPoint3D64d point1,CvPoint3D64d point2,double* dist);
+CVAPI(void) icvGetPieceLength3D(CvPoint3D64f point1,CvPoint3D64f point2,double* dist);
 
 CVAPI(int) icvCompute3DPoint(    double alpha,double betta,
                             CvStereoLineCoeff* coeffs,
-                            CvPoint3D64d* point);
+                            CvPoint3D64f* point);
 
 CVAPI(int) icvCreateConvertMatrVect( CvMatr64d     rotMatr1,
                                 CvMatr64d     transVect1,
@@ -573,8 +573,8 @@ CVAPI(int) icvCreateConvertMatrVect( CvMatr64d     rotMatr1,
                                 CvMatr64d     convRotMatr,
                                 CvMatr64d     convTransVect);
 
-CVAPI(int) icvConvertPointSystem(CvPoint3D64d  M2,
-                            CvPoint3D64d* M1,
+CVAPI(int) icvConvertPointSystem(CvPoint3D64f  M2,
+                            CvPoint3D64f* M1,
                             CvMatr64d     rotMatr,
                             CvMatr64d     transVect
                             );
@@ -598,10 +598,10 @@ CVAPI(int) icvComputeRestStereoParams(CvStereoCamera *stereoparams);
 
 CVAPI(void) cvComputePerspectiveMap( const double coeffs[3][3], CvArr* rectMapX, CvArr* rectMapY );
 
-CVAPI(int) icvComCoeffForLine(   CvPoint2D64d point1,
-                            CvPoint2D64d point2,
-                            CvPoint2D64d point3,
-                            CvPoint2D64d point4,
+CVAPI(int) icvComCoeffForLine(   CvPoint2D64f point1,
+                            CvPoint2D64f point2,
+                            CvPoint2D64f point3,
+                            CvPoint2D64f point4,
                             CvMatr64d    camMatr1,
                             CvMatr64d    rotMatr1,
                             CvMatr64d    transVect1,
@@ -611,17 +611,17 @@ CVAPI(int) icvComCoeffForLine(   CvPoint2D64d point1,
                             CvStereoLineCoeff*    coeffs,
                             int* needSwapCameras);
 
-CVAPI(int) icvGetDirectionForPoint(  CvPoint2D64d point,
+CVAPI(int) icvGetDirectionForPoint(  CvPoint2D64f point,
                                 CvMatr64d camMatr,
-                                CvPoint3D64d* direct);
+                                CvPoint3D64f* direct);
 
-CVAPI(int) icvGetCrossLines(CvPoint3D64d point11,CvPoint3D64d point12,
-                       CvPoint3D64d point21,CvPoint3D64d point22,
-                       CvPoint3D64d* midPoint);
+CVAPI(int) icvGetCrossLines(CvPoint3D64f point11,CvPoint3D64f point12,
+                       CvPoint3D64f point21,CvPoint3D64f point22,
+                       CvPoint3D64f* midPoint);
 
-CVAPI(int) icvComputeStereoLineCoeffs(   CvPoint3D64d pointA,
-                                    CvPoint3D64d pointB,
-                                    CvPoint3D64d pointCam1,
+CVAPI(int) icvComputeStereoLineCoeffs(   CvPoint3D64f pointA,
+                                    CvPoint3D64f pointB,
+                                    CvPoint3D64f pointCam1,
                                     double gamma,
                                     CvStereoLineCoeff*    coeffs);
 
@@ -631,18 +631,18 @@ CVAPI(int) icvComputeStereoLineCoeffs(   CvPoint3D64d pointA,
                                     CvMatr64d     camMatr2,
                                     CvMatr64d     rotMatr2,
                                     CvVect64d     transVect2,
-                                    CvPoint2D64d* epipole1,
-                                    CvPoint2D64d* epipole2,
+                                    CvPoint2D64f* epipole1,
+                                    CvPoint2D64f* epipole2,
                                     CvMatr64d     fundMatr);*/
 
-CVAPI(int) icvGetAngleLine( CvPoint2D64d startPoint, CvSize imageSize,CvPoint2D64d *point1,CvPoint2D64d *point2);
+CVAPI(int) icvGetAngleLine( CvPoint2D64f startPoint, CvSize imageSize,CvPoint2D64f *point1,CvPoint2D64f *point2);
 
-CVAPI(void) icvGetCoefForPiece(   CvPoint2D64d p_start,CvPoint2D64d p_end,
+CVAPI(void) icvGetCoefForPiece(   CvPoint2D64f p_start,CvPoint2D64f p_end,
                         double *a,double *b,double *c,
                         int* result);
 
 /*CVAPI(void) icvGetCommonArea( CvSize imageSize,
-                    CvPoint2D64d epipole1,CvPoint2D64d epipole2,
+                    CvPoint2D64f epipole1,CvPoint2D64f epipole2,
                     CvMatr64d fundMatr,
                     CvVect64d coeff11,CvVect64d coeff12,
                     CvVect64d coeff21,CvVect64d coeff22,
@@ -661,27 +661,27 @@ CVAPI(void) icvComputeeInfiniteProject2(CvMatr64d    rotMatr,
                                      CvPoint2D32f point2);
 
 CVAPI(void) icvGetCrossDirectDirect(  CvVect64d direct1,CvVect64d direct2,
-                            CvPoint2D64d *cross,int* result);
+                            CvPoint2D64f *cross,int* result);
 
-CVAPI(void) icvGetCrossPieceDirect(   CvPoint2D64d p_start,CvPoint2D64d p_end,
+CVAPI(void) icvGetCrossPieceDirect(   CvPoint2D64f p_start,CvPoint2D64f p_end,
                             double a,double b,double c,
-                            CvPoint2D64d *cross,int* result);
+                            CvPoint2D64f *cross,int* result);
 
-CVAPI(void) icvGetCrossPiecePiece( CvPoint2D64d p1_start,CvPoint2D64d p1_end,
-                            CvPoint2D64d p2_start,CvPoint2D64d p2_end,
-                            CvPoint2D64d* cross,
+CVAPI(void) icvGetCrossPiecePiece( CvPoint2D64f p1_start,CvPoint2D64f p1_end,
+                            CvPoint2D64f p2_start,CvPoint2D64f p2_end,
+                            CvPoint2D64f* cross,
                             int* result);
                             
-CVAPI(void) icvGetPieceLength(CvPoint2D64d point1,CvPoint2D64d point2,double* dist);
+CVAPI(void) icvGetPieceLength(CvPoint2D64f point1,CvPoint2D64f point2,double* dist);
 
 CVAPI(void) icvGetCrossRectDirect(    CvSize imageSize,
                             double a,double b,double c,
-                            CvPoint2D64d *start,CvPoint2D64d *end,
+                            CvPoint2D64f *start,CvPoint2D64f *end,
                             int* result);
 
-CVAPI(void) icvProjectPointToImage(   CvPoint3D64d point,
+CVAPI(void) icvProjectPointToImage(   CvPoint3D64f point,
                             CvMatr64d camMatr,CvMatr64d rotMatr,CvVect64d transVect,
-                            CvPoint2D64d* projPoint);
+                            CvPoint2D64f* projPoint);
 
 CVAPI(void) icvGetQuadsTransform( CvSize        imageSize,
                         CvMatr64d     camMatr1,
@@ -694,8 +694,8 @@ CVAPI(void) icvGetQuadsTransform( CvSize        imageSize,
                         double quad1[4][2],
                         double quad2[4][2],
                         CvMatr64d     fundMatr,
-                        CvPoint3D64d* epipole1,
-                        CvPoint3D64d* epipole2
+                        CvPoint3D64f* epipole1,
+                        CvPoint3D64f* epipole2
                         );
 
 CVAPI(void) icvGetQuadsTransformStruct(  CvStereoCamera* stereoCamera);
@@ -703,24 +703,24 @@ CVAPI(void) icvGetQuadsTransformStruct(  CvStereoCamera* stereoCamera);
 CVAPI(void) icvComputeStereoParamsForCameras(CvStereoCamera* stereoCamera);
 
 CVAPI(void) icvGetCutPiece(   CvVect64d areaLineCoef1,CvVect64d areaLineCoef2,
-                    CvPoint2D64d epipole,
+                    CvPoint2D64f epipole,
                     CvSize imageSize,
-                    CvPoint2D64d* point11,CvPoint2D64d* point12,
-                    CvPoint2D64d* point21,CvPoint2D64d* point22,
+                    CvPoint2D64f* point11,CvPoint2D64f* point12,
+                    CvPoint2D64f* point21,CvPoint2D64f* point22,
                     int* result);
 
-CVAPI(void) icvGetMiddleAnglePoint(   CvPoint2D64d basePoint,
-                            CvPoint2D64d point1,CvPoint2D64d point2,
-                            CvPoint2D64d* midPoint);
+CVAPI(void) icvGetMiddleAnglePoint(   CvPoint2D64f basePoint,
+                            CvPoint2D64f point1,CvPoint2D64f point2,
+                            CvPoint2D64f* midPoint);
 
-CVAPI(void) icvGetNormalDirect(CvVect64d direct,CvPoint2D64d point,CvVect64d normDirect);
+CVAPI(void) icvGetNormalDirect(CvVect64d direct,CvPoint2D64f point,CvVect64d normDirect);
 
-CVAPI(double) icvGetVect(CvPoint2D64d basePoint,CvPoint2D64d point1,CvPoint2D64d point2);
+CVAPI(double) icvGetVect(CvPoint2D64f basePoint,CvPoint2D64f point1,CvPoint2D64f point2);
 
-CVAPI(void) icvProjectPointToDirect(  CvPoint2D64d point,CvVect64d lineCoeff,
-                            CvPoint2D64d* projectPoint);
+CVAPI(void) icvProjectPointToDirect(  CvPoint2D64f point,CvVect64d lineCoeff,
+                            CvPoint2D64f* projectPoint);
 
-CVAPI(void) icvGetDistanceFromPointToDirect( CvPoint2D64d point,CvVect64d lineCoef,double*dist);
+CVAPI(void) icvGetDistanceFromPointToDirect( CvPoint2D64f point,CvVect64d lineCoef,double*dist);
 
 CVAPI(IplImage*) icvCreateIsometricImage( IplImage* src, IplImage* dst,
                               int desired_depth, int desired_num_channels );
