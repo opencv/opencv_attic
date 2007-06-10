@@ -1,1 +1,2 @@
 SUBDIRS = c python
+EXTRA_DIST = MacOSX

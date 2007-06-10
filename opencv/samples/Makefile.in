@@ -208,6 +208,7 @@ target_vendor = @target_vendor@
 top_builddir = @top_builddir@
 top_srcdir = @top_srcdir@
 SUBDIRS = c python
+EXTRA_DIST = MacOSX
 all: all-recursive
 
 .SUFFIXES:

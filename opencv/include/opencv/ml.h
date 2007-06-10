@@ -46,10 +46,14 @@
 #pragma warning( disable : 4996 ) 
 #endif
 
-#include <cxcore.h>
+#include "cxcore.h"
 #include <limits.h>
 
 #ifdef __cplusplus
+
+// Apple defines a check() macro somewhere in the debug headers
+// that interferes with a method definiton in this header
+#undef check
 
 /****************************************************************************************\
 *                               Main struct definitions                                  *
@@ -159,6 +163,7 @@ struct CV_EXPORTS CvParamGrid
     {
         min_val = max_val = step = 0;
     }
+    
     CvParamGrid( double _min_val, double _max_val, double log_step )
     {
         min_val = _min_val;
