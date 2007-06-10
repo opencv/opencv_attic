@@ -217,7 +217,7 @@ MacOSX
      with the following exceptions:
 
      * Carbon is used instead of GTK+ by default
-     * Quicktime is used instead of FFMPEG by default
+     * Quicktime is used instead of FFMPEG/xine by default
      * pkg-config is optional (it is only used explicitly in samples\c\build_all.sh script)
      * RPM and ldconfig are not supported by default,
        use configure+make+sudo make install to build and install OpenCV,
