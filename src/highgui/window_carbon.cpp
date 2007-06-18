@@ -568,15 +568,62 @@ cvSetMouseCallback( const char* name, CvMouseCallback function, void* info)
 	}
 }
 
-CV_IMPL int cvGetTrackbarPos( const char*, const char* )
+ CV_IMPL int cvGetTrackbarPos( const char* trackbar_name, const char* window_name )
 {
-    //CV_NO_GTK_ERROR( "cvGetTrackbarPos" );
-    return -1;
+    int pos = -1;
+    
+    CV_FUNCNAME( "cvGetTrackbarPos" );
+
+    __BEGIN__;
+
+    CvWindow* window;
+    CvTrackbar* trackbar = 0;
+
+    if( trackbar_name == 0 || window_name == 0 )
+        CV_ERROR( CV_StsNullPtr, "NULL trackbar or window name" );
+
+    window = icvFindWindowByName( window_name );
+    if( window )
+        trackbar = icvFindTrackbarByName( window, trackbar_name );
+
+    if( trackbar )
+        pos = trackbar->pos;
+
+    __END__;
+
+    return pos;
 }
 
-CV_IMPL void cvSetTrackbarPos( const char*, const char*, int )
+CV_IMPL void cvSetTrackbarPos(const char* trackbar_name, const char* window_name, int pos)
 {
-    // CV_NO_GTK_ERROR( "cvSetTrackbarPos" );
+   CV_FUNCNAME( "cvSetTrackbarPos" );
+
+    __BEGIN__;
+
+    CvWindow* window;
+    CvTrackbar* trackbar = 0;
+
+    if( trackbar_name == 0 || window_name == 0 )
+        CV_ERROR( CV_StsNullPtr, "NULL trackbar or window name" );
+
+    window = icvFindWindowByName( window_name );
+    if( window )
+        trackbar = icvFindTrackbarByName( window, trackbar_name );
+
+    if( trackbar )
+    {
+        if( pos < 0 )
+            pos = 0;
+
+        if( pos > trackbar->maxval )
+            pos = trackbar->maxval;
+
+	// Set new value and redraw the trackbar
+	SetControlValue( trackbar->trackbar, pos );
+	Draw1Control( trackbar->trackbar );	
+    }
+
+    __END__;
     return ;
 }
 
