@@ -2,7 +2,7 @@
 
 # Set various version strings
 m4_define([opencv_major_version],    [1])
-m4_define([opencv_minor_version],    [0])
+m4_define([opencv_minor_version],    [1])
 m4_define([opencv_subminor_version], [0])
 m4_define([opencv_version],          [opencv_major_version.opencv_minor_version.opencv_subminor_version])
 
@@ -30,7 +30,7 @@ m4_define([opencv_version],          [opencv_major_version.opencv_minor_version.
 # This is an abuse that only fosters misunderstanding of the purpose of library versions. Instead, 
 # use the -release flag (see Release numbers), but be warned that every release of your package will 
 # not be binary compatible with any other release.
-m4_define([opencv_lt_version],       [1:0:0])
+m4_define([opencv_lt_version],       [2:0:0])
 
 # init autotools
 AC_PREREQ(2.60)
@@ -40,7 +40,7 @@ AC_CONFIG_AUX_DIR([autotools])
 AC_CONFIG_MACRO_DIR([autotools/aclocal])
 
 # put CVS revision of this configure.in into the resulting configure script
-AC_REVISION($Revision: 1.42 $)
+AC_REVISION($Revision: 1.43 $)
 
 # Detect the canonical host and target build environment
 AC_CANONICAL_HOST
@@ -67,19 +67,6 @@ AC_SUBST(LT_VERSION, [opencv_lt_version])
 # allow Cygwin to build DLLs
 AC_DISABLE_STATIC
 AC_LIBTOOL_WIN32_DLL
-
-# does the user want to build universal binaries on Mac OS X?
-# AC_ARG_ENABLE([universal-build],
-#               AS_HELP_STRING([--enable-universal-build],
-#                              [build universal binaries on Mac OS X (default is YES)]),
-#               [ac_cv_universal_build=$enableval],
-#               [ac_cv_universal_build=yes])
-
-# disable dependency tracking when building universal binaries on Mac OS X
-# (this has to be done before the program checks)
-# if test x"$ac_cv_universal_build" = xyes; then
-#     enable_dependency_tracking=no
-# fi
 
 # checks for programs.
 AC_PROG_CXX
@@ -149,6 +136,12 @@ AC_ARG_WITH([v4l],
             [AS_HELP_STRING([--with-v4l],[use video4linux [automatic]])],
             [with_v4l=$withval],
             [with_v4l=auto])
+
+# does the user want OpenCV to use image libraries from OS X 10.4?
+AC_ARG_WITH([imageio],
+            [AS_HELP_STRING([--with-imageio],[use ImageIO libraries [automatic]])],
+            [with_imageio=$withval],
+            [with_imageio=yes])
 
 # does the user want OpenCV to use QuickTime video libraries?
 AC_ARG_WITH([quicktime],
@@ -599,6 +592,22 @@ IMAGELIBS=""
 
 AC_SUBST(IMAGELIBS)
 
+have_imageio=no
+if test x"$with_imageio" = "xauto"; then
+    with_imageio=yes
+fi
+if test x"$with_imageio" = "xyes"; then
+    AC_CHECK_HEADER([ApplicationServices/ApplicationServices.h],
+                    [
+                      have_imageio=yes
+                      AC_DEFINE(HAVE_IMAGEIO,,[Apple ImageIO Framework])
+                      IMAGELIBS="$IMAGELIBS -framework ApplicationServices"
+                      LIBS="$LIBS -framework ApplicationServices"
+                    ],
+                    [ have_imageio=no ])
+fi
+AM_CONDITIONAL([BUILD_IMAGEIO], [test x"$have_imageio" = "xyes"])
+
 have_jpeg=no
 AC_CHECK_HEADER(jpeglib.h,
                 AC_CHECK_LIB(jpeg, jpeg_destroy_decompress,
@@ -854,6 +863,7 @@ HighGUI configuration ================================================
     Use libtiff:              ${have_tiff}
     Use libjasper:            ${have_jasper}
     Use libIlmImf:            ${have_ilmimf}
+    Use ImageIO / Mac OS X:   ${have_imageio}
     
     Video I/O ---------------------
     Use QuickTime / Mac OS X: ${have_quicktime}

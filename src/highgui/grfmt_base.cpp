@@ -90,6 +90,31 @@ GrFmtFilterFactory::GrFmtFilterFactory()
 }
 
 
+bool  GrFmtFilterFactory::CheckFile( const char* filename )
+{
+	FILE* f = 0;
+	char signature[4096];
+	int sign_len = 0;
+	int cur_sign_len = GetSignatureLength();
+	
+	if( !filename ) return false;
+	
+	assert( cur_sign_len <= (int)sizeof( signature ) );
+	f = fopen( filename, "rb" );
+	
+	if( f )
+	{
+		sign_len = (int)fread( signature, 1, cur_sign_len, f );
+		fclose( f );
+		
+		if( cur_sign_len <= sign_len && CheckSignature( signature ) )
+            return true;
+	}
+	
+	return false;
+}
+
+
 bool GrFmtFilterFactory::CheckSignature( const char* signature )
 {
     return m_sign_len > 0 && signature != 0 &&
@@ -237,42 +262,21 @@ GrFmtFilterFactory* GrFmtFactoriesList::GetNextFactory( ListPosition& pos )
 
 GrFmtReader* GrFmtFactoriesList::FindReader( const char* filename )
 {
-    FILE*  f = 0;
-    char   signature[4096];
-    int    sign_len = 0;
-    GrFmtReader* reader = 0;
-    ListPosition pos = GetFirstFactoryPos();
-
-    if( !filename ) return 0;
-
-    while( pos )
-    {
-        GrFmtFilterFactory* tempFactory = GetNextFactory(pos);
-        int cur_sign_len = tempFactory->GetSignatureLength();
-        if( sign_len < cur_sign_len ) sign_len = cur_sign_len;
-    }
-
-    assert( sign_len <= (int)sizeof(signature) );
-    f = fopen( filename, "rb" );
-
-    if( f )
-    {
-        sign_len = (int)fread( signature, 1, sign_len, f );
-        fclose(f);
-
-        pos = GetFirstFactoryPos();
-        while( pos )
-        {
-            GrFmtFilterFactory* tempFactory = GetNextFactory(pos);
-            int cur_sign_len = tempFactory->GetSignatureLength();
-            if( cur_sign_len <= sign_len && tempFactory->CheckSignature(signature))
-            {
-                reader = tempFactory->NewReader( filename );
-                break;
-            }
-        }
-    }
-
+	if( !filename ) return 0;
+	
+	GrFmtReader* reader = 0;
+	ListPosition pos = GetFirstFactoryPos();
+	
+	while( pos )
+	{
+		GrFmtFilterFactory* tempFactory = GetNextFactory( pos );
+		if( tempFactory->CheckFile( filename ) )
+		{
+			reader = tempFactory->NewReader( filename );
+			break;
+		}
+	}
+	
     return reader;
 }
 

@@ -48,6 +48,9 @@
 /* OpenEXR codec */
 #undef HAVE_ILMIMF
 
+/* Apple ImageIO Framework */
+#undef HAVE_IMAGEIO
+
 /* Define to 1 if you have the <inttypes.h> header file. */
 #undef HAVE_INTTYPES_H
 

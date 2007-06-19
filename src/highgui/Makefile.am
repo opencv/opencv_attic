@@ -2,7 +2,8 @@ EXTRA_DIST = highgui.dsp highgui.vcproj highgui.rc resource.h    \
     cvcap_cmu.cpp cvcap_tyzx.cpp cvcap_vfw.cpp cvcap_mil.cpp     \
     cvcap_qt.cpp cvcap_dc1394.cpp cvcap_ffmpeg.cpp               \
     cvcap_v4l.cpp cvcap_xine.cpp                                 \
-    window_carbon.cpp window_gtk.cpp window_w32.cpp
+    window_carbon.cpp window_gtk.cpp window_w32.cpp              \
+    grfmt_imageio.cpp
 
 INCLUDES = -I. -I$(top_srcdir)/cxcore/include \
     -I$(top_srcdir)/cv/include @GTHREAD_CFLAGS@ @GTK_CFLAGS@ \
@@ -10,7 +11,7 @@ INCLUDES = -I. -I$(top_srcdir)/cxcore/include \
 
 noinst_HEADERS     = \
     _highgui.h bitstrm.h grfmt_base.h grfmt_bmp.h \
-    grfmt_jpeg.h grfmt_jpeg2000.h grfmt_exr.h \
+    grfmt_jpeg.h grfmt_jpeg2000.h grfmt_exr.h grfmt_imageio.h \
     grfmt_pxm.h grfmt_png.h grfmt_sunras.h grfmt_tiff.h grfmts.h utils.h
 noinst_LTLIBRARIES = lib_highgui.la
 lib_LTLIBRARIES    = libhighgui.la
@@ -57,6 +58,12 @@ else
 TMP_GTK=
 endif
 
+if BUILD_IMAGEIO
+TMP_IMAGEIO=grfmt_imageio.cpp
+else
+TMP_IMAGEIO=
+endif
+
 
 # convenience library
 lib_highgui_la_SOURCES = \
@@ -65,7 +72,7 @@ lib_highgui_la_SOURCES = \
     grfmt_sunras.cpp grfmt_tiff.cpp image.cpp loadsave.cpp       \
     precomp.cpp utils.cpp cvcap.cpp window.cpp                   \
     $(TMP_DC1394) $(TMP_V4L) $(TMP_FFMPEG) $(TMP_QT)             \
-    $(TMP_XINE) $(TMP_GTK) $(TMP_CARBON)
+    $(TMP_XINE) $(TMP_GTK) $(TMP_CARBON) $(TMP_IMAGEIO)
 lib_highgui_la_LDFLAGS = -no-undefined @LDFLAGS@
 
 # real library
