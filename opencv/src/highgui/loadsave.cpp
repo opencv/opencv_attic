@@ -295,6 +295,9 @@ CvImageFilters::CvImageFilters()
 {
     m_factories = new GrFmtFactoriesList;
 
+#ifdef HAVE_IMAGEIO
+    m_factories->AddFactory( new GrFmtImageIO() );
+#endif
     m_factories->AddFactory( new GrFmtBmp() );
     m_factories->AddFactory( new GrFmtJpeg() );
     m_factories->AddFactory( new GrFmtSunRaster() );

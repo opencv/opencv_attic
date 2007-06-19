@@ -115,6 +115,7 @@ public:
 
     const char*  GetDescription() { return m_description; };
     int     GetSignatureLength()  { return m_sign_len; };
+	virtual bool CheckFile( const char* filename );
     virtual bool CheckSignature( const char* signature );
     virtual bool CheckExtension( const char* filename );
     virtual GrFmtReader* NewReader( const char* filename ) = 0;
