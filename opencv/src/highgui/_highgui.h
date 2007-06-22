@@ -99,6 +99,18 @@ typedef struct CvCapture
 }
 CvCapture;
 
+extern "C" {
+
+typedef CvCapture* (CV_CDECL * CvCaptureFromFile)( const char* filename );
+
+typedef CvVideoWriter* (CV_CDECL * CvCreateVideoWriter)( const char * filename,
+        int fourcc, double fps, CvSize frameSize, int is_color );
+
+typedef int (CV_CDECL * CvWriteFrame)( CvVideoWriter * writer, const IplImage * image );
+
+typedef void (CV_CDECL * CvReleaseVideoWriter)( CvVideoWriter ** writer );
+
+}
 
 #ifdef WIN32
 #define HAVE_VFW 1
@@ -132,8 +144,16 @@ CV_IMPL CvCapture * cvCaptureFromCAM_TYZX( int index );
 #endif
 
 #ifdef WIN32
+CvCapture* cvCaptureFromFile_Win32( const char* filename );
+
 CvCapture* cvCaptureFromCAM_VFW( int index );
 CvCapture* cvCaptureFromFile_VFW( const char* filename );
+
+CvVideoWriter* cvCreateVideoWriter_VFW( const char* filename, int fourcc,
+                                        double fps, CvSize frameSize, int is_color );
+int cvWriteFrame_VFW( CvVideoWriter* _writer, const IplImage* image );
+void cvReleaseVideoWriter_VFW( CvVideoWriter** writer );
+
 #endif
 
 #ifdef HAVE_XINE

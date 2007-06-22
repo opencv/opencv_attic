@@ -206,34 +206,32 @@ CV_IMPL CvCapture * cvCaptureFromCAM (int index)
  */
 CV_IMPL CvCapture * cvCaptureFromFile (const char * filename)
 {
-	CvCapture * result = 0;
-	
-	#ifdef HAVE_VFW
-	if (! result)
-		result = cvCaptureFromFile_VFW (filename);
-	#endif
-	
-	#ifdef HAVE_XINE
-	if (! result)
-		result = cvCaptureFromFile_XINE (filename);
-	#endif
-	
-	#ifdef HAVE_FFMPEG
-	if (! result)
-		result = cvCaptureFromFile_FFMPEG (filename);
-	#endif
-	
-	#ifdef HAVE_QUICKTIME
-	if (! result)
-		result = cvCaptureFromFile_QT (filename);
-	#endif
-	
-	return result;
+    CvCapture * result = 0;
+    
+    #ifdef WIN32
+    if (! result)
+        result = cvCaptureFromFile_Win32 (filename);
+    #endif
+    
+    #ifdef HAVE_XINE
+    if (! result)
+        result = cvCaptureFromFile_XINE (filename);
+    #endif
+    
+    #ifdef HAVE_FFMPEG
+    if (! result)
+        result = cvCaptureFromFile_FFMPEG (filename);
+    #endif
+    
+    #ifdef HAVE_QUICKTIME
+    if (! result)
+        result = cvCaptureFromFile_QT (filename);
+    #endif
+
+    return result;
 }
 
-#ifndef HAVE_FFMPEG
-#ifndef HAVE_VFW
-#ifndef HAVE_QUICKTIME
+#if !defined WIN32 && !defined HAVE_FFMPEG && !defined HAVE_VFW && !defined HAVE_QUICKTIME
 
 // quick fix for rc1
 
@@ -252,6 +250,4 @@ CV_IMPL void cvReleaseVideoWriter( CvVideoWriter** writer )
 {
 }
 
-#endif
-#endif
 #endif

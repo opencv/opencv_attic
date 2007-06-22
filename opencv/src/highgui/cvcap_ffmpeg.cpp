@@ -43,6 +43,7 @@
 
 extern "C" {
 #include <ffmpeg/avformat.h>
+#include <ffmpeg/avutil.h>
 }
 
 #ifdef NDEBUG
@@ -106,6 +107,10 @@ static int icvOpenAVI_FFMPEG( CvCaptureAVI_FFMPEG* capture, const char* filename
     /* register all codecs, demux and protocols */
     av_register_all();
 
+#ifndef _DEBUG
+    av_log_level = AV_LOG_QUIET;
+#endif
+
     err = av_open_input_file(&ic, filename, NULL, 0, NULL);
     if (err < 0) {
 	    CV_WARN("Error opening file");
@@ -134,7 +139,7 @@ static int icvOpenAVI_FFMPEG( CvCaptureAVI_FFMPEG* capture, const char* filename
         capture->video_st = ic->streams[i];
         capture->picture = avcodec_alloc_frame();
 
-        capture->rgb_picture.data[0] = (uchar*)cvAlloc(
+        capture->rgb_picture.data[0] = (uint8_t*)cvAlloc(
                                 avpicture_get_size( PIX_FMT_BGR24,
                                 enc->width, enc->height ));
         avpicture_fill( (AVPicture*)&capture->rgb_picture, capture->rgb_picture.data[0],
@@ -282,7 +287,7 @@ static double icvGetPropertyAVI_FFMPEG( CvCaptureAVI_FFMPEG* capture, int proper
 
 
 static int icvSetPropertyAVI_FFMPEG( CvCaptureAVI_FFMPEG* capture,
-                                     int property_id, double value )
+                                     int property_id, double /*value*/ )
 {
     if( !capture || !capture->video_st || !capture->picture->data[0] )
     return 0;
@@ -355,7 +360,10 @@ CvCapture* cvCaptureFromFile_FFMPEG( const char* filename )
         capture->vtable = &captureAVI_FFMPEG_vtable;
 
         if( !icvOpenAVI_FFMPEG( capture, filename ))
-            cvReleaseCapture( (CvCapture**)&capture );
+        {
+            capture->vtable->close((CvCapture*)capture);
+            cvFree( &capture );
+        }
     }
 
     return (CvCapture*)capture;
@@ -491,9 +499,9 @@ static AVStream *icv_add_video_stream_FFMPEG(AVFormatContext *oc,
 	/* adjust time base for supported framerates */
 	if(codec && codec->supported_framerates){
 		const AVRational *p= codec->supported_framerates;
-		AVRational req= (AVRational){frame_rate, frame_rate_base};
+        AVRational req = {frame_rate, frame_rate_base};
 		const AVRational *best=NULL;
-		AVRational best_error= (AVRational){INT_MAX, 1};
+		AVRational best_error= {INT_MAX, 1};
 		for(; p->den!=0; p++){
 			AVRational error= av_sub_q(req, *p);
 			if(error.num <0) error.num *= -1;

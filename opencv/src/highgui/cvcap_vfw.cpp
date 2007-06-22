@@ -141,10 +141,8 @@ static int icvOpenAVI_VFW( CvCaptureAVI_VFW* capture, const char* filename )
                                     sizeof(capture->aviinfo));
             if( SUCCEEDED(hr))
             {
-                int fcc = capture->aviinfo.fccHandler;
-                capture->data_offset = fcc == CV_FOURCC('d','i','v','3') ||
-                    fcc == CV_FOURCC('x','v','i','d') ? 3 :
-                    fcc == CV_FOURCC('D', 'I', 'B', ' ') ? 1024 : 0;
+                //int fcc = capture->aviinfo.fccHandler;
+                capture->data_offset = 0;
                 capture->size.width = capture->aviinfo.rcFrame.right -
                                       capture->aviinfo.rcFrame.left;
                 capture->size.height = capture->aviinfo.rcFrame.bottom -
@@ -616,8 +614,8 @@ static int icvInitAVIWriter( CvAVI_VFW_Writer* writer, int fourcc,
     return 0;
 }
 
-CV_IMPL CvVideoWriter* cvCreateVideoWriter( const char* filename, int fourcc,
-                                            double fps, CvSize frameSize, int is_color )
+CvVideoWriter* cvCreateVideoWriter_VFW( const char* filename, int fourcc,
+                                        double fps, CvSize frameSize, int is_color )
 {
     CvAVI_VFW_Writer* writer = (CvAVI_VFW_Writer*)cvAlloc( sizeof(CvAVI_VFW_Writer));
     memset( writer, 0, sizeof(*writer));
@@ -647,7 +645,7 @@ CV_IMPL CvVideoWriter* cvCreateVideoWriter( const char* filename, int fourcc,
     return (CvVideoWriter*)writer;
 }
 
-CV_IMPL int cvWriteFrame( CvVideoWriter* _writer, const IplImage* image )
+int cvWriteFrame_VFW( CvVideoWriter* _writer, const IplImage* image )
 {
     CvAVI_VFW_Writer* writer = (CvAVI_VFW_Writer*)_writer;
 	
@@ -676,7 +674,7 @@ CV_IMPL int cvWriteFrame( CvVideoWriter* _writer, const IplImage* image )
     return 0;
 }
 
-CV_IMPL void cvReleaseVideoWriter( CvVideoWriter** writer )
+void cvReleaseVideoWriter_VFW( CvVideoWriter** writer )
 {
     if( writer && *writer )
     {

@@ -421,7 +421,7 @@ CV_INLINE IplROI RectToROI( RECT r )
 #endif /* __cplusplus */
 
 
-#if defined __cplusplus && (!defined WIN32 || !defined (__GNUC__))
+#if defined __cplusplus && (!defined WIN32 || !defined (__GNUC__)) && !defined CV_NO_CVV_IMAGE
 
 #define CImage CvvImage
 
