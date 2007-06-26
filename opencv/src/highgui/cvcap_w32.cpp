@@ -53,13 +53,18 @@ icvInitFFMPEG(void)
 {
     if( !ffmpeg_initialized )
     {
+#ifdef _DEBUG
+#define ffopencv_suffix_dbg "d"
+#else
+#define ffopencv_suffix_dbg ""
+#endif
 #if defined EM64T
 #define ffopencv_suffix "_64"
 #else
 #define ffopencv_suffix ""
 #endif
 
-#define ffopencv_name_m2(a,b,c) "ffopencv" #a #b #c ffopencv_suffix ".dll"
+#define ffopencv_name_m2(a,b,c) "ffopencv" #a #b #c ffopencv_suffix ffopencv_suffix_dbg ".dll"
 #define ffopencv_name_m(a,b,c) ffopencv_name_m2(a,b,c)
         const char* ffopencv_name =
             ffopencv_name_m(CV_MAJOR_VERSION,CV_MINOR_VERSION,CV_SUBMINOR_VERSION);
