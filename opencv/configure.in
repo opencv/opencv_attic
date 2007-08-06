@@ -40,7 +40,7 @@ AC_CONFIG_AUX_DIR([autotools])
 AC_CONFIG_MACRO_DIR([autotools/aclocal])
 
 # put CVS revision of this configure.in into the resulting configure script
-AC_REVISION($Revision: 1.43 $)
+AC_REVISION($Revision: 1.44 $)
 
 # Detect the canonical host and target build environment
 AC_CANONICAL_HOST
@@ -608,37 +608,45 @@ if test x"$with_imageio" = "xyes"; then
 fi
 AM_CONDITIONAL([BUILD_IMAGEIO], [test x"$have_imageio" = "xyes"])
 
+
 have_jpeg=no
-AC_CHECK_HEADER(jpeglib.h,
-                AC_CHECK_LIB(jpeg, jpeg_destroy_decompress,
-                             [
-                               have_jpeg=yes
-                               AC_DEFINE(HAVE_JPEG,,[IJG JPEG codec])
-                               IMAGELIBS="$IMAGELIBS -ljpeg"
-                             ]))
-
 have_zlib=no
-AC_CHECK_HEADER(zlib.h,
-                AC_CHECK_LIB(z, gzopen,
-                             [
-                               have_zlib=yes
-                               AC_DEFINE(HAVE_ZLIB,,[LZ77 compression/decompression library (used for PNG)])
-                               IMAGELIBS="$IMAGELIBS -lz -lm"
-                               LIBS="$LIBS -lz -lm"
-                             ]))
-
 have_png=no
-AC_CHECK_HEADER(png.h, 
-                [
-                  AC_DEFINE(HAVE_PNG_H,,[png.h needs to be included])
-                  have_png=yes
-                ])
-AC_CHECK_HEADER([libpng/png.h], 
-                [
-                  AC_DEFINE(HAVE_LIBPNG_PNG_H,,[libpng/png.h needs to be included])
-                  have_png=yes
-                ])
-if test x"$have_png" = "xyes"; then
+have_tiff=no
+
+# there are problems with dependencies of ImageIO to libtiff, etc.
+# that we avoid by not linking them ourselves
+if test x"$have_imageio" = "xno" ; then
+
+  AC_CHECK_HEADER(jpeglib.h,
+                  AC_CHECK_LIB(jpeg, jpeg_destroy_decompress,
+                               [
+                                 have_jpeg=yes
+                                 AC_DEFINE(HAVE_JPEG,,[IJG JPEG codec])
+                                 IMAGELIBS="$IMAGELIBS -ljpeg"
+                               ]))
+
+  AC_CHECK_HEADER(zlib.h,
+                  AC_CHECK_LIB(z, gzopen,
+                               [
+                                 have_zlib=yes
+                                 AC_DEFINE(HAVE_ZLIB,,[LZ77 compression/decompression library (used for PNG)])
+                                 IMAGELIBS="$IMAGELIBS -lz -lm"
+                                 LIBS="$LIBS -lz -lm"
+                               ]))
+
+  AC_CHECK_HEADER(png.h, 
+                  [
+                    AC_DEFINE(HAVE_PNG_H,,[png.h needs to be included])
+                    have_png=yes
+                  ])
+  AC_CHECK_HEADER([libpng/png.h], 
+                  [
+                    AC_DEFINE(HAVE_LIBPNG_PNG_H,,[libpng/png.h needs to be included])
+                    have_png=yes
+                  ])
+  
+  if test x"$have_png" = "xyes"; then
     AC_CHECK_LIB(png12, png_read_image,
                  [
                    have_png=yes
@@ -648,17 +656,17 @@ if test x"$have_png" = "xyes"; then
                    AC_CHECK_FUNCS(png_get_valid png_set_tRNS_to_alpha)
                  ],
                  [ have_png=no ])
-fi
+  fi
 
-have_tiff=no
-AC_CHECK_HEADER(tiff.h,
-                AC_CHECK_LIB(tiff, TIFFReadRGBAStrip,
-                             [
-                               have_tiff=yes
-                               AC_DEFINE(HAVE_TIFF,,[TIFF codec])
-                               IMAGELIBS="$IMAGELIBS -ltiff"
-                               LIBS="$LIBS -ltiff"
-                             ]))
+  AC_CHECK_HEADER(tiff.h,
+                  AC_CHECK_LIB(tiff, TIFFReadRGBAStrip,
+                               [
+                                 have_tiff=yes
+                                 AC_DEFINE(HAVE_TIFF,,[TIFF codec])
+                                 IMAGELIBS="$IMAGELIBS -ltiff"
+                                 LIBS="$LIBS -ltiff"
+                               ]))
+fi
 
 have_jasper=no
 AC_CHECK_HEADER(jasper/jasper.h,
@@ -857,13 +865,13 @@ HighGUI configuration ================================================
     Use gthread:              ${have_gthread}
     
     Image I/O ---------------------
+    Use ImageIO / Mac OS X:   ${have_imageio}
     Use libjpeg:              ${have_jpeg}
     Use zlib:                 ${have_zlib}
     Use libpng:               ${have_png}
     Use libtiff:              ${have_tiff}
     Use libjasper:            ${have_jasper}
     Use libIlmImf:            ${have_ilmimf}
-    Use ImageIO / Mac OS X:   ${have_imageio}
     
     Video I/O ---------------------
     Use QuickTime / Mac OS X: ${have_quicktime}
