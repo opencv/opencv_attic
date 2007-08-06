@@ -11,7 +11,7 @@
 #ifdef HAVE_IMAGEIO
 
 #include "grfmt_imageio.h"
-
+#include <iostream>
 
 // ImageIO filter factory
 
@@ -365,12 +365,16 @@ bool  GrFmtImageIOWriter::WriteImage( const uchar* data, int step,
     {
         CGImageRelease( imageRef );
         free( bitmapData );
+        std::cerr << "!destRef" << std::endl << std::flush;
         return false;
     }
     
     CGImageDestinationAddImage(destRef, imageRef, NULL);
-    if( CGImageDestinationFinalize(destRef) )
+    if( !CGImageDestinationFinalize(destRef) )
+    {
+        std::cerr << "Finalize failed" << std::endl << std::flush;
         return false;
+    }
     
     CFRelease( destRef );
     CGImageRelease( imageRef );    
