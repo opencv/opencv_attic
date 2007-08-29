@@ -175,8 +175,8 @@ bool CvNormalBayesClassifier::train( const CvMat* _train_data, const CvMat* _res
     else
     {
         // check that the new training data has the same dimensionality etc.
-        if( _var_count != var_count || _var_all != var_all || _var_idx && !var_idx || !_var_idx && !var_idx ||
-            _var_idx && var_idx && cvNorm(_var_idx,var_idx,CV_C) > DBL_EPSILON )
+        if( _var_count != var_count || _var_all != var_all || !(!_var_idx && !var_idx ||
+            _var_idx && var_idx && cvNorm(_var_idx,var_idx,CV_C) < DBL_EPSILON) )
             CV_ERROR( CV_StsBadArg,
             "The new training data is inconsistent with the original training data" );
 
