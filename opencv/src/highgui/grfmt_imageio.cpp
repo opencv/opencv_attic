@@ -117,8 +117,6 @@ bool  GrFmtImageIOReader::ReadHeader()
     
     m_iscolor = ( CGColorSpaceGetNumberOfComponents( colorSpace ) > 1 );
     
-    CFRelease( colorSpace );
-    
     return true;
 }
 
