@@ -78,6 +78,9 @@ cvCreateFGDStatModel( IplImage* first_frame, CvFGDStatModelParams* parameters )
     if( !CV_IS_IMAGE(first_frame) )
         CV_ERROR( CV_StsBadArg, "Invalid or NULL first_frame parameter" );
 
+    if (first_frame->nChannels != 3)
+        CV_ERROR( CV_StsBadArg, "first_frame must have 3 color channels" );
+
     //init parameters
     if( parameters == NULL )
     {
