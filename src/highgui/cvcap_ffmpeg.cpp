@@ -599,7 +599,6 @@ CV_IMPL CvVideoWriter* cvCreateVideoWriter( const char * filename, int fourcc,
     // set a few optimal pixel formats for lossless codecs of interest..
     int codec_pix_fmt;
     switch (codec_id) {
-    case CODEC_ID_RAWVIDEO:
     case CODEC_ID_JPEGLS:
         // BGR24 or GRAY8 depending on is_color...
         codec_pix_fmt = writer->input_pix_fmt;
@@ -612,6 +611,7 @@ CV_IMPL CvVideoWriter* cvCreateVideoWriter( const char * filename, int fourcc,
 	case CODEC_ID_LJPEG:
 		codec_pix_fmt = PIX_FMT_YUVJ420P;
 		break;
+    case CODEC_ID_RAWVIDEO:
     default:
         // good for lossy formats, MPEG, etc.
         codec_pix_fmt = PIX_FMT_YUV420P;
