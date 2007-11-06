@@ -382,6 +382,7 @@ typedef struct CvAVI_FFMPEG_Writer
     uint8_t         * picbuf;
 	AVStream        * video_st;
 	int 			  input_pix_fmt;
+    IplImage        * temp_image;
 } CvAVI_FFMPEG_Writer;
 
 const char * icv_FFMPEG_ErrStr(int err)
@@ -590,7 +591,7 @@ CV_IMPL CvVideoWriter* cvCreateVideoWriter( const char * filename, int fourcc,
 
 	/* Lookup codec_id for given fourcc */
 	if(fourcc!=CV_FOURCC_DEFAULT){
-		if( (codec_id = codec_get_bmp_id( fourcc )) == CODEC_ID_NONE ){
+        if( (codec_id = codec_get_bmp_id( fourcc )) == CODEC_ID_NONE ){
 			CV_ERROR( CV_StsUnsupportedFormat, 
 				"FFMPEG could not find a codec matching the given FOURCC code. Use fourcc=CV_FOURCC_DEFAULT for auto selection." );
 		}
@@ -620,7 +621,8 @@ CV_IMPL CvVideoWriter* cvCreateVideoWriter( const char * filename, int fourcc,
 
 	// TODO -- safe to ignore output audio stream?
 	writer->video_st = icv_add_video_stream_FFMPEG(writer->oc, codec_id, 
-			frameSize.width, frameSize.height, 800000, fps, codec_pix_fmt);
+			frameSize.width, frameSize.height, frameSize.width*frameSize.height*64,
+            fps, codec_pix_fmt);
 
 
 	/* set the output parameters (must be done even if no
@@ -646,6 +648,7 @@ CV_IMPL CvVideoWriter* cvCreateVideoWriter( const char * filename, int fourcc,
     c = &(writer->video_st->codec);
 #endif
 
+    c->codec_tag = fourcc;
     /* find the video encoder */
     codec = avcodec_find_encoder(c->codec_id);
     if (!codec) {
@@ -781,6 +784,16 @@ CV_IMPL int cvWriteFrame( CvVideoWriter * writer, const IplImage * image )
 #else
 	AVCodecContext *c = &(mywriter->video_st->codec);
 #endif
+    
+    if( c->codec_id == CODEC_ID_RAWVIDEO && image->origin != IPL_ORIGIN_BL )
+    {
+        if( !mywriter->temp_image )
+            mywriter->temp_image = cvCreateImage( cvGetSize(image),
+                                    image->depth, image->nChannels );
+        cvFlip( image, mywriter->temp_image, 0 );
+        image = mywriter->temp_image;
+    }
+
     // check parameters
     if (mywriter->input_pix_fmt == PIX_FMT_BGR24) {
         if (image->nChannels != 3 || image->depth != IPL_DEPTH_8U) {
@@ -879,6 +892,8 @@ CV_IMPL void cvReleaseVideoWriter( CvVideoWriter ** writer )
 
 	/* free the stream */
 	av_free(mywriter->oc);
+
+    cvReleaseImage( &mywriter->temp_image );
 
 	/* free cvVideoWriter */
 	cvFree ( writer );
