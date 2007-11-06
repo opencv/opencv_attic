@@ -642,7 +642,10 @@ cvResize( const CvArr* srcarr, CvArr* dstarr, int method )
     CV_CALL( dst = cvGetMat( dstarr, &dststub ));
     
     if( CV_ARE_SIZES_EQ( src, dst ))
+    {
         CV_CALL( cvCopy( src, dst ));
+        EXIT;
+    }
 
     if( !CV_ARE_TYPES_EQ( src, dst ))
         CV_ERROR( CV_StsUnmatchedFormats, "" );
