@@ -73,10 +73,13 @@
         icvMorphInitAlloc_##flavor##_C4R_p = 0;
 
 IPCV_MORPHOLOGY_PTRS( Erode, 8u )
+IPCV_MORPHOLOGY_PTRS( Erode, 16u )
 IPCV_MORPHOLOGY_PTRS( Erode, 32f )
 IPCV_MORPHOLOGY_PTRS( Dilate, 8u )
+IPCV_MORPHOLOGY_PTRS( Dilate, 16u )
 IPCV_MORPHOLOGY_PTRS( Dilate, 32f )
 IPCV_MORPHOLOGY_INITALLOC_PTRS( 8u )
+IPCV_MORPHOLOGY_INITALLOC_PTRS( 16u )
 IPCV_MORPHOLOGY_INITALLOC_PTRS( 32f )
 
 icvMorphFree_t icvMorphFree_p = 0;
@@ -86,25 +89,35 @@ icvMorphFree_t icvMorphFree_p = 0;
 \****************************************************************************************/
 
 static void icvErodeRectRow_8u( const uchar* src, uchar* dst, void* params );
+static void icvErodeRectRow_16u( const ushort* src, ushort* dst, void* params );
 static void icvErodeRectRow_32f( const int* src, int* dst, void* params );
 static void icvDilateRectRow_8u( const uchar* src, uchar* dst, void* params );
+static void icvDilateRectRow_16u( const ushort* src, ushort* dst, void* params );
 static void icvDilateRectRow_32f( const int* src, int* dst, void* params );
 
 static void icvErodeRectCol_8u( const uchar** src, uchar* dst, int dst_step,
                                 int count, void* params );
+static void icvErodeRectCol_16u( const ushort** src, ushort* dst, int dst_step,
+                                 int count, void* params );
 static void icvErodeRectCol_32f( const int** src, int* dst, int dst_step,
                                  int count, void* params );
 static void icvDilateRectCol_8u( const uchar** src, uchar* dst, int dst_step,
                                  int count, void* params );
+static void icvDilateRectCol_16u( const ushort** src, ushort* dst, int dst_step,
+                                  int count, void* params );
 static void icvDilateRectCol_32f( const int** src, int* dst, int dst_step,
                                   int count, void* params );
 
 static void icvErodeAny_8u( const uchar** src, uchar* dst, int dst_step,
                             int count, void* params );
+static void icvErodeAny_16u( const ushort** src, ushort* dst, int dst_step,
+                             int count, void* params );
 static void icvErodeAny_32f( const int** src, int* dst, int dst_step,
                              int count, void* params );
 static void icvDilateAny_8u( const uchar** src, uchar* dst, int dst_step,
                              int count, void* params );
+static void icvDilateAny_16u( const ushort** src, ushort* dst, int dst_step,
+                              int count, void* params );
 static void icvDilateAny_32f( const int** src, int* dst, int dst_step,
                               int count, void* params );
 
@@ -185,6 +198,9 @@ void CvMorphology::init( int _operation, int _max_width, int _src_dst_type,
             if( depth == CV_8U )
                 x_func = (CvRowFilterFunc)icvErodeRectRow_8u,
                 y_func = (CvColumnFilterFunc)icvErodeRectCol_8u;
+            else if( depth == CV_16U )
+                x_func = (CvRowFilterFunc)icvErodeRectRow_16u,
+                y_func = (CvColumnFilterFunc)icvErodeRectCol_16u;
             else if( depth == CV_32F )
                 x_func = (CvRowFilterFunc)icvErodeRectRow_32f,
                 y_func = (CvColumnFilterFunc)icvErodeRectCol_32f;
@@ -195,6 +211,9 @@ void CvMorphology::init( int _operation, int _max_width, int _src_dst_type,
             if( depth == CV_8U )
                 x_func = (CvRowFilterFunc)icvDilateRectRow_8u,
                 y_func = (CvColumnFilterFunc)icvDilateRectCol_8u;
+            else if( depth == CV_16U )
+                x_func = (CvRowFilterFunc)icvDilateRectRow_16u,
+                y_func = (CvColumnFilterFunc)icvDilateRectCol_16u;
             else if( depth == CV_32F )
                 x_func = (CvRowFilterFunc)icvDilateRectRow_32f,
                 y_func = (CvColumnFilterFunc)icvDilateRectCol_32f;
@@ -229,6 +248,8 @@ void CvMorphology::init( int _operation, int _max_width, int _src_dst_type,
         {
             if( depth == CV_8U )
                 y_func = (CvColumnFilterFunc)icvErodeAny_8u;
+            else if( depth == CV_16U )
+                y_func = (CvColumnFilterFunc)icvErodeAny_16u;
             else if( depth == CV_32F )
                 y_func = (CvColumnFilterFunc)icvErodeAny_32f;
         }
@@ -237,6 +258,8 @@ void CvMorphology::init( int _operation, int _max_width, int _src_dst_type,
             assert( operation == DILATE );
             if( depth == CV_8U )
                 y_func = (CvColumnFilterFunc)icvDilateAny_8u;
+            else if( depth == CV_16U )
+                y_func = (CvColumnFilterFunc)icvDilateAny_16u;
             else if( depth == CV_32F )
                 y_func = (CvColumnFilterFunc)icvDilateAny_32f;
         }
@@ -488,6 +511,8 @@ icv##name##RectRow_##flavor( const arrtype* src,            \
 
 ICV_MORPH_RECT_ROW( Erode, 8u, uchar, int, CV_CALC_MIN_8U )
 ICV_MORPH_RECT_ROW( Dilate, 8u, uchar, int, CV_CALC_MAX_8U )
+ICV_MORPH_RECT_ROW( Erode, 16u, ushort, int, CV_CALC_MIN )
+ICV_MORPH_RECT_ROW( Dilate, 16u, ushort, int, CV_CALC_MAX )
 ICV_MORPH_RECT_ROW( Erode, 32f, int, int, CV_CALC_MIN )
 ICV_MORPH_RECT_ROW( Dilate, 32f, int, int, CV_CALC_MAX )
 
@@ -615,6 +640,8 @@ icv##name##RectCol_##flavor( const arrtype** src,           \
 
 ICV_MORPH_RECT_COL( Erode, 8u, uchar, int, CV_CALC_MIN_8U, CV_NOP )
 ICV_MORPH_RECT_COL( Dilate, 8u, uchar, int, CV_CALC_MAX_8U, CV_NOP )
+ICV_MORPH_RECT_COL( Erode, 16u, ushort, int, CV_CALC_MIN, CV_NOP )
+ICV_MORPH_RECT_COL( Dilate, 16u, ushort, int, CV_CALC_MAX, CV_NOP )
 ICV_MORPH_RECT_COL( Erode, 32f, int, int, CV_CALC_MIN, CV_TOGGLE_FLT )
 ICV_MORPH_RECT_COL( Dilate, 32f, int, int, CV_CALC_MAX, CV_TOGGLE_FLT )
 
@@ -687,6 +714,8 @@ icv##name##Any_##flavor( const arrtype** src, arrtype* dst, \
 
 ICV_MORPH_ANY( Erode, 8u, uchar, int, CV_CALC_MIN, CV_NOP )
 ICV_MORPH_ANY( Dilate, 8u, uchar, int, CV_CALC_MAX, CV_NOP )
+ICV_MORPH_ANY( Erode, 16u, ushort, int, CV_CALC_MIN, CV_NOP )
+ICV_MORPH_ANY( Dilate, 16u, ushort, int, CV_CALC_MAX, CV_NOP )
 ICV_MORPH_ANY( Erode, 32f, int, int, CV_CALC_MIN, CV_TOGGLE_FLT )
 ICV_MORPH_ANY( Dilate, 32f, int, int, CV_CALC_MAX, CV_TOGGLE_FLT )
 
@@ -883,6 +912,15 @@ icvMorphOp( const void* srcarr, void* dstarr, IplConvKernel* element,
             else if( type == CV_8UC4 )
                 rect_getbufsize_func = icvErodeRect_GetBufSize_8u_C4R_p,
                 rect_func = icvErodeRect_8u_C4R_p;
+            else if( type == CV_16UC1 )
+                rect_getbufsize_func = icvErodeRect_GetBufSize_16u_C1R_p,
+                rect_func = icvErodeRect_16u_C1R_p;
+            else if( type == CV_16UC3 )
+                rect_getbufsize_func = icvErodeRect_GetBufSize_16u_C3R_p,
+                rect_func = icvErodeRect_16u_C3R_p;
+            else if( type == CV_16UC4 )
+                rect_getbufsize_func = icvErodeRect_GetBufSize_16u_C4R_p,
+                rect_func = icvErodeRect_16u_C4R_p;
             else if( type == CV_32FC1 )
                 rect_getbufsize_func = icvErodeRect_GetBufSize_32f_C1R_p,
                 rect_func = icvErodeRect_32f_C1R_p;
@@ -904,6 +942,15 @@ icvMorphOp( const void* srcarr, void* dstarr, IplConvKernel* element,
             else if( type == CV_8UC4 )
                 rect_getbufsize_func = icvDilateRect_GetBufSize_8u_C4R_p,
                 rect_func = icvDilateRect_8u_C4R_p;
+            else if( type == CV_16UC1 )
+                rect_getbufsize_func = icvDilateRect_GetBufSize_16u_C1R_p,
+                rect_func = icvDilateRect_16u_C1R_p;
+            else if( type == CV_16UC3 )
+                rect_getbufsize_func = icvDilateRect_GetBufSize_16u_C3R_p,
+                rect_func = icvDilateRect_16u_C3R_p;
+            else if( type == CV_16UC4 )
+                rect_getbufsize_func = icvDilateRect_GetBufSize_16u_C4R_p,
+                rect_func = icvDilateRect_16u_C4R_p;
             else if( type == CV_32FC1 )
                 rect_getbufsize_func = icvDilateRect_GetBufSize_32f_C1R_p,
                 rect_func = icvDilateRect_32f_C1R_p;
@@ -966,6 +1013,15 @@ icvMorphOp( const void* srcarr, void* dstarr, IplConvKernel* element,
         else if( type == CV_8UC4 )
             custom_initalloc_func = icvMorphInitAlloc_8u_C4R_p,
             custom_func = mop == 0 ? icvErode_8u_C4R_p : icvDilate_8u_C4R_p;
+        else if( type == CV_16UC1 )
+            custom_initalloc_func = icvMorphInitAlloc_16u_C1R_p,
+            custom_func = mop == 0 ? icvErode_16u_C1R_p : icvDilate_16u_C1R_p;
+        else if( type == CV_16UC3 )
+            custom_initalloc_func = icvMorphInitAlloc_16u_C3R_p,
+            custom_func = mop == 0 ? icvErode_16u_C3R_p : icvDilate_16u_C3R_p;
+        else if( type == CV_16UC4 )
+            custom_initalloc_func = icvMorphInitAlloc_16u_C4R_p,
+            custom_func = mop == 0 ? icvErode_16u_C4R_p : icvDilate_16u_C4R_p;
         else if( type == CV_32FC1 )
             custom_initalloc_func = icvMorphInitAlloc_32f_C1R_p,
             custom_func = mop == 0 ? icvErode_32f_C1R_p : icvDilate_32f_C1R_p;
