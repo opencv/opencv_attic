@@ -1125,7 +1125,7 @@ cvEstimateRigidTransform( const CvArr* _A, const CvArr* _B, CvMat* _M, int full_
 {
     int result = 0;
     
-    const int COUNT = 20;
+    const int COUNT = 15;
     const int WIDTH = 160, HEIGHT = 120;
     const int RANSAC_MAX_ITERS = 100;
     const int RANSAC_SIZE0 = 3;
@@ -1337,7 +1337,7 @@ cvEstimateRigidTransform( const CvArr* _A, const CvArr* _B, CvMat* _M, int full_
         // estimate the transformation using 3 points
         icvGetRTMatrix( a, b, 3, &M, full_affine );
 
-        for( i = 0; i < count; i++ )
+        for( i = 0, good_count = 0; i < count; i++ )
         {
             if( fabs( m[0]*pA[i].x + m[1]*pA[i].y + m[2] - pB[i].x ) +
                 fabs( m[3]*pA[i].x + m[4]*pA[i].y + m[5] - pB[i].y ) < 8 )
