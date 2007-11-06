@@ -1580,15 +1580,17 @@ cvGetCols( const CvArr* arr, CvMat* submat, int start_col, int end_col )
     __BEGIN__;
 
     CvMat stub, *mat = (CvMat*)arr;
+    int cols;
 
     if( !CV_IS_MAT( mat ))
         CV_CALL( mat = cvGetMat( mat, &stub ));
 
     if( !submat )
         CV_ERROR( CV_StsNullPtr, "" );
-
-    if( (unsigned)start_col >= (unsigned)mat->cols ||
-        (unsigned)end_col > (unsigned)mat->cols )
+    
+    cols = mat->cols;
+    if( (unsigned)start_col >= (unsigned)cols ||
+        (unsigned)end_col > (unsigned)cols )
         CV_ERROR( CV_StsOutOfRange, "" );
 
     {
@@ -1604,8 +1606,7 @@ cvGetCols( const CvArr* arr, CvMat* submat, int start_col, int end_col )
     submat->cols = end_col - start_col;
     submat->step = mat->step & (submat->rows > 1 ? -1 : 0);
     submat->data.ptr = mat->data.ptr + (size_t)start_col*CV_ELEM_SIZE(mat->type);
-    submat->type = mat->type & (submat->step && submat->cols < mat->cols ?
-                                ~CV_MAT_CONT_FLAG : -1);
+    submat->type = mat->type & (submat->step && submat->cols < cols ? ~CV_MAT_CONT_FLAG : -1);
     submat->refcount = 0;
     submat->hdr_refcount = 0;
     res = submat;
