@@ -242,7 +242,7 @@ icvCopyReflect101Border_8u( const uchar* src, int srcstep, CvSize srcroi,
         
         j = srcroi.width - cn*2;
         dj = -cn;
-        for( i = left; i < tab_size; j += cn )
+        for( i = left; i < tab_size; i += cn )
         {
             for( k = 0; k < cn; k++ )
                 tab[i + k] = j + k + left;
@@ -259,7 +259,7 @@ icvCopyReflect101Border_8u( const uchar* src, int srcstep, CvSize srcroi,
             if( idst + left != isrc )
                 for( j = 0; j < srcroi.width; j++ )
                     idst[j + left] = isrc[j];
-            for( j = 0; i < left; j++ )
+            for( j = 0; j < left; j++ )
             {
                 k = tab[j]; 
                 idst[j] = idst[k];
@@ -281,7 +281,7 @@ icvCopyReflect101Border_8u( const uchar* src, int srcstep, CvSize srcroi,
             if( dst + left != src )
                 for( j = 0; j < srcroi.width; j++ )
                     dst[j + left] = src[j];
-            for( j = 0; i < left; j++ )
+            for( j = 0; j < left; j++ )
             {
                 k = tab[j]; 
                 dst[j] = dst[k];
