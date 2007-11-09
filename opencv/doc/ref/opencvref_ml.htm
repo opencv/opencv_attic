@@ -437,7 +437,7 @@ predicted value is returned by the method.</p>
 
 
 <hr>
-<h3>Example. Classification of 2D samples from a gaussian mixture with k-nearest classifier</h3>
+<h3>Example. Classification of 2D samples from a Gaussian mixture with k-nearest classifier</h3>
 <pre>
 #include "ml.h"
 #include "highgui.h"
@@ -530,13 +530,13 @@ int main( int argc, char** argv )
 binary (2-class) classifier. Then the technique has been extended to regression and clustering problems.
 SVM is a partial case of kernel-based methods,
 it maps feature vectors into higher-dimensional space using some kernel function, and then it builds
-an optimal linear discriminating function in this space (or an optimal hyperplane that fits into
+an optimal linear discriminating function in this space (or an optimal hyper-plane that fits into
 the training data, ...). In case of SVM the kernel is not defined explicitly. Instead, a distance
-between any 2 points in the hyperspace needs to be defined.</p>
-<p>The solution is optimal in a sense that the margin between the separating hyperplane and the
+between any 2 points in the hyper-space needs to be defined.</p>
+<p>The solution is optimal in a sense that the margin between the separating hyper-plane and the
 nearest feature vectors from the both classes (in case of 2-class classifier) is maximal. The
-feature vectors that are the closest to the hyperplane are called "support vectors", meaning that
-the position of other vectors does not affect the hyperplane (the decision function).</p>
+feature vectors that are the closest to the hyper-plane are called "support vectors", meaning that
+the position of other vectors does not affect the hyper-plane (the decision function).</p>
 
 <!-- TODO: insert formulae -->
 
@@ -637,7 +637,7 @@ struct CvSVMParams
                 CvSVM::ONE_CLASS - one-class SVM. All the training data are from the same class, SVM builds
                                    a boundary that separates the class from the rest of the feature space.<br>
                 CvSVM::EPS_SVR - regression. The distance between feature vectors from the training set and
-                                 the fitting hyperplane must be less than <code>p</code>. For outliers
+                                 the fitting hyper-plane must be less than <code>p</code>. For outliers
                                  the penalty multiplier <code>C</code> is used.<br>
                 CvSVM::NU_SVR - regression; <code>nu</code> is used instead of <code>p</code>.
 <dt>kernel_type<dd>The kernel type, one of the following types:<br>
@@ -746,7 +746,7 @@ CvParamGrid CvSVM::get_default_grid( int param_id );
 <code>CvSVM::C, CvSVM::GAMMA, CvSVM::P, CvSVM::NU, CvSVM::COEF, CvSVM::DEGREE</code>.
 The grid will be generated for the parameter with this ID.
 </dl>
-<p>The function genarates a grid for the specified parameter of the SVM algorithm.
+<p>The function generates a grid for the specified parameter of the SVM algorithm.
 The grid may be passed to the function
 <a href="#decl_CvSVM_train_auto">CvSVM::train_auto</a></p>
 
@@ -756,7 +756,7 @@ The grid may be passed to the function
 CvSVMParams CvSVM::get_params() const;
 </pre>
 <p>This function may be used to get the optimal parameters that were obtained
-while automatical training <a href="#decl_CvSVM_train_auto">CvSVM::train_auto</a>.</p>
+while automatic training <a href="#decl_CvSVM_train_auto">CvSVM::train_auto</a>.</p>
 
 <hr><h3><a name="decl_CvSVM_get_support_vector">CvSVM::get_support_vector*</a></h3>
 <p class="Blurb">Retrieves the number of support vectors and the particular vector</p>
@@ -775,7 +775,7 @@ const float* CvSVM::get_support_vector(int i) const;
 
 <p>The ML classes discussed in this section implement
 Classification And Regression Tree algorithms, which is described in
-<a href="#paper_Brieman84">[Brieman84]</a>.</p>
+<a href="#paper_Breiman84">[Breiman84]</a>.</p>
 <p>The class <a href="#decl_CvDTree">CvDTree</a> represents a single decision tree that
 may be used alone, or as a base class in tree ensembles
 (see <a href=#ch_boosting>Boosting</a> and <a href=#ch_randomforest>Random Trees</a>).</p>
@@ -793,7 +793,7 @@ a certain variable, which index is stored in the observed node. The variable can
 ordered or categorical. In the first case, the variable value is compared with the certain threshold
 (which is also stored in the node); if the value is less than the threshold, the
 procedure goes to the left,
-otherwise, to the right (for example, if the weight is less than 1 kilo, the
+otherwise, to the right (for example, if the weight is less than 1 kilogram, the
 procedure goes to the left,
 else to the right). And in the second case the discrete variable value is tested, whether it
 belongs to a certain subset of values (also stored in the node)
@@ -853,7 +853,7 @@ size reasonable.</p>
 and surrogate ones. Thus, to compute variable importance correctly, the surrogate splits must be enabled
 in the training parameters, even if there is no missing data.</p>
 
-<p><a name="paper_Brieman84"><b>[Brieman84]
+<p><a name="paper_Breiman84"><b>[Breiman84]
 Breiman, L., Friedman, J. Olshen, R. and Stone, C. (1984), "Classification and Regression Trees", Wadsworth.
 </b></a></p>
 
@@ -1002,7 +1002,7 @@ may
                 (with <code>Tn</code>&le;<code>CvDTree::pruned_tree_idx</code>) are physically
                 removed from the tree. Otherwise they are kept, and by decreasing
                 <code>CvDTree::pruned_tree_idx</code> (e.g. setting it to -1)
-                it is still possible to get the results from the original unpruned
+                it is still possible to get the results from the original un-pruned
                 (or pruned less aggressively) tree.
 <dt>priors<dd>The array of a priori class probabilities, sorted by the class label value.
               The parameter can be used to tune the decision tree preferences toward a certain class.
@@ -1426,7 +1426,7 @@ struct CvBoostParams : public CvDTreeParams
                  <code>CvBoost::REAL</code> - Real AdaBoost<br>
                  <code>CvBoost::LOGIT</code> - LogitBoost<br>
                  <code>CvBoost::GENTLE</code> - Gentle AdaBoost<br>
-                 Gentle AdaBoost and Real AdaBoost are often the preferrable choices.
+                 Gentle AdaBoost and Real AdaBoost are often the preferable choices.
 <dt>weak_count<dd>The number of weak classifiers to build.
 <dt>split_criteria<dd>Splitting criteria, used to choose optimal splits during a weak tree construction:<br>
                  <code>CvBoost::DEFAULT</code> - Use the default criteria for the particular boosting method, see below.<br>
@@ -1572,7 +1572,7 @@ float CvBoost::predict( const CvMat* sample, const CvMat* missing=0,
 <dt>missing<dd>The optional mask of missing measurements. To handle
                missing measurements, the weak classifiers must include
                surrogate splits (see <code>CvDTreeParams::use_surrogates</code>).
-<dt>weak_reponses<dd>The optional output parameter, a floating-point vector,
+<dt>weak_responses<dd>The optional output parameter, a floating-point vector,
                of responses from each individual weak classifier.
                The number of elements in the vector must be equal to
                the <code>slice</code> length.
@@ -1594,7 +1594,7 @@ in the ensemble and returns the output class label based on the weighted voting.
 void CvBoost::prune( CvSlice slice );
 </pre><p>
 The method removes the specified weak classifiers from the sequence. Note that 
-this method should not be confused with the prunning of individual decision trees, which is currently
+this method should not be confused with the pruning of individual decision trees, which is currently
 not supported.
 </p>
 
@@ -1620,7 +1620,7 @@ http://www.stat.berkeley.edu/users/breiman/RandomForests/</a>.
 The algorithm can deal with both classification and regression problems.
 Random trees is a collection (ensemble) of <a href="#ch_dtree">tree
 predictors</a> that is called <b>forest</b> further in this section
-(the term has been also introduced by L. Brieman).
+(the term has been also introduced by L. Breiman).
 The classification works as following:
 the random trees classifier takes the input feature vector, classifies
 it with every tree in the forest, and outputs the class label that
@@ -1655,7 +1655,7 @@ using the very i-th tree.
 find the class-"winner" for it (i.e. the class that has got the majority of votes
 in the trees, where the vector was oob) and compare it to the ground-truth response.
 <li>Then the classification error estimate is computed as ratio of
-number of missclassified oob vectors to all the vectors in the original data.
+number of misclassified oob vectors to all the vectors in the original data.
 In the case of regression the oob-error is computed as
 the squared error for oob vectors difference divided by the total number of vectors.
 </ul>
@@ -1788,7 +1788,7 @@ double CvRTrees::predict( const CvMat* sample, const CvMat* missing=0 ) const;
 <p>
 The input parameters of the prediction method are the same as in
 <a href="#decl_CvDTree_predict">CvDTree::predict</a>, but the return value type is different.
-This method returns the cummulative result from all the trees in the forest
+This method returns the cumulative result from all the trees in the forest
 (the class that receives the majority of voices, or the mean of the regression function estimates).
 </p>
 
@@ -1807,7 +1807,7 @@ after the training.
 
 
 <hr><h3><a name="decl_CvRTrees_get_proximity">CvRTrees::get_proximity</a></h3>
-<p class="Blurb">Retrieves proximitity measure between two training samples</p>
+<p class="Blurb">Retrieves proximity measure between two training samples</p>
 <pre>
 float CvRTrees::get_proximity( const CvMat* sample_1, const CvMat* sample_2 ) const;
 </pre>
@@ -1815,7 +1815,7 @@ float CvRTrees::get_proximity( const CvMat* sample_1, const CvMat* sample_2 ) co
 (the ratio of the those trees in the ensemble, in which the samples fall into
 the same leaf node, to the total number of the trees).</p>
 
-<hr><h4>Example. Prediction of mushroom edibility using random trees classifier</h4>
+<hr><h4>Example. Prediction of mushroom goodness using random trees classifier</h4>
 <pre>
 #include &lt;float.h&gt;
 #include &lt;stdio.h&gt;
@@ -2117,16 +2117,16 @@ void CvEM::train( const CvMat* samples, const CvMat*  sample_idx=0,
 <p>Unlike many of ML models, EM is an unsupervised learning algorithm and it does not
 take responses (class labels or the function values) on input. Instead, it computes
 <a href="#def_EM_MLE">MLE</a> of Gaussian mixture parameters from the input sample set,
-stores all the parameters inside the stucture: <code>p<sub>i,k</sub></code> in <code>probs</code>,
+stores all the parameters inside the structure: <code>p<sub>i,k</sub></code> in <code>probs</code>,
 <code>a<sub>k</sub></code> in <code>means</code> <code>S<sub>k</sub></code> in <code>covs[k]</code>,
 <code>&pi;<sub>k</sub></code> in <code>weights</code> and
 optionally computes the output "class label" for each sample:
 <code>labels<sub>i</sub>=arg max<sub>k</sub>(p<sub>i,k</sub>), i=1..N</code>
 (i.e. indices of the most-probable mixture for each sample).</p>
 <p>The trained model can be used further for prediction, just like any other classifier.
-The model trained is similar to the <a href="#ch_nbayes">normal bayes classifier</a>.</p>
+The model trained is similar to the <a href="#ch_nbayes">normal Bayes classifier</a>.</p>
 
-<h4>Example. Clustering random samples of multi-gaussian distribution using EM</h4>
+<h4>Example. Clustering random samples of multi-Gaussian distribution using EM</h4>
 <pre>
 #include "ml.h"
 #include "highgui.h"
@@ -2231,7 +2231,7 @@ int main( int argc, char** argv )
      ***************************************************************************************** -->
 <hr><h2><a name="ch_ann">Neural Networks</a></h2>
 
-<p>ML implements feedforward artificial neural networks, more particularly, multi-layer
+<p>ML implements feed-forward artificial neural networks, more particularly, multi-layer
 perceptrons (MLP), the most commonly used type of neural networks.
 
 MLP consists of the input layer, output layer and one or more
@@ -2294,15 +2294,15 @@ element is <code>1</code> if and only if the feature is equal to the <code>i</co
 training algorithm convergence and at the same time enable "fuzzy" values of such variables, i.e.
 a tuple of probabilities instead of a fixed value.</p>
 <p>ML implements 2 algorithms for training MLP's. The first is the classical random sequential
-<a href="#paper_backprop">backpropagation algorithm</a> and the second (default one) is
+<a href="#paper_backprop">back-propagation algorithm</a> and the second (default one) is
 batch <a href="#paper_rprop">RPROP algorithm</a></p>
 
 <p><b>References:<br>
 <ol>
 <li><a href="http://en.wikipedia.org/wiki/Backpropagation">http://en.wikipedia.org/wiki/Backpropagation</a>.
-    Wikipedia article about the backpropagation algorithm.
+    Wikipedia article about the back-propagation algorithm.
 <li>Y. LeCun, L. Bottou, G.B. Orr and K.-R. Muller, "Efficient backprop", in Neural Networks---Tricks of the Trade, Springer Lecture Notes in Computer Sciences 1524, pp.5-50, 1998.
-<li><a name="paper_prop">M. Riedmiller and H. Braun, "A Direct Adaptive Method for Faster Backpropagation Learning: The RPROP Algorithm", Proc. ICNN, San Fransisco (1993).</a></b>
+<li><a name="paper_prop">M. Riedmiller and H. Braun, "A Direct Adaptive Method for Faster Backpropagation Learning: The RPROP Algorithm", Proc. ICNN, San Francisco (1993).</a></b>
 </ol>
 </b></p>
 
@@ -2333,7 +2333,7 @@ struct CvANN_MLP_TrainParams
                  (for sequential backpropagation algorithm the number is multiplied
                  by the size of the training set) and how much the weights could
                  change between the iterations to make the algorithm continue.
-<dt>train_method<dd>The training algoithm to use;
+<dt>train_method<dd>The training algorithm to use;
                     can be one of <code>CvANN_MLP_TrainParams::BACKPROP</code> (sequential
                     backpropagation algorithm) or <code>CvANN_MLP_TrainParams::RPROP</code>
                     (RPROP algorithm, default value).
