@@ -390,7 +390,7 @@ selected channels of planar images can be processed as well if COI is set.
 separate parameter. Also the mask in OpenCV is 8-bit, whereas in IPL it is 1-bit.
 <li><code>tileInfo</code> is not supported.
 <li><code>BorderMode</code> and <code>BorderConst</code> are not supported. Every OpenCV function
-working with a pixel neigborhood uses a single hard-coded border mode (most often, replication).
+working with a pixel neighborhood uses a single hard-coded border mode (most often, replication).
 </ul>
 Besides the above restrictions, OpenCV handles ROI differently. It requires that the sizes or ROI sizes of
 all source and destination images match exactly (according to the operation, e.g. for <a href="#decl_cvPyrDown">cvPyrDown</a>
@@ -409,7 +409,7 @@ vary independently.
 The metatype <code>CvArr*</code> is used <em>only</em> as a function parameter to
 specify that the function accepts arrays of more than a
 single type, for example IplImage*, CvMat* or even CvSeq*. The particular array
-type is determined at runtime by analyzing the first 4 bytes of the header.
+type is determined at runtime by analysing the first 4 bytes of the header.
 </p>
 
 <!-- *****************************************************************************************
@@ -522,7 +522,7 @@ shortened form of
 IplImage* cvInitImageHeader( IplImage* image, CvSize size, int depth,
                              int channels, int origin=0, int align=4 );
 </pre><p><dl>
-<dt>image<dd>Image header to initialize.
+<dt>image<dd>Image header to initialise.
 <dt>size<dd>Image width and height.
 <dt>depth<dd>Image depth (see CreateImage).
 <dt>channels<dd>Number of channels (see CreateImage).
@@ -683,7 +683,7 @@ releases matrix header:</p>
 CvMat* cvInitMatHeader( CvMat* mat, int rows, int cols, int type,
                         void* data=NULL, int step=CV_AUTOSTEP );
 </pre><p><dl>
-<dt>mat<dd>Pointer to the matrix header to be initialized.
+<dt>mat<dd>Pointer to the matrix header to be initialised.
 <dt>rows<dd>Number of rows in the matrix.
 <dt>cols<dd>Number of columns in the matrix.
 <dt>type<dd>Type of the matrix elements.
@@ -1009,7 +1009,7 @@ CvSparseMat* cvCreateSparseMat( int dims, const int* sizes, int type );
 <dt>type<dd>Type of array elements. The same as for CvMat
 </dl><p>
 The function <code>cvCreateSparseMat</code> allocates multi-dimensional sparse array.
-Initially the array contain no elements, that is <a href="#decl_cvGet*D">cvGet*D</a> or
+Initially the array contains no elements, that is <a href="#decl_cvGet*D">cvGet*D</a> or
 <a href="#decl_cvGetReal*D">cvGetReal*D</a> return zero for every index</p>
 
 
@@ -1423,7 +1423,7 @@ in case of sparse arrays all the elements are removed.</p>
 <pre>
 void cvSetIdentity( CvArr* mat, CvScalar value=cvRealScalar(1) );
 </pre><p><dl>
-<dt>arr<dd>The matrix to initialize (not necesserily square).
+<dt>arr<dd>The matrix to initialize (not necessarily square).
 <dt>value<dd>The value to assign to the diagonal elements.
 </dl><p>
 The function <code>cvSetIdentity</code> initializes scaled identity matrix:</p>
@@ -1446,7 +1446,7 @@ The function <code>cvRange</code> initializes the matrix as following:</p>
 <pre>
 arr(i,j)=(end-start)*(i*cols(arr)+j)/(cols(arr)*rows(arr))
 </pre>
-For example, the following code will initilize 1D vector with subsequent integer numbers.
+For example, the following code will initialize 1D vector with subsequent integer numbers.
 <pre>
 CvMat* A = cvCreateMat( 1, 10, CV_32S );
 cvRange( A, 0, A->cols ); // A will be initialized as [0,1,2,3,4,5,6,7,8,9]
@@ -1545,14 +1545,14 @@ the source array.
 
 
 <hr><h3><a name="decl_cvFlip">Flip</a></h3>
-<p class="Blurb">Flip a 2D array around vertical, horizontall or both axises</p>
+<p class="Blurb">Flip a 2D array around vertical, horizontal or both axises</p>
 <pre>
 void  cvFlip( const CvArr* src, CvArr* dst=NULL, int flip_mode=0);
 #define cvMirror cvFlip
 
 </pre><p><dl>
 <dt>src<dd>Source array.
-<dt>dst<dd>Destination array. If <code>dst = NULL</code> the flipping is done inplace.
+<dt>dst<dd>Destination array. If <code>dst = NULL</code> the flipping is done in-place.
 <dt>flip_mode<dd>Specifies how to flip the array.<br>
                  flip_mode = 0 means flipping around x-axis,
                  flip_mode > 0 (e.g. 1) means flipping around y-axis
@@ -1564,7 +1564,7 @@ The function <code>cvFlip</code> flips the array in one of different 3 ways
 <pre>dst(i,j)=src(rows(src)-i-1,j) if flip_mode = 0</pre>
 <pre>dst(i,j)=src(i,cols(src1)-j-1) if flip_mode > 0</pre>
 <pre>dst(i,j)=src(rows(src)-i-1,cols(src)-j-1) if flip_mode &lt; 0</pre>
-<p>The example cenaria of the function use are:
+<p>The example scenario of the function use are:
 <ul>
 <li>
 vertical flipping of the image (flip_mode > 0) to switch between top-left
@@ -1725,7 +1725,7 @@ It copies one array to another with optional scaling, which is performed first, 
 The type conversion is done with rounding and saturation, that is if a result of scaling + conversion can not
 be represented exactly by a value of destination array element type, it is set to the nearest
 representable value on the real axis.</p>
-<p>In case of <code>scale=1, shift=0</code> no prescaling is done. This is a specially optimized case and it
+<p>In case of <code>scale=1, shift=0</code> no pre-scaling is done. This is a specially optimized case and it
 has the appropriate <a href="#decl_cvConvert">cvConvert</a> synonym. If source and destination array types have
 equal types, this is also a special case that can be used to scale and shift a matrix or an image and
 that fits to <a href="#decl_cvScale">cvScale</a> synonym.</p>
@@ -2293,7 +2293,7 @@ mean<sub>c</sub> = 1/N &bull; sum<sub>I,mask(I)!=0</sub> arr(I)<sub>c</sub>
 std_dev<sub>c</sub> = sqrt(1/N &bull; sum<sub>I,mask(I)!=0</sub> (arr(I)<sub>c</sub> - M<sub>c</sub>)<sup>2</sup>)
 </pre>
 If the array is <code>IplImage</code> and COI is set, the function processes the selected channel only
-and stores the average and standard deviation to the first compoenents of output scalars (M<sub>0</sub>
+and stores the average and standard deviation to the first components of output scalars (M<sub>0</sub>
 and S<sub>0</sub>).</p>
 
 
@@ -2396,7 +2396,7 @@ element bit-depth to preserve accuracy. And multi-channel arrays are also suppor
 <hr><h2><a name="cxcore_arrays_matrix">Linear Algebra</a></h2>
 
 <hr><h3><a name="decl_cvDotProduct">DotProduct</a></h3>
-<p class="Blurb">Calculates dot product of two arrays in Euclidian metrics</p>
+<p class="Blurb">Calculates dot product of two arrays in Euclidean metrics</p>
 <pre>
 double cvDotProduct( const CvArr* src1, const CvArr* src2 );
 </pre><p><dl>
@@ -2427,7 +2427,7 @@ void cvNormalize( const CvArr* src, CvArr* dst,
 <dt>norm_type<dd>The normalization type. It can take one of the following values:<br>
     <code>CV_C</code> - the C-norm (maximum of absolute values) of the array is normalized.<br>
     <code>CV_L1</code> - the L<sub>1</sub>-norm (sum of absolute values) of the array is normalized.<br>
-    <code>CV_L2</code> - the (Euclidian) L<sub>2</sub>-norm of the array is normalized.<br>
+    <code>CV_L2</code> - the (Euclidean) L<sub>2</sub>-norm of the array is normalized.<br>
     <code>CV_MINMAX</code> - the array values are scaled and shifted to the specified range.<br>
 <dt>mask<dd>The operation mask. Makes the function consider and normalize only certain array elements.
 </dl><p>
@@ -2528,7 +2528,7 @@ and stores the results in <code>dst</code>:</p>
 <p>That is every element of <code>N</code>-channel array <code>src</code> is considered as <code>N</code>-element vector, which is
 transformed using matrix <code>M</code>&times;<code>N</code> matrix <code>transmat</code> and shift vector <code>shiftvec</code>
 into an element of <code>M</code>-channel array <code>dst</code>.
-There is an option to embedd <code>shiftvec</code> into <code>transmat</code>. In this case <code>transmat</code> should be
+There is an option to embed <code>shiftvec</code> into <code>transmat</code>. In this case <code>transmat</code> should be
 <code>M</code>&times;<code>N+1</code> matrix and the right-most column is treated as the shift vector.</p>
 <p>
 Both source and destination arrays should have the same depth and the same size or selected ROI
@@ -2638,7 +2638,7 @@ double cvInvert( const CvArr* src, CvArr* dst, int method=CV_LU );
 The function <code>cvInvert</code> inverts matrix <code>src1</code> and stores the result in <code>src2</code></p>
 <p>In case of <code>LU</code> method the function returns <code>src1</code> determinant (src1 must be square).
 If it is 0, the matrix is not inverted and <code>src2</code> is filled with zeros.</p>
-<p>In case of <code>SVD</code> methods the function returns the inversed condition number of <code>src1</code>
+<p>In case of <code>SVD</code> methods the function returns the inverted condition number of <code>src1</code>
 (ratio of the smallest singular value to the largest singular value) and 0 if <code>src1</code> is all zeros.
 The SVD methods calculate a pseudo-inverse matrix if <code>src1</code> is singular</p>
 
@@ -2681,9 +2681,9 @@ void cvSVD( CvArr* A, CvArr* W, CvArr* U=NULL, CvArr* V=NULL, int flags=0 );
 <ul>
 <li>  <code>CV_SVD_MODIFY_A</code> enables modification of matrix <code>src1</code> during the operation. It
   speeds up the processing.
-<li>  <code>CV_SVD_U_T</code> means that the tranposed matrix <code>U</code> is returned.
+<li>  <code>CV_SVD_U_T</code> means that the transposed matrix <code>U</code> is returned.
       Specifying the flag speeds up the processing.
-<li>  <code>CV_SVD_V_T</code> means that the tranposed matrix <code>V</code> is returned.
+<li>  <code>CV_SVD_V_T</code> means that the transposed matrix <code>V</code> is returned.
       Specifying the flag speeds up the processing.
 </ul>
 </dl><p>
@@ -2694,14 +2694,14 @@ A=U*W*V<sup>T</sup>
 </pre>
 <p>Where <code>W</code> is diagonal matrix of singular values that can be coded as a 1D
 vector of singular values and <code>U</code> and <code>V</code>. All the singular values are non-negative and sorted (together with <code>U</code> and
-and <code>V</code> columns) in descenting order.</p>
+and <code>V</code> columns) in descending order.</p>
 <p>SVD algorithm is numerically robust and its typical applications include:
 <ul>
 <li>accurate eigenvalue problem solution when matrix <code>A</code> is square, symmetric and positively
   defined matrix, for example, when it is a covariation matrix.
-  <code>W</code> in this case will be a vector of eigen values, and <code>U</code>=<code>V</code> is matrix of
-  eigen vectors (thus, only one of <code>U</code> or <code>V</code> needs to be calculated if
-  the eigen vectors are required)</li>
+  <code>W</code> in this case will be a vector of eigenvalues, and <code>U</code>=<code>V</code> is matrix of
+  eigenvectors (thus, only one of <code>U</code> or <code>V</code> needs to be calculated if
+  the eigenvectors are required)</li>
 <li>accurate solution of poor-conditioned linear systems</li>
 <li>least-squares solution of overdetermined linear systems. This and previous is done by <a href="#decl_cvSolve">cvSolve</a>
     function with <code>CV_SVD</code> method</li>
@@ -2723,8 +2723,8 @@ void  cvSVBkSb( const CvArr* W, const CvArr* U, const CvArr* V,
 </pre><p><dl>
 
 <dt>W<dd>Matrix or vector of singular values.
-<dt>U<dd>Left orthogonal matrix (tranposed, perhaps)
-<dt>V<dd>Right orthogonal matrix (tranposed, perhaps)
+<dt>U<dd>Left orthogonal matrix (transposed, perhaps)
+<dt>V<dd>Right orthogonal matrix (transposed, perhaps)
 <dt>B<dd>The matrix to multiply the pseudo-inverse of the original matrix <code>A</code> by.
          This is the optional parameter. If it is omitted then it is assumed to be
          an identity matrix of an appropriate size (So <code>X</code> will be the reconstructed
@@ -2756,8 +2756,8 @@ void cvEigenVV( CvArr* mat, CvArr* evects, CvArr* evals, double eps=0 );
 </pre><p><dl>
 <dt>mat<dd>The input symmetric square matrix. It is modified during the processing.
 <dt>evects<dd>The output matrix of eigenvectors, stored as a subsequent rows.
-<dt>evals<dd>The output vector of eigenvalues, stored in the descenting order (order of
-eigenvalues and eigenvectors is syncronized, of course).
+<dt>evals<dd>The output vector of eigenvalues, stored in the descending order (order of
+eigenvalues and eigenvectors is synchronized, of course).
 <dt>eps<dd>Accuracy of diagonalization (typically, DBL_EPSILON=&asymp;10<sup>-15</sup> is enough).
 </dl><p>
 The function <code>cvEigenVV</code> computes the eigenvalues and eigenvectors of the matrix <code>A</code>:</p>
@@ -2788,15 +2788,15 @@ void cvCalcCovarMatrix( const CvArr** vects, int count, CvArr* cov_mat, CvArr* a
 <dt>cov_mat<dd>The output covariation matrix that should be floating-point and square.
 <dt>avg<dd>The input or output (depending on the flags) array - the mean (average) vector of the input vectors.
 <dt>flags<dd>The operation flags, a combination of the following values:<br>
-                 <code>CV_COVAR_SCRAMBLED</code> - the output covaration matrix is calculated as:<br>
+                 <code>CV_COVAR_SCRAMBLED</code> - the output covariation matrix is calculated as:<br>
                        <code>scale*[vects[0]-avg,vects[1]-avg,...]<sup>T</sup>*[vects[0]-avg,vects[1]-avg,...]</code>,<br>
                        that is, the covariation matrix is <code>count</code>&times;<code>count</code>. Such an unusual
                        covariation matrix is used for fast PCA of a set of very large vectors
-                       (see, for example, EigenFaces technique for face recognition). Eigenvalues of this
+                       (see, for example, Eigen Faces technique for face recognition). Eigenvalues of this
                        "scrambled" matrix will match to the eigenvalues of the true covariation matrix and
                        the "true" eigenvectors can be easily calculated from the eigenvectors of the "scrambled" covariation
                        matrix.<br>
-                 <code>CV_COVAR_NORMAL</code> - the output covaration matrix is calculated as:<br>
+                 <code>CV_COVAR_NORMAL</code> - the output covariation matrix is calculated as:<br>
                        <code>scale*[vects[0]-avg,vects[1]-avg,...]*[vects[0]-avg,vects[1]-avg,...]<sup>T</sup></code>,<br>
                        that is, <code>cov_mat</code> will be a usual covariation matrix with the same linear size as the total number of
                        elements in every input vector. One and only one of <code>CV_COVAR_SCRAMBLED</code> and <code>CV_COVAR_NORMAL</code> must be specified<br>
@@ -2832,7 +2832,7 @@ and returns it:</p>
 d(vec1,vec2)=sqrt( sum<sub>i,j</sub> {mat(i,j)*(vec1(i)-vec2(i))*(vec1(j)-vec2(j))} )
 </pre>
 <p>The covariation matrix may be calculated using <a href="#decl_cvCalcCovarMatrix">cvCalcCovarMatrix</a> function and further
-inverted using <a href="#decl_cvInvert">cvInvert</a> function (CV_SVD method is the preffered one, because the matrix
+inverted using <a href="#decl_cvInvert">cvInvert</a> function (CV_SVD method is the preferred one, because the matrix
 might be singular).</p>
 
 
@@ -2850,7 +2850,7 @@ void cvCalcPCA( const CvArr* data, CvArr* avg,
                     one vector per row.
 <dt>flags<dd>The operation flags, a combination of the following values:<br>
              <code>CV_PCA_DATA_AS_ROW</code> - the vectors are stored as rows
-             (i.e. all the components of a certain vector are stored continously)<br>
+             (i.e. all the components of a certain vector are stored continuously)<br>
              <code>CV_PCA_DATA_AS_COL</code> - the vectors are stored as columns
              (i.e. values of a certain vector component are stored continuously)<br>
              (the above two flags are mutually exclusive)<br>
@@ -3031,7 +3031,7 @@ is set to 0.</p>
 
 
 <hr><h3><a name="decl_cvPolarToCart">PolarToCart</a></h3>
-<p class="Blurb">Calculates cartesian coordinates of 2d vectors represented in polar form</p>
+<p class="Blurb">Calculates Cartesian coordinates of 2d vectors represented in polar form</p>
 <pre>
 void cvPolarToCart( const CvArr* magnitude, const CvArr* angle,
                     CvArr* x, CvArr* y, int angle_in_degrees=0 );
@@ -3039,11 +3039,11 @@ void cvPolarToCart( const CvArr* magnitude, const CvArr* angle,
 <dt>magnitude<dd>The array of magnitudes. If it is NULL, the magnitudes are assumed all 1&#146;s.
 <dt>angle<dd>The array of angles, whether in radians or degrees.
 <dt>x<dd>The destination array of x-coordinates, may be set to NULL if it is not needed.
-<dt>y<dd>The destination array of y-coordinates, mau be set to NULL if it is not needed.
+<dt>y<dd>The destination array of y-coordinates, may be set to NULL if it is not needed.
 <dt>angle_in_degrees<dd>The flag indicating whether the angles are measured in radians,
                         which is default mode, or in degrees.
 </dl><p>
-The function <code>cvPolarToCart</code> calculates either x-coodinate, y-coordinate
+The function <code>cvPolarToCart</code> calculates either x-coordinate, y-coordinate
 or both of every vector <code>magnitude(I)*exp(angle(I)*j), j=sqrt(-1)</code>:</p>
 <pre>
 x(I)=magnitude(I)*cos(angle(I)),
@@ -3389,7 +3389,7 @@ Re Y<sub>M/2,0</sub>    Re Y<sub>M-1,1</sub>   Im Y<sub>M-1,1</sub>  Re Y<sub>M-
    // no need to pad bottom part of dft_B with zeros because of
    // use nonzero_rows parameter in cvDFT() call below
 
-   cvDFT( dft_B, dft_B, CV_DXT_FORWBRD, B->rows );
+   cvDFT( dft_B, dft_B, CV_DXT_FORWARD, B->rows );
 
    cvMulSpectrums( dft_A, dft_B, dft_A, 0 /* or CV_DXT_MUL_CONJ to get correlation
                                              rather than convolution */ );
@@ -3494,9 +3494,9 @@ Memory storage is a low-level structure used to store dynamically growing data s
 sequences, contours, graphs, subdivisions etc. It is organized as a list of memory blocks of
 equal size - <code>bottom</code> field is the beginning of the list of blocks</code>
 and <code>top</code> is the currently used block, but not necessarily the last block of the list. All blocks
-between <code>bottom</code> and <code>top</code>, not including the latter, are considered fully ocupied;
+between <code>bottom</code> and <code>top</code>, not including the latter, are considered fully occupied;
 and all blocks between <code>top</code> and the last block, not including <code>top</code>,
-are considered free and <code>top</code> block itself is partly ocupied - <code>free_space</code>
+are considered free and <code>top</code> block itself is partly occupied - <code>free_space</code>
 contains the number of free bytes left in the end of <code>top</code>.
 </p><p>New memory buffer that may be allocated explicitly by <a href="#decl_cvMemStorageAlloc">cvMemStorageAlloc</a> function
 or implicitly by
@@ -3694,7 +3694,7 @@ Note again that there is no way to free memory in the middle of the occupied par
 <p class="Blurb">Growable sequence of elements</p>
 <pre>
 #define CV_SEQUENCE_FIELDS() \
-    int flags; /* micsellaneous flags */ \
+    int flags; /* miscellaneous flags */ \
     int header_size; /* size of sequence header */ \
     struct CvSeq* h_prev; /* previous sequence */ \
     struct CvSeq* h_next; /* next sequence */ \
@@ -3777,7 +3777,7 @@ The next <code>CV_SEQ_KIND_BITS</code> bits specify the kind of the sequence:</p
     /* generic (unspecified) kind of sequence */
     #define CV_SEQ_KIND_GENERIC     (0 &lt;&lt; CV_SEQ_ELTYPE_BITS)
 
-    /* dense sequence suntypes */
+    /* dense sequence subtypes */
     #define CV_SEQ_KIND_CURVE       (1 &lt;&lt; CV_SEQ_ELTYPE_BITS)
     #define CV_SEQ_KIND_BIN_TREE    (2 &lt;&lt; CV_SEQ_ELTYPE_BITS)
 
@@ -3921,7 +3921,7 @@ char* cvSeqPush( CvSeq* seq, void* element=NULL );
 <dt>seq<dd>Sequence.
 <dt>element<dd>Added element.
 </dl><p>
-The function <code>cvSeqPush</code> adds an element to the end of sequence and retuns pointer
+The function <code>cvSeqPush</code> adds an element to the end of sequence and returns pointer
 to the allocated element. If the input <code>element</code> is NULL,
 the function simply allocates a space for one more element.</p>
 <p>The following code demonstrates how to create a new sequence using this function:</p>
@@ -4047,7 +4047,7 @@ void cvSeqRemove( CvSeq* seq, int index );
 The function <code>cvSeqRemove</code> removes elements with the given index. If the index is
 out of range the function reports an error.
 An attempt to remove an element from an empty sequence is a
-partitial case of this situation. The function removes an element by shifting the
+partial case of this situation. The function removes an element by shifting the
 sequence elements between the nearest end of the sequence and the <code>index</code>-th position, not
 counting the latter.</p>
 
@@ -4225,9 +4225,9 @@ void cvSeqSort( CvSeq* seq, CvCmpFunc func, void* userdata=NULL );
 <dt>seq<dd>The sequence to sort
 <dt>func<dd>The comparison function that returns negative, zero or positive value depending
             on the elements relation (see the above declaration and the example below) -
-            similar function is used by <code>qsort</code> from C runline except that in the latter
+            similar function is used by <code>qsort</code> from C runtime except that in the latter
             <code>userdata</code> is not used
-<dt>userdata<dd>The user parameter passed to the compasion function;
+<dt>userdata<dd>The user parameter passed to the comparison function;
                 helps to avoid global variables in some cases.
 </dl><p>
 The function <code>cvSeqSort</code> sorts the sequence in-place using the specified criteria.
@@ -4286,7 +4286,7 @@ char* cvSeqSearch( CvSeq* seq, const void* elem, CvCmpFunc func,
             on the elements relation (see also <a href="#decl_cvSeqSort">cvSeqSort</a>).
 <dt>is_sorted<dd>Whether the sequence is sorted or not.
 <dt>elem_idx<dd>Output parameter; index of the found element.
-<dt>userdata<dd>The user parameter passed to the compasion function;
+<dt>userdata<dd>The user parameter passed to the comparison function;
                 helps to avoid global variables in some cases.
 </dl><p>
 The function <code>cvSeqSearch</code> searches the element in the sequence.
@@ -4360,7 +4360,7 @@ The function <code>cvFlushSeqWriter</code> is intended to enable the user to rea
 elements, whenever required, during the writing process, e.g., in order to check
 specific conditions. The function updates the sequence headers to make reading
 from the sequence possible. The writer is not closed, however, so that the
-writing process can be continued any time. In some algorithm requires often flush'es,
+writing process can be continued any time. If some algorithm requires often flushes,
 consider using <a href="#decl_cvSeqPush">cvSeqPush</a> instead.</p>
 
 
@@ -4411,7 +4411,7 @@ for( i = 0; i &lt; seq->total; i++ )
 #if 1
     CV_READ_SEQ_ELEM( val, reader );
     printf("%d is read\n", val );
-#else /* alternative way, that is prefferable if sequence elements are large,
+#else /* alternative way, that is preferable if sequence elements are large,
          or their size/type is unknown at compile time */
     printf("%d is read\n", *(int*)reader.ptr );
     CV_NEXT_SEQ_ELEM( seq->elem_size, reader );
@@ -4490,7 +4490,7 @@ are not linked as the free nodes are, so the second field can be used for such a
 for some different purpose. The macro <code>CV_IS_SET_ELEM(set_elem_ptr)</code>
 can be used to determined whether the specified node is occupied or not.</p>
 <p>
-Initially the set and the list are empty. When a new node is requiested from the set,
+Initially the set and the list are empty. When a new node is requested from the set,
 it is taken from the list of free nodes, which is updated then. If the list appears to be empty,
 a new sequence block is allocated and all the nodes within the block are joined in the list of free
 nodes. Thus, <code>total</code> field of the set is the total number of nodes both occupied and free.
@@ -4597,7 +4597,7 @@ The function <code>cvClearSet</code> removes all elements from set. It has O(1) 
 <hr><h2><a name="cxcore_ds_graphs">Graphs</a></h2>
 
 <hr><h3><a name="decl_CvGraph">CvGraph</a></h3>
-<p class="Blurb">Oriented or unoriented weigted graph</p>
+<p class="Blurb">Oriented or undirected weighted graph</p>
 <pre>
     #define CV_GRAPH_VERTEX_FIELDS()    \
         int flags; /* vertex flags */   \
@@ -4645,8 +4645,8 @@ The <code>flags</code> fields are used as for indicating occupied vertices and e
 for other purposes, for example, for graph traversal (see <a href="#decl_cvCreateGraphScanner">cvCreateGraphScanner</a> et al.), so
 it is better not to use them directly.</p>
 <p>The graph is represented as a set of edges each of whose has the list of incident edges. The incidence
-lists for different vertices are interleaved to avoid information duplication as much as posssible.</p>
-<p>The graph may be oriented or unoriented. In the latter case there is no distiction between edge
+lists for different vertices are interleaved to avoid information duplication as much as possible.</p>
+<p>The graph may be oriented or undirected. In the latter case there is no distinction between edge
 connecting vertex A with vertex B and the edge connecting vertex B with vertex A - only one of them
 can exist in the graph at the same moment and it represents both &lt;A, B&gt; and &lt;B, A&gt; edges..</p>
 
@@ -4659,7 +4659,7 @@ CvGraph* cvCreateGraph( int graph_flags, int header_size, int vtx_size,
                         int edge_size, CvMemStorage* storage );
 </pre><p><dl>
 <dt>graph_flags<dd>Type of the created graph. Usually, it is either <code>CV_SEQ_KIND_GRAPH</code>
-for generic unoriented graphs and <code>CV_SEQ_KIND_GRAPH | CV_GRAPH_FLAG_ORIENTED</code> for generic oriented graphs.
+for generic undirected graphs and <code>CV_SEQ_KIND_GRAPH | CV_GRAPH_FLAG_ORIENTED</code> for generic oriented graphs.
 <dt>header_size<dd>Graph header size; may not be less than <code>sizeof(CvGraph).</code>
 <dt>vtx_size<dd>Graph vertex size; the custom vertex structure must start with <a href="#decl_CvGraphVtx">CvGraphVtx</a>
                   (use <code>CV_GRAPH_VERTEX_FIELDS()</code>)
@@ -4744,7 +4744,7 @@ int cvGraphAddEdge( CvGraph* graph, int start_idx, int end_idx,
 </pre><p><dl>
 <dt>graph<dd>Graph.
 <dt>start_idx<dd>Index of the starting vertex of the edge.
-<dt>end_idx<dd>Index of the ending vertex of the edge. For unoriented graph the order of the vertex
+<dt>end_idx<dd>Index of the ending vertex of the edge. For undirected graph the order of the vertex
 parameters does not matter.
 <dt>edge<dd>Optional input parameter, initialization data for the edge.
 <dt>inserted_edge<dd>Optional output parameter to contain the address of the inserted
@@ -4765,7 +4765,7 @@ int cvGraphAddEdgeByPtr( CvGraph* graph, CvGraphVtx* start_vtx, CvGraphVtx* end_
 </pre><p><dl>
 <dt>graph<dd>Graph.
 <dt>start_vtx<dd>Pointer to the starting vertex of the edge.
-<dt>end_vtx<dd>Pointer to the ending vertex of the edge. For unoriented graph the order of the vertex
+<dt>end_vtx<dd>Pointer to the ending vertex of the edge. For undirected graph the order of the vertex
 parameters does not matter.
 <dt>edge<dd>Optional input parameter, initialization data for the edge.
 <dt>inserted_edge<dd>Optional output parameter to contain the address of the inserted
@@ -4785,7 +4785,7 @@ void cvGraphRemoveEdge( CvGraph* graph, int start_idx, int end_idx );
 </pre><p><dl>
 <dt>graph<dd>Graph.
 <dt>start_idx<dd>Index of the starting vertex of the edge.
-<dt>end_idx<dd>Index of the ending vertex of the edge. For unoriented graph the order of the vertex
+<dt>end_idx<dd>Index of the ending vertex of the edge. For undirected graph the order of the vertex
 parameters does not matter.
 </dl><p>
 The function <code>cvGraphRemoveEdge</code> removes the edge connecting two specified vertices.
@@ -4800,7 +4800,7 @@ void cvGraphRemoveEdgeByPtr( CvGraph* graph, CvGraphVtx* start_vtx, CvGraphVtx* 
 </pre><p><dl>
 <dt>graph<dd>Graph.
 <dt>start_vtx<dd>Pointer to the starting vertex of the edge.
-<dt>end_vtx<dd>Pointer to the ending vertex of the edge. For unoriented graph the order of the vertex
+<dt>end_vtx<dd>Pointer to the ending vertex of the edge. For undirected graph the order of the vertex
 parameters does not matter.
 </dl><p>
 The function <code>cvGraphRemoveEdgeByPtr</code> removes the edge connecting two specified vertices.
@@ -4815,7 +4815,7 @@ CvGraphEdge* cvFindGraphEdge( const CvGraph* graph, int start_idx, int end_idx )
 </pre><p><dl>
 <dt>graph<dd>Graph.
 <dt>start_idx<dd>Index of the starting vertex of the edge.
-<dt>end_idx<dd>Index of the ending vertex of the edge. For unoriented graph the order of the vertex
+<dt>end_idx<dd>Index of the ending vertex of the edge. For undirected graph the order of the vertex
 parameters does not matter.
 </dl><p>
 The function <code>cvFindGraphEdge</code> finds the graph edge connecting two specified vertices
@@ -4831,7 +4831,7 @@ CvGraphEdge* cvFindGraphEdgeByPtr( const CvGraph* graph, const CvGraphVtx* start
 </pre><p><dl>
 <dt>graph<dd>Graph.
 <dt>start_vtx<dd>Pointer to the starting vertex of the edge.
-<dt>end_vtx<dd>Pointer to the ending vertex of the edge. For unoriented graph the order of the vertex
+<dt>end_vtx<dd>Pointer to the ending vertex of the edge. For undirected graph the order of the vertex
 parameters does not matter.
 </dl><p>
 The function <code>cvFindGraphEdge</code> finds the graph edge connecting two specified vertices
@@ -4850,7 +4850,7 @@ The function <code>cvGraphEdgeIdx</code> returns index of the graph edge.</p>
 
 
 <hr><h3><a name="decl_cvGraphVtxDegree">GraphVtxDegree</a></h3>
-<p class="Blurb">Counts edges indicent to the vertex</p>
+<p class="Blurb">Counts edges incident to the vertex</p>
 <pre>
 int cvGraphVtxDegree( const CvGraph* graph, int vtx_idx );
 </pre><p><dl>
@@ -4858,7 +4858,7 @@ int cvGraphVtxDegree( const CvGraph* graph, int vtx_idx );
 <dt>vtx<dd>Index of the graph vertex.
 </dl><p>
 The function <code>cvGraphVtxDegree</code> returns the number of edges
-incident to the specified vertex, both incoming and outcoming.
+incident to the specified vertex, both incoming and outgoing.
 To count the edges, the following code is used:</p>
 <pre>
     CvGraphEdge* edge = vertex->first; int count = 0;
@@ -4881,7 +4881,7 @@ int cvGraphVtxDegreeByPtr( const CvGraph* graph, const CvGraphVtx* vtx );
 <dt>vtx<dd>Pointer to the graph vertex.
 </dl><p>
 The function <code>cvGraphVtxDegree</code> returns the number of edges
-incident to the specified vertex, both incoming and outcoming.</p>
+incident to the specified vertex, both incoming and outgoing.</p>
 
 
 <hr><h3><a name="decl_cvClearGraph">ClearGraph</a></h3>
@@ -4947,7 +4947,7 @@ CvGraphScanner*  cvCreateGraphScanner( CvGraph* graph, CvGraphVtx* vtx=NULL,
                                  the vertex to be visited next)<br>
             <li>CV_GRAPH_BACK_EDGE - stop at back edges (<code>back edge</code> is an edge connecting
                                  the last visited vertex with some of its ancestors in the search tree)<br>
-            <li>CV_GRAPH_FORWARD_EDGE - stop at forward edges (<code>forward edge</code> is an edge conecting
+            <li>CV_GRAPH_FORWARD_EDGE - stop at forward edges (<code>forward edge</code> is an edge connecting
                                  the last visited vertex with some of its descendants in the search tree).
                                  The <code>forward edges</code> are only possible during oriented graph traversal)<br>
             <li>CV_GRAPH_CROSS_EDGE - stop at cross edges (<code>cross edge</code> is an edge connecting different search trees or
@@ -4955,13 +4955,13 @@ CvGraphScanner*  cvCreateGraphScanner( CvGraph* graph, CvGraphVtx* vtx=NULL,
                                  The <code>cross edges</code> are only possible during oriented graphs traversal)<br>
             <li>CV_GRAPH_ANY_EDGE - stop and any edge (<code>tree, back, forward</code> and <code>cross edges</code>)<br>
             <li>CV_GRAPH_NEW_TREE - stop in the beginning of every new search tree. When the traversal procedure
-                                visits all vertices and edges reachible from the initial vertex (the visited vertices
+                                visits all vertices and edges reachable from the initial vertex (the visited vertices
                                 together with tree edges make up a tree), it searches for some unvisited vertex
                                 in the graph and resumes the traversal process from that vertex.
                                 Before starting a new tree (including the very first tree
                                 when <code>cvNextGraphItem</code> is called for the first time)
                                 it generates <code>CV_GRAPH_NEW_TREE</code> event.<br>
-                                For unoriented graphs each search tree corresponds to a connected component of the graph.<br>
+                                For undirected graphs each search tree corresponds to a connected component of the graph.<br>
             <li>CV_GRAPH_BACKTRACKING - stop at every already visited vertex during backtracking - returning to
                                 already visited vertexes of the traversal tree.<br></ul>
 </dl><p>
@@ -5008,7 +5008,7 @@ and releases the traverser state.</p>
 <p class="Blurb">Helper macro for a tree node type declaration</p>
 <pre>
 #define CV_TREE_NODE_FIELDS(node_type)                          \
-    int       flags;         /* micsellaneous flags */          \
+    int       flags;         /* miscellaneous flags */          \
     int       header_size;   /* size of sequence header */      \
     struct    node_type* h_prev; /* previous sequence */        \
     struct    node_type* h_next; /* next sequence */            \
@@ -5016,7 +5016,7 @@ and releases the traverser state.</p>
     struct    node_type* v_next; /* 2nd next sequence */
 </pre>
 <p>The macro <code>CV_TREE_NODE_FIELDS()</code> is used to declare structures
-that can be organized into hierarchical strucutures (trees), such as <a href="#decl_CvSeq">CvSeq</a> -
+that can be organized into hierarchical structures (trees), such as <a href="#decl_CvSeq">CvSeq</a> -
 the basic type for all dynamical structures.
 The trees made of nodes declared using this macro can be processed using
 the functions described below in this section.</p>
@@ -5089,7 +5089,7 @@ CvSeq* cvTreeToNodeSeq( const void* first, int header_size, CvMemStorage* storag
 <dt>header_size<dd>Header size of the created sequence (sizeof(CvSeq) is the most used value).
 <dt>storage<dd>Container for the sequence.
 </dl><p>
-The function <code>cvTreeToNodeSeq</code> puts pointers of all nodes reacheable from <code>first</code>
+The function <code>cvTreeToNodeSeq</code> puts pointers of all nodes reachable from <code>first</code>
 to the single sequence. The pointers are written subsequently in the depth-first order.</p>
 
 
@@ -5341,7 +5341,7 @@ are supported now:<br>
     <code>CV_FONT_HERSHEY_COMPLEX_SMALL</code> - smaller version of <code>CV_FONT_HERSHEY_COMPLEX</code><br>
     <code>CV_FONT_HERSHEY_SCRIPT_SIMPLEX</code> - hand-writing style font<br>
     <code>CV_FONT_HERSHEY_SCRIPT_COMPLEX</code> - more complex variant of <code>CV_FONT_HERSHEY_SCRIPT_SIMPLEX</code><br>
-    The parameter can be composited from one of the values above and optional <code>CV_FONT_ITALIC</code> flag,
+    The parameter can be composed from one of the values above and optional <code>CV_FONT_ITALIC</code> flag,
     that means italic or oblique font.
 <dt>hscale<dd>Horizontal scale. If equal to <code>1.0f</code>, the characters have the original
 width depending on the font type. If equal to <code>0.5f</code>, the characters are of half
@@ -5415,7 +5415,7 @@ but draws child contours of <code>contour</code> up to abs(<code>max_level</code
 the contour interiors are drawn.
 <dt>line_type<dd>Type of the contour segments, see <a href="#decl_cvLine">cvLine</a> description.
 <dt>offset<dd>Shift all the point coordinates by the specified value.
-              It is useful in case if the contours retrived in some image ROI and
+              It is useful in case if the contours retrieved in some image ROI and
               then the ROI offset needs to be taken into account during the rendering.
 </dl><p>
 The function <code>cvDrawContours</code> draws contour outlines in the image if <code>thickness</code>&gt;=0
@@ -5567,12 +5567,12 @@ CVAPI(int) cvEllipse2Poly( CvPoint center, CvSize axes,
 The structure <a href="#decl_CvFileStorage">CvFileStorage</a> is "black box" representation of
 file storage that is associated with a file on disk. Several functions that are described below
 take <code>CvFileStorage</code> on input and allow user to save or to load hierarchical collections
-that consist of scalar values, standard CXCore objects (such as matrices, sequences, graphs) and
+that consist of scalar values, standard CXCORE objects (such as matrices, sequences, graphs) and
 user-defined objects.
 </p><p>
-CXCore can read and write data in XML (<a href="http://www.w3c.org/XML">http://www.w3c.org/XML</a>)
+CXCORE can read and write data in XML (<a href="http://www.w3c.org/XML">http://www.w3c.org/XML</a>)
 or YAML (<a href="http://www.yaml.org">http://www.yaml.org</a>) formats. Below is the example of
-3&times;3 floating-point identity matrix <code>A</code>, stored in XML and YAML files using CXCore functions:</p>
+3&times;3 floating-point identity matrix <code>A</code>, stored in XML and YAML files using CXCORE functions:</p>
 <p><dl>
 <dt><b>XML:</b><dd><pre>
 &lt;?xml version="1.0"&gt;
@@ -5598,7 +5598,7 @@ A: !!opencv-matrix
 As it can be seen from the examples, XML uses nested tags to represent hierarchy,
 while YAML uses indentation for that purpose (similarly to Python programming language).
 </p><p>
-The same CXCore functions can read and write data in both formats, the particular format is determined
+The same CXCORE functions can read and write data in both formats, the particular format is determined
 by the extension of the opened file, .xml for XML files and .yml or .yaml for YAML.
 </p>
 
@@ -5646,7 +5646,7 @@ typedef struct CvString
 }
 CvString;
 
-/* all the keys (names) of elements in the readed file storage
+/* all the keys (names) of elements in the read file storage
    are stored in the hash to speed up the lookup operations */
 typedef struct CvStringHashNode
 {
@@ -5707,10 +5707,10 @@ The table below describes the different types of a file node:</p>
           <code>node->data.obj.map</code>. -->
 </dl>
 </p><p>
-A user (custom) object is instance of either one of standard CxCore types, such as <a href="#decl_CvMat">CvMat</a>, <a href="#decl_CvSeq">CvSeq</a> etc.,
+A user (custom) object is instance of either one of standard CXCORE types, such as <a href="#decl_CvMat">CvMat</a>, <a href="#decl_CvSeq">CvSeq</a> etc.,
 or any type registered with <a href="#decl_cvRegisterTypeInfo">cvRegisterTypeInfo</a>. Such an object is initially represented in file as a map
 (as shown in XML and YAML sample files above), after file storage has been opened and parsed.
-Then the object can be decoded (coverted to the native representation) by request -
+Then the object can be decoded (converted to the native representation) by request -
 when user calls <a href="#decl_cvRead">cvRead</a> or
 <a href="#decl_cvReadByName">cvReadByName</a> function.</p>
 
@@ -5861,7 +5861,7 @@ void write_termcriteria( CvFileStorage* fs, const char* struct_name,
     cvStartWriteStruct( fs, struct_name, CV_NODE_MAP, NULL, cvAttrList(0,0));
     cvWriteComment( fs, "termination criteria", 1 ); // just a description
     if( termcrit->type & CV_TERMCRIT_ITER )
-        cvWriteInteger( fs, "max_iterations", termcrit->max_iter );
+        cvWriteInt( fs, "max_iterations", termcrit->max_iter );
     if( termcrit->type & CV_TERMCRIT_EPS )
         cvWriteReal( fs, "accuracy", termcrit->epsilon );
     cvEndWriteStruct( fs );
@@ -5928,7 +5928,7 @@ void  cvWrite( CvFileStorage* fs, const char* name,
             structure is a sequence.
 <dt>ptr<dd>Pointer to the object.
 <dt>attributes<dd>The attributes of the object. They are specific for each particular
-           type (see the dicsussion).
+           type (see the discussion).
 </dl><p>
 The function <code>cvWrite</code> writes the object to file storage.
 First, the appropriate type info is found using <a href="#decl_cvTypeOf">cvTypeOf</a>.
@@ -6031,7 +6031,7 @@ void cvWriteFileNode( CvFileStorage* fs, const char* new_node_name,
                      use <code><a href="#decl_cvGetFileNodeName">cvGetFileNodeName</a>(node)</code>.
 <dt>node<dd>The written node
 <dt>embed<dd>If the written node is a collection and this parameter is not zero,
-             no extra level of hiararchy is created. Instead, all the elements of <code>node</code> are
+             no extra level of hierarchy is created. Instead, all the elements of <code>node</code> are
              written into the currently written structure. Of course, map elements may be
              written only to map, and sequence elements may be written only to sequence.
 </dl><p>
@@ -6082,7 +6082,7 @@ The function <code>cvGetFileNodeByName</code> finds
 a file node by <code>name</code>. The node is searched either in <code>map</code>
 or, if the pointer is NULL, among the top-level file nodes of the storage.
 Using this function for maps and <a href="#decl_cvGetSeqElem">cvGetSeqElem</a>
-(or sequence reader) for sequences, it is possible to nagivate through the file storage.
+(or sequence reader) for sequences, it is possible to navigate through the file storage.
 To speed up multiple queries for a certain key (e.g. in case of array of structures)
 one may use a pair of <a href="#decl_cvGetHashedKey">cvGetHashedKey</a> and
 <a href="#decl_cvGetFileNode">cvGetFileNode</a>.</p>
@@ -6096,7 +6096,7 @@ CvStringHashNode* cvGetHashedKey( CvFileStorage* fs, const char* name,
 </pre><p><dl>
 <dt>fs<dd>File storage.
 <dt>name<dd>Literal node name.
-<dt>len<dd>Length of the name (if it is known apriori), or -1 if it needs to
+<dt>len<dd>Length of the name (if it is known a priori), or -1 if it needs to
            be calculated.
 <dt>create_missing<dd>Flag that specifies, whether an absent key should be
            added into the hash table, or not.
@@ -6431,7 +6431,7 @@ The structure <a href="#decl_CvTypeInfo">CvTypeInfo</a> contains information abo
 one of standard or user-defined types. Instances of the type may or may not contain
 pointer to the corresponding <a href="#decl_CvTypeInfo">CvTypeInfo</a> structure.
 In any case there is a way to find type info structure for given object - using
-<a href="#decl_cvTypeOf">cvTypeOf</a> function. Aternatively, type info can be
+<a href="#decl_cvTypeOf">cvTypeOf</a> function. Alternatively, type info can be
 found by the type name using <a href="#decl_cvFindType">cvFindType</a>, which is
 used when object is read from file storage. User can register a new type with
 <a href="#decl_cvRegisterType">cvRegisterType</a> that adds the type information structure
@@ -6575,7 +6575,7 @@ int  cvCheckArr( const CvArr* arr, int flags=0,
              <code>CV_CHECK_RANGE</code> - if set, the function checks that every value of
                               array is within [minVal,maxVal) range,
                               otherwise it just checks that every element
-                              is neigther NaN nor &plusmn;Infinity.<br>
+                              is neither NaN nor &plusmn;Infinity.<br>
              <code>CV_CHECK_QUIET</code> - if set, the function does not raises an
                               error if an element is invalid or out of range
 <dt>min_val<dd>The inclusive lower boundary of valid values range.
@@ -6609,7 +6609,7 @@ between the subsequent iterations).
 The function <code>cvKMeans2</code> implements k-means algorithm that finds centers of <code>cluster_count</code> clusters
 and groups the input samples around the clusters. On output <code>labels(i)</code> contains a cluster index
 for sample stored in the i-th row of <code>samples</code> matrix.
-<h4>Example. Clustering random samples of multi-gaussian distribution with k-means</h4>
+<h4>Example. Clustering random samples of k-variate Gaussian distribution</h4>
 <pre>
 #include "cxcore.h"
 #include "highgui.h"
@@ -6636,7 +6636,7 @@ void main( int argc, char** argv )
         CvMat* points = cvCreateMat( sample_count, 1, CV_32FC2 );
         CvMat* clusters = cvCreateMat( sample_count, 1, CV_32SC1 );
 
-        /* generate random sample from multigaussian distribution */
+        /* generate random sample from multivariate Gaussian distribution */
         for( k = 0; k &lt; cluster_count; k++ )
         {
             CvPoint center;
@@ -6685,24 +6685,24 @@ void main( int argc, char** argv )
 
 
 <hr><h3><a name="decl_cvSeqPartition">SeqPartition</a></h3>
-<p class="Blurb">Splits sequence into equivalency classes</p>
+<p class="Blurb">Splits sequence into equivalence classes</p>
 <pre>
 typedef int (CV_CDECL* CvCmpFunc)(const void* a, const void* b, void* userdata);
 int cvSeqPartition( const CvSeq* seq, CvMemStorage* storage, CvSeq** labels,
                     CvCmpFunc is_equal, void* userdata );
 </pre><p><dl>
 <dt>seq<dd>The sequence to partition.
-<dt>storage<dd>The storage to store the sequence of equivalency classes. If it is NULL,
+<dt>storage<dd>The storage to store the sequence of equivalence classes. If it is NULL,
                the function uses <code>seq->storage</code> for output labels.
-<dt>labels<dd>Ouput parameter. Double pointer to the sequence
+<dt>labels<dd>Output parameter. Double pointer to the sequence
               of 0-based labels of input sequence elements.
 <dt>is_equal<dd>The relation function that should return non-zero if the two particular sequence elements
-                are from the same class, and zero overwise.
-                The partitioning algorithm uses transitive closure of the relation function as equivalency critria.
+                are from the same class, and zero otherwise.
+                The partitioning algorithm uses transitive closure of the relation function as equivalence criteria.
 <dt>userdata<dd>Pointer that is transparently passed to the <code>is_equal</code> function.
 </dl><p>
 The function <code>cvSeqPartition</code> implements quadratic algorithm for splitting
-a set into one or more classes of equivalency. The function returns the number of equivalency classes.
+a set into one or more classes of equivalence. The function returns the number of equivalence classes.
 </p>
 <h4>Example. Partitioning 2d point set.</h4>
 <pre>
@@ -6795,10 +6795,10 @@ and <a href="#decl_cvGetErrMode">cvGetErrMode</a>):
 <dt>Leaf<dd>The program is terminated after error handler is called.
             <em>This is the default value</em>. It is useful for debugging, as the error
             is signalled immediately after it occurs. However, for production systems
-            other two methods may be prefferable as they provide more control.
+            other two methods may be preferable as they provide more control.
 <dt>Parent<dd>The program is not terminated, but the error handler is called.
               The stack is unwinded (it is done w/o using C++ exception mechanism).
-              User may check error code after calling CxCore function with
+              User may check error code after calling Cxcore function with
               <a href="#decl_cvGetErrStatus">cvGetErrStatus</a> and react.
 <dt>Silent<dd>Similar to <em>Parent</em> mode, but no error handler is called.
 </dl>
@@ -6835,7 +6835,7 @@ and some custom error handler may implement quite different semantics.</p>
         CV_ERROR( CV_StsBackTrace, "Inner function failed." );      \
 }
 
-/* Provies shorthand for CXCORE function call and CV_CHECK() */
+/* Provides shorthand for CXCORE function call and CV_CHECK() */
 #define CV_CALL( Statement )                                        \
 {                                                                   \
     Statement;                                                      \
@@ -6894,7 +6894,7 @@ void cvResizeDCT( CvMat* input_array, CvMat* output_array )
 
     __END__; // finish processing. Epilogue follows after the macro.
 
-    // release temp_array. If temp_array has not been allocated before an error occured, cvReleaseMat
+    // release temp_array. If temp_array has not been allocated before an error occurred, cvReleaseMat
     // takes care of it and does nothing in this case.
     cvReleaseMat( &temp_array );
 }
@@ -6912,10 +6912,10 @@ int main( int argc, char** argv )
 #if 0 /* change 0 to 1 to suppress error handler invocation */
     cvSetErrMode( CV_ErrModeSilent );
 #endif
-    cvResizeDCT( src, dst ); // if some error occurs, the message box will popup, or a message will be
+    cvResizeDCT( src, dst ); // if some error occurs, the message box will pop up, or a message will be
                              // written to log, or some user-defined processing will be done
     if( cvGetErrStatus() &lt; 0 )
-        printf("Some error occured" );
+        printf("Some error occurred" );
     else
         printf("Everything is OK" );
     return 0;
@@ -6930,7 +6930,7 @@ int cvGetErrStatus( void );
 </pre><p>
 The function <code>cvGetErrStatus</code> returns the current error status -
 the value set with the last <a href="#decl_cvSetErrStatus">cvSetErrStatus</a> call. Note, that
-in <em>Leaf</em> mode the program terminates immediately after error occured, so to
+in <em>Leaf</em> mode the program terminates immediately after error occurred, so to
 always get control after the function call, one should call <a href="#decl_cvSetErrMode">cvSetErrMode</a>
 and set <em>Parent</em> or <em>Silent</em> error mode.
 </p>
@@ -6982,10 +6982,10 @@ int cvError( int status, const char* func_name,
              const char* err_msg, const char* file_name, int line );
 </pre><p><dl>
 <dt>status<dd>The error status.
-<dt>func_name<dd>Name of the function where the error occured.
+<dt>func_name<dd>Name of the function where the error occurred.
 <dt>err_msg<dd>Additional information/diagnostics about the error.
-<dt>file_name<dd>Name of the file where the error occured.
-<dt>line<dd>Line number, where the error occured.
+<dt>file_name<dd>Name of the file where the error occurred.
+<dt>line<dd>Line number, where the error occurred.
 </dl><p>
 The function <code>cvError</code> sets the error status
 to the specified value (via <a href="#decl_cvSetErrStatus">cvSetErrStatus</a>)
@@ -7014,7 +7014,7 @@ CvErrorCallback cvRedirectError( CvErrorCallback error_handler,
                                  void* userdata=NULL, void** prev_userdata=NULL );
 </pre><p><dl>
 <dt>error_handler<dd>The new error_handler.
-<dt>userdata<dd>Arbitrary pointer that is transparetly passed to the error handler.
+<dt>userdata<dd>Arbitrary pointer that is transparently passed to the error handler.
 <dt>prev_userdata<dd>Pointer to the previously assigned user data pointer.
 </dl><p>
 The function <code>cvRedirectError</code> sets a new error handler that
@@ -7044,17 +7044,17 @@ int cvGuiBoxReport( int status, const char* func_name,
                     int line, void* userdata );
 </pre><p><dl>
 <dt>status<dd>The error status.
-<dt>func_name<dd>Name of the function where the error occured.
+<dt>func_name<dd>Name of the function where the error occurred.
 <dt>err_msg<dd>Additional information/diagnostics about the error.
-<dt>file_name<dd>Name of the file where the error occured.
-<dt>line<dd>Line number, where the error occured.
+<dt>file_name<dd>Name of the file where the error occurred.
+<dt>line<dd>Line number, where the error occurred.
 <dt>userdata<dd>Pointer to the user data. Ignored by the standard handlers.
 </dl><p>
 The functions <code>cvNullDevReport, cvStdErrReport</code> and <code>cvGuiBoxReport</code>
 provide standard error handling. <code>cvGuiBoxReport</code> is the default
 error handler on Win32 systems, <code>cvStdErrReport</code> - on other systems.
 <code>cvGuiBoxReport</code> pops up message box with the error description and
-suggest a few options. Below is the sample message box that may be recieved with the
+suggest a few options. Below is the sample message box that may be received with the
 <a name="decl_error_handling_sample">sample code</a> above, if one introduce an error as described
 in the sample</p>
 <h4>Error Message Box</h4>
@@ -7155,7 +7155,7 @@ The function <code>cvRegisterModule</code> adds module to the list of registered
 modules. After the module is registered, information about it can be retrieved
 using <a href="#decl_cvGetModuleInfo">cvGetModuleInfo</a> function. Also, the registered module
 makes full use of optimized plugins (IPP, MKL, ...), supported by CXCORE.
-CXCORE itself, CV (computer vision), CVAUX (auxilary computer vision) and HIGHGUI
+CXCORE itself, CV (computer vision), CVAUX (auxiliary computer vision) and HIGHGUI
 (visualization & image/video acquisition) are examples of modules. Registration is usually done
 then the shared library is loaded. See cxcore/src/cxswitcher.cpp and cv/src/cvswitcher.cpp
 for details, how registration is done and
@@ -7197,7 +7197,7 @@ increase the startup time)</p>
 
 
 <hr><h3><a name="decl_cvSetMemoryManager">SetMemoryManager</a></h3>
-<p class="Blurb">Assings custom/default memory managing functions</p>
+<p class="Blurb">Assigns custom/default memory managing functions</p>
 <pre>
 typedef void* (CV_CDECL *CvAllocFunc)(size_t size, void* userdata);
 typedef int (CV_CDECL *CvFreeFunc)(void* pptr, void* userdata);
@@ -7209,10 +7209,10 @@ void cvSetMemoryManager( CvAllocFunc alloc_func=NULL,
 <dt>alloc_func<dd>Allocation function; the interface is similar to <code>malloc</code>, except that <code>userdata</code>
               may be used to determine the context.
 <dt>free_func<dd>Deallocation function; the interface is similar to <code>free</code>.
-<dt>userdata<dd>User data that is transparetly passed to the custom functions.
+<dt>userdata<dd>User data that is transparently passed to the custom functions.
 </dl><p>
 The function <code>cvSetMemoryManager</code>
-sets user-defined memory managment functions (substitutors for malloc and free) that
+sets user-defined memory management functions (replacements for malloc and free) that
 will be called by cvAlloc, cvFree and higher-level functions (e.g. cvCreateImage).
 Note, that the function should be called when there is data allocated using <a href="#decl_cvAlloc">cvAlloc<a>.
 Also, to avoid infinite recursive calls, it is not allowed to call <a href="#decl_cvAlloc">cvAlloc</a>

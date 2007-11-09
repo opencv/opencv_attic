@@ -36,7 +36,7 @@ the window size manually.
 </dl><p>
 The function <code>cvNamedWindow</code>
 creates a window which can be used as a placeholder for images and trackbars.
-Created windows are reffered by their names.
+Created windows are referred by their names.
 </p><p>
 If the window with such a name already exists, the function does nothing.</p>
 
@@ -151,7 +151,7 @@ int cvCreateTrackbar( const char* trackbar_name, const char* window_name,
 </dl><p>
 The function <code>cvCreateTrackbar</code>
 creates the trackbar (a.k.a. slider or range control) with the specified name and range,
-assigns the variable to be syncronized with trackbar position and specifies callback function
+assigns the variable to be synchronized with trackbar position and specifies callback function
 to be called on trackbar position change. The created trackbar is displayed on top
 of given window.</p>
 
@@ -165,7 +165,7 @@ int cvGetTrackbarPos( const char* trackbar_name, const char* window_name );
 <dt>window_name<dd>Name of the window which is the parent of trackbar.
 </dl><p>
 The function <code>cvGetTrackbarPos</code>
-returns the ciurrent position of the specified trackbar.</p>
+returns the current position of the specified trackbar.</p>
 
 
 <hr><h3><a name="decl_cvSetTrackbarPos">cvSetTrackbarPos</a></h3>
@@ -218,7 +218,7 @@ void cvSetMouseCallback( const char* window_name, CvMouseCallback on_mouse, void
 <dt>param<dd>User-defined parameter to be passed to the callback function.
 </dl><p>
 The function <code>cvSetMouseCallback</code>
-sets the callback function for mouse events occuting within the specified
+sets the callback function for mouse events occurring within the specified
 window. To see how it works, look at <a href="../../samples/c/ffilldemo.c">
 opencv/samples/c/ffilldemo.c</a> demo</p>
 
@@ -289,7 +289,7 @@ Currently the following file formats are supported:
 <li>Windows bitmaps - BMP, DIB;
 <li>JPEG files - JPEG, JPG, JPE;
 <li>Portable Network Graphics - PNG;
-<li>Portable image format - PBM, PGM, PPM;
+<li>Portable image format - PBM, PGM, PPM, PXM, PNM;
 <li>Sun rasters - SR, RAS;
 <li>TIFF files - TIFF, TIF;
 <li>OpenEXR HDR images - EXR;
@@ -362,7 +362,7 @@ from the camera. Currently two camera interfaces can be used on Windows: Video f
 Windows (VFW) and Matrox Imaging Library (MIL); and two on Linux:
 V4L and FireWire (IEEE1394).
 </p>
-<p>To release the sturtcure, use <a href="#decl_cvReleaseCapture">cvReleaseCapture</a>.</p>
+<p>To release the structure, use <a href="#decl_cvReleaseCapture">cvReleaseCapture</a>.</p>
 
 
 <hr><h3><a name="decl_cvReleaseCapture">cvReleaseCapture</a></h3>
@@ -388,7 +388,7 @@ int cvGrabFrame( CvCapture* capture );
 The function <code>cvGrabFrame</code>
 grabs the frame from camera or file. The grabbed frame is stored internally.
 The purpose of this function is to grab frame <em>fast</em> that is important
-for syncronization in case of reading from several cameras simultaneously. The
+for synchronization in case of reading from several cameras simultaneously. The
 grabbed frames are not exposed because they may be stored in compressed format
 (as defined by camera/driver). To retrieve the grabbed frame,
 <a href="#decl_cvRetrieveFrame">cvRetrieveFrame</a> should be used.
@@ -490,7 +490,7 @@ creates video writer structure.
 </p>
 
 <hr><h3><a name="decl_cvReleaseVideoWriter">cvReleaseVideoWriter</a></h3>
-<p class="Blurb">Releases AVI writer</p>
+<p class="Blurb">Releases video file writer</p>
 <pre>
 void cvReleaseVideoWriter( CvVideoWriter** writer );
 </pre><dl>
