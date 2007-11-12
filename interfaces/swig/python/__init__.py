@@ -42,22 +42,35 @@
 # 2004-03-16, Mark Asbach       <asbach@ient.rwth-aachen.de>
 #             Institute of Communications Engineering, RWTH Aachen University
 
-"""
-OpenCV is the Intel Open CV library, an open source effort to provide
-computer vision algorithms for standard PC hardware.
+"""The Open Computer Vision Library
+
+OpenCV is the Open Computer Vision library, an open source effort originally started
+by intel to provide computer vision algorithms for standard PC hardware.
 
 This wrapper was semi-automatically created from the C/C++ headers and therefore
 contains no Python documentation. Because all identifiers are identical to their
 C/C++ counterparts, you can consult the standard manuals that come with OpenCV.
-""" 
 
-# always import functionality from cxcore and cv to this namespace
+In detail, this python package contains four sub-modules:
+
+  cv             core components (cxcore and cv)
+  ml             machine learning
+  highgui        simple user interface, video and image I/O
+  adaptors       pure python module offering conversion to numpy/scipy matrices 
+                 and PIL (python imaging library) images
+  matlab_syntax  pure python module offering syntax that is similar to Matlab
+                 for those who switched
+
+All methods and data types from cv, ml and adaptors are automatically imported into 
+the opencv namespace. Contents from highgui and matlab_syntax must be explicitly 
+imported - to avoid conflicts with other UI toolkits and the python matlab interface.
+"""
+
+# the module consists of these four sub-modules
+__all__ = ['cv', 'ml', 'highgui', 'adaptors', 'matlab_syntax']
+
+# always import functionality from cxcore, cv and ml to this namespace
+# try to import PIL and numpy adaptors
 from cv import *
-
-# try to import PIL and Numeric adaptors
-# ignore import errors if one of both is not present
-try:
-    from adaptors import *
-except ImportError:
-    pass
-
+from ml import *
+from adaptors import *

@@ -89,6 +89,16 @@ _highgui_la_LINK = $(LIBTOOL) --tag=CXX $(AM_LIBTOOLFLAGS) \
 	$(CXXFLAGS) $(_highgui_la_LDFLAGS) $(LDFLAGS) -o $@
 @BUILD_PYTHON_WRAPPERS_TRUE@am__highgui_la_rpath = -rpath \
 @BUILD_PYTHON_WRAPPERS_TRUE@	$(pkgpythondir)
+@BUILD_PYTHON_WRAPPERS_TRUE@_ml_la_DEPENDENCIES =  \
+@BUILD_PYTHON_WRAPPERS_TRUE@	$(top_builddir)/ml/src/libml.la
+am___ml_la_SOURCES_DIST = _ml.cpp pyhelpers.cpp pyhelpers.h
+@BUILD_PYTHON_WRAPPERS_TRUE@am__ml_la_OBJECTS = _ml_la-_ml.lo \
+@BUILD_PYTHON_WRAPPERS_TRUE@	_ml_la-pyhelpers.lo
+_ml_la_OBJECTS = $(am__ml_la_OBJECTS)
+_ml_la_LINK = $(LIBTOOL) --tag=CXX $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) \
+	--mode=link $(CXXLD) $(_ml_la_CXXFLAGS) $(CXXFLAGS) \
+	$(_ml_la_LDFLAGS) $(LDFLAGS) -o $@
+@BUILD_PYTHON_WRAPPERS_TRUE@am__ml_la_rpath = -rpath $(pkgpythondir)
 DEFAULT_INCLUDES = -I. -I$(top_builddir)@am__isrc@
 depcomp = $(SHELL) $(top_srcdir)/autotools/depcomp
 am__depfiles_maybe = depfiles
@@ -110,11 +120,11 @@ CCLD = $(CC)
 LINK = $(LIBTOOL) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) \
 	--mode=link $(CCLD) $(AM_CFLAGS) $(CFLAGS) $(AM_LDFLAGS) \
 	$(LDFLAGS) -o $@
-SOURCES = $(_cv_la_SOURCES) $(_highgui_la_SOURCES)
+SOURCES = $(_cv_la_SOURCES) $(_highgui_la_SOURCES) $(_ml_la_SOURCES)
 DIST_SOURCES = $(am___cv_la_SOURCES_DIST) \
-	$(am___highgui_la_SOURCES_DIST)
-am__pkgpython_PYTHON_DIST = __init__.py cv.py adaptors.py highgui.py \
-	matlab_syntax.py
+	$(am___highgui_la_SOURCES_DIST) $(am___ml_la_SOURCES_DIST)
+am__pkgpython_PYTHON_DIST = __init__.py cv.py ml.py highgui.py \
+	adaptors.py matlab_syntax.py
 pkgpythonPYTHON_INSTALL = $(INSTALL_DATA)
 py_compile = $(top_srcdir)/autotools/py-compile
 ETAGS = etags
@@ -270,6 +280,7 @@ top_srcdir = @top_srcdir@
 CV_INCLUDES = \
   -I$(top_srcdir)/cv/include         \
   -I$(top_srcdir)/cxcore/include     \
+  -I$(top_srcdir)/ml/include         \
   -I$(top_srcdir)/otherlibs/highgui
 
 AM_CPPFLAGS = \
@@ -278,32 +289,35 @@ AM_CPPFLAGS = \
 
 noinst_PYTHON = setup-for-win.py
 EXTRA_DIST = \
-  __init__.py \
-  cv.py \
-  adaptors.py \
-  highgui.py \
+  __init__.py      \
+  \
+  cv.py            \
+  adaptors.py      \
+  highgui.py       \
   matlab_syntax.py \
   \
-  cv.i \
-  cvaliases.i \
-  cvarr.i \
-  cvseq.i \
-  cvshadow.i \
-  highgui.i \
-  imagedata.i \
-  nointpb.i \
-  pyhelpers.i \
-  pytypemaps.i \
+  cv.i             \
+  cvaliases.i      \
+  cvarr.i          \
+  cvseq.i          \
+  cvshadow.i       \
+  ml.i             \
+  highgui.i        \
+  imagedata.i      \
+  nointpb.i        \
+  pyhelpers.i      \
+  pytypemaps.i     \
   \
-  cvshadow.h \
-  error.h \
-  pycvseq.hpp \
-  pyhelpers.h \
+  cvshadow.h       \
+  error.h          \
+  pycvseq.hpp      \
+  pyhelpers.h      \
   \
-  _cv.cpp \
-  _highgui.cpp \
-  cvshadow.cpp \
-  error.cpp \
+  _cv.cpp          \
+  _ml.cpp          \
+  _highgui.cpp     \
+  cvshadow.cpp     \
+  error.cpp        \
   pyhelpers.cpp
 
 @UPDATE_SWIG_WRAPPERS_TRUE@CV_HEADER_FILES = \
@@ -314,12 +328,15 @@ EXTRA_DIST = \
 
 
 # Conditional targets #######################################################
-@BUILD_PYTHON_WRAPPERS_TRUE@pkgpython_LTLIBRARIES = _cv.la _highgui.la
+
+#pkgpython_LTLIBRARIES = _cv.la _highgui.la
+@BUILD_PYTHON_WRAPPERS_TRUE@pkgpython_LTLIBRARIES = _cv.la _ml.la _highgui.la
 @BUILD_PYTHON_WRAPPERS_TRUE@pkgpython_PYTHON = \
 @BUILD_PYTHON_WRAPPERS_TRUE@  __init__.py    \
 @BUILD_PYTHON_WRAPPERS_TRUE@  cv.py          \
+@BUILD_PYTHON_WRAPPERS_TRUE@  ml.py          \
+@BUILD_PYTHON_WRAPPERS_TRUE@  highgui.py     \
 @BUILD_PYTHON_WRAPPERS_TRUE@  adaptors.py    \
-@BUILD_PYTHON_WRAPPERS_TRUE@  highgui.py 	   \
 @BUILD_PYTHON_WRAPPERS_TRUE@  matlab_syntax.py
 
 @BUILD_PYTHON_WRAPPERS_TRUE@_cv_la_SOURCES = _cv.cpp error.cpp error.h pyhelpers.cpp pyhelpers.h \
@@ -329,6 +346,12 @@ EXTRA_DIST = \
 @BUILD_PYTHON_WRAPPERS_TRUE@_cv_la_CXXFLAGS = $(PYTHON_CSPEC)
 @BUILD_PYTHON_WRAPPERS_TRUE@_cv_la_LIBADD = $(top_builddir)/cv/src/libcv.la
 @BUILD_PYTHON_WRAPPERS_TRUE@_cv_la_LDFLAGS = -module -avoid-version -no-undefined $(PYTHON_LSPEC) \
+@BUILD_PYTHON_WRAPPERS_TRUE@                    -L$(SWIG_PYTHON_LIBS)
+
+@BUILD_PYTHON_WRAPPERS_TRUE@_ml_la_SOURCES = _ml.cpp pyhelpers.cpp pyhelpers.h
+@BUILD_PYTHON_WRAPPERS_TRUE@_ml_la_CXXFLAGS = $(PYTHON_CSPEC)
+@BUILD_PYTHON_WRAPPERS_TRUE@_ml_la_LIBADD = $(top_builddir)/ml/src/libml.la
+@BUILD_PYTHON_WRAPPERS_TRUE@_ml_la_LDFLAGS = -module -avoid-version -no-undefined $(PYTHON_LSPEC) \
 @BUILD_PYTHON_WRAPPERS_TRUE@                    -L$(SWIG_PYTHON_LIBS)
 
 @BUILD_PYTHON_WRAPPERS_TRUE@_highgui_la_SOURCES = _highgui.cpp pyhelpers.cpp pyhelpers.h \
@@ -403,6 +426,8 @@ _cv.la: $(_cv_la_OBJECTS) $(_cv_la_DEPENDENCIES)
 	$(_cv_la_LINK) $(am__cv_la_rpath) $(_cv_la_OBJECTS) $(_cv_la_LIBADD) $(LIBS)
 _highgui.la: $(_highgui_la_OBJECTS) $(_highgui_la_DEPENDENCIES) 
 	$(_highgui_la_LINK) $(am__highgui_la_rpath) $(_highgui_la_OBJECTS) $(_highgui_la_LIBADD) $(LIBS)
+_ml.la: $(_ml_la_OBJECTS) $(_ml_la_DEPENDENCIES) 
+	$(_ml_la_LINK) $(am__ml_la_rpath) $(_ml_la_OBJECTS) $(_ml_la_LIBADD) $(LIBS)
 
 mostlyclean-compile:
 	-rm -f *.$(OBJEXT)
@@ -416,6 +441,8 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/_cv_la-pyhelpers.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/_highgui_la-_highgui.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/_highgui_la-pyhelpers.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/_ml_la-_ml.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/_ml_la-pyhelpers.Plo@am__quote@
 
 .cpp.o:
 @am__fastdepCXX_TRUE@	$(CXXCOMPILE) -MT $@ -MD -MP -MF $(DEPDIR)/$*.Tpo -c -o $@ $<
@@ -479,6 +506,20 @@ _highgui_la-pyhelpers.lo: pyhelpers.cpp
 @AMDEP_TRUE@@am__fastdepCXX_FALSE@	source='pyhelpers.cpp' object='_highgui_la-pyhelpers.lo' libtool=yes @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCXX_FALSE@	$(LIBTOOL) --tag=CXX $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(_highgui_la_CXXFLAGS) $(CXXFLAGS) -c -o _highgui_la-pyhelpers.lo `test -f 'pyhelpers.cpp' || echo '$(srcdir)/'`pyhelpers.cpp
+
+_ml_la-_ml.lo: _ml.cpp
+@am__fastdepCXX_TRUE@	$(LIBTOOL) --tag=CXX $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(_ml_la_CXXFLAGS) $(CXXFLAGS) -MT _ml_la-_ml.lo -MD -MP -MF $(DEPDIR)/_ml_la-_ml.Tpo -c -o _ml_la-_ml.lo `test -f '_ml.cpp' || echo '$(srcdir)/'`_ml.cpp
+@am__fastdepCXX_TRUE@	mv -f $(DEPDIR)/_ml_la-_ml.Tpo $(DEPDIR)/_ml_la-_ml.Plo
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	source='_ml.cpp' object='_ml_la-_ml.lo' libtool=yes @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCXX_FALSE@	$(LIBTOOL) --tag=CXX $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(_ml_la_CXXFLAGS) $(CXXFLAGS) -c -o _ml_la-_ml.lo `test -f '_ml.cpp' || echo '$(srcdir)/'`_ml.cpp
+
+_ml_la-pyhelpers.lo: pyhelpers.cpp
+@am__fastdepCXX_TRUE@	$(LIBTOOL) --tag=CXX $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(_ml_la_CXXFLAGS) $(CXXFLAGS) -MT _ml_la-pyhelpers.lo -MD -MP -MF $(DEPDIR)/_ml_la-pyhelpers.Tpo -c -o _ml_la-pyhelpers.lo `test -f 'pyhelpers.cpp' || echo '$(srcdir)/'`pyhelpers.cpp
+@am__fastdepCXX_TRUE@	mv -f $(DEPDIR)/_ml_la-pyhelpers.Tpo $(DEPDIR)/_ml_la-pyhelpers.Plo
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	source='pyhelpers.cpp' object='_ml_la-pyhelpers.lo' libtool=yes @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCXX_FALSE@	$(LIBTOOL) --tag=CXX $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(_ml_la_CXXFLAGS) $(CXXFLAGS) -c -o _ml_la-pyhelpers.lo `test -f 'pyhelpers.cpp' || echo '$(srcdir)/'`pyhelpers.cpp
 
 mostlyclean-libtool:
 	-rm -f *.lo
@@ -717,12 +758,20 @@ uninstall-am: uninstall-pkgpythonLTLIBRARIES uninstall-pkgpythonPYTHON
 @UPDATE_SWIG_WRAPPERS_TRUE@         Makefile.in
 @UPDATE_SWIG_WRAPPERS_TRUE@	$(SWIG) $(SWIG_PYTHON_OPT) $(CV_INCLUDES) -o $@ $<
 
+# this rule creates the Python wrapper sources for ml
+@UPDATE_SWIG_WRAPPERS_TRUE@_ml.cpp: ml.i nointpb.i pytypemaps.i                            \
+@UPDATE_SWIG_WRAPPERS_TRUE@              $(top_srcdir)/interfaces/swig/general/typemaps.i  \
+@UPDATE_SWIG_WRAPPERS_TRUE@              $(top_srcdir)/interfaces/swig/general/memory.i    \
+@UPDATE_SWIG_WRAPPERS_TRUE@              $(top_srcdir)/ml/include/ml.h                     \
+@UPDATE_SWIG_WRAPPERS_TRUE@              Makefile.in
+@UPDATE_SWIG_WRAPPERS_TRUE@	$(SWIG) $(SWIG_PYTHON_OPT) $(CV_INCLUDES) -DSKIP_INCLUDES -o $@ $<
+
 # this rule creates the Python wrapper sources for highgui
 @UPDATE_SWIG_WRAPPERS_TRUE@_highgui.cpp: highgui.i nointpb.i pytypemaps.i                  \
 @UPDATE_SWIG_WRAPPERS_TRUE@              $(top_srcdir)/interfaces/swig/general/highgui.i   \
-@UPDATE_SWIG_WRAPPERS_TRUE@	      $(top_srcdir)/interfaces/swig/general/typemaps.i      \
+@UPDATE_SWIG_WRAPPERS_TRUE@              $(top_srcdir)/interfaces/swig/general/typemaps.i  \
 @UPDATE_SWIG_WRAPPERS_TRUE@              $(top_srcdir)/interfaces/swig/general/memory.i    \
-@UPDATE_SWIG_WRAPPERS_TRUE@	      $(top_srcdir)/otherlibs/highgui/highgui.h             \
+@UPDATE_SWIG_WRAPPERS_TRUE@              $(top_srcdir)/otherlibs/highgui/highgui.h         \
 @UPDATE_SWIG_WRAPPERS_TRUE@              Makefile.in
 @UPDATE_SWIG_WRAPPERS_TRUE@	$(SWIG) $(SWIG_PYTHON_OPT) $(CV_INCLUDES) -DSKIP_INCLUDES -o $@ $<
 
