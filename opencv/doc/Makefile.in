@@ -209,6 +209,7 @@ top_srcdir = @top_srcdir@
 opencvdocdir = $(pkgdatadir)/doc
 nobase_dist_opencvdoc_DATA = cvcam.rtf faq.htm index.htm \
     license.txt opencv.jpg opencvman_old.pdf \
+    ../THANKS ../ChangeLog \
     papers/algo_tracking.pdf papers/avbpa99.ps papers/camshift.pdf \
     ref/opencvref.css ref/opencvref_cv.htm ref/opencvref_cvaux.htm \
     ref/opencvref_cxcore.htm ref/opencvref_highgui.htm ref/opencvref_ml.htm \
