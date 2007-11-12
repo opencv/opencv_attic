@@ -46,8 +46,65 @@
 #pragma warning( disable : 4996 ) 
 #endif
 
-#include "cxcore.h"
-#include <limits.h>
+#ifndef SKIP_INCLUDES
+
+  #include "cxcore.h"
+  #include <limits.h>
+
+  #if defined WIN32 || defined WIN64
+    #include <windows.h>
+  #endif
+
+#else // SKIP_INCLUDES
+
+  #if defined WIN32 || defined WIN64
+    #define CV_CDECL __cdecl
+    #define CV_STDCALL __stdcall
+  #else
+    #define CV_CDECL
+    #define CV_STDCALL
+  #endif
+
+  #ifndef CV_EXTERN_C
+    #ifdef __cplusplus
+      #define CV_EXTERN_C extern "C"
+      #define CV_DEFAULT(val) = val
+    #else
+      #define CV_EXTERN_C
+      #define CV_DEFAULT(val)
+    #endif
+  #endif
+
+  #ifndef CV_EXTERN_C_FUNCPTR
+    #ifdef __cplusplus
+      #define CV_EXTERN_C_FUNCPTR(x) extern "C" { typedef x; }
+    #else
+      #define CV_EXTERN_C_FUNCPTR(x) typedef x
+    #endif
+  #endif
+
+  #ifndef CV_INLINE
+    #if defined __cplusplus
+      #define CV_INLINE inline
+    #elif (defined WIN32 || defined WIN64) && !defined __GNUC__
+      #define CV_INLINE __inline
+    #else
+      #define CV_INLINE static
+    #endif
+  #endif /* CV_INLINE */
+
+  #if (defined WIN32 || defined WIN64) && defined CVAPI_EXPORTS
+    #define CV_EXPORTS __declspec(dllexport)
+  #else
+    #define CV_EXPORTS
+  #endif
+
+  #ifndef CVAPI
+    #define CVAPI(rettype) CV_EXTERN_C CV_EXPORTS rettype CV_CDECL
+  #endif
+
+#endif // SKIP_INCLUDES
+
 
 #ifdef __cplusplus
 
@@ -536,8 +593,11 @@ public:
     enum { START_E_STEP=1, START_M_STEP=2, START_AUTO_STEP=0 };
 
     CvEM();
-    CvEM( const CvMat* samples, const CvMat* sample_idx=0,
-          CvEMParams params=CvEMParams(), CvMat* labels=0 );
+    
+    // TODO: implement non-default constructor!
+    //       see bug 1830346 on the sourceforge bug tracker
+    //CvEM( const CvMat* samples, const CvMat* sample_idx=0,
+    //      CvEMParams params=CvEMParams(), CvMat* labels=0 );
     virtual ~CvEM();
 
     virtual bool train( const CvMat* samples, const CvMat* sample_idx=0,
