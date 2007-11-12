@@ -7,6 +7,7 @@ EXTRA_DIST = testdata
 MOSTLYCLEANFILES = *.works
 
 check_SCRIPTS = \
+    test_adaptors.py                              \
     highgui/cvInitSystem.py                       \
     highgui/cvLoadImageBMP.py                     \
     highgui/cvLoadImageJPG.py                     \
