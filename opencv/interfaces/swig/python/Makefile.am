@@ -7,6 +7,7 @@
 CV_INCLUDES = \
   -I$(top_srcdir)/cv/include         \
   -I$(top_srcdir)/cxcore/include     \
+  -I$(top_srcdir)/ml/include         \
   -I$(top_srcdir)/otherlibs/highgui
 
 AM_CPPFLAGS = \
@@ -16,32 +17,35 @@ AM_CPPFLAGS = \
 noinst_PYTHON = setup-for-win.py
 
 EXTRA_DIST = \
-  __init__.py \
-  cv.py \
-  adaptors.py \
-  highgui.py \
+  __init__.py      \
+  \
+  cv.py            \
+  adaptors.py      \
+  highgui.py       \
   matlab_syntax.py \
   \
-  cv.i \
-  cvaliases.i \
-  cvarr.i \
-  cvseq.i \
-  cvshadow.i \
-  highgui.i \
-  imagedata.i \
-  nointpb.i \
-  pyhelpers.i \
-  pytypemaps.i \
+  cv.i             \
+  cvaliases.i      \
+  cvarr.i          \
+  cvseq.i          \
+  cvshadow.i       \
+  ml.i             \
+  highgui.i        \
+  imagedata.i      \
+  nointpb.i        \
+  pyhelpers.i      \
+  pytypemaps.i     \
   \
-  cvshadow.h \
-  error.h \
-  pycvseq.hpp \
-  pyhelpers.h \
+  cvshadow.h       \
+  error.h          \
+  pycvseq.hpp      \
+  pyhelpers.h      \
   \
-  _cv.cpp \
-  _highgui.cpp \
-  cvshadow.cpp \
-  error.cpp \
+  _cv.cpp          \
+  _ml.cpp          \
+  _highgui.cpp     \
+  cvshadow.cpp     \
+  error.cpp        \
   pyhelpers.cpp
 
 
@@ -67,12 +71,20 @@ _cv.cpp: cv.i imagedata.i cvarr.i cvaliases.i pyhelpers.i       \
          Makefile.in
 	$(SWIG) $(SWIG_PYTHON_OPT) $(CV_INCLUDES) -o $@ $<
 
+# this rule creates the Python wrapper sources for ml
+_ml.cpp: ml.i nointpb.i pytypemaps.i                            \
+              $(top_srcdir)/interfaces/swig/general/typemaps.i  \
+              $(top_srcdir)/interfaces/swig/general/memory.i    \
+              $(top_srcdir)/ml/include/ml.h                     \
+              Makefile.in
+	$(SWIG) $(SWIG_PYTHON_OPT) $(CV_INCLUDES) -DSKIP_INCLUDES -o $@ $<
+
 # this rule creates the Python wrapper sources for highgui
 _highgui.cpp: highgui.i nointpb.i pytypemaps.i                  \
               $(top_srcdir)/interfaces/swig/general/highgui.i   \
-	      $(top_srcdir)/interfaces/swig/general/typemaps.i      \
+              $(top_srcdir)/interfaces/swig/general/typemaps.i  \
               $(top_srcdir)/interfaces/swig/general/memory.i    \
-	      $(top_srcdir)/otherlibs/highgui/highgui.h             \
+              $(top_srcdir)/otherlibs/highgui/highgui.h         \
               Makefile.in
 	$(SWIG) $(SWIG_PYTHON_OPT) $(CV_INCLUDES) -DSKIP_INCLUDES -o $@ $<
 
@@ -92,13 +104,15 @@ endif
 
 if BUILD_PYTHON_WRAPPERS
 
-pkgpython_LTLIBRARIES = _cv.la _highgui.la
+#pkgpython_LTLIBRARIES = _cv.la _highgui.la
+pkgpython_LTLIBRARIES = _cv.la _ml.la _highgui.la
 
 pkgpython_PYTHON = \
   __init__.py    \
   cv.py          \
+  ml.py          \
+  highgui.py     \
   adaptors.py    \
-  highgui.py 	   \
   matlab_syntax.py
 
 _cv_la_SOURCES    = _cv.cpp error.cpp error.h pyhelpers.cpp pyhelpers.h \
@@ -107,6 +121,12 @@ _cv_la_SOURCES    = _cv.cpp error.cpp error.h pyhelpers.cpp pyhelpers.h \
 _cv_la_CXXFLAGS   = $(PYTHON_CSPEC)
 _cv_la_LIBADD     = $(top_builddir)/cv/src/libcv.la
 _cv_la_LDFLAGS    = -module -avoid-version -no-undefined $(PYTHON_LSPEC) \
+                    -L$(SWIG_PYTHON_LIBS)
+
+_ml_la_SOURCES    = _ml.cpp pyhelpers.cpp pyhelpers.h
+_ml_la_CXXFLAGS   = $(PYTHON_CSPEC)
+_ml_la_LIBADD     = $(top_builddir)/ml/src/libml.la
+_ml_la_LDFLAGS    = -module -avoid-version -no-undefined $(PYTHON_LSPEC) \
                     -L$(SWIG_PYTHON_LIBS)
 
 _highgui_la_SOURCES    = _highgui.cpp pyhelpers.cpp pyhelpers.h \
