@@ -75,7 +75,7 @@
 %pythoncode 
 %{
 
-__doc__ = ""Machine Learning
+__doc__ = """Machine Learning
 
 The Machine Learning library (ML) is a set of classes and functions for 
 statistical classification, regression and clustering of data.
