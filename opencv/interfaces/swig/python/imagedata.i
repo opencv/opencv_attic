@@ -90,7 +90,7 @@ void CvMat_imageData_set(CvMat * self, PyObject* object)
 	}
 	else if ( depth == CV_32F )
 	{
-		// Float 32bit case
+		// float (32bit) case
 		for (long line = 0; line < self->rows; ++line)
 		{
 			// here we don not have to care about alignment as the Floats are
@@ -98,10 +98,33 @@ void CvMat_imageData_set(CvMat * self, PyObject* object)
 			memcpy
 				(
 				 self->data.ptr + line*self->step,
-				 py_string + line*self->cols*4,
+				 py_string + line*self->cols*sizeof(float),
 				 self->step
 				);
 		}
+	}
+	else if ( depth == CV_64F )
+	{
+		// double (64bit) case
+		for (long line = 0; line < self->rows; ++line)
+		{
+			// here we don not have to care about alignment as the Floats are
+			// as long as the alignment
+			memcpy
+				(
+				 self->data.ptr + line*self->step,
+				 py_string + line*self->cols*sizeof(double),
+				 self->step
+				);
+		}
+	}
+	else
+	{
+	  // make some noise
+	  SendErrorToPython (SWIG_TypeError, 
+                       "CvMat_imageData_set", 
+                       "cannot convert string data to this image format",
+                       __FILE__, __LINE__, NULL);
 	}
 }
 

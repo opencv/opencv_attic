@@ -170,8 +170,9 @@ try:
          2 dimensions of numpy.uint8
          3 dimensions of numpy.uint8
          2 dimensions of numpy.float32
+         2 dimensions of numpy.float64
       """
-  
+      
       if not isinstance(input, numpy.ndarray):
           raise TypeError, 'Must be called with numpy.ndarray!'
   
@@ -179,34 +180,37 @@ try:
       ndim = input.ndim
       if not ndim in (2, 3):
           raise ValueError, 'Only 2D-arrays and 3D-arrays are supported!'
-  
+      
       # Get the number of channels
       if ndim == 2:
           channels = 1
       else:
           channels = input.shape[2]
-  
+      
       # Get the image depth
       if input.dtype == numpy.uint8:
           depth = cv.IPL_DEPTH_8U
       elif input.dtype == numpy.float32:
           depth = cv.IPL_DEPTH_32F
-  
+      elif input.dtype == numpy.float64:
+          depth = cv.IPL_DEPTH_64F
+      
       # supported modes list: [(channels, dtype), ...]
-      modes_list = [(1, numpy.uint8), (3, numpy.uint8), (1, numpy.float32)]
-  
+      modes_list = [(1, numpy.uint8), (3, numpy.uint8), (1, numpy.float32), (1, numpy.float64)]
+      
       # Check if the input array layout is supported
       if not (channels, input.dtype) in modes_list:
           raise ValueError, 'Unknown or unsupported input mode'
-  
+      
       result = cv.cvCreateImage(
           cv.cvSize(input.shape[0], input.shape[1]),  # size
           depth,  # depth
           channels  # channels
           )
-  
+      
       # set imageData
       result.imageData = input.tostring()
+      
       return result
   
   
@@ -218,6 +222,7 @@ try:
          IPL_DEPTH_8U  x 1 channel
          IPL_DEPTH_8U  x 3 channels
          IPL_DEPTH_32F x 1 channel
+         IPL_DEPTH_64F x 1 channel
       """
   
       if not isinstance(input, cv.CvMat):
@@ -232,7 +237,8 @@ try:
       ipl2dtype = {
           (1, cv.IPL_DEPTH_8U)  : numpy.uint8,
           (3, cv.IPL_DEPTH_8U)  : numpy.uint8,
-          (1, cv.IPL_DEPTH_32F) : numpy.float32
+          (1, cv.IPL_DEPTH_32F) : numpy.float32,
+          (1, cv.IPL_DEPTH_64F) : numpy.float64
           }
   
       key = (input.nChannels, input.depth)
