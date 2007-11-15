@@ -3388,6 +3388,20 @@ SWIG_From_float  (float value)
   return SWIG_From_double  (value);
 }
 
+SWIGINTERN PyObject *CvEM_get_covs(CvEM *self){
+       CvMat ** pointers = const_cast<CvMat **> (self->get_covs());
+       int n = self->get_nclusters();
+
+       PyObject * result = PyTuple_New(n);
+       for (int i=0; i<n; ++i)
+       {
+           PyObject * obj = SWIG_NewPointerObj(pointers[i], SWIGTYPE_p_CvMat, 0);
+           PyTuple_SetItem(result, i, obj);
+           //Py_DECREF(obj);
+       }
+       
+       return result;
+   }
 
 SWIGINTERN int
 SWIG_AsVal_float (PyObject * obj, float *val)
@@ -17042,36 +17056,6 @@ fail:
 }
 
 
-SWIGINTERN PyObject *_wrap_CvEM_get_covs(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
-  PyObject *resultobj = 0;
-  CvEM *arg1 = (CvEM *) 0 ;
-  CvMat **result = 0 ;
-  void *argp1 = 0 ;
-  int res1 = 0 ;
-  PyObject * obj0 = 0 ;
-  
-  if (!PyArg_ParseTuple(args,(char *)"O:CvEM_get_covs",&obj0)) SWIG_fail;
-  res1 = SWIG_ConvertPtr(obj0, &argp1,SWIGTYPE_p_CvEM, 0 |  0 );
-  if (!SWIG_IsOK(res1)) {
-    SWIG_exception_fail(SWIG_ArgError(res1), "in method '" "CvEM_get_covs" "', argument " "1"" of type '" "CvEM const *""'"); 
-  }
-  arg1 = reinterpret_cast< CvEM * >(argp1);
-  {
-    try {
-      result = (CvMat **)((CvEM const *)arg1)->get_covs(); 
-    } 
-    catch (...) 
-    {
-      return NULL;
-    } 
-  }
-  resultobj = SWIG_NewPointerObj(SWIG_as_voidptr(result), SWIGTYPE_p_p_CvMat, 0 |  0 );
-  return resultobj;
-fail:
-  return NULL;
-}
-
-
 SWIGINTERN PyObject *_wrap_CvEM_get_weights(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
   PyObject *resultobj = 0;
   CvEM *arg1 = (CvEM *) 0 ;
@@ -17126,6 +17110,36 @@ SWIGINTERN PyObject *_wrap_CvEM_get_probs(PyObject *SWIGUNUSEDPARM(self), PyObje
     } 
   }
   resultobj = SWIG_NewPointerObj(SWIG_as_voidptr(result), SWIGTYPE_p_CvMat, 0 |  0 );
+  return resultobj;
+fail:
+  return NULL;
+}
+
+
+SWIGINTERN PyObject *_wrap_CvEM_get_covs(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
+  PyObject *resultobj = 0;
+  CvEM *arg1 = (CvEM *) 0 ;
+  PyObject *result = 0 ;
+  void *argp1 = 0 ;
+  int res1 = 0 ;
+  PyObject * obj0 = 0 ;
+  
+  if (!PyArg_ParseTuple(args,(char *)"O:CvEM_get_covs",&obj0)) SWIG_fail;
+  res1 = SWIG_ConvertPtr(obj0, &argp1,SWIGTYPE_p_CvEM, 0 |  0 );
+  if (!SWIG_IsOK(res1)) {
+    SWIG_exception_fail(SWIG_ArgError(res1), "in method '" "CvEM_get_covs" "', argument " "1"" of type '" "CvEM *""'"); 
+  }
+  arg1 = reinterpret_cast< CvEM * >(argp1);
+  {
+    try {
+      result = (PyObject *)CvEM_get_covs(arg1); 
+    } 
+    catch (...) 
+    {
+      return NULL;
+    } 
+  }
+  resultobj = result;
   return resultobj;
 fail:
   return NULL;
@@ -35840,9 +35854,9 @@ static PyMethodDef SwigMethods[] = {
 	 { (char *)"CvEM_clear", _wrap_CvEM_clear, METH_VARARGS, NULL},
 	 { (char *)"CvEM_get_nclusters", _wrap_CvEM_get_nclusters, METH_VARARGS, NULL},
 	 { (char *)"CvEM_get_means", _wrap_CvEM_get_means, METH_VARARGS, NULL},
-	 { (char *)"CvEM_get_covs", _wrap_CvEM_get_covs, METH_VARARGS, NULL},
 	 { (char *)"CvEM_get_weights", _wrap_CvEM_get_weights, METH_VARARGS, NULL},
 	 { (char *)"CvEM_get_probs", _wrap_CvEM_get_probs, METH_VARARGS, NULL},
+	 { (char *)"CvEM_get_covs", _wrap_CvEM_get_covs, METH_VARARGS, NULL},
 	 { (char *)"CvEM_swigregister", CvEM_swigregister, METH_VARARGS, NULL},
 	 { (char *)"CvPair32s32f_i_set", _wrap_CvPair32s32f_i_set, METH_VARARGS, NULL},
 	 { (char *)"CvPair32s32f_i_get", _wrap_CvPair32s32f_i_get, METH_VARARGS, NULL},

@@ -72,6 +72,7 @@
 
 %newobject cvCreateCrossValidationEstimateModel;
 
+
 %pythoncode 
 %{
 
@@ -92,5 +93,26 @@ C/C++ counterparts, you can consult the standard manuals that come with OpenCV.
 """
 
 %}
+
+%extend CvEM
+{
+   PyObject * get_covs()
+   {
+       CvMat ** pointers = const_cast<CvMat **> (self->get_covs());
+       int n = self->get_nclusters();
+
+       PyObject * result = PyTuple_New(n);
+       for (int i=0; i<n; ++i)
+       {
+           PyObject * obj = SWIG_NewPointerObj(pointers[i], $descriptor(CvMat *), 0);
+           PyTuple_SetItem(result, i, obj);
+           //Py_DECREF(obj);
+       }
+       
+       return result;
+   }
+}
+
+%ignore CvEM::get_covs;
 
 %include "ml.h"
