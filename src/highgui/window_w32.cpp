@@ -1151,8 +1151,27 @@ cvWaitKey( int delay )
                     DispatchMessage(&message);
                     return (int)message.wParam;
 
+                case WM_SYSKEYDOWN:
+                    if( message.wParam == VK_F10 )
+                    {
+                        is_processed = 1;
+                        return (int)(message.wParam << 16);
+                    }
+                    break;
+
                 case WM_KEYDOWN:
                     TranslateMessage(&message);
+                    if( message.wParam >= VK_F1 && message.wParam <= VK_F24 ||
+                        message.wParam == VK_HOME || message.wParam == VK_END ||
+                        message.wParam == VK_UP || message.wParam == VK_DOWN ||
+                        message.wParam == VK_LEFT || message.wParam == VK_RIGHT ||
+                        message.wParam == VK_INSERT || message.wParam == VK_DELETE ||
+                        message.wParam == VK_PRIOR || message.wParam == VK_NEXT )
+                    {
+                        DispatchMessage(&message);
+                        is_processed = 1;
+                        return (int)(message.wParam << 16);
+                    }
                 default:
                     DispatchMessage(&message);
                     is_processed = 1;
