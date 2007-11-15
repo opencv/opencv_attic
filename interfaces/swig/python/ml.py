@@ -634,9 +634,9 @@ class CvEM(CvStatModel):
     def clear(*args): return _ml.CvEM_clear(*args)
     def get_nclusters(*args): return _ml.CvEM_get_nclusters(*args)
     def get_means(*args): return _ml.CvEM_get_means(*args)
-    def get_covs(*args): return _ml.CvEM_get_covs(*args)
     def get_weights(*args): return _ml.CvEM_get_weights(*args)
     def get_probs(*args): return _ml.CvEM_get_probs(*args)
+    def get_covs(*args): return _ml.CvEM_get_covs(*args)
 CvEM_swigregister = _ml.CvEM_swigregister
 CvEM_swigregister(CvEM)
 
