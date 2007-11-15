@@ -40,7 +40,7 @@ AC_CONFIG_AUX_DIR([autotools])
 AC_CONFIG_MACRO_DIR([autotools/aclocal])
 
 # put CVS revision of this configure.in into the resulting configure script
-AC_REVISION($Revision: 1.44 $)
+AC_REVISION($Revision: 1.45 $)
 
 # Detect the canonical host and target build environment
 AC_CANONICAL_HOST
@@ -181,20 +181,6 @@ if test x"$CXXFLAGS" = "x-g -O2" ; then
     CXXFLAGS=""
 fi
 
-# see if the user wants to build universal binaries on Mac OS X
-case $host in
-    *-*-darwin*)
-#        AC_MSG_CHECKING([whether we are building universal binaries])
-#        if test x"$ac_cv_universal_build" = xyes; then
-#            CFLAGS="$CFLAGS -isysroot /Developer/SDKs/MacOSX10.4u.sdk -arch ppc -arch i386"
-#            CXXFLAGS="$CXXFLAGS -isysroot /Developer/SDKs/MacOSX10.4u.sdk -arch ppc -arch i386"
-#            AC_DEFINE([OPENCV_UNIVERSAL_BUILD], [], [Define when building universal binaries on Mac OS X])
-#        fi
-#        AC_MSG_RESULT([$ac_cv_universal_build])
-        ;;
-    *)
-        ;;
-esac
 
 # see if the user wants aggressive optimizations of the code,
 # check whether to include debugging code
@@ -239,8 +225,12 @@ else
 fi
 
 if test x"$ac_cv_c_compiler_gnu" = "xyes"; then
+    PY_CXXFLAGS="-Wall -pipe $CXXFLAGS"
     CXXFLAGS="-Wall -fno-rtti -pipe $CXXFLAGS"
+else
+    PY_CXXFLAGS="$CXXFLAGS"
 fi
+AC_SUBST(PY_CXXFLAGS)
 
 # add libm because it is used by several libraries and OpenCV itself 
 AC_CHECK_LIB(m,pow)
