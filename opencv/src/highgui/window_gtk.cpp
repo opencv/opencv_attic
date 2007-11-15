@@ -1187,9 +1187,12 @@ static gboolean icvOnMouse( GtkWidget *widget, GdkEvent *event, gpointer user_da
 		if( (image_widget->flags & CV_WINDOW_AUTOSIZE)==0 &&
 		     image_widget->original_image &&
 			 image_widget->scaled_image ){
-   			pt.x = cvRound( pt32f.x*image_widget->original_image->cols/
+			// image origin is not necessarily at (0,0)
+			int x0 = (widget->allocation.width - image_widget->scaled_image->cols)/2;
+			int y0 = (widget->allocation.height - image_widget->scaled_image->rows)/2;
+   			pt.x = cvRound( ((pt32f.x-x0)*image_widget->original_image->cols)/
 					                        image_widget->scaled_image->cols );
-   			pt.y = cvRound( pt32f.y*image_widget->original_image->rows/
+   			pt.y = cvRound( ((pt32f.y-y0)*image_widget->original_image->rows)/
 					                        image_widget->scaled_image->rows );
 		}
 		else{
