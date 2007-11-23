@@ -179,9 +179,14 @@ static CvWindow* hg_windows = 0;
 static CvWin32WindowCallback hg_on_preprocess = 0, hg_on_postprocess = 0;
 static HINSTANCE hg_hinstance = 0;
 
+static const char* highGUIclassName = "HighGUI class";
+static const char* mainHighGUIclassName = "Main HighGUI class";
+
 static void icvCleanupHighgui()
 {
     cvDestroyAllWindows();
+    UnregisterClass(highGUIclassName, hg_hinstance);
+    UnregisterClass(mainHighGUIclassName, hg_hinstance);
 }
 
 CV_IMPL int cvInitSystem( int, char** )
@@ -201,16 +206,16 @@ CV_IMPL int cvInitSystem( int, char** )
         wndc.cbClsExtra = 0;
         wndc.cbWndExtra = 0;
         wndc.hInstance = hg_hinstance;
-        wndc.lpszClassName = "HighGUI class";
-        wndc.lpszMenuName = "HighGUI class";
+        wndc.lpszClassName = highGUIclassName;
+        wndc.lpszMenuName = highGUIclassName;
         wndc.hIcon = LoadIcon(0, IDI_APPLICATION);
         wndc.hCursor = (HCURSOR)LoadCursor(0, (LPSTR)(size_t)IDC_CROSS );
         wndc.hbrBackground = (HBRUSH)GetStockObject(GRAY_BRUSH);
 
         RegisterClass(&wndc);
 
-        wndc.lpszClassName = "Main HighGUI class";
-        wndc.lpszMenuName = "Main HighGUI class";
+        wndc.lpszClassName = mainHighGUIclassName;
+        wndc.lpszMenuName = mainHighGUIclassName;
         wndc.hbrBackground = (HBRUSH)GetStockObject(GRAY_BRUSH);
         wndc.lpfnWndProc = MainWindowProc;
 
