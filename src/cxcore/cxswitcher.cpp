@@ -549,8 +549,8 @@ cvUseOptimized( int load_flag )
     // to find the latest and the greatest IPP/MKL libraries
     static const char* opencv_sfx[] = { "100", "099", "097", 0 };
     static const char* ipp_sfx_ia32[] = { "-6.1", "-6.0", "-5.3", "-5.2", "-5.1", "", 0 };
-    static const char* ipp_sfx_ia64[] = { "64-6.1", "64-6.0", "64-5.2", "64-5.1", "64", 0 };
-    static const char* ipp_sfx_em64t[] = { "em64t-6.1", "em64t-6.0", "em64t-5.2", "em64t-5.1", "em64t", 0 };
+    static const char* ipp_sfx_ia64[] = { "64-6.1", "64-6.0", "64-5.3", "64-5.2", "64-5.1", "64", 0 };
+    static const char* ipp_sfx_em64t[] = { "em64t-6.1", "em64t-6.0", "em64t-5.3", "em64t-5.2", "em64t-5.1", "em64t", 0 };
     static const char* mkl_sfx_ia32[] = { "p4", "p3", "def", 0 };
     static const char* mkl_sfx_ia64[] = { "i2p", "itp", 0 };
     static const char* mkl_sfx_em64t[] = { "def", 0 };
