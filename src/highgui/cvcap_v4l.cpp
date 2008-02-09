@@ -999,7 +999,7 @@ static int _capture_V4L (CvCaptureCAM_V4L *capture, char *deviceName)
        selectedChannel.channel=CHANNEL_NUMBER;
        if (ioctl(capture->deviceHandle, VIDIOCGCHAN , &selectedChannel) != -1) {
           /* set the video mode to ( VIDEO_MODE_PAL, VIDEO_MODE_NTSC, VIDEO_MODE_SECAM) */
-          selectedChannel.norm = VIDEO_MODE_NTSC;
+//           selectedChannel.norm = VIDEO_MODE_NTSC;
           if (ioctl(capture->deviceHandle, VIDIOCSCHAN , &selectedChannel) == -1) {
              /* Could not set selected channel - Oh well */
              //printf("\n%d, %s not NTSC capable.\n",selectedChannel.channel, selectedChannel.name);
@@ -1040,7 +1040,7 @@ static int _capture_V4L (CvCaptureCAM_V4L *capture, char *deviceName)
         fprintf( stderr, "HIGHGUI ERROR: V4L: Mapping Memmory from video source error: %s\n", strerror(errno));
         icvCloseCAM_V4L(capture);
      }
-
+     
      /* Set up video_mmap structure pointing to this memory mapped area so each image may be
         retrieved from an index value */
      capture->mmaps = (struct video_mmap *)
