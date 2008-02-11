@@ -44,6 +44,9 @@
 extern "C" {
 #include <ffmpeg/avformat.h>
 #include <ffmpeg/avutil.h>
+#ifndef WIN32
+#include <errno.h>
+#endif
 }
 
 #ifdef NDEBUG
