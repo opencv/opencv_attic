@@ -516,6 +516,11 @@ icvSumCol_64f32f( const double** src, float* dst,
 #include "emmintrin.h"
 #endif
 
+#if defined(__VEC__) || defined(__ALTIVEC__)
+#include <altivec.h>
+#undef bool
+#endif
+
 #if defined(__GNUC__)
 #define align(x) __attribute__ ((aligned (x)))
 #elif CV_SSE2 && (defined(__ICL) || (_MSC_VER >= 1300))
