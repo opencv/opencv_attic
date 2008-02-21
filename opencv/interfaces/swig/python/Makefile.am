@@ -14,7 +14,7 @@ AM_CPPFLAGS = \
   $(CV_INCLUDES)                     \
   -DCV_NO_BACKWARD_COMPATIBILITY
 
-CXXFLAGS = @PY_CXXFLAGS@
+AM_CXXFLAGS = @PY_CXXFLAGS@
 
 noinst_PYTHON = setup-for-win.py
 

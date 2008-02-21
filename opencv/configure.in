@@ -40,7 +40,7 @@ AC_CONFIG_AUX_DIR([autotools])
 AC_CONFIG_MACRO_DIR([autotools/aclocal])
 
 # put CVS revision of this configure.in into the resulting configure script
-AC_REVISION($Revision: 1.45 $)
+AC_REVISION($Revision: 1.46 $)
 
 # Detect the canonical host and target build environment
 AC_CANONICAL_HOST
@@ -460,9 +460,8 @@ else
     fi
     if test x"$with_ffmpeg" = "xyes"; then
         AC_CHECK_HEADER(ffmpeg/avcodec.h,
-                        AC_CHECK_LIB(avcodec, avcodec_decode_video,
-                                     [
-                                       AC_CHECK_LIB(avformat, av_open_input_file,
+                        AC_SEARCH_LIBS([avcodec_decode_video],[avcodec_pic avcodec],                                      [
+                                       AC_SEARCH_LIBS([av_open_input_file], [avformat_pic avformat],
                                                     [
                                                       have_ffmpeg=yes
                                                       AC_DEFINE(HAVE_FFMPEG,,[FFMpeg video library])

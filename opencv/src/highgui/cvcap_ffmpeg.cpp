@@ -43,17 +43,204 @@
 
 extern "C" {
 #include <ffmpeg/avformat.h>
-#include <ffmpeg/avutil.h>
+#include <ffmpeg/avcodec.h>
 #ifndef WIN32
 #include <errno.h>
 #endif
 }
+
+
+#define INT64_C (long long)
 
 #ifdef NDEBUG
 #define CV_WARN(message) 
 #else
 #define CV_WARN(message) fprintf(stderr, "warning: %s (%s:%d)\n", message, __FILE__, __LINE__)
 #endif
+
+
+#if LIBAVCODEC_VERSION_INT<=0x000409
+#define MKTAG(a,b,c,d) (a | (b << 8) | (c << 16) | (d << 24))
+#endif
+
+
+
+
+char * FOURCC2str( int fourcc )
+{
+    char * mystr=(char*)malloc(5);
+    mystr[0]=(fourcc    )&255;
+    mystr[1]=(fourcc>> 8)&255;
+    mystr[2]=(fourcc>>16)&255;
+    mystr[3]=(fourcc>>24)&255;
+    mystr[4]=0;
+    return mystr;
+}
+
+
+// required to look up the correct codec ID depending on the FOURCC code,
+// this is just a snipped from the file riff.c from ffmpeg/libavformat
+typedef struct AVCodecTag {
+    int id;
+    unsigned int tag;
+} AVCodecTag;
+
+const AVCodecTag codec_bmp_tags[] = {
+    { CODEC_ID_H264, MKTAG('H', '2', '6', '4') },
+    { CODEC_ID_H264, MKTAG('h', '2', '6', '4') },
+    { CODEC_ID_H264, MKTAG('X', '2', '6', '4') },
+    { CODEC_ID_H264, MKTAG('x', '2', '6', '4') },
+    { CODEC_ID_H264, MKTAG('a', 'v', 'c', '1') },
+    { CODEC_ID_H264, MKTAG('V', 'S', 'S', 'H') },
+
+    { CODEC_ID_H263, MKTAG('H', '2', '6', '3') },
+    { CODEC_ID_H263P, MKTAG('H', '2', '6', '3') },
+    { CODEC_ID_H263I, MKTAG('I', '2', '6', '3') }, /* intel h263 */
+    { CODEC_ID_H261, MKTAG('H', '2', '6', '1') },
+
+    /* added based on MPlayer */
+    { CODEC_ID_H263P, MKTAG('U', '2', '6', '3') },
+    { CODEC_ID_H263P, MKTAG('v', 'i', 'v', '1') },
+
+    { CODEC_ID_MPEG4, MKTAG('F', 'M', 'P', '4') },
+    { CODEC_ID_MPEG4, MKTAG('D', 'I', 'V', 'X') },
+    { CODEC_ID_MPEG4, MKTAG('D', 'X', '5', '0') },
+    { CODEC_ID_MPEG4, MKTAG('X', 'V', 'I', 'D') },
+    { CODEC_ID_MPEG4, MKTAG('M', 'P', '4', 'S') },
+    { CODEC_ID_MPEG4, MKTAG('M', '4', 'S', '2') },
+    { CODEC_ID_MPEG4, MKTAG(0x04, 0, 0, 0) }, /* some broken avi use this */
+
+    /* added based on MPlayer */
+    { CODEC_ID_MPEG4, MKTAG('D', 'I', 'V', '1') },
+    { CODEC_ID_MPEG4, MKTAG('B', 'L', 'Z', '0') },
+    { CODEC_ID_MPEG4, MKTAG('m', 'p', '4', 'v') },
+    { CODEC_ID_MPEG4, MKTAG('U', 'M', 'P', '4') },
+    { CODEC_ID_MPEG4, MKTAG('W', 'V', '1', 'F') },
+    { CODEC_ID_MPEG4, MKTAG('S', 'E', 'D', 'G') },
+
+    { CODEC_ID_MPEG4, MKTAG('R', 'M', 'P', '4') },
+
+    { CODEC_ID_MSMPEG4V3, MKTAG('D', 'I', 'V', '3') }, /* default signature when using MSMPEG4 */
+    { CODEC_ID_MSMPEG4V3, MKTAG('M', 'P', '4', '3') },
+
+    /* added based on MPlayer */
+    { CODEC_ID_MSMPEG4V3, MKTAG('M', 'P', 'G', '3') },
+    { CODEC_ID_MSMPEG4V3, MKTAG('D', 'I', 'V', '5') },
+    { CODEC_ID_MSMPEG4V3, MKTAG('D', 'I', 'V', '6') },
+    { CODEC_ID_MSMPEG4V3, MKTAG('D', 'I', 'V', '4') },
+    { CODEC_ID_MSMPEG4V3, MKTAG('A', 'P', '4', '1') },
+    { CODEC_ID_MSMPEG4V3, MKTAG('C', 'O', 'L', '1') },
+    { CODEC_ID_MSMPEG4V3, MKTAG('C', 'O', 'L', '0') },
+
+    { CODEC_ID_MSMPEG4V2, MKTAG('M', 'P', '4', '2') },
+
+    /* added based on MPlayer */
+    { CODEC_ID_MSMPEG4V2, MKTAG('D', 'I', 'V', '2') },
+
+    { CODEC_ID_MSMPEG4V1, MKTAG('M', 'P', 'G', '4') },
+
+    { CODEC_ID_WMV1, MKTAG('W', 'M', 'V', '1') },
+
+    /* added based on MPlayer */
+    { CODEC_ID_WMV2, MKTAG('W', 'M', 'V', '2') },
+    { CODEC_ID_DVVIDEO, MKTAG('d', 'v', 's', 'd') },
+    { CODEC_ID_DVVIDEO, MKTAG('d', 'v', 'h', 'd') },
+    { CODEC_ID_DVVIDEO, MKTAG('d', 'v', 's', 'l') },
+    { CODEC_ID_DVVIDEO, MKTAG('d', 'v', '2', '5') },
+    { CODEC_ID_MPEG1VIDEO, MKTAG('m', 'p', 'g', '1') },
+    { CODEC_ID_MPEG1VIDEO, MKTAG('m', 'p', 'g', '2') },
+    { CODEC_ID_MPEG2VIDEO, MKTAG('m', 'p', 'g', '2') },
+    { CODEC_ID_MPEG2VIDEO, MKTAG('M', 'P', 'E', 'G') },
+    { CODEC_ID_MPEG1VIDEO, MKTAG('P', 'I', 'M', '1') },
+    { CODEC_ID_MPEG1VIDEO, MKTAG('V', 'C', 'R', '2') },
+    { CODEC_ID_MPEG1VIDEO, 0x10000001 },
+    { CODEC_ID_MPEG2VIDEO, 0x10000002 },
+    { CODEC_ID_MPEG2VIDEO, MKTAG('D', 'V', 'R', ' ') },
+    { CODEC_ID_MPEG2VIDEO, MKTAG('M', 'M', 'E', 'S') },
+    { CODEC_ID_MJPEG, MKTAG('M', 'J', 'P', 'G') },
+    { CODEC_ID_MJPEG, MKTAG('L', 'J', 'P', 'G') },
+    { CODEC_ID_LJPEG, MKTAG('L', 'J', 'P', 'G') },
+    { CODEC_ID_MJPEG, MKTAG('J', 'P', 'G', 'L') }, /* Pegasus lossless JPEG */
+    { CODEC_ID_MJPEG, MKTAG('M', 'J', 'L', 'S') }, /* JPEG-LS custom FOURCC for avi - decoder */
+    { CODEC_ID_MJPEG, MKTAG('j', 'p', 'e', 'g') },
+    { CODEC_ID_MJPEG, MKTAG('I', 'J', 'P', 'G') },
+    { CODEC_ID_MJPEG, MKTAG('A', 'V', 'R', 'n') },
+    { CODEC_ID_HUFFYUV, MKTAG('H', 'F', 'Y', 'U') },
+    { CODEC_ID_FFVHUFF, MKTAG('F', 'F', 'V', 'H') },
+    { CODEC_ID_CYUV, MKTAG('C', 'Y', 'U', 'V') },
+    { CODEC_ID_RAWVIDEO, 0 },
+    { CODEC_ID_RAWVIDEO, MKTAG('I', '4', '2', '0') },
+    { CODEC_ID_RAWVIDEO, MKTAG('Y', 'U', 'Y', '2') },
+    { CODEC_ID_RAWVIDEO, MKTAG('Y', '4', '2', '2') },
+    { CODEC_ID_RAWVIDEO, MKTAG('Y', 'V', '1', '2') },
+    { CODEC_ID_RAWVIDEO, MKTAG('U', 'Y', 'V', 'Y') },
+    { CODEC_ID_RAWVIDEO, MKTAG('I', 'Y', 'U', 'V') },
+    { CODEC_ID_RAWVIDEO, MKTAG('Y', '8', '0', '0') },
+    { CODEC_ID_RAWVIDEO, MKTAG('H', 'D', 'Y', 'C') },
+    { CODEC_ID_INDEO3, MKTAG('I', 'V', '3', '1') },
+    { CODEC_ID_INDEO3, MKTAG('I', 'V', '3', '2') },
+    { CODEC_ID_VP3, MKTAG('V', 'P', '3', '1') },
+    { CODEC_ID_VP3, MKTAG('V', 'P', '3', '0') },
+    { CODEC_ID_ASV1, MKTAG('A', 'S', 'V', '1') },
+    { CODEC_ID_ASV2, MKTAG('A', 'S', 'V', '2') },
+    { CODEC_ID_VCR1, MKTAG('V', 'C', 'R', '1') },
+    { CODEC_ID_FFV1, MKTAG('F', 'F', 'V', '1') },
+    { CODEC_ID_XAN_WC4, MKTAG('X', 'x', 'a', 'n') },
+    { CODEC_ID_MSRLE, MKTAG('m', 'r', 'l', 'e') },
+    { CODEC_ID_MSRLE, MKTAG(0x1, 0x0, 0x0, 0x0) },
+    { CODEC_ID_MSVIDEO1, MKTAG('M', 'S', 'V', 'C') },
+    { CODEC_ID_MSVIDEO1, MKTAG('m', 's', 'v', 'c') },
+    { CODEC_ID_MSVIDEO1, MKTAG('C', 'R', 'A', 'M') },
+    { CODEC_ID_MSVIDEO1, MKTAG('c', 'r', 'a', 'm') },
+    { CODEC_ID_MSVIDEO1, MKTAG('W', 'H', 'A', 'M') },
+    { CODEC_ID_MSVIDEO1, MKTAG('w', 'h', 'a', 'm') },
+    { CODEC_ID_CINEPAK, MKTAG('c', 'v', 'i', 'd') },
+    { CODEC_ID_TRUEMOTION1, MKTAG('D', 'U', 'C', 'K') },
+    { CODEC_ID_MSZH, MKTAG('M', 'S', 'Z', 'H') },
+    { CODEC_ID_ZLIB, MKTAG('Z', 'L', 'I', 'B') },
+    { CODEC_ID_SNOW, MKTAG('S', 'N', 'O', 'W') },
+    { CODEC_ID_4XM, MKTAG('4', 'X', 'M', 'V') },
+    { CODEC_ID_FLV1, MKTAG('F', 'L', 'V', '1') },
+    { CODEC_ID_SVQ1, MKTAG('s', 'v', 'q', '1') },
+    { CODEC_ID_TSCC, MKTAG('t', 's', 'c', 'c') },
+    { CODEC_ID_ULTI, MKTAG('U', 'L', 'T', 'I') },
+    { CODEC_ID_VIXL, MKTAG('V', 'I', 'X', 'L') },
+    { CODEC_ID_QPEG, MKTAG('Q', 'P', 'E', 'G') },
+    { CODEC_ID_QPEG, MKTAG('Q', '1', '.', '0') },
+    { CODEC_ID_QPEG, MKTAG('Q', '1', '.', '1') },
+    { CODEC_ID_WMV3, MKTAG('W', 'M', 'V', '3') },
+    { CODEC_ID_LOCO, MKTAG('L', 'O', 'C', 'O') },
+    { CODEC_ID_THEORA, MKTAG('t', 'h', 'e', 'o') },
+#if LIBAVCODEC_VERSION_INT>0x000409
+    { CODEC_ID_JPEGLS,MKTAG('M', 'J', 'L', 'S') }, /* JPEG-LS custom FOURCC for avi - encoder */
+    { CODEC_ID_FLASHSV, MKTAG('F', 'S', 'V', '1') },
+    { CODEC_ID_VC1, MKTAG('W', 'V', 'C', '1') },
+    { CODEC_ID_VC1, MKTAG('W', 'M', 'V', 'A') },
+    { CODEC_ID_WNV1, MKTAG('W', 'N', 'V', '1') },
+    { CODEC_ID_AASC, MKTAG('A', 'A', 'S', 'C') },
+    { CODEC_ID_INDEO2, MKTAG('R', 'T', '2', '1') },
+    { CODEC_ID_FRAPS, MKTAG('F', 'P', 'S', '1') },
+    { CODEC_ID_TRUEMOTION2, MKTAG('T', 'M', '2', '0') },
+    { CODEC_ID_CSCD, MKTAG('C', 'S', 'C', 'D') },
+    { CODEC_ID_ZMBV, MKTAG('Z', 'M', 'B', 'V') },
+    { CODEC_ID_KMVC, MKTAG('K', 'M', 'V', 'C') },
+#endif
+#if LIBAVCODEC_VERSION_INT>((51<<16)+(11<<8)+0)
+    { CODEC_ID_VP5, MKTAG('V', 'P', '5', '0') },
+    { CODEC_ID_VP6, MKTAG('V', 'P', '6', '0') },
+    { CODEC_ID_VP6, MKTAG('V', 'P', '6', '1') },
+    { CODEC_ID_VP6, MKTAG('V', 'P', '6', '2') },
+    { CODEC_ID_VP6F, MKTAG('V', 'P', '6', 'F') },
+    { CODEC_ID_JPEG2000, MKTAG('M', 'J', '2', 'C') },
+    { CODEC_ID_VMNC, MKTAG('V', 'M', 'n', 'c') },
+#endif
+#if LIBAVCODEC_VERSION_INT>=((51<<16)+(49<<8)+0)
+// this tag seems not to exist in older versions of FFMPEG
+    { CODEC_ID_TARGA, MKTAG('t', 'g', 'a', ' ') },
+#endif
+    { CODEC_ID_NONE, 0 },
+};
+
 
 typedef struct CvCaptureAVI_FFMPEG
 {
@@ -65,14 +252,14 @@ typedef struct CvCaptureAVI_FFMPEG
     AVFrame           * picture;
     int64_t             picture_pts;
     AVFrame             rgb_picture;
-
     IplImage            frame;
+    int                 nativeseek;
 } CvCaptureAVI_FFMPEG;
+
 
 static void icvCloseAVI_FFMPEG( CvCaptureAVI_FFMPEG* capture )
 {
     //cvFree( (void**)&(capture->entries) );
-        
     if( capture->picture )
     av_free(capture->picture);
 
@@ -99,6 +286,10 @@ static void icvCloseAVI_FFMPEG( CvCaptureAVI_FFMPEG* capture )
 }
 
 
+
+// forward
+static int icvCheckSeekAVI_FFMPEG( CvCaptureAVI_FFMPEG *capture);
+
 static int icvOpenAVI_FFMPEG( CvCaptureAVI_FFMPEG* capture, const char* filename )
 {
     int err, valid = 0, video_index = -1, i;
@@ -111,7 +302,7 @@ static int icvOpenAVI_FFMPEG( CvCaptureAVI_FFMPEG* capture, const char* filename
     av_register_all();
 
 #ifndef _DEBUG
-    av_log_level = AV_LOG_QUIET;
+    // av_log_level = AV_LOG_QUIET;
 #endif
 
     err = av_open_input_file(&ic, filename, NULL, 0, NULL);
@@ -156,9 +347,11 @@ static int icvOpenAVI_FFMPEG( CvCaptureAVI_FFMPEG* capture, const char* filename
     }
     }
 
+    if(video_index >= 0) valid = 1;
 
-    if(video_index >= 0)
-    valid = 1;
+    // perform check if source is seekable via ffmpeg's seek function av_seek_frame(...)
+    capture->nativeseek=icvCheckSeekAVI_FFMPEG(capture);
+
 
 exit_func:
 
@@ -167,6 +360,7 @@ exit_func:
 
     return valid;
 }
+
 
 
 static int icvGrabFrameAVI_FFMPEG( CvCaptureAVI_FFMPEG* capture )
@@ -193,8 +387,7 @@ static int icvGrabFrameAVI_FFMPEG( CvCaptureAVI_FFMPEG* capture )
 
     // get the next frame
     while ((0 == valid) && (av_read_frame(capture->ic, &pkt) >= 0)) {
-		if( pkt.stream_index != capture->video_stream ) continue;
-
+        if( pkt.stream_index != capture->video_stream ) continue;
 #if LIBAVFORMAT_BUILD > 4628
         avcodec_decode_video(capture->video_st->codec, 
                              capture->picture, &got_picture, 
@@ -211,7 +404,7 @@ static int icvGrabFrameAVI_FFMPEG( CvCaptureAVI_FFMPEG* capture )
             valid = 1;
         }
     }
-    
+
     // return if we have a new picture or not
     return valid;
 }
@@ -221,6 +414,8 @@ static const IplImage* icvRetrieveFrameAVI_FFMPEG( CvCaptureAVI_FFMPEG* capture 
 {
     if( !capture || !capture->video_st || !capture->picture->data[0] )
     return 0;
+
+
 #if LIBAVFORMAT_BUILD > 4628
     img_convert( (AVPicture*)&capture->rgb_picture, PIX_FMT_BGR24,
                  (AVPicture*)capture->picture,
@@ -238,13 +433,11 @@ static const IplImage* icvRetrieveFrameAVI_FFMPEG( CvCaptureAVI_FFMPEG* capture 
 }
 
 
-static int icvSetPropertyAVI_FFMPEG( CvCaptureAVI_FFMPEG* capture,
-                                     int property_id, double value );
-
 static double icvGetPropertyAVI_FFMPEG( CvCaptureAVI_FFMPEG* capture, int property_id )
 {
-    if( !capture || !capture->video_st || !capture->picture->data[0] )
-    return 0;
+    // if( !capture || !capture->video_st || !capture->picture->data[0] ) return 0;
+    if( !capture || !capture->video_st ) return 0;
+
 
     int64_t timestamp;
     timestamp = capture->picture_pts;
@@ -252,22 +445,25 @@ static double icvGetPropertyAVI_FFMPEG( CvCaptureAVI_FFMPEG* capture, int proper
     switch( property_id )
     {
     case CV_CAP_PROP_POS_MSEC:
-        if(capture->ic->start_time != static_cast<double>(AV_NOPTS_VALUE))
+        // if(capture->ic->start_time != static_cast<double>(AV_NOPTS_VALUE))
+        if(capture->ic->start_time != AV_NOPTS_VALUE)
         return (double)(timestamp - capture->ic->start_time)*1000/(double)AV_TIME_BASE;
         break;
     case CV_CAP_PROP_POS_FRAMES:
-    if(capture->video_st->cur_dts != static_cast<double>(AV_NOPTS_VALUE))
+    //if(capture->video_st->cur_dts != static_cast<double>(AV_NOPTS_VALUE))
+    if(capture->video_st->cur_dts != AV_NOPTS_VALUE)
         return (double)capture->video_st->cur_dts-1;
     break;
     case CV_CAP_PROP_POS_AVI_RATIO:
-    if(capture->ic->start_time != static_cast<double>(AV_NOPTS_VALUE) && capture->ic->duration != static_cast<double>(AV_NOPTS_VALUE))
+    //  if(capture->ic->start_time != static_cast<double>(AV_NOPTS_VALUE) && capture->ic->duration != static_cast<double>(AV_NOPTS_VALUE))
+    if(capture->ic->start_time != AV_NOPTS_VALUE && capture->ic->duration != AV_NOPTS_VALUE)
         return (double)(timestamp-capture->ic->start_time)/(double)capture->ic->duration;
     break;
     case CV_CAP_PROP_FRAME_WIDTH:
-        return capture->frame.width;
+        return (double)capture->frame.width;
     break;
     case CV_CAP_PROP_FRAME_HEIGHT:
-        return capture->frame.height;
+        return (double)capture->frame.height;
     break;
     case CV_CAP_PROP_FPS:
 #if LIBAVCODEC_BUILD > 4753
@@ -289,55 +485,112 @@ static double icvGetPropertyAVI_FFMPEG( CvCaptureAVI_FFMPEG* capture, int proper
 }
 
 
-static int icvSetPropertyAVI_FFMPEG( CvCaptureAVI_FFMPEG* capture,
-                                     int property_id, double /*value*/ )
+
+// this is a VERY slow fallback function, ONLY used if ffmpeg's av_seek_frame delivers no correct result!
+static int icvSlowSeekAVI_FFMPEG( CvCaptureAVI_FFMPEG* capture, const int framenumber )
 {
-    if( !capture || !capture->video_st || !capture->picture->data[0] )
-    return 0;
-    switch( property_id )
+    if ( framenumber>capture->picture_pts )
     {
-#if 0    
-    case CV_CAP_PROP_POS_MSEC:
-    case CV_CAP_PROP_POS_FRAMES:
-    case CV_CAP_PROP_POS_AVI_RATIO:
-        {
-        int64_t timestamp = AV_NOPTS_VALUE;
-        switch( property_id )
-            {
-        case CV_CAP_PROP_POS_FRAMES:
-        if(capture->ic->start_time != AV_NOPTS_VALUE) {
-            value *= (double)capture->video_st->codec.frame_rate_base
-            / (double)capture->video_st->codec.frame_rate;
-            timestamp = capture->ic->start_time+(int64_t)(value*AV_TIME_BASE);
-        }
-        break;
-        case CV_CAP_PROP_POS_MSEC:
-        if(capture->ic->start_time != AV_NOPTS_VALUE)
-            timestamp = capture->ic->start_time+(int64_t)(value*AV_TIME_BASE/1000);
-        break;
-        case CV_CAP_PROP_POS_AVI_RATIO:
-        if(capture->ic->start_time != AV_NOPTS_VALUE && capture->ic->duration != AV_NOPTS_VALUE)
-            timestamp = capture->ic->start_time+(int64_t)(value*capture->ic->duration);
-        break;
-        }
-        if(timestamp != AV_NOPTS_VALUE) {
-        //printf("timestamp=%g\n",(double)timestamp);
-        int ret = av_seek_frame(capture->ic, -1, timestamp, 0);
-        if (ret < 0) {
-            fprintf(stderr, "HIGHGUI ERROR: AVI: could not seek to position %0.3f\n", 
-                (double)timestamp / AV_TIME_BASE);
-            return 0;
-        }
+        for ( ; capture->picture_pts<=framenumber; capture->picture_pts++ ) {
+            int ret=icvGrabFrameAVI_FFMPEG( capture );
+            if ( ret<0 ) return 0;
         }
     }
+    else if ( framenumber<capture->picture_pts )
+    {
+        av_seek_frame( capture->ic, capture->video_stream, 0, 0 );
+        for ( capture->picture_pts=0; capture->picture_pts<=framenumber; capture->picture_pts++ ) {
+            int ret=icvGrabFrameAVI_FFMPEG( capture );
+            if ( ret<0 ) return 0;
+        }
+    }
+    return 1;
+}
+
+
+
+
+static int icvSetPropertyAVI_FFMPEG( CvCaptureAVI_FFMPEG* capture,
+                                     int property_id, double value )
+{
+    if( !capture || !capture->video_st ) return 0;
+
+    switch( property_id )
+    {
+        case CV_CAP_PROP_POS_MSEC:
+        case CV_CAP_PROP_POS_FRAMES:
+        case CV_CAP_PROP_POS_AVI_RATIO:
+        {
+            int64_t timestamp;
+            AVRational time_base;
+            switch( property_id )
+            {
+                case CV_CAP_PROP_POS_FRAMES:
+                timestamp=(int64_t)value;
+                if(capture->ic->start_time != AV_NOPTS_VALUE)
+                    timestamp += capture->ic->start_time;
+                break;
+
+                case CV_CAP_PROP_POS_MSEC:
+                time_base=capture->ic->streams[capture->video_stream]->time_base;
+                timestamp=(int64_t)(value*(float(time_base.den)/float(time_base.num))/1000);
+                if(capture->ic->start_time != AV_NOPTS_VALUE)
+                    timestamp += capture->ic->start_time;
+                break;
+
+                case CV_CAP_PROP_POS_AVI_RATIO:
+                timestamp=(int64_t)(value*capture->ic->duration);
+                if(capture->ic->start_time != AV_NOPTS_VALUE && capture->ic->duration != AV_NOPTS_VALUE)
+                    timestamp += capture->ic->start_time;
+                break;
+            }
+
+            if ( capture->nativeseek )
+            {
+                int ret = av_seek_frame(capture->ic, capture->video_stream, timestamp, 0);
+                if (ret < 0)
+                {
+                    fprintf(stderr, "HIGHGUI ERROR: AVI: could not seek to position %0.3f\n", 
+                        (double)timestamp / AV_TIME_BASE);
+                    return 0;
+                }
+            }
+            else
+            {
+                int ret = icvSlowSeekAVI_FFMPEG(capture, timestamp);
+                if (ret < 0)
+                {
+                    fprintf(stderr, "HIGHGUI ERROR: AVI: could not (slow) seek to position %0.3f\n", 
+                        (double)timestamp / AV_TIME_BASE);
+                    return 0;
+                }
+            }
+        }
         break;
-#endif  
-    default:
-        return 0;
+
+        default:
+            return 0;
     }
 
     return 1;
 }
+
+
+
+static int icvCheckSeekAVI_FFMPEG( CvCaptureAVI_FFMPEG* capture )
+{
+    int _native=capture->nativeseek;
+    capture->nativeseek=false;
+    int res=icvSetPropertyAVI_FFMPEG( capture, CV_CAP_PROP_POS_FRAMES, 15 );
+    if ( !res ) return 0;
+    if ( icvGetPropertyAVI_FFMPEG( capture, CV_CAP_PROP_POS_FRAMES ) != 15 ) return 0;
+    av_seek_frame(capture->ic, capture->video_stream, 0, 0);
+    capture->nativeseek=_native;
+    return 1;
+}
+
+
+
 
 static CvCaptureVTable captureAVI_FFMPEG_vtable = 
 {
@@ -371,6 +624,7 @@ CvCapture* cvCaptureFromFile_FFMPEG( const char* filename )
 
     return (CvCapture*)capture;
 }
+
 
 ///////////////// FFMPEG CvVideoWriter implementation //////////////////////////
 typedef struct CvAVI_FFMPEG_Writer
@@ -535,10 +789,13 @@ static AVStream *icv_add_video_stream_FFMPEG(AVFormatContext *oc,
 		/* avoid FFMPEG warning 'clipping 1 dct coefficients...' */
         c->mb_decision=2;
     }
+#if LIBAVCODEC_VERSION_INT>0x000409
     // some formats want stream headers to be seperate
-	if(oc->oformat->flags & AVFMT_GLOBALHEADER){
+    if(oc->oformat->flags & AVFMT_GLOBALHEADER)
+    {
         c->flags |= CODEC_FLAG_GLOBAL_HEADER;
     }
+#endif
 
     return st;
 }
@@ -592,21 +849,31 @@ CV_IMPL CvVideoWriter* cvCreateVideoWriter( const char * filename, int fourcc,
 	/* set some options */
 	writer->oc->max_delay = (int)(0.7*AV_TIME_BASE);  /* This reduces buffer underrun warnings with MPEG */
 
-	/* Lookup codec_id for given fourcc */
+	/* Lookup codec id for given fourcc */
 	if(fourcc!=CV_FOURCC_DEFAULT){
+#if LIBAVCODEC_VERSION_INT<((51<<16)+(49<<8)+0)
         if( (codec_id = codec_get_bmp_id( fourcc )) == CODEC_ID_NONE ){
 			CV_ERROR( CV_StsUnsupportedFormat, 
 				"FFMPEG could not find a codec matching the given FOURCC code. Use fourcc=CV_FOURCC_DEFAULT for auto selection." );
 		}
 	}
+#else
+        if( (codec_id = av_codec_get_id((const AVCodecTag**)(&codec_bmp_tags), fourcc)) == CODEC_ID_NONE ){
+			CV_ERROR( CV_StsUnsupportedFormat, 
+				"FFMPEG could not find a codec matching the given FOURCC code. Use fourcc=CV_FOURCC_DEFAULT for auto selection." );
+		}
+	}
+#endif
 
     // set a few optimal pixel formats for lossless codecs of interest..
     int codec_pix_fmt;
     switch (codec_id) {
+#if LIBAVCODEC_VERSION_INT>0x000409
     case CODEC_ID_JPEGLS:
         // BGR24 or GRAY8 depending on is_color...
         codec_pix_fmt = writer->input_pix_fmt;
         break;
+#endif
     case CODEC_ID_FFV1:
         // no choice... other supported formats are YUV only
         codec_pix_fmt = PIX_FMT_RGBA32;
@@ -890,7 +1157,14 @@ CV_IMPL void cvReleaseVideoWriter( CvVideoWriter ** writer )
 
 	if (!(mywriter->fmt->flags & AVFMT_NOFILE)) {
 		/* close the output file */
+
+
+#if LIBAVCODEC_VERSION_INT==((51<<16)+(49<<8)+0)
+		url_fclose(mywriter->oc->pb);
+#else
 		url_fclose(&mywriter->oc->pb);
+#endif
+
 	}
 
 	/* free the stream */
