@@ -8,6 +8,7 @@ on a 3GP-compressed .3gp file.
 # name if this test and it's requirements
 TESTNAME = "query_3gp"
 REQUIRED = []
+ERRORS=[0.043,0.031,0.032,0.031,0.029,0.030,0.030,0.031,0.030,0.029,0.034,0.027,0.029,0.029,0.029,0.029,0.029,0.028,0.031,0.030,0.035,0.031,0.031,0.032,0.031,0.032,0.033,0.031,0.033]
 
 # needed for sys.exit(int), .works file handling and check routine
 import sys
@@ -22,7 +23,7 @@ if not works.check_files(REQUIRED,TESTNAME):
 FILENAME='3gp.3gp'
 
 # run check routine
-result=query_test.query_ok(FILENAME,0.3)
+result=query_test.query_ok(FILENAME,ERRORS)
 
 # create flag file for following tests
 works.set_file(TESTNAME)

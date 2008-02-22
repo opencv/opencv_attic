@@ -13,6 +13,15 @@ import os
 
 PREFIX=os.environ["top_srcdir"]+"/tests/python/testdata/images/"
 
+
+DisplayImages=False
+
+if DisplayImages:
+	videowindow="video"
+	referencewindow="reference"
+	cvNamedWindow(videowindow,CV_WINDOW_AUTOSIZE)
+	cvNamedWindow(referencewindow,CV_WINDOW_AUTOSIZE)
+
 # returns True/False if match/non-match
 def match( image, index, thres ):
 
@@ -30,12 +39,20 @@ def match( image, index, thres ):
 
 # compare images
 	diff=cvNorm( image, compare, CV_RELATIVE_L2 )
-#	print "mean("+repr(index)+" = "+repr(diff)
-	
-	del QCIFcompare
-	del compare
 
-	if diff<thres:
+	if DisplayImages:
+		cvShowImage(videowindow,image)
+		cvShowImage(referencewindow,compare)
+		if diff<=thres:
+			cvWaitKey(200)
+		else:
+			print "index==",index,": max==",thres," is==",diff
+			cvWaitKey(5000)
+
+	cvReleaseImage(QCIFcompare)
+	cvReleaseImage(compare)
+
+	if diff<=thres:
 		return True
 	else:
 		return False

@@ -8,6 +8,7 @@ on an Intel Indeo-compressed .avi file.
 # name if this test and it's requirements
 TESTNAME = "seek_time_indeo"
 REQUIRED = []
+ERRORS=[0.085,0.082,0.086,0.084,0.086,0.084,0.085,0.085,0.085,0.086,0.088,0.087,0.089,0.088,0.088,0.087,0.088,0.087,0.088,0.087,0.091,0.089,0.091,0.090,0.090,0.090,0.090,0.090,0.090]
 
 # needed for sys.exit(int), .works file handling and check routine
 import sys
@@ -22,7 +23,7 @@ if not works.check_files(REQUIRED,TESTNAME):
 FILENAME='indeo.avi'
 
 # run check routine
-result=seek_test.seek_time_ok(FILENAME,0.25)
+result=seek_test.seek_time_ok(FILENAME,ERRORS)
 
 # create flag file for following tests
 works.set_file(TESTNAME)

@@ -20,7 +20,7 @@ VIDEOS		= PREFIX+"videos/"
 
 # testing routine, called for each entry in FILENAMES
 # and compares each frame with corresponding frame in COMPARISON
-def query_ok(FILENAME,THRESHOLD):
+def query_ok(FILENAME,ERRORS):
 
     # create a video reader using the tiny videofile VIDEOS+FILENAME
     video=cvCreateFileCapture(VIDEOS+FILENAME)
@@ -29,22 +29,17 @@ def query_ok(FILENAME,THRESHOLD):
 	# couldn't open video (FAIL)
 	return 1
 
-    # call cvQueryFrame for 30 frames and check if the returned image is ok
-    for k in range(0,29):
+    # call cvQueryFrame for 29 frames and check if the returned image is ok
+    for k in range(29):
     	image=cvQueryFrame(video)
 
 	if image is None:
 	# returned image is NULL (FAIL)
 		return 1
 
-	result=match.match(image,k,THRESHOLD)
-	if not result:
+	if not match.match(image,k,ERRORS[k]):
 		return 1
 	
-	# ATTENTION: We do not release the video reader, window or any image.
-	# This is bad manners, but Python and OpenCV don't care,
-	# the whole memory segment will be freed on finish anyway...
-	
-    del video
+    cvReleaseCapture(video)
     # everything is fine (PASS)
     return 0

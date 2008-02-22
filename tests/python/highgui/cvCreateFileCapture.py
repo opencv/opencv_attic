@@ -32,14 +32,9 @@ def video_ok( FORMAT ):
 	if not works.check_files( REQUIRED, TESTNAME+FORMAT ):
 		return false
 
-
 	filename = PREFIX+FORMAT+EXTENSION
-	print "checking file "+filename
-
 	video = cvCreateFileCapture(PREFIX+FORMAT+EXTENSION)
-
 	if video is None:
 		sys.exit(1)
-
 	works.set_file( TESTNAME+FORMAT )
 	return True
