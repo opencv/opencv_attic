@@ -8,6 +8,7 @@ on an .avi file containing uncompressed 32bit Bitmap frames.
 # name if this test and it's requirements
 TESTNAME = "seek_time_bmp32"
 REQUIRED = []
+ERRORS=[0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0]
 
 # needed for sys.exit(int), .works file handling and check routine
 import sys
@@ -22,7 +23,7 @@ if not works.check_files(REQUIRED,TESTNAME):
 FILENAME='bmp32.avi'
 
 # run check routine
-result=seek_test.seek_time_ok(FILENAME,0.25)
+result=seek_test.seek_time_ok(FILENAME,ERRORS)
 
 # create flag file for following tests
 works.set_file(TESTNAME)

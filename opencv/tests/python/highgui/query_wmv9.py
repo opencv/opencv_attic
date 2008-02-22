@@ -8,6 +8,7 @@ on a WMV9-compressed .avi file.
 # name if this test and it's requirements
 TESTNAME = "query_wmv9"
 REQUIRED = []
+ERRORS=[0.084,0.088,0.086,0.086,0.089,0.085,0.090,0.088,0.087,0.090,0.095,0.088,0.090,0.091,0.092,0.088,0.090,0.090,0.090,0.091,0.095,0.093,0.093,0.094,0.097,0.090,0.094,0.092,0.092]
 
 # needed for sys.exit(int), .works file handling and check routine
 import sys
@@ -22,7 +23,7 @@ if not works.check_files(REQUIRED,TESTNAME):
 FILENAME='wmv9.avi'
 
 # run check routine
-result=query_test.query_ok(FILENAME,0.3)
+result=query_test.query_ok(FILENAME,ERRORS)
 
 # create flag file for following tests
 works.set_file(TESTNAME)

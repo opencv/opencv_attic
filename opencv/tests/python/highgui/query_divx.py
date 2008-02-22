@@ -8,6 +8,7 @@ on a DivX-compressed .avi file.
 # name if this test and it's requirements
 TESTNAME = "query_divx"
 REQUIRED = []
+ERRORS=[0.084,0.081,0.085,0.083,0.085,0.083,0.085,0.085,0.084,0.084,0.087,0.086,0.088,0.086,0.087,0.086,0.086,0.086,0.087,0.086,0.089,0.087,0.090,0.089,0.089,0.088,0.089,0.089,0.089]
 
 # needed for sys.exit(int), .works file handling and check routine
 import sys
@@ -22,7 +23,7 @@ if not works.check_files(REQUIRED,TESTNAME):
 FILENAME='divx.avi'
 
 # run check routine
-result=query_test.query_ok(FILENAME,0.3)
+result=query_test.query_ok(FILENAME,ERRORS)
 
 # create flag file for following tests
 works.set_file(TESTNAME)

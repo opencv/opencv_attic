@@ -8,6 +8,7 @@ on an .avi file containing uncompressed 24bit Bitmap frames.
 # name if this test and it's requirements
 TESTNAME = "query_bmp24"
 REQUIRED = []
+ERRORS=[0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0]
 
 # needed for sys.exit(int), .works file handling and check routine
 import sys
@@ -22,7 +23,7 @@ if not works.check_files(REQUIRED,TESTNAME):
 FILENAME='bmp24.avi'
 
 # run check routine
-result=query_test.query_ok(FILENAME,0.3)
+result=query_test.query_ok(FILENAME,ERRORS)
 
 # create flag file for following tests
 works.set_file(TESTNAME)

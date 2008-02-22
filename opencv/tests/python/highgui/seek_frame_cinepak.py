@@ -8,6 +8,7 @@ on a CinePak-compressed .avi file.
 # name if this test and it's requirements
 TESTNAME = "seek_frame_cinepak"
 REQUIRED = []
+ERRORS=[0.086,0.082,0.087,0.085,0.086,0.085,0.086,0.086,0.086,0.086,0.089,0.087,0.090,0.088,0.088,0.088,0.089,0.088,0.089,0.088,0.091,0.089,0.092,0.091,0.091,0.090,0.091,0.090,0.091]
 
 # needed for sys.exit(int), .works file handling and check routine
 import sys
@@ -22,7 +23,7 @@ if not works.check_files(REQUIRED,TESTNAME):
 FILENAME='cinepak.avi'
 
 # run check routine
-result=seek_test.seek_frame_ok(FILENAME,0.25)
+result=seek_test.seek_frame_ok(FILENAME,ERRORS)
 
 # create flag file for following tests
 works.set_file(TESTNAME)
