@@ -253,7 +253,14 @@ typedef struct CvCaptureAVI_FFMPEG
     int64_t             picture_pts;
     AVFrame             rgb_picture;
     IplImage            frame;
-    int                 nativeseek;
+/*
+   'filename' contains the filename of the videosource,
+   'filename==NULL' indicates that ffmpeg's seek support works
+   for the particular file.
+   'filename!=NULL' indicates that the slow fallback function is used for seeking,
+   and so the filename is needed to reopen the file on backward seeking.
+*/ 
+    char              * filename;
 } CvCaptureAVI_FFMPEG;
 
 
@@ -283,6 +290,39 @@ static void icvCloseAVI_FFMPEG( CvCaptureAVI_FFMPEG* capture )
         cvFree( &capture->rgb_picture.data[0] );
 
     memset( &capture->frame, 0, sizeof(capture->frame));
+}
+
+
+/*
+    Used to reopen a video if the slower fallback function for seeking is used.
+*/
+static int icvReopenFileAVI_FFMPEG( CvCaptureAVI_FFMPEG* capture )
+{
+    if ( capture->filename==NULL ) return 0;
+
+#if LIBAVFORMAT_BUILD > 4628
+    avcodec_close( capture->video_st->codec );
+#else
+    avcodec_close( &capture->video_st->codec );
+#endif
+    av_close_input_file(capture->ic);
+
+    // reopen video
+    av_open_input_file(&capture->ic, capture->filename, NULL, 0, NULL);
+    av_find_stream_info(capture->ic);
+#if LIBAVFORMAT_BUILD > 4628
+    AVCodecContext *enc = capture->ic->streams[capture->video_stream]->codec;
+#else
+    AVCodecContext *enc = &capture->ic->streams[capture->video_stream]->codec;
+#endif
+    AVCodec *codec = avcodec_find_decoder(enc->codec_id);
+    avcodec_open(enc, codec);
+    capture->video_st = capture->ic->streams[capture->video_stream];
+
+    // reset framenumber to zero
+    capture->picture_pts=0;
+
+    return 1;
 }
 
 
@@ -350,9 +390,24 @@ static int icvOpenAVI_FFMPEG( CvCaptureAVI_FFMPEG* capture, const char* filename
     if(video_index >= 0) valid = 1;
 
     // perform check if source is seekable via ffmpeg's seek function av_seek_frame(...)
-    capture->nativeseek=icvCheckSeekAVI_FFMPEG(capture);
-
-
+    err = av_seek_frame(capture->ic, capture->video_stream, 10, 0);
+    if (err < 0)
+    {
+        int length=0;
+        while ( filename[length] ) length++;
+        // remark filename
+        capture->filename=(char*)malloc(length+1);
+        for ( int i=0; i<length+1; i++ ) capture->filename[i]=filename[i];
+        // reopen videofile to 'seek' back to first frame
+        icvReopenFileAVI_FFMPEG( capture );
+    }
+    else
+    {
+        // seek seems to work, so we don't need the filename,
+        // but we still need to seek back to filestart
+        capture->filename=NULL;
+        av_seek_frame(capture->ic, capture->video_stream, 0, 0);
+    }
 exit_func:
 
     if( !valid )
@@ -360,6 +415,7 @@ exit_func:
 
     return valid;
 }
+
 
 
 
@@ -491,18 +547,14 @@ static int icvSlowSeekAVI_FFMPEG( CvCaptureAVI_FFMPEG* capture, const int framen
 {
     if ( framenumber>capture->picture_pts )
     {
-        for ( ; capture->picture_pts<=framenumber; capture->picture_pts++ ) {
-            int ret=icvGrabFrameAVI_FFMPEG( capture );
-            if ( ret<0 ) return 0;
-        }
+        while ( capture->picture_pts<framenumber )
+            if ( icvGrabFrameAVI_FFMPEG( capture )<0 ) return 0;
     }
     else if ( framenumber<capture->picture_pts )
     {
-        av_seek_frame( capture->ic, capture->video_stream, 0, 0 );
-        for ( capture->picture_pts=0; capture->picture_pts<=framenumber; capture->picture_pts++ ) {
-            int ret=icvGrabFrameAVI_FFMPEG( capture );
-            if ( ret<0 ) return 0;
-        }
+        icvReopenFileAVI_FFMPEG(capture);
+        while ( capture->picture_pts<framenumber )
+            if ( icvGrabFrameAVI_FFMPEG( capture )<0 ) return 0;
     }
     return 1;
 }
@@ -545,7 +597,17 @@ static int icvSetPropertyAVI_FFMPEG( CvCaptureAVI_FFMPEG* capture,
                 break;
             }
 
-            if ( capture->nativeseek )
+            if ( capture->filename )
+            {
+                // ffmpeg's seek doesn't work...
+                if (icvSlowSeekAVI_FFMPEG(capture, timestamp) < 0)
+                {
+                    fprintf(stderr, "HIGHGUI ERROR: AVI: could not (slow) seek to position %0.3f\n", 
+                        (double)timestamp / AV_TIME_BASE);
+                    return 0;
+                }
+            }
+            else
             {
                 int ret = av_seek_frame(capture->ic, capture->video_stream, timestamp, 0);
                 if (ret < 0)
@@ -555,16 +617,7 @@ static int icvSetPropertyAVI_FFMPEG( CvCaptureAVI_FFMPEG* capture,
                     return 0;
                 }
             }
-            else
-            {
-                int ret = icvSlowSeekAVI_FFMPEG(capture, timestamp);
-                if (ret < 0)
-                {
-                    fprintf(stderr, "HIGHGUI ERROR: AVI: could not (slow) seek to position %0.3f\n", 
-                        (double)timestamp / AV_TIME_BASE);
-                    return 0;
-                }
-            }
+            capture->picture_pts=value;
         }
         break;
 
@@ -574,21 +627,6 @@ static int icvSetPropertyAVI_FFMPEG( CvCaptureAVI_FFMPEG* capture,
 
     return 1;
 }
-
-
-
-static int icvCheckSeekAVI_FFMPEG( CvCaptureAVI_FFMPEG* capture )
-{
-    int _native=capture->nativeseek;
-    capture->nativeseek=false;
-    int res=icvSetPropertyAVI_FFMPEG( capture, CV_CAP_PROP_POS_FRAMES, 15 );
-    if ( !res ) return 0;
-    if ( icvGetPropertyAVI_FFMPEG( capture, CV_CAP_PROP_POS_FRAMES ) != 15 ) return 0;
-    av_seek_frame(capture->ic, capture->video_stream, 0, 0);
-    capture->nativeseek=_native;
-    return 1;
-}
-
 
 
 
@@ -924,7 +962,6 @@ CV_IMPL CvVideoWriter* cvCreateVideoWriter( const char * filename, int fourcc,
     if (!codec) {
 		CV_ERROR(CV_StsBadArg, "codec not found");
     }
-	//printf("cvcap_ffmpeg: using codec %s\n", codec->name);
 
     /* open the codec */
     if ( (err=avcodec_open(c, codec)) < 0) {
@@ -933,7 +970,6 @@ CV_IMPL CvVideoWriter* cvCreateVideoWriter( const char * filename, int fourcc,
 		CV_ERROR(CV_StsBadArg, errtext);
     }
 
-	//	printf("Using codec %s\n", codec->name);
     writer->outbuf = NULL;
 
     if (!(writer->oc->oformat->flags & AVFMT_RAWPICTURE)) {
