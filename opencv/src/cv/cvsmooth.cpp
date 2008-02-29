@@ -1028,232 +1028,115 @@ icvMedianBlur_8u_CnR_Om( uchar* src, int src_step, uchar* dst, int dst_step,
                                    Bilateral Filtering
 \****************************************************************************************/
 
-static CvStatus CV_STDCALL
-icvBilateralFiltering_8u_CnR( uchar* src, int srcStep,
-                              uchar* dst, int dstStep,
-                              CvSize size, double sigma_color,
-                              double sigma_space, int channels )
+static void
+icvBilateralFiltering( const CvMat* src, CvMat* dst,
+                       double sigma_color, double sigma_space )
 {
-    double i2sigma_color = 1./(sigma_color*sigma_color);
-    double i2sigma_space = 1./(sigma_space*sigma_space);
+    CvMat* temp = 0;
+    float* color_weight = 0;
+    float* space_weight = 0;
+    int* space_ofs = 0;
 
-    double mean1[3];
-    double mean0;
-    double w;
-    int deltas[8];
-    double weight_tab[8];
+    CV_FUNCNAME( "icvBilateralFiltering" );
 
-    int i, j;
+    __BEGIN__;
 
-#define INIT_C1\
-            color = src[0]; \
-            mean0 = 1; mean1[0] = color;
+    double gauss_color_coeff = -0.5/(sigma_color*sigma_color);
+    double gauss_space_coeff = -0.5/(sigma_space*sigma_space);
+    int cn = CV_MAT_CN(src->type);
+    int i, j, k, maxk, radius, d;
+    CvSize size = cvGetMatSize(src);
+   
+    if( CV_MAT_TYPE(src->type) != CV_8UC1 &&
+        CV_MAT_TYPE(src->type) != CV_8UC3 ||
+        !CV_ARE_TYPES_EQ(src, dst) )
+        CV_ERROR( CV_StsUnsupportedFormat,
+        "Both source and destination must be 8-bit, single-channel or 3-channel images" );
 
-#define COLOR_DISTANCE_C1(c1, c2)\
-            (c1 - c2)*(c1 - c2)
-#define KERNEL_ELEMENT_C1(k)\
-            temp_color = src[deltas[k]];\
-            w = weight_tab[k] + COLOR_DISTANCE_C1(color, temp_color)*i2sigma_color;\
-            w = 1./(w*w + 1); \
-            mean0 += w;\
-            mean1[0] += temp_color*w;
+    if( sigma_color <= 0 )
+        sigma_color = 1;
+    if( sigma_space <= 0 )
+        sigma_space = 1;
 
-#define INIT_C3\
-            mean0 = 1; mean1[0] = src[0];mean1[1] = src[1];mean1[2] = src[2];
+    radius = cvRound(sigma_space*1.5);
+    radius = MAX(radius, 1);
+    d = radius*2 + 1;
 
-#define UPDATE_OUTPUT_C1                   \
-            dst[i] = (uchar)cvRound(mean1[0]/mean0);
+    CV_CALL( temp = cvCreateMat( src->rows + radius*2,
+        src->cols + radius*2, src->type ));
+    CV_CALL( cvCopyMakeBorder( src, temp, cvPoint(radius,radius), IPL_BORDER_REPLICATE ));
+    CV_CALL( color_weight = (float*)cvAlloc(cn*256*sizeof(color_weight[0])));
+    CV_CALL( space_weight = (float*)cvAlloc(d*d*sizeof(space_weight[0])));
+    CV_CALL( space_ofs = (int*)cvAlloc(d*d*sizeof(space_ofs[0])));
 
-#define COLOR_DISTANCE_C3(c1, c2)\
-            ((c1[0] - c2[0])*(c1[0] - c2[0]) + \
-             (c1[1] - c2[1])*(c1[1] - c2[1]) + \
-             (c1[2] - c2[2])*(c1[2] - c2[2]))
-#define KERNEL_ELEMENT_C3(k)\
-            temp_color = src + deltas[k];\
-            w = weight_tab[k] + COLOR_DISTANCE_C3(src, temp_color)*i2sigma_color;\
-            w = 1./(w*w + 1); \
-            mean0 += w;\
-            mean1[0] += temp_color[0]*w; \
-            mean1[1] += temp_color[1]*w; \
-            mean1[2] += temp_color[2]*w;
+    // initialize color-related bilateral filter coefficients
+    for( i = 0; i < 256*cn; i++ )
+        color_weight[i] = (float)exp(i*i*gauss_color_coeff);
 
-#define UPDATE_OUTPUT_C3\
-            mean0 = 1./mean0;\
-            dst[i*3 + 0] = (uchar)cvRound(mean1[0]*mean0); \
-            dst[i*3 + 1] = (uchar)cvRound(mean1[1]*mean0); \
-            dst[i*3 + 2] = (uchar)cvRound(mean1[2]*mean0);
+    // initialize space-related bilateral filter coefficients
+    for( i = -radius, maxk = 0; i <= radius; i++ )
+        for( j = -radius; j <= radius; j++ )
+        {
+            double r = sqrt((double)i*i + (double)j*j);
+            if( r > radius )
+                continue;
+            space_weight[maxk] = (float)exp(r*r*gauss_space_coeff);
+            space_ofs[maxk++] = i*temp->step + j*cn;
+        }
 
-    CV_INIT_3X3_DELTAS( deltas, srcStep, channels );
-
-    weight_tab[0] = weight_tab[2] = weight_tab[4] = weight_tab[6] = i2sigma_space;
-    weight_tab[1] = weight_tab[3] = weight_tab[5] = weight_tab[7] = i2sigma_space*2;
-
-    if( channels == 1 )
+    for( i = 0; i < size.height; i++ )
     {
-        int color, temp_color;
+        const uchar* sptr = temp->data.ptr + (i+radius)*temp->step + radius*cn;
+        uchar* dptr = dst->data.ptr + i*dst->step;
 
-        for( i = 0; i < size.width; i++, src++ )
+        if( cn == 1 )
         {
-            INIT_C1;
-            KERNEL_ELEMENT_C1(6);
-            if( i > 0 )
+            for( j = 0; j < size.width; j++ )
             {
-                KERNEL_ELEMENT_C1(5);
-                KERNEL_ELEMENT_C1(4);
+                float sum = 0, wsum = 0;
+                int val0 = sptr[j];
+                for( k = 0; k < maxk; k++ )
+                {
+                    int val = sptr[j + space_ofs[k]];
+                    float w = space_weight[k]*color_weight[abs(val - val0)];
+                    sum += val*w;
+                    wsum += w;
+                }
+                // overflow is not possible here => there is no need to use CV_CAST_8U
+                dptr[j] = (uchar)cvRound(sum/wsum);
             }
-            if( i < size.width - 1 )
-            {
-                KERNEL_ELEMENT_C1(7);
-                KERNEL_ELEMENT_C1(0);
-            }
-            UPDATE_OUTPUT_C1;
         }
-
-        src += srcStep - size.width;
-        dst += dstStep;
-
-        for( j = 1; j < size.height - 1; j++, dst += dstStep )
+        else
         {
-            i = 0;
-            INIT_C1;
-            KERNEL_ELEMENT_C1(0);
-            KERNEL_ELEMENT_C1(1);
-            KERNEL_ELEMENT_C1(2);
-            KERNEL_ELEMENT_C1(6);
-            KERNEL_ELEMENT_C1(7);
-            UPDATE_OUTPUT_C1;
-
-            for( i = 1, src++; i < size.width - 1; i++, src++ )
+            assert( cn == 3 );
+            for( j = 0; j < size.width*3; j += 3 )
             {
-                INIT_C1;
-                KERNEL_ELEMENT_C1(0);
-                KERNEL_ELEMENT_C1(1);
-                KERNEL_ELEMENT_C1(2);
-                KERNEL_ELEMENT_C1(3);
-                KERNEL_ELEMENT_C1(4);
-                KERNEL_ELEMENT_C1(5);
-                KERNEL_ELEMENT_C1(6);
-                KERNEL_ELEMENT_C1(7);
-                UPDATE_OUTPUT_C1;
+                float sum_b = 0, sum_g = 0, sum_r = 0, wsum = 0;
+                int b0 = sptr[j], g0 = sptr[j+1], r0 = sptr[j+2];
+                for( k = 0; k < maxk; k++ )
+                {
+                    const uchar* sptr_k = sptr + j + space_ofs[k];
+                    int b = sptr_k[0], g = sptr_k[1], r = sptr_k[2];
+                    float w = space_weight[k]*color_weight[abs(b - b0) +
+                        abs(g - g0) + abs(r - r0)];
+                    sum_b += b*w; sum_g += g*w; sum_r += r*w;
+                    wsum += w;
+                }
+                wsum = 1.f/wsum;
+                b0 = cvRound(sum_b*wsum);
+                g0 = cvRound(sum_g*wsum);
+                r0 = cvRound(sum_r*wsum);
+                dptr[j] = (uchar)b0; dptr[j+1] = (uchar)g0; dptr[j+2] = (uchar)r0;
             }
-
-            INIT_C1;
-            KERNEL_ELEMENT_C1(2);
-            KERNEL_ELEMENT_C1(3);
-            KERNEL_ELEMENT_C1(4);
-            KERNEL_ELEMENT_C1(5);
-            KERNEL_ELEMENT_C1(6);
-            UPDATE_OUTPUT_C1;
-
-            src += srcStep + 1 - size.width;
-        }
-
-        for( i = 0; i < size.width; i++, src++ )
-        {
-            INIT_C1;
-            KERNEL_ELEMENT_C1(2);
-            if( i > 0 )
-            {
-                KERNEL_ELEMENT_C1(3);
-                KERNEL_ELEMENT_C1(4);
-            }
-            if( i < size.width - 1 )
-            {
-                KERNEL_ELEMENT_C1(1);
-                KERNEL_ELEMENT_C1(0);
-            }
-            UPDATE_OUTPUT_C1;
-        }
-    }
-    else
-    {
-        uchar* temp_color;
-
-        if( channels != 3 )
-            return CV_UNSUPPORTED_CHANNELS_ERR;
-
-        for( i = 0; i < size.width; i++, src += 3 )
-        {
-            INIT_C3;
-            KERNEL_ELEMENT_C3(6);
-            if( i > 0 )
-            {
-                KERNEL_ELEMENT_C3(5);
-                KERNEL_ELEMENT_C3(4);
-            }
-            if( i < size.width - 1 )
-            {
-                KERNEL_ELEMENT_C3(7);
-                KERNEL_ELEMENT_C3(0);
-            }
-            UPDATE_OUTPUT_C3;
-        }
-
-        src += srcStep - size.width*3;
-        dst += dstStep;
-
-        for( j = 1; j < size.height - 1; j++, dst += dstStep )
-        {
-            i = 0;
-            INIT_C3;
-            KERNEL_ELEMENT_C3(0);
-            KERNEL_ELEMENT_C3(1);
-            KERNEL_ELEMENT_C3(2);
-            KERNEL_ELEMENT_C3(6);
-            KERNEL_ELEMENT_C3(7);
-            UPDATE_OUTPUT_C3;
-
-            for( i = 1, src += 3; i < size.width - 1; i++, src += 3 )
-            {
-                INIT_C3;
-                KERNEL_ELEMENT_C3(0);
-                KERNEL_ELEMENT_C3(1);
-                KERNEL_ELEMENT_C3(2);
-                KERNEL_ELEMENT_C3(3);
-                KERNEL_ELEMENT_C3(4);
-                KERNEL_ELEMENT_C3(5);
-                KERNEL_ELEMENT_C3(6);
-                KERNEL_ELEMENT_C3(7);
-                UPDATE_OUTPUT_C3;
-            }
-
-            INIT_C3;
-            KERNEL_ELEMENT_C3(2);
-            KERNEL_ELEMENT_C3(3);
-            KERNEL_ELEMENT_C3(4);
-            KERNEL_ELEMENT_C3(5);
-            KERNEL_ELEMENT_C3(6);
-            UPDATE_OUTPUT_C3;
-
-            src += srcStep + 3 - size.width*3;
-        }
-
-        for( i = 0; i < size.width; i++, src += 3 )
-        {
-            INIT_C3;
-            KERNEL_ELEMENT_C3(2);
-            if( i > 0 )
-            {
-                KERNEL_ELEMENT_C3(3);
-                KERNEL_ELEMENT_C3(4);
-            }
-            if( i < size.width - 1 )
-            {
-                KERNEL_ELEMENT_C3(1);
-                KERNEL_ELEMENT_C3(0);
-            }
-            UPDATE_OUTPUT_C3;
         }
     }
 
-    return CV_OK;
-#undef INIT_C1
-#undef KERNEL_ELEMENT_C1
-#undef UPDATE_OUTPUT_C1
-#undef INIT_C3
-#undef KERNEL_ELEMENT_C3
-#undef UPDATE_OUTPUT_C3
-#undef COLOR_DISTANCE_C3
+    __END__;
+
+    cvReleaseMat( &temp );
+    cvFree( &color_weight );
+    cvFree( &space_weight );
+    cvFree( &space_ofs );
 }
 
 //////////////////////////////// IPP smoothing functions /////////////////////////////////
@@ -1469,20 +1352,7 @@ cvSmooth( const void* srcarr, void* dstarr, int smooth_type,
         CV_CALL( gaussian_filter.process( src, dst ));
     }
     else if( smooth_type == CV_BILATERAL )
-    {
-        if( param1 < 0 || param2 < 0 )
-            CV_ERROR( CV_StsOutOfRange,
-            "Thresholds in bilaral filtering should not bee negative" );
-        param1 += param1 == 0;
-        param2 += param2 == 0;
-
-        if( depth != CV_8U || cn != 1 && cn != 3 )
-            CV_ERROR( CV_StsUnsupportedFormat,
-            "Bilateral filter only supports 8uC1 and 8uC3 images" );
-
-        IPPI_CALL( icvBilateralFiltering_8u_CnR( src->data.ptr, src->step,
-            dst->data.ptr, dst->step, size, param1, param2, cn ));
-    }
+        CV_CALL( icvBilateralFiltering( src, dst, param1, param2 ));
 
     __END__;
 
