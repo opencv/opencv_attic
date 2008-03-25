@@ -53,13 +53,13 @@ extern "C" {
 #define INT64_C (long long)
 
 #ifdef NDEBUG
-#define CV_WARN(message) 
+#define CV_WARN(message)
 #else
 #define CV_WARN(message) fprintf(stderr, "warning: %s (%s:%d)\n", message, __FILE__, __LINE__)
 #endif
 
 
-#if LIBAVCODEC_VERSION_INT<=0x000409
+#ifndef MKTAG
 #define MKTAG(a,b,c,d) (a | (b << 8) | (c << 16) | (d << 24))
 #endif
 
@@ -212,15 +212,17 @@ const AVCodecTag codec_bmp_tags[] = {
     { CODEC_ID_LOCO, MKTAG('L', 'O', 'C', 'O') },
     { CODEC_ID_THEORA, MKTAG('t', 'h', 'e', 'o') },
 #if LIBAVCODEC_VERSION_INT>0x000409
-    { CODEC_ID_JPEGLS,MKTAG('M', 'J', 'L', 'S') }, /* JPEG-LS custom FOURCC for avi - encoder */
-    { CODEC_ID_FLASHSV, MKTAG('F', 'S', 'V', '1') },
-    { CODEC_ID_VC1, MKTAG('W', 'V', 'C', '1') },
-    { CODEC_ID_VC1, MKTAG('W', 'M', 'V', 'A') },
     { CODEC_ID_WNV1, MKTAG('W', 'N', 'V', '1') },
     { CODEC_ID_AASC, MKTAG('A', 'A', 'S', 'C') },
     { CODEC_ID_INDEO2, MKTAG('R', 'T', '2', '1') },
     { CODEC_ID_FRAPS, MKTAG('F', 'P', 'S', '1') },
     { CODEC_ID_TRUEMOTION2, MKTAG('T', 'M', '2', '0') },
+#endif
+#if LIBAVCODEC_VERSION_INT>((50<<16)+(1<<8)+0)
+    { CODEC_ID_FLASHSV, MKTAG('F', 'S', 'V', '1') },
+    { CODEC_ID_JPEGLS,MKTAG('M', 'J', 'L', 'S') }, /* JPEG-LS custom FOURCC for avi - encoder */
+    { CODEC_ID_VC1, MKTAG('W', 'V', 'C', '1') },
+    { CODEC_ID_VC1, MKTAG('W', 'M', 'V', 'A') },
     { CODEC_ID_CSCD, MKTAG('C', 'S', 'C', 'D') },
     { CODEC_ID_ZMBV, MKTAG('Z', 'M', 'B', 'V') },
     { CODEC_ID_KMVC, MKTAG('K', 'M', 'V', 'C') },
@@ -259,7 +261,7 @@ typedef struct CvCaptureAVI_FFMPEG
    for the particular file.
    'filename!=NULL' indicates that the slow fallback function is used for seeking,
    and so the filename is needed to reopen the file on backward seeking.
-*/ 
+*/
     char              * filename;
 } CvCaptureAVI_FFMPEG;
 
@@ -445,12 +447,12 @@ static int icvGrabFrameAVI_FFMPEG( CvCaptureAVI_FFMPEG* capture )
     while ((0 == valid) && (av_read_frame(capture->ic, &pkt) >= 0)) {
         if( pkt.stream_index != capture->video_stream ) continue;
 #if LIBAVFORMAT_BUILD > 4628
-        avcodec_decode_video(capture->video_st->codec, 
-                             capture->picture, &got_picture, 
+        avcodec_decode_video(capture->video_st->codec,
+                             capture->picture, &got_picture,
                              pkt.data, pkt.size);
 #else
-        avcodec_decode_video(&capture->video_st->codec, 
-                             capture->picture, &got_picture, 
+        avcodec_decode_video(&capture->video_st->codec,
+                             capture->picture, &got_picture,
                              pkt.data, pkt.size);
 #endif
 
@@ -602,7 +604,7 @@ static int icvSetPropertyAVI_FFMPEG( CvCaptureAVI_FFMPEG* capture,
                 // ffmpeg's seek doesn't work...
                 if (icvSlowSeekAVI_FFMPEG(capture, timestamp) < 0)
                 {
-                    fprintf(stderr, "HIGHGUI ERROR: AVI: could not (slow) seek to position %0.3f\n", 
+                    fprintf(stderr, "HIGHGUI ERROR: AVI: could not (slow) seek to position %0.3f\n",
                         (double)timestamp / AV_TIME_BASE);
                     return 0;
                 }
@@ -612,7 +614,7 @@ static int icvSetPropertyAVI_FFMPEG( CvCaptureAVI_FFMPEG* capture,
                 int ret = av_seek_frame(capture->ic, capture->video_stream, timestamp, 0);
                 if (ret < 0)
                 {
-                    fprintf(stderr, "HIGHGUI ERROR: AVI: could not seek to position %0.3f\n", 
+                    fprintf(stderr, "HIGHGUI ERROR: AVI: could not seek to position %0.3f\n",
                         (double)timestamp / AV_TIME_BASE);
                     return 0;
                 }
@@ -630,7 +632,7 @@ static int icvSetPropertyAVI_FFMPEG( CvCaptureAVI_FFMPEG* capture,
 
 
 
-static CvCaptureVTable captureAVI_FFMPEG_vtable = 
+static CvCaptureVTable captureAVI_FFMPEG_vtable =
 {
     6,
     (CvCaptureCloseFunc)icvCloseAVI_FFMPEG,
@@ -720,12 +722,12 @@ static AVFrame * icv_alloc_picture_FFMPEG(int pix_fmt, int width, int height, bo
 	size = avpicture_get_size(pix_fmt, width, height);
 	if(alloc){
 		picture_buf = (uint8_t *) cvAlloc(size);
-		if (!picture_buf) 
+		if (!picture_buf)
 		{
 			av_free(picture);
 			return NULL;
 		}
-		avpicture_fill((AVPicture *)picture, picture_buf, 
+		avpicture_fill((AVPicture *)picture, picture_buf,
 				pix_fmt, width, height);
 	}
 	else {
@@ -734,16 +736,16 @@ static AVFrame * icv_alloc_picture_FFMPEG(int pix_fmt, int width, int height, bo
 }
 
 /* add a video output stream to the container */
-static AVStream *icv_add_video_stream_FFMPEG(AVFormatContext *oc, 
-		                                     CodecID codec_id, 
-											 int w, int h, int bitrate, 
+static AVStream *icv_add_video_stream_FFMPEG(AVFormatContext *oc,
+		                                     CodecID codec_id,
+											 int w, int h, int bitrate,
 											 double fps, int pixel_format)
 {
 	AVCodecContext *c;
 	AVStream *st;
 	int frame_rate, frame_rate_base;
 	AVCodec *codec;
-	
+
 
 	st = av_new_stream(oc, 0);
 	if (!st) {
@@ -757,7 +759,7 @@ static AVStream *icv_add_video_stream_FFMPEG(AVFormatContext *oc,
 	c = &(st->codec);
 #endif
 
-#if LIBAVFORMAT_BUILD > 4621 
+#if LIBAVFORMAT_BUILD > 4621
 	c->codec_id = av_guess_codec(oc->oformat, NULL, oc->filename, NULL, CODEC_TYPE_VIDEO);
 #else
 	c->codec_id = oc->oformat->video_codec;
@@ -847,7 +849,7 @@ CV_IMPL CvVideoWriter* cvCreateVideoWriter( const char * filename, int fourcc,
 	CvAVI_FFMPEG_Writer * writer = NULL;
 	CodecID codec_id = CODEC_ID_NONE;
 	int err;
-	
+
 	__BEGIN__;
 
 	// check arguments
@@ -871,12 +873,12 @@ CV_IMPL CvVideoWriter* cvCreateVideoWriter( const char * filename, int fourcc,
 	/* determine optimal pixel format */
     if (is_color) {
         writer->input_pix_fmt = PIX_FMT_BGR24;
-    } 
+    }
 	else {
         writer->input_pix_fmt = PIX_FMT_GRAY8;
     }
 
-	// alloc memory for context 
+	// alloc memory for context
 	writer->oc = av_alloc_format_context();
 	assert (writer->oc);
 
@@ -891,13 +893,13 @@ CV_IMPL CvVideoWriter* cvCreateVideoWriter( const char * filename, int fourcc,
 	if(fourcc!=CV_FOURCC_DEFAULT){
 #if LIBAVCODEC_VERSION_INT<((51<<16)+(49<<8)+0)
         if( (codec_id = codec_get_bmp_id( fourcc )) == CODEC_ID_NONE ){
-			CV_ERROR( CV_StsUnsupportedFormat, 
+			CV_ERROR( CV_StsUnsupportedFormat,
 				"FFMPEG could not find a codec matching the given FOURCC code. Use fourcc=CV_FOURCC_DEFAULT for auto selection." );
 		}
 	}
 #else
         if( (codec_id = av_codec_get_id((const AVCodecTag**)(&codec_bmp_tags), fourcc)) == CODEC_ID_NONE ){
-			CV_ERROR( CV_StsUnsupportedFormat, 
+			CV_ERROR( CV_StsUnsupportedFormat,
 				"FFMPEG could not find a codec matching the given FOURCC code. Use fourcc=CV_FOURCC_DEFAULT for auto selection." );
 		}
 	}
@@ -906,7 +908,7 @@ CV_IMPL CvVideoWriter* cvCreateVideoWriter( const char * filename, int fourcc,
     // set a few optimal pixel formats for lossless codecs of interest..
     int codec_pix_fmt;
     switch (codec_id) {
-#if LIBAVCODEC_VERSION_INT>0x000409
+#if LIBAVCODEC_VERSION_INT>((50<<16)+(1<<8)+0)
     case CODEC_ID_JPEGLS:
         // BGR24 or GRAY8 depending on is_color...
         codec_pix_fmt = writer->input_pix_fmt;
@@ -928,7 +930,7 @@ CV_IMPL CvVideoWriter* cvCreateVideoWriter( const char * filename, int fourcc,
     }
 
 	// TODO -- safe to ignore output audio stream?
-	writer->video_st = icv_add_video_stream_FFMPEG(writer->oc, codec_id, 
+	writer->video_st = icv_add_video_stream_FFMPEG(writer->oc, codec_id,
 			frameSize.width, frameSize.height, frameSize.width*frameSize.height*64,
             fps, codec_pix_fmt);
 
@@ -975,7 +977,7 @@ CV_IMPL CvVideoWriter* cvCreateVideoWriter( const char * filename, int fourcc,
     if (!(writer->oc->oformat->flags & AVFMT_RAWPICTURE)) {
         /* allocate output buffer */
 		/* assume we will never get codec output with more than 4 bytes per pixel... */
-		writer->outbuf_size = frameSize.width*frameSize.height*4; 
+		writer->outbuf_size = frameSize.width*frameSize.height*4;
         writer->outbuf = (uint8_t *) av_malloc(writer->outbuf_size);
     }
 
@@ -989,7 +991,7 @@ CV_IMPL CvVideoWriter* cvCreateVideoWriter( const char * filename, int fourcc,
     }
 
     /* if the output format is not our input format, then a temporary
-       picture of the input format is needed too. It is then converted 
+       picture of the input format is needed too. It is then converted
 	   to the required output format */
 	writer->input_picture = NULL;
     if ( need_color_convert ) {
@@ -1008,7 +1010,7 @@ CV_IMPL CvVideoWriter* cvCreateVideoWriter( const char * filename, int fourcc,
 
     /* write the stream header, if any */
     av_write_header( writer->oc );
-	
+
 
 	__END__;
 
@@ -1049,9 +1051,9 @@ int icv_av_write_frame_FFMPEG( AVFormatContext * oc, AVStream * video_st, uint8_
             AVPacket pkt;
             av_init_packet(&pkt);
 
-#if LIBAVFORMAT_BUILD > 4752 
+#if LIBAVFORMAT_BUILD > 4752
             pkt.pts = av_rescale_q(c->coded_frame->pts, c->time_base, video_st->time_base);
-#else 
+#else
 			pkt.pts = c->coded_frame->pts;
 #endif
             if(c->coded_frame->key_frame)
@@ -1090,7 +1092,7 @@ CV_IMPL int cvWriteFrame( CvVideoWriter * writer, const IplImage * image )
 #else
 	AVCodecContext *c = &(mywriter->video_st->codec);
 #endif
-    
+
     if( c->codec_id == CODEC_ID_RAWVIDEO && image->origin != IPL_ORIGIN_BL )
     {
         if( !mywriter->temp_image )
@@ -1105,12 +1107,12 @@ CV_IMPL int cvWriteFrame( CvVideoWriter * writer, const IplImage * image )
         if (image->nChannels != 3 || image->depth != IPL_DEPTH_8U) {
             CV_ERROR(CV_StsUnsupportedFormat, "cvWriteFrame() needs images with depth = IPL_DEPTH_8U and nChannels = 3.");
         }
-    } 
+    }
 	else if (mywriter->input_pix_fmt == PIX_FMT_GRAY8) {
         if (image->nChannels != 1 || image->depth != IPL_DEPTH_8U) {
             CV_ERROR(CV_StsUnsupportedFormat, "cvWriteFrame() needs images with depth = IPL_DEPTH_8U and nChannels = 1.");
         }
-    } 
+    }
 	else {
         assert(false);
     }
@@ -1121,12 +1123,12 @@ CV_IMPL int cvWriteFrame( CvVideoWriter * writer, const IplImage * image )
 	if ( c->pix_fmt != mywriter->input_pix_fmt ) {
 		assert( mywriter->input_picture );
 		// let input_picture point to the raw data buffer of 'image'
-		avpicture_fill((AVPicture *)mywriter->input_picture, (uint8_t *) image->imageData, 
+		avpicture_fill((AVPicture *)mywriter->input_picture, (uint8_t *) image->imageData,
 				mywriter->input_pix_fmt, image->width, image->height);
 
 		// convert to the color format needed by the codec
 		if( img_convert((AVPicture *)mywriter->picture, c->pix_fmt,
-					(AVPicture *)mywriter->input_picture, mywriter->input_pix_fmt, 
+					(AVPicture *)mywriter->input_picture, mywriter->input_pix_fmt,
 					image->width, image->height) < 0){
 			CV_ERROR(CV_StsUnsupportedFormat, "FFMPEG::img_convert pixel format conversion from BGR24 not handled");
 		}
@@ -1150,14 +1152,14 @@ CV_IMPL void cvReleaseVideoWriter( CvVideoWriter ** writer )
 	// nothing to do if already released
 	if ( !(*writer) )
 		return;
-	
+
 	// release data structures in reverse order
 	CvAVI_FFMPEG_Writer * mywriter = (CvAVI_FFMPEG_Writer*)(*writer);
 
 	/* no more frame to compress. The codec has a latency of a few
 	   frames if using B frames, so we get the last frames by
 	   passing the same picture again */
-	// TODO -- do we need to account for latency here? 
+	// TODO -- do we need to account for latency here?
 
 	/* write the trailer, if any */
 	av_write_trailer(mywriter->oc);
@@ -1182,7 +1184,7 @@ CV_IMPL void cvReleaseVideoWriter( CvVideoWriter ** writer )
 #else
 	avcodec_close(&(mywriter->video_st->codec));
 #endif
-    
+
 	av_free(mywriter->outbuf);
 
 	/* free the streams */
