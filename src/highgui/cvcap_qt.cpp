@@ -73,17 +73,17 @@ static int did_enter_movies = 0;
 /// Movie state structure for QuickTime movies
 typedef struct CvCapture_QT_Movie
 {
-	CvCaptureVTable * vtable; 
+	CvCaptureVTable * vtable;
 
 	Movie      myMovie;            // movie handle
 	GWorldPtr  myGWorld;           // we render into an offscreen GWorld
-	
+
 	CvSize     size;               // dimensions of the movie
 	TimeValue  movie_start_time;   // movies can start at arbitrary times
 	long       number_of_frames;   // duration in frames
 	long       next_frame_time;
-	long       next_frame_number; 
-	
+	long       next_frame_number;
+
 	IplImage * image_rgb;          // will point to the PixMap of myGWorld
 	IplImage * image_bgr;          // will be returned by icvRetrieveFrame_QT()
 
@@ -99,7 +99,7 @@ static       int         icvGrabFrame_QT_Movie     (CvCapture_QT_Movie * capture
 static const void      * icvRetrieveFrame_QT_Movie (CvCapture_QT_Movie * capture);
 
 
-static CvCaptureVTable capture_QT_Movie_vtable = 
+static CvCaptureVTable capture_QT_Movie_vtable =
 {
     6,
     (CvCaptureCloseFunc)           icvClose_QT_Movie,
@@ -119,20 +119,20 @@ CvCapture * cvCaptureFromFile_QT (const char * filename)
 		EnterMovies();
 		did_enter_movies = 1;
 	}
-	
+
     CvCapture_QT_Movie * capture = 0;
-	
+
     if (filename)
     {
         capture = (CvCapture_QT_Movie *) cvAlloc (sizeof (*capture));
         memset (capture, 0, sizeof(*capture));
-		
+
         capture->vtable = &capture_QT_Movie_vtable;
-		
+
         if (!icvOpenFile_QT_Movie (capture, filename))
             cvReleaseCapture ((CvCapture**) & capture);
     }
-	
+
     return (CvCapture*)capture;
 }
 
@@ -143,7 +143,7 @@ CvCapture * cvCaptureFromFile_QT (const char * filename)
  * step over 'interesting frame times' to count total number of frames
  * for video material with varying frame durations and create offscreen
  * GWorld for rendering the movie frames.
- * 
+ *
  * @author Mark Asbach <asbach@ient.rwth-aachen.de>
  * @date   2005-11-04
  */
@@ -154,27 +154,27 @@ static int icvOpenFile_QT_Movie (CvCapture_QT_Movie * capture, const char * file
 	Handle        myDataRef      = nil;
 	OSType        myDataRefType  = 0;
 	OSErr         myErr          = noErr;
-	
-	
+
+
 	// no old errors please
 	ClearMoviesStickyError ();
-	
+
 	// initialize pointers to zero
 	capture->myMovie  = 0;
 	capture->myGWorld = nil;
-	
+
 	// initialize numbers with invalid values
 	capture->next_frame_time   = -1;
 	capture->next_frame_number = -1;
 	capture->number_of_frames  = -1;
 	capture->movie_start_time  = -1;
 	capture->size              = cvSize (-1,-1);
-	
-	
+
+
 	// we would use CFStringCreateWithFileSystemRepresentation (kCFAllocatorDefault, filename) on Mac OS X 10.4
 	CFStringRef   inPath = CFStringCreateWithCString (kCFAllocatorDefault, filename, kCFStringEncodingISOLatin1);
 	OPENCV_ASSERT ((inPath != nil), "icvOpenFile_QT_Movie", "couldnt create CFString from a string");
-	
+
 	// create the data reference
 	myErr = QTNewDataReferenceFromFullPathCFString (inPath, kQTPOSIXPathStyle, 0, & myDataRef, & myDataRefType);
 	if (myErr != noErr)
@@ -182,30 +182,30 @@ static int icvOpenFile_QT_Movie (CvCapture_QT_Movie * capture, const char * file
 		fprintf (stderr, "Couldn't create QTNewDataReferenceFromFullPathCFString().\n");
 		return 0;
 	}
-	
+
 	// get the Movie
 	myErr = NewMovieFromDataRef(& capture->myMovie, newMovieActive | newMovieAsyncOK /* | newMovieIdleImportOK */,
 								& myResID, myDataRef, myDataRefType);
-	
+
 	// dispose of the data reference handle - we no longer need it
 	DisposeHandle (myDataRef);
-	
+
 	// if NewMovieFromDataRef failed, we already disposed the DataRef, so just return with an error
 	if (myErr != noErr)
 	{
 		fprintf (stderr, "Couldn't create a NewMovieFromDataRef() - error is %d.\n",  myErr);
 		return 0;
 	}
-	
+
 	// count the number of video 'frames' in the movie by stepping through all of the
 	// video 'interesting times', or in other words, the places where the movie displays
 	// a new video sample. The time between these interesting times is not necessarily constant.
 	{
 		OSType      whichMediaType = VisualMediaCharacteristic;
 		TimeValue   theTime        = -1;
-		
+
 		// find out movie start time
-		GetMovieNextInterestingTime (capture->myMovie, short (nextTimeMediaSample + nextTimeEdgeOK), 
+		GetMovieNextInterestingTime (capture->myMovie, short (nextTimeMediaSample + nextTimeEdgeOK),
 		                             1, & whichMediaType, TimeValue (0), 0, & theTime, NULL);
 		if (theTime == -1)
 		{
@@ -215,48 +215,48 @@ static int icvOpenFile_QT_Movie (CvCapture_QT_Movie * capture, const char * file
 		capture->movie_start_time  = theTime;
 		capture->next_frame_time   = theTime;
 		capture->next_frame_number = 0;
-		
+
 		// count all 'interesting times' of the movie
 		capture->number_of_frames  = 0;
-		while (theTime >= 0) 
+		while (theTime >= 0)
 		{
-			GetMovieNextInterestingTime (capture->myMovie, short (nextTimeMediaSample), 
+			GetMovieNextInterestingTime (capture->myMovie, short (nextTimeMediaSample),
 			                             1, & whichMediaType, theTime, 0, & theTime, NULL);
 			capture->number_of_frames++;
 		}
 	}
-	
+
 	// get the bounding rectangle of the movie
 	GetMoviesError ();
 	GetMovieBox (capture->myMovie, & myRect);
 	capture->size = cvSize (myRect.right - myRect.left, myRect.bottom - myRect.top);
-	
+
 	// create gworld for decompressed image
-	myErr = QTNewGWorld (& capture->myGWorld, k32ARGBPixelFormat /* k24BGRPixelFormat geht leider nicht */, 
+	myErr = QTNewGWorld (& capture->myGWorld, k32ARGBPixelFormat /* k24BGRPixelFormat geht leider nicht */,
 	                     & myRect, nil, nil, 0);
 	OPENCV_ASSERT (myErr == noErr, "icvOpenFile_QT_Movie", "couldnt create QTNewGWorld() for output image");
 	SetMovieGWorld (capture->myMovie, capture->myGWorld, nil);
-	
+
 	// build IplImage header that will point to the PixMap of the Movie's GWorld later on
 	capture->image_rgb = cvCreateImageHeader (capture->size, IPL_DEPTH_8U, 4);
-	
+
 	// create IplImage that hold correctly formatted result
 	capture->image_bgr = cvCreateImage (capture->size, IPL_DEPTH_8U, 3);
-	
+
 	// okay, that's it - should we wait until the Movie is playable?
 	return 1;
 }
 
 /**
  * dispose of QuickTime Movie and free memory buffers
- * 
+ *
  * @author Mark Asbach <asbach@ient.rwth-aachen.de>
  * @date   2005-11-04
  */
 static int icvClose_QT_Movie (CvCapture_QT_Movie * capture)
 {
 	OPENCV_ASSERT (capture,          "icvClose_QT_Movie", "'capture' is a NULL-pointer");
-	
+
 	// deallocate and free resources
 	if (capture->myMovie)
 	{
@@ -265,14 +265,14 @@ static int icvClose_QT_Movie (CvCapture_QT_Movie * capture)
 		DisposeGWorld        (capture->myGWorld);
 		DisposeMovie         (capture->myMovie);
 	}
-	
+
 	// okay, that's it
 	return 1;
 }
 
 /**
  * get a capture property
- * 
+ *
  * @author Mark Asbach <asbach@ient.rwth-aachen.de>
  * @date   2005-11-05
  */
@@ -282,18 +282,18 @@ static double icvGetProperty_QT_Movie (CvCapture_QT_Movie * capture, int propert
 	OPENCV_ASSERT (capture->myMovie,               "icvGetProperty_QT_Movie", "invalid Movie handle");
 	OPENCV_ASSERT (capture->number_of_frames >  0, "icvGetProperty_QT_Movie", "movie has invalid number of frames");
 	OPENCV_ASSERT (capture->movie_start_time >= 0, "icvGetProperty_QT_Movie", "movie has invalid start time");
-	
+
     // inquire desired property
     switch (property_id)
     {
 		case CV_CAP_PROP_POS_FRAMES:
 			return (capture->next_frame_number);
-		
+
 		case CV_CAP_PROP_POS_MSEC:
 		case CV_CAP_PROP_POS_AVI_RATIO:
 			{
 				TimeValue   position  = capture->next_frame_time - capture->movie_start_time;
-				
+
 				if (property_id == CV_CAP_PROP_POS_MSEC)
 				{
 					TimeScale   timescale = GetMovieTimeScale (capture->myMovie);
@@ -306,24 +306,24 @@ static double icvGetProperty_QT_Movie (CvCapture_QT_Movie * capture, int propert
 				}
 			}
 			break; // never reached
-		
+
 		case CV_CAP_PROP_FRAME_WIDTH:
 			return static_cast<double> (capture->size.width);
-		
+
 		case CV_CAP_PROP_FRAME_HEIGHT:
 			return static_cast<double> (capture->size.height);
-		
+
 		case CV_CAP_PROP_FPS:
 			{
 				TimeValue   duration  = GetMovieDuration  (capture->myMovie);
 				TimeScale   timescale = GetMovieTimeScale (capture->myMovie);
-				
+
 				return (capture->number_of_frames / (static_cast<double> (duration) / timescale));
 			}
-		
+
 		case CV_CAP_PROP_FRAME_COUNT:
 			return static_cast<double> (capture->number_of_frames);
-		
+
 		case CV_CAP_PROP_FOURCC:  // not implemented
 		case CV_CAP_PROP_FORMAT:  // not implemented
 		case CV_CAP_PROP_MODE:    // not implemented
@@ -332,14 +332,14 @@ static double icvGetProperty_QT_Movie (CvCapture_QT_Movie * capture, int propert
 			OPENCV_ERROR (CV_StsBadArg, "icvSetProperty_QT_Movie", "unknown or unhandled property_id");
 			return CV_StsBadArg;
     }
-    
+
     return 0;
 }
 
 /**
  * set a capture property. With movie files, it is only possible to set the
  * position (i.e. jump to a given time or frame number)
- * 
+ *
  * @author Mark Asbach <asbach@ient.rwth-aachen.de>
  * @date   2005-11-05
  */
@@ -349,11 +349,11 @@ static int icvSetProperty_QT_Movie (CvCapture_QT_Movie * capture, int property_i
 	OPENCV_ASSERT (capture->myMovie,               "icvSetProperty_QT_Movie", "invalid Movie handle");
 	OPENCV_ASSERT (capture->number_of_frames >  0, "icvSetProperty_QT_Movie", "movie has invalid number of frames");
 	OPENCV_ASSERT (capture->movie_start_time >= 0, "icvSetProperty_QT_Movie", "movie has invalid start time");
-    
+
     // inquire desired property
-	// 
+	//
 	// rework these three points to really work through 'interesting times'.
-	// with the current implementation, they result in wrong times or wrong frame numbers with content that 
+	// with the current implementation, they result in wrong times or wrong frame numbers with content that
 	// features varying frame durations
     switch (property_id)
     {
@@ -374,18 +374,18 @@ static int icvSetProperty_QT_Movie (CvCapture_QT_Movie * capture, int property_i
 					TimeValue  duration    = GetMovieDuration       (capture->myMovie);
 					           destination = static_cast<TimeValue> (value * duration + capture->movie_start_time);
 				}
-				
+
 				// really seek?
 				if (capture->next_frame_time == destination)
 					break;
-				
+
 				// seek into which direction?
 				if (capture->next_frame_time < destination)
 				{
 					while (capture->next_frame_time < destination)
 					{
 						capture->next_frame_number++;
-						GetMovieNextInterestingTime (capture->myMovie, nextTimeStep, 1, & myType, capture->next_frame_time,  
+						GetMovieNextInterestingTime (capture->myMovie, nextTimeStep, 1, & myType, capture->next_frame_time,
 						                             1, & capture->next_frame_time, NULL);
 						myErr = GetMoviesError();
 						if (myErr != noErr)
@@ -400,7 +400,7 @@ static int icvSetProperty_QT_Movie (CvCapture_QT_Movie * capture, int property_i
 					while (capture->next_frame_time > destination)
 					{
 						capture->next_frame_number--;
-						GetMovieNextInterestingTime (capture->myMovie, nextTimeStep, 1, & myType, capture->next_frame_time, 
+						GetMovieNextInterestingTime (capture->myMovie, nextTimeStep, 1, & myType, capture->next_frame_time,
 						                             -1, & capture->next_frame_time, NULL);
 						myErr = GetMoviesError();
 						if (myErr != noErr)
@@ -412,18 +412,18 @@ static int icvSetProperty_QT_Movie (CvCapture_QT_Movie * capture, int property_i
 				}
 			}
 			break;
-		
+
 		case CV_CAP_PROP_POS_FRAMES:
 			{
 				TimeValue    destination = static_cast<TimeValue> (value);
 				short        direction   = (destination > capture->next_frame_number) ? 1 : -1;
 				OSType       myType      = VisualMediaCharacteristic;
 				OSErr        myErr       = noErr;
-				
+
 				while (destination != capture->next_frame_number)
 				{
 					capture->next_frame_number += direction;
-					GetMovieNextInterestingTime (capture->myMovie, nextTimeStep, 1, & myType, capture->next_frame_time, 
+					GetMovieNextInterestingTime (capture->myMovie, nextTimeStep, 1, & myType, capture->next_frame_time,
 												 direction, & capture->next_frame_time, NULL);
 					myErr = GetMoviesError();
 					if (myErr != noErr)
@@ -434,13 +434,13 @@ static int icvSetProperty_QT_Movie (CvCapture_QT_Movie * capture, int property_i
 				}
 			}
 			break;
-		
+
 		default:
 			// unhandled or unknown capture property
 			OPENCV_ERROR (CV_StsBadArg, "icvSetProperty_QT_Movie", "unknown or unhandled property_id");
 			return 0;
 	}
-	
+
 	// positive result means success
 	return 1;
 }
@@ -449,7 +449,7 @@ static int icvSetProperty_QT_Movie (CvCapture_QT_Movie * capture, int property_i
  * the original meaning of this method is to acquire raw frame data for the next video
  * frame but not decompress it. With the QuickTime video reader, this is reduced to
  * advance to the current frame time.
- * 
+ *
  * @author Mark Asbach <asbach@ient.rwth-aachen.de>
  * @date   2005-11-06
  */
@@ -457,12 +457,12 @@ static int icvGrabFrame_QT_Movie (CvCapture_QT_Movie * capture)
 {
 	OPENCV_ASSERT (capture,          "icvGrabFrame_QT_Movie", "'capture' is a NULL-pointer");
 	OPENCV_ASSERT (capture->myMovie, "icvGrabFrame_QT_Movie", "invalid Movie handle");
-	
+
 	TimeValue    myCurrTime;
 	OSType       myType     = VisualMediaCharacteristic;
 	OSErr        myErr      = noErr;
-	
-	
+
+
 	// jump to current video sample
 	SetMovieTimeValue (capture->myMovie, capture->next_frame_time);
 	myErr = GetMoviesError();
@@ -471,10 +471,10 @@ static int icvGrabFrame_QT_Movie (CvCapture_QT_Movie * capture)
 		fprintf (stderr, "Couldn't SetMovieTimeValue() in icvGrabFrame_QT_Movie.\n");
 		return  0;
 	}
-	
+
 	// where are we now?
 	myCurrTime = GetMovieTime (capture->myMovie, NULL);
-	
+
 	// increment counters
 	capture->next_frame_number++;
 	GetMovieNextInterestingTime (capture->myMovie, nextTimeStep, 1, & myType, myCurrTime, 1, & capture->next_frame_time, NULL);
@@ -484,7 +484,7 @@ static int icvGrabFrame_QT_Movie (CvCapture_QT_Movie * capture)
 		fprintf (stderr, "Couldn't GetMovieNextInterestingTime() in icvGrabFrame_QT_Movie.\n");
 		return 0;
 	}
-	
+
 	// that's it
     return 1;
 }
@@ -492,7 +492,7 @@ static int icvGrabFrame_QT_Movie (CvCapture_QT_Movie * capture)
 /**
  * render the current frame into an image buffer and convert to OpenCV IplImage
  * buffer layout (BGR sampling)
- * 
+ *
  * @author Mark Asbach <asbach@ient.rwth-aachen.de>
  * @date   2005-11-06
  */
@@ -502,12 +502,12 @@ static const void * icvRetrieveFrame_QT_Movie (CvCapture_QT_Movie * capture)
 	OPENCV_ASSERT (capture->myMovie,   "icvRetrieveFrame_QT_Movie", "invalid Movie handle");
 	OPENCV_ASSERT (capture->image_rgb, "icvRetrieveFrame_QT_Movie", "invalid source image");
 	OPENCV_ASSERT (capture->image_bgr, "icvRetrieveFrame_QT_Movie", "invalid destination image");
-	
+
 	PixMapHandle  myPixMapHandle = nil;
 	OSErr         myErr          = noErr;
-	
-	
-	// invalidates the movie's display state so that the Movie Toolbox 
+
+
+	// invalidates the movie's display state so that the Movie Toolbox
 	// redraws the movie the next time we call MoviesTask
 	UpdateMovie (capture->myMovie);
 	myErr = GetMoviesError ();
@@ -516,7 +516,7 @@ static const void * icvRetrieveFrame_QT_Movie (CvCapture_QT_Movie * capture)
 		fprintf (stderr, "Couldn't UpdateMovie() in icvRetrieveFrame_QT_Movie().\n");
 		return 0;
 	}
-	
+
 	// service active movie (= redraw immediately)
 	MoviesTask (capture->myMovie, 0L);
 	myErr = GetMoviesError ();
@@ -525,7 +525,7 @@ static const void * icvRetrieveFrame_QT_Movie (CvCapture_QT_Movie * capture)
 		fprintf (stderr, "MoviesTask() didn't succeed in icvRetrieveFrame_QT_Movie().\n");
 		return 0;
 	}
-	
+
 	// update IplImage header that points to PixMap of the Movie's GWorld.
 	// unfortunately, cvCvtColor doesn't know ARGB, the QuickTime pixel format,
 	// so we pass a modfied address.
@@ -533,13 +533,13 @@ static const void * icvRetrieveFrame_QT_Movie (CvCapture_QT_Movie * capture)
 	myPixMapHandle = GetGWorldPixMap (capture->myGWorld);
 	LockPixels (myPixMapHandle);
 	cvSetData (capture->image_rgb, GetPixBaseAddr (myPixMapHandle) + 1, GetPixRowBytes (myPixMapHandle));
-	
+
 	// covert RGB of GWorld to BGR
 	cvCvtColor (capture->image_rgb, capture->image_bgr, CV_RGBA2BGR);
-	
+
 	// allow QuickTime to access the buffer again
 	UnlockPixels (myPixMapHandle);
-	
+
     // always return the same image pointer
 	return capture->image_bgr;
 }
@@ -554,16 +554,16 @@ static const void * icvRetrieveFrame_QT_Movie (CvCapture_QT_Movie * capture)
 	/// SequenceGrabber state structure for QuickTime
 	typedef struct CvCapture_QT_Cam_vdig
 	{
-		CvCaptureVTable  * vtable; 
+		CvCaptureVTable  * vtable;
 
 		ComponentInstance  grabber;
 		short              channel;
 		GWorldPtr          myGWorld;
 		PixMapHandle       pixmap;
-		
+
 		CvSize             size;
 		long               number_of_frames;
-		
+
 		IplImage         * image_rgb; // will point to the PixMap of myGWorld
 		IplImage         * image_bgr; // will be returned by icvRetrieveFrame_QT()
 
@@ -573,7 +573,7 @@ static const void * icvRetrieveFrame_QT_Movie (CvCapture_QT_Movie * capture)
 
 	typedef struct CvCapture_QT_Cam_barg
 	{
-		CvCaptureVTable  * vtable; 
+		CvCaptureVTable  * vtable;
 
 		SeqGrabComponent   grabber;
 		SGChannel          channel;
@@ -599,7 +599,7 @@ static       int         icvGrabFrame_QT_Cam     (CvCapture_QT_Cam * capture);
 static const void      * icvRetrieveFrame_QT_Cam (CvCapture_QT_Cam * capture);
 
 
-static CvCaptureVTable capture_QT_Cam_vtable = 
+static CvCaptureVTable capture_QT_Cam_vtable =
 {
     6,
     (CvCaptureCloseFunc)           icvClose_QT_Cam,
@@ -624,20 +624,20 @@ CvCapture * cvCaptureFromCAM_QT (const int index)
 		EnterMovies();
 		did_enter_movies = 1;
 	}
-	
+
     CvCapture_QT_Cam * capture = 0;
-	
+
     if (index >= 0)
     {
         capture = (CvCapture_QT_Cam *) cvAlloc (sizeof (*capture));
         memset (capture, 0, sizeof(*capture));
-		
+
         capture->vtable = &capture_QT_Cam_vtable;
-	
+
         if (!icvOpenCamera_QT (capture, index))
             cvReleaseCapture ((CvCapture**) & capture);
     }
-	
+
     return (CvCapture *) capture;
 }
 
@@ -661,7 +661,7 @@ static int icvSetProperty_QT_Cam (CvCapture_QT_Cam * capture, int property_id, d
 /**
  * Open a quicktime video grabber component. This could be an attached
  * IEEE1394 camera, a web cam, an iSight or digitizer card / video converter.
- * 
+ *
  * @author Mark Asbach <asbach@ient.rwth-aachen.de>
  * @date 2006-01-29
  */
@@ -675,7 +675,7 @@ static int icvOpenCamera_QT (CvCapture_QT_Cam * capture, const int index)
 	int                     number_of_inputs = 0;
 	Rect                    myRect;
 	ComponentResult			result = noErr;
-	
+
 
 	// travers all components and count video digitizer channels
 	component_description.componentType         = videoDigitizerComponentType;
@@ -686,15 +686,15 @@ static int icvOpenCamera_QT (CvCapture_QT_Cam * capture, const int index)
 	do
 	{
 		// traverse component list
-		component = FindNextComponent (component, & component_description);		
-		
+		component = FindNextComponent (component, & component_description);
+
 		// found a component?
 		if (component)
 		{
 			// dump component name
 			#ifndef NDEBUG
 				ComponentDescription  desc;
-				Handle                nameHandle = NewHandleClear (200);  
+				Handle                nameHandle = NewHandleClear (200);
 				char                  nameBuffer [255];
 
 				result = GetComponentInfo (component, & desc, nameHandle, nil, nil);
@@ -704,7 +704,7 @@ static int icvOpenCamera_QT (CvCapture_QT_Cam * capture, const int index)
 				printf ("- Videodevice: %s\n", nameBuffer);
 				DisposeHandle (nameHandle);
 			#endif
-			
+
 			// open component to count number of inputs
 			capture->grabber = OpenComponent (component);
 			if (capture->grabber)
@@ -717,67 +717,67 @@ static int icvOpenCamera_QT (CvCapture_QT_Cam * capture, const int index)
 					#ifndef NDEBUG
 						printf ("  Number of inputs: %d\n", (int) capture->channel + 1);
 					#endif
-					
+
 					// add to overall number of inputs
 					number_of_inputs += capture->channel + 1;
-					
-					// did the user select an input that falls into this device's 
+
+					// did the user select an input that falls into this device's
 					// range of inputs? Then leave the loop
 					if (number_of_inputs > index)
 					{
 						// calculate relative channel index
 						capture->channel = index - number_of_inputs + capture->channel + 1;
 						OPENCV_ASSERT (capture->channel >= 0, "icvOpenCamera_QT", "negative channel number");
-						
+
 						// dump channel name
 						#ifndef NDEBUG
 							char  name[256];
 							Str255  nameBuffer;
-						
+
 							result = VDGetInputName (capture->grabber, capture->channel, nameBuffer);
 							OPENCV_ASSERT (result == noErr, "ictOpenCamera_QT", "couldnt GetInputName()");
 							snprintf (name, *nameBuffer, "%s", (char *) (nameBuffer + 1));
 							printf ("  Choosing input %d - %s\n", (int) capture->channel, name);
 						#endif
-						
+
 						// leave the loop
 						break;
 					}
 				}
-				
+
 				// obviously no inputs of this device/component were needed
 				CloseComponent (capture->grabber);
 			}
 		}
 	}
 	while (component);
-	
+
 	// did we find the desired input?
 	if (! component)
 	{
 		fprintf(stderr, "Not enough inputs available - can't choose input %d\n", index);
 		return 0;
 	}
-	
+
 	// -- Okay now, we selected the digitizer input, lets set up digitizer destination --
-	
+
 	ClearMoviesStickyError();
-	
+
 	// Select the desired input
 	result = VDSetInput (capture->grabber, capture->channel);
 	OPENCV_ASSERT (result == noErr, "icvOpenCamera_QT", "couldnt select video digitizer input");
-										
+
 	// get the bounding rectangle of the video digitizer
 	result = VDGetActiveSrcRect (capture->grabber, capture->channel, & myRect);
 	OPENCV_ASSERT (result == noErr, "icvOpenCamera_QT", "couldnt create VDGetActiveSrcRect from digitizer");
 	myRect.right = 640; myRect.bottom = 480;
 	capture->size = cvSize (myRect.right - myRect.left, myRect.bottom - myRect.top);
 	printf ("Source rect is %d, %d -- %d, %d\n", (int) myRect.left, (int) myRect.top, (int) myRect.right, (int) myRect.bottom);
-	
+
 	// create offscreen GWorld
 	result = QTNewGWorld (& capture->myGWorld, k32ARGBPixelFormat, & myRect, nil, nil, 0);
 	OPENCV_ASSERT (result == noErr, "icvOpenCamera_QT", "couldnt create QTNewGWorld() for output image");
-	
+
 	// get pixmap
 	capture->pixmap = GetGWorldPixMap (capture->myGWorld);
 	result = GetMoviesError ();
@@ -786,18 +786,18 @@ static int icvOpenCamera_QT (CvCapture_QT_Cam * capture, const int index)
 	// set digitizer rect
 	result = VDSetDigitizerRect (capture->grabber, & myRect);
 	OPENCV_ASSERT (result == noErr, "icvOpenCamera_QT", "couldnt create VDGetActiveSrcRect from digitizer");
-	
+
 	// set destination of digitized input
 	result = VDSetPlayThruDestination (capture->grabber, capture->pixmap, & myRect, nil, nil);
 	printf ("QuickTime error: %d\n", (int) result);
 	OPENCV_ASSERT (result == noErr, "icvOpenCamera_QT", "couldnt set video destination");
-	
+
 	// get destination of digitized images
 	result = VDGetPlayThruDestination (capture->grabber, & capture->pixmap, nil, nil, nil);
 	printf ("QuickTime error: %d\n", (int) result);
 	OPENCV_ASSERT (result == noErr, "icvOpenCamera_QT", "couldnt get video destination");
 	OPENCV_ASSERT (capture->pixmap != nil, "icvOpenCamera_QT", "empty set video destination");
-	
+
 	// get the bounding rectangle of the video digitizer
 	GetPixBounds (capture->pixmap, & myRect);
 	capture->size = cvSize (myRect.right - myRect.left, myRect.bottom - myRect.top);
@@ -805,16 +805,16 @@ static int icvOpenCamera_QT (CvCapture_QT_Cam * capture, const int index)
 	// build IplImage header that will point to the PixMap of the Movie's GWorld later on
 	capture->image_rgb = cvCreateImageHeader (capture->size, IPL_DEPTH_8U, 4);
 	OPENCV_ASSERT (capture->image_rgb, "icvOpenCamera_QT", "couldnt create image header");
-	
+
 	// create IplImage that hold correctly formatted result
 	capture->image_bgr = cvCreateImage (capture->size, IPL_DEPTH_8U, 3);
 	OPENCV_ASSERT (capture->image_bgr, "icvOpenCamera_QT", "couldnt create image");
-	
+
 	// notify digitizer component, that we well be starting grabbing soon
 	result = VDCaptureStateChanging (capture->grabber, vdFlagCaptureIsForRecord | vdFlagCaptureStarting | vdFlagCaptureLowLatency);
 	OPENCV_ASSERT (result == noErr, "icvOpenCamera_QT", "couldnt set capture state");
-	
-	
+
+
 	// yeah, we did it
 	return 1;
 }
@@ -822,19 +822,19 @@ static int icvOpenCamera_QT (CvCapture_QT_Cam * capture, const int index)
 static int icvClose_QT_Cam (CvCapture_QT_Cam * capture)
 {
 	OPENCV_ASSERT (capture, "icvClose_QT_Cam", "'capture' is a NULL-pointer");
-	
+
 	ComponentResult	result = noErr;
 
 	// notify digitizer component, that we well be stopping grabbing soon
 	result = VDCaptureStateChanging (capture->grabber, vdFlagCaptureStopping);
 	OPENCV_ASSERT (result == noErr, "icvOpenCamera_QT", "couldnt set capture state");
-	
+
 	// release memory
 	cvReleaseImage       (& capture->image_bgr);
 	cvReleaseImageHeader (& capture->image_rgb);
 	DisposeGWorld        (capture->myGWorld);
 	CloseComponent       (capture->grabber);
-	
+
 	// sucessful
 	return 1;
 }
@@ -843,9 +843,9 @@ static int icvGrabFrame_QT_Cam (CvCapture_QT_Cam * capture)
 {
 	OPENCV_ASSERT (capture,          "icvGrabFrame_QT_Cam", "'capture' is a NULL-pointer");
 	OPENCV_ASSERT (capture->grabber, "icvGrabFrame_QT_Cam", "'grabber' is a NULL-pointer");
-	
+
 	ComponentResult	result = noErr;
-	
+
 	// grab one frame
 	result = VDGrabOneFrame (capture->grabber);
 	if (result != noErr)
@@ -853,7 +853,7 @@ static int icvGrabFrame_QT_Cam (CvCapture_QT_Cam * capture)
 		fprintf (stderr, "VDGrabOneFrame failed\n");
 		return 0;
 	}
-	
+
 	// successful
 	return 1;
 }
@@ -861,7 +861,7 @@ static int icvGrabFrame_QT_Cam (CvCapture_QT_Cam * capture)
 static const void * icvRetrieveFrame_QT_Cam (CvCapture_QT_Cam * capture)
 {
 	OPENCV_ASSERT (capture, "icvRetrieveFrame_QT_Cam", "'capture' is a NULL-pointer");
-	
+
 	PixMapHandle  myPixMapHandle = nil;
 
 	// update IplImage header that points to PixMap of the Movie's GWorld.
@@ -872,18 +872,18 @@ static const void * icvRetrieveFrame_QT_Cam (CvCapture_QT_Cam * capture)
 	myPixMapHandle = capture->pixmap;
 	LockPixels (myPixMapHandle);
 	cvSetData (capture->image_rgb, GetPixBaseAddr (myPixMapHandle) + 1, GetPixRowBytes (myPixMapHandle));
-	
+
 	// covert RGB of GWorld to BGR
 	cvCvtColor (capture->image_rgb, capture->image_bgr, CV_RGBA2BGR);
-	
+
 	// allow QuickTime to access the buffer again
 	UnlockPixels (myPixMapHandle);
-	
+
     // always return the same image pointer
 	return capture->image_bgr;
 }
 
-#else 
+#else
 #pragma mark Capturing using Sequence Grabber
 
 static OSErr icvDataProc_QT_Cam (SGChannel channel, Ptr raw_data, long len, long *, long, TimeValue, short, long refCon)
@@ -891,28 +891,28 @@ static OSErr icvDataProc_QT_Cam (SGChannel channel, Ptr raw_data, long len, long
 	CvCapture_QT_Cam  * capture = (CvCapture_QT_Cam *) refCon;
 	CodecFlags          ignore;
 	ComponentResult     err     = noErr;
-	
-	
+
+
 	// we need valid pointers
 	OPENCV_ASSERT (capture,          "icvDataProc_QT_Cam", "'capture' is a NULL-pointer");
 	OPENCV_ASSERT (capture->gworld,  "icvDataProc_QT_Cam", "'gworld' is a NULL-pointer");
 	OPENCV_ASSERT (raw_data,         "icvDataProc_QT_Cam", "'raw_data' is a NULL-pointer");
-	
+
 	// create a decompression sequence the first time
 	if (capture->sequence == 0)
 	{
 		ImageDescriptionHandle   description = (ImageDescriptionHandle) NewHandle(0);
-		
+
 		// we need a decompression sequence that fits the raw data coming from the camera
 		err = SGGetChannelSampleDescription (channel, (Handle) description);
 		OPENCV_ASSERT (err == noErr, "icvDataProc_QT_Cam", "couldnt get channel sample description");
-		err = DecompressSequenceBegin (&capture->sequence, description, capture->gworld, 0, &capture->bounds, 
+		err = DecompressSequenceBegin (&capture->sequence, description, capture->gworld, 0, &capture->bounds,
 			                           nil, srcCopy, nil, 0, codecNormalQuality, bestSpeedCodec);
 		OPENCV_ASSERT (err == noErr, "icvDataProc_QT_Cam", "couldnt begin decompression sequence");
 
 		DisposeHandle ((Handle) description);
 	}
-	
+
 	// okay, we have a decompression sequence -> decompress!
 	err = DecompressSequenceFrameS (capture->sequence, raw_data, len, 0, &ignore, nil);
 	if (err != noErr)
@@ -920,13 +920,13 @@ static OSErr icvDataProc_QT_Cam (SGChannel channel, Ptr raw_data, long len, long
 		fprintf (stderr, "icvDataProc_QT_Cam: couldn't decompress frame - %d\n", (int) err);
 		return err;
 	}
-	
+
 	// check if we dropped a frame
 	#ifndef NDEBUG
 		if (capture->got_frame)
 			fprintf (stderr, "icvDataProc_QT_Cam: frame was dropped\n");
 	#endif
-	
+
 	// everything worked as expected
 	capture->got_frame = true;
 	return noErr;
@@ -937,24 +937,24 @@ static int icvOpenCamera_QT (CvCapture_QT_Cam * capture, const int index)
 {
 	OPENCV_ASSERT (capture,    "icvOpenCamera_QT", "'capture' is a NULL-pointer");
 	OPENCV_ASSERT (index >= 0, "icvOpenCamera_QT", "camera index is negative");
-	
+
 	PixMapHandle  pixmap       = nil;
 	OSErr         result       = noErr;
-	
+
 	// open sequence grabber component
 	capture->grabber = OpenDefaultComponent (SeqGrabComponentType, 0);
 	OPENCV_ASSERT (capture->grabber, "icvOpenCamera_QT", "couldnt create image");
-	
+
 	// initialize sequence grabber component
 	result = SGInitialize (capture->grabber);
 	OPENCV_ASSERT (result == noErr, "icvOpenCamera_QT", "couldnt initialize sequence grabber");
 	result = SGSetDataRef (capture->grabber, 0, 0, seqGrabDontMakeMovie);
 	OPENCV_ASSERT (result == noErr, "icvOpenCamera_QT", "couldnt set data reference of sequence grabber");
-	
+
 	// set up video channel
 	result = SGNewChannel (capture->grabber, VideoMediaType, & (capture->channel));
 	OPENCV_ASSERT (result == noErr, "icvOpenCamera_QT", "couldnt create new video channel");
-	
+
 	// query natural camera resolution -- this will be wrong, but will be an upper
 	// bound on the actual resolution -- the actual resolution is set below
 	// after starting the frame grabber
@@ -996,11 +996,11 @@ static int icvOpenCamera_QT (CvCapture_QT_Cam * capture, const int index)
 	capture->gworld = tmpgworld;
 
 	result = SGSetChannelBounds (capture->channel, & (capture->bounds));
-	OPENCV_ASSERT (result == noErr, "icvOpenCamera_QT", "couldnt set video channel bounds");	
+	OPENCV_ASSERT (result == noErr, "icvOpenCamera_QT", "couldnt set video channel bounds");
 
 	// allocate images
 	capture->size = cvSize (capture->bounds.right - capture->bounds.left, capture->bounds.bottom - capture->bounds.top);
-	
+
 	// build IplImage header that points to the PixMap of the Movie's GWorld.
 	// unfortunately, cvCvtColor doesn't know ARGB, the QuickTime pixel format,
 	// so we shift the base address by one byte.
@@ -1011,16 +1011,16 @@ static int icvOpenCamera_QT (CvCapture_QT_Cam * capture, const int index)
 	OPENCV_ASSERT (pixmap, "icvOpenCamera_QT", "didn't get GWorld PixMap handle");
 	LockPixels (pixmap);
 	cvSetData (capture->image_rgb, GetPixBaseAddr (pixmap) + 1, GetPixRowBytes (pixmap));
-	
+
 	// create IplImage that hold correctly formatted result
 	capture->image_bgr = cvCreateImage (capture->size, IPL_DEPTH_8U, 3);
 	OPENCV_ASSERT (capture->image_bgr, "icvOpenCamera_QT", "couldnt create image");
 
-	
+
 	// tell the sequence grabber to invoke our data proc
 	result = SGSetDataProc (capture->grabber, NewSGDataUPP (icvDataProc_QT_Cam), (long) capture);
 	OPENCV_ASSERT (result == noErr, "icvOpenCamera_QT", "couldnt set data proc");
-	
+
 	// start recording
 	result = SGStartRecord (capture->grabber);
 	OPENCV_ASSERT (result == noErr, "icvOpenCamera_QT", "couldnt start recording");
@@ -1032,10 +1032,10 @@ static int icvOpenCamera_QT (CvCapture_QT_Cam * capture, const int index)
 static int icvClose_QT_Cam (CvCapture_QT_Cam * capture)
 {
 	OPENCV_ASSERT (capture, "icvClose_QT_Cam", "'capture' is a NULL-pointer");
-	
+
 	OSErr  result = noErr;
-	
-	
+
+
 	// stop recording
 	result = SGStop (capture->grabber);
 	OPENCV_ASSERT (result == noErr, "icveClose_QT_Cam", "couldnt stop recording");
@@ -1043,15 +1043,15 @@ static int icvClose_QT_Cam (CvCapture_QT_Cam * capture)
 	// close sequence grabber component
 	result = CloseComponent (capture->grabber);
 	OPENCV_ASSERT (result == noErr, "icveClose_QT_Cam", "couldnt close sequence grabber component");
-	
+
 	// end decompression sequence
 	CDSequenceEnd (capture->sequence);
-	
+
 	// free memory
 	cvReleaseImage (& capture->image_bgr);
 	cvReleaseImageHeader (& capture->image_rgb);
-	DisposeGWorld (capture->gworld); 
-	
+	DisposeGWorld (capture->gworld);
+
 	// sucessful
 	return 1;
 }
@@ -1071,7 +1071,7 @@ static int icvGrabFrame_QT_Cam (CvCapture_QT_Cam * capture)
 		fprintf (stderr, "SGIdle failed in icvGrabFrame_QT_Cam with error %d\n", (int) result);
 		return 0;
 	}
-	
+
 	// successful
 	return 1;
 }
@@ -1081,9 +1081,9 @@ static const void * icvRetrieveFrame_QT_Cam (CvCapture_QT_Cam * capture)
 	OPENCV_ASSERT (capture,            "icvRetrieveFrame_QT_Cam", "'capture' is a NULL-pointer");
 	OPENCV_ASSERT (capture->image_rgb, "icvRetrieveFrame_QT_Cam", "invalid source image");
 	OPENCV_ASSERT (capture->image_bgr, "icvRetrieveFrame_QT_Cam", "invalid destination image");
-	
+
 	OSErr         myErr          = noErr;
-	
+
 
 	// service active sequence grabbers (= redraw immediately)
 	while (! capture->got_frame)
@@ -1095,13 +1095,13 @@ static const void * icvRetrieveFrame_QT_Cam (CvCapture_QT_Cam * capture)
 			return 0;
 		}
 	}
-	
+
 	// covert RGB of GWorld to BGR
 	cvCvtColor (capture->image_rgb, capture->image_bgr, CV_RGBA2BGR);
-	
+
 	// reset grabbing status
 	capture->got_frame = false;
-	
+
     // always return the same image pointer
 	return capture->image_bgr;
 }
@@ -1110,6 +1110,8 @@ static const void * icvRetrieveFrame_QT_Cam (CvCapture_QT_Cam * capture)
 
 
 typedef struct CvVideoWriter_QT {
+    CvVideoWriterVTable vtable;
+
     DataHandler data_handler;
     Movie movie;
     Track track;
@@ -1137,7 +1139,147 @@ void icvSourceTrackingCallback(
     void *reserved
 );
 
-CV_IMPL CvVideoWriter* cvCreateVideoWriter(
+static int icvWriteFrame_QT(
+    CvVideoWriter * writer,
+    const IplImage * image
+) {
+    CvVideoWriter_QT* video_writer =
+        reinterpret_cast<CvVideoWriter_QT*>( writer );
+
+    CVPixelBufferRef pixel_buffer_ref = NULL;
+    CVReturn retval =
+        CVPixelBufferCreate(
+            kCFAllocatorDefault,
+            image->width, image->height, k24RGBPixelFormat,
+            NULL /* pixel_buffer_attributes */,
+            &pixel_buffer_ref
+        );
+
+    // convert BGR IPL image to RGB pixel buffer
+    IplImage* image_rgb =
+        cvCreateImageHeader(
+            cvSize( image->width, image->height ),
+            IPL_DEPTH_8U,
+            3
+        );
+
+    retval = CVPixelBufferLockBaseAddress( pixel_buffer_ref, 0 );
+
+    void* base_address = CVPixelBufferGetBaseAddress( pixel_buffer_ref );
+    size_t bytes_per_row = CVPixelBufferGetBytesPerRow( pixel_buffer_ref );
+    cvSetData( image_rgb, base_address, bytes_per_row );
+
+    cvConvertImage( image, image_rgb, CV_CVTIMG_SWAP_RB );
+
+    retval = CVPixelBufferUnlockBaseAddress( pixel_buffer_ref, 0 );
+
+    cvReleaseImageHeader( &image_rgb );
+
+    ICMSourceTrackingCallbackRecord source_tracking_callback_record;
+    source_tracking_callback_record.sourceTrackingCallback =
+        icvSourceTrackingCallback;
+    source_tracking_callback_record.sourceTrackingRefCon = NULL;
+
+    OSStatus status =
+        ICMCompressionSessionEncodeFrame(
+            video_writer->compression_session_ref,
+            pixel_buffer_ref,
+            0,
+            video_writer->duration_per_sample,
+            kICMValidTime_DisplayDurationIsValid,
+            NULL,
+            &source_tracking_callback_record,
+            static_cast<void*>( &pixel_buffer_ref )
+        );
+
+    return 0;
+}
+
+static void icvReleaseVideoWriter_QT( CvVideoWriter ** writer ) {
+    if ( ( writer != NULL ) && ( *writer != NULL ) ) {
+        CvVideoWriter_QT* video_writer =
+            reinterpret_cast<CvVideoWriter_QT*>( *writer );
+
+        // force compression session to complete encoding of outstanding source
+        // frames
+        ICMCompressionSessionCompleteFrames(
+            video_writer->compression_session_ref, TRUE, 0, 0
+        );
+
+        EndMediaEdits( video_writer->video );
+
+        ICMCompressionSessionRelease( video_writer->compression_session_ref );
+
+        InsertMediaIntoTrack(
+            video_writer->track,
+            0,
+            0,
+            GetMediaDuration( video_writer->video ),
+            FixRatio( 1, 1 )
+        );
+
+        UpdateMovieInStorage( video_writer->movie, video_writer->data_handler );
+
+        CloseMovieStorage( video_writer->data_handler );
+
+/*
+        // export to AVI
+        Handle data_ref;
+        OSType data_ref_type;
+        QTNewDataReferenceFromFullPathCFString(
+            CFSTR( "/Users/seibert/Desktop/test.avi" ), kQTPOSIXPathStyle, 0,
+            &data_ref, &data_ref_type
+        );
+
+        ConvertMovieToDataRef( video_writer->movie, NULL, data_ref,
+            data_ref_type, kQTFileTypeAVI, 'TVOD', 0, NULL );
+
+        DisposeHandle( data_ref );
+*/
+
+        DisposeMovie( video_writer->movie );
+
+        cvFree( reinterpret_cast<void**>( &video_writer ) );
+        *writer = NULL;
+    }
+}
+
+OSStatus icvEncodedFrameOutputCallback(
+    void* writer,
+    ICMCompressionSessionRef compression_session_ref,
+    OSStatus error,
+    ICMEncodedFrameRef encoded_frame_ref,
+    void* reserved
+) {
+    CvVideoWriter_QT* video_writer = static_cast<CvVideoWriter_QT*>( writer );
+
+    OSStatus err = AddMediaSampleFromEncodedFrame( video_writer->video,
+        encoded_frame_ref, NULL );
+
+    return err;
+}
+
+void icvSourceTrackingCallback(
+    void *source_tracking_ref_con,
+    ICMSourceTrackingFlags source_tracking_flags,
+    void *source_frame_ref_con,
+    void *reserved
+) {
+    if ( source_tracking_flags & kICMSourceTracking_ReleasedPixelBuffer ) {
+        CVPixelBufferRelease(
+            *static_cast<CVPixelBufferRef*>( source_frame_ref_con )
+        );
+    }
+}
+
+static CvVideoWriterVTable video_writer_QT_vtable =
+{
+    2,
+    (CvVideoWriterCloseFunc)icvReleaseVideoWriter_QT,
+    (CvVideoWriterWriteFrameFunc)icvWriteFrame_QT
+};
+
+CvVideoWriter* cvCreateVideoWriter_QT(
     const char * filename,
     int fourcc,
     double fps,
@@ -1149,6 +1291,8 @@ CV_IMPL CvVideoWriter* cvCreateVideoWriter(
     CvVideoWriter_QT* video_writer =
         static_cast<CvVideoWriter_QT*>( cvAlloc( sizeof( CvVideoWriter_QT ) ) );
     memset( video_writer, 0, sizeof( CvVideoWriter_QT ) );
+
+    video_writer->vtable = video_writer_QT_vtable;
 
     Handle data_ref = NULL;
     OSType data_ref_type;
@@ -1254,7 +1398,7 @@ CV_IMPL CvVideoWriter* cvCreateVideoWriter(
     encoded_frame_output_record.encodedFrameOutputRefCon =
         static_cast<void*>( video_writer );
     encoded_frame_output_record.frameDataAllocator = NULL;
-    
+
     err = ICMCompressionSessionCreate( kCFAllocatorDefault, frame_size.width,
         frame_size.height, codecType, TIME_SCALE, options_ref,
         NULL /*source_pixel_buffer_attributes*/, &encoded_frame_output_record,
@@ -1304,137 +1448,4 @@ CV_IMPL CvVideoWriter* cvCreateVideoWriter(
     }
 
     return reinterpret_cast<CvVideoWriter*>( video_writer );
-}
-
-CV_IMPL int cvWriteFrame(
-    CvVideoWriter * writer,
-    const IplImage * image
-) {
-    CvVideoWriter_QT* video_writer =
-        reinterpret_cast<CvVideoWriter_QT*>( writer );
-
-    CVPixelBufferRef pixel_buffer_ref = NULL;
-    CVReturn retval =
-        CVPixelBufferCreate(
-            kCFAllocatorDefault,
-            image->width, image->height, k24RGBPixelFormat,
-            NULL /* pixel_buffer_attributes */,
-            &pixel_buffer_ref
-        );
-
-    // convert BGR IPL image to RGB pixel buffer
-    IplImage* image_rgb =
-        cvCreateImageHeader(
-            cvSize( image->width, image->height ),
-            IPL_DEPTH_8U,
-            3
-        );
-
-    retval = CVPixelBufferLockBaseAddress( pixel_buffer_ref, 0 );
-
-    void* base_address = CVPixelBufferGetBaseAddress( pixel_buffer_ref );
-    size_t bytes_per_row = CVPixelBufferGetBytesPerRow( pixel_buffer_ref );
-    cvSetData( image_rgb, base_address, bytes_per_row );
-
-    cvConvertImage( image, image_rgb, CV_CVTIMG_SWAP_RB );
-
-    retval = CVPixelBufferUnlockBaseAddress( pixel_buffer_ref, 0 );
-
-    cvReleaseImageHeader( &image_rgb );
-
-    ICMSourceTrackingCallbackRecord source_tracking_callback_record;
-    source_tracking_callback_record.sourceTrackingCallback =
-        icvSourceTrackingCallback;
-    source_tracking_callback_record.sourceTrackingRefCon = NULL;
-
-    OSStatus status =
-        ICMCompressionSessionEncodeFrame(
-            video_writer->compression_session_ref,
-            pixel_buffer_ref,
-            0,
-            video_writer->duration_per_sample,
-            kICMValidTime_DisplayDurationIsValid,
-            NULL,
-            &source_tracking_callback_record,
-            static_cast<void*>( &pixel_buffer_ref )
-        );
-
-    return 0;
-}
-
-CV_IMPL void cvReleaseVideoWriter( CvVideoWriter ** writer ) {
-    if ( ( writer != NULL ) && ( *writer != NULL ) ) {
-        CvVideoWriter_QT* video_writer =
-            reinterpret_cast<CvVideoWriter_QT*>( *writer );
-
-        // force compression session to complete encoding of outstanding source
-        // frames
-        ICMCompressionSessionCompleteFrames(
-            video_writer->compression_session_ref, TRUE, 0, 0
-        );
-
-        EndMediaEdits( video_writer->video );
-
-        ICMCompressionSessionRelease( video_writer->compression_session_ref );
-
-        InsertMediaIntoTrack(
-            video_writer->track,
-            0,
-            0,
-            GetMediaDuration( video_writer->video ),
-            FixRatio( 1, 1 )
-        );
-
-        UpdateMovieInStorage( video_writer->movie, video_writer->data_handler );
-
-        CloseMovieStorage( video_writer->data_handler );
-
-/*
-        // export to AVI
-        Handle data_ref;
-        OSType data_ref_type;
-        QTNewDataReferenceFromFullPathCFString(
-            CFSTR( "/Users/seibert/Desktop/test.avi" ), kQTPOSIXPathStyle, 0,
-            &data_ref, &data_ref_type
-        );
-
-        ConvertMovieToDataRef( video_writer->movie, NULL, data_ref,
-            data_ref_type, kQTFileTypeAVI, 'TVOD', 0, NULL );
-
-        DisposeHandle( data_ref );
-*/
-
-        DisposeMovie( video_writer->movie );
-
-        cvFree( reinterpret_cast<void**>( &video_writer ) );
-        *writer = NULL;
-    }
-}
-
-OSStatus icvEncodedFrameOutputCallback(
-    void* writer,
-    ICMCompressionSessionRef compression_session_ref,
-    OSStatus error,
-    ICMEncodedFrameRef encoded_frame_ref,
-    void* reserved
-) {
-    CvVideoWriter_QT* video_writer = static_cast<CvVideoWriter_QT*>( writer );
-
-    OSStatus err = AddMediaSampleFromEncodedFrame( video_writer->video,
-        encoded_frame_ref, NULL );
-
-    return err;
-}
-
-void icvSourceTrackingCallback(
-    void *source_tracking_ref_con,
-    ICMSourceTrackingFlags source_tracking_flags,
-    void *source_frame_ref_con,
-    void *reserved
-) {
-    if ( source_tracking_flags & kICMSourceTracking_ReleasedPixelBuffer ) {
-        CVPixelBufferRelease(
-            *static_cast<CVPixelBufferRef*>( source_frame_ref_con )
-        );
-    }
 }

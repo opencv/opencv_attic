@@ -82,7 +82,7 @@ CV_IMPL int cvGrabFrame( CvCapture* capture )
         capture->vtable->grab_frame )
         return capture->vtable->grab_frame( capture );
     return 0;
-} 
+}
 
 CV_IMPL IplImage* cvRetrieveFrame( CvCapture* capture )
 {
@@ -91,7 +91,7 @@ CV_IMPL IplImage* cvRetrieveFrame( CvCapture* capture )
         capture->vtable->retrieve_frame )
         return capture->vtable->retrieve_frame( capture );
     return 0;
-}                                       
+}
 
 CV_IMPL double cvGetCaptureProperty( CvCapture* capture, int id )
 {
@@ -120,20 +120,20 @@ CV_IMPL int cvSetCaptureProperty( CvCapture* capture, int id, double value )
  */
 CV_IMPL CvCapture * cvCaptureFromCAM (int index)
 {
-    int  domains[] = 
+    int  domains[] =
 	{
-		CV_CAP_IEEE1394,   // identical to CV_CAP_DC1394 
-		CV_CAP_STEREO, 
+		CV_CAP_IEEE1394,   // identical to CV_CAP_DC1394
+		CV_CAP_STEREO,
 		CV_CAP_VFW,        // identical to CV_CAP_V4L
-		CV_CAP_MIL, 
+		CV_CAP_MIL,
 		CV_CAP_QT,
-		-1 
+		-1
 	};
-	
+
 
     // interpret preferred interface (0 = autodetect)
     int pref = (index / 100) * 100;
-    if (pref) 
+    if (pref)
 	{
 		domains[0]=pref;
 		index %= 100;
@@ -141,13 +141,13 @@ CV_IMPL CvCapture * cvCaptureFromCAM (int index)
     }
 
     // try every possibly installed camera API
-    for (int i = 0; domains[i] >= 0; i++) 
+    for (int i = 0; domains[i] >= 0; i++)
 	{
 
 		// local variable to memorize the captured device
 		CvCapture *capture;
 
-		switch (domains[i]) 
+		switch (domains[i])
 		{
 		#ifdef HAVE_TYZX
 		case CV_CAP_STEREO:
@@ -159,12 +159,12 @@ CV_IMPL CvCapture * cvCaptureFromCAM (int index)
 		#if   defined (HAVE_VFW)
 		case CV_CAP_VFW:
 			capture = cvCaptureFromCAM_VFW (index);
-			if (capture) 
+			if (capture)
 				return capture;
 		#elif defined (HAVE_CAMV4L) || defined (HAVE_CAMV4L2)
 		case CV_CAP_V4L:
 			capture = cvCaptureFromCAM_V4L (index);
-			if (capture) 
+			if (capture)
 				return capture;
 		#endif
 
@@ -173,7 +173,7 @@ CV_IMPL CvCapture * cvCaptureFromCAM (int index)
 			capture = cvCaptureFromCAM_DC1394 (index);
 			if (capture)
 				return capture;
-		#elif defined (HAVE_CMU1394)        
+		#elif defined (HAVE_CMU1394)
 			case CV_CAP_IEEE1394:
 			capture = cvCaptureFromCAM_CMU (index);
 			if (capture)
@@ -183,10 +183,10 @@ CV_IMPL CvCapture * cvCaptureFromCAM (int index)
 		#ifdef HAVE_MIL
 		case CV_CAP_MIL:
 			capture = cvCaptureFromCAM_MIL (index);
-			if (capture) 
+			if (capture)
 				return capture;
 		#endif
-		
+
 		#ifdef HAVE_QUICKTIME
 		case CV_CAP_QT:
 			capture = cvCaptureFromCAM_QT (index);
@@ -207,22 +207,25 @@ CV_IMPL CvCapture * cvCaptureFromCAM (int index)
 CV_IMPL CvCapture * cvCaptureFromFile (const char * filename)
 {
     CvCapture * result = 0;
-    
+
+    if (! result)
+        result = cvCaptureFromFile_Images(filename);
+
     #ifdef WIN32
     if (! result)
         result = cvCaptureFromFile_Win32 (filename);
     #endif
-    
+
     #ifdef HAVE_XINE
     if (! result)
         result = cvCaptureFromFile_XINE (filename);
     #endif
-    
+
     #ifdef HAVE_FFMPEG
     if (! result)
         result = cvCaptureFromFile_FFMPEG (filename);
     #endif
-    
+
     #ifdef HAVE_QUICKTIME
     if (! result)
         result = cvCaptureFromFile_QT (filename);
@@ -231,23 +234,64 @@ CV_IMPL CvCapture * cvCaptureFromFile (const char * filename)
     return result;
 }
 
-#if !defined WIN32 && !defined HAVE_FFMPEG && !defined HAVE_VFW && !defined HAVE_QUICKTIME
-
-// quick fix for rc1
-
+/**
+ * Videowriter dispatching method: it tries to find the first
+ * API that can write a given stream.
+ */
 CV_IMPL CvVideoWriter* cvCreateVideoWriter( const char* filename, int fourcc,
                                             double fps, CvSize frameSize, int is_color )
 {
-    return 0;
+	CV_FUNCNAME( "cvCreateVideoWriter" );
+
+	CvVideoWriter *result = 0;
+
+	if(!fourcc || !fps)
+		result = cvCreateVideoWriter_Images(filename);
+
+	#ifdef WIN32
+	if(!result)
+		result = cvCreateVideoWriter_Win32(filename, fourcc, fps, frameSize, is_color);
+	#endif
+
+/*	#ifdef HAVE_XINE
+	if(!result)
+		result = cvCreateVideoWriter_XINE(filename, fourcc, fps, frameSize, is_color);
+	#endif
+*/
+	#ifdef HAVE_FFMPEG
+	if(!result)
+		result = cvCreateVideoWriter_FFMPEG(filename, fourcc, fps, frameSize, is_color);
+	#endif
+
+	#ifdef HAVE_QUICKTIME
+	if(!result)
+		result = cvCreateVideoWriter_QT(filename, fourcc, fps, frameSize, is_color);
+	#endif
+
+	if(!result)
+		result = cvCreateVideoWriter_Images(filename);
+
+	return result;
 }
 
-CV_IMPL int cvWriteFrame( CvVideoWriter* _writer, const IplImage* image )
+CV_IMPL int cvWriteFrame( CvVideoWriter* writer, const IplImage* image )
 {
-  return 0;
+	if(writer && writer->vtable &&
+	   writer->vtable->count >= CV_VIDEOWRITER_BASE_API_COUNT &&
+	   writer->vtable->write_frame)
+		return writer->vtable->write_frame(writer, image);
+	return 0;
 }
 
-CV_IMPL void cvReleaseVideoWriter( CvVideoWriter** writer )
+CV_IMPL void cvReleaseVideoWriter( CvVideoWriter** pwriter )
 {
-}
+	if(!pwriter || !*pwriter)
+		return;
 
-#endif
+	CvVideoWriter* writer = *pwriter;
+	if(writer && writer->vtable &&
+	   writer->vtable->count >= CV_CAPTURE_BASE_API_COUNT &&
+	   writer->vtable->close )
+		writer->vtable->close( writer );
+	cvFree( pwriter );
+}
