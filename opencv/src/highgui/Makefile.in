@@ -67,9 +67,9 @@ am__lib_highgui_la_SOURCES_DIST = bitstrm.cpp grfmt_base.cpp \
 	grfmt_bmp.cpp grfmt_jpeg.cpp grfmt_png.cpp grfmt_pxm.cpp \
 	grfmt_jpeg2000.cpp grfmt_exr.cpp grfmt_sunras.cpp \
 	grfmt_tiff.cpp image.cpp loadsave.cpp precomp.cpp utils.cpp \
-	cvcap.cpp window.cpp cvcap_dc1394.cpp cvcap_v4l.cpp \
-	cvcap_ffmpeg.cpp cvcap_qt.cpp cvcap_xine.cpp window_gtk.cpp \
-	window_carbon.cpp grfmt_imageio.cpp
+	cvcap.cpp cvcap_images.cpp window.cpp cvcap_dc1394.cpp \
+	cvcap_v4l.cpp cvcap_ffmpeg.cpp cvcap_qt.cpp cvcap_xine.cpp \
+	window_gtk.cpp window_carbon.cpp grfmt_imageio.cpp
 @BUILD_DC1394_TRUE@am__objects_1 = cvcap_dc1394.lo
 @BUILD_V4L_TRUE@am__objects_2 = cvcap_v4l.lo
 @BUILD_FFMPEG_TRUE@am__objects_3 = cvcap_ffmpeg.lo
@@ -81,8 +81,8 @@ am__lib_highgui_la_SOURCES_DIST = bitstrm.cpp grfmt_base.cpp \
 am_lib_highgui_la_OBJECTS = bitstrm.lo grfmt_base.lo grfmt_bmp.lo \
 	grfmt_jpeg.lo grfmt_png.lo grfmt_pxm.lo grfmt_jpeg2000.lo \
 	grfmt_exr.lo grfmt_sunras.lo grfmt_tiff.lo image.lo \
-	loadsave.lo precomp.lo utils.lo cvcap.lo window.lo \
-	$(am__objects_1) $(am__objects_2) $(am__objects_3) \
+	loadsave.lo precomp.lo utils.lo cvcap.lo cvcap_images.lo \
+	window.lo $(am__objects_1) $(am__objects_2) $(am__objects_3) \
 	$(am__objects_4) $(am__objects_5) $(am__objects_6) \
 	$(am__objects_7) $(am__objects_8)
 lib_highgui_la_OBJECTS = $(am_lib_highgui_la_OBJECTS)
@@ -287,7 +287,7 @@ target_vendor = @target_vendor@
 EXTRA_DIST = highgui.dsp highgui.vcproj highgui.rc resource.h    \
     cvcap_cmu.cpp cvcap_tyzx.cpp cvcap_vfw.cpp cvcap_mil.cpp     \
     cvcap_qt.cpp cvcap_dc1394.cpp cvcap_ffmpeg.cpp               \
-    cvcap_v4l.cpp cvcap_xine.cpp                                 \
+    cvcap_v4l.cpp cvcap_xine.cpp cvcap_images.cpp                \
     window_carbon.cpp window_gtk.cpp window_w32.cpp              \
     grfmt_imageio.cpp
 
@@ -297,7 +297,7 @@ INCLUDES = -I. -I$(top_srcdir)/cxcore/include \
 
 noinst_HEADERS = \
     _highgui.h bitstrm.h grfmt_base.h grfmt_bmp.h \
-    grfmt_jpeg.h grfmt_jpeg2000.h grfmt_exr.h grfmt_imageio.h \
+    grfmt_jpeg.h grfmt_jpeg2000.h grfmt_exr.h grfmt_imageio.h      \
     grfmt_pxm.h grfmt_png.h grfmt_sunras.h grfmt_tiff.h grfmts.h utils.h
 
 noinst_LTLIBRARIES = lib_highgui.la
@@ -324,9 +324,9 @@ lib_highgui_la_SOURCES = \
     bitstrm.cpp grfmt_base.cpp grfmt_bmp.cpp grfmt_jpeg.cpp      \
     grfmt_png.cpp grfmt_pxm.cpp grfmt_jpeg2000.cpp grfmt_exr.cpp \
     grfmt_sunras.cpp grfmt_tiff.cpp image.cpp loadsave.cpp       \
-    precomp.cpp utils.cpp cvcap.cpp window.cpp                   \
-    $(TMP_DC1394) $(TMP_V4L) $(TMP_FFMPEG) $(TMP_QT)             \
-    $(TMP_XINE) $(TMP_GTK) $(TMP_CARBON) $(TMP_IMAGEIO)
+    precomp.cpp utils.cpp cvcap.cpp cvcap_images.cpp window.cpp  \
+    $(TMP_DC1394) $(TMP_V4L) $(TMP_FFMPEG)                       \
+    $(TMP_QT) $(TMP_XINE) $(TMP_GTK) $(TMP_CARBON) $(TMP_IMAGEIO)
 
 lib_highgui_la_LDFLAGS = -no-undefined @LDFLAGS@
 
@@ -426,6 +426,7 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/cvcap.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/cvcap_dc1394.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/cvcap_ffmpeg.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/cvcap_images.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/cvcap_qt.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/cvcap_v4l.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/cvcap_xine.Plo@am__quote@

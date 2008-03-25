@@ -64,7 +64,7 @@ void  FillBitmapInfo( BITMAPINFO* bmi, int width, int height, int bpp, int origi
 #define HG_INITFAILED -2 /* Can't initialize HigHGUI. Possibly, can't find vlgrfmts.dll */
 #define HG_WCFAILED   -3 /* Can't create a window */
 #define HG_NULLPTR    -4 /* The null pointer where it should not appear */
-#define HG_BADPARAM   -5 
+#define HG_BADPARAM   -5
 
 #define CV_WINDOW_MAGIC_VAL     0x00420042
 #define CV_TRACKBAR_MAGIC_VAL   0x00420043
@@ -99,6 +99,27 @@ typedef struct CvCapture
 }
 CvCapture;
 
+
+#define CV_VIDEOWRITER_BASE_API_COUNT 2
+
+typedef void         (CV_CDECL* CvVideoWriterCloseFunc)         ( CvVideoWriter* writer );
+typedef int          (CV_CDECL* CvVideoWriterWriteFrameFunc)    ( CvVideoWriter* writer,
+                                                                  const IplImage* image );
+typedef struct CvVideoWriterVTable
+{
+    int                           count;
+    CvVideoWriterCloseFunc        close;
+    CvVideoWriterWriteFrameFunc   write_frame;
+}
+CvVideoWriterVTable;
+
+typedef struct CvVideoWriter
+{
+    CvVideoWriterVTable* vtable;
+}
+CvVideoWriter;
+
+
 extern "C" {
 
 typedef CvCapture* (CV_CDECL * CvCaptureFromFile)( const char* filename );
@@ -115,7 +136,7 @@ typedef void (CV_CDECL * CvReleaseVideoWriter)( CvVideoWriter ** writer );
 #ifdef WIN32
 #define HAVE_VFW 1
 
-/* uncomment to enable OpenEXR codec (will not compile under MSVC6) */ 
+/* uncomment to enable OpenEXR codec (will not compile under MSVC6) */
 //#define HAVE_ILMIMF 1
 
 /* uncomment to enable CMUCamera1394 fireware camera module */
@@ -156,17 +177,29 @@ void cvReleaseVideoWriter_VFW( CvVideoWriter** writer );
 
 #endif
 
+CVAPI(int) cvHaveImageReader(const char* filename);
+CVAPI(int) cvHaveImageWriter(const char* filename);
+
+CvCapture* cvCaptureFromFile_Images(const char* filename);
+CvVideoWriter* cvCreateVideoWriter_Images(const char* filename);
+
 #ifdef HAVE_XINE
-CvCapture* cvCaptureFromFile_XINE   (const char* filename);
+CvCapture* cvCaptureFromFile_XINE (const char* filename);
 #endif
 
 #ifdef HAVE_FFMPEG
 CvCapture* cvCaptureFromFile_FFMPEG (const char* filename);
+
+CvVideoWriter* cvCreateVideoWriter_FFMPEG ( const char* filename, int fourcc,
+                                            double fps, CvSize frameSize, int is_color );
 #endif
 
 #ifdef HAVE_QUICKTIME
 CvCapture * cvCaptureFromFile_QT (const char  * filename);
 CvCapture * cvCaptureFromCAM_QT  (const int     index);
+
+CvVideoWriter* cvCreateVideoWriter_QT ( const char* filename, int fourcc,
+                                        double fps, CvSize frameSize, int is_color );
 #endif
 
 #endif /* __HIGHGUI_H_ */

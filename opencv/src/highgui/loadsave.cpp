@@ -363,6 +363,27 @@ cvAddSearchPath( const char* path )
 }
 #endif
 
+CV_IMPL int
+cvHaveImageReader( const char* filename )
+{
+    GrFmtReader* reader = g_Filters.FindReader( filename );
+    if( reader ) {
+        delete reader;
+        return 1;
+    }
+    return 0;
+}
+
+CV_IMPL int cvHaveImageWriter( const char* filename )
+{
+    GrFmtWriter* writer = g_Filters.FindWriter( filename );
+    if( writer ) {
+        delete writer;
+        return 1;
+    }
+    return 0;
+}
+
 static void*
 icvLoadImage( const char* filename, int flags, bool load_as_matrix )
 {
