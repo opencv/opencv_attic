@@ -1,2 +1,2 @@
-SUBDIRS = c python
+SUBDIRS = c python octave
 EXTRA_DIST = MacOSX

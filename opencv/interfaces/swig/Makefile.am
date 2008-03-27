@@ -13,6 +13,6 @@ AM_CPPFLAGS = \
   $(CV_INCLUDES)                     \
   -DCV_NO_BACKWARD_COMPATIBILITY
 
-SUBDIRS = filtered general python
+SUBDIRS = filtered general python octave
 
 EXTRA_DIST = README

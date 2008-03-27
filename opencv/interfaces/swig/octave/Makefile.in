@@ -1,0 +1,101 @@
+
+# todo: use automake
+
+top_srcdir = @top_srcdir@
+top_builddir = @top_builddir@
+prefix = @prefix@
+datarootdir = @datarootdir@
+OCTAVE = @OCTAVE@
+#MKOCTFILE = @MKOCTFILE@
+MKOCTFILE = $(CXX) -shared # not portable, but building with default mkoctfile flags takes forever
+OCTAVE_ARCH = @OCTAVE_ARCH@
+SWIG = @SWIG@
+INSTALL = @INSTALL@
+
+@UPDATE_SWIG_WRAPPERS_TRUE@UPDATE_SWIG_WRAPPERS = 1
+
+OCTAVE_PKG_VERSION = @OCTAVE_PKG_VERSION@
+PKG_NAME = opencv-$(OCTAVE_PKG_VERSION)
+PKG_OCT_FILES = cv.oct ml.oct highgui.oct
+PKG_OTHER_FILES = COPYING DESCRIPTION INDEX PKG_ADD_template
+
+ifdef OCTAVE
+PKG_TARFILE = $(PKG_NAME).tar.gz
+endif
+
+CV_INCLUDES = \
+  -I$(top_srcdir)/cv/include         \
+  -I$(top_srcdir)/cxcore/include     \
+  -I$(top_srcdir)/ml/include         \
+  -I$(top_srcdir)/otherlibs/highgui
+
+BUILD_CPPFLAGS = \
+  $(CV_INCLUDES)                     \
+  -DCV_NO_BACKWARD_COMPATIBILITY
+
+CV_SOURCES = cv_wrap.cpp cvshadow.cpp error.cpp octhelpers.cpp
+ML_SOURCES = ml_wrap.cpp octhelpers.cpp
+HIGHGUI_SOURCES = highgui_wrap.cpp octhelpers.cpp
+
+CV_LDFLAGS = -L$(top_builddir)/cv/src/.libs -lcv
+ML_LDFLAGS = -L$(top_builddir)/ml/src/.libs -lml
+HIGHGUI_LDFLAGS = -L$(top_builddir)/otherlibs/highgui/.libs -lhighgui
+
+
+all: $(PKG_TARFILE)
+$(PKG_TARFILE): $(PKG_OCT_FILES) $(PKG_OTHER_FILES)
+	mkdir -p $(PKG_NAME)
+	mkdir -p $(PKG_NAME)/inst/$(OCTAVE_ARCH)
+	cp -rf $(PKG_OTHER_FILES) $(PKG_NAME)
+	mv $(PKG_NAME)/PKG_ADD_template $(PKG_NAME)/PKG_ADD
+	cp -rf $(PKG_OCT_FILES) $(PKG_NAME)/inst/$(OCTAVE_ARCH)
+	tar cpzvf $(PKG_TARFILE) $(PKG_NAME)
+	rm -rf $(PKG_NAME)
+
+.PHONY: install distclean clean check
+distclean: clean
+clean:
+	rm -rf *.o *.oct *~ octave-core $(PKG_TARFILE) $(PKG_NAME)
+
+install: $(PKG_TARFILE)
+	mkdir -p $(datarootdir)/opencv
+	$(INSTALL) $(PKG_TARFILE) $(datarootdir)/opencv/$(PKG_TARFILE)
+
+cv.oct: $(CV_SOURCES)
+	$(MKOCTFILE) -o cv.oct $(BUILD_CPPFLAGS) $(CV_LDFLAGS) $(CV_SOURCES)
+ml.oct: $(ML_SOURCES)
+	$(MKOCTFILE) -o ml.oct $(BUILD_CPPFLAGS) $(ML_LDFLAGS) $(ML_SOURCES)
+highgui.oct: $(HIGHGUI_SOURCES)
+	$(MKOCTFILE) -o highgui.oct $(BUILD_CPPFLAGS) $(HIGHGUI_LDFLAGS) $(HIGHGUI_SOURCES)
+
+ifdef UPDATE_SWIG_WRAPPERS
+
+cv_wrap.cpp: cv.i imagedata.i cvarr.i octhelpers.i       \
+         octtypemaps.i cvshadow.i cvseq.i              \
+         error.cpp error.h                                      \
+         octhelpers.h cvshadow.h octcvseq.hpp                     \
+         $(top_srcdir)/interfaces/swig/general/cv.i             \
+         $(top_srcdir)/interfaces/swig/general/memory.i         \
+         $(top_srcdir)/interfaces/swig/general/typemaps.i       \
+         $(top_srcdir)/interfaces/swig/general/extensions.i     \
+         $(top_srcdir)/interfaces/swig/general/doublepointers.i \
+         $(top_srcdir)/interfaces/swig/general/sizeof.i         \
+         $(top_srcdir)/interfaces/swig/general/cvmacros.i       \
+         ../filtered/cv.h            \
+         ../filtered/constants.h
+	$(SWIG) -octave $(CV_INCLUDES) -o $@ $<
+
+ml_wrap.cpp: ml.i octtypemaps.i                            \
+              $(top_srcdir)/interfaces/swig/general/typemaps.i  \
+              $(top_srcdir)/interfaces/swig/general/memory.i    \
+              $(top_srcdir)/ml/include/ml.h
+	$(SWIG) -octave $(CV_INCLUDES) -DSKIP_INCLUDES -o $@ $<
+
+highgui_wrap.cpp: highgui.i octtypemaps.i                  \
+              $(top_srcdir)/interfaces/swig/general/highgui.i   \
+              $(top_srcdir)/interfaces/swig/general/typemaps.i  \
+              $(top_srcdir)/interfaces/swig/general/memory.i    \
+              $(top_srcdir)/otherlibs/highgui/highgui.h
+	$(SWIG) -octave $(CV_INCLUDES) -DSKIP_INCLUDES -o $@ $<
+
+endif
