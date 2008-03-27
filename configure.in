@@ -40,7 +40,7 @@ AC_CONFIG_AUX_DIR([autotools])
 AC_CONFIG_MACRO_DIR([autotools/aclocal])
 
 # put CVS revision of this configure.in into the resulting configure script
-AC_REVISION($Revision: 1.46 $)
+AC_REVISION($Revision: 1.47 $)
 
 # Detect the canonical host and target build environment
 AC_CANONICAL_HOST
@@ -112,6 +112,12 @@ AC_ARG_WITH([python],
             [AS_HELP_STRING([--with-python],[use python for wrapping [yes]])],
             [with_python=$withval],
             [with_python=yes])
+
+# does the user want to compile octave modules as well?
+AC_ARG_WITH([octave], 
+            [AS_HELP_STRING([--with-octave],[use octave for wrapping [yes]])],
+            [with_octave=$withval],
+            [with_octave=yes])
 
 # does the user want OpenCV to use xine video libraries?
 AC_ARG_WITH([xine],
@@ -226,11 +232,14 @@ fi
 
 if test x"$ac_cv_c_compiler_gnu" = "xyes"; then
     PY_CXXFLAGS="-Wall -pipe $CXXFLAGS"
+    OCT_CXXFLAGS="-fno-strict-aliasing -Wall -Wno-uninitialized -pipe $CXXFLAGS"
     CXXFLAGS="-Wall -fno-rtti -pipe $CXXFLAGS"
 else
     PY_CXXFLAGS="$CXXFLAGS"
+    OCT_CXXFLAGS="$CXXFLAGS"
 fi
 AC_SUBST(PY_CXXFLAGS)
+AC_SUBST(OCT_CXXFLAGS)
 
 # add libm because it is used by several libraries and OpenCV itself 
 AC_CHECK_LIB(m,pow)
@@ -686,10 +695,9 @@ AC_SUBST(IMAGELIBS)
 ######################################################################
 # SWIG wrappers
 
-# currently there is only python.
-# If additional wrapper languages / SWIG modules
-# get available for OpenCV, we will have a --with-LANGUAGE switch
-# for every wrapper language
+# each language should have --with-LANGUAGE switch
+
+# check for python
 if test x"$with_python" = "xyes"; then
     AC_MSG_NOTICE([Checking for necessary tools to build python wrappers])
 
@@ -736,6 +744,55 @@ else
 fi
 AM_CONDITIONAL([BUILD_PYTHON_WRAPPERS], [test x"$have_python" = "xyes"])
 
+# check for octave
+if test x"$with_octave" = "xyes"; then
+    AC_MSG_NOTICE([Checking for necessary tools to build octave wrappers])
+
+    # find octave and mkoctfile
+    AC_PATH_PROG(OCTAVE,octave)
+    AC_PATH_PROG(MKOCTFILE,mkoctfile)
+
+    # if not explicitly forbidden, check for swig also
+    if test x"$with_swig" = "xauto"; then
+        with_swig=yes
+    fi
+
+    # check that we have octave headers
+    OLD_CPPFLAGS=$CPPFLAGS
+    CPPFLAGS="$CPPFLAGS -x c++"
+    AC_CHECK_HEADER(octave/oct.h,
+        [have_octave=yes],
+        [
+          AC_MSG_WARN([Octave headers not found, disabling octave wrappers])
+          have_octave=no
+        ])
+
+    # restore the old CPPFLAGS
+    CPPFLAGS=$OLD_CPPFLAGS
+
+    # find Octave arch
+    AC_MSG_CHECKING([for Octave arch])
+    OCTAVE_ARCH=`$OCTAVE -q --eval 'strcat(octave_config_info("canonical_host_type"), "-", octave_config_info("api_version"))'|sed -e 's/ans = //'`
+    AC_MSG_RESULT([$OCTAVE_ARCH])
+    AC_SUBST(OCTAVE_ARCH,[$OCTAVE_ARCH])
+
+    # find Octave package version
+    OCTAVE_PKG_VERSION=`egrep '^Version: ' interfaces/swig/octave/DESCRIPTION|sed -e 's/Version: //'`;
+    AC_SUBST(OCTAVE_PKG_VERSION,[$OCTAVE_PKG_VERSION])
+    AC_MSG_NOTICE([Octave package version is $OCTAVE_PKG_VERSION])
+
+else
+    # check if ./configure arguments are valid
+    if test x"$with_octave" = "xno"; then
+        have_octave=no
+    else
+        # if we get here then --with-octave was not called with 'yes','no' or 'auto'
+        AC_MSG_WARN([unexpected arguments for option --with-octave, continuing assuming 'no'])
+        have_octave=no
+    fi
+fi
+AM_CONDITIONAL([BUILD_OCTAVE_WRAPPERS], [test x"$have_octave" = "xyes"])
+
 # check for swig itself
 SWIG=""
 if test x"$with_swig" = "xyes"; then
@@ -749,9 +806,21 @@ if test x"$with_swig" = "xyes"; then
 		AC_PATH_SWIG([1.2.24])
 	fi
 
+
     if test -n "$SWIG"; then
         SWIG_ENABLE_CXX()
         SWIG_MULTI_MODULE_SUPPORT()
+
+	# if octave wrappers are enabled, check that swig supports octave
+	if test x"$with_octave" = "xyes"; then
+	   AC_MSG_CHECKING([if SWIG supports Octave])
+cat > conftest.i <<EOF
+%module conftest
+EOF
+	   $SWIG -c++ -octave conftest.i || AC_MSG_ERROR(SWIG doesn't support Octave modules)
+	   AC_MSG_RESULT([yes])
+	   rm -f conftest.*
+	fi
 
         # check for swig python library
         SWIG_PYTHON()
@@ -824,6 +893,7 @@ interfaces/swig/Makefile
 interfaces/swig/filtered/Makefile
 interfaces/swig/general/Makefile
 interfaces/swig/python/Makefile
+interfaces/swig/octave/Makefile
 tests/Makefile
 tests/python/Makefile
 tests/cv/Makefile
@@ -835,6 +905,7 @@ utils/Makefile
 samples/Makefile
 samples/c/Makefile
 samples/python/Makefile
+samples/octave/Makefile
 ])
 
 AC_OUTPUT
@@ -873,6 +944,7 @@ HighGUI configuration ================================================
 Wrappers for other languages =========================================
     SWIG                      ${SWIG}
     Python                    ${have_python}
+    Octave                    ${have_octave}
 
 Additional build settings ============================================
     Build demo apps           ${enable_apps}

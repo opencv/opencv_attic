@@ -35,6 +35,7 @@ Chudinovich, Boris      Intel Corp.                Ideas and algorithms on conto
 Cowperthwaite, David    Intel Corp.                3d Tracker
 
 Davies, Bob             Intel Corp.                First OpenCV installation program, communications with user group, tech. advisor
+Delacour, Xavier        ???                        Octave bindings
 Devernay, Frederic      INRIA (?)                  Multiple patches for OpenCV (cvcam, cxcore, cv, highgui).
 Don Murray              PointGrey                  PointGrey SDK and patches for stereo gesture recognition code
 Dubey, Premnath         ???                        Patch for cvcam (Windows version)

@@ -74,11 +74,19 @@
 	}
     const double __getitem__ (int index) {
         if (index >= 4) {
+#ifdef defined(SWIGPYTHON)
             PyErr_SetString (PyExc_IndexError, "indice must be lower than 4");
+#elif defined(SWIGOCTAVE)
+            error("indice must be lower than 4");
+#endif
             return 0;
         }
         if (index < -4) {
+#ifdef defined(SWIGPYTHON)
             PyErr_SetString (PyExc_IndexError, "indice must be bigger or egal to -4");
+#elif defined(SWIGOCTAVE)
+	    error("indice must be bigger or egal to -4");
+#endif
             return 0;
         }
         if (index < 0) {
@@ -89,11 +97,19 @@
     }
     void __setitem__ (int index, double value) {
         if (index >= 4) {
+#ifdef defined(SWIGPYTHON)
             PyErr_SetString (PyExc_IndexError, "indice must be lower than 4");
+#elif defined(SWIGOCTAVE)
+	    error("indice must be lower than 4");
+#endif
             return;
         }
         if (index < -4) {
+#ifdef defined(SWIGPYTHON)
             PyErr_SetString (PyExc_IndexError, "indice must be bigger or egal to -4");
+#elif defined(SWIGOCTAVE)
+	    error("indice must be bigger or egal to -4");
+#endif
             return;
         }
         if (index < 0) {

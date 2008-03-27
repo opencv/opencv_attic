@@ -53,14 +53,13 @@
  * sets the Python error.
  * We need to return 0 here instead of an PyObject to tell Python
  * that an error has occured.
- * NOTE (Olivier Bornet): not sure, but this must be language-independant...
  */
 %exception
     {
     try { $action } 
     catch (...) 
         {
-        return NULL;
+	  SWIG_fail;
         } 
     }
 
