@@ -733,7 +733,7 @@ SWIGRUNTIME bool SWIG_check_num_args(const char *func_name, int num_args, int ma
   if (num_args > max_args && !varargs)
     error("function %s takes at most %i arguments", func_name, max_args);
   else if (num_args < min_args)
-    error("function %s requires at least %i arguments", func_name, max_args);
+    error("function %s requires at least %i arguments", func_name, min_args);
   else
     return true;
   return false;
@@ -901,6 +901,7 @@ namespace {
     swig_type_info **type;
     int director;
     octave_func constructor;
+    const char *constructor_doc;
     octave_func destructor;
     const swig_octave_member *members;
     const char **base_names;
@@ -1114,6 +1115,14 @@ namespace {
 	return (long) this;
       return (long) types[0].second.ptr;
     }
+    const char* help_text() const {
+      if (!types.size())
+	return 0;
+      if (!types[0].first->clientdata)
+	return 0;
+      swig_octave_class *c = (swig_octave_class *) types[0].first->clientdata;
+      return c->constructor_doc;
+    }
 
     std::string swig_type_name() const {
       // * need some way to manually name subclasses.
@@ -1149,10 +1158,19 @@ namespace {
       for (member_map::const_iterator it = members.begin(); it != members.end(); ++it) {
 	if (it->second.first && it->second.first->method)
 	  install_builtin_function(it->second.first->method, it->first,
-				   /*it->second.first->doc?it->second.first->doc:*/std::string());
+				   it->second.first->doc?it->second.first->doc:std::string());
 	else if (it->second.second.is_defined()) {
 	  link_to_global_variable(curr_sym_tab->lookup(it->first, true));
 	  set_global_value(it->first, it->second.second);
+	  
+	  octave_swig_type *ost = Swig::swig_value_deref(it->second.second);
+	  if (ost) {
+	    const char* h = ost->help_text();
+	    if (h) {
+	      symbol_record *sr = global_sym_tab->lookup (it->first, true);
+	      sr->document(h);
+	    }
+	  }
 	}
       }
     }
@@ -3641,6 +3659,203 @@ SWIG_FromCharPtr(const char *cptr)
       return SWIG_OK;
     }
 
+const char* _wrap_CV_FOURCC_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} @var{retval} = CV_FOURCC (@var{c1}, @var{c2}, @var{c3}, @var{c4})\n\
+@var{c1} is of type char. @var{c2} is of type char. @var{c3} is of type char. @var{c4} is of type char. @var{retval} is of type int. \n\
+@end deftypefn";
+const char* _wrap_CvvImage_Bpp_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} @var{retval} = Bpp (@var{self})\n\
+@var{self} is of type CvvImage. @var{retval} is of type int. \n\
+@end deftypefn";
+const char* _wrap_CvvImage_CopyOf_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} CopyOf (@var{self}, @var{img})\n\
+@var{self} is of type CvvImage. @var{img} is of type . \n\
+@end deftypefn";
+const char* _wrap_CvvImage_Create_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} @var{retval} = Create (@var{self}, @var{width}, @var{height}, @var{bits_per_pixel})\n\
+@var{self} is of type CvvImage. @var{width} is of type int. @var{height} is of type int. @var{bits_per_pixel} is of type int. @var{retval} is of type bool. \n\
+@end deftypefn";
+const char* _wrap_CvvImage_Destroy_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} Destroy (@var{self})\n\
+@var{self} is of type CvvImage. \n\
+@end deftypefn";
+const char* _wrap_CvvImage_Fill_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} Fill (@var{self}, @var{color})\n\
+@var{self} is of type CvvImage. @var{color} is of type int. \n\
+@end deftypefn";
+const char* _wrap_CvvImage_GetImage_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} @var{retval} = GetImage (@var{self})\n\
+@var{self} is of type CvvImage. @var{retval} is of type . \n\
+@end deftypefn";
+const char* _wrap_CvvImage_Height_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} @var{retval} = Height (@var{self})\n\
+@var{self} is of type CvvImage. @var{retval} is of type int. \n\
+@end deftypefn";
+const char* _wrap_CvvImage_Load_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} @var{retval} = Load (@var{self}, @var{filename})\n\
+@var{self} is of type CvvImage. @var{filename} is of type char. @var{retval} is of type bool. \n\
+@end deftypefn";
+const char* _wrap_CvvImage_LoadRect_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} @var{retval} = LoadRect (@var{self}, @var{filename}, @var{desired_color}, @var{r})\n\
+@var{self} is of type CvvImage. @var{filename} is of type char. @var{desired_color} is of type int. @var{r} is of type CvRect. @var{retval} is of type bool. \n\
+@end deftypefn";
+const char* _wrap_CvvImage_Save_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} @var{retval} = Save (@var{self}, @var{filename})\n\
+@var{self} is of type CvvImage. @var{filename} is of type char. @var{retval} is of type bool. \n\
+@end deftypefn";
+const char* _wrap_CvvImage_Show_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} Show (@var{self}, @var{window})\n\
+@var{self} is of type CvvImage. @var{window} is of type char. \n\
+@end deftypefn";
+const char* _wrap_CvvImage_Width_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} @var{retval} = Width (@var{self})\n\
+@var{self} is of type CvvImage. @var{retval} is of type int. \n\
+@end deftypefn";
+const char* _wrap_cvConvertImage_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} cvConvertImage (@var{src}, @var{dst}, @var{flags} = 0)\n\
+@var{src} is of type CvArr. @var{dst} is of type CvArr. @var{flags} is of type int. \n\
+@end deftypefn";
+const char* _wrap_cvCreateCameraCapture_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} @var{retval} = cvCreateCameraCapture (@var{index})\n\
+@var{index} is of type int. @var{retval} is of type CvCapture. \n\
+@end deftypefn";
+const char* _wrap_cvCreateFileCapture_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} @var{retval} = cvCreateFileCapture (@var{filename})\n\
+@var{filename} is of type char. @var{retval} is of type CvCapture. \n\
+@end deftypefn";
+const char* _wrap_cvCreateTrackbar_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} @var{retval} = cvCreateTrackbar (@var{trackbar_name}, @var{window_name}, @var{value}, @var{count}, @var{on_change})\n\
+@var{trackbar_name} is of type char. @var{window_name} is of type char. @var{value} is of type int. @var{count} is of type int. @var{on_change} is of type CvTrackbarCallback. @var{retval} is of type int. \n\
+@end deftypefn";
+const char* _wrap_cvCreateVideoWriter_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} @var{retval} = cvCreateVideoWriter (@var{filename}, @var{fourcc}, @var{fps}, @var{frame_size}, @var{is_color} = 1)\n\
+@var{filename} is of type char. @var{fourcc} is of type int. @var{fps} is of type double. @var{frame_size} is of type CvSize. @var{is_color} is of type int. @var{retval} is of type CvVideoWriter. \n\
+@end deftypefn";
+const char* _wrap_cvDestroyAllWindows_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} cvDestroyAllWindows ()\n\
+\n\
+@end deftypefn";
+const char* _wrap_cvDestroyWindow_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} cvDestroyWindow (@var{name})\n\
+@var{name} is of type char. \n\
+@end deftypefn";
+const char* _wrap_cvGetCaptureProperty_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} @var{retval} = cvGetCaptureProperty (@var{capture}, @var{property_id})\n\
+@var{capture} is of type CvCapture. @var{property_id} is of type int. @var{retval} is of type double. \n\
+@end deftypefn";
+const char* _wrap_cvGetTrackbarPos_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} @var{retval} = cvGetTrackbarPos (@var{trackbar_name}, @var{window_name})\n\
+@var{trackbar_name} is of type char. @var{window_name} is of type char. @var{retval} is of type int. \n\
+@end deftypefn";
+const char* _wrap_cvGetWindowHandle_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} @var{retval} = cvGetWindowHandle (@var{name})\n\
+@var{name} is of type char. @var{retval} is of type void. \n\
+@end deftypefn";
+const char* _wrap_cvGetWindowName_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} @var{retval} = cvGetWindowName (@var{window_handle})\n\
+@var{window_handle} is of type void. @var{retval} is of type char. \n\
+@end deftypefn";
+const char* _wrap_cvGrabFrame_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} @var{retval} = cvGrabFrame (@var{capture})\n\
+@var{capture} is of type CvCapture. @var{retval} is of type int. \n\
+@end deftypefn";
+const char* _wrap_cvInitSystem_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} @var{retval} = cvInitSystem (@var{argc}, @var{argv})\n\
+@var{argc} is of type int. @var{argv} is of type char. @var{retval} is of type int. \n\
+@end deftypefn";
+const char* _wrap_cvLoadImage_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} @var{retval} = cvLoadImageMat (@var{filename})\n\
+@var{filename} is of type char. @var{retval} is of type CvMat. \n\
+@end deftypefn";
+const char* _wrap_cvLoadImageM_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} @var{retval} = cvLoadImageM (@var{filename}, @var{iscolor} = 1)\n\
+@var{filename} is of type char. @var{iscolor} is of type int. @var{retval} is of type CvMat. \n\
+@end deftypefn";
+const char* _wrap_cvMoveWindow_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} cvMoveWindow (@var{name}, @var{x}, @var{y})\n\
+@var{name} is of type char. @var{x} is of type int. @var{y} is of type int. \n\
+@end deftypefn";
+const char* _wrap_cvNamedWindow_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} @var{retval} = cvNamedWindow (@var{name}, @var{flags} = 1)\n\
+@var{name} is of type char. @var{flags} is of type int. @var{retval} is of type int. \n\
+@end deftypefn";
+const char* _wrap_cvQueryFrame_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} @var{retval} = cvQueryFrame__CvMat (@var{capture})\n\
+@var{capture} is of type CvCapture. @var{retval} is of type CvMat. \n\
+@end deftypefn";
+const char* _wrap_cvQueryFrame__Deprecated_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} @var{retval} = cvQueryFrame (@var{capture})\n\
+@var{capture} is of type CvCapture. @var{retval} is of type . \n\
+@end deftypefn";
+const char* _wrap_cvReleaseCapture_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} cvReleaseCapture (@var{capture})\n\
+@var{capture} is of type CvCapture. \n\
+@end deftypefn";
+const char* _wrap_cvReleaseVideoWriter_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} cvReleaseVideoWriter (@var{writer})\n\
+@var{writer} is of type CvVideoWriter. \n\
+@end deftypefn";
+const char* _wrap_cvResizeWindow_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} cvResizeWindow (@var{name}, @var{width}, @var{height})\n\
+@var{name} is of type char. @var{width} is of type int. @var{height} is of type int. \n\
+@end deftypefn";
+const char* _wrap_cvRetrieveFrame_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} @var{retval} = cvRetrieveFrame__CvMat (@var{capture})\n\
+@var{capture} is of type CvCapture. @var{retval} is of type CvMat. \n\
+@end deftypefn";
+const char* _wrap_cvRetrieveFrame__Deprecated_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} @var{retval} = cvRetrieveFrame (@var{capture})\n\
+@var{capture} is of type CvCapture. @var{retval} is of type . \n\
+@end deftypefn";
+const char* _wrap_cvSaveImage_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} @var{retval} = cvSaveImage (@var{filename}, @var{image})\n\
+@var{filename} is of type char. @var{image} is of type CvArr. @var{retval} is of type int. \n\
+@end deftypefn";
+const char* _wrap_cvSetCaptureProperty_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} @var{retval} = cvSetCaptureProperty (@var{capture}, @var{property_id}, @var{value})\n\
+@var{capture} is of type CvCapture. @var{property_id} is of type int. @var{value} is of type double. @var{retval} is of type int. \n\
+@end deftypefn";
+const char* _wrap_cvSetMouseCallbackOld_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} cvSetMouseCallback (@var{window_name}, @var{on_mouse}, @var{param} = nil)\n\
+@var{window_name} is of type char. @var{on_mouse} is of type CvMouseCallback. @var{param} is of type void. \n\
+@end deftypefn";
+const char* _wrap_cvSetTrackbarPos_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} cvSetTrackbarPos (@var{trackbar_name}, @var{window_name}, @var{pos})\n\
+@var{trackbar_name} is of type char. @var{window_name} is of type char. @var{pos} is of type int. \n\
+@end deftypefn";
+const char* _wrap_cvShowImage_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} cvShowImage (@var{name}, @var{image})\n\
+@var{name} is of type char. @var{image} is of type CvArr. \n\
+@end deftypefn";
+const char* _wrap_cvStartWindowThread_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} @var{retval} = cvStartWindowThread ()\n\
+@var{retval} is of type int. \n\
+@end deftypefn";
+const char* _wrap_cvWaitKeyC_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} @var{retval} = cvWaitKey (@var{delay} = 0)\n\
+@var{delay} is of type int. @var{retval} is of type int. \n\
+@end deftypefn";
+const char* _wrap_cvWriteFrame_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} @var{retval} = cvWriteFrame (@var{writer}, @var{image})\n\
+@var{writer} is of type CvVideoWriter. @var{image} is of type . @var{retval} is of type int. \n\
+@end deftypefn";
+const char* _wrap_delete_CvRNG_Wrapper_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} CvRNG_Wrapper::~CvRNG_Wrapper (@var{self})\n\
+@var{self} is of type CvRNG_Wrapper. \n\
+@end deftypefn";
+const char* _wrap_delete_CvSubdiv2DEdge_Wrapper_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} CvSubdiv2DEdge_Wrapper::~CvSubdiv2DEdge_Wrapper (@var{self})\n\
+@var{self} is of type CvSubdiv2DEdge_Wrapper. \n\
+@end deftypefn";
+const char* _wrap_delete_CvvImage_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} CvvImage (@var{self})\n\
+@var{self} is of type CvvImage. \n\
+@end deftypefn";
+const char* _wrap_new_CvvImage_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} @var{retval} = CvvImage ()\n\
+@var{retval} is of type CvvImage. \n\
+@end deftypefn";
+
 static octave_value_list _wrap_new_CvRNG_Wrapper (const octave_value_list& args, int nargout) {
   CvRNG *arg1 = 0 ;
   CvRNG_Wrapper *result = 0 ;
@@ -3834,7 +4049,7 @@ static swig_octave_member swig_CvRNG_Wrapper_members[] = {
 };
 static const char *swig_CvRNG_Wrapper_base_names[] = {0};
 static const swig_type_info *swig_CvRNG_Wrapper_base[] = {0};
-static swig_octave_class _wrap_class_CvRNG_Wrapper = {"CvRNG_Wrapper", &SWIGTYPE_p_CvRNG_Wrapper,0,_wrap_new_CvRNG_Wrapper,_wrap_delete_CvRNG_Wrapper,swig_CvRNG_Wrapper_members,swig_CvRNG_Wrapper_base_names,swig_CvRNG_Wrapper_base };
+static swig_octave_class _wrap_class_CvRNG_Wrapper = {"CvRNG_Wrapper", &SWIGTYPE_p_CvRNG_Wrapper,0,_wrap_new_CvRNG_Wrapper,0,_wrap_delete_CvRNG_Wrapper,swig_CvRNG_Wrapper_members,swig_CvRNG_Wrapper_base_names,swig_CvRNG_Wrapper_base };
 
 static octave_value_list _wrap_new_CvSubdiv2DEdge_Wrapper (const octave_value_list& args, int nargout) {
   CvSubdiv2DEdge *arg1 = 0 ;
@@ -4029,7 +4244,7 @@ static swig_octave_member swig_CvSubdiv2DEdge_Wrapper_members[] = {
 };
 static const char *swig_CvSubdiv2DEdge_Wrapper_base_names[] = {0};
 static const swig_type_info *swig_CvSubdiv2DEdge_Wrapper_base[] = {0};
-static swig_octave_class _wrap_class_CvSubdiv2DEdge_Wrapper = {"CvSubdiv2DEdge_Wrapper", &SWIGTYPE_p_CvSubdiv2DEdge_Wrapper,0,_wrap_new_CvSubdiv2DEdge_Wrapper,_wrap_delete_CvSubdiv2DEdge_Wrapper,swig_CvSubdiv2DEdge_Wrapper_members,swig_CvSubdiv2DEdge_Wrapper_base_names,swig_CvSubdiv2DEdge_Wrapper_base };
+static swig_octave_class _wrap_class_CvSubdiv2DEdge_Wrapper = {"CvSubdiv2DEdge_Wrapper", &SWIGTYPE_p_CvSubdiv2DEdge_Wrapper,0,_wrap_new_CvSubdiv2DEdge_Wrapper,0,_wrap_delete_CvSubdiv2DEdge_Wrapper,swig_CvSubdiv2DEdge_Wrapper_members,swig_CvSubdiv2DEdge_Wrapper_base_names,swig_CvSubdiv2DEdge_Wrapper_base };
 
 static octave_value_list _wrap_cvSetMouseCallback__SWIG_0 (const octave_value_list& args, int nargout) {
   char *arg1 = (char *) 0 ;
@@ -6855,7 +7070,7 @@ static swig_octave_member swig_CvvImage_members[] = {
 };
 static const char *swig_CvvImage_base_names[] = {0};
 static const swig_type_info *swig_CvvImage_base[] = {0};
-static swig_octave_class _wrap_class_CvvImage = {"CvvImage", &SWIGTYPE_p_CvvImage,0,_wrap_new_CvvImage,_wrap_delete_CvvImage,swig_CvvImage_members,swig_CvvImage_base_names,swig_CvvImage_base };
+static swig_octave_class _wrap_class_CvvImage = {"CvvImage", &SWIGTYPE_p_CvvImage,0,_wrap_new_CvvImage,0,_wrap_delete_CvvImage,swig_CvvImage_members,swig_CvvImage_base_names,swig_CvvImage_base };
 
 
 static const struct swig_octave_member swig_globals[] = {
@@ -6864,62 +7079,62 @@ static const struct swig_octave_member swig_globals[] = {
 {"CvRNG_Wrapper_ref",_wrap_CvRNG_Wrapper_ref,0,0,2,0},
 {"CvRNG_Wrapper___eq",_wrap_CvRNG_Wrapper___eq,0,0,2,0},
 {"CvRNG_Wrapper___ne",_wrap_CvRNG_Wrapper___ne,0,0,2,0},
-{"delete_CvRNG_Wrapper",_wrap_delete_CvRNG_Wrapper,0,0,2,0},
+{"delete_CvRNG_Wrapper",_wrap_delete_CvRNG_Wrapper,0,0,2,_wrap_delete_CvRNG_Wrapper_texinfo},
 {"new_CvSubdiv2DEdge_Wrapper",_wrap_new_CvSubdiv2DEdge_Wrapper,0,0,2,0},
 {"CvSubdiv2DEdge_Wrapper_ptr",_wrap_CvSubdiv2DEdge_Wrapper_ptr,0,0,2,0},
 {"CvSubdiv2DEdge_Wrapper_ref",_wrap_CvSubdiv2DEdge_Wrapper_ref,0,0,2,0},
 {"CvSubdiv2DEdge_Wrapper___eq",_wrap_CvSubdiv2DEdge_Wrapper___eq,0,0,2,0},
 {"CvSubdiv2DEdge_Wrapper___ne",_wrap_CvSubdiv2DEdge_Wrapper___ne,0,0,2,0},
-{"delete_CvSubdiv2DEdge_Wrapper",_wrap_delete_CvSubdiv2DEdge_Wrapper,0,0,2,0},
+{"delete_CvSubdiv2DEdge_Wrapper",_wrap_delete_CvSubdiv2DEdge_Wrapper,0,0,2,_wrap_delete_CvSubdiv2DEdge_Wrapper_texinfo},
 {"cvSetMouseCallback",_wrap_cvSetMouseCallback,0,0,2,0},
 {"cvWaitKey",_wrap_cvWaitKey,0,0,2,0},
-{"cvLoadImage",_wrap_cvLoadImage,0,0,2,0},
-{"cvRetrieveFrame",_wrap_cvRetrieveFrame,0,0,2,0},
-{"cvQueryFrame",_wrap_cvQueryFrame,0,0,2,0},
-{"CV_FOURCC",_wrap_CV_FOURCC,0,0,2,0},
-{"cvInitSystem",_wrap_cvInitSystem,0,0,2,0},
-{"cvStartWindowThread",_wrap_cvStartWindowThread,0,0,2,0},
-{"cvNamedWindow",_wrap_cvNamedWindow,0,0,2,0},
-{"cvShowImage",_wrap_cvShowImage,0,0,2,0},
-{"cvResizeWindow",_wrap_cvResizeWindow,0,0,2,0},
-{"cvMoveWindow",_wrap_cvMoveWindow,0,0,2,0},
-{"cvDestroyWindow",_wrap_cvDestroyWindow,0,0,2,0},
-{"cvDestroyAllWindows",_wrap_cvDestroyAllWindows,0,0,2,0},
-{"cvGetWindowHandle",_wrap_cvGetWindowHandle,0,0,2,0},
-{"cvGetWindowName",_wrap_cvGetWindowName,0,0,2,0},
-{"cvCreateTrackbar",_wrap_cvCreateTrackbar,0,0,2,0},
-{"cvGetTrackbarPos",_wrap_cvGetTrackbarPos,0,0,2,0},
-{"cvSetTrackbarPos",_wrap_cvSetTrackbarPos,0,0,2,0},
-{"cvSetMouseCallbackOld",_wrap_cvSetMouseCallbackOld,0,0,2,0},
-{"cvLoadImageM",_wrap_cvLoadImageM,0,0,2,0},
-{"cvSaveImage",_wrap_cvSaveImage,0,0,2,0},
-{"cvConvertImage",_wrap_cvConvertImage,0,0,2,0},
-{"cvWaitKeyC",_wrap_cvWaitKeyC,0,0,2,0},
-{"cvCreateFileCapture",_wrap_cvCreateFileCapture,0,0,2,0},
-{"cvCreateCameraCapture",_wrap_cvCreateCameraCapture,0,0,2,0},
-{"cvGrabFrame",_wrap_cvGrabFrame,0,0,2,0},
-{"cvRetrieveFrame__Deprecated",_wrap_cvRetrieveFrame__Deprecated,0,0,2,0},
-{"cvQueryFrame__Deprecated",_wrap_cvQueryFrame__Deprecated,0,0,2,0},
-{"cvReleaseCapture",_wrap_cvReleaseCapture,0,0,2,0},
-{"cvGetCaptureProperty",_wrap_cvGetCaptureProperty,0,0,2,0},
-{"cvSetCaptureProperty",_wrap_cvSetCaptureProperty,0,0,2,0},
-{"cvCreateVideoWriter",_wrap_cvCreateVideoWriter,0,0,2,0},
-{"cvWriteFrame",_wrap_cvWriteFrame,0,0,2,0},
-{"cvReleaseVideoWriter",_wrap_cvReleaseVideoWriter,0,0,2,0},
-{"new_CvvImage",_wrap_new_CvvImage,0,0,2,0},
-{"delete_CvvImage",_wrap_delete_CvvImage,0,0,2,0},
-{"CvvImage_Create",_wrap_CvvImage_Create,0,0,2,0},
-{"CvvImage_Load",_wrap_CvvImage_Load,0,0,2,0},
-{"CvvImage_LoadRect",_wrap_CvvImage_LoadRect,0,0,2,0},
-{"CvvImage_Save",_wrap_CvvImage_Save,0,0,2,0},
-{"CvvImage_CopyOf",_wrap_CvvImage_CopyOf,0,0,2,0},
-{"CvvImage_GetImage",_wrap_CvvImage_GetImage,0,0,2,0},
-{"CvvImage_Destroy",_wrap_CvvImage_Destroy,0,0,2,0},
-{"CvvImage_Width",_wrap_CvvImage_Width,0,0,2,0},
-{"CvvImage_Height",_wrap_CvvImage_Height,0,0,2,0},
-{"CvvImage_Bpp",_wrap_CvvImage_Bpp,0,0,2,0},
-{"CvvImage_Fill",_wrap_CvvImage_Fill,0,0,2,0},
-{"CvvImage_Show",_wrap_CvvImage_Show,0,0,2,0},
+{"cvLoadImage",_wrap_cvLoadImage,0,0,2,_wrap_cvLoadImage_texinfo},
+{"cvRetrieveFrame",_wrap_cvRetrieveFrame,0,0,2,_wrap_cvRetrieveFrame_texinfo},
+{"cvQueryFrame",_wrap_cvQueryFrame,0,0,2,_wrap_cvQueryFrame_texinfo},
+{"CV_FOURCC",_wrap_CV_FOURCC,0,0,2,_wrap_CV_FOURCC_texinfo},
+{"cvInitSystem",_wrap_cvInitSystem,0,0,2,_wrap_cvInitSystem_texinfo},
+{"cvStartWindowThread",_wrap_cvStartWindowThread,0,0,2,_wrap_cvStartWindowThread_texinfo},
+{"cvNamedWindow",_wrap_cvNamedWindow,0,0,2,_wrap_cvNamedWindow_texinfo},
+{"cvShowImage",_wrap_cvShowImage,0,0,2,_wrap_cvShowImage_texinfo},
+{"cvResizeWindow",_wrap_cvResizeWindow,0,0,2,_wrap_cvResizeWindow_texinfo},
+{"cvMoveWindow",_wrap_cvMoveWindow,0,0,2,_wrap_cvMoveWindow_texinfo},
+{"cvDestroyWindow",_wrap_cvDestroyWindow,0,0,2,_wrap_cvDestroyWindow_texinfo},
+{"cvDestroyAllWindows",_wrap_cvDestroyAllWindows,0,0,2,_wrap_cvDestroyAllWindows_texinfo},
+{"cvGetWindowHandle",_wrap_cvGetWindowHandle,0,0,2,_wrap_cvGetWindowHandle_texinfo},
+{"cvGetWindowName",_wrap_cvGetWindowName,0,0,2,_wrap_cvGetWindowName_texinfo},
+{"cvCreateTrackbar",_wrap_cvCreateTrackbar,0,0,2,_wrap_cvCreateTrackbar_texinfo},
+{"cvGetTrackbarPos",_wrap_cvGetTrackbarPos,0,0,2,_wrap_cvGetTrackbarPos_texinfo},
+{"cvSetTrackbarPos",_wrap_cvSetTrackbarPos,0,0,2,_wrap_cvSetTrackbarPos_texinfo},
+{"cvSetMouseCallbackOld",_wrap_cvSetMouseCallbackOld,0,0,2,_wrap_cvSetMouseCallbackOld_texinfo},
+{"cvLoadImageM",_wrap_cvLoadImageM,0,0,2,_wrap_cvLoadImageM_texinfo},
+{"cvSaveImage",_wrap_cvSaveImage,0,0,2,_wrap_cvSaveImage_texinfo},
+{"cvConvertImage",_wrap_cvConvertImage,0,0,2,_wrap_cvConvertImage_texinfo},
+{"cvWaitKeyC",_wrap_cvWaitKeyC,0,0,2,_wrap_cvWaitKeyC_texinfo},
+{"cvCreateFileCapture",_wrap_cvCreateFileCapture,0,0,2,_wrap_cvCreateFileCapture_texinfo},
+{"cvCreateCameraCapture",_wrap_cvCreateCameraCapture,0,0,2,_wrap_cvCreateCameraCapture_texinfo},
+{"cvGrabFrame",_wrap_cvGrabFrame,0,0,2,_wrap_cvGrabFrame_texinfo},
+{"cvRetrieveFrame__Deprecated",_wrap_cvRetrieveFrame__Deprecated,0,0,2,_wrap_cvRetrieveFrame__Deprecated_texinfo},
+{"cvQueryFrame__Deprecated",_wrap_cvQueryFrame__Deprecated,0,0,2,_wrap_cvQueryFrame__Deprecated_texinfo},
+{"cvReleaseCapture",_wrap_cvReleaseCapture,0,0,2,_wrap_cvReleaseCapture_texinfo},
+{"cvGetCaptureProperty",_wrap_cvGetCaptureProperty,0,0,2,_wrap_cvGetCaptureProperty_texinfo},
+{"cvSetCaptureProperty",_wrap_cvSetCaptureProperty,0,0,2,_wrap_cvSetCaptureProperty_texinfo},
+{"cvCreateVideoWriter",_wrap_cvCreateVideoWriter,0,0,2,_wrap_cvCreateVideoWriter_texinfo},
+{"cvWriteFrame",_wrap_cvWriteFrame,0,0,2,_wrap_cvWriteFrame_texinfo},
+{"cvReleaseVideoWriter",_wrap_cvReleaseVideoWriter,0,0,2,_wrap_cvReleaseVideoWriter_texinfo},
+{"new_CvvImage",_wrap_new_CvvImage,0,0,2,_wrap_new_CvvImage_texinfo},
+{"delete_CvvImage",_wrap_delete_CvvImage,0,0,2,_wrap_delete_CvvImage_texinfo},
+{"CvvImage_Create",_wrap_CvvImage_Create,0,0,2,_wrap_CvvImage_Create_texinfo},
+{"CvvImage_Load",_wrap_CvvImage_Load,0,0,2,_wrap_CvvImage_Load_texinfo},
+{"CvvImage_LoadRect",_wrap_CvvImage_LoadRect,0,0,2,_wrap_CvvImage_LoadRect_texinfo},
+{"CvvImage_Save",_wrap_CvvImage_Save,0,0,2,_wrap_CvvImage_Save_texinfo},
+{"CvvImage_CopyOf",_wrap_CvvImage_CopyOf,0,0,2,_wrap_CvvImage_CopyOf_texinfo},
+{"CvvImage_GetImage",_wrap_CvvImage_GetImage,0,0,2,_wrap_CvvImage_GetImage_texinfo},
+{"CvvImage_Destroy",_wrap_CvvImage_Destroy,0,0,2,_wrap_CvvImage_Destroy_texinfo},
+{"CvvImage_Width",_wrap_CvvImage_Width,0,0,2,_wrap_CvvImage_Width_texinfo},
+{"CvvImage_Height",_wrap_CvvImage_Height,0,0,2,_wrap_CvvImage_Height_texinfo},
+{"CvvImage_Bpp",_wrap_CvvImage_Bpp,0,0,2,_wrap_CvvImage_Bpp_texinfo},
+{"CvvImage_Fill",_wrap_CvvImage_Fill,0,0,2,_wrap_CvvImage_Fill_texinfo},
+{"CvvImage_Show",_wrap_CvvImage_Show,0,0,2,_wrap_CvvImage_Show_texinfo},
 {0,0,0,0,0}
 };
 

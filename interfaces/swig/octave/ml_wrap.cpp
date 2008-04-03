@@ -733,7 +733,7 @@ SWIGRUNTIME bool SWIG_check_num_args(const char *func_name, int num_args, int ma
   if (num_args > max_args && !varargs)
     error("function %s takes at most %i arguments", func_name, max_args);
   else if (num_args < min_args)
-    error("function %s requires at least %i arguments", func_name, max_args);
+    error("function %s requires at least %i arguments", func_name, min_args);
   else
     return true;
   return false;
@@ -901,6 +901,7 @@ namespace {
     swig_type_info **type;
     int director;
     octave_func constructor;
+    const char *constructor_doc;
     octave_func destructor;
     const swig_octave_member *members;
     const char **base_names;
@@ -1114,6 +1115,14 @@ namespace {
 	return (long) this;
       return (long) types[0].second.ptr;
     }
+    const char* help_text() const {
+      if (!types.size())
+	return 0;
+      if (!types[0].first->clientdata)
+	return 0;
+      swig_octave_class *c = (swig_octave_class *) types[0].first->clientdata;
+      return c->constructor_doc;
+    }
 
     std::string swig_type_name() const {
       // * need some way to manually name subclasses.
@@ -1149,10 +1158,19 @@ namespace {
       for (member_map::const_iterator it = members.begin(); it != members.end(); ++it) {
 	if (it->second.first && it->second.first->method)
 	  install_builtin_function(it->second.first->method, it->first,
-				   /*it->second.first->doc?it->second.first->doc:*/std::string());
+				   it->second.first->doc?it->second.first->doc:std::string());
 	else if (it->second.second.is_defined()) {
 	  link_to_global_variable(curr_sym_tab->lookup(it->first, true));
 	  set_global_value(it->first, it->second.second);
+	  
+	  octave_swig_type *ost = Swig::swig_value_deref(it->second.second);
+	  if (ost) {
+	    const char* h = ost->help_text();
+	    if (h) {
+	      symbol_record *sr = global_sym_tab->lookup (it->first, true);
+	      sr->document(h);
+	    }
+	  }
 	}
       }
     }
@@ -2646,6 +2664,7 @@ SWIG_AsVal_float (octave_value obj, float *val)
   return res;
 }
 
+
 static octave_value_list _wrap_new_CvRNG_Wrapper (const octave_value_list& args, int nargout) {
   CvRNG *arg1 = 0 ;
   CvRNG_Wrapper *result = 0 ;
@@ -2839,7 +2858,7 @@ static swig_octave_member swig_CvRNG_Wrapper_members[] = {
 };
 static const char *swig_CvRNG_Wrapper_base_names[] = {0};
 static const swig_type_info *swig_CvRNG_Wrapper_base[] = {0};
-static swig_octave_class _wrap_class_CvRNG_Wrapper = {"CvRNG_Wrapper", &SWIGTYPE_p_CvRNG_Wrapper,0,_wrap_new_CvRNG_Wrapper,_wrap_delete_CvRNG_Wrapper,swig_CvRNG_Wrapper_members,swig_CvRNG_Wrapper_base_names,swig_CvRNG_Wrapper_base };
+static swig_octave_class _wrap_class_CvRNG_Wrapper = {"CvRNG_Wrapper", &SWIGTYPE_p_CvRNG_Wrapper,0,_wrap_new_CvRNG_Wrapper,0,_wrap_delete_CvRNG_Wrapper,swig_CvRNG_Wrapper_members,swig_CvRNG_Wrapper_base_names,swig_CvRNG_Wrapper_base };
 
 static octave_value_list _wrap_new_CvSubdiv2DEdge_Wrapper (const octave_value_list& args, int nargout) {
   CvSubdiv2DEdge *arg1 = 0 ;
@@ -3034,7 +3053,7 @@ static swig_octave_member swig_CvSubdiv2DEdge_Wrapper_members[] = {
 };
 static const char *swig_CvSubdiv2DEdge_Wrapper_base_names[] = {0};
 static const swig_type_info *swig_CvSubdiv2DEdge_Wrapper_base[] = {0};
-static swig_octave_class _wrap_class_CvSubdiv2DEdge_Wrapper = {"CvSubdiv2DEdge_Wrapper", &SWIGTYPE_p_CvSubdiv2DEdge_Wrapper,0,_wrap_new_CvSubdiv2DEdge_Wrapper,_wrap_delete_CvSubdiv2DEdge_Wrapper,swig_CvSubdiv2DEdge_Wrapper_members,swig_CvSubdiv2DEdge_Wrapper_base_names,swig_CvSubdiv2DEdge_Wrapper_base };
+static swig_octave_class _wrap_class_CvSubdiv2DEdge_Wrapper = {"CvSubdiv2DEdge_Wrapper", &SWIGTYPE_p_CvSubdiv2DEdge_Wrapper,0,_wrap_new_CvSubdiv2DEdge_Wrapper,0,_wrap_delete_CvSubdiv2DEdge_Wrapper,swig_CvSubdiv2DEdge_Wrapper_members,swig_CvSubdiv2DEdge_Wrapper_base_names,swig_CvSubdiv2DEdge_Wrapper_base };
 
 static octave_value_list _wrap_CvVectors_type_set (const octave_value_list& args, int nargout) {
   CvVectors *arg1 = (CvVectors *) 0 ;
@@ -3360,7 +3379,7 @@ static swig_octave_member swig_CvVectors_members[] = {
 };
 static const char *swig_CvVectors_base_names[] = {0};
 static const swig_type_info *swig_CvVectors_base[] = {0};
-static swig_octave_class _wrap_class_CvVectors = {"CvVectors", &SWIGTYPE_p_CvVectors,0,_wrap_new_CvVectors,_wrap_delete_CvVectors,swig_CvVectors_members,swig_CvVectors_base_names,swig_CvVectors_base };
+static swig_octave_class _wrap_class_CvVectors = {"CvVectors", &SWIGTYPE_p_CvVectors,0,_wrap_new_CvVectors,0,_wrap_delete_CvVectors,swig_CvVectors_members,swig_CvVectors_base_names,swig_CvVectors_base };
 
 static octave_value_list _wrap_CvVectors_data_ptr_set (const octave_value_list& args, int nargout) {
   CvVectors_data *arg1 = (CvVectors_data *) 0 ;
@@ -3603,7 +3622,7 @@ static swig_octave_member swig_CvVectors_data_members[] = {
 };
 static const char *swig_CvVectors_data_base_names[] = {0};
 static const swig_type_info *swig_CvVectors_data_base[] = {0};
-static swig_octave_class _wrap_class_CvVectors_data = {"CvVectors_data", &SWIGTYPE_p_CvVectors_data,0,_wrap_new_CvVectors_data,_wrap_delete_CvVectors_data,swig_CvVectors_data_members,swig_CvVectors_data_base_names,swig_CvVectors_data_base };
+static swig_octave_class _wrap_class_CvVectors_data = {"CvVectors_data", &SWIGTYPE_p_CvVectors_data,0,_wrap_new_CvVectors_data,0,_wrap_delete_CvVectors_data,swig_CvVectors_data_members,swig_CvVectors_data_base_names,swig_CvVectors_data_base };
 
 static octave_value_list _wrap_new_CvStatModel (const octave_value_list& args, int nargout) {
   CvStatModel *result = 0 ;
@@ -4074,7 +4093,7 @@ static swig_octave_member swig_CvStatModel_members[] = {
 };
 static const char *swig_CvStatModel_base_names[] = {0};
 static const swig_type_info *swig_CvStatModel_base[] = {0};
-static swig_octave_class _wrap_class_CvStatModel = {"CvStatModel", &SWIGTYPE_p_CvStatModel,0,_wrap_new_CvStatModel,_wrap_delete_CvStatModel,swig_CvStatModel_members,swig_CvStatModel_base_names,swig_CvStatModel_base };
+static swig_octave_class _wrap_class_CvStatModel = {"CvStatModel", &SWIGTYPE_p_CvStatModel,0,_wrap_new_CvStatModel,0,_wrap_delete_CvStatModel,swig_CvStatModel_members,swig_CvStatModel_base_names,swig_CvStatModel_base };
 
 static octave_value_list _wrap_new_CvParamGrid__SWIG_0 (const octave_value_list& args, int nargout) {
   CvParamGrid *result = 0 ;
@@ -4435,7 +4454,7 @@ static swig_octave_member swig_CvParamGrid_members[] = {
 };
 static const char *swig_CvParamGrid_base_names[] = {0};
 static const swig_type_info *swig_CvParamGrid_base[] = {0};
-static swig_octave_class _wrap_class_CvParamGrid = {"CvParamGrid", &SWIGTYPE_p_CvParamGrid,0,_wrap_new_CvParamGrid,_wrap_delete_CvParamGrid,swig_CvParamGrid_members,swig_CvParamGrid_base_names,swig_CvParamGrid_base };
+static swig_octave_class _wrap_class_CvParamGrid = {"CvParamGrid", &SWIGTYPE_p_CvParamGrid,0,_wrap_new_CvParamGrid,0,_wrap_delete_CvParamGrid,swig_CvParamGrid_members,swig_CvParamGrid_base_names,swig_CvParamGrid_base };
 
 static octave_value_list _wrap_new_CvNormalBayesClassifier__SWIG_0 (const octave_value_list& args, int nargout) {
   CvNormalBayesClassifier *result = 0 ;
@@ -5351,7 +5370,7 @@ static swig_octave_member swig_CvNormalBayesClassifier_members[] = {
 };
 static const char *swig_CvNormalBayesClassifier_base_names[] = {"_p_CvStatModel",0};
 static const swig_type_info *swig_CvNormalBayesClassifier_base[] = {0,0};
-static swig_octave_class _wrap_class_CvNormalBayesClassifier = {"CvNormalBayesClassifier", &SWIGTYPE_p_CvNormalBayesClassifier,0,_wrap_new_CvNormalBayesClassifier,_wrap_delete_CvNormalBayesClassifier,swig_CvNormalBayesClassifier_members,swig_CvNormalBayesClassifier_base_names,swig_CvNormalBayesClassifier_base };
+static swig_octave_class _wrap_class_CvNormalBayesClassifier = {"CvNormalBayesClassifier", &SWIGTYPE_p_CvNormalBayesClassifier,0,_wrap_new_CvNormalBayesClassifier,0,_wrap_delete_CvNormalBayesClassifier,swig_CvNormalBayesClassifier_members,swig_CvNormalBayesClassifier_base_names,swig_CvNormalBayesClassifier_base };
 
 static octave_value_list _wrap_new_CvKNearest__SWIG_0 (const octave_value_list& args, int nargout) {
   CvKNearest *result = 0 ;
@@ -6883,7 +6902,7 @@ static swig_octave_member swig_CvKNearest_members[] = {
 };
 static const char *swig_CvKNearest_base_names[] = {"_p_CvStatModel",0};
 static const swig_type_info *swig_CvKNearest_base[] = {0,0};
-static swig_octave_class _wrap_class_CvKNearest = {"CvKNearest", &SWIGTYPE_p_CvKNearest,0,_wrap_new_CvKNearest,_wrap_delete_CvKNearest,swig_CvKNearest_members,swig_CvKNearest_base_names,swig_CvKNearest_base };
+static swig_octave_class _wrap_class_CvKNearest = {"CvKNearest", &SWIGTYPE_p_CvKNearest,0,_wrap_new_CvKNearest,0,_wrap_delete_CvKNearest,swig_CvKNearest_members,swig_CvKNearest_base_names,swig_CvKNearest_base };
 
 static octave_value_list _wrap_new_CvSVMParams__SWIG_0 (const octave_value_list& args, int nargout) {
   CvSVMParams *result = 0 ;
@@ -7725,7 +7744,7 @@ static swig_octave_member swig_CvSVMParams_members[] = {
 };
 static const char *swig_CvSVMParams_base_names[] = {0};
 static const swig_type_info *swig_CvSVMParams_base[] = {0};
-static swig_octave_class _wrap_class_CvSVMParams = {"CvSVMParams", &SWIGTYPE_p_CvSVMParams,0,_wrap_new_CvSVMParams,_wrap_delete_CvSVMParams,swig_CvSVMParams_members,swig_CvSVMParams_base_names,swig_CvSVMParams_base };
+static swig_octave_class _wrap_class_CvSVMParams = {"CvSVMParams", &SWIGTYPE_p_CvSVMParams,0,_wrap_new_CvSVMParams,0,_wrap_delete_CvSVMParams,swig_CvSVMParams_members,swig_CvSVMParams_base_names,swig_CvSVMParams_base };
 
 static octave_value_list _wrap_new_CvSVMKernel__SWIG_0 (const octave_value_list& args, int nargout) {
   CvSVMKernel *result = 0 ;
@@ -8523,7 +8542,7 @@ static swig_octave_member swig_CvSVMKernel_members[] = {
 };
 static const char *swig_CvSVMKernel_base_names[] = {0};
 static const swig_type_info *swig_CvSVMKernel_base[] = {0};
-static swig_octave_class _wrap_class_CvSVMKernel = {"CvSVMKernel", &SWIGTYPE_p_CvSVMKernel,0,_wrap_new_CvSVMKernel,_wrap_delete_CvSVMKernel,swig_CvSVMKernel_members,swig_CvSVMKernel_base_names,swig_CvSVMKernel_base };
+static swig_octave_class _wrap_class_CvSVMKernel = {"CvSVMKernel", &SWIGTYPE_p_CvSVMKernel,0,_wrap_new_CvSVMKernel,0,_wrap_delete_CvSVMKernel,swig_CvSVMKernel_members,swig_CvSVMKernel_base_names,swig_CvSVMKernel_base };
 
 static octave_value_list _wrap_CvSVMKernelRow_prev_set (const octave_value_list& args, int nargout) {
   CvSVMKernelRow *arg1 = (CvSVMKernelRow *) 0 ;
@@ -8764,7 +8783,7 @@ static swig_octave_member swig_CvSVMKernelRow_members[] = {
 };
 static const char *swig_CvSVMKernelRow_base_names[] = {0};
 static const swig_type_info *swig_CvSVMKernelRow_base[] = {0};
-static swig_octave_class _wrap_class_CvSVMKernelRow = {"CvSVMKernelRow", &SWIGTYPE_p_CvSVMKernelRow,0,_wrap_new_CvSVMKernelRow,_wrap_delete_CvSVMKernelRow,swig_CvSVMKernelRow_members,swig_CvSVMKernelRow_base_names,swig_CvSVMKernelRow_base };
+static swig_octave_class _wrap_class_CvSVMKernelRow = {"CvSVMKernelRow", &SWIGTYPE_p_CvSVMKernelRow,0,_wrap_new_CvSVMKernelRow,0,_wrap_delete_CvSVMKernelRow,swig_CvSVMKernelRow_members,swig_CvSVMKernelRow_base_names,swig_CvSVMKernelRow_base };
 
 static octave_value_list _wrap_CvSVMSolutionInfo_obj_set (const octave_value_list& args, int nargout) {
   CvSVMSolutionInfo *arg1 = (CvSVMSolutionInfo *) 0 ;
@@ -9123,7 +9142,7 @@ static swig_octave_member swig_CvSVMSolutionInfo_members[] = {
 };
 static const char *swig_CvSVMSolutionInfo_base_names[] = {0};
 static const swig_type_info *swig_CvSVMSolutionInfo_base[] = {0};
-static swig_octave_class _wrap_class_CvSVMSolutionInfo = {"CvSVMSolutionInfo", &SWIGTYPE_p_CvSVMSolutionInfo,0,_wrap_new_CvSVMSolutionInfo,_wrap_delete_CvSVMSolutionInfo,swig_CvSVMSolutionInfo_members,swig_CvSVMSolutionInfo_base_names,swig_CvSVMSolutionInfo_base };
+static swig_octave_class _wrap_class_CvSVMSolutionInfo = {"CvSVMSolutionInfo", &SWIGTYPE_p_CvSVMSolutionInfo,0,_wrap_new_CvSVMSolutionInfo,0,_wrap_delete_CvSVMSolutionInfo,swig_CvSVMSolutionInfo_members,swig_CvSVMSolutionInfo_base_names,swig_CvSVMSolutionInfo_base };
 
 static octave_value_list _wrap_new_CvSVMSolver__SWIG_0 (const octave_value_list& args, int nargout) {
   CvSVMSolver *result = 0 ;
@@ -12051,7 +12070,7 @@ static swig_octave_member swig_CvSVMSolver_members[] = {
 };
 static const char *swig_CvSVMSolver_base_names[] = {0};
 static const swig_type_info *swig_CvSVMSolver_base[] = {0};
-static swig_octave_class _wrap_class_CvSVMSolver = {"CvSVMSolver", &SWIGTYPE_p_CvSVMSolver,0,_wrap_new_CvSVMSolver,_wrap_delete_CvSVMSolver,swig_CvSVMSolver_members,swig_CvSVMSolver_base_names,swig_CvSVMSolver_base };
+static swig_octave_class _wrap_class_CvSVMSolver = {"CvSVMSolver", &SWIGTYPE_p_CvSVMSolver,0,_wrap_new_CvSVMSolver,0,_wrap_delete_CvSVMSolver,swig_CvSVMSolver_members,swig_CvSVMSolver_base_names,swig_CvSVMSolver_base };
 
 static octave_value_list _wrap_CvSVMDecisionFunc_rho_set (const octave_value_list& args, int nargout) {
   CvSVMDecisionFunc *arg1 = (CvSVMDecisionFunc *) 0 ;
@@ -12351,7 +12370,7 @@ static swig_octave_member swig_CvSVMDecisionFunc_members[] = {
 };
 static const char *swig_CvSVMDecisionFunc_base_names[] = {0};
 static const swig_type_info *swig_CvSVMDecisionFunc_base[] = {0};
-static swig_octave_class _wrap_class_CvSVMDecisionFunc = {"CvSVMDecisionFunc", &SWIGTYPE_p_CvSVMDecisionFunc,0,_wrap_new_CvSVMDecisionFunc,_wrap_delete_CvSVMDecisionFunc,swig_CvSVMDecisionFunc_members,swig_CvSVMDecisionFunc_base_names,swig_CvSVMDecisionFunc_base };
+static swig_octave_class _wrap_class_CvSVMDecisionFunc = {"CvSVMDecisionFunc", &SWIGTYPE_p_CvSVMDecisionFunc,0,_wrap_new_CvSVMDecisionFunc,0,_wrap_delete_CvSVMDecisionFunc,swig_CvSVMDecisionFunc_members,swig_CvSVMDecisionFunc_base_names,swig_CvSVMDecisionFunc_base };
 
 static octave_value_list _wrap_new_CvSVM__SWIG_0 (const octave_value_list& args, int nargout) {
   CvSVM *result = 0 ;
@@ -14870,7 +14889,7 @@ static swig_octave_member swig_CvSVM_members[] = {
 };
 static const char *swig_CvSVM_base_names[] = {"_p_CvStatModel",0};
 static const swig_type_info *swig_CvSVM_base[] = {0,0};
-static swig_octave_class _wrap_class_CvSVM = {"CvSVM", &SWIGTYPE_p_CvSVM,0,_wrap_new_CvSVM,_wrap_delete_CvSVM,swig_CvSVM_members,swig_CvSVM_base_names,swig_CvSVM_base };
+static swig_octave_class _wrap_class_CvSVM = {"CvSVM", &SWIGTYPE_p_CvSVM,0,_wrap_new_CvSVM,0,_wrap_delete_CvSVM,swig_CvSVM_members,swig_CvSVM_base_names,swig_CvSVM_base };
 
 static octave_value_list _wrap_new_CvEMParams__SWIG_0 (const octave_value_list& args, int nargout) {
   CvEMParams *result = 0 ;
@@ -16172,7 +16191,7 @@ static swig_octave_member swig_CvEMParams_members[] = {
 };
 static const char *swig_CvEMParams_base_names[] = {0};
 static const swig_type_info *swig_CvEMParams_base[] = {0};
-static swig_octave_class _wrap_class_CvEMParams = {"CvEMParams", &SWIGTYPE_p_CvEMParams,0,_wrap_new_CvEMParams,_wrap_delete_CvEMParams,swig_CvEMParams_members,swig_CvEMParams_base_names,swig_CvEMParams_base };
+static swig_octave_class _wrap_class_CvEMParams = {"CvEMParams", &SWIGTYPE_p_CvEMParams,0,_wrap_new_CvEMParams,0,_wrap_delete_CvEMParams,swig_CvEMParams_members,swig_CvEMParams_base_names,swig_CvEMParams_base };
 
 static octave_value_list _wrap_new_CvEM (const octave_value_list& args, int nargout) {
   CvEM *result = 0 ;
@@ -16812,7 +16831,7 @@ static swig_octave_member swig_CvEM_members[] = {
 };
 static const char *swig_CvEM_base_names[] = {"_p_CvStatModel",0};
 static const swig_type_info *swig_CvEM_base[] = {0,0};
-static swig_octave_class _wrap_class_CvEM = {"CvEM", &SWIGTYPE_p_CvEM,0,_wrap_new_CvEM,_wrap_delete_CvEM,swig_CvEM_members,swig_CvEM_base_names,swig_CvEM_base };
+static swig_octave_class _wrap_class_CvEM = {"CvEM", &SWIGTYPE_p_CvEM,0,_wrap_new_CvEM,0,_wrap_delete_CvEM,swig_CvEM_members,swig_CvEM_base_names,swig_CvEM_base };
 
 static octave_value_list _wrap_CvPair32s32f_i_set (const octave_value_list& args, int nargout) {
   CvPair32s32f *arg1 = (CvPair32s32f *) 0 ;
@@ -16994,7 +17013,7 @@ static swig_octave_member swig_CvPair32s32f_members[] = {
 };
 static const char *swig_CvPair32s32f_base_names[] = {0};
 static const swig_type_info *swig_CvPair32s32f_base[] = {0};
-static swig_octave_class _wrap_class_CvPair32s32f = {"CvPair32s32f", &SWIGTYPE_p_CvPair32s32f,0,_wrap_new_CvPair32s32f,_wrap_delete_CvPair32s32f,swig_CvPair32s32f_members,swig_CvPair32s32f_base_names,swig_CvPair32s32f_base };
+static swig_octave_class _wrap_class_CvPair32s32f = {"CvPair32s32f", &SWIGTYPE_p_CvPair32s32f,0,_wrap_new_CvPair32s32f,0,_wrap_delete_CvPair32s32f,swig_CvPair32s32f_members,swig_CvPair32s32f_base_names,swig_CvPair32s32f_base };
 
 static octave_value_list _wrap_CvDTreeSplit_var_idx_set (const octave_value_list& args, int nargout) {
   CvDTreeSplit *arg1 = (CvDTreeSplit *) 0 ;
@@ -17294,7 +17313,7 @@ static swig_octave_member swig_CvDTreeSplit_members[] = {
 };
 static const char *swig_CvDTreeSplit_base_names[] = {0};
 static const swig_type_info *swig_CvDTreeSplit_base[] = {0};
-static swig_octave_class _wrap_class_CvDTreeSplit = {"CvDTreeSplit", &SWIGTYPE_p_CvDTreeSplit,0,_wrap_new_CvDTreeSplit,_wrap_delete_CvDTreeSplit,swig_CvDTreeSplit_members,swig_CvDTreeSplit_base_names,swig_CvDTreeSplit_base };
+static swig_octave_class _wrap_class_CvDTreeSplit = {"CvDTreeSplit", &SWIGTYPE_p_CvDTreeSplit,0,_wrap_new_CvDTreeSplit,0,_wrap_delete_CvDTreeSplit,swig_CvDTreeSplit_members,swig_CvDTreeSplit_base_names,swig_CvDTreeSplit_base };
 
 static octave_value_list _wrap_CvDTreeNode_class_idx_set (const octave_value_list& args, int nargout) {
   CvDTreeNode *arg1 = (CvDTreeNode *) 0 ;
@@ -18688,7 +18707,7 @@ static swig_octave_member swig_CvDTreeNode_members[] = {
 };
 static const char *swig_CvDTreeNode_base_names[] = {0};
 static const swig_type_info *swig_CvDTreeNode_base[] = {0};
-static swig_octave_class _wrap_class_CvDTreeNode = {"CvDTreeNode", &SWIGTYPE_p_CvDTreeNode,0,_wrap_new_CvDTreeNode,_wrap_delete_CvDTreeNode,swig_CvDTreeNode_members,swig_CvDTreeNode_base_names,swig_CvDTreeNode_base };
+static swig_octave_class _wrap_class_CvDTreeNode = {"CvDTreeNode", &SWIGTYPE_p_CvDTreeNode,0,_wrap_new_CvDTreeNode,0,_wrap_delete_CvDTreeNode,swig_CvDTreeNode_members,swig_CvDTreeNode_base_names,swig_CvDTreeNode_base };
 
 static octave_value_list _wrap_CvDTreeParams_max_categories_set (const octave_value_list& args, int nargout) {
   CvDTreeParams *arg1 = (CvDTreeParams *) 0 ;
@@ -19452,7 +19471,7 @@ static swig_octave_member swig_CvDTreeParams_members[] = {
 };
 static const char *swig_CvDTreeParams_base_names[] = {0};
 static const swig_type_info *swig_CvDTreeParams_base[] = {0};
-static swig_octave_class _wrap_class_CvDTreeParams = {"CvDTreeParams", &SWIGTYPE_p_CvDTreeParams,0,_wrap_new_CvDTreeParams,_wrap_delete_CvDTreeParams,swig_CvDTreeParams_members,swig_CvDTreeParams_base_names,swig_CvDTreeParams_base };
+static swig_octave_class _wrap_class_CvDTreeParams = {"CvDTreeParams", &SWIGTYPE_p_CvDTreeParams,0,_wrap_new_CvDTreeParams,0,_wrap_delete_CvDTreeParams,swig_CvDTreeParams_members,swig_CvDTreeParams_base_names,swig_CvDTreeParams_base };
 
 static octave_value_list _wrap_new_CvDTreeTrainData__SWIG_0 (const octave_value_list& args, int nargout) {
   CvDTreeTrainData *result = 0 ;
@@ -24703,7 +24722,7 @@ static swig_octave_member swig_CvDTreeTrainData_members[] = {
 };
 static const char *swig_CvDTreeTrainData_base_names[] = {0};
 static const swig_type_info *swig_CvDTreeTrainData_base[] = {0};
-static swig_octave_class _wrap_class_CvDTreeTrainData = {"CvDTreeTrainData", &SWIGTYPE_p_CvDTreeTrainData,0,_wrap_new_CvDTreeTrainData,_wrap_delete_CvDTreeTrainData,swig_CvDTreeTrainData_members,swig_CvDTreeTrainData_base_names,swig_CvDTreeTrainData_base };
+static swig_octave_class _wrap_class_CvDTreeTrainData = {"CvDTreeTrainData", &SWIGTYPE_p_CvDTreeTrainData,0,_wrap_new_CvDTreeTrainData,0,_wrap_delete_CvDTreeTrainData,swig_CvDTreeTrainData_members,swig_CvDTreeTrainData_base_names,swig_CvDTreeTrainData_base };
 
 static octave_value_list _wrap_new_CvDTree (const octave_value_list& args, int nargout) {
   CvDTree *result = 0 ;
@@ -26223,7 +26242,7 @@ static swig_octave_member swig_CvDTree_members[] = {
 };
 static const char *swig_CvDTree_base_names[] = {"_p_CvStatModel",0};
 static const swig_type_info *swig_CvDTree_base[] = {0,0};
-static swig_octave_class _wrap_class_CvDTree = {"CvDTree", &SWIGTYPE_p_CvDTree,0,_wrap_new_CvDTree,_wrap_delete_CvDTree,swig_CvDTree_members,swig_CvDTree_base_names,swig_CvDTree_base };
+static swig_octave_class _wrap_class_CvDTree = {"CvDTree", &SWIGTYPE_p_CvDTree,0,_wrap_new_CvDTree,0,_wrap_delete_CvDTree,swig_CvDTree_members,swig_CvDTree_base_names,swig_CvDTree_base };
 
 static octave_value_list _wrap_new_CvForestTree (const octave_value_list& args, int nargout) {
   CvForestTree *result = 0 ;
@@ -27429,7 +27448,7 @@ static swig_octave_member swig_CvForestTree_members[] = {
 };
 static const char *swig_CvForestTree_base_names[] = {"_p_CvDTree",0};
 static const swig_type_info *swig_CvForestTree_base[] = {0,0};
-static swig_octave_class _wrap_class_CvForestTree = {"CvForestTree", &SWIGTYPE_p_CvForestTree,0,_wrap_new_CvForestTree,_wrap_delete_CvForestTree,swig_CvForestTree_members,swig_CvForestTree_base_names,swig_CvForestTree_base };
+static swig_octave_class _wrap_class_CvForestTree = {"CvForestTree", &SWIGTYPE_p_CvForestTree,0,_wrap_new_CvForestTree,0,_wrap_delete_CvForestTree,swig_CvForestTree_members,swig_CvForestTree_base_names,swig_CvForestTree_base };
 
 static octave_value_list _wrap_CvRTParams_calc_var_importance_set (const octave_value_list& args, int nargout) {
   CvRTParams *arg1 = (CvRTParams *) 0 ;
@@ -27867,7 +27886,7 @@ static swig_octave_member swig_CvRTParams_members[] = {
 };
 static const char *swig_CvRTParams_base_names[] = {"_p_CvDTreeParams",0};
 static const swig_type_info *swig_CvRTParams_base[] = {0,0};
-static swig_octave_class _wrap_class_CvRTParams = {"CvRTParams", &SWIGTYPE_p_CvRTParams,0,_wrap_new_CvRTParams,_wrap_delete_CvRTParams,swig_CvRTParams_members,swig_CvRTParams_base_names,swig_CvRTParams_base };
+static swig_octave_class _wrap_class_CvRTParams = {"CvRTParams", &SWIGTYPE_p_CvRTParams,0,_wrap_new_CvRTParams,0,_wrap_delete_CvRTParams,swig_CvRTParams_members,swig_CvRTParams_base_names,swig_CvRTParams_base };
 
 static octave_value_list _wrap_new_CvRTrees (const octave_value_list& args, int nargout) {
   CvRTrees *result = 0 ;
@@ -29343,7 +29362,7 @@ static swig_octave_member swig_CvRTrees_members[] = {
 };
 static const char *swig_CvRTrees_base_names[] = {"_p_CvStatModel",0};
 static const swig_type_info *swig_CvRTrees_base[] = {0,0};
-static swig_octave_class _wrap_class_CvRTrees = {"CvRTrees", &SWIGTYPE_p_CvRTrees,0,_wrap_new_CvRTrees,_wrap_delete_CvRTrees,swig_CvRTrees_members,swig_CvRTrees_base_names,swig_CvRTrees_base };
+static swig_octave_class _wrap_class_CvRTrees = {"CvRTrees", &SWIGTYPE_p_CvRTrees,0,_wrap_new_CvRTrees,0,_wrap_delete_CvRTrees,swig_CvRTrees_members,swig_CvRTrees_base_names,swig_CvRTrees_base };
 
 static octave_value_list _wrap_CvBoostParams_boost_type_set (const octave_value_list& args, int nargout) {
   CvBoostParams *arg1 = (CvBoostParams *) 0 ;
@@ -29770,7 +29789,7 @@ static swig_octave_member swig_CvBoostParams_members[] = {
 };
 static const char *swig_CvBoostParams_base_names[] = {"_p_CvDTreeParams",0};
 static const swig_type_info *swig_CvBoostParams_base[] = {0,0};
-static swig_octave_class _wrap_class_CvBoostParams = {"CvBoostParams", &SWIGTYPE_p_CvBoostParams,0,_wrap_new_CvBoostParams,_wrap_delete_CvBoostParams,swig_CvBoostParams_members,swig_CvBoostParams_base_names,swig_CvBoostParams_base };
+static swig_octave_class _wrap_class_CvBoostParams = {"CvBoostParams", &SWIGTYPE_p_CvBoostParams,0,_wrap_new_CvBoostParams,0,_wrap_delete_CvBoostParams,swig_CvBoostParams_members,swig_CvBoostParams_base_names,swig_CvBoostParams_base };
 
 static octave_value_list _wrap_new_CvBoostTree (const octave_value_list& args, int nargout) {
   CvBoostTree *result = 0 ;
@@ -31016,7 +31035,7 @@ static swig_octave_member swig_CvBoostTree_members[] = {
 };
 static const char *swig_CvBoostTree_base_names[] = {"_p_CvDTree",0};
 static const swig_type_info *swig_CvBoostTree_base[] = {0,0};
-static swig_octave_class _wrap_class_CvBoostTree = {"CvBoostTree", &SWIGTYPE_p_CvBoostTree,0,_wrap_new_CvBoostTree,_wrap_delete_CvBoostTree,swig_CvBoostTree_members,swig_CvBoostTree_base_names,swig_CvBoostTree_base };
+static swig_octave_class _wrap_class_CvBoostTree = {"CvBoostTree", &SWIGTYPE_p_CvBoostTree,0,_wrap_new_CvBoostTree,0,_wrap_delete_CvBoostTree,swig_CvBoostTree_members,swig_CvBoostTree_base_names,swig_CvBoostTree_base };
 
 static octave_value_list _wrap_new_CvBoost__SWIG_0 (const octave_value_list& args, int nargout) {
   CvBoost *result = 0 ;
@@ -33367,7 +33386,7 @@ static swig_octave_member swig_CvBoost_members[] = {
 };
 static const char *swig_CvBoost_base_names[] = {"_p_CvStatModel",0};
 static const swig_type_info *swig_CvBoost_base[] = {0,0};
-static swig_octave_class _wrap_class_CvBoost = {"CvBoost", &SWIGTYPE_p_CvBoost,0,_wrap_new_CvBoost,_wrap_delete_CvBoost,swig_CvBoost_members,swig_CvBoost_base_names,swig_CvBoost_base };
+static swig_octave_class _wrap_class_CvBoost = {"CvBoost", &SWIGTYPE_p_CvBoost,0,_wrap_new_CvBoost,0,_wrap_delete_CvBoost,swig_CvBoost_members,swig_CvBoost_base_names,swig_CvBoost_base };
 
 static octave_value_list _wrap_new_CvANN_MLP_TrainParams__SWIG_0 (const octave_value_list& args, int nargout) {
   CvANN_MLP_TrainParams *result = 0 ;
@@ -34143,7 +34162,7 @@ static swig_octave_member swig_CvANN_MLP_TrainParams_members[] = {
 };
 static const char *swig_CvANN_MLP_TrainParams_base_names[] = {0};
 static const swig_type_info *swig_CvANN_MLP_TrainParams_base[] = {0};
-static swig_octave_class _wrap_class_CvANN_MLP_TrainParams = {"CvANN_MLP_TrainParams", &SWIGTYPE_p_CvANN_MLP_TrainParams,0,_wrap_new_CvANN_MLP_TrainParams,_wrap_delete_CvANN_MLP_TrainParams,swig_CvANN_MLP_TrainParams_members,swig_CvANN_MLP_TrainParams_base_names,swig_CvANN_MLP_TrainParams_base };
+static swig_octave_class _wrap_class_CvANN_MLP_TrainParams = {"CvANN_MLP_TrainParams", &SWIGTYPE_p_CvANN_MLP_TrainParams,0,_wrap_new_CvANN_MLP_TrainParams,0,_wrap_delete_CvANN_MLP_TrainParams,swig_CvANN_MLP_TrainParams_members,swig_CvANN_MLP_TrainParams_base_names,swig_CvANN_MLP_TrainParams_base };
 
 static octave_value_list _wrap_new_CvANN_MLP__SWIG_0 (const octave_value_list& args, int nargout) {
   CvANN_MLP *result = 0 ;
@@ -35508,7 +35527,7 @@ static swig_octave_member swig_CvANN_MLP_members[] = {
 };
 static const char *swig_CvANN_MLP_base_names[] = {"_p_CvStatModel",0};
 static const swig_type_info *swig_CvANN_MLP_base[] = {0,0};
-static swig_octave_class _wrap_class_CvANN_MLP = {"CvANN_MLP", &SWIGTYPE_p_CvANN_MLP,0,_wrap_new_CvANN_MLP,_wrap_delete_CvANN_MLP,swig_CvANN_MLP_members,swig_CvANN_MLP_base_names,swig_CvANN_MLP_base };
+static swig_octave_class _wrap_class_CvANN_MLP = {"CvANN_MLP", &SWIGTYPE_p_CvANN_MLP,0,_wrap_new_CvANN_MLP,0,_wrap_delete_CvANN_MLP,swig_CvANN_MLP_members,swig_CvANN_MLP_base_names,swig_CvANN_MLP_base };
 
 static octave_value_list _wrap_cvRandMVNormal (const octave_value_list& args, int nargout) {
   CvMat *arg1 = (CvMat *) 0 ;
