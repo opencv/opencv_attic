@@ -733,7 +733,7 @@ SWIGRUNTIME bool SWIG_check_num_args(const char *func_name, int num_args, int ma
   if (num_args > max_args && !varargs)
     error("function %s takes at most %i arguments", func_name, max_args);
   else if (num_args < min_args)
-    error("function %s requires at least %i arguments", func_name, max_args);
+    error("function %s requires at least %i arguments", func_name, min_args);
   else
     return true;
   return false;
@@ -901,6 +901,7 @@ namespace {
     swig_type_info **type;
     int director;
     octave_func constructor;
+    const char *constructor_doc;
     octave_func destructor;
     const swig_octave_member *members;
     const char **base_names;
@@ -1114,6 +1115,14 @@ namespace {
 	return (long) this;
       return (long) types[0].second.ptr;
     }
+    const char* help_text() const {
+      if (!types.size())
+	return 0;
+      if (!types[0].first->clientdata)
+	return 0;
+      swig_octave_class *c = (swig_octave_class *) types[0].first->clientdata;
+      return c->constructor_doc;
+    }
 
     std::string swig_type_name() const {
       // * need some way to manually name subclasses.
@@ -1149,10 +1158,19 @@ namespace {
       for (member_map::const_iterator it = members.begin(); it != members.end(); ++it) {
 	if (it->second.first && it->second.first->method)
 	  install_builtin_function(it->second.first->method, it->first,
-				   /*it->second.first->doc?it->second.first->doc:*/std::string());
+				   it->second.first->doc?it->second.first->doc:std::string());
 	else if (it->second.second.is_defined()) {
 	  link_to_global_variable(curr_sym_tab->lookup(it->first, true));
 	  set_global_value(it->first, it->second.second);
+	  
+	  octave_swig_type *ost = Swig::swig_value_deref(it->second.second);
+	  if (ost) {
+	    const char* h = ost->help_text();
+	    if (h) {
+	      symbol_record *sr = global_sym_tab->lookup (it->first, true);
+	      sr->document(h);
+	    }
+	  }
 	}
       }
     }
@@ -4952,6 +4970,4303 @@ octave_value CvMat_imageData_get(CvMat * self)
 }
 
 
+const char* _wrap_CV_16SC_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} @var{retval} = CV_16SC (@var{n})\n\
+@var{n} is of type int. @var{retval} is of type int. \n\
+@end deftypefn";
+const char* _wrap_CV_16UC_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} @var{retval} = CV_16UC (@var{n})\n\
+@var{n} is of type int. @var{retval} is of type int. \n\
+@end deftypefn";
+const char* _wrap_CV_32FC_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} @var{retval} = CV_32FC (@var{n})\n\
+@var{n} is of type int. @var{retval} is of type int. \n\
+@end deftypefn";
+const char* _wrap_CV_32SC_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} @var{retval} = CV_32SC (@var{n})\n\
+@var{n} is of type int. @var{retval} is of type int. \n\
+@end deftypefn";
+const char* _wrap_CV_64FC_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} @var{retval} = CV_64FC (@var{n})\n\
+@var{n} is of type int. @var{retval} is of type int. \n\
+@end deftypefn";
+const char* _wrap_CV_8SC_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} @var{retval} = CV_8SC (@var{n})\n\
+@var{n} is of type int. @var{retval} is of type int. \n\
+@end deftypefn";
+const char* _wrap_CV_8UC_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} @var{retval} = CV_8UC (@var{n})\n\
+@var{n} is of type int. @var{retval} is of type int. \n\
+@end deftypefn";
+const char* _wrap_CV_ARE_CNS_EQ_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} @var{retval} = CV_ARE_CNS_EQ (@var{mat1}, @var{mat2})\n\
+@var{mat1} is of type CvMat. @var{mat2} is of type CvMat. @var{retval} is of type int. \n\
+@end deftypefn";
+const char* _wrap_CV_ARE_DEPTHS_EQ_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} @var{retval} = CV_ARE_DEPTHS_EQ (@var{mat1}, @var{mat2})\n\
+@var{mat1} is of type CvMat. @var{mat2} is of type CvMat. @var{retval} is of type int. \n\
+@end deftypefn";
+const char* _wrap_CV_ARE_SIZES_EQ_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} @var{retval} = CV_ARE_SIZES_EQ (@var{mat1}, @var{mat2})\n\
+@var{mat1} is of type CvMat. @var{mat2} is of type CvMat. @var{retval} is of type int. \n\
+@end deftypefn";
+const char* _wrap_CV_ARE_TYPES_EQ_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} @var{retval} = CV_ARE_TYPES_EQ (@var{mat1}, @var{mat2})\n\
+@var{mat1} is of type CvMat. @var{mat2} is of type CvMat. @var{retval} is of type int. \n\
+@end deftypefn";
+const char* _wrap_CV_CMP_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} CV_CMP (@var{a}, @var{b})\n\
+@var{a} is of type int. @var{b} is of type int. \n\
+@end deftypefn";
+const char* _wrap_CV_CURRENT_POINT_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} @var{retval} = CV_CURRENT_POINT (@var{reader})\n\
+@var{reader} is of type CvSeqReader. @var{retval} is of type CvPoint. \n\
+@end deftypefn";
+const char* _wrap_CV_ELEM_SIZE_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} @var{retval} = CV_ELEM_SIZE (@var{type})\n\
+@var{type} is of type int. @var{retval} is of type int. \n\
+@end deftypefn";
+const char* _wrap_CV_ELEM_SIZE1_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} @var{retval} = CV_ELEM_SIZE1 (@var{type})\n\
+@var{type} is of type int. @var{retval} is of type int. \n\
+@end deftypefn";
+const char* _wrap_CV_HIST_HAS_RANGES_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} @var{retval} = CV_HIST_HAS_RANGES (@var{hist})\n\
+@var{hist} is of type CvHistogram. @var{retval} is of type int. \n\
+@end deftypefn";
+const char* _wrap_CV_IABS_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} @var{retval} = CV_IABS (@var{a})\n\
+@var{a} is of type int. @var{retval} is of type int. \n\
+@end deftypefn";
+const char* _wrap_CV_IMAX_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} @var{retval} = CV_IMAX (@var{a}, @var{b})\n\
+@var{a} is of type int. @var{b} is of type int. @var{retval} is of type int. \n\
+@end deftypefn";
+const char* _wrap_CV_IMIN_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} @var{retval} = CV_IMIN (@var{a}, @var{b})\n\
+@var{a} is of type int. @var{b} is of type int. @var{retval} is of type int. \n\
+@end deftypefn";
+const char* _wrap_CV_INIT_3X3_DELTAS_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} CV_INIT_3X3_DELTAS (@var{deltas}, @var{step}, @var{nch})\n\
+@var{deltas} is of type double. @var{step} is of type int. @var{nch} is of type int. \n\
+@end deftypefn";
+const char* _wrap_CV_IS_GRAPH_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} @var{retval} = CV_IS_GRAPH (@var{seq})\n\
+@var{seq} is of type CvSeq. @var{retval} is of type int. \n\
+@end deftypefn";
+const char* _wrap_CV_IS_GRAPH_EDGE_VISITED_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} @var{retval} = CV_IS_GRAPH_EDGE_VISITED (@var{edge})\n\
+@var{edge} is of type CvGraphEdge. @var{retval} is of type int. \n\
+@end deftypefn";
+const char* _wrap_CV_IS_GRAPH_ORIENTED_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} @var{retval} = CV_IS_GRAPH_ORIENTED (@var{seq})\n\
+@var{seq} is of type CvSeq. @var{retval} is of type int. \n\
+@end deftypefn";
+const char* _wrap_CV_IS_GRAPH_VERTEX_VISITED_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} @var{retval} = CV_IS_GRAPH_VERTEX_VISITED (@var{vtx})\n\
+@var{vtx} is of type CvGraphVtx. @var{retval} is of type int. \n\
+@end deftypefn";
+const char* _wrap_CV_IS_HAAR_CLASSIFIER_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} @var{retval} = CV_IS_HAAR_CLASSIFIER (@var{haar})\n\
+@var{haar} is of type void. @var{retval} is of type int. \n\
+@end deftypefn";
+const char* _wrap_CV_IS_HIST_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} @var{retval} = CV_IS_HIST (@var{hist})\n\
+@var{hist} is of type CvHistogram. @var{retval} is of type int. \n\
+@end deftypefn";
+const char* _wrap_CV_IS_IMAGE_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} @var{retval} = CV_IS_IMAGE (@var{img})\n\
+@var{img} is of type CvArr. @var{retval} is of type int. \n\
+@end deftypefn";
+const char* _wrap_CV_IS_IMAGE_HDR_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} @var{retval} = CV_IS_IMAGE_HDR (@var{img})\n\
+@var{img} is of type CvArr. @var{retval} is of type int. \n\
+@end deftypefn";
+const char* _wrap_CV_IS_MASK_ARR_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} @var{retval} = CV_IS_MASK_ARR (@var{mat})\n\
+@var{mat} is of type CvMat. @var{retval} is of type int. \n\
+@end deftypefn";
+const char* _wrap_CV_IS_MAT_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} @var{retval} = CV_IS_MAT (@var{mat})\n\
+@var{mat} is of type CvMat. @var{retval} is of type int. \n\
+@end deftypefn";
+const char* _wrap_CV_IS_MATND_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} @var{retval} = CV_IS_MATND (@var{mat})\n\
+@var{mat} is of type CvMat. @var{retval} is of type int. \n\
+@end deftypefn";
+const char* _wrap_CV_IS_MATND_HDR_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} @var{retval} = CV_IS_MATND_HDR (@var{mat})\n\
+@var{mat} is of type CvMat. @var{retval} is of type int. \n\
+@end deftypefn";
+const char* _wrap_CV_IS_MAT_CONST_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} @var{retval} = CV_IS_MAT_CONST (@var{mat})\n\
+@var{mat} is of type CvMat. @var{retval} is of type int. \n\
+@end deftypefn";
+const char* _wrap_CV_IS_MAT_CONT_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} @var{retval} = CV_IS_MAT_CONT (@var{flags})\n\
+@var{flags} is of type int. @var{retval} is of type int. \n\
+@end deftypefn";
+const char* _wrap_CV_IS_MAT_HDR_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} @var{retval} = CV_IS_MAT_HDR (@var{mat})\n\
+@var{mat} is of type CvMat. @var{retval} is of type int. \n\
+@end deftypefn";
+const char* _wrap_CV_IS_SEQ_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} @var{retval} = CV_IS_SEQ (@var{seq})\n\
+@var{seq} is of type CvSeq. @var{retval} is of type int. \n\
+@end deftypefn";
+const char* _wrap_CV_IS_SEQ_CHAIN_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} @var{retval} = CV_IS_SEQ_CHAIN (@var{seq})\n\
+@var{seq} is of type CvSeq. @var{retval} is of type int. \n\
+@end deftypefn";
+const char* _wrap_CV_IS_SEQ_CHAIN_CONTOUR_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} @var{retval} = CV_IS_SEQ_CHAIN_CONTOUR (@var{seq})\n\
+@var{seq} is of type CvSeq. @var{retval} is of type int. \n\
+@end deftypefn";
+const char* _wrap_CV_IS_SEQ_CLOSED_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} @var{retval} = CV_IS_SEQ_CLOSED (@var{seq})\n\
+@var{seq} is of type CvSeq. @var{retval} is of type int. \n\
+@end deftypefn";
+const char* _wrap_CV_IS_SEQ_CONTOUR_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} @var{retval} = CV_IS_SEQ_CONTOUR (@var{seq})\n\
+@var{seq} is of type CvSeq. @var{retval} is of type int. \n\
+@end deftypefn";
+const char* _wrap_CV_IS_SEQ_CONVEX_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} @var{retval} = CV_IS_SEQ_CONVEX (@var{seq})\n\
+@var{seq} is of type CvSeq. @var{retval} is of type int. \n\
+@end deftypefn";
+const char* _wrap_CV_IS_SEQ_CURVE_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} @var{retval} = CV_IS_SEQ_CURVE (@var{seq})\n\
+@var{seq} is of type CvSeq. @var{retval} is of type int. \n\
+@end deftypefn";
+const char* _wrap_CV_IS_SEQ_HOLE_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} @var{retval} = CV_IS_SEQ_HOLE (@var{seq})\n\
+@var{seq} is of type CvSeq. @var{retval} is of type int. \n\
+@end deftypefn";
+const char* _wrap_CV_IS_SEQ_INDEX_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} @var{retval} = CV_IS_SEQ_INDEX (@var{seq})\n\
+@var{seq} is of type CvSeq. @var{retval} is of type int. \n\
+@end deftypefn";
+const char* _wrap_CV_IS_SEQ_POINT_SET_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} @var{retval} = CV_IS_SEQ_POINT_SET (@var{seq})\n\
+@var{seq} is of type CvSeq. @var{retval} is of type int. \n\
+@end deftypefn";
+const char* _wrap_CV_IS_SEQ_POINT_SUBSET_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} @var{retval} = CV_IS_SEQ_POINT_SUBSET (@var{seq})\n\
+@var{seq} is of type CvSeq. @var{retval} is of type int. \n\
+@end deftypefn";
+const char* _wrap_CV_IS_SEQ_POLYGON_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} @var{retval} = CV_IS_SEQ_POLYGON (@var{seq})\n\
+@var{seq} is of type CvSeq. @var{retval} is of type int. \n\
+@end deftypefn";
+const char* _wrap_CV_IS_SEQ_POLYGON_TREE_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} @var{retval} = CV_IS_SEQ_POLYGON_TREE (@var{seq})\n\
+@var{seq} is of type CvSeq. @var{retval} is of type int. \n\
+@end deftypefn";
+const char* _wrap_CV_IS_SEQ_POLYLINE_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} @var{retval} = CV_IS_SEQ_POLYLINE (@var{seq})\n\
+@var{seq} is of type CvSeq. @var{retval} is of type int. \n\
+@end deftypefn";
+const char* _wrap_CV_IS_SEQ_SIMPLE_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} @var{retval} = CV_IS_SEQ_SIMPLE (@var{seq})\n\
+@var{seq} is of type CvSeq. @var{retval} is of type int. \n\
+@end deftypefn";
+const char* _wrap_CV_IS_SET_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} @var{retval} = CV_IS_SET (@var{set})\n\
+@var{set} is of type CvSet. @var{retval} is of type int. \n\
+@end deftypefn";
+const char* _wrap_CV_IS_SET_ELEM_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} @var{retval} = CV_IS_SET_ELEM (@var{ptr})\n\
+@var{ptr} is of type void. @var{retval} is of type int. \n\
+@end deftypefn";
+const char* _wrap_CV_IS_SPARSE_HIST_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} @var{retval} = CV_IS_SPARSE_HIST (@var{hist})\n\
+@var{hist} is of type CvHistogram. @var{retval} is of type int. \n\
+@end deftypefn";
+const char* _wrap_CV_IS_SPARSE_MAT_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} @var{retval} = CV_IS_SPARSE_MAT (@var{mat})\n\
+@var{mat} is of type CvMat. @var{retval} is of type int. \n\
+@end deftypefn";
+const char* _wrap_CV_IS_SPARSE_MAT_HDR_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} @var{retval} = CV_IS_SPARSE_MAT_HDR (@var{mat})\n\
+@var{mat} is of type CvMat. @var{retval} is of type int. \n\
+@end deftypefn";
+const char* _wrap_CV_IS_STORAGE_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} @var{retval} = CV_IS_STORAGE (@var{storage})\n\
+@var{storage} is of type CvMemStorage. @var{retval} is of type int. \n\
+@end deftypefn";
+const char* _wrap_CV_IS_SUBDIV2D_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} @var{retval} = CV_IS_SUBDIV2D (@var{seq})\n\
+@var{seq} is of type CvSeq. @var{retval} is of type int. \n\
+@end deftypefn";
+const char* _wrap_CV_IS_TEMP_MAT_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} @var{retval} = CV_IS_TEMP_MAT (@var{flags})\n\
+@var{flags} is of type int. @var{retval} is of type int. \n\
+@end deftypefn";
+const char* _wrap_CV_IS_UNIFORM_HIST_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} @var{retval} = CV_IS_UNIFORM_HIST (@var{hist})\n\
+@var{hist} is of type CvHistogram. @var{retval} is of type int. \n\
+@end deftypefn";
+const char* _wrap_CV_MAKETYPE_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} @var{retval} = CV_MAKETYPE (@var{depth}, @var{cn})\n\
+@var{depth} is of type int. @var{cn} is of type int. @var{retval} is of type int. \n\
+@end deftypefn";
+const char* _wrap_CV_MAT_CN_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} @var{retval} = CV_MAT_CN (@var{flags})\n\
+@var{flags} is of type int. @var{retval} is of type int. \n\
+@end deftypefn";
+const char* _wrap_CV_MAT_DEPTH_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} @var{retval} = CV_MAT_DEPTH (@var{flags})\n\
+@var{flags} is of type int. @var{retval} is of type int. \n\
+@end deftypefn";
+const char* _wrap_CV_MAT_ELEM_PTR_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} @var{retval} = CV_MAT_ELEM_PTR (@var{mat}, @var{row}, @var{col})\n\
+@var{mat} is of type CvMat. @var{row} is of type int. @var{col} is of type int. @var{retval} is of type void. \n\
+@end deftypefn";
+const char* _wrap_CV_MAT_ELEM_PTR_FAST_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} @var{retval} = CV_MAT_ELEM_PTR_FAST (@var{mat}, @var{row}, @var{col}, @var{pix_size})\n\
+@var{mat} is of type CvMat. @var{row} is of type int. @var{col} is of type int. @var{pix_size} is of type int. @var{retval} is of type void. \n\
+@end deftypefn";
+const char* _wrap_CV_MAT_TYPE_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} @var{retval} = CV_MAT_TYPE (@var{flags})\n\
+@var{flags} is of type int. @var{retval} is of type int. \n\
+@end deftypefn";
+const char* _wrap_CV_NEXT_GRAPH_EDGE_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} @var{retval} = CV_NEXT_GRAPH_EDGE (@var{edge}, @var{vertex})\n\
+@var{edge} is of type CvGraphEdge. @var{vertex} is of type CvGraphVtx. @var{retval} is of type CvGraphEdge. \n\
+@end deftypefn";
+const char* _wrap_CV_NEXT_LINE_POINT_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} CV_NEXT_LINE_POINT (@var{line_iterator})\n\
+@var{line_iterator} is of type CvLineIterator. \n\
+@end deftypefn";
+const char* _wrap_CV_NEXT_SEQ_ELEM_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} CV_NEXT_SEQ_ELEM (@var{elem_size}, @var{reader})\n\
+@var{elem_size} is of type int. @var{reader} is of type CvSeqReader. \n\
+@end deftypefn";
+const char* _wrap_CV_NODE_HAS_NAME_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} @var{retval} = CV_NODE_HAS_NAME (@var{flags})\n\
+@var{flags} is of type int. @var{retval} is of type int. \n\
+@end deftypefn";
+const char* _wrap_CV_NODE_IDX_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} @var{retval} = CV_NODE_IDX (@var{mat}, @var{node})\n\
+@var{mat} is of type CvSparseMat. @var{node} is of type CvSparseNode. @var{retval} is of type int. \n\
+@end deftypefn";
+const char* _wrap_CV_NODE_IS_COLLECTION_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} @var{retval} = CV_NODE_IS_COLLECTION (@var{flags})\n\
+@var{flags} is of type int. @var{retval} is of type int. \n\
+@end deftypefn";
+const char* _wrap_CV_NODE_IS_EMPTY_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} @var{retval} = CV_NODE_IS_EMPTY (@var{flags})\n\
+@var{flags} is of type int. @var{retval} is of type int. \n\
+@end deftypefn";
+const char* _wrap_CV_NODE_IS_FLOW_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} @var{retval} = CV_NODE_IS_FLOW (@var{flags})\n\
+@var{flags} is of type int. @var{retval} is of type int. \n\
+@end deftypefn";
+const char* _wrap_CV_NODE_IS_INT_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} @var{retval} = CV_NODE_IS_INT (@var{flags})\n\
+@var{flags} is of type int. @var{retval} is of type int. \n\
+@end deftypefn";
+const char* _wrap_CV_NODE_IS_MAP_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} @var{retval} = CV_NODE_IS_MAP (@var{flags})\n\
+@var{flags} is of type int. @var{retval} is of type int. \n\
+@end deftypefn";
+const char* _wrap_CV_NODE_IS_REAL_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} @var{retval} = CV_NODE_IS_REAL (@var{flags})\n\
+@var{flags} is of type int. @var{retval} is of type int. \n\
+@end deftypefn";
+const char* _wrap_CV_NODE_IS_SEQ_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} @var{retval} = CV_NODE_IS_SEQ (@var{flags})\n\
+@var{flags} is of type int. @var{retval} is of type int. \n\
+@end deftypefn";
+const char* _wrap_CV_NODE_IS_STRING_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} @var{retval} = CV_NODE_IS_STRING (@var{flags})\n\
+@var{flags} is of type int. @var{retval} is of type int. \n\
+@end deftypefn";
+const char* _wrap_CV_NODE_IS_USER_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} @var{retval} = CV_NODE_IS_USER (@var{flags})\n\
+@var{flags} is of type int. @var{retval} is of type int. \n\
+@end deftypefn";
+const char* _wrap_CV_NODE_SEQ_IS_SIMPLE_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} @var{retval} = CV_NODE_SEQ_IS_SIMPLE (@var{seq})\n\
+@var{seq} is of type CvSeq. @var{retval} is of type int. \n\
+@end deftypefn";
+const char* _wrap_CV_NODE_TYPE_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} @var{retval} = CV_NODE_TYPE (@var{flags})\n\
+@var{flags} is of type int. @var{retval} is of type int. \n\
+@end deftypefn";
+const char* _wrap_CV_NODE_VAL_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} @var{retval} = CV_NODE_VAL (@var{mat}, @var{node})\n\
+@var{mat} is of type CvSparseMat. @var{node} is of type CvSparseNode. @var{retval} is of type void. \n\
+@end deftypefn";
+const char* _wrap_CV_PREV_POINT_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} @var{retval} = CV_PREV_POINT (@var{reader})\n\
+@var{reader} is of type CvSeqReader. @var{retval} is of type CvPoint. \n\
+@end deftypefn";
+const char* _wrap_CV_PREV_SEQ_ELEM_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} CV_PREV_SEQ_ELEM (@var{elem_size}, @var{reader})\n\
+@var{elem_size} is of type int. @var{reader} is of type CvSeqReader. \n\
+@end deftypefn";
+const char* _wrap_CV_READ_CHAIN_POINT_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} CV_READ_CHAIN_POINT (@var{_pt}, @var{reader})\n\
+@var{_pt} is of type CvPoint. @var{reader} is of type CvChainPtReader. \n\
+@end deftypefn";
+const char* _wrap_CV_READ_EDGE_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} CV_READ_EDGE (@var{pt1}, @var{pt2}, @var{reader})\n\
+@var{pt1} is of type CvPoint. @var{pt2} is of type CvPoint. @var{reader} is of type CvSeqReader. \n\
+@end deftypefn";
+const char* _wrap_CV_READ_SEQ_ELEM_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} CV_READ_SEQ_ELEM (@var{elem}, @var{reader})\n\
+@var{elem} is of type CvPoint. @var{reader} is of type CvSeqReader. \n\
+@end deftypefn";
+const char* _wrap_CV_REV_READ_SEQ_ELEM_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} CV_REV_READ_SEQ_ELEM (@var{elem}, @var{reader})\n\
+@var{elem} is of type CvPoint. @var{reader} is of type CvSeqReader. \n\
+@end deftypefn";
+const char* _wrap_CV_RGB_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} @var{retval} = CV_RGB (@var{r}, @var{g}, @var{b})\n\
+@var{r} is of type double. @var{g} is of type double. @var{b} is of type int. @var{retval} is of type CvScalar. \n\
+@end deftypefn";
+const char* _wrap_CV_SEQ_ELTYPE_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} @var{retval} = CV_SEQ_ELTYPE (@var{seq})\n\
+@var{seq} is of type CvSeq. @var{retval} is of type int. \n\
+@end deftypefn";
+const char* _wrap_CV_SEQ_KIND_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} @var{retval} = CV_SEQ_KIND (@var{seq})\n\
+@var{seq} is of type CvSeq. @var{retval} is of type int. \n\
+@end deftypefn";
+const char* _wrap_CV_SIGN_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} CV_SIGN (@var{a})\n\
+@var{a} is of type int. \n\
+@end deftypefn";
+const char* _wrap_CV_SUBDIV2D_NEXT_EDGE_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} @var{retval} = CV_SUBDIV2D_NEXT_EDGE (@var{edge})\n\
+@var{edge} is of type CvSubdiv2DEdge. @var{retval} is of type CvQuadEdge2D. \n\
+@end deftypefn";
+const char* _wrap_CV_SWAP_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} CV_SWAP (@var{a}, @var{b}, @var{t})\n\
+@var{a} is of type int. @var{b} is of type int. @var{t} is of type int. \n\
+@end deftypefn";
+const char* _wrap_CV_WRITE_SEQ_ELEM_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} CV_WRITE_SEQ_ELEM (@var{elem}, @var{writer})\n\
+@var{elem} is of type CvPoint. @var{writer} is of type CvSeqWriter. \n\
+@end deftypefn";
+const char* _wrap_CV_WRITE_SEQ_ELEM_VAR_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} CV_WRITE_SEQ_ELEM_VAR (@var{elem_ptr}, @var{writer})\n\
+@var{elem_ptr} is of type void. @var{writer} is of type CvSeqWriter. \n\
+@end deftypefn";
+const char* _wrap_CvBaseImageFilter_clear_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} clear (@var{self})\n\
+@var{self} is of type CvBaseImageFilter. \n\
+@end deftypefn";
+const char* _wrap_CvBaseImageFilter_get_anchor_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} @var{retval} = get_anchor (@var{self})\n\
+@var{self} is of type CvBaseImageFilter. @var{retval} is of type CvPoint. \n\
+@end deftypefn";
+const char* _wrap_CvBaseImageFilter_get_dst_type_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} @var{retval} = get_dst_type (@var{self})\n\
+@var{self} is of type CvBaseImageFilter. @var{retval} is of type int. \n\
+@end deftypefn";
+const char* _wrap_CvBaseImageFilter_get_kernel_size_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} @var{retval} = get_kernel_size (@var{self})\n\
+@var{self} is of type CvBaseImageFilter. @var{retval} is of type CvSize. \n\
+@end deftypefn";
+const char* _wrap_CvBaseImageFilter_get_src_type_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} @var{retval} = get_src_type (@var{self})\n\
+@var{self} is of type CvBaseImageFilter. @var{retval} is of type int. \n\
+@end deftypefn";
+const char* _wrap_CvBaseImageFilter_get_width_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} @var{retval} = get_width (@var{self})\n\
+@var{self} is of type CvBaseImageFilter. @var{retval} is of type int. \n\
+@end deftypefn";
+const char* _wrap_CvBaseImageFilter_get_work_type_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} @var{retval} = get_work_type (@var{self})\n\
+@var{self} is of type CvBaseImageFilter. @var{retval} is of type int. \n\
+@end deftypefn";
+const char* _wrap_CvBaseImageFilter_get_x_filter_func_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} @var{retval} = get_x_filter_func (@var{self})\n\
+@var{self} is of type CvBaseImageFilter. @var{retval} is of type CvRowFilterFunc. \n\
+@end deftypefn";
+const char* _wrap_CvBaseImageFilter_get_y_filter_func_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} @var{retval} = get_y_filter_func (@var{self})\n\
+@var{self} is of type CvBaseImageFilter. @var{retval} is of type CvColumnFilterFunc. \n\
+@end deftypefn";
+const char* _wrap_CvBaseImageFilter_init_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} init (@var{self}, @var{_max_width}, @var{_src_type}, @var{_dst_type}, @var{_is_separable}, @var{_ksize})\n\
+@var{self} is of type CvBaseImageFilter. @var{_max_width} is of type int. @var{_src_type} is of type int. @var{_dst_type} is of type int. @var{_is_separable} is of type bool. @var{_ksize} is of type CvSize. \n\
+@end deftypefn";
+const char* _wrap_CvBaseImageFilter_process_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} @var{retval} = process (@var{self}, @var{_src}, @var{_dst})\n\
+@var{self} is of type CvBaseImageFilter. @var{_src} is of type CvMat. @var{_dst} is of type CvMat. @var{retval} is of type int. \n\
+@end deftypefn";
+const char* _wrap_CvBoxFilter_get_scale_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} @var{retval} = get_scale (@var{self})\n\
+@var{self} is of type CvBoxFilter. @var{retval} is of type double. \n\
+@end deftypefn";
+const char* _wrap_CvBoxFilter_get_sum_buf_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} @var{retval} = get_sum_buf (@var{self})\n\
+@var{self} is of type CvBoxFilter. @var{retval} is of type uchar. \n\
+@end deftypefn";
+const char* _wrap_CvBoxFilter_get_sum_count_ptr_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} @var{retval} = get_sum_count_ptr (@var{self})\n\
+@var{self} is of type CvBoxFilter. @var{retval} is of type int. \n\
+@end deftypefn";
+const char* _wrap_CvBoxFilter_init_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} init (@var{self}, @var{_max_width}, @var{_src_type}, @var{_dst_type}, @var{_normalized}, @var{_ksize})\n\
+@var{self} is of type CvBoxFilter. @var{_max_width} is of type int. @var{_src_type} is of type int. @var{_dst_type} is of type int. @var{_normalized} is of type bool. @var{_ksize} is of type CvSize. \n\
+@end deftypefn";
+const char* _wrap_CvBoxFilter_is_normalized_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} @var{retval} = is_normalized (@var{self})\n\
+@var{self} is of type CvBoxFilter. @var{retval} is of type bool. \n\
+@end deftypefn";
+const char* _wrap_CvImage_asIplImage_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} @var{retval} = operator IplImage* (@var{self})\n\
+@var{self} is of type CvImage. @var{retval} is of type . \n\
+@end deftypefn";
+const char* _wrap_CvImage_attach_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} attach (@var{self}, @var{img})\n\
+@var{self} is of type CvImage. @var{img} is of type . \n\
+@end deftypefn";
+const char* _wrap_CvImage_channels_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} @var{retval} = channels (@var{self})\n\
+@var{self} is of type CvImage. @var{retval} is of type int. \n\
+@end deftypefn";
+const char* _wrap_CvImage_clear_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} clear (@var{self})\n\
+@var{self} is of type CvImage. \n\
+@end deftypefn";
+const char* _wrap_CvImage_clone_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} @var{retval} = clone (@var{self})\n\
+@var{self} is of type CvImage. @var{retval} is of type CvImage. \n\
+@end deftypefn";
+const char* _wrap_CvImage_coi_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} @var{retval} = coi (@var{self})\n\
+@var{self} is of type CvImage. @var{retval} is of type int. \n\
+@end deftypefn";
+const char* _wrap_CvImage_create_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} create (@var{self}, @var{size}, @var{depth}, @var{channels})\n\
+@var{self} is of type CvImage. @var{size} is of type CvSize. @var{depth} is of type int. @var{channels} is of type int. \n\
+@end deftypefn";
+const char* _wrap_CvImage_data_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} @var{retval} = data (@var{self})\n\
+@var{self} is of type CvImage. @var{retval} is of type uchar. \n\
+@end deftypefn";
+const char* _wrap_CvImage_depth_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} @var{retval} = depth (@var{self})\n\
+@var{self} is of type CvImage. @var{retval} is of type int. \n\
+@end deftypefn";
+const char* _wrap_CvImage_detach_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} detach (@var{self})\n\
+@var{self} is of type CvImage. \n\
+@end deftypefn";
+const char* _wrap_CvImage_height_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} @var{retval} = height (@var{self})\n\
+@var{self} is of type CvImage. @var{retval} is of type int. \n\
+@end deftypefn";
+const char* _wrap_CvImage_is_valid_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} @var{retval} = is_valid (@var{self})\n\
+@var{self} is of type CvImage. @var{retval} is of type bool. \n\
+@end deftypefn";
+const char* _wrap_CvImage_load_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} @var{retval} = load (@var{self}, @var{filename})\n\
+@var{self} is of type CvImage. @var{filename} is of type char. @var{retval} is of type bool. \n\
+@end deftypefn";
+const char* _wrap_CvImage_origin_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} @var{retval} = origin (@var{self})\n\
+@var{self} is of type CvImage. @var{retval} is of type int. \n\
+@end deftypefn";
+const char* _wrap_CvImage_pix_size_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} @var{retval} = pix_size (@var{self})\n\
+@var{self} is of type CvImage. @var{retval} is of type int. \n\
+@end deftypefn";
+const char* _wrap_CvImage_read_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} @var{retval} = read (@var{self}, @var{fs}, @var{seqname}, @var{idx})\n\
+@var{self} is of type CvImage. @var{fs} is of type CvFileStorage. @var{seqname} is of type char. @var{idx} is of type int. @var{retval} is of type bool. \n\
+@end deftypefn";
+const char* _wrap_CvImage_release_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} release (@var{self})\n\
+@var{self} is of type CvImage. \n\
+@end deftypefn";
+const char* _wrap_CvImage_reset_roi_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} reset_roi (@var{self})\n\
+@var{self} is of type CvImage. \n\
+@end deftypefn";
+const char* _wrap_CvImage_roi_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} @var{retval} = roi (@var{self})\n\
+@var{self} is of type CvImage. @var{retval} is of type CvRect. \n\
+@end deftypefn";
+const char* _wrap_CvImage_roi_row_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} @var{retval} = roi_row (@var{self}, @var{y})\n\
+@var{self} is of type CvImage. @var{y} is of type int. @var{retval} is of type uchar. \n\
+@end deftypefn";
+const char* _wrap_CvImage_roi_size_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} @var{retval} = roi_size (@var{self})\n\
+@var{self} is of type CvImage. @var{retval} is of type CvSize. \n\
+@end deftypefn";
+const char* _wrap_CvImage_save_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} save (@var{self}, @var{filename}, @var{imgname})\n\
+@var{self} is of type CvImage. @var{filename} is of type char. @var{imgname} is of type char. \n\
+@end deftypefn";
+const char* _wrap_CvImage_set_coi_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} set_coi (@var{self}, @var{coi})\n\
+@var{self} is of type CvImage. @var{coi} is of type int. \n\
+@end deftypefn";
+const char* _wrap_CvImage_set_roi_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} set_roi (@var{self}, @var{roi})\n\
+@var{self} is of type CvImage. @var{roi} is of type CvRect. \n\
+@end deftypefn";
+const char* _wrap_CvImage_show_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} show (@var{self}, @var{window_name})\n\
+@var{self} is of type CvImage. @var{window_name} is of type char. \n\
+@end deftypefn";
+const char* _wrap_CvImage_size_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} @var{retval} = size (@var{self})\n\
+@var{self} is of type CvImage. @var{retval} is of type CvSize. \n\
+@end deftypefn";
+const char* _wrap_CvImage_step_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} @var{retval} = step (@var{self})\n\
+@var{self} is of type CvImage. @var{retval} is of type int. \n\
+@end deftypefn";
+const char* _wrap_CvImage_width_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} @var{retval} = width (@var{self})\n\
+@var{self} is of type CvImage. @var{retval} is of type int. \n\
+@end deftypefn";
+const char* _wrap_CvImage_write_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} write (@var{self}, @var{fs}, @var{imgname})\n\
+@var{self} is of type CvImage. @var{fs} is of type CvFileStorage. @var{imgname} is of type char. \n\
+@end deftypefn";
+const char* _wrap_CvLaplaceFilter_init_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} init (@var{self}, @var{_max_width}, @var{_src_type}, @var{_dst_type}, @var{_kx}, @var{_ky})\n\
+@var{self} is of type CvLaplaceFilter. @var{_max_width} is of type int. @var{_src_type} is of type int. @var{_dst_type} is of type int. @var{_kx} is of type CvMat. @var{_ky} is of type CvMat. \n\
+@end deftypefn";
+const char* _wrap_CvLaplaceFilter_is_basic_laplacian_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} @var{retval} = is_basic_laplacian (@var{self})\n\
+@var{self} is of type CvLaplaceFilter. @var{retval} is of type bool. \n\
+@end deftypefn";
+const char* _wrap_CvLaplaceFilter_is_normalized_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} @var{retval} = is_normalized (@var{self})\n\
+@var{self} is of type CvLaplaceFilter. @var{retval} is of type bool. \n\
+@end deftypefn";
+const char* _wrap_CvLinearFilter_clear_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} clear (@var{self})\n\
+@var{self} is of type CvLinearFilter. \n\
+@end deftypefn";
+const char* _wrap_CvLinearFilter_get_kernel_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} @var{retval} = get_kernel (@var{self})\n\
+@var{self} is of type CvLinearFilter. @var{retval} is of type CvMat. \n\
+@end deftypefn";
+const char* _wrap_CvLinearFilter_get_kernel_sparse_buf_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} @var{retval} = get_kernel_sparse_buf (@var{self})\n\
+@var{self} is of type CvLinearFilter. @var{retval} is of type uchar. \n\
+@end deftypefn";
+const char* _wrap_CvLinearFilter_get_kernel_sparse_count_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} @var{retval} = get_kernel_sparse_count (@var{self})\n\
+@var{self} is of type CvLinearFilter. @var{retval} is of type int. \n\
+@end deftypefn";
+const char* _wrap_CvLinearFilter_init_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} init (@var{self}, @var{_max_width}, @var{_src_type}, @var{_dst_type}, @var{_is_separable}, @var{_ksize})\n\
+@var{self} is of type CvLinearFilter. @var{_max_width} is of type int. @var{_src_type} is of type int. @var{_dst_type} is of type int. @var{_is_separable} is of type bool. @var{_ksize} is of type CvSize. \n\
+@end deftypefn";
+const char* _wrap_CvMat___add_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} @var{retval} = operator + (@var{self}, @var{val})\n\
+@var{self} is of type CvMat. @var{val} is of type CvScalar. @var{retval} is of type CvMat. \n\
+@end deftypefn";
+const char* _wrap_CvMat___div_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} @var{retval} = operator / (@var{self}, @var{val})\n\
+@var{self} is of type CvMat. @var{val} is of type double. @var{retval} is of type CvMat. \n\
+@end deftypefn";
+const char* _wrap_CvMat___eq_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} @var{retval} = operator == (@var{self}, @var{val})\n\
+@var{self} is of type CvMat. @var{val} is of type double. @var{retval} is of type CvMat. \n\
+@end deftypefn";
+const char* _wrap_CvMat___ge_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} @var{retval} = operator >= (@var{self}, @var{val})\n\
+@var{self} is of type CvMat. @var{val} is of type double. @var{retval} is of type CvMat. \n\
+@end deftypefn";
+const char* _wrap_CvMat___gt_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} @var{retval} = operator > (@var{self}, @var{val})\n\
+@var{self} is of type CvMat. @var{val} is of type double. @var{retval} is of type CvMat. \n\
+@end deftypefn";
+const char* _wrap_CvMat___le_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} @var{retval} = operator <= (@var{self}, @var{val})\n\
+@var{self} is of type CvMat. @var{val} is of type double. @var{retval} is of type CvMat. \n\
+@end deftypefn";
+const char* _wrap_CvMat___lt_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} @var{retval} = operator < (@var{self}, @var{val})\n\
+@var{self} is of type CvMat. @var{val} is of type double. @var{retval} is of type CvMat. \n\
+@end deftypefn";
+const char* _wrap_CvMat___mul_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} @var{retval} = operator * (@var{self}, @var{src})\n\
+@var{self} is of type CvMat. @var{src} is of type CvArr. @var{retval} is of type CvMat. \n\
+@end deftypefn";
+const char* _wrap_CvMat___ne_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} @var{retval} = operator != (@var{self}, @var{val})\n\
+@var{self} is of type CvMat. @var{val} is of type double. @var{retval} is of type CvMat. \n\
+@end deftypefn";
+const char* _wrap_CvMat___paren_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} @var{retval} = __paren (@var{self}, @var{object})\n\
+@var{self} is of type CvMat. @var{object} is of type octave_value. @var{retval} is of type octave_value. \n\
+@end deftypefn";
+const char* _wrap_CvMat___paren_asgn_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} __paren_asgn (@var{self}, @var{object}, @var{arr})\n\
+@var{self} is of type CvMat. @var{object} is of type octave_value. @var{arr} is of type CvArr. \n\
+@end deftypefn";
+const char* _wrap_CvMat___pow___texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} @var{retval} = __pow__ (@var{self}, @var{arg})\n\
+@var{self} is of type CvMat. @var{arg} is of type double. @var{retval} is of type CvMat. \n\
+@end deftypefn";
+const char* _wrap_CvMat___radd___texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} @var{retval} = __radd__ (@var{self}, @var{arg})\n\
+@var{self} is of type CvMat. @var{arg} is of type double. @var{retval} is of type CvMat. \n\
+@end deftypefn";
+const char* _wrap_CvMat___rand___texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} @var{retval} = __rand__ (@var{self}, @var{arg})\n\
+@var{self} is of type CvMat. @var{arg} is of type double. @var{retval} is of type CvMat. \n\
+@end deftypefn";
+const char* _wrap_CvMat___rdiv___texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} @var{retval} = __rdiv__ (@var{self}, @var{arg})\n\
+@var{self} is of type CvMat. @var{arg} is of type double. @var{retval} is of type CvArr. \n\
+@end deftypefn";
+const char* _wrap_CvMat___req___texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} @var{retval} = __req__ (@var{self}, @var{arg})\n\
+@var{self} is of type CvMat. @var{arg} is of type double. @var{retval} is of type CvArr. \n\
+@end deftypefn";
+const char* _wrap_CvMat___rge___texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} @var{retval} = __rge__ (@var{self}, @var{arg})\n\
+@var{self} is of type CvMat. @var{arg} is of type double. @var{retval} is of type CvArr. \n\
+@end deftypefn";
+const char* _wrap_CvMat___rgt___texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} @var{retval} = __rgt__ (@var{self}, @var{arg})\n\
+@var{self} is of type CvMat. @var{arg} is of type double. @var{retval} is of type CvArr. \n\
+@end deftypefn";
+const char* _wrap_CvMat___rle___texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} @var{retval} = __rle__ (@var{self}, @var{arg})\n\
+@var{self} is of type CvMat. @var{arg} is of type double. @var{retval} is of type CvArr. \n\
+@end deftypefn";
+const char* _wrap_CvMat___rlt___texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} @var{retval} = __rlt__ (@var{self}, @var{arg})\n\
+@var{self} is of type CvMat. @var{arg} is of type double. @var{retval} is of type CvArr. \n\
+@end deftypefn";
+const char* _wrap_CvMat___rmul___texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} @var{retval} = __rmul__ (@var{self}, @var{arg})\n\
+@var{self} is of type CvMat. @var{arg} is of type double. @var{retval} is of type CvArr. \n\
+@end deftypefn";
+const char* _wrap_CvMat___rne___texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} @var{retval} = __rne__ (@var{self}, @var{arg})\n\
+@var{self} is of type CvMat. @var{arg} is of type double. @var{retval} is of type CvArr. \n\
+@end deftypefn";
+const char* _wrap_CvMat___ror___texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} @var{retval} = __ror__ (@var{self}, @var{arg})\n\
+@var{self} is of type CvMat. @var{arg} is of type double. @var{retval} is of type CvMat. \n\
+@end deftypefn";
+const char* _wrap_CvMat___rsub___texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} @var{retval} = __rsub__ (@var{self}, @var{arg})\n\
+@var{self} is of type CvMat. @var{arg} is of type double. @var{retval} is of type CvMat. \n\
+@end deftypefn";
+const char* _wrap_CvMat___rxor___texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} @var{retval} = __rxor__ (@var{self}, @var{arg})\n\
+@var{self} is of type CvMat. @var{arg} is of type double. @var{retval} is of type CvMat. \n\
+@end deftypefn";
+const char* _wrap_CvMat___str_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} @var{retval} = __str (@var{self})\n\
+@var{self} is of type CvMat. @var{retval} is of type char. \n\
+@end deftypefn";
+const char* _wrap_CvMat___sub_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} @var{retval} = operator - (@var{self}, @var{val})\n\
+@var{self} is of type CvMat. @var{val} is of type CvScalar. @var{retval} is of type CvMat. \n\
+@end deftypefn";
+const char* _wrap_CvMat___xor_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} @var{retval} = operator ^ (@var{self}, @var{val})\n\
+@var{self} is of type CvMat. @var{val} is of type CvScalar. @var{retval} is of type CvMat. \n\
+@end deftypefn";
+const char* _wrap_CvMatrix_addref_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} addref (@var{self})\n\
+@var{self} is of type CvMatrix. \n\
+@end deftypefn";
+const char* _wrap_CvMatrix_asCvMat_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} @var{retval} = operator CvMat* (@var{self})\n\
+@var{self} is of type CvMatrix. @var{retval} is of type CvMat. \n\
+@end deftypefn";
+const char* _wrap_CvMatrix_channels_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} @var{retval} = channels (@var{self})\n\
+@var{self} is of type CvMatrix. @var{retval} is of type int. \n\
+@end deftypefn";
+const char* _wrap_CvMatrix_clear_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} clear (@var{self})\n\
+@var{self} is of type CvMatrix. \n\
+@end deftypefn";
+const char* _wrap_CvMatrix_clone_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} @var{retval} = clone (@var{self})\n\
+@var{self} is of type CvMatrix. @var{retval} is of type CvMatrix. \n\
+@end deftypefn";
+const char* _wrap_CvMatrix_cols_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} @var{retval} = cols (@var{self})\n\
+@var{self} is of type CvMatrix. @var{retval} is of type int. \n\
+@end deftypefn";
+const char* _wrap_CvMatrix_create_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} create (@var{self}, @var{rows}, @var{cols}, @var{type})\n\
+@var{self} is of type CvMatrix. @var{rows} is of type int. @var{cols} is of type int. @var{type} is of type int. \n\
+@end deftypefn";
+const char* _wrap_CvMatrix_data_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} @var{retval} = data (@var{self})\n\
+@var{self} is of type CvMatrix. @var{retval} is of type uchar. \n\
+@end deftypefn";
+const char* _wrap_CvMatrix_depth_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} @var{retval} = depth (@var{self})\n\
+@var{self} is of type CvMatrix. @var{retval} is of type int. \n\
+@end deftypefn";
+const char* _wrap_CvMatrix_is_valid_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} @var{retval} = is_valid (@var{self})\n\
+@var{self} is of type CvMatrix. @var{retval} is of type bool. \n\
+@end deftypefn";
+const char* _wrap_CvMatrix_load_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} @var{retval} = load (@var{self}, @var{filename})\n\
+@var{self} is of type CvMatrix. @var{filename} is of type char. @var{retval} is of type bool. \n\
+@end deftypefn";
+const char* _wrap_CvMatrix_pix_size_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} @var{retval} = pix_size (@var{self})\n\
+@var{self} is of type CvMatrix. @var{retval} is of type int. \n\
+@end deftypefn";
+const char* _wrap_CvMatrix_read_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} @var{retval} = read (@var{self}, @var{fs}, @var{seqname}, @var{idx})\n\
+@var{self} is of type CvMatrix. @var{fs} is of type CvFileStorage. @var{seqname} is of type char. @var{idx} is of type int. @var{retval} is of type bool. \n\
+@end deftypefn";
+const char* _wrap_CvMatrix_release_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} release (@var{self})\n\
+@var{self} is of type CvMatrix. \n\
+@end deftypefn";
+const char* _wrap_CvMatrix_row_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} @var{retval} = row (@var{self}, @var{i})\n\
+@var{self} is of type CvMatrix. @var{i} is of type int. @var{retval} is of type uchar. \n\
+@end deftypefn";
+const char* _wrap_CvMatrix_rows_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} @var{retval} = rows (@var{self})\n\
+@var{self} is of type CvMatrix. @var{retval} is of type int. \n\
+@end deftypefn";
+const char* _wrap_CvMatrix_save_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} save (@var{self}, @var{filename}, @var{matname})\n\
+@var{self} is of type CvMatrix. @var{filename} is of type char. @var{matname} is of type char. \n\
+@end deftypefn";
+const char* _wrap_CvMatrix_set_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} set (@var{self}, @var{m}, @var{add_ref})\n\
+@var{self} is of type CvMatrix. @var{m} is of type CvMat. @var{add_ref} is of type bool. \n\
+@end deftypefn";
+const char* _wrap_CvMatrix_set_data_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} set_data (@var{self}, @var{data})\n\
+@var{self} is of type CvMatrix. @var{data} is of type void. \n\
+@end deftypefn";
+const char* _wrap_CvMatrix_show_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} show (@var{self}, @var{window_name})\n\
+@var{self} is of type CvMatrix. @var{window_name} is of type char. \n\
+@end deftypefn";
+const char* _wrap_CvMatrix_size_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} @var{retval} = size (@var{self})\n\
+@var{self} is of type CvMatrix. @var{retval} is of type CvSize. \n\
+@end deftypefn";
+const char* _wrap_CvMatrix_step_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} @var{retval} = step (@var{self})\n\
+@var{self} is of type CvMatrix. @var{retval} is of type int. \n\
+@end deftypefn";
+const char* _wrap_CvMatrix_type_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} @var{retval} = type (@var{self})\n\
+@var{self} is of type CvMatrix. @var{retval} is of type int. \n\
+@end deftypefn";
+const char* _wrap_CvMatrix_write_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} write (@var{self}, @var{fs}, @var{matname})\n\
+@var{self} is of type CvMatrix. @var{fs} is of type CvFileStorage. @var{matname} is of type char. \n\
+@end deftypefn";
+const char* _wrap_CvMorphology_clear_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} clear (@var{self})\n\
+@var{self} is of type CvMorphology. \n\
+@end deftypefn";
+const char* _wrap_CvMorphology_get_element_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} @var{retval} = get_element (@var{self})\n\
+@var{self} is of type CvMorphology. @var{retval} is of type CvMat. \n\
+@end deftypefn";
+const char* _wrap_CvMorphology_get_element_shape_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} @var{retval} = get_element_shape (@var{self})\n\
+@var{self} is of type CvMorphology. @var{retval} is of type int. \n\
+@end deftypefn";
+const char* _wrap_CvMorphology_get_element_sparse_buf_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} @var{retval} = get_element_sparse_buf (@var{self})\n\
+@var{self} is of type CvMorphology. @var{retval} is of type uchar. \n\
+@end deftypefn";
+const char* _wrap_CvMorphology_get_element_sparse_count_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} @var{retval} = get_element_sparse_count (@var{self})\n\
+@var{self} is of type CvMorphology. @var{retval} is of type int. \n\
+@end deftypefn";
+const char* _wrap_CvMorphology_get_operation_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} @var{retval} = get_operation (@var{self})\n\
+@var{self} is of type CvMorphology. @var{retval} is of type int. \n\
+@end deftypefn";
+const char* _wrap_CvMorphology_init_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} init (@var{self}, @var{_max_width}, @var{_src_type}, @var{_dst_type}, @var{_is_separable}, @var{_ksize})\n\
+@var{self} is of type CvMorphology. @var{_max_width} is of type int. @var{_src_type} is of type int. @var{_dst_type} is of type int. @var{_is_separable} is of type bool. @var{_ksize} is of type CvSize. \n\
+@end deftypefn";
+const char* _wrap_CvMorphology_init_binary_element_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} CvMorphology::init_binary_element (@var{_element}, @var{_element_shape})\n\
+@var{_element} is of type CvMat. @var{_element_shape} is of type int. \n\
+@end deftypefn";
+const char* _wrap_CvPoint2D32f___repr___texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} @var{retval} = __repr__ (@var{self})\n\
+@var{self} is of type CvPoint2D32f. @var{retval} is of type char. \n\
+@end deftypefn";
+const char* _wrap_CvPoint2D32f___str___texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} @var{retval} = __str__ (@var{self})\n\
+@var{self} is of type CvPoint2D32f. @var{retval} is of type char. \n\
+@end deftypefn";
+const char* _wrap_CvPointVector___paren_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} @var{retval} = __paren (@var{self}, @var{i})\n\
+@var{self} is of type CvPointVector. @var{i} is of type difference_type. @var{retval} is of type value_type. \n\
+@end deftypefn";
+const char* _wrap_CvPointVector___paren_asgn_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} __paren_asgn (@var{self}, @var{i}, @var{x})\n\
+@var{self} is of type CvPointVector. @var{i} is of type difference_type. @var{x} is of type value_type. \n\
+@end deftypefn";
+const char* _wrap_CvPointVector_append_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} append (@var{self}, @var{x})\n\
+@var{self} is of type CvPointVector. @var{x} is of type value_type. \n\
+@end deftypefn";
+const char* _wrap_CvPointVector_assign_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} assign (@var{self}, @var{n}, @var{x})\n\
+@var{self} is of type CvPointVector. @var{n} is of type size_type. @var{x} is of type value_type. \n\
+@end deftypefn";
+const char* _wrap_CvPointVector_back_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} @var{retval} = back (@var{self})\n\
+@var{self} is of type CvPointVector. @var{retval} is of type value_type. \n\
+@end deftypefn";
+const char* _wrap_CvPointVector_begin_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} @var{retval} = begin (@var{self})\n\
+@var{self} is of type CvPointVector. @var{retval} is of type const_iterator. \n\
+@end deftypefn";
+const char* _wrap_CvPointVector_capacity_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} @var{retval} = capacity (@var{self})\n\
+@var{self} is of type CvPointVector. @var{retval} is of type size_type. \n\
+@end deftypefn";
+const char* _wrap_CvPointVector_clear_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} clear (@var{self})\n\
+@var{self} is of type CvPointVector. \n\
+@end deftypefn";
+const char* _wrap_CvPointVector_empty_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} @var{retval} = empty (@var{self})\n\
+@var{self} is of type CvPointVector. @var{retval} is of type bool. \n\
+@end deftypefn";
+const char* _wrap_CvPointVector_end_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} @var{retval} = end (@var{self})\n\
+@var{self} is of type CvPointVector. @var{retval} is of type const_iterator. \n\
+@end deftypefn";
+const char* _wrap_CvPointVector_erase_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} @var{retval} = erase (@var{self}, @var{first}, @var{last})\n\
+@var{self} is of type CvPointVector. @var{first} is of type iterator. @var{last} is of type iterator. @var{retval} is of type iterator. \n\
+@end deftypefn";
+const char* _wrap_CvPointVector_front_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} @var{retval} = front (@var{self})\n\
+@var{self} is of type CvPointVector. @var{retval} is of type value_type. \n\
+@end deftypefn";
+const char* _wrap_CvPointVector_get_allocator_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} @var{retval} = get_allocator (@var{self})\n\
+@var{self} is of type CvPointVector. @var{retval} is of type allocator_type. \n\
+@end deftypefn";
+const char* _wrap_CvPointVector_insert_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} insert (@var{self}, @var{pos}, @var{n}, @var{x})\n\
+@var{self} is of type CvPointVector. @var{pos} is of type iterator. @var{n} is of type size_type. @var{x} is of type value_type. \n\
+@end deftypefn";
+const char* _wrap_CvPointVector_pop_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} @var{retval} = pop (@var{self})\n\
+@var{self} is of type CvPointVector. @var{retval} is of type value_type. \n\
+@end deftypefn";
+const char* _wrap_CvPointVector_pop_back_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} pop_back (@var{self})\n\
+@var{self} is of type CvPointVector. \n\
+@end deftypefn";
+const char* _wrap_CvPointVector_push_back_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} push_back (@var{self}, @var{x})\n\
+@var{self} is of type CvPointVector. @var{x} is of type value_type. \n\
+@end deftypefn";
+const char* _wrap_CvPointVector_rbegin_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} @var{retval} = rbegin (@var{self})\n\
+@var{self} is of type CvPointVector. @var{retval} is of type const_reverse_iterator. \n\
+@end deftypefn";
+const char* _wrap_CvPointVector_rend_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} @var{retval} = rend (@var{self})\n\
+@var{self} is of type CvPointVector. @var{retval} is of type const_reverse_iterator. \n\
+@end deftypefn";
+const char* _wrap_CvPointVector_reserve_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} reserve (@var{self}, @var{n})\n\
+@var{self} is of type CvPointVector. @var{n} is of type size_type. \n\
+@end deftypefn";
+const char* _wrap_CvPointVector_resize_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} resize (@var{self}, @var{new_size}, @var{x})\n\
+@var{self} is of type CvPointVector. @var{new_size} is of type size_type. @var{x} is of type value_type. \n\
+@end deftypefn";
+const char* _wrap_CvPointVector_size_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} @var{retval} = size (@var{self})\n\
+@var{self} is of type CvPointVector. @var{retval} is of type size_type. \n\
+@end deftypefn";
+const char* _wrap_CvPointVector_swap_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} swap (@var{self}, @var{v})\n\
+@var{self} is of type CvPointVector. @var{v} is of type CvPointVector. \n\
+@end deftypefn";
+const char* _wrap_CvPoint___repr___texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} @var{retval} = __repr__ (@var{self})\n\
+@var{self} is of type CvPoint. @var{retval} is of type char. \n\
+@end deftypefn";
+const char* _wrap_CvPoint___str___texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} @var{retval} = __str__ (@var{self})\n\
+@var{self} is of type CvPoint. @var{retval} is of type char. \n\
+@end deftypefn";
+const char* _wrap_CvRNG_Wrapper___eq_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} @var{retval} = operator == (@var{self}, @var{x})\n\
+@var{self} is of type CvRNG_Wrapper. @var{x} is of type CvRNG_Wrapper. @var{retval} is of type bool. \n\
+@end deftypefn";
+const char* _wrap_CvRNG_Wrapper___ne_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} @var{retval} = operator != (@var{self}, @var{x})\n\
+@var{self} is of type CvRNG_Wrapper. @var{x} is of type CvRNG_Wrapper. @var{retval} is of type bool. \n\
+@end deftypefn";
+const char* _wrap_CvRNG_Wrapper_ptr_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} @var{retval} = ptr (@var{self})\n\
+@var{self} is of type CvRNG_Wrapper. @var{retval} is of type CvRNG. \n\
+@end deftypefn";
+const char* _wrap_CvRNG_Wrapper_ref_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} @var{retval} = ref (@var{self})\n\
+@var{self} is of type CvRNG_Wrapper. @var{retval} is of type CvRNG. \n\
+@end deftypefn";
+const char* _wrap_CvScalar___getitem___texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} @var{retval} = __getitem__ (@var{self}, @var{index})\n\
+@var{self} is of type CvScalar. @var{index} is of type int. @var{retval} is of type double. \n\
+@end deftypefn";
+const char* _wrap_CvScalar___repr___texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} @var{retval} = __repr__ (@var{self})\n\
+@var{self} is of type CvScalar. @var{retval} is of type char. \n\
+@end deftypefn";
+const char* _wrap_CvScalar___setitem___texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} __setitem__ (@var{self}, @var{index}, @var{value})\n\
+@var{self} is of type CvScalar. @var{index} is of type int. @var{value} is of type double. \n\
+@end deftypefn";
+const char* _wrap_CvScalar___str___texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} @var{retval} = __str__ (@var{self})\n\
+@var{self} is of type CvScalar. @var{retval} is of type char. \n\
+@end deftypefn";
+const char* _wrap_CvSepFilter_clear_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} clear (@var{self})\n\
+@var{self} is of type CvSepFilter. \n\
+@end deftypefn";
+const char* _wrap_CvSepFilter_get_x_kernel_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} @var{retval} = get_x_kernel (@var{self})\n\
+@var{self} is of type CvSepFilter. @var{retval} is of type CvMat. \n\
+@end deftypefn";
+const char* _wrap_CvSepFilter_get_x_kernel_flags_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} @var{retval} = get_x_kernel_flags (@var{self})\n\
+@var{self} is of type CvSepFilter. @var{retval} is of type int. \n\
+@end deftypefn";
+const char* _wrap_CvSepFilter_get_y_kernel_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} @var{retval} = get_y_kernel (@var{self})\n\
+@var{self} is of type CvSepFilter. @var{retval} is of type CvMat. \n\
+@end deftypefn";
+const char* _wrap_CvSepFilter_get_y_kernel_flags_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} @var{retval} = get_y_kernel_flags (@var{self})\n\
+@var{self} is of type CvSepFilter. @var{retval} is of type int. \n\
+@end deftypefn";
+const char* _wrap_CvSepFilter_init_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} init (@var{self}, @var{_max_width}, @var{_src_type}, @var{_dst_type}, @var{_is_separable}, @var{_ksize})\n\
+@var{self} is of type CvSepFilter. @var{_max_width} is of type int. @var{_src_type} is of type int. @var{_dst_type} is of type int. @var{_is_separable} is of type bool. @var{_ksize} is of type CvSize. \n\
+@end deftypefn";
+const char* _wrap_CvSepFilter_init_deriv_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} init_deriv (@var{self}, @var{_max_width}, @var{_src_type}, @var{_dst_type}, @var{dx}, @var{dy}, @var{aperture_size})\n\
+@var{self} is of type CvSepFilter. @var{_max_width} is of type int. @var{_src_type} is of type int. @var{_dst_type} is of type int. @var{dx} is of type int. @var{dy} is of type int. @var{aperture_size} is of type int. \n\
+@end deftypefn";
+const char* _wrap_CvSepFilter_init_gaussian_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} init_gaussian (@var{self}, @var{_max_width}, @var{_src_type}, @var{_dst_type}, @var{gaussian_size}, @var{sigma})\n\
+@var{self} is of type CvSepFilter. @var{_max_width} is of type int. @var{_src_type} is of type int. @var{_dst_type} is of type int. @var{gaussian_size} is of type int. @var{sigma} is of type double. \n\
+@end deftypefn";
+const char* _wrap_CvSepFilter_init_gaussian_kernel_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} CvSepFilter::init_gaussian_kernel (@var{kernel})\n\
+@var{kernel} is of type CvMat. \n\
+@end deftypefn";
+const char* _wrap_CvSepFilter_init_scharr_kernel_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} CvSepFilter::init_scharr_kernel (@var{_kx}, @var{_ky}, @var{dx}, @var{dy})\n\
+@var{_kx} is of type CvMat. @var{_ky} is of type CvMat. @var{dx} is of type int. @var{dy} is of type int. \n\
+@end deftypefn";
+const char* _wrap_CvSepFilter_init_sobel_kernel_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} CvSepFilter::init_sobel_kernel (@var{_kx}, @var{_ky}, @var{dx}, @var{dy})\n\
+@var{_kx} is of type CvMat. @var{_ky} is of type CvMat. @var{dx} is of type int. @var{dy} is of type int. \n\
+@end deftypefn";
+const char* _wrap_CvSeq_CvConnectedComp___getitem___texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} @var{retval} = __getitem__ (@var{self}, @var{i})\n\
+@var{self} is of type CvSeq_CvConnectedComp. @var{i} is of type int. @var{retval} is of type CvConnectedComp. \n\
+@end deftypefn";
+const char* _wrap_CvSeq_CvConnectedComp___setitem___texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} __setitem__ (@var{self}, @var{i}, @var{obj})\n\
+@var{self} is of type CvSeq_CvConnectedComp. @var{i} is of type int. @var{obj} is of type CvConnectedComp. \n\
+@end deftypefn";
+const char* _wrap_CvSeq_CvConnectedComp_append_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} append (@var{self}, @var{obj})\n\
+@var{self} is of type CvSeq_CvConnectedComp. @var{obj} is of type CvConnectedComp. \n\
+@end deftypefn";
+const char* _wrap_CvSeq_CvConnectedComp_cast_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} @var{retval} = CvTypedSeq<(CvConnectedComp)>::cast (@var{seq})\n\
+@var{seq} is of type CvSeq. @var{retval} is of type CvSeq_CvConnectedComp. \n\
+@end deftypefn";
+const char* _wrap_CvSeq_CvConnectedComp_pop_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} @var{retval} = pop (@var{self})\n\
+@var{self} is of type CvSeq_CvConnectedComp. @var{retval} is of type CvConnectedComp. \n\
+@end deftypefn";
+const char* _wrap_CvSeq_CvPoint2D32f___getitem___texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} @var{retval} = __getitem__ (@var{self}, @var{i})\n\
+@var{self} is of type CvSeq_CvPoint2D32f. @var{i} is of type int. @var{retval} is of type CvPoint2D32f. \n\
+@end deftypefn";
+const char* _wrap_CvSeq_CvPoint2D32f___setitem___texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} __setitem__ (@var{self}, @var{i}, @var{obj})\n\
+@var{self} is of type CvSeq_CvPoint2D32f. @var{i} is of type int. @var{obj} is of type CvPoint2D32f. \n\
+@end deftypefn";
+const char* _wrap_CvSeq_CvPoint2D32f_append_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} append (@var{self}, @var{obj})\n\
+@var{self} is of type CvSeq_CvPoint2D32f. @var{obj} is of type CvPoint2D32f. \n\
+@end deftypefn";
+const char* _wrap_CvSeq_CvPoint2D32f_cast_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} @var{retval} = CvTypedSeq<(CvPoint2D32f)>::cast (@var{seq})\n\
+@var{seq} is of type CvSeq. @var{retval} is of type CvSeq_CvPoint2D32f. \n\
+@end deftypefn";
+const char* _wrap_CvSeq_CvPoint2D32f_pop_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} @var{retval} = pop (@var{self})\n\
+@var{self} is of type CvSeq_CvPoint2D32f. @var{retval} is of type CvPoint2D32f. \n\
+@end deftypefn";
+const char* _wrap_CvSeq_CvPoint_2___getitem___texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} @var{retval} = __getitem__ (@var{self}, @var{i})\n\
+@var{self} is of type CvSeq_CvPoint_2. @var{i} is of type int. @var{retval} is of type CvTuple_CvPoint_2. \n\
+@end deftypefn";
+const char* _wrap_CvSeq_CvPoint_2___setitem___texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} __setitem__ (@var{self}, @var{i}, @var{obj})\n\
+@var{self} is of type CvSeq_CvPoint_2. @var{i} is of type int. @var{obj} is of type CvTuple_CvPoint_2. \n\
+@end deftypefn";
+const char* _wrap_CvSeq_CvPoint_2_append_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} append (@var{self}, @var{obj})\n\
+@var{self} is of type CvSeq_CvPoint_2. @var{obj} is of type CvTuple_CvPoint_2. \n\
+@end deftypefn";
+const char* _wrap_CvSeq_CvPoint_2_cast_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} @var{retval} = CvTypedSeq<(CvTuple<(CvPoint,2)>)>::cast (@var{seq})\n\
+@var{seq} is of type CvSeq. @var{retval} is of type CvSeq_CvPoint_2. \n\
+@end deftypefn";
+const char* _wrap_CvSeq_CvPoint_2_pop_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} @var{retval} = pop (@var{self})\n\
+@var{self} is of type CvSeq_CvPoint_2. @var{retval} is of type CvTuple_CvPoint_2. \n\
+@end deftypefn";
+const char* _wrap_CvSeq_CvPoint___getitem___texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} @var{retval} = __getitem__ (@var{self}, @var{i})\n\
+@var{self} is of type CvSeq_CvPoint. @var{i} is of type int. @var{retval} is of type CvPoint. \n\
+@end deftypefn";
+const char* _wrap_CvSeq_CvPoint___setitem___texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} __setitem__ (@var{self}, @var{i}, @var{obj})\n\
+@var{self} is of type CvSeq_CvPoint. @var{i} is of type int. @var{obj} is of type CvPoint. \n\
+@end deftypefn";
+const char* _wrap_CvSeq_CvPoint_append_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} append (@var{self}, @var{obj})\n\
+@var{self} is of type CvSeq_CvPoint. @var{obj} is of type CvPoint. \n\
+@end deftypefn";
+const char* _wrap_CvSeq_CvPoint_cast_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} @var{retval} = CvTypedSeq<(CvPoint)>::cast (@var{seq})\n\
+@var{seq} is of type CvSeq. @var{retval} is of type CvSeq_CvPoint. \n\
+@end deftypefn";
+const char* _wrap_CvSeq_CvPoint_pop_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} @var{retval} = pop (@var{self})\n\
+@var{self} is of type CvSeq_CvPoint. @var{retval} is of type CvPoint. \n\
+@end deftypefn";
+const char* _wrap_CvSeq_CvQuadEdge2D___getitem___texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} @var{retval} = __getitem__ (@var{self}, @var{i})\n\
+@var{self} is of type CvSeq_CvQuadEdge2D. @var{i} is of type int. @var{retval} is of type CvQuadEdge2D. \n\
+@end deftypefn";
+const char* _wrap_CvSeq_CvQuadEdge2D___setitem___texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} __setitem__ (@var{self}, @var{i}, @var{obj})\n\
+@var{self} is of type CvSeq_CvQuadEdge2D. @var{i} is of type int. @var{obj} is of type CvQuadEdge2D. \n\
+@end deftypefn";
+const char* _wrap_CvSeq_CvQuadEdge2D_append_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} append (@var{self}, @var{obj})\n\
+@var{self} is of type CvSeq_CvQuadEdge2D. @var{obj} is of type CvQuadEdge2D. \n\
+@end deftypefn";
+const char* _wrap_CvSeq_CvQuadEdge2D_cast_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} @var{retval} = CvTypedSeq<(CvQuadEdge2D)>::cast (@var{seq})\n\
+@var{seq} is of type CvSeq. @var{retval} is of type CvSeq_CvQuadEdge2D. \n\
+@end deftypefn";
+const char* _wrap_CvSeq_CvQuadEdge2D_pop_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} @var{retval} = pop (@var{self})\n\
+@var{self} is of type CvSeq_CvQuadEdge2D. @var{retval} is of type CvQuadEdge2D. \n\
+@end deftypefn";
+const char* _wrap_CvSeq_CvRect___getitem___texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} @var{retval} = __getitem__ (@var{self}, @var{i})\n\
+@var{self} is of type CvSeq_CvRect. @var{i} is of type int. @var{retval} is of type CvRect. \n\
+@end deftypefn";
+const char* _wrap_CvSeq_CvRect___setitem___texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} __setitem__ (@var{self}, @var{i}, @var{obj})\n\
+@var{self} is of type CvSeq_CvRect. @var{i} is of type int. @var{obj} is of type CvRect. \n\
+@end deftypefn";
+const char* _wrap_CvSeq_CvRect_append_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} append (@var{self}, @var{obj})\n\
+@var{self} is of type CvSeq_CvRect. @var{obj} is of type CvRect. \n\
+@end deftypefn";
+const char* _wrap_CvSeq_CvRect_cast_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} @var{retval} = CvTypedSeq<(CvRect)>::cast (@var{seq})\n\
+@var{seq} is of type CvSeq. @var{retval} is of type CvSeq_CvRect. \n\
+@end deftypefn";
+const char* _wrap_CvSeq_CvRect_pop_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} @var{retval} = pop (@var{self})\n\
+@var{self} is of type CvSeq_CvRect. @var{retval} is of type CvRect. \n\
+@end deftypefn";
+const char* _wrap_CvSeq_CvSeq___getitem___texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} @var{retval} = __getitem__ (@var{self}, @var{i})\n\
+@var{self} is of type CvSeq_CvSeq. @var{i} is of type int. @var{retval} is of type CvSeq. \n\
+@end deftypefn";
+const char* _wrap_CvSeq_CvSeq___setitem___texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} __setitem__ (@var{self}, @var{i}, @var{obj})\n\
+@var{self} is of type CvSeq_CvSeq. @var{i} is of type int. @var{obj} is of type CvSeq. \n\
+@end deftypefn";
+const char* _wrap_CvSeq_CvSeq_append_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} append (@var{self}, @var{obj})\n\
+@var{self} is of type CvSeq_CvSeq. @var{obj} is of type CvSeq. \n\
+@end deftypefn";
+const char* _wrap_CvSeq_CvSeq_cast_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} @var{retval} = CvTypedSeq<(p.CvSeq)>::cast (@var{seq})\n\
+@var{seq} is of type CvSeq. @var{retval} is of type CvSeq_CvSeq. \n\
+@end deftypefn";
+const char* _wrap_CvSeq_CvSeq_pop_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} @var{retval} = pop (@var{self})\n\
+@var{self} is of type CvSeq_CvSeq. @var{retval} is of type CvSeq. \n\
+@end deftypefn";
+const char* _wrap_CvSeq_float_2___getitem___texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} @var{retval} = __getitem__ (@var{self}, @var{i})\n\
+@var{self} is of type CvSeq_float_2. @var{i} is of type int. @var{retval} is of type CvTuple_float_2. \n\
+@end deftypefn";
+const char* _wrap_CvSeq_float_2___setitem___texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} __setitem__ (@var{self}, @var{i}, @var{obj})\n\
+@var{self} is of type CvSeq_float_2. @var{i} is of type int. @var{obj} is of type CvTuple_float_2. \n\
+@end deftypefn";
+const char* _wrap_CvSeq_float_2_append_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} append (@var{self}, @var{obj})\n\
+@var{self} is of type CvSeq_float_2. @var{obj} is of type CvTuple_float_2. \n\
+@end deftypefn";
+const char* _wrap_CvSeq_float_2_cast_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} @var{retval} = CvTypedSeq<(CvTuple<(float,2)>)>::cast (@var{seq})\n\
+@var{seq} is of type CvSeq. @var{retval} is of type CvSeq_float_2. \n\
+@end deftypefn";
+const char* _wrap_CvSeq_float_2_pop_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} @var{retval} = pop (@var{self})\n\
+@var{self} is of type CvSeq_float_2. @var{retval} is of type CvTuple_float_2. \n\
+@end deftypefn";
+const char* _wrap_CvSeq_float_3___getitem___texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} @var{retval} = __getitem__ (@var{self}, @var{i})\n\
+@var{self} is of type CvSeq_float_3. @var{i} is of type int. @var{retval} is of type CvTuple_float_3. \n\
+@end deftypefn";
+const char* _wrap_CvSeq_float_3___setitem___texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} __setitem__ (@var{self}, @var{i}, @var{obj})\n\
+@var{self} is of type CvSeq_float_3. @var{i} is of type int. @var{obj} is of type CvTuple_float_3. \n\
+@end deftypefn";
+const char* _wrap_CvSeq_float_3_append_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} append (@var{self}, @var{obj})\n\
+@var{self} is of type CvSeq_float_3. @var{obj} is of type CvTuple_float_3. \n\
+@end deftypefn";
+const char* _wrap_CvSeq_float_3_cast_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} @var{retval} = CvTypedSeq<(CvTuple<(float,3)>)>::cast (@var{seq})\n\
+@var{seq} is of type CvSeq. @var{retval} is of type CvSeq_float_3. \n\
+@end deftypefn";
+const char* _wrap_CvSeq_float_3_pop_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} @var{retval} = pop (@var{self})\n\
+@var{self} is of type CvSeq_float_3. @var{retval} is of type CvTuple_float_3. \n\
+@end deftypefn";
+const char* _wrap_CvSubdiv2DEdge_Wrapper___eq_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} @var{retval} = operator == (@var{self}, @var{x})\n\
+@var{self} is of type CvSubdiv2DEdge_Wrapper. @var{x} is of type CvSubdiv2DEdge_Wrapper. @var{retval} is of type bool. \n\
+@end deftypefn";
+const char* _wrap_CvSubdiv2DEdge_Wrapper___ne_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} @var{retval} = operator != (@var{self}, @var{x})\n\
+@var{self} is of type CvSubdiv2DEdge_Wrapper. @var{x} is of type CvSubdiv2DEdge_Wrapper. @var{retval} is of type bool. \n\
+@end deftypefn";
+const char* _wrap_CvSubdiv2DEdge_Wrapper_ptr_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} @var{retval} = ptr (@var{self})\n\
+@var{self} is of type CvSubdiv2DEdge_Wrapper. @var{retval} is of type CvSubdiv2DEdge. \n\
+@end deftypefn";
+const char* _wrap_CvSubdiv2DEdge_Wrapper_ref_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} @var{retval} = ref (@var{self})\n\
+@var{self} is of type CvSubdiv2DEdge_Wrapper. @var{retval} is of type CvSubdiv2DEdge. \n\
+@end deftypefn";
+const char* _wrap_CvSubdiv2D_typed_edges_get_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} @var{retval} = typed_edges_get (@var{self})\n\
+@var{self} is of type CvSubdiv2D. @var{retval} is of type CvSeq_CvQuadEdge2D. \n\
+@end deftypefn";
+const char* _wrap_CvSubdiv2D_typed_edges_set_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} typed_edges_set (@var{self}, @var{?})\n\
+@var{self} is of type CvSubdiv2D. @var{?} is of type CvSeq_CvQuadEdge2D. \n\
+@end deftypefn";
+const char* _wrap_CvTuple_CvPoint_2___getitem___texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} @var{retval} = __getitem__ (@var{self}, @var{i})\n\
+@var{self} is of type CvTuple_CvPoint_2. @var{i} is of type int. @var{retval} is of type CvPoint. \n\
+@end deftypefn";
+const char* _wrap_CvTuple_CvPoint_2___setitem___texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} __setitem__ (@var{self}, @var{i}, @var{obj})\n\
+@var{self} is of type CvTuple_CvPoint_2. @var{i} is of type int. @var{obj} is of type CvPoint. \n\
+@end deftypefn";
+const char* _wrap_CvTuple_float_2___getitem___texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} @var{retval} = __getitem__ (@var{self}, @var{i})\n\
+@var{self} is of type CvTuple_float_2. @var{i} is of type int. @var{retval} is of type float. \n\
+@end deftypefn";
+const char* _wrap_CvTuple_float_2___setitem___texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} __setitem__ (@var{self}, @var{i}, @var{obj})\n\
+@var{self} is of type CvTuple_float_2. @var{i} is of type int. @var{obj} is of type float. \n\
+@end deftypefn";
+const char* _wrap_CvTuple_float_3___getitem___texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} @var{retval} = __getitem__ (@var{self}, @var{i})\n\
+@var{self} is of type CvTuple_float_3. @var{i} is of type int. @var{retval} is of type float. \n\
+@end deftypefn";
+const char* _wrap_CvTuple_float_3___setitem___texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} __setitem__ (@var{self}, @var{i}, @var{obj})\n\
+@var{self} is of type CvTuple_float_3. @var{i} is of type int. @var{obj} is of type float. \n\
+@end deftypefn";
+const char* _wrap_FloatVector___paren_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} @var{retval} = __paren (@var{self}, @var{i})\n\
+@var{self} is of type FloatVector. @var{i} is of type difference_type. @var{retval} is of type value_type. \n\
+@end deftypefn";
+const char* _wrap_FloatVector___paren_asgn_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} __paren_asgn (@var{self}, @var{i}, @var{x})\n\
+@var{self} is of type FloatVector. @var{i} is of type difference_type. @var{x} is of type value_type. \n\
+@end deftypefn";
+const char* _wrap_FloatVector_append_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} append (@var{self}, @var{x})\n\
+@var{self} is of type FloatVector. @var{x} is of type value_type. \n\
+@end deftypefn";
+const char* _wrap_FloatVector_assign_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} assign (@var{self}, @var{n}, @var{x})\n\
+@var{self} is of type FloatVector. @var{n} is of type size_type. @var{x} is of type value_type. \n\
+@end deftypefn";
+const char* _wrap_FloatVector_back_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} @var{retval} = back (@var{self})\n\
+@var{self} is of type FloatVector. @var{retval} is of type value_type. \n\
+@end deftypefn";
+const char* _wrap_FloatVector_begin_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} @var{retval} = begin (@var{self})\n\
+@var{self} is of type FloatVector. @var{retval} is of type const_iterator. \n\
+@end deftypefn";
+const char* _wrap_FloatVector_capacity_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} @var{retval} = capacity (@var{self})\n\
+@var{self} is of type FloatVector. @var{retval} is of type size_type. \n\
+@end deftypefn";
+const char* _wrap_FloatVector_clear_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} clear (@var{self})\n\
+@var{self} is of type FloatVector. \n\
+@end deftypefn";
+const char* _wrap_FloatVector_empty_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} @var{retval} = empty (@var{self})\n\
+@var{self} is of type FloatVector. @var{retval} is of type bool. \n\
+@end deftypefn";
+const char* _wrap_FloatVector_end_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} @var{retval} = end (@var{self})\n\
+@var{self} is of type FloatVector. @var{retval} is of type const_iterator. \n\
+@end deftypefn";
+const char* _wrap_FloatVector_erase_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} @var{retval} = erase (@var{self}, @var{first}, @var{last})\n\
+@var{self} is of type FloatVector. @var{first} is of type iterator. @var{last} is of type iterator. @var{retval} is of type iterator. \n\
+@end deftypefn";
+const char* _wrap_FloatVector_front_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} @var{retval} = front (@var{self})\n\
+@var{self} is of type FloatVector. @var{retval} is of type value_type. \n\
+@end deftypefn";
+const char* _wrap_FloatVector_get_allocator_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} @var{retval} = get_allocator (@var{self})\n\
+@var{self} is of type FloatVector. @var{retval} is of type allocator_type. \n\
+@end deftypefn";
+const char* _wrap_FloatVector_insert_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} insert (@var{self}, @var{pos}, @var{n}, @var{x})\n\
+@var{self} is of type FloatVector. @var{pos} is of type iterator. @var{n} is of type size_type. @var{x} is of type value_type. \n\
+@end deftypefn";
+const char* _wrap_FloatVector_pop_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} @var{retval} = pop (@var{self})\n\
+@var{self} is of type FloatVector. @var{retval} is of type value_type. \n\
+@end deftypefn";
+const char* _wrap_FloatVector_pop_back_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} pop_back (@var{self})\n\
+@var{self} is of type FloatVector. \n\
+@end deftypefn";
+const char* _wrap_FloatVector_push_back_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} push_back (@var{self}, @var{x})\n\
+@var{self} is of type FloatVector. @var{x} is of type value_type. \n\
+@end deftypefn";
+const char* _wrap_FloatVector_rbegin_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} @var{retval} = rbegin (@var{self})\n\
+@var{self} is of type FloatVector. @var{retval} is of type const_reverse_iterator. \n\
+@end deftypefn";
+const char* _wrap_FloatVector_rend_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} @var{retval} = rend (@var{self})\n\
+@var{self} is of type FloatVector. @var{retval} is of type const_reverse_iterator. \n\
+@end deftypefn";
+const char* _wrap_FloatVector_reserve_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} reserve (@var{self}, @var{n})\n\
+@var{self} is of type FloatVector. @var{n} is of type size_type. \n\
+@end deftypefn";
+const char* _wrap_FloatVector_resize_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} resize (@var{self}, @var{new_size}, @var{x})\n\
+@var{self} is of type FloatVector. @var{new_size} is of type size_type. @var{x} is of type value_type. \n\
+@end deftypefn";
+const char* _wrap_FloatVector_size_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} @var{retval} = size (@var{self})\n\
+@var{self} is of type FloatVector. @var{retval} is of type size_type. \n\
+@end deftypefn";
+const char* _wrap_FloatVector_swap_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} swap (@var{self}, @var{v})\n\
+@var{self} is of type FloatVector. @var{v} is of type FloatVector. \n\
+@end deftypefn";
+const char* _wrap_IplImage___add_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} @var{retval} = operator + (@var{self}, @var{val})\n\
+@var{self} is of type . @var{val} is of type CvScalar. @var{retval} is of type . \n\
+@end deftypefn";
+const char* _wrap_IplImage___div_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} @var{retval} = operator / (@var{self}, @var{val})\n\
+@var{self} is of type . @var{val} is of type double. @var{retval} is of type . \n\
+@end deftypefn";
+const char* _wrap_IplImage___eq_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} @var{retval} = operator == (@var{self}, @var{val})\n\
+@var{self} is of type . @var{val} is of type double. @var{retval} is of type . \n\
+@end deftypefn";
+const char* _wrap_IplImage___ge_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} @var{retval} = operator >= (@var{self}, @var{val})\n\
+@var{self} is of type . @var{val} is of type double. @var{retval} is of type . \n\
+@end deftypefn";
+const char* _wrap_IplImage___gt_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} @var{retval} = operator > (@var{self}, @var{val})\n\
+@var{self} is of type . @var{val} is of type double. @var{retval} is of type . \n\
+@end deftypefn";
+const char* _wrap_IplImage___le_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} @var{retval} = operator <= (@var{self}, @var{val})\n\
+@var{self} is of type . @var{val} is of type double. @var{retval} is of type . \n\
+@end deftypefn";
+const char* _wrap_IplImage___lt_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} @var{retval} = operator < (@var{self}, @var{val})\n\
+@var{self} is of type . @var{val} is of type double. @var{retval} is of type . \n\
+@end deftypefn";
+const char* _wrap_IplImage___mul_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} @var{retval} = operator * (@var{self}, @var{src})\n\
+@var{self} is of type . @var{src} is of type CvArr. @var{retval} is of type . \n\
+@end deftypefn";
+const char* _wrap_IplImage___ne_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} @var{retval} = operator != (@var{self}, @var{val})\n\
+@var{self} is of type . @var{val} is of type double. @var{retval} is of type . \n\
+@end deftypefn";
+const char* _wrap_IplImage___paren_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} @var{retval} = __paren (@var{self}, @var{object})\n\
+@var{self} is of type . @var{object} is of type octave_value. @var{retval} is of type octave_value. \n\
+@end deftypefn";
+const char* _wrap_IplImage___paren_asgn_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} __paren_asgn (@var{self}, @var{object}, @var{arr})\n\
+@var{self} is of type . @var{object} is of type octave_value. @var{arr} is of type CvArr. \n\
+@end deftypefn";
+const char* _wrap_IplImage___pow___texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} @var{retval} = __pow__ (@var{self}, @var{arg})\n\
+@var{self} is of type . @var{arg} is of type double. @var{retval} is of type . \n\
+@end deftypefn";
+const char* _wrap_IplImage___radd___texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} @var{retval} = __radd__ (@var{self}, @var{arg})\n\
+@var{self} is of type . @var{arg} is of type double. @var{retval} is of type . \n\
+@end deftypefn";
+const char* _wrap_IplImage___rand___texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} @var{retval} = __rand__ (@var{self}, @var{arg})\n\
+@var{self} is of type . @var{arg} is of type double. @var{retval} is of type . \n\
+@end deftypefn";
+const char* _wrap_IplImage___rdiv___texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} @var{retval} = __rdiv__ (@var{self}, @var{arg})\n\
+@var{self} is of type . @var{arg} is of type double. @var{retval} is of type CvArr. \n\
+@end deftypefn";
+const char* _wrap_IplImage___req___texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} @var{retval} = __req__ (@var{self}, @var{arg})\n\
+@var{self} is of type . @var{arg} is of type double. @var{retval} is of type CvArr. \n\
+@end deftypefn";
+const char* _wrap_IplImage___rge___texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} @var{retval} = __rge__ (@var{self}, @var{arg})\n\
+@var{self} is of type . @var{arg} is of type double. @var{retval} is of type CvArr. \n\
+@end deftypefn";
+const char* _wrap_IplImage___rgt___texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} @var{retval} = __rgt__ (@var{self}, @var{arg})\n\
+@var{self} is of type . @var{arg} is of type double. @var{retval} is of type CvArr. \n\
+@end deftypefn";
+const char* _wrap_IplImage___rle___texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} @var{retval} = __rle__ (@var{self}, @var{arg})\n\
+@var{self} is of type . @var{arg} is of type double. @var{retval} is of type CvArr. \n\
+@end deftypefn";
+const char* _wrap_IplImage___rlt___texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} @var{retval} = __rlt__ (@var{self}, @var{arg})\n\
+@var{self} is of type . @var{arg} is of type double. @var{retval} is of type CvArr. \n\
+@end deftypefn";
+const char* _wrap_IplImage___rmul___texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} @var{retval} = __rmul__ (@var{self}, @var{arg})\n\
+@var{self} is of type . @var{arg} is of type double. @var{retval} is of type CvArr. \n\
+@end deftypefn";
+const char* _wrap_IplImage___rne___texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} @var{retval} = __rne__ (@var{self}, @var{arg})\n\
+@var{self} is of type . @var{arg} is of type double. @var{retval} is of type CvArr. \n\
+@end deftypefn";
+const char* _wrap_IplImage___ror___texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} @var{retval} = __ror__ (@var{self}, @var{arg})\n\
+@var{self} is of type . @var{arg} is of type double. @var{retval} is of type . \n\
+@end deftypefn";
+const char* _wrap_IplImage___rsub___texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} @var{retval} = __rsub__ (@var{self}, @var{arg})\n\
+@var{self} is of type . @var{arg} is of type double. @var{retval} is of type . \n\
+@end deftypefn";
+const char* _wrap_IplImage___rxor___texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} @var{retval} = __rxor__ (@var{self}, @var{arg})\n\
+@var{self} is of type . @var{arg} is of type double. @var{retval} is of type . \n\
+@end deftypefn";
+const char* _wrap_IplImage___str_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} @var{retval} = __str (@var{self})\n\
+@var{self} is of type . @var{retval} is of type char. \n\
+@end deftypefn";
+const char* _wrap_IplImage___sub_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} @var{retval} = operator - (@var{self}, @var{val})\n\
+@var{self} is of type . @var{val} is of type CvScalar. @var{retval} is of type . \n\
+@end deftypefn";
+const char* _wrap_IplImage___xor_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} @var{retval} = operator ^ (@var{self}, @var{val})\n\
+@var{self} is of type . @var{val} is of type CvScalar. @var{retval} is of type . \n\
+@end deftypefn";
+const char* _wrap_OctSwigIterator___add_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} @var{retval} = operator + (@var{self}, @var{n})\n\
+@var{self} is of type OctSwigIterator. @var{n} is of type ptrdiff_t. @var{retval} is of type OctSwigIterator. \n\
+@end deftypefn";
+const char* _wrap_OctSwigIterator___decr_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} @var{retval} = operator -- (@var{self})\n\
+@var{self} is of type OctSwigIterator. @var{retval} is of type OctSwigIterator. \n\
+@end deftypefn";
+const char* _wrap_OctSwigIterator___eq_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} @var{retval} = operator == (@var{self}, @var{x})\n\
+@var{self} is of type OctSwigIterator. @var{x} is of type OctSwigIterator. @var{retval} is of type bool. \n\
+@end deftypefn";
+const char* _wrap_OctSwigIterator___incr_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} @var{retval} = operator ++ (@var{self})\n\
+@var{self} is of type OctSwigIterator. @var{retval} is of type OctSwigIterator. \n\
+@end deftypefn";
+const char* _wrap_OctSwigIterator___ne_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} @var{retval} = operator != (@var{self}, @var{x})\n\
+@var{self} is of type OctSwigIterator. @var{x} is of type OctSwigIterator. @var{retval} is of type bool. \n\
+@end deftypefn";
+const char* _wrap_OctSwigIterator___sub_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} @var{retval} = operator - (@var{self}, @var{x})\n\
+@var{self} is of type OctSwigIterator. @var{x} is of type OctSwigIterator. @var{retval} is of type ptrdiff_t. \n\
+@end deftypefn";
+const char* _wrap_OctSwigIterator_advance_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} @var{retval} = advance (@var{self}, @var{n})\n\
+@var{self} is of type OctSwigIterator. @var{n} is of type ptrdiff_t. @var{retval} is of type OctSwigIterator. \n\
+@end deftypefn";
+const char* _wrap_OctSwigIterator_copy_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} @var{retval} = copy (@var{self})\n\
+@var{self} is of type OctSwigIterator. @var{retval} is of type OctSwigIterator. \n\
+@end deftypefn";
+const char* _wrap_OctSwigIterator_decr_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} @var{retval} = decr (@var{self})\n\
+@var{self} is of type OctSwigIterator. @var{retval} is of type OctSwigIterator. \n\
+@end deftypefn";
+const char* _wrap_OctSwigIterator_distance_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} @var{retval} = distance (@var{self}, @var{x})\n\
+@var{self} is of type OctSwigIterator. @var{x} is of type OctSwigIterator. @var{retval} is of type ptrdiff_t. \n\
+@end deftypefn";
+const char* _wrap_OctSwigIterator_equal_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} @var{retval} = equal (@var{self}, @var{x})\n\
+@var{self} is of type OctSwigIterator. @var{x} is of type OctSwigIterator. @var{retval} is of type bool. \n\
+@end deftypefn";
+const char* _wrap_OctSwigIterator_incr_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} @var{retval} = incr (@var{self})\n\
+@var{self} is of type OctSwigIterator. @var{retval} is of type OctSwigIterator. \n\
+@end deftypefn";
+const char* _wrap_OctSwigIterator_next_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} @var{retval} = next (@var{self})\n\
+@var{self} is of type OctSwigIterator. @var{retval} is of type octave_value. \n\
+@end deftypefn";
+const char* _wrap_OctSwigIterator_previous_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} @var{retval} = previous (@var{self})\n\
+@var{self} is of type OctSwigIterator. @var{retval} is of type octave_value. \n\
+@end deftypefn";
+const char* _wrap_OctSwigIterator_value_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} @var{retval} = value (@var{self})\n\
+@var{self} is of type OctSwigIterator. @var{retval} is of type octave_value. \n\
+@end deftypefn";
+const char* _wrap_SendErrorToPython_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} @var{retval} = SendErrorToPython (@var{status}, @var{func_name}, @var{err_msg}, @var{file_name}, @var{line}, @var{?})\n\
+@var{status} is of type int. @var{func_name} is of type char. @var{err_msg} is of type char. @var{file_name} is of type char. @var{line} is of type int. @var{?} is of type void. @var{retval} is of type int. \n\
+@end deftypefn";
+const char* _wrap_cv2DRotationMatrix_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} @var{retval} = cv2DRotationMatrix (@var{center}, @var{angle}, @var{scale}, @var{map_matrix})\n\
+@var{center} is of type CvPoint2D32f. @var{angle} is of type double. @var{scale} is of type double. @var{map_matrix} is of type CvMat. @var{retval} is of type CvMat. \n\
+@end deftypefn";
+const char* _wrap_cvAXPY_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} cvAXPY (@var{A}, @var{real_scalar}, @var{B}, @var{C})\n\
+@var{A} is of type CvArr. @var{real_scalar} is of type double. @var{B} is of type CvArr. @var{C} is of type CvArr. \n\
+@end deftypefn";
+const char* _wrap_cvAbs_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} cvAbs (@var{src}, @var{dst})\n\
+@var{src} is of type CvArr. @var{dst} is of type CvArr. \n\
+@end deftypefn";
+const char* _wrap_cvAbsDiff_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} cvAbsDiff (@var{src1}, @var{src2}, @var{dst})\n\
+@var{src1} is of type CvArr. @var{src2} is of type CvArr. @var{dst} is of type CvArr. \n\
+@end deftypefn";
+const char* _wrap_cvAbsDiffS_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} cvAbsDiffS (@var{src}, @var{dst}, @var{value})\n\
+@var{src} is of type CvArr. @var{dst} is of type CvArr. @var{value} is of type CvScalar. \n\
+@end deftypefn";
+const char* _wrap_cvAcc_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} cvAcc (@var{image}, @var{sum}, @var{mask} = nil)\n\
+@var{image} is of type CvArr. @var{sum} is of type CvArr. @var{mask} is of type CvArr. \n\
+@end deftypefn";
+const char* _wrap_cvAdaptiveThreshold_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} cvAdaptiveThreshold (@var{src}, @var{dst}, @var{max_value}, @var{adaptive_method} = 0, @var{threshold_type} = 0, @var{block_size} = 3, @var{param1} = 5)\n\
+@var{src} is of type CvArr. @var{dst} is of type CvArr. @var{max_value} is of type double. @var{adaptive_method} is of type int. @var{threshold_type} is of type int. @var{block_size} is of type int. @var{param1} is of type double. \n\
+@end deftypefn";
+const char* _wrap_cvAdd_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} cvAdd (@var{src1}, @var{src2}, @var{dst}, @var{mask} = nil)\n\
+@var{src1} is of type CvArr. @var{src2} is of type CvArr. @var{dst} is of type CvArr. @var{mask} is of type CvArr. \n\
+@end deftypefn";
+const char* _wrap_cvAddS_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} cvAddS (@var{src}, @var{value}, @var{dst}, @var{mask} = nil)\n\
+@var{src} is of type CvArr. @var{value} is of type CvScalar. @var{dst} is of type CvArr. @var{mask} is of type CvArr. \n\
+@end deftypefn";
+const char* _wrap_cvAddWeighted_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} cvAddWeighted (@var{src1}, @var{alpha}, @var{src2}, @var{beta}, @var{gamma}, @var{dst})\n\
+@var{src1} is of type CvArr. @var{alpha} is of type double. @var{src2} is of type CvArr. @var{beta} is of type double. @var{gamma} is of type double. @var{dst} is of type CvArr. \n\
+@end deftypefn";
+const char* _wrap_cvAlloc_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} @var{retval} = cvAlloc (@var{size})\n\
+@var{size} is of type size_t. @var{retval} is of type void. \n\
+@end deftypefn";
+const char* _wrap_cvAnd_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} cvAnd (@var{src1}, @var{src2}, @var{dst}, @var{mask} = nil)\n\
+@var{src1} is of type CvArr. @var{src2} is of type CvArr. @var{dst} is of type CvArr. @var{mask} is of type CvArr. \n\
+@end deftypefn";
+const char* _wrap_cvAndS_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} cvAndS (@var{src}, @var{value}, @var{dst}, @var{mask} = nil)\n\
+@var{src} is of type CvArr. @var{value} is of type CvScalar. @var{dst} is of type CvArr. @var{mask} is of type CvArr. \n\
+@end deftypefn";
+const char* _wrap_cvApproxChainsUntyped_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} @var{retval} = cvApproxChains (@var{src_seq}, @var{storage}, @var{method} = 2, @var{parameter} = 0, @var{minimal_perimeter} = 0, @var{recursive} = 0)\n\
+@var{src_seq} is of type CvSeq. @var{storage} is of type CvMemStorage. @var{method} is of type int. @var{parameter} is of type double. @var{minimal_perimeter} is of type int. @var{recursive} is of type int. @var{retval} is of type CvSeq. \n\
+@end deftypefn";
+const char* _wrap_cvApproxPoly_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} @var{retval} = cvApproxPoly_Shadow (@var{src_seq}, @var{header_size}, @var{storage}, @var{method}, @var{parameter})\n\
+@var{src_seq} is of type void. @var{header_size} is of type int. @var{storage} is of type CvMemStorage. @var{method} is of type int. @var{parameter} is of type double. @var{retval} is of type CvSeq_CvPoint. \n\
+@end deftypefn";
+const char* _wrap_cvArcLength_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} @var{retval} = cvArcLength_Shadow (@var{arr})\n\
+@var{arr} is of type CvArr. @var{retval} is of type double. \n\
+@end deftypefn";
+const char* _wrap_cvAttrList_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} @var{retval} = cvAttrList ()\n\
+@var{retval} is of type CvAttrList. \n\
+@end deftypefn";
+const char* _wrap_cvAttrValue_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} @var{retval} = cvAttrValue (@var{attr}, @var{attr_name})\n\
+@var{attr} is of type CvAttrList. @var{attr_name} is of type char. @var{retval} is of type char. \n\
+@end deftypefn";
+const char* _wrap_cvAvg_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} @var{retval} = cvAvg (@var{arr}, @var{mask} = nil)\n\
+@var{arr} is of type CvArr. @var{mask} is of type CvArr. @var{retval} is of type CvScalar. \n\
+@end deftypefn";
+const char* _wrap_cvAvgSdv_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} cvAvgSdv (@var{arr}, @var{mean}, @var{std_dev}, @var{mask} = nil)\n\
+@var{arr} is of type CvArr. @var{mean} is of type CvScalar. @var{std_dev} is of type CvScalar. @var{mask} is of type CvArr. \n\
+@end deftypefn";
+const char* _wrap_cvBackProjectPCA_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} cvBackProjectPCA (@var{proj}, @var{mean}, @var{eigenvects}, @var{result})\n\
+@var{proj} is of type CvArr. @var{mean} is of type CvArr. @var{eigenvects} is of type CvArr. @var{result} is of type CvArr. \n\
+@end deftypefn";
+const char* _wrap_cvBoundingRect_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} @var{retval} = cvBoundingRect (@var{points}, @var{update} = 0)\n\
+@var{points} is of type CvArr. @var{update} is of type int. @var{retval} is of type CvRect. \n\
+@end deftypefn";
+const char* _wrap_cvBoxPoints_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} cvBoxPoints (@var{box}, @var{pt})\n\
+@var{box} is of type CvBox2D. @var{pt} is of type CvPoint2D32f. \n\
+@end deftypefn";
+const char* _wrap_cvCalcAffineFlowPyrLK_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} cvCalcAffineFlowPyrLK (@var{prev}, @var{curr}, @var{prev_pyr}, @var{curr_pyr}, @var{prev_features}, @var{curr_features}, @var{matrices}, @var{count}, @var{win_size}, @var{level}, @var{status}, @var{track_error}, @var{criteria}, @var{flags})\n\
+@var{prev} is of type CvArr. @var{curr} is of type CvArr. @var{prev_pyr} is of type CvArr. @var{curr_pyr} is of type CvArr. @var{prev_features} is of type CvPoint2D32f. @var{curr_features} is of type CvPoint2D32f. @var{matrices} is of type float. @var{count} is of type int. @var{win_size} is of type CvSize. @var{level} is of type int. @var{status} is of type char. @var{track_error} is of type float. @var{criteria} is of type CvTermCriteria. @var{flags} is of type int. \n\
+@end deftypefn";
+const char* _wrap_cvCalcArrBackProject_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} cvCalcArrBackProject (@var{image}, @var{dst}, @var{hist})\n\
+@var{image} is of type CvArr. @var{dst} is of type CvArr. @var{hist} is of type CvHistogram. \n\
+@end deftypefn";
+const char* _wrap_cvCalcArrBackProjectPatch_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} cvCalcArrBackProjectPatch (@var{image}, @var{dst}, @var{range}, @var{hist}, @var{method}, @var{factor})\n\
+@var{image} is of type CvArr. @var{dst} is of type CvArr. @var{range} is of type CvSize. @var{hist} is of type CvHistogram. @var{method} is of type int. @var{factor} is of type double. \n\
+@end deftypefn";
+const char* _wrap_cvCalcArrHist_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} cvCalcArrHist (@var{arr}, @var{hist}, @var{accumulate} = 0, @var{mask} = nil)\n\
+@var{arr} is of type CvArr. @var{hist} is of type CvHistogram. @var{accumulate} is of type int. @var{mask} is of type CvArr. \n\
+@end deftypefn";
+const char* _wrap_cvCalcBackProject_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} cvCalcBackProject (@var{image}, @var{dst}, @var{hist})\n\
+@var{image} is of type . @var{dst} is of type CvArr. @var{hist} is of type CvHistogram. \n\
+@end deftypefn";
+const char* _wrap_cvCalcBackProjectPatch_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} cvCalcBackProjectPatch (@var{image}, @var{dst}, @var{range}, @var{hist}, @var{method}, @var{factor})\n\
+@var{image} is of type . @var{dst} is of type CvArr. @var{range} is of type CvSize. @var{hist} is of type CvHistogram. @var{method} is of type int. @var{factor} is of type double. \n\
+@end deftypefn";
+const char* _wrap_cvCalcBayesianProb_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} cvCalcBayesianProb (@var{src}, @var{number}, @var{dst})\n\
+@var{src} is of type CvHistogram. @var{number} is of type int. @var{dst} is of type CvHistogram. \n\
+@end deftypefn";
+const char* _wrap_cvCalcCovarMatrix_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} cvCalcCovarMatrix (@var{vects}, @var{count}, @var{cov_mat}, @var{avg}, @var{flags})\n\
+@var{vects} is of type CvArr. @var{count} is of type int. @var{cov_mat} is of type CvArr. @var{avg} is of type CvArr. @var{flags} is of type int. \n\
+@end deftypefn";
+const char* _wrap_cvCalcEMD2_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} @var{retval} = cvCalcEMD2 (@var{signature1}, @var{signature2}, @var{distance_type}, @var{distance_func} = nil, @var{cost_matrix} = nil, @var{flow} = nil, @var{lower_bound} = nil, @var{userdata} = nil)\n\
+@var{signature1} is of type CvArr. @var{signature2} is of type CvArr. @var{distance_type} is of type int. @var{distance_func} is of type CvDistanceFunction. @var{cost_matrix} is of type CvArr. @var{flow} is of type CvArr. @var{lower_bound} is of type float. @var{userdata} is of type void. @var{retval} is of type float. \n\
+@end deftypefn";
+const char* _wrap_cvCalcGlobalOrientation_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} @var{retval} = cvCalcGlobalOrientation (@var{orientation}, @var{mask}, @var{mhi}, @var{timestamp}, @var{duration})\n\
+@var{orientation} is of type CvArr. @var{mask} is of type CvArr. @var{mhi} is of type CvArr. @var{timestamp} is of type double. @var{duration} is of type double. @var{retval} is of type double. \n\
+@end deftypefn";
+const char* _wrap_cvCalcImageHist_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} cvCalcHist (@var{image}, @var{hist}, @var{accumulate} = 0, @var{mask} = nil)\n\
+@var{image} is of type . @var{hist} is of type CvHistogram. @var{accumulate} is of type int. @var{mask} is of type CvArr. \n\
+@end deftypefn";
+const char* _wrap_cvCalcImageHomography_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} cvCalcImageHomography (@var{line}, @var{center}, @var{intrinsic}, @var{homography})\n\
+@var{line} is of type float. @var{center} is of type CvPoint3D32f. @var{intrinsic} is of type float. @var{homography} is of type float. \n\
+@end deftypefn";
+const char* _wrap_cvCalcMotionGradient_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} cvCalcMotionGradient (@var{mhi}, @var{mask}, @var{orientation}, @var{delta1}, @var{delta2}, @var{aperture_size} = 3)\n\
+@var{mhi} is of type CvArr. @var{mask} is of type CvArr. @var{orientation} is of type CvArr. @var{delta1} is of type double. @var{delta2} is of type double. @var{aperture_size} is of type int. \n\
+@end deftypefn";
+const char* _wrap_cvCalcOpticalFlowBM_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} cvCalcOpticalFlowBM (@var{prev}, @var{curr}, @var{block_size}, @var{shift_size}, @var{max_range}, @var{use_previous}, @var{velx}, @var{vely})\n\
+@var{prev} is of type CvArr. @var{curr} is of type CvArr. @var{block_size} is of type CvSize. @var{shift_size} is of type CvSize. @var{max_range} is of type CvSize. @var{use_previous} is of type int. @var{velx} is of type CvArr. @var{vely} is of type CvArr. \n\
+@end deftypefn";
+const char* _wrap_cvCalcOpticalFlowHS_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} cvCalcOpticalFlowHS (@var{prev}, @var{curr}, @var{use_previous}, @var{velx}, @var{vely}, @var{lambda}, @var{criteria})\n\
+@var{prev} is of type CvArr. @var{curr} is of type CvArr. @var{use_previous} is of type int. @var{velx} is of type CvArr. @var{vely} is of type CvArr. @var{lambda} is of type double. @var{criteria} is of type CvTermCriteria. \n\
+@end deftypefn";
+const char* _wrap_cvCalcOpticalFlowLK_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} cvCalcOpticalFlowLK (@var{prev}, @var{curr}, @var{win_size}, @var{velx}, @var{vely})\n\
+@var{prev} is of type CvArr. @var{curr} is of type CvArr. @var{win_size} is of type CvSize. @var{velx} is of type CvArr. @var{vely} is of type CvArr. \n\
+@end deftypefn";
+const char* _wrap_cvCalcOpticalFlowPyrLK_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} cvCalcOpticalFlowPyrLK (@var{prev}, @var{curr}, @var{prev_pyr}, @var{curr_pyr}, @var{prev_features}, @var{curr_features}, @var{win_size}, @var{level}, @var{status}, @var{track_error}, @var{criteria}, @var{flags})\n\
+@var{prev} is of type CvArr. @var{curr} is of type CvArr. @var{prev_pyr} is of type CvArr. @var{curr_pyr} is of type CvArr. @var{prev_features} is of type CvPoint2D32f. @var{curr_features} is of type CvPoint2D32f. @var{win_size} is of type CvSize. @var{level} is of type int. @var{status} is of type char. @var{track_error} is of type float. @var{criteria} is of type CvTermCriteria. @var{flags} is of type int. \n\
+@end deftypefn";
+const char* _wrap_cvCalcPCA_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} cvCalcPCA (@var{data}, @var{mean}, @var{eigenvals}, @var{eigenvects}, @var{flags})\n\
+@var{data} is of type CvArr. @var{mean} is of type CvArr. @var{eigenvals} is of type CvArr. @var{eigenvects} is of type CvArr. @var{flags} is of type int. \n\
+@end deftypefn";
+const char* _wrap_cvCalcPGH_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} cvCalcPGH (@var{contour}, @var{hist})\n\
+@var{contour} is of type CvSeq. @var{hist} is of type CvHistogram. \n\
+@end deftypefn";
+const char* _wrap_cvCalcProbDensity_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} cvCalcProbDensity (@var{hist1}, @var{hist2}, @var{dst_hist}, @var{scale} = 255)\n\
+@var{hist1} is of type CvHistogram. @var{hist2} is of type CvHistogram. @var{dst_hist} is of type CvHistogram. @var{scale} is of type double. \n\
+@end deftypefn";
+const char* _wrap_cvCalcSubdivVoronoi2D_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} cvCalcSubdivVoronoi2D (@var{subdiv})\n\
+@var{subdiv} is of type CvSubdiv2D. \n\
+@end deftypefn";
+const char* _wrap_cvCalibrateCamera2_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} cvCalibrateCamera2 (@var{object_points}, @var{image_points}, @var{point_counts}, @var{image_size}, @var{intrinsic_matrix}, @var{rotation_vectors} = nil, @var{translation_vectors} = nil, @var{flags} = 0)\n\
+@var{object_points} is of type CvMat. @var{image_points} is of type CvMat. @var{point_counts} is of type CvMat. @var{image_size} is of type CvSize. @var{intrinsic_matrix} is of type CvMat. @var{rotation_vectors} is of type CvMat. @var{translation_vectors} is of type CvMat. @var{flags} is of type int. \n\
+@end deftypefn";
+const char* _wrap_cvCamShift_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} @var{retval} = cvCamShift (@var{prob_image}, @var{window}, @var{criteria}, @var{comp}, @var{box} = nil)\n\
+@var{prob_image} is of type CvArr. @var{window} is of type CvRect. @var{criteria} is of type CvTermCriteria. @var{comp} is of type CvConnectedComp. @var{box} is of type CvBox2D. @var{retval} is of type int. \n\
+@end deftypefn";
+const char* _wrap_cvCanny_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} cvCanny (@var{image}, @var{edges}, @var{threshold1}, @var{threshold2}, @var{aperture_size} = 3)\n\
+@var{image} is of type CvArr. @var{edges} is of type CvArr. @var{threshold1} is of type double. @var{threshold2} is of type double. @var{aperture_size} is of type int. \n\
+@end deftypefn";
+const char* _wrap_cvCartToPolar_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} cvCartToPolar (@var{x}, @var{y}, @var{magnitude}, @var{angle} = nil, @var{angle_in_degrees} = 0)\n\
+@var{x} is of type CvArr. @var{y} is of type CvArr. @var{magnitude} is of type CvArr. @var{angle} is of type CvArr. @var{angle_in_degrees} is of type int. \n\
+@end deftypefn";
+const char* _wrap_cvCbrt_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} @var{retval} = cvCbrt (@var{value})\n\
+@var{value} is of type float. @var{retval} is of type float. \n\
+@end deftypefn";
+const char* _wrap_cvCeil_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} @var{retval} = cvCeil (@var{value})\n\
+@var{value} is of type double. @var{retval} is of type int. \n\
+@end deftypefn";
+const char* _wrap_cvChangeSeqBlock_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} cvChangeSeqBlock (@var{reader}, @var{direction})\n\
+@var{reader} is of type void. @var{direction} is of type int. \n\
+@end deftypefn";
+const char* _wrap_cvCheckArr_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} @var{retval} = cvCheckArr (@var{arr}, @var{flags} = 0, @var{min_val} = 0, @var{max_val} = 0)\n\
+@var{arr} is of type CvArr. @var{flags} is of type int. @var{min_val} is of type double. @var{max_val} is of type double. @var{retval} is of type int. \n\
+@end deftypefn";
+const char* _wrap_cvCheckContourConvexity_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} @var{retval} = cvCheckContourConvexity (@var{contour})\n\
+@var{contour} is of type CvArr. @var{retval} is of type int. \n\
+@end deftypefn";
+const char* _wrap_cvCheckTermCriteria_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} @var{retval} = cvCheckTermCriteria (@var{criteria}, @var{default_eps}, @var{default_max_iters})\n\
+@var{criteria} is of type CvTermCriteria. @var{default_eps} is of type double. @var{default_max_iters} is of type int. @var{retval} is of type CvTermCriteria. \n\
+@end deftypefn";
+const char* _wrap_cvCircle_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} cvCircle (@var{img}, @var{center}, @var{radius}, @var{color}, @var{thickness} = 1, @var{line_type} = 8, @var{shift} = 0)\n\
+@var{img} is of type CvArr. @var{center} is of type CvPoint. @var{radius} is of type int. @var{color} is of type CvScalar. @var{thickness} is of type int. @var{line_type} is of type int. @var{shift} is of type int. \n\
+@end deftypefn";
+const char* _wrap_cvClearGraph_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} cvClearGraph (@var{graph})\n\
+@var{graph} is of type CvGraph. \n\
+@end deftypefn";
+const char* _wrap_cvClearHist_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} cvClearHist (@var{hist})\n\
+@var{hist} is of type CvHistogram. \n\
+@end deftypefn";
+const char* _wrap_cvClearMemStorage_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} cvClearMemStorage (@var{storage})\n\
+@var{storage} is of type CvMemStorage. \n\
+@end deftypefn";
+const char* _wrap_cvClearND_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} cvClearND (@var{arr}, @var{idx})\n\
+@var{arr} is of type CvArr. @var{idx} is of type int. \n\
+@end deftypefn";
+const char* _wrap_cvClearSeq_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} cvClearSeq (@var{seq})\n\
+@var{seq} is of type CvSeq. \n\
+@end deftypefn";
+const char* _wrap_cvClearSet_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} cvClearSet (@var{set_header})\n\
+@var{set_header} is of type CvSet. \n\
+@end deftypefn";
+const char* _wrap_cvClearSubdivVoronoi2D_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} cvClearSubdivVoronoi2D (@var{subdiv})\n\
+@var{subdiv} is of type CvSubdiv2D. \n\
+@end deftypefn";
+const char* _wrap_cvClipLine_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} @var{retval} = cvClipLine (@var{img_size}, @var{pt1}, @var{pt2})\n\
+@var{img_size} is of type CvSize. @var{pt1} is of type CvPoint. @var{pt2} is of type CvPoint. @var{retval} is of type int. \n\
+@end deftypefn";
+const char* _wrap_cvClone_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} @var{retval} = cvClone (@var{struct_ptr})\n\
+@var{struct_ptr} is of type void. @var{retval} is of type void. \n\
+@end deftypefn";
+const char* _wrap_cvCloneGraph_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} @var{retval} = cvCloneGraph (@var{graph}, @var{storage})\n\
+@var{graph} is of type CvGraph. @var{storage} is of type CvMemStorage. @var{retval} is of type CvGraph. \n\
+@end deftypefn";
+const char* _wrap_cvCloneImage_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} @var{retval} = cvCloneImageMat (@var{mat})\n\
+@var{mat} is of type CvMat. @var{retval} is of type CvMat. \n\
+@end deftypefn";
+const char* _wrap_cvCloneMat_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} @var{retval} = cvCloneMat (@var{mat})\n\
+@var{mat} is of type CvMat. @var{retval} is of type CvMat. \n\
+@end deftypefn";
+const char* _wrap_cvCloneMatND_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} @var{retval} = cvCloneMatND (@var{mat})\n\
+@var{mat} is of type CvMatND. @var{retval} is of type CvMatND. \n\
+@end deftypefn";
+const char* _wrap_cvCloneSeq_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} @var{retval} = cvCloneSeq (@var{seq}, @var{storage} = nil)\n\
+@var{seq} is of type CvSeq. @var{storage} is of type CvMemStorage. @var{retval} is of type CvSeq. \n\
+@end deftypefn";
+const char* _wrap_cvCloneSparseMat_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} @var{retval} = cvCloneSparseMat (@var{mat})\n\
+@var{mat} is of type CvSparseMat. @var{retval} is of type CvSparseMat. \n\
+@end deftypefn";
+const char* _wrap_cvCmp_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} cvCmp (@var{src1}, @var{src2}, @var{dst}, @var{cmp_op})\n\
+@var{src1} is of type CvArr. @var{src2} is of type CvArr. @var{dst} is of type CvArr. @var{cmp_op} is of type int. \n\
+@end deftypefn";
+const char* _wrap_cvCmpS_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} cvCmpS (@var{src}, @var{value}, @var{dst}, @var{cmp_op})\n\
+@var{src} is of type CvArr. @var{value} is of type double. @var{dst} is of type CvArr. @var{cmp_op} is of type int. \n\
+@end deftypefn";
+const char* _wrap_cvColorToScalar_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} @var{retval} = cvColorToScalar (@var{packed_color}, @var{arrtype})\n\
+@var{packed_color} is of type double. @var{arrtype} is of type int. @var{retval} is of type CvScalar. \n\
+@end deftypefn";
+const char* _wrap_cvCompareHist_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} @var{retval} = cvCompareHist (@var{hist1}, @var{hist2}, @var{method})\n\
+@var{hist1} is of type CvHistogram. @var{hist2} is of type CvHistogram. @var{method} is of type int. @var{retval} is of type double. \n\
+@end deftypefn";
+const char* _wrap_cvComputeCorrespondEpilines_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} cvComputeCorrespondEpilines (@var{points}, @var{which_image}, @var{fundamental_matrix}, @var{correspondent_lines})\n\
+@var{points} is of type CvMat. @var{which_image} is of type int. @var{fundamental_matrix} is of type CvMat. @var{correspondent_lines} is of type CvMat. \n\
+@end deftypefn";
+const char* _wrap_cvConDensInitSampleSet_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} cvConDensInitSampleSet (@var{condens}, @var{lower_bound}, @var{upper_bound})\n\
+@var{condens} is of type CvConDensation. @var{lower_bound} is of type CvMat. @var{upper_bound} is of type CvMat. \n\
+@end deftypefn";
+const char* _wrap_cvConDensUpdateByTime_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} cvConDensUpdateByTime (@var{condens})\n\
+@var{condens} is of type CvConDensation. \n\
+@end deftypefn";
+const char* _wrap_cvContourArea_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} @var{retval} = cvContourArea (@var{contour}, @var{slice} = cvSlice(0, 0x3fffffff))\n\
+@var{contour} is of type CvArr. @var{slice} is of type CvSlice. @var{retval} is of type double. \n\
+@end deftypefn";
+const char* _wrap_cvContourFromContourTreeUntyped_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} @var{retval} = cvContourFromContourTree (@var{tree}, @var{storage}, @var{criteria})\n\
+@var{tree} is of type CvContourTree. @var{storage} is of type CvMemStorage. @var{criteria} is of type CvTermCriteria. @var{retval} is of type CvSeq. \n\
+@end deftypefn";
+const char* _wrap_cvContourPerimeter_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} @var{retval} = cvContourPerimeter_Shadow (@var{arr})\n\
+@var{arr} is of type CvArr. @var{retval} is of type double. \n\
+@end deftypefn";
+const char* _wrap_cvConvert_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} cvConvert (@var{src}, @var{dst})\n\
+@var{src} is of type CvArr. @var{dst} is of type CvArr. \n\
+@end deftypefn";
+const char* _wrap_cvConvertPointsHomogenious_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} cvConvertPointsHomogenious (@var{src}, @var{dst})\n\
+@var{src} is of type CvMat. @var{dst} is of type CvMat. \n\
+@end deftypefn";
+const char* _wrap_cvConvertScale_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} cvConvertScale (@var{src}, @var{dst}, @var{scale} = 1, @var{shift} = 0)\n\
+@var{src} is of type CvArr. @var{dst} is of type CvArr. @var{scale} is of type double. @var{shift} is of type double. \n\
+@end deftypefn";
+const char* _wrap_cvConvertScaleAbs_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} cvConvertScaleAbs (@var{src}, @var{dst}, @var{scale} = 1, @var{shift} = 0)\n\
+@var{src} is of type CvArr. @var{dst} is of type CvArr. @var{scale} is of type double. @var{shift} is of type double. \n\
+@end deftypefn";
+const char* _wrap_cvConvexHull2_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} @var{retval} = cvConvexHull2_Shadow (@var{points})\n\
+@var{points} is of type CvArr. @var{retval} is of type CvMat. \n\
+@end deftypefn";
+const char* _wrap_cvConvexityDefectsUntyped_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} @var{retval} = cvConvexityDefects (@var{contour}, @var{convexhull}, @var{storage} = nil)\n\
+@var{contour} is of type CvArr. @var{convexhull} is of type CvArr. @var{storage} is of type CvMemStorage. @var{retval} is of type CvSeq. \n\
+@end deftypefn";
+const char* _wrap_cvCopy_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} cvCopy (@var{src}, @var{dst}, @var{mask} = nil)\n\
+@var{src} is of type CvArr. @var{dst} is of type CvArr. @var{mask} is of type CvArr. \n\
+@end deftypefn";
+const char* _wrap_cvCopyHist_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} cvCopyHist (@var{src}, @var{dst})\n\
+@var{src} is of type CvHistogram. @var{dst} is of type CvHistogram. \n\
+@end deftypefn";
+const char* _wrap_cvCopyMakeBorder_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} cvCopyMakeBorder (@var{src}, @var{dst}, @var{offset}, @var{bordertype}, @var{value} = cvScalarAll(0))\n\
+@var{src} is of type CvArr. @var{dst} is of type CvArr. @var{offset} is of type CvPoint. @var{bordertype} is of type int. @var{value} is of type CvScalar. \n\
+@end deftypefn";
+const char* _wrap_cvCornerEigenValsAndVecs_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} cvCornerEigenValsAndVecs (@var{image}, @var{eigenvv}, @var{block_size}, @var{aperture_size} = 3)\n\
+@var{image} is of type CvArr. @var{eigenvv} is of type CvArr. @var{block_size} is of type int. @var{aperture_size} is of type int. \n\
+@end deftypefn";
+const char* _wrap_cvCornerHarris_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} cvCornerHarris (@var{image}, @var{harris_responce}, @var{block_size}, @var{aperture_size} = 3, @var{k} = 0.04)\n\
+@var{image} is of type CvArr. @var{harris_responce} is of type CvArr. @var{block_size} is of type int. @var{aperture_size} is of type int. @var{k} is of type double. \n\
+@end deftypefn";
+const char* _wrap_cvCornerMinEigenVal_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} cvCornerMinEigenVal (@var{image}, @var{eigenval}, @var{block_size}, @var{aperture_size} = 3)\n\
+@var{image} is of type CvArr. @var{eigenval} is of type CvArr. @var{block_size} is of type int. @var{aperture_size} is of type int. \n\
+@end deftypefn";
+const char* _wrap_cvCountNonZero_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} @var{retval} = cvCountNonZero (@var{arr})\n\
+@var{arr} is of type CvArr. @var{retval} is of type int. \n\
+@end deftypefn";
+const char* _wrap_cvCreateChildMemStorage_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} @var{retval} = cvCreateChildMemStorage (@var{parent})\n\
+@var{parent} is of type CvMemStorage. @var{retval} is of type CvMemStorage. \n\
+@end deftypefn";
+const char* _wrap_cvCreateConDensation_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} @var{retval} = cvCreateConDensation (@var{dynam_params}, @var{measure_params}, @var{sample_count})\n\
+@var{dynam_params} is of type int. @var{measure_params} is of type int. @var{sample_count} is of type int. @var{retval} is of type CvConDensation. \n\
+@end deftypefn";
+const char* _wrap_cvCreateContourTree_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} @var{retval} = cvCreateContourTree (@var{contour}, @var{storage}, @var{threshold})\n\
+@var{contour} is of type CvSeq. @var{storage} is of type CvMemStorage. @var{threshold} is of type double. @var{retval} is of type CvContourTree. \n\
+@end deftypefn";
+const char* _wrap_cvCreateData_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} cvCreateData (@var{arr})\n\
+@var{arr} is of type CvArr. \n\
+@end deftypefn";
+const char* _wrap_cvCreateGraph_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} @var{retval} = cvCreateGraph (@var{graph_flags}, @var{header_size}, @var{vtx_size}, @var{edge_size}, @var{storage})\n\
+@var{graph_flags} is of type int. @var{header_size} is of type int. @var{vtx_size} is of type int. @var{edge_size} is of type int. @var{storage} is of type CvMemStorage. @var{retval} is of type CvGraph. \n\
+@end deftypefn";
+const char* _wrap_cvCreateGraphScanner_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} @var{retval} = cvCreateGraphScanner (@var{graph}, @var{vtx} = nil, @var{mask} = -1)\n\
+@var{graph} is of type CvGraph. @var{vtx} is of type CvGraphVtx. @var{mask} is of type int. @var{retval} is of type CvGraphScanner. \n\
+@end deftypefn";
+const char* _wrap_cvCreateHist_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} @var{retval} = cvCreateHist (@var{dims}, @var{type}, @var{ranges} = nil, @var{uniform} = 1)\n\
+@var{dims} is of type int. @var{type} is of type int. @var{ranges} is of type float. @var{uniform} is of type int. @var{retval} is of type CvHistogram. \n\
+@end deftypefn";
+const char* _wrap_cvCreateImage_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} @var{retval} = cvCreateImageMat (@var{size}, @var{depth}, @var{channels})\n\
+@var{size} is of type CvSize. @var{depth} is of type int. @var{channels} is of type int. @var{retval} is of type CvMat. \n\
+@end deftypefn";
+const char* _wrap_cvCreateKalman_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} @var{retval} = cvCreateKalman (@var{dynam_params}, @var{measure_params}, @var{control_params} = 0)\n\
+@var{dynam_params} is of type int. @var{measure_params} is of type int. @var{control_params} is of type int. @var{retval} is of type CvKalman. \n\
+@end deftypefn";
+const char* _wrap_cvCreateMat_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} @var{retval} = cvCreateMat (@var{rows}, @var{cols}, @var{type})\n\
+@var{rows} is of type int. @var{cols} is of type int. @var{type} is of type int. @var{retval} is of type CvMat. \n\
+@end deftypefn";
+const char* _wrap_cvCreateMatHeader_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} @var{retval} = cvCreateMatHeader (@var{rows}, @var{cols}, @var{type})\n\
+@var{rows} is of type int. @var{cols} is of type int. @var{type} is of type int. @var{retval} is of type CvMat. \n\
+@end deftypefn";
+const char* _wrap_cvCreateMatND_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} @var{retval} = cvCreateMatND (@var{dims}, @var{type})\n\
+@var{dims} is of type int. @var{type} is of type int. @var{retval} is of type CvMatND. \n\
+@end deftypefn";
+const char* _wrap_cvCreateMatNDHeader_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} @var{retval} = cvCreateMatNDHeader (@var{dims}, @var{type})\n\
+@var{dims} is of type int. @var{type} is of type int. @var{retval} is of type CvMatND. \n\
+@end deftypefn";
+const char* _wrap_cvCreateMemStorage_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} @var{retval} = cvCreateMemStorage (@var{block_size} = 0)\n\
+@var{block_size} is of type int. @var{retval} is of type CvMemStorage. \n\
+@end deftypefn";
+const char* _wrap_cvCreatePOSITObject_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} @var{retval} = cvCreatePOSITObject (@var{points}, @var{point_count})\n\
+@var{points} is of type CvPoint3D32f. @var{point_count} is of type int. @var{retval} is of type CvPOSITObject. \n\
+@end deftypefn";
+const char* _wrap_cvCreatePyramid_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} @var{retval} = cvCreatePyramid (@var{img}, @var{extra_layers}, @var{rate}, @var{layer_sizes} = 0, @var{bufarr} = 0, @var{calc} = 1, @var{filter} = CV_GAUSSIAN_5x5)\n\
+@var{img} is of type CvArr. @var{extra_layers} is of type int. @var{rate} is of type double. @var{layer_sizes} is of type CvSize. @var{bufarr} is of type CvArr. @var{calc} is of type int. @var{filter} is of type int. @var{retval} is of type CvMat. \n\
+@end deftypefn";
+const char* _wrap_cvCreateSeq_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} @var{retval} = cvCreateSeq (@var{seq_flags}, @var{header_size}, @var{elem_size}, @var{storage})\n\
+@var{seq_flags} is of type int. @var{header_size} is of type int. @var{elem_size} is of type int. @var{storage} is of type CvMemStorage. @var{retval} is of type CvSeq. \n\
+@end deftypefn";
+const char* _wrap_cvCreateSeqBlock_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} cvCreateSeqBlock (@var{writer})\n\
+@var{writer} is of type CvSeqWriter. \n\
+@end deftypefn";
+const char* _wrap_cvCreateSet_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} @var{retval} = cvCreateSet (@var{set_flags}, @var{header_size}, @var{elem_size}, @var{storage})\n\
+@var{set_flags} is of type int. @var{header_size} is of type int. @var{elem_size} is of type int. @var{storage} is of type CvMemStorage. @var{retval} is of type CvSet. \n\
+@end deftypefn";
+const char* _wrap_cvCreateSparseMat_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} @var{retval} = cvCreateSparseMat (@var{dims}, @var{type})\n\
+@var{dims} is of type int. @var{type} is of type int. @var{retval} is of type CvSparseMat. \n\
+@end deftypefn";
+const char* _wrap_cvCreateStructuringElementEx_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} @var{retval} = cvCreateStructuringElementEx (@var{cols}, @var{rows}, @var{anchor_x}, @var{anchor_y}, @var{shape}, @var{values} = nil)\n\
+@var{cols} is of type int. @var{rows} is of type int. @var{anchor_x} is of type int. @var{anchor_y} is of type int. @var{shape} is of type int. @var{values} is of type int. @var{retval} is of type . \n\
+@end deftypefn";
+const char* _wrap_cvCreateSubdiv2D_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} @var{retval} = cvCreateSubdiv2D (@var{subdiv_type}, @var{header_size}, @var{vtx_size}, @var{quadedge_size}, @var{storage})\n\
+@var{subdiv_type} is of type int. @var{header_size} is of type int. @var{vtx_size} is of type int. @var{quadedge_size} is of type int. @var{storage} is of type CvMemStorage. @var{retval} is of type CvSubdiv2D. \n\
+@end deftypefn";
+const char* _wrap_cvCreateSubdivDelaunay2D_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} @var{retval} = cvCreateSubdivDelaunay2D (@var{rect}, @var{storage})\n\
+@var{rect} is of type CvRect. @var{storage} is of type CvMemStorage. @var{retval} is of type CvSubdiv2D. \n\
+@end deftypefn";
+const char* _wrap_cvCrossProduct_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} cvCrossProduct (@var{src1}, @var{src2}, @var{dst})\n\
+@var{src1} is of type CvArr. @var{src2} is of type CvArr. @var{dst} is of type CvArr. \n\
+@end deftypefn";
+const char* _wrap_cvCvToIplDepth_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} @var{retval} = cvCvToIplDepth (@var{type})\n\
+@var{type} is of type int. @var{retval} is of type int. \n\
+@end deftypefn";
+const char* _wrap_cvCvtColor_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} cvCvtColor (@var{src}, @var{dst}, @var{code})\n\
+@var{src} is of type CvArr. @var{dst} is of type CvArr. @var{code} is of type int. \n\
+@end deftypefn";
+const char* _wrap_cvCvtSeqToArray_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} @var{retval} = cvCvtSeqToArray_Shadow (@var{seq}, @var{elements})\n\
+@var{seq} is of type CvSeq. @var{elements} is of type CvArr. @var{retval} is of type CvArr. \n\
+@end deftypefn";
+const char* _wrap_cvDCT_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} cvDCT (@var{src}, @var{dst}, @var{flags})\n\
+@var{src} is of type CvArr. @var{dst} is of type CvArr. @var{flags} is of type int. \n\
+@end deftypefn";
+const char* _wrap_cvDFT_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} cvDFT (@var{src}, @var{dst}, @var{flags}, @var{nonzero_rows} = 0)\n\
+@var{src} is of type CvArr. @var{dst} is of type CvArr. @var{flags} is of type int. @var{nonzero_rows} is of type int. \n\
+@end deftypefn";
+const char* _wrap_cvDecRefData_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} cvDecRefData (@var{arr})\n\
+@var{arr} is of type CvArr. \n\
+@end deftypefn";
+const char* _wrap_cvDet_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} @var{retval} = cvDet (@var{mat})\n\
+@var{mat} is of type CvArr. @var{retval} is of type double. \n\
+@end deftypefn";
+const char* _wrap_cvDilate_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} cvDilate (@var{src}, @var{dst}, @var{element} = nil, @var{iterations} = 1)\n\
+@var{src} is of type CvArr. @var{dst} is of type CvArr. @var{element} is of type . @var{iterations} is of type int. \n\
+@end deftypefn";
+const char* _wrap_cvDistTransform_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} cvDistTransform (@var{src}, @var{dst}, @var{distance_type} = 2, @var{mask_size} = 3, @var{mask} = nil, @var{labels} = nil)\n\
+@var{src} is of type CvArr. @var{dst} is of type CvArr. @var{distance_type} is of type int. @var{mask_size} is of type int. @var{mask} is of type float. @var{labels} is of type CvArr. \n\
+@end deftypefn";
+const char* _wrap_cvDiv_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} cvDiv (@var{src1}, @var{src2}, @var{dst}, @var{scale} = 1)\n\
+@var{src1} is of type CvArr. @var{src2} is of type CvArr. @var{dst} is of type CvArr. @var{scale} is of type double. \n\
+@end deftypefn";
+const char* _wrap_cvDotProduct_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} @var{retval} = cvDotProduct (@var{src1}, @var{src2})\n\
+@var{src1} is of type CvArr. @var{src2} is of type CvArr. @var{retval} is of type double. \n\
+@end deftypefn";
+const char* _wrap_cvDrawChessboardCorners_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} cvDrawChessboardCorners (@var{image}, @var{pattern_size}, @var{corners}, @var{pattern_was_found})\n\
+@var{image} is of type CvArr. @var{pattern_size} is of type CvSize. @var{corners} is of type CvPoint2D32f. @var{pattern_was_found} is of type int. \n\
+@end deftypefn";
+const char* _wrap_cvDrawContours_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} cvDrawContours (@var{img}, @var{contour}, @var{external_color}, @var{hole_color}, @var{max_level}, @var{thickness} = 1, @var{line_type} = 8, @var{offset} = cvPoint(0,0))\n\
+@var{img} is of type CvArr. @var{contour} is of type CvSeq. @var{external_color} is of type CvScalar. @var{hole_color} is of type CvScalar. @var{max_level} is of type int. @var{thickness} is of type int. @var{line_type} is of type int. @var{offset} is of type CvPoint. \n\
+@end deftypefn";
+const char* _wrap_cvEigenVV_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} cvEigenVV (@var{mat}, @var{evects}, @var{evals}, @var{eps} = 0)\n\
+@var{mat} is of type CvArr. @var{evects} is of type CvArr. @var{evals} is of type CvArr. @var{eps} is of type double. \n\
+@end deftypefn";
+const char* _wrap_cvEllipse_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} cvEllipse (@var{img}, @var{center}, @var{axes}, @var{angle}, @var{start_angle}, @var{end_angle}, @var{color}, @var{thickness} = 1, @var{line_type} = 8, @var{shift} = 0)\n\
+@var{img} is of type CvArr. @var{center} is of type CvPoint. @var{axes} is of type CvSize. @var{angle} is of type double. @var{start_angle} is of type double. @var{end_angle} is of type double. @var{color} is of type CvScalar. @var{thickness} is of type int. @var{line_type} is of type int. @var{shift} is of type int. \n\
+@end deftypefn";
+const char* _wrap_cvEllipse2Poly_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} @var{retval} = cvEllipse2Poly (@var{center}, @var{axes}, @var{angle}, @var{arc_start}, @var{arc_end}, @var{pts}, @var{delta})\n\
+@var{center} is of type CvPoint. @var{axes} is of type CvSize. @var{angle} is of type int. @var{arc_start} is of type int. @var{arc_end} is of type int. @var{pts} is of type CvPoint. @var{delta} is of type int. @var{retval} is of type int. \n\
+@end deftypefn";
+const char* _wrap_cvEllipseBox_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} cvEllipseBox (@var{img}, @var{box}, @var{color}, @var{thickness} = 1, @var{line_type} = 8, @var{shift} = 0)\n\
+@var{img} is of type CvArr. @var{box} is of type CvBox2D. @var{color} is of type CvScalar. @var{thickness} is of type int. @var{line_type} is of type int. @var{shift} is of type int. \n\
+@end deftypefn";
+const char* _wrap_cvEndFindContours_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} @var{retval} = cvEndFindContours (@var{scanner})\n\
+@var{scanner} is of type CvContourScanner. @var{retval} is of type CvSeq. \n\
+@end deftypefn";
+const char* _wrap_cvEndWriteSeq_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} @var{retval} = cvEndWriteSeq (@var{writer})\n\
+@var{writer} is of type CvSeqWriter. @var{retval} is of type CvSeq. \n\
+@end deftypefn";
+const char* _wrap_cvEndWriteStruct_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} cvEndWriteStruct (@var{fs})\n\
+@var{fs} is of type CvFileStorage. \n\
+@end deftypefn";
+const char* _wrap_cvEqualizeHist_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} cvEqualizeHist (@var{src}, @var{dst})\n\
+@var{src} is of type CvArr. @var{dst} is of type CvArr. \n\
+@end deftypefn";
+const char* _wrap_cvErode_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} cvErode (@var{src}, @var{dst}, @var{element} = nil, @var{iterations} = 1)\n\
+@var{src} is of type CvArr. @var{dst} is of type CvArr. @var{element} is of type . @var{iterations} is of type int. \n\
+@end deftypefn";
+const char* _wrap_cvError_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} cvError (@var{status}, @var{func_name}, @var{err_msg}, @var{file_name}, @var{line})\n\
+@var{status} is of type int. @var{func_name} is of type char. @var{err_msg} is of type char. @var{file_name} is of type char. @var{line} is of type int. \n\
+@end deftypefn";
+const char* _wrap_cvErrorFromIppStatus_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} @var{retval} = cvErrorFromIppStatus (@var{ipp_status})\n\
+@var{ipp_status} is of type int. @var{retval} is of type int. \n\
+@end deftypefn";
+const char* _wrap_cvErrorStr_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} @var{retval} = cvErrorStr (@var{status})\n\
+@var{status} is of type int. @var{retval} is of type char. \n\
+@end deftypefn";
+const char* _wrap_cvEstimateRigidTransform_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} @var{retval} = cvEstimateRigidTransform (@var{A}, @var{B}, @var{M}, @var{full_affine})\n\
+@var{A} is of type CvArr. @var{B} is of type CvArr. @var{M} is of type CvMat. @var{full_affine} is of type int. @var{retval} is of type int. \n\
+@end deftypefn";
+const char* _wrap_cvExp_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} cvExp (@var{src}, @var{dst})\n\
+@var{src} is of type CvArr. @var{dst} is of type CvArr. \n\
+@end deftypefn";
+const char* _wrap_cvFastArctan_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} @var{retval} = cvFastArctan (@var{y}, @var{x})\n\
+@var{y} is of type float. @var{x} is of type float. @var{retval} is of type float. \n\
+@end deftypefn";
+const char* _wrap_cvFillConvexPoly_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} cvFillConvexPoly (@var{img}, @var{pts}, @var{color}, @var{line_type} = 8, @var{shift} = 0)\n\
+@var{img} is of type CvArr. @var{pts} is of type CvPoint. @var{color} is of type CvScalar. @var{line_type} is of type int. @var{shift} is of type int. \n\
+@end deftypefn";
+const char* _wrap_cvFillPoly_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} cvFillPoly (@var{img}, @var{pts}, @var{color}, @var{line_type} = 8, @var{shift} = 0)\n\
+@var{img} is of type CvArr. @var{pts} is of type CvPoint. @var{color} is of type CvScalar. @var{line_type} is of type int. @var{shift} is of type int. \n\
+@end deftypefn";
+const char* _wrap_cvFilter2D_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} cvFilter2D (@var{src}, @var{dst}, @var{kernel}, @var{anchor} = cvPoint(-1,-1))\n\
+@var{src} is of type CvArr. @var{dst} is of type CvArr. @var{kernel} is of type CvMat. @var{anchor} is of type CvPoint. \n\
+@end deftypefn";
+const char* _wrap_cvFindChessboardCorners_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} @var{retval} = cvFindChessboardCorners (@var{image}, @var{pattern_size}, @var{flags} = 1)\n\
+@var{image} is of type void. @var{pattern_size} is of type CvSize. @var{flags} is of type int. @var{retval} is of type int. \n\
+@end deftypefn";
+const char* _wrap_cvFindContoursUntyped_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} @var{retval} = cvFindContours (@var{image}, @var{storage}, @var{first_contour}, @var{header_size} = sizeof(CvContour), @var{mode} = 1, @var{method} = 2, @var{offset} = cvPoint(0,0))\n\
+@var{image} is of type CvArr. @var{storage} is of type CvMemStorage. @var{first_contour} is of type CvSeq. @var{header_size} is of type int. @var{mode} is of type int. @var{method} is of type int. @var{offset} is of type CvPoint. @var{retval} is of type int. \n\
+@end deftypefn";
+const char* _wrap_cvFindCornerSubPix_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} cvFindCornerSubPix (@var{image}, @var{corners}, @var{win}, @var{zero_zone}, @var{criteria})\n\
+@var{image} is of type CvArr. @var{corners} is of type CvPoint2D32f. @var{win} is of type CvSize. @var{zero_zone} is of type CvSize. @var{criteria} is of type CvTermCriteria. \n\
+@end deftypefn";
+const char* _wrap_cvFindDominantPoints_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} @var{retval} = cvFindDominantPoints (@var{contour}, @var{storage}, @var{method} = 1, @var{parameter1} = 0, @var{parameter2} = 0, @var{parameter3} = 0, @var{parameter4} = 0)\n\
+@var{contour} is of type CvSeq. @var{storage} is of type CvMemStorage. @var{method} is of type int. @var{parameter1} is of type double. @var{parameter2} is of type double. @var{parameter3} is of type double. @var{parameter4} is of type double. @var{retval} is of type CvSeq. \n\
+@end deftypefn";
+const char* _wrap_cvFindExtrinsicCameraParams2_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} cvFindExtrinsicCameraParams2 (@var{object_points}, @var{image_points}, @var{intrinsic_matrix}, @var{distortion_coeffs}, @var{rotation_vector}, @var{translation_vector})\n\
+@var{object_points} is of type CvMat. @var{image_points} is of type CvMat. @var{intrinsic_matrix} is of type CvMat. @var{distortion_coeffs} is of type CvMat. @var{rotation_vector} is of type CvMat. @var{translation_vector} is of type CvMat. \n\
+@end deftypefn";
+const char* _wrap_cvFindFundamentalMat_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} @var{retval} = cvFindFundamentalMat (@var{points1}, @var{points2}, @var{fundamental_matrix}, @var{method} = (8+2), @var{param1} = 1., @var{param2} = 0.99, @var{status} = nil)\n\
+@var{points1} is of type CvMat. @var{points2} is of type CvMat. @var{fundamental_matrix} is of type CvMat. @var{method} is of type int. @var{param1} is of type double. @var{param2} is of type double. @var{status} is of type CvMat. @var{retval} is of type int. \n\
+@end deftypefn";
+const char* _wrap_cvFindGraphEdge_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} @var{retval} = cvFindGraphEdge (@var{graph}, @var{start_idx}, @var{end_idx})\n\
+@var{graph} is of type CvGraph. @var{start_idx} is of type int. @var{end_idx} is of type int. @var{retval} is of type CvGraphEdge. \n\
+@end deftypefn";
+const char* _wrap_cvFindGraphEdgeByPtr_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} @var{retval} = cvFindGraphEdgeByPtr (@var{graph}, @var{start_vtx}, @var{end_vtx})\n\
+@var{graph} is of type CvGraph. @var{start_vtx} is of type CvGraphVtx. @var{end_vtx} is of type CvGraphVtx. @var{retval} is of type CvGraphEdge. \n\
+@end deftypefn";
+const char* _wrap_cvFindHomography_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} cvFindHomography (@var{src_points}, @var{dst_points}, @var{homography})\n\
+@var{src_points} is of type CvMat. @var{dst_points} is of type CvMat. @var{homography} is of type CvMat. \n\
+@end deftypefn";
+const char* _wrap_cvFindNearestPoint2D_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} @var{retval} = cvFindNearestPoint2D (@var{subdiv}, @var{pt})\n\
+@var{subdiv} is of type CvSubdiv2D. @var{pt} is of type CvPoint2D32f. @var{retval} is of type CvSubdiv2DPoint. \n\
+@end deftypefn";
+const char* _wrap_cvFindNextContour_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} @var{retval} = cvFindNextContour (@var{scanner})\n\
+@var{scanner} is of type CvContourScanner. @var{retval} is of type CvSeq. \n\
+@end deftypefn";
+const char* _wrap_cvFindType_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} @var{retval} = cvFindType (@var{type_name})\n\
+@var{type_name} is of type char. @var{retval} is of type CvTypeInfo. \n\
+@end deftypefn";
+const char* _wrap_cvFirstType_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} @var{retval} = cvFirstType ()\n\
+@var{retval} is of type CvTypeInfo. \n\
+@end deftypefn";
+const char* _wrap_cvFitEllipse2_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} @var{retval} = cvFitEllipse2 (@var{points})\n\
+@var{points} is of type CvArr. @var{retval} is of type CvBox2D. \n\
+@end deftypefn";
+const char* _wrap_cvFitLine_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} cvFitLine (@var{points}, @var{dist_type}, @var{param}, @var{reps}, @var{aeps}, @var{line})\n\
+@var{points} is of type CvArr. @var{dist_type} is of type int. @var{param} is of type double. @var{reps} is of type double. @var{aeps} is of type double. @var{line} is of type float. \n\
+@end deftypefn";
+const char* _wrap_cvFlip_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} cvFlip (@var{src}, @var{dst} = nil, @var{flip_mode} = 0)\n\
+@var{src} is of type CvArr. @var{dst} is of type CvArr. @var{flip_mode} is of type int. \n\
+@end deftypefn";
+const char* _wrap_cvFloodFill_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} cvFloodFill (@var{image}, @var{seed_point}, @var{new_val}, @var{lo_diff} = cvScalarAll(0), @var{up_diff} = cvScalarAll(0), @var{comp} = nil, @var{flags} = 4, @var{mask} = nil)\n\
+@var{image} is of type CvArr. @var{seed_point} is of type CvPoint. @var{new_val} is of type CvScalar. @var{lo_diff} is of type CvScalar. @var{up_diff} is of type CvScalar. @var{comp} is of type CvConnectedComp. @var{flags} is of type int. @var{mask} is of type CvArr. \n\
+@end deftypefn";
+const char* _wrap_cvFloor_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} @var{retval} = cvFloor (@var{value})\n\
+@var{value} is of type double. @var{retval} is of type int. \n\
+@end deftypefn";
+const char* _wrap_cvFlushSeqWriter_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} cvFlushSeqWriter (@var{writer})\n\
+@var{writer} is of type CvSeqWriter. \n\
+@end deftypefn";
+const char* _wrap_cvFont_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} @var{retval} = cvFont (@var{scale}, @var{thickness} = 1)\n\
+@var{scale} is of type double. @var{thickness} is of type int. @var{retval} is of type CvFont. \n\
+@end deftypefn";
+const char* _wrap_cvFree_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} cvFree (@var{ptr})\n\
+@var{ptr} is of type void. \n\
+@end deftypefn";
+const char* _wrap_cvFree__texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} cvFree_ (@var{ptr})\n\
+@var{ptr} is of type void. \n\
+@end deftypefn";
+const char* _wrap_cvGEMM_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} cvGEMM (@var{src1}, @var{src2}, @var{alpha}, @var{src3}, @var{beta}, @var{dst}, @var{tABC} = 0)\n\
+@var{src1} is of type CvArr. @var{src2} is of type CvArr. @var{alpha} is of type double. @var{src3} is of type CvArr. @var{beta} is of type double. @var{dst} is of type CvArr. @var{tABC} is of type int. \n\
+@end deftypefn";
+const char* _wrap_cvGet1D_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} @var{retval} = cvGet1D (@var{arr}, @var{idx0})\n\
+@var{arr} is of type CvArr. @var{idx0} is of type int. @var{retval} is of type CvScalar. \n\
+@end deftypefn";
+const char* _wrap_cvGet2D_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} @var{retval} = cvGet2D (@var{arr}, @var{idx0}, @var{idx1})\n\
+@var{arr} is of type CvArr. @var{idx0} is of type int. @var{idx1} is of type int. @var{retval} is of type CvScalar. \n\
+@end deftypefn";
+const char* _wrap_cvGet3D_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} @var{retval} = cvGet3D (@var{arr}, @var{idx0}, @var{idx1}, @var{idx2})\n\
+@var{arr} is of type CvArr. @var{idx0} is of type int. @var{idx1} is of type int. @var{idx2} is of type int. @var{retval} is of type CvScalar. \n\
+@end deftypefn";
+const char* _wrap_cvGetAffineTransform_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} @var{retval} = cvGetAffineTransform (@var{src}, @var{dst}, @var{map_matrix})\n\
+@var{src} is of type CvPoint2D32f. @var{dst} is of type CvPoint2D32f. @var{map_matrix} is of type CvMat. @var{retval} is of type CvMat. \n\
+@end deftypefn";
+const char* _wrap_cvGetCentralMoment_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} @var{retval} = cvGetCentralMoment (@var{moments}, @var{x_order}, @var{y_order})\n\
+@var{moments} is of type CvMoments. @var{x_order} is of type int. @var{y_order} is of type int. @var{retval} is of type double. \n\
+@end deftypefn";
+const char* _wrap_cvGetCol_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} @var{retval} = cvGetCol (@var{arr}, @var{submat}, @var{col})\n\
+@var{arr} is of type CvArr. @var{submat} is of type CvMat. @var{col} is of type int. @var{retval} is of type CvMat. \n\
+@end deftypefn";
+const char* _wrap_cvGetCols_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} @var{retval} = cvGetCols (@var{arr}, @var{submat}, @var{start_col}, @var{end_col})\n\
+@var{arr} is of type CvArr. @var{submat} is of type CvMat. @var{start_col} is of type int. @var{end_col} is of type int. @var{retval} is of type CvMat. \n\
+@end deftypefn";
+const char* _wrap_cvGetDiag_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} @var{retval} = cvGetDiag (@var{arr}, @var{submat}, @var{diag} = 0)\n\
+@var{arr} is of type CvArr. @var{submat} is of type CvMat. @var{diag} is of type int. @var{retval} is of type CvMat. \n\
+@end deftypefn";
+const char* _wrap_cvGetDimSize_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} @var{retval} = cvGetDimSize (@var{arr}, @var{index})\n\
+@var{arr} is of type CvArr. @var{index} is of type int. @var{retval} is of type int. \n\
+@end deftypefn";
+const char* _wrap_cvGetDims_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} @var{retval} = cvGetDims (@var{arr})\n\
+@var{arr} is of type CvArr. @var{retval} is of type int. \n\
+@end deftypefn";
+const char* _wrap_cvGetElemType_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} @var{retval} = cvGetElemType (@var{arr})\n\
+@var{arr} is of type CvArr. @var{retval} is of type int. \n\
+@end deftypefn";
+const char* _wrap_cvGetErrInfo_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} @var{retval} = cvGetErrInfo (@var{errcode_desc}, @var{description}, @var{filename}, @var{line})\n\
+@var{errcode_desc} is of type char. @var{description} is of type char. @var{filename} is of type char. @var{line} is of type int. @var{retval} is of type int. \n\
+@end deftypefn";
+const char* _wrap_cvGetErrMode_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} @var{retval} = cvGetErrMode ()\n\
+@var{retval} is of type int. \n\
+@end deftypefn";
+const char* _wrap_cvGetErrStatus_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} @var{retval} = cvGetErrStatus ()\n\
+@var{retval} is of type int. \n\
+@end deftypefn";
+const char* _wrap_cvGetFileNode_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} @var{retval} = cvGetFileNode (@var{fs}, @var{map}, @var{key}, @var{create_missing} = 0)\n\
+@var{fs} is of type CvFileStorage. @var{map} is of type CvFileNode. @var{key} is of type CvStringHashNode. @var{create_missing} is of type int. @var{retval} is of type CvFileNode. \n\
+@end deftypefn";
+const char* _wrap_cvGetFileNodeByName_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} @var{retval} = cvGetFileNodeByName (@var{fs}, @var{map}, @var{name})\n\
+@var{fs} is of type CvFileStorage. @var{map} is of type CvFileNode. @var{name} is of type char. @var{retval} is of type CvFileNode. \n\
+@end deftypefn";
+const char* _wrap_cvGetFileNodeName_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} @var{retval} = cvGetFileNodeName (@var{node})\n\
+@var{node} is of type CvFileNode. @var{retval} is of type char. \n\
+@end deftypefn";
+const char* _wrap_cvGetGraphVtx_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} cvGetGraphVtx (@var{graph}, @var{idx})\n\
+@var{graph} is of type CvGraph. @var{idx} is of type int. \n\
+@end deftypefn";
+const char* _wrap_cvGetHashedKey_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} @var{retval} = cvGetHashedKey (@var{fs}, @var{name}, @var{len} = -1, @var{create_missing} = 0)\n\
+@var{fs} is of type CvFileStorage. @var{name} is of type char. @var{len} is of type int. @var{create_missing} is of type int. @var{retval} is of type CvStringHashNode. \n\
+@end deftypefn";
+const char* _wrap_cvGetHuMoments_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} cvGetHuMoments (@var{moments}, @var{hu_moments})\n\
+@var{moments} is of type CvMoments. @var{hu_moments} is of type CvHuMoments. \n\
+@end deftypefn";
+const char* _wrap_cvGetMat_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} @var{retval} = cvGetMat (@var{arr}, @var{header}, @var{coi} = nil, @var{allowND} = 0)\n\
+@var{arr} is of type CvArr. @var{header} is of type CvMat. @var{coi} is of type int. @var{allowND} is of type int. @var{retval} is of type CvMat. \n\
+@end deftypefn";
+const char* _wrap_cvGetMinMaxHistValue_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} cvGetMinMaxHistValue (@var{hist}, @var{min_value}, @var{max_value}, @var{min_idx} = nil, @var{max_idx} = nil)\n\
+@var{hist} is of type CvHistogram. @var{min_value} is of type float. @var{max_value} is of type float. @var{min_idx} is of type int. @var{max_idx} is of type int. \n\
+@end deftypefn";
+const char* _wrap_cvGetModuleInfo_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} cvGetModuleInfo (@var{module_name}, @var{version}, @var{loaded_addon_plugins})\n\
+@var{module_name} is of type char. @var{version} is of type char. @var{loaded_addon_plugins} is of type char. \n\
+@end deftypefn";
+const char* _wrap_cvGetND_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} @var{retval} = cvGetND (@var{arr}, @var{idx})\n\
+@var{arr} is of type CvArr. @var{idx} is of type int. @var{retval} is of type CvScalar. \n\
+@end deftypefn";
+const char* _wrap_cvGetNextSparseNode_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} @var{retval} = cvGetNextSparseNode (@var{mat_iterator})\n\
+@var{mat_iterator} is of type CvSparseMatIterator. @var{retval} is of type CvSparseNode. \n\
+@end deftypefn";
+const char* _wrap_cvGetNormalizedCentralMoment_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} @var{retval} = cvGetNormalizedCentralMoment (@var{moments}, @var{x_order}, @var{y_order})\n\
+@var{moments} is of type CvMoments. @var{x_order} is of type int. @var{y_order} is of type int. @var{retval} is of type double. \n\
+@end deftypefn";
+const char* _wrap_cvGetNumThreads_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} @var{retval} = cvGetNumThreads ()\n\
+@var{retval} is of type int. \n\
+@end deftypefn";
+const char* _wrap_cvGetOptimalDFTSize_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} @var{retval} = cvGetOptimalDFTSize (@var{size0})\n\
+@var{size0} is of type int. @var{retval} is of type int. \n\
+@end deftypefn";
+const char* _wrap_cvGetPerspectiveTransform_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} @var{retval} = cvGetPerspectiveTransform (@var{src}, @var{dst}, @var{map_matrix})\n\
+@var{src} is of type CvPoint2D32f. @var{dst} is of type CvPoint2D32f. @var{map_matrix} is of type CvMat. @var{retval} is of type CvMat. \n\
+@end deftypefn";
+const char* _wrap_cvGetQuadrangleSubPix_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} cvGetQuadrangleSubPix (@var{src}, @var{dst}, @var{map_matrix})\n\
+@var{src} is of type CvArr. @var{dst} is of type CvArr. @var{map_matrix} is of type CvMat. \n\
+@end deftypefn";
+const char* _wrap_cvGetRawData_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} cvGetRawData (@var{arr}, @var{data}, @var{step} = nil, @var{roi_size} = nil)\n\
+@var{arr} is of type CvArr. @var{data} is of type uchar. @var{step} is of type int. @var{roi_size} is of type CvSize. \n\
+@end deftypefn";
+const char* _wrap_cvGetReal1D_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} @var{retval} = cvGetReal1D (@var{arr}, @var{idx0})\n\
+@var{arr} is of type CvArr. @var{idx0} is of type int. @var{retval} is of type double. \n\
+@end deftypefn";
+const char* _wrap_cvGetReal2D_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} @var{retval} = cvGetReal2D (@var{arr}, @var{idx0}, @var{idx1})\n\
+@var{arr} is of type CvArr. @var{idx0} is of type int. @var{idx1} is of type int. @var{retval} is of type double. \n\
+@end deftypefn";
+const char* _wrap_cvGetReal3D_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} @var{retval} = cvGetReal3D (@var{arr}, @var{idx0}, @var{idx1}, @var{idx2})\n\
+@var{arr} is of type CvArr. @var{idx0} is of type int. @var{idx1} is of type int. @var{idx2} is of type int. @var{retval} is of type double. \n\
+@end deftypefn";
+const char* _wrap_cvGetRealND_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} @var{retval} = cvGetRealND (@var{arr}, @var{idx})\n\
+@var{arr} is of type CvArr. @var{idx} is of type int. @var{retval} is of type double. \n\
+@end deftypefn";
+const char* _wrap_cvGetRectSubPix_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} cvGetRectSubPix (@var{src}, @var{dst}, @var{center})\n\
+@var{src} is of type CvArr. @var{dst} is of type CvArr. @var{center} is of type CvPoint2D32f. \n\
+@end deftypefn";
+const char* _wrap_cvGetRootFileNode_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} @var{retval} = cvGetRootFileNode (@var{fs}, @var{stream_index} = 0)\n\
+@var{fs} is of type CvFileStorage. @var{stream_index} is of type int. @var{retval} is of type CvFileNode. \n\
+@end deftypefn";
+const char* _wrap_cvGetRow_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} @var{retval} = cvGetRow (@var{arr}, @var{submat}, @var{row})\n\
+@var{arr} is of type CvArr. @var{submat} is of type CvMat. @var{row} is of type int. @var{retval} is of type CvMat. \n\
+@end deftypefn";
+const char* _wrap_cvGetRows_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} @var{retval} = cvGetRows (@var{arr}, @var{submat}, @var{start_row}, @var{end_row}, @var{delta_row} = 1)\n\
+@var{arr} is of type CvArr. @var{submat} is of type CvMat. @var{start_row} is of type int. @var{end_row} is of type int. @var{delta_row} is of type int. @var{retval} is of type CvMat. \n\
+@end deftypefn";
+const char* _wrap_cvGetSeqElem_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} @var{retval} = cvGetSeqElem (@var{seq}, @var{index})\n\
+@var{seq} is of type CvSeq. @var{index} is of type int. @var{retval} is of type char. \n\
+@end deftypefn";
+const char* _wrap_cvGetSeqReaderPos_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} @var{retval} = cvGetSeqReaderPos (@var{reader})\n\
+@var{reader} is of type CvSeqReader. @var{retval} is of type int. \n\
+@end deftypefn";
+const char* _wrap_cvGetSetElem_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} @var{retval} = cvGetSetElem (@var{set_header}, @var{index})\n\
+@var{set_header} is of type CvSet. @var{index} is of type int. @var{retval} is of type CvSetElem. \n\
+@end deftypefn";
+const char* _wrap_cvGetSize_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} @var{retval} = cvGetSize (@var{arr})\n\
+@var{arr} is of type CvArr. @var{retval} is of type CvSize. \n\
+@end deftypefn";
+const char* _wrap_cvGetSpatialMoment_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} @var{retval} = cvGetSpatialMoment (@var{moments}, @var{x_order}, @var{y_order})\n\
+@var{moments} is of type CvMoments. @var{x_order} is of type int. @var{y_order} is of type int. @var{retval} is of type double. \n\
+@end deftypefn";
+const char* _wrap_cvGetSubRect_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} @var{retval} = cvGetSubRect (@var{arr}, @var{submat}, @var{rect})\n\
+@var{arr} is of type CvArr. @var{submat} is of type CvMat. @var{rect} is of type CvRect. @var{retval} is of type CvMat. \n\
+@end deftypefn";
+const char* _wrap_cvGetTextSize_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} cvGetTextSize (@var{text_string}, @var{font}, @var{text_size})\n\
+@var{text_string} is of type char. @var{font} is of type CvFont. @var{text_size} is of type CvSize. \n\
+@end deftypefn";
+const char* _wrap_cvGetThreadNum_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} @var{retval} = cvGetThreadNum ()\n\
+@var{retval} is of type int. \n\
+@end deftypefn";
+const char* _wrap_cvGetTickCount_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} @var{retval} = cvGetTickCount ()\n\
+@var{retval} is of type int64. \n\
+@end deftypefn";
+const char* _wrap_cvGetTickFrequency_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} @var{retval} = cvGetTickFrequency ()\n\
+@var{retval} is of type double. \n\
+@end deftypefn";
+const char* _wrap_cvGoodFeaturesToTrack_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} cvGoodFeaturesToTrack (@var{image}, @var{eig_image}, @var{temp_image}, @var{corners}, @var{quality_level}, @var{min_distance}, @var{mask} = nil, @var{block_size} = 3, @var{use_harris} = 0, @var{k} = 0.04)\n\
+@var{image} is of type CvArr. @var{eig_image} is of type CvArr. @var{temp_image} is of type CvArr. @var{corners} is of type CvPoint2D32f. @var{quality_level} is of type double. @var{min_distance} is of type double. @var{mask} is of type CvArr. @var{block_size} is of type int. @var{use_harris} is of type int. @var{k} is of type double. \n\
+@end deftypefn";
+const char* _wrap_cvGraphAddEdge_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} @var{retval} = cvGraphAddEdge (@var{graph}, @var{start_idx}, @var{end_idx}, @var{edge} = nil, @var{inserted_edge} = nil)\n\
+@var{graph} is of type CvGraph. @var{start_idx} is of type int. @var{end_idx} is of type int. @var{edge} is of type CvGraphEdge. @var{inserted_edge} is of type CvGraphEdge. @var{retval} is of type int. \n\
+@end deftypefn";
+const char* _wrap_cvGraphAddEdgeByPtr_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} @var{retval} = cvGraphAddEdgeByPtr (@var{graph}, @var{start_vtx}, @var{end_vtx}, @var{edge} = nil, @var{inserted_edge} = nil)\n\
+@var{graph} is of type CvGraph. @var{start_vtx} is of type CvGraphVtx. @var{end_vtx} is of type CvGraphVtx. @var{edge} is of type CvGraphEdge. @var{inserted_edge} is of type CvGraphEdge. @var{retval} is of type int. \n\
+@end deftypefn";
+const char* _wrap_cvGraphAddVtx_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} @var{retval} = cvGraphAddVtx (@var{graph}, @var{vtx} = nil, @var{inserted_vtx} = nil)\n\
+@var{graph} is of type CvGraph. @var{vtx} is of type CvGraphVtx. @var{inserted_vtx} is of type CvGraphVtx. @var{retval} is of type int. \n\
+@end deftypefn";
+const char* _wrap_cvGraphEdgeIdx_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} @var{retval} = cvGraphEdgeIdx (@var{graph}, @var{edge})\n\
+@var{graph} is of type CvGraph. @var{edge} is of type CvGraphEdge. @var{retval} is of type int. \n\
+@end deftypefn";
+const char* _wrap_cvGraphGetEdgeCount_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} @var{retval} = cvGraphGetEdgeCount (@var{graph})\n\
+@var{graph} is of type CvGraph. @var{retval} is of type int. \n\
+@end deftypefn";
+const char* _wrap_cvGraphGetVtxCount_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} @var{retval} = cvGraphGetVtxCount (@var{graph})\n\
+@var{graph} is of type CvGraph. @var{retval} is of type int. \n\
+@end deftypefn";
+const char* _wrap_cvGraphRemoveEdge_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} cvGraphRemoveEdge (@var{graph}, @var{start_idx}, @var{end_idx})\n\
+@var{graph} is of type CvGraph. @var{start_idx} is of type int. @var{end_idx} is of type int. \n\
+@end deftypefn";
+const char* _wrap_cvGraphRemoveEdgeByPtr_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} cvGraphRemoveEdgeByPtr (@var{graph}, @var{start_vtx}, @var{end_vtx})\n\
+@var{graph} is of type CvGraph. @var{start_vtx} is of type CvGraphVtx. @var{end_vtx} is of type CvGraphVtx. \n\
+@end deftypefn";
+const char* _wrap_cvGraphRemoveVtx_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} @var{retval} = cvGraphRemoveVtx (@var{graph}, @var{index})\n\
+@var{graph} is of type CvGraph. @var{index} is of type int. @var{retval} is of type int. \n\
+@end deftypefn";
+const char* _wrap_cvGraphRemoveVtxByPtr_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} @var{retval} = cvGraphRemoveVtxByPtr (@var{graph}, @var{vtx})\n\
+@var{graph} is of type CvGraph. @var{vtx} is of type CvGraphVtx. @var{retval} is of type int. \n\
+@end deftypefn";
+const char* _wrap_cvGraphVtxDegree_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} @var{retval} = cvGraphVtxDegree (@var{graph}, @var{vtx_idx})\n\
+@var{graph} is of type CvGraph. @var{vtx_idx} is of type int. @var{retval} is of type int. \n\
+@end deftypefn";
+const char* _wrap_cvGraphVtxDegreeByPtr_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} @var{retval} = cvGraphVtxDegreeByPtr (@var{graph}, @var{vtx})\n\
+@var{graph} is of type CvGraph. @var{vtx} is of type CvGraphVtx. @var{retval} is of type int. \n\
+@end deftypefn";
+const char* _wrap_cvGraphVtxIdx_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} @var{retval} = cvGraphVtxIdx (@var{graph}, @var{vtx})\n\
+@var{graph} is of type CvGraph. @var{vtx} is of type CvGraphVtx. @var{retval} is of type int. \n\
+@end deftypefn";
+const char* _wrap_cvGuiBoxReport_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} @var{retval} = cvGuiBoxReport (@var{status}, @var{func_name}, @var{err_msg}, @var{file_name}, @var{line}, @var{userdata})\n\
+@var{status} is of type int. @var{func_name} is of type char. @var{err_msg} is of type char. @var{file_name} is of type char. @var{line} is of type int. @var{userdata} is of type void. @var{retval} is of type int. \n\
+@end deftypefn";
+const char* _wrap_cvHaarDetectObjects_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} @var{retval} = cvHaarDetectObjects_Shadow (@var{image}, @var{cascade}, @var{storage})\n\
+@var{image} is of type CvArr. @var{cascade} is of type CvHaarClassifierCascade. @var{storage} is of type CvMemStorage. @var{retval} is of type CvSeq_CvRect. \n\
+@end deftypefn";
+const char* _wrap_cvHoughCirclesUntyped_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} @var{retval} = cvHoughCircles (@var{image}, @var{circle_storage}, @var{method}, @var{dp}, @var{min_dist}, @var{param1} = 100, @var{param2} = 100, @var{min_radius} = 0, @var{max_radius} = 0)\n\
+@var{image} is of type CvArr. @var{circle_storage} is of type void. @var{method} is of type int. @var{dp} is of type double. @var{min_dist} is of type double. @var{param1} is of type double. @var{param2} is of type double. @var{min_radius} is of type int. @var{max_radius} is of type int. @var{retval} is of type CvSeq. \n\
+@end deftypefn";
+const char* _wrap_cvHoughLinesUntyped_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} @var{retval} = cvHoughLines2 (@var{image}, @var{line_storage}, @var{method}, @var{rho}, @var{theta}, @var{threshold}, @var{param1} = 0, @var{param2} = 0)\n\
+@var{image} is of type CvArr. @var{line_storage} is of type void. @var{method} is of type int. @var{rho} is of type double. @var{theta} is of type double. @var{threshold} is of type int. @var{param1} is of type double. @var{param2} is of type double. @var{retval} is of type CvSeq. \n\
+@end deftypefn";
+const char* _wrap_cvInRange_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} cvInRange (@var{src}, @var{lower}, @var{upper}, @var{dst})\n\
+@var{src} is of type CvArr. @var{lower} is of type CvArr. @var{upper} is of type CvArr. @var{dst} is of type CvArr. \n\
+@end deftypefn";
+const char* _wrap_cvInRangeS_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} cvInRangeS (@var{src}, @var{lower}, @var{upper}, @var{dst})\n\
+@var{src} is of type CvArr. @var{lower} is of type CvScalar. @var{upper} is of type CvScalar. @var{dst} is of type CvArr. \n\
+@end deftypefn";
+const char* _wrap_cvIncRefData_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} @var{retval} = cvIncRefData (@var{arr})\n\
+@var{arr} is of type CvArr. @var{retval} is of type int. \n\
+@end deftypefn";
+const char* _wrap_cvInitFont_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} cvInitFont (@var{font}, @var{hscale}, @var{vscale}, @var{shear} = 0, @var{thickness} = 1, @var{line_type} = 8)\n\
+@var{font} is of type CvFont. @var{hscale} is of type double. @var{vscale} is of type double. @var{shear} is of type double. @var{thickness} is of type int. @var{line_type} is of type int. \n\
+@end deftypefn";
+const char* _wrap_cvInitLineIterator_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} @var{retval} = cvInitLineIterator (@var{image}, @var{pt1}, @var{pt2}, @var{line_iterator}, @var{connectivity} = 8, @var{left_to_right} = 0)\n\
+@var{image} is of type CvArr. @var{pt1} is of type CvPoint. @var{pt2} is of type CvPoint. @var{line_iterator} is of type CvLineIterator. @var{connectivity} is of type int. @var{left_to_right} is of type int. @var{retval} is of type int. \n\
+@end deftypefn";
+const char* _wrap_cvInitMatHeader_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} @var{retval} = cvInitMatHeader (@var{mat}, @var{rows}, @var{cols}, @var{type}, @var{data} = nil, @var{step} = 0x7fffffff)\n\
+@var{mat} is of type CvMat. @var{rows} is of type int. @var{cols} is of type int. @var{type} is of type int. @var{data} is of type void. @var{step} is of type int. @var{retval} is of type CvMat. \n\
+@end deftypefn";
+const char* _wrap_cvInitMatNDHeader_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} @var{retval} = cvInitMatNDHeader (@var{mat}, @var{dims}, @var{type}, @var{data} = nil)\n\
+@var{mat} is of type CvMatND. @var{dims} is of type int. @var{type} is of type int. @var{data} is of type void. @var{retval} is of type CvMatND. \n\
+@end deftypefn";
+const char* _wrap_cvInitNArrayIterator_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} @var{retval} = cvInitNArrayIterator (@var{count}, @var{arrs}, @var{mask}, @var{stubs}, @var{array_iterator}, @var{flags} = 0)\n\
+@var{count} is of type int. @var{arrs} is of type CvArr. @var{mask} is of type CvArr. @var{stubs} is of type CvMatND. @var{array_iterator} is of type CvNArrayIterator. @var{flags} is of type int. @var{retval} is of type int. \n\
+@end deftypefn";
+const char* _wrap_cvInitSparseMatIterator_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} @var{retval} = cvInitSparseMatIterator (@var{mat}, @var{mat_iterator})\n\
+@var{mat} is of type CvSparseMat. @var{mat_iterator} is of type CvSparseMatIterator. @var{retval} is of type CvSparseNode. \n\
+@end deftypefn";
+const char* _wrap_cvInitSubdivDelaunay2D_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} cvInitSubdivDelaunay2D (@var{subdiv}, @var{rect})\n\
+@var{subdiv} is of type CvSubdiv2D. @var{rect} is of type CvRect. \n\
+@end deftypefn";
+const char* _wrap_cvInitTreeNodeIterator_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} cvInitTreeNodeIterator (@var{tree_iterator}, @var{first}, @var{max_level})\n\
+@var{tree_iterator} is of type CvTreeNodeIterator. @var{first} is of type void. @var{max_level} is of type int. \n\
+@end deftypefn";
+const char* _wrap_cvInitUndistortMap_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} cvInitUndistortMap (@var{intrinsic_matrix}, @var{distortion_coeffs}, @var{mapx}, @var{mapy})\n\
+@var{intrinsic_matrix} is of type CvMat. @var{distortion_coeffs} is of type CvMat. @var{mapx} is of type CvArr. @var{mapy} is of type CvArr. \n\
+@end deftypefn";
+const char* _wrap_cvInpaint_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} cvInpaint (@var{src}, @var{inpaint_mask}, @var{dst}, @var{inpaintRange}, @var{flags})\n\
+@var{src} is of type CvArr. @var{inpaint_mask} is of type CvArr. @var{dst} is of type CvArr. @var{inpaintRange} is of type double. @var{flags} is of type int. \n\
+@end deftypefn";
+const char* _wrap_cvInsertNodeIntoTree_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} cvInsertNodeIntoTree (@var{node}, @var{parent}, @var{frame})\n\
+@var{node} is of type void. @var{parent} is of type void. @var{frame} is of type void. \n\
+@end deftypefn";
+const char* _wrap_cvIntegral_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} cvIntegral (@var{image}, @var{sum}, @var{sqsum} = nil, @var{tilted_sum} = nil)\n\
+@var{image} is of type CvArr. @var{sum} is of type CvArr. @var{sqsum} is of type CvArr. @var{tilted_sum} is of type CvArr. \n\
+@end deftypefn";
+const char* _wrap_cvInvSqrt_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} cvInvSqrt (@var{value})\n\
+@var{value} is of type double. \n\
+@end deftypefn";
+const char* _wrap_cvInvert_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} @var{retval} = cvInvert (@var{src}, @var{dst}, @var{method} = 0)\n\
+@var{src} is of type CvArr. @var{dst} is of type CvArr. @var{method} is of type int. @var{retval} is of type double. \n\
+@end deftypefn";
+const char* _wrap_cvIsInf_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} @var{retval} = cvIsInf (@var{value})\n\
+@var{value} is of type double. @var{retval} is of type int. \n\
+@end deftypefn";
+const char* _wrap_cvIsNaN_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} @var{retval} = cvIsNaN (@var{value})\n\
+@var{value} is of type double. @var{retval} is of type int. \n\
+@end deftypefn";
+const char* _wrap_cvKMeans2_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} cvKMeans2 (@var{samples}, @var{cluster_count}, @var{labels}, @var{termcrit})\n\
+@var{samples} is of type CvArr. @var{cluster_count} is of type int. @var{labels} is of type CvArr. @var{termcrit} is of type CvTermCriteria. \n\
+@end deftypefn";
+const char* _wrap_cvKalmanCorrect_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} @var{retval} = cvKalmanCorrect (@var{kalman}, @var{measurement})\n\
+@var{kalman} is of type CvKalman. @var{measurement} is of type CvMat. @var{retval} is of type CvMat. \n\
+@end deftypefn";
+const char* _wrap_cvKalmanPredict_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} @var{retval} = cvKalmanPredict (@var{kalman}, @var{control} = nil)\n\
+@var{kalman} is of type CvKalman. @var{control} is of type CvMat. @var{retval} is of type CvMat. \n\
+@end deftypefn";
+const char* _wrap_cvLUT_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} cvLUT (@var{src}, @var{dst}, @var{lut})\n\
+@var{src} is of type CvArr. @var{dst} is of type CvArr. @var{lut} is of type CvArr. \n\
+@end deftypefn";
+const char* _wrap_cvLaplace_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} cvLaplace (@var{src}, @var{dst}, @var{aperture_size} = 3)\n\
+@var{src} is of type CvArr. @var{dst} is of type CvArr. @var{aperture_size} is of type int. \n\
+@end deftypefn";
+const char* _wrap_cvLine_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} cvLine (@var{img}, @var{pt1}, @var{pt2}, @var{color}, @var{thickness} = 1, @var{line_type} = 8, @var{shift} = 0)\n\
+@var{img} is of type CvArr. @var{pt1} is of type CvPoint. @var{pt2} is of type CvPoint. @var{color} is of type CvScalar. @var{thickness} is of type int. @var{line_type} is of type int. @var{shift} is of type int. \n\
+@end deftypefn";
+const char* _wrap_cvLoad_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} @var{retval} = cvLoad (@var{filename}, @var{memstorage} = nil, @var{name} = nil, @var{real_name} = nil)\n\
+@var{filename} is of type char. @var{memstorage} is of type CvMemStorage. @var{name} is of type char. @var{real_name} is of type char. @var{retval} is of type void. \n\
+@end deftypefn";
+const char* _wrap_cvLoadHaarClassifierCascade_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} @var{retval} = cvLoadHaarClassifierCascade (@var{directory}, @var{orig_window_size})\n\
+@var{directory} is of type char. @var{orig_window_size} is of type CvSize. @var{retval} is of type CvHaarClassifierCascade. \n\
+@end deftypefn";
+const char* _wrap_cvLog_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} cvLog (@var{src}, @var{dst})\n\
+@var{src} is of type CvArr. @var{dst} is of type CvArr. \n\
+@end deftypefn";
+const char* _wrap_cvLogPolar_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} cvLogPolar (@var{src}, @var{dst}, @var{center}, @var{M}, @var{flags} = 1+8)\n\
+@var{src} is of type CvArr. @var{dst} is of type CvArr. @var{center} is of type CvPoint2D32f. @var{M} is of type double. @var{flags} is of type int. \n\
+@end deftypefn";
+const char* _wrap_cvMahalanobis_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} @var{retval} = cvMahalanobis (@var{vec1}, @var{vec2}, @var{mat})\n\
+@var{vec1} is of type CvArr. @var{vec2} is of type CvArr. @var{mat} is of type CvArr. @var{retval} is of type double. \n\
+@end deftypefn";
+const char* _wrap_cvMakeHistHeaderForArray_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} @var{retval} = cvMakeHistHeaderForArray (@var{dims}, @var{hist}, @var{data}, @var{ranges} = nil, @var{uniform} = 1)\n\
+@var{dims} is of type int. @var{hist} is of type CvHistogram. @var{data} is of type float. @var{ranges} is of type float. @var{uniform} is of type int. @var{retval} is of type CvHistogram. \n\
+@end deftypefn";
+const char* _wrap_cvMakeSeqHeaderForArray_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} @var{retval} = cvMakeSeqHeaderForArray (@var{seq_type}, @var{header_size}, @var{elem_size}, @var{elements}, @var{total}, @var{seq}, @var{block})\n\
+@var{seq_type} is of type int. @var{header_size} is of type int. @var{elem_size} is of type int. @var{elements} is of type void. @var{total} is of type int. @var{seq} is of type CvSeq. @var{block} is of type CvSeqBlock. @var{retval} is of type CvSeq. \n\
+@end deftypefn";
+const char* _wrap_cvMat_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} @var{retval} = cvMat (@var{rows}, @var{cols}, @var{type})\n\
+@var{rows} is of type int. @var{cols} is of type int. @var{type} is of type int. @var{retval} is of type CvMat. \n\
+@end deftypefn";
+const char* _wrap_cvMatMul_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} cvMatMul (@var{src1}, @var{src2}, @var{dst})\n\
+@var{src1} is of type CvArr. @var{src2} is of type CvArr. @var{dst} is of type CvArr. \n\
+@end deftypefn";
+const char* _wrap_cvMatMulAdd_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} cvMatMulAdd (@var{src1}, @var{src2}, @var{src3}, @var{dst})\n\
+@var{src1} is of type CvArr. @var{src2} is of type CvArr. @var{src3} is of type CvArr. @var{dst} is of type CvArr. \n\
+@end deftypefn";
+const char* _wrap_cvMatchContourTrees_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} @var{retval} = cvMatchContourTrees (@var{tree1}, @var{tree2}, @var{method}, @var{threshold})\n\
+@var{tree1} is of type CvContourTree. @var{tree2} is of type CvContourTree. @var{method} is of type int. @var{threshold} is of type double. @var{retval} is of type double. \n\
+@end deftypefn";
+const char* _wrap_cvMatchShapes_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} @var{retval} = cvMatchShapes (@var{object1}, @var{object2}, @var{method}, @var{parameter} = 0)\n\
+@var{object1} is of type void. @var{object2} is of type void. @var{method} is of type int. @var{parameter} is of type double. @var{retval} is of type double. \n\
+@end deftypefn";
+const char* _wrap_cvMatchTemplate_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} cvMatchTemplate (@var{image}, @var{templ}, @var{result}, @var{method})\n\
+@var{image} is of type CvArr. @var{templ} is of type CvArr. @var{result} is of type CvArr. @var{method} is of type int. \n\
+@end deftypefn";
+const char* _wrap_cvMax_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} cvMax (@var{src1}, @var{src2}, @var{dst})\n\
+@var{src1} is of type CvArr. @var{src2} is of type CvArr. @var{dst} is of type CvArr. \n\
+@end deftypefn";
+const char* _wrap_cvMaxRect_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} @var{retval} = cvMaxRect (@var{rect1}, @var{rect2})\n\
+@var{rect1} is of type CvRect. @var{rect2} is of type CvRect. @var{retval} is of type CvRect. \n\
+@end deftypefn";
+const char* _wrap_cvMaxS_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} cvMaxS (@var{src}, @var{value}, @var{dst})\n\
+@var{src} is of type CvArr. @var{value} is of type double. @var{dst} is of type CvArr. \n\
+@end deftypefn";
+const char* _wrap_cvMeanShift_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} @var{retval} = cvMeanShift (@var{prob_image}, @var{window}, @var{criteria}, @var{comp})\n\
+@var{prob_image} is of type CvArr. @var{window} is of type CvRect. @var{criteria} is of type CvTermCriteria. @var{comp} is of type CvConnectedComp. @var{retval} is of type int. \n\
+@end deftypefn";
+const char* _wrap_cvMemStorageAlloc_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} @var{retval} = cvMemStorageAlloc (@var{storage}, @var{size})\n\
+@var{storage} is of type CvMemStorage. @var{size} is of type size_t. @var{retval} is of type void. \n\
+@end deftypefn";
+const char* _wrap_cvMemStorageAllocString_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} @var{retval} = cvMemStorageAllocString (@var{storage}, @var{ptr}, @var{len} = -1)\n\
+@var{storage} is of type CvMemStorage. @var{ptr} is of type char. @var{len} is of type int. @var{retval} is of type CvString. \n\
+@end deftypefn";
+const char* _wrap_cvMerge_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} cvMerge (@var{src0}, @var{src1}, @var{src2}, @var{src3}, @var{dst})\n\
+@var{src0} is of type CvArr. @var{src1} is of type CvArr. @var{src2} is of type CvArr. @var{src3} is of type CvArr. @var{dst} is of type CvArr. \n\
+@end deftypefn";
+const char* _wrap_cvMin_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} cvMin (@var{src1}, @var{src2}, @var{dst})\n\
+@var{src1} is of type CvArr. @var{src2} is of type CvArr. @var{dst} is of type CvArr. \n\
+@end deftypefn";
+const char* _wrap_cvMinAreaRect2_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} @var{retval} = cvMinAreaRect2 (@var{points}, @var{storage} = nil)\n\
+@var{points} is of type CvArr. @var{storage} is of type CvMemStorage. @var{retval} is of type CvBox2D. \n\
+@end deftypefn";
+const char* _wrap_cvMinEnclosingCircle_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} @var{retval} = cvMinEnclosingCircle (@var{points}, @var{center})\n\
+@var{points} is of type CvArr. @var{center} is of type CvPoint2D32f. @var{retval} is of type int. \n\
+@end deftypefn";
+const char* _wrap_cvMinMaxLoc_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} cvMinMaxLoc (@var{arr}, @var{min_val}, @var{max_val}, @var{min_loc} = nil, @var{max_loc} = nil, @var{mask} = nil)\n\
+@var{arr} is of type CvArr. @var{min_val} is of type double. @var{max_val} is of type double. @var{min_loc} is of type CvPoint. @var{max_loc} is of type CvPoint. @var{mask} is of type CvArr. \n\
+@end deftypefn";
+const char* _wrap_cvMinS_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} cvMinS (@var{src}, @var{value}, @var{dst})\n\
+@var{src} is of type CvArr. @var{value} is of type double. @var{dst} is of type CvArr. \n\
+@end deftypefn";
+const char* _wrap_cvMixChannels_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} cvMixChannels (@var{src}, @var{src_count}, @var{dst}, @var{dst_count}, @var{from_to}, @var{pair_count})\n\
+@var{src} is of type CvArr. @var{src_count} is of type int. @var{dst} is of type CvArr. @var{dst_count} is of type int. @var{from_to} is of type int. @var{pair_count} is of type int. \n\
+@end deftypefn";
+const char* _wrap_cvMoments_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} cvMoments (@var{arr}, @var{moments}, @var{binary} = 0)\n\
+@var{arr} is of type CvArr. @var{moments} is of type CvMoments. @var{binary} is of type int. \n\
+@end deftypefn";
+const char* _wrap_cvMorphologyEx_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} cvMorphologyEx (@var{src}, @var{dst}, @var{temp}, @var{element}, @var{operation}, @var{iterations} = 1)\n\
+@var{src} is of type CvArr. @var{dst} is of type CvArr. @var{temp} is of type CvArr. @var{element} is of type . @var{operation} is of type int. @var{iterations} is of type int. \n\
+@end deftypefn";
+const char* _wrap_cvMul_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} cvMul (@var{src1}, @var{src2}, @var{dst}, @var{scale} = 1)\n\
+@var{src1} is of type CvArr. @var{src2} is of type CvArr. @var{dst} is of type CvArr. @var{scale} is of type double. \n\
+@end deftypefn";
+const char* _wrap_cvMulSpectrums_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} cvMulSpectrums (@var{src1}, @var{src2}, @var{dst}, @var{flags})\n\
+@var{src1} is of type CvArr. @var{src2} is of type CvArr. @var{dst} is of type CvArr. @var{flags} is of type int. \n\
+@end deftypefn";
+const char* _wrap_cvMulTransposed_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} cvMulTransposed (@var{src}, @var{dst}, @var{order}, @var{delta} = nil, @var{scale} = 1.)\n\
+@var{src} is of type CvArr. @var{dst} is of type CvArr. @var{order} is of type int. @var{delta} is of type CvArr. @var{scale} is of type double. \n\
+@end deftypefn";
+const char* _wrap_cvMultiplyAcc_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} cvMultiplyAcc (@var{image1}, @var{image2}, @var{acc}, @var{mask} = nil)\n\
+@var{image1} is of type CvArr. @var{image2} is of type CvArr. @var{acc} is of type CvArr. @var{mask} is of type CvArr. \n\
+@end deftypefn";
+const char* _wrap_cvNextGraphItem_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} @var{retval} = cvNextGraphItem (@var{scanner})\n\
+@var{scanner} is of type CvGraphScanner. @var{retval} is of type int. \n\
+@end deftypefn";
+const char* _wrap_cvNextNArraySlice_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} @var{retval} = cvNextNArraySlice (@var{array_iterator})\n\
+@var{array_iterator} is of type CvNArrayIterator. @var{retval} is of type int. \n\
+@end deftypefn";
+const char* _wrap_cvNextTreeNode_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} @var{retval} = cvNextTreeNode (@var{tree_iterator})\n\
+@var{tree_iterator} is of type CvTreeNodeIterator. @var{retval} is of type void. \n\
+@end deftypefn";
+const char* _wrap_cvNorm_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} @var{retval} = cvNorm (@var{arr1}, @var{arr2} = nil, @var{norm_type} = 4, @var{mask} = nil)\n\
+@var{arr1} is of type CvArr. @var{arr2} is of type CvArr. @var{norm_type} is of type int. @var{mask} is of type CvArr. @var{retval} is of type double. \n\
+@end deftypefn";
+const char* _wrap_cvNormalize_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} cvNormalize (@var{src}, @var{dst}, @var{a} = 1., @var{b} = 0., @var{norm_type} = 4, @var{mask} = nil)\n\
+@var{src} is of type CvArr. @var{dst} is of type CvArr. @var{a} is of type double. @var{b} is of type double. @var{norm_type} is of type int. @var{mask} is of type CvArr. \n\
+@end deftypefn";
+const char* _wrap_cvNormalizeHist_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} cvNormalizeHist (@var{hist}, @var{factor})\n\
+@var{hist} is of type CvHistogram. @var{factor} is of type double. \n\
+@end deftypefn";
+const char* _wrap_cvNot_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} cvNot (@var{src}, @var{dst})\n\
+@var{src} is of type CvArr. @var{dst} is of type CvArr. \n\
+@end deftypefn";
+const char* _wrap_cvNulDevReport_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} @var{retval} = cvNulDevReport (@var{status}, @var{func_name}, @var{err_msg}, @var{file_name}, @var{line}, @var{userdata})\n\
+@var{status} is of type int. @var{func_name} is of type char. @var{err_msg} is of type char. @var{file_name} is of type char. @var{line} is of type int. @var{userdata} is of type void. @var{retval} is of type int. \n\
+@end deftypefn";
+const char* _wrap_cvOpenFileStorage_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} @var{retval} = cvOpenFileStorage (@var{filename}, @var{memstorage}, @var{flags})\n\
+@var{filename} is of type char. @var{memstorage} is of type CvMemStorage. @var{flags} is of type int. @var{retval} is of type CvFileStorage. \n\
+@end deftypefn";
+const char* _wrap_cvOr_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} cvOr (@var{src1}, @var{src2}, @var{dst}, @var{mask} = nil)\n\
+@var{src1} is of type CvArr. @var{src2} is of type CvArr. @var{dst} is of type CvArr. @var{mask} is of type CvArr. \n\
+@end deftypefn";
+const char* _wrap_cvOrS_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} cvOrS (@var{src}, @var{value}, @var{dst}, @var{mask} = nil)\n\
+@var{src} is of type CvArr. @var{value} is of type CvScalar. @var{dst} is of type CvArr. @var{mask} is of type CvArr. \n\
+@end deftypefn";
+const char* _wrap_cvPOSIT_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} cvPOSIT (@var{posit_object}, @var{image_points}, @var{focal_length}, @var{criteria}, @var{rotation_matrix}, @var{translation_vector})\n\
+@var{posit_object} is of type CvPOSITObject. @var{image_points} is of type CvPoint2D32f. @var{focal_length} is of type double. @var{criteria} is of type CvTermCriteria. @var{rotation_matrix} is of type CvMatr32f. @var{translation_vector} is of type CvVect32f. \n\
+@end deftypefn";
+const char* _wrap_cvPerspectiveTransform_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} cvPerspectiveTransform (@var{src}, @var{dst}, @var{mat})\n\
+@var{src} is of type CvArr. @var{dst} is of type CvArr. @var{mat} is of type CvMat. \n\
+@end deftypefn";
+const char* _wrap_cvPoint_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} @var{retval} = cvPoint (@var{x}, @var{y})\n\
+@var{x} is of type int. @var{y} is of type int. @var{retval} is of type CvPoint. \n\
+@end deftypefn";
+const char* _wrap_cvPoint2D32f_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} @var{retval} = cvPoint2D32f (@var{x}, @var{y})\n\
+@var{x} is of type double. @var{y} is of type double. @var{retval} is of type CvPoint2D32f. \n\
+@end deftypefn";
+const char* _wrap_cvPoint2D64f_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} @var{retval} = cvPoint2D64f (@var{x}, @var{y})\n\
+@var{x} is of type double. @var{y} is of type double. @var{retval} is of type CvPoint2D64f. \n\
+@end deftypefn";
+const char* _wrap_cvPoint3D32f_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} @var{retval} = cvPoint3D32f (@var{x}, @var{y}, @var{z})\n\
+@var{x} is of type double. @var{y} is of type double. @var{z} is of type double. @var{retval} is of type CvPoint3D32f. \n\
+@end deftypefn";
+const char* _wrap_cvPoint3D64f_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} @var{retval} = cvPoint3D64f (@var{x}, @var{y}, @var{z})\n\
+@var{x} is of type double. @var{y} is of type double. @var{z} is of type double. @var{retval} is of type CvPoint3D64f. \n\
+@end deftypefn";
+const char* _wrap_cvPointFrom32f_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} @var{retval} = cvPointFrom32f (@var{point})\n\
+@var{point} is of type CvPoint2D32f. @var{retval} is of type CvPoint. \n\
+@end deftypefn";
+const char* _wrap_cvPointPolygonTest_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} @var{retval} = cvPointPolygonTest (@var{contour}, @var{pt}, @var{measure_dist})\n\
+@var{contour} is of type CvArr. @var{pt} is of type CvPoint2D32f. @var{measure_dist} is of type int. @var{retval} is of type double. \n\
+@end deftypefn";
+const char* _wrap_cvPointSeqFromMat_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} @var{retval} = cvPointSeqFromMat (@var{seq_kind}, @var{mat}, @var{contour_header}, @var{block})\n\
+@var{seq_kind} is of type int. @var{mat} is of type CvArr. @var{contour_header} is of type CvContour. @var{block} is of type CvSeqBlock. @var{retval} is of type CvSeq. \n\
+@end deftypefn";
+const char* _wrap_cvPointTo32f_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} @var{retval} = cvPointTo32f (@var{point})\n\
+@var{point} is of type CvPoint. @var{retval} is of type CvPoint2D32f. \n\
+@end deftypefn";
+const char* _wrap_cvPolarToCart_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} cvPolarToCart (@var{magnitude}, @var{angle}, @var{x}, @var{y}, @var{angle_in_degrees} = 0)\n\
+@var{magnitude} is of type CvArr. @var{angle} is of type CvArr. @var{x} is of type CvArr. @var{y} is of type CvArr. @var{angle_in_degrees} is of type int. \n\
+@end deftypefn";
+const char* _wrap_cvPolyLine_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} cvPolyLine (@var{img}, @var{pts}, @var{is_closed}, @var{color}, @var{thickness} = 1, @var{line_type} = 8, @var{shift} = 0)\n\
+@var{img} is of type CvArr. @var{pts} is of type CvPoint. @var{is_closed} is of type int. @var{color} is of type CvScalar. @var{thickness} is of type int. @var{line_type} is of type int. @var{shift} is of type int. \n\
+@end deftypefn";
+const char* _wrap_cvPow_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} cvPow (@var{src}, @var{dst}, @var{power})\n\
+@var{src} is of type CvArr. @var{dst} is of type CvArr. @var{power} is of type double. \n\
+@end deftypefn";
+const char* _wrap_cvPreCornerDetect_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} cvPreCornerDetect (@var{image}, @var{corners}, @var{aperture_size} = 3)\n\
+@var{image} is of type CvArr. @var{corners} is of type CvArr. @var{aperture_size} is of type int. \n\
+@end deftypefn";
+const char* _wrap_cvPrevTreeNode_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} @var{retval} = cvPrevTreeNode (@var{tree_iterator})\n\
+@var{tree_iterator} is of type CvTreeNodeIterator. @var{retval} is of type void. \n\
+@end deftypefn";
+const char* _wrap_cvProjectPCA_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} cvProjectPCA (@var{data}, @var{mean}, @var{eigenvects}, @var{result})\n\
+@var{data} is of type CvArr. @var{mean} is of type CvArr. @var{eigenvects} is of type CvArr. @var{result} is of type CvArr. \n\
+@end deftypefn";
+const char* _wrap_cvProjectPoints2_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} cvProjectPoints2 (@var{object_points}, @var{rotation_vector}, @var{translation_vector}, @var{intrinsic_matrix}, @var{distortion_coeffs}, @var{image_points}, @var{dpdrot} = nil, @var{dpdt} = nil, @var{dpdf} = nil, @var{dpdc} = nil, @var{dpddist} = nil)\n\
+@var{object_points} is of type CvMat. @var{rotation_vector} is of type CvMat. @var{translation_vector} is of type CvMat. @var{intrinsic_matrix} is of type CvMat. @var{distortion_coeffs} is of type CvMat. @var{image_points} is of type CvMat. @var{dpdrot} is of type CvMat. @var{dpdt} is of type CvMat. @var{dpdf} is of type CvMat. @var{dpdc} is of type CvMat. @var{dpddist} is of type CvMat. \n\
+@end deftypefn";
+const char* _wrap_cvPtr1D_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} @var{retval} = cvPtr1D (@var{arr}, @var{idx0}, @var{type} = nil)\n\
+@var{arr} is of type CvArr. @var{idx0} is of type int. @var{type} is of type int. @var{retval} is of type uchar. \n\
+@end deftypefn";
+const char* _wrap_cvPtr2D_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} @var{retval} = cvPtr2D (@var{arr}, @var{idx0}, @var{idx1}, @var{type} = nil)\n\
+@var{arr} is of type CvArr. @var{idx0} is of type int. @var{idx1} is of type int. @var{type} is of type int. @var{retval} is of type uchar. \n\
+@end deftypefn";
+const char* _wrap_cvPtr3D_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} @var{retval} = cvPtr3D (@var{arr}, @var{idx0}, @var{idx1}, @var{idx2}, @var{type} = nil)\n\
+@var{arr} is of type CvArr. @var{idx0} is of type int. @var{idx1} is of type int. @var{idx2} is of type int. @var{type} is of type int. @var{retval} is of type uchar. \n\
+@end deftypefn";
+const char* _wrap_cvPtrND_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} @var{retval} = cvPtrND (@var{arr}, @var{idx}, @var{type} = nil, @var{create_node} = 1, @var{precalc_hashval} = nil)\n\
+@var{arr} is of type CvArr. @var{idx} is of type int. @var{type} is of type int. @var{create_node} is of type int. @var{precalc_hashval} is of type unsigned int. @var{retval} is of type uchar. \n\
+@end deftypefn";
+const char* _wrap_cvPutText_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} cvPutText (@var{img}, @var{text}, @var{org}, @var{font}, @var{color})\n\
+@var{img} is of type CvArr. @var{text} is of type char. @var{org} is of type CvPoint. @var{font} is of type CvFont. @var{color} is of type CvScalar. \n\
+@end deftypefn";
+const char* _wrap_cvPyrDown_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} cvPyrDown (@var{src}, @var{dst}, @var{filter} = CV_GAUSSIAN_5x5)\n\
+@var{src} is of type CvArr. @var{dst} is of type CvArr. @var{filter} is of type int. \n\
+@end deftypefn";
+const char* _wrap_cvPyrMeanShiftFiltering_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} cvPyrMeanShiftFiltering (@var{src}, @var{dst}, @var{sp}, @var{sr}, @var{max_level} = 1, @var{termcrit} = cvTermCriteria(1 +2,5,1))\n\
+@var{src} is of type CvArr. @var{dst} is of type CvArr. @var{sp} is of type double. @var{sr} is of type double. @var{max_level} is of type int. @var{termcrit} is of type CvTermCriteria. \n\
+@end deftypefn";
+const char* _wrap_cvPyrSegmentationUntyped_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} cvPyrSegmentation (@var{src}, @var{dst}, @var{storage}, @var{comp}, @var{level}, @var{threshold1}, @var{threshold2})\n\
+@var{src} is of type . @var{dst} is of type . @var{storage} is of type CvMemStorage. @var{comp} is of type CvSeq. @var{level} is of type int. @var{threshold1} is of type double. @var{threshold2} is of type double. \n\
+@end deftypefn";
+const char* _wrap_cvPyrUp_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} cvPyrUp (@var{src}, @var{dst}, @var{filter} = CV_GAUSSIAN_5x5)\n\
+@var{src} is of type CvArr. @var{dst} is of type CvArr. @var{filter} is of type int. \n\
+@end deftypefn";
+const char* _wrap_cvRANSACUpdateNumIters_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} @var{retval} = cvRANSACUpdateNumIters (@var{p}, @var{err_prob}, @var{model_points}, @var{max_iters})\n\
+@var{p} is of type double. @var{err_prob} is of type double. @var{model_points} is of type int. @var{max_iters} is of type int. @var{retval} is of type int. \n\
+@end deftypefn";
+const char* _wrap_cvRNG_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} @var{retval} = cvRNG ()\n\
+@var{retval} is of type CvRNG. \n\
+@end deftypefn";
+const char* _wrap_cvROIToRect_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} @var{retval} = cvROIToRect (@var{roi})\n\
+@var{roi} is of type . @var{retval} is of type CvRect. \n\
+@end deftypefn";
+const char* _wrap_cvRandArr_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} cvRandArr (@var{rng}, @var{arr}, @var{dist_type}, @var{param1}, @var{param2})\n\
+@var{rng} is of type CvRNG. @var{arr} is of type CvArr. @var{dist_type} is of type int. @var{param1} is of type CvScalar. @var{param2} is of type CvScalar. \n\
+@end deftypefn";
+const char* _wrap_cvRandInt_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} @var{retval} = cvRandInt (@var{rng})\n\
+@var{rng} is of type CvRNG. @var{retval} is of type unsigned int. \n\
+@end deftypefn";
+const char* _wrap_cvRandReal_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} @var{retval} = cvRandReal (@var{rng})\n\
+@var{rng} is of type CvRNG. @var{retval} is of type double. \n\
+@end deftypefn";
+const char* _wrap_cvRandShuffle_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} cvRandShuffle (@var{mat}, @var{rng}, @var{iter_factor} = 1.)\n\
+@var{mat} is of type CvArr. @var{rng} is of type CvRNG. @var{iter_factor} is of type double. \n\
+@end deftypefn";
+const char* _wrap_cvRange_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} @var{retval} = cvRange (@var{mat}, @var{start}, @var{end})\n\
+@var{mat} is of type CvArr. @var{start} is of type double. @var{end} is of type double. @var{retval} is of type CvArr. \n\
+@end deftypefn";
+const char* _wrap_cvRawDataToScalar_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} cvRawDataToScalar (@var{data}, @var{type}, @var{scalar})\n\
+@var{data} is of type void. @var{type} is of type int. @var{scalar} is of type CvScalar. \n\
+@end deftypefn";
+const char* _wrap_cvRead_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} @var{retval} = cvRead (@var{fs}, @var{node}, @var{attributes} = nil)\n\
+@var{fs} is of type CvFileStorage. @var{node} is of type CvFileNode. @var{attributes} is of type CvAttrList. @var{retval} is of type void. \n\
+@end deftypefn";
+const char* _wrap_cvReadByName_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} @var{retval} = cvReadByName (@var{fs}, @var{map}, @var{name}, @var{attributes} = nil)\n\
+@var{fs} is of type CvFileStorage. @var{map} is of type CvFileNode. @var{name} is of type char. @var{attributes} is of type CvAttrList. @var{retval} is of type void. \n\
+@end deftypefn";
+const char* _wrap_cvReadChainPoint_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} @var{retval} = cvReadChainPoint (@var{reader})\n\
+@var{reader} is of type CvChainPtReader. @var{retval} is of type CvPoint. \n\
+@end deftypefn";
+const char* _wrap_cvReadInt_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} @var{retval} = cvReadInt (@var{node}, @var{default_value} = 0)\n\
+@var{node} is of type CvFileNode. @var{default_value} is of type int. @var{retval} is of type int. \n\
+@end deftypefn";
+const char* _wrap_cvReadIntByName_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} @var{retval} = cvReadIntByName (@var{fs}, @var{map}, @var{name}, @var{default_value} = 0)\n\
+@var{fs} is of type CvFileStorage. @var{map} is of type CvFileNode. @var{name} is of type char. @var{default_value} is of type int. @var{retval} is of type int. \n\
+@end deftypefn";
+const char* _wrap_cvReadRawData_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} cvReadRawData (@var{fs}, @var{src}, @var{dst}, @var{dt})\n\
+@var{fs} is of type CvFileStorage. @var{src} is of type CvFileNode. @var{dst} is of type void. @var{dt} is of type char. \n\
+@end deftypefn";
+const char* _wrap_cvReadRawDataSlice_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} cvReadRawDataSlice (@var{fs}, @var{reader}, @var{count}, @var{dst}, @var{dt})\n\
+@var{fs} is of type CvFileStorage. @var{reader} is of type CvSeqReader. @var{count} is of type int. @var{dst} is of type void. @var{dt} is of type char. \n\
+@end deftypefn";
+const char* _wrap_cvReadReal_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} @var{retval} = cvReadReal (@var{node}, @var{default_value} = 0.)\n\
+@var{node} is of type CvFileNode. @var{default_value} is of type double. @var{retval} is of type double. \n\
+@end deftypefn";
+const char* _wrap_cvReadRealByName_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} @var{retval} = cvReadRealByName (@var{fs}, @var{map}, @var{name}, @var{default_value} = 0.)\n\
+@var{fs} is of type CvFileStorage. @var{map} is of type CvFileNode. @var{name} is of type char. @var{default_value} is of type double. @var{retval} is of type double. \n\
+@end deftypefn";
+const char* _wrap_cvReadString_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} @var{retval} = cvReadString (@var{node}, @var{default_value} = nil)\n\
+@var{node} is of type CvFileNode. @var{default_value} is of type char. @var{retval} is of type char. \n\
+@end deftypefn";
+const char* _wrap_cvReadStringByName_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} @var{retval} = cvReadStringByName (@var{fs}, @var{map}, @var{name}, @var{default_value} = nil)\n\
+@var{fs} is of type CvFileStorage. @var{map} is of type CvFileNode. @var{name} is of type char. @var{default_value} is of type char. @var{retval} is of type char. \n\
+@end deftypefn";
+const char* _wrap_cvRealScalar_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} @var{retval} = cvRealScalar (@var{val0})\n\
+@var{val0} is of type double. @var{retval} is of type CvScalar. \n\
+@end deftypefn";
+const char* _wrap_cvRect_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} @var{retval} = cvRect (@var{x}, @var{y}, @var{width}, @var{height})\n\
+@var{x} is of type int. @var{y} is of type int. @var{width} is of type int. @var{height} is of type int. @var{retval} is of type CvRect. \n\
+@end deftypefn";
+const char* _wrap_cvRectToROI_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} @var{retval} = cvRectToROI (@var{rect}, @var{coi})\n\
+@var{rect} is of type CvRect. @var{coi} is of type int. @var{retval} is of type . \n\
+@end deftypefn";
+const char* _wrap_cvRectangle_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} cvRectangle (@var{img}, @var{pt1}, @var{pt2}, @var{color}, @var{thickness} = 1, @var{line_type} = 8, @var{shift} = 0)\n\
+@var{img} is of type CvArr. @var{pt1} is of type CvPoint. @var{pt2} is of type CvPoint. @var{color} is of type CvScalar. @var{thickness} is of type int. @var{line_type} is of type int. @var{shift} is of type int. \n\
+@end deftypefn";
+const char* _wrap_cvRedirectError_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} @var{retval} = cvRedirectError (@var{error_handler}, @var{userdata} = nil, @var{prev_userdata} = nil)\n\
+@var{error_handler} is of type CvErrorCallback. @var{userdata} is of type void. @var{prev_userdata} is of type void. @var{retval} is of type CvErrorCallback. \n\
+@end deftypefn";
+const char* _wrap_cvReduce_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} cvReduce (@var{src}, @var{dst}, @var{dim} = -1, @var{op} = 0)\n\
+@var{src} is of type CvArr. @var{dst} is of type CvArr. @var{dim} is of type int. @var{op} is of type int. \n\
+@end deftypefn";
+const char* _wrap_cvRegisterModule_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} @var{retval} = cvRegisterModule (@var{module_info})\n\
+@var{module_info} is of type CvModuleInfo. @var{retval} is of type int. \n\
+@end deftypefn";
+const char* _wrap_cvRegisterType_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} cvRegisterType (@var{info})\n\
+@var{info} is of type CvTypeInfo. \n\
+@end deftypefn";
+const char* _wrap_cvRelease_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} cvRelease (@var{struct_ptr})\n\
+@var{struct_ptr} is of type void. \n\
+@end deftypefn";
+const char* _wrap_cvReleaseConDensation_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} cvReleaseConDensation (@var{condens})\n\
+@var{condens} is of type CvConDensation. \n\
+@end deftypefn";
+const char* _wrap_cvReleaseData_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} cvReleaseData (@var{arr})\n\
+@var{arr} is of type CvArr. \n\
+@end deftypefn";
+const char* _wrap_cvReleaseFileStorage_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} cvReleaseFileStorage (@var{fs})\n\
+@var{fs} is of type CvFileStorage. \n\
+@end deftypefn";
+const char* _wrap_cvReleaseGraphScanner_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} cvReleaseGraphScanner (@var{scanner})\n\
+@var{scanner} is of type CvGraphScanner. \n\
+@end deftypefn";
+const char* _wrap_cvReleaseHaarClassifierCascade_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} cvReleaseHaarClassifierCascade (@var{cascade})\n\
+@var{cascade} is of type CvHaarClassifierCascade. \n\
+@end deftypefn";
+const char* _wrap_cvReleaseHist_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} cvReleaseHist (@var{hist})\n\
+@var{hist} is of type CvHistogram. \n\
+@end deftypefn";
+const char* _wrap_cvReleaseImage_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} cvReleaseImage (@var{image})\n\
+@var{image} is of type . \n\
+@end deftypefn";
+const char* _wrap_cvReleaseImageHeader_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} cvReleaseImageHeader (@var{image})\n\
+@var{image} is of type . \n\
+@end deftypefn";
+const char* _wrap_cvReleaseKalman_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} cvReleaseKalman (@var{kalman})\n\
+@var{kalman} is of type CvKalman. \n\
+@end deftypefn";
+const char* _wrap_cvReleaseMat_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} cvReleaseMat (@var{mat})\n\
+@var{mat} is of type CvMat. \n\
+@end deftypefn";
+const char* _wrap_cvReleaseMatND_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} cvReleaseMatND (@var{mat})\n\
+@var{mat} is of type CvMatND. \n\
+@end deftypefn";
+const char* _wrap_cvReleaseMemStorage_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} cvReleaseMemStorage (@var{storage})\n\
+@var{storage} is of type CvMemStorage. \n\
+@end deftypefn";
+const char* _wrap_cvReleasePOSITObject_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} cvReleasePOSITObject (@var{posit_object})\n\
+@var{posit_object} is of type CvPOSITObject. \n\
+@end deftypefn";
+const char* _wrap_cvReleasePyramid_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} cvReleasePyramid (@var{pyramid}, @var{extra_layers})\n\
+@var{pyramid} is of type CvMat. @var{extra_layers} is of type int. \n\
+@end deftypefn";
+const char* _wrap_cvReleaseSparseMat_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} cvReleaseSparseMat (@var{mat})\n\
+@var{mat} is of type CvSparseMat. \n\
+@end deftypefn";
+const char* _wrap_cvReleaseStructuringElement_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} cvReleaseStructuringElement (@var{element})\n\
+@var{element} is of type . \n\
+@end deftypefn";
+const char* _wrap_cvRemap_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} cvRemap (@var{src}, @var{dst}, @var{mapx}, @var{mapy}, @var{flags} = 1+8, @var{fillval} = cvScalarAll(0))\n\
+@var{src} is of type CvArr. @var{dst} is of type CvArr. @var{mapx} is of type CvArr. @var{mapy} is of type CvArr. @var{flags} is of type int. @var{fillval} is of type CvScalar. \n\
+@end deftypefn";
+const char* _wrap_cvRemoveNodeFromTree_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} cvRemoveNodeFromTree (@var{node}, @var{frame})\n\
+@var{node} is of type void. @var{frame} is of type void. \n\
+@end deftypefn";
+const char* _wrap_cvRepeat_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} cvRepeat (@var{src}, @var{dst})\n\
+@var{src} is of type CvArr. @var{dst} is of type CvArr. \n\
+@end deftypefn";
+const char* _wrap_cvResetImageROI_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} cvResetImageROI (@var{image})\n\
+@var{image} is of type . \n\
+@end deftypefn";
+const char* _wrap_cvReshape_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} @var{retval} = cvReshape (@var{arr}, @var{header}, @var{new_cn}, @var{new_rows} = 0)\n\
+@var{arr} is of type CvArr. @var{header} is of type CvMat. @var{new_cn} is of type int. @var{new_rows} is of type int. @var{retval} is of type CvMat. \n\
+@end deftypefn";
+const char* _wrap_cvReshapeMatND_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} @var{retval} = cvReshapeMatND (@var{arr}, @var{sizeof_header}, @var{header}, @var{new_cn}, @var{new_dims}, @var{new_sizes})\n\
+@var{arr} is of type CvArr. @var{sizeof_header} is of type int. @var{header} is of type CvArr. @var{new_cn} is of type int. @var{new_dims} is of type int. @var{new_sizes} is of type int. @var{retval} is of type CvArr. \n\
+@end deftypefn";
+const char* _wrap_cvReshapeND_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} cvReshapeND (@var{arr}, @var{header}, @var{new_cn}, @var{new_dims}, @var{new_sizes})\n\
+@var{arr} is of type CvArr. @var{header} is of type CvMat. @var{new_cn} is of type int. @var{new_dims} is of type int. @var{new_sizes} is of type int. \n\
+@end deftypefn";
+const char* _wrap_cvResize_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} cvResize (@var{src}, @var{dst}, @var{interpolation} = 1)\n\
+@var{src} is of type CvArr. @var{dst} is of type CvArr. @var{interpolation} is of type int. \n\
+@end deftypefn";
+const char* _wrap_cvRestoreMemStoragePos_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} cvRestoreMemStoragePos (@var{storage}, @var{pos})\n\
+@var{storage} is of type CvMemStorage. @var{pos} is of type CvMemStoragePos. \n\
+@end deftypefn";
+const char* _wrap_cvRodrigues2_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} @var{retval} = cvRodrigues2 (@var{src}, @var{dst}, @var{jacobian} = 0)\n\
+@var{src} is of type CvMat. @var{dst} is of type CvMat. @var{jacobian} is of type CvMat. @var{retval} is of type int. \n\
+@end deftypefn";
+const char* _wrap_cvRound_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} @var{retval} = cvRound (@var{value})\n\
+@var{value} is of type double. @var{retval} is of type int. \n\
+@end deftypefn";
+const char* _wrap_cvRunHaarClassifierCascade_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} @var{retval} = cvRunHaarClassifierCascade (@var{cascade}, @var{pt}, @var{start_stage} = 0)\n\
+@var{cascade} is of type CvHaarClassifierCascade. @var{pt} is of type CvPoint. @var{start_stage} is of type int. @var{retval} is of type int. \n\
+@end deftypefn";
+const char* _wrap_cvRunningAvg_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} cvRunningAvg (@var{image}, @var{acc}, @var{alpha}, @var{mask} = nil)\n\
+@var{image} is of type CvArr. @var{acc} is of type CvArr. @var{alpha} is of type double. @var{mask} is of type CvArr. \n\
+@end deftypefn";
+const char* _wrap_cvSVBkSb_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} cvSVBkSb (@var{W}, @var{U}, @var{V}, @var{B}, @var{X}, @var{flags})\n\
+@var{W} is of type CvArr. @var{U} is of type CvArr. @var{V} is of type CvArr. @var{B} is of type CvArr. @var{X} is of type CvArr. @var{flags} is of type int. \n\
+@end deftypefn";
+const char* _wrap_cvSVD_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} cvSVD (@var{A}, @var{W}, @var{U} = nil, @var{V} = nil, @var{flags} = 0)\n\
+@var{A} is of type CvArr. @var{W} is of type CvArr. @var{U} is of type CvArr. @var{V} is of type CvArr. @var{flags} is of type int. \n\
+@end deftypefn";
+const char* _wrap_cvSampleLine_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} @var{retval} = cvSampleLine (@var{image}, @var{pt1}, @var{pt2}, @var{buffer}, @var{connectivity} = 8)\n\
+@var{image} is of type CvArr. @var{pt1} is of type CvPoint. @var{pt2} is of type CvPoint. @var{buffer} is of type void. @var{connectivity} is of type int. @var{retval} is of type int. \n\
+@end deftypefn";
+const char* _wrap_cvSave_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} cvSave (@var{filename}, @var{struct_ptr}, @var{name} = nil, @var{comment} = nil, @var{attributes} = cvAttrList())\n\
+@var{filename} is of type char. @var{struct_ptr} is of type void. @var{name} is of type char. @var{comment} is of type char. @var{attributes} is of type CvAttrList. \n\
+@end deftypefn";
+const char* _wrap_cvSaveMemStoragePos_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} cvSaveMemStoragePos (@var{storage}, @var{pos})\n\
+@var{storage} is of type CvMemStorage. @var{pos} is of type CvMemStoragePos. \n\
+@end deftypefn";
+const char* _wrap_cvScalar_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} @var{retval} = cvScalar (@var{val0})\n\
+@var{val0} is of type double. @var{retval} is of type CvScalar. \n\
+@end deftypefn";
+const char* _wrap_cvScalarAll_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} @var{retval} = cvScalarAll (@var{val0123})\n\
+@var{val0123} is of type double. @var{retval} is of type CvScalar. \n\
+@end deftypefn";
+const char* _wrap_cvScalarToRawData_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} cvScalarToRawData (@var{scalar}, @var{data}, @var{type}, @var{extend_to_12} = 0)\n\
+@var{scalar} is of type CvScalar. @var{data} is of type void. @var{type} is of type int. @var{extend_to_12} is of type int. \n\
+@end deftypefn";
+const char* _wrap_cvScaleAdd_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} cvScaleAdd (@var{src1}, @var{scale}, @var{src2}, @var{dst})\n\
+@var{src1} is of type CvArr. @var{scale} is of type CvScalar. @var{src2} is of type CvArr. @var{dst} is of type CvArr. \n\
+@end deftypefn";
+const char* _wrap_cvSegmentMotion_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} @var{retval} = cvSegmentMotion_Shadow (@var{mhi}, @var{seg_mask}, @var{storage}, @var{timestamp}, @var{seg_thresh})\n\
+@var{mhi} is of type CvArr. @var{seg_mask} is of type CvArr. @var{storage} is of type CvMemStorage. @var{timestamp} is of type double. @var{seg_thresh} is of type double. @var{retval} is of type CvSeq_CvConnectedComp. \n\
+@end deftypefn";
+const char* _wrap_cvSeqElemIdx_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} @var{retval} = cvSeqElemIdx (@var{seq}, @var{element}, @var{block} = nil)\n\
+@var{seq} is of type CvSeq. @var{element} is of type void. @var{block} is of type CvSeqBlock. @var{retval} is of type int. \n\
+@end deftypefn";
+const char* _wrap_cvSeqInsert_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} @var{retval} = cvSeqInsert (@var{seq}, @var{before_index}, @var{element} = nil)\n\
+@var{seq} is of type CvSeq. @var{before_index} is of type int. @var{element} is of type void. @var{retval} is of type char. \n\
+@end deftypefn";
+const char* _wrap_cvSeqInsertSlice_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} cvSeqInsertSlice (@var{seq}, @var{before_index}, @var{from_arr})\n\
+@var{seq} is of type CvSeq. @var{before_index} is of type int. @var{from_arr} is of type CvArr. \n\
+@end deftypefn";
+const char* _wrap_cvSeqInvert_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} cvSeqInvert (@var{seq})\n\
+@var{seq} is of type CvSeq. \n\
+@end deftypefn";
+const char* _wrap_cvSeqPartition_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} @var{retval} = cvSeqPartition (@var{seq}, @var{storage}, @var{labels}, @var{is_equal}, @var{userdata})\n\
+@var{seq} is of type CvSeq. @var{storage} is of type CvMemStorage. @var{labels} is of type CvSeq. @var{is_equal} is of type CvCmpFunc. @var{userdata} is of type void. @var{retval} is of type int. \n\
+@end deftypefn";
+const char* _wrap_cvSeqPop_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} cvSeqPop (@var{seq}, @var{element} = nil)\n\
+@var{seq} is of type CvSeq. @var{element} is of type void. \n\
+@end deftypefn";
+const char* _wrap_cvSeqPopFront_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} cvSeqPopFront (@var{seq}, @var{element} = nil)\n\
+@var{seq} is of type CvSeq. @var{element} is of type void. \n\
+@end deftypefn";
+const char* _wrap_cvSeqPopMulti_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} cvSeqPopMulti (@var{seq}, @var{elements}, @var{count}, @var{in_front} = 0)\n\
+@var{seq} is of type CvSeq. @var{elements} is of type void. @var{count} is of type int. @var{in_front} is of type int. \n\
+@end deftypefn";
+const char* _wrap_cvSeqPush_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} @var{retval} = cvSeqPush (@var{seq}, @var{element} = nil)\n\
+@var{seq} is of type CvSeq. @var{element} is of type void. @var{retval} is of type char. \n\
+@end deftypefn";
+const char* _wrap_cvSeqPushFront_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} @var{retval} = cvSeqPushFront (@var{seq}, @var{element} = nil)\n\
+@var{seq} is of type CvSeq. @var{element} is of type void. @var{retval} is of type char. \n\
+@end deftypefn";
+const char* _wrap_cvSeqPushMulti_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} cvSeqPushMulti (@var{seq}, @var{elements}, @var{count}, @var{in_front} = 0)\n\
+@var{seq} is of type CvSeq. @var{elements} is of type void. @var{count} is of type int. @var{in_front} is of type int. \n\
+@end deftypefn";
+const char* _wrap_cvSeqRemove_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} cvSeqRemove (@var{seq}, @var{index})\n\
+@var{seq} is of type CvSeq. @var{index} is of type int. \n\
+@end deftypefn";
+const char* _wrap_cvSeqRemoveSlice_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} cvSeqRemoveSlice (@var{seq}, @var{slice})\n\
+@var{seq} is of type CvSeq. @var{slice} is of type CvSlice. \n\
+@end deftypefn";
+const char* _wrap_cvSeqSearch_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} @var{retval} = cvSeqSearch (@var{seq}, @var{elem}, @var{func}, @var{is_sorted}, @var{elem_idx}, @var{userdata} = nil)\n\
+@var{seq} is of type CvSeq. @var{elem} is of type void. @var{func} is of type CvCmpFunc. @var{is_sorted} is of type int. @var{elem_idx} is of type int. @var{userdata} is of type void. @var{retval} is of type char. \n\
+@end deftypefn";
+const char* _wrap_cvSeqSlice_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} @var{retval} = cvSeqSlice (@var{seq}, @var{slice}, @var{storage} = nil, @var{copy_data} = 0)\n\
+@var{seq} is of type CvSeq. @var{slice} is of type CvSlice. @var{storage} is of type CvMemStorage. @var{copy_data} is of type int. @var{retval} is of type CvSeq. \n\
+@end deftypefn";
+const char* _wrap_cvSeqSort_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} cvSeqSort (@var{seq}, @var{func}, @var{userdata} = nil)\n\
+@var{seq} is of type CvSeq. @var{func} is of type CvCmpFunc. @var{userdata} is of type void. \n\
+@end deftypefn";
+const char* _wrap_cvSet_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} cvSet (@var{arr}, @var{value}, @var{mask} = nil)\n\
+@var{arr} is of type CvArr. @var{value} is of type CvScalar. @var{mask} is of type CvArr. \n\
+@end deftypefn";
+const char* _wrap_cvSet1D_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} cvSet1D (@var{arr}, @var{idx0}, @var{value})\n\
+@var{arr} is of type CvArr. @var{idx0} is of type int. @var{value} is of type CvScalar. \n\
+@end deftypefn";
+const char* _wrap_cvSet2D_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} cvSet2D (@var{arr}, @var{idx0}, @var{idx1}, @var{value})\n\
+@var{arr} is of type CvArr. @var{idx0} is of type int. @var{idx1} is of type int. @var{value} is of type CvScalar. \n\
+@end deftypefn";
+const char* _wrap_cvSet3D_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} cvSet3D (@var{arr}, @var{idx0}, @var{idx1}, @var{idx2}, @var{value})\n\
+@var{arr} is of type CvArr. @var{idx0} is of type int. @var{idx1} is of type int. @var{idx2} is of type int. @var{value} is of type CvScalar. \n\
+@end deftypefn";
+const char* _wrap_cvSetAdd_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} @var{retval} = cvSetAdd (@var{set_header}, @var{elem} = nil, @var{inserted_elem} = nil)\n\
+@var{set_header} is of type CvSet. @var{elem} is of type CvSetElem. @var{inserted_elem} is of type CvSetElem. @var{retval} is of type int. \n\
+@end deftypefn";
+const char* _wrap_cvSetData_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} cvSetData (@var{arr}, @var{data}, @var{step})\n\
+@var{arr} is of type CvArr. @var{data} is of type void. @var{step} is of type int. \n\
+@end deftypefn";
+const char* _wrap_cvSetErrMode_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} @var{retval} = cvSetErrMode (@var{mode})\n\
+@var{mode} is of type int. @var{retval} is of type int. \n\
+@end deftypefn";
+const char* _wrap_cvSetErrStatus_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} cvSetErrStatus (@var{status})\n\
+@var{status} is of type int. \n\
+@end deftypefn";
+const char* _wrap_cvSetHistBinRanges_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} cvSetHistBinRanges (@var{hist}, @var{ranges}, @var{uniform} = 1)\n\
+@var{hist} is of type CvHistogram. @var{ranges} is of type float. @var{uniform} is of type int. \n\
+@end deftypefn";
+const char* _wrap_cvSetIPLAllocators_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} cvSetIPLAllocators (@var{create_header}, @var{allocate_data}, @var{deallocate}, @var{create_roi}, @var{clone_image})\n\
+@var{create_header} is of type Cv_iplCreateImageHeader. @var{allocate_data} is of type Cv_iplAllocateImageData. @var{deallocate} is of type Cv_iplDeallocate. @var{create_roi} is of type Cv_iplCreateROI. @var{clone_image} is of type Cv_iplCloneImage. \n\
+@end deftypefn";
+const char* _wrap_cvSetIdentity_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} cvSetIdentity (@var{mat}, @var{value} = cvRealScalar(1))\n\
+@var{mat} is of type CvArr. @var{value} is of type CvScalar. \n\
+@end deftypefn";
+const char* _wrap_cvSetImageIOFunctions_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} @var{retval} = cvSetImageIOFunctions (@var{_load_image}, @var{_load_image_m}, @var{_save_image}, @var{_show_image})\n\
+@var{_load_image} is of type CvLoadImageFunc. @var{_load_image_m} is of type CvLoadImageMFunc. @var{_save_image} is of type CvSaveImageFunc. @var{_show_image} is of type CvShowImageFunc. @var{retval} is of type int. \n\
+@end deftypefn";
+const char* _wrap_cvSetImagesForHaarClassifierCascade_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} cvSetImagesForHaarClassifierCascade (@var{cascade}, @var{sum}, @var{sqsum}, @var{tilted_sum}, @var{scale})\n\
+@var{cascade} is of type CvHaarClassifierCascade. @var{sum} is of type CvArr. @var{sqsum} is of type CvArr. @var{tilted_sum} is of type CvArr. @var{scale} is of type double. \n\
+@end deftypefn";
+const char* _wrap_cvSetMemoryManager_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} cvSetMemoryManager (@var{alloc_func} = nil, @var{free_func} = nil, @var{userdata} = nil)\n\
+@var{alloc_func} is of type CvAllocFunc. @var{free_func} is of type CvFreeFunc. @var{userdata} is of type void. \n\
+@end deftypefn";
+const char* _wrap_cvSetND_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} cvSetND (@var{arr}, @var{idx}, @var{value})\n\
+@var{arr} is of type CvArr. @var{idx} is of type int. @var{value} is of type CvScalar. \n\
+@end deftypefn";
+const char* _wrap_cvSetNew_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} @var{retval} = cvSetNew (@var{set_header})\n\
+@var{set_header} is of type CvSet. @var{retval} is of type CvSetElem. \n\
+@end deftypefn";
+const char* _wrap_cvSetNumThreads_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} cvSetNumThreads (@var{threads} = 0)\n\
+@var{threads} is of type int. \n\
+@end deftypefn";
+const char* _wrap_cvSetReal1D_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} cvSetReal1D (@var{arr}, @var{idx0}, @var{value})\n\
+@var{arr} is of type CvArr. @var{idx0} is of type int. @var{value} is of type double. \n\
+@end deftypefn";
+const char* _wrap_cvSetReal2D_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} cvSetReal2D (@var{arr}, @var{idx0}, @var{idx1}, @var{value})\n\
+@var{arr} is of type CvArr. @var{idx0} is of type int. @var{idx1} is of type int. @var{value} is of type double. \n\
+@end deftypefn";
+const char* _wrap_cvSetReal3D_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} cvSetReal3D (@var{arr}, @var{idx0}, @var{idx1}, @var{idx2}, @var{value})\n\
+@var{arr} is of type CvArr. @var{idx0} is of type int. @var{idx1} is of type int. @var{idx2} is of type int. @var{value} is of type double. \n\
+@end deftypefn";
+const char* _wrap_cvSetRealND_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} cvSetRealND (@var{arr}, @var{idx}, @var{value})\n\
+@var{arr} is of type CvArr. @var{idx} is of type int. @var{value} is of type double. \n\
+@end deftypefn";
+const char* _wrap_cvSetRemove_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} cvSetRemove (@var{set_header}, @var{index})\n\
+@var{set_header} is of type CvSet. @var{index} is of type int. \n\
+@end deftypefn";
+const char* _wrap_cvSetRemoveByPtr_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} cvSetRemoveByPtr (@var{set_header}, @var{elem})\n\
+@var{set_header} is of type CvSet. @var{elem} is of type void. \n\
+@end deftypefn";
+const char* _wrap_cvSetSeqBlockSize_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} cvSetSeqBlockSize (@var{seq}, @var{delta_elems})\n\
+@var{seq} is of type CvSeq. @var{delta_elems} is of type int. \n\
+@end deftypefn";
+const char* _wrap_cvSetSeqReaderPos_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} cvSetSeqReaderPos (@var{reader}, @var{index}, @var{is_relative} = 0)\n\
+@var{reader} is of type CvSeqReader. @var{index} is of type int. @var{is_relative} is of type int. \n\
+@end deftypefn";
+const char* _wrap_cvSetZero_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} cvSetZero (@var{arr})\n\
+@var{arr} is of type CvArr. \n\
+@end deftypefn";
+const char* _wrap_cvSize_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} @var{retval} = cvSize (@var{width}, @var{height})\n\
+@var{width} is of type int. @var{height} is of type int. @var{retval} is of type CvSize. \n\
+@end deftypefn";
+const char* _wrap_cvSize2D32f_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} @var{retval} = cvSize2D32f (@var{width}, @var{height})\n\
+@var{width} is of type double. @var{height} is of type double. @var{retval} is of type CvSize2D32f. \n\
+@end deftypefn";
+const char* _wrap_cvSlice_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} @var{retval} = cvSlice (@var{start}, @var{end})\n\
+@var{start} is of type int. @var{end} is of type int. @var{retval} is of type CvSlice. \n\
+@end deftypefn";
+const char* _wrap_cvSliceLength_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} @var{retval} = cvSliceLength (@var{slice}, @var{seq})\n\
+@var{slice} is of type CvSlice. @var{seq} is of type CvSeq. @var{retval} is of type int. \n\
+@end deftypefn";
+const char* _wrap_cvSmooth_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} cvSmooth (@var{src}, @var{dst}, @var{smoothtype} = 2, @var{param1} = 3, @var{param2} = 0, @var{param3} = 0, @var{param4} = 0)\n\
+@var{src} is of type CvArr. @var{dst} is of type CvArr. @var{smoothtype} is of type int. @var{param1} is of type int. @var{param2} is of type int. @var{param3} is of type double. @var{param4} is of type double. \n\
+@end deftypefn";
+const char* _wrap_cvSnakeImage_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} @var{retval} = cvSnakeImage_Shadow (@var{image}, @var{points}, @var{alpha}, @var{beta}, @var{gamma}, @var{win}, @var{criteria})\n\
+@var{image} is of type CvMat. @var{points} is of type CvPointVector. @var{alpha} is of type FloatVector. @var{beta} is of type FloatVector. @var{gamma} is of type FloatVector. @var{win} is of type CvSize. @var{criteria} is of type CvTermCriteria. @var{retval} is of type CvPointVector. \n\
+@end deftypefn";
+const char* _wrap_cvSobel_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} cvSobel (@var{src}, @var{dst}, @var{xorder}, @var{yorder}, @var{aperture_size} = 3)\n\
+@var{src} is of type CvArr. @var{dst} is of type CvArr. @var{xorder} is of type int. @var{yorder} is of type int. @var{aperture_size} is of type int. \n\
+@end deftypefn";
+const char* _wrap_cvSolve_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} @var{retval} = cvSolve (@var{src1}, @var{src2}, @var{dst}, @var{method} = 0)\n\
+@var{src1} is of type CvArr. @var{src2} is of type CvArr. @var{dst} is of type CvArr. @var{method} is of type int. @var{retval} is of type int. \n\
+@end deftypefn";
+const char* _wrap_cvSolveCubic_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} @var{retval} = cvSolveCubic (@var{coeffs}, @var{roots})\n\
+@var{coeffs} is of type CvMat. @var{roots} is of type CvMat. @var{retval} is of type int. \n\
+@end deftypefn";
+const char* _wrap_cvSplit_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} cvSplit (@var{src}, @var{dst0}, @var{dst1}, @var{dst2}, @var{dst3})\n\
+@var{src} is of type CvArr. @var{dst0} is of type CvArr. @var{dst1} is of type CvArr. @var{dst2} is of type CvArr. @var{dst3} is of type CvArr. \n\
+@end deftypefn";
+const char* _wrap_cvSqrt_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} cvSqrt (@var{value})\n\
+@var{value} is of type double. \n\
+@end deftypefn";
+const char* _wrap_cvSquareAcc_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} cvSquareAcc (@var{image}, @var{sqsum}, @var{mask} = nil)\n\
+@var{image} is of type CvArr. @var{sqsum} is of type CvArr. @var{mask} is of type CvArr. \n\
+@end deftypefn";
+const char* _wrap_cvStartAppendToSeq_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} cvStartAppendToSeq (@var{seq}, @var{writer})\n\
+@var{seq} is of type CvSeq. @var{writer} is of type CvSeqWriter. \n\
+@end deftypefn";
+const char* _wrap_cvStartFindContours_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} @var{retval} = cvStartFindContours (@var{image}, @var{storage}, @var{header_size} = sizeof(CvContour), @var{mode} = 1, @var{method} = 2, @var{offset} = cvPoint(0,0))\n\
+@var{image} is of type CvArr. @var{storage} is of type CvMemStorage. @var{header_size} is of type int. @var{mode} is of type int. @var{method} is of type int. @var{offset} is of type CvPoint. @var{retval} is of type CvContourScanner. \n\
+@end deftypefn";
+const char* _wrap_cvStartNextStream_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} cvStartNextStream (@var{fs})\n\
+@var{fs} is of type CvFileStorage. \n\
+@end deftypefn";
+const char* _wrap_cvStartReadChainPoints_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} cvStartReadChainPoints (@var{chain}, @var{reader})\n\
+@var{chain} is of type CvChain. @var{reader} is of type CvChainPtReader. \n\
+@end deftypefn";
+const char* _wrap_cvStartReadRawData_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} cvStartReadRawData (@var{fs}, @var{src}, @var{reader})\n\
+@var{fs} is of type CvFileStorage. @var{src} is of type CvFileNode. @var{reader} is of type CvSeqReader. \n\
+@end deftypefn";
+const char* _wrap_cvStartReadSeq_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} cvStartReadSeq (@var{seq}, @var{reader}, @var{reverse} = 0)\n\
+@var{seq} is of type CvSeq. @var{reader} is of type CvSeqReader. @var{reverse} is of type int. \n\
+@end deftypefn";
+const char* _wrap_cvStartWriteSeq_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} cvStartWriteSeq (@var{seq_flags}, @var{header_size}, @var{elem_size}, @var{storage}, @var{writer})\n\
+@var{seq_flags} is of type int. @var{header_size} is of type int. @var{elem_size} is of type int. @var{storage} is of type CvMemStorage. @var{writer} is of type CvSeqWriter. \n\
+@end deftypefn";
+const char* _wrap_cvStartWriteStruct_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} cvStartWriteStruct (@var{fs}, @var{name}, @var{struct_flags}, @var{type_name} = nil, @var{attributes} = cvAttrList())\n\
+@var{fs} is of type CvFileStorage. @var{name} is of type char. @var{struct_flags} is of type int. @var{type_name} is of type char. @var{attributes} is of type CvAttrList. \n\
+@end deftypefn";
+const char* _wrap_cvStdErrReport_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} @var{retval} = cvStdErrReport (@var{status}, @var{func_name}, @var{err_msg}, @var{file_name}, @var{line}, @var{userdata})\n\
+@var{status} is of type int. @var{func_name} is of type char. @var{err_msg} is of type char. @var{file_name} is of type char. @var{line} is of type int. @var{userdata} is of type void. @var{retval} is of type int. \n\
+@end deftypefn";
+const char* _wrap_cvSub_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} cvSub (@var{src1}, @var{src2}, @var{dst}, @var{mask} = nil)\n\
+@var{src1} is of type CvArr. @var{src2} is of type CvArr. @var{dst} is of type CvArr. @var{mask} is of type CvArr. \n\
+@end deftypefn";
+const char* _wrap_cvSubRS_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} cvSubRS (@var{src}, @var{value}, @var{dst}, @var{mask} = nil)\n\
+@var{src} is of type CvArr. @var{value} is of type CvScalar. @var{dst} is of type CvArr. @var{mask} is of type CvArr. \n\
+@end deftypefn";
+const char* _wrap_cvSubS_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} cvSubS (@var{src}, @var{value}, @var{dst}, @var{mask} = nil)\n\
+@var{src} is of type CvArr. @var{value} is of type CvScalar. @var{dst} is of type CvArr. @var{mask} is of type CvArr. \n\
+@end deftypefn";
+const char* _wrap_cvSubdiv2DEdgeDst_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} @var{retval} = cvSubdiv2DEdgeDst (@var{edge})\n\
+@var{edge} is of type CvSubdiv2DEdge. @var{retval} is of type CvSubdiv2DPoint. \n\
+@end deftypefn";
+const char* _wrap_cvSubdiv2DEdgeOrg_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} @var{retval} = cvSubdiv2DEdgeOrg (@var{edge})\n\
+@var{edge} is of type CvSubdiv2DEdge. @var{retval} is of type CvSubdiv2DPoint. \n\
+@end deftypefn";
+const char* _wrap_cvSubdiv2DGetEdge_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} @var{retval} = cvSubdiv2DGetEdge (@var{edge}, @var{type})\n\
+@var{edge} is of type CvSubdiv2DEdge. @var{type} is of type CvNextEdgeType. @var{retval} is of type CvSubdiv2DEdge. \n\
+@end deftypefn";
+const char* _wrap_cvSubdiv2DLocate_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} @var{retval} = cvSubdiv2DLocate (@var{subdiv}, @var{pt}, @var{edge})\n\
+@var{subdiv} is of type CvSubdiv2D. @var{pt} is of type CvPoint2D32f. @var{edge} is of type CvSubdiv2DEdge. @var{retval} is of type CvSubdiv2DPointLocation. \n\
+@end deftypefn";
+const char* _wrap_cvSubdiv2DNextEdge_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} @var{retval} = cvSubdiv2DNextEdge (@var{edge})\n\
+@var{edge} is of type CvSubdiv2DEdge. @var{retval} is of type CvSubdiv2DEdge. \n\
+@end deftypefn";
+const char* _wrap_cvSubdiv2DRotateEdge_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} @var{retval} = cvSubdiv2DRotateEdge (@var{edge}, @var{rotate})\n\
+@var{edge} is of type CvSubdiv2DEdge. @var{rotate} is of type int. @var{retval} is of type CvSubdiv2DEdge. \n\
+@end deftypefn";
+const char* _wrap_cvSubdiv2DSymEdge_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} @var{retval} = cvSubdiv2DSymEdge (@var{edge})\n\
+@var{edge} is of type CvSubdiv2DEdge. @var{retval} is of type CvSubdiv2DEdge. \n\
+@end deftypefn";
+const char* _wrap_cvSubdivDelaunay2DInsert_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} @var{retval} = cvSubdivDelaunay2DInsert (@var{subdiv}, @var{pt})\n\
+@var{subdiv} is of type CvSubdiv2D. @var{pt} is of type CvPoint2D32f. @var{retval} is of type CvSubdiv2DPoint. \n\
+@end deftypefn";
+const char* _wrap_cvSubstituteContour_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} cvSubstituteContour (@var{scanner}, @var{new_contour})\n\
+@var{scanner} is of type CvContourScanner. @var{new_contour} is of type CvSeq. \n\
+@end deftypefn";
+const char* _wrap_cvSum_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} @var{retval} = cvSum (@var{arr})\n\
+@var{arr} is of type CvArr. @var{retval} is of type CvScalar. \n\
+@end deftypefn";
+const char* _wrap_cvTermCriteria_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} @var{retval} = cvTermCriteria (@var{type}, @var{max_iter}, @var{epsilon})\n\
+@var{type} is of type int. @var{max_iter} is of type int. @var{epsilon} is of type double. @var{retval} is of type CvTermCriteria. \n\
+@end deftypefn";
+const char* _wrap_cvThreshHist_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} cvThreshHist (@var{hist}, @var{threshold})\n\
+@var{hist} is of type CvHistogram. @var{threshold} is of type double. \n\
+@end deftypefn";
+const char* _wrap_cvThreshold_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} @var{retval} = cvThreshold (@var{src}, @var{dst}, @var{threshold}, @var{max_value}, @var{threshold_type})\n\
+@var{src} is of type CvArr. @var{dst} is of type CvArr. @var{threshold} is of type double. @var{max_value} is of type double. @var{threshold_type} is of type int. @var{retval} is of type double. \n\
+@end deftypefn";
+const char* _wrap_cvTrace_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} @var{retval} = cvTrace (@var{mat})\n\
+@var{mat} is of type CvArr. @var{retval} is of type CvScalar. \n\
+@end deftypefn";
+const char* _wrap_cvTransform_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} cvTransform (@var{src}, @var{dst}, @var{transmat}, @var{shiftvec} = nil)\n\
+@var{src} is of type CvArr. @var{dst} is of type CvArr. @var{transmat} is of type CvMat. @var{shiftvec} is of type CvMat. \n\
+@end deftypefn";
+const char* _wrap_cvTranspose_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} cvTranspose (@var{src}, @var{dst})\n\
+@var{src} is of type CvArr. @var{dst} is of type CvArr. \n\
+@end deftypefn";
+const char* _wrap_cvTreeToNodeSeq_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} @var{retval} = cvTreeToNodeSeq (@var{first}, @var{header_size}, @var{storage})\n\
+@var{first} is of type void. @var{header_size} is of type int. @var{storage} is of type CvMemStorage. @var{retval} is of type CvSeq. \n\
+@end deftypefn";
+const char* _wrap_cvTriangleArea_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} @var{retval} = cvTriangleArea (@var{a}, @var{b}, @var{c})\n\
+@var{a} is of type CvPoint2D32f. @var{b} is of type CvPoint2D32f. @var{c} is of type CvPoint2D32f. @var{retval} is of type double. \n\
+@end deftypefn";
+const char* _wrap_cvTypeOf_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} @var{retval} = cvTypeOf (@var{struct_ptr})\n\
+@var{struct_ptr} is of type void. @var{retval} is of type CvTypeInfo. \n\
+@end deftypefn";
+const char* _wrap_cvUndistort2_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} cvUndistort2 (@var{src}, @var{dst}, @var{intrinsic_matrix}, @var{distortion_coeffs})\n\
+@var{src} is of type CvArr. @var{dst} is of type CvArr. @var{intrinsic_matrix} is of type CvMat. @var{distortion_coeffs} is of type CvMat. \n\
+@end deftypefn";
+const char* _wrap_cvUnregisterType_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} cvUnregisterType (@var{type_name})\n\
+@var{type_name} is of type char. \n\
+@end deftypefn";
+const char* _wrap_cvUpdateMotionHistory_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} cvUpdateMotionHistory (@var{silhouette}, @var{mhi}, @var{timestamp}, @var{duration})\n\
+@var{silhouette} is of type CvArr. @var{mhi} is of type CvArr. @var{timestamp} is of type double. @var{duration} is of type double. \n\
+@end deftypefn";
+const char* _wrap_cvUseOptimized_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} @var{retval} = cvUseOptimized (@var{on_off})\n\
+@var{on_off} is of type int. @var{retval} is of type int. \n\
+@end deftypefn";
+const char* _wrap_cvWarpAffine_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} cvWarpAffine (@var{src}, @var{dst}, @var{map_matrix}, @var{flags} = 1+8, @var{fillval} = cvScalarAll(0))\n\
+@var{src} is of type CvArr. @var{dst} is of type CvArr. @var{map_matrix} is of type CvMat. @var{flags} is of type int. @var{fillval} is of type CvScalar. \n\
+@end deftypefn";
+const char* _wrap_cvWarpPerspective_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} cvWarpPerspective (@var{src}, @var{dst}, @var{map_matrix}, @var{flags} = 1+8, @var{fillval} = cvScalarAll(0))\n\
+@var{src} is of type CvArr. @var{dst} is of type CvArr. @var{map_matrix} is of type CvMat. @var{flags} is of type int. @var{fillval} is of type CvScalar. \n\
+@end deftypefn";
+const char* _wrap_cvWatershed_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} cvWatershed (@var{image}, @var{markers})\n\
+@var{image} is of type CvArr. @var{markers} is of type CvArr. \n\
+@end deftypefn";
+const char* _wrap_cvWrite_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} cvWrite (@var{fs}, @var{name}, @var{ptr}, @var{attributes} = cvAttrList())\n\
+@var{fs} is of type CvFileStorage. @var{name} is of type char. @var{ptr} is of type void. @var{attributes} is of type CvAttrList. \n\
+@end deftypefn";
+const char* _wrap_cvWriteComment_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} cvWriteComment (@var{fs}, @var{comment}, @var{eol_comment})\n\
+@var{fs} is of type CvFileStorage. @var{comment} is of type char. @var{eol_comment} is of type int. \n\
+@end deftypefn";
+const char* _wrap_cvWriteFileNode_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} cvWriteFileNode (@var{fs}, @var{new_node_name}, @var{node}, @var{embed})\n\
+@var{fs} is of type CvFileStorage. @var{new_node_name} is of type char. @var{node} is of type CvFileNode. @var{embed} is of type int. \n\
+@end deftypefn";
+const char* _wrap_cvWriteInt_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} cvWriteInt (@var{fs}, @var{name}, @var{value})\n\
+@var{fs} is of type CvFileStorage. @var{name} is of type char. @var{value} is of type int. \n\
+@end deftypefn";
+const char* _wrap_cvWriteRawData_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} cvWriteRawData (@var{fs}, @var{src}, @var{len}, @var{dt})\n\
+@var{fs} is of type CvFileStorage. @var{src} is of type void. @var{len} is of type int. @var{dt} is of type char. \n\
+@end deftypefn";
+const char* _wrap_cvWriteReal_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} cvWriteReal (@var{fs}, @var{name}, @var{value})\n\
+@var{fs} is of type CvFileStorage. @var{name} is of type char. @var{value} is of type double. \n\
+@end deftypefn";
+const char* _wrap_cvWriteString_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} cvWriteString (@var{fs}, @var{name}, @var{str}, @var{quote} = 0)\n\
+@var{fs} is of type CvFileStorage. @var{name} is of type char. @var{str} is of type char. @var{quote} is of type int. \n\
+@end deftypefn";
+const char* _wrap_cvXor_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} cvXor (@var{src1}, @var{src2}, @var{dst}, @var{mask} = nil)\n\
+@var{src1} is of type CvArr. @var{src2} is of type CvArr. @var{dst} is of type CvArr. @var{mask} is of type CvArr. \n\
+@end deftypefn";
+const char* _wrap_cvXorS_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} cvXorS (@var{src}, @var{value}, @var{dst}, @var{mask} = nil)\n\
+@var{src} is of type CvArr. @var{value} is of type CvScalar. @var{dst} is of type CvArr. @var{mask} is of type CvArr. \n\
+@end deftypefn";
+const char* _wrap_cvmGet_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} @var{retval} = cvmGet (@var{mat}, @var{row}, @var{col})\n\
+@var{mat} is of type CvMat. @var{row} is of type int. @var{col} is of type int. @var{retval} is of type double. \n\
+@end deftypefn";
+const char* _wrap_cvmSet_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} cvmSet (@var{mat}, @var{row}, @var{col}, @var{value})\n\
+@var{mat} is of type CvMat. @var{row} is of type int. @var{col} is of type int. @var{value} is of type double. \n\
+@end deftypefn";
+const char* _wrap_delete_Cv32suf_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} Cv32suf::~Cv32suf (@var{self})\n\
+@var{self} is of type Cv32suf. \n\
+@end deftypefn";
+const char* _wrap_delete_Cv64suf_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} Cv64suf::~Cv64suf (@var{self})\n\
+@var{self} is of type Cv64suf. \n\
+@end deftypefn";
+const char* _wrap_delete_CvAttrList_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} CvAttrList::~CvAttrList (@var{self})\n\
+@var{self} is of type CvAttrList. \n\
+@end deftypefn";
+const char* _wrap_delete_CvAvgComp_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} CvAvgComp::~CvAvgComp (@var{self})\n\
+@var{self} is of type CvAvgComp. \n\
+@end deftypefn";
+const char* _wrap_delete_CvBaseImageFilter_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} CvBaseImageFilter (@var{self})\n\
+@var{self} is of type CvBaseImageFilter. \n\
+@end deftypefn";
+const char* _wrap_delete_CvBox2D_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} CvBox2D::~CvBox2D (@var{self})\n\
+@var{self} is of type CvBox2D. \n\
+@end deftypefn";
+const char* _wrap_delete_CvBoxFilter_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} CvBoxFilter (@var{self})\n\
+@var{self} is of type CvBoxFilter. \n\
+@end deftypefn";
+const char* _wrap_delete_CvChain_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} CvChain::~CvChain (@var{self})\n\
+@var{self} is of type CvChain. \n\
+@end deftypefn";
+const char* _wrap_delete_CvChainPtReader_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} CvChainPtReader::~CvChainPtReader (@var{self})\n\
+@var{self} is of type CvChainPtReader. \n\
+@end deftypefn";
+const char* _wrap_delete_CvConDensation_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} CvConDensation (@var{self})\n\
+@var{self} is of type CvConDensation. \n\
+@end deftypefn";
+const char* _wrap_delete_CvConnectedComp_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} CvConnectedComp::~CvConnectedComp (@var{self})\n\
+@var{self} is of type CvConnectedComp. \n\
+@end deftypefn";
+const char* _wrap_delete_CvContour_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} CvContour::~CvContour (@var{self})\n\
+@var{self} is of type CvContour. \n\
+@end deftypefn";
+const char* _wrap_delete_CvContourTree_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} CvContourTree::~CvContourTree (@var{self})\n\
+@var{self} is of type CvContourTree. \n\
+@end deftypefn";
+const char* _wrap_delete_CvConvexityDefect_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} CvConvexityDefect::~CvConvexityDefect (@var{self})\n\
+@var{self} is of type CvConvexityDefect. \n\
+@end deftypefn";
+const char* _wrap_delete_CvFileNode_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} CvFileNode::~CvFileNode (@var{self})\n\
+@var{self} is of type CvFileNode. \n\
+@end deftypefn";
+const char* _wrap_delete_CvFileNode_data_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} CvFileNode_data::~CvFileNode_data (@var{self})\n\
+@var{self} is of type CvFileNode_data. \n\
+@end deftypefn";
+const char* _wrap_delete_CvFont_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} CvFont::~CvFont (@var{self})\n\
+@var{self} is of type CvFont. \n\
+@end deftypefn";
+const char* _wrap_delete_CvGraph_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} CvGraph::~CvGraph (@var{self})\n\
+@var{self} is of type CvGraph. \n\
+@end deftypefn";
+const char* _wrap_delete_CvGraphEdge_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} CvGraphEdge::~CvGraphEdge (@var{self})\n\
+@var{self} is of type CvGraphEdge. \n\
+@end deftypefn";
+const char* _wrap_delete_CvGraphScanner_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} CvGraphScanner (@var{self})\n\
+@var{self} is of type CvGraphScanner. \n\
+@end deftypefn";
+const char* _wrap_delete_CvGraphVtx_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} CvGraphVtx::~CvGraphVtx (@var{self})\n\
+@var{self} is of type CvGraphVtx. \n\
+@end deftypefn";
+const char* _wrap_delete_CvGraphVtx2D_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} CvGraphVtx2D::~CvGraphVtx2D (@var{self})\n\
+@var{self} is of type CvGraphVtx2D. \n\
+@end deftypefn";
+const char* _wrap_delete_CvHaarClassifier_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} CvHaarClassifier::~CvHaarClassifier (@var{self})\n\
+@var{self} is of type CvHaarClassifier. \n\
+@end deftypefn";
+const char* _wrap_delete_CvHaarClassifierCascade_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} CvHaarClassifierCascade (@var{self})\n\
+@var{self} is of type CvHaarClassifierCascade. \n\
+@end deftypefn";
+const char* _wrap_delete_CvHaarFeature_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} CvHaarFeature::~CvHaarFeature (@var{self})\n\
+@var{self} is of type CvHaarFeature. \n\
+@end deftypefn";
+const char* _wrap_delete_CvHaarFeature_rect_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} CvHaarFeature_rect::~CvHaarFeature_rect (@var{self})\n\
+@var{self} is of type CvHaarFeature_rect. \n\
+@end deftypefn";
+const char* _wrap_delete_CvHaarStageClassifier_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} CvHaarStageClassifier::~CvHaarStageClassifier (@var{self})\n\
+@var{self} is of type CvHaarStageClassifier. \n\
+@end deftypefn";
+const char* _wrap_delete_CvHistogram_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} CvHistogram (@var{self})\n\
+@var{self} is of type CvHistogram. \n\
+@end deftypefn";
+const char* _wrap_delete_CvHuMoments_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} CvHuMoments::~CvHuMoments (@var{self})\n\
+@var{self} is of type CvHuMoments. \n\
+@end deftypefn";
+const char* _wrap_delete_CvImage_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} CvImage (@var{self})\n\
+@var{self} is of type CvImage. \n\
+@end deftypefn";
+const char* _wrap_delete_CvKalman_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} CvKalman (@var{self})\n\
+@var{self} is of type CvKalman. \n\
+@end deftypefn";
+const char* _wrap_delete_CvLaplaceFilter_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} CvLaplaceFilter (@var{self})\n\
+@var{self} is of type CvLaplaceFilter. \n\
+@end deftypefn";
+const char* _wrap_delete_CvLineIterator_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} CvLineIterator::~CvLineIterator (@var{self})\n\
+@var{self} is of type CvLineIterator. \n\
+@end deftypefn";
+const char* _wrap_delete_CvLinearFilter_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} CvLinearFilter (@var{self})\n\
+@var{self} is of type CvLinearFilter. \n\
+@end deftypefn";
+const char* _wrap_delete_CvMat_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} CvMat (@var{self})\n\
+@var{self} is of type CvMat. \n\
+@end deftypefn";
+const char* _wrap_delete_CvMatND_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} CvMatND (@var{self})\n\
+@var{self} is of type CvMatND. \n\
+@end deftypefn";
+const char* _wrap_delete_CvMatND_data_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} CvMatND_data::~CvMatND_data (@var{self})\n\
+@var{self} is of type CvMatND_data. \n\
+@end deftypefn";
+const char* _wrap_delete_CvMatND_dim_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} CvMatND_dim::~CvMatND_dim (@var{self})\n\
+@var{self} is of type CvMatND_dim. \n\
+@end deftypefn";
+const char* _wrap_delete_CvMat_data_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} CvMat_data::~CvMat_data (@var{self})\n\
+@var{self} is of type CvMat_data. \n\
+@end deftypefn";
+const char* _wrap_delete_CvMatrix_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} CvMatrix (@var{self})\n\
+@var{self} is of type CvMatrix. \n\
+@end deftypefn";
+const char* _wrap_delete_CvMatrix3_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} CvMatrix3::~CvMatrix3 (@var{self})\n\
+@var{self} is of type CvMatrix3. \n\
+@end deftypefn";
+const char* _wrap_delete_CvMemBlock_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} CvMemBlock::~CvMemBlock (@var{self})\n\
+@var{self} is of type CvMemBlock. \n\
+@end deftypefn";
+const char* _wrap_delete_CvMemStorage_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} CvMemStorage (@var{self})\n\
+@var{self} is of type CvMemStorage. \n\
+@end deftypefn";
+const char* _wrap_delete_CvMemStoragePos_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} CvMemStoragePos::~CvMemStoragePos (@var{self})\n\
+@var{self} is of type CvMemStoragePos. \n\
+@end deftypefn";
+const char* _wrap_delete_CvModule_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} CvModule (@var{self})\n\
+@var{self} is of type CvModule. \n\
+@end deftypefn";
+const char* _wrap_delete_CvModuleInfo_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} CvModuleInfo::~CvModuleInfo (@var{self})\n\
+@var{self} is of type CvModuleInfo. \n\
+@end deftypefn";
+const char* _wrap_delete_CvMoments_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} CvMoments::~CvMoments (@var{self})\n\
+@var{self} is of type CvMoments. \n\
+@end deftypefn";
+const char* _wrap_delete_CvMorphology_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} CvMorphology (@var{self})\n\
+@var{self} is of type CvMorphology. \n\
+@end deftypefn";
+const char* _wrap_delete_CvNArrayIterator_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} CvNArrayIterator::~CvNArrayIterator (@var{self})\n\
+@var{self} is of type CvNArrayIterator. \n\
+@end deftypefn";
+const char* _wrap_delete_CvPluginFuncInfo_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} CvPluginFuncInfo::~CvPluginFuncInfo (@var{self})\n\
+@var{self} is of type CvPluginFuncInfo. \n\
+@end deftypefn";
+const char* _wrap_delete_CvPoint_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} CvPoint::~CvPoint (@var{self})\n\
+@var{self} is of type CvPoint. \n\
+@end deftypefn";
+const char* _wrap_delete_CvPoint2D32f_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} CvPoint2D32f::~CvPoint2D32f (@var{self})\n\
+@var{self} is of type CvPoint2D32f. \n\
+@end deftypefn";
+const char* _wrap_delete_CvPoint2D64f_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} CvPoint2D64f::~CvPoint2D64f (@var{self})\n\
+@var{self} is of type CvPoint2D64f. \n\
+@end deftypefn";
+const char* _wrap_delete_CvPoint3D32f_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} CvPoint3D32f::~CvPoint3D32f (@var{self})\n\
+@var{self} is of type CvPoint3D32f. \n\
+@end deftypefn";
+const char* _wrap_delete_CvPoint3D64f_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} CvPoint3D64f::~CvPoint3D64f (@var{self})\n\
+@var{self} is of type CvPoint3D64f. \n\
+@end deftypefn";
+const char* _wrap_delete_CvPointVector_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} std::vector<(CvPoint)>::~vector<(CvPoint)> (@var{self})\n\
+@var{self} is of type CvPointVector. \n\
+@end deftypefn";
+const char* _wrap_delete_CvQuadEdge2D_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} CvQuadEdge2D::~CvQuadEdge2D (@var{self})\n\
+@var{self} is of type CvQuadEdge2D. \n\
+@end deftypefn";
+const char* _wrap_delete_CvRNG_Wrapper_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} CvRNG_Wrapper::~CvRNG_Wrapper (@var{self})\n\
+@var{self} is of type CvRNG_Wrapper. \n\
+@end deftypefn";
+const char* _wrap_delete_CvRect_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} CvRect::~CvRect (@var{self})\n\
+@var{self} is of type CvRect. \n\
+@end deftypefn";
+const char* _wrap_delete_CvScalar_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} CvScalar::~CvScalar (@var{self})\n\
+@var{self} is of type CvScalar. \n\
+@end deftypefn";
+const char* _wrap_delete_CvSepFilter_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} CvSepFilter (@var{self})\n\
+@var{self} is of type CvSepFilter. \n\
+@end deftypefn";
+const char* _wrap_delete_CvSeq_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} CvSeq::~CvSeq (@var{self})\n\
+@var{self} is of type CvSeq. \n\
+@end deftypefn";
+const char* _wrap_delete_CvSeqBlock_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} CvSeqBlock::~CvSeqBlock (@var{self})\n\
+@var{self} is of type CvSeqBlock. \n\
+@end deftypefn";
+const char* _wrap_delete_CvSeqReader_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} CvSeqReader::~CvSeqReader (@var{self})\n\
+@var{self} is of type CvSeqReader. \n\
+@end deftypefn";
+const char* _wrap_delete_CvSeqWriter_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} CvSeqWriter::~CvSeqWriter (@var{self})\n\
+@var{self} is of type CvSeqWriter. \n\
+@end deftypefn";
+const char* _wrap_delete_CvSeq_CvConnectedComp_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} CvTypedSeq<(CvConnectedComp)>::~CvTypedSeq<(CvConnectedComp)> (@var{self})\n\
+@var{self} is of type CvSeq_CvConnectedComp. \n\
+@end deftypefn";
+const char* _wrap_delete_CvSeq_CvPoint_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} CvTypedSeq<(CvPoint)>::~CvTypedSeq<(CvPoint)> (@var{self})\n\
+@var{self} is of type CvSeq_CvPoint. \n\
+@end deftypefn";
+const char* _wrap_delete_CvSeq_CvPoint2D32f_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} CvTypedSeq<(CvPoint2D32f)>::~CvTypedSeq<(CvPoint2D32f)> (@var{self})\n\
+@var{self} is of type CvSeq_CvPoint2D32f. \n\
+@end deftypefn";
+const char* _wrap_delete_CvSeq_CvPoint_2_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} CvTypedSeq<(CvTuple<(CvPoint,2)>)>::~CvTypedSeq<(CvTuple<(CvPoint,2)>)> (@var{self})\n\
+@var{self} is of type CvSeq_CvPoint_2. \n\
+@end deftypefn";
+const char* _wrap_delete_CvSeq_CvQuadEdge2D_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} CvTypedSeq<(CvQuadEdge2D)>::~CvTypedSeq<(CvQuadEdge2D)> (@var{self})\n\
+@var{self} is of type CvSeq_CvQuadEdge2D. \n\
+@end deftypefn";
+const char* _wrap_delete_CvSeq_CvRect_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} CvTypedSeq<(CvRect)>::~CvTypedSeq<(CvRect)> (@var{self})\n\
+@var{self} is of type CvSeq_CvRect. \n\
+@end deftypefn";
+const char* _wrap_delete_CvSeq_CvSeq_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} CvTypedSeq<(p.CvSeq)>::~CvTypedSeq<(p.CvSeq)> (@var{self})\n\
+@var{self} is of type CvSeq_CvSeq. \n\
+@end deftypefn";
+const char* _wrap_delete_CvSeq_float_2_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} CvTypedSeq<(CvTuple<(float,2)>)>::~CvTypedSeq<(CvTuple<(float,2)>)> (@var{self})\n\
+@var{self} is of type CvSeq_float_2. \n\
+@end deftypefn";
+const char* _wrap_delete_CvSeq_float_3_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} CvTypedSeq<(CvTuple<(float,3)>)>::~CvTypedSeq<(CvTuple<(float,3)>)> (@var{self})\n\
+@var{self} is of type CvSeq_float_3. \n\
+@end deftypefn";
+const char* _wrap_delete_CvSet_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} CvSet::~CvSet (@var{self})\n\
+@var{self} is of type CvSet. \n\
+@end deftypefn";
+const char* _wrap_delete_CvSetElem_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} CvSetElem::~CvSetElem (@var{self})\n\
+@var{self} is of type CvSetElem. \n\
+@end deftypefn";
+const char* _wrap_delete_CvSize_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} CvSize::~CvSize (@var{self})\n\
+@var{self} is of type CvSize. \n\
+@end deftypefn";
+const char* _wrap_delete_CvSize2D32f_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} CvSize2D32f::~CvSize2D32f (@var{self})\n\
+@var{self} is of type CvSize2D32f. \n\
+@end deftypefn";
+const char* _wrap_delete_CvSlice_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} CvSlice::~CvSlice (@var{self})\n\
+@var{self} is of type CvSlice. \n\
+@end deftypefn";
+const char* _wrap_delete_CvSparseMat_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} CvSparseMat (@var{self})\n\
+@var{self} is of type CvSparseMat. \n\
+@end deftypefn";
+const char* _wrap_delete_CvSparseMatIterator_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} CvSparseMatIterator::~CvSparseMatIterator (@var{self})\n\
+@var{self} is of type CvSparseMatIterator. \n\
+@end deftypefn";
+const char* _wrap_delete_CvSparseNode_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} CvSparseNode::~CvSparseNode (@var{self})\n\
+@var{self} is of type CvSparseNode. \n\
+@end deftypefn";
+const char* _wrap_delete_CvString_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} CvString::~CvString (@var{self})\n\
+@var{self} is of type CvString. \n\
+@end deftypefn";
+const char* _wrap_delete_CvStringHashNode_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} CvStringHashNode::~CvStringHashNode (@var{self})\n\
+@var{self} is of type CvStringHashNode. \n\
+@end deftypefn";
+const char* _wrap_delete_CvSubdiv2D_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} CvSubdiv2D::~CvSubdiv2D (@var{self})\n\
+@var{self} is of type CvSubdiv2D. \n\
+@end deftypefn";
+const char* _wrap_delete_CvSubdiv2DEdge_Wrapper_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} CvSubdiv2DEdge_Wrapper::~CvSubdiv2DEdge_Wrapper (@var{self})\n\
+@var{self} is of type CvSubdiv2DEdge_Wrapper. \n\
+@end deftypefn";
+const char* _wrap_delete_CvSubdiv2DPoint_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} CvSubdiv2DPoint::~CvSubdiv2DPoint (@var{self})\n\
+@var{self} is of type CvSubdiv2DPoint. \n\
+@end deftypefn";
+const char* _wrap_delete_CvTermCriteria_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} CvTermCriteria::~CvTermCriteria (@var{self})\n\
+@var{self} is of type CvTermCriteria. \n\
+@end deftypefn";
+const char* _wrap_delete_CvTreeNodeIterator_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} CvTreeNodeIterator::~CvTreeNodeIterator (@var{self})\n\
+@var{self} is of type CvTreeNodeIterator. \n\
+@end deftypefn";
+const char* _wrap_delete_CvTuple_CvPoint_2_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} CvTuple<(CvPoint,2)>::~CvTuple<(CvPoint,2)> (@var{self})\n\
+@var{self} is of type CvTuple_CvPoint_2. \n\
+@end deftypefn";
+const char* _wrap_delete_CvTuple_float_2_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} CvTuple<(float,2)>::~CvTuple<(float,2)> (@var{self})\n\
+@var{self} is of type CvTuple_float_2. \n\
+@end deftypefn";
+const char* _wrap_delete_CvTuple_float_3_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} CvTuple<(float,3)>::~CvTuple<(float,3)> (@var{self})\n\
+@var{self} is of type CvTuple_float_3. \n\
+@end deftypefn";
+const char* _wrap_delete_CvType_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} CvType (@var{self})\n\
+@var{self} is of type CvType. \n\
+@end deftypefn";
+const char* _wrap_delete_CvTypeInfo_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} CvTypeInfo::~CvTypeInfo (@var{self})\n\
+@var{self} is of type CvTypeInfo. \n\
+@end deftypefn";
+const char* _wrap_delete_FloatVector_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} std::vector<(float)>::~vector<(float)> (@var{self})\n\
+@var{self} is of type FloatVector. \n\
+@end deftypefn";
+const char* _wrap_delete_IplConvKernel_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} IplConvKernel (@var{self})\n\
+@var{self} is of type . \n\
+@end deftypefn";
+const char* _wrap_delete_IplConvKernelFP_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} IplConvKernelFP::~IplConvKernelFP (@var{self})\n\
+@var{self} is of type . \n\
+@end deftypefn";
+const char* _wrap_delete_IplImage_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} IplImage (@var{self})\n\
+@var{self} is of type . \n\
+@end deftypefn";
+const char* _wrap_delete_IplROI_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} IplROI::~IplROI (@var{self})\n\
+@var{self} is of type . \n\
+@end deftypefn";
+const char* _wrap_delete_OctSwigIterator_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} swig::~OctSwigIterator (@var{self})\n\
+@var{self} is of type OctSwigIterator. \n\
+@end deftypefn";
+const char* _wrap_function_ptr_generator_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} @var{retval} = function_ptr_generator ()\n\
+@var{retval} is of type CvErrorCallback. \n\
+@end deftypefn";
+const char* _wrap_new_Cv32suf_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} @var{retval} = Cv32suf::Cv32suf ()\n\
+@var{retval} is of type Cv32suf. \n\
+@end deftypefn";
+const char* _wrap_new_Cv64suf_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} @var{retval} = Cv64suf::Cv64suf ()\n\
+@var{retval} is of type Cv64suf. \n\
+@end deftypefn";
+const char* _wrap_new_CvAttrList_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} @var{retval} = CvAttrList::CvAttrList ()\n\
+@var{retval} is of type CvAttrList. \n\
+@end deftypefn";
+const char* _wrap_new_CvAvgComp_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} @var{retval} = CvAvgComp::CvAvgComp ()\n\
+@var{retval} is of type CvAvgComp. \n\
+@end deftypefn";
+const char* _wrap_new_CvBaseImageFilter_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} @var{retval} = CvBaseImageFilter (@var{_max_width}, @var{_src_type}, @var{_dst_type}, @var{_is_separable}, @var{_ksize})\n\
+@var{_max_width} is of type int. @var{_src_type} is of type int. @var{_dst_type} is of type int. @var{_is_separable} is of type bool. @var{_ksize} is of type CvSize. @var{retval} is of type CvBaseImageFilter. \n\
+@end deftypefn";
+const char* _wrap_new_CvBox2D_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} @var{retval} = CvBox2D::CvBox2D ()\n\
+@var{retval} is of type CvBox2D. \n\
+@end deftypefn";
+const char* _wrap_new_CvBoxFilter_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} @var{retval} = CvBoxFilter (@var{_max_width}, @var{_src_type}, @var{_dst_type}, @var{_normalized}, @var{_ksize})\n\
+@var{_max_width} is of type int. @var{_src_type} is of type int. @var{_dst_type} is of type int. @var{_normalized} is of type bool. @var{_ksize} is of type CvSize. @var{retval} is of type CvBoxFilter. \n\
+@end deftypefn";
+const char* _wrap_new_CvChain_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} @var{retval} = CvChain::CvChain ()\n\
+@var{retval} is of type CvChain. \n\
+@end deftypefn";
+const char* _wrap_new_CvChainPtReader_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} @var{retval} = CvChainPtReader::CvChainPtReader ()\n\
+@var{retval} is of type CvChainPtReader. \n\
+@end deftypefn";
+const char* _wrap_new_CvConnectedComp_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} @var{retval} = CvConnectedComp::CvConnectedComp ()\n\
+@var{retval} is of type CvConnectedComp. \n\
+@end deftypefn";
+const char* _wrap_new_CvContour_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} @var{retval} = CvContour::CvContour ()\n\
+@var{retval} is of type CvContour. \n\
+@end deftypefn";
+const char* _wrap_new_CvContourTree_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} @var{retval} = CvContourTree::CvContourTree ()\n\
+@var{retval} is of type CvContourTree. \n\
+@end deftypefn";
+const char* _wrap_new_CvConvexityDefect_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} @var{retval} = CvConvexityDefect::CvConvexityDefect ()\n\
+@var{retval} is of type CvConvexityDefect. \n\
+@end deftypefn";
+const char* _wrap_new_CvFileNode_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} @var{retval} = CvFileNode::CvFileNode ()\n\
+@var{retval} is of type CvFileNode. \n\
+@end deftypefn";
+const char* _wrap_new_CvFileNode_data_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} @var{retval} = CvFileNode_data::CvFileNode_data ()\n\
+@var{retval} is of type CvFileNode_data. \n\
+@end deftypefn";
+const char* _wrap_new_CvFont_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} @var{retval} = CvFont::CvFont ()\n\
+@var{retval} is of type CvFont. \n\
+@end deftypefn";
+const char* _wrap_new_CvGraph_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} @var{retval} = CvGraph::CvGraph ()\n\
+@var{retval} is of type CvGraph. \n\
+@end deftypefn";
+const char* _wrap_new_CvGraphEdge_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} @var{retval} = CvGraphEdge::CvGraphEdge ()\n\
+@var{retval} is of type CvGraphEdge. \n\
+@end deftypefn";
+const char* _wrap_new_CvGraphVtx_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} @var{retval} = CvGraphVtx::CvGraphVtx ()\n\
+@var{retval} is of type CvGraphVtx. \n\
+@end deftypefn";
+const char* _wrap_new_CvGraphVtx2D_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} @var{retval} = CvGraphVtx2D::CvGraphVtx2D ()\n\
+@var{retval} is of type CvGraphVtx2D. \n\
+@end deftypefn";
+const char* _wrap_new_CvHaarClassifier_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} @var{retval} = CvHaarClassifier::CvHaarClassifier ()\n\
+@var{retval} is of type CvHaarClassifier. \n\
+@end deftypefn";
+const char* _wrap_new_CvHaarFeature_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} @var{retval} = CvHaarFeature::CvHaarFeature ()\n\
+@var{retval} is of type CvHaarFeature. \n\
+@end deftypefn";
+const char* _wrap_new_CvHaarFeature_rect_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} @var{retval} = CvHaarFeature_rect::CvHaarFeature_rect ()\n\
+@var{retval} is of type CvHaarFeature_rect. \n\
+@end deftypefn";
+const char* _wrap_new_CvHaarStageClassifier_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} @var{retval} = CvHaarStageClassifier::CvHaarStageClassifier ()\n\
+@var{retval} is of type CvHaarStageClassifier. \n\
+@end deftypefn";
+const char* _wrap_new_CvHuMoments_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} @var{retval} = CvHuMoments::CvHuMoments ()\n\
+@var{retval} is of type CvHuMoments. \n\
+@end deftypefn";
+const char* _wrap_new_CvImage_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} @var{retval} = CvImage (@var{fs}, @var{seqname}, @var{idx})\n\
+@var{fs} is of type CvFileStorage. @var{seqname} is of type char. @var{idx} is of type int. @var{retval} is of type CvImage. \n\
+@end deftypefn";
+const char* _wrap_new_CvLaplaceFilter_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} @var{retval} = CvLaplaceFilter (@var{_max_width}, @var{_src_type}, @var{_dst_type}, @var{_normalized}, @var{_ksize})\n\
+@var{_max_width} is of type int. @var{_src_type} is of type int. @var{_dst_type} is of type int. @var{_normalized} is of type bool. @var{_ksize} is of type int. @var{retval} is of type CvLaplaceFilter. \n\
+@end deftypefn";
+const char* _wrap_new_CvLineIterator_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} @var{retval} = CvLineIterator::CvLineIterator ()\n\
+@var{retval} is of type CvLineIterator. \n\
+@end deftypefn";
+const char* _wrap_new_CvLinearFilter_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} @var{retval} = CvLinearFilter (@var{_max_width}, @var{_src_type}, @var{_dst_type}, @var{_kernel})\n\
+@var{_max_width} is of type int. @var{_src_type} is of type int. @var{_dst_type} is of type int. @var{_kernel} is of type CvMat. @var{retval} is of type CvLinearFilter. \n\
+@end deftypefn";
+const char* _wrap_new_CvMatND_data_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} @var{retval} = CvMatND_data::CvMatND_data ()\n\
+@var{retval} is of type CvMatND_data. \n\
+@end deftypefn";
+const char* _wrap_new_CvMatND_dim_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} @var{retval} = CvMatND_dim::CvMatND_dim ()\n\
+@var{retval} is of type CvMatND_dim. \n\
+@end deftypefn";
+const char* _wrap_new_CvMat_data_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} @var{retval} = CvMat_data::CvMat_data ()\n\
+@var{retval} is of type CvMat_data. \n\
+@end deftypefn";
+const char* _wrap_new_CvMatrix_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} @var{retval} = CvMatrix (@var{fs}, @var{seqname}, @var{idx})\n\
+@var{fs} is of type CvFileStorage. @var{seqname} is of type char. @var{idx} is of type int. @var{retval} is of type CvMatrix. \n\
+@end deftypefn";
+const char* _wrap_new_CvMatrix3_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} @var{retval} = CvMatrix3::CvMatrix3 ()\n\
+@var{retval} is of type CvMatrix3. \n\
+@end deftypefn";
+const char* _wrap_new_CvMemBlock_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} @var{retval} = CvMemBlock::CvMemBlock ()\n\
+@var{retval} is of type CvMemBlock. \n\
+@end deftypefn";
+const char* _wrap_new_CvMemStoragePos_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} @var{retval} = CvMemStoragePos::CvMemStoragePos ()\n\
+@var{retval} is of type CvMemStoragePos. \n\
+@end deftypefn";
+const char* _wrap_new_CvModule_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} @var{retval} = CvModule (@var{_info})\n\
+@var{_info} is of type CvModuleInfo. @var{retval} is of type CvModule. \n\
+@end deftypefn";
+const char* _wrap_new_CvModuleInfo_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} @var{retval} = CvModuleInfo::CvModuleInfo ()\n\
+@var{retval} is of type CvModuleInfo. \n\
+@end deftypefn";
+const char* _wrap_new_CvMoments_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} @var{retval} = CvMoments::CvMoments ()\n\
+@var{retval} is of type CvMoments. \n\
+@end deftypefn";
+const char* _wrap_new_CvMorphology_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} @var{retval} = CvMorphology (@var{_operation}, @var{_max_width}, @var{_src_dst_type}, @var{_element_shape}, @var{_element})\n\
+@var{_operation} is of type int. @var{_max_width} is of type int. @var{_src_dst_type} is of type int. @var{_element_shape} is of type int. @var{_element} is of type CvMat. @var{retval} is of type CvMorphology. \n\
+@end deftypefn";
+const char* _wrap_new_CvNArrayIterator_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} @var{retval} = CvNArrayIterator::CvNArrayIterator ()\n\
+@var{retval} is of type CvNArrayIterator. \n\
+@end deftypefn";
+const char* _wrap_new_CvPluginFuncInfo_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} @var{retval} = CvPluginFuncInfo::CvPluginFuncInfo ()\n\
+@var{retval} is of type CvPluginFuncInfo. \n\
+@end deftypefn";
+const char* _wrap_new_CvPoint_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} @var{retval} = CvPoint::CvPoint ()\n\
+@var{retval} is of type CvPoint. \n\
+@end deftypefn";
+const char* _wrap_new_CvPoint2D32f_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} @var{retval} = CvPoint2D32f::CvPoint2D32f ()\n\
+@var{retval} is of type CvPoint2D32f. \n\
+@end deftypefn";
+const char* _wrap_new_CvPoint2D64f_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} @var{retval} = CvPoint2D64f::CvPoint2D64f ()\n\
+@var{retval} is of type CvPoint2D64f. \n\
+@end deftypefn";
+const char* _wrap_new_CvPoint3D32f_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} @var{retval} = CvPoint3D32f::CvPoint3D32f ()\n\
+@var{retval} is of type CvPoint3D32f. \n\
+@end deftypefn";
+const char* _wrap_new_CvPoint3D64f_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} @var{retval} = CvPoint3D64f::CvPoint3D64f ()\n\
+@var{retval} is of type CvPoint3D64f. \n\
+@end deftypefn";
+const char* _wrap_new_CvPointVector_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} @var{retval} = std::vector<(CvPoint)> (@var{size}, @var{value})\n\
+@var{size} is of type size_type. @var{value} is of type value_type. @var{retval} is of type CvPointVector. \n\
+@end deftypefn";
+const char* _wrap_new_CvQuadEdge2D_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} @var{retval} = CvQuadEdge2D::CvQuadEdge2D ()\n\
+@var{retval} is of type CvQuadEdge2D. \n\
+@end deftypefn";
+const char* _wrap_new_CvRNG_Wrapper_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} @var{retval} = CvRNG_Wrapper (@var{val})\n\
+@var{val} is of type CvRNG. @var{retval} is of type CvRNG_Wrapper. \n\
+@end deftypefn";
+const char* _wrap_new_CvRect_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} @var{retval} = CvRect::CvRect ()\n\
+@var{retval} is of type CvRect. \n\
+@end deftypefn";
+const char* _wrap_new_CvScalar_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} @var{retval} = CvScalar::CvScalar ()\n\
+@var{retval} is of type CvScalar. \n\
+@end deftypefn";
+const char* _wrap_new_CvSepFilter_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} @var{retval} = CvSepFilter (@var{_max_width}, @var{_src_type}, @var{_dst_type}, @var{_kx}, @var{_ky})\n\
+@var{_max_width} is of type int. @var{_src_type} is of type int. @var{_dst_type} is of type int. @var{_kx} is of type CvMat. @var{_ky} is of type CvMat. @var{retval} is of type CvSepFilter. \n\
+@end deftypefn";
+const char* _wrap_new_CvSeq_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} @var{retval} = CvSeq::CvSeq ()\n\
+@var{retval} is of type CvSeq. \n\
+@end deftypefn";
+const char* _wrap_new_CvSeqBlock_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} @var{retval} = CvSeqBlock::CvSeqBlock ()\n\
+@var{retval} is of type CvSeqBlock. \n\
+@end deftypefn";
+const char* _wrap_new_CvSeqReader_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} @var{retval} = CvSeqReader::CvSeqReader ()\n\
+@var{retval} is of type CvSeqReader. \n\
+@end deftypefn";
+const char* _wrap_new_CvSeqWriter_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} @var{retval} = CvSeqWriter::CvSeqWriter ()\n\
+@var{retval} is of type CvSeqWriter. \n\
+@end deftypefn";
+const char* _wrap_new_CvSeq_CvConnectedComp_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} @var{retval} = CvTypedSeq<(CvConnectedComp)>::CvTypedSeq<(CvConnectedComp)> ()\n\
+@var{retval} is of type CvSeq_CvConnectedComp. \n\
+@end deftypefn";
+const char* _wrap_new_CvSeq_CvPoint_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} @var{retval} = CvTypedSeq<(CvPoint)>::CvTypedSeq<(CvPoint)> ()\n\
+@var{retval} is of type CvSeq_CvPoint. \n\
+@end deftypefn";
+const char* _wrap_new_CvSeq_CvPoint2D32f_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} @var{retval} = CvTypedSeq<(CvPoint2D32f)>::CvTypedSeq<(CvPoint2D32f)> ()\n\
+@var{retval} is of type CvSeq_CvPoint2D32f. \n\
+@end deftypefn";
+const char* _wrap_new_CvSeq_CvPoint_2_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} @var{retval} = CvTypedSeq<(CvTuple<(CvPoint,2)>)>::CvTypedSeq<(CvTuple<(CvPoint,2)>)> ()\n\
+@var{retval} is of type CvSeq_CvPoint_2. \n\
+@end deftypefn";
+const char* _wrap_new_CvSeq_CvQuadEdge2D_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} @var{retval} = CvTypedSeq<(CvQuadEdge2D)>::CvTypedSeq<(CvQuadEdge2D)> ()\n\
+@var{retval} is of type CvSeq_CvQuadEdge2D. \n\
+@end deftypefn";
+const char* _wrap_new_CvSeq_CvRect_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} @var{retval} = CvTypedSeq<(CvRect)>::CvTypedSeq<(CvRect)> ()\n\
+@var{retval} is of type CvSeq_CvRect. \n\
+@end deftypefn";
+const char* _wrap_new_CvSeq_CvSeq_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} @var{retval} = CvTypedSeq<(p.CvSeq)>::CvTypedSeq<(p.CvSeq)> ()\n\
+@var{retval} is of type CvSeq_CvSeq. \n\
+@end deftypefn";
+const char* _wrap_new_CvSeq_float_2_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} @var{retval} = CvTypedSeq<(CvTuple<(float,2)>)>::CvTypedSeq<(CvTuple<(float,2)>)> ()\n\
+@var{retval} is of type CvSeq_float_2. \n\
+@end deftypefn";
+const char* _wrap_new_CvSeq_float_3_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} @var{retval} = CvTypedSeq<(CvTuple<(float,3)>)>::CvTypedSeq<(CvTuple<(float,3)>)> ()\n\
+@var{retval} is of type CvSeq_float_3. \n\
+@end deftypefn";
+const char* _wrap_new_CvSet_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} @var{retval} = CvSet::CvSet ()\n\
+@var{retval} is of type CvSet. \n\
+@end deftypefn";
+const char* _wrap_new_CvSetElem_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} @var{retval} = CvSetElem::CvSetElem ()\n\
+@var{retval} is of type CvSetElem. \n\
+@end deftypefn";
+const char* _wrap_new_CvSize_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} @var{retval} = CvSize::CvSize ()\n\
+@var{retval} is of type CvSize. \n\
+@end deftypefn";
+const char* _wrap_new_CvSize2D32f_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} @var{retval} = CvSize2D32f::CvSize2D32f ()\n\
+@var{retval} is of type CvSize2D32f. \n\
+@end deftypefn";
+const char* _wrap_new_CvSlice_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} @var{retval} = CvSlice::CvSlice ()\n\
+@var{retval} is of type CvSlice. \n\
+@end deftypefn";
+const char* _wrap_new_CvSparseMatIterator_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} @var{retval} = CvSparseMatIterator::CvSparseMatIterator ()\n\
+@var{retval} is of type CvSparseMatIterator. \n\
+@end deftypefn";
+const char* _wrap_new_CvSparseNode_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} @var{retval} = CvSparseNode::CvSparseNode ()\n\
+@var{retval} is of type CvSparseNode. \n\
+@end deftypefn";
+const char* _wrap_new_CvString_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} @var{retval} = CvString::CvString ()\n\
+@var{retval} is of type CvString. \n\
+@end deftypefn";
+const char* _wrap_new_CvStringHashNode_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} @var{retval} = CvStringHashNode::CvStringHashNode ()\n\
+@var{retval} is of type CvStringHashNode. \n\
+@end deftypefn";
+const char* _wrap_new_CvSubdiv2D_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} @var{retval} = CvSubdiv2D::CvSubdiv2D ()\n\
+@var{retval} is of type CvSubdiv2D. \n\
+@end deftypefn";
+const char* _wrap_new_CvSubdiv2DEdge_Wrapper_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} @var{retval} = CvSubdiv2DEdge_Wrapper (@var{val})\n\
+@var{val} is of type CvSubdiv2DEdge. @var{retval} is of type CvSubdiv2DEdge_Wrapper. \n\
+@end deftypefn";
+const char* _wrap_new_CvSubdiv2DPoint_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} @var{retval} = CvSubdiv2DPoint::CvSubdiv2DPoint ()\n\
+@var{retval} is of type CvSubdiv2DPoint. \n\
+@end deftypefn";
+const char* _wrap_new_CvTermCriteria_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} @var{retval} = CvTermCriteria::CvTermCriteria ()\n\
+@var{retval} is of type CvTermCriteria. \n\
+@end deftypefn";
+const char* _wrap_new_CvTreeNodeIterator_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} @var{retval} = CvTreeNodeIterator::CvTreeNodeIterator ()\n\
+@var{retval} is of type CvTreeNodeIterator. \n\
+@end deftypefn";
+const char* _wrap_new_CvTuple_CvPoint_2_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} @var{retval} = CvTuple<(CvPoint,2)>::CvTuple<(CvPoint,2)> ()\n\
+@var{retval} is of type CvTuple_CvPoint_2. \n\
+@end deftypefn";
+const char* _wrap_new_CvTuple_float_2_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} @var{retval} = CvTuple<(float,2)>::CvTuple<(float,2)> ()\n\
+@var{retval} is of type CvTuple_float_2. \n\
+@end deftypefn";
+const char* _wrap_new_CvTuple_float_3_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} @var{retval} = CvTuple<(float,3)>::CvTuple<(float,3)> ()\n\
+@var{retval} is of type CvTuple_float_3. \n\
+@end deftypefn";
+const char* _wrap_new_CvType_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} @var{retval} = CvType (@var{type_name}, @var{is_instance})\n\
+@var{type_name} is of type char. @var{is_instance} is of type CvIsInstanceFunc. @var{retval} is of type CvType. \n\
+@end deftypefn";
+const char* _wrap_new_CvTypeInfo_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} @var{retval} = CvTypeInfo::CvTypeInfo ()\n\
+@var{retval} is of type CvTypeInfo. \n\
+@end deftypefn";
+const char* _wrap_new_FloatVector_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} @var{retval} = std::vector<(float)> (@var{size}, @var{value})\n\
+@var{size} is of type size_type. @var{value} is of type value_type. @var{retval} is of type FloatVector. \n\
+@end deftypefn";
+const char* _wrap_new_IplConvKernelFP_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} @var{retval} = IplConvKernelFP::IplConvKernelFP ()\n\
+@var{retval} is of type . \n\
+@end deftypefn";
+const char* _wrap_new_IplROI_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} @var{retval} = IplROI::IplROI ()\n\
+@var{retval} is of type . \n\
+@end deftypefn";
+const char* _wrap_void_ptr_generator_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} @var{retval} = void_ptr_generator ()\n\
+@var{retval} is of type void. \n\
+@end deftypefn";
+const char* _wrap_void_ptrptr_generator_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} @var{retval} = void_ptrptr_generator ()\n\
+@var{retval} is of type void. \n\
+@end deftypefn";
+
 static octave_value_list _wrap_new_CvRNG_Wrapper (const octave_value_list& args, int nargout) {
   CvRNG *arg1 = 0 ;
   CvRNG_Wrapper *result = 0 ;
@@ -5145,7 +9460,7 @@ static swig_octave_member swig_CvRNG_Wrapper_members[] = {
 };
 static const char *swig_CvRNG_Wrapper_base_names[] = {0};
 static const swig_type_info *swig_CvRNG_Wrapper_base[] = {0};
-static swig_octave_class _wrap_class_CvRNG_Wrapper = {"CvRNG_Wrapper", &SWIGTYPE_p_CvRNG_Wrapper,0,_wrap_new_CvRNG_Wrapper,_wrap_delete_CvRNG_Wrapper,swig_CvRNG_Wrapper_members,swig_CvRNG_Wrapper_base_names,swig_CvRNG_Wrapper_base };
+static swig_octave_class _wrap_class_CvRNG_Wrapper = {"CvRNG_Wrapper", &SWIGTYPE_p_CvRNG_Wrapper,0,_wrap_new_CvRNG_Wrapper,0,_wrap_delete_CvRNG_Wrapper,swig_CvRNG_Wrapper_members,swig_CvRNG_Wrapper_base_names,swig_CvRNG_Wrapper_base };
 
 static octave_value_list _wrap_new_CvSubdiv2DEdge_Wrapper (const octave_value_list& args, int nargout) {
   CvSubdiv2DEdge *arg1 = 0 ;
@@ -5340,7 +9655,7 @@ static swig_octave_member swig_CvSubdiv2DEdge_Wrapper_members[] = {
 };
 static const char *swig_CvSubdiv2DEdge_Wrapper_base_names[] = {0};
 static const swig_type_info *swig_CvSubdiv2DEdge_Wrapper_base[] = {0};
-static swig_octave_class _wrap_class_CvSubdiv2DEdge_Wrapper = {"CvSubdiv2DEdge_Wrapper", &SWIGTYPE_p_CvSubdiv2DEdge_Wrapper,0,_wrap_new_CvSubdiv2DEdge_Wrapper,_wrap_delete_CvSubdiv2DEdge_Wrapper,swig_CvSubdiv2DEdge_Wrapper_members,swig_CvSubdiv2DEdge_Wrapper_base_names,swig_CvSubdiv2DEdge_Wrapper_base };
+static swig_octave_class _wrap_class_CvSubdiv2DEdge_Wrapper = {"CvSubdiv2DEdge_Wrapper", &SWIGTYPE_p_CvSubdiv2DEdge_Wrapper,0,_wrap_new_CvSubdiv2DEdge_Wrapper,0,_wrap_delete_CvSubdiv2DEdge_Wrapper,swig_CvSubdiv2DEdge_Wrapper_members,swig_CvSubdiv2DEdge_Wrapper_base_names,swig_CvSubdiv2DEdge_Wrapper_base };
 
 static octave_value_list _wrap_delete_OctSwigIterator (const octave_value_list& args, int nargout) {
   swig::OctSwigIterator *arg1 = (swig::OctSwigIterator *) 0 ;
@@ -6147,7 +10462,7 @@ static swig_octave_member swig_OctSwigIterator_members[] = {
 };
 static const char *swig_OctSwigIterator_base_names[] = {0};
 static const swig_type_info *swig_OctSwigIterator_base[] = {0};
-static swig_octave_class _wrap_class_OctSwigIterator = {"OctSwigIterator", &SWIGTYPE_p_swig__OctSwigIterator,0,0,_wrap_delete_OctSwigIterator,swig_OctSwigIterator_members,swig_OctSwigIterator_base_names,swig_OctSwigIterator_base };
+static swig_octave_class _wrap_class_OctSwigIterator = {"OctSwigIterator", &SWIGTYPE_p_swig__OctSwigIterator,0,0,0,_wrap_delete_OctSwigIterator,swig_OctSwigIterator_members,swig_OctSwigIterator_base_names,swig_OctSwigIterator_base };
 
 static octave_value_list _wrap_FloatVector_pop (const octave_value_list& args, int nargout) {
   std::vector< float > *arg1 = (std::vector< float > *) 0 ;
@@ -7600,7 +11915,7 @@ static swig_octave_member swig_FloatVector_members[] = {
 };
 static const char *swig_FloatVector_base_names[] = {0};
 static const swig_type_info *swig_FloatVector_base[] = {0};
-static swig_octave_class _wrap_class_FloatVector = {"FloatVector", &SWIGTYPE_p_std__vectorT_float_std__allocatorT_float_t_t,0,_wrap_new_FloatVector,_wrap_delete_FloatVector,swig_FloatVector_members,swig_FloatVector_base_names,swig_FloatVector_base };
+static swig_octave_class _wrap_class_FloatVector = {"FloatVector", &SWIGTYPE_p_std__vectorT_float_std__allocatorT_float_t_t,0,_wrap_new_FloatVector,0,_wrap_delete_FloatVector,swig_FloatVector_members,swig_FloatVector_base_names,swig_FloatVector_base };
 
 static octave_value_list _wrap_CvPointVector_pop (const octave_value_list& args, int nargout) {
   std::vector< CvPoint > *arg1 = (std::vector< CvPoint > *) 0 ;
@@ -9047,7 +13362,7 @@ static swig_octave_member swig_CvPointVector_members[] = {
 };
 static const char *swig_CvPointVector_base_names[] = {0};
 static const swig_type_info *swig_CvPointVector_base[] = {0};
-static swig_octave_class _wrap_class_CvPointVector = {"CvPointVector", &SWIGTYPE_p_std__vectorT_CvPoint_std__allocatorT_CvPoint_t_t,0,_wrap_new_CvPointVector,_wrap_delete_CvPointVector,swig_CvPointVector_members,swig_CvPointVector_base_names,swig_CvPointVector_base };
+static swig_octave_class _wrap_class_CvPointVector = {"CvPointVector", &SWIGTYPE_p_std__vectorT_CvPoint_std__allocatorT_CvPoint_t_t,0,_wrap_new_CvPointVector,0,_wrap_delete_CvPointVector,swig_CvPointVector_members,swig_CvPointVector_base_names,swig_CvPointVector_base };
 
 static octave_value_list _wrap_cvCvtSeqToArray__SWIG_0 (const octave_value_list& args, int nargout) {
   CvSeq *arg1 = (CvSeq *) 0 ;
@@ -14811,7 +19126,7 @@ static swig_octave_member swig_Cv32suf_members[] = {
 };
 static const char *swig_Cv32suf_base_names[] = {0};
 static const swig_type_info *swig_Cv32suf_base[] = {0};
-static swig_octave_class _wrap_class_Cv32suf = {"Cv32suf", &SWIGTYPE_p_Cv32suf,0,_wrap_new_Cv32suf,_wrap_delete_Cv32suf,swig_Cv32suf_members,swig_Cv32suf_base_names,swig_Cv32suf_base };
+static swig_octave_class _wrap_class_Cv32suf = {"Cv32suf", &SWIGTYPE_p_Cv32suf,0,_wrap_new_Cv32suf,0,_wrap_delete_Cv32suf,swig_Cv32suf_members,swig_Cv32suf_base_names,swig_Cv32suf_base };
 
 static octave_value_list _wrap_Cv64suf_i_set (const octave_value_list& args, int nargout) {
   Cv64suf *arg1 = (Cv64suf *) 0 ;
@@ -15052,7 +19367,7 @@ static swig_octave_member swig_Cv64suf_members[] = {
 };
 static const char *swig_Cv64suf_base_names[] = {0};
 static const swig_type_info *swig_Cv64suf_base[] = {0};
-static swig_octave_class _wrap_class_Cv64suf = {"Cv64suf", &SWIGTYPE_p_Cv64suf,0,_wrap_new_Cv64suf,_wrap_delete_Cv64suf,swig_Cv64suf_members,swig_Cv64suf_base_names,swig_Cv64suf_base };
+static swig_octave_class _wrap_class_Cv64suf = {"Cv64suf", &SWIGTYPE_p_Cv64suf,0,_wrap_new_Cv64suf,0,_wrap_delete_Cv64suf,swig_Cv64suf_members,swig_Cv64suf_base_names,swig_Cv64suf_base };
 
 static octave_value_list _wrap_cvRound (const octave_value_list& args, int nargout) {
   double arg1 ;
@@ -19465,7 +23780,7 @@ static swig_octave_member swig_IplImage_members[] = {
 };
 static const char *swig_IplImage_base_names[] = {0};
 static const swig_type_info *swig_IplImage_base[] = {0};
-static swig_octave_class _wrap_class_IplImage = {"IplImage", &SWIGTYPE_p__IplImage,0,0,_wrap_delete_IplImage,swig_IplImage_members,swig_IplImage_base_names,swig_IplImage_base };
+static swig_octave_class _wrap_class_IplImage = {"IplImage", &SWIGTYPE_p__IplImage,0,0,0,_wrap_delete_IplImage,swig_IplImage_members,swig_IplImage_base_names,swig_IplImage_base };
 
 static octave_value_list _wrap_IplROI_coi_set (const octave_value_list& args, int nargout) {
   IplROI *arg1 = (IplROI *) 0 ;
@@ -19824,7 +24139,7 @@ static swig_octave_member swig_IplROI_members[] = {
 };
 static const char *swig_IplROI_base_names[] = {0};
 static const swig_type_info *swig_IplROI_base[] = {0};
-static swig_octave_class _wrap_class_IplROI = {"IplROI", &SWIGTYPE_p__IplROI,0,_wrap_new_IplROI,_wrap_delete_IplROI,swig_IplROI_members,swig_IplROI_base_names,swig_IplROI_base };
+static swig_octave_class _wrap_class_IplROI = {"IplROI", &SWIGTYPE_p__IplROI,0,_wrap_new_IplROI,0,_wrap_delete_IplROI,swig_IplROI_members,swig_IplROI_base_names,swig_IplROI_base };
 
 static octave_value_list _wrap_IplConvKernel_nCols_set (const octave_value_list& args, int nargout) {
   IplConvKernel *arg1 = (IplConvKernel *) 0 ;
@@ -20217,7 +24532,7 @@ static swig_octave_member swig_IplConvKernel_members[] = {
 };
 static const char *swig_IplConvKernel_base_names[] = {0};
 static const swig_type_info *swig_IplConvKernel_base[] = {0};
-static swig_octave_class _wrap_class_IplConvKernel = {"IplConvKernel", &SWIGTYPE_p__IplConvKernel,0,0,_wrap_delete_IplConvKernel,swig_IplConvKernel_members,swig_IplConvKernel_base_names,swig_IplConvKernel_base };
+static swig_octave_class _wrap_class_IplConvKernel = {"IplConvKernel", &SWIGTYPE_p__IplConvKernel,0,0,0,_wrap_delete_IplConvKernel,swig_IplConvKernel_members,swig_IplConvKernel_base_names,swig_IplConvKernel_base };
 
 static octave_value_list _wrap_IplConvKernelFP_nCols_set (const octave_value_list& args, int nargout) {
   IplConvKernelFP *arg1 = (IplConvKernelFP *) 0 ;
@@ -20576,7 +24891,7 @@ static swig_octave_member swig_IplConvKernelFP_members[] = {
 };
 static const char *swig_IplConvKernelFP_base_names[] = {0};
 static const swig_type_info *swig_IplConvKernelFP_base[] = {0};
-static swig_octave_class _wrap_class_IplConvKernelFP = {"IplConvKernelFP", &SWIGTYPE_p__IplConvKernelFP,0,_wrap_new_IplConvKernelFP,_wrap_delete_IplConvKernelFP,swig_IplConvKernelFP_members,swig_IplConvKernelFP_base_names,swig_IplConvKernelFP_base };
+static swig_octave_class _wrap_class_IplConvKernelFP = {"IplConvKernelFP", &SWIGTYPE_p__IplConvKernelFP,0,_wrap_new_IplConvKernelFP,0,_wrap_delete_IplConvKernelFP,swig_IplConvKernelFP_members,swig_IplConvKernelFP_base_names,swig_IplConvKernelFP_base };
 
 static octave_value_list _wrap_CvMat_type_set (const octave_value_list& args, int nargout) {
   CvMat *arg1 = (CvMat *) 0 ;
@@ -24354,7 +28669,7 @@ static swig_octave_member swig_CvMat_members[] = {
 };
 static const char *swig_CvMat_base_names[] = {0};
 static const swig_type_info *swig_CvMat_base[] = {0};
-static swig_octave_class _wrap_class_CvMat = {"CvMat", &SWIGTYPE_p_CvMat,0,0,_wrap_delete_CvMat,swig_CvMat_members,swig_CvMat_base_names,swig_CvMat_base };
+static swig_octave_class _wrap_class_CvMat = {"CvMat", &SWIGTYPE_p_CvMat,0,0,0,_wrap_delete_CvMat,swig_CvMat_members,swig_CvMat_base_names,swig_CvMat_base };
 
 static octave_value_list _wrap_CvMat_data_ptr_set (const octave_value_list& args, int nargout) {
   CvMat_data *arg1 = (CvMat_data *) 0 ;
@@ -24713,7 +29028,7 @@ static swig_octave_member swig_CvMat_data_members[] = {
 };
 static const char *swig_CvMat_data_base_names[] = {0};
 static const swig_type_info *swig_CvMat_data_base[] = {0};
-static swig_octave_class _wrap_class_CvMat_data = {"CvMat_data", &SWIGTYPE_p_CvMat_data,0,_wrap_new_CvMat_data,_wrap_delete_CvMat_data,swig_CvMat_data_members,swig_CvMat_data_base_names,swig_CvMat_data_base };
+static swig_octave_class _wrap_class_CvMat_data = {"CvMat_data", &SWIGTYPE_p_CvMat_data,0,_wrap_new_CvMat_data,0,_wrap_delete_CvMat_data,swig_CvMat_data_members,swig_CvMat_data_base_names,swig_CvMat_data_base };
 
 static octave_value_list _wrap_cvMat__SWIG_0 (const octave_value_list& args, int nargout) {
   int arg1 ;
@@ -25343,7 +29658,7 @@ static swig_octave_member swig_CvMatND_members[] = {
 };
 static const char *swig_CvMatND_base_names[] = {0};
 static const swig_type_info *swig_CvMatND_base[] = {0};
-static swig_octave_class _wrap_class_CvMatND = {"CvMatND", &SWIGTYPE_p_CvMatND,0,0,_wrap_delete_CvMatND,swig_CvMatND_members,swig_CvMatND_base_names,swig_CvMatND_base };
+static swig_octave_class _wrap_class_CvMatND = {"CvMatND", &SWIGTYPE_p_CvMatND,0,0,0,_wrap_delete_CvMatND,swig_CvMatND_members,swig_CvMatND_base_names,swig_CvMatND_base };
 
 static octave_value_list _wrap_CvMatND_dim_size_set (const octave_value_list& args, int nargout) {
   CvMatND_dim *arg1 = (CvMatND_dim *) 0 ;
@@ -25525,7 +29840,7 @@ static swig_octave_member swig_CvMatND_dim_members[] = {
 };
 static const char *swig_CvMatND_dim_base_names[] = {0};
 static const swig_type_info *swig_CvMatND_dim_base[] = {0};
-static swig_octave_class _wrap_class_CvMatND_dim = {"CvMatND_dim", &SWIGTYPE_p_CvMatND_dim,0,_wrap_new_CvMatND_dim,_wrap_delete_CvMatND_dim,swig_CvMatND_dim_members,swig_CvMatND_dim_base_names,swig_CvMatND_dim_base };
+static swig_octave_class _wrap_class_CvMatND_dim = {"CvMatND_dim", &SWIGTYPE_p_CvMatND_dim,0,_wrap_new_CvMatND_dim,0,_wrap_delete_CvMatND_dim,swig_CvMatND_dim_members,swig_CvMatND_dim_base_names,swig_CvMatND_dim_base };
 
 static octave_value_list _wrap_CvMatND_data_ptr_set (const octave_value_list& args, int nargout) {
   CvMatND_data *arg1 = (CvMatND_data *) 0 ;
@@ -25884,7 +30199,7 @@ static swig_octave_member swig_CvMatND_data_members[] = {
 };
 static const char *swig_CvMatND_data_base_names[] = {0};
 static const swig_type_info *swig_CvMatND_data_base[] = {0};
-static swig_octave_class _wrap_class_CvMatND_data = {"CvMatND_data", &SWIGTYPE_p_CvMatND_data,0,_wrap_new_CvMatND_data,_wrap_delete_CvMatND_data,swig_CvMatND_data_members,swig_CvMatND_data_base_names,swig_CvMatND_data_base };
+static swig_octave_class _wrap_class_CvMatND_data = {"CvMatND_data", &SWIGTYPE_p_CvMatND_data,0,_wrap_new_CvMatND_data,0,_wrap_delete_CvMatND_data,swig_CvMatND_data_members,swig_CvMatND_data_base_names,swig_CvMatND_data_base };
 
 static octave_value_list _wrap_CvSparseMat_type_set (const octave_value_list& args, int nargout) {
   CvSparseMat *arg1 = (CvSparseMat *) 0 ;
@@ -26525,7 +30840,7 @@ static swig_octave_member swig_CvSparseMat_members[] = {
 };
 static const char *swig_CvSparseMat_base_names[] = {0};
 static const swig_type_info *swig_CvSparseMat_base[] = {0};
-static swig_octave_class _wrap_class_CvSparseMat = {"CvSparseMat", &SWIGTYPE_p_CvSparseMat,0,0,_wrap_delete_CvSparseMat,swig_CvSparseMat_members,swig_CvSparseMat_base_names,swig_CvSparseMat_base };
+static swig_octave_class _wrap_class_CvSparseMat = {"CvSparseMat", &SWIGTYPE_p_CvSparseMat,0,0,0,_wrap_delete_CvSparseMat,swig_CvSparseMat_members,swig_CvSparseMat_base_names,swig_CvSparseMat_base };
 
 static octave_value_list _wrap_CvSparseNode_hashval_set (const octave_value_list& args, int nargout) {
   CvSparseNode *arg1 = (CvSparseNode *) 0 ;
@@ -26707,7 +31022,7 @@ static swig_octave_member swig_CvSparseNode_members[] = {
 };
 static const char *swig_CvSparseNode_base_names[] = {0};
 static const swig_type_info *swig_CvSparseNode_base[] = {0};
-static swig_octave_class _wrap_class_CvSparseNode = {"CvSparseNode", &SWIGTYPE_p_CvSparseNode,0,_wrap_new_CvSparseNode,_wrap_delete_CvSparseNode,swig_CvSparseNode_members,swig_CvSparseNode_base_names,swig_CvSparseNode_base };
+static swig_octave_class _wrap_class_CvSparseNode = {"CvSparseNode", &SWIGTYPE_p_CvSparseNode,0,_wrap_new_CvSparseNode,0,_wrap_delete_CvSparseNode,swig_CvSparseNode_members,swig_CvSparseNode_base_names,swig_CvSparseNode_base };
 
 static octave_value_list _wrap_CvSparseMatIterator_mat_set (const octave_value_list& args, int nargout) {
   CvSparseMatIterator *arg1 = (CvSparseMatIterator *) 0 ;
@@ -26948,7 +31263,7 @@ static swig_octave_member swig_CvSparseMatIterator_members[] = {
 };
 static const char *swig_CvSparseMatIterator_base_names[] = {0};
 static const swig_type_info *swig_CvSparseMatIterator_base[] = {0};
-static swig_octave_class _wrap_class_CvSparseMatIterator = {"CvSparseMatIterator", &SWIGTYPE_p_CvSparseMatIterator,0,_wrap_new_CvSparseMatIterator,_wrap_delete_CvSparseMatIterator,swig_CvSparseMatIterator_members,swig_CvSparseMatIterator_base_names,swig_CvSparseMatIterator_base };
+static swig_octave_class _wrap_class_CvSparseMatIterator = {"CvSparseMatIterator", &SWIGTYPE_p_CvSparseMatIterator,0,_wrap_new_CvSparseMatIterator,0,_wrap_delete_CvSparseMatIterator,swig_CvSparseMatIterator_members,swig_CvSparseMatIterator_base_names,swig_CvSparseMatIterator_base };
 
 static octave_value_list _wrap_CvHistogram_type_set (const octave_value_list& args, int nargout) {
   CvHistogram *arg1 = (CvHistogram *) 0 ;
@@ -27300,7 +31615,7 @@ static swig_octave_member swig_CvHistogram_members[] = {
 };
 static const char *swig_CvHistogram_base_names[] = {0};
 static const swig_type_info *swig_CvHistogram_base[] = {0};
-static swig_octave_class _wrap_class_CvHistogram = {"CvHistogram", &SWIGTYPE_p_CvHistogram,0,0,_wrap_delete_CvHistogram,swig_CvHistogram_members,swig_CvHistogram_base_names,swig_CvHistogram_base };
+static swig_octave_class _wrap_class_CvHistogram = {"CvHistogram", &SWIGTYPE_p_CvHistogram,0,0,0,_wrap_delete_CvHistogram,swig_CvHistogram_members,swig_CvHistogram_base_names,swig_CvHistogram_base };
 
 static octave_value_list _wrap_CvRect_x_set (const octave_value_list& args, int nargout) {
   CvRect *arg1 = (CvRect *) 0 ;
@@ -27600,7 +31915,7 @@ static swig_octave_member swig_CvRect_members[] = {
 };
 static const char *swig_CvRect_base_names[] = {0};
 static const swig_type_info *swig_CvRect_base[] = {0};
-static swig_octave_class _wrap_class_CvRect = {"CvRect", &SWIGTYPE_p_CvRect,0,_wrap_new_CvRect,_wrap_delete_CvRect,swig_CvRect_members,swig_CvRect_base_names,swig_CvRect_base };
+static swig_octave_class _wrap_class_CvRect = {"CvRect", &SWIGTYPE_p_CvRect,0,_wrap_new_CvRect,0,_wrap_delete_CvRect,swig_CvRect_members,swig_CvRect_base_names,swig_CvRect_base };
 
 static octave_value_list _wrap_cvRect (const octave_value_list& args, int nargout) {
   int arg1 ;
@@ -27984,7 +32299,7 @@ static swig_octave_member swig_CvTermCriteria_members[] = {
 };
 static const char *swig_CvTermCriteria_base_names[] = {0};
 static const swig_type_info *swig_CvTermCriteria_base[] = {0};
-static swig_octave_class _wrap_class_CvTermCriteria = {"CvTermCriteria", &SWIGTYPE_p_CvTermCriteria,0,_wrap_new_CvTermCriteria,_wrap_delete_CvTermCriteria,swig_CvTermCriteria_members,swig_CvTermCriteria_base_names,swig_CvTermCriteria_base };
+static swig_octave_class _wrap_class_CvTermCriteria = {"CvTermCriteria", &SWIGTYPE_p_CvTermCriteria,0,_wrap_new_CvTermCriteria,0,_wrap_delete_CvTermCriteria,swig_CvTermCriteria_members,swig_CvTermCriteria_base_names,swig_CvTermCriteria_base };
 
 static octave_value_list _wrap_cvTermCriteria (const octave_value_list& args, int nargout) {
   int arg1 ;
@@ -28283,7 +32598,7 @@ static swig_octave_member swig_CvPoint_members[] = {
 };
 static const char *swig_CvPoint_base_names[] = {0};
 static const swig_type_info *swig_CvPoint_base[] = {0};
-static swig_octave_class _wrap_class_CvPoint = {"CvPoint", &SWIGTYPE_p_CvPoint,0,_wrap_new_CvPoint,_wrap_delete_CvPoint,swig_CvPoint_members,swig_CvPoint_base_names,swig_CvPoint_base };
+static swig_octave_class _wrap_class_CvPoint = {"CvPoint", &SWIGTYPE_p_CvPoint,0,_wrap_new_CvPoint,0,_wrap_delete_CvPoint,swig_CvPoint_members,swig_CvPoint_base_names,swig_CvPoint_base };
 
 static octave_value_list _wrap_cvPoint (const octave_value_list& args, int nargout) {
   int arg1 ;
@@ -28574,7 +32889,7 @@ static swig_octave_member swig_CvPoint2D32f_members[] = {
 };
 static const char *swig_CvPoint2D32f_base_names[] = {0};
 static const swig_type_info *swig_CvPoint2D32f_base[] = {0};
-static swig_octave_class _wrap_class_CvPoint2D32f = {"CvPoint2D32f", &SWIGTYPE_p_CvPoint2D32f,0,_wrap_new_CvPoint2D32f,_wrap_delete_CvPoint2D32f,swig_CvPoint2D32f_members,swig_CvPoint2D32f_base_names,swig_CvPoint2D32f_base };
+static swig_octave_class _wrap_class_CvPoint2D32f = {"CvPoint2D32f", &SWIGTYPE_p_CvPoint2D32f,0,_wrap_new_CvPoint2D32f,0,_wrap_delete_CvPoint2D32f,swig_CvPoint2D32f_members,swig_CvPoint2D32f_base_names,swig_CvPoint2D32f_base };
 
 static octave_value_list _wrap_cvPoint2D32f (const octave_value_list& args, int nargout) {
   double arg1 ;
@@ -28914,7 +33229,7 @@ static swig_octave_member swig_CvPoint3D32f_members[] = {
 };
 static const char *swig_CvPoint3D32f_base_names[] = {0};
 static const swig_type_info *swig_CvPoint3D32f_base[] = {0};
-static swig_octave_class _wrap_class_CvPoint3D32f = {"CvPoint3D32f", &SWIGTYPE_p_CvPoint3D32f,0,_wrap_new_CvPoint3D32f,_wrap_delete_CvPoint3D32f,swig_CvPoint3D32f_members,swig_CvPoint3D32f_base_names,swig_CvPoint3D32f_base };
+static swig_octave_class _wrap_class_CvPoint3D32f = {"CvPoint3D32f", &SWIGTYPE_p_CvPoint3D32f,0,_wrap_new_CvPoint3D32f,0,_wrap_delete_CvPoint3D32f,swig_CvPoint3D32f_members,swig_CvPoint3D32f_base_names,swig_CvPoint3D32f_base };
 
 static octave_value_list _wrap_cvPoint3D32f (const octave_value_list& args, int nargout) {
   double arg1 ;
@@ -29145,7 +33460,7 @@ static swig_octave_member swig_CvPoint2D64f_members[] = {
 };
 static const char *swig_CvPoint2D64f_base_names[] = {0};
 static const swig_type_info *swig_CvPoint2D64f_base[] = {0};
-static swig_octave_class _wrap_class_CvPoint2D64f = {"CvPoint2D64f", &SWIGTYPE_p_CvPoint2D64f,0,_wrap_new_CvPoint2D64f,_wrap_delete_CvPoint2D64f,swig_CvPoint2D64f_members,swig_CvPoint2D64f_base_names,swig_CvPoint2D64f_base };
+static swig_octave_class _wrap_class_CvPoint2D64f = {"CvPoint2D64f", &SWIGTYPE_p_CvPoint2D64f,0,_wrap_new_CvPoint2D64f,0,_wrap_delete_CvPoint2D64f,swig_CvPoint2D64f_members,swig_CvPoint2D64f_base_names,swig_CvPoint2D64f_base };
 
 static octave_value_list _wrap_cvPoint2D64f (const octave_value_list& args, int nargout) {
   double arg1 ;
@@ -29427,7 +33742,7 @@ static swig_octave_member swig_CvPoint3D64f_members[] = {
 };
 static const char *swig_CvPoint3D64f_base_names[] = {0};
 static const swig_type_info *swig_CvPoint3D64f_base[] = {0};
-static swig_octave_class _wrap_class_CvPoint3D64f = {"CvPoint3D64f", &SWIGTYPE_p_CvPoint3D64f,0,_wrap_new_CvPoint3D64f,_wrap_delete_CvPoint3D64f,swig_CvPoint3D64f_members,swig_CvPoint3D64f_base_names,swig_CvPoint3D64f_base };
+static swig_octave_class _wrap_class_CvPoint3D64f = {"CvPoint3D64f", &SWIGTYPE_p_CvPoint3D64f,0,_wrap_new_CvPoint3D64f,0,_wrap_delete_CvPoint3D64f,swig_CvPoint3D64f_members,swig_CvPoint3D64f_base_names,swig_CvPoint3D64f_base };
 
 static octave_value_list _wrap_cvPoint3D64f (const octave_value_list& args, int nargout) {
   double arg1 ;
@@ -29658,7 +33973,7 @@ static swig_octave_member swig_CvSize_members[] = {
 };
 static const char *swig_CvSize_base_names[] = {0};
 static const swig_type_info *swig_CvSize_base[] = {0};
-static swig_octave_class _wrap_class_CvSize = {"CvSize", &SWIGTYPE_p_CvSize,0,_wrap_new_CvSize,_wrap_delete_CvSize,swig_CvSize_members,swig_CvSize_base_names,swig_CvSize_base };
+static swig_octave_class _wrap_class_CvSize = {"CvSize", &SWIGTYPE_p_CvSize,0,_wrap_new_CvSize,0,_wrap_delete_CvSize,swig_CvSize_members,swig_CvSize_base_names,swig_CvSize_base };
 
 static octave_value_list _wrap_cvSize (const octave_value_list& args, int nargout) {
   int arg1 ;
@@ -29881,7 +34196,7 @@ static swig_octave_member swig_CvSize2D32f_members[] = {
 };
 static const char *swig_CvSize2D32f_base_names[] = {0};
 static const swig_type_info *swig_CvSize2D32f_base[] = {0};
-static swig_octave_class _wrap_class_CvSize2D32f = {"CvSize2D32f", &SWIGTYPE_p_CvSize2D32f,0,_wrap_new_CvSize2D32f,_wrap_delete_CvSize2D32f,swig_CvSize2D32f_members,swig_CvSize2D32f_base_names,swig_CvSize2D32f_base };
+static swig_octave_class _wrap_class_CvSize2D32f = {"CvSize2D32f", &SWIGTYPE_p_CvSize2D32f,0,_wrap_new_CvSize2D32f,0,_wrap_delete_CvSize2D32f,swig_CvSize2D32f_members,swig_CvSize2D32f_base_names,swig_CvSize2D32f_base };
 
 static octave_value_list _wrap_cvSize2D32f (const octave_value_list& args, int nargout) {
   double arg1 ;
@@ -30163,7 +34478,7 @@ static swig_octave_member swig_CvBox2D_members[] = {
 };
 static const char *swig_CvBox2D_base_names[] = {0};
 static const swig_type_info *swig_CvBox2D_base[] = {0};
-static swig_octave_class _wrap_class_CvBox2D = {"CvBox2D", &SWIGTYPE_p_CvBox2D,0,_wrap_new_CvBox2D,_wrap_delete_CvBox2D,swig_CvBox2D_members,swig_CvBox2D_base_names,swig_CvBox2D_base };
+static swig_octave_class _wrap_class_CvBox2D = {"CvBox2D", &SWIGTYPE_p_CvBox2D,0,_wrap_new_CvBox2D,0,_wrap_delete_CvBox2D,swig_CvBox2D_members,swig_CvBox2D_base_names,swig_CvBox2D_base };
 
 static octave_value_list _wrap_CvLineIterator_ptr_set (const octave_value_list& args, int nargout) {
   CvLineIterator *arg1 = (CvLineIterator *) 0 ;
@@ -30581,7 +34896,7 @@ static swig_octave_member swig_CvLineIterator_members[] = {
 };
 static const char *swig_CvLineIterator_base_names[] = {0};
 static const swig_type_info *swig_CvLineIterator_base[] = {0};
-static swig_octave_class _wrap_class_CvLineIterator = {"CvLineIterator", &SWIGTYPE_p_CvLineIterator,0,_wrap_new_CvLineIterator,_wrap_delete_CvLineIterator,swig_CvLineIterator_members,swig_CvLineIterator_base_names,swig_CvLineIterator_base };
+static swig_octave_class _wrap_class_CvLineIterator = {"CvLineIterator", &SWIGTYPE_p_CvLineIterator,0,_wrap_new_CvLineIterator,0,_wrap_delete_CvLineIterator,swig_CvLineIterator_members,swig_CvLineIterator_base_names,swig_CvLineIterator_base };
 
 static octave_value_list _wrap_CvSlice_start_index_set (const octave_value_list& args, int nargout) {
   CvSlice *arg1 = (CvSlice *) 0 ;
@@ -30763,7 +35078,7 @@ static swig_octave_member swig_CvSlice_members[] = {
 };
 static const char *swig_CvSlice_base_names[] = {0};
 static const swig_type_info *swig_CvSlice_base[] = {0};
-static swig_octave_class _wrap_class_CvSlice = {"CvSlice", &SWIGTYPE_p_CvSlice,0,_wrap_new_CvSlice,_wrap_delete_CvSlice,swig_CvSlice_members,swig_CvSlice_base_names,swig_CvSlice_base };
+static swig_octave_class _wrap_class_CvSlice = {"CvSlice", &SWIGTYPE_p_CvSlice,0,_wrap_new_CvSlice,0,_wrap_delete_CvSlice,swig_CvSlice_members,swig_CvSlice_base_names,swig_CvSlice_base };
 
 static octave_value_list _wrap_cvSlice (const octave_value_list& args, int nargout) {
   int arg1 ;
@@ -31092,7 +35407,7 @@ static swig_octave_member swig_CvScalar_members[] = {
 };
 static const char *swig_CvScalar_base_names[] = {0};
 static const swig_type_info *swig_CvScalar_base[] = {0};
-static swig_octave_class _wrap_class_CvScalar = {"CvScalar", &SWIGTYPE_p_CvScalar,0,_wrap_new_CvScalar,_wrap_delete_CvScalar,swig_CvScalar_members,swig_CvScalar_base_names,swig_CvScalar_base };
+static swig_octave_class _wrap_class_CvScalar = {"CvScalar", &SWIGTYPE_p_CvScalar,0,_wrap_new_CvScalar,0,_wrap_delete_CvScalar,swig_CvScalar_members,swig_CvScalar_base_names,swig_CvScalar_base };
 
 static octave_value_list _wrap_cvScalar__SWIG_0 (const octave_value_list& args, int nargout) {
   double arg1 ;
@@ -31608,7 +35923,7 @@ static swig_octave_member swig_CvMemBlock_members[] = {
 };
 static const char *swig_CvMemBlock_base_names[] = {0};
 static const swig_type_info *swig_CvMemBlock_base[] = {0};
-static swig_octave_class _wrap_class_CvMemBlock = {"CvMemBlock", &SWIGTYPE_p_CvMemBlock,0,_wrap_new_CvMemBlock,_wrap_delete_CvMemBlock,swig_CvMemBlock_members,swig_CvMemBlock_base_names,swig_CvMemBlock_base };
+static swig_octave_class _wrap_class_CvMemBlock = {"CvMemBlock", &SWIGTYPE_p_CvMemBlock,0,_wrap_new_CvMemBlock,0,_wrap_delete_CvMemBlock,swig_CvMemBlock_members,swig_CvMemBlock_base_names,swig_CvMemBlock_base };
 
 static octave_value_list _wrap_CvMemStorage_signature_set (const octave_value_list& args, int nargout) {
   CvMemStorage *arg1 = (CvMemStorage *) 0 ;
@@ -32001,7 +36316,7 @@ static swig_octave_member swig_CvMemStorage_members[] = {
 };
 static const char *swig_CvMemStorage_base_names[] = {0};
 static const swig_type_info *swig_CvMemStorage_base[] = {0};
-static swig_octave_class _wrap_class_CvMemStorage = {"CvMemStorage", &SWIGTYPE_p_CvMemStorage,0,0,_wrap_delete_CvMemStorage,swig_CvMemStorage_members,swig_CvMemStorage_base_names,swig_CvMemStorage_base };
+static swig_octave_class _wrap_class_CvMemStorage = {"CvMemStorage", &SWIGTYPE_p_CvMemStorage,0,0,0,_wrap_delete_CvMemStorage,swig_CvMemStorage_members,swig_CvMemStorage_base_names,swig_CvMemStorage_base };
 
 static octave_value_list _wrap_CvMemStoragePos_top_set (const octave_value_list& args, int nargout) {
   CvMemStoragePos *arg1 = (CvMemStoragePos *) 0 ;
@@ -32183,7 +36498,7 @@ static swig_octave_member swig_CvMemStoragePos_members[] = {
 };
 static const char *swig_CvMemStoragePos_base_names[] = {0};
 static const swig_type_info *swig_CvMemStoragePos_base[] = {0};
-static swig_octave_class _wrap_class_CvMemStoragePos = {"CvMemStoragePos", &SWIGTYPE_p_CvMemStoragePos,0,_wrap_new_CvMemStoragePos,_wrap_delete_CvMemStoragePos,swig_CvMemStoragePos_members,swig_CvMemStoragePos_base_names,swig_CvMemStoragePos_base };
+static swig_octave_class _wrap_class_CvMemStoragePos = {"CvMemStoragePos", &SWIGTYPE_p_CvMemStoragePos,0,_wrap_new_CvMemStoragePos,0,_wrap_delete_CvMemStoragePos,swig_CvMemStoragePos_members,swig_CvMemStoragePos_base_names,swig_CvMemStoragePos_base };
 
 static octave_value_list _wrap_CvSeqBlock_prev_set (const octave_value_list& args, int nargout) {
   CvSeqBlock *arg1 = (CvSeqBlock *) 0 ;
@@ -32549,7 +36864,7 @@ static swig_octave_member swig_CvSeqBlock_members[] = {
 };
 static const char *swig_CvSeqBlock_base_names[] = {0};
 static const swig_type_info *swig_CvSeqBlock_base[] = {0};
-static swig_octave_class _wrap_class_CvSeqBlock = {"CvSeqBlock", &SWIGTYPE_p_CvSeqBlock,0,_wrap_new_CvSeqBlock,_wrap_delete_CvSeqBlock,swig_CvSeqBlock_members,swig_CvSeqBlock_base_names,swig_CvSeqBlock_base };
+static swig_octave_class _wrap_class_CvSeqBlock = {"CvSeqBlock", &SWIGTYPE_p_CvSeqBlock,0,_wrap_new_CvSeqBlock,0,_wrap_delete_CvSeqBlock,swig_CvSeqBlock_members,swig_CvSeqBlock_base_names,swig_CvSeqBlock_base };
 
 static octave_value_list _wrap_CvSeq_flags_set (const octave_value_list& args, int nargout) {
   CvSeq *arg1 = (CvSeq *) 0 ;
@@ -33717,7 +38032,7 @@ static swig_octave_member swig_CvSeq_members[] = {
 };
 static const char *swig_CvSeq_base_names[] = {0};
 static const swig_type_info *swig_CvSeq_base[] = {0};
-static swig_octave_class _wrap_class_CvSeq = {"CvSeq", &SWIGTYPE_p_CvSeq,0,_wrap_new_CvSeq,_wrap_delete_CvSeq,swig_CvSeq_members,swig_CvSeq_base_names,swig_CvSeq_base };
+static swig_octave_class _wrap_class_CvSeq = {"CvSeq", &SWIGTYPE_p_CvSeq,0,_wrap_new_CvSeq,0,_wrap_delete_CvSeq,swig_CvSeq_members,swig_CvSeq_base_names,swig_CvSeq_base };
 
 static octave_value_list _wrap_CvSetElem_flags_set (const octave_value_list& args, int nargout) {
   CvSetElem *arg1 = (CvSetElem *) 0 ;
@@ -33899,7 +38214,7 @@ static swig_octave_member swig_CvSetElem_members[] = {
 };
 static const char *swig_CvSetElem_base_names[] = {0};
 static const swig_type_info *swig_CvSetElem_base[] = {0};
-static swig_octave_class _wrap_class_CvSetElem = {"CvSetElem", &SWIGTYPE_p_CvSetElem,0,_wrap_new_CvSetElem,_wrap_delete_CvSetElem,swig_CvSetElem_members,swig_CvSetElem_base_names,swig_CvSetElem_base };
+static swig_octave_class _wrap_class_CvSetElem = {"CvSetElem", &SWIGTYPE_p_CvSetElem,0,_wrap_new_CvSetElem,0,_wrap_delete_CvSetElem,swig_CvSetElem_members,swig_CvSetElem_base_names,swig_CvSetElem_base };
 
 static octave_value_list _wrap_CvSet_flags_set (const octave_value_list& args, int nargout) {
   CvSet *arg1 = (CvSet *) 0 ;
@@ -35085,7 +39400,7 @@ static swig_octave_member swig_CvSet_members[] = {
 };
 static const char *swig_CvSet_base_names[] = {0};
 static const swig_type_info *swig_CvSet_base[] = {0};
-static swig_octave_class _wrap_class_CvSet = {"CvSet", &SWIGTYPE_p_CvSet,0,_wrap_new_CvSet,_wrap_delete_CvSet,swig_CvSet_members,swig_CvSet_base_names,swig_CvSet_base };
+static swig_octave_class _wrap_class_CvSet = {"CvSet", &SWIGTYPE_p_CvSet,0,_wrap_new_CvSet,0,_wrap_delete_CvSet,swig_CvSet_members,swig_CvSet_base_names,swig_CvSet_base };
 
 static octave_value_list _wrap_CvGraphEdge_flags_set (const octave_value_list& args, int nargout) {
   CvGraphEdge *arg1 = (CvGraphEdge *) 0 ;
@@ -35397,7 +39712,7 @@ static swig_octave_member swig_CvGraphEdge_members[] = {
 };
 static const char *swig_CvGraphEdge_base_names[] = {0};
 static const swig_type_info *swig_CvGraphEdge_base[] = {0};
-static swig_octave_class _wrap_class_CvGraphEdge = {"CvGraphEdge", &SWIGTYPE_p_CvGraphEdge,0,_wrap_new_CvGraphEdge,_wrap_delete_CvGraphEdge,swig_CvGraphEdge_members,swig_CvGraphEdge_base_names,swig_CvGraphEdge_base };
+static swig_octave_class _wrap_class_CvGraphEdge = {"CvGraphEdge", &SWIGTYPE_p_CvGraphEdge,0,_wrap_new_CvGraphEdge,0,_wrap_delete_CvGraphEdge,swig_CvGraphEdge_members,swig_CvGraphEdge_base_names,swig_CvGraphEdge_base };
 
 static octave_value_list _wrap_CvGraphVtx_flags_set (const octave_value_list& args, int nargout) {
   CvGraphVtx *arg1 = (CvGraphVtx *) 0 ;
@@ -35579,7 +39894,7 @@ static swig_octave_member swig_CvGraphVtx_members[] = {
 };
 static const char *swig_CvGraphVtx_base_names[] = {0};
 static const swig_type_info *swig_CvGraphVtx_base[] = {0};
-static swig_octave_class _wrap_class_CvGraphVtx = {"CvGraphVtx", &SWIGTYPE_p_CvGraphVtx,0,_wrap_new_CvGraphVtx,_wrap_delete_CvGraphVtx,swig_CvGraphVtx_members,swig_CvGraphVtx_base_names,swig_CvGraphVtx_base };
+static swig_octave_class _wrap_class_CvGraphVtx = {"CvGraphVtx", &SWIGTYPE_p_CvGraphVtx,0,_wrap_new_CvGraphVtx,0,_wrap_delete_CvGraphVtx,swig_CvGraphVtx_members,swig_CvGraphVtx_base_names,swig_CvGraphVtx_base };
 
 static octave_value_list _wrap_CvGraphVtx2D_flags_set (const octave_value_list& args, int nargout) {
   CvGraphVtx2D *arg1 = (CvGraphVtx2D *) 0 ;
@@ -35820,7 +40135,7 @@ static swig_octave_member swig_CvGraphVtx2D_members[] = {
 };
 static const char *swig_CvGraphVtx2D_base_names[] = {0};
 static const swig_type_info *swig_CvGraphVtx2D_base[] = {0};
-static swig_octave_class _wrap_class_CvGraphVtx2D = {"CvGraphVtx2D", &SWIGTYPE_p_CvGraphVtx2D,0,_wrap_new_CvGraphVtx2D,_wrap_delete_CvGraphVtx2D,swig_CvGraphVtx2D_members,swig_CvGraphVtx2D_base_names,swig_CvGraphVtx2D_base };
+static swig_octave_class _wrap_class_CvGraphVtx2D = {"CvGraphVtx2D", &SWIGTYPE_p_CvGraphVtx2D,0,_wrap_new_CvGraphVtx2D,0,_wrap_delete_CvGraphVtx2D,swig_CvGraphVtx2D_members,swig_CvGraphVtx2D_base_names,swig_CvGraphVtx2D_base };
 
 static octave_value_list _wrap_CvGraph_flags_set (const octave_value_list& args, int nargout) {
   CvGraph *arg1 = (CvGraph *) 0 ;
@@ -37042,7 +41357,7 @@ static swig_octave_member swig_CvGraph_members[] = {
 };
 static const char *swig_CvGraph_base_names[] = {0};
 static const swig_type_info *swig_CvGraph_base[] = {0};
-static swig_octave_class _wrap_class_CvGraph = {"CvGraph", &SWIGTYPE_p_CvGraph,0,_wrap_new_CvGraph,_wrap_delete_CvGraph,swig_CvGraph_members,swig_CvGraph_base_names,swig_CvGraph_base };
+static swig_octave_class _wrap_class_CvGraph = {"CvGraph", &SWIGTYPE_p_CvGraph,0,_wrap_new_CvGraph,0,_wrap_delete_CvGraph,swig_CvGraph_members,swig_CvGraph_base_names,swig_CvGraph_base };
 
 static octave_value_list _wrap_CvChain_flags_set (const octave_value_list& args, int nargout) {
   CvChain *arg1 = (CvChain *) 0 ;
@@ -38037,7 +42352,7 @@ static swig_octave_member swig_CvChain_members[] = {
 };
 static const char *swig_CvChain_base_names[] = {0};
 static const swig_type_info *swig_CvChain_base[] = {0};
-static swig_octave_class _wrap_class_CvChain = {"CvChain", &SWIGTYPE_p_CvChain,0,_wrap_new_CvChain,_wrap_delete_CvChain,swig_CvChain_members,swig_CvChain_base_names,swig_CvChain_base };
+static swig_octave_class _wrap_class_CvChain = {"CvChain", &SWIGTYPE_p_CvChain,0,_wrap_new_CvChain,0,_wrap_delete_CvChain,swig_CvChain_members,swig_CvChain_base_names,swig_CvChain_base };
 
 static octave_value_list _wrap_CvContour_flags_set (const octave_value_list& args, int nargout) {
   CvContour *arg1 = (CvContour *) 0 ;
@@ -39156,7 +43471,7 @@ static swig_octave_member swig_CvContour_members[] = {
 };
 static const char *swig_CvContour_base_names[] = {0};
 static const swig_type_info *swig_CvContour_base[] = {0};
-static swig_octave_class _wrap_class_CvContour = {"CvContour", &SWIGTYPE_p_CvContour,0,_wrap_new_CvContour,_wrap_delete_CvContour,swig_CvContour_members,swig_CvContour_base_names,swig_CvContour_base };
+static swig_octave_class _wrap_class_CvContour = {"CvContour", &SWIGTYPE_p_CvContour,0,_wrap_new_CvContour,0,_wrap_delete_CvContour,swig_CvContour_members,swig_CvContour_base_names,swig_CvContour_base };
 
 static octave_value_list _wrap_CvSeqWriter_header_size_set (const octave_value_list& args, int nargout) {
   CvSeqWriter *arg1 = (CvSeqWriter *) 0 ;
@@ -39603,7 +43918,7 @@ static swig_octave_member swig_CvSeqWriter_members[] = {
 };
 static const char *swig_CvSeqWriter_base_names[] = {0};
 static const swig_type_info *swig_CvSeqWriter_base[] = {0};
-static swig_octave_class _wrap_class_CvSeqWriter = {"CvSeqWriter", &SWIGTYPE_p_CvSeqWriter,0,_wrap_new_CvSeqWriter,_wrap_delete_CvSeqWriter,swig_CvSeqWriter_members,swig_CvSeqWriter_base_names,swig_CvSeqWriter_base };
+static swig_octave_class _wrap_class_CvSeqWriter = {"CvSeqWriter", &SWIGTYPE_p_CvSeqWriter,0,_wrap_new_CvSeqWriter,0,_wrap_delete_CvSeqWriter,swig_CvSeqWriter_members,swig_CvSeqWriter_base_names,swig_CvSeqWriter_base };
 
 static octave_value_list _wrap_CvSeqReader_header_size_set (const octave_value_list& args, int nargout) {
   CvSeqReader *arg1 = (CvSeqReader *) 0 ;
@@ -40175,7 +44490,7 @@ static swig_octave_member swig_CvSeqReader_members[] = {
 };
 static const char *swig_CvSeqReader_base_names[] = {0};
 static const swig_type_info *swig_CvSeqReader_base[] = {0};
-static swig_octave_class _wrap_class_CvSeqReader = {"CvSeqReader", &SWIGTYPE_p_CvSeqReader,0,_wrap_new_CvSeqReader,_wrap_delete_CvSeqReader,swig_CvSeqReader_members,swig_CvSeqReader_base_names,swig_CvSeqReader_base };
+static swig_octave_class _wrap_class_CvSeqReader = {"CvSeqReader", &SWIGTYPE_p_CvSeqReader,0,_wrap_new_CvSeqReader,0,_wrap_delete_CvSeqReader,swig_CvSeqReader_members,swig_CvSeqReader_base_names,swig_CvSeqReader_base };
 
 static octave_value_list _wrap_CvAttrList_attr_set (const octave_value_list& args, int nargout) {
   CvAttrList *arg1 = (CvAttrList *) 0 ;
@@ -40359,7 +44674,7 @@ static swig_octave_member swig_CvAttrList_members[] = {
 };
 static const char *swig_CvAttrList_base_names[] = {0};
 static const swig_type_info *swig_CvAttrList_base[] = {0};
-static swig_octave_class _wrap_class_CvAttrList = {"CvAttrList", &SWIGTYPE_p_CvAttrList,0,_wrap_new_CvAttrList,_wrap_delete_CvAttrList,swig_CvAttrList_members,swig_CvAttrList_base_names,swig_CvAttrList_base };
+static swig_octave_class _wrap_class_CvAttrList = {"CvAttrList", &SWIGTYPE_p_CvAttrList,0,_wrap_new_CvAttrList,0,_wrap_delete_CvAttrList,swig_CvAttrList_members,swig_CvAttrList_base_names,swig_CvAttrList_base };
 
 static octave_value_list _wrap_cvAttrList__SWIG_0 (const octave_value_list& args, int nargout) {
   char **arg1 = (char **) 0 ;
@@ -40689,7 +45004,7 @@ static swig_octave_member swig_CvString_members[] = {
 };
 static const char *swig_CvString_base_names[] = {0};
 static const swig_type_info *swig_CvString_base[] = {0};
-static swig_octave_class _wrap_class_CvString = {"CvString", &SWIGTYPE_p_CvString,0,_wrap_new_CvString,_wrap_delete_CvString,swig_CvString_members,swig_CvString_base_names,swig_CvString_base };
+static swig_octave_class _wrap_class_CvString = {"CvString", &SWIGTYPE_p_CvString,0,_wrap_new_CvString,0,_wrap_delete_CvString,swig_CvString_members,swig_CvString_base_names,swig_CvString_base };
 
 static octave_value_list _wrap_CvStringHashNode_hashval_set (const octave_value_list& args, int nargout) {
   CvStringHashNode *arg1 = (CvStringHashNode *) 0 ;
@@ -40930,7 +45245,7 @@ static swig_octave_member swig_CvStringHashNode_members[] = {
 };
 static const char *swig_CvStringHashNode_base_names[] = {0};
 static const swig_type_info *swig_CvStringHashNode_base[] = {0};
-static swig_octave_class _wrap_class_CvStringHashNode = {"CvStringHashNode", &SWIGTYPE_p_CvStringHashNode,0,_wrap_new_CvStringHashNode,_wrap_delete_CvStringHashNode,swig_CvStringHashNode_members,swig_CvStringHashNode_base_names,swig_CvStringHashNode_base };
+static swig_octave_class _wrap_class_CvStringHashNode = {"CvStringHashNode", &SWIGTYPE_p_CvStringHashNode,0,_wrap_new_CvStringHashNode,0,_wrap_delete_CvStringHashNode,swig_CvStringHashNode_members,swig_CvStringHashNode_base_names,swig_CvStringHashNode_base };
 
 static octave_value_list _wrap_CvFileNode_tag_set (const octave_value_list& args, int nargout) {
   CvFileNode *arg1 = (CvFileNode *) 0 ;
@@ -41138,7 +45453,7 @@ static swig_octave_member swig_CvFileNode_members[] = {
 };
 static const char *swig_CvFileNode_base_names[] = {0};
 static const swig_type_info *swig_CvFileNode_base[] = {0};
-static swig_octave_class _wrap_class_CvFileNode = {"CvFileNode", &SWIGTYPE_p_CvFileNode,0,_wrap_new_CvFileNode,_wrap_delete_CvFileNode,swig_CvFileNode_members,swig_CvFileNode_base_names,swig_CvFileNode_base };
+static swig_octave_class _wrap_class_CvFileNode = {"CvFileNode", &SWIGTYPE_p_CvFileNode,0,_wrap_new_CvFileNode,0,_wrap_delete_CvFileNode,swig_CvFileNode_members,swig_CvFileNode_base_names,swig_CvFileNode_base };
 
 static octave_value_list _wrap_CvFileNode_data_f_set (const octave_value_list& args, int nargout) {
   CvFileNode_data *arg1 = (CvFileNode_data *) 0 ;
@@ -41505,7 +45820,7 @@ static swig_octave_member swig_CvFileNode_data_members[] = {
 };
 static const char *swig_CvFileNode_data_base_names[] = {0};
 static const swig_type_info *swig_CvFileNode_data_base[] = {0};
-static swig_octave_class _wrap_class_CvFileNode_data = {"CvFileNode_data", &SWIGTYPE_p_CvFileNode_data,0,_wrap_new_CvFileNode_data,_wrap_delete_CvFileNode_data,swig_CvFileNode_data_members,swig_CvFileNode_data_base_names,swig_CvFileNode_data_base };
+static swig_octave_class _wrap_class_CvFileNode_data = {"CvFileNode_data", &SWIGTYPE_p_CvFileNode_data,0,_wrap_new_CvFileNode_data,0,_wrap_delete_CvFileNode_data,swig_CvFileNode_data_members,swig_CvFileNode_data_base_names,swig_CvFileNode_data_base };
 
 static octave_value_list _wrap_CvTypeInfo_flags_set (const octave_value_list& args, int nargout) {
   CvTypeInfo *arg1 = (CvTypeInfo *) 0 ;
@@ -42160,7 +46475,7 @@ static swig_octave_member swig_CvTypeInfo_members[] = {
 };
 static const char *swig_CvTypeInfo_base_names[] = {0};
 static const swig_type_info *swig_CvTypeInfo_base[] = {0};
-static swig_octave_class _wrap_class_CvTypeInfo = {"CvTypeInfo", &SWIGTYPE_p_CvTypeInfo,0,_wrap_new_CvTypeInfo,_wrap_delete_CvTypeInfo,swig_CvTypeInfo_members,swig_CvTypeInfo_base_names,swig_CvTypeInfo_base };
+static swig_octave_class _wrap_class_CvTypeInfo = {"CvTypeInfo", &SWIGTYPE_p_CvTypeInfo,0,_wrap_new_CvTypeInfo,0,_wrap_delete_CvTypeInfo,swig_CvTypeInfo_members,swig_CvTypeInfo_base_names,swig_CvTypeInfo_base };
 
 static octave_value_list _wrap_CvPluginFuncInfo_func_addr_set (const octave_value_list& args, int nargout) {
   CvPluginFuncInfo *arg1 = (CvPluginFuncInfo *) 0 ;
@@ -42525,7 +46840,7 @@ static swig_octave_member swig_CvPluginFuncInfo_members[] = {
 };
 static const char *swig_CvPluginFuncInfo_base_names[] = {0};
 static const swig_type_info *swig_CvPluginFuncInfo_base[] = {0};
-static swig_octave_class _wrap_class_CvPluginFuncInfo = {"CvPluginFuncInfo", &SWIGTYPE_p_CvPluginFuncInfo,0,_wrap_new_CvPluginFuncInfo,_wrap_delete_CvPluginFuncInfo,swig_CvPluginFuncInfo_members,swig_CvPluginFuncInfo_base_names,swig_CvPluginFuncInfo_base };
+static swig_octave_class _wrap_class_CvPluginFuncInfo = {"CvPluginFuncInfo", &SWIGTYPE_p_CvPluginFuncInfo,0,_wrap_new_CvPluginFuncInfo,0,_wrap_delete_CvPluginFuncInfo,swig_CvPluginFuncInfo_members,swig_CvPluginFuncInfo_base_names,swig_CvPluginFuncInfo_base };
 
 static octave_value_list _wrap_CvModuleInfo_next_set (const octave_value_list& args, int nargout) {
   CvModuleInfo *arg1 = (CvModuleInfo *) 0 ;
@@ -42837,7 +47152,7 @@ static swig_octave_member swig_CvModuleInfo_members[] = {
 };
 static const char *swig_CvModuleInfo_base_names[] = {0};
 static const swig_type_info *swig_CvModuleInfo_base[] = {0};
-static swig_octave_class _wrap_class_CvModuleInfo = {"CvModuleInfo", &SWIGTYPE_p_CvModuleInfo,0,_wrap_new_CvModuleInfo,_wrap_delete_CvModuleInfo,swig_CvModuleInfo_members,swig_CvModuleInfo_base_names,swig_CvModuleInfo_base };
+static swig_octave_class _wrap_class_CvModuleInfo = {"CvModuleInfo", &SWIGTYPE_p_CvModuleInfo,0,_wrap_new_CvModuleInfo,0,_wrap_delete_CvModuleInfo,swig_CvModuleInfo_members,swig_CvModuleInfo_base_names,swig_CvModuleInfo_base };
 
 static octave_value_list _wrap_cvAlloc (const octave_value_list& args, int nargout) {
   size_t arg1 ;
@@ -44636,7 +48951,7 @@ static swig_octave_member swig_CvNArrayIterator_members[] = {
 };
 static const char *swig_CvNArrayIterator_base_names[] = {0};
 static const swig_type_info *swig_CvNArrayIterator_base[] = {0};
-static swig_octave_class _wrap_class_CvNArrayIterator = {"CvNArrayIterator", &SWIGTYPE_p_CvNArrayIterator,0,_wrap_new_CvNArrayIterator,_wrap_delete_CvNArrayIterator,swig_CvNArrayIterator_members,swig_CvNArrayIterator_base_names,swig_CvNArrayIterator_base };
+static swig_octave_class _wrap_class_CvNArrayIterator = {"CvNArrayIterator", &SWIGTYPE_p_CvNArrayIterator,0,_wrap_new_CvNArrayIterator,0,_wrap_delete_CvNArrayIterator,swig_CvNArrayIterator_members,swig_CvNArrayIterator_base_names,swig_CvNArrayIterator_base };
 
 static octave_value_list _wrap_cvInitNArrayIterator (const octave_value_list& args, int nargout) {
   int arg1 ;
@@ -54942,7 +59257,7 @@ static swig_octave_member swig_CvGraphScanner_members[] = {
 };
 static const char *swig_CvGraphScanner_base_names[] = {0};
 static const swig_type_info *swig_CvGraphScanner_base[] = {0};
-static swig_octave_class _wrap_class_CvGraphScanner = {"CvGraphScanner", &SWIGTYPE_p_CvGraphScanner,0,0,_wrap_delete_CvGraphScanner,swig_CvGraphScanner_members,swig_CvGraphScanner_base_names,swig_CvGraphScanner_base };
+static swig_octave_class _wrap_class_CvGraphScanner = {"CvGraphScanner", &SWIGTYPE_p_CvGraphScanner,0,0,0,_wrap_delete_CvGraphScanner,swig_CvGraphScanner_members,swig_CvGraphScanner_base_names,swig_CvGraphScanner_base };
 
 static octave_value_list _wrap_cvCreateGraphScanner (const octave_value_list& args, int nargout) {
   CvGraph *arg1 = (CvGraph *) 0 ;
@@ -56664,7 +60979,7 @@ static swig_octave_member swig_CvFont_members[] = {
 };
 static const char *swig_CvFont_base_names[] = {0};
 static const swig_type_info *swig_CvFont_base[] = {0};
-static swig_octave_class _wrap_class_CvFont = {"CvFont", &SWIGTYPE_p_CvFont,0,_wrap_new_CvFont,_wrap_delete_CvFont,swig_CvFont_members,swig_CvFont_base_names,swig_CvFont_base };
+static swig_octave_class _wrap_class_CvFont = {"CvFont", &SWIGTYPE_p_CvFont,0,_wrap_new_CvFont,0,_wrap_delete_CvFont,swig_CvFont_members,swig_CvFont_base_names,swig_CvFont_base };
 
 static octave_value_list _wrap_cvInitFont (const octave_value_list& args, int nargout) {
   CvFont *arg1 = (CvFont *) 0 ;
@@ -57425,7 +61740,7 @@ static swig_octave_member swig_CvTreeNodeIterator_members[] = {
 };
 static const char *swig_CvTreeNodeIterator_base_names[] = {0};
 static const swig_type_info *swig_CvTreeNodeIterator_base[] = {0};
-static swig_octave_class _wrap_class_CvTreeNodeIterator = {"CvTreeNodeIterator", &SWIGTYPE_p_CvTreeNodeIterator,0,_wrap_new_CvTreeNodeIterator,_wrap_delete_CvTreeNodeIterator,swig_CvTreeNodeIterator_members,swig_CvTreeNodeIterator_base_names,swig_CvTreeNodeIterator_base };
+static swig_octave_class _wrap_class_CvTreeNodeIterator = {"CvTreeNodeIterator", &SWIGTYPE_p_CvTreeNodeIterator,0,_wrap_new_CvTreeNodeIterator,0,_wrap_delete_CvTreeNodeIterator,swig_CvTreeNodeIterator_members,swig_CvTreeNodeIterator_base_names,swig_CvTreeNodeIterator_base };
 
 static octave_value_list _wrap_cvInitTreeNodeIterator (const octave_value_list& args, int nargout) {
   CvTreeNodeIterator *arg1 = (CvTreeNodeIterator *) 0 ;
@@ -62794,7 +67109,7 @@ static swig_octave_member swig_CvImage_members[] = {
 };
 static const char *swig_CvImage_base_names[] = {0};
 static const swig_type_info *swig_CvImage_base[] = {0};
-static swig_octave_class _wrap_class_CvImage = {"CvImage", &SWIGTYPE_p_CvImage,0,_wrap_new_CvImage,_wrap_delete_CvImage,swig_CvImage_members,swig_CvImage_base_names,swig_CvImage_base };
+static swig_octave_class _wrap_class_CvImage = {"CvImage", &SWIGTYPE_p_CvImage,0,_wrap_new_CvImage,0,_wrap_delete_CvImage,swig_CvImage_members,swig_CvImage_base_names,swig_CvImage_base };
 
 static octave_value_list _wrap_new_CvMatrix__SWIG_0 (const octave_value_list& args, int nargout) {
   CvMatrix *result = 0 ;
@@ -65471,7 +69786,7 @@ static swig_octave_member swig_CvMatrix_members[] = {
 };
 static const char *swig_CvMatrix_base_names[] = {0};
 static const swig_type_info *swig_CvMatrix_base[] = {0};
-static swig_octave_class _wrap_class_CvMatrix = {"CvMatrix", &SWIGTYPE_p_CvMatrix,0,_wrap_new_CvMatrix,_wrap_delete_CvMatrix,swig_CvMatrix_members,swig_CvMatrix_base_names,swig_CvMatrix_base };
+static swig_octave_class _wrap_class_CvMatrix = {"CvMatrix", &SWIGTYPE_p_CvMatrix,0,_wrap_new_CvMatrix,0,_wrap_delete_CvMatrix,swig_CvMatrix_members,swig_CvMatrix_base_names,swig_CvMatrix_base };
 
 static octave_value_list _wrap_cvSetImageIOFunctions (const octave_value_list& args, int nargout) {
   CvLoadImageFunc arg1 = (CvLoadImageFunc) 0 ;
@@ -65705,7 +70020,7 @@ static swig_octave_member swig_CvModule_members[] = {
 };
 static const char *swig_CvModule_base_names[] = {0};
 static const swig_type_info *swig_CvModule_base[] = {0};
-static swig_octave_class _wrap_class_CvModule = {"CvModule", &SWIGTYPE_p_CvModule,0,_wrap_new_CvModule,_wrap_delete_CvModule,swig_CvModule_members,swig_CvModule_base_names,swig_CvModule_base };
+static swig_octave_class _wrap_class_CvModule = {"CvModule", &SWIGTYPE_p_CvModule,0,_wrap_new_CvModule,0,_wrap_delete_CvModule,swig_CvModule_members,swig_CvModule_base_names,swig_CvModule_base };
 
 static octave_value_list _wrap_new_CvType__SWIG_0 (const octave_value_list& args, int nargout) {
   char *arg1 = (char *) 0 ;
@@ -66260,7 +70575,7 @@ static swig_octave_member swig_CvType_members[] = {
 };
 static const char *swig_CvType_base_names[] = {0};
 static const swig_type_info *swig_CvType_base[] = {0};
-static swig_octave_class _wrap_class_CvType = {"CvType", &SWIGTYPE_p_CvType,0,_wrap_new_CvType,_wrap_delete_CvType,swig_CvType_members,swig_CvType_base_names,swig_CvType_base };
+static swig_octave_class _wrap_class_CvType = {"CvType", &SWIGTYPE_p_CvType,0,_wrap_new_CvType,0,_wrap_delete_CvType,swig_CvType_members,swig_CvType_base_names,swig_CvType_base };
 
 static octave_value_list _wrap_CvMoments_m00_set (const octave_value_list& args, int nargout) {
   CvMoments *arg1 = (CvMoments *) 0 ;
@@ -67386,7 +71701,7 @@ static swig_octave_member swig_CvMoments_members[] = {
 };
 static const char *swig_CvMoments_base_names[] = {0};
 static const swig_type_info *swig_CvMoments_base[] = {0};
-static swig_octave_class _wrap_class_CvMoments = {"CvMoments", &SWIGTYPE_p_CvMoments,0,_wrap_new_CvMoments,_wrap_delete_CvMoments,swig_CvMoments_members,swig_CvMoments_base_names,swig_CvMoments_base };
+static swig_octave_class _wrap_class_CvMoments = {"CvMoments", &SWIGTYPE_p_CvMoments,0,_wrap_new_CvMoments,0,_wrap_delete_CvMoments,swig_CvMoments_members,swig_CvMoments_base_names,swig_CvMoments_base };
 
 static octave_value_list _wrap_CvHuMoments_hu1_set (const octave_value_list& args, int nargout) {
   CvHuMoments *arg1 = (CvHuMoments *) 0 ;
@@ -67863,7 +72178,7 @@ static swig_octave_member swig_CvHuMoments_members[] = {
 };
 static const char *swig_CvHuMoments_base_names[] = {0};
 static const swig_type_info *swig_CvHuMoments_base[] = {0};
-static swig_octave_class _wrap_class_CvHuMoments = {"CvHuMoments", &SWIGTYPE_p_CvHuMoments,0,_wrap_new_CvHuMoments,_wrap_delete_CvHuMoments,swig_CvHuMoments_members,swig_CvHuMoments_base_names,swig_CvHuMoments_base };
+static swig_octave_class _wrap_class_CvHuMoments = {"CvHuMoments", &SWIGTYPE_p_CvHuMoments,0,_wrap_new_CvHuMoments,0,_wrap_delete_CvHuMoments,swig_CvHuMoments_members,swig_CvHuMoments_base_names,swig_CvHuMoments_base };
 
 static octave_value_list _wrap_CvConnectedComp_area_set (const octave_value_list& args, int nargout) {
   CvConnectedComp *arg1 = (CvConnectedComp *) 0 ;
@@ -68171,7 +72486,7 @@ static swig_octave_member swig_CvConnectedComp_members[] = {
 };
 static const char *swig_CvConnectedComp_base_names[] = {0};
 static const swig_type_info *swig_CvConnectedComp_base[] = {0};
-static swig_octave_class _wrap_class_CvConnectedComp = {"CvConnectedComp", &SWIGTYPE_p_CvConnectedComp,0,_wrap_new_CvConnectedComp,_wrap_delete_CvConnectedComp,swig_CvConnectedComp_members,swig_CvConnectedComp_base_names,swig_CvConnectedComp_base };
+static swig_octave_class _wrap_class_CvConnectedComp = {"CvConnectedComp", &SWIGTYPE_p_CvConnectedComp,0,_wrap_new_CvConnectedComp,0,_wrap_delete_CvConnectedComp,swig_CvConnectedComp_members,swig_CvConnectedComp_base_names,swig_CvConnectedComp_base };
 
 static octave_value_list _wrap_CvChainPtReader_header_size_set (const octave_value_list& args, int nargout) {
   CvChainPtReader *arg1 = (CvChainPtReader *) 0 ;
@@ -68933,7 +73248,7 @@ static swig_octave_member swig_CvChainPtReader_members[] = {
 };
 static const char *swig_CvChainPtReader_base_names[] = {0};
 static const swig_type_info *swig_CvChainPtReader_base[] = {0};
-static swig_octave_class _wrap_class_CvChainPtReader = {"CvChainPtReader", &SWIGTYPE_p_CvChainPtReader,0,_wrap_new_CvChainPtReader,_wrap_delete_CvChainPtReader,swig_CvChainPtReader_members,swig_CvChainPtReader_base_names,swig_CvChainPtReader_base };
+static swig_octave_class _wrap_class_CvChainPtReader = {"CvChainPtReader", &SWIGTYPE_p_CvChainPtReader,0,_wrap_new_CvChainPtReader,0,_wrap_delete_CvChainPtReader,swig_CvChainPtReader_members,swig_CvChainPtReader_base_names,swig_CvChainPtReader_base };
 
 static octave_value_list _wrap_CvContourTree_flags_set (const octave_value_list& args, int nargout) {
   CvContourTree *arg1 = (CvContourTree *) 0 ;
@@ -69987,7 +74302,7 @@ static swig_octave_member swig_CvContourTree_members[] = {
 };
 static const char *swig_CvContourTree_base_names[] = {0};
 static const swig_type_info *swig_CvContourTree_base[] = {0};
-static swig_octave_class _wrap_class_CvContourTree = {"CvContourTree", &SWIGTYPE_p_CvContourTree,0,_wrap_new_CvContourTree,_wrap_delete_CvContourTree,swig_CvContourTree_members,swig_CvContourTree_base_names,swig_CvContourTree_base };
+static swig_octave_class _wrap_class_CvContourTree = {"CvContourTree", &SWIGTYPE_p_CvContourTree,0,_wrap_new_CvContourTree,0,_wrap_delete_CvContourTree,swig_CvContourTree_members,swig_CvContourTree_base_names,swig_CvContourTree_base };
 
 static octave_value_list _wrap_CvConvexityDefect_start_set (const octave_value_list& args, int nargout) {
   CvConvexityDefect *arg1 = (CvConvexityDefect *) 0 ;
@@ -70287,7 +74602,7 @@ static swig_octave_member swig_CvConvexityDefect_members[] = {
 };
 static const char *swig_CvConvexityDefect_base_names[] = {0};
 static const swig_type_info *swig_CvConvexityDefect_base[] = {0};
-static swig_octave_class _wrap_class_CvConvexityDefect = {"CvConvexityDefect", &SWIGTYPE_p_CvConvexityDefect,0,_wrap_new_CvConvexityDefect,_wrap_delete_CvConvexityDefect,swig_CvConvexityDefect_members,swig_CvConvexityDefect_base_names,swig_CvConvexityDefect_base };
+static swig_octave_class _wrap_class_CvConvexityDefect = {"CvConvexityDefect", &SWIGTYPE_p_CvConvexityDefect,0,_wrap_new_CvConvexityDefect,0,_wrap_delete_CvConvexityDefect,swig_CvConvexityDefect_members,swig_CvConvexityDefect_base_names,swig_CvConvexityDefect_base };
 
 static octave_value_list _wrap_CvQuadEdge2D_flags_set (const octave_value_list& args, int nargout) {
   CvQuadEdge2D *arg1 = (CvQuadEdge2D *) 0 ;
@@ -70540,7 +74855,7 @@ static swig_octave_member swig_CvQuadEdge2D_members[] = {
 };
 static const char *swig_CvQuadEdge2D_base_names[] = {0};
 static const swig_type_info *swig_CvQuadEdge2D_base[] = {0};
-static swig_octave_class _wrap_class_CvQuadEdge2D = {"CvQuadEdge2D", &SWIGTYPE_p_CvQuadEdge2D,0,_wrap_new_CvQuadEdge2D,_wrap_delete_CvQuadEdge2D,swig_CvQuadEdge2D_members,swig_CvQuadEdge2D_base_names,swig_CvQuadEdge2D_base };
+static swig_octave_class _wrap_class_CvQuadEdge2D = {"CvQuadEdge2D", &SWIGTYPE_p_CvQuadEdge2D,0,_wrap_new_CvQuadEdge2D,0,_wrap_delete_CvQuadEdge2D,swig_CvQuadEdge2D_members,swig_CvQuadEdge2D_base_names,swig_CvQuadEdge2D_base };
 
 static octave_value_list _wrap_CvSubdiv2DPoint_flags_set (const octave_value_list& args, int nargout) {
   CvSubdiv2DPoint *arg1 = (CvSubdiv2DPoint *) 0 ;
@@ -70794,7 +75109,7 @@ static swig_octave_member swig_CvSubdiv2DPoint_members[] = {
 };
 static const char *swig_CvSubdiv2DPoint_base_names[] = {0};
 static const swig_type_info *swig_CvSubdiv2DPoint_base[] = {0};
-static swig_octave_class _wrap_class_CvSubdiv2DPoint = {"CvSubdiv2DPoint", &SWIGTYPE_p_CvSubdiv2DPoint,0,_wrap_new_CvSubdiv2DPoint,_wrap_delete_CvSubdiv2DPoint,swig_CvSubdiv2DPoint_members,swig_CvSubdiv2DPoint_base_names,swig_CvSubdiv2DPoint_base };
+static swig_octave_class _wrap_class_CvSubdiv2DPoint = {"CvSubdiv2DPoint", &SWIGTYPE_p_CvSubdiv2DPoint,0,_wrap_new_CvSubdiv2DPoint,0,_wrap_delete_CvSubdiv2DPoint,swig_CvSubdiv2DPoint_members,swig_CvSubdiv2DPoint_base_names,swig_CvSubdiv2DPoint_base };
 
 static octave_value_list _wrap_CvSubdiv2D_flags_set (const octave_value_list& args, int nargout) {
   CvSubdiv2D *arg1 = (CvSubdiv2D *) 0 ;
@@ -72305,7 +76620,7 @@ static swig_octave_member swig_CvSubdiv2D_members[] = {
 };
 static const char *swig_CvSubdiv2D_base_names[] = {0};
 static const swig_type_info *swig_CvSubdiv2D_base[] = {0};
-static swig_octave_class _wrap_class_CvSubdiv2D = {"CvSubdiv2D", &SWIGTYPE_p_CvSubdiv2D,0,_wrap_new_CvSubdiv2D,_wrap_delete_CvSubdiv2D,swig_CvSubdiv2D_members,swig_CvSubdiv2D_base_names,swig_CvSubdiv2D_base };
+static swig_octave_class _wrap_class_CvSubdiv2D = {"CvSubdiv2D", &SWIGTYPE_p_CvSubdiv2D,0,_wrap_new_CvSubdiv2D,0,_wrap_delete_CvSubdiv2D,swig_CvSubdiv2D_members,swig_CvSubdiv2D_base_names,swig_CvSubdiv2D_base };
 
 static octave_value_list _wrap_CvMatrix3_m_set (const octave_value_list& args, int nargout) {
   CvMatrix3 *arg1 = (CvMatrix3 *) 0 ;
@@ -72441,7 +76756,7 @@ static swig_octave_member swig_CvMatrix3_members[] = {
 };
 static const char *swig_CvMatrix3_base_names[] = {0};
 static const swig_type_info *swig_CvMatrix3_base[] = {0};
-static swig_octave_class _wrap_class_CvMatrix3 = {"CvMatrix3", &SWIGTYPE_p_CvMatrix3,0,_wrap_new_CvMatrix3,_wrap_delete_CvMatrix3,swig_CvMatrix3_members,swig_CvMatrix3_base_names,swig_CvMatrix3_base };
+static swig_octave_class _wrap_class_CvMatrix3 = {"CvMatrix3", &SWIGTYPE_p_CvMatrix3,0,_wrap_new_CvMatrix3,0,_wrap_delete_CvMatrix3,swig_CvMatrix3_members,swig_CvMatrix3_base_names,swig_CvMatrix3_base };
 
 static octave_value_list _wrap_CvConDensation_MP_set (const octave_value_list& args, int nargout) {
   CvConDensation *arg1 = (CvConDensation *) 0 ;
@@ -73192,7 +77507,7 @@ static swig_octave_member swig_CvConDensation_members[] = {
 };
 static const char *swig_CvConDensation_base_names[] = {0};
 static const swig_type_info *swig_CvConDensation_base[] = {0};
-static swig_octave_class _wrap_class_CvConDensation = {"CvConDensation", &SWIGTYPE_p_CvConDensation,0,0,_wrap_delete_CvConDensation,swig_CvConDensation_members,swig_CvConDensation_base_names,swig_CvConDensation_base };
+static swig_octave_class _wrap_class_CvConDensation = {"CvConDensation", &SWIGTYPE_p_CvConDensation,0,0,0,_wrap_delete_CvConDensation,swig_CvConDensation_members,swig_CvConDensation_base_names,swig_CvConDensation_base };
 
 static octave_value_list _wrap_CvKalman_MP_set (const octave_value_list& args, int nargout) {
   CvKalman *arg1 = (CvKalman *) 0 ;
@@ -74942,7 +79257,7 @@ static swig_octave_member swig_CvKalman_members[] = {
 };
 static const char *swig_CvKalman_base_names[] = {0};
 static const swig_type_info *swig_CvKalman_base[] = {0};
-static swig_octave_class _wrap_class_CvKalman = {"CvKalman", &SWIGTYPE_p_CvKalman,0,0,_wrap_delete_CvKalman,swig_CvKalman_members,swig_CvKalman_base_names,swig_CvKalman_base };
+static swig_octave_class _wrap_class_CvKalman = {"CvKalman", &SWIGTYPE_p_CvKalman,0,0,0,_wrap_delete_CvKalman,swig_CvKalman_members,swig_CvKalman_base_names,swig_CvKalman_base };
 
 static octave_value_list _wrap_CvHaarFeature_tilted_set (const octave_value_list& args, int nargout) {
   CvHaarFeature *arg1 = (CvHaarFeature *) 0 ;
@@ -75091,7 +79406,7 @@ static swig_octave_member swig_CvHaarFeature_members[] = {
 };
 static const char *swig_CvHaarFeature_base_names[] = {0};
 static const swig_type_info *swig_CvHaarFeature_base[] = {0};
-static swig_octave_class _wrap_class_CvHaarFeature = {"CvHaarFeature", &SWIGTYPE_p_CvHaarFeature,0,_wrap_new_CvHaarFeature,_wrap_delete_CvHaarFeature,swig_CvHaarFeature_members,swig_CvHaarFeature_base_names,swig_CvHaarFeature_base };
+static swig_octave_class _wrap_class_CvHaarFeature = {"CvHaarFeature", &SWIGTYPE_p_CvHaarFeature,0,_wrap_new_CvHaarFeature,0,_wrap_delete_CvHaarFeature,swig_CvHaarFeature_members,swig_CvHaarFeature_base_names,swig_CvHaarFeature_base };
 
 static octave_value_list _wrap_CvHaarFeature_rect_r_set (const octave_value_list& args, int nargout) {
   CvHaarFeature_rect *arg1 = (CvHaarFeature_rect *) 0 ;
@@ -75273,7 +79588,7 @@ static swig_octave_member swig_CvHaarFeature_rect_members[] = {
 };
 static const char *swig_CvHaarFeature_rect_base_names[] = {0};
 static const swig_type_info *swig_CvHaarFeature_rect_base[] = {0};
-static swig_octave_class _wrap_class_CvHaarFeature_rect = {"CvHaarFeature_rect", &SWIGTYPE_p_CvHaarFeature_rect,0,_wrap_new_CvHaarFeature_rect,_wrap_delete_CvHaarFeature_rect,swig_CvHaarFeature_rect_members,swig_CvHaarFeature_rect_base_names,swig_CvHaarFeature_rect_base };
+static swig_octave_class _wrap_class_CvHaarFeature_rect = {"CvHaarFeature_rect", &SWIGTYPE_p_CvHaarFeature_rect,0,_wrap_new_CvHaarFeature_rect,0,_wrap_delete_CvHaarFeature_rect,swig_CvHaarFeature_rect_members,swig_CvHaarFeature_rect_base_names,swig_CvHaarFeature_rect_base };
 
 static octave_value_list _wrap_CvHaarClassifier_count_set (const octave_value_list& args, int nargout) {
   CvHaarClassifier *arg1 = (CvHaarClassifier *) 0 ;
@@ -75691,7 +80006,7 @@ static swig_octave_member swig_CvHaarClassifier_members[] = {
 };
 static const char *swig_CvHaarClassifier_base_names[] = {0};
 static const swig_type_info *swig_CvHaarClassifier_base[] = {0};
-static swig_octave_class _wrap_class_CvHaarClassifier = {"CvHaarClassifier", &SWIGTYPE_p_CvHaarClassifier,0,_wrap_new_CvHaarClassifier,_wrap_delete_CvHaarClassifier,swig_CvHaarClassifier_members,swig_CvHaarClassifier_base_names,swig_CvHaarClassifier_base };
+static swig_octave_class _wrap_class_CvHaarClassifier = {"CvHaarClassifier", &SWIGTYPE_p_CvHaarClassifier,0,_wrap_new_CvHaarClassifier,0,_wrap_delete_CvHaarClassifier,swig_CvHaarClassifier_members,swig_CvHaarClassifier_base_names,swig_CvHaarClassifier_base };
 
 static octave_value_list _wrap_CvHaarStageClassifier_count_set (const octave_value_list& args, int nargout) {
   CvHaarStageClassifier *arg1 = (CvHaarStageClassifier *) 0 ;
@@ -76109,7 +80424,7 @@ static swig_octave_member swig_CvHaarStageClassifier_members[] = {
 };
 static const char *swig_CvHaarStageClassifier_base_names[] = {0};
 static const swig_type_info *swig_CvHaarStageClassifier_base[] = {0};
-static swig_octave_class _wrap_class_CvHaarStageClassifier = {"CvHaarStageClassifier", &SWIGTYPE_p_CvHaarStageClassifier,0,_wrap_new_CvHaarStageClassifier,_wrap_delete_CvHaarStageClassifier,swig_CvHaarStageClassifier_members,swig_CvHaarStageClassifier_base_names,swig_CvHaarStageClassifier_base };
+static swig_octave_class _wrap_class_CvHaarStageClassifier = {"CvHaarStageClassifier", &SWIGTYPE_p_CvHaarStageClassifier,0,_wrap_new_CvHaarStageClassifier,0,_wrap_delete_CvHaarStageClassifier,swig_CvHaarStageClassifier_members,swig_CvHaarStageClassifier_base_names,swig_CvHaarStageClassifier_base };
 
 static octave_value_list _wrap_CvHaarClassifierCascade_flags_set (const octave_value_list& args, int nargout) {
   CvHaarClassifierCascade *arg1 = (CvHaarClassifierCascade *) 0 ;
@@ -76561,7 +80876,7 @@ static swig_octave_member swig_CvHaarClassifierCascade_members[] = {
 };
 static const char *swig_CvHaarClassifierCascade_base_names[] = {0};
 static const swig_type_info *swig_CvHaarClassifierCascade_base[] = {0};
-static swig_octave_class _wrap_class_CvHaarClassifierCascade = {"CvHaarClassifierCascade", &SWIGTYPE_p_CvHaarClassifierCascade,0,0,_wrap_delete_CvHaarClassifierCascade,swig_CvHaarClassifierCascade_members,swig_CvHaarClassifierCascade_base_names,swig_CvHaarClassifierCascade_base };
+static swig_octave_class _wrap_class_CvHaarClassifierCascade = {"CvHaarClassifierCascade", &SWIGTYPE_p_CvHaarClassifierCascade,0,0,0,_wrap_delete_CvHaarClassifierCascade,swig_CvHaarClassifierCascade_members,swig_CvHaarClassifierCascade_base_names,swig_CvHaarClassifierCascade_base };
 
 static octave_value_list _wrap_CvAvgComp_rect_set (const octave_value_list& args, int nargout) {
   CvAvgComp *arg1 = (CvAvgComp *) 0 ;
@@ -76743,7 +81058,7 @@ static swig_octave_member swig_CvAvgComp_members[] = {
 };
 static const char *swig_CvAvgComp_base_names[] = {0};
 static const swig_type_info *swig_CvAvgComp_base[] = {0};
-static swig_octave_class _wrap_class_CvAvgComp = {"CvAvgComp", &SWIGTYPE_p_CvAvgComp,0,_wrap_new_CvAvgComp,_wrap_delete_CvAvgComp,swig_CvAvgComp_members,swig_CvAvgComp_base_names,swig_CvAvgComp_base };
+static swig_octave_class _wrap_class_CvAvgComp = {"CvAvgComp", &SWIGTYPE_p_CvAvgComp,0,_wrap_new_CvAvgComp,0,_wrap_delete_CvAvgComp,swig_CvAvgComp_members,swig_CvAvgComp_base_names,swig_CvAvgComp_base };
 
 static octave_value_list _wrap_cvCopyMakeBorder (const octave_value_list& args, int nargout) {
   CvArr *arg1 = (CvArr *) 0 ;
@@ -88435,7 +92750,7 @@ static swig_octave_member swig_CvBaseImageFilter_members[] = {
 };
 static const char *swig_CvBaseImageFilter_base_names[] = {0};
 static const swig_type_info *swig_CvBaseImageFilter_base[] = {0};
-static swig_octave_class _wrap_class_CvBaseImageFilter = {"CvBaseImageFilter", &SWIGTYPE_p_CvBaseImageFilter,0,_wrap_new_CvBaseImageFilter,_wrap_delete_CvBaseImageFilter,swig_CvBaseImageFilter_members,swig_CvBaseImageFilter_base_names,swig_CvBaseImageFilter_base };
+static swig_octave_class _wrap_class_CvBaseImageFilter = {"CvBaseImageFilter", &SWIGTYPE_p_CvBaseImageFilter,0,_wrap_new_CvBaseImageFilter,0,_wrap_delete_CvBaseImageFilter,swig_CvBaseImageFilter_members,swig_CvBaseImageFilter_base_names,swig_CvBaseImageFilter_base };
 
 static octave_value_list _wrap_new_CvSepFilter__SWIG_0 (const octave_value_list& args, int nargout) {
   CvSepFilter *result = 0 ;
@@ -91017,7 +95332,7 @@ static swig_octave_member swig_CvSepFilter_members[] = {
 };
 static const char *swig_CvSepFilter_base_names[] = {"_p_CvBaseImageFilter",0};
 static const swig_type_info *swig_CvSepFilter_base[] = {0,0};
-static swig_octave_class _wrap_class_CvSepFilter = {"CvSepFilter", &SWIGTYPE_p_CvSepFilter,0,_wrap_new_CvSepFilter,_wrap_delete_CvSepFilter,swig_CvSepFilter_members,swig_CvSepFilter_base_names,swig_CvSepFilter_base };
+static swig_octave_class _wrap_class_CvSepFilter = {"CvSepFilter", &SWIGTYPE_p_CvSepFilter,0,_wrap_new_CvSepFilter,0,_wrap_delete_CvSepFilter,swig_CvSepFilter_members,swig_CvSepFilter_base_names,swig_CvSepFilter_base };
 
 static octave_value_list _wrap_new_CvLinearFilter__SWIG_0 (const octave_value_list& args, int nargout) {
   CvLinearFilter *result = 0 ;
@@ -92620,7 +96935,7 @@ static swig_octave_member swig_CvLinearFilter_members[] = {
 };
 static const char *swig_CvLinearFilter_base_names[] = {"_p_CvBaseImageFilter",0};
 static const swig_type_info *swig_CvLinearFilter_base[] = {0,0};
-static swig_octave_class _wrap_class_CvLinearFilter = {"CvLinearFilter", &SWIGTYPE_p_CvLinearFilter,0,_wrap_new_CvLinearFilter,_wrap_delete_CvLinearFilter,swig_CvLinearFilter_members,swig_CvLinearFilter_base_names,swig_CvLinearFilter_base };
+static swig_octave_class _wrap_class_CvLinearFilter = {"CvLinearFilter", &SWIGTYPE_p_CvLinearFilter,0,_wrap_new_CvLinearFilter,0,_wrap_delete_CvLinearFilter,swig_CvLinearFilter_members,swig_CvLinearFilter_base_names,swig_CvLinearFilter_base };
 
 static octave_value_list _wrap_new_CvBoxFilter__SWIG_0 (const octave_value_list& args, int nargout) {
   CvBoxFilter *result = 0 ;
@@ -93856,7 +98171,7 @@ static swig_octave_member swig_CvBoxFilter_members[] = {
 };
 static const char *swig_CvBoxFilter_base_names[] = {"_p_CvBaseImageFilter",0};
 static const swig_type_info *swig_CvBoxFilter_base[] = {0,0};
-static swig_octave_class _wrap_class_CvBoxFilter = {"CvBoxFilter", &SWIGTYPE_p_CvBoxFilter,0,_wrap_new_CvBoxFilter,_wrap_delete_CvBoxFilter,swig_CvBoxFilter_members,swig_CvBoxFilter_base_names,swig_CvBoxFilter_base };
+static swig_octave_class _wrap_class_CvBoxFilter = {"CvBoxFilter", &SWIGTYPE_p_CvBoxFilter,0,_wrap_new_CvBoxFilter,0,_wrap_delete_CvBoxFilter,swig_CvBoxFilter_members,swig_CvBoxFilter_base_names,swig_CvBoxFilter_base };
 
 static octave_value_list _wrap_new_CvLaplaceFilter__SWIG_0 (const octave_value_list& args, int nargout) {
   CvLaplaceFilter *result = 0 ;
@@ -95748,7 +100063,7 @@ static swig_octave_member swig_CvLaplaceFilter_members[] = {
 };
 static const char *swig_CvLaplaceFilter_base_names[] = {"_p_CvSepFilter",0};
 static const swig_type_info *swig_CvLaplaceFilter_base[] = {0,0};
-static swig_octave_class _wrap_class_CvLaplaceFilter = {"CvLaplaceFilter", &SWIGTYPE_p_CvLaplaceFilter,0,_wrap_new_CvLaplaceFilter,_wrap_delete_CvLaplaceFilter,swig_CvLaplaceFilter_members,swig_CvLaplaceFilter_base_names,swig_CvLaplaceFilter_base };
+static swig_octave_class _wrap_class_CvLaplaceFilter = {"CvLaplaceFilter", &SWIGTYPE_p_CvLaplaceFilter,0,_wrap_new_CvLaplaceFilter,0,_wrap_delete_CvLaplaceFilter,swig_CvLaplaceFilter_members,swig_CvLaplaceFilter_base_names,swig_CvLaplaceFilter_base };
 
 static octave_value_list _wrap_new_CvMorphology__SWIG_0 (const octave_value_list& args, int nargout) {
   CvMorphology *result = 0 ;
@@ -98023,7 +102338,7 @@ static swig_octave_member swig_CvMorphology_members[] = {
 };
 static const char *swig_CvMorphology_base_names[] = {"_p_CvBaseImageFilter",0};
 static const swig_type_info *swig_CvMorphology_base[] = {0,0};
-static swig_octave_class _wrap_class_CvMorphology = {"CvMorphology", &SWIGTYPE_p_CvMorphology,0,_wrap_new_CvMorphology,_wrap_delete_CvMorphology,swig_CvMorphology_members,swig_CvMorphology_base_names,swig_CvMorphology_base };
+static swig_octave_class _wrap_class_CvMorphology = {"CvMorphology", &SWIGTYPE_p_CvMorphology,0,_wrap_new_CvMorphology,0,_wrap_delete_CvMorphology,swig_CvMorphology_members,swig_CvMorphology_base_names,swig_CvMorphology_base };
 
 static octave_value_list _wrap_CvTuple_CvPoint_2_val_set (const octave_value_list& args, int nargout) {
   CvTuple< CvPoint,2 > *arg1 = (CvTuple< CvPoint,2 > *) 0 ;
@@ -98246,7 +102561,7 @@ static swig_octave_member swig_CvTuple_CvPoint_2_members[] = {
 };
 static const char *swig_CvTuple_CvPoint_2_base_names[] = {0};
 static const swig_type_info *swig_CvTuple_CvPoint_2_base[] = {0};
-static swig_octave_class _wrap_class_CvTuple_CvPoint_2 = {"CvTuple_CvPoint_2", &SWIGTYPE_p_CvTupleT_CvPoint_2_t,0,_wrap_new_CvTuple_CvPoint_2,_wrap_delete_CvTuple_CvPoint_2,swig_CvTuple_CvPoint_2_members,swig_CvTuple_CvPoint_2_base_names,swig_CvTuple_CvPoint_2_base };
+static swig_octave_class _wrap_class_CvTuple_CvPoint_2 = {"CvTuple_CvPoint_2", &SWIGTYPE_p_CvTupleT_CvPoint_2_t,0,_wrap_new_CvTuple_CvPoint_2,0,_wrap_delete_CvTuple_CvPoint_2,swig_CvTuple_CvPoint_2_members,swig_CvTuple_CvPoint_2_base_names,swig_CvTuple_CvPoint_2_base };
 
 static octave_value_list _wrap_CvTuple_float_2_val_set (const octave_value_list& args, int nargout) {
   CvTuple< float,2 > *arg1 = (CvTuple< float,2 > *) 0 ;
@@ -98469,7 +102784,7 @@ static swig_octave_member swig_CvTuple_float_2_members[] = {
 };
 static const char *swig_CvTuple_float_2_base_names[] = {0};
 static const swig_type_info *swig_CvTuple_float_2_base[] = {0};
-static swig_octave_class _wrap_class_CvTuple_float_2 = {"CvTuple_float_2", &SWIGTYPE_p_CvTupleT_float_2_t,0,_wrap_new_CvTuple_float_2,_wrap_delete_CvTuple_float_2,swig_CvTuple_float_2_members,swig_CvTuple_float_2_base_names,swig_CvTuple_float_2_base };
+static swig_octave_class _wrap_class_CvTuple_float_2 = {"CvTuple_float_2", &SWIGTYPE_p_CvTupleT_float_2_t,0,_wrap_new_CvTuple_float_2,0,_wrap_delete_CvTuple_float_2,swig_CvTuple_float_2_members,swig_CvTuple_float_2_base_names,swig_CvTuple_float_2_base };
 
 static octave_value_list _wrap_CvTuple_float_3_val_set (const octave_value_list& args, int nargout) {
   CvTuple< float,3 > *arg1 = (CvTuple< float,3 > *) 0 ;
@@ -98692,7 +103007,7 @@ static swig_octave_member swig_CvTuple_float_3_members[] = {
 };
 static const char *swig_CvTuple_float_3_base_names[] = {0};
 static const swig_type_info *swig_CvTuple_float_3_base[] = {0};
-static swig_octave_class _wrap_class_CvTuple_float_3 = {"CvTuple_float_3", &SWIGTYPE_p_CvTupleT_float_3_t,0,_wrap_new_CvTuple_float_3,_wrap_delete_CvTuple_float_3,swig_CvTuple_float_3_members,swig_CvTuple_float_3_base_names,swig_CvTuple_float_3_base };
+static swig_octave_class _wrap_class_CvTuple_float_3 = {"CvTuple_float_3", &SWIGTYPE_p_CvTupleT_float_3_t,0,_wrap_new_CvTuple_float_3,0,_wrap_delete_CvTuple_float_3,swig_CvTuple_float_3_members,swig_CvTuple_float_3_base_names,swig_CvTuple_float_3_base };
 
 static octave_value_list _wrap_CvSeq_CvPoint_cast (const octave_value_list& args, int nargout) {
   CvSeq *arg1 = (CvSeq *) 0 ;
@@ -98964,7 +103279,7 @@ static swig_octave_member swig_CvSeq_CvPoint_members[] = {
 };
 static const char *swig_CvSeq_CvPoint_base_names[] = {"_p_CvSeq",0};
 static const swig_type_info *swig_CvSeq_CvPoint_base[] = {0,0};
-static swig_octave_class _wrap_class_CvSeq_CvPoint = {"CvSeq_CvPoint", &SWIGTYPE_p_CvTypedSeqT_CvPoint_t,0,_wrap_new_CvSeq_CvPoint,_wrap_delete_CvSeq_CvPoint,swig_CvSeq_CvPoint_members,swig_CvSeq_CvPoint_base_names,swig_CvSeq_CvPoint_base };
+static swig_octave_class _wrap_class_CvSeq_CvPoint = {"CvSeq_CvPoint", &SWIGTYPE_p_CvTypedSeqT_CvPoint_t,0,_wrap_new_CvSeq_CvPoint,0,_wrap_delete_CvSeq_CvPoint,swig_CvSeq_CvPoint_members,swig_CvSeq_CvPoint_base_names,swig_CvSeq_CvPoint_base };
 
 static octave_value_list _wrap_CvSeq_CvPoint2D32f_cast (const octave_value_list& args, int nargout) {
   CvSeq *arg1 = (CvSeq *) 0 ;
@@ -99236,7 +103551,7 @@ static swig_octave_member swig_CvSeq_CvPoint2D32f_members[] = {
 };
 static const char *swig_CvSeq_CvPoint2D32f_base_names[] = {"_p_CvSeq",0};
 static const swig_type_info *swig_CvSeq_CvPoint2D32f_base[] = {0,0};
-static swig_octave_class _wrap_class_CvSeq_CvPoint2D32f = {"CvSeq_CvPoint2D32f", &SWIGTYPE_p_CvTypedSeqT_CvPoint2D32f_t,0,_wrap_new_CvSeq_CvPoint2D32f,_wrap_delete_CvSeq_CvPoint2D32f,swig_CvSeq_CvPoint2D32f_members,swig_CvSeq_CvPoint2D32f_base_names,swig_CvSeq_CvPoint2D32f_base };
+static swig_octave_class _wrap_class_CvSeq_CvPoint2D32f = {"CvSeq_CvPoint2D32f", &SWIGTYPE_p_CvTypedSeqT_CvPoint2D32f_t,0,_wrap_new_CvSeq_CvPoint2D32f,0,_wrap_delete_CvSeq_CvPoint2D32f,swig_CvSeq_CvPoint2D32f_members,swig_CvSeq_CvPoint2D32f_base_names,swig_CvSeq_CvPoint2D32f_base };
 
 static octave_value_list _wrap_CvSeq_CvRect_cast (const octave_value_list& args, int nargout) {
   CvSeq *arg1 = (CvSeq *) 0 ;
@@ -99508,7 +103823,7 @@ static swig_octave_member swig_CvSeq_CvRect_members[] = {
 };
 static const char *swig_CvSeq_CvRect_base_names[] = {"_p_CvSeq",0};
 static const swig_type_info *swig_CvSeq_CvRect_base[] = {0,0};
-static swig_octave_class _wrap_class_CvSeq_CvRect = {"CvSeq_CvRect", &SWIGTYPE_p_CvTypedSeqT_CvRect_t,0,_wrap_new_CvSeq_CvRect,_wrap_delete_CvSeq_CvRect,swig_CvSeq_CvRect_members,swig_CvSeq_CvRect_base_names,swig_CvSeq_CvRect_base };
+static swig_octave_class _wrap_class_CvSeq_CvRect = {"CvSeq_CvRect", &SWIGTYPE_p_CvTypedSeqT_CvRect_t,0,_wrap_new_CvSeq_CvRect,0,_wrap_delete_CvSeq_CvRect,swig_CvSeq_CvRect_members,swig_CvSeq_CvRect_base_names,swig_CvSeq_CvRect_base };
 
 static octave_value_list _wrap_CvSeq_CvSeq_cast (const octave_value_list& args, int nargout) {
   CvSeq *arg1 = (CvSeq *) 0 ;
@@ -99784,7 +104099,7 @@ static swig_octave_member swig_CvSeq_CvSeq_members[] = {
 };
 static const char *swig_CvSeq_CvSeq_base_names[] = {"_p_CvSeq",0};
 static const swig_type_info *swig_CvSeq_CvSeq_base[] = {0,0};
-static swig_octave_class _wrap_class_CvSeq_CvSeq = {"CvSeq_CvSeq", &SWIGTYPE_p_CvTypedSeqT_CvSeq_p_t,0,_wrap_new_CvSeq_CvSeq,_wrap_delete_CvSeq_CvSeq,swig_CvSeq_CvSeq_members,swig_CvSeq_CvSeq_base_names,swig_CvSeq_CvSeq_base };
+static swig_octave_class _wrap_class_CvSeq_CvSeq = {"CvSeq_CvSeq", &SWIGTYPE_p_CvTypedSeqT_CvSeq_p_t,0,_wrap_new_CvSeq_CvSeq,0,_wrap_delete_CvSeq_CvSeq,swig_CvSeq_CvSeq_members,swig_CvSeq_CvSeq_base_names,swig_CvSeq_CvSeq_base };
 
 static octave_value_list _wrap_CvSeq_CvQuadEdge2D_cast (const octave_value_list& args, int nargout) {
   CvSeq *arg1 = (CvSeq *) 0 ;
@@ -100056,7 +104371,7 @@ static swig_octave_member swig_CvSeq_CvQuadEdge2D_members[] = {
 };
 static const char *swig_CvSeq_CvQuadEdge2D_base_names[] = {"_p_CvSeq",0};
 static const swig_type_info *swig_CvSeq_CvQuadEdge2D_base[] = {0,0};
-static swig_octave_class _wrap_class_CvSeq_CvQuadEdge2D = {"CvSeq_CvQuadEdge2D", &SWIGTYPE_p_CvTypedSeqT_CvQuadEdge2D_t,0,_wrap_new_CvSeq_CvQuadEdge2D,_wrap_delete_CvSeq_CvQuadEdge2D,swig_CvSeq_CvQuadEdge2D_members,swig_CvSeq_CvQuadEdge2D_base_names,swig_CvSeq_CvQuadEdge2D_base };
+static swig_octave_class _wrap_class_CvSeq_CvQuadEdge2D = {"CvSeq_CvQuadEdge2D", &SWIGTYPE_p_CvTypedSeqT_CvQuadEdge2D_t,0,_wrap_new_CvSeq_CvQuadEdge2D,0,_wrap_delete_CvSeq_CvQuadEdge2D,swig_CvSeq_CvQuadEdge2D_members,swig_CvSeq_CvQuadEdge2D_base_names,swig_CvSeq_CvQuadEdge2D_base };
 
 static octave_value_list _wrap_CvSeq_CvConnectedComp_cast (const octave_value_list& args, int nargout) {
   CvSeq *arg1 = (CvSeq *) 0 ;
@@ -100328,7 +104643,7 @@ static swig_octave_member swig_CvSeq_CvConnectedComp_members[] = {
 };
 static const char *swig_CvSeq_CvConnectedComp_base_names[] = {"_p_CvSeq",0};
 static const swig_type_info *swig_CvSeq_CvConnectedComp_base[] = {0,0};
-static swig_octave_class _wrap_class_CvSeq_CvConnectedComp = {"CvSeq_CvConnectedComp", &SWIGTYPE_p_CvTypedSeqT_CvConnectedComp_t,0,_wrap_new_CvSeq_CvConnectedComp,_wrap_delete_CvSeq_CvConnectedComp,swig_CvSeq_CvConnectedComp_members,swig_CvSeq_CvConnectedComp_base_names,swig_CvSeq_CvConnectedComp_base };
+static swig_octave_class _wrap_class_CvSeq_CvConnectedComp = {"CvSeq_CvConnectedComp", &SWIGTYPE_p_CvTypedSeqT_CvConnectedComp_t,0,_wrap_new_CvSeq_CvConnectedComp,0,_wrap_delete_CvSeq_CvConnectedComp,swig_CvSeq_CvConnectedComp_members,swig_CvSeq_CvConnectedComp_base_names,swig_CvSeq_CvConnectedComp_base };
 
 static octave_value_list _wrap_CvSeq_CvPoint_2_cast (const octave_value_list& args, int nargout) {
   CvSeq *arg1 = (CvSeq *) 0 ;
@@ -100600,7 +104915,7 @@ static swig_octave_member swig_CvSeq_CvPoint_2_members[] = {
 };
 static const char *swig_CvSeq_CvPoint_2_base_names[] = {"_p_CvSeq",0};
 static const swig_type_info *swig_CvSeq_CvPoint_2_base[] = {0,0};
-static swig_octave_class _wrap_class_CvSeq_CvPoint_2 = {"CvSeq_CvPoint_2", &SWIGTYPE_p_CvTypedSeqT_CvTupleT_CvPoint_2_t_t,0,_wrap_new_CvSeq_CvPoint_2,_wrap_delete_CvSeq_CvPoint_2,swig_CvSeq_CvPoint_2_members,swig_CvSeq_CvPoint_2_base_names,swig_CvSeq_CvPoint_2_base };
+static swig_octave_class _wrap_class_CvSeq_CvPoint_2 = {"CvSeq_CvPoint_2", &SWIGTYPE_p_CvTypedSeqT_CvTupleT_CvPoint_2_t_t,0,_wrap_new_CvSeq_CvPoint_2,0,_wrap_delete_CvSeq_CvPoint_2,swig_CvSeq_CvPoint_2_members,swig_CvSeq_CvPoint_2_base_names,swig_CvSeq_CvPoint_2_base };
 
 static octave_value_list _wrap_CvSeq_float_2_cast (const octave_value_list& args, int nargout) {
   CvSeq *arg1 = (CvSeq *) 0 ;
@@ -100872,7 +105187,7 @@ static swig_octave_member swig_CvSeq_float_2_members[] = {
 };
 static const char *swig_CvSeq_float_2_base_names[] = {"_p_CvSeq",0};
 static const swig_type_info *swig_CvSeq_float_2_base[] = {0,0};
-static swig_octave_class _wrap_class_CvSeq_float_2 = {"CvSeq_float_2", &SWIGTYPE_p_CvTypedSeqT_CvTupleT_float_2_t_t,0,_wrap_new_CvSeq_float_2,_wrap_delete_CvSeq_float_2,swig_CvSeq_float_2_members,swig_CvSeq_float_2_base_names,swig_CvSeq_float_2_base };
+static swig_octave_class _wrap_class_CvSeq_float_2 = {"CvSeq_float_2", &SWIGTYPE_p_CvTypedSeqT_CvTupleT_float_2_t_t,0,_wrap_new_CvSeq_float_2,0,_wrap_delete_CvSeq_float_2,swig_CvSeq_float_2_members,swig_CvSeq_float_2_base_names,swig_CvSeq_float_2_base };
 
 static octave_value_list _wrap_CvSeq_float_3_cast (const octave_value_list& args, int nargout) {
   CvSeq *arg1 = (CvSeq *) 0 ;
@@ -101144,7 +105459,7 @@ static swig_octave_member swig_CvSeq_float_3_members[] = {
 };
 static const char *swig_CvSeq_float_3_base_names[] = {"_p_CvSeq",0};
 static const swig_type_info *swig_CvSeq_float_3_base[] = {0,0};
-static swig_octave_class _wrap_class_CvSeq_float_3 = {"CvSeq_float_3", &SWIGTYPE_p_CvTypedSeqT_CvTupleT_float_3_t_t,0,_wrap_new_CvSeq_float_3,_wrap_delete_CvSeq_float_3,swig_CvSeq_float_3_members,swig_CvSeq_float_3_base_names,swig_CvSeq_float_3_base };
+static swig_octave_class _wrap_class_CvSeq_float_3 = {"CvSeq_float_3", &SWIGTYPE_p_CvTypedSeqT_CvTupleT_float_3_t_t,0,_wrap_new_CvSeq_float_3,0,_wrap_delete_CvSeq_float_3,swig_CvSeq_float_3_members,swig_CvSeq_float_3_base_names,swig_CvSeq_float_3_base };
 
 static octave_value_list _wrap_SendErrorToPython (const octave_value_list& args, int nargout) {
   int arg1 ;
@@ -101305,231 +105620,231 @@ fail:
 
 
 static const struct swig_octave_member swig_globals[] = {
-{"new_CvRNG_Wrapper",_wrap_new_CvRNG_Wrapper,0,0,2,0},
-{"CvRNG_Wrapper_ptr",_wrap_CvRNG_Wrapper_ptr,0,0,2,0},
-{"CvRNG_Wrapper_ref",_wrap_CvRNG_Wrapper_ref,0,0,2,0},
-{"CvRNG_Wrapper___eq",_wrap_CvRNG_Wrapper___eq,0,0,2,0},
-{"CvRNG_Wrapper___ne",_wrap_CvRNG_Wrapper___ne,0,0,2,0},
-{"delete_CvRNG_Wrapper",_wrap_delete_CvRNG_Wrapper,0,0,2,0},
-{"new_CvSubdiv2DEdge_Wrapper",_wrap_new_CvSubdiv2DEdge_Wrapper,0,0,2,0},
-{"CvSubdiv2DEdge_Wrapper_ptr",_wrap_CvSubdiv2DEdge_Wrapper_ptr,0,0,2,0},
-{"CvSubdiv2DEdge_Wrapper_ref",_wrap_CvSubdiv2DEdge_Wrapper_ref,0,0,2,0},
-{"CvSubdiv2DEdge_Wrapper___eq",_wrap_CvSubdiv2DEdge_Wrapper___eq,0,0,2,0},
-{"CvSubdiv2DEdge_Wrapper___ne",_wrap_CvSubdiv2DEdge_Wrapper___ne,0,0,2,0},
-{"delete_CvSubdiv2DEdge_Wrapper",_wrap_delete_CvSubdiv2DEdge_Wrapper,0,0,2,0},
-{"delete_OctSwigIterator",_wrap_delete_OctSwigIterator,0,0,2,0},
-{"OctSwigIterator_value",_wrap_OctSwigIterator_value,0,0,2,0},
-{"OctSwigIterator_incr",_wrap_OctSwigIterator_incr,0,0,2,0},
-{"OctSwigIterator_decr",_wrap_OctSwigIterator_decr,0,0,2,0},
-{"OctSwigIterator_distance",_wrap_OctSwigIterator_distance,0,0,2,0},
-{"OctSwigIterator_equal",_wrap_OctSwigIterator_equal,0,0,2,0},
-{"OctSwigIterator_copy",_wrap_OctSwigIterator_copy,0,0,2,0},
-{"OctSwigIterator_next",_wrap_OctSwigIterator_next,0,0,2,0},
-{"OctSwigIterator_previous",_wrap_OctSwigIterator_previous,0,0,2,0},
-{"OctSwigIterator_advance",_wrap_OctSwigIterator_advance,0,0,2,0},
-{"OctSwigIterator___eq",_wrap_OctSwigIterator___eq,0,0,2,0},
-{"OctSwigIterator___ne",_wrap_OctSwigIterator___ne,0,0,2,0},
-{"OctSwigIterator___incr",_wrap_OctSwigIterator___incr,0,0,2,0},
-{"OctSwigIterator___decr",_wrap_OctSwigIterator___decr,0,0,2,0},
-{"OctSwigIterator___add",_wrap_OctSwigIterator___add,0,0,2,0},
-{"OctSwigIterator___sub",_wrap_OctSwigIterator___sub,0,0,2,0},
-{"FloatVector_pop",_wrap_FloatVector_pop,0,0,2,0},
-{"FloatVector___paren",_wrap_FloatVector___paren,0,0,2,0},
-{"FloatVector___paren_asgn",_wrap_FloatVector___paren_asgn,0,0,2,0},
-{"FloatVector_append",_wrap_FloatVector_append,0,0,2,0},
-{"FloatVector_empty",_wrap_FloatVector_empty,0,0,2,0},
-{"FloatVector_size",_wrap_FloatVector_size,0,0,2,0},
-{"FloatVector_clear",_wrap_FloatVector_clear,0,0,2,0},
-{"FloatVector_swap",_wrap_FloatVector_swap,0,0,2,0},
-{"FloatVector_get_allocator",_wrap_FloatVector_get_allocator,0,0,2,0},
-{"FloatVector_begin",_wrap_FloatVector_begin,0,0,2,0},
-{"FloatVector_end",_wrap_FloatVector_end,0,0,2,0},
-{"FloatVector_rbegin",_wrap_FloatVector_rbegin,0,0,2,0},
-{"FloatVector_rend",_wrap_FloatVector_rend,0,0,2,0},
-{"FloatVector_pop_back",_wrap_FloatVector_pop_back,0,0,2,0},
-{"FloatVector_erase",_wrap_FloatVector_erase,0,0,2,0},
-{"new_FloatVector",_wrap_new_FloatVector,0,0,2,0},
-{"FloatVector_push_back",_wrap_FloatVector_push_back,0,0,2,0},
-{"FloatVector_front",_wrap_FloatVector_front,0,0,2,0},
-{"FloatVector_back",_wrap_FloatVector_back,0,0,2,0},
-{"FloatVector_assign",_wrap_FloatVector_assign,0,0,2,0},
-{"FloatVector_resize",_wrap_FloatVector_resize,0,0,2,0},
-{"FloatVector_insert",_wrap_FloatVector_insert,0,0,2,0},
-{"FloatVector_reserve",_wrap_FloatVector_reserve,0,0,2,0},
-{"FloatVector_capacity",_wrap_FloatVector_capacity,0,0,2,0},
-{"delete_FloatVector",_wrap_delete_FloatVector,0,0,2,0},
-{"CvPointVector_pop",_wrap_CvPointVector_pop,0,0,2,0},
-{"CvPointVector___paren",_wrap_CvPointVector___paren,0,0,2,0},
-{"CvPointVector___paren_asgn",_wrap_CvPointVector___paren_asgn,0,0,2,0},
-{"CvPointVector_append",_wrap_CvPointVector_append,0,0,2,0},
-{"CvPointVector_empty",_wrap_CvPointVector_empty,0,0,2,0},
-{"CvPointVector_size",_wrap_CvPointVector_size,0,0,2,0},
-{"CvPointVector_clear",_wrap_CvPointVector_clear,0,0,2,0},
-{"CvPointVector_swap",_wrap_CvPointVector_swap,0,0,2,0},
-{"CvPointVector_get_allocator",_wrap_CvPointVector_get_allocator,0,0,2,0},
-{"CvPointVector_begin",_wrap_CvPointVector_begin,0,0,2,0},
-{"CvPointVector_end",_wrap_CvPointVector_end,0,0,2,0},
-{"CvPointVector_rbegin",_wrap_CvPointVector_rbegin,0,0,2,0},
-{"CvPointVector_rend",_wrap_CvPointVector_rend,0,0,2,0},
-{"CvPointVector_pop_back",_wrap_CvPointVector_pop_back,0,0,2,0},
-{"CvPointVector_erase",_wrap_CvPointVector_erase,0,0,2,0},
-{"new_CvPointVector",_wrap_new_CvPointVector,0,0,2,0},
-{"CvPointVector_push_back",_wrap_CvPointVector_push_back,0,0,2,0},
-{"CvPointVector_front",_wrap_CvPointVector_front,0,0,2,0},
-{"CvPointVector_back",_wrap_CvPointVector_back,0,0,2,0},
-{"CvPointVector_assign",_wrap_CvPointVector_assign,0,0,2,0},
-{"CvPointVector_resize",_wrap_CvPointVector_resize,0,0,2,0},
-{"CvPointVector_insert",_wrap_CvPointVector_insert,0,0,2,0},
-{"CvPointVector_reserve",_wrap_CvPointVector_reserve,0,0,2,0},
-{"CvPointVector_capacity",_wrap_CvPointVector_capacity,0,0,2,0},
-{"delete_CvPointVector",_wrap_delete_CvPointVector,0,0,2,0},
-{"cvCvtSeqToArray",_wrap_cvCvtSeqToArray,0,0,2,0},
-{"cvArcLength",_wrap_cvArcLength,0,0,2,0},
-{"cvContourPerimeter",_wrap_cvContourPerimeter,0,0,2,0},
-{"cvHaarDetectObjects",_wrap_cvHaarDetectObjects,0,0,2,0},
-{"cvSegmentMotion",_wrap_cvSegmentMotion,0,0,2,0},
-{"cvApproxPoly",_wrap_cvApproxPoly,0,0,2,0},
-{"cvConvexHull2",_wrap_cvConvexHull2,0,0,2,0},
-{"cvSnakeImage",_wrap_cvSnakeImage,0,0,2,0},
-{"cvFree",_wrap_cvFree,0,0,2,0},
-{"CV_READ_CHAIN_POINT",_wrap_CV_READ_CHAIN_POINT,0,0,2,0},
-{"CV_MAT_ELEM_PTR",_wrap_CV_MAT_ELEM_PTR,0,0,2,0},
-{"CV_MAT_ELEM_PTR_FAST",_wrap_CV_MAT_ELEM_PTR_FAST,0,0,2,0},
-{"CV_NODE_VAL",_wrap_CV_NODE_VAL,0,0,2,0},
-{"CV_NODE_IDX",_wrap_CV_NODE_IDX,0,0,2,0},
-{"CV_SUBDIV2D_NEXT_EDGE",_wrap_CV_SUBDIV2D_NEXT_EDGE,0,0,2,0},
-{"CV_SWAP",_wrap_CV_SWAP,0,0,2,0},
-{"CV_IMIN",_wrap_CV_IMIN,0,0,2,0},
-{"CV_IMAX",_wrap_CV_IMAX,0,0,2,0},
-{"CV_IABS",_wrap_CV_IABS,0,0,2,0},
-{"CV_CMP",_wrap_CV_CMP,0,0,2,0},
-{"CV_SIGN",_wrap_CV_SIGN,0,0,2,0},
-{"cvInvSqrt",_wrap_cvInvSqrt,0,0,2,0},
-{"cvSqrt",_wrap_cvSqrt,0,0,2,0},
-{"CV_IS_IMAGE_HDR",_wrap_CV_IS_IMAGE_HDR,0,0,2,0},
-{"CV_IS_IMAGE",_wrap_CV_IS_IMAGE,0,0,2,0},
-{"CV_MAKETYPE",_wrap_CV_MAKETYPE,0,0,2,0},
-{"CV_8UC",_wrap_CV_8UC,0,0,2,0},
-{"CV_8SC",_wrap_CV_8SC,0,0,2,0},
-{"CV_16UC",_wrap_CV_16UC,0,0,2,0},
-{"CV_16SC",_wrap_CV_16SC,0,0,2,0},
-{"CV_32SC",_wrap_CV_32SC,0,0,2,0},
-{"CV_32FC",_wrap_CV_32FC,0,0,2,0},
-{"CV_64FC",_wrap_CV_64FC,0,0,2,0},
-{"CV_MAT_CN",_wrap_CV_MAT_CN,0,0,2,0},
-{"CV_MAT_DEPTH",_wrap_CV_MAT_DEPTH,0,0,2,0},
-{"CV_MAT_TYPE",_wrap_CV_MAT_TYPE,0,0,2,0},
-{"CV_IS_MAT_CONT",_wrap_CV_IS_MAT_CONT,0,0,2,0},
-{"CV_IS_TEMP_MAT",_wrap_CV_IS_TEMP_MAT,0,0,2,0},
-{"CV_IS_MAT_HDR",_wrap_CV_IS_MAT_HDR,0,0,2,0},
-{"CV_IS_MAT",_wrap_CV_IS_MAT,0,0,2,0},
-{"CV_IS_MASK_ARR",_wrap_CV_IS_MASK_ARR,0,0,2,0},
-{"CV_ARE_TYPES_EQ",_wrap_CV_ARE_TYPES_EQ,0,0,2,0},
-{"CV_ARE_CNS_EQ",_wrap_CV_ARE_CNS_EQ,0,0,2,0},
-{"CV_ARE_DEPTHS_EQ",_wrap_CV_ARE_DEPTHS_EQ,0,0,2,0},
-{"CV_ARE_SIZES_EQ",_wrap_CV_ARE_SIZES_EQ,0,0,2,0},
-{"CV_IS_MAT_CONST",_wrap_CV_IS_MAT_CONST,0,0,2,0},
-{"CV_ELEM_SIZE1",_wrap_CV_ELEM_SIZE1,0,0,2,0},
-{"CV_ELEM_SIZE",_wrap_CV_ELEM_SIZE,0,0,2,0},
-{"CV_IS_MATND_HDR",_wrap_CV_IS_MATND_HDR,0,0,2,0},
-{"CV_IS_MATND",_wrap_CV_IS_MATND,0,0,2,0},
-{"CV_IS_SPARSE_MAT_HDR",_wrap_CV_IS_SPARSE_MAT_HDR,0,0,2,0},
-{"CV_IS_SPARSE_MAT",_wrap_CV_IS_SPARSE_MAT,0,0,2,0},
-{"CV_IS_HIST",_wrap_CV_IS_HIST,0,0,2,0},
-{"CV_IS_UNIFORM_HIST",_wrap_CV_IS_UNIFORM_HIST,0,0,2,0},
-{"CV_IS_SPARSE_HIST",_wrap_CV_IS_SPARSE_HIST,0,0,2,0},
-{"CV_HIST_HAS_RANGES",_wrap_CV_HIST_HAS_RANGES,0,0,2,0},
-{"CV_IS_STORAGE",_wrap_CV_IS_STORAGE,0,0,2,0},
-{"CV_IS_SET_ELEM",_wrap_CV_IS_SET_ELEM,0,0,2,0},
-{"CV_IS_SEQ",_wrap_CV_IS_SEQ,0,0,2,0},
-{"CV_IS_SET",_wrap_CV_IS_SET,0,0,2,0},
-{"CV_SEQ_ELTYPE",_wrap_CV_SEQ_ELTYPE,0,0,2,0},
-{"CV_SEQ_KIND",_wrap_CV_SEQ_KIND,0,0,2,0},
-{"CV_IS_SEQ_INDEX",_wrap_CV_IS_SEQ_INDEX,0,0,2,0},
-{"CV_IS_SEQ_CURVE",_wrap_CV_IS_SEQ_CURVE,0,0,2,0},
-{"CV_IS_SEQ_CLOSED",_wrap_CV_IS_SEQ_CLOSED,0,0,2,0},
-{"CV_IS_SEQ_CONVEX",_wrap_CV_IS_SEQ_CONVEX,0,0,2,0},
-{"CV_IS_SEQ_HOLE",_wrap_CV_IS_SEQ_HOLE,0,0,2,0},
-{"CV_IS_SEQ_SIMPLE",_wrap_CV_IS_SEQ_SIMPLE,0,0,2,0},
-{"CV_IS_SEQ_POINT_SET",_wrap_CV_IS_SEQ_POINT_SET,0,0,2,0},
-{"CV_IS_SEQ_POINT_SUBSET",_wrap_CV_IS_SEQ_POINT_SUBSET,0,0,2,0},
-{"CV_IS_SEQ_POLYLINE",_wrap_CV_IS_SEQ_POLYLINE,0,0,2,0},
-{"CV_IS_SEQ_POLYGON",_wrap_CV_IS_SEQ_POLYGON,0,0,2,0},
-{"CV_IS_SEQ_CHAIN",_wrap_CV_IS_SEQ_CHAIN,0,0,2,0},
-{"CV_IS_SEQ_CONTOUR",_wrap_CV_IS_SEQ_CONTOUR,0,0,2,0},
-{"CV_IS_SEQ_CHAIN_CONTOUR",_wrap_CV_IS_SEQ_CHAIN_CONTOUR,0,0,2,0},
-{"CV_IS_SEQ_POLYGON_TREE",_wrap_CV_IS_SEQ_POLYGON_TREE,0,0,2,0},
-{"CV_IS_GRAPH",_wrap_CV_IS_GRAPH,0,0,2,0},
-{"CV_IS_GRAPH_ORIENTED",_wrap_CV_IS_GRAPH_ORIENTED,0,0,2,0},
-{"CV_IS_SUBDIV2D",_wrap_CV_IS_SUBDIV2D,0,0,2,0},
-{"CV_WRITE_SEQ_ELEM_VAR",_wrap_CV_WRITE_SEQ_ELEM_VAR,0,0,2,0},
-{"CV_WRITE_SEQ_ELEM",_wrap_CV_WRITE_SEQ_ELEM,0,0,2,0},
-{"CV_NEXT_SEQ_ELEM",_wrap_CV_NEXT_SEQ_ELEM,0,0,2,0},
-{"CV_PREV_SEQ_ELEM",_wrap_CV_PREV_SEQ_ELEM,0,0,2,0},
-{"CV_READ_SEQ_ELEM",_wrap_CV_READ_SEQ_ELEM,0,0,2,0},
-{"CV_REV_READ_SEQ_ELEM",_wrap_CV_REV_READ_SEQ_ELEM,0,0,2,0},
-{"CV_CURRENT_POINT",_wrap_CV_CURRENT_POINT,0,0,2,0},
-{"CV_PREV_POINT",_wrap_CV_PREV_POINT,0,0,2,0},
-{"CV_READ_EDGE",_wrap_CV_READ_EDGE,0,0,2,0},
-{"CV_NEXT_GRAPH_EDGE",_wrap_CV_NEXT_GRAPH_EDGE,0,0,2,0},
-{"CV_NODE_TYPE",_wrap_CV_NODE_TYPE,0,0,2,0},
-{"CV_NODE_IS_INT",_wrap_CV_NODE_IS_INT,0,0,2,0},
-{"CV_NODE_IS_REAL",_wrap_CV_NODE_IS_REAL,0,0,2,0},
-{"CV_NODE_IS_STRING",_wrap_CV_NODE_IS_STRING,0,0,2,0},
-{"CV_NODE_IS_SEQ",_wrap_CV_NODE_IS_SEQ,0,0,2,0},
-{"CV_NODE_IS_MAP",_wrap_CV_NODE_IS_MAP,0,0,2,0},
-{"CV_NODE_IS_COLLECTION",_wrap_CV_NODE_IS_COLLECTION,0,0,2,0},
-{"CV_NODE_IS_FLOW",_wrap_CV_NODE_IS_FLOW,0,0,2,0},
-{"CV_NODE_IS_EMPTY",_wrap_CV_NODE_IS_EMPTY,0,0,2,0},
-{"CV_NODE_IS_USER",_wrap_CV_NODE_IS_USER,0,0,2,0},
-{"CV_NODE_HAS_NAME",_wrap_CV_NODE_HAS_NAME,0,0,2,0},
-{"CV_NODE_SEQ_IS_SIMPLE",_wrap_CV_NODE_SEQ_IS_SIMPLE,0,0,2,0},
-{"cvReshapeND",_wrap_cvReshapeND,0,0,2,0},
-{"cvConvert",_wrap_cvConvert,0,0,2,0},
-{"cvAXPY",_wrap_cvAXPY,0,0,2,0},
-{"cvAbs",_wrap_cvAbs,0,0,2,0},
-{"cvMatMulAdd",_wrap_cvMatMulAdd,0,0,2,0},
-{"cvMatMul",_wrap_cvMatMul,0,0,2,0},
-{"cvGetGraphVtx",_wrap_cvGetGraphVtx,0,0,2,0},
-{"cvGraphVtxIdx",_wrap_cvGraphVtxIdx,0,0,2,0},
-{"cvGraphEdgeIdx",_wrap_cvGraphEdgeIdx,0,0,2,0},
-{"cvGraphGetVtxCount",_wrap_cvGraphGetVtxCount,0,0,2,0},
-{"cvGraphGetEdgeCount",_wrap_cvGraphGetEdgeCount,0,0,2,0},
-{"CV_IS_GRAPH_VERTEX_VISITED",_wrap_CV_IS_GRAPH_VERTEX_VISITED,0,0,2,0},
-{"CV_IS_GRAPH_EDGE_VISITED",_wrap_CV_IS_GRAPH_EDGE_VISITED,0,0,2,0},
-{"CV_RGB",_wrap_CV_RGB,0,0,2,0},
-{"CV_NEXT_LINE_POINT",_wrap_CV_NEXT_LINE_POINT,0,0,2,0},
-{"CV_INIT_3X3_DELTAS",_wrap_CV_INIT_3X3_DELTAS,0,0,2,0},
-{"CV_IS_HAAR_CLASSIFIER",_wrap_CV_IS_HAAR_CLASSIFIER,0,0,2,0},
-{"cvCalcBackProject",_wrap_cvCalcBackProject,0,0,2,0},
-{"cvCalcBackProjectPatch",_wrap_cvCalcBackProjectPatch,0,0,2,0},
+{"new_CvRNG_Wrapper",_wrap_new_CvRNG_Wrapper,0,0,2,_wrap_new_CvRNG_Wrapper_texinfo},
+{"CvRNG_Wrapper_ptr",_wrap_CvRNG_Wrapper_ptr,0,0,2,_wrap_CvRNG_Wrapper_ptr_texinfo},
+{"CvRNG_Wrapper_ref",_wrap_CvRNG_Wrapper_ref,0,0,2,_wrap_CvRNG_Wrapper_ref_texinfo},
+{"CvRNG_Wrapper___eq",_wrap_CvRNG_Wrapper___eq,0,0,2,_wrap_CvRNG_Wrapper___eq_texinfo},
+{"CvRNG_Wrapper___ne",_wrap_CvRNG_Wrapper___ne,0,0,2,_wrap_CvRNG_Wrapper___ne_texinfo},
+{"delete_CvRNG_Wrapper",_wrap_delete_CvRNG_Wrapper,0,0,2,_wrap_delete_CvRNG_Wrapper_texinfo},
+{"new_CvSubdiv2DEdge_Wrapper",_wrap_new_CvSubdiv2DEdge_Wrapper,0,0,2,_wrap_new_CvSubdiv2DEdge_Wrapper_texinfo},
+{"CvSubdiv2DEdge_Wrapper_ptr",_wrap_CvSubdiv2DEdge_Wrapper_ptr,0,0,2,_wrap_CvSubdiv2DEdge_Wrapper_ptr_texinfo},
+{"CvSubdiv2DEdge_Wrapper_ref",_wrap_CvSubdiv2DEdge_Wrapper_ref,0,0,2,_wrap_CvSubdiv2DEdge_Wrapper_ref_texinfo},
+{"CvSubdiv2DEdge_Wrapper___eq",_wrap_CvSubdiv2DEdge_Wrapper___eq,0,0,2,_wrap_CvSubdiv2DEdge_Wrapper___eq_texinfo},
+{"CvSubdiv2DEdge_Wrapper___ne",_wrap_CvSubdiv2DEdge_Wrapper___ne,0,0,2,_wrap_CvSubdiv2DEdge_Wrapper___ne_texinfo},
+{"delete_CvSubdiv2DEdge_Wrapper",_wrap_delete_CvSubdiv2DEdge_Wrapper,0,0,2,_wrap_delete_CvSubdiv2DEdge_Wrapper_texinfo},
+{"delete_OctSwigIterator",_wrap_delete_OctSwigIterator,0,0,2,_wrap_delete_OctSwigIterator_texinfo},
+{"OctSwigIterator_value",_wrap_OctSwigIterator_value,0,0,2,_wrap_OctSwigIterator_value_texinfo},
+{"OctSwigIterator_incr",_wrap_OctSwigIterator_incr,0,0,2,_wrap_OctSwigIterator_incr_texinfo},
+{"OctSwigIterator_decr",_wrap_OctSwigIterator_decr,0,0,2,_wrap_OctSwigIterator_decr_texinfo},
+{"OctSwigIterator_distance",_wrap_OctSwigIterator_distance,0,0,2,_wrap_OctSwigIterator_distance_texinfo},
+{"OctSwigIterator_equal",_wrap_OctSwigIterator_equal,0,0,2,_wrap_OctSwigIterator_equal_texinfo},
+{"OctSwigIterator_copy",_wrap_OctSwigIterator_copy,0,0,2,_wrap_OctSwigIterator_copy_texinfo},
+{"OctSwigIterator_next",_wrap_OctSwigIterator_next,0,0,2,_wrap_OctSwigIterator_next_texinfo},
+{"OctSwigIterator_previous",_wrap_OctSwigIterator_previous,0,0,2,_wrap_OctSwigIterator_previous_texinfo},
+{"OctSwigIterator_advance",_wrap_OctSwigIterator_advance,0,0,2,_wrap_OctSwigIterator_advance_texinfo},
+{"OctSwigIterator___eq",_wrap_OctSwigIterator___eq,0,0,2,_wrap_OctSwigIterator___eq_texinfo},
+{"OctSwigIterator___ne",_wrap_OctSwigIterator___ne,0,0,2,_wrap_OctSwigIterator___ne_texinfo},
+{"OctSwigIterator___incr",_wrap_OctSwigIterator___incr,0,0,2,_wrap_OctSwigIterator___incr_texinfo},
+{"OctSwigIterator___decr",_wrap_OctSwigIterator___decr,0,0,2,_wrap_OctSwigIterator___decr_texinfo},
+{"OctSwigIterator___add",_wrap_OctSwigIterator___add,0,0,2,_wrap_OctSwigIterator___add_texinfo},
+{"OctSwigIterator___sub",_wrap_OctSwigIterator___sub,0,0,2,_wrap_OctSwigIterator___sub_texinfo},
+{"FloatVector_pop",_wrap_FloatVector_pop,0,0,2,_wrap_FloatVector_pop_texinfo},
+{"FloatVector___paren",_wrap_FloatVector___paren,0,0,2,_wrap_FloatVector___paren_texinfo},
+{"FloatVector___paren_asgn",_wrap_FloatVector___paren_asgn,0,0,2,_wrap_FloatVector___paren_asgn_texinfo},
+{"FloatVector_append",_wrap_FloatVector_append,0,0,2,_wrap_FloatVector_append_texinfo},
+{"FloatVector_empty",_wrap_FloatVector_empty,0,0,2,_wrap_FloatVector_empty_texinfo},
+{"FloatVector_size",_wrap_FloatVector_size,0,0,2,_wrap_FloatVector_size_texinfo},
+{"FloatVector_clear",_wrap_FloatVector_clear,0,0,2,_wrap_FloatVector_clear_texinfo},
+{"FloatVector_swap",_wrap_FloatVector_swap,0,0,2,_wrap_FloatVector_swap_texinfo},
+{"FloatVector_get_allocator",_wrap_FloatVector_get_allocator,0,0,2,_wrap_FloatVector_get_allocator_texinfo},
+{"FloatVector_begin",_wrap_FloatVector_begin,0,0,2,_wrap_FloatVector_begin_texinfo},
+{"FloatVector_end",_wrap_FloatVector_end,0,0,2,_wrap_FloatVector_end_texinfo},
+{"FloatVector_rbegin",_wrap_FloatVector_rbegin,0,0,2,_wrap_FloatVector_rbegin_texinfo},
+{"FloatVector_rend",_wrap_FloatVector_rend,0,0,2,_wrap_FloatVector_rend_texinfo},
+{"FloatVector_pop_back",_wrap_FloatVector_pop_back,0,0,2,_wrap_FloatVector_pop_back_texinfo},
+{"FloatVector_erase",_wrap_FloatVector_erase,0,0,2,_wrap_FloatVector_erase_texinfo},
+{"new_FloatVector",_wrap_new_FloatVector,0,0,2,_wrap_new_FloatVector_texinfo},
+{"FloatVector_push_back",_wrap_FloatVector_push_back,0,0,2,_wrap_FloatVector_push_back_texinfo},
+{"FloatVector_front",_wrap_FloatVector_front,0,0,2,_wrap_FloatVector_front_texinfo},
+{"FloatVector_back",_wrap_FloatVector_back,0,0,2,_wrap_FloatVector_back_texinfo},
+{"FloatVector_assign",_wrap_FloatVector_assign,0,0,2,_wrap_FloatVector_assign_texinfo},
+{"FloatVector_resize",_wrap_FloatVector_resize,0,0,2,_wrap_FloatVector_resize_texinfo},
+{"FloatVector_insert",_wrap_FloatVector_insert,0,0,2,_wrap_FloatVector_insert_texinfo},
+{"FloatVector_reserve",_wrap_FloatVector_reserve,0,0,2,_wrap_FloatVector_reserve_texinfo},
+{"FloatVector_capacity",_wrap_FloatVector_capacity,0,0,2,_wrap_FloatVector_capacity_texinfo},
+{"delete_FloatVector",_wrap_delete_FloatVector,0,0,2,_wrap_delete_FloatVector_texinfo},
+{"CvPointVector_pop",_wrap_CvPointVector_pop,0,0,2,_wrap_CvPointVector_pop_texinfo},
+{"CvPointVector___paren",_wrap_CvPointVector___paren,0,0,2,_wrap_CvPointVector___paren_texinfo},
+{"CvPointVector___paren_asgn",_wrap_CvPointVector___paren_asgn,0,0,2,_wrap_CvPointVector___paren_asgn_texinfo},
+{"CvPointVector_append",_wrap_CvPointVector_append,0,0,2,_wrap_CvPointVector_append_texinfo},
+{"CvPointVector_empty",_wrap_CvPointVector_empty,0,0,2,_wrap_CvPointVector_empty_texinfo},
+{"CvPointVector_size",_wrap_CvPointVector_size,0,0,2,_wrap_CvPointVector_size_texinfo},
+{"CvPointVector_clear",_wrap_CvPointVector_clear,0,0,2,_wrap_CvPointVector_clear_texinfo},
+{"CvPointVector_swap",_wrap_CvPointVector_swap,0,0,2,_wrap_CvPointVector_swap_texinfo},
+{"CvPointVector_get_allocator",_wrap_CvPointVector_get_allocator,0,0,2,_wrap_CvPointVector_get_allocator_texinfo},
+{"CvPointVector_begin",_wrap_CvPointVector_begin,0,0,2,_wrap_CvPointVector_begin_texinfo},
+{"CvPointVector_end",_wrap_CvPointVector_end,0,0,2,_wrap_CvPointVector_end_texinfo},
+{"CvPointVector_rbegin",_wrap_CvPointVector_rbegin,0,0,2,_wrap_CvPointVector_rbegin_texinfo},
+{"CvPointVector_rend",_wrap_CvPointVector_rend,0,0,2,_wrap_CvPointVector_rend_texinfo},
+{"CvPointVector_pop_back",_wrap_CvPointVector_pop_back,0,0,2,_wrap_CvPointVector_pop_back_texinfo},
+{"CvPointVector_erase",_wrap_CvPointVector_erase,0,0,2,_wrap_CvPointVector_erase_texinfo},
+{"new_CvPointVector",_wrap_new_CvPointVector,0,0,2,_wrap_new_CvPointVector_texinfo},
+{"CvPointVector_push_back",_wrap_CvPointVector_push_back,0,0,2,_wrap_CvPointVector_push_back_texinfo},
+{"CvPointVector_front",_wrap_CvPointVector_front,0,0,2,_wrap_CvPointVector_front_texinfo},
+{"CvPointVector_back",_wrap_CvPointVector_back,0,0,2,_wrap_CvPointVector_back_texinfo},
+{"CvPointVector_assign",_wrap_CvPointVector_assign,0,0,2,_wrap_CvPointVector_assign_texinfo},
+{"CvPointVector_resize",_wrap_CvPointVector_resize,0,0,2,_wrap_CvPointVector_resize_texinfo},
+{"CvPointVector_insert",_wrap_CvPointVector_insert,0,0,2,_wrap_CvPointVector_insert_texinfo},
+{"CvPointVector_reserve",_wrap_CvPointVector_reserve,0,0,2,_wrap_CvPointVector_reserve_texinfo},
+{"CvPointVector_capacity",_wrap_CvPointVector_capacity,0,0,2,_wrap_CvPointVector_capacity_texinfo},
+{"delete_CvPointVector",_wrap_delete_CvPointVector,0,0,2,_wrap_delete_CvPointVector_texinfo},
+{"cvCvtSeqToArray",_wrap_cvCvtSeqToArray,0,0,2,_wrap_cvCvtSeqToArray_texinfo},
+{"cvArcLength",_wrap_cvArcLength,0,0,2,_wrap_cvArcLength_texinfo},
+{"cvContourPerimeter",_wrap_cvContourPerimeter,0,0,2,_wrap_cvContourPerimeter_texinfo},
+{"cvHaarDetectObjects",_wrap_cvHaarDetectObjects,0,0,2,_wrap_cvHaarDetectObjects_texinfo},
+{"cvSegmentMotion",_wrap_cvSegmentMotion,0,0,2,_wrap_cvSegmentMotion_texinfo},
+{"cvApproxPoly",_wrap_cvApproxPoly,0,0,2,_wrap_cvApproxPoly_texinfo},
+{"cvConvexHull2",_wrap_cvConvexHull2,0,0,2,_wrap_cvConvexHull2_texinfo},
+{"cvSnakeImage",_wrap_cvSnakeImage,0,0,2,_wrap_cvSnakeImage_texinfo},
+{"cvFree",_wrap_cvFree,0,0,2,_wrap_cvFree_texinfo},
+{"CV_READ_CHAIN_POINT",_wrap_CV_READ_CHAIN_POINT,0,0,2,_wrap_CV_READ_CHAIN_POINT_texinfo},
+{"CV_MAT_ELEM_PTR",_wrap_CV_MAT_ELEM_PTR,0,0,2,_wrap_CV_MAT_ELEM_PTR_texinfo},
+{"CV_MAT_ELEM_PTR_FAST",_wrap_CV_MAT_ELEM_PTR_FAST,0,0,2,_wrap_CV_MAT_ELEM_PTR_FAST_texinfo},
+{"CV_NODE_VAL",_wrap_CV_NODE_VAL,0,0,2,_wrap_CV_NODE_VAL_texinfo},
+{"CV_NODE_IDX",_wrap_CV_NODE_IDX,0,0,2,_wrap_CV_NODE_IDX_texinfo},
+{"CV_SUBDIV2D_NEXT_EDGE",_wrap_CV_SUBDIV2D_NEXT_EDGE,0,0,2,_wrap_CV_SUBDIV2D_NEXT_EDGE_texinfo},
+{"CV_SWAP",_wrap_CV_SWAP,0,0,2,_wrap_CV_SWAP_texinfo},
+{"CV_IMIN",_wrap_CV_IMIN,0,0,2,_wrap_CV_IMIN_texinfo},
+{"CV_IMAX",_wrap_CV_IMAX,0,0,2,_wrap_CV_IMAX_texinfo},
+{"CV_IABS",_wrap_CV_IABS,0,0,2,_wrap_CV_IABS_texinfo},
+{"CV_CMP",_wrap_CV_CMP,0,0,2,_wrap_CV_CMP_texinfo},
+{"CV_SIGN",_wrap_CV_SIGN,0,0,2,_wrap_CV_SIGN_texinfo},
+{"cvInvSqrt",_wrap_cvInvSqrt,0,0,2,_wrap_cvInvSqrt_texinfo},
+{"cvSqrt",_wrap_cvSqrt,0,0,2,_wrap_cvSqrt_texinfo},
+{"CV_IS_IMAGE_HDR",_wrap_CV_IS_IMAGE_HDR,0,0,2,_wrap_CV_IS_IMAGE_HDR_texinfo},
+{"CV_IS_IMAGE",_wrap_CV_IS_IMAGE,0,0,2,_wrap_CV_IS_IMAGE_texinfo},
+{"CV_MAKETYPE",_wrap_CV_MAKETYPE,0,0,2,_wrap_CV_MAKETYPE_texinfo},
+{"CV_8UC",_wrap_CV_8UC,0,0,2,_wrap_CV_8UC_texinfo},
+{"CV_8SC",_wrap_CV_8SC,0,0,2,_wrap_CV_8SC_texinfo},
+{"CV_16UC",_wrap_CV_16UC,0,0,2,_wrap_CV_16UC_texinfo},
+{"CV_16SC",_wrap_CV_16SC,0,0,2,_wrap_CV_16SC_texinfo},
+{"CV_32SC",_wrap_CV_32SC,0,0,2,_wrap_CV_32SC_texinfo},
+{"CV_32FC",_wrap_CV_32FC,0,0,2,_wrap_CV_32FC_texinfo},
+{"CV_64FC",_wrap_CV_64FC,0,0,2,_wrap_CV_64FC_texinfo},
+{"CV_MAT_CN",_wrap_CV_MAT_CN,0,0,2,_wrap_CV_MAT_CN_texinfo},
+{"CV_MAT_DEPTH",_wrap_CV_MAT_DEPTH,0,0,2,_wrap_CV_MAT_DEPTH_texinfo},
+{"CV_MAT_TYPE",_wrap_CV_MAT_TYPE,0,0,2,_wrap_CV_MAT_TYPE_texinfo},
+{"CV_IS_MAT_CONT",_wrap_CV_IS_MAT_CONT,0,0,2,_wrap_CV_IS_MAT_CONT_texinfo},
+{"CV_IS_TEMP_MAT",_wrap_CV_IS_TEMP_MAT,0,0,2,_wrap_CV_IS_TEMP_MAT_texinfo},
+{"CV_IS_MAT_HDR",_wrap_CV_IS_MAT_HDR,0,0,2,_wrap_CV_IS_MAT_HDR_texinfo},
+{"CV_IS_MAT",_wrap_CV_IS_MAT,0,0,2,_wrap_CV_IS_MAT_texinfo},
+{"CV_IS_MASK_ARR",_wrap_CV_IS_MASK_ARR,0,0,2,_wrap_CV_IS_MASK_ARR_texinfo},
+{"CV_ARE_TYPES_EQ",_wrap_CV_ARE_TYPES_EQ,0,0,2,_wrap_CV_ARE_TYPES_EQ_texinfo},
+{"CV_ARE_CNS_EQ",_wrap_CV_ARE_CNS_EQ,0,0,2,_wrap_CV_ARE_CNS_EQ_texinfo},
+{"CV_ARE_DEPTHS_EQ",_wrap_CV_ARE_DEPTHS_EQ,0,0,2,_wrap_CV_ARE_DEPTHS_EQ_texinfo},
+{"CV_ARE_SIZES_EQ",_wrap_CV_ARE_SIZES_EQ,0,0,2,_wrap_CV_ARE_SIZES_EQ_texinfo},
+{"CV_IS_MAT_CONST",_wrap_CV_IS_MAT_CONST,0,0,2,_wrap_CV_IS_MAT_CONST_texinfo},
+{"CV_ELEM_SIZE1",_wrap_CV_ELEM_SIZE1,0,0,2,_wrap_CV_ELEM_SIZE1_texinfo},
+{"CV_ELEM_SIZE",_wrap_CV_ELEM_SIZE,0,0,2,_wrap_CV_ELEM_SIZE_texinfo},
+{"CV_IS_MATND_HDR",_wrap_CV_IS_MATND_HDR,0,0,2,_wrap_CV_IS_MATND_HDR_texinfo},
+{"CV_IS_MATND",_wrap_CV_IS_MATND,0,0,2,_wrap_CV_IS_MATND_texinfo},
+{"CV_IS_SPARSE_MAT_HDR",_wrap_CV_IS_SPARSE_MAT_HDR,0,0,2,_wrap_CV_IS_SPARSE_MAT_HDR_texinfo},
+{"CV_IS_SPARSE_MAT",_wrap_CV_IS_SPARSE_MAT,0,0,2,_wrap_CV_IS_SPARSE_MAT_texinfo},
+{"CV_IS_HIST",_wrap_CV_IS_HIST,0,0,2,_wrap_CV_IS_HIST_texinfo},
+{"CV_IS_UNIFORM_HIST",_wrap_CV_IS_UNIFORM_HIST,0,0,2,_wrap_CV_IS_UNIFORM_HIST_texinfo},
+{"CV_IS_SPARSE_HIST",_wrap_CV_IS_SPARSE_HIST,0,0,2,_wrap_CV_IS_SPARSE_HIST_texinfo},
+{"CV_HIST_HAS_RANGES",_wrap_CV_HIST_HAS_RANGES,0,0,2,_wrap_CV_HIST_HAS_RANGES_texinfo},
+{"CV_IS_STORAGE",_wrap_CV_IS_STORAGE,0,0,2,_wrap_CV_IS_STORAGE_texinfo},
+{"CV_IS_SET_ELEM",_wrap_CV_IS_SET_ELEM,0,0,2,_wrap_CV_IS_SET_ELEM_texinfo},
+{"CV_IS_SEQ",_wrap_CV_IS_SEQ,0,0,2,_wrap_CV_IS_SEQ_texinfo},
+{"CV_IS_SET",_wrap_CV_IS_SET,0,0,2,_wrap_CV_IS_SET_texinfo},
+{"CV_SEQ_ELTYPE",_wrap_CV_SEQ_ELTYPE,0,0,2,_wrap_CV_SEQ_ELTYPE_texinfo},
+{"CV_SEQ_KIND",_wrap_CV_SEQ_KIND,0,0,2,_wrap_CV_SEQ_KIND_texinfo},
+{"CV_IS_SEQ_INDEX",_wrap_CV_IS_SEQ_INDEX,0,0,2,_wrap_CV_IS_SEQ_INDEX_texinfo},
+{"CV_IS_SEQ_CURVE",_wrap_CV_IS_SEQ_CURVE,0,0,2,_wrap_CV_IS_SEQ_CURVE_texinfo},
+{"CV_IS_SEQ_CLOSED",_wrap_CV_IS_SEQ_CLOSED,0,0,2,_wrap_CV_IS_SEQ_CLOSED_texinfo},
+{"CV_IS_SEQ_CONVEX",_wrap_CV_IS_SEQ_CONVEX,0,0,2,_wrap_CV_IS_SEQ_CONVEX_texinfo},
+{"CV_IS_SEQ_HOLE",_wrap_CV_IS_SEQ_HOLE,0,0,2,_wrap_CV_IS_SEQ_HOLE_texinfo},
+{"CV_IS_SEQ_SIMPLE",_wrap_CV_IS_SEQ_SIMPLE,0,0,2,_wrap_CV_IS_SEQ_SIMPLE_texinfo},
+{"CV_IS_SEQ_POINT_SET",_wrap_CV_IS_SEQ_POINT_SET,0,0,2,_wrap_CV_IS_SEQ_POINT_SET_texinfo},
+{"CV_IS_SEQ_POINT_SUBSET",_wrap_CV_IS_SEQ_POINT_SUBSET,0,0,2,_wrap_CV_IS_SEQ_POINT_SUBSET_texinfo},
+{"CV_IS_SEQ_POLYLINE",_wrap_CV_IS_SEQ_POLYLINE,0,0,2,_wrap_CV_IS_SEQ_POLYLINE_texinfo},
+{"CV_IS_SEQ_POLYGON",_wrap_CV_IS_SEQ_POLYGON,0,0,2,_wrap_CV_IS_SEQ_POLYGON_texinfo},
+{"CV_IS_SEQ_CHAIN",_wrap_CV_IS_SEQ_CHAIN,0,0,2,_wrap_CV_IS_SEQ_CHAIN_texinfo},
+{"CV_IS_SEQ_CONTOUR",_wrap_CV_IS_SEQ_CONTOUR,0,0,2,_wrap_CV_IS_SEQ_CONTOUR_texinfo},
+{"CV_IS_SEQ_CHAIN_CONTOUR",_wrap_CV_IS_SEQ_CHAIN_CONTOUR,0,0,2,_wrap_CV_IS_SEQ_CHAIN_CONTOUR_texinfo},
+{"CV_IS_SEQ_POLYGON_TREE",_wrap_CV_IS_SEQ_POLYGON_TREE,0,0,2,_wrap_CV_IS_SEQ_POLYGON_TREE_texinfo},
+{"CV_IS_GRAPH",_wrap_CV_IS_GRAPH,0,0,2,_wrap_CV_IS_GRAPH_texinfo},
+{"CV_IS_GRAPH_ORIENTED",_wrap_CV_IS_GRAPH_ORIENTED,0,0,2,_wrap_CV_IS_GRAPH_ORIENTED_texinfo},
+{"CV_IS_SUBDIV2D",_wrap_CV_IS_SUBDIV2D,0,0,2,_wrap_CV_IS_SUBDIV2D_texinfo},
+{"CV_WRITE_SEQ_ELEM_VAR",_wrap_CV_WRITE_SEQ_ELEM_VAR,0,0,2,_wrap_CV_WRITE_SEQ_ELEM_VAR_texinfo},
+{"CV_WRITE_SEQ_ELEM",_wrap_CV_WRITE_SEQ_ELEM,0,0,2,_wrap_CV_WRITE_SEQ_ELEM_texinfo},
+{"CV_NEXT_SEQ_ELEM",_wrap_CV_NEXT_SEQ_ELEM,0,0,2,_wrap_CV_NEXT_SEQ_ELEM_texinfo},
+{"CV_PREV_SEQ_ELEM",_wrap_CV_PREV_SEQ_ELEM,0,0,2,_wrap_CV_PREV_SEQ_ELEM_texinfo},
+{"CV_READ_SEQ_ELEM",_wrap_CV_READ_SEQ_ELEM,0,0,2,_wrap_CV_READ_SEQ_ELEM_texinfo},
+{"CV_REV_READ_SEQ_ELEM",_wrap_CV_REV_READ_SEQ_ELEM,0,0,2,_wrap_CV_REV_READ_SEQ_ELEM_texinfo},
+{"CV_CURRENT_POINT",_wrap_CV_CURRENT_POINT,0,0,2,_wrap_CV_CURRENT_POINT_texinfo},
+{"CV_PREV_POINT",_wrap_CV_PREV_POINT,0,0,2,_wrap_CV_PREV_POINT_texinfo},
+{"CV_READ_EDGE",_wrap_CV_READ_EDGE,0,0,2,_wrap_CV_READ_EDGE_texinfo},
+{"CV_NEXT_GRAPH_EDGE",_wrap_CV_NEXT_GRAPH_EDGE,0,0,2,_wrap_CV_NEXT_GRAPH_EDGE_texinfo},
+{"CV_NODE_TYPE",_wrap_CV_NODE_TYPE,0,0,2,_wrap_CV_NODE_TYPE_texinfo},
+{"CV_NODE_IS_INT",_wrap_CV_NODE_IS_INT,0,0,2,_wrap_CV_NODE_IS_INT_texinfo},
+{"CV_NODE_IS_REAL",_wrap_CV_NODE_IS_REAL,0,0,2,_wrap_CV_NODE_IS_REAL_texinfo},
+{"CV_NODE_IS_STRING",_wrap_CV_NODE_IS_STRING,0,0,2,_wrap_CV_NODE_IS_STRING_texinfo},
+{"CV_NODE_IS_SEQ",_wrap_CV_NODE_IS_SEQ,0,0,2,_wrap_CV_NODE_IS_SEQ_texinfo},
+{"CV_NODE_IS_MAP",_wrap_CV_NODE_IS_MAP,0,0,2,_wrap_CV_NODE_IS_MAP_texinfo},
+{"CV_NODE_IS_COLLECTION",_wrap_CV_NODE_IS_COLLECTION,0,0,2,_wrap_CV_NODE_IS_COLLECTION_texinfo},
+{"CV_NODE_IS_FLOW",_wrap_CV_NODE_IS_FLOW,0,0,2,_wrap_CV_NODE_IS_FLOW_texinfo},
+{"CV_NODE_IS_EMPTY",_wrap_CV_NODE_IS_EMPTY,0,0,2,_wrap_CV_NODE_IS_EMPTY_texinfo},
+{"CV_NODE_IS_USER",_wrap_CV_NODE_IS_USER,0,0,2,_wrap_CV_NODE_IS_USER_texinfo},
+{"CV_NODE_HAS_NAME",_wrap_CV_NODE_HAS_NAME,0,0,2,_wrap_CV_NODE_HAS_NAME_texinfo},
+{"CV_NODE_SEQ_IS_SIMPLE",_wrap_CV_NODE_SEQ_IS_SIMPLE,0,0,2,_wrap_CV_NODE_SEQ_IS_SIMPLE_texinfo},
+{"cvReshapeND",_wrap_cvReshapeND,0,0,2,_wrap_cvReshapeND_texinfo},
+{"cvConvert",_wrap_cvConvert,0,0,2,_wrap_cvConvert_texinfo},
+{"cvAXPY",_wrap_cvAXPY,0,0,2,_wrap_cvAXPY_texinfo},
+{"cvAbs",_wrap_cvAbs,0,0,2,_wrap_cvAbs_texinfo},
+{"cvMatMulAdd",_wrap_cvMatMulAdd,0,0,2,_wrap_cvMatMulAdd_texinfo},
+{"cvMatMul",_wrap_cvMatMul,0,0,2,_wrap_cvMatMul_texinfo},
+{"cvGetGraphVtx",_wrap_cvGetGraphVtx,0,0,2,_wrap_cvGetGraphVtx_texinfo},
+{"cvGraphVtxIdx",_wrap_cvGraphVtxIdx,0,0,2,_wrap_cvGraphVtxIdx_texinfo},
+{"cvGraphEdgeIdx",_wrap_cvGraphEdgeIdx,0,0,2,_wrap_cvGraphEdgeIdx_texinfo},
+{"cvGraphGetVtxCount",_wrap_cvGraphGetVtxCount,0,0,2,_wrap_cvGraphGetVtxCount_texinfo},
+{"cvGraphGetEdgeCount",_wrap_cvGraphGetEdgeCount,0,0,2,_wrap_cvGraphGetEdgeCount_texinfo},
+{"CV_IS_GRAPH_VERTEX_VISITED",_wrap_CV_IS_GRAPH_VERTEX_VISITED,0,0,2,_wrap_CV_IS_GRAPH_VERTEX_VISITED_texinfo},
+{"CV_IS_GRAPH_EDGE_VISITED",_wrap_CV_IS_GRAPH_EDGE_VISITED,0,0,2,_wrap_CV_IS_GRAPH_EDGE_VISITED_texinfo},
+{"CV_RGB",_wrap_CV_RGB,0,0,2,_wrap_CV_RGB_texinfo},
+{"CV_NEXT_LINE_POINT",_wrap_CV_NEXT_LINE_POINT,0,0,2,_wrap_CV_NEXT_LINE_POINT_texinfo},
+{"CV_INIT_3X3_DELTAS",_wrap_CV_INIT_3X3_DELTAS,0,0,2,_wrap_CV_INIT_3X3_DELTAS_texinfo},
+{"CV_IS_HAAR_CLASSIFIER",_wrap_CV_IS_HAAR_CLASSIFIER,0,0,2,_wrap_CV_IS_HAAR_CLASSIFIER_texinfo},
+{"cvCalcBackProject",_wrap_cvCalcBackProject,0,0,2,_wrap_cvCalcBackProject_texinfo},
+{"cvCalcBackProjectPatch",_wrap_cvCalcBackProjectPatch,0,0,2,_wrap_cvCalcBackProjectPatch_texinfo},
 {"icvDepthToType",0,_wrap_icvDepthToType_get,_wrap_icvDepthToType_set,2,0},
-{"cvCreateImage",_wrap_cvCreateImage,0,0,2,0},
-{"cvCloneImage",_wrap_cvCloneImage,0,0,2,0},
+{"cvCreateImage",_wrap_cvCreateImage,0,0,2,_wrap_cvCreateImage_texinfo},
+{"cvCloneImage",_wrap_cvCloneImage,0,0,2,_wrap_cvCloneImage_texinfo},
 {"Cv32suf_i_set",_wrap_Cv32suf_i_set,0,0,2,0},
 {"Cv32suf_i_get",_wrap_Cv32suf_i_get,0,0,2,0},
 {"Cv32suf_u_set",_wrap_Cv32suf_u_set,0,0,2,0},
 {"Cv32suf_u_get",_wrap_Cv32suf_u_get,0,0,2,0},
 {"Cv32suf_f_set",_wrap_Cv32suf_f_set,0,0,2,0},
 {"Cv32suf_f_get",_wrap_Cv32suf_f_get,0,0,2,0},
-{"new_Cv32suf",_wrap_new_Cv32suf,0,0,2,0},
-{"delete_Cv32suf",_wrap_delete_Cv32suf,0,0,2,0},
+{"new_Cv32suf",_wrap_new_Cv32suf,0,0,2,_wrap_new_Cv32suf_texinfo},
+{"delete_Cv32suf",_wrap_delete_Cv32suf,0,0,2,_wrap_delete_Cv32suf_texinfo},
 {"Cv64suf_i_set",_wrap_Cv64suf_i_set,0,0,2,0},
 {"Cv64suf_i_get",_wrap_Cv64suf_i_get,0,0,2,0},
 {"Cv64suf_u_set",_wrap_Cv64suf_u_set,0,0,2,0},
 {"Cv64suf_u_get",_wrap_Cv64suf_u_get,0,0,2,0},
 {"Cv64suf_f_set",_wrap_Cv64suf_f_set,0,0,2,0},
 {"Cv64suf_f_get",_wrap_Cv64suf_f_get,0,0,2,0},
-{"new_Cv64suf",_wrap_new_Cv64suf,0,0,2,0},
-{"delete_Cv64suf",_wrap_delete_Cv64suf,0,0,2,0},
-{"cvRound",_wrap_cvRound,0,0,2,0},
-{"cvFloor",_wrap_cvFloor,0,0,2,0},
-{"cvCeil",_wrap_cvCeil,0,0,2,0},
-{"cvIsNaN",_wrap_cvIsNaN,0,0,2,0},
-{"cvIsInf",_wrap_cvIsInf,0,0,2,0},
-{"cvRNG",_wrap_cvRNG,0,0,2,0},
-{"cvRandInt",_wrap_cvRandInt,0,0,2,0},
-{"cvRandReal",_wrap_cvRandReal,0,0,2,0},
+{"new_Cv64suf",_wrap_new_Cv64suf,0,0,2,_wrap_new_Cv64suf_texinfo},
+{"delete_Cv64suf",_wrap_delete_Cv64suf,0,0,2,_wrap_delete_Cv64suf_texinfo},
+{"cvRound",_wrap_cvRound,0,0,2,_wrap_cvRound_texinfo},
+{"cvFloor",_wrap_cvFloor,0,0,2,_wrap_cvFloor_texinfo},
+{"cvCeil",_wrap_cvCeil,0,0,2,_wrap_cvCeil_texinfo},
+{"cvIsNaN",_wrap_cvIsNaN,0,0,2,_wrap_cvIsNaN_texinfo},
+{"cvIsInf",_wrap_cvIsInf,0,0,2,_wrap_cvIsInf_texinfo},
+{"cvRNG",_wrap_cvRNG,0,0,2,_wrap_cvRNG_texinfo},
+{"cvRandInt",_wrap_cvRandInt,0,0,2,_wrap_cvRandInt_texinfo},
+{"cvRandReal",_wrap_cvRandReal,0,0,2,_wrap_cvRandReal_texinfo},
 {"IplImage_ID_set",_wrap_IplImage_ID_set,0,0,2,0},
 {"IplImage_ID_get",_wrap_IplImage_ID_get,0,0,2,0},
 {"IplImage_nChannels_set",_wrap_IplImage_nChannels_set,0,0,2,0},
@@ -101552,35 +105867,35 @@ static const struct swig_octave_member swig_globals[] = {
 {"IplImage_imageSize_get",_wrap_IplImage_imageSize_get,0,0,2,0},
 {"IplImage_widthStep_set",_wrap_IplImage_widthStep_set,0,0,2,0},
 {"IplImage_widthStep_get",_wrap_IplImage_widthStep_get,0,0,2,0},
-{"delete_IplImage",_wrap_delete_IplImage,0,0,2,0},
-{"IplImage___mul",_wrap_IplImage___mul,0,0,2,0},
-{"IplImage___add",_wrap_IplImage___add,0,0,2,0},
-{"IplImage___xor",_wrap_IplImage___xor,0,0,2,0},
-{"IplImage___sub",_wrap_IplImage___sub,0,0,2,0},
-{"IplImage___ge",_wrap_IplImage___ge,0,0,2,0},
-{"IplImage___eq",_wrap_IplImage___eq,0,0,2,0},
-{"IplImage___le",_wrap_IplImage___le,0,0,2,0},
-{"IplImage___ne",_wrap_IplImage___ne,0,0,2,0},
-{"IplImage___lt",_wrap_IplImage___lt,0,0,2,0},
-{"IplImage___gt",_wrap_IplImage___gt,0,0,2,0},
-{"IplImage___div",_wrap_IplImage___div,0,0,2,0},
-{"IplImage___radd__",_wrap_IplImage___radd__,0,0,2,0},
-{"IplImage___rsub__",_wrap_IplImage___rsub__,0,0,2,0},
-{"IplImage___rmul__",_wrap_IplImage___rmul__,0,0,2,0},
-{"IplImage___rdiv__",_wrap_IplImage___rdiv__,0,0,2,0},
-{"IplImage___ror__",_wrap_IplImage___ror__,0,0,2,0},
-{"IplImage___rand__",_wrap_IplImage___rand__,0,0,2,0},
-{"IplImage___rxor__",_wrap_IplImage___rxor__,0,0,2,0},
-{"IplImage___req__",_wrap_IplImage___req__,0,0,2,0},
-{"IplImage___rgt__",_wrap_IplImage___rgt__,0,0,2,0},
-{"IplImage___rge__",_wrap_IplImage___rge__,0,0,2,0},
-{"IplImage___rlt__",_wrap_IplImage___rlt__,0,0,2,0},
-{"IplImage___rle__",_wrap_IplImage___rle__,0,0,2,0},
-{"IplImage___rne__",_wrap_IplImage___rne__,0,0,2,0},
-{"IplImage___pow__",_wrap_IplImage___pow__,0,0,2,0},
-{"IplImage___str",_wrap_IplImage___str,0,0,2,0},
-{"IplImage___paren_asgn",_wrap_IplImage___paren_asgn,0,0,2,0},
-{"IplImage___paren",_wrap_IplImage___paren,0,0,2,0},
+{"delete_IplImage",_wrap_delete_IplImage,0,0,2,_wrap_delete_IplImage_texinfo},
+{"IplImage___mul",_wrap_IplImage___mul,0,0,2,_wrap_IplImage___mul_texinfo},
+{"IplImage___add",_wrap_IplImage___add,0,0,2,_wrap_IplImage___add_texinfo},
+{"IplImage___xor",_wrap_IplImage___xor,0,0,2,_wrap_IplImage___xor_texinfo},
+{"IplImage___sub",_wrap_IplImage___sub,0,0,2,_wrap_IplImage___sub_texinfo},
+{"IplImage___ge",_wrap_IplImage___ge,0,0,2,_wrap_IplImage___ge_texinfo},
+{"IplImage___eq",_wrap_IplImage___eq,0,0,2,_wrap_IplImage___eq_texinfo},
+{"IplImage___le",_wrap_IplImage___le,0,0,2,_wrap_IplImage___le_texinfo},
+{"IplImage___ne",_wrap_IplImage___ne,0,0,2,_wrap_IplImage___ne_texinfo},
+{"IplImage___lt",_wrap_IplImage___lt,0,0,2,_wrap_IplImage___lt_texinfo},
+{"IplImage___gt",_wrap_IplImage___gt,0,0,2,_wrap_IplImage___gt_texinfo},
+{"IplImage___div",_wrap_IplImage___div,0,0,2,_wrap_IplImage___div_texinfo},
+{"IplImage___radd__",_wrap_IplImage___radd__,0,0,2,_wrap_IplImage___radd___texinfo},
+{"IplImage___rsub__",_wrap_IplImage___rsub__,0,0,2,_wrap_IplImage___rsub___texinfo},
+{"IplImage___rmul__",_wrap_IplImage___rmul__,0,0,2,_wrap_IplImage___rmul___texinfo},
+{"IplImage___rdiv__",_wrap_IplImage___rdiv__,0,0,2,_wrap_IplImage___rdiv___texinfo},
+{"IplImage___ror__",_wrap_IplImage___ror__,0,0,2,_wrap_IplImage___ror___texinfo},
+{"IplImage___rand__",_wrap_IplImage___rand__,0,0,2,_wrap_IplImage___rand___texinfo},
+{"IplImage___rxor__",_wrap_IplImage___rxor__,0,0,2,_wrap_IplImage___rxor___texinfo},
+{"IplImage___req__",_wrap_IplImage___req__,0,0,2,_wrap_IplImage___req___texinfo},
+{"IplImage___rgt__",_wrap_IplImage___rgt__,0,0,2,_wrap_IplImage___rgt___texinfo},
+{"IplImage___rge__",_wrap_IplImage___rge__,0,0,2,_wrap_IplImage___rge___texinfo},
+{"IplImage___rlt__",_wrap_IplImage___rlt__,0,0,2,_wrap_IplImage___rlt___texinfo},
+{"IplImage___rle__",_wrap_IplImage___rle__,0,0,2,_wrap_IplImage___rle___texinfo},
+{"IplImage___rne__",_wrap_IplImage___rne__,0,0,2,_wrap_IplImage___rne___texinfo},
+{"IplImage___pow__",_wrap_IplImage___pow__,0,0,2,_wrap_IplImage___pow___texinfo},
+{"IplImage___str",_wrap_IplImage___str,0,0,2,_wrap_IplImage___str_texinfo},
+{"IplImage___paren_asgn",_wrap_IplImage___paren_asgn,0,0,2,_wrap_IplImage___paren_asgn_texinfo},
+{"IplImage___paren",_wrap_IplImage___paren,0,0,2,_wrap_IplImage___paren_texinfo},
 {"IplROI_coi_set",_wrap_IplROI_coi_set,0,0,2,0},
 {"IplROI_coi_get",_wrap_IplROI_coi_get,0,0,2,0},
 {"IplROI_xOffset_set",_wrap_IplROI_xOffset_set,0,0,2,0},
@@ -101591,8 +105906,8 @@ static const struct swig_octave_member swig_globals[] = {
 {"IplROI_width_get",_wrap_IplROI_width_get,0,0,2,0},
 {"IplROI_height_set",_wrap_IplROI_height_set,0,0,2,0},
 {"IplROI_height_get",_wrap_IplROI_height_get,0,0,2,0},
-{"new_IplROI",_wrap_new_IplROI,0,0,2,0},
-{"delete_IplROI",_wrap_delete_IplROI,0,0,2,0},
+{"new_IplROI",_wrap_new_IplROI,0,0,2,_wrap_new_IplROI_texinfo},
+{"delete_IplROI",_wrap_delete_IplROI,0,0,2,_wrap_delete_IplROI_texinfo},
 {"IplConvKernel_nCols_set",_wrap_IplConvKernel_nCols_set,0,0,2,0},
 {"IplConvKernel_nCols_get",_wrap_IplConvKernel_nCols_get,0,0,2,0},
 {"IplConvKernel_nRows_set",_wrap_IplConvKernel_nRows_set,0,0,2,0},
@@ -101605,7 +105920,7 @@ static const struct swig_octave_member swig_globals[] = {
 {"IplConvKernel_values_get",_wrap_IplConvKernel_values_get,0,0,2,0},
 {"IplConvKernel_nShiftR_set",_wrap_IplConvKernel_nShiftR_set,0,0,2,0},
 {"IplConvKernel_nShiftR_get",_wrap_IplConvKernel_nShiftR_get,0,0,2,0},
-{"delete_IplConvKernel",_wrap_delete_IplConvKernel,0,0,2,0},
+{"delete_IplConvKernel",_wrap_delete_IplConvKernel,0,0,2,_wrap_delete_IplConvKernel_texinfo},
 {"IplConvKernelFP_nCols_set",_wrap_IplConvKernelFP_nCols_set,0,0,2,0},
 {"IplConvKernelFP_nCols_get",_wrap_IplConvKernelFP_nCols_get,0,0,2,0},
 {"IplConvKernelFP_nRows_set",_wrap_IplConvKernelFP_nRows_set,0,0,2,0},
@@ -101616,8 +105931,8 @@ static const struct swig_octave_member swig_globals[] = {
 {"IplConvKernelFP_anchorY_get",_wrap_IplConvKernelFP_anchorY_get,0,0,2,0},
 {"IplConvKernelFP_values_set",_wrap_IplConvKernelFP_values_set,0,0,2,0},
 {"IplConvKernelFP_values_get",_wrap_IplConvKernelFP_values_get,0,0,2,0},
-{"new_IplConvKernelFP",_wrap_new_IplConvKernelFP,0,0,2,0},
-{"delete_IplConvKernelFP",_wrap_delete_IplConvKernelFP,0,0,2,0},
+{"new_IplConvKernelFP",_wrap_new_IplConvKernelFP,0,0,2,_wrap_new_IplConvKernelFP_texinfo},
+{"delete_IplConvKernelFP",_wrap_delete_IplConvKernelFP,0,0,2,_wrap_delete_IplConvKernelFP_texinfo},
 {"CvMat_type_set",_wrap_CvMat_type_set,0,0,2,0},
 {"CvMat_type_get",_wrap_CvMat_type_get,0,0,2,0},
 {"CvMat_step_set",_wrap_CvMat_step_set,0,0,2,0},
@@ -101627,7 +105942,7 @@ static const struct swig_octave_member swig_globals[] = {
 {"CvMat_hdr_refcount_set",_wrap_CvMat_hdr_refcount_set,0,0,2,0},
 {"CvMat_hdr_refcount_get",_wrap_CvMat_hdr_refcount_get,0,0,2,0},
 {"CvMat_data_get",_wrap_CvMat_data_get,0,0,2,0},
-{"delete_CvMat",_wrap_delete_CvMat,0,0,2,0},
+{"delete_CvMat",_wrap_delete_CvMat,0,0,2,_wrap_delete_CvMat_texinfo},
 {"CvMat_depth_get",_wrap_CvMat_depth_get,0,0,2,0},
 {"CvMat_nChannels_get",_wrap_CvMat_nChannels_get,0,0,2,0},
 {"CvMat_dataOrder_get",_wrap_CvMat_dataOrder_get,0,0,2,0},
@@ -101638,34 +105953,34 @@ static const struct swig_octave_member swig_globals[] = {
 {"CvMat_widthStep_get",_wrap_CvMat_widthStep_get,0,0,2,0},
 {"CvMat_rows_get",_wrap_CvMat_rows_get,0,0,2,0},
 {"CvMat_cols_get",_wrap_CvMat_cols_get,0,0,2,0},
-{"CvMat___mul",_wrap_CvMat___mul,0,0,2,0},
-{"CvMat___add",_wrap_CvMat___add,0,0,2,0},
-{"CvMat___xor",_wrap_CvMat___xor,0,0,2,0},
-{"CvMat___sub",_wrap_CvMat___sub,0,0,2,0},
-{"CvMat___ge",_wrap_CvMat___ge,0,0,2,0},
-{"CvMat___eq",_wrap_CvMat___eq,0,0,2,0},
-{"CvMat___le",_wrap_CvMat___le,0,0,2,0},
-{"CvMat___ne",_wrap_CvMat___ne,0,0,2,0},
-{"CvMat___lt",_wrap_CvMat___lt,0,0,2,0},
-{"CvMat___gt",_wrap_CvMat___gt,0,0,2,0},
-{"CvMat___div",_wrap_CvMat___div,0,0,2,0},
-{"CvMat___radd__",_wrap_CvMat___radd__,0,0,2,0},
-{"CvMat___rsub__",_wrap_CvMat___rsub__,0,0,2,0},
-{"CvMat___rmul__",_wrap_CvMat___rmul__,0,0,2,0},
-{"CvMat___rdiv__",_wrap_CvMat___rdiv__,0,0,2,0},
-{"CvMat___ror__",_wrap_CvMat___ror__,0,0,2,0},
-{"CvMat___rand__",_wrap_CvMat___rand__,0,0,2,0},
-{"CvMat___rxor__",_wrap_CvMat___rxor__,0,0,2,0},
-{"CvMat___req__",_wrap_CvMat___req__,0,0,2,0},
-{"CvMat___rgt__",_wrap_CvMat___rgt__,0,0,2,0},
-{"CvMat___rge__",_wrap_CvMat___rge__,0,0,2,0},
-{"CvMat___rlt__",_wrap_CvMat___rlt__,0,0,2,0},
-{"CvMat___rle__",_wrap_CvMat___rle__,0,0,2,0},
-{"CvMat___rne__",_wrap_CvMat___rne__,0,0,2,0},
-{"CvMat___pow__",_wrap_CvMat___pow__,0,0,2,0},
-{"CvMat___str",_wrap_CvMat___str,0,0,2,0},
-{"CvMat___paren_asgn",_wrap_CvMat___paren_asgn,0,0,2,0},
-{"CvMat___paren",_wrap_CvMat___paren,0,0,2,0},
+{"CvMat___mul",_wrap_CvMat___mul,0,0,2,_wrap_CvMat___mul_texinfo},
+{"CvMat___add",_wrap_CvMat___add,0,0,2,_wrap_CvMat___add_texinfo},
+{"CvMat___xor",_wrap_CvMat___xor,0,0,2,_wrap_CvMat___xor_texinfo},
+{"CvMat___sub",_wrap_CvMat___sub,0,0,2,_wrap_CvMat___sub_texinfo},
+{"CvMat___ge",_wrap_CvMat___ge,0,0,2,_wrap_CvMat___ge_texinfo},
+{"CvMat___eq",_wrap_CvMat___eq,0,0,2,_wrap_CvMat___eq_texinfo},
+{"CvMat___le",_wrap_CvMat___le,0,0,2,_wrap_CvMat___le_texinfo},
+{"CvMat___ne",_wrap_CvMat___ne,0,0,2,_wrap_CvMat___ne_texinfo},
+{"CvMat___lt",_wrap_CvMat___lt,0,0,2,_wrap_CvMat___lt_texinfo},
+{"CvMat___gt",_wrap_CvMat___gt,0,0,2,_wrap_CvMat___gt_texinfo},
+{"CvMat___div",_wrap_CvMat___div,0,0,2,_wrap_CvMat___div_texinfo},
+{"CvMat___radd__",_wrap_CvMat___radd__,0,0,2,_wrap_CvMat___radd___texinfo},
+{"CvMat___rsub__",_wrap_CvMat___rsub__,0,0,2,_wrap_CvMat___rsub___texinfo},
+{"CvMat___rmul__",_wrap_CvMat___rmul__,0,0,2,_wrap_CvMat___rmul___texinfo},
+{"CvMat___rdiv__",_wrap_CvMat___rdiv__,0,0,2,_wrap_CvMat___rdiv___texinfo},
+{"CvMat___ror__",_wrap_CvMat___ror__,0,0,2,_wrap_CvMat___ror___texinfo},
+{"CvMat___rand__",_wrap_CvMat___rand__,0,0,2,_wrap_CvMat___rand___texinfo},
+{"CvMat___rxor__",_wrap_CvMat___rxor__,0,0,2,_wrap_CvMat___rxor___texinfo},
+{"CvMat___req__",_wrap_CvMat___req__,0,0,2,_wrap_CvMat___req___texinfo},
+{"CvMat___rgt__",_wrap_CvMat___rgt__,0,0,2,_wrap_CvMat___rgt___texinfo},
+{"CvMat___rge__",_wrap_CvMat___rge__,0,0,2,_wrap_CvMat___rge___texinfo},
+{"CvMat___rlt__",_wrap_CvMat___rlt__,0,0,2,_wrap_CvMat___rlt___texinfo},
+{"CvMat___rle__",_wrap_CvMat___rle__,0,0,2,_wrap_CvMat___rle___texinfo},
+{"CvMat___rne__",_wrap_CvMat___rne__,0,0,2,_wrap_CvMat___rne___texinfo},
+{"CvMat___pow__",_wrap_CvMat___pow__,0,0,2,_wrap_CvMat___pow___texinfo},
+{"CvMat___str",_wrap_CvMat___str,0,0,2,_wrap_CvMat___str_texinfo},
+{"CvMat___paren_asgn",_wrap_CvMat___paren_asgn,0,0,2,_wrap_CvMat___paren_asgn_texinfo},
+{"CvMat___paren",_wrap_CvMat___paren,0,0,2,_wrap_CvMat___paren_texinfo},
 {"CvMat_imageData_set",_wrap_CvMat_imageData_set,0,0,2,0},
 {"CvMat_imageData_get",_wrap_CvMat_imageData_get,0,0,2,0},
 {"CvMat_data_ptr_set",_wrap_CvMat_data_ptr_set,0,0,2,0},
@@ -101678,12 +105993,12 @@ static const struct swig_octave_member swig_globals[] = {
 {"CvMat_data_fl_get",_wrap_CvMat_data_fl_get,0,0,2,0},
 {"CvMat_data_db_set",_wrap_CvMat_data_db_set,0,0,2,0},
 {"CvMat_data_db_get",_wrap_CvMat_data_db_get,0,0,2,0},
-{"new_CvMat_data",_wrap_new_CvMat_data,0,0,2,0},
-{"delete_CvMat_data",_wrap_delete_CvMat_data,0,0,2,0},
-{"cvMat",_wrap_cvMat,0,0,2,0},
-{"cvmGet",_wrap_cvmGet,0,0,2,0},
-{"cvmSet",_wrap_cvmSet,0,0,2,0},
-{"cvCvToIplDepth",_wrap_cvCvToIplDepth,0,0,2,0},
+{"new_CvMat_data",_wrap_new_CvMat_data,0,0,2,_wrap_new_CvMat_data_texinfo},
+{"delete_CvMat_data",_wrap_delete_CvMat_data,0,0,2,_wrap_delete_CvMat_data_texinfo},
+{"cvMat",_wrap_cvMat,0,0,2,_wrap_cvMat_texinfo},
+{"cvmGet",_wrap_cvmGet,0,0,2,_wrap_cvmGet_texinfo},
+{"cvmSet",_wrap_cvmSet,0,0,2,_wrap_cvmSet_texinfo},
+{"cvCvToIplDepth",_wrap_cvCvToIplDepth,0,0,2,_wrap_cvCvToIplDepth_texinfo},
 {"CvMatND_type_set",_wrap_CvMatND_type_set,0,0,2,0},
 {"CvMatND_type_get",_wrap_CvMatND_type_get,0,0,2,0},
 {"CvMatND_dims_set",_wrap_CvMatND_dims_set,0,0,2,0},
@@ -101694,13 +106009,13 @@ static const struct swig_octave_member swig_globals[] = {
 {"CvMatND_hdr_refcount_get",_wrap_CvMatND_hdr_refcount_get,0,0,2,0},
 {"CvMatND_dim_get",_wrap_CvMatND_dim_get,0,0,2,0},
 {"CvMatND_data_get",_wrap_CvMatND_data_get,0,0,2,0},
-{"delete_CvMatND",_wrap_delete_CvMatND,0,0,2,0},
+{"delete_CvMatND",_wrap_delete_CvMatND,0,0,2,_wrap_delete_CvMatND_texinfo},
 {"CvMatND_dim_size_set",_wrap_CvMatND_dim_size_set,0,0,2,0},
 {"CvMatND_dim_size_get",_wrap_CvMatND_dim_size_get,0,0,2,0},
 {"CvMatND_dim_step_set",_wrap_CvMatND_dim_step_set,0,0,2,0},
 {"CvMatND_dim_step_get",_wrap_CvMatND_dim_step_get,0,0,2,0},
-{"new_CvMatND_dim",_wrap_new_CvMatND_dim,0,0,2,0},
-{"delete_CvMatND_dim",_wrap_delete_CvMatND_dim,0,0,2,0},
+{"new_CvMatND_dim",_wrap_new_CvMatND_dim,0,0,2,_wrap_new_CvMatND_dim_texinfo},
+{"delete_CvMatND_dim",_wrap_delete_CvMatND_dim,0,0,2,_wrap_delete_CvMatND_dim_texinfo},
 {"CvMatND_data_ptr_set",_wrap_CvMatND_data_ptr_set,0,0,2,0},
 {"CvMatND_data_ptr_get",_wrap_CvMatND_data_ptr_get,0,0,2,0},
 {"CvMatND_data_fl_set",_wrap_CvMatND_data_fl_set,0,0,2,0},
@@ -101711,8 +106026,8 @@ static const struct swig_octave_member swig_globals[] = {
 {"CvMatND_data_i_get",_wrap_CvMatND_data_i_get,0,0,2,0},
 {"CvMatND_data_s_set",_wrap_CvMatND_data_s_set,0,0,2,0},
 {"CvMatND_data_s_get",_wrap_CvMatND_data_s_get,0,0,2,0},
-{"new_CvMatND_data",_wrap_new_CvMatND_data,0,0,2,0},
-{"delete_CvMatND_data",_wrap_delete_CvMatND_data,0,0,2,0},
+{"new_CvMatND_data",_wrap_new_CvMatND_data,0,0,2,_wrap_new_CvMatND_data_texinfo},
+{"delete_CvMatND_data",_wrap_delete_CvMatND_data,0,0,2,_wrap_delete_CvMatND_data_texinfo},
 {"CvSparseMat_type_set",_wrap_CvSparseMat_type_set,0,0,2,0},
 {"CvSparseMat_type_get",_wrap_CvSparseMat_type_get,0,0,2,0},
 {"CvSparseMat_dims_set",_wrap_CvSparseMat_dims_set,0,0,2,0},
@@ -101733,21 +106048,21 @@ static const struct swig_octave_member swig_globals[] = {
 {"CvSparseMat_idxoffset_get",_wrap_CvSparseMat_idxoffset_get,0,0,2,0},
 {"CvSparseMat_size_set",_wrap_CvSparseMat_size_set,0,0,2,0},
 {"CvSparseMat_size_get",_wrap_CvSparseMat_size_get,0,0,2,0},
-{"delete_CvSparseMat",_wrap_delete_CvSparseMat,0,0,2,0},
+{"delete_CvSparseMat",_wrap_delete_CvSparseMat,0,0,2,_wrap_delete_CvSparseMat_texinfo},
 {"CvSparseNode_hashval_set",_wrap_CvSparseNode_hashval_set,0,0,2,0},
 {"CvSparseNode_hashval_get",_wrap_CvSparseNode_hashval_get,0,0,2,0},
 {"CvSparseNode_next_set",_wrap_CvSparseNode_next_set,0,0,2,0},
 {"CvSparseNode_next_get",_wrap_CvSparseNode_next_get,0,0,2,0},
-{"new_CvSparseNode",_wrap_new_CvSparseNode,0,0,2,0},
-{"delete_CvSparseNode",_wrap_delete_CvSparseNode,0,0,2,0},
+{"new_CvSparseNode",_wrap_new_CvSparseNode,0,0,2,_wrap_new_CvSparseNode_texinfo},
+{"delete_CvSparseNode",_wrap_delete_CvSparseNode,0,0,2,_wrap_delete_CvSparseNode_texinfo},
 {"CvSparseMatIterator_mat_set",_wrap_CvSparseMatIterator_mat_set,0,0,2,0},
 {"CvSparseMatIterator_mat_get",_wrap_CvSparseMatIterator_mat_get,0,0,2,0},
 {"CvSparseMatIterator_node_set",_wrap_CvSparseMatIterator_node_set,0,0,2,0},
 {"CvSparseMatIterator_node_get",_wrap_CvSparseMatIterator_node_get,0,0,2,0},
 {"CvSparseMatIterator_curidx_set",_wrap_CvSparseMatIterator_curidx_set,0,0,2,0},
 {"CvSparseMatIterator_curidx_get",_wrap_CvSparseMatIterator_curidx_get,0,0,2,0},
-{"new_CvSparseMatIterator",_wrap_new_CvSparseMatIterator,0,0,2,0},
-{"delete_CvSparseMatIterator",_wrap_delete_CvSparseMatIterator,0,0,2,0},
+{"new_CvSparseMatIterator",_wrap_new_CvSparseMatIterator,0,0,2,_wrap_new_CvSparseMatIterator_texinfo},
+{"delete_CvSparseMatIterator",_wrap_delete_CvSparseMatIterator,0,0,2,_wrap_delete_CvSparseMatIterator_texinfo},
 {"CvHistogram_type_set",_wrap_CvHistogram_type_set,0,0,2,0},
 {"CvHistogram_type_get",_wrap_CvHistogram_type_get,0,0,2,0},
 {"CvHistogram_bins_set",_wrap_CvHistogram_bins_set,0,0,2,0},
@@ -101758,7 +106073,7 @@ static const struct swig_octave_member swig_globals[] = {
 {"CvHistogram_thresh2_get",_wrap_CvHistogram_thresh2_get,0,0,2,0},
 {"CvHistogram_mat_set",_wrap_CvHistogram_mat_set,0,0,2,0},
 {"CvHistogram_mat_get",_wrap_CvHistogram_mat_get,0,0,2,0},
-{"delete_CvHistogram",_wrap_delete_CvHistogram,0,0,2,0},
+{"delete_CvHistogram",_wrap_delete_CvHistogram,0,0,2,_wrap_delete_CvHistogram_texinfo},
 {"CvRect_x_set",_wrap_CvRect_x_set,0,0,2,0},
 {"CvRect_x_get",_wrap_CvRect_x_get,0,0,2,0},
 {"CvRect_y_set",_wrap_CvRect_y_set,0,0,2,0},
@@ -101767,87 +106082,87 @@ static const struct swig_octave_member swig_globals[] = {
 {"CvRect_width_get",_wrap_CvRect_width_get,0,0,2,0},
 {"CvRect_height_set",_wrap_CvRect_height_set,0,0,2,0},
 {"CvRect_height_get",_wrap_CvRect_height_get,0,0,2,0},
-{"new_CvRect",_wrap_new_CvRect,0,0,2,0},
-{"delete_CvRect",_wrap_delete_CvRect,0,0,2,0},
-{"cvRect",_wrap_cvRect,0,0,2,0},
-{"cvRectToROI",_wrap_cvRectToROI,0,0,2,0},
-{"cvROIToRect",_wrap_cvROIToRect,0,0,2,0},
+{"new_CvRect",_wrap_new_CvRect,0,0,2,_wrap_new_CvRect_texinfo},
+{"delete_CvRect",_wrap_delete_CvRect,0,0,2,_wrap_delete_CvRect_texinfo},
+{"cvRect",_wrap_cvRect,0,0,2,_wrap_cvRect_texinfo},
+{"cvRectToROI",_wrap_cvRectToROI,0,0,2,_wrap_cvRectToROI_texinfo},
+{"cvROIToRect",_wrap_cvROIToRect,0,0,2,_wrap_cvROIToRect_texinfo},
 {"CvTermCriteria_type_set",_wrap_CvTermCriteria_type_set,0,0,2,0},
 {"CvTermCriteria_type_get",_wrap_CvTermCriteria_type_get,0,0,2,0},
 {"CvTermCriteria_max_iter_set",_wrap_CvTermCriteria_max_iter_set,0,0,2,0},
 {"CvTermCriteria_max_iter_get",_wrap_CvTermCriteria_max_iter_get,0,0,2,0},
 {"CvTermCriteria_epsilon_set",_wrap_CvTermCriteria_epsilon_set,0,0,2,0},
 {"CvTermCriteria_epsilon_get",_wrap_CvTermCriteria_epsilon_get,0,0,2,0},
-{"new_CvTermCriteria",_wrap_new_CvTermCriteria,0,0,2,0},
-{"delete_CvTermCriteria",_wrap_delete_CvTermCriteria,0,0,2,0},
-{"cvTermCriteria",_wrap_cvTermCriteria,0,0,2,0},
+{"new_CvTermCriteria",_wrap_new_CvTermCriteria,0,0,2,_wrap_new_CvTermCriteria_texinfo},
+{"delete_CvTermCriteria",_wrap_delete_CvTermCriteria,0,0,2,_wrap_delete_CvTermCriteria_texinfo},
+{"cvTermCriteria",_wrap_cvTermCriteria,0,0,2,_wrap_cvTermCriteria_texinfo},
 {"CvPoint_x_set",_wrap_CvPoint_x_set,0,0,2,0},
 {"CvPoint_x_get",_wrap_CvPoint_x_get,0,0,2,0},
 {"CvPoint_y_set",_wrap_CvPoint_y_set,0,0,2,0},
 {"CvPoint_y_get",_wrap_CvPoint_y_get,0,0,2,0},
-{"CvPoint___str__",_wrap_CvPoint___str__,0,0,2,0},
-{"CvPoint___repr__",_wrap_CvPoint___repr__,0,0,2,0},
-{"new_CvPoint",_wrap_new_CvPoint,0,0,2,0},
-{"delete_CvPoint",_wrap_delete_CvPoint,0,0,2,0},
-{"cvPoint",_wrap_cvPoint,0,0,2,0},
+{"CvPoint___str__",_wrap_CvPoint___str__,0,0,2,_wrap_CvPoint___str___texinfo},
+{"CvPoint___repr__",_wrap_CvPoint___repr__,0,0,2,_wrap_CvPoint___repr___texinfo},
+{"new_CvPoint",_wrap_new_CvPoint,0,0,2,_wrap_new_CvPoint_texinfo},
+{"delete_CvPoint",_wrap_delete_CvPoint,0,0,2,_wrap_delete_CvPoint_texinfo},
+{"cvPoint",_wrap_cvPoint,0,0,2,_wrap_cvPoint_texinfo},
 {"CvPoint2D32f_x_set",_wrap_CvPoint2D32f_x_set,0,0,2,0},
 {"CvPoint2D32f_x_get",_wrap_CvPoint2D32f_x_get,0,0,2,0},
 {"CvPoint2D32f_y_set",_wrap_CvPoint2D32f_y_set,0,0,2,0},
 {"CvPoint2D32f_y_get",_wrap_CvPoint2D32f_y_get,0,0,2,0},
-{"CvPoint2D32f___str__",_wrap_CvPoint2D32f___str__,0,0,2,0},
-{"CvPoint2D32f___repr__",_wrap_CvPoint2D32f___repr__,0,0,2,0},
-{"new_CvPoint2D32f",_wrap_new_CvPoint2D32f,0,0,2,0},
-{"delete_CvPoint2D32f",_wrap_delete_CvPoint2D32f,0,0,2,0},
-{"cvPoint2D32f",_wrap_cvPoint2D32f,0,0,2,0},
-{"cvPointTo32f",_wrap_cvPointTo32f,0,0,2,0},
-{"cvPointFrom32f",_wrap_cvPointFrom32f,0,0,2,0},
+{"CvPoint2D32f___str__",_wrap_CvPoint2D32f___str__,0,0,2,_wrap_CvPoint2D32f___str___texinfo},
+{"CvPoint2D32f___repr__",_wrap_CvPoint2D32f___repr__,0,0,2,_wrap_CvPoint2D32f___repr___texinfo},
+{"new_CvPoint2D32f",_wrap_new_CvPoint2D32f,0,0,2,_wrap_new_CvPoint2D32f_texinfo},
+{"delete_CvPoint2D32f",_wrap_delete_CvPoint2D32f,0,0,2,_wrap_delete_CvPoint2D32f_texinfo},
+{"cvPoint2D32f",_wrap_cvPoint2D32f,0,0,2,_wrap_cvPoint2D32f_texinfo},
+{"cvPointTo32f",_wrap_cvPointTo32f,0,0,2,_wrap_cvPointTo32f_texinfo},
+{"cvPointFrom32f",_wrap_cvPointFrom32f,0,0,2,_wrap_cvPointFrom32f_texinfo},
 {"CvPoint3D32f_x_set",_wrap_CvPoint3D32f_x_set,0,0,2,0},
 {"CvPoint3D32f_x_get",_wrap_CvPoint3D32f_x_get,0,0,2,0},
 {"CvPoint3D32f_y_set",_wrap_CvPoint3D32f_y_set,0,0,2,0},
 {"CvPoint3D32f_y_get",_wrap_CvPoint3D32f_y_get,0,0,2,0},
 {"CvPoint3D32f_z_set",_wrap_CvPoint3D32f_z_set,0,0,2,0},
 {"CvPoint3D32f_z_get",_wrap_CvPoint3D32f_z_get,0,0,2,0},
-{"new_CvPoint3D32f",_wrap_new_CvPoint3D32f,0,0,2,0},
-{"delete_CvPoint3D32f",_wrap_delete_CvPoint3D32f,0,0,2,0},
-{"cvPoint3D32f",_wrap_cvPoint3D32f,0,0,2,0},
+{"new_CvPoint3D32f",_wrap_new_CvPoint3D32f,0,0,2,_wrap_new_CvPoint3D32f_texinfo},
+{"delete_CvPoint3D32f",_wrap_delete_CvPoint3D32f,0,0,2,_wrap_delete_CvPoint3D32f_texinfo},
+{"cvPoint3D32f",_wrap_cvPoint3D32f,0,0,2,_wrap_cvPoint3D32f_texinfo},
 {"CvPoint2D64f_x_set",_wrap_CvPoint2D64f_x_set,0,0,2,0},
 {"CvPoint2D64f_x_get",_wrap_CvPoint2D64f_x_get,0,0,2,0},
 {"CvPoint2D64f_y_set",_wrap_CvPoint2D64f_y_set,0,0,2,0},
 {"CvPoint2D64f_y_get",_wrap_CvPoint2D64f_y_get,0,0,2,0},
-{"new_CvPoint2D64f",_wrap_new_CvPoint2D64f,0,0,2,0},
-{"delete_CvPoint2D64f",_wrap_delete_CvPoint2D64f,0,0,2,0},
-{"cvPoint2D64f",_wrap_cvPoint2D64f,0,0,2,0},
+{"new_CvPoint2D64f",_wrap_new_CvPoint2D64f,0,0,2,_wrap_new_CvPoint2D64f_texinfo},
+{"delete_CvPoint2D64f",_wrap_delete_CvPoint2D64f,0,0,2,_wrap_delete_CvPoint2D64f_texinfo},
+{"cvPoint2D64f",_wrap_cvPoint2D64f,0,0,2,_wrap_cvPoint2D64f_texinfo},
 {"CvPoint3D64f_x_set",_wrap_CvPoint3D64f_x_set,0,0,2,0},
 {"CvPoint3D64f_x_get",_wrap_CvPoint3D64f_x_get,0,0,2,0},
 {"CvPoint3D64f_y_set",_wrap_CvPoint3D64f_y_set,0,0,2,0},
 {"CvPoint3D64f_y_get",_wrap_CvPoint3D64f_y_get,0,0,2,0},
 {"CvPoint3D64f_z_set",_wrap_CvPoint3D64f_z_set,0,0,2,0},
 {"CvPoint3D64f_z_get",_wrap_CvPoint3D64f_z_get,0,0,2,0},
-{"new_CvPoint3D64f",_wrap_new_CvPoint3D64f,0,0,2,0},
-{"delete_CvPoint3D64f",_wrap_delete_CvPoint3D64f,0,0,2,0},
-{"cvPoint3D64f",_wrap_cvPoint3D64f,0,0,2,0},
+{"new_CvPoint3D64f",_wrap_new_CvPoint3D64f,0,0,2,_wrap_new_CvPoint3D64f_texinfo},
+{"delete_CvPoint3D64f",_wrap_delete_CvPoint3D64f,0,0,2,_wrap_delete_CvPoint3D64f_texinfo},
+{"cvPoint3D64f",_wrap_cvPoint3D64f,0,0,2,_wrap_cvPoint3D64f_texinfo},
 {"CvSize_width_set",_wrap_CvSize_width_set,0,0,2,0},
 {"CvSize_width_get",_wrap_CvSize_width_get,0,0,2,0},
 {"CvSize_height_set",_wrap_CvSize_height_set,0,0,2,0},
 {"CvSize_height_get",_wrap_CvSize_height_get,0,0,2,0},
-{"new_CvSize",_wrap_new_CvSize,0,0,2,0},
-{"delete_CvSize",_wrap_delete_CvSize,0,0,2,0},
-{"cvSize",_wrap_cvSize,0,0,2,0},
+{"new_CvSize",_wrap_new_CvSize,0,0,2,_wrap_new_CvSize_texinfo},
+{"delete_CvSize",_wrap_delete_CvSize,0,0,2,_wrap_delete_CvSize_texinfo},
+{"cvSize",_wrap_cvSize,0,0,2,_wrap_cvSize_texinfo},
 {"CvSize2D32f_width_set",_wrap_CvSize2D32f_width_set,0,0,2,0},
 {"CvSize2D32f_width_get",_wrap_CvSize2D32f_width_get,0,0,2,0},
 {"CvSize2D32f_height_set",_wrap_CvSize2D32f_height_set,0,0,2,0},
 {"CvSize2D32f_height_get",_wrap_CvSize2D32f_height_get,0,0,2,0},
-{"new_CvSize2D32f",_wrap_new_CvSize2D32f,0,0,2,0},
-{"delete_CvSize2D32f",_wrap_delete_CvSize2D32f,0,0,2,0},
-{"cvSize2D32f",_wrap_cvSize2D32f,0,0,2,0},
+{"new_CvSize2D32f",_wrap_new_CvSize2D32f,0,0,2,_wrap_new_CvSize2D32f_texinfo},
+{"delete_CvSize2D32f",_wrap_delete_CvSize2D32f,0,0,2,_wrap_delete_CvSize2D32f_texinfo},
+{"cvSize2D32f",_wrap_cvSize2D32f,0,0,2,_wrap_cvSize2D32f_texinfo},
 {"CvBox2D_center_set",_wrap_CvBox2D_center_set,0,0,2,0},
 {"CvBox2D_center_get",_wrap_CvBox2D_center_get,0,0,2,0},
 {"CvBox2D_size_set",_wrap_CvBox2D_size_set,0,0,2,0},
 {"CvBox2D_size_get",_wrap_CvBox2D_size_get,0,0,2,0},
 {"CvBox2D_angle_set",_wrap_CvBox2D_angle_set,0,0,2,0},
 {"CvBox2D_angle_get",_wrap_CvBox2D_angle_get,0,0,2,0},
-{"new_CvBox2D",_wrap_new_CvBox2D,0,0,2,0},
-{"delete_CvBox2D",_wrap_delete_CvBox2D,0,0,2,0},
+{"new_CvBox2D",_wrap_new_CvBox2D,0,0,2,_wrap_new_CvBox2D_texinfo},
+{"delete_CvBox2D",_wrap_delete_CvBox2D,0,0,2,_wrap_delete_CvBox2D_texinfo},
 {"CvLineIterator_ptr_set",_wrap_CvLineIterator_ptr_set,0,0,2,0},
 {"CvLineIterator_ptr_get",_wrap_CvLineIterator_ptr_get,0,0,2,0},
 {"CvLineIterator_err_set",_wrap_CvLineIterator_err_set,0,0,2,0},
@@ -101860,32 +106175,32 @@ static const struct swig_octave_member swig_globals[] = {
 {"CvLineIterator_plus_step_get",_wrap_CvLineIterator_plus_step_get,0,0,2,0},
 {"CvLineIterator_minus_step_set",_wrap_CvLineIterator_minus_step_set,0,0,2,0},
 {"CvLineIterator_minus_step_get",_wrap_CvLineIterator_minus_step_get,0,0,2,0},
-{"new_CvLineIterator",_wrap_new_CvLineIterator,0,0,2,0},
-{"delete_CvLineIterator",_wrap_delete_CvLineIterator,0,0,2,0},
+{"new_CvLineIterator",_wrap_new_CvLineIterator,0,0,2,_wrap_new_CvLineIterator_texinfo},
+{"delete_CvLineIterator",_wrap_delete_CvLineIterator,0,0,2,_wrap_delete_CvLineIterator_texinfo},
 {"CvSlice_start_index_set",_wrap_CvSlice_start_index_set,0,0,2,0},
 {"CvSlice_start_index_get",_wrap_CvSlice_start_index_get,0,0,2,0},
 {"CvSlice_end_index_set",_wrap_CvSlice_end_index_set,0,0,2,0},
 {"CvSlice_end_index_get",_wrap_CvSlice_end_index_get,0,0,2,0},
-{"new_CvSlice",_wrap_new_CvSlice,0,0,2,0},
-{"delete_CvSlice",_wrap_delete_CvSlice,0,0,2,0},
-{"cvSlice",_wrap_cvSlice,0,0,2,0},
+{"new_CvSlice",_wrap_new_CvSlice,0,0,2,_wrap_new_CvSlice_texinfo},
+{"delete_CvSlice",_wrap_delete_CvSlice,0,0,2,_wrap_delete_CvSlice_texinfo},
+{"cvSlice",_wrap_cvSlice,0,0,2,_wrap_cvSlice_texinfo},
 {"CvScalar_val_set",_wrap_CvScalar_val_set,0,0,2,0},
 {"CvScalar_val_get",_wrap_CvScalar_val_get,0,0,2,0},
-{"CvScalar___str__",_wrap_CvScalar___str__,0,0,2,0},
-{"CvScalar___repr__",_wrap_CvScalar___repr__,0,0,2,0},
-{"CvScalar___getitem__",_wrap_CvScalar___getitem__,0,0,2,0},
-{"CvScalar___setitem__",_wrap_CvScalar___setitem__,0,0,2,0},
-{"new_CvScalar",_wrap_new_CvScalar,0,0,2,0},
-{"delete_CvScalar",_wrap_delete_CvScalar,0,0,2,0},
-{"cvScalar",_wrap_cvScalar,0,0,2,0},
-{"cvRealScalar",_wrap_cvRealScalar,0,0,2,0},
-{"cvScalarAll",_wrap_cvScalarAll,0,0,2,0},
+{"CvScalar___str__",_wrap_CvScalar___str__,0,0,2,_wrap_CvScalar___str___texinfo},
+{"CvScalar___repr__",_wrap_CvScalar___repr__,0,0,2,_wrap_CvScalar___repr___texinfo},
+{"CvScalar___getitem__",_wrap_CvScalar___getitem__,0,0,2,_wrap_CvScalar___getitem___texinfo},
+{"CvScalar___setitem__",_wrap_CvScalar___setitem__,0,0,2,_wrap_CvScalar___setitem___texinfo},
+{"new_CvScalar",_wrap_new_CvScalar,0,0,2,_wrap_new_CvScalar_texinfo},
+{"delete_CvScalar",_wrap_delete_CvScalar,0,0,2,_wrap_delete_CvScalar_texinfo},
+{"cvScalar",_wrap_cvScalar,0,0,2,_wrap_cvScalar_texinfo},
+{"cvRealScalar",_wrap_cvRealScalar,0,0,2,_wrap_cvRealScalar_texinfo},
+{"cvScalarAll",_wrap_cvScalarAll,0,0,2,_wrap_cvScalarAll_texinfo},
 {"CvMemBlock_prev_set",_wrap_CvMemBlock_prev_set,0,0,2,0},
 {"CvMemBlock_prev_get",_wrap_CvMemBlock_prev_get,0,0,2,0},
 {"CvMemBlock_next_set",_wrap_CvMemBlock_next_set,0,0,2,0},
 {"CvMemBlock_next_get",_wrap_CvMemBlock_next_get,0,0,2,0},
-{"new_CvMemBlock",_wrap_new_CvMemBlock,0,0,2,0},
-{"delete_CvMemBlock",_wrap_delete_CvMemBlock,0,0,2,0},
+{"new_CvMemBlock",_wrap_new_CvMemBlock,0,0,2,_wrap_new_CvMemBlock_texinfo},
+{"delete_CvMemBlock",_wrap_delete_CvMemBlock,0,0,2,_wrap_delete_CvMemBlock_texinfo},
 {"CvMemStorage_signature_set",_wrap_CvMemStorage_signature_set,0,0,2,0},
 {"CvMemStorage_signature_get",_wrap_CvMemStorage_signature_get,0,0,2,0},
 {"CvMemStorage_bottom_set",_wrap_CvMemStorage_bottom_set,0,0,2,0},
@@ -101898,13 +106213,13 @@ static const struct swig_octave_member swig_globals[] = {
 {"CvMemStorage_block_size_get",_wrap_CvMemStorage_block_size_get,0,0,2,0},
 {"CvMemStorage_free_space_set",_wrap_CvMemStorage_free_space_set,0,0,2,0},
 {"CvMemStorage_free_space_get",_wrap_CvMemStorage_free_space_get,0,0,2,0},
-{"delete_CvMemStorage",_wrap_delete_CvMemStorage,0,0,2,0},
+{"delete_CvMemStorage",_wrap_delete_CvMemStorage,0,0,2,_wrap_delete_CvMemStorage_texinfo},
 {"CvMemStoragePos_top_set",_wrap_CvMemStoragePos_top_set,0,0,2,0},
 {"CvMemStoragePos_top_get",_wrap_CvMemStoragePos_top_get,0,0,2,0},
 {"CvMemStoragePos_free_space_set",_wrap_CvMemStoragePos_free_space_set,0,0,2,0},
 {"CvMemStoragePos_free_space_get",_wrap_CvMemStoragePos_free_space_get,0,0,2,0},
-{"new_CvMemStoragePos",_wrap_new_CvMemStoragePos,0,0,2,0},
-{"delete_CvMemStoragePos",_wrap_delete_CvMemStoragePos,0,0,2,0},
+{"new_CvMemStoragePos",_wrap_new_CvMemStoragePos,0,0,2,_wrap_new_CvMemStoragePos_texinfo},
+{"delete_CvMemStoragePos",_wrap_delete_CvMemStoragePos,0,0,2,_wrap_delete_CvMemStoragePos_texinfo},
 {"CvSeqBlock_prev_set",_wrap_CvSeqBlock_prev_set,0,0,2,0},
 {"CvSeqBlock_prev_get",_wrap_CvSeqBlock_prev_get,0,0,2,0},
 {"CvSeqBlock_next_set",_wrap_CvSeqBlock_next_set,0,0,2,0},
@@ -101915,8 +106230,8 @@ static const struct swig_octave_member swig_globals[] = {
 {"CvSeqBlock_count_get",_wrap_CvSeqBlock_count_get,0,0,2,0},
 {"CvSeqBlock_data_set",_wrap_CvSeqBlock_data_set,0,0,2,0},
 {"CvSeqBlock_data_get",_wrap_CvSeqBlock_data_get,0,0,2,0},
-{"new_CvSeqBlock",_wrap_new_CvSeqBlock,0,0,2,0},
-{"delete_CvSeqBlock",_wrap_delete_CvSeqBlock,0,0,2,0},
+{"new_CvSeqBlock",_wrap_new_CvSeqBlock,0,0,2,_wrap_new_CvSeqBlock_texinfo},
+{"delete_CvSeqBlock",_wrap_delete_CvSeqBlock,0,0,2,_wrap_delete_CvSeqBlock_texinfo},
 {"CvSeq_flags_set",_wrap_CvSeq_flags_set,0,0,2,0},
 {"CvSeq_flags_get",_wrap_CvSeq_flags_get,0,0,2,0},
 {"CvSeq_header_size_set",_wrap_CvSeq_header_size_set,0,0,2,0},
@@ -101945,14 +106260,14 @@ static const struct swig_octave_member swig_globals[] = {
 {"CvSeq_free_blocks_get",_wrap_CvSeq_free_blocks_get,0,0,2,0},
 {"CvSeq_first_set",_wrap_CvSeq_first_set,0,0,2,0},
 {"CvSeq_first_get",_wrap_CvSeq_first_get,0,0,2,0},
-{"new_CvSeq",_wrap_new_CvSeq,0,0,2,0},
-{"delete_CvSeq",_wrap_delete_CvSeq,0,0,2,0},
+{"new_CvSeq",_wrap_new_CvSeq,0,0,2,_wrap_new_CvSeq_texinfo},
+{"delete_CvSeq",_wrap_delete_CvSeq,0,0,2,_wrap_delete_CvSeq_texinfo},
 {"CvSetElem_flags_set",_wrap_CvSetElem_flags_set,0,0,2,0},
 {"CvSetElem_flags_get",_wrap_CvSetElem_flags_get,0,0,2,0},
 {"CvSetElem_next_free_set",_wrap_CvSetElem_next_free_set,0,0,2,0},
 {"CvSetElem_next_free_get",_wrap_CvSetElem_next_free_get,0,0,2,0},
-{"new_CvSetElem",_wrap_new_CvSetElem,0,0,2,0},
-{"delete_CvSetElem",_wrap_delete_CvSetElem,0,0,2,0},
+{"new_CvSetElem",_wrap_new_CvSetElem,0,0,2,_wrap_new_CvSetElem_texinfo},
+{"delete_CvSetElem",_wrap_delete_CvSetElem,0,0,2,_wrap_delete_CvSetElem_texinfo},
 {"CvSet_flags_set",_wrap_CvSet_flags_set,0,0,2,0},
 {"CvSet_flags_get",_wrap_CvSet_flags_get,0,0,2,0},
 {"CvSet_header_size_set",_wrap_CvSet_header_size_set,0,0,2,0},
@@ -101985,8 +106300,8 @@ static const struct swig_octave_member swig_globals[] = {
 {"CvSet_free_elems_get",_wrap_CvSet_free_elems_get,0,0,2,0},
 {"CvSet_active_count_set",_wrap_CvSet_active_count_set,0,0,2,0},
 {"CvSet_active_count_get",_wrap_CvSet_active_count_get,0,0,2,0},
-{"new_CvSet",_wrap_new_CvSet,0,0,2,0},
-{"delete_CvSet",_wrap_delete_CvSet,0,0,2,0},
+{"new_CvSet",_wrap_new_CvSet,0,0,2,_wrap_new_CvSet_texinfo},
+{"delete_CvSet",_wrap_delete_CvSet,0,0,2,_wrap_delete_CvSet_texinfo},
 {"CvGraphEdge_flags_set",_wrap_CvGraphEdge_flags_set,0,0,2,0},
 {"CvGraphEdge_flags_get",_wrap_CvGraphEdge_flags_get,0,0,2,0},
 {"CvGraphEdge_weight_set",_wrap_CvGraphEdge_weight_set,0,0,2,0},
@@ -101995,22 +106310,22 @@ static const struct swig_octave_member swig_globals[] = {
 {"CvGraphEdge_next_get",_wrap_CvGraphEdge_next_get,0,0,2,0},
 {"CvGraphEdge_vtx_set",_wrap_CvGraphEdge_vtx_set,0,0,2,0},
 {"CvGraphEdge_vtx_get",_wrap_CvGraphEdge_vtx_get,0,0,2,0},
-{"new_CvGraphEdge",_wrap_new_CvGraphEdge,0,0,2,0},
-{"delete_CvGraphEdge",_wrap_delete_CvGraphEdge,0,0,2,0},
+{"new_CvGraphEdge",_wrap_new_CvGraphEdge,0,0,2,_wrap_new_CvGraphEdge_texinfo},
+{"delete_CvGraphEdge",_wrap_delete_CvGraphEdge,0,0,2,_wrap_delete_CvGraphEdge_texinfo},
 {"CvGraphVtx_flags_set",_wrap_CvGraphVtx_flags_set,0,0,2,0},
 {"CvGraphVtx_flags_get",_wrap_CvGraphVtx_flags_get,0,0,2,0},
 {"CvGraphVtx_first_set",_wrap_CvGraphVtx_first_set,0,0,2,0},
 {"CvGraphVtx_first_get",_wrap_CvGraphVtx_first_get,0,0,2,0},
-{"new_CvGraphVtx",_wrap_new_CvGraphVtx,0,0,2,0},
-{"delete_CvGraphVtx",_wrap_delete_CvGraphVtx,0,0,2,0},
+{"new_CvGraphVtx",_wrap_new_CvGraphVtx,0,0,2,_wrap_new_CvGraphVtx_texinfo},
+{"delete_CvGraphVtx",_wrap_delete_CvGraphVtx,0,0,2,_wrap_delete_CvGraphVtx_texinfo},
 {"CvGraphVtx2D_flags_set",_wrap_CvGraphVtx2D_flags_set,0,0,2,0},
 {"CvGraphVtx2D_flags_get",_wrap_CvGraphVtx2D_flags_get,0,0,2,0},
 {"CvGraphVtx2D_first_set",_wrap_CvGraphVtx2D_first_set,0,0,2,0},
 {"CvGraphVtx2D_first_get",_wrap_CvGraphVtx2D_first_get,0,0,2,0},
 {"CvGraphVtx2D_ptr_set",_wrap_CvGraphVtx2D_ptr_set,0,0,2,0},
 {"CvGraphVtx2D_ptr_get",_wrap_CvGraphVtx2D_ptr_get,0,0,2,0},
-{"new_CvGraphVtx2D",_wrap_new_CvGraphVtx2D,0,0,2,0},
-{"delete_CvGraphVtx2D",_wrap_delete_CvGraphVtx2D,0,0,2,0},
+{"new_CvGraphVtx2D",_wrap_new_CvGraphVtx2D,0,0,2,_wrap_new_CvGraphVtx2D_texinfo},
+{"delete_CvGraphVtx2D",_wrap_delete_CvGraphVtx2D,0,0,2,_wrap_delete_CvGraphVtx2D_texinfo},
 {"CvGraph_flags_set",_wrap_CvGraph_flags_set,0,0,2,0},
 {"CvGraph_flags_get",_wrap_CvGraph_flags_get,0,0,2,0},
 {"CvGraph_header_size_set",_wrap_CvGraph_header_size_set,0,0,2,0},
@@ -102045,8 +106360,8 @@ static const struct swig_octave_member swig_globals[] = {
 {"CvGraph_active_count_get",_wrap_CvGraph_active_count_get,0,0,2,0},
 {"CvGraph_edges_set",_wrap_CvGraph_edges_set,0,0,2,0},
 {"CvGraph_edges_get",_wrap_CvGraph_edges_get,0,0,2,0},
-{"new_CvGraph",_wrap_new_CvGraph,0,0,2,0},
-{"delete_CvGraph",_wrap_delete_CvGraph,0,0,2,0},
+{"new_CvGraph",_wrap_new_CvGraph,0,0,2,_wrap_new_CvGraph_texinfo},
+{"delete_CvGraph",_wrap_delete_CvGraph,0,0,2,_wrap_delete_CvGraph_texinfo},
 {"CvChain_flags_set",_wrap_CvChain_flags_set,0,0,2,0},
 {"CvChain_flags_get",_wrap_CvChain_flags_get,0,0,2,0},
 {"CvChain_header_size_set",_wrap_CvChain_header_size_set,0,0,2,0},
@@ -102077,8 +106392,8 @@ static const struct swig_octave_member swig_globals[] = {
 {"CvChain_first_get",_wrap_CvChain_first_get,0,0,2,0},
 {"CvChain_origin_set",_wrap_CvChain_origin_set,0,0,2,0},
 {"CvChain_origin_get",_wrap_CvChain_origin_get,0,0,2,0},
-{"new_CvChain",_wrap_new_CvChain,0,0,2,0},
-{"delete_CvChain",_wrap_delete_CvChain,0,0,2,0},
+{"new_CvChain",_wrap_new_CvChain,0,0,2,_wrap_new_CvChain_texinfo},
+{"delete_CvChain",_wrap_delete_CvChain,0,0,2,_wrap_delete_CvChain_texinfo},
 {"CvContour_flags_set",_wrap_CvContour_flags_set,0,0,2,0},
 {"CvContour_flags_get",_wrap_CvContour_flags_get,0,0,2,0},
 {"CvContour_header_size_set",_wrap_CvContour_header_size_set,0,0,2,0},
@@ -102113,8 +106428,8 @@ static const struct swig_octave_member swig_globals[] = {
 {"CvContour_color_get",_wrap_CvContour_color_get,0,0,2,0},
 {"CvContour_reserved_set",_wrap_CvContour_reserved_set,0,0,2,0},
 {"CvContour_reserved_get",_wrap_CvContour_reserved_get,0,0,2,0},
-{"new_CvContour",_wrap_new_CvContour,0,0,2,0},
-{"delete_CvContour",_wrap_delete_CvContour,0,0,2,0},
+{"new_CvContour",_wrap_new_CvContour,0,0,2,_wrap_new_CvContour_texinfo},
+{"delete_CvContour",_wrap_delete_CvContour,0,0,2,_wrap_delete_CvContour_texinfo},
 {"CvSeqWriter_header_size_set",_wrap_CvSeqWriter_header_size_set,0,0,2,0},
 {"CvSeqWriter_header_size_get",_wrap_CvSeqWriter_header_size_get,0,0,2,0},
 {"CvSeqWriter_seq_set",_wrap_CvSeqWriter_seq_set,0,0,2,0},
@@ -102127,8 +106442,8 @@ static const struct swig_octave_member swig_globals[] = {
 {"CvSeqWriter_block_min_get",_wrap_CvSeqWriter_block_min_get,0,0,2,0},
 {"CvSeqWriter_block_max_set",_wrap_CvSeqWriter_block_max_set,0,0,2,0},
 {"CvSeqWriter_block_max_get",_wrap_CvSeqWriter_block_max_get,0,0,2,0},
-{"new_CvSeqWriter",_wrap_new_CvSeqWriter,0,0,2,0},
-{"delete_CvSeqWriter",_wrap_delete_CvSeqWriter,0,0,2,0},
+{"new_CvSeqWriter",_wrap_new_CvSeqWriter,0,0,2,_wrap_new_CvSeqWriter_texinfo},
+{"delete_CvSeqWriter",_wrap_delete_CvSeqWriter,0,0,2,_wrap_delete_CvSeqWriter_texinfo},
 {"CvSeqReader_header_size_set",_wrap_CvSeqReader_header_size_set,0,0,2,0},
 {"CvSeqReader_header_size_get",_wrap_CvSeqReader_header_size_get,0,0,2,0},
 {"CvSeqReader_seq_set",_wrap_CvSeqReader_seq_set,0,0,2,0},
@@ -102145,36 +106460,36 @@ static const struct swig_octave_member swig_globals[] = {
 {"CvSeqReader_delta_index_get",_wrap_CvSeqReader_delta_index_get,0,0,2,0},
 {"CvSeqReader_prev_elem_set",_wrap_CvSeqReader_prev_elem_set,0,0,2,0},
 {"CvSeqReader_prev_elem_get",_wrap_CvSeqReader_prev_elem_get,0,0,2,0},
-{"new_CvSeqReader",_wrap_new_CvSeqReader,0,0,2,0},
-{"delete_CvSeqReader",_wrap_delete_CvSeqReader,0,0,2,0},
+{"new_CvSeqReader",_wrap_new_CvSeqReader,0,0,2,_wrap_new_CvSeqReader_texinfo},
+{"delete_CvSeqReader",_wrap_delete_CvSeqReader,0,0,2,_wrap_delete_CvSeqReader_texinfo},
 {"CvAttrList_attr_set",_wrap_CvAttrList_attr_set,0,0,2,0},
 {"CvAttrList_attr_get",_wrap_CvAttrList_attr_get,0,0,2,0},
 {"CvAttrList_next_set",_wrap_CvAttrList_next_set,0,0,2,0},
 {"CvAttrList_next_get",_wrap_CvAttrList_next_get,0,0,2,0},
-{"new_CvAttrList",_wrap_new_CvAttrList,0,0,2,0},
-{"delete_CvAttrList",_wrap_delete_CvAttrList,0,0,2,0},
-{"cvAttrList",_wrap_cvAttrList,0,0,2,0},
+{"new_CvAttrList",_wrap_new_CvAttrList,0,0,2,_wrap_new_CvAttrList_texinfo},
+{"delete_CvAttrList",_wrap_delete_CvAttrList,0,0,2,_wrap_delete_CvAttrList_texinfo},
+{"cvAttrList",_wrap_cvAttrList,0,0,2,_wrap_cvAttrList_texinfo},
 {"CvString_len_set",_wrap_CvString_len_set,0,0,2,0},
 {"CvString_len_get",_wrap_CvString_len_get,0,0,2,0},
 {"CvString_ptr_set",_wrap_CvString_ptr_set,0,0,2,0},
 {"CvString_ptr_get",_wrap_CvString_ptr_get,0,0,2,0},
-{"new_CvString",_wrap_new_CvString,0,0,2,0},
-{"delete_CvString",_wrap_delete_CvString,0,0,2,0},
+{"new_CvString",_wrap_new_CvString,0,0,2,_wrap_new_CvString_texinfo},
+{"delete_CvString",_wrap_delete_CvString,0,0,2,_wrap_delete_CvString_texinfo},
 {"CvStringHashNode_hashval_set",_wrap_CvStringHashNode_hashval_set,0,0,2,0},
 {"CvStringHashNode_hashval_get",_wrap_CvStringHashNode_hashval_get,0,0,2,0},
 {"CvStringHashNode_str_set",_wrap_CvStringHashNode_str_set,0,0,2,0},
 {"CvStringHashNode_str_get",_wrap_CvStringHashNode_str_get,0,0,2,0},
 {"CvStringHashNode_next_set",_wrap_CvStringHashNode_next_set,0,0,2,0},
 {"CvStringHashNode_next_get",_wrap_CvStringHashNode_next_get,0,0,2,0},
-{"new_CvStringHashNode",_wrap_new_CvStringHashNode,0,0,2,0},
-{"delete_CvStringHashNode",_wrap_delete_CvStringHashNode,0,0,2,0},
+{"new_CvStringHashNode",_wrap_new_CvStringHashNode,0,0,2,_wrap_new_CvStringHashNode_texinfo},
+{"delete_CvStringHashNode",_wrap_delete_CvStringHashNode,0,0,2,_wrap_delete_CvStringHashNode_texinfo},
 {"CvFileNode_tag_set",_wrap_CvFileNode_tag_set,0,0,2,0},
 {"CvFileNode_tag_get",_wrap_CvFileNode_tag_get,0,0,2,0},
 {"CvFileNode_info_set",_wrap_CvFileNode_info_set,0,0,2,0},
 {"CvFileNode_info_get",_wrap_CvFileNode_info_get,0,0,2,0},
 {"CvFileNode_data_get",_wrap_CvFileNode_data_get,0,0,2,0},
-{"new_CvFileNode",_wrap_new_CvFileNode,0,0,2,0},
-{"delete_CvFileNode",_wrap_delete_CvFileNode,0,0,2,0},
+{"new_CvFileNode",_wrap_new_CvFileNode,0,0,2,_wrap_new_CvFileNode_texinfo},
+{"delete_CvFileNode",_wrap_delete_CvFileNode,0,0,2,_wrap_delete_CvFileNode_texinfo},
 {"CvFileNode_data_f_set",_wrap_CvFileNode_data_f_set,0,0,2,0},
 {"CvFileNode_data_f_get",_wrap_CvFileNode_data_f_get,0,0,2,0},
 {"CvFileNode_data_i_set",_wrap_CvFileNode_data_i_set,0,0,2,0},
@@ -102185,8 +106500,8 @@ static const struct swig_octave_member swig_globals[] = {
 {"CvFileNode_data_seq_get",_wrap_CvFileNode_data_seq_get,0,0,2,0},
 {"CvFileNode_data_map_set",_wrap_CvFileNode_data_map_set,0,0,2,0},
 {"CvFileNode_data_map_get",_wrap_CvFileNode_data_map_get,0,0,2,0},
-{"new_CvFileNode_data",_wrap_new_CvFileNode_data,0,0,2,0},
-{"delete_CvFileNode_data",_wrap_delete_CvFileNode_data,0,0,2,0},
+{"new_CvFileNode_data",_wrap_new_CvFileNode_data,0,0,2,_wrap_new_CvFileNode_data_texinfo},
+{"delete_CvFileNode_data",_wrap_delete_CvFileNode_data,0,0,2,_wrap_delete_CvFileNode_data_texinfo},
 {"CvTypeInfo_flags_set",_wrap_CvTypeInfo_flags_set,0,0,2,0},
 {"CvTypeInfo_flags_get",_wrap_CvTypeInfo_flags_get,0,0,2,0},
 {"CvTypeInfo_header_size_set",_wrap_CvTypeInfo_header_size_set,0,0,2,0},
@@ -102207,8 +106522,8 @@ static const struct swig_octave_member swig_globals[] = {
 {"CvTypeInfo_write_get",_wrap_CvTypeInfo_write_get,0,0,2,0},
 {"CvTypeInfo_clone_set",_wrap_CvTypeInfo_clone_set,0,0,2,0},
 {"CvTypeInfo_clone_get",_wrap_CvTypeInfo_clone_get,0,0,2,0},
-{"new_CvTypeInfo",_wrap_new_CvTypeInfo,0,0,2,0},
-{"delete_CvTypeInfo",_wrap_delete_CvTypeInfo,0,0,2,0},
+{"new_CvTypeInfo",_wrap_new_CvTypeInfo,0,0,2,_wrap_new_CvTypeInfo_texinfo},
+{"delete_CvTypeInfo",_wrap_delete_CvTypeInfo,0,0,2,_wrap_delete_CvTypeInfo_texinfo},
 {"CvPluginFuncInfo_func_addr_set",_wrap_CvPluginFuncInfo_func_addr_set,0,0,2,0},
 {"CvPluginFuncInfo_func_addr_get",_wrap_CvPluginFuncInfo_func_addr_get,0,0,2,0},
 {"CvPluginFuncInfo_default_func_addr_set",_wrap_CvPluginFuncInfo_default_func_addr_set,0,0,2,0},
@@ -102219,8 +106534,8 @@ static const struct swig_octave_member swig_globals[] = {
 {"CvPluginFuncInfo_search_modules_get",_wrap_CvPluginFuncInfo_search_modules_get,0,0,2,0},
 {"CvPluginFuncInfo_loaded_from_set",_wrap_CvPluginFuncInfo_loaded_from_set,0,0,2,0},
 {"CvPluginFuncInfo_loaded_from_get",_wrap_CvPluginFuncInfo_loaded_from_get,0,0,2,0},
-{"new_CvPluginFuncInfo",_wrap_new_CvPluginFuncInfo,0,0,2,0},
-{"delete_CvPluginFuncInfo",_wrap_delete_CvPluginFuncInfo,0,0,2,0},
+{"new_CvPluginFuncInfo",_wrap_new_CvPluginFuncInfo,0,0,2,_wrap_new_CvPluginFuncInfo_texinfo},
+{"delete_CvPluginFuncInfo",_wrap_delete_CvPluginFuncInfo,0,0,2,_wrap_delete_CvPluginFuncInfo_texinfo},
 {"CvModuleInfo_next_set",_wrap_CvModuleInfo_next_set,0,0,2,0},
 {"CvModuleInfo_next_get",_wrap_CvModuleInfo_next_get,0,0,2,0},
 {"CvModuleInfo_name_set",_wrap_CvModuleInfo_name_set,0,0,2,0},
@@ -102229,38 +106544,38 @@ static const struct swig_octave_member swig_globals[] = {
 {"CvModuleInfo_version_get",_wrap_CvModuleInfo_version_get,0,0,2,0},
 {"CvModuleInfo_func_tab_set",_wrap_CvModuleInfo_func_tab_set,0,0,2,0},
 {"CvModuleInfo_func_tab_get",_wrap_CvModuleInfo_func_tab_get,0,0,2,0},
-{"new_CvModuleInfo",_wrap_new_CvModuleInfo,0,0,2,0},
-{"delete_CvModuleInfo",_wrap_delete_CvModuleInfo,0,0,2,0},
-{"cvAlloc",_wrap_cvAlloc,0,0,2,0},
-{"cvFree_",_wrap_cvFree_,0,0,2,0},
-{"cvReleaseImageHeader",_wrap_cvReleaseImageHeader,0,0,2,0},
-{"cvReleaseImage",_wrap_cvReleaseImage,0,0,2,0},
-{"cvResetImageROI",_wrap_cvResetImageROI,0,0,2,0},
-{"cvCreateMatHeader",_wrap_cvCreateMatHeader,0,0,2,0},
-{"cvInitMatHeader",_wrap_cvInitMatHeader,0,0,2,0},
-{"cvCreateMat",_wrap_cvCreateMat,0,0,2,0},
-{"cvReleaseMat",_wrap_cvReleaseMat,0,0,2,0},
-{"cvDecRefData",_wrap_cvDecRefData,0,0,2,0},
-{"cvIncRefData",_wrap_cvIncRefData,0,0,2,0},
-{"cvCloneMat",_wrap_cvCloneMat,0,0,2,0},
-{"cvGetSubRect",_wrap_cvGetSubRect,0,0,2,0},
-{"cvGetRows",_wrap_cvGetRows,0,0,2,0},
-{"cvGetRow",_wrap_cvGetRow,0,0,2,0},
-{"cvGetCols",_wrap_cvGetCols,0,0,2,0},
-{"cvGetCol",_wrap_cvGetCol,0,0,2,0},
-{"cvGetDiag",_wrap_cvGetDiag,0,0,2,0},
-{"cvScalarToRawData",_wrap_cvScalarToRawData,0,0,2,0},
-{"cvRawDataToScalar",_wrap_cvRawDataToScalar,0,0,2,0},
-{"cvCreateMatNDHeader",_wrap_cvCreateMatNDHeader,0,0,2,0},
-{"cvCreateMatND",_wrap_cvCreateMatND,0,0,2,0},
-{"cvInitMatNDHeader",_wrap_cvInitMatNDHeader,0,0,2,0},
-{"cvReleaseMatND",_wrap_cvReleaseMatND,0,0,2,0},
-{"cvCloneMatND",_wrap_cvCloneMatND,0,0,2,0},
-{"cvCreateSparseMat",_wrap_cvCreateSparseMat,0,0,2,0},
-{"cvReleaseSparseMat",_wrap_cvReleaseSparseMat,0,0,2,0},
-{"cvCloneSparseMat",_wrap_cvCloneSparseMat,0,0,2,0},
-{"cvInitSparseMatIterator",_wrap_cvInitSparseMatIterator,0,0,2,0},
-{"cvGetNextSparseNode",_wrap_cvGetNextSparseNode,0,0,2,0},
+{"new_CvModuleInfo",_wrap_new_CvModuleInfo,0,0,2,_wrap_new_CvModuleInfo_texinfo},
+{"delete_CvModuleInfo",_wrap_delete_CvModuleInfo,0,0,2,_wrap_delete_CvModuleInfo_texinfo},
+{"cvAlloc",_wrap_cvAlloc,0,0,2,_wrap_cvAlloc_texinfo},
+{"cvFree_",_wrap_cvFree_,0,0,2,_wrap_cvFree__texinfo},
+{"cvReleaseImageHeader",_wrap_cvReleaseImageHeader,0,0,2,_wrap_cvReleaseImageHeader_texinfo},
+{"cvReleaseImage",_wrap_cvReleaseImage,0,0,2,_wrap_cvReleaseImage_texinfo},
+{"cvResetImageROI",_wrap_cvResetImageROI,0,0,2,_wrap_cvResetImageROI_texinfo},
+{"cvCreateMatHeader",_wrap_cvCreateMatHeader,0,0,2,_wrap_cvCreateMatHeader_texinfo},
+{"cvInitMatHeader",_wrap_cvInitMatHeader,0,0,2,_wrap_cvInitMatHeader_texinfo},
+{"cvCreateMat",_wrap_cvCreateMat,0,0,2,_wrap_cvCreateMat_texinfo},
+{"cvReleaseMat",_wrap_cvReleaseMat,0,0,2,_wrap_cvReleaseMat_texinfo},
+{"cvDecRefData",_wrap_cvDecRefData,0,0,2,_wrap_cvDecRefData_texinfo},
+{"cvIncRefData",_wrap_cvIncRefData,0,0,2,_wrap_cvIncRefData_texinfo},
+{"cvCloneMat",_wrap_cvCloneMat,0,0,2,_wrap_cvCloneMat_texinfo},
+{"cvGetSubRect",_wrap_cvGetSubRect,0,0,2,_wrap_cvGetSubRect_texinfo},
+{"cvGetRows",_wrap_cvGetRows,0,0,2,_wrap_cvGetRows_texinfo},
+{"cvGetRow",_wrap_cvGetRow,0,0,2,_wrap_cvGetRow_texinfo},
+{"cvGetCols",_wrap_cvGetCols,0,0,2,_wrap_cvGetCols_texinfo},
+{"cvGetCol",_wrap_cvGetCol,0,0,2,_wrap_cvGetCol_texinfo},
+{"cvGetDiag",_wrap_cvGetDiag,0,0,2,_wrap_cvGetDiag_texinfo},
+{"cvScalarToRawData",_wrap_cvScalarToRawData,0,0,2,_wrap_cvScalarToRawData_texinfo},
+{"cvRawDataToScalar",_wrap_cvRawDataToScalar,0,0,2,_wrap_cvRawDataToScalar_texinfo},
+{"cvCreateMatNDHeader",_wrap_cvCreateMatNDHeader,0,0,2,_wrap_cvCreateMatNDHeader_texinfo},
+{"cvCreateMatND",_wrap_cvCreateMatND,0,0,2,_wrap_cvCreateMatND_texinfo},
+{"cvInitMatNDHeader",_wrap_cvInitMatNDHeader,0,0,2,_wrap_cvInitMatNDHeader_texinfo},
+{"cvReleaseMatND",_wrap_cvReleaseMatND,0,0,2,_wrap_cvReleaseMatND_texinfo},
+{"cvCloneMatND",_wrap_cvCloneMatND,0,0,2,_wrap_cvCloneMatND_texinfo},
+{"cvCreateSparseMat",_wrap_cvCreateSparseMat,0,0,2,_wrap_cvCreateSparseMat_texinfo},
+{"cvReleaseSparseMat",_wrap_cvReleaseSparseMat,0,0,2,_wrap_cvReleaseSparseMat_texinfo},
+{"cvCloneSparseMat",_wrap_cvCloneSparseMat,0,0,2,_wrap_cvCloneSparseMat_texinfo},
+{"cvInitSparseMatIterator",_wrap_cvInitSparseMatIterator,0,0,2,_wrap_cvInitSparseMatIterator_texinfo},
+{"cvGetNextSparseNode",_wrap_cvGetNextSparseNode,0,0,2,_wrap_cvGetNextSparseNode_texinfo},
 {"CvNArrayIterator_count_set",_wrap_CvNArrayIterator_count_set,0,0,2,0},
 {"CvNArrayIterator_count_get",_wrap_CvNArrayIterator_count_get,0,0,2,0},
 {"CvNArrayIterator_dims_set",_wrap_CvNArrayIterator_dims_set,0,0,2,0},
@@ -102273,183 +106588,183 @@ static const struct swig_octave_member swig_globals[] = {
 {"CvNArrayIterator_stack_get",_wrap_CvNArrayIterator_stack_get,0,0,2,0},
 {"CvNArrayIterator_hdr_set",_wrap_CvNArrayIterator_hdr_set,0,0,2,0},
 {"CvNArrayIterator_hdr_get",_wrap_CvNArrayIterator_hdr_get,0,0,2,0},
-{"new_CvNArrayIterator",_wrap_new_CvNArrayIterator,0,0,2,0},
-{"delete_CvNArrayIterator",_wrap_delete_CvNArrayIterator,0,0,2,0},
-{"cvInitNArrayIterator",_wrap_cvInitNArrayIterator,0,0,2,0},
-{"cvNextNArraySlice",_wrap_cvNextNArraySlice,0,0,2,0},
-{"cvGetElemType",_wrap_cvGetElemType,0,0,2,0},
-{"cvGetDims",_wrap_cvGetDims,0,0,2,0},
-{"cvGetDimSize",_wrap_cvGetDimSize,0,0,2,0},
-{"cvPtr1D",_wrap_cvPtr1D,0,0,2,0},
-{"cvPtr2D",_wrap_cvPtr2D,0,0,2,0},
-{"cvPtr3D",_wrap_cvPtr3D,0,0,2,0},
-{"cvPtrND",_wrap_cvPtrND,0,0,2,0},
-{"cvGet1D",_wrap_cvGet1D,0,0,2,0},
-{"cvGet2D",_wrap_cvGet2D,0,0,2,0},
-{"cvGet3D",_wrap_cvGet3D,0,0,2,0},
-{"cvGetND",_wrap_cvGetND,0,0,2,0},
-{"cvGetReal1D",_wrap_cvGetReal1D,0,0,2,0},
-{"cvGetReal2D",_wrap_cvGetReal2D,0,0,2,0},
-{"cvGetReal3D",_wrap_cvGetReal3D,0,0,2,0},
-{"cvGetRealND",_wrap_cvGetRealND,0,0,2,0},
-{"cvSet1D",_wrap_cvSet1D,0,0,2,0},
-{"cvSet2D",_wrap_cvSet2D,0,0,2,0},
-{"cvSet3D",_wrap_cvSet3D,0,0,2,0},
-{"cvSetND",_wrap_cvSetND,0,0,2,0},
-{"cvSetReal1D",_wrap_cvSetReal1D,0,0,2,0},
-{"cvSetReal2D",_wrap_cvSetReal2D,0,0,2,0},
-{"cvSetReal3D",_wrap_cvSetReal3D,0,0,2,0},
-{"cvSetRealND",_wrap_cvSetRealND,0,0,2,0},
-{"cvClearND",_wrap_cvClearND,0,0,2,0},
-{"cvGetMat",_wrap_cvGetMat,0,0,2,0},
-{"cvReshapeMatND",_wrap_cvReshapeMatND,0,0,2,0},
-{"cvReshape",_wrap_cvReshape,0,0,2,0},
-{"cvRepeat",_wrap_cvRepeat,0,0,2,0},
-{"cvCreateData",_wrap_cvCreateData,0,0,2,0},
-{"cvReleaseData",_wrap_cvReleaseData,0,0,2,0},
-{"cvSetData",_wrap_cvSetData,0,0,2,0},
-{"cvGetRawData",_wrap_cvGetRawData,0,0,2,0},
-{"cvGetSize",_wrap_cvGetSize,0,0,2,0},
-{"cvCopy",_wrap_cvCopy,0,0,2,0},
-{"cvSet",_wrap_cvSet,0,0,2,0},
-{"cvSetZero",_wrap_cvSetZero,0,0,2,0},
-{"cvSplit",_wrap_cvSplit,0,0,2,0},
-{"cvMerge",_wrap_cvMerge,0,0,2,0},
-{"cvMixChannels",_wrap_cvMixChannels,0,0,2,0},
-{"cvConvertScale",_wrap_cvConvertScale,0,0,2,0},
-{"cvConvertScaleAbs",_wrap_cvConvertScaleAbs,0,0,2,0},
-{"cvCheckTermCriteria",_wrap_cvCheckTermCriteria,0,0,2,0},
-{"cvAdd",_wrap_cvAdd,0,0,2,0},
-{"cvAddS",_wrap_cvAddS,0,0,2,0},
-{"cvSub",_wrap_cvSub,0,0,2,0},
-{"cvSubS",_wrap_cvSubS,0,0,2,0},
-{"cvSubRS",_wrap_cvSubRS,0,0,2,0},
-{"cvMul",_wrap_cvMul,0,0,2,0},
-{"cvDiv",_wrap_cvDiv,0,0,2,0},
-{"cvScaleAdd",_wrap_cvScaleAdd,0,0,2,0},
-{"cvAddWeighted",_wrap_cvAddWeighted,0,0,2,0},
-{"cvDotProduct",_wrap_cvDotProduct,0,0,2,0},
-{"cvAnd",_wrap_cvAnd,0,0,2,0},
-{"cvAndS",_wrap_cvAndS,0,0,2,0},
-{"cvOr",_wrap_cvOr,0,0,2,0},
-{"cvOrS",_wrap_cvOrS,0,0,2,0},
-{"cvXor",_wrap_cvXor,0,0,2,0},
-{"cvXorS",_wrap_cvXorS,0,0,2,0},
-{"cvNot",_wrap_cvNot,0,0,2,0},
-{"cvInRange",_wrap_cvInRange,0,0,2,0},
-{"cvInRangeS",_wrap_cvInRangeS,0,0,2,0},
-{"cvCmp",_wrap_cvCmp,0,0,2,0},
-{"cvCmpS",_wrap_cvCmpS,0,0,2,0},
-{"cvMin",_wrap_cvMin,0,0,2,0},
-{"cvMax",_wrap_cvMax,0,0,2,0},
-{"cvMinS",_wrap_cvMinS,0,0,2,0},
-{"cvMaxS",_wrap_cvMaxS,0,0,2,0},
-{"cvAbsDiff",_wrap_cvAbsDiff,0,0,2,0},
-{"cvAbsDiffS",_wrap_cvAbsDiffS,0,0,2,0},
-{"cvCartToPolar",_wrap_cvCartToPolar,0,0,2,0},
-{"cvPolarToCart",_wrap_cvPolarToCart,0,0,2,0},
-{"cvPow",_wrap_cvPow,0,0,2,0},
-{"cvExp",_wrap_cvExp,0,0,2,0},
-{"cvLog",_wrap_cvLog,0,0,2,0},
-{"cvFastArctan",_wrap_cvFastArctan,0,0,2,0},
-{"cvCbrt",_wrap_cvCbrt,0,0,2,0},
-{"cvCheckArr",_wrap_cvCheckArr,0,0,2,0},
-{"cvRandArr",_wrap_cvRandArr,0,0,2,0},
-{"cvRandShuffle",_wrap_cvRandShuffle,0,0,2,0},
-{"cvSolveCubic",_wrap_cvSolveCubic,0,0,2,0},
-{"cvCrossProduct",_wrap_cvCrossProduct,0,0,2,0},
-{"cvGEMM",_wrap_cvGEMM,0,0,2,0},
-{"cvTransform",_wrap_cvTransform,0,0,2,0},
-{"cvPerspectiveTransform",_wrap_cvPerspectiveTransform,0,0,2,0},
-{"cvMulTransposed",_wrap_cvMulTransposed,0,0,2,0},
-{"cvTranspose",_wrap_cvTranspose,0,0,2,0},
-{"cvFlip",_wrap_cvFlip,0,0,2,0},
-{"cvSVD",_wrap_cvSVD,0,0,2,0},
-{"cvSVBkSb",_wrap_cvSVBkSb,0,0,2,0},
-{"cvInvert",_wrap_cvInvert,0,0,2,0},
-{"cvSolve",_wrap_cvSolve,0,0,2,0},
-{"cvDet",_wrap_cvDet,0,0,2,0},
-{"cvTrace",_wrap_cvTrace,0,0,2,0},
-{"cvEigenVV",_wrap_cvEigenVV,0,0,2,0},
-{"cvSetIdentity",_wrap_cvSetIdentity,0,0,2,0},
-{"cvRange",_wrap_cvRange,0,0,2,0},
-{"cvCalcCovarMatrix",_wrap_cvCalcCovarMatrix,0,0,2,0},
-{"cvCalcPCA",_wrap_cvCalcPCA,0,0,2,0},
-{"cvProjectPCA",_wrap_cvProjectPCA,0,0,2,0},
-{"cvBackProjectPCA",_wrap_cvBackProjectPCA,0,0,2,0},
-{"cvMahalanobis",_wrap_cvMahalanobis,0,0,2,0},
-{"cvSum",_wrap_cvSum,0,0,2,0},
-{"cvCountNonZero",_wrap_cvCountNonZero,0,0,2,0},
-{"cvAvg",_wrap_cvAvg,0,0,2,0},
-{"cvAvgSdv",_wrap_cvAvgSdv,0,0,2,0},
-{"cvMinMaxLoc",_wrap_cvMinMaxLoc,0,0,2,0},
-{"cvNorm",_wrap_cvNorm,0,0,2,0},
-{"cvNormalize",_wrap_cvNormalize,0,0,2,0},
-{"cvReduce",_wrap_cvReduce,0,0,2,0},
-{"cvDFT",_wrap_cvDFT,0,0,2,0},
-{"cvMulSpectrums",_wrap_cvMulSpectrums,0,0,2,0},
-{"cvGetOptimalDFTSize",_wrap_cvGetOptimalDFTSize,0,0,2,0},
-{"cvDCT",_wrap_cvDCT,0,0,2,0},
-{"cvSliceLength",_wrap_cvSliceLength,0,0,2,0},
-{"cvCreateMemStorage",_wrap_cvCreateMemStorage,0,0,2,0},
-{"cvCreateChildMemStorage",_wrap_cvCreateChildMemStorage,0,0,2,0},
-{"cvReleaseMemStorage",_wrap_cvReleaseMemStorage,0,0,2,0},
-{"cvClearMemStorage",_wrap_cvClearMemStorage,0,0,2,0},
-{"cvSaveMemStoragePos",_wrap_cvSaveMemStoragePos,0,0,2,0},
-{"cvRestoreMemStoragePos",_wrap_cvRestoreMemStoragePos,0,0,2,0},
-{"cvMemStorageAlloc",_wrap_cvMemStorageAlloc,0,0,2,0},
-{"cvMemStorageAllocString",_wrap_cvMemStorageAllocString,0,0,2,0},
-{"cvCreateSeq",_wrap_cvCreateSeq,0,0,2,0},
-{"cvSetSeqBlockSize",_wrap_cvSetSeqBlockSize,0,0,2,0},
-{"cvSeqPush",_wrap_cvSeqPush,0,0,2,0},
-{"cvSeqPushFront",_wrap_cvSeqPushFront,0,0,2,0},
-{"cvSeqPop",_wrap_cvSeqPop,0,0,2,0},
-{"cvSeqPopFront",_wrap_cvSeqPopFront,0,0,2,0},
-{"cvSeqPushMulti",_wrap_cvSeqPushMulti,0,0,2,0},
-{"cvSeqPopMulti",_wrap_cvSeqPopMulti,0,0,2,0},
-{"cvSeqInsert",_wrap_cvSeqInsert,0,0,2,0},
-{"cvSeqRemove",_wrap_cvSeqRemove,0,0,2,0},
-{"cvClearSeq",_wrap_cvClearSeq,0,0,2,0},
-{"cvGetSeqElem",_wrap_cvGetSeqElem,0,0,2,0},
-{"cvSeqElemIdx",_wrap_cvSeqElemIdx,0,0,2,0},
-{"cvStartAppendToSeq",_wrap_cvStartAppendToSeq,0,0,2,0},
-{"cvStartWriteSeq",_wrap_cvStartWriteSeq,0,0,2,0},
-{"cvEndWriteSeq",_wrap_cvEndWriteSeq,0,0,2,0},
-{"cvFlushSeqWriter",_wrap_cvFlushSeqWriter,0,0,2,0},
-{"cvStartReadSeq",_wrap_cvStartReadSeq,0,0,2,0},
-{"cvGetSeqReaderPos",_wrap_cvGetSeqReaderPos,0,0,2,0},
-{"cvSetSeqReaderPos",_wrap_cvSetSeqReaderPos,0,0,2,0},
-{"cvMakeSeqHeaderForArray",_wrap_cvMakeSeqHeaderForArray,0,0,2,0},
-{"cvSeqSlice",_wrap_cvSeqSlice,0,0,2,0},
-{"cvCloneSeq",_wrap_cvCloneSeq,0,0,2,0},
-{"cvSeqRemoveSlice",_wrap_cvSeqRemoveSlice,0,0,2,0},
-{"cvSeqInsertSlice",_wrap_cvSeqInsertSlice,0,0,2,0},
-{"cvSeqSort",_wrap_cvSeqSort,0,0,2,0},
-{"cvSeqSearch",_wrap_cvSeqSearch,0,0,2,0},
-{"cvSeqInvert",_wrap_cvSeqInvert,0,0,2,0},
-{"cvSeqPartition",_wrap_cvSeqPartition,0,0,2,0},
-{"cvChangeSeqBlock",_wrap_cvChangeSeqBlock,0,0,2,0},
-{"cvCreateSeqBlock",_wrap_cvCreateSeqBlock,0,0,2,0},
-{"cvCreateSet",_wrap_cvCreateSet,0,0,2,0},
-{"cvSetAdd",_wrap_cvSetAdd,0,0,2,0},
-{"cvSetNew",_wrap_cvSetNew,0,0,2,0},
-{"cvSetRemoveByPtr",_wrap_cvSetRemoveByPtr,0,0,2,0},
-{"cvSetRemove",_wrap_cvSetRemove,0,0,2,0},
-{"cvGetSetElem",_wrap_cvGetSetElem,0,0,2,0},
-{"cvClearSet",_wrap_cvClearSet,0,0,2,0},
-{"cvCreateGraph",_wrap_cvCreateGraph,0,0,2,0},
-{"cvGraphAddVtx",_wrap_cvGraphAddVtx,0,0,2,0},
-{"cvGraphRemoveVtx",_wrap_cvGraphRemoveVtx,0,0,2,0},
-{"cvGraphRemoveVtxByPtr",_wrap_cvGraphRemoveVtxByPtr,0,0,2,0},
-{"cvGraphAddEdge",_wrap_cvGraphAddEdge,0,0,2,0},
-{"cvGraphAddEdgeByPtr",_wrap_cvGraphAddEdgeByPtr,0,0,2,0},
-{"cvGraphRemoveEdge",_wrap_cvGraphRemoveEdge,0,0,2,0},
-{"cvGraphRemoveEdgeByPtr",_wrap_cvGraphRemoveEdgeByPtr,0,0,2,0},
-{"cvFindGraphEdge",_wrap_cvFindGraphEdge,0,0,2,0},
-{"cvFindGraphEdgeByPtr",_wrap_cvFindGraphEdgeByPtr,0,0,2,0},
-{"cvClearGraph",_wrap_cvClearGraph,0,0,2,0},
-{"cvGraphVtxDegree",_wrap_cvGraphVtxDegree,0,0,2,0},
-{"cvGraphVtxDegreeByPtr",_wrap_cvGraphVtxDegreeByPtr,0,0,2,0},
+{"new_CvNArrayIterator",_wrap_new_CvNArrayIterator,0,0,2,_wrap_new_CvNArrayIterator_texinfo},
+{"delete_CvNArrayIterator",_wrap_delete_CvNArrayIterator,0,0,2,_wrap_delete_CvNArrayIterator_texinfo},
+{"cvInitNArrayIterator",_wrap_cvInitNArrayIterator,0,0,2,_wrap_cvInitNArrayIterator_texinfo},
+{"cvNextNArraySlice",_wrap_cvNextNArraySlice,0,0,2,_wrap_cvNextNArraySlice_texinfo},
+{"cvGetElemType",_wrap_cvGetElemType,0,0,2,_wrap_cvGetElemType_texinfo},
+{"cvGetDims",_wrap_cvGetDims,0,0,2,_wrap_cvGetDims_texinfo},
+{"cvGetDimSize",_wrap_cvGetDimSize,0,0,2,_wrap_cvGetDimSize_texinfo},
+{"cvPtr1D",_wrap_cvPtr1D,0,0,2,_wrap_cvPtr1D_texinfo},
+{"cvPtr2D",_wrap_cvPtr2D,0,0,2,_wrap_cvPtr2D_texinfo},
+{"cvPtr3D",_wrap_cvPtr3D,0,0,2,_wrap_cvPtr3D_texinfo},
+{"cvPtrND",_wrap_cvPtrND,0,0,2,_wrap_cvPtrND_texinfo},
+{"cvGet1D",_wrap_cvGet1D,0,0,2,_wrap_cvGet1D_texinfo},
+{"cvGet2D",_wrap_cvGet2D,0,0,2,_wrap_cvGet2D_texinfo},
+{"cvGet3D",_wrap_cvGet3D,0,0,2,_wrap_cvGet3D_texinfo},
+{"cvGetND",_wrap_cvGetND,0,0,2,_wrap_cvGetND_texinfo},
+{"cvGetReal1D",_wrap_cvGetReal1D,0,0,2,_wrap_cvGetReal1D_texinfo},
+{"cvGetReal2D",_wrap_cvGetReal2D,0,0,2,_wrap_cvGetReal2D_texinfo},
+{"cvGetReal3D",_wrap_cvGetReal3D,0,0,2,_wrap_cvGetReal3D_texinfo},
+{"cvGetRealND",_wrap_cvGetRealND,0,0,2,_wrap_cvGetRealND_texinfo},
+{"cvSet1D",_wrap_cvSet1D,0,0,2,_wrap_cvSet1D_texinfo},
+{"cvSet2D",_wrap_cvSet2D,0,0,2,_wrap_cvSet2D_texinfo},
+{"cvSet3D",_wrap_cvSet3D,0,0,2,_wrap_cvSet3D_texinfo},
+{"cvSetND",_wrap_cvSetND,0,0,2,_wrap_cvSetND_texinfo},
+{"cvSetReal1D",_wrap_cvSetReal1D,0,0,2,_wrap_cvSetReal1D_texinfo},
+{"cvSetReal2D",_wrap_cvSetReal2D,0,0,2,_wrap_cvSetReal2D_texinfo},
+{"cvSetReal3D",_wrap_cvSetReal3D,0,0,2,_wrap_cvSetReal3D_texinfo},
+{"cvSetRealND",_wrap_cvSetRealND,0,0,2,_wrap_cvSetRealND_texinfo},
+{"cvClearND",_wrap_cvClearND,0,0,2,_wrap_cvClearND_texinfo},
+{"cvGetMat",_wrap_cvGetMat,0,0,2,_wrap_cvGetMat_texinfo},
+{"cvReshapeMatND",_wrap_cvReshapeMatND,0,0,2,_wrap_cvReshapeMatND_texinfo},
+{"cvReshape",_wrap_cvReshape,0,0,2,_wrap_cvReshape_texinfo},
+{"cvRepeat",_wrap_cvRepeat,0,0,2,_wrap_cvRepeat_texinfo},
+{"cvCreateData",_wrap_cvCreateData,0,0,2,_wrap_cvCreateData_texinfo},
+{"cvReleaseData",_wrap_cvReleaseData,0,0,2,_wrap_cvReleaseData_texinfo},
+{"cvSetData",_wrap_cvSetData,0,0,2,_wrap_cvSetData_texinfo},
+{"cvGetRawData",_wrap_cvGetRawData,0,0,2,_wrap_cvGetRawData_texinfo},
+{"cvGetSize",_wrap_cvGetSize,0,0,2,_wrap_cvGetSize_texinfo},
+{"cvCopy",_wrap_cvCopy,0,0,2,_wrap_cvCopy_texinfo},
+{"cvSet",_wrap_cvSet,0,0,2,_wrap_cvSet_texinfo},
+{"cvSetZero",_wrap_cvSetZero,0,0,2,_wrap_cvSetZero_texinfo},
+{"cvSplit",_wrap_cvSplit,0,0,2,_wrap_cvSplit_texinfo},
+{"cvMerge",_wrap_cvMerge,0,0,2,_wrap_cvMerge_texinfo},
+{"cvMixChannels",_wrap_cvMixChannels,0,0,2,_wrap_cvMixChannels_texinfo},
+{"cvConvertScale",_wrap_cvConvertScale,0,0,2,_wrap_cvConvertScale_texinfo},
+{"cvConvertScaleAbs",_wrap_cvConvertScaleAbs,0,0,2,_wrap_cvConvertScaleAbs_texinfo},
+{"cvCheckTermCriteria",_wrap_cvCheckTermCriteria,0,0,2,_wrap_cvCheckTermCriteria_texinfo},
+{"cvAdd",_wrap_cvAdd,0,0,2,_wrap_cvAdd_texinfo},
+{"cvAddS",_wrap_cvAddS,0,0,2,_wrap_cvAddS_texinfo},
+{"cvSub",_wrap_cvSub,0,0,2,_wrap_cvSub_texinfo},
+{"cvSubS",_wrap_cvSubS,0,0,2,_wrap_cvSubS_texinfo},
+{"cvSubRS",_wrap_cvSubRS,0,0,2,_wrap_cvSubRS_texinfo},
+{"cvMul",_wrap_cvMul,0,0,2,_wrap_cvMul_texinfo},
+{"cvDiv",_wrap_cvDiv,0,0,2,_wrap_cvDiv_texinfo},
+{"cvScaleAdd",_wrap_cvScaleAdd,0,0,2,_wrap_cvScaleAdd_texinfo},
+{"cvAddWeighted",_wrap_cvAddWeighted,0,0,2,_wrap_cvAddWeighted_texinfo},
+{"cvDotProduct",_wrap_cvDotProduct,0,0,2,_wrap_cvDotProduct_texinfo},
+{"cvAnd",_wrap_cvAnd,0,0,2,_wrap_cvAnd_texinfo},
+{"cvAndS",_wrap_cvAndS,0,0,2,_wrap_cvAndS_texinfo},
+{"cvOr",_wrap_cvOr,0,0,2,_wrap_cvOr_texinfo},
+{"cvOrS",_wrap_cvOrS,0,0,2,_wrap_cvOrS_texinfo},
+{"cvXor",_wrap_cvXor,0,0,2,_wrap_cvXor_texinfo},
+{"cvXorS",_wrap_cvXorS,0,0,2,_wrap_cvXorS_texinfo},
+{"cvNot",_wrap_cvNot,0,0,2,_wrap_cvNot_texinfo},
+{"cvInRange",_wrap_cvInRange,0,0,2,_wrap_cvInRange_texinfo},
+{"cvInRangeS",_wrap_cvInRangeS,0,0,2,_wrap_cvInRangeS_texinfo},
+{"cvCmp",_wrap_cvCmp,0,0,2,_wrap_cvCmp_texinfo},
+{"cvCmpS",_wrap_cvCmpS,0,0,2,_wrap_cvCmpS_texinfo},
+{"cvMin",_wrap_cvMin,0,0,2,_wrap_cvMin_texinfo},
+{"cvMax",_wrap_cvMax,0,0,2,_wrap_cvMax_texinfo},
+{"cvMinS",_wrap_cvMinS,0,0,2,_wrap_cvMinS_texinfo},
+{"cvMaxS",_wrap_cvMaxS,0,0,2,_wrap_cvMaxS_texinfo},
+{"cvAbsDiff",_wrap_cvAbsDiff,0,0,2,_wrap_cvAbsDiff_texinfo},
+{"cvAbsDiffS",_wrap_cvAbsDiffS,0,0,2,_wrap_cvAbsDiffS_texinfo},
+{"cvCartToPolar",_wrap_cvCartToPolar,0,0,2,_wrap_cvCartToPolar_texinfo},
+{"cvPolarToCart",_wrap_cvPolarToCart,0,0,2,_wrap_cvPolarToCart_texinfo},
+{"cvPow",_wrap_cvPow,0,0,2,_wrap_cvPow_texinfo},
+{"cvExp",_wrap_cvExp,0,0,2,_wrap_cvExp_texinfo},
+{"cvLog",_wrap_cvLog,0,0,2,_wrap_cvLog_texinfo},
+{"cvFastArctan",_wrap_cvFastArctan,0,0,2,_wrap_cvFastArctan_texinfo},
+{"cvCbrt",_wrap_cvCbrt,0,0,2,_wrap_cvCbrt_texinfo},
+{"cvCheckArr",_wrap_cvCheckArr,0,0,2,_wrap_cvCheckArr_texinfo},
+{"cvRandArr",_wrap_cvRandArr,0,0,2,_wrap_cvRandArr_texinfo},
+{"cvRandShuffle",_wrap_cvRandShuffle,0,0,2,_wrap_cvRandShuffle_texinfo},
+{"cvSolveCubic",_wrap_cvSolveCubic,0,0,2,_wrap_cvSolveCubic_texinfo},
+{"cvCrossProduct",_wrap_cvCrossProduct,0,0,2,_wrap_cvCrossProduct_texinfo},
+{"cvGEMM",_wrap_cvGEMM,0,0,2,_wrap_cvGEMM_texinfo},
+{"cvTransform",_wrap_cvTransform,0,0,2,_wrap_cvTransform_texinfo},
+{"cvPerspectiveTransform",_wrap_cvPerspectiveTransform,0,0,2,_wrap_cvPerspectiveTransform_texinfo},
+{"cvMulTransposed",_wrap_cvMulTransposed,0,0,2,_wrap_cvMulTransposed_texinfo},
+{"cvTranspose",_wrap_cvTranspose,0,0,2,_wrap_cvTranspose_texinfo},
+{"cvFlip",_wrap_cvFlip,0,0,2,_wrap_cvFlip_texinfo},
+{"cvSVD",_wrap_cvSVD,0,0,2,_wrap_cvSVD_texinfo},
+{"cvSVBkSb",_wrap_cvSVBkSb,0,0,2,_wrap_cvSVBkSb_texinfo},
+{"cvInvert",_wrap_cvInvert,0,0,2,_wrap_cvInvert_texinfo},
+{"cvSolve",_wrap_cvSolve,0,0,2,_wrap_cvSolve_texinfo},
+{"cvDet",_wrap_cvDet,0,0,2,_wrap_cvDet_texinfo},
+{"cvTrace",_wrap_cvTrace,0,0,2,_wrap_cvTrace_texinfo},
+{"cvEigenVV",_wrap_cvEigenVV,0,0,2,_wrap_cvEigenVV_texinfo},
+{"cvSetIdentity",_wrap_cvSetIdentity,0,0,2,_wrap_cvSetIdentity_texinfo},
+{"cvRange",_wrap_cvRange,0,0,2,_wrap_cvRange_texinfo},
+{"cvCalcCovarMatrix",_wrap_cvCalcCovarMatrix,0,0,2,_wrap_cvCalcCovarMatrix_texinfo},
+{"cvCalcPCA",_wrap_cvCalcPCA,0,0,2,_wrap_cvCalcPCA_texinfo},
+{"cvProjectPCA",_wrap_cvProjectPCA,0,0,2,_wrap_cvProjectPCA_texinfo},
+{"cvBackProjectPCA",_wrap_cvBackProjectPCA,0,0,2,_wrap_cvBackProjectPCA_texinfo},
+{"cvMahalanobis",_wrap_cvMahalanobis,0,0,2,_wrap_cvMahalanobis_texinfo},
+{"cvSum",_wrap_cvSum,0,0,2,_wrap_cvSum_texinfo},
+{"cvCountNonZero",_wrap_cvCountNonZero,0,0,2,_wrap_cvCountNonZero_texinfo},
+{"cvAvg",_wrap_cvAvg,0,0,2,_wrap_cvAvg_texinfo},
+{"cvAvgSdv",_wrap_cvAvgSdv,0,0,2,_wrap_cvAvgSdv_texinfo},
+{"cvMinMaxLoc",_wrap_cvMinMaxLoc,0,0,2,_wrap_cvMinMaxLoc_texinfo},
+{"cvNorm",_wrap_cvNorm,0,0,2,_wrap_cvNorm_texinfo},
+{"cvNormalize",_wrap_cvNormalize,0,0,2,_wrap_cvNormalize_texinfo},
+{"cvReduce",_wrap_cvReduce,0,0,2,_wrap_cvReduce_texinfo},
+{"cvDFT",_wrap_cvDFT,0,0,2,_wrap_cvDFT_texinfo},
+{"cvMulSpectrums",_wrap_cvMulSpectrums,0,0,2,_wrap_cvMulSpectrums_texinfo},
+{"cvGetOptimalDFTSize",_wrap_cvGetOptimalDFTSize,0,0,2,_wrap_cvGetOptimalDFTSize_texinfo},
+{"cvDCT",_wrap_cvDCT,0,0,2,_wrap_cvDCT_texinfo},
+{"cvSliceLength",_wrap_cvSliceLength,0,0,2,_wrap_cvSliceLength_texinfo},
+{"cvCreateMemStorage",_wrap_cvCreateMemStorage,0,0,2,_wrap_cvCreateMemStorage_texinfo},
+{"cvCreateChildMemStorage",_wrap_cvCreateChildMemStorage,0,0,2,_wrap_cvCreateChildMemStorage_texinfo},
+{"cvReleaseMemStorage",_wrap_cvReleaseMemStorage,0,0,2,_wrap_cvReleaseMemStorage_texinfo},
+{"cvClearMemStorage",_wrap_cvClearMemStorage,0,0,2,_wrap_cvClearMemStorage_texinfo},
+{"cvSaveMemStoragePos",_wrap_cvSaveMemStoragePos,0,0,2,_wrap_cvSaveMemStoragePos_texinfo},
+{"cvRestoreMemStoragePos",_wrap_cvRestoreMemStoragePos,0,0,2,_wrap_cvRestoreMemStoragePos_texinfo},
+{"cvMemStorageAlloc",_wrap_cvMemStorageAlloc,0,0,2,_wrap_cvMemStorageAlloc_texinfo},
+{"cvMemStorageAllocString",_wrap_cvMemStorageAllocString,0,0,2,_wrap_cvMemStorageAllocString_texinfo},
+{"cvCreateSeq",_wrap_cvCreateSeq,0,0,2,_wrap_cvCreateSeq_texinfo},
+{"cvSetSeqBlockSize",_wrap_cvSetSeqBlockSize,0,0,2,_wrap_cvSetSeqBlockSize_texinfo},
+{"cvSeqPush",_wrap_cvSeqPush,0,0,2,_wrap_cvSeqPush_texinfo},
+{"cvSeqPushFront",_wrap_cvSeqPushFront,0,0,2,_wrap_cvSeqPushFront_texinfo},
+{"cvSeqPop",_wrap_cvSeqPop,0,0,2,_wrap_cvSeqPop_texinfo},
+{"cvSeqPopFront",_wrap_cvSeqPopFront,0,0,2,_wrap_cvSeqPopFront_texinfo},
+{"cvSeqPushMulti",_wrap_cvSeqPushMulti,0,0,2,_wrap_cvSeqPushMulti_texinfo},
+{"cvSeqPopMulti",_wrap_cvSeqPopMulti,0,0,2,_wrap_cvSeqPopMulti_texinfo},
+{"cvSeqInsert",_wrap_cvSeqInsert,0,0,2,_wrap_cvSeqInsert_texinfo},
+{"cvSeqRemove",_wrap_cvSeqRemove,0,0,2,_wrap_cvSeqRemove_texinfo},
+{"cvClearSeq",_wrap_cvClearSeq,0,0,2,_wrap_cvClearSeq_texinfo},
+{"cvGetSeqElem",_wrap_cvGetSeqElem,0,0,2,_wrap_cvGetSeqElem_texinfo},
+{"cvSeqElemIdx",_wrap_cvSeqElemIdx,0,0,2,_wrap_cvSeqElemIdx_texinfo},
+{"cvStartAppendToSeq",_wrap_cvStartAppendToSeq,0,0,2,_wrap_cvStartAppendToSeq_texinfo},
+{"cvStartWriteSeq",_wrap_cvStartWriteSeq,0,0,2,_wrap_cvStartWriteSeq_texinfo},
+{"cvEndWriteSeq",_wrap_cvEndWriteSeq,0,0,2,_wrap_cvEndWriteSeq_texinfo},
+{"cvFlushSeqWriter",_wrap_cvFlushSeqWriter,0,0,2,_wrap_cvFlushSeqWriter_texinfo},
+{"cvStartReadSeq",_wrap_cvStartReadSeq,0,0,2,_wrap_cvStartReadSeq_texinfo},
+{"cvGetSeqReaderPos",_wrap_cvGetSeqReaderPos,0,0,2,_wrap_cvGetSeqReaderPos_texinfo},
+{"cvSetSeqReaderPos",_wrap_cvSetSeqReaderPos,0,0,2,_wrap_cvSetSeqReaderPos_texinfo},
+{"cvMakeSeqHeaderForArray",_wrap_cvMakeSeqHeaderForArray,0,0,2,_wrap_cvMakeSeqHeaderForArray_texinfo},
+{"cvSeqSlice",_wrap_cvSeqSlice,0,0,2,_wrap_cvSeqSlice_texinfo},
+{"cvCloneSeq",_wrap_cvCloneSeq,0,0,2,_wrap_cvCloneSeq_texinfo},
+{"cvSeqRemoveSlice",_wrap_cvSeqRemoveSlice,0,0,2,_wrap_cvSeqRemoveSlice_texinfo},
+{"cvSeqInsertSlice",_wrap_cvSeqInsertSlice,0,0,2,_wrap_cvSeqInsertSlice_texinfo},
+{"cvSeqSort",_wrap_cvSeqSort,0,0,2,_wrap_cvSeqSort_texinfo},
+{"cvSeqSearch",_wrap_cvSeqSearch,0,0,2,_wrap_cvSeqSearch_texinfo},
+{"cvSeqInvert",_wrap_cvSeqInvert,0,0,2,_wrap_cvSeqInvert_texinfo},
+{"cvSeqPartition",_wrap_cvSeqPartition,0,0,2,_wrap_cvSeqPartition_texinfo},
+{"cvChangeSeqBlock",_wrap_cvChangeSeqBlock,0,0,2,_wrap_cvChangeSeqBlock_texinfo},
+{"cvCreateSeqBlock",_wrap_cvCreateSeqBlock,0,0,2,_wrap_cvCreateSeqBlock_texinfo},
+{"cvCreateSet",_wrap_cvCreateSet,0,0,2,_wrap_cvCreateSet_texinfo},
+{"cvSetAdd",_wrap_cvSetAdd,0,0,2,_wrap_cvSetAdd_texinfo},
+{"cvSetNew",_wrap_cvSetNew,0,0,2,_wrap_cvSetNew_texinfo},
+{"cvSetRemoveByPtr",_wrap_cvSetRemoveByPtr,0,0,2,_wrap_cvSetRemoveByPtr_texinfo},
+{"cvSetRemove",_wrap_cvSetRemove,0,0,2,_wrap_cvSetRemove_texinfo},
+{"cvGetSetElem",_wrap_cvGetSetElem,0,0,2,_wrap_cvGetSetElem_texinfo},
+{"cvClearSet",_wrap_cvClearSet,0,0,2,_wrap_cvClearSet_texinfo},
+{"cvCreateGraph",_wrap_cvCreateGraph,0,0,2,_wrap_cvCreateGraph_texinfo},
+{"cvGraphAddVtx",_wrap_cvGraphAddVtx,0,0,2,_wrap_cvGraphAddVtx_texinfo},
+{"cvGraphRemoveVtx",_wrap_cvGraphRemoveVtx,0,0,2,_wrap_cvGraphRemoveVtx_texinfo},
+{"cvGraphRemoveVtxByPtr",_wrap_cvGraphRemoveVtxByPtr,0,0,2,_wrap_cvGraphRemoveVtxByPtr_texinfo},
+{"cvGraphAddEdge",_wrap_cvGraphAddEdge,0,0,2,_wrap_cvGraphAddEdge_texinfo},
+{"cvGraphAddEdgeByPtr",_wrap_cvGraphAddEdgeByPtr,0,0,2,_wrap_cvGraphAddEdgeByPtr_texinfo},
+{"cvGraphRemoveEdge",_wrap_cvGraphRemoveEdge,0,0,2,_wrap_cvGraphRemoveEdge_texinfo},
+{"cvGraphRemoveEdgeByPtr",_wrap_cvGraphRemoveEdgeByPtr,0,0,2,_wrap_cvGraphRemoveEdgeByPtr_texinfo},
+{"cvFindGraphEdge",_wrap_cvFindGraphEdge,0,0,2,_wrap_cvFindGraphEdge_texinfo},
+{"cvFindGraphEdgeByPtr",_wrap_cvFindGraphEdgeByPtr,0,0,2,_wrap_cvFindGraphEdgeByPtr_texinfo},
+{"cvClearGraph",_wrap_cvClearGraph,0,0,2,_wrap_cvClearGraph_texinfo},
+{"cvGraphVtxDegree",_wrap_cvGraphVtxDegree,0,0,2,_wrap_cvGraphVtxDegree_texinfo},
+{"cvGraphVtxDegreeByPtr",_wrap_cvGraphVtxDegreeByPtr,0,0,2,_wrap_cvGraphVtxDegreeByPtr_texinfo},
 {"CvGraphScanner_vtx_set",_wrap_CvGraphScanner_vtx_set,0,0,2,0},
 {"CvGraphScanner_vtx_get",_wrap_CvGraphScanner_vtx_get,0,0,2,0},
 {"CvGraphScanner_dst_set",_wrap_CvGraphScanner_dst_set,0,0,2,0},
@@ -102464,21 +106779,21 @@ static const struct swig_octave_member swig_globals[] = {
 {"CvGraphScanner_index_get",_wrap_CvGraphScanner_index_get,0,0,2,0},
 {"CvGraphScanner_mask_set",_wrap_CvGraphScanner_mask_set,0,0,2,0},
 {"CvGraphScanner_mask_get",_wrap_CvGraphScanner_mask_get,0,0,2,0},
-{"delete_CvGraphScanner",_wrap_delete_CvGraphScanner,0,0,2,0},
-{"cvCreateGraphScanner",_wrap_cvCreateGraphScanner,0,0,2,0},
-{"cvReleaseGraphScanner",_wrap_cvReleaseGraphScanner,0,0,2,0},
-{"cvNextGraphItem",_wrap_cvNextGraphItem,0,0,2,0},
-{"cvCloneGraph",_wrap_cvCloneGraph,0,0,2,0},
-{"cvLine",_wrap_cvLine,0,0,2,0},
-{"cvRectangle",_wrap_cvRectangle,0,0,2,0},
-{"cvCircle",_wrap_cvCircle,0,0,2,0},
-{"cvEllipse",_wrap_cvEllipse,0,0,2,0},
-{"cvEllipseBox",_wrap_cvEllipseBox,0,0,2,0},
-{"cvFillConvexPoly",_wrap_cvFillConvexPoly,0,0,2,0},
-{"cvFillPoly",_wrap_cvFillPoly,0,0,2,0},
-{"cvPolyLine",_wrap_cvPolyLine,0,0,2,0},
-{"cvClipLine",_wrap_cvClipLine,0,0,2,0},
-{"cvInitLineIterator",_wrap_cvInitLineIterator,0,0,2,0},
+{"delete_CvGraphScanner",_wrap_delete_CvGraphScanner,0,0,2,_wrap_delete_CvGraphScanner_texinfo},
+{"cvCreateGraphScanner",_wrap_cvCreateGraphScanner,0,0,2,_wrap_cvCreateGraphScanner_texinfo},
+{"cvReleaseGraphScanner",_wrap_cvReleaseGraphScanner,0,0,2,_wrap_cvReleaseGraphScanner_texinfo},
+{"cvNextGraphItem",_wrap_cvNextGraphItem,0,0,2,_wrap_cvNextGraphItem_texinfo},
+{"cvCloneGraph",_wrap_cvCloneGraph,0,0,2,_wrap_cvCloneGraph_texinfo},
+{"cvLine",_wrap_cvLine,0,0,2,_wrap_cvLine_texinfo},
+{"cvRectangle",_wrap_cvRectangle,0,0,2,_wrap_cvRectangle_texinfo},
+{"cvCircle",_wrap_cvCircle,0,0,2,_wrap_cvCircle_texinfo},
+{"cvEllipse",_wrap_cvEllipse,0,0,2,_wrap_cvEllipse_texinfo},
+{"cvEllipseBox",_wrap_cvEllipseBox,0,0,2,_wrap_cvEllipseBox_texinfo},
+{"cvFillConvexPoly",_wrap_cvFillConvexPoly,0,0,2,_wrap_cvFillConvexPoly_texinfo},
+{"cvFillPoly",_wrap_cvFillPoly,0,0,2,_wrap_cvFillPoly_texinfo},
+{"cvPolyLine",_wrap_cvPolyLine,0,0,2,_wrap_cvPolyLine_texinfo},
+{"cvClipLine",_wrap_cvClipLine,0,0,2,_wrap_cvClipLine_texinfo},
+{"cvInitLineIterator",_wrap_cvInitLineIterator,0,0,2,_wrap_cvInitLineIterator_texinfo},
 {"CvFont_font_face_set",_wrap_CvFont_font_face_set,0,0,2,0},
 {"CvFont_font_face_get",_wrap_CvFont_font_face_get,0,0,2,0},
 {"CvFont_ascii_set",_wrap_CvFont_ascii_set,0,0,2,0},
@@ -102499,157 +106814,157 @@ static const struct swig_octave_member swig_globals[] = {
 {"CvFont_dx_get",_wrap_CvFont_dx_get,0,0,2,0},
 {"CvFont_line_type_set",_wrap_CvFont_line_type_set,0,0,2,0},
 {"CvFont_line_type_get",_wrap_CvFont_line_type_get,0,0,2,0},
-{"new_CvFont",_wrap_new_CvFont,0,0,2,0},
-{"delete_CvFont",_wrap_delete_CvFont,0,0,2,0},
-{"cvInitFont",_wrap_cvInitFont,0,0,2,0},
-{"cvFont",_wrap_cvFont,0,0,2,0},
-{"cvPutText",_wrap_cvPutText,0,0,2,0},
-{"cvGetTextSize",_wrap_cvGetTextSize,0,0,2,0},
-{"cvColorToScalar",_wrap_cvColorToScalar,0,0,2,0},
-{"cvEllipse2Poly",_wrap_cvEllipse2Poly,0,0,2,0},
-{"cvDrawContours",_wrap_cvDrawContours,0,0,2,0},
-{"cvLUT",_wrap_cvLUT,0,0,2,0},
+{"new_CvFont",_wrap_new_CvFont,0,0,2,_wrap_new_CvFont_texinfo},
+{"delete_CvFont",_wrap_delete_CvFont,0,0,2,_wrap_delete_CvFont_texinfo},
+{"cvInitFont",_wrap_cvInitFont,0,0,2,_wrap_cvInitFont_texinfo},
+{"cvFont",_wrap_cvFont,0,0,2,_wrap_cvFont_texinfo},
+{"cvPutText",_wrap_cvPutText,0,0,2,_wrap_cvPutText_texinfo},
+{"cvGetTextSize",_wrap_cvGetTextSize,0,0,2,_wrap_cvGetTextSize_texinfo},
+{"cvColorToScalar",_wrap_cvColorToScalar,0,0,2,_wrap_cvColorToScalar_texinfo},
+{"cvEllipse2Poly",_wrap_cvEllipse2Poly,0,0,2,_wrap_cvEllipse2Poly_texinfo},
+{"cvDrawContours",_wrap_cvDrawContours,0,0,2,_wrap_cvDrawContours_texinfo},
+{"cvLUT",_wrap_cvLUT,0,0,2,_wrap_cvLUT_texinfo},
 {"CvTreeNodeIterator_node_set",_wrap_CvTreeNodeIterator_node_set,0,0,2,0},
 {"CvTreeNodeIterator_node_get",_wrap_CvTreeNodeIterator_node_get,0,0,2,0},
 {"CvTreeNodeIterator_level_set",_wrap_CvTreeNodeIterator_level_set,0,0,2,0},
 {"CvTreeNodeIterator_level_get",_wrap_CvTreeNodeIterator_level_get,0,0,2,0},
 {"CvTreeNodeIterator_max_level_set",_wrap_CvTreeNodeIterator_max_level_set,0,0,2,0},
 {"CvTreeNodeIterator_max_level_get",_wrap_CvTreeNodeIterator_max_level_get,0,0,2,0},
-{"new_CvTreeNodeIterator",_wrap_new_CvTreeNodeIterator,0,0,2,0},
-{"delete_CvTreeNodeIterator",_wrap_delete_CvTreeNodeIterator,0,0,2,0},
-{"cvInitTreeNodeIterator",_wrap_cvInitTreeNodeIterator,0,0,2,0},
-{"cvNextTreeNode",_wrap_cvNextTreeNode,0,0,2,0},
-{"cvPrevTreeNode",_wrap_cvPrevTreeNode,0,0,2,0},
-{"cvInsertNodeIntoTree",_wrap_cvInsertNodeIntoTree,0,0,2,0},
-{"cvRemoveNodeFromTree",_wrap_cvRemoveNodeFromTree,0,0,2,0},
-{"cvTreeToNodeSeq",_wrap_cvTreeToNodeSeq,0,0,2,0},
-{"cvKMeans2",_wrap_cvKMeans2,0,0,2,0},
-{"cvRegisterModule",_wrap_cvRegisterModule,0,0,2,0},
-{"cvUseOptimized",_wrap_cvUseOptimized,0,0,2,0},
-{"cvGetModuleInfo",_wrap_cvGetModuleInfo,0,0,2,0},
-{"cvGetErrStatus",_wrap_cvGetErrStatus,0,0,2,0},
-{"cvSetErrStatus",_wrap_cvSetErrStatus,0,0,2,0},
-{"cvGetErrMode",_wrap_cvGetErrMode,0,0,2,0},
-{"cvSetErrMode",_wrap_cvSetErrMode,0,0,2,0},
-{"cvError",_wrap_cvError,0,0,2,0},
-{"cvErrorStr",_wrap_cvErrorStr,0,0,2,0},
-{"cvGetErrInfo",_wrap_cvGetErrInfo,0,0,2,0},
-{"cvErrorFromIppStatus",_wrap_cvErrorFromIppStatus,0,0,2,0},
-{"cvRedirectError",_wrap_cvRedirectError,0,0,2,0},
-{"cvNulDevReport",_wrap_cvNulDevReport,0,0,2,0},
-{"cvStdErrReport",_wrap_cvStdErrReport,0,0,2,0},
-{"cvGuiBoxReport",_wrap_cvGuiBoxReport,0,0,2,0},
-{"cvSetMemoryManager",_wrap_cvSetMemoryManager,0,0,2,0},
-{"cvSetIPLAllocators",_wrap_cvSetIPLAllocators,0,0,2,0},
-{"cvOpenFileStorage",_wrap_cvOpenFileStorage,0,0,2,0},
-{"cvReleaseFileStorage",_wrap_cvReleaseFileStorage,0,0,2,0},
-{"cvAttrValue",_wrap_cvAttrValue,0,0,2,0},
-{"cvStartWriteStruct",_wrap_cvStartWriteStruct,0,0,2,0},
-{"cvEndWriteStruct",_wrap_cvEndWriteStruct,0,0,2,0},
-{"cvWriteInt",_wrap_cvWriteInt,0,0,2,0},
-{"cvWriteReal",_wrap_cvWriteReal,0,0,2,0},
-{"cvWriteString",_wrap_cvWriteString,0,0,2,0},
-{"cvWriteComment",_wrap_cvWriteComment,0,0,2,0},
-{"cvWrite",_wrap_cvWrite,0,0,2,0},
-{"cvStartNextStream",_wrap_cvStartNextStream,0,0,2,0},
-{"cvWriteRawData",_wrap_cvWriteRawData,0,0,2,0},
-{"cvGetHashedKey",_wrap_cvGetHashedKey,0,0,2,0},
-{"cvGetRootFileNode",_wrap_cvGetRootFileNode,0,0,2,0},
-{"cvGetFileNode",_wrap_cvGetFileNode,0,0,2,0},
-{"cvGetFileNodeByName",_wrap_cvGetFileNodeByName,0,0,2,0},
-{"cvReadInt",_wrap_cvReadInt,0,0,2,0},
-{"cvReadIntByName",_wrap_cvReadIntByName,0,0,2,0},
-{"cvReadReal",_wrap_cvReadReal,0,0,2,0},
-{"cvReadRealByName",_wrap_cvReadRealByName,0,0,2,0},
-{"cvReadString",_wrap_cvReadString,0,0,2,0},
-{"cvReadStringByName",_wrap_cvReadStringByName,0,0,2,0},
-{"cvRead",_wrap_cvRead,0,0,2,0},
-{"cvReadByName",_wrap_cvReadByName,0,0,2,0},
-{"cvStartReadRawData",_wrap_cvStartReadRawData,0,0,2,0},
-{"cvReadRawDataSlice",_wrap_cvReadRawDataSlice,0,0,2,0},
-{"cvReadRawData",_wrap_cvReadRawData,0,0,2,0},
-{"cvWriteFileNode",_wrap_cvWriteFileNode,0,0,2,0},
-{"cvGetFileNodeName",_wrap_cvGetFileNodeName,0,0,2,0},
-{"cvRegisterType",_wrap_cvRegisterType,0,0,2,0},
-{"cvUnregisterType",_wrap_cvUnregisterType,0,0,2,0},
-{"cvFirstType",_wrap_cvFirstType,0,0,2,0},
-{"cvFindType",_wrap_cvFindType,0,0,2,0},
-{"cvTypeOf",_wrap_cvTypeOf,0,0,2,0},
-{"cvRelease",_wrap_cvRelease,0,0,2,0},
-{"cvClone",_wrap_cvClone,0,0,2,0},
-{"cvSave",_wrap_cvSave,0,0,2,0},
-{"cvLoad",_wrap_cvLoad,0,0,2,0},
-{"cvGetTickCount",_wrap_cvGetTickCount,0,0,2,0},
-{"cvGetTickFrequency",_wrap_cvGetTickFrequency,0,0,2,0},
-{"cvGetNumThreads",_wrap_cvGetNumThreads,0,0,2,0},
-{"cvSetNumThreads",_wrap_cvSetNumThreads,0,0,2,0},
-{"cvGetThreadNum",_wrap_cvGetThreadNum,0,0,2,0},
-{"new_CvImage",_wrap_new_CvImage,0,0,2,0},
-{"delete_CvImage",_wrap_delete_CvImage,0,0,2,0},
-{"CvImage_clone",_wrap_CvImage_clone,0,0,2,0},
-{"CvImage_create",_wrap_CvImage_create,0,0,2,0},
-{"CvImage_release",_wrap_CvImage_release,0,0,2,0},
-{"CvImage_clear",_wrap_CvImage_clear,0,0,2,0},
-{"CvImage_attach",_wrap_CvImage_attach,0,0,2,0},
-{"CvImage_detach",_wrap_CvImage_detach,0,0,2,0},
-{"CvImage_load",_wrap_CvImage_load,0,0,2,0},
-{"CvImage_read",_wrap_CvImage_read,0,0,2,0},
-{"CvImage_save",_wrap_CvImage_save,0,0,2,0},
-{"CvImage_write",_wrap_CvImage_write,0,0,2,0},
-{"CvImage_show",_wrap_CvImage_show,0,0,2,0},
-{"CvImage_is_valid",_wrap_CvImage_is_valid,0,0,2,0},
-{"CvImage_width",_wrap_CvImage_width,0,0,2,0},
-{"CvImage_height",_wrap_CvImage_height,0,0,2,0},
-{"CvImage_size",_wrap_CvImage_size,0,0,2,0},
-{"CvImage_roi_size",_wrap_CvImage_roi_size,0,0,2,0},
-{"CvImage_roi",_wrap_CvImage_roi,0,0,2,0},
-{"CvImage_coi",_wrap_CvImage_coi,0,0,2,0},
-{"CvImage_set_roi",_wrap_CvImage_set_roi,0,0,2,0},
-{"CvImage_reset_roi",_wrap_CvImage_reset_roi,0,0,2,0},
-{"CvImage_set_coi",_wrap_CvImage_set_coi,0,0,2,0},
-{"CvImage_depth",_wrap_CvImage_depth,0,0,2,0},
-{"CvImage_channels",_wrap_CvImage_channels,0,0,2,0},
-{"CvImage_pix_size",_wrap_CvImage_pix_size,0,0,2,0},
-{"CvImage_data",_wrap_CvImage_data,0,0,2,0},
-{"CvImage_step",_wrap_CvImage_step,0,0,2,0},
-{"CvImage_origin",_wrap_CvImage_origin,0,0,2,0},
-{"CvImage_roi_row",_wrap_CvImage_roi_row,0,0,2,0},
-{"CvImage_asIplImage",_wrap_CvImage_asIplImage,0,0,2,0},
-{"new_CvMatrix",_wrap_new_CvMatrix,0,0,2,0},
-{"delete_CvMatrix",_wrap_delete_CvMatrix,0,0,2,0},
-{"CvMatrix_clone",_wrap_CvMatrix_clone,0,0,2,0},
-{"CvMatrix_set",_wrap_CvMatrix_set,0,0,2,0},
-{"CvMatrix_create",_wrap_CvMatrix_create,0,0,2,0},
-{"CvMatrix_addref",_wrap_CvMatrix_addref,0,0,2,0},
-{"CvMatrix_release",_wrap_CvMatrix_release,0,0,2,0},
-{"CvMatrix_clear",_wrap_CvMatrix_clear,0,0,2,0},
-{"CvMatrix_load",_wrap_CvMatrix_load,0,0,2,0},
-{"CvMatrix_read",_wrap_CvMatrix_read,0,0,2,0},
-{"CvMatrix_save",_wrap_CvMatrix_save,0,0,2,0},
-{"CvMatrix_write",_wrap_CvMatrix_write,0,0,2,0},
-{"CvMatrix_show",_wrap_CvMatrix_show,0,0,2,0},
-{"CvMatrix_is_valid",_wrap_CvMatrix_is_valid,0,0,2,0},
-{"CvMatrix_rows",_wrap_CvMatrix_rows,0,0,2,0},
-{"CvMatrix_cols",_wrap_CvMatrix_cols,0,0,2,0},
-{"CvMatrix_size",_wrap_CvMatrix_size,0,0,2,0},
-{"CvMatrix_type",_wrap_CvMatrix_type,0,0,2,0},
-{"CvMatrix_depth",_wrap_CvMatrix_depth,0,0,2,0},
-{"CvMatrix_channels",_wrap_CvMatrix_channels,0,0,2,0},
-{"CvMatrix_pix_size",_wrap_CvMatrix_pix_size,0,0,2,0},
-{"CvMatrix_data",_wrap_CvMatrix_data,0,0,2,0},
-{"CvMatrix_step",_wrap_CvMatrix_step,0,0,2,0},
-{"CvMatrix_set_data",_wrap_CvMatrix_set_data,0,0,2,0},
-{"CvMatrix_row",_wrap_CvMatrix_row,0,0,2,0},
-{"CvMatrix_asCvMat",_wrap_CvMatrix_asCvMat,0,0,2,0},
-{"cvSetImageIOFunctions",_wrap_cvSetImageIOFunctions,0,0,2,0},
-{"new_CvModule",_wrap_new_CvModule,0,0,2,0},
-{"delete_CvModule",_wrap_delete_CvModule,0,0,2,0},
+{"new_CvTreeNodeIterator",_wrap_new_CvTreeNodeIterator,0,0,2,_wrap_new_CvTreeNodeIterator_texinfo},
+{"delete_CvTreeNodeIterator",_wrap_delete_CvTreeNodeIterator,0,0,2,_wrap_delete_CvTreeNodeIterator_texinfo},
+{"cvInitTreeNodeIterator",_wrap_cvInitTreeNodeIterator,0,0,2,_wrap_cvInitTreeNodeIterator_texinfo},
+{"cvNextTreeNode",_wrap_cvNextTreeNode,0,0,2,_wrap_cvNextTreeNode_texinfo},
+{"cvPrevTreeNode",_wrap_cvPrevTreeNode,0,0,2,_wrap_cvPrevTreeNode_texinfo},
+{"cvInsertNodeIntoTree",_wrap_cvInsertNodeIntoTree,0,0,2,_wrap_cvInsertNodeIntoTree_texinfo},
+{"cvRemoveNodeFromTree",_wrap_cvRemoveNodeFromTree,0,0,2,_wrap_cvRemoveNodeFromTree_texinfo},
+{"cvTreeToNodeSeq",_wrap_cvTreeToNodeSeq,0,0,2,_wrap_cvTreeToNodeSeq_texinfo},
+{"cvKMeans2",_wrap_cvKMeans2,0,0,2,_wrap_cvKMeans2_texinfo},
+{"cvRegisterModule",_wrap_cvRegisterModule,0,0,2,_wrap_cvRegisterModule_texinfo},
+{"cvUseOptimized",_wrap_cvUseOptimized,0,0,2,_wrap_cvUseOptimized_texinfo},
+{"cvGetModuleInfo",_wrap_cvGetModuleInfo,0,0,2,_wrap_cvGetModuleInfo_texinfo},
+{"cvGetErrStatus",_wrap_cvGetErrStatus,0,0,2,_wrap_cvGetErrStatus_texinfo},
+{"cvSetErrStatus",_wrap_cvSetErrStatus,0,0,2,_wrap_cvSetErrStatus_texinfo},
+{"cvGetErrMode",_wrap_cvGetErrMode,0,0,2,_wrap_cvGetErrMode_texinfo},
+{"cvSetErrMode",_wrap_cvSetErrMode,0,0,2,_wrap_cvSetErrMode_texinfo},
+{"cvError",_wrap_cvError,0,0,2,_wrap_cvError_texinfo},
+{"cvErrorStr",_wrap_cvErrorStr,0,0,2,_wrap_cvErrorStr_texinfo},
+{"cvGetErrInfo",_wrap_cvGetErrInfo,0,0,2,_wrap_cvGetErrInfo_texinfo},
+{"cvErrorFromIppStatus",_wrap_cvErrorFromIppStatus,0,0,2,_wrap_cvErrorFromIppStatus_texinfo},
+{"cvRedirectError",_wrap_cvRedirectError,0,0,2,_wrap_cvRedirectError_texinfo},
+{"cvNulDevReport",_wrap_cvNulDevReport,0,0,2,_wrap_cvNulDevReport_texinfo},
+{"cvStdErrReport",_wrap_cvStdErrReport,0,0,2,_wrap_cvStdErrReport_texinfo},
+{"cvGuiBoxReport",_wrap_cvGuiBoxReport,0,0,2,_wrap_cvGuiBoxReport_texinfo},
+{"cvSetMemoryManager",_wrap_cvSetMemoryManager,0,0,2,_wrap_cvSetMemoryManager_texinfo},
+{"cvSetIPLAllocators",_wrap_cvSetIPLAllocators,0,0,2,_wrap_cvSetIPLAllocators_texinfo},
+{"cvOpenFileStorage",_wrap_cvOpenFileStorage,0,0,2,_wrap_cvOpenFileStorage_texinfo},
+{"cvReleaseFileStorage",_wrap_cvReleaseFileStorage,0,0,2,_wrap_cvReleaseFileStorage_texinfo},
+{"cvAttrValue",_wrap_cvAttrValue,0,0,2,_wrap_cvAttrValue_texinfo},
+{"cvStartWriteStruct",_wrap_cvStartWriteStruct,0,0,2,_wrap_cvStartWriteStruct_texinfo},
+{"cvEndWriteStruct",_wrap_cvEndWriteStruct,0,0,2,_wrap_cvEndWriteStruct_texinfo},
+{"cvWriteInt",_wrap_cvWriteInt,0,0,2,_wrap_cvWriteInt_texinfo},
+{"cvWriteReal",_wrap_cvWriteReal,0,0,2,_wrap_cvWriteReal_texinfo},
+{"cvWriteString",_wrap_cvWriteString,0,0,2,_wrap_cvWriteString_texinfo},
+{"cvWriteComment",_wrap_cvWriteComment,0,0,2,_wrap_cvWriteComment_texinfo},
+{"cvWrite",_wrap_cvWrite,0,0,2,_wrap_cvWrite_texinfo},
+{"cvStartNextStream",_wrap_cvStartNextStream,0,0,2,_wrap_cvStartNextStream_texinfo},
+{"cvWriteRawData",_wrap_cvWriteRawData,0,0,2,_wrap_cvWriteRawData_texinfo},
+{"cvGetHashedKey",_wrap_cvGetHashedKey,0,0,2,_wrap_cvGetHashedKey_texinfo},
+{"cvGetRootFileNode",_wrap_cvGetRootFileNode,0,0,2,_wrap_cvGetRootFileNode_texinfo},
+{"cvGetFileNode",_wrap_cvGetFileNode,0,0,2,_wrap_cvGetFileNode_texinfo},
+{"cvGetFileNodeByName",_wrap_cvGetFileNodeByName,0,0,2,_wrap_cvGetFileNodeByName_texinfo},
+{"cvReadInt",_wrap_cvReadInt,0,0,2,_wrap_cvReadInt_texinfo},
+{"cvReadIntByName",_wrap_cvReadIntByName,0,0,2,_wrap_cvReadIntByName_texinfo},
+{"cvReadReal",_wrap_cvReadReal,0,0,2,_wrap_cvReadReal_texinfo},
+{"cvReadRealByName",_wrap_cvReadRealByName,0,0,2,_wrap_cvReadRealByName_texinfo},
+{"cvReadString",_wrap_cvReadString,0,0,2,_wrap_cvReadString_texinfo},
+{"cvReadStringByName",_wrap_cvReadStringByName,0,0,2,_wrap_cvReadStringByName_texinfo},
+{"cvRead",_wrap_cvRead,0,0,2,_wrap_cvRead_texinfo},
+{"cvReadByName",_wrap_cvReadByName,0,0,2,_wrap_cvReadByName_texinfo},
+{"cvStartReadRawData",_wrap_cvStartReadRawData,0,0,2,_wrap_cvStartReadRawData_texinfo},
+{"cvReadRawDataSlice",_wrap_cvReadRawDataSlice,0,0,2,_wrap_cvReadRawDataSlice_texinfo},
+{"cvReadRawData",_wrap_cvReadRawData,0,0,2,_wrap_cvReadRawData_texinfo},
+{"cvWriteFileNode",_wrap_cvWriteFileNode,0,0,2,_wrap_cvWriteFileNode_texinfo},
+{"cvGetFileNodeName",_wrap_cvGetFileNodeName,0,0,2,_wrap_cvGetFileNodeName_texinfo},
+{"cvRegisterType",_wrap_cvRegisterType,0,0,2,_wrap_cvRegisterType_texinfo},
+{"cvUnregisterType",_wrap_cvUnregisterType,0,0,2,_wrap_cvUnregisterType_texinfo},
+{"cvFirstType",_wrap_cvFirstType,0,0,2,_wrap_cvFirstType_texinfo},
+{"cvFindType",_wrap_cvFindType,0,0,2,_wrap_cvFindType_texinfo},
+{"cvTypeOf",_wrap_cvTypeOf,0,0,2,_wrap_cvTypeOf_texinfo},
+{"cvRelease",_wrap_cvRelease,0,0,2,_wrap_cvRelease_texinfo},
+{"cvClone",_wrap_cvClone,0,0,2,_wrap_cvClone_texinfo},
+{"cvSave",_wrap_cvSave,0,0,2,_wrap_cvSave_texinfo},
+{"cvLoad",_wrap_cvLoad,0,0,2,_wrap_cvLoad_texinfo},
+{"cvGetTickCount",_wrap_cvGetTickCount,0,0,2,_wrap_cvGetTickCount_texinfo},
+{"cvGetTickFrequency",_wrap_cvGetTickFrequency,0,0,2,_wrap_cvGetTickFrequency_texinfo},
+{"cvGetNumThreads",_wrap_cvGetNumThreads,0,0,2,_wrap_cvGetNumThreads_texinfo},
+{"cvSetNumThreads",_wrap_cvSetNumThreads,0,0,2,_wrap_cvSetNumThreads_texinfo},
+{"cvGetThreadNum",_wrap_cvGetThreadNum,0,0,2,_wrap_cvGetThreadNum_texinfo},
+{"new_CvImage",_wrap_new_CvImage,0,0,2,_wrap_new_CvImage_texinfo},
+{"delete_CvImage",_wrap_delete_CvImage,0,0,2,_wrap_delete_CvImage_texinfo},
+{"CvImage_clone",_wrap_CvImage_clone,0,0,2,_wrap_CvImage_clone_texinfo},
+{"CvImage_create",_wrap_CvImage_create,0,0,2,_wrap_CvImage_create_texinfo},
+{"CvImage_release",_wrap_CvImage_release,0,0,2,_wrap_CvImage_release_texinfo},
+{"CvImage_clear",_wrap_CvImage_clear,0,0,2,_wrap_CvImage_clear_texinfo},
+{"CvImage_attach",_wrap_CvImage_attach,0,0,2,_wrap_CvImage_attach_texinfo},
+{"CvImage_detach",_wrap_CvImage_detach,0,0,2,_wrap_CvImage_detach_texinfo},
+{"CvImage_load",_wrap_CvImage_load,0,0,2,_wrap_CvImage_load_texinfo},
+{"CvImage_read",_wrap_CvImage_read,0,0,2,_wrap_CvImage_read_texinfo},
+{"CvImage_save",_wrap_CvImage_save,0,0,2,_wrap_CvImage_save_texinfo},
+{"CvImage_write",_wrap_CvImage_write,0,0,2,_wrap_CvImage_write_texinfo},
+{"CvImage_show",_wrap_CvImage_show,0,0,2,_wrap_CvImage_show_texinfo},
+{"CvImage_is_valid",_wrap_CvImage_is_valid,0,0,2,_wrap_CvImage_is_valid_texinfo},
+{"CvImage_width",_wrap_CvImage_width,0,0,2,_wrap_CvImage_width_texinfo},
+{"CvImage_height",_wrap_CvImage_height,0,0,2,_wrap_CvImage_height_texinfo},
+{"CvImage_size",_wrap_CvImage_size,0,0,2,_wrap_CvImage_size_texinfo},
+{"CvImage_roi_size",_wrap_CvImage_roi_size,0,0,2,_wrap_CvImage_roi_size_texinfo},
+{"CvImage_roi",_wrap_CvImage_roi,0,0,2,_wrap_CvImage_roi_texinfo},
+{"CvImage_coi",_wrap_CvImage_coi,0,0,2,_wrap_CvImage_coi_texinfo},
+{"CvImage_set_roi",_wrap_CvImage_set_roi,0,0,2,_wrap_CvImage_set_roi_texinfo},
+{"CvImage_reset_roi",_wrap_CvImage_reset_roi,0,0,2,_wrap_CvImage_reset_roi_texinfo},
+{"CvImage_set_coi",_wrap_CvImage_set_coi,0,0,2,_wrap_CvImage_set_coi_texinfo},
+{"CvImage_depth",_wrap_CvImage_depth,0,0,2,_wrap_CvImage_depth_texinfo},
+{"CvImage_channels",_wrap_CvImage_channels,0,0,2,_wrap_CvImage_channels_texinfo},
+{"CvImage_pix_size",_wrap_CvImage_pix_size,0,0,2,_wrap_CvImage_pix_size_texinfo},
+{"CvImage_data",_wrap_CvImage_data,0,0,2,_wrap_CvImage_data_texinfo},
+{"CvImage_step",_wrap_CvImage_step,0,0,2,_wrap_CvImage_step_texinfo},
+{"CvImage_origin",_wrap_CvImage_origin,0,0,2,_wrap_CvImage_origin_texinfo},
+{"CvImage_roi_row",_wrap_CvImage_roi_row,0,0,2,_wrap_CvImage_roi_row_texinfo},
+{"CvImage_asIplImage",_wrap_CvImage_asIplImage,0,0,2,_wrap_CvImage_asIplImage_texinfo},
+{"new_CvMatrix",_wrap_new_CvMatrix,0,0,2,_wrap_new_CvMatrix_texinfo},
+{"delete_CvMatrix",_wrap_delete_CvMatrix,0,0,2,_wrap_delete_CvMatrix_texinfo},
+{"CvMatrix_clone",_wrap_CvMatrix_clone,0,0,2,_wrap_CvMatrix_clone_texinfo},
+{"CvMatrix_set",_wrap_CvMatrix_set,0,0,2,_wrap_CvMatrix_set_texinfo},
+{"CvMatrix_create",_wrap_CvMatrix_create,0,0,2,_wrap_CvMatrix_create_texinfo},
+{"CvMatrix_addref",_wrap_CvMatrix_addref,0,0,2,_wrap_CvMatrix_addref_texinfo},
+{"CvMatrix_release",_wrap_CvMatrix_release,0,0,2,_wrap_CvMatrix_release_texinfo},
+{"CvMatrix_clear",_wrap_CvMatrix_clear,0,0,2,_wrap_CvMatrix_clear_texinfo},
+{"CvMatrix_load",_wrap_CvMatrix_load,0,0,2,_wrap_CvMatrix_load_texinfo},
+{"CvMatrix_read",_wrap_CvMatrix_read,0,0,2,_wrap_CvMatrix_read_texinfo},
+{"CvMatrix_save",_wrap_CvMatrix_save,0,0,2,_wrap_CvMatrix_save_texinfo},
+{"CvMatrix_write",_wrap_CvMatrix_write,0,0,2,_wrap_CvMatrix_write_texinfo},
+{"CvMatrix_show",_wrap_CvMatrix_show,0,0,2,_wrap_CvMatrix_show_texinfo},
+{"CvMatrix_is_valid",_wrap_CvMatrix_is_valid,0,0,2,_wrap_CvMatrix_is_valid_texinfo},
+{"CvMatrix_rows",_wrap_CvMatrix_rows,0,0,2,_wrap_CvMatrix_rows_texinfo},
+{"CvMatrix_cols",_wrap_CvMatrix_cols,0,0,2,_wrap_CvMatrix_cols_texinfo},
+{"CvMatrix_size",_wrap_CvMatrix_size,0,0,2,_wrap_CvMatrix_size_texinfo},
+{"CvMatrix_type",_wrap_CvMatrix_type,0,0,2,_wrap_CvMatrix_type_texinfo},
+{"CvMatrix_depth",_wrap_CvMatrix_depth,0,0,2,_wrap_CvMatrix_depth_texinfo},
+{"CvMatrix_channels",_wrap_CvMatrix_channels,0,0,2,_wrap_CvMatrix_channels_texinfo},
+{"CvMatrix_pix_size",_wrap_CvMatrix_pix_size,0,0,2,_wrap_CvMatrix_pix_size_texinfo},
+{"CvMatrix_data",_wrap_CvMatrix_data,0,0,2,_wrap_CvMatrix_data_texinfo},
+{"CvMatrix_step",_wrap_CvMatrix_step,0,0,2,_wrap_CvMatrix_step_texinfo},
+{"CvMatrix_set_data",_wrap_CvMatrix_set_data,0,0,2,_wrap_CvMatrix_set_data_texinfo},
+{"CvMatrix_row",_wrap_CvMatrix_row,0,0,2,_wrap_CvMatrix_row_texinfo},
+{"CvMatrix_asCvMat",_wrap_CvMatrix_asCvMat,0,0,2,_wrap_CvMatrix_asCvMat_texinfo},
+{"cvSetImageIOFunctions",_wrap_cvSetImageIOFunctions,0,0,2,_wrap_cvSetImageIOFunctions_texinfo},
+{"new_CvModule",_wrap_new_CvModule,0,0,2,_wrap_new_CvModule_texinfo},
+{"delete_CvModule",_wrap_delete_CvModule,0,0,2,_wrap_delete_CvModule_texinfo},
 {"CvModule_info_set",_wrap_CvModule_info_set,0,0,2,0},
 {"CvModule_info_get",_wrap_CvModule_info_get,0,0,2,0},
 {"CvModule_first",0,_wrap_CvModule_first_get,_wrap_CvModule_first_set,2,0},
 {"CvModule_last",0,_wrap_CvModule_last_get,_wrap_CvModule_last_set,2,0},
-{"new_CvType",_wrap_new_CvType,0,0,2,0},
-{"delete_CvType",_wrap_delete_CvType,0,0,2,0},
+{"new_CvType",_wrap_new_CvType,0,0,2,_wrap_new_CvType_texinfo},
+{"delete_CvType",_wrap_delete_CvType,0,0,2,_wrap_delete_CvType_texinfo},
 {"CvType_info_set",_wrap_CvType_info_set,0,0,2,0},
 {"CvType_info_get",_wrap_CvType_info_get,0,0,2,0},
 {"CvType_first",0,_wrap_CvType_first_get,_wrap_CvType_first_set,2,0},
@@ -102690,8 +107005,8 @@ static const struct swig_octave_member swig_globals[] = {
 {"CvMoments_mu03_get",_wrap_CvMoments_mu03_get,0,0,2,0},
 {"CvMoments_inv_sqrt_m00_set",_wrap_CvMoments_inv_sqrt_m00_set,0,0,2,0},
 {"CvMoments_inv_sqrt_m00_get",_wrap_CvMoments_inv_sqrt_m00_get,0,0,2,0},
-{"new_CvMoments",_wrap_new_CvMoments,0,0,2,0},
-{"delete_CvMoments",_wrap_delete_CvMoments,0,0,2,0},
+{"new_CvMoments",_wrap_new_CvMoments,0,0,2,_wrap_new_CvMoments_texinfo},
+{"delete_CvMoments",_wrap_delete_CvMoments,0,0,2,_wrap_delete_CvMoments_texinfo},
 {"CvHuMoments_hu1_set",_wrap_CvHuMoments_hu1_set,0,0,2,0},
 {"CvHuMoments_hu1_get",_wrap_CvHuMoments_hu1_get,0,0,2,0},
 {"CvHuMoments_hu2_set",_wrap_CvHuMoments_hu2_set,0,0,2,0},
@@ -102706,8 +107021,8 @@ static const struct swig_octave_member swig_globals[] = {
 {"CvHuMoments_hu6_get",_wrap_CvHuMoments_hu6_get,0,0,2,0},
 {"CvHuMoments_hu7_set",_wrap_CvHuMoments_hu7_set,0,0,2,0},
 {"CvHuMoments_hu7_get",_wrap_CvHuMoments_hu7_get,0,0,2,0},
-{"new_CvHuMoments",_wrap_new_CvHuMoments,0,0,2,0},
-{"delete_CvHuMoments",_wrap_delete_CvHuMoments,0,0,2,0},
+{"new_CvHuMoments",_wrap_new_CvHuMoments,0,0,2,_wrap_new_CvHuMoments_texinfo},
+{"delete_CvHuMoments",_wrap_delete_CvHuMoments,0,0,2,_wrap_delete_CvHuMoments_texinfo},
 {"CvConnectedComp_area_set",_wrap_CvConnectedComp_area_set,0,0,2,0},
 {"CvConnectedComp_area_get",_wrap_CvConnectedComp_area_get,0,0,2,0},
 {"CvConnectedComp_value_set",_wrap_CvConnectedComp_value_set,0,0,2,0},
@@ -102716,8 +107031,8 @@ static const struct swig_octave_member swig_globals[] = {
 {"CvConnectedComp_rect_get",_wrap_CvConnectedComp_rect_get,0,0,2,0},
 {"CvConnectedComp_contour_set",_wrap_CvConnectedComp_contour_set,0,0,2,0},
 {"CvConnectedComp_contour_get",_wrap_CvConnectedComp_contour_get,0,0,2,0},
-{"new_CvConnectedComp",_wrap_new_CvConnectedComp,0,0,2,0},
-{"delete_CvConnectedComp",_wrap_delete_CvConnectedComp,0,0,2,0},
+{"new_CvConnectedComp",_wrap_new_CvConnectedComp,0,0,2,_wrap_new_CvConnectedComp_texinfo},
+{"delete_CvConnectedComp",_wrap_delete_CvConnectedComp,0,0,2,_wrap_delete_CvConnectedComp_texinfo},
 {"CvChainPtReader_header_size_set",_wrap_CvChainPtReader_header_size_set,0,0,2,0},
 {"CvChainPtReader_header_size_get",_wrap_CvChainPtReader_header_size_get,0,0,2,0},
 {"CvChainPtReader_seq_set",_wrap_CvChainPtReader_seq_set,0,0,2,0},
@@ -102740,8 +107055,8 @@ static const struct swig_octave_member swig_globals[] = {
 {"CvChainPtReader_pt_get",_wrap_CvChainPtReader_pt_get,0,0,2,0},
 {"CvChainPtReader_deltas_set",_wrap_CvChainPtReader_deltas_set,0,0,2,0},
 {"CvChainPtReader_deltas_get",_wrap_CvChainPtReader_deltas_get,0,0,2,0},
-{"new_CvChainPtReader",_wrap_new_CvChainPtReader,0,0,2,0},
-{"delete_CvChainPtReader",_wrap_delete_CvChainPtReader,0,0,2,0},
+{"new_CvChainPtReader",_wrap_new_CvChainPtReader,0,0,2,_wrap_new_CvChainPtReader_texinfo},
+{"delete_CvChainPtReader",_wrap_delete_CvChainPtReader,0,0,2,_wrap_delete_CvChainPtReader_texinfo},
 {"CvContourTree_flags_set",_wrap_CvContourTree_flags_set,0,0,2,0},
 {"CvContourTree_flags_get",_wrap_CvContourTree_flags_get,0,0,2,0},
 {"CvContourTree_header_size_set",_wrap_CvContourTree_header_size_set,0,0,2,0},
@@ -102774,8 +107089,8 @@ static const struct swig_octave_member swig_globals[] = {
 {"CvContourTree_p1_get",_wrap_CvContourTree_p1_get,0,0,2,0},
 {"CvContourTree_p2_set",_wrap_CvContourTree_p2_set,0,0,2,0},
 {"CvContourTree_p2_get",_wrap_CvContourTree_p2_get,0,0,2,0},
-{"new_CvContourTree",_wrap_new_CvContourTree,0,0,2,0},
-{"delete_CvContourTree",_wrap_delete_CvContourTree,0,0,2,0},
+{"new_CvContourTree",_wrap_new_CvContourTree,0,0,2,_wrap_new_CvContourTree_texinfo},
+{"delete_CvContourTree",_wrap_delete_CvContourTree,0,0,2,_wrap_delete_CvContourTree_texinfo},
 {"CvConvexityDefect_start_set",_wrap_CvConvexityDefect_start_set,0,0,2,0},
 {"CvConvexityDefect_start_get",_wrap_CvConvexityDefect_start_get,0,0,2,0},
 {"CvConvexityDefect_end_set",_wrap_CvConvexityDefect_end_set,0,0,2,0},
@@ -102784,24 +107099,24 @@ static const struct swig_octave_member swig_globals[] = {
 {"CvConvexityDefect_depth_point_get",_wrap_CvConvexityDefect_depth_point_get,0,0,2,0},
 {"CvConvexityDefect_depth_set",_wrap_CvConvexityDefect_depth_set,0,0,2,0},
 {"CvConvexityDefect_depth_get",_wrap_CvConvexityDefect_depth_get,0,0,2,0},
-{"new_CvConvexityDefect",_wrap_new_CvConvexityDefect,0,0,2,0},
-{"delete_CvConvexityDefect",_wrap_delete_CvConvexityDefect,0,0,2,0},
+{"new_CvConvexityDefect",_wrap_new_CvConvexityDefect,0,0,2,_wrap_new_CvConvexityDefect_texinfo},
+{"delete_CvConvexityDefect",_wrap_delete_CvConvexityDefect,0,0,2,_wrap_delete_CvConvexityDefect_texinfo},
 {"CvQuadEdge2D_flags_set",_wrap_CvQuadEdge2D_flags_set,0,0,2,0},
 {"CvQuadEdge2D_flags_get",_wrap_CvQuadEdge2D_flags_get,0,0,2,0},
 {"CvQuadEdge2D_pt_set",_wrap_CvQuadEdge2D_pt_set,0,0,2,0},
 {"CvQuadEdge2D_pt_get",_wrap_CvQuadEdge2D_pt_get,0,0,2,0},
 {"CvQuadEdge2D_next_set",_wrap_CvQuadEdge2D_next_set,0,0,2,0},
 {"CvQuadEdge2D_next_get",_wrap_CvQuadEdge2D_next_get,0,0,2,0},
-{"new_CvQuadEdge2D",_wrap_new_CvQuadEdge2D,0,0,2,0},
-{"delete_CvQuadEdge2D",_wrap_delete_CvQuadEdge2D,0,0,2,0},
+{"new_CvQuadEdge2D",_wrap_new_CvQuadEdge2D,0,0,2,_wrap_new_CvQuadEdge2D_texinfo},
+{"delete_CvQuadEdge2D",_wrap_delete_CvQuadEdge2D,0,0,2,_wrap_delete_CvQuadEdge2D_texinfo},
 {"CvSubdiv2DPoint_flags_set",_wrap_CvSubdiv2DPoint_flags_set,0,0,2,0},
 {"CvSubdiv2DPoint_flags_get",_wrap_CvSubdiv2DPoint_flags_get,0,0,2,0},
 {"CvSubdiv2DPoint_first_set",_wrap_CvSubdiv2DPoint_first_set,0,0,2,0},
 {"CvSubdiv2DPoint_first_get",_wrap_CvSubdiv2DPoint_first_get,0,0,2,0},
 {"CvSubdiv2DPoint_pt_set",_wrap_CvSubdiv2DPoint_pt_set,0,0,2,0},
 {"CvSubdiv2DPoint_pt_get",_wrap_CvSubdiv2DPoint_pt_get,0,0,2,0},
-{"new_CvSubdiv2DPoint",_wrap_new_CvSubdiv2DPoint,0,0,2,0},
-{"delete_CvSubdiv2DPoint",_wrap_delete_CvSubdiv2DPoint,0,0,2,0},
+{"new_CvSubdiv2DPoint",_wrap_new_CvSubdiv2DPoint,0,0,2,_wrap_new_CvSubdiv2DPoint_texinfo},
+{"delete_CvSubdiv2DPoint",_wrap_delete_CvSubdiv2DPoint,0,0,2,_wrap_delete_CvSubdiv2DPoint_texinfo},
 {"CvSubdiv2D_flags_set",_wrap_CvSubdiv2D_flags_set,0,0,2,0},
 {"CvSubdiv2D_flags_get",_wrap_CvSubdiv2D_flags_get,0,0,2,0},
 {"CvSubdiv2D_header_size_set",_wrap_CvSubdiv2D_header_size_set,0,0,2,0},
@@ -102846,14 +107161,14 @@ static const struct swig_octave_member swig_globals[] = {
 {"CvSubdiv2D_bottomright_get",_wrap_CvSubdiv2D_bottomright_get,0,0,2,0},
 {"CvSubdiv2D_edges_set",_wrap_CvSubdiv2D_edges_set,0,0,2,0},
 {"CvSubdiv2D_edges_get",_wrap_CvSubdiv2D_edges_get,0,0,2,0},
-{"CvSubdiv2D_typed_edges_get",_wrap_CvSubdiv2D_typed_edges_get,0,0,2,0},
-{"CvSubdiv2D_typed_edges_set",_wrap_CvSubdiv2D_typed_edges_set,0,0,2,0},
-{"new_CvSubdiv2D",_wrap_new_CvSubdiv2D,0,0,2,0},
-{"delete_CvSubdiv2D",_wrap_delete_CvSubdiv2D,0,0,2,0},
+{"CvSubdiv2D_typed_edges_get",_wrap_CvSubdiv2D_typed_edges_get,0,0,2,_wrap_CvSubdiv2D_typed_edges_get_texinfo},
+{"CvSubdiv2D_typed_edges_set",_wrap_CvSubdiv2D_typed_edges_set,0,0,2,_wrap_CvSubdiv2D_typed_edges_set_texinfo},
+{"new_CvSubdiv2D",_wrap_new_CvSubdiv2D,0,0,2,_wrap_new_CvSubdiv2D_texinfo},
+{"delete_CvSubdiv2D",_wrap_delete_CvSubdiv2D,0,0,2,_wrap_delete_CvSubdiv2D_texinfo},
 {"CvMatrix3_m_set",_wrap_CvMatrix3_m_set,0,0,2,0},
 {"CvMatrix3_m_get",_wrap_CvMatrix3_m_get,0,0,2,0},
-{"new_CvMatrix3",_wrap_new_CvMatrix3,0,0,2,0},
-{"delete_CvMatrix3",_wrap_delete_CvMatrix3,0,0,2,0},
+{"new_CvMatrix3",_wrap_new_CvMatrix3,0,0,2,_wrap_new_CvMatrix3_texinfo},
+{"delete_CvMatrix3",_wrap_delete_CvMatrix3,0,0,2,_wrap_delete_CvMatrix3_texinfo},
 {"CvConDensation_MP_set",_wrap_CvConDensation_MP_set,0,0,2,0},
 {"CvConDensation_MP_get",_wrap_CvConDensation_MP_get,0,0,2,0},
 {"CvConDensation_DP_set",_wrap_CvConDensation_DP_set,0,0,2,0},
@@ -102878,7 +107193,7 @@ static const struct swig_octave_member swig_globals[] = {
 {"CvConDensation_RandomSample_get",_wrap_CvConDensation_RandomSample_get,0,0,2,0},
 {"CvConDensation_RandS_set",_wrap_CvConDensation_RandS_set,0,0,2,0},
 {"CvConDensation_RandS_get",_wrap_CvConDensation_RandS_get,0,0,2,0},
-{"delete_CvConDensation",_wrap_delete_CvConDensation,0,0,2,0},
+{"delete_CvConDensation",_wrap_delete_CvConDensation,0,0,2,_wrap_delete_CvConDensation_texinfo},
 {"CvKalman_MP_set",_wrap_CvKalman_MP_set,0,0,2,0},
 {"CvKalman_MP_get",_wrap_CvKalman_MP_get,0,0,2,0},
 {"CvKalman_DP_set",_wrap_CvKalman_DP_set,0,0,2,0},
@@ -102937,18 +107252,18 @@ static const struct swig_octave_member swig_globals[] = {
 {"CvKalman_temp4_get",_wrap_CvKalman_temp4_get,0,0,2,0},
 {"CvKalman_temp5_set",_wrap_CvKalman_temp5_set,0,0,2,0},
 {"CvKalman_temp5_get",_wrap_CvKalman_temp5_get,0,0,2,0},
-{"delete_CvKalman",_wrap_delete_CvKalman,0,0,2,0},
+{"delete_CvKalman",_wrap_delete_CvKalman,0,0,2,_wrap_delete_CvKalman_texinfo},
 {"CvHaarFeature_tilted_set",_wrap_CvHaarFeature_tilted_set,0,0,2,0},
 {"CvHaarFeature_tilted_get",_wrap_CvHaarFeature_tilted_get,0,0,2,0},
 {"CvHaarFeature_rect_get",_wrap_CvHaarFeature_rect_get,0,0,2,0},
-{"new_CvHaarFeature",_wrap_new_CvHaarFeature,0,0,2,0},
-{"delete_CvHaarFeature",_wrap_delete_CvHaarFeature,0,0,2,0},
+{"new_CvHaarFeature",_wrap_new_CvHaarFeature,0,0,2,_wrap_new_CvHaarFeature_texinfo},
+{"delete_CvHaarFeature",_wrap_delete_CvHaarFeature,0,0,2,_wrap_delete_CvHaarFeature_texinfo},
 {"CvHaarFeature_rect_r_set",_wrap_CvHaarFeature_rect_r_set,0,0,2,0},
 {"CvHaarFeature_rect_r_get",_wrap_CvHaarFeature_rect_r_get,0,0,2,0},
 {"CvHaarFeature_rect_weight_set",_wrap_CvHaarFeature_rect_weight_set,0,0,2,0},
 {"CvHaarFeature_rect_weight_get",_wrap_CvHaarFeature_rect_weight_get,0,0,2,0},
-{"new_CvHaarFeature_rect",_wrap_new_CvHaarFeature_rect,0,0,2,0},
-{"delete_CvHaarFeature_rect",_wrap_delete_CvHaarFeature_rect,0,0,2,0},
+{"new_CvHaarFeature_rect",_wrap_new_CvHaarFeature_rect,0,0,2,_wrap_new_CvHaarFeature_rect_texinfo},
+{"delete_CvHaarFeature_rect",_wrap_delete_CvHaarFeature_rect,0,0,2,_wrap_delete_CvHaarFeature_rect_texinfo},
 {"CvHaarClassifier_count_set",_wrap_CvHaarClassifier_count_set,0,0,2,0},
 {"CvHaarClassifier_count_get",_wrap_CvHaarClassifier_count_get,0,0,2,0},
 {"CvHaarClassifier_haar_feature_set",_wrap_CvHaarClassifier_haar_feature_set,0,0,2,0},
@@ -102961,8 +107276,8 @@ static const struct swig_octave_member swig_globals[] = {
 {"CvHaarClassifier_right_get",_wrap_CvHaarClassifier_right_get,0,0,2,0},
 {"CvHaarClassifier_alpha_set",_wrap_CvHaarClassifier_alpha_set,0,0,2,0},
 {"CvHaarClassifier_alpha_get",_wrap_CvHaarClassifier_alpha_get,0,0,2,0},
-{"new_CvHaarClassifier",_wrap_new_CvHaarClassifier,0,0,2,0},
-{"delete_CvHaarClassifier",_wrap_delete_CvHaarClassifier,0,0,2,0},
+{"new_CvHaarClassifier",_wrap_new_CvHaarClassifier,0,0,2,_wrap_new_CvHaarClassifier_texinfo},
+{"delete_CvHaarClassifier",_wrap_delete_CvHaarClassifier,0,0,2,_wrap_delete_CvHaarClassifier_texinfo},
 {"CvHaarStageClassifier_count_set",_wrap_CvHaarStageClassifier_count_set,0,0,2,0},
 {"CvHaarStageClassifier_count_get",_wrap_CvHaarStageClassifier_count_get,0,0,2,0},
 {"CvHaarStageClassifier_threshold_set",_wrap_CvHaarStageClassifier_threshold_set,0,0,2,0},
@@ -102975,8 +107290,8 @@ static const struct swig_octave_member swig_globals[] = {
 {"CvHaarStageClassifier_child_get",_wrap_CvHaarStageClassifier_child_get,0,0,2,0},
 {"CvHaarStageClassifier_parent_set",_wrap_CvHaarStageClassifier_parent_set,0,0,2,0},
 {"CvHaarStageClassifier_parent_get",_wrap_CvHaarStageClassifier_parent_get,0,0,2,0},
-{"new_CvHaarStageClassifier",_wrap_new_CvHaarStageClassifier,0,0,2,0},
-{"delete_CvHaarStageClassifier",_wrap_delete_CvHaarStageClassifier,0,0,2,0},
+{"new_CvHaarStageClassifier",_wrap_new_CvHaarStageClassifier,0,0,2,_wrap_new_CvHaarStageClassifier_texinfo},
+{"delete_CvHaarStageClassifier",_wrap_delete_CvHaarStageClassifier,0,0,2,_wrap_delete_CvHaarStageClassifier_texinfo},
 {"CvHaarClassifierCascade_flags_set",_wrap_CvHaarClassifierCascade_flags_set,0,0,2,0},
 {"CvHaarClassifierCascade_flags_get",_wrap_CvHaarClassifierCascade_flags_get,0,0,2,0},
 {"CvHaarClassifierCascade_count_set",_wrap_CvHaarClassifierCascade_count_set,0,0,2,0},
@@ -102991,306 +107306,306 @@ static const struct swig_octave_member swig_globals[] = {
 {"CvHaarClassifierCascade_stage_classifier_get",_wrap_CvHaarClassifierCascade_stage_classifier_get,0,0,2,0},
 {"CvHaarClassifierCascade_hid_cascade_set",_wrap_CvHaarClassifierCascade_hid_cascade_set,0,0,2,0},
 {"CvHaarClassifierCascade_hid_cascade_get",_wrap_CvHaarClassifierCascade_hid_cascade_get,0,0,2,0},
-{"delete_CvHaarClassifierCascade",_wrap_delete_CvHaarClassifierCascade,0,0,2,0},
+{"delete_CvHaarClassifierCascade",_wrap_delete_CvHaarClassifierCascade,0,0,2,_wrap_delete_CvHaarClassifierCascade_texinfo},
 {"CvAvgComp_rect_set",_wrap_CvAvgComp_rect_set,0,0,2,0},
 {"CvAvgComp_rect_get",_wrap_CvAvgComp_rect_get,0,0,2,0},
 {"CvAvgComp_neighbors_set",_wrap_CvAvgComp_neighbors_set,0,0,2,0},
 {"CvAvgComp_neighbors_get",_wrap_CvAvgComp_neighbors_get,0,0,2,0},
-{"new_CvAvgComp",_wrap_new_CvAvgComp,0,0,2,0},
-{"delete_CvAvgComp",_wrap_delete_CvAvgComp,0,0,2,0},
-{"cvCopyMakeBorder",_wrap_cvCopyMakeBorder,0,0,2,0},
-{"cvSmooth",_wrap_cvSmooth,0,0,2,0},
-{"cvFilter2D",_wrap_cvFilter2D,0,0,2,0},
-{"cvIntegral",_wrap_cvIntegral,0,0,2,0},
-{"cvPyrDown",_wrap_cvPyrDown,0,0,2,0},
-{"cvPyrUp",_wrap_cvPyrUp,0,0,2,0},
-{"cvCreatePyramid",_wrap_cvCreatePyramid,0,0,2,0},
-{"cvReleasePyramid",_wrap_cvReleasePyramid,0,0,2,0},
-{"cvPyrSegmentationUntyped",_wrap_cvPyrSegmentationUntyped,0,0,2,0},
-{"cvPyrMeanShiftFiltering",_wrap_cvPyrMeanShiftFiltering,0,0,2,0},
-{"cvWatershed",_wrap_cvWatershed,0,0,2,0},
-{"cvInpaint",_wrap_cvInpaint,0,0,2,0},
-{"cvSobel",_wrap_cvSobel,0,0,2,0},
-{"cvLaplace",_wrap_cvLaplace,0,0,2,0},
-{"cvCvtColor",_wrap_cvCvtColor,0,0,2,0},
-{"cvResize",_wrap_cvResize,0,0,2,0},
-{"cvWarpAffine",_wrap_cvWarpAffine,0,0,2,0},
-{"cvGetAffineTransform",_wrap_cvGetAffineTransform,0,0,2,0},
-{"cv2DRotationMatrix",_wrap_cv2DRotationMatrix,0,0,2,0},
-{"cvWarpPerspective",_wrap_cvWarpPerspective,0,0,2,0},
-{"cvGetPerspectiveTransform",_wrap_cvGetPerspectiveTransform,0,0,2,0},
-{"cvRemap",_wrap_cvRemap,0,0,2,0},
-{"cvLogPolar",_wrap_cvLogPolar,0,0,2,0},
-{"cvCreateStructuringElementEx",_wrap_cvCreateStructuringElementEx,0,0,2,0},
-{"cvReleaseStructuringElement",_wrap_cvReleaseStructuringElement,0,0,2,0},
-{"cvErode",_wrap_cvErode,0,0,2,0},
-{"cvDilate",_wrap_cvDilate,0,0,2,0},
-{"cvMorphologyEx",_wrap_cvMorphologyEx,0,0,2,0},
-{"cvMoments",_wrap_cvMoments,0,0,2,0},
-{"cvGetSpatialMoment",_wrap_cvGetSpatialMoment,0,0,2,0},
-{"cvGetCentralMoment",_wrap_cvGetCentralMoment,0,0,2,0},
-{"cvGetNormalizedCentralMoment",_wrap_cvGetNormalizedCentralMoment,0,0,2,0},
-{"cvGetHuMoments",_wrap_cvGetHuMoments,0,0,2,0},
-{"cvSampleLine",_wrap_cvSampleLine,0,0,2,0},
-{"cvGetRectSubPix",_wrap_cvGetRectSubPix,0,0,2,0},
-{"cvGetQuadrangleSubPix",_wrap_cvGetQuadrangleSubPix,0,0,2,0},
-{"cvMatchTemplate",_wrap_cvMatchTemplate,0,0,2,0},
-{"cvCalcEMD2",_wrap_cvCalcEMD2,0,0,2,0},
-{"cvFindContoursUntyped",_wrap_cvFindContoursUntyped,0,0,2,0},
-{"cvStartFindContours",_wrap_cvStartFindContours,0,0,2,0},
-{"cvFindNextContour",_wrap_cvFindNextContour,0,0,2,0},
-{"cvSubstituteContour",_wrap_cvSubstituteContour,0,0,2,0},
-{"cvEndFindContours",_wrap_cvEndFindContours,0,0,2,0},
-{"cvApproxChainsUntyped",_wrap_cvApproxChainsUntyped,0,0,2,0},
-{"cvStartReadChainPoints",_wrap_cvStartReadChainPoints,0,0,2,0},
-{"cvReadChainPoint",_wrap_cvReadChainPoint,0,0,2,0},
-{"cvCalcOpticalFlowLK",_wrap_cvCalcOpticalFlowLK,0,0,2,0},
-{"cvCalcOpticalFlowBM",_wrap_cvCalcOpticalFlowBM,0,0,2,0},
-{"cvCalcOpticalFlowHS",_wrap_cvCalcOpticalFlowHS,0,0,2,0},
-{"cvCalcOpticalFlowPyrLK",_wrap_cvCalcOpticalFlowPyrLK,0,0,2,0},
-{"cvCalcAffineFlowPyrLK",_wrap_cvCalcAffineFlowPyrLK,0,0,2,0},
-{"cvEstimateRigidTransform",_wrap_cvEstimateRigidTransform,0,0,2,0},
-{"cvUpdateMotionHistory",_wrap_cvUpdateMotionHistory,0,0,2,0},
-{"cvCalcMotionGradient",_wrap_cvCalcMotionGradient,0,0,2,0},
-{"cvCalcGlobalOrientation",_wrap_cvCalcGlobalOrientation,0,0,2,0},
-{"cvAcc",_wrap_cvAcc,0,0,2,0},
-{"cvSquareAcc",_wrap_cvSquareAcc,0,0,2,0},
-{"cvMultiplyAcc",_wrap_cvMultiplyAcc,0,0,2,0},
-{"cvRunningAvg",_wrap_cvRunningAvg,0,0,2,0},
-{"cvCamShift",_wrap_cvCamShift,0,0,2,0},
-{"cvMeanShift",_wrap_cvMeanShift,0,0,2,0},
-{"cvCreateConDensation",_wrap_cvCreateConDensation,0,0,2,0},
-{"cvReleaseConDensation",_wrap_cvReleaseConDensation,0,0,2,0},
-{"cvConDensUpdateByTime",_wrap_cvConDensUpdateByTime,0,0,2,0},
-{"cvConDensInitSampleSet",_wrap_cvConDensInitSampleSet,0,0,2,0},
-{"cvCreateKalman",_wrap_cvCreateKalman,0,0,2,0},
-{"cvReleaseKalman",_wrap_cvReleaseKalman,0,0,2,0},
-{"cvKalmanPredict",_wrap_cvKalmanPredict,0,0,2,0},
-{"cvKalmanCorrect",_wrap_cvKalmanCorrect,0,0,2,0},
-{"cvInitSubdivDelaunay2D",_wrap_cvInitSubdivDelaunay2D,0,0,2,0},
-{"cvCreateSubdiv2D",_wrap_cvCreateSubdiv2D,0,0,2,0},
-{"cvCreateSubdivDelaunay2D",_wrap_cvCreateSubdivDelaunay2D,0,0,2,0},
-{"cvSubdivDelaunay2DInsert",_wrap_cvSubdivDelaunay2DInsert,0,0,2,0},
-{"cvSubdiv2DLocate",_wrap_cvSubdiv2DLocate,0,0,2,0},
-{"cvCalcSubdivVoronoi2D",_wrap_cvCalcSubdivVoronoi2D,0,0,2,0},
-{"cvClearSubdivVoronoi2D",_wrap_cvClearSubdivVoronoi2D,0,0,2,0},
-{"cvFindNearestPoint2D",_wrap_cvFindNearestPoint2D,0,0,2,0},
-{"cvSubdiv2DNextEdge",_wrap_cvSubdiv2DNextEdge,0,0,2,0},
-{"cvSubdiv2DRotateEdge",_wrap_cvSubdiv2DRotateEdge,0,0,2,0},
-{"cvSubdiv2DSymEdge",_wrap_cvSubdiv2DSymEdge,0,0,2,0},
-{"cvSubdiv2DGetEdge",_wrap_cvSubdiv2DGetEdge,0,0,2,0},
-{"cvSubdiv2DEdgeOrg",_wrap_cvSubdiv2DEdgeOrg,0,0,2,0},
-{"cvSubdiv2DEdgeDst",_wrap_cvSubdiv2DEdgeDst,0,0,2,0},
-{"cvTriangleArea",_wrap_cvTriangleArea,0,0,2,0},
-{"cvFindDominantPoints",_wrap_cvFindDominantPoints,0,0,2,0},
-{"cvBoundingRect",_wrap_cvBoundingRect,0,0,2,0},
-{"cvContourArea",_wrap_cvContourArea,0,0,2,0},
-{"cvMinAreaRect2",_wrap_cvMinAreaRect2,0,0,2,0},
-{"cvMinEnclosingCircle",_wrap_cvMinEnclosingCircle,0,0,2,0},
-{"cvMatchShapes",_wrap_cvMatchShapes,0,0,2,0},
-{"cvCreateContourTree",_wrap_cvCreateContourTree,0,0,2,0},
-{"cvContourFromContourTreeUntyped",_wrap_cvContourFromContourTreeUntyped,0,0,2,0},
-{"cvMatchContourTrees",_wrap_cvMatchContourTrees,0,0,2,0},
-{"cvCalcPGH",_wrap_cvCalcPGH,0,0,2,0},
-{"cvCheckContourConvexity",_wrap_cvCheckContourConvexity,0,0,2,0},
-{"cvConvexityDefectsUntyped",_wrap_cvConvexityDefectsUntyped,0,0,2,0},
-{"cvFitEllipse2",_wrap_cvFitEllipse2,0,0,2,0},
-{"cvMaxRect",_wrap_cvMaxRect,0,0,2,0},
-{"cvBoxPoints",_wrap_cvBoxPoints,0,0,2,0},
-{"cvPointSeqFromMat",_wrap_cvPointSeqFromMat,0,0,2,0},
-{"cvPointPolygonTest",_wrap_cvPointPolygonTest,0,0,2,0},
-{"cvCreateHist",_wrap_cvCreateHist,0,0,2,0},
-{"cvSetHistBinRanges",_wrap_cvSetHistBinRanges,0,0,2,0},
-{"cvMakeHistHeaderForArray",_wrap_cvMakeHistHeaderForArray,0,0,2,0},
-{"cvReleaseHist",_wrap_cvReleaseHist,0,0,2,0},
-{"cvClearHist",_wrap_cvClearHist,0,0,2,0},
-{"cvGetMinMaxHistValue",_wrap_cvGetMinMaxHistValue,0,0,2,0},
-{"cvNormalizeHist",_wrap_cvNormalizeHist,0,0,2,0},
-{"cvThreshHist",_wrap_cvThreshHist,0,0,2,0},
-{"cvCompareHist",_wrap_cvCompareHist,0,0,2,0},
-{"cvCopyHist",_wrap_cvCopyHist,0,0,2,0},
-{"cvCalcBayesianProb",_wrap_cvCalcBayesianProb,0,0,2,0},
-{"cvCalcArrHist",_wrap_cvCalcArrHist,0,0,2,0},
-{"cvCalcImageHist",_wrap_cvCalcImageHist,0,0,2,0},
-{"cvCalcArrBackProject",_wrap_cvCalcArrBackProject,0,0,2,0},
-{"cvCalcArrBackProjectPatch",_wrap_cvCalcArrBackProjectPatch,0,0,2,0},
-{"cvCalcProbDensity",_wrap_cvCalcProbDensity,0,0,2,0},
-{"cvEqualizeHist",_wrap_cvEqualizeHist,0,0,2,0},
-{"cvCalcImageHomography",_wrap_cvCalcImageHomography,0,0,2,0},
-{"cvDistTransform",_wrap_cvDistTransform,0,0,2,0},
-{"cvThreshold",_wrap_cvThreshold,0,0,2,0},
-{"cvAdaptiveThreshold",_wrap_cvAdaptiveThreshold,0,0,2,0},
-{"cvFloodFill",_wrap_cvFloodFill,0,0,2,0},
-{"cvCanny",_wrap_cvCanny,0,0,2,0},
-{"cvPreCornerDetect",_wrap_cvPreCornerDetect,0,0,2,0},
-{"cvCornerEigenValsAndVecs",_wrap_cvCornerEigenValsAndVecs,0,0,2,0},
-{"cvCornerMinEigenVal",_wrap_cvCornerMinEigenVal,0,0,2,0},
-{"cvCornerHarris",_wrap_cvCornerHarris,0,0,2,0},
-{"cvFindCornerSubPix",_wrap_cvFindCornerSubPix,0,0,2,0},
-{"cvGoodFeaturesToTrack",_wrap_cvGoodFeaturesToTrack,0,0,2,0},
-{"cvHoughLinesUntyped",_wrap_cvHoughLinesUntyped,0,0,2,0},
-{"cvHoughCirclesUntyped",_wrap_cvHoughCirclesUntyped,0,0,2,0},
-{"cvFitLine",_wrap_cvFitLine,0,0,2,0},
-{"cvLoadHaarClassifierCascade",_wrap_cvLoadHaarClassifierCascade,0,0,2,0},
-{"cvReleaseHaarClassifierCascade",_wrap_cvReleaseHaarClassifierCascade,0,0,2,0},
-{"cvSetImagesForHaarClassifierCascade",_wrap_cvSetImagesForHaarClassifierCascade,0,0,2,0},
-{"cvRunHaarClassifierCascade",_wrap_cvRunHaarClassifierCascade,0,0,2,0},
-{"cvUndistort2",_wrap_cvUndistort2,0,0,2,0},
-{"cvInitUndistortMap",_wrap_cvInitUndistortMap,0,0,2,0},
-{"cvRodrigues2",_wrap_cvRodrigues2,0,0,2,0},
-{"cvFindHomography",_wrap_cvFindHomography,0,0,2,0},
-{"cvProjectPoints2",_wrap_cvProjectPoints2,0,0,2,0},
-{"cvFindExtrinsicCameraParams2",_wrap_cvFindExtrinsicCameraParams2,0,0,2,0},
-{"cvCalibrateCamera2",_wrap_cvCalibrateCamera2,0,0,2,0},
-{"cvFindChessboardCorners",_wrap_cvFindChessboardCorners,0,0,2,0},
-{"cvDrawChessboardCorners",_wrap_cvDrawChessboardCorners,0,0,2,0},
-{"cvCreatePOSITObject",_wrap_cvCreatePOSITObject,0,0,2,0},
-{"cvPOSIT",_wrap_cvPOSIT,0,0,2,0},
-{"cvReleasePOSITObject",_wrap_cvReleasePOSITObject,0,0,2,0},
-{"cvRANSACUpdateNumIters",_wrap_cvRANSACUpdateNumIters,0,0,2,0},
-{"cvConvertPointsHomogenious",_wrap_cvConvertPointsHomogenious,0,0,2,0},
-{"cvFindFundamentalMat",_wrap_cvFindFundamentalMat,0,0,2,0},
-{"cvComputeCorrespondEpilines",_wrap_cvComputeCorrespondEpilines,0,0,2,0},
-{"new_CvBaseImageFilter",_wrap_new_CvBaseImageFilter,0,0,2,0},
-{"delete_CvBaseImageFilter",_wrap_delete_CvBaseImageFilter,0,0,2,0},
-{"CvBaseImageFilter_init",_wrap_CvBaseImageFilter_init,0,0,2,0},
-{"CvBaseImageFilter_clear",_wrap_CvBaseImageFilter_clear,0,0,2,0},
-{"CvBaseImageFilter_process",_wrap_CvBaseImageFilter_process,0,0,2,0},
-{"CvBaseImageFilter_get_src_type",_wrap_CvBaseImageFilter_get_src_type,0,0,2,0},
-{"CvBaseImageFilter_get_dst_type",_wrap_CvBaseImageFilter_get_dst_type,0,0,2,0},
-{"CvBaseImageFilter_get_work_type",_wrap_CvBaseImageFilter_get_work_type,0,0,2,0},
-{"CvBaseImageFilter_get_kernel_size",_wrap_CvBaseImageFilter_get_kernel_size,0,0,2,0},
-{"CvBaseImageFilter_get_anchor",_wrap_CvBaseImageFilter_get_anchor,0,0,2,0},
-{"CvBaseImageFilter_get_width",_wrap_CvBaseImageFilter_get_width,0,0,2,0},
-{"CvBaseImageFilter_get_x_filter_func",_wrap_CvBaseImageFilter_get_x_filter_func,0,0,2,0},
-{"CvBaseImageFilter_get_y_filter_func",_wrap_CvBaseImageFilter_get_y_filter_func,0,0,2,0},
-{"new_CvSepFilter",_wrap_new_CvSepFilter,0,0,2,0},
-{"delete_CvSepFilter",_wrap_delete_CvSepFilter,0,0,2,0},
-{"CvSepFilter_init_deriv",_wrap_CvSepFilter_init_deriv,0,0,2,0},
-{"CvSepFilter_init_gaussian",_wrap_CvSepFilter_init_gaussian,0,0,2,0},
-{"CvSepFilter_init",_wrap_CvSepFilter_init,0,0,2,0},
-{"CvSepFilter_clear",_wrap_CvSepFilter_clear,0,0,2,0},
-{"CvSepFilter_get_x_kernel",_wrap_CvSepFilter_get_x_kernel,0,0,2,0},
-{"CvSepFilter_get_y_kernel",_wrap_CvSepFilter_get_y_kernel,0,0,2,0},
-{"CvSepFilter_get_x_kernel_flags",_wrap_CvSepFilter_get_x_kernel_flags,0,0,2,0},
-{"CvSepFilter_get_y_kernel_flags",_wrap_CvSepFilter_get_y_kernel_flags,0,0,2,0},
-{"CvSepFilter_init_gaussian_kernel",_wrap_CvSepFilter_init_gaussian_kernel,0,0,2,0},
-{"CvSepFilter_init_sobel_kernel",_wrap_CvSepFilter_init_sobel_kernel,0,0,2,0},
-{"CvSepFilter_init_scharr_kernel",_wrap_CvSepFilter_init_scharr_kernel,0,0,2,0},
-{"new_CvLinearFilter",_wrap_new_CvLinearFilter,0,0,2,0},
-{"delete_CvLinearFilter",_wrap_delete_CvLinearFilter,0,0,2,0},
-{"CvLinearFilter_init",_wrap_CvLinearFilter_init,0,0,2,0},
-{"CvLinearFilter_clear",_wrap_CvLinearFilter_clear,0,0,2,0},
-{"CvLinearFilter_get_kernel",_wrap_CvLinearFilter_get_kernel,0,0,2,0},
-{"CvLinearFilter_get_kernel_sparse_buf",_wrap_CvLinearFilter_get_kernel_sparse_buf,0,0,2,0},
-{"CvLinearFilter_get_kernel_sparse_count",_wrap_CvLinearFilter_get_kernel_sparse_count,0,0,2,0},
-{"new_CvBoxFilter",_wrap_new_CvBoxFilter,0,0,2,0},
-{"CvBoxFilter_init",_wrap_CvBoxFilter_init,0,0,2,0},
-{"delete_CvBoxFilter",_wrap_delete_CvBoxFilter,0,0,2,0},
-{"CvBoxFilter_is_normalized",_wrap_CvBoxFilter_is_normalized,0,0,2,0},
-{"CvBoxFilter_get_scale",_wrap_CvBoxFilter_get_scale,0,0,2,0},
-{"CvBoxFilter_get_sum_buf",_wrap_CvBoxFilter_get_sum_buf,0,0,2,0},
-{"CvBoxFilter_get_sum_count_ptr",_wrap_CvBoxFilter_get_sum_count_ptr,0,0,2,0},
-{"new_CvLaplaceFilter",_wrap_new_CvLaplaceFilter,0,0,2,0},
-{"delete_CvLaplaceFilter",_wrap_delete_CvLaplaceFilter,0,0,2,0},
-{"CvLaplaceFilter_init",_wrap_CvLaplaceFilter_init,0,0,2,0},
-{"CvLaplaceFilter_is_normalized",_wrap_CvLaplaceFilter_is_normalized,0,0,2,0},
-{"CvLaplaceFilter_is_basic_laplacian",_wrap_CvLaplaceFilter_is_basic_laplacian,0,0,2,0},
-{"new_CvMorphology",_wrap_new_CvMorphology,0,0,2,0},
-{"delete_CvMorphology",_wrap_delete_CvMorphology,0,0,2,0},
-{"CvMorphology_init",_wrap_CvMorphology_init,0,0,2,0},
-{"CvMorphology_clear",_wrap_CvMorphology_clear,0,0,2,0},
-{"CvMorphology_get_element",_wrap_CvMorphology_get_element,0,0,2,0},
-{"CvMorphology_get_element_shape",_wrap_CvMorphology_get_element_shape,0,0,2,0},
-{"CvMorphology_get_operation",_wrap_CvMorphology_get_operation,0,0,2,0},
-{"CvMorphology_get_element_sparse_buf",_wrap_CvMorphology_get_element_sparse_buf,0,0,2,0},
-{"CvMorphology_get_element_sparse_count",_wrap_CvMorphology_get_element_sparse_count,0,0,2,0},
-{"CvMorphology_init_binary_element",_wrap_CvMorphology_init_binary_element,0,0,2,0},
+{"new_CvAvgComp",_wrap_new_CvAvgComp,0,0,2,_wrap_new_CvAvgComp_texinfo},
+{"delete_CvAvgComp",_wrap_delete_CvAvgComp,0,0,2,_wrap_delete_CvAvgComp_texinfo},
+{"cvCopyMakeBorder",_wrap_cvCopyMakeBorder,0,0,2,_wrap_cvCopyMakeBorder_texinfo},
+{"cvSmooth",_wrap_cvSmooth,0,0,2,_wrap_cvSmooth_texinfo},
+{"cvFilter2D",_wrap_cvFilter2D,0,0,2,_wrap_cvFilter2D_texinfo},
+{"cvIntegral",_wrap_cvIntegral,0,0,2,_wrap_cvIntegral_texinfo},
+{"cvPyrDown",_wrap_cvPyrDown,0,0,2,_wrap_cvPyrDown_texinfo},
+{"cvPyrUp",_wrap_cvPyrUp,0,0,2,_wrap_cvPyrUp_texinfo},
+{"cvCreatePyramid",_wrap_cvCreatePyramid,0,0,2,_wrap_cvCreatePyramid_texinfo},
+{"cvReleasePyramid",_wrap_cvReleasePyramid,0,0,2,_wrap_cvReleasePyramid_texinfo},
+{"cvPyrSegmentationUntyped",_wrap_cvPyrSegmentationUntyped,0,0,2,_wrap_cvPyrSegmentationUntyped_texinfo},
+{"cvPyrMeanShiftFiltering",_wrap_cvPyrMeanShiftFiltering,0,0,2,_wrap_cvPyrMeanShiftFiltering_texinfo},
+{"cvWatershed",_wrap_cvWatershed,0,0,2,_wrap_cvWatershed_texinfo},
+{"cvInpaint",_wrap_cvInpaint,0,0,2,_wrap_cvInpaint_texinfo},
+{"cvSobel",_wrap_cvSobel,0,0,2,_wrap_cvSobel_texinfo},
+{"cvLaplace",_wrap_cvLaplace,0,0,2,_wrap_cvLaplace_texinfo},
+{"cvCvtColor",_wrap_cvCvtColor,0,0,2,_wrap_cvCvtColor_texinfo},
+{"cvResize",_wrap_cvResize,0,0,2,_wrap_cvResize_texinfo},
+{"cvWarpAffine",_wrap_cvWarpAffine,0,0,2,_wrap_cvWarpAffine_texinfo},
+{"cvGetAffineTransform",_wrap_cvGetAffineTransform,0,0,2,_wrap_cvGetAffineTransform_texinfo},
+{"cv2DRotationMatrix",_wrap_cv2DRotationMatrix,0,0,2,_wrap_cv2DRotationMatrix_texinfo},
+{"cvWarpPerspective",_wrap_cvWarpPerspective,0,0,2,_wrap_cvWarpPerspective_texinfo},
+{"cvGetPerspectiveTransform",_wrap_cvGetPerspectiveTransform,0,0,2,_wrap_cvGetPerspectiveTransform_texinfo},
+{"cvRemap",_wrap_cvRemap,0,0,2,_wrap_cvRemap_texinfo},
+{"cvLogPolar",_wrap_cvLogPolar,0,0,2,_wrap_cvLogPolar_texinfo},
+{"cvCreateStructuringElementEx",_wrap_cvCreateStructuringElementEx,0,0,2,_wrap_cvCreateStructuringElementEx_texinfo},
+{"cvReleaseStructuringElement",_wrap_cvReleaseStructuringElement,0,0,2,_wrap_cvReleaseStructuringElement_texinfo},
+{"cvErode",_wrap_cvErode,0,0,2,_wrap_cvErode_texinfo},
+{"cvDilate",_wrap_cvDilate,0,0,2,_wrap_cvDilate_texinfo},
+{"cvMorphologyEx",_wrap_cvMorphologyEx,0,0,2,_wrap_cvMorphologyEx_texinfo},
+{"cvMoments",_wrap_cvMoments,0,0,2,_wrap_cvMoments_texinfo},
+{"cvGetSpatialMoment",_wrap_cvGetSpatialMoment,0,0,2,_wrap_cvGetSpatialMoment_texinfo},
+{"cvGetCentralMoment",_wrap_cvGetCentralMoment,0,0,2,_wrap_cvGetCentralMoment_texinfo},
+{"cvGetNormalizedCentralMoment",_wrap_cvGetNormalizedCentralMoment,0,0,2,_wrap_cvGetNormalizedCentralMoment_texinfo},
+{"cvGetHuMoments",_wrap_cvGetHuMoments,0,0,2,_wrap_cvGetHuMoments_texinfo},
+{"cvSampleLine",_wrap_cvSampleLine,0,0,2,_wrap_cvSampleLine_texinfo},
+{"cvGetRectSubPix",_wrap_cvGetRectSubPix,0,0,2,_wrap_cvGetRectSubPix_texinfo},
+{"cvGetQuadrangleSubPix",_wrap_cvGetQuadrangleSubPix,0,0,2,_wrap_cvGetQuadrangleSubPix_texinfo},
+{"cvMatchTemplate",_wrap_cvMatchTemplate,0,0,2,_wrap_cvMatchTemplate_texinfo},
+{"cvCalcEMD2",_wrap_cvCalcEMD2,0,0,2,_wrap_cvCalcEMD2_texinfo},
+{"cvFindContoursUntyped",_wrap_cvFindContoursUntyped,0,0,2,_wrap_cvFindContoursUntyped_texinfo},
+{"cvStartFindContours",_wrap_cvStartFindContours,0,0,2,_wrap_cvStartFindContours_texinfo},
+{"cvFindNextContour",_wrap_cvFindNextContour,0,0,2,_wrap_cvFindNextContour_texinfo},
+{"cvSubstituteContour",_wrap_cvSubstituteContour,0,0,2,_wrap_cvSubstituteContour_texinfo},
+{"cvEndFindContours",_wrap_cvEndFindContours,0,0,2,_wrap_cvEndFindContours_texinfo},
+{"cvApproxChainsUntyped",_wrap_cvApproxChainsUntyped,0,0,2,_wrap_cvApproxChainsUntyped_texinfo},
+{"cvStartReadChainPoints",_wrap_cvStartReadChainPoints,0,0,2,_wrap_cvStartReadChainPoints_texinfo},
+{"cvReadChainPoint",_wrap_cvReadChainPoint,0,0,2,_wrap_cvReadChainPoint_texinfo},
+{"cvCalcOpticalFlowLK",_wrap_cvCalcOpticalFlowLK,0,0,2,_wrap_cvCalcOpticalFlowLK_texinfo},
+{"cvCalcOpticalFlowBM",_wrap_cvCalcOpticalFlowBM,0,0,2,_wrap_cvCalcOpticalFlowBM_texinfo},
+{"cvCalcOpticalFlowHS",_wrap_cvCalcOpticalFlowHS,0,0,2,_wrap_cvCalcOpticalFlowHS_texinfo},
+{"cvCalcOpticalFlowPyrLK",_wrap_cvCalcOpticalFlowPyrLK,0,0,2,_wrap_cvCalcOpticalFlowPyrLK_texinfo},
+{"cvCalcAffineFlowPyrLK",_wrap_cvCalcAffineFlowPyrLK,0,0,2,_wrap_cvCalcAffineFlowPyrLK_texinfo},
+{"cvEstimateRigidTransform",_wrap_cvEstimateRigidTransform,0,0,2,_wrap_cvEstimateRigidTransform_texinfo},
+{"cvUpdateMotionHistory",_wrap_cvUpdateMotionHistory,0,0,2,_wrap_cvUpdateMotionHistory_texinfo},
+{"cvCalcMotionGradient",_wrap_cvCalcMotionGradient,0,0,2,_wrap_cvCalcMotionGradient_texinfo},
+{"cvCalcGlobalOrientation",_wrap_cvCalcGlobalOrientation,0,0,2,_wrap_cvCalcGlobalOrientation_texinfo},
+{"cvAcc",_wrap_cvAcc,0,0,2,_wrap_cvAcc_texinfo},
+{"cvSquareAcc",_wrap_cvSquareAcc,0,0,2,_wrap_cvSquareAcc_texinfo},
+{"cvMultiplyAcc",_wrap_cvMultiplyAcc,0,0,2,_wrap_cvMultiplyAcc_texinfo},
+{"cvRunningAvg",_wrap_cvRunningAvg,0,0,2,_wrap_cvRunningAvg_texinfo},
+{"cvCamShift",_wrap_cvCamShift,0,0,2,_wrap_cvCamShift_texinfo},
+{"cvMeanShift",_wrap_cvMeanShift,0,0,2,_wrap_cvMeanShift_texinfo},
+{"cvCreateConDensation",_wrap_cvCreateConDensation,0,0,2,_wrap_cvCreateConDensation_texinfo},
+{"cvReleaseConDensation",_wrap_cvReleaseConDensation,0,0,2,_wrap_cvReleaseConDensation_texinfo},
+{"cvConDensUpdateByTime",_wrap_cvConDensUpdateByTime,0,0,2,_wrap_cvConDensUpdateByTime_texinfo},
+{"cvConDensInitSampleSet",_wrap_cvConDensInitSampleSet,0,0,2,_wrap_cvConDensInitSampleSet_texinfo},
+{"cvCreateKalman",_wrap_cvCreateKalman,0,0,2,_wrap_cvCreateKalman_texinfo},
+{"cvReleaseKalman",_wrap_cvReleaseKalman,0,0,2,_wrap_cvReleaseKalman_texinfo},
+{"cvKalmanPredict",_wrap_cvKalmanPredict,0,0,2,_wrap_cvKalmanPredict_texinfo},
+{"cvKalmanCorrect",_wrap_cvKalmanCorrect,0,0,2,_wrap_cvKalmanCorrect_texinfo},
+{"cvInitSubdivDelaunay2D",_wrap_cvInitSubdivDelaunay2D,0,0,2,_wrap_cvInitSubdivDelaunay2D_texinfo},
+{"cvCreateSubdiv2D",_wrap_cvCreateSubdiv2D,0,0,2,_wrap_cvCreateSubdiv2D_texinfo},
+{"cvCreateSubdivDelaunay2D",_wrap_cvCreateSubdivDelaunay2D,0,0,2,_wrap_cvCreateSubdivDelaunay2D_texinfo},
+{"cvSubdivDelaunay2DInsert",_wrap_cvSubdivDelaunay2DInsert,0,0,2,_wrap_cvSubdivDelaunay2DInsert_texinfo},
+{"cvSubdiv2DLocate",_wrap_cvSubdiv2DLocate,0,0,2,_wrap_cvSubdiv2DLocate_texinfo},
+{"cvCalcSubdivVoronoi2D",_wrap_cvCalcSubdivVoronoi2D,0,0,2,_wrap_cvCalcSubdivVoronoi2D_texinfo},
+{"cvClearSubdivVoronoi2D",_wrap_cvClearSubdivVoronoi2D,0,0,2,_wrap_cvClearSubdivVoronoi2D_texinfo},
+{"cvFindNearestPoint2D",_wrap_cvFindNearestPoint2D,0,0,2,_wrap_cvFindNearestPoint2D_texinfo},
+{"cvSubdiv2DNextEdge",_wrap_cvSubdiv2DNextEdge,0,0,2,_wrap_cvSubdiv2DNextEdge_texinfo},
+{"cvSubdiv2DRotateEdge",_wrap_cvSubdiv2DRotateEdge,0,0,2,_wrap_cvSubdiv2DRotateEdge_texinfo},
+{"cvSubdiv2DSymEdge",_wrap_cvSubdiv2DSymEdge,0,0,2,_wrap_cvSubdiv2DSymEdge_texinfo},
+{"cvSubdiv2DGetEdge",_wrap_cvSubdiv2DGetEdge,0,0,2,_wrap_cvSubdiv2DGetEdge_texinfo},
+{"cvSubdiv2DEdgeOrg",_wrap_cvSubdiv2DEdgeOrg,0,0,2,_wrap_cvSubdiv2DEdgeOrg_texinfo},
+{"cvSubdiv2DEdgeDst",_wrap_cvSubdiv2DEdgeDst,0,0,2,_wrap_cvSubdiv2DEdgeDst_texinfo},
+{"cvTriangleArea",_wrap_cvTriangleArea,0,0,2,_wrap_cvTriangleArea_texinfo},
+{"cvFindDominantPoints",_wrap_cvFindDominantPoints,0,0,2,_wrap_cvFindDominantPoints_texinfo},
+{"cvBoundingRect",_wrap_cvBoundingRect,0,0,2,_wrap_cvBoundingRect_texinfo},
+{"cvContourArea",_wrap_cvContourArea,0,0,2,_wrap_cvContourArea_texinfo},
+{"cvMinAreaRect2",_wrap_cvMinAreaRect2,0,0,2,_wrap_cvMinAreaRect2_texinfo},
+{"cvMinEnclosingCircle",_wrap_cvMinEnclosingCircle,0,0,2,_wrap_cvMinEnclosingCircle_texinfo},
+{"cvMatchShapes",_wrap_cvMatchShapes,0,0,2,_wrap_cvMatchShapes_texinfo},
+{"cvCreateContourTree",_wrap_cvCreateContourTree,0,0,2,_wrap_cvCreateContourTree_texinfo},
+{"cvContourFromContourTreeUntyped",_wrap_cvContourFromContourTreeUntyped,0,0,2,_wrap_cvContourFromContourTreeUntyped_texinfo},
+{"cvMatchContourTrees",_wrap_cvMatchContourTrees,0,0,2,_wrap_cvMatchContourTrees_texinfo},
+{"cvCalcPGH",_wrap_cvCalcPGH,0,0,2,_wrap_cvCalcPGH_texinfo},
+{"cvCheckContourConvexity",_wrap_cvCheckContourConvexity,0,0,2,_wrap_cvCheckContourConvexity_texinfo},
+{"cvConvexityDefectsUntyped",_wrap_cvConvexityDefectsUntyped,0,0,2,_wrap_cvConvexityDefectsUntyped_texinfo},
+{"cvFitEllipse2",_wrap_cvFitEllipse2,0,0,2,_wrap_cvFitEllipse2_texinfo},
+{"cvMaxRect",_wrap_cvMaxRect,0,0,2,_wrap_cvMaxRect_texinfo},
+{"cvBoxPoints",_wrap_cvBoxPoints,0,0,2,_wrap_cvBoxPoints_texinfo},
+{"cvPointSeqFromMat",_wrap_cvPointSeqFromMat,0,0,2,_wrap_cvPointSeqFromMat_texinfo},
+{"cvPointPolygonTest",_wrap_cvPointPolygonTest,0,0,2,_wrap_cvPointPolygonTest_texinfo},
+{"cvCreateHist",_wrap_cvCreateHist,0,0,2,_wrap_cvCreateHist_texinfo},
+{"cvSetHistBinRanges",_wrap_cvSetHistBinRanges,0,0,2,_wrap_cvSetHistBinRanges_texinfo},
+{"cvMakeHistHeaderForArray",_wrap_cvMakeHistHeaderForArray,0,0,2,_wrap_cvMakeHistHeaderForArray_texinfo},
+{"cvReleaseHist",_wrap_cvReleaseHist,0,0,2,_wrap_cvReleaseHist_texinfo},
+{"cvClearHist",_wrap_cvClearHist,0,0,2,_wrap_cvClearHist_texinfo},
+{"cvGetMinMaxHistValue",_wrap_cvGetMinMaxHistValue,0,0,2,_wrap_cvGetMinMaxHistValue_texinfo},
+{"cvNormalizeHist",_wrap_cvNormalizeHist,0,0,2,_wrap_cvNormalizeHist_texinfo},
+{"cvThreshHist",_wrap_cvThreshHist,0,0,2,_wrap_cvThreshHist_texinfo},
+{"cvCompareHist",_wrap_cvCompareHist,0,0,2,_wrap_cvCompareHist_texinfo},
+{"cvCopyHist",_wrap_cvCopyHist,0,0,2,_wrap_cvCopyHist_texinfo},
+{"cvCalcBayesianProb",_wrap_cvCalcBayesianProb,0,0,2,_wrap_cvCalcBayesianProb_texinfo},
+{"cvCalcArrHist",_wrap_cvCalcArrHist,0,0,2,_wrap_cvCalcArrHist_texinfo},
+{"cvCalcImageHist",_wrap_cvCalcImageHist,0,0,2,_wrap_cvCalcImageHist_texinfo},
+{"cvCalcArrBackProject",_wrap_cvCalcArrBackProject,0,0,2,_wrap_cvCalcArrBackProject_texinfo},
+{"cvCalcArrBackProjectPatch",_wrap_cvCalcArrBackProjectPatch,0,0,2,_wrap_cvCalcArrBackProjectPatch_texinfo},
+{"cvCalcProbDensity",_wrap_cvCalcProbDensity,0,0,2,_wrap_cvCalcProbDensity_texinfo},
+{"cvEqualizeHist",_wrap_cvEqualizeHist,0,0,2,_wrap_cvEqualizeHist_texinfo},
+{"cvCalcImageHomography",_wrap_cvCalcImageHomography,0,0,2,_wrap_cvCalcImageHomography_texinfo},
+{"cvDistTransform",_wrap_cvDistTransform,0,0,2,_wrap_cvDistTransform_texinfo},
+{"cvThreshold",_wrap_cvThreshold,0,0,2,_wrap_cvThreshold_texinfo},
+{"cvAdaptiveThreshold",_wrap_cvAdaptiveThreshold,0,0,2,_wrap_cvAdaptiveThreshold_texinfo},
+{"cvFloodFill",_wrap_cvFloodFill,0,0,2,_wrap_cvFloodFill_texinfo},
+{"cvCanny",_wrap_cvCanny,0,0,2,_wrap_cvCanny_texinfo},
+{"cvPreCornerDetect",_wrap_cvPreCornerDetect,0,0,2,_wrap_cvPreCornerDetect_texinfo},
+{"cvCornerEigenValsAndVecs",_wrap_cvCornerEigenValsAndVecs,0,0,2,_wrap_cvCornerEigenValsAndVecs_texinfo},
+{"cvCornerMinEigenVal",_wrap_cvCornerMinEigenVal,0,0,2,_wrap_cvCornerMinEigenVal_texinfo},
+{"cvCornerHarris",_wrap_cvCornerHarris,0,0,2,_wrap_cvCornerHarris_texinfo},
+{"cvFindCornerSubPix",_wrap_cvFindCornerSubPix,0,0,2,_wrap_cvFindCornerSubPix_texinfo},
+{"cvGoodFeaturesToTrack",_wrap_cvGoodFeaturesToTrack,0,0,2,_wrap_cvGoodFeaturesToTrack_texinfo},
+{"cvHoughLinesUntyped",_wrap_cvHoughLinesUntyped,0,0,2,_wrap_cvHoughLinesUntyped_texinfo},
+{"cvHoughCirclesUntyped",_wrap_cvHoughCirclesUntyped,0,0,2,_wrap_cvHoughCirclesUntyped_texinfo},
+{"cvFitLine",_wrap_cvFitLine,0,0,2,_wrap_cvFitLine_texinfo},
+{"cvLoadHaarClassifierCascade",_wrap_cvLoadHaarClassifierCascade,0,0,2,_wrap_cvLoadHaarClassifierCascade_texinfo},
+{"cvReleaseHaarClassifierCascade",_wrap_cvReleaseHaarClassifierCascade,0,0,2,_wrap_cvReleaseHaarClassifierCascade_texinfo},
+{"cvSetImagesForHaarClassifierCascade",_wrap_cvSetImagesForHaarClassifierCascade,0,0,2,_wrap_cvSetImagesForHaarClassifierCascade_texinfo},
+{"cvRunHaarClassifierCascade",_wrap_cvRunHaarClassifierCascade,0,0,2,_wrap_cvRunHaarClassifierCascade_texinfo},
+{"cvUndistort2",_wrap_cvUndistort2,0,0,2,_wrap_cvUndistort2_texinfo},
+{"cvInitUndistortMap",_wrap_cvInitUndistortMap,0,0,2,_wrap_cvInitUndistortMap_texinfo},
+{"cvRodrigues2",_wrap_cvRodrigues2,0,0,2,_wrap_cvRodrigues2_texinfo},
+{"cvFindHomography",_wrap_cvFindHomography,0,0,2,_wrap_cvFindHomography_texinfo},
+{"cvProjectPoints2",_wrap_cvProjectPoints2,0,0,2,_wrap_cvProjectPoints2_texinfo},
+{"cvFindExtrinsicCameraParams2",_wrap_cvFindExtrinsicCameraParams2,0,0,2,_wrap_cvFindExtrinsicCameraParams2_texinfo},
+{"cvCalibrateCamera2",_wrap_cvCalibrateCamera2,0,0,2,_wrap_cvCalibrateCamera2_texinfo},
+{"cvFindChessboardCorners",_wrap_cvFindChessboardCorners,0,0,2,_wrap_cvFindChessboardCorners_texinfo},
+{"cvDrawChessboardCorners",_wrap_cvDrawChessboardCorners,0,0,2,_wrap_cvDrawChessboardCorners_texinfo},
+{"cvCreatePOSITObject",_wrap_cvCreatePOSITObject,0,0,2,_wrap_cvCreatePOSITObject_texinfo},
+{"cvPOSIT",_wrap_cvPOSIT,0,0,2,_wrap_cvPOSIT_texinfo},
+{"cvReleasePOSITObject",_wrap_cvReleasePOSITObject,0,0,2,_wrap_cvReleasePOSITObject_texinfo},
+{"cvRANSACUpdateNumIters",_wrap_cvRANSACUpdateNumIters,0,0,2,_wrap_cvRANSACUpdateNumIters_texinfo},
+{"cvConvertPointsHomogenious",_wrap_cvConvertPointsHomogenious,0,0,2,_wrap_cvConvertPointsHomogenious_texinfo},
+{"cvFindFundamentalMat",_wrap_cvFindFundamentalMat,0,0,2,_wrap_cvFindFundamentalMat_texinfo},
+{"cvComputeCorrespondEpilines",_wrap_cvComputeCorrespondEpilines,0,0,2,_wrap_cvComputeCorrespondEpilines_texinfo},
+{"new_CvBaseImageFilter",_wrap_new_CvBaseImageFilter,0,0,2,_wrap_new_CvBaseImageFilter_texinfo},
+{"delete_CvBaseImageFilter",_wrap_delete_CvBaseImageFilter,0,0,2,_wrap_delete_CvBaseImageFilter_texinfo},
+{"CvBaseImageFilter_init",_wrap_CvBaseImageFilter_init,0,0,2,_wrap_CvBaseImageFilter_init_texinfo},
+{"CvBaseImageFilter_clear",_wrap_CvBaseImageFilter_clear,0,0,2,_wrap_CvBaseImageFilter_clear_texinfo},
+{"CvBaseImageFilter_process",_wrap_CvBaseImageFilter_process,0,0,2,_wrap_CvBaseImageFilter_process_texinfo},
+{"CvBaseImageFilter_get_src_type",_wrap_CvBaseImageFilter_get_src_type,0,0,2,_wrap_CvBaseImageFilter_get_src_type_texinfo},
+{"CvBaseImageFilter_get_dst_type",_wrap_CvBaseImageFilter_get_dst_type,0,0,2,_wrap_CvBaseImageFilter_get_dst_type_texinfo},
+{"CvBaseImageFilter_get_work_type",_wrap_CvBaseImageFilter_get_work_type,0,0,2,_wrap_CvBaseImageFilter_get_work_type_texinfo},
+{"CvBaseImageFilter_get_kernel_size",_wrap_CvBaseImageFilter_get_kernel_size,0,0,2,_wrap_CvBaseImageFilter_get_kernel_size_texinfo},
+{"CvBaseImageFilter_get_anchor",_wrap_CvBaseImageFilter_get_anchor,0,0,2,_wrap_CvBaseImageFilter_get_anchor_texinfo},
+{"CvBaseImageFilter_get_width",_wrap_CvBaseImageFilter_get_width,0,0,2,_wrap_CvBaseImageFilter_get_width_texinfo},
+{"CvBaseImageFilter_get_x_filter_func",_wrap_CvBaseImageFilter_get_x_filter_func,0,0,2,_wrap_CvBaseImageFilter_get_x_filter_func_texinfo},
+{"CvBaseImageFilter_get_y_filter_func",_wrap_CvBaseImageFilter_get_y_filter_func,0,0,2,_wrap_CvBaseImageFilter_get_y_filter_func_texinfo},
+{"new_CvSepFilter",_wrap_new_CvSepFilter,0,0,2,_wrap_new_CvSepFilter_texinfo},
+{"delete_CvSepFilter",_wrap_delete_CvSepFilter,0,0,2,_wrap_delete_CvSepFilter_texinfo},
+{"CvSepFilter_init_deriv",_wrap_CvSepFilter_init_deriv,0,0,2,_wrap_CvSepFilter_init_deriv_texinfo},
+{"CvSepFilter_init_gaussian",_wrap_CvSepFilter_init_gaussian,0,0,2,_wrap_CvSepFilter_init_gaussian_texinfo},
+{"CvSepFilter_init",_wrap_CvSepFilter_init,0,0,2,_wrap_CvSepFilter_init_texinfo},
+{"CvSepFilter_clear",_wrap_CvSepFilter_clear,0,0,2,_wrap_CvSepFilter_clear_texinfo},
+{"CvSepFilter_get_x_kernel",_wrap_CvSepFilter_get_x_kernel,0,0,2,_wrap_CvSepFilter_get_x_kernel_texinfo},
+{"CvSepFilter_get_y_kernel",_wrap_CvSepFilter_get_y_kernel,0,0,2,_wrap_CvSepFilter_get_y_kernel_texinfo},
+{"CvSepFilter_get_x_kernel_flags",_wrap_CvSepFilter_get_x_kernel_flags,0,0,2,_wrap_CvSepFilter_get_x_kernel_flags_texinfo},
+{"CvSepFilter_get_y_kernel_flags",_wrap_CvSepFilter_get_y_kernel_flags,0,0,2,_wrap_CvSepFilter_get_y_kernel_flags_texinfo},
+{"CvSepFilter_init_gaussian_kernel",_wrap_CvSepFilter_init_gaussian_kernel,0,0,2,_wrap_CvSepFilter_init_gaussian_kernel_texinfo},
+{"CvSepFilter_init_sobel_kernel",_wrap_CvSepFilter_init_sobel_kernel,0,0,2,_wrap_CvSepFilter_init_sobel_kernel_texinfo},
+{"CvSepFilter_init_scharr_kernel",_wrap_CvSepFilter_init_scharr_kernel,0,0,2,_wrap_CvSepFilter_init_scharr_kernel_texinfo},
+{"new_CvLinearFilter",_wrap_new_CvLinearFilter,0,0,2,_wrap_new_CvLinearFilter_texinfo},
+{"delete_CvLinearFilter",_wrap_delete_CvLinearFilter,0,0,2,_wrap_delete_CvLinearFilter_texinfo},
+{"CvLinearFilter_init",_wrap_CvLinearFilter_init,0,0,2,_wrap_CvLinearFilter_init_texinfo},
+{"CvLinearFilter_clear",_wrap_CvLinearFilter_clear,0,0,2,_wrap_CvLinearFilter_clear_texinfo},
+{"CvLinearFilter_get_kernel",_wrap_CvLinearFilter_get_kernel,0,0,2,_wrap_CvLinearFilter_get_kernel_texinfo},
+{"CvLinearFilter_get_kernel_sparse_buf",_wrap_CvLinearFilter_get_kernel_sparse_buf,0,0,2,_wrap_CvLinearFilter_get_kernel_sparse_buf_texinfo},
+{"CvLinearFilter_get_kernel_sparse_count",_wrap_CvLinearFilter_get_kernel_sparse_count,0,0,2,_wrap_CvLinearFilter_get_kernel_sparse_count_texinfo},
+{"new_CvBoxFilter",_wrap_new_CvBoxFilter,0,0,2,_wrap_new_CvBoxFilter_texinfo},
+{"CvBoxFilter_init",_wrap_CvBoxFilter_init,0,0,2,_wrap_CvBoxFilter_init_texinfo},
+{"delete_CvBoxFilter",_wrap_delete_CvBoxFilter,0,0,2,_wrap_delete_CvBoxFilter_texinfo},
+{"CvBoxFilter_is_normalized",_wrap_CvBoxFilter_is_normalized,0,0,2,_wrap_CvBoxFilter_is_normalized_texinfo},
+{"CvBoxFilter_get_scale",_wrap_CvBoxFilter_get_scale,0,0,2,_wrap_CvBoxFilter_get_scale_texinfo},
+{"CvBoxFilter_get_sum_buf",_wrap_CvBoxFilter_get_sum_buf,0,0,2,_wrap_CvBoxFilter_get_sum_buf_texinfo},
+{"CvBoxFilter_get_sum_count_ptr",_wrap_CvBoxFilter_get_sum_count_ptr,0,0,2,_wrap_CvBoxFilter_get_sum_count_ptr_texinfo},
+{"new_CvLaplaceFilter",_wrap_new_CvLaplaceFilter,0,0,2,_wrap_new_CvLaplaceFilter_texinfo},
+{"delete_CvLaplaceFilter",_wrap_delete_CvLaplaceFilter,0,0,2,_wrap_delete_CvLaplaceFilter_texinfo},
+{"CvLaplaceFilter_init",_wrap_CvLaplaceFilter_init,0,0,2,_wrap_CvLaplaceFilter_init_texinfo},
+{"CvLaplaceFilter_is_normalized",_wrap_CvLaplaceFilter_is_normalized,0,0,2,_wrap_CvLaplaceFilter_is_normalized_texinfo},
+{"CvLaplaceFilter_is_basic_laplacian",_wrap_CvLaplaceFilter_is_basic_laplacian,0,0,2,_wrap_CvLaplaceFilter_is_basic_laplacian_texinfo},
+{"new_CvMorphology",_wrap_new_CvMorphology,0,0,2,_wrap_new_CvMorphology_texinfo},
+{"delete_CvMorphology",_wrap_delete_CvMorphology,0,0,2,_wrap_delete_CvMorphology_texinfo},
+{"CvMorphology_init",_wrap_CvMorphology_init,0,0,2,_wrap_CvMorphology_init_texinfo},
+{"CvMorphology_clear",_wrap_CvMorphology_clear,0,0,2,_wrap_CvMorphology_clear_texinfo},
+{"CvMorphology_get_element",_wrap_CvMorphology_get_element,0,0,2,_wrap_CvMorphology_get_element_texinfo},
+{"CvMorphology_get_element_shape",_wrap_CvMorphology_get_element_shape,0,0,2,_wrap_CvMorphology_get_element_shape_texinfo},
+{"CvMorphology_get_operation",_wrap_CvMorphology_get_operation,0,0,2,_wrap_CvMorphology_get_operation_texinfo},
+{"CvMorphology_get_element_sparse_buf",_wrap_CvMorphology_get_element_sparse_buf,0,0,2,_wrap_CvMorphology_get_element_sparse_buf_texinfo},
+{"CvMorphology_get_element_sparse_count",_wrap_CvMorphology_get_element_sparse_count,0,0,2,_wrap_CvMorphology_get_element_sparse_count_texinfo},
+{"CvMorphology_init_binary_element",_wrap_CvMorphology_init_binary_element,0,0,2,_wrap_CvMorphology_init_binary_element_texinfo},
 {"CvTuple_CvPoint_2_val_set",_wrap_CvTuple_CvPoint_2_val_set,0,0,2,0},
 {"CvTuple_CvPoint_2_val_get",_wrap_CvTuple_CvPoint_2_val_get,0,0,2,0},
-{"CvTuple_CvPoint_2___setitem__",_wrap_CvTuple_CvPoint_2___setitem__,0,0,2,0},
-{"CvTuple_CvPoint_2___getitem__",_wrap_CvTuple_CvPoint_2___getitem__,0,0,2,0},
-{"new_CvTuple_CvPoint_2",_wrap_new_CvTuple_CvPoint_2,0,0,2,0},
-{"delete_CvTuple_CvPoint_2",_wrap_delete_CvTuple_CvPoint_2,0,0,2,0},
+{"CvTuple_CvPoint_2___setitem__",_wrap_CvTuple_CvPoint_2___setitem__,0,0,2,_wrap_CvTuple_CvPoint_2___setitem___texinfo},
+{"CvTuple_CvPoint_2___getitem__",_wrap_CvTuple_CvPoint_2___getitem__,0,0,2,_wrap_CvTuple_CvPoint_2___getitem___texinfo},
+{"new_CvTuple_CvPoint_2",_wrap_new_CvTuple_CvPoint_2,0,0,2,_wrap_new_CvTuple_CvPoint_2_texinfo},
+{"delete_CvTuple_CvPoint_2",_wrap_delete_CvTuple_CvPoint_2,0,0,2,_wrap_delete_CvTuple_CvPoint_2_texinfo},
 {"CvTuple_float_2_val_set",_wrap_CvTuple_float_2_val_set,0,0,2,0},
 {"CvTuple_float_2_val_get",_wrap_CvTuple_float_2_val_get,0,0,2,0},
-{"CvTuple_float_2___setitem__",_wrap_CvTuple_float_2___setitem__,0,0,2,0},
-{"CvTuple_float_2___getitem__",_wrap_CvTuple_float_2___getitem__,0,0,2,0},
-{"new_CvTuple_float_2",_wrap_new_CvTuple_float_2,0,0,2,0},
-{"delete_CvTuple_float_2",_wrap_delete_CvTuple_float_2,0,0,2,0},
+{"CvTuple_float_2___setitem__",_wrap_CvTuple_float_2___setitem__,0,0,2,_wrap_CvTuple_float_2___setitem___texinfo},
+{"CvTuple_float_2___getitem__",_wrap_CvTuple_float_2___getitem__,0,0,2,_wrap_CvTuple_float_2___getitem___texinfo},
+{"new_CvTuple_float_2",_wrap_new_CvTuple_float_2,0,0,2,_wrap_new_CvTuple_float_2_texinfo},
+{"delete_CvTuple_float_2",_wrap_delete_CvTuple_float_2,0,0,2,_wrap_delete_CvTuple_float_2_texinfo},
 {"CvTuple_float_3_val_set",_wrap_CvTuple_float_3_val_set,0,0,2,0},
 {"CvTuple_float_3_val_get",_wrap_CvTuple_float_3_val_get,0,0,2,0},
-{"CvTuple_float_3___setitem__",_wrap_CvTuple_float_3___setitem__,0,0,2,0},
-{"CvTuple_float_3___getitem__",_wrap_CvTuple_float_3___getitem__,0,0,2,0},
-{"new_CvTuple_float_3",_wrap_new_CvTuple_float_3,0,0,2,0},
-{"delete_CvTuple_float_3",_wrap_delete_CvTuple_float_3,0,0,2,0},
-{"CvSeq_CvPoint_cast",_wrap_CvSeq_CvPoint_cast,0,0,2,0},
-{"CvSeq_CvPoint___getitem__",_wrap_CvSeq_CvPoint___getitem__,0,0,2,0},
-{"CvSeq_CvPoint___setitem__",_wrap_CvSeq_CvPoint___setitem__,0,0,2,0},
-{"CvSeq_CvPoint_append",_wrap_CvSeq_CvPoint_append,0,0,2,0},
-{"CvSeq_CvPoint_pop",_wrap_CvSeq_CvPoint_pop,0,0,2,0},
-{"new_CvSeq_CvPoint",_wrap_new_CvSeq_CvPoint,0,0,2,0},
-{"delete_CvSeq_CvPoint",_wrap_delete_CvSeq_CvPoint,0,0,2,0},
-{"CvSeq_CvPoint2D32f_cast",_wrap_CvSeq_CvPoint2D32f_cast,0,0,2,0},
-{"CvSeq_CvPoint2D32f___getitem__",_wrap_CvSeq_CvPoint2D32f___getitem__,0,0,2,0},
-{"CvSeq_CvPoint2D32f___setitem__",_wrap_CvSeq_CvPoint2D32f___setitem__,0,0,2,0},
-{"CvSeq_CvPoint2D32f_append",_wrap_CvSeq_CvPoint2D32f_append,0,0,2,0},
-{"CvSeq_CvPoint2D32f_pop",_wrap_CvSeq_CvPoint2D32f_pop,0,0,2,0},
-{"new_CvSeq_CvPoint2D32f",_wrap_new_CvSeq_CvPoint2D32f,0,0,2,0},
-{"delete_CvSeq_CvPoint2D32f",_wrap_delete_CvSeq_CvPoint2D32f,0,0,2,0},
-{"CvSeq_CvRect_cast",_wrap_CvSeq_CvRect_cast,0,0,2,0},
-{"CvSeq_CvRect___getitem__",_wrap_CvSeq_CvRect___getitem__,0,0,2,0},
-{"CvSeq_CvRect___setitem__",_wrap_CvSeq_CvRect___setitem__,0,0,2,0},
-{"CvSeq_CvRect_append",_wrap_CvSeq_CvRect_append,0,0,2,0},
-{"CvSeq_CvRect_pop",_wrap_CvSeq_CvRect_pop,0,0,2,0},
-{"new_CvSeq_CvRect",_wrap_new_CvSeq_CvRect,0,0,2,0},
-{"delete_CvSeq_CvRect",_wrap_delete_CvSeq_CvRect,0,0,2,0},
-{"CvSeq_CvSeq_cast",_wrap_CvSeq_CvSeq_cast,0,0,2,0},
-{"CvSeq_CvSeq___getitem__",_wrap_CvSeq_CvSeq___getitem__,0,0,2,0},
-{"CvSeq_CvSeq___setitem__",_wrap_CvSeq_CvSeq___setitem__,0,0,2,0},
-{"CvSeq_CvSeq_append",_wrap_CvSeq_CvSeq_append,0,0,2,0},
-{"CvSeq_CvSeq_pop",_wrap_CvSeq_CvSeq_pop,0,0,2,0},
-{"new_CvSeq_CvSeq",_wrap_new_CvSeq_CvSeq,0,0,2,0},
-{"delete_CvSeq_CvSeq",_wrap_delete_CvSeq_CvSeq,0,0,2,0},
-{"CvSeq_CvQuadEdge2D_cast",_wrap_CvSeq_CvQuadEdge2D_cast,0,0,2,0},
-{"CvSeq_CvQuadEdge2D___getitem__",_wrap_CvSeq_CvQuadEdge2D___getitem__,0,0,2,0},
-{"CvSeq_CvQuadEdge2D___setitem__",_wrap_CvSeq_CvQuadEdge2D___setitem__,0,0,2,0},
-{"CvSeq_CvQuadEdge2D_append",_wrap_CvSeq_CvQuadEdge2D_append,0,0,2,0},
-{"CvSeq_CvQuadEdge2D_pop",_wrap_CvSeq_CvQuadEdge2D_pop,0,0,2,0},
-{"new_CvSeq_CvQuadEdge2D",_wrap_new_CvSeq_CvQuadEdge2D,0,0,2,0},
-{"delete_CvSeq_CvQuadEdge2D",_wrap_delete_CvSeq_CvQuadEdge2D,0,0,2,0},
-{"CvSeq_CvConnectedComp_cast",_wrap_CvSeq_CvConnectedComp_cast,0,0,2,0},
-{"CvSeq_CvConnectedComp___getitem__",_wrap_CvSeq_CvConnectedComp___getitem__,0,0,2,0},
-{"CvSeq_CvConnectedComp___setitem__",_wrap_CvSeq_CvConnectedComp___setitem__,0,0,2,0},
-{"CvSeq_CvConnectedComp_append",_wrap_CvSeq_CvConnectedComp_append,0,0,2,0},
-{"CvSeq_CvConnectedComp_pop",_wrap_CvSeq_CvConnectedComp_pop,0,0,2,0},
-{"new_CvSeq_CvConnectedComp",_wrap_new_CvSeq_CvConnectedComp,0,0,2,0},
-{"delete_CvSeq_CvConnectedComp",_wrap_delete_CvSeq_CvConnectedComp,0,0,2,0},
-{"CvSeq_CvPoint_2_cast",_wrap_CvSeq_CvPoint_2_cast,0,0,2,0},
-{"CvSeq_CvPoint_2___getitem__",_wrap_CvSeq_CvPoint_2___getitem__,0,0,2,0},
-{"CvSeq_CvPoint_2___setitem__",_wrap_CvSeq_CvPoint_2___setitem__,0,0,2,0},
-{"CvSeq_CvPoint_2_append",_wrap_CvSeq_CvPoint_2_append,0,0,2,0},
-{"CvSeq_CvPoint_2_pop",_wrap_CvSeq_CvPoint_2_pop,0,0,2,0},
-{"new_CvSeq_CvPoint_2",_wrap_new_CvSeq_CvPoint_2,0,0,2,0},
-{"delete_CvSeq_CvPoint_2",_wrap_delete_CvSeq_CvPoint_2,0,0,2,0},
-{"CvSeq_float_2_cast",_wrap_CvSeq_float_2_cast,0,0,2,0},
-{"CvSeq_float_2___getitem__",_wrap_CvSeq_float_2___getitem__,0,0,2,0},
-{"CvSeq_float_2___setitem__",_wrap_CvSeq_float_2___setitem__,0,0,2,0},
-{"CvSeq_float_2_append",_wrap_CvSeq_float_2_append,0,0,2,0},
-{"CvSeq_float_2_pop",_wrap_CvSeq_float_2_pop,0,0,2,0},
-{"new_CvSeq_float_2",_wrap_new_CvSeq_float_2,0,0,2,0},
-{"delete_CvSeq_float_2",_wrap_delete_CvSeq_float_2,0,0,2,0},
-{"CvSeq_float_3_cast",_wrap_CvSeq_float_3_cast,0,0,2,0},
-{"CvSeq_float_3___getitem__",_wrap_CvSeq_float_3___getitem__,0,0,2,0},
-{"CvSeq_float_3___setitem__",_wrap_CvSeq_float_3___setitem__,0,0,2,0},
-{"CvSeq_float_3_append",_wrap_CvSeq_float_3_append,0,0,2,0},
-{"CvSeq_float_3_pop",_wrap_CvSeq_float_3_pop,0,0,2,0},
-{"new_CvSeq_float_3",_wrap_new_CvSeq_float_3,0,0,2,0},
-{"delete_CvSeq_float_3",_wrap_delete_CvSeq_float_3,0,0,2,0},
-{"SendErrorToPython",_wrap_SendErrorToPython,0,0,2,0},
-{"function_ptr_generator",_wrap_function_ptr_generator,0,0,2,0},
-{"void_ptr_generator",_wrap_void_ptr_generator,0,0,2,0},
-{"void_ptrptr_generator",_wrap_void_ptrptr_generator,0,0,2,0},
+{"CvTuple_float_3___setitem__",_wrap_CvTuple_float_3___setitem__,0,0,2,_wrap_CvTuple_float_3___setitem___texinfo},
+{"CvTuple_float_3___getitem__",_wrap_CvTuple_float_3___getitem__,0,0,2,_wrap_CvTuple_float_3___getitem___texinfo},
+{"new_CvTuple_float_3",_wrap_new_CvTuple_float_3,0,0,2,_wrap_new_CvTuple_float_3_texinfo},
+{"delete_CvTuple_float_3",_wrap_delete_CvTuple_float_3,0,0,2,_wrap_delete_CvTuple_float_3_texinfo},
+{"CvSeq_CvPoint_cast",_wrap_CvSeq_CvPoint_cast,0,0,2,_wrap_CvSeq_CvPoint_cast_texinfo},
+{"CvSeq_CvPoint___getitem__",_wrap_CvSeq_CvPoint___getitem__,0,0,2,_wrap_CvSeq_CvPoint___getitem___texinfo},
+{"CvSeq_CvPoint___setitem__",_wrap_CvSeq_CvPoint___setitem__,0,0,2,_wrap_CvSeq_CvPoint___setitem___texinfo},
+{"CvSeq_CvPoint_append",_wrap_CvSeq_CvPoint_append,0,0,2,_wrap_CvSeq_CvPoint_append_texinfo},
+{"CvSeq_CvPoint_pop",_wrap_CvSeq_CvPoint_pop,0,0,2,_wrap_CvSeq_CvPoint_pop_texinfo},
+{"new_CvSeq_CvPoint",_wrap_new_CvSeq_CvPoint,0,0,2,_wrap_new_CvSeq_CvPoint_texinfo},
+{"delete_CvSeq_CvPoint",_wrap_delete_CvSeq_CvPoint,0,0,2,_wrap_delete_CvSeq_CvPoint_texinfo},
+{"CvSeq_CvPoint2D32f_cast",_wrap_CvSeq_CvPoint2D32f_cast,0,0,2,_wrap_CvSeq_CvPoint2D32f_cast_texinfo},
+{"CvSeq_CvPoint2D32f___getitem__",_wrap_CvSeq_CvPoint2D32f___getitem__,0,0,2,_wrap_CvSeq_CvPoint2D32f___getitem___texinfo},
+{"CvSeq_CvPoint2D32f___setitem__",_wrap_CvSeq_CvPoint2D32f___setitem__,0,0,2,_wrap_CvSeq_CvPoint2D32f___setitem___texinfo},
+{"CvSeq_CvPoint2D32f_append",_wrap_CvSeq_CvPoint2D32f_append,0,0,2,_wrap_CvSeq_CvPoint2D32f_append_texinfo},
+{"CvSeq_CvPoint2D32f_pop",_wrap_CvSeq_CvPoint2D32f_pop,0,0,2,_wrap_CvSeq_CvPoint2D32f_pop_texinfo},
+{"new_CvSeq_CvPoint2D32f",_wrap_new_CvSeq_CvPoint2D32f,0,0,2,_wrap_new_CvSeq_CvPoint2D32f_texinfo},
+{"delete_CvSeq_CvPoint2D32f",_wrap_delete_CvSeq_CvPoint2D32f,0,0,2,_wrap_delete_CvSeq_CvPoint2D32f_texinfo},
+{"CvSeq_CvRect_cast",_wrap_CvSeq_CvRect_cast,0,0,2,_wrap_CvSeq_CvRect_cast_texinfo},
+{"CvSeq_CvRect___getitem__",_wrap_CvSeq_CvRect___getitem__,0,0,2,_wrap_CvSeq_CvRect___getitem___texinfo},
+{"CvSeq_CvRect___setitem__",_wrap_CvSeq_CvRect___setitem__,0,0,2,_wrap_CvSeq_CvRect___setitem___texinfo},
+{"CvSeq_CvRect_append",_wrap_CvSeq_CvRect_append,0,0,2,_wrap_CvSeq_CvRect_append_texinfo},
+{"CvSeq_CvRect_pop",_wrap_CvSeq_CvRect_pop,0,0,2,_wrap_CvSeq_CvRect_pop_texinfo},
+{"new_CvSeq_CvRect",_wrap_new_CvSeq_CvRect,0,0,2,_wrap_new_CvSeq_CvRect_texinfo},
+{"delete_CvSeq_CvRect",_wrap_delete_CvSeq_CvRect,0,0,2,_wrap_delete_CvSeq_CvRect_texinfo},
+{"CvSeq_CvSeq_cast",_wrap_CvSeq_CvSeq_cast,0,0,2,_wrap_CvSeq_CvSeq_cast_texinfo},
+{"CvSeq_CvSeq___getitem__",_wrap_CvSeq_CvSeq___getitem__,0,0,2,_wrap_CvSeq_CvSeq___getitem___texinfo},
+{"CvSeq_CvSeq___setitem__",_wrap_CvSeq_CvSeq___setitem__,0,0,2,_wrap_CvSeq_CvSeq___setitem___texinfo},
+{"CvSeq_CvSeq_append",_wrap_CvSeq_CvSeq_append,0,0,2,_wrap_CvSeq_CvSeq_append_texinfo},
+{"CvSeq_CvSeq_pop",_wrap_CvSeq_CvSeq_pop,0,0,2,_wrap_CvSeq_CvSeq_pop_texinfo},
+{"new_CvSeq_CvSeq",_wrap_new_CvSeq_CvSeq,0,0,2,_wrap_new_CvSeq_CvSeq_texinfo},
+{"delete_CvSeq_CvSeq",_wrap_delete_CvSeq_CvSeq,0,0,2,_wrap_delete_CvSeq_CvSeq_texinfo},
+{"CvSeq_CvQuadEdge2D_cast",_wrap_CvSeq_CvQuadEdge2D_cast,0,0,2,_wrap_CvSeq_CvQuadEdge2D_cast_texinfo},
+{"CvSeq_CvQuadEdge2D___getitem__",_wrap_CvSeq_CvQuadEdge2D___getitem__,0,0,2,_wrap_CvSeq_CvQuadEdge2D___getitem___texinfo},
+{"CvSeq_CvQuadEdge2D___setitem__",_wrap_CvSeq_CvQuadEdge2D___setitem__,0,0,2,_wrap_CvSeq_CvQuadEdge2D___setitem___texinfo},
+{"CvSeq_CvQuadEdge2D_append",_wrap_CvSeq_CvQuadEdge2D_append,0,0,2,_wrap_CvSeq_CvQuadEdge2D_append_texinfo},
+{"CvSeq_CvQuadEdge2D_pop",_wrap_CvSeq_CvQuadEdge2D_pop,0,0,2,_wrap_CvSeq_CvQuadEdge2D_pop_texinfo},
+{"new_CvSeq_CvQuadEdge2D",_wrap_new_CvSeq_CvQuadEdge2D,0,0,2,_wrap_new_CvSeq_CvQuadEdge2D_texinfo},
+{"delete_CvSeq_CvQuadEdge2D",_wrap_delete_CvSeq_CvQuadEdge2D,0,0,2,_wrap_delete_CvSeq_CvQuadEdge2D_texinfo},
+{"CvSeq_CvConnectedComp_cast",_wrap_CvSeq_CvConnectedComp_cast,0,0,2,_wrap_CvSeq_CvConnectedComp_cast_texinfo},
+{"CvSeq_CvConnectedComp___getitem__",_wrap_CvSeq_CvConnectedComp___getitem__,0,0,2,_wrap_CvSeq_CvConnectedComp___getitem___texinfo},
+{"CvSeq_CvConnectedComp___setitem__",_wrap_CvSeq_CvConnectedComp___setitem__,0,0,2,_wrap_CvSeq_CvConnectedComp___setitem___texinfo},
+{"CvSeq_CvConnectedComp_append",_wrap_CvSeq_CvConnectedComp_append,0,0,2,_wrap_CvSeq_CvConnectedComp_append_texinfo},
+{"CvSeq_CvConnectedComp_pop",_wrap_CvSeq_CvConnectedComp_pop,0,0,2,_wrap_CvSeq_CvConnectedComp_pop_texinfo},
+{"new_CvSeq_CvConnectedComp",_wrap_new_CvSeq_CvConnectedComp,0,0,2,_wrap_new_CvSeq_CvConnectedComp_texinfo},
+{"delete_CvSeq_CvConnectedComp",_wrap_delete_CvSeq_CvConnectedComp,0,0,2,_wrap_delete_CvSeq_CvConnectedComp_texinfo},
+{"CvSeq_CvPoint_2_cast",_wrap_CvSeq_CvPoint_2_cast,0,0,2,_wrap_CvSeq_CvPoint_2_cast_texinfo},
+{"CvSeq_CvPoint_2___getitem__",_wrap_CvSeq_CvPoint_2___getitem__,0,0,2,_wrap_CvSeq_CvPoint_2___getitem___texinfo},
+{"CvSeq_CvPoint_2___setitem__",_wrap_CvSeq_CvPoint_2___setitem__,0,0,2,_wrap_CvSeq_CvPoint_2___setitem___texinfo},
+{"CvSeq_CvPoint_2_append",_wrap_CvSeq_CvPoint_2_append,0,0,2,_wrap_CvSeq_CvPoint_2_append_texinfo},
+{"CvSeq_CvPoint_2_pop",_wrap_CvSeq_CvPoint_2_pop,0,0,2,_wrap_CvSeq_CvPoint_2_pop_texinfo},
+{"new_CvSeq_CvPoint_2",_wrap_new_CvSeq_CvPoint_2,0,0,2,_wrap_new_CvSeq_CvPoint_2_texinfo},
+{"delete_CvSeq_CvPoint_2",_wrap_delete_CvSeq_CvPoint_2,0,0,2,_wrap_delete_CvSeq_CvPoint_2_texinfo},
+{"CvSeq_float_2_cast",_wrap_CvSeq_float_2_cast,0,0,2,_wrap_CvSeq_float_2_cast_texinfo},
+{"CvSeq_float_2___getitem__",_wrap_CvSeq_float_2___getitem__,0,0,2,_wrap_CvSeq_float_2___getitem___texinfo},
+{"CvSeq_float_2___setitem__",_wrap_CvSeq_float_2___setitem__,0,0,2,_wrap_CvSeq_float_2___setitem___texinfo},
+{"CvSeq_float_2_append",_wrap_CvSeq_float_2_append,0,0,2,_wrap_CvSeq_float_2_append_texinfo},
+{"CvSeq_float_2_pop",_wrap_CvSeq_float_2_pop,0,0,2,_wrap_CvSeq_float_2_pop_texinfo},
+{"new_CvSeq_float_2",_wrap_new_CvSeq_float_2,0,0,2,_wrap_new_CvSeq_float_2_texinfo},
+{"delete_CvSeq_float_2",_wrap_delete_CvSeq_float_2,0,0,2,_wrap_delete_CvSeq_float_2_texinfo},
+{"CvSeq_float_3_cast",_wrap_CvSeq_float_3_cast,0,0,2,_wrap_CvSeq_float_3_cast_texinfo},
+{"CvSeq_float_3___getitem__",_wrap_CvSeq_float_3___getitem__,0,0,2,_wrap_CvSeq_float_3___getitem___texinfo},
+{"CvSeq_float_3___setitem__",_wrap_CvSeq_float_3___setitem__,0,0,2,_wrap_CvSeq_float_3___setitem___texinfo},
+{"CvSeq_float_3_append",_wrap_CvSeq_float_3_append,0,0,2,_wrap_CvSeq_float_3_append_texinfo},
+{"CvSeq_float_3_pop",_wrap_CvSeq_float_3_pop,0,0,2,_wrap_CvSeq_float_3_pop_texinfo},
+{"new_CvSeq_float_3",_wrap_new_CvSeq_float_3,0,0,2,_wrap_new_CvSeq_float_3_texinfo},
+{"delete_CvSeq_float_3",_wrap_delete_CvSeq_float_3,0,0,2,_wrap_delete_CvSeq_float_3_texinfo},
+{"SendErrorToPython",_wrap_SendErrorToPython,0,0,2,_wrap_SendErrorToPython_texinfo},
+{"function_ptr_generator",_wrap_function_ptr_generator,0,0,2,_wrap_function_ptr_generator_texinfo},
+{"void_ptr_generator",_wrap_void_ptr_generator,0,0,2,_wrap_void_ptr_generator_texinfo},
+{"void_ptrptr_generator",_wrap_void_ptrptr_generator,0,0,2,_wrap_void_ptrptr_generator_texinfo},
 {0,0,0,0,0}
 };
 

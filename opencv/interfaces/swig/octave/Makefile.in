@@ -54,8 +54,13 @@ $(PKG_TARFILE): $(PKG_OCT_FILES) $(PKG_OTHER_FILES)
 
 .PHONY: install distclean clean check
 distclean: clean
+ifdef UPDATE_SWIG_WRAPPERS
+clean:
+	rm -rf *.o *.oct *~ octave-core $(PKG_TARFILE) $(PKG_NAME) *_wrap.cpp
+else
 clean:
 	rm -rf *.o *.oct *~ octave-core $(PKG_TARFILE) $(PKG_NAME)
+endif
 
 install: $(PKG_TARFILE)
 	mkdir -p $(datarootdir)/opencv
@@ -83,19 +88,19 @@ cv_wrap.cpp: cv.i imagedata.i cvarr.i octhelpers.i       \
          $(top_srcdir)/interfaces/swig/general/cvmacros.i       \
          ../filtered/cv.h            \
          ../filtered/constants.h
-	$(SWIG) -octave $(CV_INCLUDES) -o $@ $<
+	$(SWIG) -octave -c++ $(CV_INCLUDES) -o $@ $<
 
 ml_wrap.cpp: ml.i octtypemaps.i                            \
               $(top_srcdir)/interfaces/swig/general/typemaps.i  \
               $(top_srcdir)/interfaces/swig/general/memory.i    \
               $(top_srcdir)/ml/include/ml.h
-	$(SWIG) -octave $(CV_INCLUDES) -DSKIP_INCLUDES -o $@ $<
+	$(SWIG) -octave -c++ $(CV_INCLUDES) -DSKIP_INCLUDES -o $@ $<
 
 highgui_wrap.cpp: highgui.i octtypemaps.i                  \
               $(top_srcdir)/interfaces/swig/general/highgui.i   \
               $(top_srcdir)/interfaces/swig/general/typemaps.i  \
               $(top_srcdir)/interfaces/swig/general/memory.i    \
               $(top_srcdir)/otherlibs/highgui/highgui.h
-	$(SWIG) -octave $(CV_INCLUDES) -DSKIP_INCLUDES -o $@ $<
+	$(SWIG) -octave -c++ $(CV_INCLUDES) -DSKIP_INCLUDES -o $@ $<
 
 endif
