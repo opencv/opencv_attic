@@ -40,7 +40,7 @@ AC_CONFIG_AUX_DIR([autotools])
 AC_CONFIG_MACRO_DIR([autotools/aclocal])
 
 # put CVS revision of this configure.in into the resulting configure script
-AC_REVISION($Revision: 1.47 $)
+AC_REVISION($Revision: 1.48 $)
 
 # Detect the canonical host and target build environment
 AC_CANONICAL_HOST
@@ -752,6 +752,29 @@ if test x"$with_octave" = "xyes"; then
     AC_PATH_PROG(OCTAVE,octave)
     AC_PATH_PROG(MKOCTFILE,mkoctfile)
 
+    if test -z "$OCTAVE"; then
+       AC_MSG_WARN([octave not found, disabling octave wrappers])
+       with_octave=no
+    fi
+    if test -z "$MKOCTFILE"; then
+       AC_MSG_WARN([mkoctfile not found, disabling octave wrappers])
+       with_octave=no
+    fi
+fi
+if test x"$with_octave" = "xyes"; then
+    # check that octave version is at least 2.9.12
+    cat > conftest.m <<'EOF'
+[[a,b,c]]=sscanf(version,"%i.%i.%i","C");
+exit(sum([[a,b,c]].*[[1e5,1e3,1]])<209012)
+EOF
+    $OCTAVE conftest.m >& /dev/null || with_octave="no";
+    rm -f conftest.m
+
+    if test x"$with_octave" = "xno"; then
+       AC_MSG_WARN([Octave version < 2.9.12, disabling octave wrappers])
+    fi
+fi
+if test x"$with_octave" = "xyes"; then
     # if not explicitly forbidden, check for swig also
     if test x"$with_swig" = "xauto"; then
         with_swig=yes
