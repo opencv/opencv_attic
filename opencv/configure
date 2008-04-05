@@ -25514,6 +25514,32 @@ fi
 
 
 
+    if test -z "$OCTAVE"; then
+       { echo "$as_me:$LINENO: WARNING: octave not found, disabling octave wrappers" >&5
+echo "$as_me: WARNING: octave not found, disabling octave wrappers" >&2;}
+       with_octave=no
+    fi
+    if test -z "$MKOCTFILE"; then
+       { echo "$as_me:$LINENO: WARNING: mkoctfile not found, disabling octave wrappers" >&5
+echo "$as_me: WARNING: mkoctfile not found, disabling octave wrappers" >&2;}
+       with_octave=no
+    fi
+fi
+if test x"$with_octave" = "xyes"; then
+    # check that octave version is at least 2.9.12
+    cat > conftest.m <<'EOF'
+[a,b,c]=sscanf(version,"%i.%i.%i","C");
+exit(sum([a,b,c].*[1e5,1e3,1])<209012)
+EOF
+    $OCTAVE conftest.m >& /dev/null || with_octave="no";
+    rm -f conftest.m
+
+    if test x"$with_octave" = "xno"; then
+       { echo "$as_me:$LINENO: WARNING: Octave version < 2.9.12, disabling octave wrappers" >&5
+echo "$as_me: WARNING: Octave version < 2.9.12, disabling octave wrappers" >&2;}
+    fi
+fi
+if test x"$with_octave" = "xyes"; then
     # if not explicitly forbidden, check for swig also
     if test x"$with_swig" = "xauto"; then
         with_swig=yes
