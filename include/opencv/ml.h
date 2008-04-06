@@ -43,7 +43,7 @@
 
 // disable deprecation warning which appears in VisualStudio 8.0
 #if _MSC_VER >= 1400
-#pragma warning( disable : 4996 ) 
+#pragma warning( disable : 4996 )
 #endif
 
 #ifndef SKIP_INCLUDES
@@ -191,10 +191,10 @@ public:
     virtual ~CvStatModel();
 
     virtual void clear();
-    
+
     virtual void save( const char* filename, const char* name=0 );
     virtual void load( const char* filename, const char* name=0 );
-    
+
     virtual void write( CvFileStorage* storage, const char* name );
     virtual void read( CvFileStorage* storage, CvFileNode* node );
 
@@ -220,7 +220,7 @@ struct CV_EXPORTS CvParamGrid
     {
         min_val = max_val = step = 0;
     }
-    
+
     CvParamGrid( double _min_val, double _max_val, double log_step )
     {
         min_val = _min_val;
@@ -243,7 +243,7 @@ public:
 
     CvNormalBayesClassifier( const CvMat* _train_data, const CvMat* _responses,
         const CvMat* _var_idx=0, const CvMat* _sample_idx=0 );
-        
+
     virtual bool train( const CvMat* _train_data, const CvMat* _responses,
         const CvMat* _var_idx = 0, const CvMat* _sample_idx=0, bool update=false );
 
@@ -275,13 +275,13 @@ protected:
 class CV_EXPORTS CvKNearest : public CvStatModel
 {
 public:
-    
+
     CvKNearest();
     virtual ~CvKNearest();
 
     CvKNearest( const CvMat* _train_data, const CvMat* _responses,
                 const CvMat* _sample_idx=0, bool _is_regression=false, int max_k=32 );
-        
+
     virtual bool train( const CvMat* _train_data, const CvMat* _responses,
                         const CvMat* _sample_idx=0, bool is_regression=false,
                         int _max_k=32, bool _update_base=false );
@@ -304,7 +304,7 @@ protected:
     virtual void find_neighbors_direct( const CvMat* _samples, int k, int start, int end,
         float* neighbor_responses, const float** neighbors, float* dist ) const;
 
-    
+
     int max_k, var_count;
     int total;
     bool regression;
@@ -323,7 +323,7 @@ struct CV_EXPORTS CvSVMParams
                  double _degree, double _gamma, double _coef0,
                  double _C, double _nu, double _p,
                  CvMat* _class_weights, CvTermCriteria _term_crit );
-    
+
     int         svm_type;
     int         kernel_type;
     double      degree; // for poly
@@ -346,7 +346,7 @@ struct CV_EXPORTS CvSVMKernel
     CvSVMKernel( const CvSVMParams* _params, Calc _calc_func );
     virtual bool create( const CvSVMParams* _params, Calc _calc_func );
     virtual ~CvSVMKernel();
-    
+
     virtual void clear();
     virtual void calc( int vcount, int n, const float** vecs, const float* another, float* results );
 
@@ -391,14 +391,14 @@ public:
     typedef bool (CvSVMSolver::*SelectWorkingSet)( int& i, int& j );
     typedef float* (CvSVMSolver::*GetRow)( int i, float* row, float* dst, bool existed );
     typedef void (CvSVMSolver::*CalcRho)( double& rho, double& r );
-    
+
     CvSVMSolver();
 
-    CvSVMSolver( int count, int var_count, const float** samples, char* y,
+    CvSVMSolver( int count, int var_count, const float** samples, schar* y,
                  int alpha_count, double* alpha, double Cp, double Cn,
                  CvMemStorage* storage, CvSVMKernel* kernel, GetRow get_row,
                  SelectWorkingSet select_working_set, CalcRho calc_rho );
-    virtual bool create( int count, int var_count, const float** samples, char* y,
+    virtual bool create( int count, int var_count, const float** samples, schar* y,
                  int alpha_count, double* alpha, double Cp, double Cn,
                  CvMemStorage* storage, CvSVMKernel* kernel, GetRow get_row,
                  SelectWorkingSet select_working_set, CalcRho calc_rho );
@@ -406,11 +406,11 @@ public:
 
     virtual void clear();
     virtual bool solve_generic( CvSVMSolutionInfo& si );
-    
-    virtual bool solve_c_svc( int count, int var_count, const float** samples, char* y,
+
+    virtual bool solve_c_svc( int count, int var_count, const float** samples, schar* y,
                               double Cp, double Cn, CvMemStorage* storage,
                               CvSVMKernel* kernel, double* alpha, CvSVMSolutionInfo& si );
-    virtual bool solve_nu_svc( int count, int var_count, const float** samples, char* y,
+    virtual bool solve_nu_svc( int count, int var_count, const float** samples, schar* y,
                                CvMemStorage* storage, CvSVMKernel* kernel,
                                double* alpha, CvSVMSolutionInfo& si );
     virtual bool solve_one_class( int count, int var_count, const float** samples,
@@ -444,16 +444,16 @@ public:
     double* alpha;
 
     // -1 - lower bound, 0 - free, 1 - upper bound
-    char* alpha_status;
+    schar* alpha_status;
 
-    char* y;
+    schar* y;
     double* b;
     float* buf[2];
     double eps;
     int max_iter;
     double C[2];  // C[0] == Cn, C[1] == Cp
     CvSVMKernel* kernel;
-    
+
     SelectWorkingSet select_working_set_func;
     CalcRho calc_rho_func;
     GetRow get_row_func;
@@ -497,7 +497,7 @@ public:
     CvSVM( const CvMat* _train_data, const CvMat* _responses,
            const CvMat* _var_idx=0, const CvMat* _sample_idx=0,
            CvSVMParams _params=CvSVMParams() );
-        
+
     virtual bool train( const CvMat* _train_data, const CvMat* _responses,
                         const CvMat* _var_idx=0, const CvMat* _sample_idx=0,
                         CvSVMParams _params=CvSVMParams() );
@@ -593,7 +593,7 @@ public:
     enum { START_E_STEP=1, START_M_STEP=2, START_AUTO_STEP=0 };
 
     CvEM();
-    
+
     // TODO: implement non-default constructor!
     //       see bug 1830346 on the sourceforge bug tracker
     //CvEM( const CvMat* samples, const CvMat* sample_idx=0,
@@ -725,8 +725,8 @@ struct CV_EXPORTS CvDTreeParams
                    bool _use_1se_rule, bool _truncate_pruned_tree,
                    const float* _priors ) :
         max_categories(_max_categories), max_depth(_max_depth),
-        min_sample_count(_min_sample_count), cv_folds (_cv_folds), 
-        use_surrogates(_use_surrogates), use_1se_rule(_use_1se_rule), 
+        min_sample_count(_min_sample_count), cv_folds (_cv_folds),
+        use_surrogates(_use_surrogates), use_1se_rule(_use_1se_rule),
         truncate_pruned_tree(_truncate_pruned_tree),
         regression_accuracy(_regression_accuracy),
         priors(_priors)
@@ -849,12 +849,12 @@ public:
 
     virtual void read( CvFileStorage* fs, CvFileNode* node );
     virtual void write( CvFileStorage* fs, const char* name );
-    
+
     // special read & write methods for trees in the tree ensembles
     virtual void read( CvFileStorage* fs, CvFileNode* node,
                        CvDTreeTrainData* data );
     virtual void write( CvFileStorage* fs );
-    
+
     const CvDTreeNode* get_root() const;
     int get_pruned_tree_idx() const;
     CvDTreeTrainData* get_data();
@@ -893,7 +893,7 @@ protected:
     virtual void read_tree_nodes( CvFileStorage* fs, CvFileNode* node );
 
     CvDTreeNode* root;
-    
+
     int pruned_tree_idx;
     CvMat* var_importance;
 
@@ -1058,7 +1058,7 @@ public:
     /* dummy methods to avoid warnings: END */
 
 protected:
-    
+
     virtual void try_split_node( CvDTreeNode* n );
     virtual CvDTreeSplit* find_surrogate_split_ord( CvDTreeNode* n, int vi );
     virtual CvDTreeSplit* find_surrogate_split_cat( CvDTreeNode* n, int vi );
@@ -1078,7 +1078,7 @@ class CV_EXPORTS CvBoost : public CvStatModel
 public:
     // Boosting type
     enum { DISCRETE=0, REAL=1, LOGIT=2, GENTLE=3 };
-    
+
     // Splitting criteria
     enum { DEFAULT=0, GINI=1, MISCLASS=3, SQERR=4 };
 
@@ -1090,7 +1090,7 @@ public:
              const CvMat* _sample_idx=0, const CvMat* _var_type=0,
              const CvMat* _missing_mask=0,
              CvBoostParams params=CvBoostParams() );
-        
+
     virtual bool train( const CvMat* _train_data, int _tflag,
              const CvMat* _responses, const CvMat* _var_idx=0,
              const CvMat* _sample_idx=0, const CvMat* _var_type=0,
@@ -1125,9 +1125,9 @@ protected:
     virtual void read_params( CvFileStorage* fs, CvFileNode* node );
 
     CvDTreeTrainData* data;
-    CvBoostParams params;    
+    CvBoostParams params;
     CvSeq* weak;
-    
+
     CvMat* orig_response;
     CvMat* sum_response;
     CvMat* weak_eval;
@@ -1158,7 +1158,7 @@ struct CV_EXPORTS CvANN_MLP_TrainParams
 
     // backpropagation parameters
     double bp_dw_scale, bp_moment_scale;
-    
+
     // rprop parameters
     double rp_dw0, rp_dw_plus, rp_dw_minus, rp_dw_min, rp_dw_max;
 };
@@ -1212,7 +1212,7 @@ protected:
 
     // sequential random backpropagation
     virtual int train_backprop( CvVectors _ivecs, CvVectors _ovecs, const double* _sw );
-    
+
     // RPROP algorithm
     virtual int train_rprop( CvVectors _ivecs, CvVectors _ovecs, const double* _sw );
 
@@ -1367,7 +1367,7 @@ typedef struct CvCNNFullConnectLayer
     float a;
     // scale parameter of sigmoid activation function
     float s;
-    // exp2ssumWX = exp(2*<s>*(W*X)) - is the vector used in computing of the 
+    // exp2ssumWX = exp(2*<s>*(W*X)) - is the vector used in computing of the
     // activation function and it's derivative by the formulae
     // activ.func. = <a>(exp(2<s>WX)-1)/(exp(2<s>WX)+1) == <a> - 2<a>/(<exp2ssumWX> + 1)
     // (activ.func.)' = 4<a><s>exp(2<s>WX)/(exp(2<s>WX)+1)^2
@@ -1415,7 +1415,7 @@ CVAPI(CvCNNLayer*) cvCreateCNNSubSamplingLayer(
     int sub_samp_scale, float a, float s,
     float init_learn_rate, int learn_rate_decrease_type, CvMat* weights CV_DEFAULT(0) );
 
-CVAPI(CvCNNLayer*) cvCreateCNNFullConnectLayer( 
+CVAPI(CvCNNLayer*) cvCreateCNNFullConnectLayer(
     int n_inputs, int n_outputs, float a, float s,
     float init_learn_rate, int learning_type, CvMat* weights CV_DEFAULT(0) );
 
@@ -1440,8 +1440,8 @@ typedef int (CV_CDECL *CvStatModelEstimateNextStep)
 
 typedef void (CV_CDECL *CvStatModelEstimateCheckClassifier)
                     ( CvStatModel* estimateModel,
-                const CvStatModel* model, 
-                const CvMat*       features, 
+                const CvStatModel* model,
+                const CvMat*       features,
                       int          sample_t_flag,
                 const CvMat*       responses );
 
@@ -1501,13 +1501,13 @@ typedef struct CvCrossValidationModel
     CV_CROSS_VALIDATION_ESTIMATE_CLASSIFIER_FIELDS();
 } CvCrossValidationModel;
 
-CVAPI(CvStatModel*) 
+CVAPI(CvStatModel*)
 cvCreateCrossValidationEstimateModel
            ( int                samples_all,
        const CvStatModelParams* estimateParams CV_DEFAULT(0),
        const CvMat*             sampleIdx CV_DEFAULT(0) );
 
-CVAPI(float) 
+CVAPI(float)
 cvCrossValidation( const CvMat*             trueData,
                          int                tflag,
                    const CvMat*             trueClasses,

@@ -98,7 +98,7 @@ typedef double Qfloat;
 #define QFLOAT_TYPE CV_64F
 #endif
 
-// Param Grid 
+// Param Grid
 bool CvParamGrid::check() const
 {
     bool ok = false;
@@ -293,7 +293,7 @@ void CvSVMKernel::calc_rbf( int vcount, int var_count, const float** vecs,
     {
         const float* sample = vecs[j];
         double s = 0;
-        
+
         for( k = 0; k <= var_count - 4; k += 4 )
         {
             double t0 = sample[k] - another[k];
@@ -314,7 +314,7 @@ void CvSVMKernel::calc_rbf( int vcount, int var_count, const float** vecs,
         }
         results[j] = (Qfloat)(s*gamma);
     }
-    
+
     cvExp( &R, &R );
 }
 
@@ -383,7 +383,7 @@ CvSVMSolver::~CvSVMSolver()
 }
 
 
-CvSVMSolver::CvSVMSolver( int _sample_count, int _var_count, const float** _samples, char* _y,
+CvSVMSolver::CvSVMSolver( int _sample_count, int _var_count, const float** _samples, schar* _y,
                 int _alpha_count, double* _alpha, double _Cp, double _Cn,
                 CvMemStorage* _storage, CvSVMKernel* _kernel, GetRow _get_row,
                 SelectWorkingSet _select_working_set, CalcRho _calc_rho )
@@ -394,7 +394,7 @@ CvSVMSolver::CvSVMSolver( int _sample_count, int _var_count, const float** _samp
 }
 
 
-bool CvSVMSolver::create( int _sample_count, int _var_count, const float** _samples, char* _y,
+bool CvSVMSolver::create( int _sample_count, int _var_count, const float** _samples, schar* _y,
                 int _alpha_count, double* _alpha, double _Cp, double _Cn,
                 CvMemStorage* _storage, CvSVMKernel* _kernel, GetRow _get_row,
                 SelectWorkingSet _select_working_set, CalcRho _calc_rho )
@@ -405,7 +405,7 @@ bool CvSVMSolver::create( int _sample_count, int _var_count, const float** _samp
     CV_FUNCNAME( "CvSVMSolver::create" );
 
     __BEGIN__;
-    
+
     int rows_hdr_size;
 
     clear();
@@ -425,7 +425,7 @@ bool CvSVMSolver::create( int _sample_count, int _var_count, const float** _samp
     storage = cvCreateChildMemStorage( _storage );
 
     b = (double*)cvMemStorageAlloc( storage, alpha_count*sizeof(b[0]));
-    alpha_status = (char*)cvMemStorageAlloc( storage, alpha_count*sizeof(alpha_status[0]));
+    alpha_status = (schar*)cvMemStorageAlloc( storage, alpha_count*sizeof(alpha_status[0]));
     G = (double*)cvMemStorageAlloc( storage, alpha_count*sizeof(G[0]));
     for( i = 0; i < 2; i++ )
         buf[i] = (Qfloat*)cvMemStorageAlloc( storage, sample_count*2*sizeof(buf[i][0]) );
@@ -453,7 +453,7 @@ bool CvSVMSolver::create( int _sample_count, int _var_count, const float** _samp
     // cache size = max(num_of_samples^2*sizeof(Qfloat)*0.25, 64Kb)
     // (assuming that for large training sets ~25% of Q matrix is used)
     cache_size = MAX( cache_line_size*sample_count/4, CV_SVM_MIN_CACHE_SIZE );
-    
+
     // the size of Q matrix row headers
     rows_hdr_size = sample_count*sizeof(rows[0]);
     if( rows_hdr_size > storage->block_size )
@@ -517,7 +517,7 @@ float* CvSVMSolver::get_row_svc( int i, float* row, float*, bool existed )
 {
     if( !existed )
     {
-        const char* _y = y;
+        const schar* _y = y;
         int j, len = sample_count;
         assert( _y && i < sample_count );
 
@@ -586,7 +586,7 @@ float* CvSVMSolver::get_row( int i, float* dst )
 
 #undef update_alpha_status
 #define update_alpha_status(i) \
-    alpha_status[i] = (char)(alpha[i] >= get_C(i) ? 1 : alpha[i] <= 0 ? -1 : 0)
+    alpha_status[i] = (schar)(alpha[i] >= get_C(i) ? 1 : alpha[i] <= 0 ? -1 : 0)
 
 #undef reconstruct_gradient
 #define reconstruct_gradient() /* empty for now */
@@ -625,8 +625,8 @@ bool CvSVMSolver::solve_generic( CvSVMSolutionInfo& si )
         double C_i, C_j;
         double old_alpha_i, old_alpha_j, alpha_i, alpha_j;
         double delta_alpha_i, delta_alpha_j;
-        
-#ifdef _DEBUG        
+
+#ifdef _DEBUG
         for( i = 0; i < alpha_count; i++ )
         {
             if( fabs(G[i]) > 1e+300 )
@@ -656,7 +656,7 @@ bool CvSVMSolver::solve_generic( CvSVMSolutionInfo& si )
             double diff = alpha_i - alpha_j;
             alpha_i += delta;
             alpha_j += delta;
-            
+
             if( diff > 0 && alpha_j < 0 )
             {
                 alpha_j = 0;
@@ -686,7 +686,7 @@ bool CvSVMSolver::solve_generic( CvSVMSolutionInfo& si )
             double sum = alpha_i + alpha_j;
             alpha_i -= delta;
             alpha_j += delta;
-            
+
             if( sum > C_i && alpha_i > C_i )
             {
                 alpha_i = C_i;
@@ -719,7 +719,7 @@ bool CvSVMSolver::solve_generic( CvSVMSolutionInfo& si )
         // update G
         delta_alpha_i = alpha_i - old_alpha_i;
         delta_alpha_j = alpha_j - old_alpha_j;
-        
+
         for( k = 0; k < alpha_count; k++ )
             G[k] += Q_i[k]*delta_alpha_i + Q_j[k]*delta_alpha_j;
     }
@@ -799,7 +799,7 @@ CvSVMSolver::calc_rho( double& rho, double& r )
 {
     int i, nr_free = 0;
     double ub = DBL_MAX, lb = -DBL_MAX, sum_free = 0;
-    
+
     for( i = 0; i < alpha_count; i++ )
     {
         double yG = y[i]*G[i];
@@ -941,7 +941,7 @@ CvSVMSolver::calc_rho_nu_svm( double& rho, double& r )
 
     r1 = nr_free1 > 0 ? sum_free1/nr_free1 : (ub1 + lb1)*0.5;
     r2 = nr_free2 > 0 ? sum_free2/nr_free2 : (ub2 + lb2)*0.5;
-    
+
     rho = (r1 - r2)*0.5;
     r = (r1 + r2)*0.5;
 }
@@ -951,7 +951,7 @@ CvSVMSolver::calc_rho_nu_svm( double& rho, double& r )
 ///////////////////////// construct and solve various formulations ///////////////////////
 */
 
-bool CvSVMSolver::solve_c_svc( int _sample_count, int _var_count, const float** _samples, char* _y,
+bool CvSVMSolver::solve_c_svc( int _sample_count, int _var_count, const float** _samples, schar* _y,
                                double _Cp, double _Cn, CvMemStorage* _storage,
                                CvSVMKernel* _kernel, double* _alpha, CvSVMSolutionInfo& _si )
 {
@@ -978,7 +978,7 @@ bool CvSVMSolver::solve_c_svc( int _sample_count, int _var_count, const float** 
 }
 
 
-bool CvSVMSolver::solve_nu_svc( int _sample_count, int _var_count, const float** _samples, char* _y,
+bool CvSVMSolver::solve_nu_svc( int _sample_count, int _var_count, const float** _samples, schar* _y,
                                 CvMemStorage* _storage, CvSVMKernel* _kernel,
                                 double* _alpha, CvSVMSolutionInfo& _si )
 {
@@ -1031,13 +1031,13 @@ bool CvSVMSolver::solve_one_class( int _sample_count, int _var_count, const floa
 {
     int i, n;
     double nu = _kernel->params->nu;
-    
+
     if( !create( _sample_count, _var_count, _samples, 0, _sample_count,
                  _alpha, 1., 1., _storage, _kernel, &CvSVMSolver::get_row_one_class,
                  &CvSVMSolver::select_working_set, &CvSVMSolver::calc_rho ))
         return false;
 
-    y = (char*)cvMemStorageAlloc( storage, sample_count*sizeof(y[0]) );
+    y = (schar*)cvMemStorageAlloc( storage, sample_count*sizeof(y[0]) );
     n = cvRound( nu*sample_count );
 
     for( i = 0; i < sample_count; i++ )
@@ -1051,7 +1051,7 @@ bool CvSVMSolver::solve_one_class( int _sample_count, int _var_count, const floa
         alpha[n] = nu * sample_count - n;
     else
         alpha[n-1] = nu * sample_count - (n-1);
-    
+
     return solve_generic(_si);
 }
 
@@ -1062,13 +1062,13 @@ bool CvSVMSolver::solve_eps_svr( int _sample_count, int _var_count, const float*
 {
     int i;
     double p = _kernel->params->p, C = _kernel->params->C;
-    
+
     if( !create( _sample_count, _var_count, _samples, 0,
                  _sample_count*2, 0, C, C, _storage, _kernel, &CvSVMSolver::get_row_svr,
                  &CvSVMSolver::select_working_set, &CvSVMSolver::calc_rho ))
         return false;
 
-    y = (char*)cvMemStorageAlloc( storage, sample_count*2*sizeof(y[0]) );
+    y = (schar*)cvMemStorageAlloc( storage, sample_count*2*sizeof(y[0]) );
     alpha = (double*)cvMemStorageAlloc( storage, alpha_count*sizeof(alpha[0]) );
 
     for( i = 0; i < sample_count; i++ )
@@ -1081,7 +1081,7 @@ bool CvSVMSolver::solve_eps_svr( int _sample_count, int _var_count, const float*
         b[i+sample_count] = p + _y[i];
         y[i+sample_count] = -1;
     }
-    
+
     if( !solve_generic( _si ))
         return false;
 
@@ -1104,7 +1104,7 @@ bool CvSVMSolver::solve_nu_svr( int _sample_count, int _var_count, const float**
                  &CvSVMSolver::select_working_set_nu_svm, &CvSVMSolver::calc_rho_nu_svm ))
         return false;
 
-    y = (char*)cvMemStorageAlloc( storage, sample_count*2*sizeof(y[0]) );
+    y = (schar*)cvMemStorageAlloc( storage, sample_count*2*sizeof(y[0]) );
     alpha = (double*)cvMemStorageAlloc( storage, alpha_count*sizeof(alpha[0]) );
     sum = C * _kernel->params->nu * sample_count * 0.5;
 
@@ -1119,7 +1119,7 @@ bool CvSVMSolver::solve_nu_svr( int _sample_count, int _var_count, const float**
         b[i + sample_count] = _y[i];
         y[i + sample_count] = -1;
     }
-    
+
     if( !solve_generic( _si ))
         return false;
 
@@ -1201,7 +1201,7 @@ const float* CvSVM::get_support_vector(int i) const
 bool CvSVM::set_params( const CvSVMParams& _params )
 {
     bool ok = false;
-    
+
     CV_FUNCNAME( "CvSVM::set_params" );
 
     __BEGIN__;
@@ -1284,7 +1284,7 @@ bool CvSVM::train1( int sample_count, int var_count, const float** samples,
                     CvMemStorage* _storage, double* alpha, double& rho )
 {
     bool ok = false;
-    
+
     //CV_FUNCNAME( "CvSVM::train1" );
 
     __BEGIN__;
@@ -1294,9 +1294,9 @@ bool CvSVM::train1( int sample_count, int var_count, const float** samples,
 
     si.rho = 0;
 
-    ok = svm_type == C_SVC ? solver->solve_c_svc( sample_count, var_count, samples, (char*)_responses,
+    ok = svm_type == C_SVC ? solver->solve_c_svc( sample_count, var_count, samples, (schar*)_responses,
                                                   Cp, Cn, _storage, kernel, alpha, si ) :
-         svm_type == NU_SVC ? solver->solve_nu_svc( sample_count, var_count, samples, (char*)_responses,
+         svm_type == NU_SVC ? solver->solve_nu_svc( sample_count, var_count, samples, (schar*)_responses,
                                                     _storage, kernel, alpha, si ) :
          svm_type == ONE_CLASS ? solver->solve_one_class( sample_count, var_count, samples,
                                                           _storage, kernel, alpha, si ) :
@@ -1395,7 +1395,7 @@ bool CvSVM::do_train( int svm_type, int sample_count, int var_count, const float
         //check that while cross-validation there were the samples from all the classes
         if( class_ranges[class_count] <= 0 )
             CV_ERROR( CV_StsBadArg, "While cross-validation one or more of the classes have "
-            "been fell out of the sample. Try to enlarge <CvSVMParams::k_fold>" ); 
+            "been fell out of the sample. Try to enlarge <CvSVMParams::k_fold>" );
 
         if( svm_type == NU_SVC )
         {
@@ -1529,7 +1529,7 @@ bool CvSVM::train( const CvMat* _train_data, const CvMat* _responses,
     CvMat* responses = 0;
     CvMemStorage* temp_storage = 0;
     const float** samples = 0;
-    
+
     CV_FUNCNAME( "CvSVM::train" );
 
     __BEGIN__;
@@ -1598,7 +1598,7 @@ bool CvSVM::train_auto( const CvMat* _train_data, const CvMat* _responses,
     CvMemStorage* temp_storage = 0;
     const float** samples = 0;
     const float** samples_local = 0;
-    
+
     CV_FUNCNAME( "CvSVM::train_auto" );
     __BEGIN__;
 
@@ -1857,7 +1857,7 @@ bool CvSVM::train_auto( const CvMat* _train_data, const CvMat* _responses,
     params.coef0  = best_coef;
 
     CV_CALL(ok = do_train( svm_type, sample_count, var_count, samples, responses, temp_storage, alpha ));
- 
+
     __END__;
 
     delete solver;
@@ -1907,7 +1907,7 @@ float CvSVM::predict( const CvMat* sample ) const
     }
     else
         CV_CALL( buffer = (Qfloat*)cvAlloc( buf_sz ));
-    
+
     if( params.svm_type == EPS_SVR ||
         params.svm_type == NU_SVR ||
         params.svm_type == ONE_CLASS )
@@ -1974,7 +1974,7 @@ void CvSVM::write_params( CvFileStorage* fs )
     //CV_FUNCNAME( "CvSVM::write_params" );
 
     __BEGIN__;
-    
+
     int svm_type = params.svm_type;
     int kernel_type = params.kernel_type;
 
@@ -1997,7 +1997,7 @@ void CvSVM::write_params( CvFileStorage* fs )
 
     // save kernel
     cvStartWriteStruct( fs, "kernel", CV_NODE_MAP + CV_NODE_FLOW );
-    
+
     if( kernel_type_str )
         cvWriteString( fs, "type", kernel_type_str );
     else
@@ -2115,9 +2115,9 @@ void CvSVM::write( CvFileStorage* fs, const char* name )
 void CvSVM::read_params( CvFileStorage* fs, CvFileNode* svm_node )
 {
     CV_FUNCNAME( "CvSVM::read_params" );
-    
+
     __BEGIN__;
-    
+
     int svm_type, kernel_type;
     CvSVMParams _params;
 
@@ -2196,7 +2196,7 @@ void CvSVM::read_params( CvFileStorage* fs, CvFileNode* svm_node )
 void CvSVM::read( CvFileStorage* fs, CvFileNode* svm_node )
 {
     const double not_found_dbl = DBL_MAX;
-    
+
     CV_FUNCNAME( "CvSVM::read" );
 
     __BEGIN__;
@@ -2246,7 +2246,7 @@ void CvSVM::read( CvFileStorage* fs, CvFileNode* svm_node )
     CV_CALL( storage = cvCreateMemStorage( block_size ));
     CV_CALL( sv = (float**)cvMemStorageAlloc( storage,
                                 sv_total*sizeof(sv[0]) ));
-    
+
     CV_CALL( cvStartReadSeq( sv_node->data.seq, &reader, 0 ));
     sv_size = var_count*sizeof(sv[0][0]);
 
@@ -2268,7 +2268,7 @@ void CvSVM::read( CvFileStorage* fs, CvFileNode* svm_node )
         df_node->data.seq->total != df_count )
         CV_ERROR( CV_StsParseError, "decision_functions is missing or is not a collection "
                   "or has a wrong number of elements" );
-    
+
     CV_CALL( df = decision_func = (CvSVMDecisionFunc*)cvAlloc( df_count*sizeof(df[0]) ));
     cvStartReadSeq( df_node->data.seq, &reader, 0 );
 
@@ -2323,7 +2323,7 @@ static void*
 icvCloneSVM( const void* _src )
 {
     CvSVMModel* dst = 0;
-    
+
     CV_FUNCNAME( "icvCloneSVM" );
 
     __BEGIN__;
@@ -2357,9 +2357,9 @@ icvCloneSVM( const void* _src )
     CV_CALL( dst->storage = cvCreateMemStorage( src->storage->block_size ));
     CV_CALL( dst->sv = (float**)cvMemStorageAlloc( dst->storage,
                                     sv_total*sizeof(dst->sv[0]) ));
-    
+
     sv_size = var_count*sizeof(dst->sv[0][0]);
-    
+
     for( i = 0; i < sv_total; i++ )
     {
         CV_CALL( dst->sv[i] = (float*)cvMemStorageAlloc( dst->storage, sv_size ));
@@ -2367,7 +2367,7 @@ icvCloneSVM( const void* _src )
     }
 
     df_count = class_count > 1 ? class_count*(class_count-1)/2 : 1;
-    
+
     CV_CALL( dst->decision_func = cvAlloc( df_count*sizeof(CvSVMDecisionFunc) ));
 
     for( i = 0; i < df_count; i++ )
@@ -2397,7 +2397,7 @@ icvCloneSVM( const void* _src )
 
     if( cvGetErrStatus() < 0 && dst )
         icvReleaseSVM( &dst );
-    
+
     return dst;
 }
 
@@ -2603,7 +2603,7 @@ cvTrainSVM_CrossValidation( const CvMat* train_data, int tflag,
 
     if( kernel != CvSVM::POLY && kernel != CvSVM::SIGMOID )
         coef_begin = coef_end = svm_params.coef0;
- 
+
     if( svm_type == CvSVM::NU_SVC || svm_type == CvSVM::ONE_CLASS )
         C_begin = C_end = svm_params.C;
 
