@@ -236,3 +236,11 @@ MacOSX
 
    + If you'd like to step in as a developer, you will need to get the appropriate
      versions of automake, etc. (see Linux section) from darwinports.
+
+Other Systems
+=============
+
+   Although there is no official support for non-x86 based
+   processors it is reportedly possible to compile OpenCV on ARM.
+
+   * on ARM pass CXXFLAGS=-fsigned-char to configure.
