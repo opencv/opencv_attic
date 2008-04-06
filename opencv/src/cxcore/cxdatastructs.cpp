@@ -68,7 +68,7 @@ cvAlignLeft( int size, int align )
 }
 
 #define ICV_SHIFT_TAB_MAX 32
-static const char icvPower2ShiftTab[] =
+static const schar icvPower2ShiftTab[] =
 {
     0, 1, -1, 2, -1, -1, -1, 3, -1, -1, -1, -1, -1, -1, -1, 4,
     -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, 5
@@ -83,7 +83,7 @@ static void
 icvInitMemStorage( CvMemStorage* storage, int block_size )
 {
     CV_FUNCNAME( "icvInitMemStorage " );
-    
+
     __BEGIN__;
 
     if( !storage )
@@ -259,9 +259,9 @@ static void
 icvGoNextMemBlock( CvMemStorage * storage )
 {
     CV_FUNCNAME( "icvGoNextMemBlock" );
-    
+
     __BEGIN__;
-    
+
     if( !storage )
         CV_ERROR( CV_StsNullPtr, "" );
 
@@ -385,7 +385,7 @@ CV_IMPL void*
 cvMemStorageAlloc( CvMemStorage* storage, size_t size )
 {
     char *ptr = 0;
-    
+
     CV_FUNCNAME( "cvMemStorageAlloc" );
 
     __BEGIN__;
@@ -610,7 +610,7 @@ cvSliceLength( CvSlice slice, const CvSeq* seq )
 {
     int total = seq->total;
     int length = slice.end_index - slice.start_index;
-    
+
     if( length != 0 )
     {
         if( slice.start_index < 0 )
@@ -651,10 +651,10 @@ cvCvtSeqToArray( const CvSeq *seq, void *array, CvSlice slice )
 
     elem_size = seq->elem_size;
     total = cvSliceLength( slice, seq )*elem_size;
-    
+
     if( total == 0 )
         EXIT;
-    
+
     cvStartReadSeq( seq, &reader, 0 );
     CV_CALL( cvSetSeqReaderPos( &reader, slice.start_index, 0 ));
 
@@ -686,7 +686,7 @@ cvMakeSeqHeaderForArray( int seq_flags, int header_size, int elem_size,
                          void *array, int total, CvSeq *seq, CvSeqBlock * block )
 {
     CvSeq* result = 0;
-    
+
     CV_FUNCNAME( "cvMakeSeqHeaderForArray" );
 
     __BEGIN__;
@@ -1153,7 +1153,7 @@ cvChangeSeqBlock( void* _reader, int direction )
     __BEGIN__;
 
     CvSeqReader* reader = (CvSeqReader*)_reader;
-    
+
     if( !reader )
         CV_ERROR( CV_StsNullPtr, "" );
 
@@ -1707,11 +1707,11 @@ cvSeqPushMulti( CvSeq *seq, void *_elements, int count, int front )
     else
     {
         CvSeqBlock* block = seq->first;
-        
+
         while( count > 0 )
         {
             int delta;
-            
+
             if( !block || block->start_index == 0 )
             {
                 CV_CALL( icvGrowSeq( seq, 1 ));
@@ -1833,15 +1833,15 @@ CV_IMPL CvSeq*
 cvSeqSlice( const CvSeq* seq, CvSlice slice, CvMemStorage* storage, int copy_data )
 {
     CvSeq* subseq = 0;
-    
+
     CV_FUNCNAME("cvSeqSlice");
 
     __BEGIN__;
-    
+
     int elem_size, count, length;
     CvSeqReader reader;
     CvSeqBlock *block, *first_block = 0, *last_block = 0;
-    
+
     if( !CV_IS_SEQ(seq) )
         CV_ERROR( CV_StsBadArg, "Invalid sequence header" );
 
@@ -1873,7 +1873,7 @@ cvSeqSlice( const CvSeq* seq, CvSlice slice, CvMemStorage* storage, int copy_dat
         do
         {
             int bl = MIN( count, length );
-            
+
             if( !copy_data )
             {
                 block = (CvSeqBlock*)cvMemStorageAlloc( storage, sizeof(*block) );
@@ -1903,7 +1903,7 @@ cvSeqSlice( const CvSeq* seq, CvSlice slice, CvMemStorage* storage, int copy_dat
         }
         while( length > 0 );
     }
-    
+
     __END__;
 
     return subseq;
@@ -1994,7 +1994,7 @@ cvSeqInsertSlice( CvSeq* seq, int index, const CvArr* from_arr )
 {
     CvSeqReader reader_to, reader_from;
     int i, elem_size, total, from_total;
-    
+
     CV_FUNCNAME("cvSeqInsertSlice");
 
     __BEGIN__;
@@ -2152,7 +2152,7 @@ icvMed3( char* a, char* b, char* c, CvCmpFunc cmp_func, void* aux )
 
 CV_IMPL void
 cvSeqSort( CvSeq* seq, CvCmpFunc cmp_func, void* aux )
-{         
+{
     int elem_size;
     int isort_thresh = 7;
     CvSeqReader left, right;
@@ -2168,7 +2168,7 @@ cvSeqSort( CvSeq* seq, CvCmpFunc cmp_func, void* aux )
     CV_FUNCNAME( "cvSeqSort" );
 
     __BEGIN__;
-    
+
     if( !CV_IS_SEQ(seq) )
         CV_ERROR( !seq ? CV_StsNullPtr : CV_StsBadArg, "Bad input sequence" );
 
@@ -2244,7 +2244,7 @@ cvSeqSort( CvSeq* seq, CvCmpFunc cmp_func, void* aux )
                 left0 = tmp0 = left;
                 right0 = right1 = right;
                 n /= elem_size;
-                
+
                 if( n > 40 )
                 {
                     int d = n / 8;
@@ -2358,7 +2358,7 @@ cvSeqSort( CvSeq* seq, CvCmpFunc cmp_func, void* aux )
                 l1 = cvGetSeqReaderPos( &left1 );
                 if( l1 == 0 )
                     l1 = seq->total;
-                
+
                 n = MIN( l - l1, l1 - l0 );
                 if( n > 0 )
                 {
@@ -2443,8 +2443,8 @@ cvSeqSearch( CvSeq* seq, const void* _elem, CvCmpFunc cmp_func,
     char* result = 0;
     const char* elem = (const char*)_elem;
     int idx = -1;
-    
-    CV_FUNCNAME("cvSeqSort");
+
+    CV_FUNCNAME("cvSeqSearch");
 
     __BEGIN__;
 
@@ -2515,7 +2515,7 @@ cvSeqSearch( CvSeq* seq, const void* _elem, CvCmpFunc cmp_func,
             CV_ERROR( CV_StsNullPtr, "Null compare function" );
 
         i = 0, j = total;
-        
+
         while( j > i )
         {
             int k = (i+j)>>1, code;
@@ -2594,7 +2594,7 @@ cvSeqPartition( const CvSeq* seq, CvMemStorage* storage, CvSeq** labels,
     CvSeq* result = 0;
     CvMemStorage* temp_storage = 0;
     int class_idx = 0;
-    
+
     CV_FUNCNAME( "cvSeqPartition" );
 
     __BEGIN__;
@@ -2603,7 +2603,7 @@ cvSeqPartition( const CvSeq* seq, CvMemStorage* storage, CvSeq** labels,
     CvSeqReader reader, reader0;
     CvSeq* nodes;
     int i, j;
-    int is_set; 
+    int is_set;
 
     if( !labels )
         CV_ERROR( CV_StsNullPtr, "" );
@@ -2625,7 +2625,7 @@ cvSeqPartition( const CvSeq* seq, CvMemStorage* storage, CvSeq** labels,
 
     cvStartReadSeq( seq, &reader );
     memset( &writer, 0, sizeof(writer));
-    cvStartAppendToSeq( nodes, &writer ); 
+    cvStartAppendToSeq( nodes, &writer );
 
     // Initial O(N) pass. Make a forest of single-vertex trees.
     for( i = 0; i < seq->total; i++ )
@@ -2662,12 +2662,12 @@ cvSeqPartition( const CvSeq* seq, CvMemStorage* storage, CvSeq** labels,
         for( j = 0; j < nodes->total; j++ )
         {
             CvPTreeNode* node2 = (CvPTreeNode*)reader.ptr;
-            
+
             if( node2->element && node2 != node &&
                 is_equal( node->element, node2->element, userdata ))
             {
                 CvPTreeNode* root2 = node2;
-                
+
                 // unite both trees
                 while( root2->parent )
                     root2 = root2->parent;
@@ -2716,7 +2716,7 @@ cvSeqPartition( const CvSeq* seq, CvMemStorage* storage, CvSeq** labels,
     {
         CvPTreeNode* node = (CvPTreeNode*)reader.ptr;
         int idx = -1;
-        
+
         if( node->element )
         {
             while( node->parent )
@@ -3344,7 +3344,7 @@ icvSeqElemsClearFlags( CvSeq* seq, int offset, int clear_mask )
     CV_FUNCNAME("icvStartScanGraph");
 
     __BEGIN__;
-    
+
     CvSeqReader reader;
     int i, total, elem_size;
 
@@ -3376,11 +3376,11 @@ icvSeqFindNextElem( CvSeq* seq, int offset, int mask,
                     int value, int* start_index )
 {
     char* elem_ptr = 0;
-    
+
     CV_FUNCNAME("icvStartScanGraph");
 
     __BEGIN__;
-    
+
     CvSeqReader reader;
     int total, elem_size, index;
 
@@ -3504,7 +3504,7 @@ CV_IMPL int
 cvNextGraphItem( CvGraphScanner* scanner )
 {
     int code = -1;
-    
+
     CV_FUNCNAME("cvNextGraphItem");
 
     __BEGIN__;
@@ -3544,7 +3544,7 @@ cvNextGraphItem( CvGraphScanner* scanner )
             while( edge )
             {
                 dst = edge->vtx[vtx == edge->vtx[0]];
-                
+
                 if( !CV_IS_GRAPH_EDGE_VISITED(edge) )
                 {
                     // check that the edge is outcoming
@@ -3560,7 +3560,7 @@ cvNextGraphItem( CvGraphScanner* scanner )
                             vtx->flags |= CV_GRAPH_SEARCH_TREE_NODE_FLAG;
 
                             cvSeqPush( scanner->stack, &item );
-                            
+
                             if( scanner->mask & CV_GRAPH_TREE_EDGE )
                             {
                                 code = CV_GRAPH_TREE_EDGE;
@@ -3667,7 +3667,7 @@ cvCloneGraph( const CvGraph* graph, CvMemStorage* storage )
     int* flag_buffer = 0;
     CvGraphVtx** ptr_buffer = 0;
     CvGraph* result = 0;
-    
+
     CV_FUNCNAME( "cvCloneGraph" );
 
     __BEGIN__;
@@ -3793,11 +3793,11 @@ cvTreeToNodeSeq( const void* first, int header_size, CvMemStorage* storage )
 
 typedef struct CvTreeNode
 {
-    int       flags;         /* micsellaneous flags */         
-    int       header_size;   /* size of sequence header */     
-    struct    CvTreeNode* h_prev; /* previous sequence */      
-    struct    CvTreeNode* h_next; /* next sequence */          
-    struct    CvTreeNode* v_prev; /* 2nd previous sequence */  
+    int       flags;         /* micsellaneous flags */
+    int       header_size;   /* size of sequence header */
+    struct    CvTreeNode* h_prev; /* previous sequence */
+    struct    CvTreeNode* h_next; /* next sequence */
+    struct    CvTreeNode* v_prev; /* 2nd previous sequence */
     struct    CvTreeNode* v_next; /* 2nd next sequence */
 }
 CvTreeNode;
@@ -3879,7 +3879,7 @@ cvInitTreeNodeIterator( CvTreeNodeIterator* treeIterator,
     CV_FUNCNAME("icvInitTreeNodeIterator");
 
     __BEGIN__;
-    
+
     if( !treeIterator || !first )
         CV_ERROR( CV_StsNullPtr, "" );
 
@@ -3898,11 +3898,11 @@ CV_IMPL void*
 cvNextTreeNode( CvTreeNodeIterator* treeIterator )
 {
     CvTreeNode* prevNode = 0;
-    
+
     CV_FUNCNAME("cvNextTreeNode");
 
     __BEGIN__;
-    
+
     CvTreeNode* node;
     int level;
 
@@ -3947,7 +3947,7 @@ CV_IMPL void*
 cvPrevTreeNode( CvTreeNodeIterator* treeIterator )
 {
     CvTreeNode* prevNode = 0;
-    
+
     CV_FUNCNAME("cvPrevTreeNode");
 
     __BEGIN__;
@@ -3956,11 +3956,11 @@ cvPrevTreeNode( CvTreeNodeIterator* treeIterator )
     int level;
 
     if( !treeIterator )
-        CV_ERROR( CV_StsNullPtr, "" );    
+        CV_ERROR( CV_StsNullPtr, "" );
 
     prevNode = node = (CvTreeNode*)treeIterator->node;
     level = treeIterator->level;
-    
+
     if( node )
     {
         if( !node->h_prev )
