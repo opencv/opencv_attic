@@ -104,7 +104,7 @@ void cvTsRandUni( CvRNG* rng, CvMat* a, CvScalar param0, CvScalar param1 )
                 for( k = 0; k < cn; k++ )
                 {
                     int val = cvFloor( cvTsRandInt(rng)*scale.val[k] + delta.val[k] );
-                    ((char*)data)[j + k] = CV_CAST_8S(val);
+                    ((schar*)data)[j + k] = CV_CAST_8S(val);
                 }
             break;
         case CV_16U:
@@ -241,7 +241,7 @@ void cvTsConvert( const CvMat* a, CvMat* b )
             break;
         case CV_8S:
             for( j = 0; j < ncols; j++ )
-                buf[j] = ((char*)a_data)[j];
+                buf[j] = ((schar*)a_data)[j];
             break;
         case CV_16U:
             for( j = 0; j < ncols; j++ )
@@ -281,7 +281,7 @@ void cvTsConvert( const CvMat* a, CvMat* b )
             for( j = 0; j < ncols; j++ )
             {
                 int val = cvRound(buf[j]);
-                ((char*)b_data)[j] = CV_CAST_8S(val);
+                ((schar*)b_data)[j] = CV_CAST_8S(val);
             }
             break;
         case CV_16U:
@@ -451,7 +451,7 @@ void cvTsAdd( const CvMat* a, CvScalar alpha, const CvMat* b, CvScalar beta,
                 break;
             case CV_8S:
                 for( j = 0; j < ncols; j++ )
-                    buf[j] = ((char*)a_data)[j]*alpha_buf[j] + gamma_buf[j];
+                    buf[j] = ((schar*)a_data)[j]*alpha_buf[j] + gamma_buf[j];
                 break;
             case CV_16U:
                 for( j = 0; j < ncols; j++ )
@@ -491,7 +491,7 @@ void cvTsAdd( const CvMat* a, CvScalar alpha, const CvMat* b, CvScalar beta,
                 break;
             case CV_8S:
                 for( j = 0; j < ncols; j++ )
-                    buf[j] += ((char*)b_data)[j]*beta_buf[j];
+                    buf[j] += ((schar*)b_data)[j]*beta_buf[j];
                 break;
             case CV_16U:
                 for( j = 0; j < ncols; j++ )
@@ -546,7 +546,7 @@ void cvTsAdd( const CvMat* a, CvScalar alpha, const CvMat* b, CvScalar beta,
             for( j = 0; j < ncols; j++ )
             {
                 int val = cvRound(buf[j]);
-                ((char*)c_data)[j] = CV_CAST_8S(val);
+                ((schar*)c_data)[j] = CV_CAST_8S(val);
             }
             break;
         case CV_16U:
@@ -633,7 +633,7 @@ void cvTsMul( const CvMat* a, const CvMat* b, CvScalar alpha, CvMat* c )
             break;
         case CV_8S:
             for( j = 0; j < ncols; j++ )
-                buf[j] = (alpha_buf[j]*((char*)a_data)[j])*((char*)b_data)[j];
+                buf[j] = (alpha_buf[j]*((schar*)a_data)[j])*((schar*)b_data)[j];
             break;
         case CV_16U:
             for( j = 0; j < ncols; j++ )
@@ -673,7 +673,7 @@ void cvTsMul( const CvMat* a, const CvMat* b, CvScalar alpha, CvMat* c )
             for( j = 0; j < ncols; j++ )
             {
                 int val = cvRound(buf[j]);
-                ((char*)c_data)[j] = CV_CAST_8S(val);
+                ((schar*)c_data)[j] = CV_CAST_8S(val);
             }
             break;
         case CV_16U:
@@ -767,8 +767,8 @@ void cvTsDiv( const CvMat* a, const CvMat* b, CvScalar alpha, CvMat* c )
         case CV_8S:
             for( j = 0; j < ncols; j++ )
             {
-                int denom = ((char*)b_data)[j];
-                int num = a_data ? ((char*)a_data)[j] : 1;
+                int denom = ((schar*)b_data)[j];
+                int num = a_data ? ((schar*)a_data)[j] : 1;
                 buf[j] = !denom ? 0 : (alpha_buf[j]*num/denom);
             }
             break;
@@ -830,7 +830,7 @@ void cvTsDiv( const CvMat* a, const CvMat* b, CvScalar alpha, CvMat* c )
             for( j = 0; j < ncols; j++ )
             {
                 int val = cvRound(buf[j]);
-                ((char*)c_data)[j] = CV_CAST_8S(val);
+                ((schar*)c_data)[j] = CV_CAST_8S(val);
             }
             break;
         case CV_16U:
@@ -911,9 +911,9 @@ void cvTsMinMax( const CvMat* a, const CvMat* b, CvMat* c, int op_type )
         case CV_8S:
             for( j = 0; j < ncols; j++ )
             {
-                int aj = ((char*)a_data)[j];
-                int bj = ((char*)b_data)[j];
-                ((char*)c_data)[j] = (char)(calc_max ? MAX(aj, bj) : MIN(aj,bj));
+                int aj = ((schar*)a_data)[j];
+                int bj = ((schar*)b_data)[j];
+                ((schar*)c_data)[j] = (schar)(calc_max ? MAX(aj, bj) : MIN(aj,bj));
             }
             break;
         case CV_16U:
@@ -1016,8 +1016,8 @@ void cvTsMinMaxS( const CvMat* a, double s, CvMat* c, int op_type )
         case CV_8S:
             for( j = 0; j < ncols; j++ )
             {
-                int aj = ((char*)a_data)[j];
-                ((char*)c_data)[j] = (char)(calc_max ? MAX(aj, is) : MIN(aj, is));
+                int aj = ((schar*)a_data)[j];
+                ((schar*)c_data)[j] = (schar)(calc_max ? MAX(aj, is) : MIN(aj, is));
             }
             break;
         case CV_16U:
@@ -1095,7 +1095,7 @@ int cvTsCheck( const CvMat* a, double min_val, double max_val, CvPoint* idx )
         case CV_8S:
             for( j = 0; j < ncols; j++ )
             {
-                int val = ((char*)data)[j];
+                int val = ((schar*)data)[j];
                 if( val < imin || imax < val )
                     goto _exit_;
             }
@@ -1209,7 +1209,7 @@ int cvTsCmpEps( const CvMat* check_arr, const CvMat* etalon, double* _max_diff,
         case CV_8S:
             for( j = 0; j < ncols; j++ )
             {
-                int val = abs(((char*)a_data)[j] - ((char*)b_data)[j]);
+                int val = abs(((schar*)a_data)[j] - ((schar*)b_data)[j]);
                 if( val > imaxdiff )
                 {
                     imaxdiff = val;
@@ -1409,7 +1409,7 @@ void cvTsCmp( const CvMat* a, const CvMat* b, CvMat* result, int cmp_op )
     {
         uchar* a_data = a->data.ptr + a->step*i;
         uchar* b_data = b->data.ptr + b->step*i;
-        char* r_data = (char*)(result->data.ptr + result->step*i);
+        schar* r_data = (schar*)(result->data.ptr + result->step*i);
 
         switch( CV_MAT_DEPTH(a->type) )
         {
@@ -1418,15 +1418,15 @@ void cvTsCmp( const CvMat* a, const CvMat* b, CvMat* result, int cmp_op )
             {
                 int a_val = ((uchar*)a_data)[j];
                 int b_val = ((uchar*)b_data)[j];
-                r_data[j] = (char)CV_CMP(a_val,b_val);
+                r_data[j] = (schar)CV_CMP(a_val,b_val);
             }
             break;
         case CV_8S:
             for( j = 0; j < ncols; j++ )
             {
-                int a_val = ((char*)a_data)[j];
-                int b_val = ((char*)b_data)[j];
-                r_data[j] = (char)CV_CMP(a_val,b_val);
+                int a_val = ((schar*)a_data)[j];
+                int b_val = ((schar*)b_data)[j];
+                r_data[j] = (schar)CV_CMP(a_val,b_val);
             }
             break;
         case CV_16U:
@@ -1434,7 +1434,7 @@ void cvTsCmp( const CvMat* a, const CvMat* b, CvMat* result, int cmp_op )
             {
                 int a_val = ((ushort*)a_data)[j];
                 int b_val = ((ushort*)b_data)[j];
-                r_data[j] = (char)CV_CMP(a_val,b_val);
+                r_data[j] = (schar)CV_CMP(a_val,b_val);
             }
             break;
         case CV_16S:
@@ -1442,7 +1442,7 @@ void cvTsCmp( const CvMat* a, const CvMat* b, CvMat* result, int cmp_op )
             {
                 int a_val = ((short*)a_data)[j];
                 int b_val = ((short*)b_data)[j];
-                r_data[j] = (char)CV_CMP(a_val,b_val);
+                r_data[j] = (schar)CV_CMP(a_val,b_val);
             }
             break;
         case CV_32S:
@@ -1450,7 +1450,7 @@ void cvTsCmp( const CvMat* a, const CvMat* b, CvMat* result, int cmp_op )
             {
                 int a_val = ((int*)a_data)[j];
                 int b_val = ((int*)b_data)[j];
-                r_data[j] = (char)CV_CMP(a_val,b_val);
+                r_data[j] = (schar)CV_CMP(a_val,b_val);
             }
             break;
         case CV_32F:
@@ -1458,7 +1458,7 @@ void cvTsCmp( const CvMat* a, const CvMat* b, CvMat* result, int cmp_op )
             {
                 float a_val = ((float*)a_data)[j];
                 float b_val = ((float*)b_data)[j];
-                r_data[j] = (char)CV_CMP(a_val,b_val);
+                r_data[j] = (schar)CV_CMP(a_val,b_val);
             }
             break;
         case CV_64F:
@@ -1466,7 +1466,7 @@ void cvTsCmp( const CvMat* a, const CvMat* b, CvMat* result, int cmp_op )
             {
                 double a_val = ((double*)a_data)[j];
                 double b_val = ((double*)b_data)[j];
-                r_data[j] = (char)CV_CMP(a_val,b_val);
+                r_data[j] = (schar)CV_CMP(a_val,b_val);
             }
             break;
         default:
@@ -1477,27 +1477,27 @@ void cvTsCmp( const CvMat* a, const CvMat* b, CvMat* result, int cmp_op )
         {
         case CV_CMP_EQ:
             for( j = 0; j < ncols; j++ )
-                r_data[j] = (char)(r_data[j] == 0 ? -1 : 0);
+                r_data[j] = (schar)(r_data[j] == 0 ? -1 : 0);
             break;
         case CV_CMP_NE:
             for( j = 0; j < ncols; j++ )
-                r_data[j] = (char)(r_data[j] != 0 ? -1 : 0);
+                r_data[j] = (schar)(r_data[j] != 0 ? -1 : 0);
             break;
         case CV_CMP_LT:
             for( j = 0; j < ncols; j++ )
-                r_data[j] = (char)(r_data[j] < 0 ? -1 : 0);
+                r_data[j] = (schar)(r_data[j] < 0 ? -1 : 0);
             break;
         case CV_CMP_LE:
             for( j = 0; j < ncols; j++ )
-                r_data[j] = (char)(r_data[j] <= 0 ? -1 : 0);
+                r_data[j] = (schar)(r_data[j] <= 0 ? -1 : 0);
             break;
         case CV_CMP_GE:
             for( j = 0; j < ncols; j++ )
-                r_data[j] = (char)(r_data[j] >= 0 ? -1 : 0);
+                r_data[j] = (schar)(r_data[j] >= 0 ? -1 : 0);
             break;
         case CV_CMP_GT:
             for( j = 0; j < ncols; j++ )
-                r_data[j] = (char)(r_data[j] > 0 ? -1 : 0);
+                r_data[j] = (schar)(r_data[j] > 0 ? -1 : 0);
             break;
         default:
             ;
@@ -1523,7 +1523,7 @@ void cvTsCmpS( const CvMat* a, double fval, CvMat* result, int cmp_op )
     for( i = 0; i < a->rows; i++ )
     {
         uchar* a_data = a->data.ptr + a->step*i;
-        char* r_data = (char*)(result->data.ptr + result->step*i);
+        schar* r_data = (schar*)(result->data.ptr + result->step*i);
 
         switch( CV_MAT_DEPTH(a->type) )
         {
@@ -1531,49 +1531,49 @@ void cvTsCmpS( const CvMat* a, double fval, CvMat* result, int cmp_op )
             for( j = 0; j < ncols; j++ )
             {
                 int a_val = ((uchar*)a_data)[j];
-                r_data[j] = (char)CV_CMP(a_val,ival);
+                r_data[j] = (schar)CV_CMP(a_val,ival);
             }
             break;
         case CV_8S:
             for( j = 0; j < ncols; j++ )
             {
-                int a_val = ((char*)a_data)[j];
-                r_data[j] = (char)CV_CMP(a_val,ival);
+                int a_val = ((schar*)a_data)[j];
+                r_data[j] = (schar)CV_CMP(a_val,ival);
             }
             break;
         case CV_16U:
             for( j = 0; j < ncols; j++ )
             {
                 int a_val = ((ushort*)a_data)[j];
-                r_data[j] = (char)CV_CMP(a_val,ival);
+                r_data[j] = (schar)CV_CMP(a_val,ival);
             }
             break;
         case CV_16S:
             for( j = 0; j < ncols; j++ )
             {
                 int a_val = ((short*)a_data)[j];
-                r_data[j] = (char)CV_CMP(a_val,ival);
+                r_data[j] = (schar)CV_CMP(a_val,ival);
             }
             break;
         case CV_32S:
             for( j = 0; j < ncols; j++ )
             {
                 int a_val = ((int*)a_data)[j];
-                r_data[j] = (char)CV_CMP(a_val,ival);
+                r_data[j] = (schar)CV_CMP(a_val,ival);
             }
             break;
         case CV_32F:
             for( j = 0; j < ncols; j++ )
             {
                 float a_val = ((float*)a_data)[j];
-                r_data[j] = (char)CV_CMP(a_val,fval);
+                r_data[j] = (schar)CV_CMP(a_val,fval);
             }
             break;
         case CV_64F:
             for( j = 0; j < ncols; j++ )
             {
                 double a_val = ((double*)a_data)[j];
-                r_data[j] = (char)CV_CMP(a_val,fval);
+                r_data[j] = (schar)CV_CMP(a_val,fval);
             }
             break;
         default:
@@ -1584,27 +1584,27 @@ void cvTsCmpS( const CvMat* a, double fval, CvMat* result, int cmp_op )
         {
         case CV_CMP_EQ:
             for( j = 0; j < ncols; j++ )
-                r_data[j] = (char)(r_data[j] == 0 ? -1 : 0);
+                r_data[j] = (schar)(r_data[j] == 0 ? -1 : 0);
             break;
         case CV_CMP_NE:
             for( j = 0; j < ncols; j++ )
-                r_data[j] = (char)(r_data[j] != 0 ? -1 : 0);
+                r_data[j] = (schar)(r_data[j] != 0 ? -1 : 0);
             break;
         case CV_CMP_LT:
             for( j = 0; j < ncols; j++ )
-                r_data[j] = (char)(r_data[j] < 0 ? -1 : 0);
+                r_data[j] = (schar)(r_data[j] < 0 ? -1 : 0);
             break;
         case CV_CMP_LE:
             for( j = 0; j < ncols; j++ )
-                r_data[j] = (char)(r_data[j] <= 0 ? -1 : 0);
+                r_data[j] = (schar)(r_data[j] <= 0 ? -1 : 0);
             break;
         case CV_CMP_GE:
             for( j = 0; j < ncols; j++ )
-                r_data[j] = (char)(r_data[j] >= 0 ? -1 : 0);
+                r_data[j] = (schar)(r_data[j] >= 0 ? -1 : 0);
             break;
         case CV_CMP_GT:
             for( j = 0; j < ncols; j++ )
-                r_data[j] = (char)(r_data[j] > 0 ? -1 : 0);
+                r_data[j] = (schar)(r_data[j] > 0 ? -1 : 0);
             break;
         default:
             ;
@@ -1727,7 +1727,7 @@ double cvTsNorm( const CvMat* arr, const CvMat* mask, int norm_type, int coi )
             {
                 for( j = 0; j < ncols; j += cn )
                 {
-                    int val = abs(((const char*)data)[j]);
+                    int val = abs(((const schar*)data)[j]);
                     inorm = MAX( inorm, val );
                 }
             }
@@ -1736,7 +1736,7 @@ double cvTsNorm( const CvMat* arr, const CvMat* mask, int norm_type, int coi )
                 inorm = 0;
                 for( j = 0; j < ncols; j += cn )
                 {
-                    int val = abs(((const char*)data)[j]);
+                    int val = abs(((const schar*)data)[j]);
                     inorm += val;
                 }
                 fnorm += inorm;
@@ -1746,7 +1746,7 @@ double cvTsNorm( const CvMat* arr, const CvMat* mask, int norm_type, int coi )
                 inorm = 0;
                 for( j = 0; j < ncols; j += cn )
                 {
-                    int val = ((const char*)data)[j];
+                    int val = ((const schar*)data)[j];
                     inorm += val*val;
                 }
                 fnorm += inorm;
@@ -1981,7 +1981,7 @@ int cvTsMeanStdDevNonZero( const CvMat* arr, const CvMat* mask,
                 {
                     for( k = 0; k < cn; k++ )
                     {
-                        int val = ((const char*)data)[j+k];
+                        int val = ((const schar*)data)[j+k];
                         isum[k] += val;
                         isqsum[k] += val*val;
                     }
@@ -2140,7 +2140,7 @@ void cvTsMinMaxLoc( const CvMat* arr, const CvMat* mask,
         case CV_8S:
             for( j = 0; j < ncols; j += cn, mdata++ )
             {
-                int val = ((const char*)data)[j];
+                int val = ((const schar*)data)[j];
                 if( val < iminval && *mdata )
                 {
                     iminval = val;
@@ -2306,7 +2306,7 @@ void cvTsLogicS( const CvMat* a, CvScalar s, CvMat* c, int logic_op )
     union
     {
         uchar ptr[4];
-        char c[4];
+        schar c[4];
         short s[4];
         ushort w[4];
         int i[4];
@@ -2847,9 +2847,9 @@ void cvTsConvolve2D( const CvMat* a, CvMat* b, const CvMat* kernel, CvPoint anch
                 double s = 0;
                 int val;
                 for( k = 0; k < ker_size; k++ )
-                    s += ((char*)a_data)[j+offset[k]]*k_data[k];
+                    s += ((schar*)a_data)[j+offset[k]]*k_data[k];
                 val = cvRound(s);
-                ((char*)b_data)[j] = CV_CAST_8S(val);
+                ((schar*)b_data)[j] = CV_CAST_8S(val);
             }
             break;
         case CV_16U:
@@ -3102,7 +3102,7 @@ double cvTsCrossCorr( const CvMat* a, const CvMat* b )
             break;
         case CV_8S:
             for( j = 0; j < ncols; j++ )
-                s += ((char*)a_data)[j]*((char*)b_data)[j];
+                s += ((schar*)a_data)[j]*((schar*)b_data)[j];
             break;
         case CV_16U:
             for( j = 0; j < ncols; j++ )

@@ -320,8 +320,8 @@ typedef CvStatus (CV_STDCALL * CvLUT_TransformFunc)( const void* src, int srcste
                                                      int dststep, CvSize size, const void* lut );
 
 CV_INLINE CvStatus
-icvLUT_Transform8u_8s_C1R( const uchar* src, int srcstep, char* dst,
-                            int dststep, CvSize size, const char* lut )
+icvLUT_Transform8u_8s_C1R( const uchar* src, int srcstep, schar* dst,
+                            int dststep, CvSize size, const schar* lut )
 {
     return icvLUT_Transform8u_8u_C1R( src, srcstep, (uchar*)dst,
                                       dststep, size, (const uchar*)lut );

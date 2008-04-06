@@ -150,6 +150,8 @@ typedef unsigned char uchar;
 typedef unsigned short ushort;
 #endif
 
+typedef signed char schar;
+
 /* CvArr* is used to pass arbitrary array-like data structures
    into the functions where the particular
    array type is recognized at runtime */

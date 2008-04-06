@@ -727,11 +727,11 @@ cvMixChannels( const CvArr** src, int src_count,
     static int inittab = 0;
     uchar* buffer = 0;
     int heap_alloc = 0;
-    
+
     CV_FUNCNAME( "cvMixChannels" );
 
     __BEGIN__;
-    
+
     CvSize size = {0,0};
     int depth = -1, elem_size = 1;
     int *sdelta0 = 0, *sdelta1 = 0, *ddelta0 = 0, *ddelta1 = 0;
@@ -765,7 +765,7 @@ cvMixChannels( const CvArr** src, int src_count,
         CV_ERROR( CV_StsNullPtr, "The array of copied channel indices is NULL" );
 
     buf_size = (src_count + dst_count + 2)*
-        (sizeof(src0[0]) + sizeof(src_cn[0]) + sizeof(src_step[0])) + 
+        (sizeof(src0[0]) + sizeof(src_cn[0]) + sizeof(src_step[0])) +
         pair_count*2*(sizeof(sptr[0]) + sizeof(sdelta0[0]) + sizeof(sdelta1[0]));
 
     if( buf_size > CV_MAX_LOCAL_SIZE )
@@ -798,10 +798,10 @@ cvMixChannels( const CvArr** src, int src_count,
         {
             CvMat stub, *mat = (CvMat*)(k == 0 ? src[i] : dst[i]);
             int cn;
-        
+
             if( !CV_IS_MAT(mat) )
                 CV_CALL( mat = cvGetMat( mat, &stub ));
-        
+
             if( depth < 0 )
             {
                 depth = CV_MAT_DEPTH(mat->type);
@@ -868,7 +868,7 @@ cvMixChannels( const CvArr** src, int src_count,
 
             for( ; cn >= cn_arr[a+1]; a++ )
                 ;
-            
+
             if( k == 0 )
             {
                 sptr[i] = src0[a] + (cn - cn_arr[a])*elem_size;
@@ -889,7 +889,7 @@ cvMixChannels( const CvArr** src, int src_count,
         CV_ERROR( CV_StsUnsupportedFormat, "The data type is not supported by the function" );
 
     IPPI_CALL( func( (const void**)sptr, sdelta0, sdelta1, (void**)dptr,
-                     ddelta0, ddelta1, pair_count, size )); 
+                     ddelta0, ddelta1, pair_count, size ));
 
     __END__;
 
@@ -966,16 +966,16 @@ icvCvtScaleAbsTo_8u_C1R( const uchar* src, int srcstep,
         uchar lut[256];
         int i;
         double val = shift;
-        
+
         for( i = 0; i < 128; i++, val += scale )
         {
             int t = cvRound(fabs(val));
             lut[i] = CV_CAST_8U(t);
         }
-        
+
         if( srcdepth == CV_8S )
             val = -val;
-        
+
         for( ; i < 256; i++, val += scale )
         {
             int t = cvRound(fabs(val));
@@ -1181,7 +1181,7 @@ icvCvtScaleTo_##flavor##_C1R( const uchar* src, int srcstep,            \
         {                                                               \
             for( i = 0; i < 256; i++ )                                  \
             {                                                           \
-                int t = cvRound( (char)i*scale + shift );               \
+                int t = cvRound( (schar)i*scale + shift );              \
                 lut[i] = cast_macro(t);                                 \
             }                                                           \
                                                                         \
@@ -1194,12 +1194,12 @@ icvCvtScaleTo_##flavor##_C1R( const uchar* src, int srcstep,            \
             int iscale = cvRound(scale*(1 << ICV_FIX_SHIFT));           \
             int ishift = cvRound(shift*(1 << ICV_FIX_SHIFT));           \
                                                                         \
-            ICV_DEF_CVT_SCALE_CASE( char, int, ICV_SCALE,               \
+            ICV_DEF_CVT_SCALE_CASE( schar, int, ICV_SCALE,              \
                                     cast_macro, iscale, ishift );       \
         }                                                               \
         else                                                            \
         {                                                               \
-            ICV_DEF_CVT_SCALE_CASE( char, int, cvRound,                 \
+            ICV_DEF_CVT_SCALE_CASE( schar, int, cvRound,                \
                                     cast_macro, scale, shift );         \
         }                                                               \
         break;                                                          \
@@ -1286,14 +1286,14 @@ icvCvtScaleTo_##flavor##_C1R( const uchar* src, int srcstep,            \
         if( size.width*size.height >= 256 )                             \
         {                                                               \
             for( i = 0; i < 256; i++ )                                  \
-                lut[i] = (dsttype)((char)i*scale + shift);              \
+                lut[i] = (dsttype)((schar)i*scale + shift);             \
                                                                         \
             icvLUT_Transform8u_##flavor##_C1R( src, srcstep, dst,       \
                                 dststep*sizeof(dst[0]), size, lut );    \
         }                                                               \
         else                                                            \
         {                                                               \
-            ICV_DEF_CVT_SCALE_CASE( char, double, CV_NOP,               \
+            ICV_DEF_CVT_SCALE_CASE( schar, double, CV_NOP,              \
                                     cast_macro, scale, shift );         \
         }                                                               \
         break;                                                          \
@@ -1327,7 +1327,7 @@ icvCvtScaleTo_##flavor##_C1R( const uchar* src, int srcstep,            \
 
 
 ICV_DEF_CVT_SCALE_FUNC_INT( 8u, uchar, CV_CAST_8U )
-ICV_DEF_CVT_SCALE_FUNC_INT( 8s, char, CV_CAST_8S )
+ICV_DEF_CVT_SCALE_FUNC_INT( 8s, schar, CV_CAST_8S )
 ICV_DEF_CVT_SCALE_FUNC_INT( 16s, short, CV_CAST_16S )
 ICV_DEF_CVT_SCALE_FUNC_INT( 16u, ushort, CV_CAST_16U )
 ICV_DEF_CVT_SCALE_FUNC_INT( 32s, int, CV_CAST_32S )
@@ -1424,14 +1424,14 @@ icvCvtTo_##flavor##_C1R( const uchar* src, int srcstep,                 \
 
 
 ICV_DEF_CVT_FUNC_2D( 8u, uchar, int, CV_CAST_8U,
-                     CV_8S,  char,   CV_NOP,
+                     CV_8S,  schar,  CV_NOP,
                      CV_16U, ushort, CV_NOP,
                      CV_16S, short,  CV_NOP,
                      CV_32S, int,    CV_NOP,
                      CV_32F, float,  cvRound,
                      CV_64F, double, cvRound )
 
-ICV_DEF_CVT_FUNC_2D( 8s, char, int, CV_CAST_8S,
+ICV_DEF_CVT_FUNC_2D( 8s, schar, int, CV_CAST_8S,
                      CV_8U,  uchar,  CV_NOP,
                      CV_16U, ushort, CV_NOP,
                      CV_16S, short,  CV_NOP,
@@ -1441,7 +1441,7 @@ ICV_DEF_CVT_FUNC_2D( 8s, char, int, CV_CAST_8S,
 
 ICV_DEF_CVT_FUNC_2D( 16u, ushort, int, CV_CAST_16U,
                      CV_8U,  uchar,  CV_NOP,
-                     CV_8S,  char,   CV_NOP,
+                     CV_8S,  schar,  CV_NOP,
                      CV_16S, short,  CV_NOP,
                      CV_32S, int,    CV_NOP,
                      CV_32F, float,  cvRound,
@@ -1449,7 +1449,7 @@ ICV_DEF_CVT_FUNC_2D( 16u, ushort, int, CV_CAST_16U,
 
 ICV_DEF_CVT_FUNC_2D( 16s, short, int, CV_CAST_16S,
                      CV_8U,  uchar,  CV_NOP,
-                     CV_8S,  char,   CV_NOP,
+                     CV_8S,  schar,  CV_NOP,
                      CV_16U, ushort, CV_NOP,
                      CV_32S, int,    CV_NOP,
                      CV_32F, float,  cvRound,
@@ -1457,7 +1457,7 @@ ICV_DEF_CVT_FUNC_2D( 16s, short, int, CV_CAST_16S,
 
 ICV_DEF_CVT_FUNC_2D( 32s, int, int, CV_NOP,
                      CV_8U,  uchar,  CV_NOP,
-                     CV_8S,  char,   CV_NOP,
+                     CV_8S,  schar,  CV_NOP,
                      CV_16U, ushort, CV_NOP,
                      CV_16S, short,  CV_NOP,
                      CV_32F, float,  cvRound,
@@ -1465,7 +1465,7 @@ ICV_DEF_CVT_FUNC_2D( 32s, int, int, CV_NOP,
 
 ICV_DEF_CVT_FUNC_2D( 32f, float, float, CV_NOP,
                      CV_8U,  uchar,  CV_8TO32F,
-                     CV_8S,  char,   CV_8TO32F,
+                     CV_8S,  schar,  CV_8TO32F,
                      CV_16U, ushort, CV_NOP,
                      CV_16S, short,  CV_NOP,
                      CV_32S, int,    CV_CAST_32F,
@@ -1473,7 +1473,7 @@ ICV_DEF_CVT_FUNC_2D( 32f, float, float, CV_NOP,
 
 ICV_DEF_CVT_FUNC_2D( 64f, double, double, CV_NOP,
                      CV_8U,  uchar,  CV_8TO32F,
-                     CV_8S,  char,   CV_8TO32F,
+                     CV_8S,  schar,  CV_8TO32F,
                      CV_16U, ushort, CV_NOP,
                      CV_16S, short,  CV_NOP,
                      CV_32S, int,    CV_NOP,
