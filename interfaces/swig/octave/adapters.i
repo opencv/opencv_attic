@@ -51,7 +51,7 @@
 
 // * add support for sparse matrices
 
-// * add support for roi
+// * add support for roi and coi, or complain if either is set
 
 // * test case for channel==1
 // * test case for channel=={2,3,4}
@@ -82,7 +82,7 @@ assert(all(cv2mat(mat2cv(eye(3),6))==eye(3)));
 I=cvLoadImage("sink.png");
 a=cv2im(I);
 I2=cvCloneImage(I);
-cvSobel (I, I2, 2, 2);
+cvSobel(I,I2,2,2);
 imshow(cv2im(I2));
 
 imshow(a);
@@ -276,7 +276,7 @@ octave_value cv2mat(CvArr* arr) {
     }
 
     nda = NDArray(d);
-    transpose_copy(ndim_iterator(m),ndim_iterator(nda));
+    transpose_copy(m, nda);
   }
   else if (CV_IS_MATND(arr)) {
     // m1 x m2 x ... x mn x c
@@ -295,7 +295,7 @@ octave_value cv2mat(CvArr* arr) {
     }
 
     nda = NDArray(d);
-    transpose_copy(ndim_iterator(m), ndim_iterator(nda));
+    transpose_copy(m, nda);
   }
   else if (CV_IS_IMAGE(arr)) {
     // m x n x c
@@ -313,7 +313,7 @@ octave_value cv2mat(CvArr* arr) {
     }
 
     nda = NDArray(d);
-    transpose_copy(ndim_iterator(img), ndim_iterator(nda));
+    transpose_copy(img, nda);
   }
   else {
     error("unsupported array type (supported types are CvMat, CvMatND, IplImage)");
@@ -343,7 +343,7 @@ octave_value mat2cv(const octave_value& ov, int type) {
 
   if (nd == 2) {
     CvMat *m = cvCreateMat(d(0), d(1), type);
-    transpose_copy(ndim_iterator(nda), ndim_iterator(m));
+    transpose_copy(nda, m);
     return SWIG_NewPointerObj(m, SWIGTYPE_p_CvMat, SWIG_POINTER_OWN);
   }
   else {
@@ -351,7 +351,7 @@ octave_value mat2cv(const octave_value& ov, int type) {
     for (int j = 0; j < nd; ++j)
       tmp[j] = d(j);
     CvMatND *m = cvCreateMatND(nd, tmp, type);
-    transpose_copy(ndim_iterator(nda), ndim_iterator(m));
+    transpose_copy(nda, m);
     return SWIG_NewPointerObj(m, SWIGTYPE_p_CvMatND, SWIG_POINTER_OWN);
   }
 }
@@ -382,7 +382,7 @@ octave_value cv2im(CvArr* arr) {
     }
 
     nda = NDArray(d);
-    transpose_copy(ndim_iterator(m),ndim_iterator(nda), 1/256.0);
+    transpose_copy(m, nda, 1/256.0);
   }
   else if (CV_IS_IMAGE(arr)) {
     // m x n x c
@@ -400,7 +400,7 @@ octave_value cv2im(CvArr* arr) {
     }
 
     nda = NDArray(d);
-    transpose_copy(ndim_iterator(img), ndim_iterator(nda), 1/256.0);
+    transpose_copy(img, nda, 1/256.0);
   }
 
   return nda;
@@ -424,7 +424,7 @@ CvMat* im2cv(const octave_value& ov, int depth) {
   int type = CV_MAKETYPE(depth, channels);
 
   CvMat *m = cvCreateMat(d(0), d(1), type);
-  transpose_copy(ndim_iterator(nda), ndim_iterator(m), 256);
+  transpose_copy(nda, m, 256);
 
   return m;
 }
@@ -432,6 +432,48 @@ CvMat* im2cv(const octave_value& ov, int depth) {
 %}
 
 %newobject im2cv;
+
+%feature("autodoc", 0) cv2mat;
+%feature("autodoc", 0) mat2cv;
+%feature("autodoc", 0) cv2im;
+%feature("autodoc", 0) im2cv;
+
+%docstring cv2mat {
+@deftypefn {Loadable Function} @var{m1} = cv2mat (@var{m2})
+Convert the CvMat, CvMatND, or IplImage @var{m2} into an Octave real matrix @var{m1}.
+The dimensions @var{m1} are those of @var{m2}, plus an addition dimension 
+if @var{m2} has more than one channel.
+@end deftypefn
+}
+
+%docstring mat2cv {
+@deftypefn {Loadable Function} @var{m1} = mat2cv (@var{m2}, @var{type})
+Convert the Octave array @var{m2} into either a CvMat or a CvMatND of type
+@var{type}.
+@var{type} is one of CV_8UC(n), CV_8SC(n), CV_16UC(n), CV_16SC(n), CV_32SC(n), 
+CV_32FC(n), CV_64FC(n), where n indicates channel and is between 1 and 4.
+If the dimension of @var{m2} is equal to 2 (not counting channels),
+a CvMat is returned. Otherwise, a CvMatND is returned.
+@end deftypefn
+}
+
+%docstring cv2im {
+@deftypefn {Loadable Function} @var{im} = cv2im (@var{I})
+Convert the OpenCV image or 2D matrix @var{I} into an Octave image @var{im}.
+@var{im} is a real matrix of dimension height x width or 
+height x width x channels, with values within the interval [0,1]).
+@end deftypefn
+}
+
+%docstring im2cv {
+@deftypefn {Loadable Function} @var{I} = im2cv (@var{im}, @var{depth})
+Convert the Octave image @var{im} into the OpenCV image @var{I} of depth
+@var{depth}.
+@var{im} is a real matrix of dimension height x width or 
+height x width x channels, with values within the interval [0,1].
+@var{depth} must be one of CV_8U, CV_8S, CV_16U, CV_16S, CV_32S, CV_32F, CV_64F.
+@end deftypefn
+}
 
 octave_value cv2mat(CvArr* arr);
 octave_value mat2cv(const octave_value& ov, int type);
