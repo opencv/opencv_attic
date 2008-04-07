@@ -2057,18 +2057,19 @@ octave_value_typeinfo::register_binary_op(octave_value::op_##name,tid1,tid2,swig
 #define SWIGTYPE_p_f_int_int_int_int_p_void__void swig_types[94]
 #define SWIGTYPE_p_int swig_types[95]
 #define SWIGTYPE_p_long_long swig_types[96]
-#define SWIGTYPE_p_p_CvCapture swig_types[97]
-#define SWIGTYPE_p_p_CvVideoWriter swig_types[98]
-#define SWIGTYPE_p_p_char swig_types[99]
-#define SWIGTYPE_p_size_t swig_types[100]
-#define SWIGTYPE_p_size_type swig_types[101]
-#define SWIGTYPE_p_unsigned_char swig_types[102]
-#define SWIGTYPE_p_unsigned_long_long swig_types[103]
-#define SWIGTYPE_p_unsigned_short swig_types[104]
-#define SWIGTYPE_p_value_type swig_types[105]
-#define SWIGTYPE_p_void swig_types[106]
-static swig_type_info *swig_types[108];
-static swig_module_info swig_module = {swig_types, 107, 0, 0, 0, 0};
+#define SWIGTYPE_p_octave_value swig_types[97]
+#define SWIGTYPE_p_p_CvCapture swig_types[98]
+#define SWIGTYPE_p_p_CvVideoWriter swig_types[99]
+#define SWIGTYPE_p_p_char swig_types[100]
+#define SWIGTYPE_p_size_t swig_types[101]
+#define SWIGTYPE_p_size_type swig_types[102]
+#define SWIGTYPE_p_unsigned_char swig_types[103]
+#define SWIGTYPE_p_unsigned_long_long swig_types[104]
+#define SWIGTYPE_p_unsigned_short swig_types[105]
+#define SWIGTYPE_p_value_type swig_types[106]
+#define SWIGTYPE_p_void swig_types[107]
+static swig_type_info *swig_types[109];
+static swig_module_info swig_module = {swig_types, 108, 0, 0, 0, 0};
 #define SWIG_TypeQuery(name) SWIG_TypeQueryModule(&swig_module, &swig_module, name)
 #define SWIG_MangledTypeQuery(name) SWIG_MangledTypeQueryModule(&swig_module, &swig_module, name)
 
@@ -3659,10 +3660,360 @@ SWIG_FromCharPtr(const char *cptr)
       return SWIG_OK;
     }
 
+
+
+class ndim_iterator {
+  int nd;
+  int dims[CV_MAX_DIM];
+  int step[CV_MAX_DIM];
+  int curr[CV_MAX_DIM];
+  uchar* _data;
+  int _type;
+  bool done;
+ public:
+  ndim_iterator() {}
+  ndim_iterator(CvMat* m) {
+    int c = CV_MAT_CN(m->type);
+    int elem_size = CV_ELEM_SIZE1(m->type);
+    nd = c == 1 ? 2 : 3;
+    dims[0] = m->rows;
+    dims[1] = m->cols;
+    dims[2] = c;
+    step[0] = m->step;
+    step[1] = c * elem_size;
+    step[2] = elem_size;
+    curr[0] = curr[1] = curr[2] = 0;
+    _data = m->data.ptr;
+    _type = m->type;
+    done = false;
+  }
+  ndim_iterator(CvMatND* m) {
+    int c = CV_MAT_CN(m->type);
+    int elem_size = CV_ELEM_SIZE1(m->type);
+    nd = m->dims + (c == 1 ? 0 : 1);
+    for (int j = 0; j < m->dims; ++j) {
+      dims[j] = m->dim[j].size;
+      step[j] = m->dim[j].step;
+      curr[j] = 0;
+    }
+    if (c > 1) {
+      dims[m->dims] = c;
+      step[m->dims] = elem_size;
+      curr[m->dims] = 0;
+    }
+    _data = m->data.ptr;
+    _type = m->type;
+    done = false;
+  }
+  ndim_iterator(IplImage* img) {
+    nd = img->nChannels == 1 ? 2 : 3;
+    dims[0] = img->height;
+    dims[1] = img->width;
+    dims[2] = img->nChannels;
+
+    switch (img->depth) {
+    case IPL_DEPTH_8U: _type = CV_8U; break;
+    case IPL_DEPTH_8S: _type = CV_8S; break;
+    case IPL_DEPTH_16U: _type = CV_16U; break;
+    case IPL_DEPTH_16S: _type = CV_16S; break;
+    case IPL_DEPTH_32S: _type = CV_32S; break;
+    case IPL_DEPTH_32F: _type = CV_32F; break;
+    case IPL_DEPTH_1U: _type = CV_64F; break;
+    default:
+      error("unsupported image depth");
+      return;
+    }
+
+    int elem_size = CV_ELEM_SIZE1(_type);
+    step[0] = img->widthStep;
+    step[1] = img->nChannels * elem_size;
+    step[2] = elem_size;
+    curr[0] = curr[1] = curr[2] = 0;
+    _data = (uchar*)img->imageData;
+    done = false;
+  }
+  ndim_iterator(NDArray& nda) {
+    dim_vector d(nda.dims());
+    nd = d.length();
+    int last_step = sizeof(double);
+    for (int j = 0; j < d.length(); ++j) {
+      dims[j] = d(j);
+      step[j] = last_step;
+      last_step *= dims[j];
+      curr[j] = 0;
+    }
+    _data = (uchar*)const_cast<double*>(nda.data());
+    _type = CV_64F;
+    done = false;
+  }
+
+  operator bool () const {
+    return !done;
+  }
+  uchar* data() {
+    return _data;
+  }
+  int type() const {
+    return _type;
+  }
+  ndim_iterator& operator++ () {
+    int curr_dim = 0;
+    for (;;) {
+      _data += step[curr_dim];
+      if (++curr[curr_dim] < dims[curr_dim])
+	break;
+      curr[curr_dim] = 0;
+      _data -= step[curr_dim] * dims[curr_dim];
+      ++curr_dim;
+      if (curr_dim == nd) {
+	done = true;
+	break;
+      }
+    }
+    return *this;
+  }
+};
+
+template <class T1, class T2>
+  void transpose_copy_typed(ndim_iterator src_it, ndim_iterator dst_it, 
+			   double scale) {
+  assert(sizeof(T1) == CV_ELEM_SIZE1(src_it.type()));
+  assert(sizeof(T2) == CV_ELEM_SIZE1(dst_it.type()));
+  if (scale == 1) {
+    while (src_it) {
+      *(T2*)dst_it.data() = (T2)*(T1*)src_it.data();
+      ++src_it;
+      ++dst_it;
+    }
+  } else {
+    while (src_it) {
+      *(T2*)dst_it.data() = (T2)(scale * (*(T1*)src_it.data()));
+      ++src_it;
+      ++dst_it;
+    }
+  }
+}
+
+template <class T1>
+void transpose_copy2(ndim_iterator src_it, ndim_iterator dst_it, 
+		     double scale) {
+  switch (CV_MAT_DEPTH(dst_it.type())) {
+  case CV_8U: transpose_copy_typed<T1,unsigned char>(src_it,dst_it,scale); break;
+  case CV_8S: transpose_copy_typed<T1,signed char>(src_it,dst_it,scale); break;
+  case CV_16U: transpose_copy_typed<T1,unsigned short>(src_it,dst_it,scale); break;
+  case CV_16S: transpose_copy_typed<T1,signed short>(src_it,dst_it,scale); break;
+  case CV_32S: transpose_copy_typed<T1,signed int>(src_it,dst_it,scale); break;
+  case CV_32F: transpose_copy_typed<T1,float>(src_it,dst_it,scale); break;
+  case CV_64F: transpose_copy_typed<T1,double>(src_it,dst_it,scale); break;
+  default:
+    error("unsupported dest array type (supported types are CV_8U, CV_8S, "
+	  "CV_16U, CV_16S, CV_32S, CV_32F, CV_64F)");
+  }
+}
+
+void transpose_copy(ndim_iterator src_it, ndim_iterator dst_it, 
+		    double scale = 1) {
+  switch (CV_MAT_DEPTH(src_it.type())) {
+  case CV_8U: transpose_copy2<unsigned char>(src_it,dst_it,scale); break;
+  case CV_8S: transpose_copy2<signed char>(src_it,dst_it,scale); break;
+  case CV_16U: transpose_copy2<unsigned short>(src_it,dst_it,scale); break;
+  case CV_16S: transpose_copy2<signed short>(src_it,dst_it,scale); break;
+  case CV_32S: transpose_copy2<signed int>(src_it,dst_it,scale); break;
+  case CV_32F: transpose_copy2<float>(src_it,dst_it,scale); break;
+  case CV_64F: transpose_copy2<double>(src_it,dst_it,scale); break;
+  default:
+    error("unsupported source array type (supported types are CV_8U, CV_8S, "
+	  "CV_16U, CV_16S, CV_32S, CV_32F, CV_64F)");
+  }
+}
+
+octave_value cv2mat(CvArr* arr) {
+  dim_vector d;
+  NDArray nda;
+
+  if (CV_IS_MAT(arr)) {
+    // m x n x c
+    CvMat* m = (CvMat*)arr;
+
+    int c = CV_MAT_CN(m->type);
+    if (c == 1) {
+      d.resize(2);
+      d(0) = m->rows;
+      d(1) = m->cols;
+    } else {
+      d.resize(3);
+      d(0) = m->rows;
+      d(1) = m->cols;
+      d(2) = c;
+    }
+
+    nda = NDArray(d);
+    transpose_copy(ndim_iterator(m),ndim_iterator(nda));
+  }
+  else if (CV_IS_MATND(arr)) {
+    // m1 x m2 x ... x mn x c
+    CvMatND* m = (CvMatND*)arr;
+
+    int c = CV_MAT_CN(m->type);
+    if (c == 1) {
+      d.resize(m->dims);
+      for (int j = 0; j < m->dims; ++j)
+	d(j) = m->dim[j].size;
+    } else {
+      d.resize(m->dims + 1);
+      for (int j = 0; j < m->dims; ++j)
+	d(j) = m->dim[j].size;
+      d(m->dims) = c;
+    }
+
+    nda = NDArray(d);
+    transpose_copy(ndim_iterator(m), ndim_iterator(nda));
+  }
+  else if (CV_IS_IMAGE(arr)) {
+    // m x n x c
+    IplImage* img = (IplImage*)arr;
+
+    if (img->nChannels == 1) {
+      d.resize(2);
+      d(0) = img->height;
+      d(1) = img->width;
+    } else {
+      d.resize(3);
+      d(0) = img->height;
+      d(1) = img->width;
+      d(2) = img->nChannels;
+    }
+
+    nda = NDArray(d);
+    transpose_copy(ndim_iterator(img), ndim_iterator(nda));
+  }
+  else {
+    error("unsupported array type (supported types are CvMat, CvMatND, IplImage)");
+    return octave_value();
+  }
+
+  return nda;
+}
+
+octave_value mat2cv(const octave_value& ov, int type) {
+  NDArray nda(ov.array_value());
+  if (error_state)
+    return 0;
+
+  dim_vector d = ov.dims();
+  assert(d.length() > 0);
+
+  int nd = d.length();
+  int last_dim = d(d.length() - 1);
+  int c = CV_MAT_CN(type);
+  if (c != 1 && c != last_dim) {
+    error("last dimension and channel must agree, or channel must equal one");
+    return 0;
+  }
+  if (c > 1)
+    --nd;
+
+  if (nd == 2) {
+    CvMat *m = cvCreateMat(d(0), d(1), type);
+    transpose_copy(ndim_iterator(nda), ndim_iterator(m));
+    return SWIG_NewPointerObj(m, SWIGTYPE_p_CvMat, SWIG_POINTER_OWN);
+  }
+  else {
+    int tmp[CV_MAX_DIM];
+    for (int j = 0; j < nd; ++j)
+      tmp[j] = d(j);
+    CvMatND *m = cvCreateMatND(nd, tmp, type);
+    transpose_copy(ndim_iterator(nda), ndim_iterator(m));
+    return SWIG_NewPointerObj(m, SWIGTYPE_p_CvMatND, SWIG_POINTER_OWN);
+  }
+}
+
+octave_value cv2im(CvArr* arr) {
+  if (!CV_IS_IMAGE(arr) && !CV_IS_MAT(arr)) {
+    error("input is not an OpenCV image or 2D matrix");
+    return octave_value();
+  }
+
+  dim_vector d;
+  NDArray nda;
+
+  if (CV_IS_MAT(arr)) {
+    // m x n x c
+    CvMat* m = (CvMat*)arr;
+
+    int c = CV_MAT_CN(m->type);
+    if (c == 1) {
+      d.resize(2);
+      d(0) = m->rows;
+      d(1) = m->cols;
+    } else {
+      d.resize(3);
+      d(0) = m->rows;
+      d(1) = m->cols;
+      d(2) = c;
+    }
+
+    nda = NDArray(d);
+    transpose_copy(ndim_iterator(m),ndim_iterator(nda), 1/256.0);
+  }
+  else if (CV_IS_IMAGE(arr)) {
+    // m x n x c
+    IplImage* img = (IplImage*)arr;
+
+    if (img->nChannels == 1) {
+      d.resize(2);
+      d(0) = img->height;
+      d(1) = img->width;
+    } else {
+      d.resize(3);
+      d(0) = img->height;
+      d(1) = img->width;
+      d(2) = img->nChannels;
+    }
+
+    nda = NDArray(d);
+    transpose_copy(ndim_iterator(img), ndim_iterator(nda), 1/256.0);
+  }
+
+  return nda;
+}
+
+CvMat* im2cv(const octave_value& ov, int depth) {
+  NDArray nda(ov.array_value());
+  if (error_state)
+    return 0;
+
+  dim_vector d = ov.dims();
+  assert(d.length() > 0);
+
+  if (d.length() != 2 && d.length() != 3 && 
+      !(d.length() == 3 && d(2) <= 4)) {
+    error("input must be m x n or m x n x c matrix, where 1<=c<=4");
+    return 0;
+  }
+
+  int channels = d.length() == 2 ? 1 : d(2);
+  int type = CV_MAKETYPE(depth, channels);
+
+  CvMat *m = cvCreateMat(d(0), d(1), type);
+  transpose_copy(ndim_iterator(nda), ndim_iterator(m), 256);
+
+  return m;
+}
+
+
 const char* _wrap_CV_FOURCC_texinfo = "-*- texinfo -*-\n\
 @deftypefn {Loadable Function} @var{retval} = CV_FOURCC (@var{c1}, @var{c2}, @var{c3}, @var{c4})\n\
 @var{c1} is of type char. @var{c2} is of type char. @var{c3} is of type char. @var{c4} is of type char. @var{retval} is of type int. \n\
 @end deftypefn";
+const char* _wrap_CvRNG_Wrapper___eq_texinfo = 0;
+const char* _wrap_CvRNG_Wrapper___ne_texinfo = 0;
+const char* _wrap_CvRNG_Wrapper_ptr_texinfo = 0;
+const char* _wrap_CvRNG_Wrapper_ref_texinfo = 0;
+const char* _wrap_CvSubdiv2DEdge_Wrapper___eq_texinfo = 0;
+const char* _wrap_CvSubdiv2DEdge_Wrapper___ne_texinfo = 0;
+const char* _wrap_CvSubdiv2DEdge_Wrapper_ptr_texinfo = 0;
+const char* _wrap_CvSubdiv2DEdge_Wrapper_ref_texinfo = 0;
 const char* _wrap_CvvImage_Bpp_texinfo = "-*- texinfo -*-\n\
 @deftypefn {Loadable Function} @var{retval} = Bpp (@var{self})\n\
 @var{self} is of type CvvImage. @var{retval} is of type int. \n\
@@ -3710,6 +4061,14 @@ const char* _wrap_CvvImage_Show_texinfo = "-*- texinfo -*-\n\
 const char* _wrap_CvvImage_Width_texinfo = "-*- texinfo -*-\n\
 @deftypefn {Loadable Function} @var{retval} = Width (@var{self})\n\
 @var{self} is of type CvvImage. @var{retval} is of type int. \n\
+@end deftypefn";
+const char* _wrap_cv2im_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} @var{retval} = cv2im (@var{arr})\n\
+@var{arr} is of type CvArr. @var{retval} is of type octave_value. \n\
+@end deftypefn";
+const char* _wrap_cv2mat_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} @var{retval} = cv2mat (@var{arr})\n\
+@var{arr} is of type CvArr. @var{retval} is of type octave_value. \n\
 @end deftypefn";
 const char* _wrap_cvConvertImage_texinfo = "-*- texinfo -*-\n\
 @deftypefn {Loadable Function} cvConvertImage (@var{src}, @var{dst}, @var{flags} = 0)\n\
@@ -3815,6 +4174,7 @@ const char* _wrap_cvSetCaptureProperty_texinfo = "-*- texinfo -*-\n\
 @deftypefn {Loadable Function} @var{retval} = cvSetCaptureProperty (@var{capture}, @var{property_id}, @var{value})\n\
 @var{capture} is of type CvCapture. @var{property_id} is of type int. @var{value} is of type double. @var{retval} is of type int. \n\
 @end deftypefn";
+const char* _wrap_cvSetMouseCallback_texinfo = 0;
 const char* _wrap_cvSetMouseCallbackOld_texinfo = "-*- texinfo -*-\n\
 @deftypefn {Loadable Function} cvSetMouseCallback (@var{window_name}, @var{on_mouse}, @var{param} = nil)\n\
 @var{window_name} is of type char. @var{on_mouse} is of type CvMouseCallback. @var{param} is of type void. \n\
@@ -3831,6 +4191,7 @@ const char* _wrap_cvStartWindowThread_texinfo = "-*- texinfo -*-\n\
 @deftypefn {Loadable Function} @var{retval} = cvStartWindowThread ()\n\
 @var{retval} is of type int. \n\
 @end deftypefn";
+const char* _wrap_cvWaitKey_texinfo = 0;
 const char* _wrap_cvWaitKeyC_texinfo = "-*- texinfo -*-\n\
 @deftypefn {Loadable Function} @var{retval} = cvWaitKey (@var{delay} = 0)\n\
 @var{delay} is of type int. @var{retval} is of type int. \n\
@@ -3851,6 +4212,16 @@ const char* _wrap_delete_CvvImage_texinfo = "-*- texinfo -*-\n\
 @deftypefn {Loadable Function} CvvImage (@var{self})\n\
 @var{self} is of type CvvImage. \n\
 @end deftypefn";
+const char* _wrap_im2cv_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} @var{retval} = im2cv (@var{ov}, @var{depth})\n\
+@var{ov} is of type octave_value. @var{depth} is of type int. @var{retval} is of type CvMat. \n\
+@end deftypefn";
+const char* _wrap_mat2cv_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} @var{retval} = mat2cv (@var{ov}, @var{type})\n\
+@var{ov} is of type octave_value. @var{type} is of type int. @var{retval} is of type octave_value. \n\
+@end deftypefn";
+const char* _wrap_new_CvRNG_Wrapper_texinfo = 0;
+const char* _wrap_new_CvSubdiv2DEdge_Wrapper_texinfo = 0;
 const char* _wrap_new_CvvImage_texinfo = "-*- texinfo -*-\n\
 @deftypefn {Loadable Function} @var{retval} = CvvImage ()\n\
 @var{retval} is of type CvvImage. \n\
@@ -4041,15 +4412,15 @@ fail:
 
 
 static swig_octave_member swig_CvRNG_Wrapper_members[] = {
-{"ptr",_wrap_CvRNG_Wrapper_ptr,0,0,0,0},
-{"ref",_wrap_CvRNG_Wrapper_ref,0,0,0,0},
-{"__eq",_wrap_CvRNG_Wrapper___eq,0,0,0,0},
-{"__ne",_wrap_CvRNG_Wrapper___ne,0,0,0,0},
+{"ptr",_wrap_CvRNG_Wrapper_ptr,0,0,0,_wrap_CvRNG_Wrapper_ptr_texinfo},
+{"ref",_wrap_CvRNG_Wrapper_ref,0,0,0,_wrap_CvRNG_Wrapper_ref_texinfo},
+{"__eq",_wrap_CvRNG_Wrapper___eq,0,0,0,_wrap_CvRNG_Wrapper___eq_texinfo},
+{"__ne",_wrap_CvRNG_Wrapper___ne,0,0,0,_wrap_CvRNG_Wrapper___ne_texinfo},
 {0,0,0,0}
 };
 static const char *swig_CvRNG_Wrapper_base_names[] = {0};
 static const swig_type_info *swig_CvRNG_Wrapper_base[] = {0};
-static swig_octave_class _wrap_class_CvRNG_Wrapper = {"CvRNG_Wrapper", &SWIGTYPE_p_CvRNG_Wrapper,0,_wrap_new_CvRNG_Wrapper,0,_wrap_delete_CvRNG_Wrapper,swig_CvRNG_Wrapper_members,swig_CvRNG_Wrapper_base_names,swig_CvRNG_Wrapper_base };
+static swig_octave_class _wrap_class_CvRNG_Wrapper = {"CvRNG_Wrapper", &SWIGTYPE_p_CvRNG_Wrapper,0,_wrap_new_CvRNG_Wrapper,_wrap_new_CvRNG_Wrapper_texinfo,_wrap_delete_CvRNG_Wrapper,swig_CvRNG_Wrapper_members,swig_CvRNG_Wrapper_base_names,swig_CvRNG_Wrapper_base };
 
 static octave_value_list _wrap_new_CvSubdiv2DEdge_Wrapper (const octave_value_list& args, int nargout) {
   CvSubdiv2DEdge *arg1 = 0 ;
@@ -4236,15 +4607,15 @@ fail:
 
 
 static swig_octave_member swig_CvSubdiv2DEdge_Wrapper_members[] = {
-{"ptr",_wrap_CvSubdiv2DEdge_Wrapper_ptr,0,0,0,0},
-{"ref",_wrap_CvSubdiv2DEdge_Wrapper_ref,0,0,0,0},
-{"__eq",_wrap_CvSubdiv2DEdge_Wrapper___eq,0,0,0,0},
-{"__ne",_wrap_CvSubdiv2DEdge_Wrapper___ne,0,0,0,0},
+{"ptr",_wrap_CvSubdiv2DEdge_Wrapper_ptr,0,0,0,_wrap_CvSubdiv2DEdge_Wrapper_ptr_texinfo},
+{"ref",_wrap_CvSubdiv2DEdge_Wrapper_ref,0,0,0,_wrap_CvSubdiv2DEdge_Wrapper_ref_texinfo},
+{"__eq",_wrap_CvSubdiv2DEdge_Wrapper___eq,0,0,0,_wrap_CvSubdiv2DEdge_Wrapper___eq_texinfo},
+{"__ne",_wrap_CvSubdiv2DEdge_Wrapper___ne,0,0,0,_wrap_CvSubdiv2DEdge_Wrapper___ne_texinfo},
 {0,0,0,0}
 };
 static const char *swig_CvSubdiv2DEdge_Wrapper_base_names[] = {0};
 static const swig_type_info *swig_CvSubdiv2DEdge_Wrapper_base[] = {0};
-static swig_octave_class _wrap_class_CvSubdiv2DEdge_Wrapper = {"CvSubdiv2DEdge_Wrapper", &SWIGTYPE_p_CvSubdiv2DEdge_Wrapper,0,_wrap_new_CvSubdiv2DEdge_Wrapper,0,_wrap_delete_CvSubdiv2DEdge_Wrapper,swig_CvSubdiv2DEdge_Wrapper_members,swig_CvSubdiv2DEdge_Wrapper_base_names,swig_CvSubdiv2DEdge_Wrapper_base };
+static swig_octave_class _wrap_class_CvSubdiv2DEdge_Wrapper = {"CvSubdiv2DEdge_Wrapper", &SWIGTYPE_p_CvSubdiv2DEdge_Wrapper,0,_wrap_new_CvSubdiv2DEdge_Wrapper,_wrap_new_CvSubdiv2DEdge_Wrapper_texinfo,_wrap_delete_CvSubdiv2DEdge_Wrapper,swig_CvSubdiv2DEdge_Wrapper_members,swig_CvSubdiv2DEdge_Wrapper_base_names,swig_CvSubdiv2DEdge_Wrapper_base };
 
 static octave_value_list _wrap_cvSetMouseCallback__SWIG_0 (const octave_value_list& args, int nargout) {
   char *arg1 = (char *) 0 ;
@@ -7054,40 +7425,186 @@ fail:
 
 
 static swig_octave_member swig_CvvImage_members[] = {
-{"Create",_wrap_CvvImage_Create,0,0,0,0},
-{"Load",_wrap_CvvImage_Load,0,0,0,0},
-{"LoadRect",_wrap_CvvImage_LoadRect,0,0,0,0},
-{"Save",_wrap_CvvImage_Save,0,0,0,0},
-{"CopyOf",_wrap_CvvImage_CopyOf,0,0,0,0},
-{"GetImage",_wrap_CvvImage_GetImage,0,0,0,0},
-{"Destroy",_wrap_CvvImage_Destroy,0,0,0,0},
-{"Width",_wrap_CvvImage_Width,0,0,0,0},
-{"Height",_wrap_CvvImage_Height,0,0,0,0},
-{"Bpp",_wrap_CvvImage_Bpp,0,0,0,0},
-{"Fill",_wrap_CvvImage_Fill,0,0,0,0},
-{"Show",_wrap_CvvImage_Show,0,0,0,0},
+{"Create",_wrap_CvvImage_Create,0,0,0,_wrap_CvvImage_Create_texinfo},
+{"Load",_wrap_CvvImage_Load,0,0,0,_wrap_CvvImage_Load_texinfo},
+{"LoadRect",_wrap_CvvImage_LoadRect,0,0,0,_wrap_CvvImage_LoadRect_texinfo},
+{"Save",_wrap_CvvImage_Save,0,0,0,_wrap_CvvImage_Save_texinfo},
+{"CopyOf",_wrap_CvvImage_CopyOf,0,0,0,_wrap_CvvImage_CopyOf_texinfo},
+{"GetImage",_wrap_CvvImage_GetImage,0,0,0,_wrap_CvvImage_GetImage_texinfo},
+{"Destroy",_wrap_CvvImage_Destroy,0,0,0,_wrap_CvvImage_Destroy_texinfo},
+{"Width",_wrap_CvvImage_Width,0,0,0,_wrap_CvvImage_Width_texinfo},
+{"Height",_wrap_CvvImage_Height,0,0,0,_wrap_CvvImage_Height_texinfo},
+{"Bpp",_wrap_CvvImage_Bpp,0,0,0,_wrap_CvvImage_Bpp_texinfo},
+{"Fill",_wrap_CvvImage_Fill,0,0,0,_wrap_CvvImage_Fill_texinfo},
+{"Show",_wrap_CvvImage_Show,0,0,0,_wrap_CvvImage_Show_texinfo},
 {0,0,0,0}
 };
 static const char *swig_CvvImage_base_names[] = {0};
 static const swig_type_info *swig_CvvImage_base[] = {0};
-static swig_octave_class _wrap_class_CvvImage = {"CvvImage", &SWIGTYPE_p_CvvImage,0,_wrap_new_CvvImage,0,_wrap_delete_CvvImage,swig_CvvImage_members,swig_CvvImage_base_names,swig_CvvImage_base };
+static swig_octave_class _wrap_class_CvvImage = {"CvvImage", &SWIGTYPE_p_CvvImage,0,_wrap_new_CvvImage,_wrap_new_CvvImage_texinfo,_wrap_delete_CvvImage,swig_CvvImage_members,swig_CvvImage_base_names,swig_CvvImage_base };
+
+static octave_value_list _wrap_cv2mat (const octave_value_list& args, int nargout) {
+  CvArr *arg1 = (CvArr *) 0 ;
+  octave_value result;
+  bool freearg1 = false ;
+  octave_value_list _out;
+  octave_value_list *_outp=&_out;
+  octave_value _outv;
+  
+  if (!SWIG_check_num_args("cv2mat",args.length(),1,1,0)) {
+    SWIG_fail;
+  }
+  {
+    arg1 = OctObject_to_CvArr(args(0), &freearg1);
+  }
+  {
+    try {
+      result = cv2mat(arg1); 
+    } 
+    catch (...) 
+    {
+      SWIG_fail;
+    } 
+  }
+  _outv = result;
+  if (_outv.is_defined()) _outp = SWIG_Octave_AppendOutput(_outp, _outv);
+  {
+    if(arg1!=NULL && freearg1){
+      cvReleaseData( arg1 );
+      cvFree(&(arg1));
+    }
+  }
+fail:
+  return _out;
+}
+
+
+static octave_value_list _wrap_mat2cv (const octave_value_list& args, int nargout) {
+  octave_value *arg1 = 0 ;
+  int arg2 ;
+  octave_value result;
+  octave_value temp1 ;
+  int val2 ;
+  int ecode2 = 0 ;
+  octave_value_list _out;
+  octave_value_list *_outp=&_out;
+  octave_value _outv;
+  
+  if (!SWIG_check_num_args("mat2cv",args.length(),2,2,0)) {
+    SWIG_fail;
+  }
+  temp1 = (octave_value)(args(0));
+  arg1 = &temp1;
+  ecode2 = SWIG_AsVal_int(args(1), &val2);
+  if (!SWIG_IsOK(ecode2)) {
+    SWIG_exception_fail(SWIG_ArgError(ecode2), "in method '" "mat2cv" "', argument " "2"" of type '" "int""'");
+  } 
+  arg2 = (int)(val2);
+  {
+    try {
+      result = mat2cv((octave_value const &)*arg1,arg2); 
+    } 
+    catch (...) 
+    {
+      SWIG_fail;
+    } 
+  }
+  _outv = result;
+  if (_outv.is_defined()) _outp = SWIG_Octave_AppendOutput(_outp, _outv);
+fail:
+  return _out;
+}
+
+
+static octave_value_list _wrap_cv2im (const octave_value_list& args, int nargout) {
+  CvArr *arg1 = (CvArr *) 0 ;
+  octave_value result;
+  bool freearg1 = false ;
+  octave_value_list _out;
+  octave_value_list *_outp=&_out;
+  octave_value _outv;
+  
+  if (!SWIG_check_num_args("cv2im",args.length(),1,1,0)) {
+    SWIG_fail;
+  }
+  {
+    arg1 = OctObject_to_CvArr(args(0), &freearg1);
+  }
+  {
+    try {
+      result = cv2im(arg1); 
+    } 
+    catch (...) 
+    {
+      SWIG_fail;
+    } 
+  }
+  _outv = result;
+  if (_outv.is_defined()) _outp = SWIG_Octave_AppendOutput(_outp, _outv);
+  {
+    if(arg1!=NULL && freearg1){
+      cvReleaseData( arg1 );
+      cvFree(&(arg1));
+    }
+  }
+fail:
+  return _out;
+}
+
+
+static octave_value_list _wrap_im2cv (const octave_value_list& args, int nargout) {
+  octave_value *arg1 = 0 ;
+  int arg2 ;
+  CvMat *result = 0 ;
+  octave_value temp1 ;
+  int val2 ;
+  int ecode2 = 0 ;
+  octave_value_list _out;
+  octave_value_list *_outp=&_out;
+  octave_value _outv;
+  
+  if (!SWIG_check_num_args("im2cv",args.length(),2,2,0)) {
+    SWIG_fail;
+  }
+  temp1 = (octave_value)(args(0));
+  arg1 = &temp1;
+  ecode2 = SWIG_AsVal_int(args(1), &val2);
+  if (!SWIG_IsOK(ecode2)) {
+    SWIG_exception_fail(SWIG_ArgError(ecode2), "in method '" "im2cv" "', argument " "2"" of type '" "int""'");
+  } 
+  arg2 = (int)(val2);
+  {
+    try {
+      result = (CvMat *)im2cv((octave_value const &)*arg1,arg2); 
+    } 
+    catch (...) 
+    {
+      SWIG_fail;
+    } 
+  }
+  _outv = SWIG_NewPointerObj(SWIG_as_voidptr(result), SWIGTYPE_p_CvMat, 1 |  0 );
+  if (_outv.is_defined()) _outp = SWIG_Octave_AppendOutput(_outp, _outv);
+fail:
+  return _out;
+}
+
 
 
 static const struct swig_octave_member swig_globals[] = {
-{"new_CvRNG_Wrapper",_wrap_new_CvRNG_Wrapper,0,0,2,0},
-{"CvRNG_Wrapper_ptr",_wrap_CvRNG_Wrapper_ptr,0,0,2,0},
-{"CvRNG_Wrapper_ref",_wrap_CvRNG_Wrapper_ref,0,0,2,0},
-{"CvRNG_Wrapper___eq",_wrap_CvRNG_Wrapper___eq,0,0,2,0},
-{"CvRNG_Wrapper___ne",_wrap_CvRNG_Wrapper___ne,0,0,2,0},
+{"new_CvRNG_Wrapper",_wrap_new_CvRNG_Wrapper,0,0,2,_wrap_new_CvRNG_Wrapper_texinfo},
+{"CvRNG_Wrapper_ptr",_wrap_CvRNG_Wrapper_ptr,0,0,2,_wrap_CvRNG_Wrapper_ptr_texinfo},
+{"CvRNG_Wrapper_ref",_wrap_CvRNG_Wrapper_ref,0,0,2,_wrap_CvRNG_Wrapper_ref_texinfo},
+{"CvRNG_Wrapper___eq",_wrap_CvRNG_Wrapper___eq,0,0,2,_wrap_CvRNG_Wrapper___eq_texinfo},
+{"CvRNG_Wrapper___ne",_wrap_CvRNG_Wrapper___ne,0,0,2,_wrap_CvRNG_Wrapper___ne_texinfo},
 {"delete_CvRNG_Wrapper",_wrap_delete_CvRNG_Wrapper,0,0,2,_wrap_delete_CvRNG_Wrapper_texinfo},
-{"new_CvSubdiv2DEdge_Wrapper",_wrap_new_CvSubdiv2DEdge_Wrapper,0,0,2,0},
-{"CvSubdiv2DEdge_Wrapper_ptr",_wrap_CvSubdiv2DEdge_Wrapper_ptr,0,0,2,0},
-{"CvSubdiv2DEdge_Wrapper_ref",_wrap_CvSubdiv2DEdge_Wrapper_ref,0,0,2,0},
-{"CvSubdiv2DEdge_Wrapper___eq",_wrap_CvSubdiv2DEdge_Wrapper___eq,0,0,2,0},
-{"CvSubdiv2DEdge_Wrapper___ne",_wrap_CvSubdiv2DEdge_Wrapper___ne,0,0,2,0},
+{"new_CvSubdiv2DEdge_Wrapper",_wrap_new_CvSubdiv2DEdge_Wrapper,0,0,2,_wrap_new_CvSubdiv2DEdge_Wrapper_texinfo},
+{"CvSubdiv2DEdge_Wrapper_ptr",_wrap_CvSubdiv2DEdge_Wrapper_ptr,0,0,2,_wrap_CvSubdiv2DEdge_Wrapper_ptr_texinfo},
+{"CvSubdiv2DEdge_Wrapper_ref",_wrap_CvSubdiv2DEdge_Wrapper_ref,0,0,2,_wrap_CvSubdiv2DEdge_Wrapper_ref_texinfo},
+{"CvSubdiv2DEdge_Wrapper___eq",_wrap_CvSubdiv2DEdge_Wrapper___eq,0,0,2,_wrap_CvSubdiv2DEdge_Wrapper___eq_texinfo},
+{"CvSubdiv2DEdge_Wrapper___ne",_wrap_CvSubdiv2DEdge_Wrapper___ne,0,0,2,_wrap_CvSubdiv2DEdge_Wrapper___ne_texinfo},
 {"delete_CvSubdiv2DEdge_Wrapper",_wrap_delete_CvSubdiv2DEdge_Wrapper,0,0,2,_wrap_delete_CvSubdiv2DEdge_Wrapper_texinfo},
-{"cvSetMouseCallback",_wrap_cvSetMouseCallback,0,0,2,0},
-{"cvWaitKey",_wrap_cvWaitKey,0,0,2,0},
+{"cvSetMouseCallback",_wrap_cvSetMouseCallback,0,0,2,_wrap_cvSetMouseCallback_texinfo},
+{"cvWaitKey",_wrap_cvWaitKey,0,0,2,_wrap_cvWaitKey_texinfo},
 {"cvLoadImage",_wrap_cvLoadImage,0,0,2,_wrap_cvLoadImage_texinfo},
 {"cvRetrieveFrame",_wrap_cvRetrieveFrame,0,0,2,_wrap_cvRetrieveFrame_texinfo},
 {"cvQueryFrame",_wrap_cvQueryFrame,0,0,2,_wrap_cvQueryFrame_texinfo},
@@ -7135,6 +7652,10 @@ static const struct swig_octave_member swig_globals[] = {
 {"CvvImage_Bpp",_wrap_CvvImage_Bpp,0,0,2,_wrap_CvvImage_Bpp_texinfo},
 {"CvvImage_Fill",_wrap_CvvImage_Fill,0,0,2,_wrap_CvvImage_Fill_texinfo},
 {"CvvImage_Show",_wrap_CvvImage_Show,0,0,2,_wrap_CvvImage_Show_texinfo},
+{"cv2mat",_wrap_cv2mat,0,0,2,_wrap_cv2mat_texinfo},
+{"mat2cv",_wrap_mat2cv,0,0,2,_wrap_mat2cv_texinfo},
+{"cv2im",_wrap_cv2im,0,0,2,_wrap_cv2im_texinfo},
+{"im2cv",_wrap_im2cv,0,0,2,_wrap_im2cv_texinfo},
 {0,0,0,0,0}
 };
 
@@ -7264,6 +7785,7 @@ static swig_type_info _swigt__p_f_int__void = {"_p_f_int__void", "void (*)(int)|
 static swig_type_info _swigt__p_f_int_int_int_int_p_void__void = {"_p_f_int_int_int_int_p_void__void", "void (*)(int,int,int,int,void *)|CvMouseCallback", 0, 0, (void*)0, 0};
 static swig_type_info _swigt__p_int = {"_p_int", "CvHistType *|int *|CVStatus *", 0, 0, (void*)0, 0};
 static swig_type_info _swigt__p_long_long = {"_p_long_long", "int64 *|long long *", 0, 0, (void*)0, 0};
+static swig_type_info _swigt__p_octave_value = {"_p_octave_value", "octave_value *", 0, 0, (void*)0, 0};
 static swig_type_info _swigt__p_p_CvCapture = {"_p_p_CvCapture", "CvCapture **", 0, 0, (void*)0, 0};
 static swig_type_info _swigt__p_p_CvVideoWriter = {"_p_p_CvVideoWriter", "CvVideoWriter **", 0, 0, (void*)0, 0};
 static swig_type_info _swigt__p_p_char = {"_p_p_char", "char **", 0, 0, (void*)0, 0};
@@ -7373,6 +7895,7 @@ static swig_type_info *swig_type_initial[] = {
   &_swigt__p_f_int_int_int_int_p_void__void,
   &_swigt__p_int,
   &_swigt__p_long_long,
+  &_swigt__p_octave_value,
   &_swigt__p_p_CvCapture,
   &_swigt__p_p_CvVideoWriter,
   &_swigt__p_p_char,
@@ -7482,6 +8005,7 @@ static swig_cast_info _swigc__p_f_int__void[] = {  {&_swigt__p_f_int__void, 0, 0
 static swig_cast_info _swigc__p_f_int_int_int_int_p_void__void[] = {  {&_swigt__p_f_int_int_int_int_p_void__void, 0, 0, 0},{0, 0, 0, 0}};
 static swig_cast_info _swigc__p_int[] = {  {&_swigt__p_int, 0, 0, 0},{0, 0, 0, 0}};
 static swig_cast_info _swigc__p_long_long[] = {  {&_swigt__p_long_long, 0, 0, 0},{0, 0, 0, 0}};
+static swig_cast_info _swigc__p_octave_value[] = {  {&_swigt__p_octave_value, 0, 0, 0},{0, 0, 0, 0}};
 static swig_cast_info _swigc__p_p_CvCapture[] = {  {&_swigt__p_p_CvCapture, 0, 0, 0},{0, 0, 0, 0}};
 static swig_cast_info _swigc__p_p_CvVideoWriter[] = {  {&_swigt__p_p_CvVideoWriter, 0, 0, 0},{0, 0, 0, 0}};
 static swig_cast_info _swigc__p_p_char[] = {  {&_swigt__p_p_char, 0, 0, 0},{0, 0, 0, 0}};
@@ -7591,6 +8115,7 @@ static swig_cast_info *swig_cast_initial[] = {
   _swigc__p_f_int_int_int_int_p_void__void,
   _swigc__p_int,
   _swigc__p_long_long,
+  _swigc__p_octave_value,
   _swigc__p_p_CvCapture,
   _swigc__p_p_CvVideoWriter,
   _swigc__p_p_char,

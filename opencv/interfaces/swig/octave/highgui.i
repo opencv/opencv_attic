@@ -280,3 +280,5 @@ static void icvOctTrackbarCB##idx(int pos){
 
 
 %include "../general/highgui.i"
+%include "adapters.i"
+

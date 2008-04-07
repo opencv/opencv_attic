@@ -36,24 +36,24 @@ std::ostream & cv_arr_write(std::ostream & out, T * data, int rows, int nch, int
     chdelim2=")";
   }
 
-  out<<"[";
+  out<<"[\n";
   for(i=0; i<rows; i++){
     out<<"[";
 
     // first element
     out<<chdelim1;
-    out<<((T*)(cdata+i*step))[0];
+    out<<double(((T*)(cdata+i*step))[0]);
     for(k=1; k<nch; k++){
-      out<<", "<<((T*)(cdata+i*step))[k];
+      out<<", "<<double(((T*)(cdata+i*step))[k]);
     }
     out<<chdelim2;
-		
+
     // remaining elements
     for(j=nch*sizeof(T); j<step; j+=(nch*sizeof(T))){
       out<<", "<<chdelim1;
-      out<<((T*)(cdata+i*step+j))[0];
+      out<<double(((T*)(cdata+i*step+j))[0]);
       for(k=1; k<nch; k++){
-	out<<", "<<((T*)(cdata+i*step+j))[k];
+	out<<", "<<double(((T*)(cdata+i*step+j))[k]);
       }
       out<<chdelim2;
     }
@@ -71,7 +71,7 @@ void cvArrPrint(CvArr * arr){
   CvMat stub;
 
   mat = cvGetMat(arr, &stub);
-	
+
   int cn = CV_MAT_CN(mat->type);
   int depth = CV_MAT_DEPTH(mat->type);
   int step = MAX(mat->step, cn*mat->cols*CV_ELEM_SIZE(depth));

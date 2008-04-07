@@ -75,10 +75,10 @@ highgui.oct: $(HIGHGUI_SOURCES)
 
 ifdef UPDATE_SWIG_WRAPPERS
 
-cv_wrap.cpp: cv.i imagedata.i cvarr.i octhelpers.i       \
-         octtypemaps.i cvshadow.i cvseq.i              \
+cv_wrap.cpp: cv.i imagedata.i cvarr.i octhelpers.i              \
+         octtypemaps.i cvshadow.i cvseq.i                       \
          error.cpp error.h                                      \
-         octhelpers.h cvshadow.h octcvseq.hpp                     \
+         octhelpers.h cvshadow.h octcvseq.hpp                   \
          $(top_srcdir)/interfaces/swig/general/cv.i             \
          $(top_srcdir)/interfaces/swig/general/memory.i         \
          $(top_srcdir)/interfaces/swig/general/typemaps.i       \
@@ -90,13 +90,13 @@ cv_wrap.cpp: cv.i imagedata.i cvarr.i octhelpers.i       \
          ../filtered/constants.h
 	$(SWIG) -octave -c++ $(CV_INCLUDES) -o $@ $<
 
-ml_wrap.cpp: ml.i octtypemaps.i                            \
+ml_wrap.cpp: ml.i octtypemaps.i                                 \
               $(top_srcdir)/interfaces/swig/general/typemaps.i  \
               $(top_srcdir)/interfaces/swig/general/memory.i    \
               $(top_srcdir)/ml/include/ml.h
 	$(SWIG) -octave -c++ $(CV_INCLUDES) -DSKIP_INCLUDES -o $@ $<
 
-highgui_wrap.cpp: highgui.i octtypemaps.i                  \
+highgui_wrap.cpp: highgui.i octtypemaps.i adapters.i            \
               $(top_srcdir)/interfaces/swig/general/highgui.i   \
               $(top_srcdir)/interfaces/swig/general/typemaps.i  \
               $(top_srcdir)/interfaces/swig/general/memory.i    \

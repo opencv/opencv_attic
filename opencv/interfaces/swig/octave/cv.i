@@ -42,6 +42,7 @@
 // 2004-03-16, Gabriel Schreiber <schreiber@ient.rwth-aachen.de>
 //             Mark Asbach       <asbach@ient.rwth-aachen.de>
 //             Institute of Communications Engineering, RWTH Aachen University
+// 2008-04-03, Xavier Delacour    <xavier.delacour@gmail.com>
 
 
 // todo remove these..
